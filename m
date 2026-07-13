@@ -1,41 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7399535DA78
-	for <linux-xfs@vger.kernel.org>; Mon, 13 Jul 2026 22:51:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 179753B83E8
+	for <linux-xfs@vger.kernel.org>; Mon, 13 Jul 2026 22:52:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783983104; cv=none; b=U5UzMhQ9phjJetkFZlnfWJH4aHyFGwWyaU+QZw9OfiQzNZR+W5qRdR+2WBP0ZiAO5EitG4SIMrJ5g2/akvm+mNeDWm4gKyrE+4BIYj/jcAwwjG0hNPgxP1LI79qazW5mk+uhYKnavBCxwVnCeazWsHv31izHdDjxLIWvUfv4KR8=
+	t=1783983147; cv=none; b=P3vOgDPlhYqWfbovMYpTYYWaXxtY8odtJlmtsdUzHwH9pJcBrzTdC4JTKl9fw0Ia88/4mFP18jOD/+6qCsFrG8+UEMskVEvC13zemTahwSm2b34jMUzXVDqIC989IespXjeLg30xcbquDxEnoan1eGrx6j/CxwdjE2CjKg/YiJ4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783983104; c=relaxed/simple;
-	bh=Eb0EhnPRO+VfJ25//S0RcpAy7rrYcn/49SsNA9SBRHM=;
+	s=arc-20240116; t=1783983147; c=relaxed/simple;
+	bh=dSHlskzE+GDGqjne8z+h8WJ3IwKgpG4Kbue4opZG9bg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=D3taKhgyL5kU2QcWyVMPpJ2gE8vw5cNtqkpEAvwAXkmE+c3/tdmL9RKRNiuPCCYuwQ8iy//4qZBz1B/7U16ilYagM0LfvGvKOCYZHUi3LyDGqyvLckrfC1yD3j/TrvERYMZ0FNNXrTuGTw/qdh0LXXbtors5wekgXCfDGadZ+JM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X/kUgDoS; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=gylenq8wMrCk/0CmJCS7domBhLf1LCsZ27eN/+JJIOaSr5DIGkmdTlj/rUlluPAbe2WvgF0WTxaGLyzQasQRolvRPfXQQVHbnYTnC2Je1KYxOyj/AbKKF5cLAQ6zj6cQqSGS6d+yecTReic3jry3Ed+vx4kpkWIY6Rb27qeu4uc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f0/2atGY; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X/kUgDoS"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 08CB11F000E9;
-	Mon, 13 Jul 2026 22:51:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f0/2atGY"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 9F8A81F000E9;
+	Mon, 13 Jul 2026 22:52:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783983103;
-	bh=caBQuDRfhY7br+NGl4tJXSuY+AQvHiyxWp+GCLnQGe4=;
+	s=k20260515; t=1783983145;
+	bh=CWbM++ZnK979WFr3rUU2I53CjEqbP7yyHdrMT/t3m6w=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=X/kUgDoShYBFoo0f4Iv7WhIFFrj5+K5KpR3Gy+9rBA5kd2G2cBTBmrdVgd8XJ1DQR
-	 +EfSpQROy1oRRyvl7+sS46cKTn6luebvmNsBYQA+GFslDCJbE3u0A9818W+AZEqq8f
-	 TxxJi93obpEmKlOYvNDEFr5qYsV0kAH8h4jM2xtMvBnBT3vUpAeZLd5txDFd6D6jX+
-	 2K+NGa3jeGQvKEnw1x3G5CVrtpDxx6PxvOtAYzcyDzf1ibFvO6IRrcSOQB8TdpQYAE
-	 da+saGy8Gjxvb87GpY5Spzv7EfCVQg3CF2wyki3CWlVoleBwvkMW1Mg5mTUBhFfmtZ
-	 BFB6xJSwzEQOA==
-Date: Mon, 13 Jul 2026 15:51:42 -0700
+	b=f0/2atGY4D8Poh6D3stls7vJ1bD9Q2lQUbSToLYCwyee70eGUmupdMYMea1fOjPW5
+	 +R3463UNDuIDSe2Vi4UmU0A3X6xm9QAmBsNfXwUMXegRJL3bADhSwtWB+7w1uqARZb
+	 iY/TTjQOC305/pPyDuTye6ySqnXP5UlmEfmTJGY+c0KGTcDa22JxEy+5FsFwllqqyV
+	 psJ87czzHcVSW7nzV9M+nsVtH/yhsJihW6d4365ifME51Gn0Hw7Q13exUWyu0c8VRS
+	 jMn57p4Jif1j1ZP7NQWkVSypILk0Cwlf74o5NPr4exE+vJIREx7nszi9xy604l8vHB
+	 URs9q9Hb6WpPQ==
+Date: Mon, 13 Jul 2026 15:52:25 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 Cc: linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
 	Carlos Maiolino <cem@kernel.org>,
 	Damien Le Moal <dlemoal@kernel.org>
-Subject: Re: [PATCH v2 1/4] xfs: add xfs_metadir_create_file helper
-Message-ID: <20260713225142.GI7195@frogsfrogsfrogs>
+Subject: Re: [PATCH v2 2/4] xfs: create quota metadir inodes using
+ xfs_metadir_create_file
+Message-ID: <20260713225225.GJ7195@frogsfrogsfrogs>
 References: <20260713124250.3978-1-johannes.thumshirn@wdc.com>
- <20260713124250.3978-2-johannes.thumshirn@wdc.com>
+ <20260713124250.3978-3-johannes.thumshirn@wdc.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,134 +45,82 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260713124250.3978-2-johannes.thumshirn@wdc.com>
+In-Reply-To: <20260713124250.3978-3-johannes.thumshirn@wdc.com>
 
-On Mon, Jul 13, 2026 at 02:42:47PM +0200, Johannes Thumshirn wrote:
-> Factor the metadata inode create/commit/cleanup lifecycle out of
-> xfs_metadir_mkdir into a reusable helper that takes an optional callback
-> to initialize the new inode, and convert xfs_metadir_mkdir to it.
+On Mon, Jul 13, 2026 at 02:42:48PM +0200, Johannes Thumshirn wrote:
+> Now that we have xfs_metadir_create_file() use it in
+> xfs_dqinode_metadir_create().
 > 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 > Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
-> ---
->  fs/xfs/libxfs/xfs_metadir.c | 58 +++++++++++++++++++++++--------------
->  fs/xfs/libxfs/xfs_metadir.h |  6 ++++
->  2 files changed, 43 insertions(+), 21 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_metadir.c b/fs/xfs/libxfs/xfs_metadir.c
-> index 74c4596ee4cf..0d6a153bc9e9 100644
-> --- a/fs/xfs/libxfs/xfs_metadir.c
-> +++ b/fs/xfs/libxfs/xfs_metadir.c
-> @@ -438,48 +438,64 @@ xfs_metadir_cancel(
->  	xfs_metadir_teardown(upd, error);
->  }
->  
-> -/* Create a metadata for the last component of the path. */
->  int
-> -xfs_metadir_mkdir(
-> -	struct xfs_inode		*dp,
-> -	const char			*path,
-> +xfs_metadir_create_file(
-> +	struct xfs_metadir_update	*upd,
-> +	umode_t				mode,
-> +	xfs_metadir_createfn		create,
-> +	void				*priv,
->  	struct xfs_inode		**ipp)
->  {
-> -	struct xfs_metadir_update	upd = {
-> -		.dp			= dp,
-> -		.path			= path,
-> -		.metafile_type		= XFS_METAFILE_DIR,
-> -	};
->  	int				error;
->  
-> -	if (xfs_is_shutdown(dp->i_mount))
-> +	if (xfs_is_shutdown(upd->dp->i_mount))
->  		return -EIO;
->  
-> -	/* Allocate a transaction to create the last directory. */
-> -	error = xfs_metadir_start_create(&upd);
-> +	error = xfs_metadir_start_create(upd);
->  	if (error)
->  		return error;
->  
-> -	/* Create the subdirectory and take our reference. */
-> -	error = xfs_metadir_create(&upd, S_IFDIR);
-> +	error = xfs_metadir_create(upd, mode);
->  	if (error)
->  		goto out_cancel;
->  
-> -	error = xfs_metadir_commit(&upd);
-> +	if (create) {
-> +		error = create(upd, priv);
-> +		if (error)
-> +			goto out_cancel;
-> +	}
-> +
-> +	error = xfs_metadir_commit(upd);
->  	if (error)
->  		goto out_irele;
->  
-> -	xfs_finish_inode_setup(upd.ip);
-> -	*ipp = upd.ip;
-> +	xfs_finish_inode_setup(upd->ip);
-> +	*ipp = upd->ip;
->  	return 0;
->  
->  out_cancel:
-> -	xfs_metadir_cancel(&upd, error);
-> +	xfs_metadir_cancel(upd, error);
->  out_irele:
->  	/* Have to finish setting up the inode to ensure it's deleted. */
-> -	if (upd.ip) {
-> -		xfs_finish_inode_setup(upd.ip);
-> -		xfs_irele(upd.ip);
-> +	if (upd->ip) {
-> +		xfs_finish_inode_setup(upd->ip);
-> +		xfs_irele(upd->ip);
->  	}
->  	return error;
->  }
-> +
-> +/* Create a metadata for the last component of the path. */
-> +int
-> +xfs_metadir_mkdir(
-> +	struct xfs_inode		*dp,
-> +	const char			*path,
-> +	struct xfs_inode		**ipp)
-> +{
-> +	struct xfs_metadir_update	upd = {
-> +		.dp			= dp,
-> +		.path			= path,
-> +		.metafile_type		= XFS_METAFILE_DIR,
-> +	};
-> +
-> +	return xfs_metadir_create_file(&upd, S_IFDIR, NULL, NULL, ipp);
-> +}
-> diff --git a/fs/xfs/libxfs/xfs_metadir.h b/fs/xfs/libxfs/xfs_metadir.h
-> index bfecac7d3d14..a795a2d0e3fe 100644
-> --- a/fs/xfs/libxfs/xfs_metadir.h
-> +++ b/fs/xfs/libxfs/xfs_metadir.h
-> @@ -35,6 +35,12 @@ int xfs_metadir_load(struct xfs_trans *tp, struct xfs_inode *dp,
->  int xfs_metadir_start_create(struct xfs_metadir_update *upd);
->  int xfs_metadir_create(struct xfs_metadir_update *upd, umode_t mode);
->  
-> +typedef int (*xfs_metadir_createfn)(struct xfs_metadir_update *upd, void *priv);
-> +
-> +int xfs_metadir_create_file(struct xfs_metadir_update *upd, umode_t mode,
-> +		xfs_metadir_createfn create, void *priv,
 
-I'd have called these both "_create_fn" and "create_fn" for consistency
-but otherwise this looks fine to me.
-
+Looks good to me,
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
-> +		struct xfs_inode **ipp);
-> +
->  int xfs_metadir_start_link(struct xfs_metadir_update *upd);
->  int xfs_metadir_link(struct xfs_metadir_update *upd);
+> ---
+>  fs/xfs/libxfs/xfs_dquot_buf.c | 39 ++++++++++-------------------------
+>  1 file changed, 11 insertions(+), 28 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
+> index bbada0d3cc08..f960474bed3d 100644
+> --- a/fs/xfs/libxfs/xfs_dquot_buf.c
+> +++ b/fs/xfs/libxfs/xfs_dquot_buf.c
+> @@ -416,6 +416,15 @@ xfs_dqinode_load(
+>  	return 0;
+>  }
 >  
+> +static int
+> +xfs_dqinode_init(
+> +	struct xfs_metadir_update	*upd,
+> +	void				*priv)
+> +{
+> +	xfs_trans_log_inode(upd->tp, upd->ip, XFS_ILOG_CORE);
+> +	return 0;
+> +}
+> +
+>  /* Create a metadata directory quota inode. */
+>  int
+>  xfs_dqinode_metadir_create(
+> @@ -428,35 +437,9 @@ xfs_dqinode_metadir_create(
+>  		.metafile_type		= xfs_dqinode_metafile_type(type),
+>  		.path			= xfs_dqinode_path(type),
+>  	};
+> -	int				error;
+>  
+> -	error = xfs_metadir_start_create(&upd);
+> -	if (error)
+> -		return error;
+> -
+> -	error = xfs_metadir_create(&upd, S_IFREG);
+> -	if (error)
+> -		goto out_cancel;
+> -
+> -	xfs_trans_log_inode(upd.tp, upd.ip, XFS_ILOG_CORE);
+> -
+> -	error = xfs_metadir_commit(&upd);
+> -	if (error)
+> -		goto out_irele;
+> -
+> -	xfs_finish_inode_setup(upd.ip);
+> -	*ipp = upd.ip;
+> -	return 0;
+> -
+> -out_cancel:
+> -	xfs_metadir_cancel(&upd, error);
+> -out_irele:
+> -	/* Have to finish setting up the inode to ensure it's deleted. */
+> -	if (upd.ip) {
+> -		xfs_finish_inode_setup(upd.ip);
+> -		xfs_irele(upd.ip);
+> -	}
+> -	return error;
+> +	return xfs_metadir_create_file(&upd, S_IFREG, xfs_dqinode_init, NULL,
+> +			ipp);
+>  }
+>  
+>  #ifndef __KERNEL__
 > -- 
 > 2.54.0
 > 
