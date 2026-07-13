@@ -1,43 +1,94 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BC8030D41E
-	for <linux-xfs@vger.kernel.org>; Mon, 13 Jul 2026 16:20:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B18D92472AA
+	for <linux-xfs@vger.kernel.org>; Mon, 13 Jul 2026 18:02:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783959637; cv=none; b=qu7h17U+RkoaD8FYuoNg5hpjEHBds5hAXy43JE+hUlUjs9C4q3VvUOmvN5BULpCi3NhZ+5ZzdVPTzCCMC+ZABlrnj+Vv0C2YnJB3TbNMi7Ca9XnOzzcpOyJJs+QhDvRMlqXbZEVp/S4kFP5zDWyF3EqnKeO7Bw1EKG0bRqaazNw=
+	t=1783965765; cv=none; b=PNUY8/U7QYTxew8wskYqbMot0buE3IJw6RgUYQS1o+Po2jo3DVD2bVMfngA4b+HxwXTsq4FKtAqPC+EFLwV5V4OCnUTHuAfhWvTzMmHXd7zGGj7ZU5KHaCsPpUBxcDcRaajSn4D0KzqTcTllLkvaK59coB3Aj730+4LlQI/E0C8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783959637; c=relaxed/simple;
-	bh=8aXDrkAY025sJteaT9t2RwwJTHeU+KB2irjukML7tPA=;
+	s=arc-20240116; t=1783965765; c=relaxed/simple;
+	bh=Lp52UTZ90ae4x8tITBKatqccXlH3pYbiRQ64F1HApNQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ugmIdwTfFJ773129jDiQYsF5uRNMGoOZHTPgpB6+qqih1soSIQKJ3S+CPH3T8p0IFeJN8eqXuPFYmlD6i9ZxTuXMk4XQRHnGq++4CdHa42TS/8SjohwlpkjRlyIHhLBp+cmQtV02BjfiJBlzoE7xZJ8w48HZb9aA/0IuLPJdGnc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YTVjNqVa; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=cZwsssf7TykT4eDF9IYQQEYb9YE4ml9w8ML0rljOeHtRSPk/pQtimJaXKWVZwtwrVcy5pvymrw9tWDj47mwIgZzpjqJSYmdy1CAFna5PLoMfXoHMHUMgvRYV9ocLdGxSIPOvJRdGt5meveP5VgiRlcoinwdnhQ3ySPNpAESBj/I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=dCW+fwnX; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=HYuIwwcM; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YTVjNqVa"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id BC1E61F000E9;
-	Mon, 13 Jul 2026 16:20:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783959635;
-	bh=dK553fN3HhEQ1Nn0BTOyHhvCDAhyrw9K5bWCzoeQ/7A=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=YTVjNqVailOO3/SqChFlFq+NmuC23y2TarHD7X9mx6+ZGowomNWOiBr4YMcSD72OG
-	 ThYzShv1Yk5J6vL0lR0Nz0YS+DCNiL5nO+3zJHqo70NsMKJM5AczZi9nMkSFM/e9AL
-	 0seGqji45rngM3t8x414LLqjskZaVmcndALBxBUpBpZZNxFcsNpECGET/b5vCpZ5c3
-	 D+EmqsE9HJTh6GgjshmIvZIr827cYOdIckIN+pdul4YfNh1tzTfIAouR6s+EoEPnaW
-	 JvSdQgqQ1VBo7TBKtUCoccuWXgxg+3QycJm+oJFIDkzUo8kqbdicu4aQ/zcYu2uVK7
-	 zzrtbL3aLZk2w==
-Date: Mon, 13 Jul 2026 09:20:35 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Pankaj Raghav <p.raghav@samsung.com>
-Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com, lukas@herbolt.com,
-	dgc@kernel.org, gost.dev@samsung.com,
-	Zhang Yi <yi.zhang@huaweicloud.com>, pankaj.raghav@linux.dev,
-	andres@anarazel.de, kundan.kumar@samsung.com, hch@lst.de,
-	cem@kernel.org, hch@infradead.org
-Subject: Re: [PATCH v9 2/2] xfs: add support for FALLOC_FL_WRITE_ZEROES
-Message-ID: <20260713162035.GE7195@frogsfrogsfrogs>
-References: <20260706084117.1455204-1-p.raghav@samsung.com>
- <20260706084117.1455204-3-p.raghav@samsung.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="dCW+fwnX";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="HYuIwwcM"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1783965762;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=e/J1Bco3e8pzGFTAz8Dlc2Y3RIbJRM5bYMQDDy63RUQ=;
+	b=dCW+fwnXxMPNHbxOeW+gjKdmV4SvGc+UzDLqoXvCiepvtoAe1WNVxQ2rr8kPsz5Cs+k6QV
+	MF3+JfXuajLSAuLwWfM9se3xOPSOZVe8S6AcCTysE7+TIIHVAEIpWfsJwZRzLmdw4azXS9
+	rQDr1KTfcMkyvlwXRa9PejNuGxxIi88=
+Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
+ [209.85.128.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-231-2ULv6Ws_MTiTbCoE9L7dVA-1; Mon, 13 Jul 2026 14:02:41 -0400
+X-MC-Unique: 2ULv6Ws_MTiTbCoE9L7dVA-1
+X-Mimecast-MFC-AGG-ID: 2ULv6Ws_MTiTbCoE9L7dVA_1783965760
+Received: by mail-wm1-f72.google.com with SMTP id 5b1f17b1804b1-493c526df6bso1515635e9.3
+        for <linux-xfs@vger.kernel.org>; Mon, 13 Jul 2026 11:02:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1783965760; x=1784570560; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=e/J1Bco3e8pzGFTAz8Dlc2Y3RIbJRM5bYMQDDy63RUQ=;
+        b=HYuIwwcMMvKo5IL/Jt8DODX58FIX0FVIKk4wxnWLRE7NNlQ7MNRsXfzgkgLTdhVeNi
+         aJ0vAf0N00bSv/bR2piH6N+ENbq8hIgDS2pX6tAe9YCDdG1jPBjS8S0yV+gADOqrFhFE
+         MOdrtOm0oETJwV3mMdyfS++yH6bg5BjlGmW0l0X/xItBAbXZTrJzSHCVASGFPVxitBVN
+         HuUP/saZkUNIimpYH2HkdjQxiJPXFGXTVdF/RpzI0Uw4slys7CD7MtrhQRNnm7MqySrQ
+         3nwoCi/UJnIEQHztGJEIS+Wurwj90Sw7h64UFByFQbr7i6reZeq8+QDgkAgmdZ7r7W9j
+         VOog==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1783965760; x=1784570560;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=e/J1Bco3e8pzGFTAz8Dlc2Y3RIbJRM5bYMQDDy63RUQ=;
+        b=PMnh8yWuDjV0pVk0hKp+6nWd0OYgKKmby6ansLx5CEom24wkDyWRs45f0heC4FBCyr
+         j8fP+GHZoBR2nzVC2G18YrjYpKaiJorwFcPQDWRCt5Z7Gk5aHxJ7teGLYCjISSlS+AvI
+         HKc/nnIjESv8qCqLkrbcER1k7mYySrKAQu5QK22E4vtTwTQ8bHVcvvh9EVeJ5jf13lIn
+         4HkSFAy58GnVd7it9KeUCOcbiIUIc5hGfo70MJ8Q6Z8biSvne2cUyqNvZAwTlsztLkWl
+         dtrqViKDKakYMql2CIhh/T/iCdzZ9wcWl/OupSgszgdNLhpZQ57Lmpl0fCeft7N6XqSQ
+         3GqQ==
+X-Forwarded-Encrypted: i=1; AHgh+RrjliSZzVX2YKaCkPV5Y8F7dnCwK8DcPKfMzpi8MgSYVhDX015UhoxFWm2P/C20dQeKonHitNY4TSU=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzNm1n5bJ+KYbysTGqMvRgso0+J5nW8U+mlx/0m0jSg0LCVP+bw
+	9MHA4Y6Eo8s7mLTjfyA384BY9YIlKALA50OfPfo3ZO3tXxF5GaPn1UiF5yYMN/Fhr+J6xk2TB6C
+	lQpn4a1HiRokICnp0f/LOGPpWurXhWf3DnYdtcYWSc1AGmqPTxG+09iarEwJ3
+X-Gm-Gg: AfdE7cl3lpWWXjp9b6mTbgywaac8Pw2nFN5Nx437Xy09ozCQ0e3Jy/kd35mS0waPnHb
+	HcqQp/1wv8VcFzToDuDOIG5181QNTEkTRiKr9eTLXMGeIaJV2wfE4aQox0x9nHS6a4xGg3fjc+e
+	9/Qz0TO/WFOHQ3Fle44T2esGwl2rbzqjC1i8YvqjIk1CJ3RNRpzOfK0tfVKuGLrzqgR4+LXm9Lx
+	sGFQAbzOPR46Hll684RHP7upN3wE1iZ2A+M27avmwrk+7ycDTW0nbNvsAiFCjFk42kBcNn8Dxqw
+	vjXOVDzqNNA8rCjHXVZS4xhCcjjmxu7i0BWJZpj26KUX8lRrR85JpDQVHogO3ig9Q7HODegbF4H
+	UTMOdyXp46wI3E5/SP5JSJqy918834Tnq4kU+EZwuGdUhgg==
+X-Received: by 2002:a05:600c:8b29:b0:493:c337:db0e with SMTP id 5b1f17b1804b1-493f881d069mr102592645e9.18.1783965759717;
+        Mon, 13 Jul 2026 11:02:39 -0700 (PDT)
+X-Received: by 2002:a05:600c:8b29:b0:493:c337:db0e with SMTP id 5b1f17b1804b1-493f881d069mr102592135e9.18.1783965759070;
+        Mon, 13 Jul 2026 11:02:39 -0700 (PDT)
+Received: from aalbersh-thinkpadx1carbongen13.rmtcz.csb ([217.30.74.39])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4950a33a926sm11245805e9.15.2026.07.13.11.02.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 13 Jul 2026 11:02:38 -0700 (PDT)
+Date: Mon, 13 Jul 2026 20:02:37 +0200
+From: Andrey Albershteyn <aalbersh@redhat.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Andrey Albershteyn <aalbersh@kernel.org>, linux-xfs@vger.kernel.org, 
+	alexjlzheng@tencent.com, bfoster@redhat.com, cem@kernel.org, cmaiolino@redhat.com, 
+	dgc@kernel.org, hch@lst.de, liuhuan01@kylinos.cn, msinguru@redhat.com, 
+	romain.naour@smile.fr, syzbot+0391d34e801643e2809b@syzkaller.appspotmail.com, 
+	wilfred.mallawa@wdc.com, ytohnuki@amazon.com
+Subject: Re: [ANNOUNCE] xfsprogs: v7.1.0 released
+Message-ID: <alUm3yMFKm9w0Mjm@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+References: <alDUTZkDnQodyG2R@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+ <20260713155405.GC7195@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,206 +97,123 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260706084117.1455204-3-p.raghav@samsung.com>
+In-Reply-To: <20260713155405.GC7195@frogsfrogsfrogs>
 
-On Mon, Jul 06, 2026 at 10:41:17AM +0200, Pankaj Raghav wrote:
-> If the underlying block device supports the unmap write zeroes
-> operation, this flag allows users to quickly preallocate a file with
-> written extents that contain zeroes. This is beneficial for subsequent
-> overwrites as it prevents the need for unwritten-to-written extent
-> conversions, thereby significantly reducing metadata updates and journal
-> I/O overhead, improving overwrite performance.
+On 2026-07-13 08:54:05, Darrick J. Wong wrote:
+> On Mon, Jul 13, 2026 at 11:23:41AM +0200, Andrey Albershteyn wrote:
+> > Hi folks,
+> > 
+> > The xfsprogs master branch in repository at:
+> > 
+> > 	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+> > 
+> > has just been updated.
+> > 
+> > This release consist mostly of a bunch of fixes for xfs_scrub and xfs_healer
+> > found with help of Codex. The xfs_scrub systemd units now have less security
+> > restrictions due to issues with postfix. Multiple memory leaks and overflows
+> > fixed. A lot of fixes for xfs_scrub phased repair flow. xfs_protofile now also
+> > works with non-directories. The build system is fixed for path containing ".o".
+> > Manual pages and mkfs messages now have correct MiB units.
+> > 
+> > Patches often get missed, so if your outstanding patches are properly reviewed
+> > on the list and not included in this update, please let me know.
+> > 
+> > The for-next branch has also been updated to match the state of master.
+> > 
+> > The new head of the master branch is commit:
+> > 
+> > e80b048d87fdc5735e0d03ae29b497b402ea8bbe
+> > 
+> > New commits:
+> > 
+> > Andrey Albershteyn (1):
+> >       [e80b048d87fd] xfsprogs: Release v7.1.0
+> > 
+> > Christoph Hellwig (1):
+> >       [846570fc6498] xfs: switch (back) to a per-buftarg buffer hash
+> > 
+> > Darrick J. Wong (65):
+> >       [1aadfecf6afb] xfs_healer: fix error reporting
+> >       [d21aab594247] xfs_healer: recommend offline fsck for XCORRUPT repairs
+> >       [44849c72c720] xfs_healer: initialize variable here
+> >       [fc76bac6ce1f] xfs_healer: run a full xfs_scrub repair if we don't know how to do a spot repair
+> >       [79551362141a] xfs_healer: fix Makefile errors
+> >       [4d62c2fa83ba] xfs_healer: don't leak wh->mntpoint if fd_to_handle fails
+> >       [a6b85058f1ae] xfs_healer: coordinate access to weakhandle::mntpoint correctly
+> >       [de2bc2763b53] xfs_scrub_media_fail: reduce security lockdowns to avoid postfix problems
+> >       [ff0aeb233200] xfs_scrub_all: fix broken command line string array construction
+> >       [ee3ea981af6b] xfs_scrub_all_fail: reduce security lockdowns to avoid postfix problems
+> >       [24362b13fb76] xfs_scrub_fail: send content headers for xfs_scrub_all failures
+> >       [472b010d0c84] xfs_scrub: fix uninitialized variable
+> >       [a42fc3ec97db] xfs_scrub: fix integer overflows
+> >       [9d36b3db1212] xfs_scrub: don't count internal log space in the data device used count
+> >       [064834b6a0a2] xfs_scrub: widen scrub and repair dependency mask
+> >       [44eee006149b] xfs_scrub: fix work estimation for rtgroups filesystems
+> >       [5db0a8b13358] xfs_scrub: don't report media errors in specially-owned areas as file data
+> >       [b65854f9e580] xfs_scrub: return SCRUB_RET_OPERROR if unicode collision detection fails to initialize
+> >       [a34231de7668] xfs_scrub: fix nonsense advice after a scrub finds errors
+> >       [25c97ededd3e] xfs_scrub: don't allow NAN as fstrim percentage
+> >       [709b7eab8977] xfs_scrub: reset bulkstat pointer on retry
+> >       [dc4e11fa3d7c] xfs_scrub: don't return garbage value from bulkstat_the_rest
+> >       [d0b07b57faf0] xfs_scrub: don't continue with phase1 if autofsck=none
+> >       [4a093a994c63] xfs_scrub: don't crash trying to complain about clean health
+> >       [353333f0f3ff] xfs_scrub: fix inverted return value from ptvar_get
+> >       [a5732e6c61f5] xfs_scrub: don't obscure repair failures in repair_list_schedule
+> >       [33cc9bbc4dce] xfs_scrub: bitmap iteration functions must retur
+> >       [5556c32a0304] xfs_scrub: read verification isn't ok if it hit runtime errors
+> >       [359eeef71fae] libfrog: fix buffer overflow in getparents path_to_string
+> >       [5b0f430d8e59] xfs_healer: don't allow aliasing of mon_fd in setup_monitor
+> >       [425126caa89c] xfs_healer_start: check listmount when doing a --check
+> >       [577d6415adbb] xfs_healer_start: fix static checking
+> >       [76ef8d90a3f0] xfs_healer_start: increase statmount buffer size
+> >       [a0f50dec3540] xfs_healer: allow AF_UNIX socket access for xfs_healer instances
+> >       [f6505519ef79] xfs_healer: don't put the slice file in LDIRT
+> >       [64344c43430a] xfs_scrub: handle missing media verify ioctl failure return codes
+> >       [2712427c08a5] xfs_scrub: report bad file ranges correctly
+> >       [3e4bb144f657] xfs_scrub: handle media scans of internal rt devices correctly
+> >       [c001fa7d4db4] xfs_scrub: track inode scan abort state with an enum
+> >       [bc9371417a61] xfs_scrub: don't skip bulkstat batch when scrub_scan_user_files helper returns ESTALE
+> >       [b6dba3d85ae5] xfs_scrub: warn about incomplete repairs if we never get to them
+> >       [e2df9f9bb984] xfs_scrub: report external log space usage in phase 7
+> >       [243048f90dd4] xfs_scrub: account only data extent tail after an overlap
+> >       [baef30aabbd5] xfs_scrub: account for reflinked realtime file data
+> >       [a4080cef33fd] xfs_scrub: don't leak the autofsck fsproperty handle
+> >       [157d76940c3c] xfs_scrub: warn about difficult rtgroup repairs
+> >       [0bafb12d66e7] xfs_scrub: stop user file scan if caller already aborted
+> >       [bac5085ac2e3] xfs_scrub: don't flatten error numbers in read_verify_schedule_now
+> >       [b43e9064d665] xfs_scrub: actually handle NEEDSCHECK scrub items in phase 4
+> >       [41530a0981a1] xfs_scrub: don't leak phase 5 scan items after a failed workqueue_add
+> >       [f4dfa0b0c565] xfs_scrub: fix phase 8 debug reporting
+> >       [f75bb3f2d598] xfs_scrub: always finish cleanup, even if reporting healthy state fails
+> >       [4399db49dec0] xfs_scrub: fix spacemap external log device scan dev key
+> >       [70d0a4f27464] xfs_scrub: fix estimate of work items for phase 4
+> >       [b64c29f5bfed] xfs_db: fix type conversions
+> >       [1bbedb6d165e] xfs_db: dump zoned filesystem superblock fields
+> >       [7a26df144fad] xfs_healer: fix getmntent race in weakhandle
+> >       [b07c386bc60b] mkfs: don't redefine DIRT for protofiles
+> >       [2df5f48fb829] mkfs: fix PATH_MAX check
+> >       [46b0ee102f25] mkfs: fix symlink target length check in create_nondir_inode
+> >       [b3268fb3d822] xfs_protofile: make nondirectory arguments actually work
+> >       [a2b765f7d0fd] mkfs: pass stat buf pointers around the protofile code
+> >       [63a4a9d6966c] mkfs: fix hardlink detection in directory import code
+> >       [8c6bf6721ac4] mkfs: PQUOTA shouldn't conflict with GQNOENFORCE
+> >       [074c18165ea3] xfs_scrub: fix spacemap scan for internal rt devices
 > 
-> Punch the range first so it becomes a hole, update the size via
-> xfs_falloc_setsize() while it is still a hole (so its xfs_zero_range()
-> skips it and avoids rezeroing), then convert it to written
-> zeroed extents. A crash between the size update and the conversion is
-> safe, as a hole within i_size reads back as zeroes.
-> 
-> Co-developed-by: Lukas Herbolt <lukas@herbolt.com>
-> Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
-> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+> Hmmm, this patch seems to have gotten the same rtstart hunk pasted into
+> both scan_ag_rmaps and scan_rtg_rmaps even though the original patch
+> only changed scan_rtg_rmaps.  I'll send a fix.
 
-This is at last ready to go :)
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Hmm I miss-understood the patch flow here. I intentionally squashed
+these two patches, I thought you sent fix in two patches (both had
+identical commit message).
 
---D
+standalone fix:
+https://lore.kernel.org/linux-xfs/20260701145124.GE6526@frogsfrogsfrogs/
 
-> ---
->  fs/xfs/xfs_bmap_util.c | 19 ++++++++--
->  fs/xfs/xfs_bmap_util.h |  1 +
->  fs/xfs/xfs_file.c      | 83 +++++++++++++++++++++++++++++++++++++++++-
->  3 files changed, 99 insertions(+), 4 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index e5424d010a69..855602cb35e8 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -643,11 +643,18 @@ xfs_free_eofblocks(
->  }
->  
->  /*
-> - * Allocate space for a file according to @mode:
-> + * Allocate space or convert extents for a file according to @mode:
->   *
->   * XFS_ALLOC_FILE_SPACE_PREALLOC:
->   * Preallocate unwritten extents over holes across the range and mark the inode
->   * as preallocated.
-> + *
-> + * XFS_ALLOC_FILE_SPACE_WRITE_ZEROES:
-> + * Allocate written extents over holes and convert unwritten extents in the
-> + * range to written extents, initialising both to contain zeroes.
-> + *
-> + * This function does not update the file size; callers that extend the file
-> + * are responsible for updating it once the extents are allocated.
->   */
->  int
->  xfs_alloc_file_space(
-> @@ -688,6 +695,10 @@ xfs_alloc_file_space(
->  		bmapi_flags = XFS_BMAPI_PREALLOC;
->  		nr_exts = XFS_IEXT_ADD_NOSPLIT_CNT;
->  		break;
-> +	case XFS_ALLOC_FILE_SPACE_WRITE_ZEROES:
-> +		bmapi_flags = XFS_BMAPI_CONVERT | XFS_BMAPI_ZERO;
-> +		nr_exts = XFS_IEXT_WRITE_UNWRITTEN_CNT;
-> +		break;
->  	default:
->  		return -EINVAL;
->  	}
-> @@ -776,8 +787,10 @@ xfs_alloc_file_space(
->  			allocatesize_fsb -= imapp->br_blockcount;
->  		}
->  
-> -		ip->i_diflags |= XFS_DIFLAG_PREALLOC;
-> -		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-> +		if (mode == XFS_ALLOC_FILE_SPACE_PREALLOC) {
-> +			ip->i_diflags |= XFS_DIFLAG_PREALLOC;
-> +			xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-> +		}
->  
->  		error = xfs_trans_commit(tp);
->  		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
-> index 232b4c48247e..e3d506ca9610 100644
-> --- a/fs/xfs/xfs_bmap_util.h
-> +++ b/fs/xfs/xfs_bmap_util.h
-> @@ -57,6 +57,7 @@ int	xfs_bmap_last_extent(struct xfs_trans *tp, struct xfs_inode *ip,
->  /* preallocation and hole punch interface */
->  enum xfs_alloc_file_space_mode {
->  	XFS_ALLOC_FILE_SPACE_PREALLOC,
-> +	XFS_ALLOC_FILE_SPACE_WRITE_ZEROES,
->  };
->  
->  int	xfs_alloc_file_space(struct xfs_inode *ip, xfs_off_t offset,
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index e90ea6ebdc8e..0ade13b31335 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1368,6 +1368,84 @@ xfs_falloc_force_zero(
->  	return XFS_TEST_ERROR(ip->i_mount, XFS_ERRTAG_FORCE_ZERO_RANGE);
->  }
->  
-> +static int
-> +xfs_falloc_write_zeroes(
-> +	struct file		*file,
-> +	int			mode,
-> +	loff_t			offset,
-> +	loff_t			len,
-> +	struct xfs_zone_alloc_ctx *ac)
-> +{
-> +	struct inode		*inode = file_inode(file);
-> +	struct xfs_inode	*ip = XFS_I(inode);
-> +	loff_t			new_size = 0;
-> +	int			error;
-> +
-> +	/*
-> +	 * XXX: There is an issue with bigrtalloc inodes where there can be blocks
-> +	 * that are written after the EOF block. This breaks the promise of no
-> +	 * written blocks past EOF. Return EOPNOTSUPP until it is fixed.
-> +	 */
-> +	if (xfs_is_always_cow_inode(ip) || xfs_inode_has_bigrtalloc(ip) ||
-> +	    !bdev_write_zeroes_unmap_sectors(xfs_inode_buftarg(ip)->bt_bdev))
-> +		return -EOPNOTSUPP;
-> +
-> +	error = xfs_falloc_newsize(file, mode, offset, len, &new_size);
-> +	if (error)
-> +		return error;
-> +
-> +	/*
-> +	 *
-> +	 *    |----------|----------|----------|----------|----------|
-> +	 *    ^     ^    ^                     ^     ^    ^
-> +	 *    |     |    |                     |     |    |
-> +	 *    |   offset |                     |    end   |
-> +	 *    |          |                     |          |
-> +	 * offset_rd   offset_ru              end_rd    end_ru
-> +	 *
-> +	 * xfs_free_file_space() punches the aligned interior offset_ru -> end_rd
-> +	 * to holes and byte-zeroes the in-range parts of the partial edge blocks,
-> +	 * offset -> offset_ru and end_rd -> end.  xfs_zero_range() only touches
-> +	 * already-written blocks here; it skips holes and unwritten extents, so
-> +	 * unallocated/unwritten edge blocks are left for the allocation below.
-> +	 */
-> +	error = xfs_free_file_space(ip, offset, len, ac);
-> +	if (error)
-> +		return error;
-> +
-> +	/*
-> +	 * Publish the new size while the punched range is still a hole, then
-> +	 * fill it with written zeroes.  Like the other fallocate modes we use
-> +	 * xfs_falloc_setsize(), but it must run *before* we convert the range
-> +	 * to written extents: xfs_setattr_size() zeroes [old EOF, new size) via
-> +	 * xfs_zero_range(), which skips holes, so there is nothing to re-zero.
-> +	 * It will also writeback partial EOF block before the on-disk size is
-> +	 * logged.
-> +	 * Note: extending the size before allocating means a failure below
-> +	 * leaves the file larger with unallocated holes in the new range.
-> +	 * That is safe as holes within i_size read back as zeroes and expose
-> +	 * no stale data while the error is propagated to the caller.
-> +	 */
-> +	error = xfs_falloc_setsize(file, new_size);
-> +	if (error)
-> +		return error;
-> +
-> +	/*
-> +	 * Allocate written, zeroed extents across the range.  xfs_alloc_file_space()
-> +	 * rounds outward to block granularity:
-> +	 *  - holes (the punched interior and any unallocated edge block) are
-> +	 *    allocated and zeroed;
-> +	 *  - unwritten extents (including unwritten edge blocks) are converted to
-> +	 *    written and zeroed;
-> +	 *  - Already written edge blocks are skipped. The out-of-range bytes of
-> +	 *    a written edge block keep their data (offset_rd -> offset and
-> +	 *    end -> end_rd); their in-range bytes (offset -> offset_ru and
-> +	 *    end_ru -> end were already zeroed by xfs_free_file_space().
-> +	 */
-> +	return xfs_alloc_file_space(ip, offset, len,
-> +			XFS_ALLOC_FILE_SPACE_WRITE_ZEROES);
-> +}
-> +
->  /*
->   * Punch a hole and prealloc the range.  We use a hole punch rather than
->   * unwritten extent conversion for two reasons:
-> @@ -1473,7 +1551,7 @@ xfs_falloc_allocate_range(
->  		(FALLOC_FL_ALLOCATE_RANGE | FALLOC_FL_KEEP_SIZE |	\
->  		 FALLOC_FL_PUNCH_HOLE |	FALLOC_FL_COLLAPSE_RANGE |	\
->  		 FALLOC_FL_ZERO_RANGE |	FALLOC_FL_INSERT_RANGE |	\
-> -		 FALLOC_FL_UNSHARE_RANGE)
-> +		 FALLOC_FL_UNSHARE_RANGE | FALLOC_FL_WRITE_ZEROES)
->  
->  STATIC long
->  __xfs_file_fallocate(
-> @@ -1525,6 +1603,9 @@ __xfs_file_fallocate(
->  	case FALLOC_FL_ALLOCATE_RANGE:
->  		error = xfs_falloc_allocate_range(file, mode, offset, len);
->  		break;
-> +	case FALLOC_FL_WRITE_ZEROES:
-> +		error = xfs_falloc_write_zeroes(file, mode, offset, len, ac);
-> +		break;
->  	default:
->  		error = -EOPNOTSUPP;
->  		break;
-> -- 
-> 2.51.2
-> 
-> 
+part of the pr:
+https://lore.kernel.org/linux-xfs/178302114913.828394.9290073519402547866.stg-ugh@frogsfrogsfrogs/
+
+-- 
+- Andrey
+
