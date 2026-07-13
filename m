@@ -1,83 +1,94 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECE523EFFB9;
-	Mon, 13 Jul 2026 12:00:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E0D9369208;
+	Mon, 13 Jul 2026 12:30:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783944009; cv=none; b=UhdstMa8p9e3sN4j6PrtFo+f0HSVLfH/ANRrJ88ZYLki3BX2F7UFGchhAzTl4xOzmQM+0a5Hsp0ICIVhpaci49ASyaf5aKM1mvpakGZVIZQ2gY5bovhMgmXWthnlCII3DTTwSmf5zGT287+NHqUJrCfxTUntZWy0ElrqGaRMUrU=
+	t=1783945805; cv=none; b=CzV6BLeBljphdp+QaqLyc9hE/8nDaFn6BB8IG/ZpHn/Qg82n4XX5Cp2m47GpGgL0/g3M3T9PkdN6+N//ySbxW+7ML+O59adFv9QlmAM1PRxJ6wlWiHlYkJOQvTbIJMeCR7bhYW0xKskya5ZaaeWMcGIQETESaraHb7awfJHywoA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783944009; c=relaxed/simple;
-	bh=xrh7lf/j+INDpBIQuxKKEaAe66A3IiJwW82dONtLcSw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hNOUAqn9o395UOkGlDuRT8raHG7TWafMSW8QhlxomJ3u9TGRfc9j7l9Vc/6slD6qSeIegibEhshiDA2xsu/+0Gn1I66JC3njzJt4KZhcW6vv4MeIvhK/B8KXgAEBIn5LL+6RkA6+C1wM9NJef5fYg7OglkZJhJgRyAi+THEZ2os=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=dCaEjrZ6; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="dCaEjrZ6"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=tQYMjoiTYjYW1olQ44tmxQBfF3EMsN52ax3nXVxNLJk=; b=dCaEjrZ6fLHwI0XLAxmjHgIYZa
-	1IBSKVZzD0flrK2WUENb+JAbS3Rf02/YVO+5rgeQPlYKpYOvM9aK7/3JyShsIq2HX4RfbczOToBAM
-	lRdB60hf8h2XcdDZehKZqEBoiFuKqe2Ew0jscy71bjR4ya1leGMkKBpbMU7YNLHFl3rEvU3uRdq6R
-	eKTAfppC2AtOLbEy0ijYImRsh8dcqH0bojGZqwbdn5oXNLUtW8P59VEt4yRBq9KsLlvG+qY27oBh6
-	5lRKqIx1aVStoEZXh182roeTFj3Bm4Ec+TMUIT8eQvcIkTjKgfeNpinZ6Jd9HVYNL690yV30dTqLD
-	tLExMRHw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wjFKQ-000000096Qi-0M9M;
-	Mon, 13 Jul 2026 12:00:06 +0000
-Date: Mon, 13 Jul 2026 05:00:06 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Keith Busch <kbusch@meta.com>
-Cc: linux-block@vger.kernel.org, linux-ext4@vger.kernel.org,
-	linux-f2fs-devel@lists.sourceforge.net,
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	axboe@kernel.dk, jack@suse.cz, brauner@kernel.org, cem@kernel.org,
-	jaegeuk@kernel.org, aalbersh@kernel.org, tytso@mit.edu,
-	Keith Busch <kbusch@kernel.org>
-Subject: Re: [PATCHv2 3/5] xfs: report direct io attributes through
- file_getattr
-Message-ID: <alTTRoOEglwuf4vg@infradead.org>
-References: <20260710210646.3576365-1-kbusch@meta.com>
- <20260710210646.3576365-4-kbusch@meta.com>
+	s=arc-20240116; t=1783945805; c=relaxed/simple;
+	bh=g+2CeNv0XPkFB5ugDGzJw+wyyysRYVGY7XiXNoOYp08=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=dhQim4YvwBwbDZN+Mfpa922LaRUMs2Q/mhUNv2qqCGRpH+t+OXEf0EVOAAVWxVYHKQw5I5CJOhWPqDfAwY1sCKKqSlfHtv9Ve+qRuUbPWKRK18uKJ/5W5AOT8SyJk14xBd38XOK/lxU50c5l/IOU4viBTUQySJ40Il2B0ApjCt8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.177])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4gzMFQ27ZPzKHMVf;
+	Mon, 13 Jul 2026 20:29:30 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id 590D440592;
+	Mon, 13 Jul 2026 20:29:59 +0800 (CST)
+Received: from [10.174.178.253] (unknown [10.174.178.253])
+	by APP1 (Coremail) with UTF8SMTPSA id cCh0CgCntnJF2lRqRRFXBA--.42884S3;
+	Mon, 13 Jul 2026 20:29:59 +0800 (CST)
+Message-ID: <80ed1ee9-8776-42fd-861e-f01a84d24e28@huaweicloud.com>
+Date: Mon, 13 Jul 2026 20:29:56 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260710210646.3576365-4-kbusch@meta.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 2/5] iomap: support invalidating partial folios
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+ linux-ext4@vger.kernel.org, brauner@kernel.org, djwong@kernel.org,
+ joannelkoong@gmail.com, yi.zhang@huawei.com, yizhang089@gmail.com,
+ chengzhihao1@huawei.com, yangerkun@huawei.com, yukuai@fnnas.com
+References: <20260713072906.1726059-1-yi.zhang@huaweicloud.com>
+ <20260713072906.1726059-3-yi.zhang@huaweicloud.com>
+ <alSmLfvpehKh690P@infradead.org>
+Content-Language: en-US
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+In-Reply-To: <alSmLfvpehKh690P@infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:cCh0CgCntnJF2lRqRRFXBA--.42884S3
+X-Coremail-Antispam: 1UD129KBjvdXoWrKr1rCryUXr4rJryDXFWfuFg_yoWfAFcE9F
+	WkZ34j934kXF9rtFs2kF4rJrn2kFWUur98Aryrtan3K348Jw1DZFn8ZrnYyr15JrW7tFy7
+	CF1fXw13A3429jkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbxxYFVCjjxCrM7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E6xAIw20E
+	Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwV
+	A0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWUJVWUCwA2z4x0Y4vE2Ix0cI8IcVCY1x02
+	67AKxVW8JVWxJwA2z4x0Y4vEx4A2jsIE14v26F4UJVW0owA2z4x0Y4vEx4A2jsIEc7CjxV
+	AFwI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2
+	j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7x
+	kEbVWUJVW8JwACjcxG0xvEwIxGrwACI402YVCY1x02628vn2kIc2xKxwCY1x0262kKe7AK
+	xVWUtVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F4
+	0E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFyl
+	IxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxV
+	AFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j
+	6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr1j6F4UJbIYCTnIWIevJa73UjIFyTuYvjxUF1
+	v3UUUUU
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-On Fri, Jul 10, 2026 at 02:06:44PM -0700, Keith Busch wrote:
-> +static void
-> +xfs_fill_fsxattr_dio(
-> +	struct xfs_inode	*ip,
-> +	int			whichfork,
-> +	struct file_kattr	*fa)
-> +{
-> +	struct xfs_buftarg *target;
+On 7/13/2026 4:47 PM, Christoph Hellwig wrote:
+> On Mon, Jul 13, 2026 at 03:29:03PM +0800, Zhang Yi wrote:
+>> However, the implementation of FALLOC_FL_ZERO_RANGE in ext4 depends on
+>> the support for invalidating partial folios. When ext4 partially zeroes
+>> out a dirty and unwritten folio, it does not perform a flush first like
+>> XFS. Therefore, if the dirty bits of the corresponding area cannot be
+>> cleared, the zeroed area after writeback remains in the written state
+>> rather than reverting to the unwritten state. Fix this by supporting
+>> invalidation of partial folios.
+> 
+> This sounds like we could use this to avoid the flush in
+> zero_range/truncate in xfs as well?
+> 
 
-Same alignment for the variables as for the arguments.
+Theoretically yes, but XFS may have more details I haven't checked,
+plus possibly other prerequisites.
 
-> +
-> +	if (whichfork != XFS_DATA_FORK || !S_ISREG(VFS_I(ip)->i_mode))
-> +		return;
+> Looks good:
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
 
-Move this check to th caller?  Although this and similar check in
-the other file system patches miss block device nodes, for which we'd
-need a special case, or one in the caller to override the attrs.
+Thank you for the review!
 
-Or maybe using the file attr for this isn't actually a good idea,
-and we should do an ioctl instead which automatically gets routed to
-the block device fops?
-
-> +	target = xfs_inode_buftarg(ip);
-
-.. and initialize the variable at declaration time?
+Best Regards,
+Yi.
 
