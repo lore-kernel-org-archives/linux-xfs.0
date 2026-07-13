@@ -1,150 +1,166 @@
-Received: from muffat.debian.org (muffat.debian.org [209.87.16.33])
+Received: from mx0b-0064b401.pphosted.com (mx0b-0064b401.pphosted.com [205.220.178.238])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91BF1437451
-	for <linux-xfs@vger.kernel.org>; Mon, 13 Jul 2026 14:32:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.87.16.33
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E81F642E8E1;
+	Mon, 13 Jul 2026 14:50:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.178.238
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783953132; cv=none; b=XyYf983IUs1VjWKgmGzaOSEox/ZhQ5OY6ZEmFuOruYNsUgOAjL5xHCe5l1vbzOtv+L/CIvpz9H4FQWCH+DyLqcd7A5s8m1QSpNH3OLFReeLY8XXgmaci0GKFJ1DtfGgGsxbXj/uEvmrNHsOPZpfUytZ5Lc1w90iuVmiu5ruFmbQ=
+	t=1783954222; cv=none; b=n+06+8V3+fzQ8YQpoh4FhO4ri3UCzITc8IKSntsJXI9zaR0f/p88okKdaHl2zoU6rt2DmB4W9A8tsQtaM6J7U5kwXhWF3Z9BcuZ4X2XAERqWyMx/h0t3Ffe7gxDnPCZzl38eiAcYswh80QNTdSMlr43XRsOa6tiHtqXk5IRbWzM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783953132; c=relaxed/simple;
-	bh=vRy/wL3qLEUpzbBFz+cuWzJyeszNUbbCgOAgjPEuOzM=;
-	h=From:To:MIME-Version:Subject:Content-Type:Message-Id:Date; b=BwqRH7K/GwLCpnmirx7S8NEGEj7TsQ1gGM35kUvXGmVZjNqDT+SwcMAVsVfWG00fG9LkJ8aseIw1/TCyyfUKb8msH8I/1oE080s4920EzzePPgiVGWr/pQyrtSF4XyiUAV6q3FPwyjVrV2VvD1kEItPh4MhCVtgCQlZdCrz6Ejs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ftp-master.debian.org; spf=pass smtp.mailfrom=ftp-master.debian.org; dkim=pass (2048-bit key) header.d=ftp-master.debian.org header.i=@ftp-master.debian.org header.b=bQITMwFh; arc=none smtp.client-ip=209.87.16.33
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ftp-master.debian.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ftp-master.debian.org
+	s=arc-20240116; t=1783954222; c=relaxed/simple;
+	bh=L1NX+wW8Ok7XFw1hsv7Q09QcDIPe7dend3SJn73PXeU=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=O0sLLzxiFLScUTDKDLvrtIWHvZmBOhiCN2rBelm8z2wUUtPRhb5QXN1DZEJVtPOBopcos9JcElyuqjKKXkvaPbWozIx9ieJ3cO0JGpkxQggJKBmipr2YB61lTUIT4uKdeHMicgM4+Z4PXi06QVrBZPZ7T7rbUk2Is7MuTzuzkuY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=windriver.com; spf=pass smtp.mailfrom=windriver.com; dkim=pass (2048-bit key) header.d=windriver.com header.i=@windriver.com header.b=VDKzfQPG; arc=none smtp.client-ip=205.220.178.238
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=windriver.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=windriver.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ftp-master.debian.org header.i=@ftp-master.debian.org header.b="bQITMwFh"
-Received: via submission
-	from C=NA,ST=NA,L=Ankh Morpork,O=Debian SMTP,OU=Debian SMTP CA,CN=fasolo.debian.org,EMAIL=hostmaster@fasolo.debian.org (verified)
-	by muffat.debian.org with esmtps (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.96)
-	(envelope-from <envelope@ftp-master.debian.org>)
-	id 1wjHha-0027pc-2y
-	for linux-xfs@vger.kernel.org;
-	Mon, 13 Jul 2026 14:32:10 +0000
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=ftp-master.debian.org; s=smtpauto.fasolo; h=Date:Message-Id:Content-Type:
-	Subject:MIME-Version:To:From:Reply-To:Cc:Content-Transfer-Encoding:Content-ID
-	:Content-Description:In-Reply-To:References;
-	bh=bz5AWrY8gj8zWhVkRIRxO8E1J0hpoiqT0c5tOKF/amA=; b=bQITMwFhD+XQzGGivxAFKuJHVv
-	oJD1YZPedQBlKPtprukI1I+7swKIj321c2bjNdwZgoZ4xv9Q+hrMYNp5hCsKv/zZPtL1vVrVQfEgh
-	uIzcGpLBNX1OSh7qhwRpNN9zAOv5iFN6COT6T8ZXYCiqEqOkhQvj0o5/10Y3Otb/TXUbIQtZy7pIQ
-	90Oz5YFA3sgtQf6M3GnBWw0BmgFzKuJu6xFw1Sfu6/weot1p3stynJXMEkE5zkdn/s1GZ3boqyztd
-	uucTPHVZhuZtIG7WlOQZgAVLHEtLrQdyMtAx49GOJNeHMJl4CRh6+UwSa4suAOI0Se9bGchQlip3A
-	GhcKww2w==;
-Received: from dak by fasolo.debian.org with local (Exim 4.98.2)
-	(envelope-from <envelope@ftp-master.debian.org>)
-	id 1wjHhW-0000000GKSx-285G;
-	Mon, 13 Jul 2026 14:32:06 +0000
-From: Debian FTP Masters <ftpmaster@ftp-master.debian.org>
-To: Bastian Germann <bage@debian.org>,
- XFS Development Team <linux-xfs@vger.kernel.org>
-X-DAK: dak process-policy
-X-Debian: DAK
-X-Debian-Package: xfsprogs
-Debian: DAK
-Debian-Changes: xfsprogs_6.13.0-2+deb13u1_source.changes
-Debian-Source: xfsprogs
-Debian-Version: 6.13.0-2+deb13u1
-Debian-Architecture: source
-Debian-Suite: proposed-updates
-Debian-Archive-Action: accept
-Precedence: bulk
-Auto-Submitted: auto-generated
+	dkim=pass (2048-bit key) header.d=windriver.com header.i=@windriver.com header.b="VDKzfQPG"
+Received: from pps.filterd (m0250811.ppops.net [127.0.0.1])
+	by mx0a-0064b401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66DCEwt13812073;
+	Mon, 13 Jul 2026 14:50:06 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=windriver.com;
+	 h=cc:content-transfer-encoding:content-type:date:from
+	:message-id:mime-version:subject:to; s=PPS06212021; bh=5m771+D50
+	Z8JZ0Y+9aliS+KzXp6AcS/ZvOAOnlw9G0c=; b=VDKzfQPG+d81hieO4aZVfNgX4
+	qo3bACa4XNHQV4KDyFIDzojO0eIHPKZkomjo9UOVFD8kmGwPFj0Qn7Wxt0Pmo5fg
+	hMv++xE/V9u4qVcDLl/isGg+pPIF0bCOiQbbmMfECgn3qxvlB7OXZbM9IrhcdWZ4
+	D1SSo6ou9iZ5ZXI6du7FYAU/dYnC9zZQnfqrTylhSlrT5STlmDwpFzJGdIk8Q8u+
+	HgWNl978YD2xMC6mW9womvhkTkPfXLpMizfOJJY7ZdBOPVzWX8TwkMs1bTa1foQa
+	u5nLuvRDez6tMOBkFQ9xMTwi3rT/RU65uOfqd5WShbrWAELt2zMzl8trWTJRQ==
+Received: from ala-exchng01.corp.ad.wrs.com (ala-exchng01.wrs.com [128.224.246.36])
+	by mx0a-0064b401.pphosted.com (PPS) with ESMTPS id 4fbcpn2fjk-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+	Mon, 13 Jul 2026 14:50:06 +0000 (GMT)
+Received: from ALA-EXCHNG02.corp.ad.wrs.com (10.11.224.122) by
+ ala-exchng01.corp.ad.wrs.com (10.11.224.121) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.61; Mon, 13 Jul 2026 07:50:04 -0700
+Received: from pek-yzhou-d3.wrs.com (10.11.232.110) by
+ ALA-EXCHNG02.corp.ad.wrs.com (10.11.224.122) with Microsoft SMTP Server id
+ 15.1.2507.61 via Frontend Transport; Mon, 13 Jul 2026 07:50:03 -0700
+From: Yun Zhou <yun.zhou@windriver.com>
+To: <cem@kernel.org>, <hch@infradead.org>
+CC: <linux-xfs@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <yun.zhou@windriver.com>
+Subject: [PATCH] xfs: don't hold buffer locks across sync transaction commit in xfs_sync_sb_buf
+Date: Mon, 13 Jul 2026 22:50:02 +0800
+Message-ID: <20260713145002.1627608-1-yun.zhou@windriver.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject:
- xfsprogs_6.13.0-2+deb13u1_source.changes ACCEPTED into proposed-updates
-Content-Type: multipart/signed; micalg="pgp-sha256";
- protocol="application/pgp-signature";
- boundary="===============0986466235824958526=="
-Message-Id: <E1wjHhW-0000000GKSx-285G@fasolo.debian.org>
-Date: Mon, 13 Jul 2026 14:32:06 +0000
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzEzMDE1NCBTYWx0ZWRfX5m2uBcjf9znk
+ QVUwhpRX2meKUAnESbAhD5lO7jATeIabqmn80wAZUJEadjRfHK6M9TlzMXKQK0EtLuuw7pVlSy6
+ URwUFLczwEvvMQRvY8R1cXD2a8pjBE0vjal0tIYf1XBbtLMpzzqBTCLydYyf+RpgqWwEEyEZ2OC
+ pfBPnYepirHCJtN9tCS6SjoTpuJkk0ZXSbVs7UVcxmihxHWubd2GP9rDoAujxj6MuVKjAjnOQxT
+ cn1j1c24ImTdqkPBDz4dyzjIU0pGnl2X03BZUAg9eKUBrokWhFcJ10Ghx+v453pmDuteBbHqRK9
+ arlSGv78T2oLzVNj/+lM2nFVDjRy4nM5gBJgV7QOePMi9BjehlDKeX3UGlFlOcacyQRrBl/UPTu
+ VM2qBF6VnMX5qpd4yNRKnEw2BnhgNyQZt5BwgnY7Q/LP6Qa+CL1G1YfExDflDKeJZrQ0aeAxPRz
+ Eerz219a8rGBKQP3eng==
+X-Proofpoint-GUID: ec_1w4fud14EvDD9zuWmNwWIxRX0zHWC
+X-Proofpoint-ORIG-GUID: ec_1w4fud14EvDD9zuWmNwWIxRX0zHWC
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzEzMDE1NCBTYWx0ZWRfXyxZ8DewYuHl9
+ T9iFp5hRPv6icjn46AheugXEI41HYmD2pzaH7GqkBSesNRP+yiYPRsPQ+Yn8rD8ZjjqNxuD9ak7
+ L4O0ox8drbmxbKWRqBi6AYYt0M2wleI7I1dd1LyCJKthIO912p4N
+X-Authority-Analysis: v=2.4 cv=JNsLdcKb c=1 sm=1 tr=0 ts=6a54fb1e cx=c_pps
+ a=AbJuCvi4Y3V6hpbCNWx0WA==:117 a=AbJuCvi4Y3V6hpbCNWx0WA==:17
+ a=RAioF0-LDSMA:10 a=VkNPw1HP01LnGYTKEx00:22 a=bi6dqmuHe4P4UrxVR6um:22
+ a=klDOsUkWDRETUCZYPvoE:22 a=edf1wS77AAAA:8 a=hSkVLCK3AAAA:8 a=t7CeM3EgAAAA:8
+ a=iBksvAyJ2aauEmJFfc8A:9 a=DcSpbTIhAlouE1Uv7lRv:22 a=cQPPKAXgyycSBL8etih5:22
+ a=FdTzh2GWekK77mhwV6Dw:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-07-13_03,2026-07-10_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ suspectscore=0 adultscore=0 clxscore=1015 bulkscore=0 phishscore=0
+ spamscore=0 priorityscore=1501 impostorscore=0 malwarescore=0
+ lowpriorityscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
+ definitions=main-2607130154
 
---===============0986466235824958526==
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+xfs_sync_sb_buf() holds sb/rtsb buffer locks across a synchronous
+xfs_trans_commit(), which flushes the CIL push workqueue internally.
+If shutdown occurs during the CIL push, xfs_buf_item_unpin() needs to
+lock these buffers to fail them, causing a deadlock:
 
-Thank you for your contribution to Debian.
+  setlabel:          holds buf lock -> flush_workqueue(xfs-cil)
+  CIL push worker:   xfs_buf_item_unpin -> xfs_buf_lock(same buf)
 
+Remove the xfs_trans_bhold() calls so that commit releases the buffer
+locks normally.  After the sync commit, re-acquire the buffers via
+mp->m_sb_bp / mp->m_rtsb_bp for the on-disk writeback.
 
+Fixes: f7664b31975b ("xfs: implement online get/set fs label")
+Reported-by: syzbot+837bcd54843dd6262f2f@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=837bcd54843dd6262f2f
+Signed-off-by: Yun Zhou <yun.zhou@windriver.com>
+---
+ fs/xfs/libxfs/xfs_sb.c | 37 +++++++++++++++++++------------------
+ 1 file changed, 19 insertions(+), 18 deletions(-)
 
-Accepted:
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index 47322adb7690..fbb4505b1e9e 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -1471,7 +1471,6 @@ xfs_sync_sb_buf(
+ {
+ 	struct xfs_trans	*tp;
+ 	struct xfs_buf		*bp;
+-	struct xfs_buf		*rtsb_bp = NULL;
+ 	int			error;
+ 
+ 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_sb, 0, 0, 0, &tp);
+@@ -1480,26 +1479,28 @@ xfs_sync_sb_buf(
+ 
+ 	bp = xfs_trans_getsb(tp);
+ 	xfs_log_sb(tp);
+-	xfs_trans_bhold(tp, bp);
+-	if (update_rtsb) {
+-		rtsb_bp = xfs_log_rtsb(tp, bp);
+-		if (rtsb_bp)
+-			xfs_trans_bhold(tp, rtsb_bp);
+-	}
++	if (update_rtsb)
++		xfs_log_rtsb(tp, bp);
+ 	xfs_trans_set_sync(tp);
+ 	error = xfs_trans_commit(tp);
+ 	if (error)
+-		goto out;
+-	/*
+-	 * write out the sb buffer to get the changes to disk
+-	 */
+-	error = xfs_bwrite(bp);
+-	if (!error && rtsb_bp)
+-		error = xfs_bwrite(rtsb_bp);
+-out:
+-	if (rtsb_bp)
+-		xfs_buf_relse(rtsb_bp);
+-	xfs_buf_relse(bp);
++		return error;
++
++	/* Re-acquire and write the sb and rtsb to disk. */
++	xfs_buf_lock(mp->m_sb_bp);
++	xfs_buf_hold(mp->m_sb_bp);
++	error = xfs_bwrite(mp->m_sb_bp);
++	xfs_buf_relse(mp->m_sb_bp);
++	if (error)
++		return error;
++
++	if (update_rtsb && mp->m_rtsb_bp) {
++		xfs_buf_lock(mp->m_rtsb_bp);
++		xfs_buf_hold(mp->m_rtsb_bp);
++		error = xfs_bwrite(mp->m_rtsb_bp);
++		xfs_buf_relse(mp->m_rtsb_bp);
++	}
++
+ 	return error;
+ }
+ 
+-- 
+2.43.0
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA512
-
-Format: 1.8
-Date: Wed, 04 Mar 2026 12:28:29 +0100
-Source: xfsprogs
-Architecture: source
-Version: 6.13.0-2+deb13u1
-Distribution: trixie
-Urgency: medium
-Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
-Changed-By: Bastian Germann <bage@debian.org>
-Closes: 1116595
-Changes:
- xfsprogs (6.13.0-2+deb13u1) trixie; urgency=3Dmedium
- .
-   * xfs_scrub_fail: reduce security lockdowns to avoid postfix problems
-     (Closes: #1116595)
-Checksums-Sha1:
- 02f392d1756a3c7af524b6e9b09aaab34abbe99f 2080 xfsprogs_6.13.0-2+deb13u1.dsc
- 31d4f7ab5d84c6322375b17b10970be649afa7a7 1506676 xfsprogs_6.13.0.orig.tar.xz
- be67f479c6e94db18f2127c800dcc3d7491a3d3a 16100 xfsprogs_6.13.0-2+deb13u1.deb=
-ian.tar.xz
- 9768ef24b97ccbfc2b1861867cbf2f1be14e6389 5863 xfsprogs_6.13.0-2+deb13u1_sour=
-ce.buildinfo
-Checksums-Sha256:
- f3137052af84bbaee33566ac47600c54db908c384b3f2d30c7d98673b9e8150f 2080 xfspro=
-gs_6.13.0-2+deb13u1.dsc
- 0459933f93d94c82bc2789e7bd63742273d9d74207cdae67dc3032038da08337 1506676 xfs=
-progs_6.13.0.orig.tar.xz
- 7d68f9d00e225c7a426559995268f4d6efcc925cf7b33cb61f1dca1bb9a02d75 16100 xfspr=
-ogs_6.13.0-2+deb13u1.debian.tar.xz
- fb5fd8b0e93e07e19119b7fcbd2cbf32bc58381d0ad563414acb3d0df9dc8a19 5863 xfspro=
-gs_6.13.0-2+deb13u1_source.buildinfo
-Files:
- 080b9023b61275658df5bc986689a1e1 2080 admin optional xfsprogs_6.13.0-2+deb13=
-u1.dsc
- 42b00213982d16c6df3fc17a0706b773 1506676 admin optional xfsprogs_6.13.0.orig=
-.tar.xz
- c87f52c49a0322036392860d65278288 16100 admin optional xfsprogs_6.13.0-2+deb1=
-3u1.debian.tar.xz
- 2b3a1dfb6c04768857a4f3edceacb75f 5863 admin optional xfsprogs_6.13.0-2+deb13=
-u1_source.buildinfo
-
------BEGIN PGP SIGNATURE-----
-
-iQHEBAEBCgAuFiEEQGIgyLhVKAI3jM5BH1x6i0VWQxQFAmpUo8IQHGJhZ2VAZGVi
-aWFuLm9yZwAKCRAfXHqLRVZDFJl9DAC+hF6iq2GWs8RWyKOduq2lcERy1/gnU7YE
-Qd8wtYx9OL682vKIrcYty4CzBQzdm4I0PizvnhnepB15SHugDMpyzJRkYuhCidDt
-v1fLZ/r7Hid3k6FmPOzRs5e7YT3y8eexrJHbcOtvAC/FfdraedpW7LMbteq/SDgd
-xYoxfIgwslFOOkLBlVRZcxBSlYvY8AHeEDx+jnVs6FxHZUEr7Z7nQblbMhhu6vYc
-JxavBGwvT9f3DR1LNPAF86uRYBh8G3M2atfwPJtIzSYKsJpWf+ia7hPkWzJ8mTmq
-SbOln3K4dKqHMa/p5ReqSW4HApj6IXvcjs7GM6gGLbHKTnu3610YOMIx9o2O17Gk
-NAfUsA0+EPLuTfY9FC7s2EuQQcRcXQoCJswzVlatyVEl6FjmqzrbiPrcTaytHSxd
-09hZWLqxY0+PDlDfY5cjPTjUw/HtPK3CO5DjeMQrOPoI3d7hDE0XOCDdik0CF1W5
-7EYYi5toLulIIo97nOvwwAUcKnqMyqE=3D
-=3D+M9s
------END PGP SIGNATURE-----
-
-
---===============0986466235824958526==
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYIAB0WIQTziqJOuF8J+ZI8pJSb9qggYcy5IQUCalT25gAKCRCb9qggYcy5
-Ie7vAQCLWLsOt0YgcsJFX8cNEHjc7qmTZZ4Lw/0Iw0blaC2VNwEA/RuzGdU90CGC
-8ou+KU6zGiH2qXEmEDi0HieSAFoJWAI=
-=VgM2
------END PGP SIGNATURE-----
-
---===============0986466235824958526==--
