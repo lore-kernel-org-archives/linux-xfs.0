@@ -1,155 +1,164 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5ECE32ABCD;
-	Tue, 14 Jul 2026 18:53:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D36FC2931CD
+	for <linux-xfs@vger.kernel.org>; Tue, 14 Jul 2026 19:20:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784055228; cv=none; b=c2GdUtlcz4ipKBvJo9UkWJnJOyDRHQV9KJZDmkJ0oe+jbEC2nRc/+4GNET8mlSzs9KW+Ss9PKmZfnxmUFLkflTdViC7n5l1fNPTnkMj/9VEBnrFuhZ+zNTazNCZuRxMWHYiFg6wLsmP873S9M7iXAGMF/2sDkc5fsqZd9Xu0T7A=
+	t=1784056822; cv=none; b=dOsnR69yHkNeX2TannjXsy55KQu0XhcPYQggmHuL61jzVnOHdIQvICpPYCuaxOJA9WNhfJGgz9HsAOdv03DCdTumonFIAo8pdakgA77QQJSg25ygFdUacbMhXV5wSgIB9nNmj/3u+IEIITAENUVLAixz8bOA7DOn+/SQexYWyZk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784055228; c=relaxed/simple;
-	bh=AOw4CBhUpkfKQoSvbsHv14tv0NRLKUplmFUEo1x4nDg=;
+	s=arc-20240116; t=1784056822; c=relaxed/simple;
+	bh=yqd4MKAtMwnmAxGSUdIx+mohPQm8y+iXnHfZQckwwbU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Zs5/f8aJYbQemaJG9wSL+NxPQwhHr8+PEwma5bq6nAsLiK5Sl7lPfGkiN9c/UY7nOLuU6wD90DCsaxcFm9Bub4Z5ZgpF6hLeZc0+B/QEuTlIYfy2soMuFlLX6Hj7zRq7gO9Jb62wvzRrinpIQ61f8h6ckDbXZmzHUOjOZblU+CM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UsMeaVij; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=Jxmsul5RZepng3i1VM9lsR+dCczLOxsnPltBvnnty0IhV4K1aZTKU9lip2SXno2JclL4t2NhNPpmG6ALEHP8gCkbyDqvYdAp8UcAaz2L2Ay7SWFcYPuEsrTWFTzQI3JWQCsJVTdx2oGzYHSZLRlnfNQOT1Hv9dQdi/tbUsN29Qg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=SWJHQijp; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UsMeaVij"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 6A11B1F000E9;
-	Tue, 14 Jul 2026 18:53:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784055214;
-	bh=drFn20uL6NhR91DYLEIp22lK9ia3uqNE29xicoI1pdw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=UsMeaVij47APGwJcrPHXd7+hvVpqN+150v8Uoyo3YcdjZ3MCelNg1wwak+G7n+BBA
-	 dDxZV64KRRxMoOkvybY2pS6s3+PN99UwHmTbuC9Fp2cN/GkTJWlQs3XVDQwDm0ZDpM
-	 QENQggcZF9bYD7vQTVsOLF4jjxq2LMy+qTCTgZyjJlEvpyvlvRwR9GPmUealIC0OGl
-	 Vz6ZCn4Ed/wghhnkGiDsAKyHglmHMWqAH+Sr6O9J5aQK2Q9Wv/0Skme15W5ZEbT+uW
-	 afsqlsPnikFiDOlzluwuI2WiI9Q/05DzhmD0jmBMmnaDOviNUcjYa4ejwIWsouX4aB
-	 HTexjKWSk9Q2w==
-Date: Tue, 14 Jul 2026 11:53:34 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Matthew Wilcox <willy@infradead.org>
-Cc: "Zhou, Yun" <yun.zhou@windriver.com>,
-	Christoph Hellwig <hch@infradead.org>, cem@kernel.org,
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="SWJHQijp"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1784056818;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=/uKDBVP44I9YE9Zk7Xpf6ZOElFBwIIrrOVbJoZwZECQ=;
+	b=SWJHQijpvu+qLoWlzxPj7aQDtb9QTfOowtu5ymLftevVUtUbCuJdftkcb3QZ0xsPaSivpL
+	MQr1F3LB8lYMuQfelTLIskqiroPo/fMyCZp9R1Um3dM2ye4ZFCkVQnG05hEfAYfD0huoWZ
+	d6bEX/LApUxGwk1TZWRgCF2tdS0Szmo=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-26-IM0-mnCVMgmyM0Z28z-8IQ-1; Tue,
+ 14 Jul 2026 15:20:15 -0400
+X-MC-Unique: IM0-mnCVMgmyM0Z28z-8IQ-1
+X-Mimecast-MFC-AGG-ID: IM0-mnCVMgmyM0Z28z-8IQ_1784056814
+Received: from mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.95])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id DB3F5195607C;
+	Tue, 14 Jul 2026 19:20:13 +0000 (UTC)
+Received: from bfoster (unknown [10.22.88.111])
+	by mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id D1B39414;
+	Tue, 14 Jul 2026 19:20:12 +0000 (UTC)
+Date: Tue, 14 Jul 2026 15:20:08 -0400
+From: Brian Foster <bfoster@redhat.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Ibrahim Hashimov <security@auditcode.ai>, cem@kernel.org,
 	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-mm <linux-mm@kvack.org>
-Subject: Re: [PATCH] xfs: restore nofs context unconditionally in
- xfs_trans_roll
-Message-ID: <20260714185334.GI7398@frogsfrogsfrogs>
-References: <20260713035505.1635191-1-yun.zhou@windriver.com>
- <alSrO3aDTuZkX0K9@infradead.org>
- <7a053113-f678-486e-a78b-8f5e94e73acb@windriver.com>
- <alToBmAN_HyeXth9@infradead.org>
- <20260713230420.GN7195@frogsfrogsfrogs>
- <0792c175-6a7c-4108-966d-4afbc8c515a2@windriver.com>
- <20260714175528.GG7380@frogsfrogsfrogs>
- <alZ80Dv4uNWWhrDk@casper.infradead.org>
+	stable@vger.kernel.org
+Subject: Re: [PATCH v4] xfs: bounds-check buffer log item's dirty bitmap
+Message-ID: <alaL6C6Gy717Jk2J@bfoster>
+References: <20260714172730.73160-1-security@auditcode.ai>
+ <20260714175532.74257-1-security@auditcode.ai>
+ <20260714180152.GH7398@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <alZ80Dv4uNWWhrDk@casper.infradead.org>
+In-Reply-To: <20260714180152.GH7398@frogsfrogsfrogs>
+X-Scanned-By: MIMEDefang 3.6 on 10.30.177.95
 
-On Tue, Jul 14, 2026 at 07:15:44PM +0100, Matthew Wilcox wrote:
-> On Tue, Jul 14, 2026 at 10:55:28AM -0700, Darrick J. Wong wrote:
-> > [add linux-mm since we're talking about memalloc_nofs_save]
+On Tue, Jul 14, 2026 at 11:01:52AM -0700, Darrick J. Wong wrote:
+> On Tue, Jul 14, 2026 at 07:55:32PM +0200, Ibrahim Hashimov wrote:
+> > xlog_recover_do_reg_buffer() replays each dirty region described by a
+> > buffer log item's bitmap into the buffer read for that item:
+> > 
+> > 	memcpy(xfs_buf_offset(bp, (uint)bit << XFS_BLF_SHIFT),
+> > 		item->ri_buf[i].iov_base,
+> > 		nbits << XFS_BLF_SHIFT);
+> > 
+> > The destination offset (bit/nbits, from the logged dirty bitmap) and the
+> > buffer size (from the logged blf_len) are both attacker-controlled and
+> > otherwise unrelated, yet the only thing bounding the copy is an ASSERT(),
+> > which compiles away on production kernels. A crafted image logging a
+> > small blf_len together with a bitmap bit past the end of that buffer
+> > drives the memcpy() past the buffer's allocation, corrupting adjacent
+> > kernel heap during mount-time log recovery. This is reachable by anyone
+> > who can get a crafted image mounted -- the malicious-filesystem threat
+> > model XFS already guards against elsewhere.
+> > 
+> > Turn the ASSERT() into a real XFS_IS_CORRUPT() check that aborts recovery
+> > of the buffer with -EFSCORRUPTED, consistent with the validate-and-fail
+> > idiom already used in xlog_recover_do_inode_buffer() and
+> > xfs_dquot_item_recover.c. xlog_recover_do_reg_buffer() therefore becomes
+> > STATIC int and its three callers propagate the error.
+> > 
+> > Found and confirmed with KASAN on a CONFIG_XFS_DEBUG=n build: the crafted
+> > image trips a slab-out-of-bounds write before this change and fails
+> > recovery cleanly with -EFSCORRUPTED after it.
+> > 
+> > Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+> > Cc: stable@vger.kernel.org
+> > Signed-off-by: Ibrahim Hashimov <security@auditcode.ai>
+> > Assisted-by: AuditCode-AI:2026.07
 > 
-> Thanks!
+> Looks fine to me now, thanks for making those edits.
+> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 > 
-> > On Tue, Jul 14, 2026 at 10:15:53AM +0800, Zhou, Yun wrote:
-> > > On 7/14/26 07:04, Darrick J. Wong wrote:
-> > > > On Mon, Jul 13, 2026 at 06:28:38AM -0700, Christoph Hellwig wrote:
-> > > > > On Mon, Jul 13, 2026 at 06:06:38PM +0800, Zhou, Yun wrote:
-> > > > > > On 7/13/26 17:09, Christoph Hellwig wrote:
-> > > > > > > On Mon, Jul 13, 2026 at 11:55:05AM +0800, Yun Zhou wrote:
-> > > > > > > > diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> > > > > > > > index 7bfbd9f6f0df..1b36cf12d4e3 100644
-> > > > > > > > --- a/fs/xfs/xfs_trans.c
-> > > > > > > > +++ b/fs/xfs/xfs_trans.c
-> > > > > > > > @@ -1029,6 +1029,15 @@ xfs_trans_roll(
-> > > > > > > >          * duplicate transaction that gets returned.
-> > > > > > > >          */
-> > > > > > > >         error = __xfs_trans_commit(tp, true);
-> > > > > > > > +
-> > > > > > > > +     tp = *tpp;
-> > > > > > > > +     /*
-> > > > > > > > +      * __xfs_trans_commit cleared the NOFS flag by calling into
-> > > > > > > > +      * xfs_trans_free.  Set it again here before doing memory
-> > > > > > > > +      * allocations.
-> > > > > > > > +      */
-> > > > > > > > +     xfs_trans_set_context(tp);
-> > > > > > > 
-> > > > > > > The tp assignment above now returns the incorrect transaction when
-> > > > > > > __xfs_trans_commit fails, so you can't do this.
-> > > > > > > 
-> > > > > > > Otherwise yes, this call should move up.  I don't really see how
-> > > > > > > it fixes the syzbot report, though.
-> > > > > > 
-> > > > > > Thank you very much for your reply. The tp here is a local variable only
-> > > > > > used for convenience within the function. The caller always gets the new
-> > > > > > transaction through *tpp, which was set by xfs_trans_dup() before the commit
-> > > > > > call. Moving tp = *tpp before the error check doesn't change what the caller
-> > > > > > sees - *tpp still points to the new (dup'd) transaction regardless.
-> > > > > 
-> > > > > Ah, right.  Tis should be fine:
-> > > > > 
-> > > > > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > > > 
-> > > > Why not move tp_pflags to the new transaction in xfs_trans_dup like we
-> > > > do for the deferred item list:
-> > > > 
-> > > >          /* move deferred ops over to the new tp */
-> > > >          xfs_defer_move(ntp, tp);
-> > > > 
-> > > >          ntp->t_pflags = tp->t_pflags;
-> > > >          tp->t_pflags = 0;
-> > > 
-> > > That's what the old xfs_trans_switch_context() did before a1ca658d649a
-> > > removed it. The problem is that setting tp->t_pflags = 0 means
-> > > xfs_trans_free() calls memalloc_nofs_restore(0), which relies on that being
-> > > a  no-op — an mm implementation detail. A fresh memalloc_nofs_save() on the
-> > > new tp keeps the save/restore pairing correct unconditionally.
-> > 
-> > So add a new helper.
-> > 
-> > /**
-> >  * memalloc_flags_take - move an implicit __GFP_MEMALLOC scope from one
-> >  * tracking structure to another.
-> >  */
-> > static inline unsigned int
-> > memalloc_flags_take(unsigned int *old_flags)
-> > {
-> > 	unsigned int ret = *old_flags;
-> > 
-> > 	*old_flags = 0;
-> > 	return ret;
-> > }
-> > 
-> > and then:
-> > 
-> > 	/* move deferred ops over to the new tp */
-> > 	xfs_defer_move(ntp, tp);
-> > 
-> > 	ntp->t_pflags = memalloc_flags_take(&tp->t_pflags);
+> --D
 > 
-> I might stick with the 'move' wording?  ie memalloc_flags_move().
+> > ---
+> > v4: fold xlog_recover_do_dquot_buffer()'s bool return and error
+> >     out-parameter into a single int return (1 if dirty, 0 if clean, or a
+> >     negative errno on failure), per Darrick's review. No behavioural
+> >     change.
+> > v3: trim the changelog per Brian Foster's review. Add a Fixes: tag --
+> >     the destination-bounds check has been an ASSERT since the initial git
+> >     import (2.6.12-rc2), so it predates the git era.
+> > v2: resend; v1 went out with an empty Subject line due to a local
+> >     git send-email glitch (leading blank line in the patch file).
+> > 
+> >  fs/xfs/xfs_buf_item_recover.c | 56 ++++++++++++++++++++++++++++-------------
+> >  1 file changed, 40 insertions(+), 16 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
+> > index 02b95b89d1b5..cf2b07ebc6f3 100644
+> > --- a/fs/xfs/xfs_buf_item_recover.c
+> > +++ b/fs/xfs/xfs_buf_item_recover.c
+...
+> > @@ -1081,11 +1103,10 @@ xlog_recover_buf_commit_pass2(
+> >  			goto out_release;
+> >  	} else if (buf_f->blf_flags &
+> >  		  (XFS_BLF_UDQUOT_BUF|XFS_BLF_PDQUOT_BUF|XFS_BLF_GDQUOT_BUF)) {
+> > -		bool	dirty;
+> > -
+> > -		dirty = xlog_recover_do_dquot_buffer(mp, log, item, bp, buf_f);
+> > -		if (!dirty)
+> > +		error = xlog_recover_do_dquot_buffer(mp, log, item, bp, buf_f);
+> > +		if (error <= 0)
+> >  			goto out_release;
 
-<nod>
+I might suggest something like:
 
-> And I think you should bury the call to memalloc_flags_move() inside
-> xfs_defer_move().  I don't think there's a case where you'd want to move
-> from one transaction to another without preserving the nofs state, is
-> there?  Bit hard to tell since there's only one caller of xfs_defer_move()
-> in the XFS code base.
+		/* reset error since > 0 means to write the buffer */
 
-There's only ever going to be one caller, and it's the transaction
-rolling mechanism.  I wouldn't put the memalloc_flags_move in
-xfs_defer_move because userspace transactions don't have t_pflags
-because NOFS is meaningless there.
+... or maybe we can phrase that better. But regardless LGTM now as well,
+thanks:
 
---D
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+> > +		error = 0;
+> >  	} else if ((xfs_blft_from_flags(buf_f) & XFS_BLFT_SB_BUF) &&
+> >  			xfs_buf_daddr(bp) == 0) {
+> >  		error = xlog_recover_do_primary_sb_buffer(mp, item, bp, buf_f,
+> > @@ -1105,7 +1126,10 @@ xlog_recover_buf_commit_pass2(
+> >  			xfs_buf_relse(rtsb_bp);
+> >  		}
+> >  	} else {
+> > -		xlog_recover_do_reg_buffer(mp, item, bp, buf_f, current_lsn);
+> > +		error = xlog_recover_do_reg_buffer(mp, item, bp, buf_f,
+> > +						   current_lsn);
+> > +		if (error)
+> > +			goto out_release;
+> >  	}
+> >  
+> >  	/*
+> > -- 
+> > 2.50.1 (Apple Git-155)
+> 
+
