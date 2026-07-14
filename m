@@ -1,38 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03CE542BC51
-	for <linux-xfs@vger.kernel.org>; Tue, 14 Jul 2026 20:45:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1712942BC3C;
+	Tue, 14 Jul 2026 21:09:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784061957; cv=none; b=r/+3cbgWgDpOJ2ruRgMZk9MA7njELeNUejJN4uOKaM0Vf82FN84N68vhq1QTB4cDDAv0xFWHSvN6wR/r6TCpRjOSFWWajGDulO1sUqFcFW29pdCfRwrcoJ8GxizOHmSB1lcbSPDjHSOI3ks0Lv5u2ryTHan7I0vZ0Idl3zH0D6g=
+	t=1784063401; cv=none; b=UIoGkmL1juUKWFdmnWz3MpzAPI1Jq9sQeWsKoQLwUrEqIdq6oU0yB5dZErf0d3+7p55od+0/k9rNF6bogFLwzdng0H4e8NhjzNPnmMhY0Qw4T9/GDbbOE2z30HLujXdXtK2y371rnxHzBqhT8vV7NCVRxMevAY4nxS6uIADvAeI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784061957; c=relaxed/simple;
-	bh=+A+anX6DCIeBdihYc/xSGP6z0wl60OuothgimM9rKUc=;
+	s=arc-20240116; t=1784063401; c=relaxed/simple;
+	bh=/PKCeTzBGwJ/fX/RPVvV2t7fJeEV6MwvJOtgIgoCvVE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=tK0dmdiA5wuDg2OhyHkWMaEGP9Prw0A9lkH8MW9cSpQTW7bclfChLYqYYE8/++Ut5ZBRvGBIsWWMN0G0uyR6KX7ifK511OOGVYqQcLjGPax0s07CP/c9T1zlSwxD5qV/jQpPc3e+nY29nkXs17R7ny31eg24knb13hD8Kd1L91k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YIVMBedd; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=LwDZGIIo7sLkSMIAX5+2rT82CeBOxCelVntevXsBwr434BCKxlxaSTExChGikB+WFTlQLZO6UyL8PmSMVUPJ5Xxyjdv5MU9vsGk8+Y3zpvWAeSUvJhrkc67BZbxewilPyaERslGnpL/AmOHopyn+pm+7j9CE1Hk+Cg48T1rLcDs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZtihMZIc; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YIVMBedd"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 945F21F000E9;
-	Tue, 14 Jul 2026 20:45:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZtihMZIc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1A3A1F000E9;
+	Tue, 14 Jul 2026 21:09:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784061955;
-	bh=R59nvVFHFL3ToGOOs/O8R5cS0hI4YCZEtXl7cgqO+Kk=;
+	s=k20260515; t=1784063399;
+	bh=be6DrEWvPa6kK/0Bi2TniGp6w6cr2kXmMjxcnQdvtQI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=YIVMBeddF2m4ZuD9KlPLbBzEWh4oiwuk0f6sJEuFpiM7bL+jVKDWniUuLmtph4hq7
-	 HCOUP4Rod8giZzSc4R0qJY4HTVev0+HNn2l1UkUslCE/iY+AsCmerUkJP4POfLWOWC
-	 1MhyL2HtAfABs3qH/fxNug4MDylVu9x2+2MbVHJsngxVGzQ8pUe8mKmSPne3ofMGVw
-	 AOUbTe47+ihMwQOA2Ssbvv+iFgB4o2/2mDHck+oxMxPxnCO96pqIEcjs2SeU0ncflv
-	 rKi4Fiq++WE1GhwBk3+JLzGFguQ9wcXfS18bxoKCq4mcbIgysEHME2AINIimIq3L8p
-	 oAGZ9O0/M4/6A==
-Date: Tue, 14 Jul 2026 13:45:54 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Allen Hewes <rallenh@hotmail.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: xfsprogs 7.1.0 LTINSTALL fix
-Message-ID: <20260714204554.GK7380@frogsfrogsfrogs>
-References: <465ea336301aafed0e392d668a23e34cca2e4324.camel@hotmail.com>
+	b=ZtihMZIcpfKz1Lwu6hNVxt52R9gEJsvFCje+8P9ba1jEfmxJJBG2sxKQF2oEA7fsG
+	 pGc/Wf3v9z2avwKy0DQ+TFwIIJQBEEh6mvxu6m+wEk+76ngw2bCcKbCBR1cS94rA2h
+	 YLO8QIEzBi7rl6m0Chu7VUtiAjf+dtFgcUSGyCVyhZAK7H+zO2uOCRKBIHV1Q9jwbM
+	 +L6Hctr12fMFVSS0pDSL04cPVqWIetfdwYgar8qD1FsUgo2WUhgvNHF4uUCU62K8xQ
+	 2fXsnPpP1HdkROUKHyoFD+ed2FbGrbjeMdAx3hzoo2RDo8l9oJvAZSxB3n+Lhc2GnS
+	 VzkzzylqNBuxg==
+Date: Tue, 14 Jul 2026 15:09:57 -0600
+From: Keith Busch <kbusch@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Keith Busch <kbusch@meta.com>, linux-block@vger.kernel.org,
+	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	axboe@kernel.dk, jack@suse.cz, brauner@kernel.org, cem@kernel.org,
+	jaegeuk@kernel.org, aalbersh@kernel.org, tytso@mit.edu
+Subject: Re: [PATCHv2 3/5] xfs: report direct io attributes through
+ file_getattr
+Message-ID: <alalpRYxjqtdJhVR@kbusch-mbp>
+References: <20260710210646.3576365-1-kbusch@meta.com>
+ <20260710210646.3576365-4-kbusch@meta.com>
+ <alTTRoOEglwuf4vg@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -41,90 +48,139 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <465ea336301aafed0e392d668a23e34cca2e4324.camel@hotmail.com>
+In-Reply-To: <alTTRoOEglwuf4vg@infradead.org>
 
-On Tue, Jul 14, 2026 at 05:18:37PM +0000, Allen Hewes wrote:
-> Hi!
-> 
-> I am not a member of the list.
-> 
-> I got local mock build error with xfsprogs 7.1.0:
-> Installing healer-install
-> ../install-sh -o root -g mock -m 755 -d /usr/libexec/xfsprogs
-> /bin/sh ../libtool --quiet --mode=install ../install-sh -o root -g mock
-> -m 755 xfs_healer xfs_healer_start /usr/libexec/xfsprogs
-> Usage: /builddir/build/BUILD/xfsprogs-7.1.0-build/xfsprogs-
-> 7.1.0/libtool [OPTION]... [MODE-ARG]...
-> Try 'libtool --help' for more information.
-> libtool:   error: '/usr/libexec/xfsprogs' is not a directory
-> gmake[1]: *** [Makefile:72: install-healer] Error 1
-> make: *** [Makefile:135: healer-install] Error 2
-> error: Bad exit status from /var/tmp/rpm-tmp.YMwAaj (%install)
->     Bad exit status from /var/tmp/rpm-tmp.YMwAaj (%install)
-> 
-> RPM build errors:
-> 
-> I tracked this down to a recent change
-> https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git/commit/?id=79551362141a051faf9c3d504fe18ee34ca800f8
-> and then worked from there.
-> 
-> It appears that LTINSTALL need a single target and not multiple
-> targets. Here's a patch that let me mock build xfsprogs 7.1.0:
+On Mon, Jul 13, 2026 at 05:00:06AM -0700, Christoph Hellwig wrote:
+> Or maybe using the file attr for this isn't actually a good idea,
+> and we should do an ioctl instead which automatically gets routed to
+> the block device fops?
 
-I guess that means libtool no longer just calls ../install-sh with
-whatever parameters it's given?  Or perhaps just yours?  On my system:
+Something like this instead?
 
-$ libtool --version
-libtool (GNU libtool) 2.5.4 Debian-2.5.4-4
-
-It would be good to know if this is the result of gnu libtool changing
-their CLI in a newer version; or some other libtool clone is in use; or
-something else.
-
-> diff -Nuarp xfsprogs-7.1.0.a/healer/Makefile xfsprogs-
-> 7.1.0.b/healer/Makefile
-> --- xfsprogs-7.1.0.a/healer/Makefile    2026-07-10 07:06:28.000000000 -
-> 0400
-> +++ xfsprogs-7.1.0.b/healer/Makefile    2026-07-14 13:08:18.106217736 -
-> 0400
-> @@ -69,7 +69,9 @@ install: $(INSTALL_HEALER)
->  
->  install-healer: default
->         $(INSTALL) -m 755 -d $(PKG_LIBEXEC_DIR)
-> -       $(LTINSTALL) -m 755 $(BUILD_TARGETS) $(PKG_LIBEXEC_DIR)
-> +       for f in $(BUILD_TARGETS); do \
-> +               $(LTINSTALL) -m 755 $$f $(PKG_LIBEXEC_DIR); \
-> +       done
->  
->  install-systemd: default
->         $(INSTALL) -m 755 -d $(SYSTEMD_SYSTEM_UNIT_DIR)
-> 
-> I will send as an attachment.
-> 
-> Thanks!
-
-Thank you for sending a patch, but it needs a proper Signed-off-by: tag
-before anyone can look at it.
-
-https://docs.kernel.org/process/submitting-patches.html#developer-s-certificate-of-origin-1-1
-
---D
-
-> 
-> /allen
-
-> diff -Nuarp xfsprogs-7.1.0.a/healer/Makefile xfsprogs-7.1.0.b/healer/Makefile
-> --- xfsprogs-7.1.0.a/healer/Makefile	2026-07-10 07:06:28.000000000 -0400
-> +++ xfsprogs-7.1.0.b/healer/Makefile	2026-07-14 13:08:18.106217736 -0400
-> @@ -69,7 +69,9 @@ install: $(INSTALL_HEALER)
->  
->  install-healer: default
->  	$(INSTALL) -m 755 -d $(PKG_LIBEXEC_DIR)
-> -	$(LTINSTALL) -m 755 $(BUILD_TARGETS) $(PKG_LIBEXEC_DIR)
-> +	for f in $(BUILD_TARGETS); do \
-> +		$(LTINSTALL) -m 755 $$f $(PKG_LIBEXEC_DIR); \
-> +	done
->  
->  install-systemd: default
->  	$(INSTALL) -m 755 -d $(SYSTEMD_SYSTEM_UNIT_DIR)
-
+---
+diff --git a/block/ioctl.c b/block/ioctl.c
+index 3d4ea1537457d..6de2f87bcb8bd 100644
+--- a/block/ioctl.c
++++ b/block/ioctl.c
+@@ -642,6 +642,21 @@ static int blkdev_bszset(struct file *file, blk_mode_t mode,
+ 	return ret;
+ }
+ 
++void bdev_dio_align(struct block_device *bdev, struct fs_dio_align *align)
++{
++	align->dio_mem_align = bdev_dma_alignment(bdev) + 1;
++	align->dio_offset_align = bdev_logical_block_size(bdev);
++	align->dio_read_offset_align = bdev_logical_block_size(bdev);
++	align->dio_virt_boundary_align = bdev_virt_boundary_alignment(bdev);
++	align->dio_offset_align_max_vecs = bdev_max_segments(bdev);
++}
++EXPORT_SYMBOL_GPL(bdev_dio_align);
++
+ /*
+  * Common commands that are handled the same way on native and compat
+  * user space. Note the separate arg/argp parameters that are needed
+@@ -690,6 +705,12 @@ static int blkdev_common_ioctl(struct block_device *bdev, blk_mode_t mode,
+ 		return put_uint(argp, bdev_io_opt(bdev));
+ 	case BLKALIGNOFF:
+ 		return put_int(argp, bdev_alignment_offset(bdev));
++	case FS_IOC_GETDIOALIGN: {
++		struct fs_dio_align align = {};
++
++		bdev_dio_align(bdev, &align);
++		return copy_to_user(argp, &align, sizeof(align)) ? -EFAULT : 0;
++	}
+ 	case BLKDISCARDZEROES:
+ 		return put_uint(argp, 0);
+ 	case BLKSECTGET:
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 1b53701bebea1..e980522fa7539 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -49,6 +49,7 @@
+ 
+ #include <linux/mount.h>
+ #include <linux/fileattr.h>
++#include <linux/blkdev.h>
+ 
+ /* Return 0 on success or positive error */
+ int
+@@ -1244,6 +1245,23 @@ xfs_file_ioctl(
+ 	"%s should use fallocate; XFS_IOC_{ALLOC,FREE}SP ioctl unsupported",
+ 				current->comm);
+ 		return -ENOTTY;
++	case FS_IOC_GETDIOALIGN: {
++		struct fs_dio_align	align = {};
++
++		if (!S_ISREG(inode->i_mode))
++			return -ENOTTY;
++		bdev_dio_align(xfs_inode_buftarg(ip)->bt_bdev, &align);
++		if (xfs_is_cow_inode(ip))
++			align.dio_offset_align = xfs_inode_alloc_unitsize(ip);
++		if (copy_to_user(arg, &align, sizeof(align)))
++			return -EFAULT;
++		return 0;
++	}
+ 	case XFS_IOC_DIOINFO: {
+ 		struct kstat		st;
+ 		struct dioattr		da;
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 9213a5716f95a..dc32acf696e40 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -1607,6 +1607,17 @@ static inline unsigned int bdev_dma_alignment(struct block_device *bdev)
+ 	return queue_dma_alignment(bdev_get_queue(bdev));
+ }
+ 
++static inline unsigned long bdev_virt_boundary_mask(struct block_device *bdev)
++{
++	return bdev_get_queue(bdev)->limits.virt_boundary_mask;
++}
++
++static inline unsigned int
++bdev_virt_boundary_alignment(struct block_device *bdev)
++{
++	return bdev_virt_boundary_mask(bdev) + 1;
++}
++
+ static inline unsigned int
+ blk_lim_dma_alignment_and_pad(struct queue_limits *lim)
+ {
+@@ -1805,6 +1816,8 @@ int sync_blockdev_range(struct block_device *bdev, loff_t lstart, loff_t lend);
+ int sync_blockdev_nowait(struct block_device *bdev);
+ void sync_bdevs(bool wait);
+ void bdev_statx(const struct path *path, struct kstat *stat, u32 request_mask);
++struct fs_dio_align;
++void bdev_dio_align(struct block_device *bdev, struct fs_dio_align *align);
+ void printk_all_partitions(void);
+ int __init early_lookup_bdev(const char *pathname, dev_t *dev);
+ #else
+diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
+index bd87262f2e349..81b0c81e17282 100644
+--- a/include/uapi/linux/fs.h
++++ b/include/uapi/linux/fs.h
+@@ -234,6 +234,21 @@ struct file_attr {
+ #define FILE_ATTR_SIZE_VER0 24
+ #define FILE_ATTR_SIZE_LATEST FILE_ATTR_SIZE_VER0
+ 
++struct fs_dio_align {
++	__u32 dio_mem_align;		/* buffer alignment */
++	__u32 dio_offset_align;		/* write offset alignment */
++	__u32 dio_read_offset_align;	/* read offset alignment */
++	__u32 dio_virt_boundary_align;	/* segment boundary */
++	__u32 dio_offset_align_max_vecs;	/* max vecs per unit */
++	__u32 dio_reserved[3];		/* must be zero */
++};
++
+ /*
+  * Flags for the fsx_xflags field
+  */
+@@ -344,6 +359,8 @@ struct file_attr {
+ #define FS_IOC_GETFSSYSFSPATH		_IOR(0x15, 1, struct fs_sysfs_path)
+ /* Get logical block metadata capability details */
+ #define FS_IOC_GETLBMD_CAP		_IOWR(0x15, 2, struct logical_block_metadata_cap)
++/* Get direct I/O alignment and layout constraints */
++#define FS_IOC_GETDIOALIGN		_IOR(0x15, 3, struct fs_dio_align)
+ 
+ /*
+  * Inode flags (FS_IOC_GETFLAGS / FS_IOC_SETFLAGS)
+--
