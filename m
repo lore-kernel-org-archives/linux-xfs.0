@@ -1,40 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0AB137E5D5
-	for <linux-xfs@vger.kernel.org>; Tue, 14 Jul 2026 20:35:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03CE542BC51
+	for <linux-xfs@vger.kernel.org>; Tue, 14 Jul 2026 20:45:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784061360; cv=none; b=tM47c1k9gcCzMfmt9P5/MPtvg7Z8nYjDK+R4xrhB82kAfEri0G0Y3hmu4dQyVQ+q+F8GPRutpD034z161y4Xa9rMDXYtBB20P+NOAhO7dI0ZUh41borDdjPL20v52jjfY6R3UrbD9A+pZ4YDDXz5+pfydTv0C/q5IL2yhVrd76M=
+	t=1784061957; cv=none; b=r/+3cbgWgDpOJ2ruRgMZk9MA7njELeNUejJN4uOKaM0Vf82FN84N68vhq1QTB4cDDAv0xFWHSvN6wR/r6TCpRjOSFWWajGDulO1sUqFcFW29pdCfRwrcoJ8GxizOHmSB1lcbSPDjHSOI3ks0Lv5u2ryTHan7I0vZ0Idl3zH0D6g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784061360; c=relaxed/simple;
-	bh=DCFZE4Dz/n22lgUd4vgH+IhCnnGfcVkfbxehdfnPcyo=;
+	s=arc-20240116; t=1784061957; c=relaxed/simple;
+	bh=+A+anX6DCIeBdihYc/xSGP6z0wl60OuothgimM9rKUc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=aulvh5xoW3f6WU52kZ1xDykooB7fkysW2ChsAf4zZF7su3hiBv2BebgO1RTuFqzDcjstaqfJLeUFoMJO/ZmwzR9KBXa1o2RsvP+dzTCFRT/IfECUgTq/iwqTsLchqZ0Tzzg9SpAQ7SaqMKgzTPw2NUoAUuttcZo18BSTXfCcJ6Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HOwZoMnZ; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=tK0dmdiA5wuDg2OhyHkWMaEGP9Prw0A9lkH8MW9cSpQTW7bclfChLYqYYE8/++Ut5ZBRvGBIsWWMN0G0uyR6KX7ifK511OOGVYqQcLjGPax0s07CP/c9T1zlSwxD5qV/jQpPc3e+nY29nkXs17R7ny31eg24knb13hD8Kd1L91k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YIVMBedd; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HOwZoMnZ"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 448811F000E9;
-	Tue, 14 Jul 2026 20:35:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YIVMBedd"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 945F21F000E9;
+	Tue, 14 Jul 2026 20:45:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784061359;
-	bh=e/axzbIzw+KY6GqwCPyyz9spJLbje8Ozm00GmVyf/Xc=;
+	s=k20260515; t=1784061955;
+	bh=R59nvVFHFL3ToGOOs/O8R5cS0hI4YCZEtXl7cgqO+Kk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=HOwZoMnZj0d84dyr0MPZvaF0yxrBHnRNOiBmZ65IxmOgChqTqQfEWIxjtgizCySOQ
-	 fXsYgqhOkn87a+37VDTH5mnCZM6iVddSxd95ki5EaPOxNmXAyx4f8sZJaha5jlpuwS
-	 665MWwlUf++nxys1rfPYIL8IztJhhrhTNqDmE89h7tA7sBc7qgO7hSKdRYwTTRqp2v
-	 63E3Uj7KGliYcMZoPP7Nf08Ialhfx5tGF7Om8VgXeL2T6nVq08bu6Gu5+w6Jsi1JsF
-	 JKZKry1JKYCQfFSkzDlFbOhqrsWBfEvvAjffZUw4NpMtxfF1aFotcrAl2Ct0qZbKiz
-	 tDRFjERFOlSxA==
-Date: Tue, 14 Jul 2026 13:35:58 -0700
+	b=YIVMBeddF2m4ZuD9KlPLbBzEWh4oiwuk0f6sJEuFpiM7bL+jVKDWniUuLmtph4hq7
+	 HCOUP4Rod8giZzSc4R0qJY4HTVev0+HNn2l1UkUslCE/iY+AsCmerUkJP4POfLWOWC
+	 1MhyL2HtAfABs3qH/fxNug4MDylVu9x2+2MbVHJsngxVGzQ8pUe8mKmSPne3ofMGVw
+	 AOUbTe47+ihMwQOA2Ssbvv+iFgB4o2/2mDHck+oxMxPxnCO96pqIEcjs2SeU0ncflv
+	 rKi4Fiq++WE1GhwBk3+JLzGFguQ9wcXfS18bxoKCq4mcbIgysEHME2AINIimIq3L8p
+	 oAGZ9O0/M4/6A==
+Date: Tue, 14 Jul 2026 13:45:54 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Pankaj Raghav <p.raghav@samsung.com>
-Cc: aalbersh@kernel.org, pankaj.raghav@linux.dev, hch@lst.de,
-	Zhang Yi <yi.zhang@huaweicloud.com>, gost.dev@samsung.com,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v3] fiemap: add a nosync option
-Message-ID: <20260714203558.GK7398@frogsfrogsfrogs>
-References: <20260714203206.520348-1-p.raghav@samsung.com>
+To: Allen Hewes <rallenh@hotmail.com>
+Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: xfsprogs 7.1.0 LTINSTALL fix
+Message-ID: <20260714204554.GK7380@frogsfrogsfrogs>
+References: <465ea336301aafed0e392d668a23e34cca2e4324.camel@hotmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,91 +41,90 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260714203206.520348-1-p.raghav@samsung.com>
+In-Reply-To: <465ea336301aafed0e392d668a23e34cca2e4324.camel@hotmail.com>
 
-On Tue, Jul 14, 2026 at 10:32:06PM +0200, Pankaj Raghav wrote:
-> io/fiemap adds FIEMAP_FLAG_SYNC by default. There are some test cases
-> where adding this flag might have an undesired side effect on the
-> results [1].
+On Tue, Jul 14, 2026 at 05:18:37PM +0000, Allen Hewes wrote:
+> Hi!
 > 
-> Add an option that does not pass FIEMAP_FLAG_SYNC flag.
+> I am not a member of the list.
 > 
-> [1] https://lore.kernel.org/linux-xfs/ca21b3c4-e1df-4ba7-8e9c-5d221337c86b@huaweicloud.com/
+> I got local mock build error with xfsprogs 7.1.0:
+> Installing healer-install
+> ../install-sh -o root -g mock -m 755 -d /usr/libexec/xfsprogs
+> /bin/sh ../libtool --quiet --mode=install ../install-sh -o root -g mock
+> -m 755 xfs_healer xfs_healer_start /usr/libexec/xfsprogs
+> Usage: /builddir/build/BUILD/xfsprogs-7.1.0-build/xfsprogs-
+> 7.1.0/libtool [OPTION]... [MODE-ARG]...
+> Try 'libtool --help' for more information.
+> libtool:   error: '/usr/libexec/xfsprogs' is not a directory
+> gmake[1]: *** [Makefile:72: install-healer] Error 1
+> make: *** [Makefile:135: healer-install] Error 2
+> error: Bad exit status from /var/tmp/rpm-tmp.YMwAaj (%install)
+>     Bad exit status from /var/tmp/rpm-tmp.YMwAaj (%install)
 > 
-> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
-> ---
-> Changes since v2:
-> - Add this option to the man page (Darrick)
-> - Add more information about this flag in the help.
-> Changes since v1:
-> - Change '-s' to '-e' to match xfs_bmap (Christoph).
+> RPM build errors:
 > 
->  io/fiemap.c       | 9 +++++++--
->  man/man8/xfs_io.8 | 2 +-
->  2 files changed, 8 insertions(+), 3 deletions(-)
+> I tracked this down to a recent change
+> https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git/commit/?id=79551362141a051faf9c3d504fe18ee34ca800f8
+> and then worked from there.
 > 
-> diff --git a/io/fiemap.c b/io/fiemap.c
-> index b41f71bf..cf3a1b3e 100644
-> --- a/io/fiemap.c
-> +++ b/io/fiemap.c
-> @@ -36,6 +36,7 @@ fiemap_help(void)
->  " -a -- prints the attribute fork map instead of the data fork.\n"
->  " -l -- also displays the length of each extent in 512-byte blocks.\n"
->  " -n -- query n extents.\n"
-> +" -e -- obtains also delayed allocation extents by not using FIEMAP_FLAG_SYNC.\n"
->  " -v -- Verbose information\n"
->  " offset is the starting offset to map, and is optional.  If offset is\n"
->  " specified, mapping length may (optionally) be specified as well."
-> @@ -242,7 +243,7 @@ fiemap_f(
->  
->  	init_cvtnum(&fsblocksize, &fssectsize);
->  
-> -	while ((c = getopt(argc, argv, "aln:v")) != EOF) {
-> +	while ((c = getopt(argc, argv, "aln:ev")) != EOF) {
->  		switch (c) {
->  		case 'a':
->  			fiemap_flags |= FIEMAP_FLAG_XATTR;
-> @@ -253,6 +254,10 @@ fiemap_f(
->  		case 'n':
->  			max_extents = atoi(optarg);
->  			break;
-> +		case 'e':
-> +			/* nosync */
-> +			fiemap_flags &= ~(FIEMAP_FLAG_SYNC);
-> +			break;
->  		case 'v':
->  			vflag++;
->  			break;
-> @@ -393,7 +398,7 @@ fiemap_init(void)
->  	fiemap_cmd.argmin = 0;
->  	fiemap_cmd.argmax = -1;
->  	fiemap_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
-> -	fiemap_cmd.args = _("[-alv] [-n nx] [offset [len]]");
-> +	fiemap_cmd.args = _("[-alev] [-n nx] [offset [len]]");
->  	fiemap_cmd.oneline = _("print block mapping for a file");
->  	fiemap_cmd.help = fiemap_help;
->  
-> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-> index 61defcc3..a3ddab02 100644
-> --- a/man/man8/xfs_io.8
-> +++ b/man/man8/xfs_io.8
-> @@ -353,7 +353,7 @@ Prints the block mapping for the current open file. Refer to the
->  .BR xfs_bmap (8)
->  manual page for complete documentation.
->  .TP
-> -.BI "fiemap [ \-alv ] [ \-n " nx " ] [ " offset " [ " len " ]]"
-> +.BI "fiemap [ \-alev ] [ \-n " nx " ] [ " offset " [ " len " ]]"
+> It appears that LTINSTALL need a single target and not multiple
+> targets. Here's a patch that let me mock build xfsprogs 7.1.0:
 
-Thanks!
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+I guess that means libtool no longer just calls ../install-sh with
+whatever parameters it's given?  Or perhaps just yours?  On my system:
+
+$ libtool --version
+libtool (GNU libtool) 2.5.4 Debian-2.5.4-4
+
+It would be good to know if this is the result of gnu libtool changing
+their CLI in a newer version; or some other libtool clone is in use; or
+something else.
+
+> diff -Nuarp xfsprogs-7.1.0.a/healer/Makefile xfsprogs-
+> 7.1.0.b/healer/Makefile
+> --- xfsprogs-7.1.0.a/healer/Makefile    2026-07-10 07:06:28.000000000 -
+> 0400
+> +++ xfsprogs-7.1.0.b/healer/Makefile    2026-07-14 13:08:18.106217736 -
+> 0400
+> @@ -69,7 +69,9 @@ install: $(INSTALL_HEALER)
+>  
+>  install-healer: default
+>         $(INSTALL) -m 755 -d $(PKG_LIBEXEC_DIR)
+> -       $(LTINSTALL) -m 755 $(BUILD_TARGETS) $(PKG_LIBEXEC_DIR)
+> +       for f in $(BUILD_TARGETS); do \
+> +               $(LTINSTALL) -m 755 $$f $(PKG_LIBEXEC_DIR); \
+> +       done
+>  
+>  install-systemd: default
+>         $(INSTALL) -m 755 -d $(SYSTEMD_SYSTEM_UNIT_DIR)
+> 
+> I will send as an attachment.
+> 
+> Thanks!
+
+Thank you for sending a patch, but it needs a proper Signed-off-by: tag
+before anyone can look at it.
+
+https://docs.kernel.org/process/submitting-patches.html#developer-s-certificate-of-origin-1-1
 
 --D
 
->  Prints the block mapping for the current open file using the fiemap
->  ioctl.  Options behave as described in the
->  .BR xfs_bmap (8)
 > 
-> base-commit: e80b048d87fdc5735e0d03ae29b497b402ea8bbe
-> -- 
-> 2.51.2
-> 
+> /allen
+
+> diff -Nuarp xfsprogs-7.1.0.a/healer/Makefile xfsprogs-7.1.0.b/healer/Makefile
+> --- xfsprogs-7.1.0.a/healer/Makefile	2026-07-10 07:06:28.000000000 -0400
+> +++ xfsprogs-7.1.0.b/healer/Makefile	2026-07-14 13:08:18.106217736 -0400
+> @@ -69,7 +69,9 @@ install: $(INSTALL_HEALER)
+>  
+>  install-healer: default
+>  	$(INSTALL) -m 755 -d $(PKG_LIBEXEC_DIR)
+> -	$(LTINSTALL) -m 755 $(BUILD_TARGETS) $(PKG_LIBEXEC_DIR)
+> +	for f in $(BUILD_TARGETS); do \
+> +		$(LTINSTALL) -m 755 $$f $(PKG_LIBEXEC_DIR); \
+> +	done
+>  
+>  install-systemd: default
+>  	$(INSTALL) -m 755 -d $(SYSTEMD_SYSTEM_UNIT_DIR)
+
