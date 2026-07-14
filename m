@@ -1,54 +1,88 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BAB12A1BF
-	for <linux-xfs@vger.kernel.org>; Tue, 14 Jul 2026 15:09:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8759D4963A9
+	for <linux-xfs@vger.kernel.org>; Tue, 14 Jul 2026 15:20:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784041750; cv=none; b=j6whI2IHRp+yVbzVBkDOb537dwAXdFIBYk84XCiCMkzBE4Ng88K7NOnUDwf0KVnkjjDDnPr5FVpJPUl63Srzgfnw495k09Xu1l7FPf67z3sr54Bcc9KcfftYZwO7LydoROLKnPkj43zxPbGLHohyRsWniWZzRSN1SVxvP/ycLSc=
+	t=1784042461; cv=none; b=rQxhau23216I9BW/kZq5yuuIL+tK96nmFO+htJ8w9POXiA6/0YtBAJQ3JbKjfgT45bcK4K47y7rbyn4L0Mq7bBHeMSm5ejbRyPwbtLiSuv+as/dojUn0pfZ4KeZ4cH0LyQLzknOFCBa/UNY1CfZJEuSpQ+mstLBMGXBRZvj1Yj4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784041750; c=relaxed/simple;
-	bh=brtSlaXWYjEvu1apUC9GnGvgR1Va3GgEBftzZynhgww=;
+	s=arc-20240116; t=1784042461; c=relaxed/simple;
+	bh=wqFfTlkEbOdYZZvKD6m8yjmVTIDP1K1kzr/Ncxyd3eI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dwsVIzh8LhXDCE1s0w5MZr7qvflUoZDOQNJ0wDO2h1rSjVQ+6NpTyT/amFMLwYX6f22flHyPCrWj5XgKnd9vmoY/jSuzfiLKOQcE8WxTY22NppL3QrmoA8mf6WVOBu9q4ZxGuVOJzQuN0uGp9RHsyThQI9h2mNcyWsYFHjCcHX8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=csBP4o6d; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=KzEOBpthiNbQPet60fCDfl1NQX7zHaMPxbrSmKJvGMT2y1d11zkNRh99MfIKa3lyHjzWyEGcqxvaRZS4Xm7NSoUrQLDd4WWGUjrT0hQodUY6u1SeomlwNZyPpoW0Y6/BbKIsphG32Ca5uFojEcPhA11CV58TDywRrhGXhD8XHko=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=dASCRtRt; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=xIE1j4Cr; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=dASCRtRt; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=xIE1j4Cr; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="csBP4o6d"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1784041747;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=vHo8RNl2LI2DW1/5h4rnjcUhrGhhIuy5tIua1RWi8to=;
-	b=csBP4o6dS3V8iDdSkrvrHGTmrllO+EdwtMjy+1raH8PwMP7fFtsukyvIHEe9w9eAapFipD
-	piUYblo+fnQhS5M4QvmXilQano7K0AbGjQwwEFm+ItjSr/flLExhBp9M/JlGN2/vlw2Ezv
-	lTr/nYFF4xWkYjvjV5rifnOBlpUE1aA=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-227-rS3m6NEjOFSZpiuBHxUBcw-1; Tue,
- 14 Jul 2026 11:09:03 -0400
-X-MC-Unique: rS3m6NEjOFSZpiuBHxUBcw-1
-X-Mimecast-MFC-AGG-ID: rS3m6NEjOFSZpiuBHxUBcw_1784041742
-Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="dASCRtRt";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="xIE1j4Cr";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="dASCRtRt";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="xIE1j4Cr"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id EBA6818011E6;
-	Tue, 14 Jul 2026 15:09:01 +0000 (UTC)
-Received: from bfoster (unknown [10.22.88.111])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 01EC63000232;
-	Tue, 14 Jul 2026 15:09:00 +0000 (UTC)
-Date: Tue, 14 Jul 2026 11:08:58 -0400
-From: Brian Foster <bfoster@redhat.com>
-To: Ibrahim Hashimov <security@auditcode.ai>
-Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH v2] xfs: bounds-check buffer log item's dirty bitmap
-Message-ID: <alZRCj6IIETEDjRM@bfoster>
-References: <20260708225814.2568-1-security@auditcode.ai>
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 8AB1C3E09;
+	Tue, 14 Jul 2026 15:20:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1784042457; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=kptdctJwrqYn1JC5emwU/TK/4EX/o+cOyDQJ6bNpNg8=;
+	b=dASCRtRtL//gOyKnlywttPlWck8xL5wEGvxxYkQp+GLBVb2rYuh+DGwUc2nRYVlZOUDPmm
+	wnFOEOtHrErBl+e8ffFFpOjtMSGZci8GJ4S0j0TKuxldeSqAs5ui1yJbWv5/HCtAhWRDn9
+	z6R5ubb0NJj+8sTlcOmyNdlZO9mw54o=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1784042457;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=kptdctJwrqYn1JC5emwU/TK/4EX/o+cOyDQJ6bNpNg8=;
+	b=xIE1j4CrqNVRYt8d6Dk4AJ1wPbp4OzW9GO1U+7vd/ZbLByovfW2xse3D6P3ox9jVuQNqoO
+	7bvrJ3ceM2buSsBA==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1784042457; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=kptdctJwrqYn1JC5emwU/TK/4EX/o+cOyDQJ6bNpNg8=;
+	b=dASCRtRtL//gOyKnlywttPlWck8xL5wEGvxxYkQp+GLBVb2rYuh+DGwUc2nRYVlZOUDPmm
+	wnFOEOtHrErBl+e8ffFFpOjtMSGZci8GJ4S0j0TKuxldeSqAs5ui1yJbWv5/HCtAhWRDn9
+	z6R5ubb0NJj+8sTlcOmyNdlZO9mw54o=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1784042457;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=kptdctJwrqYn1JC5emwU/TK/4EX/o+cOyDQJ6bNpNg8=;
+	b=xIE1j4CrqNVRYt8d6Dk4AJ1wPbp4OzW9GO1U+7vd/ZbLByovfW2xse3D6P3ox9jVuQNqoO
+	7bvrJ3ceM2buSsBA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 7A0B8779AE;
+	Tue, 14 Jul 2026 15:20:57 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id ZnPZHNlTVmrnUAAAD6G6ig
+	(envelope-from <jack@suse.cz>); Tue, 14 Jul 2026 15:20:57 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+	id 22BE9A1319; Tue, 14 Jul 2026 17:20:57 +0200 (CEST)
+Date: Tue, 14 Jul 2026 17:20:57 +0200
+From: Jan Kara <jack@suse.cz>
+To: Usama Arif <usama.arif@linux.dev>
+Cc: brauner@kernel.org, qi.zheng@linux.dev, jack@suse.cz, 
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>, 
+	linux-mm@kvack.org, hughd@google.com, boris@bur.io, clm@fb.com, dsterba@suse.com, 
+	linux-btrfs@vger.kernel.org, cem@kernel.org, linux-xfs@vger.kernel.org, 
+	shakeel.butt@linux.dev, hannes@cmpxchg.org, riel@surriel.com, kernel-team@meta.com
+Subject: Re: [PATCH] fs: push nr_cached_objects memcg gating into individual
+ filesystems
+Message-ID: <7yhd7nfbeukx5ycm4tpk2mc37b6cqpiw4q4gbf3elmtbfaoftb@txp5gavwasxv>
+References: <20260714101454.1202449-1-usama.arif@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -57,270 +91,201 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260708225814.2568-1-security@auditcode.ai>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
+In-Reply-To: <20260714101454.1202449-1-usama.arif@linux.dev>
+X-Spam-Flag: NO
+X-Spamd-Result: default: False [-3.80 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	NEURAL_HAM_SHORT(-0.20)[-0.996];
+	MIME_GOOD(-0.10)[text/plain];
+	RCVD_COUNT_THREE(0.00)[3];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	FROM_HAS_DN(0.00)[];
+	ARC_NA(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[19];
+	MIME_TRACE(0.00)[0:+];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	RCVD_TLS_LAST(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MISSING_XM_UA(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.cz:email,suse.com:email,linux.dev:email,imap1.dmz-prg2.suse.org:helo]
+X-Spam-Level: 
+X-Spam-Score: -3.80
 
-On Thu, Jul 09, 2026 at 12:58:14AM +0200, Ibrahim Hashimov wrote:
-> xlog_recover_do_reg_buffer() replays each dirty region a buffer log
-> item's bitmap describes into the in-core buffer read for that log
-> item:
+On Tue 14-07-26 03:14:54, Usama Arif wrote:
+> Commit 0baad6f9b997 ("fs/super: skip non-memcg-aware nr_cached_objects
+> in memcg slab shrink") added a check in fs/super.c that skips the
+> ->nr_cached_objects() hook whenever the shrinker is invoked for a
+> non-root memcg, because none of the current implementations (btrfs,
+> xfs, shmem huge) honour sc->memcg.
 > 
-> 	memcpy(xfs_buf_offset(bp, (uint)bit << XFS_BLF_SHIFT),
-> 		item->ri_buf[i].iov_base,
-> 		nbits << XFS_BLF_SHIFT);
+> That policy is really a filesystem-owned property: fs/super.c should
+> not encode the assumption that these hooks are never memcg-aware,
+> since a future implementation might legitimately filter by sc->memcg.
+> Move the check into btrfs_nr_cached_objects(), xfs_fs_nr_cached_objects()
+> and shmem_unused_huge_count() so each filesystem can lift the
+> restriction independently once its underlying counters/scans become
+> memcg-aware, without needing a coordinated change to fs/super.c.
 > 
-> The only thing standing between that destination offset and the end
-> of "bp" is:
+> Behaviour is unchanged: calls into these hooks from shrink_slab_memcg()
+> still early-return 0 for non-root memcg contexts, keeping the shrinker
+> bit clearable in each memcg's bitmap; the global (kswapd or root
+> direct reclaim) path still drives them as before.
 > 
-> 	ASSERT(BBTOB(bp->b_length) >=
-> 	       ((uint)bit << XFS_BLF_SHIFT) + (nbits << XFS_BLF_SHIFT));
-> 
-> "bp" is sized directly from the logged, attacker-controlled
-> buf_f->blf_len (xlog_recover_buf_commit_pass2() ->
-> xfs_buf_read(..., buf_f->blf_blkno, buf_f->blf_len, ...)), while
-> "bit"/"nbits" come from the logged dirty bitmap (buf_f->blf_data_map),
-> also attacker-controlled. Nothing else relates the two: the source
-> side is trimmed against the log iovec length a few lines down
-> (item->ri_buf[i].iov_len), but the destination side has no equivalent
-> runtime check.
-> 
-> ASSERT() compiles to a no-op on production (non-DEBUG, non-XFS_WARN)
-> kernels, which is exactly where this matters. A dirty log record
-> whose buffer-log-format item logs a small blf_len (e.g. 1, a
-> 512-byte buffer) together with a dirty bitmap bit that indexes past
-> that buffer drives the memcpy() above straight past the end of the
-> recovered buffer's backing allocation, corrupting adjacent kernel
-> heap memory during mount-time log recovery of a crafted (or merely
-> corrupt) XFS image. This is reachable by anyone who can get such an
-> image mounted (CAP_SYS_ADMIN in the init namespace, or automount of
-> removable/untrusted media) -- the standard malicious-filesystem
-> threat model XFS's other verifiers guard against. Found with a
-> KASAN-enabled kernel: a crafted image with a small blf_len and an
-> out-of-range bitmap bit produces a slab-out-of-bounds write during
-> log recovery.
-> 
-> Nearby recovery code already treats this class of "logged size
-> doesn't match reality" problem as a real runtime condition rather
-> than an invariant to assert on. In this very function, the dquot
-> sanity check a few lines below does exactly that:
-> 
-> 	if (item->ri_buf[i].iov_len < size_disk_dquot) {
-> 		xfs_alert(mp, "XFS: dquot too small (%zd) in %s.", ...);
-> 		goto next;
-> 	}
-> 
-> and its sibling xlog_recover_do_inode_buffer(), a little further down
-> in this same file, converts the equivalent destination-bounds
-> ASSERT() into a real XFS_IS_CORRUPT() check that aborts recovery of
-> the item instead of trusting the log:
-> 
-> 	ASSERT((reg_buf_offset + reg_buf_bytes) <= BBTOB(bp->b_length));
-> 	...
-> 	if (XFS_IS_CORRUPT(mp, *logged_nextp == 0)) {
-> 		xfs_alert(mp, "Bad inode buffer log record ...");
-> 		return -EFSCORRUPTED;
-> 	}
-> 
+> Signed-off-by: Usama Arif <usama.arif@linux.dev>
 
-In the spirit of the LLM guidelines thing Carlos had recently posted, I
-feel like this commit log could probably be cut down without losing
-useful information. I'm not sure we need all this detailed context and
-code snippets from other functions, for example. It should be sufficient
-to say something like we have runtime validation/detection in other
-places like and this change is consistent.
+Makes sense to me. Feel free to add:
 
-In general, I think you should read this and think about how to cut it
-down to minimally useful information. I'm not opposed to long commit
-logs by any stretch, but usually these are reserved to explain
-complicated problems and solutions. This is quite a lot of text for a
-patch to convert a preexisting assert to a runtime check.
+Reviewed-by: Jan Kara <jack@suse.cz>
 
-> Give xlog_recover_do_reg_buffer() the same treatment: turn the
-> destination-bounds ASSERT() into a real XFS_IS_CORRUPT() check, log
-> it with xfs_alert() (matching xlog_recover_do_inode_buffer() and the
-> xfs_dquot_item_recover.c size checks), and fail recovery of this
-> buffer with -EFSCORRUPTED instead of copying past its end. Since the
-> function now needs to report failure, change it from "STATIC void"
-> to "STATIC int" and propagate the new error out of all three
-> callers:
-> 
->   - xlog_recover_do_primary_sb_buffer(), which already returns int
->     and already checks other error conditions inline;
->   - xlog_recover_do_dquot_buffer(), which returns a "dirty" bool to
->     its one caller; it gains an "int *error" out-parameter so the
->     caller can distinguish "buffer intentionally skipped" from
->     "buffer recovery failed";
->   - the plain regular-buffer branch of
->     xlog_recover_buf_commit_pass2(), which already has an in-scope
->     "error" local used by the sibling branches right next to it.
-> 
-> This is a minimal, targeted fix: it does not change any successful
-> recovery path (the new check only rejects logs that were already
-> violating the invariant the ASSERT() was documenting), and it
-> mirrors the exact validate-and-fail idiom already used a few lines
-> away in the same file and in fs/xfs/xfs_dquot_item_recover.c.
-> 
-> Verified on a v6.19 KASAN-enabled kernel (CONFIG_XFS_DEBUG=n): mount
-> of a crafted image whose buffer log item's dirty bitmap indexes past
-> its logged blf_len trips a KASAN slab-out-of-bounds write in
-> xlog_recover_do_reg_buffer() before this patch; with the patch
-> applied, mounting the same image fails recovery with -EFSCORRUPTED
-> and no KASAN report is produced.
-> 
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Ibrahim Hashimov <security@auditcode.ai>
-> Assisted-by: AuditCode-AI:2026.07
+								Honza
+
 > ---
-> v2: no functional change; v1 was sent with an empty Subject line due to
->     a local git send-email glitch (leading blank line in the patch file).
+>  fs/btrfs/super.c   | 11 +++++++++++
+>  fs/super.c         | 19 ++-----------------
+>  fs/xfs/xfs_super.c | 12 ++++++++++++
+>  mm/shmem.c         | 11 +++++++++++
+>  4 files changed, 36 insertions(+), 17 deletions(-)
 > 
->  fs/xfs/xfs_buf_item_recover.c | 48 ++++++++++++++++++++++++++++-------
->  1 file changed, 39 insertions(+), 9 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
-> index 02b95b89d1b5..521e5f544caf 100644
-> --- a/fs/xfs/xfs_buf_item_recover.c
-> +++ b/fs/xfs/xfs_buf_item_recover.c
-> @@ -461,7 +461,7 @@ xlog_recover_validate_buf_type(
->   * given buffer.  The bitmap in the buf log format structure indicates
->   * where to place the logged data.
->   */
-> -STATIC void
-> +STATIC int
->  xlog_recover_do_reg_buffer(
->  	struct xfs_mount		*mp,
->  	struct xlog_recover_item	*item,
-> @@ -489,8 +489,25 @@ xlog_recover_do_reg_buffer(
->  		ASSERT(nbits > 0);
->  		ASSERT(item->ri_buf[i].iov_base != NULL);
->  		ASSERT(item->ri_buf[i].iov_len % XFS_BLF_CHUNK == 0);
-> -		ASSERT(BBTOB(bp->b_length) >=
-> -		       ((uint)bit << XFS_BLF_SHIFT) + (nbits << XFS_BLF_SHIFT));
+> diff --git a/fs/btrfs/super.c b/fs/btrfs/super.c
+> index a7d804219bec..16c24bccc897 100644
+> --- a/fs/btrfs/super.c
+> +++ b/fs/btrfs/super.c
+> @@ -22,6 +22,7 @@
+>  #include <linux/namei.h>
+>  #include <linux/miscdevice.h>
+>  #include <linux/magic.h>
+> +#include <linux/memcontrol.h>
+>  #include <linux/slab.h>
+>  #include <linux/ratelimit.h>
+>  #include <linux/crc32c.h>
+> @@ -2434,6 +2435,16 @@ static long btrfs_nr_cached_objects(struct super_block *sb, struct shrink_contro
+>  	struct btrfs_fs_info *fs_info = btrfs_sb(sb);
+>  	const s64 nr = percpu_counter_read_positive(&fs_info->evictable_extent_maps);
+>  
+> +	/*
+> +	 * The evictable extent map counter is filesystem-global and does not
+> +	 * honour sc->memcg, so it is only meaningful on the global (kswapd or
+> +	 * root direct reclaim) shrink path. Skip the per-memcg iterations of
+> +	 * shrink_slab_memcg() to avoid queueing duplicate global work and
+> +	 * pinning the shrinker bit in every memcg's bitmap.
+> +	 */
+> +	if (sc->memcg && !mem_cgroup_is_root(sc->memcg))
+> +		return 0;
 > +
-> +		/*
-> +		 * The bitmap is only trustworthy to the extent that it
-> +		 * describes a region that actually fits inside the buffer we
-> +		 * read in based on the (attacker-controlled) blf_len.  Do not
-> +		 * rely on an ASSERT() for this -- it compiles away entirely
-> +		 * on non-DEBUG kernels, which is exactly where this matters,
-> +		 * so validate it for real and abort recovery of this buffer
-> +		 * rather than copying past the end of it.
-> +		 */
-
-Similarly.. not sure we need a paragraph on what we don't do here (use
-an assert) and why.
-
-Also I find the opposite logic a little more readable as a validation
-check (i.e. bit/nbits too large for buffer), for whatever reason, but
-others might disagree.
-
-> +		if (XFS_IS_CORRUPT(mp, BBTOB(bp->b_length) <
-> +				((uint)bit << XFS_BLF_SHIFT) +
-> +				(nbits << XFS_BLF_SHIFT))) {
-> +			xfs_alert(mp,
-> +	"Bad buffer log item dirty bitmap (bit %d, nbits %d) for %d-byte buffer at daddr 0x%llx.",
-> +				bit, nbits, BBTOB(bp->b_length),
-> +				xfs_buf_daddr(bp));
-> +			return -EFSCORRUPTED;
-> +		}
+>  	trace_btrfs_extent_map_shrinker_count(fs_info, nr);
 >  
->  		/*
->  		 * The dirty regions logged in the buffer, even though
-> @@ -544,6 +561,7 @@ xlog_recover_do_reg_buffer(
->  	ASSERT(i == item->ri_total);
->  
->  	xlog_recover_validate_buf_type(mp, bp, buf_f, current_lsn);
-> +	return 0;
+>  	return nr;
+> diff --git a/fs/super.c b/fs/super.c
+> index d2d04a6f4f84..a8fd61136aaf 100644
+> --- a/fs/super.c
+> +++ b/fs/super.c
+> @@ -24,7 +24,6 @@
+>  #include <linux/export.h>
+>  #include <linux/slab.h>
+>  #include <linux/blkdev.h>
+> -#include <linux/memcontrol.h>
+>  #include <linux/mount.h>
+>  #include <linux/security.h>
+>  #include <linux/writeback.h>		/* for the emergency remount stuff */
+> @@ -170,19 +169,6 @@ static void super_wake(struct super_block *sb, unsigned int flag)
+>  	wake_up_var(&sb->s_flags);
 >  }
 >  
+> -/*
+> - * The s_op->nr_cached_objects hooks (used for example by btrfs and xfs)
+> - * operate on filesystem-global state and ignore sc->memcg. Driving them
+> - * from per-memcg shrink_slab_memcg() invocations only burns CPU walking
+> - * per-cpu counters and queueing duplicate work: the actual reclaim happens on
+> - * the global path (kswapd or root direct reclaim) regardless. Restrict them
+> - * to that path.
+> - */
+> -static inline bool super_fs_objects_eligible(struct shrink_control *sc)
+> -{
+> -	return !sc->memcg || mem_cgroup_is_root(sc->memcg);
+> -}
+> -
 >  /*
-> @@ -553,7 +571,9 @@ xlog_recover_do_reg_buffer(
->   * Else, treat it as a regular buffer and do recovery.
->   *
->   * Return false if the buffer was tossed and true if we recovered the buffer to
-> - * indicate to the caller if the buffer needs writing.
-> + * indicate to the caller if the buffer needs writing.  *error is set if
-> + * recovery of the buffer failed and the caller must abort replay of this
-> + * buffer.
->   */
->  STATIC bool
->  xlog_recover_do_dquot_buffer(
-> @@ -561,10 +581,12 @@ xlog_recover_do_dquot_buffer(
->  	struct xlog			*log,
->  	struct xlog_recover_item	*item,
->  	struct xfs_buf			*bp,
-> -	struct xfs_buf_log_format	*buf_f)
-> +	struct xfs_buf_log_format	*buf_f,
-> +	int				*error)
-
-Hrm, that's kind of an ugly function signature...
-
->  {
->  	uint			type;
+>   * One thing we have to be careful of with a per-sb shrinker is that we don't
+>   * drop the last active reference to the superblock from within the shrinker.
+> @@ -212,7 +198,7 @@ static unsigned long super_cache_scan(struct shrinker *shrink,
+>  	if (!super_trylock_shared(sb))
+>  		return SHRINK_STOP;
 >  
-> +	*error = 0;
->  	trace_xfs_log_recover_buf_dquot_buf(log, buf_f);
+> -	if (sb->s_op->nr_cached_objects && super_fs_objects_eligible(sc))
+> +	if (sb->s_op->nr_cached_objects)
+>  		fs_objects = sb->s_op->nr_cached_objects(sb, sc);
 >  
->  	/*
-> @@ -586,7 +608,7 @@ xlog_recover_do_dquot_buffer(
->  	if (log->l_quotaoffs_flag & type)
->  		return false;
+>  	inodes = list_lru_shrink_count(&sb->s_inode_lru, sc);
+> @@ -273,8 +259,7 @@ static unsigned long super_cache_count(struct shrinker *shrink,
+>  		return 0;
+>  	smp_rmb();
 >  
-> -	xlog_recover_do_reg_buffer(mp, item, bp, buf_f, NULLCOMMITLSN);
-> +	*error = xlog_recover_do_reg_buffer(mp, item, bp, buf_f, NULLCOMMITLSN);
->  	return true;
+> -	if (sb->s_op && sb->s_op->nr_cached_objects &&
+> -	    super_fs_objects_eligible(sc))
+> +	if (sb->s_op && sb->s_op->nr_cached_objects)
+>  		total_objects = sb->s_op->nr_cached_objects(sb, sc);
+>  
+>  	total_objects += list_lru_shrink_count(&sb->s_dentry_lru, sc);
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index eac7f9503805..f0d8251fad3b 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -54,6 +54,7 @@
+>  #include "scrub/rcbag_btree.h"
+>  
+>  #include <linux/magic.h>
+> +#include <linux/memcontrol.h>
+>  #include <linux/fs_context.h>
+>  #include <linux/fs_parser.h>
+>  #include <linux/fserror.h>
+> @@ -1242,6 +1243,17 @@ xfs_fs_nr_cached_objects(
+>  	/* Paranoia: catch incorrect calls during mount setup or teardown */
+>  	if (WARN_ON_ONCE(!sb->s_fs_info))
+>  		return 0;
+> +
+> +	/*
+> +	 * The reclaimable inode count is filesystem-global and does not honour
+> +	 * sc->memcg, so it is only meaningful on the global (kswapd or root
+> +	 * direct reclaim) shrink path. Skip the per-memcg iterations of
+> +	 * shrink_slab_memcg() to avoid queueing duplicate global work and
+> +	 * pinning the shrinker bit in every memcg's bitmap.
+> +	 */
+> +	if (sc->memcg && !mem_cgroup_is_root(sc->memcg))
+> +		return 0;
+> +
+>  	return xfs_reclaim_inodes_count(XFS_M(sb));
 >  }
 >  
-> @@ -724,7 +746,9 @@ xlog_recover_do_primary_sb_buffer(
->  	xfs_rgnumber_t			orig_rgcount = mp->m_sb.sb_rgcount;
->  	int				error;
->  
-> -	xlog_recover_do_reg_buffer(mp, item, bp, buf_f, current_lsn);
-> +	error = xlog_recover_do_reg_buffer(mp, item, bp, buf_f, current_lsn);
-> +	if (error)
-> +		return error;
->  
->  	if (orig_agcount == 0) {
->  		xfs_alert(mp, "Trying to grow file system without AGs");
-> @@ -1083,7 +1107,10 @@ xlog_recover_buf_commit_pass2(
->  		  (XFS_BLF_UDQUOT_BUF|XFS_BLF_PDQUOT_BUF|XFS_BLF_GDQUOT_BUF)) {
->  		bool	dirty;
->  
-> -		dirty = xlog_recover_do_dquot_buffer(mp, log, item, bp, buf_f);
-> +		dirty = xlog_recover_do_dquot_buffer(mp, log, item, bp, buf_f,
-> +						     &error);
-> +		if (error)
-> +			goto out_release;
->  		if (!dirty)
->  			goto out_release;
-
-... and the error = 0 assignment buried in the _do_dquot_buffer() call
-is also kind of confusing, since these both reuse the same error path
-out of the function.
-
-I wonder if we should switch the semantics of the call to return error
-and let 'dirty' be a parameter..? Another option could be to use a
-special error code to reflect the !dirty case that we can check for and
-reset here, but that might be too hacky as well (but if not, should
-probably be a separate patch). Hm?
-
-Brian
-
->  	} else if ((xfs_blft_from_flags(buf_f) & XFS_BLFT_SB_BUF) &&
-> @@ -1105,7 +1132,10 @@ xlog_recover_buf_commit_pass2(
->  			xfs_buf_relse(rtsb_bp);
->  		}
->  	} else {
-> -		xlog_recover_do_reg_buffer(mp, item, bp, buf_f, current_lsn);
-> +		error = xlog_recover_do_reg_buffer(mp, item, bp, buf_f,
-> +						   current_lsn);
-> +		if (error)
-> +			goto out_release;
->  	}
->  
->  	/*
+> diff --git a/mm/shmem.c b/mm/shmem.c
+> index 5789a0f5a346..3ba812e4f5ba 100644
+> --- a/mm/shmem.c
+> +++ b/mm/shmem.c
+> @@ -846,6 +846,17 @@ static long shmem_unused_huge_count(struct super_block *sb,
+>  		struct shrink_control *sc)
+>  {
+>  	struct shmem_sb_info *sbinfo = SHMEM_SB(sb);
+> +
+> +	/*
+> +	 * The per-superblock shrinklist is filesystem-global and does not
+> +	 * honour sc->memcg, so it is only meaningful on the global (kswapd or
+> +	 * root direct reclaim) shrink path. Skip the per-memcg iterations of
+> +	 * shrink_slab_memcg() to avoid queueing duplicate global work and
+> +	 * pinning the shrinker bit in every memcg's bitmap.
+> +	 */
+> +	if (sc->memcg && !mem_cgroup_is_root(sc->memcg))
+> +		return 0;
+> +
+>  	return READ_ONCE(sbinfo->shrinklist_len);
+>  }
+>  #else /* !CONFIG_TRANSPARENT_HUGEPAGE */
 > -- 
-> 2.50.1 (Apple Git-155)
+> 2.53.0-Meta
 > 
-> 
-
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
