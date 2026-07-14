@@ -1,123 +1,101 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3B1A3FBB7E;
-	Tue, 14 Jul 2026 08:31:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87E6D35DA6A
+	for <linux-xfs@vger.kernel.org>; Tue, 14 Jul 2026 08:52:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784017919; cv=none; b=tFZQVGUFVSFdnNLWkT6ZoAD45jBzj3ZH8Y8A5lXnl4CeS6aV66yz/omsOdYIx6fTcwIZj3BGfETER2rWOZImw4MjLcSLZAueus4GiLQ2FvfLFp1+JCDrgD8psNu0ayLqDC5M3mGpuZzat46YJkwRUW03+qJCycXxDQ/9oqlNzCA=
+	t=1784019171; cv=none; b=r35ryj0SWnqRRoUmgi/bsDEtGC5S/r8eO4zKjp9E9aAce9V8GvsHs8KXX25ET5pB5wz7IIny/sBkVroJcy0i/SOYMwXoViTgcXML0gFglY3rN6nDQjBHWi1D4ScsJ3DNbC1Gfcu7hjhMeLC7m1PHvB5k9AfyOA6aMbgi7Ye+tpk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784017919; c=relaxed/simple;
-	bh=mIpMt/nd0CbxXQB1BqNm7V/SHfXY7VyxtInjVCbXVMk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=C7hcjLZYxe+hbhXQJuyMSvbihFft6aRagK59SjwrTKlur2i9VNRFLYQAAOuZ368hQamDw+m7vHCEPHWFenxPS5qM9yv3XrxQwsw+wOzkb3t0wDtt0YQJKQnKG3MR1/YlFuykNNIQ1E891KruwF2G4KY+Sz6V3b6YbDKMjsd6QJo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.198])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4gzsvz5G1gzKHMNr;
-	Tue, 14 Jul 2026 16:31:11 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 2588B408C6;
-	Tue, 14 Jul 2026 16:31:42 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.50.85.155])
-	by APP1 (Coremail) with UTF8SMTPSA id cCh0CgDH1nLl81VqTRS8BA--.57256S9;
-	Tue, 14 Jul 2026 16:31:42 +0800 (CST)
-From: Zhang Yi <yi.zhang@huaweicloud.com>
-To: linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Cc: linux-ext4@vger.kernel.org,
-	brauner@kernel.org,
-	djwong@kernel.org,
-	hch@infradead.org,
-	joannelkoong@gmail.com,
-	yi.zhang@huawei.com,
-	yi.zhang@huaweicloud.com,
-	yizhang089@gmail.com,
-	chengzhihao1@huawei.com,
-	yangerkun@huawei.com,
-	yukuai@fnnas.com
-Subject: [PATCH v4 5/5] iomap: add comments for ifs_clear/set_range_dirty()
-Date: Tue, 14 Jul 2026 16:23:25 +0800
-Message-ID: <20260714082325.325163-6-yi.zhang@huaweicloud.com>
-X-Mailer: git-send-email 2.52.0
-In-Reply-To: <20260714082325.325163-1-yi.zhang@huaweicloud.com>
-References: <20260714082325.325163-1-yi.zhang@huaweicloud.com>
+	s=arc-20240116; t=1784019171; c=relaxed/simple;
+	bh=MRxZN58RCNS6CBVnVZDbllFBtxSUh1WP4Y+7nGJNF5Y=;
+	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=ueHT00DUYIsrfDSvEku7dRxwUkgfpt4GL35748YK3l5YpMliwaYwEgkfh8hOaGeEOGkwT7JphoOjzKUxNszBKxKLTYh5b8YTOAv9Sd3MckJkhmKlR26fN4OcEds5yefcNcmX3jezQ175uAvZHsgi/OXkJqnysDrUdTbmynosSrw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OYXxA7pp; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OYXxA7pp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8F4FE1F000E9
+	for <linux-xfs@vger.kernel.org>; Tue, 14 Jul 2026 08:52:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784019170;
+	bh=XqmmF3/D5yerfgUF8tE/1n0rjtBYmiry9ETKhdvsHv0=;
+	h=Date:From:To:Subject;
+	b=OYXxA7ppxPsFq/u98LPmI94+qipbmrwcUD/m4r+FfKnWBJTxCE9qOJAZ9SxWlYE7J
+	 NFW+vyiHrGRkG/dSCv49NDD3KilY9v+RoH1EUnKNjO1xC0zTf2SN79Tthdukk4uYKN
+	 g9k0DMP8HIVbffIB1Xiz9LyPYQuFNTH36cXdUj8+HA0ntUzRDulF7HHidLprzYBG2j
+	 FfGPCMkaoV0PURrMCyxkXKc+Gq7SH0dA/ZXRKLryq8Z3cvJUi8BplyfDXE66wAzBd5
+	 zWZdAGjeFZEVrVqSBENh9uZUTmbHiE38tLzV8hNk1JO1fbJp8JS2NFk6BLWfxlO4WM
+	 HJVExrvcssP/g==
+Date: Tue, 14 Jul 2026 10:52:46 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: linux-xfs@vger.kernel.org
+Subject: [ANNOUNCE] xfs-linux: for-next updated to 11b039aa588b
+Message-ID: <alX4xI5R8pG26dug@nidhogg.toxiclabs.cc>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgDH1nLl81VqTRS8BA--.57256S9
-X-Coremail-Antispam: 1UD129KBjvJXoW7CFyUZF4fZryDJFWDCF1xKrg_yoW8Zw48pF
-	43K3yDKr4DWrs7u3W3WFW5A34Fqws3XFWfGFWxGwnIga15Ar9rKF1DKa109Fy8KryxJFnY
-	kr1j9a4FgF1UAFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUmS14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
-	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
-	z4x0Y4vE2Ix0cI8IcVAFwI0_Gr0_Xr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr
-	1UM28EF7xvwVC2z280aVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE
-	3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2I
-	x0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8
-	JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2
-	ka0xkIwI1lc7CjxVAaw2AFwI0_Jw0_GFyl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Y
-	z7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zV
-	AF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_JFI_Gr1l
-	IxAIcVC0I7IYx2IY6xkF7I0E14v26F4j6r4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF
-	4lIxAIcVC2z280aVAFwI0_Gr0_Cr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBI
-	daVFxhVjvjDU0xZFpf9x0JUQFxUUUUUU=
-X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-From: Zhang Yi <yi.zhang@huawei.com>
 
-The range alignment strategy differs between ifs_clear_range_dirty() and
-ifs_set_range_dirty(). The former rounds inwards to clear only
-fully-covered blocks, while the latter rounds outwards to mark any
-partially-touched block as dirty. Add comments to document this
-asymmetry in block range calculation.
+Hi folks,
 
-Suggested-by: "Darrick J. Wong" <djwong@kernel.org>
-Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
-Reviewed-by: Joanne Koong <joannelkoong@gmail.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/iomap/buffered-io.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+The for-next branch of the xfs-linux repository at:
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index a356efbae6b0..c12237ed7cde 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -173,6 +173,13 @@ static unsigned iomap_find_dirty_range(struct folio *folio, u64 *range_start,
- 	return range_end - *range_start;
- }
- 
-+/*
-+ * Clear the per-block dirty bits for the range [@off, @off + @len) within a
-+ * folio.  The range is rounded inwards so that only blocks fully covered by
-+ * the range are cleared.  This is required for operations like folio
-+ * invalidation, where we must ensure a block is fully clean before discarding
-+ * it.
-+ */
- static void ifs_clear_range_dirty(struct folio *folio,
- 		struct iomap_folio_state *ifs, size_t off, size_t len)
- {
-@@ -200,6 +207,13 @@ static void iomap_clear_range_dirty(struct folio *folio, size_t off, size_t len)
- 		ifs_clear_range_dirty(folio, ifs, off, len);
- }
- 
-+/*
-+ * Set the per-block dirty bits for the range [@off, @off + @len) within a
-+ * folio.  The range is rounded outwards so that any block partially touched
-+ * by the range is marked dirty.  This ensures blocks containing even a
-+ * single dirty byte will be included in subsequent writeback, preventing
-+ * data loss when partial blocks are written.
-+ */
- static void ifs_set_range_dirty(struct folio *folio,
- 		struct iomap_folio_state *ifs, size_t off, size_t len)
- {
--- 
-2.52.0
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
+has just been updated.
+
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
+
+The new head of the for-next branch is commit:
+
+11b039aa588b xfs: don't zap bmbt forks if they are MAXLEVELS tall
+
+16 new commits:
+
+Andrey Albershteyn (1):
+      [9202ee546b0c] xfs: fix null pointer dereference in tracepoint
+
+Darrick J. Wong (15):
+      [ba5ea85a15bd] xfs: resample the data fork mapping after cycling ILOCK
+      [6703032e46d1] xfs: don't replace the wrong part of the cow fork
+      [13b496c74f27] xfs: make cow repair somewhat flaky when debugging knob enabled
+      [0296824c9c8a] xfs: move cow_replace_mapping to xfs_bmap_util.c
+      [9303ae0254cd] xfs: don't wrap around quota ids in dqiterate
+      [21d7bae20902] xfs: use rtrefcount btree cursor in xchk_xref_is_rt_cow_staging
+      [339221cf2071] xfs: use the rt version of the cow staging checker
+      [356205a8c4bd] xfs: write the rg superblock when fixing it
+      [4225af2efb21] xfs: grab rtrmap btree when checking rgsuper
+      [1abdcea06bc3] xfs: set xfarray killable sort correctly
+      [9d2bf2d60b31] xfs: fix off-by-one error when calling xchk_xref_has_rt_owner
+      [86b7d76a1a4d] xfs: handle non-inode owners for rtrmap record checking
+      [96869cc20ddd] xfs: fully check the parent handle when it points to the rootdir
+      [5b75dcb0766d] xfs: clamp timestamp nanoseconds correctly
+      [11b039aa588b] xfs: don't zap bmbt forks if they are MAXLEVELS tall
+
+Code Diffstat:
+
+ fs/xfs/libxfs/xfs_defer.c   |   2 +-
+ fs/xfs/scrub/cow_repair.c   | 177 +++++++++++++++++++++-----------------------
+ fs/xfs/scrub/dirtree.c      |  16 ++--
+ fs/xfs/scrub/dqiterate.c    |   2 +-
+ fs/xfs/scrub/inode_repair.c |   4 +-
+ fs/xfs/scrub/rgsuper.c      |  14 +++-
+ fs/xfs/scrub/rtbitmap.c     |   2 +-
+ fs/xfs/scrub/rtrefcount.c   |   2 +-
+ fs/xfs/scrub/rtrmap.c       |   8 +-
+ fs/xfs/scrub/scrub.h        |   6 +-
+ fs/xfs/scrub/trace.h        |  35 ---------
+ fs/xfs/scrub/xfarray.c      |   3 +-
+ fs/xfs/xfs_bmap_util.c      |  89 ++++++++++++++++++++++
+ fs/xfs/xfs_bmap_util.h      |   4 +
+ fs/xfs/xfs_reflink.c        |  36 +++++++++
+ fs/xfs/xfs_trace.h          |  41 ++++++++++
+ 16 files changed, 293 insertions(+), 148 deletions(-)
