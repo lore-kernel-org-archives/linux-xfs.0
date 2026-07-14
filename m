@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8118F372696;
-	Tue, 14 Jul 2026 06:07:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 207143D666F;
+	Tue, 14 Jul 2026 06:07:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784009236; cv=none; b=hhgcXt9wSvJGRnKi06cIlr0HqB/O8QzPtLY2vOO5ziFGlDydA+3IlHSEagIfSAPd1VazXTZKErr1hRnUVFCsi1mfcUPhwxh614YhQZRMN18w8mQUrAOoXJCF55TiaJ/ZGbAImdzoO0Fyjm4jWnZY4FYWUvA5AnVSEBT8fZ0QyBU=
+	t=1784009252; cv=none; b=XX+cfm8AQx+3lGKtP1usZSaUUwpbXVprfuOm/k518mD+ezKWk1OfLB1JvuMS4hT3HQ47lFmH0hxMllwKAtLBSWpERuFSdDst1NdvmaQM2Ti7DyFhTdmwCP8hImiBO4RdDTp0ddhT6xReP2tc4DMH/tLdfjish4Nm1CRG3Og6b9I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784009236; c=relaxed/simple;
-	bh=EIKwocMY9Mz16Gz80xSOpJj0MFnDIoaOtpxqAdHPjUM=;
+	s=arc-20240116; t=1784009252; c=relaxed/simple;
+	bh=Cetr1bQndrsAVypnNfbtmGSlC8a4+hsuihBnoXbU8jI=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=jFCIyTPAms53aDsa8HomBIRjQw5TEKv9qZNMPTi8gIfBi5Nds7sX+t12D1StPzjNbzTBpFB4JbTgW7nAg263B3lUahoKYiX4UbNqyPkKuZnjyrcpYauDV4qZJt0dXx3vBN/brO085VZTtLmhvHmFkPxBWclvgs/d7QVRlwDwL5M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YMqPbsMP; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=nGB5AAbUVaMxJG0Gx7RVpFmB5jQM5cSAq8WuWmbZLTChilhqnoNvz1e2Krpg/apQZqJwHchNuVn5N/zs1JrEibZJF2RSxcbTcwkAbuSwWrF1uSSGKoOf134bQh6jyj6KxdQUoWqyUEzWWl4dHfblrBI9g8HAGVO4xmoneVeGoIs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hg7vyg35; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YMqPbsMP"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 594F51F00A3A;
-	Tue, 14 Jul 2026 06:07:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hg7vyg35"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id D8DD11F000E9;
+	Tue, 14 Jul 2026 06:07:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784009235;
-	bh=VOnevRL2fUwJn3hTVi1t/RaCUkd0JBF3tRvHqDHD9hY=;
+	s=k20260515; t=1784009250;
+	bh=ZxYKo0sRpEti0pQnZnKyjrDyOGZ+Pr3nGZtSujy8hwQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=YMqPbsMPldI+eCjIvRBaMxiKuQMGYGIqnPAbUL5q2ieW7PartREfOiGQGATj0ssAv
-	 1U9dl0jJRiujfUljbT4eDxrjQM7gxWecWrnqyr2ZTgvSP0JofOlLPTdkCeZpD79Zoa
-	 iRFunq7PFiA1hMhQ5QnI3rAqXK03HNQEg4UY8UBAM4ZR7xkaG4IwDRPRwm7dGreW/Y
-	 CpFOrDDdVXSe/Db4sBS/3E7+XPfndAKMMLM2RPtd0nCBapOKVqzSqEPCE61L0CiL66
-	 4KVRN2oxUnY3/p3e+ERcF+BbKTHAhGdwTZUEiXSF0bdsdQ/PFFKmjCrxAt2BtVlqH+
-	 UF+YINhRt5vnA==
-Date: Mon, 13 Jul 2026 23:07:15 -0700
-Subject: [PATCH 5/6] xfs: clamp timestamp nanoseconds correctly
+	b=hg7vyg35n2n7XrWHkCEpXSFd4tC1JSMpWnKbasuV47QddmSK3dFQWxasNpKkFdhie
+	 +BgmSin8EzhDQy8llHOvy9E0gluM49ecbdN+EIItypDPGrgEFImw4y4qM51C3/QuqG
+	 IxrWpQLMulIjF/7Gq4K198Ykj6l+bwnCxsfxqYQahEfETSOaOwLC40GppR/Ete0qMT
+	 Lv6oSKAsA2eI1P+hcZmk+VdMCp2JwBzW8lMpBu7KkTXMxeBk1LJj29eJp3rvL5zl13
+	 HYBeaHW+f9eHwZNuqGGZKuhOMP5IlE5Xr57FXJ2LFdD6Q3tKnJuMYGbd61eHBfpKj2
+	 XGI0uDfHvxwOQ==
+Date: Mon, 13 Jul 2026 23:07:30 -0700
+Subject: [PATCH 6/6] xfs: don't zap bmbt forks if they are MAXLEVELS tall
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org, hch@lst.de
 Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <178400716925.268162.444784889317482361.stgit@frogsfrogsfrogs>
+Message-ID: <178400716946.268162.18317924649043454437.stgit@frogsfrogsfrogs>
 In-Reply-To: <178400716782.268162.4846177784022689546.stgit@frogsfrogsfrogs>
 References: <178400716782.268162.4846177784022689546.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,11 +45,12 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-LOLLM noticed an off-by-one error in the nsec clamping; fix that so that
-we never have tv_nsec == 1e9.
+LOLLM noticed a discrepancy between the bmbt level checks in the libxfs
+bmbt code vs. the inode repair code.  We do actually allow a bmbt root
+that proclaims to have a height of XFS_BM_MAXLEVELS.
 
 Cc: <stable@vger.kernel.org> # v6.8
-Fixes: 2d295fe65776d1 ("xfs: repair inode records")
+Fixes: e744cef2060559 ("xfs: zap broken inode forks")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Assisted-by: LOLLM # finding obvious bugs
 ---
@@ -58,16 +59,16 @@ Assisted-by: LOLLM # finding obvious bugs
 
 
 diff --git a/fs/xfs/scrub/inode_repair.c b/fs/xfs/scrub/inode_repair.c
-index 493dcf5cc6c159..5565e80691a69e 100644
+index 5565e80691a69e..3ec41c19835116 100644
 --- a/fs/xfs/scrub/inode_repair.c
 +++ b/fs/xfs/scrub/inode_repair.c
-@@ -1757,7 +1757,7 @@ xrep_clamp_timestamp(
- 	struct xfs_inode	*ip,
- 	struct timespec64	*ts)
- {
--	ts->tv_nsec = clamp_t(long, ts->tv_nsec, 0, NSEC_PER_SEC);
-+	ts->tv_nsec = clamp_t(long, ts->tv_nsec, 0, NSEC_PER_SEC - 1);
- 	*ts = timestamp_truncate(*ts, VFS_I(ip));
- }
+@@ -921,7 +921,7 @@ xrep_dinode_bad_bmbt_fork(
  
+ 	if (nrecs == 0 || xfs_bmdr_space_calc(nrecs) > dfork_size)
+ 		return true;
+-	if (level == 0 || level >= XFS_BM_MAXLEVELS(sc->mp, whichfork))
++	if (level == 0 || level > XFS_BM_MAXLEVELS(sc->mp, whichfork))
+ 		return true;
+ 
+ 	dmxr = xfs_bmdr_maxrecs(dfork_size, 0);
 
