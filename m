@@ -1,27 +1,27 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 816AD3FA5EB;
-	Tue, 14 Jul 2026 08:31:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE2AA406804;
+	Tue, 14 Jul 2026 08:31:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784017913; cv=none; b=gc3b1FCv+AIcNHqe8P9VuA8ycT8xf1UCR4fe+RLKMqYdPbgn5VlbCBP5MVbprrBdRdf9XQxHAlM4361funskyXn2SGKllHmhqilj4H6iJyLTYbpZsa9cPs79GwxjirMHPS7+StszN/hTyLtZMF+SfHwdFLxixsC9Ifuu7kC97MY=
+	t=1784017914; cv=none; b=JzePq4B3r6bIS3g59e2jLMvWrA+XSVJL2LdGAhrMwoMSS8EsUOH8a/tzW7zFwj9pcQKBZawX6yqVofW03m1ugDLXuVhx+U/zaS/3T0WS8qfPKwX2rzoV5rlf6IXeveTXzhQTA+Dhh1wlCs/bCSgrd0YYLwuXeBdzSREEoJ8h1FQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784017913; c=relaxed/simple;
-	bh=pc9I7VwVtgC5EC5A549+JH90biQ7qKKttkL32luHcBk=;
+	s=arc-20240116; t=1784017914; c=relaxed/simple;
+	bh=3mCT2yARTPVjOJMZz+nAmGnbhR8N7PjAAv2iHBcdT3M=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=QXex0bW3wVCgk5mXfbCcPthXQibOaoJX96JK3HraMTEQqkhN2iPh/3XcUy7FJCEKPWDJn6TrHuD4Pt+DLcYOGJGhke8AzjUIQQRsvNyCT0WfQX74lWf94fJeZ1et+vw7H2O6wfRj/TPjlndg/7x0Xb05lZ65GgcPK+E7jllI8as=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=none smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+	 MIME-Version; b=F3iG51ZwX1Y7MpXmifnnN4TLtgmcNOI0waG4BUd3qHy7nTWdQ6UYHNPGaTR+TG8ttEBykmaeA0eUbrFOudY4dbev0SUmQraxO6xZNRcwRbCLzK5f32M78Ae0AOwnyT9uxhAWpTurdn6V3rMm2C87WCuzOQgKMCUn5lq7kJ688/I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.177])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4gzsvz4nHKzKHMP8;
-	Tue, 14 Jul 2026 16:31:11 +0800 (CST)
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.170])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4gzswG5sgTzYQtlf;
+	Tue, 14 Jul 2026 16:31:26 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 092E140592;
-	Tue, 14 Jul 2026 16:31:42 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id CD62540570;
+	Tue, 14 Jul 2026 16:31:41 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.50.85.155])
-	by APP1 (Coremail) with UTF8SMTPSA id cCh0CgDH1nLl81VqTRS8BA--.57256S7;
+	by APP1 (Coremail) with UTF8SMTPSA id cCh0CgDH1nLl81VqTRS8BA--.57256S5;
 	Tue, 14 Jul 2026 16:31:41 +0800 (CST)
 From: Zhang Yi <yi.zhang@huaweicloud.com>
 To: linux-fsdevel@vger.kernel.org,
@@ -37,9 +37,9 @@ Cc: linux-ext4@vger.kernel.org,
 	chengzhihao1@huawei.com,
 	yangerkun@huawei.com,
 	yukuai@fnnas.com
-Subject: [PATCH v4 3/5] iomap: fix incorrect did_zero setting in iomap_zero_iter()
-Date: Tue, 14 Jul 2026 16:23:23 +0800
-Message-ID: <20260714082325.325163-4-yi.zhang@huaweicloud.com>
+Subject: [PATCH v4 1/5] iomap: correct the range of a partial dirty clear
+Date: Tue, 14 Jul 2026 16:23:21 +0800
+Message-ID: <20260714082325.325163-2-yi.zhang@huaweicloud.com>
 X-Mailer: git-send-email 2.52.0
 In-Reply-To: <20260714082325.325163-1-yi.zhang@huaweicloud.com>
 References: <20260714082325.325163-1-yi.zhang@huaweicloud.com>
@@ -50,91 +50,73 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgDH1nLl81VqTRS8BA--.57256S7
-X-Coremail-Antispam: 1UD129KBjvJXoWxJr1UJr4fuw1kXF18uw4kZwb_yoW8uw4Dp3
-	sxKayDCFs7XrW7uF1kJF9IqFWYkw1rJFW7Wr4UGwn8ZFs0vr4akr1FgayFqF1xJ34fA3WS
-	yr40ya4xZF15CrDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUm214x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JrWl82xGYIkIc2
-	x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-	Y4vE2Ix0cI8IcVAFwI0_JFI_Gr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr1UM2
-	8EF7xvwVC2z280aVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1l
-	e2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI
-	8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwAC
-	jcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka0x
-	kIwI1lc7CjxVAaw2AFwI0_Jw0_GFyl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_
-	Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1V
-	AY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAI
-	cVC0I7IYx2IY6xkF7I0E14v26F4j6r4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIx
-	AIcVC2z280aVAFwI0_Gr0_Cr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBIdaVF
-	xhVjvjDU0xZFpf9x0JUHWlkUUUUU=
+X-CM-TRANSID:cCh0CgDH1nLl81VqTRS8BA--.57256S5
+X-Coremail-Antispam: 1UD129KBjvJXoW7ury5ArW5Wr4DKF1xuryDJrb_yoW8ZF13pa
+	n3KF45KrWDX348u3W8ZFWrXFyFga9rWFWxJrW3Wrn3Wa15JFyFgF1v93y5uFyUKrsrAF1F
+	vF13KryxCr4DArJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUmY14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jr4l82xGYIkIc2
+	x26xkF7I0E14v26r4j6ryUM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+	Y4vE2Ix0cI8IcVAFwI0_JFI_Gr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1l84
+	ACjcxK6I8E87Iv67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
+	0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
+	IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
+	Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
+	xKxwCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWU
+	JVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67
+	kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY
+	6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0x
+	vEx4A2jsIE14v26r4j6F4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr1j6F4UJbIYCTnIWIev
+	Ja73UjIFyTuYvjfU8XdbUUUUU
 X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
 From: Zhang Yi <yi.zhang@huawei.com>
 
-The did_zero output parameter was unconditionally set after the loop,
-which is incorrect. It should only be set when the zeroing operation
-actually completes, not when IOMAP_F_STALE is set or when
-IOMAP_F_FOLIO_BATCH is set but !folio causes the loop to break early,
-or when iomap_iter_advance() returns an error.
+The block range calculation in ifs_clear_range_dirty() is incorrect when
+partially clearing a range in a folio. We cannot clear the dirty bit of
+the first block or the last block if the start or end offset is not
+blocksize-aligned. This has not yet caused any issues since we always
+clear a whole folio in iomap_writeback_folio().
 
-This causes did_zero to be incorrectly set when zeroing a clean
-unwritten extent because the loop exits early without actually zeroing
-any data.
+Fix this by rounding up the first block to blocksize alignment, and
+calculate the last block by rounding down (using truncation). Correct
+the nr_blks calculation accordingly.
 
-Fix it by using a local variable to track whether any folio was actually
-zeroed, and only set did_zero after the loop if zeroing happened.
-
-Fixes: 98eb8d95025b ("iomap: set did_zero to true when zeroing successfully")
+Fixes: 4ce02c679722 ("iomap: Add per-block dirty state tracking to improve performance")
 Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
+Reviewed-by: Joanne Koong <joannelkoong@gmail.com>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/iomap/buffered-io.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ fs/iomap/buffered-io.c | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
 
 diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index aeeed6316cf9..7f77a1f68160 100644
+index d55b936e6986..48878bc4ff62 100644
 --- a/fs/iomap/buffered-io.c
 +++ b/fs/iomap/buffered-io.c
-@@ -1542,6 +1542,7 @@ static int iomap_zero_iter(struct iomap_iter *iter, bool *did_zero,
- 		const struct iomap_write_ops *write_ops)
+@@ -176,13 +176,17 @@ static void ifs_clear_range_dirty(struct folio *folio,
  {
- 	u64 bytes = iomap_length(iter);
-+	bool zeroed = false;
- 	int status;
+ 	struct inode *inode = folio->mapping->host;
+ 	unsigned int blks_per_folio = i_blocks_per_folio(inode, folio);
+-	unsigned int first_blk = (off >> inode->i_blkbits);
+-	unsigned int last_blk = (off + len - 1) >> inode->i_blkbits;
+-	unsigned int nr_blks = last_blk - first_blk + 1;
++	unsigned int first_blk = round_up(off, i_blocksize(inode)) >>
++				 inode->i_blkbits;
++	unsigned int last_blk = (off + len) >> inode->i_blkbits;
+ 	unsigned long flags;
  
- 	do {
-@@ -1560,6 +1561,8 @@ static int iomap_zero_iter(struct iomap_iter *iter, bool *did_zero,
- 		/* a NULL folio means we're done with a folio batch */
- 		if (!folio) {
- 			status = iomap_iter_advance_full(iter);
-+			if (status)
-+				return status;
- 			break;
- 		}
- 
-@@ -1570,6 +1573,7 @@ static int iomap_zero_iter(struct iomap_iter *iter, bool *did_zero,
- 				bytes);
- 
- 		folio_zero_range(folio, offset, bytes);
-+		zeroed = true;
- 		folio_mark_accessed(folio);
- 
- 		ret = iomap_write_end(iter, bytes, bytes, folio);
-@@ -1579,10 +1583,10 @@ static int iomap_zero_iter(struct iomap_iter *iter, bool *did_zero,
- 
- 		status = iomap_iter_advance(iter, bytes);
- 		if (status)
--			break;
-+			return status;
- 	} while ((bytes = iomap_length(iter)) > 0);
- 
--	if (did_zero)
-+	if (did_zero && zeroed)
- 		*did_zero = true;
- 	return status;
++	if (first_blk >= last_blk)
++		return;
++
+ 	spin_lock_irqsave(&ifs->state_lock, flags);
+-	bitmap_clear(ifs->state, first_blk + blks_per_folio, nr_blks);
++	bitmap_clear(ifs->state, first_blk + blks_per_folio,
++		     last_blk - first_blk);
+ 	spin_unlock_irqrestore(&ifs->state_lock, flags);
  }
+ 
 -- 
 2.52.0
 
