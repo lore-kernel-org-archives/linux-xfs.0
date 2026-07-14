@@ -1,57 +1,39 @@
-Received: from out-179.mta1.migadu.com (out-179.mta1.migadu.com [95.215.58.179])
+Received: from mout-p-103.mailbox.org (mout-p-103.mailbox.org [80.241.56.161])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5FB2366DA3;
-	Tue, 14 Jul 2026 10:18:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F35B8370D4F
+	for <linux-xfs@vger.kernel.org>; Tue, 14 Jul 2026 10:53:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.161
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784024282; cv=none; b=oC+oapZf+L/QoM8nEejcDkapjEbVTCg8m0XJNmZz4VcwKOLh8LJkZZBCgZqSEzYNPyT8jsyrcazY9G7R+TB/jNJQ0peDHEKvrgEbfj2OWkk7Lo1Lo+t+U5Vu3WVr+EM9KFKX7VSTgtW0d+h0Wv6uaI2910I23qlCNvdnz+m0N6Q=
+	t=1784026409; cv=none; b=Z9t/QoU22XRM5zSyx7zpq0/8AXSMjmXTLwO57ws6Fir77KaOscDTzDCD8qOvSXgCgiP1zLhIDuWcovsrLBdeAg+ZdE8xqHm9bq0rdb+0Ip6BBS2kyYipqqN6f4lKpQL8PVN9LhmMjA0qjWDyBw80kkeZQh8SDMmwT/WWrR8GG/U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784024282; c=relaxed/simple;
-	bh=Mc8muXwHgWJ3LP8g1wRWeqXEkFLLP6iDZu3v9ZOHf+A=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=bR4CbCIgDjSSWLD08bHgftLxanXf3+Prp2f5mu7LulG/BH8pneJeY7+wR4TdbHGBYSYZ7xvN//Lw/Cb7uHhwG40NG43zot4ejOhxV4ShoPHzqUvjNp33SdMGiLLBNlNFXm1+V/1vlsxpXl9SxwzZsTg0NWY8HdQPNBL1sc+/TLI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=YPQmMD0/; arc=none smtp.client-ip=95.215.58.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="YPQmMD0/"
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1784024278;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=EDiZS8zttT4a9O025kBB1zOShFsYsLLFK1SisQ6msEY=;
-	b=YPQmMD0/zTCtgtqVy5SDNK+fsg0BTqTsor+JXyoKqwEfTjG7p9IsJgjJNVeLOLicga3pXM
-	gP9//+7EcPmcJzR94Erhzir6snvi2gfkCwv0wOCWnsrLDd1Hd30WV/lxmMJyKojs/BGpkv
-	I7T1czZ32Ibjv2lEpa1TLNGT4zPUUE8=
-From: Usama Arif <usama.arif@linux.dev>
-To: Qi Zheng <qi.zheng@linux.dev>
-Cc: Usama Arif <usama.arif@linux.dev>,
-	brauner@kernel.org,
-	jack@suse.cz,
-	linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Al Viro <viro@zeniv.linux.org.uk>,
-	linux-mm@kvack.org,
-	hughd@google.com,
-	boris@bur.io,
-	clm@fb.com,
-	dsterba@suse.com,
-	linux-btrfs@vger.kernel.org,
-	cem@kernel.org,
+	s=arc-20240116; t=1784026409; c=relaxed/simple;
+	bh=K0pspBB5tELj174biR6SFNCGMMaaodFHyK14ob7cAfY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=TKKVLUqd4cqurDRqxHWkiSneabRtjOgHnYDJwPfACc6CKEsTCGGZjAVlaoB0FqduAssB10TmzAm9WOltWIt2rkgSqLNI8M6Scm8WKElHhl+qZIX74t2fntGUTNsb9JVdyyBbrRlI5OzjFelbsiF9Jo08xFLnLENlxpvlGsaqnAQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=pankajraghav.com; arc=none smtp.client-ip=80.241.56.161
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
+Received: from smtp102.mailbox.org (smtp102.mailbox.org [IPv6:2001:67c:2050:b231:465::102])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA512)
+	(No client certificate requested)
+	by mout-p-103.mailbox.org (Postfix) with ESMTPS id 4gzx426NlFzKnf5;
+	Tue, 14 Jul 2026 12:53:22 +0200 (CEST)
+Authentication-Results: outgoing_mbo_mout;
+	dkim=none;
+	spf=pass (outgoing_mbo_mout: domain of kernel@pankajraghav.com designates 2001:67c:2050:b231:465::102 as permitted sender) smtp.mailfrom=kernel@pankajraghav.com
+From: Pankaj Raghav <p.raghav@samsung.com>
+To: aalbersh@kernel.org
+Cc: pankaj.raghav@linux.dev,
+	djwong@kernel.org,
+	Zhang Yi <yi.zhang@huaweicloud.com>,
+	gost.dev@samsung.com,
+	hch@lst.de,
 	linux-xfs@vger.kernel.org,
-	shakeel.butt@linux.dev,
-	hannes@cmpxchg.org,
-	riel@surriel.com,
-	kernel-team@meta.com
-Subject: Re: [PATCH] fs/super: skip non-memcg-aware nr_cached_objects in memcg slab shrink
-Date: Tue, 14 Jul 2026 03:17:38 -0700
-Message-ID: <20260714101740.1270419-1-usama.arif@linux.dev>
-In-Reply-To: <d39f8258-66d5-4ce3-8080-69dc4e2ab197@linux.dev>
-References: 
+	Pankaj Raghav <p.raghav@samsung.com>
+Subject: [PATCH] fiemap: add a nosync option
+Date: Tue, 14 Jul 2026 12:53:14 +0200
+Message-ID: <20260714105314.413402-1-p.raghav@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -59,67 +41,64 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+X-Rspamd-Queue-Id: 4gzx426NlFzKnf5
 
-On Tue, 14 Jul 2026 10:09:26 +0800 Qi Zheng <qi.zheng@linux.dev> wrote:
+io/fiemap adds FIEMAP_FLAG_SYNC by default. There are some test cases
+where adding this flag might have an undesired side effect on the
+results [1].
 
-> Hi Usama,
-> 
-> On 7/13/26 11:34 PM, Usama Arif wrote:
-> > 
-> > 
-> > On 13/07/2026 14:12, Qi Zheng wrote:
-> >> Hi Usama,
-> >>
-> >> On 6/9/26 8:30 PM, Usama Arif wrote:
-> >>> The super_block shrinker is registered with SHRINKER_MEMCG_AWARE because its
-> >>> dentry and inode LRUs are memcg-aware (via list_lru). But the optional
-> >>> ->nr_cached_objects() hooks that the shrinker also drives are not memcg-aware:
-> >>> btrfs extent maps and xfs inode reclaim operate on filesystem-global
-> >>> state, and shmem's unused-huge shrinker walks a per-superblock shrinklist.
-> >>> None of them filter by sc->memcg.
-> >>
-> >> This makes sense for now, but how should we handle this if these
-> >> shrinkers are made memcg-aware in the future?
-> >>
-> >> I've recently been working on making the shmem huge shrinker
-> >> memcg-aware, but noticed my changes broke after rebasing onto the latest
-> >> tree, which led me to this patch.
-> >>
-> >> As for the shmem huge shrinker, I can work around this limitation by
-> >> making it a separate shrinker. But this feels more like an overall
-> >> design decision, effectively meaning that all nr_cached_objects are
-> >> precluded from being memcg-aware.
-> >>
-> >> Thanks,
-> >> Qi
-> >>
-> > 
-> > 
-> > Hi Qi,
-> > 
-> > Thanks for raising this. I think the alternative is what I mentioned in
-> > https://lore.kernel.org/all/cfdb8620-ea55-4226-98bf-d006820e6270@linux.dev/
-> > move this down to the fs own callbacks instead of here. Would that
-> > be better?
-> 
-> Yes, I think this is a better approach.
-> 
-> Later on, shrinkers that are converted to be memcg-aware can lift this 
-> restriction themselves.
-> 
-> Thanks,
-> Qi
+Add an option that does not pass FIEMAP_FLAG_SYNC flag.
 
-Thanks Qi, I have sent a patch to push it down to filesystems in [1].
-No functional change inteneded in there. You would have to rebase your
-patch on top of that one and remove my code in shmem specifically.
+[1] https://lore.kernel.org/linux-xfs/ca21b3c4-e1df-4ba7-8e9c-5d221337c86b@huaweicloud.com/
 
-[1] https://lore.kernel.org/all/20260714101454.1202449-1-usama.arif@linux.dev/
+Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+---
+ io/fiemap.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-> 
-> > 
-> > Thanks,
-> > Usama
-> 
-> 
+diff --git a/io/fiemap.c b/io/fiemap.c
+index b41f71bf..7aa8868d 100644
+--- a/io/fiemap.c
++++ b/io/fiemap.c
+@@ -36,6 +36,7 @@ fiemap_help(void)
+ " -a -- prints the attribute fork map instead of the data fork.\n"
+ " -l -- also displays the length of each extent in 512-byte blocks.\n"
+ " -n -- query n extents.\n"
++" -s -- do not use FIEMAP_FLAG_SYNC.\n"
+ " -v -- Verbose information\n"
+ " offset is the starting offset to map, and is optional.  If offset is\n"
+ " specified, mapping length may (optionally) be specified as well."
+@@ -242,7 +243,7 @@ fiemap_f(
+ 
+ 	init_cvtnum(&fsblocksize, &fssectsize);
+ 
+-	while ((c = getopt(argc, argv, "aln:v")) != EOF) {
++	while ((c = getopt(argc, argv, "aln:sv")) != EOF) {
+ 		switch (c) {
+ 		case 'a':
+ 			fiemap_flags |= FIEMAP_FLAG_XATTR;
+@@ -253,6 +254,10 @@ fiemap_f(
+ 		case 'n':
+ 			max_extents = atoi(optarg);
+ 			break;
++		case 's':
++			/* nosync */
++			fiemap_flags &= ~(FIEMAP_FLAG_SYNC);
++			break;
+ 		case 'v':
+ 			vflag++;
+ 			break;
+@@ -393,7 +398,7 @@ fiemap_init(void)
+ 	fiemap_cmd.argmin = 0;
+ 	fiemap_cmd.argmax = -1;
+ 	fiemap_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
+-	fiemap_cmd.args = _("[-alv] [-n nx] [offset [len]]");
++	fiemap_cmd.args = _("[-alsv] [-n nx] [offset [len]]");
+ 	fiemap_cmd.oneline = _("print block mapping for a file");
+ 	fiemap_cmd.help = fiemap_help;
+ 
+
+base-commit: e80b048d87fdc5735e0d03ae29b497b402ea8bbe
+-- 
+2.51.2
+
