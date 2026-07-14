@@ -1,66 +1,111 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oa1-f53.google.com (mail-oa1-f53.google.com [209.85.160.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0BAAF4D90A6;
-	Tue, 14 Jul 2026 16:42:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784047331; cv=none; b=QiNL/c6fDsDFPoPYjgWClGDOut7crq6ntP137PO+FhQ4Kh4P9Lf/Xs7pVI5G+aGuTKIfPYxcStXOzVkXbN2grg4o62SCvyIM3mT/qzyMbU5U0tDdshOXF2MggO3c979p+TEMbfuhVvWHbEbzwuDMRAQFmdzjIBz3d3atJk/VQ4I=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784047331; c=relaxed/simple;
-	bh=IVZqqqbKk3Pvs7pPmAHOufutOPK/M9DAVp2gqk9ibac=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=tHESFaGKi3vrgQDe0rC3OtxohtylufHaXpIJrGUqmvk82JKURactl7mQ92HWwP7lDDLomj5pvq2kbVNJGoLZSKbl0uc6Oq6mEHhRzzMbfSWsOvFCvF/8LzBSnsuY/D0iHDHPGVi8zNeIXGWk1CjuuUJ6EgAu1qZHg6eG/4UFqXw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z9UaWKmX; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62E3F39CCEE
+	for <linux-xfs@vger.kernel.org>; Tue, 14 Jul 2026 17:10:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.53
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784049038; cv=pass; b=NuFOQg7jVHywoBDUK4ffONCduElG4nbV0rBNidsGUf2M7LGEzn2UxfhQiJhhVIt7uJE4QIp7aum0PCQZpweaL72tswQhIMGvbxiV0QY2fG/nO1YNa/wbECqUdll/tom+BEtyCt7s+cceMEkJeHSjSQ0mDvxoao/fmUGP4RoOozQ=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784049038; c=relaxed/simple;
+	bh=uoqCnBCzsbw30aZ60m/CDE+8TS3VxRuPkrhfRDmuhDc=;
+	h=MIME-Version:From:Date:Message-ID:Subject:To:Content-Type; b=bghXfHCKjXP/aj28QuOF0K1+0hsDkCZw8nYGJ+ZsMQ+GTkpKx6eeny70UrIHV3ekTYgvHqp/gPgDC336CrqZTunpLc/c8RsG0wRuLGOQuoFfiff0jd1vRzgeLzfI1dYY9grk5K9co0Ig6gc2PI8NQuoAaaEBhJFEf08bnJ/VRkg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=reillybrogan.com; spf=pass smtp.mailfrom=reillybrogan.com; dkim=pass (1024-bit key) header.d=reillybrogan.com header.i=@reillybrogan.com header.b=NBBPpFJ5; arc=pass smtp.client-ip=209.85.160.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=reillybrogan.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=reillybrogan.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z9UaWKmX"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 91E3D1F000E9;
-	Tue, 14 Jul 2026 16:42:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784047329;
-	bh=7fK8AmZdS3XkyteViA4pHtIvyKygfQDkI+Fj0vrrJXI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Z9UaWKmXiYj6t5ehRiVCvD2lUuesMoriCvADbxDZX63HQtTakZp8PfaA5cTOrj675
-	 Y1V9FlJDXUxZS+A8hZKlKL+6g0J/YVSGtxIaMIkgRtSowv00FfMcnLirOBVwm9uuuj
-	 dB/3F3dKat24yOPabiQ2xpDy1VqfnySXptVFpaMvGHJ7288osw7sH9JyHJg8e904iY
-	 LV/0VNYSaiznBUPsP1gdilp2IfXYw+1EQLTuAPI+x/sV0Ex/Ex1JFc5aDUdO4yzLlN
-	 7RUqtcbiytbir9OalU2R5pjaSVrvgtGdfU4zKthY5Inm+JSWR9Jn07HvxHcAANbr1f
-	 LgfCQQJO7fmuQ==
-Date: Tue, 14 Jul 2026 09:42:09 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: cem@kernel.org, stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/6] xfs: set xfarray killable sort correctly
-Message-ID: <20260714164209.GF7398@frogsfrogsfrogs>
-References: <178400716782.268162.4846177784022689546.stgit@frogsfrogsfrogs>
- <178400716837.268162.4871292933498780753.stgit@frogsfrogsfrogs>
- <20260714061134.GB1072@lst.de>
+	dkim=pass (1024-bit key) header.d=reillybrogan.com header.i=@reillybrogan.com header.b="NBBPpFJ5"
+Received: by mail-oa1-f53.google.com with SMTP id 586e51a60fabf-448b89f700fso2772266fac.2
+        for <linux-xfs@vger.kernel.org>; Tue, 14 Jul 2026 10:10:37 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1784049036; cv=none;
+        d=google.com; s=arc-20260327;
+        b=dwt8cssOfwuG+PZfj3jHw7usLC1E9CrjvwgWcNWeI6QM4+XV5jane/iaT9U658ERM6
+         qC9pPo0PMDiDz4Wg7BfsgFvKksk/TPxtP7C55nsXo7BzCjIeIh18ewSdLbPf9s+3pl2d
+         DLow10anU/HwYH2iuLW0Mwhi0oG89hbluFC3o6AMcvsFb5aTaSBuyZOy/VFJHoZX/96V
+         uXNfBCkS3gFowW2Sbeco5vCKZE8esqH68Ewt5VeO/rvlxwDVqUpitpex9/lHcYBBVBhD
+         bbUmtdSuO3Q8Ij62RbxRT3Rn3/R4c9FjyvDByWctixT0wGEZqkPhlX/pK6g+e1VwqWSB
+         zm9Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=to:subject:message-id:date:from:mime-version:dkim-signature;
+        bh=09/eux3Rf65entca8YTbw14ylc20TqV7ArsL2JqtMNA=;
+        fh=717UJfa65qmxQPHgXYe7gUuNhUmUVEsh3JzHptCWmjI=;
+        b=TwD5Oi+y5XN2zFRdnXUHLG/ahV0RB9it/iQnbEszBeiuLIkxE+j4f1MZgd3Sv5gOHU
+         h5q1f9eUaBfvu9yX7eG6L7GWVhk92qadyPknMS02eLhJPy9cwG2Oc/SwsC/rHAZA38f5
+         tEFEHIRx6c3lJOifJOY4vS6bTkTaWXmc8mWjs9zf1rj65M1Y3zn7RR0pVGOuQYbNg4Ii
+         nwfW+QemKEYbXYkZoJ/8mHyv0Ir3pLR65DcL9Ci8gnDpA8j4UtW7ImJXFBkl6idZtVEl
+         JVogkgBqTV3FFS/hQbqJUIdzum+tb0nIuRV2eJCkUUCHpiCuQOdlzpkuLZCBUu3teN++
+         pjrQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=reillybrogan.com; s=google; t=1784049036; x=1784653836; darn=vger.kernel.org;
+        h=content-type:to:subject:message-id:date:from:mime-version:from:to
+         :cc:subject:date:message-id:reply-to:content-type;
+        bh=09/eux3Rf65entca8YTbw14ylc20TqV7ArsL2JqtMNA=;
+        b=NBBPpFJ5Msp8N+X4sKVHVHkdgHSU/H8ZfEtS4t52LI8G8dluolO2DXEEqvjhDiFRmE
+         TRIAs7ZJfhw6uPvWOwdUUPXdEfGcGuTryb8/WycKa3lPjDlciqnPrgCwqU5dgdB+frvK
+         DxW3BMZOrowuCYrLeh58LUlRsTDMbwHiW6FK4=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784049036; x=1784653836;
+        h=content-type:to:subject:message-id:date:from:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=09/eux3Rf65entca8YTbw14ylc20TqV7ArsL2JqtMNA=;
+        b=CX1xdNUKh2FRvXetGNvNGj4yTYzesh4KUJBil6tk1A7oDkWL8sQKSXYsUo/IHzNJVi
+         65t8DN/QIIsT2Q/AtSSeab5Fm9aQI7cRkZwd+U2lRnfsfvPLAnPLjjsXmfAXhljJ7fgc
+         AH1Mn4fXpYh1xUiwHS1FsUDcrPmFeutpqkTBi7q6uTU1TbLHL9v2umseLCBiDQTpaq7C
+         JNtPkM/BfKPjSH66LR1gVPaAhXnToVmeafpwxPfXWQuAVfgodKyhHo+KCUa9V12KNoSl
+         BiYhJhTPTZffvawOVn6K4X0ppkUjWICd65JKsIX7RTN4FVYwX5PFudsops5T6U22aopr
+         qAYQ==
+X-Gm-Message-State: AOJu0Yz/gxq2oW9pZgL7oHaZn51ecR2r2MGXBiyUJ+f0niAY4oZM3bq5
+	SwwJhLIg7dvdDJAZwGft2TxZdX2DxdtwqD3Z5clZNmTPAi3iYxZnQgicOdx9XUI52NupB4rsHRs
+	MY6d2edjh7TbdojnKR4ESUfmTdJAgxYgTsW1KVqVwIkWG2GIlpllsJG3dSw==
+X-Gm-Gg: AfdE7ckQH6mElzXwkXldnknnXdYgC9Lb5ePFJ8skWVLBBDV2zVl7FPb2rqr78QGQfkR
+	JqcLg1ILaz/UGa4aZGW9Q/VPKEH9vNBWRlrH4v2fto9QS9Ibz+0k17vMVRqVwazcsQI92UISkQQ
+	RjC1DX+rI69hNf12eg+1gindOn+verbHUW46c2lPbvxkJ30ezsxozX2L6Anz2iPbwiPGzgnEDiJ
+	qGfxurB21o9/ps5P9MMzCd50LFMaPUSggGJYT8A2il35EfZw7tmI0tOZ6A98zlg6Ka1+QpyPtaq
+	CXm3YEw=
+X-Received: by 2002:a05:6808:6f8f:b0:495:d7ec:b6be with SMTP id
+ 5614622812f47-4a42ad68d30mr9725433b6e.18.1784049036072; Tue, 14 Jul 2026
+ 10:10:36 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260714061134.GB1072@lst.de>
+From: Reilly Brogan <reilly@reillybrogan.com>
+Date: Tue, 14 Jul 2026 12:10:24 -0500
+X-Gm-Features: AUfX_mxEeAdHu9qfN44Oly9F-sUPivQv7ibpPKawbwEXGUt2QVqDfYXE9Egh3RE
+Message-ID: <CABqFQkar-sMMyZGw4KfAV51x7F65ddF7d8cszQ8iWiprvnKMFQ@mail.gmail.com>
+Subject: xfsprogs: 7.1.0 Build Failure
+To: linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On Tue, Jul 14, 2026 at 08:11:34AM +0200, Christoph Hellwig wrote:
-> On Mon, Jul 13, 2026 at 11:06:12PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > LOLLM noticed that we *disable* interruptible sorts when the KILLABLE
-> > flag is set.  This is backwards.  Fix the incorrect logic, and rename
-> > the variable to make the connection more obvious.
-> 
-> Looks good:
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> 
-> Can we come up with a test that actually kills a sort somewhat reliably?
+We're seeing a build failure on AerynOS with 7.1.0 that we didn't get
+with 7.0.1:
 
-Userspace doesn't have good visibility into when a sort is running, and
-I don't think we want to add XFS_TEST_ERROR() chunks where we inject a
-SIGKILL into current... however that might be done.
+```
+Installing healer-install
+../install-sh -o root -g root -m 755 -d /usr/lib/xfsprogs
+/usr/bin/dash ../libtool --quiet --mode=install ../install-sh -o root
+-g root -m 755 xfs_healer xfs_healer_start /usr/lib/xfsprogs
+Usage: /mason/build/x86_64/xfsprogs-7.1.0.tar.xz/libtool [OPTION]...
+[MODE-ARG]...
+Try 'libtool --help' for more information.
+libtool:   error: '/usr/lib/xfsprogs' is not a directory
+make[1]: *** [Makefile:72: install-healer] Error 1
+```
 
---D
+We use slibtool as our libtool implementation and dash as /usr/bin/sh
+so perhaps this is an incompatibility with either of those (likely
+slibtool).
+
+It looks like the issue is in `healer/Makefile`. On AerynOS at least
+`$(LTINSTALL) -m 755 $(BUILD_TARGETS) $(PKG_LIBEXEC_DIR)` doesn't work
+if there are multiple BUILD_TARGETS, and this is the only Makefile
+that uses LTINSTALL like that. If I replace it with a loop to install
+each target separately the build succeeds as expected.
+
+Regards,
+Reilly
