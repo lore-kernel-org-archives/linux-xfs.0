@@ -1,147 +1,73 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
+Received: from mail.itouring.de (mail.itouring.de [85.10.202.141])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B7613FF1DC;
-	Tue, 14 Jul 2026 18:15:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3749412BF8
+	for <linux-xfs@vger.kernel.org>; Tue, 14 Jul 2026 18:34:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=85.10.202.141
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784052950; cv=none; b=aRvrHTj72Lu/uHyyuLkVYOYl0HwsLaqnN6tGEHfZEvk90morP7P5jj5CH3g9X9ce8HlYvFgb9XS7woYZHpevYpnjsdBIL0l6BVINbbAfrvs7guoVLfXvbSK3Vjg9GjzbqILowWwT62cWj2nHrvRlt2cMPQoRvFGIiUB29U9T7tA=
+	t=1784054100; cv=none; b=ecNd7p82RhXitowt5X/DZbrnaRK3WAunAYONaYEMlgL9UrC/VZec2ieLEit6SrGSMFfx9PMPh/GoOWNZ7k/89fjYs/LkZrPxQ9uU62gbkfOqiH4x7B5lWCmWNsVnrMHhdzOeY4UEY7UMJYpjMcHCz8hhfqeAu/SeBXGeaMsu3A0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784052950; c=relaxed/simple;
-	bh=xPvfxje7YaR5IdNM0CRKeHs3gY2YZCsaN6aLpX5bdxw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=BWFC6W4xj4+90FFCWvZLTLGK7bFDhDqDxOECdZfLZxxi8ft+nqRSfudLTnw+fUrFDl851naLhSbP4q+Qk/oksy9SAlbJZy6dBDfwr7ET+TexmMzSFAPZDn0jBgSb0czGmgTGkOl7IDGt9vyyFmDPDaEXD/h3JadAh3ZgqzOFRK4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=pass smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=BpLqAf/g; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="BpLqAf/g"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Transfer-Encoding:
-	Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
-	Sender:Reply-To:Content-ID:Content-Description;
-	bh=BDRfQDib/z9B1BsarbaLihpCO5f0Vdj9FB1+83Vr95w=; b=BpLqAf/gO0vW/sEagFo1t6DWEf
-	9dODVxX1zB/7fgFD/d0kyQU7sTxjnp+F9IYIW3fq8j7KBjyaV9AVmymf21qbT3DyzTyJpZM0kb7Yc
-	bKSaqWluPkYcU/itC3TapdjKEwSFZPBKvqOVu18vxK14KHrOxG4kxfshHjRs58a9uR0I62q3ztLKM
-	JDhbJiP8IE6Y3GxbQLFgqSdgce9V35JiyggQXClRMzRhHAwbu84Wi0iCiaRE5fI3EotjmwnWzdnH9
-	WqtxizescJ71/RRb92HX6gdkZrTQZw+RSKBQ46GvLr3BPbftVnEj2ddINiJiR/ez6n4CxcP73xJVD
-	h5N4WPmQ==;
-Received: from willy by casper.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wjhfU-0000000FfbE-2muA;
-	Tue, 14 Jul 2026 18:15:44 +0000
-Date: Tue, 14 Jul 2026 19:15:44 +0100
-From: Matthew Wilcox <willy@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: "Zhou, Yun" <yun.zhou@windriver.com>,
-	Christoph Hellwig <hch@infradead.org>, cem@kernel.org,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-mm <linux-mm@kvack.org>
-Subject: Re: [PATCH] xfs: restore nofs context unconditionally in
- xfs_trans_roll
-Message-ID: <alZ80Dv4uNWWhrDk@casper.infradead.org>
-References: <20260713035505.1635191-1-yun.zhou@windriver.com>
- <alSrO3aDTuZkX0K9@infradead.org>
- <7a053113-f678-486e-a78b-8f5e94e73acb@windriver.com>
- <alToBmAN_HyeXth9@infradead.org>
- <20260713230420.GN7195@frogsfrogsfrogs>
- <0792c175-6a7c-4108-966d-4afbc8c515a2@windriver.com>
- <20260714175528.GG7380@frogsfrogsfrogs>
+	s=arc-20240116; t=1784054100; c=relaxed/simple;
+	bh=RZLveJ3hnbxCUuQZgmXA8uDUQTMkyNYc/NFUZDzzsu4=;
+	h=Subject:To:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=UWup+OSr6qHyV4a5V3829TZHy7lKTQOHTR6ogjix7g/GDCiuUOiDGfa0LsnaXgodGFrWluerr2a7K/7gtq8Z5y8Pc6yoc2CQoybe7swN+JY5T6rzQ7RPhT6ObZFE4OXgI9pM1f+xW6vKOxas7iTpINkXduoDp5kDTQkU8rONxxw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=applied-asynchrony.com; spf=pass smtp.mailfrom=applied-asynchrony.com; arc=none smtp.client-ip=85.10.202.141
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=applied-asynchrony.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=applied-asynchrony.com
+Received: from tux.applied-asynchrony.com (p5ddd7a22.dip0.t-ipconnect.de [93.221.122.34])
+	by mail.itouring.de (Postfix) with ESMTPSA id AA61D3BC6;
+	Tue, 14 Jul 2026 20:25:02 +0200 (CEST)
+Received: from [192.168.100.221] (hho.applied-asynchrony.com [192.168.100.221])
+	by tux.applied-asynchrony.com (Postfix) with ESMTP id 78965601893B2;
+	Tue, 14 Jul 2026 20:25:01 +0200 (CEST)
+Subject: Re: xfsprogs: 7.1.0 Build Failure
+To: Reilly Brogan <reilly@reillybrogan.com>, linux-xfs@vger.kernel.org
+References: <CABqFQkar-sMMyZGw4KfAV51x7F65ddF7d8cszQ8iWiprvnKMFQ@mail.gmail.com>
+From: =?UTF-8?Q?Holger_Hoffst=c3=a4tte?= <holger@applied-asynchrony.com>
+Organization: Applied Asynchrony, Inc.
+Message-ID: <bf7bab13-51eb-8be8-a875-fd9d02391f51@applied-asynchrony.com>
+Date: Tue, 14 Jul 2026 20:25:01 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260714175528.GG7380@frogsfrogsfrogs>
+In-Reply-To: <CABqFQkar-sMMyZGw4KfAV51x7F65ddF7d8cszQ8iWiprvnKMFQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 
-On Tue, Jul 14, 2026 at 10:55:28AM -0700, Darrick J. Wong wrote:
-> [add linux-mm since we're talking about memalloc_nofs_save]
+On 2026-07-14 19:10, Reilly Brogan wrote:
+> We're seeing a build failure on AerynOS with 7.1.0 that we didn't get
+> with 7.0.1:
+> 
+> ```
+> Installing healer-install
+> ../install-sh -o root -g root -m 755 -d /usr/lib/xfsprogs
+> /usr/bin/dash ../libtool --quiet --mode=install ../install-sh -o root
+> -g root -m 755 xfs_healer xfs_healer_start /usr/lib/xfsprogs
+> Usage: /mason/build/x86_64/xfsprogs-7.1.0.tar.xz/libtool [OPTION]...
+> [MODE-ARG]...
+> Try 'libtool --help' for more information.
+> libtool:   error: '/usr/lib/xfsprogs' is not a directory
+> make[1]: *** [Makefile:72: install-healer] Error 1
+> ```
+> 
+> We use slibtool as our libtool implementation and dash as /usr/bin/sh
+> so perhaps this is an incompatibility with either of those (likely
+> slibtool).
 
-Thanks!
+Nope - I see the same on Gentoo with bash and GNU libtool:
 
-> On Tue, Jul 14, 2026 at 10:15:53AM +0800, Zhou, Yun wrote:
-> > On 7/14/26 07:04, Darrick J. Wong wrote:
-> > > On Mon, Jul 13, 2026 at 06:28:38AM -0700, Christoph Hellwig wrote:
-> > > > On Mon, Jul 13, 2026 at 06:06:38PM +0800, Zhou, Yun wrote:
-> > > > > On 7/13/26 17:09, Christoph Hellwig wrote:
-> > > > > > On Mon, Jul 13, 2026 at 11:55:05AM +0800, Yun Zhou wrote:
-> > > > > > > diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> > > > > > > index 7bfbd9f6f0df..1b36cf12d4e3 100644
-> > > > > > > --- a/fs/xfs/xfs_trans.c
-> > > > > > > +++ b/fs/xfs/xfs_trans.c
-> > > > > > > @@ -1029,6 +1029,15 @@ xfs_trans_roll(
-> > > > > > >          * duplicate transaction that gets returned.
-> > > > > > >          */
-> > > > > > >         error = __xfs_trans_commit(tp, true);
-> > > > > > > +
-> > > > > > > +     tp = *tpp;
-> > > > > > > +     /*
-> > > > > > > +      * __xfs_trans_commit cleared the NOFS flag by calling into
-> > > > > > > +      * xfs_trans_free.  Set it again here before doing memory
-> > > > > > > +      * allocations.
-> > > > > > > +      */
-> > > > > > > +     xfs_trans_set_context(tp);
-> > > > > > 
-> > > > > > The tp assignment above now returns the incorrect transaction when
-> > > > > > __xfs_trans_commit fails, so you can't do this.
-> > > > > > 
-> > > > > > Otherwise yes, this call should move up.  I don't really see how
-> > > > > > it fixes the syzbot report, though.
-> > > > > 
-> > > > > Thank you very much for your reply. The tp here is a local variable only
-> > > > > used for convenience within the function. The caller always gets the new
-> > > > > transaction through *tpp, which was set by xfs_trans_dup() before the commit
-> > > > > call. Moving tp = *tpp before the error check doesn't change what the caller
-> > > > > sees - *tpp still points to the new (dup'd) transaction regardless.
-> > > > 
-> > > > Ah, right.  Tis should be fine:
-> > > > 
-> > > > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > > 
-> > > Why not move tp_pflags to the new transaction in xfs_trans_dup like we
-> > > do for the deferred item list:
-> > > 
-> > >          /* move deferred ops over to the new tp */
-> > >          xfs_defer_move(ntp, tp);
-> > > 
-> > >          ntp->t_pflags = tp->t_pflags;
-> > >          tp->t_pflags = 0;
-> > 
-> > That's what the old xfs_trans_switch_context() did before a1ca658d649a
-> > removed it. The problem is that setting tp->t_pflags = 0 means
-> > xfs_trans_free() calls memalloc_nofs_restore(0), which relies on that being
-> > a  no-op — an mm implementation detail. A fresh memalloc_nofs_save() on the
-> > new tp keeps the save/restore pairing correct unconditionally.
-> 
-> So add a new helper.
-> 
-> /**
->  * memalloc_flags_take - move an implicit __GFP_MEMALLOC scope from one
->  * tracking structure to another.
->  */
-> static inline unsigned int
-> memalloc_flags_take(unsigned int *old_flags)
-> {
-> 	unsigned int ret = *old_flags;
-> 
-> 	*old_flags = 0;
-> 	return ret;
-> }
-> 
-> and then:
-> 
-> 	/* move deferred ops over to the new tp */
-> 	xfs_defer_move(ntp, tp);
-> 
-> 	ntp->t_pflags = memalloc_flags_take(&tp->t_pflags);
+Installing scrub-install
+gmake[1]: Nothing to be done for 'install'.
+../install-sh -o portage -g portage -m 755 -d /usr/libexec/xfsprogs
+/bin/sh ../libtool --quiet --mode=install ../install-sh -o portage -g portage -m 755 xfs_healer xfs_healer_start /usr/libexec/xfsprogs
+Usage: /tmp/portage/sys-fs/xfsprogs-7.1.0/work/xfsprogs-7.1.0/libtool [OPTION]... [MODE-ARG]...
+Try 'libtool --help' for more information.
+libtool:   error: '/usr/libexec/xfsprogs' is not a directory
+gmake[1]: *** [Makefile:72: install-healer] Error 1
+make: *** [Makefile:134: healer-install] Error 2
 
-I might stick with the 'move' wording?  ie memalloc_flags_move().
-
-And I think you should bury the call to memalloc_flags_move() inside
-xfs_defer_move().  I don't think there's a case where you'd want to move
-from one transaction to another without preserving the nofs state, is
-there?  Bit hard to tell since there's only one caller of xfs_defer_move()
-in the XFS code base.
+-h
