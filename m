@@ -1,38 +1,36 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B345276041
-	for <linux-xfs@vger.kernel.org>; Tue, 14 Jul 2026 09:01:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1525543CEFD
+	for <linux-xfs@vger.kernel.org>; Tue, 14 Jul 2026 09:20:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784019689; cv=none; b=V4FXRviBzJ9Mkrrn0eJMM5/tysM1NRVbmZOCHukViXKaG9Z0/CPWlnvnLmNpAKWylsWywO7dEpa36C36Br200dHjx+XfaOmM4YE9i4Npq2NGOLHqPUtM2LigsjqcB2cqePL4zmzJf162al56LX7PFlb+PJHgNViH+Kp4NXM/uX8=
+	t=1784020805; cv=none; b=CsPdw9NkwNZLv0NNL8mwWsMZSzZsfFFs941zuhekVdqGDCB32HgzX33XjZhe5yUC/mno0c6B+/IodNJj96HsGNbbuAYHhVsCGvON6s3FyYtqCBoF53WTO2/9H/j2uIxzLyfDI8pElMCL3X5EEOFtmS+fZm7zUQUPL/8HY3IQY6A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784019689; c=relaxed/simple;
-	bh=FfQhNl0DcXKVuCYHJwadnUMqeBtECiHAzExsLhS6JAk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=e8+/IPW1rYNOPAYEIH0z2GHhaZqGhdCCUZoeO/HArDPDEmGW1KHZl9nXeaso0Hy7EjfQ9sfkLKhX64qlmR/1Njt4dYwBHPfo2+mpAcISSkr8J8FbEPXNtMA4o+BPttsbhyRK6s9laXNjmSq6r6SF1zyFpDuZLy9Cwouj/Fhu94k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Lcuhs1K7; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784020805; c=relaxed/simple;
+	bh=xKwCzuxcGP6m/D280sEV1GQaafmyKwkShCpfohy7xdY=;
+	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=McIowFnCdPY+iY3wM9zPpZPAOpiRsractlOUcE3NCnjBPOxe4Ty31W9dEZWgNHZLwqUpaXIQga+MyoBfCrNrrg/2mtEx24JyIYHD0dTTMlxoLNXoM3/TU9kQcb9O1bU8ZABBCZGfEp5SHjSS5aUwnzR2fblWq1yZ0elzjrAMwJc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ARamMpAM; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Lcuhs1K7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A76241F000E9;
-	Tue, 14 Jul 2026 09:01:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ARamMpAM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 68B781F000E9
+	for <linux-xfs@vger.kernel.org>; Tue, 14 Jul 2026 09:20:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784019687;
-	bh=IeWFSV+5TmeNUkIEn9uhtdM1TdKNsntyi2QLZMPva1o=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Lcuhs1K79/OowMPnyF8BihoYqo/dzBhJG38QhPpm0lKvV9rSmSqfX2Y7FQctqD/x/
-	 gGBq1UoeoZIl9/zUb2kFXVUEG9SF4VZG7JRa2CLTGrdNDReGWRwlkR1xqfTNVf7Smy
-	 1Wn4UoMTB6tqHv1F/LIvYDJXORjbEjJ7ytrZL4m/jLyHCzTq09uAIUNJ6tUe3DDriY
-	 acfItIDwB1olHdx04JsIfM76jVtdv9NgK6Cg1aR23gvHW9vpnlxicxieBE7Dp9CX7a
-	 wajKFyHVC6QpvZsDK1VINqccBy9iVBN10a6NDzWFAxrjx3bCV8pEDaKPcP4cz62zlX
-	 zwnJfmQjul94w==
-Date: Tue, 14 Jul 2026 11:01:23 +0200
+	s=k20260515; t=1784020804;
+	bh=bUppdkcVVx5HxeLhShlH3kMVKhydz5NNIr2ah5R3KJQ=;
+	h=Date:From:To:Subject;
+	b=ARamMpAMW2TVwkDsI9WwLO1HKORarBch4te/fsM0oz0w+9PAKy6TZFkFl2YjhhqyG
+	 BPPo+V6G7mI1AC3QQyyZ272xr0Ce9z53vu80o2gsK9SReipIcJ2VsZewwnQ1rvIcs9
+	 RjV+a+qRPvOjyIeVmA+jWQZzeh3YCOfipygd6wz77GBlj8Hebsibdh2kg9yChAlz3N
+	 KT0WumZE+WcEyjt6twsSAQzwOoMzZDEDTxoqEnrLQKqhrV7GszFnPum4NU98aC/mcJ
+	 KS21uhvyFpIwKke0AloSIYDiZu6e14gcSCuIs81dv8/Ag3GSKyW9rxIOKfCQIjrhwk
+	 5cL5vKJKTbXew==
+Date: Tue, 14 Jul 2026 11:20:00 +0200
 From: Carlos Maiolino <cem@kernel.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs: resample the data fork mapping after cycling ILOCK
-Message-ID: <alX63M11tY_xPnrn@nidhogg.toxiclabs.cc>
-References: <20260714060344.GA7380@frogsfrogsfrogs>
+To: linux-xfs@vger.kernel.org
+Subject: [ANNOUNCE] xfs-linux: for-next *REBASED* to 59c462b0f5cf
+Message-ID: <alX-zGY2VuvxZFxL@nidhogg.toxiclabs.cc>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -41,101 +39,61 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260714060344.GA7380@frogsfrogsfrogs>
 
-On Mon, Jul 13, 2026 at 11:03:44PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> xfs_reflink_fill_{cow_hole,delalloc} are both presented with an inode,
-> a data fork mapping, and a cow fork mapping.  Unfortunately, these two
-> helpers cycle the ILOCK to grab a transaction, which means that the
-> mappings are stale as soon as we reacquire the ILOCK.  Currently we
-> refresh the cow fork mapping by re-calling xfs_find_trim_cow_extent, but
-> we don't refresh the data fork mapping beforehand, which means that the
-> xfs_bmap_trim_cow in that function queries the refcount btree about the
-> wrong physical blocks and returns an inaccurate value in *shared.
-> 
-> If *shared is now false, the directio write proceeds with a stale data
-> fork mapping.  Fix this by querying the data fork mapping if the
-> sequence counter changes across the ILOCK cycle.
-> 
-> Cc: <hch@lst.de>
-> Cc: <stable@vger.kernel.org> # v4.11
-> Fixes: 3c68d44a2b49a0 ("xfs: allocate direct I/O COW blocks in iomap_begin")
-> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Hi folks,
 
-> ---
->  fs/xfs/xfs_reflink.c |   36 ++++++++++++++++++++++++++++++++++++
->  1 file changed, 36 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index d81510912be58b..489ecd4cf10aff 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -440,6 +440,7 @@ xfs_reflink_fill_cow_hole(
->  	struct xfs_mount	*mp = ip->i_mount;
->  	struct xfs_trans	*tp;
->  	xfs_filblks_t		resaligned;
-> +	unsigned int		seq_before = READ_ONCE(ip->i_df.if_seq);
->  	unsigned int		dblocks = 0, rblocks = 0;
->  	int			nimaps;
->  	int			error;
-> @@ -465,6 +466,22 @@ xfs_reflink_fill_cow_hole(
->  
->  	*lockmode = XFS_ILOCK_EXCL;
->  
-> +	/*
-> +	 * The data fork mapping may have changed while we dropped the ILOCK
-> +	 * (a racing O_DIRECT writer under IOLOCK_SHARED can complete a full
-> +	 * CoW cycle including xfs_reflink_end_cow(), which remaps this offset
-> +	 * and drops the refcount of the old shared block).  Re-read it so the
-> +	 * shared-status recheck below and the caller's in-place iomap both
-> +	 * operate on the current mapping rather than a stale physical block.
-> +	 */
-> +	if (seq_before != READ_ONCE(ip->i_df.if_seq)) {
-> +		nimaps = 1;
-> +		error = xfs_bmapi_read(ip, imap->br_startoff,
-> +				imap->br_blockcount, imap, &nimaps, 0);
-> +		if (error)
-> +			goto out_trans_cancel;
-> +	}
-> +
->  	error = xfs_find_trim_cow_extent(ip, imap, cmap, shared, &found);
->  	if (error || !*shared)
->  		goto out_trans_cancel;
-> @@ -511,6 +528,8 @@ xfs_reflink_fill_delalloc(
->  	bool			found;
->  
->  	do {
-> +		unsigned int	seq_before = READ_ONCE(ip->i_df.if_seq);
-> +
->  		xfs_iunlock(ip, *lockmode);
->  		*lockmode = 0;
->  
-> @@ -521,6 +540,23 @@ xfs_reflink_fill_delalloc(
->  
->  		*lockmode = XFS_ILOCK_EXCL;
->  
-> +		/*
-> +		 * The data fork mapping may have changed while we dropped the
-> +		 * ILOCK (a racing O_DIRECT writer under IOLOCK_SHARED can
-> +		 * complete a full CoW cycle including xfs_reflink_end_cow(),
-> +		 * which remaps this offset and drops the refcount of the old
-> +		 * shared block).  Re-read it so the shared-status recheck
-> +		 * below and the caller's in-place iomap both operate on the
-> +		 * current mapping rather than a stale physical block.
-> +		 */
-> +		if (seq_before != READ_ONCE(ip->i_df.if_seq)) {
-> +			nimaps = 1;
-> +			error = xfs_bmapi_read(ip, imap->br_startoff,
-> +					imap->br_blockcount, imap, &nimaps, 0);
-> +			if (error)
-> +				goto out_trans_cancel;
-> +		}
-> +
->  		error = xfs_find_trim_cow_extent(ip, imap, cmap, shared,
->  				&found);
->  		if (error || !*shared)
-> 
+The for-next branch of the xfs-linux repository at:
+
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+
+has just been *REBASED*.
+
+My apologies for the extra announce. There are no changes between this and
+the previous one, only a coupl tags that I missed adding on the previous patches.
+
+The new head of the for-next branch is commit:
+
+59c462b0f5cf xfs: don't zap bmbt forks if they are MAXLEVELS tall
+
+16 new commits:
+
+Andrey Albershteyn (1):
+      [9202ee546b0c] xfs: fix null pointer dereference in tracepoint
+
+Darrick J. Wong (15):
+      [2f4acd0fcd86] xfs: resample the data fork mapping after cycling ILOCK
+      [a1caeeadbf57] xfs: don't replace the wrong part of the cow fork
+      [bcb0621204e6] xfs: make cow repair somewhat flaky when debugging knob enabled
+      [60a1dde9d289] xfs: move cow_replace_mapping to xfs_bmap_util.c
+      [d766e4e5e85d] xfs: don't wrap around quota ids in dqiterate
+      [ee248157da50] xfs: use rtrefcount btree cursor in xchk_xref_is_rt_cow_staging
+      [881f2eb0fcde] xfs: use the rt version of the cow staging checker
+      [9af789fa274b] xfs: write the rg superblock when fixing it
+      [ea6e2d9de25d] xfs: grab rtrmap btree when checking rgsuper
+      [540ddc626245] xfs: set xfarray killable sort correctly
+      [5d72a68f2007] xfs: fix off-by-one error when calling xchk_xref_has_rt_owner
+      [353a5900bc85] xfs: handle non-inode owners for rtrmap record checking
+      [ba150ce63453] xfs: fully check the parent handle when it points to the rootdir
+      [15e38a9366b3] xfs: clamp timestamp nanoseconds correctly
+      [59c462b0f5cf] xfs: don't zap bmbt forks if they are MAXLEVELS tall
+
+Code Diffstat:
+
+ fs/xfs/libxfs/xfs_defer.c   |   2 +-
+ fs/xfs/scrub/cow_repair.c   | 177 +++++++++++++++++++++-----------------------
+ fs/xfs/scrub/dirtree.c      |  16 ++--
+ fs/xfs/scrub/dqiterate.c    |   2 +-
+ fs/xfs/scrub/inode_repair.c |   4 +-
+ fs/xfs/scrub/rgsuper.c      |  14 +++-
+ fs/xfs/scrub/rtbitmap.c     |   2 +-
+ fs/xfs/scrub/rtrefcount.c   |   2 +-
+ fs/xfs/scrub/rtrmap.c       |   8 +-
+ fs/xfs/scrub/scrub.h        |   6 +-
+ fs/xfs/scrub/trace.h        |  35 ---------
+ fs/xfs/scrub/xfarray.c      |   3 +-
+ fs/xfs/xfs_bmap_util.c      |  89 ++++++++++++++++++++++
+ fs/xfs/xfs_bmap_util.h      |   4 +
+ fs/xfs/xfs_reflink.c        |  36 +++++++++
+ fs/xfs/xfs_trace.h          |  41 ++++++++++
+ 16 files changed, 293 insertions(+), 148 deletions(-)
