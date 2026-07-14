@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D54AA3D7A01;
-	Tue, 14 Jul 2026 06:06:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 653AB281525;
+	Tue, 14 Jul 2026 06:06:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784009189; cv=none; b=VNLw9dgYS8ntCmWaped5jPKwnjpKV7u5w++S5eGrJscs+zW9mMaB4tAOgRByvqsU2T4Re3CXbPijwvKkOxSvIMCfB/pafiH5/mNhf+57Ms/IFTWCdkY70wcXigfH6g5nJCzr6IN1Yp4lCijzSbD6YBuTESJ12mqVNcBUdkDmzcA=
+	t=1784009205; cv=none; b=a9OEevlc03S52AovFPiYnJFDwSWUeY0dq6dmgidE/uKvAXPb+5EivMc72SECdcxIg+xm7AVA5q/DF4a/nDns8X7XRGLUNS71FdcqZf3MWzjSWpO3wvQ2dWIjS1MwW2ThOY+E7WJBf4GBh+/74d7vRAU125yUcgauPQ+k0VEnT/w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784009189; c=relaxed/simple;
-	bh=rxjMGCsyCVfoMcL5cJePZ85puAs5N7fe5njb4f07Bag=;
+	s=arc-20240116; t=1784009205; c=relaxed/simple;
+	bh=mMSizUDdDh49qgN19O4lGnxQDs+Svxlnjs/J+E+D8yo=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=dRRfYFZ7wGV4NbqV/WiqfvuZUSClHg+NaV+Yx56KavW9R8WtYrcFRUXTjet9zmlDUr/acJ7ZTMowR/kirP7VEtXtU1zs84KHnoI8lSt0d3hb2qXooHO0j5EXQmfsC+eBpf3W0pUZKVJ43V1iEOp1POGIAqb2FziY1wVHmT5uGr8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aEfDFPlJ; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=YAAjIaMB8VSryVDh/lUdiP4wpSgOcc5iIaekgDXr83coKdmhIKSBAk1GxMbPGtmJf/AkMiLFAxSzks/nJq+P/n55OKTk0HhKu9I5SHjmkkLYrjm5qpqSjdMGJ3bpp0OOmLoLCIppHGiEgC1VJGzlMaOpQQ1hm2MYfK9sgrN5AH8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=N+eR6uAl; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aEfDFPlJ"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id ACE441F000E9;
-	Tue, 14 Jul 2026 06:06:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="N+eR6uAl"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 3A9F01F00A3A;
+	Tue, 14 Jul 2026 06:06:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784009188;
-	bh=411yU0ScccAFgZa2VlXqY5m0dpuP2LHw9JDObfsfcAM=;
+	s=k20260515; t=1784009204;
+	bh=Xj+m5BMXjgPbuT93x0vCBh/G/2emdAhqdtWkqjNTtBA=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=aEfDFPlJx0KmafMobHHPianSn7ohq5iSdBQmLpT8caZrPVOB2nNJZVIXO3XsIbdwj
-	 ZB4P679N44wTQaiwmVJ0q9+iQJagtLMLv6twhdaNg6MW9Q+bBnbDX5leOMkkzBH9NC
-	 /N3vp2SUpycO8OPar1arJNRH6+NEElm1OnbQ2v4Brl97eDu14YciqhgehSzcghv+ks
-	 MFe2UUeqEOhO37cp7q/L9oW4HcujnufySzjWE/WEIQJjvreVuWBuc8W0Rwp3dw1ro1
-	 GjhY7BNMvwFOKERYB/xU+W3ooHI1RkY1+hKXm5vMRBlXFb0851LUsib97StRI8NO2Q
-	 4s8YoApmllwIQ==
-Date: Mon, 13 Jul 2026 23:06:28 -0700
-Subject: [PATCH 2/6] xfs: fix off-by-one error when calling
- xchk_xref_has_rt_owner
+	b=N+eR6uAl8rTMNUZ786Uo58raJC7yusOWHCXEV33bVBXDPg3NIOAKJFLlfOeYak3vl
+	 zwCE+gJytauTIMnt7oevyGb7zK+veFvlZcRK9DfG6rMyCYXm9q9fizWaLBp41JTGUL
+	 8Wq67gq9NXhkHlBrKDyDqVqP9pL5jkYPgdX9n1x9MoMs8v4YDMOzSsXE4jxwtULBhR
+	 Yi0L3iDIeIhd4nPo9dMXgrEnakGDElVErwIPhHg5CruQNq18qYxLZDcU5AF+RHGd/D
+	 lQJ7ZK0Sg01DfGTuOCDl3TxEZ6BPadMvWaUqlSsS84rR5GC0c4B/YR4SM3KN6Si2wx
+	 f/ycfvLM+ngZQ==
+Date: Mon, 13 Jul 2026 23:06:43 -0700
+Subject: [PATCH 3/6] xfs: handle non-inode owners for rtrmap record checking
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org, hch@lst.de
 Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <178400716859.268162.13837291911320452593.stgit@frogsfrogsfrogs>
+Message-ID: <178400716881.268162.6869252550857617012.stgit@frogsfrogsfrogs>
 In-Reply-To: <178400716782.268162.4846177784022689546.stgit@frogsfrogsfrogs>
 References: <178400716782.268162.4846177784022689546.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,29 +45,42 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-LOLLM noticed an off-by-one error when computing the length of the
-rtrmap to cross-check.
+LOLLM noticed that two helper functions in the rtrmapbt scrub code don't
+actually handle non-inode owners correctly -- CoW staging extents and
+rgsuperblock extents are not shareable, but they are mergeable.  Fix
+these two helpers.
 
 Cc: <stable@vger.kernel.org> # v6.14
-Fixes: 037a44d8277adf ("xfs: cross-reference the realtime rmapbt")
+Fixes: 2d9a3e98053e8c ("xfs: allow overlapping rtrmapbt records for shared data extents")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Assisted-by: LOLLM # finding obvious bugs
 ---
- fs/xfs/scrub/rtbitmap.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/scrub/rtrmap.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
 
 
-diff --git a/fs/xfs/scrub/rtbitmap.c b/fs/xfs/scrub/rtbitmap.c
-index de3f22f310f7eb..52c24d3d4be6ce 100644
---- a/fs/xfs/scrub/rtbitmap.c
-+++ b/fs/xfs/scrub/rtbitmap.c
-@@ -258,7 +258,7 @@ xchk_rtbitmap(
- 	 * the last free extent we saw and the last possible extent in the rt
- 	 * group.
- 	 */
--	last_rgbno = rtg->rtg_extents * mp->m_sb.sb_rextsize - 1;
-+	last_rgbno = rtg->rtg_extents * mp->m_sb.sb_rextsize;
- 	if (rtb->next_free_rgbno < last_rgbno)
- 		xchk_xref_has_rt_owner(sc, rtb->next_free_rgbno,
- 				last_rgbno - rtb->next_free_rgbno);
+diff --git a/fs/xfs/scrub/rtrmap.c b/fs/xfs/scrub/rtrmap.c
+index b3b2cf17ba2c08..564d19a97a2f8f 100644
+--- a/fs/xfs/scrub/rtrmap.c
++++ b/fs/xfs/scrub/rtrmap.c
+@@ -87,6 +87,9 @@ xchk_rtrmapbt_is_shareable(
+ 		return false;
+ 	if (irec->rm_flags & XFS_RMAP_UNWRITTEN)
+ 		return false;
++	if (irec->rm_owner == XFS_RMAP_OWN_COW ||
++	    irec->rm_owner == XFS_RMAP_OWN_FS)
++		return false;
+ 	return true;
+ }
+ 
+@@ -146,6 +149,9 @@ xchk_rtrmap_mergeable(
+ 		return false;
+ 	if (r1->rm_flags != r2->rm_flags)
+ 		return false;
++	if (r1->rm_owner == XFS_RMAP_OWN_COW ||
++	    r1->rm_owner == XFS_RMAP_OWN_FS)
++		return true;
+ 	return r1->rm_offset + r1->rm_blockcount == r2->rm_offset;
+ }
+ 
 
