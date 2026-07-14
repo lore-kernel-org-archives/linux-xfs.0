@@ -1,158 +1,111 @@
-Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
+Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53304418A2C
-	for <linux-xfs@vger.kernel.org>; Tue, 14 Jul 2026 21:56:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784066178; cv=none; b=Cu8n4E8r5ugF7KD2j6YSQ6mH7xJFfOzt3GXiWXYpk3QALAnsZIsvoBQ5bFzPvaZXGh1pX3et8ZwIQdgkBXux6BobUge99c5VxLX4hb1LTsGhPLbe6X2WrNA8AIaCy2DdbKyhdr7BfG1Uhwnhlyl4gFEJoHsQlHK6JsgcPLhdLzk=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784066178; c=relaxed/simple;
-	bh=/AfF9I8r9L88QBqEXJ+knjHCrOUZXwHF9Mjcs14h22w=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=VYKwLtfUStQ4+gGGXreIkwJScgC5ABDL0/de5ogA4fP7SqeowkwfcowM58Q8qa2P5iQ6Qw3QTh+KdIfaC+76J3khO5Vp7sHJ5y33ge/53qzoikp3astJoli8k48RFx5QWG0zsQUkNuxhCHelm3l5WBf1q8mHjb1Q7L/g3c3hOqk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=asu.edu; spf=pass smtp.mailfrom=asu.edu; dkim=pass (2048-bit key) header.d=asu.edu header.i=@asu.edu header.b=DREa4cm1; arc=none smtp.client-ip=209.85.214.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6EB841A931
+	for <linux-xfs@vger.kernel.org>; Tue, 14 Jul 2026 21:59:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.214.174
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784066350; cv=pass; b=Y9TqAmnWgXyEW2DxNR9W5hYtmgsMMsfI37b6tTLRIQGj2eacmbasRk/RfkXCLYTSxK+3cnjKssh+crkkT5u5ZNI2yznCG3HDufxSX68dEJNjWpkWIH7PI0/hgecFscGPIlr3OJvDY1ZwDurUaHC6hJbcgO+vlUtzG4bM4yyfFrI=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784066350; c=relaxed/simple;
+	bh=YGC9dDFhcNE/nH8uF7RQF2fZklwLDMr+vQpMOrHnmr0=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=LTOEiS8DrqknhiY+3jKFWsv8G3CQ7iYHZnG8JAL9Gtw9N/p+kSQb/zZvfMgmchtM9f5jtb8VPvYImRiMBmDuq/bRUT3UPnEDIrLNmL5KMWp29RGhejxdQlKDQNB4ATbYkwBUCkkEOTjyDAHRKtRD9NBfvJVsF0MWB7uzUHMMXos=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=asu.edu; spf=pass smtp.mailfrom=asu.edu; dkim=pass (2048-bit key) header.d=asu.edu header.i=@asu.edu header.b=Z3q/7ywE; arc=pass smtp.client-ip=209.85.214.174
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=asu.edu
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=asu.edu
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=asu.edu header.i=@asu.edu header.b="DREa4cm1"
-Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-2caced6038eso20480615ad.0
-        for <linux-xfs@vger.kernel.org>; Tue, 14 Jul 2026 14:56:17 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=asu.edu header.i=@asu.edu header.b="Z3q/7ywE"
+Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-2ceaf8a1265so38882035ad.2
+        for <linux-xfs@vger.kernel.org>; Tue, 14 Jul 2026 14:59:09 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1784066349; cv=none;
+        d=google.com; s=arc-20260327;
+        b=N2HdY6aOILkQLIDkq3NK4Dg4K1iX2yQm0UYstE3iPs0SAETHjpuCKslo9r42iorgAc
+         xnuu6bMajF4Um6y4/TZjSuIlazMsowIzaqLCWqvoOes45YleC/7BNsdUr2PsvInzzONt
+         XPO4KEWuEHr+ykPzcOKnpguzXWvLuWA5hyyIVDnBNRYomAsn2Tk3Dwbq22pID14EQRGe
+         hIpx61YbkwXa5Sx88W4pXzk06VCrVRwYd9rWAreT2sW/S/GdTx0PDrBIrRW74zH8U7r9
+         8qL6hjtVtAZeda80YIoR44IDyVGfZPKV6AuGxgxEObPBywRxooa4nNSE6v6lZZwBqD3X
+         cRHA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=YGC9dDFhcNE/nH8uF7RQF2fZklwLDMr+vQpMOrHnmr0=;
+        fh=Ly9PwL+RNiMgHg+F2ip9gOa/14AHVmcFEt6JualRs1E=;
+        b=Dbi5zi7SjOmncItSuKt/CcKEIrH8ZRmc0vZ4BpL+v5+0oILTfTEiYuDxoJxMgwnJC5
+         lDY6x/NoOyJvmtlEZSANwWMgvIksLee94oW1K0fFQPzPC1fQjl42Ql3e/nYih3gUDS8a
+         kMZIp2+O48gnay8ZrUjSKIZeUqzWeFwbCVqTiW2hk2lNusWv4CVHuMhPUEPcuQIdSjpt
+         rG2951eszTZ+uH3s+A9lZMFD9N23uC/gZ6I9U8Hc6oxQDtTCeYhaeOg2gOV/oWcpfbYp
+         tMNIvUMCr5WcXYJbvFdVnGJyuHkIVS4Pb8f9RVQ7ew4/gZlQLb9VQpHN9Hp0gp+jO4fQ
+         yDjw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=asu.edu; s=google; t=1784066177; x=1784670977; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=a3bMWS4b6GGm8PZgGzkoAOMcuJeTSNNgmOihDM66PlI=;
-        b=DREa4cm1m9Ylo7pKIQDsuRve4bsUFOEFus+ELhJDsYeTdBv4ZmbfoFXRBZntrl0Sff
-         oRKEmy3QGgnHQangciwzBVKJEi2lKt0raXk3YAvj2hfzG2NnCwO26KGdMiTQvaPr0WHN
-         Wl1TGVZGSyBpkc7XcZlKDCQbzEa1kpT9dKWJ1Hemcp32RnmRZXRTKGlVMvmICJwjJ8F2
-         e3TC/E87pg5MrDKBrZSs9wsf/pWZtf6mOvoReIJvM2WO4y3Jg+XrxfXV1KZOyqUc8mpU
-         J2pgaVRDfNLZwUY68Ogm0U3xsXQWYGqIGu6ycGM9cJ+hymr0oJixMJ+UlrF6ZbHK5YS3
-         c2Aw==
+        d=asu.edu; s=google; t=1784066349; x=1784671149; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=YGC9dDFhcNE/nH8uF7RQF2fZklwLDMr+vQpMOrHnmr0=;
+        b=Z3q/7ywECfXtnVrAHDubFcCRDHT+Ujw+9mMWR0y9xVh+HodsZxJDAeIa3NLw41W/Vt
+         50snp9FQrSHDIf3oa7iNFnNRt8wfDPi19A5JZo2CHa8Q6GoQ6OyFZA7DMUVrZB+edXs7
+         yXbQdDeZ3nzmSqzfVIkNhgzYM9FuACZP5LqY5LovcmQDGGieX5iMBMy/VQ3CFq8kjqq7
+         6WbVTGOE7f77Nm0TaZ3VTo1aEGd3c090e33KPUF/4h/JfJfZPheArM6JoRH2bZyNOeGZ
+         7KbsON98kg8J//lfpdPnJekr9SytPPz8nVlEg6u4kuyAEU1TrdHnC589pL99mmzId7II
+         FVNA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784066177; x=1784670977;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=a3bMWS4b6GGm8PZgGzkoAOMcuJeTSNNgmOihDM66PlI=;
-        b=kIzWNiXQ4/UFkhwdST7T7lyCC9JCkF6DCiHcoUiic+5qZn5VpWcryg3u7+aUKegzjE
-         yQtChwGnzspXDPjI/DmW/DmCpbiIaL8SN3PAVCVhT5zv18On9j0ykzhQXdo1DeTMvAUP
-         rCjer3acCr3l0RYPtn6XS72UEaJaBFi5KQ62DOqFVB5xKYh/z302BCDJbAsWp9OUNIg8
-         u8GkGjTeu0Gr9/zns8kg/9/JpdVPoa7OI3outZqUK6+9GOJCj7lyrsgUgm4xTau0e1EV
-         ijAVj6150MhhTy4DYNDxKi0vruHMBYzpUoEVtB+rRexPw0tq0dRQEVsm4iD5AVisPpmx
-         04pA==
-X-Forwarded-Encrypted: i=1; AHgh+RqEC+96b2G5bVhfDQe0kaV+jJ+wtEI8QE/zHIhk/t3h345EkyAubRkrUrhq+maSMd3Po1c7XDoH40M=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw7qxmYJCc40ehWfWYC/Sw38jJ3HVWT7qpTRXXO7kgecJycNBxR
-	HEHI6wh9KiVVFlqcm+UX9Z6q22jbfufRr5EwSmPwZTa+ebGGbR5gmx65zrVtS61OhQ==
-X-Gm-Gg: AfdE7cnSsNpha/zfCLcp5TbZywxZeLZyUYdqwxPDyvjRpQ/ZbcqhRWbYX3rEwCEHfLB
-	Yd2BnEW1pM8HRSV/ufQgnH5VYGAfzQFFX6gNX4NxRnmPVjy+e1Uij99apv4pwWqLE+DbbgmS4rw
-	pxs68UqezMhuK6d1SSSyK2261Jgh6lQs/oMmmbthkEzylhOAW79C0XSa5p9FlvKLkmK/C936r6w
-	8ydC/3EovJoZXZc0c6lKT415UmG+Bu3VzWLJuEApKbeyCxE5QLR734bQDWxWjFGnx0Q/TZcGVj1
-	PMHPUTEaCzaYQcAeEI5tX7uvk++y1Melas6oYsLVn+RbMumk+EbAEk76/Xi8jpoLs43m3NpozCn
-	ad+c/fCOUe+KjczJtHegsBUODyQRLIg46hXkiJ3HNDmeGmfll8VqNnEFg+8ZPHVXRiN9HfuMhB2
-	6CYwLTxd8=
-X-Received: by 2002:a17:903:298e:b0:2c9:97a7:3283 with SMTP id d9443c01a7336-2cea187c0d0mr144303245ad.23.1784066176736;
-        Tue, 14 Jul 2026 14:56:16 -0700 (PDT)
-Received: from p1.. ([2607:fb91:153f:24b:150b:bb6f:1d25:f03e])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ccc9bf77e4sm122119835ad.22.2026.07.14.14.56.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 14 Jul 2026 14:56:16 -0700 (PDT)
-From: Xiang Mei <xmei5@asu.edu>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: "Darrick J . Wong" <djwong@kernel.org>,
-	linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	bestswngs@gmail.com,
-	Xiang Mei <xmei5@asu.edu>,
-	stable@vger.kernel.org,
-	Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v2] xfs: fix off-by-one in rtrefcount btree root level validation
-Date: Tue, 14 Jul 2026 14:56:12 -0700
-Message-ID: <20260714215612.1528518-1-xmei5@asu.edu>
-X-Mailer: git-send-email 2.43.0
+        d=1e100.net; s=20251104; t=1784066349; x=1784671149;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=YGC9dDFhcNE/nH8uF7RQF2fZklwLDMr+vQpMOrHnmr0=;
+        b=KbigGFrqXRoA8JN7vVEcb6vZAxEKnvZ/we/DDBtJtB9ultoTErxer0nm2RSMBLBDzG
+         afTnHkoE7P51AR3C6PJYcjFZsPoVkxG9XOywmwdDpZI606wkoOL4p7rk4lqmpGRz/cBu
+         PzuE534w8qCR1jZe0MnnoLDULr6nUdZRWE9zVlx8+eUe2f7wwjmjBXKxJTBST/wyxAhA
+         4RaTP0HAz63mX3cA70mKIFEcu8XDRvsy0rlaJp+QlLiYmzrYJRe1xsg/FXxNWM63stuk
+         A99Y9ku/MGiUpCo1x6BOFzcMdK3mSI1M96j7mUNBTwe5+WcanNZyWFnt5468csOTPffJ
+         oWIw==
+X-Forwarded-Encrypted: i=1; AHgh+RqQ/G/K/kfjHLyFUI1DEWHbgn0FwhH1iMlNAfcJB9yzqM+Jpu6+DLCjnCJ23KDZfurvYoFCz23SBMU=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzorr2a9ai5FIPNBzMy/DbIPBDE4GR9ZTV6bTXid139QUzHBx/R
+	cTBW+jIFVNRx5ZOl8N9triUhqIumREgGOQusQO+ORvPN0mxxWLqlDOeef5ufEviTz0Yr5oH2Gf3
+	MYvzBB84BdoU30QXqOhWKj/EwB9ktnXiwZP/Q0xiC
+X-Gm-Gg: AfdE7cklAOD6mFWtnIcwucS7/b914NrTLLF/dh0TSTy5YkG1LK5gSDdiDGwYqTUxVc0
+	oli3sgzDsJSYWg8H0k9v3qQcsFDbLxFWo1L2x1t5xjEitBAiWT811YQGL/2ZSieHTyAcvVXJEqy
+	fmgxMrRddJ4t+oOkUB6uloDr7CCWDfKRAuaqzYkvG7XnQO7euvgu0LV5FdnVUEF07qhY5AR3b55
+	BXQ98uyTPYbDbgbXSHFkxu8cpPO+DbBZo/EUdLiSlCIR5h+73NcFS+svqVviKXzDiXdRiCff8dt
+	tcLaQ3+3SBxk2AoiNJNkzTBTF+Zy6w==
+X-Received: by 2002:a17:902:fda8:b0:2ca:4b7a:4a02 with SMTP id
+ d9443c01a7336-2cef1370d34mr39057535ad.43.1784066349191; Tue, 14 Jul 2026
+ 14:59:09 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20260712002644.2519804-1-xmei5@asu.edu> <alSPszh1rI0_2m6N@infradead.org>
+In-Reply-To: <alSPszh1rI0_2m6N@infradead.org>
+From: Xiang Mei <xmei5@asu.edu>
+Date: Tue, 14 Jul 2026 14:58:58 -0700
+X-Gm-Features: AUfX_mwwt1zyghLevrgfQEB16fqKZQ8UATMcY5svs1eE5IyZpiTynqe8R-o3l00
+Message-ID: <CAPpSM+S7fmPoU3SUZ2HQRZrtA93wbSO26rU1kd1jkH0isPKiTA@mail.gmail.com>
+Subject: Re: [PATCH] xfs: fix off-by-one in rtrefcount btree root level validation
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Carlos Maiolino <cem@kernel.org>, "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, bestswngs@gmail.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-xfs_rtrefcountbt_compute_maxlevels() sets
+Thanks, Christoph and Darrick, for your review and suggestions.
 
-	mp->m_rtrefc_maxlevels = min(d_maxlevels, r_maxlevels) + 1;
+v2 is sent with Darrick's suggestions and both of your Reviewed-by tags:
+https://lore.kernel.org/all/20260714215612.1528518-1-xmei5@asu.edu/T/#u
 
-where the trailing "+ 1" already accounts for the inode-root level, so the
-deepest valid on-disk root level is m_rtrefc_maxlevels - 1 and a cursor must
-satisfy bc_nlevels <= bc_maxlevels (= m_rtrefc_maxlevels).
+Xiang
 
-The two on-disk validation paths, xfs_rtrefcountbt_verify() and
-xfs_iformat_rtrefcount(), check the root level with ">" instead of ">=", so a
-crafted rtreflink (metadir + realtime + reflink) image whose
-/rtgroups/N.refcount inode has bb_level == m_rtrefc_maxlevels is accepted on
-mount. xfs_rtrefcountbt_init_cursor() then sets bc_nlevels = bb_level + 1,
-exceeding bc_maxlevels by one. Since the xfs_rtrefcountbt_cur slab object is
-sized for exactly bc_maxlevels entries, the first btree op on such a cursor
-indexes bc_levels[m_rtrefc_maxlevels] past the end of the object. This is
-reached by the first rtrefcount cursor built after mount, via log/CoW
-recovery (xfs_reflink_recover_cow() during xfs_mountfs()) or an
-FS_IOC_GETFSMAP over the realtime device.
-
-Reject a root level equal to m_rtrefc_maxlevels, matching the ">=" form
-already used by the sibling data-device refcount/rmap verifiers and the
-in-memory rtrmap verifier.
-
-  BUG: KASAN: slab-out-of-bounds in xfs_btree_lookup (fs/xfs/libxfs/xfs_btree.c:2101)
-  Write of size 2 at addr ffff888018391658 by task exploit/144
-   xfs_btree_lookup (fs/xfs/libxfs/xfs_btree.c:2101)
-   xfs_btree_query_range (fs/xfs/libxfs/xfs_btree.c:5308)
-   xfs_refcount_recover_cow_leftovers (fs/xfs/libxfs/xfs_refcount.c:2113)
-   xfs_reflink_recover_cow (fs/xfs/xfs_reflink.c:1085)
-   xlog_recover_finish (fs/xfs/xfs_log_recover.c:3551)
-   xfs_mountfs (fs/xfs/xfs_mount.c:1158)
-   xfs_fs_fill_super (fs/xfs/xfs_super.c:1940)
-   get_tree_bdev_flags (fs/super.c:1634)
-   vfs_get_tree (fs/super.c:1694)
-   path_mount (fs/namespace.c:4161)
-   __x64_sys_mount (fs/namespace.c:4367)
-   entry_SYSCALL_64_after_hwframe (arch/x86/entry/entry_64.S:121)
-  The buggy address belongs to the cache xfs_rtrefcountbt_cur of size 216
-  The buggy address is located 8 bytes to the right of
-   allocated 216-byte region [ffff888018391578, ffff888018391650)
-  Kernel panic - not syncing: Fatal exception
-
-Cc: <stable@vger.kernel.org> # v6.14
-Fixes: 9abe03a0e4f978 ("xfs: introduce realtime refcount btree ondisk definitions")
-Reported-by: Weiming Shi <bestswngs@gmail.com>
-Assisted-by: Claude:claude-opus-4-8
-Signed-off-by: Xiang Mei <xmei5@asu.edu>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/libxfs/xfs_rtrefcount_btree.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_rtrefcount_btree.c b/fs/xfs/libxfs/xfs_rtrefcount_btree.c
-index f27b80a199ba..22acc1411aac 100644
---- a/fs/xfs/libxfs/xfs_rtrefcount_btree.c
-+++ b/fs/xfs/libxfs/xfs_rtrefcount_btree.c
-@@ -201,7 +201,7 @@ xfs_rtrefcountbt_verify(
- 	if (fa)
- 		return fa;
- 	level = be16_to_cpu(block->bb_level);
--	if (level > mp->m_rtrefc_maxlevels)
-+	if (level >= mp->m_rtrefc_maxlevels)
- 		return __this_address;
- 
- 	return xfs_btree_fsblock_verify(bp, mp->m_rtrefc_mxr[level != 0]);
-@@ -651,7 +651,7 @@ xfs_iformat_rtrefcount(
- 	numrecs = be16_to_cpu(dfp->bb_numrecs);
- 	level = be16_to_cpu(dfp->bb_level);
- 
--	if (level > mp->m_rtrefc_maxlevels ||
-+	if (level >= mp->m_rtrefc_maxlevels ||
- 	    xfs_rtrefcount_droot_space_calc(level, numrecs) > dsize) {
- 		xfs_inode_mark_sick(ip, XFS_SICK_INO_CORE);
- 		return -EFSCORRUPTED;
--- 
-2.43.0
-
+On Mon, Jul 13, 2026 at 12:11=E2=80=AFAM Christoph Hellwig <hch@infradead.o=
+rg> wrote:
+>
+> Looks good:
+>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+>
