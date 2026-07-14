@@ -1,36 +1,36 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 242631FFC59;
-	Tue, 14 Jul 2026 06:03:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5F2A36A033;
+	Tue, 14 Jul 2026 06:04:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784009039; cv=none; b=TqnSCqJuFUrJJUL083MAn1KJWxf6wLGLnfZi3MHsl35+yZ4YCbIiwiFfDD11C4HrmyFhOfBOGmOhNTlJI186dsaQkPBnhSkMiQ8v+oQ8ag+2nIWL5a4ASpYAJ7xFMrYVTNY2hLrzRJ92JN0kfg1KmMl03AbLHGx08qAaCpoDoRc=
+	t=1784009044; cv=none; b=arQqcJZmjjSI3ZML9LTXsXydUCY+cJH0xAMtJy8P3kL11T+e7XqrUyamfXd0gmqyWfFguGbH7u3K3qN22Cb21IPkCCcZTKBoCExm8He+lqEhXJZRVcms5ddBLG/c+mE6pehkiaKuTGpimKiZKqRvIrG5IfQZVazxgV7XUbDTWOU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784009039; c=relaxed/simple;
-	bh=n4V8g3/xAGJ3QXCe6t90uCoV3YhkVCIteU3JdGY18yo=;
-	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=XpyngbLXw1m9eyB3GTSgTB+5wtZjw2oqtdmBN0sG1uVyvCMc0IFrVhDNyrnQkSv3wuvMNwiud/egni4Xbm9Fx7iCZO29IHXwq9RGD70PBex8rR2+NV1RVWQIIy5aT4LYOPPQbig8ilnjKuz0mohzB3tWnbSsxclUhvUrTnrwtS0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nda4NQu4; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784009044; c=relaxed/simple;
+	bh=XEet/Yhf5u+Dah0mMfPPmN2UrgcXmKkMJom1pIG6asc=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=eNpv3q0cabubpKitvFBSPb6uecOtjeJbuvPpMSQaFAzuL4utSqjDcx5Owplv2kuu8d23x5aAjJHyJW7IBrq0UGa3FHB/m/vANujZ3xUj6bqQDNp6e34cu9Aa7vSVViIxTmxpno1QK6FhNL7NnWOpunuqLlfX4Wh8twPdQqhrFhw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ebEQkADR; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nda4NQu4"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id B02001F000E9;
-	Tue, 14 Jul 2026 06:03:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ebEQkADR"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 639C71F000E9;
+	Tue, 14 Jul 2026 06:04:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784009037;
-	bh=y6HDB+LkIWrLbng22LKCJQJGo4JTbKj4Gu2qxbwSnZ4=;
+	s=k20260515; t=1784009043;
+	bh=/mwz+MuzSS8mjqhjss8aYLDK/ZKmFw0IGY09/TVcqfo=;
 	h=Date:Subject:From:To:Cc;
-	b=nda4NQu4IXR82lykvHQ2esPrUaIkJMrcP9/i3iVOqhGUsxCwbJQd496r4JA0n4asB
-	 kbvrFAok8dMYCRYjFAqCRmFaxGTjjcel/J1C59bDvDUgSDKxAtmcY4dXve2LfjZI88
-	 YGnHkqzk/FT5U5YLKEcJP3Zfag1Ya5/m+9j9wfSNJX9j85uy8wqjNXRfQ7cqJajYNK
-	 Oqy9NZuKxW627B9/pOvvfXFQks5hdak5XA25EEwl1ERXqvQtA6EHpVFVypQY4S+UNe
-	 jyr0qPk4vy9wngMl6q5Y8Bn5IlQMVxdHwaRUC75b2y0HCVsLVWKpXmru5r6ubV90c8
-	 fU1SrwuVZAceg==
-Date: Mon, 13 Jul 2026 23:03:57 -0700
-Subject: [PATCHSET v3 1/2] xfs: LLM-inspired bug fixes, part 1
+	b=ebEQkADRaylu333yHNGA8Pvw77UX9o2ybnvRgUhwTj9IeDMjUvZgsn51XEwpkfs+m
+	 AdplLaToJ2H0irECimJRLnLqzMl3LtP9fg2X/ZsTcnNoKTa9IJd3e3Rcn6kdBuIt7C
+	 8JS33cLrm5hDHkyucEjUoFoqqvRiIR25E/D0RIxF5QcnF78CJwYtnC+0LCR0WP3VFU
+	 U78jM6r1rfUV+2sA3aBYHSBXs0LNVIXw80skO0KOQxxuHNI/O5zElCE/QO8GAJXA83
+	 yxzJWL5iNPAhO5yrn+7IzXzlUrn8GbqVFWFo5G77vQ7r7zki5AMPjQOu7LR+/xv87Z
+	 tsF5Ws23BZpDQ==
+Date: Mon, 13 Jul 2026 23:04:02 -0700
+Subject: [PATCHSET 2/2] xfs: LLM-inspired bug fixes, part 2
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org, hch@lst.de
 Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <178400716321.267810.14342805775513660564.stgit@frogsfrogsfrogs>
+Message-ID: <178400716782.268162.4846177784022689546.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,21 +42,8 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-Someone gave me a pretty generous license for a large language model, so
-I pointed it at every single file under fs/xfs and told it to find bugs.
-After personally filtering out the errors and garbage, here are fixes
-for the real bugs that I think it found.
-
-Most of these fixes target the online fsck code because I'm most
-familiar with it, but the LLM will read other parts of the xfs codebase
-so there are miscellaneous bug fixes.
-
-I'm sending these out as smallish bundles of bug fixes.  There's no
-particular order or grouping.
-
-v3: add rvb tags
-v2: add debugging patch to make it easier to test new cow repair code,
-    move cow fork replacement function to xfs_bmap_util.c.
+Here's a second batch of xfs fixes resulting from a LLaMma.  Mwa mwa
+mwa...
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -67,26 +54,21 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=llm-fixes-1
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=llm-fixes-2
 ---
 Commits in this patchset:
- * xfs: don't replace the wrong part of the cow fork
- * xfs: make cow repair somewhat flaky when debugging knob enabled
- * xfs: move cow_replace_mapping to xfs_bmap_util.c
- * xfs: don't wrap around quota ids in dqiterate
- * xfs: use rtrefcount btree cursor in xchk_xref_is_rt_cow_staging
- * xfs: use the rt version of the cow staging checker
- * xfs: write the rg superblock when fixing it
- * xfs: grab rtrmap btree when checking rgsuper
+ * xfs: set xfarray killable sort correctly
+ * xfs: fix off-by-one error when calling xchk_xref_has_rt_owner
+ * xfs: handle non-inode owners for rtrmap record checking
+ * xfs: fully check the parent handle when it points to the rootdir
+ * xfs: clamp timestamp nanoseconds correctly
+ * xfs: don't zap bmbt forks if they are MAXLEVELS tall
 ---
- fs/xfs/scrub/trace.h      |   35 ---------
- fs/xfs/xfs_bmap_util.h    |    4 +
- fs/xfs/xfs_trace.h        |   41 ++++++++++
- fs/xfs/scrub/cow_repair.c |  179 ++++++++++++++++++++++-----------------------
- fs/xfs/scrub/dqiterate.c  |    2 -
- fs/xfs/scrub/rgsuper.c    |   14 +++-
- fs/xfs/scrub/rtrefcount.c |    2 -
- fs/xfs/scrub/rtrmap.c     |    2 -
- fs/xfs/xfs_bmap_util.c    |   89 ++++++++++++++++++++++
- 9 files changed, 236 insertions(+), 132 deletions(-)
+ fs/xfs/scrub/scrub.h        |    6 +++---
+ fs/xfs/scrub/dirtree.c      |   16 ++++++++--------
+ fs/xfs/scrub/inode_repair.c |    4 ++--
+ fs/xfs/scrub/rtbitmap.c     |    2 +-
+ fs/xfs/scrub/rtrmap.c       |    6 ++++++
+ fs/xfs/scrub/xfarray.c      |    3 +--
+ 6 files changed, 21 insertions(+), 16 deletions(-)
 
