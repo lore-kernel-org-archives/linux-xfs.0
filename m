@@ -1,169 +1,118 @@
-Received: from out-177.mta0.migadu.com (out-177.mta0.migadu.com [91.218.175.177])
+Received: from smtpbgbr2.qq.com (smtpbgbr2.qq.com [54.207.22.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8CB744103F
-	for <linux-xfs@vger.kernel.org>; Wed, 15 Jul 2026 10:26:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEAE842BC49;
+	Wed, 15 Jul 2026 10:31:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.207.22.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784111189; cv=none; b=nt/P/yy/3+B39tKjRKhqVK5YSwjqFKr/lCW4aiQPLYicvxIAqThTzEfFoekQDzrCZ66GCJaF7XrwJX1T9PxhM6DNUp6Lf7sqrbVayemcVsDnK/Ow+DIxl/VQzOQ+GzyucH6ClE20LHLtkvJ9WGuD6gfRRJraXB0K4iaZF0V1qjA=
+	t=1784111496; cv=none; b=AaHq2m6j6clkNOi6RRHcrKLp2aUXbquX+Fn89gnouBDyCuMGwZp6ryOeusPoG7/roORUhPftDdAsq8lW8eeNkBasYTYBQ+Co06JGx4J+YvR9rweSFxrNKryedIqUpvzTulPaqogAkE2F0o2yml0yboLi4MkP5ZAOAJkyKoPwVYM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784111189; c=relaxed/simple;
-	bh=30lXEo8O7BemTusr8v0D5eoMcScD7uUKzh8Lgs/1WSQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=o53m11j+yavcF8CHqFsly3zR0yD2pKwPGp51GruSCrtjta008ahinYUpDzfv69t13rBATkb2aMM8NHN1zRDm3p0SvqPM07T4TXoLc/ZFr03vfO0zGhsSy8PCr+5rhNJY1qQa5vnhGbi0EfK0x1lSBHwBFtRF1afzYQ22YTTsJCk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=hx4OibK1; arc=none smtp.client-ip=91.218.175.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1784111496; c=relaxed/simple;
+	bh=e4Wl/dzPK7FW1shNf6Ar6eY6ax6OFIdfpHTZ93Ru4Hw=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=BzfXS8tV5Kw18p5JB34S6WXFmbYBPyOPgQtVAPd/X17ITGg//Wx0SaeD4PY6IwKV8ga4Vvm1oicTRGBm5Ur9ddCnvAeEQhLGzuPJ4wgvRqhlO6eeTPHhnaydQHCyupsxbC/SR/jx2FQn/ASoq60PQqeGJ72yi1a6N3iJ1tqWJrM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=hE41mSxu; arc=none smtp.client-ip=54.207.22.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="hx4OibK1"
-Message-ID: <44bf7cd3-8083-454c-9419-d377061e31c2@linux.dev>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1784111174;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=kEd62YpRlYzH7ddXxgaLtMBL/oT0lPJiUJAY2FiEygY=;
-	b=hx4OibK1fXVjDH6lWemesdKXKAAp8ftOERwPW2o9fu+hyp2uu+GzE3hSdBoXrCoRdTdWtf
-	AVHlJUwVDD5uhg+HbwYA6G70/DEf8VD+cV4zliNOWad5kMQ1pCHY0BnbWdEMFYlu4O6nRA
-	pIYP/tCPGwtoKeOapGthO5rvafaKxRI=
-Date: Wed, 15 Jul 2026 11:26:08 +0100
+	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="hE41mSxu"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uniontech.com;
+	s=onoh2408; t=1784111462;
+	bh=2cVz65bfqpxyMl4P2L/ME8u+LPsl792Q8rTSngHzZgg=;
+	h=From:To:Subject:Date:Message-Id:MIME-Version;
+	b=hE41mSxuwau3SBxhYIrltGz+Kb69C3FkUoyn1KcTYHuZPh8SwWgcWOEnO6WMzkckB
+	 Q+XUKKOtAxwXBcvmKIBvi2WsQogZFusxWgl2qmeSuItAoeR75RCG5GBkVjgwJGCzL4
+	 iJnRl18+47HuZndNUOOf0SQDvvukX9BKkFk6XUOY=
+X-QQ-mid: zesmtpgz1t1784111445t1c4ca814
+X-QQ-Originating-IP: hZmF3kZC/bQYxcnGfNESN4MAGP1slbQKbSpzr5L31AQ=
+Received: from localhost.localdomain ( [123.114.60.34])
+	by bizesmtp.qq.com (ESMTP) with 
+	id ; Wed, 15 Jul 2026 18:30:43 +0800 (CST)
+X-QQ-SSF: 0000000000000000000000000000000
+X-QQ-GoodBg: 1
+X-BIZMAIL-ID: 8601385554246524199
+EX-QQ-RecipientCnt: 5
+From: Qiang Ma <maqianga@uniontech.com>
+To: cem@kernel.org,
+	djwong@kernel.org
+Cc: linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Qiang Ma <maqianga@uniontech.com>
+Subject: [PATCH] xfs: clear zapped attr fork state when bmap repair finds no attr fork
+Date: Wed, 15 Jul 2026 18:30:26 +0800
+Message-Id: <20260715103026.1701559-1-maqianga@uniontech.com>
+X-Mailer: git-send-email 2.20.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH] fs: push nr_cached_objects memcg gating into individual
- filesystems
-To: Dave Chinner <dgc@kernel.org>
-Cc: brauner@kernel.org, qi.zheng@linux.dev, jack@suse.cz,
- linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
- Al Viro <viro@zeniv.linux.org.uk>, linux-mm@kvack.org, hughd@google.com,
- boris@bur.io, clm@fb.com, dsterba@suse.com, linux-btrfs@vger.kernel.org,
- cem@kernel.org, linux-xfs@vger.kernel.org, shakeel.butt@linux.dev,
- hannes@cmpxchg.org, riel@surriel.com, kernel-team@meta.com
-References: <20260714101454.1202449-1-usama.arif@linux.dev>
- <ala2rDHrFDjql3Qg@dread>
-Content-Language: en-US
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Usama Arif <usama.arif@linux.dev>
-In-Reply-To: <ala2rDHrFDjql3Qg@dread>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Migadu-Flow: FLOW_OUT
+Content-Transfer-Encoding: 8bit
+X-QQ-SENDSIZE: 520
+Feedback-ID: zesmtpgz:uniontech.com:qybglogicsvrsz:qybglogicsvrsz3b-0
+X-QQ-XMAILINFO: NuFCnacf6wViwKE3tPh3pkN8zZzjPcatq6qX0riLs58uVU7iryQ28qtG
+	D4rzmMVzsSAotndiy4TNXx00rOoKbd0PCJtU6q/CZItuhsWcaXbjetRQ2O9Nd6A9+325O6U
+	dUkbwLz5a5DT64mGPL4o98HhPfpBHe2ArNspiExtI9nCGIB9nXleoBk5/M05fr1QPNZBZxu
+	NSlj4XZdEqjRcN8idDBnBML3afUNjAhzj/XrGUQX0nxPCCKJ9jSXz0tc1V6qMvwblOJNWVo
+	iAPWfSg5UX6MQFNLj7PvfF6bkcqX5NF799UZO3htwmz3F2Ox5j8HQwiySVDgFUki6jVwjz2
+	5w0R74LxwrRQdZ40K3fGp7OYE+ucfk8BXXaMZ1zcMBQtwD491+AH6emVISh/y3+2qzawxgq
+	WeVz9nXQDmjmePM2yAfXYsRzUTKMMq0kzlFGL/rXvhiWDFLnEXxs8x4Jbao1QW8+UP/9NVZ
+	SKOYyIezpAotHRGfhZq0lJZSDqOQUXzAfA79ZseOi8E8l/VE6kdn1+fqSuhtZI4lzQ/uYSv
+	oBaQg+D4R3EsWZxhM9er8tgqFmU5qnAow9wo8lRb7Tuk788Usiy7e+kfNKwG5MWUp7PTR44
+	EEiu3SFkzHtzy10Ig5iUwu679y64IWpI+6w+O+4Dvp73EdmMxVatMaV9umFBAGWcKDkaZmx
+	1O30ADExSNb+/feV5LHeDnw5u34MuB0aedwGgEht5r+JR+BlLkqpyvMxfExExvJNBEG/qaX
+	0oXADI0i7QEkkmz1nY6w/CqT1qu8tQGlGtsx7neDgYd3e8aBqABH1I/rDsFwQV6/s3kfLbp
+	AU+MrGkp/XZlvKr4FY7ODPxVvOLQcXm2KM5PuSIQ5Vmoc+UZSP6tUaCNrcOFWJ0aXPAbr7z
+	v5IDGbcvAbWGMXng1rqytx3Wh5yjFGixJjOiIdznZ3U9FBJl60DI/Kgd7oXZAePHkR8s3Fi
+	tPLOjDxW7grPcY/5ORMTFWuPC8xiUab7nuy6f69daUwBt77hR1VQuBubTXp5by6i5cR2Phw
+	UxuyxLSuBfEGSJCLjmyIf+rNPMuoY=
+X-QQ-XMRINFO: M/715EihBoGS47X28/vv4NpnfpeBLnr4Qg==
+X-QQ-RECHKSPAM: 0
 
+xfstests xfs/377 can make xfs_scrub repeatedly check and repair the
+attr block map after inode repair zaps an attr fork.
 
+When inode repair zaps an attr fork, it records
+XFS_SICK_INO_BMBTA_ZAPPED so that scrub/repair can revisit the attr fork
+block map.  If the fork has been reset to an empty state and removed,
+BMBTA repair has no attr fork mappings to rebuild and can return success.
 
-On 14/07/2026 23:22, Dave Chinner wrote:
-> On Tue, Jul 14, 2026 at 03:14:54AM -0700, Usama Arif wrote:
->> Commit 0baad6f9b997 ("fs/super: skip non-memcg-aware nr_cached_objects
->> in memcg slab shrink") added a check in fs/super.c that skips the
->> ->nr_cached_objects() hook whenever the shrinker is invoked for a
->> non-root memcg, because none of the current implementations (btrfs,
->> xfs, shmem huge) honour sc->memcg.
-> 
-> I don't see that commit in an upstream tree. I'm guessing I wasn't
-> cc'd on it, either, because I don't recall seeing that as a patch,
-> either.
+The post-repair scrub then runs with XREP_ALREADY_FIXED set, which means
+xchk_file_looks_zapped() deliberately ignores the stale zapped health bit
+and asks xchk_bmap() to check the current attr fork.  For an absent attr
+fork, xchk_bmap() returns -ENOENT.  Returning that error prevents
+xchk_bmap_attr() from marking XFS_SICK_INO_BMBTA_ZAPPED healthy, leaving
+the zapped health state behind even though there are no attr fork mappings
+left to check.
 
-Ah sorry about this, I just ran get_maintainers.pl on the patch, plus added
-shmem, btrfs and xfs maintainers on it. get_maintainers.pl didn't report
-shrinker maintainers (likely because the change was in fs/) and it didn't
-come to my mind as well :(
+Treat -ENOENT during post-repair BMBTA revalidation as a clean result for
+the zapped attr fork: clear XFS_SICK_INO_BMBTA_ZAPPED and return success.
+Keep the existing -ENOENT behavior for ordinary scrubs of absent attr
+forks.
 
-The patch is here: https://lore.kernel.org/all/20260609123047.1948242-1-usama.arif@linux.dev/> 
-> However, if anything is gating the fs_objects callouts to the fs
-> when memcg is being srhunk, then it is fundamentally broken and you
-> are correct to fix it.
-> 
->>
->> That policy is really a filesystem-owned property: fs/super.c should
->> not encode the assumption that these hooks are never memcg-aware,
->> since a future implementation might legitimately filter by sc->memcg.
->> Move the check into btrfs_nr_cached_objects(), xfs_fs_nr_cached_objects()
->> and shmem_unused_huge_count() so each filesystem can lift the
->> restriction independently once its underlying counters/scans become
->> memcg-aware, without needing a coordinated change to fs/super.c.
-> 
-> However, your assumptions here are incorrect.
-> 
-> That is, the XFS fs_objects implementation is intended to be called
-> even when memcg shrinking is occurring. I architected it that way
-> all those years ago when I introduced the fs_objects shrinker
-> callout. i.e. XFS is not aging reclaimable inodes via this call - it
-> is purely an expedite freeing of recently reclaimed VFS inodes when
-> there is memory pressure of any kind.
-> 
-> Reclaimable XFS inodes are still charged to memcgs, but we don't
-> track them per-memcg because it is extremely inefficient when their
-> lifetime after being released by the VFS is usually less than 5
-> seconds. Indeed, this low level cache is not for working set
-> retention; the VFS inode cache does that. The XFS inodes need to
-> through a GC state before they can be freed, this takes a little bit
-> of time, so we don't hold up the VFS inode cache shrinker for that.
-> 
-> The VFS inode cache shrinker is memcg aware, so it only pushes
-> inodes that are being reclaimed by memcg reclaim into the the
-> reclaimable state at the XFS level. Hence we don't need to track
-> reclaimable inodes by memcg - we know that memcg owned inodes that
-> are to be freed have already been pushed into reclaim by the VFS
-> shrinker doing memcg reclaim. Hence all we need to do is sweep them
-> and free them.
-> 
-> This is what the XFS fs objects shrinker does.  It needs to run in
-> conjunction with -any- shrinker context to immediately free the
-> clean inodes that the VFS shrinker released that pass, and to
-> release any of the recently released VFS inodes that needed GC and
-> are now clean and can be freed.
-> 
-> IOWs, the XFS fs_objects callout is not "memcg-aware" in the classic
-> sense of "it tracks objects by their owner memcg". However, the
-> -combined superblock shrinker algorithm- is memcg aware and that
-> results in XFS only seeing objects from the memcg being reclaimed
-> transitioning to RECLAIMABLE state which it then immediately sweeps
-> away.
-> 
-> i.e. the architecture of the VFS and XFS inode cache reclaim is
-> entirely memcg aware, and that is why I implemented the fs_objects
-> callout for XFS all those years ago. It works efficiently, it works
-> correctly with memcg based reclaim, and XFS doesn't need to care
-> about memcgs in it's low level reclaim code. Win, win, win.
+Fixes: d9041681dd2f ("xfs: set inode sick state flags when we zap either ondisk fork")
+Signed-off-by: Qiang Ma <maqianga@uniontech.com>
+---
+ fs/xfs/scrub/bmap.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-Ack on above, and Thanks for explaining this!> 
->> Behaviour is unchanged: calls into these hooks from shrink_slab_memcg()
-> 
-> Behaviour was broken by the above commit, it needs to change.
+diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
+index 70028da1aacc7..0cee51d4338e4 100644
+--- a/fs/xfs/scrub/bmap.c
++++ b/fs/xfs/scrub/bmap.c
+@@ -1170,6 +1170,11 @@ xchk_bmap_attr(
+ 	}
+ 
+ 	error = xchk_bmap(sc, XFS_ATTR_FORK);
++	if (error == -ENOENT && (sc->flags & XREP_ALREADY_FIXED)) {
++		/* A repaired, empty attr fork no longer has mappings to check. */
++		xchk_mark_healthy_if_clean(sc, XFS_SICK_INO_BMBTA_ZAPPED);
++		return 0;
++	}
+ 	if (error)
+ 		return error;
+ 
+-- 
+2.20.1
 
-Ack.> 
->> still early-return 0 for non-root memcg contexts, keeping the shrinker
->> bit clearable in each memcg's bitmap; the global (kswapd or root
->> direct reclaim) path still drives them as before.
->>
->> Signed-off-by: Usama Arif <usama.arif@linux.dev>
->>
->> @@ -170,19 +169,6 @@ static void super_wake(struct super_block *sb, unsigned int flag)
->>  	wake_up_var(&sb->s_flags);
->>  }
->>  
->> -/*
->> - * The s_op->nr_cached_objects hooks (used for example by btrfs and xfs)
->> - * operate on filesystem-global state and ignore sc->memcg. Driving them
->> - * from per-memcg shrink_slab_memcg() invocations only burns CPU walking
->> - * per-cpu counters and queueing duplicate work: the actual reclaim happens on
->> - * the global path (kswapd or root direct reclaim) regardless. Restrict them
->> - * to that path.
->> - */
->> -static inline bool super_fs_objects_eligible(struct shrink_control *sc)
->> -{
->> -	return !sc->memcg || mem_cgroup_is_root(sc->memcg);
->> -}
-> 
-> This wrapper should still exist (with a better name) so filesystems
-> don't need to open code memcg cruft.
-
-Ack,
-
-I am going to send a v2, which will include Fixes tag and follow above.> 
-> -Dave.
 
