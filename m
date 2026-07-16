@@ -1,127 +1,99 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CE8D417D6A;
-	Wed, 15 Jul 2026 19:09:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C291743F0A9;
+	Thu, 16 Jul 2026 01:38:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.143.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784142601; cv=none; b=H6bwuvF69R8ov1CBij1hwhtGzQuo11UkCo3ahO+H/pJTkuzKBTbTTP4qNvoW3Vm2xs2WLw0xwiFA8fJPDohA3+OjUZ+vjx4MUAl0oHIxqtH6l/ilbIkAAfRC7RidO0PmSMxiHWLFn82Km1KpHQAJg1zSJlmWW3McbbeHNoJzEug=
+	t=1784165892; cv=none; b=FkjeHwAAarKGptFYD2vdqTh78lqPaZUcFP8NDXz8YTpvLPVf7VjVAyw+7ysWbpFcij5phcKpjKmvqlBkOSHYCx60DbSrADAOez25wCER/fRPsI6W7rExMVRNYL9V4lLQ+HYZw3w7Z1wuvWAz/EwjWAqFBNA901etmRxGgkvNw1o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784142601; c=relaxed/simple;
-	bh=xeV8CeGjnmFkDwWLn6i7ZBi4+YtuhD/DtjvMo26qcJk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=tYczLMRfyGQWvX6Vvx/3ITdjk6j1YuW93xV+h1Cg67T77EoL/17OpWfn7k8DOCs39NbbgFMYdmPAPF32xPit/OK7InWT+y9tHg4Wuxb3zo3sMP/cox0+ChzH0NzH04xnvIXbBBE92OncIVpEY2Y5njM63g0u5Q784wCioycu2jQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bGFpyViu; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784165892; c=relaxed/simple;
+	bh=bfe5YijdD+G8B7V+RZp8vVrAtE3Vwwb7v/BeuK5C6Xg=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Yol7qYRtiRTjx2E+vyzYqjgut3vg8/6Zry1Zz7Ems58aByTmi3KF6Iq5z9wNqRlzxp9m/fw7+wNvU/UeiwkqdBA6C/7cJxcrARc8aMdHsX9H8k/gX4v3F8eSVMI9vgXttbH7rkpYjsAI4Rlo0zjkABHZIvOF/hPv7KlOU5rJPYg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=AWKeBgjV; arc=none smtp.client-ip=68.232.143.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bGFpyViu"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 6237C1F00A3A;
-	Wed, 15 Jul 2026 19:09:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784142590;
-	bh=Jg8w+4E9GoiyrMiq7Smmef/Q1UDh4RmAlItKlCO82Js=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=bGFpyViu+4i9qqzMQIg9n9p8hw3+NOe5l2PNs8wRIYBj6cHpjiymlZ+MB9uX1P8AM
-	 HBRnpQR0KsDJtpvFqvSwgnZPok98rF+uwddHWPa7yroW7+hkPdVQG0Yn2WV+L5fw5T
-	 AvdTuwA6PDsuph3Qi7uCZpreVcAc+YkVTi6XzuhodmaIM2L7Aa5nWvWtbqfPTpiRQs
-	 dbD2b8NZmCsxZTgegJtomwfgv9wbW4H4xkwc2n0E/mgNC+d5rirCK4cyfjKKhWsQra
-	 rfw27PEmy4u3E8ARzBQ2ALDqunVFeT/mxTnwrBngdBYw0S04JzOviYwQDcQfP1HofP
-	 bdOGjmS9oOqPw==
-Date: Wed, 15 Jul 2026 12:09:49 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Avinesh Kumar <avinesh.kumar@suse.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org, cem@kernel.org
-Subject: Re: [RFC PATCH] libfrog: make cmn_err() emit each message atomically
- to avoid torn output
-Message-ID: <20260715190949.GP7380@frogsfrogsfrogs>
-References: <20260715173114.359368-1-avinesh.kumar@suse.com>
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="AWKeBgjV"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1784165890; x=1815701890;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=bfe5YijdD+G8B7V+RZp8vVrAtE3Vwwb7v/BeuK5C6Xg=;
+  b=AWKeBgjVd8BJsPF2QSpnrjJhoK4Ch1R2HdkFMKBwLVs4OdC3btge1Dln
+   2t71tNMxb1mVXMjXHLOpU4yD7jOsRLhFZQvR4RWVcCRjaTX9hXCjGJwof
+   EAPyrzuU8XtIxKA6XcWiLZ941+xHUcwyyB2YKZid8+yuQ7DUqLpjkhKng
+   ArF9pldfKzqaDT9OxVdwjr0XorXjDFgw+RwwwBZYQLItdl/GNpwmoH5Xx
+   HGjcIJD8E+KCYKEZ4Ig/jjEZkqLjSU1j2FZuMYoOIxksPjtiwh/qQk/jC
+   fKmPzzNZxF7oqyA1MXCmtQRsdXZCGeT+gbWJNW8/oSulmTEd6r9W8hWei
+   g==;
+X-CSE-ConnectionGUID: Js/jkwlnRzWiKKZHnCnHXA==
+X-CSE-MsgGUID: lRx60GI0S2m6z1a9aacHvw==
+X-IronPort-AV: E=Sophos;i="6.25,166,1779120000"; 
+   d="scan'208";a="152027378"
+Received: from unknown (HELO uls-op-esad3-o.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 16 Jul 2026 09:38:04 +0800
+X-CSE-ConnectionGUID: jtEX3HzpSaSpP+QxMSlZ/A==
+X-CSE-MsgGUID: N9ZspUTsQVSYidyONzXgaQ==
+IronPort-SDR: 6a5835ed_zX2fxtR3fUFL9taK3hm3UVfI15z3opNJPohntoSjReK2UWh
+ NvUz2N/Myo4J1ropFOEpMVUOizDZzoh52IF1ruQ==
+Received: from uls-op-esai1-o.wdc.com ([10.248.3.45])
+  by uls-op-esad3-o.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 15 Jul 2026 18:37:49 -0700
+X-CSE-ConnectionGUID: pEmxLEVWQcGSNjs5EXKWFQ==
+X-CSE-MsgGUID: aDPp3ebCSAGz9bADDw+kEg==
+WDCIronportException: Internal
+Received: from unknown (HELO shindev.ssa.fujisawa.hgst.com) ([10.149.67.30])
+  by uls-op-esai1-o.wdc.com with ESMTP; 15 Jul 2026 18:37:48 -0700
+From: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+To: fstests@vger.kernel.org,
+	Zorro Lang <zlang@kernel.org>
+Cc: linux-xfs@vger.kernel.org,
+	Yao Sang <sangyao@kylinos.cn>,
+	Christoph Hellwig <hch@lst.de>,
+	Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+Subject: [PATCH] xfs/333: require external scratch device
+Date: Thu, 16 Jul 2026 10:37:47 +0900
+Message-ID: <20260716013747.1288925-1-shinichiro.kawasaki@wdc.com>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260715173114.359368-1-avinesh.kumar@suse.com>
+Content-Transfer-Encoding: 8bit
 
-On Wed, Jul 15, 2026 at 07:28:21PM +0200, Avinesh Kumar wrote:
-> From: Avinesh Kumar <avinesh.kumar@suse.com>
-> 
-> fstests xfs/033 fails sporadically with a spurious blank line in the
-> xfs_repair output:
-> 
-> - output mismatch (see /opt/xfstests/results//xfs/033.out.bad)
->     --- tests/xfs/033.out	2026-06-24 15:52:51.000000000 -0400
->     +++ /opt/xfstests/results//xfs/033.out.bad	2026-07-14 18:54:46.582495041 -0400
->     @@ -103,6 +103,7 @@
->      Phase 3 - for each AG...
->              - scan and clear agi unlinked lists...
->              - process known inodes and perform inode discovery...
->     +
->      bad magic number 0xffff on inode INO
->      bad version number 0xffffffff on inode INO
->      inode identifier 18446744073709551615 mismatch on inode INO
-> 
-> Root cause is in cmn_err() (libfrog/util.c), which emits a message
-> and its newline as two separate writes to unbuffered stderr.
-> xfs_repair's threads all share stderr. If one is preempted between the
-> two writes, another thread's line lands in between:
-> 
-> (snips from `cat -A 033.raw`) -
-> Phase 3 - for each AG...$
->         - scan and clear agi unlinked lists...$
->         - process known inodes and perform inode discovery...$
-> Metadata corruption detected at 0x445dd3, xfs_inode block 0x80/0x4000        - agno = 0$
-> $
-> bad CRC for inode 128$
-> bad magic number 0x0 on inode 128$
-> 
-> which should be like -
-> 
-> Phase 3 - for each AG...$
->         - scan and clear agi unlinked lists...$
->         - process known inodes and perform inode discovery...$
-> Metadata corruption detected at 0x445dd3, xfs_inode block 0x80/0x4000$
->         - agno = 0$
-> bad CRC for inode 130$
-> bad magic number 0x0 on inode 130$
-> 
-> _filter_repair() strips the noise line it glued onto but not the lone
-> newline, which then fails the golden diff.
-> 
-> Make the two writes atomic.
-> 
-> Signed-off-by: Avinesh Kumar <avinesh.kumar@suse.com>
-> ---
-> 
-> Hi, please give feedback if this should be fixed in a different way.
-> Thanks!
-> 
->  libfrog/util.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/libfrog/util.c b/libfrog/util.c
-> index 5bae5bab..3b6df917 100644
-> --- a/libfrog/util.c
-> +++ b/libfrog/util.c
-> @@ -116,8 +116,10 @@ cmn_err(int level, char *fmt, ...)
->  	va_list	ap;
->  
->  	va_start(ap, fmt);
-> +	flockfile(stderr);
->  	vfprintf(stderr, fmt, ap);
->  	fputs("\n", stderr);
-> +	funlockfile(stderr);
+The test case xfs/333 uses the external scratch device SCRATCH_RTDEV.
+When SCRATCH_RTDEV is not specified, the test case fails at
+"_require_block_device $SCRATCH_RTDEV". To confirm the requirement, the
+test case calls the helper function _require_realtime(). However, it
+does not check SCRATCH_RTDEV when the zone type of SCRATCH_DEV is
+'none'.
 
-I think do_error() in xfs_repair.c is going to need the same treatment
-but otherwise this chunk looks ok to me.
+To avoid the failure, ensure the SCRATCH_RTDEV check by calling
+_require_external_realtime_device() instead of _require_realtime(). With
+this, the test case is skipped when SCRATCH_RTDEV is not specified
+regardless of the zone type of SCRATCH_DEV.
 
---D
+Signed-off-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+---
+ tests/xfs/333 | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
->  	va_end(ap);
->  }
->  
-> -- 
-> 2.55.0
-> 
-> 
+diff --git a/tests/xfs/333 b/tests/xfs/333
+index f2d4077d..7235dc24 100755
+--- a/tests/xfs/333
++++ b/tests/xfs/333
+@@ -16,7 +16,7 @@ _begin_fstest auto quick rw zone eio
+ 
+ _require_debugfs
+ _require_scratch_nocheck
+-_require_realtime
++_require_external_realtime_device
+ _require_block_device $SCRATCH_RTDEV
+ _require_zoned_device $SCRATCH_RTDEV
+ _require_command "$BLKZONE_PROG" blkzone
+-- 
+2.54.0
+
