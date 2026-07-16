@@ -1,59 +1,125 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtpbgeu1.qq.com (smtpbgeu1.qq.com [52.59.177.22])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F19C53E0222;
-	Thu, 16 Jul 2026 08:26:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C1D42EDD78;
+	Thu, 16 Jul 2026 09:24:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=52.59.177.22
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784190390; cv=none; b=nmtyDEgaY0iQmsvWbBrtK9FYhF6Sl4V1npoQQyy3RurA5iciw6aFOXETg279Xv0QWZ0+SneBUw0LnymruwmFLTQvmH5ygjfjcFcEw9EJIrYOERuPdHxaSdv9xmFkc5ug8EVTGGHrUe/L+2oDE12exH8aBYxm2RwNVRazqqF5e/Q=
+	t=1784193853; cv=none; b=hyA/z/L76ZMHywfQeWG+a7AkzKZoLNiQhrW/OBBlf99uzGd1KnvA6atwAISg2MZ/2lDBz1lba5gsX9F3f0wYln/xygGAfNC+Ws7/KYao3thuFlQkBW8nMde6vWngi9tXObnfvLuoM108HTOiVWzBYN5jjfIGZ2Z/8fLTkxyutb4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784190390; c=relaxed/simple;
-	bh=2AblPf1RDbg9RsRhhAq5QD4eS5q3JpnnQYxlCwWPDw0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=vD32CEiIvmdTWAJx93gSlgN3FvG2Ay+7/8asdruAyq65GxjKPiGlBDkVUQ/UR+fBQvboSSTqpqwytgLpYZj24xfWIb+8y12YzA7gDwBfXo0PB5CnZfU1J8oJnO/krGKSVO/qGeRcy01zouMFXgjtiPqpnXoZdw0OhWvyFAZRpdM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=VQcAH+s+; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1784193853; c=relaxed/simple;
+	bh=Nu+RxB/Gh5omp7YkDzMU16A77EzDLq3kPeJMzgFDgr0=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=i5tFuXt2toHIH11g1d5Npr5TzMjn/cEp88ejGSiBrOYqGhH72GcLd6lAl6JxEJTOesqKLd7RhfHQLvfYgueSWoSbB7eAzt1L6ajasHKGrOxupGMqp6d2YBt3an3tSnKVhgw9sq0tUXBwzrW7kF4xh6nPf2+G/ZubHRkuRJ7e9vc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=lfysFO66; arc=none smtp.client-ip=52.59.177.22
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="VQcAH+s+"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=HH4vbdwXYjKWO8cYmfnVMB/RjqgWTuhXE5fLJ9fHFNk=; b=VQcAH+s+a5NBtsy/2ObcOifa2h
-	7dn/S7M9Mq5zXt4I+klCW/nTc3C8DOsMsh96N38bXuyhyzWCp0MXClOwnZ1JQt+9L41xXn5b2Tzit
-	OjflJbPsB55qpMv+qKQKqJ32PqlMoklBEigeV20nVXCbuLBEjq1+Lph06Z+KiSskkeITWvDCJmqU6
-	Dib5+N1hro4k8iE64fKl7mVSAejqNZrS6Jzjgd1ESrp02DXY7KHZc+Y8Yqz4w6OcuqBGGadi/MwBN
-	ompQcv2vbIe/TJyj4DhSnAcS6BZ8u8kT2esKPB9lcpWj/l5t3N54bKDFPy3hmv1S9GE37580nz/FY
-	ciobzuZg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wkHQD-0000000Gkap-23xI;
-	Thu, 16 Jul 2026 08:26:21 +0000
-Date: Thu, 16 Jul 2026 01:26:21 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Qiang Ma <maqianga@uniontech.com>
-Cc: cem@kernel.org, djwong@kernel.org, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] xfs: clear zapped attr fork state when bmap repair finds
- no attr fork
-Message-ID: <aliVrdJB5tAw2lpG@infradead.org>
-References: <20260715103026.1701559-1-maqianga@uniontech.com>
+	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="lfysFO66"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uniontech.com;
+	s=onoh2408; t=1784193798;
+	bh=dQm/xOoQxhmd7Z4KU4LlwNNATvc2uZD+sB/1VJ4glWY=;
+	h=From:To:Subject:Date:Message-Id:MIME-Version;
+	b=lfysFO66IzyVU0y+7fOWSjEung+jxcVFvPo3JW/ONR2gwsm6h05bgD8y34EAYNpEa
+	 BHjxX6440Glx1eEgDAn+BmCEHWTxWnkVNmulz+4cnyxwb7pHKG2K/EZTzAwUzt3yc1
+	 kDmRbOESE5G1vq6zihEzdsMKUcBK6c7VqffVEarU=
+X-QQ-mid: zesmtpgz1t1784193781t8a31d514
+X-QQ-Originating-IP: QM7MTl46LltyGzAVW2FTPGPkSYUidmi0vYLUVxqLgnw=
+Received: from localhost.localdomain ( [123.114.60.34])
+	by bizesmtp.qq.com (ESMTP) with 
+	id ; Thu, 16 Jul 2026 17:22:59 +0800 (CST)
+X-QQ-SSF: 0000000000000000000000000000000
+X-QQ-GoodBg: 1
+X-BIZMAIL-ID: 17191938862874866410
+EX-QQ-RecipientCnt: 7
+From: Qiang Ma <maqianga@uniontech.com>
+To: cem@kernel.org,
+	djwong@kernel.org,
+	hch@infradead.org
+Cc: linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Qiang Ma <maqianga@uniontech.com>,
+	stable@vger.kernel.org
+Subject: [PATCH v2] xfs: clear zapped attr fork state when bmap repair finds no attr fork
+Date: Thu, 16 Jul 2026 17:22:45 +0800
+Message-Id: <20260716092245.1847930-1-maqianga@uniontech.com>
+X-Mailer: git-send-email 2.20.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260715103026.1701559-1-maqianga@uniontech.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
+X-QQ-SENDSIZE: 520
+Feedback-ID: zesmtpgz:uniontech.com:qybglogicsvrsz:qybglogicsvrsz3b-0
+X-QQ-XMAILINFO: M6NtOza7l4PFlQmfMSdWdJPa8tE4UIi3fVnF/BFD+6AtKEB3ILUI22bu
+	hO5EcaZiEFy/4BCWVHyWo1o7/AcNEAFE2E7VTDvc78OFj/oUWeqQRJlB60tnN+ukxBkgBMp
+	dmW7QZiwO7sRASO9NGSpqQoWU75dxxlf40yM3mOsSZRnAx3I3VSCNXJ4C2I0LDu+Gir+ByL
+	vFOhMUXIEcPbYEmQYIwK8EUOgEeXnnw/4bnQ+VWzZJWRsqs2J47wLdD1TPAbIMWd3EPk9o0
+	XkfIbwL/yrd0wiSZ1523+Xs1H9Cjs2jnUlbo/gXPlGLOdqEWf6DqMeC+CIFFj5CNFMSD19f
+	0PnsdXk2EBjElxz85jzKiuPnfL4eu5d+S5wKRyEsbbPEKmFAgpB2Qtt/lcDxdUfnLMJdm9P
+	9J9otjhCaUF8bij5lJHK07va/2eXo+gN4IgwYCuRi/5SFJXmiiziUyS6NjvCPc+bl9Y8iZj
+	4ZE74lNTpENWbnJ5w+u5xQaSZIl2dB0pxfkDiTAjTC7JvIPqB9qP/2tOPB0xW1Bj5WGuSWH
+	fGFeya7AiAs5rbeJRXkJxqHeLGpL/jMjMWi1OX83eH+JpTVD22DEDzOt1tQZr66TimCJGW6
+	bLuYDj7TV2qnjSSoFHRRyuau7RCkvqsymoTtrykmB5DNhabVUgolRpdv2WAyo+o+NednOkf
+	LjICggfs/MvbsFzCI9Qd8aO//oSxivTeXGh4KpOQVabDsQ8QqgLtDuMK1UFvQsl3ekdNVmR
+	1aNRW7J0Bcv4zSgyOqcdD1aeNdTXfZPgUwDH8aJFv2138lPfMKj5WONnzZChz1VmNz1BCAZ
+	cj8yWi8io+rElisjedXAXCLuHGLrrbhMIhJdo6+Ez2ch7i0im881Mx2UlN7/2D2/ZRrkVds
+	KFZQ76pnsGc82THZrncRkNJE+ClsYOgLtdWOyruNqtYV0GmN5w7/GN6gnC+uCWfhVfQEB0o
+	wFa/mY5Bm96FWUNCJESu7a2eMDLbE/DWj2S18FJpnqaylE74hyIbnRl4rGBFuGoZn7Jfh/t
+	O/KJYK7MWCmOjd6q2aRqjZKchUzllQAUEvg3pDKUvzei03ipp8
+X-QQ-XMRINFO: Mp0Kj//9VHAxzExpfF+O8yhSrljjwrznVg==
+X-QQ-RECHKSPAM: 0
 
-On Wed, Jul 15, 2026 at 06:30:26PM +0800, Qiang Ma wrote:
-> +	if (error == -ENOENT && (sc->flags & XREP_ALREADY_FIXED)) {
-> +		/* A repaired, empty attr fork no longer has mappings to check. */
+xfstests xfs/377 can make xfs_scrub repeatedly check and repair the
+attr block map after inode repair zaps an attr fork.
 
-Overly long, either move it above the if or turn it into a multiline
-comment.
+When inode repair zaps an attr fork, it records
+XFS_SICK_INO_BMBTA_ZAPPED so that scrub/repair can revisit the attr fork
+block map.  If the fork has been reset to an empty state and removed,
+BMBTA repair has no attr fork mappings to rebuild and can return success.
 
-Otherwise this looks good.
+The post-repair scrub then runs with XREP_ALREADY_FIXED set, which means
+xchk_file_looks_zapped() deliberately ignores the stale zapped health bit
+and asks xchk_bmap() to check the current attr fork.  For an absent attr
+fork, xchk_bmap() returns -ENOENT.  Returning that error prevents
+xchk_bmap_attr() from marking XFS_SICK_INO_BMBTA_ZAPPED healthy, leaving
+the zapped health state behind even though there are no attr fork mappings
+left to check.
+
+Treat -ENOENT during post-repair BMBTA revalidation as a clean result for
+the zapped attr fork: clear XFS_SICK_INO_BMBTA_ZAPPED and return success.
+Keep the existing -ENOENT behavior for ordinary scrubs of absent attr
+forks.
+
+Fixes: d9041681dd2f ("xfs: set inode sick state flags when we zap either ondisk fork")
+Cc: <stable@vger.kernel.org> # v6.8
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Signed-off-by: Qiang Ma <maqianga@uniontech.com>
+---
+Changes since v1:
+- Move the overly long repaired empty attr fork comment above the if.
+- Add Cc stable and Reviewed-by tags.
+
+ fs/xfs/scrub/bmap.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
+index 70028da1aacc7..401c278725d21 100644
+--- a/fs/xfs/scrub/bmap.c
++++ b/fs/xfs/scrub/bmap.c
+@@ -1170,6 +1170,11 @@ xchk_bmap_attr(
+ 	}
+ 
+ 	error = xchk_bmap(sc, XFS_ATTR_FORK);
++	/* A repaired, empty attr fork no longer has mappings to check. */
++	if (error == -ENOENT && (sc->flags & XREP_ALREADY_FIXED)) {
++		xchk_mark_healthy_if_clean(sc, XFS_SICK_INO_BMBTA_ZAPPED);
++		return 0;
++	}
+ 	if (error)
+ 		return error;
+ 
+-- 
+2.20.1
+
