@@ -1,130 +1,230 @@
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 529163E2742
-	for <linux-xfs@vger.kernel.org>; Thu, 16 Jul 2026 12:27:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.24
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 940CA422E34
+	for <linux-xfs@vger.kernel.org>; Thu, 16 Jul 2026 13:13:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784204856; cv=none; b=kCMgrrCRFLnkpYWpD8jtKF9WVqD3W8wuaGHxfSTvP5WLUVtJuMS/odTpqYEns6ASRNRM8mTLAj4lBkJwArDUUNz4SeQqUavvd7N2gseg8sEcptGf5QjmKjrdEslxUJTZqTYgW9vTM8w6yFNyVccm45Hy57UdZQGhWyG4BbS94EQ=
+	t=1784207586; cv=none; b=b+15C5MMk1QQtY4u8QqBiv/qmXZewldjVsEPY/9Wqmiokmh+43zjSYkw/YcfxhHgw289UFSOFXXEmoeKJj1xHr6r6Opmdjv3z/RD+WwrjkY2VxbvI2Di2X/kAP8R0minxKrrd5irwjPcSyL4Lzcn1ozIXGn8w8H3vgXl0vvrqio=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784204856; c=relaxed/simple;
-	bh=6a3Myq+YEczHskqy6H5LktCSv/08gjKKFs8PPfwvXO4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:From:In-Reply-To:
-	 Content-Type:References; b=qovkE1nA3rtbHSiRyk/qKjbwyJycOPYyEFCAzqtDCY1ozTnjPK/oMiPpdMW+ROPWdBiyEN1Ziry8WNmP5zck053DUPuRAcqZOZqcVFSogFtn0arcIOu2s1AKHctF8UcHhkxjAk1uJUWN/tBlS8fnm6nTt2HJ0f0+Ex8nd/dXbnw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=lrSMTPsv; arc=none smtp.client-ip=203.254.224.24
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1784207586; c=relaxed/simple;
+	bh=gx9IR2imq3+9mShBDcMQOA2NJtEDL6oK4ZmmxpAxHu4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=tpG3xSVwMg+vy+PKYgXpgbWETmJnwEwka5m7VzXLhK1/Rv3CI2pQPD7tSEXnPXxX7pI8HkpndpOPHF2KUJYANyJ5nZsrOPwvYz7VRrt++KX4E+rgXgRb0wQGlCUYDZqbHX6fho0AkGOlUoYPGbXiskeR3N0dCsD5qjbf5MUFFF4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=K/5uoV9Q; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="lrSMTPsv"
-Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
-	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20260716122732epoutp011d736c6bc455caf362ce741caf6ea146~CxNwcdnP13150731507epoutp01R
-	for <linux-xfs@vger.kernel.org>; Thu, 16 Jul 2026 12:27:32 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20260716122732epoutp011d736c6bc455caf362ce741caf6ea146~CxNwcdnP13150731507epoutp01R
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1784204852;
-	bh=goVpL7phv0f5v85AoAM/QZBOHt0lBeS9xOxdnmRJRho=;
-	h=Date:Subject:To:Cc:From:In-Reply-To:References:From;
-	b=lrSMTPsvhirFZvmuKPdVvZe4wEm9pkIf2FYnRWaB0QlnYRwyxKwqAirvZEPcngvfH
-	 0q+sCKiZArUftASUedHW+jEHhZC3AjeYESMt++ALvLajZXrjAdrRrvtE3TMtNoT78d
-	 jvJV9XKbCbgYDc11CPrd/I7FYgese4lvAZWWBCFQ=
-Received: from epsnrtp02.localdomain (unknown [182.195.42.154]) by
-	epcas5p4.samsung.com (KnoxPortal) with ESMTPS id
-	20260716122731epcas5p4b72a6b2d54f87de136569cb57bf22e21~CxNvuHdeA0311403114epcas5p4o;
-	Thu, 16 Jul 2026 12:27:31 +0000 (GMT)
-Received: from epcas5p3.samsung.com (unknown [182.195.38.95]) by
-	epsnrtp02.localdomain (Postfix) with ESMTP id 4h1C3k27Ybz2SSKX; Thu, 16 Jul
-	2026 12:27:30 +0000 (GMT)
-Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
-	epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
-	20260716122729epcas5p1c1d760a6356d1234e8098d8a4436e541~CxNuCviDN1127111271epcas5p1B;
-	Thu, 16 Jul 2026 12:27:29 +0000 (GMT)
-Received: from [107.122.11.51] (unknown [107.122.11.51]) by
-	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-	20260716122727epsmtip277c923c3033f4e6c4f6432f6195bce6b~CxNsOdiBE0195101951epsmtip2R;
-	Thu, 16 Jul 2026 12:27:27 +0000 (GMT)
-Message-ID: <9cb5024f-7e39-4b02-8720-fb4a76affa60@samsung.com>
-Date: Thu, 16 Jul 2026 17:57:26 +0530
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="K/5uoV9Q"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1784207580;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=f/YN48UjQCe3DjWzj13wkpUne0sALfaPpAJ9HBQf6Zc=;
+	b=K/5uoV9QF0z8seHsNt85PTV3o/5iuVLeHTm0oCK9Dg27ABzKMKQFVtx/mRobskgo5ECStu
+	hEvHFQCh3/30xCNOmzJrYGCwv/LAlQeklsgzZBaJQ2YXvXLNR9oMS0t6o2midBwKmoxpu8
+	vjK3g7VeS+U42v2cxw3vyM7OQHj0nNk=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-461-A29fVAa9PpW_P7Y6yQzCiw-1; Thu,
+ 16 Jul 2026 09:12:54 -0400
+X-MC-Unique: A29fVAa9PpW_P7Y6yQzCiw-1
+X-Mimecast-MFC-AGG-ID: A29fVAa9PpW_P7Y6yQzCiw_1784207573
+Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 967DC1955F68;
+	Thu, 16 Jul 2026 13:12:53 +0000 (UTC)
+Received: from bfoster (unknown [10.22.88.111])
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id D1E67180036E;
+	Thu, 16 Jul 2026 13:12:52 +0000 (UTC)
+Date: Thu, 16 Jul 2026 09:12:50 -0400
+From: Brian Foster <bfoster@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Carlos Maiolino <cem@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 02/12] xfs: consolidate buffer locking in xfs_buf_get_map
+Message-ID: <aljY0uI6jY8y2b3Z@bfoster>
+References: <20260715145147.95654-1-hch@lst.de>
+ <20260715145147.95654-3-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 2/6] iomap: introduce and propagate write_stream
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: brauner@kernel.org, hch@lst.de, dgc@kernel.org, jack@suse.cz,
-	cem@kernel.org, axboe@kernel.dk, kbusch@kernel.org, ritesh.list@gmail.com,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-block@vger.kernel.org, gost.dev@samsung.com
-Content-Language: en-US
-From: Kanchan Joshi <joshi.k@samsung.com>
-In-Reply-To: <20260624181044.GW6078@frogsfrogsfrogs>
-Content-Transfer-Encoding: 7bit
-X-CMS-MailID: 20260716122729epcas5p1c1d760a6356d1234e8098d8a4436e541
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-cpgsPolicy: CPGSC10-542,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20260616181244epcas5p318804096b125c240c2155e54f76e2e07
-References: <20260616180555.33338-1-joshi.k@samsung.com>
-	<CGME20260616181244epcas5p318804096b125c240c2155e54f76e2e07@epcas5p3.samsung.com>
-	<20260616180555.33338-3-joshi.k@samsung.com>
-	<20260624181044.GW6078@frogsfrogsfrogs>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260715145147.95654-3-hch@lst.de>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
-On 6/24/2026 11:40 PM, Darrick J. Wong wrote:
->> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
->> index b36ee619cdcd..455fd5d97d25 100644
->> --- a/fs/iomap/direct-io.c
->> +++ b/fs/iomap/direct-io.c
->> @@ -348,6 +348,7 @@ static ssize_t iomap_dio_bio_iter_one(struct iomap_iter *iter,
->>   	fscrypt_set_bio_crypt_ctx(bio, iter->inode, pos, GFP_KERNEL);
->>   	bio->bi_iter.bi_sector = iomap_sector(&iter->iomap, pos);
->>   	bio->bi_write_hint = iter->inode->i_write_hint;
->> +	bio->bi_write_stream = iter->iomap.write_stream;
->>   	bio->bi_ioprio = dio->iocb->ki_ioprio;
->>   	bio->bi_private = dio;
->>   	bio->bi_end_io = iomap_dio_bio_end_io;
->> diff --git a/fs/iomap/ioend.c b/fs/iomap/ioend.c
->> index acf3cf98b23a..56ed5ba6a421 100644
->> --- a/fs/iomap/ioend.c
->> +++ b/fs/iomap/ioend.c
->> @@ -164,6 +164,7 @@ static struct iomap_ioend *iomap_alloc_ioend(struct iomap_writepage_ctx *wpc,
->>   			       GFP_NOFS, &iomap_ioend_bioset);
->>   	bio->bi_iter.bi_sector = iomap_sector(&wpc->iomap, pos);
->>   	bio->bi_write_hint = wpc->inode->i_write_hint;
->> +	bio->bi_write_stream = wpc->iomap.write_stream;
->>   	wbc_init_bio(wpc->wbc, bio);
->>   	wpc->nr_folios = 0;
->>   	return iomap_init_ioend(wpc->inode, bio, pos, ioend_flags);
->> @@ -187,6 +188,8 @@ static bool iomap_can_add_to_ioend(struct iomap_writepage_ctx *wpc, loff_t pos,
->>   	if (!(wpc->iomap.flags & IOMAP_F_ANON_WRITE) &&
->>   	    iomap_sector(&wpc->iomap, pos) != bio_end_sector(&ioend->io_bio))
->>   		return false;
->> +	if (wpc->iomap.write_stream != ioend->io_bio.bi_write_stream)
->> +		return false;
->>   	/*
->>   	 * Limit ioend bio chain lengths to minimise IO completion latency. This
->>   	 * also prevents long tight loops ending page writeback on all the
->> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
->> index 2c5685adf3a9..44583429ffa4 100644
->> --- a/include/linux/iomap.h
->> +++ b/include/linux/iomap.h
->> @@ -120,6 +120,8 @@ struct iomap {
->>   	u64			length;	/* length of mapping, bytes */
->>   	u16			type;	/* type of mapping */
->>   	u16			flags;	/* flags for mapping */
->> +	u8			write_stream; /* write stream for I/O */
-> I'm mildly confused by the types here -- the ioctl exposes a u32, iomap
-> has a u8, and xfs seems to use u16.  I gather you want maximum
-> flexibility in the uapi and that's the reason for the u32, but can the
-> internal interfaces be made consistent?
+On Wed, Jul 15, 2026 at 04:50:55PM +0200, Christoph Hellwig wrote:
+> Consolidate the code to lock the buffer based on the passed in flags
+> into xfs_buf_get_map instead of having two different sites for buffer
+> lookup vs insertation.  This requires initializing b_lock to unlocked on
+> allocation and doing an atomic for locking it for newly allocated buffers,
+> but greatly simplifies the logic.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_buf.c   | 62 ++++++++++++++++------------------------------
+>  fs/xfs/xfs_trace.h |  2 +-
+>  2 files changed, 23 insertions(+), 41 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 54e091315d56..e56d4b8b0771 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -282,15 +282,8 @@ xfs_buf_alloc(
+>  	 * specifically set by later operations on the buffer.
+>  	 */
+>  	flags &= ~(XBF_TRYLOCK | XBF_ASYNC | XBF_READ_AHEAD);
+> -
+> -	/*
+> -	 * A new buffer is held and locked by the owner.  This ensures that the
+> -	 * buffer is owned by the caller and racing RCU lookups right after
+> -	 * inserting into the hash table are safe (and will have to wait for
+> -	 * the unlock to do anything non-trivial).
+> -	 */
+>  	lockref_init(&bp->b_lockref);
+> -	sema_init(&bp->b_sema, 0); /* held, no waiters */
+> +	sema_init(&bp->b_sema, 1); /* unlocked */
 
-Yes, using u16 within iomap will make it better.
+Maybe I'm missing something, but I thought the point of the locked init
+was to ensure that the allocator owns the buffer and can't end up
+blocking on the lock with a racing lookup. I.e., the buffer is locked
+before it becomes available for external lookup. Do we plan to do that
+another way, or are we just dropping that assumption?
 
-> I also wonder what happens if the write stream ever becomes persistent,
-> but this patchset doesn't go there, and maybe the programming model is
-> simply that you have to set it every time you open the file?
+Brian
 
-Right, not trying to make things persistent.
+>  	atomic_set(&bp->b_lru_ref, 1);
+>  	init_completion(&bp->b_iowait);
+>  	INIT_LIST_HEAD(&bp->b_lru);
+> @@ -433,33 +426,25 @@ xfs_buf_find_lock(
+>  	return 0;
+>  }
+>  
+> -static inline int
+> +static inline struct xfs_buf *
+>  xfs_buf_lookup(
+>  	struct xfs_buftarg	*btp,
+> -	struct xfs_buf_map	*map,
+> -	xfs_buf_flags_t		flags,
+> -	struct xfs_buf		**bpp)
+> +	struct xfs_buf_map	*map)
+>  {
+>  	struct xfs_buf          *bp;
+> -	int			error;
+>  
+>  	rcu_read_lock();
+>  	bp = rhashtable_lookup(&btp->bt_hash, map, xfs_buf_hash_params);
+>  	if (!bp || !lockref_get_not_dead(&bp->b_lockref)) {
+>  		rcu_read_unlock();
+> -		return -ENOENT;
+> +		XFS_STATS_INC(btp->bt_mount, xb_miss_locked);
+> +		return NULL;
+>  	}
+>  	rcu_read_unlock();
+>  
+> -	error = xfs_buf_find_lock(bp, flags);
+> -	if (error) {
+> -		xfs_buf_rele(bp);
+> -		return error;
+> -	}
+> -
+> -	trace_xfs_buf_find(bp, flags, _RET_IP_);
+> -	*bpp = bp;
+> -	return 0;
+> +	trace_xfs_buf_find(bp, _RET_IP_);
+> +	XFS_STATS_INC(btp->bt_mount, xb_get_locked);
+> +	return bp;
+>  }
+>  
+>  /*
+> @@ -509,11 +494,7 @@ xfs_buf_find_insert(
+>  			goto retry;
+>  		}
+>  		rcu_read_unlock();
+> -		error = xfs_buf_find_lock(bp, flags);
+> -		if (error)
+> -			xfs_buf_rele(bp);
+> -		else
+> -			*bpp = bp;
+> +		*bpp = bp;
+>  		goto out_free_buf;
+>  	}
+>  	rcu_read_unlock();
+> @@ -555,21 +536,20 @@ xfs_buf_get_map(
+>  	if (error)
+>  		return error;
+>  
+> -	error = xfs_buf_lookup(btp, &cmap, flags, &bp);
+> -	if (error && error != -ENOENT)
+> -		return error;
+> -
+>  	/* cache hits always outnumber misses by at least 10:1 */
+> +	bp = xfs_buf_lookup(btp, &cmap);
+>  	if (unlikely(!bp)) {
+> -		XFS_STATS_INC(btp->bt_mount, xb_miss_locked);
+> -
+>  		if (flags & XBF_INCORE)
+> -			return 0;
+> +			return -ENOENT;
+>  		error = xfs_buf_find_insert(btp, &cmap, map, nmaps, flags, &bp);
+>  		if (error)
+>  			return error;
+> -	} else {
+> -		XFS_STATS_INC(btp->bt_mount, xb_get_locked);
+> +	}
+> +
+> +	error = xfs_buf_find_lock(bp, flags);
+> +	if (error) {
+> +		xfs_buf_rele(bp);
+> +		return error;
+>  	}
+>  
+>  	/*
+> @@ -794,9 +774,11 @@ xfs_buf_get_uncached(
+>  	DEFINE_SINGLE_BUF_MAP(map, XFS_BUF_DADDR_NULL, numblks);
+>  
+>  	error = xfs_buf_alloc(target, &map, 1, 0, bpp);
+> -	if (!error)
+> -		trace_xfs_buf_get_uncached(*bpp, _RET_IP_);
+> -	return error;
+> +	if (error)
+> +		return error;
+> +	xfs_buf_lock(*bpp);
+> +	trace_xfs_buf_get_uncached(*bpp, _RET_IP_);
+> +	return 0;
+>  }
+>  
+>  /*
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index aeb89ac53bf1..f333c938fbd9 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -792,6 +792,7 @@ DEFINE_BUF_EVENT(xfs_buf_backing_folio);
+>  DEFINE_BUF_EVENT(xfs_buf_backing_kmem);
+>  DEFINE_BUF_EVENT(xfs_buf_backing_vmalloc);
+>  DEFINE_BUF_EVENT(xfs_buf_backing_fallback);
+> +DEFINE_BUF_EVENT(xfs_buf_find);
+>  
+>  /* not really buffer traces, but the buf provides useful information */
+>  DEFINE_BUF_EVENT(xfs_btree_corrupt);
+> @@ -837,7 +838,6 @@ DECLARE_EVENT_CLASS(xfs_buf_flags_class,
+>  DEFINE_EVENT(xfs_buf_flags_class, name, \
+>  	TP_PROTO(struct xfs_buf *bp, unsigned flags, unsigned long caller_ip), \
+>  	TP_ARGS(bp, flags, caller_ip))
+> -DEFINE_BUF_FLAGS_EVENT(xfs_buf_find);
+>  DEFINE_BUF_FLAGS_EVENT(xfs_buf_get);
+>  DEFINE_BUF_FLAGS_EVENT(xfs_buf_read);
+>  DEFINE_BUF_FLAGS_EVENT(xfs_buf_readahead);
+> -- 
+> 2.53.0
+> 
+> 
+
