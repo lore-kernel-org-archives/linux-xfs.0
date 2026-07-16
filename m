@@ -1,99 +1,74 @@
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C291743F0A9;
-	Thu, 16 Jul 2026 01:38:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.143.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6052234994;
+	Thu, 16 Jul 2026 06:06:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784165892; cv=none; b=FkjeHwAAarKGptFYD2vdqTh78lqPaZUcFP8NDXz8YTpvLPVf7VjVAyw+7ysWbpFcij5phcKpjKmvqlBkOSHYCx60DbSrADAOez25wCER/fRPsI6W7rExMVRNYL9V4lLQ+HYZw3w7Z1wuvWAz/EwjWAqFBNA901etmRxGgkvNw1o=
+	t=1784181978; cv=none; b=dK8xvyUF8b9yf9K1mzzJiXMTHklVSL2+shp003vT3s/9kGVIaoT8Yc2H9S8phgih9uQ4zut8i+Ht3fG9ThkZsfeAz9eQsW1SwwyBMGtZMN6zkuM3DxVz1o4mAkvh2ebXrAoEZnmDHv32C15pjy/zjgfcBYIHti8I1vrH8SHvOnE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784165892; c=relaxed/simple;
-	bh=bfe5YijdD+G8B7V+RZp8vVrAtE3Vwwb7v/BeuK5C6Xg=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Yol7qYRtiRTjx2E+vyzYqjgut3vg8/6Zry1Zz7Ems58aByTmi3KF6Iq5z9wNqRlzxp9m/fw7+wNvU/UeiwkqdBA6C/7cJxcrARc8aMdHsX9H8k/gX4v3F8eSVMI9vgXttbH7rkpYjsAI4Rlo0zjkABHZIvOF/hPv7KlOU5rJPYg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=AWKeBgjV; arc=none smtp.client-ip=68.232.143.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+	s=arc-20240116; t=1784181978; c=relaxed/simple;
+	bh=u2HZWZS5ZzBuN4s37LjQOE3WLC6+rhqwcF6gdLaEKf4=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=jiK7uHb3omP0UZXlt7Mqroz35rFiaVE/llcUHuuMAasmvamViny3VzLZnFCRPY+xZxq94/YMn13Bm8fPViGAQL8vIKIoJRDlWP3diSA+6OFfeckc2ThA8W+TXBD3BJMKcHy+LWl2T825VR426tos9ubnfBrgoUW+RRXm+tHH988=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QjagNwIZ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="AWKeBgjV"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1784165890; x=1815701890;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=bfe5YijdD+G8B7V+RZp8vVrAtE3Vwwb7v/BeuK5C6Xg=;
-  b=AWKeBgjVd8BJsPF2QSpnrjJhoK4Ch1R2HdkFMKBwLVs4OdC3btge1Dln
-   2t71tNMxb1mVXMjXHLOpU4yD7jOsRLhFZQvR4RWVcCRjaTX9hXCjGJwof
-   EAPyrzuU8XtIxKA6XcWiLZ941+xHUcwyyB2YKZid8+yuQ7DUqLpjkhKng
-   ArF9pldfKzqaDT9OxVdwjr0XorXjDFgw+RwwwBZYQLItdl/GNpwmoH5Xx
-   HGjcIJD8E+KCYKEZ4Ig/jjEZkqLjSU1j2FZuMYoOIxksPjtiwh/qQk/jC
-   fKmPzzNZxF7oqyA1MXCmtQRsdXZCGeT+gbWJNW8/oSulmTEd6r9W8hWei
-   g==;
-X-CSE-ConnectionGUID: Js/jkwlnRzWiKKZHnCnHXA==
-X-CSE-MsgGUID: lRx60GI0S2m6z1a9aacHvw==
-X-IronPort-AV: E=Sophos;i="6.25,166,1779120000"; 
-   d="scan'208";a="152027378"
-Received: from unknown (HELO uls-op-esad3-o.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 16 Jul 2026 09:38:04 +0800
-X-CSE-ConnectionGUID: jtEX3HzpSaSpP+QxMSlZ/A==
-X-CSE-MsgGUID: N9ZspUTsQVSYidyONzXgaQ==
-IronPort-SDR: 6a5835ed_zX2fxtR3fUFL9taK3hm3UVfI15z3opNJPohntoSjReK2UWh
- NvUz2N/Myo4J1ropFOEpMVUOizDZzoh52IF1ruQ==
-Received: from uls-op-esai1-o.wdc.com ([10.248.3.45])
-  by uls-op-esad3-o.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 15 Jul 2026 18:37:49 -0700
-X-CSE-ConnectionGUID: pEmxLEVWQcGSNjs5EXKWFQ==
-X-CSE-MsgGUID: aDPp3ebCSAGz9bADDw+kEg==
-WDCIronportException: Internal
-Received: from unknown (HELO shindev.ssa.fujisawa.hgst.com) ([10.149.67.30])
-  by uls-op-esai1-o.wdc.com with ESMTP; 15 Jul 2026 18:37:48 -0700
-From: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-To: fstests@vger.kernel.org,
-	Zorro Lang <zlang@kernel.org>
-Cc: linux-xfs@vger.kernel.org,
-	Yao Sang <sangyao@kylinos.cn>,
-	Christoph Hellwig <hch@lst.de>,
-	Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Subject: [PATCH] xfs/333: require external scratch device
-Date: Thu, 16 Jul 2026 10:37:47 +0900
-Message-ID: <20260716013747.1288925-1-shinichiro.kawasaki@wdc.com>
-X-Mailer: git-send-email 2.54.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QjagNwIZ"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 7A46E1F000E9;
+	Thu, 16 Jul 2026 06:06:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784181977;
+	bh=2aA/3rCH7xXbxTNZ1vldW87m7z2DZl9bN/tJw7L43bk=;
+	h=Date:Subject:From:To:Cc;
+	b=QjagNwIZVZquZ9vGMjEW0ehHgcLlerCTne5J65xYUIcm/XoS1Us6VaYUZJuQ7IyOg
+	 Qt7skXiwVSqPrVIKSG1uwxtr/tNLIIsotYYYoZoRp+qtYWScXaGJHOAUmKrOxFpnUb
+	 Goo/7Qq7QmRAgkbORUrNK6TkdmM3MvXhgb+ZAqiuG8Gt6Iz80ym7JfnbsHLDptdFbi
+	 vIhGASyFWiVNMDT990MVJ7z1v3WnaBZo4v4vOBQP/8t6NswuV6dqKkZnH/uD+0q+CX
+	 PtU8RrHJMIiFHMjRBOvItq+G01rdJnT5kCyDAg+hI1GwA8g80uB1K9D451wKrexC0A
+	 P25mMUan+cZwg==
+Date: Wed, 15 Jul 2026 23:06:16 -0700
+Subject: [PATCHSET] xfs: LLM-inspired bug fixes, part 3
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: hch@lst.de, cem@kernel.org, djwong@kernel.org
+Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
+Message-ID: <178416797326.2008054.12517273271060887961.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 
-The test case xfs/333 uses the external scratch device SCRATCH_RTDEV.
-When SCRATCH_RTDEV is not specified, the test case fails at
-"_require_block_device $SCRATCH_RTDEV". To confirm the requirement, the
-test case calls the helper function _require_realtime(). However, it
-does not check SCRATCH_RTDEV when the zone type of SCRATCH_DEV is
-'none'.
+Hi all,
 
-To avoid the failure, ensure the SCRATCH_RTDEV check by calling
-_require_external_realtime_device() instead of _require_realtime(). With
-this, the test case is skipped when SCRATCH_RTDEV is not specified
-regardless of the zone type of SCRATCH_DEV.
+Here's a third batch of xfs fixes resulting from a LLaMma.  Mwa mwa
+mwa...
 
-Signed-off-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+If you're going to start using this code, I strongly recommend pulling
+from my git trees, which are linked below.
+
+With a bit of luck, this should all go splendidly.
+Comments and questions are, as always, welcome.
+
+--D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=llm-fixes-3
 ---
- tests/xfs/333 | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/tests/xfs/333 b/tests/xfs/333
-index f2d4077d..7235dc24 100755
---- a/tests/xfs/333
-+++ b/tests/xfs/333
-@@ -16,7 +16,7 @@ _begin_fstest auto quick rw zone eio
- 
- _require_debugfs
- _require_scratch_nocheck
--_require_realtime
-+_require_external_realtime_device
- _require_block_device $SCRATCH_RTDEV
- _require_zoned_device $SCRATCH_RTDEV
- _require_command "$BLKZONE_PROG" blkzone
--- 
-2.54.0
+Commits in this patchset:
+ * xfs: check cowextsize in xrep_inode_cowextsize
+ * xfs: fix transaction block reservation in xrep_rtbitmap
+ * xfs: rtsummary scrub should treat rtbitmap corruption errors as an xref error
+ * xfs: zero i_nlink before repair puts inode on unlinked list
+ * xfs: mark nonzero sb_gquotino as corrupt on metadir filesystems
+ * xfs: don't livelock in scrub on a circular unlinked list
+---
+ fs/xfs/scrub/agheader.c        |   90 +++++++++++++++++++++++++++++-----------
+ fs/xfs/scrub/agheader_repair.c |   17 +++++++-
+ fs/xfs/scrub/inode_repair.c    |    2 -
+ fs/xfs/scrub/nlinks_repair.c   |    7 +++
+ fs/xfs/scrub/rtbitmap_repair.c |   46 ++++++++++++--------
+ fs/xfs/scrub/rtsummary.c       |    2 -
+ 6 files changed, 117 insertions(+), 47 deletions(-)
 
