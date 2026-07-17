@@ -1,276 +1,299 @@
-Received: from mail-ej1-f50.google.com (mail-ej1-f50.google.com [209.85.218.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mout-p-201.mailbox.org (mout-p-201.mailbox.org [80.241.56.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 464B3374A06
-	for <linux-xfs@vger.kernel.org>; Fri, 17 Jul 2026 03:21:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.50
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784258468; cv=pass; b=qdj8JBXatwFrjiAxeDjyGzWJFy9ejvcMuX6Bpxyge911O/jOu+V3jbw5wg6fg6uNSy9usPGJAnb8H0XQrHQjIhA9a0Y7t/sFXQkXfhOBST2ih8Gdgf1NhHDQR3FAK72fp8dVKkThWTmJD6AQcnYkJFk8k6rpydvfo2HINpndLZQ=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784258468; c=relaxed/simple;
-	bh=usCms6HFsqslX7H5/CJoC44qOxf3skUlrSgpikVpEf8=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=WHr7wwzZHnlXp7YwRAq0+W8BGlOXbzAtMXpbtzAwcq/hD2QYFlFZkx2tticHve5VGOIjLiNmYH5ij9cWS2WcgjkKM4J0DjLK4UEapqkYH2Qz4S3Is5AO1jsqzhSjpNrlgrkMtUBn/67Z+7ZlxMF02293Zv0jiNWjbKaHcryyZvM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=H/7NeKqe; arc=pass smtp.client-ip=209.85.218.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="H/7NeKqe"
-Received: by mail-ej1-f50.google.com with SMTP id a640c23a62f3a-c1670dad7a8so540502666b.3
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Jul 2026 20:21:05 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1784258463; cv=none;
-        d=google.com; s=arc-20260327;
-        b=oVm/34rDMKahwgzYBGgzkrGZny+9ZnOjd8UMs4yOdjcqjvnIBS9g32DFXANxPvFP9S
-         Ben3JVGBfrQ6a7XHdJUdoeyOnjcjQAFXcYT+qeXu2DRV5JV43oWIwVBvvx9pGIEZl6Xp
-         NQPSRfNk1Jx3FTAWj6mVepZQwP1Tm98mKeT9/C5UuHtr2O0TRBCDBYDmf2ILjRgcWNCy
-         ZubGKBq0RqCUEaS7X5V9TjgRS5cffxdny9Lv9GDfWQBBz3xgmcq9wd9dqaqxxXn/Fb4K
-         8fh/LM6hgR89oHYSjCJtNvrGSmT46nkWRh2VhnqXuHymp+JDsXPWL40qM5ZdAUaYzGRF
-         FHeA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=Wk3lS/5z7nIGLi1N0bsa6IGd3pVlr+OoSMsYzN7yd9U=;
-        fh=Ch+rVJSHYspE3pxGPO87TbDsk7QAQH7DIXPurBtoXs0=;
-        b=FFLlsK6elxXNO7r8I8rL5ipiQePU0jsDQNkPodnMkxxZeAg6/DTSh+aqjvCDJnw1db
-         svS2wJlwmctTlI8Y8IiWT9DqaiSnaA84L7jPHz/Za4dJ9WOr8OuvMyKX/TILyUsjkvfx
-         HerSPnvpRw6VyEDU/TdGO05EW/rGZqncnHeI93/f/eu6VO9sDr9Hzz8jUlkLnASmNgN/
-         gpcFLJzqGdlcPqvHnqcpWBlgvB7orQbps47qnuXE90RZ3uF/DZjiWw9ocVs6q3FwIcg+
-         U8KOjYemr4QgisOlduL3rbSC4qP0Ihbb2A3Aj9s0Ppd/1MFA0Jj0Pm6zImyoX6nXDbG7
-         qIfg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1784258463; x=1784863263; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=Wk3lS/5z7nIGLi1N0bsa6IGd3pVlr+OoSMsYzN7yd9U=;
-        b=H/7NeKqeYgGdmKEvG87aNRE2RwpjVYIHm7j0aUDRqLDA+hAtjg4+SccR6M1imWhC3E
-         cZiZGEuNrya1iDVnIJMw2kZw9WG4+fYxDBVtqB2i7NeCsRSSBl8UOUbtVRcYnQ3ZZN8G
-         md5F96pvaruug1IdGWKFmuKsrrfWQU+pi/gZn6zJ9eeiKkdYJYL/RzjUUKiE0ikf6MJG
-         mIUMxdRI55KoZkIVedQ2YlgrUI6+75DFfNSSKv7Khx6Mzs49Jovfu3h9/fIGnOEWeKPN
-         sewTD50YP0B2mvYOKB8Xb1Jd2SEy5wAXMDADM2QmodriEWxbS4dFbB4cs6uc3sTJ/2Jv
-         Q0Wg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784258463; x=1784863263;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=Wk3lS/5z7nIGLi1N0bsa6IGd3pVlr+OoSMsYzN7yd9U=;
-        b=CbyvLWJsgfnzYDCHksGAVmrIZk1raysEKG6ewyL/Br75cLMyfcmDc5VhFFqN83a2E2
-         mMnXSwdiPDDzw9s2veNS3rPRMVlThrNXjAuo2JP/nt7h6RpB6lUzIlciWRX0DuO/mDlp
-         T0SvdOuL6Yp2eUelEGr91tqZseQQFg8CCRS4ucp/JXFnDc7fi0Ou7hr1IO2NSo4eAE5P
-         3rsk8EPf+A/A30UbNQ/L9WJRY2LplTjhyC7oZjF/GicXC78Lj0lLIFQzokc7uaxfpi6Z
-         j6fjW6rfje5EpugrOfXa23bjGbdR0ldMsc/XNi/4RndApXPFRC9dIFfmm7S5SVyTnitM
-         M6zA==
-X-Forwarded-Encrypted: i=1; AHgh+Rpz0ea3mmglpNDuckeQDSCFognhoVVWvJhNtemjsLXTdDyPIWzuqtyt5HOAereY4Zc+HY9e0fsSmuo=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwoAoDBdfAn2o+9BRg44DKezk3CAu6O0kOJQxnHE2acTUMnXEZu
-	e2nivvrVLUzgBkDUwP1h8SgUrXxXdwb+5lr7C1u1wRE/V9JXbU5C7i/M+Cl+CHrhSlB+1OF9fEU
-	QAg98pmFxqv6X+IQEfoGgZh5WJfUuvco=
-X-Gm-Gg: AfdE7clcHQq35gYlgLEhTfMidahSP696oE+fozhqyMjxTM2ANGgM5XA0ySUh5yvmQGQ
-	yxK1ZMKIzSEYuhCV9F2CoWdcohWbyW6c8/KDWemRoN1E03XvOPibgcsC5xbZq4v9ZrP2qzHnLzF
-	3i20OEpUNKLoimrzPO9qpt2QdsPGFuug9e8IYa9mA1umzPSFbGQp7WmOx/GJhEftv/3INq/waJO
-	UTLWeJfjL2fwndXWeRVJ2Mu5/TXv5gK1E5aIhCFGmZxOgy0TE4K5xgirhwr/B+e5LSvRppKbcdd
-	6Vs03I7+LcId/9l7WA==
-X-Received: by 2002:a17:907:6d09:b0:c15:fc9d:cf3c with SMTP id
- a640c23a62f3a-c16b48c1139mr21555466b.42.1784258463163; Thu, 16 Jul 2026
- 20:21:03 -0700 (PDT)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D37A3769E7;
+	Fri, 17 Jul 2026 06:42:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.171
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784270564; cv=none; b=IkPTmeOaSJPtYHqkEQRBosuOMm40PrM2uiFgQbsZOhneXE1GSLa4apDDTfEQG+LwYzcCQMiZ7Ig5czw8iy+3tTZQ316q4dX2BYP9yFcub5s7hg6m5ykEO6Yrlox1s9CY9juNg1rEb3uIjYtraJ6yLnANdcg82we64PoaTT7VIsA=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784270564; c=relaxed/simple;
+	bh=IAHInoRB3P0XDVudIDKW2eyEJXp+0Pk6fP0NmE8y/is=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=WY4kWFidlZsD0wASgj2+9G52qWbbDHpjtXcC1n3Jj9SwKFqzlLNc1KcWaSt/yq3DUpssNHLT3XEGcO5WqM9K0/NG3Co3e+44pv8A6n5Z9ozyUxwpll/R/DfubT6q3SlynHCIWAqiP9uS8+MIJdtgSFbRLua+eh40qzIcfCrBY2k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=pankajraghav.com; arc=none smtp.client-ip=80.241.56.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
+Received: from smtp202.mailbox.org (smtp202.mailbox.org [IPv6:2001:67c:2050:b231:465::202])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA512)
+	(No client certificate requested)
+	by mout-p-201.mailbox.org (Postfix) with ESMTPS id 4h1gM36gY3zMlDL;
+	Fri, 17 Jul 2026 08:42:23 +0200 (CEST)
+Authentication-Results: outgoing_mbo_mout;
+	dkim=none;
+	spf=pass (outgoing_mbo_mout: domain of kernel@pankajraghav.com designates 2001:67c:2050:b231:465::202 as permitted sender) smtp.mailfrom=kernel@pankajraghav.com
+From: Pankaj Raghav <p.raghav@samsung.com>
+To: zlang@kernel.org
+Cc: linux-xfs@vger.kernel.org,
+	fstests@vger.kernel.org,
+	djwong@kernel.org,
+	Zhang Yi <yi.zhang@huaweicloud.com>,
+	pankaj.raghav@linux.dev,
+	hch@lst.de,
+	yi.zhang@huawei.com,
+	Pankaj Raghav <p.raghav@samsung.com>
+Subject: [PATCH v3] generic/795: add unaligned boundary test cases for WRITE_ZEROES
+Date: Fri, 17 Jul 2026 08:42:16 +0200
+Message-ID: <20260717064216.3254133-1-p.raghav@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260716174813.3627911-1-bestswngs@gmail.com> <allVuuJJjZb1jfBJ@dread>
-In-Reply-To: <allVuuJJjZb1jfBJ@dread>
-From: Weiming Shi <bestswngs@gmail.com>
-Date: Fri, 17 Jul 2026 11:20:24 +0800
-X-Gm-Features: AUfX_myh44fmYwHHqBN82C2XRrmYQBIofatqe4QE7uTSWGUC81vUYsyAobxwgJ8
-Message-ID: <CANgPUi17gbj6nh9Brsq4G9BqD6=-nvQX0MR6YXN4TCLELyVYCg@mail.gmail.com>
-Subject: Re: [PATCH] xfs: validate inode log item regions during recovery
-To: Dave Chinner <dgc@kernel.org>
-Cc: Carlos Maiolino <cem@kernel.org>, "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, xmei5@asu.edu
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-Rspamd-Queue-Id: 4h1gM36gY3zMlDL
 
-Dave Chinner <dgc@kernel.org> =E4=BA=8E2026=E5=B9=B47=E6=9C=8817=E6=97=A5=
-=E5=91=A8=E4=BA=94 06:05=E5=86=99=E9=81=93=EF=BC=9A
->
-> On Thu, Jul 16, 2026 at 10:48:12AM -0700, Weiming Shi wrote:
-> > xlog_recover_inode_commit_pass2() replays an XFS_LI_INODE item straight
-> > out of the log: it dereferences ri_buf[1] as the log dinode and copies =
-the
-> > data and attr forks from ri_buf[2]/ri_buf[attr_index], but never checks
-> > that those regions were logged or that the dinode geometry agrees with =
-the
-> > mount. ri_buf is sized by the item's ilf_size, bounded only to
-> > [1, XLOG_MAX_REGIONS_IN_ITEM]; the number of regions actually filled in
-> > (ri_cnt) and the fork copies are guarded only by ASSERT()s, which compi=
-le
-> > out in production.
-> >
-> > A crafted image mounted for log recovery can thus hit a NULL dereferenc=
-e of
-> > an absent region, an out-of-bounds read from a di_version or di_forkoff
-> > that disagrees with the mount, or an overflow of the inode fork by an
-> > oversized local or extent region. An item declaring a second region tha=
-t
-> > is never logged faults on the log dinode:
-> >
-> >  KASAN: null-ptr-deref in range [0x0000000000000000-0x0000000000000007]
-> >  RIP: xlog_recover_inode_commit_pass2 (fs/xfs/xfs_inode_item_recover.c:=
-370)
-> >  Call Trace:
-> >   xlog_recover_items_pass2 (fs/xfs/xfs_log_recover.c:2011)
-> >   xlog_recover_commit_trans (fs/xfs/xfs_log_recover.c:2078)
-> >   xlog_recovery_process_trans (fs/xfs/xfs_log_recover.c:2328)
-> >   xlog_recover_process_data (fs/xfs/xfs_log_recover.c:2502)
-> >   xlog_recover (fs/xfs/xfs_log_recover.c:3486)
-> >   xfs_log_mount (fs/xfs/xfs_log.c:667)
-> >   xfs_mountfs (fs/xfs/xfs_mount.c:1039)
-> >   xfs_fs_fill_super (fs/xfs/xfs_super.c:1965)
-> >   get_tree_bdev_flags (fs/super.c:1680)
-> >   vfs_get_tree (fs/super.c:1803)
-> >   __x64_sys_mount (fs/namespace.c:4433)
-> >
-> > Validate the regions before use: require ri_cnt to cover the regions
-> > ilf_fields implies, the log dinode to be present and at least a log din=
-ode
-> > in size, and di_version to match the mount. Replace the di_forkoff chec=
-k,
-> > which can never fire (di_forkoff is a u8 of 8-byte units, sb_inodesize =
-a
-> > byte count of at least 256), with xfs_dinode_verify_forkoff() (exported
-> > here), and bound the local and extent fork copies against the destinati=
-on
-> > fork. The btree-root formats are logged in their larger in-core form an=
-d
-> > converted on the way in, so they are not bounded by the on-disk fork si=
-ze.
-> >
-> > Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-> > Reported-by: Xiang Mei <xmei5@asu.edu>
-> > Assisted-by: Claude:claude-opus-4-8
-> > Signed-off-by: Weiming Shi <bestswngs@gmail.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_inode_buf.c   |  2 +-
-> >  fs/xfs/libxfs/xfs_inode_buf.h   |  2 ++
-> >  fs/xfs/xfs_inode_item_recover.c | 59 ++++++++++++++++++++++++---------
-> >  3 files changed, 47 insertions(+), 16 deletions(-)
-> >
-> > diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_bu=
-f.c
-> > index 336ef843f2fe..71311c4fc2ed 100644
-> > --- a/fs/xfs/libxfs/xfs_inode_buf.c
-> > +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-> > @@ -479,7 +479,7 @@ xfs_dinode_verify_fork(
-> >       return NULL;
-> >  }
-> >
-> > -static xfs_failaddr_t
-> > +xfs_failaddr_t
-> >  xfs_dinode_verify_forkoff(
-> >       struct xfs_dinode       *dip,
-> >       struct xfs_mount        *mp)
-> > diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_bu=
-f.h
-> > index f3624532b023..d120675f6c07 100644
-> > --- a/fs/xfs/libxfs/xfs_inode_buf.h
-> > +++ b/fs/xfs/libxfs/xfs_inode_buf.h
-> > @@ -27,6 +27,8 @@ int xfs_inode_from_disk(struct xfs_inode *ip, struct =
-xfs_dinode *from);
-> >
-> >  xfs_failaddr_t xfs_dinode_verify(struct xfs_mount *mp, xfs_ino_t ino,
-> >                          struct xfs_dinode *dip);
-> > +xfs_failaddr_t xfs_dinode_verify_forkoff(struct xfs_dinode *dip,
-> > +                        struct xfs_mount *mp);
-> >  xfs_failaddr_t xfs_dinode_verify_metadir(struct xfs_mount *mp,
-> >               struct xfs_dinode *dip, uint16_t mode, uint16_t flags,
-> >               uint64_t flags2);
-> > diff --git a/fs/xfs/xfs_inode_item_recover.c b/fs/xfs/xfs_inode_item_re=
-cover.c
-> > index 169a8fe3bf0a..8ebc8eaf9e03 100644
-> > --- a/fs/xfs/xfs_inode_item_recover.c
-> > +++ b/fs/xfs/xfs_inode_item_recover.c
-> > @@ -366,6 +366,13 @@ xlog_recover_inode_commit_pass2(
-> >               error =3D -EFSCORRUPTED;
-> >               goto out_release;
-> >       }
-> > +     /* ri_buf[1] may be absent or shorter than a log dinode */
-> > +     if (XFS_IS_CORRUPT(mp, item->ri_cnt < 2) ||
-> > +         XFS_IS_CORRUPT(mp,
-> > +                        item->ri_buf[1].iov_len < xfs_log_dinode_size(=
-mp))) {
-> > +             error =3D -EFSCORRUPTED;
-> > +             goto out_release;
-> > +     }
->
-> I'm going to push back on this sort of piece-meal validation - this
-> is not the place to be doing random "is the log item valid" checks.
-> All it does is make the code harder for humans to read and
-> understand.
->
-> It is inconsistent, it is not applied to all log items, the checks
-> are randomly distributed through the decoding and replay logic, and
-> it's impossible to tell what checks might still be missing.
->
-> We have a solid metadata verifier architecture for a reason: it
-> centralises all the metadata verification for an object in a central
-> place, and it always gets run when the object is first read from
-> disk before we try to do anything with it. The verification is in
-> one place, and it is easy to audit to determine what parts of the
-> structure we aren't actually verifying.
->
-> That means when we actually got to do an operation, we already know
-> the structures are valid and do not contain corruptions. Issues like
-> the log format structure not having enough regions is not an inode
-> log format problem - it is a generic log format structure problem.
->
-> Addressing these issues piece meal in each log item decode in pass 2 -
-> after we've already parsed them in pass 1 and for readahead purposes
-> - is too late and too random.
->
-> Use your AI tokens to do something properly useful - add an object
-> verifier layer to the journal recovery code that robustly verifies
-> objects before we perform decoding. We already have type abstraction
-> for items in log recovery (i.e. struct xlog_recover_item_ops) and we
-> already have two passes over the journal (XLOG_RECOVER_PASS1/2), and
-> pass 1 is used to set up state needed for the actual recovery in
-> pass 2. IOWs, we should be using pass 1 as a full object verifier
-> pass in addition to checking CRC.
->
-> This would allows a clean separation between validation and decoding
-> of log items and their formatted structures, and allow the recovery
-> logic to be simplified because it is no longer mixing recovery with
-> validation.
->
-> This will allow us to add full, robust validation for all log items,
-> and do it in a way that is easy to audit and identify parts of
-> structres taht we haven't verified or are unable to verify easily.
->
-> This is the sort of thing you should be using the power of the LLM
-> agents to do - it's a waste of tokens to be trying to find and fix
-> issues hidden in the code. Build the infrastructure that makes
-> verification -robust-, and that will almost entirely eliminate this
-> class of bug from log recovery.
->
-> Use the power of the LLMs to address the underlying problem, don't
-> waste time and tokens getting it to apply bandaids that don't
-> actually help address the underlying issue.
->
-> -Dave.
-> --
-> Dave Chinner
-> dgc@kernel.org
+During the review of WRITE_ZEROES support to XFS, Zhang Yi pointed out
+some important semantics for the boundary blocks when WRITE_ZEROES
+command is used.[1]
 
-Hi Dave,
+The test cases check the boundary blocks when they are in different
+states and WRITE_ZEROES are issued that straddle the boundary. Along with that,
+test cases have been added when a EoF straddles an allocation unit.
 
-Thanks for the review. I'll drop the per-item checks and rework it
-into the pass1 object verifier
-pass you described, keeping the validation separate from the decode
-and replay code.
+[1] https://lore.kernel.org/linux-xfs/0b7f1a4f-da1c-4297-8099-98d738070ab7@huaweicloud.com/
 
- Thanks,
- Weiming Shi
+Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+---
+Changes since v2:
+- Move back to fiemap with the newly added '-e' option.
+
+Changes since v1:
+- Use filefrag instead of FIEMAP as the latter uses FIEMAP_FLAG_SYNC by
+  default when used via xfs_io (Zhang yi)
+- Add an extra testcase for dirty-unwritten edges (Zhang Yi)
+
+ common/rc             |   2 +-
+ tests/generic/795     | 177 ++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/795.out |  19 +++++
+ 3 files changed, 197 insertions(+), 1 deletion(-)
+ create mode 100755 tests/generic/795
+ create mode 100644 tests/generic/795.out
+
+diff --git a/common/rc b/common/rc
+index 79189e7e..5e59968f 100644
+--- a/common/rc
++++ b/common/rc
+@@ -3008,7 +3008,7 @@ _require_xfs_io_command()
+ 		testio=`$XFS_IO_PROG -F -f -c "$command $param 0 1m" $testfile 2>&1`
+ 		param_checked="$param"
+ 		;;
+-	"fpunch" | "fcollapse" | "zero" | "fzero" | "finsert" | "funshare")
++	"fpunch" | "fcollapse" | "zero" | "fzero" | "finsert" | "funshare" | "fwzero")
+ 		local blocksize=$(_get_file_block_size $TEST_DIR)
+ 		testio=`$XFS_IO_PROG -F -f -c "pwrite 0 $((5 * $blocksize))" \
+ 			-c "fsync" -c "$command $blocksize $((2 * $blocksize))" \
+diff --git a/tests/generic/795 b/tests/generic/795
+new file mode 100755
+index 00000000..964a8f9a
+--- /dev/null
++++ b/tests/generic/795
+@@ -0,0 +1,177 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2026 Samsung Electronics.  All Rights Reserved.
++#
++# FS QA Test 795
++#
++# Verify FALLOC_FL_WRITE_ZEROES (xfs_io "fwzero") on an unaligned range,
++# exercising every state the two boundary allocation units can be in.
++#
++# WRITE_ZEROES must leave the whole requested range backed by *written*
++# (zeroed) extents while preserving the out-of-range bytes of the partial
++# boundary units. The possible scenarios are: written_edges, hole_edges,
++# unwritten_edges and delalloc_edges.
++#
++# It then covers the EOF cases: a WRITE_ZEROES that *extends* the file to a
++# non-unit-aligned size, followed by a further extension. WRITE_ZEROES must
++# never leave written blocks beyond EOF.
++
++. ./common/preamble
++_begin_fstest auto quick prealloc fiemap
++
++testfile=$TEST_DIR/$seq.testfile
++
++_cleanup()
++{
++	cd /
++	rm -r -f $tmp.*
++	rm -f $testfile
++}
++
++. ./common/filter
++. ./common/punch
++
++_require_test
++_require_xfs_io_command "fwzero"
++_require_xfs_io_command "falloc"
++_require_xfs_io_command "fiemap" "-e"
++_require_xfs_io_command "truncate"
++
++# The allocation unit: rt extent size on an rt config, otherwise the block
++# size. Deriving the range from this makes the head/tail units straddle rt
++# extents when rextsize > 1.
++u=$(_get_file_block_size $TEST_DIR)
++
++# The fs block size. On rt with rextsize > 1 the allocation unit u is the rt
++# extent (u > b). A WRITE_ZEROES that extends EOF must only write out to the
++# block-rounded EOF and leave the rest of the straddling rt extent unwritten,
++# rather than written past EOF.
++b=$(_get_block_size $TEST_DIR)
++
++# Unaligned range within EOF: start 1.5 units in, span 4 units, so both the
++# head unit [u, 2u) and the tail unit [5u, 6u) are only partially covered,
++# with fully covered units in between and data on both sides.
++off=$((u + u / 2))
++len=$((4 * u))
++filesz=$((8 * u))
++pattern=0xab
++
++# Expected images.  For the written/delalloc cases the pattern surrounds the
++# zeroed range; for the hole/unwritten cases the file reads back all zeroes.
++$XFS_IO_PROG -f -c "pwrite -S $pattern 0 $filesz" $tmp.pattern >> $seqres.full 2>&1
++$XFS_IO_PROG -c "pwrite -S 0 $off $len" $tmp.pattern >> $seqres.full 2>&1
++$XFS_IO_PROG -f -c "truncate $filesz" $tmp.zero >> $seqres.full 2>&1
++
++# Assert the whole requested range is backed by written extents immediately
++# after fwzero (before any sync/remount): no holes, no unwritten.
++_check_range_written()
++{
++	local file=$1
++	local bad
++
++	bad=$($XFS_IO_PROG -c "fiemap -v $off $len" "$file" | \
++		_filter_fiemap | grep -E -c 'hole|unwritten')
++	if [ "$bad" -eq 0 ]; then
++		echo "extents: range fully written"
++	else
++		echo "extents: FAIL - $bad hole/unwritten extent(s) in range"
++		$XFS_IO_PROG -c "fiemap -v $off $len" "$file" | _filter_fiemap
++	fi
++}
++
++_check_data()
++{
++	local file=$1
++	local want=$2
++
++	if cmp -s "$file" "$want"; then
++		echo "data: matches expected image"
++	else
++		echo "data: FAIL - mismatch against expected image"
++		cmp "$file" "$want" | head
++	fi
++}
++
++# Assert [start, start+len) has no written extents (unwritten/hole only).  Used
++# to verify the tail of the straddling rt extent, past the block-rounded EOF,
++# was left unwritten.  len <= 0 means u == block size (no rt tail) -> nothing to
++# check, but still emit the line so the output is config-independent.
++_check_eof_tail()
++{
++	local file=$1 start=$2 len=$3 bad
++
++	if [ "$len" -le 0 ]; then
++		echo "extents: eof tail unwritten"
++		return
++	fi
++	bad=$($XFS_IO_PROG -c "fiemap -v $start $len" "$file" | \
++		_filter_fiemap | grep -E -c 'data')
++	if [ "$bad" -eq 0 ]; then
++		echo "extents: eof tail unwritten"
++	else
++		echo "extents: FAIL - $bad written extent(s) past block-rounded EOF"
++		$XFS_IO_PROG -c "fiemap -v $start $len" "$file" | _filter_fiemap
++	fi
++}
++
++_run_case()
++{
++	local name=$1
++	local want=$2
++
++	echo "=== $name ==="
++
++	$XFS_IO_PROG -c "fwzero $off $len" $testfile >> $seqres.full 2>&1
++
++	echo "== $name fiemap after fwzero ==" >> $seqres.full
++	$XFS_IO_PROG -c "fiemap -v" $testfile >> $seqres.full 2>&1
++
++	_check_range_written $testfile
++	_test_cycle_mount
++	_check_data $testfile $want
++
++	rm -f $testfile
++}
++
++# 1) Boundary units already written, within i_size.
++$XFS_IO_PROG -f -c "pwrite -S $pattern 0 $filesz" -c fsync $testfile \
++	>> $seqres.full 2>&1
++_run_case "written_edges" $tmp.pattern
++
++# 2) Boundary units are holes (sparse file).
++$XFS_IO_PROG -f -c "truncate $filesz" $testfile >> $seqres.full 2>&1
++_run_case "hole_edges" $tmp.zero
++
++# 3) Boundary units are unwritten preallocation.
++$XFS_IO_PROG -f -c "falloc 0 $filesz" $testfile >> $seqres.full 2>&1
++_run_case "unwritten_edges" $tmp.zero
++
++# 4) Boundary units are dirty/delalloc:
++$XFS_IO_PROG -f -c "pwrite -S $pattern 0 $filesz" $testfile >> $seqres.full 2>&1
++_run_case "delalloc_edges" $tmp.pattern
++
++# 5) Boundary units are dirty unwritten.
++$XFS_IO_PROG -f -c "falloc 0 $filesz" -c "pwrite -S $pattern 0 $filesz" \
++	$testfile >> $seqres.full 2>&1
++_run_case "dirty_unwritten_edges" $tmp.pattern
++
++# 6) EOF cases. A WRITE_ZEROES that extends the file to a non-unit-aligned
++#    size, followed by a further extend.
++eof=$((3 * u + 1))
++
++echo "=== eof_then_truncate ==="
++$XFS_IO_PROG -f -c "fwzero 0 $eof" $testfile >> $seqres.full 2>&1
++# The write must stop at the block-rounded EOF; the rest of the rt extent that
++# straddles EOF must be unwritten, not written past EOF.  Round EOF up to the
++# fs block size (b is a power of two) the same way as generic/219.
++eof_ru=$(( (eof + b - 1) & ~(b - 1) ))
++_check_eof_tail $testfile $eof_ru $((4 * u - eof_ru))
++
++$XFS_IO_PROG -c "truncate $filesz" $testfile >> $seqres.full 2>&1
++_test_cycle_mount
++_check_data $testfile $tmp.zero
++rm -f $testfile
++
++# success, all done
++status=0
++exit
+diff --git a/tests/generic/795.out b/tests/generic/795.out
+new file mode 100644
+index 00000000..14667aef
+--- /dev/null
++++ b/tests/generic/795.out
+@@ -0,0 +1,19 @@
++QA output created by 795
++=== written_edges ===
++extents: range fully written
++data: matches expected image
++=== hole_edges ===
++extents: range fully written
++data: matches expected image
++=== unwritten_edges ===
++extents: range fully written
++data: matches expected image
++=== delalloc_edges ===
++extents: range fully written
++data: matches expected image
++=== dirty_unwritten_edges ===
++extents: range fully written
++data: matches expected image
++=== eof_then_truncate ===
++extents: eof tail unwritten
++data: matches expected image
+
+base-commit: ffc8bad17e5b2f56e48dbac43f7c5ae8ac368fe5
+-- 
+2.51.2
+
