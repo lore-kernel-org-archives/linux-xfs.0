@@ -1,131 +1,108 @@
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CD333546C3
-	for <linux-xfs@vger.kernel.org>; Fri, 17 Jul 2026 13:05:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E43DC282F0A
+	for <linux-xfs@vger.kernel.org>; Fri, 17 Jul 2026 14:13:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784293512; cv=none; b=SjGJkpZQJQDUZTCv0fwEm694d5Su3EwENj5L7RrW69a/jQdJ9jgwu3plz9vom8K7hE+nvXbRDEPzOD089YTO1PnhAVCJHJmrAWeCEPGE2CfdmHpnZBR2v+1jh/TWnEm190G0H89ZivmiVglo6JXoKijONh4u7OE4JlPc0ZsB/8M=
+	t=1784297600; cv=none; b=ATTuHHNUchqJqlRDdpkGprBWUOLKAyVpgtj8z6C3ShZogrn4GSu6J+O2m3PWvOPec5ycjVJ+0rk2qEBjMaiwS0Q1rQ9WqoGqQMkF5Mfb8onFMxgs8W47h5dHsYFEYd5d3q93RHfkaM87EWT+yiOdo3Jw2XP7ngZ8g9/Ve9n5Cqc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784293512; c=relaxed/simple;
-	bh=+S161UNQBlt6BwZQkSKfXoQecbi4lgUMX7fYfR017qk=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:MIME-Version:
-	 Content-Type:References; b=htxDCXoi0bn+ZPZO8meXLvRG3AOoxJa2Uo8MHSMVM7caLp32YLx3sNM94lcvhhJJ3Bot3ZrjbeaEIERvlcMZLuJavys7bYxXrocedSeXQ2QakNA/TTrnZ0eJkMBl2B7lVDxmX8JPV4Ph9YlvtSbMdqK9fI4n9hNsOZvfj0bwWLA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=MlJXBPgt; arc=none smtp.client-ip=203.254.224.33
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1784297600; c=relaxed/simple;
+	bh=ZfbLmBwaw+8SYRCs+q5wR2WKvWNdo/gDw0/9mdBJMK0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=CK+RInnvR7OInALTIDUOhAbpli+PBFRD6jdRQP1KQ7F9Wus00M3lQ8lJ0qBsSG6rowYc4jMF9eM8I+ruKKEWrsGUD3Kvh20Onv2mwA8rX1IUj9RdXtGFR1bO7bdZY2ebJxPvG0+SO+FUAwghA5KZA8gfVpxnnpFNCD7M4TifhA0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=PKMvIz5i; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="MlJXBPgt"
-Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
-	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20260717125629epoutp0395994f529034d20fe61899b7238f2a94~DFQVC_yPy3137631376epoutp03R
-	for <linux-xfs@vger.kernel.org>; Fri, 17 Jul 2026 12:56:29 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20260717125629epoutp0395994f529034d20fe61899b7238f2a94~DFQVC_yPy3137631376epoutp03R
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1784292989;
-	bh=3AMDvBn6ma/cX4Ovor/jyA+F92z1Qwa40XQ6d/qJL4s=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=MlJXBPgtwPRYTKkJQscAHgA0a8WGfQubUFAi6tYWS+wTpDqNHsdw6dN/LiJwwBMed
-	 YLPqbuazXOdkSEk+NnaXzFuYY1FSH88VvuiBaDyFiOT+Q2UYtS8VKbfpO6JgTiYIjo
-	 dfToC6DfB4qOJYSASmE5VdTLve5cOIwdORFciClc=
-Received: from epsnrtp01.localdomain (unknown [182.195.42.153]) by
-	epcas5p3.samsung.com (KnoxPortal) with ESMTPS id
-	20260717125628epcas5p37985b0c2c5b37b6c74ae6e5a8901be78~DFQUSESuU1729017290epcas5p3J;
-	Fri, 17 Jul 2026 12:56:28 +0000 (GMT)
-Received: from epcas5p4.samsung.com (unknown [182.195.38.89]) by
-	epsnrtp01.localdomain (Postfix) with ESMTP id 4h1qfg6fVKz6B9m5; Fri, 17 Jul
-	2026 12:56:27 +0000 (GMT)
-Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
-	epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
-	20260717125627epcas5p3f5ad1cf917d563cc061e571b2f932319~DFQS_Yu290710307103epcas5p3M;
-	Fri, 17 Jul 2026 12:56:27 +0000 (GMT)
-Received: from localhost.localdomain (unknown [107.99.41.245]) by
-	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-	20260717125624epsmtip28b7bfdb1560736a5d781ad4f7af78330~DFQQQDVgg1798617986epsmtip2K;
-	Fri, 17 Jul 2026 12:56:24 +0000 (GMT)
-From: Kanchan Joshi <joshi.k@samsung.com>
-To: brauner@kernel.org, hch@lst.de, djwong@kernel.org, dgc@kernel.org,
-	jack@suse.cz, cem@kernel.org, axboe@kernel.dk, kbusch@kernel.org,
-	ritesh.list@gmail.com
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-block@vger.kernel.org, gost.dev@samsung.com, Anuj Gupta
-	<anuj20.g@samsung.com>, Kanchan Joshi <joshi.k@samsung.com>
-Subject: [PATCH v4 1/6] fs: add write-stream management ioctls
-Date: Fri, 17 Jul 2026 18:25:33 +0530
-Message-Id: <20260717125538.508925-2-joshi.k@samsung.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20260717125538.508925-1-joshi.k@samsung.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="PKMvIz5i"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1784297597;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=xjUAUQ1Gr6hL4GKDP0CBhOkbK0uEYNzYWH6Mvqu21Xs=;
+	b=PKMvIz5iYKeecS1CaCPkisghFmzg8/UQmGIfQ0QZKJ4vAOPLK4Cu4D8WHeRcdlBM6Aq2mI
+	JKYnymHzgAkuUn/YwolZgI9LaITLwa/XokRJuGTxKerUpOBvIfyxXxDrvnYdBufVD9MyfU
+	TIfxvP8+DhPQQVWG96m5MTqwDx+u6Hk=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-474-cMGX3nO6NOOvf6Dpq85B2Q-1; Fri,
+ 17 Jul 2026 10:13:14 -0400
+X-MC-Unique: cMGX3nO6NOOvf6Dpq85B2Q-1
+X-Mimecast-MFC-AGG-ID: cMGX3nO6NOOvf6Dpq85B2Q_1784297593
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 51E3A1800771;
+	Fri, 17 Jul 2026 14:13:13 +0000 (UTC)
+Received: from bfoster (unknown [10.22.88.111])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 8C5421955D89;
+	Fri, 17 Jul 2026 14:13:12 +0000 (UTC)
+Date: Fri, 17 Jul 2026 10:13:10 -0400
+From: Brian Foster <bfoster@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Carlos Maiolino <cem@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 02/12] xfs: consolidate buffer locking in xfs_buf_get_map
+Message-ID: <alo4doLYG7BzuCfO@bfoster>
+References: <20260715145147.95654-1-hch@lst.de>
+ <20260715145147.95654-3-hch@lst.de>
+ <aljY0uI6jY8y2b3Z@bfoster>
+ <20260717085950.GA32056@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CMS-MailID: 20260717125627epcas5p3f5ad1cf917d563cc061e571b2f932319
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-cpgsPolicy: CPGSC10-542,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20260717125627epcas5p3f5ad1cf917d563cc061e571b2f932319
-References: <20260717125538.508925-1-joshi.k@samsung.com>
-	<CGME20260717125627epcas5p3f5ad1cf917d563cc061e571b2f932319@epcas5p3.samsung.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260717085950.GA32056@lst.de>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-From: Anuj Gupta <anuj20.g@samsung.com>
+On Fri, Jul 17, 2026 at 10:59:50AM +0200, Christoph Hellwig wrote:
+> On Thu, Jul 16, 2026 at 09:12:50AM -0400, Brian Foster wrote:
+> > > -	/*
+> > > -	 * A new buffer is held and locked by the owner.  This ensures that the
+> > > -	 * buffer is owned by the caller and racing RCU lookups right after
+> > > -	 * inserting into the hash table are safe (and will have to wait for
+> > > -	 * the unlock to do anything non-trivial).
+> > > -	 */
+> > >  	lockref_init(&bp->b_lockref);
+> > > -	sema_init(&bp->b_sema, 0); /* held, no waiters */
+> > > +	sema_init(&bp->b_sema, 1); /* unlocked */
+> > 
+> > Maybe I'm missing something, but I thought the point of the locked init
+> > was to ensure that the allocator owns the buffer and can't end up
+> > blocking on the lock with a racing lookup. I.e., the buffer is locked
+> > before it becomes available for external lookup. Do we plan to do that
+> > another way, or are we just dropping that assumption?
+> 
+> The comment has been stale for a while.  b_sema is not involved in
+> lookup synchronization in any way.  Only the lockref is needed to actually
+> get a stable buffer reference.  Once we have a stable buffer reference,
+> b_sema is used to protect again multiple readers trying to actually
+> read the data (for xfs_buf_read*), but we don't care if that is done
+> by the thread that allocated the buffer or not.
+> 
 
-Wire up the userspace interface for write stream management via four
-ioctls:
+Hm, Ok. I read the comment as wanting to guarantee that the allocator
+gets first crack at the buffer lock, but looking at it again it says it
+ensures "racing RCU lookups right after inserting into the hash table
+are safe," and indeed that seems to be a little different.
 
-  FS_IOC_WRITE_STREAM_GET_MAX  query the max streams supported
-  FS_IOC_WRITE_STREAM_OPEN     open a stream id, returns a stream fd
-  FS_IOC_WRITE_STREAM_SET      attach the stream fd to an open file
-  FS_IOC_WRITE_STREAM_GET      query the stream id value set on a file
+I see that you're intentionally separating out the lookup from the buf
+data locking, but it does still look like we're making a potential
+functional tradeoff here by changing the insertion side locking. Note
+that I don't object or know that it matters in any way, I'd just suggest
+to add a note about this in the commit log in case somebody has to refer
+back to this in the future.
 
-Application should query the available streams by using
-FS_IOC_WRITE_STREAM_GET_MAX. If returned value is N, valid stream id for
-the file are 1 to N.
+Otherwise I read through the rest of the series and modulo a nit on
+patch 10, it all looks reasonable to me. For the series:
 
-Application calls FS_IOC_WRITE_STREAM_OPEN to get fd for a stream-id.
-By default, kernel picks an available stream-id and returns the fd for
-it. The flag FS_WRITE_STREAM_OPEN_EXACT can be used to request a
-specific stream_id. This is useful if application cares about keeping a
-stable stream-id-to-spatial-isolation-bucket mapping across restarts.
-
-Suggested-by: Christoph Hellwig <hch@lst.de>
-Co-developed-by: Kanchan Joshi <joshi.k@samsung.com>
-Signed-off-by: Anuj Gupta <anuj20.g@samsung.com>
-Signed-off-by: Kanchan Joshi <joshi.k@samsung.com>
----
- include/uapi/linux/fs.h | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
-
-diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
-index bd87262f2e34..a756d27bdf84 100644
---- a/include/uapi/linux/fs.h
-+++ b/include/uapi/linux/fs.h
-@@ -345,6 +345,22 @@ struct file_attr {
- /* Get logical block metadata capability details */
- #define FS_IOC_GETLBMD_CAP		_IOWR(0x15, 2, struct logical_block_metadata_cap)
- 
-+struct fs_write_stream_open {
-+	__u32		stream_id;	/* IN: requested id if OPEN_EXACT set; OUT: assigned id */
-+	__u32		flags;		/* IN: FS_WRITE_STREAM_OPEN_* */
-+};
-+
-+/*
-+ * Flag to ask for specific stream_id, otherwise kernel can return any.
-+ * Fails with -EBUSY if that stream_id is already held
-+ */
-+#define FS_WRITE_STREAM_OPEN_EXACT	(1 << 0)
-+
-+#define FS_IOC_WRITE_STREAM_GET_MAX	_IOR('f', 135, __u32)
-+#define FS_IOC_WRITE_STREAM_OPEN	_IOWR('f', 136, struct fs_write_stream_open)
-+#define FS_IOC_WRITE_STREAM_SET		_IOW('f', 137, __s32)
-+#define FS_IOC_WRITE_STREAM_GET		_IOR('f', 138, __u32)
-+
- /*
-  * Inode flags (FS_IOC_GETFLAGS / FS_IOC_SETFLAGS)
-  *
--- 
-2.25.1
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
