@@ -1,55 +1,40 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 648AB282F0A
-	for <linux-xfs@vger.kernel.org>; Fri, 17 Jul 2026 14:13:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B54D723536B;
+	Fri, 17 Jul 2026 15:16:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784297635; cv=none; b=EwRekbXRMYhJjSB5XJp2UMJyz7DctSNL6oWFgdHhTxTcUf1bpUMVVBDAUsWiWjH3hWKzdULXpCQQi0ax0ZCCFfwd4oYbJQTqlEGe4amyPoWKRP3S4lUkxAtVDun791z7t+gTKyctScZ+kEniWWMc/UDxPdkjWQHysoRdkk+hHIc=
+	t=1784301382; cv=none; b=LjDYwo7/i/VKGVblKg21mAf0n768Qk3hZd3MezwP1x3xa74sVDD1Qf6ua77nO3spb/uMRWm7rMhUyi/xa3nmGlJ4ZOeoXrvPX5pg/B5JB1+BtfnRc7qd3Fs/Y6LPzgaU7hlxIxID2BkEL3fV5rKNz36LfrQESx9ZRCUvtG6rI3o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784297635; c=relaxed/simple;
-	bh=zqVRQ+SgXsaw1EhOIcRIISPKxnr9FNJtMHqY5sTFBpw=;
+	s=arc-20240116; t=1784301382; c=relaxed/simple;
+	bh=U+3xHbzfHiQWkxpOj1ePT1az7IgZVmNztKI900HJoxE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GimYs2HTHUS6q621ZugRh5NOfWhTCECdj22PZDICGWcezyT9emrw1w8QBMTflqkZLBCwa2V0KTIVh6cE/xytFq+or2VzS4xexvLTrr1jBiDr9UXl5SLuYzLw5VoOxA965YsTaX1DA1zkKNc/WKx2QtiUSK/p7Gxjr6ZAeZGWMvg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=eXZ4Jjxz; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=m4RROt75ISkpsjoFMZrO5qRK7gGO42ZpBNlKFXPqgmApBbr+YprSglbHnv5Ji39c2It1JW800KubjjweKV3gyvl1P0MhjjdkJmNvEds8xGBkTLEoSji9xNPBuR7nf2lS5gSgUYXcuPS6SemmLt1epya8dnc5J0Gc+rNckSRQFL8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NP1Hg7xj; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="eXZ4Jjxz"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1784297633;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=EzLnqLs4FZ8EdLOU+WpGtjdfD/QgYlYhnju3fY3qw/g=;
-	b=eXZ4Jjxz6NJfWd3EdwDdSNdusvUMxapkPaz2ThmX5rUXE1ggMG+FCT4doV1BxCtJYKVvGf
-	4fmP0OrLVZc9122zAoc85dlvhS+x+OccSGS8a7uVvGU/swqX3Dp4/uY+oksQg8g4tOehqF
-	rFbaJsxVErpsBdbWquIW3BEfbMXEbeo=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-156-f8VmlPYcM8q0pU4EuXdsQw-1; Fri,
- 17 Jul 2026 10:13:50 -0400
-X-MC-Unique: f8VmlPYcM8q0pU4EuXdsQw-1
-X-Mimecast-MFC-AGG-ID: f8VmlPYcM8q0pU4EuXdsQw_1784297628
-Received: from mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.95])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 76D83180075C;
-	Fri, 17 Jul 2026 14:13:48 +0000 (UTC)
-Received: from bfoster (unknown [10.22.88.111])
-	by mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id BA370D75;
-	Fri, 17 Jul 2026 14:13:47 +0000 (UTC)
-Date: Fri, 17 Jul 2026 10:13:45 -0400
-From: Brian Foster <bfoster@redhat.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 10/12] xfs: merge xfs_buf_reverify into xfs_buf_read_map
-Message-ID: <alo4mWl188yS3UWn@bfoster>
-References: <20260715145147.95654-1-hch@lst.de>
- <20260715145147.95654-11-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NP1Hg7xj"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 3B7D01F000E9;
+	Fri, 17 Jul 2026 15:16:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784301381;
+	bh=uoKoK7RKIab7QSYxpHThDEmEVpiFEQtzuYS86xjd1HY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=NP1Hg7xjYyHYzGJUHESNmsRbetLZMdG4oDOsmXi7V+yVP0pV5U25wsStgJAC1Ncfx
+	 vZJYYRcsCcvJMLkDVS6fXio4TO+EzVF8PUu5sm6n5nXwKpSzN42TYFTxOcVIDHbGo9
+	 jtueWoyPxETVNLtH5jYs/0kquWlTPgeB7GOchQzMFmLMP9aYcdaT86J2LBrrexXi08
+	 gxYKEpzewtAdpPGFHb33S7UW5ya5+2TfMe6LhQpbtyj1KUVMEyCsJeVNWq6dvr+0uy
+	 bnjbxCg7DNNmBxUcSb0KrIZZy3hopjdUP8H5LQ7iouCQzYb983MdriWdgqS4iPKI/G
+	 XRAK/0amajkCA==
+Date: Fri, 17 Jul 2026 08:16:20 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Cihan Karadag <cihan.cihan@gmail.com>
+Cc: Carlos Maiolino <cem@kernel.org>, Shuah Khan <shuah@kernel.org>,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] xfs: use kmalloc_objs() instead of kmalloc() in
+ xfs_da_grow_inode_int
+Message-ID: <20260717151620.GS7380@frogsfrogsfrogs>
+References: <20260716214827.21188-1-cihan.cihan@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -58,44 +43,44 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260715145147.95654-11-hch@lst.de>
-X-Scanned-By: MIMEDefang 3.6 on 10.30.177.95
+In-Reply-To: <20260716214827.21188-1-cihan.cihan@gmail.com>
 
-On Wed, Jul 15, 2026 at 04:51:03PM +0200, Christoph Hellwig wrote:
-> xfs_buf_read_map is the only caller of xfs_buf_reverify that is left.
-> Merge it into that so that the comments can be moved closer to the
-> logic, and redundant asserts can be removed.
+On Thu, Jul 16, 2026 at 03:48:12PM -0600, Cihan Karadag wrote:
+> Convert open-coded kmalloc() multiplication to the modern kmalloc_objs()
+> interface to improve type safety and prevent potential integer
+> overflows.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> No functional changes are intended.
+> 
+> Signed-off-by: Cihan Karadag <cihan.cihan@gmail.com>
+
+Looks ok,
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+
+--D
+
 > ---
->  fs/xfs/xfs_buf.c | 79 ++++++++++++++++++++++--------------------------
->  1 file changed, 36 insertions(+), 43 deletions(-)
+> Changes since v1:
+> - Use kmalloc_objs() instead of kmalloc_array(), per Darrick's suggestion.
 > 
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index 21c21491d72e..be3b25ccbea6 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-...
-> @@ -685,18 +650,46 @@ xfs_buf_read_map(
->  
->  	trace_xfs_buf_read(bp, flags, _RET_IP_);
->  
-> -	if (!(bp->b_flags & XBF_DONE)) {
-> +	if (bp->b_flags & XBF_DONE) {
-> +		ASSERT(bp->b_error == 0);
-> +
-> +		/*
-> +		 * If the caller passed an ops structure and the buffer doesn't
-> +		 * have ops assigned yet, set the ops and use them to verify the
-> +		 * buffer contents.
-> +		 *
-> +		 * Under normal operations, every in-core buffer is verified on
-> +		 * read I/O completion, but there are two scenarios that can
-> +		 * lead to in-core buffers without an assigned ->b_ops:
-> +		 *
-> +		 *   1) During log recovery of buffers on a V4 filesystem.
-> +		 *	These buffers are purged at the end of recovery, though.
-> +		 *   2) Oonline repair intentionally reads with a NULL buffer
-
-Online
-
+>  fs/xfs/libxfs/xfs_da_btree.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+> index 9debb95d86fa0..f190c088591bc 100644
+> --- a/fs/xfs/libxfs/xfs_da_btree.c
+> +++ b/fs/xfs/libxfs/xfs_da_btree.c
+> @@ -2354,8 +2354,7 @@ xfs_da_grow_inode_int(
+>  		 * If we didn't get it and the block might work if fragmented,
+>  		 * try without the CONTIG flag.  Loop until we get it all.
+>  		 */
+> -		mapp = kmalloc(sizeof(*mapp) * count,
+> -				GFP_KERNEL | __GFP_NOFAIL);
+> +		mapp = kmalloc_objs(*mapp, count, GFP_KERNEL | __GFP_NOFAIL);
+>  		for (b = *bno, mapi = 0; b < *bno + count; ) {
+>  			c = (int)(*bno + count - b);
+>  			nmap = min(XFS_BMAP_MAX_NMAP, c);
+> -- 
+> 2.54.0
+> 
+> 
