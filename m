@@ -1,32 +1,29 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 661903BB670;
-	Fri, 17 Jul 2026 06:48:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78FD23B9D8B;
+	Fri, 17 Jul 2026 08:31:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784270902; cv=none; b=tzZbwa4FDrbSpYgBYx4W0zV1y2FuGWem42iIt4suGAKUbw5S2mCHj+q6IO8B3BFvRmt10AEgt7dsH/ChCArxW7si5xHLJejKRXB/73lgtFZFbHcxJSTZb1meJtZDgph58USsojq42lSa9h7ChIySoS05x2fahGOnmPlb9jf1xDg=
+	t=1784277093; cv=none; b=K3pzTPsstRMUB2xCbGOzwZIAdWqtPM0pL7Il/KcGYGnpkszg7YrK/Vyy99WevGGDTnjdKqbPIe9+jonFlQ2f1V1IvMJeln1QdJKNGzP3Kc1fQDl7KN/iQNfd2fKpdZrIwFVuLw1X+eiB7G3MaTJH/+Ym5HQFu695b9ZOSr/o168=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784270902; c=relaxed/simple;
-	bh=2SImvpveMUJl7WEI82HNsMIayq/rGPsDMRwKM/Fed1M=;
+	s=arc-20240116; t=1784277093; c=relaxed/simple;
+	bh=qwHVZtzU7KtRAeDihajyacI1svuoSoUS/pG8mI7qZQk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LS4FJWujmeeiTaxnZwSDJeaw4oSEwWmP7wnj1X4TxUjOiDrktfbtk6rV3xfDLp+LRt81WfHVFo2SndDlmHGw0rc9kpgOlnmygkD/KlUALJTSkrftH8x1jQK89ySFp+ZR7i9LfC/UgcKBEsoPGhUloF7LYdTlcNqtbH83+czxANE=
+	 Content-Type:Content-Disposition:In-Reply-To; b=D7usspys7pFGXOPX3c+xA0Epiqa0Nwup8QquPufetnSpfLA+VJAQeenfCK+LIKrmPY6VqJ3QPIBs56BMwHgjf82IE01ozkysIkr99uY6c6jFY8Tvqyfc3xYR0KIR8yTmO6HSuDpgiQVytWdnIB+s0t07n7F+j4EsR7ednp89LOc=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id F29BE68AFE; Fri, 17 Jul 2026 08:48:07 +0200 (CEST)
-Date: Fri, 17 Jul 2026 08:48:07 +0200
+	id A95AB68D09; Fri, 17 Jul 2026 10:31:21 +0200 (CEST)
+Date: Fri, 17 Jul 2026 10:31:20 +0200
 From: Christoph Hellwig <hch@lst.de>
-To: kernel test robot <oliver.sang@intel.com>
-Cc: Christoph Hellwig <hch@lst.de>, oe-lkp@lists.linux.dev, lkp@intel.com,
-	linux-kernel@vger.kernel.org, Carlos Maiolino <cem@kernel.org>,
-	Carlos Maiolino <cmaiolino@redhat.com>,
-	"Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [linus:master] [xfs]  9b64ca202f:
- fxmark.ssd_xfs_DRBH_4_bufferedio.works/sec 24.1% regression
-Message-ID: <20260717064807.GA23992@lst.de>
-References: <202607161601.867c143e-lkp@intel.com>
+To: Christian Brauner <brauner@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, djwong@kernel.org,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH] iomap: add a separate bio_set for iomap_split_ioend
+Message-ID: <20260717083120.GA30021@lst.de>
+References: <20260629125229.3400726-1-hch@lst.de> <20260630-zitat-begossen-tapfer-0ff968ffa21a@brauner> <20260707050433.GA12963@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -35,32 +32,17 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <202607161601.867c143e-lkp@intel.com>
+In-Reply-To: <20260707050433.GA12963@lst.de>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Thu, Jul 16, 2026 at 09:13:19PM +0800, kernel test robot wrote:
+On Tue, Jul 07, 2026 at 07:04:33AM +0200, Christoph Hellwig wrote:
+> On Tue, Jun 30, 2026 at 12:59:38PM +0200, Christian Brauner wrote:
+> > On Mon, 29 Jun 2026 14:52:29 +0200, Christoph Hellwig wrote:
+> > > iomap: add a separate bio_set for iomap_split_ioend
+> > 
+> > Applied to the vfs-7.3.iomap branch of the vfs/vfs.git tree.
+> > Patches in the vfs-7.3.iomap branch should appear in linux-next soon.
 > 
-> 
-> Hello,
-> 
-> kernel test robot noticed a 24.1% regression of fxmark.ssd_xfs_DRBH_4_bufferedio.works/sec on:
-> 
+> Any chance you could propagates this to vfs.fixes?
 
-This looks really odd.  While the patch adds a bit more computation,
-that is very cheap shifting and masking.  So the only theory I have here
-is that this somehow affects the inode data layout.  Can you re-run this
-with the patch below applied on top of commit
-9b64ca202f364a6bf8e19bdd20953bc2d776c67f ?
-
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.h
-index 57192adc7744..319e83d4a087 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.h
-+++ b/fs/xfs/libxfs/xfs_inode_buf.h
-@@ -15,6 +15,7 @@ struct xfs_dinode;
-  */
- struct xfs_imap {
- 	xfs_agblock_t	im_agbno;	/* starting agbno of inode cluster */
-+	uint32_t	__im_pad;
- 	unsigned short	im_boffset;	/* offset in inode cluster in bytes */
- };
- 
+Ping again.
