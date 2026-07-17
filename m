@@ -1,266 +1,202 @@
-Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
+Received: from mail-wm1-f45.google.com (mail-wm1-f45.google.com [209.85.128.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE94638AC85
-	for <linux-xfs@vger.kernel.org>; Fri, 17 Jul 2026 19:24:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.48
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784316273; cv=none; b=CJYf2gtlrOQ2Ur+6DQqYn4jo7kBVQ4adx2bZ2RPZ5lVWBR9ubIDJnO1SiemMtiX/HGTNt5fBLgONFNezEVVWZWhuC6lIiABkhWgyovD/U5/2cr3CzQZGU/ObBmCfZgobW09HhnJ0yE17wEIeqY/V016EVBPTQfTjtKpp5pE3ZVo=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784316273; c=relaxed/simple;
-	bh=EG69EPkO7N62BjoL+8oQ9HiwnjhLDWKjuYf3qchcwVM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=NB7XWqTw7fqIGC2K229juHjq9P9HczIoD1q3nu4aoSx6f2njEL3jCYWR924JIIq4nZxoywyU1CyMaLwB63xb5YgiJjZG55jLMPrDlYUiACsIuG+sUwQpJaGf13s+XPMoyLwkmlVgGJu2zgLzpHwo7WrtVfu9S6Kv6BIhsbcoMeg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=G0jR1IdH; arc=none smtp.client-ip=209.85.216.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CACE918FDDE
+	for <linux-xfs@vger.kernel.org>; Fri, 17 Jul 2026 21:48:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.45
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784324899; cv=pass; b=pHThopAOgg+Yiw4OW3lNSSzGDfR7GqC/suBCVRbdLv/kpBqxMM1q9D8B7MGFswfwVj3DkUxhp1oYpsfmIr/y75yoQ8Q+WCQmHhqvIY3/mS49nri2t43YXmELYdjqgRpUxHJRQJuteFohz3cVqNsPYJEtBUHqp/MnCAC4bRX6f1w=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784324899; c=relaxed/simple;
+	bh=sqU5R3rMMXM1EIenNXeNYk0ZrLRzBSfZNYzit9/wafk=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=qhVNjNfp+mx8HAW9Hxjo00GELfQThGzy06+TVMJdFspv//lzGSmOu2NRtnkg+HSh1vpTdhWJ0VC4mCh2TDd2AX3mtbZjb9G2Sk50H+sdq8MDtrk2/kUlV8mIdFif6UtqH1k0/S2gY/FolwdLnz+gkEocBYy0K2su9Kox0WjQP7Q=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=pXf8Eyj0; arc=pass smtp.client-ip=209.85.128.45
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="G0jR1IdH"
-Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-38e58034d05so416082a91.2
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Jul 2026 12:24:29 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="pXf8Eyj0"
+Received: by mail-wm1-f45.google.com with SMTP id 5b1f17b1804b1-4954a32cf1eso4703355e9.3
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Jul 2026 14:48:17 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1784324896; cv=none;
+        d=google.com; s=arc-20260327;
+        b=bEUhApgNWlA8DNgBhzRSPZ94lBXO848285coU6dD29VW6wSpDnSlBw8VmsSwIXypm7
+         b7UxJRRJwHerd1IWQPAdzhz+PWXL+yz/MdJdRcx9TQbQp68XiYmrz7tjie4jmev9ysKK
+         9eEoYp1399+tAJvMSV6JkLQeM6yZNKPYlZbMqtZ44t+YrzwAw6CdeKY5TAAENUCHqcRz
+         N/VmS85DgfIEaGPlp6MiMCYPsXzCtJBfNXKNkH4E5wPcsqIyLGzBL9koEfrA7qUvZlp9
+         OLibhcKYq4dRx7qUQesQ3cYLnPcKDGwHSwL39t1Hvz6QSaxhP+HHGvnRbbMi1U8cCmh7
+         6Y4w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=GZjDxyMd9lYhUp+Y2lk0pT92jHBogv3cxfdr1gHkuyE=;
+        fh=LDj00pRbFizTqdGxFoJeJ2UUHkXm6Tr++1pGw77IetY=;
+        b=lUIs6aNISGXKO+DtNqpCSP9+tAqu4BZEOlJgfHnYDSLOk7eUKtuIwWizZ5hcULeWAb
+         9R12sgieXQaLrSnN1q5x6QmwM6SGtYDcPIF27xnnOx9nF/SzMXNWCCvmruzHckPFV4yf
+         Zw7qeNdYEcqgKb4294m86kn7vQJqwCGeC73vMXwi74l7ua52degZ1wZsEKCKQ/PpaMjX
+         vrXA9GDAnqpJlv76s3NlhqH2TRzGPRPm71Dhodbwe+5C0IlmFwwMpWf12fnS4b9ZxVAc
+         BDw73HNvir8JIa7foSBTNAjEGJAec2kfq4Pcs2dLRNYdIMMR28p7unOmZZXq7EHextc2
+         49lA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1784316269; x=1784921069; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=DuWe98bSxDVP2YNkxgoDo5czOZmzPaVlyD3OHz/X3MY=;
-        b=G0jR1IdHWs8zsjNPNtmZJj2davz4nQv3DKJgMTU/wr7jrspIaJvNtia2pcejcmGW25
-         6P+vEAuOdT94pks/ooVzmxZIaTTXQ42M7lHqJZeB486mz8VfugwuriUqO84AIbzAh51O
-         v6W4tYx9CaZf9DdUQDGklr1FMZoWsq9d+9zvyFtT5DzWw29/eLLU7hMUt4YEnsuSFZDf
-         Ou18qDY6fh296z5bdUwD7hbBzcbDl8lNzvj5BRTHFYf9YQDRBZ9j7OxBUqjFd01NC35a
-         ip5P6MTmn4wYwZrUTb0GDsSBdh9zW7W3zLqwPP8fFAZ9LI/jW5gofN77rHAn05y243PV
-         8lgA==
+        d=gmail.com; s=20251104; t=1784324896; x=1784929696; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=GZjDxyMd9lYhUp+Y2lk0pT92jHBogv3cxfdr1gHkuyE=;
+        b=pXf8Eyj09mAmVDmf9/D/oU6rwnXS3DXrCmAgYbcllxqHWloDIN5otfEN1/HYWGncu5
+         KGNl8W/jKpbg4y+KXukBSmaOeXpce9XSj0/N88xLQwRuNGFvF3C4aAFyZeUKVJOiDeeg
+         HB3yiXNBtpOIQHby+oqsEMR7nV5IBycmUrm84EYSarfghzAYvllj5mhJjse6w7u1IjrY
+         bq10aNTKhzOV5j67Cy6fmbaBGzr37Ys453D5V07Kzb7eBLlZYMKgQgrHSsZDLRt83um4
+         aqCxFolDcaaOeVAsTpcFfCef6aQEGS5+WrUURjf4EKYwvM5tcmeIvb3+9KF3+gM4uMaV
+         IozA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784316269; x=1784921069;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=DuWe98bSxDVP2YNkxgoDo5czOZmzPaVlyD3OHz/X3MY=;
-        b=fEPhiZSJohZRcAJubtkGAZ/dRQSAFtBtT2Wy3g6T6SboijmoCf9zDKEzrHYXGt6igE
-         yk0CXWdpTUMVGpzPzNZaLWYrYXqhzI5fucmKTIKSSyV7X4sGhAt51crXB1nl0kRGu6H/
-         vD+x1cWGFfBYmmBqCv9tBtx8/XfqbWlKj498flq6+lfWDJA9nWHF2lmclUfLTAWaf0yd
-         Aa4WCVhTxzTX2UDM3R7JzGSMcO76YW3sSGckbACPbcFI/pAmEsiPAw78wr9nh5m1mOx+
-         VEjgoVq/ahlOjnMn6xgR9CBlh1JUDe9JafSG2ceALjHvFlJak0uxMiIHItr7gAhf/3tY
-         JL6g==
-X-Gm-Message-State: AOJu0YxD91xlVw6I3NiY9Vi/HARkFNeZ10V26JH7p1eOahQHh7hX+/x0
-	DP4dfm24/gJxt+bhmlwG5hmwqpxXQUjRdC/W5/WuvSLcsx0NGafT1zKPBzBfxEqsXfU=
-X-Gm-Gg: AfdE7cmwbve/RddrblgGg6K9YjN4F4khfOErckq6jMYiMbcT9u8Ub0ye0bgPxyJv6Gx
-	5TV0wPYScE5c8V5kxc9Bb+CLyIkaeYpcuPF54Ee8a9SEk+MZETmMNpWuQ/EO+rTLWErTucZRZBu
-	GamywtDhLdCnRy6WZSKqCSOF62D/I2OqZC6DUAqHS7JvdocwThoo1nYfTd3FIg/IfM2seeyBoRN
-	XIdcP2VNoxdxpnV3xCGKOLlBHhPBBfR9z5eT0kj1Mk6DJzA+jzFY7TIDWRWsTAoIKvhvBgmlOhT
-	H8j0S8kvaTIZMGV95ZZ56hbCdFKT57PR0iFQ2NlcRGiq4AluEKFofR/mKC8/tUcNB3LRRVLqpDJ
-	xWbmFvne1MCYrcKq/t5cNHgUdaLKsE2FQKSQEh4p0PVgrP4BM969jS/XM2LgkmkAZahxAB8tFHc
-	uHdIUmXaAIbrjd04Pj3JpuINXImAWLQ6ouTo91LdAm5UlaO/M=
-X-Received: by 2002:a17:90a:dfcc:b0:366:3517:1aa2 with SMTP id 98e67ed59e1d1-38e4b24d8ddmr4182562a91.0.1784316269321;
-        Fri, 17 Jul 2026 12:24:29 -0700 (PDT)
-Received: from fx.tailc0aff1.ts.net ([206.206.192.132])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3142a1dde81sm18648783eec.21.2026.07.17.12.24.27
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Jul 2026 12:24:28 -0700 (PDT)
-From: Weiming Shi <bestswngs@gmail.com>
-To: Carlos Maiolino <cem@kernel.org>,
-	"Darrick J . Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	xmei5@asu.edu,
-	Weiming Shi <bestswngs@gmail.com>,
-	Dave Chinner <dgc@kernel.org>
-Subject: [PATCH v2 2/2] xfs: verify recovered inode log items in pass1
-Date: Fri, 17 Jul 2026 12:24:08 -0700
-Message-ID: <20260717192408.109168-3-bestswngs@gmail.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20260717192408.109168-1-bestswngs@gmail.com>
-References: <20260717192408.109168-1-bestswngs@gmail.com>
+        d=1e100.net; s=20251104; t=1784324896; x=1784929696;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=GZjDxyMd9lYhUp+Y2lk0pT92jHBogv3cxfdr1gHkuyE=;
+        b=mO3onfcIx6A2oj2KBgs56wjvNC98hv/utZq7FodHE8z+/+VF6UBbezhU984ff/pxbV
+         lSJQft2Ml93/EpzgRIUPT7rQqRoVU7CcxljTN/TEBlZ/YVxK8ekHV9+WJcCOJiBYktJW
+         AGhrg1NbZebX/qw8aPX66RTPtD5K7dhzkW5BNJ+c9IKi+RFI8HPfYBENQjkXQjkiHbx6
+         T1CYtCxbnVvY2Dl7Ge4g+Nf4SLhpfx5VUdIKgQKSEPRps8E5B7uSkAQ/1uaBx4FNUpy5
+         F+FMCSP8fFEXMnchQcYIbv10dXSilFzNb7qoIDqiq5yRDa7nMprl2kfumdU8qmb6qXVT
+         s3og==
+X-Forwarded-Encrypted: i=1; AHgh+Ro28Tr0KS6UaIVQ1CvcAMHAp4Mg+BOEzNs8opJX8wR//QSG8ejt+NocSX6nTQbKU51ypV9465pteXE=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzIKOfBEN87o4kli1s0jIpJaL07mdhO9IiwGqNmm688ohFlybhU
+	gReFXQ4qTT57Waba9Pi0rN9Bo80LJ68cZeux43nhloZmDTOZEht27oHFgDpz+bEq4KT77N6f68D
+	HD67RolISjnedsG8miL41An1d9DVWIGo=
+X-Gm-Gg: AfdE7ckAd9pIkhwWosZZNJWwIiJtkxep5h29p5jqx4WqEAOEDi213ynSHXx2KchWnO+
+	xiH+IqeIpL24IHtJ5u5VRFxPD14myNtusLvRyXc6tlO+1v4TWlkNY1qowkNECRGa4me51kwU6Ld
+	+DRd0h57QaOZLxx8nNF9wcuCzsQ4O0QGG7GI2tnMEObDpCzIzugKd2wvq6/JEvrvUG/nGL/L6wQ
+	GrnKRLHTxPC6C02T9DV2jWrcBKHaRijVpb3MSs04R0ExEYLIthu7FpF27K5ngERGzLO1YTvbaaM
+	pVxFdNdFVb2er9J2jGo9TUUksJGSaF60EGnGR+2EpA==
+X-Received: by 2002:a05:600c:b96:b0:495:4b00:1bab with SMTP id
+ 5b1f17b1804b1-4954b001c39mr45485455e9.21.1784324895791; Fri, 17 Jul 2026
+ 14:48:15 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20260701000949.1666714-1-joannelkoong@gmail.com>
+ <20260701000949.1666714-3-joannelkoong@gmail.com> <20260702164339.GI9392@frogsfrogsfrogs>
+ <CAJnrk1ZRQaFseAnz3zm31oR3KmQWje5HDJjhNbAQSAQyK9_PMA@mail.gmail.com>
+ <CAJnrk1bj4pLpAzLhehrbDJuKWa=WMq-3XOAm9dhsEVDF9WCBPQ@mail.gmail.com>
+ <CAJnrk1YkAEUhjw6mNEx70ojN7UMQT__oHn5m1Ng2Lz7FoLRhrA@mail.gmail.com> <20260717175552.GT7380@frogsfrogsfrogs>
+In-Reply-To: <20260717175552.GT7380@frogsfrogsfrogs>
+From: Joanne Koong <joannelkoong@gmail.com>
+Date: Fri, 17 Jul 2026 14:48:03 -0700
+X-Gm-Features: AUfX_mxuarmgCvMjpgrc3PqPzAefX6rjpJrhYlOJ5xPI1AmG7uUmKiouc0J-ti0
+Message-ID: <CAJnrk1bjA+Y5V-87AhNGR5-ss7gUJWwLkjouwic1Mckd2QRH7Q@mail.gmail.com>
+Subject: Re: [PATCH v2 02/18] xfs: convert iomap ops to ->iomap_next()
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: brauner@kernel.org, hch@lst.de, willy@infradead.org, 
+	hsiangkao@linux.alibaba.com, linux-fsdevel@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, Carlos Maiolino <cem@kernel.org>, 
+	open list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Log recovery mixes validation of a recovered inode item's formatted
-structures into the pass2 decode and replay code, one open-coded check at
-a time. That is hard to read and audit for what is still unchecked, and it
-runs after the item has already been sorted and read ahead in earlier
-passes.
+On Fri, Jul 17, 2026 at 10:55=E2=80=AFAM Darrick J. Wong <djwong@kernel.org=
+> wrote:
+>
+> On Fri, Jul 17, 2026 at 09:49:30AM -0700, Joanne Koong wrote:
+> > On Thu, Jul 2, 2026 at 6:21=E2=80=AFPM Joanne Koong <joannelkoong@gmail=
+.com> wrote:
+> > >
+> > > Ahh okay, I think I see the point you were trying to make. The
+> > > callsite functions are like:
+> > >
+> > > ssize_t iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter=
+ *from,
+> > >                 iomap_next_fn iomap_next,
+> > >                 const struct iomap_write_ops *write_ops, void *privat=
+e);
+> > >
+> > > int iomap_fsverity_write(struct file *file, loff_t pos, size_t length=
+,
+> > >                 const void *buf, iomap_next_fn iomap_next,
+> > >                 const struct iomap_write_ops *write_ops);
+> > >
+> > > void iomap_read_folio(iomap_next_fn iomap_next,
+> > >                 struct iomap_read_folio_ctx *ctx, void *private);
+> > >
+> > > void iomap_readahead(iomap_next_fn iomap_next,
+> > >                 struct iomap_read_folio_ctx *ctx, void *private);
+> > >
+> > > etc, so it's not clear from the "iomap_next_fn iomap_next" naming tha=
+t
+> > > it handles per-iteration logic, whereas renaming it to "iomap_iter_fn
+> > > iomap_iter" makes it more explicit. Am I interpreting this correctly?
+> >
+> > Going back to this... "iomap_iter_fn iomap_iter" doesn't feel quite
+> > right. I think there's too much naming collision with iomap_iter() and
+> > struct iomap_iter, and I like how in general ->next() matches the
+> > orthodox naming scheme for advancing an iterator. I think
+> > "iomap_iter_next_fn next" would be the best of both worlds - I'll
+> > change it to this for v3. But if you don't agree with this, please let
+> > me know.
+>
+> Fine by me :)
+>
+> --D
+>
+> >
+> > Thanks,
+> > Joanne
+> >
+> > >
+> > > > > > +{
+> > > > > > +     return iomap_process(iter, iomap, srcmap, xfs_direct_writ=
+e_iomap_begin,
+> > > > > > +                     NULL);
+> > > > >
+> > > > > But then "iomap_iter" sets up a new problem: should iomap_process=
+ have a
+> > > > > new name that goes along with that?  iomap_iter is already taken =
+for the
 
-Add a verifier layer to journal recovery: a new
-xlog_recover_item_ops->verify() method that validates an item's formatted
-log structures, called in pass1 for every item after the generic region
-checks. Add the first verifier, for inode items:
-xlog_recover_inode_verify() checks in one place that the core and each fork
-region implied by ilf_fields is declared, that the log dinode is present
-and large enough, that its version matches the mount, that di_forkoff is
-within the literal area, and that the verbatim-copied fork regions fit
-their destination fork.
+I'm starting not to like "iomap_process()" either, it seems too vague...
 
-Because those log dinode checks now run in pass1, drop the equivalent
-open-coded checks (the log dinode magic and the dead di_forkoff bound) from
-xlog_recover_inode_commit_pass2(). The checks that need the on-disk inode
-buffer (its magic, the LSN and di_flushiter replay-ordering decisions, the
-di_mode/di_format consistency, and the final xfs_dinode_verify()) cannot be
-hoisted and stay in pass2.
+I think it'd be better renamed to "iomap_iter_next()". The callsites
+would then just look something like:
 
-This only covers the self-contained log dinode structure. The btree-root
-fork formats are converted from a larger in-core form on replay and their
-record count is not yet bounded here; clamping xfs_bmbt_to_bmdr() and the
-rt btree converters against the destination fork is left as follow-up.
-Further item types can grow their own verify() method the same way.
+static int
+xfs_read_iomap_next(
+       const struct iomap_iter *iter,
+       struct iomap            *iomap,
+       struct iomap            *srcmap)
+{
+       return iomap_iter_next(iter, iomap, srcmap, xfs_read_iomap_begin, NU=
+LL);
+}
 
-Suggested-by: Dave Chinner <dgc@kernel.org>
-Assisted-by: Claude:claude-opus-4-8
-Signed-off-by: Weiming Shi <bestswngs@gmail.com>
----
- fs/xfs/libxfs/xfs_log_recover.h |  3 ++
- fs/xfs/xfs_inode_item_recover.c | 87 +++++++++++++++++++++++++++------
- fs/xfs/xfs_log_recover.c        |  5 ++
- 3 files changed, 79 insertions(+), 16 deletions(-)
+static int
+xfs_seek_iomap_next(
+       const struct iomap_iter *iter,
+       struct iomap            *iomap,
+       struct iomap            *srcmap)
+{
+       return iomap_iter_next(iter, iomap, srcmap, xfs_seek_iomap_begin, NU=
+LL);
+}
 
-diff --git a/fs/xfs/libxfs/xfs_log_recover.h b/fs/xfs/libxfs/xfs_log_recover.h
-index 9e712e62369c..327a4a9c5fbe 100644
---- a/fs/xfs/libxfs/xfs_log_recover.h
-+++ b/fs/xfs/libxfs/xfs_log_recover.h
-@@ -33,6 +33,9 @@ struct xlog_recover_item_ops {
- 	 */
- 	enum xlog_recover_reorder (*reorder)(struct xlog_recover_item *item);
- 
-+	/* Validate the item's log structures in pass1, if provided. */
-+	int (*verify)(struct xlog *log, struct xlog_recover_item *item);
-+
- 	/* Start readahead for pass2, if provided. */
- 	void (*ra_pass2)(struct xlog *log, struct xlog_recover_item *item);
- 
-diff --git a/fs/xfs/xfs_inode_item_recover.c b/fs/xfs/xfs_inode_item_recover.c
-index 169a8fe3bf0a..277267f722aa 100644
---- a/fs/xfs/xfs_inode_item_recover.c
-+++ b/fs/xfs/xfs_inode_item_recover.c
-@@ -367,13 +367,6 @@ xlog_recover_inode_commit_pass2(
- 		goto out_release;
- 	}
- 	ldip = item->ri_buf[1].iov_base;
--	if (XFS_IS_CORRUPT(mp, ldip->di_magic != XFS_DINODE_MAGIC)) {
--		xfs_alert(mp,
--			"%s: Bad inode log record, rec ptr "PTR_FMT", ino %lld",
--			__func__, item, in_f->ilf_ino);
--		error = -EFSCORRUPTED;
--		goto out_release;
--	}
- 
- 	/*
- 	 * If the inode has an LSN in it, recover the inode only if the on-disk
-@@ -462,15 +455,6 @@ xlog_recover_inode_commit_pass2(
- 	if (error)
- 		goto out_release;
- 
--	if (unlikely(ldip->di_forkoff > mp->m_sb.sb_inodesize)) {
--		XFS_CORRUPTION_ERROR("Bad log dinode fork offset",
--				XFS_ERRLEVEL_LOW, mp, ldip, sizeof(*ldip));
--		xfs_alert(mp,
--			"Bad inode 0x%llx, di_forkoff 0x%x",
--			in_f->ilf_ino, ldip->di_forkoff);
--		error = -EFSCORRUPTED;
--		goto out_release;
--	}
- 	isize = xfs_log_dinode_size(mp);
- 	if (unlikely(item->ri_buf[1].iov_len > isize)) {
- 		XFS_CORRUPTION_ERROR("Bad log dinode size", XFS_ERRLEVEL_LOW,
-@@ -597,8 +581,79 @@ xlog_recover_inode_commit_pass2(
- 	return error;
- }
- 
-+/*
-+ * Validate an inode log item's log dinode structure in pass1 so pass2 need
-+ * not re-check it; buffer-dependent checks stay in pass2.
-+ */
-+STATIC int
-+xlog_recover_inode_verify(
-+	struct xlog			*log,
-+	struct xlog_recover_item	*item)
-+{
-+	struct xfs_mount		*mp = log->l_mp;
-+	struct xfs_inode_log_format	*in_f;
-+	struct xfs_inode_log_format	in_f_buf;
-+	struct xfs_log_dinode		*ldip;
-+	unsigned int			litino = XFS_LITINO(mp);
-+	unsigned int			dsize, asize;
-+	int				attr_index;
-+	int				error;
-+
-+	if (item->ri_buf[0].iov_len == sizeof(struct xfs_inode_log_format)) {
-+		in_f = item->ri_buf[0].iov_base;
-+	} else {
-+		in_f = &in_f_buf;
-+		error = xfs_inode_item_format_convert(&item->ri_buf[0], in_f);
-+		if (error)
-+			return error;
-+	}
-+
-+	/* The inode core is always logged as the log dinode in ri_buf[1]. */
-+	if (XFS_IS_CORRUPT(mp, in_f->ilf_size < 2) ||
-+	    XFS_IS_CORRUPT(mp,
-+			   item->ri_buf[1].iov_len < xfs_log_dinode_size(mp)))
-+		return -EFSCORRUPTED;
-+
-+	ldip = item->ri_buf[1].iov_base;
-+	if (XFS_IS_CORRUPT(mp, ldip->di_magic != XFS_DINODE_MAGIC) ||
-+	    XFS_IS_CORRUPT(mp, !xfs_dinode_good_version(mp, ldip->di_version)) ||
-+	    XFS_IS_CORRUPT(mp, ldip->di_forkoff >= (litino >> 3)))
-+		return -EFSCORRUPTED;
-+
-+	if (ldip->di_forkoff) {
-+		dsize = ldip->di_forkoff << 3;
-+		asize = litino - (ldip->di_forkoff << 3);
-+	} else {
-+		dsize = litino;
-+		asize = 0;
-+	}
-+
-+	/*
-+	 * Btree-root forks are logged in a larger in-core form and converted on
-+	 * replay, so their region is not bounded by the on-disk fork size here.
-+	 */
-+	if (in_f->ilf_fields & XFS_ILOG_DFORK) {
-+		if (XFS_IS_CORRUPT(mp, in_f->ilf_size < 3))
-+			return -EFSCORRUPTED;
-+		if ((in_f->ilf_fields & XFS_ILOG_DFORK) != XFS_ILOG_DBROOT &&
-+		    XFS_IS_CORRUPT(mp, item->ri_buf[2].iov_len > dsize))
-+			return -EFSCORRUPTED;
-+	}
-+	if (in_f->ilf_fields & XFS_ILOG_AFORK) {
-+		attr_index = (in_f->ilf_fields & XFS_ILOG_DFORK) ? 3 : 2;
-+		if (XFS_IS_CORRUPT(mp, in_f->ilf_size < attr_index + 1))
-+			return -EFSCORRUPTED;
-+		if ((in_f->ilf_fields & XFS_ILOG_AFORK) != XFS_ILOG_ABROOT &&
-+		    XFS_IS_CORRUPT(mp, item->ri_buf[attr_index].iov_len > asize))
-+			return -EFSCORRUPTED;
-+	}
-+
-+	return 0;
-+}
-+
- const struct xlog_recover_item_ops xlog_inode_item_ops = {
- 	.item_type		= XFS_LI_INODE,
-+	.verify			= xlog_recover_inode_verify,
- 	.ra_pass2		= xlog_recover_inode_ra_pass2,
- 	.commit_pass2		= xlog_recover_inode_commit_pass2,
- };
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 5250d512a392..252e7f5cbd47 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -2059,6 +2059,11 @@ xlog_recover_commit_trans(
- 
- 		switch (pass) {
- 		case XLOG_RECOVER_PASS1:
-+			if (item->ri_ops->verify) {
-+				error = item->ri_ops->verify(log, item);
-+				if (error)
-+					break;
-+			}
- 			if (item->ri_ops->commit_pass1)
- 				error = item->ri_ops->commit_pass1(log, item);
- 			break;
--- 
-2.43.0
+I'll make this change for v3. But if you don't like this, please let me kno=
+w :)
 
+Thanks,
+Joanne
+
+> > > > > legacy path.  If we were emulating python I'd suggest iomap_iter_=
+yield
+> > > > > but this is C so we get to reinvent everything from scratch so wh=
+o
+> > > > > knows.
+> > > > >
+> > > > > --D
+> > > > >
+> >
