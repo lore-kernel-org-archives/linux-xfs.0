@@ -1,62 +1,62 @@
-Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D53C6390C8A
-	for <linux-xfs@vger.kernel.org>; Sun, 19 Jul 2026 11:30:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7004F37E2EE
+	for <linux-xfs@vger.kernel.org>; Sun, 19 Jul 2026 11:30:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784460631; cv=none; b=pgWvVjjwYybeR8nq0N5X2tIDxrYpsohaDHGa+NfC8mVy7nFF+Iqt3Bvb7xJ4fn1qTffRpVLi2aSnmjqKALyDnPzxoahNhCpP7GRAzIwL6e0lQ2EkqqCGUZ55w3EHPIqA3CAqbjYEE5+2fyMd/yNqXcLAobZipWMR1m1TfCsuyag=
+	t=1784460632; cv=none; b=GhzDg6OtcREraQASWIY2oj9YNcUkOj2ehmpyG6Ml2ShEsSk8zA2PNv0UkC636nThDtLUoPtgb7PnQIgxFhbKwSQQIqHIWNgWzB39IrAFB6yQ8zJskbVtcA2Ez3lU3p9JKhx1s5MwG5mZ/8GGcCoKjdeg6N9zzEwrbm6/Q5ywAuY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784460631; c=relaxed/simple;
-	bh=V1E4ldfQJDyP6ZfDcqT6Ru436JirUZfMBpHQx0g4yjI=;
+	s=arc-20240116; t=1784460632; c=relaxed/simple;
+	bh=4hQ/kd46tBOE54pT9yNBScCOaCV7TAEvDaGupEqi+l8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=EgLTNhmC04kct85PLMQdM+ArXKxm28Ywa+ILOGevQhn9dvL2rKeuxp4lEAUpaqwYbO7Kakx+4T3JsBgEtSMRDlC1+pWHsaCjDUDPyiFBmHDblG26jUpogi0OqvpyGElu7CkteibYhUAfpeT7TBX6PhKCCFzc8XbP/VA4sGk4Li8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=VmEJeIzQ; arc=none smtp.client-ip=209.85.214.182
+	 MIME-Version; b=tT7X/Ay8cI1sRkhpbXg9Q6ZQCQ1e+7aO/AWsdfXmlnA7DAJdHmiHLHf4e/DIwlpQeJCB9NBkujCJ0owNfkLWtuSPn0uJa6ah6m+Sp9SaGkGOcNtkNQplheoOBzOpTjnlOqGqkedm1x5fiaBfZsLOiQBBkmb3IMkTpCpvbMYPPpU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=sujxJqox; arc=none smtp.client-ip=209.85.214.181
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VmEJeIzQ"
-Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-2cc97653887so102034165ad.1
-        for <linux-xfs@vger.kernel.org>; Sun, 19 Jul 2026 04:30:27 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="sujxJqox"
+Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-2ccdb73f0e1so52023005ad.3
+        for <linux-xfs@vger.kernel.org>; Sun, 19 Jul 2026 04:30:28 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1784460626; x=1785065426; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1784460627; x=1785065427; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=N18ILb2wHDXeZG6Bb9nkkO9XUrYEdry3ahf/Z0caz74=;
-        b=VmEJeIzQJ77jAmOi29pP3HFG6nELdj+RZ2ej5xk0arn0XwzJvasZ75SpV+KCjXGL+j
-         2LtdY1Zz3exH+50LEkHMhx4DWL6AkHFoYeCSju0W0XTkQiOu8AaYo1rZIUb5BsS9CyS9
-         7+sn4EIDmyXJmA8bul4ZRBNMrrAkG2TTFtgAjd4JvnmmzYK8o2uH6CyNr60fpEraioKW
-         YzroAwsyzZnnINYPUlGgTMIoNzcstIqwvwGig8Y6Twd1QHUewhPqLif+R7bYNg2cwiNz
-         S77XNhHuUJJNT8dSXIaWGEGFusyKt4rOy3WzH6mMhOImg7/m4dMfzh2yE3CeqwDWamFc
-         2nRg==
+        bh=LfwjIb9K32R1YmqSTFqp7DJ6+dJC07T6UPOCV+XSImc=;
+        b=sujxJqoxkVE1efe3AvZZhaSciTdz98+357t+7rC4sFKecZ7F5tyuXzGdivO8VSxLBS
+         v+lOxmS20YFul7Wjh55D8tMXguAjy1bfiqVUIOH+2AkpDbHoWA1e0Btc1Sh6i9e5hZdX
+         lisU13Npr0Lta+KOTCeEMoVhwVgAtHwidvtzdv9w9snbAOe+bcRsYpF9nraqDnN5estG
+         bxV8jlidI8Lra+DQOzjGQDftI7pz9qc/63w7K++T8EVzrI40w3PThFkIYZTdmLvxwK14
+         I8oZmQVHrPcE0EHe9RgPhF9STOKQc0zfaH4nb7oXgX7DAMeGrrLqUnv6QvcgI2WhrTYA
+         2Rgw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784460626; x=1785065426;
+        d=1e100.net; s=20251104; t=1784460627; x=1785065427;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=N18ILb2wHDXeZG6Bb9nkkO9XUrYEdry3ahf/Z0caz74=;
-        b=CSrFy+vHMAapBIgAUjGu6dtMVgIR+Ket7HEOhuMZ0sqbM5HzGEKBP2VcgRUJIruNdG
-         2n1l0iR/6A1BzzWG5tcZ7r4fI77Gy3OqrrshH0EeHRUQxgU/ec44WuLPUhTy/a/50n/B
-         CuEAnEcIvk/GRXN6eb5XMQinz1MrWLkvUfy9YmR+Dcx9fTh9e/OytNUqSvGkoHo7ER6F
-         OC4c9pmhH56OfdurIIW8cc+Yu7KqeIec7gzJeOStR6580QstOJCceFGy/TD5WSU/Us8h
-         lKGY6XxjGqYxEl406/a/mc8skQUEJka2kSlNhGCOPkDYBCvRlWK1CrduNa/NzFo9jgr7
-         vtYw==
-X-Gm-Message-State: AOJu0Yw3Tu2rEoNyksSdYuwPE82lK5q4ZmZD9btHEXYsTxiORoY2nEp3
-	Jve8QQmxNBnNesYshOLuXYaHYqLhE1jlAfH3g6qaF8ngbVjgCcOQzAv7srqK8DqmWfo=
-X-Gm-Gg: AfdE7ckkgiT7Cg7XvOVIu/Yu40b7T2UtZYD8fnsLr1lDhBtX4XLu82At0XWIb2NPBOp
-	4sejboKgpAjA0p2hYvSYuyfT3KORpZbDEKbOzfqVdMC0OuXC6DQt0fudt0ysnfDU7qaPJqa7ls1
-	Eq+fdL+mHmtQOULN8p0CuKDRpPp2saehFrg1Yx4hMcJ/5MPuR1tLH77KeHnykirX+CQyZVyCUfN
-	xvHpMpVYvp1cK4klhg1p+YsVoWI5vG3OUl5ExGB3BHLJOkbFdDhhRrPhv2BxkHA5jmkhvRZt8Sr
-	pcqf8fBrlC9FIWQChXaCVtaJyXDp0KPgiKowY+GUO0Pu6+wmwTT+wTQEQe99EL3fbK9uywh2zIF
-	OZNqrUam62fJZEl64sHlYdY343PmgwH2N0W5XZbivUJqd0SqkJsjAnxKw3ji/b4FX5VD3Ii5ht9
-	M9UBe+IkKE2Xn25m2U4nSBpDaIsrMJjk6UD2I1a/M+X088n+q1MgwySdWIyA==
-X-Received: by 2002:a17:902:ccc8:b0:2c9:ae0b:61e3 with SMTP id d9443c01a7336-2cf3484b193mr90357755ad.2.1784460625780;
-        Sun, 19 Jul 2026 04:30:25 -0700 (PDT)
+        bh=LfwjIb9K32R1YmqSTFqp7DJ6+dJC07T6UPOCV+XSImc=;
+        b=DTbbHQ/4yERSgJ1T+961j9+jxx40gV2/fVqa/qKQMb7Am28gF9u6yltPLsQMLlLR0z
+         HEnSKSMFTA9Hu8IrlHKS5TaASAFz+GKpJ02/TV8RLWgQWMlAWl8G79yCrHGsgS/wpUXN
+         k5DIeCp4uQarpJkr4usni5iT8g9OhcVT7hwe6umuhyh/q2nBjkm93wZgcy84EqLFbHJ1
+         sV/6LAJ38ByJnqcl/XIHl9I42I5enmBjYN93pa+//EKRtRELgsWn9dp/CfBMPqsHQI0l
+         /Qdc43GwFD+KfdH2pKYWeOBlNFIdVntPscFxPBah61GPumVeNc0Nf42JlPIrkkKuSp8x
+         bDrg==
+X-Gm-Message-State: AOJu0YzHAsi5IBVid9N/Bg2qnG19X8LSAGgM+pXe653GNCu8a7g+XAaw
+	LvS4bvJyR2WJCDol/MiHjONI6a6X+x5A+dB4lXM14V2AkKrrqM6kTy2O
+X-Gm-Gg: AfdE7cmLMjZqTLJFGnnlDEvoBdHovLqVaU0i1mvdk5Y/gjjkZjO9V8w6zeqitmNY3Ds
+	PTD7FvC04/Zj5BmoEYIMByd1BhDW549X214+omqvq2851P9ZUUniKFHX9FYn/4QrOKq0qQe/qJW
+	3WrQuf3yXI5FOEezm4lR8JP6veBZwBZyjTBFuffm1sV9dYeaxGAU+s0Ms9LKd1Z3HKM8fAA3l99
+	ocG3GNXRcPRTKSwAdVxXuJKJirTFQRqr7pR9SAx7b+kuYQ/zNsYjelfOcrajBWjoswlhfwvCxh2
+	zrqof7Br52zQof6wbjUvFvAyrrAhJEnlhNnfv9WpUIWaD1YKiygXZyH2sGmKOO0sE97n1TKx2yU
+	Pa+OFjYiND+mLWUZjqCg0SWAtGpoSFogNGFpOwvrFdv7XSs2GxllCevVPhOdiheF+Gh9S0qKcKM
+	oDt8z+4SoLJgQNgx5xnv8IS/9aWO+QRbpEorzCcIDwUVi2e+3XXl15uwX7LQ==
+X-Received: by 2002:a17:902:e80e:b0:2cc:8267:31b5 with SMTP id d9443c01a7336-2cf3489a830mr103197365ad.19.1784460627295;
+        Sun, 19 Jul 2026 04:30:27 -0700 (PDT)
 Received: from fx.tailc0aff1.ts.net ([206.206.192.132])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-13ce2ddfb35sm22035031c88.14.2026.07.19.04.30.24
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-13ce2ddfb35sm22035031c88.14.2026.07.19.04.30.26
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 19 Jul 2026 04:30:24 -0700 (PDT)
+        Sun, 19 Jul 2026 04:30:26 -0700 (PDT)
 From: Weiming Shi <bestswngs@gmail.com>
 To: Carlos Maiolino <cem@kernel.org>,
 	"Darrick J . Wong" <djwong@kernel.org>
@@ -65,9 +65,9 @@ Cc: linux-xfs@vger.kernel.org,
 	xmei5@asu.edu,
 	Weiming Shi <bestswngs@gmail.com>,
 	Dave Chinner <dgc@kernel.org>
-Subject: [PATCH v3 2/3] xfs: verify recovered log items are complete before replaying them
-Date: Sun, 19 Jul 2026 04:29:22 -0700
-Message-ID: <20260719112923.226550-3-bestswngs@gmail.com>
+Subject: [PATCH v3 3/3] xfs: add an inode log item recovery verifier
+Date: Sun, 19 Jul 2026 04:29:23 -0700
+Message-ID: <20260719112923.226550-4-bestswngs@gmail.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260719112923.226550-1-bestswngs@gmail.com>
 References: <20260719112923.226550-1-bestswngs@gmail.com>
@@ -79,145 +79,154 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-xlog_recover_add_to_trans() assembles each recovered log item into an
-ri_buf[] of ri_total slots, where ri_total is the region count the item's
-format header declared, and counts the regions actually logged in ri_cnt.
-Nothing checked that ri_cnt reached ri_total once the item was fully
-decoded, so a crafted or truncated log can present an item whose header
-declares more regions than were logged. The trailing ri_buf[] slots stay
-NULL, and the reorder, readahead and replay code then dereference them.
+The previous patches let each log item type validate its own formatted
+structures through an xlog_recover_item_ops->verify method, run once the
+item is fully decoded. Add the first verifier, for inode items.
 
-For example, an XFS_LI_INODE item declaring two regions but logging only
-the format region leaves ri_buf[1] NULL, and mount-time recovery faults
-dereferencing it as the log dinode:
+Log recovery previously validated a recovered inode item's structures
+inside the pass2 decode and replay code, one open-coded check at a time,
+which was hard to read and to audit for what was still unchecked.
+xlog_recover_inode_verify() instead checks in one place that the core and
+each fork region implied by ilf_fields is declared, that the log dinode is
+present and large enough, that its version matches the mount, that
+di_forkoff is within the literal area, and that the verbatim-copied fork
+regions fit their destination fork.
 
- KASAN: null-ptr-deref in range [0x0000000000000000-0x0000000000000007]
- RIP: xlog_recover_inode_commit_pass2 (fs/xfs/xfs_inode_item_recover.c:370)
- Call Trace:
-  xlog_recover_items_pass2 (fs/xfs/xfs_log_recover.c:2011)
-  xlog_recover_commit_trans (fs/xfs/xfs_log_recover.c:2078)
-  xlog_recovery_process_trans (fs/xfs/xfs_log_recover.c:2328)
-  xlog_recover_process_data (fs/xfs/xfs_log_recover.c:2502)
-  xlog_recover (fs/xfs/xfs_log_recover.c:3486)
-  xfs_log_mount (fs/xfs/xfs_log.c:667)
-  xfs_mountfs (fs/xfs/xfs_mount.c:1039)
-  xfs_fs_fill_super (fs/xfs/xfs_super.c:1965)
-  get_tree_bdev_flags (fs/super.c:1680)
-  __x64_sys_mount (fs/namespace.c:4433)
+Because the log dinode checks now run before pass2, drop the equivalent
+open-coded checks (the log dinode magic and the dead di_forkoff bound)
+from xlog_recover_inode_commit_pass2(). The checks that need the on-disk
+inode buffer (its magic, the LSN and di_flushiter replay-ordering
+decisions, the di_mode/di_format consistency, and the final
+xfs_dinode_verify()) cannot be hoisted and stay in pass2.
 
-An item is fully decoded once every region its header declared has
-arrived. That happens when the next item's header starts (the current
-item is closed out in xlog_recover_add_to_trans()) or, for the last item
-in the transaction, when the commit record arrives
-(xlog_recover_commit_trans()). Verify the item at both of those points
-with xlog_recover_verify_item(): confirm it received all its declared
-regions, and run the item type's verifier if one is provided. Item types
-opt in with a new xlog_recover_item_ops->verify method; the first, for
-inode items, is added in the next patch.
+This covers the self-contained log dinode structure. The btree-root fork
+formats are converted from a larger in-core form on replay and their
+record count is not bounded here yet; clamping xfs_bmbt_to_bmdr() and the
+rt btree converters against the destination fork is left as follow-up.
 
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-Reported-by: Xiang Mei <xmei5@asu.edu>
 Suggested-by: Dave Chinner <dgc@kernel.org>
 Assisted-by: Claude:claude-opus-4-8
 Signed-off-by: Weiming Shi <bestswngs@gmail.com>
 ---
- fs/xfs/libxfs/xfs_log_recover.h |  9 ++++++++
- fs/xfs/xfs_log_recover.c        | 41 ++++++++++++++++++++++++++++++++-
- 2 files changed, 49 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_inode_item_recover.c | 87 +++++++++++++++++++++++++++------
+ 1 file changed, 71 insertions(+), 16 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_log_recover.h b/fs/xfs/libxfs/xfs_log_recover.h
-index 77f51afcbd9c..c7c93c65f60a 100644
---- a/fs/xfs/libxfs/xfs_log_recover.h
-+++ b/fs/xfs/libxfs/xfs_log_recover.h
-@@ -41,6 +41,15 @@ struct xlog_recover_item_ops {
- 	 */
- 	enum xlog_recover_reorder (*reorder)(struct xlog_recover_item *item);
+diff --git a/fs/xfs/xfs_inode_item_recover.c b/fs/xfs/xfs_inode_item_recover.c
+index 6b6ac92964d0..8308f064cecc 100644
+--- a/fs/xfs/xfs_inode_item_recover.c
++++ b/fs/xfs/xfs_inode_item_recover.c
+@@ -367,13 +367,6 @@ xlog_recover_inode_commit_pass2(
+ 		goto out_release;
+ 	}
+ 	ldip = item->ri_buf[1].iov_base;
+-	if (XFS_IS_CORRUPT(mp, ldip->di_magic != XFS_DINODE_MAGIC)) {
+-		xfs_alert(mp,
+-			"%s: Bad inode log record, rec ptr "PTR_FMT", ino %lld",
+-			__func__, item, in_f->ilf_ino);
+-		error = -EFSCORRUPTED;
+-		goto out_release;
+-	}
  
-+	/*
-+	 * Comprehensively validate a fully decoded item's formatted log
-+	 * structures, if provided: the region count and sizes the item type
-+	 * requires, and any header fields that can be checked without the
-+	 * on-disk buffer.  Called once the item is complete, before it is
-+	 * queued for replay.  Returning an error aborts recovery.
-+	 */
-+	int (*verify)(struct xlog *log, struct xlog_recover_item *item);
-+
- 	/* Start readahead for pass2, if provided. */
- 	void (*ra_pass2)(struct xlog *log, struct xlog_recover_item *item);
+ 	/*
+ 	 * If the inode has an LSN in it, recover the inode only if the on-disk
+@@ -462,15 +455,6 @@ xlog_recover_inode_commit_pass2(
+ 	if (error)
+ 		goto out_release;
  
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 41fa029054d3..956599b73b16 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -1997,6 +1997,9 @@ xlog_recover_items_pass2(
+-	if (unlikely(ldip->di_forkoff > mp->m_sb.sb_inodesize)) {
+-		XFS_CORRUPTION_ERROR("Bad log dinode fork offset",
+-				XFS_ERRLEVEL_LOW, mp, ldip, sizeof(*ldip));
+-		xfs_alert(mp,
+-			"Bad inode 0x%llx, di_forkoff 0x%x",
+-			in_f->ilf_ino, ldip->di_forkoff);
+-		error = -EFSCORRUPTED;
+-		goto out_release;
+-	}
+ 	isize = xfs_log_dinode_size(mp);
+ 	if (unlikely(item->ri_buf[1].iov_len > isize)) {
+ 		XFS_CORRUPTION_ERROR("Bad log dinode size", XFS_ERRLEVEL_LOW,
+@@ -597,10 +581,81 @@ xlog_recover_inode_commit_pass2(
  	return error;
  }
  
-+STATIC int xlog_recover_verify_item(struct xlog *log,
-+		struct xlog_recover_item *item);
++/*
++ * Validate the log dinode and fork regions of a decoded inode item.  Checks
++ * that need the on-disk inode buffer stay in xlog_recover_inode_commit_pass2().
++ */
++STATIC int
++xlog_recover_inode_verify(
++	struct xlog			*log,
++	struct xlog_recover_item	*item)
++{
++	struct xfs_mount		*mp = log->l_mp;
++	struct xfs_inode_log_format	*in_f;
++	struct xfs_inode_log_format	in_f_buf;
++	struct xfs_log_dinode		*ldip;
++	unsigned int			litino = XFS_LITINO(mp);
++	unsigned int			dsize, asize;
++	int				attr_index;
++	int				error;
 +
- /*
-  * Perform the transaction.
-  *
-@@ -2021,6 +2024,18 @@ xlog_recover_commit_trans(
- 
- 	hlist_del_init(&trans->r_list);
- 
-+	/*
-+	 * The final item is completed by the commit record rather than by a
-+	 * following item, so no decode step has verified it yet; do so now.
-+	 */
-+	if (!list_empty(&trans->r_itemq)) {
-+		item = list_entry(trans->r_itemq.prev,
-+				  struct xlog_recover_item, ri_list);
-+		error = xlog_recover_verify_item(log, item);
++	if (item->ri_buf[0].iov_len == sizeof(struct xfs_inode_log_format)) {
++		in_f = item->ri_buf[0].iov_base;
++	} else {
++		in_f = &in_f_buf;
++		error = xfs_inode_item_format_convert(&item->ri_buf[0], in_f);
 +		if (error)
 +			return error;
 +	}
 +
- 	xlog_recover_reorder_trans(log, trans, pass);
- 
- 	list_for_each_entry_safe(item, next, &trans->r_itemq, ri_list) {
-@@ -2164,6 +2179,25 @@ xlog_recover_verify_item_header(
- 	return 0;
- }
- 
-+/*
-+ * A fully decoded item has received all its declared regions.  Check it is
-+ * complete and run the type's verifier, if any, before it is queued for
-+ * replay.
-+ */
-+STATIC int
-+xlog_recover_verify_item(
-+	struct xlog			*log,
-+	struct xlog_recover_item	*item)
-+{
-+	if (XFS_IS_CORRUPT(log->l_mp,
-+			item->ri_total == 0 || item->ri_cnt != item->ri_total))
++	/* The inode core is always logged as the log dinode in ri_buf[1]. */
++	if (XFS_IS_CORRUPT(mp, in_f->ilf_size < 2) ||
++	    XFS_IS_CORRUPT(mp,
++			   item->ri_buf[1].iov_len < xfs_log_dinode_size(mp)))
 +		return -EFSCORRUPTED;
 +
-+	if (item->ri_ops->verify)
-+		return item->ri_ops->verify(log, item);
++	ldip = item->ri_buf[1].iov_base;
++	if (XFS_IS_CORRUPT(mp, ldip->di_magic != XFS_DINODE_MAGIC) ||
++	    XFS_IS_CORRUPT(mp, !xfs_dinode_good_version(mp, ldip->di_version)) ||
++	    XFS_IS_CORRUPT(mp, ldip->di_forkoff >= (litino >> 3)))
++		return -EFSCORRUPTED;
++
++	if (ldip->di_forkoff) {
++		dsize = ldip->di_forkoff << 3;
++		asize = litino - (ldip->di_forkoff << 3);
++	} else {
++		dsize = litino;
++		asize = 0;
++	}
++
++	/*
++	 * Btree-root forks are logged in a larger in-core form and converted on
++	 * replay, so their region is not bounded by the on-disk fork size here.
++	 */
++	if (in_f->ilf_fields & XFS_ILOG_DFORK) {
++		if (XFS_IS_CORRUPT(mp, in_f->ilf_size < 3))
++			return -EFSCORRUPTED;
++		if ((in_f->ilf_fields & XFS_ILOG_DFORK) != XFS_ILOG_DBROOT &&
++		    XFS_IS_CORRUPT(mp, item->ri_buf[2].iov_len > dsize))
++			return -EFSCORRUPTED;
++	}
++	if (in_f->ilf_fields & XFS_ILOG_AFORK) {
++		attr_index = (in_f->ilf_fields & XFS_ILOG_DFORK) ? 3 : 2;
++		if (XFS_IS_CORRUPT(mp, in_f->ilf_size < attr_index + 1))
++			return -EFSCORRUPTED;
++		if ((in_f->ilf_fields & XFS_ILOG_AFORK) != XFS_ILOG_ABROOT &&
++		    XFS_IS_CORRUPT(mp, item->ri_buf[attr_index].iov_len > asize))
++			return -EFSCORRUPTED;
++	}
++
 +	return 0;
 +}
 +
- /*
-  * The next region to add is the start of a new region.  It could be
-  * a whole region or it could be the first part of a new region.  Because
-@@ -2226,7 +2260,12 @@ xlog_recover_add_to_trans(
- 			  ri_list);
- 	if (item->ri_total != 0 &&
- 	     item->ri_total == item->ri_cnt) {
--		/* tail item is in use, get a new one */
-+		/* the tail item is complete; verify it before starting a new one */
-+		error = xlog_recover_verify_item(log, item);
-+		if (error) {
-+			kvfree(ptr);
-+			return error;
-+		}
- 		xlog_recover_add_item(&trans->r_itemq);
- 		item = list_entry(trans->r_itemq.prev,
- 					struct xlog_recover_item, ri_list);
+ const struct xlog_recover_item_ops xlog_inode_item_ops = {
+ 	.item_type		= XFS_LI_INODE,
+ 	.max_regions		= 4,
+ 	.min_regions		= 2,
++	.verify			= xlog_recover_inode_verify,
+ 	.ra_pass2		= xlog_recover_inode_ra_pass2,
+ 	.commit_pass2		= xlog_recover_inode_commit_pass2,
+ };
 -- 
 2.43.0
 
