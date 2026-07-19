@@ -1,43 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63CF318B0F;
-	Sun, 19 Jul 2026 19:31:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7817618B0F;
+	Sun, 19 Jul 2026 19:31:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784489476; cv=none; b=pHwrJ4dlzySaFCAdblIZrnWFJKBTAuEVi8/tNnOMm661Shlzyq1Vy6yjNuk/7CukFrMSnz2zLrLBfXyQM3RuM85jI2JUqva3lrpOFiaeF0RkNy5qMR9x3RKZQb4zy4DOXshpl/tZKUy//1HbIP8j9MmOS1d5sB5oRFkIbfSAMEI=
+	t=1784489513; cv=none; b=n6BcZVuvL6+sBZ+Air6x66ewCl5BZ+TDuxsOtk/Q7D6stN3211xAFRVNge5GwRqyehyKeiF//mOnnAdhDkhXUZwdMb9Oy3SnmqRfJ7Fb0O3VgrzPyBwkkUy/F6r5Xuo+gPgLmVRO/Trvmek6TMco8WMVEuNM6PhZRuVDAzHiyUI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784489476; c=relaxed/simple;
-	bh=fYmxvvHdweN0lebZsyJ0KedE3CL+WhIq1pPF5OOc8PM=;
+	s=arc-20240116; t=1784489513; c=relaxed/simple;
+	bh=Ug4PRMADdQnkdgyd86RUV6DvkIlLZZK6zv4EvR4gvOU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DTMPk6lWn21yxhJLg77OtA19KD9I5R0wQeZ80i9XnZJpkvkMv0VBQE+vKXjrKP+LuYiNWJhPR+xKPrzA7gZZQYntnVVTaS9tam6j1g9HHRj/Famo0UmNM1+JJcmj+9Ve7a+Cg69GUbHvR8UhuuNIAn/xQHy+rsv/nPCZnJ37PK4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d1KP40UZ; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=OYYyuAUs0bzHuwud+HvElqQbb5I2awWeNRCChXnXsWp+9zWZWXn/+B0E/J/hE2idCIBZAJLf9AICBOA6r7vs6YGrvT3C+S31c+73MYC6IMWxjkF8OvVir/J0xZXpA1GPTamDs4gH5PA/mgLzE6XuA3ikTXTfRh8xkPjLFVvc3rQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dkoMre0y; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d1KP40UZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 18E761F000E9;
-	Sun, 19 Jul 2026 19:31:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dkoMre0y"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3FD101F000E9;
+	Sun, 19 Jul 2026 19:31:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784489475;
-	bh=E19OCiP3Y58C5dTcmMSveUT7kFfCyIWK6f286JxhVeo=;
+	s=k20260515; t=1784489512;
+	bh=e+RZqZpeSv4JPEXdsCwBuoOWqk76eZQsPlARLjkflD8=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=d1KP40UZqURY9ANd2NvEw/zwopekVYEpazUyA/npJMrkqD8cJocGcV+HZprfCVmbl
-	 zGi5lLV0ZWkVZNf+rNNKIu/sIgkfdNZ6xtd3x0f+1MwZbN/lAGok57FgJoeuc6VhSG
-	 gyhUw4Dyu+Kh5iM4vjv0OogTxgDiFc2uVZCt+NPyZVi/MynA7GSefHruLn5gfgX29v
-	 uROczOun25rGQRgcKzgKZeoHD9f5gVAvYMtT69uFqkgKtAArwktZYa20x3yjc40JQm
-	 kaSQBqH07JlYfByI5md10j4sTRvCI4wOMdy51UNGp569mZ2HlutAuMAszYmDEghXcz
-	 bOzCugvbYXCEA==
-Date: Mon, 20 Jul 2026 03:31:09 +0800
+	b=dkoMre0yLqk5NHudQ8rVkF5FT2/RBu33+RB2IwcXcHEuQxbNeO7+CipgmNxN3k8QV
+	 wiPlEuQN/WRpvCovIk1k5Ai4EOyaUWztjzsFDAhtDaRZh6ba+hUCBASC3t3yAqz0vO
+	 3VH1GJv+HWcaxH4/x65OG+a2CWJtCxGJLHCojwdNjcFeXzwFN+wCEYD2mfDOod9b2k
+	 2pXPC8Pre0zxAB/FfjgZhX5y7QUzK2d9EZUFrdTvP55bfRCoAnTTukQfSni0nmU/En
+	 KRu8prL66Bsw6fPpzxYE+uEYfj/6sGIVR8FVevd2bfSQ0OkyC0aLaaKzf0RvqSD7ma
+	 BXkue6IoTpYxA==
+Date: Mon, 20 Jul 2026 03:31:47 +0800
 From: Zorro Lang <zlang@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: "Darrick J. Wong" <djwong@kernel.org>, fstests@vger.kernel.org, 
 	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/3] xfs/656: rearrange directio pread/pwrite for zoned
- filesystems
-Message-ID: <al0l5_nNes-8HM-l@zlang-mailbox>
+Subject: Re: [PATCH 2/3] xfs/65[56]: don't unset SCRATCH_RTDEV here
+Message-ID: <al0mCn2FhFGuiCGa@zlang-mailbox>
 Mail-Followup-To: Christoph Hellwig <hch@lst.de>, 
 	"Darrick J. Wong" <djwong@kernel.org>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 References: <20260710052747.1841555-1-hch@lst.de>
- <20260710052747.1841555-2-hch@lst.de>
+ <20260710052747.1841555-3-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,75 +45,57 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260710052747.1841555-2-hch@lst.de>
+In-Reply-To: <20260710052747.1841555-3-hch@lst.de>
 
-On Fri, Jul 10, 2026 at 07:27:33AM +0200, Christoph Hellwig wrote:
+On Fri, Jul 10, 2026 at 07:27:34AM +0200, Christoph Hellwig wrote:
 > From: "Darrick J. Wong" <djwong@kernel.org>
 > 
-> On zoned filesystems, a write failure shuts down the filesystem, which
-> makes this test fail with:
-> 
->  --- /run/fstests/bin/tests/xfs/656.out	2026-03-13 16:19:08.152939212 -0700
->  +++ /run/fstests/logs/xfs/656.out.bad	2026-06-30 18:16:43.847849604 -0700
->  @@ -1,10 +1,9 @@
->   QA output created by 656
->   Format and mount
->   pwrite: Input/output error
->  -pread: Input/output error
->  +stat: Input/output error
->   pread: Input/output error
->   fsync: Input/output error
->   VICTIM pos NUM len NUM: directio_write: Input/output error
->  -VICTIM pos NUM len NUM: directio_read: Input/output error
->   VICTIM pos NUM len NUM: buffered_read: Input/output error
->   VICTIM pos NUM len NUM: buffered_write: Input/output error
-> 
-> Reorder the directio pread and pwrite to avoid this unnecessary failure.
-> Note that we cycle the mount between the direct and buffered io tests,
-> which is why we only need to fix the directio test.
+> Both of these tests claim that they have to unset SCRATCH_RTDEV to avoid
+> formatting failures due to the rt bitmap consuming all the space in the
+> "small" data device.  However, the format doesn't constrain the size of
+> the data device, so the justification doesn't apply.  Remove the whole
+> thing.
 > 
 > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
 
-Looks good to me,
 Reviewed-by: Zorro Lang <zlang@kernel.org>
 
->  tests/xfs/656     | 2 +-
->  tests/xfs/656.out | 4 ++--
->  2 files changed, 3 insertions(+), 3 deletions(-)
+>  tests/xfs/655 | 4 ----
+>  tests/xfs/656 | 4 ----
+>  2 files changed, 8 deletions(-)
 > 
+> diff --git a/tests/xfs/655 b/tests/xfs/655
+> index a4162d70b321..9d09cc000531 100755
+> --- a/tests/xfs/655
+> +++ b/tests/xfs/655
+> @@ -24,10 +24,6 @@ _require_scratch_nocheck
+>  _require_scratch_xfs_crc # can't detect minor corruption w/o crc
+>  _require_xfs_io_command healthmon
+>  
+> -# Disable the scratch rt device to avoid test failures relating to the rt
+> -# bitmap consuming all the free space in our small data device.
+> -unset SCRATCH_RTDEV
+> -
+>  echo "Format and mount"
+>  _scratch_mkfs -d agcount=1 | _filter_mkfs 2> $tmp.mkfs >> $seqres.full
+>  . $tmp.mkfs
 > diff --git a/tests/xfs/656 b/tests/xfs/656
-> index 3830d7193fcb..c01276eb384b 100755
+> index c01276eb384b..5114a6c24003 100755
 > --- a/tests/xfs/656
 > +++ b/tests/xfs/656
-> @@ -66,8 +66,8 @@ $XFS_IO_PROG -c 'healthmon -c -v' $SCRATCH_MNT >> $tmp.healthmon &
->  healer_pid=$!
->  sleep 1	# wait for program to start up
->  _dmerror_load_error_table
-> -$XFS_IO_PROG -d -c 'pwrite -b 256k 12k 16k' $testfile >> $seqres.full
->  $XFS_IO_PROG -d -c 'pread -b 256k 10g 16k' $testfile >> $seqres.full
-> +$XFS_IO_PROG -d -c 'pwrite -b 256k 12k 16k' $testfile >> $seqres.full
->  _dmerror_load_working_table
+> @@ -40,10 +40,6 @@ filter_healer_errors() {
+>  		uniq
+>  }
 >  
->  _dmerror_unmount
-> diff --git a/tests/xfs/656.out b/tests/xfs/656.out
-> index 83b2f5948a77..4d6633060acd 100644
-> --- a/tests/xfs/656.out
-> +++ b/tests/xfs/656.out
-> @@ -1,10 +1,10 @@
->  QA output created by 656
->  Format and mount
-> -pwrite: Input/output error
->  pread: Input/output error
-> +pwrite: Input/output error
->  pread: Input/output error
->  fsync: Input/output error
-> -VICTIM pos NUM len NUM: directio_write: Input/output error
->  VICTIM pos NUM len NUM: directio_read: Input/output error
-> +VICTIM pos NUM len NUM: directio_write: Input/output error
->  VICTIM pos NUM len NUM: buffered_read: Input/output error
->  VICTIM pos NUM len NUM: buffered_write: Input/output error
+> -# Disable the scratch rt device to avoid test failures relating to the rt
+> -# bitmap consuming all the free space in our small data device.
+> -unset SCRATCH_RTDEV
+> -
+>  echo "Format and mount"
+>  _scratch_mkfs > $seqres.full 2>&1
+>  _dmerror_init no_log
 > -- 
 > 2.53.0
 > 
