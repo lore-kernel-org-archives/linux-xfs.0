@@ -1,42 +1,32 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25B1A3CB55F;
-	Mon, 20 Jul 2026 08:00:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35AEB396561;
+	Mon, 20 Jul 2026 08:16:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784534406; cv=none; b=tueaiMZzHNblCY7U/Z+2D6sHmjKovV0kn/vKyTa0GXpXbGtN9Nlx92q6XATc3HdPM4S7rQVZjtpxLS+MB8y9b8Lwt+74JeYJXUI7WOlNd+hkyqol5Klr7ylGrgBB+/t8qFogl2cDGCiUcis7FXnb5LVXHxnOAq0V8yWyke0ly30=
+	t=1784535413; cv=none; b=QGCOdqlO97B/OMtPEQNIdGg10MIK4qkVC5MFmaJaa0oWkS3OY84zgSVwHUpKcTOzfNbmD/Ja2vroY9UDuUnoG2vKtdNvxnQZNRvMFAicHHrcHHepP6RyTOqX79WXM0LBiP64UIDq3JvJrGeMWMN6/llhDpwxJ/qg8urndRrM6Gs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784534406; c=relaxed/simple;
-	bh=WvvFuA+VaRjOMPxnDzpjfzaecfdBhxXXS52lLscJPXU=;
+	s=arc-20240116; t=1784535413; c=relaxed/simple;
+	bh=p+58p6R7lvw1RkKuaAs/qZ9HWVB4+nnBx1BugqTmG24=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qQLuB2w4jkjG35DGQwej9yg1C08HDfhCOsgrKfea2XfwQa+ulKyKtYem8VDzESGe3rB7ittGVSvYLaSY5B8SVwFxzUsoXnupJ1xBcFeAwWCZSjofrw/jXeqT+t7X+MtBU2RpQWkf8hFoi1SZXIqLEmra9nyCxq6DDqRKuDGh118=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=XHPhbCk4; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="XHPhbCk4"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=l4jJC6ImrAi+dWTM73+51sE3H9Id5bZPLlTG0BgQIXM=; b=XHPhbCk4RdxvYRsesPdp/uWkst
-	pbOqeU5/w/sg5rI9hh9KjlKqU3nCl6FqgWQPEoy5SGgKpAbayN3RRmuIgs2x6qzbm51c1ySxtQ6sI
-	rncMMjAtrpaHW+jvp8olWwQHI8axY2G1/xeHyOjLT3HxiWHG3AvJYkqpw8i3ApDAE1UBbAAutq4Gd
-	xm9lA+xiBo49Fibu6QlGiHcj1qhQmSBtHQHUJ5zOvvE4nq2riqZ7E7XvFZGD+agCYII21NpGBq5jR
-	EtI9GDX9DH45P4KY5+CG6a9P7YqXveaEX8QCEsN1W7c/1PPqJdFZZptDza8XODuZn/4qJVrimYhnL
-	Gq9zn2Pg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wliuv-000000069QW-1iHd;
-	Mon, 20 Jul 2026 08:00:01 +0000
-Date: Mon, 20 Jul 2026 01:00:01 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Yun Zhou <yun.zhou@windriver.com>
-Cc: cem@kernel.org, djwong@kernel.org, hch@infradead.org,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] xfs: handle NULL b_addr in xfs_buf_free
-Message-ID: <al3VgW1ijbMf2P2k@infradead.org>
-References: <20260719151124.3514077-1-yun.zhou@windriver.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=rL1U53SIYGgs1VyPpTObt4U5GdBbdbLJctioQEkMDS1NNJknrVU5mu4uVdg9BRFw+TA9/zJp9ppgFtkwEM8citvAzX0LCFn38BXwhQrpyqk9nPGRW1cEvyg5uZ8LpPiPxpMQZbAultVeU69ZfIr8h2wD8fN3ROxHeZSDdhCDz9I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id DD19268BEB; Mon, 20 Jul 2026 10:16:47 +0200 (CEST)
+Date: Mon, 20 Jul 2026 10:16:47 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Joanne Koong <joannelkoong@gmail.com>, brauner@kernel.org, hch@lst.de,
+	willy@infradead.org, hsiangkao@linux.alibaba.com,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	Carlos Maiolino <cem@kernel.org>,
+	open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 02/18] xfs: convert iomap ops to ->iomap_next()
+Message-ID: <20260720081647.GB18764@lst.de>
+References: <20260701000949.1666714-1-joannelkoong@gmail.com> <20260701000949.1666714-3-joannelkoong@gmail.com> <20260702164339.GI9392@frogsfrogsfrogs> <CAJnrk1ZRQaFseAnz3zm31oR3KmQWje5HDJjhNbAQSAQyK9_PMA@mail.gmail.com> <CAJnrk1bj4pLpAzLhehrbDJuKWa=WMq-3XOAm9dhsEVDF9WCBPQ@mail.gmail.com> <CAJnrk1YkAEUhjw6mNEx70ojN7UMQT__oHn5m1Ng2Lz7FoLRhrA@mail.gmail.com> <20260717175552.GT7380@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,16 +35,19 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260719151124.3514077-1-yun.zhou@windriver.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20260717175552.GT7380@frogsfrogsfrogs>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Sun, Jul 19, 2026 at 11:11:24PM +0800, Yun Zhou wrote:
-> When xfs_buf_alloc_backing_mem() fails, xfs_buf_free() is called with
-> bp->b_addr still NULL.  The code falls through to the folio_put path
-> which calls virt_to_folio(NULL), dereferencing an invalid address and
-> causing a kernel crash.
+On Fri, Jul 17, 2026 at 10:55:52AM -0700, Darrick J. Wong wrote:
+> > Going back to this... "iomap_iter_fn iomap_iter" doesn't feel quite
+> > right. I think there's too much naming collision with iomap_iter() and
+> > struct iomap_iter, and I like how in general ->next() matches the
+> > orthodox naming scheme for advancing an iterator. I think
+> > "iomap_iter_next_fn next" would be the best of both worlds - I'll
+> > change it to this for v3. But if you don't agree with this, please let
+> > me know.
+> 
+> Fine by me :)
 
-Looks good:
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Same here.
 
