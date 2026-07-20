@@ -1,90 +1,144 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f50.google.com (mail-wr1-f50.google.com [209.85.221.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EABDF3101A9
-	for <linux-xfs@vger.kernel.org>; Mon, 20 Jul 2026 09:46:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5803539A05F
+	for <linux-xfs@vger.kernel.org>; Mon, 20 Jul 2026 10:37:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784540795; cv=none; b=kpjBQTzv6EBSxV55MaT2jqnv2UxEyd7brD8qdDtcJXkK8mMMMH1dj4i2zaPYYCng58BGS4RaA0aPaqPk/sI+6SOaUJ0OGyLKPkpeK26fvta4j1AVCfhtHp0KZpzKHNJK3bWmR0FfADh655Q4WSJ1FNgwlUq/QbYaaiKM/9tzu6k=
+	t=1784543850; cv=none; b=euijcmk/jJuF1FZ6br61BxmjMZ0Kbk5V5VaeJJZKBWzlylIkdr2p3CAgOE5tuNY8u39J1o8V3q3DzLRt19YQrjFJ9OtMmVRC99/78DtlBf7q0muh74V0qChLPJubcjMzhtOVgFOe0slmEDwVN6CQIfQo0Fgxmec27w2Jq8wqIjw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784540795; c=relaxed/simple;
-	bh=r9fWK4QI6Mw24W8iCByGV/7KG9oRqb3p4L9xm238W0k=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=tTnJ1O8E7n2SqWJlAxfLZNifIceRFpSjhQKum6pOxQE9501sxeyErAISb3dKQ+j1NANfE3urje7Uzcdl5Blu5wtOYJGZfA+IK3c3Fg5RZCEss9KihJLnOoFd5z/4zsnhHHlh7rZV7kvF1Z9SAF/ObjeojcbwGlSsU706mF+C6F4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=DPq7X8Qw; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1784543850; c=relaxed/simple;
+	bh=HsXP1SOgYQKGRu4YP/BzK3zeihpC3V59WcJ9CVZ0944=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=YnuvSzkqGUdRs00JeV7JB28zY1/7Yu745m4CVN+BVl1/AVW6IcdFMa8e2I2A8zvBjE0b2cGHuhTkaeDj70HH2klecn/8eipypDTNc/eXq7eoYX/AmNinRzyAIv1gupyMe4fJQuOWzlnrDftB8efeumg7q5g+mrGZH1+Bk42AMBs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=readmodwrite.com; spf=none smtp.mailfrom=readmodwrite.com; dkim=pass (2048-bit key) header.d=readmodwrite-com.20251104.gappssmtp.com header.i=@readmodwrite-com.20251104.gappssmtp.com header.b=v/LWc+TF; arc=none smtp.client-ip=209.85.221.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=readmodwrite.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=readmodwrite.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="DPq7X8Qw"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=1DmqkQTDcZ8SYM0LOsXBdPdSBCIw3F9cFX4KvcaYN40=; b=DPq7X8QwQFpt3fLK5351cXOqjv
-	M4LbEKk6pb+CTtioi+xfsFBeh9MZuToc0rmx9VTKPzCYOhXv3EBkRXJ4wx2ytMg+CCEL0hXNt7eFX
-	iAH7JHSU+bgzHOa1ViW8C4L/w3cmkcA2NykHXu9gy62i+ncyOjJB9hXySvtjpaRlIVo8VR5mD/HMq
-	gjss72syCTUqVQ80PsWhhtN3q0IIl0lHBlizAxR4uRjQybpdwtFfFqCR3jaIdw2nsd7h5jbpbUyNE
-	9st8QzUEfaSqDMG8zjM1nF6Z7E3sEUfTro/MdizA0H8G5eKB9WNdUf6aOfRzpJj3md3mA2a3hQ4/8
-	h0L9aKDA==;
-Received: from 2a02-8389-2301-9f00-b29a-36e9-8c1c-0994.cable.dynamic.v6.surfer.at ([2a02:8389:2301:9f00:b29a:36e9:8c1c:994] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wlka1-00000006MjG-0m4o;
-	Mon, 20 Jul 2026 09:46:33 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH 8/8] xfs: add lock annotations to xfs_ail_delete*
-Date: Mon, 20 Jul 2026 11:45:45 +0200
-Message-ID: <20260720094609.2191633-9-hch@lst.de>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260720094609.2191633-1-hch@lst.de>
-References: <20260720094609.2191633-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=readmodwrite-com.20251104.gappssmtp.com header.i=@readmodwrite-com.20251104.gappssmtp.com header.b="v/LWc+TF"
+Received: by mail-wr1-f50.google.com with SMTP id ffacd0b85a97d-47f7444576cso701916f8f.0
+        for <linux-xfs@vger.kernel.org>; Mon, 20 Jul 2026 03:37:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=readmodwrite-com.20251104.gappssmtp.com; s=20251104; t=1784543847; x=1785148647; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=9Ob60SlvDtMBq7kgwRG6216brqjU5lsAVw+EombhPOE=;
+        b=v/LWc+TF3dHJ5iNfM/KrMQkku/7xqwBPwOgdQ07W+RXS7DvgyTAYPUW/6mcx1GsuRc
+         +04cRzEaTxt8IOYhOlzu52hplodcbhjNqjoyb5QUCw4SgCrLh8GGQYLtOet9e36MzwXo
+         BMjU0ZFBYaJm3miVqg/EOen+BxCrRVYdOWI20w51zm4UPrASqt2uaw+a+ZybdFM7iTap
+         5Kxw29yPrnN+pzi8pHWa/VRTE6FfxIePhXnwEFI5xuo94mJ3e/xdLlPfXLuXi86oxwuu
+         U4ugJ9zHreczmTh+UYyb4BiNIpK5u1RhleYhoeH3bv5yyXbuiITP5DtTtacybTg+IJw3
+         DSzw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784543847; x=1785148647;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=9Ob60SlvDtMBq7kgwRG6216brqjU5lsAVw+EombhPOE=;
+        b=QAlZgDwWJKhiWarKfuIo57oubDR2xCG9h9lD4R6F8A78zO/24qM8KQC8N9eJ+LgC75
+         Opo/04MPjXAxBXLEk1Zk80CWcs5WJN7snC8e6om0LMoOMFRtt7dOWnmwuoXOL3LGq4vJ
+         QHIyTd61MHpDY65zryyxu6fyb+SwQkHYOWobycU4rs3He4JKSCbXjXAdYc6iOAyr8BIY
+         lI8Mpa0NvTHkjijgqLAGXDGkUlrbxGpgBKDO/pViApWQWwwAf42l5GXtFgXWivEJEpWa
+         A/3Eap1lgGd1GXNRK1IyXgCS8gK5ICssQ5KNUqE1P0/kkARrnX6i70yR3CW3tqvlCF2J
+         as2w==
+X-Gm-Message-State: AOJu0Yyp6FapZqIqX99uahBYGNrqC+XvKJ6ZLrsjjQnfsTJNYQP6RkOC
+	/nFH/u5zAAS+X0qBBeTOSo0qjHr5qviQi5m1I9LSCQfzdRmPLqFYFmI1/A31neLQ1lc=
+X-Gm-Gg: AR+sD13w1aBFziM6qmHWUkSyT+qXEUnE1W5TERSN0gxNCoRh2/uXUt2tHSkTrC56oHv
+	CmuggAmVdykXV83UvkKI19vsK+vYtTK1VDJ/wOSiyK0HbMxo8jF4UnQZGAqM8Bu/JycoOkdJVSK
+	PvunO46+KWgQlCjiub/FsuU5x8LZ84fHkhZ9yCNTHAYJOF6tjsv2UJLwY3nXUu0xdF+8Pdz9Buy
+	QEEdG8sJDitcvsr/cWREh+X1G9OHGJY3KnPRaKYzjJxtYC6PkU1TBZ3ivGfK95mTR0SIa9BU/uY
+	A5wMz1b5BSiDu2GtHt9B66tcF1vZp+FVR2McpYmAtI11y2N/vPFFxKpmbZTLa4z1koTRIKc/H0w
+	wp4ZZdZuMVw6xN/ucxIGEGbqK61lP5NIAwWYVdjh7kbD/9YSi4IIVV5F4Ebn+eQJ6
+X-Received: by 2002:a05:6000:1786:b0:46f:7d90:8125 with SMTP id ffacd0b85a97d-47f62305d3cmr15731928f8f.15.1784543847159;
+        Mon, 20 Jul 2026 03:37:27 -0700 (PDT)
+Received: from localhost ([2a09:bac6:37a8:1cdc::2e0:ea])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-47f63ed2313sm28266750f8f.23.2026.07.20.03.37.26
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 20 Jul 2026 03:37:26 -0700 (PDT)
+Date: Mon, 20 Jul 2026 11:37:25 +0100
+From: Matt Fleming <matt@readmodwrite.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org, Carlos Maiolino <cem@kernel.org>, 
+	"Darrick J . Wong" <djwong@kernel.org>, Dave Chinner <dchinner@redhat.com>, 
+	Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org, kernel-team@cloudflare.com
+Subject: Re: [BUG] xfs: sparse inode allocation can trip i != 1 after AGFL
+ growth
+Message-ID: <al33dUXS_8Yr5vEu@matt-Precision-5490>
+References: <20260717130429.1838767-1-matt@readmodwrite.com>
+ <alpsniDzp5kWl0xA@bfoster>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <alpsniDzp5kWl0xA@bfoster>
 
-Pass up the __must_hold as clang requires it, and also fix the formatting
-of the __must_hold on xfs_ail_check to match how we do it elsewhere.
+On Fri, Jul 17, 2026 at 01:55:42PM -0400, Brian Foster wrote:
+> On Fri, Jul 17, 2026 at 02:04:29PM +0100, Matt Fleming wrote:
+> > 
+> > The failure sequence seems to be:
+> > 
+> > 1. AG0 has no free inodes, so inode allocation needs a new chunk.
+> > 2. Full chunk allocation cannot fit.
+> > 3. Sparse chunk allocation can fit and passes the old AGFL minimum check.
+> > 4. Removing the sparse extent from free space grows both bnobt and cntbt.
+> 
+> I assume this means we happen to alloc a sparse chunk out of the middle
+> of a free extent, causing an additional record and thus splits in both
+> trees.
+ 
+Yep, exactly.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_trans_ail.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+> It also looks like we set args.minleft = igeo->inobt_maxlevels in the
+> chunk alloc path, presumably with the intent to leave enough blocks
+> around for inode record insertion. I assume the above available value is
+> prior to the sparse chunk alloc. It would be interesting to see what the
+> same values/calculations are after the chunk alloc at the time of the
+> inobt block alloc that fails.
+ 
+Before sparse inode allocation:
 
-diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index 99a9bf3762b7..f955479a08fd 100644
---- a/fs/xfs/xfs_trans_ail.c
-+++ b/fs/xfs/xfs_trans_ail.c
-@@ -33,7 +33,7 @@ STATIC void
- xfs_ail_check(
- 	struct xfs_ail		*ailp,
- 	struct xfs_log_item	*lip)
--	__must_hold(&ailp->ail_lock)
-+		__must_hold(&ailp->ail_lock)
- {
- 	struct xfs_log_item	*prev_lip;
- 	struct xfs_log_item	*next_lip;
-@@ -321,6 +321,7 @@ static void
- xfs_ail_delete(
- 	struct xfs_ail		*ailp,
- 	struct xfs_log_item	*lip)
-+		__must_hold(&ailp->ail_lock)
- {
- 	xfs_ail_check(ailp, lip);
- 	list_del(&lip->li_ail);
-@@ -899,6 +900,7 @@ xfs_lsn_t
- xfs_ail_delete_one(
- 	struct xfs_ail		*ailp,
- 	struct xfs_log_item	*lip)
-+		__must_hold(&ailp->ail_lock)
- {
- 	struct xfs_log_item	*mlip = xfs_ail_min(ailp);
- 	xfs_lsn_t		lsn = lip->li_lsn;
--- 
-2.53.0
+   pagf_freeblks:    2514
+   pagf_flcount:     8
+   levels:           bno/cnt/rmap = 1/1/2
+   reservation:      2505
+   minleft:          2
+   min_freelist:     8
+   AGFL credit:      min(8, 8) = 8
 
+   available:
+     2514 + 8 - 2505 - 8 - 2 = 7
+
+   request:
+     minlen=4 align=4 slop=0
+     alloc_len = 4 + (4 - 1) + 0 = 7
+
+So the sparse inode allocation only just passes the allocator check.
+
+After sparse inode allocation, at the failing inobt split allocation:
+
+   pagf_freeblks:    2510
+   pagf_flcount:     4
+   levels:           bno/cnt/rmap = 2/2/2
+   reservation:      2505
+   minleft:          0
+   min_freelist:     12
+   AGFL credit:      min(4, 12) = 4
+
+   available:
+     2510 + 4 - 2505 - 12 - 0 = -3
+
+   request:
+     minlen=1
+
+So after removing the 4-block sparse extent, bnobt/cntbt have grown,
+AGFL has dropped, min_freelist has increased from 8 to 12, and the
+later single-block inobt allocation has no available space.
+
+Thanks,
+Matt
