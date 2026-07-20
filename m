@@ -1,320 +1,243 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE25D3CF1FB;
-	Mon, 20 Jul 2026 11:10:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B122B407565;
+	Mon, 20 Jul 2026 12:04:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784545826; cv=none; b=XBq+jSu9lQKGWN+7cCReTZ8kkDi7okST9g2Yn/ixxOd50GXkuqksv8VkVUnPcP4P5RoNBiCMUUnruzazGHLuUTq1Su2fouWaiIV26zEuX0dkeaeg8W/WFj7Go5tmNOBM12PSl6zmMoO/CbwP135as2WgWj5dbDLFYWi51IJXoTA=
+	t=1784549055; cv=none; b=gUT7dPXKLkpqoMzpr0bTsk20LpwUfaawdivcffXnAC+S/zEBz6r915x2O6oC2Og5ewQ9fYoT2O9NAfusqoIa4O4vGvKFNPJ4fRL+vCVa0Acer8Hhbxl4dbwZk7fyXpBss9HdrKx7RFri14lTkuRvQZK5m8460KOpXIJKWjU7GI8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784545826; c=relaxed/simple;
-	bh=iFb/5Z/YH7CkhLoS7z+aACFB61qpVFboabZh6nnwF4Y=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=AgSjcyNUiMaoK2JXpq9KN/ec3Jh1atgNFETytwMOycADpG9/hmkd/ODzK2cYlNfDXcQJXDGD6/pSDxr1YyJ21iVq2RmOwAE+Rz3YzM74gILAjnWDO2yROpSwmjbgkPQvwcSjjEx3dxIK08RgiKMNgYd+IAuCWP4t8vs8hfWxeNU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.177])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4h3d8B0xSCzYQtm3;
-	Mon, 20 Jul 2026 19:09:46 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 98E714058D;
-	Mon, 20 Jul 2026 19:10:11 +0800 (CST)
-Received: from [10.174.178.253] (unknown [10.174.178.253])
-	by APP1 (Coremail) with UTF8SMTPSA id cCh0CgAHZHAQAl5qvjOfBw--.54318S3;
-	Mon, 20 Jul 2026 19:10:11 +0800 (CST)
-Message-ID: <fb9a8b94-4bab-471e-b8ae-9093d55d13cd@huaweicloud.com>
-Date: Mon, 20 Jul 2026 19:10:08 +0800
+	s=arc-20240116; t=1784549055; c=relaxed/simple;
+	bh=jwQI/Pf9NgcNp+DK3zQQGTyKt/dsw3MbYO0e3utNawk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=cToprLpahXKo+/cpI8sLZTwYOTx7xC0LmwnFf2RXGYc9Mx2vxh4PW2TT4MGMMcCMnX+cYh/LkwlR2He8HMjG+IzJDDKe8DRRsBcjIi8QMHqPeXAE2mBXb7P2EZBOcHAoJDRABXIFAQMCYgs4PJM8ILXsTKaOQ7RE2qM3YRV77GQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EImnMY0U; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EImnMY0U"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 296D01F000E9;
+	Mon, 20 Jul 2026 12:04:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784549053;
+	bh=GrjyUrFA1NruvtisUz4gp+RpWRHZm15WecJhiwdx36M=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=EImnMY0U0L6e9FoTHcqYRk4KnGvjXq+2u9UK7ILXDVd8nPJ3kvm0k4BPVzHyLSAh/
+	 qk4J+FUPLP9Wa7VfEZlcdVfbrJzRWL1dJGql6odNBDVrf/r1HaDEoBmsYcdZFgbKCE
+	 hhAGosbgqqEZ8XCYLKdy7/K0OukRqy/gaRGBpmHlv/cOtMgCCXvWE0JMggWzSIUTMa
+	 VqeP175mPSrKDwiD9Cg44xQxMY02HlbHaIDKaH6+tmnSpx9Mm2CUCqpE0o80BUGnP7
+	 RpdXH2oqTF4k42FapqzISKscYDArm1VFcPUvvMpP8YG+zCqlQm7zOlN+il/P/eLcMR
+	 mN8ZfdJp/qehg==
+Date: Mon, 20 Jul 2026 14:04:09 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: Ibrahim Hashimov <security@auditcode.ai>
+Cc: djwong@kernel.org, linux-xfs@vger.kernel.org, bfoster@redhat.com, 
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH v5] xfs: bounds-check buffer log item's dirty bitmap
+Message-ID: <al4OdTezVWyhrKwe@nidhogg.toxiclabs.cc>
+References: <20260714175532.74257-1-security@auditcode.ai>
+ <20260715071723.81917-1-security@auditcode.ai>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] generic/795: add unaligned boundary test cases for
- WRITE_ZEROES
-To: Pankaj Raghav <p.raghav@samsung.com>, zlang@kernel.org
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org, djwong@kernel.org,
- pankaj.raghav@linux.dev, hch@lst.de, yi.zhang@huawei.com
-References: <20260717064216.3254133-1-p.raghav@samsung.com>
-Content-Language: en-US
-From: Zhang Yi <yi.zhang@huaweicloud.com>
-In-Reply-To: <20260717064216.3254133-1-p.raghav@samsung.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:cCh0CgAHZHAQAl5qvjOfBw--.54318S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxuw47uFyxuFy7ZFyDCF18AFb_yoWfWFW7pF
-	WFk3W5trZ7Ja47Z3yxCF1DZr98CwsYqFW2vr48KryjvFy5Wrn2kF4Ygry8trWkXr4fA3Z2
-	vrs5G34UGw12kFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUymb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Jr0_JF4l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr0_Cr1l84ACjcxK6I8E87Iv67AKxVWxJr0_GcWl84ACjcxK6I8E87Iv6xkF7I
-	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
-	x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
-	0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lc7CjxVAaw2AFwI0_JF0_Jw1l42xK82IYc2Ij64vI
-	r41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8Gjc
-	xK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0
-	cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8V
-	AvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E
-	14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x07UK2NtUUUUU=
-X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260715071723.81917-1-security@auditcode.ai>
 
-On 7/17/2026 2:42 PM, Pankaj Raghav wrote:
-> During the review of WRITE_ZEROES support to XFS, Zhang Yi pointed out
-> some important semantics for the boundary blocks when WRITE_ZEROES
-> command is used.[1]
+On Wed, Jul 15, 2026 at 09:17:23AM +0200, Ibrahim Hashimov wrote:
+> xlog_recover_do_reg_buffer() replays each dirty region described by a
+> buffer log item's bitmap into the buffer read for that item:
 > 
-> The test cases check the boundary blocks when they are in different
-> states and WRITE_ZEROES are issued that straddle the boundary. Along with that,
-> test cases have been added when a EoF straddles an allocation unit.
+> 	memcpy(xfs_buf_offset(bp, (uint)bit << XFS_BLF_SHIFT),
+> 		item->ri_buf[i].iov_base,
+> 		nbits << XFS_BLF_SHIFT);
 > 
-> [1] https://lore.kernel.org/linux-xfs/0b7f1a4f-da1c-4297-8099-98d738070ab7@huaweicloud.com/
+> The destination offset (bit/nbits, from the logged dirty bitmap) and the
+> buffer size (from the logged blf_len) are both attacker-controlled and
+> otherwise unrelated, yet the only thing bounding the copy is an ASSERT(),
+> which compiles away on production kernels. A crafted image logging a
+> small blf_len together with a bitmap bit past the end of that buffer
+> drives the memcpy() past the buffer's allocation, corrupting adjacent
+> kernel heap during mount-time log recovery. This is reachable by anyone
+> who can get a crafted image mounted -- the malicious-filesystem threat
+> model XFS already guards against elsewhere.
 > 
-> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+> Turn the ASSERT() into a real XFS_IS_CORRUPT() check that aborts recovery
+> of the buffer with -EFSCORRUPTED, consistent with the validate-and-fail
+> idiom already used in xlog_recover_do_inode_buffer() and
+> xfs_dquot_item_recover.c. xlog_recover_do_reg_buffer() therefore becomes
+> STATIC int and its three callers propagate the error.
+> 
+> Found and confirmed with KASAN on a CONFIG_XFS_DEBUG=n build: the crafted
+> image trips a slab-out-of-bounds write before this change and fails
+> recovery cleanly with -EFSCORRUPTED after it.
+> 
+> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Ibrahim Hashimov <security@auditcode.ai>
+> Assisted-by: AuditCode-AI:2026.07
 
-Looks good to me.
+We are starting to get rid of Assisted-by tags mentioning specific
+models or completely getting rid of them at all.
 
-Reviewed-by: Zhang Yi <yi.zhang@huawei.com>
+If you are ok with it I'll just remove this tag during commit time, or
+if you prefer, please send a new version without the tag.
 
+Cheers.
+
+> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
 > ---
-> Changes since v2:
-> - Move back to fiemap with the newly added '-e' option.
+> v5: add the "/* write dirty buffer */" comment Darrick and Brian asked
+>     for above the error reset; no functional change. Carry their
+>     Reviewed-by tags.
+> v4: fold xlog_recover_do_dquot_buffer()'s bool return and error
+>     out-parameter into a single int return (1 if dirty, 0 if clean, or a
+>     negative errno on failure), per Darrick's review.
+> v3: trim the changelog per Brian Foster's review. Add a Fixes: tag --
+>     the destination-bounds check has been an ASSERT since the initial git
+>     import (2.6.12-rc2), so it predates the git era.
+> v2: resend; v1 went out with an empty Subject line due to a local
+>     git send-email glitch (leading blank line in the patch file).
 > 
-> Changes since v1:
-> - Use filefrag instead of FIEMAP as the latter uses FIEMAP_FLAG_SYNC by
->   default when used via xfs_io (Zhang yi)
-> - Add an extra testcase for dirty-unwritten edges (Zhang Yi)
+>  fs/xfs/xfs_buf_item_recover.c | 57 +++++++++++++++++++++++++++++--------------
+>  1 file changed, 41 insertions(+), 16 deletions(-)
 > 
->  common/rc             |   2 +-
->  tests/generic/795     | 177 ++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/795.out |  19 +++++
->  3 files changed, 197 insertions(+), 1 deletion(-)
->  create mode 100755 tests/generic/795
->  create mode 100644 tests/generic/795.out
+> diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
+> index 02b95b89d1b5..240deb3f7827 100644
+> --- a/fs/xfs/xfs_buf_item_recover.c
+> +++ b/fs/xfs/xfs_buf_item_recover.c
+> @@ -461,7 +461,7 @@ xlog_recover_validate_buf_type(
+>   * given buffer.  The bitmap in the buf log format structure indicates
+>   * where to place the logged data.
+>   */
+> -STATIC void
+> +STATIC int
+>  xlog_recover_do_reg_buffer(
+>  	struct xfs_mount		*mp,
+>  	struct xlog_recover_item	*item,
+> @@ -489,8 +489,24 @@ xlog_recover_do_reg_buffer(
+>  		ASSERT(nbits > 0);
+>  		ASSERT(item->ri_buf[i].iov_base != NULL);
+>  		ASSERT(item->ri_buf[i].iov_len % XFS_BLF_CHUNK == 0);
+> -		ASSERT(BBTOB(bp->b_length) >=
+> -		       ((uint)bit << XFS_BLF_SHIFT) + (nbits << XFS_BLF_SHIFT));
+> +		/*
+> +		 * The bitmap is only trustworthy to the extent that it
+> +		 * describes a region that actually fits inside the buffer we
+> +		 * read in based on the (attacker-controlled) blf_len.  Do not
+> +		 * rely on an ASSERT() for this -- it compiles away entirely on
+> +		 * non-DEBUG kernels, which is exactly where this matters, so
+> +		 * validate it for real and abort recovery of this buffer rather
+> +		 * than copying past the end of it.
+> +		 */
+> +		if (XFS_IS_CORRUPT(mp, BBTOB(bp->b_length) <
+> +				((uint)bit << XFS_BLF_SHIFT) +
+> +				(nbits << XFS_BLF_SHIFT))) {
+> +			xfs_alert(mp,
+> +	"Bad buffer log item dirty bitmap (bit %d, nbits %d) for %d-byte buffer at daddr 0x%llx.",
+> +				bit, nbits, BBTOB(bp->b_length),
+> +				xfs_buf_daddr(bp));
+> +			return -EFSCORRUPTED;
+> +		}
+>  
+>  		/*
+>  		 * The dirty regions logged in the buffer, even though
+> @@ -544,6 +560,7 @@ xlog_recover_do_reg_buffer(
+>  	ASSERT(i == item->ri_total);
+>  
+>  	xlog_recover_validate_buf_type(mp, bp, buf_f, current_lsn);
+> +	return 0;
+>  }
+>  
+>  /*
+> @@ -552,10 +569,10 @@ xlog_recover_do_reg_buffer(
+>   * (ie. USR or GRP), then just toss this buffer away; don't recover it.
+>   * Else, treat it as a regular buffer and do recovery.
+>   *
+> - * Return false if the buffer was tossed and true if we recovered the buffer to
+> - * indicate to the caller if the buffer needs writing.
+> + * Return 0 if the buffer was not recovered (tossed), 1 if it was recovered and
+> + * needs writing, or a negative errno if recovery of the buffer failed.
+>   */
+> -STATIC bool
+> +STATIC int
+>  xlog_recover_do_dquot_buffer(
+>  	struct xfs_mount		*mp,
+>  	struct xlog			*log,
+> @@ -564,6 +581,7 @@ xlog_recover_do_dquot_buffer(
+>  	struct xfs_buf_log_format	*buf_f)
+>  {
+>  	uint			type;
+> +	int			error;
+>  
+>  	trace_xfs_log_recover_buf_dquot_buf(log, buf_f);
+>  
+> @@ -571,7 +589,7 @@ xlog_recover_do_dquot_buffer(
+>  	 * Filesystems are required to send in quota flags at mount time.
+>  	 */
+>  	if (!mp->m_qflags)
+> -		return false;
+> +		return 0;
+>  
+>  	type = 0;
+>  	if (buf_f->blf_flags & XFS_BLF_UDQUOT_BUF)
+> @@ -584,10 +602,12 @@ xlog_recover_do_dquot_buffer(
+>  	 * This type of quotas was turned off, so ignore this buffer
+>  	 */
+>  	if (log->l_quotaoffs_flag & type)
+> -		return false;
+> +		return 0;
+>  
+> -	xlog_recover_do_reg_buffer(mp, item, bp, buf_f, NULLCOMMITLSN);
+> -	return true;
+> +	error = xlog_recover_do_reg_buffer(mp, item, bp, buf_f, NULLCOMMITLSN);
+> +	if (error)
+> +		return error;
+> +	return 1;
+>  }
+>  
+>  /*
+> @@ -724,7 +744,9 @@ xlog_recover_do_primary_sb_buffer(
+>  	xfs_rgnumber_t			orig_rgcount = mp->m_sb.sb_rgcount;
+>  	int				error;
+>  
+> -	xlog_recover_do_reg_buffer(mp, item, bp, buf_f, current_lsn);
+> +	error = xlog_recover_do_reg_buffer(mp, item, bp, buf_f, current_lsn);
+> +	if (error)
+> +		return error;
+>  
+>  	if (orig_agcount == 0) {
+>  		xfs_alert(mp, "Trying to grow file system without AGs");
+> @@ -1081,11 +1103,11 @@ xlog_recover_buf_commit_pass2(
+>  			goto out_release;
+>  	} else if (buf_f->blf_flags &
+>  		  (XFS_BLF_UDQUOT_BUF|XFS_BLF_PDQUOT_BUF|XFS_BLF_GDQUOT_BUF)) {
+> -		bool	dirty;
+> -
+> -		dirty = xlog_recover_do_dquot_buffer(mp, log, item, bp, buf_f);
+> -		if (!dirty)
+> +		error = xlog_recover_do_dquot_buffer(mp, log, item, bp, buf_f);
+> +		if (error <= 0)
+>  			goto out_release;
+> +		/* write dirty buffer */
+> +		error = 0;
+>  	} else if ((xfs_blft_from_flags(buf_f) & XFS_BLFT_SB_BUF) &&
+>  			xfs_buf_daddr(bp) == 0) {
+>  		error = xlog_recover_do_primary_sb_buffer(mp, item, bp, buf_f,
+> @@ -1105,7 +1127,10 @@ xlog_recover_buf_commit_pass2(
+>  			xfs_buf_relse(rtsb_bp);
+>  		}
+>  	} else {
+> -		xlog_recover_do_reg_buffer(mp, item, bp, buf_f, current_lsn);
+> +		error = xlog_recover_do_reg_buffer(mp, item, bp, buf_f,
+> +						   current_lsn);
+> +		if (error)
+> +			goto out_release;
+>  	}
+>  
+>  	/*
+> -- 
+> 2.50.1 (Apple Git-155)
 > 
-> diff --git a/common/rc b/common/rc
-> index 79189e7e..5e59968f 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -3008,7 +3008,7 @@ _require_xfs_io_command()
->  		testio=`$XFS_IO_PROG -F -f -c "$command $param 0 1m" $testfile 2>&1`
->  		param_checked="$param"
->  		;;
-> -	"fpunch" | "fcollapse" | "zero" | "fzero" | "finsert" | "funshare")
-> +	"fpunch" | "fcollapse" | "zero" | "fzero" | "finsert" | "funshare" | "fwzero")
->  		local blocksize=$(_get_file_block_size $TEST_DIR)
->  		testio=`$XFS_IO_PROG -F -f -c "pwrite 0 $((5 * $blocksize))" \
->  			-c "fsync" -c "$command $blocksize $((2 * $blocksize))" \
-> diff --git a/tests/generic/795 b/tests/generic/795
-> new file mode 100755
-> index 00000000..964a8f9a
-> --- /dev/null
-> +++ b/tests/generic/795
-> @@ -0,0 +1,177 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2026 Samsung Electronics.  All Rights Reserved.
-> +#
-> +# FS QA Test 795
-> +#
-> +# Verify FALLOC_FL_WRITE_ZEROES (xfs_io "fwzero") on an unaligned range,
-> +# exercising every state the two boundary allocation units can be in.
-> +#
-> +# WRITE_ZEROES must leave the whole requested range backed by *written*
-> +# (zeroed) extents while preserving the out-of-range bytes of the partial
-> +# boundary units. The possible scenarios are: written_edges, hole_edges,
-> +# unwritten_edges and delalloc_edges.
-> +#
-> +# It then covers the EOF cases: a WRITE_ZEROES that *extends* the file to a
-> +# non-unit-aligned size, followed by a further extension. WRITE_ZEROES must
-> +# never leave written blocks beyond EOF.
-> +
-> +. ./common/preamble
-> +_begin_fstest auto quick prealloc fiemap
-> +
-> +testfile=$TEST_DIR/$seq.testfile
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -r -f $tmp.*
-> +	rm -f $testfile
-> +}
-> +
-> +. ./common/filter
-> +. ./common/punch
-> +
-> +_require_test
-> +_require_xfs_io_command "fwzero"
-> +_require_xfs_io_command "falloc"
-> +_require_xfs_io_command "fiemap" "-e"
-> +_require_xfs_io_command "truncate"
-> +
-> +# The allocation unit: rt extent size on an rt config, otherwise the block
-> +# size. Deriving the range from this makes the head/tail units straddle rt
-> +# extents when rextsize > 1.
-> +u=$(_get_file_block_size $TEST_DIR)
-> +
-> +# The fs block size. On rt with rextsize > 1 the allocation unit u is the rt
-> +# extent (u > b). A WRITE_ZEROES that extends EOF must only write out to the
-> +# block-rounded EOF and leave the rest of the straddling rt extent unwritten,
-> +# rather than written past EOF.
-> +b=$(_get_block_size $TEST_DIR)
-> +
-> +# Unaligned range within EOF: start 1.5 units in, span 4 units, so both the
-> +# head unit [u, 2u) and the tail unit [5u, 6u) are only partially covered,
-> +# with fully covered units in between and data on both sides.
-> +off=$((u + u / 2))
-> +len=$((4 * u))
-> +filesz=$((8 * u))
-> +pattern=0xab
-> +
-> +# Expected images.  For the written/delalloc cases the pattern surrounds the
-> +# zeroed range; for the hole/unwritten cases the file reads back all zeroes.
-> +$XFS_IO_PROG -f -c "pwrite -S $pattern 0 $filesz" $tmp.pattern >> $seqres.full 2>&1
-> +$XFS_IO_PROG -c "pwrite -S 0 $off $len" $tmp.pattern >> $seqres.full 2>&1
-> +$XFS_IO_PROG -f -c "truncate $filesz" $tmp.zero >> $seqres.full 2>&1
-> +
-> +# Assert the whole requested range is backed by written extents immediately
-> +# after fwzero (before any sync/remount): no holes, no unwritten.
-> +_check_range_written()
-> +{
-> +	local file=$1
-> +	local bad
-> +
-> +	bad=$($XFS_IO_PROG -c "fiemap -v $off $len" "$file" | \
-> +		_filter_fiemap | grep -E -c 'hole|unwritten')
-> +	if [ "$bad" -eq 0 ]; then
-> +		echo "extents: range fully written"
-> +	else
-> +		echo "extents: FAIL - $bad hole/unwritten extent(s) in range"
-> +		$XFS_IO_PROG -c "fiemap -v $off $len" "$file" | _filter_fiemap
-> +	fi
-> +}
-> +
-> +_check_data()
-> +{
-> +	local file=$1
-> +	local want=$2
-> +
-> +	if cmp -s "$file" "$want"; then
-> +		echo "data: matches expected image"
-> +	else
-> +		echo "data: FAIL - mismatch against expected image"
-> +		cmp "$file" "$want" | head
-> +	fi
-> +}
-> +
-> +# Assert [start, start+len) has no written extents (unwritten/hole only).  Used
-> +# to verify the tail of the straddling rt extent, past the block-rounded EOF,
-> +# was left unwritten.  len <= 0 means u == block size (no rt tail) -> nothing to
-> +# check, but still emit the line so the output is config-independent.
-> +_check_eof_tail()
-> +{
-> +	local file=$1 start=$2 len=$3 bad
-> +
-> +	if [ "$len" -le 0 ]; then
-> +		echo "extents: eof tail unwritten"
-> +		return
-> +	fi
-> +	bad=$($XFS_IO_PROG -c "fiemap -v $start $len" "$file" | \
-> +		_filter_fiemap | grep -E -c 'data')
-> +	if [ "$bad" -eq 0 ]; then
-> +		echo "extents: eof tail unwritten"
-> +	else
-> +		echo "extents: FAIL - $bad written extent(s) past block-rounded EOF"
-> +		$XFS_IO_PROG -c "fiemap -v $start $len" "$file" | _filter_fiemap
-> +	fi
-> +}
-> +
-> +_run_case()
-> +{
-> +	local name=$1
-> +	local want=$2
-> +
-> +	echo "=== $name ==="
-> +
-> +	$XFS_IO_PROG -c "fwzero $off $len" $testfile >> $seqres.full 2>&1
-> +
-> +	echo "== $name fiemap after fwzero ==" >> $seqres.full
-> +	$XFS_IO_PROG -c "fiemap -v" $testfile >> $seqres.full 2>&1
-> +
-> +	_check_range_written $testfile
-> +	_test_cycle_mount
-> +	_check_data $testfile $want
-> +
-> +	rm -f $testfile
-> +}
-> +
-> +# 1) Boundary units already written, within i_size.
-> +$XFS_IO_PROG -f -c "pwrite -S $pattern 0 $filesz" -c fsync $testfile \
-> +	>> $seqres.full 2>&1
-> +_run_case "written_edges" $tmp.pattern
-> +
-> +# 2) Boundary units are holes (sparse file).
-> +$XFS_IO_PROG -f -c "truncate $filesz" $testfile >> $seqres.full 2>&1
-> +_run_case "hole_edges" $tmp.zero
-> +
-> +# 3) Boundary units are unwritten preallocation.
-> +$XFS_IO_PROG -f -c "falloc 0 $filesz" $testfile >> $seqres.full 2>&1
-> +_run_case "unwritten_edges" $tmp.zero
-> +
-> +# 4) Boundary units are dirty/delalloc:
-> +$XFS_IO_PROG -f -c "pwrite -S $pattern 0 $filesz" $testfile >> $seqres.full 2>&1
-> +_run_case "delalloc_edges" $tmp.pattern
-> +
-> +# 5) Boundary units are dirty unwritten.
-> +$XFS_IO_PROG -f -c "falloc 0 $filesz" -c "pwrite -S $pattern 0 $filesz" \
-> +	$testfile >> $seqres.full 2>&1
-> +_run_case "dirty_unwritten_edges" $tmp.pattern
-> +
-> +# 6) EOF cases. A WRITE_ZEROES that extends the file to a non-unit-aligned
-> +#    size, followed by a further extend.
-> +eof=$((3 * u + 1))
-> +
-> +echo "=== eof_then_truncate ==="
-> +$XFS_IO_PROG -f -c "fwzero 0 $eof" $testfile >> $seqres.full 2>&1
-> +# The write must stop at the block-rounded EOF; the rest of the rt extent that
-> +# straddles EOF must be unwritten, not written past EOF.  Round EOF up to the
-> +# fs block size (b is a power of two) the same way as generic/219.
-> +eof_ru=$(( (eof + b - 1) & ~(b - 1) ))
-> +_check_eof_tail $testfile $eof_ru $((4 * u - eof_ru))
-> +
-> +$XFS_IO_PROG -c "truncate $filesz" $testfile >> $seqres.full 2>&1
-> +_test_cycle_mount
-> +_check_data $testfile $tmp.zero
-> +rm -f $testfile
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/generic/795.out b/tests/generic/795.out
-> new file mode 100644
-> index 00000000..14667aef
-> --- /dev/null
-> +++ b/tests/generic/795.out
-> @@ -0,0 +1,19 @@
-> +QA output created by 795
-> +=== written_edges ===
-> +extents: range fully written
-> +data: matches expected image
-> +=== hole_edges ===
-> +extents: range fully written
-> +data: matches expected image
-> +=== unwritten_edges ===
-> +extents: range fully written
-> +data: matches expected image
-> +=== delalloc_edges ===
-> +extents: range fully written
-> +data: matches expected image
-> +=== dirty_unwritten_edges ===
-> +extents: range fully written
-> +data: matches expected image
-> +=== eof_then_truncate ===
-> +extents: eof tail unwritten
-> +data: matches expected image
-> 
-> base-commit: ffc8bad17e5b2f56e48dbac43f7c5ae8ac368fe5
-
