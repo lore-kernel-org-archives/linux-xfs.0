@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C690D3D25C5;
-	Mon, 20 Jul 2026 09:05:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DE133D25C5;
+	Mon, 20 Jul 2026 09:05:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784538308; cv=none; b=KB07ulK+EkeMm3YeQDVxtjzvSHAu/12gB1S6kLuwvB8m8YXxdiyG/AtGh3k/+7PKa+To/qPyO31VrcMgUXzwAFFbsGA01Mr8lwdPB7vbeQXM7HvUtOXfCSNcq8xZcVICRtKjCBxxQnaHgqzIYXJ6KKpJzas0aRjtqwstxVfwu6A=
+	t=1784538310; cv=none; b=XQ2kkiK1SRJGyI4mtMMHTQULGpXdgIXsz/0lP3T/ae5s9LlC9WIWDm9mmRYwk3eWbR/sCw5ntlgKa5aoYXKcICluc9nmZgvKILLGnQgk9U4sPoVrswcRxlR6A5zdmehaHp2tGdSjo9VVUL/O1DwRgQ5gT6pvoOUQWRKvOiil4W8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784538308; c=relaxed/simple;
-	bh=uU9LZECtunZjMmI4kNqkrZ+7oaDRoulPh+9RwM44jcw=;
+	s=arc-20240116; t=1784538310; c=relaxed/simple;
+	bh=/lEimu60ir8h89TDAJlmJ5NfBTPDNjM3BayXCl0gkW4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=u16IgVzgKIO8/mg8FVsGhp5wrt4qGDcvWNRaUFEx694CUGb7yNMFQnq3N+J8ep2KELehbz9RulXTBV8i1DXRByr20JIwnO4Yn3nu+nbB2wCpTdVpBf8b7aJe2Ndjif/C/8K58RzdSHTkECyRatEQojZQlLK1bP74KvCXJR9XLL0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IMRWINvT; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=HzNVMcL8kxBLqZ+QxAX16WCq5xkbdhCxWPHlVDjiNRbmDd05FP/Gvnhaf/+mNBTNc2sHI1LsVPo5HzBYaHkP9Q2DSIIbzQ9zLRrxJNTE3MvlF45k0VvYbDI48GiSp2im1V1cc53m054PGSxjPjqHaXqgJXhjBqsQV32kU/Adhmk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kE/B7BtT; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IMRWINvT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 023611F000E9;
-	Mon, 20 Jul 2026 09:05:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kE/B7BtT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D9DCC1F00A3A;
+	Mon, 20 Jul 2026 09:05:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784538306;
-	bh=5kBhEFj3Ic0jQ4W+kZl9S7neY9+Pxt8ASNrS40LLOrM=;
+	s=k20260515; t=1784538309;
+	bh=o9yINbcuiiybi8O3LP5dR8y/qvFNadlQFmrpMBfoyMQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=IMRWINvT7hJhOBWOnwX04rv+32lC5dSQOikRBu4ZhY1RciS73rUBEf7UnCOj/OnJA
-	 MOf1vaRE0xAfgP4IRyxgvEjg+Ja+qWXjOOaD3t1816jerq0Psp8t6EkbUpmF+OXnrd
-	 MYAYBG9mFswhp847rMSiD1rUVOonwnGrZwEQf5jmFoE5DXWXxgnaIZ9UQVNA7LO8ys
-	 EhUaHdMedoVkZ31u53FGJLQENgByHZ10I/S3lEE85aEkWwnk4FD4WQ/56b4vajyAu5
-	 zcBWbhUwsW1MvO+z0b280+cDt11eHQKZB178lCVYQT2fIqWDM2Ng8jF3749HkBTFgt
-	 klsQzg+PPfaMA==
+	b=kE/B7BtT5RA5OSwwML9Uh1ggbU8mbnLRKE/1vCYVzYI8iXk86AAOz0QvQc7zVJnDp
+	 hI2SkCJTyPtvkrw+fSA+7JQKdhBlRiCEE9UT3jFGPTZynp0MMWy/ywyYz5y3Wv4Gmh
+	 FkPLOlvX+lv31fjSHb5x7XaBHH3twvf3LQ1Kmvqn66Emjqj9aMGQ1c0QRNUihoXiVq
+	 WCnW4lujMoZeBOZEq9Cokj/Kb5CC1bGRSD2hcMm2dT7Dzsr+6rfEKWJXZ83SJM7ADH
+	 I2FMwq1iAf7BnJmXFrh34kL1nAO5UFTkAbnwpHQPVXfrvH76memG5u1hgJ8rJi9uyP
+	 Y4AFPPvi9UYQQ==
 From: Andrey Albershteyn <aalbersh@kernel.org>
 To: linux-xfs@vger.kernel.org,
 	fsverity@lists.linux.dev,
@@ -37,9 +37,9 @@ Cc: Andrey Albershteyn <aalbersh@kernel.org>,
 	linux-f2fs-devel@lists.sourceforge.net,
 	linux-btrfs@vger.kernel.org,
 	djwong@kernel.org
-Subject: [PATCH v12 04/21] fsverity: hoist pagecache_read from f2fs/ext4 to fsverity
-Date: Mon, 20 Jul 2026 11:03:32 +0200
-Message-ID: <20260720090410.3487990-5-aalbersh@kernel.org>
+Subject: [PATCH v12 05/21] fsverity: improve flushing performance of fsverity_fill_zerohash
+Date: Mon, 20 Jul 2026 11:03:33 +0200
+Message-ID: <20260720090410.3487990-6-aalbersh@kernel.org>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20260720090410.3487990-1-aalbersh@kernel.org>
 References: <20260720090410.3487990-1-aalbersh@kernel.org>
@@ -51,182 +51,57 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This is the same function to read from pageache. XFS will also need
-this, so move this to core fsverity.
+The current version calls flush_dcache_folio(), in memcpy_to_folio(), to
+flush whole folio on every digest (which is 128 for 4k). Open code folio
+mapping and flushing to copy all digests at once.
 
-Note that f2fs and ext4 functions diverged a bit, as ext4 operated over
-folios and f2fs operated over pages. The common one will operate over
-folios.
-
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Eric Biggers <ebiggers@kernel.org>
+Reported-by: Eric Biggers <ebiggers@kernel.org>
+Link: https://lore.kernel.org/linux-fsdevel/20260401222717.GH2466@quark/
 Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
 ---
- fs/ext4/verity.c         | 32 +++-----------------------------
- fs/f2fs/verity.c         | 30 +-----------------------------
- fs/verity/pagecache.c    | 33 +++++++++++++++++++++++++++++++++
- include/linux/fsverity.h |  2 ++
- 4 files changed, 39 insertions(+), 58 deletions(-)
+ fs/verity/pagecache.c | 24 +++++++++++++++++++++---
+ 1 file changed, 21 insertions(+), 3 deletions(-)
 
-diff --git a/fs/ext4/verity.c b/fs/ext4/verity.c
-index 347945ac23a4..ac5c133f5529 100644
---- a/fs/ext4/verity.c
-+++ b/fs/ext4/verity.c
-@@ -34,32 +34,6 @@ static inline loff_t ext4_verity_metadata_pos(const struct inode *inode)
- 	return round_up(inode->i_size, 65536);
- }
- 
--/*
-- * Read some verity metadata from the inode.  __vfs_read() can't be used because
-- * we need to read beyond i_size.
-- */
--static int pagecache_read(struct inode *inode, void *buf, size_t count,
--			  loff_t pos)
--{
--	while (count) {
--		struct folio *folio;
--		size_t n;
--
--		folio = read_mapping_folio(inode->i_mapping, pos >> PAGE_SHIFT,
--					 NULL);
--		if (IS_ERR(folio))
--			return PTR_ERR(folio);
--
--		n = memcpy_from_file_folio(buf, folio, pos, count);
--		folio_put(folio);
--
--		buf += n;
--		pos += n;
--		count -= n;
--	}
--	return 0;
--}
--
- /*
-  * Write some verity metadata to the inode for FS_IOC_ENABLE_VERITY.
-  * kernel_write() can't be used because the file descriptor is readonly.
-@@ -311,8 +285,8 @@ static int ext4_get_verity_descriptor_location(struct inode *inode,
- 		goto bad;
- 	desc_size_pos -= sizeof(desc_size_disk);
- 
--	err = pagecache_read(inode, &desc_size_disk, sizeof(desc_size_disk),
--			     desc_size_pos);
-+	err = fsverity_pagecache_read(inode, &desc_size_disk,
-+				      sizeof(desc_size_disk), desc_size_pos);
- 	if (err)
- 		return err;
- 	desc_size = le32_to_cpu(desc_size_disk);
-@@ -352,7 +326,7 @@ static int ext4_get_verity_descriptor(struct inode *inode, void *buf,
- 	if (buf_size) {
- 		if (desc_size > buf_size)
- 			return -ERANGE;
--		err = pagecache_read(inode, buf, desc_size, desc_pos);
-+		err = fsverity_pagecache_read(inode, buf, desc_size, desc_pos);
- 		if (err)
- 			return err;
- 	}
-diff --git a/fs/f2fs/verity.c b/fs/f2fs/verity.c
-index cc4158fc841d..f3a4617656db 100644
---- a/fs/f2fs/verity.c
-+++ b/fs/f2fs/verity.c
-@@ -37,34 +37,6 @@ static inline loff_t f2fs_verity_metadata_pos(const struct inode *inode)
- 	return round_up(inode->i_size, 65536);
- }
- 
--/*
-- * Read some verity metadata from the inode.  __vfs_read() can't be used because
-- * we need to read beyond i_size.
-- */
--static int pagecache_read(struct inode *inode, void *buf, size_t count,
--			  loff_t pos)
--{
--	while (count) {
--		size_t n = min_t(size_t, count,
--				 PAGE_SIZE - offset_in_page(pos));
--		struct page *page;
--
--		page = read_mapping_page(inode->i_mapping, pos >> PAGE_SHIFT,
--					 NULL);
--		if (IS_ERR(page))
--			return PTR_ERR(page);
--
--		memcpy_from_page(buf, page, offset_in_page(pos), n);
--
--		put_page(page);
--
--		buf += n;
--		pos += n;
--		count -= n;
--	}
--	return 0;
--}
--
- /*
-  * Write some verity metadata to the inode for FS_IOC_ENABLE_VERITY.
-  * kernel_write() can't be used because the file descriptor is readonly.
-@@ -250,7 +222,7 @@ static int f2fs_get_verity_descriptor(struct inode *inode, void *buf,
- 	if (buf_size) {
- 		if (size > buf_size)
- 			return -ERANGE;
--		res = pagecache_read(inode, buf, size, pos);
-+		res = fsverity_pagecache_read(inode, buf, size, pos);
- 		if (res)
- 			return res;
- 	}
 diff --git a/fs/verity/pagecache.c b/fs/verity/pagecache.c
-index 99f5f53eea98..9d82e6b74ba1 100644
+index 9d82e6b74ba1..270abd652e48 100644
 --- a/fs/verity/pagecache.c
 +++ b/fs/verity/pagecache.c
-@@ -78,3 +78,36 @@ void fsverity_fill_zerohash(struct folio *folio, size_t offset, size_t len,
+@@ -68,14 +68,32 @@ EXPORT_SYMBOL_GPL(generic_readahead_merkle_tree);
+ void fsverity_fill_zerohash(struct folio *folio, size_t offset, size_t len,
+ 			      struct fsverity_info *vi)
+ {
+-	size_t off = offset;
++	void *vaddr;
++	void *to;
++	size_t chunk;
+ 
+ 	WARN_ON_ONCE(!IS_ALIGNED(offset, vi->tree_params.digest_size));
+ 	WARN_ON_ONCE(!IS_ALIGNED(len, vi->tree_params.digest_size));
++	WARN_ON_ONCE(offset + len > folio_size(folio));
+ 
+-	for (; off < (offset + len); off += vi->tree_params.digest_size)
+-		memcpy_to_folio(folio, off, vi->tree_params.zero_digest,
++	do {
++		vaddr = kmap_local_folio(folio, offset);
++		chunk = len;
++		to = vaddr;
++
++		if (folio_test_partial_kmap(folio) &&
++		    chunk > PAGE_SIZE - offset_in_page(offset))
++			chunk = PAGE_SIZE - offset_in_page(offset);
++		for (; to < (vaddr + chunk); to += vi->tree_params.digest_size)
++			memcpy(to, vi->tree_params.zero_digest,
  				vi->tree_params.digest_size);
++		kunmap_local(vaddr);
++
++		offset += chunk;
++		len -= chunk;
++	} while (len > 0);
++
++	flush_dcache_folio(folio);
  }
  EXPORT_SYMBOL_GPL(fsverity_fill_zerohash);
-+
-+/**
-+ * fsverity_pagecache_read() - read page and copy data to buffer
-+ * @inode:	copy from this inode's address space
-+ * @buf:	buffer to copy to
-+ * @count:	number of bytes to copy
-+ * @pos:	position of the folio to copy from
-+ *
-+ * Read some verity metadata from the inode.  __vfs_read() can't be used because
-+ * we need to read beyond i_size.
-+ */
-+int fsverity_pagecache_read(struct inode *inode, void *buf, size_t count,
-+			  loff_t pos)
-+{
-+	while (count) {
-+		struct folio *folio;
-+		size_t n;
-+
-+		folio = read_mapping_folio(inode->i_mapping, pos >> PAGE_SHIFT,
-+					 NULL);
-+		if (IS_ERR(folio))
-+			return PTR_ERR(folio);
-+
-+		n = memcpy_from_file_folio(buf, folio, pos, count);
-+		folio_put(folio);
-+
-+		buf += n;
-+		pos += n;
-+		count -= n;
-+	}
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(fsverity_pagecache_read);
-diff --git a/include/linux/fsverity.h b/include/linux/fsverity.h
-index 9e7d946676b9..f9433332c274 100644
---- a/include/linux/fsverity.h
-+++ b/include/linux/fsverity.h
-@@ -328,5 +328,7 @@ void fsverity_cleanup_inode(struct inode *inode);
- struct page *generic_read_merkle_tree_page(struct inode *inode, pgoff_t index);
- void generic_readahead_merkle_tree(struct inode *inode, pgoff_t index,
- 				   unsigned long nr_pages);
-+int fsverity_pagecache_read(struct inode *inode, void *buf, size_t count,
-+			    loff_t pos);
  
- #endif	/* _LINUX_FSVERITY_H */
 -- 
 2.54.0
 
