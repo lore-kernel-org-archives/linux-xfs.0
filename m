@@ -1,84 +1,67 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 948143D3305;
-	Mon, 20 Jul 2026 09:05:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CA383AFD09;
+	Mon, 20 Jul 2026 09:11:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784538358; cv=none; b=Akj9MgrnkCcP9MOboxv1pE2shCROCXdlpTY81Z+y3m1w7VfbGCSKxkedlnxLY+QLOMx8cIEkBeMsDevb1BA80S+2BMUa7ZFMlCzFn7WN4+WmnqdwRYQS/uTmtC2lq4IRtYySRh7dZ5k7fFlswhWrHkX+PvjQ2z652nXCkaHAyzo=
+	t=1784538693; cv=none; b=WpqW7P+CTmiUUYalMfujuvT1TViJjekLU0qlc0bsM/gO05UtyZ/7uAkgb+lgH96yffWnAIA4shX/fymBSXo+IsM/jvYY9pXGaq/FSpZ6VNHzNRJeNt1p5lYdW9hGVuIrQtkYYdJfyoqLJhP58NmG1SsL7/9VAYTa2A9y3kEDfF0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784538358; c=relaxed/simple;
-	bh=oLsUxhIgOGII8FockpMXTs1qqBWzV+X+1MIELSdjFQM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=qENz6ylQrlQhohIhRR7Pr/0dPyfEObej5f8nHDS4DqtesIAJ3RJbAEtrqfWaNCzCVwNObsU4HB7Z/7mOiYd5jkQuR/vARYtD4tY4iIZbFRCCvgztSLh6Ff9Gs7J2s5wZ19Rhmj4JNmuJltkBiyzR2tizB4LBCHWi8EYhwwCPVjM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=djz3AyRl; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="djz3AyRl"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 16D701F000E9;
-	Mon, 20 Jul 2026 09:05:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784538357;
-	bh=+47nVRLEZQw/YviSfUoLbkFDroVKuX0Z4+TWL8l7VFE=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=djz3AyRlLkB4EkzF9XWbuuDmZe4Vyk4m9uHeptIXgIMMQDolgQXMzFDrwrVOvNuCD
-	 0ePpAYkqAfTuh4rjVA7tgpC1Aq2nPtxte0FPnLjE3yRxyxW4uBDwA/+PrDFi0jQo2J
-	 QlUNV/fstm94CtFNZHncpUfU0mFEPumgaj0xQ6upXL1qrNj4u0iDEujohhGxo0SPO2
-	 27pDk680D1ldc5hbBPLeE4PM45qQpEgVxNtGH++yAXVOa8BJwNUNmleu2VAu1A7MVZ
-	 /iUNh2cCa5AmVBILtt+zIYtrCrMTRUJLYI1198U/WpO3T1ZITzNgi7/Vi8NU7GjZLA
-	 TNYl1NDqbW5NQ==
-From: Andrey Albershteyn <aalbersh@kernel.org>
-To: linux-xfs@vger.kernel.org,
-	fsverity@lists.linux.dev,
-	linux-fsdevel@vger.kernel.org,
-	ebiggers@kernel.org
-Cc: Andrey Albershteyn <aalbersh@kernel.org>,
-	hch@lst.de,
-	linux-ext4@vger.kernel.org,
-	linux-f2fs-devel@lists.sourceforge.net,
-	linux-btrfs@vger.kernel.org,
-	djwong@kernel.org
-Subject: [PATCH v12 21/21] xfs: enable ro-compat fs-verity flag
-Date: Mon, 20 Jul 2026 11:03:49 +0200
-Message-ID: <20260720090410.3487990-22-aalbersh@kernel.org>
-X-Mailer: git-send-email 2.54.0
-In-Reply-To: <20260720090410.3487990-1-aalbersh@kernel.org>
-References: <20260720090410.3487990-1-aalbersh@kernel.org>
+	s=arc-20240116; t=1784538693; c=relaxed/simple;
+	bh=DbXfCmhHiqg6q74y0YMUhjNUS/rZK7b7LrEU4cwzjJc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=f3QTMvv1Lhpqwdtd+IHA2/AjB04Wh8k8YvYgdg/EHKt2JBIGF2UW42MHbm8+rSbtRyAh6GUp4j/v8bLwp7D3JKs0JaoggjLsp50FTSuBcxPbcLOk7Cw7sNZgCkNq0J3fSHkqu2MwJZeLp4IcY7dwJk3uxLUUgTSGwgG9jWJORsI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 2077D68BEB; Mon, 20 Jul 2026 11:11:29 +0200 (CEST)
+Date: Mon, 20 Jul 2026 11:11:28 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, Jan Kara <jack@suse.cz>,
+	Filip Blagojevic <filip.blagojevic@wdc.com>,
+	Matthew Wilcox <willy@infradead.org>,
+	Damien Le Moal <dlemoal@kernel.org>, linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: update BDI {io,ra}_pages values based on the RT
+ device limits
+Message-ID: <20260720091128.GB24062@lst.de>
+References: <20260623142109.1838702-1-hch@lst.de> <20260623142109.1838702-2-hch@lst.de> <al3j0GaQaeYj0Ih8@nidhogg.toxiclabs.cc>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <al3j0GaQaeYj0Ih8@nidhogg.toxiclabs.cc>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-Finalize fs-verity integration in XFS by making kernel fs-verity
-aware with ro-compat flag.
+On Mon, Jul 20, 2026 at 11:02:15AM +0200, Carlos Maiolino wrote:
+> On Tue, Jun 23, 2026 at 04:21:06PM +0200, Christoph Hellwig wrote:
+> > When using XFS with a main device on an SSD that stores metadata and a RT
+> > device to store data on a HDD, we fail to take the I/O sizes for the RT
+> > device into accounting, leading to up to 5% slower read performance when
+> > using an SSD for metadata vs storing data and metadata on the HDD.
+> > 
+> > Fix this up by taking the RT settings into account.  Note that this
+> > updates the BDI owned by the main device, and leaves those settings in
+> > place even when the file system is unmounted.  This is a bit unexpected
+> > but not different from manual tuning through sysfs (although that is only
+> > possible for the ra_pages value).
+> 
+> Sorry a 'very late reply', but...
+> On a second thought, wouldn't be wise to cache the original value in
+> memory and restore it during unmount/filesystem shutdown?
+> 
+> I could send a patch to complement this one if you guys agree, otherwise
+> just ignore me.
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-[djwong: add spaces]
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
----
- fs/xfs/libxfs/xfs_format.h | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index 7b0511eb03d0..2878bc9cb656 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -378,8 +378,9 @@ xfs_sb_has_compat_feature(
- #define XFS_SB_FEAT_RO_COMPAT_ALL \
- 		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
- 		 XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
--		 XFS_SB_FEAT_RO_COMPAT_REFLINK| \
--		 XFS_SB_FEAT_RO_COMPAT_INOBTCNT)
-+		 XFS_SB_FEAT_RO_COMPAT_REFLINK | \
-+		 XFS_SB_FEAT_RO_COMPAT_INOBTCNT | \
-+		 XFS_SB_FEAT_RO_COMPAT_VERITY)
- #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
- static inline bool
- xfs_sb_has_ro_compat_feature(
--- 
-2.54.0
+As mentioned this does seem like a valid option, there's tradeoff
+both ways.  Although we'd also want a flag to avoid restoring them
+if they were changed while mounted so it would get a bit more
+complicated.  Happy to respin it for that if there is a general
+preference.
 
