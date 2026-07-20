@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C420C3D0C18;
-	Mon, 20 Jul 2026 08:57:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 655DA3D0C18;
+	Mon, 20 Jul 2026 08:57:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784537874; cv=none; b=FHG993vyaYWnWrnyB6WEJfmNC+N2SbOQp2Wi2/BhMGo1mLQ+76nKbHM8YZicJRST7V83SVK/d9FrFG22ynOcsTLlDp2wDiwt+5J3TkTMGznode+2O1UCLOrfpppqqR1Wdrr+/h4y3b2qrF9HqK6WUMFo1BTKD8ZF4VRfpywt3Ro=
+	t=1784537876; cv=none; b=UN5HqJXAKjaor2YM9HSvM7Q5aMgdWptzxxMhZ7Wznsb3u721NTtC6G07/tO1w9kU1Psc7ydMGZ4t0GHxeXcu5rKL+gI7MKs0XgAXEcD2EVmueIYx6+se5BFUn5fLOHwcOdPnQUBc4KKomQRWdspbbjaV67cPZDRTFofMz7+7icQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784537874; c=relaxed/simple;
-	bh=6hNCSyRvRW7vxf3Tfr5jEs0DfRVy1KPfYJ0fsrRhKwc=;
+	s=arc-20240116; t=1784537876; c=relaxed/simple;
+	bh=J3Pi/WAs63J/C4fLkp4Kbt9nitDaFpgaMh/KBOtp4WU=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=b60jB5hUkIIWfm8gt1TedTHyErqsfzJ2X+IsGJwZI836lU5Nftg0I3nPeISBH8WZbc90iPQ7nZmdYetrXRNyOmMUeoj1jagi/zQfr/DJZcaVJ57ld6u+YFEOotuO0m9xiGd6PxyE6mpyZLkDjp/cLYLNIamB6otHuaZQ0HRlEps=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d2vu5h8q; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=Jk2g2oGFKPI39FESIkNSbp1KVjvsj5+DXRLB2CKuwmwoFxEeWoBcPXAZ5gQnTT4XuHa+mNB+3qMYP2amGVLP1LGxnU0+Mzmpszsv+32EBlrnur5VB6EzkTbO8Xmq2ZUfN6FV3qIxkec8dAX7v6hkoVZRW8ScuP6/07FQ1NUZAiU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c0isusl1; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d2vu5h8q"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B08031F00A3A;
-	Mon, 20 Jul 2026 08:57:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c0isusl1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 248C31F000E9;
+	Mon, 20 Jul 2026 08:57:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784537873;
-	bh=mW+OfYcdoxLnmCLkRwN5l38LwssYMHdPVP8MaxEsQx0=;
+	s=k20260515; t=1784537875;
+	bh=XXClVuwV0sVcKwPu6DDEPupcFH0LWQfMW2L+BKPytXU=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=d2vu5h8qEGTPem3LDvryHiDSccVIJkznZ6GmESw4907zhKFaLXP1+Y13DDk0C3x6c
-	 TI45ktMZwtF+W0PMjFxJRoO0AJozb3h5CnsWRE2NWI06T11DwnMiwSjnrBWARXGiZt
-	 vqsjhQJgQnZYPNGIA8ROhWdyOesVTCKSSrzls1qqi12McCeoHxUO2Wod2B1oKLhoyX
-	 Bx2DmtahTagnQUoNNVKTR0YFjXTdDHijLOY9fQESEHcNWqyyaONGP21T382f1urTJD
-	 uWCDIxcK471xBjeAxn7TIxVnjyx6jrVlmUwUxX8LReFGubN7fZg/FVdp51/9LFMUzi
-	 QoVAFD4yhT8XA==
+	b=c0isusl1KoCs3UaAUaTfSCTU2pxON4uJsjzaNzyj3EbFc4UfMb95OxDe7hBtN5btM
+	 FAYFPqV/1E7pmUs2AaKo+fV6F8jMWL5dVguE+oEl6TqCyTdfiGpXHleeixh65VPFV1
+	 Ak3nhj1t0fp7/k4gsoak4p17bxwzbtR4yELYoZZyyeldGBWImgjzx3t6PcAnjHg84i
+	 MoTRStW4kkSEuusSqvAhl8KF74jqByFJQfju8WlP6UYb30VPuHL80IDwQSsbO025bf
+	 JvN0wAEVHN4MR2WVp+sC2s7vBK4alBwlGCgUjr8Ul4nE7fbY03r8I2gogIQLeHOAqI
+	 O+yIE4FRjpU6g==
 From: Carlos Maiolino <cem@kernel.org>
 To: hch@lst.de, "Darrick J. Wong" <djwong@kernel.org>
 Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-In-Reply-To: <178400716321.267810.14342805775513660564.stgit@frogsfrogsfrogs>
-References: <178400716321.267810.14342805775513660564.stgit@frogsfrogsfrogs>
-Subject: Re: [PATCHSET v3 1/2] xfs: LLM-inspired bug fixes, part 1
-Message-Id: <178453787243.7428.11269855391412671050.b4-ty@b4>
-Date: Mon, 20 Jul 2026 10:57:52 +0200
+In-Reply-To: <178400716782.268162.4846177784022689546.stgit@frogsfrogsfrogs>
+References: <178400716782.268162.4846177784022689546.stgit@frogsfrogsfrogs>
+Subject: Re: [PATCHSET 2/2] xfs: LLM-inspired bug fixes, part 2
+Message-Id: <178453787385.7428.13090168411944119051.b4-ty@b4>
+Date: Mon, 20 Jul 2026 10:57:53 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,36 +44,32 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.15.2
 
-On Mon, 13 Jul 2026 23:03:57 -0700, Darrick J. Wong wrote:
-> Someone gave me a pretty generous license for a large language model, so
-> I pointed it at every single file under fs/xfs and told it to find bugs.
-> After personally filtering out the errors and garbage, here are fixes
-> for the real bugs that I think it found.
+On Mon, 13 Jul 2026 23:04:02 -0700, Darrick J. Wong wrote:
+> Here's a second batch of xfs fixes resulting from a LLaMma.  Mwa mwa
+> mwa...
 > 
-> Most of these fixes target the online fsck code because I'm most
-> familiar with it, but the LLM will read other parts of the xfs codebase
-> so there are miscellaneous bug fixes.
+> If you're going to start using this code, I strongly recommend pulling
+> from my git trees, which are linked below.
+> 
+> With a bit of luck, this should all go splendidly.
+> Comments and questions are, as always, welcome.
 > 
 > [...]
 
 Applied to for-next, thanks!
 
-[1/8] xfs: don't replace the wrong part of the cow fork
-      commit: a1caeeadbf57ff86dfc3454398c46de86056a74e
-[2/8] xfs: make cow repair somewhat flaky when debugging knob enabled
-      commit: bcb0621204e6999bb8f3a6c7deb5c6abfe0f197b
-[3/8] xfs: move cow_replace_mapping to xfs_bmap_util.c
-      commit: 60a1dde9d28948a88ed5a06cf0b6179b1d487f85
-[4/8] xfs: don't wrap around quota ids in dqiterate
-      commit: d766e4e5e85d829629c3ba503802fe1303d7b591
-[5/8] xfs: use rtrefcount btree cursor in xchk_xref_is_rt_cow_staging
-      commit: ee248157da501f0c02688fb64e5359f2832b0b01
-[6/8] xfs: use the rt version of the cow staging checker
-      commit: 881f2eb0fcdea2f46a50fa6a892fe9e3ccf19e01
-[7/8] xfs: write the rg superblock when fixing it
-      commit: 9af789fa274bc14b907f811f79fa988a6fc6d4e7
-[8/8] xfs: grab rtrmap btree when checking rgsuper
-      commit: ea6e2d9de25d2095845e0cdf2274e581fd40d636
+[1/6] xfs: set xfarray killable sort correctly
+      commit: 540ddc626245f12f56326ee0c1601f71ebb41d64
+[2/6] xfs: fix off-by-one error when calling xchk_xref_has_rt_owner
+      commit: 5d72a68f2007ba2a968d6bf47dba3f4620bd182e
+[3/6] xfs: handle non-inode owners for rtrmap record checking
+      commit: 353a5900bc85234e7df05caac37698042dc26348
+[4/6] xfs: fully check the parent handle when it points to the rootdir
+      commit: ba150ce63453ccd74bae1404c1dfedbd01ecfd55
+[5/6] xfs: clamp timestamp nanoseconds correctly
+      commit: 15e38a9366b31d3d61081ead115f1dff59379e24
+[6/6] xfs: don't zap bmbt forks if they are MAXLEVELS tall
+      commit: 59c462b0f5cfa107794228051724b34ae9334168
 
 Best regards,
 -- 
