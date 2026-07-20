@@ -1,90 +1,70 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE9A23B7B99;
-	Mon, 20 Jul 2026 09:39:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 881093D333D
+	for <linux-xfs@vger.kernel.org>; Mon, 20 Jul 2026 09:46:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784540341; cv=none; b=ZkiLXtgUkWJw3za4N//3j4iRZiHW7m1lY1L+nxa7rT4GrWzdrdjhElI1zBKWxjty3zU52cyzU1xYkjH7aaYrhqc3QR3VX8F8Z4lKkd0rQGDoho0SPBrto/P8Oj/NXeR2xSXsun76/Q+eBMgca9dQE5Mhm6lLqg5kl8QGP1+cH64=
+	t=1784540774; cv=none; b=q1XSQlxSRudfne9hy2lIIVk6dkPP9vQhuZdd6OUQPA5YFhTV6KfHhWl3OxPasm7gipRIMSffYOc6JR03e+zAhZ3+eswXn3lVP1NncyPeQuf3ORHrqP+sz0Xyix3Ps1aGxV+qGd94EVHzMh+HDzBXLFwEbl45pfAcx+afBOHtuhc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784540341; c=relaxed/simple;
-	bh=Or9STJmTlI1vfut4rRuIukCFIbLzcT1Tg4gzU9rrD3g=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=g445xUEgXS/d3m1LhxkSLgAyBxRLcDaMsv9560EFv7bEGJc7MInl9/kgLzE7yWTDnx1UozGzhai1RKdT5xY17VJcgsARXA3W+tq4xN9jt5AjzCcErIHEl/xYZ/7GBx02iTxBm36Dfaescq+wEAbTOyOPInsCCwONEmEgGwXD95U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IUKffP8D; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784540774; c=relaxed/simple;
+	bh=LMHhDnvJMAPhDR4ZTNGhak0zm9BTlWbkUPsugCRwIVU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=joM2DcslU1U/TQLQrdHDKOI2kQ8cngP9zpF9D+zVnGdwGufWaKZygqb9K8Hz9eKqJl6n6AY348JZ/FPQQ7RvqXlpj+TlqlmfRIoB1YXTKshbQu34r2n5Y5HMoijkwXpXtmTNMsKg7878TVtPse/QnrixDfZN1dHh/HjlneroGt0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=fuN23trh; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IUKffP8D"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E6E1F1F00A3F;
-	Mon, 20 Jul 2026 09:38:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784540340;
-	bh=99A7jp8QhPLMVch4cyBgRkG6zDkaywXbbfwScdUUt7c=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=IUKffP8DwaKJ28l6aiToJSOmfxkguMWbnlXprzLGx8vaS/JbRCCtz0D+qEG/u0a67
-	 ifMBZUAXSuU0fmiK5r9SEbe1QidZHe9HkjngxaZhG8EThu2TawOosnZlrRx7MLUIe8
-	 JbyO3nGlIFmip6/Pq2/Y6h7wbjgiTDliaDATW8NIxJcfo05sA3XCT8P2N7+kNbHTh9
-	 IJyX1eJjHodLrcf4nhAb4uFwpLPFTQz/1pYsMugyl7gNCAyCd4XYB2IpzhvYlamprL
-	 /aLHDtOzgzDT8bla6rCqjCqt08WneJq8UEclHyPpzrp9LCtmmhS+xfzdw+Gql4hyx3
-	 iuGtH8+DkC9aw==
-Date: Mon, 20 Jul 2026 11:38:56 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jan Kara <jack@suse.cz>, Filip Blagojevic <filip.blagojevic@wdc.com>, 
-	Matthew Wilcox <willy@infradead.org>, Damien Le Moal <dlemoal@kernel.org>, 
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: update BDI {io,ra}_pages values based on the RT
- device limits
-Message-ID: <al3rszGopCngWzN2@nidhogg.toxiclabs.cc>
-References: <20260623142109.1838702-1-hch@lst.de>
- <20260623142109.1838702-2-hch@lst.de>
- <al3j0GaQaeYj0Ih8@nidhogg.toxiclabs.cc>
- <20260720091128.GB24062@lst.de>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="fuN23trh"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=ehnV0E3Lagp6NQ+RAEriV70YuTyRxY5NJgm9xEu/LF0=; b=fuN23trh6+YrSYewzHh3DYFGHO
+	Bo9sMLaMAulBa0YTpW4g5+CP7hMEVeGo9gvZO/yMfDxiefJiV+N4pDpLOIbHN53aw20JtLcrlRboe
+	3a1Nkd3zqT7SPqLDTkCxge9hpPZD5F3NzblJAJ+43kSe6G4tcofu0z8WVwXja2BxF92S2DIt6Ga5h
+	NfiCkEmd96u3qtsVmyaX6YJ1zvIsvmMg0kRH/gOvyeuRFSpr8GAZIkFruaS7nGAYrMANx3amesGbC
+	QGLRsb6TT/p7zDq7pUEwF4mttzSL8CnSmAR9wDa5TpuvBS2SJc3yfLp8iqZmOUKVRVN2Rl2rYE0wp
+	lYLC0LzQ==;
+Received: from 2a02-8389-2301-9f00-b29a-36e9-8c1c-0994.cable.dynamic.v6.surfer.at ([2a02:8389:2301:9f00:b29a:36e9:8c1c:994] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1wlkZf-00000006MhJ-2Q3w;
+	Mon, 20 Jul 2026 09:46:11 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: linux-xfs@vger.kernel.org
+Subject: improve log context annotations
+Date: Mon, 20 Jul 2026 11:45:37 +0200
+Message-ID: <20260720094609.2191633-1-hch@lst.de>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260720091128.GB24062@lst.de>
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Mon, Jul 20, 2026 at 11:11:28AM +0200, Christoph Hellwig wrote:
-> On Mon, Jul 20, 2026 at 11:02:15AM +0200, Carlos Maiolino wrote:
-> > On Tue, Jun 23, 2026 at 04:21:06PM +0200, Christoph Hellwig wrote:
-> > > When using XFS with a main device on an SSD that stores metadata and a RT
-> > > device to store data on a HDD, we fail to take the I/O sizes for the RT
-> > > device into accounting, leading to up to 5% slower read performance when
-> > > using an SSD for metadata vs storing data and metadata on the HDD.
-> > > 
-> > > Fix this up by taking the RT settings into account.  Note that this
-> > > updates the BDI owned by the main device, and leaves those settings in
-> > > place even when the file system is unmounted.  This is a bit unexpected
-> > > but not different from manual tuning through sysfs (although that is only
-> > > possible for the ra_pages value).
-> > 
-> > Sorry a 'very late reply', but...
-> > On a second thought, wouldn't be wise to cache the original value in
-> > memory and restore it during unmount/filesystem shutdown?
-> > 
-> > I could send a patch to complement this one if you guys agree, otherwise
-> > just ignore me.
-> 
-> As mentioned this does seem like a valid option, there's tradeoff
-> both ways.  Although we'd also want a flag to avoid restoring them
-> if they were changed while mounted so it would get a bit more
-> complicated.  Happy to respin it for that if there is a general
-> preference.
-> 
+Hi Carlos,
 
-Sorry coming back late to it, I don't want to give you extra work after
-we've already discussed the implementation.
+this series improves the lock annotations in the XFS code.
 
-I was going to merge this patch today, but it came to my mind that might
-not be a good idea to just quietly update BDI settings while XFS is
-using it and just keep whatever change we made persist after the mount.
+Note that right now this is all mostly unused - the less stringent sparse
+lock context checks got disabled when the clang version was merged, and
+we're not quite ready to enable the latter yet due to our conditional
+locking in the ilock helper and the locking contexts transferred to the
+transaction for the inode and dquot locks, but I'm working on that.
 
-I can still merge it this week and we decide what to do later or just wait a
-bit for extra thoughts on this.
-Perhaps let's see if we get other comments soon and we make a decision
-later this week.
+In the meantime having these corrected at least serves as useful
+documentation.
+
+Diffstat:
+ xfs_extent_busy.c |    4 ++--
+ xfs_icache.c      |    3 ++-
+ xfs_log.c         |   33 +++++++++++++++++++++------------
+ xfs_log_cil.c     |    3 ++-
+ xfs_log_priv.h    |    4 ++--
+ xfs_mru_cache.c   |    2 +-
+ xfs_trans_ail.c   |    4 +++-
+ xfs_zone_alloc.c  |    2 ++
+ 8 files changed, 35 insertions(+), 20 deletions(-)
