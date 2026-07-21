@@ -1,43 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BAB047ECC1
-	for <linux-xfs@vger.kernel.org>; Tue, 21 Jul 2026 10:44:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CC07480341;
+	Tue, 21 Jul 2026 10:44:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784630702; cv=none; b=STVl29K5oisVlG5QUjNROnbkx1cl5wLseVwZW+CBtaOJVmj5lKhkLdj9mvPUKln+BZ8kXr4EhFdCLZ95C/NKgQt94CDo/D3GwjZPQE6pShrY9M8LknNiJ9I020L0FwXlNS0TweWQQ5iq8qD2Hdxs6Gey7gE1jQSewOEYrZ3FNiU=
+	t=1784630708; cv=none; b=tfH0aI/8Wqu87aRazeKChP7zMmAN+tbXULiM+R6sepnidXG80d5tNIhHPgAy6gK/jLHF5397erRO0RY0HVyk1s2cT23TWmx1RhhonPndI6r2+xFupv+omK9mmLImHxUDa/BED3V4YzjaSxcDKIXtfjdr2/gnFqTqFjPagy8Zr/Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784630702; c=relaxed/simple;
-	bh=Wc0R01EUMNRxOkk/jW0SDZIYu07TG8bknH8ES142hg0=;
+	s=arc-20240116; t=1784630708; c=relaxed/simple;
+	bh=EKDHNaDopp5fhs8uZquxf0cx5mtkXhjeH9fl7LvhNos=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=E3fjOjjMlKtHKmdHv2syq9p71GtCR3DecZ0IooQ0wQxad+arAlriAElWydIFuDHRDsWenf5/MhqU16NJEhnS1zCvvCu59Ovi4McR3geAkS4T5lKAOXBAVPfcT3tmgT/tHYtj0gboefOK1lDu7KfIJj5EJKgq6w8Gyu3L1ssD5/c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nBSVQm1M; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=ECcXtgV9M9+kIDpcTSmCG/Xf2l7nnTFVmk0ONsAdXP+jTCs9ui0+sO48Gi4uppDCz7XGM5nPZHXCohWRW3mhjpku3a3d+Jp6/y0lYnw10Z7HQLWv6s+LPa0XQQoZYum1sHVaqe95kM+RDWG+VzrZvD3xWLVWFwRW6diA0FI5b8g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hpGiG75Y; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nBSVQm1M"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DF3D91F0155D;
-	Tue, 21 Jul 2026 10:44:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hpGiG75Y"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 433511F00ADE;
+	Tue, 21 Jul 2026 10:44:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784630683;
-	bh=R6Gly+kjccCSIWhct4OzVpYcetExbExGuGpaNdLPTTM=;
+	s=k20260515; t=1784630695;
+	bh=TF1FROrz+/3Nrrqz7OrrWgxhCu3TGd4/hCWiBmCcAI0=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=nBSVQm1MjOXfmV4zbjDSFt+RvVG1aGq/F1TUcW/o9fB4hlzclMb4MRvt4CdtHHbrk
-	 f0QZ8WrMaiymGrNDQyi+qZRgWHFPtMuyAhiUXaXybjrKI1OY09PNUe4kceGSbAyTwp
-	 sOBJ1xpGZmWGuNjVmPd+YzoQSsglsQ5oHkdDGvB0RnJlD3IOHUcBbtwPGsFoQXBnwX
-	 A1A6N/ZIF2N8BYNYvOtkI+IXMkaoHgvuRVkpHdPudq4nipUMwLZyN9Z07IEUfKNpZW
-	 FWHMHSeFXLRGGRd5FKc6J56NQ4+5PpgTSSvM2zFe7CrPvovA9T8J0cCP2dCkCAuv5q
-	 kWj9K8Tb09kcA==
+	b=hpGiG75Y2P3lYU+E0uHclfq4UTAIQv+ejuFOPlxwDgY2mkHfnUSCHd/L2TzgLwks9
+	 ahErt27hpNwpwp5PQup2Lh9KwVRotSrZ/63BJwOdMsPeVYIw/FLC62LhhpMuTEDSF7
+	 4w/ITxynU+msvNw0JDMMEDhBsgFi/4Efz9Pjmc2oF3ctmt9YpvcHbq/56DslPe9Ayp
+	 syVcRLXxPwhAt9EBTIkdwoTOmm8dmVvWXgSIL/aPnYr4MgJApprIZSjp5VKJwRkuLk
+	 UfepIir9s7wYnpPjIA3Ra2CZHAYUTvl4mgTxwuDofMhLNcc6KiFKY55Q7WWEZvatP2
+	 CorOcuE6nEWYQ==
 From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org, Pankaj Raghav <p.raghav@samsung.com>
-Cc: bfoster@redhat.com, lukas@herbolt.com, 
- "Darrick J . Wong" <djwong@kernel.org>, dgc@kernel.org, 
- gost.dev@samsung.com, Zhang Yi <yi.zhang@huaweicloud.com>, 
- pankaj.raghav@linux.dev, andres@anarazel.de, kundan.kumar@samsung.com, 
- hch@lst.de, hch@infradead.org
-In-Reply-To: <20260706084117.1455204-1-p.raghav@samsung.com>
-References: <20260706084117.1455204-1-p.raghav@samsung.com>
-Subject: Re: [PATCH v9 0/2] add FALLOC_FL_WRITE_ZEROES support to xfs
-Message-Id: <178463068061.324722.423636735414417020.b4-ty@b4>
-Date: Tue, 21 Jul 2026 12:44:40 +0200
+To: Yun Zhou <yun.zhou@windriver.com>
+Cc: djwong@kernel.org, hch@infradead.org, linux-xfs@vger.kernel.org, 
+ linux-kernel@vger.kernel.org
+In-Reply-To: <20260719151124.3514077-1-yun.zhou@windriver.com>
+References: <20260719151124.3514077-1-yun.zhou@windriver.com>
+Subject: Re: [PATCH] xfs: handle NULL b_addr in xfs_buf_free
+Message-Id: <178463069397.324722.16521599214171804128.b4-ty@b4>
+Date: Tue, 21 Jul 2026 12:44:53 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,23 +45,28 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.15.2
 
-On Mon, 06 Jul 2026 10:41:15 +0200, Pankaj Raghav wrote:
-> The benefits of FALLOC_FL_WRITE_ZEROES was already discussed as a part
-> of Zhang Yi's initial patches[1]. Postgres developer Andres also
-> mentioned they would like to use this feature in Postgres [2].
+On Sun, 19 Jul 2026 23:11:24 +0800, Yun Zhou wrote:
+> When xfs_buf_alloc_backing_mem() fails, xfs_buf_free() is called with
+> bp->b_addr still NULL.  The code falls through to the folio_put path
+> which calls virt_to_folio(NULL), dereferencing an invalid address and
+> causing a kernel crash.
 > 
-> I tested the changes with fsstress and fsx based on the xfstests patch I
-> sent recently to test this flag[4]. generic/363 helped me debug the
-> crash I noticed when I did the initial implementation[3].
+>  Call Trace:
+>   xfs_buf_free+0x25f/0x510
+>   xfs_buf_alloc+0xc98/0x19b0
+>   xfs_buf_find_insert+0x55/0x14d0
+>   xfs_buf_get_map+0x122b/0x17c0
+>   xfbtree_init_leaf_block+0x11c/0x4a0
+>   xfbtree_init+0x1bb/0x460
+>   xrep_rmap_setup_scan+0x100/0x1f0
+>   xrep_rmapbt+0x41/0xc0
 > 
 > [...]
 
 Applied to for-next, thanks!
 
-[1/2] xfs: add an allocation mode to xfs_alloc_file_space()
-      commit: a12a5f85daf0833473997a210a6480d423c94ad5
-[2/2] xfs: add support for FALLOC_FL_WRITE_ZEROES
-      commit: e105fd8ccfa5ae2e1ecfee6d3e3970eb88219e2b
+[1/1] xfs: handle NULL b_addr in xfs_buf_free
+      commit: 2ba9288085f15d2eec21cdafe438a9d03f44737a
 
 Best regards,
 -- 
