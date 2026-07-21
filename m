@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CB3D78F26;
-	Tue, 21 Jul 2026 03:26:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A22A978F26;
+	Tue, 21 Jul 2026 03:26:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784604384; cv=none; b=uGkn1+7111t42isbuv08Bh6oeWnVSQR6IL082x9STYKHZfQC/8tb9opxniaTstMIaB2NmrTKxrrpzMUvWrZMueyTotxj3cD8rxxCbC81ItK2oxhMgAcEGDLAbtULBtHsws6zfBPAyMWGcL8nDYhMDwhWLOj/YeWLjZ2KQVTamBk=
+	t=1784604399; cv=none; b=OHq0KPYPtSlrFtKWULLPVX+6Y/9CKyXpFjLYqgzVsVlqV3hfDoYbAtAMSEOtECSULGjp1H7KjnKbttBOpdAvfkG99C4J5Mj+HGm+qqD6vzvS2faaFloG/US2S9IoBN1HbextqwqcDbCL4+RGwz+athmetPQ+9hZ0FLM2Zn16UIM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784604384; c=relaxed/simple;
-	bh=GsvXTTRVikVTHJdceg0/gdZ+dS22qkpLXwGSXebYmEE=;
+	s=arc-20240116; t=1784604399; c=relaxed/simple;
+	bh=WWvomjM93IF0VTSv6RUfq4F1eGd+gdBzKZ5ULU7AMdk=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=kbUekhpbLJqONVYH6NMRi13WpyIlIji526M12yJfk4tVeuTm1Zpy3fktAgdvHl2jI3ACowMefkYUCSIH7wUCNs7DtyXsZht7yI8gCl52rxAU1hXMojCBNWVy+IkUL6Lqdn/6Ps7+GcDA9XCfFJiRUqXnW5P/BpzijDUytWuOTxM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CbMy9L+l; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=VNA86gr60suNVIBbxrqKI4k3hyx1RirD07PawbVSpzKtSV0sNHfG7VyhwfdJ0QA6uOeSwmrKsHkQdD7LC92GbroJoxz7gZm7KsKzUMn3yMTZUZ5fKukmYuxK+QMJHxH6ObSA/r+9EHDuOuHAo+eIPnzAX+SUfCPsJpL6ZEUOp48=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=idQ2Dive; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CbMy9L+l"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id EA7311F000E9;
-	Tue, 21 Jul 2026 03:26:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="idQ2Dive"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 7B37D1F000E9;
+	Tue, 21 Jul 2026 03:26:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784604383;
-	bh=eyh/jjWjzRB3SSvJmm7f73C8iwm6qN2MCmJcudIUtag=;
+	s=k20260515; t=1784604398;
+	bh=0Xcnrz3tfIjXodC9sKjV7JmuHojTmNmC7mnGzQf82gM=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=CbMy9L+l3lHhKXlgD9HQ3sleU4lVFkP5Opizmi05LGurZLOHo/oogPu7GLEouKe/U
-	 5k7G6nzqYAo4Ho+jdOW4+N1gsLKeZ3ThK99z2Jbm411AIZyGTqlLwPbqovFx22pkTM
-	 bgnk+zTJUoDZTX2scHSMXxU6qS2cDV+FPcNYGYThYbkQoLagJhHF1UD1CbPIzR3Wl7
-	 pt+lG1gac4hVEUujbfnMZYFmTRTjNMrU3ydtbsHl8IL97JlqdvBzLhDdCkvWITghBx
-	 o/mIvum1YAPDaFt22rf+kHoFZajWpSp3iSudoX21FI6xNyGEoMQWaVOSTMqMJOWKel
-	 IyVHGoJTr5z0g==
-Date: Mon, 20 Jul 2026 20:26:22 -0700
-Subject: [PATCH 6/9] xfs: check xfarray iteration errors when committing
- unlinked inode lists
+	b=idQ2DiveaZBrdgPkPtNm1izb90Ls9rFbUieD8SJwIUKntN8rvwN6G5VCGHNZVAujn
+	 Lvd46wAb1Q8z7OiaLctSUos9jQZeONZB1FoKtUbneINbk9iBKGMyWZC6RtyyIBSaIw
+	 G2DClDRO9IKY6k2E8cQg7jxSuhuKnwqlJrvu9lE761wVGyCDgFM1hRMaGFAgiwRDUX
+	 fmgEZFWmQBQ0MVaXmLhVSUYM+BvXGAGG+xAHS4ZVsZVpsuDCPNsRf1/WIT10VEIhb+
+	 Kra5hp1xZuDXx002Y4szQtTgZYM7TZ4Kj+Uv54s163SuY+gRKi2fixIfdzr4lb1Y4f
+	 FVb0sVpwsEhXQ==
+Date: Mon, 20 Jul 2026 20:26:38 -0700
+Subject: [PATCH 7/9] xfs: fix allocated inodes that show up in the unlinked
+ list
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, hch@lst.de, cem@kernel.org
 Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <178460419616.830862.9734210711949892226.stgit@frogsfrogsfrogs>
+Message-ID: <178460419637.830862.15080147963623340285.stgit@frogsfrogsfrogs>
 In-Reply-To: <178460419438.830862.6755198157088208229.stgit@frogsfrogsfrogs>
 References: <178460419438.830862.6755198157088208229.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,38 +46,125 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-LOLLM noticed that we neglect to check for xfarray_iter itself returning
-errors when writing a new AGI.  Fix that.
+If an allocated inode shows up in the unlinked list, we need to get it
+completely off the list.  Set the corrected next/prev pointers such that
+the inode will not look like it should be on an unlinked list at all.
 
 Cc: <stable@vger.kernel.org> # v6.10
 Fixes: ab97f4b1c03075 ("xfs: repair AGI unlinked inode bucket lists")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-Assisted-by: LOLLM # finding obvious bugs
 ---
- fs/xfs/scrub/agheader_repair.c |    4 ++++
- 1 file changed, 4 insertions(+)
+ fs/xfs/scrub/trace.h           |    1 +
+ fs/xfs/scrub/agheader_repair.c |   57 +++++++++++++++++++++++++++++++++++-----
+ 2 files changed, 51 insertions(+), 7 deletions(-)
 
 
+diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
+index d5d39d82749e5c..00fbe1b9c2354f 100644
+--- a/fs/xfs/scrub/trace.h
++++ b/fs/xfs/scrub/trace.h
+@@ -3542,6 +3542,7 @@ DEFINE_REPAIR_IUNLINK_RESOLVE_EVENT(xrep_iunlink_resolve_uncached);
+ DEFINE_REPAIR_IUNLINK_RESOLVE_EVENT(xrep_iunlink_resolve_wronglist);
+ DEFINE_REPAIR_IUNLINK_RESOLVE_EVENT(xrep_iunlink_resolve_nolist);
+ DEFINE_REPAIR_IUNLINK_RESOLVE_EVENT(xrep_iunlink_resolve_ok);
++DEFINE_REPAIR_IUNLINK_RESOLVE_EVENT(xrep_iunlink_resolve_allocated);
+ 
+ TRACE_EVENT(xrep_iunlink_relink_next,
+ 	TP_PROTO(struct xfs_inode *ip, xfs_agino_t next_agino),
 diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
-index 7f19554843038d..8514d2d7e3cea3 100644
+index 8514d2d7e3cea3..edd406a97b7ce9 100644
 --- a/fs/xfs/scrub/agheader_repair.c
 +++ b/fs/xfs/scrub/agheader_repair.c
-@@ -1675,6 +1675,8 @@ xrep_iunlink_commit(
- 		if (error)
- 			return error;
- 	}
-+	if (error < 0)
-+		return error;
+@@ -979,6 +979,13 @@ xrep_agi_calc_from_btrees(
+ 	return error;
+ }
  
- 	/* Fix all the back links */
- 	idx = XFARRAY_CURSOR_INIT;
-@@ -1683,6 +1685,8 @@ xrep_iunlink_commit(
- 		if (error)
- 			return error;
- 	}
-+	if (error < 0)
-+		return error;
++/*
++ * Magic value that means "not unlinked" because xfarrays don't support storing
++ * totally zeroed elements.  There can't be a cluster that starts in daddr 0 so
++ * there can't be an inode #1 either.
++ */
++#define LINKED_AGINO	(0x1)
++
+ /*
+  * Record a forwards unlinked chain pointer from agino -> next_agino in our
+  * staging information.
+@@ -1362,6 +1369,29 @@ xrep_iunlink_resolve_bucket(
+ 			break;
+ 		}
  
- 	/* Copy the staged iunlink buckets to the new AGI. */
- 	for (i = 0; i < XFS_AGI_UNLINKED_BUCKETS; i++) {
++		if (VFS_I(ip)->i_nlink != 0) {
++			/*
++			 * Inode is allocated!  Blow out both unlinked list
++			 * pointers, advance the list, and pretend we didn't
++			 * see this inode.
++			 */
++			trace_xrep_iunlink_resolve_allocated(sc->sa.pag,
++					bucket, prev_agino, next_agino);
++
++			error = xrep_iunlink_store_next(ragi, next_agino,
++					NULLAGINO);
++			if (error)
++				return error;
++
++			error = xrep_iunlink_store_prev(ragi, next_agino,
++					LINKED_AGINO);
++			if (error)
++				return error;
++
++			next_agino = ip->i_next_unlinked;
++			continue;
++		}
++
+ 		if (next_agino % XFS_AGI_UNLINKED_BUCKETS != bucket) {
+ 			/*
+ 			 * Inode is in the wrong bucket.  Advance the list,
+@@ -1540,6 +1570,24 @@ xrep_iunlink_rebuild_buckets(
+ 			xrep_iunlink_add_lost_inodes, ragi);
+ }
+ 
++static inline void
++set_inode_prev_unlinked(
++	struct xfs_inode	*ip,
++	xfs_agino_t		prev_agino)
++{
++	/*
++	 * Magic value that means "not unlinked" because xfarrays don't support
++	 * storing totally zeroed elements.
++	 */
++	if (prev_agino == LINKED_AGINO)
++		prev_agino = 0;
++
++	if (ip->i_prev_unlinked != prev_agino) {
++		trace_xrep_iunlink_relink_prev(ip, prev_agino);
++		ip->i_prev_unlinked = prev_agino;
++	}
++}
++
+ /* Update i_next_iunlinked for the inode @agino. */
+ STATIC int
+ xrep_iunlink_relink_next(
+@@ -1573,8 +1621,7 @@ xrep_iunlink_relink_next(
+ 		if (error)
+ 			goto out_rele;
+ 
+-		trace_xrep_iunlink_relink_prev(ip, prev_agino);
+-		ip->i_prev_unlinked = prev_agino;
++		set_inode_prev_unlinked(ip, prev_agino);
+ 	}
+ 
+ 	/* Update the forward pointer. */
+@@ -1641,11 +1688,7 @@ xrep_iunlink_relink_prev(
+ 		ip->i_next_unlinked = next_agino;
+ 	}
+ 
+-	/* Update the backward pointer. */
+-	if (ip->i_prev_unlinked != prev_agino) {
+-		trace_xrep_iunlink_relink_prev(ip, prev_agino);
+-		ip->i_prev_unlinked = prev_agino;
+-	}
++	set_inode_prev_unlinked(ip, prev_agino);
+ 
+ out_rele:
+ 	/*
 
