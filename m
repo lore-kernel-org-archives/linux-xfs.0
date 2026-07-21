@@ -1,41 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C540D47A0A9;
-	Tue, 21 Jul 2026 10:44:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC00E20E334;
+	Tue, 21 Jul 2026 10:45:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784630708; cv=none; b=sQ6rrtQAOpsa2II1ekg8q51Ec65TZirLIMdd/MwW82cTxm8FhNGkd9eCVyCY3yLuyb3L8xCkdEPeXeSBKjaMP/AMmGtOVMZMpy0wINfgzANt9SeQsGEwJk2s6idrTis1XsB5qk5HYpd1uwQOtBgtfGGEPHaZ+LXplKEZyaIE9SQ=
+	t=1784630713; cv=none; b=T2Fowszw62glbqntRSKNrcMf/LI6ppCygV8OoomQyK7TGpuPEWZyaTw16NlsjmYguE+44As5DESFq81fZpLlI29P27cAPtrf/eRoDzjO5/fq28lWPs3TEXjZ3ljF8pk8jgKWWG3LtH/vfRrRLcz+dcSFQtM7dcvSvLGJddmLa4M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784630708; c=relaxed/simple;
-	bh=fUhC26o+AawoCH4Cgf27miKwI/Zu25y7UaUyFfLvyL8=;
+	s=arc-20240116; t=1784630713; c=relaxed/simple;
+	bh=DB/NE2LVwCm9qhXHU7Mr42jRyFJY5WmrVDAPbskDGI4=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=jNsQjZTQDNSrWE7FJPoPDHtjkiPdbhRBma7XBf84D5p75+xZanRZMJK1+Z+hay/kf0x76fpQlnfv/WekHIVYS7C4FvPcykd+2c+d/ZUiX+uybLq8QLcVx+H7NN/WCY3NtDFk0mbhc8WvKPN5ZoktA3d/6o7H6ix1W+jxcVdAces=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Tlaw3oIa; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=oF1/pq7q7v6I4D0gSgjxZCTcEYx7GLyHBuj7t9TaezNEeX0idy3blZEjSHd/ZdxxCFeRMM6TOV3iBCkJcSTht5QXDa6CpnZ5Hm0eaFLMGJrJdY1DQVwr4IWuTuKyU1KeXIvMAA7MsNPQ5lUZoDlsD99AkMxVdUqOKEcI3lOotCc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Tmjl8pRp; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Tlaw3oIa"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6AE071F00A3A;
-	Tue, 21 Jul 2026 10:44:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Tmjl8pRp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB6901F0155F;
+	Tue, 21 Jul 2026 10:44:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784630693;
-	bh=/7gKrygiveFz576bMbFnThKhghzfk8TzZCm1qj1QcEw=;
+	s=k20260515; t=1784630697;
+	bh=jJnlVRreKDBrxmLILlAYFGS4xSEfO/Pl3sPEh2YQ+z8=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=Tlaw3oIaRN0UiIw8a12riaulph2xuNq1TWlVJl9fVkNeuUEI12rFxn5/st2EUxkcN
-	 L3yf/fZEeUNifZ/kGFnEPABeDQ4DvCKDCbxxS1l/ioR8JUglGBjNu/uJZNFM1ivGa+
-	 ciFPB4gkmd1+mRbJi2bPruFRevdsfWjHYaHNvuYGSGVQzZbsydujydaE4/jg2tJA/I
-	 5n3QFcRpju+q7thqEFu4ieE3AbK9kI7kVNr8Mxxxo5d/pJCM4JISWAKysv/U07G7mB
-	 Vv29Bk2yJGoylQECaWJkAk/9Y//Eqbgo34NOWs87DTfSQ50A3aYau/dIvsIOyxa2OC
-	 1nU7VP4lwC0xQ==
+	b=Tmjl8pRpNhrPZ0d1iFtzgISErSJeLJHTqYEfiMN/v5ZA3GI81I7hURB7uf04YXZD1
+	 UvGlnp8i2ynqnbZKQzdfu7vQketO+zXfPOV5l2dRXznDoxpBnYdPn9QHxJdoID+jGQ
+	 gp/I2tox98O2GjBO62BOLictw11garpe3q7wmQ8cdZlUD86sO2diWXaPbWY0wH6Col
+	 TdTmjNw9zspXlFdUb/6/WbZdj4vUxTzH8WHiiZchfH6x4SS2CJzrHF820fotfZSZQs
+	 A8cN7x0y+wk/zfdWY7Bz/4XyIOni2HvshiX6IZ2nrKpM6h0Ws8wETWrgRzGgSBzQzA
+	 wx+xUx9vIYamA==
 From: Carlos Maiolino <cem@kernel.org>
-To: djwong@kernel.org, linux-xfs@vger.kernel.org, 
- Ibrahim Hashimov <security@auditcode.ai>
-Cc: bfoster@redhat.com, linux-kernel@vger.kernel.org, 
- stable@vger.kernel.org
-In-Reply-To: <20260715071723.81917-1-security@auditcode.ai>
-References: <20260715071723.81917-1-security@auditcode.ai>
-Subject: Re: [PATCH v5] xfs: bounds-check buffer log item's dirty bitmap
-Message-Id: <178463069213.324722.9171765123928848896.b4-ty@b4>
-Date: Tue, 21 Jul 2026 12:44:52 +0200
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jan Kara <jack@suse.cz>, Filip Blagojevic <filip.blagojevic@wdc.com>, 
+ Matthew Wilcox <willy@infradead.org>, Damien Le Moal <dlemoal@kernel.org>, 
+ linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+In-Reply-To: <20260720140849.2269776-2-hch@lst.de>
+References: <20260720140849.2269776-2-hch@lst.de>
+Subject: Re: [PATCH] xfs: update BDI {io,ra}_pages values based on the RT
+ device limits
+Message-Id: <178463069559.324722.16769567501803840266.b4-ty@b4>
+Date: Tue, 21 Jul 2026 12:44:55 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,20 +47,22 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.15.2
 
-On Wed, 15 Jul 2026 09:17:23 +0200, Ibrahim Hashimov wrote:
-> xlog_recover_do_reg_buffer() replays each dirty region described by a
-> buffer log item's bitmap into the buffer read for that item:
+On Mon, 20 Jul 2026 16:08:47 +0200, Christoph Hellwig wrote:
+> When using XFS with a main device on an SSD that stores metadata and a RT
+> device to store data on a HDD, we fail to take the I/O sizes for the RT
+> device into accounting, leading to up to 5% slower read performance when
+> using an SSD for metadata vs storing data and metadata on the HDD.
 > 
-> 	memcpy(xfs_buf_offset(bp, (uint)bit << XFS_BLF_SHIFT),
-> 		item->ri_buf[i].iov_base,
-> 		nbits << XFS_BLF_SHIFT);
+> Fix this up by taking the RT settings into account at mount an restoring
+> the old settings at unmount time, unless the BDI settings have changed
+> from those set by XFS.
 > 
 > [...]
 
 Applied to for-next, thanks!
 
-[1/1] xfs: bounds-check buffer log item's dirty bitmap
-      commit: c42b8e3237f697aedd6f75d07c5a6d59ef2a26e0
+[1/1] xfs: update BDI {io,ra}_pages values based on the RT device limits
+      commit: 39de8c9f3e4bc059bb0bc85a39affcf52664c1ed
 
 Best regards,
 -- 
