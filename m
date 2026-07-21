@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09BD046EC78;
-	Tue, 21 Jul 2026 18:44:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED7EB46D57C;
+	Tue, 21 Jul 2026 18:43:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784659442; cv=none; b=ozyffC9OV4SC4AqvyLM8SFEBP0K5Mfor+M4g7ton76PbKCr2RUGrgdx7M0cnuWB5SjLSn08ayh26K4p1u1kwPNScjuPXmeWTycLw6YLP8r0oMtV37abJjeCdeguO0QCrpILab3us1hKyQ2DPWThR4EWvCiq+laA9IsOXEhW1mbc=
+	t=1784659443; cv=none; b=V6WjCo054C26itOgwkoM+V78PdjPMILTsbCwYr8fI9Dlg+NxAYkJZ13/QJiSni9fJ5c+PT1sgIHFgqsGklZHF9Q70NoeFnfGJaWqNgqKZNhJtoKqdVxXzgbNTlQT1W6nzbRpabd5I2dX3bd9fFUes1DizMlZVDIADvpAIZEsFi0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784659442; c=relaxed/simple;
-	bh=koL5JEzCiRkG/G3J5KeYw/fhC7PQNkfGJUXQmn9MaK8=;
+	s=arc-20240116; t=1784659443; c=relaxed/simple;
+	bh=gNzjl4zWpkZJaicQjAemkaolWXKfIV765MdaOnGpKBs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=tYXlsCVhSAvsCVHou3yol27f1jMxcRJwGHBFFDZc2yXRaYeq8VR0UmXbxWQ4vd9rWQC5tpBqTLVh4HXE5ffjVtb6U7H4Sqzm94KfDpzdLPZbgM4sb6cQfJ2/oB6I5tyt1EnQPrA2Eda8B9sP0GMCtJriYfRmIgOGMgzmfoESFqw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d9PD9Gi5; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=QGKHmVN8/RwDnDCph6WanMimt12ZccOlRkRKQdKqg/ynqK4ujkqa1lmEKnariTbz1aGlbjekJop0LjVTR46z7L78a7xXQvaWOSXU/PtmI3Ki7IAspdE7nu0yB+IHyGcoI/zSv3tIehQdJExWp2ZRNwgBQO5oMlA8kiqT7RPt8Bw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WMe2mkBn; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d9PD9Gi5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 41B6C1F00A3A;
-	Tue, 21 Jul 2026 18:43:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WMe2mkBn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 622721F000E9;
+	Tue, 21 Jul 2026 18:43:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784659440;
-	bh=IA66KD2Om75bu0eBgUIzf65HS6s2gELQcRJU2+ySoSU=;
+	s=k20260515; t=1784659437;
+	bh=DLKRiRyzKQ3SHGS6qPdEtB2Y8TKgDvD/nkziuhY4NXk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=d9PD9Gi5vMT6p1hhlIj/h/itwE7/mT8ZOVX0NLfvqabqzhefeNTQgxihcd+drWpPw
-	 g3ykeZ9fmuQXv3HzHRpCF31G2zyQEmbrzr+5HCL1jnXP0eyz4ynKhjt3dNY9ZmGwy9
-	 JjzMlvFU3Cfut2m5oyd/UR0eTH6+oNJz1VQhd511VRAySM2aI9SH6aeSKu+dTqLWy6
-	 z2p+JauZKZdv6XTW8UZJv5CEPhWvp0QXu1WdgvmACiEhaPcMST8Zb7GHK1r6Xvw448
-	 K4iMbCwypr55YzjyOqYNvyMsbXcOrM9ZxVKnsOtRP5FkQSfVGKviaLLmEWbhw2ktqA
-	 ZI87u6hb490xA==
+	b=WMe2mkBnWGFuqYeb7lWHvOvaYVxLFjGS3sAn6h+9EmIfmhVWtcMhucsC0jHc2d529
+	 j2/sInsGGcUaqJfpKlq5hTcsRiWHzCNj+GbIlae0xrQ6969B5Ln5R+rZkCQlQrMNGX
+	 igys61mGg/XLwB7iYfcx88CBALLmZF7b8/yamOQQtjyX721nOFS5OOYiqWcOEowzND
+	 BSQhGs34ffJMoD95rUlV6BHGZovFZ6qtowm1qGaJtBVlxIw6VTvxMvgUNdQ6DY6Zbq
+	 7xlVUougOiosy9dQzY0RNLueBxuGs7H9aymnjFCmyGkaXcGmDhfXUPKq/ufQoWqSwR
+	 AZtP2pD6Orc8w==
 From: Andrey Albershteyn <aalbersh@kernel.org>
 To: linux-xfs@vger.kernel.org,
 	fsverity@lists.linux.dev,
@@ -37,9 +37,9 @@ Cc: Andrey Albershteyn <aalbersh@kernel.org>,
 	linux-f2fs-devel@lists.sourceforge.net,
 	linux-btrfs@vger.kernel.org,
 	djwong@kernel.org
-Subject: [PATCH v13 02/23] fsverity: expose ensure_fsverity_info()
-Date: Tue, 21 Jul 2026 20:40:39 +0200
-Message-ID: <20260721184346.416657-3-aalbersh@kernel.org>
+Subject: [PATCH v13 01/23] fsverity: report validation errors through fserror to fsnotify
+Date: Tue, 21 Jul 2026 20:40:38 +0200
+Message-ID: <20260721184346.416657-2-aalbersh@kernel.org>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20260721184346.416657-1-aalbersh@kernel.org>
 References: <20260721184346.416657-1-aalbersh@kernel.org>
@@ -51,76 +51,46 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This function will be used by XFS's scrub to force fsverity activation,
-therefore, to read fsverity context.
+Reported verification errors to fsnotify through recently added fserror
+interface.
 
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Acked-by: Eric Biggers <ebiggers@kernel.org>
 Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/verity/open.c         | 22 ++++++++++++++++++++--
- include/linux/fsverity.h |  2 ++
- 2 files changed, 22 insertions(+), 2 deletions(-)
+ fs/verity/verify.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/fs/verity/open.c b/fs/verity/open.c
-index d0c56a7faa3b..875e8850ccba 100644
---- a/fs/verity/open.c
-+++ b/fs/verity/open.c
-@@ -347,7 +347,24 @@ int fsverity_get_descriptor(struct inode *inode,
- 	return 0;
- }
+diff --git a/fs/verity/verify.c b/fs/verity/verify.c
+index 4004a1d42875..db8c350234bb 100644
+--- a/fs/verity/verify.c
++++ b/fs/verity/verify.c
+@@ -9,6 +9,7 @@
  
--static int ensure_verity_info(struct inode *inode)
-+/**
-+ * fsverity_ensure_verity_info() - cache verity info if it's not already cached
-+ * @inode: the inode for which verity info should be cached
-+ *
-+ * Ensure this inode has verity info attached to it, it's assumed the inode
-+ * already has fsverity enabled. Read fsverity descriptor and creates verity
-+ * based on that.
-+ *
-+ * This needs to be called at least once before any of the inode's data
-+ * can be verified (and thus read at all) or the inode's fsverity digest
-+ * retrieved.  fsverity_file_open() calls this already, which handles
-+ * normal file accesses.  If a filesystem does any internal (i.e. not
-+ * associated with a file descriptor) reads of the file's data or
-+ * fsverity digest, it must call this explicitly before doing so.
-+ *
-+ * Return: 0 on success, -errno on failure
-+ */
-+int fsverity_ensure_verity_info(struct inode *inode)
- {
- 	struct fsverity_info *vi = fsverity_get_info(inode), *found;
- 	struct fsverity_descriptor *desc;
-@@ -383,12 +400,13 @@ static int ensure_verity_info(struct inode *inode)
- 	kfree(desc);
- 	return err;
- }
-+EXPORT_SYMBOL_GPL(fsverity_ensure_verity_info);
+ #include <linux/bio.h>
+ #include <linux/export.h>
++#include <linux/fserror.h>
  
- int __fsverity_file_open(struct inode *inode, struct file *filp)
- {
- 	if (filp->f_mode & FMODE_WRITE)
- 		return -EPERM;
--	return ensure_verity_info(inode);
-+	return fsverity_ensure_verity_info(inode);
- }
- EXPORT_SYMBOL_GPL(__fsverity_file_open);
+ #define FS_VERITY_MAX_PENDING_BLOCKS 2
  
-diff --git a/include/linux/fsverity.h b/include/linux/fsverity.h
-index 6c467ded9751..3c3250f6f272 100644
---- a/include/linux/fsverity.h
-+++ b/include/linux/fsverity.h
-@@ -317,6 +317,8 @@ static inline int fsverity_file_open(struct inode *inode, struct file *filp)
- 	return 0;
- }
- 
-+int fsverity_ensure_verity_info(struct inode *inode);
-+
- void fsverity_cleanup_inode(struct inode *inode);
- 
- struct page *generic_read_merkle_tree_page(struct inode *inode, pgoff_t index);
+@@ -205,6 +206,8 @@ static bool verify_data_block(struct fsverity_info *vi,
+ 		if (memchr_inv(dblock->data, 0, params->block_size)) {
+ 			fsverity_err(inode,
+ 				     "FILE CORRUPTED!  Data past EOF is not zeroed");
++			fserror_report_data_lost(inode, data_pos,
++						 params->block_size, GFP_NOFS);
+ 			return false;
+ 		}
+ 		return true;
+@@ -312,6 +315,7 @@ static bool verify_data_block(struct fsverity_info *vi,
+ 		data_pos, level - 1, params->hash_alg->name, hsize, want_hash,
+ 		params->hash_alg->name, hsize,
+ 		level == 0 ? dblock->real_hash : real_hash);
++	fserror_report_data_lost(inode, data_pos, params->block_size, GFP_NOFS);
+ error:
+ 	for (; level > 0; level--) {
+ 		kunmap_local(hblocks[level - 1].addr);
 -- 
 2.54.0
 
