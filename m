@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A962F472538;
-	Tue, 21 Jul 2026 18:44:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A075A46D094;
+	Tue, 21 Jul 2026 18:44:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784659477; cv=none; b=rKyY8M/9abZJNPHn9pcggtlxwEVmie165qUu802xe7qgv3K/GggP9S5vaUUjkByOXqYKAkcyvnzuZBR76m/QtctdHzlbfdeJVpPXuAkVEP0rNF94qWYOoDgQjq0YBnfa+RWTR7WwSie9+SJtDFw42oYMD874SC6V5Uq/KNpD8rU=
+	t=1784659480; cv=none; b=YoKlqK3m3eXq0s7Wz4uAVg5tTWbvUtapJ9+dI/VByVBaWrVHcsKWnfZep+MTpBHWxlvCE88IMbdyxYT7TgCfDt/UrKY00OI4jZ5D4WSfj4NlgQ08Ll9gH/iOwlGVuP1qC/CNpgpXCBLl2wc5t8M0HwmfqKcugkvxdtVCNYlK7U4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784659477; c=relaxed/simple;
-	bh=mR/hFSygtGr3j3RN0ocaT7I/5kok3kT0D391TUt636I=;
+	s=arc-20240116; t=1784659480; c=relaxed/simple;
+	bh=WbmPEmGzdrA9hTyWEZMTNMNxhJmUgk2kI/ITpryAokU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=oDZs7srct1pnoNUmzJYNPVgTLD+3izbogFqnJ8eIG07g5FqgAutBYrQQ9ULp0TTiXLnZKW3VhopjuNnlNNDyPiLAxoMIKYO99azFvs6JlKKnPXXcc1DPPSSZhYHiBd5ggLOOKEnuv0CD9ZbtfbmHK5rNUstvZTawlEwo2H2YNX8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IUzlk21A; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=eP0NIhdstcz8mvUvPwyHTs30MGxYmv3RkEfztRQ3ixsodAJ/Wc6O/MQt6VpJug+86FBiLpaGTBwqNtVrzW0WdONnxWwyN8Rrqa9a7NzL6KOahUlUJ7wUca6feTLRJ8Rb+lJtPdK+9ISYP6tgmLz0gN751czZYkpPeI1Jx/6Qw3k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G/IgPmpf; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IUzlk21A"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 20B251F00A3D;
-	Tue, 21 Jul 2026 18:44:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G/IgPmpf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 13B721F00A3A;
+	Tue, 21 Jul 2026 18:44:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784659476;
-	bh=u81BkS3jMnJue5L3AYROT1gE9HvtANvaiLqhCodO2vM=;
+	s=k20260515; t=1784659479;
+	bh=/iiQ9eZI+F7yguJJPqGVpU2t2qOI832e7x766g0ZyfE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=IUzlk21AkPgwRnGJ7YHdWcJ3/MayMTE/pkXp/BJYB3anwkYcZ+NZ1lmBYxWgyaSes
-	 R329cBnCzJc941GqD3IQ2eenkpoFaMgr6XtRCkkg0vvdvZvb0w+0qhulleoNPEy0Vn
-	 b98Gs7a6oz7J9xWPIdfqLt3T5ko6t/cbPz+hLvvY1ckOAB5tU7i6r/zrEUMIht/Z9N
-	 mEiQ5d1xc2Erp9gYLQ1Axz9UGw79dh3lhSziOlLvrW4YQ3SIXsD865d3Yd6stnc9Zy
-	 cBAbX5uQFLWTTes0ehpttDtj93qSEU3foDqZ92wwQyueKANPfkU1sqZkS9QD2nNZ5i
-	 XxcavDrg08H8w==
+	b=G/IgPmpfQMbaCJphn4JSVxK6lb+cqthI8uFq5I7qm6zIn1zp81lWUM/j232hFNyS8
+	 xmEGzK0i5NcvEq/lUC+6fCmIMueGXEBiODuRKHHUDL2PDHsL99G3ZY68wloAsqYq3L
+	 MdBDbCu4zM4LR78/CNll5gX1BSo9DBpTsaryNoJjbgyrQhFxCR6rHUuUKsZy/AbcFb
+	 nuFoGSmG/sXlkjG5VGmwmJKwokJmWTtutKppsLwDyfGAsVHN4MIk5veUzsuHuBxAcQ
+	 z0e0zUmdY63S2eTURgdwU2OOEHmQJTsph8907U0uIZVey00fBFCS3FilzQl2G71CG/
+	 KDUtkgkd/yMww==
 From: Andrey Albershteyn <aalbersh@kernel.org>
 To: linux-xfs@vger.kernel.org,
 	fsverity@lists.linux.dev,
@@ -37,9 +37,9 @@ Cc: Andrey Albershteyn <aalbersh@kernel.org>,
 	linux-f2fs-devel@lists.sourceforge.net,
 	linux-btrfs@vger.kernel.org,
 	djwong@kernel.org
-Subject: [PATCH v13 14/23] xfs: always prioritize fsverity metadata ioends in ioend completion
-Date: Tue, 21 Jul 2026 20:40:51 +0200
-Message-ID: <20260721184346.416657-15-aalbersh@kernel.org>
+Subject: [PATCH v13 15/23] xfs: use read ioend for fsverity data verification
+Date: Tue, 21 Jul 2026 20:40:52 +0200
+Message-ID: <20260721184346.416657-16-aalbersh@kernel.org>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20260721184346.416657-1-aalbersh@kernel.org>
 References: <20260721184346.416657-1-aalbersh@kernel.org>
@@ -51,133 +51,176 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-When both block device integrity checksums and fsverity are used, all
-read ioends end up in the ioend processing. This means that fsverity
-data and metadata ioends could both get on ioend queue ip->i_ioend_list.
+Use read ioends for fsverity verification. Do not issues fsverity
+metadata I/O through the same workqueue due to risk of a deadlock by a
+filled workqueue.
 
-Then, when worker pick ups the work, it will process all ioends in the
-queue. Before, processing ioends are sorted based on file offset,
-meaning data ioend first, metadata second. Metadata ioend already
-holding folio lock, if data ioend needs this exact folio the worker will
-self deadlock.
+Pass fsverity_info from iomap context down to the ioend as hashtable
+lookups are expensive.
 
-Fix this by prioritizing fsverity metadata while sorting read ioends.
+Add a simple helper to check that this is not fsverity metadata but file
+data that needs verification.
 
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
 ---
- fs/iomap/ioend.c      |  8 ++++----
- fs/xfs/xfs_aops.c     | 32 +++++++++++++++++++++++++++++++-
- include/linux/iomap.h |  5 ++++-
- 3 files changed, 39 insertions(+), 6 deletions(-)
+ fs/xfs/xfs_aops.c     | 45 ++++++++++++++++++++++++++++++++++---------
+ fs/xfs/xfs_fsverity.c |  9 +++++++++
+ fs/xfs/xfs_fsverity.h |  6 ++++++
+ 3 files changed, 51 insertions(+), 9 deletions(-)
 
-diff --git a/fs/iomap/ioend.c b/fs/iomap/ioend.c
-index 0565328764c1..8e46b7f1aa6a 100644
---- a/fs/iomap/ioend.c
-+++ b/fs/iomap/ioend.c
-@@ -4,7 +4,6 @@
-  */
- #include <linux/bio-integrity.h>
- #include <linux/iomap.h>
--#include <linux/list_sort.h>
- #include <linux/pagemap.h>
- #include <linux/writeback.h>
- #include <linux/fserror.h>
-@@ -425,7 +424,7 @@ void iomap_ioend_try_merge(struct iomap_ioend *ioend,
- }
- EXPORT_SYMBOL_GPL(iomap_ioend_try_merge);
- 
--static int iomap_ioend_compare(void *priv, const struct list_head *a,
-+int iomap_ioend_compare(void *priv, const struct list_head *a,
- 		const struct list_head *b)
- {
- 	struct iomap_ioend *ia = container_of(a, struct iomap_ioend, io_list);
-@@ -437,10 +436,11 @@ static int iomap_ioend_compare(void *priv, const struct list_head *a,
- 		return 1;
- 	return 0;
- }
-+EXPORT_SYMBOL_GPL(iomap_ioend_compare);
- 
--void iomap_sort_ioends(struct list_head *ioend_list)
-+void iomap_sort_ioends(struct list_head *ioend_list, list_cmp_func_t cmp)
- {
--	list_sort(NULL, ioend_list, iomap_ioend_compare);
-+	list_sort(NULL, ioend_list, cmp);
- }
- EXPORT_SYMBOL_GPL(iomap_sort_ioends);
- 
 diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 34d0ff7c7086..c7843a8776b0 100644
+index c7843a8776b0..135be711f9a4 100644
 --- a/fs/xfs/xfs_aops.c
 +++ b/fs/xfs/xfs_aops.c
-@@ -182,6 +182,32 @@ xfs_end_ioend_write(
- 	memalloc_nofs_restore(nofs_flag);
+@@ -24,6 +24,7 @@
+ #include "xfs_rtgroup.h"
+ #include "xfs_fsverity.h"
+ #include <linux/bio-integrity.h>
++#include <linux/fsverity.h>
+ 
+ struct xfs_writepage_ctx {
+ 	struct iomap_writepage_ctx ctx;
+@@ -208,6 +209,23 @@ xfs_read_ioend_compare(
+ 	return 0;
  }
  
 +/*
-+ * Prioritize fsverity metadata over file data. Sort based on i_size as fsverity
-+ * metadata is always beyond EOF
++ * IO read completion.
 + */
-+static int
-+xfs_read_ioend_compare(
-+	void			*priv,
-+	const struct list_head	*a,
-+	const struct list_head	*b)
++static void
++xfs_end_ioend_read(
++	struct iomap_ioend	*ioend)
 +{
-+	struct iomap_ioend	*ia = container_of(a, struct iomap_ioend,
-+			io_list);
-+	struct iomap_ioend	*ib = container_of(b, struct iomap_ioend,
-+			io_list);
-+	loff_t			i_size = i_size_read(ia->io_inode);
++	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
 +
-+	if (!IS_VERITY(ia->io_inode))
-+		return iomap_ioend_compare(priv, a, b);
-+
-+	if (ia->io_offset > i_size && ib->io_offset < i_size)
-+		return -1;
-+	if (ia->io_offset < i_size && ib->io_offset > i_size)
-+		return 1;
-+	return 0;
++	if (!ioend->io_bio.bi_status &&
++			xfs_fsverity_is_file_data(ip, ioend->io_offset))
++		fsverity_verify_bio(ioend->io_vi,
++				    &ioend->io_bio);
++	iomap_finish_ioends(ioend,
++		blk_status_to_errno(ioend->io_bio.bi_status));
 +}
 +
  /*
   * Finish all pending IO completions that require transactional modifications.
   *
-@@ -210,7 +236,11 @@ xfs_end_io(
- 	list_replace_init(&ip->i_ioend_list, &tmp);
- 	spin_unlock_irqrestore(&ip->i_ioend_lock, flags);
- 
--	iomap_sort_ioends(&tmp);
-+	ioend = list_first_entry_or_null(&tmp, struct iomap_ioend, io_list);
-+	if (bio_op(&ioend->io_bio) == REQ_OP_READ)
-+		iomap_sort_ioends(&tmp, xfs_read_ioend_compare);
-+	else
-+		iomap_sort_ioends(&tmp, iomap_ioend_compare);
- 	while ((ioend = list_first_entry_or_null(&tmp, struct iomap_ioend,
- 			io_list))) {
+@@ -246,8 +264,7 @@ xfs_end_io(
  		list_del_init(&ioend->io_list);
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 56b43d594e6e..36fc931382a8 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -10,6 +10,7 @@
- #include <linux/mm_types.h>
- #include <linux/blkdev.h>
- #include <linux/folio_batch.h>
-+#include <linux/list_sort.h>
+ 		iomap_ioend_try_merge(ioend, &tmp);
+ 		if (bio_op(&ioend->io_bio) == REQ_OP_READ)
+-			iomap_finish_ioends(ioend,
+-				blk_status_to_errno(ioend->io_bio.bi_status));
++			xfs_end_ioend_read(ioend);
+ 		else
+ 			xfs_end_ioend_write(ioend);
+ 		cond_resched();
+@@ -273,9 +290,14 @@ xfs_end_bio(
+ 	}
  
- struct address_space;
- struct fiemap_extent_info;
-@@ -488,7 +489,9 @@ struct iomap_ioend *iomap_split_ioend(struct iomap_ioend *ioend,
- void iomap_finish_ioends(struct iomap_ioend *ioend, int error);
- void iomap_ioend_try_merge(struct iomap_ioend *ioend,
- 		struct list_head *more_ioends);
--void iomap_sort_ioends(struct list_head *ioend_list);
-+int iomap_ioend_compare(void *priv, const struct list_head *a,
-+		const struct list_head *b);
-+void iomap_sort_ioends(struct list_head *ioend_list, list_cmp_func_t cmp);
- ssize_t iomap_add_to_ioend(struct iomap_writepage_ctx *wpc, struct folio *folio,
- 		loff_t pos, loff_t end_pos, unsigned int dirty_len);
- int iomap_ioend_writeback_submit(struct iomap_writepage_ctx *wpc, int error);
+ 	spin_lock_irqsave(&ip->i_ioend_lock, flags);
+-	if (list_empty(&ip->i_ioend_list))
+-		WARN_ON_ONCE(!queue_work(mp->m_unwritten_workqueue,
++	if (list_empty(&ip->i_ioend_list)) {
++		if (IS_ENABLED(CONFIG_FS_VERITY) && ioend->io_vi &&
++		    ioend->io_offset < xfs_fsverity_metadata_offset(ip))
++			fsverity_enqueue_verify_work(&ip->i_ioend_work);
++		else
++			WARN_ON_ONCE(!queue_work(mp->m_unwritten_workqueue,
+ 					 &ip->i_ioend_work));
++	}
+ 	list_add_tail(&ioend->io_list, &ip->i_ioend_list);
+ 	spin_unlock_irqrestore(&ip->i_ioend_lock, flags);
+ }
+@@ -816,9 +838,12 @@ xfs_bio_submit_read(
+ 	struct iomap_read_folio_ctx	*ctx)
+ {
+ 	struct bio			*bio = ctx->read_ctx;
++	struct iomap_ioend		*ioend;
+ 
+ 	/* defer read completions to the ioend workqueue */
+-	iomap_init_ioend(iter->inode, bio, ctx->read_ctx_file_offset, 0);
++	ioend = iomap_init_ioend(iter->inode, bio, ctx->read_ctx_file_offset,
++			0);
++	ioend->io_vi = ctx->vi;
+ 	iomap_bio_submit_read_endio(iter, ctx, xfs_end_bio);
+ }
+ 
+@@ -830,11 +855,13 @@ static const struct iomap_read_ops xfs_iomap_read_ops = {
+ 
+ static inline const struct iomap_read_ops *
+ xfs_get_iomap_read_ops(
+-	const struct address_space	*mapping)
++	const struct address_space	*mapping,
++	loff_t				position)
+ {
+ 	struct xfs_inode		*ip = XFS_I(mapping->host);
+ 
+-	if (bdev_has_integrity_csum(xfs_inode_buftarg(ip)->bt_bdev))
++	if (bdev_has_integrity_csum(xfs_inode_buftarg(ip)->bt_bdev) ||
++			xfs_fsverity_is_file_data(ip, position))
+ 		return &xfs_iomap_read_ops;
+ 	return &iomap_bio_read_ops;
+ }
+@@ -846,7 +873,7 @@ xfs_vm_read_folio(
+ {
+ 	struct iomap_read_folio_ctx	ctx = { .cur_folio = folio };
+ 
+-	ctx.ops = xfs_get_iomap_read_ops(folio->mapping);
++	ctx.ops = xfs_get_iomap_read_ops(folio->mapping, folio_pos(folio));
+ 	iomap_read_folio(&xfs_read_iomap_ops, &ctx, NULL);
+ 	return 0;
+ }
+@@ -857,7 +884,7 @@ xfs_vm_readahead(
+ {
+ 	struct iomap_read_folio_ctx	ctx = { .rac = rac };
+ 
+-	ctx.ops = xfs_get_iomap_read_ops(rac->mapping),
++	ctx.ops = xfs_get_iomap_read_ops(rac->mapping, readahead_pos(rac));
+ 	iomap_readahead(&xfs_read_iomap_ops, &ctx, NULL);
+ }
+ 
+diff --git a/fs/xfs/xfs_fsverity.c b/fs/xfs/xfs_fsverity.c
+index 0971d2f983db..e3c8ac51c43f 100644
+--- a/fs/xfs/xfs_fsverity.c
++++ b/fs/xfs/xfs_fsverity.c
+@@ -18,3 +18,12 @@ xfs_fsverity_metadata_offset(
+ {
+ 	return round_up(i_size_read(VFS_IC(ip)), XFS_FSVERITY_START_ALIGN);
+ }
++
++bool
++xfs_fsverity_is_file_data(
++	const struct xfs_inode	*ip,
++	loff_t			offset)
++{
++	return fsverity_active(VFS_IC(ip)) &&
++			offset < xfs_fsverity_metadata_offset(ip);
++}
+diff --git a/fs/xfs/xfs_fsverity.h b/fs/xfs/xfs_fsverity.h
+index 5771db2cd797..ec77ba571106 100644
+--- a/fs/xfs/xfs_fsverity.h
++++ b/fs/xfs/xfs_fsverity.h
+@@ -9,12 +9,18 @@
+ 
+ #ifdef CONFIG_FS_VERITY
+ loff_t xfs_fsverity_metadata_offset(const struct xfs_inode *ip);
++bool xfs_fsverity_is_file_data(const struct xfs_inode *ip, loff_t offset);
+ #else
+ static inline loff_t xfs_fsverity_metadata_offset(const struct xfs_inode *ip)
+ {
+ 	WARN_ON_ONCE(1);
+ 	return ULLONG_MAX;
+ }
++static inline bool xfs_fsverity_is_file_data(const struct xfs_inode *ip,
++					    loff_t offset)
++{
++	return false;
++}
+ #endif	/* CONFIG_FS_VERITY */
+ 
+ #endif	/* __XFS_FSVERITY_H__ */
 -- 
 2.54.0
 
