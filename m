@@ -1,36 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDBE93358B0;
-	Tue, 21 Jul 2026 03:23:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F54578F26;
+	Tue, 21 Jul 2026 03:23:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784604222; cv=none; b=Cl0E8NioZaXmrtbk9ITczMgP0Zg7IXAyeryxDyleJ+4otu3zcGqb+qTZQy9Cdmv4QUDywY+sAb4YyvFB0BxD5Ml2fhL4rSDKzjlNQfgZDfcQOuACZEXYTidWAbgt8A+Wzc8WS0KekdZRRNMscPyudXjCqCwFjbjtXsV/DarpiN0=
+	t=1784604228; cv=none; b=f7lHYmflQcFDIUmBd3EBCVn428Iw7UUY9zmOjpXp/p8azSudGBffP5P1YuRT0hmWgB4h62qbRpW4vjdg7tDuAGhmYNAtAtLUGmMlDQ1DXaksYKc1uuKYIXANyJlJ3qBtatB5OT8bl/qRHn+hDzHjsd+DoqG1wZOfsK39mQpu7Pk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784604222; c=relaxed/simple;
-	bh=eqEgTQle8FfwYn8tAo2b7L97nX6lJKPx7UVmKMQvimE=;
-	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=Hlz8wkNNlHUbZk0HV5LW2mWHVnQ1aPdaSlQzYaoVq8ARRwwimv1Sl4lRrerngxERbyf7DHD4EA5Ltz2skqmdmIvwS40iMLIT9ZhfSTt6QWWc8q+bZLGF4s4CGCeqPmr9i/5KlXp3/Q3wTL7rG7/2NNMdwnXy/UbZOY67IilxuLs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Hg/ftGWi; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784604228; c=relaxed/simple;
+	bh=ROwtz8YiO0ocuTUNzu8Elmw5do6nzrGrWBGoAwGVubE=;
+	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=FJN/J9ejS5tfXhAirKAqXT2aLWd4buz32vrjGn6dTqLEq72QBCJX51sBeqc7ADBtN7gqkRM2b1BneezP0xNdZtOqnpstrl9mVPvCocrif8PdBOuYOKPpOJVcEcKDMGsymHHJBIS4Bm3m49AzhDk2/wk/2DxQiOOOd+Ij+92cAyM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iaYSvsPP; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Hg/ftGWi"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 712121F000E9;
-	Tue, 21 Jul 2026 03:23:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iaYSvsPP"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id ED95F1F000E9;
+	Tue, 21 Jul 2026 03:23:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784604221;
-	bh=6WwFlGGrSD9C32yPvWoiy5x8vlluORsxZNtXPzxJM9s=;
-	h=Date:Subject:From:To:Cc;
-	b=Hg/ftGWi+pg5ZcCUXH/V+RtTNgA94/18ggBggKXCQm8DeTIW/bsC/RukM0zzRhd5Y
-	 nrkEe7ovdxD/fX5UlGJo0Oostan9XJ1vf5Si5eM3VwfRUqstAsGFXm+4sbce9jw8P9
-	 xX2/xvyoNAPYSNgulOot4shLiLoBMmp5czJ33FJugHSN9oxtdi/SSJVWibAz/Y/TyW
-	 ldxWSvQ65xMDoPgHrKbPVJFDtt/5eAOSrhk0kI/e6XK3LMnQm1J0rOK1EHfXwpFiEh
-	 h2RkGRc2XCCyEypr6LBPGxXGTQLI/91VWAn6ugm75RrF8VxVsk07DObusvEwCfPSUL
-	 +aPd6Z9iuooLA==
-Date: Mon, 20 Jul 2026 20:23:41 -0700
-Subject: [PATCHSET 2/2] xfs: LLM-inspired iunlink repair bug fixes
+	s=k20260515; t=1784604227;
+	bh=cuIJZNVzkTutfPdoVp3/v/IMmeLS7gAFmIzFABjwCLw=;
+	h=Date:Subject:From:To:Cc:In-Reply-To:References;
+	b=iaYSvsPPA/mv+d+QUtELwW3ry7fqEgIXRrr98/jqlBs722r/FNkeFk5XGXfX0ql/z
+	 U0l9AZtSkkegdqpgu3O5S81pjRnloFPaodaYyW9A/scG0UigUhy/2odqJx64W8UDeb
+	 B9Ls8q+TBq+S/EIBLjyxsu5sGe2km97RlL4UwGNK5PxBkCbYQ60MyJILTd++SZTWQ3
+	 bvowL2ApsVzbg14nSghDgfcon7LPCtV+UpG4GCaScF8sHncdEn8OEkc/p2nH4VQ9g8
+	 Jl6BdJVJV0+ozF0kEtqqFyGEDpV9gmrVy/C3jBIVK8AeP7nCf5p4fRaCbdTGYcEBKv
+	 Wl9uYMz4Ppc+Q==
+Date: Mon, 20 Jul 2026 20:23:46 -0700
+Subject: [PATCH 1/5] xfs: check cowextsize in xrep_inode_cowextsize
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, hch@lst.de, cem@kernel.org
 Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <178460419438.830862.6755198157088208229.stgit@frogsfrogsfrogs>
+Message-ID: <178460419108.830618.3867372075527873217.stgit@frogsfrogsfrogs>
+In-Reply-To: <178460419060.830618.6327864598367400225.stgit@frogsfrogsfrogs>
+References: <178460419060.830618.6327864598367400225.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -40,37 +43,32 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-These bugfixes got started as part of a series of assorted bug fixes.
-However, in writing a test case to exercise weird corruption scenarios
-I discovered a few more fixes, so I decided to collect them all in a
-targeted series.
+LOLLM points out that the function that corrects cowextsize should check
+i_cowextsize, not i_extsize.
 
-If you're going to start using this code, I strongly recommend pulling
-from my git trees, which are linked below.
-
-With a bit of luck, this should all go splendidly.
-Comments and questions are, as always, welcome.
-
---D
-
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=llm-fixes-iunlink
+Cc: <stable@vger.kernel.org> # v6.14
+Fixes: a9600db96f74af ("xfs: detect and repair misaligned rtinherit directory cowextsize hints")
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+Assisted-by: LOLLM # finding obvious bugs
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
-Commits in this patchset:
- * xfs: hoist per-bucket unlinked list check to helper
- * xfs: don't livelock in scrub on a circular unlinked list
- * xfs: don't walk off the end of a null sc->sa.agi_bp in AGI repair
- * xfs: load next_agino from the correct xfarray in xrep_iunlink_relink_prev
- * xfs: pass runtime errors from xrep_iunlink_mark_ondisk_rec up to callers
- * xfs: check xfarray iteration errors when committing unlinked inode lists
- * xfs: fix allocated inodes that show up in the unlinked list
- * xfs: fix another iunlink infinite loop bug in online fsck
- * xfs: set the prev pointer when reinserting an inode on the unlinked list
----
- fs/xfs/scrub/trace.h           |    2 +
- fs/xfs/scrub/agheader.c        |   94 ++++++++++++++++++++++++++--------
- fs/xfs/scrub/agheader_repair.c |  110 +++++++++++++++++++++++++++++++++++-----
- 3 files changed, 170 insertions(+), 36 deletions(-)
+ fs/xfs/scrub/inode_repair.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+
+diff --git a/fs/xfs/scrub/inode_repair.c b/fs/xfs/scrub/inode_repair.c
+index 3ec41c19835116..b88427a4460cba 100644
+--- a/fs/xfs/scrub/inode_repair.c
++++ b/fs/xfs/scrub/inode_repair.c
+@@ -1960,7 +1960,7 @@ xrep_inode_cowextsize(
+ 	/* Fix misaligned CoW extent size hints on a directory. */
+ 	if ((sc->ip->i_diflags & XFS_DIFLAG_RTINHERIT) &&
+ 	    (sc->ip->i_diflags2 & XFS_DIFLAG2_COWEXTSIZE) &&
+-	    sc->ip->i_extsize % sc->mp->m_sb.sb_rextsize > 0) {
++	    xfs_extlen_to_rtxmod(sc->mp, sc->ip->i_cowextsize) > 0) {
+ 		sc->ip->i_cowextsize = 0;
+ 		sc->ip->i_diflags2 &= ~XFS_DIFLAG2_COWEXTSIZE;
+ 	}
 
