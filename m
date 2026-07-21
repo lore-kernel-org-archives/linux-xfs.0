@@ -1,118 +1,103 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 834F543E08B;
-	Tue, 21 Jul 2026 22:38:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80FE540926D;
+	Tue, 21 Jul 2026 22:57:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784673508; cv=none; b=MUguhLAY1VznadJrInScHU/Zuyp76bAVZ6mhta77G0J3U28uYX5BphYRFEZ3ODDIM5pn6WRTDz74DZE6moeTFqf/xGrFM0o2YGVd+0lsuhsYBsrwTBQG2qyoqIvhSIIfIeAVV6K06tI2fInhz0SXywRpORhXbs1ugaIDAe/4wAI=
+	t=1784674625; cv=none; b=oCYpsnNnfxg2EVLDenbJ09W5X6wpYUCVUK4iFwg8DZ6ngKyhjK8SqPs3wTYI7+anzQpNN5f91Qtj+Zij8Aa5TE0FofSKOIEXUCiL6970KQr2M/nOiao0twJwgS3TbBuAdGk+qbIKjNEcRhXgwFXqC3FiaqwOO4DBVwvyIBKVXwg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784673508; c=relaxed/simple;
-	bh=nms3C/WQRisy62ZSBYHVTz/QOw5vK+4C8rQ7PSulkjQ=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
-	 In-Reply-To:Content-Type; b=FTthH8kLSjnd2JLtpVZBG0dWIbv6NQCgPXHcqKWK9UenOkTP5dGtIg0udgyc5agD2hQ7iwxtrh/Fvo8f5NgEjyZIKj5FPCK0LRcKoHkToim/k7k2Nevl6E+2CC3XQc0LzK9CGx6IyXSPgdbn4QUpfc9hRGX4Ed7XMaGEPW7Fvng=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ARtcLoJz; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784674625; c=relaxed/simple;
+	bh=ilvc7Ca8xEGa2WSnjI4f+orqR6jvzGj8Jd35B1wuuiY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Yxpm8D8a0Wyl8Ta6PPGNe5NDR+k33faPvUwCAVfLnAdmgOi4rnVWbr1MR0dgmLXj7OeEVRNwFq1rk9ZODRoq0uM2rL958TDRSLQO/RL+ag4YhrXGCTw4DDaab3ZmjeOOKm881/twq2pZsePechA4u+ZDDQI9v6OtFTFL3vnkpns=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QN8EBaaA; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ARtcLoJz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7F3901F00A3F;
-	Tue, 21 Jul 2026 22:38:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QN8EBaaA"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 450331F00A3A;
+	Tue, 21 Jul 2026 22:57:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784673498;
-	bh=WDmDZTIDZNcAFuhGz8dTh3etu6wdnO4DjLK0ii8Wyzk=;
-	h=Date:From:Subject:To:Cc:References:In-Reply-To;
-	b=ARtcLoJzABGhjsRsl43Z8c5OfbhrPDdPrGHmNzke9lhWPAi769ClK25YbAUsSPM46
-	 G68nyYdRIURws4B22ZoP0ftvrwtCLv0Nr0u0ktF07WWJAoZJ19gDfGo3Aq9g6Qkuyp
-	 6rm0XRu3Uz0j1XrFVqGmYCXluJ6rc9RoSX8cUZmNLQ4ZdofPeM11yD3BW4I/99lde3
-	 U+eANkIjik5L4lDFo6QF9pWBHXqcOETMLerNDP3pqLMN+ZVhekwVlYuHbgfsOTfrM6
-	 yUW+a5us7kufuQxLLcrjn2DCFKpHpuoVM0z7HXQE8X4G7ZD8ocT7oFG2whgGepucM9
-	 1oIO9UA681Zvg==
-Message-ID: <10f50eff-3d65-4e58-af4c-977e786617b8@kernel.org>
-Date: Wed, 22 Jul 2026 06:38:15 +0800
+	s=k20260515; t=1784674624;
+	bh=0hkPjTUdaj568jeuea2sBw3RB9UhtApfx4Bt0GOlMcI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=QN8EBaaAr15H560q2O9dzU7JbBf/AeEDJ3RakO1jVJ388FxNQeG5h2nKy9Lk4ELA7
+	 lM08UvIGQDWe+zu1kOwoKDfzp1dsirgxIh8oN9lZTMAHL/alDOJARUQu4j1FyF7PiV
+	 10MM4rMXOovaqC5NA9u9sRK+epsZlFuwcrflfYFR9O1S2PzD0TA3VztxfZY0F5aDHw
+	 +6A9ewWquWzzB9IZY5AuOJOuggi9qzueluDAveUIBvie6rz6MAKKUd6IP6vpgP+Cto
+	 B1y80olZX3NljqRBbmbry+cAQuUgWf3rLXdagWjbEIYAfBcfq6KSiWB+Izo62if78x
+	 uD0RYeu9rW+Fw==
+Date: Tue, 21 Jul 2026 15:57:03 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Anand Suveer Jain <asj@kernel.org>
+Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org,
+	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-f2fs-devel@lists.sourceforge.net, zlang@redhat.com,
+	hch@infradead.org
+Subject: Re: [PATCH v7 06/11] fstests: verify f_fsid for cloned filesystems
+Message-ID: <20260721225703.GZ7380@frogsfrogsfrogs>
+References: <cover.1781694879.git.asj@kernel.org>
+ <2ac5fb22fd6b51973d11082a1ee8fe354926c63c.1781694879.git.asj@kernel.org>
+ <20260701173314.GH6517@frogsfrogsfrogs>
+ <328de723-6f9c-4f09-a68a-da24d49300d5@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-From: Anand Suveer Jain <asj@kernel.org>
-Subject: Re: [PATCH v7 01/11] fstests: add _loop_image_create_clone() helper
-To: "Darrick J. Wong" <djwong@kernel.org>, Anand Jain <asj@kernel.org>
-Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org,
- linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
- linux-f2fs-devel@lists.sourceforge.net, zlang@redhat.com, hch@infradead.org
-References: <cover.1781694879.git.asj@kernel.org>
- <421c7cdd5aae27b99d04dddf08c5d9df79c2f790.1781694879.git.asj@kernel.org>
- <20260701170713.GE6517@frogsfrogsfrogs>
-Content-Language: en-US
-In-Reply-To: <20260701170713.GE6517@frogsfrogsfrogs>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <328de723-6f9c-4f09-a68a-da24d49300d5@kernel.org>
 
-
->> +		_mkfs_dev "-s size=4096" ${loop_devs[0]}
+On Wed, Jul 22, 2026 at 06:36:13AM +0800, Anand Suveer Jain wrote:
 > 
-> Not sure why you pass two separate cli arguments as a quoted string, but
-> my guess is it "doesn't matter" because _try_mkfs_dev uses $* unquoted,
-> which separates them again.
 > 
-> I HATE BASH.
->> +		;;
->> +	btrfs)
->> +		_mkfs_dev ${loop_devs[0]}
+> > This is where I continue getting stuck on this patchset -- fsid is so
+> > poorly defined that I don't think the rest of these fsid tests make
+> > sense at all.  Nobody mandates that fsid is persistent or stable across
+> > remounts.  Nobody even mandates that two cloned filesystems don't have
+> > the same fsid value.
+> > 
+> > The statfs manpage says:
+> > 
+> > "Nobody knows what f_fsid is supposed to contain (but see below)"
+> > 
+> > and then:
+> > 
+> > "The general idea is that f_fsid contains some random stuff such that
+> > the pair (f_fsid,ino) uniquely determines a file."
 > 
-> And while I'm whining:    ^^^^^^^^^^^^^^^ actually should be quoted.
-> Not that fstests is at all good at getting this right.
+> Which is exactly why we need fstests guardrails.
+> Keeps filesystem's implementation consistent across kernel versions.
+> Embarrassingly, I introduced a bug around this that is now fixed.
+> The commit IDs are in the test cases.
+> Thus motivation for this fstests patch.
 > 
-
-Damn! Fixed the two issues above.
-
->> +		;;
->> +	*)
->> +		_mkfs_dev ${loop_devs[0]}
->> +		;;
->> +	esac
->> +
->> +	# Only execute if the function argument is not empty
->> +	if [ -n "$pre_clone_tune_func" ]; then
->> +		$pre_clone_tune_func ${loop_devs[0]}
->> +	fi
->> +
->> +	sync ${loop_devs[0]}
->> +	cp $img_file $img_file_clone
+> > Based on that very weak statement, at most it might make sense to check
+> > that two separate and simultaneously mounted filesystems don't end up
+> > with the same fsid 
 > 
-> What if cp doesn't create a reflink copy?  Can we fill up the $TEST_DIR
-> despite having checked it for sufficient free space?  Especially on
-> filesystems that don't support sparse holes?
+> Yes, for xfs, btrfs and f2fs. However for ext4 cloned filesystems can
+> share the same fsid and ino because the images are identical.
+> It is then up to the usecase to change the UUID for either filesystem if
+> it gets modified.
+> Commit ("fstests: add _require_unique_f_fsid() helper") captures this,
+> and the link in that commit includes the discussion.
 > 
-
-We have _require_fs_space a few lines above (yes, I have doubled the
-size requirement). If we reach this point, cp is unlikely to fail, but
-if it does, it will be messy.
-
-        _require_fs_space $TEST_DIR $((size * 1024 * 2))
-
-Added a call to _fail to be more direct.
-
-        cp $img_file $img_file_clone || _fail "Failed to copy cloned image"
-
-
-
->> +
->> +	loop_devs="$loop_devs $(_create_loop_device $img_file_clone)"
->> +
->> +	_ret=($loop_devs)
+> > just in case there *are* programs foolish enough to
+> > use (fsid,ino) as a uniqueness check.
 > 
-> Hmm.  Should this function return nonzero if any part of the clone
-> creation fails?  Or are callers expected to notice that _ret only has
-> one element?
+> On the other hand, if a program needs a unique ID, do we currently have
+> any way to get one?
+
+I don't think there is a way to get a globally unique identifier for a
+filesystem image except for the meta_uuid filesystems, and even then
+only if the volume manager resets the user-visible uuid every time it
+makes a clone and nobody runs a duplicator.
+
+--D
+
+> Thanks, Anand
 > 
-
-If we are here, both images have been created successfully; otherwise,
-we would have called _fail.
-
-> --D
-
-Thanks for the reviews Darrick.
--Anand
-
+> 
+> 
