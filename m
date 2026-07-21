@@ -1,41 +1,29 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5120B446822
-	for <linux-xfs@vger.kernel.org>; Tue, 21 Jul 2026 15:23:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1490F4CA26F
+	for <linux-xfs@vger.kernel.org>; Tue, 21 Jul 2026 15:27:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784647430; cv=none; b=SyIwUQTW+C5+uF6nwhDHaXi/2hB0EYHVTsuo5qCdQPM2VYK7uSGRuK4XvNc5acMMlX1N1Ugv/GrbJtcmqQ2SedXUgKGWHVJgl76hZ526HV+wPausakmXm9PbPBZ3G7UKeyVy8CRHV244jwQNfs/3Bvd+lmlpGPlBBQcjZ/+KHLg=
+	t=1784647664; cv=none; b=DYx5jS/GhNL3kseOLT9IIOrytfhTWguJ74HJIwWCTP3EkbuBtXkTTzmExqwjfb5RCSxrjrRMusiQt/jUiLYYJQg7IEIdE7JLqEDkNIn2vhNQi9nML01bDcKume2AzMYp9mUSWglkpIDegKSESM80jT8Iwl2qarXysj0w+2HB2TU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784647430; c=relaxed/simple;
-	bh=FJl7p5kBn+csQ3hgHCE3R7u0NjyOTPe+PlCoREt6fW8=;
+	s=arc-20240116; t=1784647664; c=relaxed/simple;
+	bh=vudqL70cP7e5iteeqtqeT5ZVRUuB8sHR9U/khHfKfkk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=BQQMn/cmA/lzUH38nMC71HtPgYdlW/RTikBI227VIH5k/OrFcEgJHKuvVsHv31GBFcNbE/XJJUc1fUCe19r4c6ZQ/wbD4J3LE06yRQRZKgpgz6zWLliuRIwhLcNKNpQrWkD4ltzlDCOwuxCm+kpstalEWOo51WF4BKioBjYsX80=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FL5v+8Q0; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FL5v+8Q0"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id BC6281F000E9;
-	Tue, 21 Jul 2026 15:23:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784647428;
-	bh=aBnVDPaZxUjX/aFDookiOziiwVxHn48/cT18M+DXqXE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=FL5v+8Q0ZKFKejLQaspYt+MwROFrHhRKSglxJItIMblZ/Sma7a0AyknCHFWePG4EE
-	 CDdQ4VM//tps+m7dN3JU6dqxgCpc2Yxlk5n58DvAkpaCSAe8Mvzbjteg+u9YWU1+Dm
-	 Htr/DEqvzp6yeB60H8EDiRCU3xmWB4NbdekzBp7s+se8YuhNM44MA2Rvvlfo7Io7Cg
-	 WW7fd6otLkqc4aluFZw5q+FARsK+nT7S7nUhFUO5EQ0iwZbE0zeijy19/Y+9XRfOMu
-	 sreKuZ6X/WdKELZfGsWJrL9eG0Wcl0YJag+VgscPsASznSnm7e6vFWBrXcNFGi9cIA
-	 aTYsVNOLD8Nyg==
-Date: Tue, 21 Jul 2026 08:23:48 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org,
-	dgc@kernel.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZmlBdCDAthBWxe0+ZAQ8p35Kar2fh0rqhAiUMxvVMrPopURSc5b8m6uAS7Anufb/O56CObYO9E1RkUZmdlZipJt6wE/RfohynHLJWGA8Hrr6J7jMwUXrqf/vquS+YF0wRKffn1XYHQ/5r8A/iuRg+IkuC4jJXZkietvVXqrTG2c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id DCF3F68BEB; Tue, 21 Jul 2026 17:27:38 +0200 (CEST)
+Date: Tue, 21 Jul 2026 17:27:38 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
+	linux-xfs@vger.kernel.org, dgc@kernel.org
 Subject: Re: improve log context annotations
-Message-ID: <20260721152348.GY7380@frogsfrogsfrogs>
-References: <20260720094609.2191633-1-hch@lst.de>
- <al84nDC0BvHr33Kz@nidhogg.toxiclabs.cc>
- <20260721150142.GA14984@lst.de>
+Message-ID: <20260721152738.GA16685@lst.de>
+References: <20260720094609.2191633-1-hch@lst.de> <al84nDC0BvHr33Kz@nidhogg.toxiclabs.cc> <20260721150142.GA14984@lst.de> <20260721152348.GY7380@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,22 +32,21 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260721150142.GA14984@lst.de>
+In-Reply-To: <20260721152348.GY7380@frogsfrogsfrogs>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Tue, Jul 21, 2026 at 05:01:42PM +0200, Christoph Hellwig wrote:
-> On Tue, Jul 21, 2026 at 11:16:40AM +0200, Carlos Maiolino wrote:
-> > Thanks. Those all look good for me. But I'm adding Dave to the thread as
-> > he has much more expertise with lockdep than me and I'd appreciate his
-> > input.
+On Tue, Jul 21, 2026 at 08:23:48AM -0700, Darrick J. Wong wrote:
+> > More review is always good.  But as a reminder for the audience:
+> > lockdep and the lock context annotations are two totally seaprate
+> > things.  The former verifies the locking state at runtime, while
+> > the latter is about compile-time enforcement for the cases where
+> > that is possible.
 > 
-> More review is always good.  But as a reminder for the audience:
-> lockdep and the lock context annotations are two totally seaprate
-> things.  The former verifies the locking state at runtime, while
-> the latter is about compile-time enforcement for the cases where
-> that is possible.
+> <shrug> The new annotations are consistent with my understanding of the
+> annotated functions, but as I don't build with clang I can't say I've
+> actually dug into its auto-verifier features, let alone run it.
 
-<shrug> The new annotations are consistent with my understanding of the
-annotated functions, but as I don't build with clang I can't say I've
-actually dug into its auto-verifier features, let alone run it.
+Even with clang you need to opt into the in the Makefile for XFS.
+As mentioned in this cover letter we're not quite ready for
+that yet, but I want to get there.
 
---D
