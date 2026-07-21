@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57B9A78F26;
-	Tue, 21 Jul 2026 03:24:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A91B78F26;
+	Tue, 21 Jul 2026 03:24:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784604244; cv=none; b=UnRdNWWGT1qm9YmtzyTqrfxk89eW4wDwEurtspggHndglcum4AH2BAlEyue34QmLFXVAxto4t4PhRFy2tw0QrI+sZuOBd3ie1h203n6JIYSRkuEMuDyhLRvQYaegULWPKCSh7xMJAIKlJFbC0yRBdvbXa8k2xRrYtXKVIItly54=
+	t=1784604259; cv=none; b=tYFeaeA+4KpCh87spqn7t0tEVZ1PYiLmO7Y6ex5sAGqVL1yahCyV5f3OSe4DCPkAV0VKuVbw93V4r/y1bCOMpEicTCw+buiQ3BBdyTTKShrq4nK2KPImcO1LoPErdGOvXjLku1NlPeQf0nezLk9VpvrrOfIAMNCMFGkHB0Hm7qE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784604244; c=relaxed/simple;
-	bh=4EotqG0FvaRuuv/yR1qPJ+6ZOVTR/XvVleW4ZjaOzqk=;
+	s=arc-20240116; t=1784604259; c=relaxed/simple;
+	bh=iUhmL8tLsaO/FvAOCIdQds7shdxj8r+i2BVho/qJevY=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=UlsDKDiPAivH1eFjxYGnQ5vnsIOJR4FDOOQIPlYzjc3o8FlPWugXncEsKIfS4R9Icw9cphfsTwTZcbjG7CTiApIcMYIqxihgXUlWa+tvD9yYVyliZCvHtX8aQRQLOM6i6FiCYs8zmbQ5KhTKrp0CQymcrVFeDOOkCq8ey2AgS38=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Wo3Rl5Pn; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=BqOO8k5YrWVF04ixEcALsVf0jlo8iNDJRnYYoSi3/5WHFYgHalHimEAipAYeIXpqrRVX3NdUUoWslwBlFtiSJbuRG1p6WL++TGOMBHKFPIfx49O9ynyzE4UrSUBvzVyclIeEXIabJyAR4T3gC4LKPJTq9PaloXG4trUdfhba9Jo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aB8hc/5r; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Wo3Rl5Pn"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 9774D1F000E9;
-	Tue, 21 Jul 2026 03:24:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aB8hc/5r"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 1C97E1F000E9;
+	Tue, 21 Jul 2026 03:24:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784604242;
-	bh=VMBYuAvhnCq0b5OrVh2RI3rlJmPHzcUJjHmEDck/aL4=;
+	s=k20260515; t=1784604258;
+	bh=HRUhhQaSCPfZF8ep5OYl+Xsq2VwLW1WNf2Puu5yH61g=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=Wo3Rl5PnM+DcKrT7AmnIBhJSAS6QZz8ydwTYzXT2N17SFnyM2y40cz/IpWo3Iu7FZ
-	 kFnKci0JDnL1ErRTiK/z1c6GNEEIADVUvPaJJgx/dA7g4/fJFg4lf53LTO3LQoddWD
-	 p4mPNKXTEbqAb/bjpl2mcY6Zzf9rndW1Jkggq7SFkjnJn5LFF8H+wTNnYVdAbWFsdG
-	 IwRMYV71K5W+719S34rD5KqWm9UIZqgBOemygs5BI4RTPUgMJMEwUqEis2kwbhpYbl
-	 jtU2TtcAMmBBDquxAELUJdob/j7Bgpzz5LdPNHSYv/sWCCUcEIaR+cjjMzOOc4PXKS
-	 jiM+3eTlh2xxw==
-Date: Mon, 20 Jul 2026 20:24:02 -0700
-Subject: [PATCH 2/5] xfs: fix transaction block reservation in xrep_rtbitmap
+	b=aB8hc/5r06kbL+8R5urd0wuTMNPWJruirvbWFumZKFfKb6h6NRhOVYOxOsjUUPbA2
+	 SrOQLpBibK7M0PBkSPgVCjWGMkWTJzoJsPXVE/8FFZwW/+Iln7jtqfx/xRR5T11fPL
+	 OAY0zcU/GWGrnsuwKCmNZ4+VvNlMQN428eMUJ6DU+9tL6hPv5TTu8e8wkLG9QaE1Xz
+	 9tpJodU9MHYuLdReB+6584DSuLNZfGwA04amwOnVM42yw1Mrx3Uoq+iJKMMUewr4pN
+	 d28SfNaXJj3N6FMjOQ8AYij/3UKTfeM8mFJ7axj6DNWA6udidu/cVxN1Fr8X98U24a
+	 i8teHQ3Zfw7PQ==
+Date: Mon, 20 Jul 2026 20:24:17 -0700
+Subject: [PATCH 3/5] xfs: rtsummary scrub should treat rtbitmap corruption
+ errors as an xref error
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, hch@lst.de, cem@kernel.org
 Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <178460419128.830618.9531393554567720123.stgit@frogsfrogsfrogs>
+Message-ID: <178460419149.830618.14920105685278204532.stgit@frogsfrogsfrogs>
 In-Reply-To: <178460419060.830618.6327864598367400225.stgit@frogsfrogsfrogs>
 References: <178460419060.830618.6327864598367400225.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,111 +46,31 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-LOLLM pointed out an inconsistency in the block reservation code in
-xrep_rtbitmap.  The first is that the reservation computation is not
-consistent between the code that sets up the repair and the code that
-tries to avoid exceeding the transaction reservation once we know how
-big the rtbitmap really must be.  As a result, the logic doesn't work.
+LOLLM notes the discrepancy between the comment saying that this is an
+xref error and the code, which marks a (non-xref) corruption error.
+This appears to be a regression.
 
-In fixing that, a second problem emerges: if we do readjust, we ask for
-the entire reservation all over again.  We really only need the delta,
-so ask only for that.
-
-Fix all these problems by hoisting the computation to a trivial helper
-so that it gets used in both places.
-
-Cc: <stable@vger.kernel.org> # v6.14
-Fixes: 8defee8dff2b20 ("xfs: online repair of realtime bitmaps for a realtime group")
+Cc: <stable@vger.kernel.org> # v6.13
+Fixes: e3088ae2dcae3c ("xfs: move RT bitmap and summary information to the rtgroup")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Assisted-by: LOLLM # finding obvious bugs
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/scrub/rtbitmap_repair.c |   46 ++++++++++++++++++++++++----------------
- 1 file changed, 28 insertions(+), 18 deletions(-)
+ fs/xfs/scrub/rtsummary.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/scrub/rtbitmap_repair.c b/fs/xfs/scrub/rtbitmap_repair.c
-index dc64902d6c25a4..442a17bf972029 100644
---- a/fs/xfs/scrub/rtbitmap_repair.c
-+++ b/fs/xfs/scrub/rtbitmap_repair.c
-@@ -36,6 +36,24 @@
- 
- /* rt bitmap content repairs */
- 
-+/*
-+ * Reserve enough blocks to write out a completely new bitmap file, plus twice
-+ * as many blocks as we would need if we can only allocate one block per data
-+ * fork mapping.  This should cover the preallocation of the temporary file and
-+ * exchanging the extent mappings.
-+ *
-+ * We cannot use xfs_exchmaps_estimate because we have not yet constructed the
-+ * replacement bitmap and therefore do not know how many extents it will use.
-+ * By the time we do, we will have a dirty transaction (which we cannot drop
-+ * because we cannot drop the rtbitmap ILOCK) and cannot ask for more
-+ * reservation.
-+ */
-+static inline unsigned long long
-+xrep_rtbitmap_calc_blocks(struct xfs_mount *mp, unsigned long long blocks)
-+{
-+	return blocks + (xfs_bmbt_calc_size(mp, blocks) * 2);
-+}
-+
- /* Set up to repair the realtime bitmap for this group. */
- int
- xrep_setup_rtbitmap(
-@@ -56,20 +74,7 @@ xrep_setup_rtbitmap(
- 	if (error)
- 		return error;
- 
--	/*
--	 * Reserve enough blocks to write out a completely new bitmap file,
--	 * plus twice as many blocks as we would need if we can only allocate
--	 * one block per data fork mapping.  This should cover the
--	 * preallocation of the temporary file and exchanging the extent
--	 * mappings.
--	 *
--	 * We cannot use xfs_exchmaps_estimate because we have not yet
--	 * constructed the replacement bitmap and therefore do not know how
--	 * many extents it will use.  By the time we do, we will have a dirty
--	 * transaction (which we cannot drop because we cannot drop the
--	 * rtbitmap ILOCK) and cannot ask for more reservation.
--	 */
--	blocks += xfs_bmbt_calc_size(mp, blocks) * 2;
-+	blocks = xrep_rtbitmap_calc_blocks(mp, mp->m_sb.sb_rbmblocks);
- 	if (blocks > UINT_MAX)
- 		return -EOPNOTSUPP;
- 
-@@ -512,7 +517,7 @@ xrep_rtbitmap(
- 	struct xchk_rtbitmap	*rtb = sc->buf;
- 	struct xfs_mount	*mp = sc->mp;
- 	struct xfs_group	*xg = rtg_group(sc->sr.rtg);
--	unsigned long long	blocks = 0;
-+	unsigned long long	blocks;
- 	unsigned int		busy_gen;
- 	int			error;
- 
-@@ -532,15 +537,20 @@ xrep_rtbitmap(
- 	 * figure out if we need to adjust the block reservation in the
- 	 * transaction.
- 	 */
--	blocks = xfs_bmbt_calc_size(mp, rtb->rbmblocks);
-+	blocks = xrep_rtbitmap_calc_blocks(mp, rtb->rbmblocks);
- 	if (blocks > UINT_MAX)
- 		return -EOPNOTSUPP;
- 	if (blocks > rtb->resblks) {
--		error = xfs_trans_reserve_more(sc->tp, blocks, 0);
-+		uint64_t	delta = blocks - rtb->resblks;
-+
-+		if (delta > UINT_MAX)
-+			return -EOPNOTSUPP;
-+
-+		error = xfs_trans_reserve_more(sc->tp, delta, 0);
- 		if (error)
- 			return error;
- 
--		rtb->resblks += blocks;
-+		rtb->resblks += delta;
+diff --git a/fs/xfs/scrub/rtsummary.c b/fs/xfs/scrub/rtsummary.c
+index 78f72a0468870e..546b335ade1354 100644
+--- a/fs/xfs/scrub/rtsummary.c
++++ b/fs/xfs/scrub/rtsummary.c
+@@ -358,7 +358,7 @@ xchk_rtsummary(
+ 		 * EFSCORRUPTED means the rtbitmap is corrupt, which is an xref
+ 		 * error since we're checking the summary file.
+ 		 */
+-		xchk_ip_set_corrupt(sc, rbmip);
++		xchk_ip_xref_set_corrupt(sc, rbmip);
+ 		return 0;
  	}
- 
- 	/* Fix inode core and forks. */
+ 	if (error)
 
