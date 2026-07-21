@@ -1,74 +1,48 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28641480973;
-	Tue, 21 Jul 2026 10:45:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F7DB4D8D8A
+	for <linux-xfs@vger.kernel.org>; Tue, 21 Jul 2026 15:01:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784630714; cv=none; b=MiM9xnq+IGSHHdRFjJq37bm2/vN4AIG84Op2aedAWl430upTwdFDZPoJM4EtUk8czZlvxvPUUDmmHSWPDbIru4zbvFbZDnbfSab2UenI7aXp5KSZSur8di5YAj7B97zV3hiM3D8sDQX+nbNONzUUzizNxwxV1KX6jJ0R4zO+QZU=
+	t=1784646107; cv=none; b=DbZV6QGAEgBZrrz684/PreZ7JNOJCcnwXUCbAz+YO2RT+xTUrpetcXoDwf5Hm098fpkn0Eoj3TETs5mNrPduX3x7jKCU0UAwWf8ifATg67XN013rIi1uR/Q2a77cAP2d9axJlvzZWQCCm1LS7U1g57QQGu7GG7iT/deSvLhxupk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784630714; c=relaxed/simple;
-	bh=TCzI1K0kG3ZszcQlzQPF9rx7YSbK7w6q8owxkwh+pzE=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=p7sA6tC4alOFnyrPw0DVo64OokoeKvMtKGWruLgsypAcMx4px2XGvgu5Y6qrlMqCuBUL7E1StyY8J1UtMD5ZX3mIFqZAxLHQqbd6PKT19OStoNNSiSP+UjiqNgOHFWh6PaxxXOGPy/uxRc0zQWTtsECc9i0cTYb8RJEfwRrEgi8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ma2maXlg; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ma2maXlg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D83AE1F01562;
-	Tue, 21 Jul 2026 10:44:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784630698;
-	bh=MVzQnfqLE/nstQnHQJfaI7cv9yLHMUmBRVo3BThwY6E=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=ma2maXlgPSeQSq2isZ++vNbZnC0MQv1HzR8gYOY4Y2XgPTPbcXChLFIW2ayYHYTD1
-	 zPjxhggVBTnWKnFRA99D0cn7lD5BnSL+HzchAAVZyssOXgm4q2lveyaEmoVX9h816r
-	 xbwqAiEHUF0fsbbxbfzmUCGnZ2BDI59vbAlo+CzxTgoXqu7fGGg+sQ+KCeQ5tRqUUm
-	 C48RPDA8BoIeXu5s7tdHRBX+RQ5yjEgTXXAoHY+0+DndaiHt8YFF3Sj+qP+4y+x5qU
-	 UnceyfoBe9/wgiz50tdqj3IVLa/sDHQfQdsy/CpTNaybJ+Giw2AAEsfiFFSoFL4DjJ
-	 ZVGicdMKi8+aw==
-From: Carlos Maiolino <cem@kernel.org>
-To: hch@lst.de, "Darrick J. Wong" <djwong@kernel.org>
-Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-In-Reply-To: <178460419060.830618.6327864598367400225.stgit@frogsfrogsfrogs>
-References: <178460419060.830618.6327864598367400225.stgit@frogsfrogsfrogs>
-Subject: Re: [PATCHSET v2 1/2] xfs: LLM-inspired bug fixes, part 3
-Message-Id: <178463069758.324722.3523337122830710867.b4-ty@b4>
-Date: Tue, 21 Jul 2026 12:44:57 +0200
+	s=arc-20240116; t=1784646107; c=relaxed/simple;
+	bh=yDHYzQ4c4JLDFAYdyT0FAPgNawRpXhXvPfO9plAB95o=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=E7QWhPg+XH2a6jvnbCDOpEDGlZlH46e/S6pbIS+S09pUf5hKm0hSHNw7RDxoupE+W1XChSquRYQ8FnQqz8ntEy+57j/pzAPZxHtwnbNpdwIAPPXPcCHFxrYoPsj+7gCbMSBgRlKSKlFKZZMBY4hU6MvegSSDv43Msi7hnn0KJXc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 6DA6768D1F; Tue, 21 Jul 2026 17:01:43 +0200 (CEST)
+Date: Tue, 21 Jul 2026 17:01:42 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
+	dgc@kernel.org
+Subject: Re: improve log context annotations
+Message-ID: <20260721150142.GA14984@lst.de>
+References: <20260720094609.2191633-1-hch@lst.de> <al84nDC0BvHr33Kz@nidhogg.toxiclabs.cc>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.15.2
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <al84nDC0BvHr33Kz@nidhogg.toxiclabs.cc>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Mon, 20 Jul 2026 20:23:35 -0700, Darrick J. Wong wrote:
-> Here's a third batch of xfs fixes resulting from a LLaMma.  Mwa mwa
-> mwa...
-> 
-> v2: apply rvb tags, split out unlinked inode list repair fixes
-> 
-> If you're going to start using this code, I strongly recommend pulling
-> from my git trees, which are linked below.
-> 
-> [...]
+On Tue, Jul 21, 2026 at 11:16:40AM +0200, Carlos Maiolino wrote:
+> Thanks. Those all look good for me. But I'm adding Dave to the thread as
+> he has much more expertise with lockdep than me and I'd appreciate his
+> input.
 
-Applied to for-next, thanks!
-
-[1/5] xfs: check cowextsize in xrep_inode_cowextsize
-      commit: a75913d5543709c8f4a76435a7a629335f166b1e
-[2/5] xfs: fix transaction block reservation in xrep_rtbitmap
-      commit: 442b827ea7d3646c5a395d5282f00f67229f2061
-[3/5] xfs: rtsummary scrub should treat rtbitmap corruption errors as an xref error
-      commit: b6d9247dd5f092169e731afb8375cc14f921991c
-[4/5] xfs: zero i_nlink before repair puts inode on unlinked list
-      commit: 266088be85e78d0d9ab3429d0bd0364858001a9c
-[5/5] xfs: mark nonzero sb_gquotino as corrupt on metadir filesystems
-      commit: 7b2a43bb08b789905716504d50700a0bedba0b35
-
-Best regards,
--- 
-Carlos Maiolino <cem@kernel.org>
+More review is always good.  But as a reminder for the audience:
+lockdep and the lock context annotations are two totally seaprate
+things.  The former verifies the locking state at runtime, while
+the latter is about compile-time enforcement for the cases where
+that is possible.
 
