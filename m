@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EABBB46DFE0;
-	Tue, 21 Jul 2026 18:44:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0BDF647011E;
+	Tue, 21 Jul 2026 18:44:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784659455; cv=none; b=DdIuj5YQhdTM6BjPdfhgkFPoOwZXVdtmBL6G1Q05YnhnmsWw2/aMBZtB33y6GDN+IoF1NtwViO+ymvxctzZSN2k3U5P6B1udX67DBuVv0QBNnL4qhMfeA4RdyJYfj693v9JdM8Sm26jkhICJ6N6r5kPIpzNVjLQ3XgiST5CEPl8=
+	t=1784659457; cv=none; b=TmmrPiq3W2KTjVpw5GSoWIOzoD3vuMJPNHEhOBGiZLhbtte3UtbjuKatke6bTcaVxBMRJuKUjZTV9UL3t58Jar/gXx/se0tt4wAbg7EasTlawmAjeFbMPCFmPj1Vdbyo+QjDGf37iDnba3Z8HmFOf2UgqnYeAd+RgDfcK3Wca6M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784659455; c=relaxed/simple;
-	bh=8g5BgA9mURecCv/apzQ2hLH2SYMpF55oRQsaZ2DgY7Y=;
+	s=arc-20240116; t=1784659457; c=relaxed/simple;
+	bh=npcBKJ6prTDjQpBMieXMMabW1h/6XVeQwDMsId6l6vQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=qz7BfWhDF5mhxyMi03AzbOn7K0S/wZaQHScHTI0j8uVWsfjSYefif5CqF3LYrVUv4kTBMLqTvVkXk6AM6ADCW+5jqALB4bs+Bx2e9s9N18xWpnK0JSAC+yquYxLWTBTqDljTbWpBtKQVnlW85vyLxnOFqY5VEurC56YxyDgrCm8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WataG6vo; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=ndfscoJzxuAQoLUpkobb2HvxWu/gJaHjcVlXR27UduZMgI+p3o4Egq0caC9EZwWzDg6+ZfpH/ehu2FdOkT20JUr7OKmGv9Q8dSoAWgfFE9drelR6ACtmGLIi/uQFxVmgiruxcpeNaI21a/4Jq20OY24Txw87Jj2dlGOGJnVloMo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MLQlBmiP; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WataG6vo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5627A1F00A3A;
-	Tue, 21 Jul 2026 18:44:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MLQlBmiP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A68A1F00A3D;
+	Tue, 21 Jul 2026 18:44:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784659452;
-	bh=VICvrkHJ76P3bbcz027VoiEo6h6DpXS/23ki+zkvasE=;
+	s=k20260515; t=1784659455;
+	bh=fmzb25jhZDNq4cfG2tBZE1WMkvl/GQ14vrzOhert9WY=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=WataG6voOGeBKkFGA2WCgtoq5VWldwW+e3KlGLrdtyzqGIypmGHbIShpKTtuaRzXk
-	 oxsyviofCAduJLlvtlHY6WOx4Lgqwcj4I/1jQnZz+lletXBJrkYPL9xGSe7DTPeO3A
-	 NSgLL8G6yYrTSdgEMz5b210tKyCnot4yfLUAKrxMNg2pogrLKd/Zj1g6WcjzBQAd6N
-	 5aUfHcSMN6rMtyB3qwNG+HHZ7dCDZixpgXdtrNYG7g6+8tdwQSWH8XWe/XCTOzSWUR
-	 u4JHj/IXvSF9VIqwBei3uoTBp77fnpW2EoFbgZ0z+PjqEh/1aS140wsOQ+25MDViyk
-	 shSR2wZSocb2A==
+	b=MLQlBmiPCAKL5xe2t/n7HpcDOcLcgJwlpHxf4sTI6VxBgIvHsR70OO8uHlSHQUGYy
+	 mEsy+hk4m92M0PDm89kHugj+4Ao1Hxgd5DKDYcelZ1KBac9k6GegVm0eTaKlbwCvII
+	 svVjfJB7Mc/+QmhS/4vroeRbGnnoBgaDsXckoeIOrJ8KgXQt0/ChPQvmhEIaQvWdvX
+	 sRUImd4hme+VN8+QP8xQ9iqcvHQYpBz9vHrtoldSURXDXBml6DRzPo4nKXQprF14PT
+	 7GLRdsbpNB6h9oi/vGPZIZ1RpM7c5FJ/UEAyIp9pGji/B4Gbnkghc1batSR9eQf9X2
+	 22UWt867AzNbQ==
 From: Andrey Albershteyn <aalbersh@kernel.org>
 To: linux-xfs@vger.kernel.org,
 	fsverity@lists.linux.dev,
@@ -37,9 +37,9 @@ Cc: Andrey Albershteyn <aalbersh@kernel.org>,
 	linux-f2fs-devel@lists.sourceforge.net,
 	linux-btrfs@vger.kernel.org,
 	djwong@kernel.org
-Subject: [PATCH v13 06/23] fsverity: don't allow setting DAX file attribute on fsverity files
-Date: Tue, 21 Jul 2026 20:40:43 +0200
-Message-ID: <20260721184346.416657-7-aalbersh@kernel.org>
+Subject: [PATCH v13 07/23] fs,fsverity: remove check for fsverity being enabled in setattr_prepare()
+Date: Tue, 21 Jul 2026 20:40:44 +0200
+Message-ID: <20260721184346.416657-8-aalbersh@kernel.org>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20260721184346.416657-1-aalbersh@kernel.org>
 References: <20260721184346.416657-1-aalbersh@kernel.org>
@@ -51,31 +51,31 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-When fsverity is enabled on the file, with FS_IOC_ENABLE_VERITY ioctl(),
-it checks if file has DAX enabled and fails if that's true. However, the
-opposite case is not checked.
+The check that fs-verity is available in the kernel is not necessary
+here. Filesystems could have fsverity files even without fs-verity
+module, then truncate will succeed. Previously, this would return
+EOPNOTSUPP if verity is missing, but if it's not EPERM was returned
+anyway.
 
+Fixes: e9734653c523 ("fs,fsverity: reject size changes on fsverity files in setattr_prepare")
 Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
 ---
- fs/file_attr.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ fs/attr.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/file_attr.c b/fs/file_attr.c
-index bfb00d256dd5..5424ec4e3949 100644
---- a/fs/file_attr.c
-+++ b/fs/file_attr.c
-@@ -246,6 +246,11 @@ static int fileattr_set_prepare(struct inode *inode,
- 	if (fa->fsx_cowextsize == 0)
- 		fa->fsx_xflags &= ~FS_XFLAG_COWEXTSIZE;
+diff --git a/fs/attr.c b/fs/attr.c
+index 4f437fabb7f0..71888ac903c2 100644
+--- a/fs/attr.c
++++ b/fs/attr.c
+@@ -176,7 +176,7 @@ int setattr_prepare(struct mnt_idmap *idmap, struct dentry *dentry,
+ 		 * covered by the open-time check because sys_truncate() takes a
+ 		 * path, not an open file.
+ 		 */
+-		if (IS_ENABLED(CONFIG_FS_VERITY) && IS_VERITY(inode))
++		if (IS_VERITY(inode))
+ 			return -EPERM;
  
-+	/* Can not enable DAX on fsverity file */
-+	if ((old_ma->fsx_xflags & FS_XFLAG_VERITY) &&
-+			fa->fsx_xflags & FS_XFLAG_DAX)
-+		return -EINVAL;
-+
- 	return 0;
- }
- 
+ 		error = inode_newsize_ok(inode, attr->ia_size);
 -- 
 2.54.0
 
