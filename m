@@ -1,40 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CC07480341;
-	Tue, 21 Jul 2026 10:44:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1EBE43553D;
+	Tue, 21 Jul 2026 10:44:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784630708; cv=none; b=tfH0aI/8Wqu87aRazeKChP7zMmAN+tbXULiM+R6sepnidXG80d5tNIhHPgAy6gK/jLHF5397erRO0RY0HVyk1s2cT23TWmx1RhhonPndI6r2+xFupv+omK9mmLImHxUDa/BED3V4YzjaSxcDKIXtfjdr2/gnFqTqFjPagy8Zr/Q=
+	t=1784630707; cv=none; b=DEV2uUHIcPXbee21EO6uRYgqWwcKayJQf16lOnfsGkIMjMpv0hm900IqbgTUlA+eztrN40NiPwp+CI1QonDrQ+03DY5aouDYsA3kBcH7KFNMUCs57il8DYZmy9rBgEpYjMUWRGcY7A25K42R+XIM5+XSYhqVE7eIec+SyDPpaC8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784630708; c=relaxed/simple;
-	bh=EKDHNaDopp5fhs8uZquxf0cx5mtkXhjeH9fl7LvhNos=;
+	s=arc-20240116; t=1784630707; c=relaxed/simple;
+	bh=YewAkqscRimfnvuK5SyaTK0Oe5wg4d9iDGKk83X2TGI=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=ECcXtgV9M9+kIDpcTSmCG/Xf2l7nnTFVmk0ONsAdXP+jTCs9ui0+sO48Gi4uppDCz7XGM5nPZHXCohWRW3mhjpku3a3d+Jp6/y0lYnw10Z7HQLWv6s+LPa0XQQoZYum1sHVaqe95kM+RDWG+VzrZvD3xWLVWFwRW6diA0FI5b8g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hpGiG75Y; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=O+tOD2dROARfwWI0e4zxOchLEdIPupOtLHpn1B1qiDSZ7ycJV/KvZUyWcCI+TauknfbL5CkgNCbFL0sIksQ5ah6viVyASn1V3SXtCZutm3o7Wjg632mksEFNMKwg3RsEy0/lsFFZnVBj82Hnh/YhBkDObrZJyC0cUNkb3KgCCHo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KONPhH1f; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hpGiG75Y"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 433511F00ADE;
-	Tue, 21 Jul 2026 10:44:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KONPhH1f"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B70171F0155A;
+	Tue, 21 Jul 2026 10:44:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784630695;
-	bh=TF1FROrz+/3Nrrqz7OrrWgxhCu3TGd4/hCWiBmCcAI0=;
+	s=k20260515; t=1784630689;
+	bh=MyHCu3nG3vt9PzFjCiq7D31QBqIFrGwY+RWAPPJh8qY=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=hpGiG75Y2P3lYU+E0uHclfq4UTAIQv+ejuFOPlxwDgY2mkHfnUSCHd/L2TzgLwks9
-	 ahErt27hpNwpwp5PQup2Lh9KwVRotSrZ/63BJwOdMsPeVYIw/FLC62LhhpMuTEDSF7
-	 4w/ITxynU+msvNw0JDMMEDhBsgFi/4Efz9Pjmc2oF3ctmt9YpvcHbq/56DslPe9Ayp
-	 syVcRLXxPwhAt9EBTIkdwoTOmm8dmVvWXgSIL/aPnYr4MgJApprIZSjp5VKJwRkuLk
-	 UfepIir9s7wYnpPjIA3Ra2CZHAYUTvl4mgTxwuDofMhLNcc6KiFKY55Q7WWEZvatP2
-	 CorOcuE6nEWYQ==
+	b=KONPhH1fZh+nQpuXMkS2SxkGL/fRy9w3sRlNub6ShvwZCcpi5G04myx/L7pX0oTdJ
+	 XQiag+f6Lex/laLO0zv+6VmX2e80mdHSlWQavGENcoy4sIXA3zz4QE4tgJ2NMzX3Rg
+	 2+5tle7yeqAk1PVvaoKk/OPOK/837YFePY2A+6B1NmxFTtWG+oLGaQMkfaqKguIkM9
+	 pwSFczEd4bY9J3xBK+pt7mW+QUVw/RceP02g/nsd/NFGUaoWiMF0WB1k6vKebEBucq
+	 +r4vhNtpxqnm73H00Ip3FWSNr1JrZethnomZsgxfbJm3sASyyUfoPyUYoo5UUP9Nza
+	 HvZGiMpkuBWjQ==
 From: Carlos Maiolino <cem@kernel.org>
-To: Yun Zhou <yun.zhou@windriver.com>
-Cc: djwong@kernel.org, hch@infradead.org, linux-xfs@vger.kernel.org, 
+To: "Darrick J . Wong" <djwong@kernel.org>, 
+ Cihan Karadag <cihan.cihan@gmail.com>
+Cc: Shuah Khan <shuah@kernel.org>, linux-xfs@vger.kernel.org, 
  linux-kernel@vger.kernel.org
-In-Reply-To: <20260719151124.3514077-1-yun.zhou@windriver.com>
-References: <20260719151124.3514077-1-yun.zhou@windriver.com>
-Subject: Re: [PATCH] xfs: handle NULL b_addr in xfs_buf_free
-Message-Id: <178463069397.324722.16521599214171804128.b4-ty@b4>
-Date: Tue, 21 Jul 2026 12:44:53 +0200
+In-Reply-To: <20260716214827.21188-1-cihan.cihan@gmail.com>
+References: <20260716214827.21188-1-cihan.cihan@gmail.com>
+Subject: Re: [PATCH v2] xfs: use kmalloc_objs() instead of kmalloc() in
+ xfs_da_grow_inode_int
+Message-Id: <178463068845.324722.5237612936067528088.b4-ty@b4>
+Date: Tue, 21 Jul 2026 12:44:48 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,28 +47,20 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.15.2
 
-On Sun, 19 Jul 2026 23:11:24 +0800, Yun Zhou wrote:
-> When xfs_buf_alloc_backing_mem() fails, xfs_buf_free() is called with
-> bp->b_addr still NULL.  The code falls through to the folio_put path
-> which calls virt_to_folio(NULL), dereferencing an invalid address and
-> causing a kernel crash.
+On Thu, 16 Jul 2026 15:48:12 -0600, Cihan Karadag wrote:
+> Convert open-coded kmalloc() multiplication to the modern kmalloc_objs()
+> interface to improve type safety and prevent potential integer
+> overflows.
 > 
->  Call Trace:
->   xfs_buf_free+0x25f/0x510
->   xfs_buf_alloc+0xc98/0x19b0
->   xfs_buf_find_insert+0x55/0x14d0
->   xfs_buf_get_map+0x122b/0x17c0
->   xfbtree_init_leaf_block+0x11c/0x4a0
->   xfbtree_init+0x1bb/0x460
->   xrep_rmap_setup_scan+0x100/0x1f0
->   xrep_rmapbt+0x41/0xc0
+> No functional changes are intended.
+> 
 > 
 > [...]
 
 Applied to for-next, thanks!
 
-[1/1] xfs: handle NULL b_addr in xfs_buf_free
-      commit: 2ba9288085f15d2eec21cdafe438a9d03f44737a
+[1/1] xfs: use kmalloc_objs() instead of kmalloc() in xfs_da_grow_inode_int
+      commit: 97f34168769238b1fe4412229c99f1a78364f6f9
 
 Best regards,
 -- 
