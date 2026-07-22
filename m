@@ -1,126 +1,191 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mx0b-0064b401.pphosted.com (mx0b-0064b401.pphosted.com [205.220.178.238])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 525BC30BB80
-	for <linux-xfs@vger.kernel.org>; Wed, 22 Jul 2026 13:18:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78D9B33FE33;
+	Wed, 22 Jul 2026 13:39:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.178.238
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784726297; cv=none; b=rsedfW+bJCqc77P4hW3+sx/1MKhEmhGMwO6pa8Lv6Jqfd1J9g32J56CwdMxzr3r60RwfYx7SJPY22bSFM3ZMT2cnIi1fiBIDSHU247lKczblWR9TWMpwEvQrtNiaXqHkiX1x6xS9VQLIUgnzlI0PqOYnB4M2pTvjfORGEavpQYM=
+	t=1784727553; cv=none; b=OHvFWzJbw0QSRiy4nLElyX90D+Ryj2zlVbM3ohBVV83nkj+JvW1FypPqvOK5qQMTdakAKdT3H6xhM0/rBOvPH4c3PhG6VL3sthjhGheDxjh+ro4Q1KNaQMxvOk0PAa32i3c4v29gZfLuKM2EM37r8emj1Wk8x3NmHFVh+xHF+/Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784726297; c=relaxed/simple;
-	bh=vkE9A1EfzhQ89kJ956Kfzgb3ZMU3kNoLqi9U/bQUN6Y=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=riaZCPGyXFZ/psQQ4I87m7NLLZ9OqRsYHSn3IxkA/d6mA5F+Ar0pI97TGgAT83K6IZ9ZpVCk0nUX+Z4LWniwdat/LhY/U2JTTVy5RiG+ieb7ZQkvYfe+H3hhelPt6H88HWbfUzul4MJ3uaZw0fahJ53vVNGVWaZIBYwXt9zVEpc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jDYxG2At; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784727553; c=relaxed/simple;
+	bh=sDd1FAahTF+OGNnEMWZmO3aNcMXP0d9FSmALXAJh7Oc=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=N1BdVIX3v1h3uXyRLR6anRpf9rkYC1HXAGBWbhlfveZCIVKYV9+RUKtLCP2kGJvsxSag3SQT89HKEkZPiZ+J+oRc1pdy+Y3juCFQDP/R+BD6fxLvdtoLkgzdwQLwlYVRgGcJ2yLEQc3vPxDJ96o7BRxizD9iubNbucjiuJZb+mQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=windriver.com; spf=unknown smtp.mailfrom=windriver.com; dkim=pass (2048-bit key) header.d=windriver.com header.i=@windriver.com header.b=fJnE5fWB; arc=none smtp.client-ip=205.220.178.238
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=windriver.com
+Authentication-Results: smtp.subspace.kernel.org; spf=tempfail smtp.mailfrom=windriver.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jDYxG2At"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5DEDE1F000E9
-	for <linux-xfs@vger.kernel.org>; Wed, 22 Jul 2026 13:18:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784726295;
-	bh=RxRInk/Oms753iC8TglVLF6tJimdkPN8ueBs9WDFfcw=;
-	h=Date:From:To:Subject;
-	b=jDYxG2AtCAqj/65yifsx/xjHdHnIJszKoLLcyrmYGuBjNuxp2EpPACAtiS3vyNmQT
-	 SDH/JRWMDiptN8n3f0cV8yg2jv8QJZcTWfmAas30pTyHVWnoottAxN5MAOZty86vI3
-	 lVuDoycur+ujqvIE003qhmyAR2OmO6lUYeYuUC1q2MVOSJ029sAbC5Gb7nhSv0ozgI
-	 DCzEdSOFId46iB+vOZFyPUQr29IvCvnASLf17tFWN4x3c8xukQm7fEATa3iz0CJ5wP
-	 KoK6kVgyKtDWH9wpxuTeZX1HqkNCX4Z8PRNQutdJ7cz+fwiMhLN9abNq3JeZY3IVPB
-	 Afy+rrN4D2p2w==
-Date: Wed, 22 Jul 2026 15:18:12 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfs-linux: for-next *REBASED* to 56aa9ef3c413
-Message-ID: <amDCWI4UwZpRQKJR@andromeda.toxiclabs.cc>
+	dkim=pass (2048-bit key) header.d=windriver.com header.i=@windriver.com header.b="fJnE5fWB"
+Received: from pps.filterd (m0250812.ppops.net [127.0.0.1])
+	by mx0a-0064b401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66MD0MTc875842;
+	Wed, 22 Jul 2026 13:38:48 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=windriver.com;
+	 h=cc:content-transfer-encoding:content-type:date:from
+	:message-id:mime-version:subject:to; s=PPS06212021; bh=7LQdZxLtG
+	2RfhEbUwtHRz/kQebXRISLmz8e6oRjqlos=; b=fJnE5fWBudUolEntnoUBa+kz0
+	r39bHhLpaRVHPX9hI3dMkbUut0OT4PfXyNUnM8mN40L4v6nnN17B0rIE9muIj0n7
+	IRaLBRM547xTm3N/V9t/uzdYrsOp3pUJnHlyD4UCxOFAJYwH69Oz6HjxPUp9I/OZ
+	OfHqAjqq+Q2ENq6SBWDRHG8md87NMCoXEBVum1uJZgpBakwhsunBZKoCZV0pA4x2
+	s+4L7uBWkhusedjjIumDmjoX1P64+0s6G/1Xj7Ts9WeC6WCqpO3Qxc0RTedaV6OG
+	jEyg7oEU/Xy7JzLRm99aklxCK3Fj+dEuV8r8TUHJAz1+Ip0VBqR/N7FzB8Ebw==
+Received: from ala-exchng01.corp.ad.wrs.com (ala-exchng01.wrs.com [128.224.246.36])
+	by mx0a-0064b401.pphosted.com (PPS) with ESMTPS id 4fg0f5g998-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+	Wed, 22 Jul 2026 13:38:48 +0000 (GMT)
+Received: from ala-exchng01.corp.ad.wrs.com (10.11.224.121) by
+ ala-exchng01.corp.ad.wrs.com (10.11.224.121) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.61; Wed, 22 Jul 2026 06:38:46 -0700
+Received: from pek-yzhou-d3.wrs.com (10.11.232.110) by
+ ala-exchng01.corp.ad.wrs.com (10.11.224.121) with Microsoft SMTP Server id
+ 15.1.2507.61 via Frontend Transport; Wed, 22 Jul 2026 06:38:45 -0700
+From: Yun Zhou <yun.zhou@windriver.com>
+To: <cem@kernel.org>
+CC: <djwong@kernel.org>, <hch@infradead.org>, <linux-xfs@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH v2] xfs: don't hold buffer locks across sync transaction commit in xfs_sync_sb_buf
+Date: Wed, 22 Jul 2026 21:38:44 +0800
+Message-ID: <20260722133844.2900030-1-yun.zhou@windriver.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzIyMDEzMiBTYWx0ZWRfX5l+DvTq6PRLR
+ XQ5fUjH3RG6ePudCbsoPNfxtgtC7Xqja0CVlARglKYcU7ezHg2+C7on27M5+MgkW5PCpHWqyxuX
+ VVZsIbeSGJFJhTItVeKR87FalFWb5ZaIeASToRI2gBYWVzhP1GTdtdiBB0/YeogVRjoBfqYvzvV
+ KxuhGhHlAAqH2hL8KSEdnRJ4U9bii+TgAizDm0ejQF1yu75GygFBDBR8h5jursbqu1STKDkPaUh
+ arZu/4njFST3xw2w4KYdP9SHjUaeebj0VRzkRr3x/uFTmiDTME9GHuHXAhUT6PseCMwj9POHT88
+ UEgbA59+t4l3JGOl4nMbr6IaPU7C9oiJeuL0PkLvM13CV0EU8GUiat2U9m2HGfBJYX0CNnXSqFk
+ SjRmP3PdzT+0qBCWgBi2CTYnEdWoniJ4jG7XWsCRXJ8e3UgMEsSrvxctFotAym0sxs1wcjZ+X6Q
+ A/bwZgFb+LENEs3PgFg==
+X-Proofpoint-GUID: k_LHlGrkHapBBNvR48JO4VbraURwQ2tn
+X-Proofpoint-ORIG-GUID: k_LHlGrkHapBBNvR48JO4VbraURwQ2tn
+X-Authority-Analysis: v=2.4 cv=IM0yzAvG c=1 sm=1 tr=0 ts=6a60c7e8 cx=c_pps
+ a=AbJuCvi4Y3V6hpbCNWx0WA==:117 a=AbJuCvi4Y3V6hpbCNWx0WA==:17
+ a=RAioF0-LDSMA:10 a=VkNPw1HP01LnGYTKEx00:22 a=bi6dqmuHe4P4UrxVR6um:22
+ a=fTW__CHxibyLmBMfj2wP:22 a=edf1wS77AAAA:8 a=hSkVLCK3AAAA:8 a=t7CeM3EgAAAA:8
+ a=tUtbpdhI3CECM1wNtOsA:9 a=DcSpbTIhAlouE1Uv7lRv:22 a=cQPPKAXgyycSBL8etih5:22
+ a=FdTzh2GWekK77mhwV6Dw:22
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzIyMDEzMiBTYWx0ZWRfX0OWaff1zzeRz
+ nHuZm/s6Z2Kuz0v1ZAe8/ArIWKAbHEp6irNDPAbXOLsOTKw23hRBlNVMT5Wo6Z4mtW2qRSqR8Ey
+ fQwlUR/4avdoBWCXPiib8jZkNDbtJiHYfkaAGBg4gw5/2wqDJpql
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-07-22_04,2026-07-21_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ lowpriorityscore=0 spamscore=0 clxscore=1015 adultscore=0 phishscore=0
+ priorityscore=1501 impostorscore=0 malwarescore=0 bulkscore=0 suspectscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607220132
 
+xfs_sync_sb_buf() holds sb/rtsb buffer locks across a synchronous
+xfs_trans_commit(), which flushes the CIL push workqueue internally.
+If shutdown occurs during the CIL push, xfs_buf_item_unpin() needs to
+lock these buffers to fail them, causing a deadlock:
 
-Hi folks,
+  setlabel:          holds buf lock -> flush_workqueue(xfs-cil)
+  CIL push worker:   xfs_buf_item_unpin -> xfs_buf_lock(same buf)
 
-The for-next branch of the xfs-linux repository at:
+Remove the xfs_trans_bhold() calls so that commit releases the buffer
+locks normally.  After the sync commit, re-acquire the buffers via
+mp->m_sb_bp / mp->m_rtsb_bp for the on-disk writeback.
 
-	ssh://git@gitolite.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+Fixes: f7664b31975b ("xfs: implement online get/set fs label")
+Reported-by: syzbot+837bcd54843dd6262f2f@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=837bcd54843dd6262f2f
+Signed-off-by: Yun Zhou <yun.zhou@windriver.com>
+---
+Changes in v2:
+- Remove the bp variable and pass xfs_trans_getsb(tp) directly to
+  xfs_log_rtsb() to fix compilation warnings when CONFIG_XFS_RT=n.
+- Convert xfs_log_rtsb() stub from macro to inline function to avoid
+  the need for (void) casting (Christoph).
+---
+ fs/xfs/libxfs/xfs_rtgroup.h |  6 +++++-
+ fs/xfs/libxfs/xfs_sb.c      | 39 ++++++++++++++++++-------------------
+ 2 files changed, 24 insertions(+), 21 deletions(-)
 
-has just been *REBASED*.
+diff --git a/fs/xfs/libxfs/xfs_rtgroup.h b/fs/xfs/libxfs/xfs_rtgroup.h
+index c0b9f9f2c413..fca2eb74908c 100644
+--- a/fs/xfs/libxfs/xfs_rtgroup.h
++++ b/fs/xfs/libxfs/xfs_rtgroup.h
+@@ -359,7 +359,11 @@ static inline int xfs_initialize_rtgroups(struct xfs_mount *mp,
+ # define xfs_rtgroup_unlock(rtg, gf)		((void)0)
+ # define xfs_rtgroup_trans_join(tp, rtg, gf)	((void)0)
+ # define xfs_update_rtsb(bp, sb_bp)	((void)0)
+-# define xfs_log_rtsb(tp, sb_bp)	(NULL)
++static inline struct xfs_buf *xfs_log_rtsb(struct xfs_trans *tp,
++		const struct xfs_buf *sb_bp)
++{
++	return NULL;
++}
+ # define xfs_rtgroup_get_geometry(rtg, rgeo)	(-EOPNOTSUPP)
+ #endif /* CONFIG_XFS_RT */
+ 
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index 47322adb7690..929677ad95b4 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -1470,36 +1470,35 @@ xfs_sync_sb_buf(
+ 	bool			update_rtsb)
+ {
+ 	struct xfs_trans	*tp;
+-	struct xfs_buf		*bp;
+-	struct xfs_buf		*rtsb_bp = NULL;
+ 	int			error;
+ 
+ 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_sb, 0, 0, 0, &tp);
+ 	if (error)
+ 		return error;
+ 
+-	bp = xfs_trans_getsb(tp);
+ 	xfs_log_sb(tp);
+-	xfs_trans_bhold(tp, bp);
+-	if (update_rtsb) {
+-		rtsb_bp = xfs_log_rtsb(tp, bp);
+-		if (rtsb_bp)
+-			xfs_trans_bhold(tp, rtsb_bp);
+-	}
++	if (update_rtsb)
++		xfs_log_rtsb(tp, xfs_trans_getsb(tp));
+ 	xfs_trans_set_sync(tp);
+ 	error = xfs_trans_commit(tp);
+ 	if (error)
+-		goto out;
+-	/*
+-	 * write out the sb buffer to get the changes to disk
+-	 */
+-	error = xfs_bwrite(bp);
+-	if (!error && rtsb_bp)
+-		error = xfs_bwrite(rtsb_bp);
+-out:
+-	if (rtsb_bp)
+-		xfs_buf_relse(rtsb_bp);
+-	xfs_buf_relse(bp);
++		return error;
++
++	/* Re-acquire and write the sb and rtsb to disk. */
++	xfs_buf_lock(mp->m_sb_bp);
++	xfs_buf_hold(mp->m_sb_bp);
++	error = xfs_bwrite(mp->m_sb_bp);
++	xfs_buf_relse(mp->m_sb_bp);
++	if (error)
++		return error;
++
++	if (update_rtsb && mp->m_rtsb_bp) {
++		xfs_buf_lock(mp->m_rtsb_bp);
++		xfs_buf_hold(mp->m_rtsb_bp);
++		error = xfs_bwrite(mp->m_rtsb_bp);
++		xfs_buf_relse(mp->m_rtsb_bp);
++	}
++
+ 	return error;
+ }
+ 
+-- 
+2.43.0
 
-This removes a single patch from the previous push, everything else is
-the same.
-
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
-
-The new head of the for-next branch is commit:
-
-56aa9ef3c413 xfs: use kmalloc_objs() instead of kmalloc() in xfs_da_grow_inode_int
-
-18 new commits:
-
-Christoph Hellwig (1):
-      [7aa67044e7d8] xfs: update BDI {io,ra}_pages values based on the RT device limits
-
-Cihan Karadag (1):
-      [56aa9ef3c413] xfs: use kmalloc_objs() instead of kmalloc() in xfs_da_grow_inode_int
-
-Darrick J. Wong (5):
-      [270ffcd9b0a4] xfs: check cowextsize in xrep_inode_cowextsize
-      [61606f8846a9] xfs: fix transaction block reservation in xrep_rtbitmap
-      [8ed78104722b] xfs: rtsummary scrub should treat rtbitmap corruption errors as an xref error
-      [49933254ba8d] xfs: zero i_nlink before repair puts inode on unlinked list
-      [b28d23c51635] xfs: mark nonzero sb_gquotino as corrupt on metadir filesystems
-
-Guanghui Yang (1):
-      [b7e53968cb88] xfs: propagate errors from xfs_rtginode_load
-
-Ibrahim Hashimov (1):
-      [813f8136a2ce] xfs: bounds-check buffer log item's dirty bitmap
-
-Johannes Thumshirn (4):
-      [daf43402da0d] xfs: add xfs_metadir_create_file helper
-      [e6ecb1a98d14] xfs: create quota metadir inodes using xfs_metadir_create_file
-      [de64b150a70c] xfs: create rtgroup metadir inodes using xfs_metadir_create_file
-      [c6c54d05b129] xfs: mark internal metadir file creation helpers static
-
-Pankaj Raghav (2):
-      [86e332447d72] xfs: add an allocation mode to xfs_alloc_file_space()
-      [b16b63a47902] xfs: add support for FALLOC_FL_WRITE_ZEROES
-
-Qiang Ma (1):
-      [87b2a82e135b] xfs: clear zapped attr fork state when bmap repair finds no attr fork
-
-Xiang Mei (1):
-      [cc3144da377d] xfs: fix off-by-one in rtrefcount btree root level validation
-
-Yun Zhou (1):
-      [d852729c5f4f] xfs: handle NULL b_addr in xfs_buf_free
-
-Code Diffstat:
-
- fs/xfs/libxfs/xfs_da_btree.c         |  3 +-
- fs/xfs/libxfs/xfs_dquot_buf.c        | 39 +++++----------
- fs/xfs/libxfs/xfs_metadir.c          | 64 +++++++++++++++----------
- fs/xfs/libxfs/xfs_metadir.h          |  8 ++--
- fs/xfs/libxfs/xfs_rtgroup.c          | 58 ++++++++++-------------
- fs/xfs/libxfs/xfs_rtrefcount_btree.c |  4 +-
- fs/xfs/scrub/agheader.c              |  2 +-
- fs/xfs/scrub/bmap.c                  |  5 ++
- fs/xfs/scrub/inode_repair.c          |  2 +-
- fs/xfs/scrub/nlinks_repair.c         |  7 ++-
- fs/xfs/scrub/rtbitmap_repair.c       | 46 +++++++++++-------
- fs/xfs/scrub/rtsummary.c             |  2 +-
- fs/xfs/xfs_bmap_util.c               | 42 +++++++++++++---
- fs/xfs/xfs_bmap_util.h               |  7 ++-
- fs/xfs/xfs_buf.c                     |  2 +-
- fs/xfs/xfs_buf_item_recover.c        | 57 +++++++++++++++-------
- fs/xfs/xfs_file.c                    | 92 ++++++++++++++++++++++++++++++++++--
- fs/xfs/xfs_mount.h                   |  7 +++
- fs/xfs/xfs_rtalloc.c                 |  2 +-
- fs/xfs/xfs_super.c                   | 53 ++++++++++++++++++++-
- 20 files changed, 359 insertions(+), 143 deletions(-)
