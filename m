@@ -1,46 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFC97439336;
-	Tue, 21 Jul 2026 23:25:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49007224AF1
+	for <linux-xfs@vger.kernel.org>; Wed, 22 Jul 2026 00:08:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784676350; cv=none; b=eM9zw4PoIOsn3MtZgV75aQgCFPBBRyMv/NIMJZlo9QIvYA50a1a5lpWhdsmXp9k6JaLM/cZrslZcqEz/KH8y6nX/DKZ8cuZ7D+JkS77EP78e0GR7SxNACC9h33r6OZMSkSVaiv9sLAJ+Yh/lq1iVJm/LT6b+B59lzi/o/vBtbmQ=
+	t=1784678924; cv=none; b=EYTr1+BBKKwy5Nd3cZsP2RoLqJrzjmKm/L8TR4BfaiS1sp9LLmWqJiBAT4UoZoFdwJDovd2zgaLF6cr2BU+U9og7sEw7bz+NDRu3ZE8hV5uuS5E+8B8yn/aBvLCMJwc3QdPMVEZPg6k4xSNC/6Pk1LEj0jjzPcVXhlqqy2H96LE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784676350; c=relaxed/simple;
-	bh=k9+DgVgH1vKEc5Jud/TiYzNSd6WnvSyzwZxrFj1VtTI=;
+	s=arc-20240116; t=1784678924; c=relaxed/simple;
+	bh=uJcor8dKgIzlMKnsU5BCxeAmT7BxJbLCaIvsweXo03M=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qg8oSHWUutPknqW1qy3KTIW9E/yPiurwljhks8gfH9muDz2icTv+A0BQOKsOglyMKztGeUhMyykKsfieGETiJaD2pRbFJGcNS+UdNEFf4xvUpxV3PGgx2arUcuWR5GWqar8CrnUrA1mAlrKU99RnTifOTSevwhIr5TywmmAaqaM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f1AtmymN; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=Jl61MaaDBhRJnGuxOR8COkbO4TJK9Hi39ngCbu/jHgYpKbPAalkFO3EbUWS5PrZWtRmLna1TIbGKMji/f+JsBQpeiqQ0PI79NcKDyQflh80HsGXP+Dv1BEcRgJP0qXncOsgi1oQxkWIR++xx74AiX8JXatudcZ6f711vvIA+gEg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OfMJvpgQ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f1AtmymN"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 67A981F000E9;
-	Tue, 21 Jul 2026 23:25:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OfMJvpgQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EFA9B1F000E9;
+	Wed, 22 Jul 2026 00:08:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784676349;
-	bh=PShLnoDa/Diacqu8FRfVhJ48Cf46bFdlZ3c0z+aO0xE=;
+	s=k20260515; t=1784678922;
+	bh=zmwpRrht/Jg+oC0CO9NPI/N+TEzWOQx+/RnEBxSnhDo=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=f1AtmymN0KKxYQZ5C3Ji/is5GsAWWp7NB5QBUVi8Es75mtRQTvFZK3rNiC3yCPkQQ
-	 tpg1CslKLMO6jI7jrGlASb1dpbg85F0YrbtFkYxCQWob+NcaS7bUijnZGlMMD985/8
-	 AJefso5AsWY+ADoy+APqsUwS9KFZSB20WIhoI4Av3oyYTd5xp53gJDPiHM66SaVAlO
-	 EWFIEsZJsN3SciJ9gp3i0cQaZkxUpLteaBsio1r1arGbNlRUORAU//pU9Z2L77+MXg
-	 YIGxz/cSJs2yVKP7ipp9qmdYsd3M3PgCycyl46oa5zOJGjLgIZ39Iz1ighy0GMT7Ps
-	 z7Ch9KAxAEG8Q==
-Date: Tue, 21 Jul 2026 16:25:48 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Anand Suveer Jain <asj@kernel.org>
-Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org,
-	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-f2fs-devel@lists.sourceforge.net, zlang@redhat.com,
-	hch@infradead.org
-Subject: Re: [PATCH v7 06/11] fstests: verify f_fsid for cloned filesystems
-Message-ID: <20260721232548.GU7398@frogsfrogsfrogs>
-References: <cover.1781694879.git.asj@kernel.org>
- <2ac5fb22fd6b51973d11082a1ee8fe354926c63c.1781694879.git.asj@kernel.org>
- <20260701173314.GH6517@frogsfrogsfrogs>
- <328de723-6f9c-4f09-a68a-da24d49300d5@kernel.org>
- <20260721225703.GZ7380@frogsfrogsfrogs>
- <18d569b9-dbea-448c-8b3d-56de32c0d6ef@kernel.org>
+	b=OfMJvpgQdlsin6rhnL7Jn4bvKC7ZO685U7UAQYQji21NhIXouK6acG2h6IA/H6Z95
+	 irOt2PeAjSzBE3oNzwuEvYkI2GfckXZJ9632ZQISdklkF1zBTUE44jOkOnWbKIwHBi
+	 yQd0il89q62qCZLDNQEVdIxGyLfI7KfuHuXyEe/IC5fvSVu7Yvo+iUiiXkr5EEijKF
+	 FXoHTSDewTZr8UqFcSltsI78XFZgtJ3tR5MWNTJLCix3PE+tB4VSq/5ZeD33/07GYj
+	 3R1VqUqrAwycWPxHqCtc3qYGV6O/E9FRZxXuBPF7NTjtf4eMVt8iYGc98e26jLJxTS
+	 +Zy1+jtVYpDmg==
+Date: Wed, 22 Jul 2026 10:08:34 +1000
+From: Dave Chinner <dgc@kernel.org>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Subject: Re: improve log context annotations
+Message-ID: <amAKAmIoTvoa6SY7@dread>
+References: <20260720094609.2191633-1-hch@lst.de>
+ <al84nDC0BvHr33Kz@nidhogg.toxiclabs.cc>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -49,25 +42,48 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <18d569b9-dbea-448c-8b3d-56de32c0d6ef@kernel.org>
+In-Reply-To: <al84nDC0BvHr33Kz@nidhogg.toxiclabs.cc>
 
-On Wed, Jul 22, 2026 at 07:21:15AM +0800, Anand Suveer Jain wrote:
-> 
-> 
-> >>> just in case there *are* programs foolish enough to
-> >>> use (fsid,ino) as a uniqueness check.
-> >>
-> >> On the other hand, if a program needs a unique ID, do we currently have
-> >> any way to get one?
+On Tue, Jul 21, 2026 at 11:16:40AM +0200, Carlos Maiolino wrote:
+> On Mon, Jul 20, 2026 at 11:45:37AM +0200, Christoph Hellwig wrote:
+> > Hi Carlos,
 > > 
-> > I don't think there is a way to get a globally unique identifier for a
-> > filesystem image except for the meta_uuid filesystems, and even then
-> > only if the volume manager resets the user-visible uuid every time it
-> > makes a clone and nobody runs a duplicator.
+> > this series improves the lock annotations in the XFS code.
+> > 
+> > Note that right now this is all mostly unused - the less stringent sparse
+> > lock context checks got disabled when the clang version was merged, and
+> > we're not quite ready to enable the latter yet due to our conditional
+> > locking in the ilock helper and the locking contexts transferred to the
+> > transaction for the inode and dquot locks, but I'm working on that.
+> > 
+> > In the meantime having these corrected at least serves as useful
+> > documentation.
 > 
-> Yeah, interesting problem to solve though.
-> Do you have any further code review comments on this test case?
+> Thanks. Those all look good for me. But I'm adding Dave to the thread as
+> he has much more expertise with lockdep than me and I'd appreciate his
+> input.
 
-Not really, no.
+Honestly, I'd prefer to kill the annotations and replace them with
+asserts that the lock is held so there's actual runtime validation
+that catches errors when they occur. These lock annotations don't
+tell you that the locking is correct, just that the function
+manipulates a lock.
 
---D
+The sparse annotations have always been more of an annoyance and
+reactive, because we only use them sporadically to suppress errors.
+We do not use them to prove locking is actually correct, nor can
+they function as such.  i.e. They exist purely to shut up a set of
+"not smart enough to understand lock context" tooling failures from
+a tool that almost nobody ever ran.
+
+Maybe the clang checker will be better, but I still don't see how it
+will ever be able to provide any sort of "locking is correct" proof,
+nor that it will be something everyone always runs.
+
+Hence this just seems like trying to maintain a technical debt that
+doesn't really serve any useful purpose anymore.
+
+-Dave.
+-- 
+Dave Chinner
+dgc@kernel.org
