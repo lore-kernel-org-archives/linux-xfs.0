@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19D6232B9B5;
-	Wed, 22 Jul 2026 12:18:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B51CB1A6806;
+	Wed, 22 Jul 2026 12:35:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784722682; cv=none; b=XypbPkPT79TLyBXPLO+93uOg153/jYPnqSKP8erwVStgrxj8/9he6kThbTVv0M4byUdhA0kq/9wYst7kRizf/rqucR9gfB0B1pGK1cp+RdJP9bjwreG8oIp449HCQnsI90y3HWCmkOaKZFNUNfXdVKP9T3wqlmWKZ8I8As9ycRs=
+	t=1784723758; cv=none; b=jg0pXiX1jvzSRcg62jtTKY77w/UiFHLhBwcznwiuiPw7K4Ygz4lhCvF9nDffJcNKhFjKo1v0iVRMWw0hpa0eYR2B0sMx7PAd4CvOZgH34lb6oD/yl1ygxhcsEseQvGzhleuQaOJVLDcXYz9kBVxHGyimiMfg3UiSKXWwBM3Uybg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784722682; c=relaxed/simple;
-	bh=F4jKDdyt9nnUyq8d21IZO/6Lc7qTAXK58nfG02soCrs=;
+	s=arc-20240116; t=1784723758; c=relaxed/simple;
+	bh=jGMB6iE9lxJe5nKtxoXNDfrLRI4gR7M3ptjh6wD6/WI=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=HKxGtMFQYlQ+S3fHzZSJVbTIBDTGAF/REiAl7uiAuW+d4YCZP5jcFptMybzQA2AU0WHen4Ecb/4/I4UtNkpa2ub1Y1Q4VCqKFSMTGggZK0GrwchXxy9e2DqBWRVnk9iZNsi2FYdoOcEpQ8ZG3XxRKpIDPp7f83/9deBknf335iA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=llzUFJes; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=ayLc+oGGCXmHSIxirEdTDXtqoxf3l1lxLfNqju/5ZF5XX6cWMnZ97QAmVNITCv1up7ShQuI+JgcKkCfHGl9QGlHJyKgdOoIx+gY82QTVICL8BrTg64LLd7eq5gmRR8jlXxIzHQvbiHCPqAZLMPmH8KEH24quz+BBjxPFov/zv/k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HyIzudcH; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="llzUFJes"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A52A11F000E9;
-	Wed, 22 Jul 2026 12:17:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HyIzudcH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 003651F000E9;
+	Wed, 22 Jul 2026 12:35:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784722680;
-	bh=quxgKTCBV0BCb8OJSz8QFDvBn14uAzUBItc9eXawEb8=;
+	s=k20260515; t=1784723757;
+	bh=2Jd1GANGwM+PXpSKQ+CRzq/E6/EDkcfhb0HgkIh9hJw=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=llzUFJesRwmmjClmGbFEABpUrAxWeJ8td+4hi1QIL4JNVvi/XNe8d3RjuNnACVrW/
-	 7hle8tPvlOSc+w1wiutgzm18ZZfTO8qvDXB65un7N68GFVCqsCsq66DfkYhq8scZfR
-	 6sZDMvuJryibh2cvMZal61Dcu/s5hOtKYL2k2VN4rgYVQga6JTq4NBXkQcasPJzDVB
-	 y6YmNHjBBOjH+GFOqdlOIRsaJe+blbSekhtDkT1JtR8e0hHkhM2IZ8ufMfULVN4XU6
-	 vxxKuQj2Sr4CHPRvr1AyMWXny34u05KxGegwnmtP66C1iCFPpDWL2CL9Jp1MOFs1oV
-	 PU9dr6VTe2bKg==
-Message-ID: <15c65a4b-aa53-4218-baa4-7dbab3b9dbab@kernel.org>
-Date: Wed, 22 Jul 2026 14:17:54 +0200
+	b=HyIzudcHgwOZMnwvnVThzTbiSoYQgWKiZ7BSA5Nn93yO5ZwK9lei72TD5EsIyvErW
+	 IBdApPWF/AFiQzqCq6bhBEkYP7OBWar0qnqBy6tDn0UVNS/UQDyr4Tr49g9ife1kGG
+	 PjgiL6sCmL5DZQR2/qRy3V6BSx7RPXHJ9QG9Tsm6etiWSMv+PcWkqBXCseFJR0wKjC
+	 2EiLaTBxgsBcsTcEPY6IrLBGKcD5HpS4iTaK+Ep2QcVcZ/xQT6/7WZKjkyW0RbAhX4
+	 2QTChyiE4YyE/kBFyhpYK/tppcL5nZQpL7EuRWN9qfuuxq3FtATsfFiTdrsAKf0uIE
+	 phOj7bGLdPLfQ==
+Message-ID: <7ddb704c-76a9-4071-8969-06fa1403eb07@kernel.org>
+Date: Wed, 22 Jul 2026 14:35:51 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -38,18 +38,17 @@ User-Agent: Mozilla Thunderbird
 Subject: Re: [PATCH v3] mm/page_alloc: avoid direct compaction for costly
  __GFP_NORETRY allocations
 Content-Language: en-US
-To: Matthew Wilcox <willy@infradead.org>,
- Salvatore Dipietro <dipiets@amazon.it>
-Cc: linux-mm@kvack.org, hch@infradead.org, ritesh.list@gmail.com,
- akpm@linux-foundation.org, linux-kernel@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, dgc@kernel.org,
- djwong@kernel.org, brauner@kernel.org, alisaidi@amazon.com,
- blakgeof@amazon.com, abuehaze@amazon.com, dipietro.salvatore@gmail.com,
- stable@vger.kernel.org, Suren Baghdasaryan <surenb@google.com>,
- Michal Hocko <mhocko@suse.com>, Brendan Jackman <jackmanb@google.com>,
- Johannes Weiner <hannes@cmpxchg.org>, Zi Yan <ziy@nvidia.com>
-References: <20260710143437.12379-1-dipiets@amazon.it>
- <alEz4Chf7Ibyg-ZG@casper.infradead.org>
+To: Salvatore Dipietro <dipiets@amazon.it>, hannes@cmpxchg.org,
+ willy@infradead.org
+Cc: abuehaze@amazon.com, akpm@linux-foundation.org, alisaidi@amazon.com,
+ blakgeof@amazon.com, brauner@kernel.org, dgc@kernel.org,
+ dipietro.salvatore@gmail.com, djwong@kernel.org, hch@infradead.org,
+ jackmanb@google.com, linux-fsdevel@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-xfs@vger.kernel.org,
+ mhocko@suse.com, ritesh.list@gmail.com, stable@vger.kernel.org,
+ surenb@google.com, ziy@nvidia.com
+References: <alEz4Chf7Ibyg-ZG@casper.infradead.org>
+ <20260714120204.542300-1-dipiets@amazon.it>
 From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
 Autocrypt: addr=vbabka@kernel.org; keydata=
  xsFNBFZdmxYBEADsw/SiUSjB0dM+vSh95UkgcHjzEVBlby/Fg+g42O7LAEkCYXi/vvq31JTB
@@ -90,64 +89,101 @@ Autocrypt: addr=vbabka@kernel.org; keydata=
  NcaZ+c6J4H+nEJGi2SkHAUJz5oBzuThvPudLvPA/SK8sKoM01IRxSihev/S/5WLazXB1PGem
  OCbvzC1IjWJJraxiDJ5IygokapUa2RP7+WBR22skQ3SSl6G107QgWKSyTOGWEaRmV53vxQLV
  jXuCmzSSasTL60zq5yGrT4/DYQVSNEUiUbG4pYekxJujNeEDkUlky0Y=
-In-Reply-To: <alEz4Chf7Ibyg-ZG@casper.infradead.org>
+In-Reply-To: <20260714120204.542300-1-dipiets@amazon.it>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 7/10/26 20:03, Matthew Wilcox wrote:
-> On Fri, Jul 10, 2026 at 02:34:37PM +0000, Salvatore Dipietro wrote:
->> Commit 5d8edfb900d5 ("iomap: Copy larger chunks from userspace")
->> introduced high-order folio allocations in the iomap buffered write
->> path.
+On 7/14/26 14:02, Salvatore Dipietro wrote:
 > 
-> https://lore.kernel.org/linux-mm/aeZzP6iQel-tkZOu@casper.infradead.org/
+> Hi Johannes, Matthew,
 > 
-> I just had a go at implementing what I thought might be the right design
-> (having a folio_alloc_orders(min, max, gfp)), but that's not really what
-> __filemap_get_folio_mpol() wants because it needs to integrate the actual
-> adding of folios to the page cache into the retry loop.
+> Thank you both for the alternative proposals. I've tested both
+> approaches on the same test environment used for v3.
 > 
-> So instead, let's try this.  The idea is that we want to try direct reclaim
-> _twice_.  Once gently (ie with NORETRY specified) when we're trying to
-> allocate the maximum order folio.  But now that we've tried that once,
-> there's no point trying direct reclaim for other sizes, we just want to
-> ask the page allocator if it can give us memory of any subsequent size.
+> Results (4 runs each):
 > 
-> Until we come to the minimum order.  Then we want to try exactly as hard
-> as we were originally asked to try.  So revert to the original gfp flags
-> and don't set the NOWARN or NORETRY flags.
+>   Config                   Avg TPS      % vs Baseline
+>   --------------------------------------------------------
+>   baseline (no patch)       70,735       -
+>   Johannes' approach       156,908      +121.8%
+>   Matthew's approach        70,145       -0.8% (within noise)
 > 
-> diff --git a/mm/filemap.c b/mm/filemap.c
-> index 58eb9d240643..23eecaf9b328 100644
-> --- a/mm/filemap.c
-> +++ b/mm/filemap.c
-> @@ -1983,6 +1983,7 @@ struct folio *__filemap_get_folio_mpol(struct address_space *mapping,
->  	if (!folio && (fgp_flags & FGP_CREAT)) {
->  		unsigned int min_order = mapping_min_folio_order(mapping);
->  		unsigned int order = max(min_order, FGF_GET_ORDER(fgp_flags));
-> +		gfp_t alloc_gfp = gfp | __GFP_NORETRY | __GFP_NOWARN;
->  		int err;
->  		index = mapping_align_index(mapping, index);
+> 
+> Johannes' approach (clearing __GFP_DIRECT_RECLAIM early in the
+> slowpath for costly __GFP_NORETRY) delivers the same ~2.2x speedup
+> as v3, as expected - it prevents the entire direct reclaim and
+> compaction machinery from running for these opportunistic allocations.
 
-Note here fgp_flags are checked and may alter gfp towards NOFS or NOWAIT or
-add __GFP_WRITE. But alloc_gfp set above will ignore all that for >min_order
-attempts, which isn't right. Probably doesn't affect Salvatore's evaluation
-though.
+AFAICS both your v3 and the implemented Johannes' suggestion effectively
+make all the compact_first logic dead code - at least for the intended THP
+use case based on costly_order. It will only continue to do something for
+the non-movable order>0  case. So that's a significant change which will not
+show up in your results, but might affect other workloads (I'd expect mainly
+by having fewer THPs).
 
-> @@ -2004,12 +2005,11 @@ struct folio *__filemap_get_folio_mpol(struct address_space *mapping,
->  			order = __ffs(index);
+> Matthew's filemap.c approach does not help in this workload.  The
+> reason is that the first allocation attempt at max order still carries
+> __GFP_DIRECT_RECLAIM and enters the slowpath with direct compaction
+> enabled.  The __GFP_DIRECT_RECLAIM clearing only takes effect for 
+> subsequent lower-order attempts in the fallback loop, but the costly 
+> compaction has already executed on the first try.
+> 
+> Let me know if you have any other variant you want me to test, 
+> or if I should prepare a v4 based on Johannes' suggestion.
+> 
+> This is what I tested for Johannes' approach:
+> 
+> 
+> diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+> index a63733dac659..6e960c969e67 100644
+> --- a/mm/page_alloc.c
+> +++ b/mm/page_alloc.c
+> @@ -4733,10 +4733,10 @@ static inline struct page *
+>  __alloc_pages_slowpath(gfp_t gfp_mask, unsigned int order,
+>  					struct alloc_context *ac)
+>  {
+> -	bool can_direct_reclaim = gfp_mask & __GFP_DIRECT_RECLAIM;
+> -	bool can_compact = can_direct_reclaim && gfp_compaction_allowed(gfp_mask);
+> -	bool nofail = gfp_mask & __GFP_NOFAIL;
+>  	const bool costly_order = order > PAGE_ALLOC_COSTLY_ORDER;
+> +	bool can_direct_reclaim;
+> +	bool can_compact;
+> +	bool nofail;
+>  	struct page *page = NULL;
+>  	unsigned int alloc_flags;
+>  	unsigned long did_some_progress;
+> @@ -4751,6 +4751,20 @@ __alloc_pages_slowpath(gfp_t gfp_mask, unsigned int order,
+>  	bool can_retry_reserves = true;
+>  	unsigned long alloc_start_time = jiffies;
 >  
->  		do {
-> -			gfp_t alloc_gfp = gfp;
-> -
->  			err = -ENOMEM;
-> -			if (order > min_order)
-> -				alloc_gfp |= __GFP_NORETRY | __GFP_NOWARN;
-> +			if (order == min_order)
-> +				alloc_gfp = gfp;
->  			folio = filemap_alloc_folio(alloc_gfp, order, policy);
-> +			alloc_gfp &= ~__GFP_DIRECT_RECLAIM;
->  			if (!folio)
->  				continue;
->  
+> +	/*
+> +	 * Costly __GFP_NORETRY allocations are opportunistic: the caller
+> +	 * can fall back to smaller orders.  Don't stall on direct reclaim
+> +	 * or compaction; clearing __GFP_DIRECT_RECLAIM makes the entire
+> +	 * slowpath treat this as a non-blocking request.  kswapd will wake
+> +	 * kcompactd as needed for background defragmentation.
+> +	 */
+> +	if (costly_order && (gfp_mask & __GFP_NORETRY))
+> +		gfp_mask &= ~__GFP_DIRECT_RECLAIM;
+> +
+> +	can_direct_reclaim = gfp_mask & __GFP_DIRECT_RECLAIM;
+> +	can_compact = can_direct_reclaim && gfp_compaction_allowed(gfp_mask);
+> +	nofail = gfp_mask & __GFP_NOFAIL;
+> +
+>  	if (unlikely(nofail)) {
+>  		/*
+>  		 * Also we don't support __GFP_NOFAIL without __GFP_DIRECT_RECLAIM,
+> 
+> 
+> Thanks,
+> Salvatore
+> 
+> 
+> 
+> 
+> 
+> AMAZON DEVELOPMENT CENTER ITALY SRL, viale Monte Grappa 3/5, 20124 Milano, Italia, Registro delle Imprese di Milano Monza Brianza Lodi REA n. 2504859, Capitale Sociale: 10.000 EUR i.v., Cod. Fisc. e P.IVA 10100050961, Societa con Socio Unico
+> 
+> 
+> 
 
