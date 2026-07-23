@@ -1,35 +1,35 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 099C443CE79;
-	Thu, 23 Jul 2026 14:50:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C865242AF80;
+	Thu, 23 Jul 2026 14:50:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784818211; cv=none; b=qLKJd6CBxadCsQTGaawQEDYoj9to7m2R+UCZmWyvt/h3AHJxVoQbsbci9PbQ597HqakEXqblnJEPrubd0FuDK2TVhZNohKSN9kFovfrFiIf25f30SkCjTswgc4OjSexjxeV2zhefXHXB7M5vbdJi2jDjNV2r6XB9AQzOhvQyomM=
+	t=1784818215; cv=none; b=t20tOnVcctHY/W1uOAtpqJd+0TrcqV2s9ZkpjtNYVzykoLOTcFm1cN4HGS4cKUNE68Cb7WsVxprNkNBBmKmfHN8V/eKquoqGif6aIFCoP5dXlp5DAudC9D0j8r5cPHEhzovP04HUmfT1GWHx2NIyqxwAwJEKMpfx18A77aZqfc4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784818211; c=relaxed/simple;
-	bh=2gmP+/qg8nGgTZnLknBflwul1dW+M/dskZ7+btSwEvQ=;
+	s=arc-20240116; t=1784818215; c=relaxed/simple;
+	bh=qeZM1qjRFnadQ0+2xHfJiTpn5zZsfw3zZU9M+IBoW9Y=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Log4Q5uvXxOnI67/AmryrqxyE7ZhmKJOQB4NLsVOqA/04pjaGnFjQhxwd1SORsW2nBHzYqI/8JEcQlb5e2igvYwQVJgGJxVAOx/EToMTCjJd+0sR9spkpLmSdgZkaQpmaY53IUOocfvHf7DZ/4g4SSNOPJ4WdYsjUi441+2smZg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=mRCLaq+g; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=IDihbhb5nh+pjhOWuj/QRU+Ae8ffa0ZpKfemWtjWQK/N0o8U0NfclWr+o8j1UtoS5k6wHibTy/uZxTsB4LiqqBdzDElcbb8MeTyQpM3xx79bZgD+SrfcV88jNHCOMjc6nqXuX5UNCiYRvgJQFWX86TQPWzNDinNda8Sfq68yiLE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=kkQuwaBR; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="mRCLaq+g"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="kkQuwaBR"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=Nba2dXeUaHj4e867Cz3s4X4aIQyI4p71a9tL7S5UAek=; b=mRCLaq+gyPYaYH5hag4EjvPkDI
-	FOTmdh8cE2saHb2pw59sHnUF4dRPfdzGxnmsK7UU1h1PGNr0gqG06sVU4saY5wyiO9z58+U0G+BqR
-	e0dkG8QHgZMg4MsQ8SYXkG87EDadL5yeF5/06oEH+DOqGq29bjejyEZUdHQpha+6h+BXyAIzNgMgS
-	gQMFc9Mm9Vin8tLwsjS2okXLbH51m1GQubazXu0R3I9AlKZCYurBGSZrDXNGVjkgZ5MOt9FdlBjrl
-	JhQaXBt4qLgWE4tWoC2YpR4dF+lph2uTZLkV/yL8oPN4uVa9NVeSU4ZdI05XonbtfnUj4KVZ8TZU2
-	hwlpf0NQ==;
+	bh=BmSdDCU376JH5jZcyBs3YCGK7N267sqFMLaAyvAbnZU=; b=kkQuwaBRsoy9mr65kvJ733uPoJ
+	dxcu5oATN21CyBUmZzMynNmoQpOM4aiTEcGkQAw3VZVcIq2OWvmKs/ntmI0vHHNAMABUHBftyzEQP
+	aCzLMm9pIPJZrQa1pJR2ebvqJxGJwO3YSV2pdnbgQPmEX1vIk81yfqzTNiNx1UNyEKy0XTghhlz72
+	TTSh67doVnkn2NGcuaAk8vdHB8NFiqfEUSKy8/a06tHjRkP5lksmrfs2WeS+kWIB3EdyYGO7DcmTk
+	ihP9uZ423S8GU4ON+H+sX0ZlcYg3ax35tRZpHT1ooY4kyp49YnN9Y36ZnoNyTRbgZhnQ8hK0O1LCm
+	cpPVoeYQ==;
 Received: from [2001:4bb8:2e9:b20c:3d3c:bb0:5e13:19af] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wmukS-0000000EXGN-2KPn;
-	Thu, 23 Jul 2026 14:50:08 +0000
+	id 1wmukW-0000000EXGy-2QF4;
+	Thu, 23 Jul 2026 14:50:12 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Jens Axboe <axboe@kernel.dk>,
 	Christian Brauner <brauner@kernel.org>,
@@ -40,9 +40,9 @@ Cc: Tal Zussman <tz2294@columbia.edu>,
 	linux-block@vger.kernel.org,
 	linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org
-Subject: [PATCH 01/22] iomap: add a separate bio_set for iomap_split_ioend
-Date: Thu, 23 Jul 2026 16:49:26 +0200
-Message-ID: <20260723145000.116419-2-hch@lst.de>
+Subject: [PATCH 02/22] block: remove bip_should_check
+Date: Thu, 23 Jul 2026 16:49:27 +0200
+Message-ID: <20260723145000.116419-3-hch@lst.de>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260723145000.116419-1-hch@lst.de>
 References: <20260723145000.116419-1-hch@lst.de>
@@ -55,64 +55,47 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-iomap_split_ioend can split bios that already come from
-iomap_ioend_bioset and thus deadlock when the bioset is exhausted.
+There is no benefit in using this helper over the simple flags check.
 
-Add a separate bio_set to avoid this deadlock.
-
-Fixes: 5fcbd555d483 ("iomap: split bios to zone append limits in the submission handlers")
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Anuj Gupta <anuj20.g@samsung.com>
 ---
- fs/iomap/ioend.c | 21 +++++++++++++++++++--
- 1 file changed, 19 insertions(+), 2 deletions(-)
+ block/bio-integrity-auto.c | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
 
-diff --git a/fs/iomap/ioend.c b/fs/iomap/ioend.c
-index 0565328764c1..2ec755a89228 100644
---- a/fs/iomap/ioend.c
-+++ b/fs/iomap/ioend.c
-@@ -13,6 +13,7 @@
- 
- struct bio_set iomap_ioend_bioset;
- EXPORT_SYMBOL_GPL(iomap_ioend_bioset);
-+static struct bio_set iomap_ioend_split_bioset;
- 
- struct iomap_ioend *iomap_init_ioend(struct inode *inode,
- 		struct bio *bio, loff_t file_offset, u16 ioend_flags)
-@@ -486,7 +487,8 @@ struct iomap_ioend *iomap_split_ioend(struct iomap_ioend *ioend,
- 	sector_offset = ALIGN_DOWN(sector_offset << SECTOR_SHIFT,
- 			i_blocksize(ioend->io_inode)) >> SECTOR_SHIFT;
- 
--	split = bio_split(bio, sector_offset, GFP_NOFS, &iomap_ioend_bioset);
-+	split = bio_split(bio, sector_offset, GFP_NOFS,
-+			&iomap_ioend_split_bioset);
- 	if (IS_ERR(split))
- 		return ERR_CAST(split);
- 	split->bi_private = bio->bi_private;
-@@ -509,8 +511,23 @@ EXPORT_SYMBOL_GPL(iomap_split_ioend);
- 
- static int __init iomap_ioend_init(void)
- {
--	return bioset_init(&iomap_ioend_bioset, 4 * (PAGE_SIZE / SECTOR_SIZE),
-+	const unsigned int nr_mempool_entries = 4 * (PAGE_SIZE / SECTOR_SIZE);
-+	int error;
-+
-+	error = bioset_init(&iomap_ioend_bioset, nr_mempool_entries,
- 			   offsetof(struct iomap_ioend, io_bio),
- 			   BIOSET_NEED_BVECS);
-+	if (error)
-+		return error;
-+	error = bioset_init(&iomap_ioend_split_bioset, nr_mempool_entries,
-+			   offsetof(struct iomap_ioend, io_bio),
-+			   BIOSET_NEED_BVECS);
-+	if (error)
-+		goto out_exit_ioend_bioset;
-+	return 0;
-+
-+out_exit_ioend_bioset:
-+	bioset_exit(&iomap_ioend_bioset);
-+	return error;
+diff --git a/block/bio-integrity-auto.c b/block/bio-integrity-auto.c
+index b1c733ecfd2e..43ac9f338183 100644
+--- a/block/bio-integrity-auto.c
++++ b/block/bio-integrity-auto.c
+@@ -45,10 +45,6 @@ static void bio_integrity_verify_fn(struct work_struct *work)
  }
- fs_initcall(iomap_ioend_init);
+ 
+ #define BIP_CHECK_FLAGS (BIP_CHECK_GUARD | BIP_CHECK_REFTAG | BIP_CHECK_APPTAG)
+-static bool bip_should_check(struct bio_integrity_payload *bip)
+-{
+-	return bip->bip_flags & BIP_CHECK_FLAGS;
+-}
+ 
+ /**
+  * __bio_integrity_endio - Integrity I/O completion function
+@@ -66,7 +62,7 @@ bool __bio_integrity_endio(struct bio *bio)
+ 		container_of(bip, struct bio_integrity_data, bip);
+ 
+ 	if (bio_op(bio) == REQ_OP_READ && !bio->bi_status &&
+-	    bip_should_check(bip)) {
++	    (bip->bip_flags & BIP_CHECK_FLAGS)) {
+ 		INIT_WORK(&bid->work, bio_integrity_verify_fn);
+ 		queue_work(kintegrityd_wq, &bid->work);
+ 		return false;
+@@ -99,7 +95,7 @@ void bio_integrity_prep(struct bio *bio, unsigned int action)
+ 		bio_integrity_setup_default(bio);
+ 
+ 	/* Auto-generate integrity metadata if this is a write */
+-	if (bio_data_dir(bio) == WRITE && bip_should_check(&bid->bip))
++	if (bio_data_dir(bio) == WRITE && (bid->bip.bip_flags & BIP_CHECK_FLAGS))
+ 		bio_integrity_generate(bio);
+ 	else
+ 		bid->saved_bio_iter = bio->bi_iter;
 -- 
 2.53.0
 
