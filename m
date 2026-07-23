@@ -1,103 +1,94 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBA6329D260;
-	Thu, 23 Jul 2026 14:51:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 095174570D8;
+	Thu, 23 Jul 2026 15:10:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784818308; cv=none; b=hfCa6T4gWGGf699zwQzRHJafBvtCfr/g27sNFXsVM1rO9CD1OphmCqo+XqvI78u7L/tKEMClW6Hzh821TIyrEG9B1TE5mShGWCGEKr9pzVv4fNJr+o1+cfq4vlaY0wZmLRO/KPlrkZi+lIBhPqTPi1+/wjEUK6YSMnt/Q8yqk9g=
+	t=1784819434; cv=none; b=JFaZgw3Uux3EWvVRV1tp01SKCeL0ifnU/BHp+wfqng4uJUD8OhcscJKlkXuinm9toxa8gXtXw+StEuoy4UTT0CT2jM70xuqRxagDwrJgrnDe9N5WYBchDSM+oyndNtKIZRLjymowzeWDe4kPheY5inuWTO2peagIOzzmv5qJMIY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784818308; c=relaxed/simple;
-	bh=hYx6YipFzNV3GP8JC5NXlp5hCvKRc4xJd9gginewaf8=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=uEzYjc6OHY/uxIGUKOW5GCx18xTPT6eK3+22jiK3EYnwIgt4C6HgYhnROK+x1716SOY5PtABwWoiP73HD8yiXhA6z22wmnyR3LfhHgo67SWlXxzdBpyaQoBcrHtwgfioNmw8Fz7ZYQRQL7vVeJIO+FRokh3aBLtRL4aOFmHX0o4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=TCbdLhD5; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1784819434; c=relaxed/simple;
+	bh=A5wlV09DKogfe0kBBj1aY7u2FZprHmUb+qucsFiA9QQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=IQlx+D1y4NOJ2XC0LNHCX9XOuE00l6fjZ0eWgNoMv2r8tWQ9yr+Yx2EUW/UPlN6ZsgtsCvv6dI3MFpG75/I6TlQ4SR2n0xmyX2GJB/hYqR5P6tud1Tl4iDlKXx5olzJMfzzqpiba9RL7YpKwUEIVhPYXPwvPAkceBx0PTUTzIxI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UIi7wctx; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="TCbdLhD5"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=kXfeN8lXGRuVlyJtlNy1+elVhZVbgqLqgZEBAlhBc2o=; b=TCbdLhD5C7N859HkKpJqoGL67C
-	kGnDuVk+1q8mDUp0s+su6UAxVKsxDnzWUvCDZGOZKRlz4LEK3ClOq67fq/w6xg4zO+P7xFs5Whdyq
-	WQHUNMxZM/zuvuzzqlgMw7ZpUNEhFCVZ2Wf98LL4+I+dVptr8fhoM67Zu1VkKFQ5RI3DuLpw0FDxC
-	P6qLXxc7BKVtvtOnQQd1dxqRjYM2LNnVvlsrKt5o23pNni/3Sl8ze5SrWIx7YA6ODmdQNnNxvsW1A
-	HmzLOTgp6FdQoc7Lfmy9UPJX1iYW79tvgtpsvnDwmvAophQOmQCpHTxQKFO4qGW7QO+ZMaPqTKtME
-	by5djogQ==;
-Received: from [2001:4bb8:2e9:b20c:3d3c:bb0:5e13:19af] (helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wmum1-0000000EXP8-1bPh;
-	Thu, 23 Jul 2026 14:51:45 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Jens Axboe <axboe@kernel.dk>,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UIi7wctx"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 986581F000E9;
+	Thu, 23 Jul 2026 15:10:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784819422;
+	bh=UZlemOYVIkQQ04wfQZGignsQrkbpEQViLHn6/sStVkM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=UIi7wctxBbUBSDvIE2MpZhrLz85CbbK/OQVDBO37A97wTjEe/yyUN0Eoad4mMD2hv
+	 e4uc9pA4PxY+B9VoQlTAXAq+zZwMgBWmDTOV2ej0lsSRo8z/UociQ4M2fo6TlYktmT
+	 B2HE/b9sIOtrUID1IRQfjygAYpmPcBHwvey9Cqg6ioeQBolYwc8XeztBu8EEnYG4Pk
+	 Cu5A9FZnp2NrnnmvF2cBybgQCsKutA5VStVijh4KJ5Qg2ok6rlJevvYSLU6Fm4seFI
+	 +jatj9UaFmX315wHwAIMj9kEBBKNQxos38d/W+kwFjSLhspRdXhfr1Lmo7WTcB37Cy
+	 5wO3I5BR7w0Ug==
+Date: Thu, 23 Jul 2026 08:10:21 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Joanne Koong <joannelkoong@gmail.com>, changfengnan@bytedance.com,
 	Christian Brauner <brauner@kernel.org>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Carlos Maiolino <cem@kernel.org>
-Cc: Tal Zussman <tz2294@columbia.edu>,
-	Anuj Gupta <anuj20.g@samsung.com>,
-	linux-block@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
+	Theodore Ts'o <tytso@mit.edu>, Carlos Maiolino <cem@kernel.org>,
+	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org
-Subject: [PATCH 22/22] xfs: log a message at mount time when using integrity protection
-Date: Thu, 23 Jul 2026 16:49:47 +0200
-Message-ID: <20260723145000.116419-23-hch@lst.de>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260723145000.116419-1-hch@lst.de>
-References: <20260723145000.116419-1-hch@lst.de>
+Subject: Re: [PATCH 2/3] iomap: decouple simple direct I/O reads from
+ iomap_dio_rw
+Message-ID: <20260723151021.GC7380@frogsfrogsfrogs>
+References: <20260722124931.3159664-1-hch@lst.de>
+ <20260722124931.3159664-3-hch@lst.de>
+ <CAJnrk1a_cc55HcpRAi+H-mqOn7XUt_BxKJTre=Mw=xaE-5A5Rg@mail.gmail.com>
+ <20260723045347.GA6641@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260723045347.GA6641@lst.de>
 
-Log a message in the kernel when using T10 protection information.
+On Thu, Jul 23, 2026 at 06:53:47AM +0200, Christoph Hellwig wrote:
+> On Wed, Jul 22, 2026 at 12:03:49PM -0700, Joanne Koong wrote:
+> > > +ssize_t __iomap_dio_simple(struct kiocb *iocb, struct iov_iter *iter,
+> > > +               struct iomap_iter *iomi);
+> > 
+> > Might be nice to have _read_ in this name as well, eg __iomap_dio_read_simple
+> 
+> Yeah.  I wanted the read out of the guts of the implementation, as
+> most of the code is not strictly limited to reads.  But with the public
+> API needing it, we might as well be consistent in the function naming.
+> 
+> > > +       if (!ret)
+> > > +               ret = __iomap_dio_simple(iocb, iter, &iomi);
+> > > +       if (ret <= 0 && ret != -EIOCBQUEUED)
+> > > +               inode_dio_end(iomi.inode);
+> > 
+> > afaict, the inode_dio_end() error handling has to be done by
+> > __iomap_dio_simple() to properly account for the synchronous case. I
+> > ran into this earlier when doing the iomap_next_fn inlining. For the
+> > synchronous case, __iomap_dio_simple() calls
+> > iomap_dio_simple_complete() which calls inode_dio_end() even on
+> > errors.
+> 
+> Yes.  Sashiko also reported that yesterday and I replied with a patch,
+> but I now noticed the report and thus my reply only went to me,
+> a sashiko-review list and Ted, but not everone else or the lists.
+> 
+> WTF?
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_buf.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+Sashiko doesn't email the lists by default, and I don't think we want to
+turn that on for the fsdevel firehose.
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index e1465e950acc..744e4a94a879 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -5,6 +5,7 @@
-  */
- #include "xfs_platform.h"
- #include <linux/backing-dev.h>
-+#include <linux/blk-integrity.h>
- #include <linux/dax.h>
- 
- #include "xfs_shared.h"
-@@ -1674,6 +1675,7 @@ xfs_configure_buftarg(
- 	struct xfs_mount	*mp = btp->bt_mount;
- 
- 	if (btp->bt_bdev) {
-+		struct blk_integrity *bi = bdev_get_integrity(btp->bt_bdev);
- 		int		error;
- 
- 		error = bdev_validate_blocksize(btp->bt_bdev, sectorsize);
-@@ -1686,6 +1688,15 @@ xfs_configure_buftarg(
- 
- 		if (bdev_can_atomic_write(btp->bt_bdev))
- 			xfs_configure_buftarg_atomic_writes(btp);
-+
-+		if (!bi)
-+			;
-+		else if (btp->bt_bdev == btp->bt_mount->m_super->s_bdev)
-+			xfs_info(mp, "using %s integrity profile",
-+				blk_integrity_profile_name(bi));
-+		else
-+			xfs_info(mp, "using %s integrity profile for %pg",
-+				blk_integrity_profile_name(bi), btp->bt_bdev);
- 	}
- 
- 	btp->bt_meta_sectorsize = sectorsize;
--- 
-2.53.0
+I sorta wish it did, but we all seem still to be struggling with what to
+do with valid complaints about existing problems from sashiko that
+neither were introduced by the patchset nor critically impact the new
+code.
 
+In the meantime I also don't like the "private review involving someone
+else's dashboard" aspects either.  No cake, no eating. :(
+
+--D
