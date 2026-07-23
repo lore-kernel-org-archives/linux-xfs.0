@@ -1,34 +1,35 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D93C443BDD9;
-	Thu, 23 Jul 2026 14:50:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 099C443CE79;
+	Thu, 23 Jul 2026 14:50:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784818209; cv=none; b=OcN5mPORFvqblIGz6AhFN58zXC/DDhNWkNGRTO/EXUpnapCxbgB7KD6eCxS+Z7i+c7/dk2p2PEZkjnW2T0v3QDTiY5USnzpY1A1tjYaf3pIuzoE2QXJryEMRgmFqIiWR5S79StyQW7wnAaQ1CHJukAMOblkcVZNLXmhGQRTCB+Y=
+	t=1784818211; cv=none; b=qLKJd6CBxadCsQTGaawQEDYoj9to7m2R+UCZmWyvt/h3AHJxVoQbsbci9PbQ597HqakEXqblnJEPrubd0FuDK2TVhZNohKSN9kFovfrFiIf25f30SkCjTswgc4OjSexjxeV2zhefXHXB7M5vbdJi2jDjNV2r6XB9AQzOhvQyomM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784818209; c=relaxed/simple;
-	bh=Vxxjpac+z/B/AXPXZ6qf9sDM2FVySsZ3M6PQ1Zlm+6U=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=O4hJK5rSPcei9bypOhvpj6/eWfYwf3rK5nL58L1+zkzdOR8Uy7TmozWVRwtY90w/2JvRsUV5MBYXeIPAVDRrmgNLPQbVojB3ujGTI3Z+bPU8rzDzYdkC97Yx+dTci5J1UbYvp7Az+wcS0mQSKfiNdyNB6zGraDGRczXHZRLVuSs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=r8GM6B10; arc=none smtp.client-ip=198.137.202.133
+	s=arc-20240116; t=1784818211; c=relaxed/simple;
+	bh=2gmP+/qg8nGgTZnLknBflwul1dW+M/dskZ7+btSwEvQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=Log4Q5uvXxOnI67/AmryrqxyE7ZhmKJOQB4NLsVOqA/04pjaGnFjQhxwd1SORsW2nBHzYqI/8JEcQlb5e2igvYwQVJgGJxVAOx/EToMTCjJd+0sR9spkpLmSdgZkaQpmaY53IUOocfvHf7DZ/4g4SSNOPJ4WdYsjUi441+2smZg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=mRCLaq+g; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="r8GM6B10"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="mRCLaq+g"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=/kKs2n9WKaggUmoGlf/eZhlmOxmWjIg3uMokE4IiBg0=; b=r8GM6B10rV2cqSlWkIGMBpQP43
-	68SavgpB74h0y8Yf4GngJ3bUAbwjiSiv9g4m+ylDc6iJODhyOYNP5tSZTvwXhNiTn2+T/gN6LQac3
-	WPH0QEcVHdsSwBrWHVHH5Qs9OeYVTWkiT+uCah8APse5zrvP2MELWWzCOods+hiWIcGVkzLwrA3R/
-	fddswUI5GdKDqRDkQ2DK5yr8uCn/Te9aac5nUIKwl/1TLv1HUM9cx0fjikKMwDPPXh8IRWCBuPm12
-	OymWNTZu+mz6Bunt80GU3CBlA90tCSc9H0WQSQjxXZNq4gOR8KAEjNraJgBqhycy1E1gXRTVVqOXI
-	I+bZZnzg==;
+	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
+	:Reply-To:Content-Type:Content-ID:Content-Description;
+	bh=Nba2dXeUaHj4e867Cz3s4X4aIQyI4p71a9tL7S5UAek=; b=mRCLaq+gyPYaYH5hag4EjvPkDI
+	FOTmdh8cE2saHb2pw59sHnUF4dRPfdzGxnmsK7UU1h1PGNr0gqG06sVU4saY5wyiO9z58+U0G+BqR
+	e0dkG8QHgZMg4MsQ8SYXkG87EDadL5yeF5/06oEH+DOqGq29bjejyEZUdHQpha+6h+BXyAIzNgMgS
+	gQMFc9Mm9Vin8tLwsjS2okXLbH51m1GQubazXu0R3I9AlKZCYurBGSZrDXNGVjkgZ5MOt9FdlBjrl
+	JhQaXBt4qLgWE4tWoC2YpR4dF+lph2uTZLkV/yL8oPN4uVa9NVeSU4ZdI05XonbtfnUj4KVZ8TZU2
+	hwlpf0NQ==;
 Received: from [2001:4bb8:2e9:b20c:3d3c:bb0:5e13:19af] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wmukO-0000000EXFp-1Yme;
-	Thu, 23 Jul 2026 14:50:04 +0000
+	id 1wmukS-0000000EXGN-2KPn;
+	Thu, 23 Jul 2026 14:50:08 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Jens Axboe <axboe@kernel.dk>,
 	Christian Brauner <brauner@kernel.org>,
@@ -39,10 +40,12 @@ Cc: Tal Zussman <tz2294@columbia.edu>,
 	linux-block@vger.kernel.org,
 	linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org
-Subject: lazy bounce buffering for checksummed reads
-Date: Thu, 23 Jul 2026 16:49:25 +0200
-Message-ID: <20260723145000.116419-1-hch@lst.de>
+Subject: [PATCH 01/22] iomap: add a separate bio_set for iomap_split_ioend
+Date: Thu, 23 Jul 2026 16:49:26 +0200
+Message-ID: <20260723145000.116419-2-hch@lst.de>
 X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260723145000.116419-1-hch@lst.de>
+References: <20260723145000.116419-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -52,42 +55,64 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Hi all,
+iomap_split_ioend can split bios that already come from
+iomap_ioend_bioset and thus deadlock when the bioset is exhausted.
 
-this series improves performance and resource usage for reads from
-devices that require stable pages due to checksumming on XFS.
+Add a separate bio_set to avoid this deadlock.
 
-Currently XFS unconditionally bounce buffers reads on such devices to
-prevent user modifications to the buffer from corrupting the data,
-leading to checksum failures.
+Fixes: 5fcbd555d483 ("iomap: split bios to zone append limits in the submission handlers")
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/iomap/ioend.c | 21 +++++++++++++++++++--
+ 1 file changed, 19 insertions(+), 2 deletions(-)
 
-This uses DRAM bandwidth and CPU cycles for copies that are not needed
-most of the time, and due to the use of a bio_vec for the bounce
-buffer to smaller than wanted and unaligned I/O sizes when using 4k
-user pages (i.e. 1MB-4k I/O).
+diff --git a/fs/iomap/ioend.c b/fs/iomap/ioend.c
+index 0565328764c1..2ec755a89228 100644
+--- a/fs/iomap/ioend.c
++++ b/fs/iomap/ioend.c
+@@ -13,6 +13,7 @@
+ 
+ struct bio_set iomap_ioend_bioset;
+ EXPORT_SYMBOL_GPL(iomap_ioend_bioset);
++static struct bio_set iomap_ioend_split_bioset;
+ 
+ struct iomap_ioend *iomap_init_ioend(struct inode *inode,
+ 		struct bio *bio, loff_t file_offset, u16 ioend_flags)
+@@ -486,7 +487,8 @@ struct iomap_ioend *iomap_split_ioend(struct iomap_ioend *ioend,
+ 	sector_offset = ALIGN_DOWN(sector_offset << SECTOR_SHIFT,
+ 			i_blocksize(ioend->io_inode)) >> SECTOR_SHIFT;
+ 
+-	split = bio_split(bio, sector_offset, GFP_NOFS, &iomap_ioend_bioset);
++	split = bio_split(bio, sector_offset, GFP_NOFS,
++			&iomap_ioend_split_bioset);
+ 	if (IS_ERR(split))
+ 		return ERR_CAST(split);
+ 	split->bi_private = bio->bi_private;
+@@ -509,8 +511,23 @@ EXPORT_SYMBOL_GPL(iomap_split_ioend);
+ 
+ static int __init iomap_ioend_init(void)
+ {
+-	return bioset_init(&iomap_ioend_bioset, 4 * (PAGE_SIZE / SECTOR_SIZE),
++	const unsigned int nr_mempool_entries = 4 * (PAGE_SIZE / SECTOR_SIZE);
++	int error;
++
++	error = bioset_init(&iomap_ioend_bioset, nr_mempool_entries,
+ 			   offsetof(struct iomap_ioend, io_bio),
+ 			   BIOSET_NEED_BVECS);
++	if (error)
++		return error;
++	error = bioset_init(&iomap_ioend_split_bioset, nr_mempool_entries,
++			   offsetof(struct iomap_ioend, io_bio),
++			   BIOSET_NEED_BVECS);
++	if (error)
++		goto out_exit_ioend_bioset;
++	return 0;
++
++out_exit_ioend_bioset:
++	bioset_exit(&iomap_ioend_bioset);
++	return error;
+ }
+ fs_initcall(iomap_ioend_init);
+-- 
+2.53.0
 
-This series addresses this by reading without the bounce buffer first,
-and then only allocating a buffer and reading into that again on an
-initial checksum failure.  To accommodate for rare (or hypothetical?)
-applications that have legitimate needs to frequently modify in-flight
-buffers, a sysfs know is provided to revert to the old behavior.
-
-The series is a bit of a mess.  Patch 1 is queued up in the VFS tree
-for 7.3, although it a fix that really should go into 7.2, but the
-request and ping for that were ignored.  Patches 2-6 were submitted
-to the block layer independently and will hopefully go in soon in in
-some form soon.  Patches 7 and 8 need a resubmission from Tal.
-
-The rest is split over 3 subsystems, and for two of them will
-conflict with large in-flight patch series (iomap iter next and
-xfs fsverity).  So for now I'm mostly looking for review and will
-worry about a merge strategy later if/when we agree on the overall
-approach.
-
-A git tree is available to help with the review here:
-
-    git://git.infradead.org/users/hch/misc.git lazy-bounce
-
-Gitweb:
-
-    https://git.infradead.org/?p=users/hch/misc.git;a=shortlog;h=refs/heads/lazy-bounce
