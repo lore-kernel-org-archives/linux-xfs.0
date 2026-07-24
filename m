@@ -1,32 +1,40 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6145B145B3F;
-	Fri, 24 Jul 2026 06:26:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31D80201113;
+	Fri, 24 Jul 2026 06:30:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784874389; cv=none; b=ZfL3cLPSJWWh5MDNEzDgnGU7FW/NyXJBSsW9eAQ6AMmG9NmuZPC3WoL1rrAEAIKs3GRUBpjqh6Cvqqmnr5karrImxsqOqYejKjylwA53fYM4dDCGmcHJmi35feCCt6auTRSXk6f9oufNO8BE4aGq9O7uksVulN0/vis2hpG1ztk=
+	t=1784874631; cv=none; b=fTnXloM/KBX36rLzUQTXmJpALsnr8b16CqPHNIcyWnKx9vd4WCt7fxexywtf4RcLC0lzSg73fGG2+DxFoCSsH8k71sRCVz8JxKnH+sQSAZ/LAwAuNHVkxHM5yl5AaFljwPjcLBShi19U5MWUay6Oo7gqkYDhNkDh9jcdAHQoo5c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784874389; c=relaxed/simple;
-	bh=TO+CSxuShwI80BRgdWJwH0qKYh1Dgnl6ikaiT+0Nmls=;
+	s=arc-20240116; t=1784874631; c=relaxed/simple;
+	bh=pIaHSD7ygJPxsyh+FcChK3+DCvczPYjlZ8K76IPRqE4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SAf+BLXBQW7552w6VpBrKO+Cz9HyMRNuInoeFJwI5qUi7s6QaGVg7M3ZBluaF51D3QuPD58Js06TweJt7kgVnu6Kt9cf3UULOyhgE1EXy9sYePKVM2965P0H+2tgzbjfoMCVJZuiw6GfDhOgY2HitUViNVIBRRXY7Rp67nU7ztA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 2D58B68BEB; Fri, 24 Jul 2026 08:26:24 +0200 (CEST)
-Date: Fri, 24 Jul 2026 08:26:23 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-	Christian Brauner <brauner@kernel.org>,
-	Carlos Maiolino <cem@kernel.org>, Tal Zussman <tz2294@columbia.edu>,
-	Anuj Gupta <anuj20.g@samsung.com>, linux-block@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 12/22] iomap: better read bounce buffering support
-Message-ID: <20260724062623.GG4953@lst.de>
-References: <20260723145000.116419-1-hch@lst.de> <20260723145000.116419-13-hch@lst.de> <20260723211004.GM2901224@frogsfrogsfrogs>
+	 Content-Type:Content-Disposition:In-Reply-To; b=bCx7Er/uXQQhLgXRA3Jr8yjD9DNmBPWtpCIL0VfWXIhr67DYp48J5rkn1Km2GbWabj1oUrsuDViDKbjh6M4DpJMNE9mPhOVXQXvEfpUGq3wt2AC9MTrhzh5F7Um3G+DfE0qerW88Ze8VkIrlUrrCiwURbIFbnguFKkfSMj77T0Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D9GQQvzc; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D9GQQvzc"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 8D3081F000E9;
+	Fri, 24 Jul 2026 06:30:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784874629;
+	bh=zC/EoX5KRllmn6rSEMxaoQlkg9/jDlUIWEZVadxbSoE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=D9GQQvzcriQTHiPBKvlqgMjpSVjRZRcvMpSgTCG3WhVvMmbb+MLNrAvWlUQHVF776
+	 vbf23N5TSd797DRb9PLFYTbfKWYRHIL7w3Q2XhYMCpz9A/aNDH0E4PpGM2VwkBh9La
+	 CCRomqO6yTm5PHcc2RLP2xuaaZJ+lz0GFED/8yfv7zuupSBa5lFQolp9BEGwOksVOs
+	 uardDqYNvE4pT2ITLWCCzeXaIVz1g2/V6zdj/5V1+5TADyOABadhMgr1JE5XUY7/se
+	 McqtFFxUi5cKr7wa/RAYVOtME0uccuyagYftQe8jncZd8fMGz7JMvundX5cRiNllT2
+	 og+ZkFbIvT4vA==
+Date: Thu, 23 Jul 2026 23:30:28 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: hch@lst.de, cem@kernel.org
+Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 8/9] xfs: fix another iunlink infinite loop bug in online
+ fsck
+Message-ID: <20260724063028.GN2901224@frogsfrogsfrogs>
+References: <178460419438.830862.6755198157088208229.stgit@frogsfrogsfrogs>
+ <178460419658.830862.2707474521987278261.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -35,32 +43,92 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260723211004.GM2901224@frogsfrogsfrogs>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <178460419658.830862.2707474521987278261.stgit@frogsfrogsfrogs>
 
-On Thu, Jul 23, 2026 at 02:10:04PM -0700, Darrick J. Wong wrote:
-> On Thu, Jul 23, 2026 at 04:49:37PM +0200, Christoph Hellwig wrote:
-> > Add helpers to bounce buffer an upper bio into one or more lower bios
-> > using bounce buffers, and to copy the data back on completion.
-> > 
-> > Compared to the existing IOMAP_DIO_BOUNCE support for read bios, this
-> > has two advantages:  by removing the special bounce bio_vec it allows
-> > to the full and "round" size of a single bio, i.e., 1MiB when using
-> > 4k pages.  This is important for good performance on HDD.  Additionally
-> > it allows to bounce buffer a bio from completion conext, and thus
-> > implement a "lazy" bounce buffering scheme, where the data is only
-> > read into a bounce buffer after an initial checksum validation failure,
-> > thus avoiding the bounce buffering I/O for most I/O.
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Mon, Jul 20, 2026 at 08:26:53PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Now that I can see how this is used ("xfs: add support for lazy direct
-> read bounce buffering") I think I'm ok with this.  Should there be some
-> Documentation/ about how to use PI with iomap?
+> xrep_iunlink_resolve_bucket is supposed to reconstruct as much of the
+> incore prev and next unlinked list pointers based on what it finds on
+> disk and in memory before we move on to relinking the truly lost inodes
+> back into the unlinked list.  However, it's still vulnerable to infinite
+> loops that come in via the next_unlinked pointers.
+> 
+> Fix this problem by checking iunlink_bmp, which at that point in
+> execution represents truly unlinked inodes that haven't yet been
+> processed.  If a bit is already unset, either this is a loop or the
+> inode has nonzero link count.  We'll deal with the second case in a
+> subsequent patch.
+> 
+> Cc: <stable@vger.kernel.org> # v6.10
+> Fixes: ab97f4b1c03075 ("xfs: repair AGI unlinked inode bucket lists")
+> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> ---
+>  fs/xfs/scrub/trace.h           |    1 +
+>  fs/xfs/scrub/agheader_repair.c |   10 ++++++++++
+>  2 files changed, 11 insertions(+)
+> 
+> 
+> diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
+> index 00fbe1b9c2354f..14aa0ec1f09e4a 100644
+> --- a/fs/xfs/scrub/trace.h
+> +++ b/fs/xfs/scrub/trace.h
+> @@ -3538,6 +3538,7 @@ DEFINE_EVENT(xrep_iunlink_resolve_class, name, \
+>  	TP_PROTO(const struct xfs_perag *pag, unsigned int bucket, \
+>  		 xfs_agino_t prev_agino, xfs_agino_t next_agino), \
+>  	TP_ARGS(pag, bucket, prev_agino, next_agino))
+> +DEFINE_REPAIR_IUNLINK_RESOLVE_EVENT(xrep_iunlink_resolve_infinite_loop);
+>  DEFINE_REPAIR_IUNLINK_RESOLVE_EVENT(xrep_iunlink_resolve_uncached);
+>  DEFINE_REPAIR_IUNLINK_RESOLVE_EVENT(xrep_iunlink_resolve_wronglist);
+>  DEFINE_REPAIR_IUNLINK_RESOLVE_EVENT(xrep_iunlink_resolve_nolist);
+> diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
+> index edd406a97b7ce9..da2265678d17f5 100644
+> --- a/fs/xfs/scrub/agheader_repair.c
+> +++ b/fs/xfs/scrub/agheader_repair.c
+> @@ -1355,6 +1355,8 @@ xrep_iunlink_resolve_bucket(
+>  	int			error = 0;
+>  
+>  	while (next_agino != NULLAGINO) {
+> +		unsigned int len = 1;
+> +
+>  		if (xchk_should_terminate(ragi->sc, &error))
+>  			return error;
+>  
+> @@ -1417,6 +1419,14 @@ xrep_iunlink_resolve_bucket(
+>  			continue;
+>  		}
+>  
+> +		/* Inode already seen?  We're stuck in a loop */
+> +		if (!xagino_bitmap_test(&ragi->iunlink_bmp, next_agino, &len)) {
 
-Maybe.  Although I'd rather have a second example first before coming
-up with definitively guidlines.  Note that even without fs pi they
-should use bounce buffering for devices that require stable pages to
-avoid corruption, but no one has been particularly interested (well,
-minus btrfs where the native checksums make it more common).
+Hmm.  Having given this patch a little more thought, I think
+xrep_iunlink_resolve_bucket should have its own "seen inode" bitmap
+for inodes that it has seen in the loop body rather than trying to reuse
+iunlink_bmp for this purpose.
 
+iunlink_bmp is created as the bitmap of inodes that have zero nlink,
+but once we start fixing the iunlink bucket chains, it becomes the
+bitmap of inodes with zero nlink that also aren't reachable in the
+ondisk metadata.  The inodes that remain set in iunlink_bmp are the ones
+that have to be put back on the list.
+
+Loop detection, OTOH, just needs to know what we've already seen whilst
+walking the chian.  That could be nonzero nlink inodes due to corruption
+problems or whatever.  So let's make the code easier to understand by
+using a separate bitmap like the agheader.c iunlink verifier does.
+
+I'll go fix this patch tomorrow and repost.
+
+--D
+
+> +			trace_xrep_iunlink_resolve_infinite_loop(sc->sa.pag,
+> +					bucket, prev_agino, next_agino);
+> +			next_agino = NULLAGINO;
+> +			break;
+> +		}
+> +
+>  		trace_xrep_iunlink_resolve_ok(sc->sa.pag, bucket, prev_agino,
+>  				next_agino);
+>  
+> 
+> 
