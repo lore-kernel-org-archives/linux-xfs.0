@@ -1,47 +1,34 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE371280335;
-	Fri, 24 Jul 2026 12:48:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1910C2749DC;
+	Fri, 24 Jul 2026 12:54:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784897285; cv=none; b=ATcc+UJykvVNTfoTiTE7NnYl6hxtx1Vm3cW/cW8EycUosLrUvmPvGGVfqEALJmxjdgO5YgBh6e5KN06rvMkJobeP4lBiCYf8ajoGagJG9wdv3ds/3UyEB6BqndnXsDI76hRP9WOG8NZDwWIXZL5FJvugZSuec41dst8n7LleM6Y=
+	t=1784897681; cv=none; b=LGcqxQkHo/aMD+qLFZbiJqV/kxmca7zQJoMwcN3W1E2tGOYBS66/N3xOXnGtTW1Mvp+lzl6w+KvG2aS9efiCzv8ajDm8Xn6kV6GHQNVzw7e4A5mGG++Vm4XrLpxXIur0t+aqNOMZirM4ltyMH0fP1cPhatDujjW6FgIvVRI8sHU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784897285; c=relaxed/simple;
-	bh=CnE5O4uHVrLBzSi3Mn+L+2J7mE9Ep0Zn8ByryFdYAoE=;
+	s=arc-20240116; t=1784897681; c=relaxed/simple;
+	bh=tqRxpgQdUJ7Au5eLmLySTDovM0MWNImE4pIPqVY7ztk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HfH2g5YLRGQBOk/AWitVcPAFFutZNi05+51A3OXsRIO+awlgxQ4CfQaQuKYq/u8DC3pQ04uirbjDUC8Gii57CHwgFPiN1pm6W1FfBfZyKY30VD67CuxS98sTqYsZRThbMvK/nMvzyDjZRM3c1PD2vXbkR6Oy6ShMLzajKFFeEHk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DJhIqkBn; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DJhIqkBn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48C2B1F000E9;
-	Fri, 24 Jul 2026 12:48:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784897283;
-	bh=x03Q1oAfo+dNzaSpFrHI/pMCaAPr+jTry/+A/jodG9M=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=DJhIqkBnT854TcQWlFC4FOqzGyds2ugGVaJCOGHZXsQr1GtEEUFMalkL5VUEZBYtb
-	 l9tKP1obi4UkDitgjoPlnA4UFeZA2QOClMEmTq6+0tqjSB9srAvY4a5jsfiiPFVLmO
-	 urTm8BF4kvAeocaPqGMf/7nJrZr6d76TZ5LuG6Eg1ZCtBljXDfuhiXn2Mxw2ZWesEv
-	 58ev2a1rh1qUCNTvou1sEqudF84h4mW+e/o47/Ja1ingY41YpQM8z0K8x88AVcmii8
-	 ISLG6+EGPLyJPMJhO90gR54B17GrwSnGg9K1bAq9waQ7nqFnByu6YOHePNvwyokJTR
-	 KLNt4iFgAquvg==
-Date: Fri, 24 Jul 2026 14:47:58 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: Theodore Tso <tytso@mit.edu>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, Christoph Hellwig <hch@lst.de>, 
-	Joanne Koong <joannelkoong@gmail.com>, changfengnan@bytedance.com, 
-	Christian Brauner <brauner@kernel.org>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 2/3] iomap: decouple simple direct I/O reads from
- iomap_dio_rw
-Message-ID: <amNerp4LwjSkHS5t@andromeda.toxiclabs.cc>
-References: <20260722124931.3159664-1-hch@lst.de>
- <20260722124931.3159664-3-hch@lst.de>
- <CAJnrk1a_cc55HcpRAi+H-mqOn7XUt_BxKJTre=Mw=xaE-5A5Rg@mail.gmail.com>
- <20260723045347.GA6641@lst.de>
- <20260723151021.GC7380@frogsfrogsfrogs>
- <amI3Kf3lFz4FMqXh@mit.edu>
+	 Content-Type:Content-Disposition:In-Reply-To; b=T4Xd10t8t6/TfzyOJzboRqgzeYSnCYL1JEH7wD8bPXFMuXEHiHsfK/L9VaZ14CYsJk7fN8EgDVNA9C7Txjcsut3S2J0FBOr7oanfnCZUfRFO+TW1K5RDLhLvtBpcP8YlbqFUtID5NJDf6bLE24jLUbXm8gMXdN0quMyo3rJqYas=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 1BE9F68AFE; Fri, 24 Jul 2026 14:54:35 +0200 (CEST)
+Date: Fri, 24 Jul 2026 14:54:34 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Andrey Albershteyn <aalbersh@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+	Christian Brauner <brauner@kernel.org>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Carlos Maiolino <cem@kernel.org>, Tal Zussman <tz2294@columbia.edu>,
+	Anuj Gupta <anuj20.g@samsung.com>, linux-block@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 18/22] xfs: use BIO_COMPLETE_IN_TASK for bounce
+ buffered read I/Os
+Message-ID: <20260724125434.GA27168@lst.de>
+References: <20260723145000.116419-1-hch@lst.de> <20260723145000.116419-19-hch@lst.de> <amItES6s54i1QSHw@aalbersh-thinkpadx1carbongen13.rmtcz.csb> <20260724062120.GA4953@lst.de> <amMvIEtEtRrNE7A_@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -50,37 +37,49 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <amI3Kf3lFz4FMqXh@mit.edu>
+In-Reply-To: <amMvIEtEtRrNE7A_@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Thu, Jul 23, 2026 at 12:08:21PM -0400, Theodore Tso wrote:
-> On Thu, Jul 23, 2026 at 08:10:21AM -0500, Darrick J. Wong wrote:
-> > > Yes.  Sashiko also reported that yesterday and I replied with a patch,
-> > > but I now noticed the report and thus my reply only went to me,
-> > > a sashiko-review list and Ted, but not everone else or the lists.
+On Fri, Jul 24, 2026 at 11:38:53AM +0200, Andrey Albershteyn wrote:
+> On 2026-07-24 08:21:20, Christoph Hellwig wrote:
+> > On Thu, Jul 23, 2026 at 05:58:49PM +0200, Andrey Albershteyn wrote:
+> > > I would probably need something like this for fsverity.
 > > > 
-> > > WTF?
+> > > When using integrity checksums with fsverity together, both file data
+> > > ioends and fsverity metadata ioends get onto the inode queue
+> > > (without checksums there's no metadata ioends). This way worker could
+> > > self-deadlock if data ioend processed first in xfs_end_io(). It will
+> > > call verify_bio to read merkle pages which could be already waiting
+> > > in queue.
 > > 
-> > Sashiko doesn't email the lists by default, and I don't think we want to
-> > turn that on for the fsdevel firehose.
+> > Yes.  Same as the situation we have (or had as this is changing
+> > for 7.3) with fsverity and fscrypt.
+> > 
+> > > I initially considered changing xfs_end_io, for read ioends, to just
+> > > schedule them instead of adding to the queue, but decided just sort
+> > > metadata ioends first in the queue [1] as a bit simpler fix.
+> > > 
+> > > The difference is that work won't be scheduled on the high-priority
+> > > fsverity's workqueue. Not sure how critical this is as with
+> > > checksums all reads would be the same priority.
+> > 
+> > I'll need to go back to your series, but just sorting isn't going
+> > to fix the problem, as the reading of the verity metadata could
+> > be kicked off from the completion workqueue and you could be blocking
+> > the rescuer thread.  So either verity needs it's own WQ, or we'd need
+> > some way for a currently running I/O completion to exit and get
+> > restarted.
 > 
-> Whether or not the review goes to a mailing list is up to each
-> subsystem to determine.  Some people have violently objected to the
-> review going to the mailing list, which is why it's optional.
-> 
-> I have asked to have ext4 reviews to be cc'ed to the linux-ext4
-> list[1].  It would be up to the VFS maintainers whether or not we want
-> to enable it for linux-fsdevel.
-> 
-> [1] https://github.com/sashiko-dev/sashiko/pull/365
-> 
-> The XFS maintainers can request if patches cc'ed to linux-fs should
-> get reviewed and sent back to authors and/or the maintainers and/or
-> the linux-fs mailing list.  You can either ask the Sashiko devs to
-> edit the email_policy.toml file, or you can send a pull request yourself.
-> 
+> Oh I see, then, the data reads could be queue further with
+> fsverity_enqueue_verify_work(ioend). This way bio completion queue
+> can continue process incoming metadata reads while data ioend is
+> waiting for verification.
 
-IIRC the discussion we had a while back was to keep the reviews emailed
-to authors only...
 
-Now I wonder how feasible would be to have a "linux-xfs-review" list to
-send sashiko reviews to, then people opt-in to it? Would it be overkill?
+fsverity_enqueue_verify_work would actually really benefit from doing
+a list (percpu or otherwise) so that the caller only needs a single
+or doubly linked list entry instead of adding another struct.
+
+But if we don't want to do that work yet, adding a verity context
+of some sort and using fsverity_enqueue_verify_work could work.
+
