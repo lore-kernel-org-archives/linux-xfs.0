@@ -1,84 +1,72 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F02E388879;
-	Fri, 24 Jul 2026 06:21:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34BF2386C0A;
+	Fri, 24 Jul 2026 06:21:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784874079; cv=none; b=SXHiGOm4pKHxRtJ1uBCyEMF9HGtJTRBWCccXMpT6EOjOZlk+sSZ/RvgBgEMqCGDduJ/A4jwhNWiAAxcBQBQMOa3jNoZCOtw/jVfZ8L4hEunbLiJUc/9o4Mn7J/jca/WYYkrL7dtyDriPN1vLt2QFB+HH5SOXb5NU38XrfLsBWbQ=
+	t=1784874090; cv=none; b=jcJYaPOEAuNKxd/ZC58gY/aoPCXPV7vuUdLr8m4ANUtd7M1wq/dDgEcSwzuftCJ0skK8JISi/11pW0d5KhstxyrmU62vZmEEVLCDh3X1qF+0e15aP+qpP3ivMNUKUd1sZQXUch+wRMKLpRc4KIqVm6opwI0d23xnO0qfa26RvK0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784874079; c=relaxed/simple;
-	bh=0oSpeqxjq7adk9CxJv+3BetaK6c2OITgJtdqvLIBsbQ=;
-	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=u4h8UqYH+LWvAeBps9d3xkllW/qw0nT1OfF5c2/Kfvq80wbfxHKYGzhB1THK+Ea/tNoio8YTDFbsaA5A8rLpRrilsRt4D4e/sP1OL0vfXs3a1OJt4NeZeivyyYy3sNzfBqxBLkgucwT2Xj8EJuZjNfAN71vkqPJeOikD2X+RfEE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=njac0Grm; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="njac0Grm"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id A98151F000E9;
-	Fri, 24 Jul 2026 06:21:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784874076;
-	bh=bUjvrWHDkuJT5zQa/sUKDucGjGE/xtmGtLX1gd1CvuM=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=njac0GrmNja/mcrwg7+WGRgswe68/7xwr/3nyBDpZttbZQZD6gOkIg558jSwE1GkR
-	 IaJHsPcaHQLAqx+NC9qysU6BdpVGC+RpnoKKuv6hrVa+PF6XiZBegILxLg1UcvjaOj
-	 9BUepeYiXBl+D2BQGTmZh7gi/Ii6nW1KN6Zf6VinYXeMDiHcNdgPxABPmuqjJbXutV
-	 ztPQlsgavYtVl5vJ6Sr5vxLROOGbhrpCcyPRDCX6IlwWJZzBSgV2j4lv/HwTDnnl7d
-	 P7qMw7nBGHA5C6r/8/8yTnkiCggu6kKama0zkBwKhZmd4GLok5fF8SdKEyKxJ6ffsm
-	 InKNx6looEPag==
-Date: Thu, 23 Jul 2026 23:21:16 -0700
-Subject: [PATCH 1/6] xfs: only check mergeability of bnobt records
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: djwong@kernel.org, hch@lst.de, cem@kernel.org
-Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <178487405399.3442778.7901047937592189648.stgit@frogsfrogsfrogs>
-In-Reply-To: <178487405343.3442778.10258954219942220821.stgit@frogsfrogsfrogs>
-References: <178487405343.3442778.10258954219942220821.stgit@frogsfrogsfrogs>
+	s=arc-20240116; t=1784874090; c=relaxed/simple;
+	bh=BaV1Epx9hWiAkuSSyAZCGFH1V0UbFkWeMpBWezrzoVE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=AvBGvUFz3YvRAlniJCL+47PfMI4Bzxk1nVC5BBWTFU5LgeO+e20VuKtBXCPnqMhI8S9cA7l3C3hijdOfwWA5iHX3ZqEN5CaSqT4Ha9YMm4qRub3vl8nN4S2tvIZaA375ZrlBlteynsZcZNCqWYk23RM9yALE6UfxIUzL9ZYw8PU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id EC95668CFE; Fri, 24 Jul 2026 08:21:21 +0200 (CEST)
+Date: Fri, 24 Jul 2026 08:21:20 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Andrey Albershteyn <aalbersh@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+	Christian Brauner <brauner@kernel.org>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Carlos Maiolino <cem@kernel.org>, Tal Zussman <tz2294@columbia.edu>,
+	Anuj Gupta <anuj20.g@samsung.com>, linux-block@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 18/22] xfs: use BIO_COMPLETE_IN_TASK for bounce
+ buffered read I/Os
+Message-ID: <20260724062120.GA4953@lst.de>
+References: <20260723145000.116419-1-hch@lst.de> <20260723145000.116419-19-hch@lst.de> <amItES6s54i1QSHw@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <amItES6s54i1QSHw@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Thu, Jul 23, 2026 at 05:58:49PM +0200, Andrey Albershteyn wrote:
+> I would probably need something like this for fsverity.
+> 
+> When using integrity checksums with fsverity together, both file data
+> ioends and fsverity metadata ioends get onto the inode queue
+> (without checksums there's no metadata ioends). This way worker could
+> self-deadlock if data ioend processed first in xfs_end_io(). It will
+> call verify_bio to read merkle pages which could be already waiting
+> in queue.
 
-In the cntbt (free space by block count) btree, records are not supposed
-to be in startblock order.  Hence the mergeability check is pointless.
-Remove it, since it does nothing, as LOLLM points out.
+Yes.  Same as the situation we have (or had as this is changing
+for 7.3) with fsverity and fscrypt.
 
-Cc: <stable@vger.kernel.org> # v6.4
-Fixes: d5784ae82778d9 ("xfs: flag free space btree records that could be merged")
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-Assisted-by: LOLLM # finding obvious bugs
----
- fs/xfs/scrub/alloc.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+> I initially considered changing xfs_end_io, for read ioends, to just
+> schedule them instead of adding to the queue, but decided just sort
+> metadata ioends first in the queue [1] as a bit simpler fix.
+> 
+> The difference is that work won't be scheduled on the high-priority
+> fsverity's workqueue. Not sure how critical this is as with
+> checksums all reads would be the same priority.
 
+I'll need to go back to your series, but just sorting isn't going
+to fix the problem, as the reading of the verity metadata could
+be kicked off from the completion workqueue and you could be blocking
+the rescuer thread.  So either verity needs it's own WQ, or we'd need
+some way for a currently running I/O completion to exit and get
+restarted.
 
-diff --git a/fs/xfs/scrub/alloc.c b/fs/xfs/scrub/alloc.c
-index 48edaa2cb1e079..c666be69f16481 100644
---- a/fs/xfs/scrub/alloc.c
-+++ b/fs/xfs/scrub/alloc.c
-@@ -136,7 +136,7 @@ xchk_allocbt_rec(
- 	const union xfs_btree_rec	*rec)
- {
- 	struct xfs_alloc_rec_incore	irec;
--	struct xchk_alloc	*ca = bs->private;
-+	struct xchk_alloc		*ca = bs->private;
- 
- 	xfs_alloc_btrec_to_irec(rec, &irec);
- 	if (xfs_alloc_check_irec(to_perag(bs->cur->bc_group), &irec) != NULL) {
-@@ -144,7 +144,8 @@ xchk_allocbt_rec(
- 		return 0;
- 	}
- 
--	xchk_allocbt_mergeable(bs, ca, &irec);
-+	if (bs->sc->sm->sm_type == XFS_SCRUB_TYPE_BNOBT)
-+		xchk_allocbt_mergeable(bs, ca, &irec);
- 	xchk_allocbt_xref(bs->sc, &irec);
- 
- 	return 0;
-
+With BIO_COMPLETE_IN_TASK we could probably do that restart thing.
+Or add a second set of workers for "metadata".
