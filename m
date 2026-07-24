@@ -1,72 +1,58 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A4DB19C54E;
-	Fri, 24 Jul 2026 06:22:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3B8519C54E;
+	Fri, 24 Jul 2026 06:22:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784874156; cv=none; b=R7Fw3MghfqBY/VuOfK+AstU38snJwNBz3+ULrAZB5gYFQqhMb0VMJMvQpDcKJ8B8d8zFe5/d4t3WaGWxMF3eAJqpS2w7DkmcsxrJ6q1KJuHnNW1/XQevgmcBkn5ItB2btQZzwEPUlhpVBb9gDK2NP7Xy9WLc0XVC7jBoVAGGg/c=
+	t=1784874158; cv=none; b=RVmRPEmwA0fJvfb4BwjFZ/0dk4sWF/V2j1tEwwed+QYupznfazLUqHvckPwsOdYnrO1x1TUvefclw2MH+GLqtsbjagUcn2KgKedlQ67qLU07AHvSOe6KNTZ9fArB+5gHrAHAiKVOIiR/zI33tZwSZGSUS3QFLiilv84M9i6HWm8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784874156; c=relaxed/simple;
-	bh=tGC5cRSIsyRHn8+jKqTN4F42dUJZdBC29bWy9x2+0iI=;
-	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=lWONiRoDteprgAw+8UCcG1siwA6NQB2HH0kREBzRolLLwJvAQQtUr1zNS3goAgb9LYd8wAMAVivAL3dEMvh6ahDXWy+5yabeNZiMfnEcAYA+zU4tztGp5bggOHDFMu/rKfFGjB88QClnRjgX5MObCrDaSm1i2djcExUxk7KtXlg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XHQT3IyF; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XHQT3IyF"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 9CA471F000E9;
-	Fri, 24 Jul 2026 06:22:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784874154;
-	bh=p1+wteF+c4ZopMU60oYBehXgn2h5PoFO83KfATfmHcE=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=XHQT3IyFNZx6XhS0Zxz9KT6/z94cHbBh2rs1IRvdg6q9Jbjal02NjhzKG2Y+whRn5
-	 grrc3KB48puW3FaN4rXvtCsqtFATEgdy8x0daF8DrKDc6hilogdRd5yoWPjZcrMHOu
-	 eqypqiTQC7tMyjAHntZ076hMD70Iaq+n18f5+pzn79qrSN1EaXr8cGUNmUFfPzaMeT
-	 CK2gEznKb3s3AzH7p5n67PTMqHHCiK6E/KKLhw5WCGwttx2g+jTv3X6TJWtI7k3S54
-	 8T+tfbS6IWCsg0IuzgD6jSjx37d+jCG3e6i7vPtzIdGLJ8dDpgk+U+XZH7eXzLuc0g
-	 0b//VKGzayhLw==
-Date: Thu, 23 Jul 2026 23:22:34 -0700
-Subject: [PATCH 6/6] xfs: avoid UAF on sc->tempip in xrep_tempfile_create
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: djwong@kernel.org, hch@lst.de, cem@kernel.org
-Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <178487405504.3442778.13576241949059106185.stgit@frogsfrogsfrogs>
-In-Reply-To: <178487405343.3442778.10258954219942220821.stgit@frogsfrogsfrogs>
-References: <178487405343.3442778.10258954219942220821.stgit@frogsfrogsfrogs>
+	s=arc-20240116; t=1784874158; c=relaxed/simple;
+	bh=lBFpdcg9Y9vfkcQ793bHvr8UCur96BAYFBIaUoPe4qA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=RtYAuLaopWL55G1U7ZkLpXtpOiQbW6uVSEvHruXolw8eXmmR7yPF70GRjAHfFC5QWhz6B4YKIClOYdbIW8M+lwF0gz5QtoAMkJZRjqoXNvzRVnHEuYOBIhlPv0oR5RwBZ3X00cvgCQXJDqxqxARQ4z0q8lW8GErQ0ZkQDjnSqBk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id DB2E768C4E; Fri, 24 Jul 2026 08:22:33 +0200 (CEST)
+Date: Fri, 24 Jul 2026 08:22:32 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+	Christian Brauner <brauner@kernel.org>,
+	Carlos Maiolino <cem@kernel.org>, Tal Zussman <tz2294@columbia.edu>,
+	Anuj Gupta <anuj20.g@samsung.com>, linux-block@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 01/22] iomap: add a separate bio_set for
+ iomap_split_ioend
+Message-ID: <20260724062232.GC4953@lst.de>
+References: <20260723145000.116419-1-hch@lst.de> <20260723145000.116419-2-hch@lst.de> <20260723164907.GA2901224@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260723164907.GA2901224@frogsfrogsfrogs>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Thu, Jul 23, 2026 at 09:49:07AM -0700, Darrick J. Wong wrote:
+> On Thu, Jul 23, 2026 at 04:49:26PM +0200, Christoph Hellwig wrote:
+> > iomap_split_ioend can split bios that already come from
+> > iomap_ioend_bioset and thus deadlock when the bioset is exhausted.
+> > 
+> > Add a separate bio_set to avoid this deadlock.
+> > 
+> > Fixes: 5fcbd555d483 ("iomap: split bios to zone append limits in the submission handlers")
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> Cc: <stable@vger.kernel.org> # v6.15
+> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
-LOLLM noticed a potential UAF if the tempfile creation code fails after
-it set sc->tempip.  Fix that.
-
-Cc: <stable@vger.kernel.org> # v6.10
-Fixes: 84c14ee39dd388 ("xfs: create temporary files and directories for online repair")
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-Assisted-by: LOLLM # finding obvious bugs
----
- fs/xfs/scrub/tempfile.c |    1 +
- 1 file changed, 1 insertion(+)
-
-
-diff --git a/fs/xfs/scrub/tempfile.c b/fs/xfs/scrub/tempfile.c
-index e0c630f888cf6e..98820003b9298f 100644
---- a/fs/xfs/scrub/tempfile.c
-+++ b/fs/xfs/scrub/tempfile.c
-@@ -174,6 +174,7 @@ xrep_tempfile_create(
- 		xfs_iunlock(sc->tempip, XFS_ILOCK_EXCL);
- 		xfs_finish_inode_setup(sc->tempip);
- 		xchk_irele(sc, sc->tempip);
-+		sc->tempip = NULL;
- 	}
- out_release_dquots:
- 	xfs_qm_dqrele(udqp);
-
+Note that this already is queued up in the vfs iomap branch for 7.3.
+I've been begging to get іt queued up for 7.2, but so far I've not
+even managed to a reply to that.
