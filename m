@@ -1,190 +1,145 @@
-Received: from mx0a-0064b401.pphosted.com (mx0a-0064b401.pphosted.com [205.220.166.238])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5BEE33CD8CA;
-	Fri, 24 Jul 2026 08:15:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.166.238
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784880939; cv=fail; b=Q6C5XYy6CqONesUowGWbVl5waolugE43WE91smw3aJ9KpkbYc/rfHu0VMC2E0rkNSxS4ley1aiLQg//APerxWDUhkK6wr/h4YzLo7sri+iJxZ1Q9mUsGWjuvMm5S7lM6ujKGD/y3m661IySs3abwhqoQfQXOdtXRW0Iv28futmE=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784880939; c=relaxed/simple;
-	bh=d/mLrH5vLDcCGUYhg4TT0GE2SlugiaOWgecMVqllxNQ=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=NZ0uo0/74eKmOszHhKS77aG4/CnCioCrgjt4MofIp0LJL4QNPUiF78E3fY3txqdy5lygn8qZmo+5RbTdpynyZcvjZJRVeHkgd5TgNmkNDbtkQabWDVZCeGbfUepUGGvOt6s2ixHuAuivsnfYay0oUvEImbd7J8Q+YSxxO8Nq6vM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=windriver.com; spf=pass smtp.mailfrom=windriver.com; dkim=pass (2048-bit key) header.d=windriver.com header.i=@windriver.com header.b=E3CK9Frc; arc=fail smtp.client-ip=205.220.166.238
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=windriver.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=windriver.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 284FD3515DC
+	for <linux-xfs@vger.kernel.org>; Fri, 24 Jul 2026 09:38:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784885940; cv=none; b=lryMYXBxetlGVJm/39IMBDLCJrOm2doARBCWU89Mw0ci3BNk0yl/RutFKXU8dsLydGBzMTwSa4zten7juyGDsWHizf/AvwMhUSngD7hXBNChkvBfhJlKPfAy7izNZoqDCZc9Mhgmk2lklA7HzRffaLskBxathb3FshR9ZhNC+O0=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784885940; c=relaxed/simple;
+	bh=5bygh+KDkyq5VnIRNVHRHMpV3wSyJVNSh4zxi7M408o=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ND2XwzKAZBtBWHgT/Ze76oydYnsGl2HVsS+R6f8u+MWfuLNAj3Rsiv7obzC1cnXMOZoP6kDa4an6FU0ybXWpHpBbYHSaS/8ggFkbU8dupM4l+u7HogS+fRZt8AzEs+7Q0Qubz8XWHdBRcWr+z+fsKkjJ1XqtOwUz1CDVHM6wkoY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=JdAvZv9D; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=f3n9hsD9; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=windriver.com header.i=@windriver.com header.b="E3CK9Frc"
-Received: from pps.filterd (m0250809.ppops.net [127.0.0.1])
-	by mx0a-0064b401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66O6ibo51096250;
-	Fri, 24 Jul 2026 01:15:06 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=windriver.com;
-	 h=cc:content-transfer-encoding:content-type:date:from
-	:in-reply-to:message-id:mime-version:references:subject:to; s=
-	PPS06212021; bh=tlPRxPbtA2KwOQVgK5ofSlpVgQkC1Ov0gwF54nzjKvI=; b=
-	E3CK9FrcFgbbbi+j5dfIuog1JVzFyBKxsKcVnv3F2lTBHwWdQSPcydFrnHPa9fGT
-	PJ6KM4TmFvo2ieqYEUPmlyYdWAALRdxPlfEVH3eMMDf/79XeCFRutUR4o/ZbDjvs
-	nJrcrqStkGY3OrGBK+vVTXIAgZj3kGzZjnSsEI82F7HZpp24j83bZGA4luf37lvf
-	lbCLFvvr2mqkkS7gf1CKyDtLbE0CExSp6GX9qzNupwGnfEmCt+uk9jlqNdMfd3wD
-	5Clkk1SCHMj/G1qQe3jziighQnIoYfSKz7UO/d1EclAPmOvUuJreqZrL4VkVgGI4
-	HU7K8mxNKXUbM/v9O4HCiQ==
-Received: from bn1pr04cu002.outbound.protection.outlook.com (mail-eastus2azon11010039.outbound.protection.outlook.com [52.101.56.39])
-	by mx0a-0064b401.pphosted.com (PPS) with ESMTPS id 4fjt3u4cj9-1
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Fri, 24 Jul 2026 01:15:05 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=O4Uw2bvCtSiVXLYY25Nsll0cvEtg83Vl1Cekm5SJkUFdnn6+JXSmmuEJwFvBxXB0VkV0a/rHwX31zl9vuN6Dbm9ki4Q8Oo5MKp3UdWtvmBAK9SbKo/ONWgdEi7S2CwfIQexNV0K0o5UhwF3QK12yyRUnPeqFC9Wm5SOxfCkl3v/09bBYwbi+AaieNLTeIVdyuwOKv/C5PfKVqY230+CdUY8h3vGKE1UciH7wgTtos+5RHeEhqAssY2L1mKWgOTuqUp+VA0h1Qm6HFLMPj1aiU/PJVgRZ45U2CVM0PnTzt9IRS+eRc/4qh5Rdg/JgSPRcTIDsmyMRE6UcICjVI1WgJg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=tlPRxPbtA2KwOQVgK5ofSlpVgQkC1Ov0gwF54nzjKvI=;
- b=Kx4sNaCojbFfHsNkweDP9Zc682NkFLudIU0rPYLe/vKlEGn6/XH0WGq+Y3LHmANt8JjPlpdpruaJLy+Fu3KHY4ukrUSb+Fh0swDu5JwEfhzqoD+1mrjb/CygXnuAzg9huCv0psCLqRwV9YKGr179/RrJVGI942ZE/rWwo5WVB2U6V4CfrfxBEaDt0OmzYhm0PxyiPqCwbRyCXejoV/nyUF+LNfvzWVMdzuixLdHMrpwr1oh99b+SsMtISVZA3ChNhMTmrV3yE6ptnBDT5rSBPY4pGNx40XeeGFL4u9pI2GlebSag0k1DLOaSPLaNaEhXtY+mfA6Uc20pQTjeXsbPNA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=windriver.com; dmarc=pass action=none
- header.from=windriver.com; dkim=pass header.d=windriver.com; arc=none
-Received: from CH0PR11MB5332.namprd11.prod.outlook.com (2603:10b6:610:bf::17)
- by SJ0PR11MB4846.namprd11.prod.outlook.com (2603:10b6:a03:2d8::24) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.245.11; Fri, 24 Jul
- 2026 08:15:01 +0000
-Received: from CH0PR11MB5332.namprd11.prod.outlook.com
- ([fe80::8f86:8d08:45bf:ec13]) by CH0PR11MB5332.namprd11.prod.outlook.com
- ([fe80::8f86:8d08:45bf:ec13%6]) with mapi id 15.21.0245.010; Fri, 24 Jul 2026
- 08:15:01 +0000
-Message-ID: <df41a675-2991-4157-96b4-f8672e906a6f@windriver.com>
-Date: Fri, 24 Jul 2026 16:14:52 +0800
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] xfs: fix nofs context corruption in
- xfs_btree_split_worker
-To: Christoph Hellwig <hch@infradead.org>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        akpm@linux-foundation.org
-References: <20260720050522.3101824-1-yun.zhou@windriver.com>
- <al3dypUNu1VNZErK@infradead.org>
- <3f683dea-fdee-416a-8112-2db000c4cf4e@windriver.com>
- <amMdC5fvYcsFXNmA@infradead.org>
-Content-Language: en-US
-From: "Zhou, Yun" <yun.zhou@windriver.com>
-In-Reply-To: <amMdC5fvYcsFXNmA@infradead.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SE2P216CA0127.KORP216.PROD.OUTLOOK.COM
- (2603:1096:101:2c7::16) To CH0PR11MB5332.namprd11.prod.outlook.com
- (2603:10b6:610:bf::17)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JdAvZv9D";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="f3n9hsD9"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1784885938;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=0krbbzEdB1cnlzq7dONjoMYcCneykIRlk0aXIE/WO08=;
+	b=JdAvZv9D8icmDbEp5q5WSZuEQkWG9qCflWHTT9XXQ8iplRsQDPta+C3ezYxBE5j6f26/p0
+	LZG7CjZdUmGQcd9HhRJSV3JTYVQy6R59ENJJlSG4Z+2E0PKsgUY3x+hlFLSOcm409MKRN/
+	Tu3kiW+H5RfEREed6mlhgZlqaTbEZPs=
+Received: from mail-wm1-f69.google.com (mail-wm1-f69.google.com
+ [209.85.128.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-477-ZIYzfQs0PSqyCIv6ZZPzyQ-1; Fri, 24 Jul 2026 05:38:56 -0400
+X-MC-Unique: ZIYzfQs0PSqyCIv6ZZPzyQ-1
+X-Mimecast-MFC-AGG-ID: ZIYzfQs0PSqyCIv6ZZPzyQ_1784885936
+Received: by mail-wm1-f69.google.com with SMTP id 5b1f17b1804b1-4955b84e25eso2002965e9.1
+        for <linux-xfs@vger.kernel.org>; Fri, 24 Jul 2026 02:38:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1784885936; x=1785490736; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=0krbbzEdB1cnlzq7dONjoMYcCneykIRlk0aXIE/WO08=;
+        b=f3n9hsD9EZrWHliNWPbUXmKNyC3TbEIBqiuOchy848Cw3Ek5CkjwR2Wt898MfQCdJN
+         R7YuySscDAoVypS7g5trVGJwDNY05itdHrz+CsA3Bq8Rz0DJRweMmtrvwoiiSl2I4T/x
+         JB+C2PJORX5HmZCsp1WfUDbihtqYN6Qo4DY5RSa+/s2CT7dlzurautp5tJoqZydKgXzE
+         b2lDTKNvyIBW8XVj7JMPxeU39P1X+h+otnT2YL4d/WT3VLOhRPlzgGAeNOh/QYpbDQNU
+         em2ZJWWO5Caz0+NtNVukxLpwcQ3+Aflvmo/9hOnjewuIdFtbcuNtSBHoajhDvUyYXtio
+         WPfw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784885936; x=1785490736;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=0krbbzEdB1cnlzq7dONjoMYcCneykIRlk0aXIE/WO08=;
+        b=Bxvd7Ckj9FtCjzSod6oc51OpOedOeOwjWP2nd7F3DBIPOsKGK6TJlAbV/2v5ioRPp6
+         mR4GwkpE5SnE9fvXdwzZ26rRme5PD4ieykicT04TtkcZeqEd4iwk9HPYdQlmoNvkH+5d
+         8Als9vW1rOlarfQLxSWuNOooBVKNrFtVsIEp4tP1UQp92inRy+z/w1bDgZeA58dOYidv
+         szAC7iYoOcx5Tb41YaGN8j7Gkc2qSaCvu8fyO2NQ6v4S9GVk8ZC2/9q5ZAt7JYoYv7wj
+         gAsON16MytBaaE+CgPGHvCdSKWEufyjLTr9uxaZ+oBxXP+Cax1lVUwjg2hFHK8NAYZ7U
+         0VdQ==
+X-Forwarded-Encrypted: i=1; AHgh+RrDxIFCeTEedGZx/C7mJp67V2Ql+stLYFKo650Yt56TVmPjwahvg1EXP23JcRfuzwaYaGkCAqUv6Oo=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwM7/dezpkSws3cXgNs7tV9qwPHV3OL7h8gLu7rHLWnn9JfChx/
+	QAM4BUjNqL4lNp475PRbfMO3BXUSpA5nXLeuqNSgX3DrnoQx59OHaPa2wgnBC9aD2hhY+ASHdDk
+	SxkY0oOLhJnn0EmNK3GYvs9+7V9j5V5e4Iu+vdefhB/CiX3NQT384x87TBJoA
+X-Gm-Gg: AR+sD11UMmTnY76ilSLEyCrkmoFHzQvobKy2Db5Xr4ZKAS85chujOigYsQSn2NC8hsS
+	tyX31f4kp3O62jgke9VnuwdqAN5JWoAmn0Nj2UIuAAjsyVHxHfrP5NRgEWQl0HIT76KSStOTspW
+	lycDQg6nKfBAO7yICNFmiG5BBouYap1dPDOr/ipLrEbwtGaO2bJ5dZjfu/sqEa1SX5wsXGfEOvj
+	j8pFlC4n/LSJ9NJQoYHP+WbTzBkSXJd9ZLEl4/FDgQpP52Tau9lgdAMnjoYU4W6ql5u9AH87MLO
+	hDnVycExFt30Ko47r0SMX2+OvzS7EYYJ9v5MedLsD9nBrot3+7rrN2UQ1BlsmnRgLSkkBiHO0Fr
+	LNIhPPiwiSrznMOIqNWRfh2jflKvEWMG1PSc=
+X-Received: by 2002:a05:600c:a21c:b0:495:4811:7998 with SMTP id 5b1f17b1804b1-49573ca982fmr49200975e9.17.1784885935512;
+        Fri, 24 Jul 2026 02:38:55 -0700 (PDT)
+X-Received: by 2002:a05:600c:a21c:b0:495:4811:7998 with SMTP id 5b1f17b1804b1-49573ca982fmr49200745e9.17.1784885934954;
+        Fri, 24 Jul 2026 02:38:54 -0700 (PDT)
+Received: from aalbersh-thinkpadx1carbongen13.rmtcz.csb ([217.30.74.39])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4957af6ad58sm65616845e9.4.2026.07.24.02.38.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 24 Jul 2026 02:38:54 -0700 (PDT)
+Date: Fri, 24 Jul 2026 11:38:53 +0200
+From: Andrey Albershteyn <aalbersh@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, Christian Brauner <brauner@kernel.org>, 
+	"Darrick J. Wong" <djwong@kernel.org>, Carlos Maiolino <cem@kernel.org>, 
+	Tal Zussman <tz2294@columbia.edu>, Anuj Gupta <anuj20.g@samsung.com>, linux-block@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 18/22] xfs: use BIO_COMPLETE_IN_TASK for bounce buffered
+ read I/Os
+Message-ID: <amMvIEtEtRrNE7A_@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+References: <20260723145000.116419-1-hch@lst.de>
+ <20260723145000.116419-19-hch@lst.de>
+ <amItES6s54i1QSHw@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+ <20260724062120.GA4953@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH0PR11MB5332:EE_|SJ0PR11MB4846:EE_
-X-MS-Office365-Filtering-Correlation-Id: ca876dad-c491-48e2-3599-08dee95ba889
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|376014|23010399003|1800799024|22082099003|18002099003|56012099006|11063799006|4143699003|10067099003;
-X-Microsoft-Antispam-Message-Info:
-	vHUFJpBasS54vYvh3pZUpHOzpmBxklTXOKoP4oRGuRTzm5/FmalZ7zqZMD2umm58OQ6GAxPaKv9NGk1cMFHEvf8Vrq5hidJhGgQc1HX/Qb7dqu8eYgd6jgzOfsHeCuPCRfBv4JUNjpLs/4+I/jR7tB4vEbKJU66A3cbbsZEutXrLaBPGIZ/xCiJL9580fr4QMD1CMLjP8vVlzwHMMAKRO98M5teXKOrbULxKlW5diwKmpZom5f0a5uiDUM8O99FSI79zDEMTtkuS6fJIGL9sUYVWSXW/ct9wRGOM4YhWCqW1+qAPZ1/8OUN8yWx8rF7fYSssmEbCsSYHoWTpueprCWy5fL9yt9W98ugtkzz44hLuhKDOutvtERkIhPwnJWbO6Q0Kon4ufbMPXW78CdS4bQKdbz7yQskXNjK9I7udlz5tYgnk9jHK1BasOXYsgyh5CwqocnIidQENLwXIgxTh2dulUawViUR4gcPFxFvvsWf6U+VnwZ1C0Vcn8M+d9tSnH1TQ9Ma3oAsxEJ7q2g7VM+YnaQ2QDlwvNOU8h2ctJsbq4uGE6DHaVB8tyRvpGmm/6NuriYqOcpvxjNLzhrivhhGZID9/LiYcgrago6SHCuewCz38sT5UyaWIKcIFwwvH6DJWxt47pHxMBiQNcYYWeubZEk+yKRcuVtwJ+xtj/oc=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH0PR11MB5332.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(23010399003)(1800799024)(22082099003)(18002099003)(56012099006)(11063799006)(4143699003)(10067099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?ZE1qV00zQ3Y0c3hUTXdYWWtnZkk1UkZ3b2FiMzVma1hwTkxGeWo0aS9PdjBB?=
- =?utf-8?B?ZW9JQU5qY3E4UUF5MWpOMStMZ0ZxaFE0UDZmeUZiWHhhblZlMU42RE02K2Ro?=
- =?utf-8?B?UDBxbGNjeFhoS1VUNGlyeDZPd2x5amdaaTBtKzVLNTNCbTVFbVduVVpMdFNT?=
- =?utf-8?B?b1d0VzExaGoxY2VVcFlpeHllL0NQYUtNNzgxZ091ZEh2MTU2UW10WWFkZzRy?=
- =?utf-8?B?Mnc0bmlEdjhBRDU4QUNEMGlJTHlNcDVoTkdGc3Erc1VvOGRjKzNmekJpTlpS?=
- =?utf-8?B?MUpBbENyR1ZvSkpMa3hJOTdmTzAwOHhIdEREcG85SnBLOW9HdjVYYTd3bEU2?=
- =?utf-8?B?Y1hXSlZzQXRyY1F1MHV3aHBiKzRpMVYzL1h0QTNEVzN2VTlQVFJHU2JJVVYw?=
- =?utf-8?B?a3dES2JlY1ZTclVpaTczZmNnYmRGVHA3TlkvQVp4alBEZmVzQjBiQjZpV1hV?=
- =?utf-8?B?dCtyRldVdGdoenVZcmJIWUFQc3BWRWRmQi9xMDN1SmVTSm84ektweVJqdzMw?=
- =?utf-8?B?Y1hmNHE5MkU2RVByWEt2YzZLRit4Z2pEQU1TUkZsUG5aa1ZtSGxIeTVCVldP?=
- =?utf-8?B?ZVRhN3RycGl6d0JobStzbks2V1JEeklnaWJESXdsNUdOVllCK0tnVTNNSk1v?=
- =?utf-8?B?dlJMVklHbVh5MzRaZ01PQ1lMUnVNWGNheEtDK3VsVjdrY1IxUnlJS3JOeVJZ?=
- =?utf-8?B?NkxIYjhJSjJubXN3eFZqcklDMGlTby9WbTV6ZnJxV2pkdXV4YllxNm5uY3lJ?=
- =?utf-8?B?YTI4VTJrTFBsei84azV2UHl1Ny82ck5NRDVGZlBxcnViNU40ZVJQNmk0Mk1E?=
- =?utf-8?B?R1FhVGkrVGJ2R2YvODFUSGYyYjY3M3R5dWhqSjFoSGEyaFA4WXF0WTlaSW14?=
- =?utf-8?B?S0VUR2RndGRBVnhRS09ENEMxZnFwWGVVY3Nsb0tYb3dYcWpmbTMza2VyYXJy?=
- =?utf-8?B?OVdHSjFNMU1BbkxBVXFBOE1JVlRFT2FoN2V0a3BTd3oxeTRyVUc0NTY0TWFB?=
- =?utf-8?B?NzNvZTRhWnFoTUJORGdBM2o2ME1oZURYc0dwOURlK1FiV2R1VitsSFBDdGJm?=
- =?utf-8?B?VmVoYmFvM3FnNzNaRnpPbWc4QnZQeG5COGtURjQ1N3BXZEZ2VlM1dzNzV2k1?=
- =?utf-8?B?UTZGTVJ2MG9rRURVV3JXY2dHV2d2N2hMME10WlRzMnVuTWxVMkFJcktJUlNP?=
- =?utf-8?B?Tjc3eTBKK1llQXhxendqdzl5RENHY0tjcXZpUFhPNHE4TUgyZjhZT3FVbDhM?=
- =?utf-8?B?cVBibVdCbUVJSGpTVmdOdDNIL2crRGZLam4vSGtmZEdXbllBa3lac0N4NkM2?=
- =?utf-8?B?RTdlb2dKcXFsd28wME9ITkZKMnkvYmVVUTBLRmZMd3ZLV2EyWU43R0t3M0NJ?=
- =?utf-8?B?NXNBbmNBa1pwRnMvbk84MUVKTVNZZW1BZFR6Q1hXdSs2bithdmpzUWd5eWh1?=
- =?utf-8?B?OXBTb2Vya1FQcHJDZXNZaHozT3ppZTdHOEYzUDNzWFpVZkJWREdjQ1I4VHYx?=
- =?utf-8?B?OW9PN1o0c25XWlhPZVpZT1ZBMVVBRHdDQ1V1enp3dWh5MnNsYVZvVytESG9S?=
- =?utf-8?B?bWlPZlVJZ2M0cmQ3RHU5aWtmeTRINEhkWjNnVXNUQ0dEcDFvMmlQbHM2TkZ4?=
- =?utf-8?B?akhJZHdmTnNIdm03VjdqaWdyMWJPeVB5UlZtNVBEbUFZR0h3TWJHaEd6L0dE?=
- =?utf-8?B?ZkRSTG1zRnpKWGtkbzdyVGVpMFl3SEdsMnBDZEtycDRxS0h0RkxUL0orM2lF?=
- =?utf-8?B?dnF4TnlxRXNSN3JpNGYzOENtbzNXWXJpM3pFZFAvSFVoeEVmb3lwb28rQmU4?=
- =?utf-8?B?eDFyWFdvMzBEZG5EdWQrcGd1Z0hBODRCSHk2WTZheTlGaFlKWmRQOU9YMnBC?=
- =?utf-8?B?d1VYT0JPUHV5RzdDcFh5dldpK1lQS3p6OG5KL20wZmVNelNwbEZWQitRWVBU?=
- =?utf-8?B?RTJldXJGcTdseUNQc2R0V0p6b0FxS1d2dU5nbkVLeldtc3ZPM2FiRytzSENJ?=
- =?utf-8?B?bFNYZ2hqdnc4czVOclBzK091S2x1Rk9BMk5IaGQyTndqTitrY2w0R2NtRGRu?=
- =?utf-8?B?VGo3MEFLTGxkbStIQ1NMVTNYNkdZT0RMc3hrSmF4RlVXME94RzM2M1o1WUhJ?=
- =?utf-8?B?U0I0OFhRT2c4L1RxTnpoM1VnRUxCcTRRcWRtOTRmY01vVEMxaklGazliQzBk?=
- =?utf-8?B?NUFTMlVrMzBTT2Rnajg3MnlMb2IxeHJUUlBxNllORzdDOUk5ZjdBaVNUYlNP?=
- =?utf-8?B?Yk1QOE5QOVBXVHBacWJjUjd1KzV2aTRNcTVqNVp5M3JNL2UyOERrTUg3bFZB?=
- =?utf-8?B?U09WamlOdW9QQms3V1pBSVBwYllJTjRiRW1naTY4UVNCdFBvOVZHUT09?=
-X-Exchange-RoutingPolicyChecked:
-	QCqK05HI8OUsupx3iBKjd9Tfuky1e4m+ax7ZVZVNQJKupfUYyZk67t26VsS9VOtEad5YkN2MycRQ2ZavToLR/We2fsEqHrGkAWSbP0gNX+iKpHvgxcDWj+xgd2ea7gvhE+aBoNKbgdRmgLetOw3c6DqDu0dLYogEonEe5TxdkYlhN58Emjk2QvoKJTHR9hhEMYceG9m/zjrO11thyt0T9IfP7CPivx0JJFPu9t3lbTMIdjAEYtb507gLZOw1/2cQ6PvAC2ix+VRCbzMgM3IARK2uk/mDy0kckWsvMykC+fUuuBc/jtcDZ+xRxsLMPFwXu2xinTBk+rktHCUnV5RVAQ==
-X-OriginatorOrg: windriver.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ca876dad-c491-48e2-3599-08dee95ba889
-X-MS-Exchange-CrossTenant-AuthSource: CH0PR11MB5332.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Jul 2026 08:15:01.3511
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 8ddb2873-a1ad-4a18-ae4e-4644631433be
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 9vO1lXSVukNIWLmckizJfiB/MK7ksG48/Ar9vurkxQ49fnPHjdmBzGcTs9mPuMKGWV2ONQo6ed+90LubQOx6Ag==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR11MB4846
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzI0MDA3NCBTYWx0ZWRfX4Ij7VKbRJlcG
- 2765atujVpJA0IeU4kNSsMMDmhKgH4oHjw9u0x4NNTtX82Y7VXqur1MSLU9iCebp6I/ylvaflYN
- 6coXOzfmZ8ZXQ7xHZ+hRvRUU3S+9KIyFdYTrv1atzePtpW81Htc2fr0PUxTejkcunKZMeNaxDxU
- 2HsKvnvbytLnsAPVUG7vT5RoAMAEOI5RH3MCiYZmK8NyK8RetHiYyKnGMyvnW0VV/Szb/cOVLTY
- edm97PZprBnMQK1dgInAXKRBWac/42j78Kd17Lg6IH/HocLwhYzCse2W9qN3U7Wnk9pOG55HMC6
- Z4pbLSu8x56u/M1xcQId+OfZC8RjJbYn12xnuZFKcj0LEZQk/I86fKImVUrkxsbppd9CIVq0+YQ
- uYszlpMbpinYthVIMZYapmKKEPcvTZM3JB8UBXxrTpFR0HgN/W6gXbJuWq4cEECtCcqiSivG5RJ
- I0AkAOfWDXX1fVHLWIg==
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzI0MDA3NCBTYWx0ZWRfX7uJGAXvBV0e/
- ydCwnxnYCWTTxpY9Swa3NCI3FOxt2F3BxKtfVFck2fH6TNVWRI3viGh1S7Jc79OanqfDHta2mLV
- sDjzqeMicgI4hMMpTU/TlyBYkM9g28aYlbWsuipSd0IxmyOlFCjn
-X-Proofpoint-GUID: o1NeVaT3wmmhsts4foEv_oQuIGp_Dnyw
-X-Authority-Analysis: v=2.4 cv=U9yiy+ru c=1 sm=1 tr=0 ts=6a631f0a cx=c_pps
- a=BlIXLFXQXelmgi4pYy3AOQ==:117 a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19
- a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19 a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19
- a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=bi6dqmuHe4P4UrxVR6um:22 a=iKiJcTA2PjBS6x5JeXcw:22
- a=oqIRtgDX5uB9IJKAlrYA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-ORIG-GUID: o1NeVaT3wmmhsts4foEv_oQuIGp_Dnyw
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-07-24_01,2026-07-22_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 malwarescore=0 bulkscore=0 spamscore=0 priorityscore=1501
- lowpriorityscore=0 adultscore=0 impostorscore=0 phishscore=0 suspectscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607240074
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260724062120.GA4953@lst.de>
 
-On 7/24/2026 4:06 PM, Christoph Hellwig wrote:
-> On Fri, Jul 24, 2026 at 03:54:10PM +0800, Zhou, Yun wrote:
->> Thanks a lot.
->> I'd like to understand the scope you have in mind. Should the removal of
->> xfs_trans_set/clear_context and current_set/restore_flags_nested be part of
->> my nofs series, or is that something you'd prefer to handle separately?
+On 2026-07-24 08:21:20, Christoph Hellwig wrote:
+> On Thu, Jul 23, 2026 at 05:58:49PM +0200, Andrey Albershteyn wrote:
+> > I would probably need something like this for fsverity.
+> > 
+> > When using integrity checksums with fsverity together, both file data
+> > ioends and fsverity metadata ioends get onto the inode queue
+> > (without checksums there's no metadata ioends). This way worker could
+> > self-deadlock if data ioend processed first in xfs_end_io(). It will
+> > call verify_bio to read merkle pages which could be already waiting
+> > in queue.
 > 
-> I don't care too strongly.  Maybe we should a minimal fix for the bug
-> in ASAP, and then we just need to agree who cleans up after that.
-> Happy to do that myself if you don't have the time or aren't interested.
+> Yes.  Same as the situation we have (or had as this is changing
+> for 7.3) with fsverity and fscrypt.
+> 
+> > I initially considered changing xfs_end_io, for read ioends, to just
+> > schedule them instead of adding to the queue, but decided just sort
+> > metadata ioends first in the queue [1] as a bit simpler fix.
+> > 
+> > The difference is that work won't be scheduled on the high-priority
+> > fsverity's workqueue. Not sure how critical this is as with
+> > checksums all reads would be the same priority.
+> 
+> I'll need to go back to your series, but just sorting isn't going
+> to fix the problem, as the reading of the verity metadata could
+> be kicked off from the completion workqueue and you could be blocking
+> the rescuer thread.  So either verity needs it's own WQ, or we'd need
+> some way for a currently running I/O completion to exit and get
+> restarted.
 
-Thanks. The patch I sent is already a minimal fix - it just replaces
-xfs_trans_set/clear_context with memalloc_nofs_save/restore in the
-worker. Could you take another look?
+Oh I see, then, the data reads could be queue further with
+fsverity_enqueue_verify_work(ioend). This way bio completion queue
+can continue process incoming metadata reads while data ioend is
+waiting for verification.
 
-BR,
-Yun
+> 
+> With BIO_COMPLETE_IN_TASK we could probably do that restart thing.
+> Or add a second set of workers for "metadata".
+> 
+
+-- 
+- Andrey
+
