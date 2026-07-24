@@ -1,77 +1,86 @@
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62AD4427FA7
-	for <linux-xfs@vger.kernel.org>; Fri, 24 Jul 2026 12:29:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.24
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE371280335;
+	Fri, 24 Jul 2026 12:48:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784896187; cv=none; b=gHsn9mMIZpGcSFePIaEZSmRE9IGTlBgI+aqHBxKdsibmrZOuW+6r/E7/xCyUKdTVih4OpebBQqTJqsQE7F6l2EpQJCnxcXn2F0o/t5gmQjzxvQf5OJkfept3/ode7ksg+giCIEJNZQpzSrFVjirb0Vp1dUDt8iZ5fKClLQsEvwU=
+	t=1784897285; cv=none; b=ATcc+UJykvVNTfoTiTE7NnYl6hxtx1Vm3cW/cW8EycUosLrUvmPvGGVfqEALJmxjdgO5YgBh6e5KN06rvMkJobeP4lBiCYf8ajoGagJG9wdv3ds/3UyEB6BqndnXsDI76hRP9WOG8NZDwWIXZL5FJvugZSuec41dst8n7LleM6Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784896187; c=relaxed/simple;
-	bh=MPy2dmqKlCsrw5okIZFwkiGzwVi0bWXg1j0NfWvMFRQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:From:In-Reply-To:
-	 Content-Type:References; b=r/V2FaYTQbyJjoSGSijkyl+sSfBvkNpDZBcdISJFPiz+AAuJntnCcIems/Jh1EzzmLc9+aF51fO8Yo/xXM/Qqr6RWB5kP4jcHIWJ0Xprx6ibwR/geFtjYRh9+wd0ET8EjOvwP5HY297iPZWCBL45TQP5Xa5Az1y247211N9n+qs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=OULIiiI2; arc=none smtp.client-ip=203.254.224.24
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1784897285; c=relaxed/simple;
+	bh=CnE5O4uHVrLBzSi3Mn+L+2J7mE9Ep0Zn8ByryFdYAoE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=HfH2g5YLRGQBOk/AWitVcPAFFutZNi05+51A3OXsRIO+awlgxQ4CfQaQuKYq/u8DC3pQ04uirbjDUC8Gii57CHwgFPiN1pm6W1FfBfZyKY30VD67CuxS98sTqYsZRThbMvK/nMvzyDjZRM3c1PD2vXbkR6Oy6ShMLzajKFFeEHk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DJhIqkBn; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="OULIiiI2"
-Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
-	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20260724122942epoutp014336f0e25b00c26181c7beaa17456891~FOZ7w6xgp1126511265epoutp01a
-	for <linux-xfs@vger.kernel.org>; Fri, 24 Jul 2026 12:29:42 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20260724122942epoutp014336f0e25b00c26181c7beaa17456891~FOZ7w6xgp1126511265epoutp01a
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1784896182;
-	bh=MPy2dmqKlCsrw5okIZFwkiGzwVi0bWXg1j0NfWvMFRQ=;
-	h=Date:Subject:To:Cc:From:In-Reply-To:References:From;
-	b=OULIiiI269+1WxJT3BSgRxZXaThIg3KzJ0Y8uSoSA5JHMoWS/WHk2mSRYypMcnLKA
-	 YQRDBpQTBVsoNeyIpJ/k+Z/dThr1/xzUlXdts15RnXTgR7eqkDEMd9s2cwvO0ljL37
-	 g1xiKlUA56jK0/M27xEvdiYhoz+1Zowa7A1Yu54A=
-Received: from epsnrtp02.localdomain (unknown [182.195.42.154]) by
-	epcas5p4.samsung.com (KnoxPortal) with ESMTPS id
-	20260724122940epcas5p470a17d834a633b68f21a1a505ff45a54~FOZ6nPzM-1979419794epcas5p4m;
-	Fri, 24 Jul 2026 12:29:40 +0000 (GMT)
-Received: from epcas5p4.samsung.com (unknown [182.195.38.91]) by
-	epsnrtp02.localdomain (Postfix) with ESMTP id 4h66kX1c0Nz2SSKZ; Fri, 24 Jul
-	2026 12:29:40 +0000 (GMT)
-Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
-	epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
-	20260724122939epcas5p10b6ca4e663c8a28da6a21f976dee3dc5~FOZ4458aG1950819508epcas5p1B;
-	Fri, 24 Jul 2026 12:29:39 +0000 (GMT)
-Received: from [107.122.11.51] (unknown [107.122.11.51]) by
-	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-	20260724122937epsmtip282d53e8241dfc2741e0011bae7490d27~FOZ3Bmc-q2587125871epsmtip2l;
-	Fri, 24 Jul 2026 12:29:36 +0000 (GMT)
-Message-ID: <6c122cdc-d874-48aa-bca3-686459dee84e@samsung.com>
-Date: Fri, 24 Jul 2026 17:59:35 +0530
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DJhIqkBn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48C2B1F000E9;
+	Fri, 24 Jul 2026 12:48:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784897283;
+	bh=x03Q1oAfo+dNzaSpFrHI/pMCaAPr+jTry/+A/jodG9M=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=DJhIqkBnT854TcQWlFC4FOqzGyds2ugGVaJCOGHZXsQr1GtEEUFMalkL5VUEZBYtb
+	 l9tKP1obi4UkDitgjoPlnA4UFeZA2QOClMEmTq6+0tqjSB9srAvY4a5jsfiiPFVLmO
+	 urTm8BF4kvAeocaPqGMf/7nJrZr6d76TZ5LuG6Eg1ZCtBljXDfuhiXn2Mxw2ZWesEv
+	 58ev2a1rh1qUCNTvou1sEqudF84h4mW+e/o47/Ja1ingY41YpQM8z0K8x88AVcmii8
+	 ISLG6+EGPLyJPMJhO90gR54B17GrwSnGg9K1bAq9waQ7nqFnByu6YOHePNvwyokJTR
+	 KLNt4iFgAquvg==
+Date: Fri, 24 Jul 2026 14:47:58 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: Theodore Tso <tytso@mit.edu>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, Christoph Hellwig <hch@lst.de>, 
+	Joanne Koong <joannelkoong@gmail.com>, changfengnan@bytedance.com, 
+	Christian Brauner <brauner@kernel.org>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 2/3] iomap: decouple simple direct I/O reads from
+ iomap_dio_rw
+Message-ID: <amNerp4LwjSkHS5t@andromeda.toxiclabs.cc>
+References: <20260722124931.3159664-1-hch@lst.de>
+ <20260722124931.3159664-3-hch@lst.de>
+ <CAJnrk1a_cc55HcpRAi+H-mqOn7XUt_BxKJTre=Mw=xaE-5A5Rg@mail.gmail.com>
+ <20260723045347.GA6641@lst.de>
+ <20260723151021.GC7380@frogsfrogsfrogs>
+ <amI3Kf3lFz4FMqXh@mit.edu>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 4/4] iomap: don't free integrity payload that doesn't
- exist
-To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Anuj Gupta
-	<anuj20.g@samsung.com>, Christian Brauner <brauner@kernel.org>, "Darrick J.
- Wong" <djwong@kernel.org>, linux-block@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	stable@vger.kernel.org
-Content-Language: en-US
-From: Kanchan Joshi <joshi.k@samsung.com>
-In-Reply-To: <20260724051001.202741-5-hch@lst.de>
-Content-Transfer-Encoding: 7bit
-X-CMS-MailID: 20260724122939epcas5p10b6ca4e663c8a28da6a21f976dee3dc5
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-cpgsPolicy: CPGSC10-542,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20260724051221epcas5p4308310d7cf98403add5912ab223419b7
-References: <20260724051001.202741-1-hch@lst.de>
-	<CGME20260724051221epcas5p4308310d7cf98403add5912ab223419b7@epcas5p4.samsung.com>
-	<20260724051001.202741-5-hch@lst.de>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <amI3Kf3lFz4FMqXh@mit.edu>
 
-Reviewed-by: Kanchan Joshi <joshi.k@samsung.com>
+On Thu, Jul 23, 2026 at 12:08:21PM -0400, Theodore Tso wrote:
+> On Thu, Jul 23, 2026 at 08:10:21AM -0500, Darrick J. Wong wrote:
+> > > Yes.  Sashiko also reported that yesterday and I replied with a patch,
+> > > but I now noticed the report and thus my reply only went to me,
+> > > a sashiko-review list and Ted, but not everone else or the lists.
+> > > 
+> > > WTF?
+> > 
+> > Sashiko doesn't email the lists by default, and I don't think we want to
+> > turn that on for the fsdevel firehose.
+> 
+> Whether or not the review goes to a mailing list is up to each
+> subsystem to determine.  Some people have violently objected to the
+> review going to the mailing list, which is why it's optional.
+> 
+> I have asked to have ext4 reviews to be cc'ed to the linux-ext4
+> list[1].  It would be up to the VFS maintainers whether or not we want
+> to enable it for linux-fsdevel.
+> 
+> [1] https://github.com/sashiko-dev/sashiko/pull/365
+> 
+> The XFS maintainers can request if patches cc'ed to linux-fs should
+> get reviewed and sent back to authors and/or the maintainers and/or
+> the linux-fs mailing list.  You can either ask the Sashiko devs to
+> edit the email_policy.toml file, or you can send a pull request yourself.
+> 
+
+IIRC the discussion we had a while back was to keep the reviews emailed
+to authors only...
+
+Now I wonder how feasible would be to have a "linux-xfs-review" list to
+send sashiko reviews to, then people opt-in to it? Would it be overkill?
