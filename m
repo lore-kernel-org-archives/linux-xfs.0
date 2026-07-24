@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36DE6377AB6;
-	Fri, 24 Jul 2026 06:22:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A4DB19C54E;
+	Fri, 24 Jul 2026 06:22:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784874140; cv=none; b=XPehpKmc9B+QOTQr1A7g8PliBZ6yGgDcNpDcyyv5SPS4OgdBS2DKF8UvGfQYZnXznTBKoWNgULWrMVyocaih1/9yrEA43P455PPdXSZBO+wMcxoCRy6gcT/9uuvKooFHXi+hYjRx8ynIXOzFl4Ig0I9muXFPUEPBnGuZZd00Z3k=
+	t=1784874156; cv=none; b=R7Fw3MghfqBY/VuOfK+AstU38snJwNBz3+ULrAZB5gYFQqhMb0VMJMvQpDcKJ8B8d8zFe5/d4t3WaGWxMF3eAJqpS2w7DkmcsxrJ6q1KJuHnNW1/XQevgmcBkn5ItB2btQZzwEPUlhpVBb9gDK2NP7Xy9WLc0XVC7jBoVAGGg/c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784874140; c=relaxed/simple;
-	bh=OxozelXBC3LqvAZ0sS22xDjknhnFWJcsFT3doqUaKjI=;
+	s=arc-20240116; t=1784874156; c=relaxed/simple;
+	bh=tGC5cRSIsyRHn8+jKqTN4F42dUJZdBC29bWy9x2+0iI=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=XoFPyZuosliJpPiL+xuZLQa6YoNYhoYqMC+q2Es21ogcpYRdy83WjUuwM8aM+LGOR88RN88QhH+s46gcBNzb4Zysw6Y/qCan3NZAhOCTfOg8jlXkoWpN1LaKCqa54dqzQOebF+tk9nKC+Bvp5yZxGv0NonS7/72b/XQ0Zeytu5Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BSfuGqZC; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=lWONiRoDteprgAw+8UCcG1siwA6NQB2HH0kREBzRolLLwJvAQQtUr1zNS3goAgb9LYd8wAMAVivAL3dEMvh6ahDXWy+5yabeNZiMfnEcAYA+zU4tztGp5bggOHDFMu/rKfFGjB88QClnRjgX5MObCrDaSm1i2djcExUxk7KtXlg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XHQT3IyF; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BSfuGqZC"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 0CB631F000E9;
-	Fri, 24 Jul 2026 06:22:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XHQT3IyF"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 9CA471F000E9;
+	Fri, 24 Jul 2026 06:22:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784874139;
-	bh=Yfo+eCjeCul4cSHTP6sz9TrlM8cSbV+tm9cm3xS5bZg=;
+	s=k20260515; t=1784874154;
+	bh=p1+wteF+c4ZopMU60oYBehXgn2h5PoFO83KfATfmHcE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=BSfuGqZCtkcsxUoW5wWJnZPqaoB/08wvm53G8cJwxrpWP8uVwxvOoo6B2K0GlXTja
-	 6p1d01268crPVmNtktEw41SBSvbSGYV9DMyKUyk37OvJljk2ZrTijyyxc+w5FFZgST
-	 FpGvBGfCVBIixLvPee7rvbZZTJQlJYSwqjXwev0pdzKGdBr+vx8Cdf5i4Sm73/gvkd
-	 uUuvcz/91x5kJG4Md/f8nkOxpdcK4zUWX8qZxxu1lQZwqIr9Hp3uLo624kYiFzqI6H
-	 PiIejWO5C2a0hvws6lXl6ysM8MXdQnz9kScViPuee2KCXNgsZsG9ZypsZzFRDowEJl
-	 +Jo/hBX2s+DEQ==
-Date: Thu, 23 Jul 2026 23:22:18 -0700
-Subject: [PATCH 5/6] xfs: nlink scrub must take IOLOCK before determining
- ILOCK state
+	b=XHQT3IyFNZx6XhS0Zxz9KT6/z94cHbBh2rs1IRvdg6q9Jbjal02NjhzKG2Y+whRn5
+	 grrc3KB48puW3FaN4rXvtCsqtFATEgdy8x0daF8DrKDc6hilogdRd5yoWPjZcrMHOu
+	 eqypqiTQC7tMyjAHntZ076hMD70Iaq+n18f5+pzn79qrSN1EaXr8cGUNmUFfPzaMeT
+	 CK2gEznKb3s3AzH7p5n67PTMqHHCiK6E/KKLhw5WCGwttx2g+jTv3X6TJWtI7k3S54
+	 8T+tfbS6IWCsg0IuzgD6jSjx37d+jCG3e6i7vPtzIdGLJ8dDpgk+U+XZH7eXzLuc0g
+	 0b//VKGzayhLw==
+Date: Thu, 23 Jul 2026 23:22:34 -0700
+Subject: [PATCH 6/6] xfs: avoid UAF on sc->tempip in xrep_tempfile_create
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, hch@lst.de, cem@kernel.org
 Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <178487405483.3442778.17939171750881157462.stgit@frogsfrogsfrogs>
+Message-ID: <178487405504.3442778.13576241949059106185.stgit@frogsfrogsfrogs>
 In-Reply-To: <178487405343.3442778.10258954219942220821.stgit@frogsfrogsfrogs>
 References: <178487405343.3442778.10258954219942220821.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,50 +45,28 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-In xchk_nlinks_ilock_dir, take the IOLOCK before accessing internal
-inode state to figure out if we need to take ILOCK shared or exclusive.
-That way we can't race with directory updates.  LOLLM pointed out that
-the code was initially correct w.r.t. the IOLOCK, but then I broke it.
+LOLLM noticed a potential UAF if the tempfile creation code fails after
+it set sc->tempip.  Fix that.
 
-Cc: <stable@vger.kernel.org> # v6.18
-Fixes: f477af0cfa0487 ("xfs: fix locking in xchk_nlinks_collect_dir")
+Cc: <stable@vger.kernel.org> # v6.10
+Fixes: 84c14ee39dd388 ("xfs: create temporary files and directories for online repair")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Assisted-by: LOLLM # finding obvious bugs
 ---
- fs/xfs/scrub/nlinks.c |   13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+ fs/xfs/scrub/tempfile.c |    1 +
+ 1 file changed, 1 insertion(+)
 
 
-diff --git a/fs/xfs/scrub/nlinks.c b/fs/xfs/scrub/nlinks.c
-index 355ab6de23eaba..bcedb8c3e4e608 100644
---- a/fs/xfs/scrub/nlinks.c
-+++ b/fs/xfs/scrub/nlinks.c
-@@ -382,6 +382,12 @@ xchk_nlinks_ilock_dir(
- {
- 	uint			lock_mode = XFS_ILOCK_SHARED;
- 
-+	/*
-+	 * Take the IOLOCK so that other threads cannot start a directory
-+	 * update while we're scanning.
-+	 */
-+	xfs_ilock(ip, XFS_IOLOCK_SHARED);
-+
- 	/*
- 	 * We're going to scan the directory entries, so we must be ready to
- 	 * pull the data fork mappings into memory if they aren't already.
-@@ -397,13 +403,8 @@ xchk_nlinks_ilock_dir(
- 	    xfs_need_iread_extents(&ip->i_af))
- 		lock_mode = XFS_ILOCK_EXCL;
- 
--	/*
--	 * Take the IOLOCK so that other threads cannot start a directory
--	 * update while we're scanning.
--	 */
--	lock_mode |= XFS_IOLOCK_SHARED;
- 	xfs_ilock(ip, lock_mode);
--	return lock_mode;
-+	return lock_mode | XFS_IOLOCK_SHARED;
- }
- 
- /* Walk a directory to bump the observed link counts of the children. */
+diff --git a/fs/xfs/scrub/tempfile.c b/fs/xfs/scrub/tempfile.c
+index e0c630f888cf6e..98820003b9298f 100644
+--- a/fs/xfs/scrub/tempfile.c
++++ b/fs/xfs/scrub/tempfile.c
+@@ -174,6 +174,7 @@ xrep_tempfile_create(
+ 		xfs_iunlock(sc->tempip, XFS_ILOCK_EXCL);
+ 		xfs_finish_inode_setup(sc->tempip);
+ 		xchk_irele(sc, sc->tempip);
++		sc->tempip = NULL;
+ 	}
+ out_release_dquots:
+ 	xfs_qm_dqrele(udqp);
 
