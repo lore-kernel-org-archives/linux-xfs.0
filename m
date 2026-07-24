@@ -1,39 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35A4D224F3
-	for <linux-xfs@vger.kernel.org>; Fri, 24 Jul 2026 16:49:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A2433C872B
+	for <linux-xfs@vger.kernel.org>; Fri, 24 Jul 2026 16:49:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784911746; cv=none; b=Z4SDaoAqkd8EMFcEqLV247TvGn9rQsWNd+QUqaSTNwaqOkN1o4mb7SV1m270DjNZckyAW2vvGJSzDyCq4ZV8NTMJKepVcMsUQAwe1ONriY3lCYOoz0UhV8TE7LkcICxL1dVbA268mQiMLL45+TRfLJCE4srhZFJsmbWe80uQ33Y=
+	t=1784911795; cv=none; b=F3P8KD0SYvJcwaGDRSqau9TkPC5f2Cvwe3h/0gyugY7rTofOaBuCVLBL9MSvTlPqF2IllLkP4Skt060Bi5z0gKy7JkumV7qK85yeAUsZ1n+xtmZN14G3VuiidzzCjNIVyn49JvizXGU6OWEH+lBHpqu/044ZIEQYpd+7dwOnxC0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784911746; c=relaxed/simple;
-	bh=wrZRU12PL5lc9J1Hw0LZzGoatT+XzByIhG3wrhwAn8c=;
+	s=arc-20240116; t=1784911795; c=relaxed/simple;
+	bh=lYrZJL3OY0ohL+z4DwzBlzwlQLgdgH6/ev6uThnu4aw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uOqGrVa1sTmbJiZHUQe/M4BuKFtl4vQYvjuYWv6PV1z81vOkf+D41csc4tEkmIV9ZH9FPFeGsQrLu6AZP4qaiQAF/8mLfZCK+mbHTFGwFpDu+O23C9k8dty02lgHp3abfvY2XeJkmlG95TjIVnmUrelPoChlP6koBLEWJ0OlQw8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LLPppVAa; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=b0N8ARg29/Q1CPEbKqTl2BsPmjJvp7tez1eTzTt+6RA3JG2AYfRyXh5GtSHsBGx2iy6xq9gZtx4ajj/piOHTU7dzmu1WaIUYt3mw92X/wz0/A4+RUBYZ0P/gj+wSaqOOulRCcXrBZe7P2Qzka4W6KvmowMgO1BJQwmquIfDQ1P4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PQi2yN/J; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LLPppVAa"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id CA00D1F000E9;
-	Fri, 24 Jul 2026 16:49:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PQi2yN/J"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id AADD61F000E9;
+	Fri, 24 Jul 2026 16:49:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784911744;
-	bh=i4PAhU1/LVMTZNZunVsFIz8pBshrB/BCYi7R8gTy+d0=;
+	s=k20260515; t=1784911793;
+	bh=jwgMbaj+lqGQ1ApmV7Yj456wdIVnb+j2aCJTdSTktt4=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=LLPppVAaPMytTxJlkYt8Mefmail1nfKiEB4Ja5PeyYHXNfeChuFbYLeFY6d+M1caB
-	 EtWdtj2bn+fuV0a+lmgKT6GgC8BKy8RFAMtxaVItA8r2+t5vDfVt8kZ8nFG7cflK5g
-	 fdkpq0MiP2oIwELcIxtAzGKFakqeZy4OSuBWAGRVhmwANwFsrzo9EIDGIEPtQHg4Vw
-	 fRNVeDuzkZqhe3q4Fq3Lb93CstaJFtUXQRUp8SkmPkRbzDTfU08R7qzUqjkGZPkY4b
-	 YaF27uBnhvbw0I7KEZQzKBHnRhV7QSMY+RXZGrkLfQhrPXr3cS/ss8dZMOrwyCvLvL
-	 srAf4TVmCGM9Q==
-Date: Fri, 24 Jul 2026 09:49:04 -0700
+	b=PQi2yN/JWq698pyAv0UR47uOUlsm5/uKaAeKM6ssfD2vP/CZgaw/Hz7iCmxhKgG6j
+	 yOTMxznZKoIoNng2HXl8RzAGVhqu9TWBTM2fENq1q/HJWSE3CkRznp9hXW3EVoDpJp
+	 60DtE6uzFpA6aAVIE+H3tAB/ZJArvw9qgU6H8KYDiuw3gxGHGuD3/acUVOOsyaU/vW
+	 w9lCqhraForQwRi5uDjtU3KMTqmBrp0Z+rbNautdX/a7m+ySfiGPUV2FduwHDAmTjx
+	 BgDH5jQMsh9XFKmKoaYEQwB5FIp1k7yW3Kigy5rb5MaxXK9kWZTtQhfhssx4clJdZ7
+	 xc8cOKdksjwFA==
+Date: Fri, 24 Jul 2026 09:49:53 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 05/12] xfs: remove _XBF_LOGRECOVERY
-Message-ID: <20260724164904.GS2901224@frogsfrogsfrogs>
+Subject: Re: [PATCH 06/12] xfs: hide b_flags manipulation from code outside
+ of xfs_buf.c
+Message-ID: <20260724164953.GT2901224@frogsfrogsfrogs>
 References: <20260715145147.95654-1-hch@lst.de>
- <20260715145147.95654-6-hch@lst.de>
+ <20260715145147.95654-7-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,173 +43,177 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260715145147.95654-6-hch@lst.de>
+In-Reply-To: <20260715145147.95654-7-hch@lst.de>
 
-On Wed, Jul 15, 2026 at 04:50:58PM +0200, Christoph Hellwig wrote:
-> Adding _XBF_LOGRECOVERY to every buffer write from log recovery is error
-> prone.  Instead key off the behavior on log recovery being active with
-> indirecting that through a flag.
+On Wed, Jul 15, 2026 at 04:50:59PM +0200, Christoph Hellwig wrote:
+> Add helpers for the remaining buffer flags manipulation not done in the
+> core buffer cache code.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-That makes sense.  I suppose if anyone wants to capture ftrace data
-they'll see the printk log stating that we're starting and ending
-recovery, right?
-
-If yes then
+Pretty straightforward wrappers, so
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
 > ---
->  fs/xfs/xfs_buf.c                |  5 ++---
->  fs/xfs/xfs_buf.h                |  4 ----
->  fs/xfs/xfs_buf_item.c           | 10 ++++++----
->  fs/xfs/xfs_buf_item_recover.c   |  3 ---
->  fs/xfs/xfs_dquot_item_recover.c |  1 -
->  fs/xfs/xfs_inode_item_recover.c |  1 -
->  fs/xfs/xfs_log_recover.c        |  5 ++---
->  7 files changed, 10 insertions(+), 19 deletions(-)
+>  fs/xfs/libxfs/xfs_btree_staging.c |  7 +++----
+>  fs/xfs/libxfs/xfs_ialloc.c        |  2 +-
+>  fs/xfs/xfs_buf.c                  | 16 ++++++++++++++++
+>  fs/xfs/xfs_buf.h                  |  4 +++-
+>  fs/xfs/xfs_fsops.c                |  2 +-
+>  fs/xfs/xfs_inode.c                |  4 ++--
+>  fs/xfs/xfs_trans_buf.c            |  7 +++----
+>  7 files changed, 29 insertions(+), 13 deletions(-)
 > 
+> diff --git a/fs/xfs/libxfs/xfs_btree_staging.c b/fs/xfs/libxfs/xfs_btree_staging.c
+> index c3c7ea54895a..7314dab4bcfb 100644
+> --- a/fs/xfs/libxfs/xfs_btree_staging.c
+> +++ b/fs/xfs/libxfs/xfs_btree_staging.c
+> @@ -248,11 +248,10 @@ xfs_btree_bload_drop_buf(
+>  		return 0;
+>  
+>  	/*
+> -	 * Mark this buffer XBF_DONE (i.e. uptodate) so that a subsequent
+> -	 * xfs_buf_read will not pointlessly reread the contents from the disk.
+> +	 * Mark this buffer uptodate so that a subsequent xfs_buf_read will
+> +	 * not pointlessly reread the contents from the disk.
+>  	 */
+> -	bp->b_flags |= XBF_DONE;
+> -
+> +	xfs_buf_set_uptodate(bp);
+>  	xfs_buf_delwri_queue_here(bp, buffers_list);
+>  	xfs_buf_relse(bp);
+>  	*bpp = NULL;
+> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+> index ffcdd1f691fd..58dac4d505ba 100644
+> --- a/fs/xfs/libxfs/xfs_ialloc.c
+> +++ b/fs/xfs/libxfs/xfs_ialloc.c
+> @@ -413,7 +413,7 @@ xfs_ialloc_inode_init(
+>  				xfs_trans_ordered_buf(tp, fbuf);
+>  			}
+>  		} else {
+> -			fbuf->b_flags |= XBF_DONE;
+> +			xfs_buf_set_uptodate(fbuf);
+>  			xfs_buf_delwri_queue(fbuf, buffer_list);
+>  			xfs_buf_relse(fbuf);
+>  		}
 > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index 2cf359b4c446..d0146d4fb3d3 100644
+> index d0146d4fb3d3..33e904d838f4 100644
 > --- a/fs/xfs/xfs_buf.c
 > +++ b/fs/xfs/xfs_buf.c
-> @@ -1017,7 +1017,7 @@ xfs_buf_ioend_handle_error(
->  	 * We're not going to bother about retrying this during recovery.
->  	 * One strike!
->  	 */
-> -	if (bp->b_flags & _XBF_LOGRECOVERY) {
-> +	if (mp->m_log && xlog_in_recovery(mp->m_log)) {
->  		xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
->  		return false;
->  	}
-> @@ -1124,8 +1124,7 @@ xfs_buf_ioend(
->  			bp->b_iodone(bp);
->  	}
->  
-> -	bp->b_flags &= ~(XBF_READ | XBF_WRITE | XBF_READ_AHEAD |
-> -			 _XBF_LOGRECOVERY);
-> +	bp->b_flags &= ~(XBF_READ | XBF_WRITE | XBF_READ_AHEAD);
->  	if (async)
->  		xfs_buf_relse(bp);
+> @@ -55,6 +55,13 @@ static inline bool xfs_buf_is_uncached(struct xfs_buf *bp)
+>  	return bp->b_rhash_key == XFS_BUF_DADDR_NULL;
 >  }
+>  
+> +void
+> +xfs_buf_set_uptodate(
+> +	struct xfs_buf	*bp)
+> +{
+> +	bp->b_flags |= XBF_DONE;
+> +}
+> +
+>  /*
+>   * When we mark a buffer stale, we remove the buffer from the LRU and clear the
+>   * b_lru_ref count so that the buffer is freed immediately when the buffer
+> @@ -85,6 +92,15 @@ xfs_buf_stale(
+>  	spin_unlock(&bp->b_lockref.lock);
+>  }
+>  
+> +void
+> +xfs_buf_clear_stale(
+> +	struct xfs_buf	*bp)
+> +{
+> +	ASSERT(bp->b_flags & XBF_STALE);
+> +
+> +	bp->b_flags &= ~XBF_STALE;
+> +}
+> +
+>  static void
+>  xfs_buf_free_callback(
+>  	struct callback_head	*cb)
 > diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-> index 79cc9c3f0254..e440f97cf3e1 100644
+> index e440f97cf3e1..a4729253b56f 100644
 > --- a/fs/xfs/xfs_buf.h
 > +++ b/fs/xfs/xfs_buf.h
-> @@ -34,9 +34,6 @@ struct xfs_buf;
->  #define XBF_STALE	 (1u << 6) /* buffer has been staled, do not find it */
->  #define XBF_WRITE_FAIL	 (1u << 7) /* async writes have failed on this buffer */
->  
-> -/* buffer type flags for write callbacks */
-> -#define _XBF_LOGRECOVERY (1u << 18)/* log recovery buffer */
-> -
->  /* flags used only internally */
->  #define _XBF_KMEM	 (1u << 21)/* backed by heap memory */
->  #define _XBF_DELWRI_Q	 (1u << 22)/* buffer on a delwri queue */
-> @@ -61,7 +58,6 @@ typedef unsigned int xfs_buf_flags_t;
->  	{ XBF_DONE,		"DONE" }, \
->  	{ XBF_STALE,		"STALE" }, \
->  	{ XBF_WRITE_FAIL,	"WRITE_FAIL" }, \
-> -	{ _XBF_LOGRECOVERY,	"LOG_RECOVERY" }, \
->  	{ _XBF_KMEM,		"KMEM" }, \
->  	{ _XBF_DELWRI_Q,	"DELWRI_Q" }, \
->  	/* The following interface flags should never be set */ \
-> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-> index 1f055cd6732e..1a4ef34af8d5 100644
-> --- a/fs/xfs/xfs_buf_item.c
-> +++ b/fs/xfs/xfs_buf_item.c
-> @@ -1066,6 +1066,8 @@ void
->  xfs_buf_item_done(
->  	struct xfs_buf		*bp)
->  {
-> +	struct xfs_buf_log_item	*bip = bp->b_log_item;
-> +
->  	/*
->  	 * If we are forcibly shutting down, this may well be off the AIL
->  	 * already. That's because we simulate the log-committed callbacks to
-> @@ -1078,8 +1080,8 @@ xfs_buf_item_done(
->  	 * Note that log recovery writes might have buffer items that are not on
->  	 * the AIL even when the file system is not shut down.
->  	 */
-> -	xfs_trans_ail_delete(&bp->b_log_item->bli_item,
-> -			     (bp->b_flags & _XBF_LOGRECOVERY) ? 0 :
-> -			     SHUTDOWN_CORRUPT_INCORE);
-> -	xfs_buf_item_relse(bp->b_log_item);
-> +	xfs_trans_ail_delete(&bip->bli_item,
-> +			     xlog_in_recovery(bip->bli_item.li_log) ?
-> +			     0 : SHUTDOWN_CORRUPT_INCORE);
-> +	xfs_buf_item_relse(bip);
+> @@ -301,7 +301,9 @@ static inline void xfs_buf_zero(struct xfs_buf *bp, size_t boff, size_t bsize)
+>  	memset(bp->b_addr + boff, 0, bsize);
 >  }
-> diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
-> index 02b95b89d1b5..0a3ab33b0e74 100644
-> --- a/fs/xfs/xfs_buf_item_recover.c
-> +++ b/fs/xfs/xfs_buf_item_recover.c
-> @@ -448,7 +448,6 @@ xlog_recover_validate_buf_type(
->  	if (bp->b_ops) {
->  		struct xfs_buf_log_item	*bip;
 >  
-> -		bp->b_flags |= _XBF_LOGRECOVERY;
->  		xfs_buf_item_init(bp, mp);
->  		bip = bp->b_log_item;
->  		bip->bli_item.li_lsn = current_lsn;
-> @@ -1100,7 +1099,6 @@ xlog_recover_buf_commit_pass2(
->  			xfs_buf_lock(rtsb_bp);
->  			xfs_buf_hold(rtsb_bp);
->  			xfs_update_rtsb(rtsb_bp, bp);
-> -			rtsb_bp->b_flags |= _XBF_LOGRECOVERY;
->  			xfs_buf_delwri_queue(rtsb_bp, buffer_list);
->  			xfs_buf_relse(rtsb_bp);
->  		}
-> @@ -1139,7 +1137,6 @@ xlog_recover_buf_commit_pass2(
->  		error = xfs_bwrite(bp);
->  	} else {
->  		ASSERT(bp->b_mount == mp);
-> -		bp->b_flags |= _XBF_LOGRECOVERY;
->  		xfs_buf_delwri_queue(bp, buffer_list);
+> -extern void xfs_buf_stale(struct xfs_buf *bp);
+> +void xfs_buf_set_uptodate(struct xfs_buf *bp);
+> +void xfs_buf_stale(struct xfs_buf *bp);
+> +void xfs_buf_clear_stale(struct xfs_buf *bp);
+>  
+>  /* Delayed Write Buffer Routines */
+>  extern void xfs_buf_delwri_cancel(struct list_head *);
+> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> index 67624a804a7f..21114bb6d4ff 100644
+> --- a/fs/xfs/xfs_fsops.c
+> +++ b/fs/xfs/xfs_fsops.c
+> @@ -501,7 +501,7 @@ xfs_do_force_shutdown(
+>  		return;
 >  	}
+>  	if (mp->m_sb_bp)
+> -		mp->m_sb_bp->b_flags |= XBF_DONE;
+> +		xfs_buf_set_uptodate(mp->m_sb_bp);
 >  
-> diff --git a/fs/xfs/xfs_dquot_item_recover.c b/fs/xfs/xfs_dquot_item_recover.c
-> index fe419b28de22..d4dfe1885666 100644
-> --- a/fs/xfs/xfs_dquot_item_recover.c
-> +++ b/fs/xfs/xfs_dquot_item_recover.c
-> @@ -168,7 +168,6 @@ xlog_recover_dquot_commit_pass2(
+>  	if (flags & SHUTDOWN_FORCE_UMOUNT)
+>  		xfs_alert(mp, "User initiated shutdown received.");
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 15279d22a894..030a7c8f2c12 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -1753,7 +1753,7 @@ xfs_ifree_cluster(
+>  		 * attachment may occur in xfs_inode_item_precommit() after we
+>  		 * have marked this buffer stale.  If this buffer was not in
+>  		 * memory before xfs_ifree_cluster() started, it will not be
+> -		 * marked XBF_DONE and this will cause problems later in
+> +		 * marked uptodate and this will cause problems later in
+>  		 * xfs_inode_item_precommit() when we trip over a (stale, !done)
+>  		 * buffer to attached to the transaction.
+>  		 *
+> @@ -1766,7 +1766,7 @@ xfs_ifree_cluster(
+>  		 * fail. We can acheive this by adding a write verifier to the
+>  		 * buffer.
+>  		 */
+> -		bp->b_flags |= XBF_DONE;
+> +		xfs_buf_set_uptodate(bp);
+>  		bp->b_ops = &xfs_inode_buf_ops;
 >  
->  	ASSERT(dq_f->qlf_size == 2);
->  	ASSERT(bp->b_mount == mp);
-> -	bp->b_flags |= _XBF_LOGRECOVERY;
->  	xfs_buf_delwri_queue(bp, buffer_list);
->  
->  out_release:
-> diff --git a/fs/xfs/xfs_inode_item_recover.c b/fs/xfs/xfs_inode_item_recover.c
-> index 169a8fe3bf0a..1d2319ad15c5 100644
-> --- a/fs/xfs/xfs_inode_item_recover.c
-> +++ b/fs/xfs/xfs_inode_item_recover.c
-> @@ -586,7 +586,6 @@ xlog_recover_inode_commit_pass2(
->  	}
->  
->  	ASSERT(bp->b_mount == mp);
-> -	bp->b_flags |= _XBF_LOGRECOVERY;
->  	xfs_buf_delwri_queue(bp, buffer_list);
->  
->  out_release:
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index fdb011e6ef60..e7e49529658b 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -3279,9 +3279,8 @@ xlog_do_recovery_pass(
->  			 * checkpoints at this start LSN.
->  			 *
->  			 * Note: Shutting down the filesystem will result in the
-> -			 * delwri submission marking all the buffers stale,
-> -			 * completing them and cleaning up _XBF_LOGRECOVERY
-> -			 * state without doing any IO.
-> +			 * delwri submission marking all the buffers stale and
-> +			 * completing them without doing any IO.
->  			 */
->  			xlog_force_shutdown(log, SHUTDOWN_LOG_IO_ERROR);
+>  		/*
+> diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+> index 7e17b93fe9ad..1e025848811a 100644
+> --- a/fs/xfs/xfs_trans_buf.c
+> +++ b/fs/xfs/xfs_trans_buf.c
+> @@ -140,7 +140,7 @@ xfs_trans_get_buf_map(
+>  		ASSERT(xfs_buf_islocked(bp));
+>  		if (xfs_is_shutdown(tp->t_mountp)) {
+>  			xfs_buf_stale(bp);
+> -			bp->b_flags |= XBF_DONE;
+> +			xfs_buf_set_uptodate(bp);
 >  		}
+>  
+>  		ASSERT(bp->b_transp == tp);
+> @@ -482,7 +482,7 @@ xfs_trans_dirty_buf(
+>  	 * item from the AIL and free it when the buffer is flushed
+>  	 * to disk.
+>  	 */
+> -	bp->b_flags |= XBF_DONE;
+> +	xfs_buf_set_uptodate(bp);
+>  
+>  	ASSERT(atomic_read(&bip->bli_refcount) > 0);
+>  
+> @@ -494,8 +494,7 @@ xfs_trans_dirty_buf(
+>  	 */
+>  	if (bip->bli_flags & XFS_BLI_STALE) {
+>  		bip->bli_flags &= ~XFS_BLI_STALE;
+> -		ASSERT(bp->b_flags & XBF_STALE);
+> -		bp->b_flags &= ~XBF_STALE;
+> +		xfs_buf_clear_stale(bp);
+>  		bip->__bli_format.blf_flags &= ~XFS_BLF_CANCEL;
+>  	}
+>  	bip->bli_flags |= XFS_BLI_DIRTY | XFS_BLI_LOGGED;
 > -- 
 > 2.53.0
 > 
