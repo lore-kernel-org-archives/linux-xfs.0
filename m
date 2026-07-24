@@ -1,72 +1,112 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34BF2386C0A;
-	Fri, 24 Jul 2026 06:21:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CA953859F0;
+	Fri, 24 Jul 2026 06:21:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784874090; cv=none; b=jcJYaPOEAuNKxd/ZC58gY/aoPCXPV7vuUdLr8m4ANUtd7M1wq/dDgEcSwzuftCJ0skK8JISi/11pW0d5KhstxyrmU62vZmEEVLCDh3X1qF+0e15aP+qpP3ivMNUKUd1sZQXUch+wRMKLpRc4KIqVm6opwI0d23xnO0qfa26RvK0=
+	t=1784874094; cv=none; b=X20j3IdsYpL8Cux2vrXPKcseSDksqt7nqsBUfa336vjdWyqVBgURdCq4sakp5iHg5r6Bv/rimGCNSezxyYC6JEIU3l3bSQIysdApq+XXJQXMKJ5kHHIb6t6IUcEGeOA+sVw9pNDHLRP0RhfoN+80GJNnYbFudQ/Jgy+X19SRN5A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784874090; c=relaxed/simple;
-	bh=BaV1Epx9hWiAkuSSyAZCGFH1V0UbFkWeMpBWezrzoVE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=AvBGvUFz3YvRAlniJCL+47PfMI4Bzxk1nVC5BBWTFU5LgeO+e20VuKtBXCPnqMhI8S9cA7l3C3hijdOfwWA5iHX3ZqEN5CaSqT4Ha9YMm4qRub3vl8nN4S2tvIZaA375ZrlBlteynsZcZNCqWYk23RM9yALE6UfxIUzL9ZYw8PU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id EC95668CFE; Fri, 24 Jul 2026 08:21:21 +0200 (CEST)
-Date: Fri, 24 Jul 2026 08:21:20 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Andrey Albershteyn <aalbersh@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-	Christian Brauner <brauner@kernel.org>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Carlos Maiolino <cem@kernel.org>, Tal Zussman <tz2294@columbia.edu>,
-	Anuj Gupta <anuj20.g@samsung.com>, linux-block@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 18/22] xfs: use BIO_COMPLETE_IN_TASK for bounce
- buffered read I/Os
-Message-ID: <20260724062120.GA4953@lst.de>
-References: <20260723145000.116419-1-hch@lst.de> <20260723145000.116419-19-hch@lst.de> <amItES6s54i1QSHw@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+	s=arc-20240116; t=1784874094; c=relaxed/simple;
+	bh=0N6e8IVwr/od2eNxvuiu4ET8E0BoW/s2UcIkjBwMyDE=;
+	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=HbqUQU7bR8EY4ixEGkC/b30MZRFkF6n/uU/yfbucsu5lc2i9vvrv88KqibAM0CHnUdUErnNggwawCkzCLpGzvac912KRjZ6iErKyWgRq2GBQpDYBB9NR1TWGmb2/B79z4YF3iuiuyyRa5AL0JL1rkt7rGgSv8VTgobLLjc7o254=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dT0t6Tiq; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dT0t6Tiq"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 460D71F000E9;
+	Fri, 24 Jul 2026 06:21:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784874092;
+	bh=16MOaQIJa4Y6KcCfoNXUUp95GYEskOxM1WbBbrywGtE=;
+	h=Date:Subject:From:To:Cc:In-Reply-To:References;
+	b=dT0t6TiqqWXlyiy3MuJeJq3/Egx89GKTF7C1CeOVHF7cI5Y46kiEo7B1lFy83K/85
+	 Lqm20mhhCKlBi0zLBC15VWwFhAyFBjgep7rac3jkDFQfexXNuEDBATyu47/XVDJrjm
+	 WtEBGnHQoevtjDpkelNYCVMb5kRCmJfCRGubP3UhUzHm2N632ZKiMo/8CTR0gaG/OP
+	 kNqoqmCv5pyg3iQXmrldQFwkyDxyJDSnrmnEkrnWAILOOfMeFuDyFczdduwQvJAfsV
+	 +N9X9ad55dU7SHIA3uX1nHEtHcEhhRyBePs00r+wh5Dkpt44oQ6xvxn4RVGDIN4eMz
+	 KV6cdCjkELHJA==
+Date: Thu, 23 Jul 2026 23:21:31 -0700
+Subject: [PATCH 2/6] xfs: don't double-lock when deleting a self-referential
+ directory
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: djwong@kernel.org, hch@lst.de, cem@kernel.org
+Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
+Message-ID: <178487405420.3442778.11716685055970529363.stgit@frogsfrogsfrogs>
+In-Reply-To: <178487405343.3442778.10258954219942220821.stgit@frogsfrogsfrogs>
+References: <178487405343.3442778.10258954219942220821.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <amItES6s54i1QSHw@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 
-On Thu, Jul 23, 2026 at 05:58:49PM +0200, Andrey Albershteyn wrote:
-> I would probably need something like this for fsverity.
-> 
-> When using integrity checksums with fsverity together, both file data
-> ioends and fsverity metadata ioends get onto the inode queue
-> (without checksums there's no metadata ioends). This way worker could
-> self-deadlock if data ioend processed first in xfs_end_io(). It will
-> call verify_bio to read merkle pages which could be already waiting
-> in queue.
+From: Darrick J. Wong <djwong@kernel.org>
 
-Yes.  Same as the situation we have (or had as this is changing
-for 7.3) with fsverity and fscrypt.
+LOLLM notices that the dirtree scrubber can detect a directory that
+refers to itself.  In this case, it's not correct for the directory tree
+repair code to try to iolock/ilock both sc->ip and dp, because they're
+the same inode.  Fix this by detecting that corner case and handling it
+appropriately.
 
-> I initially considered changing xfs_end_io, for read ioends, to just
-> schedule them instead of adding to the queue, but decided just sort
-> metadata ioends first in the queue [1] as a bit simpler fix.
-> 
-> The difference is that work won't be scheduled on the high-priority
-> fsverity's workqueue. Not sure how critical this is as with
-> checksums all reads would be the same priority.
+Cc: <stable@vger.kernel.org> # v6.10
+Fixes: 3f31406aef493b ("xfs: fix corruptions in the directory tree")
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+Assisted-by: LOLLM # finding obvious bugs
+---
+ fs/xfs/scrub/dirtree_repair.c |   22 ++++++++++++++++++----
+ 1 file changed, 18 insertions(+), 4 deletions(-)
 
-I'll need to go back to your series, but just sorting isn't going
-to fix the problem, as the reading of the verity metadata could
-be kicked off from the completion workqueue and you could be blocking
-the rescuer thread.  So either verity needs it's own WQ, or we'd need
-some way for a currently running I/O completion to exit and get
-restarted.
 
-With BIO_COMPLETE_IN_TASK we could probably do that restart thing.
-Or add a second set of workers for "metadata".
+diff --git a/fs/xfs/scrub/dirtree_repair.c b/fs/xfs/scrub/dirtree_repair.c
+index 1c0d7ea4a5be6a..bbf6acf6fd400c 100644
+--- a/fs/xfs/scrub/dirtree_repair.c
++++ b/fs/xfs/scrub/dirtree_repair.c
+@@ -349,6 +349,8 @@ xrep_dirtree_unlink_iolock(
+ 
+ 	ASSERT(sc->ilock_flags & XFS_IOLOCK_EXCL);
+ 
++	if (sc->ip == dp)
++		return 0;
+ 	if (xfs_ilock_nowait(dp, XFS_IOLOCK_EXCL))
+ 		return 0;
+ 
+@@ -400,8 +402,18 @@ xrep_dirtree_unlink(
+ 	 * directory code can handle a reservationless update.
+ 	 */
+ 	resblks = xfs_remove_space_res(mp, step->name_len);
+-	error = xfs_trans_alloc_dir(dp, &M_RES(mp)->tr_remove, sc->ip,
+-			&resblks, &sc->tp, &dontcare);
++	if (sc->ip == dp) {
++again:
++		error = xfs_trans_alloc_inode(dp, &M_RES(mp)->tr_remove,
++				resblks, 0, false, &sc->tp);
++		if ((error == -ENOSPC || error == -EDQUOT) && resblks > 0) {
++			resblks = 0;
++			goto again;
++		}
++	} else {
++		error = xfs_trans_alloc_dir(dp, &M_RES(mp)->tr_remove, sc->ip,
++				&resblks, &sc->tp, &dontcare);
++	}
+ 	if (error)
+ 		goto out_iolock;
+ 
+@@ -489,9 +501,11 @@ xrep_dirtree_unlink(
+ 	xchk_trans_cancel(sc);
+ out_ilock:
+ 	xfs_iunlock(sc->ip, XFS_ILOCK_EXCL);
+-	xfs_iunlock(dp, XFS_ILOCK_EXCL);
++	if (dp != sc->ip)
++		xfs_iunlock(dp, XFS_ILOCK_EXCL);
+ out_iolock:
+-	xfs_iunlock(dp, XFS_IOLOCK_EXCL);
++	if (dp != sc->ip)
++		xfs_iunlock(dp, XFS_IOLOCK_EXCL);
+ 	return error;
+ }
+ 
+
