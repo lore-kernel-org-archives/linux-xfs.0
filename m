@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D06433D4F3;
-	Sat, 25 Jul 2026 07:39:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A433E2931C4;
+	Sat, 25 Jul 2026 07:40:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784965198; cv=none; b=Avjh2i01PsVrsHgBk3Fr40zHGifmYjRgGdLMI8cp58TmhS8hVuEiOt6CzBuCVvzTiEYGeYdhUN1kIaH/C9apJlLOj+go9l67ruad2cj62/+QWZbVf30HsnybD0SaykXunJMe5QHRMA2Zu9db2ms2NHXLrlHb9nuiHmP145JSnC8=
+	t=1784965202; cv=none; b=m93iYCpytlFoxCb2KduEP9lcfbYZ9j6mgKd5aqK3WOv4g/gb8BJ9nHBFhGb0hKtQ3TWGLpVR4brvlqQkIkq4T50aGNflfL7HR3zLkVKQAzuolNMs68u81u1BTWUC3IQiMY0JxYcXKgLN8ssob+fBTOtcxG7UEhmUDVvAUz9Wkvw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784965198; c=relaxed/simple;
-	bh=tJZzMF1Z7aWUxj/SMLB6BgcrfQYSTr8XZcal0HPcp8U=;
+	s=arc-20240116; t=1784965202; c=relaxed/simple;
+	bh=MREnbjvEBqMpy7wpSCVhm497D7ruPet95cTI7ds4mXw=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=d++n4730u1TSg4UH2oJPjZiAcBKaOIfxDyqTOWapAKkLvBc0kH+goLkHI3etlYeMOiBDQGsh33w/mZF652okw5RU1mseB8fBoyYX9ZLU2BMsNa+D2bkE7DV7UpiD8l61rffAr4GQvK4bIXoJk0Yw3T1rssCMh0bFlu3yr4GfqmY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ff3xWOii; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=c1/QWqX5uOp4XIyd+cd5dBLWUW/r3ACLmisdTTo3V8NBvHm9thwLGL5pWEMYO6ySzMnRO9VHFXKqvD11jJcNyRjtUvi0PI8CfMrhlL6Mrr2bUGl66qq5eql1jZRo7yg9GK7GWlUt40KUopjY8JYvrOoXZsd7twCel5hgrIzVzJo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gj1xu1qF; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ff3xWOii"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 28BC61F00A3D;
-	Sat, 25 Jul 2026 07:39:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gj1xu1qF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DA6321F000E9;
+	Sat, 25 Jul 2026 07:39:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784965197;
-	bh=VFzRoel95Mk0OMd9ieiVtGk8xEu55dadodVvWCnTMiA=;
+	s=k20260515; t=1784965201;
+	bh=59hR12Fh7OpPXrpLzZyElHGF/zwJFzn0kyHqlK4pJZk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=Ff3xWOiiSum+eiQ0IDBD0xHnnau/0WLL5X0I9QyU57/8tD3oLR1PX9oGU/SUdRvS/
-	 fVSF+jl9Zln+tvT7AbqV90mL4LX5LfJt6JBY8hjkBI1KvxoQXhsQ6xlAhD5Cj627PC
-	 Vdf6u5la7w4C7yivHqEQmYBr4yJIGfnjg9hEhhm+V9VEN6aK3LPFQHdcV6i9lypCid
-	 I6LTy6ytdtiGOCSaVsE7SnAsN8X1a4wACwna547h+XmNycfe8qdB/jlqmzDvniucvG
-	 DxCwZH8Puv7R/aPTzZjITto1Omtg3/SJWvzMHbDA+4VZRFm4ueD0agoqKtxYclkg3j
-	 eB3E66YXVmiLA==
+	b=gj1xu1qFRtHFOglUxDz7eyx1nye8DqukMZuKtlauWLMs0U+4Znpb0NR5q1+RdWLmW
+	 YnTh9FAG84igIshKYia6BHphZtmsLlC21rq2JAOudM6odJ9PZJ9AV7UEuzUaKGFhjT
+	 I2kSNevThSitAKDSTzgT9lk7sayxQMvLx/YdzCldG3yDdPxPbIuSN/d+jKUbbEth9U
+	 kuFT5LEMVECkcERxZ6Kulw0Yi6RfVHvoF3ACwtg1hjmKrQQmdXIk7rZE+5d6DPwN4V
+	 6rEBX4WZjKhcExMhKIxEZRqjARS8UTtI1f4IZXbHzWRJ4NbC1U+8WTsgLCdrV4koJt
+	 /f8NOW5sHEpVA==
 From: Anand Jain <asj@kernel.org>
 To: fstests@vger.kernel.org
 Cc: linux-btrfs@vger.kernel.org,
@@ -34,9 +34,9 @@ Cc: linux-btrfs@vger.kernel.org,
 	linux-f2fs-devel@lists.sourceforge.net,
 	zlang@kernel.org,
 	djwong@kernel.org
-Subject: [PATCH v8 08/13] fstests: verify f_fsid for cloned filesystems
-Date: Sat, 25 Jul 2026 15:39:05 +0800
-Message-ID: <f68b3bd9fcee878289f8ddd7c85a6913c89772cd.1784949155.git.asj@kernel.org>
+Subject: [PATCH v8 09/13] fstests: verify libblkid resolution of duplicate UUIDs
+Date: Sat, 25 Jul 2026 15:39:06 +0800
+Message-ID: <0e530686fa2bfb9a4b8ec4596484a4fec6d849e4.1784949155.git.asj@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <cover.1784949154.git.asj@kernel.org>
 References: <cover.1784949154.git.asj@kernel.org>
@@ -48,32 +48,33 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Verify that the cloned filesystem provides an f_fsid that is persistent
-across mount cycles, yet unique from the original filesystem's f_fsid.
+Verify how findmnt, df (libblkid) resolve device paths when multiple
+block devices share the same FSUUID.
 
 Signed-off-by: Anand Jain <asj@kernel.org>
 ---
- tests/generic/802     | 64 +++++++++++++++++++++++++++++++++++++++++++
- tests/generic/802.out |  4 +++
- 2 files changed, 68 insertions(+)
- create mode 100644 tests/generic/802
- create mode 100644 tests/generic/802.out
+ tests/generic/803     | 72 +++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/803.out |  6 ++++
+ 2 files changed, 78 insertions(+)
+ create mode 100644 tests/generic/803
+ create mode 100644 tests/generic/803.out
 
-diff --git a/tests/generic/802 b/tests/generic/802
+diff --git a/tests/generic/803 b/tests/generic/803
 new file mode 100644
-index 000000000000..910807c11584
+index 000000000000..77901592366c
 --- /dev/null
-+++ b/tests/generic/802
-@@ -0,0 +1,64 @@
++++ b/tests/generic/803
+@@ -0,0 +1,72 @@
 +#! /bin/bash
 +# SPDX-License-Identifier: GPL-2.0
 +# Copyright (c) 2026 Anand Jain <asj@kernel.org>.  All Rights Reserved.
 +#
-+# FS QA Test 802
-+# Check that the cloned filesystem provides an f_fsid that is persistent
-+# across mount cycles if the block device maj:min remains unchanged.
++# FS QA Test 803
++# Check if the mountinfo based findmnt would resolve to the common uuid
++# as per the blkid (libblkid based).
 +
 +. ./common/preamble
++. ./common/filter
 +
 +_begin_fstest auto quick mount clone
 +
@@ -81,17 +82,19 @@ index 000000000000..910807c11584
 +_require_block_device $TEST_DEV
 +_require_loop
 +
-+_fixed_by_fs_commit btrfs xxxxxxxxxxxx \
-+	"btrfs: use on-disk uuid for s_uuid in temp_fsid mounts"
-+_fixed_by_fs_commit btrfs xxxxxxxxxxxx \
-+	"btrfs: derive f_fsid from on-disk fsuuid and dev_t"
-+
 +_cleanup()
 +{
 +	cd /
 +	rm -r -f $tmp.*
 +	umount $mnt1 $mnt2 2>/dev/null
 +	_loop_image_destroy "${devs[@]}" 2> /dev/null
++}
++
++# Normalize pool devices and mount points names
++filter_pool()
++{
++	sed -e "s|${devs[0]}|DEV1|g" -e "s|${mnt1}|MNT1|g" \
++	    -e "s|${devs[1]}|DEV2|g" -e "s|${mnt2}|MNT2|g" | _filter_spaces
 +}
 +
 +# Setup base loop device and its clone
@@ -103,19 +106,23 @@ index 000000000000..910807c11584
 +mkdir -p $mnt1
 +mkdir -p $mnt2
 +
-+# Mount both filesystems simultaneously using mandatory clone mount options
++# Get the uuid from the source device
++fsuuid=$(blkid -s UUID -o value ${devs[0]})
++
++# Mount both identical UUID filesystems simultaneously
 +_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[0]} $mnt1 || \
 +						_fail "Failed to mount dev1"
 +_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[1]} $mnt2 || \
 +						_fail "Failed to mount dev2"
 +
-+# Capture baseline filesystem IDs for comparison
-+fsid_scratch=$(stat -f -c "%i" $mnt1)
-+fsid_clone=$(stat -f -c "%i" $mnt2)
++findmnt -o SOURCE,TARGET,UUID "${devs[0]}" | tail -n +2 | \
++				sed -e "s/${fsuuid}/FSUUID/g" | filter_pool
++findmnt -o SOURCE,TARGET,UUID "${devs[1]}" | tail -n +2 | \
++				sed -e "s/${fsuuid}/FSUUID/g" | filter_pool
 +
-+# Verify that the fsids remain stable after a mount cycle, even when the
-+# mount order is reversed.
-+echo "**** fsid after mount cycle ****"
++# Btrfs assigned a random uuid for the clone fs before the fix.
++# Cycle mounts and reverse the initialization (source and clone fs) order.
++echo "**** mount cycle ****"
 +_unmount $mnt1
 +_unmount $mnt2
 +_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[1]} $mnt2 || \
@@ -123,22 +130,25 @@ index 000000000000..910807c11584
 +_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[0]} $mnt1 || \
 +						_fail "Failed to mount dev1"
 +
-+# Compare post mount-cycle values against the baseline
-+stat -f -c "%i" $mnt1 | sed -e "s/$fsid_scratch/FSID_SCRATCH/g"
-+stat -f -c "%i" $mnt2 | sed -e "s/$fsid_clone/FSID_CLONE/g"
++findmnt -o SOURCE,TARGET,UUID "${devs[0]}" | tail -n +2 | \
++				sed -e "s/${fsuuid}/FSUUID/g" | filter_pool
++findmnt -o SOURCE,TARGET,UUID "${devs[1]}" | tail -n +2 | \
++				sed -e "s/${fsuuid}/FSUUID/g" | filter_pool
 +
 +status=0
 +exit
-diff --git a/tests/generic/802.out b/tests/generic/802.out
+diff --git a/tests/generic/803.out b/tests/generic/803.out
 new file mode 100644
-index 000000000000..0202a9a2c108
+index 000000000000..3a130c662430
 --- /dev/null
-+++ b/tests/generic/802.out
-@@ -0,0 +1,4 @@
-+QA output created by 802
-+**** fsid after mount cycle ****
-+FSID_SCRATCH
-+FSID_CLONE
++++ b/tests/generic/803.out
+@@ -0,0 +1,6 @@
++QA output created by 803
++DEV1 MNT1 FSUUID
++DEV2 MNT2 FSUUID
++**** mount cycle ****
++DEV1 MNT1 FSUUID
++DEV2 MNT2 FSUUID
 -- 
 2.43.0
 
