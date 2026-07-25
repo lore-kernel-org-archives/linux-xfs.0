@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9B8C331EB0;
-	Sat, 25 Jul 2026 07:39:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4DDD33A9DA;
+	Sat, 25 Jul 2026 07:39:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784965189; cv=none; b=Rs2pagYI0BfyBuXcWj6yMnabzG9t7UPN72ISMzhdFpLjwmMdPf4F9emT4+JOo/dAMeeIXxDnAsuSV7Ctr1X14QqXEMJPAOtoE3LyAUzQ16ap3rVy1DhOTtMC8hNMFoSeYOotfSNBHki1BQmNkuIQerF5H4ytpYBFkknvAPkFj5I=
+	t=1784965194; cv=none; b=TwNtdJ0M/Cm0HusJUPMf4abn8WHg6tkmZDwZDI0HnumtKN8gj3oq8usmmM+L0a5fYjW4+cjT+3R8Ok7efXI2o557Q5way4/+Too3Ii+gMYKn+OdLQwx5t2CQOi2yPe0HmeJicMXGQl0y0+YB8Wfg80ChTlG+d7RfT0oSYVQFPSQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784965189; c=relaxed/simple;
-	bh=fw/nRl/y4mdFVVDi5bLGz78R8GMegVuj2iIDvwX1m30=;
+	s=arc-20240116; t=1784965194; c=relaxed/simple;
+	bh=+oxCwpPG0gKSlAWmeDj60V3HHIME5/GtBc5MHUhzgBE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=mJtnw7CoEPqJLX8FDw25hRfOwHrQMVE7971DFBRDCmOam24q4Lv1uGL5eLUz+l/fncyVBXM4Ghajl2xAK4MbGv6fjRkN6Gt9A0eukjB86mAXS6Tm5xHWDUa0tzHy9CQDIO2nY2eDajGabonRMAMxlLrMLZSLM2QSlEX2/RkW8tE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dPaoRKB5; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=d6WsbTi3ZUjEVI1sCM5jHPkOCkRNCCjtOG5Fg30mgtWCQTPr3vIKhO7XNiW9GyXYOLiylVDyiNDHx0+y2ndLhzOQtG3h0CFu0Mih53EOVEksnPsyyk1pMdT8lQijzQUP4WGzQSXBchpC2AABW8EJr3XsklfY26NKeOEZvAcUyEc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FqaC57Cd; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dPaoRKB5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 460AD1F000E9;
-	Sat, 25 Jul 2026 07:39:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FqaC57Cd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 23C081F00A3A;
+	Sat, 25 Jul 2026 07:39:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784965188;
-	bh=qa1sayaIQvzwoExpdR95uN90DWjqj0ydUFZDZMchGLE=;
+	s=k20260515; t=1784965192;
+	bh=aMwVCCWZDuciLe1K54iTOINlOZwfxoezCEoWXTGF2Nc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=dPaoRKB5mRsGUeO1YgS87w8dLD/3UFAfEQ+qSsf9LZYRfpN868YhWRSKU56SBFmCu
-	 /Bxn36BQTuszrVJuFUN3rhh2a9WY8cy9SHAER62S3hPtLtqopIybYrkwyi5oIZn2Rp
-	 HgomxRkJd6NslSKW7a+A9gjb4up7RagqMcX3YdXh2t8nVkkMMfQs2SjsG1Zx9KU+xp
-	 laUZcSChf+wCEj3DvZMIUI4az/vITGVX9E+xamSYk/5gkAElz9uX4RWI/ukSR0PaDX
-	 SxYDXXECamPrmK9/QT/cZpXvyn8BFDW/1Mu03vfv+aOjVvAVVFyR2Pl0lZoOzT5EkD
-	 D7l2hRmQJPo6Q==
+	b=FqaC57Cda4w6K1U6SNZea2Gaa4IXwyNU8VNYzCO7SKaxGakX661Sf4N6mvd1xNBtY
+	 5Mkx+bq7KuUKGiVEPBi6Dspie7EfTyNA+YtIXD1MYNmwkrOnuelFlkFULyy229oogn
+	 F2JR3ZNHfOgZs6k3CXDywCpviihqzQOzA3i54f0GmRk23qJIP1cL8gOy0jl+B3NX0U
+	 ANLg3qbL9QMkemT7J1a0jMN10fUuNgauNDqTiKextCJImkqUMcMwoX80jyThrVqh6p
+	 JPfqAos5wgdnUUAO3+nyOjKh16AanSsgfhjcLay8KfGMSP+Zz+bU+lPuYMl8NOkKJx
+	 3SROTWJOztPNQ==
 From: Anand Jain <asj@kernel.org>
 To: fstests@vger.kernel.org
 Cc: linux-btrfs@vger.kernel.org,
@@ -34,9 +34,9 @@ Cc: linux-btrfs@vger.kernel.org,
 	linux-f2fs-devel@lists.sourceforge.net,
 	zlang@kernel.org,
 	djwong@kernel.org
-Subject: [PATCH v8 06/13] fstests: add SEMANAGE_PROG
-Date: Sat, 25 Jul 2026 15:39:03 +0800
-Message-ID: <97b71706f0c127ec1bf4c73cd97e664fbeb03086.1784949155.git.asj@kernel.org>
+Subject: [PATCH v8 07/13] fstests: verify fanotify isolation on cloned filesystems
+Date: Sat, 25 Jul 2026 15:39:04 +0800
+Message-ID: <96599abcd6e3264a088ea2f34947de6496f33359.1784949155.git.asj@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <cover.1784949154.git.asj@kernel.org>
 References: <cover.1784949154.git.asj@kernel.org>
@@ -48,25 +48,181 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Define `SEMANAGE_PROG` for an upcoming test case that uses `semanage(8)`.
+Verify that fanotify events are correctly routed to the appropriate
+watcher when cloned filesystems are mounted.
+Helps verify kernel's event notification distinguishes between devices
+sharing the same FSID/UUID.
 
 Signed-off-by: Anand Jain <asj@kernel.org>
 ---
- common/config | 1 +
- 1 file changed, 1 insertion(+)
+ tests/generic/801     | 143 ++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/801.out |   7 +++
+ 2 files changed, 150 insertions(+)
+ create mode 100644 tests/generic/801
+ create mode 100644 tests/generic/801.out
 
-diff --git a/common/config b/common/config
-index 5661fa0ec310..d760b796ce86 100644
---- a/common/config
-+++ b/common/config
-@@ -243,6 +243,7 @@ export PARTED_PROG="$(type -P parted)"
- export XFS_PROPERTY_PROG="$(type -P xfs_property)"
- export FSCRYPTCTL_PROG="$(type -P fscryptctl)"
- export FSNOTIFYWAIT_PROG="$(type -P fsnotifywait)"
-+export SEMANAGE_PROG="$(type -P semanage)"
- 
- # udev wait functions.
- #
+diff --git a/tests/generic/801 b/tests/generic/801
+new file mode 100644
+index 000000000000..904ba9440b3d
+--- /dev/null
++++ b/tests/generic/801
+@@ -0,0 +1,143 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2026 Anand Jain <asj@kernel.org>.  All Rights Reserved.
++#
++# FS QA Test 801
++# Verify fanotify FID functionality on cloned filesystems by setting up
++# watchers and making sure notifications are in the correct logs files.
++
++. ./common/preamble
++
++_begin_fstest auto quick mount clone
++
++_require_test
++_require_block_device $TEST_DEV
++_require_loop
++_require_command "$SEMANAGE_PROG" semanage
++_require_command "$FSNOTIFYWAIT_PROG" fsnotifywait
++_require_fanotify_function
++_require_unique_f_fsid
++
++_cleanup()
++{
++	cd /
++	[[ -n $pid1 ]] && { kill -TERM "$pid1" 2> /dev/null; wait $pid1; }
++	[[ -n $pid2 ]] && { kill -TERM "$pid2" 2> /dev/null; wait $pid2; }
++
++	if [ "$semanage_added" = "yes" ]; then
++		semanage permissive -d unconfined_t >/dev/null 2>&1 || true
++	fi
++
++	umount $mnt1 $mnt2 >/dev/null 2>&1
++	_loop_image_destroy "${devs[@]}" 2> /dev/null
++	rm -r -f $tmp.*
++}
++
++# Run fsnotifywait in unbuffered mode to watch filesystem-wide create events
++monitor_fanotify()
++{
++	local mmnt=$1
++	exec stdbuf -oL $FSNOTIFYWAIT_PROG -m -F -S -e create "$mmnt" 2>&1
++}
++
++# Transform f_fsid into the hi.lo format used in fanotify FID logs
++fsid_to_fid_parts()
++{
++	local fsid=$1
++	# Pad to 16 hex chars (64-bit), then split into two 32-bit halves
++	local padded=$(printf '%016x' "0x${fsid}")
++	local hi=$(printf '%x' "0x${padded:0:8}")   # strips leading zeros
++	local lo=$(printf '%x' "0x${padded:8:8}")   # strips leading zeros
++	echo "${hi}.${lo}"
++}
++
++# Create base loop device and its clone
++devs=()
++_loop_image_create_clone devs
++mkdir -p $TEST_DIR/$seq
++mnt1=$TEST_DIR/$seq/mnt1
++mnt2=$TEST_DIR/$seq/mnt2
++mkdir -p $mnt1
++mkdir -p $mnt2
++
++# Mount both base and clone filesystems using required clone mount options
++_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[0]} $mnt1 || \
++						_fail "Failed to mount dev1"
++_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[1]} $mnt2 || \
++						_fail "Failed to mount dev2"
++
++# Fetch filesystem IDs to verify the kernel can differentiate between them
++fsid1=$(stat -f -c "%i" $mnt1)
++fsid2=$(stat -f -c "%i" $mnt2)
++
++log1=$tmp.fanotify1
++log2=$tmp.fanotify2
++
++pid1=""
++pid2=""
++echo "Setup FID fanotify watchers on both mnt1 and mnt2"
++
++# Permit unconfined_t domains when SELinux is enforcing to prevent fanotify
++# blockages
++semanage_added="no"
++if [ "$(getenforce 2>/dev/null)" = "Enforcing" ]; then
++    if ! semanage permissive -l | grep -q "unconfined_t"; then
++        semanage permissive -a unconfined_t >/dev/null 2>&1 && semanage_added="yes"
++    fi
++fi
++
++# Start asynchronous fanotify monitors
++( monitor_fanotify "$mnt1" > "$log1" ) &
++pid1=$!
++( monitor_fanotify "$mnt2" > "$log2" ) &
++pid2=$!
++sleep 2
++
++if ! kill -0 "$pid1" 2>/dev/null || ! kill -0 "$pid2" 2>/dev/null; then
++	cat "$log1"
++	cat "$log2"
++	_fail "$FSNOTIFYWAIT_PROG setup failed"
++fi
++
++echo "Trigger file creation on mnt1"
++touch $mnt1/file_on_mnt1
++sync
++sleep 1
++
++echo "Trigger file creation on mnt2"
++touch $mnt2/file_on_mnt2
++sync
++sleep 1
++
++echo "Verify fsid in the fanotify"
++kill $pid1 $pid2
++wait $pid1 $pid2 2>/dev/null
++pid1=""
++pid2=""
++
++e_fsid1=$(fsid_to_fid_parts "$fsid1")
++e_fsid2=$(fsid_to_fid_parts "$fsid2")
++
++# Dump debug details to the full log
++echo $fsid1 $e_fsid1 $fsid2 $e_fsid2 >> $seqres.full
++cat $log1 >> $seqres.full
++cat $log2 >> $seqres.full
++
++# Ensure monitor 1 only captured events belonging to mnt 1 and fsid 1
++if grep -qF "$e_fsid1" "$log1" && ! grep -qF "$e_fsid2" "$log1"; then
++	echo "SUCCESS: mnt1 events found"
++else
++	[ ! -s "$log1" ] && echo "  - mnt1 received no events."
++	grep -qF "$e_fsid2" "$log1" && echo "  - mnt1 received event from mnt2."
++fi
++
++# Ensure monitor 2 only captured events belonging to mnt 2 and fsid 2
++if grep -qF "$e_fsid2" "$log2" && ! grep -qF "$e_fsid1" "$log2"; then
++	echo "SUCCESS: mnt2 events found"
++else
++	[ ! -s "$log2" ] && echo "  - mnt2 received no events."
++	grep -qF "$e_fsid1" "$log2" && echo "  - mnt2 received event from mnt1."
++fi
++
++status=0
++exit
+diff --git a/tests/generic/801.out b/tests/generic/801.out
+new file mode 100644
+index 000000000000..d7b318d9f27c
+--- /dev/null
++++ b/tests/generic/801.out
+@@ -0,0 +1,7 @@
++QA output created by 801
++Setup FID fanotify watchers on both mnt1 and mnt2
++Trigger file creation on mnt1
++Trigger file creation on mnt2
++Verify fsid in the fanotify
++SUCCESS: mnt1 events found
++SUCCESS: mnt2 events found
 -- 
 2.43.0
 
