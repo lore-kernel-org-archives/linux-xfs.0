@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F30C233723;
-	Mon, 27 Jul 2026 05:23:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD62731F9BC;
+	Mon, 27 Jul 2026 05:24:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785129828; cv=none; b=Tuxp6YMImFo8Z4VFQ+2hPfc1aO7jg+QaUymfC3ZoY6VuwFVigfnVZzyiZ/f6+qddqXiue3iqF/qxPQl2sz3wJmGAdgD2VUl6qDp3Mz0u3k3Yo0M1tQgIjE7QXgvHzKkaP2VB5fW66wU2TqVADFoOjY3i/76w4hKL1cdj9GoZq0I=
+	t=1785129843; cv=none; b=pMrIbfyJ2dMPC8//8zIKWkBC4qHNHexVqlfkxLklUHd7FPP4JQ89HgtCnOUg2+JAzB0dlBOuzHaPrX0Rm82k/igyjPQpt4ElceOfcAYog8hdzEhPRit0plHe4xhPxetc6CjH3Kx/g9e6fHVE4JswzUdTo2xiKMFFuf34mKnZ/wU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785129828; c=relaxed/simple;
-	bh=l6TWdrOjmBIXZHwS144J0iKmQD5oo7AzMcV5qukf2UY=;
+	s=arc-20240116; t=1785129843; c=relaxed/simple;
+	bh=FQEHMAns1q8FWp7RW4qsCH6VA0NEyljWMPcVOEzxZqA=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=JiuoSH2YZf2WBL7UmPsKsBURUYywb6UuwExBT6PZfDxu7oL6Tb4PIhBCUr/wQyr7KS+19RtuwVGelJA+0FEH7/spWFvYemL3TYpuVnrJYV7n9SM9AvCdFBhvJmmicGYso989Kc/vxbLMokXgP+t6BCQbmQnq4BB/gWUt3VYGPMs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IjRkikt3; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=ajPF5HVu+1t4Bk/4YDcLsSSZTmA+iUaAqNQqmuj3o0JXs4ZSXxvRPPQ1PX5t1sZUNMTudW0eLHEpBTj8Hn6bq1rCn6ANljj8GDUAeTulzqboFhos6orjSVAnxfLJQEF4jPWQJg8c2TQ1BAykMQSZ8D/d1SUaMXfSzcnGA6MSPvk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kO47T+nk; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IjRkikt3"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id EC4B71F000E9;
-	Mon, 27 Jul 2026 05:23:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kO47T+nk"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 76C0A1F00A3A;
+	Mon, 27 Jul 2026 05:24:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785129827;
-	bh=aQHKGNNTjHFAEUmqaWNrJ03FTrs0w7lo896GjcdVZNc=;
+	s=k20260515; t=1785129842;
+	bh=5+pUdGrdxWqyVHAZueu0urX28U4TypzpZHfgHJaTc/I=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=IjRkikt3dNixwhZFHNU5wX6L8CQbrcFJ7O3hl+1TxM0vm8D+oojyZ8Zf8WPqVpeWr
-	 L+Oo3ep9Uw4H5H2fNW0yRcv9D3uni/AVkYGj4LzQcu/aTXA82AIValXn81RKir/DCs
-	 EocBsLm6x+wwyyDVh/ub52R4TBbiWG9fx0bqr5HZtcTwvaGYVlckap8ruAvqybPtWO
-	 FHsPKfecRPrVrNDulQ5bzLN9HokE6ADfEUeULRkAgoF/HztNhQR9VmqYPhbyj/w4Z7
-	 bfY/pkfpMNOb0zW/lo1k8n4Jj1qPG6gh19e6Q4rv9H+sfEcET/qu2i8i51B91dtVHv
-	 57VIivK81/YKA==
-Date: Sun, 26 Jul 2026 22:23:46 -0700
-Subject: [PATCH 4/6] xfs: don't zap the attr fork on repair when there are
- queued pptr updates
+	b=kO47T+nkWKzJFm7r/5BRy54ct31Z4u16wgJQcnsNFc1vEL7+3GPeJsLsgWEmS6RHd
+	 u2C4WoD0AeG06U01MemNTuiiN7YmFv+Ksm/ms1cptjwa8IGjPhlaIiGijBxq+HPGum
+	 lFm7O7S6zkpmJasSCssa0CV1Uzjg9OTznM27VPTPh0PPMuNYbWSS0amPdQM7RcxDme
+	 i8eeMT8oNjNb5+qytTGshCS7VFh0+hrgcZe7uPINldbC6ucn6fgZH/Cpotnxl+truA
+	 6OOa7wCNgLb7bP2jy44Da4/EBcGCAtNbTZJ4g2YZ4NjsWTilJiwoXA/z/RJWyAy78c
+	 P27iYXTJXhpCg==
+Date: Sun, 26 Jul 2026 22:24:02 -0700
+Subject: [PATCH 5/6] xfs: nlink scrub must take IOLOCK before determining
+ ILOCK state
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org, hch@lst.de
 Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <178512389251.1494795.11990651998732898567.stgit@frogsfrogsfrogs>
+Message-ID: <178512389273.1494795.6087235993994857365.stgit@frogsfrogsfrogs>
 In-Reply-To: <178512389129.1494795.16117444961252720216.stgit@frogsfrogsfrogs>
 References: <178512389129.1494795.16117444961252720216.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,34 +46,51 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-LOLLM noticed that xrep_xattr_rebuild_tree doesn't check for queued
-parent pointer updates when it decides that it's going to zap the attr
-fork.  This is obviously incorrect, so fix that.  We hold the IOLOCK and
-the ILOCK of sc->ip at that point in time, so we can't race with any
-/new/ operations.
+In xchk_nlinks_ilock_dir, take the IOLOCK before accessing internal
+inode state to figure out if we need to take ILOCK shared or exclusive.
+That way we can't race with directory updates.  LOLLM pointed out that
+the code was initially correct w.r.t. the IOLOCK, but then I broke it.
 
-Cc: <stable@vger.kernel.org> # v6.10
-Fixes: e5d7ce0364d8ee ("xfs: replay unlocked parent pointer updates that accrue during xattr repair")
+Cc: <stable@vger.kernel.org> # v6.18
+Fixes: f477af0cfa0487 ("xfs: fix locking in xchk_nlinks_collect_dir")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Assisted-by: LOLLM # finding obvious bugs
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/scrub/attr_repair.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ fs/xfs/scrub/nlinks.c |   13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/attr_repair.c b/fs/xfs/scrub/attr_repair.c
-index be627ab655ad16..6e6af142f1fb8e 100644
---- a/fs/xfs/scrub/attr_repair.c
-+++ b/fs/xfs/scrub/attr_repair.c
-@@ -1427,7 +1427,8 @@ xrep_xattr_rebuild_tree(
- 	 * If we didn't find any attributes to salvage, repair the file by
- 	 * zapping its attr fork.
- 	 */
--	if (rx->attrs_found == 0) {
-+	if (rx->attrs_found == 0 &&
-+	    (!xfs_has_parent(sc->mp) || xfarray_length(rx->pptr_recs) == 0)) {
- 		xfs_trans_ijoin(sc->tp, sc->ip, 0);
- 		error = xrep_xattr_reset_fork(sc);
- 		if (error)
+diff --git a/fs/xfs/scrub/nlinks.c b/fs/xfs/scrub/nlinks.c
+index 355ab6de23eaba..bcedb8c3e4e608 100644
+--- a/fs/xfs/scrub/nlinks.c
++++ b/fs/xfs/scrub/nlinks.c
+@@ -382,6 +382,12 @@ xchk_nlinks_ilock_dir(
+ {
+ 	uint			lock_mode = XFS_ILOCK_SHARED;
+ 
++	/*
++	 * Take the IOLOCK so that other threads cannot start a directory
++	 * update while we're scanning.
++	 */
++	xfs_ilock(ip, XFS_IOLOCK_SHARED);
++
+ 	/*
+ 	 * We're going to scan the directory entries, so we must be ready to
+ 	 * pull the data fork mappings into memory if they aren't already.
+@@ -397,13 +403,8 @@ xchk_nlinks_ilock_dir(
+ 	    xfs_need_iread_extents(&ip->i_af))
+ 		lock_mode = XFS_ILOCK_EXCL;
+ 
+-	/*
+-	 * Take the IOLOCK so that other threads cannot start a directory
+-	 * update while we're scanning.
+-	 */
+-	lock_mode |= XFS_IOLOCK_SHARED;
+ 	xfs_ilock(ip, lock_mode);
+-	return lock_mode;
++	return lock_mode | XFS_IOLOCK_SHARED;
+ }
+ 
+ /* Walk a directory to bump the observed link counts of the children. */
 
