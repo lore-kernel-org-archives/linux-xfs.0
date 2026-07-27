@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D67D36A358;
-	Mon, 27 Jul 2026 22:33:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48BBE388881;
+	Mon, 27 Jul 2026 22:39:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785191628; cv=none; b=BhWZhGXeYWobOqHTidK+bl/x7WtbjhD4akyt8uKtWoI0+l0J50WduGVW3jy3LI8Gl8GTsa2DzMNYVg67lVu4ofIk+RtiJfvNz3MrPLZkyH4cpxwBd0dVP97NO7LIZXOEao4xygbX9RUHwnQqwQqbsOkUlgmRfFonKVjqSsk4zDE=
+	t=1785191980; cv=none; b=YwAqG42ZkbPbEUxIURoJIgD5z+gJCbEAhn1he4EReoToU3R6TcgD43KOBBv0+zX/+KcmT8BPH4Z9/yQsgGI0EExESrYJvu30k6MVnODtJjtlqH3mTCAKHJHsKM0zjVsOFG+8vXlkdD95zFU1yZTPZMcObgzIxcAII0O3rrm4wEo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785191628; c=relaxed/simple;
-	bh=boQ3wvigkRkQuI/DIXVvxl4mP1YudHOq6hGwPQn07jQ=;
+	s=arc-20240116; t=1785191980; c=relaxed/simple;
+	bh=QD8IRFA2FDj0ymzHCWdAk6GDICOEPcWf+mJiRCeut6Q=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JZrwF51VGE+WJUk44b0aRw5qXIkCmqSEinz/mA8sZhtyYYjKf2rmQzju+IlUMnmLBMXgZjQDqR2J6O6/rpLPGnO/fgDkwxcpGrK33PJZPxI8gh8dQ85sj4tnZWN0VjSjCsIA/MPM/LqxNhZyxvg+Sq/JgVCdij27Kf/VPX9nSks=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b/fbSOu1; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=lkVyjQOk+XQXLXxwhtqJi5mw5jsHWXv44PJ6YFaqF8BGO1y5RkyDzClTrDAF+xGe4HnqR6LP9sjA83a4R8k+y7L+59xt5y7CKomZKft/IhfaImEptvtSrX4quZoSghj6HXskWeCxyR0IJZ2jq7bdUGwxJe64yz3l6a1Wp4j9OLo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FxKhcd3w; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b/fbSOu1"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id F20A51F000E9;
-	Mon, 27 Jul 2026 22:33:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FxKhcd3w"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id C3A171F000E9;
+	Mon, 27 Jul 2026 22:39:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785191626;
-	bh=hkPkgX83I80bxWsTzLeVbgEQ2XZC0ownCjz2jE4zYO0=;
+	s=k20260515; t=1785191977;
+	bh=lKFGCscNnOuexB0zV1R7PVP7DoDo2hXjs5XnLF8lBMU=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=b/fbSOu1Jq918mCzffSULnMg4ht1hzzU1/yMmo8HA258q7mWDKpEG9BDjbmA2c5+K
-	 aFh6EnG82b+keLK7TtzewOJDFT/HxYrCbBeQFI0As/VnSTgxjTdbS6obK4Jg8CpSXc
-	 DVwzqtDp4lZeVESld7LqDnQNGT20xGDsQ85ryKUgGPDJOxVZ+MJ38/QuQNTlmWtzxI
-	 Oa56gt7i2njSAJyWfWZUUnygadnqWD5fcICUGkeZ2hwywIrJTgyB/QYieSTfNSuZ9w
-	 7XxMTkj8QhwLKfIH5C7cINUhOH2g3djHTSaaNmk6EmfKYqeusw8b9pDcLSQP95nFMp
-	 xYw4VBK9YCJIA==
-Date: Mon, 27 Jul 2026 15:33:45 -0700
+	b=FxKhcd3whFPB2OjKr/78hUUI61BrwLsH4bHjffo+VAHn0tuhEuOwtr69f4bhlW9rM
+	 ZCToTjJo40K0ZJoAVmoMqo8lF4uZSwLVqlBre2ZTGm0wrk00N02kRLZs1navp5hcB4
+	 JAurohQVEa71tkUANWzJy9if1wAqwLecxyjVN+hydAK8/VwFXV9ls9P5nZyA6UmiPe
+	 GoDhOr3q14JohFsGxbTGKBS3wMsmFHXdXuvWy0NDEZP3tIF5mSbQgsZRXdzlwuqyYc
+	 4NWPEkhisx04my4C3441QyWd+D3QTnLlFcD6fdciyOzMEk8QYOWp+KP+raz6ks4Oj4
+	 GsND2lYI6pocA==
+Date: Mon, 27 Jul 2026 15:39:37 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Joanne Koong <joannelkoong@gmail.com>
 Cc: Christian Brauner <brauner@kernel.org>, hch@lst.de,
@@ -44,11 +44,11 @@ Cc: Christian Brauner <brauner@kernel.org>, hch@lst.de,
 	Carlos Maiolino <cem@kernel.org>,
 	Damien Le Moal <dlemoal@kernel.org>, libaokun@linux.alibaba.com,
 	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v4 20/21] iomap: pass iomap_iter_next_fn directly instead
- of struct iomap_ops
-Message-ID: <20260727223345.GI2901224@frogsfrogsfrogs>
+Subject: Re: [PATCH v4 21/21] Documentation: iomap: update docs to reflect
+ iomap_iter_next model
+Message-ID: <20260727223937.GJ2901224@frogsfrogsfrogs>
 References: <20260727211758.1116539-1-joannelkoong@gmail.com>
- <20260727211758.1116539-21-joannelkoong@gmail.com>
+ <20260727211758.1116539-22-joannelkoong@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -57,512 +57,549 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260727211758.1116539-21-joannelkoong@gmail.com>
+In-Reply-To: <20260727211758.1116539-22-joannelkoong@gmail.com>
 
-On Mon, Jul 27, 2026 at 02:17:57PM -0700, Joanne Koong wrote:
-> Now that all filesystems implement ->iomap_next() and the legacy
-> ->iomap_begin()/->iomap_end() fallback is gone, struct iomap_ops only
-> wraps a single iomap_next function pointer. Drop the struct entirely and
-> pass the iomap_iter_next_fn directly to iomap_iter() and all the
-> iomap/dax entry points. Filesystems pass their iomap_iter_next_fn
-> callback directly instead of an ops struct. Several iomap_iter_next_fn
-> callbacks become non-static and gain header declarations since callers
-> now reference them directly.
+On Mon, Jul 27, 2026 at 02:17:58PM -0700, Joanne Koong wrote:
+> Filesystems no longer pass a struct iomap_ops with separate
+> ->iomap_begin() and ->iomap_end() callbacks. Instead, every iomap
+> operation takes a single iomap_iter_next() callback directly.
+> iomap_iter_next() finishes the previous mapping (if any) and produces
+> the next one. Most filesystems build it from begin and end helpers via
+> the iomap_iter_next() helper.
 > 
-> The iomap_iter tracepoint's ops field is renamed to next to match. These
-> tracepoints are explicitly not stable ABI (see the note in iomap/trace.h).
+> Update the iomap documentation to match this change.
 > 
-> No functional change intended other than the tracepoint field rename
-> noted above.
-> 
-> Acked-by: Jan Kara <jack@suse.cz>
 > Reviewed-by: Christoph Hellwig <hch@lst.de>
 > Signed-off-by: Joanne Koong <joannelkoong@gmail.com>
-> ---
->  block/fops.c           | 10 +++-----
->  fs/btrfs/direct-io.c   |  8 ++----
->  fs/dax.c               | 48 ++++++++++++++++++------------------
->  fs/erofs/data.c        | 28 +++++++++------------
->  fs/erofs/internal.h    |  3 ++-
->  fs/erofs/zmap.c        |  7 +-----
->  fs/exfat/file.c        | 18 +++++++-------
->  fs/exfat/inode.c       |  6 ++---
->  fs/exfat/iomap.c       | 16 +++---------
->  fs/exfat/iomap.h       |  6 +++--
->  fs/ext2/ext2.h         |  3 ++-
->  fs/ext2/file.c         |  4 +--
->  fs/ext2/inode.c        |  9 ++-----
->  fs/ext4/ext4.h         |  6 +++--
->  fs/ext4/extents.c      |  8 ++----
->  fs/ext4/file.c         | 14 +++++------
->  fs/ext4/inode.c        | 18 ++++----------
->  fs/f2fs/data.c         |  6 +----
->  fs/f2fs/f2fs.h         |  3 ++-
->  fs/f2fs/file.c         |  4 +--
->  fs/fuse/dax.c          | 10 +++-----
->  fs/fuse/file.c         | 10 +++-----
->  fs/gfs2/aops.c         |  6 ++---
->  fs/gfs2/bmap.c         |  9 ++-----
->  fs/gfs2/bmap.h         |  3 ++-
->  fs/gfs2/file.c         |  6 ++---
->  fs/gfs2/inode.c        |  6 ++---
->  fs/hpfs/file.c         |  6 +----
->  fs/internal.h          |  1 -
->  fs/iomap/buffered-io.c | 40 +++++++++++++++---------------
->  fs/iomap/direct-io.c   |  8 +++---
->  fs/iomap/fiemap.c      |  8 +++---
->  fs/iomap/iter.c        |  9 +++----
->  fs/iomap/seek.c        |  8 +++---
->  fs/iomap/swapfile.c    |  4 +--
->  fs/iomap/trace.h       | 12 ++++-----
->  fs/ntfs/aops.c         |  6 ++---
->  fs/ntfs/file.c         | 24 +++++++++---------
->  fs/ntfs/inode.c        |  2 +-
->  fs/ntfs/iomap.c        | 40 ++++++------------------------
->  fs/ntfs/iomap.h        | 15 ++++++++----
->  fs/ntfs3/file.c        | 16 ++++++------
->  fs/ntfs3/inode.c       | 13 +++-------
->  fs/ntfs3/ntfs_fs.h     |  3 ++-
->  fs/remap_range.c       |  6 ++---
->  fs/xfs/xfs_aops.c      |  8 +++---
->  fs/xfs/xfs_file.c      | 44 ++++++++++++++++-----------------
->  fs/xfs/xfs_iomap.c     | 55 +++++++++---------------------------------
->  fs/xfs/xfs_iomap.h     | 24 ++++++++++++------
->  fs/xfs/xfs_iops.c      |  4 +--
->  fs/xfs/xfs_reflink.c   |  6 ++---
->  fs/zonefs/file.c       | 22 ++++++-----------
->  include/linux/dax.h    | 18 ++++++--------
->  include/linux/fs.h     |  7 ++++--
->  include/linux/iomap.h  | 54 +++++++++++++++++++----------------------
->  55 files changed, 313 insertions(+), 425 deletions(-)
-> 
 
-<skip to xfs>
-
-> diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
-> index cffcec532ea6..d2d3c84d93f9 100644
-> --- a/fs/xfs/xfs_iomap.h
-> +++ b/fs/xfs/xfs_iomap.h
-> @@ -53,14 +53,22 @@ int xfs_read_iomap_begin(struct inode *inode, loff_t offset,
->  		loff_t length, unsigned flags, struct iomap *iomap,
->  		struct iomap *srcmap);
->  
-> -extern const struct iomap_ops xfs_buffered_write_iomap_ops;
-> -extern const struct iomap_ops xfs_direct_write_iomap_ops;
-> -extern const struct iomap_ops xfs_zoned_direct_write_iomap_ops;
-> -extern const struct iomap_ops xfs_read_iomap_ops;
-> -extern const struct iomap_ops xfs_seek_iomap_ops;
-> -extern const struct iomap_ops xfs_xattr_iomap_ops;
-> -extern const struct iomap_ops xfs_dax_write_iomap_ops;
-> -extern const struct iomap_ops xfs_atomic_write_cow_iomap_ops;
-> +int xfs_buffered_write_iomap_next(const struct iomap_iter *iter,
-> +		struct iomap *iomap, struct iomap *srcmap);
-
-I wonder, would it make more sense to have a macro to define the forward
-declaration?  e.g.
-
-#define DECLARE_IOMAP_NEXT(name) \
-	int name(...)
-
-DECLARE_IOMAP_NEXT(xfs_buffered_write_iomap_next);
-
-Hm?
-
-Though feel free to say "declaration macros suck!" because they do.
+Looks good to me,
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
-> +int xfs_direct_write_iomap_next(const struct iomap_iter *iter,
-> +		struct iomap *iomap, struct iomap *srcmap);
-> +int xfs_zoned_direct_write_iomap_next(const struct iomap_iter *iter,
-> +		struct iomap *iomap, struct iomap *srcmap);
-> +int xfs_read_iomap_next(const struct iomap_iter *iter, struct iomap *iomap,
-> +		struct iomap *srcmap);
-> +int xfs_seek_iomap_next(const struct iomap_iter *iter, struct iomap *iomap,
-> +		struct iomap *srcmap);
-> +int xfs_xattr_iomap_next(const struct iomap_iter *iter, struct iomap *iomap,
-> +		struct iomap *srcmap);
-> +int xfs_dax_write_iomap_next(const struct iomap_iter *iter, struct iomap *iomap,
-> +		struct iomap *srcmap);
-> +int xfs_atomic_write_cow_iomap_next(const struct iomap_iter *iter,
-> +		struct iomap *iomap, struct iomap *srcmap);
->  extern const struct iomap_write_ops xfs_iomap_write_ops;
+> ---
+>  Documentation/filesystems/iomap/design.rst    | 140 +++++++++++++-----
+>  .../filesystems/iomap/operations.rst          |  68 ++++-----
+>  Documentation/filesystems/iomap/porting.rst   |  16 +-
+>  3 files changed, 151 insertions(+), 73 deletions(-)
+> 
+> diff --git a/Documentation/filesystems/iomap/design.rst b/Documentation/filesystems/iomap/design.rst
+> index 0f7672676c0b..bed8a5beac81 100644
+> --- a/Documentation/filesystems/iomap/design.rst
+> +++ b/Documentation/filesystems/iomap/design.rst
+> @@ -75,7 +75,10 @@ At a high level, an iomap operation `looks like this
 >  
->  #endif /* __XFS_IOMAP_H__*/
-> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> index 6339f4956ecb..5c3d9a365f93 100644
-> --- a/fs/xfs/xfs_iops.c
-> +++ b/fs/xfs/xfs_iops.c
-> @@ -1239,10 +1239,10 @@ xfs_vn_fiemap(
->  	if (fieinfo->fi_flags & FIEMAP_FLAG_XATTR) {
->  		fieinfo->fi_flags &= ~FIEMAP_FLAG_XATTR;
->  		error = iomap_fiemap(inode, fieinfo, start, length,
-> -				&xfs_xattr_iomap_ops);
-> +				xfs_xattr_iomap_next);
->  	} else {
->  		error = iomap_fiemap(inode, fieinfo, start, length,
-> -				&xfs_read_iomap_ops);
-> +				xfs_read_iomap_next);
->  	}
->  	xfs_iunlock(XFS_I(inode), XFS_IOLOCK_SHARED);
+>  1. For each byte in the operation range...
 >  
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index a5c188b78138..2b9792626bab 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -1683,7 +1683,7 @@ xfs_reflink_remap_prep(
->  				pos_out, len, remap_flags);
->  	else
->  		ret = dax_remap_file_range_prep(file_in, pos_in, file_out,
-> -				pos_out, len, remap_flags, &xfs_read_iomap_ops);
-> +				pos_out, len, remap_flags, xfs_read_iomap_next);
->  	if (ret || *len == 0)
->  		goto out_unlock;
+> -   1. Obtain a space mapping via ``->iomap_begin``
+> +   1. Obtain the next space mapping via the ``iomap_iter_next_fn`` callback.
+> +      From the second iteration onwards this same callback first finishes
+> +      the previous mapping (committing or unreserving space as needed)
+> +      and then produces the next one.
 >  
-> @@ -1878,10 +1878,10 @@ xfs_reflink_unshare(
+>     2. For each sub-unit of work...
 >  
->  	if (IS_DAX(inode))
->  		error = dax_file_unshare(inode, offset, len,
-> -				&xfs_dax_write_iomap_ops);
-> +				xfs_dax_write_iomap_next);
->  	else
->  		error = iomap_file_unshare(inode, offset, len,
-> -				&xfs_buffered_write_iomap_ops,
-> +				xfs_buffered_write_iomap_next,
->  				&xfs_iomap_write_ops);
->  	if (error)
->  		goto out;
-> diff --git a/fs/zonefs/file.c b/fs/zonefs/file.c
-> index 5b34849be7a2..319d9502ba56 100644
-> --- a/fs/zonefs/file.c
-> +++ b/fs/zonefs/file.c
-> @@ -59,10 +59,6 @@ static int zonefs_read_iomap_begin(struct inode *inode, loff_t offset,
+> @@ -86,7 +89,13 @@ At a high level, an iomap operation `looks like this
 >  
->  static DEFINE_IOMAP_ITER_NEXT(zonefs_read_iomap_next, zonefs_read_iomap_begin);
+>     3. Increment operation cursor
 >  
-> -static const struct iomap_ops zonefs_read_iomap_ops = {
-> -	.iomap_next	= zonefs_read_iomap_next,
-> -};
-> -
->  static int zonefs_write_iomap_begin(struct inode *inode, loff_t offset,
->  				    loff_t length, unsigned int flags,
->  				    struct iomap *iomap, struct iomap *srcmap)
-> @@ -111,19 +107,15 @@ static int zonefs_write_iomap_begin(struct inode *inode, loff_t offset,
->  static DEFINE_IOMAP_ITER_NEXT(zonefs_write_iomap_next,
->  			      zonefs_write_iomap_begin);
+> -   4. Release the mapping via ``->iomap_end``, if necessary
+> +iomap repeats this until the range is fully consumed.  The ``iomap_iter_next_fn``
+> +callback returns ``1`` while there is more of the range left to process,
+> +``0`` once it is fully consumed, or a negative errno on error.
+> +Filesystems rarely implement this callback by hand. The ``iomap_iter_next``
+> +helper implements the finish-then-produce sequence in terms of two smaller
+> +callbacks, ``begin`` and ``end``. See `The Mapping Callback`_ below for more
+> +info.
 >  
-> -static const struct iomap_ops zonefs_write_iomap_ops = {
-> -	.iomap_next	= zonefs_write_iomap_next,
-> -};
-> -
->  static int zonefs_read_folio(struct file *unused, struct folio *folio)
->  {
-> -	iomap_bio_read_folio(folio, &zonefs_read_iomap_ops);
-> +	iomap_bio_read_folio(folio, zonefs_read_iomap_next);
->  	return 0;
->  }
+>  Each iomap operation will be covered in more detail below.
+>  This library was covered previously by an `LWN article
+> @@ -189,7 +198,7 @@ The fields are as follows:
+>     * **IOMAP_DELALLOC**: A promise to allocate space at a later time
+>       ("delayed allocation").
+>       If the filesystem returns IOMAP_F_NEW here and the write fails, the
+> -     ``->iomap_end`` function must delete the reservation.
+> +     ``end`` function must delete the reservation.
+>       The ``addr`` field must be set to ``IOMAP_NULL_ADDR``.
 >  
->  static void zonefs_readahead(struct readahead_control *rac)
->  {
-> -	iomap_bio_readahead(rac, &zonefs_read_iomap_ops);
-> +	iomap_bio_readahead(rac, zonefs_read_iomap_next);
->  }
+>     * **IOMAP_MAPPED**: The file range maps to specific space on the
+> @@ -208,12 +217,11 @@ The fields are as follows:
 >  
->  /*
-> @@ -184,7 +176,7 @@ static int zonefs_swap_activate(struct swap_info_struct *sis,
->  	}
+>     * **IOMAP_INLINE**: The file range maps to the memory buffer
+>       specified by ``inline_data``.
+> -     For write operation, the ``->iomap_end`` function presumably
+> -     handles persisting the data.
+> +     For write operation, the ``end`` function must persist the data.
+>       The ``addr`` field must be set to ``IOMAP_NULL_ADDR``.
 >  
->  	return iomap_swapfile_activate(sis, swap_file, span,
-> -				       &zonefs_read_iomap_ops);
-> +				       zonefs_read_iomap_next);
->  }
+>   * ``flags`` describe the status of the space mapping.
+> -   These flags should be set by the filesystem in ``->iomap_begin``:
+> +   These flags should be set by the filesystem in ``begin``:
 >  
->  const struct address_space_operations zonefs_file_aops = {
-> @@ -314,7 +306,7 @@ static vm_fault_t zonefs_filemap_page_mkwrite(struct vm_fault *vmf)
+>     * **IOMAP_F_NEW**: The space under the mapping is newly allocated.
+>       Areas that will not be written to must be zeroed.
+> @@ -262,15 +270,15 @@ The fields are as follows:
+>       update.
 >  
->  	/* Serialize against truncates */
->  	filemap_invalidate_lock_shared(inode->i_mapping);
-> -	ret = iomap_page_mkwrite(vmf, &zonefs_write_iomap_ops, NULL);
-> +	ret = iomap_page_mkwrite(vmf, zonefs_write_iomap_next, NULL);
->  	filemap_invalidate_unlock_shared(inode->i_mapping);
+>     These flags can be set by iomap itself during file operations.
+> -   The filesystem should supply an ``->iomap_end`` function if it needs
+> +   The filesystem should supply an ``end`` function if it needs
+>     to observe these flags:
 >  
->  	sb_end_pagefault(inode->i_sb);
-> @@ -530,7 +522,7 @@ static ssize_t zonefs_file_dio_write(struct kiocb *iocb, struct iov_iter *from)
->  	 * page invalidation. Overwrite that error code with EBUSY so that
->  	 * the user can make sense of the error.
->  	 */
-> -	ret = iomap_dio_rw(iocb, from, &zonefs_write_iomap_ops,
-> +	ret = iomap_dio_rw(iocb, from, zonefs_write_iomap_next,
->  			   &zonefs_write_dio_ops, 0, NULL, 0);
->  	if (ret == -ENOTBLK)
->  		ret = -EBUSY;
-> @@ -580,7 +572,7 @@ static ssize_t zonefs_file_buffered_write(struct kiocb *iocb,
->  	if (ret <= 0)
->  		goto inode_unlock;
+>     * **IOMAP_F_SIZE_CHANGED**: The file size has changed as a result of
+>       using this mapping.
 >  
-> -	ret = iomap_file_buffered_write(iocb, from, &zonefs_write_iomap_ops,
-> +	ret = iomap_file_buffered_write(iocb, from, zonefs_write_iomap_next,
->  			NULL, NULL);
->  	if (ret == -EIO)
->  		zonefs_io_error(inode, true);
-> @@ -675,7 +667,7 @@ static ssize_t zonefs_file_read_iter(struct kiocb *iocb, struct iov_iter *to)
->  			goto inode_unlock;
->  		}
->  		file_accessed(iocb->ki_filp);
-> -		ret = iomap_dio_rw(iocb, to, &zonefs_read_iomap_ops,
-> +		ret = iomap_dio_rw(iocb, to, zonefs_read_iomap_next,
->  				   &zonefs_read_dio_ops, 0, NULL, 0);
->  	} else {
->  		ret = generic_file_read_iter(iocb, to);
-> diff --git a/include/linux/dax.h b/include/linux/dax.h
-> index fe6c3ded1b50..e0bc653ffe9f 100644
-> --- a/include/linux/dax.h
-> +++ b/include/linux/dax.h
-> @@ -3,6 +3,7 @@
->  #define _LINUX_DAX_H
+>     * **IOMAP_F_STALE**: The mapping was found to be stale.
+> -     iomap will call ``->iomap_end`` on this mapping and then
+> -     ``->iomap_begin`` to obtain a new mapping.
+> +     iomap will call ``end`` on this mapping and then ``begin`` to obtain a
+> +     new mapping.
 >  
->  #include <linux/fs.h>
-> +#include <linux/iomap.h>
->  #include <linux/mm.h>
->  #include <linux/radix-tree.h>
+>     Currently, these flags are only set by pagecache operations.
 >  
-> @@ -10,9 +11,6 @@ typedef unsigned long dax_entry_t;
+> @@ -289,41 +297,103 @@ The fields are as follows:
 >  
->  struct dax_device;
->  struct gendisk;
-> -struct iomap_ops;
-> -struct iomap_iter;
-> -struct iomap;
+>   * ``private`` is a pointer to `filesystem-private information
+>     <https://lore.kernel.org/all/20180619164137.13720-7-hch@lst.de/>`_.
+> -   This value will be passed unchanged to ``->iomap_end``.
+> +   This value will be passed unchanged to ``end``.
 >  
->  enum dax_access_mode {
->  	DAX_ACCESS,
-> @@ -213,11 +211,11 @@ static inline void dax_unlock_mapping_entry(struct address_space *mapping,
->  #endif
+>   * ``validity_cookie`` is a magic freshness value set by the filesystem
+>     that should be used to detect stale mappings.
+>     For pagecache operations this is critical for correct operation
+>     because page faults can occur, which implies that filesystem locks
+> -   should not be held between ``->iomap_begin`` and ``->iomap_end``.
+> +   should not be held between ``begin`` and ``end``.
+>     Filesystems with completely static mappings need not set this value.
+>     Only pagecache operations revalidate mappings; see the section about
+>     ``iomap_valid`` for details.
 >  
->  int dax_file_unshare(struct inode *inode, loff_t pos, loff_t len,
-> -		const struct iomap_ops *ops);
-> +		iomap_iter_next_fn next);
->  int dax_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
-> -		const struct iomap_ops *ops);
-> +		iomap_iter_next_fn next);
->  int dax_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
-> -		const struct iomap_ops *ops);
-> +		iomap_iter_next_fn next);
+> -``struct iomap_ops``
+> +The Mapping Callback
+>  --------------------
 >  
->  static inline bool dax_page_is_idle(struct page *page)
->  {
-> @@ -266,10 +264,10 @@ int dax_holder_notify_failure(struct dax_device *dax_dev, u64 off, u64 len,
->  void dax_flush(struct dax_device *dax_dev, void *addr, size_t size);
+> -Every iomap function requires the filesystem to pass an operations
+> -structure to obtain a mapping and (optionally) to release the mapping:
+> +Every iomap operation takes an ``iomap_iter_next_fn`` callback from the
+> +filesystem. iomap calls it once per iteration of the file range:
 >  
->  ssize_t dax_iomap_rw(struct kiocb *iocb, struct iov_iter *iter,
-> -		const struct iomap_ops *ops);
-> +		iomap_iter_next_fn next);
->  vm_fault_t dax_iomap_fault(struct vm_fault *vmf, unsigned int order,
->  			unsigned long *pfnp, int *errp,
-> -			const struct iomap_ops *ops);
-> +			iomap_iter_next_fn next);
->  vm_fault_t dax_finish_sync_fault(struct vm_fault *vmf,
->  		unsigned int order, unsigned long pfn);
->  int dax_delete_mapping_entry(struct address_space *mapping, pgoff_t index);
-> @@ -288,11 +286,11 @@ void dax_break_layout_final(struct inode *inode);
->  int dax_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
->  				  struct inode *dest, loff_t destoff,
->  				  loff_t len, bool *is_same,
-> -				  const struct iomap_ops *ops);
-> +				  iomap_iter_next_fn next);
->  int dax_remap_file_range_prep(struct file *file_in, loff_t pos_in,
->  			      struct file *file_out, loff_t pos_out,
->  			      loff_t *len, unsigned int remap_flags,
-> -			      const struct iomap_ops *ops);
-> +			      iomap_iter_next_fn next);
->  static inline bool dax_mapping(struct address_space *mapping)
->  {
->  	return mapping->host && IS_DAX(mapping->host);
-> diff --git a/include/linux/fs.h b/include/linux/fs.h
-> index d10897b3a1e3..2eb063438a3b 100644
-> --- a/include/linux/fs.h
-> +++ b/include/linux/fs.h
-> @@ -70,7 +70,8 @@ struct fsnotify_mark_connector;
->  struct fs_context;
->  struct fs_parameter_spec;
->  struct file_kattr;
-> -struct iomap_ops;
-> +struct iomap_iter;
-> +struct iomap;
->  struct delegated_inode;
+>  .. code-block:: c
 >  
->  extern void __init inode_init(void);
-> @@ -2079,7 +2080,9 @@ int remap_verify_area(struct file *file, loff_t pos, loff_t len, bool write);
->  int __generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
->  				    struct file *file_out, loff_t pos_out,
->  				    loff_t *len, unsigned int remap_flags,
-> -				    const struct iomap_ops *dax_read_ops);
-> +				    int (*dax_read_next)(const struct iomap_iter *iter,
-> +							 struct iomap *iomap,
-> +							 struct iomap *srcmap));
->  int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
->  				  struct file *file_out, loff_t pos_out,
->  				  loff_t *count, unsigned int remap_flags);
-> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-> index 0bc1beb47a09..1875e21ce164 100644
-> --- a/include/linux/iomap.h
-> +++ b/include/linux/iomap.h
-> @@ -239,10 +239,6 @@ typedef int (*iomap_iter_end_fn)(struct inode *inode, loff_t pos, loff_t length,
->  typedef int (*iomap_iter_next_fn)(const struct iomap_iter *iter,
->  		struct iomap *iomap, struct iomap *srcmap);
+> - struct iomap_ops {
+> -     int (*iomap_begin)(struct inode *inode, loff_t pos, loff_t length,
+> -                        unsigned flags, struct iomap *iomap,
+> -                        struct iomap *srcmap);
+> + typedef int (*iomap_iter_next_fn)(const struct iomap_iter *iter,
+> +                              struct iomap *iomap, struct iomap *srcmap);
 >  
-> -struct iomap_ops {
-> -	iomap_iter_next_fn iomap_next;
-> -};
-> -
->  /**
->   * struct iomap_iter - Iterate through a range of a file
->   * @inode: Set at the start of the iteration and should not change.
-> @@ -254,7 +250,7 @@ struct iomap_ops {
->   *	incremental iter advance.
->   * @status: Status of the most recent iteration. Zero on success or a negative
->   *	errno on error.
-> - * @flags: Zero or more of the iomap_next flags above.
-> + * @flags: Zero or more of the iomap_iter_next flags above.
->   * @iomap: Map describing the I/O iteration
->   * @srcmap: Source map for COW operations
->   */
-> @@ -271,7 +267,7 @@ struct iomap_iter {
->  	void *private;
->  };
+> -     int (*iomap_end)(struct inode *inode, loff_t pos, loff_t length,
+> -                      ssize_t written, unsigned flags,
+> -                      struct iomap *iomap);
+> - };
+> +``iomap_iter_next_fn``
+> +~~~~~~~~~~~~~~~~~~~~~~
+> +
+> +This must finish the previous mapping, if any, and then produce the next
+> +mapping for the current iteration position described by ``iter``.
+> +The mapping is returned through ``iomap`` (and through ``srcmap`` for
+> +operations that read from one mapping while writing to another; see
+> +``begin`` below).
+> +
+> +The callback returns ``1`` to continue iterating, ``0`` once the file
+> +range has been fully consumed, or a negative errno on error.
+> +
+> +Most filesystems are not expected to implement all of these behaviors
+> +in this callback themselves.  They should instead call ``iomap_iter_next`` as
+> +described below.
+> +
+> +``iomap_iter_next``
+> +~~~~~~~~~~~~~~~~~~~
+> +
+> +Filesystems rarely need a hand-written ``iomap_iter_next_fn`` callback.  The
+> +``iomap_iter_next`` helper implements the finish-then-produce sequence in
+> +terms of two smaller callbacks, ``begin`` and ``end``, so most
+> +``iomap_iter_next_fn`` implementations are simply:
+> +
+> +.. code-block:: c
+> +
+> + static int my_iomap_next(const struct iomap_iter *iter,
+> +                          struct iomap *iomap, struct iomap *srcmap)
+> + {
+> +         return iomap_iter_next(iter, iomap, srcmap,
+> +                                my_iomap_begin, my_iomap_end);
+> + }
+> +
+> +This boilerplate is normally generated with the ``DEFINE_IOMAP_ITER_NEXT()``
+> +and ``DEFINE_IOMAP_ITER_NEXT_END()`` macros rather than written by hand.  Use
+> +``DEFINE_IOMAP_ITER_NEXT()`` for the common case with no ``end`` callback, and
+> +``DEFINE_IOMAP_ITER_NEXT_END()`` when an ``end`` callback is needed:
+> +
+> +.. code-block:: c
+> +
+> + /* no end() callback */
+> + static DEFINE_IOMAP_ITER_NEXT(my_iomap_next, my_iomap_begin);
+> +
+> + /* with an end() callback */
+> + static DEFINE_IOMAP_ITER_NEXT_END(my_iomap_next, my_iomap_begin,
+> +                                   my_iomap_end);
+> +
+> +The macro generates a function with external linkage.  Prefix the invocation
+> +with ``static`` for a file-local callback, or leave it non-``static`` and add
+> +a matching declaration to a header when the callback is referenced from
+> +another file.
+> +
+> +``end`` may be ``NULL`` when the filesystem has nothing to finish.
+> +The two callbacks have these prototypes:
+> +
+> +.. code-block:: c
+> +
+> + typedef int (*iomap_begin_fn)(struct inode *inode, loff_t pos,
+> +                               loff_t length, unsigned flags,
+> +                               struct iomap *iomap, struct iomap *srcmap);
+> +
+> + typedef int (*iomap_end_fn)(struct inode *inode, loff_t pos,
+> +                             loff_t length, ssize_t written,
+> +                             unsigned flags, struct iomap *iomap);
+> +
+> +``iomap_iter_next`` is an inline helper, so when it is called with fixed
+> +``begin`` and ``end`` functions the compiler can inline both into the
+> +filesystem's ``iomap_iter_next_fn`` callback, keeping indirect calls out of the
+> +iteration hot path.  The two callbacks are described next.
 >  
-> -int iomap_iter(struct iomap_iter *iter, const struct iomap_ops *ops);
-> +int iomap_iter(struct iomap_iter *iter, iomap_iter_next_fn next);
->  int iomap_iter_advance(struct iomap_iter *iter, u64 count);
+> -``->iomap_begin``
+> -~~~~~~~~~~~~~~~~~
+> +``begin``
+> +~~~~~~~~~
 >  
->  /**
-> @@ -339,7 +335,7 @@ int iomap_iter_continue(const struct iomap_iter *iter, struct iomap *iomap,
->   * @begin: callback that produces a mapping for the current position
->   * @end: optional callback that finishes the previous mapping, or NULL
->   *
-> - * Inline helper that implements the common body of an ->iomap_next()
-> + * Inline helper that implements the common body of an iomap_iter_next_fn
->   * callback: it finishes the previous mapping via @end (if present), decides
->   * via iomap_iter_continue() whether to keep going, and obtains the next
->   * mapping via @begin.
-> @@ -427,15 +423,15 @@ static inline bool iomap_want_unshare_iter(const struct iomap_iter *iter)
->  }
+> -iomap operations call ``->iomap_begin`` to obtain one file mapping for
+> -the range of bytes specified by ``pos`` and ``length`` for the file
+> -``inode``.
+> +The ``begin`` callback obtains one file mapping for the range of bytes
+> +specified by ``pos`` and ``length`` for the file ``inode``.
+>  This mapping should be returned through the ``iomap`` pointer.
+>  The mapping must cover at least the first byte of the supplied file
+>  range, but it does not need to cover the entire requested range.
+> @@ -377,18 +447,18 @@ information via ``srcmap``.
+>  Only pagecache and fsdax operations support reading from one mapping and
+>  writing to another.
 >  
->  ssize_t iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *from,
-> -		const struct iomap_ops *ops,
-> +		iomap_iter_next_fn next,
->  		const struct iomap_write_ops *write_ops, void *private);
->  int iomap_fsverity_write(struct file *file, loff_t pos, size_t length,
-> -		const void *buf, const struct iomap_ops *ops,
-> +		const void *buf, iomap_iter_next_fn next,
->  		const struct iomap_write_ops *write_ops);
-> -void iomap_read_folio(const struct iomap_ops *ops,
-> -		struct iomap_read_folio_ctx *ctx, void *private);
-> -void iomap_readahead(const struct iomap_ops *ops,
-> -		struct iomap_read_folio_ctx *ctx, void *private);
-> +void iomap_read_folio(iomap_iter_next_fn next, struct iomap_read_folio_ctx *ctx,
-> +		void *private);
-> +void iomap_readahead(iomap_iter_next_fn next, struct iomap_read_folio_ctx *ctx,
-> +		void *private);
->  bool iomap_is_partially_uptodate(struct folio *, size_t from, size_t count);
->  struct folio *iomap_get_folio(struct iomap_iter *iter, loff_t pos, size_t len);
->  bool iomap_release_folio(struct folio *folio, gfp_t gfp_flags);
-> @@ -443,17 +439,17 @@ void iomap_invalidate_folio(struct folio *folio, size_t offset, size_t len);
->  bool iomap_dirty_folio(struct address_space *mapping, struct folio *folio);
->  void iomap_folio_mark_uptodate(struct folio *folio);
->  int iomap_file_unshare(struct inode *inode, loff_t pos, loff_t len,
-> -		const struct iomap_ops *ops,
-> +		iomap_iter_next_fn next,
->  		const struct iomap_write_ops *write_ops);
->  unsigned int iomap_fill_dirty_folios(struct iomap_iter *iter, loff_t *start,
->  		loff_t end, unsigned int *iomap_flags);
->  int iomap_zero_range(struct inode *inode, loff_t pos, loff_t len,
-> -		bool *did_zero, const struct iomap_ops *ops,
-> +		bool *did_zero, iomap_iter_next_fn next,
->  		const struct iomap_write_ops *write_ops, void *private);
->  int iomap_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
-> -		const struct iomap_ops *ops,
-> +		iomap_iter_next_fn next,
->  		const struct iomap_write_ops *write_ops, void *private);
-> -vm_fault_t iomap_page_mkwrite(struct vm_fault *vmf, const struct iomap_ops *ops,
-> +vm_fault_t iomap_page_mkwrite(struct vm_fault *vmf, iomap_iter_next_fn next,
->  		void *private);
->  typedef void (*iomap_punch_t)(struct inode *inode, loff_t offset, loff_t length,
->  		struct iomap *iomap);
-> @@ -462,13 +458,13 @@ void iomap_write_delalloc_release(struct inode *inode, loff_t start_byte,
->  		iomap_punch_t punch);
+> -``->iomap_end``
+> -~~~~~~~~~~~~~~~
+> +``end``
+> +~~~~~~~
 >  
->  int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
-> -		u64 start, u64 len, const struct iomap_ops *ops);
-> +		u64 start, u64 len, iomap_iter_next_fn next);
->  loff_t iomap_seek_hole(struct inode *inode, loff_t offset,
-> -		const struct iomap_ops *ops);
-> +		iomap_iter_next_fn next);
->  loff_t iomap_seek_data(struct inode *inode, loff_t offset,
-> -		const struct iomap_ops *ops);
-> +		iomap_iter_next_fn next);
->  sector_t iomap_bmap(struct address_space *mapping, sector_t bno,
-> -		const struct iomap_ops *ops);
-> +		iomap_iter_next_fn next);
+> -After the operation completes, the ``->iomap_end`` function, if present,
+> -is called to signal that iomap is finished with a mapping.
+> +After the operation completes, the ``end`` callback, if present, is called to
+> +signal that iomap is finished with a mapping.
+>  Typically, implementations will use this function to tear down any
+> -context that were set up in ``->iomap_begin``.
+> +context that was set up in ``begin``.
+>  For example, a write might wish to commit the reservations for the bytes
+>  that were operated upon and unreserve any space that was not operated
+>  upon.
+>  ``written`` might be zero if no bytes were touched.
+> -``flags`` will contain the same value passed to ``->iomap_begin``.
+> +``flags`` will contain the same value passed to ``begin``.
+>  iomap ops for reads are not likely to need to supply this function.
 >  
->  /*
->   * Flags for iomap_ioend->io_flags.
-> @@ -675,10 +671,10 @@ struct iomap_dio_ops {
->  #define IOMAP_DIO_BOUNCE		(1 << 4)
+>  Both functions should return a negative errno code on error, or zero on
+> @@ -421,8 +491,8 @@ iomap is concerned:
+>     accessing the folio until writeback is underway.
 >  
->  ssize_t iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
-> -		const struct iomap_ops *ops, const struct iomap_dio_ops *dops,
-> +		iomap_iter_next_fn next, const struct iomap_dio_ops *dops,
->  		unsigned int dio_flags, void *private, size_t done_before);
->  struct iomap_dio *__iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
-> -		const struct iomap_ops *ops, const struct iomap_dio_ops *dops,
-> +		iomap_iter_next_fn next, const struct iomap_dio_ops *dops,
->  		unsigned int dio_flags, void *private, size_t done_before);
->  ssize_t iomap_dio_complete(struct iomap_dio *dio);
->  void iomap_dio_bio_end_io(struct bio *bio);
-> @@ -754,9 +750,9 @@ struct swap_info_struct;
+>     * The **lower** level primitive is taken by the filesystem in the
+> -     ``->iomap_begin`` and ``->iomap_end`` functions to coordinate
+> -     access to the file space mapping information.
+> +     ``begin`` and ``end`` functions to coordinate access to the file space
+> +     mapping information.
+>       The fields of the iomap object should be filled out while holding
+>       this primitive.
+>       The upper level synchronization primitive, if any, remains held
+> diff --git a/Documentation/filesystems/iomap/operations.rst b/Documentation/filesystems/iomap/operations.rst
+> index da982ca7e413..a5784dee0850 100644
+> --- a/Documentation/filesystems/iomap/operations.rst
+> +++ b/Documentation/filesystems/iomap/operations.rst
+> @@ -17,6 +17,12 @@ Supported File Operations
+>  Below are a discussion of the high level file operations that iomap
+>  implements.
 >  
->  int iomap_swapfile_activate(struct swap_info_struct *sis,
->  		struct file *swap_file, sector_t *pagespan,
-> -		const struct iomap_ops *ops);
-> +		iomap_iter_next_fn next);
->  #else
-> -# define iomap_swapfile_activate(sis, swapfile, pagespan, ops)	(-EIO)
-> +# define iomap_swapfile_activate(sis, swapfile, pagespan, next) (-EIO)
->  #endif /* CONFIG_SWAP */
+> +Each operation takes an ``iomap_iter_next_fn`` callback that supplies the file
+> +mappings, as described in the iomap design document.  The per-operation
+> +``flags`` documented below are passed to that callback; references to
+> +``begin`` and ``end`` name the two steps a typical callback is built from
+> +via ``iomap_iter_next``.
+> +
+>  Buffered I/O
+>  ============
 >  
->  extern struct bio_set iomap_ioend_bioset;
-> @@ -768,25 +764,25 @@ int iomap_bio_read_folio_range(const struct iomap_iter *iter,
->  extern const struct iomap_read_ops iomap_bio_read_ops;
+> @@ -90,10 +96,10 @@ iomap calls these functions:
+>      <https://lore.kernel.org/all/20180619164137.13720-6-hch@lst.de/>`_
+>      that was set up by ``->get_folio``.
 >  
->  static inline void iomap_bio_read_folio(struct folio *folio,
-> -		const struct iomap_ops *ops)
-> +		iomap_iter_next_fn next)
->  {
->  	struct iomap_read_folio_ctx ctx = {
->  		.ops		= &iomap_bio_read_ops,
->  		.cur_folio	= folio,
->  	};
+> -  - ``iomap_valid``: The filesystem may not hold locks between
+> -    ``->iomap_begin`` and ``->iomap_end`` because pagecache operations
+> -    can take folio locks, fault on userspace pages, initiate writeback
+> -    for memory reclamation, or engage in other time-consuming actions.
+> +  - ``iomap_valid``: The filesystem may not hold locks between ``begin`` and
+> +    ``end`` because pagecache operations can take folio locks, fault on
+> +    userspace pages, initiate writeback for memory reclamation, or engage in
+> +    other time-consuming actions.
+>      If a file's space mapping data are mutable, it is possible that the
+>      mapping for a particular pagecache folio can `change in the time it
+>      takes
+> @@ -114,12 +120,12 @@ iomap calls these functions:
+>      If the mapping is not valid, the mapping will be sampled again.
 >  
-> -	iomap_read_folio(ops, &ctx, NULL);
-> +	iomap_read_folio(next, &ctx, NULL);
->  }
+>      To support making the validity decision, the filesystem's
+> -    ``->iomap_begin`` function may set ``struct iomap::validity_cookie``
+> +    ``begin`` function may set ``struct iomap::validity_cookie``
+>      at the same time that it populates the other iomap fields.
+>      A simple validation cookie implementation is a sequence counter.
+>      If the filesystem bumps the sequence counter every time it modifies
+>      the inode's extent map, it can be placed in the ``struct
+> -    iomap::validity_cookie`` during ``->iomap_begin``.
+> +    iomap::validity_cookie`` during ``begin``.
+>      If the value in the cookie is found to be different to the value
+>      the filesystem holds when the mapping is passed back to
+>      ``->iomap_valid``, then the iomap should considered stale and the
+> @@ -199,7 +205,7 @@ Buffered Readahead and Reads
+>  The ``iomap_readahead`` function initiates readahead to the pagecache.
+>  The ``iomap_read_folio`` function reads one folio's worth of data into
+>  the pagecache.
+> -The ``flags`` argument to ``->iomap_begin`` will be set to zero.
+> +The ``flags`` argument to ``begin`` will be set to zero.
+>  The pagecache takes whatever locks it needs before calling the
+>  filesystem.
 >  
->  static inline void iomap_bio_readahead(struct readahead_control *rac,
-> -		const struct iomap_ops *ops)
-> +		iomap_iter_next_fn next)
->  {
->  	struct iomap_read_folio_ctx ctx = {
->  		.ops		= &iomap_bio_read_ops,
->  		.rac		= rac,
->  	};
+> @@ -231,7 +237,7 @@ Buffered Writes
+>  The ``iomap_file_buffered_write`` function writes an ``iocb`` to the
+>  pagecache.
+>  ``IOMAP_WRITE`` or ``IOMAP_WRITE`` | ``IOMAP_NOWAIT`` will be passed as
+> -the ``flags`` argument to ``->iomap_begin``.
+> +the ``flags`` argument to ``begin``.
+>  Callers commonly take ``i_rwsem`` in either shared or exclusive mode
+>  before calling this function.
 >  
-> -	iomap_readahead(ops, &ctx, NULL);
-> +	iomap_readahead(next, &ctx, NULL);
->  }
->  #endif /* CONFIG_BLOCK */
+> @@ -241,7 +247,7 @@ mmap Write Faults
+>  The ``iomap_page_mkwrite`` function handles a write fault to a folio in
+>  the pagecache.
+>  ``IOMAP_WRITE | IOMAP_FAULT`` will be passed as the ``flags`` argument
+> -to ``->iomap_begin``.
+> +to ``begin``.
+>  Callers commonly take the mmap ``invalidate_lock`` in shared or
+>  exclusive mode before calling this function.
 >  
+> @@ -256,7 +262,7 @@ such `reservations
+>  <https://lore.kernel.org/linux-xfs/20220817093627.GZ3600936@dread.disaster.area/>`_
+>  because writeback will not consume the reservation.
+>  The ``iomap_write_delalloc_release`` can be called from a
+> -``->iomap_end`` function to find all the clean areas of the folios
+> +``end`` function to find all the clean areas of the folios
+>  caching a fresh (``IOMAP_F_NEW``) delalloc mapping.
+>  It takes the ``invalidate_lock``.
+>  
+> @@ -274,7 +280,7 @@ Filesystems can call ``iomap_zero_range`` to perform zeroing of the
+>  pagecache for non-truncation file operations that are not aligned to
+>  the fsblock size.
+>  ``IOMAP_ZERO`` will be passed as the ``flags`` argument to
+> -``->iomap_begin``.
+> +``begin``.
+>  Callers typically hold ``i_rwsem`` and ``invalidate_lock`` in exclusive
+>  mode before calling this function.
+>  
+> @@ -285,7 +291,7 @@ Filesystems can call ``iomap_file_unshare`` to force a file sharing
+>  storage with another file to preemptively copy the shared data to newly
+>  allocate storage.
+>  ``IOMAP_WRITE | IOMAP_UNSHARE`` will be passed as the ``flags`` argument
+> -to ``->iomap_begin``.
+> +to ``begin``.
+>  Callers typically hold ``i_rwsem`` and ``invalidate_lock`` in exclusive
+>  mode before calling this function.
+>  
+> @@ -298,7 +304,7 @@ operation.
+>  ``truncate_setsize`` or ``truncate_pagecache`` will take care of
+>  everything after the EOF block.
+>  ``IOMAP_ZERO`` will be passed as the ``flags`` argument to
+> -``->iomap_begin``.
+> +``begin``.
+>  Callers typically hold ``i_rwsem`` and ``invalidate_lock`` in exclusive
+>  mode before calling this function.
+>  
+> @@ -341,8 +347,8 @@ The fields are as follows:
+>      though it will `reuse mappings
+>      <https://lore.kernel.org/all/20231207072710.176093-15-hch@lst.de/>`_
+>      for runs of contiguous dirty fsblocks within a folio.
+> -    Do not return ``IOMAP_INLINE`` mappings here; the ``->iomap_end``
+> -    function must deal with persisting written data.
+> +    Do not return ``IOMAP_INLINE`` mappings here; the ``end`` function must
+> +    deal with persisting written data.
+>      Do not return ``IOMAP_DELALLOC`` mappings here; iomap currently
+>      requires mapping to allocated space.
+>      Filesystems can skip a potentially expensive mapping lookup if the
+> @@ -428,7 +434,7 @@ writes for files.
+>  .. code-block:: c
+>  
+>   ssize_t iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+> -                      const struct iomap_ops *ops,
+> +                      iomap_iter_next_fn iomap_next,
+>                        const struct iomap_dio_ops *dops,
+>                        unsigned int dio_flags, void *private,
+>                        size_t done_before);
+> @@ -511,7 +517,7 @@ Return Values
+>   * ``-ENOTBLK``: Fall back to buffered I/O.
+>     iomap itself will return this value if it cannot invalidate the page
+>     cache before issuing the I/O to storage.
+> -   The ``->iomap_begin`` or ``->iomap_end`` functions may also return
+> +   The ``begin`` or ``end`` functions may also return
+>     this value.
+>  
+>   * ``-EIOCBQUEUED``: The asynchronous direct I/O request has been
+> @@ -526,7 +532,7 @@ A direct I/O read initiates a read I/O from the storage device to the
+>  caller's buffer.
+>  Dirty parts of the pagecache are flushed to storage before initiating
+>  the read io.
+> -The ``flags`` value for ``->iomap_begin`` will be ``IOMAP_DIRECT`` with
+> +The ``flags`` value for ``begin`` will be ``IOMAP_DIRECT`` with
+>  any combination of the following enhancements:
+>  
+>   * ``IOMAP_NOWAIT``, as defined previously.
+> @@ -542,7 +548,7 @@ caller's buffer.
+>  Dirty parts of the pagecache are flushed to storage before initiating
+>  the write io.
+>  The pagecache is invalidated both before and after the write io.
+> -The ``flags`` value for ``->iomap_begin`` will be ``IOMAP_DIRECT |
+> +The ``flags`` value for ``begin`` will be ``IOMAP_DIRECT |
+>  IOMAP_WRITE`` with any combination of the following enhancements:
+>  
+>   * ``IOMAP_NOWAIT``, as defined previously.
+> @@ -644,7 +650,7 @@ fsdax Reads
+>  
+>  A fsdax read performs a memcpy from storage device to the caller's
+>  buffer.
+> -The ``flags`` value for ``->iomap_begin`` will be ``IOMAP_DAX`` with any
+> +The ``flags`` value for ``begin`` will be ``IOMAP_DAX`` with any
+>  combination of the following enhancements:
+>  
+>   * ``IOMAP_NOWAIT``, as defined previously.
+> @@ -657,7 +663,7 @@ fsdax Writes
+>  
+>  A fsdax write initiates a memcpy to the storage device from the caller's
+>  buffer.
+> -The ``flags`` value for ``->iomap_begin`` will be ``IOMAP_DAX |
+> +The ``flags`` value for ``begin`` will be ``IOMAP_DAX |
+>  IOMAP_WRITE`` with any combination of the following enhancements:
+>  
+>   * ``IOMAP_NOWAIT``, as defined previously.
+> @@ -680,9 +686,9 @@ fsdax mmap Faults
+>  The ``dax_iomap_fault`` function handles read and write faults to fsdax
+>  storage.
+>  For a read fault, ``IOMAP_DAX | IOMAP_FAULT`` will be passed as the
+> -``flags`` argument to ``->iomap_begin``.
+> +``flags`` argument to ``begin``.
+>  For a write fault, ``IOMAP_DAX | IOMAP_FAULT | IOMAP_WRITE`` will be
+> -passed as the ``flags`` argument to ``->iomap_begin``.
+> +passed as the ``flags`` argument to ``begin``.
+>  
+>  Callers commonly hold the same locks as they do to call their iomap
+>  pagecache counterparts.
+> @@ -692,8 +698,8 @@ fsdax Truncation, fallocate, and Unsharing
+>  
+>  For fsdax files, the following functions are provided to replace their
+>  iomap pagecache I/O counterparts.
+> -The ``flags`` argument to ``->iomap_begin`` are the same as the
+> -pagecache counterparts, with ``IOMAP_DAX`` added.
+> +The ``flags`` argument to ``begin`` are the same as the pagecache counterparts,
+> +with ``IOMAP_DAX`` added.
+>  
+>   * ``dax_file_unshare``
+>   * ``dax_zero_range``
+> @@ -719,8 +725,7 @@ SEEK_DATA
+>  
+>  The ``iomap_seek_data`` function implements the SEEK_DATA "whence" value
+>  for llseek.
+> -``IOMAP_REPORT`` will be passed as the ``flags`` argument to
+> -``->iomap_begin``.
+> +``IOMAP_REPORT`` will be passed as the ``flags`` argument to ``begin``.
+>  
+>  For unwritten mappings, the pagecache will be searched.
+>  Regions of the pagecache with a folio mapped and uptodate fsblocks
+> @@ -734,8 +739,7 @@ SEEK_HOLE
+>  
+>  The ``iomap_seek_hole`` function implements the SEEK_HOLE "whence" value
+>  for llseek.
+> -``IOMAP_REPORT`` will be passed as the ``flags`` argument to
+> -``->iomap_begin``.
+> +``IOMAP_REPORT`` will be passed as the ``flags`` argument to ``begin``.
+>  
+>  For unwritten mappings, the pagecache will be searched.
+>  Regions of the pagecache with no folio mapped, or a !uptodate fsblock
+> @@ -750,8 +754,7 @@ Swap File Activation
+>  The ``iomap_swapfile_activate`` function finds all the base-page aligned
+>  regions in a file and sets them up as swap space.
+>  The file will be ``fsync()``'d before activation.
+> -``IOMAP_REPORT`` will be passed as the ``flags`` argument to
+> -``->iomap_begin``.
+> +``IOMAP_REPORT`` will be passed as the ``flags`` argument to ``begin``.
+>  All mappings must be mapped or unwritten; cannot be dirty or shared, and
+>  cannot span multiple block devices.
+>  Callers must hold ``i_rwsem`` in exclusive mode; this is already
+> @@ -767,8 +770,7 @@ FS_IOC_FIEMAP
+>  
+>  The ``iomap_fiemap`` function exports file extent mappings to userspace
+>  in the format specified by the ``FS_IOC_FIEMAP`` ioctl.
+> -``IOMAP_REPORT`` will be passed as the ``flags`` argument to
+> -``->iomap_begin``.
+> +``IOMAP_REPORT`` will be passed as the ``flags`` argument to ``begin``.
+>  Callers commonly hold ``i_rwsem`` in shared mode before calling this
+>  function.
+>  
+> diff --git a/Documentation/filesystems/iomap/porting.rst b/Documentation/filesystems/iomap/porting.rst
+> index 3d49a32c0fff..b995f426808a 100644
+> --- a/Documentation/filesystems/iomap/porting.rst
+> +++ b/Documentation/filesystems/iomap/porting.rst
+> @@ -50,8 +50,14 @@ Build the kernel, run fstests with the ``-g all`` option across a wide
+>  variety of your filesystem's supported configurations to build a
+>  baseline of which tests pass and which ones fail.
+>  
+> -The recommended approach is first to implement ``->iomap_begin`` (and
+> -``->iomap_end`` if necessary) to allow iomap to obtain a read-only
+> +Every iomap operation is driven by an ``iomap_iter_next_fn`` callback.
+> +Filesystems normally do not write one by hand: implement ``begin``
+> +(and ``end`` if necessary) and generate the callback with the
+> +``DEFINE_IOMAP_ITER_NEXT()`` macro, or ``DEFINE_IOMAP_ITER_NEXT_END()`` if an
+> +``end`` callback is needed.
+> +
+> +The recommended approach is first to implement ``begin`` (and
+> +``end`` if necessary) to allow iomap to obtain a read-only
+>  mapping of a file range.
+>  In most cases, this is a relatively trivial conversion of the existing
+>  ``get_block()`` function for read-only mappings.
+> @@ -62,7 +68,7 @@ If FIEMAP is returning the correct information, it's a good sign that
+>  other read-only mapping operations will do the right thing.
+>  
+>  Next, modify the filesystem's ``get_block(create = false)``
+> -implementation to use the new ``->iomap_begin`` implementation to map
+> +implementation to use the new ``begin`` implementation to map
+>  file space for selected read operations.
+>  Hide behind a debugging knob the ability to switch on the iomap mapping
+>  functions for selected call paths.
+> @@ -82,14 +88,14 @@ I/O path because of bufferheads.
+>  The buffered read I/O paths doesn't need to be converted yet, though the
+>  direct I/O read path should be converted in this phase.
+>  
+> -At this point, you should look over your ``->iomap_begin`` function.
+> +At this point, you should look over your ``begin`` function.
+>  If it switches between large blocks of code based on dispatching of the
+>  ``flags`` argument, you should consider breaking it up into
+>  per-operation iomap ops with smaller, more cohesive functions.
+>  XFS is a good example of this.
+>  
+>  The next thing to do is implement ``get_blocks(create == true)``
+> -functionality in the ``->iomap_begin``/``->iomap_end`` methods.
+> +functionality in the ``begin``/``end`` methods.
+>  It is strongly recommended to create separate mapping functions and
+>  iomap ops for write operations.
+>  Then convert the direct I/O write path to iomap, and start running fsx
 > -- 
 > 2.52.0
 > 
