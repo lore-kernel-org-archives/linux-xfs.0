@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D8B7233723;
-	Mon, 27 Jul 2026 05:23:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F30C233723;
+	Mon, 27 Jul 2026 05:23:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785129812; cv=none; b=nbK3nhQmkxJfjUoOvIRXfgTY8dz43iH1KlKdXLAUoDOvSbNODVois+0BvM4vLHG7Rgmjp6iD1CAiuZ+i4ksEs5zVsZF/W1d5dFwugLM/KZev0sRSLsx/2+rE4o+qudviw3Y5riqO0o1czixCz5/9MK2G79L7FaTabGcAzUSQZtE=
+	t=1785129828; cv=none; b=Tuxp6YMImFo8Z4VFQ+2hPfc1aO7jg+QaUymfC3ZoY6VuwFVigfnVZzyiZ/f6+qddqXiue3iqF/qxPQl2sz3wJmGAdgD2VUl6qDp3Mz0u3k3Yo0M1tQgIjE7QXgvHzKkaP2VB5fW66wU2TqVADFoOjY3i/76w4hKL1cdj9GoZq0I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785129812; c=relaxed/simple;
-	bh=7e96+SgzUcJBQEeK31acN8QmwDzDgRPPxsxmfdvM3+k=;
+	s=arc-20240116; t=1785129828; c=relaxed/simple;
+	bh=l6TWdrOjmBIXZHwS144J0iKmQD5oo7AzMcV5qukf2UY=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=QdGQJ9LB2gKsbnTBE7rtb/KkBxLcv6U/S3sELgxSe8/U/8mmwq4ucKQBUx5AfnFM2bvJt94RRzoqiu1zNBja1SbRIm+YGE+Gio6qVDVmNSGKICW/MDM8gNylVVS1hstETDBLFVa+Kc1sOA5j4z4AD0UjToXHfkXeru9r/4c1pz8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KHATNrKP; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=JiuoSH2YZf2WBL7UmPsKsBURUYywb6UuwExBT6PZfDxu7oL6Tb4PIhBCUr/wQyr7KS+19RtuwVGelJA+0FEH7/spWFvYemL3TYpuVnrJYV7n9SM9AvCdFBhvJmmicGYso989Kc/vxbLMokXgP+t6BCQbmQnq4BB/gWUt3VYGPMs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IjRkikt3; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KHATNrKP"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 6CE631F000E9;
-	Mon, 27 Jul 2026 05:23:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IjRkikt3"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id EC4B71F000E9;
+	Mon, 27 Jul 2026 05:23:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785129811;
-	bh=2EbjGaRs7zvo7wBWsPU8gyxWNJt5l2haDIp9X43zSnw=;
+	s=k20260515; t=1785129827;
+	bh=aQHKGNNTjHFAEUmqaWNrJ03FTrs0w7lo896GjcdVZNc=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=KHATNrKPcxQtq7JxT2coY/YbPX+/ikNNXhAeRQzWiYFY7tONiEIc5YD2E+GBtX90Q
-	 c8P7a106y/NXF5tObBNIrpnRrFryHbGxZBDNRZ1GH5CjD3DK5lIhoh5VpfoCIpCHXV
-	 SQW9wIZORFaPHAsnPCKLqvhQ4I2j1AOsPM2+TzHPkLHTBitDp+U1Pfg3P+PFOcHh/K
-	 Mveu9MV1wN0+5VMkeJjb2eAt1fRsHwCLOH8OCxe9AH9AOONuaCNqrqHvwo0E9L9iCl
-	 hvEhWsVC19i3OklkW4DE8PSUtsfZvw0v7svUncDYQzJV2yBf4BZNQYkhcmrp0viWrI
-	 NUbMWaPRmenaA==
-Date: Sun, 26 Jul 2026 22:23:31 -0700
-Subject: [PATCH 3/6] xfs: don't return EFSCORRUPTED when scrubbing corrupt
- parent pointers
+	b=IjRkikt3dNixwhZFHNU5wX6L8CQbrcFJ7O3hl+1TxM0vm8D+oojyZ8Zf8WPqVpeWr
+	 L+Oo3ep9Uw4H5H2fNW0yRcv9D3uni/AVkYGj4LzQcu/aTXA82AIValXn81RKir/DCs
+	 EocBsLm6x+wwyyDVh/ub52R4TBbiWG9fx0bqr5HZtcTwvaGYVlckap8ruAvqybPtWO
+	 FHsPKfecRPrVrNDulQ5bzLN9HokE6ADfEUeULRkAgoF/HztNhQR9VmqYPhbyj/w4Z7
+	 bfY/pkfpMNOb0zW/lo1k8n4Jj1qPG6gh19e6Q4rv9H+sfEcET/qu2i8i51B91dtVHv
+	 57VIivK81/YKA==
+Date: Sun, 26 Jul 2026 22:23:46 -0700
+Subject: [PATCH 4/6] xfs: don't zap the attr fork on repair when there are
+ queued pptr updates
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org, hch@lst.de
 Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <178512389230.1494795.12380486743423568658.stgit@frogsfrogsfrogs>
+Message-ID: <178512389251.1494795.11990651998732898567.stgit@frogsfrogsfrogs>
 In-Reply-To: <178512389129.1494795.16117444961252720216.stgit@frogsfrogsfrogs>
 References: <178512389129.1494795.16117444961252720216.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,33 +46,34 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-LOLLM noticed that scrub sets the CORRUPT flag when xfs_parent_from_attr
-thinks it's been given a corrupt parent pointer.  This eliminates the
-potential to repair the filesystem because that error code is bubbled up
-the call stack.  Fix this by collapsing them all to ECANCELED in
-xchk_parent_pptr, which doesn't have that trait.
+LOLLM noticed that xrep_xattr_rebuild_tree doesn't check for queued
+parent pointer updates when it decides that it's going to zap the attr
+fork.  This is obviously incorrect, so fix that.  We hold the IOLOCK and
+the ILOCK of sc->ip at that point in time, so we can't race with any
+/new/ operations.
 
 Cc: <stable@vger.kernel.org> # v6.10
-Fixes: 0d29a20fbdba89 ("xfs: scrub parent pointers")
+Fixes: e5d7ce0364d8ee ("xfs: replay unlocked parent pointer updates that accrue during xattr repair")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Assisted-by: LOLLM # finding obvious bugs
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/scrub/parent.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/scrub/attr_repair.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/scrub/parent.c b/fs/xfs/scrub/parent.c
-index a8c4807e1d9464..99b60773b7158d 100644
---- a/fs/xfs/scrub/parent.c
-+++ b/fs/xfs/scrub/parent.c
-@@ -485,7 +485,7 @@ xchk_parent_scan_attr(
- 			valuelen, &parent_ino, NULL);
- 	if (error) {
- 		xchk_fblock_set_corrupt(sc, XFS_ATTR_FORK, 0);
--		return error;
-+		return -ECANCELED;
- 	}
- 
- 	/* No self-referential parent pointers. */
+diff --git a/fs/xfs/scrub/attr_repair.c b/fs/xfs/scrub/attr_repair.c
+index be627ab655ad16..6e6af142f1fb8e 100644
+--- a/fs/xfs/scrub/attr_repair.c
++++ b/fs/xfs/scrub/attr_repair.c
+@@ -1427,7 +1427,8 @@ xrep_xattr_rebuild_tree(
+ 	 * If we didn't find any attributes to salvage, repair the file by
+ 	 * zapping its attr fork.
+ 	 */
+-	if (rx->attrs_found == 0) {
++	if (rx->attrs_found == 0 &&
++	    (!xfs_has_parent(sc->mp) || xfarray_length(rx->pptr_recs) == 0)) {
+ 		xfs_trans_ijoin(sc->tp, sc->ip, 0);
+ 		error = xrep_xattr_reset_fork(sc);
+ 		if (error)
 
