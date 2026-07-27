@@ -1,99 +1,109 @@
-Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2C97377AAE
-	for <linux-xfs@vger.kernel.org>; Mon, 27 Jul 2026 14:17:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 800DD4248D2;
+	Mon, 27 Jul 2026 16:21:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785161854; cv=none; b=kw/tScAkLYeiS3o9p7u9iNIEyF7rc6Xk+CPmf7jvFTT4OYfkrCUm+jsJdgyUs1fX97amSruNZvoCCbBKmwhTfjHVysRpOlh5KhsvQhcdgiD8tqAQRoLpmJ01n1Wl9QpBmoYZ5IOakNFiRJjbmRBUyYC9kuEUpNxeR0Jm052C3dA=
+	t=1785169293; cv=none; b=FQTAm/c+fPq4I40rj0YvtUbP/1u84ajwqMvmIlkztg71jlI8txin9wbLAk9IsB77I/x7w5vzqlQz+cKEOu9ZNFxHd2HnZI64x/cr7RBxZn2n1v3x9msrd1BB8e3q7BwB7bxGxrlOecbDf7Zip+blbuZVwVB6t+BDPDlDWDq8Zsg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785161854; c=relaxed/simple;
-	bh=YfdmKDMoYPEZCHasO3vceo4NYJMFc6xtTkJj5m+qSN8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:From:In-Reply-To:
-	 Content-Type:References; b=dYiMdZRtabHhFWuNJ2gGEKe93t/z3qgXJs6lnKQRrN/AnlbPHUxr6Mr8GAII85PgAPsOdFNZvw004wKlSL2QNo6RVvC5mSDGD5tgrP+2xScGLLp2E7GswDCjn3Fi9w/waLfmos+K1SCvPTw5XW0ee2Hj93UKhz5KVN8PEV9h1hM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=ZuZNbcm6; arc=none smtp.client-ip=203.254.224.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1785169293; c=relaxed/simple;
+	bh=okETTFH1Y9E3loI+xtAY+f5lU0cxrxH1yIePN3OQsGM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=I+awJTotoVMGTtfYIJllQpgvOyEgK04FiGk1HduNO2UZA1LdOt8qGI9XLwLhVDi+crO9DDJg0EyMlchffPYPOgiAIhL9b+vOUohwfvll8MC2gRfFf04VtV58Ss80RXwciFSZRi/UFa8aNIVT4IWzcczpkJjcC6TcHJ+GZvIEd2w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ANPhbjcf; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="ZuZNbcm6"
-Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
-	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20260727141731epoutp043d34cf2e3f08a56357b061b2263a17fe~GKz7PDq612578625786epoutp04Q
-	for <linux-xfs@vger.kernel.org>; Mon, 27 Jul 2026 14:17:31 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20260727141731epoutp043d34cf2e3f08a56357b061b2263a17fe~GKz7PDq612578625786epoutp04Q
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1785161851;
-	bh=tIV12OnGWLcStnM19ejURF2KKLRf0IVkVUo2Fa2yrVQ=;
-	h=Date:Subject:To:Cc:From:In-Reply-To:References:From;
-	b=ZuZNbcm63KqLfrmEb6BCnPqNb6QdRqRPjuK2lJJ1mvsnZcNlH8B5bJdWyjTuSHpOB
-	 B7DSNALiVRtbNMF5zXQ5iP0zv2STORmtp7gCdMT1mJNzC9uwozZlrOtlVLpTklLcjT
-	 oNqg8Iknc8FZ+eXtTDOkfnve1fZx+ojm24k8mDZ0=
-Received: from epsnrtp03.localdomain (unknown [182.195.42.155]) by
-	epcas5p1.samsung.com (KnoxPortal) with ESMTPS id
-	20260727141730epcas5p1a7fb7f3241f1eecfdf4e80d458570225~GKz6otSif2417524175epcas5p1U;
-	Mon, 27 Jul 2026 14:17:30 +0000 (GMT)
-Received: from epcas5p1.samsung.com (unknown [182.195.38.95]) by
-	epsnrtp03.localdomain (Postfix) with ESMTP id 4h80zY70Rxz3hhT4; Mon, 27 Jul
-	2026 14:17:29 +0000 (GMT)
-Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
-	epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
-	20260727141729epcas5p3a9c500cd217bfa88587bb828203fb4f7~GKz5n-4ob1231912319epcas5p35;
-	Mon, 27 Jul 2026 14:17:29 +0000 (GMT)
-Received: from [107.122.10.194] (unknown [107.122.10.194]) by
-	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-	20260727141728epsmtip16cef9fbed94036b6928d79032eb51509~GKz4at9h-2086520865epsmtip1C;
-	Mon, 27 Jul 2026 14:17:27 +0000 (GMT)
-Message-ID: <1d08c3f3-29d6-42db-973b-1c544b436e15@samsung.com>
-Date: Mon, 27 Jul 2026 19:47:27 +0530
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ANPhbjcf"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id E4CB71F000E9;
+	Mon, 27 Jul 2026 16:21:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785169291;
+	bh=bG2/T3mc03zzZ7g3YzwI59DLS+QwpeHBdd+G/YNwvGs=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=ANPhbjcfgS4DU1GwDd4ybGxqxIFjMux3XaUxsciVyWrj1bOP5fgpCnH4aHVntW2Vz
+	 bY0aswmsxlvEeF/LuoaIWmOXxR2ObaZkEz4q6Iu49oYLXeWVqolWGNs4E+y3nyhhXZ
+	 Tda1cNAYNGSw9b3P9aDjOkfqFtfSksQdwgrtqSCaJro3I4SNzr3CX0Qo5p0Sfmf2Fj
+	 SuLT0wg2wg90DBUeBksEvS4olcuTuSTzIT1K1z++208coT77EUAAmRlGQgj2hpNf7N
+	 4gAElfT3OF+WdqcfoB+1OgzUaTmg4F8OdO5gUvCP4taVB0pFHmiyC3UoKwr7MXxavF
+	 jx4G4mWCt5jxg==
+Date: Mon, 27 Jul 2026 09:21:30 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Lin Jiapeng <ljp1205831794@gmail.com>
+Cc: cem@kernel.org, linux-xfs@vger.kernel.org, stable@vger.kernel.org,
+	jiapenglin@tencent.com
+Subject: Re: [PATCH] xfs: fix exchange-range reflink flag clearing issue with
+  INO1_WRITTEN
+Message-ID: <20260727162130.GD2901224@frogsfrogsfrogs>
+References: <20260727125210.28329-1-jiapenglin@tencent.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 12/22] iomap: better read bounce buffering support
-To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Christian
-	Brauner <brauner@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>, Carlos
-	Maiolino <cem@kernel.org>
-Cc: Tal Zussman <tz2294@columbia.edu>, linux-block@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Content-Language: en-US
-From: Anuj Gupta/Anuj Gupta <anuj20.g@samsung.com>
-In-Reply-To: <20260723145000.116419-13-hch@lst.de>
-Content-Transfer-Encoding: 7bit
-X-CMS-MailID: 20260727141729epcas5p3a9c500cd217bfa88587bb828203fb4f7
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-cpgsPolicy: CPGSC10-542,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20260723145102epcas5p1b832a57cc20b821145a4814f29d4fee5
-References: <20260723145000.116419-1-hch@lst.de>
-	<CGME20260723145102epcas5p1b832a57cc20b821145a4814f29d4fee5@epcas5p1.samsung.com>
-	<20260723145000.116419-13-hch@lst.de>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260727125210.28329-1-jiapenglin@tencent.com>
 
-On 7/23/2026 8:19 PM, Christoph Hellwig wrote:
-> +void iomap_bounce_read(struct iomap_ioend *orig_ioend, unsigned int minsize,
-> +		void (*submit_ioend)(struct iomap_ioend *ioend))
-> +{
-> +	struct inode *inode = orig_ioend->io_inode;
-> +	struct bio *orig_bio = &orig_ioend->io_bio;
-> +	loff_t file_offset = orig_ioend->io_offset;
-> +	sector_t sector = orig_ioend->io_sector;
-> +	size_t total_len = round_up(orig_ioend->io_size, minsize);
-> +
-> +	WARN_ON_ONCE(!(orig_ioend->io_flags & IOMAP_IOEND_DIRECT));
-> +
-> +	do {
-> +		struct iomap_ioend *ioend;
-> +		struct bio *bio;
-> +		int error;
-> +
-> +		bio = bio_alloc_bioset(orig_bio->bi_bdev,
-> +				min(total_len / minsize, BIO_MAX_VECS),
-> +				orig_bio->bi_opf, GFP_KERNEL,
-> +				&iomap_ioend_split_bioset);
+On Mon, Jul 27, 2026 at 08:52:03PM +0800, Lin Jiapeng wrote:
+> When exchanging two full-file ranges, xmi_can_exchange_reflink_flags()
+> can move the reflink inode flag from the file that currently has it to
+> the other file, as long as exactly one side is marked.  This assumes
+> that the file contents, and therefore all shared extents, are exchanged.
+> 
+> That assumption is not true when XFS_EXCHMAPS_INO1_WRITTEN is set.
+> xfs_exchmaps_can_skip_mapping() can skip hole and unwritten mappings
+> from file1, so an exchange can complete without moving every mapping
+> that the earlier flag-swap decision accounted for.  In that case the
+> post-operation cleanup can clear the reflink flag from an inode that
+> still owns shared written extents.  Later writes then take the
+> non-reflink write path and may update blocks that should still have
+> been protected by CoW, which shows up as data corruption between
+> reflink-related files.
+> 
+> Fix this by disabling the reflink flag exchange whenever
+> XFS_EXCHMAPS_INO1_WRITTEN is requested.  The contents exchange can still
+> proceed; the conservative outcome is that both inodes keep the reflink
+> flag.  The regular reflink flag cleanup path can drop the extra flag
+> later once the inode no longer has shared extents.
+> 
+> Reported-by: Lin Jiapeng(TencentOS Red Team) <jiapenglin@tencent.com>
+> Fixes: 966ceafc7a43 ("xfs: create deferred log items for file mapping exchanges")
+> Signed-off-by: Lin Jiapeng <jiapenglin@tencent.com>
 
-thw new bio inherits REQ_POLLED via orig_bio->bi_opf but iocb->private 
-still points to the never submitted orig_bio; hanging polled reads.
-Maybe mask REQ_POLLED from the bounce bio?
+Good catch!  Please add:
+
+Cc: <stable@vger.kernel.org> # v6.10
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+
+--D
+
+> ---
+>  fs/xfs/libxfs/xfs_exchmaps.c | 10 ++++++++++
+>  1 file changed, 10 insertions(+)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_exchmaps.c b/fs/xfs/libxfs/xfs_exchmaps.c
+> index dcd0bd0b13b4..3efed37cb98a 100644
+> --- a/fs/xfs/libxfs/xfs_exchmaps.c
+> +++ b/fs/xfs/libxfs/xfs_exchmaps.c
+> @@ -959,6 +959,16 @@ xmi_can_exchange_reflink_flags(
+>  {
+>  	struct xfs_mount		*mp = req->ip1->i_mount;
+>  
+> +	/*
+> +	 * The INO1_WRITTEN optimization can skip exchanging hole and
+> +	 * unwritten mappings, which means we cannot guarantee that all
+> +	 * shared extents actually moved to the other file.  Clearing the
+> +	 * reflink flag of an inode that still holds shared extents breaks
+> +	 * the CoW write path, so refuse to exchange the flags in that case.
+> +	 */
+> +	if (req->flags & XFS_EXCHMAPS_INO1_WRITTEN)
+> +		return false;
+> +
+>  	if (hweight32(reflink_state) != 1)
+>  		return false;
+>  	if (req->startoff1 != 0 || req->startoff2 != 0)
+> -- 
+> 2.50.1 (Apple Git-155)
+> 
+> 
