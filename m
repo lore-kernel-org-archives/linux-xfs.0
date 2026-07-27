@@ -1,109 +1,274 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 800DD4248D2;
-	Mon, 27 Jul 2026 16:21:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0947C3783AD
+	for <linux-xfs@vger.kernel.org>; Mon, 27 Jul 2026 21:24:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785169293; cv=none; b=FQTAm/c+fPq4I40rj0YvtUbP/1u84ajwqMvmIlkztg71jlI8txin9wbLAk9IsB77I/x7w5vzqlQz+cKEOu9ZNFxHd2HnZI64x/cr7RBxZn2n1v3x9msrd1BB8e3q7BwB7bxGxrlOecbDf7Zip+blbuZVwVB6t+BDPDlDWDq8Zsg=
+	t=1785187468; cv=none; b=UIj76QjO90DlKTjPbD05eKLZOnubkM9Zn3yg3fBH7palaW3iWi0uJHjttILYRAXfvI0aGpoYhaJaepZAoScEMGMU7+zpRAPz+Ruarxt4uAwi7bLUXkHupJvKT/Akuo1OjxKnUvsyPyDmaunWWE98Wl8xniZ4T0rqR+HHyK8fiY8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785169293; c=relaxed/simple;
-	bh=okETTFH1Y9E3loI+xtAY+f5lU0cxrxH1yIePN3OQsGM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=I+awJTotoVMGTtfYIJllQpgvOyEgK04FiGk1HduNO2UZA1LdOt8qGI9XLwLhVDi+crO9DDJg0EyMlchffPYPOgiAIhL9b+vOUohwfvll8MC2gRfFf04VtV58Ss80RXwciFSZRi/UFa8aNIVT4IWzcczpkJjcC6TcHJ+GZvIEd2w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ANPhbjcf; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785187468; c=relaxed/simple;
+	bh=6coMMzJvMlt96tUiQ+2wIJibJRmGZxsGHGesRSw6xlk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=H8lyZyeDXQee/TMrauFZsmM71TLzTMiOCXWr/ZbjUZt1p784wYfxWd9CjxBpjlDKv2Z1G6OIR+/+L6ZAyF8fRbqAvLlv4sTP5V/B8Nq76R7cFDEIt3Gi8NN95ZfENZfTRSA74H7WEYXNKxWq5qeUFj3SwLtWllgDJWq0W7E9Glo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PElMfLzj; arc=none smtp.client-ip=209.85.214.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ANPhbjcf"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id E4CB71F000E9;
-	Mon, 27 Jul 2026 16:21:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785169291;
-	bh=bG2/T3mc03zzZ7g3YzwI59DLS+QwpeHBdd+G/YNwvGs=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=ANPhbjcfgS4DU1GwDd4ybGxqxIFjMux3XaUxsciVyWrj1bOP5fgpCnH4aHVntW2Vz
-	 bY0aswmsxlvEeF/LuoaIWmOXxR2ObaZkEz4q6Iu49oYLXeWVqolWGNs4E+y3nyhhXZ
-	 Tda1cNAYNGSw9b3P9aDjOkfqFtfSksQdwgrtqSCaJro3I4SNzr3CX0Qo5p0Sfmf2Fj
-	 SuLT0wg2wg90DBUeBksEvS4olcuTuSTzIT1K1z++208coT77EUAAmRlGQgj2hpNf7N
-	 4gAElfT3OF+WdqcfoB+1OgzUaTmg4F8OdO5gUvCP4taVB0pFHmiyC3UoKwr7MXxavF
-	 jx4G4mWCt5jxg==
-Date: Mon, 27 Jul 2026 09:21:30 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Lin Jiapeng <ljp1205831794@gmail.com>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org, stable@vger.kernel.org,
-	jiapenglin@tencent.com
-Subject: Re: [PATCH] xfs: fix exchange-range reflink flag clearing issue with
-  INO1_WRITTEN
-Message-ID: <20260727162130.GD2901224@frogsfrogsfrogs>
-References: <20260727125210.28329-1-jiapenglin@tencent.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PElMfLzj"
+Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-2cca0c5799eso30055805ad.0
+        for <linux-xfs@vger.kernel.org>; Mon, 27 Jul 2026 14:24:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1785187466; x=1785792266; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=nwQurP/2xKbuuU+V4mrpMPrFREANrf+WyvNyFFZA9r4=;
+        b=PElMfLzjxIsI4Sx4DWhMJH8vVEQIZa52+cHiEW0Os3Rr+xKY40+OI3QKgv55C0AgBi
+         ooAXi1uhGiPIDIoZBejv36ABtqxKj+mJMei79ObG/FDXKTaz8+zAp1tCgXwFvOkiXavU
+         smKCnRzRKy5Hf0fjlXS7HrdY+Lkr3e7P+xmjofkN6N86uvD/XUsCa2Czd7vqsSr4Arzj
+         RN3kEnX73Y1IJLu5+Pzv72OPUa7spL3ul5eJaFshTIbu5n1moOcImguL6Sl9o+1FzMzD
+         T0J6evsMPZO/KYJaHo3y8evlAzmpxESPc7KjaTWOO9/yLkbqcvQnNbpwoiFrIAYZ/Igu
+         +MNw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785187466; x=1785792266;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=nwQurP/2xKbuuU+V4mrpMPrFREANrf+WyvNyFFZA9r4=;
+        b=MC6LHByNKnlBBe0KDGfbUJaoau33PWsKXOKYuVdp+fjjx44Z2i3Eg+YRYqz8zSo4sd
+         4dUjpuQw+9eVQcpMLi7rZTD8LT2JIk4+Rhpcf8kS5tE6VcvPhtB757lPkd7W+8qnLzc8
+         zdbPkoV0dPX3HB+TARn1auqg6teIr51vwnkqk+U3fwrV1XuRF9XVZVqUp2z6ej5Ht9EU
+         a5M78SP8gWGK98EPTRTJNfNMVYNyuc3nac7ZHCVRoczk/9BMsTKBfa7Dv+Dr/soYaGtN
+         xHBMziBkmv82TyLKihGWt2FWYP6LuR7AG8dsfrmXef4cf/CHbBBUNlju0vdVQbJuZVT/
+         Y0XA==
+X-Forwarded-Encrypted: i=1; AHgh+RrikMGP9MV6MNYS3ne7DExL618Ad2XzFE0a6xQsJ/kZ5Yco5k/hF9ueLp89yznp9WFIeZM9RpLVfcY=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxVzA9urq30s+nfNZRZIli90B0F0LQA9XobJQbXzbcMEZHevqml
+	pIzGOy6fTL5HTu1hKIyO368c62rlEkxV0xZV79QwRqna5WOO+z1zw1CI
+X-Gm-Gg: AR+sD13ZcqEcJJHWljS7g+BxQAY2WxAdNIc85IsOst7GdPezVjUe0CnNh6YtEoHsgIK
+	wlD9PbYb4fR2lxRPmumlNmR5HlGQUF+uZE3q0cbarEXw0UwWlyuiiYouLV4DxqiuS9fhTCTUHt0
+	gyIGsReghI74lyKdD6rEHTQ/2tZTdRhjNMBeYF0QFRN0dXKj4RHOuARDAj9JUNq9wpmilMH2dhW
+	5vU0egC5eT52HL/hTIMrwIQpVrZmxVk5gNCmrV/MnmL3Yrn1mg+V9//p51lUd8p0KMoN/3O7OKD
+	iWgPkgmlTBjxaBoq/ipG1oNgw0OfcunEYW+RFU5qtm1pIL1A+tzYCVJn//jgq+8nfACCG/DWcvs
+	aHEy1pOo1wgsSd1e71BGCMXwsZXVkdoMrPPWBIxK3QseIHDwT1QVsqMkDRCOOZnlzL28y6e6WuT
+	QnyoXTuPULtnF1CJDzu0JbZuxSH+kR2KdxhQ3AcsE+n01WIfMYBk2/l5RHQWhKmgVOs3nSQdXi5
+	ZA=
+X-Received: by 2002:a17:902:ec81:b0:2cf:afa5:b19a with SMTP id d9443c01a7336-2cfde797554mr88864015ad.11.1785187466278;
+        Mon, 27 Jul 2026 14:24:26 -0700 (PDT)
+Received: from localhost ([2a03:2880:ff:73::])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2cfde5e3e0asm40597175ad.29.2026.07.27.14.24.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 27 Jul 2026 14:24:25 -0700 (PDT)
+From: Joanne Koong <joannelkoong@gmail.com>
+To: Christian Brauner <brauner@kernel.org>,
+	hch@lst.de,
+	"Darrick J . Wong" <djwong@kernel.org>,
+	linux-fsdevel@vger.kernel.org
+Cc: changfengnan@bytedance.com,
+	kbusch@kernel.org,
+	Matthew Wilcox <willy@infradead.org>,
+	Jan Kara <jack@suse.cz>,
+	Jonathan Corbet <corbet@lwn.net>,
+	David Sterba <dsterba@suse.com>,
+	Gao Xiang <xiang@kernel.org>,
+	Namjae Jeon <linkinjeon@kernel.org>,
+	tytso@mit.edu,
+	Jaegeuk Kim <jaegeuk@kernel.org>,
+	Miklos Szeredi <miklos@szeredi.hu>,
+	Andreas Gruenbacher <agruenba@redhat.com>,
+	Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>,
+	Hyunchul Lee <hyc.lee@gmail.com>,
+	Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
+	Carlos Maiolino <cem@kernel.org>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	libaokun@linux.alibaba.com,
+	linux-ext4@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: [PATCH v4 00/21] iomap: convert to in-iter iomap_next() model
+Date: Mon, 27 Jul 2026 14:17:37 -0700
+Message-ID: <20260727211758.1116539-1-joannelkoong@gmail.com>
+X-Mailer: git-send-email 2.52.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260727125210.28329-1-jiapenglin@tencent.com>
+Content-Transfer-Encoding: 8bit
 
-On Mon, Jul 27, 2026 at 08:52:03PM +0800, Lin Jiapeng wrote:
-> When exchanging two full-file ranges, xmi_can_exchange_reflink_flags()
-> can move the reflink inode flag from the file that currently has it to
-> the other file, as long as exactly one side is marked.  This assumes
-> that the file contents, and therefore all shared extents, are exchanged.
-> 
-> That assumption is not true when XFS_EXCHMAPS_INO1_WRITTEN is set.
-> xfs_exchmaps_can_skip_mapping() can skip hole and unwritten mappings
-> from file1, so an exchange can complete without moving every mapping
-> that the earlier flag-swap decision accounted for.  In that case the
-> post-operation cleanup can clear the reflink flag from an inode that
-> still owns shared written extents.  Later writes then take the
-> non-reflink write path and may update blocks that should still have
-> been protected by CoW, which shows up as data corruption between
-> reflink-related files.
-> 
-> Fix this by disabling the reflink flag exchange whenever
-> XFS_EXCHMAPS_INO1_WRITTEN is requested.  The contents exchange can still
-> proceed; the conservative outcome is that both inodes keep the reflink
-> flag.  The regular reflink flag cleanup path can drop the extra flag
-> later once the inode no longer has shared extents.
-> 
-> Reported-by: Lin Jiapeng(TencentOS Red Team) <jiapenglin@tencent.com>
-> Fixes: 966ceafc7a43 ("xfs: create deferred log items for file mapping exchanges")
-> Signed-off-by: Lin Jiapeng <jiapenglin@tencent.com>
+This series implements a suggestion by Christoph for finishing the conversion
+of iomap to an iterator model. This revives Matthew's previous RFC [1], which
+had the same intention.
 
-Good catch!  Please add:
+Every iomap operation currently drives its iteration through a struct
+iomap_ops, which contains two callbacks, ->iomap_begin() and ->iomap_end().
+iomap_iter() only ever sees these as pointers, so every step of every
+iteration is an indirect call, including on the hottest paths. 
 
-Cc: <stable@vger.kernel.org> # v6.10
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+This series replaces the begin/end pair with a single ->iomap_next() callback
+that finishes the previous mapping (if any) and produces the next one.
+Collapsing to one callback lets a performance-critical caller inline its
+iteration loop and pass its ->iomap_next() function as a compile-time
+constant, where the compiler can devirtualize the callback into a direct and
+inlineable call rather than an indirect one. It also allows future callers
+more flexibility in expressing custom logic in the IO path for driving the
+iteration forward.
 
---D
+This series has no functional changes intended. The patches are broken down as
+follows:
 
-> ---
->  fs/xfs/libxfs/xfs_exchmaps.c | 10 ++++++++++
->  1 file changed, 10 insertions(+)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_exchmaps.c b/fs/xfs/libxfs/xfs_exchmaps.c
-> index dcd0bd0b13b4..3efed37cb98a 100644
-> --- a/fs/xfs/libxfs/xfs_exchmaps.c
-> +++ b/fs/xfs/libxfs/xfs_exchmaps.c
-> @@ -959,6 +959,16 @@ xmi_can_exchange_reflink_flags(
->  {
->  	struct xfs_mount		*mp = req->ip1->i_mount;
->  
-> +	/*
-> +	 * The INO1_WRITTEN optimization can skip exchanging hole and
-> +	 * unwritten mappings, which means we cannot guarantee that all
-> +	 * shared extents actually moved to the other file.  Clearing the
-> +	 * reflink flag of an inode that still holds shared extents breaks
-> +	 * the CoW write path, so refuse to exchange the flags in that case.
-> +	 */
-> +	if (req->flags & XFS_EXCHMAPS_INO1_WRITTEN)
-> +		return false;
-> +
->  	if (hweight32(reflink_state) != 1)
->  		return false;
->  	if (req->startoff1 != 0 || req->startoff2 != 0)
-> -- 
-> 2.50.1 (Apple Git-155)
-> 
-> 
+1) Patch 1: refactors existing iomap_iter() logic into an iomap_iter_next()
+function. Sets up DEFINE_IOMAP_ITER_NEXT/DEFINE_IOMAP_ITER_NEXT_END macro.
+
+2) Patch 2 and 3: Christoph's patches for decoupling simple direct i/o reads
+from iomap_dio_rw and improvement for using GFP_NOWAIT for non-blocking iocbs
+[2]
+
+3) Patch 4: Adds ->iomap_next() callback as an iomap op
+
+4) Patches 5 to 18: converts each filesystem to ->iomap_next() model
+
+5) Patch 19: Removes the legacy ->iomap_begin()/->iomap_end() path
+
+6) Patch 20: At this point, struct iomap_ops only has one item in it, the
+->iomap_next() callback. Gets rid of struct iomap_ops and passes
+iomap_iter_next_fn directly.
+
+7) Patch 21: Updates the iomap documentation to match.
+
+This series is submitted against the vfs tree on top of the vfs-7.3.iomap
+branch (head commit f166f2d0a0ae "Merge patch series "iomap/fuse: add helper
+to keep..."). The changes can also be found in this github link [3]. This
+series was run through an ai review system for additional sanity-checking.
+
+As discussed in v2 about the merge logistics [4], the plan is for patches 1 to
+18 to be merged in the v7.3-rc1 cycle and for patches 19 to 21 to be merged
+after v7.3-rc1 has been tagged, in order to minimize disruption to filesystems
+that are currently landing iomap conversions during the 7.3 merge window.
+Patches 19 to 21 are included in this series for upstream review, so that they
+can be approved / all ready to go when the 7.3 merge window closes.
+
+Thanks,
+Joanne
+
+[1] https://lore.kernel.org/linux-fsdevel/20200728173216.7184-1-willy@infradead.org/T/#u
+[2] https://lore.kernel.org/linux-fsdevel/20260723050201.3381045-1-hch@lst.de/
+[3] https://github.com/joannekoong/linux/tree/iomap_iter_next_v4
+[4] https://lore.kernel.org/linux-fsdevel/20260703-nachrangig-gegeben-befestigen-8219a53648c7@brauner/ 
+
+Changelog
+---------
+v3: https://lore.kernel.org/linux-fsdevel/20260720210202.1163861-1-joannelkoong@gmail.com/
+v3 -> v4:
+* Fold in Christoph's "decouple simple direct I/O reads from iomap_dio_rw v2"
+  series and drop v3's simple dio patch/changes
+* Add reviewed-bys
+
+v2: https://lore.kernel.org/linux-fsdevel/20260701000949.1666714-1-joannelkoong@gmail.com/
+v2 -> v3:
+* Rename iomap_next_fn to iomap_iter_next_fn and iomap_process() to
+  iomap_iter_next() (Darrick)
+* Add integration with dio simple path, add Fengnan's patch
+* Reconstruct patch that adds iomap_iter_next() logic as a refactoring of
+  existing code (Christoph)
+* Add DEFINE_IOMAP_ITER_NEXT{_END} macro, which nicely simplifies things
+  (Christoph)
+* Make documentation wording changes and a rename from dops -> next (Darrick)
+* Update tracepoint in patch 19 to reflect taking iomap_iter_next_fn instead
+  of ops. iomap tracepoints are explicitly called out as non-stable ABI so I
+  kept Christoph's reviewed-by for this, but if that should be revoked, please
+  let me know
+* Add reviewed-bys
+
+v1: https://lore.kernel.org/linux-fsdevel/20260625024723.1611000-1-joannelkoong@gmail.com/
+v1 -> v2:
+* Implement conversion for all callers
+
+Christoph Hellwig (2):
+  iomap: decouple simple direct I/O reads from iomap_dio_rw
+  iomap: use GFP_NOWAIT when application for iomap_dio_simple
+    allocations
+
+Joanne Koong (19):
+  iomap: split iomap_iter() logic into iomap_iter_next()
+  iomap: add ->iomap_next()
+  xfs: convert iomap ops to ->iomap_next()
+  btrfs: convert iomap ops to ->iomap_next()
+  ntfs3: convert iomap ops to ->iomap_next()
+  ntfs: convert iomap ops to ->iomap_next()
+  ext4: convert iomap ops to ->iomap_next()
+  erofs: convert iomap ops to ->iomap_next()
+  zonefs: convert iomap ops to ->iomap_next()
+  ext2: convert iomap ops to ->iomap_next()
+  block: convert iomap ops to ->iomap_next()
+  f2fs: convert iomap ops to ->iomap_next()
+  gfs2: convert iomap ops to ->iomap_next()
+  hpfs: convert iomap ops to ->iomap_next()
+  fuse: convert iomap ops to ->iomap_next()
+  exfat: convert iomap ops to ->iomap_next()
+  iomap: remove ->iomap_begin()/->iomap_end() legacy path
+  iomap: pass iomap_iter_next_fn directly instead of struct iomap_ops
+  Documentation: iomap: update docs to reflect iomap_iter_next model
+
+ Documentation/filesystems/iomap/design.rst    | 140 ++++++++---
+ .../filesystems/iomap/operations.rst          |  68 +++---
+ Documentation/filesystems/iomap/porting.rst   |  16 +-
+ block/fops.c                                  |  10 +-
+ fs/btrfs/direct-io.c                          |  10 +-
+ fs/dax.c                                      |  48 ++--
+ fs/erofs/data.c                               |  30 ++-
+ fs/erofs/internal.h                           |   3 +-
+ fs/erofs/zmap.c                               |   4 +-
+ fs/exfat/file.c                               |  18 +-
+ fs/exfat/inode.c                              |   6 +-
+ fs/exfat/iomap.c                              |  12 +-
+ fs/exfat/iomap.h                              |   6 +-
+ fs/ext2/ext2.h                                |   3 +-
+ fs/ext2/file.c                                |   4 +-
+ fs/ext2/inode.c                               |   7 +-
+ fs/ext4/ext4.h                                |   9 +-
+ fs/ext4/extents.c                             |   8 +-
+ fs/ext4/file.c                                |  16 +-
+ fs/ext4/inode.c                               |  16 +-
+ fs/f2fs/data.c                                |   4 +-
+ fs/f2fs/f2fs.h                                |   3 +-
+ fs/f2fs/file.c                                |   4 +-
+ fs/fuse/dax.c                                 |  12 +-
+ fs/fuse/file.c                                |  10 +-
+ fs/fuse/virtio_fs.c                           |   3 +-
+ fs/gfs2/aops.c                                |   6 +-
+ fs/gfs2/bmap.c                                |   7 +-
+ fs/gfs2/bmap.h                                |   3 +-
+ fs/gfs2/file.c                                |   6 +-
+ fs/gfs2/inode.c                               |   6 +-
+ fs/hpfs/file.c                                |   6 +-
+ fs/internal.h                                 |   1 -
+ fs/iomap/buffered-io.c                        |  40 ++--
+ fs/iomap/direct-io.c                          | 219 +++++------------
+ fs/iomap/fiemap.c                             |   8 +-
+ fs/iomap/iter.c                               | 122 +++++-----
+ fs/iomap/seek.c                               |   8 +-
+ fs/iomap/swapfile.c                           |   4 +-
+ fs/iomap/trace.h                              |  12 +-
+ fs/ntfs/aops.c                                |   6 +-
+ fs/ntfs/file.c                                |  24 +-
+ fs/ntfs/inode.c                               |   2 +-
+ fs/ntfs/iomap.c                               |  34 +--
+ fs/ntfs/iomap.h                               |  15 +-
+ fs/ntfs3/file.c                               |  16 +-
+ fs/ntfs3/inode.c                              |  11 +-
+ fs/ntfs3/ntfs_fs.h                            |   3 +-
+ fs/remap_range.c                              |   6 +-
+ fs/xfs/xfs_aops.c                             |   8 +-
+ fs/xfs/xfs_file.c                             |  58 ++---
+ fs/xfs/xfs_iomap.c                            |  50 ++--
+ fs/xfs/xfs_iomap.h                            |  28 ++-
+ fs/xfs/xfs_iops.c                             |   4 +-
+ fs/xfs/xfs_reflink.c                          |   6 +-
+ fs/zonefs/file.c                              |  23 +-
+ include/linux/dax.h                           |  18 +-
+ include/linux/fs.h                            |   7 +-
+ include/linux/iomap.h                         | 223 ++++++++++++++----
+ 59 files changed, 772 insertions(+), 688 deletions(-)
+
+-- 
+2.52.0
+
