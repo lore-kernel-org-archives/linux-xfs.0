@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B332D31F9BC;
-	Mon, 27 Jul 2026 05:25:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71040233723;
+	Mon, 27 Jul 2026 05:25:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785129905; cv=none; b=jq86k2geyfRedbB2ljjXgrnx/AKLDPEDwuFd5jINmX9NvNeuy9q9fkR8b/AZdRJTbzWZxGRgsukNDZW+STNsXwsl6LTtzDL1Yq4rizhZIauhN/6umcmklhJuOmqHNSkX+dzBjURhdJxoCg8cejwtUMUnr1/R4lXHcNEeIKDqKIc=
+	t=1785129921; cv=none; b=WNJlmPHlZhwtp9D0PZpcYt085G9QXLSoaYoA/YlO6lHwVD8cYnjFOJA5/qsKnknNh4n5B8X/U0KMP1wK/R0iojel3fnA5dReh9Cbd6mDpMLKbmJUrugnVIuzlR2sKctah2E2n4JtDxt/aNQEMEz0PwXxJmcqpR1qg9GEheBaEx0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785129905; c=relaxed/simple;
-	bh=AKRET1zDfCN91HEJR0fO7h2j+zTKs6/PvJUl5+NtJKE=;
+	s=arc-20240116; t=1785129921; c=relaxed/simple;
+	bh=+pnD+f+C85MEapbwXCo1cNj38dZv5Wqg7X7teK33KAM=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=uLfKh+EbkFyhX+KZYDX0p5nG1SB0qs8B0Xz39J593UgOwo5i4TlYdydFZ7xGqWV44WFddvk+tVWJxEntt6CGMkGyL7MwXVwXNJRx0MpuETL5SYp71BJ0YLbuzVc8B/N1NTtmCI8035qNG/4+WXfqP1gjw6HInjTjd2zB0+aa9so=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OsOkS6RM; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=g/2O9w15QknH3rRgxo9j5MDhJhTeXPG29UZj6CT5PqNRHnaFQQMH/wKysyFzmGelzKdxf7F9SVLWfoLyTkuaGbJlp9QfocJhC1Kw36RAmq3XgtFoNicqRBnXZfHoWlRPrfrRS/ySnkt0C1rvUqWkUZiegsM6fQC7XS3TwVglaZ4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fRpfI4Xg; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OsOkS6RM"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 8BA4C1F000E9;
-	Mon, 27 Jul 2026 05:25:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fRpfI4Xg"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 190A71F000E9;
+	Mon, 27 Jul 2026 05:25:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785129904;
-	bh=Uim7n0QwjvCuqqk7fuOwMH+KWxxilmdxHdHWLeWeBqE=;
+	s=k20260515; t=1785129920;
+	bh=OZkVlxGUu4t6bjfBrWtf5EV62GCWRr3mJRKjC8E755s=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=OsOkS6RMzkpEAHaaH6IyF3P1GuY6RePjreRs3MkzboIA0QQdljr+SG5jGExN/82cL
-	 vrE50qhbAtW2F3pmqHeOQ4+ea8Jj+gpCkQ9O2PmAy7vFcpbQjX4ELOzBaWMCoHvkwR
-	 a7RTrl4D1BakarmQKQOMO1zGw6CMK9a9Nc4OfdbVdL9O8OXY8dy1i6a0Se+McNuFXe
-	 6lQGIAMqHFxRKxid0ODLa0GruZoshJf8rADCPHtvrE9QT4XjXPNrPaBxb3AaZBuUAf
-	 /6dVN1Mpo3/aF4aVvrEWFeyZSIQ3xGBBPfF4UsNWfimEadvBE0fOd5MivFBY0E4liy
-	 VaZC0FrA0NpMQ==
-Date: Sun, 26 Jul 2026 22:25:04 -0700
-Subject: [PATCH 03/10] xfs: don't walk off the end of a null sc->sa.agi_bp in
- AGI repair
+	b=fRpfI4Xg/Qj7/qoVvVRFevaVseclNV2LgQ4SpjpbySvcPo3VGG+GVc1KqcwPuSq3E
+	 M/HilZPQPtpaexEMi4lQHBCb3EVrYI1dGERLcVI+wCJEYW9CtDnvTR0U1ToilQNyFS
+	 iXpx96aAGK6VoVf6pufoKTbZbDNwciFteemUsUUv+6QzQLXvFfYqGfx5dTc/vXmCVC
+	 9xmKlew133e45p6eQmwlAzXo1MjvqWayD2v3L1KN8Rw53JTIttpK8cRWrFouGhvF3g
+	 6eqQlghRQAIXQx80guveCqKiEQAsfz5znJcEy3FN3/ysdbqwoo6Ql4Cg1jltt0o3Z4
+	 kZ+hdm/zKvBuQ==
+Date: Sun, 26 Jul 2026 22:25:19 -0700
+Subject: [PATCH 04/10] xfs: load next_agino from the correct xfarray in
+ xrep_iunlink_relink_prev
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org, hch@lst.de
 Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <178512389660.1495075.9090296623201887316.stgit@frogsfrogsfrogs>
+Message-ID: <178512389681.1495075.6487399026686955990.stgit@frogsfrogsfrogs>
 In-Reply-To: <178512389537.1495075.1621818931849629575.stgit@frogsfrogsfrogs>
 References: <178512389537.1495075.1621818931849629575.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,11 +46,10 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-LOLLM noticed a longstanding bug where xrep_iunlink_walk_ondisk_bucket
-tries to walk ragi->sc->sa.agi_bp to rebuild the unlinked inode lists.
-Unfortunately, it's possible for agi_bp to be null if the buffer
-verifier fails, so we have to use ragi->agi_bp (which skips verifier
-checks) instead.
+LOLLM notices that xrep_iunlink_relink_prev has the comment "set the
+forward pointer..." but then loads the value from the xfarray that
+stores pointers to the previous inode in the unlinked list.  That's
+wrong, so fix the variable access.
 
 Cc: <stable@vger.kernel.org> # v6.10
 Fixes: ab97f4b1c03075 ("xfs: repair AGI unlinked inode bucket lists")
@@ -63,16 +62,16 @@ Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 
 diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
-index 13074d5e319cc0..39468b8fa9863d 100644
+index 39468b8fa9863d..5204eab09c6450 100644
 --- a/fs/xfs/scrub/agheader_repair.c
 +++ b/fs/xfs/scrub/agheader_repair.c
-@@ -1082,7 +1082,7 @@ xrep_iunlink_walk_ondisk_bucket(
- {
- 	struct xagino_bitmap	seen;
- 	struct xfs_scrub	*sc = ragi->sc;
--	struct xfs_agi		*agi = sc->sa.agi_bp->b_addr;
-+	struct xfs_agi		*agi = ragi->agi_bp->b_addr;
- 	xfs_agino_t		prev_agino = NULLAGINO;
- 	xfs_agino_t		next_agino;
- 	int			error = 0;
+@@ -1619,7 +1619,7 @@ xrep_iunlink_relink_prev(
+ 		want_rele = true;
+ 
+ 		/* Set the forward pointer since this just came off disk. */
+-		error = xfarray_load(ragi->iunlink_prev, agino, &next_agino);
++		error = xfarray_load(ragi->iunlink_next, agino, &next_agino);
+ 		if (error)
+ 			goto out_rele;
+ 
 
