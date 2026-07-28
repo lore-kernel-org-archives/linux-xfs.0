@@ -1,51 +1,42 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0A2F3F4831;
-	Tue, 28 Jul 2026 07:43:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B98B3B14C0
+	for <linux-xfs@vger.kernel.org>; Tue, 28 Jul 2026 08:04:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785224636; cv=none; b=RIUvZ6tdHLgse/n0SbT8Ow8VFY7K50ZWwObDukv2E4ojX/9NGePmSKsb+5B4RJhn6KdqsNQeTVugpdkmaOhC0fCuSZjWiuoQr/6S9f7uA22xe7KZfU34/sbOk6Y34VolfIAOLNMvMZdMeWqLyXmvSNske3N9Tr8o42Ks9vtJ/PQ=
+	t=1785225885; cv=none; b=BZabVPvBbrZpoKd1BXydS/e7nKwDEx1tB9p3vV1RojTfbvM5tN3cA7KVTzbqQl2POlj+Vp0tRPu70recyzg3NkmvQ2icvihlh6ybpDakdpVRUWfc6ZkQEnI95IvUf9AVrUGRuR1a0X0viv7y6U3Az1JCYYTFtsaAQeNAgxEkFrs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785224636; c=relaxed/simple;
-	bh=QZOs4FGhubnYDPYcPYNY+QPbVq281pORx25gt8fGDzo=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=k3PhUkRuqaELJFiErrDGY6Ont4wFpzkxwPyLmuV0yvo058DdlNLs/YZghMLpRNMZREc8dC3lml3HaGTJ4eyAvgVzmdDWpjBytgpaokuI0kaFHJRLi6fNdWug9R9m6l1A8E0dc0eKggVoSkVcmlOrHJMcdEtga+JiygYlIiTnLB4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: 0fc6195e8a5811f1aa26b74ffac11d73-20260728
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.12,REQID:775ade54-c369-425f-913d-7844ee8015ed,IP:0,U
-	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:0
-X-CID-META: VersionHash:e7bac3a,CLOUDID:f77ff31c170d5fa6fa0ccfdb9dc81a46,BulkI
-	D:nil,BulkQuantity:0,Recheck:0,SF:102|850|865|898,TC:nil,Content:0|15|50,E
-	DM:-3,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA
-	:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 0fc6195e8a5811f1aa26b74ffac11d73-20260728
-X-User: zenghongling@kylinos.cn
-Received: from localhost.localdomain [(10.44.16.150)] by mailgw.kylinos.cn
-	(envelope-from <zenghongling@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 594171554; Tue, 28 Jul 2026 15:43:45 +0800
-From: Hongling Zeng <zenghongling@kylinos.cn>
-To: cem@kernel.org,
-	djwong@kernel.org,
-	leo.lilong@huawei.com,
-	bfoster@redhat.com
-Cc: linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	zhongling0719@126.com,
-	Hongling Zeng <zenghongling@kylinos.cn>,
-	stable@vger.kernel.org
-Subject: [PATCH] xfs: validate attr entry pointer before field access
-Date: Tue, 28 Jul 2026 15:43:40 +0800
-Message-Id: <20260728074340.84166-1-zenghongling@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
+	s=arc-20240116; t=1785225885; c=relaxed/simple;
+	bh=MMWZA20UMM3x6qfSbv6dcvh8XemV3dpgd3fl4VQ3vrk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=F+8xxVg3tfj5wAv1ZZn6TH34N8YeFe/JRGuLMOf9G2TXE0uGV5yihb261G6vRTKhPiRj8GSm2ZaEnP7rRfssmfGdXCMu4GuOXyDbUZuRLGiXMTgyLM63i2gSxcLdIbyRHoVd7uFYYIDlIFfz1hspKfKYq9yWTEBHJxxlCzJqw1Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=j1TtEBQV; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="j1TtEBQV"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=4qBQkI0nJDEHZy7+OrGTXcLAuYxitmJsM4DqM80LGOc=; b=j1TtEBQVYYsHA4mXun4syh1V0m
+	PG76Zbkxs5hZvwx8UZzI5kyrPRNT3x5/dL5d0M4R7+kHO8m4AtOmUQGFuQS2DVNnNJ368cremiHep
+	ksG28mTpRkB25wy0tAlZBj2HYBsbPbDMAVibCoKI7cU8B1KG0piSlzHhlCMxZxC5av/WpZ+6dueE0
+	fFgV6ACMPPPbnO6dvC1iYQFDJSDaTj7CG+J2Eipooaz9XqEPG62p/dkCqz5c6qx5y09IS0TwX6fU5
+	eTkv034SznzXYjmpxBg5fMlYmG0ypiINpgaouMxJhY6wg5KyLESBWH9I53ymh2pY11fQiun9jYU39
+	QCQd4/QA==;
+Received: from 2a02-8389-2301-9f00-b29a-36e9-8c1c-0994.cable.dynamic.v6.surfer.at ([2a02:8389:2301:9f00:b29a:36e9:8c1c:994] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1wocnn-00000004fyx-0Z7k;
+	Tue, 28 Jul 2026 08:04:39 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: cem@kernel.org
+Cc: darrick.wong@oracle.com,
+	linux-xfs@vger.kernel.org
+Subject: [PATCH] xfs: check v5 superblock features early
+Date: Tue, 28 Jul 2026 10:04:35 +0200
+Message-ID: <20260728080435.1777362-1-hch@lst.de>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -53,57 +44,65 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-xfs_attr3_leaf_verify_entry() accesses lentry/rentry fields (namelen,
-valuelen) before checking if the entry pointer itself is within bounds.
-If nameidx is crafted to point near the end of the buffer, these field
-accesses can read out-of-bounds before the bounds check at
-name_end > buf_end is performed.
+When working on a new features that reuses the existing pad in the
+superblock, I noticed that mounting such a file system on an old kernel
+logs a rather confusing warning:
 
-Add explicit bounds checks for entry pointers before accessing their
-fields. Use offsetof() to check that the start of the flexible array
-member (nameval/name) is within bounds, which ensures all preceding
-fields are safe to access.
+    XFS (vdc): Metadir superblock padding fields must be zero.
 
-Fixes: c84760659dcf2 ("xfs: check attribute leaf block structure")
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Hongling Zeng <zenghongling@kylinos.cn>
+This is because we only validate the various feature fields in v5
+superblocks after the common superblock validation helper is called.
+
+Fix this by calling the feature validation first.  To make this more
+obvious, rename xfs_validate_sb_read to xfs_validate_sb_features and only
+call it for v5 file systems.
+
+Fixes: eca383fcd63b ("xfs: refactor superblock verifiers")
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_attr_leaf.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+ fs/xfs/libxfs/xfs_sb.c | 15 +++++++--------
+ 1 file changed, 7 insertions(+), 8 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index 86c5c09a5db4..b6288395f853 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -325,6 +325,13 @@ xfs_attr3_leaf_verify_entry(
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index 47322adb7690..e3fc19440e0f 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -189,15 +189,12 @@ xfs_sb_version_to_features(
+ 	return features;
+ }
+ 
+-/* Check all the superblock fields we care about when reading one in. */
++/* Check for compatible v5 superblock features when reading a superblock */
+ STATIC int
+-xfs_validate_sb_read(
++xfs_validate_sb_features(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_sb		*sbp)
+ {
+-	if (!xfs_sb_is_v5(sbp))
+-		return 0;
+-
+ 	/*
+ 	 * Version 5 superblock feature mask validation. Reject combinations
+ 	 * the kernel cannot support up front before checking anything else.
+@@ -1118,10 +1115,12 @@ xfs_sb_read_verify(
+ 	 * because _verify_common checks the on-disk values.
  	 */
- 	if (ent->flags & XFS_ATTR_LOCAL) {
- 		lentry = xfs_attr3_leaf_name_local(leaf, idx);
-+
-+		/* Validate lentry pointer is within bounds before field access */
-+		if ((char *)lentry >= buf_end)
-+			return __this_address;
-+		if ((char *)lentry + offsetof(struct xfs_attr_leaf_name_local, nameval) > buf_end)
-+			return __this_address;
-+
- 		namesize = xfs_attr_leaf_entsize_local(lentry->namelen,
- 				be16_to_cpu(lentry->valuelen));
- 		name_end = (char *)lentry + namesize;
-@@ -332,6 +339,13 @@ xfs_attr3_leaf_verify_entry(
- 			return __this_address;
- 	} else {
- 		rentry = xfs_attr3_leaf_name_remote(leaf, idx);
-+
-+		/* Validate rentry pointer is within bounds before field access */
-+		if ((char *)rentry >= buf_end)
-+			return __this_address;
-+		if ((char *)rentry + offsetof(struct xfs_attr_leaf_name_remote, name) > buf_end)
-+			return __this_address;
-+
- 		namesize = xfs_attr_leaf_entsize_remote(rentry->namelen);
- 		name_end = (char *)rentry + namesize;
- 		if (rentry->namelen == 0)
+ 	__xfs_sb_from_disk(&sb, dsb, false);
++	if (xfs_sb_is_v5(&sb)) {
++		error = xfs_validate_sb_features(mp, &sb);
++		if (error)
++			goto out_error;
++	}
+ 	error = xfs_validate_sb_common(mp, bp, &sb);
+-	if (error)
+-		goto out_error;
+-	error = xfs_validate_sb_read(mp, &sb);
+ 
+ out_error:
+ 	if (error == -EFSCORRUPTED || error == -EFSBADCRC)
 -- 
-2.25.1
+2.53.0
 
