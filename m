@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3002B456DEC;
-	Tue, 28 Jul 2026 15:11:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FFCB24CEEA;
+	Tue, 28 Jul 2026 15:13:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785251478; cv=none; b=pSudpKVJuaesjrUkiKSHEgeO2HhQ6CL3cHuwWhNQhc+t4tHHtgW/iJge+dkZS8OCaUBOnKQesCWwjkoRTatw7CPov9SvFpjNTYYoUpkvyxLM8EXwB1LaTPRGpR9Zm6Kmey5f9Kv8GbOHBBLpPq6/3BIqdoQumv8bSB2tPNITqmM=
+	t=1785251582; cv=none; b=S8rjsRuazkcSpwBVKYAlhDkeyEN2SboMfgfYZjrExBX5YHZE4E54CZC3FQnHMQ+mXBh+TYf07wb7TN7OhkEtF0iferVfxRKw3/N4M0FtQnuRxjixIt/LlqDPj2Xtk44ibK9NrpYVHDZtaCjEXoa7rO3Q2NiD5cbeTCp9KxuQAqU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785251478; c=relaxed/simple;
-	bh=wjz3HuM1nOW0/tTE8o03gFjrZPApOxtOA+rDa4YttCI=;
+	s=arc-20240116; t=1785251582; c=relaxed/simple;
+	bh=zwjIYYcTirhwra8L75lHSY7XleN1z2x2mYlJTbtPXIo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YDEUWZJKg6FdxjdtX0DbAUONUPo4MxOM/CW1Q2cKiO6ia7iPi5MUuonos32a0Foq2NewSQ91JgCN9CdkT+A2pZDLQjDGhVwATJeakXA2pvXVulKEIh77DCVYo3h6KW8qogwvA4amRACqbjjwA/S5gEEgwRVRN9iJJDXl516fu38=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NT84b8QO; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=cO8S+h94eQ4Q2hBGIAAfz5HtarEA615m9X3vM5zlurTTDCevQckwySJJPNnTOINE3G5Jh8+fUwOgz10SpPx2FxQXAXTvUwk87MHiTM+XqyDrTQDVzhCUPN0FX/auz/TY52lty7xWGXQVWX1HUzoJakjwcwnjcWT95HN3nzcLBAo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KCi2MNjU; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NT84b8QO"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id AB5081F000E9;
-	Tue, 28 Jul 2026 15:11:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KCi2MNjU"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 9BBBE1F00A3D;
+	Tue, 28 Jul 2026 15:13:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785251476;
-	bh=hYNj5zZdX9y9vcOK9E04bgbJiBRa/ibqxz9fbodRO9s=;
+	s=k20260515; t=1785251580;
+	bh=CjzIUeyydDp1FNeB9HEnq1lerUJdpQlmkJB/qONU/pg=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=NT84b8QOCMz0ynh6z0zXB+a/TwHBCYY98Doai4sqjN4AHCsfDd9NW0CXd+1EwDDJb
-	 kLbFc9TPfh77tmM5CWICPko+77RpOpe3++jcUWEABJfzUWE6MzI1VYeYHLm2xuJoMR
-	 rj6ec3XvUfjtAAlIfx3MnrRPkTmg6d/KpkMIjvStX8SvshnWvv0dRuuNEyE79uQ0He
-	 4wff620dBc1IMMB9nurSiRzxZhJu5WI/Zd8KQ+vGHi/lA6ozSb+SbA26a+I9fbBePp
-	 7Fh8CHE32NOi+ClnTTVChks6n/RHg5eQws1/oB/R9gn6acYyeMi0mk2XZNZwuS3Cvh
-	 dkDcclszzkMvg==
-Date: Tue, 28 Jul 2026 08:11:16 -0700
+	b=KCi2MNjUwsjIOzXnonjvbR2c6l0ZB9/pll7XQ+KD7B81A/FiIMSsK8iH7NTBik94r
+	 Ic64bYv8nfjiV0p0rdkkV5dl15VS9S6CTmL71w7mj1Edesr3L7NfkYIRx1l5YYEaAS
+	 1XbXlL/qRYzb1XVdJvU13mMMw7MpbPYamQVqh1h63zh5NlCtSp5TIHtmdo+oibT45u
+	 jmyrEGJB5TyLYii9O/JwgYrtGP3Gz4qn0V4yNflll7KQWLoXnPLaw9MZztH5jd4qeX
+	 Tap6uxX3SaF3lqtLrKSMxoRi0ElA+nd6jXM+z/G5QDPPNrIJlbN53bQzmLNTnaB8+A
+	 oYOZ6juyliI8A==
+Date: Tue, 28 Jul 2026 08:12:59 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Miao Zhao <muel@nova.gal>
-Cc: linux-xfs@vger.kernel.org, cem@kernel.org, bfoster@redhat.com,
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH xfs] xfs: validate remote attr value length in the leaf
- verifier
-Message-ID: <20260728151116.GL2901224@frogsfrogsfrogs>
-References: <20260728062451.1296908-1-muel@nova.gal>
+To: Hongling Zeng <zenghongling@kylinos.cn>
+Cc: cem@kernel.org, leo.lilong@huawei.com, bfoster@redhat.com,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	zhongling0719@126.com, stable@vger.kernel.org
+Subject: Re: [PATCH] xfs: validate attr entry pointer before field access
+Message-ID: <20260728151259.GM2901224@frogsfrogsfrogs>
+References: <20260728074340.84166-1-zenghongling@kylinos.cn>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,80 +43,71 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260728062451.1296908-1-muel@nova.gal>
+In-Reply-To: <20260728074340.84166-1-zenghongling@kylinos.cn>
 
-On Tue, Jul 28, 2026 at 06:24:51AM +0000, Miao Zhao wrote:
-> xfs_attr3_leaf_verify_entry() checks a remote attr entry's namelen and
-> valueblk but never its valuelen. A crafted image can set valuelen to a
-> value with the high bit set; xfs_attr3_leaf_getvalue() then stores it
-> in the signed int args->rmtvaluelen, where it goes negative. The
-> negative length bypasses the -ERANGE size check in xfs_attr_copy_value()
-> because the comparison is signed, and xfs_attr_rmtval_get() then
-> reinterprets it as a huge unsigned value, driving the memcpy loop in
-> xfs_attr_rmtval_copyout() past the end of the getxattr(2) result buffer
-> with image-controlled data (up to ~64KB on v5, where the remote block
-> header verifier caps rm_offset + rm_bytes at XFS_XATTR_SIZE_MAX;
-> unbounded on v4, where remote blocks carry no header at all).
+On Tue, Jul 28, 2026 at 03:43:40PM +0800, Hongling Zeng wrote:
+> xfs_attr3_leaf_verify_entry() accesses lentry/rentry fields (namelen,
+> valuelen) before checking if the entry pointer itself is within bounds.
+> If nameidx is crafted to point near the end of the buffer, these field
+> accesses can read out-of-bounds before the bounds check at
+> name_end > buf_end is performed.
 > 
-> Any unprivileged user with read access to the file can trigger this
-> with getxattr(2) once a crafted image is mounted, e.g. by a privileged
-> auto-mount daemon:
+> Add explicit bounds checks for entry pointers before accessing their
+> fields. Use offsetof() to check that the start of the flexible array
+> member (nameval/name) is within bounds, which ensures all preceding
+> fields are safe to access.
 > 
->  BUG: KASAN: slab-out-of-bounds in xfs_attr_rmtval_copyout
->  Write of size 4040 at addr 0000000061bf4ee0 by task xattr_tool/37
->  CPU: 0 UID: 65534 PID: 37 Comm: xattr_tool Not tainted 7.2.0-rc5 #1
->  Call Trace:
->   memcpy
->   xfs_attr_rmtval_copyout
->   xfs_attr_rmtval_get
->   xfs_attr_copy_value
->   xfs_attr3_leaf_getvalue
->   xfs_attr_node_get
->   xfs_attr_get
->   xfs_xattr_get
->   vfs_getxattr
->   sys_getxattr
-> 
-> The same unchecked valuelen is consumed on the INCOMPLETE sweep path
-> (xfs_attr_inactive.c) to size stale remote blocks, so validate it for
-> all remote entries: reject valuelen larger than XFS_XATTR_SIZE_MAX,
-> and reject a zero valuelen on complete entries (a value is only stored
-> remotely when it is too large for the local format, so zero is never
-> valid there; INCOMPLETE entries legitimately carry a zeroed valuelen
-> until the operation completes).
-> 
-> Fixes: c84760659dcf ("xfs: check attribute leaf block structure")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Miao Zhao <muel@nova.gal>
+> Fixes: c84760659dcf2 ("xfs: check attribute leaf block structure")
+> Cc: <stable@vger.kernel.org>
 
-Isn't this a duplicate of
-https://lore.kernel.org/linux-xfs/20260707190038.3811440-3-qwe.aldo@gmail.com/#t
-?
+Cc: <stable@vger.kernel.org> # v5.5
+
+(for automatic backport)
+
+> Signed-off-by: Hongling Zeng <zenghongling@kylinos.cn>
+
+Looks correct to me;
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
 > ---
->  fs/xfs/libxfs/xfs_attr_leaf.c | 5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
+>  fs/xfs/libxfs/xfs_attr_leaf.c | 14 ++++++++++++++
+>  1 file changed, 14 insertions(+)
 > 
 > diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-> index 86c5c09a5db4..b8ae25be639a 100644
+> index 86c5c09a5db4..b6288395f853 100644
 > --- a/fs/xfs/libxfs/xfs_attr_leaf.c
 > +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-> @@ -336,8 +336,11 @@ xfs_attr3_leaf_verify_entry(
+> @@ -325,6 +325,13 @@ xfs_attr3_leaf_verify_entry(
+>  	 */
+>  	if (ent->flags & XFS_ATTR_LOCAL) {
+>  		lentry = xfs_attr3_leaf_name_local(leaf, idx);
+> +
+> +		/* Validate lentry pointer is within bounds before field access */
+> +		if ((char *)lentry >= buf_end)
+> +			return __this_address;
+> +		if ((char *)lentry + offsetof(struct xfs_attr_leaf_name_local, nameval) > buf_end)
+> +			return __this_address;
+> +
+>  		namesize = xfs_attr_leaf_entsize_local(lentry->namelen,
+>  				be16_to_cpu(lentry->valuelen));
+>  		name_end = (char *)lentry + namesize;
+> @@ -332,6 +339,13 @@ xfs_attr3_leaf_verify_entry(
+>  			return __this_address;
+>  	} else {
+>  		rentry = xfs_attr3_leaf_name_remote(leaf, idx);
+> +
+> +		/* Validate rentry pointer is within bounds before field access */
+> +		if ((char *)rentry >= buf_end)
+> +			return __this_address;
+> +		if ((char *)rentry + offsetof(struct xfs_attr_leaf_name_remote, name) > buf_end)
+> +			return __this_address;
+> +
+>  		namesize = xfs_attr_leaf_entsize_remote(rentry->namelen);
 >  		name_end = (char *)rentry + namesize;
 >  		if (rentry->namelen == 0)
->  			return __this_address;
-> +		if (be32_to_cpu(rentry->valuelen) > XFS_XATTR_SIZE_MAX)
-> +			return __this_address;
->  		if (!(ent->flags & XFS_ATTR_INCOMPLETE) &&
-> -		    rentry->valueblk == 0)
-> +		    (rentry->valueblk == 0 ||
-> +		     be32_to_cpu(rentry->valuelen) == 0))
->  			return __this_address;
->  	}
->  
 > -- 
-> 2.34.1
+> 2.25.1
 > 
 > 
