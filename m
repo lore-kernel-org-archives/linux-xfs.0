@@ -1,40 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FFCB24CEEA;
-	Tue, 28 Jul 2026 15:13:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29141305057
+	for <linux-xfs@vger.kernel.org>; Tue, 28 Jul 2026 15:26:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785251582; cv=none; b=S8rjsRuazkcSpwBVKYAlhDkeyEN2SboMfgfYZjrExBX5YHZE4E54CZC3FQnHMQ+mXBh+TYf07wb7TN7OhkEtF0iferVfxRKw3/N4M0FtQnuRxjixIt/LlqDPj2Xtk44ibK9NrpYVHDZtaCjEXoa7rO3Q2NiD5cbeTCp9KxuQAqU=
+	t=1785252390; cv=none; b=Z6MgMHrubhD0sB56BUP3TFciTkVIedKDNrUMv6GjBxBWorQas71fUnzqkiDN6WBTZPoO4GA/K29x8fRuliXGUUJ2xRiZUBJml6wXs8v+nJ0TXum6ZdYWrpK2NVswCWl7wlDQAZGPa0Fxvhz1QQMxz5vaoQBQzii+VldTvQ/BNJ4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785251582; c=relaxed/simple;
-	bh=zwjIYYcTirhwra8L75lHSY7XleN1z2x2mYlJTbtPXIo=;
+	s=arc-20240116; t=1785252390; c=relaxed/simple;
+	bh=3QnQkzJi9IHtjQYn3ERIT2SpPS0WySmIF48zszwjn5A=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cO8S+h94eQ4Q2hBGIAAfz5HtarEA615m9X3vM5zlurTTDCevQckwySJJPNnTOINE3G5Jh8+fUwOgz10SpPx2FxQXAXTvUwk87MHiTM+XqyDrTQDVzhCUPN0FX/auz/TY52lty7xWGXQVWX1HUzoJakjwcwnjcWT95HN3nzcLBAo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KCi2MNjU; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=Tnf3CouacFbbj6IocLgRjn8GH5JNTIgquCw5hqozBzEHC3GiE22KLU5+XhiiZExybp40Wr9IF2IFCQXGH5qsr7bQwABRyh/xPD4KPAb0Chy/54GOl5gjExwKHHDeuYFmDzKhv1cZwEEdsKS4M6lcfLz5el17T90L3rOJt0kr2nQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T6RFz7P5; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KCi2MNjU"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 9BBBE1F00A3D;
-	Tue, 28 Jul 2026 15:13:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T6RFz7P5"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id ECF831F000E9;
+	Tue, 28 Jul 2026 15:26:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785251580;
-	bh=CjzIUeyydDp1FNeB9HEnq1lerUJdpQlmkJB/qONU/pg=;
+	s=k20260515; t=1785252389;
+	bh=dqAuMKVFOOQYLT7qXodg9kjhfob7tf3gC5/+fdsLVL8=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=KCi2MNjUwsjIOzXnonjvbR2c6l0ZB9/pll7XQ+KD7B81A/FiIMSsK8iH7NTBik94r
-	 Ic64bYv8nfjiV0p0rdkkV5dl15VS9S6CTmL71w7mj1Edesr3L7NfkYIRx1l5YYEaAS
-	 1XbXlL/qRYzb1XVdJvU13mMMw7MpbPYamQVqh1h63zh5NlCtSp5TIHtmdo+oibT45u
-	 jmyrEGJB5TyLYii9O/JwgYrtGP3Gz4qn0V4yNflll7KQWLoXnPLaw9MZztH5jd4qeX
-	 Tap6uxX3SaF3lqtLrKSMxoRi0ElA+nd6jXM+z/G5QDPPNrIJlbN53bQzmLNTnaB8+A
-	 oYOZ6juyliI8A==
-Date: Tue, 28 Jul 2026 08:12:59 -0700
+	b=T6RFz7P5S7EDkIs51FPQFZW/+UMa5LGJO6cUG/tcdK5B34ibLWOpjL//G6R3CqGB9
+	 32vBsEhxkB3Zobt4Es994sYBC5urw38UT6lsPQZzV9Z2Cg99oLNtQvgg81nXmTsLu8
+	 003H/Qz1JHWYy/d5ET9nAEuHeV+I4QQ/L8JEMQkZGXFXuHMCqwx1zsqGeAuQKlyK+a
+	 hCWgVnp4j41+LVlsRUdXvvuGkw6NQ2rXFnwKB0sEADQ0rOAzgWbfWZB4qlhlZl5ddV
+	 153tYb/4pJoe4nULTeWnBvqticjAe2pRKUUhCKbGY4R7+oW0KLDLGo9Uz59c+5Wg4t
+	 w3Q9//ByZlMbQ==
+Date: Tue, 28 Jul 2026 08:26:28 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Hongling Zeng <zenghongling@kylinos.cn>
-Cc: cem@kernel.org, leo.lilong@huawei.com, bfoster@redhat.com,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	zhongling0719@126.com, stable@vger.kernel.org
-Subject: Re: [PATCH] xfs: validate attr entry pointer before field access
-Message-ID: <20260728151259.GM2901224@frogsfrogsfrogs>
-References: <20260728074340.84166-1-zenghongling@kylinos.cn>
+To: Christoph Hellwig <hch@lst.de>
+Cc: cem@kernel.org, darrick.wong@oracle.com, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: check v5 superblock features early
+Message-ID: <20260728152628.GN2901224@frogsfrogsfrogs>
+References: <20260728080435.1777362-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,71 +41,88 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260728074340.84166-1-zenghongling@kylinos.cn>
+In-Reply-To: <20260728080435.1777362-1-hch@lst.de>
 
-On Tue, Jul 28, 2026 at 03:43:40PM +0800, Hongling Zeng wrote:
-> xfs_attr3_leaf_verify_entry() accesses lentry/rentry fields (namelen,
-> valuelen) before checking if the entry pointer itself is within bounds.
-> If nameidx is crafted to point near the end of the buffer, these field
-> accesses can read out-of-bounds before the bounds check at
-> name_end > buf_end is performed.
+On Tue, Jul 28, 2026 at 10:04:35AM +0200, Christoph Hellwig wrote:
+> When working on a new features that reuses the existing pad in the
+> superblock, I noticed that mounting such a file system on an old kernel
+> logs a rather confusing warning:
 > 
-> Add explicit bounds checks for entry pointers before accessing their
-> fields. Use offsetof() to check that the start of the flexible array
-> member (nameval/name) is within bounds, which ensures all preceding
-> fields are safe to access.
+>     XFS (vdc): Metadir superblock padding fields must be zero.
 > 
-> Fixes: c84760659dcf2 ("xfs: check attribute leaf block structure")
-> Cc: <stable@vger.kernel.org>
+> This is because we only validate the various feature fields in v5
+> superblocks after the common superblock validation helper is called.
+> 
+> Fix this by calling the feature validation first.  To make this more
+> obvious, rename xfs_validate_sb_read to xfs_validate_sb_features and only
+> call it for v5 file systems.
 
-Cc: <stable@vger.kernel.org> # v5.5
+Shouldn't it be called xfs_validate_v5_sb_features then?
 
-(for automatic backport)
+Oh.  There's already a xfs_sb_validate_v5_features function that checks
+that the v4 feature bits are set correctly for a v5 filesystem, and it
+would be confusing to have both.  Could we move the code in
+xfs_validate_sb_read into xfs_sb_validate_v5_features instead?
 
-> Signed-off-by: Hongling Zeng <zenghongling@kylinos.cn>
+If you do that, then xfs_sb_good_version will validate the feature bit
+recognition, which it doesn't do now.  I'm not sure what weird side
+effects might result from that though.
 
-Looks correct to me;
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+> Fixes: eca383fcd63b ("xfs: refactor superblock verifiers")
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Cc: <stable@vger.kernel.org> # v4.19
+
+> ---
+>  fs/xfs/libxfs/xfs_sb.c | 15 +++++++--------
+>  1 file changed, 7 insertions(+), 8 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+> index 47322adb7690..e3fc19440e0f 100644
+> --- a/fs/xfs/libxfs/xfs_sb.c
+> +++ b/fs/xfs/libxfs/xfs_sb.c
+> @@ -189,15 +189,12 @@ xfs_sb_version_to_features(
+>  	return features;
+>  }
+>  
+> -/* Check all the superblock fields we care about when reading one in. */
+> +/* Check for compatible v5 superblock features when reading a superblock */
+>  STATIC int
+> -xfs_validate_sb_read(
+> +xfs_validate_sb_features(
+>  	struct xfs_mount	*mp,
+>  	struct xfs_sb		*sbp)
+>  {
+> -	if (!xfs_sb_is_v5(sbp))
+> -		return 0;
+> -
+>  	/*
+>  	 * Version 5 superblock feature mask validation. Reject combinations
+>  	 * the kernel cannot support up front before checking anything else.
+> @@ -1118,10 +1115,12 @@ xfs_sb_read_verify(
+>  	 * because _verify_common checks the on-disk values.
+>  	 */
+>  	__xfs_sb_from_disk(&sb, dsb, false);
+> +	if (xfs_sb_is_v5(&sb)) {
+> +		error = xfs_validate_sb_features(mp, &sb);
+
+By putting xfs_validate_sb_features ahead of xfs_validate_sb_common, I
+think we now validate the V5 feature bits (if the V5 versionnum is set)
+before checking the superblock magic.  Right?
 
 --D
 
-> ---
->  fs/xfs/libxfs/xfs_attr_leaf.c | 14 ++++++++++++++
->  1 file changed, 14 insertions(+)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-> index 86c5c09a5db4..b6288395f853 100644
-> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
-> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-> @@ -325,6 +325,13 @@ xfs_attr3_leaf_verify_entry(
->  	 */
->  	if (ent->flags & XFS_ATTR_LOCAL) {
->  		lentry = xfs_attr3_leaf_name_local(leaf, idx);
-> +
-> +		/* Validate lentry pointer is within bounds before field access */
-> +		if ((char *)lentry >= buf_end)
-> +			return __this_address;
-> +		if ((char *)lentry + offsetof(struct xfs_attr_leaf_name_local, nameval) > buf_end)
-> +			return __this_address;
-> +
->  		namesize = xfs_attr_leaf_entsize_local(lentry->namelen,
->  				be16_to_cpu(lentry->valuelen));
->  		name_end = (char *)lentry + namesize;
-> @@ -332,6 +339,13 @@ xfs_attr3_leaf_verify_entry(
->  			return __this_address;
->  	} else {
->  		rentry = xfs_attr3_leaf_name_remote(leaf, idx);
-> +
-> +		/* Validate rentry pointer is within bounds before field access */
-> +		if ((char *)rentry >= buf_end)
-> +			return __this_address;
-> +		if ((char *)rentry + offsetof(struct xfs_attr_leaf_name_remote, name) > buf_end)
-> +			return __this_address;
-> +
->  		namesize = xfs_attr_leaf_entsize_remote(rentry->namelen);
->  		name_end = (char *)rentry + namesize;
->  		if (rentry->namelen == 0)
+> +		if (error)
+> +			goto out_error;
+> +	}
+>  	error = xfs_validate_sb_common(mp, bp, &sb);
+> -	if (error)
+> -		goto out_error;
+> -	error = xfs_validate_sb_read(mp, &sb);
+>  
+>  out_error:
+>  	if (error == -EFSCORRUPTED || error == -EFSBADCRC)
 > -- 
-> 2.25.1
+> 2.53.0
 > 
 > 
