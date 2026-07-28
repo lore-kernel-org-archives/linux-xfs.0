@@ -1,97 +1,153 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6645E3EDAAE
-	for <linux-xfs@vger.kernel.org>; Tue, 28 Jul 2026 08:12:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D445F41F34B;
+	Tue, 28 Jul 2026 10:29:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785226359; cv=none; b=g/LpNcl2zr+QT0rZCDCsBaUPfYfrYEOu+EM+y4GAmXWico0ZdUmYiZ7mi9CsxEqNrORcBo+7elpUxOtKygp4mB3C9QjiFftgtCNCBksKr4mSNg/HYA76ZKoIh5RMoEnBvkSI3+EABZ7sIq7LrVxd8F0IP63OL+BRGPqKG3IRysY=
+	t=1785234580; cv=none; b=p0Pi9VRKMlODc5lCG/wacMctgTDggFWUYRe3OFBFXXxiIrZjioxn9qD0ObxMWk1TbuRZYnsvhisiiiLaxHvZDkEBMyTmrYncLn+MkB0H8yeNeg8hdOxTLC+2fnpOF+p0fw7oq7btDFUjqrB5DIEEehOqk6TQduAxd6u9B4u+NqU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785226359; c=relaxed/simple;
-	bh=FPiNZH9g3Sex+eGf1q5wgkM1X7zvepd84olJ8JbLfcY=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=DKS76aGMrpes2lJehp95IkfNfokB5GKoa4RtRt3wXIXNiKKwRMctes8YSfHJk+xyJ8oca4lBkw1GTPJpYsZQpcidJBA8YgVEmYMDA+xTW5YaUz5Chhy0hyv0w3K1MFJDTilr96KC19dcNWjFSL/uXKtD52W6G68SvSNU6lG3byM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=XWskuI4h; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1785234580; c=relaxed/simple;
+	bh=dWmkL5VtX8QU+x/aXoMMfGWLozW4cDRaSW0/aYnvUcM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=aBLQ2QRoLBPaUKYMt/mhj31zGBOXbysMw+g6hS33fA7L3ZS8cTfUoNWJqwuZmHwB4ESp01V9DihwH0KgLs3Q8i0cfiQ1iQVOdC4lxjOydqFC/dJdEBJYEjBKFa188mbv3tN1UXsI62KD8WMvaprXEKdJLr85jYqbmZzyRILrWi8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MKiYCYTD; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="XWskuI4h"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=b05IB2zOHVxnXERwXEe/1UjxKNLAaaZj4OF50Q1zjGU=; b=XWskuI4hah9XCoYUPvWnmP1TQN
-	WqVn8f8ki1UUKa7BQuzYgmOuTYhvB3Jc+rGmEle7n5qxu5hMCSdnp0wZtRW055zo8Ev9XN1KZiM/r
-	Ykyxdgs2CchtJiL8OsR6P8TvSkFxcSsBEXkFMIulb9gy97csoMMLbxz6hsu5GD4bgkpWyFtIbFaA3
-	U9AcglmpuFtnEo3Wb/c6uZ6q2tF/CbexKBN1e57yh18UpjOAEMnig0qyo35ZhPtcirGldQyzSfPFy
-	zC9KZs+Umu3HiDwkqsxhFwreyYwYGx9gyddng0Oxo9FJLrfMRoIVwBthMG27aOewdkH3Df17BHnEx
-	dtdO+DGg==;
-Received: from 2a02-8389-2301-9f00-b29a-36e9-8c1c-0994.cable.dynamic.v6.surfer.at ([2a02:8389:2301:9f00:b29a:36e9:8c1c:994] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wocvV-00000004hBr-23tr;
-	Tue, 28 Jul 2026 08:12:37 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>,
-	Brian Foster <bfoster@redhat.com>,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH 12/12] xfs: add lockless xfs_buf_readahead_map fast path
-Date: Tue, 28 Jul 2026 10:11:20 +0200
-Message-ID: <20260728081152.1778841-13-hch@lst.de>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260728081152.1778841-1-hch@lst.de>
-References: <20260728081152.1778841-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MKiYCYTD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B9DAC1F000E9;
+	Tue, 28 Jul 2026 10:29:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785234579;
+	bh=gPjsV3DS6/bJU8RKMga/6Yuq2Wnmr/HvPwTaTgrLhAU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=MKiYCYTDn8bFIyiSidM+BjqntqF0pkSfZN5egcI9lSwPzipkLwYXl8vriHMGNyUkJ
+	 UM9qGlcsy0WQQaKE4Oy3vg2wD/hJ5qDcVDX3JM8V2MHf+erLMApGGuu+YNOngHHIKx
+	 QqLyL4ECIhULV//cwFYIo1leLgx523Pu7nomiM9GYVk5poKRAi/7AhQSGxJM9Vbrik
+	 zxNBGCStWWLiw26OvfqxNzRBdcJs/5fZ4Bjv5aOAKspiHGAs7FfEi0nJgKTJp5iVI1
+	 Ky/luUwwvEj1dH3hasTNqmOMqSHuFTjBxrjyxRYlpnoTFbTSsMxyFQd6SY9KXPJDup
+	 VOWSIxAlKxb7Q==
+Date: Tue, 28 Jul 2026 18:29:34 +0800
+From: Zorro Lang <zlang@kernel.org>
+To: Donald Douwsma <ddouwsma@redhat.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH v2] xfs: test xfsdump subtree restores
+Message-ID: <amiEFW7iEi6kpfp2@zlang-mailbox>
+Mail-Followup-To: Donald Douwsma <ddouwsma@redhat.com>, 
+	linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+References: <20260723062617.424905-1-ddouwsma@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260723062617.424905-1-ddouwsma@redhat.com>
 
-Readahead currently always locks the buffer, which can cause contention
-with actual users of the buffer.  Add a fast path without taking any
-locks if the buffer is uptodate and not stale.
+On Thu, Jul 23, 2026 at 04:26:17PM +1000, Donald Douwsma wrote:
+> Regression test for cumulative restores where a directory has been
+> renamed outside of the subtree being restored triggering the assert:
+> 
+>   xfsrestore: tree.c:1421: noref_elim_recurse: Assertion 'isrealpr' failed
+> 
+> Signed-off-by: Donald Douwsma <ddouwsma@redhat.com>
+> ---
+> Changes since v1
+> - Fix use of _do, including label quoting
+> - Update test output
+> - Add tests for additional edge cases
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
----
- fs/xfs/xfs_buf.c | 16 +++++++++++++---
- 1 file changed, 13 insertions(+), 3 deletions(-)
+Hi Donald, This version is good to me now.
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index bc23fa59680e..9d8a8b395a23 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -775,13 +775,23 @@ xfs_buf_readahead_map(
- 
- 	if (__xfs_find_get_buf(target, map, nmaps, flags, &bp))
- 		return;
--	if (xfs_buf_find_lock(bp, XBF_TRYLOCK))
-+
-+	/*
-+	 * Do a lockless fast path check for a valid uptodate buffer and avoid
-+	 * locking entirely in this case.
-+	 */
-+	if ((READ_ONCE(bp->b_flags) & (XBF_DONE | XBF_STALE)) == XBF_DONE)
- 		goto out_rele;
- 
--	trace_xfs_buf_readahead(bp, 0, _RET_IP_);
--	if (bp->b_flags & XBF_DONE)
-+	/* Otherwise lock the buffer to stabilize the state */
-+	if (!xfs_buf_trylock(bp))
-+		goto out_rele;
-+
-+	/* Let the actual reader deal with stale buffers. */
-+	if (bp->b_flags & (XBF_STALE | XBF_DONE))
- 		goto out_unlock;
- 
-+	trace_xfs_buf_readahead(bp, 0, _RET_IP_);
- 	XFS_STATS_INC(target->bt_mount, xb_get_read);
- 	bp->b_ops = ops;
- 	xfs_buf_clear_flags(bp, XBF_WRITE | XBF_DONE);
--- 
-2.53.0
+Reviewed-by: Zorro Lang <zlang@kernel.org>
 
+> ---
+>  tests/xfs/995     | 58 +++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/995.out |  8 +++++++
+>  2 files changed, 66 insertions(+)
+>  create mode 100755 tests/xfs/995
+>  create mode 100644 tests/xfs/995.out
+> 
+> diff --git a/tests/xfs/995 b/tests/xfs/995
+> new file mode 100755
+> index 000000000..bba0bcd52
+> --- /dev/null
+> +++ b/tests/xfs/995
+> @@ -0,0 +1,58 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2026 Red Hat.  All Rights Reserved.
+> +#
+> +# FS QA Test 995
+> +#
+> +# Regression test for cumulative restores where a directory has been
+> +# renamed outside of the subtree being restored resulting in
+> +#
+> +#   xfsrestore: tree.c:1421: noref_elim_recurse: Assertion 'isrealpr' failed
+> +#
+> +. ./common/preamble
+> +_begin_fstest auto dump
+> +_do_die_on_error="always"
+> +
+> +_fixed_by_git_commit xfsdump dd63de5 \
+> +	"xfsrestore: only process subtrees that are selected"
+> +
+> +# Override the default cleanup function.
+> +_cleanup()
+> +{
+> +	_cleanup_dump
+> +	cd /
+> +	rm -r -f $tmp.*
+> +}
+> +
+> +# Import common functions.
+> +. ./common/dump
+> +
+> +# Modify as appropriate.
+> +_require_scratch
+> +_scratch_mkfs_xfs >>$seqres.full
+> +_scratch_mount
+> +
+> +mkdir -p $SCRATCH_MNT/a/b/c/d/e/f/g
+> +mkdir -p $SCRATCH_MNT/restore_me/B/C/D/E/F/G
+> +
+> +_do "Creating l0 dump" "$XFSDUMP_PROG -L lab_l0 -M test -l0 -f $tmp.dump.l0 $SCRATCH_MNT"
+> +
+> +mv $SCRATCH_MNT/a/b/c $SCRATCH_MNT/1
+> +
+> +_do "Creating l2 dump" "$XFSDUMP_PROG -L lab_l2.0 -M test -l2 -f $tmp.dump.l2.0 $SCRATCH_MNT"
+> +
+> +dir=$(mktemp -d $SCRATCH_MNT/restore_XXX)
+> +_do "Cumulative restore l0" "$XFSRESTORE_PROG -f $tmp.dump.l0 -r $dir"
+> +_do "Cumulative restore l2" "$XFSRESTORE_PROG -f $tmp.dump.l2.0 -r $dir"
+> +
+> +dir=$(mktemp -d $SCRATCH_MNT/restore_XXX)
+> +_do "Cumulative subtree restore l0" "$XFSRESTORE_PROG -f $tmp.dump.l0 -r -s restore_me $dir"
+> +# The next command core dumps prior to xfsdump v3.3.0 when noref_elim_recurse attempts to
+> +# rename directories outside of the subtree when their parent has not been created.
+> +_do "Cumulative subtree restore l2" "$XFSRESTORE_PROG -f $tmp.dump.l2.0 -r $dir"
+> +
+> +dir=$(mktemp -d $SCRATCH_MNT/restore_XXX)
+> +_do "Restore l2 on its own" "$XFSRESTORE_PROG -f $tmp.dump.l0 -r -s restore_me $dir"
+> +
+> +# success, all done
+> +_exit 0
+> diff --git a/tests/xfs/995.out b/tests/xfs/995.out
+> new file mode 100644
+> index 000000000..9a620eb31
+> --- /dev/null
+> +++ b/tests/xfs/995.out
+> @@ -0,0 +1,8 @@
+> +QA output created by 995
+> +Creating l0 dump... done
+> +Creating l2 dump... done
+> +Cumulative restore l0... done
+> +Cumulative restore l2... done
+> +Cumulative subtree restore l0... done
+> +Cumulative subtree restore l2... done
+> +Restore l2 on its own... done
+> -- 
+> 2.52.0
+> 
+> 
