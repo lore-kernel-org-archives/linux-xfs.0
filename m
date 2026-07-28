@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A49E472534;
-	Tue, 28 Jul 2026 14:59:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3002B456DEC;
+	Tue, 28 Jul 2026 15:11:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785250788; cv=none; b=TWrGprXk/jjrMo4AZ8SMpZXCcw6wFnX/rQNuVLmcbeJJla60uR4+Uhd7TUEmC90nT5KZwCW4btjP6T4BgaCJkytt/VHzbjBJIiRI3toyOOnzkcEwGVy6gw86HgTbSa9a6Dyj3hVg4iYP0gEcfn/sGtIE7l5qRyu+YwqPWp+Ez1I=
+	t=1785251478; cv=none; b=pSudpKVJuaesjrUkiKSHEgeO2HhQ6CL3cHuwWhNQhc+t4tHHtgW/iJge+dkZS8OCaUBOnKQesCWwjkoRTatw7CPov9SvFpjNTYYoUpkvyxLM8EXwB1LaTPRGpR9Zm6Kmey5f9Kv8GbOHBBLpPq6/3BIqdoQumv8bSB2tPNITqmM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785250788; c=relaxed/simple;
-	bh=sRk6c4kick86NEt1MUpvlo0Z8uLS7gr1nxZwp8kVqlA=;
+	s=arc-20240116; t=1785251478; c=relaxed/simple;
+	bh=wjz3HuM1nOW0/tTE8o03gFjrZPApOxtOA+rDa4YttCI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=e8mfGu/XNqKTFbbSm5AyeCAaLxqVY3FW/MCU4rL4G+WkZyv/rK7SCHz2Va+ie434LVQLSYHPu2oePHrw20aDB2ldzg8D1upluXFbHfEASFVE3Fsxlr95Z8F6xXLEE6OuSyvjjJvGzPEi1dCxghrVRDVpS0gZAyg38putXMHumfQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aI18/76S; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=YDEUWZJKg6FdxjdtX0DbAUONUPo4MxOM/CW1Q2cKiO6ia7iPi5MUuonos32a0Foq2NewSQ91JgCN9CdkT+A2pZDLQjDGhVwATJeakXA2pvXVulKEIh77DCVYo3h6KW8qogwvA4amRACqbjjwA/S5gEEgwRVRN9iJJDXl516fu38=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NT84b8QO; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aI18/76S"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id C4EF51F000E9;
-	Tue, 28 Jul 2026 14:59:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NT84b8QO"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id AB5081F000E9;
+	Tue, 28 Jul 2026 15:11:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785250786;
-	bh=Sh5dYU/f1v+W2SJpNOuarRKhWy8WgRMbaLkuKwmMoiw=;
+	s=k20260515; t=1785251476;
+	bh=hYNj5zZdX9y9vcOK9E04bgbJiBRa/ibqxz9fbodRO9s=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=aI18/76SDc9RBko7l1vBlrfOv5eQDTg1iVXyE4O+wDoeDp0COAiX/sxB5kgxIexsn
-	 iSjbMeQ9jltcaQV/aR3l/wGcSG8lMd2l/VR9IExRUKZehIyKB3CTSPX1Jz12lGU5Vm
-	 PYo+lv3ijYLsgiY8UCsssIYDIlvzJ6rtxFHwjnZ8GyJ+TaKRBUSOWW4ueWNFJsvlCi
-	 kN9c5vHI3DWet3UgOFxzh15VuvQ9LSAYKuDD/CeVfIavMlaqSUazFux448+Yzd/HB7
-	 431z8JY+7fetIjHRkDry2spJejpmtHZhOavUFZltLIcNxYBjZw7Tbwmq8vV+mfiKfk
-	 GNrW+ZhdN61Ng==
-Date: Tue, 28 Jul 2026 07:59:46 -0700
+	b=NT84b8QOCMz0ynh6z0zXB+a/TwHBCYY98Doai4sqjN4AHCsfDd9NW0CXd+1EwDDJb
+	 kLbFc9TPfh77tmM5CWICPko+77RpOpe3++jcUWEABJfzUWE6MzI1VYeYHLm2xuJoMR
+	 rj6ec3XvUfjtAAlIfx3MnrRPkTmg6d/KpkMIjvStX8SvshnWvv0dRuuNEyE79uQ0He
+	 4wff620dBc1IMMB9nurSiRzxZhJu5WI/Zd8KQ+vGHi/lA6ozSb+SbA26a+I9fbBePp
+	 7Fh8CHE32NOi+ClnTTVChks6n/RHg5eQws1/oB/R9gn6acYyeMi0mk2XZNZwuS3Cvh
+	 dkDcclszzkMvg==
+Date: Tue, 28 Jul 2026 08:11:16 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Lin Jiapeng <ljp1205831794@gmail.com>
-Cc: zlang@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org,
-	fstests@vger.kernel.org, jiapenglin@tencent.com
-Subject: Re: [PATCH] xfs/842: verify CoW after exchangerange with
- FILE1_WRITTEN on shared extents
-Message-ID: <20260728145946.GK2901224@frogsfrogsfrogs>
-References: <20260728071625.79516-1-jiapenglin@tencent.com>
+To: Miao Zhao <muel@nova.gal>
+Cc: linux-xfs@vger.kernel.org, cem@kernel.org, bfoster@redhat.com,
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH xfs] xfs: validate remote attr value length in the leaf
+ verifier
+Message-ID: <20260728151116.GL2901224@frogsfrogsfrogs>
+References: <20260728062451.1296908-1-muel@nova.gal>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,133 +43,80 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260728071625.79516-1-jiapenglin@tencent.com>
+In-Reply-To: <20260728062451.1296908-1-muel@nova.gal>
 
-On Tue, Jul 28, 2026 at 03:16:20PM +0800, Lin Jiapeng wrote:
-> When a full-file exchangerange is requested with FILE1_WRITTEN for a
-> fully sparse donor file, every mapping pair is skipped, so no extents
-> actually move.  However, the kernel decides to swap the reflink inode
-> flag based on the request geometry alone, so the target file used to
-> lose its reflink flag while still owning shared extents.  A subsequent
-> write then took the non-reflink write path and modified the shared
-> physical blocks in place, silently corrupting the other file sharing
-> them:
+On Tue, Jul 28, 2026 at 06:24:51AM +0000, Miao Zhao wrote:
+> xfs_attr3_leaf_verify_entry() checks a remote attr entry's namelen and
+> valueblk but never its valuelen. A crafted image can set valuelen to a
+> value with the high bit set; xfs_attr3_leaf_getvalue() then stores it
+> in the signed int args->rmtvaluelen, where it goes negative. The
+> negative length bypasses the -ERANGE size check in xfs_attr_copy_value()
+> because the comparison is signed, and xfs_attr_rmtval_get() then
+> reinterprets it as a huge unsigned value, driving the memcpy loop in
+> xfs_attr_rmtval_copyout() past the end of the getxattr(2) result buffer
+> with image-controlled data (up to ~64KB on v5, where the remote block
+> header verifier caps rm_offset + rm_bytes at XFS_XATTR_SIZE_MAX;
+> unbounded on v4, where remote blocks carry no header at all).
 > 
->  --- tests/xfs/842.out
->  +++ results/xfs/842.out.bad
->  @@ -1,2 +1,3 @@
->   QA output created by 842
->  +orig changed: md5 e6065c4aa2ab1603008fc18410f579d4 -> 32c5189478e6bafa1cc76423f06c88f2 (write hit shared blocks in place)
->   Silence is golden
+> Any unprivileged user with read access to the file can trigger this
+> with getxattr(2) once a crafted image is mounted, e.g. by a privileged
+> auto-mount daemon:
 > 
-> This test clones a file so that both share extents, swaps the clone
-> against a sparse donor with FILE1_WRITTEN, writes to the clone, and
-> verifies after a mount cycle that the original file's data is intact,
-> i.e. the write was redirected through CoW.
+>  BUG: KASAN: slab-out-of-bounds in xfs_attr_rmtval_copyout
+>  Write of size 4040 at addr 0000000061bf4ee0 by task xattr_tool/37
+>  CPU: 0 UID: 65534 PID: 37 Comm: xattr_tool Not tainted 7.2.0-rc5 #1
+>  Call Trace:
+>   memcpy
+>   xfs_attr_rmtval_copyout
+>   xfs_attr_rmtval_get
+>   xfs_attr_copy_value
+>   xfs_attr3_leaf_getvalue
+>   xfs_attr_node_get
+>   xfs_attr_get
+>   xfs_xattr_get
+>   vfs_getxattr
+>   sys_getxattr
 > 
-> The kernel fix "xfs: fix exchange-range reflink flag clearing issue
-> with INO1_WRITTEN" refuses the reflink flag exchange whenever
-> FILE1_WRITTEN is requested, which makes this test pass.
+> The same unchecked valuelen is consumed on the INCOMPLETE sweep path
+> (xfs_attr_inactive.c) to size stale remote blocks, so validate it for
+> all remote entries: reject valuelen larger than XFS_XATTR_SIZE_MAX,
+> and reject a zero valuelen on complete entries (a value is only stored
+> remotely when it is too large for the local format, so zero is never
+> valid there; INCOMPLETE entries legitimately carry a zeroed valuelen
+> until the operation completes).
 > 
-> Reported-by: Lin Jiapeng(TencentOS Red Team) <jiapenglin@tencent.com>
-> Link: https://lore.kernel.org/r/amgekiNKKoAdACnc@infradead.org
-> Suggested-by: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Lin Jiapeng <jiapenglin@tencent.com>
-> ---
->  tests/xfs/842     | 55 +++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/842.out |  2 ++
->  2 files changed, 57 insertions(+)
->  create mode 100755 tests/xfs/842
->  create mode 100644 tests/xfs/842.out
-> 
-> diff --git a/tests/xfs/842 b/tests/xfs/842
-> new file mode 100755
-> index 0000000..6d5bcab
-> --- /dev/null
-> +++ b/tests/xfs/842
-> @@ -0,0 +1,55 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0-or-later
-> +# Copyright (c) 2026 Tencent.  All Rights Reserved.
-> +#
-> +# FS QA Test No. 842
-> +#
-> +# Make sure that a full-file exchangerange under FILE1_WRITTEN does not strip
-> +# the reflink flag from a file that still owns shared extents.  When the
-> +# donor file is fully sparse, every mapping pair is skipped, so no extents
-> +# actually move; the target file must keep its reflink flag, and a later
-> +# write must go through CoW instead of modifying the shared blocks in place.
-> +
-> +. ./common/preamble
-> +_begin_fstest auto quick fiexchange
-> +
-> +# Import common functions.
-> +. ./common/filter
-> +. ./common/reflink
-> +
-> +_require_xfs_io_command exchangerange
-> +_require_scratch_reflink
-> +_require_scratch
-> +
-> +_scratch_mkfs >> $seqres.full
-> +_scratch_mount
-> +
-> +# Create the original file with a known pattern and clone it, so that both
-> +# files share the same extents.
-> +_pwrite_byte 0x41 0 1m $SCRATCH_MNT/orig >> $seqres.full
-> +_reflink $SCRATCH_MNT/orig $SCRATCH_MNT/clone >> $seqres.full
-> +
-> +# Create a fully sparse donor file of the same size.
-> +$XFS_IO_PROG -f -c 'truncate 1m' $SCRATCH_MNT/donor
+> Fixes: c84760659dcf ("xfs: check attribute leaf block structure")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Miao Zhao <muel@nova.gal>
 
-Hehe, this is exactly the same sequence as the testcase I wrote
-yesterday afternoon, so the review is easy;
-
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-
-(For extra clarity I also had done:
-
-# Check reflink flags
-_scratch_unmount
-_scratch_xfs_db -c "path /orig" -c 'print' -c "path /donor" -c 'print' | grep reflink
-_scratch_mount
-
-for direct confirmation of the incorrect inode flag state, but the
-md5sum failure suffices to prove the defect.)
+Isn't this a duplicate of
+https://lore.kernel.org/linux-xfs/20260707190038.3811440-3-qwe.aldo@gmail.com/#t
+?
 
 --D
 
-> +
-> +md5_before=$(md5sum $SCRATCH_MNT/orig | awk '{print $1}')
-> +
-> +# Swap the clone against the sparse donor, claiming the donor is fully
-> +# written (-w).  Every donor mapping is a hole, so all pairs are skipped
-> +# and the clone keeps its shared extents in place.
-> +$XFS_IO_PROG -c "exchangerange -f -w $SCRATCH_MNT/donor" $SCRATCH_MNT/clone \
-> +	>> $seqres.full
-> +
-> +# Overwrite part of the clone.  With the reflink flag correctly retained,
-> +# this must go through CoW and leave the shared blocks of orig untouched.
-> +_pwrite_byte 0x42 0 64k $SCRATCH_MNT/clone >> $seqres.full
-> +_scratch_cycle_mount
-> +
-> +md5_after=$(md5sum $SCRATCH_MNT/orig | awk '{print $1}')
-> +
-> +test "$md5_before" != "$md5_after" && \
-> +	echo "orig changed: md5 $md5_before -> $md5_after (write hit shared blocks in place)"
-> +
-> +echo Silence is golden
-> +status=0
-> +exit
-> diff --git a/tests/xfs/842.out b/tests/xfs/842.out
-> new file mode 100644
-> index 0000000..643d052
-> --- /dev/null
-> +++ b/tests/xfs/842.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 842
-> +Silence is golden
+> ---
+>  fs/xfs/libxfs/xfs_attr_leaf.c | 5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+> index 86c5c09a5db4..b8ae25be639a 100644
+> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
+> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+> @@ -336,8 +336,11 @@ xfs_attr3_leaf_verify_entry(
+>  		name_end = (char *)rentry + namesize;
+>  		if (rentry->namelen == 0)
+>  			return __this_address;
+> +		if (be32_to_cpu(rentry->valuelen) > XFS_XATTR_SIZE_MAX)
+> +			return __this_address;
+>  		if (!(ent->flags & XFS_ATTR_INCOMPLETE) &&
+> -		    rentry->valueblk == 0)
+> +		    (rentry->valueblk == 0 ||
+> +		     be32_to_cpu(rentry->valuelen) == 0))
+>  			return __this_address;
+>  	}
+>  
 > -- 
-> 2.50.1 (Apple Git-155)
+> 2.34.1
 > 
 > 
