@@ -1,64 +1,64 @@
-Received: from mail-pj1-f54.google.com (mail-pj1-f54.google.com [209.85.216.54])
+Received: from mail-pf1-f178.google.com (mail-pf1-f178.google.com [209.85.210.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71C444DB566
-	for <linux-xfs@vger.kernel.org>; Wed, 29 Jul 2026 19:30:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 594684D90A5
+	for <linux-xfs@vger.kernel.org>; Wed, 29 Jul 2026 19:30:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785353426; cv=none; b=fB2e4fh1PS+iPwCFGFWiYJd+n3x7fGygPUdv/K0tImpVaoZ4ZZCIrooMewHUUPIWiVjqkWgcd8BhOlH7GR71JBs3sgPH/OC0TuRddZn3FxsIMq9n3PM8TeDbr/PUW4jmjSaTxPZ1ZoHotCbdYixOMUnEcnUW45s7S/QgeIam2sY=
+	t=1785353427; cv=none; b=L7fIRP4dCnW1r2oO1arTt3Ty2Z0B7K+92dGd5UIhxsF5+33QhYi9Jdo/orFvMyZc6pY1+LepMixMoGqgMcj3ISSH8gUGSE6eWiXJnvNVpSRWN7f4JGCPOu3WHMhaEBC8RCx7mDDPoCTJW8DXym7kPVhB9ZaPreQ1/1qK3T6E+50=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785353426; c=relaxed/simple;
-	bh=NkWTxDB7BVf5kr2NeMKSqq0wtS9n6p/N2UG9HabFDJQ=;
+	s=arc-20240116; t=1785353427; c=relaxed/simple;
+	bh=mjtFePw905Ih8lZM0jTOp001M3VsZYjlem3tQ4B9G6o=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=mjsq+d7EZXkPUTrsE1fUSmXZQ0LfAScMY77SAY7+0NQoi8HM4VP1dMSKa+72n/1oGSZMmbB/OdO0nqqB0O/1rlT6APw1JobZgL/3LZuoS6zm/GWJ77gDoEH6+Tm1mMFwWMzLsrgKL/WnbOJ9+TBIEpxPsimSD9OtaBMKDwKjXWM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RzjNwIXQ; arc=none smtp.client-ip=209.85.216.54
+	 MIME-Version; b=UjmIEckyK74RPfF7ixCSOZD8UHTYLHLamJzLA5XmcahLxHClGU34kjvKtSnJVrn2a2nSbwGiWFiIOqO9c0Lr3EoIVNugk3cS+WOL7HlJfv5vL1oJhV+pNfGF0LuKi3Mrvm/eDeqh3sujGkcQ9gk97zGqwplwFUr6jZdTn4a4rKY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZaTGMMzL; arc=none smtp.client-ip=209.85.210.178
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RzjNwIXQ"
-Received: by mail-pj1-f54.google.com with SMTP id 98e67ed59e1d1-38e3efab7e0so17391a91.0
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Jul 2026 12:30:21 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZaTGMMzL"
+Received: by mail-pf1-f178.google.com with SMTP id d2e1a72fcca58-84867f07d63so1663061b3a.2
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Jul 2026 12:30:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785353420; x=1785958220; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1785353418; x=1785958218; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=e6+Ei9NFKggzOoAWAaPtMOQsJgv2L14jqLZIvC8zwcM=;
-        b=RzjNwIXQwrsLc3iXdQispTSj9R5/FlEjfFmgXGQb9PEF7caPycSYLn3C3o8pRgIk+g
-         kED15/HnjZSIvZ7AxM8N84cMjdb8B+6J9J3pgM4GFLvxqsa4dfTzmqmolRiDNP9kPH0N
-         hh5Kx6pJwWKF+N7ADb/GYUaDTgJpaUeIWuGPFFCuM4fBexqG3OApWHJpFDejajRRnD/x
-         ZItS2yKSfr2/VYq0WFmXLUPiHUgAt/pBwgQhpZq2FPvZOKfBURv0YmqCKTlppvhT01Ug
-         e7dA+zbEXM5zNDAfxBzxCtM8OxAs8zqPs+gwfRM9HOUpqrUv09N+za9omB1R9bvAjMX1
-         kfQg==
+        bh=t0HucSFNwCrhhqVsgsZLRy5u6x5BGWTlUoNlDXYASAs=;
+        b=ZaTGMMzL0y7gj1mhiwNikYREV2yRDps3jAibpTH0klMMs7NxfSdlkT2PG6RsWrvMDb
+         4+07TF/n9G3jWNhIJErhILiYEvIvrFa5/+YiQa/a56mtIayLBpaIwkZhOkWUVLMyDr+t
+         XdRxaP9YhX14o10k6iGq1yUE42w0VvhWdm9H+vYSq+9gZ+4bMVUzZ7yL+yQku+xa0Qwz
+         UlVujzrB/7u3BF7mhR0Ez3Plrkquaz0n7v+eRxGA51Q+lZsmoWEofprJGi0X3vO7eXvo
+         xTAgjowexqWopGOiOKzivQCKlZYftyYYQJovLUAf7TGwhSCu3COwe5vITBd3PzLiFY7O
+         o+0g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785353420; x=1785958220;
+        d=1e100.net; s=20251104; t=1785353418; x=1785958218;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=e6+Ei9NFKggzOoAWAaPtMOQsJgv2L14jqLZIvC8zwcM=;
-        b=gF3/MKaZ0iL+HhGVlWkC7sCHjJmsyx+zTmgHnOcXb199W9jrQp2EoHqOxjfyqsF1bL
-         9qpPhFaOE3b0z8FZN7+CToNk169Fi5Hjh1HhgpmKejkKShkxZCjDB73y4ZbpI+woTkpY
-         YFDQowfZN/OJgGwAafUOKH5cOTYtzjHH7Mh78ZgoahhGgmQYjzavqF5rqnBJ8mBz2ANB
-         8dysnmsYUpRGtYa0qULT6czhJ/GlxgHAf3XdmCyWYJt1WGz23eBY6wm6bK9SWw3WE8Wl
-         Ade9Y1JaHKenlNAR5oGMlhhqo9U7TRiwEOfC8kkRte3UCnX8FNAEZd0j6MTFpO0gjRqm
-         CyHQ==
-X-Forwarded-Encrypted: i=1; AHgh+RqLGRtw21aheKYH/6dMYHLOcTjyS6a9MO4PdOr9AATaIIhNIcRp/FsLfNEvxwO8AWwMP7TKyR2dM5E=@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywo3M1kKE34GjbyCd5U68zCHmqLSd9U+2g0iu30sjWpClbfBxMV
-	HW8mcZqEYAFwKlUB01arhXejBOWSKSpI4eW5cvcE7u4kNTvCPM8U5BiV
-X-Gm-Gg: AR+sD120KYO8wFkwCf0URC6s2n6WSgSEvOgmuKIf5Am5eMQeszabKPRRvyzS3Fnlzwy
-	zK/U1Vgi8AkHoJlvZ6YjlJkvyTRAtEAquPBCSgm3/+c7EO9847K4AnNojg0B+0yqM5hBQLt5Ezw
-	ZLhuOnooWp1HJFS+TyejwQEM0YF+BQGQss0lyt6XrW5q3R0w3sce0kIhrVw2OhQDsw5E3WzTEKD
-	nDb75OyqEutuEhCTAv9kKv9i2UFfewBE4b+Q3Ud5mrlLq5v9TlVJ9CsybTD0CmjVBiLYIj21qbh
-	OXi60y0ka2jsUklAaEv8+PwoTNYi1RWWSVxUxSNP03MV11JageBeU5QDXzqZBU/o1ndxu6YrSTP
-	NLpAi1Qx1iMlG3vogqr2V6o1HFHI31QoYgx1nSteRkim77PQevtxNHx377rTw9muu9SM1sgocNm
-	PNvNS+lcYuskLt4Wm1s1sWWgHQpuI92wCb1z/PUJuqoKAswp59uvnkjockYzoS9N/zqo0yUhUa2
-	r+H9bHLRpkWZ9FY9mfOEnWEJ+D+ZCkuviMTZGgL
-X-Received: by 2002:a17:90b:1b07:b0:384:927f:3db9 with SMTP id 98e67ed59e1d1-38f83519701mr2825738a91.1.1785353419540;
-        Wed, 29 Jul 2026 12:30:19 -0700 (PDT)
+        bh=t0HucSFNwCrhhqVsgsZLRy5u6x5BGWTlUoNlDXYASAs=;
+        b=AL2UB7Ap9Q5EASY9tlBpLwOx+nbX/OT8nzdGOb+lDn0CTUq5irWWwZbQbpFQJUTIgO
+         pn/SGKXKN4xhVevuq/N9DhL/LHJ+qcpKqL9//17kC9zs5WD8y3y+5Ca+yXRqWdofqd/f
+         pTL7nI1YP7dCHDdpkxlh9QdILgJvdOs11TGER2bEmCp/Tj53Od8Vq+s0StW5y1E3cPUs
+         hi+SDgChhmw1ZX2KSFNu80Hhj9k6YEp9q3Bp4da9GwEqffKxoVXjf/t6g8px5vmV7JlT
+         hbaO4AesfY8k0H9QmtOs66/2AHAmtNvpdnJVNa6oC+UPe1j23QXUUA0xyYlXEgg4yomw
+         IKEw==
+X-Forwarded-Encrypted: i=1; AHgh+RqRvhTBM86c7JvNGUTEy4k8sjjyrYDtpmyshg60GLJECbvZyQzCmmXRiYW250prPCDhmZ3HgAjRUkw=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzxMwzImfcQVK79z2WMg0ZMWFZ8oZvkSDOxF5RH0F4CCImwr8LT
+	RqpoYzZ1qliN4VKQfsZXosb58GdKxntjCSFDJeg+MTpzyC9CZAIgRtSA
+X-Gm-Gg: AR+sD11s34P6Jn/NxVncauLSMZg0C9hCZbmv7Rag/7ZzpxTsTTo0DvlAQrW81v4e9j4
+	XT6BdddlYPeW1abUEmV0EBY7/2mZCvfPoOXNkhxfolLjWT3gS5fXDgbfFfIXd7BdrFZDVUbqao0
+	XffScU/mOSWn8i1bjp5cY9zeJBtIEWmFZtkw/H5/jqYtNA2MINyKCps6Dif+0tOz4rNdpkLviOw
+	EwSjfG+pN9vpZwJkKQxAAH84pR0wsgtEDmQWW0cwCa1e8bGvlfm8YkCvN81Myr3XRK6lBE8bvCY
+	P9I190U0OCJTYvw1TKJ4m/jqGreZTQEHOM1ATvSsEcYoxJP8wo+kVIFyiOYo5eRwkUqaFjVxABC
+	CT6hmyZH4LTy4xvtsK07jEjVZv5vtzNmYhI7mSyRVi9uT+XV83kKVI/FcvBIqwdmDZkzZXZVwlh
+	Cl19hk8F0Ry2kM3Q9FQnQnT+VIi0VpDMZRkRHKk9cWrbo7nOMkjTq9XwxQ5eFaBqFDOfb5/3nyP
+	zSXTyqoKKltvqZ/XwY5Y5f1O7+tyEky66zblDI=
+X-Received: by 2002:a05:6a00:a02:b0:84e:24f:2677 with SMTP id d2e1a72fcca58-84eb9e82597mr91426b3a.4.1785353417595;
+        Wed, 29 Jul 2026 12:30:17 -0700 (PDT)
 Received: from localhost ([2a03:2880:ff:2::])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-38f6410ff7dsm3181791a91.4.2026.07.29.12.30.18
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cbdb55c5b7bsm1288273a12.0.2026.07.29.12.30.16
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 29 Jul 2026 12:30:18 -0700 (PDT)
+        Wed, 29 Jul 2026 12:30:16 -0700 (PDT)
 From: Joanne Koong <joannelkoong@gmail.com>
 To: Christian Brauner <brauner@kernel.org>,
 	hch@lst.de,
@@ -85,9 +85,9 @@ Cc: changfengnan@bytedance.com,
 	bfoster@redhat.com,
 	linux-ext4@vger.kernel.org,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH v5 13/22] ext2: convert iomap ops to ->iomap_next()
-Date: Wed, 29 Jul 2026 12:27:28 -0700
-Message-ID: <20260729192737.3190206-14-joannelkoong@gmail.com>
+Subject: [PATCH v5 12/22] zonefs: convert iomap ops to ->iomap_next()
+Date: Wed, 29 Jul 2026 12:27:27 -0700
+Message-ID: <20260729192737.3190206-13-joannelkoong@gmail.com>
 X-Mailer: git-send-email 2.52.0
 In-Reply-To: <20260729192737.3190206-1-joannelkoong@gmail.com>
 References: <20260729192737.3190206-1-joannelkoong@gmail.com>
@@ -99,35 +99,46 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Convert ext2 iomap_ops to the new ->iomap_next() callback. The callback is
-generated with the DEFINE_IOMAP_ITER_NEXT_END() macro, which wraps the
-iomap_iter_next() helper to finish the previous mapping if needed and
-produce the next one. No functional changes are intended.
+Convert zonefs iomap_ops to the new ->iomap_next() callback. Each
+callback is generated with the DEFINE_IOMAP_ITER_NEXT() macro, which
+wraps the iomap_iter_next() helper to finish the previous mapping if
+needed and produce the next one. No functional changes are intended.
 
-Reviewed-by: Jan Kara <jack@suse.cz>
+Acked-by: Damien Le Moal <dlemoal@kernel.org>
 Signed-off-by: Joanne Koong <joannelkoong@gmail.com>
 ---
- fs/ext2/inode.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ fs/zonefs/file.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/fs/ext2/inode.c b/fs/ext2/inode.c
-index 29808629cce5..7e0fa9c454e1 100644
---- a/fs/ext2/inode.c
-+++ b/fs/ext2/inode.c
-@@ -860,9 +860,11 @@ ext2_iomap_end(struct inode *inode, loff_t offset, loff_t length,
+diff --git a/fs/zonefs/file.c b/fs/zonefs/file.c
+index 5ada33f70bb4..5b34849be7a2 100644
+--- a/fs/zonefs/file.c
++++ b/fs/zonefs/file.c
+@@ -57,8 +57,10 @@ static int zonefs_read_iomap_begin(struct inode *inode, loff_t offset,
  	return 0;
  }
  
-+static DEFINE_IOMAP_ITER_NEXT_END(ext2_iomap_next, ext2_iomap_begin,
-+				  ext2_iomap_end);
++static DEFINE_IOMAP_ITER_NEXT(zonefs_read_iomap_next, zonefs_read_iomap_begin);
 +
- const struct iomap_ops ext2_iomap_ops = {
--	.iomap_begin		= ext2_iomap_begin,
--	.iomap_end		= ext2_iomap_end,
-+	.iomap_next		= ext2_iomap_next,
+ static const struct iomap_ops zonefs_read_iomap_ops = {
+-	.iomap_begin	= zonefs_read_iomap_begin,
++	.iomap_next	= zonefs_read_iomap_next,
  };
  
- int ext2_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
+ static int zonefs_write_iomap_begin(struct inode *inode, loff_t offset,
+@@ -106,8 +108,11 @@ static int zonefs_write_iomap_begin(struct inode *inode, loff_t offset,
+ 	return 0;
+ }
+ 
++static DEFINE_IOMAP_ITER_NEXT(zonefs_write_iomap_next,
++			      zonefs_write_iomap_begin);
++
+ static const struct iomap_ops zonefs_write_iomap_ops = {
+-	.iomap_begin	= zonefs_write_iomap_begin,
++	.iomap_next	= zonefs_write_iomap_next,
+ };
+ 
+ static int zonefs_read_folio(struct file *unused, struct folio *folio)
 -- 
 2.52.0
 
