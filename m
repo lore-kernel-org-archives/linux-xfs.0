@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B99544C4F1
-	for <linux-xfs@vger.kernel.org>; Wed, 29 Jul 2026 10:06:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F7D044C518
+	for <linux-xfs@vger.kernel.org>; Wed, 29 Jul 2026 10:06:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785319618; cv=none; b=KpIdu7MMyhV+/E0lX2D/sLyzNA2HGEtiYySeQv2J4eR4JE1+tQJP1fBq3fqKRj8waYWjFSvq4jLiWvC8psVJNMCRNRdjksotXsKuOp8w/txwA7f14dYPiMF6CzUaovq03jDvl7v70g4l8Ut4xhDDOSKgGcgbzUNG62Pvy8ENnAM=
+	t=1785319619; cv=none; b=tz9PxcVAvvqVTolUA7S6pEVv2KQ6kd0l6wSBKQlnIu+3/8ld1gqFadG5dyYhhW52kt3ut1UxJe1OAXZdoqchQDaNunIlJuAYTeDdoz0gp/7qGIidT3lXlkn7qRXPql8SRIvwyFPWHxaLCp9RMhpE8ApzgS4cmtG9DKevf1+8IL4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785319618; c=relaxed/simple;
-	bh=/lt3g3U51W2D7OdI0tMRog/oCUwxdYn6K9MVvP/MWYg=;
+	s=arc-20240116; t=1785319619; c=relaxed/simple;
+	bh=jq+KSfTPWCL+mBpJy/yoObowXaQD+ThbVEc3cPpGECE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=JXjvsTrtL7Om0ZK2l1dNatmKyZFbNM5qaUg/g3JkB468O/w73v+iSUedtCjkUZ7CISkl80Jfz/U+9RemJ8dBaf3XERAtwvSm8i2woRZ4D/TyBBpHj5zYyu0CDfgTz28Ium750cbx3vWH1924xifcRwDGDvx2aJyccRmeoxOHyMw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VXsEsEby; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=nh6lXBI8e/fVQazrStFB6PAalJdfRFjvmAsfTQKoG0KwODUqi/8MZVFCjmwbfD47sFMjv4uEJ5MLtsUHR1Dq/dlkZ6S3PeuUJZJCxVMz2oh+mU1HEl3F6CDORSvdeBJTfpZsBJjASs3stD+MzNys1zV8ESALw76myeh796o6a5E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=n6qcHQoo; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VXsEsEby"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D6441F000E9;
-	Wed, 29 Jul 2026 10:06:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n6qcHQoo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4B801F00A3D;
+	Wed, 29 Jul 2026 10:06:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785319617;
-	bh=msUJA9YyQshYDymulk4BAzVtNnWr/m0OvRTtp3RwxLg=;
+	s=k20260515; t=1785319618;
+	bh=w9dUY6PyRSP2irjJ+ssMkZYm1DW/QDsSpdYH1s8Z78Q=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=VXsEsEbyYOPTVzvj3Swkz9nDduBEDglFaQrTCqdicVdj/W6drniY2K4JOMxCN4/Ft
-	 FqLzLoD1HWoJQJExezd0yRGJqtyx/GdR07o3OgKNuR6YBqWSwiFpUbYAKyCfH8doLs
-	 dfOemqb6edu+Pv+idJAQXx+OZGQy2Oxk9dSudfR+yf10RuxvLhOP8huxcHBqxelGIC
-	 JvssF8K4UhcTM4dJM2kpnBj4wyCjgE8OUVaCeF0BrRjsWZhMVCoVUhSQRFxyBbMc/1
-	 yPHsVHsxSBENF0c8Yxkp4D63WP+rAhf44jbC/lB+sgKL3m9cml56fQc0ZNk4q3+F5h
-	 7fhZYx6aKT4ZA==
+	b=n6qcHQoo/NLhzwik8yU4DHF3Tt1kouifqnbNO9cGr5WmpmY0BtqBgrn5kfL2+4QXp
+	 rObyy1aWC5g1435+QauzCXOUMqURSwISRMzksKVvbEfFKZ1z2HzGQsTIu7KvMkYfTW
+	 cdYY14MWenZsqa21XC4l+4DqygzpbdZje1hLvC6wBXmEn/l7ueLUgFTdctZMKrVhYT
+	 zW/HmkrvcX3njfCynFc1N7XeeTcEvwmzHmTiG8JGIOjibZEz44ImD54Jlk94NgCIYy
+	 +Ugk0CevBhibzFG8dj8Kq0nZOySm/4HT0iPv8sM1QkSdldwkq03pwSxD/kcheeIJ6l
+	 bxNmyLNS0m9iQ==
 From: Dave Chinner <dgc@kernel.org>
 To: linux-xfs@vger.kernel.org
 Cc: cem@kernel.org
-Subject: [PATCH 19/33] xfs: factor out xfs_iomap_write_unwritten_one helper
-Date: Wed, 29 Jul 2026 20:02:03 +1000
-Message-ID: <20260729100629.1943710-20-dgc@kernel.org>
+Subject: [PATCH 20/33] xfs: convert xfs_iomap_write_unwritten to rolling transactions
+Date: Wed, 29 Jul 2026 20:02:04 +1000
+Message-ID: <20260729100629.1943710-21-dgc@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260729100629.1943710-1-dgc@kernel.org>
 References: <20260729100629.1943710-1-dgc@kernel.org>
@@ -43,171 +43,135 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Extract the per-iteration unwritten extent conversion work from
-xfs_iomap_write_unwritten() into a new helper function
-xfs_iomap_write_unwritten_one().
+Convert xfs_iomap_write_unwritten() from per-iteration transaction
+allocation to a single rolling transaction that keeps the ILOCK
+held across the entire unwritten extent conversion loop.
 
-The helper takes a caller-supplied transaction and performs the
-extent count extension, unwritten-to-written conversion via
-xfs_bmapi_write(), and inode size update for a single extent.
+Previously each iteration allocated a new transaction, acquired the
+ILOCK, converted one extent, committed, and released the ILOCK.
+This left a window where the extent tree could change between
+iterations.
 
-The startblock validation check remains in the caller after the
-transaction commit, as it is a corruption detection check that
-should warn and return an error without causing a filesystem
-shutdown from cancelling a dirty transaction.
+The rolling transaction keeps the ILOCK held throughout, making the
+multi-extent conversion atomic with respect to other concurrent
+extent operations. XFS_TRANS_RENEW_BLKRES is set so that the btree
+split block reservation is automatically renewed after each
+xfs_defer_finish() call.
 
-This is a pure refactoring with no functional change, done to
-prepare for converting the loop to use rolling transactions.
+The startblock corruption check is performed after xfs_defer_finish()
+commits the dirty transaction, so that corruption detection warns and
+returns an error without causing a filesystem shutdown from cancelling
+a dirty transaction.
 
 Assisted-by: LLM
 Signed-off-by: Dave Chinner <dgc@kernel.org>
 ---
- fs/xfs/xfs_iomap.c | 103 +++++++++++++++++++++++++++------------------
- 1 file changed, 61 insertions(+), 42 deletions(-)
+ fs/xfs/xfs_iomap.c | 71 +++++++++++++++++++++++++++-------------------
+ 1 file changed, 42 insertions(+), 29 deletions(-)
 
 diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 2f18a8f62e39..16feac3ad3bd 100644
+index 16feac3ad3bd..e43ce4811283 100644
 --- a/fs/xfs/xfs_iomap.c
 +++ b/fs/xfs/xfs_iomap.c
-@@ -609,6 +609,59 @@ xfs_iomap_prealloc_size(
- 	return alloc_blocks;
- }
+@@ -19,6 +19,7 @@
+ #include "xfs_errortag.h"
+ #include "xfs_error.h"
+ #include "xfs_trans.h"
++#include "xfs_defer.h"
+ #include "xfs_trans_space.h"
+ #include "xfs_inode_item.h"
+ #include "xfs_iomap.h"
+@@ -702,44 +703,49 @@ xfs_iomap_write_unwritten(
+ 	if (error)
+ 		return error;
  
-+/*
-+ * Convert a single unwritten extent to a real extent using the supplied
-+ * transaction. Returns the converted extent via @imap.
-+ */
-+static int
-+xfs_iomap_write_unwritten_one(
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*ip,
-+	xfs_fileoff_t		offset_fsb,
-+	xfs_filblks_t		count_fsb,
-+	xfs_off_t		end,
-+	bool			update_isize,
-+	uint			resblks,
-+	struct xfs_bmbt_irec	*imap)
-+{
-+	xfs_fsize_t		i_size;
-+	int			nimaps;
-+	int			error;
-+
-+	error = xfs_iext_count_extend(tp, ip, XFS_DATA_FORK,
-+			XFS_IEXT_WRITE_UNWRITTEN_CNT);
-+	if (error)
-+		return error;
-+
-+	nimaps = 1;
-+	error = xfs_bmapi_write(tp, ip, offset_fsb, count_fsb,
-+				XFS_BMAPI_CONVERT, resblks, imap, &nimaps);
-+	if (error)
-+		return error;
-+
+-	do {
+-		/*
+-		 * Set up a transaction to convert the range of extents
+-		 * from unwritten to real. Do allocations in a loop until
+-		 * we have covered the range passed in.
+-		 *
+-		 * Note that we can't risk to recursing back into the filesystem
+-		 * here as we might be asked to write out the same inode that we
+-		 * complete here and might deadlock on the iolock.
+-		 */
+-		error = xfs_trans_alloc_inode(ip, &M_RES(mp)->tr_write, resblks,
+-				0, true, &tp);
+-		if (error)
+-			return error;
 +	/*
-+	 * Update the inode size to reflect the extent that was converted in
-+	 * this iteration. We must not advance isize beyond the extent we just
-+	 * converted, otherwise a crash before the next conversion exposes
-+	 * unwritten extents (zeroes) to userspace instead of the written data.
-+	 * Clamp to the byte-level write end in case the converted extent
-+	 * extends past the write boundary.
++	 * Allocate the transaction once and use a rolling transaction to
++	 * convert the range of extents from unwritten to real. The rolling
++	 * transaction keeps the ILOCK held across the entire conversion,
++	 * making it atomic with respect to other concurrent extent
++	 * operations. The block reservation is automatically renewed on
++	 * each roll by XFS_TRANS_RENEW_BLKRES.
++	 *
++	 * Note that we can't risk recursing back into the filesystem here
++	 * as we might be asked to write out the same inode that we complete
++	 * here and might deadlock on the iolock.
 +	 */
-+	i_size = XFS_FSB_TO_B(ip->i_mount,
-+			imap->br_startoff + imap->br_blockcount);
-+	if (i_size > end)
-+		i_size = end;
-+	if (update_isize && i_size > i_size_read(VFS_I(ip)))
-+		i_size_write(VFS_I(ip), i_size);
-+	i_size = xfs_new_eof(ip, i_size);
-+	if (i_size) {
-+		ip->i_disk_size = i_size;
-+		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+	}
-+
-+	return 0;
-+}
-+
- int
- xfs_iomap_write_unwritten(
- 	xfs_inode_t	*ip,
-@@ -617,21 +670,19 @@ xfs_iomap_write_unwritten(
- 	bool		update_isize)
- {
- 	xfs_mount_t	*mp = ip->i_mount;
-+	xfs_off_t	end = offset + count;
- 	xfs_fileoff_t	offset_fsb;
- 	xfs_filblks_t	count_fsb;
- 	xfs_filblks_t	numblks_fsb;
--	int		nimaps;
- 	xfs_trans_t	*tp;
- 	xfs_bmbt_irec_t imap;
--	struct inode	*inode = VFS_I(ip);
--	xfs_fsize_t	i_size;
- 	uint		resblks;
- 	int		error;
++	error = xfs_trans_alloc_inode(ip, &M_RES(mp)->tr_write, resblks,
++			0, true, &tp);
++	if (error)
++		return error;
++	tp->t_flags |= XFS_TRANS_RENEW_BLKRES;
  
- 	trace_xfs_unwritten_convert(ip, offset, count);
++	do {
+ 		error = xfs_iomap_write_unwritten_one(tp, ip, offset_fsb,
+ 				count_fsb, end, update_isize, resblks, &imap);
+-		if (error) {
+-			xfs_trans_cancel(tp);
+-			xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-			return error;
+-		}
++		if (error)
++			goto out_cancel;
  
- 	offset_fsb = XFS_B_TO_FSBT(mp, offset);
--	count_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + count);
-+	count_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)end);
- 	count_fsb = (xfs_filblks_t)(count_fsb - offset_fsb);
- 
- 	/*
-@@ -666,39 +717,12 @@ xfs_iomap_write_unwritten(
+-		error = xfs_trans_commit(tp);
+-		xfs_iunlock(ip, XFS_ILOCK_EXCL);
++		/*
++		 * Roll the transaction to commit the conversion and renew
++		 * the block reservation. The startblock validation must be
++		 * done after the roll commits the transaction, so that a
++		 * corruption detection does not cancel a dirty transaction
++		 * and shut down the filesystem.
++		 */
++		error = xfs_defer_finish(&tp);
  		if (error)
- 			return error;
+-			return error;
++			goto out_cancel;
  
--		error = xfs_iext_count_extend(tp, ip, XFS_DATA_FORK,
--				XFS_IEXT_WRITE_UNWRITTEN_CNT);
--		if (error)
--			goto error_on_bmapi_transaction;
--
--		/*
--		 * Modify the unwritten extent state of the buffer.
--		 */
--		nimaps = 1;
--		error = xfs_bmapi_write(tp, ip, offset_fsb, count_fsb,
--					XFS_BMAPI_CONVERT, resblks, &imap,
--					&nimaps);
--		if (error)
--			goto error_on_bmapi_transaction;
--
--		/*
--		 * Update the inode size to reflect the extent that was
--		 * converted in this iteration. We must not advance isize
--		 * beyond the extent we just converted, otherwise a crash
--		 * before the next conversion exposes unwritten extents
--		 * (zeroes) to userspace instead of the written data.
--		 * Clamp to the byte-level write end in case the converted
--		 * extent extends past the write boundary.
--		 */
--		i_size = XFS_FSB_TO_B(mp, imap.br_startoff + imap.br_blockcount);
--		if (i_size > offset + count)
--			i_size = offset + count;
--		if (update_isize && i_size > i_size_read(inode))
--			i_size_write(inode, i_size);
--		i_size = xfs_new_eof(ip, i_size);
--		if (i_size) {
--			ip->i_disk_size = i_size;
--			xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+		error = xfs_iomap_write_unwritten_one(tp, ip, offset_fsb,
-+				count_fsb, end, update_isize, resblks, &imap);
-+		if (error) {
-+			xfs_trans_cancel(tp);
-+			xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+			return error;
+ 		if (unlikely(!xfs_valid_startblock(ip, imap.br_startblock))) {
+ 			xfs_bmap_mark_sick(ip, XFS_DATA_FORK);
+-			return xfs_alert_fsblock_zero(ip, &imap);
++			error = xfs_alert_fsblock_zero(ip, &imap);
++			goto out_cancel;
  		}
  
- 		error = xfs_trans_commit(tp);
-@@ -724,11 +748,6 @@ xfs_iomap_write_unwritten(
+-		if ((numblks_fsb = imap.br_blockcount) == 0) {
+-			/*
+-			 * The numblks_fsb value should always get
+-			 * smaller, otherwise the loop is stuck.
+-			 */
++		numblks_fsb = imap.br_blockcount;
++		if (numblks_fsb == 0) {
+ 			ASSERT(imap.br_blockcount);
+ 			break;
+ 		}
+@@ -747,7 +753,14 @@ xfs_iomap_write_unwritten(
+ 		count_fsb -= numblks_fsb;
  	} while (count_fsb > 0);
  
- 	return 0;
--
--error_on_bmapi_transaction:
--	xfs_trans_cancel(tp);
--	xfs_iunlock(ip, XFS_ILOCK_EXCL);
--	return error;
+-	return 0;
++	error = xfs_trans_commit(tp);
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++	return error;
++
++out_cancel:
++	xfs_trans_cancel(tp);
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++	return error;
  }
  
  static inline bool
