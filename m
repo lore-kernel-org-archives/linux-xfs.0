@@ -1,43 +1,30 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95BC5EEB3;
-	Wed, 29 Jul 2026 06:52:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 983373783AF;
+	Wed, 29 Jul 2026 06:53:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785307945; cv=none; b=dzi6d207yvipihIepYWbe8noKeM9AX+ANuM3CnZJm5Nmi/p1AUBnTVxHH2RKDEaUusCQUCPdRVP8CI2pbjmgDYLizWmKnF86qFKLh/eEu60lvkouA7CD9bxDhp0lnEuH4RlHdfTqYXMEOQhax4zzcIN4MLWWKXgvR+5sdG57mrI=
+	t=1785308000; cv=none; b=TAKVfbde7bz1tZEADxyx48oZEf7MwD5OjPlffwMKmo7WPGBaq7A1A3m0aZl+gtVKckzKZA5GgUdK+xyS6Pt/CXLqCLNctGDqSQf5aKkzITOJfMQOKJ87HLihm+wRe8VZY2G4nH6fkO+1DzFfNSurGJJ5fhICuq+Vwf7AsK87NQg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785307945; c=relaxed/simple;
-	bh=2AjAfBh3PVT7jRhQmwKUUUXnQMKve0RUhX/1CLv/7f0=;
+	s=arc-20240116; t=1785308000; c=relaxed/simple;
+	bh=nmgduKLrRLMzISYvAqXUbfkMPDP+3AagHMo9E/fnG1w=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CNiw5QDeERPaAAc88gFoMtVSTbCP0qeROhCzAfXOALUkT8T8VOSi1xgKcwk3cISMVosDLOB7Gg2JkoX+C+OdWUzg3F1ED46gS5HOAgsX1cpwTUXsVCnl9s8xOotXjWT2aj+8NlqLp+FYkkEWS+I4hM7JVL7ujk3/oIGo7d31/BA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=JRVS5xp5; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="JRVS5xp5"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=G8PvX1ncWHGXTxhJOn+Gnajkbtvsm1bV8NGcf0dUhfU=; b=JRVS5xp5ZfEv831jHfTpKkSXog
-	7IunM/SyLt+MNlcssV7FRpO0oBSgVlxF0AG+YQmFeQKI9+8BQuRTkFXAv2d/0mypHWJo5T6cDhwOo
-	fhyOdMYf5BIAJHd7GSESE3UJ0sbf+/rqJ/7sXYxswZF3XxiPimq/n9DuVS/oa68bW0AIYgoJfSrw+
-	sgdvLiaSOToWphapEA2t1QsbnNU3WB9LsF4FKJhkU31ANgRg5zDQAk6FFCm1KT9VgbGBK09hMl6En
-	AZtcPyEru6Cm2z70pVrpNC04ka6yAjWmERlVEYLWO1J8piIJksTgt5ynbL7kaAUEF5ZS0s/JSBnWJ
-	n0zAsKqw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1woy9N-000000074A1-1BIp;
-	Wed, 29 Jul 2026 06:52:21 +0000
-Date: Tue, 28 Jul 2026 23:52:21 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Hongling Zeng <zenghongling@kylinos.cn>
-Cc: cem@kernel.org, djwong@kernel.org, hans.holmberg@wdc.com,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	zhongling0719@126.com, stable@vger.kernel.org
-Subject: Re: [PATCH] xfs: check split_sectors validity before bio_split call
-Message-ID: <ammjJTqoOHsW9AXJ@infradead.org>
-References: <20260729063117.54540-1-zenghongling@kylinos.cn>
+	 Content-Type:Content-Disposition:In-Reply-To; b=Zoj4dWac0CFhvdORatdKHq2E+117dCdDlsl3ruqPCOrCZvkiCyXD8YdFyVtrM5ppHSMvekaT9I+uEsgJtn8edFJYi6dTIFhCq3ak13elr6wSZY7m3l0/YxbCvzcDEaLxPYWKhc/yoy+VKQ59i8imQR5yv0EbgM1kjsueKLSOW4c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 0A0F668AFE; Wed, 29 Jul 2026 08:53:12 +0200 (CEST)
+Date: Wed, 29 Jul 2026 08:53:11 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Joanne Koong <joannelkoong@gmail.com>
+Cc: Brian Foster <bfoster@redhat.com>, linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, hch@lst.de, djwong@kernel.org
+Subject: Re: [PATCH] iomap: release the folio batch on iomap callback
+ failures
+Message-ID: <20260729065311.GA9433@lst.de>
+References: <20260728183005.92395-1-bfoster@redhat.com> <CAJnrk1Z=qohEjesFFn-YbmU0mqSPkMH_Jy+E6qSCw4pM8niPhw@mail.gmail.com> <amj_MJOEzLor4jMW@bfoster> <CAJnrk1YME2vEunO=y6WhqVr0hEO+QXihyrFNa+sisKR4j7-=tw@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,24 +33,12 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260729063117.54540-1-zenghongling@kylinos.cn>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <CAJnrk1YME2vEunO=y6WhqVr0hEO+QXihyrFNa+sisKR4j7-=tw@mail.gmail.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Wed, Jul 29, 2026 at 02:31:17PM +0800, Hongling Zeng wrote:
-> Fix by changing the check from !split_sectors to split_sectors <= 0
-> immediately after bio_split_rw_at() and before any arithmetic operations.
-> This prevents both the negative error code propagation and the undefined
-> behavior from left-shifting negative values.
-> 
-> When NULL is returned, the caller's while loop naturally terminates,
-> which is the correct behavior for "cannot split" cases.
-> 
-> Fixes: 080d01c41d44f ("xfs: implement zoned garbage collection")
-> Cc: <stable@vger.kernel.org>
+On Tue, Jul 28, 2026 at 01:52:08PM -0700, Joanne Koong wrote:
+> I'll wait a day for anyone to object, and if no one does, I'll send v5
+> tomorrow with your patch folded in.
 
-Nothing can actually hit that.  It only happens for invalid flags,
-or unaligned I/O, none of which can happen for GC I/O.
-
-I think checking all cases of the return value is fine, but the fixes
-is a bit bogus, and it really is not stable material.
+This approach sounds good to me.
 
