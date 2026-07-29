@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B45CC443E4E
-	for <linux-xfs@vger.kernel.org>; Wed, 29 Jul 2026 10:06:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBA6E4457B0
+	for <linux-xfs@vger.kernel.org>; Wed, 29 Jul 2026 10:06:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785319597; cv=none; b=TaFjgfYVduvs6+MBLejmxP8ubg1npWFRyCOXm09dUaxzbRdhM9iVY/5cz+lICu3hsfR20u8KKNV6OFFh6sIKsaIBt2/TMXsRVUKyuaODeq8bpjEK3efrLSkJFME+S4YdbdeFSrlbuE44Vw3ECW4G2XhzOzEinyVKR1sAYEVUdWA=
+	t=1785319598; cv=none; b=DIilzaG4wwG2nokXkD80VJx2VBLufJ/1WWraJGYjvpa6OkoujxWoY/cmQzz/kNcMnbflH3jz5XqmlydnYvOgK32RzMkWfkLuD6XPl2bIsedqbX4SLf9TWCxUP6M+nNVO8+BNjwqLByA7frIQo4hddVZPT809xJGYKdOvZx6MIWk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785319597; c=relaxed/simple;
-	bh=fOpCBeFV+Rg/rTL5w67wDPrWTg3czLzAZDUMXGL5kDI=;
+	s=arc-20240116; t=1785319598; c=relaxed/simple;
+	bh=QTJrurmQAGy0VyhuEjNTg6N+BwJOYNAcK+d0WkSHwBI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=imHw1hW/en+34SExn8A+L0NqrTNczf9qpm+Bg1UXTNVKUOGMNWNApI1bixp+/gLBR6DU7l7RdVAI0cS1pNyzhhH4CXB88nFocLeRjKzXVAldPL6OqnrqqBRUMIjSnEirzmpliHjeLppkBz5B5LX9hQ/kNX+Q4s52f4N9wpoAosE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YJ54EOXT; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=cFkdXWAxgwelpswY/SY18nAgebfQ5yUZbA5VNiA03adtAg0/XNs//WrwKdps8w2OEytN2KjVtYUZu2DD5g25W/zGazUOFLmj3s5QoPve6g4u5Tzgaf31qFV7dpuCDInDFASgOqdZwBOdVJske4uFz3Ye22ct+585dy7V/2IxxMk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mXqamG4J; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YJ54EOXT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A01E01F00A3A;
-	Wed, 29 Jul 2026 10:06:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mXqamG4J"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C54031F00A3D;
+	Wed, 29 Jul 2026 10:06:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785319596;
-	bh=aCu5LIfqFAp6nIiFs8KI2Ikh1Li7iftABTkdZjCVM4c=;
+	s=k20260515; t=1785319597;
+	bh=PetFRr39qH3rKFLwi8HLfV1npmbFH7ri7h4tZylt2Vg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=YJ54EOXT5BxVUvWRcTOTeJsYTVkR8r+bA29fGOV3nYYPvFr/tIhuSX8WRI4/kVbvz
-	 Zz/v0tB0ZNOkpuJcq3ORO1s6sl2KmqGxHT/NsXr0TDSFd/S0CuhiHaDnwFyKgxx+ka
-	 sW74EVdsEM5cQIg2D1xL59cVDJDn8Hh0+NETFlR9zUKA2X0MGdE89MBLipL0TtEZeK
-	 6iP0GdnUidb/wjusC2YFxUuGAWqsr7/qG8nAkBdS/cdf/728BSC5+pqTpFQe3YMNj6
-	 lx53eSHr4EKoPA7pCDhuphDu91Z+5EOg9zgz0XxmSEzbHcT9rxJBkYZQoxi8lm9Odt
-	 7Glz+tvkAIr6w==
+	b=mXqamG4JWI9llCNHzviU80JchXUyrOktTANTF/e8B9BwUWBAHAemT1ieCGnvnRdXZ
+	 Au5GSYy59wjEBiAPnoZGDzFu9XW+nrvY7AchW1WeHIDUMUeX6G3nh4eZuoXS1hbbqa
+	 qNvgUXHhnCOOkyI9/2iJ6gRpyVPNFMZrtKhqDIDPT1PS+i8iNpxH3BtDi2ex/hBgkD
+	 ml/JKklX5MHE+8si31bss2iUg3v6NnrwBbSNpXlfRrwr0kJqyoiFoWzKvjmWf8MqEZ
+	 j/Y1v9PZBe6h2AGWPhjPd31Fwi0wn13vfCl7nfJGKAXv1p4zCxoOlNR/13R2K5EccC
+	 Ac1CNMP8Le0+w==
 From: Dave Chinner <dgc@kernel.org>
 To: linux-xfs@vger.kernel.org
 Cc: cem@kernel.org
-Subject: [PATCH 01/33] xfs: fix dirty transaction cancellation in xfs_bmapi_convert_one_delalloc
-Date: Wed, 29 Jul 2026 20:01:45 +1000
-Message-ID: <20260729100629.1943710-2-dgc@kernel.org>
+Subject: [PATCH 02/33] xfs: fix isize update in xfs_iomap_write_unwritten to track conversion progress
+Date: Wed, 29 Jul 2026 20:01:46 +1000
+Message-ID: <20260729100629.1943710-3-dgc@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260729100629.1943710-1-dgc@kernel.org>
 References: <20260729100629.1943710-1-dgc@kernel.org>
@@ -43,61 +43,54 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-xfs_bmapi_convert_one_delalloc() calls xfs_iext_count_extend() before
-checking whether there is actually a delalloc extent to convert. If
-xfs_iext_count_extend() modifies the inode's extent count fields it
-will dirty the transaction. If the subsequent extent lookup finds
-nothing to convert (e.g. a racing COW completion moved the extent to
-the data fork), the function returns -EAGAIN and the caller cancels
-the transaction. Cancelling a dirty transaction triggers a filesystem
-shutdown.
+xfs_iomap_write_unwritten() updates i_disk_size using the end of
+the entire unwritten range (offset_fsb + count_fsb) rather than the
+end of the extent that was actually converted in each iteration
+(imap.br_startoff + imap.br_blockcount).
 
-Fix this by moving the extent lookup and validation ahead of the
-xfs_iext_count_extend() call. This ensures that if there is no extent
-to convert, or the extent has already been converted by a racing
-thread, the function returns before the transaction is dirtied and
-can be safely cancelled.
+If the conversion requires multiple iterations and a crash occurs
+partway through, recovery would replay the first transaction which
+set i_disk_size to the end of the full range. This exposes
+unwritten extents to userspace reads as zeroes rather than the
+data that was written, because those extents have not yet been
+converted from unwritten to written state.
 
-Fixes: 4f86bb4b66c9 ("xfs: Conditionally upgrade existing inodes to use large extent counters")
+Fix this by computing i_size from the extent that was actually
+converted (imap), so i_disk_size advances incrementally as each
+extent is converted. On crash, recovery only exposes data in
+extents that have been both written and converted.
+
+Fixes: 84803fb78237 ("xfs: log file size updates as part of unwritten extent conversion")
 Assisted-by: LLM
 Signed-off-by: Dave Chinner <dgc@kernel.org>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 15 ++++++++++-----
- 1 file changed, 10 insertions(+), 5 deletions(-)
+ fs/xfs/xfs_iomap.c | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index d64defeda645..47c4d5c52b95 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -4380,11 +4380,11 @@ xfs_bmapi_convert_one_delalloc(
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	xfs_trans_ijoin(tp, ip, 0);
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 225c3de88d03..1437ea93563c 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -682,11 +682,15 @@ xfs_iomap_write_unwritten(
+ 			goto error_on_bmapi_transaction;
  
--	error = xfs_iext_count_extend(tp, ip, whichfork,
--			XFS_IEXT_ADD_NOSPLIT_CNT);
--	if (error)
--		goto out_trans_cancel;
--
-+	/*
-+	 * Look up the extent before extending the extent count so that we
-+	 * don't dirty the transaction if there is nothing to convert. A
-+	 * dirty transaction cancellation on -EAGAIN would shutdown the fs.
-+	 */
- 	if (!xfs_iext_lookup_extent(ip, ifp, offset_fsb, &bma.icur, &bma.got) ||
- 	    bma.got.br_startoff > offset_fsb) {
  		/*
-@@ -4409,6 +4409,11 @@ xfs_bmapi_convert_one_delalloc(
- 		goto out_trans_cancel;
- 	}
- 
-+	error = xfs_iext_count_extend(tp, ip, whichfork,
-+			XFS_IEXT_ADD_NOSPLIT_CNT);
-+	if (error)
-+		goto out_trans_cancel;
-+
- 	bma.tp = tp;
- 	bma.ip = ip;
- 	bma.wasdel = true;
+-		 * Log the updated inode size as we go.  We have to be careful
+-		 * to only log it up to the actual write offset if it is
+-		 * halfway into a block.
++		 * Update the inode size to reflect the extent that was
++		 * converted in this iteration. We must not advance isize
++		 * beyond the extent we just converted, otherwise a crash
++		 * before the next conversion exposes unwritten extents
++		 * (zeroes) to userspace instead of the written data.
++		 * Clamp to the byte-level write end in case the converted
++		 * extent extends past the write boundary.
+ 		 */
+-		i_size = XFS_FSB_TO_B(mp, offset_fsb + count_fsb);
++		i_size = XFS_FSB_TO_B(mp, imap.br_startoff + imap.br_blockcount);
+ 		if (i_size > offset + count)
+ 			i_size = offset + count;
+ 		if (update_isize && i_size > i_size_read(inode))
 -- 
 2.55.0
 
