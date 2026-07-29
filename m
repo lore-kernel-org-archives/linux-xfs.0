@@ -1,247 +1,279 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B4D344160F
-	for <linux-xfs@vger.kernel.org>; Wed, 29 Jul 2026 09:52:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CB654457B0
+	for <linux-xfs@vger.kernel.org>; Wed, 29 Jul 2026 10:06:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785318774; cv=none; b=rXuPYXSQG3hdRbZcgwoaUwEOSATf5ui5AeU/Zxq4l8/zKIgGTqI0Y0DH13D29+v6zdhr+54AS3t27pdCHInCGLFVKMmKy+M2u2o1YuDjGDIe1hxWFo7OZGX/oZD9kebRE/hw2/zrh/gFrLIYaStfLrlvh5kYCotKF2wn5ZsIjcE=
+	t=1785319597; cv=none; b=QOztcWUbYCkIACgKbYULMP9aQEMO5daallawI3vjHuH6SnHJK/gBcdmo6xHwhtbxTljxRMgZHynIjClZlummWJQrjFwKpIZfe9HQvJv8Xmpb6kvqli9QUNuHpj3udjqFaVF0IAGZ5pXhBzkoUgw/zMexM/B7+xUcjHPD6JsgVJc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785318774; c=relaxed/simple;
-	bh=npoQEiDvN1yxH7BsBNSL0UIpLQBvzsgp7LVJ168Zdig=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XyO2SBYnbkhEjr2EjkYhaz5qGKOpuDiUMme3s/9hg3+OAxiVfZuTGQ++igE5eQBq63EPjnKB7rlEpD9xKJQ4VRXp4pvxWiLXo1SSNOt4h/7xZw0yIpwdSWsiFrJQpXT6E5zZSQm+hrP9i765c26okkckeMLTV9QHduBgXA5IGNk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Wznb2WZc; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=OQqBU48v; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1785319597; c=relaxed/simple;
+	bh=RDeoIH3434mX9ZZ+Q+fH0m9eCW8YykLD0k/FCSq8NQc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=QyxZsCmHcboPU4pywkzkIkcFXGAlBz28iH0KEndvDvDUsr013MtG2mUpX5067H6N7WMe6rnFPB4OOpq86vHrxUJ1G3OD8nDCAKCAgwuusJGfZT+R2NOURrsP72qhPsBngaocYEcC5igpm+eP0lbZD+/AScp1YJRtH+unXza3oJA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=k+lgOUPs; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Wznb2WZc";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="OQqBU48v"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1785318771;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=IMtixXml2fd5ko/LMxKKst4tpZQdQmsUb4+nyDRXP5s=;
-	b=Wznb2WZc5JKMpwZ4jIdR/2OtwIUOl70x9qENVwNwW1V18zZ6qQjHuYz7Dx0HEk0EdCCI5v
-	oLwIDqgwr/UQivma2k5TWysuv6jFScxfGXPHZ/4XHmJiM5f1Lx+GpNA1/jsbvvjbRBEZGU
-	nJky3E/GcXxv9TAELnn9IjuCHPs4fAA=
-Received: from mail-wr1-f69.google.com (mail-wr1-f69.google.com
- [209.85.221.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-584-Tf88oWnaN361WxVLe9fuJA-1; Wed, 29 Jul 2026 05:52:49 -0400
-X-MC-Unique: Tf88oWnaN361WxVLe9fuJA-1
-X-Mimecast-MFC-AGG-ID: Tf88oWnaN361WxVLe9fuJA_1785318768
-Received: by mail-wr1-f69.google.com with SMTP id ffacd0b85a97d-47f8158485eso667238f8f.3
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Jul 2026 02:52:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1785318768; x=1785923568; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=IMtixXml2fd5ko/LMxKKst4tpZQdQmsUb4+nyDRXP5s=;
-        b=OQqBU48vEentkiII+pi+dE9cttvh79Std+RmKv+C7icrMLs4qfqaaabp8KhGpXnP2i
-         zp3n+9aQIwZmdA+iq8ihLg939goND5Y/ZLDxE7RNSXsk73vsSKQUBOfsSungu8chdRB8
-         cMOCnhh4c3o8YdSfFxQ6/TzKspq2rYrPg5VTxJRnoXJsjuXnEG0AU+WwBfV0cg68NbB/
-         d42TCvCWoyx0hj0cVlxNC2AgC4BU/xHvnmvG/WVbgaiCJiYZYAaeI6/5Jm1kflSzLIzd
-         WASIXhBhWlI0P3MNaHU/C3ZigLYmSY+qNMHwGCKk5BeKfvm2IITuAQkiQ4pl4X95C3b8
-         Lmqg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785318768; x=1785923568;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=IMtixXml2fd5ko/LMxKKst4tpZQdQmsUb4+nyDRXP5s=;
-        b=aR2FNtVpvkFOtrBFhjMbWxjNfKwZ0dNti8JLUKCOalRQ/1xbIKwcrgIr63rt160GJm
-         TXo1+Yqqo8H2Aqm+QsR86SuoPvE1fHxMv14si0YeHew3g0Gv7FtG2vT1Ak71eKcccy1n
-         RR3ZWH6T9PyneGamy/vGNqIz4MvV4YIOhBTHnMHkvuvW2pns9kLjRtxXjqmnWnFymljs
-         NzuMfTFKyciWk1toyxGIz919m7qFvNflrxi9e5K909/IfmmFYEXKXUr0J26ypxCqV6bz
-         ldy1fY9/9tVht4J55jHeBSdjKhQsDESM87EkEpIGxt1EBPTLrJc2Z2D6Vdo2dE14ngxD
-         ELGQ==
-X-Forwarded-Encrypted: i=1; AHgh+RpXe9NdOjpcrlOCXt41uTM/uinwdtIzUXsi6y9xVKyv802tHuX8+M/v0ljrRYTuU6PKClCCj1Te5nM=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwchXDmwuX1Af1H1ypw6BT3qW2kdctpGQh4nWWGBOC6lzWtazy7
-	KvXX6XlX1lA49SEV5s5kD9QnYfurIUO0fd5x2CBILst6AgpSk3Z7o87zN7Jg9PnAGLoMr6STZhN
-	8aasaar4ReNhhO1kc4uGBWm4iEj2/m5h0jIBxrzfFOI7t4fvL1htXgCJG4Nvt
-X-Gm-Gg: AR+sD13aqEmHUXFFW0fC6513hRFcqGvVarxRqAJJgx28C5iq6KdAFd7Epd10E2i9eqG
-	X9sVaugvNWptBuYiCeDlIDm95Lx/o+Htc+KCC6/9UsSCb8rvCtlB6uGIO87Veq7kUkalV9fmsYl
-	aoNGjiMiH+hTWVKei5ngXF7kuzV5YE/2A90w4hDW5TeZ6+mSuZCj/cEVl2jHlKdNqCu8Cj/2EOi
-	WMehdwg2i9HXHebHE98/jxK0s819udItUEoeTx9KZykjhYEUYeZfBuafzlm+RsmTOh3hZ1PdsQ5
-	2dky4t5485auAtTCO1dwqVImJkDC3YVVR3wvLF2KAjSQTa4ZfZugUsS74STxydlq4ol81sWF14L
-	iPExStxsAzvLhXo2sye56AU7r47AsbM2q57o=
-X-Received: by 2002:a05:6000:5c2:b0:47f:7aee:ed3c with SMTP id ffacd0b85a97d-47fb1ec81eamr8509546f8f.5.1785318768188;
-        Wed, 29 Jul 2026 02:52:48 -0700 (PDT)
-X-Received: by 2002:a05:6000:5c2:b0:47f:7aee:ed3c with SMTP id ffacd0b85a97d-47fb1ec81eamr8509465f8f.5.1785318767507;
-        Wed, 29 Jul 2026 02:52:47 -0700 (PDT)
-Received: from aalbersh-thinkpadx1carbongen13.rmtcz.csb ([217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-47fb6b1cf09sm6907867f8f.31.2026.07.29.02.52.46
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 29 Jul 2026 02:52:47 -0700 (PDT)
-Date: Wed, 29 Jul 2026 11:52:46 +0200
-From: Andrey Albershteyn <aalbersh@redhat.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, Christian Brauner <brauner@kernel.org>, 
-	"Darrick J. Wong" <djwong@kernel.org>, Carlos Maiolino <cem@kernel.org>, 
-	Tal Zussman <tz2294@columbia.edu>, Anuj Gupta <anuj20.g@samsung.com>, linux-block@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 06/22] block,iomap: fix protection information
- verification with initial bvec offset
-Message-ID: <amnJ0rFnXTcfmcVJ@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
-References: <20260723145000.116419-1-hch@lst.de>
- <20260723145000.116419-7-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="k+lgOUPs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 746AC1F000E9;
+	Wed, 29 Jul 2026 10:06:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785319595;
+	bh=8zgv5HHWjDN6kWmARgDiKm6KlNIcN8gAgQtDbVH1WPM=;
+	h=From:To:Cc:Subject:Date;
+	b=k+lgOUPsczImwSnyzCy/Jjp0rWt3uhHjhw2431cfk5JS2nkscl1HO0fhoBgrNwM/n
+	 PR24MWfWdtH/exvg3qbUSn9ZPxUT9M9pBR6HTlXj2TjNQVBZ6+QFKkd6UQsIfz+TL4
+	 xZEZKd8BicRxOQN4tB/Yr0nom+X74sItENj5SsGyaHbqgVhJh4wROUExhpL70bGEgW
+	 J30XkKakAGEKYOfGyaRa7mUgAL70VrEB/Q0tRC2FCaP5rJxRiiJZoMSXf0OX1uxi1f
+	 xkfGopKekbciLw9Mqovf6Nz9FA01S+TQq6XzdkSrGQTftxzlU5KQHP43u0AXx/XeP1
+	 8FC6FdqGMgu5A==
+From: Dave Chinner <dgc@kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: cem@kernel.org
+Subject: [RFC PATCH 00/33] XFS: Atomic multi-extent operations via rolling transactions
+Date: Wed, 29 Jul 2026 20:01:44 +1000
+Message-ID: <20260729100629.1943710-1-dgc@kernel.org>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260723145000.116419-7-hch@lst.de>
+Content-Transfer-Encoding: 8bit
 
-On 2026-07-23 16:49:31, Christoph Hellwig wrote:
-> When reconstructing a bvec_iter from an ioend for protection information
-> verification, iomap currently ignores the offset into the initial
-> bio_vec.
-> 
-> This can't happen for buffered I/O an direct I/O to user addresses, but
-> is exercised by split on O_DIRECT file descriptors or when using the loop
-> driver.
-> 
-> Fortunately the only file system PI user (XFS) currently always bounce
-> buffers, so this can't actually be triggered yet.  But we'll want to make
-> the bounce buffering conditional soon, for which this needs to be fixed.
-> 
-> Store the initial offset in struct iomap_ioend, and pass a
-> pre-constructed bvec_iter to fs_bio_integrity_verify.  For the
-> synchronous read case the fix is even simpler as this path can
-> simply stash away the original bvec_iter.
-> 
-> Fixes: 0bde8a12b554 ("block: add fs_bio_integrity helpers")
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  block/bio-integrity-fs.c      | 13 +++++--------
->  fs/iomap/bio.c                |  4 +++-
->  fs/iomap/ioend.c              | 14 ++++++++++----
->  include/linux/bio-integrity.h |  3 +--
->  include/linux/iomap.h         |  8 ++++++++
->  5 files changed, 27 insertions(+), 15 deletions(-)
-> 
-> diff --git a/block/bio-integrity-fs.c b/block/bio-integrity-fs.c
-> index 692403dfa047..dd6c85530913 100644
-> --- a/block/bio-integrity-fs.c
-> +++ b/block/bio-integrity-fs.c
-> @@ -52,14 +52,10 @@ void fs_bio_integrity_generate(struct bio *bio)
->  }
->  EXPORT_SYMBOL_GPL(fs_bio_integrity_generate);
->  
-> -int fs_bio_integrity_verify(struct bio *bio, sector_t sector, unsigned int size)
-> +int fs_bio_integrity_verify(struct bio *bio, struct bvec_iter *data_iter)
->  {
->  	struct blk_integrity *bi = blk_get_integrity(bio->bi_bdev->bd_disk);
->  	struct bio_integrity_payload *bip = bio_integrity(bio);
-> -	struct bvec_iter data_iter = {
-> -		.bi_sector	= sector,
-> -		.bi_size	= size,
-> -	};
->  
->  	if (!bip || !(bip->bip_flags & BIP_CHECK_FLAGS))
->  		return 0;
-> @@ -71,9 +67,10 @@ int fs_bio_integrity_verify(struct bio *bio, sector_t sector, unsigned int size)
->  	 * bio.  Requires the submitter to remember the sector and the size.
->  	 */
->  	memset(&bip->bip_iter, 0, sizeof(bip->bip_iter));
-> -	bip->bip_iter.bi_sector = sector;
-> -	bip->bip_iter.bi_size = bio_integrity_bytes(bi, size >> SECTOR_SHIFT);
-> -	return blk_status_to_errno(bio_integrity_verify(bio, &data_iter));
-> +	bip->bip_iter.bi_sector = data_iter->bi_sector;
-> +	bip->bip_iter.bi_size =
-> +		bio_integrity_bytes(bi, data_iter->bi_size >> SECTOR_SHIFT);
-> +	return blk_status_to_errno(bio_integrity_verify(bio, data_iter));
->  }
->  
->  static int __init fs_bio_integrity_init(void)
-> diff --git a/fs/iomap/bio.c b/fs/iomap/bio.c
-> index 30ef78a66b4f..813002b2299d 100644
-> --- a/fs/iomap/bio.c
-> +++ b/fs/iomap/bio.c
-> @@ -169,6 +169,7 @@ int iomap_bio_read_folio_range_sync(const struct iomap_iter *iter,
->  {
->  	const struct iomap *srcmap = iomap_iter_srcmap(iter);
->  	sector_t sector = iomap_sector(srcmap, pos);
-> +	struct bvec_iter saved_iter;
->  	struct bio_vec bvec;
->  	struct bio bio;
->  	int error;
-> @@ -178,10 +179,11 @@ int iomap_bio_read_folio_range_sync(const struct iomap_iter *iter,
->  	bio_add_folio_nofail(&bio, folio, len, offset_in_folio(folio, pos));
->  	if (srcmap->flags & IOMAP_F_INTEGRITY)
->  		fs_bio_integrity_alloc(&bio);
-> +	saved_iter = bio.bi_iter;
->  	error = submit_bio_wait(&bio);
->  	if (bio_integrity(&bio)) {
->  		if (!error)
-> -			error = fs_bio_integrity_verify(&bio, sector, len);
-> +			error = fs_bio_integrity_verify(&bio, &saved_iter);
->  		fs_bio_integrity_free(&bio);
->  	}
->  	return error;
-> diff --git a/fs/iomap/ioend.c b/fs/iomap/ioend.c
-> index 2ec755a89228..d43e6229900c 100644
-> --- a/fs/iomap/ioend.c
-> +++ b/fs/iomap/ioend.c
-> @@ -25,6 +25,7 @@ struct iomap_ioend *iomap_init_ioend(struct inode *inode,
->  	ioend->io_parent = NULL;
->  	INIT_LIST_HEAD(&ioend->io_list);
->  	ioend->io_flags = ioend_flags;
-> +	ioend->io_bvec_offset = bio->bi_iter.bi_bvec_done;
->  	ioend->io_inode = inode;
->  	ioend->io_offset = file_offset;
->  	ioend->io_size = bio->bi_iter.bi_size;
-> @@ -311,6 +312,13 @@ ssize_t iomap_add_to_ioend(struct iomap_writepage_ctx *wpc, struct folio *folio,
->  }
->  EXPORT_SYMBOL_GPL(iomap_add_to_ioend);
->  
-> +static int iomap_ioend_integrity_verify(struct iomap_ioend *ioend)
-> +{
-> +	struct bvec_iter data_iter = BVEC_ITER_IOEND(ioend);
-> +
-> +	return fs_bio_integrity_verify(&ioend->io_bio, &data_iter);
-> +}
-> +
->  static u32 iomap_finish_ioend(struct iomap_ioend *ioend, int error)
->  {
->  	if (ioend->io_parent) {
-> @@ -328,10 +336,8 @@ static u32 iomap_finish_ioend(struct iomap_ioend *ioend, int error)
->  
->  	if (!ioend->io_error &&
->  	    bio_integrity(&ioend->io_bio) &&
-> -	    bio_op(&ioend->io_bio) == REQ_OP_READ) {
-> -		ioend->io_error = fs_bio_integrity_verify(&ioend->io_bio,
-> -			ioend->io_sector, ioend->io_size);
-> -	}
-> +	    bio_op(&ioend->io_bio) == REQ_OP_READ)
-> +		ioend->io_error = iomap_ioend_integrity_verify(ioend);
->  
->  	if (ioend->io_flags & IOMAP_IOEND_DIRECT)
->  		return iomap_finish_ioend_direct(ioend);
-> diff --git a/include/linux/bio-integrity.h b/include/linux/bio-integrity.h
-> index 0ea2a8bf7efb..a954c97be0b3 100644
-> --- a/include/linux/bio-integrity.h
-> +++ b/include/linux/bio-integrity.h
-> @@ -151,7 +151,6 @@ void bio_integrity_setup_default(struct bio *bio);
->  unsigned int fs_bio_integrity_alloc(struct bio *bio);
->  void fs_bio_integrity_free(struct bio *bio);
->  void fs_bio_integrity_generate(struct bio *bio);
-> -int fs_bio_integrity_verify(struct bio *bio, sector_t sector,
-> -		unsigned int size);
-> +int fs_bio_integrity_verify(struct bio *bio, struct bvec_iter *data_iter);
+Hi folks,
 
-shouldn't this have a static inline stub if BLK_DEV_INTEGRITY=no?
-linker fails to resolve this in ioend.c
+This is a patchset intended to address long-standing races in extent
+manipulation operations throughput the IO path. This series
+addresses the underlying cause of the problem Darrick recently fixed
+in commit 2f4acd0fcd86 ("xfs: resample the data fork mapping after
+cycling ILOCK") in that extent manipulations are not atomic w.r.t.
+each other and so can race in unexpected and unpredictable ways.
 
-not sure why _generate and rest are apparently fine
+This is not a new issue - these code paths have been a source of
+data corruption bugs for a long time. We have several outstanding
+bug reports for intermittent test failures caused by warnings or
+assert failures due to unexpected mismatches in extent state
+(delalloc, data/cow fork inconsistencies, state not matching cached
+imap state, etc) that have resisted attempts to reproduce reliably
+and/or find a root cause.
 
--- 
-- Andrey
+Hence I decided that it would probably be a good idea to do the work
+necessary to try to address the underlying problems to try to get
+rid of this entire class of bug from the code.
+
+I haven't been working on XFS for a year now; I've been working a
+completely unrelated cloud-based project, and so I haven't written
+any kernel code (nor C code!) for some time. Any mistakes I've made
+in the code, commit messages, etc are all my own and stem from being
+a bit rusty when it comes to writing kernel XFS code. Point them
+out, I'll fix them.
+
+I'll also be up front about the fact that this patchset is based
+entirely on LLM predicted code. I review it all and correct any
+errors, issues, concerns, etc immediately as each new hunk of code
+is predicted by the LLM to prevent errors from compounding and
+multiplying. Thus the code ends up the way I'd write it manually,
+not the way an unchecked LLM would vibe code it. Mistakes in the
+code are mine, not a result of an LLM being used to predict the code
+I'd write faster than I can write it myself.
+
+The first problematic pattern this patchset addresses is this:
+
+	- lock ILOCK
+	- map extent
+	- decide what to do
+	- unlock ILOCK
+	- allocate transaction
+	- lock ILOCK
+	- do what was decided
+	- commit transaction
+	- unlock ILOCK
+
+The issue is that the decision on what to do and actually doing it
+is occurring in separate ILOCK contexts - the decision and action
+are not atomic, leading to incorrect actions being taken.
+
+This is further exacerbated by the second problematic pattern -
+extent manipulations being executed in piece-wise manner and hence
+not being atomic with respect to the range over which the action is
+being performed. And example of this is unwritten IO completion. It
+performs a loop like:
+
+	for the range {offset, len} {
+		- allocate transaction
+		- lock ILOCK
+		- convert next extent in range
+		- update i_disk_size
+		- commit transaction
+		- unlock ILOCK
+		- move offset forwards for next extent in range
+	}
+
+Hence we can have unwritten extent conversion interact with incoming
+writes mapping the same range using the first pattern, and they
+lock-step through the extents in the range and the extent map within
+the range changes with each ILOCK cycle on both sides. The inherent
+raciness of these operations means it is difficult to reason about
+them and the races have caused data corruption issues in the past.
+
+There are similar (but more complex) interactions with COW
+operations as conversion and fork updates are split across incoming
+writes, IO submission and IO completion.
+
+What this patch set is doing is making both patterns atomic with
+respect to the ILOCK. Code that uses the first pattern is adjusted
+to return all the way back to the start if a transaction is
+required. We then allocate a transaction and run the entire
+map-decision-modify operation under a single ILOCK context.
+
+For the second pattern, these are converted to use a rolling
+transaction so the ILOCK is held across the entire set of
+modifications whilst still maintaining the "one extent modification
+per transaction" structure of the operation. Whilst this was always
+possible with some operations, the operations that required a
+physical block reservation for every extent modification (e.g. for
+BMBT block allocation) require renewing the block reservation and
+hence can receive ENOSPC from those reservations.
+
+Historically speaking, handling errors from within rolling
+transactions has been problematic and usually results in a
+filesystem shutdown as we can't cancel a dirty transaction cleanly.
+
+Hence to turn these into rolling transactions we require the
+addition of a new transaction block reservation regrant mechanism
+that can safely return ENOSPC from within a rolling transaction
+context. This means we can only regrant block reservations when the
+transaction is clean.
+
+When we roll a transaction, we have a new transaction that is clean
+after commiting the old transaction, and so this provides a location
+for regranting block reservations whilst being able to handle an
+ENOSPC error safely. However, if we are in the middle of a defer-ops
+chain, we cannot safely unwind even though we have a clean
+transaction. i.e. the "atomic modification" of the extent
+modification has to complete fully before we can regrant block
+reservation space and handle ENOSPC.
+
+We only want to do this block reservation regrant when committing
+the final transaction that finishes deferops processing - the
+original reservation should already be sufficient for the entire
+deferops chain, and so by avoiding regrants in the middle of an
+intent processing chain we avoid seeing ENOSPC errors that would
+cause a shutdown. Hence we only process regrants at the top level
+commit in xfs_defer_finish().
+
+With this mechanism, we can convert the individual transactions in a
+loop like unwritten conversion to a rolling transaction that handles
+ENOSPC in exactly the same way that the individual transaction
+method does. This is how the series makes these multi-extent
+modifications atomic with respect to the ILOCK and hence other
+extent manipulations.
+
+The overall series addresses the most frequently hit instances of
+both patterns. There are other code paths that have similar patterns
+that could be converted, but it's not immediately clear that any of
+them matter in any material way. If there are such instances, they
+can be addressed in future series.
+
+The series passed multiple iterations of the fstests auto group over
+mulitple fs configurations without regressions, and it has survived
+several hundred iterations of the recoveryloop group without an
+unexpected failure. Lots more testing is necessary, but given it
+appears to be working it is time to get feedback on the approach and
+code changes.
+
+Comments and thoughts welcome.
+
+-Dave.
+
+----
+
+LLM generated summary of the series:
+
+This series of 33 patches fixes several race conditions and bugs in the XFS
+extent manipulation code, then reworks the transaction handling to make
+multi-extent operations atomic with respect to the ILOCK.
+
+Bug fixes (patches 1-3):
+
+Three pre-existing bugs are fixed. A dirty transaction cancellation in
+xfs_bmapi_convert_one_delalloc() where xfs_iext_count_extend() could dirty a
+transaction before discovering there was nothing to convert, leading to a
+filesystem shutdown on the -EAGAIN cancel path. An isize update bug in
+xfs_iomap_write_unwritten() where i_disk_size was set to the end of the entire
+write range rather than the end of the actually converted extent, potentially
+exposing zeroes after a crash. A block reservation bug in xfs_zoned_end_io()
+where the reservation only covered bmbt splits but not the deferred rmap and
+refcount btree operations, papered over by the fragile XFS_TRANS_RES_FDBLKS
+workaround.
+
+COW direct write atomicity (patches 4-14):
+
+The COW extent allocation path in xfs_direct_write_iomap_begin() is restructured
+so that the extent lookup and COW allocation are performed atomically under a
+single ILOCK hold. Previously, the ILOCK was cycled between the extent lookup
+and the allocation, leaving a window where racing DIO writes could modify the
+extent tree and cause stale state bugs. Transaction allocation is lifted to the
+caller with a -EAGAIN retry mechanism, and xfs_reflink_fill_cow_hole() and
+xfs_reflink_fill_delalloc() are converted to use rolling transactions via
+xfs_defer_finish() to keep the ILOCK held across their entire operation.
+
+Delalloc conversion atomicity (patches 15-17):
+
+The xfs_bmapi_convert_delalloc() loop, which converts delalloc extents to real
+allocations, is converted from per-iteration transaction allocation to a single
+rolling transaction using xfs_defer_finish(). This makes multi-extent delalloc
+conversion atomic with respect to other concurrent extent operations.
+
+Block reservation renewal infrastructure (patch 18):
+
+New XFS_TRANS_RENEW_BLKRES transaction flag and xfs_trans_regrant_blkres()
+mechanism that automatically restores the block reservation to its original
+level after xfs_defer_finish() processes deferred operations. This is needed for
+rolling transaction loops where each iteration requires a block reservation for
+btree splits.
+
+Unwritten extent conversion atomicity (patches 19-20):
+
+The xfs_iomap_write_unwritten() loop, used for buffered writeback and DIO
+completion, is converted from per-iteration transaction allocation to a single
+rolling transaction with XFS_TRANS_RENEW_BLKRES for automatic block reservation
+renewal.
+
+COW IO completion atomicity (patches 21-23):
+
+The xfs_reflink_end_cow() loop is converted to a rolling transaction, making COW
+extent remapping atomic. The xfs_reflink_end_cow_extent() wrapper is removed and
+the locked variant renamed since there is no longer an unlocked path.
+
+Zoned IO completion atomicity (patch 24):
+
+The xfs_zoned_end_io() loop is converted to a rolling transaction with the
+corrected XFS_RTEXTENTADD_SPACE_RES() block reservation.
+
+Direct write iomap restructure (patches 25-33):
+
+The xfs_direct_write_iomap_begin() function is restructured with a unified
+do/while retry loop that handles both COW and non-COW allocation paths
+atomically. A new xfs_direct_write_args struct replaces the long parameter lists
+throughout the call chain. The pNFS block allocation path is reworked to perform
+extent allocation and inode update in a single synchronous transaction. Dead
+internal transaction paths are removed from xfs_iomap_write_direct() and
+xfs_direct_write_cow_iomap_begin() now that all callers supply transactions.
+
+----
+
+ fs/xfs/libxfs/xfs_bmap.c        |  80 ++++++++-------
+ fs/xfs/libxfs/xfs_defer.c       |  38 ++++---
+ fs/xfs/libxfs/xfs_shared.h      |   3 +
+ fs/xfs/libxfs/xfs_trans_space.h |  12 +++
+ fs/xfs/xfs_iomap.c              | 548 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-------------------------------------------
+ fs/xfs/xfs_iomap.h              |  23 ++++-
+ fs/xfs/xfs_pnfs.c               | 117 +++++++++++-----------
+ fs/xfs/xfs_reflink.c            | 313 +++++++++++++++++++++-------------------------------------
+ fs/xfs/xfs_reflink.h            |   6 +-
+ fs/xfs/xfs_trans.c              |  40 +++++++-
+ fs/xfs/xfs_trans.h              |   3 +
+ fs/xfs/xfs_zone_alloc.c         |  43 +++++---
+ 12 files changed, 675 insertions(+), 551 deletions(-)
 
