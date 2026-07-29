@@ -1,41 +1,41 @@
 Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9EBF47ACE9;
-	Wed, 29 Jul 2026 12:59:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4DAD4779B8
+	for <linux-xfs@vger.kernel.org>; Wed, 29 Jul 2026 13:01:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785330002; cv=none; b=K8bzPAM1sf06/279i4vMmxA3eZaIZiRwEWi94iM1zYKrgzMTsX8LNCc29hZThs1qxP3TooUqo/8QLzorWKSBJUDi0xzx8b6c2Kw40+S3PCJiVygfE/IAkz5JZDVhpL3T8OYHwC5pYVSizx3E86xAtmjHATMPkKvJnT9HCIN5+o8=
+	t=1785330086; cv=none; b=NHonZT76nhktd4Wm6dAkRYGnQKBQ6zsUOlWN55B+wlX309+h4WkMBCjAs5rWT7ULFyGoIDN2cu4i76nad8ZW7aANrapB76QZPz/485DjZaIFFKDKpg7hq3aXFRVkPcLqU9Kfo2EeU6OQPBQzyNgsHjoqifEZGND0Iyqk7czwY08=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785330002; c=relaxed/simple;
-	bh=/PzP6JGaPydfWNUraZYBJo6tpdlWALHrb5m+kgD4kiY=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=uX0M4EhiytwbLYMNtsCgSVfJ81YtQdMIuI/i1zMtnOMo1QNGY4BKkfCcxSFXeVV5Cw1qO/nnAFl96mW0YCDoojVjoJLovcUTuA68zbxDkX+EGJxUDl+p91/WHwx45AwmQMUDmaNYlqlGz1OWiS0GdAX7kuWU3xSOIT3GIttOCQY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=casper.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=olLFogHE; arc=none smtp.client-ip=90.155.50.34
+	s=arc-20240116; t=1785330086; c=relaxed/simple;
+	bh=iG8RCErDu0t8tY63KzcR7ofSo/de5Cc1S1ndcmwT2Fg=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Q48dNUm0vR7JWWzTLhiClCK7UTC6w/GYfQONNGeRPWUmdbcvCMXQ8Ob5Hkd4+K23Fq0wXoiDzoVl20pRiWnQ8lzsPM5XV/8B+34iwwGPLl1/EAzA7/ZtoONcZX0fb/usw03SUxzuRwir5199xnTYz8G6rz/dtmJwnZIL60QfwUQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=casper.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=i0QzGuxS; arc=none smtp.client-ip=90.155.50.34
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=casper.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="olLFogHE"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="i0QzGuxS"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
 	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
 	Content-Description:In-Reply-To:References;
-	bh=CvDfiUhj0/rbRz/sFU2oR+wTKJag6K5qy+m30gW7YyM=; b=olLFogHEsLuQrFn3Yi5l4jeIZB
-	CfhWkGowiOYLkUie4UaYaxejybsTAPqAHTXu+MYECzpxGRkWDSnyvN8QPRufMG7/xbiGPuIKM6fu7
-	X+v9m+O0Z3n56/8shn4+mNGRhdT8+vX7jMvDOZPA9MjLVXOFnFb3HndYzR3oDdFUD6SBN3LMTyTXo
-	FCflOY4mVF7kdejxfA5TolRcx8jLxaDCj551G/qGusIVWof/Qp9Bkf2EcdhGa1jQK3Myipcmd8MSx
-	noTY/LSg0/gIxbNyTSeBPnJ09kva+O+w4a5X2+pxGCkYJaU2s/nPeyoNx7vtS8a7HBFYXhOG8edGj
-	wSEXvyyg==;
+	bh=wD4etcgvYU/SNYGxP4fvEpnr1tUkCJ1rrMffuk5SmPU=; b=i0QzGuxSqlQ63h37IC9as8d6G+
+	CKsr1/OzF6AYB8iSiquPe2TIap/K/ov7SyHIEmMP3A3IfLREz0fow7P7b9HvbB/vezrOKrIA60jNx
+	fti3z63/BhP8oqHbUr116Y3a8bkLPGv1NJB7jG/3NvkYVpSgZLLIUI1n61X3pkPO1AFKNphdO4qq/
+	987VL5Ehe2/ocSJhim2ITwzm5dzcZit9t1ggsNIY8E+UHHqIXxbC4LSnKdyMuDHch0r2DVZtifJp1
+	YYN2+eGrQ5pOLRH028HHGNtr0RecLiRKKj28CnD7G1M2FisiSnEVuNK9ICR9iHPs3wXwBe33Czh00
+	0iigcPyA==;
 Received: from 85-127-110-197.dsl.dynamic.surfer.at ([85.127.110.197] helo=localhost)
 	by casper.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wp3t7-00000004PId-3Cq4;
-	Wed, 29 Jul 2026 12:59:57 +0000
+	id 1wp3uT-00000004UMl-35WG;
+	Wed, 29 Jul 2026 13:01:21 +0000
 From: Christoph Hellwig <hch@lst.de>
-To: zlang@kernel.org
-Cc: fstests@vger.kernel.org,
+To: cem@kernel.org
+Cc: darrick.wong@oracle.com,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH] xfs/507: use mount -t xfs
-Date: Wed, 29 Jul 2026 14:59:55 +0200
-Message-ID: <20260729125955.2281762-1-hch@lst.de>
+Subject: [PATCH v2] xfs: check v5 superblock features early
+Date: Wed, 29 Jul 2026 15:00:58 +0200
+Message-ID: <20260729130121.2281910-1-hch@lst.de>
 X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -46,28 +46,44 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 
-Sometimes mount wants to try every other file system but XFS when
-mounting the loop image, making this test fail.  Force mounting as XFS
-to make it reliably pass.
+When working on a new features that reuses the existing pad in the
+superblock, I noticed that mounting such a file system on an old kernel
+logs a rather confusing warning:
 
+    XFS (vdc): Metadir superblock padding fields must be zero.
+
+This is because we only validate the various feature fields in v5
+superblocks after the common superblock validation helper is called.
+
+Fix this by calling the feature validation first.
+
+Fixes: eca383fcd63b ("xfs: refactor superblock verifiers")
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- tests/xfs/507 | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/tests/xfs/507 b/tests/xfs/507
-index e1450f4f8f94..a9eb8646680b 100755
---- a/tests/xfs/507
-+++ b/tests/xfs/507
-@@ -86,7 +86,7 @@ loop_dev=$(_create_loop_device $loop_file)
+Changes since v1:
+ - minimize the fix, and implement all the good ideas later
+
+ fs/xfs/libxfs/xfs_sb.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index 47322adb7690..75f2a021ee6d 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -1118,10 +1118,10 @@ xfs_sb_read_verify(
+ 	 * because _verify_common checks the on-disk values.
+ 	 */
+ 	__xfs_sb_from_disk(&sb, dsb, false);
+-	error = xfs_validate_sb_common(mp, bp, &sb);
++	error = xfs_validate_sb_read(mp, &sb);
+ 	if (error)
+ 		goto out_error;
+-	error = xfs_validate_sb_read(mp, &sb);
++	error = xfs_validate_sb_common(mp, bp, &sb);
  
- _mkfs_dev -d cowextsize=$MAXEXTLEN -l size=256m $loop_dev >> $seqres.full
- mkdir $loop_mount
--_mount $loop_dev $loop_mount
-+_mount -t xfs $loop_dev $loop_mount
- 
- echo "Create crazy huge file"
- huge_file="$loop_mount/a"
+ out_error:
+ 	if (error == -EFSCORRUPTED || error == -EFSBADCRC)
 -- 
 2.53.0
 
