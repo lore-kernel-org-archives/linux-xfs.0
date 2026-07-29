@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F104D1DF75B
-	for <linux-xfs@vger.kernel.org>; Wed, 29 Jul 2026 04:05:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5438E31328E
+	for <linux-xfs@vger.kernel.org>; Wed, 29 Jul 2026 04:07:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785297955; cv=none; b=aB2+5Xycku6P9IRcqaQYw4+AII0GynAkBE6ecfbzX1LnzUXOmvEq5Sy6qQcvFRhUcEhPA/b+aBAZ6DyunyA0YPIJWNk08Z9JsUjb5ObX8pK3S+ENzZz2Aye6S0MFPAZHfnC0r+LlKtHQN6pxW/FocMaVVzZRn4V/jb5cS/xGIzc=
+	t=1785298077; cv=none; b=JnSGe59a9iievRuArn4AWG6C41X3b4L/o616RVOJKzl0bKSlcfxlO68jE6t4JXUuKDyzSlxX8b/rnTErbbQBJzSjLG8Xvd53TCjSQiicHfFVjHlTMubtmI1Jg0JXasjnvXC4oKR979ndSLMXLwY80OfNgGFqvX2k3iydCTbThiY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785297955; c=relaxed/simple;
-	bh=YXKh8pb9nIIHYgxVcXtEcLf/eUX29cJKhCqgpXSflXo=;
+	s=arc-20240116; t=1785298077; c=relaxed/simple;
+	bh=okpaBx8yHCfGJqCvJLWQPsSQn+t88jk5t0UJ8jOEHsk=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Eb6L48WwuQRwnqAjncBR4kkj59rcTCtzClVtA2Xu/x3sCmP5+edNKIR/3/uSt5a3yq6mvTrB2G8Srj5aYWN5JzY4fMQNilcycwNKbZPmT7QKBewVCaiwleB0ArJtMSuRf0T9AsMB5Sa6BUyeGQToXQT1nog6P9kkyeAuMYZYtO4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NKG6zYnx; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=jLrdZYz+wniJEJJXTS4SS1JR1j25JovErotQW6Cay8zfB8ahqn4+OJLTbismyXAanATABysTfKXTBMOPesOxSX0OK78SrB2lVBBpnjKgt4qdaEKW5SK+cnnGS6FPFvikiR4TWSu4ol5/iytETTBjvhA7jpbLJm5AudgOLZBvyeM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Sv0v7l/Q; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NKG6zYnx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DD19F1F000E9;
-	Wed, 29 Jul 2026 04:05:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Sv0v7l/Q"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6EEB41F000E9;
+	Wed, 29 Jul 2026 04:07:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785297953;
-	bh=OHcHK65NVmKWD8Dje/5wZR9y8huRdTG+FfBI1DvfCkc=;
+	s=k20260515; t=1785298076;
+	bh=bCtupAXY+R+ai2iCaW4heX1Ihr/iGkuc4iqNhbnF4SQ=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=NKG6zYnxpUbPT0zS8T5IPkKkWjGzsgbIZ9SHsHXMJqQB7wegHReshcl22W8PPfEAF
-	 l/s9gWEqLLAB8JtX+0mDzTSflH+jqBscRc/0jWmXEXnKJdL6UJPShQ5sHAHCS8kDDl
-	 QS4HvePfaf4WD5IkUhrAEx0+4h1Q1kx+JMmSMc+PzhaihyiRF9xK6DAIv6nP9+H4CA
-	 Pptf1L8bKdCZQeXpZc/pTav01bShjvacETF+wNEEtMQqVChnb0bxVEyKQ0pwJgcYWE
-	 T0zTNov51hnbgt1yCVIh47MmULfh3cVhbQTJpNVxfcojwdGm/Dn8kGEqhf1p40K2ud
-	 u0/XbT1p7BBTw==
-Message-ID: <171ae5a9-8524-488b-b999-8bac192f926e@kernel.org>
-Date: Wed, 29 Jul 2026 13:05:41 +0900
+	b=Sv0v7l/QsG3l+E0D0yTxJI8b7nzNW7Ly8YyX43Nq6APd3YMmS4ypkyik+wlHkNnrz
+	 1JMtKam31os6hfuH1vlJted6YfSrcd07f4uD/Gh6otL/phH1YjKIDPXQ7P60BydPIK
+	 04oYktPtsAOgg0zxWJtxFE8iOUuftHsLKq9gKWVTz/2wxDJLT0YJDw3dvp9Iq3EXXR
+	 gD8x595sv6IbjPlg+9HUiEqQT8wBrHz2KELNE1dO7Y57fooA2PxasZeFdkiJ4tC0Wr
+	 ds+R9YlQg/ykcY+8WMSB30Vj2+Gj7GhXyCr4G+Oc6cfpOhIZLG2CAQW8QGnT/uuxkf
+	 n6+wTNnexh4Uw==
+Message-ID: <cf06355e-0974-480f-8649-64abd2cbf433@kernel.org>
+Date: Wed, 29 Jul 2026 13:07:44 +0900
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -35,47 +35,32 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/2] xfs: add a comment to describe xfs_gc_bio.victim_rtg
+Subject: Re: [PATCH 1/2] xfs: add a separate bio_set for spliting GC writes
 To: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>
 Cc: "Cc : Hans Holmberg" <hans.holmberg@wdc.com>, linux-xfs@vger.kernel.org
 References: <20260728080650.1777545-1-hch@lst.de>
- <20260728080650.1777545-3-hch@lst.de>
-Content-Language: en-US
+ <20260728080650.1777545-2-hch@lst.de>
 From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
 Organization: Western Digital Research
-In-Reply-To: <20260728080650.1777545-3-hch@lst.de>
+In-Reply-To: <20260728080650.1777545-2-hch@lst.de>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 7/28/26 17:06, Christoph Hellwig wrote:
-> All other fields have comments describing them, add one for this field
-> as well.
+> Allocating the new bio for a split from the same pool as the original
+> one can deadlock under memory pressure.  Add a separate pool for
+> splitting GC write bios to avoid this.
 > 
+> Fixes: 080d01c41d44 ("xfs: implement zoned garbage collection")
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Looks good to me (see nit below).
+Looks good to me, but the commit message would be better with an explanation of
+how the deadlock can happen, as I do not think it is that obvious.
+
+Regardless,
 
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-
-> ---
->  fs/xfs/xfs_zone_gc.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/fs/xfs/xfs_zone_gc.c b/fs/xfs/xfs_zone_gc.c
-> index e4f70e024632..e2bad83b10f6 100644
-> --- a/fs/xfs/xfs_zone_gc.c
-> +++ b/fs/xfs/xfs_zone_gc.c
-> @@ -103,6 +103,7 @@ struct xfs_gc_bio {
->  	/* Open Zone being written to */
->  	struct xfs_open_zone		*oz;
->  
-> +	/* Realtime group currently evacuated */
-
-May be: /* Realtime group currently being reclaimed */ ?
-
->  	struct xfs_rtgroup		*victim_rtg;
->  
->  	/* Bio used for reads and writes, including the bvec used by it */
 
 
 -- 
