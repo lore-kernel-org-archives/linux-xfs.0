@@ -1,84 +1,85 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from m16.mail.126.com (m16.mail.126.com [220.197.31.8])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84AB9432E68;
-	Wed, 29 Jul 2026 08:48:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54642400987;
+	Wed, 29 Jul 2026 09:00:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.8
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785314919; cv=none; b=gMcCOBlK7RtgEifNmDNwoXf7mCmMTe2or+ECAsGlNBmlyDINhXwNm2UKMFNVOEo7zxaVvmUJgPAhLnwnVq/uRPs4TDE3AJzUagyCDk0RlWOuste8yuquI/o1du/LiSwqNn5OT//74jNE0/F7F4+VAkYLRubPgTSQOagubO6OwfQ=
+	t=1785315623; cv=none; b=p5qz6FZzRItbSlJG0X+06xcsU0RJtud1wML+6cI531G1+upB6i8EiVMXgJE46RrbPaOlskrx1fVYM5791Q4hkFrTVQKVTA4PuNccAWxxNT6nNthTbknQePmXfd4tzUnHElAlljWeP8h/5RiWGftLJ5v/0zFLjQ51Ax2YB9MI5J4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785314919; c=relaxed/simple;
-	bh=/narXh7pPOZ4O+pLXLRtRJ77mb3IERKycuMvFjLVUkw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=mpEOjc6BoiClXjDtVOqjRDKDd8m/+Qmhod8kzohdp51CYliMbQsZ/WXQFvfFLzwDK8UA6x/6xmn0NqB9yYkLW6+/cXn8TjmncJ0TvJ2osqQJFFEYmwdmIrTYq1Q6sOxHaAjG/9Bhq3o2ttnybN0lLN6v8XDBE0Hm6oBWMNQaSh0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=RZXWSbw8; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1785315623; c=relaxed/simple;
+	bh=jcuQtevEerw/A6wn20c0rr8xik0xiI5Auqu5npUa6E0=;
+	h=Message-ID:Date:From:MIME-Version:To:CC:Subject:References:
+	 In-Reply-To:Content-Type; b=QuYeBkDXhhv961vrmCEHEbqsWkAp6q/0FKr7MZjqQhMqc97eYtY6wJ54xbswHyLjlhUbgJWlxvj2NJ+9Wkt9Y+gg0utWRq41jf9bJ3QXqapFIrlIc54gPtA1zBiM83VuYedOy2vnBwTdd9QLNuJWfTy9wBv9XXBsWU+ZYZvZY6o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=126.com; spf=pass smtp.mailfrom=126.com; dkim=pass (1024-bit key) header.d=126.com header.i=@126.com header.b=XlLz8f2m; arc=none smtp.client-ip=220.197.31.8
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=126.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=126.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="RZXWSbw8"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=/narXh7pPOZ4O+pLXLRtRJ77mb3IERKycuMvFjLVUkw=; b=RZXWSbw8u1u57uY2shP/yxlNQq
-	R9nR/ZWG3r/ZX/a4kI4Mfv21+SVafHoH2rU0vvbVkGmIJZH2IlJCcji2wdKWfRuJ8OfosxNn8cbpK
-	qedUwm0QIZuWAVU77jOxQOOwWKucCQd3ioDZG1ObK5h2+2NDMQopLovEgyN4AWhujYyXeamM88il4
-	SlwyJcDysvtZmqntJ80ap8lu1o6rPHfLTN4lu2zXMFDdzOTm9vPiyAIBN6ya7nn+05AhUGk06oF/G
-	PJWiNoci1XtaL4F44iCmw+ZXYDSF8bReAknLuzJEAwQUk2moDmiClY7+5NPWTz8tqkHJovN2PTKX+
-	P9WdR9eQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wozxo-00000007HFQ-3Kwp;
-	Wed, 29 Jul 2026 08:48:32 +0000
-Date: Wed, 29 Jul 2026 01:48:32 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Jan Kara <jack@suse.cz>
-Cc: Tal Zussman <tz2294@columbia.edu>,
-	Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>,
-	"Matthew Wilcox (Oracle)" <willy@infradead.org>,
-	Christian Brauner <brauner@kernel.org>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Carlos Maiolino <cem@kernel.org>,
-	Alexander Viro <viro@zeniv.linux.org.uk>,
-	Dave Chinner <dgc@kernel.org>, Bart Van Assche <bvanassche@acm.org>,
-	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-mm@kvack.org, Gao Xiang <xiang@kernel.org>
-Subject: Re: [PATCH v6 1/4] block: add task-context bio completion
- infrastructure
-Message-ID: <amm-YHQJFUsj4AM6@infradead.org>
-References: <f1b8eeb6-2397-4f48-a21a-a023eb0c80ab@columbia.edu>
- <rkb5oei6cx2erbyininczz6ukbnquqheexhu7tznn5rslkkdn7@b4kpdyhdwdb6>
- <ahbq0RdUyLIPiItB@infradead.org>
- <80cb53f3-e7e5-4f96-bacc-f9fb7661d976@columbia.edu>
- <cuyklvhnt37xwk3jlr2iyyxxkzvt4bsf5iqv2gag4ixdicnbk2@rfqgjlclwesz>
- <4jtsjd2sbsn2w7fzfwb7wwowz72r4kc6345ckkkcjoxjbbwjwn@rkl44x3o3sgy>
- <cc58a101-6d09-4e42-b99d-673271934c29@columbia.edu>
- <amgrwn0yQoFvJP4u@infradead.org>
- <8124341f-3af2-4a16-897d-38db5ab5a9d4@columbia.edu>
- <4ahxusvs255ibn5unrayfeioqijbbidtn3l7joczxphwo2faee@3wtnw4nzu6wi>
+	dkim=pass (1024-bit key) header.d=126.com header.i=@126.com header.b="XlLz8f2m"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=126.com;
+	s=s110527; h=Message-ID:Date:From:MIME-Version:To:Subject:
+	Content-Type; bh=ANcUODjA3VpWjjYEN5SkyJZz9EKU5KnA+PCUCHa9VuI=;
+	b=XlLz8f2mw9ORUPBPbp9FfTsZgMnf/CkbyVflpAxuMwTs1odTcNaSbklduFalP5
+	22Fg+ta3BDaDYGj2uaU1Sdnl2yZfcXF/gqgUQEsNMSTnuE3vHCDfCGTc993Oy7zf
+	kv53gkcZ246E3G2r30jz+0sl/wWQQalppuYkaqV8nUYY0=
+Received: from localhost.localdomain (unknown [])
+	by gzga-smtp-mtada-g1-3 (Coremail) with SMTP id _____wD3b7L_wGlq7vLoEQ--.13331S2;
+	Wed, 29 Jul 2026 16:59:44 +0800 (CST)
+Message-ID: <6A69C0F0.8010206@126.com>
+Date: Wed, 29 Jul 2026 16:59:28 +0800
+From: Hongling Zeng <zhongling0719@126.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:31.0) Gecko/20100101 Thunderbird/31.2.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <4ahxusvs255ibn5unrayfeioqijbbidtn3l7joczxphwo2faee@3wtnw4nzu6wi>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+To: Christoph Hellwig <hch@infradead.org>, 
+ Hongling Zeng <zenghongling@kylinos.cn>
+CC: cem@kernel.org, dchinner@redhat.com, linux-xfs@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH] xfs: fix fallback data device flush for realtime inodes
+References: <20260729073918.64505-1-zenghongling@kylinos.cn> <amm6-JkURolQqXDo@infradead.org>
+In-Reply-To: <amm6-JkURolQqXDo@infradead.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wD3b7L_wGlq7vLoEQ--.13331S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7uF4UJFW7Cw4DZr4rZFyftFb_yoW8Xw1rpr
+	Z3XF13GF4DKFZxGryfZwsrGFyfJws3Aa1fWryrAry5C3W5XF1Sga9rKr48t34UtFn5Aanx
+	A348uF95AFZ0kFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07j-sqJUUUUU=
+X-CM-SenderInfo: x2kr0wpolqwiqxrzqiyswou0bp/xtbBoABlNmppwQA+5AAA3r
 
-On Wed, Jul 29, 2026 at 10:41:40AM +0200, Jan Kara wrote:
-> This looks a bit hacky and at least deserves a comment. Ideally we'd get
-> rid of the xfs workqueue and rely on the generic offloading mechanism. But
-> as Christoph wrote maybe let's just get something good enough in and we can
-> work on improving that later. In particular if Christoph has a plan how to
-> clean this up :).
 
-The XFS workqueue can't just go away, as for writes that require
-completion time processing (unwritten extent conversion, i_size logging,
-zoned block mapping), we want to serialize the processing on a per-inode
-basis as otherwise the different helpers would just content on the xfs
-inode lock and burn cycles.
+在 2026年07月29日 16:34, Christoph Hellwig 写道:
+> On Wed, Jul 29, 2026 at 03:39:18PM +0800, Hongling Zeng wrote:
+>> xfs_file_fsync() has a fallback flush for the case where the log force
+>> was a no-op, for example fdatasync/O_DSYNC overwrites of already
+>> allocated file data with no metadata updates.
+>>
+>> The current fallback path is limited to non-realtime inodes and always
+>> flushes mp->m_ddev_targp. This misses realtime inodes whose data target
+>> is selected by the inode and may be mp->m_rtdev_targp.
+> No.  The rt device is flushed before the called to xfs_fsync_flush_log,
+> as we need to ensure that the data is flushed from the cache before
+> the log commit.  For the data device, the REQ_PREFLUSH case takes
+> care that.  After xfs_fsync_flush_log we only need to take care of
+> the data device if the file is on the data device and the cache
+> wasn't flushed as part of the log commit.
+Thanks for the explanation.
 
-We want to get rid of it for read completions, and a patch for that is
-in the lazy bounce series I posted a few days ago.
+I understand that for realtime inodes with a separate RT device, the RT
+device is flushed before xfs_fsync_flush_log(), and therefore the
+post-log fallback path is intentionally limited to data-device files.
+
+The only case I was worried about is whether it is possible to have a
+realtime inode while mp->m_rtdev_targp == mp->m_ddev_targp, i.e. the
+realtime data target is effectively the data device. In that case both
+the early RT-device flush and the post-log fallback appear to be skipped
+when log_flushed == 0.
+
+If such a configuration is impossible by design, then my patch is wrong.
+
+Thanks for clarifying.
+
