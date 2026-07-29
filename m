@@ -1,62 +1,64 @@
-Received: from mail-pj1-f53.google.com (mail-pj1-f53.google.com [209.85.216.53])
+Received: from mail-pg1-f175.google.com (mail-pg1-f175.google.com [209.85.215.175])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC46446C838
-	for <linux-xfs@vger.kernel.org>; Wed, 29 Jul 2026 19:29:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9430145FFAD
+	for <linux-xfs@vger.kernel.org>; Wed, 29 Jul 2026 19:29:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785353396; cv=none; b=bX2n8pkSJX6Jaej0MOMjksDytGnHjd61x9pevH+ygTA2CF6srIzBaUupRwxTRK5UndL8i1T8ryKNvIqR3Klj/vOUeDk0uyxZEKCcAqDoF+tp9WwzwbLUezU7hs+HhkQ9OpywisTVqHA8JbJbIC4GQ5SvhuAPcOzjNyJNlLE2k7k=
+	t=1785353401; cv=none; b=WLtU5A9M6XUl83S3X7l5oYmtiBNKn2D4tE2PtJ3j75Uhw00Ms6p7LRbaMJ+uMzZdqghBjd7aduKzxy6mpLtwdse7CPpNwYxVPD733uWOc287g5Zr9bwg2oKo42Ek5GZCTGNmcADl2HwNyfcQ/lX9+6uckBsM0EVGfRlDt7updkA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785353396; c=relaxed/simple;
-	bh=/kCEApx1GUiQ4M2nyPM46Cj/bUTisD+vHILiLyuC+4M=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=gplyuZeWWMH9T/OTMvmpbACIx1xHsJKmK59Mauh56yfSw+ABuTNGVj+8iGpm8GHtw0CTYdCCmXiqCzl2a+8ECfffFTjwDU2D2GPF+vyEK0JIxTRs9M8Nf14BK1Ky6GQYyi/7fAG9ADAfEWh4S0yEjY83NNhO7UsxUi2jQ2uOVrw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=mXM6Jv8h; arc=none smtp.client-ip=209.85.216.53
+	s=arc-20240116; t=1785353401; c=relaxed/simple;
+	bh=dm3LN+/ZsUKIhfnc4z/JFkhcplzF7edc+ByCQORKFDQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=eqf4iqRvBvhZzItf8R/jkrujRLTs2sQBBB9nhv8xLyy0SysJl+nIGrWXDToFwX+MfV+lf90QxRgsqQysV/cNtNMrtaukD1g2I1Kuc58xuaGcmnmBo3HPBYawJILTDBd7ikL/5z+ignBnTAW8M3cIiF2YeLJyaPinusEB5joKKr8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QccZjmF0; arc=none smtp.client-ip=209.85.215.175
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mXM6Jv8h"
-Received: by mail-pj1-f53.google.com with SMTP id 98e67ed59e1d1-382ef647e20so1372998a91.1
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Jul 2026 12:29:44 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QccZjmF0"
+Received: by mail-pg1-f175.google.com with SMTP id 41be03b00d2f7-ca913a601fbso921818a12.3
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Jul 2026 12:29:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785353382; x=1785958182; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=ovZABv9yoc1Q8/xxLQmvxzzbEKSvbmvmRNSZrpsZp4g=;
-        b=mXM6Jv8h6bvfcalBi+Qoni3+kpjKtfTv6cBpsu2fBlvXGpOROCWn+OVsoNk1Lv7AlJ
-         nsYUiA8bT4v8s9RmIcSTfQApgRmpNXaD6lLOtH0KGDhziZxRlp03LvAzsWHUebkCRXeg
-         vdmmRIuydqHqt/O3wuWrltAvHy1DR0EXajpLiJTaGlCzW+Kg+fYAssJdKpBtsE+Bl2GD
-         7SgqOrqpfaBWDYPC6h3x4Bocmeyfzc8HPEnXKgx+xQ8i46ALLuWCnFMT3A7ZAQsWv5Ux
-         51qWXPtpjABh5/WVqkr+IdPKHXXEPSqjcrzgHhyVPfE3qEtJctttMG6fBEL8tQdnFiy2
-         B3Zg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785353382; x=1785958182;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20251104; t=1785353387; x=1785958187; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=ovZABv9yoc1Q8/xxLQmvxzzbEKSvbmvmRNSZrpsZp4g=;
-        b=BgDleXu9i4yE+fn6/5FCNC2rS4w/a5RZmkRF25Y5nSkhtW0Kwr+2g1gvWGWvBOF5Kc
-         WwM224Mazy11auhsQ8KAqjDsl3UbxEbl1q9KroFrqPVqQ8jRlXgyeeDkZFXINg43C1r0
-         AQT0gaSjVl2rVQyhhTb1QPRd/ZJBk5CJUiVUPwaFyxW5iJ2Wkiz3GGzTkYxWtLs/AJZ6
-         KfB2ajyiOpREujiEFzfu+SYME+go0I3ffjdrXO1pIua4aYxakBYJOn+mzG5M9fhk/gDF
-         h0ZJtK2nUFDwW9YusUfzlhp8FaDKC/eqB8PN0lnmv3wfrOTPMoIvwLUGuECAXI79/CS+
-         ZYVw==
-X-Forwarded-Encrypted: i=1; AHgh+RrO+tCOk89YCC73UakMZTyZV0f87rHNnRy6H+o0SDyBRL47LJvTp3Sw3pXkE6KfvXxPn4OZzndT6xc=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxgqqgh0Dw/tUrUM9EqB9Pc6XgMnnQBrMWOocJsCPyUWIJfDrV0
-	/qVKaiqaCicL1msY06UENZbSBOgvklwbD/92ATzdg7XDzHdjbdhG5RJ2
-X-Gm-Gg: AR+sD12FKyhMZwX5ML6hA+1XEta5JEg3Si9sG9ERzbIi6hr+ed1+rJPgbYRDrGcqTtY
-	T8AZ2ukL6SLBJnobuyMf4dX1QtiVa75THltcHMHKO5evr87C1YbpSeLUgKVIj4oV0J1PGoVEvJV
-	L8sMpLycqFZExdycGq7vyiznnSsSD3Z9djm5AuypwCx55cA/XVvzcs58rFgP6ccT6wXqj5ctwmt
-	h63tpf40EgRtjVVf2GRKoEEh++fEVO4cHTPzMMTke1hH4q6x7x9FEDv4GGkNxtXq3YP7NpNwYkn
-	W0zm5+HklufsRCu0PlMZLEvM/+PX1F37s3gnwMclvXPyb6UuSBunLOMKRpWcb94GyAd2LpKibE8
-	HuOozOVmqzg8589sKBs1i0+92AjHXt5E1F5vMlylfEsw0wy8/lGYbqOEQdWCmobNztu+4eFEl8a
-	kjzN0aUcMIAxxnoQcm5W8hWd9BpGG3Pv9GHDVZKO021/vXwkmT9/Apkq5On/uEMfSnjjajntnlp
-	Fbk1ZPfmpvJPRS4MxPIa4z0jGjBN/LqcTpM58/8
-X-Received: by 2002:a17:90b:4d11:b0:384:8a11:33eb with SMTP id 98e67ed59e1d1-38f99257d04mr170061a91.24.1785353381687;
-        Wed, 29 Jul 2026 12:29:41 -0700 (PDT)
-Received: from localhost ([2a03:2880:ff:50::])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-38f642e33cesm3188955a91.14.2026.07.29.12.29.40
+        bh=H36vbA9+RdAkC7K19J81IrluTjdhjew2liZ0qqBsVew=;
+        b=QccZjmF0dV+R/Z/5hQgnky5glmKN8xTzvq8+jC6iMaG3XbzP6sSk9BbWuvpb7yaiO9
+         suAxxi/0qGUqI2cM69ZjtwXHIs5ZC7IDPz6jaUcOZtO3g6IEvS+5HWnjN1uG6SilbQyJ
+         d0gVDbl2/EH5ouPif8YBXXoBmKl2xCzdwJ9o0qw21QAVC31LsjBweIhUTq7ykEqlQaqt
+         ctZTfVAIXaW8cjVCgpNm1C0Oip4PjqenNZuH8tx5hg8ClcKbT+GX/n1eA7gSR7b/M3ek
+         H3a4UHZ8wUMKQjNQyr4G82mpYZLcCq8Qq6/9xyjGVZAASv0nMvUGhMgeSHPSWW1tcG/5
+         MOXA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785353387; x=1785958187;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=H36vbA9+RdAkC7K19J81IrluTjdhjew2liZ0qqBsVew=;
+        b=Ou3X6NELdPe4vZFEdaN2cmS5kuwLB/zBAWRmwwIMZ5RYWm8murcrMMcRRb7IiIBy+K
+         XLMDcB18mvxMLduNWhlHsLKdKcdm3Gy6yJtv5papOHDhunBFTrk986FmkbOjzZMymO+7
+         EvdgzCMWOWeREN5kORaDLFCCeItBHommSV5dqXuHaGUNnJsJ+yDHHfYxtmjZK06bPIql
+         7JwdW4GL/Izsi5omTFBpVQkkJJZN9CK0DS9xPkKFoSiH7EZO7pbtryVyZ1Lw3UZhQP+G
+         54f+AhqSbXzZY4vWL3m2Fx0Ch+NIjMGaq/jSrR1o19HUdSQ1MUkSqCEXQuFqQiNR2R9b
+         eoNA==
+X-Forwarded-Encrypted: i=1; AHgh+RoclvF6jCmUzY7RidTciS8oHiSRy50L0PuEwNekvtaf1sCiCan87f9dyHN+FrVMjo4IQN37quWc6Ao=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwrndhWctxnmfGwhMpKpvEbR6ora7l9qY3VGavi8cOmxnqp+v9m
+	l59sh5yE2CoJufWto3BJ6oJWxqABKvKjW892CKJiQwwdm+DCRg0gQU3g
+X-Gm-Gg: AR+sD10aWA7ijuq7+WUhK0aMxM1T24Qid3XJo+2qFrZUrTmuQrDAYGcgYHDpPjDemLw
+	R4IZkn+4VkrtXHQfbHCRm/1SMoWuK62y2jfbOHtjIZpdQE/frRAcdfNUrPMEUZzoF4CT+/wtvKu
+	sjd3qvqo06nzX7qwjy3Lz2xLw1Yk+4HhcEQ7pW/kW0h5zTPuLN/UDao0s1bIII9w5FBep4K+M/j
+	fhSUz9zEubgnCGQI++WnYY7DRUqTciutQAfimdZQf10vFAtcqzWBNCFZoYsTej317ilXRmWRtIV
+	xKdCV0B1Lg0liqoTWGhq3rSDmSZGWs0lSK2e86IHonqvf5Va/dfA789UWpVU77bm0ZG8PYs8y3M
+	Y6GGRWtRZe66oSAaP82nM1x2XQVS5m292+5tlScZgGzSUd51WCNUztZu5Y3W5+ssiWLz/6hKEeR
+	h2wGCouXk/GKnIm7FDxsDDy8gEi7HC2tVsmeoTPqtq5pkHohQMmA1JcvH2y8uT2oI2KPvSfEsVt
+	VdQKPCj+j7PV59I775hveriQNVhtijqhaGwwo9G
+X-Received: by 2002:a05:6a20:7284:b0:3bf:aab1:cc8b with SMTP id adf61e73a8af0-3c8ba547a35mr9358525637.46.1785353387239;
+        Wed, 29 Jul 2026 12:29:47 -0700 (PDT)
+Received: from localhost ([2a03:2880:ff:4d::])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cbdb79a3767sm1259481a12.7.2026.07.29.12.29.45
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 29 Jul 2026 12:29:41 -0700 (PDT)
+        Wed, 29 Jul 2026 12:29:46 -0700 (PDT)
 From: Joanne Koong <joannelkoong@gmail.com>
 To: Christian Brauner <brauner@kernel.org>,
 	hch@lst.de,
@@ -83,10 +85,12 @@ Cc: changfengnan@bytedance.com,
 	bfoster@redhat.com,
 	linux-ext4@vger.kernel.org,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH v5 00/22] iomap: convert to in-iter iomap_next() model
-Date: Wed, 29 Jul 2026 12:27:15 -0700
-Message-ID: <20260729192737.3190206-1-joannelkoong@gmail.com>
+Subject: [PATCH v5 02/22] iomap: split iomap_iter() logic into iomap_iter_next()
+Date: Wed, 29 Jul 2026 12:27:17 -0700
+Message-ID: <20260729192737.3190206-3-joannelkoong@gmail.com>
 X-Mailer: git-send-email 2.52.0
+In-Reply-To: <20260729192737.3190206-1-joannelkoong@gmail.com>
+References: <20260729192737.3190206-1-joannelkoong@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -95,198 +99,315 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This series implements a suggestion by Christoph for finishing the conversion
-of iomap to an iterator model. This revives Matthew's previous RFC [1], which
-had the same intention.
+In preparation for changing iomap to use an in-iter (->iomap_next())
+model, move the iomap_iter() logic out into the new iomap_iter_next()
+helper function.
 
-Every iomap operation currently drives its iteration through a struct
-iomap_ops, which contains two callbacks, ->iomap_begin() and ->iomap_end().
-iomap_iter() only ever sees these as pointers, so every step of every
-iteration is an indirect call, including on the hottest paths. 
+iomap_iter_next() is added as an inlined helper so it can be called
+directly by ->iomap_next() implementations where the begin()/end()
+callbacks can be direct calls.
 
-This series replaces the begin/end pair with a single ->iomap_next() callback
-that finishes the previous mapping (if any) and produces the next one.
-Collapsing to one callback lets a performance-critical caller inline its
-iteration loop and pass its ->iomap_next() function as a compile-time
-constant, where the compiler can devirtualize the callback into a direct and
-inlineable call rather than an indirect one. It also allows future callers
-more flexibility in expressing custom logic in the IO path for driving the
-iteration forward.
+The DEFINE_IOMAP_ITER_NEXT() and DEFINE_IOMAP_ITER_NEXT_END() macros are
+also provided to generate the boilerplate ->iomap_next() wrapper
+functions that simply forward to iomap_iter_next() with the appropriate
+begin/end callbacks. DEFINE_IOMAP_ITER_NEXT() is for the common case
+where there is no end() callback. DEFINE_IOMAP_ITER_NEXT_END() is for
+the case where there is an explicit end() callback.
 
-This series has no functional changes intended. The patches are broken down as
-follows:
+No functional change intended. The one would-be behavioral difference is
+that on the iomap_end() error path (ret < 0 && !advanced), the old code
+returned with iter.status left as the caller's last value whereas the
+new code zeroes it, but this is not observable in practice as there are
+no in-tree callers that read iter.status after the iteration loop.
 
-1) Patch 1: Brian's fix for folio batch release on iomap callback failures.
-The bug was reported by Sashiko and is an unlikely/second order error scenario
-[2] that doesn't need backporting to stable.
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Fengnan Chang <changfengnan@bytedance.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Joanne Koong <joannelkoong@gmail.com>
+---
+ fs/iomap/iter.c       | 116 ++++++++++++++++++++++--------------------
+ include/linux/iomap.h | 102 ++++++++++++++++++++++++++++++-------
+ 2 files changed, 145 insertions(+), 73 deletions(-)
 
-2) Patch 2: refactors existing iomap_iter() logic into an iomap_iter_next()
-function. Sets up DEFINE_IOMAP_ITER_NEXT/DEFINE_IOMAP_ITER_NEXT_END macro.
-
-3) Patch 3 and 4: Christoph's patches for decoupling simple direct i/o reads
-from iomap_dio_rw and improvement for using GFP_NOWAIT for non-blocking iocbs
-[3]
-
-4) Patch 5: Adds ->iomap_next() callback as an iomap op
-
-5) Patches 6 to 19: converts each filesystem to ->iomap_next() model
-
-6) Patch 20: Removes the legacy ->iomap_begin()/->iomap_end() path
-
-7) Patch 21: At this point, struct iomap_ops only has one item in it, the
-->iomap_next() callback. Gets rid of struct iomap_ops and passes
-iomap_iter_next_fn directly.
-
-8) Patch 22: Updates the iomap documentation to match.
-
-This series is submitted against the vfs tree on top of the vfs-7.3.iomap
-branch (head commit f166f2d0a0ae "Merge patch series "iomap/fuse: add helper
-to keep..."). The changes can also be found in this github link [4]. This
-series was run through an ai review system for additional sanity-checking.
-
-As discussed in v2 about the merge logistics [5], the plan is for patches 1 to
-19 to be merged in the v7.3-rc1 cycle and for patches 20 to 22 to be merged
-after v7.3-rc1 has been tagged, in order to minimize disruption to filesystems
-that are currently landing iomap conversions during the 7.3 merge window.
-Patches 20 to 22 are included in this series for upstream review, so that they
-can be approved / all ready to go when the 7.3 merge window closes.
-
-Thanks,
-Joanne
-
-[1] https://lore.kernel.org/linux-fsdevel/20200728173216.7184-1-willy@infradead.org/T/#u
-[2] https://lore.kernel.org/linux-fsdevel/amjztG-DisHYbV9W@bfoster/
-[3] https://lore.kernel.org/linux-fsdevel/20260723050201.3381045-1-hch@lst.de/
-[4] https://github.com/joannekoong/linux/tree/iomap_iter_next_v5
-[5] https://lore.kernel.org/linux-fsdevel/20260703-nachrangig-gegeben-befestigen-8219a53648c7@brauner/ 
-
-Changelog
----------
-v4: https://lore.kernel.org/linux-fsdevel/20260727211758.1116539-1-joannelkoong@gmail.com/
-v4 -> v5:
-* Add Brian's release batch fix, modify patch 2 ("split iomap_iter() logic
-  into...") to work with this
-* Add DECLARE_IOMAP_ITER_NEXT macro to patch 21 for forward declarations (Darrick)
-* Kept reviewed-bys for the patches changed, but Darrick/Christoph/Fengnan, if
-  you don't like the change and want to revoke your name, please let me know
-* Add Reviewed-bys from Darrick and Fengnan
-
-v3: https://lore.kernel.org/linux-fsdevel/20260720210202.1163861-1-joannelkoong@gmail.com/
-v3 -> v4:
-* Fold in Christoph's "decouple simple direct I/O reads from iomap_dio_rw v2"
-  series and drop v3's simple dio patch/changes
-* Add reviewed-bys
-
-v2: https://lore.kernel.org/linux-fsdevel/20260701000949.1666714-1-joannelkoong@gmail.com/
-v2 -> v3:
-* Rename iomap_next_fn to iomap_iter_next_fn and iomap_process() to
-  iomap_iter_next() (Darrick)
-* Add integration with dio simple path, add Fengnan's patch
-* Reconstruct patch that adds iomap_iter_next() logic as a refactoring of
-  existing code (Christoph)
-* Add DEFINE_IOMAP_ITER_NEXT{_END} macro, which nicely simplifies things
-  (Christoph)
-* Make documentation wording changes and a rename from dops -> next (Darrick)
-* Update tracepoint in patch 19 to reflect taking iomap_iter_next_fn instead
-  of ops. iomap tracepoints are explicitly called out as non-stable ABI so I
-  kept Christoph's reviewed-by for this, but if that should be revoked, please
-  let me know
-* Add reviewed-bys
-
-v1: https://lore.kernel.org/linux-fsdevel/20260625024723.1611000-1-joannelkoong@gmail.com/
-v1 -> v2:
-* Implement conversion for all callers
-
-Brian Foster (1):
-  iomap: release the folio batch on iomap callback failures
-
-Christoph Hellwig (2):
-  iomap: decouple simple direct I/O reads from iomap_dio_rw
-  iomap: use GFP_NOWAIT when application for iomap_dio_simple
-    allocations
-
-Joanne Koong (19):
-  iomap: split iomap_iter() logic into iomap_iter_next()
-  iomap: add ->iomap_next()
-  xfs: convert iomap ops to ->iomap_next()
-  btrfs: convert iomap ops to ->iomap_next()
-  ntfs3: convert iomap ops to ->iomap_next()
-  ntfs: convert iomap ops to ->iomap_next()
-  ext4: convert iomap ops to ->iomap_next()
-  erofs: convert iomap ops to ->iomap_next()
-  zonefs: convert iomap ops to ->iomap_next()
-  ext2: convert iomap ops to ->iomap_next()
-  block: convert iomap ops to ->iomap_next()
-  f2fs: convert iomap ops to ->iomap_next()
-  gfs2: convert iomap ops to ->iomap_next()
-  hpfs: convert iomap ops to ->iomap_next()
-  fuse: convert iomap ops to ->iomap_next()
-  exfat: convert iomap ops to ->iomap_next()
-  iomap: remove ->iomap_begin()/->iomap_end() legacy path
-  iomap: pass iomap_iter_next_fn directly instead of struct iomap_ops
-  Documentation: iomap: update docs to reflect iomap_iter_next model
-
- Documentation/filesystems/iomap/design.rst    | 140 ++++++++---
- .../filesystems/iomap/operations.rst          |  68 +++---
- Documentation/filesystems/iomap/porting.rst   |  16 +-
- block/fops.c                                  |  10 +-
- fs/btrfs/direct-io.c                          |  10 +-
- fs/dax.c                                      |  48 ++--
- fs/erofs/data.c                               |  30 ++-
- fs/erofs/internal.h                           |   2 +-
- fs/erofs/zmap.c                               |   4 +-
- fs/exfat/file.c                               |  18 +-
- fs/exfat/inode.c                              |   6 +-
- fs/exfat/iomap.c                              |  12 +-
- fs/exfat/iomap.h                              |   6 +-
- fs/ext2/ext2.h                                |   3 +-
- fs/ext2/file.c                                |   4 +-
- fs/ext2/inode.c                               |   7 +-
- fs/ext4/ext4.h                                |   8 +-
- fs/ext4/extents.c                             |   8 +-
- fs/ext4/file.c                                |  16 +-
- fs/ext4/inode.c                               |  16 +-
- fs/f2fs/data.c                                |   4 +-
- fs/f2fs/f2fs.h                                |   3 +-
- fs/f2fs/file.c                                |   4 +-
- fs/fuse/dax.c                                 |  12 +-
- fs/fuse/file.c                                |  10 +-
- fs/fuse/virtio_fs.c                           |   3 +-
- fs/gfs2/aops.c                                |   6 +-
- fs/gfs2/bmap.c                                |   7 +-
- fs/gfs2/bmap.h                                |   2 +-
- fs/gfs2/file.c                                |   6 +-
- fs/gfs2/inode.c                               |   6 +-
- fs/hpfs/file.c                                |   6 +-
- fs/internal.h                                 |   1 -
- fs/iomap/buffered-io.c                        |  40 +--
- fs/iomap/direct-io.c                          | 219 +++++------------
- fs/iomap/fiemap.c                             |   8 +-
- fs/iomap/iter.c                               | 123 +++++-----
- fs/iomap/seek.c                               |   8 +-
- fs/iomap/swapfile.c                           |   4 +-
- fs/iomap/trace.h                              |  12 +-
- fs/ntfs/aops.c                                |   6 +-
- fs/ntfs/file.c                                |  24 +-
- fs/ntfs/inode.c                               |   2 +-
- fs/ntfs/iomap.c                               |  34 +--
- fs/ntfs/iomap.h                               |  10 +-
- fs/ntfs3/file.c                               |  16 +-
- fs/ntfs3/inode.c                              |  11 +-
- fs/ntfs3/ntfs_fs.h                            |   3 +-
- fs/remap_range.c                              |   6 +-
- fs/xfs/xfs_aops.c                             |   8 +-
- fs/xfs/xfs_file.c                             |  58 ++---
- fs/xfs/xfs_iomap.c                            |  50 ++--
- fs/xfs/xfs_iomap.h                            |  20 +-
- fs/xfs/xfs_iops.c                             |   4 +-
- fs/xfs/xfs_reflink.c                          |   6 +-
- fs/zonefs/file.c                              |  23 +-
- include/linux/dax.h                           |  18 +-
- include/linux/fs.h                            |   7 +-
- include/linux/iomap.h                         | 231 ++++++++++++++----
- 59 files changed, 771 insertions(+), 682 deletions(-)
-
+diff --git a/fs/iomap/iter.c b/fs/iomap/iter.c
+index 63617ec48250..bf7d4cccc1a7 100644
+--- a/fs/iomap/iter.c
++++ b/fs/iomap/iter.c
+@@ -10,11 +10,12 @@
+  * Release the iter folio batch. Note that the iomap flag is meant to control
+  * the I/O path for the mapping and may not be set in error situations.
+  */
+-static inline void iomap_iter_clean_fbatch(struct iomap_iter *iter)
++static inline void iomap_iter_clean_fbatch(const struct iomap_iter *iter,
++		struct iomap *iomap)
+ {
+ 	if (!iter->fbatch)
+ 		return;
+-	iter->iomap.flags &= ~IOMAP_F_FOLIO_BATCH;
++	iomap->flags &= ~IOMAP_F_FOLIO_BATCH;
+ 	if (folio_batch_count(iter->fbatch)) {
+ 		folio_batch_release(iter->fbatch);
+ 		folio_batch_reinit(iter->fbatch);
+@@ -46,51 +47,27 @@ static inline void iomap_iter_done(struct iomap_iter *iter)
+ }
+ 
+ /**
+- * iomap_iter - iterate over a ranges in a file
+- * @iter: iteration structue
+- * @ops: iomap ops provided by the file system
++ * iomap_iter_continue - decide whether iteration should continue
++ * @iter: iteration structure
++ * @iomap: the mapping that was just processed
++ * @srcmap: the source mapping that was just processed
+  *
+- * Iterate over filesystem-provided space mappings for the provided file range.
++ * Helper normally called via iomap_iter_next(). Called after the previous
++ * mapping has been finished to determine whether there is more of the file
++ * range left to process.
+  *
+- * This function handles cleanup of resources acquired for iteration when the
+- * filesystem indicates there are no more space mappings, which means that this
+- * function must be called in a loop that continues as long it returns a
+- * positive value.  If 0 or a negative value is returned, the caller must not
+- * return to the loop body.  Within a loop body, there are two ways to break out
+- * of the loop body:  leave @iter.status unchanged, or set it to a negative
+- * errno.
++ * Returns 1 if there is more work to do, in which case @iomap and @srcmap are
++ * cleared so the caller can produce the next mapping; zero if the range is
++ * fully consumed; or a negative errno on error.
+  */
+-int iomap_iter(struct iomap_iter *iter, const struct iomap_ops *ops)
++int iomap_iter_continue(const struct iomap_iter *iter, struct iomap *iomap,
++		struct iomap *srcmap, int ret)
+ {
+-	bool stale = iter->iomap.flags & IOMAP_F_STALE;
+-	ssize_t advanced;
+-	u64 olen;
+-	int ret;
+-
+-	trace_iomap_iter(iter, ops, _RET_IP_);
++	const bool stale = iomap->flags & IOMAP_F_STALE;
++	const ssize_t advanced = iter->pos - iter->iter_start_pos;
+ 
+-	if (!iter->iomap.length)
+-		goto begin;
+-
+-	/*
+-	 * Calculate how far the iter was advanced and the original length bytes
+-	 * for ->iomap_end().
+-	 */
+-	advanced = iter->pos - iter->iter_start_pos;
+-	olen = iter->len + advanced;
+-
+-	if (ops->iomap_end) {
+-		ret = ops->iomap_end(iter->inode, iter->iter_start_pos,
+-				iomap_length_trim(iter, iter->iter_start_pos,
+-						  olen),
+-				advanced, iter->flags, &iter->iomap);
+-		if (ret < 0 && !advanced)
+-			goto error;
+-	}
+-
+-	/* detect old return semantics where this would advance */
+-	if (WARN_ON_ONCE(iter->status > 0))
+-		iter->status = -EIO;
++	if (ret < 0 && !advanced)
++		return ret;
+ 
+ 	/*
+ 	 * Use iter->len to determine whether to continue onto the next mapping.
+@@ -98,29 +75,56 @@ int iomap_iter(struct iomap_iter *iter, const struct iomap_ops *ops)
+ 	 * advanced at all (i.e. no work was done for some reason) unless the
+ 	 * mapping has been marked stale and needs to be reprocessed.
+ 	 */
+-	if (iter->status < 0)
++	if (WARN_ON_ONCE(iter->status > 0))
++		/* detect old return semantics where this would advance */
++		ret = -EIO;
++	else if (iter->status < 0)
+ 		ret = iter->status;
+ 	else if (iter->len == 0 || (!advanced && !stale))
+ 		ret = 0;
+ 	else
+ 		ret = 1;
+-	iomap_iter_clean_fbatch(iter);
+-	iter->status = 0;
++
++	iomap_iter_clean_fbatch(iter, iomap);
++
+ 	if (ret <= 0)
+ 		return ret;
+ 
+-	memset(&iter->iomap, 0, sizeof(iter->iomap));
+-	memset(&iter->srcmap, 0, sizeof(iter->srcmap));
++	memset(iomap, 0, sizeof(*iomap));
++	memset(srcmap, 0, sizeof(*srcmap));
+ 
+-begin:
+-	ret = ops->iomap_begin(iter->inode, iter->pos, iter->len, iter->flags,
+-			       &iter->iomap, &iter->srcmap);
+-	if (ret < 0)
+-		goto error;
+-	iomap_iter_done(iter);
+-	return 1;
++	return ret;
++}
++EXPORT_SYMBOL_GPL(iomap_iter_continue);
++
++/**
++ * iomap_iter - iterate over ranges in a file
++ * @iter: iteration structure
++ * @ops: iomap ops provided by the filesystem
++ *
++ * Iterate over filesystem-provided space mappings for the provided file range.
++ *
++ * This function handles cleanup of resources acquired for iteration when the
++ * filesystem indicates there are no more space mappings, which means that this
++ * function must be called in a loop that continues as long it returns a
++ * positive value.  If 0 or a negative value is returned, the caller must not
++ * return to the loop body.  Within a loop body, there are two ways to break out
++ * of the loop body:  leave @iter.status unchanged, or set it to a negative
++ * errno.
++ */
++int iomap_iter(struct iomap_iter *iter, const struct iomap_ops *ops)
++{
++	int ret;
++
++	trace_iomap_iter(iter, ops, _RET_IP_);
++
++	ret = iomap_iter_next(iter, &iter->iomap, &iter->srcmap,
++			ops->iomap_begin, ops->iomap_end);
++	iter->status = 0;
++	if (ret > 0)
++		iomap_iter_done(iter);
++	else if (ret < 0)
++		iomap_iter_clean_fbatch(iter, &iter->iomap);
+ 
+-error:
+-	iomap_iter_clean_fbatch(iter);
+ 	return ret;
+ }
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index 21e73cb9c51e..36490c08d6e9 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -212,24 +212,27 @@ struct iomap_write_ops {
+ #define IOMAP_ATOMIC		(1 << 9) /* torn-write protection */
+ #define IOMAP_DONTCACHE		(1 << 10)
+ 
+-struct iomap_ops {
+-	/*
+-	 * Return the existing mapping at pos, or reserve space starting at
+-	 * pos for up to length, as long as we can do it as a single mapping.
+-	 * The actual length is returned in iomap->length.
+-	 */
+-	int (*iomap_begin)(struct inode *inode, loff_t pos, loff_t length,
+-			unsigned flags, struct iomap *iomap,
+-			struct iomap *srcmap);
++/*
++ * Return the existing mapping at pos, or reserve space starting at pos for up
++ * to length, as long as we can do it as a single mapping.
++ * The actual length is returned in iomap->length.
++ */
++typedef int (*iomap_iter_begin_fn)(struct inode *inode, loff_t pos,
++		loff_t length, unsigned flags, struct iomap *iomap,
++		struct iomap *srcmap);
+ 
+-	/*
+-	 * Commit and/or unreserve space previous allocated using iomap_begin.
+-	 * Written indicates the length of the successful write operation which
+-	 * needs to be commited, while the rest needs to be unreserved.
+-	 * Written might be zero if no data was written.
+-	 */
+-	int (*iomap_end)(struct inode *inode, loff_t pos, loff_t length,
+-			ssize_t written, unsigned flags, struct iomap *iomap);
++/*
++ * Commit and/or unreserve space previously allocated by iomap_iter_begin_fn.
++ * Written indicates the length of the successful write operation which needs
++ * to be committed, while the rest needs to be unreserved.
++ * Written might be zero if no data was written.
++ */
++typedef int (*iomap_iter_end_fn)(struct inode *inode, loff_t pos, loff_t length,
++		ssize_t written, unsigned flags, struct iomap *iomap);
++
++struct iomap_ops {
++	iomap_iter_begin_fn iomap_begin;
++	iomap_iter_end_fn iomap_end;
+ };
+ 
+ /**
+@@ -317,6 +320,71 @@ static inline const struct iomap *iomap_iter_srcmap(const struct iomap_iter *i)
+ 	return &i->iomap;
+ }
+ 
++int iomap_iter_continue(const struct iomap_iter *iter, struct iomap *iomap,
++		struct iomap *srcmap, int ret);
++
++/**
++ * iomap_iter_next - finish the previous mapping and produce the next one
++ * @iter: iteration structure
++ * @iomap: mapping to finish and then repopulate
++ * @srcmap: source mapping to finish and then repopulate
++ * @begin: callback that produces a mapping for the current position
++ * @end: optional callback that finishes the previous mapping, or NULL
++ *
++ * Inline helper that implements the common body of an ->iomap_next()
++ * callback: it finishes the previous mapping via @end (if present), decides
++ * via iomap_iter_continue() whether to keep going, and obtains the next
++ * mapping via @begin.
++ *
++ * This helper is marked __always_inline so that when a caller passes
++ * compile-time-constant @begin and @end callbacks, the compiler can call them
++ * directly, avoiding the indirect-call overhead.
++ *
++ * Returns 1 to continue iterating, 0 once the range is fully consumed, or a
++ * negative errno on error.
++ */
++static __always_inline int iomap_iter_next(const struct iomap_iter *iter,
++		struct iomap *iomap, struct iomap *srcmap,
++		iomap_iter_begin_fn begin, iomap_iter_end_fn end)
++{
++	int ret = 0;
++
++	if (iomap->length) {
++		if (end) {
++			/*
++			 * Calculate how far the iter was advanced and the
++			 * original length bytes for end().
++			 */
++			ssize_t advanced = iter->pos - iter->iter_start_pos;
++			loff_t len;
++
++			len = iomap_length_trim(iter, iter->iter_start_pos,
++					iter->len + advanced);
++
++			ret = end(iter->inode, iter->iter_start_pos, len,
++					advanced, iter->flags, iomap);
++		}
++		ret = iomap_iter_continue(iter, iomap, srcmap, ret);
++		if (ret <= 0)
++			return ret;
++	}
++
++	ret = begin(iter->inode, iter->pos, iter->len, iter->flags, iomap,
++			srcmap);
++
++	return ret < 0 ? ret : 1;
++}
++
++#define DEFINE_IOMAP_ITER_NEXT_END(name, begin_fn, end_fn)		\
++int name(const struct iomap_iter *iter, struct iomap *iomap,		\
++		struct iomap *srcmap)					\
++{									\
++	return iomap_iter_next(iter, iomap, srcmap, begin_fn, end_fn);	\
++}
++
++#define DEFINE_IOMAP_ITER_NEXT(name, begin_fn)				\
++	DEFINE_IOMAP_ITER_NEXT_END(name, begin_fn, NULL)
++
+ /*
+  * Return the file offset for the first unchanged block after a short write.
+  *
 -- 
 2.52.0
 
