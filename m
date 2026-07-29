@@ -1,117 +1,68 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D9DB3B27FF;
-	Wed, 29 Jul 2026 07:41:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9C6B44160B;
+	Wed, 29 Jul 2026 08:29:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785310889; cv=none; b=ZRT9yHKg/GJ4o0VuCVgDBbbCU43a8iTLEzeWPQTLK3PIQmJtZmevZ71w7Rts8OglxPTHGIvUP6Wlqxvu7vpDfzExbZP0i1tziiaj+UiXiLmocz0UYOuCApTIYxGt2Kqyu4+9QP70O1zi4P6Rnjp3xhhmbvo4awXhkYuHvisN4hM=
+	t=1785313776; cv=none; b=gPBEQ6YxWMVOW1bPj6dEiQtj7LzhCKDGUYvpvbJuyjl7nQW1t4Bw5n+goGXBIoxK56cltXUdwgyowrM7xgzyPkGGzdNYnAYRZ63GNw3Ed+MBn8h5TQ1E09vmb5F5lSQFLq/SpBA8edOvjxFmcwuqHmKG57hndX7Pl24KW6KQG0g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785310889; c=relaxed/simple;
-	bh=xKedype/WqR22VEEuxto1prx3+8p9hVjAmfnoDOyWuU=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=EJm4IedHegulnj/NGbG7TZdaawWZjQHYFSxxxe+UR68jqJ8c8/NR1IJG5tJmjRoA5iXay0ISKwpr/Eg8acagJUXzWMSRO9oUPxtGjnXC3tKTxuCCwBPjO51Hqtf5DsknFs55JgwtAVK1tbrUIrJFuJ2pvL8pGEalMzoT4qxCENI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: e0f293b88b2011f1aa26b74ffac11d73-20260729
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.12,REQID:1920449d-c422-47ea-abd9-e0e47754b40d,IP:0,U
-	RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:-5
-X-CID-META: VersionHash:e7bac3a,CLOUDID:c9c9293e4833fbb6f15f69faa6f774cd,BulkI
-	D:nil,BulkQuantity:0,Recheck:0,SF:102|850|865|898,TC:nil,Content:0|15|50,E
-	DM:-3,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA
-	:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: e0f293b88b2011f1aa26b74ffac11d73-20260729
-X-User: zenghongling@kylinos.cn
-Received: from localhost.localdomain [(10.44.16.150)] by mailgw.kylinos.cn
-	(envelope-from <zenghongling@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 358575867; Wed, 29 Jul 2026 15:41:15 +0800
-From: Hongling Zeng <zenghongling@kylinos.cn>
-To: cem@kernel.org,
-	dchinner@redhat.com
-Cc: linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	zhongling0719@126.com,
-	Hongling Zeng <zenghongling@kylinos.cn>,
-	stable@vger.kernel.org
-Subject: [PATCH] xfs: fix fallback data device flush for realtime inodes
-Date: Wed, 29 Jul 2026 15:39:18 +0800
-Message-Id: <20260729073918.64505-1-zenghongling@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
+	s=arc-20240116; t=1785313776; c=relaxed/simple;
+	bh=DN4z8zQOIgTQ0av4si3gDiQ4htKppXA4TNDQHOITOfw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=P3V/dCllrnD3S0MmHRy3s9WcgxqMDTcF3BriW6H2ShWI3SPse+yDLNhkIXyvl4uQ+aw0jdR1eFrFjH9I4CoNbwB+Odur+pEt+t+vjmfgjmlxlcYEKwios9eTjvdjvKJMp0AMjg42P3v3zW3f/ICfUjEoUeHC7WyhIzWhhTNg3Sw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Uo1xPR9b; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Uo1xPR9b"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=5Fj/MjyC0T1Hpz6MegdLj22vnf59FnZxCiC9lfRsovg=; b=Uo1xPR9bjJkXN7Xpu15n3g6XUY
+	lb/58clCd7sz4Q6ABhZ4HHDRja54Yhg7YZLnQnoHuzEa+PQeVR7z3NtTQ9I7kj9gk8D9VPOoShey/
+	ABw5+XA0uvlbNlMge6viMSxidrdsalURZMh7fqLfyn1FG3Fdp9LpidPQp9IPbTil4IjTNKW2cgSXW
+	Gn6N3DkuCol/vty7jKT/TLA5iM6OO/WvgkttnK22KFgf2oXiWEKXB+Q0n95xcIyBxVdfE9/QmNarN
+	wj/ntKKPMFu26bmOwAIu58Q1L0Bjb+gEgAkaaRqxm16ALQprBogF1wecAD6CJB1Pk08Jxjs3Gxn6u
+	xt0bDgRA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1wozf7-00000007EdS-4B7Z;
+	Wed, 29 Jul 2026 08:29:14 +0000
+Date: Wed, 29 Jul 2026 01:29:13 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Hongling Zeng <zenghongling@kylinos.cn>
+Cc: cem@kernel.org, djwong@kernel.org, hans.holmberg@wdc.com,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	zhongling0719@126.com
+Subject: Re: [PATCH v2] xfs: check split_sectors validity before bio_split
+ call
+Message-ID: <amm52bj1VAe24OQG@infradead.org>
+References: <20260729073418.63750-1-zenghongling@kylinos.cn>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260729073418.63750-1-zenghongling@kylinos.cn>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-xfs_file_fsync() has a fallback flush for the case where the log force
-was a no-op, for example fdatasync/O_DSYNC overwrites of already
-allocated file data with no metadata updates.
+On Wed, Jul 29, 2026 at 03:34:18PM +0800, Hongling Zeng wrote:
+> Change the split_sectors check from !split_sectors to split_sectors <= 0
+> to make the error handling explicit. While bio_split_rw_at() cannot return
+> a negative error code for the current GC I/O path (GC I/O doesn't use
+> REQ_ATOMIC/REQ_NOWAIT flags and has proper alignment), making the check
+> explicit improves code clarity and makes the intent clear.
+> 
+> This also makes the code more robust for future maintenance if different
+> I/O patterns are introduced.
+> 
+> Signed-off-by: Hongling Zeng <zenghongling@kylinos.cn>
 
-The current fallback path is limited to non-realtime inodes and always
-flushes mp->m_ddev_targp. This misses realtime inodes whose data target
-is selected by the inode and may be mp->m_rtdev_targp.
+Looks good:
 
-Use xfs_inode_buftarg(ip) to obtain the actual data target for the inode,
-and perform the fallback flush when the log force did not flush anything
-and the log target is the same as that data target.
-
-This preserves the existing behavior for regular inodes while allowing
-the fallback flush to cover realtime inodes whose data target shares the
-log device.
-
-Fixes: 2291dab2c9d1 ("xfs: Always flush caches when integrity is required")
-Cc: stable@vger.kernel.org
-Signed-off-by: Hongling Zeng <zenghongling@kylinos.cn>
----
- fs/xfs/xfs_file.c | 25 +++++++++++++++----------
- 1 file changed, 15 insertions(+), 10 deletions(-)
-
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 0ade13b31335..2a6186f67979 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -166,17 +166,22 @@ xfs_file_fsync(
- 	}
- 
- 	/*
--	 * If we only have a single device, and the log force about was
--	 * a no-op we might have to flush the data device cache here.
--	 * This can only happen for fdatasync/O_DSYNC if we were overwriting
--	 * an already allocated file and thus do not have any metadata to
--	 * commit.
-+	 * If the log force was a no-op, we may still need to flush the
-+	 * data device cache for fdatasync/O_DSYNC overwrites of already
-+	 * allocated file data with no metadata updates.
-+	 *
-+	 * Use the inode's actual data target (which may be the RT device
-+	 * for realtime inodes) and flush only if it shares the device
-+	 * with the log target.
- 	 */
--	if (!log_flushed && !XFS_IS_REALTIME_INODE(ip) &&
--	    mp->m_logdev_targp == mp->m_ddev_targp) {
--		err2 = blkdev_issue_flush(mp->m_ddev_targp->bt_bdev);
--		if (err2 && !error)
--			error = err2;
-+	if (!log_flushed) {
-+		struct xfs_buftarg *data_targp = xfs_inode_buftarg(ip);
-+
-+		if (mp->m_logdev_targp == data_targp) {
-+			err2 = blkdev_issue_flush(data_targp->bt_bdev);
-+			if (err2 && !error)
-+				error = err2;
-+		}
- 	}
- 
- 	return error;
--- 
-2.25.1
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
