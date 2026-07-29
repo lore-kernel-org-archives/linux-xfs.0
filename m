@@ -1,41 +1,41 @@
 Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0127D443AB5
-	for <linux-xfs@vger.kernel.org>; Wed, 29 Jul 2026 13:03:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E353B48877F
+	for <linux-xfs@vger.kernel.org>; Wed, 29 Jul 2026 13:03:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785330214; cv=none; b=JhHzIv8po9Cdrgg51wedAvL2MTxpEsFtaRK0+vnbnOVfeHxwJGKxBk6N8zN3vvUjHsAzqAzREnlC4CTx9Hkvv43lXmkanMZdOIQz0vzO5UkaBkJJvihFIXfbGsXQjJHEUY0qEHu5sJxYxxh7LAZZxfQVs1jYNbxVUo+z6jVKrxM=
+	t=1785330214; cv=none; b=Rp2n9I7LdgS3cvQVLunwSFic0E/bfhX+u5bPT/0rpF1hbLZP3Bz3vO1kVOXKTVW3uc0ba6RZBb9VLOY3H6XNZKjLdmJkZhO5S6dZ2Wztn8r0auoerK5bcLjtEdfwL8l/kYtn/sa2iQsIof1BTHCxw4I6HYHgyovLoOSU1/TIcaU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1785330214; c=relaxed/simple;
-	bh=4bnUr6iJwANvfF+Ts33N663UIWRfT0tMOdyd4XyfDAs=;
+	bh=ugJQTkRaBcXdLBy+03+zfgSSkIS7jWk+KmYRr04dnvU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=YsFWPlPoIoE18sZusX1iX4xcd+Clx19S1zh/kvmjnX0nhrUeUacPqkUMP0hL86PfAGGXWWfrH2PhyGJsF/v67aOA4cPpLZG2tJXuFOMbjqej2HBwLWYkkSfklzi7z/NxSiCM5vybMMP3V94OQSsQO9Ja1uKkpJoRMUkD1vjt+wk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=casper.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=MGgkUth8; arc=none smtp.client-ip=90.155.50.34
+	 MIME-Version; b=ScL9hNYXSCXsRqa2G5fzuA9OgOMRjY+K5VziTUc8itNXD6q3jsZ+ibMqwBN1w4KqUZpQCPKo8H+1ELj+Cjt6K7wVrmNiRRU7JPLiEBeBXD78mg6G68FvtNj4tCJdhvNA9MyiX0GW3Z8mzbMAp8ipyzU5jH51ueUfrFvAZyG4zzY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=casper.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=LZApGqh5; arc=none smtp.client-ip=90.155.50.34
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=casper.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="MGgkUth8"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="LZApGqh5"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:
 	Content-Type:Content-ID:Content-Description;
-	bh=QdwRwi4VOrurVwD2Tr1Mt07ELWav2/kuRkqF09H8CFw=; b=MGgkUth8FD3NBoO7wcwPcBABLN
-	/Rg4OYK9Xy7TgW7XlRlYBtFqc/uezSRVO6xs/CFtQlIisfYwROy5rVP/34U3x2zuGp901m6qegPvE
-	iQo6XgvJ2UI63/Msa+orvvwKBPvjs9YekIBtx9trC4a1qX+FZxQoeReCqHJr171gB4SQowy5orCYL
-	vPruRr65PwTw7GBR2p838courmnYpbMY4MxUkKJWIiHHvHbM6sG3+wgBNo/kKz0IM6gPcraSAVZFd
-	+1aIYzgurr5o/KgmWT3jTY2AH4FV5ZJ9kxnLzdGDLvllUmcWFwr7HSlnxJOIAsJlCAEbzgEhL2Tgi
-	+trevT4Q==;
+	bh=L4r6me3X+bFa8aS3T12wICnqa+AHWUuyZsRzu2UJ8Oc=; b=LZApGqh55OedacStg/9fxrRX+p
+	uJ8Yk64yZCFIHPVf4tC1+AL28s9bhIKzeqIBv3KrIc4mrAz4lJbgGu1BP1b00t36MngH6ZhuATRBQ
+	KI6JUYY6pH4MIDaW7SOAk27VqFNiB76NuKHxhgq+aA5VE6tIe+EOM6foTQC0NB++9jsWXtzNT6Jk4
+	PObXi4VFGXn9NV3kUyEJNme9OuDt6bSwbtRFXy+Kj0GS3WiXHbDKu5hGeeAyEiBZraZ+J4cCZ7wIM
+	X8gOkWN06oLhaWMzhj+sRZ9d9IlRvR6SS/LxRG+akPGc1WAa2a3ZOhXoDgzkp6Fno1QqDy0soFAm3
+	h1+xh/wg==;
 Received: from 85-127-110-197.dsl.dynamic.surfer.at ([85.127.110.197] helo=localhost)
 	by casper.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wp3wX-00000004WkU-0d5J;
-	Wed, 29 Jul 2026 13:03:29 +0000
+	id 1wp3wW-00000004WkM-1DUz;
+	Wed, 29 Jul 2026 13:03:28 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH 09/16] xfs: split out the handler for XFS_IOC_GOINGDOWN
-Date: Wed, 29 Jul 2026 15:03:08 +0200
-Message-ID: <20260729130320.2282183-10-hch@lst.de>
+Subject: [PATCH 08/16] xfs: split out the handlers for XFS_IOC_FSGROWFS*
+Date: Wed, 29 Jul 2026 15:03:07 +0200
+Message-ID: <20260729130320.2282183-9-hch@lst.de>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260729130320.2282183-1-hch@lst.de>
 References: <20260729130320.2282183-1-hch@lst.de>
@@ -48,60 +48,139 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 
-Split out a helper for XFS_IOC_GOINGDOWN to keep the stack variables out
+Split out helpers for XFS_IOC_FSGROWFS* to keep the stack variables out
 of xfs_file_ioctl and to clean up the main ioctl handler flow.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_ioctl.c | 28 ++++++++++++++++------------
- 1 file changed, 16 insertions(+), 12 deletions(-)
+ fs/xfs/xfs_ioctl.c | 107 ++++++++++++++++++++++++++++-----------------
+ 1 file changed, 66 insertions(+), 41 deletions(-)
 
 diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 0b5ae79e4aaf..3db8f33e9440 100644
+index eeff0678d5bf..0b5ae79e4aaf 100644
 --- a/fs/xfs/xfs_ioctl.c
 +++ b/fs/xfs/xfs_ioctl.c
-@@ -1341,6 +1341,20 @@ xfs_ioc_growfs_rt(
+@@ -1281,6 +1281,66 @@ xfs_ioc_swapext(
  	return error;
  }
  
 +static int
-+xfs_ioc_goingdown(
++xfs_ioc_growfs_data(
++	struct file		*file,
 +	struct xfs_mount	*mp,
-+	uint32_t __user		*arg)
++	void __user		*arg)
 +{
-+	uint32_t		in;
++	struct xfs_growfs_data	in;
++	int			error;
 +
-+	if (!capable(CAP_SYS_ADMIN))
-+		return -EPERM;
-+	if (get_user(in, arg))
++	if (copy_from_user(&in, arg, sizeof(in)))
 +		return -EFAULT;
-+	return xfs_fs_goingdown(mp, in);
++
++	error = mnt_want_write_file(file);
++	if (error)
++		return error;
++	error = xfs_growfs_data(mp, &in);
++	mnt_drop_write_file(file);
++	return error;
++}
++
++static int
++xfs_ioc_growfs_log(
++	struct file		*file,
++	struct xfs_mount	*mp,
++	void  __user		*arg)
++{
++	struct xfs_growfs_log	in;
++	int			error;
++
++	if (copy_from_user(&in, arg, sizeof(in)))
++		return -EFAULT;
++
++	error = mnt_want_write_file(file);
++	if (error)
++		return error;
++	error = xfs_growfs_log(mp, &in);
++	mnt_drop_write_file(file);
++	return error;
++}
++
++static int
++xfs_ioc_growfs_rt(
++	struct file		*file,
++	struct xfs_mount	*mp,
++	void __user		*arg)
++{
++	struct xfs_growfs_rt	in;
++	int			error;
++
++	if (copy_from_user(&in, arg, sizeof(in)))
++		return -EFAULT;
++
++	error = mnt_want_write_file(file);
++	if (error)
++		return error;
++	error = xfs_growfs_rt(mp, &in);
++	mnt_drop_write_file(file);
++	return error;
 +}
 +
  /*
   * These long-unused ioctls were removed from the official ioctl API in 5.17,
   * but retain these definitions so that we can log warnings about them.
-@@ -1457,18 +1471,8 @@ xfs_file_ioctl(
- 	case XFS_IOC_FSGROWFSRT:
- 		return xfs_ioc_growfs_rt(filp, mp, arg);
+@@ -1390,47 +1450,12 @@ xfs_file_ioctl(
+ 	case XFS_IOC_GET_RESBLKS:
+ 		return xfs_ioc_getset_resblocks(filp, cmd, arg);
  
--	case XFS_IOC_GOINGDOWN: {
--		uint32_t in;
+-	case XFS_IOC_FSGROWFSDATA: {
+-		struct xfs_growfs_data in;
 -
--		if (!capable(CAP_SYS_ADMIN))
--			return -EPERM;
--
--		if (get_user(in, (uint32_t __user *)arg))
+-		if (copy_from_user(&in, arg, sizeof(in)))
 -			return -EFAULT;
 -
--		return xfs_fs_goingdown(mp, in);
+-		error = mnt_want_write_file(filp);
+-		if (error)
+-			return error;
+-		error = xfs_growfs_data(mp, &in);
+-		mnt_drop_write_file(filp);
+-		return error;
 -	}
 -
-+	case XFS_IOC_GOINGDOWN:
-+		return xfs_ioc_goingdown(mp, arg);
- 	case XFS_IOC_ERROR_INJECTION: {
- 		xfs_error_injection_t in;
+-	case XFS_IOC_FSGROWFSLOG: {
+-		struct xfs_growfs_log in;
+-
+-		if (copy_from_user(&in, arg, sizeof(in)))
+-			return -EFAULT;
+-
+-		error = mnt_want_write_file(filp);
+-		if (error)
+-			return error;
+-		error = xfs_growfs_log(mp, &in);
+-		mnt_drop_write_file(filp);
+-		return error;
+-	}
+-
+-	case XFS_IOC_FSGROWFSRT: {
+-		xfs_growfs_rt_t in;
+-
+-		if (copy_from_user(&in, arg, sizeof(in)))
+-			return -EFAULT;
+-
+-		error = mnt_want_write_file(filp);
+-		if (error)
+-			return error;
+-		error = xfs_growfs_rt(mp, &in);
+-		mnt_drop_write_file(filp);
+-		return error;
+-	}
++	case XFS_IOC_FSGROWFSDATA:
++		return xfs_ioc_growfs_data(filp, mp, arg);
++	case XFS_IOC_FSGROWFSLOG:
++		return xfs_ioc_growfs_log(filp, mp, arg);
++	case XFS_IOC_FSGROWFSRT:
++		return xfs_ioc_growfs_rt(filp, mp, arg);
  
+ 	case XFS_IOC_GOINGDOWN: {
+ 		uint32_t in;
 -- 
 2.53.0
 
