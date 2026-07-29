@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F7D044C518
-	for <linux-xfs@vger.kernel.org>; Wed, 29 Jul 2026 10:06:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B43354457D1
+	for <linux-xfs@vger.kernel.org>; Wed, 29 Jul 2026 10:06:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785319619; cv=none; b=tz9PxcVAvvqVTolUA7S6pEVv2KQ6kd0l6wSBKQlnIu+3/8ld1gqFadG5dyYhhW52kt3ut1UxJe1OAXZdoqchQDaNunIlJuAYTeDdoz0gp/7qGIidT3lXlkn7qRXPql8SRIvwyFPWHxaLCp9RMhpE8ApzgS4cmtG9DKevf1+8IL4=
+	t=1785319620; cv=none; b=XwbgZkWTcVdw7TVv+cvWzXzTJvTI8Y2fph42sWXHO3f4DFR9aMXMf1F25hbEo1tNY3ovgmPaKcG31+XycWoBuJgcBnGxeQULx9RLII+DPIMDiscdLPQYt+c8+lR/KxR/Mxv06UbYpG0BcYMnM6XvIxAvwNMyM2O7MIhI4sOtWtA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785319619; c=relaxed/simple;
-	bh=jq+KSfTPWCL+mBpJy/yoObowXaQD+ThbVEc3cPpGECE=;
+	s=arc-20240116; t=1785319620; c=relaxed/simple;
+	bh=I/MqvfEKHwRP56jiYTdS5qOkAskNXEPJUTvH5DI8KRc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=nh6lXBI8e/fVQazrStFB6PAalJdfRFjvmAsfTQKoG0KwODUqi/8MZVFCjmwbfD47sFMjv4uEJ5MLtsUHR1Dq/dlkZ6S3PeuUJZJCxVMz2oh+mU1HEl3F6CDORSvdeBJTfpZsBJjASs3stD+MzNys1zV8ESALw76myeh796o6a5E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=n6qcHQoo; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=mwLS3mAMWUCJnhxBMOsD8nREk93FM3+Z2+KUuJYNH1rgBjjbL+TfxXC3JXGYLC9/V3cLfqXe8hJ82qXqMnD/KugOuGBYngDBCAKplDBmPbr+ZfxS3lUGZZk2hM7rUXieaztGh7PcST0pdW/2YiNqUsIg3IHaHikWMXlwIlNPcAg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c5YuDRGK; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n6qcHQoo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4B801F00A3D;
-	Wed, 29 Jul 2026 10:06:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c5YuDRGK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E8B761F000E9;
+	Wed, 29 Jul 2026 10:06:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785319618;
-	bh=w9dUY6PyRSP2irjJ+ssMkZYm1DW/QDsSpdYH1s8Z78Q=;
+	s=k20260515; t=1785319619;
+	bh=bqgD7wm1kEc3oFtooDI0XUwnSzjOJdwjAt+qC18VexY=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=n6qcHQoo/NLhzwik8yU4DHF3Tt1kouifqnbNO9cGr5WmpmY0BtqBgrn5kfL2+4QXp
-	 rObyy1aWC5g1435+QauzCXOUMqURSwISRMzksKVvbEfFKZ1z2HzGQsTIu7KvMkYfTW
-	 cdYY14MWenZsqa21XC4l+4DqygzpbdZje1hLvC6wBXmEn/l7ueLUgFTdctZMKrVhYT
-	 zW/HmkrvcX3njfCynFc1N7XeeTcEvwmzHmTiG8JGIOjibZEz44ImD54Jlk94NgCIYy
-	 +Ugk0CevBhibzFG8dj8Kq0nZOySm/4HT0iPv8sM1QkSdldwkq03pwSxD/kcheeIJ6l
-	 bxNmyLNS0m9iQ==
+	b=c5YuDRGKO3E3RoLDbz6F57LcnkKXfKBwIPobpXZIH7+Y3C2VAuVlhM2Ai/wTczleS
+	 YPG3AzRv7Gt74SZGjXpwTMvq50yyasUuGvpgH39bj5VWUzQkgqr38Z2WFZa8bifBnA
+	 8/ZrkfQ56mc5bzFQls40orRvl/0+zeqps+pk7/edTwdVqQgOpM/MdBVFXlB+SXXusF
+	 XhGMU4JWl/8O3MRkMwVLZ6T+bDRqSdjs3y0G8Na8o7MRIzEPp8czxtmZPRJ8GEDn8y
+	 QGMAZzkU3bX+A8zYaf66gvBxL2TmvyNbUNbwzLs9/dDDc2w0bhHWisxJlqAJm5OwKn
+	 Ynzw9ayNxwEyA==
 From: Dave Chinner <dgc@kernel.org>
 To: linux-xfs@vger.kernel.org
 Cc: cem@kernel.org
-Subject: [PATCH 20/33] xfs: convert xfs_iomap_write_unwritten to rolling transactions
-Date: Wed, 29 Jul 2026 20:02:04 +1000
-Message-ID: <20260729100629.1943710-21-dgc@kernel.org>
+Subject: [PATCH 21/33] xfs: plumb struct xfs_trans *tp into xfs_reflink_end_cow_extent
+Date: Wed, 29 Jul 2026 20:02:05 +1000
+Message-ID: <20260729100629.1943710-22-dgc@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260729100629.1943710-1-dgc@kernel.org>
 References: <20260729100629.1943710-1-dgc@kernel.org>
@@ -43,138 +43,69 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Convert xfs_iomap_write_unwritten() from per-iteration transaction
-allocation to a single rolling transaction that keeps the ILOCK
-held across the entire unwritten extent conversion loop.
+Add a struct xfs_trans *tp parameter to xfs_reflink_end_cow_extent().
+When a non-NULL transaction is provided, use it directly for the
+COW extent remapping and return the error to the caller without
+managing the transaction or lock lifecycle.
 
-Previously each iteration allocated a new transaction, acquired the
-ILOCK, converted one extent, committed, and released the ILOCK.
-This left a window where the extent tree could change between
-iterations.
+When tp is NULL, the existing behaviour is preserved.
 
-The rolling transaction keeps the ILOCK held throughout, making the
-multi-extent conversion atomic with respect to other concurrent
-extent operations. XFS_TRANS_RENEW_BLKRES is set so that the btree
-split block reservation is automatically renewed after each
-xfs_defer_finish() call.
-
-The startblock corruption check is performed after xfs_defer_finish()
-commits the dirty transaction, so that corruption detection warns and
-returns an error without causing a filesystem shutdown from cancelling
-a dirty transaction.
+All callers currently pass NULL, so there is no functional change.
 
 Assisted-by: LLM
 Signed-off-by: Dave Chinner <dgc@kernel.org>
 ---
- fs/xfs/xfs_iomap.c | 71 +++++++++++++++++++++++++++-------------------
- 1 file changed, 42 insertions(+), 29 deletions(-)
+ fs/xfs/xfs_reflink.c | 13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 16feac3ad3bd..e43ce4811283 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -19,6 +19,7 @@
- #include "xfs_errortag.h"
- #include "xfs_error.h"
- #include "xfs_trans.h"
-+#include "xfs_defer.h"
- #include "xfs_trans_space.h"
- #include "xfs_inode_item.h"
- #include "xfs_iomap.h"
-@@ -702,44 +703,49 @@ xfs_iomap_write_unwritten(
- 	if (error)
- 		return error;
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index e40f7afc2c7b..b175a549ee55 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -889,15 +889,19 @@ xfs_reflink_end_cow_extent_locked(
+  */
+ STATIC int
+ xfs_reflink_end_cow_extent(
++	struct xfs_trans	*tp,
+ 	struct xfs_inode	*ip,
+ 	xfs_fileoff_t		*offset_fsb,
+ 	xfs_fileoff_t		end_fsb)
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
+-	struct xfs_trans	*tp;
+ 	unsigned int		resblks;
++	bool			local_tp = false;
+ 	int			error;
  
--	do {
--		/*
--		 * Set up a transaction to convert the range of extents
--		 * from unwritten to real. Do allocations in a loop until
--		 * we have covered the range passed in.
--		 *
--		 * Note that we can't risk to recursing back into the filesystem
--		 * here as we might be asked to write out the same inode that we
--		 * complete here and might deadlock on the iolock.
--		 */
--		error = xfs_trans_alloc_inode(ip, &M_RES(mp)->tr_write, resblks,
--				0, true, &tp);
--		if (error)
--			return error;
-+	/*
-+	 * Allocate the transaction once and use a rolling transaction to
-+	 * convert the range of extents from unwritten to real. The rolling
-+	 * transaction keeps the ILOCK held across the entire conversion,
-+	 * making it atomic with respect to other concurrent extent
-+	 * operations. The block reservation is automatically renewed on
-+	 * each roll by XFS_TRANS_RENEW_BLKRES.
-+	 *
-+	 * Note that we can't risk recursing back into the filesystem here
-+	 * as we might be asked to write out the same inode that we complete
-+	 * here and might deadlock on the iolock.
-+	 */
-+	error = xfs_trans_alloc_inode(ip, &M_RES(mp)->tr_write, resblks,
-+			0, true, &tp);
-+	if (error)
-+		return error;
-+	tp->t_flags |= XFS_TRANS_RENEW_BLKRES;
- 
-+	do {
- 		error = xfs_iomap_write_unwritten_one(tp, ip, offset_fsb,
- 				count_fsb, end, update_isize, resblks, &imap);
--		if (error) {
--			xfs_trans_cancel(tp);
--			xfs_iunlock(ip, XFS_ILOCK_EXCL);
--			return error;
--		}
-+		if (error)
-+			goto out_cancel;
- 
--		error = xfs_trans_commit(tp);
--		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+		/*
-+		 * Roll the transaction to commit the conversion and renew
-+		 * the block reservation. The startblock validation must be
-+		 * done after the roll commits the transaction, so that a
-+		 * corruption detection does not cancel a dirty transaction
-+		 * and shut down the filesystem.
-+		 */
-+		error = xfs_defer_finish(&tp);
- 		if (error)
--			return error;
-+			goto out_cancel;
- 
- 		if (unlikely(!xfs_valid_startblock(ip, imap.br_startblock))) {
- 			xfs_bmap_mark_sick(ip, XFS_DATA_FORK);
--			return xfs_alert_fsblock_zero(ip, &imap);
-+			error = xfs_alert_fsblock_zero(ip, &imap);
-+			goto out_cancel;
- 		}
- 
--		if ((numblks_fsb = imap.br_blockcount) == 0) {
--			/*
--			 * The numblks_fsb value should always get
--			 * smaller, otherwise the loop is stuck.
--			 */
-+		numblks_fsb = imap.br_blockcount;
-+		if (numblks_fsb == 0) {
- 			ASSERT(imap.br_blockcount);
- 			break;
- 		}
-@@ -747,7 +753,14 @@ xfs_iomap_write_unwritten(
- 		count_fsb -= numblks_fsb;
- 	} while (count_fsb > 0);
- 
--	return 0;
-+	error = xfs_trans_commit(tp);
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+	return error;
++	if (tp)
++		goto end_cow;
 +
-+out_cancel:
-+	xfs_trans_cancel(tp);
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+	return error;
- }
+ 	resblks = XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK);
+ 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0,
+ 			XFS_TRANS_RESERVE, &tp);
+@@ -905,8 +909,12 @@ xfs_reflink_end_cow_extent(
+ 		return error;
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	xfs_trans_ijoin(tp, ip, 0);
++	local_tp = true;
  
- static inline bool
++end_cow:
+ 	error = xfs_reflink_end_cow_extent_locked(tp, ip, offset_fsb, end_fsb);
++	if (!local_tp)
++		return error;
+ 	if (error)
+ 		xfs_trans_cancel(tp);
+ 	else
+@@ -966,7 +974,8 @@ xfs_reflink_end_cow(
+ 	 * blocks will be remapped.
+ 	 */
+ 	while (end_fsb > offset_fsb && !error)
+-		error = xfs_reflink_end_cow_extent(ip, &offset_fsb, end_fsb);
++		error = xfs_reflink_end_cow_extent(NULL, ip, &offset_fsb,
++				end_fsb);
+ 
+ 	if (error)
+ 		trace_xfs_reflink_end_cow_error(ip, error, _RET_IP_);
 -- 
 2.55.0
 
