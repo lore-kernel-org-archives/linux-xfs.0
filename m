@@ -1,41 +1,41 @@
 Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B2A448A8CA
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A3A3485CEB
 	for <linux-xfs@vger.kernel.org>; Wed, 29 Jul 2026 13:03:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785330216; cv=none; b=WrjQ+zhdtIGRThSR217U2NAE29P836Q6TWomGP09xsoXVT5aR9CIJZU7B481Olzv0dj9mFRZGaTunDRFEBw+VmXeUttjPRI0eUfDhEkKDaVKhIqN3ypIoK/jpuxwC1VcVbnRaOwvIYU73ybvg8aguZVIYgOUkej1ga1x2+ygCfs=
+	t=1785330216; cv=none; b=rk6LcAqhbeDNhXiatkN+EZmcRuLZe3/OqmgtWOsUSSXn8OqnyAS1nvcCInZn3tdgj2CQP4HinjOhiccEqGLoVehiGijkZt9WUo1X7C1ovV9oNOXTA8H5smnlOM+WfINQJdJMhh276OCssvkrSh3XhOJTJ6CkYnJlHJqQK0GMGsg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1785330216; c=relaxed/simple;
-	bh=P3al4mUrJjVNr7vv0vbo3TEfTD3l5LaBACsecmrVHoM=;
+	bh=wIbO2l1D7QUXIuI9R4V3vrSMJzrwn5q+GxydwcVjgY8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=tsJaZqov2491pJFf8k8xwxhr2ywA1aCgeSKsdW0hygPFjVzNvi56/l8nAiu0VLi6rmpqzlp0mQG0dJkclQe7zAGdQ7VxRUywup8ClhazplWLN0E00uTg0dp+uMPOiZwgwCy1V8B32dbOvotAU6Kti2K3AQufRLU/QQmjiI4HZyw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=casper.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=guUanVDb; arc=none smtp.client-ip=90.155.50.34
+	 MIME-Version; b=ZOuB2asw4csT/xt1SwU6uiZ2wIxsTdMMdKx+1XbkD/yb0Ex7UINXizfGrEcN+oI8bZ/uFXKy9Xx8Ge9ZQyTcHRldlYLomULdMWvE/XkfdcS+oeM9WEZi0mOQzUqkdfPt10UO9c3B6XlIWmbSXajf3U8tsqtan/zgXdi2eSbKQeY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=casper.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=CzQGhC/j; arc=none smtp.client-ip=90.155.50.34
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=casper.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="guUanVDb"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="CzQGhC/j"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:
 	Content-Type:Content-ID:Content-Description;
-	bh=HT1g/VFzatvzhRjDHv7+ea6/Fy/ovprkeb+2pQ0sg0c=; b=guUanVDbS5HwOUvPbETE+zpcbT
-	yAPf4RcGAzDPWFO7ZfxGnEZmP0PqnBnwNf+veCHWUYeHKu9ybw6qP39manUKX/dej1YhHlUKiJnlc
-	3giPywoewl11bb3a7+PTqKHvHVIlLJviT8Vh4JqsGES5o9GVjWxhuBvC3+X38wDfWoupa2FRQdhfG
-	UZpsQXfMAYPtsRcqd1EKL4x0h6YZ/K0U47mCjdP/S4d2VEhkcupIKqSkLatJCOMN2fOZ8x8uKdsAd
-	orecmdYLJINuzkUK/y1k6IYpAkJH2X7FJAtZKMywKji2ReNotMvCsfIfwoe/U2+gn0rsf6vur9yze
-	tPSeyXIw==;
+	bh=SsBlSb2VAQ47+gTk/tt0snER4/QNXhVteb5yhrSS1kk=; b=CzQGhC/jvhZuIMNWtQDe98kAY1
+	8vurh7y1WVIJDIHOIBN3wfZ8tr3XSrUaXyMeujfDeOhEvr4nOQ20w9vPwim4PSz7+H7qlmJfbqnJF
+	Mj/8+TzQLUYq404aTpwEUPbKcBewP9IdwRqvKDZ1koUEvfoehsMTLPpIy3YdM1kuN/8m9HoPd4ZH+
+	r2niH4d3YLSp3Qyk0zP+pnIK+2awbwF9jECUTT0XM5DxdqA0TS8vJFay22zNihtW0aAH/+jTVt3Bm
+	qffSXputmhIYskqXGsZ4IFk9ubSjQJM/lSdyiQBCjL6V+IEEnKUGP6qO/tinOIKeNlc0kOHQYHZoQ
+	yeFzLomA==;
 Received: from 85-127-110-197.dsl.dynamic.surfer.at ([85.127.110.197] helo=localhost)
 	by casper.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wp3wY-00000004Wks-3aRt;
+	id 1wp3wZ-00000004Wl3-32Cc;
 	Wed, 29 Jul 2026 13:03:31 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH 11/16] xfs: split out the handler for XFS_IOC_FREE_EOFBLOCKS
-Date: Wed, 29 Jul 2026 15:03:10 +0200
-Message-ID: <20260729130320.2282183-12-hch@lst.de>
+Subject: [PATCH 12/16] xfs: split out the handlers for XFS_IOC_FSGROWFS_*_32
+Date: Wed, 29 Jul 2026 15:03:11 +0200
+Message-ID: <20260729130320.2282183-13-hch@lst.de>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260729130320.2282183-1-hch@lst.de>
 References: <20260729130320.2282183-1-hch@lst.de>
@@ -48,91 +48,115 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 
-Split out a helper for XFS_IOC_FREE_EOFBLOCKS to keep the stack variables
-out of xfs_file_ioctl and to clean up the main ioctl handler flow.
+Split out helpers for XFS_IOC_FSGROWFS_*_32 to keep the stack variables
+out of xfs_file_compat_ioctl and to clean up the main compat ioctl
+handler flow.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_ioctl.c | 52 ++++++++++++++++++++++++++--------------------
- 1 file changed, 29 insertions(+), 23 deletions(-)
+ fs/xfs/xfs_ioctl32.c | 76 ++++++++++++++++++++++----------------------
+ 1 file changed, 38 insertions(+), 38 deletions(-)
 
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 25e01648bb7b..bf3be8b4eaf0 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1369,6 +1369,33 @@ xfs_ioc_error_injection(
- 	return xfs_errortag_add(mp, in.errtag);
+diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
+index 250df2bbf214..2162eda01743 100644
+--- a/fs/xfs/xfs_ioctl32.c
++++ b/fs/xfs/xfs_ioctl32.c
+@@ -44,26 +44,46 @@ xfs_compat_ioc_fsgeometry_v1(
+ 	return 0;
  }
  
+-STATIC int
+-xfs_compat_growfs_data_copyin(
+-	struct xfs_growfs_data	 *in,
+-	compat_xfs_growfs_data_t __user *arg32)
 +static int
-+xfs_ioc_free_eofblocks(
++xfs_compat_ioc_growfs_data(
++	struct file		*file,
 +	struct xfs_mount	*mp,
-+	struct xfs_fs_eofblocks	__user *arg)
-+{
-+	struct xfs_fs_eofblocks	eofb;
-+	struct xfs_icwalk	icw;
++	struct compat_xfs_growfs_data __user *arg32)
+ {
+-	if (get_user(in->newblocks, &arg32->newblocks) ||
+-	    get_user(in->imaxpct,   &arg32->imaxpct))
++	struct xfs_growfs_data	in = { };
 +	int			error;
 +
-+	if (!capable(CAP_SYS_ADMIN))
-+		return -EPERM;
-+	if (xfs_is_readonly(mp))
-+		return -EROFS;
++	if (get_user(in.newblocks, &arg32->newblocks) ||
++	    get_user(in.imaxpct, &arg32->imaxpct))
+ 		return -EFAULT;
+-	return 0;
 +
-+	if (copy_from_user(&eofb, arg, sizeof(eofb)))
-+		return -EFAULT;
-+
-+	error = xfs_fs_eofblocks_from_user(&eofb, &icw);
++	error = mnt_want_write_file(file);
 +	if (error)
 +		return error;
-+
-+	trace_xfs_ioc_free_eofblocks(mp, &icw, _RET_IP_);
-+
-+	guard(super_write)(mp->m_super);
-+	return xfs_blockgc_free_space(mp, &icw);
-+}
-+
- /*
-  * These long-unused ioctls were removed from the official ioctl API in 5.17,
-  * but retain these definitions so that we can log warnings about them.
-@@ -1388,7 +1415,6 @@ xfs_file_ioctl(
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	struct xfs_mount	*mp = ip->i_mount;
- 	void			__user *arg = (void __user *)p;
--	int			error;
++	error = xfs_growfs_data(mp, &in);
++	mnt_drop_write_file(file);
++	return error;
+ }
  
- 	trace_xfs_file_ioctl(ip);
+-STATIC int
+-xfs_compat_growfs_rt_copyin(
+-	struct xfs_growfs_rt	 *in,
+-	compat_xfs_growfs_rt_t	__user *arg32)
++static int
++xfs_compat_ioc_growfs_rt(
++	struct file		*file,
++	struct xfs_mount	*mp,
++	struct compat_xfs_growfs_rt __user *arg32)
+ {
+-	if (get_user(in->newblocks, &arg32->newblocks) ||
+-	    get_user(in->extsize,   &arg32->extsize))
++	struct xfs_growfs_rt	in = {};
++	int			error;
++
++	if (get_user(in.newblocks, &arg32->newblocks) ||
++	    get_user(in.extsize, &arg32->extsize))
+ 		return -EFAULT;
+-	return 0;
++
++	error = mnt_want_write_file(file);
++	if (error)
++		return error;
++	error = xfs_growfs_rt(mp, &in);
++	mnt_drop_write_file(file);
++	return error;
+ }
  
-@@ -1494,28 +1520,8 @@ xfs_file_ioctl(
- 			return -EPERM;
- 		return xfs_errortag_clearall(mp);
- 
--	case XFS_IOC_FREE_EOFBLOCKS: {
--		struct xfs_fs_eofblocks	eofb;
--		struct xfs_icwalk	icw;
+ STATIC int
+@@ -434,30 +454,10 @@ xfs_file_compat_ioctl(
+ #if defined(BROKEN_X86_ALIGNMENT)
+ 	case XFS_IOC_FSGEOMETRY_V1_32:
+ 		return xfs_compat_ioc_fsgeometry_v1(ip->i_mount, arg);
+-	case XFS_IOC_FSGROWFSDATA_32: {
+-		struct xfs_growfs_data	in;
 -
--		if (!capable(CAP_SYS_ADMIN))
--			return -EPERM;
--
--		if (xfs_is_readonly(mp))
--			return -EROFS;
--
--		if (copy_from_user(&eofb, arg, sizeof(eofb)))
+-		if (xfs_compat_growfs_data_copyin(&in, arg))
 -			return -EFAULT;
--
--		error = xfs_fs_eofblocks_from_user(&eofb, &icw);
+-		error = mnt_want_write_file(filp);
 -		if (error)
 -			return error;
--
--		trace_xfs_ioc_free_eofblocks(mp, &icw, _RET_IP_);
--
--		guard(super_write)(mp->m_super);
--		return xfs_blockgc_free_space(mp, &icw);
+-		error = xfs_growfs_data(ip->i_mount, &in);
+-		mnt_drop_write_file(filp);
+-		return error;
 -	}
-+	case XFS_IOC_FREE_EOFBLOCKS:
-+		return xfs_ioc_free_eofblocks(mp, arg);
- 
- 	case XFS_IOC_EXCHANGE_RANGE:
- 		return xfs_ioc_exchange_range(filp, arg);
+-	case XFS_IOC_FSGROWFSRT_32: {
+-		struct xfs_growfs_rt	in;
+-
+-		if (xfs_compat_growfs_rt_copyin(&in, arg))
+-			return -EFAULT;
+-		error = mnt_want_write_file(filp);
+-		if (error)
+-			return error;
+-		error = xfs_growfs_rt(ip->i_mount, &in);
+-		mnt_drop_write_file(filp);
+-		return error;
+-	}
++	case XFS_IOC_FSGROWFSDATA_32:
++		return xfs_compat_ioc_growfs_data(filp, ip->i_mount, arg);
++	case XFS_IOC_FSGROWFSRT_32:
++		return xfs_compat_ioc_growfs_rt(filp, ip->i_mount, arg);
+ #endif
+ 	/* long changes size, but xfs only copiese out 32 bits */
+ 	case XFS_IOC_GETVERSION_32:
 -- 
 2.53.0
 
