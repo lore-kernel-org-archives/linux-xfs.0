@@ -1,75 +1,118 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E92D42C4E9
-	for <linux-xfs@vger.kernel.org>; Thu, 30 Jul 2026 12:28:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64E7C430794
+	for <linux-xfs@vger.kernel.org>; Thu, 30 Jul 2026 13:06:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785414527; cv=none; b=bUOeNylGoq9aQ1HJtbmlY/c0tINvA6M+jmhIDfkmUyu0jh2U6DAG5HHxZiglA9fkJgOjjsoFqrXQbjNUz8IBrYlwSLa+fVJm1KOJ6r5SPsiww3veTwt5TbI8beeSOXMM4AGyzVP13PsDFFJYNJNhBKK09u/h6tXI70ZxF26lxuc=
+	t=1785416784; cv=none; b=dqmvecNh2wI6ORw0wYoy4eRy9yGCSrqBs4i8vdQ1pjtSaCPNW331qRTfF9G7Xptl3gmj/ljLf6KQxP2lBNEWjMX262UkXPc8qsHfrSnSxDhuA8uTpOM3WWvtf3e1qU0F2t6B8GuzLQU4E6cvVnZqc0j/dlWZssnmj6ijSs/fHMM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785414527; c=relaxed/simple;
-	bh=zTmrVAIArnX/EzxQAgktPBw+ZjZdxL49FQ8Vlu8l8Rk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=cqV5qGRsAKGrI+MbFErXivVIRbrXid7WLF/1MaJ7xHG29q/EfJX4dRuwzYZvO9ZrI+BW81k3jgn72gxcbjLN5PsQHR2WxxfUctDRXNrk/fgRIGlO1L6JMVBRJs6WTnZ7KfFcK81ZQKmpm/yuogRWt044aKA7IWKjrl/9KDB0RN4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=casper.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=jgA0yrBZ; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=casper.srs.infradead.org
+	s=arc-20240116; t=1785416784; c=relaxed/simple;
+	bh=r4K3ZVt18WAGvJtyk/TPvennSIuJFefaDJtGXcRDTjw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Pi10tF+ptpnslQF97fMLaxS6B9bQR6mm29CgKtW0ipkkxqi4xvfziqAq4djdlNA2hyJY8iHNTmHp3ybJ7EkdsMTv1J7+YtM23cE9iLsoBNFnIrrhSo2fM6FRu3vpQx3nCV9I5S1uhWPSa3YKfDdBCJJA7wsABZYK1/LiK7/+kn8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=readmodwrite.com; spf=none smtp.mailfrom=readmodwrite.com; dkim=pass (2048-bit key) header.d=readmodwrite-com.20251104.gappssmtp.com header.i=@readmodwrite-com.20251104.gappssmtp.com header.b=qJMJYVjX; arc=none smtp.client-ip=209.85.128.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=readmodwrite.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=readmodwrite.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="jgA0yrBZ"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:
-	Content-Type:Content-ID:Content-Description;
-	bh=4otEs0D7TD7fn4OFdg2XAVoZ3NP2/67xUSgL1985d5c=; b=jgA0yrBZb/xkx7NW6CWXDBWdh5
-	eTjVi6BQbPow6iSWob/meeqWN1YunkHvc2JeF60tTC/k6JFNj9FsSlbzsQW5GcCvycBWE4DvJyj96
-	/wrDkgHhVqqr7UuINMaLkyQyItSVl+3Vu15zbkSSUphU4Awj7cWDpQ/FycM9Ttqx0j/myNJS/zycM
-	xbyBRNLDcW44yu2TDSchqZldwdrRjWnK3ul34FQ8uh5w4/Or+TX5KI0b5H+uBA6cOWAX70Z6LXHoO
-	ScZrba2HwTTLi4aaVaVONJ6ZxxNwluahKCZZXvxnFOnF0s3zyurnkCMtSJBcQ6gHjmA0MHocFdM+F
-	z1pwNjfA==;
-Received: from 2a02-8389-2301-9f00-b29a-36e9-8c1c-0994.cable.dynamic.v6.surfer.at ([2a02:8389:2301:9f00:b29a:36e9:8c1c:994] helo=localhost)
-	by casper.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wpPsR-0000000DlTB-2Qfk;
-	Thu, 30 Jul 2026 12:28:43 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Andrey Albershteyn <aalbersh@kernel.org>
-Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH 2/2] growfs: clarify the man page a bit
-Date: Thu, 30 Jul 2026 14:28:16 +0200
-Message-ID: <20260730122841.2591200-3-hch@lst.de>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260730122841.2591200-1-hch@lst.de>
-References: <20260730122841.2591200-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=readmodwrite-com.20251104.gappssmtp.com header.i=@readmodwrite-com.20251104.gappssmtp.com header.b="qJMJYVjX"
+Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-4954a2e73a9so12597965e9.3
+        for <linux-xfs@vger.kernel.org>; Thu, 30 Jul 2026 06:06:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=readmodwrite-com.20251104.gappssmtp.com; s=20251104; t=1785416781; x=1786021581; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=sxXEd+HzJtwi1wb5EKcD7k+cVu9vp/hmZ7y5pUznXvs=;
+        b=qJMJYVjXUHnjicG7z7fH1ka+sksga/NP0pOe7FFngqlI+7GH+vt9ZXpzbQQtWYynTX
+         JShA0VOGVLBLxFJlKaghABdTsi2tnpLWYxqulr1qAFazGgv5nEGP1GYvjsae1Z4r0Fhq
+         f21ZRTEvtF613bKxXHtl8xW1fCYAkFdYuw2u2cfRnPuItvB9YLK4iFEr8ix7rzd4dZJM
+         vKxCq6yhz3t3tCGVzD9z3nGUIh9bMd6yryJtvrgbUF7rtpSHfMaP6m9McATMki78dzEC
+         oNOxsynM4DsmCokAYKXLpisJqe/jt0/zJSir771QasP31BBldusQt9quiuDbBxFKiPmI
+         dHWA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785416781; x=1786021581;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=sxXEd+HzJtwi1wb5EKcD7k+cVu9vp/hmZ7y5pUznXvs=;
+        b=gYhbdTMUqY82xAoM0Vmg6hAr8T19e1EVd5/056McPBlc7MwGO1XX3aoeVHpxhyBwxo
+         dH9xf6HtE3p3vDgYpZ1FHrReQ4qWgU66PZaaZx0mbeHsy1lJKJv4+6qWWVJxvjhfHrAW
+         /LKUcf30gzxwFVgCuMn7V8V8N7IAXobe23f9ZfkzAiuSbD9+yf30u8oW44evFD32Mpex
+         ZmmHqCkxs0ucM67FYhgDCo+NFAk1qup0Epk0RWtOULZ7g1CS5pILzsBL2LA+hEATeVl1
+         xUhW1rrxBBMHQeNJSUZpfeMZekkqeJ5HP+jr8g4xGoEg5id6gZByIZcFdEkQKa+t+9d5
+         ENoQ==
+X-Gm-Message-State: AOJu0YwRTxNoMRYTE8EzJqKwoTRKWiA8pHk31Hfi1CB+wZr1pTzXkOOd
+	aHj0hjVSvRlBmwzOO6+ONsLCAJIGpKa8X/oIh92psx87O4LoFeI71rmTJMbaTQ02S+M=
+X-Gm-Gg: AR+sD1152AGbKS3153NuJtNtskBZAOoJ62K1TK7aAFzFqxurT9/aILHqWIxE/FL2BG+
+	UBh10ZONNIkaQLHhPYnq6+DuB8uPRoC4v+6qKVBjf4biJn6Gkd0rhG8XECfYCjn4tmfkjUoBhW1
+	a268qvVjO4MesNZb58pwVp9+PYrLtKCwLjR4/JtWu+ibPcPwyQUg0PezenpiTMoZHzZZNhtyit0
+	mOy4VFO6UFJ9w25GdWckOQ48yu7qr9LgNP5qCtQlijFUKbmmvynPGbr8FCVzf6AQLJOeVrfHUVH
+	gXbTicGUBSqXzEUd/TwIRPqXFmKF8juXPAY+v2EFcMN01+M+3E4fo8jCKfn3FE14KGfhQGLYvc5
+	YDPmQi8W1QLuHqNZ5ebonlFyvllodxynT744a3J2z2g+iDGmBnMWgdihmkX5c8S3+jiVVfoUJWu
+	avZrbXOdeOGXsnOQB8EEguqcN+RPEZig470YoE3eZdINilpRk=
+X-Received: by 2002:a05:600c:8209:b0:495:6b8a:5227 with SMTP id 5b1f17b1804b1-49800ebed12mr33012005e9.23.1785416781243;
+        Thu, 30 Jul 2026 06:06:21 -0700 (PDT)
+Received: from localhost ([2a09:bac6:37a8:ebe::178:11c])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-47fc892cdeasm6356992f8f.22.2026.07.30.06.06.20
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 30 Jul 2026 06:06:20 -0700 (PDT)
+Date: Thu, 30 Jul 2026 14:06:19 +0100
+From: Matt Fleming <matt@readmodwrite.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org, Carlos Maiolino <cem@kernel.org>, 
+	"Darrick J . Wong" <djwong@kernel.org>, Dave Chinner <dchinner@redhat.com>, 
+	Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org, kernel-team@cloudflare.com
+Subject: Re: [BUG] xfs: sparse inode allocation can trip i != 1 after AGFL
+ growth
+Message-ID: <amtFONut0xhq8qTP@matt-Precision-5490>
+References: <20260717130429.1838767-1-matt@readmodwrite.com>
+ <alpsniDzp5kWl0xA@bfoster>
+ <al33dUXS_8Yr5vEu@matt-Precision-5490>
+ <ampLZcB3CAzLPKV5@bfoster>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ampLZcB3CAzLPKV5@bfoster>
 
-While no RT section needs to exist for GROWFS_RT to work, the buftarg
-must point to a block device already.
+On Wed, Jul 29, 2026 at 02:50:13PM -0400, Brian Foster wrote:
+> 
+> I want to think about that a little more and need to run more tests, but
+> unless something better comes along I'll try to post that soonish. BTW,
+> I had to make some tweaks to the reproducer test to make it work on my
+> fedora based test vm. Is this something you plan to post for upstream
+> inclusion?
+> 
+> Brian
+> 
+> --- 8< ---
+> 
+> diff --git a/tests/xfs/842 b/tests/xfs/842
+> index 9e694a56..5455998f 100755
+> --- a/tests/xfs/842
+> +++ b/tests/xfs/842
+> @@ -293,9 +293,9 @@ inspect_unmounted
+>  read -r free reserved used <<<"$(ag0_reservation_state)"
+>  reservation=$((reserved - used))
+>  outside=$((free - reservation))
+> -bno_level=$(agf_field 'levels[0]')
+> -cnt_level=$(agf_field 'levels[1]')
+> -rmap_level=$(agf_field 'levels[2]')
+> +bno_level=$(agf_field bnolevel)
+> +cnt_level=$(agf_field cntlevel)
+> +rmap_level=$(agf_field rmaplevel)
+>  flcount=$(agf_field flcount)
+>  bno_recs=$(alloc_root_field bnoroot numrecs)
+>  cnt_recs=$(alloc_root_field cntroot numrecs)
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- man/man8/xfs_growfs.8 | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Thanks for catching this! Yeah I'll submit this upstream.
 
-diff --git a/man/man8/xfs_growfs.8 b/man/man8/xfs_growfs.8
-index d6e5fe13e943..1aa57fb0308f 100644
---- a/man/man8/xfs_growfs.8
-+++ b/man/man8/xfs_growfs.8
-@@ -151,7 +151,8 @@ the real-time section is grown to the largest size possible with the
- option. The filesystem does not need to have contained a real-time section
- before the
- .B xfs_growfs
--operation.
-+operation, but it must have been mounted with the -o rtdev option pointing
-+to a block device.
- .TP
- .B \-t
- Specifies an alternate mount table file (default is
--- 
-2.53.0
+Thanks,
+Matt
 
