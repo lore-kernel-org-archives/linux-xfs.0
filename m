@@ -1,36 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C69263B0591;
-	Thu, 30 Jul 2026 05:26:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECCA43ACA41;
+	Thu, 30 Jul 2026 05:26:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785389174; cv=none; b=IF01oGej2aSWjjuozgczxFTyuwYvMHhx2c3YIC0EjENvvGRy0roaQ+QlmmUooEHrzUCbMbmQlDRZ0wqt8++UZgDlMwTvqkZJo0Wvrk+TbcyAwB1POVW7xA8Dpk95ihiOPdsQvCgZYLrpEOdtXOX7iZSmm44aTef46o7Swl+So9k=
+	t=1785389179; cv=none; b=I43JnY3ZN+yXdPPtL7Zaazkv47DL/nMARWn14o9qb6aoBfRRJTXnquY3mZ9gIabB0Yw6kla6LUIMEJ+DTVKQc5QfvLOFP85XGGfJIeo0JE4+K4UxzqlazYZbXgpB+1ZXIjU/UDd4IMSAC6VQMLW62AUqVhzXFIJAteAPF4X1IkA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785389174; c=relaxed/simple;
-	bh=9rJH0zzluc9hiFuNznkKZcuUv2VJWVYFUImdUYF17HA=;
-	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=GfqHzReTtd0hkJDT0mQwsFIStmTOIRIwuq18s8JLB3SS1gE1k46X/XcrRaHH/u2uHJiVNsYbySjOnG4SWl0Ihy6nQ8tDuoy9VwkTDBlXWQwBN571fCHg/EalW0ZgGg+Nv0Q2h283gm4uEc61F5Oa/dkNELQ63CxDoefzss6jXhY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KwDKfYkv; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785389179; c=relaxed/simple;
+	bh=b8ojyl33JmWD45AJ9X5gI60nlxWtNIaLLl/baeOCB1A=;
+	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=g/vPyt/6SWxl4Tx2EJHW+6YW7y6UJzBCZ/7uXTyW1DHoF9+0R/jmsdFiA0/s9BSwTD2FndkcX86/TmeG+FAMbRdiJCiQ/9wLHb/nbWOCDYLHaOeJ6i5Jw7UYS/xXx8oMebBHfMxrh7rHKo1WD1rQ649FM7PwCAUXxpYp3gWZRCo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CCZcQ6bY; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KwDKfYkv"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 1765D1F000E9;
-	Thu, 30 Jul 2026 05:26:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CCZcQ6bY"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 9688B1F000E9;
+	Thu, 30 Jul 2026 05:26:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785389173;
-	bh=Ez2cvLpLvocUL0LtvpwJGonDyIfvg6Rd7/1c8LAGp8k=;
-	h=Date:Subject:From:To:Cc;
-	b=KwDKfYkvwJQbwrny5ROLb1p09Jqk6/CI1zHHLAX9Wc4uMGarCeqY9pYjnk/ophyae
-	 syM8u1oH6i6bJI/t4uOprnuIO17/f0aRhVEI16n6YtzjtcvwIN70xSraa+R4gcnIHI
-	 BRWTmNJ3OWU46gz7HWZ3gOeb/t7JlSjZqmX+PFtAhsysjhd5MQjEW2fixMuimMuFBh
-	 nXkLHGeATIXqYE2T0qkC1elr/a6YDt9ABN0nCGm7yPgaEvPAwnvUqX4YIWasCNsBHi
-	 VLu7YIy1rkPsPzuZ6yiDFYHkLCMp0OmbFhVvVtBCkwRiB0TOPtFogsHq6Qx+LJGzL7
-	 mFFuTXWd2rm1w==
-Date: Wed, 29 Jul 2026 22:26:12 -0700
-Subject: [PATCHSET] xfs: LLM-inspired bug fixes, part 5
+	s=k20260515; t=1785389178;
+	bh=+ChdbIcTz9rJlxo/Q1HlhbYdAOwAUvCeosh2x+Fu8Ck=;
+	h=Date:Subject:From:To:Cc:In-Reply-To:References;
+	b=CCZcQ6bYFqiYKRijM9utdWJEa4vXl5nctPzkHEV1RMvbazqB5nxqnZ2ZDZrpgQpwJ
+	 SuS0l5gh0rnwssKN6E0HET+/3zRwwc/D2HXPE606lNWQDqlewXj4ugCzj5173NPj2A
+	 TxbjZ7TpDIyfRqzBtgyuVteOPIErKfk5Eqh+JcFZFzAeuDASZ/pXFbHtPevsVkYUVV
+	 n8d/KlCq7qLQzra1rPkJKARsDqxr45nwLE4A58Dgjdre+RL13/wICcuJkqmujLXOYE
+	 oDoVsC26GmbO9NiDhwbyoiey0LrAjGZN3zOaA0PWA7CgFaoSDpgt4ncRQUJ7QLUi9r
+	 R66Gs3lNzoohg==
+Date: Wed, 29 Jul 2026 22:26:18 -0700
+Subject: [PATCH 1/6] xfs: fix unit conversions in per_binval computation
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, hch@lst.de, cem@kernel.org
 Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <178538912844.4070956.17029198681620903700.stgit@frogsfrogsfrogs>
+Message-ID: <178538912901.4070956.12472652319090346828.stgit@frogsfrogsfrogs>
+In-Reply-To: <178538912844.4070956.17029198681620903700.stgit@frogsfrogsfrogs>
+References: <178538912844.4070956.17029198681620903700.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -40,36 +43,42 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-Here's a fifth batch of xfs fixes resulting from a LLaMma.  Mwa mwa
-mwa...
+LOLLM noticed that we're doing the unit conversion in the per_binval
+computation backwards -- xfs_buf_inval_log_space's second parameter is
+supposed to be in bytes, but max_binval is in units of fsblocks.  Hence
+the conversion should be FSB -> B, not the other way around.
 
-If you're going to start using this code, I strongly recommend pulling
-from my git trees, which are linked below.
-
-With a bit of luck, this should all go splendidly.
-Comments and questions are, as always, welcome.
-
---D
-
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=llm-fixes-5
+Cc: <stable@vger.kernel.org> # v6.18
+Fixes: b2311ec6778fcd ("xfs: compute per-AG extent reap limits dynamically")
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+Assisted-by: LOLLM # finding obvious bugs
 ---
-Commits in this patchset:
- * xfs: fix unit conversions in per_binval computation
- * xfs: fix short ifork reaping computation in xreap_bmapi_binval
- * xfs: fix name string recording in slowpath pptr tracepoints
- * xfs: don't leak dqacct if rhashtable insertion fails
- * xfs: adjust datadev sector count to reflect internal rt volumes
- * xfs: fix the rtrmap and rtrefcount _maxlevels_ondisk functions
----
- fs/xfs/scrub/trace.h                 |    2 +-
- fs/xfs/libxfs/xfs_rtrefcount_btree.c |    7 +++++--
- fs/xfs/libxfs/xfs_rtrmap_btree.c     |    4 +++-
- fs/xfs/scrub/quotacheck.c            |    4 +++-
- fs/xfs/scrub/reap.c                  |    6 +++---
- fs/xfs/xfs_buf_item_recover.c        |   12 ++++++++++--
- fs/xfs/xfs_super.c                   |   11 ++++++++++-
- 7 files changed, 35 insertions(+), 11 deletions(-)
+ fs/xfs/scrub/reap.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+
+diff --git a/fs/xfs/scrub/reap.c b/fs/xfs/scrub/reap.c
+index fcd14c1703ea04..496c6eab555e91 100644
+--- a/fs/xfs/scrub/reap.c
++++ b/fs/xfs/scrub/reap.c
+@@ -601,7 +601,7 @@ xreap_configure_agextent_limits(
+ 
+ 	/* Maximum overhead of invalidating one buffer. */
+ 	const unsigned int	per_binval =
+-		xfs_buf_inval_log_space(1, XFS_B_TO_FSBT(mp, max_binval));
++		xfs_buf_inval_log_space(1, XFS_FSB_TO_B(mp, max_binval));
+ 
+ 	/*
+ 	 * For each transaction in a reap chain, we can delete some number of
+@@ -680,7 +680,7 @@ xreap_configure_agcow_limits(
+ 
+ 	/* Overhead of invalidating one buffer */
+ 	const unsigned int	per_binval =
+-		xfs_buf_inval_log_space(1, XFS_B_TO_FSBT(mp, max_binval));
++		xfs_buf_inval_log_space(1, XFS_FSB_TO_B(mp, max_binval));
+ 
+ 	/*
+ 	 * For each transaction in a reap chain, we can delete some number of
 
