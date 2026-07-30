@@ -1,173 +1,117 @@
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FB0141D625
-	for <linux-xfs@vger.kernel.org>; Thu, 30 Jul 2026 14:53:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.24
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41BE23B5DEE;
+	Thu, 30 Jul 2026 15:04:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785423188; cv=none; b=J3R8jWvMcM+dELu1ceD+2aUrtBBNuuimCgv2x+IQN6bWa1I4oYnBA05Wj+M2v3G84f92m0eWW9mXtTgjLw6zAURxaTzPiHWqiRcnbpvz2r23CCHkSdEaJv+YO9YySjKPux8w9oXJ6b0Ppzdo/vgYEkBSnCNfJBP94HOR4f0kmCo=
+	t=1785423884; cv=none; b=SnRyI74joMAob73B8rzcqwPPLKPHbvl3V2d87ssarYEqVceGBS02Ddq3p2geEadjUZpBC93sTswyfA6QXWcIBYlkRBRC9+YM7BCNaW4TWGxVRwLghrhY4QQ3rNJ9P5wWvwrIZtJM7WHSAIcL+Um66o1Kna1VA3dukb1+znBrnCM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785423188; c=relaxed/simple;
-	bh=JFvzplvbus/2kYURLL1As5wrffPNUN1jD/Gn1VXQyfY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:From:In-Reply-To:
-	 Content-Type:References; b=ArFWiMZRkZqjr5ikduMetvt9q3mbmcrHO+RGfJQN3qIh2P8x4KsWB6g5bV1ZKzgbFu6BqTQOW2zzDlQuNwpiPe8mqY8x/wC6C/D8HmSsp8bMdJa3FHxYbm2PHzcPeJ4zEzhTfKlnh66cc4EC8N7GRdS0deKS3Jtr374cWMIxGDA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=QbrPcklU; arc=none smtp.client-ip=203.254.224.24
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1785423884; c=relaxed/simple;
+	bh=EpW0x2798AoiDoKb9rArQXNO5ZqU7NimtPjPdjk1Nhc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=aaAElcj4FTcRoj5s3nK4feG2FN+j0Flma1Qys84VK1WzVTKbmFv14QKYDw7x7zU0yPthuE5Y5VY4lgs/DuaIZXtEcpS2SjDH53eO68kU921v+RqqEhrc46im9FmhqHgozDt3C53fBCRucowKgIypHN0jz061vbqJvsKX4ACd7CA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=orxrvFtz; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="QbrPcklU"
-Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
-	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20260730145256epoutp012404869f893c6cb3a88ece77b14f4e4a~HGOtvNTnd1082910829epoutp01D
-	for <linux-xfs@vger.kernel.org>; Thu, 30 Jul 2026 14:52:56 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20260730145256epoutp012404869f893c6cb3a88ece77b14f4e4a~HGOtvNTnd1082910829epoutp01D
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1785423176;
-	bh=4xilCRaoznc9RobxFg1o+gyR5JVXgQvjMd852A/HQH4=;
-	h=Date:Subject:To:Cc:From:In-Reply-To:References:From;
-	b=QbrPcklUlggA3I2zBiY5rerioThQTxm7vLm+OT9Y61cuzjPu2dgWspEz73wDowtxP
-	 fqeaPUVLkGqcz1kBAP5GWbYtcxcE3YxlMvqPCpnswMiNsbb0tAb+CIcNlQ4M/bEeoT
-	 bbHP/8kUzQtb4D1C0n+ipcyKB+41h6i6y1uiTF0w=
-Received: from epsnrtp02.localdomain (unknown [182.195.42.154]) by
-	epcas5p1.samsung.com (KnoxPortal) with ESMTPS id
-	20260730145255epcas5p191c9aef2712848a1834dc86e4444f9c9~HGOs8MzRf2930629306epcas5p10;
-	Thu, 30 Jul 2026 14:52:55 +0000 (GMT)
-Received: from epcas5p1.samsung.com (unknown [182.195.38.86]) by
-	epsnrtp02.localdomain (Postfix) with ESMTP id 4h9sd26j6tz2SSKX; Thu, 30 Jul
-	2026 14:52:54 +0000 (GMT)
-Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
-	epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
-	20260730145254epcas5p1af021ebbff5009fe362522f33a622711~HGOroDPqy2929729297epcas5p17;
-	Thu, 30 Jul 2026 14:52:54 +0000 (GMT)
-Received: from [107.122.11.51] (unknown [107.122.11.51]) by
-	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-	20260730145252epsmtip2cfb198552ce68aa76ff4c69eaed27064~HGOp4weFf1740717407epsmtip22;
-	Thu, 30 Jul 2026 14:52:52 +0000 (GMT)
-Message-ID: <71ae458a-a6e3-4c6f-8fb9-7e8bc088bb87@samsung.com>
-Date: Thu, 30 Jul 2026 20:22:51 +0530
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="orxrvFtz"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id EB2E41F00A3A;
+	Thu, 30 Jul 2026 15:04:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785423883;
+	bh=fM/xKUOc6YWd1++R4Gf8HPdAr9fdBpqR9uClIyw/OVw=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=orxrvFtzGIaoNQZh15Ai7XfGp1pb0Ti5Vy9zbxMHh/ZJzGA880eQ+cgkoKFaJTy7O
+	 th65ms1sz2XbL+91LyXH55Ig5u4eHrWX60Gj8UzWVpgisnRNqy24UeC7DuQBMwNGN5
+	 aNvB7YsnDfdkmoykeUh2akrUM7L87tSdIGhlIKA3fhQUBa/ss1dxolBowb8vg0AyrQ
+	 MtQDlD1D42tD1RMkmrwh6UDISUNFTrn9ECtMAbvjLs9NdnJ1c0SRUZqxFnT+LkVYFw
+	 DRO8yhJDxi3PhJEMzmRNiyIH6ck2Ko/ZNyoS7CB7Br804uKv6SHfyI2+qsppVha57L
+	 bD8l4UzG5A6MQ==
+Date: Thu, 30 Jul 2026 08:04:42 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: cem@kernel.org, stable@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 5/6] xfs: adjust datadev sector count to reflect internal
+ rt volumes
+Message-ID: <20260730150442.GA3556460@frogsfrogsfrogs>
+References: <178538912844.4070956.17029198681620903700.stgit@frogsfrogsfrogs>
+ <178538912986.4070956.14205556423461124701.stgit@frogsfrogsfrogs>
+ <20260730082204.GE10558@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 1/6] fs: add write-stream management ioctls
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: brauner@kernel.org, hch@lst.de, dgc@kernel.org, jack@suse.cz,
-	cem@kernel.org, axboe@kernel.dk, kbusch@kernel.org, ritesh.list@gmail.com,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-block@vger.kernel.org, gost.dev@samsung.com, Anuj Gupta
-	<anuj20.g@samsung.com>
-Content-Language: en-US
-From: Kanchan Joshi <joshi.k@samsung.com>
-In-Reply-To: <20260721030338.GU7380@frogsfrogsfrogs>
-Content-Transfer-Encoding: 7bit
-X-CMS-MailID: 20260730145254epcas5p1af021ebbff5009fe362522f33a622711
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-cpgsPolicy: CPGSC10-542,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20260717125627epcas5p3f5ad1cf917d563cc061e571b2f932319
-References: <20260717125538.508925-1-joshi.k@samsung.com>
-	<CGME20260717125627epcas5p3f5ad1cf917d563cc061e571b2f932319@epcas5p3.samsung.com>
-	<20260717125538.508925-2-joshi.k@samsung.com>
-	<20260721030338.GU7380@frogsfrogsfrogs>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260730082204.GE10558@lst.de>
 
-On 7/21/2026 8:33 AM, Darrick J. Wong wrote:
-> On Fri, Jul 17, 2026 at 06:25:33PM +0530, Kanchan Joshi wrote:
->> From: Anuj Gupta<anuj20.g@samsung.com>
->>
->> Wire up the userspace interface for write stream management via four
->> ioctls:
->>
->>    FS_IOC_WRITE_STREAM_GET_MAX  query the max streams supported
->>    FS_IOC_WRITE_STREAM_OPEN     open a stream id, returns a stream fd
->>    FS_IOC_WRITE_STREAM_SET      attach the stream fd to an open file
->>    FS_IOC_WRITE_STREAM_GET      query the stream id value set on a file
->>
->> Application should query the available streams by using
->> FS_IOC_WRITE_STREAM_GET_MAX. If returned value is N, valid stream id for
->> the file are 1 to N.
->>
->> Application calls FS_IOC_WRITE_STREAM_OPEN to get fd for a stream-id.
->> By default, kernel picks an available stream-id and returns the fd for
->> it. The flag FS_WRITE_STREAM_OPEN_EXACT can be used to request a
->> specific stream_id. This is useful if application cares about keeping a
->> stable stream-id-to-spatial-isolation-bucket mapping across restarts.
-> Hmm.  If FS_IOC_WRITE_STREAM_OPEN returns an fd that represents an open
-> stream id, then why does STREAM_SET below take a pointer to a signed
-> s32? 
+On Thu, Jul 30, 2026 at 10:22:04AM +0200, Christoph Hellwig wrote:
+> On Wed, Jul 29, 2026 at 10:27:20PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > A media scan of a filesystem containing an internal rt volume produced
+> > an error in xfs_scrub phase 6 complaining about a truncated realtime
+> > device.  The rt device wasn't truncated, but the media scan code thought
+> > we were trying to start a scan past the end of m_rtdev_targp.  That in
+> > turn is an alias for m_ddev_targp, but in xfs_configure_buftarg we set
+> > nr_sectors to the size of the data section.  Oops.
+> > 
+> > On these filesystems, the internal rt section comes immediately after
+> > the data section.  We need to set the sector count for the data device
+> > buftarg to the size of both sections.  Without this, media scans don't
+> > work and media failure notifications from the kernel will be discarded
+> > silently.
+> > 
+> > We also need to fix the superblock buffer recovery code to do the same.
+> 
+> This feels wrong.  Nothing should acess the internal rtdev through
+> the data device buftarg.
 
-Not a pointer, that s32 is to pass the stream fd.
+It's the only one available, because xfs_setup_devices aliases
+ddev_targp to rtdev_targp for internal rt volumes:
 
-> And why does STREAM_GET take a pointer to a u32?
+	if (mp->m_sb.sb_rtstart) {
+		if (mp->m_rtdev_targp) {
+			xfs_warn(mp,
+		"can't use internal and external rtdev at the same time");
+			return -EINVAL;
+		}
+		mp->m_rtdev_targp = mp->m_ddev_targp;
+	}
 
-This also is a scalar value and not a pointer. The returned stream-id is 
-a u32.
+So we're doing that anyway.  We could separate them by creating a second
+buftarg with a duplicate struct file, but that would involve a bunch of
+rototillingi because a fair amount of code changes behavior on
+rtdev==ddev now.
 
-> IOWs it'd be much easier to distinguish these things if the ioctls took
-> pointers to structs instead of u32/s32 pointers directly.
+The only field that the media verification code uses is bt_nr_sectors,
+which it uses to trim verification requests to wherever the filesystem
+thinks is the end of the device.  I could change that to call
+bdev_nr_sectors() to fix the bug, but then we'd have to deal with media
+failures for LBAs outside of the filesystem, which didn't seem ideal.
 
-Maybe IOCTL naming is the source of confusion, because we introduced 
-stream-fds alongside stream-ids. More on this below.
-> Also it's a little weird that STREAM_SET associates an open file with a
-> stream fd, but STREAM_GET returns the stream*id* (not the fd)
-> associated with an open file.
+Also, if someone asynchronously reports a media error in the internal
+rtdev to us through fs_holder_ops, the report will mention a range that
+is beyond bt_nr_sectors but actually within the filesystem.
+xfs_dax_notify_failure currently does the right thing because it doesn't
+check bt_nr_sectors, but that also feels wrong. ;)
 
-The confusion stems from keeping symmetric names for different 
-operations. Let me explain the intent and propose revised names below.
+So I went with making bt_nr_sectors bigger because that felt the least
+awkward.  IIRC it's supposed to represent the location of the end of the
+filesystem on a particular blockdev, not the highest LBA that the fs
+can xfs_buf_read(), right?
 
-Christoph's idea was to use FD for a write-stream so that it remains 
-exclusive to the application and unrelated applications don't collide.
+> Is this an LLM report bug, or did you actually run it using scrub?  If
+> so can you help with the reproducer?
 
-So, in this version, write-stream ids are implemented as independent 
-resource:
-- To set a file's write-stream ID to X, the app must first obtain the fd 
-for stream X.
-- That stream/fd will be unavailable if some other application has 
-already opened it.
-- If applications gets the stream fd, it can use that to set stream id 
-for multiple files.
-- It can close the stream-fd and that does not change anything for the 
-file resource (i.e, its inode continue to carry the stream-id value that 
-was set).
+I found it accidentally while triaging another bug that LOLLM found.
+I turned on the tracepoints (and btrace) for debugging and noticed that
+it wasn't issuing reads for the internal rt device:
 
-Christoph - does this match?
+# mkfs.xfs /dev/sda -r zoned=1
+# mount /dev/sda /mnt/scratch
+# trace-cmd <big ugly command line> &
+# xfs_io -x -c 'verifymedia -r' /mnt/scratch
 
-Here are the revised names (suggestions?):
-
-1. FS_IOC_QUERY_MAX_WRITE_STREAM_IDS		_IOR('f', 135, __u32)
-
-Returns (in __u32) number of supported stream-ids.
-
-2. FS_IOC_OPEN_WRITE_STREAM_ID			_IOWR('f', 136, struct 
-fs_write_stream_open)
-
-Open the specific write-stream id (or any available one via a flag) and 
-return its FD. This gives right to use that stream-id.
-
-And the following manage setting/clearing/querying write-stream on the file:
-
-3. FS_IOC_SET_FILE_WRITE_STREAM_BY_FD		_IOW('f', 137, __s32)
-
-Sets a file's write-stream value (in inode) to whatever the stream fd 
-(passed as __s32) carries. So one never sets scalar values into a file 
-directly.
-
-4. FS_IOC_QUERY_FILE_WRITE_STREAM_ID		_IOR('f', 138, __u32)
-
-Queries the write-stream value (__u32) currently assigned to the file 
-(its inode).
-
-5. FS_IOC_CLEAR_FILE_WRITE_STREAM_ID		_IO('f', 139)
-
-To clear (zeroing) the write-stream value on the file's inode.
-
-
-> Can you extract the stream id from the fd that FS_IOC_WRITE_STREAM_OPEN
-> returns?
-
-Can be done by implementing the ioctl handler for that stream fd, but 
-did not feel the need of it. Do you see the utility? If yes, name can 
-potentially be FS_IOC_QUERY_WRITE_STREAM_ID_FROM_FD.
+--D
