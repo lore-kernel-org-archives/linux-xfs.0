@@ -1,88 +1,134 @@
-Received: from m16.mail.126.com (m16.mail.126.com [220.197.31.6])
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B5383161BF;
-	Thu, 30 Jul 2026 01:48:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B3282857FA;
+	Thu, 30 Jul 2026 02:13:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785376097; cv=none; b=LjVc4sBvWHE4rEXYzgnDOt2VmHzH1aksG55z/r2DM4A7m0bR19wSrdbj4au+8XY2e5qJzePRK+I9kRvKCM6W5wO4wAe7Srs8LisEF5apxFTLerx5TzxcViI0einzhT1kzqkWzaEmmEqZpClYdH5pgnL6E58n7iHtdwtnrJjubvA=
+	t=1785377589; cv=none; b=Vk/dWSvc+hA2ZKFIYFUVX7S1HCtSc89hh3e+wJF1PtLLUXw2KPbrA2gHPNshlvsFEy4ZIsP06cqQUC29t7+h5s2ghQBKydiqvqscMo1weeQAfspUWuz1IaImtHKe6rfwcG0FWKo6RwQ2ORZX/DNUpfoGu2sJsrP75xf7VRGmD68=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785376097; c=relaxed/simple;
-	bh=rVu+F6RnSWJJZnAftEo2/jYIH2WDE0J1yQDd2G5rV/o=;
-	h=Message-ID:Date:From:MIME-Version:To:CC:Subject:References:
-	 In-Reply-To:Content-Type; b=g7uFO6v1bTn9rCFfwBoKNomN31vjpT8a9spfZmi0GMikf1JvIQvATVpmO0t4T6+uAS7liUH/1DVGnefRG358aIpAP2wFIx3xjRV1mYWmAToqVrZ2rPKe+7CMa8ndjayE8jcoBG5PyJB4iSFj8OcB5adPylyyyK8xUf1AB8dHKEw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=126.com; spf=pass smtp.mailfrom=126.com; dkim=pass (1024-bit key) header.d=126.com header.i=@126.com header.b=EYGGeds2; arc=none smtp.client-ip=220.197.31.6
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=126.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=126.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=126.com header.i=@126.com header.b="EYGGeds2"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=126.com;
-	s=s110527; h=Message-ID:Date:From:MIME-Version:To:Subject:
-	Content-Type; bh=xW4396uRphpjRzmMc5DBjuASLFmoZ0s1xIPgyOMpA10=;
-	b=EYGGeds22wg6R7SfR4U+4fQZXUV8Xt9eRDtcHq5b5P6LPiUfoBGvBH27p/8XDh
-	aD2Zf//jsz9rIS3S5uqCbVE3Ji/F7ibP5lps19gRTeHknaCXC8y5F+mFP/aF58gb
-	qynCO/YyrEE201yO0bWLbYG0Pwwf2O5ikMSXNpglF2abg=
-Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g0-0 (Coremail) with SMTP id _____wDHjyw2rWpq5+TQEg--.14592S2;
-	Thu, 30 Jul 2026 09:47:35 +0800 (CST)
-Message-ID: <6A6AAD26.1040805@126.com>
-Date: Thu, 30 Jul 2026 09:47:18 +0800
-From: Hongling Zeng <zhongling0719@126.com>
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:31.0) Gecko/20100101 Thunderbird/31.2.0
+	s=arc-20240116; t=1785377589; c=relaxed/simple;
+	bh=Y5gyuyhRcX5Wzb93blQ8CEllyMzxSFEGMymniw08v3g=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=UHb4Rx4CPurKv6I9TKLSv9fM8gbeuqrZb1+CpInq+0LcGRvkfy0aFhyy2EqccnKKjddPVMlLEyY0L00smisYclB0zzQoj20sjZHjh8Zyozy17ZONK/EaMTINDu2yekih7dDlXxQXY/9kdnuDjfak46ZWjtLeTWMSP6uGV4ow/Vo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: 2f35b60e8bbc11f1aa26b74ffac11d73-20260730
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.12,REQID:50b1fd2a-2add-4e13-bcce-220b16a09660,IP:0,U
+	RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+	:release,TS:-5
+X-CID-META: VersionHash:e7bac3a,CLOUDID:642115a5e68a5f901e4d7e51699316bc,BulkI
+	D:nil,BulkQuantity:0,Recheck:0,SF:102|850|865|898,TC:nil,Content:0|15|50,E
+	DM:-3,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA
+	:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 2f35b60e8bbc11f1aa26b74ffac11d73-20260730
+X-User: zenghongling@kylinos.cn
+Received: from localhost.localdomain [(10.44.16.150)] by mailgw.kylinos.cn
+	(envelope-from <zenghongling@kylinos.cn>)
+	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
+	with ESMTP id 1247924156; Thu, 30 Jul 2026 10:12:58 +0800
+From: Hongling Zeng <zenghongling@kylinos.cn>
+To: hch@infradead.org,
+	cem@kernel.org,
+	dchinner@redhat.com
+Cc: linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	zhongling0719@126.com,
+	Hongling Zeng <zenghongling@kylinos.cn>,
+	stable@vger.kernel.org
+Subject: [PATCH v2] xfs: use file target for post-log fsync fallback flush
+Date: Thu, 30 Jul 2026 10:12:54 +0800
+Message-Id: <20260730021254.15467-1-zenghongling@kylinos.cn>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-To: Christoph Hellwig <hch@infradead.org>
-CC: Hongling Zeng <zenghongling@kylinos.cn>, cem@kernel.org, 
- dchinner@redhat.com, linux-xfs@vger.kernel.org, 
- linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH] xfs: fix fallback data device flush for realtime inodes
-References: <20260729073918.64505-1-zenghongling@kylinos.cn> <amm6-JkURolQqXDo@infradead.org> <6A69C0F0.8010206@126.com> <amoODOM31YmofPlR@infradead.org>
-In-Reply-To: <amoODOM31YmofPlR@infradead.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wDHjyw2rWpq5+TQEg--.14592S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7uFW5Zr1kGFykKr48Cw15urg_yoW8AF4kp3
-	y0vFWUGFnrKay3Wr97Z3WkJa4Syw4rJ3y8Wryrtry8C3W5XFySgay7trW8X34jvFykG3WY
-	934j9FZ3Aa90krJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07j-3kAUUUUU=
-X-CM-SenderInfo: x2kr0wpolqwiqxrzqiyswou0bp/xtbBrxetfmpqrTdjwgAA3Q
 
+xfs_file_fsync() has a fallback flush for the case where the log force
+was a no-op, for example fdatasync/O_DSYNC writes that do not require
+metadata updates. The current fallback path is expressed in terms of the
+main data device and explicitly excludes realtime inodes.
 
-在 2026年07月29日 22:28, Christoph Hellwig 写道:
-> On Wed, Jul 29, 2026 at 04:59:28PM +0800, Hongling Zeng wrote:
->> I understand that for realtime inodes with a separate RT device, the RT
->> device is flushed before xfs_fsync_flush_log(), and therefore the
->> post-log fallback path is intentionally limited to data-device files.
->>
->> The only case I was worried about is whether it is possible to have a
->> realtime inode while mp->m_rtdev_targp == mp->m_ddev_targp, i.e. the
->> realtime data target is effectively the data device. In that case both
->> the early RT-device flush and the post-log fallback appear to be skipped
->> when log_flushed == 0.
-> So the internal RT device does exist, but only when using the zoned
-> allocator.  And the zoned allocator doesn't support overwrites but
-> always writes out of place, i.e., every data write must log updates
-> to the inode and bmap tree from the I/O completion handler.
->
-> That being said I agree with your that the current handling is
-> inconsistent.  Maybe you can update the commit log based on that?Also
-> maybe rename data_tarp to something like file_targp as data is to close
-> to the "data device" name for the main device?
-Thanks for the explanation.
+Realtime files with a separate realtime device are flushed before the log
+force, because their data must reach stable storage before the log commit.
+For the internal realtime device used by the zoned allocator, writes are
+out-of-place and update inode and bmap metadata from I/O completion, so
+the overwrite-without-metadata-update case does not apply in the same way.
 
-I see now that the internal RT device case only exists with the zoned
-allocator, and that zoned writes are out-of-place and therefore always
-log inode/bmap updates from I/O completion.  So the overwrite/no-metadata
-case I described is not the right justification.
-
-I agree that the current code is still inconsistent because the fallback
-flush is expressed as "non-RT inode on the data device" rather than in
+Even so, the current fallback condition is inconsistent because it is
+expressed as "non-realtime inode on the main data device" rather than in
 terms of the inode's actual file data target.
 
-I'll update the commit log accordingly and rename data_targp to
-file_targp as suggested.
+Use xfs_inode_buftarg() to obtain the target that stores this file's
+data, and issue the fallback flush when the log force did not flush
+anything and the log target is the same as that file target.
+
+This preserves existing behavior for regular files while making the
+fallback logic consistent for files whose data target is selected by the
+inode.
+
+Fixes: 2291dab2c9d1 ("xfs: Always flush caches when integrity is required")
+Cc: stable@vger.kernel.org
+Signed-off-by: Hongling Zeng <zenghongling@kylinos.cn>
+Suggested-by: Christoph Hellwig <hch@infradead.org>
+
+---
+Change in v2:
+- Update commit log based on Christoph Hellwig's explanation about realtime
+  device flushing and the internal realtime device used by the zoned allocator.
+- Rename data_targp to file_targp to avoid confusion with the main data
+  device.
+---
+ fs/xfs/xfs_file.c | 26 ++++++++++++++++----------
+ 1 file changed, 16 insertions(+), 10 deletions(-)
+
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 0ade13b31335..4745f047193c 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -166,17 +166,23 @@ xfs_file_fsync(
+ 	}
+ 
+ 	/*
+-	 * If we only have a single device, and the log force about was
+-	 * a no-op we might have to flush the data device cache here.
+-	 * This can only happen for fdatasync/O_DSYNC if we were overwriting
+-	 * an already allocated file and thus do not have any metadata to
+-	 * commit.
++	 * If the log force was a no-op, we may still need to flush the
++	 * file data target cache here. This can happen for fdatasync/O_DSYNC
++	 * when no metadata needed to be committed.
++	 *
++	 * Use the inode's actual file data target rather than assuming the
++	 * main data device. Realtime inodes with a separate realtime device
++	 * are flushed before the log force, so this fallback only applies
++	 * when the file data target is the same as the log target.
+ 	 */
+-	if (!log_flushed && !XFS_IS_REALTIME_INODE(ip) &&
+-	    mp->m_logdev_targp == mp->m_ddev_targp) {
+-		err2 = blkdev_issue_flush(mp->m_ddev_targp->bt_bdev);
+-		if (err2 && !error)
+-			error = err2;
++	if (!log_flushed) {
++		struct xfs_buftarg *file_targp = xfs_inode_buftarg(ip);
++
++		if (mp->m_logdev_targp == file_targp) {
++			err2 = blkdev_issue_flush(file_targp->bt_bdev);
++			if (err2 && !error)
++				error = err2;
++		}
+ 	}
+ 
+ 	return error;
+-- 
+2.25.1
 
