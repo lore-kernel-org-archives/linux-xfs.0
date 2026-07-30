@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 227E93AFB03;
-	Thu, 30 Jul 2026 05:27:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92C623B0585;
+	Thu, 30 Jul 2026 05:27:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785389242; cv=none; b=RyU30ri8LfaYnf3YLvzLGE+5OwrI5Vxu2Q5AbHyGEl5q3vEBnEVRWqO+b7N42PHyQ8Cdjli35gc62+TbFCX14W+1yRDvndtZZKmB6eFvy6s/DnNB+9y8cX+dK0QIK7plfwSEXmiVdMwKsOQi7yydrDupxeKBTjhhCaPLjxsVLMk=
+	t=1785389257; cv=none; b=KSQmRW64AwEnZPXGjqaplQxVmG85TxTiFPSDXa9pw8iMCNwgSHsSmSPPkbkjz7Lbat4efNTvTD5sLt0DI/M0KBH9jhAai94//ZCKGqiAHlw5HLjpR4kCih5s89EhDubUEUXpscyJRSTgzfCGEgwqMospX/dsOuBkf0gbqGQMuXQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785389242; c=relaxed/simple;
-	bh=B0SAzx0L4l8VL2gbsNynv5qP4fi++NaKmvOEPADcCxw=;
+	s=arc-20240116; t=1785389257; c=relaxed/simple;
+	bh=wF6quXi3RPiJx9hQCANHZIG6+TXsCXZrirZl6rWYh54=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=HCG97R2gjKcRAty5M70/+rtaec34MqCJANZyAoJ3M7/7dSLA9vwRhaOj4j12cu7cJNNSxoMfwEiB7BZQBfFWFB+8+iTpQguTp/c0mSR7KZdS+QbhNt615SdNUyNoq63DX7OAMDkmJxz7E26BErijFM7olCdlnteDKMxG3QWUZfY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G09rsWoi; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=kOTscuUuqvhltqw3hH4xBh0rQhyNTP/i3RnsZQcgP/a0C4Wb3jgcqCVlJzv0BhCMAJLAOEt8czQUmZr2cWHJsO0Mj7L7v1qMRAeFGaL+lcwjDzKoPykV3UrCqsv0IAcYbZSykzX+W3rie8uDXPB9U9MY7oTE6wEubcRMxEqzKFI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BlsuI0Mz; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G09rsWoi"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id AD6A41F000E9;
-	Thu, 30 Jul 2026 05:27:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BlsuI0Mz"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 3A3961F00A3A;
+	Thu, 30 Jul 2026 05:27:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785389240;
-	bh=kQzansl9wSXIgo24w015EJK1HLmxfT9VMwLKE/sYSkE=;
+	s=k20260515; t=1785389256;
+	bh=ysAWRofeXPZcJkultPkpVeKmZke1ylrpEMkqBGZFC1c=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=G09rsWoiX+qImAk+y4S1eL89ZM+86P7WJxCDaZtutqCqn9alIMrJharU0scnv0IYv
-	 HTAZoAigBj4KHcZJ+QEr+XQWfZ5nVNNpckCmG1Z9q1DViE3RvJMpRlh77mahVqwOAh
-	 ez1PqToT6omUEDYxNxQ/xlo1OlwMLZh+vNVOb4HjkvBRgsqIpf2tY8qP5to/0qDzeK
-	 zEsRIr2R4v4VznRS3w+BbMlCxAxh1frCExXaBeHyVR4nL9ijEAw0mg2knPfjQcF8pW
-	 tKBe4oHZUyjbUcAb91AVPcD7VDesUd+XO59ylJMWkCaaB04EZypFgMCAjh6SCu1Pbj
-	 PtauUCx4ZVgng==
-Date: Wed, 29 Jul 2026 22:27:20 -0700
-Subject: [PATCH 5/6] xfs: adjust datadev sector count to reflect internal rt
- volumes
+	b=BlsuI0Mz8UilfQbxbvRbqymxXvmMjCpZdRhoFIEnZJw4FdVfrlfwaQX1BDY0144FE
+	 tL/3N2QhhtZlHsOH0hA20L+SNhXtk1DEAa/VujVw40jXaYckLwad3toKQl27ll+IOx
+	 uvMOhv8XmOpp5EmNC2AeD9s8ybeGdJI+UxSCcpUbE2+qPIHGNHoMaH11K1jGgxRQUA
+	 L8KP4Q2OHOymnReapwN9VAyV+ur3iAebmbjZfzjcPyjL4hpn/PZqudkGBQSshirwC7
+	 DoO/r9UuIzV+eowj5maSMaZbz6dchfE7siGnh4n442xKyXAYOb1MOz27p4g8vt0Dfw
+	 e/F5/YRt90z4A==
+Date: Wed, 29 Jul 2026 22:27:35 -0700
+Subject: [PATCH 6/6] xfs: fix the rtrmap and rtrefcount _maxlevels_ondisk
+ functions
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, hch@lst.de, cem@kernel.org
 Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <178538912986.4070956.14205556423461124701.stgit@frogsfrogsfrogs>
+Message-ID: <178538913008.4070956.1052714188976376785.stgit@frogsfrogsfrogs>
 In-Reply-To: <178538912844.4070956.17029198681620903700.stgit@frogsfrogsfrogs>
 References: <178538912844.4070956.17029198681620903700.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,84 +46,57 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-A media scan of a filesystem containing an internal rt volume produced
-an error in xfs_scrub phase 6 complaining about a truncated realtime
-device.  The rt device wasn't truncated, but the media scan code thought
-we were trying to start a scan past the end of m_rtdev_targp.  That in
-turn is an alias for m_ddev_targp, but in xfs_configure_buftarg we set
-nr_sectors to the size of the data section.  Oops.
+The _maxlevels_ondisk functions are used to compute the size of
+in-memory btree cursors for each btree type.  Unfortunately, LOLLM
+noticed that the rtrmap and rtrefcount versions of these functions
+forget to account for the inode root, which means that we could access
+beyond the end of the cursor given a sufficiently large btree.  Fix
+this.
 
-On these filesystems, the internal rt section comes immediately after
-the data section.  We need to set the sector count for the data device
-buftarg to the size of both sections.  Without this, media scans don't
-work and media failure notifications from the kernel will be discarded
-silently.
-
-We also need to fix the superblock buffer recovery code to do the same.
-
-Cc: <stable@vger.kernel.org> # v6.15
-Fixes: bdc03eb5f98f6f ("xfs: allow internal RT devices for zoned mode")
+Cc: <stable@vger.kernel.org> # v6.14
+Fixes: 9abe03a0e4f978 ("xfs: introduce realtime refcount btree ondisk definitions")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+Assisted-by: LOLLM # finding obvious bugs
 ---
- fs/xfs/xfs_buf_item_recover.c |   12 ++++++++++--
- fs/xfs/xfs_super.c            |   11 ++++++++++-
- 2 files changed, 20 insertions(+), 3 deletions(-)
+ fs/xfs/libxfs/xfs_rtrefcount_btree.c |    7 +++++--
+ fs/xfs/libxfs/xfs_rtrmap_btree.c     |    4 +++-
+ 2 files changed, 8 insertions(+), 3 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
-index 02b95b89d1b597..140b1c16ea15c3 100644
---- a/fs/xfs/xfs_buf_item_recover.c
-+++ b/fs/xfs/xfs_buf_item_recover.c
-@@ -720,6 +720,7 @@ xlog_recover_do_primary_sb_buffer(
- 	xfs_lsn_t			current_lsn)
- {
- 	struct xfs_dsb			*dsb = bp->b_addr;
-+	xfs_rfsblock_t			dblocks;
- 	xfs_agnumber_t			orig_agcount = mp->m_sb.sb_agcount;
- 	xfs_rgnumber_t			orig_rgcount = mp->m_sb.sb_rgcount;
- 	int				error;
-@@ -738,9 +739,16 @@ xlog_recover_do_primary_sb_buffer(
+diff --git a/fs/xfs/libxfs/xfs_rtrefcount_btree.c b/fs/xfs/libxfs/xfs_rtrefcount_btree.c
+index f27b80a199ba2e..971cb27400b042 100644
+--- a/fs/xfs/libxfs/xfs_rtrefcount_btree.c
++++ b/fs/xfs/libxfs/xfs_rtrefcount_btree.c
+@@ -489,8 +489,11 @@ xfs_rtrefcountbt_maxlevels_ondisk(void)
+ 	minrecs[0] = xfs_rtrefcountbt_block_maxrecs(blocklen, true) / 2;
+ 	minrecs[1] = xfs_rtrefcountbt_block_maxrecs(blocklen, false) / 2;
  
- 	/*
- 	 * Grow can change the device size.  Mirror that into the buftarg.
-+	 *
-+	 * Internal rt volumes are placed immediately after the data device,
-+	 * so set the buftarg sector count to the end of the rt volume so that
-+	 * we can do media scans and handle media failure reports.
- 	 */
--	mp->m_ddev_targp->bt_nr_sectors =
--		XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
-+	if (mp->m_sb.sb_rtstart)
-+		dblocks = mp->m_sb.sb_rtstart + mp->m_sb.sb_rblocks;
-+	else
-+		dblocks = mp->m_sb.sb_dblocks;
-+	mp->m_ddev_targp->bt_nr_sectors = XFS_FSB_TO_BB(mp, dblocks);
- 	if (mp->m_rtdev_targp && mp->m_rtdev_targp != mp->m_ddev_targp) {
- 		mp->m_rtdev_targp->bt_nr_sectors =
- 			XFS_FSB_TO_BB(mp, mp->m_sb.sb_rblocks);
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 8531d526fc4409..9898cd9db0ada6 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -555,10 +555,19 @@ STATIC int
- xfs_setup_devices(
- 	struct xfs_mount	*mp)
- {
-+	xfs_rfsblock_t		dblocks = mp->m_sb.sb_dblocks;
- 	int			error;
- 
+-	/* We need at most one record for every block in an rt group. */
+-	return xfs_btree_compute_maxlevels(minrecs, XFS_MAX_RGBLOCKS);
 +	/*
-+	 * Internal rt volumes are placed immediately after the data device,
-+	 * so set the buftarg sector count to the end of the rt volume so that
-+	 * we can do media scans and handle media failure reports.
++	 * We need at most one record for every block in an rt group, and
++	 * one extra level for the inode root.
 +	 */
-+	if (mp->m_sb.sb_rtstart)
-+		dblocks = mp->m_sb.sb_rtstart + mp->m_sb.sb_rblocks;
-+
- 	error = xfs_configure_buftarg(mp->m_ddev_targp, mp->m_sb.sb_sectsize,
--			mp->m_sb.sb_dblocks);
-+			dblocks);
- 	if (error)
- 		return error;
++	return xfs_btree_compute_maxlevels(minrecs, XFS_MAX_RGBLOCKS) + 1;
+ }
  
+ int __init
+diff --git a/fs/xfs/libxfs/xfs_rtrmap_btree.c b/fs/xfs/libxfs/xfs_rtrmap_btree.c
+index c264bc5651c0a6..0cb2113d5b4045 100644
+--- a/fs/xfs/libxfs/xfs_rtrmap_btree.c
++++ b/fs/xfs/libxfs/xfs_rtrmap_btree.c
+@@ -716,10 +716,12 @@ xfs_rtrmapbt_maxlevels_ondisk(void)
+ 	 * happens, which means that we must compute the max height based on
+ 	 * what the btree will look like if it consumes almost all the blocks
+ 	 * in the data device due to maximal sharing factor.
++	 *
++	 * Add one extra level for the inode root.
+ 	 */
+ 	max_dblocks = -1U; /* max ag count */
+ 	max_dblocks *= XFS_MAX_CRC_AG_BLOCKS;
+-	return xfs_btree_space_to_height(minrecs, max_dblocks);
++	return xfs_btree_space_to_height(minrecs, max_dblocks) + 1;
+ }
+ 
+ int __init
 
