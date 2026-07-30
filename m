@@ -1,40 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF59E43C04B;
-	Thu, 30 Jul 2026 15:51:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02BEF43E06E;
+	Thu, 30 Jul 2026 17:22:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785426687; cv=none; b=XUCQIrIVjgwx2F0bx3Yz6BnJVu6NVWXFEEDjWqVGFoNUOhJQMJTPBJRnTtdBoimnyZU/UGzuWOsvHEn/tO7M7A19wfkG5yrwzbYJjtNQafWwK7RR6RWp0r1wFwXqg6lO+Y0emD0hhaGhTiaXq4bhCjSE4KUM8lTiQxnfP/5Vuns=
+	t=1785432135; cv=none; b=GI1zXpFtvvKDNJSbFAwbKuJL+vELMBR0IXuuR9sDDC56YLjfvZc38gysNwoL3aqlmwZOXyQ5YYVEqm25OrIqcYAGf5NgMV5t6bpCUPQDIgJZci7XQGJ3IC3x+IULtzNcXIW1gmEWaet02ktMCiaAkyvMXILnauGoGHGRuqdRh6Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785426687; c=relaxed/simple;
-	bh=i5SxLcGX370H8rMqdiNzVshT5WOmwPZiEWHQSCCHLvE=;
+	s=arc-20240116; t=1785432135; c=relaxed/simple;
+	bh=jDNmc4meTOC48+Q3IEDbk4+gRBVJ/ShbSj+dJRJ29s4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Sg9tutknfZmGO4PREq9LuwVJWUA83Pp59em7TTmR4X/Lyb1VRfg0yqEDRr3VRL1m3XSY5F11ZCS+dOpg2XWTwtLBWTCEWbSV7p4S1eiSlAGarXw4sj9R5lXoEqpwqN1RUHOrzq86Zlj0RvZJA2YtC2KNKn+w2O+Q0e/YoubtJE8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DTCaQh8w; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=oQoegVxB2J+d99cJnOH63js5nXFeg7amzGiyBF29+/fMdv3AEntajgTUgmmJysU9XiT/9in+ZNnlSUDvMRGb1yn6SejjZMMl1xh/m/fohoWoDrOkly+K7OcQB1bkjNVvKtPOwKWBJUcjN+IFXhKiZxOVIXGSRb3+i7F3/SWpt7A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oSX2F6X8; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DTCaQh8w"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id BA48D1F000E9;
-	Thu, 30 Jul 2026 15:51:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oSX2F6X8"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 98B301F000E9;
+	Thu, 30 Jul 2026 17:22:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785426685;
-	bh=VCJsv9KC5Ka+Fy2imKetC9rTxJ6152x6+usqg3nFdwM=;
+	s=k20260515; t=1785432133;
+	bh=McAgD6bGrXTjy6SCU9zZMCKhjy/fGK+hqvLguqeEyXY=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=DTCaQh8wYnPqtVoYbJB8i/07Pc9wzs8CFUJFjDIctQiZD8AxRbKcDZ3wQmoVSO0k+
-	 t0o643KOE//42eQ36RIkntKWXcXa5mfrIkng9XmsNrc5K+pY6VXQFZlICBrgyQvCUK
-	 5Swx6a9yLVML0ihBdjW3X+e4/GEq1v00miM6xWRgjwrVwKnPO8z1VcrQhqGwLMR3Q6
-	 uQpbp8GUSLwxaVvJPJVqpjCGVMri3duYw4M9jLMx8akq7gjgMLIkjRZlbL8xdNISpo
-	 l/KKSSOm22ed8bQhlFJ7gbLFF1dAi6NF/KkqBScSVwUeNudNVig3ArD+K2znv5OLXy
-	 tE3vC9Jss44kg==
-Date: Thu, 30 Jul 2026 08:51:25 -0700
+	b=oSX2F6X8bCppWdG2XhvH4DC2YBCkQa5JqzZ0jpGA5M8YlAdYHmk9gPn8foNtgPQiA
+	 l81DnkCN0xz2AKvZ1TGMykgQovUloJiQ7i580uaaKQdpVl/JKRMoprfN38uoUSjeJa
+	 06zW3eCL3PRoIR0+v/4ndHolhVnlXyoU4g7cNR52qrT6pu4fVMHsesUQpNqpaAMZ32
+	 S3rx2n+FauNF3WNeXLgNaSDTOSecAvPnIwBLunnsWKDwZ/t9hwv0opAUEl6Swdz6MC
+	 TWM3yjySvoWbXtuF4ufClpIJ270VKPdTLnTY9S1onvxIIuFUGTyZw/e9RvQHVIoZ+a
+	 YNAvv5Bnh9o9Q==
+Date: Thu, 30 Jul 2026 10:22:11 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Yun Zhou <yun.zhou@windriver.com>
-Cc: cem@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3] xfs: restore nofs context unconditionally in
- xfs_trans_roll
-Message-ID: <20260730155125.GE3556460@frogsfrogsfrogs>
-References: <20260730093002.1034320-1-yun.zhou@windriver.com>
+To: Kanchan Joshi <joshi.k@samsung.com>
+Cc: brauner@kernel.org, hch@lst.de, dgc@kernel.org, jack@suse.cz,
+	cem@kernel.org, axboe@kernel.dk, kbusch@kernel.org,
+	ritesh.list@gmail.com, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
+	gost.dev@samsung.com, Anuj Gupta <anuj20.g@samsung.com>
+Subject: Re: [PATCH v4 1/6] fs: add write-stream management ioctls
+Message-ID: <20260730172211.GF3556460@frogsfrogsfrogs>
+References: <20260717125538.508925-1-joshi.k@samsung.com>
+ <CGME20260717125627epcas5p3f5ad1cf917d563cc061e571b2f932319@epcas5p3.samsung.com>
+ <20260717125538.508925-2-joshi.k@samsung.com>
+ <20260721030338.GU7380@frogsfrogsfrogs>
+ <71ae458a-a6e3-4c6f-8fb9-7e8bc088bb87@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,86 +49,128 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260730093002.1034320-1-yun.zhou@windriver.com>
+In-Reply-To: <71ae458a-a6e3-4c6f-8fb9-7e8bc088bb87@samsung.com>
 
-On Thu, Jul 30, 2026 at 05:30:02PM +0800, Yun Zhou wrote:
-> When __xfs_trans_commit() fails in xfs_trans_roll(), the NOFS context
-> is cleared but only restored in the success path.  This leaves the
-> error path without nofs protection, causing a circular lock dependency
-> between xfs_nondir_ilock_class and fs_reclaim:
+On Thu, Jul 30, 2026 at 08:22:51PM +0530, Kanchan Joshi wrote:
+> On 7/21/2026 8:33 AM, Darrick J. Wong wrote:
+> > On Fri, Jul 17, 2026 at 06:25:33PM +0530, Kanchan Joshi wrote:
+> >> From: Anuj Gupta<anuj20.g@samsung.com>
+> >>
+> >> Wire up the userspace interface for write stream management via four
+> >> ioctls:
+> >>
+> >>    FS_IOC_WRITE_STREAM_GET_MAX  query the max streams supported
+> >>    FS_IOC_WRITE_STREAM_OPEN     open a stream id, returns a stream fd
+> >>    FS_IOC_WRITE_STREAM_SET      attach the stream fd to an open file
+> >>    FS_IOC_WRITE_STREAM_GET      query the stream id value set on a file
+> >>
+> >> Application should query the available streams by using
+> >> FS_IOC_WRITE_STREAM_GET_MAX. If returned value is N, valid stream id for
+> >> the file are 1 to N.
+> >>
+> >> Application calls FS_IOC_WRITE_STREAM_OPEN to get fd for a stream-id.
+> >> By default, kernel picks an available stream-id and returns the fd for
+> >> it. The flag FS_WRITE_STREAM_OPEN_EXACT can be used to request a
+> >> specific stream_id. This is useful if application cares about keeping a
+> >> stable stream-id-to-spatial-isolation-bucket mapping across restarts.
+> > Hmm.  If FS_IOC_WRITE_STREAM_OPEN returns an fd that represents an open
+> > stream id, then why does STREAM_SET below take a pointer to a signed
+> > s32? 
 > 
->        CPU0                    CPU1
->        ----                    ----
->   lock(&xfs_nondir_ilock_class);
->                                lock(fs_reclaim);
->                                lock(&xfs_nondir_ilock_class);
->   lock(fs_reclaim);
-> 
-> Fix this by moving xfs_trans_set_context() before the error check so
-> that nofs context is always restored on the new transaction.
-> 
-> Reported-by: syzbot+59178abfeb0ea3f0ab20@syzkaller.appspotmail.com
-> Closes: https://syzkaller.appspot.com/bug?extid=59178abfeb0ea3f0ab20
-> Fixes: a1ca658d649a ("xfs: fix incorrect context handling in xfs_trans_roll")
-> Cc: stable@vger.kernel.org
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Yun Zhou <yun.zhou@windriver.com>
+> Not a pointer, that s32 is to pass the stream fd.
 
-Looks good to me,
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Oh, but that third argument to ioctl() /is/ supposed to be a pointer to
+some data.  From ioctl(2):
+
+"The third argument is an untyped pointer to memory.  It's traditionally
+char  *argp (from the days before void * was valid C), and will be so
+named for this discussion."
+
+You can also see this reflected in the discussion of the R/W/WR variants
+of _IO:
+https://docs.kernel.org/driver-api/ioctl.html
+
+"[data_type] may be a pointer to data to be passed into the kernel
+(_IOW), out of the kernel (_IOR), or both (_IOWR)"
+
+Granted your kernel code can treat that argp as an integer and not a
+__user pointer if it wants to, but that goes against most ioctl
+implementations.  Further, subsystems that marshal ioctl information for
+passing through to another layer (e.g. fuse) assume that the third
+argument is a pointer and that it can copy sizeof(data_type) bytes at
+that address in and out of the kernel as part of marshalling.
+
+> > And why does STREAM_GET take a pointer to a u32?
+> 
+> This also is a scalar value and not a pointer. The returned stream-id is 
+> a u32.
+> 
+> > IOWs it'd be much easier to distinguish these things if the ioctls took
+> > pointers to structs instead of u32/s32 pointers directly.
+> 
+> Maybe IOCTL naming is the source of confusion, because we introduced 
+> stream-fds alongside stream-ids. More on this below.
+> > Also it's a little weird that STREAM_SET associates an open file with a
+> > stream fd, but STREAM_GET returns the stream*id* (not the fd)
+> > associated with an open file.
+> 
+> The confusion stems from keeping symmetric names for different 
+> operations. Let me explain the intent and propose revised names below.
+> 
+> Christoph's idea was to use FD for a write-stream so that it remains 
+> exclusive to the application and unrelated applications don't collide.
+> 
+> So, in this version, write-stream ids are implemented as independent 
+> resource:
+> - To set a file's write-stream ID to X, the app must first obtain the fd 
+> for stream X.
+> - That stream/fd will be unavailable if some other application has 
+> already opened it.
+> - If applications gets the stream fd, it can use that to set stream id 
+> for multiple files.
+> - It can close the stream-fd and that does not change anything for the 
+> file resource (i.e, its inode continue to carry the stream-id value that 
+> was set).
+> 
+> Christoph - does this match?
+> 
+> Here are the revised names (suggestions?):
+> 
+> 1. FS_IOC_QUERY_MAX_WRITE_STREAM_IDS		_IOR('f', 135, __u32)
+> 
+> Returns (in __u32) number of supported stream-ids.
+> 
+> 2. FS_IOC_OPEN_WRITE_STREAM_ID			_IOWR('f', 136, struct 
+> fs_write_stream_open)
+> 
+> Open the specific write-stream id (or any available one via a flag) and 
+> return its FD. This gives right to use that stream-id.
+> 
+> And the following manage setting/clearing/querying write-stream on the file:
+> 
+> 3. FS_IOC_SET_FILE_WRITE_STREAM_BY_FD		_IOW('f', 137, __s32)
+> 
+> Sets a file's write-stream value (in inode) to whatever the stream fd 
+> (passed as __s32) carries. So one never sets scalar values into a file 
+> directly.
+> 
+> 4. FS_IOC_QUERY_FILE_WRITE_STREAM_ID		_IOR('f', 138, __u32)
+> 
+> Queries the write-stream value (__u32) currently assigned to the file 
+> (its inode).
+> 
+> 5. FS_IOC_CLEAR_FILE_WRITE_STREAM_ID		_IO('f', 139)
+> 
+> To clear (zeroing) the write-stream value on the file's inode.
+> 
+> 
+> > Can you extract the stream id from the fd that FS_IOC_WRITE_STREAM_OPEN
+> > returns?
+> 
+> Can be done by implementing the ioctl handler for that stream fd, but 
+> did not feel the need of it. Do you see the utility? If yes, name can 
+> potentially be FS_IOC_QUERY_WRITE_STREAM_ID_FROM_FD.
+
+Why not reuse FS_IOC_QUERY_FILE_WRITE_STREAM_ID?
 
 --D
-
-> ---
-> v3:
->   - Change back to v1
-> 
-> v2:
->   - Instead of moving xfs_trans_set_context() before the error check,
->     transfer the nofs context in xfs_trans_dup() via a new
->     memalloc_flags_move() helper, as suggested by Darrick.
->   - Change t_pflags from unsigned long to unsigned int to match mm API.
-> 
-> v1: https://lore.kernel.org/all/20260713035505.1635191-1-yun.zhou@windriver.com/T/
-> 
->  fs/xfs/xfs_trans.c | 16 +++++++++-------
->  1 file changed, 9 insertions(+), 7 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> index 7bfbd9f6f0df..1b36cf12d4e3 100644
-> --- a/fs/xfs/xfs_trans.c
-> +++ b/fs/xfs/xfs_trans.c
-> @@ -1029,6 +1029,15 @@ xfs_trans_roll(
->  	 * duplicate transaction that gets returned.
->  	 */
->  	error = __xfs_trans_commit(tp, true);
-> +
-> +	tp = *tpp;
-> +	/*
-> +	 * __xfs_trans_commit cleared the NOFS flag by calling into
-> +	 * xfs_trans_free.  Set it again here before doing memory
-> +	 * allocations.
-> +	 */
-> +	xfs_trans_set_context(tp);
-> +
->  	if (error)
->  		return error;
->  
-> @@ -1040,13 +1049,6 @@ xfs_trans_roll(
->  	 * either nothing be locked across this call, or that anything that is
->  	 * locked be logged in the prior and the next transactions.
->  	 */
-> -	tp = *tpp;
-> -	/*
-> -	 * __xfs_trans_commit cleared the NOFS flag by calling into
-> -	 * xfs_trans_free.  Set it again here before doing memory
-> -	 * allocations.
-> -	 */
-> -	xfs_trans_set_context(tp);
->  	error = xfs_log_regrant(tp->t_mountp, tp->t_ticket);
->  	if (error)
->  		return error;
-> -- 
-> 2.43.0
-> 
-> 
