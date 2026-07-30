@@ -1,221 +1,88 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from m16.mail.126.com (m16.mail.126.com [220.197.31.6])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACEC834A799
-	for <linux-xfs@vger.kernel.org>; Thu, 30 Jul 2026 01:22:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B5383161BF;
+	Thu, 30 Jul 2026 01:48:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785374562; cv=none; b=h/8JrqFwk0m6181zEduqrV2aihvaGeA2r3iKa3i+eVcdwvWrimRfz3eEhfJdj0hCtiFoAClhGqh+yOvw3TAYz0g/bYTrJXmOxgqHfCD3Lp2ZoAi/I0zWFRCzAFRb8x32K1+DRKS0J6QwItE2JdpM/oMxGdgLuGp4fmyjxPGeSwc=
+	t=1785376097; cv=none; b=LjVc4sBvWHE4rEXYzgnDOt2VmHzH1aksG55z/r2DM4A7m0bR19wSrdbj4au+8XY2e5qJzePRK+I9kRvKCM6W5wO4wAe7Srs8LisEF5apxFTLerx5TzxcViI0einzhT1kzqkWzaEmmEqZpClYdH5pgnL6E58n7iHtdwtnrJjubvA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785374562; c=relaxed/simple;
-	bh=/4qAEzUQBFKLtCXPBStUoJsGxRzkUMLWb4q0GwsVhfo=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version; b=u6XLArNfJ6nhXzcj1z3D3ugPeL1ACXvPh1XjJnSZY5ZDXGTXG6UucmMYD1JBbbiTGlZjIXTnwBQqQtrtGEyWVBtY12USJp3t1OEJj4+nJ7tS/5Kdy1cvebXcsj8yTj8WUUUdGcK+5i1BtZIIpB8d7XT0tT0kWtRCYqmbP2sSJlA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=glFDgoi0; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=SI6JH9Oa; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1785376097; c=relaxed/simple;
+	bh=rVu+F6RnSWJJZnAftEo2/jYIH2WDE0J1yQDd2G5rV/o=;
+	h=Message-ID:Date:From:MIME-Version:To:CC:Subject:References:
+	 In-Reply-To:Content-Type; b=g7uFO6v1bTn9rCFfwBoKNomN31vjpT8a9spfZmi0GMikf1JvIQvATVpmO0t4T6+uAS7liUH/1DVGnefRG358aIpAP2wFIx3xjRV1mYWmAToqVrZ2rPKe+7CMa8ndjayE8jcoBG5PyJB4iSFj8OcB5adPylyyyK8xUf1AB8dHKEw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=126.com; spf=pass smtp.mailfrom=126.com; dkim=pass (1024-bit key) header.d=126.com header.i=@126.com header.b=EYGGeds2; arc=none smtp.client-ip=220.197.31.6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=126.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=126.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="glFDgoi0";
-	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="SI6JH9Oa"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 7D0EE7CD71;
-	Thu, 30 Jul 2026 01:22:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-	t=1785374554; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-	bh=Nv/Vy1FGQZPL9hLmzLnXj02eJ10QS/d3Ra28Ulno1rs=;
-	b=glFDgoi0Jx+XW7v9VHXxv+6xeGMJr7Zmv4Wn7iPHw4fXemV5WY2Z/CmMTsfrwKK19Id0AA
-	zRzQIDkQAnm//88b9EGz7OZ7U8gQ2eOgGD+h6QzayXLt9ebFsrp/9w1t+j61rk8E4YSEEi
-	wIb8TqDEThfJQm7NcaEKWrji/89NsqQ=
-Authentication-Results: smtp-out1.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-	t=1785374550; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-	bh=Nv/Vy1FGQZPL9hLmzLnXj02eJ10QS/d3Ra28Ulno1rs=;
-	b=SI6JH9Oab6t8pZGQcBAbPuInI+ppgQ1Zbvfw0BrlQgeV9ChdjPo9zWH3Sg8q7ZsoH1fgLd
-	r1sa1EAqeOtucQe02E+Ptk9/15gKuzNraKAE77D48z5hhaIgr5DZD2DX527T+etCUXvoLm
-	LgXB+f5kZajxPETd6/N9hrTwqK8gEsk=
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id D974E779CC;
-	Thu, 30 Jul 2026 01:22:28 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id 1+rhIVSnamquJgAAD6G6ig
-	(envelope-from <wqu@suse.com>); Thu, 30 Jul 2026 01:22:28 +0000
-From: Qu Wenruo <wqu@suse.com>
-To: linux-btrfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH] iomap: follow the alignment requirement for iomap_dio_hole_iter()
-Date: Thu, 30 Jul 2026 10:52:10 +0930
-Message-ID: <e69cc8a4a9c3f641b97872b50f04c397880077cd.1785374485.git.wqu@suse.com>
-X-Mailer: git-send-email 2.54.0
+	dkim=pass (1024-bit key) header.d=126.com header.i=@126.com header.b="EYGGeds2"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=126.com;
+	s=s110527; h=Message-ID:Date:From:MIME-Version:To:Subject:
+	Content-Type; bh=xW4396uRphpjRzmMc5DBjuASLFmoZ0s1xIPgyOMpA10=;
+	b=EYGGeds22wg6R7SfR4U+4fQZXUV8Xt9eRDtcHq5b5P6LPiUfoBGvBH27p/8XDh
+	aD2Zf//jsz9rIS3S5uqCbVE3Ji/F7ibP5lps19gRTeHknaCXC8y5F+mFP/aF58gb
+	qynCO/YyrEE201yO0bWLbYG0Pwwf2O5ikMSXNpglF2abg=
+Received: from localhost.localdomain (unknown [])
+	by gzga-smtp-mtada-g0-0 (Coremail) with SMTP id _____wDHjyw2rWpq5+TQEg--.14592S2;
+	Thu, 30 Jul 2026 09:47:35 +0800 (CST)
+Message-ID: <6A6AAD26.1040805@126.com>
+Date: Thu, 30 Jul 2026 09:47:18 +0800
+From: Hongling Zeng <zhongling0719@126.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:31.0) Gecko/20100101 Thunderbird/31.2.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+To: Christoph Hellwig <hch@infradead.org>
+CC: Hongling Zeng <zenghongling@kylinos.cn>, cem@kernel.org, 
+ dchinner@redhat.com, linux-xfs@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH] xfs: fix fallback data device flush for realtime inodes
+References: <20260729073918.64505-1-zenghongling@kylinos.cn> <amm6-JkURolQqXDo@infradead.org> <6A69C0F0.8010206@126.com> <amoODOM31YmofPlR@infradead.org>
+In-Reply-To: <amoODOM31YmofPlR@infradead.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Spam-Score: -2.80
-X-Spam-Level: 
-X-Spam-Flag: NO
-X-Spamd-Result: default: False [-2.80 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	MID_CONTAINS_FROM(1.00)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_MISSING_CHARSET(0.50)[];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	ARC_NA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	DKIM_SIGNED(0.00)[suse.com:s=susede1];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,suse.com:mid,imap1.dmz-prg2.suse.org:helo];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	RCPT_COUNT_THREE(0.00)[3];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_DN_NONE(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	RCVD_TLS_ALL(0.00)[]
+X-CM-TRANSID:_____wDHjyw2rWpq5+TQEg--.14592S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7uFW5Zr1kGFykKr48Cw15urg_yoW8AF4kp3
+	y0vFWUGFnrKay3Wr97Z3WkJa4Syw4rJ3y8Wryrtry8C3W5XFySgay7trW8X34jvFykG3WY
+	934j9FZ3Aa90krJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07j-3kAUUUUU=
+X-CM-SenderInfo: x2kr0wpolqwiqxrzqiyswou0bp/xtbBrxetfmpqrTdjwgAA3Q
 
-[BUG]
-On the latest development branch, btrfs with 8K block size on 4K page
-sized systems will fail the following fsstress workload:
 
- # $fsstress -n 4 -d $mnt -s 1785675805 -v
- 0/0: dwrite - no filename
- 0/1: creat f0 x:0 0 0
- 0/1: creat add id=0,parent=-1
- 0/2: write dontcache f0[259 1 0 0 0 0] [816411,3620] 0
- 0/3: dread - xfsctl(XFS_IOC_DIOINFO) f0[259 1 0 0 32 820031] return 25, fallback to stat()
- 0/3: dread f0[259 1 0 0 32 820031] [483328,81920] 0
+在 2026年07月29日 22:28, Christoph Hellwig 写道:
+> On Wed, Jul 29, 2026 at 04:59:28PM +0800, Hongling Zeng wrote:
+>> I understand that for realtime inodes with a separate RT device, the RT
+>> device is flushed before xfs_fsync_flush_log(), and therefore the
+>> post-log fallback path is intentionally limited to data-device files.
+>>
+>> The only case I was worried about is whether it is possible to have a
+>> realtime inode while mp->m_rtdev_targp == mp->m_ddev_targp, i.e. the
+>> realtime data target is effectively the data device. In that case both
+>> the early RT-device flush and the post-log fallback appear to be skipped
+>> when log_flushed == 0.
+> So the internal RT device does exist, but only when using the zoned
+> allocator.  And the zoned allocator doesn't support overwrites but
+> always writes out of place, i.e., every data write must log updates
+> to the inode and bmap tree from the I/O completion handler.
+>
+> That being said I agree with your that the current handling is
+> inconsistent.  Maybe you can update the commit log based on that?Also
+> maybe rename data_tarp to something like file_targp as data is to close
+> to the "data device" name for the main device?
+Thanks for the explanation.
 
-Which triggered the following ASSERT():
+I see now that the internal RT device case only exists with the zoned
+allocator, and that zoned writes are out-of-place and therefore always
+log inode/bmap updates from I/O completion.  So the overwrite/no-metadata
+case I described is not the right justification.
 
- assertion failed: IS_ALIGNED(state->start, blocksize) && IS_ALIGNED(state->end + 1, blocksize), in fs/btrfs/extent-io-tree.c:346 (unaligned extent state, blocksize=8192 start=487424 end=565247 state=0x0)
- ------------[ cut here ]------------
- kernel BUG at fs/btrfs/extent-io-tree.c:346!
- Oops: invalid opcode: 0000 [#1] SMP
- CPU: 4 UID: 0 PID: 648 Comm: fsstress Tainted: G            E       7.2.0-rc5-custom+ #431 PREEMPT(full)  7c507bd40d65e4d871e698b22d80f1306bbec543
- Tainted: [E]=UNSIGNED_MODULE
- Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS unknown 02/02/2022
- RIP: 0010:validate_extent_state.part.0.isra.0.cold+0x24/0x26 [btrfs]
- Call Trace:
-  <TASK>
-  insert_state+0x34/0x1a0 [btrfs 6924944583e4bc91a7c5183a1e7908e745a9b0c8]
-  set_extent_bit+0x440/0x8d0 [btrfs 6924944583e4bc91a7c5183a1e7908e745a9b0c8]
-  btrfs_lock_extent_bits+0x58/0x380 [btrfs 6924944583e4bc91a7c5183a1e7908e745a9b0c8]
-  btrfs_dio_iomap_begin+0x319/0xb70 [btrfs 6924944583e4bc91a7c5183a1e7908e745a9b0c8]
-  iomap_iter+0x1a2/0x370
-  __iomap_dio_rw+0x236/0x8d0
-  iomap_dio_rw+0x12/0x30
-  btrfs_direct_read+0x15f/0x290 [btrfs 6924944583e4bc91a7c5183a1e7908e745a9b0c8]
-  btrfs_file_read_iter+0x42/0x90 [btrfs 6924944583e4bc91a7c5183a1e7908e745a9b0c8]
-  vfs_read+0x25e/0x380
-  ksys_read+0x73/0xe0
-  do_syscall_64+0xe1/0x790
-  entry_SYSCALL_64_after_hwframe+0x4b/0x53
- RIP: 0033:0x7fc3f129318e
-  </TASK>
+I agree that the current code is still inconsistent because the fallback
+flush is expressed as "non-RT inode on the data device" rather than in
+terms of the inode's actual file data target.
 
-[CAUSE]
-Btrfs has recently introduced more strict extent_state alignment checks,
-which means functions like btrfs_lock_extent() will require the range
-to be block size aligned.
-
-But in the above workload, iomap_dio_hole_iter() only zeroed 4K, then
-hit a page fault. In that case the iov_iter is still advanced 4K bytes,
-then btrfs_dio_iomap_begin() is called for the remaining range, which is
-no longer block size (8K) aligned, triggering the ASSERT().
-
-This shows that, although iomap_dio_bio_iter() is properly respecting
-the alignment requirement, iomap_dio_hole_iter() is not doing the same
-thing.
-
-[FIX]
-Extract a helper, iomap_dio_alignment(), to calculate the alignment first.
-
-Then for iomap_dio_hole_iter() round down the copied length, and revert
-any excessive range that is beyond the aligned copied length.
-Also use @aligned_copied for the size increment and iter advancement.
-
-Fixes: 001397f5ef49 ("iomap: add IOMAP_DIO_FSBLOCK_ALIGNED flag")
-Signed-off-by: Qu Wenruo <wqu@suse.com>
----
- fs/iomap/direct-io.c | 34 ++++++++++++++++++++--------------
- 1 file changed, 20 insertions(+), 14 deletions(-)
-
-diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-index e2cd5f92babe..94747963cb1f 100644
---- a/fs/iomap/direct-io.c
-+++ b/fs/iomap/direct-io.c
-@@ -403,6 +403,18 @@ static ssize_t iomap_dio_bio_iter_one(struct iomap_iter *iter,
- 	return ret;
- }
- 
-+/*
-+ * File systems that write out of place and always allocate new blocks
-+ * need each bio to be block aligned as that's the unit of allocation.
-+ */
-+static unsigned int iomap_dio_alignment(const struct iomap_iter *iter,
-+					const struct iomap_dio *dio)
-+{
-+	if (dio->flags & IOMAP_DIO_FSBLOCK_ALIGNED)
-+		return i_blocksize(iter->inode);
-+	return bdev_logical_block_size(iter->iomap.bdev);
-+}
-+
- static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
- {
- 	const struct iomap *iomap = &iter->iomap;
-@@ -414,18 +426,9 @@ static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
- 	bool need_zeroout = false;
- 	u64 copied = 0;
- 	size_t orig_count;
--	unsigned int alignment;
-+	const unsigned int alignment = iomap_dio_alignment(iter, dio);
- 	ssize_t ret = 0;
- 
--	/*
--	 * File systems that write out of place and always allocate new blocks
--	 * need each bio to be block aligned as that's the unit of allocation.
--	 */
--	if (dio->flags & IOMAP_DIO_FSBLOCK_ALIGNED)
--		alignment = fs_block_size;
--	else
--		alignment = bdev_logical_block_size(iomap->bdev);
--
- 	if ((pos | length) & (alignment - 1))
- 		return -EINVAL;
- 
-@@ -588,12 +591,15 @@ static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
- 
- static int iomap_dio_hole_iter(struct iomap_iter *iter, struct iomap_dio *dio)
- {
--	loff_t length = iov_iter_zero(iomap_length(iter), dio->submit.iter);
-+	loff_t copied = iov_iter_zero(iomap_length(iter), dio->submit.iter);
-+	const unsigned int alignment = iomap_dio_alignment(iter, dio);
-+	const loff_t aligned_copied = round_down(copied, alignment);
- 
--	dio->size += length;
--	if (!length)
-+	iov_iter_revert(dio->submit.iter, copied - aligned_copied);
-+	dio->size += aligned_copied;
-+	if (!aligned_copied)
- 		return -EFAULT;
--	return iomap_iter_advance(iter, length);
-+	return iomap_iter_advance(iter, aligned_copied);
- }
- 
- static int iomap_dio_inline_iter(struct iomap_iter *iomi, struct iomap_dio *dio)
--- 
-2.54.0
+I'll update the commit log accordingly and rename data_targp to
+file_targp as suggested.
 
