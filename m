@@ -1,55 +1,51 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A60B84534AE
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB13A468C2A
 	for <linux-xfs@vger.kernel.org>; Fri, 31 Jul 2026 16:33:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785515625; cv=none; b=BuplLpKFlcracnY8rJ3jaXEKPeQw1083i38e7R0zTW5mzPLXqF2+bjP8bMY7S40ffyNCh51u5tuja3EYByQeE/NBtjWx0SOF9/Bo99ikh867KxlI+sqW1AIUrwEqKCSSmAD2M2w/aOvACjm/NI5sLEimcJp34VRqBiHgG/HbIfI=
+	t=1785515625; cv=none; b=Qg9hRFn8/tTfS/ZpA4TxAZv1ohXxQUZrDD2NC5q0+QeyOtXdNKH2urSItiPzWU+GES/DzJtmAJMzCChH34Vwli2by4hPRW37ezzIkxDQxh7Mqb70dX9nRR60kCyaRmxP3iVSOG+qlH5EnU6fbEpGUjfMz8uxnV6tlE97r4WK12g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1785515625; c=relaxed/simple;
-	bh=kb8Gq2NzoUGVg6SxI/ZvnPcsTumuaCuvWAvSdmNM7B0=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=HT2iqOb5m521BHQJo7rBQkvqRHYXboHDFld4VZLtAKR13glsitzjWjoh6bCHfbKnKtPAoGensngJoFRhH0PgNOX+AKousMnQahknwfLKgBfNWvk7KobU+/rm37wiI4lQtLVgEsvgyBXFGgqJbCe0JO3xcgCvA1U2z26oNzP7He8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=NHMQp7g2; arc=none smtp.client-ip=170.10.133.124
+	bh=KpUhhiOU0+FHx3F0Xf/uU/zXI8qfQwKif45IG83Mk6E=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=WDUpj+8z/lkO+MOn2M6GRQhooEGAn2FgovOCu0lF5TExU4jDckb1niH7Cv2Z4JsXRBLBgJCQ1UpLoRPvaB9ZvNmAdAzUddN7Qq4tQTHMCSyMKxzTOV56n4M7lAUUnxSLXVIuY4dBR0j5PsnLEZabQJC+m3TRcDNldybYgqr3u/Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=TgfNJQuy; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="NHMQp7g2"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="TgfNJQuy"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1785515622;
+	s=mimecast20190719; t=1785515623;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=aJoDNfi7PbvFAwIZ59jNGUqpCKbrX7nIUyaZT9vjnlM=;
-	b=NHMQp7g2mZS+Ij8ID+PIvsTQb+2JFou9ktmm7VKjPtAiajntXb/ERWlW+faKVRZmX7RJ0+
-	PRXqac/rawcKJoR0kFw6barQx+c2V0+ALQ5cUtVGhoJzXcs/IM61qWEoCozVD0WvilviIq
-	RineQ9aa8dOicOFuzpri7g0mbQHKEMQ=
-Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=icBEEUxLowdMKy1lCtc8E/nu9dX8AlII+63L/ZiGZys=;
+	b=TgfNJQuyHQt4zV9mw5UCsKrteOeFcXwGwcJgElD8YyqLMGpha/bXhT4/FgrEBkwUXkQy5g
+	pnDFu5nsaYAcq9lQrzo8cBqMdNAJIRkmsFJzdvmKaRSxBKU4DYfUdoHFD1Yx8/lP4kHwAQ
+	Hn3NZcTBSPCpm5HXTgMLceYIl7pPlZE=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-686-aY9mG574PTCm2QSKF6-CgQ-1; Fri,
- 31 Jul 2026 12:33:40 -0400
-X-MC-Unique: aY9mG574PTCm2QSKF6-CgQ-1
-X-Mimecast-MFC-AGG-ID: aY9mG574PTCm2QSKF6-CgQ_1785515620
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-84-YrxpwKN3Pz-BjXW59Jjkcw-1; Fri,
+ 31 Jul 2026 12:33:39 -0400
+X-MC-Unique: YrxpwKN3Pz-BjXW59Jjkcw-1
+X-Mimecast-MFC-AGG-ID: YrxpwKN3Pz-BjXW59Jjkcw_1785515618
 Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 194A51800347;
-	Fri, 31 Jul 2026 16:33:40 +0000 (UTC)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 955B51956094;
+	Fri, 31 Jul 2026 16:33:38 +0000 (UTC)
 Received: from bfoster.redhat.com (unknown [10.22.80.193])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 9165E30002E9;
-	Fri, 31 Jul 2026 16:33:39 +0000 (UTC)
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 07EB730002E9;
+	Fri, 31 Jul 2026 16:33:37 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
 To: linux-xfs@vger.kernel.org
 Cc: Matt Fleming <matt@readmodwrite.com>
-Subject: [PATCH 2/2] xfs: consistent low ag space behavior for sparse inode chunk allocs
-Date: Fri, 31 Jul 2026 12:33:37 -0400
-Message-ID: <20260731163337.152522-3-bfoster@redhat.com>
-In-Reply-To: <20260731163337.152522-1-bfoster@redhat.com>
-References: <20260731163337.152522-1-bfoster@redhat.com>
+Subject: [PATCH 0/2] xfs: fix a couple sparse chunk alloc problems
+Date: Fri, 31 Jul 2026 12:33:35 -0400
+Message-ID: <20260731163337.152522-1-bfoster@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -60,94 +56,60 @@ Content-Type: text/plain
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-Matt Fleming reports a filesystem shutdown due to inobt block
-allocation failure during sparse chunk allocation. Inode creation
-can involve multiple allocations in a transaction via the initial
-chunk allocation and inode btree growth via the subsequent inobt
-record insertion. Technically this should be safe as the chunk
-allocation sets the allocation minleft parameter to the max depth of
-the inode btree, which means the allocation selects an AG only if
-there is enough free space for record insertion after the
-allocation. The record insertion naturally occurs in the same AG as
-the allocation and the associated AGF is locked and held by the
-current transaction.
+Hi all,
 
-The situation that reproduces this failure is a bit of a corner
-case. The allocation and inode btrees are all completely full and
-require a split on the next insertion. The AG has just enough
-available space to satisfy inode creation through sparse allocation
-(i.e. 7 blocks in this example). The block allocation occurs within
-an existing free space record, splitting the free space record into
-two and triggering the aforementioned allocbt splits.
+This series is a couple small sparse chunk alloc related fixes. Patch 1
+is LLM detected and generated (I rewrote the commit log) during the
+process of investigating the problem fixed by the second. Patch 2 fixes
+the problem reported by Matt here [1].
 
-The sparse chunk allocation consumes 4 blocks for the chunk, and 4
-blocks from the AGFL for the two allocbt splits. This leaves the
-AGFL with 4 remaining blocks and 3 available blocks in the AG. The
-record insertion attempts block allocation for the inobt split, but
-even though space is available, the geometry change has changed the
-minimum allocation requirements enforced by
-xfs_alloc_fix_freelist(). The min freelist value jumps from 8 to 12
-due to the alloc btree level increases, so the available space
-calculation goes from something like this before the allocation:
+Note that patch 2 is semi-RFC. Personally I'm Ok with using this as the
+fix, but I don't love it and recognize that it's more of a band-aid. The
+fundamental problem seems more that the space availability requirements
+change within a transaction that targets a single AG, but I haven't yet
+thought of an elegant enough way to fix that for something that is kind
+of a corner case.
 
-	free + agfl - res - minfree - minleft = avail
-	2514 + 8 - 2505 - 8 - 2 = 7
+The LLM came up with a fix that basically bumps up minleft within the
+allocator path by the extra space that would be required by the inobt
+allocation, but I didn't really like that at all and tossed it in favor
+of this.
 
-... to this after it:
+I had a couple other things I thought about as potential alternatives.
+One is to perhaps use or repurpose something like the
+XFS_ALLOC_FLAG_FREEING flag for this pattern where we have a minleft
+gated allocation followed by a targeted alloc to the same AG. This would
+presumably allow the allocation to succeed.
 
-	2510 + 4 - 2505 - 12 - 0 = -3
+Another is to perhaps enhance the xfs_alloc_min_freelist() logic to just
+start to use the allocbt maxlevels value for requirements calculation as
+an AG starts to approach -ENOSPC. That is more of a heuristic and
+similar sort of workaround for the problem, but more directly encodes
+that reliability is priority over squeezing every last block from an AG.
+I also think it's a little risky as it may involve a new mode of
+allocation across the board (not just sparse chunk allocs).
 
-Essentially the minleft value of 2 for the chunk alloc is not
-sufficient to overcome the additional requirements imposed on the
-subsequent inobt alloc due to the allocbt geometry changes caused by
-the first.
+I also suspect this wouldn't be a problem if the inobt were covered as
+perag metadata res the way the finobt is, but I haven't thought that
+through fully.
 
-Technically this shouldn't be a concern because a full split of any
-of the allocation btrees in one transaction means that we're not
-going to see another full split in the lifetime of that transaction,
-but the allocation path does not behave that way.
+So all in all I'm curious what folks think about any of this or have any
+other potential ideas. My main concern is that I don't want to introduce
+something too complex for the single uncommon use case of sparse inodes.
+I.e., this problem seems a lot like a corner case of a corner case to
+me. Thoughts?
 
-Absent of a clear way to lock in the agfl state for the particular
-case of multiple allocations into a single AG, this patch works
-around the problem by increasing the minleft requirement for sparse
-chunk allocations. Specifically, we increase minleft by the number
-of blocks that the alloc length was reduced by. The reasoning behind
-this is to generally preserve the AG level no space behavior between
-full and sparse inode chunk allocations.
+Brian
 
-The purpose of sparse inode chunks is to facilitate allocation in
-AGs under severe free space fragmentation and thus prevent premature
--ENOSPC conditions across the broader fs, not necessarily squeeze
-every last block out of any single AG. Therefore, this helps ensure
-the low AG space boundary conditions for sparse inode chunks are
-relatively well tested compared to full inode chunks.
+[1] https://lore.kernel.org/linux-xfs/20260717130429.1838767-1-matt@readmodwrite.com/
 
-Fixes: 56d1115c9bc7 ("xfs: allocate sparse inode chunks on full chunk allocation failure")
-Reported-by: Matt Fleming <matt@readmodwrite.com>
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/libxfs/xfs_ialloc.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+Brian Foster (2):
+  xfs: set minleft correctly for sparse chunk errortag allocation
+  xfs: consistent low ag space behavior for sparse inode chunk allocs
 
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index 633b2d6e42c5..7e71c33fbefa 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -840,6 +840,14 @@ xfs_ialloc_ag_alloc(
- 		args.minlen = igeo->ialloc_min_blks;
- 		args.maxlen = args.minlen;
- 
-+		/*
-+		 * Bump minleft by the alloc size delta to maintain consistent
-+		 * out of space behavior with normal sized chunks. This isn't a
-+		 * requirement, but helps avoid sparse chunk and inobt block
-+		 * allocation quirks at or close to AG depletion.
-+		 */
-+		args.minleft += igeo->ialloc_blks - igeo->ialloc_min_blks;
-+
- 		/*
- 		 * The inode record will be aligned to full chunk size. We must
- 		 * prevent sparse allocation from AG boundaries that result in
+ fs/xfs/libxfs/xfs_ialloc.c | 18 ++++++++++++------
+ 1 file changed, 12 insertions(+), 6 deletions(-)
+
 -- 
 2.55.0
 
