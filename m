@@ -1,107 +1,139 @@
-Received: from mail-vs1-f47.google.com (mail-vs1-f47.google.com [209.85.217.47])
+Received: from mail-ej1-f54.google.com (mail-ej1-f54.google.com [209.85.218.54])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C33AB363082
-	for <linux-xfs@vger.kernel.org>; Fri, 31 Jul 2026 06:17:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.217.47
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785478640; cv=none; b=nsAsHGDA6SmyHQl0nlJ53iB1Tf8TZKkN2hKBJvMMohsD0mA2aVofRNT5Uan0oPLqM97ais78FB0OciZVLHb92KGQXK9g+1xkHq+bxXT1NNY4mxM5JRAjzYQqa+0SOiQ0+WGybRZZDpJJAp9324K0UR0Mpht+3eNhxDTKppUixq0=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785478640; c=relaxed/simple;
-	bh=+5QYk5EiYjuebP9ZG2Pg7OKoEiKdDmMnOGBCN99Tbpo=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=gzEkn2SUz5X+yjuMyVdkYvPeIbqyw5Nsu9ZqvtxiLHIJ3vnUaqi/u456zisgnz2SHqRy8u68H/IydpEL8icc82Sr3isvW6pkCHhGHDv5+bwdGWn5Jfq/Ab2qwK2RA2N/r4falWF1Td0seHQoOcjUBzp4dti4jecEpCfz/BjpEVk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UjzbeKiU; arc=none smtp.client-ip=209.85.217.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B9A2489864
+	for <linux-xfs@vger.kernel.org>; Fri, 31 Jul 2026 07:03:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.54
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1785481384; cv=pass; b=b5yYDJm1ikXGdNyhSkwTj9rOAhabVhJ1agqGgow3tFz09tqy5wTy0aG5DMPJ0SmyeA2A24a1uP0/Ra/fbi10jF+iEPc06YoRIYH2wH6DxzF6c+2W8NuJ8Y65fKnN8FgokVj0NAIDe79UxNKqC64kA3VTwgf2xr4qJxG85GM1bgk=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1785481384; c=relaxed/simple;
+	bh=SJx7bMjpr8SXTq1cdnfjAujyMlWVMQd1xFdAy3xTxbg=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=GyI02YY8qtNj80LPjQDciL1PJQ5gN53WV1Zdx/8rqGVO8oN0KL4azMKo4KmBE76q1y885pvwbA97FqgaHyF0J2KAUwIcK+9JbCmqE5fAzbktPEzqpe2f6UUHSn92IVcboFVONadzGWlHJkW5f7UW7bxQOlNj0oqfYkBXUePI4Wc=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PoNMLiQL; arc=pass smtp.client-ip=209.85.218.54
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UjzbeKiU"
-Received: by mail-vs1-f47.google.com with SMTP id ada2fe7eead31-7389cff36bdso204607137.1
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Jul 2026 23:17:18 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PoNMLiQL"
+Received: by mail-ej1-f54.google.com with SMTP id a640c23a62f3a-c12614b81c9so91557766b.3
+        for <linux-xfs@vger.kernel.org>; Fri, 31 Jul 2026 00:03:02 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1785481381; cv=none;
+        d=google.com; s=arc-20260327;
+        b=HVs0y1Lj2eUmq7gtQ4SNfelQYNSZLlFwjBTgnpWxN7aq3EDj8btgWgFz5fAZFrqZok
+         k4p3Nni70C9csfA2tPUBt1ftB5JgiMFOocKwW4t3huqf3/gab9O1FoBIU+YsLxZnh8td
+         9s3IMhEVoENbfbvyA3QFmP4v1R3iOzrwpGD3PgT2IwUg4e3C4g+SwJP5GEGASMN0V03N
+         faArH+Va4G0ljRRYUTiRekd8PvMLVAPNIIrUNnYPTANQ6ypHDoXt2+3dqadUanj2HtnP
+         wywOKyQPQMEJFUQW8h1V85K4XFrOua/cgz52z21mWtaBkkQ0P1DoXfzD0ydfADSSBO3D
+         rMEQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=myDTl1nKRuAAbvgMixZszeJnFnkfBSLyfqTzMwLTzro=;
+        fh=wQEcgPXy381BcswxR4YU8rre7+s5pWncMk5MUPcFMUc=;
+        b=rT4LkKvDNlhDyi3xOJDd14YqCwr2Pv/eKgCQ9fjsjWFODx6Lt+kL/ttpC2bbtv7asl
+         /in2XqA3yjmHbq7GQ+P2TvwHsJ29uMBjSqdfwgYyPpyHSg5phuOmi38ybrsWisO6bqp6
+         vsSjI7czLaaqk6X8xbGLLetaG7gWshWH85clW+YPzLUSdCZo16jnKIXB1eLtNJsqbgqp
+         u/mn8113T4iZ+uM9/0kK2FHVTUQG2mwcM0e2QwGuTYaGn2xpODjB3Zl4EExU0JbT1g7R
+         clXR2uMSaOv4O+9bM251Me83WB7Qb2OW5WZYhU8dm+d0W6EasPhtGnNxPkRCOS4AC59S
+         5NZA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785478638; x=1786083438; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=iHW4TV4tTuaZdEfu4Qe5VuaxQkpgoHCigu/4rFxdTdg=;
-        b=UjzbeKiUJwM3l/C6HuTTH19R6n8k56k4noBlFNP3nbXyCQbrnp+F1Q6uJqJhc1tEZd
-         h7TLoW3vJYb7xJG99QjQ42pDVqgMVKy+F8VG9PiqyVpu0GcXhBg2446j2AnB+dNhPIxF
-         edAvCcKbL4Rs1np11qqQ2+mgAqLslTgYdIE5NQifwiH0bzKLJU1BeLu8nTiDhQ4U/K1B
-         KG/J9pREALbyQw43/SI6zEbjC8/QGU5xNARqH7kReuTDaDEd/pBFCGP4DsKDvcx0MIWF
-         n6TSlwAY3GE6s2kyREYt2DBm9W6GHWub3cT9vLhedEilSjrrtdiFIb5rObr3R2t14V5F
-         8NjA==
+        d=gmail.com; s=20251104; t=1785481381; x=1786086181; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=myDTl1nKRuAAbvgMixZszeJnFnkfBSLyfqTzMwLTzro=;
+        b=PoNMLiQLsEMTst8atohVToV1WZCZawy3Y6zTQ8YDiTiiLFyqDigajFAmD46J7ILFlT
+         dkdvhw5AKXjlxB7eBQrycS1tnq9BxT8XvT94ukgbxldB25oyWkmJd1sayCPHip6ZpBd1
+         ZoO10YjcWvcuA9TGgClz6rENYEi5qD7di2zA/Dx+S69t9W7lbUGjfaBggdRiq/ygzByv
+         E0hGgSVk5FHXSWkrYMdz0Rgno238ZIJJPUYbh6Zt3eD8axAkE7TbXGqYVs5mBBPHuRH2
+         qo6e8w7V2Tky/Oj8VRFozr44Nclik7uSdp+wW4ulCbuA42JU/s12no02LMGoQm6YR5L3
+         TsHQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785478638; x=1786083438;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=iHW4TV4tTuaZdEfu4Qe5VuaxQkpgoHCigu/4rFxdTdg=;
-        b=ReyZj295da4yVRwViOjV2WZ30OD7F1boQ0H7Lhm47Z5eAtPiEhUTX7dIGQpEpisYk6
-         3ZeKaEkHQm1nDnoL+tfIsv6Qvwws++faMibpkjW8SfN386A8iztLVGjTS0KgChgYJHHS
-         /gQTFXj82fN7O8vuvowToRjiQUZzizr4oUO2OSziunp8p8ic/rQpFXuapbg6wVs7EoR0
-         HBRuXDHLHZt/XJN6af8WZwT809trEiaCSwfboDXZ5o/ysr87ej6MmzxXea9MejIttVpl
-         7rAs3xWJo0t5F2edgTRe2GwCe7eYk4VdHuduJuLFHg62u6rerhF1VuqpwPnKZkn7SnFb
-         4Cpg==
-X-Gm-Message-State: AOJu0YyNw07Rj1KmD3n8t+UwakCumhYNrSLUrzfkMTtk4p5yUyvD8gQq
-	106F80R5D+wWVme4pI2X54CGi4BgLyxdiI0aSNY+/A9sQiISw+XWD+Qy
-X-Gm-Gg: AR+sD11Y/99kHzdxWpm/mRepYLgrXQUZYrh3F2o/QMWDfVVH9Px8kgQJfQZlzR+QOwE
-	qheTzoVRolCL1tqILclUWF5JN9ct6dbqbR1x7uz7CnaMrW6LcGNGgvYsb0V+r84HxW/tlUtY+Ki
-	TOqd7lYq1xU95Sd5an7ycHDMmBVY04/i8kuVPBqJZk3OYAlGIsd9IeDVvFay+6SiS44HEAfZq+E
-	bgnzPDr048uN5RwIPsJ7vt3PI73EvQgFlK9jUeKGI7AprdfykElF6pALihhG2k4QmI7yjTsX9FG
-	r8fadSOZmYzGNr6r44hl6dqCuYi8IlrPk2wtQiQYjmDscd4AT7b0Lau2zziht7T7Q436NSk2XHJ
-	rGdfF58v72TDpEpq2sLsmPVgZy9j7xF7YXYcTdVCVj7PhOUKyLYiBwFQFquU005Uvom4wE6Er/5
-	ykVgUZ7zmCIcLaT0+f5TjK/vLE55au1ahAH6NLAkVRZ8Yk4ba4h/z85UgxJiHGL1/vjg==
-X-Received: by 2002:a05:6102:38ce:b0:74c:9177:35bc with SMTP id ada2fe7eead31-758f6974abdmr203607137.2.1785478637579;
-        Thu, 30 Jul 2026 23:17:17 -0700 (PDT)
-Received: from fedora ([2804:1b3:a8c3:8ee5:1c39:64d9:e257:73dc])
-        by smtp.gmail.com with ESMTPSA id a1e0cc1a2514c-977e6aa5d2csm62806241.12.2026.07.30.23.17.13
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 30 Jul 2026 23:17:16 -0700 (PDT)
-From: Marcelo Mendes Spessoto Junior <marcelomspessoto@gmail.com>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Marcelo Mendes Spessoto Junior <marcelomspessoto@gmail.com>,
-	syzbot+4e6ee73c0ae4b6e8753f@syzkaller.appspotmail.com
-Subject: [PATCH] xfs: add guard before freeing buffer log item
-Date: Fri, 31 Jul 2026 03:14:48 -0300
-Message-ID: <20260731061448.192010-1-marcelomspessoto@gmail.com>
-X-Mailer: git-send-email 2.55.0
+        d=1e100.net; s=20251104; t=1785481381; x=1786086181;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=myDTl1nKRuAAbvgMixZszeJnFnkfBSLyfqTzMwLTzro=;
+        b=aTkEF0XLwI8n0+oO6yu6CqIIOn3m7LcH0yR/YjaLA/M4jWDQjv0XfOs4/JEhzUp/3I
+         e5vSMIrpHtW4TIZmfkxFUGA+f1tXZc2SI6XdL7owb8IuOeRMn03r1TCJ+qkpEtnzP/LR
+         ddi5CtRfpzWydpqrzG0SO7/lCgYNOtQztpnzuyP2W8K/Wyi0Tis5yDF6An3N41gABJAL
+         5Twj+XI+xkN89uWBj/msUmfmHr3HAk+hifuSObn9ZMGaKcxvVDX8J/+SCc1GQUpRa0ZS
+         kYJB5dLLSega7b8jVigNsq/VS1a/MRXDlmvEbsEY6GoI412iZ3i/vaw7SseazoySY5ZB
+         c2Bw==
+X-Gm-Message-State: AOJu0Yx24rHKcEGZmZ8D9hggFNY8y68u1a0Stcq5dysGy37+r81dLRpA
+	VDJgm994/Z7sgD06abXwCKsDvzwr9DRpfeKqkUQf38G5GkoaZ01tfVbwnErIdkLU1W0YKVQX0/G
+	GC3Eh1OTI3XO4zAAb+0ZoOSqqvrENL/a5rpsS
+X-Gm-Gg: AR+sD10iZh1vn9GAbxwkXRyOGGNb6jvTDI90vXANZTgk6SnlsYTIM7G773gihnHU5s0
+	ppkHxaQTfUNzAAKSfxoM6FSfMeKSkun3225VGbTPFuTJYdPaVRmh7YdSLG0HhLq2vkSloMbSR9V
+	71PB/SLHPjmY2X1R+415lGxv1G7mOcBeL2bPxxyncDKPozYSWgkrN8KDwIgbSwKzQlUnjsDe+hf
+	tKWJ35+m1+dwFF1oUsx5vXhGJ4TcpFMQVVQiUG0d3Jx5M11ydsaaOlxrLPhkjDqCYC1LOIghYX9
+	FrdNT4i9Aygn92bOdztItzlIXU5JBn+Yl++8XbFrpZXAjAxfkIMrUjm5DhLpzIyPFTWI1QMAGLF
+	+7w==
+X-Received: by 2002:a17:907:d20:b0:c16:5a9b:5966 with SMTP id
+ a640c23a62f3a-c1fd24c8bdcmr47614066b.33.1785481380986; Fri, 31 Jul 2026
+ 00:03:00 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20260731061448.192010-1-marcelomspessoto@gmail.com>
+In-Reply-To: <20260731061448.192010-1-marcelomspessoto@gmail.com>
+From: Marcelo Mendes <marcelomspessoto@gmail.com>
+Date: Fri, 31 Jul 2026 04:02:49 -0300
+X-Gm-Features: AUfX_my7ZSlmSbXk5qrNFfjELe9kAQNvd2cGavJ2_GPg0O3DknKy03hd_4Mpvfs
+Message-ID: <CAB4W1t7q3QTc+udz_NOhYP+aqbRzU5EXFxr1ctXTCcbA05swyQ@mail.gmail.com>
+Subject: Re: [PATCH] xfs: add guard before freeing buffer log item
+To: linux-xfs@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-A buffer's write completion can race with the CIL walking the same
-checkpoint's item list during a forced shutdown's simulated commit
-callbacks. Whichever side reaches the item last should be the one to
-free it; right now completion frees it unconditionally, so the CIL
-walk can end up touching memory that's already gone.
+I've missed the original discussion about the issue
+(https://lore.kernel.org/all/68a70f15.050a0220.3d78fd.0024.GAE@google.com/T=
+/)
+before submitting the fix. I will work on a v2 addressing the root
+causes, and this patch can be ignored.
 
-Fixes: d2fe5c4c8d25 ("xfs: rearrange code in xfs_buf_item.c")
-Reported-by: syzbot+4e6ee73c0ae4b6e8753f@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=4e6ee73c0ae4b6e8753f
-Tested-by: syzbot+4e6ee73c0ae4b6e8753f@syzkaller.appspotmail.com
-Signed-off-by: Marcelo Mendes Spessoto Junior <marcelomspessoto@gmail.com>
----
- fs/xfs/xfs_buf_item.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index f4c5be67826e..c86c4387f52b 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -1072,6 +1072,9 @@ void
- xfs_buf_item_done(
- 	struct xfs_buf		*bp)
- {
-+	if (atomic_read(&bp->b_log_item->bli_refcount) != 0)
-+		return;
-+
- 	/*
- 	 * If we are forcibly shutting down, this may well be off the AIL
- 	 * already. That's because we simulate the log-committed callbacks to
--- 
-2.55.0
-
+On Fri, Jul 31, 2026 at 3:17=E2=80=AFAM Marcelo Mendes Spessoto Junior
+<marcelomspessoto@gmail.com> wrote:
+>
+> A buffer's write completion can race with the CIL walking the same
+> checkpoint's item list during a forced shutdown's simulated commit
+> callbacks. Whichever side reaches the item last should be the one to
+> free it; right now completion frees it unconditionally, so the CIL
+> walk can end up touching memory that's already gone.
+>
+> Fixes: d2fe5c4c8d25 ("xfs: rearrange code in xfs_buf_item.c")
+> Reported-by: syzbot+4e6ee73c0ae4b6e8753f@syzkaller.appspotmail.com
+> Closes: https://syzkaller.appspot.com/bug?extid=3D4e6ee73c0ae4b6e8753f
+> Tested-by: syzbot+4e6ee73c0ae4b6e8753f@syzkaller.appspotmail.com
+> Signed-off-by: Marcelo Mendes Spessoto Junior <marcelomspessoto@gmail.com=
+>
+> ---
+>  fs/xfs/xfs_buf_item.c | 3 +++
+>  1 file changed, 3 insertions(+)
+>
+> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+> index f4c5be67826e..c86c4387f52b 100644
+> --- a/fs/xfs/xfs_buf_item.c
+> +++ b/fs/xfs/xfs_buf_item.c
+> @@ -1072,6 +1072,9 @@ void
+>  xfs_buf_item_done(
+>         struct xfs_buf          *bp)
+>  {
+> +       if (atomic_read(&bp->b_log_item->bli_refcount) !=3D 0)
+> +               return;
+> +
+>         /*
+>          * If we are forcibly shutting down, this may well be off the AIL
+>          * already. That's because we simulate the log-committed callback=
+s to
+> --
+> 2.55.0
+>
