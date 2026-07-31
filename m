@@ -1,177 +1,307 @@
-Received: from mail-oi1-f200.google.com (mail-oi1-f200.google.com [209.85.167.200])
+Received: from mail-qk1-f181.google.com (mail-qk1-f181.google.com [209.85.222.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADAF83F822F
-	for <linux-xfs@vger.kernel.org>; Fri, 31 Jul 2026 11:41:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.200
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE30F40F75B
+	for <linux-xfs@vger.kernel.org>; Fri, 31 Jul 2026 12:03:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785498076; cv=none; b=gvUnZL2+ctABvbsrUMN2mmmhhJ6MRyLwVcVPhhZtLKEtw3NSm48h5aPVONJGLy0ynmeGkWVzkPFg/txlVjYh6if76vl9wtZshQhtv/Z3Zt1QnpXfNASJMv+WoMjYjNtnUqh0cZABPrztWCKDaPoWNBIzy+kI+bHRJTwCtsMuqsI=
+	t=1785499428; cv=none; b=HC5axWza/D4x62Pb4velkg2OTYeym5/7NqpXCpJLzVc2g6OAflx+nOuqO5rypKa/VC2sc14OFiQxVtrO9sV9uhlmQdQj65CJbEORnkwu7EVrBOn/xcZKfGqmnkdgNrMvtDZIEt+IfRBS/+DhcML/6QTgZmeCb2bEiseu0q13Ozk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785498076; c=relaxed/simple;
-	bh=e2vjSttxcoNtyW6JrbhYTnqq7Pxo0YsnVImfEbqlRQk=;
-	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:Cc:
-	 Content-Type; b=cGMTzpiml007vcfXLKRB42SVJIxSdAJAK3NiKWVzf4z7tnusnA4f1LbgRxK0HzFlhpVga1FLG+rb+zSZEgC2zVE0cbHqBF7e4vHb7Mwdj37HWnboBVdwbcdB25ZOdDBJDmG+3zIsZqpSWiRdrhQIvQUmqewiXTqLTGN1mEqoj3k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.167.200
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-oi1-f200.google.com with SMTP id 5614622812f47-4ab4f652f9bso617514b6e.0
-        for <linux-xfs@vger.kernel.org>; Fri, 31 Jul 2026 04:41:14 -0700 (PDT)
+	s=arc-20240116; t=1785499428; c=relaxed/simple;
+	bh=QW7C5r3pM1/vCX46LSIXEXAD21DECLDErAMKMLOiNy0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=ubxftiohShtUuUvoOawXK7APTgqyBJkQp2Bm1+dm3F+FS79DCn5xFEMgFZExDadWxQwlhdBoHZJlMUpK67HARZvpEaVRTLS+unZdp8+yKBlSjZuyMHC+V5cOC5mhLtnoF87GUR23qWU0Q8Ttn6JszH1iJ37Af7+LPyOzJMMtvBI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=trailofbits.com; spf=pass smtp.mailfrom=trailofbits.com; dkim=pass (2048-bit key) header.d=trailofbits.com header.i=@trailofbits.com header.b=RKW703sj; arc=none smtp.client-ip=209.85.222.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=trailofbits.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=trailofbits.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=trailofbits.com header.i=@trailofbits.com header.b="RKW703sj"
+Received: by mail-qk1-f181.google.com with SMTP id af79cd13be357-92e99ef0902so48825485a.2
+        for <linux-xfs@vger.kernel.org>; Fri, 31 Jul 2026 05:03:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=trailofbits.com; s=google; t=1785499425; x=1786104225; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=mhz95Ie+nEoib5CAw3va8pb49gr72Xo3exPDF8Fxc0Q=;
+        b=RKW703sj56tFYBI+ew9hX4ZgptQamLgFSldys6htEya3Jd8BDck29/PjDKDss0TmxN
+         8+BoAHIxXGtHadNg5pJCgn1UrZEPQfd7Lmu+vsx7VcXix25MSP3eCzTVgciFMCWoYCDU
+         /GXC6safhu+gzN7GRoXM0COXDE0Lxp6sFiOlBFtYPnyjefvyWbjs1p7fvEXoCIbVfbUL
+         gtZjEd3coDnOmYB+VEXBsNJVSR7bXgsOSTZclG8in5hIQFbIM6uZSdTHjv+w3TLS6yi2
+         eTrjX5/8B6r6qRJ4eqMlY2fg0QZGm2kSO7tevI4hMq5mhM34SVChI1qddr3OZc9xDH40
+         1oqg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785498073; x=1786102873;
-        h=content-type:cc:to:from:subject:message-id:in-reply-to:date
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=m8VUZ3s3LYwXHsVpWfjVPQGrgQzqZfc/ZafskNEpMqk=;
-        b=bzMZi6A6MwSW3ZWL/dbGGmM4sezD/xNo8b6wVl6UcWjnHKMpkqZO5hKvtawfVoi09e
-         N7BUbln4/Kpe406y2t9OAr8CToJNkb6npOS+vGTzeZTzdCANI4cR1Kc+/K6IToeylPr1
-         FECyjqVtSCJ5C+19HHEJE6KTgZo0/ZLrBG/ZEi4KZrpSQ/fCkMOV8xu6jUjtSUr4Nxr1
-         FpyOmPj7TF6TyIvKDexKhDkJRUp0i2AN7nFlQHz5sRCSrRVNwvq3IO2NhyxVtNjumNsM
-         CyZ06CDg/f+69uAbQHuSRh3YWlB4kq30M0phIkKbMkhMmhF2ql59Frhjc1UgyI0C0CGH
-         aejg==
-X-Forwarded-Encrypted: i=1; AHgh+RpdL3eZLxZ8LNfmbKlVmwb+sp18O6gSWjai3q30DC63Mw9SmNtq721U2mjnpu63J4mAArj/CbPke3s=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzj/NYWzvsyOtNjrgdV+rEGHpUHxP2psFNzxsBEtMsKQKrA9PVb
-	4uINi+65YOMkz15Bl//WwSH7SX+WHkh4rRzHngTAfoaE3qXiyJB517lDzCoWthEt7quS+bSD+jl
-	9Ky9kR0FAZY0IzcVaqlV2RJra6GFxIDxuW6DbfI+7tvaMPgPdY7LgA5TtVgU=
+        d=1e100.net; s=20251104; t=1785499425; x=1786104225;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=mhz95Ie+nEoib5CAw3va8pb49gr72Xo3exPDF8Fxc0Q=;
+        b=AlCBGYi48PvUJY4yARZ8zwNIzjS02pGU4BivKLo5eCBSIineElqnQpqFs6JfChRtIe
+         8PDdzUtbCd9skGukP0+5dW1QHzyNtgd2iLLYqVODu62ZPGHFEZhFrdGK4bR04IWEAZ6t
+         eVV9UasOFudr4aQYTSvITZYBG3Kp4ZRNMELs7NVWggt7wb3in3njwn0bzn5aGwfvPrMk
+         3xK1CRSikvCIKz14WTAf192M7Jzi9X1loy6gExhDNswfqFahq6wKuAcsGXWJGy1jKUbY
+         WtYZJrO/ReGKBrqyFjSmaKkXW7oahH6IvjXDHZpopOlibiRygq0gdnDShtu3+wtdLMLt
+         DHuw==
+X-Forwarded-Encrypted: i=1; AHgh+RoPjxnTA3HB9vH/YFzheXDsCYKuRDTqT1Zh132uS6wq97S/6nFJN2P2v9moWKwbfnVtS4IwQ92p31Q=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx69j+VwkYmXVBxXv7eXqKH7mHdSnHKuZk0vs1wizSsWUDpCehm
+	qGCQTaYtpYe+dSz6nUVgY6rREEyg+o4EmemF7Dbrw1FUgXjLjbd+JFWFgvIkGT7+z3U=
+X-Gm-Gg: AR+sD11ody9wN8M85W8b0MZ1ZCIJrLiQU9DqsO2zNu1f/0YXsWZH+PCq54X/PRJsxdI
+	86pk+1Q+ZeURv4hrjScNrVZSacJ7rcMu2Ym3TqQIB3htyh0S9HKRfXRRBoOjiE5iODr4UHt5ml1
+	x/u50gKJYTGhGMzxcK3IUsJ0b8Fm8WKAoReei3XZ+M7+Lgfvo+Aa7Z3fEhF6vlv87FN8qBThUEf
+	1sPPsYD8YjknxMKbzil42T/uT+PXud3Zm7XLsloZmMu/3RQnUqI2Xi+jamRdbceLwVhdVNMaJ3S
+	fRvd0RGxUyTXgBHXP6i5vvzmBRB8B9fROW0SHMjZzAjCss1SmLQi6gxs4pwwQuBusnLPtlqUvfc
+	DpIdb24M6mUreKLrLmKR1kqiDqq62F3y25sk/5+wNLUracn76epFXRPwlg12fWIT9Z/s7PXJ3gV
+	OTcJos8N7SLqyVQCeo6/68BFYeATDBUK8W/dWKBif2hL7+GAQ16DUI4ff9jtC2GqZLBw==
+X-Received: by 2002:a05:620a:2625:b0:92e:4859:49dd with SMTP id af79cd13be357-934965cc450mr241891085a.26.1785499425318;
+        Fri, 31 Jul 2026 05:03:45 -0700 (PDT)
+Received: from localhost ([146.190.222.192])
+        by smtp.gmail.com with UTF8SMTPSA id af79cd13be357-9349bc4bbcasm41860085a.13.2026.07.31.05.03.44
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 31 Jul 2026 05:03:44 -0700 (PDT)
+From: David Lee <david.lee@trailofbits.com>
+To: cem@kernel.org
+Cc: David Lee <david.lee@trailofbits.com>,
+	Kyle Zeng <kylebot@openai.com>,
+	Dominik 'Disconnect3d' Czarnota <dominik.czarnota@trailofbits.com>,
+	linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] xfs: validate btree block level on read
+Date: Fri, 31 Jul 2026 12:03:42 +0000
+Message-ID: <20260731120344.558808-1-david.lee@trailofbits.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6808:10cc:b0:4a4:c12:49d9 with SMTP id
- 5614622812f47-4ae4c4de8a7mr1992011b6e.3.1785498073711; Fri, 31 Jul 2026
- 04:41:13 -0700 (PDT)
-Date: Fri, 31 Jul 2026 04:41:13 -0700
-In-Reply-To: <e69cc8a4a9c3f641b97872b50f04c397880077cd.1785374485.git.wqu@suse.com>
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <6a6c89d9.77639fcc.3d4fd0.0026.GAE@google.com>
-Subject: [syzbot ci] Re: iomap: follow the alignment requirement for iomap_dio_hole_iter()
-From: syzbot ci <syzbot+ci731b4119b755b229@syzkaller.appspotmail.com>
-To: linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, wqu@suse.com
-Cc: syzbot@lists.linux.dev, syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-syzbot ci has tested the following series
+Btree buffer verifiers validate record counts against the level stored in
+the block itself.  Callers of xfs_btree_read_buf_block(), however, use
+the returned block according to the level they are traversing.  A
+corrupted sibling pointer can therefore return a verifier-valid block
+from another level and cause out-of-bounds accesses when layout-specific
+entries are moved.
 
-[v1] iomap: follow the alignment requirement for iomap_dio_hole_iter()
-https://lore.kernel.org/all/e69cc8a4a9c3f641b97872b50f04c397880077cd.1785374485.git.wqu@suse.com
-* [PATCH] iomap: follow the alignment requirement for iomap_dio_hole_iter()
+Pass the expected level into xfs_btree_read_buf_block() and reject
+blocks whose on-disk level differs before returning them.  This
+centralizes the check for traversal and sibling reads.
 
-and found the following issue:
-general protection fault in __iomap_dio_rw
+Fixes: 3d3e6f64e22c ("xfs: verify btree blocks as they are read from disk")
+Bug found and triaged by OpenAI Security Research and 
+validated by Trail of Bits.
 
-Full report is available here:
-https://ci.syzbot.org/series/81e0fbae-4715-4d62-8e9e-bcd19e46b164
-
-***
-
-general protection fault in __iomap_dio_rw
-
-tree:      vfs
-URL:       https://kernel.googlesource.com/pub/scm/linux/kernel/git/vfs/vfs.git
-base:      70c2cbf8600c7d3a622b77e31136b83d6ac7d86c
-arch:      amd64
-compiler:  Debian clang version 22.1.8 (++20260613092233+e80beda6e255-1~exp1~20260613092250.77), Debian LLD 22.1.8
-config:    https://ci.syzbot.org/builds/8d5fee65-291c-46a2-9f9a-d512f8fad82b/config
-syz repro: https://ci.syzbot.org/findings/c9f79a18-3316-44ec-b805-b805b1c49325/syz_repro
-
-loop0: rw=2049, sector=53248, nr_sectors = 976 limit=40427
-Oops: general protection fault, probably for non-canonical address 0xdffffc0000000003: 0000 [#1] SMP KASAN PTI
-KASAN: null-ptr-deref in range [0x0000000000000018-0x000000000000001f]
-CPU: 0 UID: 0 PID: 5842 Comm: syz.0.17 Not tainted syzkaller #0 PREEMPT(full) 
-Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.2-debian-1.16.2-1 04/01/2014
-RIP: 0010:bdev_get_queue include/linux/blkdev.h:1058 [inline]
-RIP: 0010:bdev_logical_block_size include/linux/blkdev.h:1403 [inline]
-RIP: 0010:iomap_dio_alignment fs/iomap/direct-io.c:415 [inline]
-RIP: 0010:iomap_dio_hole_iter fs/iomap/direct-io.c:595 [inline]
-RIP: 0010:iomap_dio_iter fs/iomap/direct-io.c:643 [inline]
-RIP: 0010:__iomap_dio_rw+0x1142/0x2130 fs/iomap/direct-io.c:815
-Code: e2 5a ff 83 e3 08 75 5c e8 ab de 5a ff 48 8b 9c 24 68 01 00 00 48 83 c3 18 48 89 d8 48 c1 e8 03 48 b9 00 00 00 00 00 fc ff df <80> 3c 08 00 74 08 48 89 df e8 d0 75 c8 ff 48 8b 1b b8 58 01 00 00
-RSP: 0018:ffffc90003fef560 EFLAGS: 00010206
-RAX: 0000000000000003 RBX: 0000000000000018 RCX: dffffc0000000000
-RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000000
-RBP: ffffc90003fef860 R08: ffff8881148d8fff R09: 0000000000000000
-R10: ffff8881148d8000 R11: ffffed102291b200 R12: 1ffff920007fdecc
-R13: 0000000000000000 R14: ffff888166b45340 R15: 0000000000001000
-FS:  00007fd77743d6c0(0000) GS:ffff88818d951000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000200000078000 CR3: 000000011606a000 CR4: 00000000000006f0
-Call Trace:
- <TASK>
- f2fs_dio_read_iter fs/f2fs/file.c:4887 [inline]
- f2fs_file_read_iter+0x60b/0x940 fs/f2fs/file.c:4950
- copy_splice_read+0x5ff/0xaa0 fs/splice.c:362
- do_splice_read fs/splice.c:979 [inline]
- splice_direct_to_actor+0x4b6/0xcb0 fs/splice.c:1084
- do_splice_direct_actor fs/splice.c:1202 [inline]
- do_splice_direct+0x195/0x290 fs/splice.c:1228
- do_sendfile+0x52e/0x7c0 fs/read_write.c:1371
- __do_sys_sendfile64 fs/read_write.c:1432 [inline]
- __se_sys_sendfile64+0x144/0x1a0 fs/read_write.c:1418
- do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
- do_syscall_64+0x174/0x580 arch/x86/entry/syscall_64.c:94
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
-RIP: 0033:0x7fd77659df99
-Code: ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 e8 ff ff ff f7 d8 64 89 01 48
-RSP: 002b:00007fd77743d028 EFLAGS: 00000246 ORIG_RAX: 0000000000000028
-RAX: ffffffffffffffda RBX: 00007fd776825fa0 RCX: 00007fd77659df99
-RDX: 0000000000000000 RSI: 0000000000000004 RDI: 0000000000000004
-RBP: 00007fd776634ec4 R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000800000009 R11: 0000000000000246 R12: 0000000000000000
-R13: 00007fd776826038 R14: 00007fd776825fa0 R15: 00007fff168f4a18
- </TASK>
-Modules linked in:
----[ end trace 0000000000000000 ]---
-RIP: 0010:bdev_get_queue include/linux/blkdev.h:1058 [inline]
-RIP: 0010:bdev_logical_block_size include/linux/blkdev.h:1403 [inline]
-RIP: 0010:iomap_dio_alignment fs/iomap/direct-io.c:415 [inline]
-RIP: 0010:iomap_dio_hole_iter fs/iomap/direct-io.c:595 [inline]
-RIP: 0010:iomap_dio_iter fs/iomap/direct-io.c:643 [inline]
-RIP: 0010:__iomap_dio_rw+0x1142/0x2130 fs/iomap/direct-io.c:815
-Code: e2 5a ff 83 e3 08 75 5c e8 ab de 5a ff 48 8b 9c 24 68 01 00 00 48 83 c3 18 48 89 d8 48 c1 e8 03 48 b9 00 00 00 00 00 fc ff df <80> 3c 08 00 74 08 48 89 df e8 d0 75 c8 ff 48 8b 1b b8 58 01 00 00
-RSP: 0018:ffffc90003fef560 EFLAGS: 00010206
-RAX: 0000000000000003 RBX: 0000000000000018 RCX: dffffc0000000000
-RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000000
-RBP: ffffc90003fef860 R08: ffff8881148d8fff R09: 0000000000000000
-R10: ffff8881148d8000 R11: ffffed102291b200 R12: 1ffff920007fdecc
-R13: 0000000000000000 R14: ffff888166b45340 R15: 0000000000001000
-FS:  00007fd77743d6c0(0000) GS:ffff8882a8f51000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00007faa8f64dc80 CR3: 000000011606a000 CR4: 00000000000006f0
-----------------
-Code disassembly (best guess):
-   0:	e2 5a                	loop   0x5c
-   2:	ff 83 e3 08 75 5c    	incl   0x5c7508e3(%rbx)
-   8:	e8 ab de 5a ff       	call   0xff5adeb8
-   d:	48 8b 9c 24 68 01 00 	mov    0x168(%rsp),%rbx
-  14:	00
-  15:	48 83 c3 18          	add    $0x18,%rbx
-  19:	48 89 d8             	mov    %rbx,%rax
-  1c:	48 c1 e8 03          	shr    $0x3,%rax
-  20:	48 b9 00 00 00 00 00 	movabs $0xdffffc0000000000,%rcx
-  27:	fc ff df
-* 2a:	80 3c 08 00          	cmpb   $0x0,(%rax,%rcx,1) <-- trapping instruction
-  2e:	74 08                	je     0x38
-  30:	48 89 df             	mov    %rbx,%rdi
-  33:	e8 d0 75 c8 ff       	call   0xffc87608
-  38:	48 8b 1b             	mov    (%rbx),%rbx
-  3b:	b8 58 01 00 00       	mov    $0x158,%eax
-
-
-***
-
-If these findings have caused you to resend the series or submit a
-separate fix, please add the following tag to your commit message:
-  Tested-by: syzbot@syzkaller.appspotmail.com
-
+Assisted-by: Codex:gpt-5.6-sol gpt-5.5-cyber
+Signed-off-by: Kyle Zeng <kylebot@openai.com>
 ---
-This report is generated by a bot. It may contain errors.
-syzbot ci engineers can be reached at syzkaller@googlegroups.com.
+Trail of Bits has a reproducer for this bug that triggers ㅁ
+KASAN use-after-free and can share if needed.
 
-To test a patch for this bug, please reply with `#syz test`
-(should be on a separate line).
+ fs/xfs/libxfs/xfs_btree.c         | 48 +++++++++++++++++++------------
+ fs/xfs/libxfs/xfs_btree.h         |  2 +-
+ fs/xfs/libxfs/xfs_btree_staging.c |  9 +++---
+ 3 files changed, 36 insertions(+), 23 deletions(-)
 
-The patch should be attached to the email.
-Note: arguments like custom git repos and branches are not supported.
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 60ef7f08b..b2db143bb 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -1378,13 +1378,14 @@ xfs_btree_get_buf_block(
+ }
+ 
+ /*
+- * Read in the buffer at the given ptr and return the buffer and
+- * the block pointer within the buffer.
++ * Read in the buffer at the given ptr and return the buffer and the block
++ * pointer within the buffer.  The block must be at the expected level.
+  */
+ int
+ xfs_btree_read_buf_block(
+ 	struct xfs_btree_cur		*cur,
+ 	const union xfs_btree_ptr	*ptr,
++	int				level,
+ 	int				flags,
+ 	struct xfs_btree_block		**block,
+ 	struct xfs_buf			**bpp)
+@@ -1409,6 +1410,14 @@ xfs_btree_read_buf_block(
+ 
+ 	xfs_btree_set_refs(cur, *bpp);
+ 	*block = XFS_BUF_TO_BLOCK(*bpp);
++	if (xfs_btree_get_level(*block) != level) {
++		xfs_buf_mark_corrupt(*bpp);
++		xfs_trans_brelse(cur->bc_tp, *bpp);
++		xfs_btree_mark_sick(cur);
++		*block = NULL;
++		*bpp = NULL;
++		return -EFSCORRUPTED;
++	}
+ 	return 0;
+ }
+ 
+@@ -1733,7 +1742,8 @@ xfs_btree_increment(
+ 
+ 		ptrp = xfs_btree_ptr_addr(cur, cur->bc_levels[lev].ptr, block);
+ 		--lev;
+-		error = xfs_btree_read_buf_block(cur, ptrp, 0, &block, &bp);
++		error = xfs_btree_read_buf_block(cur, ptrp, lev, 0, &block,
++						 &bp);
+ 		if (error)
+ 			goto error0;
+ 
+@@ -1827,7 +1837,8 @@ xfs_btree_decrement(
+ 
+ 		ptrp = xfs_btree_ptr_addr(cur, cur->bc_levels[lev].ptr, block);
+ 		--lev;
+-		error = xfs_btree_read_buf_block(cur, ptrp, 0, &block, &bp);
++		error = xfs_btree_read_buf_block(cur, ptrp, lev, 0, &block,
++						 &bp);
+ 		if (error)
+ 			goto error0;
+ 		xfs_btree_setbuf(cur, lev, bp);
+@@ -1904,7 +1915,7 @@ xfs_btree_lookup_get_block(
+ 		return 0;
+ 	}
+ 
+-	error = xfs_btree_read_buf_block(cur, pp, 0, blkp, &bp);
++	error = xfs_btree_read_buf_block(cur, pp, level, 0, blkp, &bp);
+ 	if (error)
+ 		return error;
+ 
+@@ -1912,10 +1923,6 @@ xfs_btree_lookup_get_block(
+ 	if (xfs_btree_check_block_owner(cur, *blkp) != NULL)
+ 		goto out_bad;
+ 
+-	/* Did we get the level we were looking for? */
+-	if (be16_to_cpu((*blkp)->bb_level) != level)
+-		goto out_bad;
+-
+ 	/* Check that internal nodes have at least one record. */
+ 	if (level != 0 && be16_to_cpu((*blkp)->bb_numrecs) == 0)
+ 		goto out_bad;
+@@ -2457,7 +2464,7 @@ xfs_btree_lshift(
+ 		goto out0;
+ 
+ 	/* Set up the left neighbor as "left". */
+-	error = xfs_btree_read_buf_block(cur, &lptr, 0, &left, &lbp);
++	error = xfs_btree_read_buf_block(cur, &lptr, level, 0, &left, &lbp);
+ 	if (error)
+ 		goto error0;
+ 
+@@ -2653,7 +2660,7 @@ xfs_btree_rshift(
+ 		goto out0;
+ 
+ 	/* Set up the right neighbor as "right". */
+-	error = xfs_btree_read_buf_block(cur, &rptr, 0, &right, &rbp);
++	error = xfs_btree_read_buf_block(cur, &rptr, level, 0, &right, &rbp);
+ 	if (error)
+ 		goto error0;
+ 
+@@ -2940,8 +2947,8 @@ __xfs_btree_split(
+ 	 * point back to right instead of to left.
+ 	 */
+ 	if (!xfs_btree_ptr_is_null(cur, &rrptr)) {
+-		error = xfs_btree_read_buf_block(cur, &rrptr,
+-							0, &rrblock, &rrbp);
++		error = xfs_btree_read_buf_block(cur, &rrptr, level, 0,
++						 &rrblock, &rrbp);
+ 		if (error)
+ 			goto error0;
+ 		xfs_btree_set_sibling(cur, rrblock, &rptr, XFS_BB_LEFTSIB);
+@@ -3365,7 +3372,8 @@ xfs_btree_new_root(
+ 		lbp = bp;
+ 		xfs_btree_buf_to_ptr(cur, lbp, &lptr);
+ 		left = block;
+-		error = xfs_btree_read_buf_block(cur, &rptr, 0, &right, &rbp);
++		error = xfs_btree_read_buf_block(cur, &rptr,
++						 cur->bc_nlevels - 1, 0, &right, &rbp);
+ 		if (error)
+ 			goto error0;
+ 		bp = rbp;
+@@ -3376,7 +3384,8 @@ xfs_btree_new_root(
+ 		xfs_btree_buf_to_ptr(cur, rbp, &rptr);
+ 		right = block;
+ 		xfs_btree_get_sibling(cur, right, &lptr, XFS_BB_LEFTSIB);
+-		error = xfs_btree_read_buf_block(cur, &lptr, 0, &left, &lbp);
++		error = xfs_btree_read_buf_block(cur, &lptr,
++						 cur->bc_nlevels - 1, 0, &left, &lbp);
+ 		if (error)
+ 			goto error0;
+ 		bp = lbp;
+@@ -4394,7 +4403,8 @@ xfs_btree_delrec(
+ 		rptr = cptr;
+ 		right = block;
+ 		rbp = bp;
+-		error = xfs_btree_read_buf_block(cur, &lptr, 0, &left, &lbp);
++		error = xfs_btree_read_buf_block(cur, &lptr, level, 0, &left,
++						 &lbp);
+ 		if (error)
+ 			goto error0;
+ 
+@@ -4411,7 +4421,8 @@ xfs_btree_delrec(
+ 		lptr = cptr;
+ 		left = block;
+ 		lbp = bp;
+-		error = xfs_btree_read_buf_block(cur, &rptr, 0, &right, &rbp);
++		error = xfs_btree_read_buf_block(cur, &rptr, level, 0, &right,
++						 &rbp);
+ 		if (error)
+ 			goto error0;
+ 
+@@ -4483,7 +4494,8 @@ xfs_btree_delrec(
+ 	/* If there is a right sibling, point it to the remaining block. */
+ 	xfs_btree_get_sibling(cur, left, &cptr, XFS_BB_RIGHTSIB);
+ 	if (!xfs_btree_ptr_is_null(cur, &cptr)) {
+-		error = xfs_btree_read_buf_block(cur, &cptr, 0, &rrblock, &rrbp);
++		error = xfs_btree_read_buf_block(cur, &cptr, level, 0,
++						 &rrblock, &rrbp);
+ 		if (error)
+ 			goto error0;
+ 		xfs_btree_set_sibling(cur, rrblock, &lptr, XFS_BB_LEFTSIB);
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index 60e78572e..2153ee08d 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -650,7 +650,7 @@ int xfs_btree_get_buf_block(struct xfs_btree_cur *cur,
+ 		const union xfs_btree_ptr *ptr, struct xfs_btree_block **block,
+ 		struct xfs_buf **bpp);
+ int xfs_btree_read_buf_block(struct xfs_btree_cur *cur,
+-		const union xfs_btree_ptr *ptr, int flags,
++		const union xfs_btree_ptr *ptr, int level, int flags,
+ 		struct xfs_btree_block **block, struct xfs_buf **bpp);
+ void xfs_btree_set_sibling(struct xfs_btree_cur *cur,
+ 		struct xfs_btree_block *block, const union xfs_btree_ptr *ptr,
+diff --git a/fs/xfs/libxfs/xfs_btree_staging.c b/fs/xfs/libxfs/xfs_btree_staging.c
+index c3c7ea548..a8af4f834 100644
+--- a/fs/xfs/libxfs/xfs_btree_staging.c
++++ b/fs/xfs/libxfs/xfs_btree_staging.c
+@@ -385,6 +385,7 @@ xfs_btree_bload_leaf(
+ STATIC int
+ xfs_btree_bload_node(
+ 	struct xfs_btree_cur	*cur,
++	unsigned int		level,
+ 	unsigned int		recs_this_block,
+ 	union xfs_btree_ptr	*child_ptr,
+ 	struct xfs_btree_block	*block)
+@@ -407,8 +408,8 @@ xfs_btree_bload_node(
+ 		 * been reclaimed.  LRU refs will be set on the block, which is
+ 		 * desirable if the new btree commits.
+ 		 */
+-		ret = xfs_btree_read_buf_block(cur, child_ptr, 0, &child_block,
+-				&child_bp);
++		ret = xfs_btree_read_buf_block(cur, child_ptr, level - 1, 0,
++					       &child_block, &child_bp);
+ 		if (ret)
+ 			return ret;
+ 
+@@ -767,8 +768,8 @@ xfs_btree_bload(
+ 			trace_xfs_btree_bload_block(cur, level, i, blocks,
+ 					&ptr, nr_this_block);
+ 
+-			ret = xfs_btree_bload_node(cur, nr_this_block,
+-					&child_ptr, block);
++			ret = xfs_btree_bload_node(cur, level, nr_this_block,
++						   &child_ptr, block);
+ 			if (ret)
+ 				goto out;
+ 
