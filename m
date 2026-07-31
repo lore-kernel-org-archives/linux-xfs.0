@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 035A82E974D;
-	Fri, 31 Jul 2026 23:13:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC36E45C71F;
+	Fri, 31 Jul 2026 23:28:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785539590; cv=none; b=H5KL9nxG5k+Ze8dyFuIx/9kLkMyZa5a+MXvTyPbXXSv8BitogVsGhbSUHcvWakfHQccBbbEnyspn7VIxCa3Z0QEPGEe77qKM5SkOVPqHs4+1qrSCOxg4V8UFpp6oSceVN77tlXkRKoZsxXc0dwW4ANDy2lP1rD0GNBLkvoy3J10=
+	t=1785540523; cv=none; b=eZ5YMkEcs16hHNl7p48266RaI2D4j0qcwDQD+IRosJ8r5BlxF+6nBwVdcI8IPabJr21sAnxiKOSuRJNLX7rXUKctwdh457rddMiQW1BoOgv8vIqKFm27cVpcBLvvz61+HEmpn7mIapqllcs5CSFY7nw+tIEde1fwEfIRZYXDny8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785539590; c=relaxed/simple;
-	bh=2h81XBfO2KAWvG9Nhdq6FXesJX0dlXewhtgyIwGrlYI=;
+	s=arc-20240116; t=1785540523; c=relaxed/simple;
+	bh=E3r8FCJuBiRU3Xv8wwDurllKV87o3W+8JalvHKOq8Fs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=o5SjwEOe5dOG3mI8ihmmrex11mdzS/H9pStfwYuaIpePI09C5B+gAB4eHPPb/sY9bQcpDzojdZUy1AjsWnom30SAXAKuIfvXV62LokhtsEVuUjobLAELXTt1zfod8y40GyHjUt9OQig+25Glg6hkoIINrIhfmwgVNZwZQthVG4A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cLLcbvba; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=U1xCrgAVWf+WUWpZ+TFU2pZa01g/kCih7714W48GQUQBEMP/ZxhlNDUO5sfydbiusX3kQFqNOnk2BXWgSVPW1iLfteV98SNmyY7ESDLoO0LQuEjcugKrMrRGrmSIxo8HBsd/OM3ew2COAOt0rButKz0PDohjsFJdqzhwY4sWcDo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=inW9ji0a; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cLLcbvba"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A9F01F00AC4;
-	Fri, 31 Jul 2026 23:13:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="inW9ji0a"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 49BE91F00ACA;
+	Fri, 31 Jul 2026 23:28:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785539588;
-	bh=0kKFIXjnpx1F/dXdLYQ4KLSqK04RWf3a/vAFLOyNisU=;
+	s=k20260515; t=1785540521;
+	bh=aH6ege4UbeplDIKeNnhoASGAJzO6VZ7IUm4ZGuf/NLk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=cLLcbvbalTogJhjySm3mg4JdjA2CCBwixPC9Lk5r4X41v72+6rUg2mO1N7/xEfRoQ
-	 ztPXIDpc9vYxIKgNKxmCLI72kZ/v4KR3F5/Z3GydcREVis+0rixYsvqtUJ+XOBqULB
-	 NPMcHW/acRqYwwhuvgo4QL6jEFWE/vF8oyJZExYDaKJvd6fIu7ygRRR4gE+p/MwOFY
-	 +f+JPgdMp4M28dopCVKWAaDoo2IhAgKlAZdnZF/pkcuRNk31GZuX4FYSA2DBd9ZMxw
-	 oTAApacQYi3xM4+1lXlKbHZWfmIHkFqmb+Mb75lDZ2W9OvVcN741yWSwkF8BHvAMs1
-	 pD0Zw/j9o9UTA==
-Date: Sat, 1 Aug 2026 09:13:00 +1000
+	b=inW9ji0acURGuuH9OC+GrGCN39bhLtqMkHVT38p+0XjwGQxRQKgXo9+1knJdKQWi+
+	 G0Rst4TgQYwhSM780PNReJeMMcrxFt5VDpQFgsR3VWsqq2cO48G5mcJvycQ2Z+iO76
+	 6pR+9K+Sj9Pc2Q/pyDNfR3YvrEjZoJSCqT31aLTJcgGZAhHiTfmu8+aK2gh5ord++a
+	 x6IPmlkTcW8DxlJ2XRpxdZQ10lQtgypvUWYGoclPx+/4VKOJ0nDowBRDZ1n+zrRzwC
+	 53qS8iw/nlZDx1FKqFxD9fTOzUPDLptJ5fp6dgsFwHssBUtQLNf7Tu7igeHzzYdiOC
+	 w2R9BRWNJMZfg==
+Date: Sat, 1 Aug 2026 09:28:32 +1000
 From: Dave Chinner <dgc@kernel.org>
-To: Marcelo Mendes Spessoto Junior <marcelomspessoto@gmail.com>
-Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	syzbot+4e6ee73c0ae4b6e8753f@syzkaller.appspotmail.com
-Subject: Re: [PATCH] xfs: add guard before freeing buffer log item
-Message-ID: <am0r_JImI8qE_TDZ@dread>
-References: <20260731061448.192010-1-marcelomspessoto@gmail.com>
+To: David Lee <david.lee@trailofbits.com>
+Cc: cem@kernel.org, Kyle Zeng <kylebot@openai.com>,
+	Dominik 'Disconnect3d' Czarnota <dominik.czarnota@trailofbits.com>,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] xfs: validate btree block level on read
+Message-ID: <am0voArOlA31WBC3@dread>
+References: <20260731120344.558808-1-david.lee@trailofbits.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,72 +43,43 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260731061448.192010-1-marcelomspessoto@gmail.com>
+In-Reply-To: <20260731120344.558808-1-david.lee@trailofbits.com>
 
-On Fri, Jul 31, 2026 at 03:14:48AM -0300, Marcelo Mendes Spessoto Junior wrote:
-> A buffer's write completion can race with the CIL walking the same
-> checkpoint's item list during a forced shutdown's simulated commit
-> callbacks. Whichever side reaches the item last should be the one to
-> free it; right now completion frees it unconditionally, so the CIL
-> walk can end up touching memory that's already gone.
+On Fri, Jul 31, 2026 at 12:03:42PM +0000, David Lee wrote:
+> Btree buffer verifiers validate record counts against the level stored in
+> the block itself.  Callers of xfs_btree_read_buf_block(), however, use
+> the returned block according to the level they are traversing.  A
+> corrupted sibling pointer can therefore return a verifier-valid block
+> from another level and cause out-of-bounds accesses when layout-specific
+> entries are moved.
 > 
-> Fixes: d2fe5c4c8d25 ("xfs: rearrange code in xfs_buf_item.c")
-> Reported-by: syzbot+4e6ee73c0ae4b6e8753f@syzkaller.appspotmail.com
-> Closes: https://syzkaller.appspot.com/bug?extid=4e6ee73c0ae4b6e8753f
-> Tested-by: syzbot+4e6ee73c0ae4b6e8753f@syzkaller.appspotmail.com
-> Signed-off-by: Marcelo Mendes Spessoto Junior <marcelomspessoto@gmail.com>
-> ---
->  fs/xfs/xfs_buf_item.c | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-> index f4c5be67826e..c86c4387f52b 100644
-> --- a/fs/xfs/xfs_buf_item.c
-> +++ b/fs/xfs/xfs_buf_item.c
-> @@ -1072,6 +1072,9 @@ void
->  xfs_buf_item_done(
->  	struct xfs_buf		*bp)
->  {
-> +	if (atomic_read(&bp->b_log_item->bli_refcount) != 0)
-> +		return;
+> Pass the expected level into xfs_btree_read_buf_block() and reject
+> blocks whose on-disk level differs before returning them.  This
+> centralizes the check for traversal and sibling reads.
 
-No.
+We already have a centralised function that does all this level
+check (and more): xfs_btree_lookup_get_block(). It is already passed
+the expected level, and it also checks various other per-usage
+header information like owner, level specific numrecs bounds, etc.
 
-My conclusion to the original syzbot report was:
+If we have to verify per-block context state, then nothing should be
+calling xfs_btree_read_buf_block() directly except
+xfs_btree_lookup_get_block(), and all the read context checks should
+be performed in xfs_btree_lookup_get_block() (as they already are).
 
-| As such, I think that the issue we need to understand here is why a
-| write IO completion is being run from read IO context. That's the
-| root cause of the UAF, not the commit the bisect landed on....
+> Fixes: 3d3e6f64e22c ("xfs: verify btree blocks as they are read from disk")
+> Bug found and triaged by OpenAI Security Research and 
+> validated by Trail of Bits.
 
-And if you look at what I posted yesterday about a different hack to
-this same code:
+Great. How did you reproduce the issue and test the fix is correct?
+Did you submit an fstests that reproduces the issue and verifies the
+fix works?
 
-https://lore.kernel.org/linux-xfs/amvI_rVUlifIXoZA@dread/
+> Assisted-by: Codex:gpt-5.6-sol gpt-5.5-cyber
+> Signed-off-by: Kyle Zeng <kylebot@openai.com>
 
-which "fixes" a UAF in the CIL code reported by KASAN under syzbot
-conditions. Whilst the syzbot report quoted was different:
-
-https://syzkaller.appspot.com/bug?extid=598a791b31c498b63c6b
-
-The syzbot report indicates exactly the same UAF situation - a write
-IO completion being run from a read IO context causing the BLI to be
-freed incorrectly and then the CIL access to the BLI triggering a
-UAF.  My conclusion to that one is:
-
-| Given that syzbot has only reported this 5 times in 12 hours only on
-| a 7.1-rc3 kernel, never before and never since, an external memory
-| corruption bug that has since been fixed seems like the most like
-| cause here.
-
-All the recent reports of this issue (the cluster in mid May) are
-also only from v7.1-rc3 kernels....
-
-So, yeah, people really need to stop trying to hack "fixes" into
-xfs_buf_item_done(). The UAF indicates that there has been an
--incorrect free of the item- during IO completion. That's the issue
-that needs to be understood and fixed. Fundamentally breaking the
-refcounting model of the BLI to silence the downstream UAF that
-results from the incorrect free is not an acceptible solution.
+Yeah, nah. Patches have to be submitted by a real person, not a bot
+account, and SOB should reflect that.
 
 -Dave.
 -- 
