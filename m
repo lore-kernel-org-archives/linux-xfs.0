@@ -1,175 +1,183 @@
-Received: from mx0a-00364e01.pphosted.com (mx0a-00364e01.pphosted.com [148.163.135.74])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 013AF3C1D56
-	for <linux-xfs@vger.kernel.org>; Fri, 31 Jul 2026 23:55:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.135.74
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 809BC286A7
+	for <linux-xfs@vger.kernel.org>; Sat,  1 Aug 2026 00:11:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785542144; cv=none; b=FUWS0wgYsnqfEhQwtrnPo5goNkLhvl+Pqw28aYaukn1Mu3g2oLt/kYmaA0lRR5neDfbL8QkcMEp1TuQCE8MXpISJOfLaDvZ8cos5mrZCDYAl9WOMsu/PmRu1XmlpGfFNsZveIryrS2z5Q9b0ZE3xc4vMrC15xPH3YvI3nJd4AtM=
+	t=1785543113; cv=none; b=WbfCUrBotEz8cmNZ/r1ZqQNYfzXuihKEaT96y7QCgYhaJcdNx07vdWEQ3yEIEkLlD1vQkYLd+rolyK+Lgc5PnPkUdUyzrHCS4TNzB/HXMC+PtRPyUyS3l0zud2T3bYy4q0jldZq6ZwsyX31WNf3zCu+EvN2karHiDwjog7VfHRc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785542144; c=relaxed/simple;
-	bh=wG5D40/Lu2nFYK2vM4/wbzyQ/E5JdLxxUYwVq3fVHcM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=dSs1nSMKm9rkkLM/GiEbCXU70t+MMOrl8f/sIye+GKjj6A+ruAIGNZDBaOXRaA4lRB8X6bwkq/iiiHohSqTo4xmLMqDJIBiTNguuZ0JH637Dzwvz260T/b3Q6qMgS+Mg2Z68vMmJgJqsvx90TI+KsSmGL5p9V3TuH+RPDTDRl3w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=columbia.edu; spf=pass smtp.mailfrom=columbia.edu; dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b=Uo15toe0; arc=none smtp.client-ip=148.163.135.74
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=columbia.edu
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=columbia.edu
+	s=arc-20240116; t=1785543113; c=relaxed/simple;
+	bh=bScoIUgtWg6PufG47wdSvgoXTyp6XK7e2C5jPey84bc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=IYQXzqHSdOl+EaVM8yLtGbxdaLaBvaa56ogNBWt7u2Kte9NjOTarnLQTg3C5Bk2Yt4S748YOsPvkZhryCZOHTDLKRK9qf4cw2LEyCZAiTvK01a6P+NmWJEWyqumArBw0knJ0LIbwdIm+VQs5hYBDOjiEOkNs7Hh534Vvch07OMg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PhuIPimQ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b="Uo15toe0"
-Received: from pps.filterd (m0499199.ppops.net [127.0.0.1])
-	by mx0a-00364e01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66VMb7lQ3083039
-	for <linux-xfs@vger.kernel.org>; Fri, 31 Jul 2026 19:55:41 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=columbia.edu; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pps01; bh=KPIA
-	GymP6/Pepnye/+rZrmO39/Nbpf2QPPAXtg/RPwQ=; b=Uo15toe0rPDAPWwZwVeJ
-	n4E2aKPhzCtlbJaIPoOEk9oRKi29yWUd6bKSiKw2/UEDTT8IEoVnM0DWGZyllyTD
-	40GpyfJ7ynehv56/EO+/jPUwA4CByxejxRy47r6xIde4zro2qbznQsk1f3dywHQu
-	wWe/OeeuDrb/CAZQvA482658TGeu20X/PI6Kw1A+xglVLpQoL80+fmUhRsCQSdex
-	hBfukncjUKNjTuWp4rZ1AdX9RDFeDZK1825QXT+td5WsnXaq10PJ+COGZwtnliH8
-	5iqQ8kshUmIgCn4Ssedi1QZ6CFkegXN0zS0YJNWRRYNyK7IbH/AyMNUtzTFSMG47
-	Gg==
-Received: from mail-qt1-f197.google.com (mail-qt1-f197.google.com [209.85.160.197])
-	by mx0a-00364e01.pphosted.com (PPS) with ESMTPS id 4fs3590syf-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-xfs@vger.kernel.org>; Fri, 31 Jul 2026 19:55:41 -0400 (EDT)
-Received: by mail-qt1-f197.google.com with SMTP id d75a77b69052e-5276aa86d00so15908111cf.2
-        for <linux-xfs@vger.kernel.org>; Fri, 31 Jul 2026 16:55:41 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785542140; x=1786146940;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=KPIAGymP6/Pepnye/+rZrmO39/Nbpf2QPPAXtg/RPwQ=;
-        b=jupJvkHpUAy1E9dAPlkVc5dRs7xOWvK6shg3hPap/ldkuWeQ9uQZeCc2ohkOzhayLu
-         M6KmsPp+TQFAPZGg8A/54uPUrWHOQmVX9JbtRnEHKY5dvBC2IcoCttBa5TJON4H1Hzhc
-         D5AWFuxBysG52eaQX9FiYyRhZ9ok0vWYhyC6cHNBeHQ6NhL3rwq66CGDLVrBiiv/dnpZ
-         WDOUDcdfaEO7IKc8YfAW2WqqtXkz6+B/34crVfjg9N4+OoGw7zQLEH6lyaC+nBSPao3R
-         RMiIggpFSK1XFaUltngpfVyqvt9DIG4uwoYwLdI3MFe71OG1QYB6wJiOK3hGaZz05oSm
-         cEFQ==
-X-Forwarded-Encrypted: i=1; AHgh+RruRdOsdp0qxRc7EREICvTopMX6F1FheRgcj1q/Bo641pXgDdpmiH7e2baibe4oyiLyMvfSKSmUpLo=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyELBbu1ZRIyzKH8XCuZvHE3LHJIDkf+FcDG0JCGbPX0JV4Pz9z
-	exCgLveE16uby7BSKe38gMwvYuQ6WAZ8wyBcqxBnqbsXjACYP9Z2bJXyOCXx2FxjoOmTIC8HxUt
-	96JVOexiQrp0lN80YGG3N9GxmvnPDUg/LyRzNN3I0NMtPES2A3D7rW5/rqQ==
-X-Gm-Gg: AR+sD10XstRMg1TiCHiOdsjXGwwc9GeMHE9VtxH7SRCrHLAa1CKcvdDD9g4urLcYfNn
-	kjH1Uxel4aWwRh8tG6PpMapTvdxrHFxatHQyMa7VecSl41FvVcRyUnKd5O37qdUnd4PaSP8HW5n
-	Je+bXMypqXcyghPxFra9r6ziUl837DWMtfeujh1Jrdrhgof8B37S7vLNwigowk5/gYm4itzckST
-	R7h7YFCTqdjDyULI6y38nsWUHKTj2RsO+Dxn1I0NGrwqC8v88j6YRAJylbKWblMciHDr/cyedY6
-	p6vN50lBNm5lxC8UwKgUCgQI4JiZm3bvmHSnc0YAo/PO2tTcuIHdM9U4i8fvixrAypdwgQ4Yk/p
-	H9ZhWQwzzQr1XZQ==
-X-Received: by 2002:a05:622a:2618:b0:51a:8f3a:13b9 with SMTP id d75a77b69052e-52b566b184dmr44464621cf.16.1785542140295;
-        Fri, 31 Jul 2026 16:55:40 -0700 (PDT)
-X-Received: by 2002:a05:622a:2618:b0:51a:8f3a:13b9 with SMTP id d75a77b69052e-52b566b184dmr44464271cf.16.1785542139795;
-        Fri, 31 Jul 2026 16:55:39 -0700 (PDT)
-Received: from [10.1.46.221] ([217.192.152.179])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49807b8d04fsm6127465e9.3.2026.07.31.16.55.37
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 31 Jul 2026 16:55:38 -0700 (PDT)
-Message-ID: <adf05cdf-0c73-4cf1-b1f7-9d063c891eaf@columbia.edu>
-Date: Sat, 1 Aug 2026 01:55:36 +0200
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PhuIPimQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4CCCB1F00AC4;
+	Sat,  1 Aug 2026 00:11:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785543112;
+	bh=tgUOxXrX8a7rgOw03cLio8WgBDADNPx876jHBwMAnuY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=PhuIPimQ215LwA1SsQ0ZSiVefgeazOULolLLKAVMH4HUyhKrkB1pUA2cwXhDQ8S39
+	 T0i9mj9dX2ETWqHLuYwSGBjvtwXg6LPFiCBfvqsOwOa8SSKS/Fse1N2TxiOspitXWw
+	 +HCVKzhGosdHEHzVZM/fia5lmkUZLPqtWMIDlSaRkWuki+lgBFukUY4h/IXwqVO1Ps
+	 fJHKIfkh2sUdhrucuPTF0laK0dOv3wpnjnH7VwNGOlYdziJiBDy4Ha+pKNOIPp4WSi
+	 EkL6UjuUWq6m3N7D2QNLnrmAxEhrdSHd5ulOx9o/Uqw59fnXyhc3t/gfQXNO03l2T+
+	 zFi1Fvfr7Sxdg==
+Date: Sat, 1 Aug 2026 10:11:43 +1000
+From: Dave Chinner <dgc@kernel.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org, Matt Fleming <matt@readmodwrite.com>
+Subject: Re: [PATCH 2/2] xfs: consistent low ag space behavior for sparse
+ inode chunk allocs
+Message-ID: <am05vzAntuhAKXgr@dread>
+References: <20260731163337.152522-1-bfoster@redhat.com>
+ <20260731163337.152522-3-bfoster@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v7 5/5] block: enable RWF_DONTCACHE for block devices
-To: Jens Axboe <axboe@kernel.dk>,
-        "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        Christian Brauner <brauner@kernel.org>,
-        "Darrick J. Wong"
- <djwong@kernel.org>,
-        Carlos Maiolino <cem@kernel.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
-        Christoph Hellwig <hch@infradead.org>, Gao Xiang <xiang@kernel.org>,
-        Chao Yu <chao@kernel.org>, Yue Hu <zbestahu@gmail.com>,
-        Jeffle Xu <jefflexu@linux.alibaba.com>,
-        Sandeep Dhavale
- <dhavale@google.com>,
-        Hongbo Li <lihongbo22@huawei.com>, Chunhai Guo <guochunhai@vivo.com>
-Cc: Dave Chinner <dgc@kernel.org>, Bart Van Assche <bvanassche@acm.org>,
-        Hillf Danton <hdanton@sina.com>,
-        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-mm@kvack.org, linux-erofs@lists.ozlabs.org,
-        Christoph Hellwig <hch@lst.de>
-References: <20260730-blk-dontcache-v7-0-3e8e6850068d@columbia.edu>
- <20260730-blk-dontcache-v7-5-3e8e6850068d@columbia.edu>
-Content-Language: en-US
-From: Tal Zussman <tz2294@columbia.edu>
-In-Reply-To: <20260730-blk-dontcache-v7-5-3e8e6850068d@columbia.edu>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-ORIG-GUID: Z3El0VkJ8zdfUi-O92bgAhjGemLoKxEW
-X-Authority-Analysis: v=2.4 cv=XMAAjwhE c=1 sm=1 tr=0 ts=6a6d35fd cx=c_pps
- a=EVbN6Ke/fEF3bsl7X48z0g==:117 a=NgQitlhRlW+MZLNskBD3Jw==:17
- a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10 a=x7bEGLp0ZPQA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=Da8U98TiO7q1upZEImrf:22 a=G--0XuH5328wxK7v7Suf:22
- a=c92rfblmAAAA:8 a=jDzJYAX_DjbP0Cb_QUIA:9 a=QEXdDO2ut3YA:10
- a=a_PwQJl-kcHnX1M80qC6:22 a=GvGzcOZaWPEFPQC_NcjD:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzMxMDE3NyBTYWx0ZWRfXwOP0ehI1MaWn
- 4BXkxCD6FmPFBRekeGbFcxyTCNGUAlZ4td5V41C4sl0nErsEs97GyM+URRMiYOmLvcoz1k1kcv/
- ad5rmMMlCueP3lfB6/5w6avF82Ht/PLtH1M6TA9ev3MRfcRKkaXN+G6ayEx4ejoF4LcIDePjj6+
- co9GVoxtkPWHqxhWJLWJEOZQxsFAoiomz3d9UiIxJX/AKks19wpu3hX9MHzteTcB4uaCnGPPJ/k
- tdFHWLhXRO5HpQ/UarByeKG/xgdiEFC2CiIIEpQvynss+K70oU9kM1L1NFVFQOWmnS/E2BYHGRu
- KxeT4kxbZPbkoA4qwOzuycWfiJT1kFSq8mIzMUIGL57ug9BQatyXXVciGWnMefyGIS2tSRjLpv8
- 74M1TJbFgT3bIqSZU5lfflk4roXFfPSM8vRLtr3j4d4338GnQf7scIJJNIEIUBVoPHMV8AvrodI
- 0u0QQbx4uvZpjdjLm1w==
-X-Proofpoint-GUID: Z3El0VkJ8zdfUi-O92bgAhjGemLoKxEW
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzMxMDE3NyBTYWx0ZWRfX970n1tGccfNX
- +sAsExLFvMVb6NlTTSvueP7j9qzAUZN2f+gvuPeLu97TNo5jHyaY87G7tTLoSpUqAJU2AFUrQUC
- mZXzIri+H9msEbxS9GW2dNahBwUbpMH10pcEGdpOLBcVIszmup7j
-X-Proofpoint-Virus-Version: vendor=nai engine=6900 definitions=11861
- signatures=596817
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 bulkscore=10 priorityscore=1501 impostorscore=10
- lowpriorityscore=10 spamscore=0 adultscore=0 suspectscore=0 malwarescore=0
- phishscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
- definitions=main-2607310177
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260731163337.152522-3-bfoster@redhat.com>
 
-On 7/30/26 2:57 AM, Tal Zussman wrote:
-> Block device buffered reads and writes already pass through
-> filemap_read() and iomap_file_buffered_write() respectively, both of
-> which handle IOCB_DONTCACHE. Enable RWF_DONTCACHE for block device files
-> by setting FOP_DONTCACHE in def_blk_fops.
-> 
-> For CONFIG_BUFFER_HEAD=y, writeback goes through buffer_head's
-> __bh_submit() which sets BIO_COMPLETE_IN_TASK on dropbehind folios. For
-> CONFIG_BUFFER_HEAD=n, writeback goes through iomap which handles it via
-> BIO_COMPLETE_IN_TASK on the ioend bio.
-> 
-> This support is useful for databases that operate on raw block devices,
-> among other userspace applications.
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Tal Zussman <tz2294@columbia.edu>
-> ---
->  block/fops.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/block/fops.c b/block/fops.c
-> index 15783a6180de..8b39c53b6393 100644
-> --- a/block/fops.c
-> +++ b/block/fops.c
-> @@ -941,7 +941,7 @@ const struct file_operations def_blk_fops = {
->  	.splice_write	= iter_file_splice_write,
->  	.fallocate	= blkdev_fallocate,
->  	.uring_cmd	= blkdev_uring_cmd,
-> -	.fop_flags	= FOP_BUFFER_RASYNC,
-> +	.fop_flags	= FOP_BUFFER_RASYNC | FOP_DONTCACHE,
->  };
->  
->  static __init int blkdev_init(void)
-> 
+Hi Brian,
 
-It looks like Sashiko found a couple pre-existing issues in this file [1].
-I've reproduced the first and looking into the second. Will send patches
-once confirmed.
+On Fri, Jul 31, 2026 at 12:33:37PM -0400, Brian Foster wrote:
+> Matt Fleming reports a filesystem shutdown due to inobt block
+> allocation failure during sparse chunk allocation. Inode creation
+> can involve multiple allocations in a transaction via the initial
+> chunk allocation and inode btree growth via the subsequent inobt
+> record insertion. Technically this should be safe as the chunk
+> allocation sets the allocation minleft parameter to the max depth of
+> the inode btree, which means the allocation selects an AG only if
+> there is enough free space for record insertion after the
+> allocation. The record insertion naturally occurs in the same AG as
+> the allocation and the associated AGF is locked and held by the
+> current transaction.
+> 
+> The situation that reproduces this failure is a bit of a corner
+> case. The allocation and inode btrees are all completely full and
+> require a split on the next insertion. The AG has just enough
+> available space to satisfy inode creation through sparse allocation
+> (i.e. 7 blocks in this example). The block allocation occurs within
+> an existing free space record, splitting the free space record into
+> two and triggering the aforementioned allocbt splits.
+> 
+> The sparse chunk allocation consumes 4 blocks for the chunk, and 4
+> blocks from the AGFL for the two allocbt splits. This leaves the
+> AGFL with 4 remaining blocks and 3 available blocks in the AG. The
+> record insertion attempts block allocation for the inobt split, but
+> even though space is available, the geometry change has changed the
+> minimum allocation requirements enforced by
+> xfs_alloc_fix_freelist(). The min freelist value jumps from 8 to 12
+> due to the alloc btree level increases, so the available space
+> calculation goes from something like this before the allocation:
 
-(FWIW the other issues Sashiko reported seem overblown.)
+Ok, in my own words, the problem is that the minleft takes into
+account the space needed by the inobt/finobt allocations, but the
+allocator doesn't take into account that the AGFL requirement may
+increase for the second allocation in the transaction because the
+first allocation split the free space trees?
 
-[1]: https://sashiko.dev/#/patchset/20260730-blk-dontcache-v7-0-3e8e6850068d%40columbia.edu?part=5
+Is that an accurate summary of the issue?
+
+If that is the case, then I think the root cause of the issue is
+that amount we are reserving for the AGFL on the first transaction
+is insufficient. ENOSPC needs to be detected before we modify
+anything, so it has to be done at the first allocation. However, it
+appears to be based on the current level of the bno/cnt btrees, not
+the potential for the level to increase and the AGFL require a
+larger block reservation than we've accounted for with minleft.
+
+Therefore, we need to account for the AGFL demand increase in the
+first reservation that might occur for the second (and subsequent
+allocations.
+
+i.e. if minleft != 0, then the agfl btree block reservations need to
+be done for (current level + 1) to take into account space for the
+trees to split during the dependent allocation chain that minleft !=
+0 implies is about to occur.
+
+This isn't an issue just for inobt/finobt blocks on inode chunk
+alloc, it's also an issue for anything that sets minleft for a
+dependent, multi-allocation operation (e.g. data extent allocation +
+BMBT block allocation). 
+
+So from this perspective, I think the fix needs to be made to the
+calculation in xfs_alloc_min_freelist() to take into account minleft
+needing a larger AGFL reservation if any of the allocations in the
+chain splits.
+
+Hmmmm. I'm not sure the calculation in xfs_alloc_min_freelist() is
+correct, either:
+
+        /*
+         * For a btree shorter than the maximum height, the worst case is that
+         * every level gets split and a new level is added, then while inserting
+         * another entry to refill the AGFL, every level under the old root gets
+         * split again. This is:
+         *
+         *   (full height split reservation) + (AGFL refill split height)
+         * = (current height + 1) + (current height - 1)
+         * = (new height) + (new height - 2)
+         * = 2 * new height - 2
+
+i.e. I think the AGFL refill split height is wrong.
+
+Look at it this way: we do the AGFL refill -first-, so if that
+splits, we consume (current height + 1) blocks, and then new_height
+= (current height + 1). Then if the actual data allocation does a
+full split again (i.e. all except for the root block), that needs
+(new_height -1) blocks. So that becomes:
+
+	new_height = current height + 1;
+	blocks = new_height + (new_height - 1)
+	       = 2 * new_height - 1.
+
+IOWs, I think there's an existing off-by one in the AGFL btree block
+reservation calculation that contributes to this problem as well.
+
+Put these two things together:
+
+	/*
+	 * if minleft is set, we are going to do multiple * allocations in this
+	 * transaction (e.g. inode chunk followed by inobt). Hence
+	 * we need to make sure we have enough space for fixing up
+	 * the freelists after the split as the btree level
+	 * increases the AGFL reservation size mid-transaction. If
+	 * we are close to ENOSPC, this AGFL reservation increase may
+	 * trigger ENOSPC from the subsequent allocation attempt,
+	 * and then we shutdown the filesystem. Hence if minleft is
+	 * set, reserve enough AGFL space for a potential split
+	 * during the allocation chain in this transaction up front.
+	 */
+	split_space = 1;
+	if (minleft)
+		split_space = 2;
+
+        /* space needed by-bno freespace btree */
+        min_free = min(bno_level + split_space, mp->m_alloc_maxlevels) * 2 - 1;
+        /* space needed by-size freespace btree */
+        min_free += min(cnt_level + split_space, mp->m_alloc_maxlevels) * 2 - 1;
+        /* space needed reverse mapping used space btree */
+        if (xfs_has_rmapbt(mp))
+                min_free += min(rmap_level + split_space, mp->m_rmap_maxlevels) * 2 - 1;
+        return min_free;
+
+This is all off the top of my head, I haven't verified it so it'll
+need checking. However, I think handling this situation generically
+in the allocator is a better solution than trying to work around it
+with caller-based minleft heuristics.
+
+Cheers,
+
+Dave.
+
+-- 
+Dave Chinner
+dgc@kernel.org
