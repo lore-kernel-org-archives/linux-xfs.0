@@ -1,176 +1,205 @@
-Received: from mail-oi1-f198.google.com (mail-oi1-f198.google.com [209.85.167.198])
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E57032571D
-	for <linux-xfs@vger.kernel.org>; Sun,  2 Aug 2026 19:14:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.198
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3FC646B5
+	for <linux-xfs@vger.kernel.org>; Mon,  3 Aug 2026 02:56:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785698051; cv=none; b=rvhbB8TYPoISmrkZLWDAhZJG4njiOjvzc41HUs97c2RikIW60z1VkEhuRoMbXcz3Gh9edCmy1+oUUMY22cwej3iLQghm0uuFtie18c4gBMxK1NqMM5UjaHcoIKIhAxQHOL72uvy++iF8OB9Y8UelePXNQ1+2M9sWuv2fOVp/uO8=
+	t=1785725790; cv=none; b=T0EmSaSZPc5zqqcXoSYl0otVlKFNU8C78bW2YvDPUw2E0HIs3MP92BzztM+3FUoAc8hSHN1mrWuYxxCa9WRCXQyaIuobLkcEtBoWt+7Y+TiEHOW19ajf4CTpf8Ib5SYkMdWIrj0d8k7E7+W1jfdml9NXQ/BUEKq+BVNjSgZiHNc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785698051; c=relaxed/simple;
-	bh=PNkPQ00M4cug6cnINhKqePsxzOVYzVtwcuGLIK2Vg14=;
-	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:Cc:
-	 Content-Type; b=l1uY7z6Ff3yfNAao9dqyvcH6sfsxgsd6ldnVnvTGswuSPJPylFSGZJpyGlAlmQfGPUGs7HZMyUzOitqTrQABzhn4JzZpWlyv96/1HInTaWwqQyjoAxMyA75Qcwd9wmUB0FjsknQBTIp2cHPF5/hgQ9vBYQul8+tgQ3yjBVwJpuY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.167.198
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-oi1-f198.google.com with SMTP id 5614622812f47-4ad778bacbeso3985217b6e.1
-        for <linux-xfs@vger.kernel.org>; Sun, 02 Aug 2026 12:14:09 -0700 (PDT)
+	s=arc-20240116; t=1785725790; c=relaxed/simple;
+	bh=9JksVlenLD/tn/RgNkrISaIa/9t4UiEjQRJ5MpQAwd0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=FJlkdzBINJXTqPXibniWtVQpdesOjm6S72bsQdjQDY9c/dDKfGbiIIEbAKOsrrL1Zo+93wEcn+43XuKPUTPOc1/+BltYDG5Z/5CXMkI0sFeJ09p0TeQoixW2uBD3umV+mMlq1fcOl6ZvNJasL0DZ9AFWWV//3l5H0r0AE3VEyak=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=YV57td0A; arc=none smtp.client-ip=209.85.214.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YV57td0A"
+Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-2cf452def93so26923725ad.1
+        for <linux-xfs@vger.kernel.org>; Sun, 02 Aug 2026 19:56:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1785725788; x=1786330588; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=5dShAQ1lYMtkqytfZFTDLWc+qcDcWtf1Ahs1bgrAph4=;
+        b=YV57td0AF2rD8UOMBcKQIdUlaFXckgLXA4DyTDxsehta5XsfeH8Pp3nCnM4/K3216V
+         J+zOFddtuBAiLfOuu+4TGHbZUr6C0DNQVrei8Ne5ZWfOPGkOB7yqvRHY0LjZiMyD0J6d
+         atELreA+yOzSMBL8Myc1ZhQ2F+fOqNmAeq4DkfsDGgiqmS7euSv8JmkbNP0NXPhhbfoO
+         EVDx1tvk/6UdnT8DbLXV5VHr+7c01rrv+lx6OCiRtAHaZRlUb2vmgnwuDDKfqF+2EowX
+         LALbCCaWC5ijs9QYD5BdqfYXxqMjCjA3qsmSX9Mf2ut+95IrlnEqaAYeLxIu7VMjdlHr
+         n9AQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785698049; x=1786302849;
-        h=content-type:cc:to:from:subject:message-id:in-reply-to:date
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=TeXFxPT1F5icdtJbwoponQFYgcfJt3/FmWXGCthR0WY=;
-        b=OHBt0iCdrHulo262yBRS2zIPvdxXJRsBQgSAvoMQWDcEr1zrv39y26Gyaor6RBxrjR
-         OZVYKJnMvsXBIpOBlmkSizv5BTHsL4QsWZegpF4MGfanJQL19PxhJ1XK5+kcj7FXdUWe
-         75Y8DN9RXUesrvSsC+IO217qtGu/uXsgMQve0VPIp8rIscndODzSsQFwPuc18hFhdxd6
-         otYWAUP0oQ7jNlx0PETGx5UF+3QuwM3En4KD7u6J4fv79JNovXEX2ir1a/xpn2qOcggs
-         TnS4dnn7/7I0yKzKxuMUOdJk9icUHRPyggD36SLmZoUKIc668ceDvR47x3J/ynI0U1Aw
-         SGZw==
-X-Forwarded-Encrypted: i=1; AHgh+Rqgt2kud9iFBTikzAUAWlHbJC6gtNf3Ljw31I6M4ylJQFYimAE3FBZFk+4d8qyxzk2EORZTLJa8IOE=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwwD2fzcRHapmj2+V9PP5JE82Vkm8UnSL/qTdIIFUGtgIH/LTlI
-	ds/SXbb/hm8oug1hAyUH88u9JUxwCjNaySmoUmYFYSN9rmFuWsHw0ZhSY3YLdjpwUYqfJdkt/d7
-	QHjl7EByYzKYqSlKSugP9dd6wZXIdlYrfNOky8GlCM9LPeo1MpDbMT9fjtOw=
+        d=1e100.net; s=20251104; t=1785725788; x=1786330588;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=5dShAQ1lYMtkqytfZFTDLWc+qcDcWtf1Ahs1bgrAph4=;
+        b=DsGlFT36XqjbgM/O55Nuv8xEnSwk+SZOcHDUMjXwtnHnY8BbccZrI0loQ4cEDXnQaJ
+         pDF+lSE2/bDvb/lzPh12WDRmWTzr1AM36N1MBwyiUvRxk5hEao94V2pRZ7M6MXh9e3ks
+         zRT4mQeiWfk0pMugnFHOdyxAV5dnAqZXcqd2L2z5Iv0QVk9vJkZ9PQzngQLaMEBePTsF
+         hrLvxa+6/MiIvp7B7HSSiCgcdrCbKaXCE8oYd+yJ8b9wzPuZXoTsXGSvnHA3Lo0KMpSI
+         pKy+gPw9UjteYhlZTcEPkvu4i3JpR6GORDFLDj5iqJpDsZHAdGDx0Ako4kp5fupszmNC
+         dgSw==
+X-Forwarded-Encrypted: i=1; AHgh+RrHGQEUv6TbaKOThyMeBy5kRLa9yytz972hbiZnyIFErYoDZ2h/YR8UznNPzW5vMtuBmDEl5HYMhqU=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzw0JDKFtqu/bRvihxkkXZXyLRIKQfzc/O8yu93VgOByZRBKFg/
+	4NqaqB3OXi4EbOC4pJYD3MEVDMY3OefCFPlKls+dosrAY9yq6TXDh00s
+X-Gm-Gg: AR+sD13h2FB/43H496zbUR0DqpRi6vDzU/n8gqQVy6mzX5vJVBml8zG6fjHU+j2Lu3g
+	UnsNl2zpeKX1p91VQWcY1PHUWSxDFzriI8TPYC+t1WfXRvmS81lHMn0pUOUPBaQkFuXne5MuyW8
+	TuCW/m6ocgM5PPTZNFu3opZBM1xlR6Oh1+h5TNawxj5GbLyuf69m89FBMTDeGsBdjCLcYnZs40f
+	8Ap0dY3Bev9xgQkNGHfK+Qp3uoX8/GG3A+CegEvrgjfcuLZo/CNFPgy8ZA6MUlVsP4i/xwkJcso
+	7uxqTIzsLwCgNRVGbyQnMlOFvv8X9dyTdfmgV7Grp081HBiAcSCOPBcuTh7otdbFQtxYDuLolUB
+	za9PWrCF+MB3jyU0lB/6myTL7Ccs+3x/3krHWvpssl4bS1t0jFKWmOjENiuuR/Kvc0WRAa/oNfN
+	qKOXG72bsf/W2BQkn9LefmxqoKukFqZoGGRdj/A11HM8ySfoWc8uLZnbEjWjhZRLhXSpyTWdwxt
+	+CD0fksT50ICRlKuQrmmpMy970TX/o=
+X-Received: by 2002:a17:902:e551:b0:2cc:92ae:b36 with SMTP id d9443c01a7336-2d047e88baemr102252165ad.24.1785725787782;
+        Sun, 02 Aug 2026 19:56:27 -0700 (PDT)
+Received: from JIAPENGLIN-MC0.tencent.com ([43.132.141.24])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2d04ae19ba5sm31369665ad.17.2026.08.02.19.56.25
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Sun, 02 Aug 2026 19:56:27 -0700 (PDT)
+From: Lin Jiapeng <ljp1205831794@gmail.com>
+X-Google-Original-From: Lin Jiapeng <jiapenglin@tencent.com>
+To: zlang@kernel.org
+Cc: hch@lst.de,
+	linux-xfs@vger.kernel.org,
+	fstests@vger.kernel.org,
+	djwong@kernel.org,
+	jiapenglin@tencent.com
+Subject: [PATCH v4] xfs/842: verify CoW after exchangerange with FILE1_WRITTEN on shared extents
+Date: Mon,  3 Aug 2026 10:56:13 +0800
+Message-ID: <20260803025621.52453-1-jiapenglin@tencent.com>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6808:1a1c:b0:4af:5d69:1cb4 with SMTP id
- 5614622812f47-4af5e25091dmr11802434b6e.15.1785698049130; Sun, 02 Aug 2026
- 12:14:09 -0700 (PDT)
-Date: Sun, 02 Aug 2026 12:14:09 -0700
-In-Reply-To: <9209e7204fc6b7b60c28f196750084be8a2faba8.1785489008.git.wqu@suse.com>
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <6a6f9701.1aa927e4.17d4bf.001c.GAE@google.com>
-Subject: [syzbot ci] Re: iomap: follow the alignment requirement for iomap_dio_hole_iter()
-From: syzbot ci <syzbot+cif06ef19c5d178998@syzkaller.appspotmail.com>
-To: linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, wqu@suse.com
-Cc: syzbot@lists.linux.dev, syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 
-syzbot ci has tested the following series
+When a full-file exchangerange is requested with FILE1_WRITTEN for a
+fully sparse donor file, every mapping pair is skipped, so no extents
+actually move.  However, the kernel decides to swap the reflink inode
+flag based on the request geometry alone, so the target file used to
+lose its reflink flag to the donor while still owning shared extents.
+A subsequent write then took the non-reflink write path and modified
+the shared physical blocks in place, silently corrupting the other
+file sharing them:
 
-[v2] iomap: follow the alignment requirement for iomap_dio_hole_iter()
-https://lore.kernel.org/all/9209e7204fc6b7b60c28f196750084be8a2faba8.1785489008.git.wqu@suse.com
-* [PATCH v2] iomap: follow the alignment requirement for iomap_dio_hole_iter()
+ --- tests/xfs/842.out
+ +++ results/xfs/842.out.bad
+ @@ -1,3 +1,4 @@
+  QA output created by 842
+ +vX.reflink = 0
+  vX.reflink = 1
+ -vX.reflink = 1
+ +orig changed: md5 e6065c4aa2ab1603008fc18410f579d4 -> 32c5189478e6bafa1cc76423f06c88f2 (write hit shared blocks in place)
 
-and found the following issue:
-general protection fault in iomap_dio_hole_iter
+This test clones a file so that both share extents, swaps the clone
+against a sparse donor with FILE1_WRITTEN, and then checks the defect
+twice.  First it inspects the inodes directly with xfs_db: the clone
+must still be flagged reflink after the exchange (the donor carrying
+the flag too is the conservative outcome of the fix and is harmless).
+Then it writes to the clone and verifies after a mount cycle that the
+original file's data is intact, i.e. the write was redirected through
+CoW.
 
-Full report is available here:
-https://ci.syzbot.org/series/9d98023b-4249-4697-ab21-ea7cf83805c8
+The kernel fix "xfs: fix exchange-range reflink flag clearing issue
+with INO1_WRITTEN" refuses the reflink flag exchange whenever
+FILE1_WRITTEN is requested, which makes this test pass.
 
-***
-
-general protection fault in iomap_dio_hole_iter
-
-tree:      vfs
-URL:       https://kernel.googlesource.com/pub/scm/linux/kernel/git/vfs/vfs.git
-base:      fa20f6cb6063f7f1a6a56693d4a8713f19058d23
-arch:      amd64
-compiler:  Debian clang version 22.1.8 (++20260613092233+e80beda6e255-1~exp1~20260613092250.77), Debian LLD 22.1.8
-config:    https://ci.syzbot.org/builds/a53b891c-9ac3-484a-a77e-61c04d35157f/config
-syz repro: https://ci.syzbot.org/findings/8ed3b1e3-7e4e-4c2c-b0f6-934cfea6e536/syz_repro
-
-syz.0.17: attempt to access beyond end of device
-loop0: rw=2049, sector=53248, nr_sectors = 976 limit=40427
-Oops: general protection fault, probably for non-canonical address 0xdffffc0000000003: 0000 [#1] SMP KASAN PTI
-KASAN: null-ptr-deref in range [0x0000000000000018-0x000000000000001f]
-CPU: 1 UID: 0 PID: 6257 Comm: syz.0.17 Not tainted syzkaller #0 PREEMPT(full) 
-Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.2-debian-1.16.2-1 04/01/2014
-RIP: 0010:bdev_get_queue include/linux/blkdev.h:1056 [inline]
-RIP: 0010:bdev_logical_block_size include/linux/blkdev.h:1401 [inline]
-RIP: 0010:iomap_dio_alignment fs/iomap/direct-io.c:412 [inline]
-RIP: 0010:iomap_dio_hole_iter+0x1bf/0x390 fs/iomap/direct-io.c:598
-Code: fc ff df 80 3c 08 00 74 08 4c 89 ef e8 aa d7 c7 ff 49 8b 6d 00 48 83 c5 18 48 89 e8 48 c1 e8 03 48 b9 00 00 00 00 00 fc ff df <80> 3c 08 00 74 08 48 89 ef e8 83 d7 c7 ff 41 bd 58 01 00 00 4c 03
-RSP: 0018:ffffc90003eff500 EFLAGS: 00010206
-RAX: 0000000000000003 RBX: ffffc90003eff680 RCX: dffffc0000000000
-RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000000
-RBP: 0000000000000018 R08: ffff88816dc38fff R09: 0000000000000000
-R10: ffff88816dc38000 R11: ffffed102db87200 R12: 0000000000001000
-R13: ffffc90003eff6c8 R14: ffff88816b839c00 R15: 1ffff1102d707388
-FS:  00007ffb1678d6c0(0000) GS:ffff8882a8f4b000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000563ae8dcd0a8 CR3: 0000000110cf4000 CR4: 00000000000006f0
-Call Trace:
- <TASK>
- iomap_dio_iter fs/iomap/direct-io.c:-1 [inline]
- __iomap_dio_rw+0xe56/0x1ac0 fs/iomap/direct-io.c:823
- f2fs_dio_read_iter fs/f2fs/file.c:4887 [inline]
- f2fs_file_read_iter+0x60b/0x940 fs/f2fs/file.c:4950
- copy_splice_read+0x5ff/0xaa0 fs/splice.c:362
- do_splice_read fs/splice.c:979 [inline]
- splice_direct_to_actor+0x4b6/0xcb0 fs/splice.c:1084
- do_splice_direct_actor fs/splice.c:1202 [inline]
- do_splice_direct+0x195/0x290 fs/splice.c:1228
- do_sendfile+0x52e/0x7c0 fs/read_write.c:1371
- __do_sys_sendfile64 fs/read_write.c:1432 [inline]
- __se_sys_sendfile64+0x144/0x1a0 fs/read_write.c:1418
- do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
- do_syscall_64+0x174/0x580 arch/x86/entry/syscall_64.c:94
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
-RIP: 0033:0x7ffb1599e019
-Code: ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 e8 ff ff ff f7 d8 64 89 01 48
-RSP: 002b:00007ffb1678d028 EFLAGS: 00000246 ORIG_RAX: 0000000000000028
-RAX: ffffffffffffffda RBX: 00007ffb15c25fa0 RCX: 00007ffb1599e019
-RDX: 0000000000000000 RSI: 0000000000000004 RDI: 0000000000000004
-RBP: 00007ffb15a3500c R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000800000009 R11: 0000000000000246 R12: 0000000000000000
-R13: 00007ffb15c26038 R14: 00007ffb15c25fa0 R15: 00007ffc15b4ab58
- </TASK>
-Modules linked in:
----[ end trace 0000000000000000 ]---
-RIP: 0010:bdev_get_queue include/linux/blkdev.h:1056 [inline]
-RIP: 0010:bdev_logical_block_size include/linux/blkdev.h:1401 [inline]
-RIP: 0010:iomap_dio_alignment fs/iomap/direct-io.c:412 [inline]
-RIP: 0010:iomap_dio_hole_iter+0x1bf/0x390 fs/iomap/direct-io.c:598
-Code: fc ff df 80 3c 08 00 74 08 4c 89 ef e8 aa d7 c7 ff 49 8b 6d 00 48 83 c5 18 48 89 e8 48 c1 e8 03 48 b9 00 00 00 00 00 fc ff df <80> 3c 08 00 74 08 48 89 ef e8 83 d7 c7 ff 41 bd 58 01 00 00 4c 03
-RSP: 0018:ffffc90003eff500 EFLAGS: 00010206
-RAX: 0000000000000003 RBX: ffffc90003eff680 RCX: dffffc0000000000
-RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000000
-RBP: 0000000000000018 R08: ffff88816dc38fff R09: 0000000000000000
-R10: ffff88816dc38000 R11: ffffed102db87200 R12: 0000000000001000
-R13: ffffc90003eff6c8 R14: ffff88816b839c00 R15: 1ffff1102d707388
-FS:  00007ffb1678d6c0(0000) GS:ffff8882a8f4b000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000558d8b221b40 CR3: 0000000110cf4000 CR4: 00000000000006f0
-----------------
-Code disassembly (best guess), 2 bytes skipped:
-   0:	df 80 3c 08 00 74    	filds  0x7400083c(%rax)
-   6:	08 4c 89 ef          	or     %cl,-0x11(%rcx,%rcx,4)
-   a:	e8 aa d7 c7 ff       	call   0xffc7d7b9
-   f:	49 8b 6d 00          	mov    0x0(%r13),%rbp
-  13:	48 83 c5 18          	add    $0x18,%rbp
-  17:	48 89 e8             	mov    %rbp,%rax
-  1a:	48 c1 e8 03          	shr    $0x3,%rax
-  1e:	48 b9 00 00 00 00 00 	movabs $0xdffffc0000000000,%rcx
-  25:	fc ff df
-* 28:	80 3c 08 00          	cmpb   $0x0,(%rax,%rcx,1) <-- trapping instruction
-  2c:	74 08                	je     0x36
-  2e:	48 89 ef             	mov    %rbp,%rdi
-  31:	e8 83 d7 c7 ff       	call   0xffc7d7b9
-  36:	41 bd 58 01 00 00    	mov    $0x158,%r13d
-  3c:	4c                   	rex.WR
-  3d:	03                   	.byte 0x3
-
-
-***
-
-If these findings have caused you to resend the series or submit a
-separate fix, please add the following tag to your commit message:
-  Tested-by: syzbot@syzkaller.appspotmail.com
-
+Reported-by: Lin Jiapeng(TencentOS Red Team) <jiapenglin@tencent.com>
+Link: https://lore.kernel.org/r/amgekiNKKoAdACnc@infradead.org
+Suggested-by: Zorro Lang <zlang@kernel.org>
+Suggested-by: Christoph Hellwig <hch@lst.de>
+Suggested-by: "Darrick J. Wong" <djwong@kernel.org>
+Signed-off-by: Lin Jiapeng <jiapenglin@tencent.com>
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
-This report is generated by a bot. It may contain errors.
-syzbot ci engineers can be reached at syzkaller@googlegroups.com.
+ tests/xfs/842     | 63 +++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/842.out |  3 +++
+ 2 files changed, 66 insertions(+)
+ create mode 100755 tests/xfs/842
+ create mode 100644 tests/xfs/842.out
 
-To test a patch for this bug, please reply with `#syz test`
-(should be on a separate line).
+diff --git a/tests/xfs/842 b/tests/xfs/842
+new file mode 100755
+index 0000000..e9d01f8
+--- /dev/null
++++ b/tests/xfs/842
+@@ -0,0 +1,63 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0-or-later
++# Copyright (c) 2026 Tencent.  All Rights Reserved.
++#
++# FS QA Test No. 842
++#
++# Make sure that a full-file exchangerange under FILE1_WRITTEN does not strip
++# the reflink flag from a file that still owns shared extents.  When the
++# donor file is fully sparse, every mapping pair is skipped, so no extents
++# actually move; the target file must keep its reflink flag, and a later
++# write must go through CoW instead of modifying the shared blocks in place.
++
++. ./common/preamble
++_begin_fstest auto quick fiexchange
++
++# Import common functions.
++. ./common/filter
++. ./common/reflink
++
++_require_xfs_io_command exchangerange
++_require_scratch_reflink
++
++_scratch_mkfs >> $seqres.full
++_scratch_mount
++
++# Create the original file with a known pattern and clone it, so that both
++# files share the same extents.
++_pwrite_byte 0x41 0 1m $SCRATCH_MNT/orig >> $seqres.full
++_reflink $SCRATCH_MNT/orig $SCRATCH_MNT/clone >> $seqres.full
++
++# Create a fully sparse donor file of the same size.
++$XFS_IO_PROG -f -c 'truncate 1m' $SCRATCH_MNT/donor
++
++md5_before=$(md5sum $SCRATCH_MNT/orig | awk '{print $1}')
++
++# Swap the clone against the sparse donor, claiming the donor is fully
++# written (-w).  Every donor mapping is a hole, so all pairs are skipped
++# and the clone keeps its shared extents in place.
++$XFS_IO_PROG -c "exchangerange -f -w $SCRATCH_MNT/donor" $SCRATCH_MNT/clone \
++	>> $seqres.full
++
++# Directly confirm the inode flag state after the exchange: the clone
++# must still be flagged reflink.  The donor may also carry the flag, which
++# is the conservative outcome of refusing the flag exchange under
++# FILE1_WRITTEN; the extra flag is harmless and can be dropped later by
++# the regular reflink flag cleanup path.
++_scratch_unmount
++_scratch_xfs_db -c "path /clone" -c print -c "path /donor" -c print | \
++	grep reflink | sed -e 's/^v[0-9]*/vX/g'
++_scratch_mount
++
++# Overwrite part of the clone.  With the reflink flag correctly retained,
++# this must go through CoW and leave the shared blocks of orig untouched.
++_pwrite_byte 0x42 0 64k $SCRATCH_MNT/clone >> $seqres.full
++_scratch_cycle_mount
++
++md5_after=$(md5sum $SCRATCH_MNT/orig | awk '{print $1}')
++
++test "$md5_before" != "$md5_after" && \
++	echo "orig changed: md5 $md5_before -> $md5_after (write hit shared blocks in place)"
++
++# success, all done
++_exit 0
+diff --git a/tests/xfs/842.out b/tests/xfs/842.out
+new file mode 100644
+index 0000000..69049d5
+--- /dev/null
++++ b/tests/xfs/842.out
+@@ -0,0 +1,3 @@
++QA output created by 842
++vX.reflink = 1
++vX.reflink = 1
+-- 
+2.50.1 (Apple Git-155)
 
-The patch should be attached to the email.
-Note: arguments like custom git repos and branches are not supported.
