@@ -1,45 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E17E53AB294;
-	Mon,  3 Aug 2026 20:10:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5BC43AD503;
+	Mon,  3 Aug 2026 20:10:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785787807; cv=none; b=ESaBHZdnZKfbOA27C4QeXjZbsKDXZKtdryMf+XfufZufgg8h8MuJ1doTdqQRD6IvpbAjpKrNmVGb7z2NSDGSSJitpY8M+Krd1yC4x2rjlQ0QS3heg2MvqToAnVwMW1Mmnqfiqdh7uYAUTs/0+oMc2fo5PZg2orDeJUJSyT9AAD0=
+	t=1785787809; cv=none; b=S6tRTeQvpjiJ4xF3yPLlzX5bTfXQX5fm5YEFyh9yO0Fn4Y4h2h80jXrxdGQsRiH3ivwVt456g8y9V4ijKcPxfYCNpkMOQ3EfDcJLsDov0xUGNo/niIpVJRXt1QWMv6BEXCb2IzVUHfaHV3zgRnJEpwwsCcGTfduerPYFytM8E00=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785787807; c=relaxed/simple;
-	bh=eMER1x8m4CZqlrFNFKfkI0qvBqNJYSn7TNFTh4M9iYY=;
+	s=arc-20240116; t=1785787809; c=relaxed/simple;
+	bh=6ebTBRAInphXLlenjDIfCvoCH+LLB5g72pSKXI80WtI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=u0iJMRCr+Y8YpE/f++P4kavz69WG+5U1z6ZNx9+/0pfXD3tA0ed2IWdj9/d+6MKCbBDXivWO7bahIVLwIIc9SlX1cQZUI+Y38kpzjovyfCUdSLTdwXxeG9yYSUk5+poIzDugLavxgK5fUoVmtPI35za1c32wzkbrNbU4dfhft9s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hx6e6NCy; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=bO7UH41Gb2xWiG+aYba3NhtlOJs1pWn19pp77Qk933E+oWOCYHMC053hgsEOkEHnxe5P2tPHoPVAHEYOTk5qXFWnR0AkhkRf+LCah/ICYuUmtTi5jgvpfC3mobnnbHWGCCG9O/6PA4yxT7Fx4mGRCBXem7vei20c7Gn5VkqXqDk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BKAvXZv6; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hx6e6NCy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 16EE31F00A3D;
-	Mon,  3 Aug 2026 20:10:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BKAvXZv6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0AE951F000E9;
+	Mon,  3 Aug 2026 20:10:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785787805;
-	bh=b60rlsl0feAlLmeQHo960Z9xGyUmodo6/Ab15kMsZEk=;
+	s=k20260515; t=1785787808;
+	bh=ofE5XEX4ZIl5axhr4Z3TAou5cQZ7F2Wr9izZtWvEIgQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=hx6e6NCyeJYwymIo6/gxa7wL/VQF1pI9yKzdc+KzU/S6U3tnOJ2htAXU+7YdWGlNz
-	 tib90tkJksBGiD6ioyxiXhwFYBTVkCocpI1f3e6LCQ6t8YaZRrW2mQn1cab1IPuL/W
-	 sPx5EnmiUwH2ONQEsKjZJmjRuV6tsCS5irDFo6stQ53pfW3Tl+Q6I8IYa+NnOiW1z7
-	 yEmLJ7xQ6efdnb5uNHoAKZwLozTttEFCbKPU9TMDX9Iq7tC9OMTPZsJE9cIiC6QNYL
-	 D6aGOP5Evuh8nW1Sw7mCMjuqcDgw0Xk9P5+hYd8y2+YSspksqTfUWVOiCFuZPl2v/B
-	 6ykKpgdLcYucA==
+	b=BKAvXZv6ZD97GAEMqUpupapXbsZ7CJlkpawIkfNaVQabWNr6wqJG7gr5wgIxsfb5r
+	 u/uF/alxu4h8cuDE1lt1KtQoFT/jpIp5JH40Angj2gITQD0TXNg4UM7zWvB1bUoHFO
+	 v4FUe+e/VTC/i/b4CqkbY9+NFM8HRByFBPc6VpWDV9lJuTRfxw4ozF903P/kwUGL8T
+	 fH7kj/g2B546bdkE1xIOF+H/WGdYgUS7K7ZLBjmhqLQTk59HrZI1Uw1JX3/gpG6L4W
+	 hNuqw+7RyrqRwNyxR9O7KUp5+Ohoi9ofuoRwB7+39w/ILYAfJQoX7n9fH4+9AkNWD1
+	 Annq/zB81kM1g==
 From: Andrey Albershteyn <aalbersh@kernel.org>
 To: linux-xfs@vger.kernel.org,
 	fsverity@lists.linux.dev,
 	linux-fsdevel@vger.kernel.org,
 	ebiggers@kernel.org
-Cc: "Darrick J. Wong" <djwong@kernel.org>,
+Cc: Andrey Albershteyn <aalbersh@kernel.org>,
 	hch@lst.de,
 	linux-ext4@vger.kernel.org,
 	linux-f2fs-devel@lists.sourceforge.net,
 	linux-btrfs@vger.kernel.org,
-	Andrey Albershteyn <aalbersh@kernel.org>
-Subject: [PATCH v14 19/21] xfs: check and repair the verity inode flag state
-Date: Mon,  3 Aug 2026 22:08:09 +0200
-Message-ID: <20260803200820.393203-20-aalbersh@kernel.org>
+	djwong@kernel.org
+Subject: [PATCH v14 20/21] xfs: introduce health state for corrupted fsverity metadata
+Date: Mon,  3 Aug 2026 22:08:10 +0200
+Message-ID: <20260803200820.393203-21-aalbersh@kernel.org>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20260803200820.393203-1-aalbersh@kernel.org>
 References: <20260803200820.393203-1-aalbersh@kernel.org>
@@ -51,201 +51,122 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: "Darrick J. Wong" <djwong@kernel.org>
+Report corrupted fsverity descriptor through health system.
 
-If an inode has the incore verity iflag set, make sure that we can
-actually activate fsverity on that inode.  If activation fails due to
-a fsverity metadata validation error, clear the flag.  The usage model
-for fsverity requires that any program that cares about verity state is
-required to call statx/getflags to check that the flag is set after
-opening the file, so clearing the flag will not compromise that model.
-
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
 ---
- fs/xfs/scrub/common.c       | 55 +++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/common.h       |  2 ++
- fs/xfs/scrub/inode.c        |  7 +++++
- fs/xfs/scrub/inode_repair.c | 36 ++++++++++++++++++++++++
- 4 files changed, 100 insertions(+)
+ fs/xfs/libxfs/xfs_fs.h     |  1 +
+ fs/xfs/libxfs/xfs_health.h |  4 +++-
+ fs/xfs/xfs_fsverity.c      | 25 +++++++++++++++++++------
+ fs/xfs/xfs_health.c        |  1 +
+ 4 files changed, 24 insertions(+), 7 deletions(-)
 
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index e5233e31abb7..02b68bf4c512 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -45,6 +45,8 @@
- #include "scrub/health.h"
- #include "scrub/tempfile.h"
- 
-+#include <linux/fsverity.h>
-+
- /* Common code for the metadata scrubbers. */
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index c80133784419..84d62b7506a9 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -422,6 +422,7 @@ struct xfs_bulkstat {
+ #define XFS_BS_SICK_SYMLINK	(1 << 6)  /* symbolic link remote target */
+ #define XFS_BS_SICK_PARENT	(1 << 7)  /* parent pointers */
+ #define XFS_BS_SICK_DIRTREE	(1 << 8)  /* directory tree structure */
++#define XFS_BS_SICK_FSVERITY	(1 << 9)  /* fsverity metadata */
  
  /*
-@@ -1754,3 +1756,56 @@ xchk_inode_count_blocks(
- 	return xfs_bmap_count_blocks(sc->tp, sc->ip, whichfork, nextents,
- 			count);
- }
-+
-+/*
-+ * If this inode has S_VERITY set on it, read the verity info. If the reading
-+ * fails with anything other than ENOMEM, the file is corrupt, which we can
-+ * detect later with fsverity_active.
-+ *
-+ * Callers must hold the IOLOCK and must not hold the ILOCK of sc->ip because
-+ * activation reads inode data.
-+ */
-+int
-+xchk_inode_setup_verity(
-+	struct xfs_scrub	*sc)
-+{
-+	int			error;
-+
-+	if (!fsverity_active(VFS_I(sc->ip)))
-+		return 0;
-+
-+	error = fsverity_ensure_verity_info(VFS_I(sc->ip));
-+	switch (error) {
-+	case 0:
-+		/* fsverity is active */
-+		break;
-+	case -ENODATA:
-+	case -EMSGSIZE:
-+	case -EINVAL:
-+	case -EFSCORRUPTED:
-+	case -EFBIG:
-+	case -ERANGE:
-+	case -EBADMSG:
-+		/*
-+		 * The nonzero errno codes above are the error codes that can
-+		 * be returned from fsverity on metadata validation errors.
-+		 */
-+		return 0;
-+	default:
-+		/* runtime errors */
-+		return error;
-+	}
-+
-+	return 0;
-+}
-+
-+/*
-+ * Is this a verity file that failed to activate?  Callers must have tried to
-+ * activate fsverity via xchk_inode_setup_verity.
-+ */
-+bool
-+xchk_inode_verity_broken(
-+	struct xfs_inode	*ip)
-+{
-+	return fsverity_active(VFS_I(ip)) && !fsverity_get_info(VFS_I(ip));
-+}
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index 9d627fd50687..3de2b6009a99 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -268,6 +268,8 @@ int xchk_inode_is_allocated(struct xfs_scrub *sc, xfs_agino_t agino,
- 		bool *inuse);
- int xchk_inode_count_blocks(struct xfs_scrub *sc, int whichfork,
- 		xfs_extnum_t *nextents, xfs_filblks_t *count);
-+int xchk_inode_setup_verity(struct xfs_scrub *sc);
-+bool xchk_inode_verity_broken(struct xfs_inode *ip);
+  * Project quota id helpers (previously projid was 16bit only
+diff --git a/fs/xfs/libxfs/xfs_health.h b/fs/xfs/libxfs/xfs_health.h
+index 1d45cf5789e8..932b447190da 100644
+--- a/fs/xfs/libxfs/xfs_health.h
++++ b/fs/xfs/libxfs/xfs_health.h
+@@ -104,6 +104,7 @@ struct xfs_rtgroup;
+ /* Don't propagate sick status to ag health summary during inactivation */
+ #define XFS_SICK_INO_FORGET	(1 << 12)
+ #define XFS_SICK_INO_DIRTREE	(1 << 13)  /* directory tree structure */
++#define XFS_SICK_INO_FSVERITY	(1 << 14)  /* fsverity metadata */
  
- bool xchk_inode_is_dirtree_root(const struct xfs_inode *ip);
- bool xchk_inode_is_sb_rooted(const struct xfs_inode *ip);
-diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
-index 65b13e311916..d1cdd6b445d0 100644
---- a/fs/xfs/scrub/inode.c
-+++ b/fs/xfs/scrub/inode.c
-@@ -36,6 +36,10 @@ xchk_prepare_iscrub(
+ /* Primary evidence of health problems in a given group. */
+ #define XFS_SICK_FS_PRIMARY	(XFS_SICK_FS_COUNTERS | \
+@@ -140,7 +141,8 @@ struct xfs_rtgroup;
+ 				 XFS_SICK_INO_XATTR | \
+ 				 XFS_SICK_INO_SYMLINK | \
+ 				 XFS_SICK_INO_PARENT | \
+-				 XFS_SICK_INO_DIRTREE)
++				 XFS_SICK_INO_DIRTREE | \
++				 XFS_SICK_INO_FSVERITY)
  
- 	xchk_ilock(sc, XFS_IOLOCK_EXCL);
- 
-+	error = xchk_inode_setup_verity(sc);
-+	if (error)
-+		return error;
-+
- 	error = xchk_trans_alloc(sc, 0);
+ #define XFS_SICK_INO_ZAPPED	(XFS_SICK_INO_BMBTD_ZAPPED | \
+ 				 XFS_SICK_INO_BMBTA_ZAPPED | \
+diff --git a/fs/xfs/xfs_fsverity.c b/fs/xfs/xfs_fsverity.c
+index 290669ad24e4..8e221cb639da 100644
+--- a/fs/xfs/xfs_fsverity.c
++++ b/fs/xfs/xfs_fsverity.c
+@@ -68,13 +68,17 @@ xfs_fsverity_get_descriptor(
  	if (error)
  		return error;
-@@ -833,6 +837,9 @@ xchk_inode(
- 	if (S_ISREG(VFS_I(sc->ip)->i_mode))
- 		xchk_inode_check_reflink_iflag(sc, I_INO(sc->ip));
  
-+	if (xchk_inode_verity_broken(sc->ip))
-+		xchk_ino_set_corrupt(sc, sc->sm->sm_ino);
-+
- 	xchk_inode_check_unlinked(sc);
+-	if (is_empty)
++	if (is_empty) {
++		xfs_inode_mark_sick(XFS_I(inode), XFS_SICK_INO_FSVERITY);
+ 		return -ENODATA;
++	}
  
- 	xchk_inode_xref(sc, I_INO(sc->ip), &di);
-diff --git a/fs/xfs/scrub/inode_repair.c b/fs/xfs/scrub/inode_repair.c
-index 3ec41c198351..35e93a4b50cd 100644
---- a/fs/xfs/scrub/inode_repair.c
-+++ b/fs/xfs/scrub/inode_repair.c
-@@ -573,6 +573,8 @@ xrep_dinode_flags(
- 		dip->di_nrext64_pad = 0;
- 	else if (dip->di_version >= 3)
- 		dip->di_v3_pad = 0;
-+	if (!xfs_has_verity(mp) || !S_ISREG(mode))
-+		flags2 &= ~XFS_DIFLAG2_VERITY;
+ 	last_block_offset =
+ 		XFS_FSB_TO_B(mp, rec.br_startoff + rec.br_blockcount);
+-	if (last_block_offset <= xfs_fsverity_metadata_offset(ip))
++	if (last_block_offset <= xfs_fsverity_metadata_offset(ip)) {
++		xfs_inode_mark_sick(XFS_I(inode), XFS_SICK_INO_FSVERITY);
+ 		return -ENODATA;
++	}
  
- 	if (flags2 & XFS_DIFLAG2_METADATA) {
- 		xfs_failaddr_t	fa;
-@@ -1617,6 +1619,10 @@ xrep_dinode_core(
- 	if (iget_error)
- 		return iget_error;
- 
-+	error = xchk_inode_setup_verity(sc);
-+	if (error)
-+		return error;
-+
- 	error = xchk_trans_alloc(sc, 0);
- 	if (error)
+ 	desc_size_pos = last_block_offset - sizeof(__be32);
+ 	error = fsverity_pagecache_read(inode, (char *)&d_desc_size,
+@@ -83,20 +87,29 @@ xfs_fsverity_get_descriptor(
  		return error;
-@@ -2035,6 +2041,27 @@ xrep_inode_unlinked(
- 	return 0;
- }
  
-+/*
-+ * If this file is a fsverity file, xchk_prepare_iscrub or xrep_dinode_core
-+ * should have activated it.  If it's still not active, then there's something
-+ * wrong with the verity descriptor and we should turn it off.
-+ */
-+STATIC int
-+xrep_inode_verity(
-+	struct xfs_scrub	*sc)
-+{
-+	struct inode		*inode = VFS_I(sc->ip);
-+
-+	if (xchk_inode_verity_broken(sc->ip)) {
-+		sc->ip->i_diflags2 &= ~XFS_DIFLAG2_VERITY;
-+		inode_set_flags(inode, 0, S_VERITY);
-+
-+		xfs_trans_log_inode(sc->tp, sc->ip, XFS_ILOG_CORE);
+ 	desc_size = be32_to_cpu(d_desc_size);
+-	if (XFS_IS_CORRUPT(mp, desc_size > FS_VERITY_MAX_DESCRIPTOR_SIZE))
++	if (XFS_IS_CORRUPT(mp, desc_size > FS_VERITY_MAX_DESCRIPTOR_SIZE)) {
++		xfs_inode_mark_sick(XFS_I(inode), XFS_SICK_INO_FSVERITY);
+ 		return -ERANGE;
+-	if (XFS_IS_CORRUPT(mp, desc_size > desc_size_pos))
 +	}
 +
-+	return 0;
-+}
-+
- /* Repair an inode's fields. */
- int
- xrep_inode(
-@@ -2084,6 +2111,15 @@ xrep_inode(
- 			return error;
- 	}
++	if (XFS_IS_CORRUPT(mp, desc_size > desc_size_pos)) {
++		xfs_inode_mark_sick(XFS_I(inode), XFS_SICK_INO_FSVERITY);
+ 		return -ERANGE;
++	}
  
-+	/*
-+	 * Disable fsverity if it cannot be activated.  Activation failure
-+	 * prohibits the file from being opened, so there cannot be another
-+	 * program with an open fd to what it thinks is a verity file.
-+	 */
-+	error = xrep_inode_verity(sc);
-+	if (error)
-+		return error;
-+
- 	/* Reconnect incore unlinked list */
- 	error = xrep_inode_unlinked(sc);
+ 	if (!buf_size)
+ 		return desc_size;
+ 
+-	if (XFS_IS_CORRUPT(mp, desc_size > buf_size))
++	if (XFS_IS_CORRUPT(mp, desc_size > buf_size)) {
++		xfs_inode_mark_sick(XFS_I(inode), XFS_SICK_INO_FSVERITY);
+ 		return -ERANGE;
++	}
+ 
+ 	desc_pos = round_down(desc_size_pos - desc_size, blocksize);
+-	if (desc_pos < xfs_fsverity_metadata_offset(ip))
++	if (desc_pos < xfs_fsverity_metadata_offset(ip)) {
++		xfs_inode_mark_sick(XFS_I(inode), XFS_SICK_INO_FSVERITY);
+ 		return -ERANGE;
++	}
+ 
+ 	error = fsverity_pagecache_read(inode, buf, desc_size, desc_pos);
  	if (error)
+diff --git a/fs/xfs/xfs_health.c b/fs/xfs/xfs_health.c
+index 239b843e83d4..be66760fb120 100644
+--- a/fs/xfs/xfs_health.c
++++ b/fs/xfs/xfs_health.c
+@@ -625,6 +625,7 @@ static const struct ioctl_sick_map ino_map[] = {
+ 	{ XFS_SICK_INO_DIR_ZAPPED,	XFS_BS_SICK_DIR },
+ 	{ XFS_SICK_INO_SYMLINK_ZAPPED,	XFS_BS_SICK_SYMLINK },
+ 	{ XFS_SICK_INO_DIRTREE,	XFS_BS_SICK_DIRTREE },
++	{ XFS_SICK_INO_FSVERITY,	XFS_BS_SICK_FSVERITY },
+ };
+ 
+ /* Fill out bulkstat health info. */
 -- 
 2.54.0
 
