@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE9A742049D;
-	Mon,  3 Aug 2026 20:09:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42FD843B6DE;
+	Mon,  3 Aug 2026 20:09:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785787762; cv=none; b=jHHHgIOaJ3qTE2oFOdNK35B7TQUmXzSBQP9txyVPFa8IQHfpIgQz7cOaYJ0Grl0/LF1aIz3xp1+BuXUE1vLeDsOQBLVrtIgYTBeB5GrfZQ/GTupJXDSfenGJafwgbc8vCJWnCGnMGb1SKpjjv1VYAFHEAcu0dOHbAAxLFoIX7Vc=
+	t=1785787765; cv=none; b=hs+z/pT8OvKLmfknduoh5TWuF0hijOWrKgWW7ys/Ck3RusMEN7zxSD7RZkQDOLAaFfaEO/350q0tP+tFgbDKqazcczmOAbVsKB+RN3RH8FKq3tNjcZEvpwVVPS1x6Q6JjaqHQThTWLIeX2myhnRZdDWCVHJzkF3QwXLQLJriwxo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785787762; c=relaxed/simple;
-	bh=vvBJkYxxOMUdxPQvRNWFjbdqDYu6ibnNDulSFIkVvYI=;
+	s=arc-20240116; t=1785787765; c=relaxed/simple;
+	bh=lGl7zZG/tCZ/d0EvjVC0HAenH6JBve47kUujeVEXcbk=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=UVKn2kZhP3w+W4SB9x5LGfxNDTGVNlbnGSe6klk3/pV3qCLaI3e6GQ6LZpbvW74+r/WEGACe7r/RWk4/5UbyW9NTTQzQXtjF1zwDhXY+3Ocz4NGaPj4EJhJzBoxBfS3yCmHkR+NMJudjyTnz/5CmUFMeUwrOMTq9NJKNXcJmn0M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X9Rcboru; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=uUVS9eZUaywakIg8MGp9WP7tjb8pUQUKhP3upzz0ol73UsgKktLwks9u44+f0O+NgRYSh9t1CZOpQWVIaUGD2GSBp5taSwi8ab2fdKmTx+IYXgGtA3mOfM7DzgC4J1523NiA/JbNFlAh3soOXvyVblu+ba26ccVGupfL0+/IOUU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Xv3GemY7; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X9Rcboru"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D857C1F00A3E;
-	Mon,  3 Aug 2026 20:09:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Xv3GemY7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E0E541F000E9;
+	Mon,  3 Aug 2026 20:09:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785787760;
-	bh=1i5PkmN5JfVODQHHHlqnvp3yzz22XTSFm/6ynxgAmcw=;
+	s=k20260515; t=1785787763;
+	bh=rZWX811rIfYR67QwB8vikVgdnuYWzMncjRnGbNdXxUY=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=X9RcboruTw2IJHtaxvhR10PRk1ivwDxJxgwv0N+FSASdMBEoiY9rL9eHwfZjRCyyv
-	 XCSWXvwIHQRPvTl9ChdpPWuxi3x2M4LdSXGowQrRtaCtam9GKVfeg6pJ5ReoMtB7w0
-	 H3I4zcCN2Z+yLIPv/9gncxf6GWL0cdTqL8bgJ0ZppzGa5MqIR9eco+VGdoz/ZeoYK6
-	 Qphx9pdWt2eHMwaWKK78ODOc5OQhG53xHHsPoYrnhen5JWgdbM8g6gbMADxeG8pKYy
-	 OtjgViViXYtZGEKEBOc1PzRQL3NiOBscsTcbZg6IzwsDAMZ2qpOpQ7Ahgp9MFzZMcf
-	 aK0G+P1zuu2Gw==
+	b=Xv3GemY77kDWAyLYxMaiSPV9m1hveehoyl3i3Pa1ocRZHXhZRJfMXy7EsEdEH0+mV
+	 IS4dl/QpROJ3JldTVRKPS0JS0ZIYeQ6K3ODY3IWn8R5wxt6v7M32BSYjQnNRfZz+1P
+	 ivkjvC3F8h+aljDnxDI8dSwFib21pWU/HZsXqHnLqird2by4+LbX0t3/8R1OjQBtsB
+	 t8xEDIT9k6idva/WTCbjmdFgKx0hpRrC65uYVS+wvUyDyzoZd1wYDYCl2DNSo30rGb
+	 TALha/hctIeA2B021v7HH5kbWjdfHoqBi3vkxZOBtAJuhkEx8/EZUqa8nBimuc3qcv
+	 J+1GfWBOY+TBg==
 From: Andrey Albershteyn <aalbersh@kernel.org>
 To: linux-xfs@vger.kernel.org,
 	fsverity@lists.linux.dev,
@@ -37,9 +37,9 @@ Cc: Andrey Albershteyn <aalbersh@kernel.org>,
 	linux-f2fs-devel@lists.sourceforge.net,
 	linux-btrfs@vger.kernel.org,
 	djwong@kernel.org
-Subject: [PATCH v14 05/21] fsverity: improve flushing performance of fsverity_fill_zerohash
-Date: Mon,  3 Aug 2026 22:07:55 +0200
-Message-ID: <20260803200820.393203-6-aalbersh@kernel.org>
+Subject: [PATCH v14 06/21] fsverity: don't allow setting DAX file attribute on fsverity files
+Date: Mon,  3 Aug 2026 22:07:56 +0200
+Message-ID: <20260803200820.393203-7-aalbersh@kernel.org>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20260803200820.393203-1-aalbersh@kernel.org>
 References: <20260803200820.393203-1-aalbersh@kernel.org>
@@ -51,62 +51,49 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The current version calls flush_dcache_folio(), in memcpy_to_folio(), to
-flush whole folio on every digest (which is 128 for 4k) on the HIGHMEM
-systems. Open code folio mapping and flushing to copy all digests at
-once.
+When fsverity is enabled on the file, with FS_IOC_ENABLE_VERITY ioctl(),
+it checks if file has DAX enabled and fails if that's true. However, the
+opposite case is not checked.
 
-Reported-by: Eric Biggers <ebiggers@kernel.org>
-Link: https://lore.kernel.org/linux-fsdevel/20260401222717.GH2466@quark/
+Note, that the only other filesystem supporting DAX and fsverity is
+ext4, and ext4 does check for this case.
+
 Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/verity/pagecache.c | 28 ++++++++++++++++++++++++++--
- 1 file changed, 26 insertions(+), 2 deletions(-)
+ fs/file_attr.c | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
 
-diff --git a/fs/verity/pagecache.c b/fs/verity/pagecache.c
-index 9d82e6b74ba1..911207dc0ef7 100644
---- a/fs/verity/pagecache.c
-+++ b/fs/verity/pagecache.c
-@@ -68,14 +68,38 @@ EXPORT_SYMBOL_GPL(generic_readahead_merkle_tree);
- void fsverity_fill_zerohash(struct folio *folio, size_t offset, size_t len,
- 			      struct fsverity_info *vi)
- {
--	size_t off = offset;
-+	size_t off;
+diff --git a/fs/file_attr.c b/fs/file_attr.c
+index bfb00d256dd5..473ebbe9af31 100644
+--- a/fs/file_attr.c
++++ b/fs/file_attr.c
+@@ -235,10 +235,15 @@ static int fileattr_set_prepare(struct inode *inode,
+ 	/*
+ 	 * It is only valid to set the DAX flag on regular files and
+ 	 * directories on filesystems.
++	 *
++	 * DAX and fsverity are incompatible.
+ 	 */
+-	if ((fa->fsx_xflags & FS_XFLAG_DAX) &&
+-	    !(S_ISREG(inode->i_mode) || S_ISDIR(inode->i_mode)))
+-		return -EINVAL;
++	if (fa->fsx_xflags & FS_XFLAG_DAX) {
++		if (!(S_ISREG(inode->i_mode) || S_ISDIR(inode->i_mode)))
++			return -EINVAL;
++		if (old_ma->fsx_xflags & FS_XFLAG_VERITY)
++			return -EINVAL;
++	}
  
- 	WARN_ON_ONCE(!IS_ALIGNED(offset, vi->tree_params.digest_size));
- 	WARN_ON_ONCE(!IS_ALIGNED(len, vi->tree_params.digest_size));
-+#ifdef CONFIG_HIGHMEM
-+	WARN_ON_ONCE(offset + len > folio_size(folio));
+ 	/* Extent size hints of zero turn off the flags. */
+ 	if (fa->fsx_extsize == 0)
+@@ -246,6 +251,7 @@ static int fileattr_set_prepare(struct inode *inode,
+ 	if (fa->fsx_cowextsize == 0)
+ 		fa->fsx_xflags &= ~FS_XFLAG_COWEXTSIZE;
  
--	for (; off < (offset + len); off += vi->tree_params.digest_size)
-+	do {
-+		void *vaddr = kmap_local_folio(folio, offset);
-+		void *to = vaddr;
 +
-+		off = len;
-+
-+		if (folio_test_partial_kmap(folio) &&
-+		    off > PAGE_SIZE - offset_in_page(offset))
-+			off = PAGE_SIZE - offset_in_page(offset);
-+		for (; to < (vaddr + off); to += vi->tree_params.digest_size)
-+			memcpy(to, vi->tree_params.zero_digest,
-+				vi->tree_params.digest_size);
-+		kunmap_local(vaddr);
-+
-+		offset += off;
-+		len -= off;
-+	} while (len > 0);
-+
-+	flush_dcache_folio(folio);
-+#else
-+	for (off = offset; off < (offset + len);
-+			off += vi->tree_params.digest_size)
- 		memcpy_to_folio(folio, off, vi->tree_params.zero_digest,
- 				vi->tree_params.digest_size);
-+#endif
+ 	return 0;
  }
- EXPORT_SYMBOL_GPL(fsverity_fill_zerohash);
  
 -- 
 2.54.0
