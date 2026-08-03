@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFCA63B0ADE;
-	Mon,  3 Aug 2026 20:09:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A51753AEF49;
+	Mon,  3 Aug 2026 20:09:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785787748; cv=none; b=mgBt/pkBxEBJuwMKgbL6SXqLMVCxmxoQ1Gi91aaHBKN94sc6ZNOopCnAzIlaFx5Gp2EcyWBnQqank5OwugQiTyG1LqHkk+/JWuQjdEtsQqndheFXy/e1WRLRWtxrwrrzZ5x0UsoikjjRs3Ayqb+uUm2nAxPXLaCsrfJAiqRUUGs=
+	t=1785787751; cv=none; b=kXsITWbgGT6exnRwqy09mO3Q8LOqhCStircqhhvbF5CMlJZ+AEUm8IWvbHKgOzOBoYePaIFKS8Nx2BQzyx8ULEpDDwqEjc/37LCipags5kcrZ6Sct4W4vl0uqxvypMy8PbS8FU9JWIpDDP0zqvsXJNA42lIIlI/+yb0N0kd+OHg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785787748; c=relaxed/simple;
-	bh=gNzjl4zWpkZJaicQjAemkaolWXKfIV765MdaOnGpKBs=;
+	s=arc-20240116; t=1785787751; c=relaxed/simple;
+	bh=t9D5Xw8hj+Uk1PVc2axoFXJ85aUK4MBkI/u0Mp4xXAk=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=PWAigPWp1/7IyNWJwTTrStj9OFGXGPCZkvvZyvBAHSda7O7IOtjFf6AhaHFvgMxou2EU+tOTNAqTocSv6p1C5cuEkt64+EeGyAbZoPA/PmPCwGam98t+q395qIFDsz9YHbbhkApo43fiSh4CVUqzRYVuBTU2DABo250IbDuTpos=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=odDhO5Dx; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=Zfwg9pfmE04hY7M2KsWsnpnotZOh7GoqauwtUJayKE/WKP2mPJ25az9GTL4HBDCH9n7UtxCi7MpZm88x8ph9MZ5HNX8hSyY+1Qw1txEp8yPZ723W6/5UuybLmB9l98QNTfvZcVZsC/Ix8w4EmS244zXLAT/+LSkFds2KHV3Pzoo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EV8LJBUD; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="odDhO5Dx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4E0D21F00A3A;
-	Mon,  3 Aug 2026 20:09:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EV8LJBUD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 79CAC1F000E9;
+	Mon,  3 Aug 2026 20:09:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785787746;
-	bh=DLKRiRyzKQ3SHGS6qPdEtB2Y8TKgDvD/nkziuhY4NXk=;
+	s=k20260515; t=1785787750;
+	bh=Go/Ag71QhxLYREjmSa7sE9PXLYovh2VY8xtfSqyB6bM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=odDhO5Dxiudn51zKWHPN/INZZQDESNEDpHvTK+XWTnDg8GjX692Gfhk6ZXm6bbe3s
-	 6S6bT9B6y3ld6gbQ5GK6VsOXvoghahU6IVnVonwCpxQo4H+qKTaOw+XuylnLbDLf2t
-	 dmWBCIKqc7CyZs0Clift7XzH0x4IBtqBzXJBSQqj6CeJvFoR2bkFIJbeK2asznHOe/
-	 rs8IM695ngostBnGMMhqQq6n+SCKS2vXY0+BRAIv0PYuP1dFYk4UWognvGkWuwgejE
-	 8iaHnbwv8zbWblIjpRo04dZcUd6/nted5IwJt5Z+316gbD/70cwgPEl2r7Qcr1MWFb
-	 i0+pKwOr9AFXg==
+	b=EV8LJBUDYpl6tlTimrwKFGS9aTCdNeA90WiRENe+sF6EWl78XLJtfYgQQF1P6WXSa
+	 YZSSK3DCOOXVTZtnzgbRCgGRr3UcRIJoByumAIUw8k/sMMuEuiggGGN2s6QcL5zeh5
+	 //Gb4Gk0uRVeqVVGi699wB3AVqUeRMMXpgc5gO0shYqOJWQtcP/kByWE0YKwBj1y8W
+	 GlnQyU2nrihvjSEBJzdjgVr4R+z8zuOE6ZmA95lX2ekAsjkGU/AnXoLvv1xK8eIYNq
+	 ZSHGfprx9PZBwqmYpfIUzNwrHoJI4b4EV9WYaaXnLUZrDXMDGq6DtNMZc0RuhtmKJq
+	 YtsRI8vUuSoig==
 From: Andrey Albershteyn <aalbersh@kernel.org>
 To: linux-xfs@vger.kernel.org,
 	fsverity@lists.linux.dev,
@@ -37,9 +37,9 @@ Cc: Andrey Albershteyn <aalbersh@kernel.org>,
 	linux-f2fs-devel@lists.sourceforge.net,
 	linux-btrfs@vger.kernel.org,
 	djwong@kernel.org
-Subject: [PATCH v14 01/21] fsverity: report validation errors through fserror to fsnotify
-Date: Mon,  3 Aug 2026 22:07:51 +0200
-Message-ID: <20260803200820.393203-2-aalbersh@kernel.org>
+Subject: [PATCH v14 02/21] fsverity: expose ensure_fsverity_info()
+Date: Mon,  3 Aug 2026 22:07:52 +0200
+Message-ID: <20260803200820.393203-3-aalbersh@kernel.org>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20260803200820.393203-1-aalbersh@kernel.org>
 References: <20260803200820.393203-1-aalbersh@kernel.org>
@@ -51,46 +51,80 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Reported verification errors to fsnotify through recently added fserror
-interface.
+This function will be used by XFS's scrub to force fsverity activation,
+therefore, to read fsverity context.
 
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Acked-by: Eric Biggers <ebiggers@kernel.org>
 Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/verity/verify.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ fs/verity/open.c         | 26 ++++++++++++++++++++++++--
+ include/linux/fsverity.h |  2 ++
+ 2 files changed, 26 insertions(+), 2 deletions(-)
 
-diff --git a/fs/verity/verify.c b/fs/verity/verify.c
-index 4004a1d42875..db8c350234bb 100644
---- a/fs/verity/verify.c
-+++ b/fs/verity/verify.c
-@@ -9,6 +9,7 @@
+diff --git a/fs/verity/open.c b/fs/verity/open.c
+index d0c56a7faa3b..4f06697f5bf4 100644
+--- a/fs/verity/open.c
++++ b/fs/verity/open.c
+@@ -347,7 +347,28 @@ int fsverity_get_descriptor(struct inode *inode,
+ 	return 0;
+ }
  
- #include <linux/bio.h>
- #include <linux/export.h>
-+#include <linux/fserror.h>
+-static int ensure_verity_info(struct inode *inode)
++/**
++ * fsverity_ensure_verity_info() - cache verity info if it's not already cached
++ * @inode: the inode for which verity info should be cached
++ *
++ * Ensure this inode has verity info attached to it, it's assumed the inode
++ * already has fsverity enabled. Read fsverity descriptor and creates verity
++ * based on that.
++ *
++ * This needs to be called at least once before any of the inode's data
++ * can be verified (and thus read at all) or the inode's fsverity digest
++ * retrieved.  fsverity_file_open() calls this already, which handles
++ * normal file accesses.  If a filesystem does any internal (i.e. not
++ * associated with a file descriptor) reads of the file's data or
++ * fsverity digest, it must call this explicitly before doing so.
++ *
++ * In case filesystem supports both fscrypt and fsverity, this should be called
++ * after fscrypt's encryption key is set up. Otherwise, the fsverity metadata is
++ * still encrypted. See fscrypt_file_open().
++ *
++ * Return: 0 on success, -errno on failure
++ */
++int fsverity_ensure_verity_info(struct inode *inode)
+ {
+ 	struct fsverity_info *vi = fsverity_get_info(inode), *found;
+ 	struct fsverity_descriptor *desc;
+@@ -383,12 +404,13 @@ static int ensure_verity_info(struct inode *inode)
+ 	kfree(desc);
+ 	return err;
+ }
++EXPORT_SYMBOL_GPL(fsverity_ensure_verity_info);
  
- #define FS_VERITY_MAX_PENDING_BLOCKS 2
+ int __fsverity_file_open(struct inode *inode, struct file *filp)
+ {
+ 	if (filp->f_mode & FMODE_WRITE)
+ 		return -EPERM;
+-	return ensure_verity_info(inode);
++	return fsverity_ensure_verity_info(inode);
+ }
+ EXPORT_SYMBOL_GPL(__fsverity_file_open);
  
-@@ -205,6 +206,8 @@ static bool verify_data_block(struct fsverity_info *vi,
- 		if (memchr_inv(dblock->data, 0, params->block_size)) {
- 			fsverity_err(inode,
- 				     "FILE CORRUPTED!  Data past EOF is not zeroed");
-+			fserror_report_data_lost(inode, data_pos,
-+						 params->block_size, GFP_NOFS);
- 			return false;
- 		}
- 		return true;
-@@ -312,6 +315,7 @@ static bool verify_data_block(struct fsverity_info *vi,
- 		data_pos, level - 1, params->hash_alg->name, hsize, want_hash,
- 		params->hash_alg->name, hsize,
- 		level == 0 ? dblock->real_hash : real_hash);
-+	fserror_report_data_lost(inode, data_pos, params->block_size, GFP_NOFS);
- error:
- 	for (; level > 0; level--) {
- 		kunmap_local(hblocks[level - 1].addr);
+diff --git a/include/linux/fsverity.h b/include/linux/fsverity.h
+index 6c467ded9751..3c3250f6f272 100644
+--- a/include/linux/fsverity.h
++++ b/include/linux/fsverity.h
+@@ -317,6 +317,8 @@ static inline int fsverity_file_open(struct inode *inode, struct file *filp)
+ 	return 0;
+ }
+ 
++int fsverity_ensure_verity_info(struct inode *inode);
++
+ void fsverity_cleanup_inode(struct inode *inode);
+ 
+ struct page *generic_read_merkle_tree_page(struct inode *inode, pgoff_t index);
 -- 
 2.54.0
 
