@@ -1,40 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C20C283FDC
-	for <linux-xfs@vger.kernel.org>; Mon,  3 Aug 2026 13:23:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F9503B4417
+	for <linux-xfs@vger.kernel.org>; Mon,  3 Aug 2026 13:23:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785763388; cv=none; b=qfbLxL1Pyjz/UeycpiK8+jlQa7HxtmATiwcFUHd7v+CBGjG99JZa8Ky6wnwC2axKp/rLxYQIj8d3v82j3vr4/BdLYIdw83GCNX2iJUqv4YxiU1muDS/OQdZkE2GtyaQEg5WDJAy9UiTjwgh8Drz4BSkC4tD4RhcIxdnnO8mKAnw=
+	t=1785763388; cv=none; b=U1l4O61IKOpCu3zNKDMDftAs4OZOIpfRPQJRuzLj/XI7aWIQjRrQ0FB666aNlhcHYQm1Y2DhdYSpaLWs5NIJU+VSDGllyDxbnawxmU/XttVst71kQoQg1WPeE0U9P6rPQfgBWE86R1QF/qpPKGsmMbKvIob2b0OLJ502cMSoY8k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1785763388; c=relaxed/simple;
-	bh=EqxLCgMUCmBcWqfbvQB2TjHt0YrR4HDcHD0DczHFOYk=;
+	bh=d3z2+P7tF2EyMv9FR7b6NmrPz88prkPo5ne/fhl6EN0=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=CwwMS+AyCtUDSq7qgf0TE+NXnrMRO6icPryo6H0JNRgcBLs8V72EY4V701VRq3tn16jQdFy8qdmQ1cmW8FwLbd2gEOLfAkojVF+m3/CtJqBBlhzIMFItuNTahpsHYHL3Ah9lZX7P3Dcx7yQ/OKuYvtgN+Sp6v89XyKm16+/bA9o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TNk2pPPL; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=hkokPOO2mcIxmFg1sXkLKdTWyomwl6yPkHgreZZe6C8nKAuQFrFg/GC3zmcT91noPG0EhUEqDs4yydvFnG+qoj0MHR8urrLVnxllC76D661hYbUpx/GgT9C9TjCvPR6V3HPghYDXoiCIQgwLQxbhCSgZbOGPZHATxylpKvRdnl0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VA8rD67K; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TNk2pPPL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C9CD91F00A3F;
-	Mon,  3 Aug 2026 13:22:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VA8rD67K"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E0CCD1F00A3A;
+	Mon,  3 Aug 2026 13:22:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785763377;
-	bh=QWd1wZ0a9FToRaToip0cbva8TRUCgfASSPf7kOVJF3o=;
+	s=k20260515; t=1785763380;
+	bh=gktkl34C2tydwsF/RcHMABcCH+dSNdCX7ivQbgvFBu4=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=TNk2pPPLBL+vRxFLbccm7ILUPc7hASwLw1fcTsVXaNJGAmunfS6LQjtU5EkbwHXw3
-	 ux4q2Oqh6UhK+A7aZsqrdIvHL5suJgkPGeJNs2KBb8XUuZHmKvXv18zN1hGGexMNrQ
-	 UCKTAfNVU3wgJgkwx6uDg8F/0GpM5CKKi0revs8FmW+qL/NWj4b+JTDvV82uk1yCgs
-	 /I/Y6NzMLe5Podrp4fk/sDPGBo9QGZB/F2IdgevwMULShkMsN4kY5+VOQUbqf6PI7C
-	 JS/z7EsIs/r8mMU6dmrZwZvtLaIWGKq+Kz8JGzkgN4U+X5m9P2QduBoMWboXyiXfiP
-	 XqFpuQrdxUHeQ==
+	b=VA8rD67Kcy9kShcS2AKnYGIBywXEiDvMK2stsWp8kZ2blDXhP9+9RtbQrJNlocGWX
+	 CsVNWC51Vu8Vllj88qFr9auaHbDugELR7mdU0G1g/Sf9Nqlw0e4Lm8HEZbNKNnugGk
+	 aapeOptNJ7vlUAmFzc1xxWTfGVmpxJUKfJN3JgnG2SPUfFrFYs2+QD0TWrqjJjM7+b
+	 IhJwjwFsWXM9VLVZus3XJiNirX3xf/D+7hxC6BJ38Onw6qcJPQCbpMcu0hZi/1Puop
+	 gflXdHa6Uh7LK2+YfpGlq2lBjBfot9uWFUNA2kvL7nBzVG1B4mXQQtjC23VcgQwGoU
+	 +OQOeHAwwAlbw==
 From: Carlos Maiolino <cem@kernel.org>
-To: djwong@kernel.org, Long Li <leo.lilong@huawei.com>
-Cc: linux-xfs@vger.kernel.org, david@fromorbit.com, yi.zhang@huawei.com, 
- houtao1@huawei.com, yangerkun@huawei.com, lonuxli.64@gmail.com
-In-Reply-To: <20260727023849.3247961-1-leo.lilong@huawei.com>
-References: <20260727023849.3247961-1-leo.lilong@huawei.com>
-Subject: Re: [PATCH 1/2] xfs: fix ilock leak on error in xfs_dq_get_next_id
-Message-Id: <178576337549.315832.9498033159549351533.b4-ty@kernel.org>
-Date: Mon, 03 Aug 2026 15:22:55 +0200
+To: Christoph Hellwig <hch@lst.de>
+Cc: darrick.wong@oracle.com, linux-xfs@vger.kernel.org
+In-Reply-To: <20260729130121.2281910-1-hch@lst.de>
+References: <20260729130121.2281910-1-hch@lst.de>
+Subject: Re: [PATCH v2] xfs: check v5 superblock features early
+Message-Id: <178576337952.315832.6286350785253803875.b4-ty@kernel.org>
+Date: Mon, 03 Aug 2026 15:22:59 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,24 +44,22 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.3
 
-On Mon, 27 Jul 2026 10:38:48 +0800, Long Li wrote:
-> xfs_dq_get_next_id() takes the quota inode ILOCK before calling
-> xfs_iread_extents().  If xfs_iread_extents() fails, the function returns
-> immediately without releasing the lock, leaking the quota inode ILOCK.
-> This can leave the quota inode locked and cause subsequent quota
-> operations to hang.
+On Wed, 29 Jul 2026 15:00:58 +0200, Christoph Hellwig wrote:
+> When working on a new features that reuses the existing pad in the
+> superblock, I noticed that mounting such a file system on an old kernel
+> logs a rather confusing warning:
 > 
-> Fix this by jumping to a common unlock path on error instead of returning
-> directly.
+>     XFS (vdc): Metadir superblock padding fields must be zero.
+> 
+> This is because we only validate the various feature fields in v5
+> superblocks after the common superblock validation helper is called.
 > 
 > [...]
 
 Applied to for-next, thanks!
 
-[1/2] xfs: fix ilock leak on error in xfs_dq_get_next_id
-      commit: 63320a0f70f66f311f4bccff3af0719c2119f46c
-[2/2] xfs: don't swallow dquot recovery verification errors
-      commit: e2b4a856085e9bd939bde2dee0d08b1d41babde9
+[1/1] xfs: check v5 superblock features early
+      commit: eb6b2cc1fc8ad566d746d128a559989ff0bba5cc
 
 Best regards,
 -- 
