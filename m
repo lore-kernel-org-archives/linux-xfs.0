@@ -1,206 +1,244 @@
-Received: from out-189.mta1.migadu.com (out-189.mta1.migadu.com [95.215.58.189])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E4113AC0CB
-	for <linux-xfs@vger.kernel.org>; Mon,  3 Aug 2026 08:57:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.189
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A13E63BCD29;
+	Mon,  3 Aug 2026 09:07:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785747446; cv=none; b=u+Fnko85SKJdvGzeruy2BHBnZ2FJYf1PMQOBWpBXdbByE6AvZwI2wULSFdLihiSD8fXBoDvcFeyibw/f3RBL2GgkK9+tpKzycobhqxVnGJjD1EZ262x9eyqNvI+f+Bj2G+dfV76ms0wRXrRe1svcnbXORvCVQDcBHnecmtLYMoM=
+	t=1785748073; cv=none; b=q7XR9XWhUt3bjzv2AYj2phbeTy4b0R3DHTQ62aR1sSFn9a+xW1Ag6TvSk6tCaRgyfTt2OjID9H9QI9o/lyeZRLIFQAMo5tKnaGFrZpEyhVCMRL4S2cLipotPEVmoMWosNfF3uPf6gl7dY2jTGMVQ2DQcrSmhGPDWlcZlNyal/TY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785747446; c=relaxed/simple;
-	bh=7AXBt9B8kAdo1+kd26DHihTXYQ7VbHWWFxwwXbSt9Ro=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=IYvn7Rf2INF6hMOD1mHmc5Yuq+/kDHaaYGPZWPciJi67d1jnciTp773E8sbgddH8oOeXEWRzrCO/DJXa6ccEQ68wa27kh0T2mfPjNe5dX5kzHTBLVCqEO4FkoieskRPQaZB1WC4C4qpbrMBmMnPjo4pqWsewsWctncKGmc0cZCA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=AV/JRNno; arc=none smtp.client-ip=95.215.58.189
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1785748073; c=relaxed/simple;
+	bh=yHdiUNVZEOVQCn6+EXnvwHZDpHYmhWv/bbDOhmDrF9I=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=W8jFPneppPvV0Q0G1BTCXoxLj8Ebp66MR0+XOplUT0O3b6CeuX5Q5Xp+x6kIFj6K5DLr/WBfo10sHbpQy8DiHcMRdbjnxSv8sELEVkSOL/tdZZOT5UiZz7zpox5UYT6TqibP7Ix9WH08Q8ZGlNhpmwaZSc4tlBeDub1aobYb40M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=M6l0X0al; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="AV/JRNno"
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1785747438;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=jfoRf/yZtNvRWTO2I9Hy3qCaNsn4a7/3+rg+nBCMYP4=;
-	b=AV/JRNno3P7W5Ux1AM+yKPwj5K05iTE7t7/WPhUc+tJ9MOJuTfd2oTk3KNrt25UOJ/9eKn
-	yn7q9g9dgq5vOAOOM3G/UZhlrsegbuo4xAn+fyqDSU5BL7F/cP3VYr5enrnOpaqIhj/BUL
-	j0Hdy5IZjkmA1r4AsJJXr4Cu4LJeYrg=
-From: Huiwen He <huiwen.he@linux.dev>
-To: cem@kernel.org
-Cc: linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	pc@manguebit.org,
-	stfrench@microsoft.com
-Subject: [PATCH v2] xfs: avoid false ENOSPC for fallocate ranges with real extents
-Date: Mon,  3 Aug 2026 16:56:15 +0800
-Message-ID: <20260803085615.134619-1-huiwen.he@linux.dev>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="M6l0X0al"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 036E61F000E9;
+	Mon,  3 Aug 2026 09:07:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785748071;
+	bh=j4pQ7WfgwBxkr+0q9PyvO7LJoAzPLvzOTJO0g969duU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=M6l0X0alffaGelN773VoYLH7RgRUwU6rGg8y+SKCOd7WZ9qpFi7VL0HH9p1hrz7lZ
+	 QEId8rgm39Khnv5cZx/1eR6IvePgI+cjGotYocNfUnAX985QQ7y/Qe8GJ9pspAW3+n
+	 iHEhFl3V9MLoCFGd9jzoZK09uhT5rqq1A3IPoOWPjgty8bD/NN75AjGKPq+tD4NCZU
+	 amBr8Uzm2OQsR4OccyKeFgPfZMvW6GimNsWlLe8uocz+CmmwtZoAiAtOCaeMSPH6JT
+	 POG2r3ym/20tiwMPZhUNj7yXrkAHRKSZWyeXrm7EQUb5+xKxD7MiEFqlMjWnRWn51V
+	 vdRvUmyL0USyw==
+Date: Mon, 3 Aug 2026 17:07:43 +0800
+From: Zorro Lang <zlang@kernel.org>
+To: Lin Jiapeng <ljp1205831794@gmail.com>
+Cc: hch@lst.de, linux-xfs@vger.kernel.org, fstests@vger.kernel.org, 
+	djwong@kernel.org, jiapenglin@tencent.com
+Subject: Re: [PATCH v2] xfs/842: verify CoW after exchangerange with
+ FILE1_WRITTEN on shared extents
+Message-ID: <anBTKpvN_N7rA6Vu@zlang-mailbox>
+Mail-Followup-To: Lin Jiapeng <ljp1205831794@gmail.com>, hch@lst.de, 
+	linux-xfs@vger.kernel.org, fstests@vger.kernel.org, djwong@kernel.org, 
+	jiapenglin@tencent.com
+References: <20260729025504.54586-1-jiapenglin@tencent.com>
+ <am8xmal5nCP4ZvlN@zlang-mailbox>
+ <ddc3741c-612a-4d0b-bc58-bc5f54a4080b@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+In-Reply-To: <ddc3741c-612a-4d0b-bc58-bc5f54a4080b@gmail.com>
 
-From: Huiwen He <hehuiwen@kylinos.cn>
+On Sun, Aug 02, 2026 at 09:59:16PM +0800, Lin Jiapeng wrote:
+> 
+>
+> 在 2026/8/2 20:12, Zorro Lang 写道:
+> > On Wed, Jul 29, 2026 at 10:54:54AM +0800, Lin Jiapeng wrote:
+> > > When a full-file exchangerange is requested with FILE1_WRITTEN for a
+> > > fully sparse donor file, every mapping pair is skipped, so no extents
+> > > actually move.  However, the kernel decides to swap the reflink inode
+> > > flag based on the request geometry alone, so the target file used to
+> > > lose its reflink flag to the donor while still owning shared extents.
+> > > A subsequent write then took the non-reflink write path and modified
+> > > the shared physical blocks in place, silently corrupting the other
+> > > file sharing them:
+> > > 
+> > >   --- tests/xfs/842.out
+> > >   +++ results/xfs/842.out.bad
+> > >   @@ -1,4 +1,5 @@
+> > >    QA output created by 842
+> > >   +vX.reflink = 0
+> > >    vX.reflink = 1
+> > >   -vX.reflink = 1
+> > >   +orig changed: md5 e6065c4aa2ab1603008fc18410f579d4 -> 32c5189478e6bafa1cc76423f06c88f2 (write hit shared blocks in place)
+> > >    Silence is golden
+> > > 
+> > > This test clones a file so that both share extents, swaps the clone
+> > > against a sparse donor with FILE1_WRITTEN, and then checks the defect
+> > > twice.  First it inspects the inodes directly with xfs_db: the clone
+> > > must still be flagged reflink after the exchange (the donor carrying
+> > > the flag too is the conservative outcome of the fix and is harmless).
+> > > Then it writes to the clone and verifies after a mount cycle that the
+> > > original file's data is intact, i.e. the write was redirected through
+> > > CoW.
+> > > 
+> > > The kernel fix "xfs: fix exchange-range reflink flag clearing issue
+> > > with INO1_WRITTEN" refuses the reflink flag exchange whenever
+> > 
+> > So this patch/case uncovers a known bug which is fixed by:
+> >    "xfs: fix exchange-range reflink flag clearing issue with INO1_WRITTEN" ?
+> > 
+> > If so please add:
+> >    _fixed_by_fs_commit xfs xxxxxxxxxxxx \
+> >          "xfs: fix exchange-range reflink flag clearing issue with INO1_WRITTEN"
+> > 
+> > > FILE1_WRITTEN is requested, which makes this test pass.
+> > > 
+> > > Reported-by: Lin Jiapeng(TencentOS Red Team) <jiapenglin@tencent.com>
+> > > Link: https://lore.kernel.org/r/amgekiNKKoAdACnc@infradead.org
+> > > Suggested-by: Christoph Hellwig <hch@lst.de>
+> > > Suggested-by: "Darrick J. Wong" <djwong@kernel.org>
+> > > Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+> > > Signed-off-by: Lin Jiapeng <jiapenglin@tencent.com>
+> > > ---
+> > >   tests/xfs/842     | 65 +++++++++++++++++++++++++++++++++++++++++++++++
+> > >   tests/xfs/842.out |  4 +++
+> > >   2 files changed, 69 insertions(+)
+> > >   create mode 100755 tests/xfs/842
+> > >   create mode 100644 tests/xfs/842.out
+> > > 
+> > > diff --git a/tests/xfs/842 b/tests/xfs/842
+> > > new file mode 100755
+> > > index 0000000..c4c2be9
+> > > --- /dev/null
+> > > +++ b/tests/xfs/842
+> > > @@ -0,0 +1,65 @@
+> > > +#! /bin/bash
+> > > +# SPDX-License-Identifier: GPL-2.0-or-later
+> > > +# Copyright (c) 2026 Tencent.  All Rights Reserved.
+> > > +#
+> > > +# FS QA Test No. 842
+> > > +#
+> > > +# Make sure that a full-file exchangerange under FILE1_WRITTEN does not strip
+> > > +# the reflink flag from a file that still owns shared extents.  When the
+> > > +# donor file is fully sparse, every mapping pair is skipped, so no extents
+> > > +# actually move; the target file must keep its reflink flag, and a later
+> > > +# write must go through CoW instead of modifying the shared blocks in place.
+> > > +
+> > > +. ./common/preamble
+> > > +_begin_fstest auto quick fiexchange
+> > > +
+> > > +# Import common functions.
+> > > +. ./common/filter
+> > > +. ./common/reflink
+> > > +
+> > > +_require_xfs_io_command exchangerange
+> > > +_require_scratch_reflink
+> > > +_require_scratch
+> > 
+> > _require_scratch_reflink contains _require_scratch, so you can save the
+> > _require_scratch.
+> > 
+> > > +
+> > > +_scratch_mkfs >> $seqres.full
+> > > +_scratch_mount
+> > > +
+> > > +# Create the original file with a known pattern and clone it, so that both
+> > > +# files share the same extents.
+> > > +_pwrite_byte 0x41 0 1m $SCRATCH_MNT/orig >> $seqres.full
+> > > +_reflink $SCRATCH_MNT/orig $SCRATCH_MNT/clone >> $seqres.full
+> > > +
+> > > +# Create a fully sparse donor file of the same size.
+> > > +$XFS_IO_PROG -f -c 'truncate 1m' $SCRATCH_MNT/donor
+> > > +
+> > > +md5_before=$(md5sum $SCRATCH_MNT/orig | awk '{print $1}')
+> > > +
+> > > +# Swap the clone against the sparse donor, claiming the donor is fully
+> > > +# written (-w).  Every donor mapping is a hole, so all pairs are skipped
+> > > +# and the clone keeps its shared extents in place.
+> > > +$XFS_IO_PROG -c "exchangerange -f -w $SCRATCH_MNT/donor" $SCRATCH_MNT/clone \
+> > > +	>> $seqres.full
+> > > +
+> > > +# Directly confirm the inode flag state after the exchange: the clone
+> > > +# must still be flagged reflink.  The donor may also carry the flag, which
+> > > +# is the conservative outcome of refusing the flag exchange under
+> > > +# FILE1_WRITTEN; the extra flag is harmless and can be dropped later by
+> > > +# the regular reflink flag cleanup path.
+> > > +_scratch_unmount
+> > > +_scratch_xfs_db -c "path /clone" -c print -c "path /donor" -c print | \
+> > > +	grep reflink | sed -e 's/^v[0-9]*/vX/g'
+> > > +_scratch_mount
+> > > +
+> > > +# Overwrite part of the clone.  With the reflink flag correctly retained,
+> > > +# this must go through CoW and leave the shared blocks of orig untouched.
+> > > +_pwrite_byte 0x42 0 64k $SCRATCH_MNT/clone >> $seqres.full
+> > > +_scratch_cycle_mount
+> > > +
+> > > +md5_after=$(md5sum $SCRATCH_MNT/orig | awk '{print $1}')
+> > > +
+> > > +test "$md5_before" != "$md5_after" && \
+> > > +	echo "orig changed: md5 $md5_before -> $md5_after (write hit shared blocks in place)"
+> > > +
+> > > +echo Silence is golden
+> > 
+> > This case has expected output, so it's not "Silence is golden",
+> > please remove this line.
+> > 
+> > > +status=0
+> > > +exit
+> > 
+> > I remember we've changed xfstests/new script, it should give "_exit 0" at here.
+> > 
+> > Thanks,
+> > Zorro
+> > 
+> > > diff --git a/tests/xfs/842.out b/tests/xfs/842.out
+> > > new file mode 100644
+> > > index 0000000..1e6345a
+> > > --- /dev/null
+> > > +++ b/tests/xfs/842.out
+> > > @@ -0,0 +1,4 @@
+> > > +QA output created by 842
+> > > +vX.reflink = 1
+> > > +vX.reflink = 1
+> > > +Silence is golden
+> > > -- 
+> > > 2.50.1 (Apple Git-155)
+> > > 
+> 
+> Thanks a lot for your review!
+> 
+> Yes, this test case uncovers the bug fixed by "xfs: fix exchange-range
+> reflink flag clearing issue with INO1_WRITTEN". However, that fix is still
+> under review on linux-xfs and has not landed in for-next / xfs-7.2-fixes
 
-Fallocate can incorrectly return ENOSPC when the requested range
-contains real extents. This was observed when extending EOF over a
-range previously allocated with KEEP_SIZE.
+Generally, we don't merge a test case before its corresponding kernel patch
+is guaranteed to be merged. However, given that Darrick has already acked
+this patch, I feel like that xfs fix has strong backing, so merging this
+test case now should be fine.
 
-For example, on an XFS filesystem with 7G total capacity:
+> yet, so there is no stable commit ID to reference. I will add the
+> _fixed_by_fs_commit annotation as soon as the fix is merged.
 
-  $ df -h .
-  Filesystem      Size  Used Avail Use% Mounted on
-  /dev/loop0      7.0G  169M  6.8G   3% /mnt/test
+Thanks, actually we can write:
 
-  $ xfs_io -f -c "falloc -k 0 4G" file
-  $ xfs_io -c "falloc 0 4G" file
-  fallocate: No space left on device
+_fixed_by_fs_commit xfs xxxxxxxxxxxx
+    "xfs: fix exchange-range reflink flag clearing issue with INO1_WRITTEN"
 
-The first fallocate has already allocated the whole 4G range and leaves
-about 2.8G free. The second fallocate should only extend EOF without
-allocating more data blocks.
+Before the fix is officially merged into mainline Linux, "xxxx..." can serve
+as a placeholder for the commit ID to remind us to update it later.
 
-However, xfs_alloc_file_space() reserves space before xfs_bmapi_write()
-checks the existing mappings. The second 4G reservation therefore
-fails with ENOSPC.
+Don't need one more patch, I'll help to add that it when I merge your v4,
+please feel free to update it after that fix is merged.
 
-The same problem can occur in the unshare path. Unaligned ZERO_RANGE
-can also include real extents because its rounded preallocation covers
-partial edge blocks left allocated after hole punching.
+Thanks,
+Zorro
 
-Fix this by walking the existing mappings first. Skip written and
-unwritten real extents, and call xfs_alloc_file_space() only for holes
-or delayed-allocation extents. Factor this into
-xfs_falloc_allocate_space(), shared by the zero-range, allocate-range,
-and unshare-range paths.
-
-After this change, the EOF extension, unshare, and ZERO_RANGE commands
-below succeed:
-
-  $ xfs_io -f -c "falloc -k 0 4G" file
-
-  # EOF extension succeeds.
-  $ xfs_io -c "falloc 0 4G" file
-
-  # Unshare succeeds.
-  $ xfs_io -c "falloc -u 0 4G" file
-
-  $ xfs_io -f -c "pwrite -S 0x5a 0 4K" allocated
-  $ dd if=/dev/zero of=filler bs=4K status=none
-  dd: error writing 'filler': No space left on device
-
-  # Unaligned ZERO_RANGE succeeds.
-  $ xfs_io -c "fzero 1 4094" allocated
-
-Reported-by: Paulo Alcantara <pc@manguebit.org>
-Link: https://lore.kernel.org/linux-cifs/97c0ca61c2bed2d2559b32b7ed967121@manguebit.org
-Signed-off-by: Huiwen He <hehuiwen@kylinos.cn>
----
-Changes since v1:
-- Use xfs_falloc_allocate_space() in xfs_falloc_zero_range() to avoid
-  false ENOSPC for real edge extents in unaligned ZERO_RANGE requests.
-- Add an unaligned ZERO_RANGE test to the commit message.
-
-Link to v1:
-https://lore.kernel.org/linux-xfs/20260802151754.50459-1-huiwen.he@linux.dev/
-
- fs/xfs/xfs_file.c | 59 ++++++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 56 insertions(+), 3 deletions(-)
-
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 845a97c9b063..17e6316c58db 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1368,6 +1368,59 @@ xfs_falloc_force_zero(
- 	return XFS_TEST_ERROR(ip->i_mount, XFS_ERRTAG_FORCE_ZERO_RANGE);
- }
- 
-+/*
-+ * Allocate only mappings that are not already backed by physical blocks.
-+ * This avoids reserving data space for real extents before
-+ * xfs_bmapi_write() discovers the existing mappings.
-+ */
-+static int
-+xfs_falloc_allocate_space(
-+	struct xfs_inode	*ip,
-+	loff_t			offset,
-+	loff_t			len)
-+{
-+	struct xfs_mount	*mp = ip->i_mount;
-+	struct xfs_bmbt_irec	imap;
-+	xfs_fileoff_t		start_fsb = XFS_B_TO_FSBT(mp, offset);
-+	xfs_fileoff_t		end_fsb = XFS_B_TO_FSB(mp, offset + len);
-+	unsigned int		lock_mode;
-+	int			error = 0;
-+
-+	xfs_assert_ilocked(ip, XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL);
-+
-+	lock_mode = xfs_ilock_data_map_shared(ip);
-+	while (start_fsb < end_fsb) {
-+		xfs_filblks_t		count_fsb = end_fsb - start_fsb;
-+		int			nimaps = 1;
-+
-+		error = xfs_bmapi_read(ip, start_fsb, count_fsb, &imap,
-+				       &nimaps, 0);
-+		if (error)
-+			break;
-+		if (XFS_IS_CORRUPT(mp, nimaps != 1 ||
-+				   imap.br_startoff != start_fsb ||
-+				   !imap.br_blockcount ||
-+				   imap.br_blockcount > count_fsb)) {
-+			error = -EFSCORRUPTED;
-+			break;
-+		}
-+
-+		start_fsb += imap.br_blockcount;
-+		if (xfs_bmap_is_real_extent(&imap))
-+			continue;
-+
-+		xfs_iunlock(ip, lock_mode);
-+		error = xfs_alloc_file_space(ip,
-+					     XFS_FSB_TO_B(mp, imap.br_startoff),
-+					     XFS_FSB_TO_B(mp, imap.br_blockcount));
-+		if (error)
-+			return error;
-+		lock_mode = xfs_ilock_data_map_shared(ip);
-+	}
-+	xfs_iunlock(ip, lock_mode);
-+	return error;
-+}
-+
- /*
-  * Punch a hole and prealloc the range.  We use a hole punch rather than
-  * unwritten extent conversion for two reasons:
-@@ -1406,7 +1459,7 @@ xfs_falloc_zero_range(
- 		len = round_up(offset + len, blksize) -
- 			round_down(offset, blksize);
- 		offset = round_down(offset, blksize);
--		error = xfs_alloc_file_space(ip, offset, len);
-+		error = xfs_falloc_allocate_space(ip, offset, len);
- 	}
- 	if (error)
- 		return error;
-@@ -1432,7 +1485,7 @@ xfs_falloc_unshare_range(
- 	if (error)
- 		return error;
- 
--	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
-+	error = xfs_falloc_allocate_space(XFS_I(inode), offset, len);
- 	if (error)
- 		return error;
- 	return xfs_falloc_setsize(file, new_size);
-@@ -1460,7 +1513,7 @@ xfs_falloc_allocate_range(
- 	if (error)
- 		return error;
- 
--	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
-+	error = xfs_falloc_allocate_space(XFS_I(inode), offset, len);
- 	if (error)
- 		return error;
- 	return xfs_falloc_setsize(file, new_size);
--- 
-2.43.0
-
+> 
+> The other comments will be addressed in v4.
+> 
+> Lin Jiapeng
+> 
+> 
