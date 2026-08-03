@@ -1,205 +1,176 @@
-Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3FC646B5
-	for <linux-xfs@vger.kernel.org>; Mon,  3 Aug 2026 02:56:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD0F539EF33;
+	Mon,  3 Aug 2026 07:13:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785725790; cv=none; b=T0EmSaSZPc5zqqcXoSYl0otVlKFNU8C78bW2YvDPUw2E0HIs3MP92BzztM+3FUoAc8hSHN1mrWuYxxCa9WRCXQyaIuobLkcEtBoWt+7Y+TiEHOW19ajf4CTpf8Ib5SYkMdWIrj0d8k7E7+W1jfdml9NXQ/BUEKq+BVNjSgZiHNc=
+	t=1785741219; cv=none; b=kc4KpSk7otldWXxfQoBjbPO+Re0K2nNGF9t48yMzB4vKpMxP65uptLqTItgVU4W8g4A0HTdQlFUD0AZBCkthZ6Ep28bLRRdIye8MTIsk0m6LOwfZmPo+ABbDmK4xxzDon8fHKme3z3VdNK0V9WU3o+lJ8PA2mitMQtN22qhWqPk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785725790; c=relaxed/simple;
-	bh=9JksVlenLD/tn/RgNkrISaIa/9t4UiEjQRJ5MpQAwd0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=FJlkdzBINJXTqPXibniWtVQpdesOjm6S72bsQdjQDY9c/dDKfGbiIIEbAKOsrrL1Zo+93wEcn+43XuKPUTPOc1/+BltYDG5Z/5CXMkI0sFeJ09p0TeQoixW2uBD3umV+mMlq1fcOl6ZvNJasL0DZ9AFWWV//3l5H0r0AE3VEyak=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=YV57td0A; arc=none smtp.client-ip=209.85.214.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YV57td0A"
-Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-2cf452def93so26923725ad.1
-        for <linux-xfs@vger.kernel.org>; Sun, 02 Aug 2026 19:56:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785725788; x=1786330588; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=5dShAQ1lYMtkqytfZFTDLWc+qcDcWtf1Ahs1bgrAph4=;
-        b=YV57td0AF2rD8UOMBcKQIdUlaFXckgLXA4DyTDxsehta5XsfeH8Pp3nCnM4/K3216V
-         J+zOFddtuBAiLfOuu+4TGHbZUr6C0DNQVrei8Ne5ZWfOPGkOB7yqvRHY0LjZiMyD0J6d
-         atELreA+yOzSMBL8Myc1ZhQ2F+fOqNmAeq4DkfsDGgiqmS7euSv8JmkbNP0NXPhhbfoO
-         EVDx1tvk/6UdnT8DbLXV5VHr+7c01rrv+lx6OCiRtAHaZRlUb2vmgnwuDDKfqF+2EowX
-         LALbCCaWC5ijs9QYD5BdqfYXxqMjCjA3qsmSX9Mf2ut+95IrlnEqaAYeLxIu7VMjdlHr
-         n9AQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785725788; x=1786330588;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=5dShAQ1lYMtkqytfZFTDLWc+qcDcWtf1Ahs1bgrAph4=;
-        b=DsGlFT36XqjbgM/O55Nuv8xEnSwk+SZOcHDUMjXwtnHnY8BbccZrI0loQ4cEDXnQaJ
-         pDF+lSE2/bDvb/lzPh12WDRmWTzr1AM36N1MBwyiUvRxk5hEao94V2pRZ7M6MXh9e3ks
-         zRT4mQeiWfk0pMugnFHOdyxAV5dnAqZXcqd2L2z5Iv0QVk9vJkZ9PQzngQLaMEBePTsF
-         hrLvxa+6/MiIvp7B7HSSiCgcdrCbKaXCE8oYd+yJ8b9wzPuZXoTsXGSvnHA3Lo0KMpSI
-         pKy+gPw9UjteYhlZTcEPkvu4i3JpR6GORDFLDj5iqJpDsZHAdGDx0Ako4kp5fupszmNC
-         dgSw==
-X-Forwarded-Encrypted: i=1; AHgh+RrHGQEUv6TbaKOThyMeBy5kRLa9yytz972hbiZnyIFErYoDZ2h/YR8UznNPzW5vMtuBmDEl5HYMhqU=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzw0JDKFtqu/bRvihxkkXZXyLRIKQfzc/O8yu93VgOByZRBKFg/
-	4NqaqB3OXi4EbOC4pJYD3MEVDMY3OefCFPlKls+dosrAY9yq6TXDh00s
-X-Gm-Gg: AR+sD13h2FB/43H496zbUR0DqpRi6vDzU/n8gqQVy6mzX5vJVBml8zG6fjHU+j2Lu3g
-	UnsNl2zpeKX1p91VQWcY1PHUWSxDFzriI8TPYC+t1WfXRvmS81lHMn0pUOUPBaQkFuXne5MuyW8
-	TuCW/m6ocgM5PPTZNFu3opZBM1xlR6Oh1+h5TNawxj5GbLyuf69m89FBMTDeGsBdjCLcYnZs40f
-	8Ap0dY3Bev9xgQkNGHfK+Qp3uoX8/GG3A+CegEvrgjfcuLZo/CNFPgy8ZA6MUlVsP4i/xwkJcso
-	7uxqTIzsLwCgNRVGbyQnMlOFvv8X9dyTdfmgV7Grp081HBiAcSCOPBcuTh7otdbFQtxYDuLolUB
-	za9PWrCF+MB3jyU0lB/6myTL7Ccs+3x/3krHWvpssl4bS1t0jFKWmOjENiuuR/Kvc0WRAa/oNfN
-	qKOXG72bsf/W2BQkn9LefmxqoKukFqZoGGRdj/A11HM8ySfoWc8uLZnbEjWjhZRLhXSpyTWdwxt
-	+CD0fksT50ICRlKuQrmmpMy970TX/o=
-X-Received: by 2002:a17:902:e551:b0:2cc:92ae:b36 with SMTP id d9443c01a7336-2d047e88baemr102252165ad.24.1785725787782;
-        Sun, 02 Aug 2026 19:56:27 -0700 (PDT)
-Received: from JIAPENGLIN-MC0.tencent.com ([43.132.141.24])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2d04ae19ba5sm31369665ad.17.2026.08.02.19.56.25
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Sun, 02 Aug 2026 19:56:27 -0700 (PDT)
-From: Lin Jiapeng <ljp1205831794@gmail.com>
-X-Google-Original-From: Lin Jiapeng <jiapenglin@tencent.com>
-To: zlang@kernel.org
-Cc: hch@lst.de,
-	linux-xfs@vger.kernel.org,
-	fstests@vger.kernel.org,
-	djwong@kernel.org,
-	jiapenglin@tencent.com
-Subject: [PATCH v4] xfs/842: verify CoW after exchangerange with FILE1_WRITTEN on shared extents
-Date: Mon,  3 Aug 2026 10:56:13 +0800
-Message-ID: <20260803025621.52453-1-jiapenglin@tencent.com>
-X-Mailer: git-send-email 2.50.1
+	s=arc-20240116; t=1785741219; c=relaxed/simple;
+	bh=+A6zm7zbh+f47FNuk+f/+aM0sf8xDBNFHvyAhI488lE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=otjpgSMXoDgFBCv4PyS3OJ/UTMGeTACU70JpV9gYpgZw4W/FbAXzYmTgptODDdKJQSen8PO6g322hDq0FfG+9eEsN3ahSVRrXfU2yjQpqeh0eSaK+OxtcSiDvDGPM73mzZkVYzNMOQneNo6QdLSoKI0qDqEuMhU7CfqhP1ZVE0E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=none smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.198])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4hD7F42WDgzKHMX1;
+	Mon,  3 Aug 2026 15:13:28 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.252])
+	by mail.maildlp.com (Postfix) with ESMTP id EE9C84077E;
+	Mon,  3 Aug 2026 15:13:30 +0800 (CST)
+Received: from [10.174.178.253] (unknown [10.174.178.253])
+	by APP3 (Coremail) with UTF8SMTPSA id _Ch0CgC3pkWYP3BqSMnFAw--.33588S3;
+	Mon, 03 Aug 2026 15:13:30 +0800 (CST)
+Message-ID: <a638a8fb-c184-4069-ae33-379ec12cd514@huaweicloud.com>
+Date: Mon, 3 Aug 2026 15:13:28 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 2/5] iomap: support invalidating partial folios
+To: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+ linux-ext4@vger.kernel.org
+Cc: brauner@kernel.org, djwong@kernel.org, hch@infradead.org,
+ joannelkoong@gmail.com, "Theodore Y. Ts'o" <tytso@mit.edu>,
+ Jan Kara <jack@suse.cz>, Ojaswin Mujoo <ojaswin@linux.ibm.com>,
+ yi.zhang@huawei.com, yizhang089@gmail.com, chengzhihao1@huawei.com,
+ yangerkun@huawei.com, yukuai@fnnas.com
+References: <20260714082325.325163-1-yi.zhang@huaweicloud.com>
+ <20260714082325.325163-3-yi.zhang@huaweicloud.com>
+Content-Language: en-US
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+In-Reply-To: <20260714082325.325163-3-yi.zhang@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:_Ch0CgC3pkWYP3BqSMnFAw--.33588S3
+X-Coremail-Antispam: 1UD129KBjvJXoW3Wr4DJr1rGFyrKrW3Cr4kZwb_yoW7ZryUpF
+	W7Krs8GrWDGa18Cwn7ua18Xr1Fya4fWFW5CFyfK343AFs8J3Z2kF17t3WY9ay7Jr18Gw40
+	qr42vrWkWF1DAaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvYb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Gr0_Xr1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Cr0_Gr1UM28EF7xvwVC2z280aVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIEc7
+	CjxVAFwI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8C
+	rVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4
+	IE7xkEbVWUJVW8JwACjcxG0xvEwIxGrwACI402YVCY1x02628vn2kIc2xKxwCY1x0262kK
+	e7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c
+	02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_
+	GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7
+	CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v2
+	6r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x07
+	UAwIDUUUUU=
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-When a full-file exchangerange is requested with FILE1_WRITTEN for a
-fully sparse donor file, every mapping pair is skipped, so no extents
-actually move.  However, the kernel decides to swap the reflink inode
-flag based on the request geometry alone, so the target file used to
-lose its reflink flag to the donor while still owning shared extents.
-A subsequent write then took the non-reflink write path and modified
-the shared physical blocks in place, silently corrupting the other
-file sharing them:
+On 7/14/2026 4:23 PM, Zhang Yi wrote:
+> From: Zhang Yi <yi.zhang@huawei.com>
+> 
+> Current iomap_invalidate_folio() can only invalidate an entire folio. If
+> we truncate a partial folio on a filesystem where the block size is
+> smaller than the folio size, it will leave behind dirty bits for the
+> truncated or punched blocks. During the write-back process, it will
+> attempt to map the invalid hole range. Fortunately, this has not caused
+> any real problems so far because the ->writeback_range() function
+> corrects the length.
+> 
+> However, the implementation of FALLOC_FL_ZERO_RANGE in ext4 depends on
+> the support for invalidating partial folios. When ext4 partially zeroes
+> out a dirty and unwritten folio, it does not perform a flush first like
+> XFS. Therefore, if the dirty bits of the corresponding area cannot be
+> cleared, the zeroed area after writeback remains in the written state
+> rather than reverting to the unwritten state. Fix this by supporting
+> invalidation of partial folios.
 
- --- tests/xfs/842.out
- +++ results/xfs/842.out.bad
- @@ -1,3 +1,4 @@
-  QA output created by 842
- +vX.reflink = 0
-  vX.reflink = 1
- -vX.reflink = 1
- +orig changed: md5 e6065c4aa2ab1603008fc18410f579d4 -> 32c5189478e6bafa1cc76423f06c88f2 (write hit shared blocks in place)
+Hi all,
 
-This test clones a file so that both share extents, swaps the clone
-against a sparse donor with FILE1_WRITTEN, and then checks the defect
-twice.  First it inspects the inodes directly with xfs_db: the clone
-must still be flagged reflink after the exchange (the donor carrying
-the flag too is the conservative outcome of the fix and is harmless).
-Then it writes to the clone and verifies after a mount cycle that the
-original file's data is intact, i.e. the write was redirected through
-CoW.
+While working on the v5 of the ext4 iomap conversion series[1], I've
+observed a rare data inconsistency issue in xfstests generic/127. After
+debugging, I found that the root cause lies in the fact that the current
+patch does not cover all scenarios when handling partial folio
+invalidation during punch hole operations in cases where
+block size < folio size. Specifically, the sub-folio dirty state is not
+properly cleaned up in all cases. I think we need to discuss the fix,
+and I'd like to hear your suggestions.
 
-The kernel fix "xfs: fix exchange-range reflink flag clearing issue
-with INO1_WRITTEN" refuses the reflink flag exchange whenever
-FILE1_WRITTEN is requested, which makes this test pass.
+Root cause:
 
-Reported-by: Lin Jiapeng(TencentOS Red Team) <jiapenglin@tencent.com>
-Link: https://lore.kernel.org/r/amgekiNKKoAdACnc@infradead.org
-Suggested-by: Zorro Lang <zlang@kernel.org>
-Suggested-by: Christoph Hellwig <hch@lst.de>
-Suggested-by: "Darrick J. Wong" <djwong@kernel.org>
-Signed-off-by: Lin Jiapeng <jiapenglin@tencent.com>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
----
- tests/xfs/842     | 63 +++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/842.out |  3 +++
- 2 files changed, 66 insertions(+)
- create mode 100755 tests/xfs/842
- create mode 100644 tests/xfs/842.out
+In both iomap buffered write and mmap write paths, if the write range
+covers an entire folio (regardless of whether the folio size is larger
+than block size), an ifs (iomap_folio_state) is not allocated
+immediately. Instead, it is deferred until writeback time, where it gets
+created in iomap_writeback_folio(). This creates a problem: when ext4
+performs a punch or zero_range operation on a partial range within such
+a dirty folio, there is no way to clear the dirty state for the
+corresponding blocks.
 
-diff --git a/tests/xfs/842 b/tests/xfs/842
-new file mode 100755
-index 0000000..e9d01f8
---- /dev/null
-+++ b/tests/xfs/842
-@@ -0,0 +1,63 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0-or-later
-+# Copyright (c) 2026 Tencent.  All Rights Reserved.
-+#
-+# FS QA Test No. 842
-+#
-+# Make sure that a full-file exchangerange under FILE1_WRITTEN does not strip
-+# the reflink flag from a file that still owns shared extents.  When the
-+# donor file is fully sparse, every mapping pair is skipped, so no extents
-+# actually move; the target file must keep its reflink flag, and a later
-+# write must go through CoW instead of modifying the shared blocks in place.
-+
-+. ./common/preamble
-+_begin_fstest auto quick fiexchange
-+
-+# Import common functions.
-+. ./common/filter
-+. ./common/reflink
-+
-+_require_xfs_io_command exchangerange
-+_require_scratch_reflink
-+
-+_scratch_mkfs >> $seqres.full
-+_scratch_mount
-+
-+# Create the original file with a known pattern and clone it, so that both
-+# files share the same extents.
-+_pwrite_byte 0x41 0 1m $SCRATCH_MNT/orig >> $seqres.full
-+_reflink $SCRATCH_MNT/orig $SCRATCH_MNT/clone >> $seqres.full
-+
-+# Create a fully sparse donor file of the same size.
-+$XFS_IO_PROG -f -c 'truncate 1m' $SCRATCH_MNT/donor
-+
-+md5_before=$(md5sum $SCRATCH_MNT/orig | awk '{print $1}')
-+
-+# Swap the clone against the sparse donor, claiming the donor is fully
-+# written (-w).  Every donor mapping is a hole, so all pairs are skipped
-+# and the clone keeps its shared extents in place.
-+$XFS_IO_PROG -c "exchangerange -f -w $SCRATCH_MNT/donor" $SCRATCH_MNT/clone \
-+	>> $seqres.full
-+
-+# Directly confirm the inode flag state after the exchange: the clone
-+# must still be flagged reflink.  The donor may also carry the flag, which
-+# is the conservative outcome of refusing the flag exchange under
-+# FILE1_WRITTEN; the extra flag is harmless and can be dropped later by
-+# the regular reflink flag cleanup path.
-+_scratch_unmount
-+_scratch_xfs_db -c "path /clone" -c print -c "path /donor" -c print | \
-+	grep reflink | sed -e 's/^v[0-9]*/vX/g'
-+_scratch_mount
-+
-+# Overwrite part of the clone.  With the reflink flag correctly retained,
-+# this must go through CoW and leave the shared blocks of orig untouched.
-+_pwrite_byte 0x42 0 64k $SCRATCH_MNT/clone >> $seqres.full
-+_scratch_cycle_mount
-+
-+md5_after=$(md5sum $SCRATCH_MNT/orig | awk '{print $1}')
-+
-+test "$md5_before" != "$md5_after" && \
-+	echo "orig changed: md5 $md5_before -> $md5_after (write hit shared blocks in place)"
-+
-+# success, all done
-+_exit 0
-diff --git a/tests/xfs/842.out b/tests/xfs/842.out
-new file mode 100644
-index 0000000..69049d5
---- /dev/null
-+++ b/tests/xfs/842.out
-@@ -0,0 +1,3 @@
-+QA output created by 842
-+vX.reflink = 1
-+vX.reflink = 1
--- 
-2.50.1 (Apple Git-155)
+This leads to two specific issues:
+
+1. After issuing FALLOC_FL_ZERO_RANGE on a range covering
+   dirty+unwritten blocks within a large folio, the dirty state cannot
+   be cleared. During subsequent writeback, zeroed data is still
+   written back, and the final extent state for those blocks becomes
+   written. As a result, the fix from this patch becomes ineffective in
+   this case.
+
+2. The aforementioned rare data inconsistency in xfstests generic/127.
+   When performing a partial folio punch hole on a dirty large folio,
+   truncate_inode_pages_range() zeros the partial folio and then splits
+   the folio. This causes an incorrect 'end' offset calculation in
+   truncate_inode_pages_range(), which then results in all split folios
+   being truncated via truncate_inode_folio(), turning partial valid
+   data into zeroes.  For example:
+
+   Suppose we have a large folio of 4 pages, and we punch a range
+   starting from the beginning to the middle of the last page.
+   truncate_inode_pages_range() will go through two rounds of splitting.
+   Normally, if an ifs is present, the split path would hit
+   folio_split() -> filemap_release_folio() -> iomap_release_folio(),
+   which would intercept the operation and refuse splitting because the
+   folio is dirty.
+
+   However, without an ifs, filemap_release_folio() returns early via
+   folio_needs_release(), causing the interception to fail. In the first
+   round, the folio is split into 3 folios (1, 1, 2). In the second
+   round, we expect to split into 4 folios (1, 1, 1, 1). If the second
+   split succeeds, everything is fine, because
+   truncate_inode_pages_range() calculates end = 3, and only the first 3
+   folios are truncated. However, the second split is allowed to fail.
+   If it does fail, truncate_inode_pages_range() still uses end = 3 and
+   ends up truncating all 3 folios, resulting in data loss.
+
+Now I remember I previously submitted two patches [2] that always
+allocated an ifs in the iomap buffered write path and the mmap fault
+path for the block size < folio size case. However, Christoph pointed
+out that the iomap design intentionally defers ifs allocation to avoid
+unnecessary overhead and improve performance, and suggested creating the
+ifs in iomap_invalidate_folio() instead [3]. There is a hurdle, though:
+iomap_invalidate_folio() is only called when the folio has private data
+(in truncate_inode_partial_folio(), folio_needs_release() is called
+first to check the private flag). So if we go with this approach, we
+need to ensure that folio_invalidate() can be called even when the folio
+does not have an ifs.
+
+One relatively simple approach is to always set the AS_RELEASE_ALWAYS
+flag on ext4 inodes that go through the iomap path. I don't think this
+would introduce significant overhead, but it doesn't feel very generic.
+
+Another approach is to modify truncate_inode_partial_folio(). Regarding
+this, I don't want to introduce other magics to achieve this, so perhaps
+modify truncate_inode_partial_folio() to check whether
+i_blocks_per_folio > 1 before calling folio_invalidate(), and call it if
+so.
+
+So, what do people think? Any better idea?
+
+Thanks,
+Yi.
+
+[1] https://github.com/zhangyi089/linux/commits/ext4_buffered_iomap_v5-devel13/
+[2] https://lore.kernel.org/linux-fsdevel/20240812121159.3775074-4-yi.zhang@huaweicloud.com/
+    https://lore.kernel.org/linux-fsdevel/20240812121159.3775074-5-yi.zhang@huaweicloud.com/
+[3] https://lore.kernel.org/linux-fsdevel/ZrxBfKi_DpThYo94@infradead.org/
 
