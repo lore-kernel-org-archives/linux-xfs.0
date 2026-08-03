@@ -1,189 +1,364 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03E011DFFB
-	for <linux-xfs@vger.kernel.org>; Mon,  3 Aug 2026 22:01:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 712EB3C73EA
+	for <linux-xfs@vger.kernel.org>; Mon,  3 Aug 2026 23:55:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785794500; cv=none; b=Tv+HrQelKhD8YR6xPsvnH+r2mKFJVpGfoHar+P3A1DzPfx1Sh51BLC8KrChgyzn5L2cMFBQVK59ZJEWdLgi63E0ucAZZEyrr71TavJ3Ms3XMg1Epx7UNVww9gKNKRbifx+BJxzpznHlrF+Ei5EqMLXSeha3DLtumAJsl55CGglA=
+	t=1785801314; cv=none; b=uNMmMrD75v/zSyBfdyuCMkFjNX8nlIcgy8WHz67JgYS1x9mZjMd/RUQr7a0S/trJ0GIred4FL872BpeI6VrYo1bFdHoA614FT/FCxh9V+I2yE8P6xq+1jmLDJ40RaChi+jATYZrfF4VLHPCvqAw2g4zlL0oirZUqfSyBOCNKhcg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785794500; c=relaxed/simple;
-	bh=wt7wdwpAXtygnHQgrtWx31t1Uxk0Gs/fMh8PKGN4aUQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NQq6m+IZ9RFuTDAskxjpjdLQOrjzIiTPMd/A7NYBGmW3M0S5zdf1ZT3tPAiIycH+Mzle2Lmp92bEpZjYQMUZhseqVf2bkyxrC4RClDcKKcxudv62z5e1jDN4tIUdQthNR920pQqKD7KqFMF0d2goXFA6iDw/7iXO3ZlfZT9t3N0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GBi4dkXM; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785801314; c=relaxed/simple;
+	bh=fGvviV+vYU7uX5NqfLxSXffOZxCnI+jmw4PzZSTFLaQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=JxH51R6W+HzYbPSt1fMZnX8iXh4CxZJsi8a40CVGa7+7Uaup9ZHiEb2qWSr+6SL4gONXir7kW6uFNafSyrDcZujtHEWIwuVfXCXmudT/OcUqWl/g2rCwYq8b6BqEWnPvPRY1p+P2fFcuceDzELebhPFEsPJLBTkGOL5arv/gRwA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=rlX27Gbl; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=tmv+KSXu; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GBi4dkXM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C76551F000E9;
-	Mon,  3 Aug 2026 22:01:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785794498;
-	bh=XUdcNrSa/DTKPEYouqnzV6n8Dlr8yNLN4Tcsbnz58G4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=GBi4dkXMYbOfkoMPZY3cf1nvi2qvpBmz6FDJfy2M9+Tk+Z4jbn56MJ5iY+yZcrKpd
-	 K7dARNgCIMHM2Y7EOCVX3f41OMY21s35fhIRXO277tBzf2YyV38MZwDVWaf1JHZ9NH
-	 bwBKvtSeZkUSnoU0zGOnh4Qi3inRw6SKXnM5Nz69wA1wmOT+vtVy/swIxfzwa2fmBt
-	 IRklzfXI6RfVJ3ZZ8iT+bGureNEGXvAuPkBUh6/0TXYdWf+FO5uk19v//W5kfGpxdh
-	 UcQb7kYk39aTsr5vEKL2qMtsYaKRRdRQ95b3oRrfddW+rj13IsUnBMdDBlVd29Ss9X
-	 O5Xx7qORy9IKw==
-Date: Tue, 4 Aug 2026 08:01:30 +1000
-From: Dave Chinner <dgc@kernel.org>
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org, Matt Fleming <matt@readmodwrite.com>
-Subject: Re: [PATCH 2/2] xfs: consistent low ag space behavior for sparse
- inode chunk allocs
-Message-ID: <anEPukpCKlxRxACR@dread>
-References: <20260731163337.152522-1-bfoster@redhat.com>
- <20260731163337.152522-3-bfoster@redhat.com>
- <am05vzAntuhAKXgr@dread>
- <anDYdgP6y2537cY_@bfoster>
+	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="rlX27Gbl";
+	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="tmv+KSXu"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 55A5E7F434;
+	Mon,  3 Aug 2026 23:55:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+	t=1785801306; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+	bh=y/wPOgGtSbruc5STgM5zCVYa97ouCUDc3Xi/bSAUNWg=;
+	b=rlX27Gbl3uohzIMdFJ11l9CvvfWjnPGA0BppEp+HZ7vyKIpHkFRPtTX7ZT5cZTs/XMTvdF
+	uK15Vipw0SQomlABL3mbGfQ40SeytCk3GnMbN+iiIMTZj/DzTmmRE+WyXAcTRed3n1Y/7t
+	5B7/NkatgXtO0Rdo37vCM1g9UDXOJh8=
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.com header.s=susede1 header.b=tmv+KSXu
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+	t=1785801302; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+	bh=y/wPOgGtSbruc5STgM5zCVYa97ouCUDc3Xi/bSAUNWg=;
+	b=tmv+KSXuyQ3j+8kp4xdozfQtEcTN57vL0U6u95tYd/HaEmUcglHq5EbtGjNz0nJ55W3u9F
+	4yHU5P+6rB2nbO7VIKGhxy+V2CbT1UlkxCUNIVSjx9jIzsfx8Bzm94ByWC+c04CZoSdonG
+	KaoHaDi76ARq/giS7359cnY0eHT1ye4=
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id CF471779A1;
+	Mon,  3 Aug 2026 23:55:00 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id XeSTI1QqcWrhZwAAD6G6ig
+	(envelope-from <wqu@suse.com>); Mon, 03 Aug 2026 23:55:00 +0000
+From: Qu Wenruo <wqu@suse.com>
+To: linux-btrfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Cc: Christian Borntraeger <borntraeger@linux.ibm.com>
+Subject: [PATCH v2] fstests: add a dio-read-into-mmap and sync race test case
+Date: Tue,  4 Aug 2026 09:24:39 +0930
+Message-ID: <20260803235439.25785-1-wqu@suse.com>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <anDYdgP6y2537cY_@bfoster>
+Content-Transfer-Encoding: 8bit
+X-Spam-Score: -3.01
+X-Spam-Level: 
+X-Rspamd-Action: no action
+X-Rspamd-Queue-Id: 55A5E7F434
+X-Spamd-Result: default: False [-3.01 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	MID_CONTAINS_FROM(1.00)[];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_MISSING_CHARSET(0.50)[];
+	R_DKIM_ALLOW(-0.20)[suse.com:s=susede1];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	ARC_NA(0.00)[];
+	TO_DN_SOME(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	DKIM_SIGNED(0.00)[suse.com:s=susede1];
+	URIBL_BLOCKED(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,suse.com:mid,suse.com:email,suse.com:dkim];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RCPT_COUNT_THREE(0.00)[4];
+	RCVD_TLS_ALL(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:mid,suse.com:email,suse.com:dkim];
+	RCVD_COUNT_TWO(0.00)[2];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DKIM_TRACE(0.00)[suse.com:+]
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Spam-Flag: NO
 
-On Mon, Aug 03, 2026 at 02:05:42PM -0400, Brian Foster wrote:
-> On Sat, Aug 01, 2026 at 10:11:43AM +1000, Dave Chinner wrote:
-> > On Fri, Jul 31, 2026 at 12:33:37PM -0400, Brian Foster wrote:
-> > > Matt Fleming reports a filesystem shutdown due to inobt block
-> > > allocation failure during sparse chunk allocation. Inode creation
-> > > can involve multiple allocations in a transaction via the initial
-> > > chunk allocation and inode btree growth via the subsequent inobt
-> > > record insertion. Technically this should be safe as the chunk
-> > > allocation sets the allocation minleft parameter to the max depth of
-> > > the inode btree, which means the allocation selects an AG only if
-> > > there is enough free space for record insertion after the
-> > > allocation. The record insertion naturally occurs in the same AG as
-> > > the allocation and the associated AGF is locked and held by the
-> > > current transaction.
+There is a report that on btrfs, if the following workload are running,
+btrfs can fail:
 
-[snip]
+- A dio read into a mmaped range
+  Only the mmap range needs to be on btrfs.
+  The dio read source makes no difference.
 
-> > i.e. if minleft != 0, then the agfl btree block reservations need to
-> > be done for (current level + 1) to take into account space for the
-> > trees to split during the dependent allocation chain that minleft !=
-> > 0 implies is about to occur.
-> > 
-> 
-> Ok, this more aligns with what the LLM had suggested, at least in terms
-> of fixing the problem at the first AGFL check via the minfree
-> calculation. IIRC it wanted to bump minleft internally and that came out
-> rather uglier than bumping min_free (as below).
+- Sync_range on the mapped range
 
-Yeah, sounds pretty normal LLM analysis -> fix progression to me.
+The btrfs errors include:
 
-IME, LLMs often get close to the right solution, but they lack the
-subject matter expertise and/or the deep abstract thinking needed to
-understand that the problem is in the underlying behavioural
-constraints rather than the context triggering the issue.
+- Hang during data writeback
+- Filesystem flips RO
 
-Hence they output hacks to address the symptom the problematic
-context displays rather than a proper fix for the underlying
-issue...
+The mmap range is dirtied but written back by the sync_range process,
+then dio read finished and found that the folios are no longer dirty,
+so dio endio will mark those folios dirty again so that the fs can write
+them back again.
 
-> > This isn't an issue just for inobt/finobt blocks on inode chunk
-> > alloc, it's also an issue for anything that sets minleft for a
-> > dependent, multi-allocation operation (e.g. data extent allocation +
-> > BMBT block allocation). 
-> > 
-> 
-> Yeah, I noticed we had a handful of other cases that use minleft like
-> this. I wonder if the main reason we don't hit this from the bmapi path
-> is that it's usually open to multiple AGs for bmbt allocs and not fixed
-> to a single AG like inode chunk and corresponding inobt block allocs
-> obviously are.
+However for non-experimental btrfs with 4K block size and 4K page size,
+there is a regression in v7.2 that such case is no longer handled
+properly, due to the enablement of large folios and removal of cow
+fixup.
+And btrfs can never handle it for bs < ps from day 1.
 
-*nod* Seems likely to me.
+Add a regression test for it.
 
-Also, data extent allocations often have slop in them for alignment
-on top of the minleft value, so I suspect that AGFL reservation
-growth could be hidden by the alignment slop that was reserved but
-not used.
+Reported-by: Christian Borntraeger <borntraeger@linux.ibm.com>
+Link: https://lore.kernel.org/linux-btrfs/20260721191152.101118-1-borntraeger@linux.ibm.com/
+Signed-off-by: Qu Wenruo <wqu@suse.com>
+---
+Changelog:
+v2:
+- Rebased to the latest patches-in-queue branch
+  The old number is taken by another test case, now this one got the
+  number 800.
 
-> > So from this perspective, I think the fix needs to be made to the
-> > calculation in xfs_alloc_min_freelist() to take into account minleft
-> > needing a larger AGFL reservation if any of the allocations in the
-> > chain splits.
-> > 
-> > Hmmmm. I'm not sure the calculation in xfs_alloc_min_freelist() is
-> > correct, either:
-> > 
-> >         /*
-> >          * For a btree shorter than the maximum height, the worst case is that
-> >          * every level gets split and a new level is added, then while inserting
-> >          * another entry to refill the AGFL, every level under the old root gets
-> >          * split again. This is:
-> >          *
-> >          *   (full height split reservation) + (AGFL refill split height)
-> >          * = (current height + 1) + (current height - 1)
-> >          * = (new height) + (new height - 2)
-> >          * = 2 * new height - 2
-> > 
-> > i.e. I think the AGFL refill split height is wrong.
-> > 
-> > Look at it this way: we do the AGFL refill -first-, so if that
-> > splits, we consume (current height + 1) blocks, and then new_height
-> > = (current height + 1). Then if the actual data allocation does a
-> > full split again (i.e. all except for the root block), that needs
-> > (new_height -1) blocks. So that becomes:
-> > 
-> > 	new_height = current height + 1;
-> > 	blocks = new_height + (new_height - 1)
-> > 	       = 2 * new_height - 1.
-> > 
-> > IOWs, I think there's an existing off-by one in the AGFL btree block
-> > reservation calculation that contributes to this problem as well.
-> > 
-> 
-> Hmm.. I need to stare at this a little more, but I think that makes
-> sense.
+- Fix a bug when the direct read failed short, the read buffer is not
+  advanced
 
-I've thought on it a bit more, too, and I now realise the original
-code is correct. 
+- Add _require_odirect
 
-I failed to take into account that we can't split the two blocks the
-old root was split into again - they will be at 50% capacity after
-the first split, so a split up to one of their child nodes will only
-add one more ptr to them. They can't fill and split again in the
-current transaction chain.
+- Add _require_xfs_io_command sync_range
 
-Hence the second split can only occur up to (current height - 1),
-and so the existing calculation is correct.
+- Add missing tmp files cleanup
 
-[snip]
+- Remove unneessary trap command for the main process
 
-> I think this is reasonable. The thing that stands out a little bit is
-> that technically we're reserving for the worst case min_free allocation
-> requirement of the second alloc, not necessarily the actual number of
-> blocks needed, right? That seems fine if so. I just want to make sure
-> we're clear and we document the updated calculation appropriately (i.e.
-> noting how minleft > 0 is a somewhat special case).
->
-> The off-by-one thing aside, IIUC the current min_free calculation
-> correctly accounts the actual number of blocks we'd consume in the worst
-> case for both allocations, it just doesn't account for how the min_free
-> requirements change upon reentry into the allocator after a minleft > 0
-> allocation.
+- Fix the unset command
+---
+ .gitignore               |  1 +
+ src/Makefile             |  2 +-
+ src/dio-read-into-mmap.c | 81 ++++++++++++++++++++++++++++++++++++++++
+ tests/generic/800        | 79 +++++++++++++++++++++++++++++++++++++++
+ tests/generic/800.out    |  2 +
+ 5 files changed, 164 insertions(+), 1 deletion(-)
+ create mode 100644 src/dio-read-into-mmap.c
+ create mode 100755 tests/generic/800
+ create mode 100644 tests/generic/800.out
 
-Right, that's my understanding of the issue - that min_free is an up
-front worst case reservation to prevent downstream ENOSPC within the
-AG during the transactional modification that is about to take
-place.
-
-i.e. it's taken over 30 years for us to realise that the AGFL
-reservation could change in the middle of a multi-allocation
-transaction and that the minfree calc has never taken that into
-account. i.e. this is yet another zero-day bug in the AGFL fixup
-code...
-
-Cheers,
-
-Dave.
+diff --git a/.gitignore b/.gitignore
+index 0b6b9452..d52ba4ad 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -216,6 +216,7 @@ tags
+ /src/truncate
+ /src/t_btrfs_received_uuid_ioctl
+ /src/btrfs_ioctl
++/src/dio-read-into-mmap
+ 
+ # Symlinked files
+ /tests/generic/035.out
+diff --git a/src/Makefile b/src/Makefile
+index e8da2636..ea3d77b2 100644
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -21,7 +21,7 @@ TARGETS = dirstress fill fill2 getpagesize holes lstat64 \
+ 	t_mmap_writev_overlap checkpoint_journal mmap-rw-fault allocstale \
+ 	t_mmap_cow_memory_failure fake-dump-rootino dio-buf-fault rewinddir-test \
+ 	readdir-while-renames dio-append-buf-fault dio-write-fsync-same-fd \
+-	dio-writeback-race unlink-fsync truncate
++	dio-writeback-race unlink-fsync truncate dio-read-into-mmap
+ 
+ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
+ 	preallo_rw_pattern_writer ftrunc trunc fs_perms testx looptest \
+diff --git a/src/dio-read-into-mmap.c b/src/dio-read-into-mmap.c
+new file mode 100644
+index 00000000..2a5ad085
+--- /dev/null
++++ b/src/dio-read-into-mmap.c
+@@ -0,0 +1,81 @@
++// SPDX-License-Identifier: GPL-2.0
++// Copyright (c) SUSE S.A.
++
++#include <fcntl.h>
++#include <stdlib.h>
++#include <stdio.h>
++#include <unistd.h>
++#include <string.h>
++#include <errno.h>
++#include <sys/mman.h>
++#include <sys/stat.h>
++#include <err.h>
++
++static int read_source_fd = -1;
++static int mmap_dest_fd = -1;
++static void *buf = NULL;
++static int iosize = 4 * 1024 * 1024;
++
++static void usage()
++{
++	fprintf(stderr,
++	"Usage: dio-read-into-mmap <read_source> <mmap_dest>\n");
++}
++
++int main(int argc, char **argv)
++{
++	int ret = -EINVAL;
++	const int pagesize = sysconf(_SC_PAGESIZE);
++	unsigned int cur = 0;
++
++	if (argc != 3) {
++		usage();
++		goto error;
++	}
++	if (iosize < pagesize) {
++		ret = -EINVAL;
++		fprintf(stderr, "blocksize smaller than pagesize\n");
++		goto error;
++	}
++
++	read_source_fd = open(argv[1], O_RDONLY | O_DIRECT, 0600);
++	if (read_source_fd < 0) {
++		ret = -errno;
++		fprintf(stderr, "failed to open '%s': %m", argv[1]);
++		goto error;
++	}
++	mmap_dest_fd = open(argv[2], O_RDWR, 0600);
++	if (mmap_dest_fd < 0) {
++		ret = -errno;
++		fprintf(stderr, "failed to open '%s': %m", argv[2]);
++		goto error;
++	}
++	buf = mmap(NULL, iosize, PROT_WRITE, MAP_SHARED, mmap_dest_fd, 0);
++	if (buf == MAP_FAILED) {
++		buf = NULL;
++		fprintf(stderr, "failed to mmap: %m");
++		return -errno;
++	}
++	while (cur < iosize) {
++		ret = pread(read_source_fd, buf + cur, iosize - cur, cur);
++		if (ret == 0) {
++			ret = -EINVAL;
++			fprintf(stderr, "reached EOF");
++			goto error;
++		}
++		if (ret < 0) {
++			ret = -errno;
++			fprintf(stderr, "failed to read: %m");
++			goto error;
++		}
++		cur += ret;
++	}
++error:
++	close(read_source_fd);
++	close(mmap_dest_fd);
++	if (buf)
++		munmap(buf, iosize);
++	if (ret < 0)
++		return EXIT_FAILURE;
++	return EXIT_SUCCESS;
++}
+diff --git a/tests/generic/800 b/tests/generic/800
+new file mode 100755
+index 00000000..980d1734
+--- /dev/null
++++ b/tests/generic/800
+@@ -0,0 +1,79 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2026 SUSE S.A.  All Rights Reserved.
++#
++# FS QA Test 800
++#
++# Test direct read into a mmaped range meanwhile doing data sync for the mmaped
++# range.
++# Such racy workload should cause direct endio function to mark the folio
++# dirty without going through buffered write nor page_mkwrite().
++#
++# Make sure the fs can handle such ->dirty_folio() callback correctly.
++#
++. ./common/preamble
++_begin_fstest auto rw mmap
++
++_require_test_program dio-read-into-mmap
++_require_scratch
++_require_test
++_require_odirect
++_require_xfs_io_command sync_range
++
++_cleanup()
++{
++	cd /
++	[ -n "$mount_pid" ] && kill $mount_pid &> /dev/null
++	[ -n "$remount_pid" ] && kill $remount_pid &> /dev/null
++	wait
++	rm -r -f $tmp.*
++}
++
++_scratch_mkfs >> $seqres.full
++_scratch_mount
++
++# Create the 4MiB target file on TEST_MNT as the read source.
++$XFS_IO_PROG -f -c "pwrite -i /dev/urandom 0 4M" "$TEST_MNT/dio-read-source" >> $seqres.full
++
++# Another 4MiB target file on SCRATCH_MNT as the mmap dest
++$XFS_IO_PROG -f -c "pwrite 0 4M" "$SCRATCH_MNT/mmap-dest" >> $seqres.full
++
++read_workload()
++{
++	_register_cleanup "wait"
++	while true; do
++		$here/src/dio-read-into-mmap "$TEST_MNT/dio-read-source" \
++			"$SCRATCH_MNT/mmap-dest" &> /dev/null
++		if [ $? -ne 0 ]; then
++			echo "dio read failed"
++			break;
++		fi
++	done
++}
++
++sync_workload()
++{
++	_register_cleanup "wait"
++	while true; do
++		$XFS_IO_PROG -c "sync_range 0 4m" "$SCRATCH_MNT/mmap-dest"
++		if [ $? -ne 0 ]; then
++			echo "sync_range failed"
++			break;
++		fi
++	done
++}
++
++read_workload &
++read_pid=$!
++
++sync_workload &
++sync_pid=$!
++
++sleep $((15 * $TIME_FACTOR))
++
++kill "$read_pid" "$sync_pid" &> /dev/null
++unset read_pid sync_pid
++wait
++
++echo "Silence is golden"
++_exit 0
+diff --git a/tests/generic/800.out b/tests/generic/800.out
+new file mode 100644
+index 00000000..bdfaa2ce
+--- /dev/null
++++ b/tests/generic/800.out
+@@ -0,0 +1,2 @@
++QA output created by 800
++Silence is golden
 -- 
-Dave Chinner
-dgc@kernel.org
+2.51.2
+
