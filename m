@@ -1,78 +1,75 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7B48443E4E;
-	Tue,  4 Aug 2026 09:46:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C3F23803DB
+	for <linux-xfs@vger.kernel.org>; Tue,  4 Aug 2026 11:56:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785836782; cv=none; b=KdGXtNNA/kPANprSwuQVBkVO6k7bVqroO8RB3o/O4CvvXAE71418uA8fbOl2UWd4GwdlcKVZjP0Sdu9SlJBgLLZSoa1Mv+//+iPOjeVkxgaOmPnLa764rV1c71J6FwHe4oc0pboI3yFXV4A6DGyjbnAEVrIr8ch+HMeOVhu9ofA=
+	t=1785844582; cv=none; b=T/z82nKS8BEt4MYsOBrlS/aTC79kQtc0cFNoRDa1UYVKdqL5pd/Va7vZlNrnqoI3yI2eBesdlLVSgP2km4GzMXUfmabNnhY4ZDsLdH+WF+JUiPlMPMkwTxTn33x+q0oxC/BnXJwXAZj/qmhu1oP6OLg/KI1OUCdYNGWyEJbG1+8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785836782; c=relaxed/simple;
-	bh=yA8BgOH6CKTpoVpmwQuEwca7Vt9peEfZ5FZfaUAxHuE=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=TPkfI2QPe8XiW3g88ilUa7g+inv49I3UGbkZJVeMVS48WlxV/dEcVCGmpvFCx006ETULtAuxjQaBdqIOQP4JAVyB6LeSIW/FGkiir/LEC47vnM1iVEtHz1KjRatrzmuPYQ3WgtFiIxRN6cjeJ/5sOl2GDcmZEUyRKtXG1dEZAFk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=URU7TPax; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785844582; c=relaxed/simple;
+	bh=7wLG2xHpT2AFGQ6kJN8LqbVdv+zTAgnmhU3KOGJm13I=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=QyPGr6+tslKPcW4S9IaqfEp/jsYojfqWACxiq6ym0i4vPoq5uBCG0TkuGdJjGisT5R7Q7WxWtFiCg5j4H96sxdMgq9QJEUhdlWkIFZvLUcIJqVblPCkfvn5DvR9P9QDCAUUeZbrZgJHWUyHW3Htet51R8X+mZxgkX3rhkm+UUnk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BFXZ1CLA; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="URU7TPax"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 547BF1F00A3D;
-	Tue,  4 Aug 2026 09:46:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BFXZ1CLA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 562D91F000E9;
+	Tue,  4 Aug 2026 11:56:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785836781;
-	bh=KD3nQlzzgPQMXfG3TkWBP0YqCUulLthOljSvVABaabw=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=URU7TPaxCYuX3zvG2RUYaJB4XVRkC5Dkz8/zAz09dFQxc6oQA5Oudxc8uJYWD5+Kb
-	 Psj+QoM8EAQ5LSKGMkoOlYCKr+O0VdQUpFwq6NSLb0DXWK49A1h1ycIREg8b3lWDZG
-	 b86yq7AURMP4S98OV6niLAydXWCGZJKXudkkxHTsyNPNGUBIvlJrsIKh5/CNm7PbQW
-	 j7J95Ealrh1Qc40xCD1N6CmBrZTVSxvhwCr+qGXnIOfExDixbPn/fDJp+kziNIOmCj
-	 ycDsy0d5A3lGxpXRpGqIzsMv1cuU1K00sAaey64XtlozNpirONb0PegCoTxuB2462+
-	 kIoA/5nNMOJUw==
-From: cem@kernel.org
-To: cem@kernel.org
-Cc: jack@suse.cz,
-	djwong@kernel.org,
-	hch@lst.de,
-	serge@hallyn.com,
-	linux-security-module@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH v4 5/5] capability: unexport has_capability_noaudit
-Date: Tue,  4 Aug 2026 11:45:55 +0200
-Message-ID: <20260804094602.84766-6-cem@kernel.org>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260804094602.84766-1-cem@kernel.org>
-References: <20260804094602.84766-1-cem@kernel.org>
+	s=k20260515; t=1785844581;
+	bh=vT89eWuKRGe+c127utTPEG/970+lCyrq2jHBN5pC9Xg=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=BFXZ1CLAl2oTBNecKlPhnaKreC2I4n3L8/kzjqt/2Yal/X/pdCYXfUB5WazjRlLQz
+	 xpj96Tr1AvqNzqae8a86heVsLdJhQlVyCMqqiznRvYa6NLORF2XAbW9As2FJxIj7Ln
+	 CQKeyLAZ21Yi8W9iDa06ZqHIxHf9JOyvCm4l4dW3R5ayzvq3kMkuDZRPXwsgF9X7DT
+	 uvf9SB4xn51T254xhqzUklVV0LJfQqKmaWgi8PXaAI6TKF6T3cro6ZK0pTJgQynN+7
+	 KWPq7/0cJguPl/n7OFWP1Yp5d1TvcGf+phxQFBUPxgo1y+rK7ut7+Y0rhM86Mo3ikS
+	 8JJi8aB5hE+4g==
+Date: Tue, 4 Aug 2026 13:56:17 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: improve log context annotations
+Message-ID: <anHTCHGsqjL9edw3@andromeda.toxiclabs.cc>
+References: <20260720094609.2191633-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260720094609.2191633-1-hch@lst.de>
 
-From: Carlos Maiolino <cem@kernel.org>
+On Mon, Jul 20, 2026 at 11:45:37AM +0200, Christoph Hellwig wrote:
+> Hi Carlos,
+> 
+> this series improves the lock annotations in the XFS code.
+> 
+> Note that right now this is all mostly unused - the less stringent sparse
+> lock context checks got disabled when the clang version was merged, and
+> we're not quite ready to enable the latter yet due to our conditional
+> locking in the ilock helper and the locking contexts transferred to the
+> transaction for the inode and dquot locks, but I'm working on that.
+> 
 
-This has been originally exported to be used in xfs. Giving we are not
-using it anymore, unexport for consistency.
+I do disagree these annotations should be killed, so, for the series:
 
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- kernel/capability.c | 1 -
- 1 file changed, 1 deletion(-)
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-diff --git a/kernel/capability.c b/kernel/capability.c
-index f4a7f1963c9d..90e6ab62f6db 100644
---- a/kernel/capability.c
-+++ b/kernel/capability.c
-@@ -326,7 +326,6 @@ bool has_capability_noaudit(struct task_struct *t, int cap)
- {
- 	return has_ns_capability_noaudit(t, &init_user_ns, cap);
- }
--EXPORT_SYMBOL(has_capability_noaudit);
- 
- static bool ns_capable_common(struct user_namespace *ns,
- 			      int cap,
--- 
-2.55.0
-
+> In the meantime having these corrected at least serves as useful
+> documentation.
+> 
+> Diffstat:
+>  xfs_extent_busy.c |    4 ++--
+>  xfs_icache.c      |    3 ++-
+>  xfs_log.c         |   33 +++++++++++++++++++++------------
+>  xfs_log_cil.c     |    3 ++-
+>  xfs_log_priv.h    |    4 ++--
+>  xfs_mru_cache.c   |    2 +-
+>  xfs_trans_ail.c   |    4 +++-
+>  xfs_zone_alloc.c  |    2 ++
+>  8 files changed, 35 insertions(+), 20 deletions(-)
+> 
