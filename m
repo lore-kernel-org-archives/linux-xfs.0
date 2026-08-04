@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27B184432F7;
-	Tue,  4 Aug 2026 09:46:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7B48443E4E;
+	Tue,  4 Aug 2026 09:46:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785836780; cv=none; b=BpgG/9tjgDzsiqVXhxqCN+U2lH89VzUG4+YGXIBrbEX0Yom9xSMBdoIAL0F6xNhUMgpEsTYAXeEgKid6bE/p+M5IRRR3bl8l+hYiNDcVDG7gNnQD/Wnm6cb4vQ+sycFdWVAtyep1H+SyNmlrvB5KlDCcy3g1yAvEj4SqfTZq0qY=
+	t=1785836782; cv=none; b=KdGXtNNA/kPANprSwuQVBkVO6k7bVqroO8RB3o/O4CvvXAE71418uA8fbOl2UWd4GwdlcKVZjP0Sdu9SlJBgLLZSoa1Mv+//+iPOjeVkxgaOmPnLa764rV1c71J6FwHe4oc0pboI3yFXV4A6DGyjbnAEVrIr8ch+HMeOVhu9ofA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785836780; c=relaxed/simple;
-	bh=5o4waX4tYcO96lu2V9JCXdXui466KVAfJCxo44iHj6Q=;
+	s=arc-20240116; t=1785836782; c=relaxed/simple;
+	bh=yA8BgOH6CKTpoVpmwQuEwca7Vt9peEfZ5FZfaUAxHuE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=RuR60aycwquA6IQ3PeFYvKjWvfNnC6oxpMAobe5byUwHWAmcEt7o9oZUtICT9U8kEv6cZbsjUl1Jh6ZiQeXEo87i9aWGBmQjHp34bx5sPeqFCW8lCP2BHqyD1E9YdCFpKgeSiHR2BM0oaGySB/eGrBfnH3hXhf8TqkAK6n8MlYA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Wf7Ax6Nz; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=TPkfI2QPe8XiW3g88ilUa7g+inv49I3UGbkZJVeMVS48WlxV/dEcVCGmpvFCx006ETULtAuxjQaBdqIOQP4JAVyB6LeSIW/FGkiir/LEC47vnM1iVEtHz1KjRatrzmuPYQ3WgtFiIxRN6cjeJ/5sOl2GDcmZEUyRKtXG1dEZAFk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=URU7TPax; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Wf7Ax6Nz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AA24C1F000E9;
-	Tue,  4 Aug 2026 09:46:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="URU7TPax"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 547BF1F00A3D;
+	Tue,  4 Aug 2026 09:46:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785836778;
-	bh=gEbA1stGp4temkIwHIMDReZrCcpfXyIaBqXoOwUrzbo=;
+	s=k20260515; t=1785836781;
+	bh=KD3nQlzzgPQMXfG3TkWBP0YqCUulLthOljSvVABaabw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=Wf7Ax6NztfChmjRWMqiGB/ca7FqVZHpYfxCNUZjdgc/mo+jJFaB8TynV/miUkBXRe
-	 O2QJP/XQ3yZG7u4IK/VkQI68OefA9cuDpszAoxB391udt1fWtwJkjFJoKLdbqTYA3x
-	 vKi4xW8lnf/agN3VGwrwciu+BtF3vDrkfTnsAH/wtngw3Tc/tM1kzcrjSyxgPVsfwv
-	 bdXZjuiO75GG/gcpTbwYJ9oXUoT0FijX70QkaMBUr7ld4ydAYLDXV5eoXY3H6iPBRo
-	 fl1kRTs86CO8rbC1Pxfq3FmJ+0v2IG9tFMYT0Opt9CUnVEKio8s8+BalLpWPTO1cNh
-	 eSyYbzSdzGHSg==
+	b=URU7TPaxCYuX3zvG2RUYaJB4XVRkC5Dkz8/zAz09dFQxc6oQA5Oudxc8uJYWD5+Kb
+	 Psj+QoM8EAQ5LSKGMkoOlYCKr+O0VdQUpFwq6NSLb0DXWK49A1h1ycIREg8b3lWDZG
+	 b86yq7AURMP4S98OV6niLAydXWCGZJKXudkkxHTsyNPNGUBIvlJrsIKh5/CNm7PbQW
+	 j7J95Ealrh1Qc40xCD1N6CmBrZTVSxvhwCr+qGXnIOfExDixbPn/fDJp+kziNIOmCj
+	 ycDsy0d5A3lGxpXRpGqIzsMv1cuU1K00sAaey64XtlozNpirONb0PegCoTxuB2462+
+	 kIoA/5nNMOJUw==
 From: cem@kernel.org
 To: cem@kernel.org
 Cc: jack@suse.cz,
@@ -35,9 +35,9 @@ Cc: jack@suse.cz,
 	linux-security-module@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH v4 4/5] xfs: replace ns_capable_noaudit
-Date: Tue,  4 Aug 2026 11:45:54 +0200
-Message-ID: <20260804094602.84766-5-cem@kernel.org>
+Subject: [PATCH v4 5/5] capability: unexport has_capability_noaudit
+Date: Tue,  4 Aug 2026 11:45:55 +0200
+Message-ID: <20260804094602.84766-6-cem@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260804094602.84766-1-cem@kernel.org>
 References: <20260804094602.84766-1-cem@kernel.org>
@@ -51,59 +51,28 @@ Content-Transfer-Encoding: 8bit
 
 From: Carlos Maiolino <cem@kernel.org>
 
-Now that capable_noaudit() is available, we don't need to keep
-using ns_capable_noaudit() and specifying the usernaspace every single
-time.
+This has been originally exported to be used in xfs. Giving we are not
+using it anymore, unexport for consistency.
 
 Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
-V4: Fix indentation on xfs_ioctl_setattr_get_trans() changes
+ kernel/capability.c | 1 -
+ 1 file changed, 1 deletion(-)
 
- fs/xfs/xfs_fsmap.c | 3 +--
- fs/xfs/xfs_ioctl.c | 2 +-
- fs/xfs/xfs_iops.c  | 2 +-
- 3 files changed, 3 insertions(+), 4 deletions(-)
-
-diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
-index 7c79fbe0a74c..041bb2105ec6 100644
---- a/fs/xfs/xfs_fsmap.c
-+++ b/fs/xfs/xfs_fsmap.c
-@@ -1174,8 +1174,7 @@ xfs_getfsmap(
- 	if (!xfs_getfsmap_check_keys(&head->fmh_keys[0], &head->fmh_keys[1]))
- 		return -EINVAL;
+diff --git a/kernel/capability.c b/kernel/capability.c
+index f4a7f1963c9d..90e6ab62f6db 100644
+--- a/kernel/capability.c
++++ b/kernel/capability.c
+@@ -326,7 +326,6 @@ bool has_capability_noaudit(struct task_struct *t, int cap)
+ {
+ 	return has_ns_capability_noaudit(t, &init_user_ns, cap);
+ }
+-EXPORT_SYMBOL(has_capability_noaudit);
  
--	use_rmap = xfs_has_rmapbt(mp) &&
--		   ns_capable_noaudit(&init_user_ns, CAP_SYS_ADMIN);
-+	use_rmap = xfs_has_rmapbt(mp) && capable_noaudit(CAP_SYS_ADMIN);
- 	head->fmh_entries = 0;
- 
- 	/* Set up our device handlers. */
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 1a8af827dde1..96ca3e480cb9 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -647,7 +647,7 @@ xfs_ioctl_setattr_get_trans(
- 		goto out_error;
- 
- 	error = xfs_trans_alloc_ichange(ip, NULL, NULL, pdqp,
--			ns_capable_noaudit(&init_user_ns, CAP_FOWNER), &tp);
-+			capable_noaudit(CAP_FOWNER), &tp);
- 	if (error)
- 		goto out_error;
- 
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 7a8c77fdcf68..3f36d6e7b917 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -835,7 +835,7 @@ xfs_setattr_nonsize(
- 	}
- 
- 	error = xfs_trans_alloc_ichange(ip, udqp, gdqp, NULL,
--			ns_capable_noaudit(&init_user_ns, CAP_FOWNER), &tp);
-+			capable_noaudit(CAP_FOWNER), &tp);
- 	if (error)
- 		goto out_dqrele;
- 
+ static bool ns_capable_common(struct user_namespace *ns,
+ 			      int cap,
 -- 
 2.55.0
 
