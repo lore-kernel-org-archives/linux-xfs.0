@@ -1,140 +1,238 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1070F61FCE;
-	Wed,  5 Aug 2026 01:44:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B85C5363C77;
+	Wed,  5 Aug 2026 02:42:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785894297; cv=none; b=QIrJu395i1YNjezHjSS4Q8qxQ/A1Y/Ei9qCGkFkl7/RI/R4J/1VGubtyd7bd775sQKZddlvJjgqp9mb4Amv5wtZduZRvKr5HuELfCVg0G51mYYYs8Sdtx1Zl0iBO/Q2VPE/GG5Cx4u+5cH5623CuB84TatXyYfzyFc11gD41fk0=
+	t=1785897783; cv=none; b=ZB0sBJOD/ETp5mLxQOUXErZhEsmSabaJ8IVrZ0g3/2/SzUGftOvYdA93aX8lIfs1iX7WXgYOdP2c7oIL7T3X+PdweO2Dx1zN+51mTNGhyTShDWrjv8OU/jl6U+t0USY+cfTJQHJpWr6JMf4oX42EEC2klCzVAxnCq7gb3YfVocM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785894297; c=relaxed/simple;
-	bh=WvDd/w2UvdTtO1WTEshn5N9hYZQnwdmZ29yPG0sWUkg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WrKjQMgoxH5wiIEG0jyxT9psQFaljuyk/qhO5qOxYapjnTCNrYYeDecV/iKOtijH9ORar6yNAu8tSkpBDK/XP2gV+udq6j9JUpWBLZ/o38GmNZX1NM5Xetvlx3aRJp7JbEcjL5m7bJqpHFovmyZUtmVgaut0WqRLmM0m/ab9io8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZYrE2D0E; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZYrE2D0E"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 177941F000E9;
-	Wed,  5 Aug 2026 01:44:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785894295;
-	bh=qsAqHIwO7ce8+U1oKpXmq/u+9CG5d4YaaVjIOWHPKqM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=ZYrE2D0Er1uBJ5VgnpWlvdVINGGWcINCsgwbGu2AVjKPbipUwips2bKym8BzfKwvw
-	 5igbU2nGA7M4G5SYJSum0D/2hQXNrWjauWky+ruS+4LlWm67uNKjoeGNBZywhaAPbE
-	 NSFyc5wjK2TcUXKeYr2xrISjBj9leepKwg5sQWGbRPLRTWjVcB8CtZperM5txeuGUj
-	 stANbDPXa3UgpVr29l+ASMxnRM2gVNaoeroO1nuxsY9O4SpoQP/NChdJWBBPEuVjg/
-	 U7FIYIgV9YkmRGma0wQvLI5PoXstyCS0pqM3Bse2e5iKCb05gt8eT64TjrllC6/3gZ
-	 CE6zgyeXJSauQ==
-Date: Wed, 5 Aug 2026 11:44:46 +1000
-From: Dave Chinner <dgc@kernel.org>
-To: Marcelo Mendes Spessoto Junior <marcelomspessoto@gmail.com>
-Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	syzbot+4e6ee73c0ae4b6e8753f@syzkaller.appspotmail.com
-Subject: Re: [PATCH] xfs: add guard before freeing buffer log item
-Message-ID: <anKVjuBlmywjF37P@dread>
-References: <20260731061448.192010-1-marcelomspessoto@gmail.com>
- <am0r_JImI8qE_TDZ@dread>
+	s=arc-20240116; t=1785897783; c=relaxed/simple;
+	bh=mscJx+NT5NgIrvZ7eq6w0VUjVhiwou5YcEDoRYokLgs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=oqssnyOcicNF4eQwHmB4E/NdHvIVwySa6wBNzrwSUSNoomppxoi7uoqyF/GGP7HHS80g0DqaQ74zYozQ7vUnK0Ta9e6zEcCJuUUTQOZ227Zj47Z5678XQD8acshmA80qTaaSWKyCTeIH44baKbCcq5MhNG1mv6HqrOQLeZtVSKE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.170])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4hFF7q0ywczKHMf6;
+	Wed,  5 Aug 2026 10:42:47 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.252])
+	by mail.maildlp.com (Postfix) with ESMTP id AD8D34056B;
+	Wed,  5 Aug 2026 10:42:52 +0800 (CST)
+Received: from [10.174.178.253] (unknown [10.174.178.253])
+	by APP3 (Coremail) with UTF8SMTPSA id _Ch0CgCnlkUqo3JqNrejBA--.1845S3;
+	Wed, 05 Aug 2026 10:42:52 +0800 (CST)
+Message-ID: <ba0c9502-c9f8-40f7-bfd6-47942eb88dec@huaweicloud.com>
+Date: Wed, 5 Aug 2026 10:42:50 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <am0r_JImI8qE_TDZ@dread>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 2/5] iomap: support invalidating partial folios
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+ linux-ext4@vger.kernel.org, brauner@kernel.org, djwong@kernel.org,
+ hch@infradead.org, joannelkoong@gmail.com, "Theodore Y. Ts'o"
+ <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
+ Ojaswin Mujoo <ojaswin@linux.ibm.com>, Matthew Wilcox <willy@infradead.org>,
+ ziy@nvidia.com, yi.zhang@huawei.com, yizhang089@gmail.com,
+ chengzhihao1@huawei.com, yangerkun@huawei.com, yukuai@fnnas.com
+References: <20260714082325.325163-1-yi.zhang@huaweicloud.com>
+ <20260714082325.325163-3-yi.zhang@huaweicloud.com>
+ <a638a8fb-c184-4069-ae33-379ec12cd514@huaweicloud.com>
+ <anH-WKA1coW6wtfG@bfoster>
+Content-Language: en-US
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+In-Reply-To: <anH-WKA1coW6wtfG@bfoster>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:_Ch0CgCnlkUqo3JqNrejBA--.1845S3
+X-Coremail-Antispam: 1UD129KBjvJXoW3Wr4fXF4rJF4UJw45WF1kAFb_yoW3tw17pF
+	WUKFs8KrWDGa18Ar1I9a18Xr1FyayfWFW5AFyfK3y3CFs8u3W7KF47Ka4j9ay7Jr18C3y0
+	qr4jvryDWFn8AaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvYb4IE77IF4wAFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_JFI_Gr1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr0_Cr1l84ACjcxK6I8E87Iv67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVCY1x
+	0267AKxVWxJr0_GcWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8C
+	rVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4
+	IE7xkEbVWUJVW8JwACjcxG0xvEwIxGrwACI402YVCY1x02628vn2kIc2xKxwCY1x0262kK
+	e7AKxVW8ZVWrXwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c
+	02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_GFv_
+	WrylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7
+	CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v2
+	6r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x07
+	jIksgUUUUU=
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-On Sat, Aug 01, 2026 at 09:13:00AM +1000, Dave Chinner wrote:
-> On Fri, Jul 31, 2026 at 03:14:48AM -0300, Marcelo Mendes Spessoto Junior wrote:
-> > A buffer's write completion can race with the CIL walking the same
-> > checkpoint's item list during a forced shutdown's simulated commit
-> > callbacks. Whichever side reaches the item last should be the one to
-> > free it; right now completion frees it unconditionally, so the CIL
-> > walk can end up touching memory that's already gone.
-> > 
-> > Fixes: d2fe5c4c8d25 ("xfs: rearrange code in xfs_buf_item.c")
-> > Reported-by: syzbot+4e6ee73c0ae4b6e8753f@syzkaller.appspotmail.com
-> > Closes: https://syzkaller.appspot.com/bug?extid=4e6ee73c0ae4b6e8753f
-> > Tested-by: syzbot+4e6ee73c0ae4b6e8753f@syzkaller.appspotmail.com
-> > Signed-off-by: Marcelo Mendes Spessoto Junior <marcelomspessoto@gmail.com>
-> > ---
-> >  fs/xfs/xfs_buf_item.c | 3 +++
-> >  1 file changed, 3 insertions(+)
-> > 
-> > diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-> > index f4c5be67826e..c86c4387f52b 100644
-> > --- a/fs/xfs/xfs_buf_item.c
-> > +++ b/fs/xfs/xfs_buf_item.c
-> > @@ -1072,6 +1072,9 @@ void
-> >  xfs_buf_item_done(
-> >  	struct xfs_buf		*bp)
-> >  {
-> > +	if (atomic_read(&bp->b_log_item->bli_refcount) != 0)
-> > +		return;
+On 8/4/2026 10:59 PM, Brian Foster wrote:
+> On Mon, Aug 03, 2026 at 03:13:28PM +0800, Zhang Yi wrote:
+>> On 7/14/2026 4:23 PM, Zhang Yi wrote:
+>>> From: Zhang Yi <yi.zhang@huawei.com>
+>>>
+>>> Current iomap_invalidate_folio() can only invalidate an entire folio. If
+>>> we truncate a partial folio on a filesystem where the block size is
+>>> smaller than the folio size, it will leave behind dirty bits for the
+>>> truncated or punched blocks. During the write-back process, it will
+>>> attempt to map the invalid hole range. Fortunately, this has not caused
+>>> any real problems so far because the ->writeback_range() function
+>>> corrects the length.
+>>>
+>>> However, the implementation of FALLOC_FL_ZERO_RANGE in ext4 depends on
+>>> the support for invalidating partial folios. When ext4 partially zeroes
+>>> out a dirty and unwritten folio, it does not perform a flush first like
+>>> XFS. Therefore, if the dirty bits of the corresponding area cannot be
+>>> cleared, the zeroed area after writeback remains in the written state
+>>> rather than reverting to the unwritten state. Fix this by supporting
+>>> invalidation of partial folios.
+>>
+>> Hi all,
+>>
+>> While working on the v5 of the ext4 iomap conversion series[1], I've
+>> observed a rare data inconsistency issue in xfstests generic/127. After
+>> debugging, I found that the root cause lies in the fact that the current
+>> patch does not cover all scenarios when handling partial folio
+>> invalidation during punch hole operations in cases where
+>> block size < folio size. Specifically, the sub-folio dirty state is not
+>> properly cleaned up in all cases. I think we need to discuss the fix,
+>> and I'd like to hear your suggestions.
+>>
+>> Root cause:
+>>
+>> In both iomap buffered write and mmap write paths, if the write range
+>> covers an entire folio (regardless of whether the folio size is larger
+>> than block size), an ifs (iomap_folio_state) is not allocated
+>> immediately. Instead, it is deferred until writeback time, where it gets
+>> created in iomap_writeback_folio(). This creates a problem: when ext4
+>> performs a punch or zero_range operation on a partial range within such
+>> a dirty folio, there is no way to clear the dirty state for the
+>> corresponding blocks.
+>>
+>> This leads to two specific issues:
+>>
+>> 1. After issuing FALLOC_FL_ZERO_RANGE on a range covering
+>>    dirty+unwritten blocks within a large folio, the dirty state cannot
+>>    be cleared. During subsequent writeback, zeroed data is still
+>>    written back, and the final extent state for those blocks becomes
+>>    written. As a result, the fix from this patch becomes ineffective in
+>>    this case.
+>>
 > 
-> No.
+> I suspect this may be (occasionally) the case even with an ifs. IIRC the
+> folio batch stuff made a tradeoff for just zeroing any folio passed in
+> from the fs that was determined to be dirty, regardless of whether
+> underlying block aligned ranges may be unwritten and still clean.
 > 
-> My conclusion to the original syzbot report was:
-> 
-> | As such, I think that the issue we need to understand here is why a
-> | write IO completion is being run from read IO context. That's the
-> | root cause of the UAF, not the commit the bisect landed on....
-> 
-> And if you look at what I posted yesterday about a different hack to
-> this same code:
-> 
-> https://lore.kernel.org/linux-xfs/amvI_rVUlifIXoZA@dread/
-> 
-> which "fixes" a UAF in the CIL code reported by KASAN under syzbot
-> conditions. Whilst the syzbot report quoted was different:
-> 
-> https://syzkaller.appspot.com/bug?extid=598a791b31c498b63c6b
-> 
-> The syzbot report indicates exactly the same UAF situation - a write
-> IO completion being run from a read IO context causing the BLI to be
-> freed incorrectly and then the CIL access to the BLI triggering a
-> UAF.  My conclusion to that one is:
-> 
-> | Given that syzbot has only reported this 5 times in 12 hours only on
-> | a 7.1-rc3 kernel, never before and never since, an external memory
-> | corruption bug that has since been fixed seems like the most like
-> | cause here.
-> 
-> All the recent reports of this issue (the cluster in mid May) are
-> also only from v7.1-rc3 kernels....
-> 
-> So, yeah, people really need to stop trying to hack "fixes" into
-> xfs_buf_item_done(). The UAF indicates that there has been an
-> -incorrect free of the item- during IO completion. That's the issue
-> that needs to be understood and fixed. Fundamentally breaking the
-> refcounting model of the BLI to silence the downstream UAF that
-> results from the incorrect free is not an acceptible solution.
+> I think this is relatively harmless so long as the underlying range
+> returns zeroes from subsequent reads. The caveat may be if there are any
+> cases where we have a really large folio and some small portion of it is
+> dirtied and that causes some huge amount of unnecessary zeroing. I'm not
+> sure if we've hit something like that in practice though..
 
-I could of followup thoughts. If the problem is that XBF_READ is not
-set when we expect it, we should probably try to catch a buffer that
-has neither XBF_READ or XBF_WRITE set at completion time. That would
-be a clear sign of external memory corruption, and so we could log
-an error, dump the state of the xfs_buf around the b_flags field to
-discover if it's just a b_flags issue or a larger corruption. We can
-then error out the IO without assuming that it is a WRITE IO, and
-let the caller handle it appropriately.
+This does seem likely harmless, since at least the user data is as
+expected. Moreover, the ext4 filesystem itself may retain a small
+portion of a written extent due to reasons such as the inability to
+split extents. So I understand that the result should be acceptable.
 
-In this situation, if neither READ nor WRITE is set, we'll get the
-above debug. If we a completion where WRITE is set instead of READ,
-we'll get this same UAF report again.
+However, from the iomap perspective, it seems that we support sub-folio
+handling, but not fully - and the traditional buffer_head path does not
+exhibit this phenomenon, which is somewhat puzzling to me. So I was
+wandering whether it's necessary to fill this case?
 
-We probably should check for any flag fields that should not be seen
-in IO completion are set (either unknown bits or bits that should
-never be seen at completion like XBF_TRYLOCK), that way we'd also
-capture corruptions that don't change READ/WRITE completions that
-trigger the UAF.
+> 
+>> 2. The aforementioned rare data inconsistency in xfstests generic/127.
+>>    When performing a partial folio punch hole on a dirty large folio,
+>>    truncate_inode_pages_range() zeros the partial folio and then splits
+>>    the folio. This causes an incorrect 'end' offset calculation in
+>>    truncate_inode_pages_range(), which then results in all split folios
+>>    being truncated via truncate_inode_folio(), turning partial valid
+>>    data into zeroes.  For example:
+>>
+>>    Suppose we have a large folio of 4 pages, and we punch a range
+>>    starting from the beginning to the middle of the last page.
+>>    truncate_inode_pages_range() will go through two rounds of splitting.
+>>    Normally, if an ifs is present, the split path would hit
+>>    folio_split() -> filemap_release_folio() -> iomap_release_folio(),
+>>    which would intercept the operation and refuse splitting because the
+>>    folio is dirty.
+>>
+>>    However, without an ifs, filemap_release_folio() returns early via
+>>    folio_needs_release(), causing the interception to fail. In the first
+>>    round, the folio is split into 3 folios (1, 1, 2). In the second
+>>    round, we expect to split into 4 folios (1, 1, 1, 1). If the second
+>>    split succeeds, everything is fine, because
+>>    truncate_inode_pages_range() calculates end = 3, and only the first 3
+>>    folios are truncated. However, the second split is allowed to fail.
+>>    If it does fail, truncate_inode_pages_range() still uses end = 3 and
+>>    ends up truncating all 3 folios, resulting in data loss.
+>>
+> 
+> I was never really a huge fan of the ifs optimization thing, but I don't
+> recall what the performance benefits really were.
+> 
+> That aside, doesn't this seem like more of a bug within the
+> truncate_inode_pages_range() path? It's not clear to me if that's the
+> only problem wrt iomap, but I'd think if the end offset split down in
+> truncate_inode_partial_folio() fails, we should be able to return
+> partial progress or something instead of a true/false for the whole
+> thing. Would that allow this path to properly update the end index for
+> the full truncate loop and at least prevent throwing away a folio with
+> partial data like this?
+> 
 
-That will tell us more about what is going wrong here and hopefully
-help us isolate a potential cause...
++ Matthew and Zi Yan to CC
 
--Dave.
--- 
-Dave Chinner
-dgc@kernel.org
+I suspect this is because most filesystems these days, when splitting
+large folios, generally carry fs-specific private metadata for sub-folio
+management, and when a sub-folio is dirty, ->release_folio() will
+directly return EBUSY. As a result, dirty folios cannot be split because
+their private data cannot be released, which is why this issue has
+remained undetected until now. I also do think this does appear to be a
+bug in truncate_inode_partial_folio(). Matthew and Zi Yan, what do you
+think of this?
+
+Thanks,
+Yi.
+
+> Brian
+> 
+>> Now I remember I previously submitted two patches [2] that always
+>> allocated an ifs in the iomap buffered write path and the mmap fault
+>> path for the block size < folio size case. However, Christoph pointed
+>> out that the iomap design intentionally defers ifs allocation to avoid
+>> unnecessary overhead and improve performance, and suggested creating the
+>> ifs in iomap_invalidate_folio() instead [3]. There is a hurdle, though:
+>> iomap_invalidate_folio() is only called when the folio has private data
+>> (in truncate_inode_partial_folio(), folio_needs_release() is called
+>> first to check the private flag). So if we go with this approach, we
+>> need to ensure that folio_invalidate() can be called even when the folio
+>> does not have an ifs.
+>>
+>> One relatively simple approach is to always set the AS_RELEASE_ALWAYS
+>> flag on ext4 inodes that go through the iomap path. I don't think this
+>> would introduce significant overhead, but it doesn't feel very generic.
+>>
+>> Another approach is to modify truncate_inode_partial_folio(). Regarding
+>> this, I don't want to introduce other magics to achieve this, so perhaps
+>> modify truncate_inode_partial_folio() to check whether
+>> i_blocks_per_folio > 1 before calling folio_invalidate(), and call it if
+>> so.
+>>
+>> So, what do people think? Any better idea?
+>>
+>> Thanks,
+>> Yi.
+>>
+>> [1] https://github.com/zhangyi089/linux/commits/ext4_buffered_iomap_v5-devel13/
+>> [2] https://lore.kernel.org/linux-fsdevel/20240812121159.3775074-4-yi.zhang@huaweicloud.com/
+>>     https://lore.kernel.org/linux-fsdevel/20240812121159.3775074-5-yi.zhang@huaweicloud.com/
+>> [3] https://lore.kernel.org/linux-fsdevel/ZrxBfKi_DpThYo94@infradead.org/
+>>
+>>
+> 
+> 
+
