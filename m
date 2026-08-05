@@ -1,204 +1,140 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D18403EFD1F
-	for <linux-xfs@vger.kernel.org>; Tue,  4 Aug 2026 22:00:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1070F61FCE;
+	Wed,  5 Aug 2026 01:44:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785880823; cv=none; b=ls2M4faYce2t+y8HRdpAiZ4IUi/eo4t31ZqUABHNEp+BjqWF5SfE60YCxcFBADhu60nWeINMa9l8Hn7eHo3vbHn5JYVH2OpKD2LqO1p4/jCX0NcrL2B+Gt3Y82xY9HRlJ7htQthmkg7RTDqg3lEMtRNJanilMrIGan9fAZthx+c=
+	t=1785894297; cv=none; b=QIrJu395i1YNjezHjSS4Q8qxQ/A1Y/Ei9qCGkFkl7/RI/R4J/1VGubtyd7bd775sQKZddlvJjgqp9mb4Amv5wtZduZRvKr5HuELfCVg0G51mYYYs8Sdtx1Zl0iBO/Q2VPE/GG5Cx4u+5cH5623CuB84TatXyYfzyFc11gD41fk0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785880823; c=relaxed/simple;
-	bh=lzImomLB7VcX1QeNR35stZa/tXhzCK8N/aUXG4r7ZJs=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version; b=CzOGi8Teo4BoByN++NV9+ClKfOz7Ql6ZBN1qUzuIHmSH4w1uPVx0/p/mxlWzp5OyN6j+Sfs3HyinWSIyknZ6dcORPLQ12K7t0dY9ZnR2i9kKLU2PCjX4zdCR0tNyN7MT3xSz6bl9S0tKfDKzx+yeZ/abYt2EbquE+9nA8hRe5qk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=n2Po/aWo; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=rJAdjibk; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1785894297; c=relaxed/simple;
+	bh=WvDd/w2UvdTtO1WTEshn5N9hYZQnwdmZ29yPG0sWUkg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=WrKjQMgoxH5wiIEG0jyxT9psQFaljuyk/qhO5qOxYapjnTCNrYYeDecV/iKOtijH9ORar6yNAu8tSkpBDK/XP2gV+udq6j9JUpWBLZ/o38GmNZX1NM5Xetvlx3aRJp7JbEcjL5m7bJqpHFovmyZUtmVgaut0WqRLmM0m/ab9io8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZYrE2D0E; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="n2Po/aWo";
-	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="rJAdjibk"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id C108B3E72;
-	Tue,  4 Aug 2026 22:00:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-	t=1785880814; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-	bh=OlCA0AGAOld1JWr3xa6FuQqbEH3KeaqUp8HFeYuYznw=;
-	b=n2Po/aWosnrx8yFT0YZwc0v0hJvougP64pKgI3ZTG+F1V5is1iNn7T5+7suxck2gmemYUk
-	C54S+685LjQfFSVvjhJKlGR/VS0yB+xtGznJXpe1fmhgkJwMTKm1vfhpe4H1HPxhbuptt8
-	CjZ50Umg+f7JWqHhHqD2lfDaU9fmfPg=
-Authentication-Results: smtp-out2.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-	t=1785880810; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-	bh=OlCA0AGAOld1JWr3xa6FuQqbEH3KeaqUp8HFeYuYznw=;
-	b=rJAdjibkmNANWmAj/bWVawAzhBhtXJQDXPY+6N7r5C9e+m+fFs5fGSVk72RdI6DAw3CzHh
-	/trktgoYnCa+D9W9NR0Z3fg1KRopkCQGDlVobPtVhx2sBj7RqfK0VP71Cy0EmvV2LqUAss
-	Xw047rZR5UoJG/81fA1vysOAJ6V/g0g=
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 82C27779BB;
-	Tue,  4 Aug 2026 22:00:09 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id e1EBEelgcmphegAAD6G6ig
-	(envelope-from <wqu@suse.com>); Tue, 04 Aug 2026 22:00:09 +0000
-From: Qu Wenruo <wqu@suse.com>
-To: linux-btrfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH v4] iomap: follow the alignment requirement for iomap_dio_hole_iter()
-Date: Wed,  5 Aug 2026 07:29:51 +0930
-Message-ID: <73bd4d9b39e821453028ca8e567eaad2ebe0fc18.1785880740.git.wqu@suse.com>
-X-Mailer: git-send-email 2.54.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZYrE2D0E"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 177941F000E9;
+	Wed,  5 Aug 2026 01:44:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785894295;
+	bh=qsAqHIwO7ce8+U1oKpXmq/u+9CG5d4YaaVjIOWHPKqM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=ZYrE2D0Er1uBJ5VgnpWlvdVINGGWcINCsgwbGu2AVjKPbipUwips2bKym8BzfKwvw
+	 5igbU2nGA7M4G5SYJSum0D/2hQXNrWjauWky+ruS+4LlWm67uNKjoeGNBZywhaAPbE
+	 NSFyc5wjK2TcUXKeYr2xrISjBj9leepKwg5sQWGbRPLRTWjVcB8CtZperM5txeuGUj
+	 stANbDPXa3UgpVr29l+ASMxnRM2gVNaoeroO1nuxsY9O4SpoQP/NChdJWBBPEuVjg/
+	 U7FIYIgV9YkmRGma0wQvLI5PoXstyCS0pqM3Bse2e5iKCb05gt8eT64TjrllC6/3gZ
+	 CE6zgyeXJSauQ==
+Date: Wed, 5 Aug 2026 11:44:46 +1000
+From: Dave Chinner <dgc@kernel.org>
+To: Marcelo Mendes Spessoto Junior <marcelomspessoto@gmail.com>
+Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	syzbot+4e6ee73c0ae4b6e8753f@syzkaller.appspotmail.com
+Subject: Re: [PATCH] xfs: add guard before freeing buffer log item
+Message-ID: <anKVjuBlmywjF37P@dread>
+References: <20260731061448.192010-1-marcelomspessoto@gmail.com>
+ <am0r_JImI8qE_TDZ@dread>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Spam-Score: -2.80
-X-Spam-Level: 
-X-Spam-Flag: NO
-X-Spamd-Result: default: False [-2.80 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	MID_CONTAINS_FROM(1.00)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_MISSING_CHARSET(0.50)[];
-	NEURAL_HAM_SHORT(-0.20)[-0.991];
-	MIME_GOOD(-0.10)[text/plain];
-	ARC_NA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	DKIM_SIGNED(0.00)[suse.com:s=susede1];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,suse.com:mid,imap1.dmz-prg2.suse.org:helo];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	RCPT_COUNT_THREE(0.00)[3];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_DN_NONE(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	RCVD_TLS_ALL(0.00)[]
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <am0r_JImI8qE_TDZ@dread>
 
-[BUG]
-On the latest development branch, btrfs with 8K block size on 4K page
-sized systems will fail all test cases that run fsstress.
+On Sat, Aug 01, 2026 at 09:13:00AM +1000, Dave Chinner wrote:
+> On Fri, Jul 31, 2026 at 03:14:48AM -0300, Marcelo Mendes Spessoto Junior wrote:
+> > A buffer's write completion can race with the CIL walking the same
+> > checkpoint's item list during a forced shutdown's simulated commit
+> > callbacks. Whichever side reaches the item last should be the one to
+> > free it; right now completion frees it unconditionally, so the CIL
+> > walk can end up touching memory that's already gone.
+> > 
+> > Fixes: d2fe5c4c8d25 ("xfs: rearrange code in xfs_buf_item.c")
+> > Reported-by: syzbot+4e6ee73c0ae4b6e8753f@syzkaller.appspotmail.com
+> > Closes: https://syzkaller.appspot.com/bug?extid=4e6ee73c0ae4b6e8753f
+> > Tested-by: syzbot+4e6ee73c0ae4b6e8753f@syzkaller.appspotmail.com
+> > Signed-off-by: Marcelo Mendes Spessoto Junior <marcelomspessoto@gmail.com>
+> > ---
+> >  fs/xfs/xfs_buf_item.c | 3 +++
+> >  1 file changed, 3 insertions(+)
+> > 
+> > diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+> > index f4c5be67826e..c86c4387f52b 100644
+> > --- a/fs/xfs/xfs_buf_item.c
+> > +++ b/fs/xfs/xfs_buf_item.c
+> > @@ -1072,6 +1072,9 @@ void
+> >  xfs_buf_item_done(
+> >  	struct xfs_buf		*bp)
+> >  {
+> > +	if (atomic_read(&bp->b_log_item->bli_refcount) != 0)
+> > +		return;
+> 
+> No.
+> 
+> My conclusion to the original syzbot report was:
+> 
+> | As such, I think that the issue we need to understand here is why a
+> | write IO completion is being run from read IO context. That's the
+> | root cause of the UAF, not the commit the bisect landed on....
+> 
+> And if you look at what I posted yesterday about a different hack to
+> this same code:
+> 
+> https://lore.kernel.org/linux-xfs/amvI_rVUlifIXoZA@dread/
+> 
+> which "fixes" a UAF in the CIL code reported by KASAN under syzbot
+> conditions. Whilst the syzbot report quoted was different:
+> 
+> https://syzkaller.appspot.com/bug?extid=598a791b31c498b63c6b
+> 
+> The syzbot report indicates exactly the same UAF situation - a write
+> IO completion being run from a read IO context causing the BLI to be
+> freed incorrectly and then the CIL access to the BLI triggering a
+> UAF.  My conclusion to that one is:
+> 
+> | Given that syzbot has only reported this 5 times in 12 hours only on
+> | a 7.1-rc3 kernel, never before and never since, an external memory
+> | corruption bug that has since been fixed seems like the most like
+> | cause here.
+> 
+> All the recent reports of this issue (the cluster in mid May) are
+> also only from v7.1-rc3 kernels....
+> 
+> So, yeah, people really need to stop trying to hack "fixes" into
+> xfs_buf_item_done(). The UAF indicates that there has been an
+> -incorrect free of the item- during IO completion. That's the issue
+> that needs to be understood and fixed. Fundamentally breaking the
+> refcounting model of the BLI to silence the downstream UAF that
+> results from the incorrect free is not an acceptible solution.
 
-One very short example would be:
+I could of followup thoughts. If the problem is that XBF_READ is not
+set when we expect it, we should probably try to catch a buffer that
+has neither XBF_READ or XBF_WRITE set at completion time. That would
+be a clear sign of external memory corruption, and so we could log
+an error, dump the state of the xfs_buf around the b_flags field to
+discover if it's just a b_flags issue or a larger corruption. We can
+then error out the IO without assuming that it is a WRITE IO, and
+let the caller handle it appropriately.
 
- # $fsstress -n 4 -d $mnt -s 1785675805 -v
- 0/0: dwrite - no filename
- 0/1: creat f0 x:0 0 0
- 0/1: creat add id=0,parent=-1
- 0/2: write dontcache f0[259 1 0 0 0 0] [816411,3620] 0
- 0/3: dread - xfsctl(XFS_IOC_DIOINFO) f0[259 1 0 0 32 820031] return 25, fallback to stat()
- 0/3: dread f0[259 1 0 0 32 820031] [483328,81920] 0
+In this situation, if neither READ nor WRITE is set, we'll get the
+above debug. If we a completion where WRITE is set instead of READ,
+we'll get this same UAF report again.
 
-Which triggered the following ASSERT():
+We probably should check for any flag fields that should not be seen
+in IO completion are set (either unknown bits or bits that should
+never be seen at completion like XBF_TRYLOCK), that way we'd also
+capture corruptions that don't change READ/WRITE completions that
+trigger the UAF.
 
- assertion failed: IS_ALIGNED(state->start, blocksize) && IS_ALIGNED(state->end + 1, blocksize), in fs/btrfs/extent-io-tree.c:346 (unaligned extent state, blocksize=8192 start=487424 end=565247 state=0x0)
- ------------[ cut here ]------------
- kernel BUG at fs/btrfs/extent-io-tree.c:346!
- Oops: invalid opcode: 0000 [#1] SMP
- CPU: 4 UID: 0 PID: 648 Comm: fsstress Tainted: G            E       7.2.0-rc5-custom+ #431 PREEMPT(full)  7c507bd40d65e4d871e698b22d80f1306bbec543
- Tainted: [E]=UNSIGNED_MODULE
- Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS unknown 02/02/2022
- RIP: 0010:validate_extent_state.part.0.isra.0.cold+0x24/0x26 [btrfs]
- Call Trace:
-  <TASK>
-  insert_state+0x34/0x1a0 [btrfs 6924944583e4bc91a7c5183a1e7908e745a9b0c8]
-  set_extent_bit+0x440/0x8d0 [btrfs 6924944583e4bc91a7c5183a1e7908e745a9b0c8]
-  btrfs_lock_extent_bits+0x58/0x380 [btrfs 6924944583e4bc91a7c5183a1e7908e745a9b0c8]
-  btrfs_dio_iomap_begin+0x319/0xb70 [btrfs 6924944583e4bc91a7c5183a1e7908e745a9b0c8]
-  iomap_iter+0x1a2/0x370
-  __iomap_dio_rw+0x236/0x8d0
-  iomap_dio_rw+0x12/0x30
-  btrfs_direct_read+0x15f/0x290 [btrfs 6924944583e4bc91a7c5183a1e7908e745a9b0c8]
-  btrfs_file_read_iter+0x42/0x90 [btrfs 6924944583e4bc91a7c5183a1e7908e745a9b0c8]
-  vfs_read+0x25e/0x380
-  ksys_read+0x73/0xe0
-  do_syscall_64+0xe1/0x790
-  entry_SYSCALL_64_after_hwframe+0x4b/0x53
- RIP: 0033:0x7fc3f129318e
-  </TASK>
+That will tell us more about what is going wrong here and hopefully
+help us isolate a potential cause...
 
-[CAUSE]
-iomap_dio_hole_iter() is responsible for zeroing out the buffer for a
-hole, which calls iov_iter_zero() to zero the range.
-
-However btrfs disables page fault during its __iomap_dio_rw() call, so
-iov_iter_zero() can fail at any page boundary.
-
-When the fs block size is larger than page size, iov_iter_zero() may
-only have zeroed one page, which is not aligned to the fs block size.
-
-Such one page long range is passed back to btrfs, which triggers the
-above ASSERT().
-
-[FIX]
-For iomap_dio_hole_iter() round down the copied length, and revert
-any excessive range that is beyond the aligned copied length.
-Also use @aligned_copied for the size increment and iter advancement.
-
-This should only affect btrfs, which is the only fs utilizing iomap dio
-with page fault disabled.
-
-Fixes: 001397f5ef49 ("iomap: add IOMAP_DIO_FSBLOCK_ALIGNED flag")
-Signed-off-by: Qu Wenruo <wqu@suse.com>
----
-v4:
-- Always align down to fs block size
-
-v3:
-- Fix a NULL pointer dereference where @bdev can be NULL for holes
-
-v2:
-- Rebased to the latest vfs tree
-
-- Slightly rewords the reproducer
-  In fact no special reproducer needed, any test case running fsstress
-  can easily trigger it.
-
-  The example provided is just the shortest sequence I used to debug the
-  crash.
----
- fs/iomap/direct-io.c | 15 +++++++++++----
- 1 file changed, 11 insertions(+), 4 deletions(-)
-
-diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-index b3368d64e81b..01f26fb3b3b2 100644
---- a/fs/iomap/direct-io.c
-+++ b/fs/iomap/direct-io.c
-@@ -594,12 +594,19 @@ static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
- 
- static int iomap_dio_hole_iter(struct iomap_iter *iter, struct iomap_dio *dio)
- {
--	loff_t length = iov_iter_zero(iomap_length(iter), dio->submit.iter);
-+	loff_t copied = iov_iter_zero(iomap_length(iter), dio->submit.iter);
-+	unsigned int bs = i_blocksize(iter->inode);
-+	loff_t aligned_copied = round_down(copied, bs);
- 
--	dio->size += length;
--	if (!length)
-+	/*
-+	 * If fs block size is larger than page size, page fault failure
-+	 * can cause @copied to be page aligned but not fs block aligned.
-+	 */
-+	iov_iter_revert(dio->submit.iter, copied - aligned_copied);
-+	dio->size += aligned_copied;
-+	if (!aligned_copied)
- 		return -EFAULT;
--	return iomap_iter_advance(iter, length);
-+	return iomap_iter_advance(iter, aligned_copied);
- }
- 
- static int iomap_dio_inline_iter(struct iomap_iter *iomi, struct iomap_dio *dio)
+-Dave.
 -- 
-2.54.0
-
+Dave Chinner
+dgc@kernel.org
