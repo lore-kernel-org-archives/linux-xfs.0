@@ -1,152 +1,99 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f49.google.com (mail-ed1-f49.google.com [209.85.208.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B29A353A8F
-	for <linux-xfs@vger.kernel.org>; Thu,  6 Aug 2026 09:18:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786007897; cv=none; b=A96BBA+ipTlFLHRgxuiy/QhNXVUTz+kJH7yzwAvkLokbY56fV/jBbLAIKlIN/sPnOx8BJ2atJWOJLnBqIwdOUc++Xb0Ci0lEz3k4kL+AS6X1Q+uB63ytmoe/gw3FcZL/rIBfUVFl6ao6ELVxH4A6o6JZq+jM20XSSW9Lafvyt30=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786007897; c=relaxed/simple;
-	bh=JpHwjZn0QUSdBbZlFkc08H4OZgOCgRI9KGovcE2bi5I=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=EKAkjN0e0ox6LBMEJw2Emh6sCTxF7+vTaCBHPOSSbKxmcO1zl+S0cBA4u/kP8MGNDF9lXRp8Fe9j6Aa1ktVl4RS6PN2ppAKCC8JVVl0uhlj+QO7urk/9/kVUHGi1j/vVJQW4t/iu840fGRm9zvHfjMG6OKbFXdX1Zl28RoUPYZU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FvjS4XsB; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 952552FF672
+	for <linux-xfs@vger.kernel.org>; Thu,  6 Aug 2026 12:06:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.49
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1786018016; cv=pass; b=TT3X7Q4R5N8RRiRrK8mlSD/KXth5NUl3i32oczE90DF2RSN9OZYwz1JCcSDdZL0z1lpSBi+CdZtng6wyDURqFJTLGuIaAZguhU586K5VdVSnDTnz8yTa9flytUq6KbEq2FOghMngxUx2V2tP+WuI+Vt5lA3x094UIPxsyciu4ww=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1786018016; c=relaxed/simple;
+	bh=gm1y3HjSbfjetP2qj6SkQ/PvAerOiP935sq/jHQIUpg=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=n04lUrHeLyWQxi3CnlB7fx8ym9rADWgaMtCvtBG1nWP+121IsOk0ztAHQe5QLy6PZePqkSIv3k/2Sux8D9WwR3N1Owt5SmHUwaPZ3IYhSqoTtH1tA1B/Y56kS090RBo7ZoBKsHdGaQJmw9uDCxKDCY8yvcVbXhXqMJ5FBmxRVPE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Vb9OcfD2; arc=pass smtp.client-ip=209.85.208.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FvjS4XsB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 888841F000E9;
-	Thu,  6 Aug 2026 09:18:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786007896;
-	bh=QV3TnC1/HkTYUwuWfRzLhbpbREb4B36KyZxgm1mfOAQ=;
-	h=Date:From:To:Cc:Subject;
-	b=FvjS4XsB21twHQMzlFPNgdmKNuI5O7XJZhB7sSA++0T9SHU8WwhT9XrTkwTe86MSO
-	 bx+rpCcEJtl7x0bRMnJj54cG1e6e7TUL7cUdnZinPwRwtvMNlzwRmalGHmEbVmBKx3
-	 abBSPPvpqade/79CzCgcqX2kRPiCATkps3kvwERz2z2YUxKSbeL13ngCgRQTjUGfFP
-	 hTxKnCs1NPh7NGqEhyN2w8FO6myC/oNzbVC1tqakxxZ+VRrhTaoMR8w618Socv2PdW
-	 1D5OjUdnHKHQ9S90X9NjF6mw5gCHXr5vSn2kMEmuDgTLng0XFO6xlCyQVua6d3fa6i
-	 g4oyM7ivcVtag==
-Date: Thu, 6 Aug 2026 11:18:11 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: torvalds@linux-foundation.org
-Cc: linux-xfs@vger.kernel.org
-Subject: [GIT PULL] XFS: Fixes for v7.2-rc7
-Message-ID: <anRAZ3k7id6zqYh-@andromeda.toxiclabs.cc>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Vb9OcfD2"
+Received: by mail-ed1-f49.google.com with SMTP id 4fb4d7f45d1cf-69c108fee7fso3114649a12.3
+        for <linux-xfs@vger.kernel.org>; Thu, 06 Aug 2026 05:06:54 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1786018013; cv=none;
+        d=google.com; s=arc-20260327;
+        b=CvE4sLAqX61bMu8CqN7KG8ZG8vjGwT9u1wR4v9VwBbSaLzvaxax0F+31WRUhkp5lKW
+         vEfHywMsch8sqX9jstI5q4FhcagCBgBy+LUYVnBt+4wQy9TmzsRwHx31uaXKfUBeyMlj
+         mvMNHHsMbAEenKd6PIIdf8TdHDcwW4n8zMN8PgbxOKyIPrRM8TE96pht9Wg9HknuoYTG
+         zTxgSd4yg+/c14YN/xoN1L/OtGm1Oj8pSG+8Fs7Auik8DXcNFM3AlwCOga5O1mjENyeA
+         9o8YtXTuMWR76Bz677Q9jGwj8a4UbO62EoEXG8Lxac/w+nnPpy3ZXuRnjFqEmXG7SkDp
+         dW3A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=gm1y3HjSbfjetP2qj6SkQ/PvAerOiP935sq/jHQIUpg=;
+        fh=0ntakmSOf9fdJXnxC5FYskb1A8qbAsBZTpsfs/8UG8Q=;
+        b=aUEaJTKz+hz2ZY7v+EjhDeAU5e/2ZQQGDnRm3i4KCf/wvGysxx7BTxXrZ1Eaf5hpLN
+         V3X6Q25Kca2Nd0i+TO3SCbJGiwFYIOuU//CzIZPUKXfhAX/NAMgZA9QScQAolTVULlqU
+         oc/5nONxOWfFM1Z8KW6U5BR2BuIkd2vtPVPq6HYlzX+GtckNB1phlBi0IM6r/GjMsXuz
+         of54HQ9O16VZEkRqVDvfxu73iXTHKz6ukbQPKD/T8zTUO/LabAS6S0y4Xg5aFpeKn4K9
+         w9jfKsuu7iZLtcWibQbTkElg37xArqEUAm8GaZd+2/j0IVR2XnWOcJjkXQMZ1iOw55rC
+         UknQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1786018013; x=1786622813; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=gm1y3HjSbfjetP2qj6SkQ/PvAerOiP935sq/jHQIUpg=;
+        b=Vb9OcfD2g8B7FhOXE/AxFlnYBkhDF183dFcMzXv2kuf1SS8I37i+IFfOe6S77yUMmG
+         Emb8Z55urXxFw6EGHGXqyCyuNbDatEtz0PzWVtbfWAVSiTE8Drm+dkL5MMzUvPqWoBrg
+         WJ4mWq46MmIk2PRXcAo2wJy+mIBEB3LW1jQI1mjEnZ4sD3ZCFpgLZhBWFKpokwslMwzN
+         cR2dS7YkiNUoyCkJ9mMhbC+D+04BiyzgG5RE9sGtMJhSfKbwXgHCgpCu71ishch9hCYv
+         ReORnkzajc9hfut/s2k+uFlFL9aThR4q36GlVmapzaALmIxbhlTRQdN5hJjhUYYP/Yva
+         rF+w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786018013; x=1786622813;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=gm1y3HjSbfjetP2qj6SkQ/PvAerOiP935sq/jHQIUpg=;
+        b=LdHbjThCkh0ejNqQCwKgn+D7IdiBsSitoenBn1bxGImQ2q/YRENN8kMs9OxLpKHDqS
+         kRbaSoetTwIIkZlqP3RPIKkwW+isVQExOUVDcdeF818TSbOkm3zZhwF4k+xKTx47ITcU
+         DZCdpZ1nYBbK92a7guRLdnhCyEj3gFQfcpmfLJDuPCpRq+ERmpnwNgIMbevhV9ad6nhH
+         arpDSJz+QWVYycqwIw4jQqyH2Ffxya/zB60egxA2TPb6Mq6o5kZPzS0DsSLh0/cuqLCX
+         eF7uYLYgmdXoWkA17NB4YjFMDz0BaVWi79Mxokrxssn2tquF+Fcmd3ZWqLwmSZ016yXi
+         D55A==
+X-Forwarded-Encrypted: i=1; AHgh+RpMHFjxGYyg6hxEXjsBQa+rxH9irs9uN+gN1Tu5jnc1Vv7W4v4K32/64xHfnYRCn18kFe0vpUodIKM=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzK7L6Lji/LSypOrM0kdAyn0ot/toU1b79nIgucPBiIRjPQEWdp
+	j58PDUGtJ7Fhh7DTMD96dir6T72aakAtNQE3uU6aXYepKnbOy1/x9EcjEC4V1wOOVEOMxIE9Ynw
+	JEpO4UNXZSedF24plybynUTn11muiNw==
+X-Gm-Gg: AR+sD12giG11v0SPjWBvyF9wsgW2JzRjQUGffMVg23pk6eN0rSJM6ucIeae8OIxbvG+
+	gIn7hMlkofjck7szwvhZfhuYCj4DT+32UZYf4AgRCOeg+IKcsAjVWT2XYeC3AVvrggB1CGEButm
+	VKITIuA2lsbRD8SiDKrtsrj+/o9C0R7CJbAvLTUejerQ2JOBd2vEnmfOjifVTUubcStbWG/ZI90
+	Zn8wuHPoqMH32Sj+SFf8Zii8TQUF1j4sqMWc4vAI08BYeyE/VlIsOwIo53N+lVELhTjzGtupmkN
+	HHy7h7dY8yxDCuT4DDcoQwa14WAUByObDhBBAtIxOUnZiUHhx/hyJy5LsxcHjIEojBTM7Xc9OR4
+	wT5+bSmFvBRUP6Xjt8g==
+X-Received: by 2002:a05:6402:42c3:b0:696:8f45:4ae7 with SMTP id
+ 4fb4d7f45d1cf-6a14f138aa8mr7034271a12.13.1786018012568; Thu, 06 Aug 2026
+ 05:06:52 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+References: <20260804124404.737145-1-hch@lst.de> <20260804124404.737145-3-hch@lst.de>
+In-Reply-To: <20260804124404.737145-3-hch@lst.de>
+From: Anuj gupta <anuj1072538@gmail.com>
+Date: Thu, 6 Aug 2026 17:36:14 +0530
+X-Gm-Features: AUfX_mwpy12o3SwOUSv8lriL-YCkBG9LDIBCAyExEhQS8ZsJ_vNr_t-bxK4FRbA
+Message-ID: <CACzX3AvRWQ1qGwmQxvH8xeZB7cyky9k716PO8MgSM9tvOo=KYQ@mail.gmail.com>
+Subject: Re: [PATCH 2/2] iomap: iomap_bio_read_folio_range_sync is missing a
+ call to bio_uninit
+To: Christoph Hellwig <hch@lst.de>
+Cc: Christian Brauner <brauner@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>, 
+	Anuj Gupta <anuj20.g@samsung.com>, Kanchan Joshi <joshi.k@samsung.com>, linux-xfs@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-Hello Linus,
-
-Could you please pull patches included in the tag below?
-
-This contains mostly a collection of bug fixes found by LLM tools.
-
-An attempt merge against your current TOT has been successful.
-
-Thanks,
-Carlos
-
-"The following changes since commit 59c462b0f5cfa107794228051724b34ae9334168:
-
-  xfs: don't zap bmbt forks if they are MAXLEVELS tall (2026-07-14 11:01:47 +0200)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-fixes-7.2-rc7
-
-for you to fetch changes up to eb6b2cc1fc8ad566d746d128a559989ff0bba5cc:
-
-  xfs: check v5 superblock features early (2026-08-03 10:30:28 +0200)
-
-----------------------------------------------------------------
-xfs: fixes for 7.2-rc7
-
-Signed-off-by: Carlos Maiolino <cem@kernel.org>
-
-----------------------------------------------------------------
-Andrey Albershteyn (1):
-      xfs: fix inverted clearance of inode junk flags
-
-Christoph Hellwig (4):
-      xfs: update BDI {io,ra}_pages values based on the RT device limits
-      xfs: add a separate bio_set for spliting GC writes
-      xfs: add a comment to describe xfs_gc_bio.victim_rtg
-      xfs: check v5 superblock features early
-
-Darrick J. Wong (21):
-      xfs: check cowextsize in xrep_inode_cowextsize
-      xfs: fix transaction block reservation in xrep_rtbitmap
-      xfs: rtsummary scrub should treat rtbitmap corruption errors as an xref error
-      xfs: zero i_nlink before repair puts inode on unlinked list
-      xfs: mark nonzero sb_gquotino as corrupt on metadir filesystems
-      xfs: only check mergeability of bnobt records
-      xfs: don't double-lock when deleting a self-referential directory
-      xfs: don't return EFSCORRUPTED when scrubbing corrupt parent pointers
-      xfs: don't zap the attr fork on repair when there are queued pptr updates
-      xfs: nlink scrub must take IOLOCK before determining ILOCK state
-      xfs: avoid UAF on sc->tempip in xrep_tempfile_create
-      xfs: hoist per-bucket unlinked list check to helper
-      xfs: don't livelock in scrub on a circular unlinked list
-      xfs: don't walk off the end of a null sc->sa.agi_bp in AGI repair
-      xfs: load next_agino from the correct xfarray in xrep_iunlink_relink_prev
-      xfs: pass runtime errors from xrep_iunlink_mark_ondisk_rec up to callers
-      xfs: check xfarray iteration errors when committing unlinked inode lists
-      xfs: fix allocated inodes that show up in the unlinked list
-      xfs: fix another iunlink infinite loop bug in online fsck
-      xfs: set the prev pointer when reinserting an inode on the unlinked list
-      xfs: don't ignore runtime errors in xrep_iunlink_reload_next
-
-Guanghui Yang (1):
-      xfs: propagate errors from xfs_rtginode_load
-
-Ibrahim Hashimov (1):
-      xfs: bounds-check buffer log item's dirty bitmap
-
-Lin Jiapeng (1):
-      xfs: fix exchange-range reflink flag clearing issue with INO1_WRITTEN
-
-Long Li (2):
-      xfs: fix ilock leak on error in xfs_dq_get_next_id
-      xfs: don't swallow dquot recovery verification errors
-
-Qiang Ma (1):
-      xfs: clear zapped attr fork state when bmap repair finds no attr fork
-
-Xiang Mei (1):
-      xfs: fix off-by-one in rtrefcount btree root level validation
-
-Yun Zhou (1):
-      xfs: handle NULL b_addr in xfs_buf_free
-
- fs/xfs/libxfs/xfs_exchmaps.c         |  10 +++
- fs/xfs/libxfs/xfs_rtrefcount_btree.c |   4 +-
- fs/xfs/libxfs/xfs_sb.c               |   4 +-
- fs/xfs/scrub/agheader.c              |  98 ++++++++++++++------
- fs/xfs/scrub/agheader_repair.c       | 169 +++++++++++++++++++++++++++++------
- fs/xfs/scrub/alloc.c                 |   5 +-
- fs/xfs/scrub/attr_repair.c           |   3 +-
- fs/xfs/scrub/bmap.c                  |   5 ++
- fs/xfs/scrub/dirtree_repair.c        |  22 ++++-
- fs/xfs/scrub/inode_repair.c          |   6 +-
- fs/xfs/scrub/nlinks.c                |  13 +--
- fs/xfs/scrub/nlinks_repair.c         |   7 +-
- fs/xfs/scrub/parent.c                |   2 +-
- fs/xfs/scrub/rtbitmap_repair.c       |  46 ++++++----
- fs/xfs/scrub/rtsummary.c             |   2 +-
- fs/xfs/scrub/tempfile.c              |   1 +
- fs/xfs/scrub/trace.h                 |   2 +
- fs/xfs/xfs_buf.c                     |   2 +-
- fs/xfs/xfs_buf_item_recover.c        |  57 ++++++++----
- fs/xfs/xfs_dquot.c                   |   3 +-
- fs/xfs/xfs_dquot_item_recover.c      |   2 +-
- fs/xfs/xfs_mount.h                   |   7 ++
- fs/xfs/xfs_rtalloc.c                 |   2 +-
- fs/xfs/xfs_super.c                   |  53 ++++++++++-
- fs/xfs/xfs_zone_gc.c                 |  13 ++-
- 25 files changed, 421 insertions(+), 117 deletions(-)"
+Reviewed-by: Anuj Gupta <anuj20.g@samsung.com>
