@@ -1,74 +1,37 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 085203D9665;
-	Wed,  5 Aug 2026 06:36:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B29A353A8F
+	for <linux-xfs@vger.kernel.org>; Thu,  6 Aug 2026 09:18:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785911801; cv=none; b=Zhop2AJvLWpsxHtZ/Oo9iSnrUf2YgVKKOJALVFgFSx8JpdrJb6hYsi+J0sFc7UERDNLscloSpgVMw/qzsp1JXLERNsLvHyC6tR3/HT/3aSxH+jxYoFJ6tS0t11TiwF4fdu+Kd3tYWYiWeXWzuw7ewkn9fbzlUrhpf27qy9gucxs=
+	t=1786007897; cv=none; b=A96BBA+ipTlFLHRgxuiy/QhNXVUTz+kJH7yzwAvkLokbY56fV/jBbLAIKlIN/sPnOx8BJ2atJWOJLnBqIwdOUc++Xb0Ci0lEz3k4kL+AS6X1Q+uB63ytmoe/gw3FcZL/rIBfUVFl6ao6ELVxH4A6o6JZq+jM20XSSW9Lafvyt30=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785911801; c=relaxed/simple;
-	bh=YBveNqSjBa4XhmmE6HkMEs9O9bq9R95ZcqaBlV8+egQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MkA5yoXsQ3JSzu4l0XRuuPXgvphD6PJIA5LG256E7U0k/NUamw3eP6H6QRN0VjGPWyi0633E1X2G4IiSQoEZ2Uol1TPwfmXki6YvEnmuRc4N3s/kFLkO5wM0pJ12P93thEm7neNwEEu99A5428+ggNrRUpzln+3WUgu6n+XQavw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=ER1RfIgT; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1786007897; c=relaxed/simple;
+	bh=JpHwjZn0QUSdBbZlFkc08H4OZgOCgRI9KGovcE2bi5I=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=EKAkjN0e0ox6LBMEJw2Emh6sCTxF7+vTaCBHPOSSbKxmcO1zl+S0cBA4u/kP8MGNDF9lXRp8Fe9j6Aa1ktVl4RS6PN2ppAKCC8JVVl0uhlj+QO7urk/9/kVUHGi1j/vVJQW4t/iu840fGRm9zvHfjMG6OKbFXdX1Zl28RoUPYZU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FvjS4XsB; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="ER1RfIgT"
-Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6755mHMZ3005943;
-	Wed, 5 Aug 2026 06:36:13 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=pp1; bh=YBveNqSjBa4XhmmE6HkMEs9O9bq9R9
-	5ZcqaBlV8+egQ=; b=ER1RfIgT9xlB73t9/xQqXyIrY+HqeVaYwCw83gutei0Ehr
-	5efYEu+9KhkIY0xCg+E92XaZfWl8iHbH3lsIf2ahgYHDGBI0Az89Pq8mzQ4ryXue
-	jzh721p3M21DeSifvxPW7CwMStfacsSplgvs0erSp2h15fCkoE9jFN25g5zV9ckh
-	ubGOr74mJpKPylIwjW9ogaiTJc0cPGAvvO5glyFuay8lJdCn7OA6x1oX5AQniof7
-	HhWgZ6Z2lcEv7EUcrCFRAt6hqnoGcvwc3H/yae+jOz3bjF0DY39eMVNwu0WDX/kJ
-	Lci4BGxsbnzm5xvwSOYWoBysp8BzMnmY8Dl+uB8Q==
-Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4fs8h51p4f-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 05 Aug 2026 06:36:12 +0000 (GMT)
-Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma21.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 6756QHWI032076;
-	Wed, 5 Aug 2026 06:36:11 GMT
-Received: from smtprelay03.fra02v.mail.ibm.com ([9.218.2.224])
-	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4fsv4k5btw-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 05 Aug 2026 06:36:11 +0000 (GMT)
-Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
-	by smtprelay03.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 6756a9f935783012
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 5 Aug 2026 06:36:09 GMT
-Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 2B10C2004F;
-	Wed,  5 Aug 2026 06:36:09 +0000 (GMT)
-Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id AB04B20040;
-	Wed,  5 Aug 2026 06:36:00 +0000 (GMT)
-Received: from li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com (unknown [9.124.211.239])
-	by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-	Wed,  5 Aug 2026 06:36:00 +0000 (GMT)
-Date: Wed, 5 Aug 2026 12:05:57 +0530
-From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-To: Christian Brauner <brauner@kernel.org>, linux-fsdevel@vger.kernel.org
-Cc: "Darrick J . Wong" <djwong@kernel.org>, Carlos Maiolino <cem@kernel.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
-        Matthew Wilcox <willy@infradead.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Ritesh Harjani <ritesh.list@gmail.com>, Zhang Yi <yi.zhang@huawei.com>,
-        Christoph Hellwig <hch@lst.de>, Dave Chinner <dchinner@redhat.com>,
-        Daniel Gomez <da.gomez@kernel.org>,
-        Pankaj Raghav <pankaj.raghav@linux.dev>, Theodore Tso <tytso@mit.edu>,
-        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-mm@kvack.org, Andres Freund <andres@anarazel.de>
-Subject: Re: [RFC PATCH v3 00/11] Add buffered write-through support to iomap
- & xfs
-Message-ID: <anLZzeS8mx0GaPQj@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
-References: <cover.1785908600.git.ojaswin@linux.ibm.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FvjS4XsB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 888841F000E9;
+	Thu,  6 Aug 2026 09:18:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1786007896;
+	bh=QV3TnC1/HkTYUwuWfRzLhbpbREb4B36KyZxgm1mfOAQ=;
+	h=Date:From:To:Cc:Subject;
+	b=FvjS4XsB21twHQMzlFPNgdmKNuI5O7XJZhB7sSA++0T9SHU8WwhT9XrTkwTe86MSO
+	 bx+rpCcEJtl7x0bRMnJj54cG1e6e7TUL7cUdnZinPwRwtvMNlzwRmalGHmEbVmBKx3
+	 abBSPPvpqade/79CzCgcqX2kRPiCATkps3kvwERz2z2YUxKSbeL13ngCgRQTjUGfFP
+	 hTxKnCs1NPh7NGqEhyN2w8FO6myC/oNzbVC1tqakxxZ+VRrhTaoMR8w618Socv2PdW
+	 1D5OjUdnHKHQ9S90X9NjF6mw5gCHXr5vSn2kMEmuDgTLng0XFO6xlCyQVua6d3fa6i
+	 g4oyM7ivcVtag==
+Date: Thu, 6 Aug 2026 11:18:11 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: torvalds@linux-foundation.org
+Cc: linux-xfs@vger.kernel.org
+Subject: [GIT PULL] XFS: Fixes for v7.2-rc7
+Message-ID: <anRAZ3k7id6zqYh-@andromeda.toxiclabs.cc>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -77,38 +40,113 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <cover.1785908600.git.ojaswin@linux.ibm.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Proofpoint-Spam-Info: AW1haW4tMjYwODA1MDA0NyBTYWx0ZWRfX6J9sib43SCRS
- dqCrM/w2/y3hz6rJVe6u77B9G8EWVLotZhArYX52k/tnHIdGJrsdWA3BCuxo2Tp18Rsne9ODDYa
- GBmpGuV3R79M9xxEC77vxAosPfgyOA0=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODA1MDA0NyBTYWx0ZWRfXz5val6wkxSI0
- 3xwQ1UfV8fBFN54ok/JGOFfkrSVopsw2bLntHw7N5x3+51NHTZlgflVeFgaPpvFUoYLsZSEF1D2
- Rh/o267uAezPAZtcRHfwVa5/PQTokXJe7J756NcrUMCmdc1uvGC67TU5Asxgg6oMv+IyVEQFgBm
- i/6IYYuRD9x1xZ6B+QybIRU3LyVtXW7NebwGR8G0myonLU2dycSgysswyV9XrCfUPmQP0DTKqoU
- 1VowHuvfUXzt0vhw7OyNxxlTNguU1SX6h6Ol/nr1BSZMT5YMm9GPwvBZMvu6PTgAz278B5I6G5i
- Kl+tRvlopP18TK3h8yWzDC0WFWEiPOzVu9Z3LN5PZhXxppjOrDGdASl6ws8ZAJc5rXmZcXtN+z2
- V2eKtgQcLj1u6Ik6Xf9vQfCGL8oDtPq1KlKJ8LHBTp9fGOyld7KwwIP8TnOfr2FscppLHzWONDp
- olhrjxj6MNRGQ2vRp9g==
-X-Authority-Analysis: v=2.4 cv=SI1ykuvH c=1 sm=1 tr=0 ts=6a72d9dd cx=c_pps
- a=GFwsV6G8L6GxiO2Y/PsHdQ==:117 a=GFwsV6G8L6GxiO2Y/PsHdQ==:17
- a=kj9zAlcOel0A:10 a=Sv0fKeRqtYgA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=U7nrCbtTmkRpXpFmAIza:22 a=3wHVdK5kWpxBeTODUnoA:9
- a=CjuIK1q_8ugA:10
-X-Proofpoint-ORIG-GUID: ohqZjt751CnaL8m0SdDvxbjvJM6oBMhg
-X-Proofpoint-GUID: ZPbgVia0mdsgFQm7hXSCBEj6YCAPX372
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-08-05_02,2026-08-04_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 bulkscore=0 suspectscore=0 impostorscore=0 spamscore=0
- phishscore=0 priorityscore=1501 lowpriorityscore=0 adultscore=0
- malwarescore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
- definitions=main-2608050047
 
-On Wed, Aug 05, 2026 at 11:58:06AM +0530, Ojaswin Mujoo wrote:
-> This is the next revision of writethrough series. I'll quote part of the
+Hello Linus,
 
-(+cc Andres)
+Could you please pull patches included in the tag below?
+
+This contains mostly a collection of bug fixes found by LLM tools.
+
+An attempt merge against your current TOT has been successful.
+
+Thanks,
+Carlos
+
+"The following changes since commit 59c462b0f5cfa107794228051724b34ae9334168:
+
+  xfs: don't zap bmbt forks if they are MAXLEVELS tall (2026-07-14 11:01:47 +0200)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-fixes-7.2-rc7
+
+for you to fetch changes up to eb6b2cc1fc8ad566d746d128a559989ff0bba5cc:
+
+  xfs: check v5 superblock features early (2026-08-03 10:30:28 +0200)
+
+----------------------------------------------------------------
+xfs: fixes for 7.2-rc7
+
+Signed-off-by: Carlos Maiolino <cem@kernel.org>
+
+----------------------------------------------------------------
+Andrey Albershteyn (1):
+      xfs: fix inverted clearance of inode junk flags
+
+Christoph Hellwig (4):
+      xfs: update BDI {io,ra}_pages values based on the RT device limits
+      xfs: add a separate bio_set for spliting GC writes
+      xfs: add a comment to describe xfs_gc_bio.victim_rtg
+      xfs: check v5 superblock features early
+
+Darrick J. Wong (21):
+      xfs: check cowextsize in xrep_inode_cowextsize
+      xfs: fix transaction block reservation in xrep_rtbitmap
+      xfs: rtsummary scrub should treat rtbitmap corruption errors as an xref error
+      xfs: zero i_nlink before repair puts inode on unlinked list
+      xfs: mark nonzero sb_gquotino as corrupt on metadir filesystems
+      xfs: only check mergeability of bnobt records
+      xfs: don't double-lock when deleting a self-referential directory
+      xfs: don't return EFSCORRUPTED when scrubbing corrupt parent pointers
+      xfs: don't zap the attr fork on repair when there are queued pptr updates
+      xfs: nlink scrub must take IOLOCK before determining ILOCK state
+      xfs: avoid UAF on sc->tempip in xrep_tempfile_create
+      xfs: hoist per-bucket unlinked list check to helper
+      xfs: don't livelock in scrub on a circular unlinked list
+      xfs: don't walk off the end of a null sc->sa.agi_bp in AGI repair
+      xfs: load next_agino from the correct xfarray in xrep_iunlink_relink_prev
+      xfs: pass runtime errors from xrep_iunlink_mark_ondisk_rec up to callers
+      xfs: check xfarray iteration errors when committing unlinked inode lists
+      xfs: fix allocated inodes that show up in the unlinked list
+      xfs: fix another iunlink infinite loop bug in online fsck
+      xfs: set the prev pointer when reinserting an inode on the unlinked list
+      xfs: don't ignore runtime errors in xrep_iunlink_reload_next
+
+Guanghui Yang (1):
+      xfs: propagate errors from xfs_rtginode_load
+
+Ibrahim Hashimov (1):
+      xfs: bounds-check buffer log item's dirty bitmap
+
+Lin Jiapeng (1):
+      xfs: fix exchange-range reflink flag clearing issue with INO1_WRITTEN
+
+Long Li (2):
+      xfs: fix ilock leak on error in xfs_dq_get_next_id
+      xfs: don't swallow dquot recovery verification errors
+
+Qiang Ma (1):
+      xfs: clear zapped attr fork state when bmap repair finds no attr fork
+
+Xiang Mei (1):
+      xfs: fix off-by-one in rtrefcount btree root level validation
+
+Yun Zhou (1):
+      xfs: handle NULL b_addr in xfs_buf_free
+
+ fs/xfs/libxfs/xfs_exchmaps.c         |  10 +++
+ fs/xfs/libxfs/xfs_rtrefcount_btree.c |   4 +-
+ fs/xfs/libxfs/xfs_sb.c               |   4 +-
+ fs/xfs/scrub/agheader.c              |  98 ++++++++++++++------
+ fs/xfs/scrub/agheader_repair.c       | 169 +++++++++++++++++++++++++++++------
+ fs/xfs/scrub/alloc.c                 |   5 +-
+ fs/xfs/scrub/attr_repair.c           |   3 +-
+ fs/xfs/scrub/bmap.c                  |   5 ++
+ fs/xfs/scrub/dirtree_repair.c        |  22 ++++-
+ fs/xfs/scrub/inode_repair.c          |   6 +-
+ fs/xfs/scrub/nlinks.c                |  13 +--
+ fs/xfs/scrub/nlinks_repair.c         |   7 +-
+ fs/xfs/scrub/parent.c                |   2 +-
+ fs/xfs/scrub/rtbitmap_repair.c       |  46 ++++++----
+ fs/xfs/scrub/rtsummary.c             |   2 +-
+ fs/xfs/scrub/tempfile.c              |   1 +
+ fs/xfs/scrub/trace.h                 |   2 +
+ fs/xfs/xfs_buf.c                     |   2 +-
+ fs/xfs/xfs_buf_item_recover.c        |  57 ++++++++----
+ fs/xfs/xfs_dquot.c                   |   3 +-
+ fs/xfs/xfs_dquot_item_recover.c      |   2 +-
+ fs/xfs/xfs_mount.h                   |   7 ++
+ fs/xfs/xfs_rtalloc.c                 |   2 +-
+ fs/xfs/xfs_super.c                   |  53 ++++++++++-
+ fs/xfs/xfs_zone_gc.c                 |  13 ++-
+ 25 files changed, 421 insertions(+), 117 deletions(-)"
