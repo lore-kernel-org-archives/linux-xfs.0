@@ -1,44 +1,44 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDE83431A5C;
-	Mon, 10 Aug 2026 17:37:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78F7E310651;
+	Mon, 10 Aug 2026 18:07:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786383464; cv=none; b=O5YrKgSDN3J9QG8IfJC+RgOdGrDpkHyw5GlF0e3s/3kRBMgOmaguo50MvfEl4z82mlk8AhMZadAD8FV5GONan9JOf9nOX2wILOBBA9IaX2rYzzsposcKPJpNrkr3Vap54qGmhbv2RBktGgDInj+ugyz9Ko7F1yGUHB/Hq/YoUnQ=
+	t=1786385225; cv=none; b=Fv9ik3dghRqCNsA9SmctbhBFKIxTf6UhAxPGxGQMoiWO629Kd8ZX3Qkt2qjX29+Ih7zdtYXOjmRX4cXsg/rk6eCZNZALg6XkkXLGd94DjuI9irJHZv4kUsr0RB4vQh8iNGt30WB3IY0xaq3FYB+tsFA/z5LueCLP/wuWA1rI7uo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786383464; c=relaxed/simple;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
+	s=arc-20240116; t=1786385225; c=relaxed/simple;
+	bh=FVwKRILliHWr65Nl+epuisl3vE7X/hpu8TMWfZ74cIU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=o5RmtC4EHv50To5KiubUvyb57atznJr6HnfpXmRH0KS4g2uvZZZ6vRf/v9BMj5yYENXLjXtucPvZSszmfDY2apTlgFOQGXghz5GnLBW39JUsR6ACCbURW3MaDOWUTrFqgVtEj8/Q+eHyPsuna9lls3vBuEBgGPGz8Rt1hNmvxCk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=gLKKJ95q; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=rG/WRvN8vdyQy0zP9xLy9yCApa31hDhDycECz8KF9wWMzaWTXFbhobjV0UWyGMPrfzMeyXyBzesxh67w8GboYrqH826owws0rOuQdhpY0QLpDLP54MMfP/lJbz14vEzgML344Arb/AaSDGmsKgWvjYqrnBrXsKHWy8uKqySyWVk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=S3ueKuiS; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="gLKKJ95q"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=gLKKJ95qMnStmz+clE3bqwlSeO
-	GXPCSup2kZhnSPclCH09eQVmSCGZTdE2o3e4xP6KBU1ELyeD8Nlna85HWGDKwVnEudvcb5KMz1PGW
-	vj66ubP7aQn9QXiYrmGKgSM3KHpELxD+fLdKeC6MAptdrqIEeaaAD0moDimRUd1Mr9CMNgQp8SQzn
-	Q8pSRW9DeVCRCm4ghSJ5dh/LtvkFsu/z1Xg1AXuy/cQPj049Mf6644wOMLVqM+ctVR6FGAa4dz4Ys
-	csggNh1W8lP5kWu9lNWZih33n9/yEcfFg/IVWnrVdgIh8Sn2N86NP4nHDqZ6LAZtUrNwkj97XDfF8
-	nPJmJehQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wtTwS-0000000CXcM-43l5;
-	Mon, 10 Aug 2026 17:37:40 +0000
-Date: Mon, 10 Aug 2026 10:37:40 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Tal Zussman <tz2294@columbia.edu>
-Cc: Carlos Maiolino <cem@kernel.org>, Jens Axboe <axboe@kernel.dk>,
-	Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>,
-	linux-block@vger.kernel.org, linux-xfs@vger.kernel.org,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="S3ueKuiS"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 4EDA71F000E9;
+	Mon, 10 Aug 2026 18:07:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1786385224;
+	bh=4/Dsmeg0WYX5R6eqsqvBBzxR4fvbeeBUr/QABQg2hLE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=S3ueKuiS05CEhvIWT1Urj08/MNKnoHHiEg8yjq4jmjhqndz6QyR8wXpF5qH3ACqGW
+	 rK7+eIZ39esqdKFbxeS7tGgfxA6/LrlH6keA4pLlJ/o7xZk/kLLai+KxgHtQpO9YtD
+	 byKBFxZ1aypC7X5M3FwGECApkOETdpZNQoCMQmW9BylM2IUwRJFFWz3QCKyv9QSNhC
+	 98lv2y/vlh3oXnqxGrZBZJ0wJ+77ZA+U0w5sYA+7sf+m4Y9CBPBD8R8Aj26XROM2ys
+	 VRDhkgtdJl/4xASuWZrdjNW8zod8u2+at19G0Ysqf0dHZ4ynSCzowXZ6iJRxnDuQha
+	 lFfxtRkaljZdw==
+Date: Mon, 10 Aug 2026 11:07:03 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Javier Tia <javier@peridio.com>
+Cc: Carlos Maiolino <cem@kernel.org>, Dave Chinner <dchinner@redhat.com>,
+	Allison Henderson <allison.henderson@oracle.com>,
+	Andrey Albershteyn <aalbersh@kernel.org>, linux-xfs@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] xfs: avoid double deferrals for RWF_DONTCACHE writes
-Message-ID: <anoMZMav724xyGB6@infradead.org>
-References: <20260810-xfs-dontcache-double-defer-v1-1-aea7484b3e49@columbia.edu>
+Subject: Re: [PATCH v2 6/6] xfs: assert the reservation covers each da fork
+ growth
+Message-ID: <20260810180703.GR3556460@frogsfrogsfrogs>
+References: <20260808234016.246054-7-floss@jetm.me>
+ <20260810164312.960721-8-floss@jetm.me>
+ <20260810164312.960721-14-floss@jetm.me>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,10 +47,42 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260810-xfs-dontcache-double-defer-v1-1-aea7484b3e49@columbia.edu>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20260810164312.960721-14-floss@jetm.me>
 
-Looks good:
+On Mon, Aug 10, 2026 at 10:43:19AM -0600, Javier Tia wrote:
+> xfs_da_grow_inode_int() subtracts the blocks it just allocated from
+> args->total, the caller's remaining block reservation.  The subtraction
+> is unsigned, so a caller that reaches it with too small a total wraps
+> the field instead of failing, and every allocation afterwards runs with
+> a bogus reservation.  Assert the remaining reservation still covers the
+> step, so an under-reserved or uninitialised total trips in debug builds
+> instead of silently wrapping.
+> 
+> Suggested-by: Darrick J. Wong <djwong@kernel.org>
+> Signed-off-by: Javier Tia <floss@jetm.me>
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Looks good,
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
+--D
+
+> ---
+>  fs/xfs/libxfs/xfs_da_btree.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+> index ad801b7bd2dd..9be407affc6e 100644
+> --- a/fs/xfs/libxfs/xfs_da_btree.c
+> +++ b/fs/xfs/libxfs/xfs_da_btree.c
+> @@ -2385,6 +2385,7 @@ xfs_da_grow_inode_int(
+>  	}
+>  
+>  	/* account for newly allocated blocks in reserved blocks total */
+> +	ASSERT(args->total >= dp->i_nblocks - nblks);
+>  	args->total -= dp->i_nblocks - nblks;
+>  
+>  out_free_map:
+> -- 
+> Javier Tia
+> 
+> 
