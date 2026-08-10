@@ -1,64 +1,65 @@
-Received: from mail-ua1-f48.google.com (mail-ua1-f48.google.com [209.85.222.48])
+Received: from mail-vk1-f171.google.com (mail-vk1-f171.google.com [209.85.221.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86EB13B19D9
-	for <linux-xfs@vger.kernel.org>; Mon, 10 Aug 2026 23:06:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FAF23B52E6
+	for <linux-xfs@vger.kernel.org>; Mon, 10 Aug 2026 23:06:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786403187; cv=none; b=YhrOKggz1DUfx1SHmuQmSSwcNLIajjOQN1jlMhmxVArY2KpuEh7n49XM+s3UiWE77hS59BZhT4ESi2MpzhslVHWHcaC8nSLzhxMdJjpwhW3M65W8EroohTsdp6iNqySzEG9rfDzAts6D5hdj8Wspp7JMIzHiGLVjBFXJeLxNtKw=
+	t=1786403187; cv=none; b=Dw0epW3QiJe5Plygf+9DV318yBIBcNYQJWFUtaE1L9O56wtyjAZTsadhO/+k6Nxy6DD/sCYuHYEmiayXwWGdxX1KEJibdroMLzVx/ByBTDmSg7eKLyvKz26hwsE4e5sL8Z6Po8yk9+u6F1Vc3MZAyP8vzrbtaNJnaM6m9AbIRUE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1786403187; c=relaxed/simple;
-	bh=dvPmh2MX3lGbIaGJA+vnikpJaoUwi8NxpixIT/Mz2A0=;
+	bh=NNh5aG4w7LlGxuf1r7SXWUFUWOyJJe//FeT84ioNlzE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=c6qaahLNLvJtcGVRBzo+wpJFlVOPGouvuutrlu9pdHxXR/sqwhp8X9SznPgK9NfiEkldFrLie35cbHK8RdJn4PRaF3N42X4G4DzkxM4p9qfIlBzeKrXOmb9cy8CRGoB0ig40Ag+juUrmAfPg07fvX48jFbgYyTgPaHgEd/JKqlE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=peridio.com; spf=pass smtp.mailfrom=peridio.com; dkim=pass (2048-bit key) header.d=peridio.com header.i=@peridio.com header.b=OLrrpWNr; arc=none smtp.client-ip=209.85.222.48
+	 MIME-Version; b=nfo14WAxN6+atBp+bEUCRpzn2JpgWoJEVQ53O1CWtWcZVut6Ad/k/o0PNWuIRTqUfRgNKG9jKi0eEyRq64x+m86bF6Z47nSBHslCn0N1a/3IFGoHMUzUoio/6ZVpKnWPO4MyUqu54K/YTapPL40MIpFMHnuKgSLefR8JE+sWZfY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=peridio.com; spf=pass smtp.mailfrom=peridio.com; dkim=pass (2048-bit key) header.d=peridio.com header.i=@peridio.com header.b=WczM8kNJ; arc=none smtp.client-ip=209.85.221.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=peridio.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=peridio.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=peridio.com header.i=@peridio.com header.b="OLrrpWNr"
-Received: by mail-ua1-f48.google.com with SMTP id a1e0cc1a2514c-972f2ea069eso83288241.0
-        for <linux-xfs@vger.kernel.org>; Mon, 10 Aug 2026 16:06:23 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=peridio.com header.i=@peridio.com header.b="WczM8kNJ"
+Received: by mail-vk1-f171.google.com with SMTP id 71dfb90a1353d-5c39a34df41so74935e0c.3
+        for <linux-xfs@vger.kernel.org>; Mon, 10 Aug 2026 16:06:25 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=peridio.com; s=google; t=1786403182; x=1787007982; darn=vger.kernel.org;
+        d=peridio.com; s=google; t=1786403184; x=1787007984; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:sender:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=XY2LsFCEmCQ1uxuh8820Be3psuNjCA8kqH0DVMr4tgE=;
-        b=OLrrpWNrC+r9lTFPzuFN16KekeETeiBjuvzl6xpfZN2YOv+pJ74mwufH3IJWAE9QzQ
-         rFTTFxr4JhWQTKt2tH6gkBoTWs2V86D7MtQK75rAhp4mM9sXv8dApHmthYr8fLCF7uG8
-         4Mt2mXMw7GhavtL/ozOfURaDXTQofzKgjHrCLXZ1uJojbynDvRidjJtONU1aWQAEDvYT
-         m/+3vyczcz8qX5Qxw1rrwnW2WgGz5sMt9DdBKcAt3dNKRF5Qgw+3YfL4lxc2ojp8avYn
-         zRo/4ts3KumGVoNcPUZQ+IUPAEprWW9AmhBRItgbhFJuLDrHkAnVnRajUNXX+oiPRFq/
-         fRPA==
+        bh=wbXsisKh0qf4tkJequwBHZTpDXZaOCmKMrgCvRHqAvk=;
+        b=WczM8kNJommtabL/wvftUnWCFHJYqdkoSHfQkJ53EB84A274xoSPwfWOiN7iOqK9HR
+         HICogaug0QhRwGhxMR60Z78I5zjvTT0CSQ2884mh/zzOU+u0U4ToUQqBeYDU+0Zg6jVp
+         jekAuK416EOzeWwvU9w+oX97A3esR82rRukrnmWvWeDUHl+IW7ulD4Ro2plXSkkq4lVE
+         eFlJj2aGxhXQO3saXDk3v3h+u3xrjwYAd7szbc4lde3ofj6P33ePPTe1LvYMpVEd9zHW
+         LQRQ3v+yHIhOoeIPnH1eYn3tGfQw+GGTwg5q0TAj7tcWIVytDJY1p7T9L4JMSeGMF8FV
+         r+0Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786403182; x=1787007982;
+        d=1e100.net; s=20251104; t=1786403184; x=1787007984;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:sender:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=XY2LsFCEmCQ1uxuh8820Be3psuNjCA8kqH0DVMr4tgE=;
-        b=RT4zV5yt5UZJFBh2GtJ6VQpRVx/TjdQxcS3KZHeLtkOOV6jJtF3O8ChxXwKqHVNtV9
-         gKkAbA9MMtGqjD+UVDrrN4/RbazESQapAzRxaEhZ8O7SOAgO50gln10bkDEqqY2HnEGS
-         +sq00QPRptFh9fNoOqryav4UxCJ/C/f1p4huxMhi3VaKLS1QYkIM7JLCqPaKVGu2ua+i
-         HOjVGKyt/fHYE1eQAnbODBmdU0gVHY5Qz8J57mpKLpSV+hFuhfQxmi8sfBUZw+NiBMc7
-         0DeanLNBCv2DKiZo52h8RnyBRGEwSHs10mNXZtGUCl7k+QexydTeQ1zTW2HpRIlyblcS
-         d+fg==
-X-Forwarded-Encrypted: i=1; AHgh+Rq3GUBjibpGv7PCHzLnRO96N/K6f4bMw9sG/j8HzTgHh4CuQuE2RaqpppCb6Qt61T9QQDppJKDNxZE=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyrcdkgrKRzDXDdpWV1UO9rlEoU/2HlBKRRl9L6aLe0xOHLbbu1
-	Ikfi6cxpLea0XT83E84NO2ChSZRSAl2F+PHRJjudJ7ClVZqM68UYzoW/xvIeVW51Mpw=
-X-Gm-Gg: AR+sD125T9rNRcQsOTtllDVKGAjHnbOHGgZQGkU4uiy85pBJV0vwvBUf45A9+fCuogH
-	Cw+0awbNaJ1Sp1OkddLKN3tV2R0R1XuNWqmQo6MN7gGfz8uaVXDUwhvqdvvkKi7Q73NyqBs6VoT
-	+QX4g4I4sklp0bdnCdOxF7djRg0ZAoa1PE2Gm8xNgKifNo6kxHGfmuGiKcdghVQWGzM4i8ekjVT
-	zVTWZWu5XJ9QmwDQDjhWYLNFVtwx6OwkpySQNQf06Sz9pv0y3HwSdmEBSlIwjC6BQ9XCoNE2CzZ
-	LCvt6sMYC8OhbTmSDPa7ua76/5zrEndRj/QtUeh70CcMfDH+idaPz5NR8LytAP/kwZ/jHJViHbJ
-	3h1zbRoCoMnRA/w8xANKCNCKoHYRKSg4rCE4snqal7snRiwb61kIsZlnIiosubA5bqOn0VLNnqO
-	4MnssmGXlmZeX9nV2cnqOVsWEBC+hyKVHAZbE+Z1kkwTTFffAAJ39ivuUQPCxefhFK
-X-Received: by 2002:a05:6102:2c16:b0:74d:ce65:3e8b with SMTP id ada2fe7eead31-760e9045be4mr6961995137.2.1786403182482;
-        Mon, 10 Aug 2026 16:06:22 -0700 (PDT)
+        bh=wbXsisKh0qf4tkJequwBHZTpDXZaOCmKMrgCvRHqAvk=;
+        b=JDBoPdP13pBI0JXWlEhIPKbapQ6D0sz2VIojZ1dzYqj8qY9Qp9lLIau+LSTaYGBecg
+         c09PCdIy7MGWf60pFLP9CpKUKQURIIiipphlud4vQUERg8B7slUp5Ybex8sgVlP+zSc4
+         gsr3pqOqv/qTwghKLjWmrCWg22w/TaRRdL7SKbpi0YvVxovr5Qbn8+FTxeXhfFzok2GA
+         +xdzEyj+GT0z3c/9lal0BPbX6NR6COMuG4IdadnF42kiFnQwQKLW0PvlIOR+bIf381ME
+         L7JsOqTEbZEM/zFp5zot48uWLOPQZ4rsxktaLD5oXpoJir8tz3dsKktBHApXWP6kI5/7
+         cSqg==
+X-Forwarded-Encrypted: i=1; AHgh+Rq/1mCVbK9xb4M5c0Py3h4SGtuddUxYH6iIlwoCjiEfJw2PZwsaLMPdxcG3kIUQF3J8YatNSZzAUKo=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzkg40eveLZzcTsifasXI1W8v4KgGBTiy3F5icXVaEUpmDp7Cdd
+	RGaBSNhS5vh/DQkO46s82BR7kM7wfbOmIasfdIwQik0XOt/jQzSncHwE7580oI1FuSw=
+X-Gm-Gg: AR+sD101v0xfk/tQSGYXia35dpf+XYpjV8zVDMyiwvSAeMOto9bkfse7LXw+76hxwIO
+	J/+SUTUYTJmeHztNrnavoiVG/z9lFVFZhIziOV5EgA5Z5dWQCMCdmbFAFsISmzcsATHewdSLAqP
+	59IvsUsU2zIEHT8/O4/ErEOp7Z3CMXTJfI/arOSRLYST7XmH1X04eUPgl+NP/QmPejPvcVIU9/W
+	0GEZ+oxTP+j/d5szWz3gS9TK6BIqRkAU9JV0sppmknYvnzIR+WE2YFO4evseBbwddbpxJ5DxGlp
+	tCPD6ar7SfvD/7S/af4BZHM+Bl49lAzgaD+rRW6hQACyagJeK/S4leMfjWpZ09lbEcPAqyX1Myl
+	rBI4hxp3PaZ4uhpalATiQl9VlKVMsMXmjwrTryGJ608qQbVcEUkXeA+MXsTbr7/ht7RLs/oEeoj
+	2B8QXl6llAVR98BlWQXjBl+s1+3a2flo+k+aX801xXWK9SMWH2M+VSf2IflQQO1/7vnjAevs4SJ
+	g4ospphGkNDg54=
+X-Received: by 2002:a05:6122:811b:10b0:5bd:7446:e3ff with SMTP id 71dfb90a1353d-5c3d8d2a974mr3435285e0c.0.1786403184503;
+        Mon, 10 Aug 2026 16:06:24 -0700 (PDT)
 Received: from localhost ([190.113.101.40])
-        by smtp.gmail.com with ESMTPSA id ada2fe7eead31-763feadcdf4sm5513334137.4.2026.08.10.16.06.20
+        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-5c4130b358csm4079079e0c.14.2026.08.10.16.06.23
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 10 Aug 2026 16:06:21 -0700 (PDT)
+        Mon, 10 Aug 2026 16:06:24 -0700 (PDT)
 Sender: Javier Tia <j.tia@peridio.com>
 From: Javier Tia <javier@peridio.com>
 X-Google-Original-From: Javier Tia <floss@jetm.me>
@@ -69,9 +70,9 @@ Cc: "Darrick J . Wong" <djwong@kernel.org>,
 	Andrey Albershteyn <aalbersh@kernel.org>,
 	linux-xfs@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH v3 3/6] xfs: report the error that made deferred work shut down the fs
-Date: Mon, 10 Aug 2026 17:06:15 -0600
-Message-ID: <20260810230611.2859909-11-floss@jetm.me>
+Subject: [PATCH v3 4/6] xfs: correct the parent pointer space reservation comment
+Date: Mon, 10 Aug 2026 17:06:16 -0600
+Message-ID: <20260810230611.2859909-12-floss@jetm.me>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260810230611.2859909-8-floss@jetm.me>
 References: <20260810230611.2859909-8-floss@jetm.me>
@@ -81,71 +82,59 @@ List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2392; i=floss@jetm.me; h=from:subject; bh=dvPmh2MX3lGbIaGJA+vnikpJaoUwi8NxpixIT/Mz2A0=; b=owEB7QES/pANAwAKAbXuwwuoZ3cfAcsmYgBqelljS1kfyPgZ2EcwoP6u3bIWL9e5ICDwP/7uA KbgYNfEH0qJAbMEAAEKAB0WIQSbE7ILzw7eI0VKk8m17sMLqGd3HwUCanpZYwAKCRC17sMLqGd3 H6kVDACM50ty0CdE4rXcPkIWvOe0rLriJDAU8v3i7ycm9G2Al2Yuv8NTzI1FlsCQkW6yOV3iuG8 elwybvxarjhiBrhesER3oglmO6TZ4MKLa+EtdLDA27aSVx3PTaz5L+Q59uMMo8NLU2MZnM55Hel WADaeQqfPDoQTF0BT5GKSGxWtp4/QzEApyDv6GHRvQLPfo5ULBDXNoPCjjxXRExDa6drEd4mw0Z a/Aa4Z4kcq2gSFJC/kGOy+LwzXg1ot7kh8g2POBwZgOH6nkwSb3Zt+Qht5TDaPobStbbCKeSu+9 QnJ9LZgw8V0SJcgHFqaZdhH3G8jBzn4XSfGaa95hDnVIoQHSCo/jAD8mBgVn6z8oSA3ZpO4xB0r EMuRQJ2RBjd7MdPSbFfrwyMYpue3dL2T/L/x47H/tF1QXEWvvCv5h50XeTXehnCDRltRSI0OhkI BW8+uLBX5gFRmVQaTSIHlDcZ7bQukY6Zytg7/4lG8LnQrMcwegssNA7tTcALO4XguarnM=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2488; i=floss@jetm.me; h=from:subject; bh=NNh5aG4w7LlGxuf1r7SXWUFUWOyJJe//FeT84ioNlzE=; b=owEB7QES/pANAwAKAbXuwwuoZ3cfAcsmYgBqelljTRG87aijZKn3RyqSuNdDpFcbWIcNNA3Fv LL1n2VxtmaJAbMEAAEKAB0WIQSbE7ILzw7eI0VKk8m17sMLqGd3HwUCanpZYwAKCRC17sMLqGd3 H97tDACNSkjSduKs7yBuGaO3TXyJA4JaR52PXs/TIUBjGAZfwm52F+FF8XJyZi4LHmlmVX/UXPq LiCiqQ/NYQ83y3zySj5iL0TYzIqJDUhBTGreX5eOIr+ORJF4tt+jtG8WsHuamds0yH0N2keUidf qfkLlPlAOk8FG3k1SBLiyRJ4DxFwP+IrKxtmFWVk4aX1yJ1ehjDjwvCFXpfJsAB6lD0idmfhtQE S0b5W2YDd5LCRbOLTufCUTEiOGVVqhdJSzsHdrpGBpndbxqutS2yzMoaN8n3frzqVs6J4dpgodb cIANkFdLugS2hY/xAVgWX/1OhTg+wFB2pa2PP+MzTKtZ1bs89+28HQNeOz7uv3Y2oYYDDsOT55T /7hFnweiBvYTZ47CScUQnzRgUyuEhHHq7eymAsHQvHXAqs1D5Cu2sggPpHHnJe4/Zum+vbJBN9q R0XbuTfcNO8Sitb1fYq0uBpIdeRX4/tpYCmaunqSy1mW7T1VadPpWUYqmUU2ykqBuNmOY=
 X-Developer-Key: i=floss@jetm.me; a=openpgp; fpr=9B13B20BCF0EDE23454A93C9B5EEC30BA867771F
 Content-Transfer-Encoding: 8bit
 
-When a deferred operation fails and shuts the filesystem down,
-xfs_defer_finish_noroll() reports neither the errno nor which operation
-originated it, so the log cannot tell a transient -ENOSPC from real
-corruption.  Report the operation type, errno and remaining reservation.
+The comment on xfs_parent_calc_space_res() claims parent pointers are
+"always the first attr in an attr tree".  They are not: a parent pointer
+is recorded per dirent, so by the Nth hardlink the attr fork is already
+in leaf or node format.  The reservation is still correct, because
+XFS_DAENTER_SPACE_RES() covers a split at every level of a maximum-depth
+attr dabtree whatever format the fork is in, but anyone auditing a
+shortfall here is led by the comment to look for a bug that is not
+there.
 
-trace_xfs_defer_finish_error() runs after xfs_force_shutdown(), which
-BUGs under fs.xfs.panic_mask and so never fires for the first failure;
-move it ahead of the shutdown and mirror it to xfs_alert() for systems
-without tracing armed.  Capture the op name while the item is live (dfp
-is freed once its work list drains) and suppress the alert once the fs is
-already down.
+Rewrite the comment to state what actually bounds the result, and record
+why the double split allowance and the extent-add term differ from
+xfs_attr_calc_size().
 
 Signed-off-by: Javier Tia <floss@jetm.me>
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_defer.c | 15 ++++++++++++++-
- 1 file changed, 14 insertions(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_trans_space.c | 19 +++++++++++++++++--
+ 1 file changed, 17 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-index 75f0d37914d5..3152acdc335d 100644
---- a/fs/xfs/libxfs/xfs_defer.c
-+++ b/fs/xfs/libxfs/xfs_defer.c
-@@ -656,6 +656,7 @@ xfs_defer_finish_noroll(
- 	struct xfs_trans		**tp)
+diff --git a/fs/xfs/libxfs/xfs_trans_space.c b/fs/xfs/libxfs/xfs_trans_space.c
+index 9b8f495c9049..c4cd547033e5 100644
+--- a/fs/xfs/libxfs/xfs_trans_space.c
++++ b/fs/xfs/libxfs/xfs_trans_space.c
+@@ -22,8 +22,23 @@ xfs_parent_calc_space_res(
+ 	unsigned int		namelen)
  {
- 	struct xfs_defer_pending	*dfp = NULL;
-+	const char			*what = "chain";
- 	int				error = 0;
- 	LIST_HEAD(dop_pending);
- 	LIST_HEAD(dop_paused);
-@@ -705,9 +706,17 @@ xfs_defer_finish_noroll(
- 				struct xfs_defer_pending, dfp_list);
- 		if (!dfp)
- 			break;
-+		what = dfp->dfp_ops->name;
- 		error = xfs_defer_finish_one(*tp, dfp);
- 		if (error && error != -EAGAIN)
- 			goto out_shutdown;
-+		/*
-+		 * A finished item is no longer a candidate for a later
-+		 * failure.  An -EAGAIN one is not finished, so it keeps the
-+		 * attribution across the roll that completes it.
-+		 */
-+		if (!error)
-+			what = "chain";
- 	}
- 
- 	/* Requeue the paused items in the outgoing transaction. */
-@@ -719,8 +728,12 @@ xfs_defer_finish_noroll(
- out_shutdown:
- 	list_splice_tail_init(&dop_paused, &dop_pending);
- 	xfs_defer_trans_abort(*tp, &dop_pending);
--	xfs_force_shutdown((*tp)->t_mountp, SHUTDOWN_CORRUPT_INCORE);
- 	trace_xfs_defer_finish_error(*tp, error);
-+	if (!xfs_is_shutdown((*tp)->t_mountp))
-+		xfs_alert((*tp)->t_mountp,
-+			  "deferred %s work failed, error %d, %u blocks reserved",
-+			  what, error, (*tp)->t_blk_res);
-+	xfs_force_shutdown((*tp)->t_mountp, SHUTDOWN_CORRUPT_INCORE);
- 	xfs_defer_cancel_list((*tp)->t_mountp, &dop_pending);
- 	xfs_defer_cancel(*tp);
- 	return error;
+ 	/*
+-	 * Parent pointers are always the first attr in an attr tree, and never
+-	 * larger than a block
++	 * A parent pointer is recorded per dirent, so an inode with N links
++	 * carries N of them and the attr fork can already be in leaf or node
++	 * format when one is added.  That does not affect the reservation:
++	 * XFS_DAENTER_SPACE_RES covers a split at every level of a
++	 * maximum-depth attr dabtree, whatever format the fork is in now.
++	 *
++	 * The name is a dirent name and the value is a struct xfs_parent_rec,
++	 * so the leaf entry is always local and never exceeds 272 bytes.
++	 * Parent pointers require V5, hence a 1k minimum block size, so the
++	 * entry always stays under half a block and this needs none of the
++	 * double split allowance that xfs_attr_calc_size() makes.
++	 *
++	 * The second term hands a byte count to a macro whose parameter counts
++	 * mappings, so it asks for more extent-add allowance than the single
++	 * mapping a parent pointer adds - how much more depends on the block
++	 * size.  It over-reserves either way, which is why it is left alone:
++	 * correcting the unit would shrink a reservation that is only generous.
+ 	 */
+ 	return XFS_DAENTER_SPACE_RES(mp, XFS_ATTR_FORK) +
+ 	       XFS_NEXTENTADD_SPACE_RES(mp, namelen, XFS_ATTR_FORK);
 -- 
 Javier Tia
 
