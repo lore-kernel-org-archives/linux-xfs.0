@@ -1,528 +1,68 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C2283B0581
-	for <linux-xfs@vger.kernel.org>; Tue, 11 Aug 2026 16:50:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 711CD43D4EE
+	for <linux-xfs@vger.kernel.org>; Tue, 11 Aug 2026 17:03:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786467037; cv=none; b=SCrg9UJoAcvtOgrQJ6lDPbqMCFE1dDQGoK1KrarYVTcmy9+qXNOpjaeB9bapsZ09JZZptUIFtg9/7tLXwIIX/5RFybrjNB1B2RpjtBGSctOXDrBCMyMDcghhbKJM5G10GjaS/6oarO6eozTn20HnypiM3kb6v5/B+AgVpJYYQp8=
+	t=1786467803; cv=none; b=a9clyrDa8kBunl0kUnW6tAQBU8Clm9CuMyHYKoiErQtRwBfR9UtNkH9qTBFZzWWEySQWGED0t3IbEto4xccZcCBYitxVCbWU9QIM2yMt2oF/qyeV7wZw5v+glocK3MyzbSEa4GN/YlXLVB1jkNlE0dvoAxV030HovO3X8Xcd54Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786467037; c=relaxed/simple;
-	bh=J33YgSY+j/qNFasw0/e8q0BCJXBUWdSvdlG/rPWBs00=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=bLfGC77r9zHEJOHap2OZtr8Vziw98GFqUMUqKP/JVzSAG3YDRicEvlEf1JMNNeKeNcGlG+vnX/fUhMVfzBNEKCkJUK32sf2e7VgJSCNld+pP5FwP89aTj1xWxHnzOc9EP5ijWNBFEF3EI+mOH+BDLiXXOaV7i6xCE7udBlIKB6k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=UFTGTPIv; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1786467803; c=relaxed/simple;
+	bh=JBIi6bqLUuIeQ+h9mkBjiSDXlHhHvVfEKGrTeLPKXSI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=PU62kAb5wcj9TERnJ+qbnzOQzkJh8kt1bRjdrf04HlWEa4ePj+iZuilZPvvWClVAHNh+jwTnI3k2NCnTwRsDq9+u2tYFFl1DTx42Pl6Q1WhvwpEMVorViCm7yEaOL/9+3T+sPW2ou9aOdLLDCdY7ndNWXV69RdXaNYA9WE3g/l8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cJeXniFT; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="UFTGTPIv"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=hJkimiogS0QfKmfgquh2JGQx68JNuEwIUyhkJADsxJI=; b=UFTGTPIvUKC24LRoAU5+v8qMlf
-	EKW9iWPSBbuEdUGcATJ3v1LoJjR/M/BwZjS1xuxUk8eN4xGii4ySKZCwq6QhFS71I4f43zn5eil/n
-	Ylpj+qxntuoc8iURvIeGW7rMW5+wfQuksSsl4JYLjPFW/OP7Qt1SSrecQjJ60KPjrWAdMZg5YkRkH
-	I6t4x4hAF5f74ocIhpdTz2GwMoAKr0p2KuHIMTAkiZhh2WkW/I/zsdCeXgGMWnbvEEzUOlqvg6Xol
-	7n3Wd44n3KfdfbW1VNf4RmjCZHA6H3YuKor/z5aVx0SEzNniIWXV0i1L73LhVD6sM8EuOweUP62lt
-	+psj9ZOA==;
-Received: from [129.253.192.68] (helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wtpgQ-0000000EYSc-08Tc;
-	Tue, 11 Aug 2026 16:50:35 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: Wilfred Mallawa <wilfred.mallawa@wdc.com>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Hans Holmberg <hans.holmberg@wdc.com>,
-	Andrey Albershteyn <aalbersh@kernel.org>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH 5/5] xfs: split ioend handling into a separate source file
-Date: Tue, 11 Aug 2026 10:48:41 -0600
-Message-ID: <20260811164912.124416-6-hch@lst.de>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260811164912.124416-1-hch@lst.de>
-References: <20260811164912.124416-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cJeXniFT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DD7411F000E9;
+	Tue, 11 Aug 2026 17:03:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1786467802;
+	bh=UvPER0eb5WdAoIOa8CrNhwVL3i+uAe2AyJtKFdH0XX0=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=cJeXniFT17uk0RZb9/NOZJOpGkf+xuJ8YEt29To1SbF1MRDPwKOBwV66NDgYiC6+V
+	 FbMkp297aO/JZSO26m0cBW3iW4nbVY/BcNE3QmX1lTIuMZVvcVp3Mrm8vwOKpcMBBC
+	 Uksa6E4z44VyW0tbKorlPcP/wg2os/KCkdD+bM0N49bC/9gMQC9m2h7PncLwFEBXn6
+	 XSldU++w7iZwKa69rSuO7dGsydHT2FWPQa4URj59CltnLYV0LmbdNrHUbrvmUFsdsg
+	 f6GD2ns3BGmSLnX99cDx46OSINJQVMdDjeZ9rRr1C38anyG1HK67BNTYGRUvGqVhbO
+	 d+2mi8DqLYFEg==
+Message-ID: <18851800-9a5e-4cb6-8e75-c86f6f992761@kernel.org>
+Date: Tue, 11 Aug 2026 10:03:11 -0700
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/5] xfs: handle NULL open_zone for merged ioends in
+ xfs_ioend_put_open_zones
+To: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>
+Cc: Wilfred Mallawa <wilfred.mallawa@wdc.com>,
+ Hans Holmberg <hans.holmberg@wdc.com>,
+ Andrey Albershteyn <aalbersh@kernel.org>, "Darrick J. Wong"
+ <djwong@kernel.org>, linux-xfs@vger.kernel.org
+References: <20260811164912.124416-1-hch@lst.de>
+ <20260811164912.124416-2-hch@lst.de>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <20260811164912.124416-2-hch@lst.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-The ioend handling used to be only for buffered writeback, but has been
-extended to direct I/O and reads.  Split it into a new source file.
+On 2026/08/11 9:48, Christoph Hellwig wrote:
+> In theory we could fail multiple ioends before an open zone was assigned
+> to them, and the iomap code could merge them.  Check for NULL not only
+> for the main ioend but also all merged ones on ->io_list to handle this
+> case.
+> 
+> Fixes: 058dd70c65ab ("xfs: implement buffered writes to zoned RT devices")
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
----
- fs/xfs/Makefile    |   1 +
- fs/xfs/xfs_aops.c  | 181 +-------------------------------------------
- fs/xfs/xfs_aops.h  |   1 -
- fs/xfs/xfs_file.c  |   2 +-
- fs/xfs/xfs_ioend.c | 184 +++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_ioend.h |  16 ++++
- 6 files changed, 203 insertions(+), 182 deletions(-)
- create mode 100644 fs/xfs/xfs_ioend.c
- create mode 100644 fs/xfs/xfs_ioend.h
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 9f7133e02576..399a207f2d0e 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -91,6 +91,7 @@ xfs-y				+= xfs_aops.o \
- 				   xfs_healthmon.o \
- 				   xfs_icache.o \
- 				   xfs_ioctl.o \
-+				   xfs_ioend.o \
- 				   xfs_iomap.o \
- 				   xfs_iops.o \
- 				   xfs_inode.o \
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index d46b089f006a..438fff1cee9f 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -20,6 +20,7 @@
- #include "xfs_errortag.h"
- #include "xfs_error.h"
- #include "xfs_icache.h"
-+#include "xfs_ioend.h"
- #include "xfs_zone_alloc.h"
- #include "xfs_rtgroup.h"
- #include <linux/bio-integrity.h>
-@@ -36,15 +37,6 @@ XFS_WPC(struct iomap_writepage_ctx *ctx)
- 	return container_of(ctx, struct xfs_writepage_ctx, ctx);
- }
- 
--/*
-- * Fast and loose check if this write could update the on-disk inode size.
-- */
--static inline bool xfs_ioend_is_append(struct iomap_ioend *ioend)
--{
--	return ioend->io_offset + ioend->io_size >
--		XFS_I(ioend->io_inode)->i_disk_size;
--}
--
- /*
-  * Update on-disk file size now that data has been written to disk.
-  */
-@@ -80,177 +72,6 @@ xfs_setfilesize(
- 	return xfs_trans_commit(tp);
- }
- 
--static void
--xfs_ioend_put_open_zones(
--	struct iomap_ioend	*ioend)
--{
--	struct iomap_ioend *tmp;
--
--	/*
--	 * Put the open zone for all ioends merged into this one (if any).
--	 */
--	list_for_each_entry(tmp, &ioend->io_list, io_list) {
--		if (tmp->io_private)
--			xfs_open_zone_put(tmp->io_private);
--	}
--
--	/*
--	 * The main ioend might not have an open zone if the submission failed
--	 * before xfs_zone_alloc_and_submit got called.
--	 */
--	if (ioend->io_private)
--		xfs_open_zone_put(ioend->io_private);
--}
--
--/*
-- * IO write completion.
-- */
--STATIC void
--xfs_end_ioend_write(
--	struct iomap_ioend	*ioend)
--{
--	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
--	struct xfs_mount	*mp = ip->i_mount;
--	bool			is_zoned = xfs_is_zoned_inode(ip);
--	xfs_off_t		offset = ioend->io_offset;
--	size_t			size = ioend->io_size;
--	unsigned int		nofs_flag;
--	int			error;
--
--	/*
--	 * We can allocate memory here while doing writeback on behalf of
--	 * memory reclaim.  To avoid memory allocation deadlocks set the
--	 * task-wide nofs context for the following operations.
--	 */
--	nofs_flag = memalloc_nofs_save();
--
--	/*
--	 * Just clean up the in-memory structures if the fs has been shut down.
--	 */
--	if (xfs_is_shutdown(mp)) {
--		error = -EIO;
--		goto done;
--	}
--
--	/*
--	 * Clean up all COW blocks and underlying data fork delalloc blocks on
--	 * I/O error. The delalloc punch is required because this ioend was
--	 * mapped to blocks in the COW fork and the associated pages are no
--	 * longer dirty. If we don't remove delalloc blocks here, they become
--	 * stale and can corrupt free space accounting on unmount.
--	 */
--	error = blk_status_to_errno(ioend->io_bio.bi_status);
--	if (unlikely(error)) {
--		/*
--		 * Zoned writes update the in-core open zone accounting before
--		 * I/O submission.  A failed write leaves that state
--		 * inconsistent, so shut down the filesystem instead of letting
--		 * later writers wait forever for open zone space to become
--		 * available.
--		 */
--		if (is_zoned) {
--			xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
--			goto done;
--		}
--		if (ioend->io_flags & IOMAP_IOEND_SHARED) {
--			ASSERT(!is_zoned);
--			xfs_reflink_cancel_cow_range(ip, offset, size, true);
--			xfs_bmap_punch_delalloc_range(ip, XFS_DATA_FORK, offset,
--					offset + size, NULL);
--		}
--		goto done;
--	}
--
--	/*
--	 * Success: commit the COW or unwritten blocks if needed.
--	 */
--	if (is_zoned)
--		error = xfs_zoned_end_io(ip, offset, size, ioend->io_sector,
--				ioend->io_private, NULLFSBLOCK);
--	else if (ioend->io_flags & IOMAP_IOEND_SHARED)
--		error = xfs_reflink_end_cow(ip, offset, size);
--	else if (ioend->io_flags & IOMAP_IOEND_UNWRITTEN)
--		error = xfs_iomap_write_unwritten(ip, offset, size, false);
--
--	if (!error &&
--	    !(ioend->io_flags & IOMAP_IOEND_DIRECT) &&
--	    xfs_ioend_is_append(ioend))
--		error = xfs_setfilesize(ip, offset, size);
--done:
--	if (is_zoned)
--		xfs_ioend_put_open_zones(ioend);
--	iomap_finish_ioends(ioend, error);
--	memalloc_nofs_restore(nofs_flag);
--}
--
--/*
-- * Finish all pending IO completions that require transactional modifications.
-- *
-- * We try to merge physical and logically contiguous ioends before completion to
-- * minimise the number of transactions we need to perform during IO completion.
-- * Both unwritten extent conversion and COW remapping need to iterate and modify
-- * one physical extent at a time, so we gain nothing by merging physically
-- * discontiguous extents here.
-- *
-- * The ioend chain length that we can be processing here is largely unbound in
-- * length and we may have to perform significant amounts of work on each ioend
-- * to complete it. Hence we have to be careful about holding the CPU for too
-- * long in this loop.
-- */
--void
--xfs_end_io(
--	struct work_struct	*work)
--{
--	struct xfs_inode	*ip =
--		container_of(work, struct xfs_inode, i_ioend_work);
--	struct iomap_ioend	*ioend;
--	struct list_head	tmp;
--	unsigned long		flags;
--
--	spin_lock_irqsave(&ip->i_ioend_lock, flags);
--	list_replace_init(&ip->i_ioend_list, &tmp);
--	spin_unlock_irqrestore(&ip->i_ioend_lock, flags);
--
--	iomap_sort_ioends(&tmp);
--	while ((ioend = list_first_entry_or_null(&tmp, struct iomap_ioend,
--			io_list))) {
--		list_del_init(&ioend->io_list);
--		iomap_ioend_try_merge(ioend, &tmp);
--		if (bio_op(&ioend->io_bio) == REQ_OP_READ)
--			iomap_finish_ioends(ioend,
--				blk_status_to_errno(ioend->io_bio.bi_status));
--		else
--			xfs_end_ioend_write(ioend);
--		cond_resched();
--	}
--}
--
--void
--xfs_end_bio(
--	struct bio		*bio)
--{
--	struct iomap_ioend	*ioend = iomap_ioend_from_bio(bio);
--	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
--	struct xfs_mount	*mp = ip->i_mount;
--	unsigned long		flags;
--
--	/*
--	 * For Appends record the actually written block number and set the
--	 * boundary flag if needed.
--	 */
--	if (IS_ENABLED(CONFIG_XFS_RT) && bio_is_zone_append(bio)) {
--		ioend->io_sector = bio->bi_iter.bi_sector;
--		xfs_mark_rtg_boundary(ioend);
--	}
--
--	spin_lock_irqsave(&ip->i_ioend_lock, flags);
--	if (list_empty(&ip->i_ioend_list))
--		WARN_ON_ONCE(!queue_work(mp->m_unwritten_workqueue,
--					 &ip->i_ioend_work));
--	list_add_tail(&ioend->io_list, &ip->i_ioend_list);
--	spin_unlock_irqrestore(&ip->i_ioend_lock, flags);
--}
--
- /*
-  * We cannot cancel the ioend directly on error.  We may have already set other
-  * pages under writeback and hence we have to run I/O completion to mark the
-diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
-index 5a7a0f1a0b49..d5ae5c9d4c26 100644
---- a/fs/xfs/xfs_aops.h
-+++ b/fs/xfs/xfs_aops.h
-@@ -10,6 +10,5 @@ extern const struct address_space_operations xfs_address_space_operations;
- extern const struct address_space_operations xfs_dax_aops;
- 
- int xfs_setfilesize(struct xfs_inode *ip, xfs_off_t offset, size_t size);
--void xfs_end_bio(struct bio *bio);
- 
- #endif /* __XFS_AOPS_H__ */
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 4745f047193c..3f394791106b 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -25,7 +25,7 @@
- #include "xfs_iomap.h"
- #include "xfs_reflink.h"
- #include "xfs_file.h"
--#include "xfs_aops.h"
-+#include "xfs_ioend.h"
- #include "xfs_zone_alloc.h"
- #include "xfs_error.h"
- #include "xfs_errortag.h"
-diff --git a/fs/xfs/xfs_ioend.c b/fs/xfs/xfs_ioend.c
-new file mode 100644
-index 000000000000..40695d18dac0
---- /dev/null
-+++ b/fs/xfs/xfs_ioend.c
-@@ -0,0 +1,184 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Copyright (c) 2016-2025 Christoph Hellwig.
-+ * All Rights Reserved.
-+ */
-+#include "xfs_platform.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_mount.h"
-+#include "xfs_inode.h"
-+#include "xfs_iomap.h"
-+#include "xfs_trace.h"
-+#include "xfs_bmap_util.h"
-+#include "xfs_reflink.h"
-+#include "xfs_zone_alloc.h"
-+#include "xfs_ioend.h"
-+
-+static void
-+xfs_ioend_put_open_zones(
-+	struct iomap_ioend	*ioend)
-+{
-+	struct iomap_ioend *tmp;
-+
-+	/*
-+	 * Put the open zone for all ioends merged into this one (if any).
-+	 */
-+	list_for_each_entry(tmp, &ioend->io_list, io_list)
-+		xfs_open_zone_put(tmp->io_private);
-+
-+	/*
-+	 * The main ioend might not have an open zone if the submission failed
-+	 * before xfs_zone_alloc_and_submit got called.
-+	 */
-+	if (ioend->io_private)
-+		xfs_open_zone_put(ioend->io_private);
-+}
-+
-+static void
-+xfs_end_ioend_write(
-+	struct iomap_ioend	*ioend)
-+{
-+	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
-+	struct xfs_mount	*mp = ip->i_mount;
-+	bool			is_zoned = xfs_is_zoned_inode(ip);
-+	xfs_off_t		offset = ioend->io_offset;
-+	size_t			size = ioend->io_size;
-+	unsigned int		nofs_flag;
-+	int			error;
-+
-+	/*
-+	 * We can allocate memory here while doing writeback on behalf of
-+	 * memory reclaim.  To avoid memory allocation deadlocks set the
-+	 * task-wide nofs context for the following operations.
-+	 */
-+	nofs_flag = memalloc_nofs_save();
-+
-+	/*
-+	 * Just clean up the in-memory structures if the fs has been shut down.
-+	 */
-+	if (xfs_is_shutdown(mp)) {
-+		error = -EIO;
-+		goto done;
-+	}
-+
-+	/*
-+	 * Clean up all COW blocks and underlying data fork delalloc blocks on
-+	 * I/O error. The delalloc punch is required because this ioend was
-+	 * mapped to blocks in the COW fork and the associated pages are no
-+	 * longer dirty. If we don't remove delalloc blocks here, they become
-+	 * stale and can corrupt free space accounting on unmount.
-+	 */
-+	error = blk_status_to_errno(ioend->io_bio.bi_status);
-+	if (unlikely(error)) {
-+		/*
-+		 * Zoned writes update the in-core open zone accounting before
-+		 * I/O submission.  A failed write leaves that state
-+		 * inconsistent, so shut down the filesystem instead of letting
-+		 * later writers wait forever for open zone space to become
-+		 * available.
-+		 */
-+		if (is_zoned) {
-+			xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
-+			goto done;
-+		}
-+		if (ioend->io_flags & IOMAP_IOEND_SHARED) {
-+			ASSERT(!is_zoned);
-+			xfs_reflink_cancel_cow_range(ip, offset, size, true);
-+			xfs_bmap_punch_delalloc_range(ip, XFS_DATA_FORK, offset,
-+					offset + size, NULL);
-+		}
-+		goto done;
-+	}
-+
-+	/*
-+	 * Success: commit the COW or unwritten blocks if needed.
-+	 */
-+	if (is_zoned)
-+		error = xfs_zoned_end_io(ip, offset, size, ioend->io_sector,
-+				ioend->io_private, NULLFSBLOCK);
-+	else if (ioend->io_flags & IOMAP_IOEND_SHARED)
-+		error = xfs_reflink_end_cow(ip, offset, size);
-+	else if (ioend->io_flags & IOMAP_IOEND_UNWRITTEN)
-+		error = xfs_iomap_write_unwritten(ip, offset, size, false);
-+
-+	if (!error &&
-+	    !(ioend->io_flags & IOMAP_IOEND_DIRECT) &&
-+	    xfs_ioend_is_append(ioend))
-+		error = xfs_setfilesize(ip, offset, size);
-+done:
-+	if (is_zoned)
-+		xfs_ioend_put_open_zones(ioend);
-+	iomap_finish_ioends(ioend, error);
-+	memalloc_nofs_restore(nofs_flag);
-+}
-+
-+/*
-+ * Finish all pending IO completions that require transactional modifications.
-+ *
-+ * We try to merge physical and logically contiguous ioends before completion to
-+ * minimise the number of transactions we need to perform during IO completion.
-+ * Both unwritten extent conversion and COW remapping need to iterate and modify
-+ * one physical extent at a time, so we gain nothing by merging physically
-+ * discontiguous extents here.
-+ *
-+ * The ioend chain length that we can be processing here is largely unbound in
-+ * length and we may have to perform significant amounts of work on each ioend
-+ * to complete it. Hence we have to be careful about holding the CPU for too
-+ * long in this loop.
-+ */
-+void
-+xfs_end_io(
-+	struct work_struct	*work)
-+{
-+	struct xfs_inode	*ip =
-+		container_of(work, struct xfs_inode, i_ioend_work);
-+	struct iomap_ioend	*ioend;
-+	struct list_head	tmp;
-+	unsigned long		flags;
-+
-+	spin_lock_irqsave(&ip->i_ioend_lock, flags);
-+	list_replace_init(&ip->i_ioend_list, &tmp);
-+	spin_unlock_irqrestore(&ip->i_ioend_lock, flags);
-+
-+	iomap_sort_ioends(&tmp);
-+	while ((ioend = list_first_entry_or_null(&tmp, struct iomap_ioend,
-+			io_list))) {
-+		list_del_init(&ioend->io_list);
-+		iomap_ioend_try_merge(ioend, &tmp);
-+		if (bio_op(&ioend->io_bio) == REQ_OP_READ)
-+			iomap_finish_ioends(ioend,
-+				blk_status_to_errno(ioend->io_bio.bi_status));
-+		else
-+			xfs_end_ioend_write(ioend);
-+		cond_resched();
-+	}
-+}
-+
-+void
-+xfs_end_bio(
-+	struct bio		*bio)
-+{
-+	struct iomap_ioend	*ioend = iomap_ioend_from_bio(bio);
-+	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
-+	struct xfs_mount	*mp = ip->i_mount;
-+	unsigned long		flags;
-+
-+	/*
-+	 * For Appends record the actually written block number and set the
-+	 * boundary flag if needed.
-+	 */
-+	if (IS_ENABLED(CONFIG_XFS_RT) && bio_is_zone_append(bio)) {
-+		ioend->io_sector = bio->bi_iter.bi_sector;
-+		xfs_mark_rtg_boundary(ioend);
-+	}
-+
-+	spin_lock_irqsave(&ip->i_ioend_lock, flags);
-+	if (list_empty(&ip->i_ioend_list))
-+		WARN_ON_ONCE(!queue_work(mp->m_unwritten_workqueue,
-+					 &ip->i_ioend_work));
-+	list_add_tail(&ioend->io_list, &ip->i_ioend_list);
-+	spin_unlock_irqrestore(&ip->i_ioend_lock, flags);
-+}
-diff --git a/fs/xfs/xfs_ioend.h b/fs/xfs/xfs_ioend.h
-new file mode 100644
-index 000000000000..525865767fca
---- /dev/null
-+++ b/fs/xfs/xfs_ioend.h
-@@ -0,0 +1,16 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+#ifndef __XFS_IOEND_H
-+#define __XFS_IOEND_H
-+
-+/*
-+ * Fast and loose check if this write could update the on-disk inode size.
-+ */
-+static inline bool xfs_ioend_is_append(struct iomap_ioend *ioend)
-+{
-+	return ioend->io_offset + ioend->io_size >
-+		XFS_I(ioend->io_inode)->i_disk_size;
-+}
-+
-+void xfs_end_bio(struct bio *bio);
-+
-+#endif /* __XFS_IOEND_H */
 -- 
-2.53.0
-
+Damien Le Moal
+Western Digital Research
