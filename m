@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 796384519B0;
-	Tue, 11 Aug 2026 17:05:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71D524562BF
+	for <linux-xfs@vger.kernel.org>; Tue, 11 Aug 2026 17:06:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786467952; cv=none; b=mnEyL5G+qLdhut/vtC4BUfoz+Vbn98ZZPhgS4CrKhq6Q30iob1PEQuCOmO5pTecgm0gZ8xTTRHEPn0SLPvwZsxnjJwGm1Tk+LCDVXZ52al/PK2NA8HRxQN6D8KfwbLSvKGa9XN2cwuSQcAWlF5A4KUhg1yYSIHLcpf1tgNNY43I=
+	t=1786468005; cv=none; b=W9F1lnFK2XDQCkAFbbD1R77htfmasv3MSMU9kPy2FpiyuRkyI8s3sA9JZSnQabcEiL1h4lepD3GQIIDBVX0qNSbaZsE0Z76OxaiqC2pLIM+CU0SR0cKYsJgU+Ex/Ggdt6xkgqZDP7DZmk3aAz6Kl/X0Exl6GulibM529JDfd/Yo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786467952; c=relaxed/simple;
-	bh=aXL19osA6SWYLkJlRVrmBJ+EA7by69VLxmCaH7DDlW4=;
+	s=arc-20240116; t=1786468005; c=relaxed/simple;
+	bh=KStGAcEIcPNFuDkkKv6R4BimGq44R7EoqDgmmStc+fQ=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=HfQBgtbJ0E+/4zl3DIx9Y2ioS1yX2kU8GUL5bXCdZamzl08kA29uhnGAYq3i6FxLmnxJJmzVHcUt081Bp/fsD5NMo4XRY+Gx6iQhg3ggD5vDWmL7J4OIrHNEW2FTH6RucExgRNkHo4zBFi7amPS8ja7PJ12STkDuvMgSn5175H8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eI4QtGCx; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=Szd1BAOu6mHqZyuhrqhtqbpMdgutUH5xryqRAIg7dRBsx9I8u3+nRzZY0t2rbzk3072t33/PFj5MMWNg4V3nxacgf9854G6vHfEvFBd3nHOBnLJkIiO6DjNLhj2uql9V1eoxxEP1AuMTH2IlKibb2iNyAluaijfL23wmTL9dujk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bxIzgGqf; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eI4QtGCx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 286EC1F000E9;
-	Tue, 11 Aug 2026 17:05:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bxIzgGqf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F10BC1F000E9;
+	Tue, 11 Aug 2026 17:06:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786467951;
-	bh=7Nir5EBnYRn4x5EEwP8WhXeeGPZkbOr74/XfunZkKsg=;
+	s=k20260515; t=1786468004;
+	bh=FjrhbFKd9TPOzUUe1jqMHt8uXvsqBBMI1nEvPJF3GzU=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=eI4QtGCxjCilxDxAwor8qazaizBBS8rMUAezwtnLIagasWWhMw+yOgG0/Yk4nVBnK
-	 FIq/TqJ4mHzmNLvIv5c+hcMwY8J3b5zEGp5rR/kdg1r3x7cX1bge8RcK6Q2d9aJPvc
-	 D3dnbZLgKMSnFuojsB0tVoM6nChPuVk+uwqss6SiGcbfQnMaN6DtbhbdM9tsXxayc7
-	 seGSNu7W4t9UVU4vrKJTLAkd1E4VsEVMLCEp6Ms9ipU2EVYqnodcld7Fqj+1BmlWPW
-	 /U3L98tHDbl0GXfI+E1x9TQpU2QEiPSqvUDYu6MaWz9LuW3UFhDH62QGIJdonidt+K
-	 6pdg0xPST7tlQ==
-Message-ID: <26acc386-08c6-43b3-ae8e-cb7977be14d2@kernel.org>
-Date: Tue, 11 Aug 2026 10:05:43 -0700
+	b=bxIzgGqfiNG6vGXTWjA7Kf3RhTgI5WzG2yjPh2XvY43aU3fsxnKBWecEX+0ILcnd5
+	 jyEZIH6B2Zhw2Y8SohAzlHJXQLbufIkauiQRBs31Y/XatuexzhzHy7+W0qLbSBay2L
+	 P23i6ao+s7a2YMFHY8Mwustkz2n+HB7VfiJHnLmp+diMlu8lR/fsEDDJ7jvWZTDZ/p
+	 wNdw+oxth6KFaz/Vs64Ky8CaO3B8FLdvwxBxWK3xThaAjcaQg8VccDiRJD0aOxF8Ml
+	 eKs6QOyJLykl616OIb3PAa7r6e2bWLi+BoOaDudEFg6HBEziXsEHQKAP9Qfe/RjobA
+	 KUJQAgK7G5A9A==
+Message-ID: <fc6d5ce8-eae8-4737-af95-c04d3a1a2b81@kernel.org>
+Date: Tue, 11 Aug 2026 10:06:42 -0700
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -35,35 +35,28 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 3/5] xfs: fix zoned write iomap flags assignments
+Subject: Re: [PATCH 4/5] xfs: factor out a xfs_iomap_set_anon_write helper
 To: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>
 Cc: Wilfred Mallawa <wilfred.mallawa@wdc.com>,
  Hans Holmberg <hans.holmberg@wdc.com>,
  Andrey Albershteyn <aalbersh@kernel.org>, "Darrick J. Wong"
- <djwong@kernel.org>, linux-xfs@vger.kernel.org, stable@vger.kernel.org
+ <djwong@kernel.org>, linux-xfs@vger.kernel.org
 References: <20260811164912.124416-1-hch@lst.de>
- <20260811164912.124416-4-hch@lst.de>
+ <20260811164912.124416-5-hch@lst.de>
 From: Damien Le Moal <dlemoal@kernel.org>
 Content-Language: en-US
 Organization: Western Digital Research
-In-Reply-To: <20260811164912.124416-4-hch@lst.de>
+In-Reply-To: <20260811164912.124416-5-hch@lst.de>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 2026/08/11 9:48, Christoph Hellwig wrote:
-> Don't overwrite IOMAP_F_DIRTY with IOMAP_F_ANON_WRITE, but ensure both
-> flags are set instead.
+> De-duplicate the iomap setup for zoned writes.
 > 
-> Note that in practice this is harmless as all zoned writes force a metadata
-> transaction anyway, but incorrectly assigned flags are still a landmine
-> that will cause problems at some point.
-> 
-> Fixes: 058dd70c65ab ("xfs: implement buffered writes to zoned RT devices")
-> Fixes: 2e2383405824 ("xfs: implement direct writes to zoned RT devices")
-> Cc: <stable@vger.kernel.org> # v6.15
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Andrey Albershteyn <aalbersh@kernel.org>
 > Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+
+Looks good to me.
 
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
