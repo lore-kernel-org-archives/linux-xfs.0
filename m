@@ -1,117 +1,157 @@
-Received: from mail-vs1-f44.google.com (mail-vs1-f44.google.com [209.85.217.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF6D33B19D9
-	for <linux-xfs@vger.kernel.org>; Mon, 10 Aug 2026 23:06:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.217.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E15FB3A0B3B
+	for <linux-xfs@vger.kernel.org>; Tue, 11 Aug 2026 08:18:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786403199; cv=none; b=PekXKCIJljCRyqX0BpkM1dRqjO1EyisPBP7i9Hyq4hDrmHL5NL27or0FV9YJkC6qYvOJJtSX2ojkurJs82XImYZWSVojVfmfZdMT/Im6rsqit7VT8Y+62nz0p6r4IzKdtOvN6e7tr1lS9GtZjdUBM6UU9UyOb5CrAjrg/lDz6CI=
+	t=1786436298; cv=none; b=s32lrLeWpjGJ+vXMB21RsXQEDka0vuoz0ywKL6BGrWnOqE7g4dfqDN4nugnA213aU4G4I6/ftsGIJm7yC8/Gd7xknHKBAjcK9pQ5c3QaB/yiPQbmcdbVhp+0UXUjdHn9mx/HpEVunHJsm1e2bdefFSjQAnrjf2HjNmdyHstVIUA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786403199; c=relaxed/simple;
-	bh=ew41Ui+Mtu2XnI7H4myAGu1irg8mIu7VyIpeibPsk80=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=h+CkLpHg06eBXm6KGx6vYrBdoi8zE45bFCa86ViN02D4UmwVAVb7qVtA8nt7mHoGLmEt/yvi4Q8Be2+WfBDSOxyEbB7IV+wNmJBh0zuwzeY3longnHDf3EDdCFrWlsRIk9NaN1quYR4f7lW70VmoiFpb3cCcftjVtmpEucbgMSw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=peridio.com; spf=pass smtp.mailfrom=peridio.com; dkim=pass (2048-bit key) header.d=peridio.com header.i=@peridio.com header.b=sfkP9O6l; arc=none smtp.client-ip=209.85.217.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=peridio.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=peridio.com
+	s=arc-20240116; t=1786436298; c=relaxed/simple;
+	bh=0m0VCrVFS50IL0+ZPUc8eV8aQ+yXJjlZWMeXsIJ1aBM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=OPzqgSc6QDtboq2SyJv0swUZvrgXDhx7PUFhEYJ6Hsq4pUlutZ2nsdhRzDnPqb0qJebwgo5hywdcua0tz2GP+Xh0GX68f7rUnM1qKSZlHdzVghS/pbOF9+8DLrcnQu3Be88xfCbGan3QtL6QIlHHQoQQpoqHsXIMnCIZDTYsCK8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=WVCboBiv; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=QmpED+JA; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=peridio.com header.i=@peridio.com header.b="sfkP9O6l"
-Received: by mail-vs1-f44.google.com with SMTP id ada2fe7eead31-7395b602bb9so60402137.2
-        for <linux-xfs@vger.kernel.org>; Mon, 10 Aug 2026 16:06:28 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="WVCboBiv";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="QmpED+JA"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1786436295;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=rQoYgawLl/uFdgKGximNInLlgWg1ECp2Ql+MmIdl1KM=;
+	b=WVCboBivTiubRo1WNpL6u6DYD/OQWnjxQ5FFCQWfNGpKqdLXfrsIvyhMFTBBywKfJGk0kC
+	TQ+d2IxSc+GY6vUXqzALbmOmsKAAkmvURSTDDWSIuP7UtQZ0OZZmxQ5jqcESVgwLMZjtez
+	DxsLsQm4AucY5qMmZ4cQ4Ra7jOS0knw=
+Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
+ [209.85.128.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-443-qkbPQLdMMZGUsx6NN6tXBg-1; Tue, 11 Aug 2026 04:18:09 -0400
+X-MC-Unique: qkbPQLdMMZGUsx6NN6tXBg-1
+X-Mimecast-MFC-AGG-ID: qkbPQLdMMZGUsx6NN6tXBg_1786436288
+Received: by mail-wm1-f72.google.com with SMTP id 5b1f17b1804b1-4957287363bso16397735e9.0
+        for <linux-xfs@vger.kernel.org>; Tue, 11 Aug 2026 01:18:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=peridio.com; s=google; t=1786403188; x=1787007988; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:sender:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=0usgXpPODhk9hKOhk5YF9ap8MJxRZDFzD06C8UqMFw4=;
-        b=sfkP9O6lLFSZnE4vCGuLS4uStO2b//FYDV0zuYfKFDXfSH2aORr2nqKNsS0cuuvChp
-         tTEdU4dK9wKrgd1YcDhMVNEgMHKELpPc94KgVKiNsEd6RgDNVJvoiJEhxuxJVIpfzTUF
-         PJoahhJk4eKA+Txei4UzCDsWItFYUmm2KTfgLbE3Wwy6QdGK667kqB537h2IQdogOZmO
-         Yi5sCNG2AdcmugBjrmhVsKa79PJNz58icppFbfl34wXznfTgIdNrFv2RGHccqr0Zw0wp
-         h0DMLCoyhHvFhYrCxh/v6nx01RgMsOYIisFpOHKh42Nb2CkdK0CryDYeOF/X2sDKZEOu
-         QtZA==
+        d=redhat.com; s=google; t=1786436288; x=1787041088; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=rQoYgawLl/uFdgKGximNInLlgWg1ECp2Ql+MmIdl1KM=;
+        b=QmpED+JAJESU5FyhCyTatmFHkwiMWEcr86kck2O1E19QIoD8iACqFSniC+z71Bpfq4
+         lHB1cC5988ZWcEpXS2jBbpl+8bXcTaLF8Ptn6iuAQctnkw0EAWlxJH5T4lbUGq24RFMp
+         GJqAElN8kpyPqFyZbfxEMzC7fY4Adwq29Anc1K6TT3RoJ8W6Cepb59LpBtoTldmd57sv
+         +RK+pY23KXHX7vOSXvBWA/75gbtexXvCU7XavuoLarCi2r+Po0wiHkarYvRaQnDOgE96
+         T/kbvYnmh4mQ1APbZLZmE5zJErEFlCpDXIta8RUNNQp2k8wDRzLHurpwSIdNXVBl5PSW
+         UJ4w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786403188; x=1787007988;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:sender:x-gm-gg
+        d=1e100.net; s=20251104; t=1786436288; x=1787041088;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=0usgXpPODhk9hKOhk5YF9ap8MJxRZDFzD06C8UqMFw4=;
-        b=QmM5EVPj/CAx/HZsezose1U1gmDZc/h/5Uv+utyekEpeHkkF0fzS3YegeD/1C0M/6J
-         UJIWVpgwdsZBZORNxsK1cAN1M4Gv8hN8ARsQy1b1GdMSz8ovKUQeFv7DiEtufO5vchAl
-         u7NeLBmz5yOfA3ZsX8nii8BNCBU43o8jE74V699cBIKK9lzoc9Nrr04kym3Nk8QjgMh/
-         urzBg5skl1avL2MGLN3uw+uDYWV9CT8J/N3SouZw5EzU78aUN1x15Vsf8D5EVZ9jBEjl
-         jWGV98MS7VodTdoocbES0ZHJtN79WHJh/pRncbPUxyz80ZYd94gyQeQvTPAb7R9RvW7E
-         D+DQ==
-X-Forwarded-Encrypted: i=1; AHgh+Rp8K3ZLyhG2rIuQbi6CV2reTsgVSAXPTXk4Ya/8DY2ojx0a+Y6BYbhtTTHSrb5uS8BWPbTymhIj0WM=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxLRk0DCXTfczx7nuucprRZUFuOckbKSbvYh9DOKCpj6DpMZ/fC
-	Rdskai7DhBbGK1k7H0WUud+36O9c+HVyzZ3qGkxLjEwCukz5jisISmfhcuJKvAoj4rY=
-X-Gm-Gg: AR+sD11w8W0WCrTaTiWnLC3MEDzwG96wo0/mPPBByzhH7mI8Ji4jPcRIDqP9NcNEkSl
-	JyN53vaUMsCS1QAUiVkHI4vgp2YOI3OMPuTFd+HgXyFCt/uShzpa9fFG3Vatt8OGUISE55TBnhc
-	7RuLf7sv7KynS09GTL1edWC8Ar6gvjpka1/18HI42OiP31t7YvTJCzb3eYLaF5HKCle1acG6/PO
-	DzDlqKg1lK2MnzawxA4RCUL+cQPCiOtSooFjsHLuICFjoKUWKZl9KMYxM7vBNfPWjygeK+r0/e5
-	oCglsW75IZKRiSdDX/Q1lWt4paikVSquz/7XYfHz2rkAdb6eH5tOuftV0P0CsB2dbp4xAnMMJ8z
-	f5q3SIyuNibnNMFJfqtXaGnZ1CHGAWVYyvrNvDhWJHXgJudDp4O9sba9YCfQdxnmtKmBR0O5f5b
-	vb5kkYN6anAOmWVjcOnx51qOHxtK8C7UHLsKdmhKER++LkflBWPnKvhsp17j7mhSwY
-X-Received: by 2002:a05:6102:3ed6:b0:738:9abd:9ebc with SMTP id ada2fe7eead31-760e79e969amr6666021137.0.1786403187350;
-        Mon, 10 Aug 2026 16:06:27 -0700 (PDT)
-Received: from localhost ([190.113.101.40])
-        by smtp.gmail.com with ESMTPSA id ada2fe7eead31-764013f3489sm5458692137.12.2026.08.10.16.06.26
+        bh=rQoYgawLl/uFdgKGximNInLlgWg1ECp2Ql+MmIdl1KM=;
+        b=G6mc9lJVMz6HWUu2iU2TBYnce9yzCdrKIixxGx9Ki2XRqn9/Sc+j683EhSvzB48Eai
+         ZR1wx1obtgfnY5+gLb79zOOJKsJFr7NnYs1dbFrK4Xrgs522XbA4AOYF8n69O4H8hLvy
+         wDEeQDtMiHXa/gd1bAAJ3BKqszs7L+uxsJkKOTI5zxwxgoO0cRnyjahOY/kXc1lYHT67
+         p6brGKFhPG1SuSzMl88kBW8sLxqB2rpqFE0nWEfddwJp4wGmeTo4scZMHHS6Hqp+jm/C
+         iLqIknO5sym8gqHEKJBxuWf0SjtjnykrBf522mI4cWaus/NPHjkEIuvh5c5rMY5wO7Da
+         d2LA==
+X-Forwarded-Encrypted: i=1; AHgh+Rpf/2cupxQL1QxUOORBaHdeluE9zxsZ9vZdq/MXx6FOZhnz3kKT0FGYzBQgycGWTo1clEHcLDwZ7tM=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyHNwQRDy7v9H7fJxqjDo8rZOG0iIPhhzFh+4aAcOIyP2G5+coj
+	BdaXsUH/FwvloyYnQG9H53eClp2O1RsCnBu6+kbkg0vtbb7smYjTYKGElbQrpYVxXuGkXEs5X9K
+	kp2CNt65ODggO0OMyDYa5O9i7tyuokKLGVtgea5vcwWYEBcByttuED80X5J/k
+X-Gm-Gg: AR+sD123rBaiuBi8JJ9r1vvgS1taEyOihOkKrL8OVJ1w6a8LDIl/JIR63iKWSnb8a9E
+	SkYnSER1RXuT6QBDIMP+iCaogQ4ttJal+q54Xdxou+jpMyiIDyaJbOUkacwYESrAoXHutxHrN1+
+	hCCf1eQRdl4AaA/HkOIlTtZ9hguLTbdmbIW8zrPPNYEOVZK8T7pBphpkfq+JJPhZaCkjmm/mQAb
+	8V9kPG9Wur6jEJUWvw1K665tCtcK9a3UTECVjaLNQOlRfFrdN/0tImTZncQVqlL56JPX6d7f9LY
+	ACXBZvHTNImuOTDRaKYWOCuE4ZyRDo4eFKd2tmTLFJ6UcSy2hFkweLjLH4bb77syN/qvnnbNCpg
+	T80i1b8umZu2Yi+YycIHZSzw6sZTTeA6+tr5/lQ==
+X-Received: by 2002:a05:600c:4683:b0:499:5210:c537 with SMTP id 5b1f17b1804b1-4997842c1efmr23685975e9.1.1786436287867;
+        Tue, 11 Aug 2026 01:18:07 -0700 (PDT)
+X-Received: by 2002:a05:600c:4683:b0:499:5210:c537 with SMTP id 5b1f17b1804b1-4997842c1efmr23685055e9.1.1786436287342;
+        Tue, 11 Aug 2026 01:18:07 -0700 (PDT)
+Received: from aalbersh-thinkpadx1carbongen13.rmtcz.csb ([91.245.205.131])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-499788f11b8sm26013505e9.10.2026.08.11.01.18.05
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 10 Aug 2026 16:06:27 -0700 (PDT)
-Sender: Javier Tia <j.tia@peridio.com>
-From: Javier Tia <javier@peridio.com>
-X-Google-Original-From: Javier Tia <floss@jetm.me>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: "Darrick J . Wong" <djwong@kernel.org>,
-	Dave Chinner <dchinner@redhat.com>,
-	Allison Henderson <achender@kernel.org>,
-	Andrey Albershteyn <aalbersh@kernel.org>,
-	linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v3 6/6] xfs: assert the reservation covers each da fork growth
-Date: Mon, 10 Aug 2026 17:06:18 -0600
-Message-ID: <20260810230611.2859909-14-floss@jetm.me>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260810230611.2859909-8-floss@jetm.me>
-References: <20260810230611.2859909-8-floss@jetm.me>
+        Tue, 11 Aug 2026 01:18:07 -0700 (PDT)
+Date: Tue, 11 Aug 2026 10:18:05 +0200
+From: Andrey Albershteyn <aalbersh@redhat.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Andrey Albershteyn <aalbersh@kernel.org>, linux-xfs@vger.kernel.org, 
+	fsverity@lists.linux.dev, linux-fsdevel@vger.kernel.org, ebiggers@kernel.org, hch@lst.de, 
+	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, 
+	linux-btrfs@vger.kernel.org
+Subject: Re: [PATCH v14 13/21] xfs: use read ioend for fsverity data
+ verification
+Message-ID: <anrZR9SarXJMBLgI@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+References: <20260803200820.393203-1-aalbersh@kernel.org>
+ <20260803200820.393203-14-aalbersh@kernel.org>
+ <20260804183632.GO3556460@frogsfrogsfrogs>
+ <anmNNNNy4YsV_KLB@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+ <20260810183102.GY3556460@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1124; i=floss@jetm.me; h=from:subject; bh=ew41Ui+Mtu2XnI7H4myAGu1irg8mIu7VyIpeibPsk80=; b=owEB7QES/pANAwAKAbXuwwuoZ3cfAcsmYgBqelljtjemURn5LRpl6Wz+JZJUD6qD/0CqLlJto HUOpnbw1W+JAbMEAAEKAB0WIQSbE7ILzw7eI0VKk8m17sMLqGd3HwUCanpZYwAKCRC17sMLqGd3 HzrZC/91IQKPbjMT3p8vIklGy/xQ9Lior9axlrMh3lEthy5Zpwiz/hCOKjP77kZyxs1zfZvwDW/ QnTfns3MnXxv4cmZLEC0gxgsAd6K9gsLXk7L65XuVWJRP4Z4AdlzhFHH8oJjrMP+3G6nJK4vQ6k XtsJkN0AUHVuHVlgV3ze4erwUUCnjiT3Y3nli4U0KeuNE+ZubSx2kASv0br6X73MmvicSpubuTb qm6sBFmpmULN1PyYIjD8Ov/FNipxbgL0OhGigtlKUOKFaHH1Kv6K4mpQN3vL4pU3Kb2Gx+Q/8lb aKMID4915/N+dni9RIswOcT/E9XZgbKQAa9CibLrap6OR77zZr6ar3qAJlTM9hOCsSg0VSQ1zwa Q56AxfCBd8lR+0EOAAFc/FCeTejqx+sj0E2BGicHHzS08ua1T5oNSG3pZmC6Yc+Hpbyq9qz52zT UJvZPyt50o7olsvORStgAFX9wQ2NLHir6QerC4y6hHBVROutdCzHJ4tcB1ewMTpSRsATg=
-X-Developer-Key: i=floss@jetm.me; a=openpgp; fpr=9B13B20BCF0EDE23454A93C9B5EEC30BA867771F
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260810183102.GY3556460@frogsfrogsfrogs>
 
-xfs_da_grow_inode_int() subtracts the blocks it just allocated from
-args->total, the caller's remaining block reservation.  The subtraction
-is unsigned, so a caller that reaches it with too small a total wraps
-the field instead of failing, and every allocation afterwards runs with
-a bogus reservation.  Assert the remaining reservation still covers the
-step, so an under-reserved or uninitialised total trips in debug builds
-instead of silently wrapping.
+> > > "If we have fsverity and block device integrity attached to this bio,
+> > > we need to run both validations from the separate fsverity workqueue
+> > > to avoid deadlocking due to fsverity issuing its own reads."
+> > > 
+> > > (Assuming I understand the fsverity && pi case correctly.)
+> > > 
+> > > One thing I'm not clear about -- why is it safe to do the fsverity
+> > > validation here if PI isn't enabled?  Can't that also issue IO to pull
+> > > in merkle tree blocks?
+> > 
+> > Without PI, fsverity metadata is read without XFS bio completion
+> > path, we don't get here for the descriptor/metadata reads
+> > (see xfs_get_iomap_read_ops()). So, we won't block the queue, as
+> > data ioends won't be mixed with metadata ioends.
+> > 
+> > With PI, all fsverity reads goes through this path. We could get a
+> > case that data ioend is waiting for metadata IO to be completed which
+> > in turn is pending for data ioend to be finished (due to batch
+> > processing of multiple BIOs in the bio_complete wq).
+> > 
+> > So, this will issue more IO, but this IO will not get onto this
+> > queue (it will go through iomap_bio_submit_read()).
+> 
+> Ah, ok.  Maybe add to that comment:
+> 
+> "If we have fsverity enabled but block device integrity is not enabled,
+> completion of the fsverity metadata reads does not require a workqueue
+> so there is no deadlock potential."
+> 
+> then?
+> 
+> (Just echoing you to make sure I understand completely.)
+> 
 
-Suggested-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Javier Tia <floss@jetm.me>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
----
- fs/xfs/libxfs/xfs_da_btree.c | 1 +
- 1 file changed, 1 insertion(+)
+yes,
 
-diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-index ad801b7bd2dd..9be407affc6e 100644
---- a/fs/xfs/libxfs/xfs_da_btree.c
-+++ b/fs/xfs/libxfs/xfs_da_btree.c
-@@ -2385,6 +2385,7 @@ xfs_da_grow_inode_int(
- 	}
- 
- 	/* account for newly allocated blocks in reserved blocks total */
-+	ASSERT(args->total >= dp->i_nblocks - nblks);
- 	args->total -= dp->i_nblocks - nblks;
- 
- out_free_map:
+I've changed it to:
+
++       /*
++        * If we have fsverity and block device integrity attached to this bio,
++        * we need to run fsverity verification of data folios from a separate
++        * fsverity workqueue. This is necessary to avoid deadlocking due to
++        * fsverity issuing more reads of fsverity metadata which would be
++        * processed by the same worker in the BIO completion workqueue.
++        *
++        * Without device integrity, fsverity metadata IO will not use ioends for
++        * completion.
++        */
+
+
 -- 
-Javier Tia
+- Andrey
 
