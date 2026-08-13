@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00A993A6B70;
-	Thu, 13 Aug 2026 05:26:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF0003A451D;
+	Thu, 13 Aug 2026 05:27:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786598816; cv=none; b=rsGN1g1Ti2kcdkEb5uiA70uPnqNn8yo4p/uHwNAv+Jgr6Qo3y7GXZGaIuMisY4KjNN3VKrzEDCx+6LvqrJC5HfjEy7QiyUs9/Z/L2u2XqAL2mEcC/F9tJ2aM0g/pq73inqqdk+d0DOFxR/M3Qh8qHNQQ2/uJAam3WrEkEDyPxH4=
+	t=1786598831; cv=none; b=hUf8cV00xYgUBT6oJzjTpFPnXgxFT0/W/R5jJMqBew2sVmEgbeyxkieLqhUE5afT6BV6FxBzdPrHyW6ZOQ32OXei4IgPycxeIJz/TZEfRGElcQ86bZK1USRZwJaJPZc+uirf2asYjjeTGYJNKj8aDPp6SGAN634xg6pvYQvSpbY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786598816; c=relaxed/simple;
-	bh=5LmTAffNiYXjss8cq+hpulesoqXces1l6reCGf2h54U=;
+	s=arc-20240116; t=1786598831; c=relaxed/simple;
+	bh=yj67piyJNNTZoXCr0fUE8P/uNzspASTnXYcJXldE1VU=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=LaePL6/ZZEIS9dwF5CF0UBnaYp5yGCU4TJaCB+rbAYfSAirk4+eIp+3rgYreNmCM+2vUy4u5ORSrnsHvnZ5tmDd6wT+xYxwj0/H0eHWYhoaER4uJ/W+z53AyRq47dfx1IpSIWAzynewlUnR0U0x7Ubbp+A4F2S6FD01bfh6Jvzs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=buAIH7E4; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=iuiuOqV9zW2D3UXGSekTnw0hHyKFwssni0gWXvvZyYrfeOvixOvaDix9q0cGweVCUBXMvMsOjyse/kdBIuL9GHmkjzTlDK314DpjjtfLefkkvTDaicL71O3EKqiqXQ220qOi4+8UxtfC8dOq0G7MWCv2Sp8gyn6ulrfyG7CTang=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ar6Bcrzw; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="buAIH7E4"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 7FFE51F000E9;
-	Thu, 13 Aug 2026 05:26:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ar6Bcrzw"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 2086D1F000E9;
+	Thu, 13 Aug 2026 05:26:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786598803;
-	bh=wi2SWB4K61ydLxAf+KfXAC77mfSjKxhX5Eq1VcBQrSs=;
+	s=k20260515; t=1786598819;
+	bh=8Y8g297myVSLIk9Q4BQayktDEJacS7gO/k3q//TCKS8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=buAIH7E4RzOwGHXaDpztCpOvFRC7KfOuc++6ggVyfJDpT3HeUdfXmlzkO8rHzi90V
-	 98PLWbL84J0yyDQER4UasrTes4nbWCMXRmPkmxP3YUt4ut4CW/ubnBJgeRS2MxOX1j
-	 rMb/T8oiPYGUVTOO8G1YY5tLzB8HxgfkqHoKu95FvN9B3N1nei3opnbXfY0hZ+I7cH
-	 oLAIGitofPMiGWflx8PdsBjmEPlBev+ZuaYJ7TvGSg+hc8JeyUypA5mfmmVeHiYeJ7
-	 h9fRPwgrZ77C3Zz5QpTBzdmtN8fSn2xJG7svuKWAa1RaUy3F6P3NaddjAWva09Ja1E
-	 9zC3XlQvB0hnA==
-Date: Wed, 12 Aug 2026 22:26:43 -0700
-Subject: [PATCH 5/6] xfs: don't modify file attributes or poke fsnotify for
- dry runs
+	b=ar6BcrzwPOe//y6uQQUII2Xqn6OWs+RUvfRDXr0U7Gp+vJN85LUaeblZEfyUft0Pg
+	 D+asq3VyXRJc5LUtlSoglHTfF2D6c6b8BhpdINy8Bxf6++R7HUBXWqB1mxRD3pZwVG
+	 HgqkyRVIPEFj4kZcxIIDAiwDq/ewVXCQiKJMFSBPRb78OFn0qOvABxwfT9AHbzeQuG
+	 eJyA11jeBe9u5CD4dpWkdUa9CbtBhUFVUjini9pVe0gdwtDeyS8hVUdGjN58hpp4OG
+	 PfA0glufKYIBj8IQ1ok+s/Yd6kINfzgjbMrtU2tsuHitiedvOmabP74AyEI5ebqDCh
+	 eJuMAGOgCTgkQ==
+Date: Wed, 12 Aug 2026 22:26:58 -0700
+Subject: [PATCH 6/6] xfs: fix bnobt repair space reservation disposal failure
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: hch@lst.de, djwong@kernel.org, cem@kernel.org
 Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <178659861983.833922.10991178975977666480.stgit@frogsfrogsfrogs>
+Message-ID: <178659862005.833922.13291793696473888206.stgit@frogsfrogsfrogs>
 In-Reply-To: <178659861838.833922.2269351780488724470.stgit@frogsfrogsfrogs>
 References: <178659861838.833922.2269351780488724470.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,41 +45,75 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-LOLLM points out that a dry run shouldn't poke fsnotify because we don't
-actually change the files.  I noticed that we also shouldn't be removing
-file privileges when doing a dry run.
+LOLLM complains that we don't bubble failures from xrep_abt_dispose_one
+upwards in the callstack.  A failure to clean up the space used (or
+reserved but not used) by the new bnobt/cntbt should be reported.
 
-Cc: <stable@vger.kernel.org> # v6.10
-Fixes: 42672471f938cd ("xfs: bind together the front and back ends of the file range exchange code")
+Cc: <stable@vger.kernel.org> # v6.8
+Fixes: 4bdfd7d15747b1 ("xfs: repair free space btrees")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Assisted-by: LOLLM # finding obvious bugs
 ---
- fs/xfs/xfs_exchrange.c |    6 ++++++
- 1 file changed, 6 insertions(+)
+ fs/xfs/scrub/alloc_repair.c |   18 ++++++++++++------
+ 1 file changed, 12 insertions(+), 6 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_exchrange.c b/fs/xfs/xfs_exchrange.c
-index 94965a6c2187ff..56f9a6b47c47b0 100644
---- a/fs/xfs/xfs_exchrange.c
-+++ b/fs/xfs/xfs_exchrange.c
-@@ -701,6 +701,9 @@ xfs_exchrange_contents(
- 	if (error)
- 		goto out_unlock;
+diff --git a/fs/xfs/scrub/alloc_repair.c b/fs/xfs/scrub/alloc_repair.c
+index dce6ab0429dcfe..95e318e4f3a6c7 100644
+--- a/fs/xfs/scrub/alloc_repair.c
++++ b/fs/xfs/scrub/alloc_repair.c
+@@ -571,7 +571,7 @@ xrep_abt_dispose_one(
+  * allocation, and blocks that didn't get used can be freed via the usual
+  * (deferred) means.
+  */
+-STATIC void
++STATIC int
+ xrep_abt_dispose_reservations(
+ 	struct xrep_abt		*ra,
+ 	int			error)
+@@ -582,9 +582,13 @@ xrep_abt_dispose_reservations(
+ 		goto junkit;
  
-+	if (fxr->flags & XFS_EXCHANGE_RANGE_DRY_RUN)
-+		goto out_unlock;
+ 	list_for_each_entry_safe(resv, n, &ra->new_bnobt.resv_list, list) {
+-		error = xrep_abt_dispose_one(ra, resv);
+-		if (error)
++		int		error2 = xrep_abt_dispose_one(ra, resv);
 +
- 	/*
- 	 * Finish the exchange by removing special file privileges like any
- 	 * other file write would do.  This may involve turning on support for
-@@ -783,6 +786,9 @@ xfs_exchange_range(
- 	if (ret)
- 		return ret;
++		if (error2) {
++			if (!error)
++				error = error2;
+ 			goto junkit;
++		}
+ 	}
  
-+	if (fxr->flags & XFS_EXCHANGE_RANGE_DRY_RUN)
-+		return 0;
-+
- 	fsnotify_modify(fxr->file1);
- 	if (fxr->file2 != fxr->file1)
- 		fsnotify_modify(fxr->file2);
+ junkit:
+@@ -596,6 +600,7 @@ xrep_abt_dispose_reservations(
+ 
+ 	xrep_newbt_cancel(&ra->new_bnobt);
+ 	xrep_newbt_cancel(&ra->new_cntbt);
++	return error;
+ }
+ 
+ /* Retrieve free space data for bulk load. */
+@@ -801,7 +806,9 @@ xrep_abt_build_new_trees(
+ 		goto err_newbt;
+ 
+ 	/* Dispose of any unused blocks and the accounting information. */
+-	xrep_abt_dispose_reservations(ra, error);
++	error = xrep_abt_dispose_reservations(ra, error);
++	if (error)
++		return error;
+ 
+ 	return xrep_roll_ag_trans(sc);
+ 
+@@ -812,8 +819,7 @@ xrep_abt_build_new_trees(
+ 	xfs_btree_del_cursor(cnt_cur, error);
+ 	xfs_btree_del_cursor(bno_cur, error);
+ err_newbt:
+-	xrep_abt_dispose_reservations(ra, error);
+-	return error;
++	return xrep_abt_dispose_reservations(ra, error);
+ }
+ 
+ /*
 
