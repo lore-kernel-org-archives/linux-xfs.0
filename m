@@ -1,93 +1,125 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f41.google.com (mail-ej1-f41.google.com [209.85.218.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8ACDB483BCF
-	for <linux-xfs@vger.kernel.org>; Thu, 13 Aug 2026 15:11:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786633912; cv=none; b=Y1xES3xGPw3TkSr9i2x4WzkKRnzje3zySKWeopP+zXY+YdBpEDVuHo89FyQKiXrWRsG0gekBCrVOgBxLlt4nm8YlnQL1Q2jajXI91CrdJNTi3v+JU0n1eAPuyObLjPYFRLsAgPHIyehQ4BekPYiEG3v1tg+WL8LEdt4FQtSeVlg=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786633912; c=relaxed/simple;
-	bh=ylN1Fuvlo7Iaty5TIDgkjGvxPyjeAbj4jcm16r1m50s=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=AkB/keK+ZqqskhVPF+rPvNELm2AJ6uFX50NFcc4elAOAOOALzenBEplRrIdfP/JSNc0DVAkqa9qykE0Y3ayNVDlNFyJjCr8/eQDedWRH7idhvn6eTXzwkkWMlPCH5XlDqlnOzkBLNY26O7evtSmAFD/ho2V/hGhYAs0esWB7OW8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fw2AgbVc; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 866A1485508
+	for <linux-xfs@vger.kernel.org>; Thu, 13 Aug 2026 16:13:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.41
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1786637643; cv=pass; b=U4lUdIdrxky1wwvHTCQkvuyFuSZ3mOcYHpXm5XMnDfLaXNAZcqReVL/oU70xZypcSUOBN4VhbdHphmCu1hWn8qhKhybaxYpcTkfvNh8LbJTXckQYceAHGFiDg+WvMERxWfpkshGKtIPqsJ1mXySXMfGfKP6jGfcRcJ3eABsJBHs=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1786637643; c=relaxed/simple;
+	bh=W4CcLslGoVgES7gXkGgSabrHC7MeZOuqtYUByLWmTsk=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=QOSO5HNibjv4dWMPDVMtn2eho/BxcDi/NwbUpTLGB0Nuee6UGGgRMJ0s18cc5LZUbyXoKx7OGLoe5glCMO0yh1B4HtgR77q2MJfk87ubwIIMjOMHogQd7l0n1jYVJPZoyzUSRGEhlCO7m5MBmYS5SrHq1OpH1kE9k6eFYVJAInA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FRK6A6Tp; arc=pass smtp.client-ip=209.85.218.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fw2AgbVc"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 144121F000E9;
-	Thu, 13 Aug 2026 15:11:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786633911;
-	bh=Ob5SAyqP8HGwvU8Yfrkremn2KDNmSJn0CYQz2d5fyYc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=fw2AgbVc3+uk9pDBDhtF0ZE5g+MIRW1Xp5jtO07TPUE5F3uPYsj0OP8TdPLe+uzCi
-	 8rnGwy5SalRBCyB+7t5duLlu/Bj9s37wC8IBQvo9wfbfEzEoKbw/BF7vB060EJijGA
-	 Py/CAmajHJPUSe81YpIorV8JuoyJlMmohffM2Yf7Ltr0KHeIipQyEyNSlDayG6Pvo6
-	 CYLfWGVIFNh/NW/K4X6+SoOXH5BQ6nhpNpSLmDzO4GsaS4vmNM8a82+lqdzqFYv0Lx
-	 qZg85TlyC/gSEQKI+40CB9hFljcfgFS+XiGzGbJtO45SV3D89HxUsaSbNQTOL8zwXS
-	 bBL7WmfJuckLw==
-Date: Thu, 13 Aug 2026 08:11:50 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: cem@kernel.org, hans.holmberg@wdc.com, dlemoal@kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: restore bi_bdev in xfs_zone_gc_write_chunk
-Message-ID: <20260813151150.GE3556460@frogsfrogsfrogs>
-References: <20260813145617.419537-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FRK6A6Tp"
+Received: by mail-ej1-f41.google.com with SMTP id a640c23a62f3a-c15ba3a2b4bso13271566b.1
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Aug 2026 09:13:58 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1786637636; cv=none;
+        d=google.com; s=arc-20260327;
+        b=DUkoD/z4fg/5lGZ3BYCgZcWK8aqmnkYMV/Me8ejG2lpoISaadQf/hZgRK/TVj2prr+
+         /ci53NSM5hlCbliH7ikLlTpQVwmWnNbG3VBZ10MLN/ve4glWHxdvTTMZS5NVuTjvXvSo
+         VBv4mGENHpk5gJB47wFMfqH+RHReVaGGBoGzhkpXX0w3XsQaSjHRCOtDk7Rid7wCqL3Z
+         2siB/7PLO36gc4qsZg8i1qDm63PTGEp+9IqzP3aFyQ5Z7IVfCx2vPl6NC1uKhoGIh2dN
+         GN62Z8hGBUqx/IAc/6M9cs2bl7A5IiMghhNz4zC5ukH0kYd12HERbK2dv9U7tYYPtYkR
+         J/RA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=W4CcLslGoVgES7gXkGgSabrHC7MeZOuqtYUByLWmTsk=;
+        fh=2+gq3faW99QWN3wChIU63qbnxUuFFzIFXkPlSOAA0Kg=;
+        b=l0GvWIHmSdMfmBO9tHqd4ZYbmNdoD4LyKpjb9HoIuQYYCM2ivGYNWyjBJ/Io8Y8Myq
+         YQq+KWxLtBbHHzGvXD/cZWyC59fE7QekbsgAk5DXXt2fMKly1+XmrwqvTKqRycQ+zEDO
+         AN8b65yU6xHbIcKyCXgE/9c9ugfajyi4VwHpKxnnUMikxxUFiHMqp4fYhnLdd7YRHnWL
+         6OWa9oHO9GVvS/mTCUpLktX4dsOw5yFsYs/iARvYS5u7Bwx8QQ+Gv0YsSaqIl8J/kRlz
+         7SIrfvZ0OumUKpcEY8YayrApD0H/AV3sQAY6tE8zbyBHulH3BuUDCt6FBN5Hec+tS765
+         NncQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1786637636; x=1787242436; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=W4CcLslGoVgES7gXkGgSabrHC7MeZOuqtYUByLWmTsk=;
+        b=FRK6A6Tp3+OpXcmxOIan7kPQqoO5NagAomazQr6TOoYw8vrST507v16Txwis4x1Fpa
+         bbXFgUUhhBNzIXoJ700lQDW7yQ/TTeOezCg2LVUlsh0xZKSPDdYf1yMbQkOKaWLyyayS
+         mrcDDU+1+yaRsMk+kBKgrTpei2wv3zTfFHNz5QIGesC2YQwxGLWRGwJdnYnJWHPisQ+I
+         7unGyxU1kVCfku5xlOgzyXEB8jHhLMgmSCrgV/R379Me/10CkUfEZhu0WFLLN7exPsRc
+         rRvpAa/xP7+ryNRGTqkqFrSqgwK7natJeoDVSxMc1mggIizjmO1oToodVuD7zH48pSTM
+         KrwQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786637636; x=1787242436;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=W4CcLslGoVgES7gXkGgSabrHC7MeZOuqtYUByLWmTsk=;
+        b=RxKLmzXpO5/qAdjEogiy6Yj0nFfYu7eneu7Fi5cbJ6CO8TjZE9eG8YVxBlAqQvXKHv
+         cOe0Qjk2l7oNyT7wcIPkjYssD0Sa51JLAP54ntcFGlZQLVP28BS1zB0Baztt8mnwU5c7
+         O1t0/P+92Gp03jhdM9CzRGIIzKDi9yRrwghtXboQLjnvwBxSJx6ZLxL/zfvKA0NKxGXE
+         S4zn678IRjjeoXkoLJM+mFeW6Q4YubfEZIVinU6VBN8Kfzw5itlYZSgGXvjopYtqQUpT
+         GB6lHVeedombUng3/hnvAW18mjhQUWQl+R9S0HuFMfaPTRjNQGj/Qy02yil6T2rrGe55
+         vkAg==
+X-Forwarded-Encrypted: i=1; AHgh+Ro51nnrZ6lCz+DLLliCIhBgRqcHNB/90lDFiOWMWxp1ilaw3E1h29HHd2bkK8nXUH30zO59CFrjw24=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx4l9l3MDUY0BtnbsirxyetV79tBeiWqVk9Xm957/nEe28ncKb0
+	inXXB6kYZE9ASHsRIllIdlMnjYc0I9bF6C5wsa3zfL5irlWOToLJI46+okyjvQ8c35/XBVQVbYo
+	PQBB5lRdQYylsGVNL8nDvoPlSoSnxDJU=
+X-Gm-Gg: AR+sD11bctFQ+kUAq6UUGkESBtrroiCV9gMtI0EIfhWAPw52IhErYU3E1tSVpMcIYMh
+	LleG/DG2NZcVSbzpqxOMrwJEJdRodnCKUNH7qeMtriI1a/XWp8C3hmdRHhHb6b1bOI4X3TfGhSY
+	ptF+MunuRrEe2ZLMdQXQraeihWQrFSX4XFkl5RDaEhbqGhIAXOnQiStyCzo0zgl1zyVyMGEvLEd
+	Hh6XquGCiA3dCiZAVTF5Iq5/TUj6jiZ9fM6LQ2iZ8iTENSS67+JZcNIYo/eUTbpJGGGOg6+mCo3
+	Kexz+NWkS7IWOGT5SJgbuYRJf+Ck2Cul2Ece8zzZCapLBNbzFVRgjihXV3IQx/1PrL4CK+fhOVL
+	g
+X-Received: by 2002:a17:907:d0c:b0:c16:6c84:4b8e with SMTP id
+ a640c23a62f3a-c2108f76a14mr347283166b.14.1786637636103; Thu, 13 Aug 2026
+ 09:13:56 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260813145617.419537-1-hch@lst.de>
+References: <20260616053850.2188-1-aditya.ansh182@gmail.com>
+ <20260616053850.2188-3-aditya.ansh182@gmail.com> <20260624173531.GQ6078@frogsfrogsfrogs>
+ <CAK5ssPP6FL+6i8z+0QdE-9DSp0rC_U2S20qdxY7Kmdp7RS0xRw@mail.gmail.com> <CAK5ssPMyJhvnEQSRoAwVNnZS-A837OOMewEAvp+ZiuWKD=vUdg@mail.gmail.com>
+In-Reply-To: <CAK5ssPMyJhvnEQSRoAwVNnZS-A837OOMewEAvp+ZiuWKD=vUdg@mail.gmail.com>
+From: Aditya Prakash Srivastava <aditya.ansh182@gmail.com>
+Date: Thu, 13 Aug 2026 21:43:44 +0530
+X-Gm-Features: AUfX_mz4ASx4Wg4jtxq0QE41OyrxWoOEl9k5B9clEEwKWUqr_O2tj4xFQKNj9w0
+Message-ID: <CAK5ssPPC4Ov0KBbRphC_wZBZGu1Rr4-d2At4V+ZECFcuHxbEfg@mail.gmail.com>
+Subject: Re: [PATCH v5 2/2] xfs: prevent close() from hanging on frozen filesystems
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Carlos Maiolino <cem@kernel.org>, Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Thu, Aug 13, 2026 at 04:56:12PM +0200, Christoph Hellwig wrote:
-> xfs_zone_gc_write_chunk relies on bi_bdev to still be valid, which is not
-> true when XFS is used on top of a stacked block device.  This can lead to
-> misdirected GC writes, writing of plain text when using dm-crypt, or
-> miscalculated I/O limits in xfs_zone_gc_split_write.
-> 
-> Fix this by reassigning bi_bdev.
+On Wed, Jul 8, 2026 at 6:49=E2=80=AFPM Aditya Prakash Srivastava
+<aditya.ansh182@gmail.com> wrote:
+> Hi,
+>
+> Just a gentle ping on this patch.
+>
+> I replied to Darrick's suggestion regarding the
+> sb_start_write_trylock() approach, but I haven't seen any
+> further feedback since then.
+>
+> Are there any remaining concerns with the current approach,
+> or is the patch suitable for merging as-is?
+>
+> Thanks!
+>
+> Regards,
+> Aditya
 
-ewww, what??
+Hi,
 
-Should bio_reuse take a bdev parameter and set_dev itself?  I had no
-idea that bi_bdev could get changed by the time the bio completes.
+Are there any remaining concerns or feedback that need
+to be addressed with this patch?
 
-> Fixes: 080d01c41d44 ("xfs: implement zoned garbage collection")
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-From a purely defensive standpoint this makes sense, so
-
-Cc: <stable@vger.kernel.org> # v6.15
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-
---D
-
-> ---
->  fs/xfs/xfs_zone_gc.c | 5 +++++
->  1 file changed, 5 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_zone_gc.c b/fs/xfs/xfs_zone_gc.c
-> index 7ab8f2218c6a..5cc5ad1e3483 100644
-> --- a/fs/xfs/xfs_zone_gc.c
-> +++ b/fs/xfs/xfs_zone_gc.c
-> @@ -869,6 +869,11 @@ xfs_zone_gc_write_chunk(
->  	WRITE_ONCE(chunk->state, XFS_GC_BIO_NEW);
->  	list_move_tail(&chunk->entry, &data->writing);
->  
-> +	/*
-> +	 * If we run on top of stacked block device, the read I/O might have
-> +	 * reset bi_bdev, restore it to the one we want.
-> +	 */
-> +	bio_set_dev(&chunk->bio, mp->m_rtdev_targp->bt_bdev);
->  	bio_reuse(&chunk->bio, REQ_OP_WRITE);
->  	while ((split_chunk = xfs_zone_gc_split_write(data, chunk)))
->  		xfs_zone_gc_submit_write(data, split_chunk);
-> -- 
-> 2.53.0
-> 
-> 
+Regards,
+Aditya
