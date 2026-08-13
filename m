@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B5E6375AC6;
-	Thu, 13 Aug 2026 05:25:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F4CD3BF679;
+	Thu, 13 Aug 2026 05:26:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786598762; cv=none; b=XHcErI0EpLdagM5l4N3V23oMHySPI696I8HHNqkDMbqj0u7Ewr2WtBenFBpba7MIG+JozlaB6hw1c6YdDLPxd3iD0vyirOyvETUksgxLPN3uFjUnUwGoE7f9exTnZxmlfOokbOWqcqAo5neqEBlxIwvFOWl9JxxBZWAkhuQBIh0=
+	t=1786598782; cv=none; b=tGpFwDpnuOzw3pQV2mOjXIYafrYNynVZpbJIZ3EHgVdlP4kaKNqz5Uu96rBJose8jsD5uY0mkBBm3wTxKBlNi78Osuv+VMYL6bOCzxHnalQ3cmDMYdtPYkQEsMjn5ZBKCYOZnO+qAHdRlCdBV2pJ/rFyNP5M3yXNaUV3b6Js1KU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786598762; c=relaxed/simple;
-	bh=/BqJE05Y/wtHE13hd7Qu7GBnSy/4s5yFCBGOsitMDGI=;
+	s=arc-20240116; t=1786598782; c=relaxed/simple;
+	bh=ciW2fDzWVlVWQruUlCqr2qEz18ZHF4E2d91a5EIxYV0=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=BfsROwoJ5a8rMnpq/Sgu+lCRlPSlls0zqENZFxUeyZOF0bMCylhbIvK9plLTHgzwy1JQixmkOaj1wN4b2K/NyCyqV6sSk0GbFgD1OQQwBsPU7b32Vk7QKiiuyha02a6MHuFRNz5AmDUcVCM4F5DoqMv2rk5xaP/FZB7+5zWL1Ww=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SsaEP7tD; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=GOHH5W1aCtazD88KbpPXKE7puEA2whO0a9PgVAoqF3VdsHpFPduq5AwRH9q3YJNVKU2DHGZXQo1timEN09wsdAjTHDs1zCOQB3lzDQO3NbOZQt4zi4N83tt1xrX5eQLvHXvD4LSRXp63bOxSnOvr6+ZpM3dSUAsOPPNT4391NuE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eSJ4LoVb; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SsaEP7tD"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id BFDFA1F000E9;
-	Thu, 13 Aug 2026 05:25:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eSJ4LoVb"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 5920B1F000E9;
+	Thu, 13 Aug 2026 05:26:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786598756;
-	bh=6boJwVf/MS+W37aGydxpBeuUFPmnM580JJ3YZ4jOhgU=;
+	s=k20260515; t=1786598772;
+	bh=/ZebFf/BOehBxDthNkHM096TmaGpmYwbdE61E9vwXTQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=SsaEP7tDGZC7q4J/PDzP1ZAG03srTfk33+DfTSP7t8Vftq22I48z8dBqj30NSsWIF
-	 A+HuHA4e2aeO/LCfjaK2Zl3OPxrKQ8UpUI1z64mmh+Duoj6UKOw/zdBhxP53eKwK9X
-	 eLnUjsrSG1rs629fEnES/yLal/2Vqhzv0YpTkjFt5kNbBkH4iCCZD+9fKCKinQ66Dq
-	 4yCcQglzAeWUClr8J3d3GKNVLlvXHAdlIdWNmF6UWFb7sU/++OTXINaXe9KDktsdI0
-	 11jdyj0dhvrRCcw98SbDYtpVaMx1bRLR6Cb726rAoKWFrJqcxpXJpIOx/ZxEvI7TjC
-	 e+o+lwuPQJzaQ==
-Date: Wed, 12 Aug 2026 22:25:56 -0700
-Subject: [PATCH 2/6] xfs: preserve owner on in-memory btree creation
+	b=eSJ4LoVbySPLkn/dKJv9jaKGLXucecrD52S4ClCrC7sL9nUlx6m5oaolBL1a9FeDU
+	 lFK13GYKcvLmdSJ3zBf5sX67SfI92XkMHusvu9pohnm0s9xhB4wavp6KqmbNhAMXNx
+	 7+6je5/zPqGU25+BOxR1S3PEb2JsXyOj5lUiEHuQvH3t2FKAnZsGim5svitbQTwsJk
+	 TtZYfAPhtKwuflET3A2G92VrzTiOsTYVfZqudjjEmruiI82+XIeUxk549OCRhfgJ//
+	 3uBC8VkCljXR3oSt4+a/uveF/dn5fRN44v9DMtr1/bHoOYQYhN3cMkUPCkZO93ZTRF
+	 AlaLR/NaBOJDQ==
+Date: Wed, 12 Aug 2026 22:26:12 -0700
+Subject: [PATCH 3/6] xfs: don't leak new_bp if xfs_btree_bload_drop_buf fails
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: hch@lst.de, djwong@kernel.org, cem@kernel.org
 Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <178659861918.833922.4826979543941017596.stgit@frogsfrogsfrogs>
+Message-ID: <178659861940.833922.4172164469168951361.stgit@frogsfrogsfrogs>
 In-Reply-To: <178659861838.833922.2269351780488724470.stgit@frogsfrogsfrogs>
 References: <178659861838.833922.2269351780488724470.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,38 +45,34 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-LOLLM points out a minor bug where a higher level function creating an
-in-memory btree is required to pass in an owner number, but the creation
-function erases that.  In-memory btrees are ephemeral so this really
-doesn't matter except for debugging.  But let's fix this papercut.
+LOLLM observes that in xfs_btree_bload_prep_block,
+xfs_btree_bload_drop_buf can hit an IO error if writing the delwri
+buffer list to disk fails.  In this case, we fail to release new_bp,
+which means we lose a locked buffer.  Fix that.
 
-Cc: <stable@vger.kernel.org> # v6.9
-Fixes: a095686a238352 ("xfs: support in-memory btrees")
+Cc: <stable@vger.kernel.org> # v6.8
+Fixes: e069d549705e49 ("xfs: constrain dirty buffers while formatting a staged btree")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Assisted-by: LOLLM # finding obvious bugs
 ---
- fs/xfs/libxfs/xfs_btree_mem.c |    2 ++
- 1 file changed, 2 insertions(+)
+ fs/xfs/libxfs/xfs_btree_staging.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_btree_mem.c b/fs/xfs/libxfs/xfs_btree_mem.c
-index 37136a70e56d66..1d83a4251ceeb6 100644
---- a/fs/xfs/libxfs/xfs_btree_mem.c
-+++ b/fs/xfs/libxfs/xfs_btree_mem.c
-@@ -117,6 +117,7 @@ xfbtree_init(
- 	struct xfs_buftarg		*btp,
- 	const struct xfs_btree_ops	*ops)
- {
-+	unsigned long long		owner = xfbt->owner;
- 	unsigned int			blocklen = xfbtree_rec_bytes(mp, ops);
- 	unsigned int			keyptr_len;
- 	int				error;
-@@ -133,6 +134,7 @@ xfbtree_init(
+diff --git a/fs/xfs/libxfs/xfs_btree_staging.c b/fs/xfs/libxfs/xfs_btree_staging.c
+index c3c7ea54895a60..c5b7613e5216ab 100644
+--- a/fs/xfs/libxfs/xfs_btree_staging.c
++++ b/fs/xfs/libxfs/xfs_btree_staging.c
+@@ -337,8 +337,10 @@ xfs_btree_bload_prep_block(
+ 		xfs_btree_set_sibling(cur, *blockp, &new_ptr, XFS_BB_RIGHTSIB);
  
- 	memset(xfbt, 0, sizeof(*xfbt));
- 	xfbt->target = btp;
-+	xfbt->owner = owner;
+ 	ret = xfs_btree_bload_drop_buf(bbl, buffers_list, bpp);
+-	if (ret)
++	if (ret) {
++		xfs_buf_relse(new_bp);
+ 		return ret;
++	}
  
- 	/* Set up min/maxrecs for this btree. */
- 	keyptr_len = ops->key_len + sizeof(__be64);
+ 	/* Initialize the new btree block. */
+ 	xfs_btree_init_block_cur(cur, new_bp, level, nr_this_block);
 
