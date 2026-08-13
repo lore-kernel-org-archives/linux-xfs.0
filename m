@@ -1,210 +1,140 @@
-Received: from mail-ej1-f51.google.com (mail-ej1-f51.google.com [209.85.218.51])
+Received: from mail-pj1-f53.google.com (mail-pj1-f53.google.com [209.85.216.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 375D33126A0
-	for <linux-xfs@vger.kernel.org>; Wed, 12 Aug 2026 08:21:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE23F3749EB
+	for <linux-xfs@vger.kernel.org>; Thu, 13 Aug 2026 04:11:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786522902; cv=none; b=TpbUai6ljMHHf7DTFUyBpFXhsM8Sg3J014UXxVg/Noh3clr2hd2D/VwraEOXjTXshHDXoEWkF49t38Igda9xCyzYLxK9SwptmVy36Udpgj18fUNs7WzMRyrxmawcr686Mdx1NJYFQlG/fulMlVZEIPVF25gnWULYaLnDCH0G1co=
+	t=1786594316; cv=none; b=Z6cK6F8q9n3NDPXvfjn//31bRMxAvbb0vwVSVuY4/byWEQ4oiUp7rqhh03JlbtqL/uK/LgK0QoydA8cE8he0wE57AOr5S7ZyA1H2z8bx9iZCs7IdJo8L3ZF+Og26qjkOpWxXIaqjvwY2aaONiKPX+iSRWl2qTZCTucgzlzGs9zQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786522902; c=relaxed/simple;
-	bh=hy/MamDCMKEK8tredr9dX1Yq8W7ZbKsIAO08UW2RMxg=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=JsKHLaIws21CQHFpM94KVdmVrXmBDboPnup1crwhyuDnqHTj83Zl2khI97DTDR+hWIqzVPXwC+LuhzqjiMNzGsjDiGhl6oPxQIuP+wgsatPpWWPiTp5F0i3iUkHzGPCZrXMX5Gtj58lYNh55qwu/rqv54M8V8gqd233aksqQCms=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=rSFi5MpU; arc=none smtp.client-ip=209.85.218.51
+	s=arc-20240116; t=1786594316; c=relaxed/simple;
+	bh=Gnzg7LxLmW/AaeD3Pv1ryB6Tex49wbpWBcRevOIJ/7s=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=S8sSDrmqDXkJBG7IRG1d5pS+nC+/kUhg8NvJgdFKuzMYtmwrpwiExQ+LlviPZuLNvNbPuzNQLR6Ype6KCZpt3BPvMLrOzGQL3dRc/u/WsvlUz8m+G39CI2qPShLbj5JCd8oSvv9CinDvmUKAfNZbCoyBbllsdDxjOB1KprZPDx0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=sVMbCfDl; arc=none smtp.client-ip=209.85.216.53
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rSFi5MpU"
-Received: by mail-ej1-f51.google.com with SMTP id a640c23a62f3a-c15b1da6b82so71368866b.1
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Aug 2026 01:21:40 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="sVMbCfDl"
+Received: by mail-pj1-f53.google.com with SMTP id 98e67ed59e1d1-38e08baf860so332593a91.2
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Aug 2026 21:11:54 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786522899; x=1787127699; darn=vger.kernel.org;
-        h=content-disposition:content-type:mime-version:message-id:subject:cc
-         :to:from:date:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=el1pI9AYgbxBMZGemIgcUaMPCb1Mfx6+kLcyrWecEeM=;
-        b=rSFi5MpUYDS7aJrsmum3STIcKg1tFv5isLQtq5aMD0h0tPCHqdE9sNB+ptdCv5hQJQ
-         jVjcpiLTBx7Ahr87NkOUX/0wE/lHVNGE6WAUcUTtr670VpD8n1LEGZM2qh1WN7Jexmpn
-         Nndad0YHChscMXuU/3w5WiCTOjEDzx+EzwXKtQNWNn1HzbnQUlBMiimxBu5ij4r0Ge1m
-         viq0Omdz9Ijy0MGfIIXrYnDk9DlDKeEe2HJWsY2w6joClIMUfgR5bzDZ6ls5uTB1jAhI
-         NlP6ACSjh+hgr0CdauBFC+akmF8g1WUW9bL/z9IrYPn2KKswQPRqYdYSXRW3GaDzpgcV
-         qgwg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786522899; x=1787127699;
-        h=content-disposition:content-type:mime-version:message-id:subject:cc
-         :to:from:date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20251104; t=1786594314; x=1787199114; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=el1pI9AYgbxBMZGemIgcUaMPCb1Mfx6+kLcyrWecEeM=;
-        b=Ktc9qkljAkIa5p+skwN38JHB9VZvypXp+SnUWpMu+mVcWNPWIiJqjaPD9Mv/qv3Y6m
-         AGLUJiqQW4dxjy2EWJC6krxP3Ps5WYxfWSpmID3JQJehK21hV8PRpdLHP7UDnrOTS/sZ
-         QZI/+3ASkasw+vRwmCvtuGzymopL1OskwmJK3s0jW8V9l+Lvj7ZzEoizx3aB2ExYk1Eo
-         LC8IxqUC7WXZOCU7lYkZSloGxR98M/Vya4QeHBKswN+98NrUmmxFq1BKXPPSTTDXIu/8
-         75vR5nSM+vWSKggjqRc5aJrUfNAmsZty+lBbUw3f+rU8utEqWVCxI0NcppNCo0nWVeEC
-         91dg==
-X-Gm-Message-State: AOJu0YwAyyJSizTdPpUvMq04Q9CMDQdo63okGvopAzd7iRxuGNl/gt08
-	czL9HMFyZbSbH5Ulib2CFpRd28b136dhUCzRvBMjdGDq14EiTGRt4Q09
-X-Gm-Gg: AR+sD112pMhjvaq3vUV8VwFj/to4KSBct5tTFn2TkZ+2mLESV4WPXVH5WoBnpYRF2+5
-	GXal92PQaOmkdP6FFBY39PuHbvNnnkIK8vMkRtpguX0NAOGck92pDicBdm4BUQoG3wxk8TnvQx2
-	y9APLMILC/ieus0XUL5jGj1KZt1qwbk1DrCweJHT0lbzGr24rzVBwf2xZtqz0XLzHRkZJY+r455
-	eBP526C596fv/f69WvssDg91oS8O7NdS/+r3k/o0eMhI4JzOCrSDEU/wSf4U2VMQEsLKjsQfGX9
-	JNMNiTC3q5qDr0ztRJyCa0zAQOS130nF8VGyjcIZ2/Dz8NwAw4Qxzv/hb5emsW7keps/5YbTr8W
-	x8vA/1eo2tfCac+7WAYdknH6JkhkuOrlgRaIddcqRRT4rQrnp6CqUTIc+LUVudrwxDr1lwHzwpC
-	0L8jagpm6PiTBZ3+XJt5r4ZhW8sVHz9BO20Tzqvw26D6l6fXFsEh7NBAcz
-X-Received: by 2002:a17:906:f596:b0:c20:3733:a8c5 with SMTP id a640c23a62f3a-c20f2eab500mr153277666b.8.1786522898986;
-        Wed, 12 Aug 2026 01:21:38 -0700 (PDT)
-Received: from localhost ([2c0f:3d00:6be:8900:ce5e:9212:ea4b:f30])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c20f07a7a3esm62042066b.21.2026.08.12.01.21.37
+        bh=Gnzg7LxLmW/AaeD3Pv1ryB6Tex49wbpWBcRevOIJ/7s=;
+        b=sVMbCfDlTfIv4/xVpIItYsFiNHw9hjA8pH5oWjb2SVG7QOhoY//S7FxxUdNlsngf7h
+         rB/7Voc650rDZACEqxOozA+FecWj63KbnyIcxgFqYsWICZlpAVDfq5sQdsBpuBrhQb2S
+         4pXvE47jxM+z/hnBhkw37LpTFNEdiydf8D8ud07xzbBL34AEkvJ7i3VTgWUulws9gvwy
+         lRkmfWfo2gZefxcDRoL6yR76/pVjgmTjPw4/3LC/tSPtf3YMTDnZP/wihMDtsrYL9tSc
+         8Lje0WR8kXCSeZjk/+YK9r9Iv+ENPWKz7SKiJ/w2nK8nB//Q1fjvM5JemGrysvF9gsAB
+         4Mvw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786594314; x=1787199114;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=Gnzg7LxLmW/AaeD3Pv1ryB6Tex49wbpWBcRevOIJ/7s=;
+        b=Jx9VkzN0DkaVbSTvyDqOfPl9Xp/QjOfoMHOTPr0G7h8jhKsxFc5lPwXHg/IMytVjyz
+         LCIWAeg2Ng6oN8Z350khnXROftUS9BbTTL6PLRIrOJiNmS1Uqt7Hwod3LY3AtVJ+BL4H
+         9zCBR8oO87HkU3zcjIc2LeGYWdYCqAIA79PRe7NWYYRH24V6GlDImU/D820U7/uGYIbh
+         kE4mgn0E1Edsw8hgYlbzdwl3jgV1u1XfoRdGM3Ssn9lBzsTO4wUHhaEJTnHs0rQ0PkyL
+         5lhqdsLA/ih1POB/8dOk/ZxdiHoeimA3rguMKMUTkgvtJm3cgRpkLXA4v+BTgZBC4LNC
+         iuUA==
+X-Forwarded-Encrypted: i=1; AHgh+Rq0ex3isbAHL0dAree67w/WvxTdqB2rZFh/kXTyIwyMPtfauD35TOhaBe4iHZkusYnnuYXLLw3tcck=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxHMVjY/IorMR8nmj4gC6gmuRQRxh4BC6hItz6P8+t+syW4X+nl
+	wnz76GzAZRz9cKLrwEInOvAexEFEbHG6aghuCjpDeNszRuFly1k1+mML
+X-Gm-Gg: AR+sD13iZE7YMvEhWk2I5VEM0RpQrXDQiV9oKmC6gwbldxhsc6sXc4kK0b596od9jHg
+	RRGPHr9ej2QWnSghR45djFDRnt6iZqjriD0o7w6fctJKrLYV7UpD1fkda3XqPbVU75ukAwOlAni
+	xrwT+oLRPe7gjY2FkWekhz7VF8Ztq3JwXgTupNacMIGNSmv3+szNkTj6D1GSEq1PoF9rws8yOua
+	ytHo97LIlyC4cyTnXWxbeP+JtQfsyOQZs53qIZnobhyxwUCVk0ctYUv559u7p+axTyHJdCPZMac
+	3Kc7JeWfHAmr75RE/VWae3dKxzmcvhoIholcNwPWHYaBhUXpX1R/We2VW9g2OU9A558ua7iiCAh
+	p+HKSuCPWjBJBAtd1ZlbmkqcKgiRsMavWNYeEqPxotok0nfCajpkpxFmri5ZoSn4c/4D6bnbea9
+	fSzdMBW0EBGpS1Ldc0XHkdqBBJ/3/nBXTAJRJbsvP42BjP7RUt95wlDRH7Aolv52pB7zY+kAdY2
+	cPuliloHXPSA20+LPIJ/UwhmixPdc3Iz7bC07nXd2Tkr6Nl7sjLCMY2eLGt+2f8nHjSQkS5IVBz
+	O1A+ROwh85wFi11C4mBKdPxkLlgBVBtSmBRALE9Yn5aNupHz36PA
+X-Received: by 2002:a17:90b:3846:b0:38f:5801:dc0e with SMTP id 98e67ed59e1d1-3931e2a32bbmr3024404a91.15.1786594313939;
+        Wed, 12 Aug 2026 21:11:53 -0700 (PDT)
+Received: from spider.bream-herring.ts.net ([103.252.203.158])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3931f478658sm1127538a91.17.2026.08.12.21.11.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 12 Aug 2026 01:21:38 -0700 (PDT)
-Date: Wed, 12 Aug 2026 11:21:35 +0300
-From: Dan Carpenter <error27@gmail.com>
-To: Long Li <leo.lilong@huawei.com>
-Cc: linux-xfs@vger.kernel.org
-Subject: [bug report] xfs: don't swallow dquot recovery verification errors
-Message-ID: <anwtD6KQL_YA6yME@stanley.mountain>
+        Wed, 12 Aug 2026 21:11:53 -0700 (PDT)
+From: Matthias Goergens <matthias.goergens@gmail.com>
+To: syzbot+b3fba2e269970207b61d@syzkaller.appspotmail.com
+Cc: brauner@kernel.org,
+	cem@kernel.org,
+	gregkh@linuxfoundation.org,
+	jack@suse.cz,
+	jfs-discussion@lists.sourceforge.net,
+	kent.overstreet@linux.dev,
+	linux-bcachefs@vger.kernel.org,
+	linux-ext4@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	shaggy@kernel.org,
+	syzkaller-bugs@googlegroups.com,
+	tj@kernel.org,
+	viro@zeniv.linux.org.uk
+Subject: Re: [syzbot] [kernfs?] [ext4?] INFO: task hung in sb_start_write (2)
+Date: Thu, 13 Aug 2026 12:11:48 +0800
+Message-ID: <20260813041148.2302176-1-matthias.goergens@gmail.com>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <6a75a39e.01d0871a.3a0d52.0042.GAE@google.com>
+References: <6a75a39e.01d0871a.3a0d52.0042.GAE@google.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 
-Hello Long Li,
+The C reproducer neither demonstrates a kernel bug nor matches the
+crashes already collected in this bucket:
+https://syzkaller.appspot.com/bug?extid=b3fba2e269970207b61d
 
-Commit e2b4a856085e ("xfs: don't swallow dquot recovery verification
-errors") from Jul 27, 2026 (linux-next), leads to the following
-Smatch static checker warning:
+It lowers hung_task_timeout_secs to 15, issues ioctl(FIFREEZE) on the
+root filesystem, then forks a child that opens an O_TMPFILE there.
+The child blocks in sb_start_write, as any write must while the
+filesystem is frozen. The reproducer sleeps for 60 seconds before
+thawing, so the hung-task report fires only because it shortened the
+timeout below its own sleep. The default 120s timeout would not
+trigger. Any CAP_SYS_ADMIN process can produce this report on any
+kernel: this is fsfreeze working as designed. Whether a task waiting
+for thaw should be exempt from hung-task reporting is a separate,
+older question.
 
-	fs/xfs/xfs_dquot_item_recover.c:146 xlog_recover_dquot_commit_pass2()
-	warn: missing error code here? 'xfs_dquot_verify()' failed. 'error' = '0'
+The pre-existing crashes differ. In the 2025-08-01, 2025-08-23 and
+2026-08-02 instances, the blocked task waits on the sb_writers of a
+filesystem the fuzzer mounted from an image: lockdep classes
+sb_writers#31, sb_writers#13 and sb_writers#20 respectively. In the
+same reports, the root filesystem's writers class appears separately
+with a low number (sb_writers#5 held by udevd and others). The
+reproducer instead reports sb_writers#4, the root filesystem that it
+froze itself.
 
-fs/xfs/xfs_dquot_item_recover.c
-    60 STATIC int
-    61 xlog_recover_dquot_commit_pass2(
-    62         struct xlog                        *log,
-    63         struct list_head                *buffer_list,
-    64         struct xlog_recover_item        *item,
-    65         xfs_lsn_t                        current_lsn)
-    66 {
-    67         struct xfs_mount                *mp = log->l_mp;
-    68         struct xfs_buf                        *bp;
-    69         struct xfs_dqblk                *dqb;
-    70         struct xfs_disk_dquot                *ddq, *recddq;
-    71         struct xfs_dq_logformat                *dq_f;
-    72         xfs_failaddr_t                        fa;
-    73         int                                error;
-    74         uint                                type;
-    75 
-    76         /*
-    77          * Filesystems are required to send in quota flags at mount time.
-    78          */
-    79         if (mp->m_qflags == 0)
-    80                 return 0;
-    81 
-    82         recddq = item->ri_buf[1].iov_base;
-    83         if (recddq == NULL) {
-    84                 xfs_alert(log->l_mp, "NULL dquot in %s.", __func__);
-    85                 return -EFSCORRUPTED;
-    86         }
-    87         if (item->ri_buf[1].iov_len < sizeof(struct xfs_disk_dquot)) {
-    88                 xfs_alert(log->l_mp, "dquot too small (%zd) in %s.",
-    89                         item->ri_buf[1].iov_len, __func__);
-    90                 return -EFSCORRUPTED;
-    91         }
-    92 
-    93         /*
-    94          * This type of quotas was turned off, so ignore this record.
-    95          */
-    96         type = recddq->d_type & XFS_DQTYPE_REC_MASK;
-    97         ASSERT(type);
-    98         if (log->l_quotaoffs_flag & type)
-    99                 return 0;
-    100 
-    101         /*
-    102          * At this point we know that quota was _not_ turned off.
-    103          * Since the mount flags are not indicating to us otherwise, this
-    104          * must mean that quota is on, and the dquot needs to be replayed.
-    105          * Remember that we may not have fully recovered the superblock yet,
-    106          * so we can't do the usual trick of looking at the SB quota bits.
-    107          *
-    108          * The other possibility, of course, is that the quota subsystem was
-    109          * removed since the last mount - ENOSYS.
-    110          */
-    111         dq_f = item->ri_buf[0].iov_base;
-    112         ASSERT(dq_f);
-    113         fa = xfs_dquot_verify(mp, recddq, dq_f->qlf_id);
-    114         if (fa) {
-    115                 xfs_alert(mp, "corrupt dquot ID 0x%x in log at %pS",
-    116                                 dq_f->qlf_id, fa);
-    117                 return -EFSCORRUPTED;
-    118         }
-    119         ASSERT(dq_f->qlf_len == 1);
-    120 
-    121         /*
-    122          * At this point we are assuming that the dquots have been allocated
-    123          * and hence the buffer has valid dquots stamped in it. It should,
-    124          * therefore, pass verifier validation. If the dquot is bad, then the
-    125          * we'll return an error here, so we don't need to specifically check
-    126          * the dquot in the buffer after the verifier has run.
-    127          */
-    128         error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp, dq_f->qlf_blkno,
-    129                                    XFS_FSB_TO_BB(mp, dq_f->qlf_len), 0, &bp,
-    130                                    &xfs_dquot_buf_ops);
-    131         if (error)
-    132                 return error;
-    133 
-    134         ASSERT(bp);
-    135         dqb = xfs_buf_offset(bp, dq_f->qlf_boffset);
-    136         ddq = &dqb->dd_diskdq;
-    137 
-    138         /*
-    139          * If the dquot has an LSN in it, recover the dquot only if it's less
-    140          * than the lsn of the transaction we are replaying.
-    141          */
-    142         if (xfs_has_crc(mp)) {
-    143                 xfs_lsn_t        lsn = be64_to_cpu(dqb->dd_lsn);
-    144 
-    145                 if (lsn && lsn != -1 && XFS_LSN_CMP(lsn, current_lsn) >= 0) {
---> 146                         goto out_release;
+The captured console logs for the three organic crashes contain no
+FIFREEZE call. One contains a single stray FITHAW, so a freeze before
+the captured log window cannot be excluded, but that must be
+established before treating this reproducer as the explanation. If a
+fuzzer-issued FIFREEZE on a mounted image caused the hangs, the fix
+is for syzkaller to sanitise FIFREEZE, and the bug is still not in the
+kernel. Otherwise, something wedged those superblocks' writer gates
+with no fsfreeze in sight, which is a real bug that closing this
+report on the strength of the reproducer would bury. The mix of image
+filesystems mounted by those runs also explains why the subsystem
+guesses span kernfs, ext4, jfs, xfs and bcachefs.
 
-Originally this function always returned zero, but now it returns
-error codes.  Should this be an error path?
+I therefore suggest treating this reproducer as matching the
+signature, not the cause. A previous generic-signature hung-task
+bucket, "task hung in do_rmdir"
+(https://syzkaller.appspot.com/bug?extid=e68dbebd9617a9250e8d),
+contained a real ext4 livelock. It was fixed by commit 54b6bd40898d
+("ext4: stop retrying saturated xattr cache entries") in the ext4
+tree:
+https://git.kernel.org/pub/scm/linux/kernel/git/tytso/ext4.git/commit/?id=54b6bd40898d
 
-    147                 }
-    148         }
-    149 
-    150         memcpy(ddq, recddq, item->ri_buf[1].iov_len);
-    151         if (xfs_has_crc(mp)) {
-    152                 xfs_update_cksum((char *)dqb, sizeof(struct xfs_dqblk),
-    153                                  XFS_DQUOT_CRC_OFF);
-    154         }
-    155 
-    156         /* Validate the recovered dquot. */
-    157         fa = xfs_dqblk_verify(log->l_mp, dqb, dq_f->qlf_id);
-    158         if (fa) {
-    159                 XFS_CORRUPTION_ERROR("Bad dquot after recovery",
-    160                                 XFS_ERRLEVEL_LOW, mp, dqb,
-    161                                 sizeof(struct xfs_dqblk));
-    162                 xfs_alert(mp,
-    163  "Metadata corruption detected at %pS, dquot 0x%x",
-    164                                 fa, dq_f->qlf_id);
-    165                 error = -EFSCORRUPTED;
-    166                 goto out_release;
-    167         }
-    168 
-    169         ASSERT(dq_f->qlf_size == 2);
-    170         ASSERT(bp->b_mount == mp);
-    171         xfs_buf_delwri_queue(bp, buffer_list);
-    172 
-    173 out_release:
-    174         xfs_buf_relse(bp);
-    175         return error;
-    176 }
-
-This email is a free service from the Smatch-CI project [smatch.sf.net].
-
-regards,
-dan carpenter
+Such buckets can hide real bugs behind an uninformative victim stack;
+the per-instance reports contain the distinguishing evidence.
