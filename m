@@ -1,90 +1,103 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D136B456DF2;
-	Fri, 14 Aug 2026 09:27:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 436094611C9
+	for <linux-xfs@vger.kernel.org>; Fri, 14 Aug 2026 13:22:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786699662; cv=none; b=hNrpZIm9t91+CJRn0F+KFLzCfIgkQxDdDSjjuYeQvGYUFYph7OJsHtTGYfuDPWxO6X5LkbFPVQsyqwjsUTOSdKwcNYF/52S0ddt8tyFMBX0oQZi0LMW7V1xElejl75JZ0v3QpKvZK7+YeC9iE1lEw+CCQbQCbOIQg08E+gMpv9A=
+	t=1786713767; cv=none; b=F2LvyKGSB+8L2MWZIMe/8p5ChWQccRPD41k1n71pXKfjqbJEJGqR0Gf+L17FEuh1Wt/M6OXfttb3DC1sml6r1gsAwAud891yvIX0RhcP/YoYI39zctzcdOTOnAmelKmoImaqZFUmvMbxEHOdpb0T0iRATfNfwGyTbfgMf0USX8c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786699662; c=relaxed/simple;
-	bh=zD3fqdriNeyS4psrX9dNSbGJrsTYYoWrAlK7wvQAbGQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=QdW+wHHczvKaq7JXBxKjgnWdNB07Ni71l8m7MDWju73FqRW5M2X6/iCRt+ykI2OmWFDiuNqrzQ7TSWBTcI+16onzCf/slgmN/IrSESeR7AdKaHfN9D9F1TNkohukKQfMql1QW9BleYudt4c6766KZTph60jvR6Jw9NP30nsStFo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=S/uL6pgj; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1786713767; c=relaxed/simple;
+	bh=hb9fgApqEeYmJz2uVHLpQR+HJ45nkZk1zglZQWU93s4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=nez+Q6QPRRKD1bt6DQpNjQA9tA8usGq7jFb/BYlgHT5mguK6Gg6iOQbQZYxATU2RUlwfNddBDN+XPHNulUApjasuSVQAiYD5Li83Z7oj5WEvi8UnZwfBI3itZARcFGMYedpLk6wlpGyxa/Dt+YVVwo+7Rw0jZ/Ys3JmEU4l94nU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=iGJUXtCd; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="S/uL6pgj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D5A141F000E9;
-	Fri, 14 Aug 2026 09:27:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786699661;
-	bh=9UsWTPXNPtGAnC/NXDW+DJPQrI7L9qVnDZTXWpl6xCI=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=S/uL6pgjiq6TXELTFDrbimjovrxUvVcZ5/8mhkSmBYcFyChHw641ZrI5YEjevUQL6
-	 AhSv1PaTTnOB9op/Iw7UmkPzoNl36HtH5tnganmGOYSi6wiMI5s0QKCgutYNwFbd65
-	 lxcMyksIdSAVVv3V64TI4u4Th21NAg7Jk7C/XuAJCD1uKYHVTlgRoh3ItnOZrXjIbK
-	 F2irNdPjzZM1niEfmNUcJXzhx3gVGMERi3b4yhZGs5hXJkJr3SKK5iMtBGy+tNmOs4
-	 9MyRUQd/GD82SuPU2INJpuIA1e35KZjW7Zxk4YxtqOEbVQp4QNOuBVN2saVIU1uTxy
-	 L7ie5UiZb0QCQ==
-From: Andrey Albershteyn <aalbersh@kernel.org>
-To: djwong@kernel.org,
-	ebiggers@kernel.org,
-	hch@lst.de,
-	Jens Axboe <axboe@kernel.dk>,
-	Carlos Maiolino <cem@kernel.org>
-Cc: Andrey Albershteyn <aalbersh@kernel.org>,
-	fsverity@lists.linux.dev,
-	linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	linux-unionfs@vger.kernel.org,
-	linux-block@vger.kernel.org,
-	linux-ext4@vger.kernel.org,
-	linux-f2fs-devel@lists.sourceforge.net,
-	linux-btrfs@vger.kernel.org,
-	david@fromorbit.com,
-	Tal Zussman <tz2294@columbia.edu>
-Subject: [PATCH v15 25/25] xfs: enable ro-compat fs-verity flag
-Date: Fri, 14 Aug 2026 11:24:42 +0200
-Message-ID: <20260814092448.1818082-26-aalbersh@kernel.org>
-X-Mailer: git-send-email 2.54.0
-In-Reply-To: <20260814092448.1818082-1-aalbersh@kernel.org>
-References: <20260814092448.1818082-1-aalbersh@kernel.org>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="iGJUXtCd"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1786713765;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=ZeYayW/24G3TxKQblfV7CrY1EZzEA+AVjLJtZ63NpnU=;
+	b=iGJUXtCdWzgHkOpCfLY4W9IgPZHjpiKsC6LxG5+3w36cdMqc8hLi+sV76WdaTghnaOatIY
+	RhH0PzbHqeYbDZ0/50T2MpEVjz5nEmppc4FU/WTQs06enB6312bOSKaLCKQMRx89RRKcHr
+	L0pFBBroHQzs4IpgFwnOeQ02fR9dIDA=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-267-OReqUZi3MiSAkSGRSFfv0A-1; Fri,
+ 14 Aug 2026 09:22:41 -0400
+X-MC-Unique: OReqUZi3MiSAkSGRSFfv0A-1
+X-Mimecast-MFC-AGG-ID: OReqUZi3MiSAkSGRSFfv0A_1786713761
+Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id E3049180034F;
+	Fri, 14 Aug 2026 13:22:40 +0000 (UTC)
+Received: from bfoster.redhat.com (unknown [10.22.64.105])
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 57173195608A;
+	Fri, 14 Aug 2026 13:22:40 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+To: linux-xfs@vger.kernel.org
+Cc: Matt Fleming <matt@readmodwrite.com>
+Subject: [PATCH v2 0/3] xfs: fix a couple sparse chunk alloc problems
+Date: Fri, 14 Aug 2026 09:22:36 -0400
+Message-ID: <20260814132239.271492-1-bfoster@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain
 Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-Finalize fs-verity integration in XFS by making kernel fs-verity
-aware with ro-compat flag.
+Hi all,
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-[djwong: add spaces]
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
----
- fs/xfs/libxfs/xfs_format.h | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+Here's v2 of the series to fix the sparse chunk alloc shutdown. The
+original report is available here[1]. After some discussion on v1, this
+takes a slightly different approach to treat this as an allocator flaw.
+The solution is essentially to add the additional min_free block
+requirement to minleft for allocs where minleft != 0. See the commit log
+for patch 3 for further detail.
 
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index fc196d9e12dd..8be1b101b196 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -378,8 +378,9 @@ xfs_sb_has_compat_feature(
- #define XFS_SB_FEAT_RO_COMPAT_ALL \
- 		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
- 		 XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
--		 XFS_SB_FEAT_RO_COMPAT_REFLINK| \
--		 XFS_SB_FEAT_RO_COMPAT_INOBTCNT)
-+		 XFS_SB_FEAT_RO_COMPAT_REFLINK | \
-+		 XFS_SB_FEAT_RO_COMPAT_INOBTCNT | \
-+		 XFS_SB_FEAT_RO_COMPAT_VERITY)
- #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
- static inline bool
- xfs_sb_has_ro_compat_feature(
+Patch 1 is the same DEBUG mode bug fix from v1. Patch 2 refactors the
+agfl min free helper for use in patch 3. Patch 3 makes the actual logic
+fix.
+
+This survives some fstests runs without regression. For some reason the
+sparse inode reproducer is failing to work properly on the current
+baseline (can't create the requisite fs state) so I can't reconfirm
+that, but I don't expect anything would have changed there.
+
+Thoughts, reviews, flames appreciated.
+
+Brian
+
+v2:
+- Reworked fix logic into allocator instead of sparse inode alloc
+  specific.
+- Dropped Fixes: tag since this is no longer directly correlated to
+  sparse inodes.
+v1: https://lore.kernel.org/linux-xfs/20260731163337.152522-1-bfoster@redhat.com/
+
+[1] https://lore.kernel.org/linux-xfs/20260717130429.1838767-1-matt@readmodwrite.com/
+
+Brian Foster (3):
+  xfs: set minleft correctly for sparse chunk errortag allocation
+  xfs: support additional levels in the agfl minimum calculation
+  xfs: incorporate increased AGFL min requirement for minleft allocs
+
+ fs/xfs/libxfs/xfs_alloc.c  | 60 ++++++++++++++++++++++++++++++++------
+ fs/xfs/libxfs/xfs_alloc.h  |  2 ++
+ fs/xfs/libxfs/xfs_bmap.c   |  2 +-
+ fs/xfs/libxfs/xfs_ialloc.c | 10 +++----
+ 4 files changed, 58 insertions(+), 16 deletions(-)
+
 -- 
-2.54.0
+2.55.0
 
