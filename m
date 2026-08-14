@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A33F2468C13;
-	Fri, 14 Aug 2026 09:26:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7130045D1AB;
+	Fri, 14 Aug 2026 09:26:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786699594; cv=none; b=qTFknq+QYJWXWg1bb+v7GFQqv16mun6+iWfS7199H3HsAbaeyfY2nlcYkOzmJvjIY/XZk6aS5NkqNDtgQYert45tDJ+daJwOnHl2Wa/a/WZjyrlUYAJFEDqUV5NN3Iz31ZRHeeF5kP6AW58aUi1PDXschgxUHxkkxS9XGof16ag=
+	t=1786699598; cv=none; b=B4d+ZZxeaqACCupqwJ3ah94i/SkelSCuPsdSaJQZYhpMTs7OZcdfWJGiDZqBWQB5SD8oflnkIJny3MNtLEvJNRNxxOAK8/G23wnT7w1oCnbqa8JZbZ77XnBLb/B89U3gXePEkSrUQeJkN7wXf1gAkR170JiHojWY8lxXxoiBjBk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786699594; c=relaxed/simple;
-	bh=z8V1OKrD5T/H7bvujFmAM2G2uwWVbH9AxmhjS7LiA28=;
+	s=arc-20240116; t=1786699598; c=relaxed/simple;
+	bh=gHl4HQg4dFPXM12xo/VO+LNovevHv2UmpG8XKevlUCQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=f0Gs0aWDMitDyI4WcLv5WNSFl5n4+t0lJW6Ji6sRtOuPPh7Om0S03N1wJI21DFS8Gw6CPcoiX6YvzxPhBumB12lZaT4nLSGucDBp5XVeh+99Jm8MlN/ilCIzgjw35UPSXjmq/chbGXVciTerYq6jBNlSJxBBhzwOW8Ck/PXfgN0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IaSQFP71; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=ontLIrZzISV9xq9QA5vgkUNpCy+5fW3fR7KEROp9zmQ6UflOFtgEtYlkWfOsLAF7Au067X+9dlvPuMA0cO4HBlHJR4fq7EyauhXB1kzbISg6J7iYehfaTT6KRSoRgfjG2geEDuFfBCD/gXH5GjTswfJCGXg0OYRG9YYiq/pVr3M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=I77zTBZF; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IaSQFP71"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E08421F00A3D;
-	Fri, 14 Aug 2026 09:26:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="I77zTBZF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA4081F000E9;
+	Fri, 14 Aug 2026 09:26:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786699592;
-	bh=pwvCZC9H9ADAOBZl2uWOkOz1fAqalwQUzJfbp+FCNOA=;
+	s=k20260515; t=1786699597;
+	bh=AufMkm+nEeCieeEcnf+ZJSfHdxMb9GSGIeKul87lEHs=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=IaSQFP71UjM+0MSM8BcS9BY+Vva9YpiE/CjPkYRhFGG0bNs9Q6zxsolaCpOZR/pWa
-	 STKKVeB0VBDh67AqMjkcvAL5+4WoUKkeAILcUtnOtY2rbcJQdDBlV0Z9l5t4MBEEX1
-	 hj+zHNdj4nCZS9C7yTGGx4z1PWVgb7Bufp3GlKurCnhWflN0OTl/YTMb3JCYhLmEZM
-	 MhpfF2pujNp0g9v/2WiH+HeC9gEnE6qmu7Bonqp64uhCGqPzh+8H3f4QnoqIIwDWl7
-	 0HdKeI6Mc/s2xWPOH32PcwsM0srQniL1QM4U2Bg8lClYALJwGjp3TZcyrunSSg8Tzp
-	 HBOV2Pz0M6dFQ==
+	b=I77zTBZFYKCV7UtWfgedOvE6u7sNSrhLcYSmAFc8Lc9Jf1KDd734GEk99fLebVIN3
+	 XEp+4LEKPUyf6+wzhIBG0YH+I+Dm/Y5F8Y5E7LXcmcZjCEblZuPhqlSvzvezvjoABQ
+	 LyQm8NAJOQ2D5k+hyEWLrPv7X+kUOrzGoMoq87ATRfJU7nOa2Ufh9Y2RPECDI95UdV
+	 2Zh6wFhOxKGutrHBo22cInIWSU5JK4wZXEbI6ipDxqO32uCr8arVYWUx1TkPixPveu
+	 2c5TQ19TH4YqK1rdlmPQ8WiaFkufU/WkEx/1XGyYShZ3wKTeHT/Snnp6yc+W918DHU
+	 2a7e4CyAZwgsQ==
 From: Andrey Albershteyn <aalbersh@kernel.org>
 To: djwong@kernel.org,
 	ebiggers@kernel.org,
@@ -43,9 +43,9 @@ Cc: Andrey Albershteyn <aalbersh@kernel.org>,
 	linux-btrfs@vger.kernel.org,
 	david@fromorbit.com,
 	Tal Zussman <tz2294@columbia.edu>
-Subject: [PATCH v15 12/25] xfs: introduce fsverity on-disk changes
-Date: Fri, 14 Aug 2026 11:24:29 +0200
-Message-ID: <20260814092448.1818082-13-aalbersh@kernel.org>
+Subject: [PATCH v15 13/25] xfs: don't allow to enable DAX on fs-verity sealed inode
+Date: Fri, 14 Aug 2026 11:24:30 +0200
+Message-ID: <20260814092448.1818082-14-aalbersh@kernel.org>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20260814092448.1818082-1-aalbersh@kernel.org>
 References: <20260814092448.1818082-1-aalbersh@kernel.org>
@@ -55,188 +55,32 @@ List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Introduce XFS_DIFLAG2_VERITY for inodes with fsverity. This flag
-indicates that inode has fs-verity enabled (i.e. descriptor exist,
-tree is built and file is read-only).
+fs-verity doesn't support DAX. Forbid filesystem to enable DAX on
+inodes which already have fs-verity enabled. The opposite is checked
+when fs-verity is enabled, it won't be enabled if DAX is.
 
-Introduce XFS_SB_FEAT_RO_COMPAT_VERITY for filesystems having
-fsverity inodes. As on-disk changes applies to fsverity inodes only, let
-older kernels read-only access. This will be enabled in the further
-patch after full fsverity support.
-
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
 ---
- fs/xfs/libxfs/xfs_format.h     | 30 +++++++++++++++++++++++++++++-
- fs/xfs/libxfs/xfs_inode_buf.c  |  8 ++++++++
- fs/xfs/libxfs/xfs_inode_util.c |  5 ++++-
- fs/xfs/libxfs/xfs_sb.c         |  2 ++
- fs/xfs/xfs_iops.c              |  5 ++++-
- fs/xfs/xfs_mount.h             |  2 ++
- 6 files changed, 49 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_iops.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index dd0ed046fbe9..fc196d9e12dd 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -374,6 +374,7 @@ xfs_sb_has_compat_feature(
- #define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)		/* reverse map btree */
- #define XFS_SB_FEAT_RO_COMPAT_REFLINK  (1 << 2)		/* reflinked files */
- #define XFS_SB_FEAT_RO_COMPAT_INOBTCNT (1 << 3)		/* inobt block counts */
-+#define XFS_SB_FEAT_RO_COMPAT_VERITY   (1 << 4)		/* fs-verity */
- #define XFS_SB_FEAT_RO_COMPAT_ALL \
- 		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
- 		 XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
-@@ -1230,16 +1231,21 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
-  */
- #define XFS_DIFLAG2_METADATA_BIT	5
- 
-+/* inodes sealed with fs-verity */
-+#define XFS_DIFLAG2_VERITY_BIT		6
-+
- #define XFS_DIFLAG2_DAX		(1ULL << XFS_DIFLAG2_DAX_BIT)
- #define XFS_DIFLAG2_REFLINK	(1ULL << XFS_DIFLAG2_REFLINK_BIT)
- #define XFS_DIFLAG2_COWEXTSIZE	(1ULL << XFS_DIFLAG2_COWEXTSIZE_BIT)
- #define XFS_DIFLAG2_BIGTIME	(1ULL << XFS_DIFLAG2_BIGTIME_BIT)
- #define XFS_DIFLAG2_NREXT64	(1ULL << XFS_DIFLAG2_NREXT64_BIT)
- #define XFS_DIFLAG2_METADATA	(1ULL << XFS_DIFLAG2_METADATA_BIT)
-+#define XFS_DIFLAG2_VERITY	(1ULL << XFS_DIFLAG2_VERITY_BIT)
- 
- #define XFS_DIFLAG2_ANY \
- 	(XFS_DIFLAG2_DAX | XFS_DIFLAG2_REFLINK | XFS_DIFLAG2_COWEXTSIZE | \
--	 XFS_DIFLAG2_BIGTIME | XFS_DIFLAG2_NREXT64 | XFS_DIFLAG2_METADATA)
-+	 XFS_DIFLAG2_BIGTIME | XFS_DIFLAG2_NREXT64 | XFS_DIFLAG2_METADATA | \
-+	 XFS_DIFLAG2_VERITY)
- 
- static inline bool xfs_dinode_has_bigtime(const struct xfs_dinode *dip)
- {
-@@ -2027,4 +2033,26 @@ struct xfs_acl {
- #define SGI_ACL_FILE_SIZE	(sizeof(SGI_ACL_FILE)-1)
- #define SGI_ACL_DEFAULT_SIZE	(sizeof(SGI_ACL_DEFAULT)-1)
- 
-+/*
-+ * At maximum of 8 levels with 128 hashes per block (32 bytes SHA-256) maximum
-+ * tree size is ((128^8 − 1)/(128 − 1)) = 567*10^12 blocks. This should fit in
-+ * 53 bits address space.
-+ *
-+ * At this Merkle tree size we can cover 295EB large file. This is much larger
-+ * than the currently supported file size.
-+ *
-+ * For sha512 the largest file we can cover ends at 1 << 50 offset, this is also
-+ * good.
-+ */
-+#define XFS_FSVERITY_LARGEST_FILE	((loff_t)1ULL << 53)
-+
-+/*
-+ * Alignment of the fsverity metadata placement. This is largest supported PAGE
-+ * SIZE for fsverity. This is used to space out data and metadata in page cache.
-+ * The spacing is necessary for non-exposure of metadata to userspace and
-+ * correct merkle tree synthesis in the iomap.
-+ */
-+#define XFS_FSVERITY_START_ALIGN	(65536)
-+
-+
- #endif /* __XFS_FORMAT_H__ */
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index 336ef843f2fe..bd80a19f2e09 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.c
-+++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -760,6 +760,14 @@ xfs_dinode_verify(
- 	    !xfs_has_rtreflink(mp))
- 		return __this_address;
- 
-+	/* only regular files can have fsverity */
-+	if (flags2 & XFS_DIFLAG2_VERITY) {
-+		if (!xfs_has_verity(mp))
-+			return __this_address;
-+		if (!S_ISREG(mode))
-+			return __this_address;
-+	}
-+
- 	if (xfs_has_zoned(mp) &&
- 	    dip->di_metatype == cpu_to_be16(XFS_METAFILE_RTRMAP)) {
- 		if (be32_to_cpu(dip->di_used_blocks) > mp->m_sb.sb_rgextents)
-diff --git a/fs/xfs/libxfs/xfs_inode_util.c b/fs/xfs/libxfs/xfs_inode_util.c
-index 258ac3d0d486..5a516bd31c31 100644
---- a/fs/xfs/libxfs/xfs_inode_util.c
-+++ b/fs/xfs/libxfs/xfs_inode_util.c
-@@ -74,7 +74,8 @@ xfs_flags2diflags2(
- 	uint64_t		di_flags2 =
- 		(ip->i_diflags2 & (XFS_DIFLAG2_REFLINK |
- 				   XFS_DIFLAG2_BIGTIME |
--				   XFS_DIFLAG2_NREXT64));
-+				   XFS_DIFLAG2_NREXT64 |
-+				   XFS_DIFLAG2_VERITY));
- 
- 	if (xflags & FS_XFLAG_DAX)
- 		di_flags2 |= XFS_DIFLAG2_DAX;
-@@ -126,6 +127,8 @@ xfs_ip2xflags(
- 			flags |= FS_XFLAG_DAX;
- 		if (ip->i_diflags2 & XFS_DIFLAG2_COWEXTSIZE)
- 			flags |= FS_XFLAG_COWEXTSIZE;
-+		if (ip->i_diflags2 & XFS_DIFLAG2_VERITY)
-+			flags |= FS_XFLAG_VERITY;
- 	}
- 
- 	if (xfs_inode_has_attr_fork(ip))
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index 75f2a021ee6d..5ac467f387c2 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -165,6 +165,8 @@ xfs_sb_version_to_features(
- 		features |= XFS_FEAT_REFLINK;
- 	if (sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_INOBTCNT)
- 		features |= XFS_FEAT_INOBTCNT;
-+	if (sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_VERITY)
-+		features |= XFS_FEAT_VERITY;
- 	if (sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_FTYPE)
- 		features |= XFS_FEAT_FTYPE;
- 	if (sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_SPINODES)
 diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 6339f4956ecb..11dc1a485ca7 100644
+index 11dc1a485ca7..55667cc762f8 100644
 --- a/fs/xfs/xfs_iops.c
 +++ b/fs/xfs/xfs_iops.c
-@@ -1398,12 +1398,15 @@ xfs_diflags_to_iflags(
- 		flags |= S_NOATIME;
- 	if (init && xfs_inode_should_enable_dax(ip))
- 		flags |= S_DAX;
-+	if (xflags & FS_XFLAG_VERITY)
-+		flags |= S_VERITY;
- 
- 	/*
- 	 * S_DAX can only be set during inode initialization and is never set by
- 	 * the VFS, so we cannot mask off S_DAX in i_flags.
- 	 */
--	inode->i_flags &= ~(S_IMMUTABLE | S_APPEND | S_SYNC | S_NOATIME);
-+	inode->i_flags &=
-+		~(S_IMMUTABLE | S_APPEND | S_SYNC | S_NOATIME | S_VERITY);
- 	inode->i_flags |= flags;
- }
- 
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 216a38a354e7..14fe768326a3 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -395,6 +395,7 @@ typedef struct xfs_mount {
- #define XFS_FEAT_EXCHANGE_RANGE	(1ULL << 27)	/* exchange range */
- #define XFS_FEAT_METADIR	(1ULL << 28)	/* metadata directory tree */
- #define XFS_FEAT_ZONED		(1ULL << 29)	/* zoned RT device */
-+#define XFS_FEAT_VERITY		(1ULL << 30)	/* fs-verity */
- 
- /* Mount features */
- #define XFS_FEAT_NOLIFETIME	(1ULL << 47)	/* disable lifetime hints */
-@@ -452,6 +453,7 @@ __XFS_HAS_FEAT(exchange_range, EXCHANGE_RANGE)
- __XFS_HAS_FEAT(metadir, METADIR)
- __XFS_HAS_FEAT(zoned, ZONED)
- __XFS_HAS_FEAT(nolifetime, NOLIFETIME)
-+__XFS_HAS_FEAT(verity, VERITY)
- 
- static inline bool xfs_has_rtgroups(const struct xfs_mount *mp)
- {
+@@ -1370,6 +1370,8 @@ xfs_inode_should_enable_dax(
+ 		return false;
+ 	if (!xfs_inode_supports_dax(ip))
+ 		return false;
++	if (ip->i_diflags2 & XFS_DIFLAG2_VERITY)
++		return false;
+ 	if (xfs_has_dax_always(ip->i_mount))
+ 		return true;
+ 	if (ip->i_diflags2 & XFS_DIFLAG2_DAX)
 -- 
 2.54.0
 
