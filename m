@@ -1,40 +1,48 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F7AA3876C3
-	for <linux-xfs@vger.kernel.org>; Fri, 14 Aug 2026 23:57:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 065D43403EC
+	for <linux-xfs@vger.kernel.org>; Sat, 15 Aug 2026 09:09:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786751871; cv=none; b=TFlJpetAuyyKmkemoQ4KqD7hXqpsWSgReCOSPV5bxPDfJTcynZ/jAqYOL9v0HhnvTI8w6fDT2acwLPDO3iphSlh8wAQCMDnXv6Wmy1K7GtUvtjHKxO6Nuqkfq6DqI1/+Pf7nPgh1h4NBmMtHGOXnn2H/VxHkMQqgCLVcCYh9Vy0=
+	t=1786784960; cv=none; b=aq2+KRrw/apGJ5oZVQeCqrotnU1prDqa293GDaKAcb4AAvWUv0UkFCueLdRyLT1OSXZxsV9Qqvuxsn+bB/dZ+p6SAJNP0gXXVBwJRoUHlYGfVyjv7PEvW2YfSZCouqlfoIjYBwwUykOVIjtg7x/rsQ2GNIvf06jZ9j2PU6DndoM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786751871; c=relaxed/simple;
-	bh=YBPzphVfMkdDGwg+LQlXCCDYbiFBcSrrrA0KMeSrbUY=;
+	s=arc-20240116; t=1786784960; c=relaxed/simple;
+	bh=JLrbdFNtiG3qBRWmmGICrniNtnvUt3sYUz63xg4m1oU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lTlaQP3vtapxUDnEhVHOpF6mH+6SCE6v25lycqGI1r3iCJOBRo7HrbxSCwPxms7QzzaHqYufinPusmeAtQDwAaJYUXdBf+XM6tkTfqA4Ns20g9N7AoXhoAUKMalWYK3rbUnw09SKLVlYtYRKxjkg1qTLPAncdSwNquua8bxpc9w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=okUOpX6T; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=qrKrqoMTHZfiO7cVXnQbOQqHToxdViueOJMBVCef6vhOQsC5JVLjDeI8N0VdtxF+kA/x2I8fO7LRAbKXSe2AKj/ocg/hduEmILjTl7Cp73gML3kPUL4yKbdbso37Br6IBkGjKIjWMuKLYYGmgpMRUNdWWmaYq/pkBfSd2iRuESU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fRDmQ/ae; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="okUOpX6T"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 748F51F000E9;
-	Fri, 14 Aug 2026 23:57:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fRDmQ/ae"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2EA5F1F000E9;
+	Sat, 15 Aug 2026 09:09:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786751869;
-	bh=E40ZYS0CNG7+plkUMGHEuMKFBUe7hxR4KdHrT7fvO6Q=;
+	s=k20260515; t=1786784958;
+	bh=fcWbmTSWeXSzI3+dpPDOOdit17stvdCXFmk4A/bxMUM=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=okUOpX6Tl5ksLdh9gX1gsARN/4H2yjV3lh1Z5MrtqrGlBnT7xI2k98iKs2eD8NaL0
-	 UzNeqElDdIjKtWgh7AsNx3UYOv1ziIIrbFSq7GBoxnuud0f0BSbT8GxsSfw6+2st/4
-	 n+coAsv0AIuMi0AmQahct8vpQRx82sNkpve1mG1VEyL4dwtNb/yDXM/r2X99EGqXtT
-	 aepjGu1j70z9tYptFWHWERdaM4foFdub64M3nPHe9JlOVNcPX4dI8tEiAion46LR/f
-	 EGQDIk0gzNPukwFuXTfT3aWU5xOi5qYX5D8fuD7ARn5br38YM/DwGzJvp33nIjZYQ1
-	 SIY+suHeNKlgg==
-Date: Fri, 14 Aug 2026 16:57:48 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org, Matt Fleming <matt@readmodwrite.com>
-Subject: Re: [PATCH v2 3/3] xfs: incorporate increased AGFL min requirement
- for minleft allocs
-Message-ID: <20260814235748.GL3556460@frogsfrogsfrogs>
-References: <20260814132239.271492-1-bfoster@redhat.com>
- <20260814132239.271492-4-bfoster@redhat.com>
+	b=fRDmQ/aeFzazD1omM3D7UUNPGT1ipHEUKs3KKgNN9C/tmf5gjbH+ad6S+tt6mrF0m
+	 lF1EvwYJojjcLIcNnmkj/V8lbVLY0flyxgBGl8YAO84RrXh3i5Ci4SgLFOn1ho3fuU
+	 2jYdbW9Rutx2pqaAA/1ZRddBhWIcC7xJf0j3m4fBGAqh95Ixw1vpmtp+9FE7hxIZgF
+	 lT46aQrsP80IEExQ81Co2EUNcrMcvASUxSL16P2cESbxhfrutxiyU2ToXKuG0KI2aE
+	 150+J4CYekaTtE0A38PnMprX5MVCZ4ws3oRKGcWpnp5g1YTbXNn1/b+nxRe1yj58Qz
+	 tb/yiz6xVGcJQ==
+Date: Sat, 15 Aug 2026 11:09:14 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, 
+	Aditya Prakash Srivastava <aditya.ansh182@gmail.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v5 2/2] xfs: prevent close() from hanging on frozen
+ filesystems
+Message-ID: <aoAoLVzAsuM8WLQ0@andromeda.toxiclabs.cc>
+References: <20260616053850.2188-1-aditya.ansh182@gmail.com>
+ <20260616053850.2188-3-aditya.ansh182@gmail.com>
+ <20260624173531.GQ6078@frogsfrogsfrogs>
+ <CAK5ssPP6FL+6i8z+0QdE-9DSp0rC_U2S20qdxY7Kmdp7RS0xRw@mail.gmail.com>
+ <CAK5ssPMyJhvnEQSRoAwVNnZS-A837OOMewEAvp+ZiuWKD=vUdg@mail.gmail.com>
+ <CAK5ssPPC4Ov0KBbRphC_wZBZGu1Rr4-d2At4V+ZECFcuHxbEfg@mail.gmail.com>
+ <an7Dk2Tn1ibCRsv2@infradead.org>
+ <an9BQdSqrmzYhB3l@andromeda.toxiclabs.cc>
+ <20260814182449.GI3556460@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,162 +51,112 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260814132239.271492-4-bfoster@redhat.com>
+In-Reply-To: <20260814182449.GI3556460@frogsfrogsfrogs>
 
-On Fri, Aug 14, 2026 at 09:22:39AM -0400, Brian Foster wrote:
-> Matt Fleming reports a filesystem shutdown due to inobt block
-> allocation failure during sparse chunk allocation. Inode creation
-> can involve multiple allocations in a transaction: the initial chunk
-> allocation and inode btree blocks via inobt record insertion. This
-> is expected to be safe by using the minleft parameter on the chunk
-> allocation to guarantee the selected AG has blocks available for
-> a followup inobt insertion.
+On Fri, Aug 14, 2026 at 11:24:49AM -0700, Darrick J. Wong wrote:
+> On Fri, Aug 14, 2026 at 06:25:41PM +0200, Carlos Maiolino wrote:
+> > On Fri, Aug 14, 2026 at 12:28:19AM -0700, Christoph Hellwig wrote:
+> > > On Thu, Aug 13, 2026 at 09:43:44PM +0530, Aditya Prakash Srivastava wrote:
+> > > > 
+> > > > Are there any remaining concerns or feedback that need
+> > > > to be addressed with this patch?
+> > > 
+> > > Still looks good to me, but I think it just go lost.  It's a bit close
+> > > for the 7.3 merge window now, but I'd suggest you resend it in a week
+> > > or two to get it onto the agenda for 7.4 early.
+> > 
+> > Yup, I was waiting for Darrick to follow-up then it fell on limbo.
+> > Please follow Christoph's advice, please rebase and re-send on top of
+> > the tree after 7.3 merge window.
 > 
-> The sequence that leads to this failure is that the alloc and inode
-> btrees are all full (require a full split on next insertion) and the
-> AG has just enough free space to satisfy a sparse chunk allocation
-> with minleft set (i.e. 7 blocks in this example). The chunk
-> allocation splits a free extent, triggers full allocbt splits, and
-> consumes 4 free blocks for the chunk and 4 AGFL blocks for the
-> btrees.
-> 
-> Next, the inobt record insertion triggers an inobt split. The AG has
-> enough free blocks, but the allocbt splits caused by the chunk
-> allocation have increased the min AGFL requirement for the AG due to
-> btree level increases. The AGFL requirement as calculated by
-> xfs_alloc_fix_freelist() is:
-> 
-> 	free + AGFL - res - minfree - minleft = avail
-> 
-> This evaluates to the following on initial chunk allocation:
-> 
-> 	2514 + 8 - 2505 - 8 - 2 = 7
-> 
-> ... and then after the chunk allocation but before the inobt block
-> allocation:
-> 
-> 	2510 + 4 - 2505 - 12 - 0 = -3
-> 
-> This causes the inobt alloc to fail despite minleft being set in the
-> first allocation. The error path cancels the dirty transaction and
-> shuts down the fs.
-> 
-> The problem here is that while minleft ensures free blocks are
-> available for the inobt insert, it is not sufficient to cover the
-> increase of the AGFL min free requirement. To address this, create a
-> variant of the AGFL min free calculation for minleft allocations
-> that incorporates an additional allocbt level increase.
-> 
-> We do not add the additional blocks directly to min_free because
-> this would lead to spurious AGFL block allocations and frees in the
-> common case (i.e. no btree splits). Instead, add the surplus block
-> requirement to the minleft value used to select the AG. This ensures
-> the AG has enough blocks for the caller's minleft value plus the
-> worst case increase in the AGFL. In the example above, the initial
-> calculation now evaluates to 3 blocks available instead of 7 and the
-> sparse inode allocation fails gracefully with -ENOSPC.
+> I ignored the response because it's clearly AI slop, and obviously
+> wrong.
 
-Hrmm.  So if I'm understanding this correctly, you're adding to minleft
-(if one has been set) enough space to handle an AGFL expansion resulting
-from the free space / rmap btrees expanding in height?  And you're
-effectively saying that we'd rather fail creation and writes with ENOSPC
-a little earlier to handle that, than risk a shutdown?
+I haven't read that email until now, just noticed it was addressed to
+you, thanks for pointing it out.
 
---D
+Aditya... I don't care how you generate your patches, but YOU are
+responsible for the content you generate.
 
-> Reported-by: Matt Fleming <matt@readmodwrite.com>
-> Assisted-by: LLM
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
->  fs/xfs/libxfs/xfs_alloc.c | 29 ++++++++++++++++++++++++++++-
->  fs/xfs/libxfs/xfs_alloc.h |  2 ++
->  fs/xfs/libxfs/xfs_bmap.c  |  2 +-
->  3 files changed, 31 insertions(+), 2 deletions(-)
+Replying somebody's review comments with LLM generated content... I
+can't emphasize enough how disrespectful I think this kind of attitude
+is.
+
+Darrick spent his time reviewing your patch. You used a LLM model to
+reply his email which I already find disrespectful enough, and worse,
+you didn't even check the result? Why do you delegate to others your
+responsibility to review your content? If you didn't understand the
+generated content, that would already be a red flag that you shouldn't
+be sending it. If you thought it was right, it means you didn't check it
+carefully enough as you didn't even add any information saying you got
+this from a LLM and wasn't sure how right the information was.
+
+We are all overwhelmed with the inflow of patches now that writing them
+has never been easier.... Yet, we dedicate our time and effort reviewing
+them in an effort to keep the project's quality high. And yet we have
+just so much time in our hands and we would appreciate a little respect
+with at least reviewing the garbage you generated.
+
+You can use whatever tool you want to generate the patches, but Linux
+policy has been that YOU are responsible for whatever you wrote with
+whatever tool you use.
+
+And yet, I can't really emphasize how disrespectful I think such attitude
+is. Somebody's using a LLM to reply to somebody's else emails/messages,
+to say the least, make me believe you think your time is much more valuable
+than ours, giving you didn't even bother to review the email you sent to
+Darrick.
+
+Carlos
+
 > 
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index dbb85fb6314b..74c5b587c87b 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -2500,6 +2500,20 @@ xfs_alloc_min_freelist(
->  	return __xfs_alloc_min_freelist(mp, pag, 0);
->  }
->  
-> +/*
-> + * Return the minimum freelist requirement considering a potential allocbt split
-> + * from the current allocation. Use this when computing longest free extent for
-> + * allocations with minleft set to ensure that the available extent length
-> + * accounts for the subsequent allocation's increased AGFL requirement.
-> + */
-> +unsigned int
-> +xfs_alloc_min_freelist_minleft(
-> +	struct xfs_mount	*mp,
-> +	struct xfs_perag	*pag)
-> +{
-> +	return __xfs_alloc_min_freelist(mp, pag, 1);
-> +}
-> +
->  /*
->   * Check if the operation we are fixing up the freelist for should go ahead or
->   * not. If we are freeing blocks, we always allow it, otherwise the allocation
-> @@ -2517,6 +2531,7 @@ xfs_alloc_space_available(
->  	xfs_extlen_t		reservation; /* blocks that are still reserved */
->  	int			available;
->  	xfs_extlen_t		agflcount;
-> +	xfs_extlen_t		minleft;
->  
->  	if (flags & XFS_ALLOC_FLAG_FREEING)
->  		return true;
-> @@ -2533,10 +2548,22 @@ xfs_alloc_space_available(
->  	 * Do we have enough free space remaining for the allocation? Don't
->  	 * account extra agfl blocks because we are about to defer free them,
->  	 * making them unavailable until the current transaction commits.
-> +	 *
-> +	 * If minleft is set, this allocation might cause an allocbt split that
-> +	 * increases the AGFL minimum for the next allocation in the
-> +	 * transaction. Reserve that space from the available block count
-> +	 * (without prematurely growing the AGFL) to prevent the subsequent
-> +	 * allocation from failing due to an increased min_free requirement.
->  	 */
-> +	minleft = args->minleft;
-> +	if (minleft) {
-> +		minleft += xfs_alloc_min_freelist_minleft(args->mp, pag) -
-> +					min_free;
-> +	}
-> +
->  	agflcount = min_t(xfs_extlen_t, pag->pagf_flcount, min_free);
->  	available = (int)(pag->pagf_freeblks + agflcount -
-> -			  reservation - min_free - args->minleft);
-> +			  reservation - min_free - minleft);
->  	if (available < (int)max(args->total, alloc_len))
->  		return false;
->  
-> diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-> index 50ef79a1ed41..026b61a63994 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.h
-> +++ b/fs/xfs/libxfs/xfs_alloc.h
-> @@ -73,6 +73,8 @@ xfs_extlen_t xfs_alloc_longest_free_extent(struct xfs_perag *pag,
->  		xfs_extlen_t need, xfs_extlen_t reserved);
->  unsigned int xfs_alloc_min_freelist(struct xfs_mount *mp,
->  		struct xfs_perag *pag);
-> +unsigned int xfs_alloc_min_freelist_minleft(struct xfs_mount *mp,
-> +		struct xfs_perag *pag);
->  int xfs_alloc_get_freelist(struct xfs_perag *pag, struct xfs_trans *tp,
->  		struct xfs_buf *agfbp, xfs_agblock_t *bnop, int	 btreeblk);
->  int xfs_alloc_put_freelist(struct xfs_perag *pag, struct xfs_trans *tp,
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index d64defeda645..f396df864cf4 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -3160,7 +3160,7 @@ xfs_bmap_longest_free_extent(
->  	}
->  
->  	longest = xfs_alloc_longest_free_extent(pag,
-> -				xfs_alloc_min_freelist(pag_mount(pag), pag),
-> +				xfs_alloc_min_freelist_minleft(pag_mount(pag), pag),
->  				xfs_ag_resv_needed(pag, XFS_AG_RESV_NONE));
->  	if (*blen < longest)
->  		*blen = longest;
-> -- 
-> 2.55.0
+> "In XFS, the canonical locking hierarchy is:
 > 
+> "sb_start_write (freeze lock) -> IOLOCK -> ILOCK ->
+> xfs_trans_alloc"
+> 
+> Nope.
+> 
+> "xfs_file_release() already holds XFS_IOLOCK_EXCL (acquired via
+> xfs_ilock_nowait())..."
+> 
+> Nope.  The snippet I suggested isn't fully formed, but this is obviously
+> wrong; go read xfs_file_release.
+> 
+> static inline void xfs_file_release_eofblocks(struct xfs_inode *ip)
+> {
+> 	if (!xfs_can_free_eofblocks(ip))
+> 		return;
+> 	if (xfs_iflags_test(ip, XFS_EOFBLOCKS_RELEASED))
+> 		return;
+> 
+> 	/* take freeze protection and i_rwsem */
+> 	if (!sb_start_write_trylock(...))
+> 		return;
+> 	if (!xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL))
+> 		goto out_sb_write;
+> 
+> 	/*
+> 	 * recheck if we want to trim eofblocks and someone else hasn't
+> 	 * already done this
+> 	 */
+> 	if (!xfs_can_free_eofblocks(ip))
+> 		goto out_iolock;
+> 	if (xfs_iflags_test_and_set(ip, XFS_EOFBLOCKS_RELEASED))
+> 		goto out_iolock;
+> 
+> 	xfs_free_eofblocks(ip);
+> 
+> out_iolock:
+> 	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+> out_sb_write:
+> 	sb_end_write(...);
+> }
+> 
+> "xfs_trans_alloc() is the canonical, centralized place in XFS to
+> manage write-count blocking semantics."
+> 
+> Nope.  This isn't even talking about the same vfs lock here.
+> 
+> --D
 > 
