@@ -1,49 +1,44 @@
-Received: from mta1.migadu.com (out-151.mta1.migadu.com [95.215.58.151])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EBF1A3F7A9B
-	for <linux-xfs@vger.kernel.org>; Mon, 17 Aug 2026 13:33:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.151
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C111542376F;
+	Mon, 17 Aug 2026 15:37:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786973594; cv=none; b=dmM4lu3nv98LUe31a5zit2SibGmx6Epx8QsdFypIuq4Ds4SSmoYGBt06X+bZhWvAq5ElYYYBdAZAVotkdmtI4OekiKeKXBXbIve7MM+PhQUfhpepjeUgJSPlA/feIkQ9tNuegU2fo8Bc1TJYwCbw1BsDenuHJncyjEY7CIR/t/g=
+	t=1786981040; cv=none; b=LKMj58gKScNP2xQ4nKI5Vcf2QTSMcBWFlbKwFZ6DBSUUMFjUFiSVHXdkdjBktK0NO34C80XlIz36nw+7jq3zHeDvAMzMZTwCMcR+h0VWcaBHfOD8xt7theiAkbXgZjT121zW8YQVum7o6k2w1jwmtqa4tZrAOd8dEfnc97dgAA8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786973594; c=relaxed/simple;
-	bh=qDGaSGd8u93TvDMngq9Ccz8H6NOTNAvsQwpmKdm0k/A=;
+	s=arc-20240116; t=1786981040; c=relaxed/simple;
+	bh=FYWamzuJoFxSWCKL5fNKW+4hDr4mdtZK1qgkB3I75c8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=QueVrGr7MZKiN+zMVYzJf5RVJ+47nRv96CY0I6+b/dvwg3NTKTzLX+t7rJZ+1JQKLh+guiMBj2WcUpYGoSspgDFgveYpncn7WAsOLGmJEX67H46+brUnj4EEC2j5N6Ols2xw+qwODiooS1MAy6L6KSKpUxt5penbLjMlc/GJIkw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=GeGFjpj5; arc=none smtp.client-ip=95.215.58.151
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	 Content-Type:Content-Disposition:In-Reply-To; b=QWqjFgDv+0Yawn2u4rYN+Zw7t81RVQ3uIlmjEMpokcunBf2PccYr+JeZB/TEzgimXStGRvpVHmxI/o/VXJw8PS7pSUhvDU6nla0Gp6eZfYMCda3P5TfGGizCpQtRTyaMM+irFLB+Lnyk3KxgBmEMYv+EzpjXAWOHHzGccgcuMoA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YGUAcbzZ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="GeGFjpj5"
-X-Envelope-To: linux-xfs@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=qDGaSGd8u93TvDMngq9Ccz8H6NOTNAvsQwpmKdm0k/A=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1786973590; v=1; x=1787578390;
- b=GeGFjpj5MDSsuTWe7+LerZ64ouJxtM7Yks9OqjS79136RFU6OUFoTPPNZzXzZ0UGA3vUP3eT
- 8ToysIyKmBTYvxFNNhFHZZTA2CFlZjbeDq0d7cYaqqPlfSHxE3Fg4ukr1m86AKGUuP1o7YqLO/D
- Q2TI0PNV3MPSEVmY5fUxK4n8=
-X-Envelope-To: linux-xfs@vger.kernel.org
-Received: from localhost (195.100.225.50)
-	by smtp.migadu.com with ESMTPS id b5cc297c925db0cd;
-	Mon, 17 Aug 2026 13:33:10 +0000
-X-Migadu-Flow: FLOW_OUT
-Date: Mon, 17 Aug 2026 15:33:06 +0200
-From: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>
-To: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-Cc: Christian Brauner <brauner@kernel.org>, linux-fsdevel@vger.kernel.org, 
-	"Darrick J . Wong" <djwong@kernel.org>, Carlos Maiolino <cem@kernel.org>, 
-	Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>, Matthew Wilcox <willy@infradead.org>, 
-	Andrew Morton <akpm@linux-foundation.org>, Ritesh Harjani <ritesh.list@gmail.com>, 
-	Zhang Yi <yi.zhang@huawei.com>, Christoph Hellwig <hch@lst.de>, 
-	Dave Chinner <dchinner@redhat.com>, Daniel Gomez <da.gomez@kernel.org>, Theodore Tso <tytso@mit.edu>, 
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [RFC PATCH v3 09/11] xfs: Implement RWF_NOSERIAL to parallelize
- RWF_WRITETHROUGH writes
-Message-ID: <aoMMIfyEuuaDFpMh@quentin>
-References: <cover.1785908600.git.ojaswin@linux.ibm.com>
- <945bb8c88a121580cb07d0311c6742a2584ea6b2.1785908600.git.ojaswin@linux.ibm.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YGUAcbzZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C56531F000E9;
+	Mon, 17 Aug 2026 15:37:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1786981039;
+	bh=SiFMhNBo85XeONQYI7xMysmswB/FDKlJ+i51HWi9xO0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=YGUAcbzZ5cNJGgU4kbM36LvX8HXYWptaedVRNfDWS7UgO1DwWF/UPjl03V1ss/rQj
+	 hUFeQX8CoOWt3AwUeaPDRSsM0CKLuOXtG5McpewY2MmN/xtH15oo2JytenZjFrUKzB
+	 ja8fV4RBqzEiERzmEZ3HasocYKuInrX8t346KnDsYft2AmUpzevAFurIxUsthbhjfA
+	 mq+I+pACO2iP41xjR27lbtgwcgo20gce2YbwGNpYAbc7NIo3YijQPTnWxfnaPc9y4L
+	 VdJ0DnhYiFn80BuTXB/SLOsb5AoQ1C8us5MgfDk7SSBsMvlo8rqq9zUNhEz5lQoLMC
+	 QOLHcx0Z5GUPw==
+Date: Mon, 17 Aug 2026 17:37:13 +0200
+From: Andrey Albershteyn <aalbersh@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: djwong@kernel.org, ebiggers@kernel.org, Jens Axboe <axboe@kernel.dk>, 
+	Carlos Maiolino <cem@kernel.org>, fsverity@lists.linux.dev, linux-fsdevel@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-block@vger.kernel.org, 
+	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, 
+	linux-btrfs@vger.kernel.org, david@fromorbit.com, Tal Zussman <tz2294@columbia.edu>
+Subject: Re: [PATCH v15 00/25] fs-verity support for XFS with post EOF merkle
+ tree
+Message-ID: <aoMZaqbKxmp9lhKs@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+References: <20260814092448.1818082-1-aalbersh@kernel.org>
+ <20260817070240.GA17371@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -52,23 +47,46 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <945bb8c88a121580cb07d0311c6742a2584ea6b2.1785908600.git.ojaswin@linux.ibm.com>
+In-Reply-To: <20260817070240.GA17371@lst.de>
 
->  	}
->  
-> +	/*
-> +	 * Writethrough implies non-serial writes ie writes can go
-> +	 * parallelly.
-> +	 */
-> +	if (flags & RWF_WRITETHROUGH)
-> +		kiocb_flags |= IOCB_NOSERIAL;
-> +
+On 2026-08-17 09:02:40, Christoph Hellwig wrote:
+> On Fri, Aug 14, 2026 at 11:24:17AM +0200, Andrey Albershteyn wrote:
+> > Hi all,
+> > 
+> > This is next revision of fsverity for XFS.
+> > 
+> > Range-diff with v14 also below.
+> > 
+> > Patches without review:
+> > [PATCH v15 07/25] block: add task-context bio completion
+> > [PATCH v15 08/25] block: don't delay bio task completions
+> > [PATCH v15 16/25] xfs: handle fsverity I/O in write/read path
+> > [PATCH v15 18/25] xfs: make xfs_free_eofblocks() work with fsverity
+> > 
+> > The patchset include some patches from lazy-bounce@hch-misc series for
+> > BIO completion in task context
+> 
+> A different version of that landed in the block tree.  
 
-From a user perspective, shouldn't this be an explicit user flag instead
-of implicitly enabling for all RWF_WRITETHROUGH?
+oh didn't know that
 
-Power users who would want performance over POSIX compliance can enable
-this but it should not be the other way around IMO.
+> So let's hash
+> out how we want to handle this for the 7.4-rc merge window after the
+> dust for the current merges settles.
 
---
-Pankaj
+7.3-rc?
+
+> I can have the lazy bounce series
+> ready early for the merge window, and should be able to send it out
+> once all depdendency trees hit mainline.  Does that sound good?
+> Or should we split the minimum requirements into a separate
+> branch?
+
+Then the only patches I will need is IOMAP_IOEND_INTEGRITY with the
+helper. This is probably a bit too small change for separate series,
+but this will also work.
+I'm fine with waiting for lazy bounce, as I still will have at least
+one more revision.
+
+-- 
+- Andrey
