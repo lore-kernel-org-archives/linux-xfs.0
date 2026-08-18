@@ -1,77 +1,85 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oo1-f69.google.com (mail-oo1-f69.google.com [209.85.161.69])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B489B43B4A3
-	for <linux-xfs@vger.kernel.org>; Tue, 18 Aug 2026 09:31:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 954DE473C61
+	for <linux-xfs@vger.kernel.org>; Tue, 18 Aug 2026 12:32:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.69
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787045483; cv=none; b=WryjjeqrnW07jByJ8fMoTI0ew4awSUCz50sO62LM1ZYsGXcHHaBOSVvWqcaOQhV+26ZkQAHcYWYmyPycG4HbcKZtx0D13Cw8YOeGsHsROM9sk54FNZ8fk+XWmY38uK8jD5YplTs0rdOQRxLX4IQABfVIYJFuwLtAy37eqPZ/W8A=
+	t=1787056359; cv=none; b=cA39xsQLolLZKSvJG6bn5rJ+U7SkNyiPkNE3YEN9NGojv+1+u6dyRXvoNyky0lvU2XDV554mlwGEYPRwuF53Fw2238A5tpS1l0tWVBxSaxAYADG/yN6rYr851/TQcTYDYO3WXdz1reRdEMmHvzqHkYtEfDgIYcEW2xsUa+bIy88=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787045483; c=relaxed/simple;
-	bh=9j9E5X9f1QxZ0iNZUEpLzh9NLrgQUCoB/upByvMzr+I=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GwpVaJj8M/zitB2E742OVCxNPQqTjic4ELdgC6vymmeYSk8j3OSns2h4L2g1A0mXn1hdmwjqpDnwfZd/yA1HUlWR90VbuZuYuYqgOF138uiO1moFpHUHNpes0fLlFP9CDp5Wv/t9KELMCbwk5hVl8JVRDO3chtYVLuDv9iNPhqs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mpf0SeYt; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mpf0SeYt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B49A11F00A3A;
-	Tue, 18 Aug 2026 09:31:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787045482;
-	bh=JEU/DttuVzLetNjSHd1Fvqcet+AKpOk5UezWSZzm/1w=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=mpf0SeYtH+cyTJRWCXWddMVseaTTyAM19ktE5xK7IAp/dY1+JJ5aocYdrFaqccxue
-	 zuoFsBv7QPAPo76rwSa6hOFGSKK6v3LPKTq+Klz798mRx96MT10woTex6WVNQNBXsF
-	 tug9VoHg/bVkDSuYP/J2KfLP5owGKF5uFE49BdvB6kzVELNj9lKYhx/Or0uwdBQOLE
-	 7n3pnPpHfK1DDRN0Itpd3aUy9efo8d76mmQIfJIyg8xnbfcU04ml4nb5/wZPtcXLRt
-	 E0eiWleT9v0wV/0Gfi3F9ZfpZw27aQ0LSDrZEIPXTaFn+RdyeD+TDDcP3BUUIb9dXG
-	 73GE8iwIXR91w==
-Date: Tue, 18 Aug 2026 11:31:18 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: don't flush and invalidate internal RT device twice
- in xfs_shutdown_devices
-Message-ID: <aoQmUmoirdb_Cu0l@andromeda.toxiclabs.cc>
-References: <20260720140921.2269927-1-hch@lst.de>
+	s=arc-20240116; t=1787056359; c=relaxed/simple;
+	bh=sSMzJwNyQ/8ETA0yqy382L0AbeoACz4HGOX54qy+PWg=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=X33Uqh23aUVJuKGg36HzW03rm5ou1wpiYVFLrJFg01oM9VMDxlTONaZpivHpThOkjcW13klZoGOMWCtm8+mL5WDQIhlRGZOaz5pu96aU555oxP/ZhAu+El8Gu9ot0ssuko7v64mabuYADBI29k88jnCo+Y7oBsSU9bv+mWACHBY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.161.69
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-oo1-f69.google.com with SMTP id 006d021491bc7-6a0f261aeb6so5655904eaf.3
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Aug 2026 05:32:36 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787056355; x=1787661155;
+        h=content-type:to:from:subject:message-id:date:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=M4f53WTq9Hcy9VR3ErqSvIo2H47x/KzSswY7Zd7sZsc=;
+        b=o15XfGDIMpmoS1RkVALjJ/BArqmxz2vXJy2hEXWIBjDb+pHBfT1q39b/R8GL4+4Cl+
+         JleNj3n//pY0SqjqX7PUn8MTDpJeFGNL3/OtZsoZEdOC1kr620iuzAZyZftYBJd+tvzl
+         MIolpuJJbCPk87G1Pb+KxEjGnx3jhkzHmBHa3EvK+NdGuu/kf97s2dgJ9jVqC1prvJA2
+         9qTTMsKzVKx7xwcSwIfEPyJwOCL0qeDDh5+/Yse9UBZqCNdwy/aWwgRqdJwoRe0M9CrK
+         /NTf04ScJzhTZt2xsomre2HS9yBTV+A5QFAzn6hm78WXLV/kMkh835mJ1AtJushkgv92
+         Kkew==
+X-Forwarded-Encrypted: i=1; AHgh+Rqw2pO8GfyHlzowEMUeYSoMa3xAxDbvIwZzADGYjLnacODsXw7Nk0qJ/77G0Z5YAGPcFrfl7UoOdEQ=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx7KPbzsLrRpxvlcHrmZURmgHzi168eobLb41p7BRb6zYpXdUSv
+	eyf4iLg5BK5CKdUbflwAoAf2C2HhfHFDBU2klVtQXPSO3OGCAdb4satjN5mfbfRsvKFTeXFylln
+	fEKSi5kndPmimg2Iiuf29I1n2IJIVnUmNGj0ksIJ49OvnrMnPHy4WpZITY/Q=
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260720140921.2269927-1-hch@lst.de>
+X-Received: by 2002:a05:6820:709a:20b0:6b0:1ba4:dcc5 with SMTP id
+ 006d021491bc7-6b0d6262bd3mr21198160eaf.20.1787056354895; Tue, 18 Aug 2026
+ 05:32:34 -0700 (PDT)
+Date: Tue, 18 Aug 2026 05:32:34 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6a8450e2.4d75e56a.c9a88.0015.GAE@google.com>
+Subject: [syzbot] Monthly xfs report (Aug 2026)
+From: syzbot <syzbot+list41cab25620cba57a6e22@syzkaller.appspotmail.com>
+To: cem@kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-On Mon, Jul 20, 2026 at 04:09:21PM +0200, Christoph Hellwig wrote:
-> Check for an internal RT device to remove a bit of extra work.
-> 
-> Fixes: bdc03eb5f98f ("xfs: allow internal RT devices for zoned mode")
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_super.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 63c4bcbe6c2b..d96f3781d791 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -445,7 +445,7 @@ xfs_shutdown_devices(
->  		blkdev_issue_flush(mp->m_logdev_targp->bt_bdev);
->  		invalidate_bdev(mp->m_logdev_targp->bt_bdev);
->  	}
-> -	if (mp->m_rtdev_targp) {
-> +	if (mp->m_rtdev_targp && mp->m_rtdev_targp != mp->m_ddev_targp) {
->  		blkdev_issue_flush(mp->m_rtdev_targp->bt_bdev);
->  		invalidate_bdev(mp->m_rtdev_targp->bt_bdev);
->  	}
+Hello xfs maintainers/developers,
 
-Looks good too.
+This is a 31-day syzbot report for the xfs subsystem.
+All related reports/information can be found at:
+https://syzkaller.appspot.com/upstream/s/xfs
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+During the period, 2 new issues were detected and 1 were fixed.
+In total, 13 issues are still open and 32 have already been fixed.
 
-> -- 
-> 2.53.0
-> 
-> 
+Some of the still happening issues:
+
+Ref Crashes Repro Title
+<1> 20      No    kernel BUG in xrep_tempfile_rele
+                  https://syzkaller.appspot.com/bug?extid=a7f8b4c78caca340c561
+<2> 3015    Yes   INFO: task hung in sync_inodes_sb (5)
+                  https://syzkaller.appspot.com/bug?extid=30476ec1b6dc84471133
+<3> 156     Yes   INFO: task hung in xfs_buf_item_unpin (2)
+                  https://syzkaller.appspot.com/bug?extid=837bcd54843dd6262f2f
+<4> 11      Yes   INFO: task hung in xlog_force_lsn (2)
+                  https://syzkaller.appspot.com/bug?extid=c27dee924f3271489c82
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+To disable reminders for individual bugs, reply with the following command:
+#syz set <Ref> no-reminders
+
+To change bug's subsystems, reply with:
+#syz set <Ref> subsystems: new-subsystem
+
+You may send multiple commands in a single email message.
