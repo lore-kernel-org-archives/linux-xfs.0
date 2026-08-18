@@ -1,38 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93611442100
-	for <linux-xfs@vger.kernel.org>; Tue, 18 Aug 2026 09:23:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B489B43B4A3
+	for <linux-xfs@vger.kernel.org>; Tue, 18 Aug 2026 09:31:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787044998; cv=none; b=bk3okBOGXg184Q7MQjkKfoXzi6QmQYEOD9ebJ4HcbuWAXWO0PFJmf/r7Q9rz7Uil6fibMgbwofYB7CE3SK5j7NbL+sMASEaGcMeY4Ea/g+l8g5YcOEwHTFrYh87Lflmf7mc/99zjxGpj4nTtGkhp6CV/aixLvoGStXPNo5NMomg=
+	t=1787045483; cv=none; b=WryjjeqrnW07jByJ8fMoTI0ew4awSUCz50sO62LM1ZYsGXcHHaBOSVvWqcaOQhV+26ZkQAHcYWYmyPycG4HbcKZtx0D13Cw8YOeGsHsROM9sk54FNZ8fk+XWmY38uK8jD5YplTs0rdOQRxLX4IQABfVIYJFuwLtAy37eqPZ/W8A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787044998; c=relaxed/simple;
-	bh=yqtSRGtf6MuatI6WtSH/MIhEhUa7cA7qeW8YVm/L81A=;
+	s=arc-20240116; t=1787045483; c=relaxed/simple;
+	bh=9j9E5X9f1QxZ0iNZUEpLzh9NLrgQUCoB/upByvMzr+I=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=b7FkWTSx+RnXVokFPr/aPjN6GV3mT76gpHQr0bwZjKs7n3ny/jQL1JALrPh8vSxcC155znMSVSiChrvIvFeqtf+NugNG4ZQTrtwnnt9zbCKq0h7kEfCw9QOwBob0eY3QjDMy9y4GBMD9qHXxQDVPAD15/4C05Zwu7vdBb3t4h70=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BD7u6bBI; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=GwpVaJj8M/zitB2E742OVCxNPQqTjic4ELdgC6vymmeYSk8j3OSns2h4L2g1A0mXn1hdmwjqpDnwfZd/yA1HUlWR90VbuZuYuYqgOF138uiO1moFpHUHNpes0fLlFP9CDp5Wv/t9KELMCbwk5hVl8JVRDO3chtYVLuDv9iNPhqs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mpf0SeYt; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BD7u6bBI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9E7A01F000E9;
-	Tue, 18 Aug 2026 09:23:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mpf0SeYt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B49A11F00A3A;
+	Tue, 18 Aug 2026 09:31:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787044997;
-	bh=soxd0YEngNIm4n+fxiy4497Md9yGMHbZ3Di2vldKbpw=;
+	s=k20260515; t=1787045482;
+	bh=JEU/DttuVzLetNjSHd1Fvqcet+AKpOk5UezWSZzm/1w=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=BD7u6bBIyiaAASXat/GCJby5Tqq8AdgWsHBcP39ldYnNLkwYDX8z13y4a1sgfE3lu
-	 PuYCKPKhoDf1RWOiXTKUOCYV3m2AfmZwi1CdtGHDRjIIoGeqtRcRU0D8N5ZBnQL9oQ
-	 XagN/PqJk0sFB51O0gRM1SVsxGDyjjoExWFUhA8XWeE5gonzNEhgC75z/rUhAeoQGL
-	 2m7KgfScovqq+Ks+J24izs6eAWhHyveYTeQNHMbPY5s0+duKB+FFI+SP47u63i+grT
-	 YWP+5vyYED9TgdUsMVypzFwHjzbxCkl17no1Vo1yWW6+xK/5hQAMwO3tne4HtGe3Oe
-	 5jtBMbgDiFKBQ==
-Date: Tue, 18 Aug 2026 11:23:13 +0200
+	b=mpf0SeYtH+cyTJRWCXWddMVseaTTyAM19ktE5xK7IAp/dY1+JJ5aocYdrFaqccxue
+	 zuoFsBv7QPAPo76rwSa6hOFGSKK6v3LPKTq+Klz798mRx96MT10woTex6WVNQNBXsF
+	 tug9VoHg/bVkDSuYP/J2KfLP5owGKF5uFE49BdvB6kzVELNj9lKYhx/Or0uwdBQOLE
+	 7n3pnPpHfK1DDRN0Itpd3aUy9efo8d76mmQIfJIyg8xnbfcU04ml4nb5/wZPtcXLRt
+	 E0eiWleT9v0wV/0Gfi3F9ZfpZw27aQ0LSDrZEIPXTaFn+RdyeD+TDDcP3BUUIb9dXG
+	 73GE8iwIXR91w==
+Date: Tue, 18 Aug 2026 11:31:18 +0200
 From: Carlos Maiolino <cem@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: split an assert in xfs_trans_log_buf
-Message-ID: <aoQkXOxqitR7KdcK@andromeda.toxiclabs.cc>
-References: <20260720093612.2186703-1-hch@lst.de>
+Subject: Re: [PATCH] xfs: don't flush and invalidate internal RT device twice
+ in xfs_shutdown_devices
+Message-ID: <aoQmUmoirdb_Cu0l@andromeda.toxiclabs.cc>
+References: <20260720140921.2269927-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -41,37 +42,36 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260720093612.2186703-1-hch@lst.de>
+In-Reply-To: <20260720140921.2269927-1-hch@lst.de>
 
-On Mon, Jul 20, 2026 at 11:36:12AM +0200, Christoph Hellwig wrote:
-> Split the "irst <= last && last < BBTOB(bp->b_length)" assert into two to
-> make it clear which condition fired.
+On Mon, Jul 20, 2026 at 04:09:21PM +0200, Christoph Hellwig wrote:
+> Check for an internal RT device to remove a bit of extra work.
 > 
+> Fixes: bdc03eb5f98f ("xfs: allow internal RT devices for zoned mode")
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/xfs/xfs_trans_buf.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
+>  fs/xfs/xfs_super.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
-> index 1e025848811a..a5d25b703dfc 100644
-> --- a/fs/xfs/xfs_trans_buf.c
-> +++ b/fs/xfs/xfs_trans_buf.c
-> @@ -521,7 +521,8 @@ xfs_trans_log_buf(
->  {
->  	struct xfs_buf_log_item	*bip = bp->b_log_item;
->  
-> -	ASSERT(first <= last && last < BBTOB(bp->b_length));
-> +	ASSERT(first <= last);
-> +	ASSERT(last < BBTOB(bp->b_length));
->  	ASSERT(!(bip->bli_flags & XFS_BLI_ORDERED));
->  
->  	xfs_trans_dirty_buf(tp, bp);
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 63c4bcbe6c2b..d96f3781d791 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -445,7 +445,7 @@ xfs_shutdown_devices(
+>  		blkdev_issue_flush(mp->m_logdev_targp->bt_bdev);
+>  		invalidate_bdev(mp->m_logdev_targp->bt_bdev);
+>  	}
+> -	if (mp->m_rtdev_targp) {
+> +	if (mp->m_rtdev_targp && mp->m_rtdev_targp != mp->m_ddev_targp) {
+>  		blkdev_issue_flush(mp->m_rtdev_targp->bt_bdev);
+>  		invalidate_bdev(mp->m_rtdev_targp->bt_bdev);
+>  	}
 
-Ops, I think this fell through the cracks. Looks good though...
+Looks good too.
 
 Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-
 > -- 
 > 2.53.0
+> 
 > 
