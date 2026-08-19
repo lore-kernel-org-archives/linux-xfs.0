@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE0C676026
-	for <linux-xfs@vger.kernel.org>; Wed, 19 Aug 2026 00:15:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED53621767D
+	for <linux-xfs@vger.kernel.org>; Wed, 19 Aug 2026 00:15:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787098536; cv=none; b=qgeowChJn9GBqGGZESEDDxqlq0Oyc/lOha4pCFOjRDc4Klf/YmGyWqsnw5cb7FvKDG+cDRGguw5E3qcTf+CDLnf5LMkWEiqm8mG5uOn2lWY9qDATPphd78KxGTCDlf/8sTmmfj+LmPB2nk8SIMt/woACxQxtv5BqFBka9JFWMTU=
+	t=1787098537; cv=none; b=WvzThZEr0reRGLWfdDuu320jajO7IKFlPy3/A5gdsUR09jALQxExtfpvdX5Nc8Oyj8ZR3qvl3Ccg2LanCY4iWVyrvUMiQgEEPuXKEKBxTlo7m+ulR8khJ/ktZxpJBKswHpJQHi5qFTIO0zfHYxFPjul/cvJWXaSdOWZDXSs1yt0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787098536; c=relaxed/simple;
-	bh=snl6rHbyopMvzvucD7o9k04njJbr9fa8szKecAbWnQQ=;
+	s=arc-20240116; t=1787098537; c=relaxed/simple;
+	bh=aL5FIvggNMvMo11p8BAuB+ZzsY6IP/Ieo/AOw6Jevpc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=jWoFfNXUY4CCJ96SH0Q4R44M0bhlUMq69jKswdBC8pxusknMj6aCr9MI+oNljBCGUI+wHJ34x2BGUnbMhMp1Sfk/WUCz0wtembJ3LVAJ4Rc9sP27a5k1jQVS3A4UkqAoJqr78nZfWGBeX1Gnu0yXSdNXG8JJHHM5EVxf9/TyERU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bmLhyHgb; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=E/2dyt8TKzsy0Kk31RvrpXjB0VF2R8nVYdP/ipgLgsL7WSaRAoGhvfWxBnHHBKRiSEGZLmFj4uSNJTSfG13cuoUXEEx0gaOgs7dyxihagUtly1yaQEI6Nd2FvJt5aBUQPTeUgP2o6aqsnCPK66DLlDR6XXMtAlRgUBFD0GgOkUo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AmNhFtzQ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bmLhyHgb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D8B051F000E9;
-	Wed, 19 Aug 2026 00:15:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AmNhFtzQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1BF041F00A3A;
+	Wed, 19 Aug 2026 00:15:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787098534;
-	bh=2wsSgXDb9dXtqyDfHWKMSSYxOwIkh/gGEdzTv9la/Ls=;
+	s=k20260515; t=1787098535;
+	bh=CZAqngDmJMh3JAHvCaHOJmJT0VRbhSdRA3VKQb712x0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=bmLhyHgbFP9tBYiFFa8wtYvfLEZ2JSIF8zjMzi2d4ZQ7AKnqK+66FLXmvBJrc436z
-	 Szux1f64Kv8VdPRC4DBfpqwpb6hvDpEC25bj69iXUAmeoQi9wQ9UJdPjCYHkyOqi2T
-	 5yMRPcsQbHMMEwtggNcFg3+n0jr5lnlZGXt+RoEn7EnIr5HqAkImgI+pV673yWIg9N
-	 miYJgRLwtAeaYIIYGg6HjlmCIGVU3vW8sxRJLlowCMf83zMiAagzoq85Xqj3Dt9VcV
-	 C4YUYFE3a/Kx9c6xxBrAx5Qi/ctVV9gUupLExmcdXNloPWoXAynvtDBJHjl5bqs3C4
-	 Iow7BWl4wml6w==
+	b=AmNhFtzQuF+AFtg4foJur528pPEk3SvdS2u/U5QA8KzO7WHCvCfOCq3P0PJePUedF
+	 DFePJl9mo0dvXu42/47B4vxRHdDMWDiT7/qId94q/23OhNT64+IfNX2MdjXvEDyf57
+	 aYRnjoGYql0HRBp6b4EqVxqNc/SybV7FZiR0dQ7XsFGqFSU9zo9oB9ZYlgPS3N57XG
+	 6Y7xrwO/BFIxlz9xSWRN3M5K8aWDI93ZkUQd7S2M+toENKX1OwuS2pOME1ihYBVqrG
+	 dW4IayVjRncDkGMJCga+QZMlJSIh2/qwVyLOIMztpzA7L2faYG7vppImAuwH5AyTuu
+	 hLcDUngJqYdcQ==
 From: Dave Chinner <dgc@kernel.org>
 To: linux-xfs@vger.kernel.org
 Cc: cem@kernel.org
-Subject: [PATCH 36/38] xfs: clean up xfs_direct_write_cow_iomap_begin after restructure
-Date: Wed, 19 Aug 2026 10:12:39 +1000
-Message-ID: <20260819001442.1451892-37-dgc@kernel.org>
+Subject: [PATCH 37/38] xfs: make pNFS block allocation atomic with inode update
+Date: Wed, 19 Aug 2026 10:12:40 +1000
+Message-ID: <20260819001442.1451892-38-dgc@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260819001442.1451892-1-dgc@kernel.org>
 References: <20260819001442.1451892-1-dgc@kernel.org>
@@ -43,195 +43,194 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Now that xfs_direct_write_iomap_begin() handles all locking,
-transaction allocation, extent reading, and retry logic, clean up
-xfs_direct_write_cow_iomap_begin() to remove the dead transitional
-code.
+Restructure xfs_fs_map_blocks() to perform the extent allocation
+and inode update in a single synchronous transaction, making the
+operation atomic with respect to the ILOCK.
 
-Remove the needs_tp parameter and all the internal lock management,
-transaction allocation, retry loop, and local_tp handling. The
-function now assumes the caller holds the ILOCK and has already
-determined that COW is needed via imap_needs_cow().
+Previously the function used two separate transactions: one for
+the extent allocation (via xfs_iomap_write_direct) and one for the
+inode update (xfs_fs_map_update_inode), followed by an explicit
+log force to ensure persistence.
 
-Lift the imap_needs_cow() check from cow_iomap_begin up to
-xfs_direct_write_iomap_begin(), replacing the xfs_is_cow_inode()
-check after the xfs_bmapi_read(). This is safe because
-imap_needs_cow() checks xfs_is_cow_inode() internally as its first
-test.
+Now the function uses a do {} while (!dwa.tp) loop to allocate a
+transaction and re-read the mapping atomically. The inode update
+(SUID/SGID strip, timestamps, PREALLOC flag) is performed in the
+same transaction as the allocation, and the transaction is committed
+synchronously via xfs_trans_set_sync().
+
+xfs_fs_map_update_inode() is converted to take a transaction
+parameter and no longer allocates or commits its own transaction.
 
 Assisted-by: LLM
 Signed-off-by: Dave Chinner <dgc@kernel.org>
 ---
- fs/xfs/xfs_iomap.c | 113 +++++++--------------------------------------
- 1 file changed, 16 insertions(+), 97 deletions(-)
+ fs/xfs/xfs_pnfs.c | 124 +++++++++++++++++++++++-----------------------
+ 1 file changed, 61 insertions(+), 63 deletions(-)
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 77f71fdd125a..4b2860e80d9f 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -892,116 +892,44 @@ xfs_bmap_hw_atomic_write_possible(
- 
- /*
-  * Handle COW extent allocation and iomap setup for direct writes to reflinked
-- * files.
-+ * files. The caller holds the ILOCK and has already determined that COW is
-+ * needed via imap_needs_cow().
-  *
-- * Transitional tpp handling:
-- *	!tpp = do everything internally using local_tp
-- *	tpp & !*tpp = caller did locking, wants -EAGAIN if transaction required
-- *	tpp && *tpp = caller did locking and transaction allocation
-+ * On return, args->nimaps indicates what the caller should do next:
-+ *   nimaps == 0: COW was handled, iomap/srcmap are filled in.
-+ *                Caller should commit args->tp, unlock, and return.
-+ *   nimaps > 0:  Extent is not shared. Caller should continue with the
-+ *                normal IO path using the imap.
-  *
-- * The caller passes in an imap and nimaps that the COW allocation will fill
-- * with the data fork extent mapping. On return, *nimaps indicates whether the
-- * caller needs to continue with the normal IO path:
-- *
-- *   *nimaps == 0: COW was handled, iomap/srcmap are filled in, ILOCK released.
-- *                 Caller should return 0 immediately.
-- *   *nimaps > 0:  Extent is not shared, imap is valid, ILOCK is still held.
-- *                 Caller should continue with the normal IO path.
-+ * Returns -EAGAIN if a transaction is needed but args->tp is NULL.
+diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
+index 495e081838d0..37194e62d3cb 100644
+--- a/fs/xfs/xfs_pnfs.c
++++ b/fs/xfs/xfs_pnfs.c
+@@ -88,29 +88,17 @@ xfs_fs_get_uuid(
+  * is from the client to indicate that data has been written and the file size
+  * can be extended.
   */
- static int
- xfs_direct_write_cow_iomap_begin(
--	struct xfs_direct_write_args *args,
--	bool			needs_tp)
-+	struct xfs_direct_write_args *args)
+-static int
++static void
+ xfs_fs_map_update_inode(
++	struct xfs_trans	*tp,
+ 	struct xfs_inode	*ip)
  {
- 	struct xfs_inode	*ip = args->ip;
- 	struct xfs_mount	*mp = ip->i_mount;
--	struct xfs_trans	*local_tp = NULL;
- 	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, args->offset);
- 	xfs_fileoff_t		end_fsb = xfs_iomap_end_fsb(mp, args->offset,
- 					args->length);
- 	int			error;
- 	u64			seq;
- 
--	if (needs_tp) {
--		args->lockmode = XFS_ILOCK_EXCL;
+-	struct xfs_trans	*tp;
+-	int			error;
 -
--		error = xfs_ilock_for_iomap(ip, args->flags, &args->lockmode);
--		if (error)
--			return error;
+-	error = xfs_trans_alloc(ip->i_mount, &M_RES(ip->i_mount)->tr_writeid,
+-			0, 0, 0, &tp);
+-	if (error)
+-		return error;
 -
--retry:
--		args->nimaps = 1;
--		error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
--				&args->imap, &args->nimaps, 0);
--		if (error)
--			goto out_unlock;
--	}
+-	xfs_ilock(ip, XFS_ILOCK_EXCL);
+-	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
 -
--	if (!imap_needs_cow(ip, args->flags, &args->imap, args->nimaps)) {
--		if (local_tp) {
--			xfs_trans_cancel(local_tp);
--			args->tp = NULL;
--		}
--		return 0;
--	}
+ 	VFS_I(ip)->i_mode &= ~S_ISUID;
+ 	if (VFS_I(ip)->i_mode & S_IXGRP)
+ 		VFS_I(ip)->i_mode &= ~S_ISGID;
+ 	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+ 	ip->i_diflags |= XFS_DIFLAG_PREALLOC;
 -
--	error = -EAGAIN;
--	if (args->flags & IOMAP_NOWAIT)
--		goto out_unlock;
--
- 	error = xfs_reflink_allocate_cow(args);
--	if (error == -EAGAIN) {
--		ASSERT(!args->tp);
--
--		if (!needs_tp)
--			goto out_unlock;
--
--		/*
--		 * Handle the retry internally. Drop the ILOCK and allocate a
--		 * zero-block reservation transaction, which will re-acquire
--		 * the ILOCK. We cannot determine what extent type will be
--		 * found once we've regained the ILOCK, so the callees will
--		 * use xfs_trans_reserve_more_inode() directly to reserve any
--		 * blocks they require before they start modifications. This
--		 * allows ENOSPC to be returned and the transaction cancelled
--		 * safely if the block reservation cannot be made.
--		 *
--		 * Retry the imap lookup since the extent tree may have changed
--		 * while the ILOCK was not held.
--		 */
--		xfs_iunlock(ip, args->lockmode);
--
--		error = xfs_trans_alloc_inode(ip, &M_RES(mp)->tr_write,
--				0, 0, false, &args->tp);
--		if (error)
--			return error;
--		local_tp = args->tp;
--
--		goto retry;
--	}
- 	if (error)
--		goto out_unlock;
--
--	if (local_tp) {
--		error = xfs_trans_commit(local_tp);
--		args->tp = NULL;
--		if (error)
--			goto out_unlock;
--	}
-+		return error;
- 
- 	if (!args->shared)
- 		return 0;
- 
- 	if ((args->flags & IOMAP_ATOMIC) &&
- 	    !xfs_bmap_hw_atomic_write_possible(ip, &args->cmap,
--			offset_fsb, end_fsb)) {
--		error = -ENOPROTOOPT;
--		goto out_unlock;
--	}
-+			offset_fsb, end_fsb))
-+		return -ENOPROTOOPT;
- 
- 	/*
- 	 * COW extent found and allocated. Set up iomap/srcmap and return
--	 * with *nimaps = 0 to tell the caller the COW path is complete.
-+	 * with nimaps = 0 to tell the caller the COW path is complete.
- 	 */
- 	args->nimaps = 0;
- 	args->length = XFS_FSB_TO_B(mp,
-@@ -1014,20 +942,11 @@ xfs_direct_write_cow_iomap_begin(
- 		error = xfs_bmbt_to_iomap(ip, args->srcmap, &args->imap,
- 				args->flags, 0, seq);
- 		if (error)
--			goto out_unlock;
-+			return error;
- 	}
- 	seq = xfs_iomap_inode_sequence(ip, IOMAP_F_SHARED);
--	if (needs_tp)
--		xfs_iunlock(ip, args->lockmode);
- 	return xfs_bmbt_to_iomap(ip, args->iomap, &args->cmap, args->flags,
- 			IOMAP_F_SHARED, seq);
--
--out_unlock:
--	if (local_tp && args->tp)
--		xfs_trans_cancel(local_tp);
--	if (needs_tp)
--		xfs_iunlock(ip, args->lockmode);
--	return error;
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+-	return xfs_trans_commit(tp);
  }
  
- static int
-@@ -1092,8 +1011,8 @@ xfs_direct_write_iomap_begin(
- 		if (error)
- 			goto out_unlock;
+ /*
+@@ -127,6 +115,10 @@ xfs_fs_map_blocks(
+ {
+ 	struct xfs_inode	*ip = XFS_I(inode);
+ 	struct xfs_mount	*mp = ip->i_mount;
++	struct xfs_direct_write_args dwa = {
++		.ip		= ip,
++		.iomap		= iomap,
++	};
+ 	struct xfs_bmbt_irec	imap;
+ 	xfs_fileoff_t		offset_fsb, end_fsb;
+ 	loff_t			limit;
+@@ -182,61 +174,67 @@ xfs_fs_map_blocks(
+ 	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + length);
+ 	offset_fsb = XFS_B_TO_FSBT(mp, offset);
  
--		if (xfs_is_cow_inode(ip)) {
--			error = xfs_direct_write_cow_iomap_begin(&dwa, false);
-+		if (imap_needs_cow(ip, flags, &dwa.imap, dwa.nimaps)) {
-+			error = xfs_direct_write_cow_iomap_begin(&dwa);
- 			if (error == -EAGAIN)
- 				goto alloc_trans;
- 			if (error)
++	/*
++	 * Extent allocation requires a transaction. If we find a hole, drop
++	 * the ILOCK, allocate a transaction and re-read the mapping so we
++	 * don't use a stale imap for determining the allocation.
++	 */
+ 	lock_flags = xfs_ilock_data_map_shared(ip);
+-	/* request mappings for the specified range only */
+-	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
+-				&imap, &nimaps, 0);
+-	if (error) {
+-		xfs_iunlock(ip, lock_flags);
+-		goto out_unlock;
+-	}
+-	ASSERT(!nimaps || imap.br_startblock != DELAYSTARTBLOCK);
+-
+-	if (write && (!nimaps || imap.br_startblock == HOLESTARTBLOCK)) {
+-		if (offset + length > XFS_ISIZE(ip))
+-			end_fsb = xfs_iomap_eof_align_last_fsb(ip, end_fsb);
+-		else if (nimaps && imap.br_startblock == HOLESTARTBLOCK)
+-			end_fsb = min(end_fsb, imap.br_startoff +
+-					       imap.br_blockcount);
+-		xfs_iunlock(ip, lock_flags);
+-
+-		{
+-			struct xfs_direct_write_args args = {
+-				.ip		= ip,
+-				.offset_fsb	= offset_fsb,
+-				.count_fsb	= end_fsb - offset_fsb,
+-				.offset		= offset,
+-				.length		= length,
+-				.imap		= imap,
+-				.iomap		= iomap,
+-			};
+-
+-			error = xfs_iomap_write_direct(&args);
+-		}
++	do {
++		nimaps = 1;
++		error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
++					&imap, &nimaps, 0);
+ 		if (error)
+-			goto out_unlock;
++			goto out_cancel;
++		ASSERT(!nimaps || imap.br_startblock != DELAYSTARTBLOCK);
++
++		if (!write || (nimaps &&
++			       imap.br_startblock != HOLESTARTBLOCK)) {
++			seq = xfs_iomap_inode_sequence(ip, 0);
++			error = xfs_bmbt_to_iomap(ip, iomap, &imap, 0, 0, seq);
++			goto out_cancel;
++		}
+ 
+-		/*
+-		 * Ensure the next transaction is committed synchronously so
+-		 * that the blocks allocated and handed out to the client are
+-		 * guaranteed to be present even after a server crash.
+-		 */
+-		error = xfs_fs_map_update_inode(ip);
+-		if (!error)
+-			error = xfs_log_force_inode(ip);
+-		if (error)
+-			goto out_unlock;
++		if (!dwa.tp) {
++			xfs_iunlock(ip, lock_flags);
++			error = xfs_trans_alloc_inode(ip, &M_RES(mp)->tr_write,
++					0, 0, false, &dwa.tp);
++			if (error)
++				goto out_unlock;
++			lock_flags = XFS_ILOCK_EXCL;
++		}
++	} while (!dwa.tp);
++
++	if (offset + length > XFS_ISIZE(ip))
++		end_fsb = xfs_iomap_eof_align_last_fsb(ip, end_fsb);
++	else if (nimaps && imap.br_startblock == HOLESTARTBLOCK)
++		end_fsb = min(end_fsb, imap.br_startoff + imap.br_blockcount);
++
++	dwa.offset_fsb = offset_fsb;
++	dwa.count_fsb = end_fsb - offset_fsb;
++	dwa.offset = offset;
++	dwa.length = length;
++	dwa.imap = imap;
++	error = xfs_iomap_write_direct(&dwa);
++	if (error)
++		goto out_cancel;
+ 
+-	} else {
+-		seq = xfs_iomap_inode_sequence(ip, 0);
+-		xfs_iunlock(ip, lock_flags);
+-		error = xfs_bmbt_to_iomap(ip, iomap, &imap, 0, 0, seq);
+-	}
+-	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+-	*device_generation = mp->m_generation;
+-	return error;
++	/*
++	 * Update the inode and commit synchronously so that the blocks
++	 * are guaranteed persistent before being handed to the client.
++	 */
++	xfs_fs_map_update_inode(dwa.tp, ip);
++	xfs_trans_set_sync(dwa.tp);
++	error = xfs_trans_commit(dwa.tp);
++	dwa.tp = NULL;
++
++out_cancel:
++	if (dwa.tp)
++		xfs_trans_cancel(dwa.tp);
++	xfs_iunlock(ip, lock_flags);
+ out_unlock:
+ 	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
++	*device_generation = mp->m_generation;
+ 	return error;
+ }
+ 
 -- 
 2.55.0
 
