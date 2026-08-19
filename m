@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95BB32C08D0
-	for <linux-xfs@vger.kernel.org>; Wed, 19 Aug 2026 00:15:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E89AB2D3725
+	for <linux-xfs@vger.kernel.org>; Wed, 19 Aug 2026 00:15:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787098519; cv=none; b=Yryxl/zrzsT23Jn83s3uDgig27jeByDtZJ/rkfAaOEEZ4sSPLm71DmxfRMddElva8OZiSWFOInXcbxH9XICtEvUKweW4AU7kY6arduYJr2Bpp9TSqQTNtm//9w3dLI+hfpCOn8hSi0qgPRIE/BSpxuPqMqGEsNBpgx2Y+mD8o/s=
+	t=1787098520; cv=none; b=FIMQNXpmOh3BMSZYRA853K/AwQrn0bfyxeqKVaCr+fGKfDLcMpmduphDPRptL9FLHqpSX8+hnT3Q5m3qDILM/lJhRsc5o9ukISFZ3vYoLrhTS6BRjcd/wJFijsBHtuDCJEyeNewvrJtwnJJ5nwis9B8jewYuBx8c9W1F27FUSNA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787098519; c=relaxed/simple;
-	bh=vkPapmO99TYxej2MLCimbJdtG3vucJAtld86UWrIsd4=;
+	s=arc-20240116; t=1787098520; c=relaxed/simple;
+	bh=/lt3g3U51W2D7OdI0tMRog/oCUwxdYn6K9MVvP/MWYg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ZRtwJXxYH38I1TvE8HrjIkFvCA/0dAcfk+mLdNr/tr+JVukm6E6BEOHx7PCC7lNDqr24mNOkFFmXbiKASupO/T+nK9hL7cVV3Hw2kgoAghwTVkX9O4ZiWx08ur80nJYOAbN9sajAKr+63RExyson60T6zVja23reetUnqnWMTrA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QfVmnta4; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=QbmV/3Nn0Ki/951EOW3IEa9UJljv+V9WYJI+VR/k48x72NUvfSQlbgevQPsSlUdHuQMBR6fd+hS5u1CsJ1lLeaHYTkNRuoPRa/IrcL7CAA649lGlObHQCjesiXPG2Dog5vcACf/jzzvXmi5Rm5kZcqMZMeBaCH76528OEsH+Irk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jaSWfNNX; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QfVmnta4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 96D901F00A3A;
-	Wed, 19 Aug 2026 00:15:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jaSWfNNX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DC8B61F000E9;
+	Wed, 19 Aug 2026 00:15:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787098517;
-	bh=YMuHPM6ijz6EKzeDKoUI7z9K57VYZux4UJW0yGvTWYE=;
+	s=k20260515; t=1787098518;
+	bh=msUJA9YyQshYDymulk4BAzVtNnWr/m0OvRTtp3RwxLg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=QfVmnta4GtzkUBYvgHEFzwbN6EehiOZEy86peb+sIoWogc/gpf48W/F+8VoZGDUR+
-	 FD9h0PR/wA4AAGOzsoQFfGuqsxWO8DYAblBLNIy951/1BlhEHDnaReUQwIC74xYrcK
-	 DgYHwQMjcauuNHuKKFMBg5wnxwC+kcZd7nFLEJxRTcI2ev4ZI6s6VIpcAe8Tk8FZIm
-	 6cAQawc0B/DYvAgGNHTqG0r0plI88k1cwTmMRHZ/PP6MfFmSHfooF9tOlItU4XxrTr
-	 Mb6Ta1vZ3FR+CbvoM9A972lccx35+gPAomWLMFv7dbMYhm7jowvxL3tjz6NLbuo8TN
-	 8QaT8Ncnq3HuA==
+	b=jaSWfNNXA87cYCRjN6Wmndj/PmpVP2IiWjpOMm7gtBzT/HUK6htOiRAXQd/sh8993
+	 amjWFyR3XOBUvu+06BeZtAvLhseEZTkzW8m4AHYx6Z/BkjbqLdG4KRl3A/NUU4zk79
+	 JUtJLsKex1qZhyH0rsD2Yf8EPkMEsbXXSl7XTeUvKjcatucO55zIEPvk4nw1HpvhbQ
+	 zHbNiOI7g7eK32/DjaW3BI4USgM/eoN+tX1/o+3nvtbYIJRQHijVjnucwizRgfFIei
+	 0gvVWXC2/jflQJrDR0Y1vW+nOlzxhhPIwmK7A5hnsT34Q6p/A3Q2lZMY6pcRbdYQm/
+	 5jyV4L4CZZ5fw==
 From: Dave Chinner <dgc@kernel.org>
 To: linux-xfs@vger.kernel.org
 Cc: cem@kernel.org
-Subject: [PATCH 23/38] xfs: add block reservation renewal to xfs_defer_finish
-Date: Wed, 19 Aug 2026 10:12:26 +1000
-Message-ID: <20260819001442.1451892-24-dgc@kernel.org>
+Subject: [PATCH 24/38] xfs: factor out xfs_iomap_write_unwritten_one helper
+Date: Wed, 19 Aug 2026 10:12:27 +1000
+Message-ID: <20260819001442.1451892-25-dgc@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260819001442.1451892-1-dgc@kernel.org>
 References: <20260819001442.1451892-1-dgc@kernel.org>
@@ -43,237 +43,174 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add infrastructure to automatically renew block and RT extent
-reservations after deferred operations have been processed by
-xfs_defer_finish().
+Extract the per-iteration unwritten extent conversion work from
+xfs_iomap_write_unwritten() into a new helper function
+xfs_iomap_write_unwritten_one().
 
-Unlike log reservations which are renewed by xfs_log_regrant() on
-every roll, block reservations are carried forward by
-xfs_trans_dup() with consumed blocks subtracted. Over multiple
-rolls, the reservation can be depleted even though each iteration
-of the caller needs the same reservation.
+The helper takes a caller-supplied transaction and performs the
+extent count extension, unwritten-to-written conversion via
+xfs_bmapi_write(), and inode size update for a single extent.
 
-Add a new XFS_TRANS_RENEW_BLKRES flag. When set, the original
-block reservation is recorded in t_blk_res_orig (and t_rtx_res_orig
-for RT extents) at reservation time and propagated through
-xfs_trans_dup(). After xfs_defer_finish() completes all deferred
-operations and performs the final roll, xfs_trans_regrant_blkres()
-reserves the deficit between t_blk_res and t_blk_res_orig from the
-free space pool, restoring the original reservation for the next
-iteration.
+The startblock validation check remains in the caller after the
+transaction commit, as it is a corruption detection check that
+should warn and return an error without causing a filesystem
+shutdown from cancelling a dirty transaction.
 
-The _orig values are set in xfs_trans_reserve() and
-xfs_trans_reserve_more_inode() so that they are correctly captured
-regardless of how the block reservation was established.
-
-The regrant is not performed during the internal rolls in
-xfs_defer_finish_noroll() because the original reservation already
-contains all the space needed for the deferred op chain. The regrant
-after the final roll operates on a clean transaction, so the caller
-can safely cancel on ENOSPC without causing a filesystem shutdown.
-
-xfs_defer_finish() is changed to unconditionally roll the transaction
-after deferred op processing so that the regrant always occurs.
+This is a pure refactoring with no functional change, done to
+prepare for converting the loop to use rolling transactions.
 
 Assisted-by: LLM
 Signed-off-by: Dave Chinner <dgc@kernel.org>
 ---
- fs/xfs/libxfs/xfs_defer.c  | 38 +++++++++++++++++++++++++-----------
- fs/xfs/libxfs/xfs_shared.h |  3 +++
- fs/xfs/xfs_trans.c         | 40 +++++++++++++++++++++++++++++++++++---
- fs/xfs/xfs_trans.h         |  3 +++
- 4 files changed, 70 insertions(+), 14 deletions(-)
+ fs/xfs/xfs_iomap.c | 103 +++++++++++++++++++++++++++------------------
+ 1 file changed, 61 insertions(+), 42 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-index 89501e8bd2f8..f1807dadafb2 100644
---- a/fs/xfs/libxfs/xfs_defer.c
-+++ b/fs/xfs/libxfs/xfs_defer.c
-@@ -725,6 +725,24 @@ xfs_defer_finish_noroll(
- 	return error;
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 2f18a8f62e39..16feac3ad3bd 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -609,6 +609,59 @@ xfs_iomap_prealloc_size(
+ 	return alloc_blocks;
  }
  
 +/*
-+ * Finish all deferred ops and roll the transaction. The transaction is
-+ * always rolled unconditionally so that the block reservation can be
-+ * regranted after all deferred ops have completed.
-+ *
-+ * The block reservation regrant is not performed during the internal
-+ * transaction rolls in xfs_defer_finish_noroll() because the original
-+ * reservation already contains all the space needed for the deferred op
-+ * chain. Regranting during internal rolls would risk unnecessary ENOSPC
-+ * errors in the middle of a deferred op chain that cannot be safely
-+ * aborted.
-+ *
-+ * The regrant is done after the final roll when the transaction is clean,
-+ * replenishing whatever blocks were consumed by both the caller's
-+ * modifications and the deferred operations. If the regrant fails with
-+ * ENOSPC, the caller can safely cancel the clean transaction without
-+ * causing a filesystem shutdown.
++ * Convert a single unwritten extent to a real extent using the supplied
++ * transaction. Returns the converted extent via @imap.
 + */
- int
- xfs_defer_finish(
- 	struct xfs_trans	**tp)
-@@ -734,22 +752,20 @@ xfs_defer_finish(
- #endif
- 	int			error;
- 
--	/*
--	 * Finish and roll the transaction once more to avoid returning to the
--	 * caller with a dirty transaction.
--	 */
- 	error = xfs_defer_finish_noroll(tp);
- 	if (error)
- 		return error;
--	if ((*tp)->t_flags & XFS_TRANS_DIRTY) {
--		error = xfs_defer_trans_roll(tp);
--		if (error) {
--			xfs_force_shutdown((*tp)->t_mountp,
--					   SHUTDOWN_CORRUPT_INCORE);
--			return error;
--		}
++static int
++xfs_iomap_write_unwritten_one(
++	struct xfs_trans	*tp,
++	struct xfs_inode	*ip,
++	xfs_fileoff_t		offset_fsb,
++	xfs_filblks_t		count_fsb,
++	xfs_off_t		end,
++	bool			update_isize,
++	uint			resblks,
++	struct xfs_bmbt_irec	*imap)
++{
++	xfs_fsize_t		i_size;
++	int			nimaps;
++	int			error;
 +
-+	error = xfs_defer_trans_roll(tp);
-+	if (error) {
-+		xfs_force_shutdown((*tp)->t_mountp, SHUTDOWN_CORRUPT_INCORE);
-+		return error;
- 	}
- 
-+	error = xfs_trans_regrant_blkres(*tp);
++	error = xfs_iext_count_extend(tp, ip, XFS_DATA_FORK,
++			XFS_IEXT_WRITE_UNWRITTEN_CNT);
 +	if (error)
 +		return error;
 +
- 	/* Reset LOWMODE now that we've finished all the dfops. */
- #ifdef DEBUG
- 	list_for_each_entry(dfp, &(*tp)->t_dfops, dfp_list)
-diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
-index b1e0d9bc1f7d..e3909d46f3cd 100644
---- a/fs/xfs/libxfs/xfs_shared.h
-+++ b/fs/xfs/libxfs/xfs_shared.h
-@@ -164,6 +164,9 @@ void	xfs_log_get_max_trans_res(struct xfs_mount *mp,
- /* Transaction has locked the rtbitmap and rtsum inodes */
- #define XFS_TRANS_RTBITMAP_LOCKED	(1u << 9)
- 
-+/* Renew block reservation on transaction roll */
-+#define XFS_TRANS_RENEW_BLKRES		(1u << 10)
++	nimaps = 1;
++	error = xfs_bmapi_write(tp, ip, offset_fsb, count_fsb,
++				XFS_BMAPI_CONVERT, resblks, imap, &nimaps);
++	if (error)
++		return error;
 +
- /*
-  * Field values for xfs_trans_mod_sb.
-  */
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 8e32da47501e..6a274e3aed36 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -112,16 +112,19 @@ xfs_trans_dup(
- 	ntp->t_flags = XFS_TRANS_PERM_LOG_RES |
- 		       (tp->t_flags & XFS_TRANS_RESERVE) |
- 		       (tp->t_flags & XFS_TRANS_NO_WRITECOUNT) |
--		       (tp->t_flags & XFS_TRANS_RES_FDBLKS);
-+		       (tp->t_flags & XFS_TRANS_RES_FDBLKS) |
-+		       (tp->t_flags & XFS_TRANS_RENEW_BLKRES);
- 	/* We gave our writer reference to the new transaction */
- 	tp->t_flags |= XFS_TRANS_NO_WRITECOUNT;
- 	ntp->t_ticket = xfs_log_ticket_get(tp->t_ticket);
- 
- 	ASSERT(tp->t_blk_res >= tp->t_blk_res_used);
- 	ntp->t_blk_res = tp->t_blk_res - tp->t_blk_res_used;
-+	ntp->t_blk_res_orig = tp->t_blk_res_orig;
- 	tp->t_blk_res = tp->t_blk_res_used;
- 
- 	ntp->t_rtx_res = tp->t_rtx_res - tp->t_rtx_res_used;
-+	ntp->t_rtx_res_orig = tp->t_rtx_res_orig;
- 	tp->t_rtx_res = tp->t_rtx_res_used;
- 
- 	/* move deferred ops over to the new tp */
-@@ -203,6 +206,8 @@ xfs_trans_reserve(
- 	error = xfs_trans_reserve_blocks(tp, blocks, rtextents);
- 	if (error)
- 		return error;
-+	tp->t_blk_res_orig = tp->t_blk_res;
-+	tp->t_rtx_res_orig = tp->t_rtx_res;
- 
- 	/*
- 	 * Reserve the log space needed for this transaction.
-@@ -1009,6 +1014,31 @@ xfs_trans_cancel(
- 	xfs_trans_free(tp);
- }
- 
-+/*
-+ * Renew the block and RT extent reservations from the free space pool.
-+ * The consumed counts were carried forward by xfs_trans_dup() so we know
-+ * exactly how many blocks need to be reserved to restore the original
-+ * reservation.
-+ */
-+int
-+xfs_trans_regrant_blkres(
-+	struct xfs_trans	*tp)
-+{
-+	unsigned int		blk_deficit;
-+	unsigned int		rtx_deficit;
++	/*
++	 * Update the inode size to reflect the extent that was converted in
++	 * this iteration. We must not advance isize beyond the extent we just
++	 * converted, otherwise a crash before the next conversion exposes
++	 * unwritten extents (zeroes) to userspace instead of the written data.
++	 * Clamp to the byte-level write end in case the converted extent
++	 * extends past the write boundary.
++	 */
++	i_size = XFS_FSB_TO_B(ip->i_mount,
++			imap->br_startoff + imap->br_blockcount);
++	if (i_size > end)
++		i_size = end;
++	if (update_isize && i_size > i_size_read(VFS_I(ip)))
++		i_size_write(VFS_I(ip), i_size);
++	i_size = xfs_new_eof(ip, i_size);
++	if (i_size) {
++		ip->i_disk_size = i_size;
++		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
++	}
 +
-+	if (!(tp->t_flags & XFS_TRANS_RENEW_BLKRES))
-+		return 0;
-+
-+	blk_deficit = tp->t_blk_res_orig - tp->t_blk_res;
-+	rtx_deficit = tp->t_rtx_res_orig - tp->t_rtx_res;
-+
-+	if (!blk_deficit && !rtx_deficit)
-+		return 0;
-+
-+	return xfs_trans_reserve_blocks(tp, blk_deficit, rtx_deficit);
++	return 0;
 +}
 +
- /*
-  * Roll from one trans in the sequence of PERMANENT transactions to the next:
-  * permanent transactions are only flushed out when committed with
-@@ -1181,12 +1211,12 @@ xfs_trans_reserve_more_inode(
+ int
+ xfs_iomap_write_unwritten(
+ 	xfs_inode_t	*ip,
+@@ -617,21 +670,19 @@ xfs_iomap_write_unwritten(
+ 	bool		update_isize)
+ {
+ 	xfs_mount_t	*mp = ip->i_mount;
++	xfs_off_t	end = offset + count;
+ 	xfs_fileoff_t	offset_fsb;
+ 	xfs_filblks_t	count_fsb;
+ 	xfs_filblks_t	numblks_fsb;
+-	int		nimaps;
+ 	xfs_trans_t	*tp;
+ 	xfs_bmbt_irec_t imap;
+-	struct inode	*inode = VFS_I(ip);
+-	xfs_fsize_t	i_size;
+ 	uint		resblks;
+ 	int		error;
  
- 		if (!XFS_IS_QUOTA_ON(mp) ||
- 		    xfs_is_quota_inode(&mp->m_sb, I_INO(ip)))
--			return 0;
-+			break;
+ 	trace_xfs_unwritten_convert(ip, offset, count);
  
- 		error = xfs_trans_reserve_quota_nblks(tp, ip, dblocks,
- 				rblocks, force_quota);
- 		if (!error)
--			return 0;
-+			break;
+ 	offset_fsb = XFS_B_TO_FSBT(mp, offset);
+-	count_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + count);
++	count_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)end);
+ 	count_fsb = (xfs_filblks_t)(count_fsb - offset_fsb);
  
- 		xfs_trans_unreserve_blocks(tp, dblocks, rtx);
+ 	/*
+@@ -666,39 +717,12 @@ xfs_iomap_write_unwritten(
+ 		if (error)
+ 			return error;
  
-@@ -1197,6 +1227,10 @@ xfs_trans_reserve_more_inode(
- 		return error;
- 	} while (retry++ == 0);
+-		error = xfs_iext_count_extend(tp, ip, XFS_DATA_FORK,
+-				XFS_IEXT_WRITE_UNWRITTEN_CNT);
+-		if (error)
+-			goto error_on_bmapi_transaction;
+-
+-		/*
+-		 * Modify the unwritten extent state of the buffer.
+-		 */
+-		nimaps = 1;
+-		error = xfs_bmapi_write(tp, ip, offset_fsb, count_fsb,
+-					XFS_BMAPI_CONVERT, resblks, &imap,
+-					&nimaps);
+-		if (error)
+-			goto error_on_bmapi_transaction;
+-
+-		/*
+-		 * Update the inode size to reflect the extent that was
+-		 * converted in this iteration. We must not advance isize
+-		 * beyond the extent we just converted, otherwise a crash
+-		 * before the next conversion exposes unwritten extents
+-		 * (zeroes) to userspace instead of the written data.
+-		 * Clamp to the byte-level write end in case the converted
+-		 * extent extends past the write boundary.
+-		 */
+-		i_size = XFS_FSB_TO_B(mp, imap.br_startoff + imap.br_blockcount);
+-		if (i_size > offset + count)
+-			i_size = offset + count;
+-		if (update_isize && i_size > i_size_read(inode))
+-			i_size_write(inode, i_size);
+-		i_size = xfs_new_eof(ip, i_size);
+-		if (i_size) {
+-			ip->i_disk_size = i_size;
+-			xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
++		error = xfs_iomap_write_unwritten_one(tp, ip, offset_fsb,
++				count_fsb, end, update_isize, resblks, &imap);
++		if (error) {
++			xfs_trans_cancel(tp);
++			xfs_iunlock(ip, XFS_ILOCK_EXCL);
++			return error;
+ 		}
  
-+	if (!error) {
-+		tp->t_blk_res_orig = tp->t_blk_res;
-+		tp->t_rtx_res_orig = tp->t_rtx_res;
-+	}
- 	return error;
+ 		error = xfs_trans_commit(tp);
+@@ -724,11 +748,6 @@ xfs_iomap_write_unwritten(
+ 	} while (count_fsb > 0);
+ 
+ 	return 0;
+-
+-error_on_bmapi_transaction:
+-	xfs_trans_cancel(tp);
+-	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-	return error;
  }
  
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index de77b617bccf..cf527d57d40b 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -127,8 +127,10 @@ typedef struct xfs_trans {
- 	unsigned int		t_log_count;	/* count for perm log res */
- 	unsigned int		t_blk_res;	/* # of blocks resvd */
- 	unsigned int		t_blk_res_used;	/* # of resvd blocks used */
-+	unsigned int		t_blk_res_orig;	/* used with XFS_TRANS_RENEW_BLKRES */
- 	unsigned int		t_rtx_res;	/* # of rt extents resvd */
- 	unsigned int		t_rtx_res_used;	/* # of resvd rt extents used */
-+	unsigned int		t_rtx_res_orig;	/* used with XFS_TRANS_RENEW_BLKRES */
- 	unsigned int		t_flags;	/* misc flags */
- 	xfs_agnumber_t		t_highest_agno;	/* highest AGF locked */
- 	struct xlog_ticket	*t_ticket;	/* log mgr ticket */
-@@ -239,6 +241,7 @@ void		xfs_trans_log_inode(xfs_trans_t *, struct xfs_inode *, uint);
- int		xfs_trans_commit(struct xfs_trans *);
- int		xfs_trans_roll(struct xfs_trans **);
- int		xfs_trans_roll_inode(struct xfs_trans **, struct xfs_inode *);
-+int		xfs_trans_regrant_blkres(struct xfs_trans *);
- void		xfs_trans_cancel(xfs_trans_t *);
- int		xfs_trans_ail_init(struct xfs_mount *);
- void		xfs_trans_ail_destroy(struct xfs_mount *);
+ static inline bool
 -- 
 2.55.0
 
