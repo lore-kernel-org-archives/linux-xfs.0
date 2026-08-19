@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 377F61A38F9
-	for <linux-xfs@vger.kernel.org>; Wed, 19 Aug 2026 00:15:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 770C32E06EF
+	for <linux-xfs@vger.kernel.org>; Wed, 19 Aug 2026 00:15:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787098533; cv=none; b=F/I6Kdd1pkzcZCyhBtHlUPRhgelDMorqCWRlnfQExJcoTBP+bZc//DNNM7cZIO8LACvIMifj2ebSCMFFTFxu3GM7u2oEibEooelY1rCOZft3iLZmiLqzcAE4jfg3YoIqjkMv5Z3u2N7+G6To8BcS4rcOQFj1NxuprGdPvk/s41E=
+	t=1787098534; cv=none; b=PjkazAlC+4OKfYVCM2YD7zzwtnxH3Pdyj8wrK6s4zPQRiVDk5fDME5qz2JzD/Vij6F3PbLu0FbacVA6mgfVcqRFVaHsdYHw8JIuJf2rur+HvFXgaPR0ZVzsa3Yn1/wFIzFccD6YExtXZ3s132/9y1UkFbp5YMLL21YuURmstP8E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787098533; c=relaxed/simple;
-	bh=rzNYK8s6555DzlxwDqZRkE2hhv++AvF9BfGpUSdvH6o=;
+	s=arc-20240116; t=1787098534; c=relaxed/simple;
+	bh=pBjC/OxL973/fFwcs+IIR1kFjjpZP94jKFHmIhoH2vc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=h4v9T6oXPHgRB/wVHpZs8N5CtAZkH4HKGwNZQRmxCdbbp+jTthSwgcZNTJ/ESJvwOHjUTsfao0y95TKqYRUin45jlLacW/pfJqRyD89imz4spoeDg6+/oDEnr2c9Vvupcb+iDjbIRg94faS+r2PPcmUdHKGY4AHxxN5geMF4UBs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lvge6+Yv; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=pCxgc2hZBl9pbzBKMr/6THiZmz6nx89+EGbtIdQL2xsDL4wwHlocaAbkIHNKSROk4V5MSl54P+8CghLK2nE4hxwYHAJarMlKabeHF85aL4YkXYhYjWqr4R2GtQiPLJB64VKCd2++a9V52SmhWLFo/gf2Pk4AjtXPO4vOEEvUiYs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iTNvRZZa; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lvge6+Yv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 01D691F000E9;
-	Wed, 19 Aug 2026 00:15:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iTNvRZZa"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9AE341F00A3A;
+	Wed, 19 Aug 2026 00:15:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787098532;
-	bh=d1DHmXXm21h/Fi8qTYXQZ4kyxG0qoLADX40k8Rd7KQY=;
+	s=k20260515; t=1787098533;
+	bh=JTi1OcbA4LY6TeVReX5jiXeAmbWZXQHfCfeBw6QzdDs=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=lvge6+Yv6j/pTrJshqpHPRh0BA94lFVSyZHzP66LhVUrSLNmGwaj18UVW3YBLx91x
-	 brAz4ymW2Q2yZV0HJIVuXW1COL2mo/XjZZvLYSTRYBADWVMd/RSh8fV+O6HmTmN1q8
-	 ElJEbLDwFOVaSZcm/sweXoE9UJ0OmEsVWYxi6Q3dAVWAg0lOXcqriaXasa8ofLvfzG
-	 0TjosL+67T2vO1J3P4de2E1+v/uhYpt8sF2Ozsu3wlGRSBSDElDsDjLVCRHULSqOXB
-	 jvphxvJvJLjOqIC3q8HBpZ8u3w5ALQgkp1C6Gk/C6CJfbLfDoQFHIw9OfWAybei4bm
-	 y95YyL7gg4NpA==
+	b=iTNvRZZa8wRe+KWSyBErBDGcy01B6niJQmkGSQ9ukh97PN8HScsfmNu4paCRCe8kt
+	 i3cfQyPkA6zHhA/+nvcB5SEdiCeOt3/dJwy2xN1fCot4d3wmqe85Zyc6AMY/K+k+6+
+	 u6pkIeTo2KrZVFSkhJq+vB+6PeAxFWVC0+X6Tn9lvQpytV2S5VpWRmwmtcqb+W+Aiy
+	 rgkGjN5KEqP+X2i5BfxsbgMi7bidio7RwPsIYSdp5RPj7tCcTYYVC0aW0uJScMlx6Z
+	 hEDkodkdr61ZAfdu4irxWjQKEZ1+9x6EmLYQqUSG2bEEZrUvjUSYTST+4N2/kJ2wG+
+	 REoKHkezQMr4g==
 From: Dave Chinner <dgc@kernel.org>
 To: linux-xfs@vger.kernel.org
 Cc: cem@kernel.org
-Subject: [PATCH 34/38] xfs: convert xfs_direct_write_iomap_begin to use dwa struct throughout
-Date: Wed, 19 Aug 2026 10:12:37 +1000
-Message-ID: <20260819001442.1451892-35-dgc@kernel.org>
+Subject: [PATCH 35/38] xfs: restructure xfs_direct_write_iomap_begin with unified retry loop
+Date: Wed, 19 Aug 2026 10:12:38 +1000
+Message-ID: <20260819001442.1451892-36-dgc@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260819001442.1451892-1-dgc@kernel.org>
 References: <20260819001442.1451892-1-dgc@kernel.org>
@@ -43,209 +43,285 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Convert xfs_direct_write_iomap_begin() to use a single
-xfs_direct_write_args struct (dwa) allocated on the stack instead
-of individual local variables for the fields that are passed down
-the call chain.
+Replace the split COW/non-COW structure in xfs_direct_write_iomap_begin()
+with a unified do {} while (dwa.tp) loop that handles both COW extent
+allocation and data fork allocation atomically under a single ILOCK
+hold.
 
-This replaces the temporary args struct construction at each call
-site with a single struct initialised at function entry. The
-imap, nimaps, lockmode, iomap_flags, and other fields that were
-previously local variables are now accessed through dwa.
+The loop structure:
+  - xfs_ilock_for_iomap() is called once before the loop
+  - xfs_bmapi_read() at the top of each iteration reads fresh state
+  - COW check calls xfs_direct_write_cow_iomap_begin() with
+    needs_tp=false, which returns -EAGAIN if a transaction is needed
+  - If allocation is needed (needs_alloc) but no transaction, falls
+    through to alloc_trans
+  - If a transaction is available, calls xfs_iomap_write_direct()
+    with the transaction, commits, and returns
+  - Overwrite path cancels unused tp and returns the mapping
+  - alloc_trans at the tail: ASSERT(!tp), checks NOWAIT/OVERWRITE,
+    drops the ILOCK, allocates a zero-block transaction via
+    xfs_trans_alloc_inode() (which reacquires ILOCK_EXCL), and
+    loops back to re-read the extent tree
+
+This makes the extent lookup and allocation atomic with respect to
+the ILOCK for both COW and non-COW paths.
 
 Assisted-by: LLM
 Signed-off-by: Dave Chinner <dgc@kernel.org>
 ---
- fs/xfs/xfs_iomap.c | 109 +++++++++++++++++++--------------------------
- 1 file changed, 47 insertions(+), 62 deletions(-)
+ fs/xfs/xfs_iomap.c | 218 ++++++++++++++++++++++++++++-----------------
+ 1 file changed, 135 insertions(+), 83 deletions(-)
 
 diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 6126b559fd70..4bf33addb3a4 100644
+index 4bf33addb3a4..77f71fdd125a 100644
 --- a/fs/xfs/xfs_iomap.c
 +++ b/fs/xfs/xfs_iomap.c
-@@ -1041,14 +1041,21 @@ xfs_direct_write_iomap_begin(
- {
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	struct xfs_mount	*mp = ip->i_mount;
--	struct xfs_bmbt_irec	imap;
--	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
-+	struct xfs_direct_write_args dwa = {
-+		.ip		= ip,
-+		.offset_fsb	= XFS_B_TO_FSBT(mp, offset),
-+		.offset		= offset,
-+		.length		= length,
-+		.flags		= flags,
-+		.nimaps		= 1,
-+		.convert_now	= (flags & IOMAP_DIRECT) || IS_DAX(inode),
-+		.iomap		= iomap,
-+		.srcmap		= srcmap,
-+	};
- 	xfs_fileoff_t		end_fsb = xfs_iomap_end_fsb(mp, offset, length);
- 	xfs_fileoff_t		orig_end_fsb = end_fsb;
--	int			nimaps = 1, error = 0;
--	u16			iomap_flags = 0;
- 	bool			needs_alloc;
--	unsigned int		lockmode;
-+	int			error = 0;
- 	u64			seq;
- 
- 	ASSERT(flags & (IOMAP_WRITE | IOMAP_ZERO));
-@@ -1062,49 +1069,36 @@ xfs_direct_write_iomap_begin(
- 	 * there is no other metadata changes pending or have been made here.
- 	 */
- 	if (offset + length > i_size_read(inode))
--		iomap_flags |= IOMAP_F_DIRTY;
-+		dwa.iomap_flags |= IOMAP_F_DIRTY;
- 
- 	/* HW-offload atomics are always used in this path */
+@@ -1075,110 +1075,162 @@ xfs_direct_write_iomap_begin(
  	if (flags & IOMAP_ATOMIC)
--		iomap_flags |= IOMAP_F_ATOMIC_BIO;
-+		dwa.iomap_flags |= IOMAP_F_ATOMIC_BIO;
+ 		dwa.iomap_flags |= IOMAP_F_ATOMIC_BIO;
  
- 	if (xfs_is_cow_inode(ip)) {
--		struct xfs_direct_write_args cow_args = {
--			.ip		= ip,
--			.offset		= offset,
--			.length		= length,
--			.flags		= flags,
--			.iomap_flags	= iomap_flags,
--			.convert_now	= (flags & IOMAP_DIRECT) ||
--					  IS_DAX(inode),
--			.iomap		= iomap,
--			.srcmap		= srcmap,
--		};
+-	if (xfs_is_cow_inode(ip)) {
+-		error = xfs_direct_write_cow_iomap_begin(&dwa, true);
+-		if (error)
+-			return error;
+-		if (!dwa.nimaps)
+-			return 0;
 -
--		error = xfs_direct_write_cow_iomap_begin(&cow_args, true);
-+		error = xfs_direct_write_cow_iomap_begin(&dwa, true);
- 		if (error)
- 			return error;
--		if (!cow_args.nimaps)
-+		if (!dwa.nimaps)
- 			return 0;
+-		end_fsb = dwa.imap.br_startoff + dwa.imap.br_blockcount;
+-		dwa.length = XFS_FSB_TO_B(mp, end_fsb) - offset;
+-	} else {
++	if (xfs_is_cow_inode(ip))
++		dwa.lockmode = XFS_ILOCK_EXCL;
++	else
+ 		dwa.lockmode = XFS_ILOCK_SHARED;
  
--		imap = cow_args.imap;
--		lockmode = cow_args.lockmode;
--		end_fsb = imap.br_startoff + imap.br_blockcount;
--		length = XFS_FSB_TO_B(mp, end_fsb) - offset;
-+		end_fsb = dwa.imap.br_startoff + dwa.imap.br_blockcount;
-+		dwa.length = XFS_FSB_TO_B(mp, end_fsb) - offset;
- 	} else {
--		lockmode = XFS_ILOCK_SHARED;
-+		dwa.lockmode = XFS_ILOCK_SHARED;
+-		error = xfs_ilock_for_iomap(ip, flags, &dwa.lockmode);
+-		if (error)
+-			return error;
++	error = xfs_ilock_for_iomap(ip, flags, &dwa.lockmode);
++	if (error)
++		return error;
  
--		error = xfs_ilock_for_iomap(ip, flags, &lockmode);
-+		error = xfs_ilock_for_iomap(ip, flags, &dwa.lockmode);
- 		if (error)
- 			return error;
- 
--		error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
--				&imap, &nimaps, 0);
-+		error = xfs_bmapi_read(ip, dwa.offset_fsb,
-+				end_fsb - dwa.offset_fsb,
-+				&dwa.imap, &dwa.nimaps, 0);
++	do {
++		dwa.nimaps = 1;
+ 		error = xfs_bmapi_read(ip, dwa.offset_fsb,
+ 				end_fsb - dwa.offset_fsb,
+ 				&dwa.imap, &dwa.nimaps, 0);
  		if (error)
  			goto out_unlock;
- 	}
- 
--	needs_alloc = imap_needs_alloc(inode, flags, &imap, nimaps);
-+	needs_alloc = imap_needs_alloc(inode, flags, &dwa.imap, dwa.nimaps);
- 
- 	if (flags & IOMAP_ATOMIC) {
- 		error = -ENOPROTOOPT;
-@@ -1113,11 +1107,11 @@ xfs_direct_write_iomap_begin(
- 		 * then we may end up with multiple extents, which means that
- 		 * REQ_ATOMIC-based cannot be used, so avoid this possibility.
- 		 */
--		if (needs_alloc && orig_end_fsb - offset_fsb > 1)
-+		if (needs_alloc && orig_end_fsb - dwa.offset_fsb > 1)
- 			goto out_unlock;
- 
--		if (!xfs_bmap_hw_atomic_write_possible(ip, &imap, offset_fsb,
--				orig_end_fsb))
-+		if (!xfs_bmap_hw_atomic_write_possible(ip, &dwa.imap,
-+				dwa.offset_fsb, orig_end_fsb))
- 			goto out_unlock;
- 	}
- 
-@@ -1132,7 +1126,7 @@ xfs_direct_write_iomap_begin(
- 	 */
- 	if (flags & (IOMAP_NOWAIT | IOMAP_OVERWRITE_ONLY)) {
- 		error = -EAGAIN;
--		if (!imap_spans_range(&imap, offset_fsb, end_fsb))
-+		if (!imap_spans_range(&dwa.imap, dwa.offset_fsb, end_fsb))
- 			goto out_unlock;
- 	}
- 
-@@ -1144,15 +1138,17 @@ xfs_direct_write_iomap_begin(
- 	 */
- 	if (flags & IOMAP_OVERWRITE_ONLY) {
- 		error = -EAGAIN;
--		if (imap.br_state != XFS_EXT_NORM &&
--	            ((offset | length) & mp->m_blockmask))
-+		if (dwa.imap.br_state != XFS_EXT_NORM &&
-+		    ((offset | dwa.length) & mp->m_blockmask))
- 			goto out_unlock;
- 	}
- 
--	seq = xfs_iomap_inode_sequence(ip, iomap_flags);
--	xfs_iunlock(ip, lockmode);
--	trace_xfs_iomap_found(ip, offset, length, XFS_DATA_FORK, &imap);
--	return xfs_bmbt_to_iomap(ip, iomap, &imap, flags, iomap_flags, seq);
-+	seq = xfs_iomap_inode_sequence(ip, dwa.iomap_flags);
-+	xfs_iunlock(ip, dwa.lockmode);
-+	trace_xfs_iomap_found(ip, offset, dwa.length, XFS_DATA_FORK,
-+			&dwa.imap);
-+	return xfs_bmbt_to_iomap(ip, iomap, &dwa.imap, flags,
-+			dwa.iomap_flags, seq);
- 
- allocate_blocks:
- 	error = -EAGAIN;
-@@ -1168,34 +1164,23 @@ xfs_direct_write_iomap_begin(
- 	 * Note that the values needs to be less than 32-bits wide until the
- 	 * lower level functions are updated.
- 	 */
--	length = min_t(loff_t, length, 1024 * PAGE_SIZE);
--	end_fsb = xfs_iomap_end_fsb(mp, offset, length);
-+	dwa.length = min_t(loff_t, dwa.length, 1024 * PAGE_SIZE);
-+	end_fsb = xfs_iomap_end_fsb(mp, offset, dwa.length);
- 
--	if (offset + length > XFS_ISIZE(ip))
-+	if (offset + dwa.length > XFS_ISIZE(ip))
- 		end_fsb = xfs_iomap_eof_align_last_fsb(ip, end_fsb);
--	else if (nimaps && imap.br_startblock == HOLESTARTBLOCK)
--		end_fsb = min(end_fsb, imap.br_startoff + imap.br_blockcount);
--	xfs_iunlock(ip, lockmode);
-+	else if (dwa.nimaps && dwa.imap.br_startblock == HOLESTARTBLOCK)
-+		end_fsb = min(end_fsb, dwa.imap.br_startoff +
-+				dwa.imap.br_blockcount);
- 
--	{
--		struct xfs_direct_write_args args = {
--			.ip		= ip,
--			.offset_fsb	= offset_fsb,
--			.count_fsb	= end_fsb - offset_fsb,
--			.offset		= offset,
--			.length		= length,
--			.flags		= flags,
--			.iomap_flags	= iomap_flags,
--			.imap		= imap,
--			.iomap		= iomap,
--		};
-+	dwa.count_fsb = end_fsb - dwa.offset_fsb;
-+	xfs_iunlock(ip, dwa.lockmode);
- 
--		return xfs_iomap_write_direct(&args);
 -	}
-+	return xfs_iomap_write_direct(&dwa);
+ 
+-	needs_alloc = imap_needs_alloc(inode, flags, &dwa.imap, dwa.nimaps);
+-
+-	if (flags & IOMAP_ATOMIC) {
+-		error = -ENOPROTOOPT;
+-		/*
+-		 * If we allocate less than what is required for the write
+-		 * then we may end up with multiple extents, which means that
+-		 * REQ_ATOMIC-based cannot be used, so avoid this possibility.
+-		 */
+-		if (needs_alloc && orig_end_fsb - dwa.offset_fsb > 1)
+-			goto out_unlock;
++		if (xfs_is_cow_inode(ip)) {
++			error = xfs_direct_write_cow_iomap_begin(&dwa, false);
++			if (error == -EAGAIN)
++				goto alloc_trans;
++			if (error)
++				goto out_unlock;
++			if (!dwa.nimaps) {
++				/*
++				 * COW iomaps filled in. Commit the
++				 * transaction if one was needed and
++				 * return.
++				 */
++				if (dwa.tp)
++					error = xfs_trans_commit(dwa.tp);
++				xfs_iunlock(ip, dwa.lockmode);
++				return error;
++			}
+ 
+-		if (!xfs_bmap_hw_atomic_write_possible(ip, &dwa.imap,
+-				dwa.offset_fsb, orig_end_fsb))
+-			goto out_unlock;
+-	}
++			end_fsb = dwa.imap.br_startoff +
++					dwa.imap.br_blockcount;
++			dwa.length = XFS_FSB_TO_B(mp, end_fsb) - offset;
++		}
+ 
+-	if (needs_alloc)
+-		goto allocate_blocks;
++		needs_alloc = imap_needs_alloc(inode, flags, &dwa.imap,
++				dwa.nimaps);
++
++		if (flags & IOMAP_ATOMIC) {
++			error = -ENOPROTOOPT;
++			/*
++			 * If we allocate less than what is required for the
++			 * write then we may end up with multiple extents,
++			 * which means that REQ_ATOMIC-based cannot be used,
++			 * so avoid this possibility.
++			 */
++			if (needs_alloc &&
++			    orig_end_fsb - dwa.offset_fsb > 1)
++				goto out_unlock;
++			if (!xfs_bmap_hw_atomic_write_possible(ip, &dwa.imap,
++					dwa.offset_fsb, orig_end_fsb))
++				goto out_unlock;
++		}
+ 
+-	/*
+-	 * NOWAIT and OVERWRITE I/O needs to span the entire requested I/O with
+-	 * a single map so that we avoid partial IO failures due to the rest of
+-	 * the I/O range not covered by this map triggering an EAGAIN condition
+-	 * when it is subsequently mapped and aborting the I/O.
+-	 */
+-	if (flags & (IOMAP_NOWAIT | IOMAP_OVERWRITE_ONLY)) {
+-		error = -EAGAIN;
+-		if (!imap_spans_range(&dwa.imap, dwa.offset_fsb, end_fsb))
+-			goto out_unlock;
+-	}
++		if (needs_alloc) {
++			if (!dwa.tp)
++				goto alloc_trans;
++
++			/*
++			 * Cap the maximum length we map to a sane size to
++			 * keep the chunks of work done where somewhat
++			 * symmetric with the work writeback does.
++			 *
++			 * Note that the values needs to be less than
++			 * 32-bits wide until the lower level functions
++			 * are updated.
++			 */
++			dwa.length = min_t(loff_t, dwa.length,
++					1024 * PAGE_SIZE);
++			end_fsb = xfs_iomap_end_fsb(mp, offset, dwa.length);
++
++			if (offset + dwa.length > XFS_ISIZE(ip))
++				end_fsb = xfs_iomap_eof_align_last_fsb(ip,
++						end_fsb);
++			else if (dwa.nimaps &&
++				 dwa.imap.br_startblock == HOLESTARTBLOCK)
++				end_fsb = min(end_fsb, dwa.imap.br_startoff +
++						dwa.imap.br_blockcount);
++
++			dwa.count_fsb = end_fsb - dwa.offset_fsb;
++
++			error = xfs_iomap_write_direct(&dwa);
++			if (error)
++				goto out_unlock;
+ 
+-	/*
+-	 * For overwrite only I/O, we cannot convert unwritten extents without
+-	 * requiring sub-block zeroing.  This can only be done under an
+-	 * exclusive IOLOCK, hence return -EAGAIN if this is not a written
+-	 * extent to tell the caller to try again.
+-	 */
+-	if (flags & IOMAP_OVERWRITE_ONLY) {
+-		error = -EAGAIN;
+-		if (dwa.imap.br_state != XFS_EXT_NORM &&
+-		    ((offset | dwa.length) & mp->m_blockmask))
+-			goto out_unlock;
+-	}
++			error = xfs_trans_commit(dwa.tp);
++			xfs_iunlock(ip, dwa.lockmode);
++			return error;
++		}
+ 
+-	seq = xfs_iomap_inode_sequence(ip, dwa.iomap_flags);
+-	xfs_iunlock(ip, dwa.lockmode);
+-	trace_xfs_iomap_found(ip, offset, dwa.length, XFS_DATA_FORK,
+-			&dwa.imap);
+-	return xfs_bmbt_to_iomap(ip, iomap, &dwa.imap, flags,
+-			dwa.iomap_flags, seq);
++		/*
++		 * Overwrite path - no allocation needed. Cancel unused
++		 * transaction if allocated and return the mapping.
++		 */
++		if (dwa.tp) {
++			xfs_trans_cancel(dwa.tp);
++			dwa.tp = NULL;
++		}
+ 
+-allocate_blocks:
+-	error = -EAGAIN;
+-	if (flags & (IOMAP_NOWAIT | IOMAP_OVERWRITE_ONLY))
+-		goto out_unlock;
++		/*
++		 * NOWAIT and OVERWRITE I/O needs to span the entire
++		 * requested I/O with a single map so that we avoid
++		 * partial IO failures due to the rest of the I/O range
++		 * not covered by this map triggering an EAGAIN condition
++		 * when it is subsequently mapped and aborting the I/O.
++		 */
++		if (flags & (IOMAP_NOWAIT | IOMAP_OVERWRITE_ONLY)) {
++			error = -EAGAIN;
++			if (!imap_spans_range(&dwa.imap, dwa.offset_fsb,
++					end_fsb))
++				goto out_unlock;
++		}
++		/*
++		 * For overwrite only I/O, we cannot convert unwritten
++		 * extents without requiring sub-block zeroing. This
++		 * can only be done under an exclusive IOLOCK, hence
++		 * return -EAGAIN if this is not a written extent to
++		 * tell the caller to try again.
++		 */
++		if (flags & IOMAP_OVERWRITE_ONLY) {
++			error = -EAGAIN;
++			if (dwa.imap.br_state != XFS_EXT_NORM &&
++			    ((offset | dwa.length) & mp->m_blockmask))
++				goto out_unlock;
++		}
+ 
+-	/*
+-	 * We cap the maximum length we map to a sane size  to keep the chunks
+-	 * of work done where somewhat symmetric with the work writeback does.
+-	 * This is a completely arbitrary number pulled out of thin air as a
+-	 * best guess for initial testing.
+-	 *
+-	 * Note that the values needs to be less than 32-bits wide until the
+-	 * lower level functions are updated.
+-	 */
+-	dwa.length = min_t(loff_t, dwa.length, 1024 * PAGE_SIZE);
+-	end_fsb = xfs_iomap_end_fsb(mp, offset, dwa.length);
++		seq = xfs_iomap_inode_sequence(ip, dwa.iomap_flags);
++		xfs_iunlock(ip, dwa.lockmode);
++		trace_xfs_iomap_found(ip, offset, dwa.length, XFS_DATA_FORK,
++				&dwa.imap);
++		return xfs_bmbt_to_iomap(ip, iomap, &dwa.imap, flags,
++				dwa.iomap_flags, seq);
+ 
+-	if (offset + dwa.length > XFS_ISIZE(ip))
+-		end_fsb = xfs_iomap_eof_align_last_fsb(ip, end_fsb);
+-	else if (dwa.nimaps && dwa.imap.br_startblock == HOLESTARTBLOCK)
+-		end_fsb = min(end_fsb, dwa.imap.br_startoff +
+-				dwa.imap.br_blockcount);
++alloc_trans:
++		ASSERT(!dwa.tp);
+ 
+-	dwa.count_fsb = end_fsb - dwa.offset_fsb;
+-	xfs_iunlock(ip, dwa.lockmode);
++		error = -EAGAIN;
++		if (flags & (IOMAP_NOWAIT | IOMAP_OVERWRITE_ONLY))
++			goto out_unlock;
+ 
+-	return xfs_iomap_write_direct(&dwa);
++		xfs_iunlock(ip, dwa.lockmode);
++		error = xfs_trans_alloc_inode(ip, &M_RES(mp)->tr_write,
++				0, 0, false, &dwa.tp);
++		if (error)
++			return error;
++		dwa.lockmode = XFS_ILOCK_EXCL;
++	} while (dwa.tp);
  
  out_unlock:
--	if (lockmode)
--		xfs_iunlock(ip, lockmode);
-+	if (dwa.lockmode)
-+		xfs_iunlock(ip, dwa.lockmode);
++	if (dwa.tp)
++		xfs_trans_cancel(dwa.tp);
+ 	if (dwa.lockmode)
+ 		xfs_iunlock(ip, dwa.lockmode);
  	return error;
- }
- 
 -- 
 2.55.0
 
