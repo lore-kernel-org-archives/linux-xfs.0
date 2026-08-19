@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B39DD1F91F6
-	for <linux-xfs@vger.kernel.org>; Wed, 19 Aug 2026 00:14:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A70DC21CC5A
+	for <linux-xfs@vger.kernel.org>; Wed, 19 Aug 2026 00:14:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787098493; cv=none; b=OQH72RRKbBWU55sYFWGEn/EJuwLIr9aYFcmWf88ZCuwT73SpPjy5mgzoD6Zy1rkKvTGHF7Vtu9xYJBn+qh46kg3tP8u69xHx1Dg3PiIgJAEZrJ7eX5Ohcj30YbVg127UV7HuC7yCZJUJlX3y3xpWG1MHoZ6CNjcXhFNkc0MVgjE=
+	t=1787098493; cv=none; b=cXzAcHpfuclVTWUYfwhRX+HfnEWBKseFV+uvGn/Q37hdYpBMZG6M4EILJOCFebhExkCSfMZMpzPd75ENmZqTBXJlShUJ8Z0yhqLDj0U7RoTLAA9Peo9dZAkvHBNy7v/lZ+rJxI4WplePMxatzvxvY8yRDmvU1gfNbHK56abrTLw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1787098493; c=relaxed/simple;
-	bh=QTJrurmQAGy0VyhuEjNTg6N+BwJOYNAcK+d0WkSHwBI=;
+	bh=97/mB345JxbltLCTbV3sve8dbju6gXWf5/10HL7K2NQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=M4Dn2ghc1PZqgk/IwD5ZbZ6yQTOhK7DgszVagh6B49qgZR/LymLDAwVLyLpQyIQhM+wBHdzdUxom2dLAYcM508SIyOZKNPnPRT1377XQJBHp+Ox7gPKEIr6t6tmztYZE85sD8CG0Eb1Xm+JH7r9QKjsoxIlCx8s9vA+qaSZmPBk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TII4JUMq; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=LVxYkO/6RCwlUKueFa9P69CAoI64e4ITVdkpaRUC2whrNymrPyqw0x/mdvBtwnYMHwBts0QoHmi/BWxbiGTNlfLPLtotzwrkFp+z6bX+0+8D8nQ/U9bxmrzAQoFYjmjTWFPcWGkeLEbclD/XtWxeufYtt5ixUXy7/a1Kl6qsoPc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X6ok54Pm; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TII4JUMq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 73C5B1F00A3E;
-	Wed, 19 Aug 2026 00:14:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X6ok54Pm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 410961F00A3A;
+	Wed, 19 Aug 2026 00:14:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787098491;
-	bh=PetFRr39qH3rKFLwi8HLfV1npmbFH7ri7h4tZylt2Vg=;
+	s=k20260515; t=1787098490;
+	bh=DMUZ/Jwyv+4KydAJ8CVD3jk4eB4ww4l5Ug8EGB3Q0yU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=TII4JUMqoMwY/WNcaJKQhhPvGZaLpLnG4ZJx76+zBmQKKFLiGLuiO5P6XvoBuyHDn
-	 mhjGq7zxhc3yNE1XzN6sBRq51SsoyD92hPd+Jq/BwdnuvIywJvXeCb0CzHpf1GvqoU
-	 SLEJx7F56FmjNJo3ArSPzvhcrBQp7MuM979xeAea1jSaEYLuu+5Hzha4UbSiIDQzY/
-	 FBSalWQsGNJBd3081JBIYyA6Ul2RSEhtspOaLcWfZ+sWrFtXkchIs4lHR9JAACLFL0
-	 iy1K43zJr/5oxFgnMQaAUMsGq/pdXJs4I55G9kRnz3VgF3CqwkWRcmHnZboiLxsSKY
-	 rJCYBZe7SyVlg==
+	b=X6ok54PmyNNByPno4drgzG64eaMZLVnqJE3lKtBAf4k7DsTi3HvlFseN19aFhljRk
+	 3T+H+1ID3fQdiLrOuEsLHbxbvZCuAL/0o1b8dsz+CtzDFkIVvJjHgRzZciWHdKcpMA
+	 lILz0lr2sOzFDWHP+CovDGZXvJjls8iRRi0Fwmgts2hjYKdJ1fRhW6EEEJRLkhl3c3
+	 tR1oibBFZfD9DI4RkFDV/yBXaPXObfunbwXkpOeZ+X0XI9jm41BLUucWhQrS7RopIS
+	 +SOo2zHnhf/iT36vLQQDkoY1da2GRFCKD3ytI4mKoRj6dJJaZVwViIHvDE7JHP9+4+
+	 YXT5jpc3POH7w==
 From: Dave Chinner <dgc@kernel.org>
 To: linux-xfs@vger.kernel.org
 Cc: cem@kernel.org
-Subject: [PATCH 03/38] xfs: fix isize update in xfs_iomap_write_unwritten to track conversion progress
-Date: Wed, 19 Aug 2026 10:12:06 +1000
-Message-ID: <20260819001442.1451892-4-dgc@kernel.org>
+Subject: [PATCH 02/38] xfs: fix dirty transaction cancellation in xfs_attr_set
+Date: Wed, 19 Aug 2026 10:12:05 +1000
+Message-ID: <20260819001442.1451892-3-dgc@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260819001442.1451892-1-dgc@kernel.org>
 References: <20260819001442.1451892-1-dgc@kernel.org>
@@ -43,54 +43,125 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-xfs_iomap_write_unwritten() updates i_disk_size using the end of
-the entire unwritten range (offset_fsb + count_fsb) rather than the
-end of the extent that was actually converted in each iteration
-(imap.br_startoff + imap.br_blockcount).
+xfs_attr_set() calls xfs_iext_count_extend() before xfs_attr_lookup().
+If xfs_iext_count_extend() upgrades the inode to NREXT64 format it
+will dirty the transaction. If the subsequent xfs_attr_lookup() finds
+a result that is incompatible with the requested operation (e.g.
+EEXIST for CREATE, ENOATTR for REMOVE/REPLACE), the function returns
+the error and the caller cancels the transaction. Cancelling a dirty
+transaction triggers a filesystem shutdown.
 
-If the conversion requires multiple iterations and a crash occurs
-partway through, recovery would replay the first transaction which
-set i_disk_size to the end of the full range. This exposes
-unwritten extents to userspace reads as zeroes rather than the
-data that was written, because those extents have not yet been
-converted from unwritten to written state.
+Fix this by moving the xfs_attr_lookup() call before
+xfs_iext_count_extend() and validating the lookup result against the
+requested operation before dirtying the transaction. The code is
+restructured to separate validation from execution: first filter out
+the error cases that should cancel cleanly, then extend the extent
+count, then dispatch to the appropriate modification function based
+on the operation type.
 
-Fix this by computing i_size from the extent that was actually
-converted (imap), so i_disk_size advances incrementally as each
-extent is converted. On crash, recovery only exposes data in
-extents that have been both written and converted.
-
-Fixes: 84803fb78237 ("xfs: log file size updates as part of unwritten extent conversion")
+Fixes: 4f86bb4b66c9 ("xfs: Conditionally upgrade existing inodes to use large extent counters")
 Assisted-by: LLM
 Signed-off-by: Dave Chinner <dgc@kernel.org>
 ---
- fs/xfs/xfs_iomap.c | 12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
+ fs/xfs/libxfs/xfs_attr.c | 70 ++++++++++++++++++++--------------------
+ 1 file changed, 35 insertions(+), 35 deletions(-)
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 225c3de88d03..1437ea93563c 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -682,11 +682,15 @@ xfs_iomap_write_unwritten(
- 			goto error_on_bmapi_transaction;
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index b3f7b2c34ad7..bf0e867628e7 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -1136,7 +1136,7 @@ xfs_attr_set(
+ 	struct xfs_inode	*dp = args->dp;
+ 	struct xfs_mount	*mp = dp->i_mount;
+ 	struct xfs_trans_res	tres;
+-	int			error, local;
++	int			error, lookup_result, local;
+ 	int			rmt_blks = 0;
+ 	unsigned int		total = 0;
  
- 		/*
--		 * Log the updated inode size as we go.  We have to be careful
--		 * to only log it up to the actual write offset if it is
--		 * halfway into a block.
-+		 * Update the inode size to reflect the extent that was
-+		 * converted in this iteration. We must not advance isize
-+		 * beyond the extent we just converted, otherwise a crash
-+		 * before the next conversion exposes unwritten extents
-+		 * (zeroes) to userspace instead of the written data.
-+		 * Clamp to the byte-level write end in case the converted
-+		 * extent extends past the write boundary.
- 		 */
--		i_size = XFS_FSB_TO_B(mp, offset_fsb + count_fsb);
-+		i_size = XFS_FSB_TO_B(mp, imap.br_startoff + imap.br_blockcount);
- 		if (i_size > offset + count)
- 			i_size = offset + count;
- 		if (update_isize && i_size > i_size_read(inode))
+@@ -1185,48 +1185,48 @@ xfs_attr_set(
+ 	if (error)
+ 		return error;
+ 
+-	if (op != XFS_ATTRUPDATE_REMOVE || xfs_inode_hasattr(dp)) {
+-		error = xfs_iext_count_extend(args->trans, dp, XFS_ATTR_FORK,
+-				XFS_IEXT_ATTR_MANIP_CNT(rmt_blks));
+-		if (error)
+-			goto out_trans_cancel;
+-	}
+-
+-	error = xfs_attr_lookup(args);
+-	switch (error) {
+-	case -EEXIST:
+-		if (op == XFS_ATTRUPDATE_REMOVE) {
+-			/* if no value, we are performing a remove operation */
+-			error = xfs_attr_removename(args);
+-			if (error)
+-				goto out_trans_cancel;
+-			break;
+-		}
+-
+-		/* Pure create fails if the attr already exists */
++	/*
++	 * Look up the attr before extending the extent count so that we
++	 * don't dirty the transaction if the op is going to fail with an
++	 * error. Cancelling a dirty transaction would shutdown the fs.
++	 */
++	lookup_result = xfs_attr_lookup(args);
++	if (lookup_result == -EEXIST) {
+ 		if (op == XFS_ATTRUPDATE_CREATE)
+ 			goto out_trans_cancel;
+-
+-		error = xfs_attr_replacename(args, rmt_blks);
+-		if (error)
+-			goto out_trans_cancel;
+-		break;
+-	case -ENOATTR:
+-		/* Can't remove what isn't there. */
+-		if (op == XFS_ATTRUPDATE_REMOVE)
++	} else if (lookup_result == -ENOATTR) {
++		if (op == XFS_ATTRUPDATE_REMOVE ||
++		    op == XFS_ATTRUPDATE_REPLACE)
+ 			goto out_trans_cancel;
++	} else {
++		error = lookup_result;
++		goto out_trans_cancel;
++	}
+ 
+-		/* Pure replace fails if no existing attr to replace. */
+-		if (op == XFS_ATTRUPDATE_REPLACE)
+-			goto out_trans_cancel;
++	error = xfs_iext_count_extend(args->trans, dp, XFS_ATTR_FORK,
++			XFS_IEXT_ATTR_MANIP_CNT(rmt_blks));
++	if (error)
++		goto out_trans_cancel;
+ 
++	switch (op) {
++	case XFS_ATTRUPDATE_REMOVE:
++		error = xfs_attr_removename(args);
++		break;
++	case XFS_ATTRUPDATE_CREATE:
+ 		error = xfs_attr_setname(args, rmt_blks);
+-		if (error)
+-			goto out_trans_cancel;
+ 		break;
+-	default:
+-		goto out_trans_cancel;
++	case XFS_ATTRUPDATE_UPSERT:
++		if (lookup_result == -ENOATTR) {
++			error = xfs_attr_setname(args, rmt_blks);
++			break;
++		}
++		fallthrough;
++	case XFS_ATTRUPDATE_REPLACE:
++		error = xfs_attr_replacename(args, rmt_blks);
++		break;
+ 	}
++	if (error)
++		goto out_trans_cancel;
+ 
+ 	/*
+ 	 * If this is a synchronous mount, make sure that the
 -- 
 2.55.0
 
