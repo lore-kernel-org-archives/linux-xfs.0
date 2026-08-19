@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8364B26056C
-	for <linux-xfs@vger.kernel.org>; Wed, 19 Aug 2026 00:14:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65B992641CA
+	for <linux-xfs@vger.kernel.org>; Wed, 19 Aug 2026 00:14:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787098502; cv=none; b=kzCDm5OtIGT4T3JkxhmpqUV9bsVxrmhxEqgIpObYgY6D95dzPCqfnrJLUbuHB9M9bnmsFp+3uRUmRIwV5L647dQNJCB17qcGzvB8u9WqAu0CY5Y/pbxTXscaYNn9vfJM3+Y6bjgx88bcxSG6GwrtXAhqx+XlwQkP6Xx3SomTf3A=
+	t=1787098502; cv=none; b=fCVp2vrt9A9LPXcRiTCQRQkz/wG9YXrqYuE6AVOWfUU0zdlDhfAcNJo+JRifCzg10Nh4p7bg/j9Xorpwu+O9j+Tm9A3skoEaDXMbyfeyz7lteVQSMQCo9LxxtpTfJdYI9z6jtchm5AwJn/3khVX/OEzKp7GbzHECzDxwf+tzYaI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1787098502; c=relaxed/simple;
-	bh=Y2MSAIkC4AkqNa023OEHNzxpWMXHkwtkTH35tf2/h7Y=;
+	bh=Ef0RRWwTmX7+U3bjfo36VswS9M80uAfqS5rN1l/FZcQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=imrWq+I7nTo2qjoKFys13eYvJMR/QHw2o2VLalO0LDI2bZuUeTRMY+CmIQMGfzYp3345Cgwu8vQuB7mxwhJ5QOtNEjcRvnJVvge8nhq4o1IIk2jDF5Wh/GOqgS8B2WV9DECKQVaFnX8GOlyv5vTOPHDDwSc2FLbWqbVvl2tZSKo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HuFmuFo8; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=Qn/LG9A1ADa1xc0CeGHKHpdHb9zWIzASr7WkfNKF8MxJbaLFafkoYTjh55q+44XPq97MrhQf/HaUGg9boji6/A4XnSN3K/pK0Rd5N7gig3mm9/B5Xu98a0acykRGhazhkvIF7gfOybizGdJKlq0JaqLjfUD7TqiGu9qYasOSnqU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G+5TYwXn; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HuFmuFo8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9FC1E1F000E9;
-	Wed, 19 Aug 2026 00:14:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G+5TYwXn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1FAEE1F00A3D;
+	Wed, 19 Aug 2026 00:14:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787098496;
-	bh=TBOs3H5dfegtjs+dmPT+ezmmBLwelS62pyh4DH1WRJw=;
+	s=k20260515; t=1787098498;
+	bh=y5f+odjzptHGBe0AITRVjUiWjEtlBfoIYJ47D8bn8kk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=HuFmuFo8qqm8yKB6PwRiDswpIumWhR6Rbvia30jMFq4Mu3p389bNmFuaWUd843NTR
-	 CzvwREGVDHzUsrom6YYEtcq4LDS8YnnBKt1f/lBei+r/0fNEtTQJtiMbZ7buBNv40z
-	 YmYHTkqWdu/zPkVv0Mjwn1Vg5RluYsrEbcekXj5FuKr/uxyDYjuf8hvTFPyvHg8/yQ
-	 DEmCJ/qsMY0eCoCgLkWovdYwuBz7tinU3VJu5obpi/GPDvBEbdNX+6l1tACz+D/Ndd
-	 euVUtVWp5POA6eVL8WD+T7+iPTSRAih3L/W1JnwImPPJ4lVMY6IlxNQop/5CCnk98h
-	 Sz1vdOo216GlA==
+	b=G+5TYwXnkPO8rv7grBV6GUZ2WRHLzPV+aiRK/DesZqQN6g/V04uEXI3Yz5N29sjaV
+	 CCaaa3LK47MROzQK1WDIKIQw3R9fM5sFw9ySvSaPWyqaEUJeRBp7CATFP/UGjM6u8J
+	 8KfbxzdIhEh8kp3mTpIK2u5Edg0wtWYKaPe3WKo4j+Qv6x1hxRN0ddFAc0ARfschjd
+	 qi1uSOHEg1yx0qEOYZitGWh/+tG5cpTcnQ8nAN9JeB6RUUuCdQVqar0DXBo1bED7/m
+	 GopSw2Sh8x1L138nULke3+cEl/VgKVTcURrQmMBOYNdsDkTmOQulBL+UxqIfniUofu
+	 Tfqo+HGUmwrkg==
 From: Dave Chinner <dgc@kernel.org>
 To: linux-xfs@vger.kernel.org
 Cc: cem@kernel.org
-Subject: [PATCH 07/38] xfs: add async quota-targeted blockgc flush
-Date: Wed, 19 Aug 2026 10:12:10 +1000
-Message-ID: <20260819001442.1451892-8-dgc@kernel.org>
+Subject: [PATCH 09/38] xfs: factor out COW iomap handling from xfs_direct_write_iomap_begin()
+Date: Wed, 19 Aug 2026 10:12:12 +1000
+Message-ID: <20260819001442.1451892-10-dgc@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260819001442.1451892-1-dgc@kernel.org>
 References: <20260819001442.1451892-1-dgc@kernel.org>
@@ -43,250 +43,262 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Convert xfs_blockgc_free_space() to queue the icwalk scan to the
-blockgc workqueue rather than running it inline. The existing
-synchronous callers wait for completion via flush_work(). Add a
-static xfs_blockgc_free_space_nowait() for contexts that need to
-kick a scan without waiting.
+Extract the COW extent allocation and iomap setup logic from
+xfs_direct_write_iomap_begin() into a new helper function
+xfs_direct_write_cow_iomap_begin().
 
-Factor xfs_blockgc_dquot_filter() out of xfs_blockgc_free_dquots()
-to build the icwalk quota filter separately from running the scan.
-This allows both the existing synchronous xfs_blockgc_free_dquots()
-and the new async xfs_blockgc_free_quota_nowait() to share the
-filter construction.
+When the inode is a COW inode, the new function handles the entire
+COW path: acquiring the ILOCK exclusively, reading the data fork
+extent mapping, checking if COW is needed, allocating COW extents
+via xfs_reflink_allocate_cow(), and setting up the iomap/srcmap for
+the COW write.
 
-xfs_blockgc_free_quota_nowait() is the async variant for contexts
-that hold the ILOCK and cannot wait for the scan synchronously. The
-blockgc workers need the ILOCK to scan inodes for reclaimable
-speculative preallocations, and the locked inode pins journal space
-that the workers need for transactions.
+The *nimaps output parameter tells the caller what to do next:
+  - *nimaps == 0: COW was fully handled, iomap/srcmap are filled in,
+    and the ILOCK has been released. The caller returns immediately.
+  - *nimaps > 0: The extent is not shared. The imap is valid and the
+    ILOCK is still held, so the caller continues with the normal
+    allocation or overwrite IO path.
 
+When the inode is not a COW inode, xfs_direct_write_iomap_begin()
+handles the locking and extent lookup itself as before, taking
+only a shared ILOCK.
+
+This is a pure refactoring with no functional change, done to prepare
+for reworking the COW allocation to handle transaction allocation and
+retry logic at the xfs_direct_write_cow_iomap_begin() level.
+
+Assisted-by: LLM
 Signed-off-by: Dave Chinner <dgc@kernel.org>
 ---
- fs/xfs/xfs_icache.c | 145 +++++++++++++++++++++++++++++++++++---------
- fs/xfs/xfs_icache.h |   1 +
- 2 files changed, 116 insertions(+), 30 deletions(-)
+ fs/xfs/xfs_iomap.c | 184 ++++++++++++++++++++++++++++++---------------
+ 1 file changed, 123 insertions(+), 61 deletions(-)
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index bad09cb090cc..256253bfeac1 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1575,24 +1575,75 @@ xfs_blockgc_worker(
- 	xfs_blockgc_queue(pag);
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 1437ea93563c..df9fc7c6a4b9 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -848,6 +848,111 @@ xfs_bmap_hw_atomic_write_possible(
+ 	return len <= xfs_inode_buftarg(ip)->bt_awu_max;
  }
  
-+struct xfs_blockgc_async_work {
-+	struct work_struct	work;
-+	struct xfs_mount	*mp;
-+	struct xfs_icwalk	icw;
-+	int			error;
-+	bool			async;
-+};
-+
-+static void
-+xfs_blockgc_free_space_worker(
-+	struct work_struct	*work)
-+{
-+	struct xfs_blockgc_async_work *baw = container_of(work,
-+					struct xfs_blockgc_async_work, work);
-+
-+	baw->error = xfs_icwalk(baw->mp, XFS_ICWALK_BLOCKGC, &baw->icw);
-+	if (!baw->error)
-+		baw->error = xfs_inodegc_flush(baw->mp);
-+
-+	if (baw->async)
-+		kfree(baw);
-+}
-+
- /*
-  * Try to free space in the filesystem by purging inactive inodes, eofblocks
-- * and cowblocks.
-+ * and cowblocks. The scan is queued to the blockgc workqueue and the caller
-+ * waits for it to complete.
-  */
- int
- xfs_blockgc_free_space(
- 	struct xfs_mount	*mp,
- 	struct xfs_icwalk	*icw)
- {
--	int			error;
-+	struct xfs_blockgc_async_work baw = {
-+		.mp		= mp,
-+		.icw		= *icw,
-+		.async		= false,
-+	};
- 
- 	trace_xfs_blockgc_free_space(mp, icw, _RET_IP_);
- 
--	error = xfs_icwalk(mp, XFS_ICWALK_BLOCKGC, icw);
--	if (error)
--		return error;
-+	INIT_WORK_ONSTACK(&baw.work, xfs_blockgc_free_space_worker);
-+	queue_work(mp->m_blockgc_wq, &baw.work);
-+	flush_work(&baw.work);
-+	destroy_work_on_stack(&baw.work);
-+	return baw.error;
-+}
- 
--	return xfs_inodegc_flush(mp);
 +/*
-+ * Queue a background space reclaim scan without waiting for it to complete.
-+ * This is for callers that hold the ILOCK and cannot wait for the scan
-+ * synchronously because the blockgc workers need the ILOCK to scan inodes
-+ * and the locked inode pins journal space that the workers need for
-+ * transactions.
++ * Handle COW extent allocation and iomap setup for direct writes to reflinked
++ * files.
++ *
++ * The caller passes in an imap and nimaps that the COW allocation will fill
++ * with the data fork extent mapping. On return, *nimaps indicates whether the
++ * caller needs to continue with the normal IO path:
++ *
++ *   *nimaps == 0: COW was handled, iomap/srcmap are filled in, ILOCK released.
++ *                 Caller should return 0 immediately.
++ *   *nimaps > 0:  Extent is not shared, imap is valid, ILOCK is still held.
++ *                 Caller should continue with the normal IO path.
 + */
-+static void
-+xfs_blockgc_free_space_nowait(
-+	struct xfs_mount	*mp,
-+	struct xfs_icwalk	*icw)
++static int
++xfs_direct_write_cow_iomap_begin(
++	struct xfs_inode	*ip,
++	loff_t			offset,
++	loff_t			length,
++	unsigned		flags,
++	struct iomap		*iomap,
++	struct iomap		*srcmap,
++	struct xfs_bmbt_irec	*imap,
++	int			*nimaps,
++	unsigned int		*lockmode,
++	u16			iomap_flags)
 +{
-+	struct xfs_blockgc_async_work *baw;
++	struct xfs_mount	*mp = ip->i_mount;
++	struct xfs_bmbt_irec	cmap;
++	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
++	xfs_fileoff_t		end_fsb = xfs_iomap_end_fsb(mp, offset, length);
++	bool			shared = false;
++	int			error;
++	u64			seq;
 +
-+	baw = kzalloc(sizeof(*baw), GFP_KERNEL | __GFP_NOFAIL);
-+	baw->mp = mp;
-+	baw->icw = *icw;
-+	baw->async = true;
++	*lockmode = XFS_ILOCK_EXCL;
 +
-+	INIT_WORK(&baw->work, xfs_blockgc_free_space_worker);
-+	queue_work(mp->m_blockgc_wq, &baw->work);
- }
- 
- /*
-@@ -1632,56 +1683,72 @@ xfs_blockgc_flush_all(
- }
- 
- /*
-- * Run cow/eofblocks scans on the supplied dquots.  We don't know exactly which
-- * quota caused an allocation failure, so we make a best effort by including
-- * each quota under low free space conditions (less than 1% free space) in the
-- * scan.
-+ * Build an icwalk filter to free speculative preallocations on inodes in
-+ * quota groups that are under low free space conditions. We don't know
-+ * exactly which quota caused an allocation failure, so we make a best effort
-+ * by including each quota under low free space conditions (less than 1% free
-+ * space) in the scan.
-  *
-- * Callers must not hold any inode's ILOCK.  If requesting a synchronous scan
-- * (XFS_ICWALK_FLAG_SYNC), the caller also must not hold any inode's IOLOCK or
-- * MMAPLOCK.
-+ * Returns true if there are quota groups that need scanning, false otherwise.
-  */
--int
--xfs_blockgc_free_dquots(
-+static bool
-+xfs_blockgc_dquot_filter(
- 	struct xfs_mount	*mp,
- 	struct xfs_dquot	*udqp,
- 	struct xfs_dquot	*gdqp,
- 	struct xfs_dquot	*pdqp,
--	unsigned int		iwalk_flags)
-+	struct xfs_icwalk	*icw)
++relock:
++	error = xfs_ilock_for_iomap(ip, flags, lockmode);
++	if (error)
++		return error;
++
++	/*
++	 * The reflink iflag could have changed since the earlier unlocked
++	 * check, check if it again and relock if needed.
++	 */
++	if (xfs_is_cow_inode(ip) && *lockmode == XFS_ILOCK_SHARED) {
++		xfs_iunlock(ip, *lockmode);
++		*lockmode = XFS_ILOCK_EXCL;
++		goto relock;
++	}
++
++	*nimaps = 1;
++	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb, imap,
++			       nimaps, 0);
++	if (error)
++		goto out_unlock;
++
++	if (!imap_needs_cow(ip, flags, imap, *nimaps))
++		return 0;
++
++	error = -EAGAIN;
++	if (flags & IOMAP_NOWAIT)
++		goto out_unlock;
++
++	/* may drop and re-acquire the ilock */
++	error = xfs_reflink_allocate_cow(ip, imap, &cmap, &shared,
++			lockmode,
++			(flags & IOMAP_DIRECT) || IS_DAX(VFS_I(ip)));
++	if (error)
++		goto out_unlock;
++
++	if (!shared)
++		return 0;
++
++	if ((flags & IOMAP_ATOMIC) &&
++	    !xfs_bmap_hw_atomic_write_possible(ip, &cmap,
++			offset_fsb, end_fsb)) {
++		error = -ENOPROTOOPT;
++		goto out_unlock;
++	}
++
++	/*
++	 * COW extent found and allocated. Set up iomap/srcmap and return
++	 * with *nimaps = 0 to tell the caller the COW path is complete.
++	 */
++	*nimaps = 0;
++	length = XFS_FSB_TO_B(mp, cmap.br_startoff + cmap.br_blockcount);
++	trace_xfs_iomap_found(ip, offset, length - offset, XFS_COW_FORK,
++			&cmap);
++	if (imap->br_startblock != HOLESTARTBLOCK) {
++		seq = xfs_iomap_inode_sequence(ip, 0);
++		error = xfs_bmbt_to_iomap(ip, srcmap, imap, flags, 0, seq);
++		if (error)
++			goto out_unlock;
++	}
++	seq = xfs_iomap_inode_sequence(ip, IOMAP_F_SHARED);
++	xfs_iunlock(ip, *lockmode);
++	return xfs_bmbt_to_iomap(ip, iomap, &cmap, flags, IOMAP_F_SHARED, seq);
++
++out_unlock:
++	if (*lockmode)
++		xfs_iunlock(ip, *lockmode);
++	return error;
++}
++
+ static int
+ xfs_direct_write_iomap_begin(
+ 	struct inode		*inode,
+@@ -859,12 +964,11 @@ xfs_direct_write_iomap_begin(
  {
--	struct xfs_icwalk	icw = {0};
- 	bool			do_work = false;
- 
- 	if (!udqp && !gdqp && !pdqp)
--		return 0;
-+		return false;
+ 	struct xfs_inode	*ip = XFS_I(inode);
+ 	struct xfs_mount	*mp = ip->i_mount;
+-	struct xfs_bmbt_irec	imap, cmap;
++	struct xfs_bmbt_irec	imap;
+ 	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
+ 	xfs_fileoff_t		end_fsb = xfs_iomap_end_fsb(mp, offset, length);
+ 	xfs_fileoff_t		orig_end_fsb = end_fsb;
+ 	int			nimaps = 1, error = 0;
+-	bool			shared = false;
+ 	u16			iomap_flags = 0;
+ 	bool			needs_alloc;
+ 	unsigned int		lockmode;
+@@ -887,57 +991,28 @@ xfs_direct_write_iomap_begin(
+ 	if (flags & IOMAP_ATOMIC)
+ 		iomap_flags |= IOMAP_F_ATOMIC_BIO;
  
 -	/*
--	 * Run a scan to free blocks using the union filter to cover all
--	 * applicable quotas in a single scan.
+-	 * COW writes may allocate delalloc space or convert unwritten COW
+-	 * extents, so we need to make sure to take the lock exclusively here.
 -	 */
--	icw.icw_flags = XFS_ICWALK_FLAG_UNION | iwalk_flags;
-+	memset(icw, 0, sizeof(*icw));
-+	icw->icw_flags = XFS_ICWALK_FLAG_UNION;
+-	if (xfs_is_cow_inode(ip))
+-		lockmode = XFS_ILOCK_EXCL;
+-	else
+-		lockmode = XFS_ILOCK_SHARED;
+-
+-relock:
+-	error = xfs_ilock_for_iomap(ip, flags, &lockmode);
+-	if (error)
+-		return error;
+-
+-	/*
+-	 * The reflink iflag could have changed since the earlier unlocked
+-	 * check, check if it again and relock if needed.
+-	 */
+-	if (xfs_is_cow_inode(ip) && lockmode == XFS_ILOCK_SHARED) {
+-		xfs_iunlock(ip, lockmode);
+-		lockmode = XFS_ILOCK_EXCL;
+-		goto relock;
+-	}
++	if (xfs_is_cow_inode(ip)) {
++		error = xfs_direct_write_cow_iomap_begin(ip, offset, length,
++				flags, iomap, srcmap, &imap, &nimaps,
++				&lockmode, iomap_flags);
++		if (error)
++			return error;
++		if (!nimaps)
++			return 0;
  
- 	if (XFS_IS_UQUOTA_ENFORCED(mp) && udqp && xfs_dquot_lowsp(udqp)) {
--		icw.icw_uid = make_kuid(mp->m_super->s_user_ns, udqp->q_id);
--		icw.icw_flags |= XFS_ICWALK_FLAG_UID;
-+		icw->icw_uid = make_kuid(mp->m_super->s_user_ns, udqp->q_id);
-+		icw->icw_flags |= XFS_ICWALK_FLAG_UID;
- 		do_work = true;
+-	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb, &imap,
+-			       &nimaps, 0);
+-	if (error)
+-		goto out_unlock;
++		end_fsb = imap.br_startoff + imap.br_blockcount;
++		length = XFS_FSB_TO_B(mp, end_fsb) - offset;
++	} else {
++		lockmode = XFS_ILOCK_SHARED;
+ 
+-	if (imap_needs_cow(ip, flags, &imap, nimaps)) {
+-		error = -EAGAIN;
+-		if (flags & IOMAP_NOWAIT)
+-			goto out_unlock;
++		error = xfs_ilock_for_iomap(ip, flags, &lockmode);
++		if (error)
++			return error;
+ 
+-		/* may drop and re-acquire the ilock */
+-		error = xfs_reflink_allocate_cow(ip, &imap, &cmap, &shared,
+-				&lockmode,
+-				(flags & IOMAP_DIRECT) || IS_DAX(inode));
++		error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
++				&imap, &nimaps, 0);
+ 		if (error)
+ 			goto out_unlock;
+-		if (shared) {
+-			if ((flags & IOMAP_ATOMIC) &&
+-			    !xfs_bmap_hw_atomic_write_possible(ip, &cmap,
+-					offset_fsb, end_fsb)) {
+-				error = -ENOPROTOOPT;
+-				goto out_unlock;
+-			}
+-			goto out_found_cow;
+-		}
+-		end_fsb = imap.br_startoff + imap.br_blockcount;
+-		length = XFS_FSB_TO_B(mp, end_fsb) - offset;
  	}
  
- 	if (XFS_IS_UQUOTA_ENFORCED(mp) && gdqp && xfs_dquot_lowsp(gdqp)) {
--		icw.icw_gid = make_kgid(mp->m_super->s_user_ns, gdqp->q_id);
--		icw.icw_flags |= XFS_ICWALK_FLAG_GID;
-+		icw->icw_gid = make_kgid(mp->m_super->s_user_ns, gdqp->q_id);
-+		icw->icw_flags |= XFS_ICWALK_FLAG_GID;
- 		do_work = true;
- 	}
+ 	needs_alloc = imap_needs_alloc(inode, flags, &imap, nimaps);
+@@ -1022,19 +1097,6 @@ xfs_direct_write_iomap_begin(
+ 	return xfs_bmbt_to_iomap(ip, iomap, &imap, flags,
+ 				 iomap_flags | IOMAP_F_NEW, seq);
  
- 	if (XFS_IS_PQUOTA_ENFORCED(mp) && pdqp && xfs_dquot_lowsp(pdqp)) {
--		icw.icw_prid = pdqp->q_id;
--		icw.icw_flags |= XFS_ICWALK_FLAG_PRID;
-+		icw->icw_prid = pdqp->q_id;
-+		icw->icw_flags |= XFS_ICWALK_FLAG_PRID;
- 		do_work = true;
- 	}
- 
--	if (!do_work)
-+	return do_work;
-+}
-+
-+/*
-+ * Run cow/eofblocks scans on the supplied dquots.
-+ *
-+ * Callers must not hold any inode's ILOCK.  If requesting a synchronous scan
-+ * (XFS_ICWALK_FLAG_SYNC), the caller also must not hold any inode's IOLOCK or
-+ * MMAPLOCK.
-+ */
-+int
-+xfs_blockgc_free_dquots(
-+	struct xfs_mount	*mp,
-+	struct xfs_dquot	*udqp,
-+	struct xfs_dquot	*gdqp,
-+	struct xfs_dquot	*pdqp,
-+	unsigned int		iwalk_flags)
-+{
-+	struct xfs_icwalk	icw;
-+
-+	if (!xfs_blockgc_dquot_filter(mp, udqp, gdqp, pdqp, &icw))
- 		return 0;
- 
-+	icw.icw_flags |= iwalk_flags;
- 	return xfs_blockgc_free_space(mp, &icw);
- }
- 
-@@ -1697,6 +1764,24 @@ xfs_blockgc_free_quota(
- 			xfs_inode_dquot(ip, XFS_DQTYPE_PROJ), iwalk_flags);
- }
- 
-+/*
-+ * Start an async background scan to free speculative preallocations on inodes
-+ * in the quota groups attached to the given inode. This does not wait for the
-+ * scan to complete and is safe to call with the ILOCK held.
-+ */
-+void
-+xfs_blockgc_free_quota_nowait(
-+	struct xfs_inode	*ip)
-+{
-+	struct xfs_icwalk	icw;
-+
-+	if (xfs_blockgc_dquot_filter(ip->i_mount,
-+			xfs_inode_dquot(ip, XFS_DQTYPE_USER),
-+			xfs_inode_dquot(ip, XFS_DQTYPE_GROUP),
-+			xfs_inode_dquot(ip, XFS_DQTYPE_PROJ), &icw))
-+		xfs_blockgc_free_space_nowait(ip->i_mount, &icw);
-+}
-+
- /* XFS Inode Cache Walking Code */
- 
- /*
-diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
-index e68d13125f7b..f55cabb9fcf5 100644
---- a/fs/xfs/xfs_icache.h
-+++ b/fs/xfs/xfs_icache.h
-@@ -62,6 +62,7 @@ int xfs_blockgc_free_dquots(struct xfs_mount *mp, struct xfs_dquot *udqp,
- 		unsigned int iwalk_flags);
- int xfs_blockgc_free_quota(struct xfs_inode *ip, unsigned int iwalk_flags);
- int xfs_blockgc_free_space(struct xfs_mount *mp, struct xfs_icwalk *icm);
-+void xfs_blockgc_free_quota_nowait(struct xfs_inode *ip);
- void xfs_blockgc_start_flush(struct xfs_mount *mp);
- int xfs_blockgc_flush_all(struct xfs_mount *mp);
- 
+-out_found_cow:
+-	length = XFS_FSB_TO_B(mp, cmap.br_startoff + cmap.br_blockcount);
+-	trace_xfs_iomap_found(ip, offset, length - offset, XFS_COW_FORK, &cmap);
+-	if (imap.br_startblock != HOLESTARTBLOCK) {
+-		seq = xfs_iomap_inode_sequence(ip, 0);
+-		error = xfs_bmbt_to_iomap(ip, srcmap, &imap, flags, 0, seq);
+-		if (error)
+-			goto out_unlock;
+-	}
+-	seq = xfs_iomap_inode_sequence(ip, IOMAP_F_SHARED);
+-	xfs_iunlock(ip, lockmode);
+-	return xfs_bmbt_to_iomap(ip, iomap, &cmap, flags, IOMAP_F_SHARED, seq);
+-
+ out_unlock:
+ 	if (lockmode)
+ 		xfs_iunlock(ip, lockmode);
 -- 
 2.55.0
 
