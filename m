@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D248F302CC1
-	for <linux-xfs@vger.kernel.org>; Wed, 19 Aug 2026 00:15:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5BC6430ACF2
+	for <linux-xfs@vger.kernel.org>; Wed, 19 Aug 2026 00:15:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787098528; cv=none; b=ngeoShkb5MCEd2ZN6gln3+mn9LknXaaY91cWmMmJ69zlXtiRQHkcdza4zC4PcxaqA2Pk1guzJ6Knl5dMT18I7V2ZeZI6euc01IQjf1t82WIc/RoIbthLd7Y/fF7v874eZsGlASxyMyme8MBEDbtvmTDYFYnupEfpiRajUGjinHc=
+	t=1787098529; cv=none; b=o6d5TcPHxxKQT0EUPEmkafYwe+uCwGmMrYrREhU/5BuwQQB2CvKkd/yjHZbUgrkxlAVRwUlFVtlQhC63kT58afyV2XmAgaVBfeA+0rDj2PJA87YXw0J8zhynGrB4tWwvo5RGeeaezrMxd3glpRTMmxM/AbchK+H1BjVYHoVQN0M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787098528; c=relaxed/simple;
-	bh=/84Dxa7wp1dKpglL4Ik42kMxKjCyKt/Nd09JathQgKU=;
+	s=arc-20240116; t=1787098529; c=relaxed/simple;
+	bh=lDcIiRTACsDk9Q9x37esvPAvWDRvZwWxigt+B1ZVDvI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=lvMmpKce0Bj/cPhBGB27JWjO/2o9PVYd1vXxmfBUffPgQCYPP50T/mn/wRq/MS0fqA8DgLiGNWHYc3GmqAMeHdiWWCGCkPxAN8x7PPyrP+A/eYohpQePJClAg+l7+xnx5l9z/peGbC5xzKMY9sRO99H0A7OTfLsB0LfqGrKcKVw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NeF/6JFg; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=NfhC1o5Ij/ZPZWQn4grQFMPl6KtLBjj0qy5WgM7DSd02mzETNq3TiS2wPef4sGlGWaeQ2YWjIlPTFYt/lsUNLcIaLA9eF5F4hLLIwYW7ROLCe/ScFVSAzd3Vz2abMC5ojCHYLcy9L04IxRPpZSkxvq8RxsNxkyjwGA+/idOWdJc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LNkBeONo; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NeF/6JFg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0668A1F000E9;
-	Wed, 19 Aug 2026 00:15:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LNkBeONo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3F15F1F00A3A;
+	Wed, 19 Aug 2026 00:15:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787098526;
-	bh=Zp/nIM1LADldFP1w/b+Ezi5Gdh0Ol43mdYiWXbP5dqI=;
+	s=k20260515; t=1787098528;
+	bh=EIlMsgL9Oc2lFVOPWzDXgPCsJmXqMoAZNILwXIZDfrQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=NeF/6JFgMzvhZ9JwP/lJ3ked6USGfLnDLW9vsaeGrZ/+ZCfwbPcWGBsjpN8hwxkpc
-	 Rc/BUS1oY1ERovmu2mE8F06d8/lWT7COZPB3b3dllUhZ1ZpRN+/Ksn0Fel26TNdwxn
-	 IZx9SlefD3v0dvG6kdhgX8SX9Qa1MyZBbAmyqVhWRePSP+ZakM7mbKMMnlo99bIY3I
-	 IhVkjvjVwK63bL58FrgJ31NqLAtF9yZJsJcbXtW0qwaOVpWNrOUPphiM8HNE6JmSmB
-	 w+vnRIlcz//2hxIJBHASwoaKgSRl4eE4tAby6HLX13QG62gvSuA8M3Kr8wAJzM1ieb
-	 YSLDjpLOXi2qQ==
+	b=LNkBeONozC/fuoE0y8lL56ew9HgnrbgszkRynbLMZ4GfB2oDy6ZAtJZq/MnkoZGn2
+	 9kQ7MOz9ePOlbCWqQsVkQdifA+omPUIDyH0HvPsSe5L+dD9nNSq/+8WJKtIWt8ATk6
+	 Z8Q97BqWVKfAEZn8EjzRggBGlMkUuIby8xnJLMuXEfK1TWn1kOy61EC4OTArZFWSj8
+	 0xLwNG5c+Jl//OgxmnAtPP1dSIzxmUUcyuW6pjzqk3ZtRr00HfKirg4SCCCykisad0
+	 Z5UkjYg9IXfz2WFetZoputy9nEx9u4UwKsnQ5eLwO9saV4c3JbQJhGrTcCDlMs2JPl
+	 1Mw0cdtTWV91Q==
 From: Dave Chinner <dgc@kernel.org>
 To: linux-xfs@vger.kernel.org
 Cc: cem@kernel.org
-Subject: [PATCH 30/38] xfs: plumb struct xfs_trans *tp into xfs_iomap_write_direct
-Date: Wed, 19 Aug 2026 10:12:33 +1000
-Message-ID: <20260819001442.1451892-31-dgc@kernel.org>
+Subject: [PATCH 31/38] xfs: make xfs_iomap_write_direct fill in the iomap directly
+Date: Wed, 19 Aug 2026 10:12:34 +1000
+Message-ID: <20260819001442.1451892-32-dgc@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260819001442.1451892-1-dgc@kernel.org>
 References: <20260819001442.1451892-1-dgc@kernel.org>
@@ -43,153 +43,163 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add a struct xfs_trans *tp parameter to xfs_iomap_write_direct().
-When a non-NULL transaction is provided, use it directly for the
-allocation instead of allocating one internally. The block
-reservation is added to the caller's transaction via
-xfs_trans_reserve_more_inode().
+Move the xfs_bmbt_to_iomap() call and the xfs_iomap_alloc tracing
+into xfs_iomap_write_direct() so that callers do not need to
+convert the returned imap to an iomap themselves.
 
-On success with a caller-supplied transaction, the function returns
-without committing or unlocking. On error, it returns the error
-without cancelling.
+Both callers performed the same conversion after the function
+returned. By moving this inside the function, the callers are
+simplified and the iomap sequence cookie is correctly captured
+after the allocation completes under the ILOCK.
 
-When tp is NULL, the existing behaviour is preserved.
-
-All callers currently pass NULL, so there is no functional change.
+Add iomap, iomap_flags, offset and length parameters so the
+function has everything it needs for tracing and the iomap
+conversion. Replace the seq output parameter with an internal
+variable.
 
 Assisted-by: LLM
 Signed-off-by: Dave Chinner <dgc@kernel.org>
 ---
- fs/xfs/xfs_iomap.c | 41 ++++++++++++++++++++++++++++-------------
- fs/xfs/xfs_iomap.h |  7 ++++---
- fs/xfs/xfs_pnfs.c  |  2 +-
- 3 files changed, 33 insertions(+), 17 deletions(-)
+ fs/xfs/xfs_iomap.c | 46 ++++++++++++++++++++++------------------------
+ fs/xfs/xfs_iomap.h |  3 ++-
+ fs/xfs/xfs_pnfs.c  |  9 ++++-----
+ 3 files changed, 28 insertions(+), 30 deletions(-)
 
 diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index e43ce4811283..f3e4f243e877 100644
+index f3e4f243e877..347a451ec7cb 100644
 --- a/fs/xfs/xfs_iomap.c
 +++ b/fs/xfs/xfs_iomap.c
-@@ -267,6 +267,7 @@ xfs_iomap_eof_align_last_fsb(
- 
- int
- xfs_iomap_write_direct(
-+	struct xfs_trans	*tp,
- 	struct xfs_inode	*ip,
- 	xfs_fileoff_t		offset_fsb,
+@@ -273,7 +273,10 @@ xfs_iomap_write_direct(
  	xfs_fileoff_t		count_fsb,
-@@ -275,7 +276,7 @@ xfs_iomap_write_direct(
- 	u64			*seq)
+ 	unsigned int		flags,
+ 	struct xfs_bmbt_irec	*imap,
+-	u64			*seq)
++	loff_t			offset,
++	loff_t			length,
++	struct iomap		*iomap,
++	u16			iomap_flags)
  {
  	struct xfs_mount	*mp = ip->i_mount;
--	struct xfs_trans	*tp;
-+	struct xfs_trans	*local_tp = NULL;
- 	xfs_filblks_t		resaligned;
- 	int			nimaps;
- 	unsigned int		dblocks, rblocks;
-@@ -296,7 +297,10 @@ xfs_iomap_write_direct(
- 		rblocks = 0;
- 	}
+ 	struct xfs_trans	*local_tp = NULL;
+@@ -284,6 +287,7 @@ xfs_iomap_write_direct(
+ 	int			error;
+ 	int			bmapi_flags = XFS_BMAPI_PREALLOC;
+ 	int			nr_exts = XFS_IEXT_ADD_NOSPLIT_CNT;
++	u64			seq;
  
--	error = xfs_qm_dqattach(ip);
-+	if (tp)
-+		error = xfs_qm_dqattach_locked(ip, false);
-+	else
-+		error = xfs_qm_dqattach(ip);
- 	if (error)
- 		return error;
+ 	ASSERT(count_fsb > 0);
  
-@@ -322,10 +326,18 @@ xfs_iomap_write_direct(
- 		}
- 	}
- 
--	error = xfs_trans_alloc_inode(ip, &M_RES(mp)->tr_write, dblocks,
--			rblocks, force, &tp);
--	if (error)
--		return error;
-+	if (tp) {
-+		error = xfs_trans_reserve_more_inode(tp, ip, dblocks, rblocks,
-+				force);
-+		if (error)
-+			return error;
-+	} else {
-+		error = xfs_trans_alloc_inode(ip, &M_RES(mp)->tr_write, dblocks,
-+				rblocks, force, &tp);
-+		if (error)
-+			return error;
-+		local_tp = tp;
-+	}
- 
- 	error = xfs_iext_count_extend(tp, ip, XFS_DATA_FORK, nr_exts);
- 	if (error)
-@@ -341,9 +353,9 @@ xfs_iomap_write_direct(
+@@ -353,27 +357,26 @@ xfs_iomap_write_direct(
  	if (error)
  		goto out_trans_cancel;
  
--	/*
--	 * Complete the transaction
--	 */
-+	if (!local_tp)
-+		return 0;
-+
- 	error = xfs_trans_commit(tp);
- 	if (error)
- 		goto out_unlock;
-@@ -359,8 +371,11 @@ xfs_iomap_write_direct(
- 	return error;
+-	if (!local_tp)
+-		return 0;
+-
+-	error = xfs_trans_commit(tp);
+-	if (error)
+-		goto out_unlock;
+-
+-	if (unlikely(!xfs_valid_startblock(ip, imap->br_startblock))) {
+-		xfs_bmap_mark_sick(ip, XFS_DATA_FORK);
+-		error = xfs_alert_fsblock_zero(ip, imap);
++	seq = xfs_iomap_inode_sequence(ip, iomap_flags);
++	if (local_tp) {
++		error = xfs_trans_commit(tp);
++		xfs_iunlock(ip, XFS_ILOCK_EXCL);
++		if (error)
++			return error;
++		if (unlikely(!xfs_valid_startblock(ip, imap->br_startblock))) {
++			xfs_bmap_mark_sick(ip, XFS_DATA_FORK);
++			return xfs_alert_fsblock_zero(ip, imap);
++		}
+ 	}
+ 
+-out_unlock:
+-	*seq = xfs_iomap_inode_sequence(ip, 0);
+-	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-	return error;
++	trace_xfs_iomap_alloc(ip, offset, length, XFS_DATA_FORK, imap);
++	return xfs_bmbt_to_iomap(ip, iomap, imap, flags,
++			iomap_flags | IOMAP_F_NEW, seq);
  
  out_trans_cancel:
--	xfs_trans_cancel(tp);
--	goto out_unlock;
-+	if (local_tp) {
-+		xfs_trans_cancel(tp);
-+		goto out_unlock;
-+	}
-+	return error;
+ 	if (local_tp) {
+ 		xfs_trans_cancel(tp);
+-		goto out_unlock;
++		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 	}
+ 	return error;
  }
- 
- STATIC bool
-@@ -1154,8 +1169,8 @@ xfs_direct_write_iomap_begin(
+@@ -1169,14 +1172,9 @@ xfs_direct_write_iomap_begin(
  		end_fsb = min(end_fsb, imap.br_startoff + imap.br_blockcount);
  	xfs_iunlock(ip, lockmode);
  
--	error = xfs_iomap_write_direct(ip, offset_fsb, end_fsb - offset_fsb,
--			flags, &imap, &seq);
-+	error = xfs_iomap_write_direct(NULL, ip, offset_fsb,
-+			end_fsb - offset_fsb, flags, &imap, &seq);
- 	if (error)
- 		return error;
+-	error = xfs_iomap_write_direct(NULL, ip, offset_fsb,
+-			end_fsb - offset_fsb, flags, &imap, &seq);
+-	if (error)
+-		return error;
+-
+-	trace_xfs_iomap_alloc(ip, offset, length, XFS_DATA_FORK, &imap);
+-	return xfs_bmbt_to_iomap(ip, iomap, &imap, flags,
+-				 iomap_flags | IOMAP_F_NEW, seq);
++	return xfs_iomap_write_direct(NULL, ip, offset_fsb,
++			end_fsb - offset_fsb, flags, &imap,
++			offset, length, iomap, iomap_flags);
  
+ out_unlock:
+ 	if (lockmode)
 diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
-index ebcce7d49446..937a61c7a610 100644
+index 937a61c7a610..c883a7175cd0 100644
 --- a/fs/xfs/xfs_iomap.h
 +++ b/fs/xfs/xfs_iomap.h
-@@ -12,9 +12,10 @@ struct xfs_inode;
- struct xfs_bmbt_irec;
- struct xfs_zone_alloc_ctx;
- 
--int xfs_iomap_write_direct(struct xfs_inode *ip, xfs_fileoff_t offset_fsb,
--		xfs_fileoff_t count_fsb, unsigned int flags,
--		struct xfs_bmbt_irec *imap, u64 *sequence);
-+int xfs_iomap_write_direct(struct xfs_trans *tp, struct xfs_inode *ip,
-+		xfs_fileoff_t offset_fsb, xfs_fileoff_t count_fsb,
-+		unsigned int flags, struct xfs_bmbt_irec *imap,
-+		u64 *sequence);
+@@ -15,7 +15,8 @@ struct xfs_zone_alloc_ctx;
+ int xfs_iomap_write_direct(struct xfs_trans *tp, struct xfs_inode *ip,
+ 		xfs_fileoff_t offset_fsb, xfs_fileoff_t count_fsb,
+ 		unsigned int flags, struct xfs_bmbt_irec *imap,
+-		u64 *sequence);
++		loff_t offset, loff_t length, struct iomap *iomap,
++		u16 iomap_flags);
  int xfs_iomap_write_unwritten(struct xfs_inode *, xfs_off_t, xfs_off_t, bool);
  xfs_fileoff_t xfs_iomap_eof_align_last_fsb(struct xfs_inode *ip,
  		xfs_fileoff_t end_fsb);
 diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
-index f8535ecde21a..442564967b39 100644
+index 442564967b39..f9c0e748448e 100644
 --- a/fs/xfs/xfs_pnfs.c
 +++ b/fs/xfs/xfs_pnfs.c
-@@ -202,7 +202,7 @@ xfs_fs_map_blocks(
- 					       imap.br_blockcount);
+@@ -190,8 +190,6 @@ xfs_fs_map_blocks(
+ 		xfs_iunlock(ip, lock_flags);
+ 		goto out_unlock;
+ 	}
+-	seq = xfs_iomap_inode_sequence(ip, 0);
+-
+ 	ASSERT(!nimaps || imap.br_startblock != DELAYSTARTBLOCK);
+ 
+ 	if (write && (!nimaps || imap.br_startblock == HOLESTARTBLOCK)) {
+@@ -203,7 +201,8 @@ xfs_fs_map_blocks(
  		xfs_iunlock(ip, lock_flags);
  
--		error = xfs_iomap_write_direct(ip, offset_fsb,
-+		error = xfs_iomap_write_direct(NULL, ip, offset_fsb,
- 				end_fsb - offset_fsb, 0, &imap, &seq);
+ 		error = xfs_iomap_write_direct(NULL, ip, offset_fsb,
+-				end_fsb - offset_fsb, 0, &imap, &seq);
++				end_fsb - offset_fsb, 0, &imap,
++				offset, length, iomap, 0);
  		if (error)
  			goto out_unlock;
+ 
+@@ -219,11 +218,11 @@ xfs_fs_map_blocks(
+ 			goto out_unlock;
+ 
+ 	} else {
++		seq = xfs_iomap_inode_sequence(ip, 0);
+ 		xfs_iunlock(ip, lock_flags);
++		error = xfs_bmbt_to_iomap(ip, iomap, &imap, 0, 0, seq);
+ 	}
+ 	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+-
+-	error = xfs_bmbt_to_iomap(ip, iomap, &imap, 0, 0, seq);
+ 	*device_generation = mp->m_generation;
+ 	return error;
+ out_unlock:
 -- 
 2.55.0
 
