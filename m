@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 746702701B6
-	for <linux-xfs@vger.kernel.org>; Wed, 19 Aug 2026 00:15:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F0EF279DCA
+	for <linux-xfs@vger.kernel.org>; Wed, 19 Aug 2026 00:15:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787098502; cv=none; b=VTI+D/aG2po8k70RdtzvSzm0ISZijXp0Lk6jO7GsWyBQjyQ10DtWQlcoklU1cZLvkpW/KFO6koaPD8pjlQWRJahdt2bkwpKPmoDasq2N9yCh63VSZjNgG/Xst0iEaVObzT20FMDmJaGikwmx0pYAh15/DJdpqYqiRe9PCH1gxxQ=
+	t=1787098506; cv=none; b=WB2+nAFv+k76S8CVraeCaWEdGu4u/AJUfC7TLEci/fe2Y11Or2PfXNjzblxOXsoDEvbn+V7WNTT4rpfYgsi2pw+0IY3lEcEyCeT9WDsMCVwflzbTDJsdKm9iaQE/tF/3xdAGP7JdqtnZ70mxxheUadfn7Ri+xfzcnrPU7x5NESQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787098502; c=relaxed/simple;
-	bh=yEi5YozTMgdqbquQg2N+5A0CdJlYpq+kgXZZ/XWL6WA=;
+	s=arc-20240116; t=1787098506; c=relaxed/simple;
+	bh=wR101CR7uhZgoQqa3KXXU7Vqvv3VILePgexz/HdS8Wo=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Ao8WdrLvaXo6SExDbZOjGZ9zUYft1LZd3HyJ3KQWhVr8AT1t+l92cRJcwNZtbUiLxXSZlrIakX4xZUswb+MtwIiMG1Ogw646sotF79bQ9YLM8e4rRWPdUkIhlSEJDxZI/RSGvJUpRg/EU1QG6PFGbcN3h6DLBkFPcYVVqkvuzHw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ikFGvnWL; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=ngndxVHiiUrCmv9teXnznSdqRQr2GuZk71W7YkgtmIuL5MbhXJzbcwQJF4zgiUc8FRS5AoEffScggZyQk9OsCU/UlX4uscgJqObqTrVdFBQ627YMwik/ums511nFRqE7KdIFJ43hYyp/NkPJGgqUfHgVSZvDgCEop8otRqfnbaI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AL6J6g4R; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ikFGvnWL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6A2481F00A3A;
-	Wed, 19 Aug 2026 00:14:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AL6J6g4R"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 12B311F00A3F;
+	Wed, 19 Aug 2026 00:15:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787098500;
-	bh=U0iIFSqipJHyjPx8ln8Ik/fCgAiPfpfcGfuO2HvbPrU=;
+	s=k20260515; t=1787098502;
+	bh=ZfF9XZjIG5554MSsYt5Rg4xc1sstfOHRgP7dlcsU8SM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=ikFGvnWLOnnEOBnQ/GO++m2cZOePm/XzYkH2Qyt4/Q60uOk488r8Vpd1KOe4oHShw
-	 ISfa4zhs2u96f+b2gZ3b6pQf+aoqqVUIjO34LBIWdzIjCsvWvhjjgi3YPkX1co4fnC
-	 FfENrw0LoKOHJXPx9GIvPXd6Afb/5oaPKGqndK9qH9hhy2tqIVDBcXIDVb7F+QYmFP
-	 pMnxj0brgUC3ivNDgkgt9iBApegbv7oWAzBMOaFpR1w+gdWvpY229qhoxBYLrAvXGw
-	 lWbsKTrnVFxXgOcvCXE4O0vmO77iHiC24kBjxoG0neHbcXiO3oZIBjf+PB3IAr8p4Z
-	 lgG+PHfzM/gXQ==
+	b=AL6J6g4RApQ38zO/6RrtDyRNXrwnyOitXVl/jnpjs/ZxWi5xloBK9oKXqbjiDyR2b
+	 GIXLPPUYAc7lrzEZK5Xa5fpzMfuUujLX0SaTjNSJI/7GSTqGIJC6m4E1XkBvN96XAD
+	 opf77bl12ycdEipPW/1NsnlFYJMGDd2meMrvqK2il3USxdFIVo5r0QyAh6JwbcgmOg
+	 RVZ+l2u+hDG/Bdn0fs1aYZWE95DKGQhpHLYUBFAOAIh4mo8EEHf9qn4aSCXJmtPwL6
+	 ilpZxFnJaLIXlcfq0Vf2L2spBg119kqxY3ISY3Qi795DLDn09dzyODwnE7FLQWb4Cz
+	 k3mINHrKfkOKw==
 From: Dave Chinner <dgc@kernel.org>
 To: linux-xfs@vger.kernel.org
 Cc: cem@kernel.org
-Subject: [PATCH 10/38] xfs: plumb xfs_trans through xfs_reflink_allocate_cow and fill_cow_hole
-Date: Wed, 19 Aug 2026 10:12:13 +1000
-Message-ID: <20260819001442.1451892-11-dgc@kernel.org>
+Subject: [PATCH 12/38] xfs: add transaction retry infrastructure to xfs_direct_write_cow_iomap_begin
+Date: Wed, 19 Aug 2026 10:12:15 +1000
+Message-ID: <20260819001442.1451892-13-dgc@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260819001442.1451892-1-dgc@kernel.org>
 References: <20260819001442.1451892-1-dgc@kernel.org>
@@ -43,136 +43,145 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add a struct xfs_trans pointer as the first parameter to
-xfs_reflink_allocate_cow() and xfs_reflink_fill_cow_hole().
-All callers currently pass NULL.
+Add the infrastructure for handling COW extent allocation retries with
+a pre-allocated transaction in xfs_direct_write_cow_iomap_begin().
 
-This is preparation for having the caller pre-allocate a transaction
-and pass it down to avoid needing to cycle the ILOCK inside
-fill_cow_hole().
+When xfs_reflink_allocate_cow() returns -EAGAIN (indicating it needs
+a transaction to proceed), the function drops the ILOCK, allocates a
+zero-block transaction via xfs_trans_alloc_inode() (which reacquires
+the ILOCK), and jumps to retry: to re-read the imap via
+xfs_bmapi_read() since the extent tree may have changed while the
+ILOCK was not held.
 
-The local transaction variable in fill_cow_hole() is renamed to
-local_tp to avoid shadowing the new parameter.
+The initial xfs_ilock_for_iomap() call is done once before the retry
+label since we always enter with ILOCK_EXCL and xfs_trans_alloc_inode()
+re-acquires ILOCK_EXCL on the retry path.
+
+The old relock label and shared-to-exclusive lock upgrade logic is
+removed as it is unnecessary - this function always takes ILOCK_EXCL.
+
+Nothing returns -EAGAIN from xfs_reflink_allocate_cow() yet, so there
+is no functional change.
 
 Assisted-by: LLM
 Signed-off-by: Dave Chinner <dgc@kernel.org>
 ---
- fs/xfs/xfs_iomap.c   |  2 +-
- fs/xfs/xfs_reflink.c | 17 ++++++++++-------
- fs/xfs/xfs_reflink.h |  6 +++---
- 3 files changed, 14 insertions(+), 11 deletions(-)
+ fs/xfs/xfs_iomap.c | 66 +++++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 53 insertions(+), 13 deletions(-)
 
 diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index df9fc7c6a4b9..e4e64412b431 100644
+index e4e64412b431..017355372a44 100644
 --- a/fs/xfs/xfs_iomap.c
 +++ b/fs/xfs/xfs_iomap.c
-@@ -913,7 +913,7 @@ xfs_direct_write_cow_iomap_begin(
+@@ -876,6 +876,7 @@ xfs_direct_write_cow_iomap_begin(
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	struct xfs_bmbt_irec	cmap;
++	struct xfs_trans	*tp = NULL;
+ 	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
+ 	xfs_fileoff_t		end_fsb = xfs_iomap_end_fsb(mp, offset, length);
+ 	bool			shared = false;
+@@ -884,41 +885,78 @@ xfs_direct_write_cow_iomap_begin(
+ 
+ 	*lockmode = XFS_ILOCK_EXCL;
+ 
+-relock:
+ 	error = xfs_ilock_for_iomap(ip, flags, lockmode);
+ 	if (error)
+ 		return error;
+ 
+-	/*
+-	 * The reflink iflag could have changed since the earlier unlocked
+-	 * check, check if it again and relock if needed.
+-	 */
+-	if (xfs_is_cow_inode(ip) && *lockmode == XFS_ILOCK_SHARED) {
+-		xfs_iunlock(ip, *lockmode);
+-		*lockmode = XFS_ILOCK_EXCL;
+-		goto relock;
+-	}
+-
++retry:
+ 	*nimaps = 1;
+ 	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb, imap,
+ 			       nimaps, 0);
+ 	if (error)
+ 		goto out_unlock;
+ 
+-	if (!imap_needs_cow(ip, flags, imap, *nimaps))
++	if (!imap_needs_cow(ip, flags, imap, *nimaps)) {
++		/*
++		 * Extent is not shared - return the imap and ILOCK to the
++		 * caller for normal IO path processing.
++		 */
++		if (tp) {
++			xfs_trans_cancel(tp);
++			tp = NULL;
++		}
+ 		return 0;
++	}
+ 
+ 	error = -EAGAIN;
+ 	if (flags & IOMAP_NOWAIT)
  		goto out_unlock;
  
  	/* may drop and re-acquire the ilock */
--	error = xfs_reflink_allocate_cow(ip, imap, &cmap, &shared,
-+	error = xfs_reflink_allocate_cow(NULL, ip, imap, &cmap, &shared,
+-	error = xfs_reflink_allocate_cow(NULL, ip, imap, &cmap, &shared,
++	error = xfs_reflink_allocate_cow(tp, ip, imap, &cmap, &shared,
  			lockmode,
  			(flags & IOMAP_DIRECT) || IS_DAX(VFS_I(ip)));
++	if (error == -EAGAIN) {
++		/*
++		 * COW allocation needs a transaction. Drop the ILOCK and
++		 * allocate a transaction, which will re-acquire the ILOCK.
++		 * Then retry the imap lookup since the extent tree may have
++		 * changed while the ILOCK was not held.
++		 */
++		xfs_filblks_t		resaligned;
++		unsigned int		dblocks, rblocks;
++
++		ASSERT(!tp);
++
++		xfs_iunlock(ip, *lockmode);
++
++		resaligned = xfs_aligned_fsb_count(offset_fsb,
++				end_fsb - offset_fsb, xfs_get_cowextsz_hint(ip));
++		if (XFS_IS_REALTIME_INODE(ip)) {
++			dblocks = XFS_DIOSTRAT_SPACE_RES(mp, 0);
++			rblocks = resaligned;
++		} else {
++			dblocks = XFS_DIOSTRAT_SPACE_RES(mp, resaligned);
++			rblocks = 0;
++		}
++
++		error = xfs_trans_alloc_inode(ip, &M_RES(mp)->tr_write,
++				dblocks, rblocks, false, &tp);
++		if (error)
++			return error;
++
++		goto retry;
++	}
  	if (error)
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 480136136635..1fa899048b24 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -430,6 +430,7 @@ xfs_reflink_convert_unwritten(
+ 		goto out_unlock;
  
- static int
- xfs_reflink_fill_cow_hole(
-+	struct xfs_trans	*tp,
- 	struct xfs_inode	*ip,
- 	struct xfs_bmbt_irec	*imap,
- 	struct xfs_bmbt_irec	*cmap,
-@@ -438,7 +439,7 @@ xfs_reflink_fill_cow_hole(
- 	bool			convert_now)
- {
- 	struct xfs_mount	*mp = ip->i_mount;
--	struct xfs_trans	*tp;
-+	struct xfs_trans	*local_tp;
- 	xfs_filblks_t		resaligned;
- 	unsigned int		seq_before = READ_ONCE(ip->i_df.if_seq);
- 	unsigned int		dblocks = 0, rblocks = 0;
-@@ -460,7 +461,7 @@ xfs_reflink_fill_cow_hole(
- 	*lockmode = 0;
++	if (tp) {
++		error = xfs_trans_commit(tp);
++		tp = NULL;
++		if (error)
++			goto out_unlock;
++	}
++
+ 	if (!shared)
+ 		return 0;
  
- 	error = xfs_trans_alloc_inode(ip, &M_RES(mp)->tr_write, dblocks,
--			rblocks, false, &tp);
-+			rblocks, false, &local_tp);
- 	if (error)
- 		return error;
+@@ -948,6 +986,8 @@ xfs_direct_write_cow_iomap_begin(
+ 	return xfs_bmbt_to_iomap(ip, iomap, &cmap, flags, IOMAP_F_SHARED, seq);
  
-@@ -487,20 +488,21 @@ xfs_reflink_fill_cow_hole(
- 		goto out_trans_cancel;
- 
- 	if (found) {
--		xfs_trans_cancel(tp);
-+		xfs_trans_cancel(local_tp);
- 		goto convert;
- 	}
- 
- 	/* Allocate the entire reservation as unwritten blocks. */
- 	nimaps = 1;
--	error = xfs_bmapi_write(tp, ip, imap->br_startoff, imap->br_blockcount,
-+	error = xfs_bmapi_write(local_tp, ip, imap->br_startoff,
-+			imap->br_blockcount,
- 			XFS_BMAPI_COWFORK | XFS_BMAPI_PREALLOC, 0, cmap,
- 			&nimaps);
- 	if (error)
- 		goto out_trans_cancel;
- 
- 	xfs_inode_set_cowblocks_tag(ip);
--	error = xfs_trans_commit(tp);
-+	error = xfs_trans_commit(local_tp);
- 	if (error)
- 		return error;
- 
-@@ -508,7 +510,7 @@ xfs_reflink_fill_cow_hole(
- 	return xfs_reflink_convert_unwritten(ip, imap, cmap, convert_now);
- 
- out_trans_cancel:
--	xfs_trans_cancel(tp);
-+	xfs_trans_cancel(local_tp);
+ out_unlock:
++	if (tp)
++		xfs_trans_cancel(tp);
+ 	if (*lockmode)
+ 		xfs_iunlock(ip, *lockmode);
  	return error;
- }
- 
-@@ -597,6 +599,7 @@ xfs_reflink_fill_delalloc(
- /* Allocate all CoW reservations covering a range of blocks in a file. */
- int
- xfs_reflink_allocate_cow(
-+	struct xfs_trans	*tp,
- 	struct xfs_inode	*ip,
- 	struct xfs_bmbt_irec	*imap,
- 	struct xfs_bmbt_irec	*cmap,
-@@ -627,7 +630,7 @@ xfs_reflink_allocate_cow(
- 	 * Allocate a real extent in the CoW fork.
- 	 */
- 	if (cmap->br_startoff > imap->br_startoff)
--		return xfs_reflink_fill_cow_hole(ip, imap, cmap, shared,
-+		return xfs_reflink_fill_cow_hole(NULL, ip, imap, cmap, shared,
- 				lockmode, convert_now);
- 
- 	/*
-diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-index 9d1ed9bb0bee..6a984363edbc 100644
---- a/fs/xfs/xfs_reflink.h
-+++ b/fs/xfs/xfs_reflink.h
-@@ -30,9 +30,9 @@ int xfs_reflink_trim_around_shared(struct xfs_inode *ip,
- int xfs_bmap_trim_cow(struct xfs_inode *ip, struct xfs_bmbt_irec *imap,
- 		bool *shared);
- 
--int xfs_reflink_allocate_cow(struct xfs_inode *ip, struct xfs_bmbt_irec *imap,
--		struct xfs_bmbt_irec *cmap, bool *shared, uint *lockmode,
--		bool convert_now);
-+int xfs_reflink_allocate_cow(struct xfs_trans *tp, struct xfs_inode *ip,
-+		struct xfs_bmbt_irec *imap, struct xfs_bmbt_irec *cmap,
-+		bool *shared, uint *lockmode, bool convert_now);
- extern int xfs_reflink_convert_cow(struct xfs_inode *ip, xfs_off_t offset,
- 		xfs_off_t count);
- int xfs_reflink_convert_cow_locked(struct xfs_inode *ip,
 -- 
 2.55.0
 
