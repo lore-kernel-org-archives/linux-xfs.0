@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A70DC21CC5A
-	for <linux-xfs@vger.kernel.org>; Wed, 19 Aug 2026 00:14:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84B7023D283
+	for <linux-xfs@vger.kernel.org>; Wed, 19 Aug 2026 00:14:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787098493; cv=none; b=cXzAcHpfuclVTWUYfwhRX+HfnEWBKseFV+uvGn/Q37hdYpBMZG6M4EILJOCFebhExkCSfMZMpzPd75ENmZqTBXJlShUJ8Z0yhqLDj0U7RoTLAA9Peo9dZAkvHBNy7v/lZ+rJxI4WplePMxatzvxvY8yRDmvU1gfNbHK56abrTLw=
+	t=1787098494; cv=none; b=cKUD7IOfdsdYEI/Lb5Za9+QBuLgJU1J8I9xM1gdB7YiEfezeITN5aywIOx4Pl/irfSzlDH5rv2xqNH0TYfpviMm1VfPRirH2Fp27gxg4Ss/7tGDsuXjJkhgOKlg7k4uq1QTQXNJEQUNI7ek92xhRenZ6kqFXXzrRC/+H297P5rQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787098493; c=relaxed/simple;
-	bh=97/mB345JxbltLCTbV3sve8dbju6gXWf5/10HL7K2NQ=;
+	s=arc-20240116; t=1787098494; c=relaxed/simple;
+	bh=a1Nd2FM03p3JaggKJiqcH8lehvrmectZ5yJ412Ma1Fg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=LVxYkO/6RCwlUKueFa9P69CAoI64e4ITVdkpaRUC2whrNymrPyqw0x/mdvBtwnYMHwBts0QoHmi/BWxbiGTNlfLPLtotzwrkFp+z6bX+0+8D8nQ/U9bxmrzAQoFYjmjTWFPcWGkeLEbclD/XtWxeufYtt5ixUXy7/a1Kl6qsoPc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X6ok54Pm; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=iD0ylF7qj6RH04elKuz+yEbf2SFSuuuiR33o2oeewzQ/uqpRARjxW/aAdTOHEqsNUR4idnXiTTRZ7jO6osPdh9sqE8vt6sAzvt+3e438IydxoXHq7xmhVq8z3vgx98U/uqzpUg5lDh1pVMY2wEMycSqyX8uDH9F42B8OMr4LsKM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c0cHVT7d; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X6ok54Pm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 410961F00A3A;
-	Wed, 19 Aug 2026 00:14:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c0cHVT7d"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A69B01F000E9;
+	Wed, 19 Aug 2026 00:14:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787098490;
-	bh=DMUZ/Jwyv+4KydAJ8CVD3jk4eB4ww4l5Ug8EGB3Q0yU=;
+	s=k20260515; t=1787098492;
+	bh=i1dCB6LSQxWEOAtDoUjDEFHt0EkbFQNJ3aAR5xgyFOo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=X6ok54PmyNNByPno4drgzG64eaMZLVnqJE3lKtBAf4k7DsTi3HvlFseN19aFhljRk
-	 3T+H+1ID3fQdiLrOuEsLHbxbvZCuAL/0o1b8dsz+CtzDFkIVvJjHgRzZciWHdKcpMA
-	 lILz0lr2sOzFDWHP+CovDGZXvJjls8iRRi0Fwmgts2hjYKdJ1fRhW6EEEJRLkhl3c3
-	 tR1oibBFZfD9DI4RkFDV/yBXaPXObfunbwXkpOeZ+X0XI9jm41BLUucWhQrS7RopIS
-	 +SOo2zHnhf/iT36vLQQDkoY1da2GRFCKD3ytI4mKoRj6dJJaZVwViIHvDE7JHP9+4+
-	 YXT5jpc3POH7w==
+	b=c0cHVT7dnKaoruGqf1zZAQ7OKt2iiuN7keO/zaJKCo41p5bxryuGdOTbSuXVbmqaU
+	 TYj9+gE+DvgWm0oiwdwrjty3PM8CuknGlhl0i98sOZHAEDVKmBv+hWBd2ABVr0VmZP
+	 +a4SoIrqn9B0pOiIPnuUOMNp2xZMYH6jSSlkEcfGfS9yMcPYxJNxrFqfTO+WZrcpgs
+	 ayz8w8gnNzD5DCdkdjlmzvSb2/JtXrSjDQPBtz98s5y4Ao0CoIMnVwKyWv97HMZ6+5
+	 +4tYCBX1TwQCNNw3RTZtJpkZK4axNMrPL36u+qPhDaC9b9TyrdABtKU555/Tg1iBic
+	 a5RkJTrJNbp/A==
 From: Dave Chinner <dgc@kernel.org>
 To: linux-xfs@vger.kernel.org
 Cc: cem@kernel.org
-Subject: [PATCH 02/38] xfs: fix dirty transaction cancellation in xfs_attr_set
-Date: Wed, 19 Aug 2026 10:12:05 +1000
-Message-ID: <20260819001442.1451892-3-dgc@kernel.org>
+Subject: [PATCH 04/38] xfs: fix block reservation for zoned RT extent remapping
+Date: Wed, 19 Aug 2026 10:12:07 +1000
+Message-ID: <20260819001442.1451892-5-dgc@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260819001442.1451892-1-dgc@kernel.org>
 References: <20260819001442.1451892-1-dgc@kernel.org>
@@ -41,127 +41,95 @@ List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-xfs_attr_set() calls xfs_iext_count_extend() before xfs_attr_lookup().
-If xfs_iext_count_extend() upgrades the inode to NREXT64 format it
-will dirty the transaction. If the subsequent xfs_attr_lookup() finds
-a result that is incompatible with the requested operation (e.g.
-EEXIST for CREATE, ENOATTR for REMOVE/REPLACE), the function returns
-the error and the caller cancels the transaction. Cancelling a dirty
-transaction triggers a filesystem shutdown.
+xfs_zoned_end_io() uses XFS_EXTENTADD_SPACE_RES() for its block
+reservation, which only covers bmbt splits. However, the remap
+operation in xfs_zoned_map_extent() generates deferred rmap and
+refcount btree updates that also need blocks for btree splits
+when they are processed.
 
-Fix this by moving the xfs_attr_lookup() call before
-xfs_iext_count_extend() and validating the lookup result against the
-requested operation before dirtying the transaction. The code is
-restructured to separate validation from execution: first filter out
-the error cases that should cancel cleanly, then extend the extent
-count, then dispatch to the appropriate modification function based
-on the operation type.
+The code used XFS_TRANS_RES_FDBLKS as a workaround to recycle
+freed data blocks back into the transaction's block reservation.
+This is fragile — it depends on freed blocks being large enough
+to cover the metadata btree needs, and conflates data block
+recycling with metadata reservation.
 
-Fixes: 4f86bb4b66c9 ("xfs: Conditionally upgrade existing inodes to use large extent counters")
+Fix this by introducing XFS_RTEXTENTADD_SPACE_RES() which computes
+the correct reservation for any RT data extent modification: the
+bmbt split cost plus the rt rmap btree split cost plus the rt
+refcount btree cost. This covers all the deferred operations that
+are generated when an RT extent is mapped or unmapped.
+
+Drop XFS_TRANS_RES_FDBLKS from xfs_zoned_end_io() since the
+reservation now correctly covers all btree costs.
+
+Note: XFS_RTEXTENTADD_SPACE_RES() should eventually be folded
+into XFS_EXTENTADD_SPACE_RES() so that all callers operating on
+RT inodes automatically get the correct reservation. There are
+approximately 11 sites that use XFS_EXTENTADD_SPACE_RES either
+directly or via XFS_DIOSTRAT_SPACE_RES that have the same
+under-reservation issue for RT inodes.
+
+Fixes: 4e4d52075577 ("xfs: add the zoned space allocator")
 Assisted-by: LLM
 Signed-off-by: Dave Chinner <dgc@kernel.org>
 ---
- fs/xfs/libxfs/xfs_attr.c | 70 ++++++++++++++++++++--------------------
- 1 file changed, 35 insertions(+), 35 deletions(-)
+ fs/xfs/libxfs/xfs_trans_space.h | 12 ++++++++++++
+ fs/xfs/xfs_zone_alloc.c         |  9 ++++++---
+ 2 files changed, 18 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index b3f7b2c34ad7..bf0e867628e7 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -1136,7 +1136,7 @@ xfs_attr_set(
- 	struct xfs_inode	*dp = args->dp;
- 	struct xfs_mount	*mp = dp->i_mount;
- 	struct xfs_trans_res	tres;
--	int			error, local;
-+	int			error, lookup_result, local;
- 	int			rmt_blks = 0;
- 	unsigned int		total = 0;
+diff --git a/fs/xfs/libxfs/xfs_trans_space.h b/fs/xfs/libxfs/xfs_trans_space.h
+index d89b570aafcc..4cfc29ac764f 100644
+--- a/fs/xfs/libxfs/xfs_trans_space.h
++++ b/fs/xfs/libxfs/xfs_trans_space.h
+@@ -55,6 +55,18 @@
+ 	  XFS_MAX_CONTIG_EXTENTS_PER_BLOCK(mp)) * \
+ 	  XFS_EXTENTADD_SPACE_RES(mp,w))
  
-@@ -1185,48 +1185,48 @@ xfs_attr_set(
- 	if (error)
- 		return error;
- 
--	if (op != XFS_ATTRUPDATE_REMOVE || xfs_inode_hasattr(dp)) {
--		error = xfs_iext_count_extend(args->trans, dp, XFS_ATTR_FORK,
--				XFS_IEXT_ATTR_MANIP_CNT(rmt_blks));
--		if (error)
--			goto out_trans_cancel;
--	}
--
--	error = xfs_attr_lookup(args);
--	switch (error) {
--	case -EEXIST:
--		if (op == XFS_ATTRUPDATE_REMOVE) {
--			/* if no value, we are performing a remove operation */
--			error = xfs_attr_removename(args);
--			if (error)
--				goto out_trans_cancel;
--			break;
--		}
--
--		/* Pure create fails if the attr already exists */
++/*
++ * Blocks needed to add or remove a realtime data extent: the bmbt split plus
++ * rt rmap btree and rt refcount btree updates deferred from the bmbt operation.
++ *
++ * TODO: this should be folded into XFS_EXTENTADD_SPACE_RES() so that all
++ * callers that operate on RT inodes automatically get the correct reservation.
++ */
++#define XFS_RTEXTENTADD_SPACE_RES(mp)	\
++	(XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK) + \
++	 (xfs_has_rmapbt(mp) ? XFS_RTRMAPADD_SPACE_RES(mp) : 0) + \
++	 (xfs_has_reflink(mp) ? 2 * (mp)->m_rtrefc_maxlevels - 1 : 0))
++
+ /* Blocks we might need to add "b" mappings & rmappings to a file. */
+ #define XFS_SWAP_RMAP_SPACE_RES(mp,b,w)\
+ 	(XFS_NEXTENTADD_SPACE_RES((mp), (b), (w)) + \
+diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
+index 7d13fa7ab30a..61b483d24c88 100644
+--- a/fs/xfs/xfs_zone_alloc.c
++++ b/fs/xfs/xfs_zone_alloc.c
+@@ -330,8 +330,11 @@ xfs_zoned_end_io(
+ 		.br_startblock	= xfs_daddr_to_rtb(mp, daddr),
+ 		.br_state	= XFS_EXT_NORM,
+ 	};
+-	unsigned int		resblks =
+-		XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK);
 +	/*
-+	 * Look up the attr before extending the extent count so that we
-+	 * don't dirty the transaction if the op is going to fail with an
-+	 * error. Cancelling a dirty transaction would shutdown the fs.
++	 * A remap performs two independent BMBT modifications - an unmap
++	 * of the old extent followed by a map of the new extent.
 +	 */
-+	lookup_result = xfs_attr_lookup(args);
-+	if (lookup_result == -EEXIST) {
- 		if (op == XFS_ATTRUPDATE_CREATE)
- 			goto out_trans_cancel;
--
--		error = xfs_attr_replacename(args, rmt_blks);
--		if (error)
--			goto out_trans_cancel;
--		break;
--	case -ENOATTR:
--		/* Can't remove what isn't there. */
--		if (op == XFS_ATTRUPDATE_REMOVE)
-+	} else if (lookup_result == -ENOATTR) {
-+		if (op == XFS_ATTRUPDATE_REMOVE ||
-+		    op == XFS_ATTRUPDATE_REPLACE)
- 			goto out_trans_cancel;
-+	} else {
-+		error = lookup_result;
-+		goto out_trans_cancel;
-+	}
++	unsigned int		resblks = 2 * XFS_RTEXTENTADD_SPACE_RES(mp);
+ 	struct xfs_trans	*tp;
+ 	int			error;
  
--		/* Pure replace fails if no existing attr to replace. */
--		if (op == XFS_ATTRUPDATE_REPLACE)
--			goto out_trans_cancel;
-+	error = xfs_iext_count_extend(args->trans, dp, XFS_ATTR_FORK,
-+			XFS_IEXT_ATTR_MANIP_CNT(rmt_blks));
-+	if (error)
-+		goto out_trans_cancel;
+@@ -342,7 +345,7 @@ xfs_zoned_end_io(
+ 		new.br_blockcount = end_fsb - new.br_startoff;
  
-+	switch (op) {
-+	case XFS_ATTRUPDATE_REMOVE:
-+		error = xfs_attr_removename(args);
-+		break;
-+	case XFS_ATTRUPDATE_CREATE:
- 		error = xfs_attr_setname(args, rmt_blks);
--		if (error)
--			goto out_trans_cancel;
- 		break;
--	default:
--		goto out_trans_cancel;
-+	case XFS_ATTRUPDATE_UPSERT:
-+		if (lookup_result == -ENOATTR) {
-+			error = xfs_attr_setname(args, rmt_blks);
-+			break;
-+		}
-+		fallthrough;
-+	case XFS_ATTRUPDATE_REPLACE:
-+		error = xfs_attr_replacename(args, rmt_blks);
-+		break;
- 	}
-+	if (error)
-+		goto out_trans_cancel;
- 
- 	/*
- 	 * If this is a synchronous mount, make sure that the
+ 		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0,
+-				XFS_TRANS_RESERVE | XFS_TRANS_RES_FDBLKS, &tp);
++				XFS_TRANS_RESERVE, &tp);
+ 		if (error)
+ 			return error;
+ 		xfs_ilock(ip, XFS_ILOCK_EXCL);
 -- 
 2.55.0
 
