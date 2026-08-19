@@ -1,56 +1,56 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BADC93B27D6
-	for <linux-xfs@vger.kernel.org>; Wed, 19 Aug 2026 20:11:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 035C83CB2C7
+	for <linux-xfs@vger.kernel.org>; Wed, 19 Aug 2026 20:14:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787170315; cv=none; b=da0xtkewkzzBNVqtVDZcAiKvMWEuojBkMaw8hyaISRQdrZg8Dz0wY26aX6UDlXtlB6Jgn1ObqunhbJ0i36CIcw96QS/Y40+IeL/sqVRutgz1PMVek8Dena2cT/UmqvRWdVELS580a5Bk4ftNr93dDRriR5mXXn+4nhWs3Q9mTVE=
+	t=1787170449; cv=none; b=Trhlp2cikptN1JsXNU9oaE2TpqvL6hYsWWj+h53P5xGK2UvS+W1+T958nxIgiCx3okd+y3PoI6lqYBtlvZtiNE1bkDHjQXatInOwdd+la5xYKK3cZALcrHOuHbTY9mkTPjKxm3f2GcPyVjTLTnXNw2owsoGNVJdzShYi6EbjThk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787170315; c=relaxed/simple;
-	bh=XRBeurOgXAVd0MaHMkVvwW/6NKgz7Qu5uo/yWzWhryQ=;
+	s=arc-20240116; t=1787170449; c=relaxed/simple;
+	bh=JfqQAK49hHm/aZ6BXAUkM+aeuTni6pxo1R1dX3StElQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LAzGta2w45ZYkGqS8BY23AOvKHM1+EpX4ZFF7YspMf3jzIeU7V4Bwo6BRs3SyH/noQYUE767Z6izru8HhOtuzkLaDhTUMwKgPhkwJEvJmfxVE9i0FdwFSCFBH96tH6NFJvlh/iwvskeWFH9fLeIKN6LWUQWvZL74OWHk48N+rbY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=BGSFhvIV; arc=none smtp.client-ip=170.10.129.124
+	 Content-Type:Content-Disposition:In-Reply-To; b=u7YMCzsZmW42+Lx54prVbZkblenVc+D4V2q8VQYg8IQhX3saxMUOzplDQ827vQt2K60ilwzQdk8ZD9IcUjxkGOvcNEauP1MZJK9avTmObdWbzjj2K40isaS5ue5FkFFPo19V0O2mOYrhb6tuPUD9vankN2trdQcnUa+Tc9+b5lU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ak1Wk1uv; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BGSFhvIV"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ak1Wk1uv"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1787170312;
+	s=mimecast20190719; t=1787170446;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=zBnfwUazkP6Ln1CCvglQANThPj56vBgOkhvC1fKSUFw=;
-	b=BGSFhvIV24MC1qgJ5OrJGLgmDwXguvdOpARhV+ijSBJgZE72gMgVQlLfSjHero5LjIYpKv
-	wW5kPLkp/MMKXb0Kwaho/xlnaU4mUO/pOEowqbokooNTqrBjw0FpNyyuohdK8Pgb0Aapq6
-	VxS1fNidB1qA8ucJFBDsclS+1V6neSE=
-Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+	bh=BpEoXoFdee0J2Zeip9BnsJ55Kgo2M/aTeF0gJCUQdGM=;
+	b=ak1Wk1uvA7+JdIUEiya0xnftO7Oqt3tMXQi3qQty9zG8yBae+NS0AOMuySMlOyIoGVFuq2
+	ZGTmY3Bwc36m18DO+FhSOZO/Ig8govXN+pEm6LqrLyVj+pvZvDnBIZxnUdXGcZvII2lV5t
+	LrFro3FVi1geynWeI88ts8ZjnallyHE=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-659-fxZGSTh9NmWYG1R2lSSD4w-1; Wed,
- 19 Aug 2026 16:11:40 -0400
-X-MC-Unique: fxZGSTh9NmWYG1R2lSSD4w-1
-X-Mimecast-MFC-AGG-ID: fxZGSTh9NmWYG1R2lSSD4w_1787170299
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-548--4jSALLbN2qobUGFO-txcw-1; Wed,
+ 19 Aug 2026 16:14:03 -0400
+X-MC-Unique: -4jSALLbN2qobUGFO-txcw-1
+X-Mimecast-MFC-AGG-ID: -4jSALLbN2qobUGFO-txcw_1787170442
 Received: from mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.95])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id B02D919560AD;
-	Wed, 19 Aug 2026 20:11:39 +0000 (UTC)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 07BB31955F7A;
+	Wed, 19 Aug 2026 20:14:02 +0000 (UTC)
 Received: from bfoster (headnet05.pony-001.prod.iad2.dc.redhat.com [10.2.32.117])
-	by mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id EB2D6423;
-	Wed, 19 Aug 2026 20:11:38 +0000 (UTC)
-Date: Wed, 19 Aug 2026 16:11:36 -0400
+	by mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 3B4027D6;
+	Wed, 19 Aug 2026 20:14:01 +0000 (UTC)
+Date: Wed, 19 Aug 2026 16:13:58 -0400
 From: Brian Foster <bfoster@redhat.com>
 To: Dave Chinner <dgc@kernel.org>
 Cc: linux-xfs@vger.kernel.org, Matt Fleming <matt@readmodwrite.com>
-Subject: Re: [PATCH v2 1/3] xfs: set minleft correctly for sparse chunk
- errortag allocation
-Message-ID: <aoYN-HbYzFXNfXXY@bfoster>
+Subject: Re: [PATCH v2 3/3] xfs: incorporate increased AGFL min requirement
+ for minleft allocs
+Message-ID: <aoYOho8hOXlbplQC@bfoster>
 References: <20260814132239.271492-1-bfoster@redhat.com>
- <20260814132239.271492-2-bfoster@redhat.com>
- <aoOKYRBTK7ocCBrY@dread>
+ <20260814132239.271492-4-bfoster@redhat.com>
+ <aoORV3bgMqDs5rUC@dread>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -59,66 +59,118 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aoOKYRBTK7ocCBrY@dread>
+In-Reply-To: <aoORV3bgMqDs5rUC@dread>
 X-Scanned-By: MIMEDefang 3.6 on 10.30.177.95
 
-On Tue, Aug 18, 2026 at 08:25:37AM +1000, Dave Chinner wrote:
-> On Fri, Aug 14, 2026 at 09:22:37AM -0400, Brian Foster wrote:
-> > The errortag instrumentation for forced sparse chunk allocation
-> > jumps straight to the allocation path without setting args.minleft.
-> > minleft is unconditionally set to ->inobt_maxlevels for the normal
-> > allocation path. Lift the assignment to the initial args setup so
-> > it covers all possible paths.
+On Tue, Aug 18, 2026 at 08:55:19AM +1000, Dave Chinner wrote:
+> On Fri, Aug 14, 2026 at 09:22:39AM -0400, Brian Foster wrote:
+...
 > > 
+> > Reported-by: Matt Fleming <matt@readmodwrite.com>
 > > Assisted-by: LLM
-> > Fixes: 1cdadee11f8d ("xfs: randomly do sparse inode allocations in DEBUG mode")
 > > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > Reviewed-by: Mark Tinguely <mark.tinguely@oracle.com>
 > > ---
-> >  fs/xfs/libxfs/xfs_ialloc.c | 10 ++++------
-> >  1 file changed, 4 insertions(+), 6 deletions(-)
+> >  fs/xfs/libxfs/xfs_alloc.c | 29 ++++++++++++++++++++++++++++-
+> >  fs/xfs/libxfs/xfs_alloc.h |  2 ++
+> >  fs/xfs/libxfs/xfs_bmap.c  |  2 +-
+> >  3 files changed, 31 insertions(+), 2 deletions(-)
 > > 
-> > diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-> > index ffcdd1f691fd..633b2d6e42c5 100644
-> > --- a/fs/xfs/libxfs/xfs_ialloc.c
-> > +++ b/fs/xfs/libxfs/xfs_ialloc.c
-> > @@ -733,6 +733,10 @@ xfs_ialloc_ag_alloc(
-> >  							igeo->maxicount)
-> >  		return -ENOSPC;
-> >  	args.minlen = args.maxlen = igeo->ialloc_blks;
-> > +
-> > +	/* Allow space for the inode btree to split. */
-> > +	args.minleft = igeo->inobt_maxlevels;
+> > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> > index dbb85fb6314b..74c5b587c87b 100644
+> > --- a/fs/xfs/libxfs/xfs_alloc.c
+> > +++ b/fs/xfs/libxfs/xfs_alloc.c
+...
+> > @@ -2533,10 +2548,22 @@ xfs_alloc_space_available(
+> >  	 * Do we have enough free space remaining for the allocation? Don't
+> >  	 * account extra agfl blocks because we are about to defer free them,
+> >  	 * making them unavailable until the current transaction commits.
+> > +	 *
+> > +	 * If minleft is set, this allocation might cause an allocbt split that
+> > +	 * increases the AGFL minimum for the next allocation in the
+> > +	 * transaction. Reserve that space from the available block count
+> > +	 * (without prematurely growing the AGFL) to prevent the subsequent
+> > +	 * allocation from failing due to an increased min_free requirement.
+> >  	 */
+> > +	minleft = args->minleft;
+> > +	if (minleft) {
+> > +		minleft += xfs_alloc_min_freelist_minleft(args->mp, pag) -
+> > +					min_free;
+> > +	}
 > 
-> As an extra question: is that reservation even correct? We can split
-> both the inobt and the finobt on insert, and this only reserves
-> space for a inobt split....
+> This seems fragile to me. It is based on the assumption that
+> min_free is calculated from xfs_alloc_min_freelist() by the caller,
+> and then this calculates the difference between what the caller should
+> have calculated and what is actually needed.
+> 
+> Where this mod is placed also results in the longest available
+> extent check not taking into account this modified min_free
+> requirement, whereas the check in xfs_bmap_longest_free_extent() is
+> modified to take this modified minleft value into account. i.e. the
+> checks w.r.t. minleft and longest extents are no longer consistent
+> across the layers.
+> 
+> I'm also concerned that this results in the
+> xfs_alloc_space_available() caller using different values of "need"
+> and "minleft" to what the actual space availablity calculation is
+> using; that feels like a future landmine to me.
 > 
 
-I think I mentioned in one of the earlier postings that finobt is
-covered by the metadata perag res, so minleft isn't necessary. One of
-the longer term ideas worth considering is to perhaps revisit why inobt
-blocks aren't reserved and see if it's worth doing that.
+I agree in principle wrt the fragility. This is kind of what I meant by
+expressing preference for something more elegant in the other subthread
+conversation w/ Darrick; I just haven't quite figured out what that
+looks like yet.
 
-> Secondly, why always reserve space for a max level split? The amount
-> we need is depedent on the current level of the btree, and for all
-> other btree types our reservations are based on the current level.
-> i.e. we know the math needed to make this dependent on current btree
-> levels, and we know that we are inserting into multiple btrees of
-> different heights here, so maybe we should fix this reservation
-> whilst we are here, too?
+> i.e. the xfs_alloc_space_available() caller already knows is minleft
+> is set, so if it were to use xfs_alloc_min_freelist_minleft(), then
+> there would not need to be this "correction" in this code and all
+> the values would be consistent.
+> 
+> Unless I'm missing something subtle, I think that the callers should
+> not need to know it should call xfs_alloc_min_freelist_minleft() or
+> xfs_alloc_min_freelist() as it feels like exposing internal AGFL
+> space/btree accounting requirements into an external API. All the
+> caller needs to signal is whether this is the first of a chain of
+> allocations or not (i.e. args->minleft != 0), and the internal alloc
+> code should handle it from there.
 > 
 
-I thought the reason we do this historically is because we haven't
-selected an AG at this point, but that could be wrong. The current code
-looks like it has the AGI buffer at this point at least, so technically
-I think we could tailor minleft to the current AG if we wanted to.
+I also agree wrt to the layering confusion, though I find that the
+existing API also suffers a bit from this.
 
-That said, I'm skeptical of the value for one.. how many blocks would we
-expect to make available in the best case? Enough for an extra chunk or
-two? Second, I really don't want to turn this into a squeeze more blocks
-out of -ENOSPC exercise so if we do want to dig into something like
-this, I'd prefer to defer it to a follow on series.
+> Hence I suspect it would be much cleaner just to add a 'bool
+> multialloc' parameter to xfs_alloc_min_freelist() and have all
+> callers set it appropriately. That would avoid the need for the
+> wrapper functions and keep this AGFL reservation wart
+> completely internal to the AGFL reservation calculation....
+> 
+> Thoughts?
+> 
+
+If I follow correctly, this centralizes the extra level calculation to
+_min_freelist(). I agree the code is cleaner, but the reason I didn't do
+that is because this would artificially alloc and free blocks through
+the AGFL for every such multi-allocation.
+
+I.e., a multi-alloc comes in and we calculate the multi-level worst case
+bump for each allocbt, set that to min_free, bump the AGFL to the new
+min_free and carry on with the alloc. The common case is going to be no
+new splits (and certainly not "everything splits"), so either the next
+allocation in the multi-alloc (or the next alloc thereafter) will remove
+every block that was added for splits that never occurred. So IMO the
+tradeoff for cleaner code here is worse behavior.
+
+Hmmm.. I suppose we could still implement this same sort of behavior
+using a multi-alloc parameter. For example, suppose we replaced
+xfs_alloc_min_freelist() with an xfs_alloc_freelist() that took your
+multi-alloc param and returned a min and a max. The min is the current
+return value, the max is the prospective worst case (i.e. min == max if
+multi-alloc == false, else +1 level).
+
+The internal alloc path passes both min/max to _space_available() so it
+can do consistent max length checks and calculate/add the delta to
+minleft for the available calculation. The AGFL min_free value is still
+based on the min. The bmap case passes multi-alloc = true and uses the
+max for its own length checks. Hm?
 
 Brian
 
