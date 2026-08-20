@@ -1,39 +1,39 @@
 Received: from smtpout-02.galae.net (smtpout-02.galae.net [185.246.84.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BD0347ECD7;
-	Thu, 20 Aug 2026 16:46:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB140478846;
+	Thu, 20 Aug 2026 17:03:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.246.84.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787244375; cv=none; b=XSJOLNcetFZBeXKU5xYi3CDU5AJi6V7YBKHule/lbOJC7N2gs9uSyX5iF0F7G2AKlGw4hn83CearlKTZfNnFs0JlYpU3u0RgjBQ99lo24AhAdtCqkR1I3/xFnFCkcTRD2qto09DlbgbQ061U/wGKHaGxAWIFjAlHq6fZusmLg9Q=
+	t=1787245398; cv=none; b=nY6so56Ipohm8CBcdu//6jeAY8T5m6/hoV2WymAL+to5NJBxfZHcwQlcfEbf5WWLlu5gkoNY2DYGK28vCeOWL/txSqH8O2Jdy6KTeTUTRKmd1deh6uygRJTNavISvFsO9YAzn919YGA1yLCEtoaNbIVLARZtRKWBsjDuGkUO9ZM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787244375; c=relaxed/simple;
-	bh=z/MYQwRoX8bnJdtLNfnYbGBYn1BFWTGbNo45Tnqiu4c=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=n/t3AmpMRTI0aBAYmu1rw86TGBfiRooUjsttOMyQVgf8Ge/xLS3GMpI+krjKRNEsfUtmtJvAkvyQixmTI3R0nT2jW3qOKRNw0eCOxnB7NLtNvgBDggHIdhb/ISq1fIEJfaIJ6Y7vWiGnaeFPutn1adOlgY5sTovzNa2OaB82Jsw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=AsTdC1FR; arc=none smtp.client-ip=185.246.84.56
+	s=arc-20240116; t=1787245398; c=relaxed/simple;
+	bh=UL5olmBLz4vCpi4CTfdNdOVt35NDxiRVlv14PKj30f4=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=dSffe8XU/c5JHTRUGWYlthKN0Txb/ToPgGFezWTwWNXrCrTVEmzqzavTLhM0M4CqRju+l1lzI0QEJVUvBM+dxLimfX2rnVS4uPqKKSWF6nvu5CUhspspFfaS1rcY02LcZyaV63Vr1IPM4wG55afeOcsJggiY7WFUBRx+D2w5eB8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=Zh+zStUK; arc=none smtp.client-ip=185.246.84.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="AsTdC1FR"
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="Zh+zStUK"
 Received: from smtpout-01.galae.net (smtpout-01.galae.net [212.83.139.233])
-	by smtpout-02.galae.net (Postfix) with ESMTPS id 638701A1771;
-	Thu, 20 Aug 2026 16:46:08 +0000 (UTC)
+	by smtpout-02.galae.net (Postfix) with ESMTPS id 29FD71A1771;
+	Thu, 20 Aug 2026 17:03:13 +0000 (UTC)
 Received: from mail.galae.net (mail.galae.net [212.83.136.155])
-	by smtpout-01.galae.net (Postfix) with ESMTPS id 366375FF59;
-	Thu, 20 Aug 2026 16:46:08 +0000 (UTC)
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id A5B3011C7654E;
-	Thu, 20 Aug 2026 18:45:59 +0200 (CEST)
+	by smtpout-01.galae.net (Postfix) with ESMTPS id D97385FF59;
+	Thu, 20 Aug 2026 17:03:12 +0000 (UTC)
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 0129211C76574;
+	Thu, 20 Aug 2026 19:03:08 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=dkim;
-	t=1787244363; h=from:subject:date:message-id:to:cc:mime-version:content-type:
-	 content-transfer-encoding; bh=HB3hKEAR0K/Zlz38CcIUi9gTa02tRgfVSqPhOWzML+Y=;
-	b=AsTdC1FRPpGzKUvw+2grQR1QEniKg1ucNMvHt3UEiEMuhwdafwbHWanUXkno+7UB4UmspS
-	fHHpHlgH6KBySOZ5BlECWoX7RvxUqbwy30bBQxWZOWZEzN9gNinEVYq++8tLdgGNA7pgYJ
-	nozEfo1T7tvAu4o90kHTT28+UL4XIVN6T/kDKBQWeHom6mkIwuP1J76TE3qONabti4paTR
-	mPTg/k5p7tQf92Ba/+hereu3b4EC0G/MxuUB314R2/L2qtm8U3Lrbw/aQmAAnz125UJdw9
-	9p8PU7/UuOb4Oa/WSC57u8XPofmmy8mZOzovTSRVr0GfZkzuObBtXYYdCUnKuw==
+	t=1787245391; h=from:subject:date:message-id:to:cc:mime-version:content-type:
+	 content-transfer-encoding; bh=dzpDPpSnAM2uONOW9dmectfOGf7mS7OXVGaVHm+mTHA=;
+	b=Zh+zStUKsoTQ14HSj68/KZzX5U8fCX5OXTe7NJwgpbvcWVhSzToGds53ZMrg3UhD0Kmfub
+	5NIJnuAdmXR1nzyTgC+5ZojvLLM8Bqm11JiVNkadHetkkAn3MGltA62jAZ0JnByIfJT1kS
+	3vG/yvRtWKSE6Mky8yM9CFII58TT7mspbtxk1cXwY0XZZR/QCZb9142Nhak9OubBkeylqw
+	qWqY38luPuIpDp8N1eJbIBkBxOTAlOg91cjwvsJntQDFMFDTWiJBZVHcpdpfH0w++lIAFn
+	44K1x9DkuuX8Fd2XUGkTOD8ntvHuaKH0wuy+kAC1mLvmEKnpn3ZmspD3LyMKqg==
 From: "Miguel Gazquez (Schneider Electric)" <miguel.gazquez@bootlin.com>
-Date: Thu, 20 Aug 2026 18:45:47 +0200
-Subject: [PATCH 6.1.y] iomap: adjust read range correctly for
+Date: Thu, 20 Aug 2026 19:03:07 +0200
+Subject: [PATCH 5.10.y] iomap: adjust read range correctly for
  non-block-aligned positions
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -43,26 +43,26 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260820-cve-2025-68794-v1-1-361e41b0a66b@bootlin.com>
-X-B4-Tracking: v=1; b=H4sIAAAAAAAC/yXMwQ6CMBCE4Vchc3bJ0sC2+CrGg5ZV1wOaVgmE8
- O5WPX6TzL8iazLN2Fcrkk6W7TEWNLsK8XYar0o2FMOxEw6OKU5KBR1J8H1L3Iah69k78YJyeia
- 92PwLHiB1Uy84/uf8Pt81vr4xbNsHQnxuK3kAAAA=
-X-Change-ID: 20260820-cve-2025-68794-048d59072676
+Message-Id: <20260820-cve-2025-68974-5-10-v1-1-26ff0db1f8e8@bootlin.com>
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/yXMyw6CMBCF4VchZ+2QaUO5+CrGBW1HHRdoWiQSw
+ rtbdfmd5PwbsiSVjGO1IcmiWR9TgTlUCLdxugppLIZl23JvmcIiVOCo7YeuIUeGKUrn/TDGENm
+ gPJ9JLvr+VU9wteF6xfm/55e/S5i/Sez7B3eYEP1/AAAA
+X-Change-ID: 20260820-cve-2025-68974-5-10-de7bb9adcd01
 To: stable@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, 
- "Darrick J. Wong" <djwong@kernel.org>
+ "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, 
+ linux-fsdevel@vger.kernel.org
 Cc: Thomas Petazzoni <thomas.petazzoni@bootlin.com>, 
- linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
  linux-kernel@vger.kernel.org, Joanne Koong <joannelkoong@gmail.com>, 
  syzbot@syzkaller.appspotmail.com, Brian Foster <bfoster@redhat.com>, 
  Christoph Hellwig <hch@lst.de>, Christian Brauner <brauner@kernel.org>, 
  Sasha Levin <sashal@kernel.org>, 
  "Miguel Gazquez (Schneider Electric)" <miguel.gazquez@bootlin.com>
 X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1787244359; l=2380;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1787245388; l=2376;
  i=miguel.gazquez@bootlin.com; s=20250708; h=from:subject:message-id;
- bh=GuQBm+40zn8HQ8wMdHhVHzOjSRd6QlWZ4HdqZv19bw0=;
- b=S3Glc+Cmr1OykvXx5Hq2JdUEVNSKQFmtYlMZMNPQ6kq5/Zok7450XUiHthNaRHk2TUrnJ/wBm
- MuuRblD3VyCCV2I3hbEeqftBNlbPBZceKOJmP1kkVHxFW2LR6bcFgc4
+ bh=CNtMEBmJPiIKjl+lDDc5UbR9iCo9r73AmjrCfA5GqX0=;
+ b=naMS4CUhlormixQdBh0yb08DTrCcZpVVcAB/BehBV+7ddR7RbtjBr6y58AENKmZrKwsq7uZWJ
+ lSmH4iCUL7WB38bsfrwn7z+Kh0E3EdvaCgtWWhyZWTwe47Xo2ivlzFw
 X-Developer-Key: i=miguel.gazquez@bootlin.com; a=ed25519;
  pk=k/2KI9jkmayaF0ghZ8QYUH9Wm/kFHDhl8QoZ0RHbr4w=
 X-Last-TLS-Session-Version: TLSv1.3
@@ -93,10 +93,10 @@ Signed-off-by: Miguel Gazquez (Schneider Electric) <miguel.gazquez@bootlin.com>
  1 file changed, 13 insertions(+), 6 deletions(-)
 
 diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 243cb2ec76ed..d0cfc4c3389c 100644
+index 219f9e1a2643..5ad3bf906b35 100644
 --- a/fs/iomap/buffered-io.c
 +++ b/fs/iomap/buffered-io.c
-@@ -107,17 +107,24 @@ static void iomap_adjust_read_range(struct inode *inode, struct folio *folio,
+@@ -103,17 +103,24 @@ iomap_adjust_read_range(struct inode *inode, struct iomap_page *iop,
  	 * to avoid reading in already uptodate ranges.
  	 */
  	if (iop) {
@@ -129,8 +129,8 @@ index 243cb2ec76ed..d0cfc4c3389c 100644
  		for ( ; i <= last; i++) {
 
 ---
-base-commit: 7e6e670547210424443261b2d54d2acfff85a37c
-change-id: 20260820-cve-2025-68794-048d59072676
+base-commit: 2a3da1f4966798b0b48ce302944ad356b2c98b5d
+change-id: 20260820-cve-2025-68974-5-10-de7bb9adcd01
 
 Best regards,
 --  
