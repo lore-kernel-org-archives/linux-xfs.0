@@ -1,120 +1,174 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E0A52DE6E6
-	for <linux-xfs@vger.kernel.org>; Fri, 21 Aug 2026 22:03:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C79383A9635;
+	Fri, 21 Aug 2026 22:20:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787349823; cv=none; b=cPsLNFhXr0eyolZYpqlrFsrV1a1hzdeRvMmkptZK3POkAogSmPeRfE7sC8p9J6oZTn/j2QqLnYcUhI/LEtZ5doWoHCpIEOigTiFUQl3FBHKihFLePxqA2uDVsr5L4yVGz4oYrFUshLvgLcqMEfCZZIa0EaTdppDoHBBsMmMbruo=
+	t=1787350817; cv=none; b=HU9KRQxtqnbDcjPUu0HR+0l2/6zpfk2eF0nzQmb0tIFPcUnEzW78PEnL7zFTxnxs9Y/cFaIDi/2sxieh1KxXWkpvTRs6CGHrh9mgYi+5VbM05BoM7uQWHO9NguNtlpwThGbkdynHOToHU6cGDBH1Y2GFbPFALbp3ueiRxRSihP8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787349823; c=relaxed/simple;
-	bh=CidgavDoxyV2WnCGn7ZkA7/Lk0FLgpHx+WotF2vqhDY=;
-	h=Message-ID:Date:MIME-Version:To:Cc:From:Subject:Content-Type; b=D0qRYH9moqCJcaumb45XzxDcg0Xs8zlUp5zHsqfaQ1byXkHf7TwKosbzBDu/ApmuCKzeYJ41Dw5mhlQ/bI/+TbxPf16u//ipYk2lswF5vmdfZvSuVPhwyRLB9V56jqwylsjwjgB4RrGt9MM/8zWd46IvNrdEj0msx9cpBiU0TPg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=dERtsKTa; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=QRzMqO9d; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1787350817; c=relaxed/simple;
+	bh=RUvF+1ZQvjubaa5vPe7qI4BVpNavFri+/1Rsr8o9Zck=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=PIcGdFint9taUQq1kSlxE8VyH0EQFgrvg+fyhbOXBgumS+wRFP8bcUMYY1Lox8j50b77Irm1Qe+pLAfGlVDGD/ftHSHk4dRbuUa6JSYL8VhmzlQo3Mrd4bVJCgAmVGia7inM1uZJZQolXgpillD71obGOeSuW/H8cx+Hh/EGi9M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kYhBnCNE; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="dERtsKTa";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="QRzMqO9d"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1787349821;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=oVNVHEeJhSSQzpgmhVniVXo1wjrMyJ2Aak0pTWRmhAE=;
-	b=dERtsKTaE/9KnZIhfMZUn69KdxuZJA5Nm6d7wE5yWXS2eZm6ZzrovBwrp5SBA5aseKB+NM
-	K4BBYB7bqTd6bwWsxEbmo47ztfEHyB+rp/TbFcLfpz4sUWDtzoidv3CGkFhaviCyPKAuSf
-	hMIoXYH3OQ4WLa2o2HyMYzD/KNCpfCw=
-Received: from mail-oa1-f69.google.com (mail-oa1-f69.google.com
- [209.85.160.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-255-dqSF8GG7P8q14XgHcSdRfw-1; Fri, 21 Aug 2026 18:03:39 -0400
-X-MC-Unique: dqSF8GG7P8q14XgHcSdRfw-1
-X-Mimecast-MFC-AGG-ID: dqSF8GG7P8q14XgHcSdRfw_1787349819
-Received: by mail-oa1-f69.google.com with SMTP id 586e51a60fabf-456b5122c7cso4090729fac.1
-        for <linux-xfs@vger.kernel.org>; Fri, 21 Aug 2026 15:03:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1787349819; x=1787954619; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:subject:from:cc:to
-         :content-language:user-agent:mime-version:date:message-id:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=oVNVHEeJhSSQzpgmhVniVXo1wjrMyJ2Aak0pTWRmhAE=;
-        b=QRzMqO9dFDXeUhxJkmmjYkKr6VbPQJWT2UCL0XFn1W6CXgOUVw8lSCsX/OLNZtNFgQ
-         4X3tDJPXDtqG+Lxiwcx6mEqouL+/pmctrunxLsBoMHzujmdo/6CVE8q4DVSobeCLXfiJ
-         /l4892cz0s35Mry6mv79BfSXeTODiV8rw4vbKbxf1CVFIf83YKLPaKQatPejqlpB71SV
-         Bd9kuPWfpVA/XPOui64r7eFKlDaEzC7nlP6sWWgPi+CTRFByzBYNHPD3lN46IqEj7Jmq
-         yMWzWvIzXKWBpBISyN2zpfGm2n+mU1eh2kZDMeBDb4HdcwinO6kg6ZhQE9SBt59zHDDU
-         GmdQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787349819; x=1787954619;
-        h=content-transfer-encoding:content-type:subject:from:cc:to
-         :content-language:user-agent:mime-version:date:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=oVNVHEeJhSSQzpgmhVniVXo1wjrMyJ2Aak0pTWRmhAE=;
-        b=pdFsI+fSjPC5VU29WUP68Fr/RgVUT7vuaqKdd+JO4p5j5d7kocn0OefsKrUxRpRQyR
-         zy0onR98KvlhwwDoq19vBzFogqD2ZOsqDY2vJ+d7ADW1mI/fDgE2Wf9lCShA9sWdfrnI
-         jgQGNJ1NmlOk2JOy+p4nHJA10zUvjDpepyi07M83gIYZRArx9CQqye7ZAVyKdgUSXEFK
-         DKmQ5rsqXcZC81pbcB15cW5Lo9wpuerit9+KHLYTcqiEfWncrGJjofUd2b5PatqFlf8C
-         kQa/evUMqRpVzpWuQ+e/BOO4GW5/ZCHnz39zUiZFktA6u/A1DtddMvmXizsa+KfR5alA
-         sJjQ==
-X-Gm-Message-State: AFuF++nxk8J/Py1clLoPd/edPhof8kqiLTDYhbw7t3JJPS4U3ABrHoEx
-	Cyt4y54PpgUmp66Lo6dQwbDRHRwJUeRH8cL9yWA2hGGsjzA9/ARln3YGqaYMBJU5lr+CxfigeFF
-	pxRj/92ZEz/BU2TNiVE+NXmrvdVokcjuifHKAR5Yr2/vW/ybATxszwaaF8XXru/x/a98nVsw14L
-	W5EA8h0UTi+KfQ172hEir9sTb3zSu45JrjY5qopIBVRPFos/M=
-X-Gm-Gg: AR+sD13GmULbg/mj6/+Y7tkl0U1D/a0jy87M4N1hd/x6OBv77uPXRG1Xvpjwzl6QQY0
-	ocXKImO1OPE4HIeYejUf47JEsxu9AchgYOtEjCe1KW/QyFiEBw8y5FpNtLEx83fgYOPVaxfcJkH
-	1GPmczqnveho5ld8SVXMV/H8nGVcR1Ds/OI0WQjtbE2rQpznRSP1KwO211KwBhvIl5ho0TndZi4
-	j/MOFxjpUJhgzDc0NcitnAZ2oDZLQBJjxSNn6V/G60j0xbtD5XF6sLEg0E+S5NXcguZ78k3kGu8
-	qNd/7UjYyRJuvEink63fn6Zv+8HepwqG+YvznK4xXfWlq2sLI72+GDUKdIBjmsxLee4g6F+W4Ji
-	sUGdLI1zJsHh26wMqKL/gkgDoarTKubMiRLJkHYoZ
-X-Received: by 2002:a05:6820:2009:b0:6aa:da90:8bd2 with SMTP id 006d021491bc7-6b15ae18075mr8414742eaf.16.1787349819039;
-        Fri, 21 Aug 2026 15:03:39 -0700 (PDT)
-X-Received: by 2002:a05:6820:2009:b0:6aa:da90:8bd2 with SMTP id 006d021491bc7-6b15ae18075mr8414622eaf.16.1787349818409;
-        Fri, 21 Aug 2026 15:03:38 -0700 (PDT)
-Received: from [10.0.0.119] (97-127-68-83.mpls.qwest.net. [97.127.68.83])
-        by smtp.gmail.com with ESMTPSA id 006d021491bc7-6b13cebebc2sm9200648eaf.9.2026.08.21.15.03.37
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 21 Aug 2026 15:03:37 -0700 (PDT)
-Message-ID: <bf0a3369-f788-4519-9883-8d01d42631e5@redhat.com>
-Date: Fri, 21 Aug 2026 17:03:37 -0500
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kYhBnCNE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1FCD41F000E9;
+	Fri, 21 Aug 2026 22:20:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1787350814;
+	bh=uK2hKM9vaLjBixO/WCDlJAXWhYvcTU7mSMuiKUtfzFo=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=kYhBnCNERk+J4lROvqtSW0Jrx+9dwe3BACWpwtns1sH0+RVe9AEr/u9hGFm/7doJR
+	 kzbOohtKjJbHGOaS3UEl3FclkITGFZ9dEAtXC+HyKdj8yEXPUo72zM/MZBnP1jjNie
+	 Rm4rS3IDHmirZ1guUs6MlA4amMIOESUmzcd61XtIeiVTBx96g4SqY8q2qLv6Y853XJ
+	 Vbnuc2gfRWX7husdsn3Cl0IZNxNdRkOU0TINWzVLEBNPBYV0xTLeOUq7szvCqk5a8V
+	 wP4SIyqxWy0dVQ6OG5q8bUtDDufsLE1IJMhkIKaglWOHS+HbRNFViSbFYeVm4Q7vZ8
+	 44K0z/cZ9+EBQ==
+Date: Sat, 22 Aug 2026 08:20:05 +1000
+From: Dave Chinner <dgc@kernel.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: "Anthony Vardaro (Anthropic)" <me@anthonyvardaro.com>,
+	Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH] xfs: revalidate cached COW fork mappings during writeback
+Message-ID: <aojPFYhD4SNPv30o@dread>
+References: <20260820-b4-xfs-cow-wb-revalidate-v1-1-8a19080799ea@anthonyvardaro.com>
+ <20260820161123.GH6072@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Content-Language: en-US
-To: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] xfs: fix reclaimed page accounting in xfs_buf_free
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260820161123.GH6072@frogsfrogsfrogs>
 
-To obtain nr. of pages in "size" bytes, we need howmany(size, PAGE_SIZE)
-not howmany(size, PAGE_SHIFT). This over-reports reclaim by orders of
-magnitude, up to 4096x on a 64k page system.
+On Thu, Aug 20, 2026 at 09:11:23AM -0700, Darrick J. Wong wrote:
+> On Thu, Aug 20, 2026 at 12:21:38AM +0000, Anthony Vardaro (Anthropic) wrote:
+> > Writeback can write a folio through a cached COW fork mapping after the
+> > blocks behind it have been freed. Since commit d9252d526ba6 ("xfs:
+> > validate writeback mapping using data fork seq counter") a cached data
+> > fork mapping is dropped when the fork changes, but a COW fork mapping is
+> > accepted on range alone, and since commit 3b3508980730 ("xfs: remove
+> > superfluous writeback mapping eof trimming") nothing trims it to EOF. So
+> > when close() or truncate frees the post-EOF COW blocks and the file is
+> > then appended, the same writeback pass writes the new folio into blocks
+> > the inode no longer owns. fsync() returns 0 and the range reads back as
+> > zeroes, or the data lands in another file.
 
-Fixes: e2874632a621 ("xfs: use vmalloc instead of vm_map_area for buffer backing memory")
-Cc: stable@vger.kernel.org # v6.15+
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
- fs/xfs/xfs_buf.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Have you reproduced this and tested that it the change actually
+fixes the supposed bug?
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 1a5340baeabf..8256c1d13ce2 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -139,7 +139,7 @@ xfs_buf_free(
- 	ASSERT(list_empty(&bp->b_lru));
- 
- 	if (!xfs_buftarg_is_mem(bp->b_target) && size >= PAGE_SIZE)
--		mm_account_reclaimed_pages(howmany(size, PAGE_SHIFT));
-+		mm_account_reclaimed_pages(howmany(size, PAGE_SIZE));
- 
- 	if (is_vmalloc_addr(bp->b_addr))
- 		vfree(bp->b_addr);
+> > Check cow_seq against the COW fork if_seq for COW mappings as well, and
+> > only sample cow_seq where the mapping is built so a failed conversion
+> > cannot pair a stale mapping with a fresh sequence number.
+> > 
+> > This costs one extent lookup and one cancelled transaction per
+> > invalidation: about 5% more fsync time on random 4k overwrites of a
+> > reflinked file, nothing measurable on sequential writeback.
+> > 
+> > Fixes: d9252d526ba6 ("xfs: validate writeback mapping using data fork seq counter")
+> > Cc: stable@vger.kernel.org # v5.1
+> > Assisted-by: Claude:unspecified
+> > Signed-off-by: Anthony Vardaro (Anthropic) <me@anthonyvardaro.com>
+> > ---
+> > An fstests case for this, using the wb_delay_ms error injection knob,
+> > follows separately.
+> > 
+> > Backport note: kernels before v6.2 do not have
+> > trace_xfs_wb_cow_iomap_invalid() (added by commit c2beff99eb03), so
+> > drop that call there. Kernels before v5.5 test wpc->fork ==
+> > XFS_COW_FORK instead of IOMAP_F_SHARED and have no XFS_WPC().
+> > ---
+> >  fs/xfs/xfs_aops.c | 29 ++++++++++++++++++-----------
+> >  1 file changed, 18 insertions(+), 11 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> > index 2a0c54256..c043e5bad 100644
+> > --- a/fs/xfs/xfs_aops.c
+> > +++ b/fs/xfs/xfs_aops.c
+> > @@ -304,12 +304,22 @@ xfs_imap_valid(
+> >  	    offset >= wpc->iomap.offset + wpc->iomap.length)
+> >  		return false;
+> >  	/*
+> > -	 * If this is a COW mapping, it is sufficient to check that the mapping
+> > -	 * covers the offset. Be careful to check this first because the caller
+> > -	 * can revalidate a COW mapping without updating the data seqno.
+> > +	 * A COW mapping is only valid while the COW fork is unchanged. After a
+> > +	 * change, the blocks behind the mapping can already be freed, for
+> > +	 * example by the post-EOF trim on close. Do this check before the
+> > +	 * data fork check, because the caller can revalidate a COW mapping
+> > +	 * without updating the data seqno.
+> >  	 */
+> > -	if (wpc->iomap.flags & IOMAP_F_SHARED)
+> > +	if (wpc->iomap.flags & IOMAP_F_SHARED) {
+> > +		if (!ip->i_cowfp)
+> > +			return false;
+> > +		if (XFS_WPC(wpc)->cow_seq != READ_ONCE(ip->i_cowfp->if_seq)) {
+> 
+> The buffered write path has similar data/cow fork sequence counter
+> revalidation code, so would it be a better idea to adapt the writeback
+> path to sample the sequence counter via xfs_iomap_inode_sequence in
+> xfs_map_blocks, and re-check that in xfs_imap_valid()?
 
+Hmmmm - looking at the rest of the function, I think that using
+xfs_iomap_inode_sequence() will potentially introduce a new bug...
+
+The code 10 lines below for non-shared iomap validity
+unconditionally checks the COW fork sequence number  if
+xfs_inode_has_cow_data() returns true.
+
+The code above is essentially makes it:
+
+	if (IOMAP_F_SHARED) {
+		if (!xfs_inode_has_cow_data())
+			return false;
+		/* check cow sequence */
+		return ....
+	}
+
+	/* check data sequence */
+
+	if (xfs_inode_has_cow_data())
+		/* check cow sequence */
+
+	return ...
+
+IOWs, adding the seqeunce check to the SHARED iomap means we
+-always- check the COW_FORK sequence number now if
+xfs_inode_has_cow_data() returns true. i.e.
+
+	if (xfs_inode_has_cow_data()) {
+		/* check cow sequence */
+	}
+	if (IOMAP_F_SHARED)
+		return false;
+
+	/* check data sequence */
+
+And with this, it should be obvious now why using I suspect
+xfs_iomap_inode_sequence() could introduce new problems - it only
+encodes the cow fork sequence number if IOMAP_F_SHARED is set.
+
+However, looking at the reworked logic above, I think this uncovers
+another bug, this one in xfs_map_blocks(). That is, xfs_map_blocks()
+never samples the COW fork sequence number on pure data fork
+writeback on xfs_inode_has_cow_data() inodes. Hence the "always
+check the cow-fork sequence" on pure data overwrites -always- fails
+on inodes with mixed data/cow overwrites, even when the cached
+extent is still valid.....
+
+So, before a fix is made, we need to decide what the correct
+behaviour is for writeback on mixed mode inodes. Given the imapct of
+getting this wrong, I think that should be unconditionally tossing
+the cached iomap if either the cow fork or data fork changes. That
+makes for simple logic, and it covers all cases where a racing
+change could potentially cause an issue....
+
+-Dave.
+-- 
+Dave Chinner
+dgc@kernel.org
