@@ -1,138 +1,145 @@
-Received: from smtpout-02.galae.net (smtpout-02.galae.net [185.246.84.56])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB140478846;
-	Thu, 20 Aug 2026 17:03:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.246.84.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 388C3365A0B;
+	Fri, 21 Aug 2026 03:39:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787245398; cv=none; b=nY6so56Ipohm8CBcdu//6jeAY8T5m6/hoV2WymAL+to5NJBxfZHcwQlcfEbf5WWLlu5gkoNY2DYGK28vCeOWL/txSqH8O2Jdy6KTeTUTRKmd1deh6uygRJTNavISvFsO9YAzn919YGA1yLCEtoaNbIVLARZtRKWBsjDuGkUO9ZM=
+	t=1787283591; cv=none; b=lqA1/lnNOwR3GC5UX/yljFvf0OORQfVZ20+awMmUzB/z459QdLGgT5/H8ox1M9Ehj7vET678kBCdCsF3R7NWr9g265kGAsR0NENkdxzV9TxRV9SJiFFXLrDCrepF5ZAkhzu8+AUxaCGvG1DYsUUmSqj2vf2AkfJX1QVd8jyWlZs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787245398; c=relaxed/simple;
-	bh=UL5olmBLz4vCpi4CTfdNdOVt35NDxiRVlv14PKj30f4=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=dSffe8XU/c5JHTRUGWYlthKN0Txb/ToPgGFezWTwWNXrCrTVEmzqzavTLhM0M4CqRju+l1lzI0QEJVUvBM+dxLimfX2rnVS4uPqKKSWF6nvu5CUhspspFfaS1rcY02LcZyaV63Vr1IPM4wG55afeOcsJggiY7WFUBRx+D2w5eB8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=Zh+zStUK; arc=none smtp.client-ip=185.246.84.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="Zh+zStUK"
-Received: from smtpout-01.galae.net (smtpout-01.galae.net [212.83.139.233])
-	by smtpout-02.galae.net (Postfix) with ESMTPS id 29FD71A1771;
-	Thu, 20 Aug 2026 17:03:13 +0000 (UTC)
-Received: from mail.galae.net (mail.galae.net [212.83.136.155])
-	by smtpout-01.galae.net (Postfix) with ESMTPS id D97385FF59;
-	Thu, 20 Aug 2026 17:03:12 +0000 (UTC)
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 0129211C76574;
-	Thu, 20 Aug 2026 19:03:08 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=dkim;
-	t=1787245391; h=from:subject:date:message-id:to:cc:mime-version:content-type:
-	 content-transfer-encoding; bh=dzpDPpSnAM2uONOW9dmectfOGf7mS7OXVGaVHm+mTHA=;
-	b=Zh+zStUKsoTQ14HSj68/KZzX5U8fCX5OXTe7NJwgpbvcWVhSzToGds53ZMrg3UhD0Kmfub
-	5NIJnuAdmXR1nzyTgC+5ZojvLLM8Bqm11JiVNkadHetkkAn3MGltA62jAZ0JnByIfJT1kS
-	3vG/yvRtWKSE6Mky8yM9CFII58TT7mspbtxk1cXwY0XZZR/QCZb9142Nhak9OubBkeylqw
-	qWqY38luPuIpDp8N1eJbIBkBxOTAlOg91cjwvsJntQDFMFDTWiJBZVHcpdpfH0w++lIAFn
-	44K1x9DkuuX8Fd2XUGkTOD8ntvHuaKH0wuy+kAC1mLvmEKnpn3ZmspD3LyMKqg==
-From: "Miguel Gazquez (Schneider Electric)" <miguel.gazquez@bootlin.com>
-Date: Thu, 20 Aug 2026 19:03:07 +0200
-Subject: [PATCH 5.10.y] iomap: adjust read range correctly for
- non-block-aligned positions
+	s=arc-20240116; t=1787283591; c=relaxed/simple;
+	bh=IRkyxu0Ni6Trkwu70PVPHmDd+v34ZZtNEsRgxhAwfEA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=FAN0sO40cWrfemH984XJcXrhwxKxXP4nu0MCU6I6MYxR13X0wOZZRNkDfaw4oEKjA3B4zHk2PsgBkVbGI9NmYalBOKweE8sSuOk+OTYylLAGS05yCSGRSxFcqIXhY88T+ZTZnpDLn7Yi4AxSEx8yFYLcjlhh0TpxD7TZObNb5Co=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.170])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4hR5df6wCfzYQtjy;
+	Fri, 21 Aug 2026 11:39:18 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.252])
+	by mail.maildlp.com (Postfix) with ESMTP id C40184056D;
+	Fri, 21 Aug 2026 11:39:38 +0800 (CST)
+Received: from [10.174.178.253] (unknown [10.174.178.253])
+	by APP3 (Coremail) with UTF8SMTPSA id _Ch0CgD35kVsyIdqUkpYDA--.64918S3;
+	Fri, 21 Aug 2026 11:39:38 +0800 (CST)
+Message-ID: <721bf688-85c4-4eab-9876-43b22e607288@huaweicloud.com>
+Date: Fri, 21 Aug 2026 11:39:24 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] man2/fallocate.2: add doc for FALLOC_FL_WRITE_ZEROES
+To: Pankaj Raghav <p.raghav@samsung.com>, linux-man@vger.kernel.org,
+ Alejandro Colomar <alx@kernel.org>
+Cc: pankaj.raghav@linux.dev, hch@lst.de, linux-xfs@vger.kernel.org,
+ gost.dev@samsung.com, "Darrick J . Wong" <djwong@kernel.org>,
+ linux-ext4@vger.kernel.org
+References: <20260820090400.857720-1-p.raghav@samsung.com>
+Content-Language: en-US
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+In-Reply-To: <20260820090400.857720-1-p.raghav@samsung.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260820-cve-2025-68974-5-10-v1-1-26ff0db1f8e8@bootlin.com>
-X-B4-Tracking: v=1; b=H4sIAAAAAAAC/yXMyw6CMBCF4VchZ+2QaUO5+CrGBW1HHRdoWiQSw
- rtbdfmd5PwbsiSVjGO1IcmiWR9TgTlUCLdxugppLIZl23JvmcIiVOCo7YeuIUeGKUrn/TDGENm
- gPJ9JLvr+VU9wteF6xfm/55e/S5i/Sez7B3eYEP1/AAAA
-X-Change-ID: 20260820-cve-2025-68974-5-10-de7bb9adcd01
-To: stable@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, 
- "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, 
- linux-fsdevel@vger.kernel.org
-Cc: Thomas Petazzoni <thomas.petazzoni@bootlin.com>, 
- linux-kernel@vger.kernel.org, Joanne Koong <joannelkoong@gmail.com>, 
- syzbot@syzkaller.appspotmail.com, Brian Foster <bfoster@redhat.com>, 
- Christoph Hellwig <hch@lst.de>, Christian Brauner <brauner@kernel.org>, 
- Sasha Levin <sashal@kernel.org>, 
- "Miguel Gazquez (Schneider Electric)" <miguel.gazquez@bootlin.com>
-X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1787245388; l=2376;
- i=miguel.gazquez@bootlin.com; s=20250708; h=from:subject:message-id;
- bh=CNtMEBmJPiIKjl+lDDc5UbR9iCo9r73AmjrCfA5GqX0=;
- b=naMS4CUhlormixQdBh0yb08DTrCcZpVVcAB/BehBV+7ddR7RbtjBr6y58AENKmZrKwsq7uZWJ
- lSmH4iCUL7WB38bsfrwn7z+Kh0E3EdvaCgtWWhyZWTwe47Xo2ivlzFw
-X-Developer-Key: i=miguel.gazquez@bootlin.com; a=ed25519;
- pk=k/2KI9jkmayaF0ghZ8QYUH9Wm/kFHDhl8QoZ0RHbr4w=
-X-Last-TLS-Session-Version: TLSv1.3
+X-CM-TRANSID:_Ch0CgD35kVsyIdqUkpYDA--.64918S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxCw13tw43tw1fCrWUAr13Arb_yoW5GryxpF
+	WrZF15t3yUXF13Kr93uw40krWrZ3ykGw43ur4Iv34kZrs8ZFn7KFs8GF15ZasrJryrAay0
+	qr10gFy2kwnrAa7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUymb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Gr0_Xr1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr0_Cr1l84ACjcxK6I8E87Iv67AKxVWxJr0_GcWl84ACjcxK6I8E87Iv6xkF7I
+	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
+	x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
+	0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lc7CjxVAaw2AFwI0_Jw0_GFyl42xK82IYc2Ij64vI
+	r41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8Gjc
+	xK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0
+	cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8V
+	AvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E
+	14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x07UAwIDUUUUU=
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-From: Joanne Koong <joannelkoong@gmail.com>
+On 8/20/2026 5:04 PM, Pankaj Raghav wrote:
+> This flag was added to the kernel in v6.17. As of now, only ext4 and
+> block device nodes support this flag.
+> 
+> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
 
-[ Upstream commit 7aa6bc3e8766990824f66ca76c19596ce10daf3e ]
+Looks good to me. Thanks!
 
-iomap_adjust_read_range() assumes that the position and length passed in
-are block-aligned. This is not always the case however, as shown in the
-syzbot generated case for erofs. This causes too many bytes to be
-skipped for uptodate blocks, which results in returning the incorrect
-position and length to read in. If all the blocks are uptodate, this
-underflows length and returns a position beyond the folio.
+Reviewed-by: Zhang Yi <yi.zhang@huawei.com>
 
-Fix the calculation to also take into account the block offset when
-calculating how many bytes can be skipped for uptodate blocks.
-
-Signed-off-by: Joanne Koong <joannelkoong@gmail.com>
-Tested-by: syzbot@syzkaller.appspotmail.com
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Christian Brauner <brauner@kernel.org>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
-Signed-off-by: Miguel Gazquez (Schneider Electric) <miguel.gazquez@bootlin.com>
----
- fs/iomap/buffered-io.c | 19 +++++++++++++------
- 1 file changed, 13 insertions(+), 6 deletions(-)
-
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 219f9e1a2643..5ad3bf906b35 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -103,17 +103,24 @@ iomap_adjust_read_range(struct inode *inode, struct iomap_page *iop,
- 	 * to avoid reading in already uptodate ranges.
- 	 */
- 	if (iop) {
--		unsigned int i;
-+		unsigned int i, blocks_skipped;
- 
- 		/* move forward for each leading block marked uptodate */
--		for (i = first; i <= last; i++) {
-+		for (i = first; i <= last; i++)
- 			if (!test_bit(i, iop->uptodate))
- 				break;
--			*pos += block_size;
--			poff += block_size;
--			plen -= block_size;
--			first++;
-+
-+		blocks_skipped = i - first;
-+		if (blocks_skipped) {
-+			unsigned long block_offset = *pos & (block_size - 1);
-+			unsigned bytes_skipped =
-+				(blocks_skipped << block_bits) - block_offset;
-+
-+			*pos += bytes_skipped;
-+			poff += bytes_skipped;
-+			plen -= bytes_skipped;
- 		}
-+		first = i;
- 
- 		/* truncate len if we find any trailing uptodate block(s) */
- 		for ( ; i <= last; i++) {
-
----
-base-commit: 2a3da1f4966798b0b48ce302944ad356b2c98b5d
-change-id: 20260820-cve-2025-68974-5-10-de7bb9adcd01
-
-Best regards,
---  
-Miguel Gazquez (Schneider Electric) <miguel.gazquez@bootlin.com>
+> ---
+> Changes since v1:
+> - Change the phrasing around zeroing and its condition (Zhang Yi)
+> - Update ext4 support only for extent-based files (Zhang Yi)
+> 
+> Note:
+> This feature was recently added to XFS and it is expected to land in
+> v7.13. I will update this man page again once v7.13 is released.
+> 
+>  man/man2/fallocate.2 | 38 ++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 38 insertions(+)
+> 
+> diff --git a/man/man2/fallocate.2 b/man/man2/fallocate.2
+> index ef6586c77..48a8c3468 100644
+> --- a/man/man2/fallocate.2
+> +++ b/man/man2/fallocate.2
+> @@ -244,6 +244,43 @@ SMB3 (since Linux 3.17)
+>  .IP \[bu]
+>  Btrfs (since Linux 4.16)
+>  .\" commit f27451f229966874a8793995b8e6b74326d125df
+> +.SS Writing zeroes in file space
+> +Specifying the
+> +.B FALLOC_FL_WRITE_ZEROES
+> +flag (available since Linux 6.17)
+> +.\" commit 7bd43cc79cab3850f34da0a31d5b042b701590ef
+> +in
+> +.I mode
+> +physically zeros space in the byte range starting at
+> +.I offset
+> +and continuing for
+> +.I size
+> +bytes.
+> +Within the specified range,
+> +blocks are preallocated for the regions that span the holes
+> +in the file.
+> +After a successful call,
+> +subsequent reads from this range will return zeros and
+> +subsequent writes to that range do not require further
+> +changes to the file mapping metadata.
+> +.P
+> +Zeroing is done within the filesystem.
+> +The filesystem may use a hardware-accelerated zeroing command
+> +or may submit regular writes.
+> +The behavior depends on the filesystem design and the
+> +available hardware.
+> +.P
+> +No other flags may be specified in
+> +.I mode
+> +in conjunction with
+> +.BR FALLOC_FL_WRITE_ZEROES .
+> +.P
+> +Not all filesystems support
+> +.BR FALLOC_FL_WRITE_ZEROES ;
+> +if a filesystem doesn't support the operation, an error is returned.
+> +The operation is supported only in ext4 (only for extent-based files)
+> +since Linux 6.17.
+> +.\" commit f4265b8d32c49ff95711e6fef7d05245a2905b30
+>  .SS Increasing file space
+>  Specifying the
+>  .B FALLOC_FL_INSERT_RANGE
+> @@ -385,6 +422,7 @@ or
+>  is
+>  .BR FALLOC_FL_COLLAPSE_RANGE ,
+>  .BR FALLOC_FL_ZERO_RANGE ,
+> +.BR FALLOC_FL_WRITE_ZEROES ,
+>  or
+>  .BR FALLOC_FL_INSERT_RANGE ,
+>  but the file referred to by
+> 
+> base-commit: d926b42e0ea0406d5c2556e18205eced92d053f1
 
