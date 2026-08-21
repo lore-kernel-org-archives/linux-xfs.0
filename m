@@ -1,145 +1,180 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 388C3365A0B;
-	Fri, 21 Aug 2026 03:39:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9AB1125CC57;
+	Fri, 21 Aug 2026 03:58:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787283591; cv=none; b=lqA1/lnNOwR3GC5UX/yljFvf0OORQfVZ20+awMmUzB/z459QdLGgT5/H8ox1M9Ehj7vET678kBCdCsF3R7NWr9g265kGAsR0NENkdxzV9TxRV9SJiFFXLrDCrepF5ZAkhzu8+AUxaCGvG1DYsUUmSqj2vf2AkfJX1QVd8jyWlZs=
+	t=1787284688; cv=none; b=bINhGnhOZ59h9guXWmyd8NdFEU+K5py7IO3iiZT6LBcRrqmvFd+pa5m6GGsIS6k9xPzAcCVLwWpA8ALDA2ow/h/+UnE2x/iGsv4C38+2yft97Y1IJi9FeSakz3zW+YXZq5uCsIoWIHggVose/fFV1v9oIjeS5W7VVbzVaNr5DwM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787283591; c=relaxed/simple;
-	bh=IRkyxu0Ni6Trkwu70PVPHmDd+v34ZZtNEsRgxhAwfEA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=FAN0sO40cWrfemH984XJcXrhwxKxXP4nu0MCU6I6MYxR13X0wOZZRNkDfaw4oEKjA3B4zHk2PsgBkVbGI9NmYalBOKweE8sSuOk+OTYylLAGS05yCSGRSxFcqIXhY88T+ZTZnpDLn7Yi4AxSEx8yFYLcjlhh0TpxD7TZObNb5Co=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.170])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4hR5df6wCfzYQtjy;
-	Fri, 21 Aug 2026 11:39:18 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.252])
-	by mail.maildlp.com (Postfix) with ESMTP id C40184056D;
-	Fri, 21 Aug 2026 11:39:38 +0800 (CST)
-Received: from [10.174.178.253] (unknown [10.174.178.253])
-	by APP3 (Coremail) with UTF8SMTPSA id _Ch0CgD35kVsyIdqUkpYDA--.64918S3;
-	Fri, 21 Aug 2026 11:39:38 +0800 (CST)
-Message-ID: <721bf688-85c4-4eab-9876-43b22e607288@huaweicloud.com>
-Date: Fri, 21 Aug 2026 11:39:24 +0800
+	s=arc-20240116; t=1787284688; c=relaxed/simple;
+	bh=ODawO/hpH9q9jvdDYpfgKydC7t8sYIsjzJjAGSb7+4s=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=Euj7//UPbwJ8ZOiX+h2fRnNCJOXfNTvsGj7CH4eNsHXLpPWyvYXtv1ATD7CYBFYIWRvhQ77aBx5Q7KnJWztKtfKBuHFyqRlZ8l0jgqSQDd5Djb5hEaatXwGvdcqVOlwkvgJOuagTNZZj2hgLCDMgRcgpNbyxdQINsOG/N90YpFw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OKdfbgt1; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OKdfbgt1"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id C930D1F000E9;
+	Fri, 21 Aug 2026 03:58:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1787284686;
+	bh=kSHmfrKhIALMyddyyAwUc75UoUF7K7K4yJh+Ue5T8Tk=;
+	h=Date:From:To:Cc:Subject;
+	b=OKdfbgt1YX95fs/iaAb+8qar636Tx0x4en5DHrYXEhGGCUhke+kqGHqK3q6XyxkjZ
+	 F8ycGx+rCInnUuJTFhlbdf/fmcnSLsqBBwHXVr8bpcOQ1IcKkRqW88s9gRMerf1WCS
+	 EqiLamGkl1NVGS4+OxzZWQJ66kNP2rxZhDiO6R/tINMFvw9584PX/64EFCvknLZui2
+	 EWeKjLx9MT7JllaQfIp3qIEPakDVtfD9e/2qckEsom3JX6Jx2tlZ/qszI6NVn66VVb
+	 bhmS20NvkHCdD358PUL3o7Cwvt4FUW1/EH0fo6MEJdpWieSJsj1VPSd2WwRdFCZz61
+	 Ka0RAPfzHuHSA==
+Date: Thu, 20 Aug 2026 20:58:06 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: hch@lst.de, cem@kernel.org
+Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: [PATCH] xfs: fix media verification ioctl for internal rt volumes
+Message-ID: <20260821035806.GJ6072@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] man2/fallocate.2: add doc for FALLOC_FL_WRITE_ZEROES
-To: Pankaj Raghav <p.raghav@samsung.com>, linux-man@vger.kernel.org,
- Alejandro Colomar <alx@kernel.org>
-Cc: pankaj.raghav@linux.dev, hch@lst.de, linux-xfs@vger.kernel.org,
- gost.dev@samsung.com, "Darrick J . Wong" <djwong@kernel.org>,
- linux-ext4@vger.kernel.org
-References: <20260820090400.857720-1-p.raghav@samsung.com>
-Content-Language: en-US
-From: Zhang Yi <yi.zhang@huaweicloud.com>
-In-Reply-To: <20260820090400.857720-1-p.raghav@samsung.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:_Ch0CgD35kVsyIdqUkpYDA--.64918S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxCw13tw43tw1fCrWUAr13Arb_yoW5GryxpF
-	WrZF15t3yUXF13Kr93uw40krWrZ3ykGw43ur4Iv34kZrs8ZFn7KFs8GF15ZasrJryrAay0
-	qr10gFy2kwnrAa7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUymb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Gr0_Xr1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr0_Cr1l84ACjcxK6I8E87Iv67AKxVWxJr0_GcWl84ACjcxK6I8E87Iv6xkF7I
-	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
-	x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
-	0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lc7CjxVAaw2AFwI0_Jw0_GFyl42xK82IYc2Ij64vI
-	r41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8Gjc
-	xK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0
-	cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8V
-	AvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E
-	14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x07UAwIDUUUUU=
-X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-On 8/20/2026 5:04 PM, Pankaj Raghav wrote:
-> This flag was added to the kernel in v6.17. As of now, only ext4 and
-> block device nodes support this flag.
-> 
-> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+From: Darrick J. Wong <djwong@kernel.org>
 
-Looks good to me. Thanks!
+A media scan of a filesystem containing an internal rt volume produced
+an error in xfs_scrub phase 6 complaining about a truncated realtime
+device.  The rt device wasn't truncated, but the media scan code thought
+we were trying to start a scan past the end of m_rtdev_targp.  That in
+turn is an alias for m_ddev_targp, but in xfs_configure_buftarg we set
+nr_sectors to the size of the data section.  We don't account for an
+internal realtime section, so the kernel doesn't scan any part of it.
+Oops.
 
-Reviewed-by: Zhang Yi <yi.zhang@huawei.com>
+Reproducer:
 
-> ---
-> Changes since v1:
-> - Change the phrasing around zeroing and its condition (Zhang Yi)
-> - Update ext4 support only for extent-based files (Zhang Yi)
-> 
-> Note:
-> This feature was recently added to XFS and it is expected to land in
-> v7.13. I will update this man page again once v7.13 is released.
-> 
->  man/man2/fallocate.2 | 38 ++++++++++++++++++++++++++++++++++++++
->  1 file changed, 38 insertions(+)
-> 
-> diff --git a/man/man2/fallocate.2 b/man/man2/fallocate.2
-> index ef6586c77..48a8c3468 100644
-> --- a/man/man2/fallocate.2
-> +++ b/man/man2/fallocate.2
-> @@ -244,6 +244,43 @@ SMB3 (since Linux 3.17)
->  .IP \[bu]
->  Btrfs (since Linux 4.16)
->  .\" commit f27451f229966874a8793995b8e6b74326d125df
-> +.SS Writing zeroes in file space
-> +Specifying the
-> +.B FALLOC_FL_WRITE_ZEROES
-> +flag (available since Linux 6.17)
-> +.\" commit 7bd43cc79cab3850f34da0a31d5b042b701590ef
-> +in
-> +.I mode
-> +physically zeros space in the byte range starting at
-> +.I offset
-> +and continuing for
-> +.I size
-> +bytes.
-> +Within the specified range,
-> +blocks are preallocated for the regions that span the holes
-> +in the file.
-> +After a successful call,
-> +subsequent reads from this range will return zeros and
-> +subsequent writes to that range do not require further
-> +changes to the file mapping metadata.
-> +.P
-> +Zeroing is done within the filesystem.
-> +The filesystem may use a hardware-accelerated zeroing command
-> +or may submit regular writes.
-> +The behavior depends on the filesystem design and the
-> +available hardware.
-> +.P
-> +No other flags may be specified in
-> +.I mode
-> +in conjunction with
-> +.BR FALLOC_FL_WRITE_ZEROES .
-> +.P
-> +Not all filesystems support
-> +.BR FALLOC_FL_WRITE_ZEROES ;
-> +if a filesystem doesn't support the operation, an error is returned.
-> +The operation is supported only in ext4 (only for extent-based files)
-> +since Linux 6.17.
-> +.\" commit f4265b8d32c49ff95711e6fef7d05245a2905b30
->  .SS Increasing file space
->  Specifying the
->  .B FALLOC_FL_INSERT_RANGE
-> @@ -385,6 +422,7 @@ or
->  is
->  .BR FALLOC_FL_COLLAPSE_RANGE ,
->  .BR FALLOC_FL_ZERO_RANGE ,
-> +.BR FALLOC_FL_WRITE_ZEROES ,
->  or
->  .BR FALLOC_FL_INSERT_RANGE ,
->  but the file referred to by
-> 
-> base-commit: d926b42e0ea0406d5c2556e18205eced92d053f1
+ # mkfs.xfs -f /dev/sda -r zoned=1 -d rtinherit=1
+ # mount /dev/sda /mnt
+ # dd if=/dev/zero of=/mnt/a bs=1024k count=100
+ # sync
+ # xfs_info /mnt
+ meta-data=/dev/sda               isize=512    agcount=4, agsize=32768 blks
+          =                       sectsz=512   attr=2, projid32bit=1
+          =                       crc=1        finobt=1, sparse=1, rmapbt=1
+          =                       reflink=0    bigtime=1 inobtcount=1 nrext64=1
+          =                       exchange=1   metadir=1
+ data     =                       bsize=4096   blocks=131072, imaxpct=25
+          =                       sunit=0      swidth=0 blks
+ naming   =version 2              bsize=4096   ascii-ci=0, ftype=1, parent=1
+ log      =internal log           bsize=4096   blocks=16384, version=2
+          =                       sectsz=512   sunit=0 blks, lazy-count=1
+ realtime =internal               extsz=4096   blocks=1114112, rtextents=1114112
+          =                       rgcount=17   rgsize=65536 extents
+          =                       zoned=1      start=131072 reserved=53248
 
+IOWS: 512M data volume, 3.1G internal rt section.  Now let's try some
+media verification:
+
+ # xfs_io -c 'verifymedia -d' -c 'verifymedia -r' /mnt
+ verified 536870912/536870912 bytes at offset 0
+ 512 MiB, 1 ops; 0.0496 sec (10.067 GiB/sec and 20.1345 ops/sec)
+ verified 536870912/536870912 bytes at offset 0
+ 512 MiB, 1 ops; 0.0409 sec (12.222 GiB/sec and 24.4439 ops/sec)
+
+Notice how xfs_io says we only verified 512M of the rt volume?  If you
+run btrace in the background you'll see that we read the first 512M of
+the volume (aka the data section) twice and never read anything from the
+rt section.
+
+An earlier fix tried messing with the buftarg geometry, but I've decided
+on a more targetted fix for the media verification code.  All we have to
+do is calculate the starting and ending daddr for the device that we're
+verifying, and clamp the user's input values to that range.  This leads
+to some bogosity in the output reporting:
+
+ # xfs_io -c 'verifymedia -d' -c 'verifymedia -r' /mnt/t
+ verified 536870912/536870912 bytes at offset 0
+ 512 MiB, 1 ops; 0.0606 sec (8.248 GiB/sec and 16.4968 ops/sec)
+ verified 5100273664/5100273664 bytes at offset 0
+ 4.750 GiB, 1 ops; 0.3329 sec (14.267 GiB/sec and 3.0035 ops/sec)
+
+Because we don't have a way to report that we didn't really do anything
+at all for that first 512M of address space of the rt "device".  But at
+least we're no longer ignoring real media.
+
+(Note that the fsmap/bmap/fiemap calls all report physical addresses for
+the internal rt volume as offsets from the start of the data device, and
+the media verifier call consumes the same.  We baked that into the
+user-visible behavior in 6.15, so we're stuck with that sparse hole at
+the beginning.)
+
+Cc: <stable@vger.kernel.org> # v6.15
+Fixes: bdc03eb5f98f6f ("xfs: allow internal RT devices for zoned mode")
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+---
+ fs/xfs/xfs_verify_media.c |   24 +++++++++++++++++-------
+ 1 file changed, 17 insertions(+), 7 deletions(-)
+
+diff --git a/fs/xfs/xfs_verify_media.c b/fs/xfs/xfs_verify_media.c
+index 5ead3976d51151..b75c81f8fcc037 100644
+--- a/fs/xfs/xfs_verify_media.c
++++ b/fs/xfs/xfs_verify_media.c
+@@ -268,6 +268,8 @@ xfs_verify_media(
+ 	struct xfs_buftarg	*btp = NULL;
+ 	struct bio		*bio;
+ 	struct folio		*folio;
++	xfs_daddr_t		dev_start = 0;
++	xfs_daddr_t		dev_end = 0;
+ 	xfs_daddr_t		daddr;
+ 	uint64_t		bbcount;
+ 	int			error = 0;
+@@ -277,24 +279,33 @@ xfs_verify_media(
+ 	switch (me->me_dev) {
+ 	case XFS_DEV_DATA:
+ 		btp = mp->m_ddev_targp;
++		dev_end = XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
+ 		break;
+ 	case XFS_DEV_LOG:
+-		if (mp->m_logdev_targp != mp->m_ddev_targp)
++		if (mp->m_logdev_targp != mp->m_ddev_targp) {
+ 			btp = mp->m_logdev_targp;
++			dev_end = XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks);
++		}
+ 		break;
+ 	case XFS_DEV_RT:
+ 		btp = mp->m_rtdev_targp;
++		dev_start = XFS_FSB_TO_BB(mp, mp->m_sb.sb_rtstart);
++		dev_end = XFS_FSB_TO_BB(mp, mp->m_sb.sb_rtstart +
++					    mp->m_sb.sb_rblocks);
+ 		break;
+ 	}
+ 	if (!btp)
+ 		return -ENODEV;
+ 
+ 	/*
+-	 * If the caller told us to verify beyond the end of the disk, tell the
+-	 * user exactly where that was.
++	 * If the caller told us to verify before the start or beyond the end
++	 * of the disk volume, tell the user exactly where the volume starts
++	 * and ends.
+ 	 */
+-	if (me->me_end_daddr > btp->bt_nr_sectors)
+-		me->me_end_daddr = btp->bt_nr_sectors;
++	if (me->me_end_daddr > dev_end)
++		me->me_end_daddr = dev_end;
++	if (me->me_start_daddr < dev_start)
++		me->me_start_daddr = dev_start;
+ 
+ 	/* start and end have to be aligned to the lba size */
+ 	if (!IS_ALIGNED(BBTOB(me->me_start_daddr | me->me_end_daddr),
+@@ -323,8 +334,7 @@ xfs_verify_media(
+ 	 *    verifying.
+ 	 */
+ 	daddr = me->me_start_daddr;
+-	bbcount = min_t(sector_t, me->me_end_daddr, btp->bt_nr_sectors) -
+-			  me->me_start_daddr;
++	bbcount = me->me_end_daddr - me->me_start_daddr;
+ 
+ 	folio = xfs_verify_alloc_folio(xfs_verify_iosize(me, btp, bbcount));
+ 	if (!folio)
