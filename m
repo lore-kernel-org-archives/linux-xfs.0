@@ -1,159 +1,116 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from proxima.stupidest.org (proxima.stupidest.org [35.163.12.83])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F68624293C
-	for <linux-xfs@vger.kernel.org>; Sun, 30 Aug 2026 08:57:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 401272DF137
+	for <linux-xfs@vger.kernel.org>; Sun, 30 Aug 2026 17:49:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=35.163.12.83
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788080252; cv=none; b=tyJltJO5SEtUH74Mq14XjavLvd3yn7ukHcaSg1hgZZjY1E8sKGFi9H2xIVbk/+jexU2NU0FmfHr/DlLhPN7I3KtDPbC52QybJnBtgXEC6K2gtIUyWI/Aevy4UFiMOe0UBN2pLHedFPl4DqGvTM03100vquMnwWvlfEJvC7JTTKk=
+	t=1788112173; cv=none; b=In3E6hHgp+0QdCa155+14hKU9jWxRy1ZDhX80dISKwzJXUGsK8CwZ3nwIVvVyOeLmuq6WQlKs5jzGDelI2Uozz6rApHgZJYN7/7Fui9Gnbu40QPRNxeFV5RV/OTuNjr7pYTYMmmGmgkKhbLysYGcpr0Z/bvIupltMxcMyl9r8W4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788080252; c=relaxed/simple;
-	bh=E8nmShe8kC7jCCQNYbIRUwo3OQACoeUixu9mDApoJtQ=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Z8iU6kx8cDA9/yAck6Q37AgLzato19YuKYtQ5YDsv5WmEEI3fXZH4xUKwiwuHMya7GY6HqWh9x3WnkY9ERjKFdVFf1KRZoAjGIcR7kjJmupdfcXKMJkinV5mXCIo3YkrhU+Lgf9DCWTONJW0Wd1BJbQuvaaZ0A71EOREnNfoNsY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cIElM/EV; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788112173; c=relaxed/simple;
+	bh=jWvS/DqdWTeESvxXhOSZV4jwiXurUfyM8h5EFiaLD1g=;
+	h=To:Message-ID:In-Reply-To:References:From:Date:Subject; b=m1wENtVCeI+1Lg2k6oL8bhRdoCb3bvwYYqj7ZNjv7aFtflnYtkC5djND91ITLl3ZCFUxpgfOodYSmBFr3XPTnCVW6ccJYjo8KGgyzMSpRVhb7Khvf0bcLnwiau/t28KcDkJTddU6DbcRNH/smrJbFuAAJNolFHnGIOhwemiHSiA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=f00f.org; spf=pass smtp.mailfrom=f00f.org; dkim=pass (2048-bit key) header.d=f00f.org header.i=@f00f.org header.b=jlarMpQ+; arc=none smtp.client-ip=35.163.12.83
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=f00f.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=f00f.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cIElM/EV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E92741F000E9
-	for <linux-xfs@vger.kernel.org>; Sun, 30 Aug 2026 08:57:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788080250;
-	bh=029+faS5ZzWsov4hpcUm5x/4rseKLpq/BvplkVhE40Q=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=cIElM/EVVH2WzeGJMV/4QFdk42ui1KAqQkON6WDnOlc2p6IooaK4UQQ+mf5CWZgOL
-	 3cqFTVMiWLS0o7h1ikoMDiq10FGPBQbJzcYovFHwL/GCZ9eq+QolNfSbTjGRSApF93
-	 s2T0VYRvHffeXAOHwcJls4hLb2RxdIHzaoAgPqAeVJzs18tJj31BRaXHAR/sc4XXmW
-	 tad+9zNDBaD+vzva4AJCQ1eRb6VhLHsK3bo3aIcG2Nc/p1LwVVnxEjvU7RsEevNruP
-	 iVCH4WYj+/YVq295ozAiACQyATYrYycdMd2L4ivqtRZU0MW0i/wRlwDzbe5efy9S9h
-	 gPHsGV7U2eytQ==
-Received: by mail-qt1-f170.google.com with SMTP id d75a77b69052e-51c08df8513so15485901cf.3
-        for <linux-xfs@vger.kernel.org>; Sun, 30 Aug 2026 01:57:30 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AHgh+RqNDdSceRTPfiFkXpo1GnbzARfDAklSNm6Q5NhEVpvCWYF44RL6Jen9i0JB0GT3nwanP75nNBPxJzI=@vger.kernel.org
-X-Gm-Message-State: AFuF++lwqMZgGyDwV2oiOMxMjFHH9pEng8Bf7RvbqyFToasf+xNbn4Tp
-	TfnhM2YCkN0Lmg8rkWWOc6E79w8PrPVIFCRXIhgVmInyUj4NuMKRWuUXzH2ysQNcX4uYwvk06cu
-	5FyG0yg2PvemVGo1tYt4BJyj2TpPKSBg=
-X-Received: by 2002:a05:620a:5d83:b0:92f:279:5953 with SMTP id
- af79cd13be357-939138ae01emr1707149385a.27.1788080250323; Sun, 30 Aug 2026
- 01:57:30 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=f00f.org header.i=@f00f.org header.b="jlarMpQ+"
+Received: from aether.stupidest.org (unknown [10.0.1.5])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(Client did not present a certificate)
+	by proxima.stupidest.org (Postfix) with ESMTPS id 4hY04Q3z8Zz6lh
+	for <linux-xfs@vger.kernel.org>; Sun, 30 Aug 2026 17:49:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=f00f.org; s=m2016a;
+	t=1788112166; bh=nd+uv7pVMqQE6MSoDkPFYS5jDZpP5O4rNRzOCZEoeVg=;
+	h=To:Message-ID:In-Reply-To:References:From:Date:Subject;
+	b=jlarMpQ+sWELAuIFZlwvShnQJw/vuXvHTbD1OYwCOvIzIhVOeHISpOjgXVMg/s4J8
+	 cT/vdmrrtk8+OAKJT2dqRDbV8BXOlXEDnzHuVcpppJ4WOCw7w9wy5Te2b5EeVtHqtj
+	 IAmBI4BU9X5TsrUkPzfTPLcKdKQgOM/iwq7aWMTnB8ObC1drWsBQlIemNBwG7uMS8q
+	 Itws/RWZD4gGT1YGEQR4w8iGSoS1wi3cmFV0X95s2PIPT3HRSdM8889VIuu8gnLJqX
+	 vLcaY7v+he6Vvi7OkcNeOq+dnCJPAR7KidATPqg/pq7jOlONfDQNB+BStE91cXPB5P
+	 RK74CpcLmqbHw==
+Received: from stupidest.org (unknown [172.31.255.110])
+	by aether.stupidest.org (Postfix) with SMTP id 4hY04P0cY7z9KVLH
+	for <linux-xfs@vger.kernel.org>; Sun, 30 Aug 2026 10:49:25 -0700 (PDT)
+Received: by stupidest.org (sSMTP sendmail emulation); Sun, 30 Aug 2026 10:49:25 -0700
+To: linux-xfs@vger.kernel.org
+Message-ID: <60509d17767ab0c93d22269c507350840b92e3e1.1788110147.git.cw@f00f.org>
+In-Reply-To: <cover.1788110147.git.cw@f00f.org>
+References: <cover.1788110147.git.cw@f00f.org>
+From: Chris Wedgwood <cw@f00f.org>
+Date: Thu, 20 Aug 2026 17:22:39 -0700
+Subject: [PATCH 1/9] libxfs: make XBF_DONE actually mark a buffer uptodate
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <20260730-blk-dontcache-v7-0-3e8e6850068d@columbia.edu>
- <20260730-blk-dontcache-v7-2-3e8e6850068d@columbia.edu> <CAGsJ_4wUvLoKGafR3U-ji1kUUaz6K_QdN6QxMT-apSaO5tXp0A@mail.gmail.com>
- <6672b30b-427f-45ed-a172-4c47a63d2c7c@columbia.edu>
-In-Reply-To: <6672b30b-427f-45ed-a172-4c47a63d2c7c@columbia.edu>
-From: Barry Song <baohua@kernel.org>
-Date: Sun, 30 Aug 2026 16:57:18 +0800
-X-Gmail-Original-Message-ID: <CAGsJ_4y8tAh8A8pfi5TJEtPq-JMPjrLX4gCLvesmPNYuZdWCCA@mail.gmail.com>
-X-Gm-Features: AcwNN1UV9cGDBED4rxscU4sOzbiEGy-p9iJ4uD11AMCMxh60PQMZXIFRTunlV-4
-Message-ID: <CAGsJ_4y8tAh8A8pfi5TJEtPq-JMPjrLX4gCLvesmPNYuZdWCCA@mail.gmail.com>
-Subject: Re: [PATCH v7 2/5] block: add task-context bio completion infrastructure
-To: Tal Zussman <tz2294@columbia.edu>
-Cc: Jens Axboe <axboe@kernel.dk>, "Matthew Wilcox (Oracle)" <willy@infradead.org>, 
-	Christian Brauner <brauner@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>, Carlos Maiolino <cem@kernel.org>, 
-	Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>, 
-	Christoph Hellwig <hch@infradead.org>, Gao Xiang <xiang@kernel.org>, Chao Yu <chao@kernel.org>, 
-	Yue Hu <zbestahu@gmail.com>, Jeffle Xu <jefflexu@linux.alibaba.com>, 
-	Sandeep Dhavale <dhavale@google.com>, Hongbo Li <lihongbo22@huawei.com>, 
-	Chunhai Guo <guochunhai@vivo.com>, Dave Chinner <dgc@kernel.org>, 
-	Bart Van Assche <bvanassche@acm.org>, Hillf Danton <hdanton@sina.com>, 
-	Sebastian Andrzej Siewior <bigeasy@linutronix.de>, linux-block@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, 
-	linux-erofs@lists.ozlabs.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Sat, Aug 29, 2026 at 11:26=E2=80=AFPM Tal Zussman <tz2294@columbia.edu> =
-wrote:
->
-> On 8/16/26 7:11 AM, Barry Song wrote:
-> > Hi Tal,
-> >
-> > Thanks very much for the patch. I=E2=80=99m just a bit confused that
-> > folio_end_dropbehind() only requires in_task(), and nothing more.
-> >
-> > void folio_end_dropbehind(struct folio *folio)
-> > {
-> >          if (!folio_test_dropbehind(folio))
-> >                  return;
-> >
-> >          /*
-> >           * Hitting !in_task() should not happen off RWF_DONTCACHE writ=
-eback,
-> >           * but can happen if normal writeback just happens to find dir=
-ty folios
-> >           * that were created as part of uncached writeback, and that w=
-riteback
-> >           * would otherwise not need non-IRQ handling. Just skip the
-> >           * invalidation in that case.
-> >           */
-> >          if (in_task() && folio_trylock(folio)) {
-> >                  filemap_end_dropbehind(folio);
-> >                  folio_unlock(folio);
-> >          }
-> > }
-> >
-> > But we=E2=80=99re applying a much stricter check with bio_in_atomic():
-> >
-> > +static inline bool bio_in_atomic(void)
-> > +{
-> > +     if (IS_ENABLED(CONFIG_PREEMPTION) && rcu_preempt_depth())
-> > +           return true;
-> > +     if (!IS_ENABLED(CONFIG_PREEMPT_COUNT))
-> > +           return true;
-> > +      return !preemptible();
-> > +}
-> >
-> > I feel like something may be missing either in
-> > folio_end_dropbehind() itself or somewhere in the
-> > filesystem/block-device path.
-> >
-> > Do you know why they don=E2=80=99t match each other?
-> >
-> > Best Regards
-> > Barry
-> >
->
-> Hi Barry,
->
-> Apologies for the delay.
->
-> As far as I can tell, the in_task() in folio_end_dropbehind() wasn't mean=
-t
-> to be a generic test for if it's safe to sleep, but rather filtered out t=
-he
-> known unsafe case of buffer_head writeback completing from IRQ context.
-> In contrast, the bio_in_atomic() check needs to be stricter since the bi_=
-end_io()
-> callbacks could sleep or the callers could be holding locks, RCU, etc.
->
-> I see there's some more discussion about this at [1], but I suspect there=
- are
-> other instances that are (incorrectly) using in_task() as a proxy for bei=
-ng able
-> to sleep (like f2fs_read_end_io(), but I haven't looked too closely at it=
-).
->
-> Additionally, it probably only makes sense to use bio_in_atomic() when th=
-ere's
-> some deferral path, since with CONFIG_PREEMPT_COUNT=3Dn, it'll always ret=
-urn true.
+XBF_DONE is defined to 0 in the userspace platform header, so every
+"this buffer's contents are valid, don't re-read it" annotation that
+libxfs inherits from the kernel is silently a no-op:
 
-Tal, thanks very much for your reply and the kind clarification. It
-seems you're right, and I think we should also use `bio_in_atomic()` in
-`folio_end_dropbehind()`.
+	bp->b_flags |= XBF_DONE;	/* expands to |= 0 */
 
-On the other hand, as I mentioned in another thread[1], I really feel that
-`bio_in_atomic()` has nothing to do with `bio` at all; it's really a
-scheduler thing. We may want to move it to the scheduler layer and
-discuss it there.
+The userspace equivalent of the kernel's XBF_DONE is LIBXFS_B_UPTODATE,
+which is what libxfs_buf_read_map() actually tests before deciding
+whether a physical read can be skipped:
 
-[1] https://lore.kernel.org/linux-mm/CAGsJ_4xxDpeaPv9Uh_1qsuXsMLkx+J0X=3D2V=
-6342idLFO5jkTBw@mail.gmail.com/
+	if (bp->b_flags & (LIBXFS_B_UPTODATE | LIBXFS_B_DIRTY))
+		goto ok;		/* no read */
 
-Best Regards
-Barry
+so a buffer that has been marked "done" is nevertheless re-read from
+disk, discarding whatever the caller had just constructed in memory.
+
+There are three consequences today:
+
+ - xfs_btree_staging.c documents the intent it does not get:
+	"Mark this buffer XBF_DONE (i.e. uptodate) so that a subsequent
+	 xfs_buf_read will not pointlessly reread the contents from the
+	 disk."
+   This is currently masked because xfs_buf_delwri_queue_here() also
+   marks the buffer dirty, and LIBXFS_B_DIRTY happens to suppress the
+   re-read too.
+
+ - The readahead verifiers in xfs_inode_buf.c and xfs_dquot_buf.c clear
+   XBF_DONE to force a subsequent real read through the full verifier,
+   as their comments describe.  Those clears are no-ops as well.
+
+ - __xfs_buf_mark_corrupt() asserts on a condition that can never be
+   true:
+	ASSERT(bp->b_flags & XBF_DONE);
+   (Inert in practice only because libxfs/Makefile builds with
+   -DNDEBUG unconditionally.)
+
+The path that motivated this, xfs_ialloc_inode_init() marking a freshly
+initialised inode chunk uptodate, is only reachable from the kernel's
+xfs_icreate_item.c, which libxfs does not carry yet; it becomes live as
+soon as log recovery is brought into libxfs.
+
+Define XBF_DONE as LIBXFS_B_UPTODATE so the flag means what its name and
+all of its users say it means.
+
+No functional change was observed: xfs_repair -n output and post-repair
+superblock counters are unchanged across an 8-image corpus, and mkfs.xfs
+superblock geometry is identical.
+---
+ libxfs/xfs_platform.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/libxfs/xfs_platform.h b/libxfs/xfs_platform.h
+index 5cddfbb8..bb9c3e23 100644
+--- a/libxfs/xfs_platform.h
++++ b/libxfs/xfs_platform.h
+@@ -347,7 +347,7 @@ static inline unsigned long long mask64_if_power2(unsigned long b)
+ 
+ /* buffer management */
+ #define XBF_TRYLOCK			0
+-#define XBF_DONE			0
++#define XBF_DONE			LIBXFS_B_UPTODATE
+ #define xfs_buf_stale(bp)		((bp)->b_flags |= LIBXFS_B_STALE)
+ #define XFS_BUF_UNDELAYWRITE(bp)	((bp)->b_flags &= ~LIBXFS_B_DIRTY)
+ 
+-- 
+2.47.3
+
