@@ -1,39 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35A6139B4BF
-	for <linux-xfs@vger.kernel.org>; Fri, 21 Aug 2026 07:36:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C603E3AB26C;
+	Fri, 21 Aug 2026 07:36:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787297769; cv=none; b=D8lApNwG5NaHaOW9T6XP2g7zGS/v3EpiDWiR0Ni66cBKq15kK/TiyEki4CdJhBDi3qhM/sPxPsKY5hUo4zeSq/K6DiED/EeOAHW8s+h28GH9vegA41/04HTfuPglrpaY4UeexiddWF/E4VJ+zOpyTtr/rcsU/OVi2QMyD8oWXrE=
+	t=1787297770; cv=none; b=EIhm10vNdhyExC0pebi8h8yAp1GjIeJMMP8CdQf6s3NvHwV6lnMJ3/klfiuJ+TQcnRp7N9PUj2dRYxmyP8ZS9Lmk7D/DDqLZgaXatprP4pMyuAj7ohcNM5Sbxytc6XhbXU/lUdMGn+4pbOwX8WFsP9E/LDl0wrywsQ0XvBkElyY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787297769; c=relaxed/simple;
-	bh=s1AKGEyiGC0O35CQ1fWUmo0H+PGl59kgXp5kIwoxdew=;
+	s=arc-20240116; t=1787297770; c=relaxed/simple;
+	bh=Md1obngXluxKbvYIu1ICh7GXlOtCPOrKFXCNTkhWiU4=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=qie30Y6kej/70qx+vySGLdbfEYHxdF4udEBGe2QhvEqcCd1BiSoe8PA6KT8VSr9LckIVk7fUes2NvRxM2t4IYQArfaLN2QbeCI9DcRN7JTeJT9mh+wV1F3kbQHUtIMJp/KrOST8joKV5UQapb0PtDF31/XFsDpOECzlUBCAT45E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Fl7xm8vd; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=YOozBLaz6gwWsbmWbb3riIn1Zxuq/mLs+8Q+gzBTtIVWL/MLJZ88MJyhD/iN7qAY3b71Vfkij9mwzQNyUcAcgEVjMNQOnHnib5Q6qWKq5nB9yzrYkWow9TY3zYfzFit+sANlGmhyGKVL8r047y5XLzTR5bzDu4TjQxPGkLwDDkQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=U2U8IY2d; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Fl7xm8vd"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D3A941F00ACA;
-	Fri, 21 Aug 2026 07:35:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="U2U8IY2d"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 93ED01F00ACF;
+	Fri, 21 Aug 2026 07:35:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787297757;
-	bh=Fp5dc+NBcqUJ5WD098K6kbF6wCle/2ZcQ14wLsyr07Q=;
+	s=k20260515; t=1787297759;
+	bh=03eLvzHpgeM92hnYwCNYL3ohPDt/39Y2iqAl8qqH/FQ=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=Fl7xm8vd6rigBNeUZBBJwFzvcPN2Cu7mG35B8hY7B2t22SeJh3WBJ/onfsVhFyYoy
-	 CGufLcYq2+GSzFrxaFKW2eGbRdbgdfBEZ0sVcWZNwrdrELaUHwg+CcRTRp+BzzU/gt
-	 gdK/HOpxh7dBK90p5M3dp7p54R624eWU96p/WvCauzzi+enDuyq2ghLZKs9MsRJQbV
-	 dMzbeqJmVjFntHtCDhD3kLHqkkOHVoB5cXXmWRCZ2Scl/Ih4ctqmMf/M9epxUli/7q
-	 sow7wrG5wcS9DmnIc0S5pz/7OlBnRB2R5CZrW96+Wg+x3Qjtl/D0PJhNs9cP5uX4wG
-	 iHBgQ3LQ4tYAQ==
+	b=U2U8IY2dqIk5fc4IQmbpMOl8XyrzCV8MGrc4PKvLl677mR+6rtv0KO7oUrLtQT0Fi
+	 8eItrxljn7+cPGX7MWgxcTwFqwMDOg73+qCkoC8oRZdm/OFgAemzjSEvK3M0ylBVGl
+	 JESirfFoosTx50HKSxXLua/XxGOSZx9aEWY/7CyBPoNmxL+/ldBrvZu6wS2Y+pIWEF
+	 BxfpARddCWe3v7zBGJ7+0Sz/JHnT3YT/8HvlAdPawtHuMgUgRSPvooQwAh9DnC1RjU
+	 CJJwr5ROfodDMRUWjZMClqcISsYrVAnHLvYZUWlLBiB2S7cJYv67eW572RgCQMeVdC
+	 +DEAYAN/Om0qA==
 From: Carlos Maiolino <cem@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: hans.holmberg@wdc.com, dlemoal@kernel.org, linux-xfs@vger.kernel.org
-In-Reply-To: <20260813145617.419537-1-hch@lst.de>
-References: <20260813145617.419537-1-hch@lst.de>
-Subject: Re: [PATCH] xfs: restore bi_bdev in xfs_zone_gc_write_chunk
-Message-Id: <178729775550.580975.16225193293599013022.b4-ty@kernel.org>
-Date: Fri, 21 Aug 2026 09:35:55 +0200
+To: cem@kernel.org
+Cc: jack@suse.cz, djwong@kernel.org, hch@lst.de, serge@hallyn.com, 
+ linux-security-module@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-xfs@vger.kernel.org
+In-Reply-To: <20260804094602.84766-1-cem@kernel.org>
+References: <20260804094602.84766-1-cem@kernel.org>
+Subject: Re: [PATCH v4 0/5] Fix quota evasion on xfs and add
+ capable_noaudit
+Message-Id: <178729775726.580975.5711956270445280777.b4-ty@kernel.org>
+Date: Fri, 21 Aug 2026 09:35:57 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,20 +47,30 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.3
 
-On Thu, 13 Aug 2026 16:56:12 +0200, Christoph Hellwig wrote:
-> xfs_zone_gc_write_chunk relies on bi_bdev to still be valid, which is not
-> true when XFS is used on top of a stacked block device.  This can lead to
-> misdirected GC writes, writing of plain text when using dm-crypt, or
-> miscalculated I/O limits in xfs_zone_gc_split_write.
+On Tue, 04 Aug 2026 11:45:50 +0200, cem@kernel.org wrote:
+> From: Carlos Maiolino <cem@kernel.org>
 > 
-> Fix this by reassigning bi_bdev.
+> Hi there.
+> 
+> This is the a new version of the series I've been working on
+> to fix a quota evasion issue on xfs. I've got to jump to more urgent
+> matters before the previous one so my apologies for the time it took to
+> cook this new version.
 > 
 > [...]
 
 Applied to for-next, thanks!
 
-[1/1] xfs: restore bi_bdev in xfs_zone_gc_write_chunk
-      commit: 885435535bb1d07746916d4c8832f95767bf2d7e
+[1/5] xfs: fix capability check in xfs
+      commit: e2f62a9744ebad3bcb6347a648e615026e9efeff
+[2/5] capability: Add new capable_noaudit
+      commit: 1b91724d0bdc470ed8f353d1cc8d3e4123b51ed5
+[3/5] quota: Don't issue audit messages on quota enforcing
+      commit: 4642259374fc9eb99af4cf8b2d54d54ccb0de08e
+[4/5] xfs: replace ns_capable_noaudit
+      commit: be9c45bdb19461889b16c91c185a284d665ea72d
+[5/5] capability: unexport has_capability_noaudit
+      commit: 412f89fb3988a344175899776c8bc7073524ad84
 
 Best regards,
 -- 
