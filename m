@@ -1,40 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2F1A3A6EEC
-	for <linux-xfs@vger.kernel.org>; Fri, 21 Aug 2026 07:35:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E2DD3A544A;
+	Fri, 21 Aug 2026 07:35:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787297757; cv=none; b=ChAK82MJBLUgg+yX3NFR9XRW14lc/5oLhSg3afINgo44NohJiE2t9TRMMHN+qk0zVbnE6+DAMEqo9lRk9WX5nUIrpicLHTmyPJ7aBnL1Emt+GelnVQG0AAvY6v3Mp3/q85/zAPPSTJS68dDtXTr2VBfukFyVW0C7LE/6UoIojDY=
+	t=1787297759; cv=none; b=X2tph/zMU7N4RcpeeAcdfl40wLvSxImOGXForAoRD7N8l0H9XZF7g58JjFCUfm9SIdqmuBpfPGI4eMuUX/xtVHSIW5YpYWsGP+9KlmmcuFRcPzL72KDDqcTo01BBF0Q89bPgHcCaJ6Go9aB5c1OTTqdude/KNSWslKDTNTBIE24=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787297757; c=relaxed/simple;
-	bh=jBEhMLFuNRabqP3OmmADtoyI8lZzRtLPdcgWxVps7Os=;
+	s=arc-20240116; t=1787297759; c=relaxed/simple;
+	bh=1J3x0jGjjZXy4KsCEaAOtuYkcDPdpqtZAGUhWqhWXss=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=IIrMpSIBRo5jwImXCPEB3TA4KFLpB91qSV9xRUp1ZcpKbv3rbGi1FiQXOjdCgnvgU5nn6Kr3iCT5is2Dy9NtZPA3DRLzqDt6FqTHCMrfYmLacUie9W+p5cdgvEdLgB6Y4excrLbt+6geYr8YQw0abB/6Q4O7FOo9K5vaK7IQeyQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PpnZrj5Z; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=MsshXR/TtqnzVaqQJA1F0fh0VLkwm1sH4hN9+za/n5lxfngSq8YKIR3MWnuY08TSSyLI/nEZOtqCsSonC4T3eyDzS3VDposduIPUIzq6z5gbjgI2m7dCim1+GX6iwyPuvnU6k12nO2CMlAOKe6Kv0Yy42KgNQUy48RFwYif7UdA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UStz8Z33; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PpnZrj5Z"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DCAB91F00A3E;
-	Fri, 21 Aug 2026 07:35:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UStz8Z33"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 022F81F00A3F;
+	Fri, 21 Aug 2026 07:35:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787297750;
-	bh=Xcs7XUSJo4aVGVDMI3zT1YOrWNzK6Mnf0f5a3VsIK+s=;
+	s=k20260515; t=1787297751;
+	bh=ch2BeEbK7KBwqXLGTBO5faJ9hEhTH0iNUv267kI5NBc=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=PpnZrj5ZFtrHCRU/oQy3m6KW0pMbjVvpnR8cHEeaVUgy2cUxrQLJbsYUQERcXFsX2
-	 izp3x/KCDHi/2mRhHQl8yvp8U77ifZbRqXIIqRxCEBT+gYDvaj1NSh6PyBcIU2VNTq
-	 0nTtuov0w3IqeUL/xfm041e6ZKb3Eb0Fc466aT5s4+ZqBFIw5URKL0KXcKDBSBMKEi
-	 pkNwNYafgPlCZEws/QxRd08+J6uXjCxJ9ryASRLqZ8GaCoKpAdOnyCKhLORraVaWrr
-	 mwiaiOeEivoY45m4KwEzd1fHFn7JBovvY6Ez0IbAh4K2An9IUBLjgflTxhIupvPOWl
-	 NgtL+eEljV+VQ==
+	b=UStz8Z33vYNAXUHav9bvvQNfKgoU0PBtWhVI7YhKhBQMTKik8WgoXnH+TubFVLejL
+	 xr++7v5JDdKdEAADoKwnELScEXBpIuPPfjOcVgZbylRrGzDG5XKmeZJROY07WPrc7D
+	 QRiOdHFT5xFISm1oze5AyiczqVLf5nyfpTofOM5EAbSp/MIim1aF819fvafo2naT6g
+	 lxxjaoE8ThghPv+dEwBMaH5g+lpV3Kdsc6airNPrTNALmiTeeGVgoCen3gX+Z+LbtX
+	 M2kJsnQUhVksWsjaP07zNlW8ep58vNDm4f9RipW+4Uw6eoZ8U9CR+HjuYzM2TZjDR3
+	 8Ze1hc72SCiWQ==
 From: Carlos Maiolino <cem@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
-In-Reply-To: <20260720140921.2269927-1-hch@lst.de>
-References: <20260720140921.2269927-1-hch@lst.de>
-Subject: Re: [PATCH] xfs: don't flush and invalidate internal RT device
- twice in xfs_shutdown_devices
-Message-Id: <178729774951.580975.14022347336117999852.b4-ty@kernel.org>
-Date: Fri, 21 Aug 2026 09:35:49 +0200
+To: Tal Zussman <tz2294@columbia.edu>
+Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <20260807-kmem_to_page-removal-v1-1-7365a789acab@columbia.edu>
+References: <20260807-kmem_to_page-removal-v1-1-7365a789acab@columbia.edu>
+Subject: Re: [PATCH] xfs: remove kmem_to_page()
+Message-Id: <178729775069.580975.1458371418478211803.b4-ty@kernel.org>
+Date: Fri, 21 Aug 2026 09:35:50 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,15 +44,17 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.3
 
-On Mon, 20 Jul 2026 16:09:21 +0200, Christoph Hellwig wrote:
-> Check for an internal RT device to remove a bit of extra work.
+On Fri, 07 Aug 2026 06:58:51 -0400, Tal Zussman wrote:
+> kmem_to_page() has been unused since commit 5ced480d4886 ("xfs: simplify
+> building the bio in xlog_write_iclog"), so remove it. This also removes
+> the last instance of 'struct page' in fs/xfs/.
 > 
 > 
 
 Applied to for-next, thanks!
 
-[1/1] xfs: don't flush and invalidate internal RT device twice in xfs_shutdown_devices
-      commit: 7fc296b379edc0fef83890097af3c9537fbf4364
+[1/1] xfs: remove kmem_to_page()
+      commit: 750a361bfc8a8c8178872f2aecb7507a6fbf41a4
 
 Best regards,
 -- 
