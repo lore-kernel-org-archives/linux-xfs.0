@@ -1,78 +1,86 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C603E3AB26C;
-	Fri, 21 Aug 2026 07:36:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B46539A04D
+	for <linux-xfs@vger.kernel.org>; Fri, 21 Aug 2026 11:39:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.24
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787297770; cv=none; b=EIhm10vNdhyExC0pebi8h8yAp1GjIeJMMP8CdQf6s3NvHwV6lnMJ3/klfiuJ+TQcnRp7N9PUj2dRYxmyP8ZS9Lmk7D/DDqLZgaXatprP4pMyuAj7ohcNM5Sbxytc6XhbXU/lUdMGn+4pbOwX8WFsP9E/LDl0wrywsQ0XvBkElyY=
+	t=1787312388; cv=none; b=VG2lqbVJT90a/QaiDP+sVIZ8Yedp3/PeMF75cDnXqeum+kVU0rgZYMVMmmE/m16EYyAsblMSD7qIJZ9plh97VTBF+TTFjRbwlyBDxHudyJK8CL/W4xYLrfShv2GQcqwIJwhOYUbcmIuztbYfAsOMEGHun/uM+itD2E5PDl5s+Ts=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787297770; c=relaxed/simple;
-	bh=Md1obngXluxKbvYIu1ICh7GXlOtCPOrKFXCNTkhWiU4=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=YOozBLaz6gwWsbmWbb3riIn1Zxuq/mLs+8Q+gzBTtIVWL/MLJZ88MJyhD/iN7qAY3b71Vfkij9mwzQNyUcAcgEVjMNQOnHnib5Q6qWKq5nB9yzrYkWow9TY3zYfzFit+sANlGmhyGKVL8r047y5XLzTR5bzDu4TjQxPGkLwDDkQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=U2U8IY2d; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787312388; c=relaxed/simple;
+	bh=yfXVRFlpvmMYanoHlJB/z0+rBqLnZTjIcI0tlxOU9ro=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:From:In-Reply-To:
+	 Content-Type:References; b=RP7v9+5xMjm/KjSNN4WIrJybglPHPEDSU19+PC5rBsuQIYkCx9Wut7pnVxVtZAya/tUaM68C4DfdVS31stynIs4Wua6bDwq6X3FMELI7WxAbgM9aB5J+oQe+va0AW+27feA61sc5gX6wY2RZN7Ks/llIWQMKryutPFYG4LZ94Qk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=gEHkLydw; arc=none smtp.client-ip=203.254.224.24
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="U2U8IY2d"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 93ED01F00ACF;
-	Fri, 21 Aug 2026 07:35:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787297759;
-	bh=03eLvzHpgeM92hnYwCNYL3ohPDt/39Y2iqAl8qqH/FQ=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=U2U8IY2dqIk5fc4IQmbpMOl8XyrzCV8MGrc4PKvLl677mR+6rtv0KO7oUrLtQT0Fi
-	 8eItrxljn7+cPGX7MWgxcTwFqwMDOg73+qCkoC8oRZdm/OFgAemzjSEvK3M0ylBVGl
-	 JESirfFoosTx50HKSxXLua/XxGOSZx9aEWY/7CyBPoNmxL+/ldBrvZu6wS2Y+pIWEF
-	 BxfpARddCWe3v7zBGJ7+0Sz/JHnT3YT/8HvlAdPawtHuMgUgRSPvooQwAh9DnC1RjU
-	 CJJwr5ROfodDMRUWjZMClqcISsYrVAnHLvYZUWlLBiB2S7cJYv67eW572RgCQMeVdC
-	 +DEAYAN/Om0qA==
-From: Carlos Maiolino <cem@kernel.org>
-To: cem@kernel.org
-Cc: jack@suse.cz, djwong@kernel.org, hch@lst.de, serge@hallyn.com, 
- linux-security-module@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-xfs@vger.kernel.org
-In-Reply-To: <20260804094602.84766-1-cem@kernel.org>
-References: <20260804094602.84766-1-cem@kernel.org>
-Subject: Re: [PATCH v4 0/5] Fix quota evasion on xfs and add
- capable_noaudit
-Message-Id: <178729775726.580975.5711956270445280777.b4-ty@kernel.org>
-Date: Fri, 21 Aug 2026 09:35:57 +0200
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="gEHkLydw"
+Received: from epcas5p4.samsung.com (unknown [182.195.41.42])
+	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20260821113933epoutp01d4ae667c4b97d8a48ea58923e8f57658~NzyJghch90563205632epoutp01H
+	for <linux-xfs@vger.kernel.org>; Fri, 21 Aug 2026 11:39:33 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20260821113933epoutp01d4ae667c4b97d8a48ea58923e8f57658~NzyJghch90563205632epoutp01H
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1787312373;
+	bh=zsly40hwKJoSQYE06LEwkYarxgdUhAAdPrroUKxUzUQ=;
+	h=Date:Subject:To:Cc:From:In-Reply-To:References:From;
+	b=gEHkLydw3j07PJtWAt+xiBbUrTIKxnz8ISvjAtkVGAdeNL0wcFNBgxwTTdbAEnyDk
+	 on42Q4t0Ns0+jaZW2e2dlBmLOk7lWUYM1eya5rtfW61KX9ilJMC9upVAXv+Jmmwjwt
+	 /nM2m9BuDmTEJTS0vu0EyoTxPVFOFxhcCosfgA8Y=
+Received: from epsnrtp03.localdomain (unknown [182.195.42.155]) by
+	epcas5p3.samsung.com (KnoxPortal) with ESMTPS id
+	20260821113932epcas5p311c69d6f2eeec397a6b57eec41706826~NzyIYX_3n2466124661epcas5p3_;
+	Fri, 21 Aug 2026 11:39:32 +0000 (GMT)
+Received: from epcas5p1.samsung.com (unknown [182.195.38.90]) by
+	epsnrtp03.localdomain (Postfix) with ESMTP id 4hRJHl3WMGz3hhT3; Fri, 21 Aug
+	2026 11:39:31 +0000 (GMT)
+Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
+	epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
+	20260821113930epcas5p30bb6be9b05cc273481a2fae8f179d846~NzyG4jSZK2466124661epcas5p37;
+	Fri, 21 Aug 2026 11:39:30 +0000 (GMT)
+Received: from [107.122.11.51] (unknown [107.122.11.51]) by
+	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+	20260821113928epsmtip2810b1f9b747eb2e367236ece8fd95ce4~NzyE_PY1P1875918759epsmtip2Z;
+	Fri, 21 Aug 2026 11:39:28 +0000 (GMT)
+Message-ID: <8a2a765e-1cab-4c6b-8a58-3ddbef3862f3@samsung.com>
+Date: Fri, 21 Aug 2026 17:09:27 +0530
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 3/6] xfs: implement write-stream management support
+To: Christoph Hellwig <hch@lst.de>
+Cc: brauner@kernel.org, djwong@kernel.org, dgc@kernel.org, jack@suse.cz,
+	cem@kernel.org, axboe@kernel.dk, kbusch@kernel.org, ritesh.list@gmail.com,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-block@vger.kernel.org, gost.dev@samsung.com, Anuj Gupta
+	<anuj1072538@gmail.com>, Anuj Gupta <anuj20.g@samsung.com>
+Content-Language: en-US
+From: Kanchan Joshi <joshi.k@samsung.com>
+In-Reply-To: <20260819072407.GH1541@lst.de>
 Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.3
+X-CMS-MailID: 20260821113930epcas5p30bb6be9b05cc273481a2fae8f179d846
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+cpgsPolicy: CPGSC10-542,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20260717125633epcas5p3f433c8acd83824bb60828af4c5ab110c
+References: <20260717125538.508925-1-joshi.k@samsung.com>
+	<CGME20260717125633epcas5p3f433c8acd83824bb60828af4c5ab110c@epcas5p3.samsung.com>
+	<20260717125538.508925-4-joshi.k@samsung.com> <20260819072407.GH1541@lst.de>
 
-On Tue, 04 Aug 2026 11:45:50 +0200, cem@kernel.org wrote:
-> From: Carlos Maiolino <cem@kernel.org>
+On 8/19/2026 12:54 PM, Christoph Hellwig wrote:
+>> +	nr_streams = bdev_max_write_streams(mp->m_ddev_targp->bt_bdev);
+> Returning to this.  Given that we are talking about pure software
+> write streams, does this make sense?  This limits the use to devices
+> that do report hardware write streams despite not using those.  Most
+> devices will not report those.
 > 
-> Hi there.
-> 
-> This is the a new version of the series I've been working on
-> to fix a quota evasion issue on xfs. I've got to jump to more urgent
-> matters before the previous one so my apologies for the time it took to
-> cook this new version.
-> 
-> [...]
 
-Applied to for-next, thanks!
-
-[1/5] xfs: fix capability check in xfs
-      commit: e2f62a9744ebad3bcb6347a648e615026e9efeff
-[2/5] capability: Add new capable_noaudit
-      commit: 1b91724d0bdc470ed8f353d1cc8d3e4123b51ed5
-[3/5] quota: Don't issue audit messages on quota enforcing
-      commit: 4642259374fc9eb99af4cf8b2d54d54ccb0de08e
-[4/5] xfs: replace ns_capable_noaudit
-      commit: be9c45bdb19461889b16c91c185a284d665ea72d
-[5/5] capability: unexport has_capability_noaudit
-      commit: 412f89fb3988a344175899776c8bc7073524ad84
-
-Best regards,
--- 
-Carlos Maiolino <cem@kernel.org>
-
+Yeah, I enabled hardware streams first and define software streams as a 
+fallback when the block device has none. I can swap the order if that 
+reads better.
