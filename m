@@ -1,174 +1,201 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 877252BEFF5;
-	Sat, 22 Aug 2026 08:13:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B60D5175A9D;
+	Sat, 22 Aug 2026 12:41:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787386400; cv=none; b=JQ1CSskYJL+px6KoWDnd+AMU7/yDKuHsfcwSFmm4ACwkufdtxBBCumCjC/FlGs6/z/Di1RUwcHbMp7/O0AZhe3NPSBAMjqxgp7xyEcEJQhGducPSrnIlmhk3hal19c51UGQBhbUWQz7N3eH7/lGMenJ6VnU1Du6uwkFcgNke7A4=
+	t=1787402500; cv=none; b=ZMDaWqNqqHx77ou/YUy53PHwkEdxF4m8r6SXBYblWOEWNGJeLIG1dsQap5QCPKqZMtKmv0mpvX8LHRCalpb1m3CTkF1j0bLMSZaCOXISjo5ucP86bJ2ectekoOz+uzNGBAW4hWg+qjQrslQCVSZXiJcEDRohZ8Bdikhus9xAqvE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787386400; c=relaxed/simple;
-	bh=sSwiWm6ThDBx36iyLyoZ3eByT0ak/GlvGQj0oLg5ocg=;
+	s=arc-20240116; t=1787402500; c=relaxed/simple;
+	bh=OQVtR1HgPjVO6sGi5O64Cf27ZAkUaXlSE/u1DP1QreE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=VS8bo2pJRnTDZT8tGXZ0uYYyfluNuTbjOA9438rB/+vjAEEWIObFPQRjoHm/PKJjg6Ys5NPKykZq9N0Qfi0gS/1UmM3kfrB3NO4JW+O4clIpW+v2dRWvPCpWL0Ns99LAJeLGb2s9CXSEHu3wFXKr2CN57Rcr+o1BH2rK1UExsfc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H+Nhwq/I; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=IRUA3vt6zU1VF7WGdRcbA/VkU3jzHQCg0gR8JH04Wm9j7EDyDsyYiUFYVbpJwBPFvPxyfp9UDLwRnCEKkP+jpCtmoQrZ0EAwnvofXJwVNelROb0XKuidA6RsfSj0DcSddX5aWi0XZpTJY3VR+9isQrMkh2cq26fPRzv+GKD8ESQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FOQPqJ/p; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H+Nhwq/I"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9700D1F000E9;
-	Sat, 22 Aug 2026 08:13:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FOQPqJ/p"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A1331F000E9;
+	Sat, 22 Aug 2026 12:41:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787386397;
-	bh=PnBdpNK4+lJJrlw4BBESR4X9LQhYLt5se4dG/HegMvc=;
+	s=k20260515; t=1787402499;
+	bh=SGLicknkCIgRsgg08fxRo1sawmxj4Z8sfoAGg4Hl/k0=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=H+Nhwq/Io92fl0m6a/tUqM3u1TqhGKgcU8tfFbfE8kBCOojQ1XOdzknSFrgMU+41H
-	 8NRvFAOVwYj2LKSpRHlc2Aeg9FuXEfPIMKy3UtIWfve/xeXXJ4zqaZ91sXbTyTT+dw
-	 kanrKgzLTzIrLabHOWfCi6rydWehVW5BhLWSqoUGWkGomycPInIMnes+gAFgdzjrrX
-	 zDlZgMztu06Ne4Os8CxAIdqumBLErQeZJon42TEc4tFG2aQ2SK2q6tBDf5T+kxDgdm
-	 eIt/sxQzWKoLh6bBUGI6F3EIsswZbHbzEnA8f8CpJlHR8h46Pj0GWBLCEtcqUEBbNM
-	 Fy4+EXCIc+K5g==
-Date: Sat, 22 Aug 2026 16:13:11 +0800
-From: Zorro Lang <zlang@kernel.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: fstests <fstests@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>, 
-	ljp1205831794@gmail.com
-Subject: Re: [PATCH] xfs: test reflux with exchange-range
-Message-ID: <aolYPXE0VupxrUEO@zlang-mailbox>
-Mail-Followup-To: "Darrick J. Wong" <djwong@kernel.org>, 
-	fstests <fstests@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>, ljp1205831794@gmail.com
-References: <20260819155121.GA839663@frogsfrogsfrogs>
+	b=FOQPqJ/p8bf+5YnBttB+R+Efa+Nd4ApxYXkS+aVpZe4NGOgf93+4fh+Jm2Wd9Jadf
+	 oIcsEEPi2Qs6ZxyunJ3xEo+uPZ/F+lW9TDyw0N/TIoKlA3rOBD5FnnmL5DSPpOO/n9
+	 EKHNStOc1iSdshIJWMaVc5r70JolkdM0MU4L4gFuA7mFccem6vrEvcaNe9gVndIsU3
+	 22MrT4z19MzUpFwrPEbs5Mum21cdCFxqRh+x5w7XBnSQQlkrX6QzRBsKZcyKwzPt4b
+	 nJzWtadMksWKiV87hgTUtkNaTI068ICM1uKeeVJgEF4zKAus77AePVHsuGq7sy2RaW
+	 l90sHPiOknSAg==
+Date: Sat, 22 Aug 2026 14:41:34 +0200
+From: Alejandro Colomar <alx@kernel.org>
+To: Pankaj Raghav <p.raghav@samsung.com>
+Cc: linux-man@vger.kernel.org, pankaj.raghav@linux.dev, hch@lst.de, 
+	Zhang Yi <yi.zhang@huaweicloud.com>, linux-xfs@vger.kernel.org, gost.dev@samsung.com, 
+	"Darrick J . Wong" <djwong@kernel.org>, linux-ext4@vger.kernel.org
+Subject: Re: [PATCH v2] man2/fallocate.2: add doc for FALLOC_FL_WRITE_ZEROES
+Message-ID: <aomV6Jt7udtAwwcw@devuan>
+References: <20260820090400.857720-1-p.raghav@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="mv6tus4g6cufx3gi"
 Content-Disposition: inline
-In-Reply-To: <20260819155121.GA839663@frogsfrogsfrogs>
+In-Reply-To: <20260820090400.857720-1-p.raghav@samsung.com>
 
-On Wed, Aug 19, 2026 at 08:51:21AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> Regression test for the XFS_IOC_EXCHRANGE flag INO1_WRITTEN clearing
-> reflink flags when that shouldn't happen.
-> 
-> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+
+--mv6tus4g6cufx3gi
+Content-Type: text/plain; protected-headers=v1; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+From: Alejandro Colomar <alx@kernel.org>
+To: Pankaj Raghav <p.raghav@samsung.com>
+Cc: linux-man@vger.kernel.org, pankaj.raghav@linux.dev, hch@lst.de, 
+	Zhang Yi <yi.zhang@huaweicloud.com>, linux-xfs@vger.kernel.org, gost.dev@samsung.com, 
+	"Darrick J . Wong" <djwong@kernel.org>, linux-ext4@vger.kernel.org
+Subject: Re: [PATCH v2] man2/fallocate.2: add doc for FALLOC_FL_WRITE_ZEROES
+Message-ID: <aomV6Jt7udtAwwcw@devuan>
+References: <20260820090400.857720-1-p.raghav@samsung.com>
+MIME-Version: 1.0
+In-Reply-To: <20260820090400.857720-1-p.raghav@samsung.com>
+
+Hi Pankaj, Christoph,
+
+> Date: 2026-08-20 11:04:00+0200
+> From: Pankaj Raghav <p.raghav@samsung.com>
+> Subject: Re: [PATCH v2] man2/fallocate.2: add doc for FALLOC_FL_WRITE_ZER=
+OES
+
+We use the full path in the prefix.  That is, 'man/man2/...: ...'.
+Also, we use regular sentence conventions for the first letter after
+the ':', so s/add/Add/.
+
+> This flag was added to the kernel in v6.17. As of now, only ext4 and
+
+Please use two spaces after period.
+<https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/CONTRIBUT=
+ING.d/patches/description#n44>
+
+> block device nodes support this flag.
+>=20
+> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+
+Please include the CC list here too.
+
 > ---
->  tests/generic/1957     |   72 ++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/1957.out |   16 +++++++++++
->  2 files changed, 88 insertions(+)
->  create mode 100755 tests/generic/1957
->  create mode 100644 tests/generic/1957.out
-> 
-> diff --git a/tests/generic/1957 b/tests/generic/1957
-> new file mode 100755
-> index 00000000000000..bb039771970d15
-> --- /dev/null
-> +++ b/tests/generic/1957
-> @@ -0,0 +1,72 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2026 Oracle.  All Rights Reserved.
-> +#
-> +# FS QA Test No. 1957
-> +#
-> +# Regression test for refluxfs, which is an exploit for a race condition in
-> +# XFS' directio copy-on-write code that can be used to rewrite shared blocks
-> +# to gain root privileges.
-> +#
-> +. ./common/preamble
-> +_begin_fstest auto quick fiexchange
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -r -f $tmp.*
-> +	test -n "$dummydir" && rm -r -f "$dummydir"
+> Changes since v1:
+> - Change the phrasing around zeroing and its condition (Zhang Yi)
+> - Update ext4 support only for extent-based files (Zhang Yi)
+>=20
+> Note:
+> This feature was recently added to XFS and it is expected to land in
+> v7.13. I will update this man page again once v7.13 is released.
+>=20
+>  man/man2/fallocate.2 | 38 ++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 38 insertions(+)
+>=20
+> diff --git a/man/man2/fallocate.2 b/man/man2/fallocate.2
+> index ef6586c77..48a8c3468 100644
+> --- a/man/man2/fallocate.2
+> +++ b/man/man2/fallocate.2
+> @@ -244,6 +244,43 @@ SMB3 (since Linux 3.17)
+>  .IP \[bu]
+>  Btrfs (since Linux 4.16)
+>  .\" commit f27451f229966874a8793995b8e6b74326d125df
+> +.SS Writing zeroes in file space
+> +Specifying the
+> +.B FALLOC_FL_WRITE_ZEROES
+> +flag (available since Linux 6.17)
+> +.\" commit 7bd43cc79cab3850f34da0a31d5b042b701590ef
+> +in
+> +.I mode
+> +physically zeros space in the byte range starting at
+> +.I offset
+> +and continuing for
+> +.I size
+> +bytes.
+> +Within the specified range,
+> +blocks are preallocated for the regions that span the holes
 
-Hmm... what's the $dummydir?
+What does it mean that "blocks are preallocated"?  That they must be
+allocated prior to this call?  I suspect not.  Otherwise, we'd be saying
+'must be' instead of 'are'.
 
-> +}
-> +
-> +. ./common/filter
-> +. ./common/reflink
-> +
-> +_require_scratch_reflink
-> +_require_xfs_io_command exchangerange
+I suspect it means that this call allocates blocks for those regions,
+but then I'm not sure we want 'pre' there.
 
-OK, if a filesystem supports reflink and exchange-range, it definitely
-supports truncate I think.
+> +in the file.
+> +After a successful call,
+> +subsequent reads from this range will return zeros and
+> +subsequent writes to that range do not require further
+> +changes to the file mapping metadata.
+> +.P
+> +Zeroing is done within the filesystem.
+> +The filesystem may use a hardware-accelerated zeroing command
+> +or may submit regular writes.
+> +The behavior depends on the filesystem design and the
+> +available hardware.
+> +.P
+> +No other flags may be specified in
+> +.I mode
+> +in conjunction with
+> +.BR FALLOC_FL_WRITE_ZEROES .
+> +.P
+> +Not all filesystems support
+> +.BR FALLOC_FL_WRITE_ZEROES ;
+> +if a filesystem doesn't support the operation, an error is returned.
+> +The operation is supported only in ext4 (only for extent-based files)
+> +since Linux 6.17.
 
-This patch is good enough, just not sure what's that "$dummydir". With
-the definition of dummydir clarified:
+Christoph, is this correct?  I remember you said something about block
+device nodes in v1.
 
-Reviewed-by: Zorro Lang <zlang@kernel.org>
 
-> +_require_cp_reflink
-> +
-> +_fixed_by_fs_commit xfs XXXXXXXXXXXXXX \
-> +	"xfs: fix exchange-range reflink flag clearing issue with  INO1_WRITTEN"
-> +
-> +_scratch_mkfs >> $seqres.full
-> +_scratch_mount
-> +
-> +# Create file1 as a fully written file, and file2 as a sparse file with one
-> +# written area.
-> +$XFS_IO_PROG -f -c "pwrite -S 0x58 0 1m" $SCRATCH_MNT/file1 >> $seqres.full
-> +$XFS_IO_PROG -f -c "truncate 1m" -c "pwrite -S 0x59 64k 64k" $SCRATCH_MNT/file2 >> $seqres.full
-> +
-> +_scratch_unmount
-> +_scratch_xfs_db -c "path /file1" -c 'print' -c "path /file2" -c 'print' | grep reflink
-> +_scratch_mount
-> +
-> +# Reflink file1 so that the reflink flag gets set
-> +_cp_reflink $SCRATCH_MNT/file1 $SCRATCH_MNT/fileC
-> +
-> +md5sum $SCRATCH_MNT/file1 $SCRATCH_MNT/file2 $SCRATCH_MNT/fileC | _filter_scratch
-> +
-> +# Exchange the written parts of file2 with file1, but only file1 has the
-> +# reflink flag set.
-> +$XFS_IO_PROG -c "exchangerange -w $SCRATCH_MNT/file2" $SCRATCH_MNT/file1 >> $seqres.full
-> +
-> +# Check reflink flags
-> +_scratch_unmount
-> +_scratch_xfs_db -c "path /file1" -c 'print' -c "path /file2" -c 'print' | grep reflink
-> +_scratch_mount
-> +
-> +# Record content and layout
-> +md5sum $SCRATCH_MNT/file1 $SCRATCH_MNT/file2 $SCRATCH_MNT/fileC | _filter_scratch
-> +$XFS_IO_PROG -c 'bmap -vvvvvvvv' $SCRATCH_MNT/file[12C] >> $seqres.full
-> +
-> +# Write a single byte to file1, does that get echoed in fileC?
-> +$XFS_IO_PROG -c 'pwrite -S 0x59 0 1' $SCRATCH_MNT/file1 >> $seqres.full
-> +#
-> +# Check reflink flags
-> +_scratch_unmount
-> +_scratch_xfs_db -c "path /file1" -c 'print' -c "path /file2" -c 'print' | grep reflink
-> +_scratch_mount
-> +
-> +md5sum $SCRATCH_MNT/file1 $SCRATCH_MNT/file2 $SCRATCH_MNT/fileC | _filter_scratch
-> +$XFS_IO_PROG -c 'bmap -vvvvvvvv' $SCRATCH_MNT/file[12C] >> $seqres.full
-> +
-> +_exit 0
-> diff --git a/tests/generic/1957.out b/tests/generic/1957.out
-> new file mode 100644
-> index 00000000000000..7d64ea0e2c372d
-> --- /dev/null
-> +++ b/tests/generic/1957.out
-> @@ -0,0 +1,16 @@
-> +QA output created by 1957
-> +v3.reflink = 0
-> +v3.reflink = 0
-> +310f146ce52077fcd3308dcbe7632bb2  SCRATCH_MNT/file1
-> +e6ee47dca6e786a44ae5b912be870d96  SCRATCH_MNT/file2
-> +310f146ce52077fcd3308dcbe7632bb2  SCRATCH_MNT/fileC
-> +v3.reflink = 1
-> +v3.reflink = 1
-> +b630c7de58afd0ba5b8dfa24d701b5b8  SCRATCH_MNT/file1
-> +18cc9868973139a0bb558e09802a51b6  SCRATCH_MNT/file2
-> +310f146ce52077fcd3308dcbe7632bb2  SCRATCH_MNT/fileC
-> +v3.reflink = 1
-> +v3.reflink = 1
-> +82b27c6f1b1de8fba44a911af80d9a7a  SCRATCH_MNT/file1
-> +18cc9868973139a0bb558e09802a51b6  SCRATCH_MNT/file2
-> +310f146ce52077fcd3308dcbe7632bb2  SCRATCH_MNT/fileC
+Have a lovely day!
+Alex
+
+> +.\" commit f4265b8d32c49ff95711e6fef7d05245a2905b30
+>  .SS Increasing file space
+>  Specifying the
+>  .B FALLOC_FL_INSERT_RANGE
+> @@ -385,6 +422,7 @@ or
+>  is
+>  .BR FALLOC_FL_COLLAPSE_RANGE ,
+>  .BR FALLOC_FL_ZERO_RANGE ,
+> +.BR FALLOC_FL_WRITE_ZEROES ,
+>  or
+>  .BR FALLOC_FL_INSERT_RANGE ,
+>  but the file referred to by
+>=20
+> base-commit: d926b42e0ea0406d5c2556e18205eced92d053f1
+> --=20
+> 2.51.2
+>=20
+
+--=20
+<https://www.alejandro-colomar.es>
+
+--mv6tus4g6cufx3gi
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEES7Jt9u9GbmlWADAi64mZXMKQwqkFAmqJmPgACgkQ64mZXMKQ
+wqmdIQ/+NgMSJLmaisJwmo5hxhBnexOjXGKPR8AK2s0jC6+HjsVjqEUJPceVPJL4
+wBcl49yTr43J1N0fGqbo7IN3tci9Xp9OiHE0gPbyjPAOm0MccHKrccsv5Iw3MWIo
+emnocP5Szzw6KHDyI7/tJTAoCw+NDRVJW/JkUz6sI+tAduVxa0w8Kwku27zTbbwd
+cF5dJRND2R9LVv4udefMp1DYt9WOQHidrPiv3ucdT6u4dUWUeYX0bFHkpa8GHbI1
+7i58j1r1eEHK2aIFCUWk59fz7nafgDuo2T0lPvXCSYMmXnOzgjNdIDQPYleRhhHS
+e0NJlwqIsuAPgewKa/k+Qe98tfJBHHr0ZhlNlcmW2T9f7C2vO1qx4YtS2+xwwlZ7
+V/+o3lAtoGE7eNO7Uz63oYjLxmEIMtv/e3upHYpYnfN2ysV0FRHq6xg9b+RFVvIj
+wLv1IAgDHwCEI0M34zS3/lhrI/nUc+mYqiWC91MmTdm12ZPCB6UbKlfsEpH9DNoR
+vEfrsfXei4lEAzXfksR9Ymn4423caS4Z84jgiMi4aOwTGT2jgxI7NYl7DgacysQu
+Q/IsuCna5Eh5cVGZ2ZuOSIX+GDKgSDvE0Z6w5SkDxabmS9nP/rqhSU2Ih9wwS5Vc
+mowM85CUt1mPxXXdaWU7yjSLW4OeTuB49pcyaid8XDbdvNYKm+M=
+=BsSp
+-----END PGP SIGNATURE-----
+
+--mv6tus4g6cufx3gi--
