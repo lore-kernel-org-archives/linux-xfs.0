@@ -1,101 +1,125 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from flow-b6-smtp.messagingengine.com (flow-b6-smtp.messagingengine.com [202.12.124.141])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A084A27AC31
-	for <linux-xfs@vger.kernel.org>; Mon, 24 Aug 2026 11:47:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2AE344052DE;
+	Mon, 24 Aug 2026 13:52:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.141
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787572029; cv=none; b=UCl7/8OmHini+7EtphJzICjeAyEVrzgj/QbhrTCWNhGY1iAMmqa7p7Z/cSaXe66M5Nksg9yuTZDUGnYIBsQrWzXgGVY3xHGvpxjapXsGTd+dd+zmlYN8WTTYT2aE8E8pZM41PjLN4mW5rVkB7sqrTYO4wO+eJIrILs0ubrsgYlk=
+	t=1787579572; cv=none; b=ioKfoQrikHmGz4cT39RAvI2UNUImtIC6n5bPJpi5xkP3qkCDSHDemM3h9Z1oOf2+8wR2DlwtGGGsps3/AAZMlSnX8oCtqUvilo1r8CyQYyH86d6/TrF6WiyrmG8WpEcHkeB7oEVKetD63QwGmbNDLium49j5i9c/vghf+M/Ad34=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787572029; c=relaxed/simple;
-	bh=s9lY/ZqAS5PthkZi3jgr+3PTNzJHVfFKv7iKwyjLOxM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=m5StThDPn4C+4135wkoLqbzi3Jah4YREybeFOalQGppP5MwXPnucQ3o4WzUfWWzXhOsMCKD56sA6jkQitCLZFe0rTitKTatAOHgZBvppaGo7HMXs2aedpjd4eqGdohiys6RhrpQeN77v9aivlkPf2jS2+X0F+KBswbGb+E3PdFU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TkOnHSua; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787579572; c=relaxed/simple;
+	bh=fUfjUCkiaM90io/n8Y7zz+NQRpbgcwJgatrGWCPIf2k=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=dHvv8flOyaY6P55/Yi8MzBimD6pWkGHOjfhnkOvhv4WFqgkTH0WNspv61zKhii/Excaxap0VDU655Dob57crl7Im5rz9Iy6qb81Q/HskOg5DGCIgZoJZa91IeW6FHXP2zte975S9TXRrvN4K1CdqaVbhLtaC505pmZmnApwATPk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kroah.com; spf=pass smtp.mailfrom=kroah.com; dkim=pass (2048-bit key) header.d=kroah.com header.i=@kroah.com header.b=G6vz/uwB; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=k0OgL+8/; arc=none smtp.client-ip=202.12.124.141
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kroah.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kroah.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TkOnHSua"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3EBAB1F000E9;
-	Mon, 24 Aug 2026 11:47:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787572028;
-	bh=40P8cljSeQzo3FsN+ah8Uc6vgF/nmXdWxy8upHW/8Es=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=TkOnHSuai1kIF3Cn5ilWbnxfhtdLfWa0lf9VE64Ny7gYmJh02qZOct4kCjznNNxd5
-	 mXBDDZxQdbrm08umGPMus0R2/k2eOBdNlfrmiUX9YX+1bFFMnDhuBZlzS7noWKfPGo
-	 pkNcN8aefozjw8o3pEUeJw3u3TFaHrgmZcS+tsgkyIUYRCiBMc2X87QYdgysYcB1Qq
-	 3A4QxykX7Zwq0xiSEwPhsZWDEaMjCC2JrGSn7I7Or+j+DZv2DTZMLvRM8gds4urABX
-	 RYnI5lk8NzBeqYSMun7Yw7/XXWF/qX77hZ1b7/AMYBRuQlJG4H47E6Dio8v3QjL6/q
-	 oYNQsRda8DvFA==
-From: Andrey Albershteyn <aalbersh@kernel.org>
-To: linux-xfs@vger.kernel.org,
-	aalbersh@kernel.org
-Cc: bestswngs@gmail.com,
-	brauner@kernel.org,
-	cem@kernel.org,
-	chuck.lever@oracle.com,
-	cmaiolino@redhat.com,
-	dawei.feng@seu.edu.cn,
-	djwong@kernel.org,
-	gaoyingjie@uniontech.com,
-	hch@lst.de,
-	jiapenglin@tencent.com,
-	roland.mainz@nrubsig.org,
-	xmei5@asu.edu
-Subject: [PATCH 21/21] xfs: check v5 superblock features early
-Date: Mon, 24 Aug 2026 12:40:19 +0200
-Message-ID: <20260824104022.420566-22-aalbersh@kernel.org>
-X-Mailer: git-send-email 2.54.0
-In-Reply-To: <20260824104022.420566-1-aalbersh@kernel.org>
-References: <20260824104022.420566-1-aalbersh@kernel.org>
+	dkim=pass (2048-bit key) header.d=kroah.com header.i=@kroah.com header.b="G6vz/uwB";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="k0OgL+8/"
+Received: from phl-compute-05.internal (phl-compute-05.internal [10.202.2.45])
+	by mailflow.stl.internal (Postfix) with ESMTP id B3FA01300084;
+	Mon, 24 Aug 2026 09:52:49 -0400 (EDT)
+Received: from phl-frontend-03 ([10.202.2.162])
+  by phl-compute-05.internal (MEProxy); Mon, 24 Aug 2026 09:52:50 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kroah.com; h=cc
+	:cc:content-type:content-type:date:date:from:from:in-reply-to
+	:in-reply-to:message-id:mime-version:references:reply-to:subject
+	:subject:to:to; s=fm3; t=1787579569; x=1787586769; bh=zD00BnjS9t
+	sCP+uch931+VaqPVYRemIFkBWowtNOyZA=; b=G6vz/uwBrBJbGD9KPp6R6rpDT4
+	x9qUAI0yUYMB99QZaRFSRHD+laZWtSFYySDls8y8mZf8XZ9DKONeXHD+E+hyipqj
+	Ex7CKV+D9/04tnWV34dpicZq+0MiUei2BwVL0DRDW2gVpo2ylK+DFcHV9D7idq+1
+	jQ1IkgagtGlq8dwVz61kcAlg4UCu2ZoHuuEc6ItXouqDjlyNkxshHIpJAcXuv+u5
+	fqpP9RIH1IlTht5o88+fOD3Rygif/A4VQ8mKht8sEo5E9zMgEGhs1SikLhOyFsTn
+	2u2YDL63Or60+4xjSOn3/oumODArME5KZVg8mF5xZnocdPxlWm1ccuWPRgsw==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-type:content-type:date:date
+	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
+	:message-id:mime-version:references:reply-to:subject:subject:to
+	:to:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=
+	1787579569; x=1787586769; bh=zD00BnjS9tsCP+uch931+VaqPVYRemIFkBW
+	owtNOyZA=; b=k0OgL+8/VRJZlTRux9iIop5FUNtzRJuHdr3D5O97slOIrvsmAIb
+	3vc/HFDi2/hGRUPzAxAVNI26KwD07c+qEI0UkLtqdVGaOsftZYNBKuIORpUyQRru
+	SJ1i/czyKl0GZ6MAKXnufPXeLoQeAb7AsFRVuQMYm2AwUZMiqb9QnMT0arb61Xfo
+	iB6Vzc7pb2pDwEpM1/6iG5aZIN5ylPK5QUOJK6uDL27I9bAY8gvYf+4MGs+KONgg
+	53Ds/cN6guJwiGwcw3r/dzlm823o79cckmlC6u8JjEhD/kGDsBNjsTTChmBEDtzu
+	8hT0MGMCPilp5ooSxXri2qmv6dOpci+e0Gw==
+X-ME-Sender: <xms:sUyMakzOP9AQhap9mWc57DEJCIKukqgcxRHapaU819tfIzSGKXrI_Q>
+    <xme:sUyMaqpEBfiQacue1Qg30PcgNvv80FxA6XXtJOl1yRT8kEuHktfvOFHCLzomd7OKg
+    0xqV6GPilIw_68bcnAG0Vp4cCxZWCqeb0K3QV1UPSccuF9CEA>
+X-ME-Received: <xmr:sUyMavn5OQg_QDPhqlJAV8wyda5B_IRZh6nM-RtUOuGtv3OZyRuqeIwWrPbD0zXCM_8JqMAsY1CCjqmD0dMpxXUdewpeQzI59Dt_IvX6Bc0>
+X-ME-Proxy-Cause: dmFkZTEPn1zsIOPKOAqDfn4v6wjQvPSeR6w6xBDZDwNrVoBNFuHflUDaBa/OrLbn41U77i
+    EB7lSjaDunC6FmNX8baljOdoWdSzXiuGLxMsuQjWfc35kQ34AzqqqWH/emt+yIdAsN19zL
+    cxURTm3UgXLxdxOMfEsDOy4PFM6wVRJjIN6rOBnjGhJ/PkeWup4AS0OA1BhyMaY9zi+f5o
+    qf0ZSbxnZhhfYF7yJjxatRECbIvFXZHzbZ6d5asxO4W6/M6L4/E30YqleLYnEJx1fJeLnK
+    FtvaYD5XhGxmO9jl0m6xZ6FJ0LB8Mn/+Yz3/qG64QKpWTFmm2RR54ru2ZLcGwDrzUXxLap
+    bPY9rfDf72H2lfttfD6I8vuC/XhkZ4249w/eF3PTCNn38rxKmcyU9ahHLQ1LTVrQS5rsSy
+    KGKfOn1pYZ6vWJi4lhRKHvWG1q+su5YiDQAbY13y1spoIl642XseFOAyWAW2LvDwEEBz8t
+    l9stysJ0b61nc2Cx5q96XBkVwK8mxD+xwh6B5tyXXhJZOKQGxBzN5D+CiTK1jxNOuVaAPa
+    2nq1AKvjVGbynX73GM974IqxvgfIP1ZfsEycpOAjpmAXc2izNFp4AEeFUjmWEhG2F4dy34
+    +41cJr5+JY2Y7KUCIzK8aoTRySc0hvj1lkxVyoF5a6URHVppOctW85Jjeyvw
+X-ME-Proxy: <xmx:sUyMalrQkYIgHEckIeAKMCE8D6pRGc2kaLc3QhMzQJC3uu8vD0tnrg>
+    <xmx:sUyMaoabsfmBz_cg4rPvPKUoosuzT5CWG4B2m4NkMS2AizsN5HikjA>
+    <xmx:sUyMarHLpqODMlOMYGe4kvRBdG-iothFTc-QOwtaxrhozA_Pdl_12g>
+    <xmx:sUyMaoxW0BPWdxByEAqO3250RmiSzbXxoWGcb2jJ2JRcwuO6dC1hzw>
+    <xmx:sUyMasCZIQIwwwU3_SlmMTStVqntYxZCnns9bDqyGh_aqPL5m4eZrAjm>
+Feedback-ID: i787e41f1:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
+ 24 Aug 2026 09:52:48 -0400 (EDT)
+Date: Mon, 24 Aug 2026 15:52:45 +0200
+From: Greg KH <greg@kroah.com>
+To: "Miguel Gazquez (Schneider Electric)" <miguel.gazquez@bootlin.com>
+Cc: stable@vger.kernel.org, Christoph Hellwig <hch@infradead.org>,
+	"Darrick J. Wong" <darrick.wong@oracle.com>,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+	linux-kernel@vger.kernel.org, Joanne Koong <joannelkoong@gmail.com>,
+	syzbot@syzkaller.appspotmail.com, Brian Foster <bfoster@redhat.com>,
+	Christoph Hellwig <hch@lst.de>,
+	Christian Brauner <brauner@kernel.org>,
+	Sasha Levin <sashal@kernel.org>
+Subject: Re: [PATCH 5.10.y] iomap: adjust read range correctly for
+ non-block-aligned positions
+Message-ID: <2026082434-freeway-legwarmer-84e6@gregkh>
+References: <20260820-cve-2025-68974-5-10-v1-1-26ff0db1f8e8@bootlin.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260820-cve-2025-68974-5-10-v1-1-26ff0db1f8e8@bootlin.com>
 
-From: Christoph Hellwig <hch@lst.de>
+On Thu, Aug 20, 2026 at 07:03:07PM +0200, Miguel Gazquez (Schneider Electric) wrote:
+> From: Joanne Koong <joannelkoong@gmail.com>
+> 
+> [ Upstream commit 7aa6bc3e8766990824f66ca76c19596ce10daf3e ]
+> 
+> iomap_adjust_read_range() assumes that the position and length passed in
+> are block-aligned. This is not always the case however, as shown in the
+> syzbot generated case for erofs. This causes too many bytes to be
+> skipped for uptodate blocks, which results in returning the incorrect
+> position and length to read in. If all the blocks are uptodate, this
+> underflows length and returns a position beyond the folio.
+> 
+> Fix the calculation to also take into account the block offset when
+> calculating how many bytes can be skipped for uptodate blocks.
+> 
+> Signed-off-by: Joanne Koong <joannelkoong@gmail.com>
+> Tested-by: syzbot@syzkaller.appspotmail.com
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Christian Brauner <brauner@kernel.org>
+> Signed-off-by: Sasha Levin <sashal@kernel.org>
+> Signed-off-by: Miguel Gazquez (Schneider Electric) <miguel.gazquez@bootlin.com>
+> ---
+>  fs/iomap/buffered-io.c | 19 +++++++++++++------
+>  1 file changed, 13 insertions(+), 6 deletions(-)
 
-Source kernel commit: eb6b2cc1fc8ad566d746d128a559989ff0bba5cc
+Don't we also need this for 5.15.y first?
 
-When working on a new features that reuses the existing pad in the
-superblock, I noticed that mounting such a file system on an old kernel
-logs a rather confusing warning:
+thanks,
 
-XFS (vdc): Metadir superblock padding fields must be zero.
-
-This is because we only validate the various feature fields in v5
-superblocks after the common superblock validation helper is called.
-
-Fix this by calling the feature validation first.
-
-Fixes: eca383fcd63b ("xfs: refactor superblock verifiers")
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Carlos Maiolino <cem@kernel.org>
----
- libxfs/xfs_sb.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
-index 7a1d85b86e59..7097bb61d48d 100644
---- a/libxfs/xfs_sb.c
-+++ b/libxfs/xfs_sb.c
-@@ -1116,10 +1116,10 @@ xfs_sb_read_verify(
- 	 * because _verify_common checks the on-disk values.
- 	 */
- 	__xfs_sb_from_disk(&sb, dsb, false);
--	error = xfs_validate_sb_common(mp, bp, &sb);
--	if (error)
--		goto out_error;
- 	error = xfs_validate_sb_read(mp, &sb);
-+	if (error)
-+		goto out_error;
-+	error = xfs_validate_sb_common(mp, bp, &sb);
- 
- out_error:
- 	if (error == -EFSCORRUPTED || error == -EFSBADCRC)
--- 
-2.55.0
-
+greg k-h
