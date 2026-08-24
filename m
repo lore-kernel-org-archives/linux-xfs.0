@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BE6F27AC31
-	for <linux-xfs@vger.kernel.org>; Mon, 24 Aug 2026 11:45:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24F0A3F074A
+	for <linux-xfs@vger.kernel.org>; Mon, 24 Aug 2026 11:45:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787571957; cv=none; b=uBd0mFuP9cs8ruf9vX40CkhIhrR4dcx5PwZdO3IqdMaIgsfxRx6m41WS9hsUd2viHRx0/V3D8kn1IgKPBfJV9hwUZPYbDZtEIssphHCgoXB8rIZSeLPEcXBdReU8Mf/D4eFwqTdKAl/Euo9+xFV15SxRlDvjDq4WsfQE22/fFow=
+	t=1787571961; cv=none; b=RA9hSjiU/nVbijawBhTJEuVjaG5JJnTjU26ls0cv/FXh4+/mOPDsszjBVO6SgMQwRPOdT7dz1+LNU0DoM/4G+SSBFnIYCHx2OCfxpJoLXj+vhcRUlDaPI9gaNxAbcGk/9iVKeSEIWQfnLHxlBYAuwXGp+SGkArxKwmeUvhpiuAc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787571957; c=relaxed/simple;
-	bh=Cy6paM3cJir3nCX7bdXZFkO/XeVpJBLy8xjRKgtay9c=;
+	s=arc-20240116; t=1787571961; c=relaxed/simple;
+	bh=fjiBLVHBU061IF8OK4Gemc6k5I/w+nuLxWl5NdctvLk=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=U4Wk4KUOPlH1xTcmUarNdFuejFzu5T/M2ysz/XRHv05qxNHrBpCGbg0D3ysJ3n9BTs411cwTPYw6rmbndGligreYvjkZjO+MGSpgiH9te9NZq7XdgJJpkm3o68CJRFpkdkNBzwLuGKF7bDQBsEnz1BvFqcScVUsgZJnG99nvAP8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cTAmB075; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=iru1eIdvqJJqeihCyEJn9saFed+TUxtuPawBVRADYbb+/RYQg2Vkj7q/h1waem44nZqmqlty6aqe+H0YcoLbgTf6qWhnD0TyWgSGNpLAvhWOTkB5GXzrfHLpCMuqEEXGeKbVqy+0Jipw5YEJgQIuoX+7Bfwe0ANDcwcxn1h3ti0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=erJ4oqg2; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cTAmB075"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ADE9E1F000E9;
-	Mon, 24 Aug 2026 11:45:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="erJ4oqg2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A5A71F00A3D;
+	Mon, 24 Aug 2026 11:45:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787571955;
-	bh=fMlbmBj1U7r6RaVmltzvYens8+tJvJBIhKGx8+iHFy4=;
+	s=k20260515; t=1787571959;
+	bh=M+4gO9cT78LOinDGBgQGravDOZPcaNFANp8Z7l1NmFc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=cTAmB075el4TGGK6f5fTmK/MApjoSrCO9fquyg6mrspheGYwQRTPjFERfqVW4F5TX
-	 tI+ObM44ztyxiSHvvE2jFNk6ehicUjM6XIbugBqi60Sq9oPS2aOKT2XLTd4n4MHP/D
-	 FIGIS0WT+u+T+Y8WyJ2BmozJfqXCJXnUI/y9y5BaQYwfug28oHUVCLlft92Xw2AbAE
-	 oeo64YUQmn9AEGqmbIn4XPYEJe8H7e2cCt82gsY5F4TJUlQLD6/7vpMrp2Ge9cUkO7
-	 MSyWwu+ZVl1Hh+6mNsOQgbiBdwl16gojV2c2Z4E1zXCY7xqINOGQSk/qxrqe0b0v+w
-	 a+9K4BVovOZqA==
+	b=erJ4oqg2POhDB0zalEzleLk4uOIH48SLbiShKLB9FhNrLPbN0MDiE2VJ6eiEM2db3
+	 OPZZHZ2z8OqbpfPzfCkn067HEgg//Lnawo80rfvD4D20Ql5ATeO9/SZvewh1DBPsF1
+	 AV6R0+73cxDSTrJSDmzcygNBCB6YQYFVtXqzgJt0cv54zh0iplwzVxIMs3lizk6f96
+	 Hybn1UMQqUUJvZH0wN/RTKItcdJ8eTFE3Kgedpo1PCXI4RzjFJ0fTPa6ftnhITG4TL
+	 wzDOapK/HuZ1wusMcYD0DT75aD877YvJa7Q8mc1fopo2wXayK1xKm2WHqKgsmL6v4B
+	 8rc4VWa3N/VfQ==
 From: Andrey Albershteyn <aalbersh@kernel.org>
 To: linux-xfs@vger.kernel.org,
 	aalbersh@kernel.org
@@ -41,9 +41,9 @@ Cc: bestswngs@gmail.com,
 	jiapenglin@tencent.com,
 	roland.mainz@nrubsig.org,
 	xmei5@asu.edu
-Subject: [PATCH 02/21] xfs: fix exchmaps reservation limit check
-Date: Mon, 24 Aug 2026 12:40:00 +0200
-Message-ID: <20260824104022.420566-3-aalbersh@kernel.org>
+Subject: [PATCH 03/21] xfs: add a XFS_INODE_TO_AGNO helper
+Date: Mon, 24 Aug 2026 12:40:01 +0200
+Message-ID: <20260824104022.420566-4-aalbersh@kernel.org>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20260824104022.420566-1-aalbersh@kernel.org>
 References: <20260824104022.420566-1-aalbersh@kernel.org>
@@ -55,41 +55,84 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Yingjie Gao <gaoyingjie@uniontech.com>
+From: Christoph Hellwig <hch@lst.de>
 
-Source kernel commit: 0a5213bbff62b51c7d4999ac8c7e11ea57d00d45
+Source kernel commit: a22166add624818a6c43b807d37f99483ba268a6
 
-xfs_exchmaps_estimate_overhead() adds the bmbt and rmapbt
-overhead to a local resblks variable, but the final UINT_MAX
-check still tests req->resblks.  That is the reservation value
-from before the overhead was added.
+Add a shortcut for the common XFS_INO_TO_AGNO(mp, ip->i_ino) pattern.
 
-The computed value is stored back in req->resblks and later passed
-to xfs_trans_alloc(), whose block reservation argument is unsigned
-int.  Check the computed reservation so the existing limit applies
-to the value that will be used.
-
-Fixes: 966ceafc7a43 ("xfs: create deferred log items for file mapping exchanges")
-Signed-off-by: Yingjie Gao <gaoyingjie@uniontech.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 Signed-off-by: Carlos Maiolino <cem@kernel.org>
 ---
- libxfs/xfs_exchmaps.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ libxfs/xfs_dir2.c       | 4 ++--
+ libxfs/xfs_format.h     | 2 ++
+ libxfs/xfs_ialloc.c     | 2 +-
+ libxfs/xfs_inode_util.c | 2 +-
+ 4 files changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/libxfs/xfs_exchmaps.c b/libxfs/xfs_exchmaps.c
-index 5566f9faf456..651c3784caba 100644
---- a/libxfs/xfs_exchmaps.c
-+++ b/libxfs/xfs_exchmaps.c
-@@ -708,7 +708,7 @@ xfs_exchmaps_estimate_overhead(
- 		return -ENOSPC;
+diff --git a/libxfs/xfs_dir2.c b/libxfs/xfs_dir2.c
+index 1a13fec25e15..562d617254b2 100644
+--- a/libxfs/xfs_dir2.c
++++ b/libxfs/xfs_dir2.c
+@@ -918,7 +918,7 @@ xfs_dir_add_child(
+ 	if (VFS_I(ip)->i_nlink == 0) {
+ 		struct xfs_perag	*pag;
  
- 	/* Can't actually reserve more than UINT_MAX blocks. */
--	if (req->resblks > UINT_MAX)
-+	if (resblks > UINT_MAX)
- 		return -ENOSPC;
+-		pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
++		pag = xfs_perag_get(mp, XFS_INODE_TO_AGNO(ip));
+ 		error = xfs_iunlink_remove(tp, pag, ip);
+ 		xfs_perag_put(pag);
+ 		if (error)
+@@ -1245,7 +1245,7 @@ xfs_dir_rename_children(
  
- 	req->resblks = resblks;
+ 		ASSERT(VFS_I(du_wip->ip)->i_nlink == 0);
+ 
+-		pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, du_wip->ip->i_ino));
++		pag = xfs_perag_get(mp, XFS_INODE_TO_AGNO(du_wip->ip));
+ 		error = xfs_iunlink_remove(tp, pag, du_wip->ip);
+ 		xfs_perag_put(pag);
+ 		if (error)
+diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
+index 779dac59b1f3..36a00c174f1e 100644
+--- a/libxfs/xfs_format.h
++++ b/libxfs/xfs_format.h
+@@ -1276,6 +1276,8 @@ static inline bool xfs_dinode_is_metadir(const struct xfs_dinode *dip)
+ 	XFS_INO_AGNO_BITS(mp) + XFS_INO_AGINO_BITS(mp)
+ #define	XFS_INO_TO_AGNO(mp,i)		\
+ 	((xfs_agnumber_t)((i) >> XFS_INO_AGINO_BITS(mp)))
++#define	XFS_INODE_TO_AGNO(ip)		\
++	XFS_INO_TO_AGNO((ip)->i_mount, (ip)->i_ino)
+ #define	XFS_INO_TO_AGINO(mp,i)		\
+ 	((xfs_agino_t)(i) & XFS_INO_MASK(XFS_INO_AGINO_BITS(mp)))
+ #define	XFS_INO_TO_AGBNO(mp,i)		\
+diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
+index 31c818f9870f..abfba2bfabaf 100644
+--- a/libxfs/xfs_ialloc.c
++++ b/libxfs/xfs_ialloc.c
+@@ -1865,7 +1865,7 @@ xfs_dialloc_pick_ag(
+ 	if (S_ISDIR(mode))
+ 		return (atomic_inc_return(&mp->m_agirotor) - 1) % mp->m_maxagi;
+ 
+-	start_agno = XFS_INO_TO_AGNO(mp, dp->i_ino);
++	start_agno = XFS_INODE_TO_AGNO(dp);
+ 	if (start_agno >= mp->m_maxagi)
+ 		start_agno = 0;
+ 
+diff --git a/libxfs/xfs_inode_util.c b/libxfs/xfs_inode_util.c
+index fd8441bf9b83..8e439dc2f4fa 100644
+--- a/libxfs/xfs_inode_util.c
++++ b/libxfs/xfs_inode_util.c
+@@ -528,7 +528,7 @@ xfs_iunlink(
+ 	ASSERT(VFS_I(ip)->i_mode != 0);
+ 	trace_xfs_iunlink(ip);
+ 
+-	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
++	pag = xfs_perag_get(mp, XFS_INODE_TO_AGNO(ip));
+ 
+ 	/* Get the agi buffer first.  It ensures lock ordering on the list. */
+ 	error = xfs_read_agi(pag, tp, 0, &agibp);
 -- 
 2.55.0
 
