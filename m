@@ -1,87 +1,41 @@
-Received: from flow-b6-smtp.messagingengine.com (flow-b6-smtp.messagingengine.com [202.12.124.141])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2AE344052DE;
-	Mon, 24 Aug 2026 13:52:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.141
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D1C9430CE5;
+	Mon, 24 Aug 2026 14:05:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787579572; cv=none; b=ioKfoQrikHmGz4cT39RAvI2UNUImtIC6n5bPJpi5xkP3qkCDSHDemM3h9Z1oOf2+8wR2DlwtGGGsps3/AAZMlSnX8oCtqUvilo1r8CyQYyH86d6/TrF6WiyrmG8WpEcHkeB7oEVKetD63QwGmbNDLium49j5i9c/vghf+M/Ad34=
+	t=1787580333; cv=none; b=n4OLCEnR3f0qnvlHyqfWMJhX1he+2zq3JsMiObZsKdJFKZ6eXmE3/Klz6GrFdkE1B78sfDKQ1n/j37q3yF64PaLiFfkY804K6kc2B6NoTZ5C8mYXa+1iFZrgkSzXz52uxt3OYxDFLx6v0mI9JAQb27Oka7HRzamUnYOhdvKpWC8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787579572; c=relaxed/simple;
-	bh=fUfjUCkiaM90io/n8Y7zz+NQRpbgcwJgatrGWCPIf2k=;
+	s=arc-20240116; t=1787580333; c=relaxed/simple;
+	bh=TVNuWznbi7z461LCNQ0VjLK7cUNilIMQSiLkD3Jk/a0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dHvv8flOyaY6P55/Yi8MzBimD6pWkGHOjfhnkOvhv4WFqgkTH0WNspv61zKhii/Excaxap0VDU655Dob57crl7Im5rz9Iy6qb81Q/HskOg5DGCIgZoJZa91IeW6FHXP2zte975S9TXRrvN4K1CdqaVbhLtaC505pmZmnApwATPk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kroah.com; spf=pass smtp.mailfrom=kroah.com; dkim=pass (2048-bit key) header.d=kroah.com header.i=@kroah.com header.b=G6vz/uwB; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=k0OgL+8/; arc=none smtp.client-ip=202.12.124.141
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kroah.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kroah.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=GFbQcRlRzXNh7xHDCLFkr4tzRkx5tMN0rcJjZvJVSeVUgK/SjDP5sDEd0N87ZLcGnM9QPT8lmkiWdQiqGyXG/qZ9766QPVtKFXHzutLq7YW54qKnsjMfazHOm/cMBygFHHhsaATRorKkOomU1gZZ6Gc9meRuEnLxgBXs/fUHpmA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=m9JnrWsr; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kroah.com header.i=@kroah.com header.b="G6vz/uwB";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="k0OgL+8/"
-Received: from phl-compute-05.internal (phl-compute-05.internal [10.202.2.45])
-	by mailflow.stl.internal (Postfix) with ESMTP id B3FA01300084;
-	Mon, 24 Aug 2026 09:52:49 -0400 (EDT)
-Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-05.internal (MEProxy); Mon, 24 Aug 2026 09:52:50 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kroah.com; h=cc
-	:cc:content-type:content-type:date:date:from:from:in-reply-to
-	:in-reply-to:message-id:mime-version:references:reply-to:subject
-	:subject:to:to; s=fm3; t=1787579569; x=1787586769; bh=zD00BnjS9t
-	sCP+uch931+VaqPVYRemIFkBWowtNOyZA=; b=G6vz/uwBrBJbGD9KPp6R6rpDT4
-	x9qUAI0yUYMB99QZaRFSRHD+laZWtSFYySDls8y8mZf8XZ9DKONeXHD+E+hyipqj
-	Ex7CKV+D9/04tnWV34dpicZq+0MiUei2BwVL0DRDW2gVpo2ylK+DFcHV9D7idq+1
-	jQ1IkgagtGlq8dwVz61kcAlg4UCu2ZoHuuEc6ItXouqDjlyNkxshHIpJAcXuv+u5
-	fqpP9RIH1IlTht5o88+fOD3Rygif/A4VQ8mKht8sEo5E9zMgEGhs1SikLhOyFsTn
-	2u2YDL63Or60+4xjSOn3/oumODArME5KZVg8mF5xZnocdPxlWm1ccuWPRgsw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-type:content-type:date:date
-	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
-	:message-id:mime-version:references:reply-to:subject:subject:to
-	:to:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=
-	1787579569; x=1787586769; bh=zD00BnjS9tsCP+uch931+VaqPVYRemIFkBW
-	owtNOyZA=; b=k0OgL+8/VRJZlTRux9iIop5FUNtzRJuHdr3D5O97slOIrvsmAIb
-	3vc/HFDi2/hGRUPzAxAVNI26KwD07c+qEI0UkLtqdVGaOsftZYNBKuIORpUyQRru
-	SJ1i/czyKl0GZ6MAKXnufPXeLoQeAb7AsFRVuQMYm2AwUZMiqb9QnMT0arb61Xfo
-	iB6Vzc7pb2pDwEpM1/6iG5aZIN5ylPK5QUOJK6uDL27I9bAY8gvYf+4MGs+KONgg
-	53Ds/cN6guJwiGwcw3r/dzlm823o79cckmlC6u8JjEhD/kGDsBNjsTTChmBEDtzu
-	8hT0MGMCPilp5ooSxXri2qmv6dOpci+e0Gw==
-X-ME-Sender: <xms:sUyMakzOP9AQhap9mWc57DEJCIKukqgcxRHapaU819tfIzSGKXrI_Q>
-    <xme:sUyMaqpEBfiQacue1Qg30PcgNvv80FxA6XXtJOl1yRT8kEuHktfvOFHCLzomd7OKg
-    0xqV6GPilIw_68bcnAG0Vp4cCxZWCqeb0K3QV1UPSccuF9CEA>
-X-ME-Received: <xmr:sUyMavn5OQg_QDPhqlJAV8wyda5B_IRZh6nM-RtUOuGtv3OZyRuqeIwWrPbD0zXCM_8JqMAsY1CCjqmD0dMpxXUdewpeQzI59Dt_IvX6Bc0>
-X-ME-Proxy-Cause: dmFkZTEPn1zsIOPKOAqDfn4v6wjQvPSeR6w6xBDZDwNrVoBNFuHflUDaBa/OrLbn41U77i
-    EB7lSjaDunC6FmNX8baljOdoWdSzXiuGLxMsuQjWfc35kQ34AzqqqWH/emt+yIdAsN19zL
-    cxURTm3UgXLxdxOMfEsDOy4PFM6wVRJjIN6rOBnjGhJ/PkeWup4AS0OA1BhyMaY9zi+f5o
-    qf0ZSbxnZhhfYF7yJjxatRECbIvFXZHzbZ6d5asxO4W6/M6L4/E30YqleLYnEJx1fJeLnK
-    FtvaYD5XhGxmO9jl0m6xZ6FJ0LB8Mn/+Yz3/qG64QKpWTFmm2RR54ru2ZLcGwDrzUXxLap
-    bPY9rfDf72H2lfttfD6I8vuC/XhkZ4249w/eF3PTCNn38rxKmcyU9ahHLQ1LTVrQS5rsSy
-    KGKfOn1pYZ6vWJi4lhRKHvWG1q+su5YiDQAbY13y1spoIl642XseFOAyWAW2LvDwEEBz8t
-    l9stysJ0b61nc2Cx5q96XBkVwK8mxD+xwh6B5tyXXhJZOKQGxBzN5D+CiTK1jxNOuVaAPa
-    2nq1AKvjVGbynX73GM974IqxvgfIP1ZfsEycpOAjpmAXc2izNFp4AEeFUjmWEhG2F4dy34
-    +41cJr5+JY2Y7KUCIzK8aoTRySc0hvj1lkxVyoF5a6URHVppOctW85Jjeyvw
-X-ME-Proxy: <xmx:sUyMalrQkYIgHEckIeAKMCE8D6pRGc2kaLc3QhMzQJC3uu8vD0tnrg>
-    <xmx:sUyMaoabsfmBz_cg4rPvPKUoosuzT5CWG4B2m4NkMS2AizsN5HikjA>
-    <xmx:sUyMarHLpqODMlOMYGe4kvRBdG-iothFTc-QOwtaxrhozA_Pdl_12g>
-    <xmx:sUyMaoxW0BPWdxByEAqO3250RmiSzbXxoWGcb2jJ2JRcwuO6dC1hzw>
-    <xmx:sUyMasCZIQIwwwU3_SlmMTStVqntYxZCnns9bDqyGh_aqPL5m4eZrAjm>
-Feedback-ID: i787e41f1:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
- 24 Aug 2026 09:52:48 -0400 (EDT)
-Date: Mon, 24 Aug 2026 15:52:45 +0200
-From: Greg KH <greg@kroah.com>
-To: "Miguel Gazquez (Schneider Electric)" <miguel.gazquez@bootlin.com>
-Cc: stable@vger.kernel.org, Christoph Hellwig <hch@infradead.org>,
-	"Darrick J. Wong" <darrick.wong@oracle.com>,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-	linux-kernel@vger.kernel.org, Joanne Koong <joannelkoong@gmail.com>,
-	syzbot@syzkaller.appspotmail.com, Brian Foster <bfoster@redhat.com>,
-	Christoph Hellwig <hch@lst.de>,
-	Christian Brauner <brauner@kernel.org>,
-	Sasha Levin <sashal@kernel.org>
-Subject: Re: [PATCH 5.10.y] iomap: adjust read range correctly for
- non-block-aligned positions
-Message-ID: <2026082434-freeway-legwarmer-84e6@gregkh>
-References: <20260820-cve-2025-68974-5-10-v1-1-26ff0db1f8e8@bootlin.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="m9JnrWsr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CBD341F000E9;
+	Mon, 24 Aug 2026 14:05:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1787580331;
+	bh=rf07oECWzg7mA/SbvL9XANAEcqw84tovmNvakjtYx30=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=m9JnrWsrSN/c8jJlw7IiR2dLMG9AwIGOnnqwVWk6H+/hsj+9pSIJ7XmGUFgrR+Pj9
+	 w+v2RpRsFIdcOO0dzztKp81+wLyHBfnSIuOcFMB6JKgzAnZ9wxYdRNvcJCb+6QSuy/
+	 fYvivPQK/+u5/w01+3/oyqQb2nCbFB0MAmb3A+N1VX2BBr9jmDBpDZ8xSpyEG25pdT
+	 /ZYy1Q33zN/+jgP49uc5xRpRVVR7sBfvJNKYi6edhOM7IZ3R7ae/V4Y/n1gOy3PqGz
+	 SCfJwVOgAV7fLE6aexKXDJZqtMD3GcfqsOZkhpxbuSMlkuIatSrtXCgTypLPjcFaGd
+	 h6yXrcf/bXcxg==
+Date: Mon, 24 Aug 2026 22:05:25 +0800
+From: Zorro Lang <zlang@kernel.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: qsa@qualys.com, fstests <fstests@vger.kernel.org>, 
+	xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH v2] generic: regression test for refluxfs fixes
+Message-ID: <aoxJrUoCCy5Kxgh8@zlang-mailbox>
+Mail-Followup-To: "Darrick J. Wong" <djwong@kernel.org>, qsa@qualys.com, 
+	fstests <fstests@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
+References: <20260821235155.GK839663@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -90,36 +44,171 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260820-cve-2025-68974-5-10-v1-1-26ff0db1f8e8@bootlin.com>
+In-Reply-To: <20260821235155.GK839663@frogsfrogsfrogs>
 
-On Thu, Aug 20, 2026 at 07:03:07PM +0200, Miguel Gazquez (Schneider Electric) wrote:
-> From: Joanne Koong <joannelkoong@gmail.com>
+On Fri, Aug 21, 2026 at 04:51:55PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> [ Upstream commit 7aa6bc3e8766990824f66ca76c19596ce10daf3e ]
+> Regression test for refluxfs as found by Qualys.
 > 
-> iomap_adjust_read_range() assumes that the position and length passed in
-> are block-aligned. This is not always the case however, as shown in the
-> syzbot generated case for erofs. This causes too many bytes to be
-> skipped for uptodate blocks, which results in returning the incorrect
-> position and length to read in. If all the blocks are uptodate, this
-> underflows length and returns a position beyond the folio.
-> 
-> Fix the calculation to also take into account the block offset when
-> calculating how many bytes can be skipped for uptodate blocks.
-> 
-> Signed-off-by: Joanne Koong <joannelkoong@gmail.com>
-> Tested-by: syzbot@syzkaller.appspotmail.com
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Christian Brauner <brauner@kernel.org>
-> Signed-off-by: Sasha Levin <sashal@kernel.org>
-> Signed-off-by: Miguel Gazquez (Schneider Electric) <miguel.gazquez@bootlin.com>
+> Reported-by: qsa@qualys.com
+> Co-developed-by: qsa@qualys.com
+> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 > ---
->  fs/iomap/buffered-io.c | 19 +++++++++++++------
->  1 file changed, 13 insertions(+), 6 deletions(-)
+> v2: add co-author credits
+> ---
 
-Don't we also need this for 5.15.y first?
+Hi Darrick,
 
-thanks,
+I just gave this patch a try on linux v7.2+ which contains the commit
+2f4acd0fcd862e, but the test still fails as shown below on both xfs
+and btrfs. Did I miss anything?
 
-greg k-h
+root@bogon:~/git/linux# git tag --contains 2f4acd0fcd862e
+v7.2
+v7.2-rc4
+v7.2-rc5
+v7.2-rc6
+v7.2-rc7
+
+root@bogon:~/git/xfstests-dev# ./check generic/1956
+FSTYP         -- xfs (debug)
+PLATFORM      -- Linux/x86_64 bogon 7.2.0-mainline+ #3 SMP PREEMPT_DYNAMIC Mon Aug 24 20:34:26 CST 2026
+MKFS_OPTIONS  -- -f /dev/sdc1
+MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/sdc1 /mnt/scratch
+
+generic/1956       - output mismatch (see /root/git/xfstests-dev/results//generic/1956.out.bad)
+    --- tests/generic/1956.out  2026-08-24 14:19:18.790104900 +0800
+    +++ /root/git/xfstests-dev/results//generic/1956.out.bad    2026-08-24 21:41:51.884222239 +0800
+    @@ -1,2 +1,2 @@
+     QA output created by 1956
+    -corruption not observed
+    +unknown outcome 126
+    ...
+    (Run 'diff -u /root/git/xfstests-dev/tests/generic/1956.out /root/git/xfstests-dev/results//generic/1956.out.bad'  to see the entire diff)
+
+HINT: You _MAY_ be missing kernel fix:
+      2f4acd0fcd862e xfs: resample the data fork mapping after cycling ILOCK
+
+Ran: generic/1956
+Failures: generic/1956
+Failed 1 of 1 tests
+
+root@bogon:~/git/xfstests-dev# ./check generic/1956
+FSTYP         -- btrfs
+PLATFORM      -- Linux/x86_64 bogon 7.2.0-mainline+ #3 SMP PREEMPT_DYNAMIC Mon Aug 24 20:34:26 CST 2026
+MKFS_OPTIONS  -- /dev/sdc1
+MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/sdc1 /mnt/scratch
+
+generic/1956       - output mismatch (see /root/git/xfstests-dev/results//generic/1956.out.bad)
+    --- tests/generic/1956.out  2026-08-24 14:19:18.790104900 +0800
+    +++ /root/git/xfstests-dev/results//generic/1956.out.bad    2026-08-24 21:44:35.654443414 +0800
+    @@ -1,2 +1,2 @@
+     QA output created by 1956
+    -corruption not observed
+    +unknown outcome 126
+    ...
+    (Run 'diff -u /root/git/xfstests-dev/tests/generic/1956.out /root/git/xfstests-dev/results//generic/1956.out.bad'  to see the entire diff)
+Ran: generic/1956
+Failures: generic/1956
+Failed 1 of 1 tests
+
+
+>  .gitignore             |    1 
+>  src/Makefile           |    2 
+>  src/refluxfs.c         |  461 ++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/1956     |   58 ++++++
+>  tests/generic/1956.out |    2 
+>  5 files changed, 523 insertions(+), 1 deletion(-)
+>  create mode 100644 src/refluxfs.c
+>  create mode 100755 tests/generic/1956
+>  create mode 100644 tests/generic/1956.out
+>
+
+[snip]
+
+> +#ifndef FICLONE
+> +#define FICLONE _IOW(0x94, 9, int)
+> +#endif
+> +#ifndef XFS_SUPER_MAGIC
+> +#define XFS_SUPER_MAGIC 0x58465342
+> +#endif
+> +
+> +#define BLK 4096
+
+This's a hard code, what if the fs blocksize or pagesize isn't 4096?
+
+> +
+> +/* ---- configuration (overridable via CLI) --------------------------------- */
+> +static const char *target_path   = "/etc/passwd";
+> +static const char *clone_dir     = "/var/tmp";
+> +static int         nr_writers    = 32;
+> +static int         nr_pressure   = 8;
+> +static int         budget_s      = 300;
+> +
+
+[snip]
+
+> +
+> +#if 0
+> +static int is_xfs(const char *p)
+> +{
+> +    struct statfs s;
+> +    if (statfs(p, &s)) return -1;
+> +    return s.f_type == XFS_SUPER_MAGIC;
+> +}
+> +#endif
+
+If this's useless, how about remove them?
+
+> +
+> +/* FIEMAP: is the target's first extent already shared (refcount > 1)?
+> + * If so the race can never see refcount==1. */
+> +static int target_first_extent_shared(void)
+> +{
+
+[snip]
+
+> +#if 0
+> +    /* 2. target on XFS */
+> +    int x = is_xfs(target_path);
+> +    if (x < 0) die(1, "statfs target", NULL);
+> +    if (!x) {
+> +        BAD("target is not on XFS (f_type != XFS_SUPER_MAGIC).");
+> +        INFO("RefluXFS only affects XFS with reflink=1 (mkfs.xfs default since");
+> +        INFO("xfsprogs 5.1.0; backported by Red Hat for RHEL 8 GA).  Default root");
+> +        INFO("fs on RHEL/CentOS/Rocky/Alma/OL/CloudLinux 8+, Fedora Server 31+,");
+> +        INFO("Amazon Linux 2023.");
+> +        exit(1);
+> +    }
+> +    OK("target is on XFS");
+> +#endif
+
+Same
+
+> +
+> +    /* 3. clone_dir on the same superblock */
+> +    if (access(clone_dir, W_OK)) die(1, "clone dir not writable",
+> +        "Need a writable directory on the SAME XFS filesystem as the target.");
+
+[snip]
+
+> +static void *pressure(void *arg)
+> +{
+> +    char p[600];
+> +    snprintf(p, sizeof p, "%s/press.%d", workdir, (int)(intptr_t)arg);
+> +    int fd = open(p, O_RDWR|O_CREAT|O_TRUNC, 0600);
+> +    if (fd < 0) return NULL;
+> +    char b = 0;
+> +    while (!atomic_load(&stop)) {
+> +        /* return values irrelevant -- goal is XFS log traffic, not the data */
+> +        (void)!pwrite(fd, &b, 1, 0);
+> +        (void)!ftruncate(fd, BLK);
+> +        fdatasync(fd);
+> +        (void)!ftruncate(fd, 0);
+
+As this's a generic test case, the pressure() works for XFS CIL, does it work
+for other filesystems?
+
+Thanks,
+Zorro
