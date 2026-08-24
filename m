@@ -1,39 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0EB337F8D6;
-	Mon, 24 Aug 2026 17:40:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22121470128;
+	Mon, 24 Aug 2026 17:42:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787593227; cv=none; b=B+5UKDDTN/ozE6r/Mf7zWSk5BYSV9/KEz76yxM3T4O6aXhL6Xz5/CxMoIawZ0s520xmAkEFOdWFS2TWnYIamAd7iFcZun8eY4Ii9dxa248DjQLLX74/gs0zTDEe7ONA8m8HUTqCz/0EGfKbnZf/I3+yCoi6d9Jc1vyVttluxtIs=
+	t=1787593336; cv=none; b=XR3f2uaP95UzCiHnfsICPrhNozvhiqr7NGc2O2t4sLxAyFruVt1nYofwPRaDaDNqgb8q2l4oR7Sy3OR36lyMX+cC2cSiEXxjQ2+e8mAHslnvZ4yce8ODn7gpL8EHxQteSgkXL+MTM9XcGOoMFrOCgOjhRSHvTNsXG4yvHiLFTCE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787593227; c=relaxed/simple;
-	bh=55kI32tDNrjHBaaaJ4tWRwTHm4/9/Rowh2ArkjVNKWY=;
+	s=arc-20240116; t=1787593336; c=relaxed/simple;
+	bh=gZbM/07fMGjN8nJ38YaB1JODCnBpK/nLvQsmOxj+jc8=;
 	h=Date:From:To:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TZNfpGsJOUnKmBHsTOWx8nXoJaqh6GsGTJhuJ4/qhK+sh301XidlZ63sY9vOUjQjfSody6IeAa+ooFy4fUlrUDtXGXS8wi4OtQwP5VOwAbgfaykg0iSRkLEh5ml6APqrOrxe1rF8frx+nA7Lq/VQ0GxZioUU0DH9MGfUX7hSVms=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aUmD1Azl; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=HdFtpRUs0uDFOiiDfvNRytBlTmg4LqD5L1skPWgbVyClPUBFAHS7uihsPM4ARdsajbkDIyFf69npk9rHsPdaFeJ7F++Icowolik+dTil7wlmroP9uJNixerKF/MAXu2ZafxYYlEbpVzRNgNCceChSwGzv9rLvtKsUt1sh6o7lJU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mBX6zaaO; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aUmD1Azl"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 006B11F000E9;
-	Mon, 24 Aug 2026 17:40:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mBX6zaaO"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 08C0A1F000E9;
+	Mon, 24 Aug 2026 17:42:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787593210;
-	bh=2ZyDA8O8zMvhHE3pKQeaf+/ce2DZP/bcSZSSN+nEib0=;
+	s=k20260515; t=1787593326;
+	bh=IyuV8ORB/IykqAIUqmv0//d4mcKFAD8ciF0EeXFf01s=;
 	h=Date:From:To:Subject:References:In-Reply-To;
-	b=aUmD1AzlR0zkBoqfPEcIDD1iYm/NXsWbKPYBhTBmZTqDY3zM/ZVbjL7M0xcoB6Krd
-	 ZEGMZNxZ5K3SsajwB3YQKdJua+XcEXeKrXLhh5yv6lV/GNkF0Do7iK9i9I9W7O96dn
-	 qbqzGxjft4Ym/wm8gipLFDz8ttKthhc1IiX2llHMIzf4I9OGPpS7cB5WZAy6EVAqcd
-	 YvcAGK0fhcqSFB7C50DNYjsayL4B5Nt9dVksf6Ci5OzTQMzzor28RufoW1MxBPh3FS
-	 K0r1VA8oFtE3+8Jzvk5E3O9DfqQtYMlkumDZhEWHO2fEFvGXZDzAgfOA38nAkLFRcj
-	 IYIK8eqYIUSFA==
-Date: Mon, 24 Aug 2026 10:40:09 -0700
+	b=mBX6zaaOzI7xQthrREQTcnndrF5bYuDJ03uY6j11EMxDE3h2T7afJj4AmY/4YdrJE
+	 v/BvD1Ap+dUgrx54N2gUVOhP3cSPro01SU13+HSqU2C/VvdEHLowprcsiPgiR/vlqn
+	 tPG/IAnLfAHQ0XPjGKmHN3kjqekM7XNS0Ll6TtRUAtkAeogIFXdDEfE+JT9uTISbrV
+	 aNAUvBk2L/X0chgypN2YKtqC2XQD5eGtWP3JneLc4CTTsGP/TH9x7BFhkbo/GYxEAN
+	 asc99f0F2+ngEw4hYhnZX/4Wc1MIYYJYMw9wpVdsCkRpwey0l3fABkUPebqg8R2CLg
+	 WBG/Wsnyyz8fg==
+Date: Mon, 24 Aug 2026 10:42:05 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: qsa@qualys.com, fstests <fstests@vger.kernel.org>,
-	xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH v2] generic: regression test for refluxfs fixes
-Message-ID: <20260824174009.GQ839663@frogsfrogsfrogs>
-References: <20260821235155.GK839663@frogsfrogsfrogs>
- <aoxJrUoCCy5Kxgh8@zlang-mailbox>
+To: fstests <fstests@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>,
+	Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfs: test unlinked inode list checking and repair with
+ loops
+Message-ID: <20260824174205.GR839663@frogsfrogsfrogs>
+References: <20260819155225.GB839663@frogsfrogsfrogs>
+ <aoxxL4KKsjA6tr2Q@zlang-mailbox>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,185 +43,294 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aoxJrUoCCy5Kxgh8@zlang-mailbox>
+In-Reply-To: <aoxxL4KKsjA6tr2Q@zlang-mailbox>
 
-On Mon, Aug 24, 2026 at 10:05:25PM +0800, Zorro Lang wrote:
-> On Fri, Aug 21, 2026 at 04:51:55PM -0700, Darrick J. Wong wrote:
+On Tue, Aug 25, 2026 at 01:14:31AM +0800, Zorro Lang wrote:
+> On Wed, Aug 19, 2026 at 08:52:25AM -0700, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > Regression test for refluxfs as found by Qualys.
+> > Simple test of various weird ways we can screw up unlinked inode list
+> > reconstruction.
 > > 
-> > Reported-by: qsa@qualys.com
-> > Co-developed-by: qsa@qualys.com
 > > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> > Reviewed-by: Christoph Hellwig <hch@lst.de>
 > > ---
-> > v2: add co-author credits
-> > ---
-> 
-> Hi Darrick,
-> 
-> I just gave this patch a try on linux v7.2+ which contains the commit
-> 2f4acd0fcd862e, but the test still fails as shown below on both xfs
-> and btrfs. Did I miss anything?
-> 
-> root@bogon:~/git/linux# git tag --contains 2f4acd0fcd862e
-> v7.2
-> v7.2-rc4
-> v7.2-rc5
-> v7.2-rc6
-> v7.2-rc7
-> 
-> root@bogon:~/git/xfstests-dev# ./check generic/1956
-> FSTYP         -- xfs (debug)
-> PLATFORM      -- Linux/x86_64 bogon 7.2.0-mainline+ #3 SMP PREEMPT_DYNAMIC Mon Aug 24 20:34:26 CST 2026
-> MKFS_OPTIONS  -- -f /dev/sdc1
-> MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/sdc1 /mnt/scratch
-> 
-> generic/1956       - output mismatch (see /root/git/xfstests-dev/results//generic/1956.out.bad)
->     --- tests/generic/1956.out  2026-08-24 14:19:18.790104900 +0800
->     +++ /root/git/xfstests-dev/results//generic/1956.out.bad    2026-08-24 21:41:51.884222239 +0800
->     @@ -1,2 +1,2 @@
->      QA output created by 1956
->     -corruption not observed
->     +unknown outcome 126
->     ...
->     (Run 'diff -u /root/git/xfstests-dev/tests/generic/1956.out /root/git/xfstests-dev/results//generic/1956.out.bad'  to see the entire diff)
-> 
-> HINT: You _MAY_ be missing kernel fix:
->       2f4acd0fcd862e xfs: resample the data fork mapping after cycling ILOCK
-> 
-> Ran: generic/1956
-> Failures: generic/1956
-> Failed 1 of 1 tests
-> 
-> root@bogon:~/git/xfstests-dev# ./check generic/1956
-> FSTYP         -- btrfs
-> PLATFORM      -- Linux/x86_64 bogon 7.2.0-mainline+ #3 SMP PREEMPT_DYNAMIC Mon Aug 24 20:34:26 CST 2026
-> MKFS_OPTIONS  -- /dev/sdc1
-> MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/sdc1 /mnt/scratch
-> 
-> generic/1956       - output mismatch (see /root/git/xfstests-dev/results//generic/1956.out.bad)
->     --- tests/generic/1956.out  2026-08-24 14:19:18.790104900 +0800
->     +++ /root/git/xfstests-dev/results//generic/1956.out.bad    2026-08-24 21:44:35.654443414 +0800
->     @@ -1,2 +1,2 @@
->      QA output created by 1956
->     -corruption not observed
->     +unknown outcome 126
->     ...
->     (Run 'diff -u /root/git/xfstests-dev/tests/generic/1956.out /root/git/xfstests-dev/results//generic/1956.out.bad'  to see the entire diff)
-> Ran: generic/1956
-> Failures: generic/1956
-> Failed 1 of 1 tests
-> 
-> 
-> >  .gitignore             |    1 
-> >  src/Makefile           |    2 
-> >  src/refluxfs.c         |  461 ++++++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/generic/1956     |   58 ++++++
-> >  tests/generic/1956.out |    2 
-> >  5 files changed, 523 insertions(+), 1 deletion(-)
-> >  create mode 100644 src/refluxfs.c
-> >  create mode 100755 tests/generic/1956
-> >  create mode 100644 tests/generic/1956.out
-> >
-> 
-> [snip]
-> 
-> > +#ifndef FICLONE
-> > +#define FICLONE _IOW(0x94, 9, int)
-> > +#endif
-> > +#ifndef XFS_SUPER_MAGIC
-> > +#define XFS_SUPER_MAGIC 0x58465342
-> > +#endif
+> >  tests/xfs/1907     |  212 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  tests/xfs/1907.out |   17 ++++
+> >  2 files changed, 229 insertions(+)
+> >  create mode 100755 tests/xfs/1907
+> >  create mode 100644 tests/xfs/1907.out
+> > 
+> > diff --git a/tests/xfs/1907 b/tests/xfs/1907
+> > new file mode 100755
+> > index 00000000000000..eb817eddd8a22f
+> > --- /dev/null
+> > +++ b/tests/xfs/1907
+> > @@ -0,0 +1,212 @@
+> > +#! /bin/bash
+> > +# SPDX-License-Identifier: GPL-2.0
+> > +# Copyright (c) 2026 Oracle.  All Rights Reserved.
+> > +#
+> > +# FS QA Test No. 1907
+> > +#
+> > +# Test using online fsck code to fix unlinked inodes on a clean filesystem that
+> > +# never got cleaned up.
+> > +#
+> > +. ./common/preamble
+> > +_begin_fstest auto quick unlink
 > > +
-> > +#define BLK 4096
+> > +. ./common/filter
+> > +. ./common/fuzzy
+> > +. ./common/quota
+> > +
+> > +_require_command "$TIMEOUT_PROG" timeout
+> > +_require_xfs_db_command iunlink
+> > +_require_scratch_nocheck	# we'll run repair ourselves
+> > +
+> > +_scratch_mount
+> > +$XFS_IO_PROG -x -c 'repair -R agi 0' $SCRATCH_MNT 2>&1 | \
+> > +	grep -q 'Operation not supported' && \
+> > +	_notrun "cannot repair agi"
+> > +_scratch_unmount
+> > +
+> > +# From the AGI definition
+> > +XFS_AGI_UNLINKED_BUCKETS=64
+> > +NULLAGINO="0xffffffff"
+> > +
+> > +# Try to make each iunlink bucket have this many inodes in it.
+> > +IUNLINK_BUCKETLEN=5
+> > +
+> > +# Disable quota since quotacheck will break this test
+> > +orig_mount_options="$MOUNT_OPTIONS"
+> > +_qmount_option 'noquota'
 > 
-> This's a hard code, what if the fs blocksize or pagesize isn't 4096?
+> OK, quota is disabled, but "orig_mount_options" seems unused throughout
+> the rest of the test?
+> 
+> > +
+> > +format_scratch() {
+> > +	_scratch_mkfs -d agcount=1 | _filter_mkfs 2> "${tmp}.mkfs" >> $seqres.full
+> > +	source "${tmp}.mkfs"
+> > +	test "${agcount}" -eq 1 || _notrun "test requires 1 AG for error injection"
+> > +
+> > +	local nr_iunlinks="$((IUNLINK_BUCKETLEN * XFS_AGI_UNLINKED_BUCKETS))"
+> > +	readarray -t BADINODES < <(_scratch_xfs_db -x -c "iunlink -n $nr_iunlinks" | awk '{print $4}')
+> > +
+> > +	ROOTINO="$(_scratch_xfs_get_sb_field rootino)"
+> > +
+> > +	BUCKET_23=()
+> > +	BUCKET_24=()
+> > +	for badinode in "${BADINODES[@]}"; do
+> > +		(( (badinode % 64) == 23 )) && BUCKET_23+=("${badinode}")
+> > +		(( (badinode % 64) == 24 )) && BUCKET_24+=("${badinode}")
+> > +	done
+> > +	test "${#BUCKET_23[@]}" -ge "$IUNLINK_BUCKETLEN" || \
+> > +		echo "bucket 23 should have at least $IUNLINK_BUCKETLEN inodes, has ${#BUCKET_23[@]}"
+> > +	test "${#BUCKET_24[@]}" -ge "$IUNLINK_BUCKETLEN" || \
+> > +		echo "bucket 24 should have at least $IUNLINK_BUCKETLEN inodes, has ${#BUCKET_23[@]}"
+>                                                                                       ^^
+> BUCKET_24 ?
 
-It reproduced the problem on 1k and 64k fsblocks before I'd patched the
-kernel.  AFAICT "BLK" really just means the application buffer size for
-doing IO and doesn't actually have to match the fs blocksize.
+Oops.  Good catch!
 
 > > +
-> > +/* ---- configuration (overridable via CLI) --------------------------------- */
-> > +static const char *target_path   = "/etc/passwd";
-> > +static const char *clone_dir     = "/var/tmp";
-> > +static int         nr_writers    = 32;
-> > +static int         nr_pressure   = 8;
-> > +static int         budget_s      = 300;
+> > +	# Log what we think the bucket 23 unlinked list will look like
+> > +	printf "ROOTINO 0x%x\n" "$ROOTINO" >> $seqres.full
+> > +	for badinode in "${BUCKET_23[@]}"; do
+> > +		printf "0x%x <- " "${badinode}" >> $seqres.full
+> > +	done
+> > +	echo " AGI.iunlinked[23]" >> $seqres.full
+> > +	for badinode in "${BUCKET_24[@]}"; do
+> > +		printf "0x%x <- " "${badinode}" >> $seqres.full
+> > +	done
+> > +	echo " AGI.iunlinked[24]" >> $seqres.full
 > > +
-> 
-> [snip]
-> 
-> > +
-> > +#if 0
-> > +static int is_xfs(const char *p)
-> > +{
-> > +    struct statfs s;
-> > +    if (statfs(p, &s)) return -1;
-> > +    return s.f_type == XFS_SUPER_MAGIC;
+> > +	# Log what the actual bucket 23 unlinked list ended up looking like
+> > +	local subcommands=()
+> > +	for badinode in "${BUCKET_23[@]}"; do
+> > +		subcommands+=(-c "inode ${badinode}" -c "print next_unlinked")
+> > +	done
+> > +	_scratch_xfs_db -x "${subcommands[@]}" >> $seqres.full
 > > +}
-> > +#endif
-> 
-> If this's useless, how about remove them?
-> 
 > > +
-> > +/* FIEMAP: is the target's first extent already shared (refcount > 1)?
-> > + * If so the race can never see refcount==1. */
-> > +static int target_first_extent_shared(void)
-> > +{
+> > +__repair_check_scratch() {
 > 
-> [snip]
-> 
-> > +#if 0
-> > +    /* 2. target on XFS */
-> > +    int x = is_xfs(target_path);
-> > +    if (x < 0) die(1, "statfs target", NULL);
-> > +    if (!x) {
-> > +        BAD("target is not on XFS (f_type != XFS_SUPER_MAGIC).");
-> > +        INFO("RefluXFS only affects XFS with reflink=1 (mkfs.xfs default since");
-> > +        INFO("xfsprogs 5.1.0; backported by Red Hat for RHEL 8 GA).  Default root");
-> > +        INFO("fs on RHEL/CentOS/Rocky/Alma/OL/CloudLinux 8+, Fedora Server 31+,");
-> > +        INFO("Amazon Linux 2023.");
-> > +        exit(1);
-> > +    }
-> > +    OK("target is on XFS");
-> > +#endif
-> 
-> Same
+> __repair_check_scratch() looks like an internal fstests common helper due to
+> the leading underscores. If it's a test-local helper, how about dropping the
+> underscores and renaming it?
 
-Will remove both of these dead code sections.
+Will do.
 
+> Thanks,
+> Zorro
+> 
+> > +	_scratch_xfs_repair -o force_geometry -n 2>&1 | \
+> > +		tee -a $seqres.full | \
+> > +		grep -E '(disconnected inode.*would move|next_unlinked in inode|unlinked bucket.*is.*in ag)'
+> > +	return "${PIPESTATUS[0]}"
+> > +}
 > > +
-> > +    /* 3. clone_dir on the same superblock */
-> > +    if (access(clone_dir, W_OK)) die(1, "clone dir not writable",
-> > +        "Need a writable directory on the SAME XFS filesystem as the target.");
+> > +exercise_scratch() {
+> > +	# Create a bunch of files...
+> > +	declare -A inums
+> > +	for ((i = 0; i < (XFS_AGI_UNLINKED_BUCKETS * 2); i++)); do
+> > +		touch "${SCRATCH_MNT}/${i}" || break
+> > +		inums["${i}"]="$(stat -c %i "${SCRATCH_MNT}/${i}")"
+> > +	done
+> > +
+> > +	# ...then delete them to exercise the unlinked buckets
+> > +	for ((i = 0; i < (XFS_AGI_UNLINKED_BUCKETS * 2); i++)); do
+> > +		if ! rm -f "${SCRATCH_MNT}/${i}"; then
+> > +			echo "rm failed on inum ${inums[$i]}"
+> > +			break
+> > +		fi
+> > +	done
+> > +}
+> > +
+> > +test_body() {
+> > +	_scratch_mount
+> > +	timeout $((30 * TIME_FACTOR))s $XFS_IO_PROG -x -c 'scrub agi 0' -c 'repair agi 0' $SCRATCH_MNT
+> > +	$XFS_IO_PROG -x -c 'repair fscounters' $SCRATCH_MNT >> $seqres.full
+> > +	exercise_scratch
+> > +	_scratch_unmount
+> > +	final_check_scratch
+> > +}
+> > +
+> > +# Offline repair should not find anything
+> > +final_check_scratch() {
+> > +	__repair_check_scratch
+> > +	res=$?
+> > +	if [ $res -eq 2 ]; then
+> > +		echo "scratch fs went offline?"
+> > +		_scratch_mount
+> > +		_scratch_unmount
+> > +		__repair_check_scratch
 > 
-> [snip]
-> 
-> > +static void *pressure(void *arg)
-> > +{
-> > +    char p[600];
-> > +    snprintf(p, sizeof p, "%s/press.%d", workdir, (int)(intptr_t)arg);
-> > +    int fd = open(p, O_RDWR|O_CREAT|O_TRUNC, 0600);
-> > +    if (fd < 0) return NULL;
-> > +    char b = 0;
-> > +    while (!atomic_load(&stop)) {
-> > +        /* return values irrelevant -- goal is XFS log traffic, not the data */
-> > +        (void)!pwrite(fd, &b, 1, 0);
-> > +        (void)!ftruncate(fd, BLK);
-> > +        fdatasync(fd);
-> > +        (void)!ftruncate(fd, 0);
-> 
-> As this's a generic test case, the pressure() works for XFS CIL, does it work
-> for other filesystems?
+> Shouldn't "res" be updated at here?
 
-Neither of them (btrfs, ocfs2) are vulnerable to this problem because
-they don't have the design flaw in the first place.  So I don't know how
-to answer that question.
+Yes it should, thanks.
 
-It's probably not necessary to run this testcase against other
-filesystems but as there's nothing xfs-specific in the test case, why
-not let them run on the others?
+> > +	fi
+> > +	test "$res" -ne 0 && echo "repair returned $res?"
+> > +}
+> > +
+> > +echo "+ Part 1: Fix a correct unlinked list" | tee -a $seqres.full
+> > +_kernlog "part 1"
+> > +format_scratch
+> > +test_body
+> > +
+> > +echo "+ Part 2: Fix a loop between 1 and 3" | tee -a $seqres.full
+> > +_kernlog "part 2"
+> > +format_scratch
+> > +# BUCKET_23 is in reverse order of the ondisk list, so we make
+> > +# inode 1 point back to inode 3.
+> > +_scratch_xfs_db -x \
+> > +	-c "inode ${BUCKET_23[1]}" \
+> > +	-c "print next_unlinked" \
+> > +	-c "write -d next_unlinked ${BUCKET_23[3]}" \
+> > +	>> $seqres.full
+> > +test_body
+> > +
+> > +echo "+ Part 3: Fix a truncated bucket" | tee -a $seqres.full
+> > +_kernlog "part 3"
+> > +format_scratch
+> > +_scratch_xfs_db -x \
+> > +	-c "agi 0" \
+> > +	-c "print" \
+> > +	-c "write -d unlinked[23] ${NULLAGINO}" \
+> > +	>> $seqres.full
+> > +test_body
+> > +
+> > +echo "+ Part 4: Fix a loop at the end" | tee -a $seqres.full
+> > +_kernlog "part 4"
+> > +format_scratch
+> > +# BUCKET_23 is in reverse order of the ondisk list, so we make
+> > +# inode 0 point back to inode 0.
+> > +_scratch_xfs_db -x \
+> > +	-c "inode ${BUCKET_23[0]}" \
+> > +	-c "print next_unlinked" \
+> > +	-c "write -d next_unlinked ${BUCKET_23[0]}" \
+> > +	>> $seqres.full
+> > +test_body
+> > +
+> > +echo "+ Part 5: Fix an inode in the wrong bucket" | tee -a $seqres.full
+> > +_kernlog "part 5"
+> > +format_scratch
+> > +_scratch_xfs_db -x \
+> > +	-c "inode ${BUCKET_23[0]}" \
+> > +	-c "print next_unlinked" \
+> > +	-c "write -d next_unlinked ${BUCKET_24[1]}" \
+> > +	-c "inode ${BUCKET_24[2]}" \
+> > +	-c "print next_unlinked" \
+> > +	-c "write -d next_unlinked ${NULLAGINO}" \
+> > +	>> $seqres.full
+> > +test_body
+> > +
+> > +echo "+ Part 6: Fix an inode that isn't free and truncates list" | tee -a $seqres.full
+> > +_kernlog "part 6"
+> > +format_scratch
+> > +_scratch_xfs_db -x \
+> > +	-c "inode ${BUCKET_23[2]}" \
+> > +	-c "print next_unlinked" \
+> > +	-c "write -d next_unlinked ${ROOTINO}" \
+> > +	>> $seqres.full
+> > +test_body
+> > +
+> > +echo "+ Part 7: Fix an inode that isn't free" | tee -a $seqres.full
+> > +_kernlog "part 7"
+> > +format_scratch
+> > +_scratch_xfs_db -x \
+> > +	-c "inode ${BUCKET_23[2]}" \
+> > +	-c "print next_unlinked" \
+> > +	-c "write -d next_unlinked ${ROOTINO}" \
+> > +	-c "inode ${ROOTINO}" \
+> > +	-c "print next_unlinked" \
+> > +	-c "write -d next_unlinked ${BUCKET_23[1]}" \
+> > +	>> $seqres.full
+> > +test_body
+> > +
+> > +echo "+ Part 8: Fix an totally unallocated inode" | tee -a $seqres.full
+>                        ^^
+>                        a?
+
+Yes, thanks for the grammatical correction.
 
 --D
+
+> > +_kernlog "part 8"
+> > +format_scratch
+> > +target=$(( BADINODES[-1] + 256 ))
+> > +_scratch_xfs_db -x \
+> > +	-c "inode ${BUCKET_23[2]}" \
+> > +	-c "print next_unlinked" \
+> > +	-c "write -d next_unlinked $target" \
+> > +	>> $seqres.full
+> > +test_body
+> > +
+> > +# success, all done
+> > +status=0
+> > +exit
+> > diff --git a/tests/xfs/1907.out b/tests/xfs/1907.out
+> > new file mode 100644
+> > index 00000000000000..83746ad602b21d
+> > --- /dev/null
+> > +++ b/tests/xfs/1907.out
+> > @@ -0,0 +1,17 @@
+> > +QA output created by 1907
+> > ++ Part 1: Fix a correct unlinked list
+> > +Corruption detected.
+> > ++ Part 2: Fix a loop between 1 and 3
+> > +Corruption detected.
+> > ++ Part 3: Fix a truncated bucket
+> > +Corruption detected.
+> > ++ Part 4: Fix a loop at the end
+> > +Corruption detected.
+> > ++ Part 5: Fix an inode in the wrong bucket
+> > +Corruption detected.
+> > ++ Part 6: Fix an inode that isn't free and truncates list
+> > +Corruption detected.
+> > ++ Part 7: Fix an inode that isn't free
+> > +Corruption detected.
+> > ++ Part 8: Fix an totally unallocated inode
+> > +Corruption detected.
+> 
