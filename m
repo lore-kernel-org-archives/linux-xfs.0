@@ -1,49 +1,84 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
+Received: from fout-a3-smtp.messagingengine.com (fout-a3-smtp.messagingengine.com [103.168.172.146])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 925903876C6;
-	Mon, 24 Aug 2026 21:05:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85B563911C7;
+	Mon, 24 Aug 2026 21:27:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.146
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787605553; cv=none; b=hEFZfDQKK3RimL2lHudOoBUiDQ05lLC6d+z3FmD9RdPcgotPc5EFAc9rLw93qjqebnUDrJ77vIvApThip/qiqv1Rtd7yomBqa/vokLoERohCUL+TkroGepdOhiARUWZfvmyyV0PRu5ZgRK6HBKkuA9PSgwiLTNGT0YcMP759Eu8=
+	t=1787606880; cv=none; b=hHAMNTxUWdPTfEr3yhaO+iYRg5RtAF+aN9EOtYSjfjT2+j9eEQSqab7llqPPfsQlXv6x/2WwhBO9FPsNyQ/s8RZTlDlMJkbWRfjjfEnNv52I+XTUmDkOlhFH5vxaw6B/2GpBY0fZGl/UKVKvKGbhkbux2wvI9H82aTEUJKsI10Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787605553; c=relaxed/simple;
-	bh=WpBAlermHUqULVWbGWU5b/daCoPsKQvwe3gDd6bRwmI=;
+	s=arc-20240116; t=1787606880; c=relaxed/simple;
+	bh=yC+Wv7HBRoCXzo7loZ++ZcaEIHA82gt69dbqTBsAme0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=m20NdN2d7Y/7UR1mg4ZxEiIoJFQUm3ZoDhuZYi0bSsa2mw45HFzyTX+AA9WYK/wowqlfA/CF32XWOqxdM9aghlh/JT/H97QgGhLLXSvHedZBrBBHyH47AXOfDwkNdt7+omdkzXb0hsK/0gU7p6aZ0C3W1M+JmPtQdcNk2DKuGgQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=pass smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=acSTKIE8; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=RQGK02e2oB0RwKEOYmhmj/zx1izU8J2eL/Y7IH5CehSaeR507uP01bJ8uNBHlP6rQ3Rq9V8wZ3ww72Yt6WYldGVNTOBwckvXKwlNKV3H33+LGU9gInxQ3vsZbxLVsA29Qg7FitXEBYBmPhpk42JYjiWnxlkbiCdvUY6oSj++ecg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bur.io; spf=pass smtp.mailfrom=bur.io; dkim=pass (2048-bit key) header.d=bur.io header.i=@bur.io header.b=TmvqfSW/; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=a/bi+feu; arc=none smtp.client-ip=103.168.172.146
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bur.io
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bur.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="acSTKIE8"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=+LSKnKKqszrwqaH5kpE+1z9+lg3HT1GwCXbZtfOytxc=; b=acSTKIE8r0eFrM8rCaUyueqk/y
-	x4ij5/ugleIUGdVP9alCWHtV4wohqt2sooIADen/YUA0AeBYqD8Y6K3LdnTp6+qFNYi0d+CIpySi3
-	fH+hw1+bFj9873pI5/kWyEtK+M94G10GsefX6QVN0W49WH0BJdJk6GbNNs2RkVyLBd4IyPM6h/5Kn
-	g/oeZpBXKFosO0M5EDSMb6yj30pwRWeWTxrfFjR67VSF7q+mYNs/XjYhk60DBpPhIlmMmRy56U6/x
-	dMqM/031tSXT4CTorKkmPibgf2JrpL/dG+C57Fg7aH6dSAvExR5jIvzm9p/DaymlYNLk5EZKRgUCY
-	0ahaWXbA==;
-Received: from willy by casper.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wybrR-00000007q0b-0jWo;
-	Mon, 24 Aug 2026 21:05:41 +0000
-Date: Mon, 24 Aug 2026 22:05:41 +0100
-From: Matthew Wilcox <willy@infradead.org>
-To: John Hubbard <jhubbard@nvidia.com>
+	dkim=pass (2048-bit key) header.d=bur.io header.i=@bur.io header.b="TmvqfSW/";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="a/bi+feu"
+Received: from phl-compute-04.internal (phl-compute-04.internal [10.202.2.44])
+	by mailfout.phl.internal (Postfix) with ESMTP id 6E8C2EC04EF;
+	Mon, 24 Aug 2026 17:27:57 -0400 (EDT)
+Received: from phl-frontend-04 ([10.202.2.163])
+  by phl-compute-04.internal (MEProxy); Mon, 24 Aug 2026 17:27:57 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bur.io; h=cc:cc
+	:content-type:content-type:date:date:from:from:in-reply-to
+	:in-reply-to:message-id:mime-version:references:reply-to:subject
+	:subject:to:to; s=fm1; t=1787606877; x=1787693277; bh=eq5n8E8wl0
+	gyQwxvErlBbHpGRNVBAbx8V0rwwpNu/V8=; b=TmvqfSW/oL//OTbI/BVMWYFWHk
+	/phtGJrF1nVRL5gPwBv3K7229FmUqy/tRjRWqAnFWOzjfFqv1KcLh4xv3ieFgD/y
+	w+WhNksRVEkE5VAwPFuYvJSF9mtt+DCrjPVQZyOIZqhWiry8fDV3SvyZKIB4ORkB
+	EGxoKdNjdLQ9klpXMT0oeEhSOxaS1khtpUJyMBeqIIrE27is2tsiZHB4EcFg/7N0
+	3MFcHy5fQtETo70wi4czm/m1NHyOaScTMsKGPCp92ry7lsRRFqtQOtNWjR/EINsB
+	YAUzybZBbjbJ7hIhOPtVXUzKUZ13q/r377lk6lO4td60zlewwT7B7rv25Ucg==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-type:content-type:date:date
+	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
+	:message-id:mime-version:references:reply-to:subject:subject:to
+	:to:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=
+	1787606877; x=1787693277; bh=eq5n8E8wl0gyQwxvErlBbHpGRNVBAbx8V0r
+	wwpNu/V8=; b=a/bi+feuoThbSSco9FLu3VH6Iq9UAXx/oL5JAglVy2A2deo5f+k
+	uP2lwViM4rNHyTnhjOBxGChv+SeAwKvvmokCPEUdrvP3qRXGvQAdo67Ff7ElcyiG
+	DbNycu5zorPwKlk/LGXP2zHNm1lUXyiQx083Nv2sNOg/UnmeVU4KMJGHwI/uNAdY
+	PtHBq48Mza05cHb/BxjxYMxaEyFHBP6wRRjO+n5ucFDauh30kFskDhQ8QVKCMYtA
+	FSPRBaE4AWL76LhDA81T07KjCNBzfBIDUR+uJOR5PwoK9Wf6vukQPjD5DKGCjjt1
+	8qEu/1FVo2Nh4aQDezH3VvPjpYeBoAU8TnQ==
+X-ME-Sender: <xms:W7eMai3ylPceQrVWY5iXwhlDUp7OC4-aTcn11JjNf2LKXKO2DLZ6Vw>
+    <xme:W7eMakrKmSFMhRwYWAwjHZ8FT8e1t6VrnNR0ZLy-2nb_A-cwKzOlo177wgjLZCZOz
+    KCI34qLTD7SBbB9jsdFMGO0t_0d4TTf6GzL67PzIgi1mpzN-P0MN1Y>
+X-ME-Received: <xmr:W7eMavMw7QQoazijFzrVpA_xt6ttGuHmT2LPaVar_JPdh8kFrDMCsMRdEg5ETMJbZXooksJEyG5kx7zu4c1KW_IajPM>
+X-ME-Proxy-Cause: dmFkZTFbQH54V+ttwf82sKhBlgJAGbLwoiQs8PwPHRJwZdDII33T6XgyYMrgg9uI/w+FXC
+    eGzpYGS+ehYXdSfGZnBNxeLMbUDJ/Fw58Jr6skYiTZeMFqbzE+rvL9QpDW3N3EoEZuEb8U
+    3csuH6q3LC2pPBx53SjdV37SaBmp0ntx7GjHnQkbbF8MELke2xAhZJsy6DqZoC7gMfjsU7
+    8r46bKQDYLobOBnnP2Axy7GGNwK46pYe62wph8/B24HvsOg/BXrQqQT2arLkhOVlH+uwFE
+    vd6lLBNmx6MqtemmJ0P1cm/i/ve6GPeVzOwSGCrjtYivYstgToBolzn/l2lFhc8ihyyRs2
+    CMh1MHG9VrGN+i27vgbNdARFvloSbad/XqQ+r47iE/s2df9gvMhZ17adn06sX5fmyxGsSP
+    IjvMqcxYHk09Doeb62DXrikOPbkvku8awlJ/hlz3Yniddkv5CVzgbGJYNUwUB7xbJpqFhT
+    lnyYpJEYDR9CnAhQBL+Yh2E5m80Ga4DoJ6p17gWoke5WNXHS9sVhuxWCust7PKXc25Esy7
+    xlnTtxhy2dH01DS1ElpMLLZDH3ptpHX0OtK2XJFM3tGebtwSD7+CcoE4VBMEO1awQXb278
+    /V9n5/8t0SUFRUNcgEwJJTFsiu9cBlAJE7KsjTMGfY+2SvDOC7uakAEXcfLA
+X-ME-Proxy: <xmx:W7eMamWp3E2gQ95wfBsXgHFNJD98xNF4v_FdTcA-Yp1mhujVTh199g>
+    <xmx:W7eMaitv_GgGlPnVFnTMTKSQZekGlnGuqY3RBKkdpXlObAxrRY7W3g>
+    <xmx:W7eMah0MNcyBWakR4J4OOgrW6LiuUFJEOeTfIHKh5w7GN_Qn4XKLCQ>
+    <xmx:W7eMaj7W-pgrd6JZ5SLX28m1Z9ktbCY-UcR_dDOhLmMBcxx7QvRNvQ>
+    <xmx:XbeMat-vLWBU2G_LlOobSUYfwkPYFvs8UUntDC2kVSoljJ3K-vj8oIi0>
+Feedback-ID: i083147f8:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
+ 24 Aug 2026 17:27:55 -0400 (EDT)
+Date: Mon, 24 Aug 2026 14:27:27 -0700
+From: Boris Burkov <boris@bur.io>
+To: Matthew Wilcox <willy@infradead.org>
 Cc: Pedro Falcato <pfalcato@suse.de>, Christoph Hellwig <hch@lst.de>,
 	Jann Horn <jannh@google.com>, David Howells <dhowells@redhat.com>,
-	Jan Kara <jack@suse.cz>, Rik van Riel <riel@surriel.com>,
-	Qu Wenruo <wqu@suse.com>, "Darrick J. Wong" <djwong@kernel.org>,
-	linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-mm@kvack.org, linux-xfs@vger.kernel.org
+	John Hubbard <jhubbard@nvidia.com>, Jan Kara <jack@suse.cz>,
+	Rik van Riel <riel@surriel.com>, Qu Wenruo <wqu@suse.com>,
+	"Darrick J. Wong" <djwong@kernel.org>, linux-btrfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+	linux-xfs@vger.kernel.org
 Subject: Re: Removing ->dirty_folio
-Message-ID: <aoyyJQz4AFq-ilMV@casper.infradead.org>
+Message-ID: <20260824212727.GA3664690@zen.localdomain>
 References: <aoyWln-Gt-yvZQkE@casper.infradead.org>
- <5f4ed03c-e91f-4641-8964-cca0391971ba@nvidia.com>
- <aoye694JQLwUuqxC@casper.infradead.org>
- <764f2f23-09ba-4203-a304-94c0fba32db7@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -52,81 +87,75 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <764f2f23-09ba-4203-a304-94c0fba32db7@nvidia.com>
+In-Reply-To: <aoyWln-Gt-yvZQkE@casper.infradead.org>
 
-On Mon, Aug 24, 2026 at 12:51:43PM -0700, John Hubbard wrote:
-> On 8/24/26 12:43 PM, Matthew Wilcox wrote:
-> > On Mon, Aug 24, 2026 at 12:25:42PM -0700, John Hubbard wrote:
-> >>> My proposal is this:
-> >>>
-> >>>  - Fileystems take note of folio_maybe_dma_pinned() during writeback.
-> >>>    If it's true, do the writeback, but retain/recreate whatever data
-> >>>    structures you need in order to write the folio again; behave as if
-> >>>    ->page_mkdirty() had been called again for each page in the folio is
-> >>>    marked as dirty.
-> >>
-> >> Yes, that would work nicely.
-> >>
-> >>>  - The MM behaves similarly; we do not clear the writeback flag for
-> >>>    folio_maybe_dma_pinned().
-> >>>
-> >>> This will have the effect of writing pinned folios back every time the
-> >>> inode is scheduled for writeback.  But since we have no idea whether
-> >>> the folio is actually dirty (because the GUP user won't tell us),
-> >>> this is the correct behaviour.
-> >>>
-> >>> I'm probably missing some stuff here.  Let me know.
-> >>
-> >> OK, so working through the end of the pinning, I think it still is
-> >> correct: device finishes writing to pinned memory, device driver
-> >> unpins the memory but the page has been left marked dirty the whole
+On Mon, Aug 24, 2026 at 08:08:06PM +0100, Matthew Wilcox wrote:
+> I think it's time to remove folio_mark_dirty(), ->dirty_folio() and so on.
 > 
-> oh, I just thought of a minor hole that we need to fill: how to mark the
-> page dirty in the first place, in the absence of mark_[page|folio]_dirty()?
+> This is not how filesystems want to be informed of folio dirtying.
+> It was fine for ext2, but anything that's journalled or COW has work
+> to do before the folio is made dirty, and it's hard to do that work
+> under the page table spinlock (not all callers hold that lock, but the
+> filesystem has to be able to handle the cases where it is.
 > 
-> Under this new scheme, we will need to pin first, then mark dirty, to
-> set up. The filesystem can't do everything, because even if it were to
-> call page_mkdirty(), a writeback could clear that before the page gets
-> pinned.
+> Filesystems want the page_mkwrite() entry point to be how they find out
+> about a folio being dirtied -- and that works great!  Except that we
+> can writeback the folio for a number of reasons.  If it's been dirtied
+> due to a shared writable mmap, that's fine; we map the folio read-only
+> and any subsequent writes will re-enter the page_mkwrite path.
 
-The page fault path:
+Can you elaborate on this part a bit more? I can't tell if you are
+proposing a change or saying the existing behavior is fine if we drop
+->dirty_folio(). I am also confused about exactly what sort of folio
+dirtying you are referring to. Sorry if I am being obtuse.
 
-handle_mm_fault()
-  __handle_mm_fault()
-    handle_pte_fault()
-      do_wp_page() [just assuming the pte is present, but !writable]
-        wp_page_shared()
-	  do_page_mkwrite()
-	    vmf->vma->vm_ops->page_mkwrite(vmf)
+When I was recently adding ->dirty_folio() to btrfs, one of the main
+cases was the call to folio_mark_dirty() that came via
+__iomap_dio_bio_end_io() calling bio_check_pages_dirty() which schedules
+bio_dirty_fn(). (i.e., completion of a dio read into a shared mmap)
 
-and that's where the filesystem gets notified that this page is about
-to become writable.
+Is that the case you are referring to here, or are you referring to
+someone just modifying a byte they faulted in from a shared mmap? The
+latter I would expect to have called page_mkwrite in the fault and done
+fs-specific work, so I assume it's the former that you are referring to?
 
-So your concern is obviously "how do we prevent the writeout from
-happening before we set the pincount", and I think it's that the
-writeout path will make the PTE read-only before it does writeback,
-and we hold the mmap_lock which prevents the page table entry from being 
-made read-only.
+Either way, I do believe that for the dio read endio case pinning is not
+involved and btrfs relies on the ->dirty_folio() call, so I think
+something would need to be done about that case too.
 
-But I'm only about 80% sure that's what happens.
+I believe you saw this patch since it was your idea for us to use
+->dirty_folio(), but just for reference for anyone else who didn't see
+it, the btrfs patch adding ->dirty_folio():
+https://lore.kernel.org/linux-btrfs/69d0043e0f6a3d17048dfde857127ab0bf331154.1785190866.git.boris@bur.io/
 
-> > @@ -2717,7 +2719,8 @@ static inline bool folio_maybe_dma_pinned(struct folio *folio)
-> >          * Here, for that overflow case, use the sign bit to count a little
-> >          * bit higher via unsigned math, and thus still get an accurate result.
-> >          */
-> > -       return ((unsigned int)folio_ref_count(folio)) >=
-> > +       mapcount = folio_mapcount(folio);
-> > +       return (folio_ref_count(folio) - mapcount) >=
+Thanks,
+Boris
+
 > 
-> As long as the math works: need to not underflow. I guess mapcount is
-> always less than refcount, so OK.
+> The problem is GUP.  We have no way to force the GUP caller to go
+> through page_mkwrite again.  So instead we make the GUP caller call
+> folio_mark_dirty_lock() which many just don't, and generally we get away
+> with it.  But it's a bug, and a bad interface.
 > 
-> So it *seems* correct to me, fwiw. :)
-
-Yeah, and if we hold the folio locked, it's true.  But we could sample
-mapcount, then have a few unmaps come in before we read refcount, and
-we've got an underflow.  I mean, it's only "maybe" mapped ... ;-)
-
-Perhaps we could have two functions, one for if you have the folio
-locked (like in the writeback path) where you can rely on mapcount
-not changing, and thus refcount always being > mapcount.
+> There's also the problem that GUP users bypass the folio_wait_stable()
+> mechanism.  If a page is written to while somebody is creating a
+> checksum over that page, the checksum will be corrupted.  If we want
+> to fix this, we have to bounce-buffer the page.  There's no way to
+> prevent or delay a GUP user from writing to the page.  Enjoy your RAID.
+> 
+> My proposal is this:
+> 
+>  - Fileystems take note of folio_maybe_dma_pinned() during writeback.
+>    If it's true, do the writeback, but retain/recreate whatever data
+>    structures you need in order to write the folio again; behave as if
+>    ->page_mkdirty() had been called again for each page in the folio is
+>    marked as dirty.
+>  - The MM behaves similarly; we do not clear the writeback flag for
+>    folio_maybe_dma_pinned().
+> 
+> This will have the effect of writing pinned folios back every time the
+> inode is scheduled for writeback.  But since we have no idea whether
+> the folio is actually dirty (because the GUP user won't tell us),
+> this is the correct behaviour.
+> 
+> I'm probably missing some stuff here.  Let me know.
