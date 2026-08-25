@@ -1,117 +1,189 @@
-Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
+Received: from mail-wm1-f44.google.com (mail-wm1-f44.google.com [209.85.128.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 875F537EFFD
-	for <linux-xfs@vger.kernel.org>; Tue, 25 Aug 2026 20:07:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.214.175
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787688430; cv=pass; b=f0IQyyjAnj2OUbxEI2VYW8/vkoLRUvHgWqr/b+i1dZSx7j5Berg+3f/+jp+egoh4/CLEV3CBMZezLYmFTk5tXat3dn5YicAUVl6ITxSKlw/inHVpSGn3dp7ud7WW/ysZ38vhCDilMYtLFk1Ohu08H+eY6n59XSUHExxuT4k0AcU=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787688430; c=relaxed/simple;
-	bh=YuDwdWxWI5Vzf2u31gjFFz05KsfDHJyOtaNcUhXTBZI=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=PcH7YU2tm92QW7Psa5P61fyecfK71MoDLTps9eiLxE7T6lVG7zRfOks+6KF4TCfqF9XN4JBbbBQmkhUnqNcv+nEBDRkbWPmqVRc4XnE2KmTudAiQIw1/byBEELeB80Zhjyv+DlguXIqG5uxJHIGevddsr9kq8i920GCS2AJxh4k=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=NKpEO3uP; arc=pass smtp.client-ip=209.85.214.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 180384908AA
+	for <linux-xfs@vger.kernel.org>; Tue, 25 Aug 2026 22:33:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.44
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1787697233; cv=none; b=TgtrhjCU6g5NnJaU7HpFSaIQ2q05OXUPIS49JaX6Sun/q6IR0AqbGB3BcH6Up4z2WrKIv4r3SZ8qRYRDdVotlr/5VTvpuzsyjn8328AahRVzdmilvKPzgBi/BgMYoSi+n38wJiTI5UPt+P77dVmRujqor6uh2FG3wz/f7cqbTfs=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1787697233; c=relaxed/simple;
+	bh=T8pK87gpR/FudGYTMZpQqgz9Vsiy+adAwiTk3948Yjo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ESXVZsZusbAtB8n3eXO7frwL4E5EYIxodVB/Hy9UQSDO3thtDmjwktpLFb1K0KdnaDlvUbXvbY9TI87sSG2AsGAv9qNXKZ2Vl+5zoVrtRAfAWLexy+CyGSeKfKlY1T8duwpceqed+xE0qZWqOGXaZo9DB6vv9UlKxo/X5XE8pnU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=TIK2I3j3; arc=none smtp.client-ip=209.85.128.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="NKpEO3uP"
-Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-2ccdf36f63dso33825ad.0
-        for <linux-xfs@vger.kernel.org>; Tue, 25 Aug 2026 13:07:09 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1787688429; cv=none;
-        d=google.com; s=arc-20260327;
-        b=l4kvV733nc1mXMCENoBMZuAC2X1CH/YebhiOy16+XC8b4wcDTvIsjt7bcp23t1+KVk
-         mqfPPM/obZhRBoDb0I5b4sxDJ0mmd9ZwvlCCX0lxKcxliWNV2yvoPfeJMNjJoalodS78
-         7ros/R+B65dWGEnw/avqSvxuSZ2HQIkRgKkJz/9s6CUr+cARJO01x8Pz5uzItwrImOv0
-         66QtqKxvgbujFoT75QBR1f2RHXGA5i+1gak8/mx8vvVxnWYvNZogVhNLVf/fnwuKyH41
-         P0yRNYA0VcZQN7hioO11jMa+W1oLg22hruobLsG8ZYWCaCekZs9MpGbv+Jj4hJxOXXVi
-         tpJg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=QmpPvlugr4sJVMK76hZIVWaN8XuXLrWZ5bMIrs2ohCE=;
-        fh=cqR8X9XBrfvOe9Ua+YAae14NDLuvOIErjC9PYr2/mc0=;
-        b=lB06QS6Z5idsLqMeAoKua/lPQceTvTRmbdNbf71daxFtLtop4Jfp3utW5N80EwL0Sm
-         Rk7JIbZwOWqemhDiQYJB5Oasrzhc0Hcxkd/M3qNatzsLAIliIm9Pk0EEiF21Bfh1Kpu/
-         OISI0ORODk11uqgLC1B3XsxDgbzmUbXTAJKZR4kslVyQaFBfEOHq3tGQidPmJumqNSOj
-         TwQ4rPl6F/ICzJggMLD2NRsxC9KLZux9olwzx1a8jfXj6QNxCEiL6X189SEn904vBltS
-         Plgo1t1SKcR5/lzE6rqMy6Cu8AzNZ5u+0NfbRZvUQhb39FRdhOkTjQRkt/vzbJ9WgIwn
-         TUZQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="TIK2I3j3"
+Received: by mail-wm1-f44.google.com with SMTP id 5b1f17b1804b1-490cf322ed0so2037865e9.1
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Aug 2026 15:33:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1787688429; x=1788293229; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=QmpPvlugr4sJVMK76hZIVWaN8XuXLrWZ5bMIrs2ohCE=;
-        b=NKpEO3uP3XiMvqGfLcqjvFeuJ8D5jsq8I30qKsRalF3gtJ3h4tH5Lafr1necQfKysZ
-         XQRl7e2mqv37A2Y/hJoax2/URWgHbgF2/9EV7ks01fPYeDmugp3BOYx/jOQ5mfF4wh1q
-         dwEZ1M8UNmRseI9gwbmaY8S1g6twVjXOhhGNJFTN0V6xYaVLSe5URyBq2sAcCeaW02zk
-         lOtxG5ieucnN1r2q0ZuCkOW/k4vvZNLBGn5ByYKUilxok7L0S27kYw7+IVB08EPcvwU9
-         g/orUJwfXzxLC72dfLYIKNoFLdSJ9opP8lsBuAR3J2zIgqq3dnNK+qz55nJ84H9kgK6p
-         z7cg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787688429; x=1788293229;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+        d=suse.com; s=google; t=1787697229; x=1788302029; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:autocrypt:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=QmpPvlugr4sJVMK76hZIVWaN8XuXLrWZ5bMIrs2ohCE=;
-        b=hWSl3qJKJBbAQeb68mPZkB6ki/k4Zzzy+zL5jSQj5PjUEvxSovuHcqS2m/YFNnjKam
-         /SC58nimMQqbNfBy8MWYXXJ9WB9pmrnFvz30iqACZazA+CWzm5WttXC/lGMLd4dh655R
-         NcQ5NbudPxOF7axjWy7oyvdVaVu2K/z8rp12RSAu/O8teEmhy745T4weZn0jyvq4aCvT
-         xbm2XGxAvhEtz4AnEjnDJItgstLtuiz5AjY/puOe2SFreCMtpecG5YeKk6T4PZ5KhSdA
-         /2QsChtYIJs6b6xPqDRJ8dfERgaHZxYXDq14BtNUPajQFWhm+paLZgxx//gqC/n1dal3
-         PqhQ==
-X-Forwarded-Encrypted: i=1; AHgh+Rrl/h3BghA55k7+E+j9yF09rsv0IhSqwVs4j8w7uzPHo2OpXZXj7hs7uu9eWfFEM2R03VBFcGJkkcc=@vger.kernel.org
-X-Gm-Message-State: AFuF++mW8P5fiLIIcNqt0uKW06rBPdohz7MPSgfI5TwRQYJiBnDE6FiS
-	OnX55ZDfWUoOj21TGNaviBs8Fpnp8WtKDAZ4+9+dZDH9LtrYKV2Eh8deDmV1QwuAFJYseUCBMeD
-	+lHsGXkKtq6Sr4bLMCXrQaeT3LHRcX1Hll5j/AGJ/
-X-Gm-Gg: AR+sD10r1LZjkiFqzEIzcm6ZTPMcsXjC7GcJ/XIyCI4XHX2QwH2cAMLKUfxBy4hTW2O
-	RQRS7I1TYBpI9nsMb2+Hs2tXZtiKPlZveaMvUIwRw49WjVvQBm2Eoxj1IWt1wKbcTne7I/is8Ef
-	4IwTXvh7zi2ipP3L4eUfbzNE0HdBWjAPw1cQCU24dZLr7haJ0PNOjbVJ5dOVAO0trA5vduqhSPF
-	uQ/fmAsm/WHAWRt2GU93TyRLdd59sNp8ucEBIiyOHP3tLnlPZndf3b7jDIU6RqA7b5lVWoQ+zMr
-	ceETSUdsGCCMKL5gXljrGoLgQxyy4nY5HLBqKWHiuXpNCyEKEh8X5E6O4f2EhwdImjolbjl5Szq
-	GVkSIelR8kl+u2AL+CwbgXmdInW8TNw==
-X-Received: by 2002:a17:903:4b4f:b0:2d5:c090:3810 with SMTP id
- d9443c01a7336-2d70baa1fdemr376215ad.2.1787688428259; Tue, 25 Aug 2026
- 13:07:08 -0700 (PDT)
+        bh=AQ9BECpJKrpP12MABcUEh0lAKrEb0D+i2kVCVQ2/O4k=;
+        b=TIK2I3j3Idx421sRhZA0hqKmXZGzFRZ5p4eklGHWHpfNjstX7UQZ7bgDuJxtwBKrXG
+         aRjJP7Wh38K9wiOU5GuWDbGmwzWZ8t6kshydID7NSje/aI7snNk9JWNQj8vLGtlHF/qV
+         75NHcoSOSGesC9bAkem3RDWYoGCR+/XRFbAGhQTIEWk+FHJepXwoInK+KhEE5R0RU7o5
+         5WCHylXfint97Cyi4mkQm1eYeQ5pfnToQHULnphtvw771e5NJQj5fXzEycXx3cGMyLHn
+         a1iNbt/uk6cpmj9hUFKIGWTVrtmI1Xqee8OCPokGMQvS/RUn3WAjdbEnHlQKcmlj59Oe
+         4qlg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787697229; x=1788302029;
+        h=content-transfer-encoding:content-type:in-reply-to:autocrypt:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=AQ9BECpJKrpP12MABcUEh0lAKrEb0D+i2kVCVQ2/O4k=;
+        b=I0xrRpOq/VTZEmzB47IxS/66x+07uOwAqaB/OH8/cBVz7NWjgDyen3tMMjnI3do4gW
+         UiK1dmJIMVFJ589v7WmpYO6JzAdfNNHIOQffhSGYyACkmTzz2s4HOWrwIwtZWsRvsKm5
+         gh9/OLbyHZx4lQxLb3NgLBRhRSJQvU0f6rD2jWV2tXzTbI+PqIxbNmB7+tTYbAXbVe/+
+         ISTAZq10GkkF3vq/t9Ygud6i2B625L7lzzVhgJgOwnDs7W2895FjaQeRJblBGmMt67op
+         WwBjBt1o4HqxLZT8bmYlWPhw1NizlCkH9hHX9RB6CphKrD3JnYJ07Nld2D1mJmI1PuU/
+         7RcQ==
+X-Forwarded-Encrypted: i=1; AHgh+RoTXV77fPkYCHhXSiNm10e/9w2k5V8RHMet9yVCDMgXPqa+DzSCg2YMqYGMjt6Vh9AkmJEzp1tAJaw=@vger.kernel.org
+X-Gm-Message-State: AFuF++nU0VszlEQqVEybee1eXwx/qA8jJKST9PmV/3r5DqzgihC4ekSo
+	3XuGlQLIFdp/TTGLVsjlck+dTBgCVrWDzvV4lA2xeY/KINgAgBHzqstKBXTRWL23h80=
+X-Gm-Gg: AR+sD11YvKeNaaDkZD35MQ1Xl0cETst2fDh8s0wRCWwzX1amJnv+bQ0yws25pkUllw2
+	9QyALhenJhBBP6ixUi5jxTrjEWCyXNgtlSrElzDp0m/cudOpa6d/iBjIUTUtHe5Ee/BZO8+aUqf
+	YzIRggGdq5c2AW1qU3bKjTBJEeMy0an0c5eMqmAjcKd40yYO76ZcZPJhmHIw1eC0dOGCX2qpPU/
+	G399AQMbRPJAcs7hHo2l+zkc6/rT49jGQIXPgYUGGi5warrg6WYVmajyEJ4MigSTDvevahq0+KL
+	7LrzOCC0s+N98aWsCwKVnS6bpPUP8b+IbtH2M1irh79T8FlPKgolnQUi+W68gJSb+gm3Itsd5Co
+	i/uzGjJo1DvrCUzBiBbPHqpCpWO3qaRutPnT4SXmipVc766iZkl722bpG3Bbv3KpwW8F//VrV+4
+	psoZq0cpg+WkPSEAbnE/5thZFh7YOewk1oQkJ+6suEQ+5bLyTQjj/c
+X-Received: by 2002:a05:600c:3155:b0:499:4892:d022 with SMTP id 5b1f17b1804b1-499dc6feffcmr15555245e9.8.1787697228911;
+        Tue, 25 Aug 2026 15:33:48 -0700 (PDT)
+Received: from [172.16.0.229] ([159.196.52.54])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3965d119724sm3170845a91.2.2026.08.25.15.33.41
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 25 Aug 2026 15:33:47 -0700 (PDT)
+Message-ID: <cf3486b8-a506-4732-8274-b3179fb06a82@suse.com>
+Date: Wed, 26 Aug 2026 08:03:38 +0930
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <aoyWln-Gt-yvZQkE@casper.infradead.org> <CAG48ez0vXVUu9j4rYUeCqgwyHKAiN_6fL--D90WvX9q7B41V-A@mail.gmail.com>
- <ao3y8TtEGjniZ_4f@casper.infradead.org>
-In-Reply-To: <ao3y8TtEGjniZ_4f@casper.infradead.org>
-From: Jann Horn <jannh@google.com>
-Date: Tue, 25 Aug 2026 22:06:30 +0200
-X-Gm-Features: AcwNN1U7imKfFFWcqWcxt2X9g3kXc7_YW65q6sOXIrpi9lP4BGYdXKwulbCkr7w
-Message-ID: <CAG48ez1yGUcS6AgtPXnmPQDmVCnJyptu64YGsTw=9vxAN9BO6Q@mail.gmail.com>
+User-Agent: Mozilla Thunderbird
 Subject: Re: Removing ->dirty_folio
-To: Matthew Wilcox <willy@infradead.org>
-Cc: Pedro Falcato <pfalcato@suse.de>, Christoph Hellwig <hch@lst.de>, David Howells <dhowells@redhat.com>, 
-	John Hubbard <jhubbard@nvidia.com>, Jan Kara <jack@suse.cz>, Rik van Riel <riel@surriel.com>, 
-	Qu Wenruo <wqu@suse.com>, "Darrick J. Wong" <djwong@kernel.org>, linux-btrfs@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+To: Matthew Wilcox <willy@infradead.org>, Qu Wenruo <quwenruo.btrfs@gmx.com>
+Cc: Pedro Falcato <pfalcato@suse.de>, Christoph Hellwig <hch@lst.de>,
+ Jann Horn <jannh@google.com>, David Howells <dhowells@redhat.com>,
+ John Hubbard <jhubbard@nvidia.com>, Jan Kara <jack@suse.cz>,
+ Rik van Riel <riel@surriel.com>, "Darrick J. Wong" <djwong@kernel.org>,
+ linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+ linux-mm@kvack.org, linux-xfs@vger.kernel.org
+References: <aoyWln-Gt-yvZQkE@casper.infradead.org>
+ <a1f8902b-72a5-40fd-a36b-89b6ea271cdd@gmx.com>
+ <ao3sgEET8GuY7Rw2@casper.infradead.org>
+Content-Language: en-US
+From: Qu Wenruo <wqu@suse.com>
+Autocrypt: addr=wqu@suse.com; keydata=
+ xsBNBFnVga8BCACyhFP3ExcTIuB73jDIBA/vSoYcTyysFQzPvez64TUSCv1SgXEByR7fju3o
+ 8RfaWuHCnkkea5luuTZMqfgTXrun2dqNVYDNOV6RIVrc4YuG20yhC1epnV55fJCThqij0MRL
+ 1NxPKXIlEdHvN0Kov3CtWA+R1iNN0RCeVun7rmOrrjBK573aWC5sgP7YsBOLK79H3tmUtz6b
+ 9Imuj0ZyEsa76Xg9PX9Hn2myKj1hfWGS+5og9Va4hrwQC8ipjXik6NKR5GDV+hOZkktU81G5
+ gkQtGB9jOAYRs86QG/b7PtIlbd3+pppT0gaS+wvwMs8cuNG+Pu6KO1oC4jgdseFLu7NpABEB
+ AAHNGFF1IFdlbnJ1byA8d3F1QHN1c2UuY29tPsLAlAQTAQgAPgIbAwULCQgHAgYVCAkKCwIE
+ FgIDAQIeAQIXgBYhBC3fcuWlpVuonapC4cI9kfOhJf6oBQJnEXVgBQkQ/lqxAAoJEMI9kfOh
+ Jf6o+jIH/2KhFmyOw4XWAYbnnijuYqb/obGae8HhcJO2KIGcxbsinK+KQFTSZnkFxnbsQ+VY
+ fvtWBHGt8WfHcNmfjdejmy9si2jyy8smQV2jiB60a8iqQXGmsrkuR+AM2V360oEbMF3gVvim
+ 2VSX2IiW9KERuhifjseNV1HLk0SHw5NnXiWh1THTqtvFFY+CwnLN2GqiMaSLF6gATW05/sEd
+ V17MdI1z4+WSk7D57FlLjp50F3ow2WJtXwG8yG8d6S40dytZpH9iFuk12Sbg7lrtQxPPOIEU
+ rpmZLfCNJJoZj603613w/M8EiZw6MohzikTWcFc55RLYJPBWQ+9puZtx1DopW2jOwE0EWdWB
+ rwEIAKpT62HgSzL9zwGe+WIUCMB+nOEjXAfvoUPUwk+YCEDcOdfkkM5FyBoJs8TCEuPXGXBO
+ Cl5P5B8OYYnkHkGWutAVlUTV8KESOIm/KJIA7jJA+Ss9VhMjtePfgWexw+P8itFRSRrrwyUf
+ E+0WcAevblUi45LjWWZgpg3A80tHP0iToOZ5MbdYk7YFBE29cDSleskfV80ZKxFv6koQocq0
+ vXzTfHvXNDELAuH7Ms/WJcdUzmPyBf3Oq6mKBBH8J6XZc9LjjNZwNbyvsHSrV5bgmu/THX2n
+ g/3be+iqf6OggCiy3I1NSMJ5KtR0q2H2Nx2Vqb1fYPOID8McMV9Ll6rh8S8AEQEAAcLAfAQY
+ AQgAJgIbDBYhBC3fcuWlpVuonapC4cI9kfOhJf6oBQJnEXWBBQkQ/lrSAAoJEMI9kfOhJf6o
+ cakH+QHwDszsoYvmrNq36MFGgvAHRjdlrHRBa4A1V1kzd4kOUokongcrOOgHY9yfglcvZqlJ
+ qfa4l+1oxs1BvCi29psteQTtw+memmcGruKi+YHD7793zNCMtAtYidDmQ2pWaLfqSaryjlzR
+ /3tBWMyvIeWZKURnZbBzWRREB7iWxEbZ014B3gICqZPDRwwitHpH8Om3eZr7ygZck6bBa4MU
+ o1XgbZcspyCGqu1xF/bMAY2iCDcq6ULKQceuKkbeQ8qxvt9hVxJC2W3lHq8dlK1pkHPDg9wO
+ JoAXek8MF37R8gpLoGWl41FIUb3hFiu3zhDDvslYM4BmzI18QgQTQnotJH8=
+In-Reply-To: <ao3sgEET8GuY7Rw2@casper.infradead.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-On Tue, Aug 25, 2026 at 9:54=E2=80=AFPM Matthew Wilcox <willy@infradead.org=
-> wrote:
-> On Tue, Aug 25, 2026 at 09:35:57PM +0200, Jann Horn wrote:
-> > Could we strictly ban using get_user_pages*() for write access, and
-> > use the unpin_*() helpers to somehow enforce that folios are always
-> > dirtied on unpin? I guess the problem with that is that we have no
-> > state that tracks whether the pin was read-only, and finding free bits
-> > in struct page to keep track of this is hard?
->
-> We'd need a count, not just a bit or two.  A pincount for all folios
-> is on its way (eventually) but I wans't planning on tracking writable vs
-> read-only pins.
 
-My thinking was that once a folio has been pinned writably one time,
-it should be fine to mark it as dirty every time it is unpinned, even
-if some of those pins were read-only?
+
+在 2026/8/26 04:56, Matthew Wilcox 写道:
+> On Tue, Aug 25, 2026 at 08:08:48AM +0930, Qu Wenruo wrote:
+>>> The problem is GUP.  We have no way to force the GUP caller to go
+>>> through page_mkwrite again.  So instead we make the GUP caller call
+>>> folio_mark_dirty_lock() which many just don't, and generally we get away
+>>> with it.  But it's a bug, and a bad interface.
+>>>
+>>> There's also the problem that GUP users bypass the folio_wait_stable()
+>>> mechanism.  If a page is written to while somebody is creating a
+>>> checksum over that page, the checksum will be corrupted.  If we want
+>>> to fix this, we have to bounce-buffer the page.  There's no way to
+>>> prevent or delay a GUP user from writing to the page.  Enjoy your RAID.
+>>>
+>>> My proposal is this:
+>>>
+>>>    - Fileystems take note of folio_maybe_dma_pinned() during writeback.
+>>>      If it's true, do the writeback, but retain/recreate whatever data
+>>>      structures you need in order to write the folio again; behave as if
+>>>      ->page_mkdirty() had been called again for each page in the folio is
+>>>      marked as dirty.
+>>
+>> This may make COW more complex.
+> 
+> It's probably wise to be explicit when talking about COW.  Anyone from
+> the MM side of the house is probably thinking "but this is only relevant
+> for shared writable mmap and we don't do a COW".  You're talking about
+> filesystems doing a COW of the on-disc data, not about the MM COWing the
+> pagecache page into an anonymous page.
+> 
+>> For folio_maybe_dma_pinned() case, we will need to do extra space
+>> reservation similar to page_mkdirty() again, so that the folio can be
+>> written back again.
+> 
+> Yes, you will.
+> 
+>> I'm not sure if we will have a good timing for re-reserving space inside
+>> btrfs.
+> 
+> Why is it hard to do it immediately at writeback time?  I think you're
+> in an even less restrictive locking environment than page_mkwrite is
+> called in because you're not under any MM locks.  According to
+> Documentation/filesystems/locking.rst, ->writepages is called with
+> absolutely no locks held.
+
+This space reservation problem is a btrfs specific problem.
+
+The root problem here is, btrfs space reservation can trigger 
+writeback/transaction commit.
+
+This is due to the data/metadata COW nature, and that's why we rely 
+completely on buffered write to do space reservation, and avoid any 
+extra space reservation at writeback time.
+
+This is also why we have the complex fixup mechanism, to avoid writing 
+the folio that needs fixup, but queue it for space reservation.
+
+Other than other fses to do the space reservation at writeback time.
+
+I believe since we have some space reservation for no-wait writes, it 
+can be slightly simplified using no-wait reservation (aka, reserve 
+during writeback), but it has a much higher chance to hit ENOSPC.
+
+
+Although I think on the long run, as long as we want to migrate to 
+iomap, we should find out a proper way to address this problem.
+
+> 
+>> Would it be possible for MM/VFS layer to trigger page_mkdirty() instead?
+> 
+> Actually ... no, because the VFS no longer knows which pages in the
+> folio are dirty.  That's information the MM had, and communicated to
+> the FS which (if it cares) has stored in its folio->private.  But the
+> VFS no longer has access to that information.
+> 
+
