@@ -1,34 +1,87 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD36835C6BF;
-	Tue, 25 Aug 2026 07:39:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E87C38D419;
+	Tue, 25 Aug 2026 07:59:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787643566; cv=none; b=WTvkHtQpcViLhijz9fWtEFyDtLXj6LOze5yb8wHnjotYsPuUOJnYTysxSvl2yD27WX+mvDYFrJHxvopj4JJ1mot5jvsJX2zTttoMU54oWaAz9Z/ZMk/06E4D6rk7SHxBKyGl4D3pWizUz+U51Uxi82+34aF/idbpUfcWTJlFa1w=
+	t=1787644757; cv=none; b=bkxyC4yaAHjDkamcu/PidXfXCwjGVW2UVgYki6BavpRIYMi1P0Ray+LTr4iRZ291ErW8OnnD1fii5tKQD/yNXTUxOadrVyyfVUTUMCp7qEzISA+ti1QXKP957dyTcposQqAa3GILXwwotzpkJs9ZkTxFxq/NYAEtVMVpxVLPurE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787643566; c=relaxed/simple;
-	bh=FfvjvkLs0U7ka28hFK9+vOUzA3Rh5GmLkBzfnEwF1w8=;
+	s=arc-20240116; t=1787644757; c=relaxed/simple;
+	bh=Z2FerkZua6EPtJf2RIJxu1CMU/0rBP1f7eRXOo3u964=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hIBcIoz0oYrbi7e5n2b2o6WMxnqIxBZ3n0voxai9s6mEIHDIO/W97Q/f2FnzQPx28AAERPYzAgNNUiqZUque0qIp2Xn9UlMItWQe3/jl3lgO2Ouqmgs4eYlOlCiteCca5M7nmlaMBZfuz5MBmSoVwb2TFw5xqoeZO6LH46Vt8qw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 5E5BD68BFE; Tue, 25 Aug 2026 09:39:19 +0200 (CEST)
-Date: Tue, 25 Aug 2026 09:39:18 +0200
-From: Christoph Hellwig <hch@lst.de>
+	 Content-Type:Content-Disposition:In-Reply-To; b=HhCorSFfDu9lwyWcamB+xlH6Dvuf3VzoVXrueTqR4vUC07DGh+BqMrR6Bv43V1/lRuQ9/hD2TOCl5kETiZihk+4JQhHNomUh2D4trrCEyRR6D1Th8yuU+9+QHu/E4iy9LFtKForvOm4q98vIjSY7xur84d9V4OHOawd0L1Pa2Wo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=0CGHFwao; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=wzWFMzHs; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=ejcDYF8o; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=xcviFUOY; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="0CGHFwao";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="wzWFMzHs";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="ejcDYF8o";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="xcviFUOY"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id E124E86D73;
+	Tue, 25 Aug 2026 07:59:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1787644750; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=X5pkgJRID5oSKj0ZfWF+KOtBr1NU4ZpOVE3ZapgsNXc=;
+	b=0CGHFwaoWm7q5XPbizZrjrEEmhZxSYM8K8G206/zLI19IzemgvLdq5t7T2QLT8DUG2Ctdc
+	cuwpc6wJDzs2STPCTEP03APDHWg8gWn08PaGN+M2+2iLhCHpdZVBTAy1EaDOuQNlQ3oQAU
+	i/aoEkLKiMy2CLn/yG+Nt/yHuS8Pnog=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1787644750;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=X5pkgJRID5oSKj0ZfWF+KOtBr1NU4ZpOVE3ZapgsNXc=;
+	b=wzWFMzHsk/+iPH0SX3CW/v7SVM4ql+8QOqiO3b/4mzZi3QmHTvhxZX6nwlXuogVYKIf8pK
+	3l5GkiJkHpZ/jICg==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1787644745; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=X5pkgJRID5oSKj0ZfWF+KOtBr1NU4ZpOVE3ZapgsNXc=;
+	b=ejcDYF8o8x7QWlAQNDisoLJNh26DKtQQmIE5Cgr7JM8Pii2nbdpQYM11aphcMrtCBVEeNE
+	Tj9XHndboopHuaVIFem8QRP9LIpLbERg8wWNNwlMcgJYlvY82A4Naz10g+z9qKKuFvjyYq
+	aQ21vQTC6lmy2Gb4tx+ctir7coTGQIE=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1787644745;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=X5pkgJRID5oSKj0ZfWF+KOtBr1NU4ZpOVE3ZapgsNXc=;
+	b=xcviFUOYu9qnGpVA+fmFz9/SxZ/wGd6G3cp34iELyzBa9ZmroK2UNmsCjOEbLmYXuofl/j
+	M9sR+JSaOGL9eNBA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 0D2F713332;
+	Tue, 25 Aug 2026 07:59:04 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id NydOO0hLjWrWbwAAD6G6ig
+	(envelope-from <pfalcato@suse.de>); Tue, 25 Aug 2026 07:59:04 +0000
+Date: Tue, 25 Aug 2026 08:59:03 +0100
+From: Pedro Falcato <pfalcato@suse.de>
 To: Matthew Wilcox <willy@infradead.org>
-Cc: Pedro Falcato <pfalcato@suse.de>, Christoph Hellwig <hch@lst.de>,
-	Jann Horn <jannh@google.com>, David Howells <dhowells@redhat.com>,
-	John Hubbard <jhubbard@nvidia.com>, Jan Kara <jack@suse.cz>,
-	Rik van Riel <riel@surriel.com>, Qu Wenruo <wqu@suse.com>,
-	"Darrick J. Wong" <djwong@kernel.org>, linux-btrfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+Cc: John Hubbard <jhubbard@nvidia.com>, Christoph Hellwig <hch@lst.de>, 
+	Jann Horn <jannh@google.com>, David Howells <dhowells@redhat.com>, Jan Kara <jack@suse.cz>, 
+	Rik van Riel <riel@surriel.com>, Qu Wenruo <wqu@suse.com>, "Darrick J. Wong" <djwong@kernel.org>, 
+	linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, 
 	linux-xfs@vger.kernel.org
 Subject: Re: Removing ->dirty_folio
-Message-ID: <20260825073918.GA25441@lst.de>
+Message-ID: <ao1Kbcu4Mmtrr_Sa@pedro-suse>
 References: <aoyWln-Gt-yvZQkE@casper.infradead.org>
+ <5f4ed03c-e91f-4641-8964-cca0391971ba@nvidia.com>
+ <aoye694JQLwUuqxC@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -37,46 +90,88 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aoyWln-Gt-yvZQkE@casper.infradead.org>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <aoye694JQLwUuqxC@casper.infradead.org>
+X-Spam-Score: -3.80
+X-Spam-Level: 
+X-Spam-Flag: NO
+X-Spamd-Result: default: False [-3.80 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	NEURAL_HAM_SHORT(-0.20)[-0.985];
+	MIME_GOOD(-0.10)[text/plain];
+	ARC_NA(0.00)[];
+	MISSING_XM_UA(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[13];
+	MIME_TRACE(0.00)[0:+];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo]
 
-On Mon, Aug 24, 2026 at 08:08:06PM +0100, Matthew Wilcox wrote:
-> My proposal is this:
+On Mon, Aug 24, 2026 at 08:43:39PM +0100, Matthew Wilcox wrote:
+> On Mon, Aug 24, 2026 at 12:25:42PM -0700, John Hubbard wrote:
+> > > My proposal is this:
+> > > 
+> > >  - Fileystems take note of folio_maybe_dma_pinned() during writeback.
+> > >    If it's true, do the writeback, but retain/recreate whatever data
+> > >    structures you need in order to write the folio again; behave as if
+> > >    ->page_mkdirty() had been called again for each page in the folio is
+> > >    marked as dirty.
+> > 
+> > Yes, that would work nicely.
+> > 
+> > >  - The MM behaves similarly; we do not clear the writeback flag for
+> > >    folio_maybe_dma_pinned().
+> > > 
+> > > This will have the effect of writing pinned folios back every time the
+> > > inode is scheduled for writeback.  But since we have no idea whether
+> > > the folio is actually dirty (because the GUP user won't tell us),
+> > > this is the correct behaviour.
+> > > 
+> > > I'm probably missing some stuff here.  Let me know.
+> > 
+> > OK, so working through the end of the pinning, I think it still is
+> > correct: device finishes writing to pinned memory, device driver
+> > unpins the memory but the page has been left marked dirty the whole
+> > time and still is, so the next writeback still does the writeback,
+> > but this time sees no pins and so it marks the page clean.
 > 
->  - Fileystems take note of folio_maybe_dma_pinned() during writeback.
->    If it's true, do the writeback, but retain/recreate whatever data
->    structures you need in order to write the folio again; behave as if
->    ->page_mkdirty() had been called again for each page in the folio is
->    marked as dirty.
->  - The MM behaves similarly; we do not clear the writeback flag for
->    folio_maybe_dma_pinned().
+> Excellent!  By the way, what would you think to this?
 > 
-> This will have the effect of writing pinned folios back every time the
-> inode is scheduled for writeback.  But since we have no idea whether
-> the folio is actually dirty (because the GUP user won't tell us),
-> this is the correct behaviour.
+> @@ -2717,7 +2719,8 @@ static inline bool folio_maybe_dma_pinned(struct folio *folio)
+>          * Here, for that overflow case, use the sign bit to count a little
+>          * bit higher via unsigned math, and thus still get an accurate result.
+>          */
+> -       return ((unsigned int)folio_ref_count(folio)) >=
+> +       mapcount = folio_mapcount(folio);
+> +       return (folio_ref_count(folio) - mapcount) >=
+>                 GUP_PIN_COUNTING_BIAS;
+>  }
 > 
-> I'm probably missing some stuff here.  Let me know.
+> 
+> It should improve the accuracy of folio_maybe_dma_pinned() for folios
+> which are mapped many, many times (eg a page of libc).  I'm a little
+> concerned about races turning that number negative since we don't
+> necessarily have the folio locked at that point.
 
-We've been through this a few times, I remember me and Jan discussing
-it maybe a year or so on the list last.  This is what I remember:
+It's perhaps a radical idea, but how about just not incrementing
+refcount for mappings? Essentially, for the main state transitions
+(mapped to unmapped, and vice-versa):
 
- - the best thing would be to just not write folio_maybe_dma_pinned
-   folios at all.  Jan brought up cases where that might not be
-   possible, so we might have to write anyway.  IIRC the major
-   one is that we actually do allow FOLL_LONGTERM even on file
-   backed mappings, and those could be pinned forever.
- - when we write them anyway we really have to bounce buffer the
-   data.  Basically copy and do something like in-kernel direct I/O
- - Even that can be tricky, because we'd still need a space reservation
-   for that write at it would otherwise consume the space reservation
-   at dirty time, but we still might have to write it again.  One
-   option might be to only do the force bounce buffer write for
-   FOLL_LONGTERM as the others should go away, and FOLL_LONGTERM
-   gets a call into the fs to reserve extra space.  This would not
-   be enough for a lot of writes, but enough to allow for
-   "bank switching" over GC cycles.
+0 mapcount -> 1 mapcount: refcount++
+1 mapcount -> 0 mapcount: refcount--
 
-So, not perfect, but probably better than the status quo.  But a lot
-of work that someone needs to do for being a bit better than the
-status quo.
+and anything else doesn't touch refcount.
+
+I think it's worth considering standalone (one less atomic inc :) and
+reduces any ambiguity in folio_maybe_dma_pinned() to essentially 0 (unless
+you have 2048 short-term pins for the folio, rather unlikely I would say).
+
+-- 
+Pedro
