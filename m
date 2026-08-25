@@ -1,41 +1,48 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62E5A2F7EF5;
-	Tue, 25 Aug 2026 18:33:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F193B37B010;
+	Tue, 25 Aug 2026 18:35:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787682790; cv=none; b=klpftLtEjBNEdvTepTeQkZb+PeLniPuAs0fHHuPB2Xl5uQvDTyvOF4MqQLLb+24FRNz2jYztF0yTZBoQ80uPUtpBrQ/EHc9tEt4PiWh7/ozypK1wMuaM3ucDXpKL39Vh0xJF6NybUwm4odkNpl5/95l7AK9+3iSAUD8I5u8o0V8=
+	t=1787682932; cv=none; b=DNHFKGiIC9yoVpkzWfPxDHr8ozehUToEReA6GzpV2rKk9Pdwi7653mMavu+VDp2nV+a5o2ZXEqtzeTs7EDHQH/1FMdhGID7vjIXEv3o+AXd0emGwZFc3/NZyhgwzvA5TjczTFK5DU7va7icMXkKZC5Lq+TsAIyMoHSrIFL5NLa0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787682790; c=relaxed/simple;
-	bh=4K01LHN6qb5PtX6z6TN1QScw5jNk4evkNGwp0rqp8Aw=;
+	s=arc-20240116; t=1787682932; c=relaxed/simple;
+	bh=pZ4mfsgKRGFTaaqzSNMXArPfYaaJEFy2hCV2prTkb3s=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fS8yk16oXXn9Q53Rc2FQBHEdzyYESdrFbe5ThN/fRV1MvGsS1BYArffJQjNCP91CgwsmWBK+dgZo9DlLfpLKZyYFXs/Mlk386EByTApvSeSbJN421onjT2MBZZXLR6aTjzRQWb9U/F6zTVU83qDxVXIBWrsZG5rrAlAzSic9w8U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ptgcm8q0; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=sZ1seROyURGXuIWeySt4JbRo8ZkBWR+iWjyW5/zZTcoEBELW57p+Pvpx66PmbyrZaznmIZeSMrsDM5PpIqO1jraQx0Ra2jd1c1QpepUSCzWFBw2cObd8J2fQJt8OCUQ1Cwxm82snlW8lcxLZLKrQYr+D8bRt+nRW/Rs85fLaMtc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=pass smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=LXRyEqv3; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ptgcm8q0"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id EA0E21F000E9;
-	Tue, 25 Aug 2026 18:33:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787682789;
-	bh=E4pjEVfIBYcDkbvVtMTqNuQnn3UBD9+nNXnxWS4ELdc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Ptgcm8q0P8Q2kAi1T1huXYgjtAY5fGGe90vLLCHn8DrvNMpUnd1YRf5xDyYLINRYX
-	 C3DHX8pf46WNGOJC8MH4eftUrJYDQnyppOqpJHuL+As04VzTx057otS0wPOb2Q+tBp
-	 jhnax1SqD0SEsU9eoMzKztgyixdx3YAyPwsPhE3hX6+lMMEl81A3jzjdPvhOAniJhy
-	 uHqq9IP2gtWgJNHyXmoMEm196ugEhUTpfdMrGp9YtL59i5z11JNWRSedf4yRxXMHb+
-	 99N+EJajwC39Vk8sadOFmDMAUtWbF9JAdM+ILU7bHDb5fhbUAqoTji8tgHpX86Aco1
-	 NVFOpcZkGVM6w==
-Date: Tue, 25 Aug 2026 11:33:08 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: cem@kernel.org, stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/5] xfs: always set xfs_healthmon::first_event when
- inserting at front of list
-Message-ID: <20260825183308.GW6072@frogsfrogsfrogs>
-References: <178760941052.944364.16602293998794359025.stgit@frogsfrogsfrogs>
- <178760941102.944364.11828316232110118627.stgit@frogsfrogsfrogs>
- <20260825064017.GA24532@lst.de>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="LXRyEqv3"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=NzdQdDzy9an+ad2ujHM4K87j7IVbsCNSw+/FSI8vDqQ=; b=LXRyEqv3luyRGaNhx9QcZkACii
+	0DKvqLDdWONegOg3YmykHdEwYxNA9R2kquCB42nIt6EHrA52otHoe1WjbQaoNFK2aqqtusT/gQeXJ
+	JFYkgLHg/zad0zJTzOD3lPUyJ/0d610qpC4N7p+Cca9zrtE0GoEpBhjIy8mxRyWc7WCMe3atU/7aL
+	J+ijmZJBfx98iQhq+I1AnO1TilXv/52BDJqbhElR8iF9vCIUpYc4rH2jhdxbgIeCHeuP7o17REHnW
+	soR2dy9Jws0Ymq/BznZz1WeI/jfpgBbeA8Qhyx/qceFGgSJybEJf75RNf9waPdG7MwxL/Zokf2XRc
+	QvpQTY/A==;
+Received: from willy by casper.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1wyvzR-00000009XHS-2xcn;
+	Tue, 25 Aug 2026 18:35:17 +0000
+Date: Tue, 25 Aug 2026 19:35:17 +0100
+From: Matthew Wilcox <willy@infradead.org>
+To: Pedro Falcato <pfalcato@suse.de>
+Cc: Christoph Hellwig <hch@lst.de>, Jann Horn <jannh@google.com>,
+	David Howells <dhowells@redhat.com>,
+	John Hubbard <jhubbard@nvidia.com>, Jan Kara <jack@suse.cz>,
+	Rik van Riel <riel@surriel.com>, Qu Wenruo <wqu@suse.com>,
+	"Darrick J. Wong" <djwong@kernel.org>, linux-btrfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: Removing ->dirty_folio
+Message-ID: <ao3gZRa7HOEg209P@casper.infradead.org>
+References: <aoyWln-Gt-yvZQkE@casper.infradead.org>
+ <ao1Lo6TKhPcqV42B@pedro-suse>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,65 +51,84 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260825064017.GA24532@lst.de>
+In-Reply-To: <ao1Lo6TKhPcqV42B@pedro-suse>
 
-On Tue, Aug 25, 2026 at 08:40:17AM +0200, Christoph Hellwig wrote:
-> On Mon, Aug 24, 2026 at 10:36:12PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
+On Tue, Aug 25, 2026 at 09:25:53AM +0100, Pedro Falcato wrote:
+> On Mon, Aug 24, 2026 at 08:08:06PM +0100, Matthew Wilcox wrote:
+> > I think it's time to remove folio_mark_dirty(), ->dirty_folio() and so on.
 > > 
-> > LOLLM complains that __xfs_healthmon_insert purports to insert a
-> > xfs_healthmon_event event at the start of the event list, but neglects
-> > to update first_event to point to the unmount event if there were
-> > already events in the queue.  That results in list corruption, so let's
-> > fix this problem.
+> > This is not how filesystems want to be informed of folio dirtying.
+> > It was fine for ext2, but anything that's journalled or COW has work
+> > to do before the folio is made dirty, and it's hard to do that work
+> > under the page table spinlock (not all callers hold that lock, but the
+> > filesystem has to be able to handle the cases where it is.
+> > 
+> > Filesystems want the page_mkwrite() entry point to be how they find out
+> > about a folio being dirtied -- and that works great!  Except that we
+> > can writeback the folio for a number of reasons.  If it's been dirtied
+> > due to a shared writable mmap, that's fine; we map the folio read-only
+> > and any subsequent writes will re-enter the page_mkwrite path.
+> > 
+> > The problem is GUP.  We have no way to force the GUP caller to go
+> > through page_mkwrite again.  So instead we make the GUP caller call
+> > folio_mark_dirty_lock() which many just don't, and generally we get away
+> > with it.  But it's a bug, and a bad interface.
+> > 
+> > There's also the problem that GUP users bypass the folio_wait_stable()
+> > mechanism.  If a page is written to while somebody is creating a
+> > checksum over that page, the checksum will be corrupted.  If we want
+> > to fix this, we have to bounce-buffer the page.  There's no way to
+> > prevent or delay a GUP user from writing to the page.  Enjoy your RAID.
+> > 
+> > My proposal is this:
+> > 
+> >  - Fileystems take note of folio_maybe_dma_pinned() during writeback.
+> >    If it's true, do the writeback, but retain/recreate whatever data
+> >    structures you need in order to write the folio again; behave as if
+> >    ->page_mkdirty() had been called again for each page in the folio is
 > 
-> I can't really follow this..
+> I don't think you can do this for stable writes. It's probably ok for
+> !stable writes filesystem stacks, as long as the filesystem & writeback
+> can handle making no progress at all. But since stable writes' writeback
+> can't race with "writes", I don't think you can Just Do It as long as the
+> folio is DMA pinned.
 
-Let me try again:
+Ah, yes, I forgot to specify that.  For mappings which need stable pages,
+we have to bounce buffer them.  I wonder if that's something we should
+do inside the VFS or if each filesystem should try to do it itself?
 
-"LOLLM complains that while __xfs_healthmon_insert is supposed to insert
-an event at the head of the list, it doesn't do that correctly if the
-list isn't empty.  In that case it *should* make our new event point to
-the current head, and then make the head point to the new event, but
-it doesn't actually update the head."
+> Perhaps we should give up trying to writeback these folios, and start
+> writeback right after they're unpinned? at least on the stable case.
 
-> > diff --git a/fs/xfs/xfs_healthmon.c b/fs/xfs/xfs_healthmon.c
-> > index d8b95af33a3e9f..166ef0d5864486 100644
-> > --- a/fs/xfs/xfs_healthmon.c
-> > +++ b/fs/xfs/xfs_healthmon.c
-> > @@ -276,8 +276,7 @@ __xfs_healthmon_insert(
-> >  	event->time_ns = (now.tv_sec * NSEC_PER_SEC) + now.tv_nsec;
-> >  
-> >  	event->next = hm->first_event;
-> > -	if (!hm->first_event)
-> > -		hm->first_event = event;
-> > +	hm->first_event = event;
-> >  	if (!hm->last_event)
-> >  		hm->last_event = event;
+The thing is, what do we do for somebody calling fsync()?  I don't
+think that "Oh, sorry, someone gave its address to an RDMA device
+so we just didn't bother" is acceptable as an answer.
+
+> >    marked as dirty.
+> >  - The MM behaves similarly; we do not clear the writeback flag for
+> >    folio_maybe_dma_pinned().
 > 
-> event is the newly inserted event.  We want to queue it at the
-> head of the list (why, btw?).
+> This sounds like a problem. You don't want users expecting writeback to make
+> progress to suddenly stall on e.g folio_wait_writeback() indefinitely.
 
-The only event that gets inserted at the front is the unmount event.
-This signals that the filesystem is being completely unmounted (not just
-detached from a mount ns) and there's nothing further that xfs_healer
-can do to fix the filesystem.  Therefore we put the unmount item first
-in the list so that xfs_healer won't waste time trying to find the
-mount to do repairs that it won't be able to make.
+I should have written "the dirty flag" there.  I do not propose to keep
+the writeback flag set indefinitely; it should be cleared after I/O has
+completed, as it is now.
 
-> The next point in event points to
-> first_event (which can be NULL).  And first should always point
-> to event, otherwise we potentially never queue anything up?  I.e.
-> we never ever actually set first?  Not sure how that is related
-> to umount.
+> I don't quite understand what your plan for getting rid of dirty_folio,
+> et al is. page_mkwrite has the fatal flaw of being directly tied to VM
+> page faults; I don't think it's the ideal interface for notifying filesystems.
+> It's also the case that page_mkwrite can trivially sleep, and GUP calls it under
+> the PTE lock. So how can we replace that? Would callers need to manually dirty
+> folios after GUP, in process context?
 
-xfs_healthmon_push will set first_event if the list is empty.
+GUP doesn't call page_mkwrite() under the PTL.  See my reply to John,
+or just look at do_page_mkwrite():
 
-(for context, all other events are _pushed on to the end of the list)
+ * We do this without the lock held, so that it can sleep if it needs to.
+ */
+static vm_fault_t do_page_mkwrite(struct vm_fault *vmf, struct folio *folio)
 
-> Maybe this should just use standard list_head-based lists even
-> if they waste an extra pointer in the event structure?
-
-Yes, that at least wouldn't increase the size of xfs_healthmon_event.
-
---D
+folio_mark_dirty() is called under the PTE lock.  My point is that (with
+the proposed changes) we won't need to call it in zap_present_folio_ptes()
+because the filesystem will already know that this page is dirty.
