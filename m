@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72DBBEEB3;
-	Tue, 25 Aug 2026 05:34:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BACBEEB3;
+	Tue, 25 Aug 2026 05:35:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787636096; cv=none; b=tO0Brj5VZAv6My9/lDnvUvSwJAGNXMoMS2PFMr7kwZGgLzZcISyzEmYkrkTZHg7YgypQRCc17S2eglNBYOPl4x0M+tv0aOZEme09+oEI3apdhOXE9x0jJ3wxXw0exaDRTH9qDJD6b8CxULRAnV6e3QRvfV6pxyBux/RSgvBTM4o=
+	t=1787636112; cv=none; b=JsOOMakfXxVgEsBGUV4I4sxcW8h2wHDtXHFsnnBRg5u1uSU39cw9b5pwrtP6W2S78f72+MLw8a851jqtJVpMxXrOJM/w+XcQwYjOnZifpzQA1Ze7DNEYVuU5ZkezV+xim8KmGzz7F8WjhXiE+AZrfX/hFzZmMd6OmuLYtKLdVLs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787636096; c=relaxed/simple;
-	bh=EEFlCo3jag+4vHC1mDNruUnH8S7sV4FVbzfKUx2QPNo=;
+	s=arc-20240116; t=1787636112; c=relaxed/simple;
+	bh=9uph0AMssO7SaZ46k89LJhkIn0fXPoVzm9Bsei/VEfw=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Wv8d1cZtb8cCbwBBnHcY7zPIjIoeBRgObTMfal5l4a3FNP+0DRKBCGnEGc288rSx219IHRqZS8mIB6ueyTCdauwlIhlDwFaXB4b9fWJN6gPN7rdKHE2Y4EbavOGdHm2C700yTIM9A1ANmuc3OdudambFPdssFg6CqP29CwcHUqo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=etDZU6dP; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=dkaoB2DU6/RIfcDmRpwY2bRIK0n+XVeorA00VBmjnJoGKYrDIsEgepKFoFQ2cLKK+0cEfSA/NAuCoDM2BsrfhcHvXrKPPlksJdEeKt7DDS706/ir2VNC3VjtnE/KI2E42kQKN244ymUYEjff96lqunoR64rI2AB/VCgYcyHzZ4M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Gr7U2yns; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="etDZU6dP"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 421001F000E9;
-	Tue, 25 Aug 2026 05:34:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Gr7U2yns"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 03D1A1F00A3A;
+	Tue, 25 Aug 2026 05:35:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787636095;
-	bh=0SyenpsgTx3tiZv4QInbY1b8VPglhqpE7KqYPMN3nvE=;
+	s=k20260515; t=1787636111;
+	bh=RH8ckPcvjlkONTwrWJjTYdWxzwSCQCPxPmeCdkZAapM=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=etDZU6dPEFG1X3Hb+8o64XRjVAFDcrF7hTNbGFAkvJU1TBqnRbsupivHhGtEIvuFU
-	 82NCcAtMrF5YdLMd7lUUIRho9K0blg8Zp4t203+iPiE0zg7EtcGQtTgjuZu35tL43Y
-	 KlGvmzI/LWNM8Vjz47JaRb4S4rcECA31noMDLmTjux4M5HtCX5BGrodpgGnhpjPG7u
-	 HxOP8HvUvUuBaJAFVQOJ83jzhN9RfpM6c4tne3nybUiB6Cb0bwGzDf9ASl2Ov2H3lz
-	 cemH4hytt1AbAykN+xXsspxsCZjQe419M18t5ELPQR0yfU3uLHiBkOp6KwyS7Bqzb/
-	 ljiuxL5oRGmtg==
-Date: Mon, 24 Aug 2026 22:34:54 -0700
-Subject: [PATCH 2/6] xfs: don't stash removename operations with unknown ftype
+	b=Gr7U2ynszDqPSxvFewN+jsb9xNeOrIMy9n14c0DBhLiGdsZNsjECvhM0HbUVE6Glq
+	 iE8CjY0OnjtWhOdeD7G4zBM0gLkB3NYAWdWcKBzN6ZL5ZzUdaYIktNUooCQdIrFu9M
+	 F643ZToxcmYEzQH71rdW6pwYAIx0q8TM6eJB2wX0yLs/DgAMhVEVxe3wUscSJz6OWO
+	 lvwsN7c61JG2t+cSG+6x1i0W0QHo0Sw9zfC9o+IQ1/iVFsqZULGhPqwvktizWBEfzO
+	 IT8OAdwOhpFytbGahbQXoqStk+u6CnvKDsvRlRmNnZp6nptvp9IyUiu9D5l4YDzQ+K
+	 kalg3bI4CMeQg==
+Date: Mon, 24 Aug 2026 22:35:10 -0700
+Subject: [PATCH 3/6] xfs: log the tempip after we convert it to extents format
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org, hch@lst.de
 Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <178760940721.944084.7350116310283813250.stgit@frogsfrogsfrogs>
+Message-ID: <178760940742.944084.4404098260047036388.stgit@frogsfrogsfrogs>
 In-Reply-To: <178760940641.944084.17475223769703836830.stgit@frogsfrogsfrogs>
 References: <178760940641.944084.17475223769703836830.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,54 +45,31 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-LOLLM notices that the behavior of xrep_dir_replay_update changes based
-on the ftype recorded in the stashed removename information.  It also
-notices that the unlink iops sometimes set that ftype to FT_UNKNOWN
-because the regular directory tree update code paths don't need to know
-the ftype of the child.
-
-Unfortunately, this results in incorrect link counts, which eventually
-trips link count errors in later phases of xfs_scrub, or in xfs_repair.
-Fix this.
+LOLLM points out that xrep_symlink_swap_prep converts sc->tempip to an
+extents format file prior to the atomic swap, but incorrectly logs
+sc->ip immediately afterwards.  Fix that, and the other problem that
+we're supposed to tell xfs_trans_log_inode what to log and don't.
 
 Cc: <stable@vger.kernel.org> # v6.10
-Fixes: 8559b21a64d983 ("xfs: implement live updates for directory repairs")
+Fixes: 2651923d8d8db0 ("xfs: online repair of symbolic links")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Assisted-by: LOLLM # finding obvious bugs
 ---
- fs/xfs/scrub/dir_repair.c |   19 +++++++++++++++++--
- 1 file changed, 17 insertions(+), 2 deletions(-)
+ fs/xfs/scrub/symlink_repair.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/scrub/dir_repair.c b/fs/xfs/scrub/dir_repair.c
-index 0c1224d05d579a..31a23c5f386ae6 100644
---- a/fs/xfs/scrub/dir_repair.c
-+++ b/fs/xfs/scrub/dir_repair.c
-@@ -1381,9 +1381,24 @@ xrep_dir_live_update(
- 		if (p->delta > 0)
- 			error = xrep_dir_stash_createname(rd, p->name,
- 					I_INO(p->ip));
--		else
--			error = xrep_dir_stash_removename(rd, p->name,
-+		else {
-+			/*
-+			 * xfs_dentry_to_name in unlink or rename-exchange can
-+			 * pass us names with ftype FT_UNKNOWN, but we really
-+			 * must know the ftype of the child that is being
-+			 * removed so that we can do nlink updates correctly
-+			 * without holding inode references.
-+			 */
-+			struct xfs_name	name = {
-+				.name	= p->name->name,
-+				.len	= p->name->len,
-+				.type	= xfs_mode_to_ftype(
-+						VFS_IC(p->ip)->i_mode),
-+			};
-+
-+			error = xrep_dir_stash_removename(rd, &name,
- 					I_INO(p->ip));
-+		}
- 		mutex_unlock(&rd->pscan.lock);
+diff --git a/fs/xfs/scrub/symlink_repair.c b/fs/xfs/scrub/symlink_repair.c
+index 91c86ea0e0f155..18196136423336 100644
+--- a/fs/xfs/scrub/symlink_repair.c
++++ b/fs/xfs/scrub/symlink_repair.c
+@@ -291,7 +291,7 @@ xrep_symlink_swap_prep(
  		if (error)
- 			goto out_abort;
+ 			return error;
+ 
+-		xfs_trans_log_inode(sc->tp, sc->ip, 0);
++		xfs_trans_log_inode(sc->tp, sc->tempip, logflags);
+ 
+ 		error = xfs_defer_finish(&sc->tp);
+ 		if (error)
 
