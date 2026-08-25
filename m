@@ -1,40 +1,48 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DCC4D175A83;
-	Tue, 25 Aug 2026 18:36:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F68C3B5314;
+	Tue, 25 Aug 2026 19:14:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787683020; cv=none; b=Rjw0MYC5sKqTAa9QsVgn7ZMmst6KrxHVHAZyycnIVkVh2vYD+MtRL+Dyb7i9oxABSrEddsLdwNkaTkioBuJOsy2812OHtKB5OIkFvRNweiyWNwwSEIqFILrW5sPowoHu/LFZWvnPYjW3x0+22iSBHZlbF5eSwGR2aPYT7k04E70=
+	t=1787685258; cv=none; b=krF6fxLx/yeG8ri4A3qf8/IpRsLZqzhfl8lEiBx+fsjV6jB84xK/wYMQ+SsxwchvoyqjvYgXbe+xRpaQIXG0xydMfWX1EK2qYy0JoYIE6vZJZXmGmTSFGbLV8eQ4GpwVUSQG3MWqqli2VuvX383PgafVnjxTAVxMR4s1NwDdflM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787683020; c=relaxed/simple;
-	bh=uumKQFEa3kqhuvOY1+xLfH5sjjFkfcwFT6v/fbDM/Dw=;
+	s=arc-20240116; t=1787685258; c=relaxed/simple;
+	bh=69sArnDF5j6CJhMR1APAkBbocbJ/kEGVeJhCURjiFFw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=W4xn1rDKwelkl+9urIdIIXJyTfNOKTeu1qq5EtjpSQ5btzRxjVZuuro/Uoa2nrWAv6aLy5juaMqX+7FBeyJUYkGdp1EImYlaZiyXfDqD3qqtmvbOqKt3tTr/DU9kqKkBE0vJ8MOQY1LT5Qmn+JVmu5qePxSdG+109nGaqVdm9VA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ovMSEDum; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=X6k1Eq4vjkmjWJgB+EDWlCSjPtDh5uv49w1kT1QpeAuiNBBPTWrax/hrJXxF7dNrIWmO4oJsf6jZp+o3ZtZA/SKdAC+A7r4IN8DUeNGZtNSBtxOdZ6utkxvMVPwkFRvFqga+5kmJ5mDxuYIFDpnmZlcSGfBJjoZWhl3yFrcqa7g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=pass smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Kj68+8Df; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ovMSEDum"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 732091F000E9;
-	Tue, 25 Aug 2026 18:36:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787683018;
-	bh=chZvNI5OrdFGzbSM2PHYoGX8WICYk+h0imPyR6BDYFo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=ovMSEDumbYipvyHK/cBSEzEK7TT3lNqLfKUoa6m7i+Rmgbwm7MS0GORFUfWUNenQE
-	 kfjPSQmwlJz/memxuEq53cL7FGFqMfW+4mmdHhbozuR1f6WJ/tzxsOdHTPX+3WhoYp
-	 YvjrqYkhVYszG2v57IXSnfCkiPfJ5PV5qQac6gjgAKm4JDzlfyGOQHvvdqb7/z0GHK
-	 kpPVQ5c7cpCivV9bUeIA7JoAdlMJRr3KTWYbfc1IGNZSF9NG2rFYOOQkXd87kFWW5h
-	 H4fvpYPiw7gSorHVfgbwsfF4Nd3f0QdAspgu8HJmEJEYmm6sPHHM7F1+3g88XOU5lM
-	 QD9ffWdUrY6GA==
-Date: Tue, 25 Aug 2026 11:36:58 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Kj68+8Df"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=Qyn5Bs3PPyuDeSA5xUHQrWKpUB1haYkwcsmOVbrXEMo=; b=Kj68+8Dfk4HZzgB1WdbRbLhwH6
+	df92mqmYj32/te7T8+qREnij7Pl1gR403+AdUFKxsknUKEu9L3B+KbU/ri8eeASHVdOsbeB+0HJ2z
+	ZAeQx7c8RB38jNBfwcBI/K2trrKMnCBlysyohZV3Tmj8uLWvwGQfAUouKKgZwQ2LzIMBl7y1Cd64t
+	x1FLFvd3cQ+zu7+rqgn1baZqLS6+GnTm6EABlcWadkzINYra3mb4d6WubH9cd5d5dajLOktQmaNLK
+	dNMPLq6k+9WqEYOt0SMP3N/eikoYIc20jPHEw2TgVI6blzlUYKsS4h1Id17VXjkCUwFXzSiGwR16p
+	o4eU33rg==;
+Received: from willy by casper.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1wywb0-00000009aFD-1haE;
+	Tue, 25 Aug 2026 19:14:06 +0000
+Date: Tue, 25 Aug 2026 20:14:06 +0100
+From: Matthew Wilcox <willy@infradead.org>
 To: Christoph Hellwig <hch@lst.de>
-Cc: cem@kernel.org, stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/5] xfs: check healthmon outbuffer space correctly
-Message-ID: <20260825183658.GX6072@frogsfrogsfrogs>
-References: <178760941052.944364.16602293998794359025.stgit@frogsfrogsfrogs>
- <178760941123.944364.14413050986149192404.stgit@frogsfrogsfrogs>
- <20260825064451.GB24532@lst.de>
+Cc: Pedro Falcato <pfalcato@suse.de>, Jann Horn <jannh@google.com>,
+	David Howells <dhowells@redhat.com>,
+	John Hubbard <jhubbard@nvidia.com>, Jan Kara <jack@suse.cz>,
+	Rik van Riel <riel@surriel.com>, Qu Wenruo <wqu@suse.com>,
+	"Darrick J. Wong" <djwong@kernel.org>, linux-btrfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: Removing ->dirty_folio
+Message-ID: <ao3pfoZbGl50nGN2@casper.infradead.org>
+References: <aoyWln-Gt-yvZQkE@casper.infradead.org>
+ <20260825073918.GA25441@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,86 +51,63 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260825064451.GB24532@lst.de>
+In-Reply-To: <20260825073918.GA25441@lst.de>
 
-On Tue, Aug 25, 2026 at 08:44:51AM +0200, Christoph Hellwig wrote:
-> On Mon, Aug 24, 2026 at 10:36:28PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
+On Tue, Aug 25, 2026 at 09:39:18AM +0200, Christoph Hellwig wrote:
+> On Mon, Aug 24, 2026 at 08:08:06PM +0100, Matthew Wilcox wrote:
+> > My proposal is this:
 > > 
-> > LOLLM notices that the outbuf space check in xfs_healthmon_format_pop
-> > isn't quite correct -- it checks that there's enough space to write a
-> > xfs_healthmon_event object, but the outbuffer is supposed to contain
-> > xfs_health_monitor_event objects.  Fix this by adding a helper, and
-> > refactoring all three outbuf size checks to use it.
+> >  - Fileystems take note of folio_maybe_dma_pinned() during writeback.
+> >    If it's true, do the writeback, but retain/recreate whatever data
+> >    structures you need in order to write the folio again; behave as if
+> >    ->page_mkdirty() had been called again for each page in the folio is
+> >    marked as dirty.
+> >  - The MM behaves similarly; we do not clear the writeback flag for
+> >    folio_maybe_dma_pinned().
 > > 
-> > Cc: <stable@vger.kernel.org> # v7.0
-> > Fixes: b3a289a2a9397b ("xfs: create event queuing, formatting, and discovery infrastructure")
-> > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-> > Assisted-by: LOLLM # finding obvious bugs
-> > ---
-> >  fs/xfs/xfs_healthmon.c |   16 +++++++++++++---
-> >  1 file changed, 13 insertions(+), 3 deletions(-)
+> > This will have the effect of writing pinned folios back every time the
+> > inode is scheduled for writeback.  But since we have no idea whether
+> > the folio is actually dirty (because the GUP user won't tell us),
+> > this is the correct behaviour.
 > > 
-> > 
-> > diff --git a/fs/xfs/xfs_healthmon.c b/fs/xfs/xfs_healthmon.c
-> > index 166ef0d5864486..a2ae15a262a510 100644
-> > --- a/fs/xfs/xfs_healthmon.c
-> > +++ b/fs/xfs/xfs_healthmon.c
-> > @@ -739,6 +739,12 @@ static const unsigned int type_map[] = {
-> >  	[XFS_HEALTHMON_DATALOST]	= XFS_HEALTH_MONITOR_TYPE_DATALOST,
-> >  };
-> >  
-> > +static inline bool
-> > +xfs_healthmon_check_outbuffer_space(const struct xfs_healthmon *hm)
-> > +{
-> > +	return hm->bufhead + sizeof(struct xfs_health_monitor_event) <= hm->bufsize;
+> > I'm probably missing some stuff here.  Let me know.
 > 
-> Overly long line.
-
-Will fix.
-
-> >  		memcpy(hm->buffer + hm->bufhead, &hme, sizeof(hme));
-> >  		hm->bufhead += sizeof(hme);
-> >  	}
-> > @@ -891,7 +897,11 @@ xfs_healthmon_format_pop(
-> >  {
-> >  	struct xfs_healthmon_event *event;
-> >  
-> > -	if (hm->bufhead + sizeof(*event) > hm->bufsize)
-> > +	/*
-> > +	 * Don't bother if there's not enough space to format even one event in
-> > +	 * the outbuffer.
-> > +	 */
-> > +	if (!xfs_healthmon_check_outbuffer_space(hm))
-> >  		return NULL;
-> >  
-> >  	mutex_lock(&hm->lock);
+> We've been through this a few times, I remember me and Jan discussing
+> it maybe a year or so on the list last.  This is what I remember:
 > 
-> This is a bit annoying as we now require the type name instead of an
-> object, and the v0 implies there could be other formats.  But I guess
-> for now it is fine..
+>  - the best thing would be to just not write folio_maybe_dma_pinned
+>    folios at all.  Jan brought up cases where that might not be
+>    possible, so we might have to write anyway.  IIRC the major
+>    one is that we actually do allow FOLL_LONGTERM even on file
+>    backed mappings, and those could be pinned forever.
+>  - when we write them anyway we really have to bounce buffer the
+>    data.  Basically copy and do something like in-kernel direct I/O
+>  - Even that can be tricky, because we'd still need a space reservation
+>    for that write at it would otherwise consume the space reservation
+>    at dirty time, but we still might have to write it again.  One
+>    option might be to only do the force bounce buffer write for
+>    FOLL_LONGTERM as the others should go away, and FOLL_LONGTERM
+>    gets a call into the fs to reserve extra space.  This would not
+>    be enough for a lot of writes, but enough to allow for
+>    "bank switching" over GC cycles.
+> 
+> So, not perfect, but probably better than the status quo.  But a lot
+> of work that someone needs to do for being a bit better than the
+> status quo.
 
-<nod> v0 is the only format, eventually that helper would end up looking
-like this:
+Thanks for summarising the previous discussion.  I understand what
+you're saying about the space reservation; that's why we have to
+bring filesystems into the conversation rather than doing it entireely
+within the VFS.  They have to know that they must create a new space
+reservation immediately after writing back this folio.  That should
+be feasible in the writeback path because we're not under any mad
+locking scheme like holding the PTL.
 
-static inline bool
-xfs_healthmon_check_outbuffer_space(const struct xfs_healthmon *hm)
-{
-	size_t	event_sz = 0;
+I think the only disagreement I have is about the upsides:
 
-	switch (hm->format) {
-	case XFS_HEALTHMON_V0:
-		event_sz = sizeof(struct xfs_health_monitor_event);
-		break;
-	case XFS_HEALTHMON_V1:
-		event_sz = sizeof(struct xfs_health_monitor_event_v1);
-		break;
-	default:
-		ASSERT(0);
-		break;
-	}
+ - Filesystems no longer need to implement ->dirty_folio()
+ - The page pinning API becomes a bit easier to use (no need to call
+   folio_mark_dirty() / folio_mark_dirty_locked())
 
-	return hm->bufhead + event_sz <= hm->bufsize;
-}
-
---D
+I'm just trying to figure out if we can do this in small chunks, or
+if we have to do the whole thing at once.
