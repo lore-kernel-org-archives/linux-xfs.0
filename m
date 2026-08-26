@@ -1,35 +1,34 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47E7637DE8A;
-	Wed, 26 Aug 2026 07:42:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8CC43B71B2;
+	Wed, 26 Aug 2026 07:55:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787730149; cv=none; b=a1yH+2uiK34dLh4VEHKU8kM7N4SSx9ABCr1Vb8gKp4wOuIof9dVfM+PeRgtQXFlLTyCtOceiFLWDCnfcGCzaj5QkX2iMBlqAveuI/1P9A4Z6YJ0vRbmTkiwNaP6dZM6VY2ghShGSxcwGFwCejMUPOWRZ0yhshZgjx4oWAwAMfNc=
+	t=1787730906; cv=none; b=jjKFnhN5UlpVhqoSYbyO0CfLXM9w57bTvg7h41uW1PGZfvbQKhILN0GqTIJqv2jaNEHHYDbhiXaMFkdG+S9i3Q0TPdHkdlEb35OZ4QPYqc+Ls/2ucvFXBqiX1kxuY09pPiH2RUsBuWN7SaWBySExeqSxWDk29+d+kO0xW9EUF4U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787730149; c=relaxed/simple;
-	bh=PBev44xSzJ2M1MJAmdYELWXheO/ojhCA+pH10s+URWQ=;
+	s=arc-20240116; t=1787730906; c=relaxed/simple;
+	bh=t6IeEGHJVwj1rPfZMcsSZpapL6LE+E4DhLBs4hNzWK8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=oPlIBgAEboftFOjjQbDS9L3HxsnaCKD58EoRufJ5NmQvPS0MdFBPIU4KFZEEG2AFxjxC+V05CmjnY1W/R6u9P6ZN2046h8oD/FetBDV+7dOH8IPsjg2IcQtpA8Cdzf+h6nN+3LQZS0oJc6Y0tKr4RQnPf9SBPYnruVDNgDZKSbA=
+	 Content-Type:Content-Disposition:In-Reply-To; b=UIdrsMmhk4U7WAUnOrt1Is/STDJ2lOqk/IBSKMe9LnrNp/J/JjDmEPVWuAypGk569zJXevOHLYTplNzivub1UGp0Hf+UH++NIVCGfhwPXOJ5VhY5SdsGFl2CSS8atUMMjWf7pEsLrpJD5WJrQ3Dvhxxj+oBpNdqNdgvNjMBgEaE=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id AB4F268B05; Wed, 26 Aug 2026 09:42:15 +0200 (CEST)
-Date: Wed, 26 Aug 2026 09:42:15 +0200
+	id 3D3D268B05; Wed, 26 Aug 2026 09:54:59 +0200 (CEST)
+Date: Wed, 26 Aug 2026 09:54:58 +0200
 From: Christoph Hellwig <hch@lst.de>
 To: Matthew Wilcox <willy@infradead.org>
-Cc: Jann Horn <jannh@google.com>, Pedro Falcato <pfalcato@suse.de>,
-	Christoph Hellwig <hch@lst.de>, David Howells <dhowells@redhat.com>,
+Cc: Pedro Falcato <pfalcato@suse.de>, Christoph Hellwig <hch@lst.de>,
+	Jann Horn <jannh@google.com>, David Howells <dhowells@redhat.com>,
 	John Hubbard <jhubbard@nvidia.com>, Jan Kara <jack@suse.cz>,
 	Rik van Riel <riel@surriel.com>, Qu Wenruo <wqu@suse.com>,
 	"Darrick J. Wong" <djwong@kernel.org>, linux-btrfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-	linux-xfs@vger.kernel.org, linux-rdma@vger.kernel.org,
-	Leon Romanovsky <leon@kernel.org>, Jason Gunthorpe <jgg@nvidia.com>
+	linux-xfs@vger.kernel.org
 Subject: Re: Removing ->dirty_folio
-Message-ID: <20260826074215.GA18668@lst.de>
-References: <aoyWln-Gt-yvZQkE@casper.infradead.org> <CAG48ez0vXVUu9j4rYUeCqgwyHKAiN_6fL--D90WvX9q7B41V-A@mail.gmail.com> <ao3y8TtEGjniZ_4f@casper.infradead.org> <20260826050733.GB15122@lst.de>
+Message-ID: <20260826075458.GB19050@lst.de>
+References: <aoyWln-Gt-yvZQkE@casper.infradead.org> <ao1Lo6TKhPcqV42B@pedro-suse> <ao3gZRa7HOEg209P@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -38,18 +37,24 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260826050733.GB15122@lst.de>
+In-Reply-To: <ao3gZRa7HOEg209P@casper.infradead.org>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Wed, Aug 26, 2026 at 07:07:33AM +0200, Christoph Hellwig wrote:
-> The interesting case is FOLL_LONGTERM, as it can pin I/O for a much
-> longer time.  And that also means IFF the user of FOLL_LONGTERM actually
-> wants to be able to persist data on a shared mmap, it has to manually
-> dirty folios one or more times during the FOLL_LONGTERM pin, because
-> otherwise the file system would never know there is dirty data.
-> The set_page_dirty call in ib_umem_odp_unmap_dma_pages is an example
-> for that.
+On Tue, Aug 25, 2026 at 07:35:17PM +0100, Matthew Wilcox wrote:
+> > I don't think you can do this for stable writes. It's probably ok for
+> > !stable writes filesystem stacks, as long as the filesystem & writeback
+> > can handle making no progress at all. But since stable writes' writeback
+> > can't race with "writes", I don't think you can Just Do It as long as the
+> > folio is DMA pinned.
+> 
+> Ah, yes, I forgot to specify that.  For mappings which need stable pages,
+> we have to bounce buffer them.  I wonder if that's something we should
+> do inside the VFS or if each filesystem should try to do it itself?
 
-... not to forget the epic boss of this genre: vmsplice, which is also
-still using get_user_pages_fast/FOLL_GET through iov_iter_get_pages2.
+If you implement the writeback without clearing dirty by going through
+the direct I/O path (with whatever customization is needed like not
+invalidating overlapping page cache), you get to use whatever bounce
+buffering the file system already implemented to deal with unstable
+data for free.  Assuming it already had that, but if not there's not
+point in adding it just for this corner case.
 
