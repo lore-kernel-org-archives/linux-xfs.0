@@ -1,36 +1,42 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDBDD35AC3F;
-	Wed, 26 Aug 2026 04:53:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3403B37D11A
+	for <linux-xfs@vger.kernel.org>; Wed, 26 Aug 2026 04:53:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787719997; cv=none; b=ChOXG3BY7pkCmXGbix+NE+OCkl9lzRczCm6GbnqhoUS7FlEP6oxw3Mpz8P87+ZF0An9r/DMg9de1YN2crcJG0iGEr39CgrAYQ+i7xHRQUBYu5skl86mkIxx7k7qD2khqTSjjZnidgqrY3lFttU3gZHDriXfqrWIcC83pFnMdjD0=
+	t=1787720034; cv=none; b=be8qdOeDbKCds7WzvXpIDdHcSPS7mk3uVolMJwpYxicDTeCKLX3FVUcXIAqCkCrP0+DWproJi1ARoZ21GV2KtA2HrqPMxvuhX/RanVlqasG94IyHvp122QkzNyYPj6SJEhKd6ne2j/3ImWAzAYSoPb6ZDeRDHuV/3ruLp2n0c2k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787719997; c=relaxed/simple;
-	bh=Ua43xsN2u8w61b6mmJqcXOl5OG/eMAXZkslOAb8g0rA=;
+	s=arc-20240116; t=1787720034; c=relaxed/simple;
+	bh=l30LThf8m/e1Hv70FB7FruqZS7ZLWOIEXuoAxM3pAVU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XvnMqM6YbGdXLE++RaBGNtEaePpmhRQ9w2TrHChSe+/bfd9vYlaHbJfQQ+PvcphmO87/MnPGEl+TL8/ZCp8fa35fUEMsahgYUHpjp9wn2yw/D/mQtzsji1E4XfnYDEDKDgZglrjkLvtzTv2ed67+F+IryVFAxmpS+HrnwAFAnFI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 8852B68AFE; Wed, 26 Aug 2026 06:53:04 +0200 (CEST)
-Date: Wed, 26 Aug 2026 06:53:04 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Qu Wenruo <wqu@suse.com>
-Cc: Matthew Wilcox <willy@infradead.org>,
-	Qu Wenruo <quwenruo.btrfs@gmx.com>,
-	Pedro Falcato <pfalcato@suse.de>, Christoph Hellwig <hch@lst.de>,
-	Jann Horn <jannh@google.com>, David Howells <dhowells@redhat.com>,
-	John Hubbard <jhubbard@nvidia.com>, Jan Kara <jack@suse.cz>,
-	Rik van Riel <riel@surriel.com>,
-	"Darrick J. Wong" <djwong@kernel.org>, linux-btrfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: Removing ->dirty_folio
-Message-ID: <20260826045304.GA15122@lst.de>
-References: <aoyWln-Gt-yvZQkE@casper.infradead.org> <a1f8902b-72a5-40fd-a36b-89b6ea271cdd@gmx.com> <ao3sgEET8GuY7Rw2@casper.infradead.org> <cf3486b8-a506-4732-8274-b3179fb06a82@suse.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=BtIuOh9qXz2MWxmbXI+atqUwoKaRXdo9lVUOCh3zCtBadMWLZ9DqQdUProw8R6EM/Jpe8t+RPcb4Z1AZmgleF5BGWFKS+1paLczv2l3uwU/4IsIoUdKC+/6/Vu0tPSpWOGLq+e1SBS6fYoy8CUMoS2h/TaZV9b4P9hq4qaLKCwU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dhQksS62; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dhQksS62"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 0C7CE1F000E9;
+	Wed, 26 Aug 2026 04:53:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1787720018;
+	bh=TLIfiPwOgHFUkGQCpwEL1X0wREBZRkUFr1x2CcQPzyA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=dhQksS62NpJ5UlKtHWhJqtc6Jrp7O8whcSQbkLmtoVvXmOKjfhfpHrPmzsSOBr4AD
+	 6pCrdzoJ2Wcj4WVH8gklWfvRlvzAgbCsBI20+exXjR7YK0IWbXNr1iNRCraRbzMtsu
+	 oTlmEkOQtmSLoP6DFlAIqCEQlnmGajPYEGYaMHLnzCROHR3aHbijHXOher2MVzKqdN
+	 2bNFo4xCN5MTPJkRGmfpZKLk4fLCGfPQkuACI0WyukspmDNFkIHUtfC8HeS7FZ3kMi
+	 vTU/6OLOiHpT8UOMXooTTFdEOQ6LFHO5obA7FH48EMoQeT3e8N1WQmh/VQQosFrt61
+	 NeF0S1ZX0OUqA==
+Date: Tue, 25 Aug 2026 21:53:37 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: cem@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 5/6] xfs: handle reconnecting metadir subdirectories
+Message-ID: <20260826045337.GA2114998@frogsfrogsfrogs>
+References: <178760940641.944084.17475223769703836830.stgit@frogsfrogsfrogs>
+ <178760940784.944084.16150563988327141422.stgit@frogsfrogsfrogs>
+ <20260825063214.GE24324@lst.de>
+ <20260825234001.GY6072@frogsfrogsfrogs>
+ <20260826044601.GB14936@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -39,36 +45,29 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <cf3486b8-a506-4732-8274-b3179fb06a82@suse.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20260826044601.GB14936@lst.de>
 
-On Wed, Aug 26, 2026 at 08:03:38AM +0930, Qu Wenruo wrote:
->> Why is it hard to do it immediately at writeback time?  I think you're
->> in an even less restrictive locking environment than page_mkwrite is
->> called in because you're not under any MM locks.  According to
->> Documentation/filesystems/locking.rst, ->writepages is called with
->> absolutely no locks held.
->
-> This space reservation problem is a btrfs specific problem.
+On Wed, Aug 26, 2026 at 06:46:01AM +0200, Christoph Hellwig wrote:
+> On Tue, Aug 25, 2026 at 04:40:01PM -0700, Darrick J. Wong wrote:
+> > On Tue, Aug 25, 2026 at 08:32:14AM +0200, Christoph Hellwig wrote:
+> > > On Mon, Aug 24, 2026 at 10:35:41PM -0700, Darrick J. Wong wrote:
+> > > > From: Darrick J. Wong <djwong@kernel.org>
+> > > > 
+> > > > A longstanding weakness of the metapath repair code is that it can only
+> > > > reattach non-directories to the metadata directory tree.  Let's fix that
+> > > 
+> > > Why was this not done before?  Why is it possible now?  Testcase?
+> > 
+> > I straight up forgot to implement it.
+> 
+> Heh..
+> 
+> > And right now there's no way to
+> > mount a filesystem with a broken subdirectory (your choices are
+> > /rtgroups or /quota) so it didn't stand out.
+> 
+> Maybe add this to the commit log?
 
-Not entirely.  It really is an issue for everyone doing (forced) out of
-place writes.
+Ok will do.
 
-> The root problem here is, btrfs space reservation can trigger 
-> writeback/transaction commit.
-
-While zoned xfs doesn't actively trigger it, it still has to wait
-for the GC daemon, so we're in exactly the same boat here.  The
-space reservation has to be done without VFS locks, and in the
-rare cases where we can't do that (->setattr for an unaligned
-truncate) we have to play with fire and dip into a reserved pool.
-It has been on my TODO list to fix up the VFS interfaces for
-that to be called without locks held.
-
-> This is due to the data/metadata COW nature, and that's why we rely 
-> completely on buffered write to do space reservation, and avoid any extra 
-> space reservation at writeback time.
-
-That's the only sane thing to do, as at writeback time it is too late
-to reserve space.
-
+--D
