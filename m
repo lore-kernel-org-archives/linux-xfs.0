@@ -1,78 +1,57 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A42221862;
-	Wed, 26 Aug 2026 00:02:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BC1A2E736A
+	for <linux-xfs@vger.kernel.org>; Wed, 26 Aug 2026 04:46:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787702572; cv=none; b=Lg6EDfqH3EmWa8/xtxoKa+ae8SDs3HYRI3lwzNqDXoD3Q2SO4nrdz49c7jizKUc+MVAYrEuh2YAbzW+Z11JUAgLh30Vk0rvGOtVXaM4Bx1LCLdI51wiqGKmsxpnukXzuLphNVLkZHZm6EkYdiV+DVYEAKh6wInaFvWeQboAiV/0=
+	t=1787719567; cv=none; b=HwHI2YEm9frBf2gJE8JsCqs650qAWekExbz/O2p01vQzZDIZa5FsbpnZ9FUjFnT4wh/7blpy++iI9aHiTNCvpGIcd04XeAnRAdKBvv9JvoavVE8E46ALnVXfoOTCooJJ+fqPl6kgEWxcF9Ecx8QVvA3+/gHWvA6QajTtEtgINJc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787702572; c=relaxed/simple;
-	bh=7wdlMJetXtztzawFTGBNjsp0NLyzHpGNH3uaTytMYwE=;
+	s=arc-20240116; t=1787719567; c=relaxed/simple;
+	bh=g5q6hUna5Od8eEOdwrAhTQ30SYd8fJZVzQqNIa/94jc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KPswxlQxDzMrCincHI75Yn+fBQEiXAmZFpeO11a4ueCX38uXH9MnYPS2q2fpuiyv3FvtrldxROg04zU15qOcqYA0ZB1/9R9WWf/jI0D13N+KWRbOyQwzINkLeqpZHMHc9u8MLrfO+SEd73fAfZXDLPFR81v4S9eLr9Hd4KYgw5s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=pass smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=RyHg/Tab; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="RyHg/Tab"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Transfer-Encoding:
-	Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
-	Sender:Reply-To:Content-ID:Content-Description;
-	bh=NBdgN2DyXgys503Hsd3B8DyE4gvlVeQWSt6yuz5SVBE=; b=RyHg/TabT5xtxP4rCiWs83zs0l
-	uFXEjv2TRABsE5z6Q41aS5XpFB+yOekqiSG3YLozinWwVU00yOdxwb32Lta44pBWrdbF9pObup8cR
-	RwhUzLZ7ZyL68VGQIhcBZd3L9c28j/g2kip2rCD6EP3AtrRica4AJfwKuHfBkYq+qT5EfhpvYUMZl
-	Wc1I9HqTnXkMBdIQTMCVptCTN6nu79viSUu1cbtHySUnJXWXaT/mz74cASY4sK6VNOCtxViWEQ8zS
-	EcwNpxjtAd4PcE8fenqUh+6I8sc8kpxuj/873GqwjNw8pr0yYPOKX+x/jGpujRFD5zGOYJni8hhWi
-	9awlrIaw==;
-Received: from willy by casper.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wz16D-00000009ytH-141Y;
-	Wed, 26 Aug 2026 00:02:37 +0000
-Date: Wed, 26 Aug 2026 01:02:37 +0100
-From: Matthew Wilcox <willy@infradead.org>
-To: Jann Horn <jannh@google.com>
-Cc: Pedro Falcato <pfalcato@suse.de>, Christoph Hellwig <hch@lst.de>,
-	David Howells <dhowells@redhat.com>,
-	John Hubbard <jhubbard@nvidia.com>, Jan Kara <jack@suse.cz>,
-	Rik van Riel <riel@surriel.com>, Qu Wenruo <wqu@suse.com>,
-	"Darrick J. Wong" <djwong@kernel.org>, linux-btrfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+	 Content-Type:Content-Disposition:In-Reply-To; b=HS3ij40HYFBCOO+DK5VRYoMrU9V16+fXyWr2gkv3ZlzZ2ewWyBLWRVvN7Ffz34K3aez4UghizFv+Wybc4aCsxr16k9Q5kB3fkBuAh2JC7yMvJz5xaxeJmp5DH/ZBmdQG0k1hVSlljwfLfQDGGkNKXFMZp9ykEv2t5zdl+NkKysY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id B4C9E68BFE; Wed, 26 Aug 2026 06:46:01 +0200 (CEST)
+Date: Wed, 26 Aug 2026 06:46:01 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, cem@kernel.org,
 	linux-xfs@vger.kernel.org
-Subject: Re: Removing ->dirty_folio
-Message-ID: <ao4tHXnIySccVRIz@casper.infradead.org>
-References: <aoyWln-Gt-yvZQkE@casper.infradead.org>
- <CAG48ez0vXVUu9j4rYUeCqgwyHKAiN_6fL--D90WvX9q7B41V-A@mail.gmail.com>
- <ao3y8TtEGjniZ_4f@casper.infradead.org>
- <CAG48ez1yGUcS6AgtPXnmPQDmVCnJyptu64YGsTw=9vxAN9BO6Q@mail.gmail.com>
+Subject: Re: [PATCH 5/6] xfs: handle reconnecting metadir subdirectories
+Message-ID: <20260826044601.GB14936@lst.de>
+References: <178760940641.944084.17475223769703836830.stgit@frogsfrogsfrogs> <178760940784.944084.16150563988327141422.stgit@frogsfrogsfrogs> <20260825063214.GE24324@lst.de> <20260825234001.GY6072@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAG48ez1yGUcS6AgtPXnmPQDmVCnJyptu64YGsTw=9vxAN9BO6Q@mail.gmail.com>
+In-Reply-To: <20260825234001.GY6072@frogsfrogsfrogs>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Tue, Aug 25, 2026 at 10:06:30PM +0200, Jann Horn wrote:
-> On Tue, Aug 25, 2026 at 9:54 PM Matthew Wilcox <willy@infradead.org> wrote:
-> > On Tue, Aug 25, 2026 at 09:35:57PM +0200, Jann Horn wrote:
-> > > Could we strictly ban using get_user_pages*() for write access, and
-> > > use the unpin_*() helpers to somehow enforce that folios are always
-> > > dirtied on unpin? I guess the problem with that is that we have no
-> > > state that tracks whether the pin was read-only, and finding free bits
-> > > in struct page to keep track of this is hard?
-> >
-> > We'd need a count, not just a bit or two.  A pincount for all folios
-> > is on its way (eventually) but I wans't planning on tracking writable vs
-> > read-only pins.
+On Tue, Aug 25, 2026 at 04:40:01PM -0700, Darrick J. Wong wrote:
+> On Tue, Aug 25, 2026 at 08:32:14AM +0200, Christoph Hellwig wrote:
+> > On Mon, Aug 24, 2026 at 10:35:41PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <djwong@kernel.org>
+> > > 
+> > > A longstanding weakness of the metapath repair code is that it can only
+> > > reattach non-directories to the metadata directory tree.  Let's fix that
+> > 
+> > Why was this not done before?  Why is it possible now?  Testcase?
 > 
-> My thinking was that once a folio has been pinned writably one time,
-> it should be fine to mark it as dirty every time it is unpinned, even
-> if some of those pins were read-only?
+> I straight up forgot to implement it.
 
-Ah, so the point of this proposal is to mark the folio dirty when it's
-pinned.  Nobody clears the dirty flag at any point until it's written
-back after being unpinned.
+Heh..
+
+> And right now there's no way to
+> mount a filesystem with a broken subdirectory (your choices are
+> /rtgroups or /quota) so it didn't stand out.
+
+Maybe add this to the commit log?
+
