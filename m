@@ -1,97 +1,103 @@
-Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B295542E43A
-	for <linux-xfs@vger.kernel.org>; Thu, 27 Aug 2026 09:33:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C11723DC4C9
+	for <linux-xfs@vger.kernel.org>; Thu, 27 Aug 2026 11:29:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.154.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787823246; cv=none; b=PrIIuKhFiTvYYtfCg0UgYGa72MKSqgN5BRyhG3LQJW9WwqHZcO8jj6kF22qhQL7DbBY8WoKGbOyC1AJq3tgttkjK4wgGmtr3FI4DZVGyUmdns1H4srcaf7DwmGmbLNiC7XPDvQ2mbMNnNM9J8i67LNaZ3Tz7R0qtCr+W7yOI10U=
+	t=1787830188; cv=none; b=hZUGH1ANruaitRcTMQqyPspYoVyX6E4H1sgXBFS1wAY4PqZL1VQ+FyRtPWLfcohl8qTa3Xv05ZlRcG/afykyA6Nj3Nabs1/tr4vq9fr9qA1SchPzSV/uRyA7xKuTkZvHjyqYua9WkPOTnFt3ItwBDvW6SGv8ZVFMWZQNW9lVr+g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787823246; c=relaxed/simple;
-	bh=fZDB6o8z+OtlEiSe+jpzVuadLZVlCBntZmpc5heGJHM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EQ4rYMsmvQSDUuY7x0JEypB62kVxlRdNt2vHmReRQd6uaVVgAzk0OAj2oEBH7IsIWHtnETpIK2WvzDCxfhxKoxGcuaGBumvLZxAwZujlCAr1hsC9jREY/+kakq8TptWVX4zbiKlu204bxRRY4nY8ksnEK9iKFBWbusf37NANbLk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=oe7mJMe+; arc=none smtp.client-ip=209.85.214.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1787830188; c=relaxed/simple;
+	bh=+XPnwlIbu+tsH3ohB2f40JGhiOIvFvL82ek5c2eOtmc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=svfEcARj2t695XwYo34SEqr3NS4ZGFFv2HJaNefa5hhpjGqgdq4KEL02Nm/j0EUoIEywpCKKV+m1XYWE/2WPSMNNvdxj+cmWl2J8j3vDE7HyJSchBJ+ZdXGOrdiFB/L8AVRmaHa4FWp+XkSZXHUAcvC/iYc3O8ocWQdevqatZ4w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=VT4xUfMa; arc=none smtp.client-ip=216.71.154.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="oe7mJMe+"
-Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-2ce7d2adef4so26083155ad.3
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Aug 2026 02:33:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787823233; x=1788428033; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=pHol47atlejuJtDqQMnwRUYn1hWF/V1mWeFNS5X2gEg=;
-        b=oe7mJMe+1Hx4Xqvao/lm9ceFpqxkCtOhADHgx1puSV/qxnHh3wuK9a8kIwaVFgVOos
-         m9/6SC7MQQPHrBpdSvUPpvQHeOKoniv5tn+li+rwFATxOCsGx+kXrr9gNHIUW63042rh
-         GIUrT8m3Yd++UqoUl012ycUXNP6JlAIQZE03u1U7PznRSJdhRDcQRQOxGshLUlm38mP0
-         rpVmZIwStuTdp6Wfc2dsFFNw0Ock19vEeS+xjHd2FdVXkKR3cMWOPa27MY+XURdPiwb5
-         WKDwqjZC8R9sdMp7e1LbWz0korSilXzhwONqIqSRdrSvzVTZpUuVRORhcgQNpkr+fRS+
-         aNWg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787823233; x=1788428033;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=pHol47atlejuJtDqQMnwRUYn1hWF/V1mWeFNS5X2gEg=;
-        b=LXLqtbbSryhArvD8eAw1P71p+Qe/n0bBpR2lYvuZyYpRVDSmWV2SzRVx6A5/osr5NK
-         71D0O7QdQthni2u2pOKvw9vYf+9YAPEltBpVeeFgI+ucIg0wdiqOkJ4QUAcmQw0uXvXq
-         pX1Ue5bG2Wk3TjESMmLz08P8d/Xfrz/rSKGCvdXE60Bk91nPAlVztnteOde+9iqdIioj
-         TaYqHW3YBsVgn8lLPJbPiYxMhTSyoRVBAgOsq/FWkjKGHUwWk+irM2d2E8pVTAA8JLJc
-         KCnpOi/zKvUYsuJXY3Thq9W6BwxPd3BSFCEMOs20xtj2wwvOmPxnU+NCwbVyqb0BAltj
-         hscg==
-X-Forwarded-Encrypted: i=1; AHgh+RoRbwGITYnSF6rUoSOx9dTPzog/XPhJuH4edrjXLLam4mP1CpAhSo42zwTULkYiItSIGei3LawuiJE=@vger.kernel.org
-X-Gm-Message-State: AFuF++nZXULL1yoGtAneAqP+qa1f7wsR3orUHfrrRaylKbHGiDruPlDu
-	d8HZPVwGn5MpqvXpkegvELDSyhaC5vfwPIPTAgr5PAi50b3/n+LlCqA=
-X-Gm-Gg: AR+sD10khFeXo25oPIAY1/U7wzYZxwxMi3Obbxy3cNxkfHp13AcRt5+PyUk1eLzjODz
-	rLJVwJgv0junK1piHlX4YNV2QZ1nhuGCOiQTjTo2LCfrPuTxhsuqe5M/hZ05kbpIsMeVP41vs8H
-	RlUzWViNvgRpzGvGU9l8D035uT2szehNUS4+Qhqw85guRpJsQUktfLXZocELBEmw3NLoGZEAXr0
-	Sh2DUC/Jhqi0u1AaGT7C/E6u6uxyNjsNi+hxBmcbZecZ4n0hj9kfBn+sHToPeoRgmdZbog35b/X
-	dlECR6qIwn1din1Uek/j4rrV0/nb3TUzG7yL6A1z+GjyAMEoFT3nRFGcbK+BuhT+9mT3wO4AQlL
-	amAIrWmDg4qiodaVQ3R9UJjkyS21OlgFlA7mWYZyHSKoA8WsZB5NAdgvl4HWHNyFSw0NYrC6VER
-	jjwR3EWmtglGHGOpZdyUyI/NYF9Nhc5jKmBfKHSIHfY2pC9OAb20NSGIYoylU63Ret3X5Qb5EJm
-	CaxhQhkIWdVwT7dgJFk6Kii/Mjyrjg/hxV7lpk=
-X-Received: by 2002:a17:90b:1fd0:b0:38e:70d5:b12d with SMTP id 98e67ed59e1d1-3966d3ed042mr29682993a91.6.1787823233035;
-        Thu, 27 Aug 2026 02:33:53 -0700 (PDT)
-Received: from anuj-MacBookPro ([2406:7400:63:4a2f:cca2:d012:36c1:4a36])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3283fa89e8fsm25343615eec.8.2026.08.27.02.33.50
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 27 Aug 2026 02:33:52 -0700 (PDT)
-Date: Thu, 27 Aug 2026 15:03:46 +0530
-From: Anuj Gupta <anuj1072538@gmail.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: cem@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/7] xfs: port healthmon event list to list_head
-Message-ID: <mut2xsmp77543bjkmrzpmx6cbbua7gjt7sty4kg7zuf7lwudfp@33ksdiowtxwm>
-References: <178780640541.3528467.13867917797753503580.stgit@frogsfrogsfrogs>
- <178780640625.3528467.15741375660976356976.stgit@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="VT4xUfMa"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1787830186; x=1819366186;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=+XPnwlIbu+tsH3ohB2f40JGhiOIvFvL82ek5c2eOtmc=;
+  b=VT4xUfMaRUJzW9v0L76/mAok/ceHtHbxUqsLVH2Hk+h/csmaOOwtDSxx
+   UtbDfNSEL+GdIG0ToX6U3i+63gbS+rDasEfOGTf4lEo5ca8mlZoHXsq30
+   0yuQvy2Tnx/XvKtpCKskX/dZzQYl5do5ISh5ru2L16Q1nXmeFwi2yVbsN
+   j3ivBSvLXBcYeKE9QLlMogweIcdVZXjXiot6QQVvVxA4SS/Dl9P2s0PC/
+   TZpae1etLwpMpBRZaHq5SA95ydV8ErQTGxlSqLc+zxrquZeqJSEXVR8mu
+   +Uxtqb0FExSJE8NEIuizzxJ419AaWW5uTac4pD5WfSK6zG7j4p/ZVPjL0
+   Q==;
+X-CSE-ConnectionGUID: 5VUV7e8AR56TrwzxqW2UWg==
+X-CSE-MsgGUID: yTiUagbJRay/g4HmudZxiQ==
+X-IronPort-AV: E=Sophos;i="6.25,246,1779120000"; 
+   d="scan'208";a="152807474"
+Received: from unknown (HELO uls-op-esad2-o.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 27 Aug 2026 19:29:40 +0800
+X-CSE-ConnectionGUID: TakA28ljS3aZMvV6NOgzig==
+X-CSE-MsgGUID: ZYe7J/9pTuuzk2XItPKBvw==
+IronPort-SDR: 6a901f86_bre8fEYm6+dyk0QGYcrrTb/T3ljXXajpWO+o0M1qgZpKBZF
+ /aIY3NyAl8BgBdVmzVYB4h0b0Bay8F+Fr9wIwFw==
+Received: from uls-op-esai2-o.wdc.com ([10.248.3.38])
+  by uls-op-esad2-o.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 27 Aug 2026 04:29:10 -0700
+X-CSE-ConnectionGUID: /qkPHxDNQ5KNCmqedSk/BA==
+X-CSE-MsgGUID: bI2/3xvJTKGbm7TXX0lHZQ==
+WDCIronportException: Internal
+Received: from wdap-i5yqra7zl2.ad.shared (HELO gcv.wdc.com) ([10.224.5.77])
+  by uls-op-esai2-o.wdc.com with ESMTP; 27 Aug 2026 04:29:09 -0700
+From: Hans Holmberg <hans.holmberg@wdc.com>
+To: linux-xfs@vger.kernel.org
+Cc: aalbersh@kernel.org,
+	cem@kernel.org,
+	hch@lst.de,
+	djwong@kernel.org,
+	Hans Holmberg <hans.holmberg@wdc.com>
+Subject: [PATCH] libxfs: report device open errors during topology probing
+Date: Thu, 27 Aug 2026 13:28:55 +0200
+Message-ID: <20260827112855.70037-1-hans.holmberg@wdc.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <178780640625.3528467.15741375660976356976.stgit@frogsfrogsfrogs>
+Content-Transfer-Encoding: 8bit
 
-> -	if (xfs_healthmon_merge_events(hm->last_event, &lost_event)) {
-> -		trace_xfs_healthmon_merge(hm, hm->last_event);
-> +	if (xfs_healthmon_merge_events(hm, &lost_event)) {
-> +		trace_xfs_healthmon_merge(hm, &lost_event);
+mkfs probes the device topology before libxfs_init opens the target.
+If blkid cannot open the device, blkid_new_probe_from_filename returns
+NULL and leaves the topology sector sizes initialized to zero.  This
+causes mkfs to report the misleading error "illegal sector size 0".
 
-This traces the lost_event now, but the merge updates existing tail
-event. Is the change in behaviour intentional?
+Report the underlying open error immediately so that permission
+failures are diagnosed correctly. For example:
 
->  	/* Try to merge with the newest event */
-> -	if (xfs_healthmon_merge_events(hm->last_event, template)) {
-> -		trace_xfs_healthmon_merge(hm, hm->last_event);
-> +	if (xfs_healthmon_merge_events(hm, template)) {
-> +		trace_xfs_healthmon_merge(hm, template);
+cannot probe device topology for device /dev/nvme1n1: Permission denied
 
-Same: the merge updates the existing tail event, but this traces the
-incoming template/event. Before this patch, surviving post-merge tail
-was traced.
+Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
+---
+ libxfs/topology.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/libxfs/topology.c b/libxfs/topology.c
+index dc2aaa17..5571c9d8 100644
+--- a/libxfs/topology.c
++++ b/libxfs/topology.c
+@@ -230,8 +230,12 @@ blkid_get_topology(
+ 	blkid_probe pr;
+ 
+ 	pr = blkid_new_probe_from_filename(device);
+-	if (!pr)
+-		return;
++	if (!pr) {
++		fprintf(stderr,
++			_("cannot probe device topology for device %s: %s\n"),
++			device, strerror(errno));
++		exit(EXIT_FAILURE);
++	}
+ 
+ 	tp = blkid_probe_get_topology(pr);
+ 	if (!tp)
+-- 
+2.53.0
+
