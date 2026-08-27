@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FFA43C2D
-	for <linux-xfs@vger.kernel.org>; Thu, 27 Aug 2026 05:32:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8405D3C2D;
+	Thu, 27 Aug 2026 05:32:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787808734; cv=none; b=VK84cWGmAXoi+y8v1QIvSJx2Pu8RtRwGpLKm6KUDBZu0OcbehBZ+3+ewSMchRY8iRAFAGNzhXHtjdICoi1nY38pJRiFm2FlsuTJ+4VC0GY+ObByrSEaG8riKD7UfcsHKwctIq9yfjN69ewfH+4ZPHFRypvZGhG69LZTluhgPGcg=
+	t=1787808749; cv=none; b=JXZzrXZ+NFgon3mMvn2wau5F+A87OEG72HL8kqXTdPO/Pxj4XJfKLVusStgqNRm9CD3lZrKh1YG5lwV0TZd3jXpLpT8LVxHwufqAc43z0dfJKZYJhg7twy2adSnmQhfQ8/gUT5r4SbviYoV3Fampd2hIHsrL0QDFc8opH7BPANk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787808734; c=relaxed/simple;
-	bh=zmCjHXFx6/7NXRKqZxyJjknsRshrum5Z412Y3mNYRQg=;
+	s=arc-20240116; t=1787808749; c=relaxed/simple;
+	bh=SrHFmhQVG7qq3yR1IPLjB3npwPb9nyfPb/MNNSa2Gx4=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=D2iZqc+0IK75wZE/k2gpJ0+gZq4Z1PhlYkC9l1DF1YrF9nLKw/FdwAX+jaL9om4ftiY1pbKNGNyzGsLq+iwn+rQU/w+Lr8WibA16QmyTIlqKn2vD3PC+VwLq7c/G5Rd9shCuI865myTYSxS1WStDHutegw9JMppB3359Ur7PaEU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VgcMtkE7; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=XRvfYtEKtRbyBGklpr/YeClss16aimcwcADAgIAvo7V0O9ylue6vNQjRWCRCiM3utYVDfDj8WxnQveNyqHTJ6CNdk2bMFU/v9mFR3bNgSKXJjiPm8ZUiB2ekeMJIxQYec/6eJ0lP5YD0V99eI1+srrULBT0d4yZJn0wz0CHtud0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a1ALedMV; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VgcMtkE7"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id C1C341F000E9;
-	Thu, 27 Aug 2026 05:32:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a1ALedMV"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 5177A1F000E9;
+	Thu, 27 Aug 2026 05:32:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787808732;
-	bh=s/j/Y9YK/unGajAxmyCx5QQ4xGsIAc/2O72ov4H1hRc=;
+	s=k20260515; t=1787808748;
+	bh=+J6MbXSiL/MEpPJCal4sMj6ay7Lyi798PSjNAiEoL14=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=VgcMtkE7+y3iPPUJ/e0UQXjBtPgdJJSz0s4bj0wU5s5LZeqwiwEIYfmshptDrUacf
-	 9YFan6Oki1bbNy2PUTn2VcQSi3mm5moipo+FpfkTctJVtUQajzJDhe+n+u/9V2sYTK
-	 BweOsIYYJcFg9TyvIDTGIaOBOEZqtOXGNM0egTJAUB6tJqEZGNKWMLVsc4IqmkSngW
-	 F3WmQUKJASRYX8cHOoUXHxlbh88++9gCQFhQgtD7u9mP7/k1J/vJQN0QTcdRRSbCOF
-	 4CNrUIOTufjikVsY/2k/dbStHpruGpwLAGPVQiKG/fKxUJH7vBys8Ec/QaFSonC/pq
-	 KxhFSzmBzUgiw==
-Date: Wed, 26 Aug 2026 22:32:12 -0700
-Subject: [PATCH 5/6] xfs: handle reconnecting metadir subdirectories
+	b=a1ALedMVIirFrU2wmTUw4GjH6VkQy/ByibDkaMoNAdcVRikfYQidgvyjLaVrDytGL
+	 9BMBj+RQlU6CzujFAe8VIuIklIjQygovcWaU3jauQ8jIgwD4sM4Qn/ZWEznpvLnCC/
+	 eiIhay87O/Mf9dsukvk+2OYBk34K9p4hTxdmtF9O+NWDBP+jFU61E1xlK4RxD0PiH0
+	 0SoILl8GwsP4qny5tJqkXlJ5tJlYa9iguZSNdE3I2X2RYXsZ1VfUqlf7A8qTcIj3PK
+	 /cPPONkufCAJ4Qzkh+KukPtTJbWak3Xlq1ywh4twG8lDG8S0pifhmflprDxhWE4ilm
+	 GbfTi5lKWuw6A==
+Date: Wed, 26 Aug 2026 22:32:28 -0700
+Subject: [PATCH 6/6] xfs: lock the healthmon when inserting unmount event
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org, hch@lst.de
-Cc: linux-xfs@vger.kernel.org
-Message-ID: <178780640282.3528187.11511654116002480699.stgit@frogsfrogsfrogs>
+Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
+Message-ID: <178780640303.3528187.4785802682222873330.stgit@frogsfrogsfrogs>
 In-Reply-To: <178780640140.3528187.6786220801490019229.stgit@frogsfrogsfrogs>
 References: <178780640140.3528187.6786220801490019229.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,134 +45,50 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-A longstanding weakness of the metapath repair code is that it can only
-reattach non-directories to the metadata directory tree.  Let's fix
-that by allowing reconnection of subdirectories.
+LOLLM complains that xfs_healthmon_unmount does an unlocked insert of
+the unmount event into the health monitor's event list.  Fix that.
 
-Note that with the initial users of metadir (rtgroups and quota),
-there's no way to mount a filesystem with broken /rtgroups or /quota
-subdirectories, so this code won't be all that useful until something
-adds deeper directory trees.  But we shouldn't leave a logic bomb for
-those futures users wherein we get the link count wrong for a subdir.
-
+Cc: <stable@vger.kernel.org> # v7.0
+Fixes: 25ca57fa3624ca ("xfs: convey filesystem unmount events to the health monitor")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+Assisted-by: LOLLM # finding obvious bugs
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/scrub/metapath.c |   83 ++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 82 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_healthmon.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
 
 
-diff --git a/fs/xfs/scrub/metapath.c b/fs/xfs/scrub/metapath.c
-index 9f44c82910eaef..a760523f40e6ff 100644
---- a/fs/xfs/scrub/metapath.c
-+++ b/fs/xfs/scrub/metapath.c
-@@ -23,6 +23,7 @@
- #include "xfs_rtgroup.h"
- #include "xfs_rtrmap_btree.h"
- #include "xfs_rtrefcount_btree.h"
-+#include "xfs_ag.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
- #include "scrub/trace.h"
-@@ -348,12 +349,78 @@ xchk_metapath(
- }
- 
- #ifdef CONFIG_XFS_ONLINE_REPAIR
-+/*
-+ * Given a directory @dp, an existing inode @ip, and a @name, link @ip into @dp
-+ * under the given @name.
-+ */
-+static int
-+xrep_metadir_add_child(
-+	struct xchk_metapath	*mpath,
-+	xfs_ino_t		old_dotdot)
-+{
-+	struct xfs_trans	*tp = mpath->sc->tp;
-+	struct xfs_dir_update	*du = &mpath->du;
-+	struct xfs_inode	*dp = du->dp;
-+	const struct xfs_name	*name = du->name;
-+	struct xfs_inode	*ip = du->ip;
-+	struct xfs_mount	*mp = tp->t_mountp;
-+	const unsigned int	resblks = mpath->link_resblks;
-+	int			error;
-+
-+	/*
-+	 * The metadata file shouldn't be on the unlinked list, but we'll fix
-+	 * it if that is the case.
-+	 */
-+	if (VFS_I(ip)->i_nlink == 0) {
-+		struct xfs_perag	*pag;
-+
-+		pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, I_INO(ip)));
-+		error = xfs_iunlink_remove(tp, pag, ip);
-+		xfs_perag_put(pag);
-+		if (error)
-+			return error;
-+	}
-+
-+	error = xfs_dir_createname(tp, dp, name, I_INO(ip), resblks);
-+	if (error)
-+		return error;
-+
-+	xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
-+
-+	xfs_bumplink(tp, ip);
-+
-+	/* update dotdot entry in child */
-+	if (S_ISDIR(VFS_I(ip)->i_mode)) {
-+		xfs_bumplink(tp, dp);
-+
-+		/* Replace the dotdot entry in the child */
-+		if (old_dotdot != I_INO(dp)) {
-+			error = xfs_dir_replace(tp, ip, &xfs_name_dotdot,
-+					I_INO(dp), resblks);
-+			if (error)
-+				return error;
-+		}
-+	}
-+
-+	/* Update the child's parent pointer */
-+	if (du->ppargs) {
-+		error = xfs_parent_addname(tp, du->ppargs, dp, name, ip);
-+		if (error)
-+			return error;
-+	}
-+
-+	xfs_dir_update_hook(dp, ip, 1, name);
-+	return 0;
-+}
-+
- /* Create the dirent represented by the final component of the path. */
- STATIC int
- xrep_metapath_link(
- 	struct xchk_metapath	*mpath)
+diff --git a/fs/xfs/xfs_healthmon.c b/fs/xfs/xfs_healthmon.c
+index 4521ffdab9f1ae..3ae5f4496ad1aa 100644
+--- a/fs/xfs/xfs_healthmon.c
++++ b/fs/xfs/xfs_healthmon.c
+@@ -272,6 +272,8 @@ __xfs_healthmon_insert(
  {
- 	struct xfs_scrub	*sc = mpath->sc;
-+	xfs_ino_t		old_dotdot = NULLFSINO;
-+	int			error;
+ 	struct timespec64		now;
  
- 	mpath->du.dp = mpath->dp;
- 	mpath->du.name = &mpath->xname;
-@@ -366,7 +433,21 @@ xrep_metapath_link(
- 
- 	trace_xrep_metapath_link(sc, mpath->path, mpath->dp, I_INO(sc->ip));
- 
--	return xfs_dir_add_child(sc->tp, mpath->link_resblks, &mpath->du);
-+	if (S_ISDIR(VFS_I(sc->ip)->i_mode)) {
-+		error = xchk_dir_lookup(sc, sc->ip, &xfs_name_dotdot,
-+				&old_dotdot);
-+		if (error && error != -ENOENT)
-+			return error;
++	lockdep_assert_held(&hm->lock);
 +
-+		/*
-+		 * subdir didn't give us a dotdot entry, so we just give up
-+		 * and let the repair get marked as failed.
-+		 */
-+		if (old_dotdot == NULLFSINO)
-+			return 0;
-+	}
-+
-+	return xrep_metadir_add_child(mpath, old_dotdot);
- }
+ 	ktime_get_coarse_real_ts64(&now);
+ 	event->time_ns = (now.tv_sec * NSEC_PER_SEC) + now.tv_nsec;
  
- /* Remove the dirent at the final component of the path. */
+@@ -294,6 +296,8 @@ __xfs_healthmon_push(
+ {
+ 	struct timespec64		now;
+ 
++	lockdep_assert_held(&hm->lock);
++
+ 	ktime_get_coarse_real_ts64(&now);
+ 	event->time_ns = (now.tv_sec * NSEC_PER_SEC) + now.tv_nsec;
+ 
+@@ -415,8 +419,10 @@ xfs_healthmon_unmount(
+ 	 * There's nothing actionable for userspace after an unmount.  Once
+ 	 * we've inserted the unmount event, hm no longer owns that event.
+ 	 */
++	mutex_lock(&hm->lock);
+ 	__xfs_healthmon_insert(hm, hm->unmount_event);
+ 	hm->unmount_event = NULL;
++	mutex_unlock(&hm->lock);
+ 
+ 	xfs_healthmon_detach(hm);
+ 	xfs_healthmon_put(hm);
 
