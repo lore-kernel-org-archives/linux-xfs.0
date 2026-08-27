@@ -1,40 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47DEA3AE6E9
-	for <linux-xfs@vger.kernel.org>; Thu, 27 Aug 2026 14:48:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 583E047FB01;
+	Thu, 27 Aug 2026 16:40:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787842110; cv=none; b=KzX45gd0nKglU0+cZvOnipSQCCfK64DcKQa0P4S+RtMjuXZC1Y7+ygCNXUnK5pX1U+DAvm8v9xOSaOyfCMwyipSOzeX53QG6/WnMIr+kTav5YaypL0CzqRlN0OzlCwD0DI72ILDPrezj4XWsWxgVyqxUpKq/D0hKT7bEfH0JSZQ=
+	t=1787848807; cv=none; b=BmS+5qSu3le0kFTCqTwqZHPxwTRX/LnhwKeRZYPnVZN2xyA/mV18XRpVuc400vL5+/OHxN6DnWfAXybiS/h2Eam/mfMkYLjSozx3BGxGnNfvWRcIXZCcszLIR8ERm4sSgN04kl1EjwwLjn1Vl88nb4xz+BgZv78mlsimDey01Ac=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787842110; c=relaxed/simple;
-	bh=gYb5jGXU55LUG5UUR75d7Dp9pzSvu3uDj+YjUeKWpqs=;
+	s=arc-20240116; t=1787848807; c=relaxed/simple;
+	bh=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UKw8fRFjN9x4jZauGcIpNirrtqANL3WRH44vcICSq7ZIKJHf96TUSVkn1SuaZcBHPC742HOll7wQPCYdCek64xAmIDNoAmal3E310KVWQ1tq3oB2cmNCgDzLeAvM6vweArel5LiJh6tb18L9LqICfNxXo0wZQzYsYArvIT1t0L0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mWNaZqTP; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=cc189ULDw3dfmYa9uI99ImfH1HZbOFs2haphDrSM8uvM1z/qtTB92/VsSbAeCRPNOdskNqMn5pkVvQouWHa83isvr89qDJDSqXId4cKr5IRTNFFAOmBj9V8w4lgdK4zZIco8b/R7WJVzxN54H7E/hkLNNb3Os5SS44myxMBiQMY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HSnq7qQL; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mWNaZqTP"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 42CD71F000E9;
-	Thu, 27 Aug 2026 14:48:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HSnq7qQL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9A6F11F000E9;
+	Thu, 27 Aug 2026 16:40:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787842080;
-	bh=CIB27XpF9yTyWbW/Ex5Hd0sf8yLVimWNrEjzI2YB0bQ=;
+	s=k20260515; t=1787848802;
+	bh=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=mWNaZqTP8XZl6/ea07HVG04EQsbyU6hPiBsTfrG3F6A8ptIGb3f9CAO51S0rECiSE
-	 DzUdK0C5xvZGjS1EjM6P4HrRGVEyNbI7DGp1xOyB0YLW1A4HnMIW/aKvbL0w9ljnee
-	 KOAMRMk4pRZ0ZODXEqdtHSJ135ZJdBTjIzZO2TWq9sna1YH7dKf+/bSLukEom5vcDJ
-	 Jiq+/z6//STaBgSjb8M+pNk6H6dvhMjQdMs3NfWDVmY4pmKJLbQTuiEx/WSVbBCggR
-	 vPDOBFM8e89NPAzL65mNry4TC/Ns1VsyOdD01neoq0DDtg24vgs/mGXeX35uRCyUn8
-	 egDJg3VHNT54A==
-Date: Thu, 27 Aug 2026 07:47:59 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Anuj Gupta <anuj1072538@gmail.com>
-Cc: cem@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/7] xfs: port healthmon event list to list_head
-Message-ID: <20260827144759.GC6072@frogsfrogsfrogs>
-References: <178780640541.3528467.13867917797753503580.stgit@frogsfrogsfrogs>
- <178780640625.3528467.15741375660976356976.stgit@frogsfrogsfrogs>
- <mut2xsmp77543bjkmrzpmx6cbbua7gjt7sty4kg7zuf7lwudfp@33ksdiowtxwm>
+	b=HSnq7qQL1zt3uiw78MlOknEwSqEAIcugPoNAoDVM9Bc0V2B6FvLPE6a2X3/pTM5CC
+	 wBqcU2/Ti0czIQDRhcqU7Zgzc4wo4MkT0Hkl/KXPhVaI+m5pUkeKXY305apcx5XAR4
+	 w9Ub2ERLW1O7bCjWmb5fLSHv6olLe7yffdXHgQe8RuvDzNOANma+PCC+zK5zCKlVEb
+	 mhdU/CjN3qwrxAhc1lvWCEd18n+CdVq9YFekb/LKst2C496POoPuXyyqT03FJurdSM
+	 mrwTXE0wYKa1cy6ieuy/X9/ESKFeEbCIBCFrKwh41V95P6BzlZ9HOaN/olj/WAevj5
+	 Ot+AZueQj+0cQ==
+Date: Fri, 28 Aug 2026 00:39:56 +0800
+From: Zorro Lang <zlang@kernel.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: fstests <fstests@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>, 
+	Hans.Holmberg@wdc.com
+Subject: Re: [PATCH] xfs/837: set rtinherit on the root directory
+ programmatically
+Message-ID: <apBn_91BwmsQjhsq@zlang-mailbox>
+Mail-Followup-To: "Darrick J. Wong" <djwong@kernel.org>, 
+	fstests <fstests@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>, Hans.Holmberg@wdc.com
+References: <20260826183001.GV839663@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,27 +45,5 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <mut2xsmp77543bjkmrzpmx6cbbua7gjt7sty4kg7zuf7lwudfp@33ksdiowtxwm>
+In-Reply-To: <20260826183001.GV839663@frogsfrogsfrogs>
 
-On Thu, Aug 27, 2026 at 03:03:46PM +0530, Anuj Gupta wrote:
-> > -	if (xfs_healthmon_merge_events(hm->last_event, &lost_event)) {
-> > -		trace_xfs_healthmon_merge(hm, hm->last_event);
-> > +	if (xfs_healthmon_merge_events(hm, &lost_event)) {
-> > +		trace_xfs_healthmon_merge(hm, &lost_event);
-> 
-> This traces the lost_event now, but the merge updates existing tail
-> event. Is the change in behaviour intentional?
-> 
-> >  	/* Try to merge with the newest event */
-> > -	if (xfs_healthmon_merge_events(hm->last_event, template)) {
-> > -		trace_xfs_healthmon_merge(hm, hm->last_event);
-> > +	if (xfs_healthmon_merge_events(hm, template)) {
-> > +		trace_xfs_healthmon_merge(hm, template);
-> 
-> Same: the merge updates the existing tail event, but this traces the
-> incoming template/event. Before this patch, surviving post-merge tail
-> was traced.
-
-Oops, that should become list_last_entry() for both.
-
---D
