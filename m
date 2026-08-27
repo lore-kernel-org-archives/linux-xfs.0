@@ -1,143 +1,99 @@
-Received: from pdx-out-013.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-013.esa.us-west-2.outbound.mail-perimeter.amazon.com [34.218.115.239])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f42.google.com (mail-pj1-f42.google.com [209.85.216.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 766EE12F585;
-	Thu, 27 Aug 2026 09:21:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=34.218.115.239
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4974F40DB42
+	for <linux-xfs@vger.kernel.org>; Thu, 27 Aug 2026 09:23:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787822492; cv=none; b=kHiwzDbXtV40kQAhAq3nMPTp/zkc4HlLDoZJOLkYpRT6HWvM4yDqf5cLhcMrZpxtOmkDQ++h1JN6bavtZBWNiiJdiT5A30rM3EycJNJmtS9PRioqnIn1J9N+GuhICv9BwCeLXLZIqZT35/ym/W050B68DfZxS/soidmESVS7Ga0=
+	t=1787822621; cv=none; b=WugHFweKbuSXSJTnI7+mtJzmjzskHFzcCLu70ekUQbRuWyCqfd2E83iHwnQosSqQNQjxuLApZgYN2QS6JS3gjY8VgmAD4l+8/XRKfpYPJn+Cm0l5U/ht4oOP19gzU0O9Jj7k/8BOmyxDfbz5d+iMTpPp+2eplQFjizwES/q4sI8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787822492; c=relaxed/simple;
-	bh=4IzhJh3lBWAOHfE4wJbpsM9iGrvkz87YVBb3Imb3jJM=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Lh+hDmD+TsidZ2uDP6VFSuODTkee2CzB0nYi2iNAIwelXDaKk7l3QveOdrSkXegFMoBUrryRejGIx1GvMrWy/bzrPyo7zdn7SHXpn9HHYDoWvDgyp167K7+RB5lhz9dy4L1x25s1r69rcpRhcg+cPUtZR2l3pjMwft6KTs84T0c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.it; spf=pass smtp.mailfrom=amazon.it; dkim=pass (2048-bit key) header.d=amazon.it header.i=@amazon.it header.b=dPRMr4HX; arc=none smtp.client-ip=34.218.115.239
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.it
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.it
+	s=arc-20240116; t=1787822621; c=relaxed/simple;
+	bh=6WR8884LY0TtV5ElOIlb37OS79lPFmuaRakjeJ6MOTk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=UzDHYR5nwuAtdwgoKNu1WnhT3JhqUNez/ImECcl+bb+CQcGF1/v0b0SoWkM8wddqw4MBEEN1uYRjPj3dD+B5SkMhx5WNrAr2oJrbE7U9ZfikU3OUX0pYxqzht6RsYkOkFvwGDr7yHOaycMs628OYU0d4z8Me1W7YYCv4c/G0IGs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=TU/2g+4h; arc=none smtp.client-ip=209.85.216.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=amazon.it header.i=@amazon.it header.b="dPRMr4HX"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TU/2g+4h"
+Received: by mail-pj1-f42.google.com with SMTP id 98e67ed59e1d1-38fdeaed181so867193a91.1
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Aug 2026 02:23:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=amazon.it; i=@amazon.it; q=dns/txt; s=amazoncorp2;
-  t=1787822490; x=1819358490;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=x7TNb3PzZ5LF/z0aOAcLHf9VQM7UzSXd9dJnzyzxr1A=;
-  b=dPRMr4HX8uEBgzbwATOM8D755h7xcAGuGer1Z80qt+JWXoCvDZb1q/da
-   e2ExPLrLGjutSQyNMXGGMJPVahdXT+LjoCDrl83eYn8GyBBZNRTRLMBrD
-   LxfbpH357Ez6KueLWxSaLHUeFSAVc9/Fj3TCZ1RhVj1zOSxQWffxbjD39
-   GdVaOrPnIBbC2u0pTmpAs3IklouK69/8g5t2WVujyzgD9JcnxWJeBaDk0
-   EN+82sqJEhzZwfYTFuflFwFckTVtJcHefBXZw7+BWdtvdEdzF0zKtQczA
-   If8BaTRJ9GYKXxNZPAc+cBgPqbimbHy212DRj37pZB1xEiBebLRzAFK1d
-   A==;
-X-CSE-ConnectionGUID: TIVzVIwxQRGxNhHQ7zupIg==
-X-CSE-MsgGUID: HUlh8tT+SpuI9Eceq6oHvA==
-X-IronPort-AV: E=Sophos;i="6.25,246,1779148800"; 
-   d="scan'208";a="26899945"
-Received: from ip-10-5-9-48.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.9.48])
-  by internal-pdx-out-013.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Aug 2026 09:21:28 +0000
-Received: from EX19MTAUWB001.ant.amazon.com [205.251.233.51:31814]
- by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.0.244:2525] with esmtp (Farcaster)
- id 3d6197ce-b226-432b-8cc0-0137c0d8e6d7; Thu, 27 Aug 2026 09:21:27 +0000 (UTC)
-X-Farcaster-Flow-ID: 3d6197ce-b226-432b-8cc0-0137c0d8e6d7
-Received: from EX19D001UWA001.ant.amazon.com (10.13.138.214) by
- EX19MTAUWB001.ant.amazon.com (10.250.64.248) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.45;
- Thu, 27 Aug 2026 09:21:27 +0000
-Received: from dev-dsk-dipiets-1b-77b833da.eu-west-1.amazon.com
- (10.253.66.177) by EX19D001UWA001.ant.amazon.com (10.13.138.214) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.46; Thu, 27 Aug 2026
- 09:21:24 +0000
-From: Salvatore Dipietro <dipiets@amazon.it>
-To: <vbabka@kernel.org>, <hannes@cmpxchg.org>, <willy@infradead.org>
-CC: <abuehaze@amazon.com>, <akpm@linux-foundation.org>, <alisaidi@amazon.com>,
-	<blakgeof@amazon.com>, <rvvandan@amazon.com>, <brauner@kernel.org>,
-	<dgc@kernel.org>, <dipietro.salvatore@gmail.com>, <dipiets@amazon.it>,
-	<djwong@kernel.org>, <hch@infradead.org>, <jackmanb@google.com>,
-	<linux-fsdevel@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-mm@kvack.org>, <linux-xfs@vger.kernel.org>, <mhocko@suse.com>,
-	<ritesh.list@gmail.com>, <stable@vger.kernel.org>, <surenb@google.com>,
-	<ziy@nvidia.com>
-Subject: Re: [PATCH v3] mm/page_alloc: avoid direct compaction for costly __GFP_NORETRY allocations
-Date: Thu, 27 Aug 2026 09:21:00 +0000
-Message-ID: <20260827092100.3988386-1-dipiets@amazon.it>
-X-Mailer: git-send-email 2.50.1
-In-Reply-To: <7ddb704c-76a9-4071-8969-06fa1403eb07@kernel.org>
-References: <7ddb704c-76a9-4071-8969-06fa1403eb07@kernel.org>
+        d=gmail.com; s=20251104; t=1787822618; x=1788427418; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=dLjX7Vy9D0KXw4jNAF/ipY1hN9b99YKc4pBJA5PGSk0=;
+        b=TU/2g+4hA4BYJthC/dpX8/oag+sh11886P8STofYXcqKckK6V2RboOkMfaC13rOOP6
+         WT8rwd9K8xCyGtzpwJaXM+ZhfNl61A/0/oItD0gGEEBIEZ+dtHjQezkr23lqeo2vBhxz
+         tiVASrHXh9GaFFUqn4yAN7LekG2RRCLCgNOp4OydFaBo1kS3hnlp4OHvtn6gY5qfM5+l
+         nuJB+6q+4avHfe3qujoBJI1pbmdcPIQrpdscH+/H0mlt9z+dbtvMWml9FD6PZr+PQr23
+         XQGqoTuekEn6gQUF9aZo23RDtP0RqJ9X0ytmN6eHikpsZA922bKgozk2oQHKJyTnpQxX
+         A/sQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787822618; x=1788427418;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=dLjX7Vy9D0KXw4jNAF/ipY1hN9b99YKc4pBJA5PGSk0=;
+        b=QfhWcgxrjMw9cfCqb91JImGakP5lg4YfE0iT6dCyZ2qBanE71sOh3j9k+qu2eKZArg
+         +qZ0hg1hoJRSTq70Dn3RbcnQtJbIFeqC8rRUaXTF4HNmklHLzzgU6vKzHVTxUwfT9qyi
+         BtYVa/EC/EIgS/rCXl8f1JgupEOgLDLmUVEWTc9BtOGvFV64QbRizlAU0xhiZQJjDIsf
+         B6G9It1qoFc1xf3PtI3QTfub4Dxz5qDz63KjPO7JSd7aGglbFMlb8/9Lwy4oKru3Gh+V
+         k64LASYRdpCkrQ60JhbWYmGEKq+LoF9aKQeerpnXAh3CDdbYckvhn7oDHJy/vKEcNO2j
+         x+oQ==
+X-Forwarded-Encrypted: i=1; AHgh+RrEUtmUJ94RfhNWbQaZJ9viNgR7eKMAEZ7z1LuuJEG7MFTMlwBHDIw26ZrrWlg1oiGRXKKS5QL0BcY=@vger.kernel.org
+X-Gm-Message-State: AFuF++lY7svDdLbqz8keyDumIWnWnvXXHZczj8VWkFR+5geBAYStXeBD
+	6CL2CArrCSTnore2B2RXqSJamJGwUhvL6fSeHnTQnZlkbFa9pqsJpaU=
+X-Gm-Gg: AR+sD135c6dS26R/X7EIDKrpPziNCFtV2VDVhYB5QbzJ2SjL9ekWTfDj0UcjCJu7WhC
+	4nuxhEM1oK5H/cWEHgAXDr59EVfq8581HMy0TyistC5sf9jRldrdSKHwkEV+QXWYDstN4+0qumC
+	sbBRrOjh/+wdvrXKWMmqEqTmghd5ZO+JzS6czAq58S0MC9M9M1go5pwjNbxLfwI0uF9LZ9hYCqj
+	sFKKpUGzgyJSG6QfCdB6r2Z1hmaXYRob0Cg3hiwrUdZck8zea3SNI0PsuRBQ4KGypEYM6RnlG/3
+	xKITzVVCLhgIH0gq9pwEHVH4lKXv5lj5daVDnhcj18eZBCE8Hk3shZjD/CqxjDXx+OpLfUsbl3s
+	fdBOd1ItHK+eSt0duktJvlyFHR31UI/NhaCE8n/1lVkmM0DcnbccSSfndxU8izjbmwBh22fKiek
+	JuoP8XL/Jjs8F4ifnDeaBPhNpZf/OocoLIK4VSnWBHvMq/hlW6uDyDVqB0PXstiaiNJs+kNmOvk
+	IPA6svaax8zUt7Fu48SLioa143x
+X-Received: by 2002:a17:90b:17d1:b0:38e:8300:af51 with SMTP id 98e67ed59e1d1-3966d20b09fmr25374301a91.8.1787822618053;
+        Thu, 27 Aug 2026 02:23:38 -0700 (PDT)
+Received: from anuj-MacBookPro ([2406:7400:63:4a2f:cca2:d012:36c1:4a36])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3283d884d5esm16830396eec.17.2026.08.27.02.23.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 27 Aug 2026 02:23:37 -0700 (PDT)
+Date: Thu, 27 Aug 2026 14:53:30 +0530
+From: Anuj Gupta <anuj1072538@gmail.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: cem@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 5/6] xfs: handle reconnecting metadir subdirectories
+Message-ID: <ux7q7mg7mp32uekxtei4vrunv53opqwthv2er7gk5l2z3ztnok@mp76pxytxzmt>
+References: <178780640140.3528187.6786220801490019229.stgit@frogsfrogsfrogs>
+ <178780640282.3528187.11511654116002480699.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-ClientProxiedBy: EX19D040UWA003.ant.amazon.com (10.13.139.6) To
- EX19D001UWA001.ant.amazon.com (10.13.138.214)
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <178780640282.3528187.11511654116002480699.stgit@frogsfrogsfrogs>
 
+> +	error = xfs_dir_createname(tp, dp, name, I_INO(ip), resblks);
+> +	if (error)
+> +		return error;
+> +
+> +	xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
 
-On Wed, Jul 22, 2026 at 02:35:00PM +0200, Vlastimil Babka (SUSE) wrote:
-> AFAICS both your v3 and the implemented Johannes' suggestion effectively
-> make all the compact_first logic dead code - at least for the intended THP
-> use case based on costly_order. It will only continue to do something for
-> the non-movable order>0  case. So that's a significant change which will not
-> show up in your results, but might affect other workloads (I'd expect mainly
-> by having fewer THPs).
+should we update dp's mtime/ctime after creating the dirent using
+xfs_trans_ichgtime()?
 
-Right - the change above modifies THP allocation requests as well. So instead
-of applying it to every costly __GFP_NORETRY allocation, I restrict it to
-callers that do not ask for __GFP_THISNODE. That leaves the local-node THP
-attempt untouched: the same bit pair is already tested further down the function 
-to bail out of the compact_first block (page_alloc.c:4899), and alloc_pages_mpol()
-sets both flags on the local-node-first attempt (mempolicy.c:2476-2478).
+> +		/*
+> +		 * subdir didn't give us a dotdot entry, so we just give up
+> +		 * and let the repair get marked as failed.
+> +		 */
+> +		if (old_dotdot == NULLFSINO)
+> +			return 0;
+> +	}
 
-I tested this with my PostgreSQL workload on kernel v7.2-rc7 and results look good:
-
-Baseline:       70,735 tps
-This version:  144,670 tps  (145,280 / 144,037 / 144,694)  +104.5%
-
-
-diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-index ee902a468c2f..1e4b0c1e7296 100644
---- a/mm/page_alloc.c
-+++ b/mm/page_alloc.c
-@@ -4725,10 +4725,10 @@ static inline struct page *
- __alloc_pages_slowpath(gfp_t gfp_mask, unsigned int order,
- 						struct alloc_context *ac)
- {
--	bool can_direct_reclaim = gfp_mask & __GFP_DIRECT_RECLAIM;
--	bool can_compact = can_direct_reclaim && gfp_compaction_allowed(gfp_mask);
--	bool nofail = gfp_mask & __GFP_NOFAIL;
- 	const bool costly_order = order > PAGE_ALLOC_COSTLY_ORDER;
-+	bool can_direct_reclaim;
-+	bool can_compact;
-+	bool nofail;
- 	struct page *page = NULL;
- 	unsigned int alloc_flags;
- 	unsigned long did_some_progress;
-@@ -4743,6 +4743,18 @@ __alloc_pages_slowpath(gfp_t gfp_mask, unsigned int order,
- 	bool can_retry_reserves = true;
- 	unsigned long alloc_start_time = jiffies;
-
-+	/*
-+	 * Costly __GFP_NORETRY callers have a cheap fallback, so don't stall
-+	 * them in reclaim or compaction. __GFP_THISNODE callers are exempt.
-+	 */
-+	if (costly_order && (gfp_mask & __GFP_NORETRY) &&
-+	    !(gfp_mask & __GFP_THISNODE))
-+		gfp_mask &= ~__GFP_DIRECT_RECLAIM;
-+
-+	can_direct_reclaim = gfp_mask & __GFP_DIRECT_RECLAIM;
-+	can_compact = can_direct_reclaim && gfp_compaction_allowed(gfp_mask);
-+	nofail = gfp_mask & __GFP_NOFAIL;
-+
- 	if (unlikely(nofail)) {
- 		/*
- 		 * Also we don't support __GFP_NOFAIL without __GFP_DIRECT_RECLAIM,
-
-
-
-AMAZON DEVELOPMENT CENTER ITALY SRL, viale Monte Grappa 3/5, 20124 Milano, Italia, Registro delle Imprese di Milano Monza Brianza Lodi REA n. 2504859, Capitale Sociale: 10.000 EUR i.v., Cod. Fisc. e P.IVA 10100050961, Societa con Socio Unico
-
-
-
+The comment says "let the repair get marked as failed" but return 0 here
+looks like it reports success.
