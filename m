@@ -1,125 +1,95 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46C401F3BA2
-	for <linux-xfs@vger.kernel.org>; Mon, 31 Aug 2026 05:53:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 423EB3ADBA2;
+	Mon, 31 Aug 2026 06:40:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788155611; cv=none; b=aP4BkLr6W1FxW/fI76ScesSbD8Ax7S7j0Q3tXJlJgP0V+i9tuB6Be3jhIHCOiwesskRUxRTuD6B25A9/koOlcobMWb9zpHbCirwlif9exv0Ilu+U90SOpArJ6MIDYwRwQmLPEpJvAPtpsgcyV+aTFRvvSwom7oaKtBr08dK4URo=
+	t=1788158427; cv=none; b=Hc6bwD6JZ7IWN7lJn3WzfSDQMlyw4flwy1mmYCSIPcuq3FMr7Abr4SyAxCSIpnKPUMLAb89sEoMEMX0vKzVb/GT+/MkltmxapCvDvKb7JhIivVeeQH/kpYl7sa78Yunq2OKVjL/l4fy26qX7lV9QsjBG9QNFERlSUavhTlMMlIY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788155611; c=relaxed/simple;
-	bh=kHi+LkwUyD9teSMIZrzt8h92lL/twszzL4tCDPzqwjo=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=SR94rObKCVJGMvjFiFbDrwl/zn8eNC+UfXPZzWUxVnrrUKzI4YFcDoDo1ycQLPdqA0cAQTFzL54euZKAM2+IeUoJ0zeRWbJ16u7RXMm6Pd/A48YLi73XVId5B/anMGisbhHlry4BfCguEyVhzP4rhL90Wn8pWaQhMyxDSXArnLw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MoKrWTxl; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788158427; c=relaxed/simple;
+	bh=khvyDwrxmguwUdvH8t87d3fMdkvfcS84MF3e9wxpffo=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=pjxoL0c3csiL8UlmcmPd3uV7jymIBKmatcwlBEyovJZctPxDghWBJv5aojIrNmxlFIOhlno+cxBU61wbWlUyt4rQcLk4nQ0WxXb1g0tO9kqgOlr0JRkCFd829ZExVpzwNGTpGnMF5k03A2612ILqEsI+zDOvgTiiSqAB0lYqL4o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=wl3oaBK4; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MoKrWTxl"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1FE441F000E9;
-	Mon, 31 Aug 2026 05:53:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788155609;
-	bh=NgGkVjNxpbxbHWl86QTkVw7kxXy1Rm4fptZLZYyvtdI=;
-	h=Date:From:To:Cc:Subject;
-	b=MoKrWTxldkrDBE0eFW3Zd7a/JpWIFyCuBnVLuUo6mtDF74xOV0u60iIu1BX83dWvp
-	 lJWd0h1jfpq6tZzuVq7ER6RgDpakgm0fwgiGR7pXMps6C/dV3Cwjv1J6n8bjIsj7un
-	 AFauCUr57bskspSNO6dTWf8+15L8jcHa0zIO7M38el6aeMSxapwF3orAXxP8hUEpIx
-	 gqXp9a2oPmXleRGYI9k2pcigaah93+FWGNwjmODQPiELONxd+kKnZz6/oNLqjz5LS2
-	 gSAb1npd/c5rly9qvgq2bM47XSwVBYuTMhvAdT0JC9lBbJUlx8c6zdxlhaN+nf5Suq
-	 n6C0jKm4toi8w==
-Date: Mon, 31 Aug 2026 07:53:25 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: torvalds@linux-foundation.org
-Cc: linux-xfs@vger.kernel.org
-Subject: [GIT PULL] XFS: Fixes for v7.3-rc2
-Message-ID: <apUSmA9aI8wpLyXf@andromeda.toxiclabs.cc>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="wl3oaBK4"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=BEs0+VEayJBZdJhNvVB+4R2X5XA5wGb/x6k8Eq0o4JQ=; b=wl3oaBK4XuJeamTGSjgQfskZuE
+	A5kxZQ2nZU+vyqI8fJZCiSpEv9/dGnQ72dqrOUyWfURnZ3U9XQ2/LJMcKGzOgWE0pnGoBeOZUbF7s
+	aNYN5kZS1xXYvonrnbRAK+QvT7qRLmta+Uu+3UQBQPkjv2yOFqv8XvrZ1xkn1MPvp+TbJF+gmcgUc
+	N9bGIk9Y9U5DMg1wWAEsUFVW6yYvmKQmbCxurlAhEtjNLZqneIeOjliwGyWKAwGIzHZx0oxlUzkJu
+	Fg6Nt9R2cQnmVvH1IpvQwTP3GbOYd6PFKwMeCP8nJOlSQxCE3zxpVTYrdNi130M7eM6MaQ3gmrjtm
+	SWirfuQQ==;
+Received: from [2001:4bb8:2f9:3a59:1608:d03f:db12:ee92] (helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1x0vgm-00000008crH-2UVp;
+	Mon, 31 Aug 2026 06:40:17 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Jens Axboe <axboe@kernel.dk>,
+	Christian Brauner <brauner@kernel.org>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Carlos Maiolino <cem@kernel.org>
+Cc: Tal Zussman <tz2294@columbia.edu>,
+	Anuj Gupta <anuj20.g@samsung.com>,
+	linux-block@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org
+Subject: lazy bounce buffering for checksummed reads V2
+Date: Mon, 31 Aug 2026 09:39:48 +0300
+Message-ID: <20260831064010.2574896-1-hch@lst.de>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Hello Linus,
+Hi all,
 
-Could you please pull patches included in the tag below?
+this series improves performance and resource usage for reads from
+devices that require stable pages due to checksumming on XFS.
 
-An attempt merge against your current TOT has been successful.
+Currently XFS unconditionally bounce buffers reads on such devices to
+prevent user modifications to the buffer from corrupting the data,
+leading to checksum failures.
 
-This contains a set of fixes for rc-2. I just want to highlight from
-this series that it contains a couple patches for capabilities subsystem
-and another for the quota subsystem. All three patches have been acked
-by the respective maintainers and they agreed for these patches to go
-through xfs tree as they are dependencies for a xfs bugfix.
+This uses DRAM bandwidth and CPU cycles for copies that are not needed
+most of the time, and due to the use of a bio_vec for the bounce
+buffer to smaller than wanted and unaligned I/O sizes when using 4k
+user pages (i.e. 1MB-4k I/O).
 
-Thanks,
-Carlos
+This series addresses this by reading without the bounce buffer first,
+and then only allocating a buffer and reading into that again on an
+initial checksum failure.  To accommodate for rare (or hypothetical?)
+applications that have legitimate needs to frequently modify in-flight
+buffers, a sysfs know is provided to revert to the old behavior.
 
-"The following changes since commit 818bebeb63dd6bf5f4e07e145f6cdbace520a34c:
+The baseline of this series is the xfs for-next branch that Carlos
+just a pull request for.  The patches are split over 3 subsystems,
+and I'd love to hear from the maintainers what a good test strategy
+is.
 
-  drm/xe: Don't hand out the flat CCS storage as usable VRAM (2026-08-20 20:12:39 -0700)
+A git tree is available to help with the review here:
 
-are available in the Git repository at:
+    git://git.infradead.org/users/hch/misc.git lazy-bounce
 
-  gitolite.kernel.org:/pub/scm/fs/xfs/xfs-linux.git tags/xfs-fixes-7.3-rc2
+Gitweb:
 
-for you to fetch changes up to 412f89fb3988a344175899776c8bc7073524ad84:
+    https://git.infradead.org/?p=users/hch/misc.git;a=shortlog;h=refs/heads/lazy-bounce
 
-  capability: unexport has_capability_noaudit (2026-08-21 09:09:55 +0200)
-
-----------------------------------------------------------------
-xfs: fixes for 7.3-rc2
-
-Signed-off-by: Carlos Maiolino <cem@kernel.org>
-
-----------------------------------------------------------------
-Carlos Maiolino (5):
-      xfs: fix capability check in xfs
-      capability: Add new capable_noaudit
-      quota: Don't issue audit messages on quota enforcing
-      xfs: replace ns_capable_noaudit
-      capability: unexport has_capability_noaudit
-
-Christoph Hellwig (9):
-      xfs: split an assert in xfs_trans_log_buf
-      xfs: don't flush and invalidate internal RT device twice in xfs_shutdown_devices
-      xfs: use inode_init_always_gfp with __GFP_NOFAIL in xfs_inode_alloc
-      xfs: handle NULL open_zone for merged ioends in xfs_ioend_put_open_zones
-      xfs: fix racy open zone caching
-      xfs: fix zoned write iomap flags assignments
-      xfs: factor out a xfs_iomap_set_anon_write helper
-      xfs: split ioend handling into a separate source file
-      xfs: restore bi_bdev in xfs_zone_gc_write_chunk
-
-Tal Zussman (1):
-      xfs: remove kmem_to_page()
-
-Yun Zhou (1):
-      xfs: don't hold buffer locks across sync transaction commit in xfs_sync_sb_buf
-
- fs/quota/dquot.c            |   2 +-
- fs/xfs/Makefile             |   1 +
- fs/xfs/libxfs/xfs_rtgroup.h |   6 +-
- fs/xfs/libxfs/xfs_sb.c      |  37 ++++-----
- fs/xfs/xfs_aops.c           | 188 +-------------------------------------------
- fs/xfs/xfs_aops.h           |   1 -
- fs/xfs/xfs_file.c           |   2 +-
- fs/xfs/xfs_fsmap.c          |   3 +-
- fs/xfs/xfs_icache.c         |  16 ++--
- fs/xfs/xfs_ioctl.c          |   2 +-
- fs/xfs/xfs_ioend.c          | 184 +++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_ioend.h          |  16 ++++
- fs/xfs/xfs_iomap.c          |   7 +-
- fs/xfs/xfs_iomap.h          |  14 ++++
- fs/xfs/xfs_iops.c           |   2 +-
- fs/xfs/xfs_platform.h       |  11 ---
- fs/xfs/xfs_super.c          |   2 +-
- fs/xfs/xfs_trans_buf.c      |   3 +-
- fs/xfs/xfs_zone_alloc.c     |  66 +++++++++++++---
- fs/xfs/xfs_zone_gc.c        |   5 ++
- include/linux/capability.h  |   5 ++
- kernel/capability.c         |  19 ++++-
- 22 files changed, 336 insertions(+), 256 deletions(-)
- create mode 100644 fs/xfs/xfs_ioend.c
- create mode 100644 fs/xfs/xfs_ioend.h"
+Changes since v1:
+ - rebase on 7.3rc-1 and xfs for-next, which has the bio complete in
+   task support merged
+ - remove the now unused IOMAP_DIO_BOUNCE support for reads
+ - fix compilation with integrity disabled
+ - make I/O size limitation actually work
+ - clear REQ_POLLED when bounce buffering
+ - use sysfs string match helpers to allow non -n echo
