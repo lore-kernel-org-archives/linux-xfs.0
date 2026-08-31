@@ -1,85 +1,96 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f50.google.com (mail-ed1-f50.google.com [209.85.208.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35DBF469842
-	for <linux-xfs@vger.kernel.org>; Mon, 31 Aug 2026 15:12:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0F1842DA36
+	for <linux-xfs@vger.kernel.org>; Mon, 31 Aug 2026 15:53:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788189168; cv=none; b=Qub+85h0a2+AanPWQwV4U7KIjisZu0R9cbZ5HAEFJBqEpCxIO4cLSkSBgE2Q7NFLx5Do3ePybrazp2T0DgpNfF8Gg2i6SP+z919ginGaLEX9Ms/2A8AVbJGBmfmvcKIc6hI99pvVYJv9C4z5xFTnYsBOFeX1Ml6ETiJ5upTKWpg=
+	t=1788191593; cv=none; b=maOakTPoRqDOxZx3xMFJf0E1yhNAAbdsk3rxv501vqFZ/KFdzQSkq0+rzB1JHqHLBaXbOIzU0XB/bZNAmIsBoXtQR6nh6xx4w0kHQNf3PyNfGOr4c81fG99o1zdOk+YZfe7dYKgXSsTAMJCa7nohzMDn9kM4QQMzWs5aBbMrXLE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788189168; c=relaxed/simple;
-	bh=Iqz6lL4Tse6uGr1eu2rrdgt+G9i/p8FZxxs0MOvCj3M=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JxuU7IPd9vR16AOvBIFSyulxqoIZ1ok95fV2dkjElITCaeGp/JVqBrPBH/KWWYTHwZHmTmIj1wP9wdcXxZwwrj4iuaxZF2f+XlR3vh6tZdKoTSkHP80JpNRZM1y1DC8hf+bdzsKPnq2X2mCLnspFjTC8GFbTCPLHUZoIHUvMup8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kTBw5M6n; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788191593; c=relaxed/simple;
+	bh=gAbvP4+Os6TgV4Ik0HS4ZZfkRe+Ugx4nJWg61i0aPTk=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=JNjFkLUKj5Vl+3qpwzBcrCL2E8St8ocj3moOx1cHORyjGfzCd6bscaWXibRP6PjZ1Cjr9UmQnoTmcxgDQw5XjBwQqJ509WRsRg8gANlXd+l2DzsZndpw0R93xuDvFWs0HsouVKmNfLlQbpHoGxdFRwTq7HoxKiP32R+0T7eb8L0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org; spf=pass smtp.mailfrom=linuxfoundation.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=IOkV0X+3; arc=none smtp.client-ip=209.85.208.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linuxfoundation.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kTBw5M6n"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id B72541F000E9;
-	Mon, 31 Aug 2026 15:12:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788189166;
-	bh=u2DKwyzqgpx3ofMOYh7DIHsiLvPJHepg5MwDErmAlkw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=kTBw5M6nV0eOkmV0gh8TH3c+SV9JKrcahqLyOl/IMKtimP8U1QCXx7NPR+GgVOivq
-	 CBPdmB8aqVfvqiUiayKJlpQR5eFf3oxJCJLKryvze14aKcCBQID58GQOCrU5LlpVzJ
-	 DswpGQKb4NUXjEMinQL8rHLfkUgiSV5LsINRQa2J8vHuYFm8Fc7L83SpSke1qjbLWo
-	 3UI2MRcPeo1Kf38zmotGBN4c3bDyVR4cuUaLbl6eIrwgwXuVb10eokIhaiTf7NKwaN
-	 wtRATPbhSlmazgT50bNLdLl4E+XqeH8BVhS2pS6C2oC5RGrELSMGNtlRWiboTQIeuK
-	 iH+D2s8bpC1yg==
-Date: Mon, 31 Aug 2026 08:12:46 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/7] xfs: port healthmon event list to list_head
-Message-ID: <20260831151246.GG6072@frogsfrogsfrogs>
-References: <178780640541.3528467.13867917797753503580.stgit@frogsfrogsfrogs>
- <178780640625.3528467.15741375660976356976.stgit@frogsfrogsfrogs>
- <20260831065826.GC24602@lst.de>
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="IOkV0X+3"
+Received: by mail-ed1-f50.google.com with SMTP id 4fb4d7f45d1cf-6a6143cca69so5477729a12.3
+        for <linux-xfs@vger.kernel.org>; Mon, 31 Aug 2026 08:53:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google; t=1788191589; x=1788796389; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=APi8RFdHET1R86VCMK/uG53ii7MkEL7yOeVhbVqENNs=;
+        b=IOkV0X+3DWeSylG3nwX3ntQLvRbq07e9Kl+w+xahqBXuJG17ou8J3AzkzhZ2a912FV
+         rEvny1eBudb6k8MOsV5RUW+miuTizAAe3FDBNjjOV1JfiUzphXTra8LUYgKu6LC60yH5
+         SeTJSQNdaPZVR/lf7d6TZ3d0Df0EO0/rfqCl0=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788191589; x=1788796389;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=APi8RFdHET1R86VCMK/uG53ii7MkEL7yOeVhbVqENNs=;
+        b=Motrc9y6G6rSlkvVQ3L67dRQ9AuRK1cg9U5JYUevij0X5SBxdqGfKkl2v5sKkuojOQ
+         2+cHpZHTeHxnWQ6sTuYjUwY7zplohQbBFONwxAul+qijZWEjRTkij6x46NEHDEj/2aOu
+         45FlDCmqBjxLOqA8u9EzfNqhPXjM/Bce8wIhLXXH7TWGiiJbs0XCfes1IArluDkstW5E
+         OavRRGiopIkfZv3QZol541B9aqpB03ONgpw66N+NwOv7Gr4izMEmz1PI2VJK6JpT8TnQ
+         lVpu6p/uD3votk5aLp+WS+lP2vXHaavW8GJ2+ya5p4FZwbOiRUQbjm8edKqN9I3X49e5
+         jU5g==
+X-Gm-Message-State: AFuF++mrUIuLdQg+5itVUsaOYgSfu7c6+GUOQ0Z21qR2yiOxHqglxa55
+	KfFAf3AkfvRA3pqZfcQFBTd6//3gHpLTawJNJ926uquzo7diy+tZAZ0hEwukPOM0Z25ZnmkNGgb
+	QxDpoAJ6gVg==
+X-Gm-Gg: AYBFou1W52LPerasjO3OgT8hL2htrD7fLsUA8wSHliB1PtLxcOr1DFeKwYR8UjEyY3g
+	Tt07offx9LBjBMScn89sX6nknohONTahxlg1OR4QNY5dgAeveztX6C3a/5zCRxYL5asHSSMwBNg
+	EvyQyI2B1IQ52E/c60Jh7FM0vTeTiNLcNdWPLENRbIeNcWhZFE15qyK/zxMiuqol8EqTQLKf9ju
+	IfePrNqin7jbGx1coaLPENhIaXpceq80PoaYVPBzDsL6eBz/hvL7ybVnRogYHNJviMaIDwkIe/j
+	+tqAICo0bQRpCGLdhRM8T2i5F8ecCLdMo+iNYeWabpU8DYmaqU+m5rSCwvqrk7cVLqeNx049i05
+	6NHFbwR1lfPeNutBlqj8zZ4hIAPn/TXa86c7S7iJ5r3LkgXiVxPajimMIc/ksPiiq4yR1EjP9Hw
+	Yixlc6/XSz1alQeJUi0iBodbMNf0xP3GizXgGhSVIwoMhYcuUpzxjpnEaszWhuQyQ88djuiJKMP
+	QdiY7twNAhdo0gSZs4jmf2zIinpzuv2SM2Lhg==
+X-Received: by 2002:a05:6402:434a:b0:6a6:32f6:f with SMTP id 4fb4d7f45d1cf-6a632f601a5mr9095863a12.21.1788191588110;
+        Mon, 31 Aug 2026 08:53:08 -0700 (PDT)
+Received: from mail-ej1-f41.google.com (mail-ej1-f41.google.com. [209.85.218.41])
+        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-6a611b675d1sm3967494a12.9.2026.08.31.08.53.07
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 31 Aug 2026 08:53:07 -0700 (PDT)
+Received: by mail-ej1-f41.google.com with SMTP id a640c23a62f3a-c15e2dab83eso95599166b.1
+        for <linux-xfs@vger.kernel.org>; Mon, 31 Aug 2026 08:53:07 -0700 (PDT)
+X-Received: by 2002:a17:907:1c09:b0:c21:6f8c:2335 with SMTP id
+ a640c23a62f3a-c2557465a51mr1726543466b.16.1788191587177; Mon, 31 Aug 2026
+ 08:53:07 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260831065826.GC24602@lst.de>
+References: <apUSmA9aI8wpLyXf@andromeda.toxiclabs.cc>
+In-Reply-To: <apUSmA9aI8wpLyXf@andromeda.toxiclabs.cc>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Mon, 31 Aug 2026 08:52:50 -0700
+X-Gmail-Original-Message-ID: <CAHk-=wh+Rxk7kuzGMX5UzkwROsCsCuk-ZvGGnRCiU0T3fecsMQ@mail.gmail.com>
+X-Gm-Features: AcwNN1UmIpDKF1-V93kSJWvjIylEwF38zIAvZMeoC1EQJnn7dTeGrp8rc6kaSko
+Message-ID: <CAHk-=wh+Rxk7kuzGMX5UzkwROsCsCuk-ZvGGnRCiU0T3fecsMQ@mail.gmail.com>
+Subject: Re: [GIT PULL] XFS: Fixes for v7.3-rc2
+To: Carlos Maiolino <cem@kernel.org>
+Cc: linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On Mon, Aug 31, 2026 at 08:58:26AM +0200, Christoph Hellwig wrote:
-> On Wed, Aug 26, 2026 at 10:32:59PM -0700, Darrick J. Wong wrote:
-> >  struct xfs_healthmon_event {
-> > -	struct xfs_healthmon_event	*next;
-> > +	struct list_head		list;
-> 
-> Call this entry to make clear it's a list entry and not the list?
-> 
-> > +static inline struct xfs_healthmon_event *xfs_healthmon_alloc_event(void)
-> > +{
-> > +	struct xfs_healthmon_event		*event =
-> > +		kzalloc_obj(struct xfs_healthmon_event, GFP_NOFS);
-> > +
-> > +	if (event)
-> > +		INIT_LIST_HEAD(&event->list);
-> > +	return event;
-> 
-> There is no need to initialize a list_head only used as an entry.
-> 
-> > +}
-> > +
-> > +static inline struct xfs_healthmon_event *
-> > +xfs_healthmon_dup_event(
-> > +	const struct xfs_healthmon_event	*template)
-> > +{
-> > +	struct xfs_healthmon_event		*event =
-> > +		kmemdup(template, sizeof(struct xfs_healthmon_event),
-> > +				GFP_NOFS);
-> > +
-> > +	if (event)
-> > +		INIT_LIST_HEAD(&event->list);
-> > +	return event;
-> 
-> Same here.
+On Sun, 30 Aug 2026 at 22:53, Carlos Maiolino <cem@kernel.org> wrote:
+>
+> This contains a set of fixes for rc-2. I just want to highlight from
+> this series that it contains a couple patches for capabilities subsystem
+> and another for the quota subsystem. All three patches have been acked
+> by the respective maintainers and they agreed for these patches to go
+> through xfs tree as they are dependencies for a xfs bugfix.
 
-Will address these, thanks. :)
+I would really like *some* information about what the actual fixes are.
 
---D
+As it is, I made some sh*t up myself. The end result could be better.
+Much better.
+
+            Linus
