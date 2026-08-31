@@ -1,36 +1,36 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADBC93F5BFA
-	for <linux-xfs@vger.kernel.org>; Mon, 31 Aug 2026 23:26:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 175493C4B8E
+	for <linux-xfs@vger.kernel.org>; Mon, 31 Aug 2026 23:26:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788218784; cv=none; b=d1qO+jFs93EnmXcBIhc91cZfXPRkzuTGuPAanFREGl3BYlXMVskb7XMhHZN6xJenGr81V4xOTyzdO/KHFheDKSUC3VVBjmlS6V4BHcOWfZtb19+8lc3weBzDysHzhNY0zCD8ZioIEt6kL6fUqg4vgFCptbWwVzZNm2/7VezyXoU=
+	t=1788218790; cv=none; b=gjQPMrLmVZcmlkDUgxsaNvMkdhfXlkVQsCByItvDX2J5KVNyE4k1AeEOVXF+5CESyDP845SPvEJNDBSWjQB9+u3Oc0FFr4uybsubqHXmOxw4lsd7+25azkqWbRZiO9o8cD9Xbw+FOMB2JVtB5CzAqrtVZsh9BBZrOOrsuVooCQ8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788218784; c=relaxed/simple;
-	bh=o0FyOygO23D1is/xvufwfZvlULNE0SV5GNe42l2ILSM=;
-	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=LLOOpV73hClm3qidZ5t5BX3BqJqRiLp9lD8N4IvsqJ5VhSvXQXVGNyih0xrIbKwqprNku7EF5smq2qThmqSZHE7f5n0/10pxPFhecolZvJigOjC2PsyRSm0/A7mb5vd/z+HPinhQidBEZNrmIjx3na8G38TUZPMPqMAFXnBDHkk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dDWT0FRO; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788218790; c=relaxed/simple;
+	bh=jAllLebqCaGlNmmmV4UHOCZag6XKtEy6EneGxjsR61s=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=BTMnsPkEQWWI1gAnXyS2pWEq7u9hLfzaXgR3xQwLMuGIczdlyGAc6pt/mEr4S+JFh7gucs1JbUMc2lieTjZhgxyXa4xnM0i8E0y2dE5VWi7h1FY0P/Uayyd5vG+olSSHu1yXZ2nB9URey3w13GtphYQQu+3rwpHnHYm03dGJRQQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VawqoDbh; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dDWT0FRO"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 254211F000E9;
-	Mon, 31 Aug 2026 23:26:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VawqoDbh"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id E2D571F000E9;
+	Mon, 31 Aug 2026 23:26:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788218783;
-	bh=XkwbTYKipLJ7ermVU5qQdvGi3uZIvg7Doe/OSvx6S8A=;
+	s=k20260515; t=1788218789;
+	bh=x09cQqzrmhCVZxjRkGoVTWNeZNQhABgmt5hG7IeA5m4=;
 	h=Date:Subject:From:To:Cc;
-	b=dDWT0FROYY5jDwxQ2z1Lol+faCDtDXG07CJ6hwZYWiMWM1m4QXm74zo+ixOaOM4C9
-	 O8xjbr2u8X39cbgYPBojw7vyx50mozJ9YM6ctyq3EjG8rI1x/JkmBrs971xSrDuaXt
-	 kmE+LwsmSRX2gSfAIGUJdUKRtIXOmOkBpAinoapAiRX9Ku5hDgKdbJSNku/qK4/ItG
-	 lN1GuL8WnHUOkGEXS5QhFRBN/5+KSeYg7hFErXfdHGVB+Nz6bOgs4GUfKV8MjZugy/
-	 IMzqbWkufq3JL29QyB2Aru5H6B/RGhCV/ZcjAf+Sp9zDCDfO1pJfjaxmSS9LLXTepn
-	 /IBstm4lAOEOA==
-Date: Mon, 31 Aug 2026 16:26:22 -0700
-Subject: [PATCHSET 1/2] xfsprogs: various bug fixes for 7.2
+	b=VawqoDbhHwTIc6ETTBltq/5c/Lwvw4JEaeML+vPSkhpCA24nLM4xSIvCBGKTPiwSE
+	 Tc/eOC0mRIfRCGebrePaXgtEpBXJJxw0IgAkRUmBChK0bIF7rBzZj5L8LOIjNR26T6
+	 51/sX/Gff929L1KERFzQr5sPryP+p1HY1mYt283vv3lHiIgIsUVC0lP9/uRFvcw8fX
+	 obEbm0QHz9OqsZn9n5MlH/2T1Nv2Hndy3FVaonouWT42FFOIgIBDuqFrF0lHhLVngm
+	 63XsOB+Txo22iEs2vjoJzVT/x6BuiYuvBKgXok8D8FqAjVI95TAx/bMMbv6BbZDbB4
+	 jlGi0euSY9QvA==
+Date: Mon, 31 Aug 2026 16:26:28 -0700
+Subject: [PATCHSET 2/2] xfsprogs: generate mkfs.xfs config files
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
-Cc: linux-xfs@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <178821870236.2381099.2561252941543842548.stgit@frogsfrogsfrogs>
+Cc: linux-xfs@vger.kernel.org
+Message-ID: <178821870568.2381199.9038448943413709082.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,7 +42,14 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-This series contains miscellaneous bugfixes.
+Every year, we generate a new mkfs.xfs configuration file to match the
+stable feature set of that year's LTS kernel.  Right now I just do this
+by copying the old configuration file and tweaking the values by hand.
+
+Instead, let's create some library code that can emit the same
+configuration variables that we've been shipping for some years now,
+and hook that up to mkfs/xfs_db/xfs_spaceman so that we can generate
+them either from the mkfs defaults or pre-existing filesystems.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -52,19 +59,25 @@ Comments and questions are, as always, welcome.
 
 --D
 
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=random-fixes
-
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=random-fixes
-
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=random-fixes
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=generate-cfgfiles
 ---
 Commits in this patchset:
- * xfs_scrub: terminate systemd services if the sysadmin unmounts
+ * mkfs: automatically upgrade autofsck earlier
+ * mkfs: print config file for a given mkfs configuration
+ * xfs_db: print configuration file for mounted filesystems
+ * xfs_spaceman: print configuration file for mounted filesystems
+ * xfs_admin: print configuration file for mounted filesystems
 ---
- scrub/xfs_scrub@.service.in       |    3 +++
- scrub/xfs_scrub_media@.service.in |    3 +++
- 2 files changed, 6 insertions(+)
+ libfrog/fsgeom.h        |    3 
+ db/info.c               |  193 ++++++++++++++++++++++++
+ db/xfs_admin.sh         |   15 ++
+ libfrog/fsgeom.c        |  376 +++++++++++++++++++++++++++++++++++++++++++++++
+ man/man8/mkfs.xfs.8.in  |    6 +
+ man/man8/xfs_admin.8    |    7 +
+ man/man8/xfs_db.8       |    6 +
+ man/man8/xfs_spaceman.8 |    6 +
+ mkfs/xfs_mkfs.c         |   62 +++++++-
+ spaceman/info.c         |  136 +++++++++++++++++
+ 10 files changed, 798 insertions(+), 12 deletions(-)
 
