@@ -1,45 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D83E25476D2;
-	Mon, 31 Aug 2026 13:46:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4AD645519A0;
+	Mon, 31 Aug 2026 13:46:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788184011; cv=none; b=o2rZhf2POXnA0V6MNtv/UaWBBLcmh9fJszGw/AHqBmTJnBsJrAtgp+0oQ2jQMuw78wKbQfEii6PIYWYe0ueWjyvt1MhDp+pzt1YLN/f1m6e9nO6CDW2UKQ+H7x4BKFXf39Q9x5WK4emTYISxYNoFspv2D+L5cA0rDTy5evpEtF0=
+	t=1788184016; cv=none; b=YZsV19OoW8DpaiQEuB54uie4oDuw4/FwCs58wKjqDvHQpbs+FUfRi/CIo3f2S6GEAbA6fSu0roEas4a8FyvuO3VdwFS7BRLwzEBKjJIQBQmA9NeQMID+fFriRQmVjqtuAFoa6iDGet539syEsGDUwc/O1cWDXMg0yhQC9wy3xis=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788184011; c=relaxed/simple;
-	bh=3iU8+o/dKiI98fssKGUtxOGzI2MdKQLjANy3PJQKy2M=;
+	s=arc-20240116; t=1788184016; c=relaxed/simple;
+	bh=IRlAvzQXXWDR5b57cSwrrJ2mIJF6Etx2TbPxpMkujHU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=dy7zBKyxWdpLK7jIysqIisocHRhp5LZodxMhdE/j48uU5BJc88jr0bNfMoPRPwenY8R6IGkMKsNUm1UP3wZe+ZgFK/LxjBQinrxtKXI+54FLBJ9zTa5XEBWbyeaIyUE2FFnOHF3EQEydUy5mds6jHeFNNJX/yiKmnfM3+NqdyCA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HzaMApTG; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=GID9azf1hxAAVQ1Lz1jRhdRL9SNywY3M4rimpu2YJvkqkXcE0/T+zWziQyOGMcpUosZhDQIriVYn6l2MRW0UTY379MxjY/sK29n8L/aIMGk06QF7ZpjroCWNheja8mj2GjP2tbTXtinP4oNkWEvgB3FtYVBaZsbbmKb0y6w2FFM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kuLdf90v; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HzaMApTG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 595BA1F00A3F;
-	Mon, 31 Aug 2026 13:46:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kuLdf90v"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C8F931F00ACA;
+	Mon, 31 Aug 2026 13:46:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788184005;
-	bh=bVA8K2oEooFlo55mJn3JSpEOJpVxPN88TTHKqRPmoYE=;
+	s=k20260515; t=1788184012;
+	bh=qkm3zZNL9HB2rqCSTJl17ZzY5ewOUI2Ek8PssKpYf1g=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=HzaMApTG3POshJKe6+fl/gwdrfhl2Dxjf91Pr1GJ3YPsGctSynsJ40o92luZ8zeQs
-	 nJ7Bexgwkfh/gz5WVo9SvXK1pt2BGmHpKDvhxwhDFe2Ljr8MuHDgGj2Fxohi7qGakN
-	 8hT91u5LWfRm+vkS1knXbZbz0OSJMMDgJYKRBfEX3goYp9e7+OHZ5VwuhRCAVccao+
-	 N6O1CGgKdE+6j9tv6beMyuQbcE2ORg/7/qI+onoSK9MSI0bU/CWsP842wpjkk4wfLh
-	 e0M/FYgllxEgDb4CWBJVXScrLpsPgTz/vc4p8MJoJzD57YsaA+O+Ey2oVIcOzNYwJF
-	 Du2nplq+/LuQg==
+	b=kuLdf90vHeYgFxUAKky7Lvw116F6nzKmYxnMUXIQwFrbpjLc/BKjph7sUZga8Adxz
+	 Xo8W1g3z7YXqQNd2JqqaPsZDXI3AmK1RGtUhJskNnmENt7vn0PZgQl82DrwVW8hz7S
+	 U3zfXqxJlNftX6sSDOt3/95QE7bi9rWGlXVypAHdrdZurkl0zekuKory7sZ03pqWSz
+	 vP3a2xhj63QrGZH/gHNGYxgEAxTmTQqWkyhsSpU8XzIyTx5Bn19TkOF+LzOcCgnsBe
+	 hkqlUtlbJbZcbS4HUuiUNDZuu8xKxF5FX578Hx/Urxl2fIBsK6kyqxd1DjKEl0Da+v
+	 d+lmcjN48pT+g==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Zhang Yi <yi.zhang@huawei.com>,
-	Christoph Hellwig <hch@lst.de>,
-	Ojaswin Mujoo <ojaswin@linux.ibm.com>,
-	"Christian Brauner (Amutable)" <brauner@kernel.org>,
+Cc: Christoph Hellwig <hch@lst.de>,
+	Christian Brauner <brauner@kernel.org>,
 	Sasha Levin <sashal@kernel.org>,
+	axboe@kernel.dk,
 	linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18] iomap: prevent ioend merge when io_private differs
-Date: Mon, 31 Aug 2026 09:27:41 -0400
-Message-ID: <20260831133314.4125787-433-sashal@kernel.org>
+	linux-kernel@vger.kernel.org,
+	linux-block@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.18-6.12] iomap: don't make REQ_POLLED imply REQ_NOWAIT
+Date: Mon, 31 Aug 2026 09:27:45 -0400
+Message-ID: <20260831133314.4125787-437-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260831133314.4125787-1-sashal@kernel.org>
 References: <20260831133314.4125787-1-sashal@kernel.org>
@@ -55,70 +55,76 @@ X-stable-base: Linux 6.18.48
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Zhang Yi <yi.zhang@huawei.com>
+From: Christoph Hellwig <hch@lst.de>
 
-[ Upstream commit c97cd6f447d8727af3d457bca3a9283a77dd70f8 ]
+[ Upstream commit 47f28b493daf9049307494689e515205f1c377af ]
 
-Different io_private values indicate distinct completion contexts that
-must not be merged together, as this could leak or corrupt the private
-data associated with each ioend.
+As described in commit 2bc057692599 ("block: don't make REQ_POLLED imply
+REQ_NOWAIT"), which fixed the same issue for the block device node, there
+are valid cases to poll for I/O completion without REQ_NOWAIT.
 
-Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
-Link: https://patch.msgid.link/20260713074206.1768006-1-yi.zhang@huaweicloud.com
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
+Additionally, sing REQ_NOWAIT for file system writes is currently not
+supported as file systems writes are not idempotent and would need a
+retry of just the bio and not the entire operation to be fully supported.
+
+Switch iomap to set REQ_POLLED and remove the now unused bio_set_polled
+helper.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Link: https://patch.msgid.link/20260518062917.506483-1-hch@lst.de
+Signed-off-by: Christian Brauner <brauner@kernel.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-# Stable Backport Analysis: `iomap: prevent ioend merge when io_private
-differs`
+# Stable Backport Analysis: `iomap: don't make REQ_POLLED imply
+REQ_NOWAIT`
 
-**Local tree:** `v6.18.44` (Makefile: 6.18.44)
+**Local tree:** Linux **6.18.43** (`v6.18.43-1-gc7f0dac02d232`)
 
 ---
 
 ## PHASE 1: COMMIT MESSAGE FORENSICS
 
 ### Step 1.1: PARSE THE SUBJECT LINE
-**Record:** `[iomap] [prevent] prevent ioend merge when io_private
-differs` — blocks incorrect merging of adjacent `iomap_ioend` structures
-when their per-ioend private completion contexts differ.
+**Record:** `[iomap] [don't make / fix] [REQ_POLLED should not imply
+REQ_NOWAIT on filesystem DIO bios]`
 
 ### Step 1.2: PARSE ALL COMMIT MESSAGE TAGS
 **Record:**
-| Tag | Value |
-|-----|-------|
-| Signed-off-by | Zhang Yi `<yi.zhang@huawei.com>` (author) |
-| Link | https://patch.msgid.link/20260713074206.1768006-1-
-yi.zhang@huaweicloud.com |
-| Reviewed-by | Christoph Hellwig `<hch@lst.de>` (iomap/XFS maintainer)
-|
-| Reviewed-by | Ojaswin Mujoo `<ojaswin@linux.ibm.com>` |
-| Signed-off-by | Christian Brauner `<brauner@kernel.org>` (VFS
-maintainer) |
-
-**Notable patterns:** Two subsystem maintainers/reviewers (Hellwig,
-Brauner). No `Reported-by:`, no syzbot, no `Fixes:` tag (expected for
-manual review). No `Cc: stable` in the commit message.
+- **Fixes:** — none
+- **Reported-by:** — none
+- **Tested-by:** — none
+- **Reviewed-by:** — none
+- **Acked-by:** — none
+- **Link:** https://patch.msgid.link/20260518062917.506483-1-hch@lst.de
+- **Cc: stable:** — none (expected for manual review)
+- **Signed-off-by:** Christoph Hellwig `<hch@lst.de>`, Christian Brauner
+  `<brauner@kernel.org>` (merge commit)
+- **Notable:** References upstream commit `2bc057692599` (block-layer
+  companion fix). No syzbot, no user bug reports.
 
 ### Step 1.3: ANALYZE THE COMMIT BODY TEXT
 **Record:**
-- **Bug:** `iomap_ioend_can_merge()` allows merging adjacent ioends even
-  when `io_private` differs.
-- **Symptom:** Leak or corruption of filesystem-private completion data.
-- **Root cause (author):** Different `io_private` values mean distinct
-  completion contexts that must stay separate.
-- **Version info:** None in the message.
-- **Context (from lore):** Patch is part of ext4 iomap conversion work;
-  discussion linked to ext4 thread.
+- **Bug:** `bio_set_polled()` propagates `REQ_NOWAIT` onto bios when
+  `IOCB_NOWAIT` is set. For iomap filesystem DIO this is incorrect —
+  filesystem writes are not idempotent at the bio level and cannot be
+  retried by re-submitting just the bio.
+- **Symptom:** Polled filesystem DIO (e.g. io_uring
+  `IORING_SETUP_IOPOLL` on xfs/ext4 O_DIRECT) can hit spurious `-EAGAIN`
+  from the block layer, or fail to make progress — same class of bug
+  fixed for raw block devices in 2023.
+- **Root cause:** iomap reused `bio_set_polled()` which couples
+  `REQ_POLLED` with conditional `REQ_NOWAIT`; block/fops.c was already
+  fixed to decouple them, but iomap was not.
+- **Version info:** Commit dated 2026-05-18; not yet in this 6.18.43
+  tree.
 
 ### Step 1.4: DETECT HIDDEN BUG FIXES
-**Record:** Not disguised — this is an explicit correctness fix. The
-"prevent" verb and corruption/leak language indicate a real bug, not
-cleanup.
+**Record:** Not disguised — this is an explicit correctness fix, though
+small. The removal of `bio_set_polled()` is cleanup after the last
+caller is gone.
 
 ---
 
@@ -126,221 +132,208 @@ cleanup.
 
 ### Step 2.1: INVENTORY THE CHANGES
 **Record:**
-- **Files:** `fs/iomap/ioend.c` (+2 lines)
-- **Function:** `iomap_ioend_can_merge()`
-- **Scope:** Single-file, surgical fix
+- `fs/iomap/direct-io.c`: 1 line changed (`bio_set_polled` →
+  `bio->bi_opf |= REQ_POLLED`)
+- `include/linux/bio.h`: 14 lines removed (`bio_set_polled()` helper +
+  comment)
+- **Functions modified:** `iomap_dio_submit_bio()`; `bio_set_polled()`
+  removed
+- **Scope:** Single-subsystem, 2 files, ~16 lines total — surgical fix
 
 ### Step 2.2: UNDERSTAND THE CODE FLOW CHANGE
 **Record:**
-- **Before:** Adjacent ioends merge if status, flags, offsets, and
-  sectors match — `io_private` ignored.
-- **After:** Merge rejected when `ioend->io_private !=
-  next->io_private`.
-- **Path:** `iomap_ioend_try_merge()` → called from `xfs_end_io()`
-  during write completion processing.
+- **Hunk 1 (`iomap_dio_submit_bio`):** Before: for async HIPRI DIO, call
+  `bio_set_polled(bio, iocb)` which sets `REQ_POLLED` and also
+  `REQ_NOWAIT` when `IOCB_NOWAIT` is set. After: only `REQ_POLLED` is
+  set; `IOCB_NOWAIT` is handled separately at the iomap layer via
+  `IOMAP_NOWAIT` (line 654–655).
+- **Hunk 2 (`bio.h`):** Remove now-dead `bio_set_polled()` helper (only
+  caller was iomap).
 
 ### Step 2.3: IDENTIFY THE BUG MECHANISM
-**Record:** **Logic / correctness fix** with **reference-counting** and
-**data-corruption** consequences.
-
-When ioends merge in `iomap_ioend_try_merge()`:
-```335:348:fs/iomap/ioend.c
-void iomap_ioend_try_merge(struct iomap_ioend *ioend,
-                struct list_head *more_ioends)
-{
-        // ...
-                if (!iomap_ioend_can_merge(ioend, next))
-                        break;
-                list_move_tail(&next->io_list, &ioend->io_list);
-                ioend->io_size += next->io_size;
-```
-
-Only `io_size` is accumulated on the parent; `io_private` from merged
-children is not propagated. XFS completion then uses only the parent's
-`io_private`:
-
-```153:167:fs/xfs/xfs_aops.c
-        if (is_zoned)
-                error = xfs_zoned_end_io(ip, offset, size,
-ioend->io_sector,
-                                ioend->io_private, NULLFSBLOCK);
-        // ...
-        if (is_zoned)
-                xfs_ioend_put_open_zones(ioend);
-```
-
-If two adjacent ioends used different `xfs_open_zone` pointers
-(`io_private`), merging causes:
-1. **Data corruption:** `xfs_zoned_end_io()` maps the full merged byte
-   range using only the parent's zone, mis-mapping blocks written under
-   a different zone.
-2. **Reference imbalance:** `xfs_ioend_put_open_zones()` walks the
-   merged chain and puts each child's `io_private` plus the parent's —
-   refcount behavior becomes inconsistent with how zones were acquired
-   in `xfs_submit_zoned_bio()`.
+**Record:**
+- **Category:** Logic / correctness fix (incorrect flag propagation)
+- **Mechanism:** `REQ_NOWAIT` on a bio causes the block layer to return
+  `-EAGAIN` instead of blocking on resource contention
+  (`__bio_queue_enter`, tag allocation in `blk-mq`). For filesystem DIO
+  through iomap, `IOCB_NOWAIT` is already translated to `IOMAP_NOWAIT`
+  for filesystem-level handling; passing `REQ_NOWAIT` to the block layer
+  is both unnecessary and harmful for writes.
 
 ### Step 2.4: ASSESS THE FIX QUALITY
-**Record:** Obviously correct — mirrors existing merge guards (status,
-flags, offset, sector). Minimal (2 lines). Very low regression risk:
-only prevents merges that should never have happened. No new APIs.
+**Record:**
+- Obviously correct: mirrors the already-accepted block-layer fix
+  pattern in `block/fops.c`.
+- Minimal: one-line functional change plus dead-code removal.
+- **Regression risk:** Very low. Block device path already uses the same
+  pattern. `IOMAP_NOWAIT` continues to handle filesystem-level non-
+  blocking semantics.
 
 ---
 
 ## PHASE 3: GIT HISTORY INVESTIGATION
 
 ### Step 3.1: BLAME THE CHANGED LINES
-**Record:** `iomap_ioend_can_merge()` in this tree comes from commit
-`5d324e5159d9e` (2025-11-28, v6.18 era). The missing `io_private` check
-has been present since the function was introduced in this tree.
-`io_private` exists in `include/linux/iomap.h` since at least tag
-`v6.18`.
+**Record:** Shallow repository limits blame — all lines attribute to
+`a112b91dd6349` (unrelated sunrpc backport). Verified current buggy code
+exists at `fs/iomap/direct-io.c:77` and `include/linux/bio.h:688-693`.
+Kernel.org history (via curl) shows iomap polled-IO support added in
+`daa99c5a3319` (2023-08-01, Jens Axboe: "iomap: only set iocb->private
+for polled bio"); block fix `2bc057692599` (2023-08-08) updated
+`bio_set_polled()` but left iomap calling it.
 
 ### Step 3.2: FOLLOW THE FIXES: TAG
-**Record:** No `Fixes:` tag present. N/A.
+**Record:** No `Fixes:` tag. Referenced commit `2bc057692599` ("block:
+don't make REQ_POLLED imply REQ_NOWAIT") exists as a git object in this
+tree; `block/fops.c` already uses the decoupled pattern (`IOCB_NOWAIT`
+and `REQ_POLLED` set independently). iomap was the remaining caller of
+`bio_set_polled()`.
 
 ### Step 3.3: CHECK FILE HISTORY FOR RELATED CHANGES
-**Record:** Recent `fs/iomap/ioend.c` changes in this tree: split
-bio_set, EOF trim guard, delalloc rejection. Standalone fix; not part of
-a multi-patch series (b4 shows only v1).
+**Record:** Shallow repo prevents meaningful `git log` on these files.
+External kernel.org log confirms this is a standalone 1-patch fix (not
+part of a series). Related prior fix: `2bc057692599` (block layer,
+2023).
 
 ### Step 3.4: CHECK THE AUTHOR'S OTHER COMMITS
-**Record:** Zhang Yi is working on ext4 iomap conversion (per lore).
-Hellwig and Mujoo reviewed. Author is an active contributor in this
-area, not a drive-by.
+**Record:** Christoph Hellwig is the iomap maintainer. Christian Brauner
+is VFS maintainer who applied the patch. Strong subsystem authority.
 
 ### Step 3.5: CHECK FOR DEPENDENT/PREREQUISITE COMMITS
-**Record:** No prerequisites. The `io_private` field and merge logic
-already exist in v6.18.44. Fix is self-contained.
+**Record:** No prerequisites. Self-contained. Depends only on existing
+`IOCB_HIPRI`/polled-IO infrastructure already present in 6.18.43. Commit
+`47f28b493daf` is NOT in this tree (object not found via `git cat-
+file`).
 
 ---
 
 ## PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
 
 ### Step 4.1: FIND THE ORIGINAL PATCH DISCUSSION
-**Record:**
-- **URL:** https://patch.msgid.link/20260713074206.1768006-1-
-  yi.zhang@huaweicloud.com
-- **Series revisions:** v1 only (no v2/v3)
-- **Reviewer feedback:** Hellwig: "Looks sensible and fine to queue up
-  now"; Mujoo: "Looks good Yi"
-- **Stable nominations:** None found in thread
-- **NAKs/concerns:** None
+**Record:** `b4 dig -c` could not run — commit not in local repo.
+Fetched via spinics.net:
+- URL: https://www.spinics.net/lists/linux-fsdevel/msg338671.html
+- Single patch, no series revisions found
+- CC'd: `axboe`, `linux-block`, `linux-fsdevel`, `linux-xfs`, `djwong`,
+  `brauner`
 
 ### Step 4.2: CHECK WHO REVIEWED THE PATCH
-**Record:** CC'd: `linux-fsdevel`, `linux-xfs`, `linux-ext4`,
-`brauner@kernel.org`, `djwong@kernel.org`, `hch@infradead.org`.
-Appropriate maintainers included and reviewed.
+**Record:** CC list includes block maintainer (Axboe), XFS, fsdevel,
+block lists. Brauner applied to `vfs-7.2.iomap` branch. No explicit
+Reviewed-by in commit; no NAKs found.
 
 ### Step 4.3: SEARCH FOR THE BUG REPORT
-**Record:** No external bug report or syzbot link. Bug identified during
-ext4 iomap conversion development. Logical analysis of XFS zoned
-completion path confirms real corruption risk.
+**Record:** No bug report, syzbot, or crash trace. Bug identified by
+code analysis and parity with the 2023 block-layer fix. Failure mode
+inferred from block commit message: "repeated -EAGAIN submissions and
+not make any progress."
 
 ### Step 4.4: CHECK FOR RELATED PATCHES AND SERIES
-**Record:** Related to ext4 iomap conversion (future in this tree). In
-v6.18.44, only XFS sets `io_private` on ioends.
+**Record:** Standalone 1/1 patch. Companion to `2bc057692599` (already
+in stable block path).
 
 ### Step 4.5: CHECK STABLE MAILING LIST HISTORY
-**Record:** Not searched exhaustively; no stable discussion found in the
-patch thread.
+**Record:** Not searched (no stable nomination found in thread). Absence
+of `Cc: stable` is not a negative signal per review guidelines.
 
 ---
 
 ## PHASE 5: CODE SEMANTIC ANALYSIS
 
 ### Step 5.1: IDENTIFY KEY FUNCTIONS IN THE DIFF
-**Record:** `iomap_ioend_can_merge()` (modified),
-`iomap_ioend_try_merge()` (caller).
+**Record:** `iomap_dio_submit_bio()`, `bio_set_polled()` (removed)
 
 ### Step 5.2: TRACE CALLERS
-**Record:** `iomap_ioend_try_merge()` called from `xfs_end_io()` in
-`fs/xfs/xfs_aops.c` (line 204). Triggered during asynchronous write I/O
-completion on XFS inodes — normal write path for buffered/direct I/O.
+**Record:** `iomap_dio_submit_bio()` called from iomap DIO write/read
+paths in `fs/iomap/direct-io.c`. Reachable via `iomap_dio_rw()` →
+filesystem `read_iter`/`write_iter` on xfs, ext4, f2fs, gfs2, zonefs,
+btrfs (partial). io_uring sets `IOCB_HIPRI` for `IORING_SETUP_IOPOLL`
+(`io_uring/rw.c:891-895`) and may set `IOCB_NOWAIT` for nonblock issue
+(`io_uring/rw.c:950-954`).
 
 ### Step 5.3: TRACE CALLEES
-**Record:** Merge logic chains ioends via `list_move_tail`; completion
-calls `xfs_end_ioend()` → `xfs_zoned_end_io()` /
-`xfs_ioend_put_open_zones()`.
+**Record:** After fix: `bio->bi_opf |= REQ_POLLED`, then `submit_bio()`
+(or filesystem `submit_io` hook). Block layer checks `REQ_NOWAIT` in
+`__bio_queue_enter()` → `bio_wouldblock_error()` → `-EAGAIN`.
 
 ### Step 5.4: FOLLOW THE CALL CHAIN
-**Record:** `submit_bio` → `xfs_end_bio` → workqueue `xfs_end_io` →
-`iomap_ioend_try_merge` → `xfs_end_ioend`. Reachable from normal file
-writes on zoned XFS RT volumes. Zone fill in
-`xfs_zone_alloc_and_submit()` can produce adjacent ioends with different
-`io_private` when `select_zone` picks a new open zone.
+**Record:** Userspace io_uring IOPOLL → `IOCB_HIPRI` + possibly
+`IOCB_NOWAIT` → `xfs_file_read_iter`/`ext4_file_write_iter` →
+`iomap_dio_rw` → `iomap_dio_submit_bio` → block layer. **Reachable from
+userspace** on common filesystems with `.iopoll = iocb_bio_iopoll` (xfs,
+ext4, f2fs, gfs2, zonefs).
 
 ### Step 5.5: SEARCH FOR SIMILAR PATTERNS
-**Record:** Other merge guards already check `bi_status`,
-`IOMAP_IOEND_BOUNDARY`, `IOMAP_IOEND_NOMERGE_FLAGS`, offset continuity,
-and sector continuity. The `io_private` check fills an obvious gap
-consistent with those guards.
+**Record:** `block/fops.c:383-388` already sets `REQ_NOWAIT` and
+`REQ_POLLED` independently — the correct pattern this patch brings to
+iomap.
 
 ---
 
 ## PHASE 6: CROSS-REFERENCING AGAINST THE LOCAL TREE
 
 ### Step 6.1: DOES THE BUGGY CODE EXIST IN THIS TREE?
-**Record:** **Yes.** `io_private` field exists in
-`include/linux/iomap.h` (line 413). XFS sets it in
-`xfs_submit_zoned_bio()` (`fs/xfs/xfs_zone_alloc.c:833`).
-`iomap_ioend_can_merge()` lacks the guard (lines 307–333). Fix commit
-`c97cd6f447d8` is **not** an ancestor of HEAD (`merge-base --is-
-ancestor` returned exit 1).
+**Record:** **YES.** Current code at `fs/iomap/direct-io.c:76-77` calls
+`bio_set_polled(bio, iocb)`. `bio_set_polled()` at
+`include/linux/bio.h:688-693` still sets `REQ_NOWAIT` when `IOCB_NOWAIT`
+is set. Polled-IO infrastructure present since at least 6.18 branch
+(xfs/ext4 `.iopoll` handlers exist).
 
 ### Step 6.2: CHECK FOR BACKPORT COMPLICATIONS
-**Record:** Upstream patch does not apply verbatim (`git apply --check`
-fails at line 385 — local tree has fewer lines in the function, no READ-
-op guard). **Minor adjustment needed:** insert the 2 lines after the
-`bi_status` check at line 310. Trivial backport.
+**Record:** Expected **clean apply**. The one-line change in
+`iomap_dio_submit_bio` is independent of surrounding `submit_bio` vs
+`blk_crypto_submit_bio` differences. Removing unused `bio_set_polled()`
+is safe — grep confirms only iomap used it.
 
 ### Step 6.3: CHECK IF RELATED FIXES ARE ALREADY HERE
-**Record:** No duplicate fix found. `git log --grep="io_private"`
-returns nothing in this tree's history.
+**Record:** Block-layer fix (`2bc057692599`) is present in
+`block/fops.c`. iomap-specific fix (`47f28b493daf`) is **NOT** present.
+No alternate fix found.
 
 ---
 
 ## PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
 
 ### Step 7.1: IDENTIFY THE SUBSYSTEM AND ITS CRITICALITY
-**Record:** **Filesystem / iomap layer** (shared infrastructure) with
-**XFS zoned RT** as the current consumer in this tree. Criticality:
-**IMPORTANT** — affects filesystem data integrity for zoned XFS users.
+**Record:** **Filesystem I/O (iomap direct-I/O)** — **IMPORTANT/CORE-
+adjacent**. Affects all iomap-based filesystem DIO, which includes xfs
+and ext4 on most enterprise/desktop systems.
 
 ### Step 7.2: ASSESS SUBSYSTEM ACTIVITY
-**Record:** iomap and XFS zoned code actively developed in the 6.18
-cycle. `io_private` and zoned allocation are relatively new, making this
-bug relevant to current 6.18.y users.
+**Record:** iomap is mature and actively used. Polled I/O is a
+performance-critical path for io_uring workloads (databases, NVMe-heavy
+applications).
 
 ---
 
 ## PHASE 8: IMPACT AND RISK ASSESSMENT
 
 ### Step 8.1: DETERMINE WHO IS AFFECTED
-**Record:** Users of **XFS with zoned realtime volumes**
-(`CONFIG_XFS_RT`, `xfs_has_zoned`). Not universal, but any such
-deployment doing writes is affected. ext4 does not use `io_private` in
-this tree yet.
+**Record:** Users of **io_uring polled I/O** (`IORING_SETUP_IOPOLL`)
+with **O_DIRECT** on **iomap filesystems** (xfs, ext4, f2fs, gfs2,
+zonefs). Config-specific but affects a significant high-performance
+workload segment.
 
 ### Step 8.2: DETERMINE THE TRIGGER CONDITIONS
-**Record:** Adjacent write ioends completing with different `io_private`
-(e.g., zone boundary crossing during allocation). Plausible during
-normal sequential or concurrent writes when zones fill. Privileged write
-access required (not a direct syscall attack vector), but corruption
-affects all data on the volume.
+**Record:** `IOCB_HIPRI` set (IOPOLL) on async DIO through iomap. Worst
+case when `IOCB_NOWAIT` is also set and block layer encounters queue
+freeze or request-tag pressure. Trigger is realistic for io_uring
+nonblock + IOPOLL combinations.
 
 ### Step 8.3: DETERMINE THE FAILURE MODE SEVERITY
-**Record:** **CRITICAL** — incorrect extent mapping via
-`xfs_zoned_end_io()` on merged ranges causes **filesystem metadata/data
-corruption**. Secondary refcount imbalance can cause leaks or premature
-free of `xfs_open_zone` structures.
+**Record:** Spurious `-EAGAIN` / I/O stalls / failure to make progress
+on polled filesystem DIO. Not a kernel oops, but a **functional
+correctness bug** that breaks a documented I/O path. Severity: **MEDIUM-
+HIGH** (I/O failures on production workloads; same severity class as the
+2023 block fix that was accepted for stable).
 
 ### Step 8.4: CALCULATE RISK-BENEFIT RATIO
 **Record:**
-- **Benefit:** HIGH for affected XFS zoned users — prevents silent
-  corruption
-- **Risk:** VERY LOW — 2-line guard, no behavior change for correctly-
-  formed ioend chains
-- **Ratio:** Strongly favors backport
+- **Benefit:** HIGH for io_uring + filesystem DIO users; completes a fix
+  already applied to block devices
+- **Risk:** VERY LOW — 1-line behavioral fix, dead-code removal, mirrors
+  proven block-layer pattern
+- **Ratio:** Strong benefit, minimal risk
 
 ---
 
@@ -348,107 +341,158 @@ free of `xfs_open_zone` structures.
 
 ### Step 9.1: COMPILE THE EVIDENCE
 
-**FOR backporting:**
-- Fixes real data-corruption bug in XFS zoned write completion
-- Small, surgical, reviewer-approved (Hellwig, Mujoo, Brauner)
-- Buggy code and `io_private` usage both present in v6.18.44
-- Fix mirrors existing merge guards — obviously correct
-- Prevents refcount corruption on `xfs_open_zone`
+**FOR backport:**
+- Buggy code confirmed present in 6.18.43
+- Companion to block-layer fix already in this tree since 2023
+- Affects major filesystems (xfs, ext4) via io_uring IOPOLL
+- Small (16 lines), maintainer-authored, obviously correct
+- Prevents incorrect `REQ_NOWAIT` on non-idempotent filesystem writes
+- Same failure mode as documented in `2bc057692599`: repeated `-EAGAIN`,
+  no progress
 
-**AGAINST backporting:**
-- Affects niche config (`CONFIG_XFS_RT` zoned volumes only)
-- No user bug report or syzbot reproduction
-- Patch needs trivial line-offset adjustment for this tree (not a
-  blocker)
+**AGAINST backport:**
+- No explicit crash report, syzbot, or user bugzilla reference
+- Impact limited to polled + (optionally) nowait filesystem DIO path
+- Not a security or data-corruption fix with demonstrated exploit
 
-**Unresolved:** None that affect the decision.
+**UNRESOLVED:**
+- Exact date iomap started using `bio_set_polled` (shallow repo);
+  kernel.org indicates ~Aug 2023
+- Whether any distribution has filed user-visible bug reports
 
 ### Step 9.2: STABLE RULES CHECKLIST
-1. Obviously correct and tested? **PASS** — logic is clear; reviewed by
-   iomap/XFS maintainers
-2. Fixes a real bug affecting users? **PASS** — XFS zoned write
-   completion corruption
-3. Important issue? **PASS** — data corruption (CRITICAL)
-4. Small and contained? **PASS** — 2 lines, 1 file
-5. No new features or APIs? **PASS**
-6. Can apply to the local tree? **PASS** — trivial insertion after
-   `bi_status` check (minor offset adjustment)
+1. Obviously correct and tested? **PASS** — mirrors accepted block fix;
+   maintainer-applied
+2. Fixes a real bug affecting users? **PASS** — incorrect flag
+   propagation on reachable I/O path
+3. Important issue? **PASS** — I/O failures / stalls on io_uring polled
+   filesystem DIO (MEDIUM-HIGH)
+4. Small and contained? **PASS** — 16 lines, 2 files
+5. No new features or APIs? **PASS** — flag-handling correction only
+6. Can apply to local tree? **PASS** — buggy code present, clean apply
+   expected
 
 ### Step 9.3: EXCEPTION CATEGORIES
-**Record:** None (not a device ID, quirk, DT, build fix, or docs fix).
-Qualifies on merit as a correctness/corruption fix.
+**Record:** None apply directly (not device ID, quirk, DT, build, or
+docs). Standard bug fix.
 
 ### Step 9.4: DECISION RATIONALE
-For **v6.18.44**, the buggy merge path exists, XFS actively uses
-`io_private` for zoned completion contexts, and incorrect merging can
-corrupt extent mappings. The fix is minimal, maintainer-reviewed, and
-low-risk. The narrow config scope does not outweigh the severity of data
-corruption.
+
+This patch completes a fix that was applied to the block-device
+direct-I/O path in 2023 but was never carried to the iomap filesystem
+DIO path. The buggy code is present in Linux 6.18.43. For io_uring users
+running polled O_DIRECT I/O on xfs/ext4 and other iomap filesystems,
+incorrectly setting `REQ_NOWAIT` on bios can cause spurious `-EAGAIN`
+returns from the block layer — particularly harmful because filesystem
+writes cannot safely retry at the bio level. The fix is tiny, low-risk,
+and directly analogous to an already-stable fix.
 
 ---
 
 ## Verification
 
-- **[Phase 1]** Parsed subject, tags, body; noted Hellwig/Mujoo reviews;
-  ext4 conversion context from lore
-- **[Phase 2]** Read diff: +2 lines in `iomap_ioend_can_merge()`; traced
-  merge → XFS completion path
-- **[Phase 3]** `git describe HEAD`: v6.18.44; `git blame` on lines
-  307–333: from `5d324e5159d9e`
-- **[Phase 3]** `git log --grep="io_private"`: no prior fix in tree
-- **[Phase 3]** `git merge-base --is-ancestor c97cd6f447d8 HEAD`: exit 1
-  (fix not in HEAD)
-- **[Phase 4]** `b4 dig -c fff189121d344`: found lore URL; v1 only;
-  Hellwig/Mujoo reviewed; Brauner applied
-- **[Phase 4]** `b4 dig -w`: CC list includes fsdevel, xfs, ext4,
-  maintainers
-- **[Phase 4]** Read `/tmp/iomap_io_private.mbox`: no NAKs, no stable
-  nomination
-- **[Phase 5]** `grep iomap_ioend_try_merge`: caller is `xfs_end_io()`
-  in `fs/xfs/xfs_aops.c`
-- **[Phase 5]** Read `xfs_zone_alloc.c`: `io_private` set in
-  `xfs_submit_zoned_bio()`; zone refill via `select_zone`
-- **[Phase 5]** Read `xfs_aops.c`: `xfs_zoned_end_io()` uses parent
-  `io_private` only; `xfs_ioend_put_open_zones()` walks merged chain
-- **[Phase 6]** `grep io_private fs/ext4`: no matches (ext4 not affected
-  in this tree)
-- **[Phase 6]** `git show v6.18:include/linux/iomap.h | grep
-  io_private`: field present since v6.18
-- **[Phase 6]** `git apply --check` on upstream patch: fails at line 385
-  (offset mismatch; trivial manual apply)
-- **[Phase 6]** Current `fs/iomap/ioend.c` lacks `io_private` merge
-  guard (verified by read)
-- **[Phase 8]** Failure mode: extent mapping corruption on zoned XFS
-  writes — CRITICAL severity
+- **[Phase 1]** Parsed subject, tags, body from provided commit message;
+  fetched spinics.net thread
+- **[Phase 1]** Confirmed no Reported-by/syzbot; found Link and Signed-
+  off-by tags
+- **[Phase 2]** Diff analysis: 1 insertion, 15 deletions across 2 files
+- **[Phase 2]** Read current `iomap_dio_submit_bio()` and
+  `bio_set_polled()` in tree
+- **[Phase 3]** `git describe HEAD`: v6.18.43; `make kernelversion`
+  equivalent from Makefile: 6.18.43
+- **[Phase 3]** `git show 2bc057692599`: confirmed block-layer companion
+  fix content
+- **[Phase 3]** `git cat-file -e 47f28b493daf`: commit NOT in tree
+- **[Phase 3]** `git blame` on changed lines: shallow-repo attribution
+  (limited)
+- **[Phase 3]** curl kernel.org log for `fs/iomap/direct-io.c`: found
+  `daa99c5a3319` (2023-08-01 polled bio) and `47f28b493daf` (2026-05-18
+  fix)
+- **[Phase 4]** spinics.net msg338671.html: original patch thread
+  fetched
+- **[Phase 4]** spinics.net msg338717.html: Brauner applied confirmation
+  fetched
+- **[Phase 4]** `b4 dig -c`: FAILED — commit not in local repo
+- **[Phase 5]** `grep bio_set_polled`: only `fs/iomap/direct-io.c` +
+  `include/linux/bio.h`
+- **[Phase 5]** `grep iopoll`: xfs, ext4, f2fs, gfs2, zonefs all use
+  `iocb_bio_iopoll`
+- **[Phase 5]** Read `io_uring/rw.c:891-954`: IOPOLL sets `IOCB_HIPRI`;
+  nonblock sets `IOCB_NOWAIT`
+- **[Phase 5]** Read `block/blk-core.c:333-342`: `REQ_NOWAIT` →
+  `-EAGAIN` on queue contention
+- **[Phase 5]** Read `fs/iomap/direct-io.c:654-655`: `IOCB_NOWAIT` →
+  `IOMAP_NOWAIT` (separate fs-level handling)
+- **[Phase 6]** Confirmed buggy `bio_set_polled()` call exists in
+  6.18.43 tree
+- **[Phase 6]** `grep bio_set_polled`: only iomap caller — safe to
+  remove helper
+- **[Phase 6]** Read `block/fops.c:383-388`: decoupled pattern already
+  in tree
+- **[Phase 8]** Failure mode: spurious `-EAGAIN` / I/O stall on polled
+  fs DIO; severity MEDIUM-HIGH
+- **UNVERIFIED:** Full `git log` ancestry for iomap polled-IO
+  introduction (shallow repo; used kernel.org instead)
+- **UNVERIFIED:** Whether 6.18.y already has a different backport of
+  this fix (no evidence found)
 
-**YES**The background check finished: `c97cd6f447d8` (the upstream fix)
-is **not** in this tree’s HEAD (`v6.18.44`), so the bug is still present
-here.
+**YES**The hung `git log HEAD` check didn’t finish — the shallow 6.18.43
+checkout made full ancestry walks impractical. That didn’t change the
+conclusion: I verified the block-layer companion fix another way (`git
+show 2bc057692599`, reading `block/fops.c`), and the iomap bug is still
+present here (`bio_set_polled()` at `fs/iomap/direct-io.c:77`).
 
-**Summary:** The patch adds a 2-line guard in `iomap_ioend_can_merge()`
-so ioends with different `io_private` values are not merged. Without it,
-XFS zoned RT write completion can mis-map extents and corrupt metadata.
-The change is small, maintainer-reviewed, and should backport cleanly
-with a minor line-offset tweak.
+**Verdict for Linux 6.18.43:** this commit should be backported. It’s a
+small, low-risk fix that stops iomap filesystem DIO from incorrectly
+setting `REQ_NOWAIT` on polled bios — the same class of bug already
+fixed for block devices in 2023. It matters for io_uring IOPOLL +
+O_DIRECT on xfs/ext4 and similar iomap filesystems, where spurious
+`-EAGAIN` or stalled I/O can result.
 
 **YES**
 
- fs/iomap/ioend.c | 2 ++
- 1 file changed, 2 insertions(+)
+ fs/iomap/direct-io.c |  2 +-
+ include/linux/bio.h  | 14 --------------
+ 2 files changed, 1 insertion(+), 15 deletions(-)
 
-diff --git a/fs/iomap/ioend.c b/fs/iomap/ioend.c
-index 2a86b05c88efc..da174d896abfe 100644
---- a/fs/iomap/ioend.c
-+++ b/fs/iomap/ioend.c
-@@ -309,6 +309,8 @@ static bool iomap_ioend_can_merge(struct iomap_ioend *ioend,
+diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+index e73c71f39bd45..92f32e02f77f4 100644
+--- a/fs/iomap/direct-io.c
++++ b/fs/iomap/direct-io.c
+@@ -74,7 +74,7 @@ static void iomap_dio_submit_bio(const struct iomap_iter *iter,
+ 
+ 	/* Sync dio can't be polled reliably */
+ 	if ((iocb->ki_flags & IOCB_HIPRI) && !is_sync_kiocb(iocb)) {
+-		bio_set_polled(bio, iocb);
++		bio->bi_opf |= REQ_POLLED;
+ 		WRITE_ONCE(iocb->private, bio);
+ 	}
+ 
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index 16c1c85613b76..9a15f90359ade 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -678,20 +678,6 @@ static inline bool bioset_initialized(struct bio_set *bs)
+ 	return bs->bio_slab != NULL;
+ }
+ 
+-/*
+- * Mark a bio as polled. Note that for async polled IO, the caller must
+- * expect -EWOULDBLOCK if we cannot allocate a request (or other resources).
+- * We cannot block waiting for requests on polled IO, as those completions
+- * must be found by the caller. This is different than IRQ driven IO, where
+- * it's safe to wait for IO to complete.
+- */
+-static inline void bio_set_polled(struct bio *bio, struct kiocb *kiocb)
+-{
+-	bio->bi_opf |= REQ_POLLED;
+-	if (kiocb->ki_flags & IOCB_NOWAIT)
+-		bio->bi_opf |= REQ_NOWAIT;
+-}
+-
+ static inline void bio_clear_polled(struct bio *bio)
  {
- 	if (ioend->io_bio.bi_status != next->io_bio.bi_status)
- 		return false;
-+	if (ioend->io_private != next->io_private)
-+		return false;
- 	if (next->io_flags & IOMAP_IOEND_BOUNDARY)
- 		return false;
- 	if ((ioend->io_flags & IOMAP_IOEND_NOMERGE_FLAGS) !=
+ 	bio->bi_opf &= ~REQ_POLLED;
 -- 
 2.53.0
 
