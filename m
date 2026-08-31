@@ -1,82 +1,91 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D1132E06EF
-	for <linux-xfs@vger.kernel.org>; Mon, 31 Aug 2026 07:10:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3DEA39FCB4
+	for <linux-xfs@vger.kernel.org>; Mon, 31 Aug 2026 07:11:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788160245; cv=none; b=t2TN5+DC6mI3VfpQkstiVSgU7hJqUi8oAk0b4LAB9TaXg0qjzMiPtBgRpd/KLkeveA6SMAiTbgNbgD7a/nJMM57HTnNAxinnpHrcFznR4ibWnzYoG6PVZd2rQpfuYmgo5czf5Gv2kvatb3hbwb7PqMw3w/dfuANZnsz5x6NfrB0=
+	t=1788160318; cv=none; b=ByLnENyfWFmk9TQzDnlvl0UeGa/qSir6UxAnKBFfGnwnVhVFNJqDF29OS69LSI4jTgArVT9wOT58j7G2FnR1NzoDEqml4PXpJHSWquRU1G8llxtP7eRJTR2OxXKPQzjxFJW225tvbg51OzmIKHnilpnmx4sJpl9C4995PkBswk8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788160245; c=relaxed/simple;
-	bh=yVNyCl1ct4ONOvjEXxJ8TmRIBxMahMJC0dMTW7eOsds=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NjordEdYvgeoeCvisFp/1kJ06Um9NXgKV+s+L1x+cVnrNcWnbOCCtoU2CxJiLbE07YL1y5fjEyu7JqyHRc9QPtIEFk7uONnfwLONC6rg7tKlY88j3gWJ0x2A9tgpNs3rZEELs76MpA2eF7L7O1ognK2Ll+hayJqmJPR0+nl1hDM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 1C43568BFE; Mon, 31 Aug 2026 09:10:40 +0200 (CEST)
-Date: Mon, 31 Aug 2026 09:10:39 +0200
+	s=arc-20240116; t=1788160318; c=relaxed/simple;
+	bh=OINsmb9OMe1t8Wh1Ce8I3nADzwDDfeZCV3aDElDYA4A=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=jdYeO53LAOmhOYt+t0JpagQWQkUu2hXIqibzaGHgWMIDYnXxNAILn5fydiUnDhwXgCGecTqYnrhzDlrfSTvBeFjJBcuSWqyuIXzp1hVFoCFAVbv6+Cp0H+PtA1wLBvGUaMjuWFz/pegTi6OxXSQhoFTU9n0sxbWWyfBfkxcceI4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=T6pceSjY; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="T6pceSjY"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=bANS14JZNvsf/ZhQCcSB0VdFS2YvE9JCui45lNw5uyc=; b=T6pceSjYSpPwB49r38DHRbJpnj
+	/8TvnvEWDC1WsrWKAd998kh4wjhucP9Rb1JvxC7Ajj4VVc28nO6mISUIqPVym2EhnLVfpQpDUirCc
+	LBcAYUqflQhsXowPImX/4knY7HNbjMqIP07fPxaPiMC4mFZJgj1sopxvJW67pi5p0wpsuUhyFZVot
+	c91t5N0lR5LNcDSloZft9q29gHTsnu8PfYdzI01Qdth+o4r8TsnRfpZGFfrLhLd5LMh6BS1oKFO4V
+	I9Nv1GxHhcabUonxs6AVFewP3Y2YRulNg1bCQ4d8y0zecWm6nT3xhrstMfSdywhLVBtcu4E5TPnwC
+	XiTTuHTA==;
+Received: from [2001:4bb8:2f9:3a59:1608:d03f:db12:ee92] (helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1x0wBP-00000008gwB-3kzh;
+	Mon, 31 Aug 2026 07:11:56 +0000
 From: Christoph Hellwig <hch@lst.de>
-To: Hans Holmberg <hans.holmberg@wdc.com>
-Cc: linux-xfs@vger.kernel.org, aalbersh@kernel.org, cem@kernel.org,
-	hch@lst.de, djwong@kernel.org
-Subject: Re: [PATCH] libxfs: report device open errors during topology
- probing
-Message-ID: <20260831071039.GA25070@lst.de>
-References: <20260827112855.70037-1-hans.holmberg@wdc.com>
+To: aalbersh@kernel.org
+Cc: djwong@kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: [PATCH] xfs_db: improve the fsmap man page entry
+Date: Mon, 31 Aug 2026 10:11:52 +0300
+Message-ID: <20260831071152.2580927-1-hch@lst.de>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260827112855.70037-1-hans.holmberg@wdc.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Thu, Aug 27, 2026 at 01:28:55PM +0200, Hans Holmberg wrote:
-> mkfs probes the device topology before libxfs_init opens the target.
-> If blkid cannot open the device, blkid_new_probe_from_filename returns
-> NULL and leaves the topology sector sizes initialized to zero.  This
-> causes mkfs to report the misleading error "illegal sector size 0".
-> 
-> Report the underlying open error immediately so that permission
-> failures are diagnosed correctly. For example:
-> 
-> cannot probe device topology for device /dev/nvme1n1: Permission denied
+Improve documentation of the flags and optional arguments, and fix up
+messed up formatting.
 
-Did you also accidentally run mkfs as a regular users? :)  That's how
-I ran into this, but didn't get around fixing it.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ man/man8/xfs_db.8 | 16 +++++++++++++---
+ 1 file changed, 13 insertions(+), 3 deletions(-)
 
-> 
-> Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
-> ---
->  libxfs/topology.c | 8 ++++++--
->  1 file changed, 6 insertions(+), 2 deletions(-)
-> 
-> diff --git a/libxfs/topology.c b/libxfs/topology.c
-> index dc2aaa17..5571c9d8 100644
-> --- a/libxfs/topology.c
-> +++ b/libxfs/topology.c
-> @@ -230,8 +230,12 @@ blkid_get_topology(
->  	blkid_probe pr;
->  
->  	pr = blkid_new_probe_from_filename(device);
-> -	if (!pr)
-> -		return;
-> +	if (!pr) {
-> +		fprintf(stderr,
-> +			_("cannot probe device topology for device %s: %s\n"),
-> +			device, strerror(errno));
-> +		exit(EXIT_FAILURE);
-> +	}
-
-I wonder if there are any valid failures from blkid_new_probe_from_filename
-where we'd want to continue?  Probably not as it doesn't really have an
-obvious failure path, but so far we continue here.  So the print is useful
-for sure, but I wonder if failing here might cause regressions in some
-really odd use case (containers without sysfs?  Although we'd run into
-trouble with that quickly in other places).
+diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
+index ba2a68211ef2..89db535d38c9 100644
+--- a/man/man8/xfs_db.8
++++ b/man/man8/xfs_db.8
+@@ -849,14 +849,24 @@ command to convert to and from this form. Block numbers given for file blocks
+ .B bmap
+ command) are in this form.
+ .TP
+-.BI "fsmap [ " start " ] [ " end " ]
++.BI "fsmap [\-r] [" start " [" end ]]
+ Prints the mapping of disk blocks used by an XFS filesystem.  The map
+ lists each extent used by files, allocation group metadata,
+ journalling logs, and static filesystem metadata, as well as any
+ regions that are unused.  All blocks, offsets, and lengths are specified
+ in units of 512-byte blocks, no matter what the filesystem's block size is.
+-.BI "The optional " start " and " end " arguments can be used to constrain
+-the output to a particular range of disk blocks.
++.IP
++The optional
++.I start
++and
++.I end
++arguments can be used to constrain the output to a particular range of disk
++blocks.
++.IP
++When the
++.B \-r
++option is specified, prints the reverse mapping for the real-time device
++instead of the data device.
+ .TP
+ .BI "fuzz [\-c] [\-d] " "field action"
+ Write garbage into a specific structure field on disk.
+-- 
+2.53.0
 
