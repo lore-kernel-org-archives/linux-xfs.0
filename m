@@ -1,156 +1,130 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A059633030F;
-	Sun, 30 Aug 2026 21:56:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D45622C21F7
+	for <linux-xfs@vger.kernel.org>; Mon, 31 Aug 2026 00:47:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788126998; cv=none; b=cG42SYMs6HIMBnFUNovZ8HMyePQRR2JQ6rHJbnKXDGFXzTY5uVedepLgiLH2y4Ws3rKq+b+ir5vgdtDqbE5eW+0Nb2KBXvjA+tJtDZpf4u9VsAI1B/ezQ7Y1+HRoVPP8b9iUego92CA0rK5q2SUevU7U9ce6I1NQu9aCOOjs+6Y=
+	t=1788137249; cv=none; b=ZTpjVLTwx/ckERLcPVJsM4DCHKjNeXvinDKKWf/vVnEYoPnknLY6MrldDRGjJPP5Q6YHR701FUJO9QYSBT+736lNCFAWPnjua7tj7EsUAf1Flfy79X4Uhir8hH5L+vn+2Qh8L1xsmV7Vgu3egkmKsa52/T0pUXZDkhJLA7uqwJY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788126998; c=relaxed/simple;
-	bh=qZlU+p7lXLrxefMKn0dslIY2Q0FciDavNpjIr64YDXw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HOgRvT+lxO4vd9xoEexa1kdreOqbe1AmRt/YvN1z97lwD7sSSX2Duq98BDfRVtcRRx7i/3faJlD9dKB3K98UPHEOM/HoHM1xe0M6IGcyv4FH+SVGtthMvA00+mswVIu4xfttBTq0FI37OSKv2i7UPctuvyi1PTxghv1k40z3kjE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Agm9kTOT; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788137249; c=relaxed/simple;
+	bh=MQpEu3wDAHZbqdrzHyo2zLigoYyYqflCjqnCr9jAqkY=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=QvFOhwf7NqTfXZBJ+P7us6Li/U56nGNDo0csBCQc/4iSdd9jB3/+96v3sVgeimknMmbN6jdv3triaRPuHR0Gz++XAwDgVukeDYy1SDu/h+TocdofhPyuanrTfuCk9ee5yYp6oziaYkCsly6KCVOGN75mky4ERAA0EiKAt1qJ2gc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=sTOl0lfW; arc=none smtp.client-ip=209.85.216.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Agm9kTOT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0825F1F000E9;
-	Sun, 30 Aug 2026 21:56:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788126997;
-	bh=KlTkAZ8T94kU0R76bTccWD/gpwVYPP6lAGYFIXUHTkI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Agm9kTOTMArPZEjG63aXM9nP0taYHpezD93f9wxLAlMVG0arRDlnQJzU9955orkK0
-	 5ewehOeablm9xUlMT7eoqVk23RbpsBV6G/c2iCSWpPLe9Aefa9hfV/OV7VAWCG1Lie
-	 R4l5uxU6JGm9yBbZStZI/CrFWmJeWpno0JJenTGUHRQoKpG9KD1G+vRlHgfJhOVM76
-	 7zoJBRDE6WC4pnKi4AqDVfzAtFQQYAwXt5Tv/cxtefTIn6NoJveH4ouYItYBX7IyRL
-	 DGVjaSp/7X/6n4EZk+KcgIquFgG0+OjH9Dzsrp+hKbw9NzmqiQkpNMIJB5K61cKd+b
-	 hhU9AWZKAqIqg==
-Date: Mon, 31 Aug 2026 07:56:27 +1000
-From: Dave Chinner <dgc@kernel.org>
-To: Ran Hongyun <ranhongyun1@huawei.com>
-Cc: catherine.hoang@oracle.com, chandan.babu@oracle.com, djwong@kernel.org,
-	hch@lst.de, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	chengzhihao1@huawei.com, yangerkun@huawei.com, yi.zhang@huawei.com
-Subject: Re: [QUESTION] xfs: Can we remove flush_workqueue from
- xlog_cil_push_now?
-Message-ID: <apSnC9p0X04cKxDj@dread>
-References: <20260827033654.1172495-1-ranhongyun1@huawei.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="sTOl0lfW"
+Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-38ec1402b05so2339010a91.2
+        for <linux-xfs@vger.kernel.org>; Sun, 30 Aug 2026 17:47:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1788137247; x=1788742047; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=A+W4QAJjuVkYQEhPreimIx5fbHXfcE4i26hZPrxZmPw=;
+        b=sTOl0lfWB+j9Z1+HhiIzgWqta9eoVGPwE44bsv0bAAVGo5YOp3/I1/HdMwrMHmsR9T
+         Dwsflgf5gV5mMIWXtRzTcDqxY6d5G1zhZE3WaQM2KxEe6169OYLUNIoJQPbM4ZsyPdZu
+         JBHjWKIzxqtTU1ldExwzuXhlxT8c3DzJpK33b1stIPUKPfhPjQWNTtgT8TGR1vw2lzKD
+         rGYXujpudf6zrubAz6T9eQwVG+0u3+jrkRCzDL4jD+6CcdEbCCWE2gi1Zbhs+h9deJJV
+         TRzu19w9zIAH49WQjoDykoVMnYP6rARQqdXWBFfDPnKw29PpeFrUlnOQoTuUbZvac1qO
+         NpkA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788137247; x=1788742047;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=A+W4QAJjuVkYQEhPreimIx5fbHXfcE4i26hZPrxZmPw=;
+        b=Yr4pOaT3BaZizAHiTzpQfuVtJ2sTbmErKh/T6gYmH5BMhC8ypH9flxemvfuvsUW1T7
+         q4s34qIXsRmCv+1YHFRHPbPX+mFN43nc3H3k9XEOOJitkP+xhA4eGquv2+2S7B3jgplL
+         x4d8jCa8zo73lOBtOSbRzrfLLFw8S3jI0p0JFYBJT4KuaPHkytJD79mr4WEPtYMssFUw
+         flUekmcf7skdb1UZZL2nSKvlt0vTqTFyptEDJTmKqnPkdJmTfjfzDElJYbyefjHmkzVZ
+         TTneDSgSQW2fm25+pD5eLhuxqZiQ1hpV7/Pwn6PywMM/LeFC6NTRLnQd1x9d6r+IVyIl
+         42jQ==
+X-Forwarded-Encrypted: i=1; AKwUvBzCmMNrsV7FGVujArsw3iWXKvtdn910zB/oNfOQu3aiX4AJnEQUuwYZ1snG7JcXy78b8qtzXB5mC2U=@vger.kernel.org
+X-Gm-Message-State: AFuF++lIOooWC1hfpYk7BTroBGdPvXKpu4FqUXPJvOJTtTna67jqiESw
+	EYw3RJDFqZ4XxTSsI/yVu6awMsSBr2F1U8fybv02HrJS3/JPisiJ06c4
+X-Gm-Gg: AYBFou3UREQ/4GUGGN4z/Yq2IVopBCSpV5BxcI+Id78t486S1bX81G2bmk7TcRwjup+
+	/66x8WeBwu1sji4FO60QxNTljdxU2tAUfLVidZUHzEXR5WXbO9pzd26nMD+1c5xdH5gpKaKd+0Y
+	56kUnHLK4pamnFJecawyNpocohDP08xS+8ZG1cb1Zml49DFifbOrZG+Ec3n6Bw+SG+idq7D17/T
+	dLkxqpfD0UHwMKAfRHDyq8xhIV/OvYo+Gtz3v1hso6AuEah1axdzdMIbJiAAVC/aMw2qpy3ZM7Y
+	qnLnFobzs9xtZUYmSncaGbb/rwwhSOWE+ROjSaWsynLMqQ9RCm7ptmevLQOUjLWmJ7L5PMWk3EF
+	N+GatY7D3BLgKtV+ofYKnanC2XabBRYBWsqfvcE0ZAV18K7qihRhWtHJ4owhxwmvYS+dCKBaBnm
+	BDNMGxnEsKyjTtHHxEl33BQvI/VipiQkIAWbx+GKwml3U5Mkfa4HTt9eb214ImD8z88UTNzkaAc
+	5GHCQNM2BkOhae8xiZjuA2aY69y080Qo4Hlbj62nbArcrt29gdJ144=
+X-Received: by 2002:a17:90b:3ec7:b0:38e:250b:122f with SMTP id 98e67ed59e1d1-396d1041324mr29242537a91.16.1788137246849;
+        Sun, 30 Aug 2026 17:47:26 -0700 (PDT)
+Received: from lima-xfs.. (174-126-236-85.cpe.sparklight.net. [174.126.236.85])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-396dda36ed6sm13688653a91.2.2026.08.30.17.47.26
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 30 Aug 2026 17:47:26 -0700 (PDT)
+From: Eric Peterson <linuxinstalled@gmail.com>
+To: Dave Chinner <dgc@kernel.org>
+Cc: Eric Peterson <linuxinstalled@gmail.com>,
+	Carlos Maiolino <cem@kernel.org>,
+	linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Eric Peterson <eric.peterson@hpe.com>
+Subject: Re: [PATCH] xfs: add per-mount read/write I/O completion counters
+Date: Sun, 30 Aug 2026 18:47:00 -0600
+Message-Id: <20260831004700.4072037-1-linuxinstalled@gmail.com>
+X-Mailer: git-send-email 2.39.5
+In-Reply-To: <apSgHPl4er6Jy9xi@dread>
+References: <20260828033429.4070267-1-linuxinstalled@gmail.com> <apSgHPl4er6Jy9xi@dread>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260827033654.1172495-1-ranhongyun1@huawei.com>
 
-On Thu, Aug 27, 2026 at 11:36:52AM +0800, Ran Hongyun wrote:
-> In xlog_cil_push_now(), we call flush_workqueue(cil->xc_push_wq) before
-> queuing a new work item in sync mode. The intention is to start any
-> pending background push and reduce the wait time for the new sync work.
-> However, after commit 636b927eba5b ("workqueue: Make unbound workqueues
-> to use per-cpu pool_workqueues"), flush_workqueue() iterates over all
-> nr_cpus pool_workqueue entries, instead of per-NUMA nodes. On large SMP
-> systems (e.g. 128 CPUs, 4 NUMA nodes), this adds significant overhead.
-> Even after 85f0d8e39aff ("workqueue: Reduce expensive locks for unbound
-> workqueue") reduced lock cost, the per-CPU iteration remains costly.
-> This seems contrary to the original performance intent of the flush.
-> 
-> Below is a bpftrace test result on a 128-CPU system with 4 NUMA nodes,
-> 16 threads doing sequential writes with fsync per write.
-> 
-> Function                    remove flush          with flush
->                             per-CPU pwqs     per-CPU      per-NUMA
-> -------------------------  --------------   ----------   -----------
-> xfs_fsync_flush_log          32-256 us      256-1000 us    32-256 us
-> flush_workqueue_prep_pwqs      N/A           2-64 us        2-8 us
-> 
-> With flush_workqueue() removed, xfs_fsync_flush_log latency drops
-> back to the per‑NUMA range (32‑256 us).
+On Mon, Aug 31, 2026 at 07:26:52AM +1000, Dave Chinner wrote:
+> Hence this really doesn't seem like something we should be trying to
+> infer from indirect filesystem stats. Why can't you use the bdev
+> stats to get the actual filesystem wide queue depth information?
 
-Ok, but how does the IO performance change? Does this result in a
-measurable increase in RWF_OSYNC write throughput? (write + fsync ==
-pwritev2(RWF_OSYNC)).
+The block device measures the device queue, which is a different
+quantity than filesystem outstanding I/O - not just a lower-layer view
+of the same thing.
 
-However, behavioural changes like this seem like an infrastructure
-regression, and trying to modify callers to hide that regression is
-a bandaid. This affects all UNBOUND workqueues, not just this one,
-and we do not need per-cpu scheduling for workqueues with such low
-work and concurrency counts - there can only be 4 pushs scheduled
-and running concurrently at any time on this work queue. Hence we
-don't even need NUMA queuing - a single global queue would work just
-fine...
+Below are three cases where filesystem queue depth is not what the block
+layer sees:
 
-Hence it seems to me that this overhead problem should be fixed at
-the WQ infra level, not worked around in the caller context...
+1. Cache hits never reach the block layer. Under a heavy read workload
+   with a warm cache, a large share of ops are serviced from the page
+   cache and are never seen at the block level. Device queue depth can
+   sit near zero while the filesystem is servicing a very high op rate.
 
-> The removal relies on the assumption that flush_workqueue is just a
-> performance optimization, not a correctness requirement. Without it,
-> xlog_cil_force_seq already provides a reliable completion guarantee via
-> xlog_wait(&cil->xc_commit_wait), which blocks until the target sequence
-> has been committed. The caller will eventually observe the completion
-> regardless of whether flush_workqueue was called. In addition, ordering
-> is enforced by xlog_cil_order_write, which ensures all records are
-> written in strict sequence order. Therefore, removing flush_workqueue
-> does not weaken any ordering or completion semantics.
+2. Filesystem ops don't map 1:1 to block I/O. A single read or write can
+   produce one block I/O, several (metadata, readahead, writeback
+   coalescing), or none at all. So device queue depth isn't the
+   filesystem's outstanding-operation count.
 
-And wait latency goes up because now there is nothing to expedidite
-the scheduling of the work we are waiting to complete.
+3. Work can be outstanding inside the filesystem before any block I/O is
+   issued - waiting on locks, log space/reservation, delalloc, etc.
+   Such I/O has entered the filesystem but is invisible at the bdev.
 
-i.e. you might see a drop in CPU time in flush heavy workloads by
-removing it, but the trade off is an increase in wait time variance
-and long tail latencies, especially under light load.
+The block-device queue depth answers "how deep is the device queue,"
+which is not the same as "how much work is outstanding in the
+filesystem." When the filesystem is just one layer an I/O passes
+through, the block stats fold the layers together and structurally
+cannot isolate the filesystem's own contribution.
 
-> If this analysis is correct, the change can be applied broadly to all
-> sync force callers through xlog_cil_push_now(), as they all share the
-> same completion and ordering guarantees provided by the existing CIL
-> infrastructure. The per-CPU iteration overhead would be eliminated on
-> every sync log force without affecting correctness.
-> 
-> But there are several concerns I'd like to confirm:
-> 
-> Is flush_workqueue just about performance, or does it hide any
-> correctness dependency I'm missing?
+To be clear about scope: I'm not proposing a queue-depth feature in
+the kernel. The change just adds read/write completion counters to pair
+with the existing call (submission) counters, so userspace can compute
+outstanding I/O and derive a response-time estimate itself. The kernel
+side is only exposing the complementary raw signal that's currently
+missing - calls are counted, completions are not.
 
-It may well hide implicit correctness bugs.
+Being upfront: what userspace derives from this is an instantaneous
+approximation, not a precise time-weighted queue length. It's meant as
+a cheap, always-on aggregate, not a replacement for accurate per-op
+tooling.
 
-> Without it, the "if (!ctx->commit_lsn) { goto restart; }" loop in
-> xlog_cil_force_seq may be triggered more often. Is that acceptable,
-> or is it a concern?
+Does exposing the completion side of the existing call counters seem
+reasonable on that basis?
 
-That's additional context switches and latency. i.e. CPU overhead
-that we are trying to avoid...
-
-> Are there any ordering guarantees provided by flush_workqueue that
-> xc_push_lock + waitqueues don't already provide?
-
-Removing the flush will change the order in which concurrent push
-pipelines order in the journal. This could change the inherent order
-of checkpoints in the journal, so there could be visible artifacts
-during crash recovery compared to an flushing implementaiton. None
-of that would be a correctness issue, but from an application POV it
-would be like the concurrent fsync operations completing in a
-different order across different kernel versions.
-
-A lakc of flushing could also simply move the ordering latency
-bottleneck to journal IO completion where checkpoints have to be
-completed in ascending LSN order. Whether that causes a problem or
-not is a complete unknown, but it could increase overall wait times
-as waiting seqeunces always get woken in ascending order, and hence
-everything will wait if a low sequeunce flush submission gets held
-up because the kworker isn't scheduled immediately...
-
-> I'd appreciate any thoughts on whether this change is safe.
-
-Probably safe, but there is lots of potential for performance
-regressions by removing it. Better would be to provide a low
-overhead work queue implementation for callers that don't need
-scale-out performance from their unbound workqueues....
-
--Dave.
--- 
-Dave Chinner
-dgc@kernel.org
+-Eric
