@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 028A23F076C
-	for <linux-xfs@vger.kernel.org>; Mon, 31 Aug 2026 23:27:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 813BB3BCD1E
+	for <linux-xfs@vger.kernel.org>; Mon, 31 Aug 2026 23:27:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788218827; cv=none; b=exz+H6l+z/EpJ4zfp81JjMj3fOrqQnLBGzb67sTy1TN0hPuIZY0HHEzWfl6xTpD5ujU7Xd01wjEcb+ioxhBIs2cbUMvgdbiDo1VZ4Ov8LrTmiK8srRVYqLirvAR+gzdAXgQRxIEFmaUeRyr/ScVZtXqqAfETa3GkJtHeQiNSDzQ=
+	t=1788218842; cv=none; b=dvQdFxXNzOSR0oAabkNTMD5tR6WqwxL4aL+4GrO1n9tG2GeRRfPP/ukGoclscGaLumvy9ggeIukjO/HXZACUc5d/lXsEyG61gGqOMzo8EK1l0pq4cQDd+7HfvOaRePGiDgSebYisSjGKmYVr/KddHc7j9wMaHuXnDV71suCJA6I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788218827; c=relaxed/simple;
-	bh=HHFoITo2iTBqKsSvYp15olyWQqNJCX0MUXYfD8E8sbI=;
+	s=arc-20240116; t=1788218842; c=relaxed/simple;
+	bh=HESJlW3CfZXPgYm34XWjua7rfFvuvkh6B9wYbP/Z1gU=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=FBKSZOqD6xZGO7rgUPCyLGmNkxHavfpbdFlhwPDvtKpzQLp3nRps8KPBmBpFYkVuK1iGAH8/e8qpSba/y705e/Mr6YJYdSQ6REgUnLTU8C5dZWYFV7EQTLLSAC4Ju95VoR9wr2Kvh0zgkULBhyyohEi0S7KK6LtVVxtPYUAr/Eo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Awzf39VE; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=AXJ2ABmkQqKNXIREtPUNOla7K5eJtD4uKcxvopRtJhdDglLz1OxccxAsmUhjGSB8Ami3lVELIwR3mNJoIgfzdQXa4LzW1IjN4Vn8wEghteGM3EeWS/9xHEzmLH9gophAZ3qjz+zKbHmJAcyOOIQOoxsGv9l/gTwdJoa66QPLhzU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KCCwJ8IB; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Awzf39VE"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 76F3D1F000E9;
-	Mon, 31 Aug 2026 23:27:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KCCwJ8IB"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 038B21F000E9;
+	Mon, 31 Aug 2026 23:27:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788218825;
-	bh=/A6MhoT6s9qDRLILnH5W9AHZnCY4QRLxeKL22PgdgIo=;
+	s=k20260515; t=1788218841;
+	bh=yjw+7oZ5BDUt4P/26yhWAYkoBbLaf1KqKWiAQKKoIak=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=Awzf39VEZLl/9gt/hkxeGNcgNZg/CFRAQLIXbLa9J6mDu4Y6qBVgbYDlwSjkTal3s
-	 xmvxBfMxaOTXyew+2ciL7so5c/F2twM+PP5nUxnTGklrrttnntbWrqV7Ie/GMu/BxI
-	 LHQH2BnxESDbft7DQ5eGEBK7qvkkPnN4MCAAwUBMVdXhqqaa53L5iLG7ncqlMfsDiP
-	 +fuxT3hcXCZdH2ynyI/nsn9lWbM4+oWVR2/9v52LVR7i7AsM9TWtM2TW8hzDdxTuqj
-	 3n5Js+VnTQPC/5/rKYGciGUghn+0k+C1Y6a5cW9J5BXhLd0SWgqlb1HEhhR/Gv/DLL
-	 sjw3b3yw5czMA==
-Date: Mon, 31 Aug 2026 16:27:05 -0700
-Subject: [PATCH 2/5] mkfs: print config file for a given mkfs configuration
+	b=KCCwJ8IB7SxUR+lJFKaMo/9jtS7r+s1K0ovl1xrlHE2XhfuncHackngdoZErwEPJF
+	 UVJ5x1wWvPynaD41aQPHNFM8Pp00WpwdqnUwZYi4tpvxlklkaSghL64OM3QCLhM4N1
+	 jpgAwQVJZ7PLdpUYsoUwKDj8cuw8OGQ8UWBH6nbIa0VFCkllQKsFXmgr3rfpaOFfWZ
+	 p4gwXSR+Pr4iXtlOML5AWz5B9KDJoaVus5Iw/vYo5RgSMupOU9GxZHbly03fFZwWX/
+	 HNRkzKSE7lr51U1uqQbKnWSBs2kqD0FaDq63Tb9ppHevvPAS6ULCMCqJBl6WuD++ih
+	 jm7FhoVP9rj0g==
+Date: Mon, 31 Aug 2026 16:27:20 -0700
+Subject: [PATCH 3/5] xfs_db: print configuration file for mounted filesystems
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <178821870627.2381199.2536649416350488195.stgit@frogsfrogsfrogs>
+Message-ID: <178821870646.2381199.5915299797285495548.stgit@frogsfrogsfrogs>
 In-Reply-To: <178821870568.2381199.9038448943413709082.stgit@frogsfrogsfrogs>
 References: <178821870568.2381199.9038448943413709082.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,544 +45,246 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add a -c makecfg= switch to mkfs to emit a mkfs.xfs configuration file
-documenting the user-visible filesystem featuresets of the configured
-filesystem.  This can be used to emit default configuration files as we
-do once a year for each LTS.
-
-Note that geometry information is not written to the configuration file.
+Teach xfs_db to emit a mkfs.xfs config file for an unmounted filesystem.
+This can be used to create a new filesystem based on an existing image.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- libfrog/fsgeom.h       |    3 
- libfrog/fsgeom.c       |  376 ++++++++++++++++++++++++++++++++++++++++++++++++
- man/man8/mkfs.xfs.8.in |    6 +
- mkfs/xfs_mkfs.c        |   44 +++++-
- 4 files changed, 428 insertions(+), 1 deletion(-)
+ db/info.c         |  193 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ man/man8/xfs_db.8 |    6 ++
+ 2 files changed, 199 insertions(+)
 
 
-diff --git a/libfrog/fsgeom.h b/libfrog/fsgeom.h
-index b851b9bbf36a58..1109dd2bcdb4cc 100644
---- a/libfrog/fsgeom.h
-+++ b/libfrog/fsgeom.h
-@@ -217,4 +217,7 @@ bytes_per_rtgroup(
- 		fsgeo->blocksize;
- }
- 
-+int xfrog_write_mkfs_config(const struct xfs_fsop_geom *fsgeo,
-+		const struct fsxattr *fsx, int autofsck, FILE *fp);
-+
- #endif /* __LIBFROG_FSGEOM_H__ */
-diff --git a/libfrog/fsgeom.c b/libfrog/fsgeom.c
-index 571d376c6b3c28..fdb7b96e06b246 100644
---- a/libfrog/fsgeom.c
-+++ b/libfrog/fsgeom.c
-@@ -7,6 +7,8 @@
- #include "bitops.h"
- #include "fsgeom.h"
- #include "util.h"
-+#include "list.h"
+diff --git a/db/info.c b/db/info.c
+index 9c233c9c0e6602..e4c026a2c4f429 100644
+--- a/db/info.c
++++ b/db/info.c
+@@ -9,6 +9,7 @@
+ #include "output.h"
+ #include "libfrog/fsgeom.h"
+ #include "libfrog/logging.h"
 +#include "libfrog/fsproperties.h"
  
- static inline const char *
- rtdev_name(
-@@ -250,3 +252,377 @@ xfrog_rtgroup_geometry(
- 		return -errno;
- 	return 0;
- }
-+
-+enum {
-+	M_CRC = 0,
-+	M_FINOBT,
-+	M_RMAPBT,
-+	M_REFLINK,
-+	M_INOBTCNT,
-+	M_BIGTIME,
-+	M_METADIR,
-+	M_AUTOFSCK,
-+	M_MAX_OPTS,
-+};
-+
-+enum {
-+	D_RTINHERIT = 0,
-+	D_PROJINHERIT,
-+	D_EXTSZINHERIT,
-+	D_COWEXTSIZE,
-+	D_DAXINHERIT,
-+	D_MAX_OPTS,
-+};
-+
-+enum {
-+	I_SPINODES = 0,
-+	I_NREXT64,
-+	I_EXCHANGE,
-+	I_MAX_OPTS,
-+};
-+
-+enum {
-+	N_PARENT = 0,
-+	N_FTYPE,
-+	N_VERSION,
-+	N_MAX_OPTS,
-+};
-+
-+enum {
-+	R_EXTSIZE = 0,
-+	R_MAX_OPTS,
-+};
-+
-+struct mkfs_config_opt;
-+
-+struct mkfs_config_data {
-+	const struct xfs_fsop_geom	*fsgeo;
-+	const struct fsxattr		*fsx;
-+	enum fsprop_autofsck		autofsck;
-+};
-+
-+typedef int (*opt_print_fn)(const struct mkfs_config_opt *opt,
-+			    const struct mkfs_config_data *data,
-+			    FILE *fp);
-+
-+struct mkfs_config_opt {
-+	const char		*name;
-+	uint64_t		fsgeom_flag;
-+	uint64_t		xflags_flag;
-+	opt_print_fn		print_fn;
-+};
-+
-+struct mkfs_config_section {
-+	const char		*ini_section;
-+	struct mkfs_config_opt	subopts[16];
-+};
-+
-+static int
-+print_fsgeom(
-+	const struct mkfs_config_opt	*opt,
-+	const struct mkfs_config_data	*data,
-+	FILE				*fp)
+ static void
+ info_help(void)
+@@ -276,10 +277,202 @@ static const struct cmdinfo rgresv_cmd = {
+ 	.help =		rgresv_help,
+ };
+ 
++static void
++makecfg_help(void)
 +{
-+	const struct xfs_fsop_geom	*fsgeo = data->fsgeo;
-+	int				ret;
++	dbprintf(_(
++"\n"
++" Print a mkfs.xfs configuration file for user-visible filesystem features\n"
++" of the current filesystem.  Geometry information are not printed.\n"
++"\n"
++));
 +
-+	ret = fprintf(fp, "%s=%d\n", opt->name,
-+			!!(fsgeo->flags & opt->fsgeom_flag));
-+	if (ret <= 0)
-+		return ret;
-+	return 0;
++}
++static void
++fill_fsxattr(
++	struct xfs_inode	*ip,
++	struct fsxattr		*fa)
++{
++	struct xfs_mount	*mp = ip->i_mount;
++	struct xfs_ifork	*ifp = xfs_ifork_ptr(ip, XFS_DATA_FORK);
++
++	fa->fsx_xflags = xfs_ip2xflags(ip);
++
++	if (ip->i_diflags & XFS_DIFLAG_EXTSIZE) {
++		fa->fsx_extsize = ip->i_extsize;
++	} else if (ip->i_diflags & XFS_DIFLAG_EXTSZINHERIT) {
++		/*
++		 * Don't let a misaligned extent size hint on a directory
++		 * escape to userspace if it won't pass the setattr checks
++		 * later.
++		 */
++		if ((ip->i_diflags & XFS_DIFLAG_RTINHERIT) &&
++		    xfs_extlen_to_rtxmod(mp, ip->i_extsize) > 0) {
++			fa->fsx_xflags &= ~(FS_XFLAG_EXTSIZE |
++					    FS_XFLAG_EXTSZINHERIT);
++			fa->fsx_extsize = 0;
++		} else {
++			fa->fsx_extsize = ip->i_extsize;
++		}
++	}
++
++	if (ip->i_diflags2 & XFS_DIFLAG2_COWEXTSIZE) {
++		/*
++		 * Don't let a misaligned CoW extent size hint on a directory
++		 * escape to userspace if it won't pass the setattr checks
++		 * later.
++		 */
++		if ((ip->i_diflags & XFS_DIFLAG_RTINHERIT) &&
++		    ip->i_cowextsize % mp->m_sb.sb_rextsize > 0) {
++			fa->fsx_xflags &= ~FS_XFLAG_COWEXTSIZE;
++			fa->fsx_cowextsize = 0;
++		} else {
++			fa->fsx_cowextsize = ip->i_cowextsize;
++		}
++	}
++
++	fa->fsx_projid = ip->i_projid;
++	if (ifp && !xfs_need_iread_extents(ifp))
++		fa->fsx_nextents = xfs_iext_count(ifp);
++	else
++		fa->fsx_nextents = xfs_ifork_nextents(ifp);
 +}
 +
 +static int
-+print_xflag(
-+	const struct mkfs_config_opt	*opt,
-+	const struct mkfs_config_data	*data,
-+	FILE				*fp)
++get_autofsck(
++	struct xfs_inode	*ip,
++	enum fsprop_autofsck	*autofsck)
 +{
-+	const struct fsxattr		*fsx = data->fsx;
-+	int				ret;
++	char			value[FSPROP_MAX_VALUELEN + 1];
++	struct xfs_da_args	args = {
++		.dp		= ip,
++		.geo		= mp->m_attr_geo,
++		.whichfork	= XFS_ATTR_FORK,
++		.op_flags	= XFS_DA_OP_OKNOENT,
++		.attr_filter	= LIBXFS_ATTR_ROOT,
++		.owner		= mp->m_sb.sb_rootino,
++		.value		= value,
++		.valuelen	= sizeof(value),
++	};
++	char			*p;
++	int			error;
 +
-+	if (!(fsx->fsx_xflags & opt->xflags_flag))
++	*autofsck = FSPROP_AUTOFSCK_UNSET;
++
++	error = fsprop_name_to_attr_name(FSPROP_AUTOFSCK_NAME, &p);
++	if (error < 0)
++		return ENOMEM;
++
++	args.namelen = error;
++	args.name = (const uint8_t *)p;
++
++	libxfs_attr_sethash(&args);
++
++	error = -libxfs_attr_get(&args);
++	if (error == ENODATA) {
++		error = 0;
++		goto out_p;
++	}
++	if (error)
++		goto out_p;
++	if (!args.valuelen)
 +		return 0;
 +
-+	ret = fprintf(fp, "%s=%d\n", opt->name, 1);
-+	if (ret <= 0)
-+		return ret;
-+	return 0;
++	/* raw xattr value is not terminated */
++	value[args.valuelen] = 0;
++	*autofsck = fsprop_autofsck_read(value);
++
++out_p:
++	free(p);
++	return error;
 +}
 +
 +static int
-+print_projinherit(
-+	const struct mkfs_config_opt	*opt,
-+	const struct mkfs_config_data	*data,
-+	FILE				*fp)
++makecfg_f(
++	int			argc,
++	char			**argv)
 +{
-+	const struct fsxattr		*fsx = data->fsx;
-+	int				ret;
++	struct xfs_fsop_geom	geo;
++	struct fsxattr		fsx = { };
++	struct xfs_inode	*ip;
++	FILE			*fp;
++	bool			close_fp = false;
++	enum fsprop_autofsck	autofsck;
++	int			c;
++	int			error;
 +
-+	if (fsx->fsx_xflags & FS_XFLAG_PROJINHERIT) {
-+		ret = fprintf(fp, "%s=%u\n", opt->name, fsx->fsx_projid);
-+		if (ret <= 0)
-+			return ret;
++	while ((c = getopt(argc, argv, "")) != EOF) {
++		switch (c) {
++		default:
++			dbprintf(_("bad option for makecfg command\n"));
++			return 0;
++		}
 +	}
 +
-+	return 0;
-+}
-+
-+static int
-+print_extszinherit(
-+	const struct mkfs_config_opt	*opt,
-+	const struct mkfs_config_data	*data,
-+	FILE				*fp)
-+{
-+	const struct fsxattr		*fsx = data->fsx;
-+	int				ret;
-+
-+	if (fsx->fsx_xflags & FS_XFLAG_EXTSZINHERIT) {
-+		ret = fprintf(fp, "%s=%u\n", opt->name, fsx->fsx_extsize);
-+		if (ret <= 0)
-+			return ret;
++	if (optind != argc && optind != argc - 1) {
++		dbprintf(_("bad option for makecfg command\n"));
++		return 0;
 +	}
 +
-+	return 0;
-+}
-+
-+static int
-+print_cowextszinherit(
-+	const struct mkfs_config_opt	*opt,
-+	const struct mkfs_config_data	*data,
-+	FILE				*fp)
-+{
-+	const struct fsxattr		*fsx = data->fsx;
-+	int				ret;
-+
-+	if (fsx->fsx_xflags & FS_XFLAG_COWEXTSIZE) {
-+		ret = fprintf(fp, "%s=%u\n", opt->name, fsx->fsx_cowextsize);
-+		if (ret <= 0)
-+			return ret;
++	error = -libxfs_iget(mp, NULL, mp->m_sb.sb_rootino, 0, &ip);
++	if (error) {
++		fprintf(stderr, "root: %s\n", strerror(error));
++		return 1;
 +	}
 +
-+	return 0;
-+}
-+
-+static int
-+print_rtextsize(
-+	const struct mkfs_config_opt	*opt,
-+	const struct mkfs_config_data	*data,
-+	FILE				*fp)
-+{
-+	const struct xfs_fsop_geom	*fsgeo = data->fsgeo;
-+	int				ret;
-+
-+	if (fsgeo->rtextsize > 1) {
-+		ret = fprintf(fp, "%s=%u\n", opt->name,
-+				fsgeo->rtextsize * fsgeo->blocksize);
-+		if (ret <= 0)
-+			return ret;
++	error = get_autofsck(ip, &autofsck);
++	if (error) {
++		fprintf(stderr, "autofsck: %s\n", strerror(error));
++		error = 1;
++		goto out_ip;
 +	}
 +
-+	return 0;
-+}
++	fill_fsxattr(ip, &fsx);
++	libxfs_fs_geometry(mp, &geo, XFS_FS_GEOM_MAX_STRUCT_VER);
 +
-+static int
-+print_dirversion(
-+	const struct mkfs_config_opt	*opt,
-+	const struct mkfs_config_data	*data,
-+	FILE				*fp)
-+{
-+	const struct xfs_fsop_geom	*fsgeo = data->fsgeo;
-+	int				ret;
-+
-+	if (fsgeo->flags & XFS_FSOP_GEOM_FLAGS_DIRV2CI)
-+		ret = fprintf(fp, "%s=ci\n", opt->name);
-+	else
-+		ret = fprintf(fp, "%s=2\n", opt->name);
-+	if (ret <= 0)
-+		return ret;
-+	return 0;
-+}
-+
-+static int
-+print_autofsck(
-+	const struct mkfs_config_opt	*opt,
-+	const struct mkfs_config_data	*data,
-+	FILE				*fp)
-+{
-+	int				ret;
-+	const char			*value =
-+		fsprop_autofsck_write(data->autofsck);
-+
-+	if (value) {
-+		ret = fprintf(fp, "%s=%s\n", opt->name, value);
-+		if (ret <= 0)
-+			return ret;
++	if (optind == argc) {
++		fp = stdout;
++	} else {
++		fp = fopen(argv[optind], "w");
++		if (!fp) {
++			perror(argv[optind]);
++			error = 1;
++			goto out_ip;
++		}
++		close_fp = true;
 +	}
 +
-+	return 0;
++	error = xfrog_write_mkfs_config(&geo, &fsx, autofsck, fp);
++	if (error) {
++		if (close_fp)
++			perror(argv[optind]);
++		else
++			perror("makecfg");
++	}
++
++	if (close_fp)
++		fclose(fp);
++out_ip:
++	libxfs_irele(ip);
++	return error;
 +}
 +
-+static const struct mkfs_config_section config_sections[] = {
-+	{
-+		.ini_section = "metadata",
-+		.subopts = {
-+			[M_CRC] = {
-+				.name		= "crc",
-+				.fsgeom_flag	= XFS_FSOP_GEOM_FLAGS_V5SB,
-+			},
-+			[M_FINOBT] = {
-+				.name		= "finobt",
-+				.fsgeom_flag	= XFS_FSOP_GEOM_FLAGS_FINOBT,
-+			},
-+			[M_RMAPBT] = {
-+				.name		= "rmapbt",
-+				.fsgeom_flag	= XFS_FSOP_GEOM_FLAGS_RMAPBT,
-+			},
-+			[M_REFLINK] = {
-+				.name		= "reflink",
-+				.fsgeom_flag	= XFS_FSOP_GEOM_FLAGS_REFLINK,
-+			},
-+			[M_INOBTCNT] = {
-+				.name		= "inobtcount",
-+				.fsgeom_flag	= XFS_FSOP_GEOM_FLAGS_INOBTCNT,
-+			},
-+			[M_BIGTIME] = {
-+				.name		= "bigtime",
-+				.fsgeom_flag	= XFS_FSOP_GEOM_FLAGS_BIGTIME,
-+			},
-+			[M_METADIR] = {
-+				.name		= "metadir",
-+				.fsgeom_flag	= XFS_FSOP_GEOM_FLAGS_METADIR,
-+			},
-+			[M_AUTOFSCK] = {
-+				.name		= "autofsck",
-+				.print_fn	= print_autofsck,
-+			},
-+			[M_MAX_OPTS] = { },
-+		},
-+	},
-+	{
-+		.ini_section			= "data",
-+		.subopts = {
-+			[D_RTINHERIT] = {
-+				.name		= "rtinherit",
-+				.xflags_flag	= FS_XFLAG_RTINHERIT,
-+			},
-+			[D_PROJINHERIT] = {
-+				.name		= "projinherit",
-+				.print_fn	= print_projinherit,
-+			},
-+			[D_EXTSZINHERIT] = {
-+				.name		= "extszinherit",
-+				.print_fn	= print_extszinherit,
-+			},
-+			[D_COWEXTSIZE] = {
-+				.name		= "cowextsize",
-+				.print_fn	= print_cowextszinherit,
-+			},
-+			[D_DAXINHERIT] = {
-+				.name		= "daxinherit",
-+				.xflags_flag	= FS_XFLAG_DAX,
-+			},
-+			[D_MAX_OPTS] = { },
-+		},
-+	},
-+	{
-+		.ini_section			= "inode",
-+		.subopts = {
-+			[I_SPINODES] = {
-+				.name		= "sparse",
-+				.fsgeom_flag	= XFS_FSOP_GEOM_FLAGS_SPINODES,
-+			},
-+			[I_NREXT64] = {
-+				.name		= "nrext64",
-+				.fsgeom_flag	= XFS_FSOP_GEOM_FLAGS_NREXT64,
-+			},
-+			[I_EXCHANGE] = {
-+				.name		= "exchange",
-+				.fsgeom_flag	= XFS_FSOP_GEOM_FLAGS_EXCHANGE_RANGE,
-+			},
-+			[I_MAX_OPTS] = { },
-+		},
-+	},
-+	{
-+		.ini_section = "naming",
-+		.subopts = {
-+			[N_PARENT] = {
-+				.name		= "parent",
-+				.fsgeom_flag	= XFS_FSOP_GEOM_FLAGS_PARENT,
-+			},
-+			[N_FTYPE] = {
-+				.name		= "ftype",
-+				.fsgeom_flag	= XFS_FSOP_GEOM_FLAGS_FTYPE,
-+			},
-+			[N_VERSION] = {
-+				.name		= "version",
-+				.print_fn	= print_dirversion,
-+			},
-+		},
-+	},
-+	{
-+		.ini_section = "realtime",
-+		.subopts = {
-+			[R_EXTSIZE] = {
-+				.name		= "extsize",
-+				.print_fn	= print_rtextsize,
-+			},
-+			[R_MAX_OPTS] = { },
-+		},
-+	},
++static const struct cmdinfo makecfg_cmd = {
++	.name =		"makecfg",
++	.cfunc =	makecfg_f,
++	.argmin =	0,
++	.argmax =	1,
++	.canpush =	0,
++	.args =		NULL,
++	.oneline =	N_("print mkfs.xfs configuration file"),
++	.help =		makecfg_help,
 +};
 +
-+/*
-+ * Write a mkfs.xfs configuration file for the user-visible filesystem features
-+ * enabled in the corresponding fs geometry and root directory file attribute
-+ * structures.
-+ *
-+ * Note: The regular and COW extent size hints must be in units of fsblocks,
-+ * not bytes.
-+ */
-+int
-+xfrog_write_mkfs_config(
-+	const struct xfs_fsop_geom		*fsgeo,
-+	const struct fsxattr			*fsx,
-+	int					autofsck,
-+	FILE					*fp)
-+{
-+	struct mkfs_config_data			d = {
-+		.fsgeo				= fsgeo,
-+		.fsx				= fsx,
-+		.autofsck			= autofsck,
-+	};
-+	const struct mkfs_config_section	*section = config_sections;
-+	const struct mkfs_config_opt		*opt;
-+	int					i, j;
-+	int					error;
-+
-+	for (i = 0; i < ARRAY_SIZE(config_sections); i++, section++) {
-+		if (i > 0) {
-+			error = fprintf(fp, "\n");
-+			if (error <= 0)
-+				return error;
-+		}
-+
-+		error = fprintf(fp, "[%s]\n", section->ini_section);
-+		if (error <= 0)
-+			return error;
-+
-+		opt = section->subopts;
-+		for (j = 0;
-+		     j < ARRAY_SIZE(section->subopts) && opt->name;
-+		     j++, opt++) {
-+			if (opt->print_fn)
-+				error = opt->print_fn(opt, &d, fp);
-+			else if (opt->xflags_flag)
-+				error = print_xflag(opt, &d, fp);
-+			else if (opt->fsgeom_flag)
-+				error = print_fsgeom(opt, &d, fp);
-+			if (error)
-+				return error;
-+		}
-+	}
-+
-+	return fflush(fp);
-+}
-diff --git a/man/man8/mkfs.xfs.8.in b/man/man8/mkfs.xfs.8.in
-index c4dee4fe07ae83..264457c3c283f1 100644
---- a/man/man8/mkfs.xfs.8.in
-+++ b/man/man8/mkfs.xfs.8.in
-@@ -163,6 +163,12 @@ .SH OPTIONS
- This option can be use either an absolute or relative path to the configuration
- file to be read.
- Sample configuration files can be found in @mkfs_cfg_dir@.
-+.TP
-+.BI makecfg= value
+ void
+ info_init(void)
+ {
+ 	add_command(&info_cmd);
+ 	add_command(&agresv_cmd);
+ 	add_command(&rgresv_cmd);
++	add_command(&makecfg_cmd);
+ }
+diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
+index ba2a68211ef21f..b602c9d399ece7 100644
+--- a/man/man8/xfs_db.8
++++ b/man/man8/xfs_db.8
+@@ -959,6 +959,12 @@ .SH COMMANDS
+ .BI "help [" command ]
+ Print help for one or all commands.
+ .TP
++.BI "makecfg [" path ]
 +Write a configuration file to the given path that can be re-read by mkfs.xfs
 +for a future filesystem format attempt.
 +This file will contain only user-visible features.
 +If no path is given, the configuration will be printed on standard output.
- .RE
- .PP
- .PD 0
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 74bbb677eee2b6..212e17a354d8be 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -61,6 +61,7 @@ enum {
- 
- enum {
- 	C_OPTFILE = 0,
-+	C_MAKECFG,
- 	C_MAX_OPTS,
- };
- 
-@@ -312,6 +313,7 @@ static struct opt_params copts = {
- 	.name = 'c',
- 	.subopts = {
- 		[C_OPTFILE] = "options",
-+		[C_MAKECFG] = "makecfg",
- 		[C_MAX_OPTS] = NULL,
- 	},
- 	.subopt_params = {
-@@ -319,6 +321,10 @@ static struct opt_params copts = {
- 		  .conflicts = { { NULL, LAST_CONFLICT } },
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
-+		{ .index = C_MAKECFG,
-+		  .conflicts = { { NULL, LAST_CONFLICT } },
-+		  .defaultval = 1,
-+		},
- 	},
- };
- 
-@@ -1072,6 +1078,7 @@ struct cli_params {
- 
- 	char	*cfgfile;
- 	char	*protofile;
-+	char	*makecfg;
- 
- 	enum fsprop_autofsck autofsck;
- 
-@@ -1207,7 +1214,7 @@ usage( void )
- {
- 	fprintf(stderr, _("Usage: %s\n\
- /* blocksize */		[-b size=num]\n\
--/* config file */	[-c options=xxx]\n\
-+/* config file */	[-c options=xxx,makecfg=0|1]\n\
- /* metadata */		[-m crc=0|1,finobt=0|1,uuid=xxx,rmapbt=0|1,reflink=0|1,\n\
- 			    inobtcount=0|1,bigtime=0|1,autofsck=xxx,\n\
- 			    metadir=0|1]\n\
-@@ -1787,6 +1794,12 @@ cfgfile_opts_parser(
- 	case C_OPTFILE:
- 		cli->cfgfile = getstr(value, opts, subopt);
- 		break;
-+	case C_MAKECFG:
-+		if (!value)
-+			cli->makecfg = "-";
-+		else
-+			cli->makecfg = getstr(value, opts, subopt);
-+		break;
- 	default:
- 		return -EINVAL;
- 	}
-@@ -6088,6 +6101,10 @@ main(
- 	 */
- 	cfgfile_parse(&cli);
- 
-+	/* Don't create anything if we're merely generating a config file */
-+	if (cli.makecfg)
-+		dry_run = 1;
-+
- 	/*
- 	 * Extract as much of the valid config as we can from the CLI input
- 	 * before opening the libxfs devices.
-@@ -6197,6 +6214,31 @@ main(
- 
- 	validate_supported(mp, &cli);
- 
-+	if (cli.makecfg) {
-+		struct xfs_fsop_geom	geo;
-+		FILE			*fp;
-+
-+		if (!strcmp(cli.makecfg, "-")) {
-+			fp = stdout;
-+		} else {
-+			fp = fopen(cli.makecfg, "w+");
-+			if (!fp) {
-+				perror(cli.makecfg);
-+				exit(1);
-+			}
-+		}
-+
-+		libxfs_fs_geometry(mp, &geo, XFS_FS_GEOM_MAX_STRUCT_VER);
-+		error = xfrog_write_mkfs_config(&geo, &cli.fsx, cli.autofsck,
-+				fp);
-+		if (error) {
-+			perror(cli.makecfg);
-+			exit(1);
-+		}
-+
-+		exit(0);
-+	}
-+
- 	/* Print the intended geometry of the fs. */
- 	if (!quiet || dry_run) {
- 		struct xfs_fsop_geom	geo;
++.TP
+ .B info
+ Displays selected geometry information about the filesystem.
+ The output will have the same format that
 
