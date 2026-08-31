@@ -1,79 +1,77 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DF642DA768;
-	Mon, 31 Aug 2026 08:06:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A35483B8D75
+	for <linux-xfs@vger.kernel.org>; Mon, 31 Aug 2026 08:53:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788163565; cv=none; b=Sir32tcmN28IrY4VjzJLs6sRIMO2wvRdX4UoESoBa6pUhgxuUJgGaj1hv6x+M290XvEXTojLJMZTPlS8T2ai1Gg0LsH/WHojEFsOvYJ3X5R9HJ9+VXdbTy16KKUVy4QesYw3ROH8uGx7qWDGjJ1RsJ+B4maY9Jke7K7rbp72nnU=
+	t=1788166426; cv=none; b=rOEknEls2jFEmifJINkNlqSI3XKrI53jxMkqRxrVgpQFqVHx2VpMJAIgy8EmdtgjmtKkiSBtHiGn59e04Bh2B5BsjlSOiqb8Mhe/lILtAjRVhStXiCS+/ac6xw/63/O8BbtMSREAeCBLFSHrKYIlfCQfvwZRNak0A/4Z/jNJo08=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788163565; c=relaxed/simple;
-	bh=/vyfIpuyozcVWZhMsXhvdOtCX7acdCxC7D7R6kRYp80=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=nFQnyPariNuEuxexHNhiC39kXfTytqi4E+mQCfrajwaiSN6te9cWT8vSSUFsOLtuagKIfRi00cy5XZgTTtO/3/jxu8uk+OYVLncOC2CEJJ5xQw96yStx2UMIwBdrFdj8IjesWXm+SwmdkVfaIDS88xP5CFqQx8ptbA3A5YuOQq4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FQ4KPu9j; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788166426; c=relaxed/simple;
+	bh=a94g1sLhwI22q0pOePQO2UFtd2eQ+xqy1DZhYUuMbZ8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=aL5WNkWS2dLImjS1OQnUyaEj8f3eEnkrCDP0DRakOfz9y8yH3uHvrX3EqkJUiN2k9yHYv5w0O7AHwrWgCw7FUdJZAODa68VqmmqJuWNuc3rHL5JlkZSsn8o3QH0BWLxIaI64/cS1dqCV5y55rfr+7AZAq/ukIp/BhYcf//l9/cU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JcVgjJc/; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FQ4KPu9j"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8BEC41F000E9;
-	Mon, 31 Aug 2026 08:06:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JcVgjJc/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 084AA1F000E9;
+	Mon, 31 Aug 2026 08:53:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788163564;
-	bh=1zBgDL1pWVQ/GHbFfDNHCmrOuVh6nlfFlm1bJTojAJA=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=FQ4KPu9j2FWTh0KWG2bqm4xDGSDzl3weUfZ444jkzRhTu7yZcIlkt+Jpbz449GzGj
-	 BjdXUn6UfZ0TAWm/WkznCDe5oQ+RG6V8cvBq+wmoDMUjdoidcNe3FXczmSW9VLzFZV
-	 B7zsStiFfq8U8yZfatOrFFIXje3/V0fRg8SbJLtxt1abLJk+U7RXvJP8p1OHaYFFQH
-	 vBa0DvLlm6tLMvA70c0c4FJ9Ca0G7r+DuRK7uhWZRfNgvry5OplVQ9Xg1Oj3LhXyUN
-	 h73cRyiD24DkhHqq8I6L6HqZNxyJkYeqwHkIBhxrq+B576IJczLvnL7F+vsF3CPnwz
-	 7EKaqMrair2Qg==
-From: Christian Brauner <brauner@kernel.org>
-To: "Darrick J . Wong" <djwong@kernel.org>, 
- Pankaj Raghav <p.raghav@samsung.com>
-Cc: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
- gost.dev@samsung.com, linux-xfs@vger.kernel.org, pankaj.raghav@linux.dev, 
- ojaswin@linux.ibm.com
-In-Reply-To: <20260819084858.778285-1-p.raghav@samsung.com>
-References: <20260819084858.778285-1-p.raghav@samsung.com>
-Subject: Re: [PATCH] iomap: remove the unused ifs parameter from
- ifs_find_dirty_range
-Message-Id: <20260831-schaukeln-nulltarif-locken-150eb31299c2@brauner>
-Date: Mon, 31 Aug 2026 10:05:57 +0200
+	s=k20260515; t=1788166425;
+	bh=YLIek0U2oqf7TpHrEKm4EN8XF0t0jfhTPXKnKxFQnHk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=JcVgjJc/cHtOg9HvVydMdTDn3f/USBJqJBK5scYeIvN+GblmYCo07vsyotHiWIYIE
+	 bt9/NwzEBrX3lha5W2XVvhbIhGQN6/iu9RxKE5M4lLRmE3kLwq7RZmZBHhSSgGHItw
+	 aX+SNmVY2hPJIH+wUdK8EY3M94ApUvv6v2JjENIWeOKXcWrmHK+6i2dNNbaHZFJKCG
+	 aNVlY6l9NnfDHTt/XytuuieqMBmce5i8E2y5rF93BmzXrjlHL0BF9Hzd+qOwksOcH1
+	 1agfXnFbLGwZWXiIQaEwD3Ly8JypM3dtnBH/0u9cOOyIak/UOpr7lDKXO6DefKf77v
+	 DQ3tmFRdWm7QA==
+Date: Mon, 31 Aug 2026 10:53:41 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: Anuj Gupta <anuj20.g@samsung.com>
+Cc: djwong@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: release alleged child inode on metapath unlink error
+Message-ID: <apVBCUZFmdxuOKS4@andromeda.toxiclabs.cc>
+References: <CGME20260831064229epcas5p3825244c86e28b11019cdd2ce90c16eff@epcas5p3.samsung.com>
+ <20260831064157.758165-1-anuj20.g@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.17-dev-362b8
-X-Developer-Signature: v=1; a=openpgp-sha256; l=917; i=brauner@kernel.org;
- h=from:subject:message-id; bh=/vyfIpuyozcVWZhMsXhvdOtCX7acdCxC7D7R6kRYp80=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWRNNX3V/+Nfiud0pRf3siZ61Mk8fnBJKeRu5JV7wiKTO
- yZ1Pjih31HKwiDGxSArpsji0G4SLrecp2KzUaYGzBxWJpAhDFycAjCRSC9GhhemF77nSSxfW3so
- gSk5fdWllvAlV5g2K7x3Lfo1R7AtP5KRocdN5KFJxA/ZvN9L33BM0/K6Ib9q9eqpDy3fbdvQ6f9
- ChwsA
-X-Developer-Key: i=brauner@kernel.org; a=openpgp;
- fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260831064157.758165-1-anuj20.g@samsung.com>
 
-On Wed, 19 Aug 2026 10:48:58 +0200, Pankaj Raghav wrote:
-> iomap: remove the unused ifs parameter from ifs_find_dirty_range
+On Mon, Aug 31, 2026 at 12:11:57PM +0530, Anuj Gupta wrote:
+> If xchk_metapath_ilock_parent_and_child() fails after xchk_iget()
+> succeeds, release the inode reference before returning.
+> 
+> Fixes: 0d2c636e489c ("xfs: repair metadata directory file path connectivity")
+> Signed-off-by: Anuj Gupta <anuj20.g@samsung.com>
+> ---
+>  fs/xfs/scrub/metapath.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/fs/xfs/scrub/metapath.c b/fs/xfs/scrub/metapath.c
+> index ff1ff762b300..79fd69d2de68 100644
+> --- a/fs/xfs/scrub/metapath.c
+> +++ b/fs/xfs/scrub/metapath.c
+> @@ -550,6 +550,8 @@ xrep_metapath_try_unlink(
+>  	}
+>  	if (error) {
+>  		xchk_trans_cancel(sc);
+> +		if (ip)
+> +			xchk_irele(sc, ip);
+>  		return error;
+>  	}
+>  
 
-Applied to the vfs-7.4.iomap branch of the vfs/vfs.git tree.
-Patches in the vfs-7.4.iomap branch should appear in linux-next soon.
+Looks good.
 
-Please report any outstanding bugs that were missed during review in a
-new review to the original patch series allowing us to drop it.
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-It's encouraged to provide Acked-bys and Reviewed-bys even though the
-patch has now been applied. If possible patch trailers will be updated.
-
-Note that commit hashes shown below are subject to change due to rebase,
-trailer updates or similar. If in doubt, please check the listed branch.
-
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
-branch: vfs-7.4.iomap
-
-[1/1] iomap: remove the unused ifs parameter from ifs_find_dirty_range
-      https://git.kernel.org/vfs/vfs/c/1aea0c4a34c7
-
+> -- 
+> 2.25.1
+> 
