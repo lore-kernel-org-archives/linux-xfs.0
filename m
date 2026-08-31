@@ -1,130 +1,125 @@
-Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D45622C21F7
-	for <linux-xfs@vger.kernel.org>; Mon, 31 Aug 2026 00:47:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46C401F3BA2
+	for <linux-xfs@vger.kernel.org>; Mon, 31 Aug 2026 05:53:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788137249; cv=none; b=ZTpjVLTwx/ckERLcPVJsM4DCHKjNeXvinDKKWf/vVnEYoPnknLY6MrldDRGjJPP5Q6YHR701FUJO9QYSBT+736lNCFAWPnjua7tj7EsUAf1Flfy79X4Uhir8hH5L+vn+2Qh8L1xsmV7Vgu3egkmKsa52/T0pUXZDkhJLA7uqwJY=
+	t=1788155611; cv=none; b=aP4BkLr6W1FxW/fI76ScesSbD8Ax7S7j0Q3tXJlJgP0V+i9tuB6Be3jhIHCOiwesskRUxRTuD6B25A9/koOlcobMWb9zpHbCirwlif9exv0Ilu+U90SOpArJ6MIDYwRwQmLPEpJvAPtpsgcyV+aTFRvvSwom7oaKtBr08dK4URo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788137249; c=relaxed/simple;
-	bh=MQpEu3wDAHZbqdrzHyo2zLigoYyYqflCjqnCr9jAqkY=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=QvFOhwf7NqTfXZBJ+P7us6Li/U56nGNDo0csBCQc/4iSdd9jB3/+96v3sVgeimknMmbN6jdv3triaRPuHR0Gz++XAwDgVukeDYy1SDu/h+TocdofhPyuanrTfuCk9ee5yYp6oziaYkCsly6KCVOGN75mky4ERAA0EiKAt1qJ2gc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=sTOl0lfW; arc=none smtp.client-ip=209.85.216.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1788155611; c=relaxed/simple;
+	bh=kHi+LkwUyD9teSMIZrzt8h92lL/twszzL4tCDPzqwjo=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=SR94rObKCVJGMvjFiFbDrwl/zn8eNC+UfXPZzWUxVnrrUKzI4YFcDoDo1ycQLPdqA0cAQTFzL54euZKAM2+IeUoJ0zeRWbJ16u7RXMm6Pd/A48YLi73XVId5B/anMGisbhHlry4BfCguEyVhzP4rhL90Wn8pWaQhMyxDSXArnLw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MoKrWTxl; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="sTOl0lfW"
-Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-38ec1402b05so2339010a91.2
-        for <linux-xfs@vger.kernel.org>; Sun, 30 Aug 2026 17:47:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788137247; x=1788742047; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=A+W4QAJjuVkYQEhPreimIx5fbHXfcE4i26hZPrxZmPw=;
-        b=sTOl0lfWB+j9Z1+HhiIzgWqta9eoVGPwE44bsv0bAAVGo5YOp3/I1/HdMwrMHmsR9T
-         Dwsflgf5gV5mMIWXtRzTcDqxY6d5G1zhZE3WaQM2KxEe6169OYLUNIoJQPbM4ZsyPdZu
-         JBHjWKIzxqtTU1ldExwzuXhlxT8c3DzJpK33b1stIPUKPfhPjQWNTtgT8TGR1vw2lzKD
-         rGYXujpudf6zrubAz6T9eQwVG+0u3+jrkRCzDL4jD+6CcdEbCCWE2gi1Zbhs+h9deJJV
-         TRzu19w9zIAH49WQjoDykoVMnYP6rARQqdXWBFfDPnKw29PpeFrUlnOQoTuUbZvac1qO
-         NpkA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788137247; x=1788742047;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=A+W4QAJjuVkYQEhPreimIx5fbHXfcE4i26hZPrxZmPw=;
-        b=Yr4pOaT3BaZizAHiTzpQfuVtJ2sTbmErKh/T6gYmH5BMhC8ypH9flxemvfuvsUW1T7
-         q4s34qIXsRmCv+1YHFRHPbPX+mFN43nc3H3k9XEOOJitkP+xhA4eGquv2+2S7B3jgplL
-         x4d8jCa8zo73lOBtOSbRzrfLLFw8S3jI0p0JFYBJT4KuaPHkytJD79mr4WEPtYMssFUw
-         flUekmcf7skdb1UZZL2nSKvlt0vTqTFyptEDJTmKqnPkdJmTfjfzDElJYbyefjHmkzVZ
-         TTneDSgSQW2fm25+pD5eLhuxqZiQ1hpV7/Pwn6PywMM/LeFC6NTRLnQd1x9d6r+IVyIl
-         42jQ==
-X-Forwarded-Encrypted: i=1; AKwUvBzCmMNrsV7FGVujArsw3iWXKvtdn910zB/oNfOQu3aiX4AJnEQUuwYZ1snG7JcXy78b8qtzXB5mC2U=@vger.kernel.org
-X-Gm-Message-State: AFuF++lIOooWC1hfpYk7BTroBGdPvXKpu4FqUXPJvOJTtTna67jqiESw
-	EYw3RJDFqZ4XxTSsI/yVu6awMsSBr2F1U8fybv02HrJS3/JPisiJ06c4
-X-Gm-Gg: AYBFou3UREQ/4GUGGN4z/Yq2IVopBCSpV5BxcI+Id78t486S1bX81G2bmk7TcRwjup+
-	/66x8WeBwu1sji4FO60QxNTljdxU2tAUfLVidZUHzEXR5WXbO9pzd26nMD+1c5xdH5gpKaKd+0Y
-	56kUnHLK4pamnFJecawyNpocohDP08xS+8ZG1cb1Zml49DFifbOrZG+Ec3n6Bw+SG+idq7D17/T
-	dLkxqpfD0UHwMKAfRHDyq8xhIV/OvYo+Gtz3v1hso6AuEah1axdzdMIbJiAAVC/aMw2qpy3ZM7Y
-	qnLnFobzs9xtZUYmSncaGbb/rwwhSOWE+ROjSaWsynLMqQ9RCm7ptmevLQOUjLWmJ7L5PMWk3EF
-	N+GatY7D3BLgKtV+ofYKnanC2XabBRYBWsqfvcE0ZAV18K7qihRhWtHJ4owhxwmvYS+dCKBaBnm
-	BDNMGxnEsKyjTtHHxEl33BQvI/VipiQkIAWbx+GKwml3U5Mkfa4HTt9eb214ImD8z88UTNzkaAc
-	5GHCQNM2BkOhae8xiZjuA2aY69y080Qo4Hlbj62nbArcrt29gdJ144=
-X-Received: by 2002:a17:90b:3ec7:b0:38e:250b:122f with SMTP id 98e67ed59e1d1-396d1041324mr29242537a91.16.1788137246849;
-        Sun, 30 Aug 2026 17:47:26 -0700 (PDT)
-Received: from lima-xfs.. (174-126-236-85.cpe.sparklight.net. [174.126.236.85])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-396dda36ed6sm13688653a91.2.2026.08.30.17.47.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 30 Aug 2026 17:47:26 -0700 (PDT)
-From: Eric Peterson <linuxinstalled@gmail.com>
-To: Dave Chinner <dgc@kernel.org>
-Cc: Eric Peterson <linuxinstalled@gmail.com>,
-	Carlos Maiolino <cem@kernel.org>,
-	linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Eric Peterson <eric.peterson@hpe.com>
-Subject: Re: [PATCH] xfs: add per-mount read/write I/O completion counters
-Date: Sun, 30 Aug 2026 18:47:00 -0600
-Message-Id: <20260831004700.4072037-1-linuxinstalled@gmail.com>
-X-Mailer: git-send-email 2.39.5
-In-Reply-To: <apSgHPl4er6Jy9xi@dread>
-References: <20260828033429.4070267-1-linuxinstalled@gmail.com> <apSgHPl4er6Jy9xi@dread>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MoKrWTxl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1FE441F000E9;
+	Mon, 31 Aug 2026 05:53:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788155609;
+	bh=NgGkVjNxpbxbHWl86QTkVw7kxXy1Rm4fptZLZYyvtdI=;
+	h=Date:From:To:Cc:Subject;
+	b=MoKrWTxldkrDBE0eFW3Zd7a/JpWIFyCuBnVLuUo6mtDF74xOV0u60iIu1BX83dWvp
+	 lJWd0h1jfpq6tZzuVq7ER6RgDpakgm0fwgiGR7pXMps6C/dV3Cwjv1J6n8bjIsj7un
+	 AFauCUr57bskspSNO6dTWf8+15L8jcHa0zIO7M38el6aeMSxapwF3orAXxP8hUEpIx
+	 gqXp9a2oPmXleRGYI9k2pcigaah93+FWGNwjmODQPiELONxd+kKnZz6/oNLqjz5LS2
+	 gSAb1npd/c5rly9qvgq2bM47XSwVBYuTMhvAdT0JC9lBbJUlx8c6zdxlhaN+nf5Suq
+	 n6C0jKm4toi8w==
+Date: Mon, 31 Aug 2026 07:53:25 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: torvalds@linux-foundation.org
+Cc: linux-xfs@vger.kernel.org
+Subject: [GIT PULL] XFS: Fixes for v7.3-rc2
+Message-ID: <apUSmA9aI8wpLyXf@andromeda.toxiclabs.cc>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-On Mon, Aug 31, 2026 at 07:26:52AM +1000, Dave Chinner wrote:
-> Hence this really doesn't seem like something we should be trying to
-> infer from indirect filesystem stats. Why can't you use the bdev
-> stats to get the actual filesystem wide queue depth information?
+Hello Linus,
 
-The block device measures the device queue, which is a different
-quantity than filesystem outstanding I/O - not just a lower-layer view
-of the same thing.
+Could you please pull patches included in the tag below?
 
-Below are three cases where filesystem queue depth is not what the block
-layer sees:
+An attempt merge against your current TOT has been successful.
 
-1. Cache hits never reach the block layer. Under a heavy read workload
-   with a warm cache, a large share of ops are serviced from the page
-   cache and are never seen at the block level. Device queue depth can
-   sit near zero while the filesystem is servicing a very high op rate.
+This contains a set of fixes for rc-2. I just want to highlight from
+this series that it contains a couple patches for capabilities subsystem
+and another for the quota subsystem. All three patches have been acked
+by the respective maintainers and they agreed for these patches to go
+through xfs tree as they are dependencies for a xfs bugfix.
 
-2. Filesystem ops don't map 1:1 to block I/O. A single read or write can
-   produce one block I/O, several (metadata, readahead, writeback
-   coalescing), or none at all. So device queue depth isn't the
-   filesystem's outstanding-operation count.
+Thanks,
+Carlos
 
-3. Work can be outstanding inside the filesystem before any block I/O is
-   issued - waiting on locks, log space/reservation, delalloc, etc.
-   Such I/O has entered the filesystem but is invisible at the bdev.
+"The following changes since commit 818bebeb63dd6bf5f4e07e145f6cdbace520a34c:
 
-The block-device queue depth answers "how deep is the device queue,"
-which is not the same as "how much work is outstanding in the
-filesystem." When the filesystem is just one layer an I/O passes
-through, the block stats fold the layers together and structurally
-cannot isolate the filesystem's own contribution.
+  drm/xe: Don't hand out the flat CCS storage as usable VRAM (2026-08-20 20:12:39 -0700)
 
-To be clear about scope: I'm not proposing a queue-depth feature in
-the kernel. The change just adds read/write completion counters to pair
-with the existing call (submission) counters, so userspace can compute
-outstanding I/O and derive a response-time estimate itself. The kernel
-side is only exposing the complementary raw signal that's currently
-missing - calls are counted, completions are not.
+are available in the Git repository at:
 
-Being upfront: what userspace derives from this is an instantaneous
-approximation, not a precise time-weighted queue length. It's meant as
-a cheap, always-on aggregate, not a replacement for accurate per-op
-tooling.
+  gitolite.kernel.org:/pub/scm/fs/xfs/xfs-linux.git tags/xfs-fixes-7.3-rc2
 
-Does exposing the completion side of the existing call counters seem
-reasonable on that basis?
+for you to fetch changes up to 412f89fb3988a344175899776c8bc7073524ad84:
 
--Eric
+  capability: unexport has_capability_noaudit (2026-08-21 09:09:55 +0200)
+
+----------------------------------------------------------------
+xfs: fixes for 7.3-rc2
+
+Signed-off-by: Carlos Maiolino <cem@kernel.org>
+
+----------------------------------------------------------------
+Carlos Maiolino (5):
+      xfs: fix capability check in xfs
+      capability: Add new capable_noaudit
+      quota: Don't issue audit messages on quota enforcing
+      xfs: replace ns_capable_noaudit
+      capability: unexport has_capability_noaudit
+
+Christoph Hellwig (9):
+      xfs: split an assert in xfs_trans_log_buf
+      xfs: don't flush and invalidate internal RT device twice in xfs_shutdown_devices
+      xfs: use inode_init_always_gfp with __GFP_NOFAIL in xfs_inode_alloc
+      xfs: handle NULL open_zone for merged ioends in xfs_ioend_put_open_zones
+      xfs: fix racy open zone caching
+      xfs: fix zoned write iomap flags assignments
+      xfs: factor out a xfs_iomap_set_anon_write helper
+      xfs: split ioend handling into a separate source file
+      xfs: restore bi_bdev in xfs_zone_gc_write_chunk
+
+Tal Zussman (1):
+      xfs: remove kmem_to_page()
+
+Yun Zhou (1):
+      xfs: don't hold buffer locks across sync transaction commit in xfs_sync_sb_buf
+
+ fs/quota/dquot.c            |   2 +-
+ fs/xfs/Makefile             |   1 +
+ fs/xfs/libxfs/xfs_rtgroup.h |   6 +-
+ fs/xfs/libxfs/xfs_sb.c      |  37 ++++-----
+ fs/xfs/xfs_aops.c           | 188 +-------------------------------------------
+ fs/xfs/xfs_aops.h           |   1 -
+ fs/xfs/xfs_file.c           |   2 +-
+ fs/xfs/xfs_fsmap.c          |   3 +-
+ fs/xfs/xfs_icache.c         |  16 ++--
+ fs/xfs/xfs_ioctl.c          |   2 +-
+ fs/xfs/xfs_ioend.c          | 184 +++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_ioend.h          |  16 ++++
+ fs/xfs/xfs_iomap.c          |   7 +-
+ fs/xfs/xfs_iomap.h          |  14 ++++
+ fs/xfs/xfs_iops.c           |   2 +-
+ fs/xfs/xfs_platform.h       |  11 ---
+ fs/xfs/xfs_super.c          |   2 +-
+ fs/xfs/xfs_trans_buf.c      |   3 +-
+ fs/xfs/xfs_zone_alloc.c     |  66 +++++++++++++---
+ fs/xfs/xfs_zone_gc.c        |   5 ++
+ include/linux/capability.h  |   5 ++
+ kernel/capability.c         |  19 ++++-
+ 22 files changed, 336 insertions(+), 256 deletions(-)
+ create mode 100644 fs/xfs/xfs_ioend.c
+ create mode 100644 fs/xfs/xfs_ioend.h"
