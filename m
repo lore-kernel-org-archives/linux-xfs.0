@@ -1,41 +1,41 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 951AB3DAAB1;
-	Mon, 31 Aug 2026 09:38:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A75F242E8F8
+	for <linux-xfs@vger.kernel.org>; Mon, 31 Aug 2026 13:36:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788169105; cv=none; b=rgYBGJ9Xe/pxEpXBTyjhcMPvv1ofJKfyM8MTZax/JZ1BrMUjhLJjZ338HMR4OZB3Q5K2FmS2dAm1OcV5vcHuWzutHy/BOJH1X4o8aFvLkr11FgK0NsZiOusSlMJJZTYOBilLw7ic6YDUrFoPlT/mZd69bWiepTy4NtDlQTKbcr8=
+	t=1788183388; cv=none; b=VKZe4RKPujFU/TBSdlFA9OsALuPZgJM/GAnZzNG6JymzPjNdroiILC1Lc5iqhHKFL6aiUaly3joiFM2VlqHWdAjzsdv7/OInoLFoj1p7GFBwuHIHxm4IvbEMhXr34D2WDyFnK08C7AnBVDpB/C2k3qKZrYOh5/2Qoo4eTUFTVGo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788169105; c=relaxed/simple;
-	bh=GKs972raUa9R83lda5wU3KsEd1d9qQMaVryjObJSkbk=;
+	s=arc-20240116; t=1788183388; c=relaxed/simple;
+	bh=B4w4eMErb6Xq08hRYN0NNtYmvVbZCDiAU/oTF7w6J8M=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Ed8F4kTIwDsPrxJu5hyoE+TsYrqIQO68Ncl+lirvJJDdB+qFJ03wc0L+grYqposTHIUrRRfxNxu7Fc4ZI1O0/mzwi/qJLZ8BkaXu0d6rhHjmIxxAP6gSdWOSK9nkHfzQGIzGi/1UCvGhvMxc51QYMlrx+2jU9EtWUxw99p9H4EA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mKs+kdq5; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=mdYczAjzkidTrs0tBaTQcqe0KxU4xfQKTzPQORrok+mdqaUcTCgPHjJsz6cZQqSFccIFYfsP94sbCcqjksB6oGC5vyiykxCyJpJgk6iTb9ElAH0gvrJ2HUj/fLwcNzz13wmN1+PZTDVVYBtU+fF3NSKoCVHob14X02tjxPM7bF8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=1uhDZOjp; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mKs+kdq5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 034901F000E9;
-	Mon, 31 Aug 2026 09:38:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788169104;
-	bh=RKqPhAZ9xw3NdRQ5uWMTUCn71fcMmY5LEXL0pLWjVzU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=mKs+kdq5UHGfH4ZrlI/c5W/Ge68k7a67c4PVUttuKr3swhPohtWn6VeXEygJUHTVL
-	 g6/zW8/16KfSZMoCVxFx0G1FfY5V/yEdumYBGLSJSZNymDxm0AmOQx2J/CEJZz4F65
-	 O+l0+w2aqUXipzp6zD59NOIwgJOcg8iwTceVOm8wMJycCaatrvGDVQVeQlMbU9J9Fj
-	 fG8vmm1OozawqHJwSXTSgvIx+MbFDKrYq44HNi2jPRt0NizIs4uFlEVFA4WFoOvZgy
-	 CS8gVi6DC6OolDbuobZbV9qVL59Rml4RRUUyUCVVHaN9kR9HRCnVNhCarPQaC8URR3
-	 I1vuXvCsUXgOQ==
-Date: Mon, 31 Aug 2026 19:38:15 +1000
-From: Dave Chinner <dgc@kernel.org>
-To: Eric Peterson <linuxinstalled@gmail.com>
-Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Eric Peterson <eric.peterson@hpe.com>
-Subject: Re: [PATCH] xfs: add per-mount read/write I/O completion counters
-Message-ID: <apVLh7cJ3Zf_aLcd@dread>
-References: <20260828033429.4070267-1-linuxinstalled@gmail.com>
- <apSgHPl4er6Jy9xi@dread>
- <20260831004700.4072037-1-linuxinstalled@gmail.com>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="1uhDZOjp"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=AUZa8CRudDnCOwRAVya/aoEnsShGtfi6043UNOD+XAI=; b=1uhDZOjp3IOZC41wbjQpFUR5uK
+	JLKQafTqK7HAIQcywzwGRmu4rKv6xuO40nmRDs7cKu2NI2OkRxJMbAfyBbWNoPXbf1sEnsqv/owUz
+	IPZUW0uuY2CmXba+q51pKnpIxllPyh3Yz/g5GRylfpQ2pZLKm9Bk2VdPbz+IEqV7lJ8yTgZvmILrY
+	qLX586XMIKThqE5ykjVeJ/KgPmijR76jTgrh9LqyYZgffdFd/El7hu3dsi25xmXoow7JiaSR06G1V
+	WspsPRFZLQNVLKJbrOG8NKUp9RN2ZRLn/fGj8Z7QzMGjfNI2X7v4b6Aj0MjLSbx7p+Cynv8yUJoLp
+	YIHMdnZQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1x12BU-00000009RL2-3QuO;
+	Mon, 31 Aug 2026 13:36:24 +0000
+Date: Mon, 31 Aug 2026 06:36:24 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Chris Wedgwood <cw@f00f.org>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 0/9] xfsprogs: add xfs_repair -R --- log replay
+Message-ID: <apWDWDSYlGBlT4NO@infradead.org>
+References: <cover.1788110147.git.cw@f00f.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,145 +44,18 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260831004700.4072037-1-linuxinstalled@gmail.com>
+In-Reply-To: <cover.1788110147.git.cw@f00f.org>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Sun, Aug 30, 2026 at 06:47:00PM -0600, Eric Peterson wrote:
-> On Mon, Aug 31, 2026 at 07:26:52AM +1000, Dave Chinner wrote:
-> > Hence this really doesn't seem like something we should be trying to
-> > infer from indirect filesystem stats. Why can't you use the bdev
-> > stats to get the actual filesystem wide queue depth information?
-> 
-> The block device measures the device queue, which is a different
-> quantity than filesystem outstanding I/O - not just a lower-layer view
-> of the same thing.
-> 
-> Below are three cases where filesystem queue depth is not what the block
-> layer sees:
+On Sun, Aug 30, 2026 at 10:15:47AM -0700, Chris Wedgwood wrote:
+> Adds xfs_repair -R: replay the log then repair, without mounting and
+> without discarding it as -L does.  Patches 1-2 are standalone fixes; 3-9
+> implement -R, importing log recovery from v7.1 fs/xfs into libxlog/.
 
-I do know the difference. Assume I understand what you are saying,
-and that you don't need to explain how the IO stack works to me...
+Pretty sure intro for a pretty big and long needed feature.
+What's the motivation to get this done now?  How was it tested?
+I'd kinda expect an xfstests series to go along with that did
+something like generic/388 and generic/475 but with log recovery
+performed by repair at least, plus specific tests for all the pitfalls
+you ran into when implementing it.
 
-> To be clear about scope: I'm not proposing a queue-depth feature in
-> the kernel. The change just adds read/write completion counters to pair
-> with the existing call (submission) counters, so userspace can compute
-> outstanding I/O and derive a response-time estimate itself. The kernel
-> side is only exposing the complementary raw signal that's currently
-> missing - calls are counted, completions are not.
-
-I know, I just don't see how it can be used for a response time
-metric that any way useful for behavioural correlation because of
-the sampling method.
-
-> Being upfront: what userspace derives from this is an instantaneous
-> approximation, not a precise time-weighted queue length. It's meant as
-> a cheap, always-on aggregate, not a replacement for accurate per-op
-> tooling.
-
-And that's exactly why I'm having trouble understanding how this
-new metric means anything useful. Ignoring temporal sampling jitter
-of multiple per-cpu counters, if you sample read + completions
-it at some instant, all it tells you is what is happening at that
-instant.
-
-What happens the other 999.9ms of that second is not captured by
-this new "in-flight" metric?  For example, if I sample read
-submissions at 10Hz (annotated manually with rough deltas between
-samples):
-
-$ pmval -r -t 0.1 xfs.read
-
-metric:    xfs.read
-host:      devoid
-semantics: cumulative counter
-units:     count
-samples:   all
-  294454912
-  294454912		S (0 IO in flight)
-  294454912
-  294454912
-  294454912
-  294454912
-  294454912
-  294454912
-  294454912
-  294454912
-  294455553	+650
-  294455553		S (0 IO in flight)
-  294455555	+2
-  294455555
-  294455555
-  294455555
-  294455555
-  294455555
-  294455555
-  294455555
-  294455559	+4
-  294455559		S (0 IO in flight)
-  294455559
-  294455559
-  294455559
-  294455559
-  294455559
-  294455559
-  294455559
-  294455559
-  294455559
-  294455559		S (0 IO in flight)
-  294455561	+2
-  294455561
-  294455561
-  294455564
-  294455564
-  294456360	+800
-  294457344	+1000
-  294457344
-  294457346	+2
-  294457352	+6	S (at most 6 IO in flight)
-  294457352
-  294458065	+700
-  294458285
-  294458285
-  294458285
-  294458285
-  294458285
-  294458285
-  294458285
-  294458285		S (0 IO in flight)
-
-You can see that there are some 100ms periods where nothing happens,
-whilst others have 650-1000 buffered reads. In all the cases where
-there are periods with no submission, the in-flight calculation will
-be zero. In the busy periods, it will likely be some non-zero
-number, but it won't give any indication of IO behaviour in that
-entire period.
-
-If we pick a 1s sample time (marked with "S" above), only one of
-those sample points had any chance of there being IO in flight.
-If I pick a sampling pattern that hits one of those high
-IO periods, it gives an unrealisticly high in flight value for the
-sampling period, given that for most of the rest of the second
-around that burst there was almost no read activity.
-
-Hence I don't see how sampling a point in time "in-flight" metric
-slowly provides reliable insight into application behaviour. To
-address that, one would need to sample and calculate the inflight
-metric at high resolution to be able to catch the concurrency of IO
-in those high IOPS bursts.
-
-However, the faster you sample to catch bursts, the closer the read
-submission rate approaches the in-flight IO rate. i.e. if I sample
-at 1000Hz instead of 10Hz, it'll capture the fact that there are
-bursts much faster bursts than 8-10 read IOs per millisecond, yet
-the in-flight counter still won't reflect that - it might still not
-register any IO being in flight at all because at the sample instant
-there was no IO in flight....
-
-Hence I'm asking how this new metric is supposed to be used and
-correlated to observed/measured application behaviour. i.e. what
-insight does it give you into application performance that can only
-be derived from this point in time snapshot?
-
--Dave.
--- 
-Dave Chinner
-dgc@kernel.org
