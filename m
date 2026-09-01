@@ -1,194 +1,116 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38B783D6CD5;
-	Mon, 31 Aug 2026 23:34:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F6F1379C55
+	for <linux-xfs@vger.kernel.org>; Tue,  1 Sep 2026 05:44:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788219272; cv=none; b=SHTFTbjHOIeoX8H/gVzb5KaAM4G15+Ue2A9jKnvqRekH2SKJjk5vxfu7jJTrQz95Klp68dz7YZXNlyT1ZmysuUM8Y138LIHQIQeQnV6/js6UQGnc3Cb6eJHKVaKzos0slvZNiU/rVmqlJ1JWo3/6OBSwD6tWIkWqvZHaWOAayy4=
+	t=1788241457; cv=none; b=cAxFjhQDF7wV5vAVQh5ph4lfTub7ukjLnY6SQozSrDhOCvVuA5JcGiCjmvcUQWGk20nctZ//gUVvO/84b/+WmRWIahXhlE844MnHeZONFpjfg6O28Fg905ONeS2rP302yRmCFmg22PIM2Ge7mw1i8ov2VLEILHE4zTKzEAhUC5A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788219272; c=relaxed/simple;
-	bh=LFNCkO0yQVQXdjZlD2AvYuRjqhqIOvbynw7F0+zienw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gqKTfY3GG9qex2LJA+lPAFQJTKXufn9rwvOTVibA1MAUjQCrjZrhD3Yfbt2mXcnqFI5ATbGEDVudpZRuAUhA4LLhy46MfdieNh3UaWPZsUWlyyy/G2eiZF46Up+Zi1rLiKj8Ecz6rJkehOy7sqsDnWOypV25ZjqrTRKR50lWdKs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gnxMEvfU; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788241457; c=relaxed/simple;
+	bh=rmqn6qA/Fewll7jkSHdXf5pxUkGNOhEP/Xbj3mumKEY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:From:In-Reply-To:
+	 Content-Type:References; b=QXLCkSVdeNKzoAX108RVLIAiSMLN02ZPi8+KNnC0UHcGBO+5wLL5zISD7Fmx2wsLx/MBdGLPSjWzGWTkSjpZbNV8eUV9/ZzHq4V8IhZ30St8KWySQW3HoselJzXFL4ZGxkXZzkqQzcHD1JhGV51Rw+ZL0RifSaRldo1UyevFJkI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=dNJ1Yc8t; arc=none smtp.client-ip=203.254.224.33
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gnxMEvfU"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 087D51F00A3D;
-	Mon, 31 Aug 2026 23:34:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788219271;
-	bh=qKaQxhFMJhOsVZB9s5jAwlOuIIekPr77MSR1JhiJ584=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=gnxMEvfUit8S8mZW7mxswmmVR7hT2UzXwRo/WFbs204i2dAozMpyktNbmjZIGZHSq
-	 o/Y86vbUq2KWygsffOwWs2OlXFXyP+ubJvl4nn6/8uIiMyPQxTcL9nOnuZtwdkUNGs
-	 wOIFo61whT93iIg4FVAFT0kzpxn6pN18XmS5TGVtGFe+G5b0hNnc2SWe0OMHbbgoDd
-	 wet316a3FlUz1eJrVorQK3gYm/g2bFAGdsGuSZDSJ6uuwv8ws+rdIlMiVTjzzjQi2z
-	 oQueTXyDl4MZfwxGcrPQ/eUXdYlHqC5EIREdo8vhHCxTGKuM2BzSN8qievMZXmQCFr
-	 Zp+gqu2Hxe4zQ==
-Date: Mon, 31 Aug 2026 16:34:30 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: aalbersh@kernel.org, fstests <fstests@vger.kernel.org>
-Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH RFC] xfs: test mkfs.xfs config file generation
-Message-ID: <20260831233430.GK1933798@frogsfrogsfrogs>
-References: <178821870568.2381199.9038448943413709082.stgit@frogsfrogsfrogs>
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="dNJ1Yc8t"
+Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
+	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20260901054407epoutp03b769780a490ad0dacf59d8de97f51cc5~RHB81GPJc0846008460epoutp03D
+	for <linux-xfs@vger.kernel.org>; Tue,  1 Sep 2026 05:44:07 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20260901054407epoutp03b769780a490ad0dacf59d8de97f51cc5~RHB81GPJc0846008460epoutp03D
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1788241447;
+	bh=PRqaBLQgn9f0JWR0KhzDK1ZY5rtDeI+KMrepnRp9h7A=;
+	h=Date:Subject:To:Cc:From:In-Reply-To:References:From;
+	b=dNJ1Yc8ti4kVY05DBaC546h6saFAO/m0RWeszQ3HB0z7C3ZkLk9MCH99bRgHLyLGT
+	 5t5vNY2PVdSNiaPdTEobZfd3c1f9F2r05lOXuwekQpfxCG9UnSKpJFngbn16GiCuAO
+	 taHeQfdSLMsCOIrtEmrq6Ez8dZmqG6Qmtdku3vys=
+Received: from epsnrtp01.localdomain (unknown [182.195.42.153]) by
+	epcas5p1.samsung.com (KnoxPortal) with ESMTPS id
+	20260901054407epcas5p1c3b5dce18c36571a6e6033ba72283c19~RHB8mtHNK0936309363epcas5p1O;
+	Tue,  1 Sep 2026 05:44:07 +0000 (GMT)
+Received: from epcas5p2.samsung.com (unknown [182.195.38.88]) by
+	epsnrtp01.localdomain (Postfix) with ESMTP id 4hYvtZ1rXlz6B9m4; Tue,  1 Sep
+	2026 05:44:06 +0000 (GMT)
+Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
+	epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
+	20260901054405epcas5p1bf6194b4c37d3eb9d73a57e12be59ef8~RHB7QGvS90797207972epcas5p1P;
+	Tue,  1 Sep 2026 05:44:05 +0000 (GMT)
+Received: from [107.122.10.194] (unknown [107.122.10.194]) by
+	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+	20260901054405epsmtip11ef004973710b32113a23cd949d10d98~RHB6oJYW52928029280epsmtip1h;
+	Tue,  1 Sep 2026 05:44:04 +0000 (GMT)
+Message-ID: <6b870d2e-04af-4899-879a-a4e26157bffd@samsung.com>
+Date: Tue, 1 Sep 2026 11:14:03 +0530
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <178821870568.2381199.9038448943413709082.stgit@frogsfrogsfrogs>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] xfs: release alleged child inode on metapath unlink
+ error
+To: "Darrick J. Wong" <djwong@kernel.org>, cem@kernel.org
+Cc: hch@lst.de, linux-xfs@vger.kernel.org
+Content-Language: en-US
+From: Anuj Gupta/Anuj Gupta <anuj20.g@samsung.com>
+In-Reply-To: <20260831141657.GD6072@frogsfrogsfrogs>
+Content-Transfer-Encoding: 7bit
+X-CMS-MailID: 20260901054405epcas5p1bf6194b4c37d3eb9d73a57e12be59ef8
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+cpgsPolicy: CPGSC10-542,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20260831064229epcas5p3825244c86e28b11019cdd2ce90c16eff
+References: <CGME20260831064229epcas5p3825244c86e28b11019cdd2ce90c16eff@epcas5p3.samsung.com>
+	<20260831064157.758165-1-anuj20.g@samsung.com>
+	<20260831141657.GD6072@frogsfrogsfrogs>
 
-From: Darrick J. Wong <djwong@kernel.org>
+On 8/31/2026 7:46 PM, Darrick J. Wong wrote:
+> On Mon, Aug 31, 2026 at 12:11:57PM +0530, Anuj Gupta wrote:
+>> If xchk_metapath_ilock_parent_and_child() fails after xchk_iget()
+>> succeeds, release the inode reference before returning.
+>>
+>> Fixes: 0d2c636e489c ("xfs: repair metadata directory file path connectivity")
+> 
+> I have a patch just like this one in my branch so
+> 
+> Cc: <stable@vger.kernel.org> # v6.13
+> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+> 
 
-Test configuration file generation via mkfs, xfs_db, and xfs_spaceman.
+I noticed that the hunk was placed in the wrong location. It belongs 
+after xchk_metapath_ilock_parent_and_child() where the leak can occur. 
+The implementation doesn't match the commit description. Really sorry 
+for the noise; I will send a v2.
 
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
----
- tests/xfs/1909     |  123 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1909.out |    2 +
- 2 files changed, 125 insertions(+)
- create mode 100755 tests/xfs/1909
- create mode 100644 tests/xfs/1909.out
+> --D
+> 
+>> Signed-off-by: Anuj Gupta <anuj20.g@samsung.com>
+>> ---
+>>   fs/xfs/scrub/metapath.c | 2 ++
+>>   1 file changed, 2 insertions(+)
+>>
+>> diff --git a/fs/xfs/scrub/metapath.c b/fs/xfs/scrub/metapath.c
+>> index ff1ff762b300..79fd69d2de68 100644
+>> --- a/fs/xfs/scrub/metapath.c
+>> +++ b/fs/xfs/scrub/metapath.c
+>> @@ -550,6 +550,8 @@ xrep_metapath_try_unlink(
+>>   	}
+>>   	if (error) {
+>>   		xchk_trans_cancel(sc);
+>> +		if (ip)
+>> +			xchk_irele(sc, ip);
+>>   		return error;
+>>   	}
+>>   
+>> -- 
+>> 2.25.1
+>>
+>>
+> 
 
-diff --git a/tests/xfs/1909 b/tests/xfs/1909
-new file mode 100755
-index 00000000000000..d405064c3e3d1d
---- /dev/null
-+++ b/tests/xfs/1909
-@@ -0,0 +1,123 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2026 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test 1909
-+#
-+# Functional testing for mkfs.xfs config file generation.
-+#
-+. ./common/preamble
-+_begin_fstest auto mkfs
-+
-+# . ./common/filter
-+
-+_require_scratch
-+_require_xfs_mkfs_cfgfile
-+_require_xfs_spaceman_command "makecfg"
-+_require_xfs_db_command "makecfg"
-+_require_command "$XFS_ADMIN_PROG" "xfs_admin"
-+
-+# t1: Make sure all three tools generate the same config file
-+_scratch_mkfs >> $seqres.full
-+_scratch_mount
-+$XFS_SPACEMAN_PROG -c "makecfg $tmp.spaceman1" $SCRATCH_MNT
-+$XFS_ADMIN_PROG -C $tmp.onadmin1 $SCRATCH_MNT
-+_scratch_unmount
-+# strip out deprecation warnings (e.g. v4 filesystems)
-+_scratch_mkfs -c makecfg=$tmp.mkfs1
-+_scratch_xfs_db -c "makecfg $tmp.db1"
-+_scratch_xfs_admin -C $tmp.offadmin1
-+
-+cmp -s $tmp.mkfs1 $tmp.spaceman1 || echo "mkfs config1 does not match spaceman?"
-+cmp -s $tmp.db1 $tmp.spaceman1 || echo "db config1 does not match spaceman?"
-+cmp -s $tmp.db1 $tmp.mkfs1 || echo "db config1 does not match mkfs?"
-+cmp -s $tmp.onadmin1 $tmp.mkfs1 || echo "online admin config1 does not match mkfs?"
-+cmp -s $tmp.offadmin1 $tmp.mkfs1 || echo "offline admin config1 does not match mkfs?"
-+
-+echo "*** spaceman config1" >> $seqres.full
-+cat $tmp.spaceman1 >> $seqres.full
-+echo "*** mkfs config1" >> $seqres.full
-+cat $tmp.mkfs1 >> $seqres.full
-+echo "*** db config1" >> $seqres.full
-+cat $tmp.db1 >> $seqres.full
-+echo "*** online admin config1" >> $seqres.full
-+cat $tmp.onadmin1 >> $seqres.full
-+echo "*** offline admin config1" >> $seqres.full
-+cat $tmp.offadmin1 >> $seqres.full
-+
-+# t2: Make sure the output changes if we set a new rootdir inherit option
-+_scratch_mount
-+$XFS_IO_PROG -c 'chattr +P' -c 'chproj 33' $SCRATCH_MNT
-+$XFS_SPACEMAN_PROG -c "makecfg $tmp.spaceman2" $SCRATCH_MNT
-+_scratch_unmount
-+_scratch_xfs_db -c "makecfg $tmp.db2"
-+
-+cmp -s $tmp.db2 $tmp.spaceman2 || echo "db config2 does not match spaceman?"
-+cmp -s $tmp.db1 $tmp.db2 && echo "db config1 should be different from db config2"
-+
-+echo "*** spaceman config2" >> $seqres.full
-+cat $tmp.spaceman2 >> $seqres.full
-+echo "*** db config2" >> $seqres.full
-+cat $tmp.db2 >> $seqres.full
-+
-+# t3: Format with t2 config file, make sure the results match t2 and not t1
-+_scratch_mkfs -c options=$tmp.db2 >> $seqres.full
-+_scratch_mount
-+$XFS_SPACEMAN_PROG -c "makecfg $tmp.spaceman3" $SCRATCH_MNT
-+_scratch_unmount
-+_scratch_xfs_db -c "makecfg $tmp.db3"
-+
-+cmp -s $tmp.db3 $tmp.spaceman3 || echo "db config3 does not match spaceman?"
-+cmp -s $tmp.db3 $tmp.db1 && echo "db config3 should be different from db config1"
-+cmp -s $tmp.db3 $tmp.db2 || echo "db config3 does not match db config2?"
-+
-+echo "*** spaceman config3" >> $seqres.full
-+cat $tmp.spaceman3 >> $seqres.full
-+echo "*** db config3" >> $seqres.full
-+cat $tmp.db3 >> $seqres.full
-+
-+# t4: Set autofsck filesystem property, make sure that gets reflected
-+autofsck="$(grep 'autofsck=' $tmp.spaceman3 | sed -e 's/^.*autofsck=//g')"
-+case "$autofsck" in
-+"")
-+	if grep -q 'crc=1' $tmp.spaceman3; then
-+		new_autofsck=check
-+	fi
-+	;;
-+repair) new_autofsck=check;;
-+*)	new_autofsck=repair;;
-+esac
-+if [ -n "$new_autofsck" ]; then
-+	$XFS_PROPERTY_PROG $SCRATCH_DEV set "autofsck=$new_autofsck" >> $seqres.full
-+	_scratch_mount
-+	$XFS_SPACEMAN_PROG -c "makecfg $tmp.spaceman4" $SCRATCH_MNT
-+	_scratch_unmount
-+	_scratch_xfs_db -c "makecfg $tmp.db4"
-+
-+	cmp -s $tmp.db4 $tmp.spaceman4 || echo "db config4 does not match spaceman?"
-+	cmp -s $tmp.db4 $tmp.db3 && echo "db config4 should be different from db config3"
-+
-+	echo "*** spaceman config4" >> $seqres.full
-+	cat $tmp.spaceman4 >> $seqres.full
-+	echo "*** db config4" >> $seqres.full
-+	cat $tmp.db4 >> $seqres.full
-+
-+	_scratch_mkfs -c options=$tmp.db4 >> $seqres.full
-+	_scratch_mount
-+	$XFS_SPACEMAN_PROG -c "makecfg $tmp.spaceman4a" $SCRATCH_MNT
-+	_scratch_unmount
-+	_scratch_xfs_db -c "makecfg $tmp.db4a"
-+
-+	cmp -s $tmp.db4a $tmp.spaceman4a || echo "db config4a does not match spaceman?"
-+	cmp -s $tmp.db4a $tmp.db3 && echo "db config4a should be different from db config3"
-+	cmp -s $tmp.db4a $tmp.db4 || echo "db config4a does not match db config4?"
-+
-+	echo "*** spaceman config4a" >> $seqres.full
-+	cat $tmp.spaceman4a >> $seqres.full
-+	echo "*** db config4a" >> $seqres.full
-+	cat $tmp.db4a >> $seqres.full
-+
-+fi
-+
-+echo Silence is golden
-+_exit 0
-diff --git a/tests/xfs/1909.out b/tests/xfs/1909.out
-new file mode 100644
-index 00000000000000..c17c5522d48db4
---- /dev/null
-+++ b/tests/xfs/1909.out
-@@ -0,0 +1,2 @@
-+QA output created by 1909
-+Silence is golden
