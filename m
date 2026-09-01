@@ -1,34 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3C3747CC75;
-	Tue,  1 Sep 2026 12:16:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7C5A47D926;
+	Tue,  1 Sep 2026 12:16:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788264982; cv=none; b=usBdXcyX1XFG4ivxWKlK/e/+FvoKqk71a2Mm4AOumD6aWh/UixROFRGLZIUuy4vPB6yDOv5FHD4zQW4/J8kTIWn9ro8KLsC5dETz7n7y/PqNBY+FEqGNJLG1Yf6imfIvbsO10tWfrRHHeA7WDG/1hmIJgdx2kc+48BRF3CXKqhQ=
+	t=1788264987; cv=none; b=gj4YFNDmgO58x1DDQwTGJGLHiB5fJKEpPkSpnOSk7urOChieJbNRCbKR56cq/DrL18WtA5wW7lwq/Ph5RoSq1sXshfzJYGAYXWIzRbuMOSRtLSheOJNlRf9d+VFZn1Ckf8iUjhOJwRKQwCR6bjQKQBecgMSpvlBS4UJtFVg4FmA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788264982; c=relaxed/simple;
-	bh=GhdthHsUtL1413InhlXP0kh48FcJh7t3akAKEapwlhk=;
+	s=arc-20240116; t=1788264987; c=relaxed/simple;
+	bh=Hg3FLaLdJ2kIoY43h5iXHTOKeMvzgNrnKlJUivdeTxA=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=CcJkDfnqjVKW7++trFLrLIScD1MQhB85QxgCq/GuOeQ8p2nOvVCsrJDnHt0iTpo+TARsRN/1azTq31LkJOVTfusETWps0qmUTfL/V4X3ZqsTBO0vkzdH1lZv6DwtlFbQ7Pq08/1VqjOEz8oH9K/x1g4c4ZN08GtEP8s87elBLu0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fJ/PuwVJ; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:To:Cc; b=DP+PLaia/2l8PevI1CTKILiPLp4acbG1Q4Ckf+O25hQUDv+d0foQEIe86AV/o4xGAGn9HpENhgGADiOkSojW5WZwH+R/3nb/TGMx0vo2XuSQ7On6chrFadBQU3rTTQcjFzLRRuiZsrpPCRVet+SJnEXAGuHozKfPrhdCr9BQ0oo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=io5hKQhW; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fJ/PuwVJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0913C1F00ACA;
-	Tue,  1 Sep 2026 12:16:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="io5hKQhW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E340C1F000E9;
+	Tue,  1 Sep 2026 12:16:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788264979;
-	bh=UzQvhDE9NYTcJkZHVUdMr01IFoThCOaH3F2Tr9Gdycg=;
+	s=k20260515; t=1788264984;
+	bh=uHgsbAAHKjoVUY1cBUf/Xz1S24N3el37nYCUEIRxIuo=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=fJ/PuwVJWBpawNycf6T3mSVGuNobaIwEzgYo3oV2NwJBexEN7EcXb/6gKE+AKmoDu
-	 lMEwdJtWBNvn2EMZXrx/hmDtL9Vkvl7Hgl24U2LvLVRPMM5IaIKqgc7JUZmL0KBHxa
-	 T3EYS+oImkBs72uThTKMBTiveM87xhqpvBBR+roEHcHIPrFaxG5qNq0o6U28sTJZIE
-	 VWKmoSmYioqL9SmFdIO7/JJvuEYvn/L9wUrhq5jpGWsDMkTsQ9UUl8EnnGMqt+mBdt
-	 pIoBH2oNXbiqEERYEY+0dTb0/RA3XJaCjUIMK4tUEhzuZvAuDaT0Iq8W8l2jGi6ELA
-	 Rwy0yTHXQ0yzg==
+	b=io5hKQhW7ZqfSfXdW2yd25JkbmYEg1CjCwQINbgKmK9bh2alYojTW1KLkG8eFrL8Q
+	 MaRKsGLZ+QQ91FXVBHn+kVTow0pHJH3rsYg9vkO5vzyA6S+1F4Ju0se/d8Kh+8tIeU
+	 +n9eZhjPN351UJFADNfQmVyOeGZ3Ckq7O2rJa5MRAPPTe4JSuv7sYJerC+h5HbpPEo
+	 taUVFL+N4YKV0pH3pKHRiBPmWgcsUUYCyJiQ3U9Le/hlM7bkLAmMBwpTu5giQ2eSuI
+	 2al90+BT0oInF5A4qbopsEHQmXkwI1fGJEu2hP1Rty/RYMZQ73CWgtE6/1HFBsW5Wa
+	 S45lX2Bkyw9sQ==
 From: Christian Brauner <brauner@kernel.org>
-Date: Tue, 01 Sep 2026 14:14:44 +0200
-Subject: [PATCH 19/27] fs: port ->rename() to pass const mnt_idmap
+Date: Tue, 01 Sep 2026 14:14:45 +0200
+Subject: [PATCH 20/27] fs: port ->mkdir() to pass const mnt_idmap
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -37,7 +37,7 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260901-work-idmap-const-v1-19-54ccd48e100b@kernel.org>
+Message-Id: <20260901-work-idmap-const-v1-20-54ccd48e100b@kernel.org>
 References: <20260901-work-idmap-const-v1-0-54ccd48e100b@kernel.org>
 In-Reply-To: <20260901-work-idmap-const-v1-0-54ccd48e100b@kernel.org>
 To: linux-fsdevel@vger.kernel.org
@@ -52,12 +52,12 @@ Cc: Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
  linux-cifs@vger.kernel.org, linux-kernel@vger.kernel.org, 
  "Christian Brauner (Amutable)" <brauner@kernel.org>
 X-Mailer: b4 0.17-dev-db0b7
-X-Developer-Signature: v=1; a=openpgp-sha256; l=32041; i=brauner@kernel.org;
- h=from:subject:message-id; bh=GhdthHsUtL1413InhlXP0kh48FcJh7t3akAKEapwlhk=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWRNO7h2YhWzvDqvyXa7zzcN116JmzHr9re4Q/O9F59xE
- OuzS1PV7yhlYRDjYpAVU2RxaDcJl1vOU7HZKFMDZg4rE8gQBi5OAZiIoDPDXynHHOn6/+WMOywf
- N16Td/urcT/frEImtmb21wMpD+1OcjAyLJU49HZnQdCsKDZGxVaGBUuO8dcctPcqT76wrsvhhY4
- FNwA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=33866; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=Hg3FLaLdJ2kIoY43h5iXHTOKeMvzgNrnKlJUivdeTxA=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWRNO7g2J5Zlggnj9J/G87Q+6QYcquqbc3riBkHHR03sa
+ xv/c03/3FHKwiDGxSArpsji0G4SLrecp2KzUaYGzBxWJpAhDFycAjCR6icM/+OZHR+w8M44ZVWl
+ u/0tc5yt7F/To61/ar6ETL3WuaL16ntGhmcss1xM1/7Jsj/9bkb0uYQptX/ldVjjHzatebtppsr
+ nZYwA
 X-Developer-Key: i=brauner@kernel.org; a=openpgp;
  fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
@@ -77,735 +77,791 @@ No functional changes.
 
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- Documentation/filesystems/locking.rst  | 2 +-
- Documentation/filesystems/vfs.rst      | 2 +-
- drivers/android/binder/rust_binderfs.c | 2 +-
- drivers/android/binderfs.c             | 2 +-
- fs/9p/v9fs.h                           | 2 +-
- fs/9p/vfs_inode.c                      | 2 +-
- fs/affs/affs.h                         | 2 +-
- fs/affs/namei.c                        | 2 +-
- fs/afs/dir.c                           | 4 ++--
- fs/bad_inode.c                         | 2 +-
- fs/bfs/dir.c                           | 2 +-
- fs/btrfs/inode.c                       | 2 +-
- fs/ceph/dir.c                          | 2 +-
- fs/coda/dir.c                          | 2 +-
- fs/ecryptfs/inode.c                    | 2 +-
- fs/exfat/namei.c                       | 2 +-
- fs/ext2/namei.c                        | 2 +-
- fs/ext4/namei.c                        | 2 +-
- fs/f2fs/namei.c                        | 2 +-
- fs/fat/namei_msdos.c                   | 2 +-
- fs/fat/namei_vfat.c                    | 2 +-
- fs/fuse/dir.c                          | 2 +-
- fs/gfs2/inode.c                        | 2 +-
- fs/hfs/dir.c                           | 2 +-
- fs/hfsplus/dir.c                       | 2 +-
- fs/hostfs/hostfs_kern.c                | 2 +-
- fs/hpfs/namei.c                        | 2 +-
- fs/jffs2/dir.c                         | 4 ++--
- fs/jfs/namei.c                         | 2 +-
- fs/kernfs/dir.c                        | 2 +-
- fs/libfs.c                             | 2 +-
- fs/minix/namei.c                       | 2 +-
- fs/nfs/dir.c                           | 2 +-
- fs/nfs/internal.h                      | 2 +-
- fs/nilfs2/namei.c                      | 2 +-
- fs/ntfs/namei.c                        | 2 +-
- fs/ntfs3/namei.c                       | 2 +-
- fs/ocfs2/namei.c                       | 2 +-
- fs/omfs/dir.c                          | 2 +-
- fs/orangefs/namei.c                    | 2 +-
- fs/overlayfs/dir.c                     | 2 +-
- fs/smb/client/cifsfs.h                 | 2 +-
- fs/smb/client/inode.c                  | 2 +-
- fs/ubifs/dir.c                         | 2 +-
- fs/udf/namei.c                         | 2 +-
- fs/ufs/namei.c                         | 2 +-
- fs/vboxsf/dir.c                        | 2 +-
- fs/xfs/xfs_iops.c                      | 2 +-
- include/linux/fs.h                     | 4 ++--
- mm/shmem.c                             | 2 +-
- 50 files changed, 53 insertions(+), 53 deletions(-)
+ Documentation/filesystems/locking.rst | 2 +-
+ Documentation/filesystems/vfs.rst     | 2 +-
+ fs/9p/vfs_inode.c                     | 2 +-
+ fs/9p/vfs_inode_dotl.c                | 2 +-
+ fs/affs/affs.h                        | 2 +-
+ fs/affs/namei.c                       | 2 +-
+ fs/afs/dir.c                          | 4 ++--
+ fs/autofs/root.c                      | 4 ++--
+ fs/bad_inode.c                        | 2 +-
+ fs/btrfs/inode.c                      | 2 +-
+ fs/ceph/dir.c                         | 2 +-
+ fs/coda/dir.c                         | 2 +-
+ fs/configfs/dir.c                     | 2 +-
+ fs/ecryptfs/inode.c                   | 2 +-
+ fs/exfat/namei.c                      | 2 +-
+ fs/ext2/namei.c                       | 2 +-
+ fs/ext4/namei.c                       | 2 +-
+ fs/f2fs/namei.c                       | 2 +-
+ fs/fat/namei_msdos.c                  | 2 +-
+ fs/fat/namei_vfat.c                   | 2 +-
+ fs/fuse/dir.c                         | 2 +-
+ fs/gfs2/inode.c                       | 2 +-
+ fs/hfs/dir.c                          | 2 +-
+ fs/hfsplus/dir.c                      | 2 +-
+ fs/hostfs/hostfs_kern.c               | 2 +-
+ fs/hpfs/namei.c                       | 2 +-
+ fs/hugetlbfs/inode.c                  | 2 +-
+ fs/jffs2/dir.c                        | 4 ++--
+ fs/jfs/namei.c                        | 2 +-
+ fs/kernfs/dir.c                       | 2 +-
+ fs/minix/namei.c                      | 2 +-
+ fs/nfs/dir.c                          | 2 +-
+ fs/nfs/internal.h                     | 2 +-
+ fs/nilfs2/namei.c                     | 2 +-
+ fs/ntfs/namei.c                       | 2 +-
+ fs/ntfs3/namei.c                      | 2 +-
+ fs/ocfs2/dlmfs/dlmfs.c                | 2 +-
+ fs/ocfs2/namei.c                      | 2 +-
+ fs/omfs/dir.c                         | 2 +-
+ fs/orangefs/namei.c                   | 2 +-
+ fs/overlayfs/dir.c                    | 2 +-
+ fs/ramfs/inode.c                      | 2 +-
+ fs/smb/client/cifsfs.h                | 2 +-
+ fs/smb/client/inode.c                 | 2 +-
+ fs/tracefs/inode.c                    | 2 +-
+ fs/ubifs/dir.c                        | 2 +-
+ fs/udf/namei.c                        | 2 +-
+ fs/ufs/namei.c                        | 2 +-
+ fs/vboxsf/dir.c                       | 2 +-
+ fs/xfs/xfs_iops.c                     | 2 +-
+ include/linux/fs.h                    | 2 +-
+ kernel/bpf/inode.c                    | 2 +-
+ mm/shmem.c                            | 2 +-
+ security/apparmor/apparmorfs.c        | 2 +-
+ 54 files changed, 57 insertions(+), 57 deletions(-)
 
 diff --git a/Documentation/filesystems/locking.rst b/Documentation/filesystems/locking.rst
-index 1cfdad9286d5..97f8aaff311e 100644
+index 97f8aaff311e..e0851f1859b3 100644
 --- a/Documentation/filesystems/locking.rst
 +++ b/Documentation/filesystems/locking.rst
-@@ -69,7 +69,7 @@ prototypes::
- 	struct dentry *(*mkdir) (struct mnt_idmap *, struct inode *,struct dentry *,umode_t);
+@@ -66,7 +66,7 @@ prototypes::
+ 	int (*link) (struct dentry *,struct inode *,struct dentry *);
+ 	int (*unlink) (struct inode *,struct dentry *);
+ 	int (*symlink) (struct mnt_idmap *, struct inode *,struct dentry *,const char *);
+-	struct dentry *(*mkdir) (struct mnt_idmap *, struct inode *,struct dentry *,umode_t);
++	struct dentry *(*mkdir) (const struct mnt_idmap *, struct inode *,struct dentry *,umode_t);
  	int (*rmdir) (struct inode *,struct dentry *);
  	int (*mknod) (const struct mnt_idmap *, struct inode *,struct dentry *,umode_t,dev_t);
--	int (*rename) (struct mnt_idmap *, struct inode *, struct dentry *,
-+	int (*rename) (const struct mnt_idmap *, struct inode *, struct dentry *,
- 			struct inode *, struct dentry *, unsigned int);
- 	int (*readlink) (struct dentry *, char __user *,int);
- 	const char *(*get_link) (struct dentry *, struct inode *, struct delayed_call *);
+ 	int (*rename) (const struct mnt_idmap *, struct inode *, struct dentry *,
 diff --git a/Documentation/filesystems/vfs.rst b/Documentation/filesystems/vfs.rst
-index d7ab34e101eb..90f8a0b74249 100644
+index 90f8a0b74249..b16105a81cfe 100644
 --- a/Documentation/filesystems/vfs.rst
 +++ b/Documentation/filesystems/vfs.rst
-@@ -423,7 +423,7 @@ As of kernel 2.6.22, the following members are defined:
- 		struct dentry *(*mkdir) (struct mnt_idmap *, struct inode *,struct dentry *,umode_t);
+@@ -420,7 +420,7 @@ As of kernel 2.6.22, the following members are defined:
+ 		int (*link) (struct dentry *,struct inode *,struct dentry *);
+ 		int (*unlink) (struct inode *,struct dentry *);
+ 		int (*symlink) (struct mnt_idmap *, struct inode *,struct dentry *,const char *);
+-		struct dentry *(*mkdir) (struct mnt_idmap *, struct inode *,struct dentry *,umode_t);
++		struct dentry *(*mkdir) (const struct mnt_idmap *, struct inode *,struct dentry *,umode_t);
  		int (*rmdir) (struct inode *,struct dentry *);
  		int (*mknod) (const struct mnt_idmap *, struct inode *,struct dentry *,umode_t,dev_t);
--		int (*rename) (struct mnt_idmap *, struct inode *, struct dentry *,
-+		int (*rename) (const struct mnt_idmap *, struct inode *, struct dentry *,
- 			       struct inode *, struct dentry *, unsigned int);
- 		int (*readlink) (struct dentry *, char __user *,int);
- 		const char *(*get_link) (struct dentry *, struct inode *,
-diff --git a/drivers/android/binder/rust_binderfs.c b/drivers/android/binder/rust_binderfs.c
-index 300cc65562d1..e98e6ca163df 100644
---- a/drivers/android/binder/rust_binderfs.c
-+++ b/drivers/android/binder/rust_binderfs.c
-@@ -338,7 +338,7 @@ static inline bool is_binderfs_control_device(const struct dentry *dentry)
- 	return info->control_dentry == dentry;
- }
- 
--static int binderfs_rename(struct mnt_idmap *idmap,
-+static int binderfs_rename(const struct mnt_idmap *idmap,
- 			   struct inode *old_dir, struct dentry *old_dentry,
- 			   struct inode *new_dir, struct dentry *new_dentry,
- 			   unsigned int flags)
-diff --git a/drivers/android/binderfs.c b/drivers/android/binderfs.c
-index 361d69f756f5..087eae6ca8ec 100644
---- a/drivers/android/binderfs.c
-+++ b/drivers/android/binderfs.c
-@@ -344,7 +344,7 @@ static inline bool is_binderfs_control_device(const struct dentry *dentry)
- 	return info->control_dentry == dentry;
- }
- 
--static int binderfs_rename(struct mnt_idmap *idmap,
-+static int binderfs_rename(const struct mnt_idmap *idmap,
- 			   struct inode *old_dir, struct dentry *old_dentry,
- 			   struct inode *new_dir, struct dentry *new_dentry,
- 			   unsigned int flags)
-diff --git a/fs/9p/v9fs.h b/fs/9p/v9fs.h
-index a462bcbfc7da..54a4a4ec5c15 100644
---- a/fs/9p/v9fs.h
-+++ b/fs/9p/v9fs.h
-@@ -188,7 +188,7 @@ extern struct dentry *v9fs_vfs_lookup(struct inode *dir, struct dentry *dentry,
- 				      unsigned int flags);
- extern int v9fs_vfs_unlink(struct inode *i, struct dentry *d);
- extern int v9fs_vfs_rmdir(struct inode *i, struct dentry *d);
--extern int v9fs_vfs_rename(struct mnt_idmap *idmap,
-+extern int v9fs_vfs_rename(const struct mnt_idmap *idmap,
- 			   struct inode *old_dir, struct dentry *old_dentry,
- 			   struct inode *new_dir, struct dentry *new_dentry,
- 			   unsigned int flags);
+ 		int (*rename) (const struct mnt_idmap *, struct inode *, struct dentry *,
 diff --git a/fs/9p/vfs_inode.c b/fs/9p/vfs_inode.c
-index 81fb5f8ec7e9..7d4d5a4481fa 100644
+index 7d4d5a4481fa..a448e9a9a014 100644
 --- a/fs/9p/vfs_inode.c
 +++ b/fs/9p/vfs_inode.c
-@@ -858,7 +858,7 @@ int v9fs_vfs_rmdir(struct inode *i, struct dentry *d)
+@@ -679,7 +679,7 @@ v9fs_vfs_create(struct mnt_idmap *idmap, struct inode *dir,
+  *
   */
  
- int
--v9fs_vfs_rename(struct mnt_idmap *idmap, struct inode *old_dir,
-+v9fs_vfs_rename(const struct mnt_idmap *idmap, struct inode *old_dir,
- 		struct dentry *old_dentry, struct inode *new_dir,
- 		struct dentry *new_dentry, unsigned int flags)
+-static struct dentry *v9fs_vfs_mkdir(struct mnt_idmap *idmap, struct inode *dir,
++static struct dentry *v9fs_vfs_mkdir(const struct mnt_idmap *idmap, struct inode *dir,
+ 				     struct dentry *dentry, umode_t mode)
+ {
+ 	u32 perm;
+diff --git a/fs/9p/vfs_inode_dotl.c b/fs/9p/vfs_inode_dotl.c
+index 634c4f5665c3..3c21006203d2 100644
+--- a/fs/9p/vfs_inode_dotl.c
++++ b/fs/9p/vfs_inode_dotl.c
+@@ -344,7 +344,7 @@ v9fs_vfs_atomic_open_dotl(struct inode *dir, struct dentry *dentry,
+  *
+  */
+ 
+-static struct dentry *v9fs_vfs_mkdir_dotl(struct mnt_idmap *idmap,
++static struct dentry *v9fs_vfs_mkdir_dotl(const struct mnt_idmap *idmap,
+ 					  struct inode *dir, struct dentry *dentry,
+ 					  umode_t omode)
  {
 diff --git a/fs/affs/affs.h b/fs/affs/affs.h
-index d1c506c1f310..a4b1e449aafc 100644
+index a4b1e449aafc..3dd795ce446e 100644
 --- a/fs/affs/affs.h
 +++ b/fs/affs/affs.h
-@@ -176,7 +176,7 @@ extern int	affs_link(struct dentry *olddentry, struct inode *dir,
- extern int	affs_symlink(struct mnt_idmap *idmap,
- 			struct inode *dir, struct dentry *dentry,
- 			const char *symname);
--extern int	affs_rename2(struct mnt_idmap *idmap,
-+extern int	affs_rename2(const struct mnt_idmap *idmap,
- 			struct inode *old_dir, struct dentry *old_dentry,
- 			struct inode *new_dir, struct dentry *new_dentry,
- 			unsigned int flags);
+@@ -168,7 +168,7 @@ extern struct dentry *affs_lookup(struct inode *dir, struct dentry *dentry, unsi
+ extern int	affs_unlink(struct inode *dir, struct dentry *dentry);
+ extern int	affs_create(struct mnt_idmap *idmap, struct inode *dir,
+ 			struct dentry *dentry, umode_t mode);
+-extern struct dentry *affs_mkdir(struct mnt_idmap *idmap, struct inode *dir,
++extern struct dentry *affs_mkdir(const struct mnt_idmap *idmap, struct inode *dir,
+ 			struct dentry *dentry, umode_t mode);
+ extern int	affs_rmdir(struct inode *dir, struct dentry *dentry);
+ extern int	affs_link(struct dentry *olddentry, struct inode *dir,
 diff --git a/fs/affs/namei.c b/fs/affs/namei.c
-index 6cb52efafe5f..c9cc0ad5c330 100644
+index c9cc0ad5c330..d17f0ba7c33c 100644
 --- a/fs/affs/namei.c
 +++ b/fs/affs/namei.c
-@@ -503,7 +503,7 @@ affs_xrename(struct inode *old_dir, struct dentry *old_dentry,
- 	return retval;
+@@ -274,7 +274,7 @@ affs_create(struct mnt_idmap *idmap, struct inode *dir,
  }
  
--int affs_rename2(struct mnt_idmap *idmap, struct inode *old_dir,
-+int affs_rename2(const struct mnt_idmap *idmap, struct inode *old_dir,
- 		 struct dentry *old_dentry, struct inode *new_dir,
- 		 struct dentry *new_dentry, unsigned int flags)
+ struct dentry *
+-affs_mkdir(struct mnt_idmap *idmap, struct inode *dir,
++affs_mkdir(const struct mnt_idmap *idmap, struct inode *dir,
+ 	   struct dentry *dentry, umode_t mode)
  {
+ 	struct inode		*inode;
 diff --git a/fs/afs/dir.c b/fs/afs/dir.c
-index 81565366d937..fee48c544c61 100644
+index fee48c544c61..6a3cac50dc61 100644
 --- a/fs/afs/dir.c
 +++ b/fs/afs/dir.c
-@@ -43,7 +43,7 @@ static int afs_link(struct dentry *from, struct inode *dir,
- 		    struct dentry *dentry);
- static int afs_symlink(struct mnt_idmap *idmap, struct inode *dir,
- 		       struct dentry *dentry, const char *content);
--static int afs_rename(struct mnt_idmap *idmap, struct inode *old_dir,
-+static int afs_rename(const struct mnt_idmap *idmap, struct inode *old_dir,
- 		      struct dentry *old_dentry, struct inode *new_dir,
- 		      struct dentry *new_dentry, unsigned int flags);
- static int afs_dir_writepages(struct address_space *mapping,
-@@ -2067,7 +2067,7 @@ static const struct afs_operation_ops afs_rename_exchange_operation = {
+@@ -35,7 +35,7 @@ static bool afs_lookup_filldir(struct dir_context *ctx, const char *name, int nl
+ #define AFS_LOOKUP ((filldir_t)0x137UL)
+ static int afs_create(struct mnt_idmap *idmap, struct inode *dir,
+ 		      struct dentry *dentry, umode_t mode);
+-static struct dentry *afs_mkdir(struct mnt_idmap *idmap, struct inode *dir,
++static struct dentry *afs_mkdir(const struct mnt_idmap *idmap, struct inode *dir,
+ 				struct dentry *dentry, umode_t mode);
+ static int afs_rmdir(struct inode *dir, struct dentry *dentry);
+ static int afs_unlink(struct inode *dir, struct dentry *dentry);
+@@ -1310,7 +1310,7 @@ static const struct afs_operation_ops afs_mkdir_operation = {
  /*
-  * rename a file in an AFS filesystem and/or move it between directories
+  * create a directory on an AFS filesystem
   */
--static int afs_rename(struct mnt_idmap *idmap, struct inode *old_dir,
-+static int afs_rename(const struct mnt_idmap *idmap, struct inode *old_dir,
- 		      struct dentry *old_dentry, struct inode *new_dir,
- 		      struct dentry *new_dentry, unsigned int flags)
+-static struct dentry *afs_mkdir(struct mnt_idmap *idmap, struct inode *dir,
++static struct dentry *afs_mkdir(const struct mnt_idmap *idmap, struct inode *dir,
+ 				struct dentry *dentry, umode_t mode)
+ {
+ 	struct afs_operation *op;
+diff --git a/fs/autofs/root.c b/fs/autofs/root.c
+index 3158df448025..c6de44473d6d 100644
+--- a/fs/autofs/root.c
++++ b/fs/autofs/root.c
+@@ -16,7 +16,7 @@ static int autofs_dir_symlink(struct mnt_idmap *, struct inode *,
+ 			      struct dentry *, const char *);
+ static int autofs_dir_unlink(struct inode *, struct dentry *);
+ static int autofs_dir_rmdir(struct inode *, struct dentry *);
+-static struct dentry *autofs_dir_mkdir(struct mnt_idmap *, struct inode *,
++static struct dentry *autofs_dir_mkdir(const struct mnt_idmap *, struct inode *,
+ 				       struct dentry *, umode_t);
+ static long autofs_root_ioctl(struct file *, unsigned int, unsigned long);
+ #ifdef CONFIG_COMPAT
+@@ -724,7 +724,7 @@ static int autofs_dir_rmdir(struct inode *dir, struct dentry *dentry)
+ 	return 0;
+ }
+ 
+-static struct dentry *autofs_dir_mkdir(struct mnt_idmap *idmap,
++static struct dentry *autofs_dir_mkdir(const struct mnt_idmap *idmap,
+ 				       struct inode *dir, struct dentry *dentry,
+ 				       umode_t mode)
  {
 diff --git a/fs/bad_inode.c b/fs/bad_inode.c
-index 9b7baf1367a6..c5c76e9dcf82 100644
+index c5c76e9dcf82..f0c56db22223 100644
 --- a/fs/bad_inode.c
 +++ b/fs/bad_inode.c
-@@ -75,7 +75,7 @@ static int bad_inode_mknod(const struct mnt_idmap *idmap, struct inode *dir,
+@@ -58,7 +58,7 @@ static int bad_inode_symlink(struct mnt_idmap *idmap,
  	return -EIO;
  }
  
--static int bad_inode_rename2(struct mnt_idmap *idmap,
-+static int bad_inode_rename2(const struct mnt_idmap *idmap,
- 			     struct inode *old_dir, struct dentry *old_dentry,
- 			     struct inode *new_dir, struct dentry *new_dentry,
- 			     unsigned int flags)
-diff --git a/fs/bfs/dir.c b/fs/bfs/dir.c
-index 91a4871fa051..80534d04db9d 100644
---- a/fs/bfs/dir.c
-+++ b/fs/bfs/dir.c
-@@ -199,7 +199,7 @@ static int bfs_unlink(struct inode *dir, struct dentry *dentry)
+-static struct dentry *bad_inode_mkdir(struct mnt_idmap *idmap, struct inode *dir,
++static struct dentry *bad_inode_mkdir(const struct mnt_idmap *idmap, struct inode *dir,
+ 				      struct dentry *dentry, umode_t mode)
+ {
+ 	return ERR_PTR(-EIO);
+diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
+index e77c791f6efa..dc7e4b68410c 100644
+--- a/fs/btrfs/inode.c
++++ b/fs/btrfs/inode.c
+@@ -7115,7 +7115,7 @@ static int btrfs_link(struct dentry *old_dentry, struct inode *dir,
+ 	return ret;
+ }
+ 
+-static struct dentry *btrfs_mkdir(struct mnt_idmap *idmap, struct inode *dir,
++static struct dentry *btrfs_mkdir(const struct mnt_idmap *idmap, struct inode *dir,
+ 				  struct dentry *dentry, umode_t mode)
+ {
+ 	struct inode *inode;
+diff --git a/fs/ceph/dir.c b/fs/ceph/dir.c
+index 864b6949fb9f..dd75d4c0a11e 100644
+--- a/fs/ceph/dir.c
++++ b/fs/ceph/dir.c
+@@ -1106,7 +1106,7 @@ static int ceph_symlink(struct mnt_idmap *idmap, struct inode *dir,
+ 	return err;
+ }
+ 
+-static struct dentry *ceph_mkdir(struct mnt_idmap *idmap, struct inode *dir,
++static struct dentry *ceph_mkdir(const struct mnt_idmap *idmap, struct inode *dir,
+ 				 struct dentry *dentry, umode_t mode)
+ {
+ 	struct ceph_mds_client *mdsc = ceph_sb_to_mdsc(dir->i_sb);
+diff --git a/fs/coda/dir.c b/fs/coda/dir.c
+index a888a7ef30e5..3a2fa1e13ef8 100644
+--- a/fs/coda/dir.c
++++ b/fs/coda/dir.c
+@@ -166,7 +166,7 @@ static int coda_create(struct mnt_idmap *idmap, struct inode *dir,
  	return error;
  }
  
--static int bfs_rename(struct mnt_idmap *idmap, struct inode *old_dir,
-+static int bfs_rename(const struct mnt_idmap *idmap, struct inode *old_dir,
- 		      struct dentry *old_dentry, struct inode *new_dir,
- 		      struct dentry *new_dentry, unsigned int flags)
+-static struct dentry *coda_mkdir(struct mnt_idmap *idmap, struct inode *dir,
++static struct dentry *coda_mkdir(const struct mnt_idmap *idmap, struct inode *dir,
+ 				 struct dentry *de, umode_t mode)
  {
-diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
-index 32b5648fdf81..e77c791f6efa 100644
---- a/fs/btrfs/inode.c
-+++ b/fs/btrfs/inode.c
-@@ -8835,7 +8835,7 @@ static int btrfs_rename(const struct mnt_idmap *idmap,
- 	return ret;
+ 	struct inode *inode;
+diff --git a/fs/configfs/dir.c b/fs/configfs/dir.c
+index 3c88f13f1ca2..e0ca643db1ac 100644
+--- a/fs/configfs/dir.c
++++ b/fs/configfs/dir.c
+@@ -1286,7 +1286,7 @@ int configfs_depend_item_unlocked(struct configfs_subsystem *caller_subsys,
  }
+ EXPORT_SYMBOL(configfs_depend_item_unlocked);
  
--static int btrfs_rename2(struct mnt_idmap *idmap, struct inode *old_dir,
-+static int btrfs_rename2(const struct mnt_idmap *idmap, struct inode *old_dir,
- 			 struct dentry *old_dentry, struct inode *new_dir,
- 			 struct dentry *new_dentry, unsigned int flags)
+-static struct dentry *configfs_mkdir(struct mnt_idmap *idmap, struct inode *dir,
++static struct dentry *configfs_mkdir(const struct mnt_idmap *idmap, struct inode *dir,
+ 				     struct dentry *dentry, umode_t mode)
  {
-diff --git a/fs/ceph/dir.c b/fs/ceph/dir.c
-index 0f3c54dc97c6..864b6949fb9f 100644
---- a/fs/ceph/dir.c
-+++ b/fs/ceph/dir.c
-@@ -1478,7 +1478,7 @@ static int ceph_unlink(struct inode *dir, struct dentry *dentry)
- 	return err;
- }
- 
--static int ceph_rename(struct mnt_idmap *idmap, struct inode *old_dir,
-+static int ceph_rename(const struct mnt_idmap *idmap, struct inode *old_dir,
- 		       struct dentry *old_dentry, struct inode *new_dir,
- 		       struct dentry *new_dentry, unsigned int flags)
- {
-diff --git a/fs/coda/dir.c b/fs/coda/dir.c
-index e8db5960b61b..a888a7ef30e5 100644
---- a/fs/coda/dir.c
-+++ b/fs/coda/dir.c
-@@ -300,7 +300,7 @@ static int coda_rmdir(struct inode *dir, struct dentry *de)
- }
- 
- /* rename */
--static int coda_rename(struct mnt_idmap *idmap, struct inode *old_dir,
-+static int coda_rename(const struct mnt_idmap *idmap, struct inode *old_dir,
- 		       struct dentry *old_dentry, struct inode *new_dir,
- 		       struct dentry *new_dentry, unsigned int flags)
- {
+ 	int ret = 0;
 diff --git a/fs/ecryptfs/inode.c b/fs/ecryptfs/inode.c
-index 411aa024d4b8..7f5396e27752 100644
+index 7f5396e27752..f5340d2b42f4 100644
 --- a/fs/ecryptfs/inode.c
 +++ b/fs/ecryptfs/inode.c
-@@ -590,7 +590,7 @@ ecryptfs_mknod(const struct mnt_idmap *idmap, struct inode *dir,
+@@ -503,7 +503,7 @@ static int ecryptfs_symlink(struct mnt_idmap *idmap,
+ 	return rc;
  }
  
- static int
--ecryptfs_rename(struct mnt_idmap *idmap, struct inode *old_dir,
-+ecryptfs_rename(const struct mnt_idmap *idmap, struct inode *old_dir,
- 		struct dentry *old_dentry, struct inode *new_dir,
- 		struct dentry *new_dentry, unsigned int flags)
+-static struct dentry *ecryptfs_mkdir(struct mnt_idmap *idmap, struct inode *dir,
++static struct dentry *ecryptfs_mkdir(const struct mnt_idmap *idmap, struct inode *dir,
+ 				     struct dentry *dentry, umode_t mode)
  {
+ 	int rc;
 diff --git a/fs/exfat/namei.c b/fs/exfat/namei.c
-index a4dc83b5949c..863a8c506fe8 100644
+index 863a8c506fe8..4accf96ea7f9 100644
 --- a/fs/exfat/namei.c
 +++ b/fs/exfat/namei.c
-@@ -1263,7 +1263,7 @@ static int __exfat_rename(struct inode *old_parent_inode,
- 	return ret;
+@@ -825,7 +825,7 @@ static int exfat_unlink(struct inode *dir, struct dentry *dentry)
+ 	return err;
  }
  
--static int exfat_rename(struct mnt_idmap *idmap,
-+static int exfat_rename(const struct mnt_idmap *idmap,
- 			struct inode *old_dir, struct dentry *old_dentry,
- 			struct inode *new_dir, struct dentry *new_dentry,
- 			unsigned int flags)
+-static struct dentry *exfat_mkdir(struct mnt_idmap *idmap, struct inode *dir,
++static struct dentry *exfat_mkdir(const struct mnt_idmap *idmap, struct inode *dir,
+ 				  struct dentry *dentry, umode_t mode)
+ {
+ 	struct super_block *sb = dir->i_sb;
 diff --git a/fs/ext2/namei.c b/fs/ext2/namei.c
-index f175b59cccd7..19e298533699 100644
+index 19e298533699..0b66e7d37464 100644
 --- a/fs/ext2/namei.c
 +++ b/fs/ext2/namei.c
-@@ -316,7 +316,7 @@ static int ext2_rmdir (struct inode * dir, struct dentry *dentry)
+@@ -223,7 +223,7 @@ static int ext2_link (struct dentry * old_dentry, struct inode * dir,
  	return err;
  }
  
--static int ext2_rename (struct mnt_idmap * idmap,
-+static int ext2_rename (const struct mnt_idmap * idmap,
- 			struct inode * old_dir, struct dentry * old_dentry,
- 			struct inode * new_dir, struct dentry * new_dentry,
- 			unsigned int flags)
+-static struct dentry *ext2_mkdir(struct mnt_idmap * idmap,
++static struct dentry *ext2_mkdir(const struct mnt_idmap * idmap,
+ 				 struct inode * dir, struct dentry * dentry,
+ 				 umode_t mode)
+ {
 diff --git a/fs/ext4/namei.c b/fs/ext4/namei.c
-index d7a58d82f320..1fbc2efe23ba 100644
+index 1fbc2efe23ba..4c0ce31c3ce8 100644
 --- a/fs/ext4/namei.c
 +++ b/fs/ext4/namei.c
-@@ -4191,7 +4191,7 @@ static int ext4_cross_rename(struct inode *old_dir, struct dentry *old_dentry,
- 	return retval;
- }
- 
--static int ext4_rename2(struct mnt_idmap *idmap,
-+static int ext4_rename2(const struct mnt_idmap *idmap,
- 			struct inode *old_dir, struct dentry *old_dentry,
- 			struct inode *new_dir, struct dentry *new_dentry,
- 			unsigned int flags)
-diff --git a/fs/f2fs/namei.c b/fs/f2fs/namei.c
-index 0773f64396f8..87b588b1d34f 100644
---- a/fs/f2fs/namei.c
-+++ b/fs/f2fs/namei.c
-@@ -1341,7 +1341,7 @@ static int f2fs_cross_rename(struct inode *old_dir, struct dentry *old_dentry,
+@@ -2994,7 +2994,7 @@ int ext4_init_new_dir(handle_t *handle, struct inode *dir,
  	return err;
  }
  
--static int f2fs_rename2(struct mnt_idmap *idmap,
-+static int f2fs_rename2(const struct mnt_idmap *idmap,
- 			struct inode *old_dir, struct dentry *old_dentry,
- 			struct inode *new_dir, struct dentry *new_dentry,
- 			unsigned int flags)
-diff --git a/fs/fat/namei_msdos.c b/fs/fat/namei_msdos.c
-index d46d1a3851f2..1af607cf47cf 100644
---- a/fs/fat/namei_msdos.c
-+++ b/fs/fat/namei_msdos.c
-@@ -600,7 +600,7 @@ static int do_msdos_rename(struct inode *old_dir, unsigned char *old_name,
- }
- 
- /***** Rename, a wrapper for rename_same_dir & rename_diff_dir */
--static int msdos_rename(struct mnt_idmap *idmap,
-+static int msdos_rename(const struct mnt_idmap *idmap,
- 			struct inode *old_dir, struct dentry *old_dentry,
- 			struct inode *new_dir, struct dentry *new_dentry,
- 			unsigned int flags)
-diff --git a/fs/fat/namei_vfat.c b/fs/fat/namei_vfat.c
-index da3e89c0b16a..d0b161f43a8b 100644
---- a/fs/fat/namei_vfat.c
-+++ b/fs/fat/namei_vfat.c
-@@ -1160,7 +1160,7 @@ static int vfat_rename_exchange(struct inode *old_dir, struct dentry *old_dentry
+-static struct dentry *ext4_mkdir(struct mnt_idmap *idmap, struct inode *dir,
++static struct dentry *ext4_mkdir(const struct mnt_idmap *idmap, struct inode *dir,
+ 				 struct dentry *dentry, umode_t mode)
+ {
+ 	handle_t *handle;
+diff --git a/fs/f2fs/namei.c b/fs/f2fs/namei.c
+index 87b588b1d34f..c888f02d89fe 100644
+--- a/fs/f2fs/namei.c
++++ b/fs/f2fs/namei.c
+@@ -751,7 +751,7 @@ static int f2fs_symlink(struct mnt_idmap *idmap, struct inode *dir,
  	goto out;
  }
  
--static int vfat_rename2(struct mnt_idmap *idmap, struct inode *old_dir,
-+static int vfat_rename2(const struct mnt_idmap *idmap, struct inode *old_dir,
- 			struct dentry *old_dentry, struct inode *new_dir,
- 			struct dentry *new_dentry, unsigned int flags)
+-static struct dentry *f2fs_mkdir(struct mnt_idmap *idmap, struct inode *dir,
++static struct dentry *f2fs_mkdir(const struct mnt_idmap *idmap, struct inode *dir,
+ 				 struct dentry *dentry, umode_t mode)
  {
-diff --git a/fs/fuse/dir.c b/fs/fuse/dir.c
-index 3250598e06f2..51ff444dcf94 100644
---- a/fs/fuse/dir.c
-+++ b/fs/fuse/dir.c
-@@ -1307,7 +1307,7 @@ static int fuse_rename_common(const struct mnt_idmap *idmap, struct inode *olddi
+ 	struct f2fs_sb_info *sbi = F2FS_I_SB(dir);
+diff --git a/fs/fat/namei_msdos.c b/fs/fat/namei_msdos.c
+index 1af607cf47cf..9ee899391f4f 100644
+--- a/fs/fat/namei_msdos.c
++++ b/fs/fat/namei_msdos.c
+@@ -345,7 +345,7 @@ static int msdos_rmdir(struct inode *dir, struct dentry *dentry)
+ }
+ 
+ /***** Make a directory */
+-static struct dentry *msdos_mkdir(struct mnt_idmap *idmap, struct inode *dir,
++static struct dentry *msdos_mkdir(const struct mnt_idmap *idmap, struct inode *dir,
+ 				  struct dentry *dentry, umode_t mode)
+ {
+ 	struct super_block *sb = dir->i_sb;
+diff --git a/fs/fat/namei_vfat.c b/fs/fat/namei_vfat.c
+index d0b161f43a8b..a3f3320fe630 100644
+--- a/fs/fat/namei_vfat.c
++++ b/fs/fat/namei_vfat.c
+@@ -846,7 +846,7 @@ static int vfat_unlink(struct inode *dir, struct dentry *dentry)
  	return err;
  }
  
--static int fuse_rename2(struct mnt_idmap *idmap, struct inode *olddir,
-+static int fuse_rename2(const struct mnt_idmap *idmap, struct inode *olddir,
- 			struct dentry *oldent, struct inode *newdir,
- 			struct dentry *newent, unsigned int flags)
+-static struct dentry *vfat_mkdir(struct mnt_idmap *idmap, struct inode *dir,
++static struct dentry *vfat_mkdir(const struct mnt_idmap *idmap, struct inode *dir,
+ 				  struct dentry *dentry, umode_t mode)
  {
+ 	struct super_block *sb = dir->i_sb;
+diff --git a/fs/fuse/dir.c b/fs/fuse/dir.c
+index 51ff444dcf94..88da9010b0ce 100644
+--- a/fs/fuse/dir.c
++++ b/fs/fuse/dir.c
+@@ -1116,7 +1116,7 @@ static int fuse_tmpfile(const struct mnt_idmap *idmap, struct inode *dir,
+ 	return err;
+ }
+ 
+-static struct dentry *fuse_mkdir(struct mnt_idmap *idmap, struct inode *dir,
++static struct dentry *fuse_mkdir(const struct mnt_idmap *idmap, struct inode *dir,
+ 				 struct dentry *entry, umode_t mode)
+ {
+ 	struct fuse_mkdir_in inarg;
 diff --git a/fs/gfs2/inode.c b/fs/gfs2/inode.c
-index 733f74603eaf..0c00fef40af1 100644
+index 0c00fef40af1..6a1d405aa6e9 100644
 --- a/fs/gfs2/inode.c
 +++ b/fs/gfs2/inode.c
-@@ -1877,7 +1877,7 @@ static int gfs2_exchange(struct inode *odir, struct dentry *odentry,
+@@ -1345,7 +1345,7 @@ static int gfs2_symlink(struct mnt_idmap *idmap, struct inode *dir,
+  * Returns: the dentry, or ERR_PTR(errno)
+  */
+ 
+-static struct dentry *gfs2_mkdir(struct mnt_idmap *idmap, struct inode *dir,
++static struct dentry *gfs2_mkdir(const struct mnt_idmap *idmap, struct inode *dir,
+ 				 struct dentry *dentry, umode_t mode)
+ {
+ 	unsigned dsize = gfs2_max_stuffed_size(GFS2_I(dir));
+diff --git a/fs/hfs/dir.c b/fs/hfs/dir.c
+index 2958ca702be2..d60399c62e99 100644
+--- a/fs/hfs/dir.c
++++ b/fs/hfs/dir.c
+@@ -213,7 +213,7 @@ static int hfs_create(struct mnt_idmap *idmap, struct inode *dir,
+  * in a directory, given the inode for the parent directory and the
+  * name (and its length) of the new directory.
+  */
+-static struct dentry *hfs_mkdir(struct mnt_idmap *idmap, struct inode *dir,
++static struct dentry *hfs_mkdir(const struct mnt_idmap *idmap, struct inode *dir,
+ 				struct dentry *dentry, umode_t mode)
+ {
+ 	struct inode *inode;
+diff --git a/fs/hfsplus/dir.c b/fs/hfsplus/dir.c
+index d26b87066bd0..651b9f73b567 100644
+--- a/fs/hfsplus/dir.c
++++ b/fs/hfsplus/dir.c
+@@ -567,7 +567,7 @@ static int hfsplus_create(struct mnt_idmap *idmap, struct inode *dir,
+ 	return hfsplus_mknod(&nop_mnt_idmap, dir, dentry, mode, 0);
+ }
+ 
+-static struct dentry *hfsplus_mkdir(struct mnt_idmap *idmap, struct inode *dir,
++static struct dentry *hfsplus_mkdir(const struct mnt_idmap *idmap, struct inode *dir,
+ 				    struct dentry *dentry, umode_t mode)
+ {
+ 	return ERR_PTR(hfsplus_mknod(&nop_mnt_idmap, dir, dentry, mode, 0));
+diff --git a/fs/hostfs/hostfs_kern.c b/fs/hostfs/hostfs_kern.c
+index 9028c9f27730..2eec9ebe1587 100644
+--- a/fs/hostfs/hostfs_kern.c
++++ b/fs/hostfs/hostfs_kern.c
+@@ -686,7 +686,7 @@ static int hostfs_symlink(struct mnt_idmap *idmap, struct inode *ino,
+ 	return err;
+ }
+ 
+-static struct dentry *hostfs_mkdir(struct mnt_idmap *idmap, struct inode *ino,
++static struct dentry *hostfs_mkdir(const struct mnt_idmap *idmap, struct inode *ino,
+ 				   struct dentry *dentry, umode_t mode)
+ {
+ 	struct inode *inode;
+diff --git a/fs/hpfs/namei.c b/fs/hpfs/namei.c
+index dfa8e5b7311f..280459b00e56 100644
+--- a/fs/hpfs/namei.c
++++ b/fs/hpfs/namei.c
+@@ -19,7 +19,7 @@ static void hpfs_update_directory_times(struct inode *dir)
+ 	hpfs_write_inode_nolock(dir);
+ }
+ 
+-static struct dentry *hpfs_mkdir(struct mnt_idmap *idmap, struct inode *dir,
++static struct dentry *hpfs_mkdir(const struct mnt_idmap *idmap, struct inode *dir,
+ 				 struct dentry *dentry, umode_t mode)
+ {
+ 	const unsigned char *name = dentry->d_name.name;
+diff --git a/fs/hugetlbfs/inode.c b/fs/hugetlbfs/inode.c
+index 0c9cb8d953ab..6298a30e7343 100644
+--- a/fs/hugetlbfs/inode.c
++++ b/fs/hugetlbfs/inode.c
+@@ -967,7 +967,7 @@ static int hugetlbfs_mknod(const struct mnt_idmap *idmap, struct inode *dir,
+ 	return 0;
+ }
+ 
+-static struct dentry *hugetlbfs_mkdir(struct mnt_idmap *idmap, struct inode *dir,
++static struct dentry *hugetlbfs_mkdir(const struct mnt_idmap *idmap, struct inode *dir,
+ 				      struct dentry *dentry, umode_t mode)
+ {
+ 	int retval = hugetlbfs_mknod(idmap, dir, dentry,
+diff --git a/fs/jffs2/dir.c b/fs/jffs2/dir.c
+index c56cd87a2a73..b4f808825738 100644
+--- a/fs/jffs2/dir.c
++++ b/fs/jffs2/dir.c
+@@ -33,7 +33,7 @@ static int jffs2_link (struct dentry *,struct inode *,struct dentry *);
+ static int jffs2_unlink (struct inode *,struct dentry *);
+ static int jffs2_symlink (struct mnt_idmap *, struct inode *,
+ 			  struct dentry *, const char *);
+-static struct dentry *jffs2_mkdir (struct mnt_idmap *, struct inode *,struct dentry *,
++static struct dentry *jffs2_mkdir (const struct mnt_idmap *, struct inode *,struct dentry *,
+ 				   umode_t);
+ static int jffs2_rmdir (struct inode *,struct dentry *);
+ static int jffs2_mknod (const struct mnt_idmap *, struct inode *,struct dentry *,
+@@ -448,7 +448,7 @@ static int jffs2_symlink (struct mnt_idmap *idmap, struct inode *dir_i,
+ }
+ 
+ 
+-static struct dentry *jffs2_mkdir (struct mnt_idmap *idmap, struct inode *dir_i,
++static struct dentry *jffs2_mkdir (const struct mnt_idmap *idmap, struct inode *dir_i,
+ 				   struct dentry *dentry, umode_t mode)
+ {
+ 	struct jffs2_inode_info *f, *dir_f;
+diff --git a/fs/jfs/namei.c b/fs/jfs/namei.c
+index a384ced308af..305eb2cab105 100644
+--- a/fs/jfs/namei.c
++++ b/fs/jfs/namei.c
+@@ -193,7 +193,7 @@ static int jfs_create(struct mnt_idmap *idmap, struct inode *dip,
+  * note:
+  * EACCES: user needs search+write permission on the parent directory
+  */
+-static struct dentry *jfs_mkdir(struct mnt_idmap *idmap, struct inode *dip,
++static struct dentry *jfs_mkdir(const struct mnt_idmap *idmap, struct inode *dip,
+ 				struct dentry *dentry, umode_t mode)
+ {
+ 	int rc = 0;
+diff --git a/fs/kernfs/dir.c b/fs/kernfs/dir.c
+index d2e978e4ea6f..943d6ee3e505 100644
+--- a/fs/kernfs/dir.c
++++ b/fs/kernfs/dir.c
+@@ -1288,7 +1288,7 @@ static struct dentry *kernfs_iop_lookup(struct inode *dir,
+ 	return d_splice_alias(inode, dentry);
+ }
+ 
+-static struct dentry *kernfs_iop_mkdir(struct mnt_idmap *idmap,
++static struct dentry *kernfs_iop_mkdir(const struct mnt_idmap *idmap,
+ 				       struct inode *dir, struct dentry *dentry,
+ 				       umode_t mode)
+ {
+diff --git a/fs/minix/namei.c b/fs/minix/namei.c
+index f7aaa19eeac0..abf4575f24b1 100644
+--- a/fs/minix/namei.c
++++ b/fs/minix/namei.c
+@@ -104,7 +104,7 @@ static int minix_link(struct dentry * old_dentry, struct inode * dir,
+ 	return add_nondir(dentry, inode);
+ }
+ 
+-static struct dentry *minix_mkdir(struct mnt_idmap *idmap, struct inode *dir,
++static struct dentry *minix_mkdir(const struct mnt_idmap *idmap, struct inode *dir,
+ 				  struct dentry *dentry, umode_t mode)
+ {
+ 	struct inode * inode;
+diff --git a/fs/nfs/dir.c b/fs/nfs/dir.c
+index 1161c809c9f1..dfa9dab7fdcc 100644
+--- a/fs/nfs/dir.c
++++ b/fs/nfs/dir.c
+@@ -2475,7 +2475,7 @@ EXPORT_SYMBOL_GPL(nfs_mknod);
+ /*
+  * See comments for nfs_proc_create regarding failed operations.
+  */
+-struct dentry *nfs_mkdir(struct mnt_idmap *idmap, struct inode *dir,
++struct dentry *nfs_mkdir(const struct mnt_idmap *idmap, struct inode *dir,
+ 			 struct dentry *dentry, umode_t mode)
+ {
+ 	struct iattr attr;
+diff --git a/fs/nfs/internal.h b/fs/nfs/internal.h
+index c7928c16352d..da6db93b1730 100644
+--- a/fs/nfs/internal.h
++++ b/fs/nfs/internal.h
+@@ -398,7 +398,7 @@ struct dentry *nfs_lookup(struct inode *, struct dentry *, unsigned int);
+ void nfs_d_prune_case_insensitive_aliases(struct inode *inode);
+ int nfs_create(struct mnt_idmap *, struct inode *, struct dentry *,
+ 	       umode_t);
+-struct dentry *nfs_mkdir(struct mnt_idmap *, struct inode *, struct dentry *,
++struct dentry *nfs_mkdir(const struct mnt_idmap *, struct inode *, struct dentry *,
+ 			 umode_t);
+ int nfs_rmdir(struct inode *, struct dentry *);
+ int nfs_unlink(struct inode *, struct dentry *);
+diff --git a/fs/nilfs2/namei.c b/fs/nilfs2/namei.c
+index bfc7c4a06743..b21fd2d8cb4a 100644
+--- a/fs/nilfs2/namei.c
++++ b/fs/nilfs2/namei.c
+@@ -218,7 +218,7 @@ static int nilfs_link(struct dentry *old_dentry, struct inode *dir,
+ 	return err;
+ }
+ 
+-static struct dentry *nilfs_mkdir(struct mnt_idmap *idmap, struct inode *dir,
++static struct dentry *nilfs_mkdir(const struct mnt_idmap *idmap, struct inode *dir,
+ 				  struct dentry *dentry, umode_t mode)
+ {
+ 	struct inode *inode;
+diff --git a/fs/ntfs/namei.c b/fs/ntfs/namei.c
+index 431ab27472ab..cbefeabe81b3 100644
+--- a/fs/ntfs/namei.c
++++ b/fs/ntfs/namei.c
+@@ -1049,7 +1049,7 @@ static int ntfs_unlink(struct inode *dir, struct dentry *dentry)
+ 	return err;
+ }
+ 
+-static struct dentry *ntfs_mkdir(struct mnt_idmap *idmap, struct inode *dir,
++static struct dentry *ntfs_mkdir(const struct mnt_idmap *idmap, struct inode *dir,
+ 		struct dentry *dentry, umode_t mode)
+ {
+ 	struct super_block *sb = dir->i_sb;
+diff --git a/fs/ntfs3/namei.c b/fs/ntfs3/namei.c
+index 0d9c8bf79947..db02a2fb69c1 100644
+--- a/fs/ntfs3/namei.c
++++ b/fs/ntfs3/namei.c
+@@ -228,7 +228,7 @@ static int ntfs_symlink(struct mnt_idmap *idmap, struct inode *dir,
+ /*
+  * ntfs_mkdir - inode_operations::mkdir
+  */
+-static struct dentry *ntfs_mkdir(struct mnt_idmap *idmap, struct inode *dir,
++static struct dentry *ntfs_mkdir(const struct mnt_idmap *idmap, struct inode *dir,
+ 				 struct dentry *dentry, umode_t mode)
+ {
+ 	return ERR_PTR(ntfs_create_inode(idmap, dir, dentry, NULL,
+diff --git a/fs/ocfs2/dlmfs/dlmfs.c b/fs/ocfs2/dlmfs/dlmfs.c
+index 53df5dd10ad0..5e544d8ded42 100644
+--- a/fs/ocfs2/dlmfs/dlmfs.c
++++ b/fs/ocfs2/dlmfs/dlmfs.c
+@@ -402,7 +402,7 @@ static struct inode *dlmfs_get_inode(struct inode *parent,
+  * File creation. Allocate an inode, and we're done..
+  */
+ /* SMP-safe */
+-static struct dentry *dlmfs_mkdir(struct mnt_idmap * idmap,
++static struct dentry *dlmfs_mkdir(const struct mnt_idmap * idmap,
+ 				  struct inode * dir,
+ 				  struct dentry * dentry,
+ 				  umode_t mode)
+diff --git a/fs/ocfs2/namei.c b/fs/ocfs2/namei.c
+index 05c007213fab..89ac6fae34f8 100644
+--- a/fs/ocfs2/namei.c
++++ b/fs/ocfs2/namei.c
+@@ -655,7 +655,7 @@ static int ocfs2_mknod_locked(struct ocfs2_super *osb,
+ 				    suballoc_loc, suballoc_bit);
+ }
+ 
+-static struct dentry *ocfs2_mkdir(struct mnt_idmap *idmap,
++static struct dentry *ocfs2_mkdir(const struct mnt_idmap *idmap,
+ 				  struct inode *dir,
+ 				  struct dentry *dentry,
+ 				  umode_t mode)
+diff --git a/fs/omfs/dir.c b/fs/omfs/dir.c
+index 99e0a7c8e03b..a476675e8e61 100644
+--- a/fs/omfs/dir.c
++++ b/fs/omfs/dir.c
+@@ -279,7 +279,7 @@ static int omfs_add_node(struct inode *dir, struct dentry *dentry, umode_t mode)
+ 	return err;
+ }
+ 
+-static struct dentry *omfs_mkdir(struct mnt_idmap *idmap, struct inode *dir,
++static struct dentry *omfs_mkdir(const struct mnt_idmap *idmap, struct inode *dir,
+ 				 struct dentry *dentry, umode_t mode)
+ {
+ 	return ERR_PTR(omfs_add_node(dir, dentry, mode));
+diff --git a/fs/orangefs/namei.c b/fs/orangefs/namei.c
+index 40105ce80bb8..749dfc0735a6 100644
+--- a/fs/orangefs/namei.c
++++ b/fs/orangefs/namei.c
+@@ -296,7 +296,7 @@ static int orangefs_symlink(struct mnt_idmap *idmap,
+ 	return ret;
+ }
+ 
+-static struct dentry *orangefs_mkdir(struct mnt_idmap *idmap, struct inode *dir,
++static struct dentry *orangefs_mkdir(const struct mnt_idmap *idmap, struct inode *dir,
+ 				     struct dentry *dentry, umode_t mode)
+ {
+ 	struct orangefs_inode_s *parent = ORANGEFS_I(dir);
+diff --git a/fs/overlayfs/dir.c b/fs/overlayfs/dir.c
+index cb2b5a8d28bd..6e206220a97f 100644
+--- a/fs/overlayfs/dir.c
++++ b/fs/overlayfs/dir.c
+@@ -736,7 +736,7 @@ static int ovl_create(struct mnt_idmap *idmap, struct inode *dir,
+ 	return ovl_create_object(idmap, dentry, (mode & 07777) | S_IFREG, 0, NULL);
+ }
+ 
+-static struct dentry *ovl_mkdir(struct mnt_idmap *idmap, struct inode *dir,
++static struct dentry *ovl_mkdir(const struct mnt_idmap *idmap, struct inode *dir,
+ 				struct dentry *dentry, umode_t mode)
+ {
+ 	return ERR_PTR(ovl_create_object(idmap, dentry, (mode & 07777) | S_IFDIR, 0, NULL));
+diff --git a/fs/ramfs/inode.c b/fs/ramfs/inode.c
+index 5b09860dc69b..363093354a90 100644
+--- a/fs/ramfs/inode.c
++++ b/fs/ramfs/inode.c
+@@ -118,7 +118,7 @@ ramfs_mknod(const struct mnt_idmap *idmap, struct inode *dir,
  	return error;
  }
  
--static int gfs2_rename2(struct mnt_idmap *idmap, struct inode *odir,
-+static int gfs2_rename2(const struct mnt_idmap *idmap, struct inode *odir,
- 			struct dentry *odentry, struct inode *ndir,
- 			struct dentry *ndentry, unsigned int flags)
+-static struct dentry *ramfs_mkdir(struct mnt_idmap *idmap, struct inode *dir,
++static struct dentry *ramfs_mkdir(const struct mnt_idmap *idmap, struct inode *dir,
+ 				 struct dentry *dentry, umode_t mode)
  {
-diff --git a/fs/hfs/dir.c b/fs/hfs/dir.c
-index e1f1fb351464..2958ca702be2 100644
---- a/fs/hfs/dir.c
-+++ b/fs/hfs/dir.c
-@@ -281,7 +281,7 @@ static int hfs_remove(struct inode *dir, struct dentry *dentry)
-  * new file/directory.
-  * XXX: how do you handle must_be dir?
-  */
--static int hfs_rename(struct mnt_idmap *idmap, struct inode *old_dir,
-+static int hfs_rename(const struct mnt_idmap *idmap, struct inode *old_dir,
- 		      struct dentry *old_dentry, struct inode *new_dir,
- 		      struct dentry *new_dentry, unsigned int flags)
- {
-diff --git a/fs/hfsplus/dir.c b/fs/hfsplus/dir.c
-index 7d31211cee97..d26b87066bd0 100644
---- a/fs/hfsplus/dir.c
-+++ b/fs/hfsplus/dir.c
-@@ -573,7 +573,7 @@ static struct dentry *hfsplus_mkdir(struct mnt_idmap *idmap, struct inode *dir,
- 	return ERR_PTR(hfsplus_mknod(&nop_mnt_idmap, dir, dentry, mode, 0));
- }
- 
--static int hfsplus_rename(struct mnt_idmap *idmap,
-+static int hfsplus_rename(const struct mnt_idmap *idmap,
- 			  struct inode *old_dir, struct dentry *old_dentry,
- 			  struct inode *new_dir, struct dentry *new_dentry,
- 			  unsigned int flags)
-diff --git a/fs/hostfs/hostfs_kern.c b/fs/hostfs/hostfs_kern.c
-index 71d15396235a..9028c9f27730 100644
---- a/fs/hostfs/hostfs_kern.c
-+++ b/fs/hostfs/hostfs_kern.c
-@@ -745,7 +745,7 @@ static int hostfs_mknod(const struct mnt_idmap *idmap, struct inode *dir,
- 	return 0;
- }
- 
--static int hostfs_rename2(struct mnt_idmap *idmap,
-+static int hostfs_rename2(const struct mnt_idmap *idmap,
- 			  struct inode *old_dir, struct dentry *old_dentry,
- 			  struct inode *new_dir, struct dentry *new_dentry,
- 			  unsigned int flags)
-diff --git a/fs/hpfs/namei.c b/fs/hpfs/namei.c
-index ed749e1684d2..dfa8e5b7311f 100644
---- a/fs/hpfs/namei.c
-+++ b/fs/hpfs/namei.c
-@@ -500,7 +500,7 @@ const struct address_space_operations hpfs_symlink_aops = {
- 	.read_folio	= hpfs_symlink_read_folio
- };
- 
--static int hpfs_rename(struct mnt_idmap *idmap, struct inode *old_dir,
-+static int hpfs_rename(const struct mnt_idmap *idmap, struct inode *old_dir,
- 		       struct dentry *old_dentry, struct inode *new_dir,
- 		       struct dentry *new_dentry, unsigned int flags)
- {
-diff --git a/fs/jffs2/dir.c b/fs/jffs2/dir.c
-index 6d4b26d625c7..c56cd87a2a73 100644
---- a/fs/jffs2/dir.c
-+++ b/fs/jffs2/dir.c
-@@ -38,7 +38,7 @@ static struct dentry *jffs2_mkdir (struct mnt_idmap *, struct inode *,struct den
- static int jffs2_rmdir (struct inode *,struct dentry *);
- static int jffs2_mknod (const struct mnt_idmap *, struct inode *,struct dentry *,
- 			umode_t,dev_t);
--static int jffs2_rename (struct mnt_idmap *, struct inode *,
-+static int jffs2_rename (const struct mnt_idmap *, struct inode *,
- 			 struct dentry *, struct inode *, struct dentry *,
- 			 unsigned int);
- 
-@@ -769,7 +769,7 @@ static int jffs2_mknod (const struct mnt_idmap *idmap, struct inode *dir_i,
- 	return ret;
- }
- 
--static int jffs2_rename (struct mnt_idmap *idmap,
-+static int jffs2_rename (const struct mnt_idmap *idmap,
- 			 struct inode *old_dir_i, struct dentry *old_dentry,
- 			 struct inode *new_dir_i, struct dentry *new_dentry,
- 			 unsigned int flags)
-diff --git a/fs/jfs/namei.c b/fs/jfs/namei.c
-index 82a5dbdaf93d..a384ced308af 100644
---- a/fs/jfs/namei.c
-+++ b/fs/jfs/namei.c
-@@ -1066,7 +1066,7 @@ static int jfs_symlink(struct mnt_idmap *idmap, struct inode *dip,
-  *
-  * FUNCTION:	rename a file or directory
-  */
--static int jfs_rename(struct mnt_idmap *idmap, struct inode *old_dir,
-+static int jfs_rename(const struct mnt_idmap *idmap, struct inode *old_dir,
- 		      struct dentry *old_dentry, struct inode *new_dir,
- 		      struct dentry *new_dentry, unsigned int flags)
- {
-diff --git a/fs/kernfs/dir.c b/fs/kernfs/dir.c
-index 82bbaeb326aa..d2e978e4ea6f 100644
---- a/fs/kernfs/dir.c
-+++ b/fs/kernfs/dir.c
-@@ -1326,7 +1326,7 @@ static int kernfs_iop_rmdir(struct inode *dir, struct dentry *dentry)
- 	return ret;
- }
- 
--static int kernfs_iop_rename(struct mnt_idmap *idmap,
-+static int kernfs_iop_rename(const struct mnt_idmap *idmap,
- 			     struct inode *old_dir, struct dentry *old_dentry,
- 			     struct inode *new_dir, struct dentry *new_dentry,
- 			     unsigned int flags)
-diff --git a/fs/libfs.c b/fs/libfs.c
-index 27d7dc16fcb0..8b379230b64f 100644
---- a/fs/libfs.c
-+++ b/fs/libfs.c
-@@ -867,7 +867,7 @@ int simple_rename_exchange(struct inode *old_dir, struct dentry *old_dentry,
- }
- EXPORT_SYMBOL_GPL(simple_rename_exchange);
- 
--int simple_rename(struct mnt_idmap *idmap, struct inode *old_dir,
-+int simple_rename(const struct mnt_idmap *idmap, struct inode *old_dir,
- 		  struct dentry *old_dentry, struct inode *new_dir,
- 		  struct dentry *new_dentry, unsigned int flags)
- {
-diff --git a/fs/minix/namei.c b/fs/minix/namei.c
-index 57b3c2c5b688..f7aaa19eeac0 100644
---- a/fs/minix/namei.c
-+++ b/fs/minix/namei.c
-@@ -187,7 +187,7 @@ static int minix_rmdir(struct inode * dir, struct dentry *dentry)
- 	return err;
- }
- 
--static int minix_rename(struct mnt_idmap *idmap,
-+static int minix_rename(const struct mnt_idmap *idmap,
- 			struct inode *old_dir, struct dentry *old_dentry,
- 			struct inode *new_dir, struct dentry *new_dentry,
- 			unsigned int flags)
-diff --git a/fs/nfs/dir.c b/fs/nfs/dir.c
-index 10c48672a79d..1161c809c9f1 100644
---- a/fs/nfs/dir.c
-+++ b/fs/nfs/dir.c
-@@ -2771,7 +2771,7 @@ static bool nfs_rename_is_unsafe_cross_dir(struct dentry *old_dentry,
-  * If these conditions are met, we can drop the dentries before doing
-  * the rename.
-  */
--int nfs_rename(struct mnt_idmap *idmap, struct inode *old_dir,
-+int nfs_rename(const struct mnt_idmap *idmap, struct inode *old_dir,
- 	       struct dentry *old_dentry, struct inode *new_dir,
- 	       struct dentry *new_dentry, unsigned int flags)
- {
-diff --git a/fs/nfs/internal.h b/fs/nfs/internal.h
-index ec37568d197b..c7928c16352d 100644
---- a/fs/nfs/internal.h
-+++ b/fs/nfs/internal.h
-@@ -407,7 +407,7 @@ int nfs_symlink(struct mnt_idmap *, struct inode *, struct dentry *,
- int nfs_link(struct dentry *, struct inode *, struct dentry *);
- int nfs_mknod(const struct mnt_idmap *, struct inode *, struct dentry *, umode_t,
- 	      dev_t);
--int nfs_rename(struct mnt_idmap *, struct inode *, struct dentry *,
-+int nfs_rename(const struct mnt_idmap *, struct inode *, struct dentry *,
- 	       struct inode *, struct dentry *, unsigned int);
- 
- #ifdef CONFIG_NFS_V4_2
-diff --git a/fs/nilfs2/namei.c b/fs/nilfs2/namei.c
-index ea3df1d5ec29..bfc7c4a06743 100644
---- a/fs/nilfs2/namei.c
-+++ b/fs/nilfs2/namei.c
-@@ -358,7 +358,7 @@ static int nilfs_rmdir(struct inode *dir, struct dentry *dentry)
- 	return err;
- }
- 
--static int nilfs_rename(struct mnt_idmap *idmap,
-+static int nilfs_rename(const struct mnt_idmap *idmap,
- 			struct inode *old_dir, struct dentry *old_dentry,
- 			struct inode *new_dir, struct dentry *new_dentry,
- 			unsigned int flags)
-diff --git a/fs/ntfs/namei.c b/fs/ntfs/namei.c
-index 82da5f14efa4..431ab27472ab 100644
---- a/fs/ntfs/namei.c
-+++ b/fs/ntfs/namei.c
-@@ -1248,7 +1248,7 @@ static int __ntfs_link(struct ntfs_inode *ni, struct ntfs_inode *dir_ni,
- 	return err;
- }
- 
--static int ntfs_rename(struct mnt_idmap *idmap, struct inode *old_dir,
-+static int ntfs_rename(const struct mnt_idmap *idmap, struct inode *old_dir,
- 		struct dentry *old_dentry, struct inode *new_dir,
- 		struct dentry *new_dentry, unsigned int flags)
- {
-diff --git a/fs/ntfs3/namei.c b/fs/ntfs3/namei.c
-index dfafadcd8fda..0d9c8bf79947 100644
---- a/fs/ntfs3/namei.c
-+++ b/fs/ntfs3/namei.c
-@@ -262,7 +262,7 @@ static int ntfs_rmdir(struct inode *dir, struct dentry *dentry)
- /*
-  * ntfs_rename - inode_operations::rename
-  */
--static int ntfs_rename(struct mnt_idmap *idmap, struct inode *dir,
-+static int ntfs_rename(const struct mnt_idmap *idmap, struct inode *dir,
- 		       struct dentry *dentry, struct inode *new_dir,
- 		       struct dentry *new_dentry, u32 flags)
- {
-diff --git a/fs/ocfs2/namei.c b/fs/ocfs2/namei.c
-index 6cd77f295939..05c007213fab 100644
---- a/fs/ocfs2/namei.c
-+++ b/fs/ocfs2/namei.c
-@@ -1211,7 +1211,7 @@ static void ocfs2_double_unlock(struct inode *inode1, struct inode *inode2)
- 		ocfs2_inode_unlock(inode2, 1);
- }
- 
--static int ocfs2_rename(struct mnt_idmap *idmap,
-+static int ocfs2_rename(const struct mnt_idmap *idmap,
- 			struct inode *old_dir,
- 			struct dentry *old_dentry,
- 			struct inode *new_dir,
-diff --git a/fs/omfs/dir.c b/fs/omfs/dir.c
-index 692297cf84e7..99e0a7c8e03b 100644
---- a/fs/omfs/dir.c
-+++ b/fs/omfs/dir.c
-@@ -370,7 +370,7 @@ static bool omfs_fill_chain(struct inode *dir, struct dir_context *ctx,
- 	return true;
- }
- 
--static int omfs_rename(struct mnt_idmap *idmap, struct inode *old_dir,
-+static int omfs_rename(const struct mnt_idmap *idmap, struct inode *old_dir,
- 		       struct dentry *old_dentry, struct inode *new_dir,
- 		       struct dentry *new_dentry, unsigned int flags)
- {
-diff --git a/fs/orangefs/namei.c b/fs/orangefs/namei.c
-index 8ebc34e112d5..40105ce80bb8 100644
---- a/fs/orangefs/namei.c
-+++ b/fs/orangefs/namei.c
-@@ -364,7 +364,7 @@ static struct dentry *orangefs_mkdir(struct mnt_idmap *idmap, struct inode *dir,
- 	return ret ? ERR_PTR(ret) : NULL;
- }
- 
--static int orangefs_rename(struct mnt_idmap *idmap,
-+static int orangefs_rename(const struct mnt_idmap *idmap,
- 			struct inode *old_dir,
- 			struct dentry *old_dentry,
- 			struct inode *new_dir,
-diff --git a/fs/overlayfs/dir.c b/fs/overlayfs/dir.c
-index 6d4b511dc3ca..cb2b5a8d28bd 100644
---- a/fs/overlayfs/dir.c
-+++ b/fs/overlayfs/dir.c
-@@ -1344,7 +1344,7 @@ static void ovl_rename_end(struct ovl_renamedata *ovlrd)
- 		ovl_drop_write(ovlrd->old_dentry);
- }
- 
--static int ovl_rename(struct mnt_idmap *idmap, struct inode *olddir,
-+static int ovl_rename(const struct mnt_idmap *idmap, struct inode *olddir,
- 		      struct dentry *old, struct inode *newdir,
- 		      struct dentry *new, unsigned int flags)
- {
+ 	int retval = ramfs_mknod(&nop_mnt_idmap, dir, dentry, mode, 0);
 diff --git a/fs/smb/client/cifsfs.h b/fs/smb/client/cifsfs.h
-index db7aebb8599e..e50edcbb2cd3 100644
+index e50edcbb2cd3..908f65001578 100644
 --- a/fs/smb/client/cifsfs.h
 +++ b/fs/smb/client/cifsfs.h
-@@ -69,7 +69,7 @@ int cifs_mknod(const struct mnt_idmap *idmap, struct inode *inode,
- struct dentry *cifs_mkdir(struct mnt_idmap *idmap, struct inode *inode,
+@@ -66,7 +66,7 @@ int cifs_hardlink(struct dentry *old_file, struct inode *inode,
+ 		  struct dentry *direntry);
+ int cifs_mknod(const struct mnt_idmap *idmap, struct inode *inode,
+ 	       struct dentry *direntry, umode_t mode, dev_t device_number);
+-struct dentry *cifs_mkdir(struct mnt_idmap *idmap, struct inode *inode,
++struct dentry *cifs_mkdir(const struct mnt_idmap *idmap, struct inode *inode,
  			  struct dentry *direntry, umode_t mode);
  int cifs_rmdir(struct inode *inode, struct dentry *direntry);
--int cifs_rename2(struct mnt_idmap *idmap, struct inode *source_dir,
-+int cifs_rename2(const struct mnt_idmap *idmap, struct inode *source_dir,
- 		 struct dentry *source_dentry, struct inode *target_dir,
- 		 struct dentry *target_dentry, unsigned int flags);
- int cifs_revalidate_file_attr(struct file *filp);
+ int cifs_rename2(const struct mnt_idmap *idmap, struct inode *source_dir,
 diff --git a/fs/smb/client/inode.c b/fs/smb/client/inode.c
-index 12ed8db10e00..eec3a46f6e41 100644
+index eec3a46f6e41..e3610e456bd4 100644
 --- a/fs/smb/client/inode.c
 +++ b/fs/smb/client/inode.c
-@@ -2526,7 +2526,7 @@ cifs_do_rename(const unsigned int xid, struct dentry *from_dentry,
+@@ -2276,7 +2276,7 @@ cifs_posix_mkdir(struct inode *inode, struct dentry *dentry, umode_t mode,
  }
+ #endif /* CONFIG_CIFS_ALLOW_INSECURE_LEGACY */
  
- int
--cifs_rename2(struct mnt_idmap *idmap, struct inode *source_dir,
-+cifs_rename2(const struct mnt_idmap *idmap, struct inode *source_dir,
- 	     struct dentry *source_dentry, struct inode *target_dir,
- 	     struct dentry *target_dentry, unsigned int flags)
+-struct dentry *cifs_mkdir(struct mnt_idmap *idmap, struct inode *inode,
++struct dentry *cifs_mkdir(const struct mnt_idmap *idmap, struct inode *inode,
+ 			  struct dentry *direntry, umode_t mode)
+ {
+ 	int rc = 0;
+diff --git a/fs/tracefs/inode.c b/fs/tracefs/inode.c
+index 7cf32384ad50..995b8d0f8d33 100644
+--- a/fs/tracefs/inode.c
++++ b/fs/tracefs/inode.c
+@@ -94,7 +94,7 @@ static struct tracefs_dir_ops {
+ 	int (*rmdir)(const char *name);
+ } tracefs_ops __ro_after_init;
+ 
+-static struct dentry *tracefs_syscall_mkdir(struct mnt_idmap *idmap,
++static struct dentry *tracefs_syscall_mkdir(const struct mnt_idmap *idmap,
+ 					    struct inode *inode, struct dentry *dentry,
+ 					    umode_t mode)
  {
 diff --git a/fs/ubifs/dir.c b/fs/ubifs/dir.c
-index 50068515f680..bff6489c4a5c 100644
+index bff6489c4a5c..c7723f80e258 100644
 --- a/fs/ubifs/dir.c
 +++ b/fs/ubifs/dir.c
-@@ -1642,7 +1642,7 @@ static int ubifs_xrename(struct inode *old_dir, struct dentry *old_dentry,
+@@ -1002,7 +1002,7 @@ static int ubifs_rmdir(struct inode *dir, struct dentry *dentry)
  	return err;
  }
  
--static int ubifs_rename(struct mnt_idmap *idmap,
-+static int ubifs_rename(const struct mnt_idmap *idmap,
- 			struct inode *old_dir, struct dentry *old_dentry,
- 			struct inode *new_dir, struct dentry *new_dentry,
- 			unsigned int flags)
+-static struct dentry *ubifs_mkdir(struct mnt_idmap *idmap, struct inode *dir,
++static struct dentry *ubifs_mkdir(const struct mnt_idmap *idmap, struct inode *dir,
+ 				  struct dentry *dentry, umode_t mode)
+ {
+ 	struct inode *inode;
 diff --git a/fs/udf/namei.c b/fs/udf/namei.c
-index 4f7200e6046e..3fe746911581 100644
+index 3fe746911581..7ee11e527377 100644
 --- a/fs/udf/namei.c
 +++ b/fs/udf/namei.c
-@@ -762,7 +762,7 @@ static int udf_link(struct dentry *old_dentry, struct inode *dir,
- /* Anybody can rename anything with this: the permission checks are left to the
-  * higher-level routines.
-  */
--static int udf_rename(struct mnt_idmap *idmap, struct inode *old_dir,
-+static int udf_rename(const struct mnt_idmap *idmap, struct inode *old_dir,
- 		      struct dentry *old_dentry, struct inode *new_dir,
- 		      struct dentry *new_dentry, unsigned int flags)
+@@ -419,7 +419,7 @@ static int udf_mknod(const struct mnt_idmap *idmap, struct inode *dir,
+ 	return udf_add_nondir(dentry, inode);
+ }
+ 
+-static struct dentry *udf_mkdir(struct mnt_idmap *idmap, struct inode *dir,
++static struct dentry *udf_mkdir(const struct mnt_idmap *idmap, struct inode *dir,
+ 				struct dentry *dentry, umode_t mode)
  {
+ 	struct inode *inode;
 diff --git a/fs/ufs/namei.c b/fs/ufs/namei.c
-index a38975b3885e..951c92d37d56 100644
+index 951c92d37d56..4aee6c3d0f75 100644
 --- a/fs/ufs/namei.c
 +++ b/fs/ufs/namei.c
-@@ -240,7 +240,7 @@ static int ufs_rmdir (struct inode * dir, struct dentry *dentry)
- 	return err;
+@@ -165,7 +165,7 @@ static int ufs_link (struct dentry * old_dentry, struct inode * dir,
+ 	return error;
  }
  
--static int ufs_rename(struct mnt_idmap *idmap, struct inode *old_dir,
-+static int ufs_rename(const struct mnt_idmap *idmap, struct inode *old_dir,
- 		      struct dentry *old_dentry, struct inode *new_dir,
- 		      struct dentry *new_dentry, unsigned int flags)
+-static struct dentry *ufs_mkdir(struct mnt_idmap * idmap, struct inode * dir,
++static struct dentry *ufs_mkdir(const struct mnt_idmap * idmap, struct inode * dir,
+ 				struct dentry * dentry, umode_t mode)
  {
+ 	struct inode * inode;
 diff --git a/fs/vboxsf/dir.c b/fs/vboxsf/dir.c
-index 0b9eab157432..81b92c6cb201 100644
+index 81b92c6cb201..851e4be5eb0d 100644
 --- a/fs/vboxsf/dir.c
 +++ b/fs/vboxsf/dir.c
-@@ -382,7 +382,7 @@ static int vboxsf_dir_unlink(struct inode *parent, struct dentry *dentry)
- 	return 0;
+@@ -303,7 +303,7 @@ static int vboxsf_dir_mkfile(struct mnt_idmap *idmap,
+ 	return vboxsf_dir_create(parent, dentry, mode, false, true, NULL);
  }
  
--static int vboxsf_dir_rename(struct mnt_idmap *idmap,
-+static int vboxsf_dir_rename(const struct mnt_idmap *idmap,
- 			     struct inode *old_parent,
- 			     struct dentry *old_dentry,
- 			     struct inode *new_parent,
+-static struct dentry *vboxsf_dir_mkdir(struct mnt_idmap *idmap,
++static struct dentry *vboxsf_dir_mkdir(const struct mnt_idmap *idmap,
+ 				       struct inode *parent, struct dentry *dentry,
+ 				       umode_t mode)
+ {
 diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 13e57b0e7cae..26f9eb41599d 100644
+index 26f9eb41599d..495c7f3dece0 100644
 --- a/fs/xfs/xfs_iops.c
 +++ b/fs/xfs/xfs_iops.c
-@@ -466,7 +466,7 @@ xfs_vn_symlink(
+@@ -300,7 +300,7 @@ xfs_vn_create(
  
- STATIC int
- xfs_vn_rename(
+ STATIC struct dentry *
+ xfs_vn_mkdir(
 -	struct mnt_idmap	*idmap,
 +	const struct mnt_idmap	*idmap,
- 	struct inode		*odir,
- 	struct dentry		*odentry,
- 	struct inode		*ndir,
+ 	struct inode		*dir,
+ 	struct dentry		*dentry,
+ 	umode_t			mode)
 diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 4ca59a110d17..2f2a0088e693 100644
+index 2f2a0088e693..b02ae54727cb 100644
 --- a/include/linux/fs.h
 +++ b/include/linux/fs.h
-@@ -2010,7 +2010,7 @@ struct inode_operations {
+@@ -2005,7 +2005,7 @@ struct inode_operations {
+ 	int (*unlink) (struct inode *,struct dentry *);
+ 	int (*symlink) (struct mnt_idmap *, struct inode *,struct dentry *,
+ 			const char *);
+-	struct dentry *(*mkdir) (struct mnt_idmap *, struct inode *,
++	struct dentry *(*mkdir) (const struct mnt_idmap *, struct inode *,
+ 				 struct dentry *, umode_t);
  	int (*rmdir) (struct inode *,struct dentry *);
  	int (*mknod) (const struct mnt_idmap *, struct inode *,struct dentry *,
- 		      umode_t,dev_t);
--	int (*rename) (struct mnt_idmap *, struct inode *, struct dentry *,
-+	int (*rename) (const struct mnt_idmap *, struct inode *, struct dentry *,
- 			struct inode *, struct dentry *, unsigned int);
- 	int (*setattr) (struct mnt_idmap *, struct dentry *, struct iattr *);
- 	int (*getattr) (struct mnt_idmap *, const struct path *,
-@@ -3276,7 +3276,7 @@ void simple_rename_timestamp(struct inode *old_dir, struct dentry *old_dentry,
- 			     struct inode *new_dir, struct dentry *new_dentry);
- extern int simple_rename_exchange(struct inode *old_dir, struct dentry *old_dentry,
- 				  struct inode *new_dir, struct dentry *new_dentry);
--extern int simple_rename(struct mnt_idmap *, struct inode *,
-+extern int simple_rename(const struct mnt_idmap *, struct inode *,
- 			 struct dentry *, struct inode *, struct dentry *,
- 			 unsigned int);
- extern void simple_recursive_removal(struct dentry *,
+diff --git a/kernel/bpf/inode.c b/kernel/bpf/inode.c
+index 11174037a9ca..871825d36c8c 100644
+--- a/kernel/bpf/inode.c
++++ b/kernel/bpf/inode.c
+@@ -176,7 +176,7 @@ static void bpf_dentry_finalize(struct dentry *dentry, struct inode *inode,
+ 	inode_set_mtime_to_ts(dir, inode_set_ctime_current(dir));
+ }
+ 
+-static struct dentry *bpf_mkdir(struct mnt_idmap *idmap, struct inode *dir,
++static struct dentry *bpf_mkdir(const struct mnt_idmap *idmap, struct inode *dir,
+ 				struct dentry *dentry, umode_t mode)
+ {
+ 	struct inode *inode;
 diff --git a/mm/shmem.c b/mm/shmem.c
-index 16a4ea914bdb..ab5b2cd34c28 100644
+index ab5b2cd34c28..e76359582406 100644
 --- a/mm/shmem.c
 +++ b/mm/shmem.c
-@@ -3991,7 +3991,7 @@ static int shmem_whiteout(const struct mnt_idmap *idmap,
-  * it exists so that the VFS layer correctly free's it when it
-  * gets overwritten.
-  */
--static int shmem_rename2(struct mnt_idmap *idmap,
-+static int shmem_rename2(const struct mnt_idmap *idmap,
- 			 struct inode *old_dir, struct dentry *old_dentry,
- 			 struct inode *new_dir, struct dentry *new_dentry,
- 			 unsigned int flags)
+@@ -3885,7 +3885,7 @@ shmem_tmpfile(const struct mnt_idmap *idmap, struct inode *dir,
+ 	return error;
+ }
+ 
+-static struct dentry *shmem_mkdir(struct mnt_idmap *idmap, struct inode *dir,
++static struct dentry *shmem_mkdir(const struct mnt_idmap *idmap, struct inode *dir,
+ 				  struct dentry *dentry, umode_t mode)
+ {
+ 	int error;
+diff --git a/security/apparmor/apparmorfs.c b/security/apparmor/apparmorfs.c
+index 5b42140e12e8..d1386722537d 100644
+--- a/security/apparmor/apparmorfs.c
++++ b/security/apparmor/apparmorfs.c
+@@ -2073,7 +2073,7 @@ int __aafs_profile_mkdir(struct aa_profile *profile, struct dentry *parent)
+ 	return error;
+ }
+ 
+-static struct dentry *ns_mkdir_op(struct mnt_idmap *idmap, struct inode *dir,
++static struct dentry *ns_mkdir_op(const struct mnt_idmap *idmap, struct inode *dir,
+ 				  struct dentry *dentry, umode_t mode)
+ {
+ 	struct aa_ns *ns, *parent;
 
 -- 
 2.53.0
