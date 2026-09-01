@@ -1,34 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C56A429CF3;
-	Tue,  1 Sep 2026 12:16:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EE7447F2CB;
+	Tue,  1 Sep 2026 12:16:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788265002; cv=none; b=RZhOU1Q0qMtY5Nu5/yikDddCd6G/Y+vUV438fWX5+nmdZZPWwJ9BsGyswIjRWqu2kVQA/UBMaYNGoATySxRRCJZVvc63BBKWXhchRZ11XFIbGk/jJ4qnSno8H/dItSZSx0JaTDVbSUCqsFHqalamMeG8wD6YJAcGAHTLpKXfVkg=
+	t=1788265007; cv=none; b=NYq+NfcJt8OUjGllK647++0UcOAicKa5kew++Ebz0GWkJYIfKHaqDkAbKR3gTbzNLYAVryhb72pJIUzdI/1qgAJqAMSLTuwf8cO1AgcRBMnnGEf/wDqEViXmWsaDK5JJRh+dA20HyYmrN4ua95L/8c7wYk/O0HQknqk9ETuwts0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788265002; c=relaxed/simple;
-	bh=uSPhCrtgbftyf2O6iLGklcKjI1/OMfI3gQJL5RtInrU=;
+	s=arc-20240116; t=1788265007; c=relaxed/simple;
+	bh=ugd0by6744fCFyNdYoVJJuev+EKWNDXHRRpjejNxLnA=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=ZBGRTUkaBkml3CYfG41rzikH7XGn/mToRi5U5MBUJ+mm6m1WeZAFwbTtelzDblgj8BwtnY1Ybgf0SGDoKPrTMnhUJRR7HZ+fk4tVONYQ8ZmrHzyo/NJAIT4E3GvolTipEyD77P5wnpT+qEs1CgUty46Zqyp1TFfrrr+3yl4MSHI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Mkkq4Wl0; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:To:Cc; b=RYgIyuSvIthIuDit1Ygp2ThOdjcOnwcBIQaP94lvSgSuIO+SsZJ4Gh0mzsVad3r3mBDKRyEQOvf2AJxCTP0ODWzX3Hr+elScaDBEo3guK/JucQLb/0eylsY6URyOHmfKF3YMvd4bid+8SJkIesHaP1y3YpeSkPvvIxZppRforrI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IWRJqVB8; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Mkkq4Wl0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C718A1F00ACF;
-	Tue,  1 Sep 2026 12:16:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IWRJqVB8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AA6A21F00ACA;
+	Tue,  1 Sep 2026 12:16:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788264999;
-	bh=3qXFompw7UqiECFobwGF7z1+mP7e6jLXb0VEY8IfNKo=;
+	s=k20260515; t=1788265004;
+	bh=9SXcy8CUy/QZbkUAYElVQEpCVEOGNJEPYPZvHBzW7Ls=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=Mkkq4Wl0nyWQnHtu52JQu+Jafd7XBkheinZNKeCQjJTz7vcnWuUU/4SegzBIGKKmm
-	 02FJ0wIm/eCXa61B15JGt7tJDBV5XPNUvYq/5BAIAhp47UMT0r163AvkCTN+DauEXR
-	 rsLgYyVcX5SbGXzVkKeS9Q1bEpksejfpLdq/udY/87/UIwj5HsXNFJxKQZnfR+2to2
-	 xuXoQPA7F3PnDBxGt65Z+cWYVeEp7/2hLHUw4qD3dbO+8FOI4FEZrVVXVAt8xp4fgw
-	 mvE2kNRR9LzNtKMmwxG1GdlNOmxmVOTWT4i9P2w1WbzKXzCBP/Rto8m/l0xjrteYYd
-	 UnFLEZTtcjkHA==
+	b=IWRJqVB840gXbNBZlDrnfc41dy9oYHMN1EaCA4XCjAJmUNO75LkDE8gNeA1CKNeIN
+	 b4g7gvuZPLHSSrScdX6zaupxi6C/iVy9DBKjXT8MfeLfeI1pyjIJxOrH84Z1wtOUgH
+	 WF9vczG8jBpd07itMDxMthmE9AekaAd0tVrRgzROZ2nEpWkdia2GchUsrfS8fyv/jo
+	 luDKsTDq+PGopmdHGCUiAGcJorTjpR1pabtDkyw0gJQEKVkzJazfhFCH9fpt7kGr8I
+	 AlE7wxXwEJTjf628i7f4AnLUtKzHqYqUv8CepdDsTY/VYF8xnFOtV85qDAnxdEBvVG
+	 fgCVdE7rdc1hg==
 From: Christian Brauner <brauner@kernel.org>
-Date: Tue, 01 Sep 2026 14:14:48 +0200
-Subject: [PATCH 23/27] fs: port ->getattr() to pass const mnt_idmap
+Date: Tue, 01 Sep 2026 14:14:49 +0200
+Subject: [PATCH 24/27] fs: port ->setattr() to pass const mnt_idmap
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -37,7 +37,7 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260901-work-idmap-const-v1-23-54ccd48e100b@kernel.org>
+Message-Id: <20260901-work-idmap-const-v1-24-54ccd48e100b@kernel.org>
 References: <20260901-work-idmap-const-v1-0-54ccd48e100b@kernel.org>
 In-Reply-To: <20260901-work-idmap-const-v1-0-54ccd48e100b@kernel.org>
 To: linux-fsdevel@vger.kernel.org
@@ -52,12 +52,12 @@ Cc: Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
  linux-cifs@vger.kernel.org, linux-kernel@vger.kernel.org, 
  "Christian Brauner (Amutable)" <brauner@kernel.org>
 X-Mailer: b4 0.17-dev-db0b7
-X-Developer-Signature: v=1; a=openpgp-sha256; l=48949; i=brauner@kernel.org;
- h=from:subject:message-id; bh=uSPhCrtgbftyf2O6iLGklcKjI1/OMfI3gQJL5RtInrU=;
- b=kA0DAAoWkcYbwGV43KIByyZiAGqWwa7IksIMSHQntegV6ADQGZYS5EGbqHqaknfz3TSSeggAZ
- Yh1BAAWCgAdFiEEQIc0Vx6nDHizMmkokcYbwGV43KIFAmqWwa4ACgkQkcYbwGV43KL9kwD8C3KJ
- 67R4tewMJRD/0/xohhPcynqUWryeGsQSfXzZf/IA/0uyrKXX8BcrXIzFSSJWKIGMUZuYg2CBzh9
- CdIBzLOAA
+X-Developer-Signature: v=1; a=openpgp-sha256; l=66087; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=ugd0by6744fCFyNdYoVJJuev+EKWNDXHRRpjejNxLnA=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWRNO7hOO9UwpdazgvVzfetu0RP6etcVXi33kP1Q8VQvI
+ so6o8yso5SFQYyLQVZMkcWh3SRcbjlPxWajTA2YOaxMIEMYuDgFYCJtdQx/BSt7Fc3jdpdOnL/7
+ /MSQSY/NnL053r/YfP64kaJR3a0sZkaG+V3P/y7l2DMtzr3Z+Kfn9otdTGfznslvsDqxc++KI+c
+ +8gEA
 X-Developer-Key: i=brauner@kernel.org; a=openpgp;
  fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
@@ -77,1097 +77,1514 @@ No functional changes.
 
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- Documentation/filesystems/locking.rst | 2 +-
- Documentation/filesystems/vfs.rst     | 2 +-
- fs/9p/vfs_inode.c                     | 2 +-
- fs/9p/vfs_inode_dotl.c                | 2 +-
- fs/afs/inode.c                        | 2 +-
- fs/afs/internal.h                     | 2 +-
- fs/anon_inodes.c                      | 2 +-
- fs/bad_inode.c                        | 2 +-
- fs/btrfs/inode.c                      | 2 +-
- fs/ceph/inode.c                       | 4 ++--
- fs/ceph/super.h                       | 2 +-
- fs/coda/coda_linux.h                  | 2 +-
- fs/coda/inode.c                       | 2 +-
- fs/ecryptfs/inode.c                   | 4 ++--
- fs/erofs/inode.c                      | 2 +-
- fs/erofs/internal.h                   | 2 +-
- fs/exfat/exfat_fs.h                   | 2 +-
- fs/exfat/file.c                       | 2 +-
- fs/ext2/ext2.h                        | 2 +-
- fs/ext2/inode.c                       | 2 +-
- fs/ext4/ext4.h                        | 4 ++--
- fs/ext4/inode.c                       | 4 ++--
- fs/ext4/symlink.c                     | 2 +-
- fs/f2fs/f2fs.h                        | 2 +-
- fs/f2fs/file.c                        | 2 +-
- fs/f2fs/namei.c                       | 2 +-
- fs/failfs.c                           | 2 +-
- fs/fat/fat.h                          | 2 +-
- fs/fat/file.c                         | 2 +-
- fs/fuse/dir.c                         | 4 ++--
- fs/gfs2/inode.c                       | 2 +-
- fs/hfsplus/hfsplus_fs.h               | 2 +-
- fs/hfsplus/inode.c                    | 2 +-
- fs/internal.h                         | 2 +-
- fs/kernfs/inode.c                     | 2 +-
- fs/kernfs/kernfs-internal.h           | 2 +-
- fs/libfs.c                            | 2 +-
- fs/minix/inode.c                      | 2 +-
- fs/minix/minix.h                      | 2 +-
- fs/nfs/inode.c                        | 2 +-
- fs/nfs/namespace.c                    | 2 +-
- fs/ntfs/file.c                        | 2 +-
- fs/ntfs/inode.h                       | 2 +-
- fs/ntfs3/file.c                       | 2 +-
- fs/ntfs3/ntfs_fs.h                    | 2 +-
- fs/ocfs2/file.c                       | 2 +-
- fs/ocfs2/file.h                       | 2 +-
- fs/orangefs/inode.c                   | 2 +-
- fs/orangefs/orangefs-kernel.h         | 2 +-
- fs/overlayfs/inode.c                  | 2 +-
- fs/overlayfs/overlayfs.h              | 2 +-
- fs/pidfs.c                            | 2 +-
- fs/proc/base.c                        | 4 ++--
- fs/proc/fd.c                          | 2 +-
- fs/proc/generic.c                     | 2 +-
- fs/proc/internal.h                    | 2 +-
- fs/proc/proc_net.c                    | 2 +-
- fs/proc/proc_sysctl.c                 | 2 +-
- fs/proc/root.c                        | 2 +-
- fs/smb/client/cifsfs.h                | 2 +-
- fs/smb/client/inode.c                 | 2 +-
- fs/stat.c                             | 2 +-
- fs/tracefs/inode.c                    | 2 +-
- fs/ubifs/dir.c                        | 2 +-
- fs/ubifs/file.c                       | 2 +-
- fs/ubifs/ubifs.h                      | 2 +-
- fs/udf/symlink.c                      | 2 +-
- fs/vboxsf/utils.c                     | 2 +-
- fs/vboxsf/vfsmod.h                    | 2 +-
- fs/xfs/xfs_iops.c                     | 2 +-
- include/linux/fs.h                    | 6 +++---
- include/linux/nfs_fs.h                | 2 +-
- mm/shmem.c                            | 2 +-
- 73 files changed, 81 insertions(+), 81 deletions(-)
+ Documentation/filesystems/locking.rst     | 2 +-
+ Documentation/filesystems/vfs.rst         | 2 +-
+ arch/powerpc/platforms/cell/spufs/inode.c | 2 +-
+ fs/9p/v9fs_vfs.h                          | 2 +-
+ fs/9p/vfs_inode.c                         | 2 +-
+ fs/9p/vfs_inode_dotl.c                    | 2 +-
+ fs/adfs/adfs.h                            | 2 +-
+ fs/adfs/inode.c                           | 2 +-
+ fs/affs/affs.h                            | 2 +-
+ fs/affs/inode.c                           | 2 +-
+ fs/afs/inode.c                            | 2 +-
+ fs/afs/internal.h                         | 2 +-
+ fs/anon_inodes.c                          | 2 +-
+ fs/attr.c                                 | 2 +-
+ fs/bad_inode.c                            | 2 +-
+ fs/btrfs/inode.c                          | 2 +-
+ fs/ceph/inode.c                           | 2 +-
+ fs/ceph/super.h                           | 2 +-
+ fs/coda/coda_linux.h                      | 2 +-
+ fs/coda/inode.c                           | 2 +-
+ fs/configfs/configfs_internal.h           | 2 +-
+ fs/configfs/inode.c                       | 2 +-
+ fs/debugfs/inode.c                        | 2 +-
+ fs/ecryptfs/inode.c                       | 2 +-
+ fs/efivarfs/inode.c                       | 2 +-
+ fs/exfat/exfat_fs.h                       | 2 +-
+ fs/exfat/file.c                           | 2 +-
+ fs/ext2/ext2.h                            | 2 +-
+ fs/ext2/inode.c                           | 2 +-
+ fs/ext4/ext4.h                            | 2 +-
+ fs/ext4/inode.c                           | 2 +-
+ fs/f2fs/f2fs.h                            | 2 +-
+ fs/f2fs/file.c                            | 2 +-
+ fs/fat/fat.h                              | 2 +-
+ fs/fat/file.c                             | 2 +-
+ fs/fuse/dir.c                             | 2 +-
+ fs/gfs2/inode.c                           | 2 +-
+ fs/hfs/hfs_fs.h                           | 2 +-
+ fs/hfs/inode.c                            | 2 +-
+ fs/hfsplus/inode.c                        | 2 +-
+ fs/hostfs/hostfs_kern.c                   | 2 +-
+ fs/hpfs/hpfs_fn.h                         | 2 +-
+ fs/hpfs/inode.c                           | 2 +-
+ fs/hugetlbfs/inode.c                      | 2 +-
+ fs/inode.c                                | 2 +-
+ fs/internal.h                             | 2 +-
+ fs/jffs2/fs.c                             | 2 +-
+ fs/jffs2/os-linux.h                       | 2 +-
+ fs/jfs/file.c                             | 2 +-
+ fs/jfs/jfs_inode.h                        | 2 +-
+ fs/kernfs/inode.c                         | 2 +-
+ fs/kernfs/kernfs-internal.h               | 2 +-
+ fs/libfs.c                                | 4 ++--
+ fs/minix/file.c                           | 2 +-
+ fs/nfs/inode.c                            | 2 +-
+ fs/nfs/namespace.c                        | 2 +-
+ fs/nilfs2/inode.c                         | 2 +-
+ fs/nilfs2/nilfs.h                         | 2 +-
+ fs/ntfs/file.c                            | 2 +-
+ fs/ntfs/inode.h                           | 2 +-
+ fs/ntfs3/file.c                           | 2 +-
+ fs/ntfs3/ntfs_fs.h                        | 2 +-
+ fs/ocfs2/dlmfs/dlmfs.c                    | 2 +-
+ fs/ocfs2/file.c                           | 2 +-
+ fs/ocfs2/file.h                           | 2 +-
+ fs/omfs/file.c                            | 2 +-
+ fs/orangefs/inode.c                       | 2 +-
+ fs/orangefs/orangefs-kernel.h             | 2 +-
+ fs/overlayfs/inode.c                      | 2 +-
+ fs/overlayfs/overlayfs.h                  | 2 +-
+ fs/pidfs.c                                | 2 +-
+ fs/proc/base.c                            | 2 +-
+ fs/proc/generic.c                         | 2 +-
+ fs/proc/internal.h                        | 2 +-
+ fs/proc/proc_sysctl.c                     | 2 +-
+ fs/ramfs/file-nommu.c                     | 4 ++--
+ fs/smb/client/cifsfs.h                    | 2 +-
+ fs/smb/client/inode.c                     | 2 +-
+ fs/tracefs/event_inode.c                  | 2 +-
+ fs/tracefs/inode.c                        | 2 +-
+ fs/ubifs/file.c                           | 2 +-
+ fs/ubifs/ubifs.h                          | 2 +-
+ fs/udf/file.c                             | 2 +-
+ fs/ufs/inode.c                            | 2 +-
+ fs/ufs/ufs.h                              | 2 +-
+ fs/vboxsf/utils.c                         | 2 +-
+ fs/vboxsf/vfsmod.h                        | 2 +-
+ fs/xfs/xfs_iops.c                         | 2 +-
+ fs/zonefs/super.c                         | 2 +-
+ include/linux/fs.h                        | 6 +++---
+ include/linux/lsm_hook_defs.h             | 4 ++--
+ include/linux/nfs_fs.h                    | 2 +-
+ include/linux/security.h                  | 8 ++++----
+ mm/secretmem.c                            | 2 +-
+ mm/shmem.c                                | 2 +-
+ net/socket.c                              | 2 +-
+ security/integrity/evm/evm_main.c         | 4 ++--
+ security/integrity/ima/ima_appraise.c     | 2 +-
+ security/security.c                       | 4 ++--
+ security/selinux/hooks.c                  | 2 +-
+ security/smack/smack_lsm.c                | 2 +-
+ virt/kvm/guest_memfd.c                    | 2 +-
+ 102 files changed, 112 insertions(+), 112 deletions(-)
 
 diff --git a/Documentation/filesystems/locking.rst b/Documentation/filesystems/locking.rst
-index 864768700eda..f11bfc2e0c13 100644
+index f11bfc2e0c13..6330653287d5 100644
 --- a/Documentation/filesystems/locking.rst
 +++ b/Documentation/filesystems/locking.rst
-@@ -77,7 +77,7 @@ prototypes::
+@@ -76,7 +76,7 @@ prototypes::
+ 	void (*truncate) (struct inode *);
  	int (*permission) (const struct mnt_idmap *, struct inode *, int, unsigned int);
  	struct posix_acl * (*get_inode_acl)(struct inode *, int, bool);
- 	int (*setattr) (struct mnt_idmap *, struct dentry *, struct iattr *);
--	int (*getattr) (struct mnt_idmap *, const struct path *, struct kstat *, u32, unsigned int);
-+	int (*getattr) (const struct mnt_idmap *, const struct path *, struct kstat *, u32, unsigned int);
+-	int (*setattr) (struct mnt_idmap *, struct dentry *, struct iattr *);
++	int (*setattr) (const struct mnt_idmap *, struct dentry *, struct iattr *);
+ 	int (*getattr) (const struct mnt_idmap *, const struct path *, struct kstat *, u32, unsigned int);
  	ssize_t (*listxattr) (struct dentry *, char *, size_t);
  	int (*fiemap)(struct inode *, struct fiemap_extent_info *, u64 start, u64 len);
- 	void (*update_time)(struct inode *inode, enum fs_update_time type,
 diff --git a/Documentation/filesystems/vfs.rst b/Documentation/filesystems/vfs.rst
-index 2ad273cfe547..98aefc5d399e 100644
+index 98aefc5d399e..7b9475b1282f 100644
 --- a/Documentation/filesystems/vfs.rst
 +++ b/Documentation/filesystems/vfs.rst
-@@ -431,7 +431,7 @@ As of kernel 2.6.22, the following members are defined:
+@@ -430,7 +430,7 @@ As of kernel 2.6.22, the following members are defined:
+ 					 struct delayed_call *);
  		int (*permission) (const struct mnt_idmap *, struct inode *, int);
  		struct posix_acl * (*get_inode_acl)(struct inode *, int, bool);
- 		int (*setattr) (struct mnt_idmap *, struct dentry *, struct iattr *);
--		int (*getattr) (struct mnt_idmap *, const struct path *, struct kstat *, u32, unsigned int);
-+		int (*getattr) (const struct mnt_idmap *, const struct path *, struct kstat *, u32, unsigned int);
+-		int (*setattr) (struct mnt_idmap *, struct dentry *, struct iattr *);
++		int (*setattr) (const struct mnt_idmap *, struct dentry *, struct iattr *);
+ 		int (*getattr) (const struct mnt_idmap *, const struct path *, struct kstat *, u32, unsigned int);
  		ssize_t (*listxattr) (struct dentry *, char *, size_t);
  		void (*update_time)(struct inode *inode, enum fs_update_time type,
- 				    int flags);
-diff --git a/fs/9p/vfs_inode.c b/fs/9p/vfs_inode.c
-index f2d0eef68acf..0c280342f8e9 100644
---- a/fs/9p/vfs_inode.c
-+++ b/fs/9p/vfs_inode.c
-@@ -966,7 +966,7 @@ v9fs_vfs_rename(const struct mnt_idmap *idmap, struct inode *old_dir,
-  */
- 
- static int
--v9fs_vfs_getattr(struct mnt_idmap *idmap, const struct path *path,
-+v9fs_vfs_getattr(const struct mnt_idmap *idmap, const struct path *path,
- 		 struct kstat *stat, u32 request_mask, unsigned int flags)
- {
- 	struct dentry *dentry = path->dentry;
-diff --git a/fs/9p/vfs_inode_dotl.c b/fs/9p/vfs_inode_dotl.c
-index c7176719a4f9..e37854ee6346 100644
---- a/fs/9p/vfs_inode_dotl.c
-+++ b/fs/9p/vfs_inode_dotl.c
-@@ -414,7 +414,7 @@ static struct dentry *v9fs_vfs_mkdir_dotl(const struct mnt_idmap *idmap,
+diff --git a/arch/powerpc/platforms/cell/spufs/inode.c b/arch/powerpc/platforms/cell/spufs/inode.c
+index 2b54afb31529..a7b2df936c90 100644
+--- a/arch/powerpc/platforms/cell/spufs/inode.c
++++ b/arch/powerpc/platforms/cell/spufs/inode.c
+@@ -92,7 +92,7 @@ spufs_new_inode(struct super_block *sb, umode_t mode)
  }
  
  static int
--v9fs_vfs_getattr_dotl(struct mnt_idmap *idmap,
-+v9fs_vfs_getattr_dotl(const struct mnt_idmap *idmap,
- 		      const struct path *path, struct kstat *stat,
- 		      u32 request_mask, unsigned int flags)
+-spufs_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++spufs_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 	      struct iattr *attr)
  {
+ 	struct inode *inode = d_inode(dentry);
+diff --git a/fs/9p/v9fs_vfs.h b/fs/9p/v9fs_vfs.h
+index 1856d91f8703..5e7b60042498 100644
+--- a/fs/9p/v9fs_vfs.h
++++ b/fs/9p/v9fs_vfs.h
+@@ -74,7 +74,7 @@ int v9fs_file_open(struct inode *inode, struct file *file);
+ int v9fs_uflags2omode(int uflags, int extended);
+ 
+ void v9fs_blank_wstat(struct p9_wstat *wstat);
+-int v9fs_vfs_setattr_dotl(struct mnt_idmap *idmap,
++int v9fs_vfs_setattr_dotl(const struct mnt_idmap *idmap,
+ 			  struct dentry *dentry, struct iattr *iattr);
+ int v9fs_file_fsync_dotl(struct file *filp, loff_t start, loff_t end,
+ 			 int datasync);
+diff --git a/fs/9p/vfs_inode.c b/fs/9p/vfs_inode.c
+index 0c280342f8e9..c95e653344f6 100644
+--- a/fs/9p/vfs_inode.c
++++ b/fs/9p/vfs_inode.c
+@@ -1014,7 +1014,7 @@ v9fs_vfs_getattr(const struct mnt_idmap *idmap, const struct path *path,
+  *
+  */
+ 
+-static int v9fs_vfs_setattr(struct mnt_idmap *idmap,
++static int v9fs_vfs_setattr(const struct mnt_idmap *idmap,
+ 			    struct dentry *dentry, struct iattr *iattr)
+ {
+ 	int retval, use_dentry = 0;
+diff --git a/fs/9p/vfs_inode_dotl.c b/fs/9p/vfs_inode_dotl.c
+index e37854ee6346..2cd2898580a9 100644
+--- a/fs/9p/vfs_inode_dotl.c
++++ b/fs/9p/vfs_inode_dotl.c
+@@ -508,7 +508,7 @@ static int v9fs_mapped_iattr_valid(int iattr_valid)
+  *
+  */
+ 
+-int v9fs_vfs_setattr_dotl(struct mnt_idmap *idmap,
++int v9fs_vfs_setattr_dotl(const struct mnt_idmap *idmap,
+ 			  struct dentry *dentry, struct iattr *iattr)
+ {
+ 	int retval, use_dentry = 0;
+diff --git a/fs/adfs/adfs.h b/fs/adfs/adfs.h
+index 0d32b7cd99b4..6003832277f8 100644
+--- a/fs/adfs/adfs.h
++++ b/fs/adfs/adfs.h
+@@ -144,7 +144,7 @@ struct adfs_discmap {
+ /* Inode stuff */
+ struct inode *adfs_iget(struct super_block *sb, struct object_info *obj);
+ int adfs_write_inode(struct inode *inode, struct writeback_control *wbc);
+-int adfs_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++int adfs_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 		struct iattr *attr);
+ 
+ /* map.c */
+diff --git a/fs/adfs/inode.c b/fs/adfs/inode.c
+index 4ac442d0a8c0..34598b499372 100644
+--- a/fs/adfs/inode.c
++++ b/fs/adfs/inode.c
+@@ -299,7 +299,7 @@ adfs_iget(struct super_block *sb, struct object_info *obj)
+  * later.
+  */
+ int
+-adfs_setattr(struct mnt_idmap *idmap, struct dentry *dentry, struct iattr *attr)
++adfs_setattr(const struct mnt_idmap *idmap, struct dentry *dentry, struct iattr *attr)
+ {
+ 	struct inode *inode = d_inode(dentry);
+ 	struct super_block *sb = inode->i_sb;
+diff --git a/fs/affs/affs.h b/fs/affs/affs.h
+index 8d4ca16c7891..2518de96a0c8 100644
+--- a/fs/affs/affs.h
++++ b/fs/affs/affs.h
+@@ -184,7 +184,7 @@ extern int	affs_rename2(const struct mnt_idmap *idmap,
+ /* inode.c */
+ 
+ extern struct inode		*affs_new_inode(struct inode *dir);
+-extern int			 affs_setattr(struct mnt_idmap *idmap,
++extern int			 affs_setattr(const struct mnt_idmap *idmap,
+ 					struct dentry *dentry, struct iattr *attr);
+ extern void			 affs_evict_inode(struct inode *inode);
+ extern struct inode		*affs_iget(struct super_block *sb,
+diff --git a/fs/affs/inode.c b/fs/affs/inode.c
+index d4a3f381c4bc..2a48d7422091 100644
+--- a/fs/affs/inode.c
++++ b/fs/affs/inode.c
+@@ -213,7 +213,7 @@ affs_write_inode(struct inode *inode, struct writeback_control *wbc)
+ }
+ 
+ int
+-affs_setattr(struct mnt_idmap *idmap, struct dentry *dentry, struct iattr *attr)
++affs_setattr(const struct mnt_idmap *idmap, struct dentry *dentry, struct iattr *attr)
+ {
+ 	struct inode *inode = d_inode(dentry);
+ 	int error;
 diff --git a/fs/afs/inode.c b/fs/afs/inode.c
-index 14f39a9bea6c..7b8a2adc3f59 100644
+index 7b8a2adc3f59..8e6ca6b45c6b 100644
 --- a/fs/afs/inode.c
 +++ b/fs/afs/inode.c
-@@ -596,7 +596,7 @@ struct inode *afs_root_iget(struct super_block *sb, struct key *key)
+@@ -759,7 +759,7 @@ static const struct afs_operation_ops afs_setattr_operation = {
  /*
-  * read the attributes of an inode
+  * set the attributes of an inode
   */
--int afs_getattr(struct mnt_idmap *idmap, const struct path *path,
-+int afs_getattr(const struct mnt_idmap *idmap, const struct path *path,
- 		struct kstat *stat, u32 request_mask, unsigned int query_flags)
+-int afs_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++int afs_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 		struct iattr *attr)
  {
- 	struct inode *inode = d_inode(path->dentry);
+ 	const unsigned int supported =
 diff --git a/fs/afs/internal.h b/fs/afs/internal.h
-index e772da2a15f2..7a8cdde9e0ad 100644
+index 7a8cdde9e0ad..0bd851f00bbe 100644
 --- a/fs/afs/internal.h
 +++ b/fs/afs/internal.h
-@@ -1258,7 +1258,7 @@ extern int afs_fetch_status(struct afs_vnode *, struct key *, bool, afs_access_t
- extern int afs_ilookup5_test_by_fid(struct inode *, void *);
- extern struct inode *afs_iget(struct afs_operation *, struct afs_vnode_param *);
+@@ -1260,7 +1260,7 @@ extern struct inode *afs_iget(struct afs_operation *, struct afs_vnode_param *);
  extern struct inode *afs_root_iget(struct super_block *, struct key *);
--extern int afs_getattr(struct mnt_idmap *idmap, const struct path *,
-+extern int afs_getattr(const struct mnt_idmap *idmap, const struct path *,
+ extern int afs_getattr(const struct mnt_idmap *idmap, const struct path *,
  		       struct kstat *, u32, unsigned int);
- extern int afs_setattr(struct mnt_idmap *idmap, struct dentry *, struct iattr *);
+-extern int afs_setattr(struct mnt_idmap *idmap, struct dentry *, struct iattr *);
++extern int afs_setattr(const struct mnt_idmap *idmap, struct dentry *, struct iattr *);
  extern void afs_evict_inode(struct inode *);
+ extern int afs_drop_inode(struct inode *);
+ 
 diff --git a/fs/anon_inodes.c b/fs/anon_inodes.c
-index a7b9b948e33d..d4a7e0b67289 100644
+index d4a7e0b67289..8f07c8d9bda0 100644
 --- a/fs/anon_inodes.c
 +++ b/fs/anon_inodes.c
-@@ -46,7 +46,7 @@ static struct inode *anon_inode_inode __ro_after_init;
-  * Rather than mess with our internal sane inode data, just fix it
-  * up here in getattr() by masking off the format bits.
-  */
--int anon_inode_getattr(struct mnt_idmap *idmap, const struct path *path,
-+int anon_inode_getattr(const struct mnt_idmap *idmap, const struct path *path,
- 		       struct kstat *stat, u32 request_mask,
- 		       unsigned int query_flags)
+@@ -57,7 +57,7 @@ int anon_inode_getattr(const struct mnt_idmap *idmap, const struct path *path,
+ 	return 0;
+ }
+ 
+-int anon_inode_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++int anon_inode_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 		       struct iattr *attr)
  {
+ 	return -EOPNOTSUPP;
+diff --git a/fs/attr.c b/fs/attr.c
+index 1845d145fe4c..9706d370f34a 100644
+--- a/fs/attr.c
++++ b/fs/attr.c
+@@ -424,7 +424,7 @@ EXPORT_SYMBOL(may_setattr);
+  * permissions. On non-idmapped mounts or if permission checking is to be
+  * performed on the raw inode simply pass @nop_mnt_idmap.
+  */
+-int notify_change(struct mnt_idmap *idmap, struct dentry *dentry,
++int notify_change(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 		  struct iattr *attr, struct delegated_inode *delegated_inode)
+ {
+ 	struct inode *inode = dentry->d_inode;
 diff --git a/fs/bad_inode.c b/fs/bad_inode.c
-index 8c7578ea4bd7..e740b4e658bf 100644
+index e740b4e658bf..bea9f4876ee0 100644
 --- a/fs/bad_inode.c
 +++ b/fs/bad_inode.c
-@@ -95,7 +95,7 @@ static int bad_inode_permission(const struct mnt_idmap *idmap,
+@@ -102,7 +102,7 @@ static int bad_inode_getattr(const struct mnt_idmap *idmap,
  	return -EIO;
  }
  
--static int bad_inode_getattr(struct mnt_idmap *idmap,
-+static int bad_inode_getattr(const struct mnt_idmap *idmap,
- 			     const struct path *path, struct kstat *stat,
- 			     u32 request_mask, unsigned int query_flags)
+-static int bad_inode_setattr(struct mnt_idmap *idmap,
++static int bad_inode_setattr(const struct mnt_idmap *idmap,
+ 			     struct dentry *direntry, struct iattr *attrs)
  {
+ 	return -EIO;
 diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
-index 61cfa03b6152..da143f9376ee 100644
+index da143f9376ee..149ec3b23063 100644
 --- a/fs/btrfs/inode.c
 +++ b/fs/btrfs/inode.c
-@@ -8224,7 +8224,7 @@ int __init btrfs_init_cachep(void)
- 	return 0;
- }
- 
--static int btrfs_getattr(struct mnt_idmap *idmap,
-+static int btrfs_getattr(const struct mnt_idmap *idmap,
- 			 const struct path *path, struct kstat *stat,
- 			 u32 request_mask, unsigned int flags)
- {
-diff --git a/fs/ceph/inode.c b/fs/ceph/inode.c
-index b8527f67e3f0..185d713218e6 100644
---- a/fs/ceph/inode.c
-+++ b/fs/ceph/inode.c
-@@ -2398,7 +2398,7 @@ static const char *ceph_encrypted_get_link(struct dentry *dentry,
- 				   done);
- }
- 
--static int ceph_encrypted_symlink_getattr(struct mnt_idmap *idmap,
-+static int ceph_encrypted_symlink_getattr(const struct mnt_idmap *idmap,
- 					  const struct path *path,
- 					  struct kstat *stat, u32 request_mask,
- 					  unsigned int query_flags)
-@@ -3145,7 +3145,7 @@ static int statx_to_caps(u32 want, umode_t mode)
-  * Get all the attributes. If we have sufficient caps for the requested attrs,
-  * then we can avoid talking to the MDS at all.
-  */
--int ceph_getattr(struct mnt_idmap *idmap, const struct path *path,
-+int ceph_getattr(const struct mnt_idmap *idmap, const struct path *path,
- 		 struct kstat *stat, u32 request_mask, unsigned int flags)
- {
- 	struct inode *inode = d_inode(path->dentry);
-diff --git a/fs/ceph/super.h b/fs/ceph/super.h
-index fd603be209e4..0a5e3916e855 100644
---- a/fs/ceph/super.h
-+++ b/fs/ceph/super.h
-@@ -1177,7 +1177,7 @@ extern int __ceph_setattr(const struct mnt_idmap *idmap, struct inode *inode,
- 			  struct iattr *attr, struct ceph_iattr *cia);
- extern int ceph_setattr(struct mnt_idmap *idmap,
- 			struct dentry *dentry, struct iattr *attr);
--extern int ceph_getattr(struct mnt_idmap *idmap,
-+extern int ceph_getattr(const struct mnt_idmap *idmap,
- 			const struct path *path, struct kstat *stat,
- 			u32 request_mask, unsigned int flags);
- void ceph_inode_shutdown(struct inode *inode);
-diff --git a/fs/coda/coda_linux.h b/fs/coda/coda_linux.h
-index 5ee6cedd3865..5dc9e392079f 100644
---- a/fs/coda/coda_linux.h
-+++ b/fs/coda/coda_linux.h
-@@ -49,7 +49,7 @@ int coda_release(struct inode *i, struct file *f);
- int coda_permission(const struct mnt_idmap *idmap, struct inode *inode,
- 		    int mask);
- int coda_revalidate_inode(struct inode *);
--int coda_getattr(struct mnt_idmap *, const struct path *, struct kstat *,
-+int coda_getattr(const struct mnt_idmap *, const struct path *, struct kstat *,
- 		 u32, unsigned int);
- int coda_setattr(struct mnt_idmap *, struct dentry *, struct iattr *);
- 
-diff --git a/fs/coda/inode.c b/fs/coda/inode.c
-index 40b43866e6a5..f83ebd94c6be 100644
---- a/fs/coda/inode.c
-+++ b/fs/coda/inode.c
-@@ -294,7 +294,7 @@ static void coda_evict_inode(struct inode *inode)
- 	coda_cache_clear_inode(inode);
- }
- 
--int coda_getattr(struct mnt_idmap *idmap, const struct path *path,
-+int coda_getattr(const struct mnt_idmap *idmap, const struct path *path,
- 		 struct kstat *stat, u32 request_mask, unsigned int flags)
- {
- 	int err = coda_revalidate_inode(d_inode(path->dentry));
-diff --git a/fs/ecryptfs/inode.c b/fs/ecryptfs/inode.c
-index 432f82bc5b0c..e70a8d73d137 100644
---- a/fs/ecryptfs/inode.c
-+++ b/fs/ecryptfs/inode.c
-@@ -939,7 +939,7 @@ static int ecryptfs_setattr(struct mnt_idmap *idmap,
- 	return rc;
- }
- 
--static int ecryptfs_getattr_link(struct mnt_idmap *idmap,
-+static int ecryptfs_getattr_link(const struct mnt_idmap *idmap,
- 				 const struct path *path, struct kstat *stat,
- 				 u32 request_mask, unsigned int flags)
- {
-@@ -965,7 +965,7 @@ static int ecryptfs_getattr_link(struct mnt_idmap *idmap,
- 	return rc;
- }
- 
--static int ecryptfs_getattr(struct mnt_idmap *idmap,
-+static int ecryptfs_getattr(const struct mnt_idmap *idmap,
- 			    const struct path *path, struct kstat *stat,
- 			    u32 request_mask, unsigned int flags)
- {
-diff --git a/fs/erofs/inode.c b/fs/erofs/inode.c
-index 45afe5c50de8..26ea3790ff21 100644
---- a/fs/erofs/inode.c
-+++ b/fs/erofs/inode.c
-@@ -311,7 +311,7 @@ struct inode *erofs_iget(struct super_block *sb, erofs_nid_t nid)
- 	return inode;
- }
- 
--int erofs_getattr(struct mnt_idmap *idmap, const struct path *path,
-+int erofs_getattr(const struct mnt_idmap *idmap, const struct path *path,
- 		  struct kstat *stat, u32 request_mask,
- 		  unsigned int query_flags)
- {
-diff --git a/fs/erofs/internal.h b/fs/erofs/internal.h
-index 65974e57aebf..b4f52f5cd626 100644
---- a/fs/erofs/internal.h
-+++ b/fs/erofs/internal.h
-@@ -421,7 +421,7 @@ void erofs_onlinefolio_init(struct folio *folio);
- void erofs_onlinefolio_split(struct folio *folio);
- void erofs_onlinefolio_end(struct folio *folio, int err, bool dirty);
- struct inode *erofs_iget(struct super_block *sb, erofs_nid_t nid);
--int erofs_getattr(struct mnt_idmap *idmap, const struct path *path,
-+int erofs_getattr(const struct mnt_idmap *idmap, const struct path *path,
- 		  struct kstat *stat, u32 request_mask,
- 		  unsigned int query_flags);
- int erofs_namei(struct inode *dir, const struct qstr *name,
-diff --git a/fs/exfat/exfat_fs.h b/fs/exfat/exfat_fs.h
-index a9131fe03302..5165a0df068a 100644
---- a/fs/exfat/exfat_fs.h
-+++ b/fs/exfat/exfat_fs.h
-@@ -557,7 +557,7 @@ extern const struct file_operations exfat_file_operations;
- int __exfat_truncate(struct inode *inode);
- int exfat_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
- 		  struct iattr *attr);
--int exfat_getattr(struct mnt_idmap *idmap, const struct path *path,
-+int exfat_getattr(const struct mnt_idmap *idmap, const struct path *path,
- 		  struct kstat *stat, unsigned int request_mask,
- 		  unsigned int query_flags);
- struct file_kattr;
-diff --git a/fs/exfat/file.c b/fs/exfat/file.c
-index 0530803f71e8..c072a0663e69 100644
---- a/fs/exfat/file.c
-+++ b/fs/exfat/file.c
-@@ -319,7 +319,7 @@ static void exfat_truncate(struct inode *inode)
- 	mutex_unlock(&sbi->s_lock);
- }
- 
--int exfat_getattr(struct mnt_idmap *idmap, const struct path *path,
-+int exfat_getattr(const struct mnt_idmap *idmap, const struct path *path,
- 		  struct kstat *stat, unsigned int request_mask,
- 		  unsigned int query_flags)
- {
-diff --git a/fs/ext2/ext2.h b/fs/ext2/ext2.h
-index 702cb7aa1afd..f4bb8b888052 100644
---- a/fs/ext2/ext2.h
-+++ b/fs/ext2/ext2.h
-@@ -740,7 +740,7 @@ extern void ext2_evict_inode(struct inode *);
- void ext2_write_failed(struct address_space *mapping, loff_t to);
- extern int ext2_get_block(struct inode *, sector_t, struct buffer_head *, int);
- extern int ext2_setattr (struct mnt_idmap *, struct dentry *, struct iattr *);
--extern int ext2_getattr (struct mnt_idmap *, const struct path *,
-+extern int ext2_getattr (const struct mnt_idmap *, const struct path *,
- 			 struct kstat *, u32, unsigned int);
- extern void ext2_set_inode_flags(struct inode *inode);
- extern int ext2_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
-diff --git a/fs/ext2/inode.c b/fs/ext2/inode.c
-index a9245f0cda4d..d4b2a2dec35e 100644
---- a/fs/ext2/inode.c
-+++ b/fs/ext2/inode.c
-@@ -1591,7 +1591,7 @@ int ext2_sync_inode_metadata(struct inode *inode, struct writeback_control *wbc)
- 	return err;
- }
- 
--int ext2_getattr(struct mnt_idmap *idmap, const struct path *path,
-+int ext2_getattr(const struct mnt_idmap *idmap, const struct path *path,
- 		 struct kstat *stat, u32 request_mask, unsigned int query_flags)
- {
- 	struct inode *inode = d_inode(path->dentry);
-diff --git a/fs/ext4/ext4.h b/fs/ext4/ext4.h
-index 2c9a845ed0f8..eb7cf19f606a 100644
---- a/fs/ext4/ext4.h
-+++ b/fs/ext4/ext4.h
-@@ -3182,11 +3182,11 @@ extern int  ext4_sync_inode_metadata(struct inode *, struct writeback_control *)
- extern int  ext4_setattr(struct mnt_idmap *, struct dentry *,
- 			 struct iattr *);
- extern u32  ext4_dio_alignment(struct inode *inode);
--extern int  ext4_getattr(struct mnt_idmap *, const struct path *,
-+extern int  ext4_getattr(const struct mnt_idmap *, const struct path *,
- 			 struct kstat *, u32, unsigned int);
- extern void ext4_evict_inode(struct inode *);
- extern void ext4_clear_inode(struct inode *);
--extern int  ext4_file_getattr(struct mnt_idmap *, const struct path *,
-+extern int  ext4_file_getattr(const struct mnt_idmap *, const struct path *,
- 			      struct kstat *, u32, unsigned int);
- extern void ext4_dirty_inode(struct inode *, int);
- extern int ext4_change_inode_journal_flag(struct inode *, int);
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index bd4b778df9eb..045f5385f26e 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -6263,7 +6263,7 @@ u32 ext4_dio_alignment(struct inode *inode)
- 	return 1; /* use the iomap defaults */
- }
- 
--int ext4_getattr(struct mnt_idmap *idmap, const struct path *path,
-+int ext4_getattr(const struct mnt_idmap *idmap, const struct path *path,
- 		 struct kstat *stat, u32 request_mask, unsigned int query_flags)
- {
- 	struct inode *inode = d_inode(path->dentry);
-@@ -6332,7 +6332,7 @@ int ext4_getattr(struct mnt_idmap *idmap, const struct path *path,
- 	return 0;
- }
- 
--int ext4_file_getattr(struct mnt_idmap *idmap,
-+int ext4_file_getattr(const struct mnt_idmap *idmap,
- 		      const struct path *path, struct kstat *stat,
- 		      u32 request_mask, unsigned int query_flags)
- {
-diff --git a/fs/ext4/symlink.c b/fs/ext4/symlink.c
-index b612262719ed..e680d1e45b47 100644
---- a/fs/ext4/symlink.c
-+++ b/fs/ext4/symlink.c
-@@ -55,7 +55,7 @@ static const char *ext4_encrypted_get_link(struct dentry *dentry,
- 	return paddr;
- }
- 
--static int ext4_encrypted_symlink_getattr(struct mnt_idmap *idmap,
-+static int ext4_encrypted_symlink_getattr(const struct mnt_idmap *idmap,
- 					  const struct path *path,
- 					  struct kstat *stat, u32 request_mask,
- 					  unsigned int query_flags)
-diff --git a/fs/f2fs/f2fs.h b/fs/f2fs/f2fs.h
-index 245df8563256..06538f5fd725 100644
---- a/fs/f2fs/f2fs.h
-+++ b/fs/f2fs/f2fs.h
-@@ -3848,7 +3848,7 @@ int f2fs_sync_file(struct file *file, loff_t start, loff_t end, int datasync);
- int f2fs_do_truncate_blocks(struct inode *inode, u64 from, bool lock);
- int f2fs_truncate_blocks(struct inode *inode, u64 from, bool lock);
- int f2fs_truncate(struct inode *inode);
--int f2fs_getattr(struct mnt_idmap *idmap, const struct path *path,
-+int f2fs_getattr(const struct mnt_idmap *idmap, const struct path *path,
- 		 struct kstat *stat, u32 request_mask, unsigned int flags);
- int f2fs_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
- 		 struct iattr *attr);
-diff --git a/fs/f2fs/file.c b/fs/f2fs/file.c
-index d0cc2ca1397a..267a3a191d54 100644
---- a/fs/f2fs/file.c
-+++ b/fs/f2fs/file.c
-@@ -1032,7 +1032,7 @@ static bool f2fs_force_buffered_io(struct inode *inode, int rw)
- 	return false;
- }
- 
--int f2fs_getattr(struct mnt_idmap *idmap, const struct path *path,
-+int f2fs_getattr(const struct mnt_idmap *idmap, const struct path *path,
- 		 struct kstat *stat, u32 request_mask, unsigned int query_flags)
- {
- 	struct inode *inode = d_inode(path->dentry);
-diff --git a/fs/f2fs/namei.c b/fs/f2fs/namei.c
-index 9934777eb2a9..233c07fec171 100644
---- a/fs/f2fs/namei.c
-+++ b/fs/f2fs/namei.c
-@@ -1394,7 +1394,7 @@ static const char *f2fs_encrypted_get_link(struct dentry *dentry,
- 	return target;
- }
- 
--static int f2fs_encrypted_symlink_getattr(struct mnt_idmap *idmap,
-+static int f2fs_encrypted_symlink_getattr(const struct mnt_idmap *idmap,
- 					  const struct path *path,
- 					  struct kstat *stat, u32 request_mask,
- 					  unsigned int query_flags)
-diff --git a/fs/failfs.c b/fs/failfs.c
-index cec6cad99eb2..437cdc981c2d 100644
---- a/fs/failfs.c
-+++ b/fs/failfs.c
-@@ -35,7 +35,7 @@ static struct dentry *failfs_lookup(struct inode *dir, struct dentry *dentry,
- 	return ERR_PTR(-EOPNOTSUPP);
- }
- 
--static int failfs_getattr(struct mnt_idmap *idmap, const struct path *path,
-+static int failfs_getattr(const struct mnt_idmap *idmap, const struct path *path,
- 			  struct kstat *stat, u32 request_mask,
- 			  unsigned int query_flags)
- {
-diff --git a/fs/fat/fat.h b/fs/fat/fat.h
-index 61338413d9f3..202f209a544b 100644
---- a/fs/fat/fat.h
-+++ b/fs/fat/fat.h
-@@ -407,7 +407,7 @@ extern const struct inode_operations fat_file_inode_operations;
- extern int fat_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
- 		       struct iattr *attr);
- extern void fat_truncate_blocks(struct inode *inode, loff_t offset);
--extern int fat_getattr(struct mnt_idmap *idmap,
-+extern int fat_getattr(const struct mnt_idmap *idmap,
- 		       const struct path *path, struct kstat *stat,
- 		       u32 request_mask, unsigned int flags);
- int fat_fileattr_get(struct dentry *dentry, struct file_kattr *fa);
-diff --git a/fs/fat/file.c b/fs/fat/file.c
-index 0b8b493d06e4..b37bc637945f 100644
---- a/fs/fat/file.c
-+++ b/fs/fat/file.c
-@@ -432,7 +432,7 @@ int fat_fileattr_get(struct dentry *dentry, struct file_kattr *fa)
- }
- EXPORT_SYMBOL_GPL(fat_fileattr_get);
- 
--int fat_getattr(struct mnt_idmap *idmap, const struct path *path,
-+int fat_getattr(const struct mnt_idmap *idmap, const struct path *path,
- 		struct kstat *stat, u32 request_mask, unsigned int flags)
- {
- 	struct inode *inode = d_inode(path->dentry);
-diff --git a/fs/fuse/dir.c b/fs/fuse/dir.c
-index ff941e78918f..dd267d9498bc 100644
---- a/fs/fuse/dir.c
-+++ b/fs/fuse/dir.c
-@@ -1537,7 +1537,7 @@ static int fuse_do_getattr(const struct mnt_idmap *idmap, struct inode *inode,
- 	return err;
- }
- 
--static int fuse_update_get_attr(struct mnt_idmap *idmap, struct inode *inode,
-+static int fuse_update_get_attr(const struct mnt_idmap *idmap, struct inode *inode,
- 				struct file *file, struct kstat *stat,
- 				u32 request_mask, unsigned int flags)
- {
-@@ -2387,7 +2387,7 @@ static int fuse_setattr(struct mnt_idmap *idmap, struct dentry *entry,
+@@ -5479,7 +5479,7 @@ static int btrfs_setsize(struct inode *inode, struct iattr *attr)
  	return ret;
  }
  
--static int fuse_getattr(struct mnt_idmap *idmap,
-+static int fuse_getattr(const struct mnt_idmap *idmap,
- 			const struct path *path, struct kstat *stat,
- 			u32 request_mask, unsigned int flags)
+-static int btrfs_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++static int btrfs_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 			 struct iattr *attr)
  {
+ 	struct inode *inode = d_inode(dentry);
+diff --git a/fs/ceph/inode.c b/fs/ceph/inode.c
+index 185d713218e6..a695dba82554 100644
+--- a/fs/ceph/inode.c
++++ b/fs/ceph/inode.c
+@@ -2921,7 +2921,7 @@ int __ceph_setattr(const struct mnt_idmap *idmap, struct inode *inode,
+ /*
+  * setattr
+  */
+-int ceph_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++int ceph_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 		 struct iattr *attr)
+ {
+ 	struct inode *inode = d_inode(dentry);
+diff --git a/fs/ceph/super.h b/fs/ceph/super.h
+index 0a5e3916e855..a033331bb151 100644
+--- a/fs/ceph/super.h
++++ b/fs/ceph/super.h
+@@ -1175,7 +1175,7 @@ struct ceph_iattr {
+ 
+ extern int __ceph_setattr(const struct mnt_idmap *idmap, struct inode *inode,
+ 			  struct iattr *attr, struct ceph_iattr *cia);
+-extern int ceph_setattr(struct mnt_idmap *idmap,
++extern int ceph_setattr(const struct mnt_idmap *idmap,
+ 			struct dentry *dentry, struct iattr *attr);
+ extern int ceph_getattr(const struct mnt_idmap *idmap,
+ 			const struct path *path, struct kstat *stat,
+diff --git a/fs/coda/coda_linux.h b/fs/coda/coda_linux.h
+index 5dc9e392079f..0c0d5f81653c 100644
+--- a/fs/coda/coda_linux.h
++++ b/fs/coda/coda_linux.h
+@@ -51,7 +51,7 @@ int coda_permission(const struct mnt_idmap *idmap, struct inode *inode,
+ int coda_revalidate_inode(struct inode *);
+ int coda_getattr(const struct mnt_idmap *, const struct path *, struct kstat *,
+ 		 u32, unsigned int);
+-int coda_setattr(struct mnt_idmap *, struct dentry *, struct iattr *);
++int coda_setattr(const struct mnt_idmap *, struct dentry *, struct iattr *);
+ 
+ /* this file:  helpers */
+ char *coda_f2s(struct CodaFid *f);
+diff --git a/fs/coda/inode.c b/fs/coda/inode.c
+index f83ebd94c6be..c449954e23c2 100644
+--- a/fs/coda/inode.c
++++ b/fs/coda/inode.c
+@@ -304,7 +304,7 @@ int coda_getattr(const struct mnt_idmap *idmap, const struct path *path,
+ 	return err;
+ }
+ 
+-int coda_setattr(struct mnt_idmap *idmap, struct dentry *de,
++int coda_setattr(const struct mnt_idmap *idmap, struct dentry *de,
+ 		 struct iattr *iattr)
+ {
+ 	struct inode *inode = d_inode(de);
+diff --git a/fs/configfs/configfs_internal.h b/fs/configfs/configfs_internal.h
+index 63d70dc05444..860f1b695921 100644
+--- a/fs/configfs/configfs_internal.h
++++ b/fs/configfs/configfs_internal.h
+@@ -76,7 +76,7 @@ extern int configfs_make_dirent(struct configfs_dirent *, struct dentry *,
+ extern int configfs_dirent_is_ready(struct configfs_dirent *);
+ 
+ extern const unsigned char * configfs_get_name(struct configfs_dirent *sd);
+-extern int configfs_setattr(struct mnt_idmap *idmap,
++extern int configfs_setattr(const struct mnt_idmap *idmap,
+ 			    struct dentry *dentry, struct iattr *iattr);
+ 
+ extern struct dentry *configfs_pin_fs(void);
+diff --git a/fs/configfs/inode.c b/fs/configfs/inode.c
+index 68290fe0e374..6ba125d25c66 100644
+--- a/fs/configfs/inode.c
++++ b/fs/configfs/inode.c
+@@ -32,7 +32,7 @@ static const struct inode_operations configfs_inode_operations ={
+ 	.setattr	= configfs_setattr,
+ };
+ 
+-int configfs_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++int configfs_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 		     struct iattr *iattr)
+ {
+ 	struct inode * inode = d_inode(dentry);
+diff --git a/fs/debugfs/inode.c b/fs/debugfs/inode.c
+index e054e62919ec..287ec424ceed 100644
+--- a/fs/debugfs/inode.c
++++ b/fs/debugfs/inode.c
+@@ -42,7 +42,7 @@ static bool debugfs_enabled __ro_after_init = IS_ENABLED(CONFIG_DEBUG_FS_ALLOW_A
+  * so that we can use the file mode as part of a heuristic to determine whether
+  * to lock down individual files.
+  */
+-static int debugfs_setattr(struct mnt_idmap *idmap,
++static int debugfs_setattr(const struct mnt_idmap *idmap,
+ 			   struct dentry *dentry, struct iattr *ia)
+ {
+ 	int ret;
+diff --git a/fs/ecryptfs/inode.c b/fs/ecryptfs/inode.c
+index e70a8d73d137..48e520960d66 100644
+--- a/fs/ecryptfs/inode.c
++++ b/fs/ecryptfs/inode.c
+@@ -869,7 +869,7 @@ ecryptfs_permission(const struct mnt_idmap *idmap, struct inode *inode,
+  * All other metadata changes will be passed right to the lower filesystem,
+  * and we will just update our inode to look like the lower.
+  */
+-static int ecryptfs_setattr(struct mnt_idmap *idmap,
++static int ecryptfs_setattr(const struct mnt_idmap *idmap,
+ 			    struct dentry *dentry, struct iattr *ia)
+ {
+ 	struct inode *inode = d_inode(dentry);
+diff --git a/fs/efivarfs/inode.c b/fs/efivarfs/inode.c
+index d87091b92776..07602cd5d33c 100644
+--- a/fs/efivarfs/inode.c
++++ b/fs/efivarfs/inode.c
+@@ -170,7 +170,7 @@ efivarfs_fileattr_set(const struct mnt_idmap *idmap,
+ }
+ 
+ /* copy of simple_setattr except that it doesn't do i_size updates */
+-static int efivarfs_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++static int efivarfs_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 		   struct iattr *iattr)
+ {
+ 	struct inode *inode = d_inode(dentry);
+diff --git a/fs/exfat/exfat_fs.h b/fs/exfat/exfat_fs.h
+index 5165a0df068a..5acfe7ef57d6 100644
+--- a/fs/exfat/exfat_fs.h
++++ b/fs/exfat/exfat_fs.h
+@@ -555,7 +555,7 @@ int exfat_trim_fs(struct inode *inode, struct fstrim_range *range);
+ /* file.c */
+ extern const struct file_operations exfat_file_operations;
+ int __exfat_truncate(struct inode *inode);
+-int exfat_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++int exfat_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 		  struct iattr *attr);
+ int exfat_getattr(const struct mnt_idmap *idmap, const struct path *path,
+ 		  struct kstat *stat, unsigned int request_mask,
+diff --git a/fs/exfat/file.c b/fs/exfat/file.c
+index c072a0663e69..3867e78c2312 100644
+--- a/fs/exfat/file.c
++++ b/fs/exfat/file.c
+@@ -347,7 +347,7 @@ int exfat_fileattr_get(struct dentry *dentry, struct file_kattr *fa)
+ 	return 0;
+ }
+ 
+-int exfat_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++int exfat_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 		  struct iattr *attr)
+ {
+ 	struct exfat_sb_info *sbi = EXFAT_SB(dentry->d_sb);
+diff --git a/fs/ext2/ext2.h b/fs/ext2/ext2.h
+index f4bb8b888052..cf2796e5703e 100644
+--- a/fs/ext2/ext2.h
++++ b/fs/ext2/ext2.h
+@@ -739,7 +739,7 @@ extern int ext2_sync_inode_metadata(struct inode *, struct writeback_control *);
+ extern void ext2_evict_inode(struct inode *);
+ void ext2_write_failed(struct address_space *mapping, loff_t to);
+ extern int ext2_get_block(struct inode *, sector_t, struct buffer_head *, int);
+-extern int ext2_setattr (struct mnt_idmap *, struct dentry *, struct iattr *);
++extern int ext2_setattr (const struct mnt_idmap *, struct dentry *, struct iattr *);
+ extern int ext2_getattr (const struct mnt_idmap *, const struct path *,
+ 			 struct kstat *, u32, unsigned int);
+ extern void ext2_set_inode_flags(struct inode *inode);
+diff --git a/fs/ext2/inode.c b/fs/ext2/inode.c
+index d4b2a2dec35e..b52ded333aa9 100644
+--- a/fs/ext2/inode.c
++++ b/fs/ext2/inode.c
+@@ -1617,7 +1617,7 @@ int ext2_getattr(const struct mnt_idmap *idmap, const struct path *path,
+ 	return 0;
+ }
+ 
+-int ext2_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++int ext2_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 		 struct iattr *iattr)
+ {
+ 	struct inode *inode = d_inode(dentry);
+diff --git a/fs/ext4/ext4.h b/fs/ext4/ext4.h
+index eb7cf19f606a..cbc59d03ca81 100644
+--- a/fs/ext4/ext4.h
++++ b/fs/ext4/ext4.h
+@@ -3179,7 +3179,7 @@ extern struct inode *__ext4_iget(struct super_block *sb, unsigned long ino,
+ 
+ extern int  ext4_write_inode(struct inode *, struct writeback_control *);
+ extern int  ext4_sync_inode_metadata(struct inode *, struct writeback_control *);
+-extern int  ext4_setattr(struct mnt_idmap *, struct dentry *,
++extern int  ext4_setattr(const struct mnt_idmap *, struct dentry *,
+ 			 struct iattr *);
+ extern u32  ext4_dio_alignment(struct inode *inode);
+ extern int  ext4_getattr(const struct mnt_idmap *, const struct path *,
+diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+index 045f5385f26e..3c39bb945821 100644
+--- a/fs/ext4/inode.c
++++ b/fs/ext4/inode.c
+@@ -6006,7 +6006,7 @@ static void ext4_wait_for_tail_page_commit(struct inode *inode)
+  *
+  * Called with inode->i_rwsem down.
+  */
+-int ext4_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++int ext4_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 		 struct iattr *attr)
+ {
+ 	struct inode *inode = d_inode(dentry);
+diff --git a/fs/f2fs/f2fs.h b/fs/f2fs/f2fs.h
+index 06538f5fd725..128813d4f6e3 100644
+--- a/fs/f2fs/f2fs.h
++++ b/fs/f2fs/f2fs.h
+@@ -3850,7 +3850,7 @@ int f2fs_truncate_blocks(struct inode *inode, u64 from, bool lock);
+ int f2fs_truncate(struct inode *inode);
+ int f2fs_getattr(const struct mnt_idmap *idmap, const struct path *path,
+ 		 struct kstat *stat, u32 request_mask, unsigned int flags);
+-int f2fs_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++int f2fs_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 		 struct iattr *attr);
+ int f2fs_truncate_hole(struct inode *inode, pgoff_t pg_start, pgoff_t pg_end);
+ void f2fs_truncate_data_blocks_range(struct dnode_of_data *dn, int count);
+diff --git a/fs/f2fs/file.c b/fs/f2fs/file.c
+index 267a3a191d54..fb8b03a9972d 100644
+--- a/fs/f2fs/file.c
++++ b/fs/f2fs/file.c
+@@ -1121,7 +1121,7 @@ static void __setattr_copy(const struct mnt_idmap *idmap,
+ #define __setattr_copy setattr_copy
+ #endif
+ 
+-int f2fs_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++int f2fs_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 		 struct iattr *attr)
+ {
+ 	struct inode *inode = d_inode(dentry);
+diff --git a/fs/fat/fat.h b/fs/fat/fat.h
+index 202f209a544b..dbbcfc90a9c2 100644
+--- a/fs/fat/fat.h
++++ b/fs/fat/fat.h
+@@ -404,7 +404,7 @@ extern long fat_generic_ioctl(struct file *filp, unsigned int cmd,
+ 			      unsigned long arg);
+ extern const struct file_operations fat_file_operations;
+ extern const struct inode_operations fat_file_inode_operations;
+-extern int fat_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++extern int fat_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 		       struct iattr *attr);
+ extern void fat_truncate_blocks(struct inode *inode, loff_t offset);
+ extern int fat_getattr(const struct mnt_idmap *idmap,
+diff --git a/fs/fat/file.c b/fs/fat/file.c
+index b37bc637945f..2c6aee9f0305 100644
+--- a/fs/fat/file.c
++++ b/fs/fat/file.c
+@@ -514,7 +514,7 @@ static int fat_allow_set_time(const struct mnt_idmap *idmap,
+ /* valid file mode bits */
+ #define FAT_VALID_MODE	(S_IFREG | S_IFDIR | S_IRWXUGO)
+ 
+-int fat_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++int fat_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 		struct iattr *attr)
+ {
+ 	struct msdos_sb_info *sbi = MSDOS_SB(dentry->d_sb);
+diff --git a/fs/fuse/dir.c b/fs/fuse/dir.c
+index dd267d9498bc..6d23878cfae5 100644
+--- a/fs/fuse/dir.c
++++ b/fs/fuse/dir.c
+@@ -2324,7 +2324,7 @@ int fuse_do_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 	return err;
+ }
+ 
+-static int fuse_setattr(struct mnt_idmap *idmap, struct dentry *entry,
++static int fuse_setattr(const struct mnt_idmap *idmap, struct dentry *entry,
+ 			struct iattr *attr)
+ {
+ 	struct inode *inode = d_inode(entry);
 diff --git a/fs/gfs2/inode.c b/fs/gfs2/inode.c
-index e207ab1f5c23..5ddac2f50f30 100644
+index 5ddac2f50f30..a040da86d8ed 100644
 --- a/fs/gfs2/inode.c
 +++ b/fs/gfs2/inode.c
-@@ -2156,7 +2156,7 @@ static int gfs2_setattr(struct mnt_idmap *idmap,
+@@ -2095,7 +2095,7 @@ static int setattr_chown(struct inode *inode, struct iattr *attr)
   * Returns: errno
   */
  
--static int gfs2_getattr(struct mnt_idmap *idmap,
-+static int gfs2_getattr(const struct mnt_idmap *idmap,
- 			const struct path *path, struct kstat *stat,
- 			u32 request_mask, unsigned int flags)
+-static int gfs2_setattr(struct mnt_idmap *idmap,
++static int gfs2_setattr(const struct mnt_idmap *idmap,
+ 			struct dentry *dentry, struct iattr *attr)
  {
-diff --git a/fs/hfsplus/hfsplus_fs.h b/fs/hfsplus/hfsplus_fs.h
-index 86fc1c1cdfd6..d55cb16e3897 100644
---- a/fs/hfsplus/hfsplus_fs.h
-+++ b/fs/hfsplus/hfsplus_fs.h
-@@ -459,7 +459,7 @@ void hfsplus_inode_write_fork(struct inode *inode,
- 			      struct hfsplus_fork_raw *fork);
- int hfsplus_cat_read_inode(struct inode *inode, struct hfs_find_data *fd);
- int hfsplus_cat_write_inode(struct inode *inode);
--int hfsplus_getattr(struct mnt_idmap *idmap, const struct path *path,
-+int hfsplus_getattr(const struct mnt_idmap *idmap, const struct path *path,
- 		    struct kstat *stat, u32 request_mask,
- 		    unsigned int query_flags);
- int hfsplus_file_fsync(struct file *file, loff_t start, loff_t end,
-diff --git a/fs/hfsplus/inode.c b/fs/hfsplus/inode.c
-index 9821662bfc1d..2807b29c7028 100644
---- a/fs/hfsplus/inode.c
-+++ b/fs/hfsplus/inode.c
-@@ -335,7 +335,7 @@ static int hfsplus_setattr(struct mnt_idmap *idmap,
+ 	struct inode *inode = d_inode(dentry);
+diff --git a/fs/hfs/hfs_fs.h b/fs/hfs/hfs_fs.h
+index e250f87a5e33..fdfa5d303d5e 100644
+--- a/fs/hfs/hfs_fs.h
++++ b/fs/hfs/hfs_fs.h
+@@ -212,7 +212,7 @@ extern struct inode *hfs_new_inode(struct inode *dir, const struct qstr *name,
+ extern void hfs_inode_write_fork(struct inode *inode, struct hfs_extent *ext,
+ 				 __be32 *log_size, __be32 *phys_size);
+ extern int hfs_write_inode(struct inode *inode, struct writeback_control *wbc);
+-extern int hfs_inode_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++extern int hfs_inode_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 			     struct iattr *attr);
+ extern void hfs_inode_read_fork(struct inode *inode, struct hfs_extent *ext,
+ 				__be32 __log_size, __be32 phys_size,
+diff --git a/fs/hfs/inode.c b/fs/hfs/inode.c
+index 2aef3c36a150..c81314f668ac 100644
+--- a/fs/hfs/inode.c
++++ b/fs/hfs/inode.c
+@@ -643,7 +643,7 @@ static int hfs_file_release(struct inode *inode, struct file *file)
  	return 0;
  }
  
--int hfsplus_getattr(struct mnt_idmap *idmap, const struct path *path,
-+int hfsplus_getattr(const struct mnt_idmap *idmap, const struct path *path,
- 		    struct kstat *stat, u32 request_mask,
- 		    unsigned int query_flags)
+-int hfs_inode_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++int hfs_inode_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 		      struct iattr *attr)
  {
-diff --git a/fs/internal.h b/fs/internal.h
-index 8a1c7c05c5a2..88d9296c2a48 100644
---- a/fs/internal.h
-+++ b/fs/internal.h
-@@ -356,7 +356,7 @@ void file_f_owner_release(struct file *file);
- bool file_seek_cur_needs_f_lock(struct file *file);
- int statmount_mnt_idmap(const struct mnt_idmap *idmap, struct seq_file *seq, bool uid_map);
- struct dentry *find_next_child(struct dentry *parent, struct dentry *prev);
--int anon_inode_getattr(struct mnt_idmap *idmap, const struct path *path,
-+int anon_inode_getattr(const struct mnt_idmap *idmap, const struct path *path,
- 		       struct kstat *stat, u32 request_mask,
- 		       unsigned int query_flags);
- int anon_inode_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
-diff --git a/fs/kernfs/inode.c b/fs/kernfs/inode.c
-index b348d4cd150b..6a92aa789ce5 100644
---- a/fs/kernfs/inode.c
-+++ b/fs/kernfs/inode.c
-@@ -181,7 +181,7 @@ static void kernfs_refresh_inode(struct kernfs_node *kn, struct inode *inode)
- 		set_nlink(inode, kn->dir.subdirs + 2);
+ 	struct inode *inode = d_inode(dentry);
+diff --git a/fs/hfsplus/inode.c b/fs/hfsplus/inode.c
+index 2807b29c7028..aed0866499b2 100644
+--- a/fs/hfsplus/inode.c
++++ b/fs/hfsplus/inode.c
+@@ -305,7 +305,7 @@ static int hfsplus_file_release(struct inode *inode, struct file *file)
+ 	return 0;
  }
  
--int kernfs_iop_getattr(struct mnt_idmap *idmap,
-+int kernfs_iop_getattr(const struct mnt_idmap *idmap,
- 		       const struct path *path, struct kstat *stat,
- 		       u32 request_mask, unsigned int query_flags)
+-static int hfsplus_setattr(struct mnt_idmap *idmap,
++static int hfsplus_setattr(const struct mnt_idmap *idmap,
+ 			   struct dentry *dentry, struct iattr *attr)
  {
-diff --git a/fs/kernfs/kernfs-internal.h b/fs/kernfs/kernfs-internal.h
-index 0f6f412213f6..8af7849f2c9c 100644
---- a/fs/kernfs/kernfs-internal.h
-+++ b/fs/kernfs/kernfs-internal.h
-@@ -175,7 +175,7 @@ int kernfs_iop_permission(const struct mnt_idmap *idmap,
- 			  struct inode *inode, int mask);
- int kernfs_iop_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
- 		       struct iattr *iattr);
--int kernfs_iop_getattr(struct mnt_idmap *idmap,
-+int kernfs_iop_getattr(const struct mnt_idmap *idmap,
- 		       const struct path *path, struct kstat *stat,
- 		       u32 request_mask, unsigned int query_flags);
- ssize_t kernfs_iop_listxattr(struct dentry *dentry, char *buf, size_t size);
-diff --git a/fs/libfs.c b/fs/libfs.c
-index 8b379230b64f..b70977b10a7c 100644
---- a/fs/libfs.c
-+++ b/fs/libfs.c
-@@ -29,7 +29,7 @@
- 
- #include "internal.h"
- 
--int simple_getattr(struct mnt_idmap *idmap, const struct path *path,
-+int simple_getattr(const struct mnt_idmap *idmap, const struct path *path,
- 		   struct kstat *stat, u32 request_mask,
- 		   unsigned int query_flags)
- {
-diff --git a/fs/minix/inode.c b/fs/minix/inode.c
-index daf83e4ff25c..670179173645 100644
---- a/fs/minix/inode.c
-+++ b/fs/minix/inode.c
-@@ -724,7 +724,7 @@ static int minix_sync_inode_metadata(struct inode *inode,
+ 	struct inode *inode = d_inode(dentry);
+diff --git a/fs/hostfs/hostfs_kern.c b/fs/hostfs/hostfs_kern.c
+index c8ad58be047e..613146e76dec 100644
+--- a/fs/hostfs/hostfs_kern.c
++++ b/fs/hostfs/hostfs_kern.c
+@@ -801,7 +801,7 @@ static int hostfs_permission(const struct mnt_idmap *idmap,
  	return err;
  }
  
--int minix_getattr(struct mnt_idmap *idmap, const struct path *path,
-+int minix_getattr(const struct mnt_idmap *idmap, const struct path *path,
- 		  struct kstat *stat, u32 request_mask, unsigned int flags)
+-static int hostfs_setattr(struct mnt_idmap *idmap,
++static int hostfs_setattr(const struct mnt_idmap *idmap,
+ 			  struct dentry *dentry, struct iattr *attr)
  {
- 	struct super_block *sb = path->dentry->d_sb;
-diff --git a/fs/minix/minix.h b/fs/minix/minix.h
-index 78722ce22e1e..db92cf9e0e1b 100644
---- a/fs/minix/minix.h
-+++ b/fs/minix/minix.h
-@@ -55,7 +55,7 @@ unsigned long minix_count_free_inodes(struct super_block *sb);
- int minix_new_block(struct inode *inode);
- void minix_free_block(struct inode *inode, unsigned long block);
- unsigned long minix_count_free_blocks(struct super_block *sb);
--int minix_getattr(struct mnt_idmap *, const struct path *,
-+int minix_getattr(const struct mnt_idmap *, const struct path *,
- 		struct kstat *, u32, unsigned int);
- int minix_prepare_chunk(struct folio *folio, loff_t pos, unsigned len);
- struct mapping_metadata_bhs *minix_get_metadata_bhs(struct inode *inode);
-diff --git a/fs/nfs/inode.c b/fs/nfs/inode.c
-index 3022454f7698..b114488715fb 100644
---- a/fs/nfs/inode.c
-+++ b/fs/nfs/inode.c
-@@ -955,7 +955,7 @@ static u32 nfs_get_valid_attrmask(struct inode *inode)
- 	return reply_mask;
+ 	struct inode *inode = d_inode(dentry);
+diff --git a/fs/hpfs/hpfs_fn.h b/fs/hpfs/hpfs_fn.h
+index 237c1c23e855..a398dd8bdf30 100644
+--- a/fs/hpfs/hpfs_fn.h
++++ b/fs/hpfs/hpfs_fn.h
+@@ -280,7 +280,7 @@ void hpfs_init_inode(struct inode *);
+ void hpfs_read_inode(struct inode *);
+ void hpfs_write_inode(struct inode *);
+ void hpfs_write_inode_nolock(struct inode *);
+-int hpfs_setattr(struct mnt_idmap *, struct dentry *, struct iattr *);
++int hpfs_setattr(const struct mnt_idmap *, struct dentry *, struct iattr *);
+ void hpfs_write_if_changed(struct inode *);
+ void hpfs_evict_inode(struct inode *);
+ 
+diff --git a/fs/hpfs/inode.c b/fs/hpfs/inode.c
+index 1b4fcf760aad..396773d0b669 100644
+--- a/fs/hpfs/inode.c
++++ b/fs/hpfs/inode.c
+@@ -257,7 +257,7 @@ void hpfs_write_inode_nolock(struct inode *i)
+ 	brelse(bh);
  }
  
--int nfs_getattr(struct mnt_idmap *idmap, const struct path *path,
-+int nfs_getattr(const struct mnt_idmap *idmap, const struct path *path,
- 		struct kstat *stat, u32 request_mask, unsigned int query_flags)
+-int hpfs_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++int hpfs_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 		 struct iattr *attr)
  {
- 	struct inode *inode = d_inode(path->dentry);
+ 	struct inode *inode = d_inode(dentry);
+diff --git a/fs/hugetlbfs/inode.c b/fs/hugetlbfs/inode.c
+index 0b95be14d3ee..6656807ce437 100644
+--- a/fs/hugetlbfs/inode.c
++++ b/fs/hugetlbfs/inode.c
+@@ -828,7 +828,7 @@ static long hugetlbfs_fallocate(struct file *file, int mode, loff_t offset,
+ 	return error;
+ }
+ 
+-static int hugetlbfs_setattr(struct mnt_idmap *idmap,
++static int hugetlbfs_setattr(const struct mnt_idmap *idmap,
+ 			     struct dentry *dentry, struct iattr *attr)
+ {
+ 	struct inode *inode = d_inode(dentry);
+diff --git a/fs/inode.c b/fs/inode.c
+index 99f1aab89eae..bd9808f07eb8 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -2356,7 +2356,7 @@ int dentry_needs_remove_privs(const struct mnt_idmap *idmap,
+ 	return mask;
+ }
+ 
+-static int __remove_privs(struct mnt_idmap *idmap,
++static int __remove_privs(const struct mnt_idmap *idmap,
+ 			  struct dentry *dentry, int kill)
+ {
+ 	struct iattr newattrs;
+diff --git a/fs/internal.h b/fs/internal.h
+index 88d9296c2a48..2b8cffc22fb3 100644
+--- a/fs/internal.h
++++ b/fs/internal.h
+@@ -359,7 +359,7 @@ struct dentry *find_next_child(struct dentry *parent, struct dentry *prev);
+ int anon_inode_getattr(const struct mnt_idmap *idmap, const struct path *path,
+ 		       struct kstat *stat, u32 request_mask,
+ 		       unsigned int query_flags);
+-int anon_inode_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++int anon_inode_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 		       struct iattr *attr);
+ void pidfs_get_root(struct path *path);
+ void nsfs_get_root(struct path *path);
+diff --git a/fs/jffs2/fs.c b/fs/jffs2/fs.c
+index 6ada8369a762..05cf860307c7 100644
+--- a/fs/jffs2/fs.c
++++ b/fs/jffs2/fs.c
+@@ -190,7 +190,7 @@ int jffs2_do_setattr (struct inode *inode, struct iattr *iattr)
+ 	return 0;
+ }
+ 
+-int jffs2_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++int jffs2_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 		  struct iattr *iattr)
+ {
+ 	struct inode *inode = d_inode(dentry);
+diff --git a/fs/jffs2/os-linux.h b/fs/jffs2/os-linux.h
+index 86ab014a349c..bff2134d771d 100644
+--- a/fs/jffs2/os-linux.h
++++ b/fs/jffs2/os-linux.h
+@@ -164,7 +164,7 @@ long jffs2_ioctl(struct file *, unsigned int, unsigned long);
+ extern const struct inode_operations jffs2_symlink_inode_operations;
+ 
+ /* fs.c */
+-int jffs2_setattr (struct mnt_idmap *, struct dentry *, struct iattr *);
++int jffs2_setattr (const struct mnt_idmap *, struct dentry *, struct iattr *);
+ int jffs2_do_setattr (struct inode *, struct iattr *);
+ struct inode *jffs2_iget(struct super_block *, unsigned long);
+ void jffs2_evict_inode (struct inode *);
+diff --git a/fs/jfs/file.c b/fs/jfs/file.c
+index 246568cb9a6e..2f5bb79c0591 100644
+--- a/fs/jfs/file.c
++++ b/fs/jfs/file.c
+@@ -89,7 +89,7 @@ static int jfs_release(struct inode *inode, struct file *file)
+ 	return 0;
+ }
+ 
+-int jfs_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++int jfs_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 		struct iattr *iattr)
+ {
+ 	struct inode *inode = d_inode(dentry);
+diff --git a/fs/jfs/jfs_inode.h b/fs/jfs/jfs_inode.h
+index 88cfc3886282..5a118b07fbff 100644
+--- a/fs/jfs/jfs_inode.h
++++ b/fs/jfs/jfs_inode.h
+@@ -28,7 +28,7 @@ extern struct dentry *jfs_fh_to_parent(struct super_block *sb, struct fid *fid,
+ 	int fh_len, int fh_type);
+ extern void jfs_set_inode_flags(struct inode *);
+ extern int jfs_get_block(struct inode *, sector_t, struct buffer_head *, int);
+-extern int jfs_setattr(struct mnt_idmap *, struct dentry *, struct iattr *);
++extern int jfs_setattr(const struct mnt_idmap *, struct dentry *, struct iattr *);
+ 
+ extern const struct address_space_operations jfs_aops;
+ extern const struct inode_operations jfs_dir_inode_operations;
+diff --git a/fs/kernfs/inode.c b/fs/kernfs/inode.c
+index 6a92aa789ce5..b9dbb504d226 100644
+--- a/fs/kernfs/inode.c
++++ b/fs/kernfs/inode.c
+@@ -107,7 +107,7 @@ int kernfs_setattr(struct kernfs_node *kn, const struct iattr *iattr)
+ 	return ret;
+ }
+ 
+-int kernfs_iop_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++int kernfs_iop_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 		       struct iattr *iattr)
+ {
+ 	struct inode *inode = d_inode(dentry);
+diff --git a/fs/kernfs/kernfs-internal.h b/fs/kernfs/kernfs-internal.h
+index 8af7849f2c9c..d0c68ec2d236 100644
+--- a/fs/kernfs/kernfs-internal.h
++++ b/fs/kernfs/kernfs-internal.h
+@@ -173,7 +173,7 @@ extern const struct xattr_handler * const kernfs_xattr_handlers[];
+ void kernfs_evict_inode(struct inode *inode);
+ int kernfs_iop_permission(const struct mnt_idmap *idmap,
+ 			  struct inode *inode, int mask);
+-int kernfs_iop_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++int kernfs_iop_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 		       struct iattr *iattr);
+ int kernfs_iop_getattr(const struct mnt_idmap *idmap,
+ 		       const struct path *path, struct kstat *stat,
+diff --git a/fs/libfs.c b/fs/libfs.c
+index b70977b10a7c..8e2cc627bc7f 100644
+--- a/fs/libfs.c
++++ b/fs/libfs.c
+@@ -913,7 +913,7 @@ EXPORT_SYMBOL(simple_rename);
+  * on simple regular filesystems.  Anything that needs to change on-disk
+  * or wire state on size changes needs its own setattr method.
+  */
+-int simple_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++int simple_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 		   struct iattr *iattr)
+ {
+ 	struct inode *inode = d_inode(dentry);
+@@ -1727,7 +1727,7 @@ static struct dentry *empty_dir_lookup(struct inode *dir, struct dentry *dentry,
+ 	return ERR_PTR(-ENOENT);
+ }
+ 
+-static int empty_dir_setattr(struct mnt_idmap *idmap,
++static int empty_dir_setattr(const struct mnt_idmap *idmap,
+ 			     struct dentry *dentry, struct iattr *attr)
+ {
+ 	return -EPERM;
+diff --git a/fs/minix/file.c b/fs/minix/file.c
+index 02aabbdb5dea..c0929fc38fbc 100644
+--- a/fs/minix/file.c
++++ b/fs/minix/file.c
+@@ -23,7 +23,7 @@ const struct file_operations minix_file_operations = {
+ 	.splice_read	= filemap_splice_read,
+ };
+ 
+-static int minix_setattr(struct mnt_idmap *idmap,
++static int minix_setattr(const struct mnt_idmap *idmap,
+ 			 struct dentry *dentry, struct iattr *attr)
+ {
+ 	struct inode *inode = d_inode(dentry);
+diff --git a/fs/nfs/inode.c b/fs/nfs/inode.c
+index b114488715fb..3c9b2ec4e244 100644
+--- a/fs/nfs/inode.c
++++ b/fs/nfs/inode.c
+@@ -690,7 +690,7 @@ EXPORT_SYMBOL_GPL(nfs_update_delegated_mtime);
+ #define NFS_VALID_ATTRS (ATTR_MODE|ATTR_UID|ATTR_GID|ATTR_SIZE|ATTR_ATIME|ATTR_ATIME_SET|ATTR_MTIME|ATTR_MTIME_SET|ATTR_FILE|ATTR_OPEN)
+ 
+ int
+-nfs_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++nfs_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 	    struct iattr *attr)
+ {
+ 	struct inode *inode = d_inode(dentry);
 diff --git a/fs/nfs/namespace.c b/fs/nfs/namespace.c
-index 6d0073c24771..17f54d79efa7 100644
+index 17f54d79efa7..c50d59c52c50 100644
 --- a/fs/nfs/namespace.c
 +++ b/fs/nfs/namespace.c
-@@ -222,7 +222,7 @@ struct vfsmount *nfs_d_automount(struct path *path)
+@@ -235,7 +235,7 @@ nfs_namespace_getattr(const struct mnt_idmap *idmap,
  }
  
  static int
--nfs_namespace_getattr(struct mnt_idmap *idmap,
-+nfs_namespace_getattr(const struct mnt_idmap *idmap,
- 		      const struct path *path, struct kstat *stat,
- 		      u32 request_mask, unsigned int query_flags)
+-nfs_namespace_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++nfs_namespace_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 		      struct iattr *attr)
  {
+ 	if (NFS_FH(d_inode(dentry))->size != 0)
+diff --git a/fs/nilfs2/inode.c b/fs/nilfs2/inode.c
+index 9342f651bf9b..8953719c4950 100644
+--- a/fs/nilfs2/inode.c
++++ b/fs/nilfs2/inode.c
+@@ -904,7 +904,7 @@ void nilfs_evict_inode(struct inode *inode)
+ 	 */
+ }
+ 
+-int nilfs_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++int nilfs_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 		  struct iattr *iattr)
+ {
+ 	struct nilfs_transaction_info ti;
+diff --git a/fs/nilfs2/nilfs.h b/fs/nilfs2/nilfs.h
+index 829df7be11fe..28d35b2fa7f7 100644
+--- a/fs/nilfs2/nilfs.h
++++ b/fs/nilfs2/nilfs.h
+@@ -299,7 +299,7 @@ struct inode *nilfs_iget_for_shadow(struct inode *inode);
+ extern void nilfs_update_inode(struct inode *, struct buffer_head *, int);
+ extern void nilfs_truncate(struct inode *);
+ extern void nilfs_evict_inode(struct inode *);
+-extern int nilfs_setattr(struct mnt_idmap *, struct dentry *,
++extern int nilfs_setattr(const struct mnt_idmap *, struct dentry *,
+ 			 struct iattr *);
+ extern void nilfs_write_failed(struct address_space *mapping, loff_t to);
+ int nilfs_permission(const struct mnt_idmap *idmap, struct inode *inode,
 diff --git a/fs/ntfs/file.c b/fs/ntfs/file.c
-index 88747217ba61..40e01704ea8f 100644
+index 40e01704ea8f..da85cbae2420 100644
 --- a/fs/ntfs/file.c
 +++ b/fs/ntfs/file.c
-@@ -364,7 +364,7 @@ int ntfs_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
- 	return err;
- }
- 
--int ntfs_getattr(struct mnt_idmap *idmap, const struct path *path,
-+int ntfs_getattr(const struct mnt_idmap *idmap, const struct path *path,
- 		struct kstat *stat, unsigned int request_mask,
- 		unsigned int query_flags)
+@@ -294,7 +294,7 @@ static int ntfs_setattr_size(struct inode *vi, struct iattr *attr)
+  * NOTE: Changes in inode size are not supported yet for compressed or
+  * encrypted files.
+  */
+-int ntfs_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++int ntfs_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 		 struct iattr *attr)
  {
+ 	struct inode *vi = d_inode(dentry);
 diff --git a/fs/ntfs/inode.h b/fs/ntfs/inode.h
-index ff61bd402df0..9cf923911825 100644
+index 9cf923911825..45a396c97846 100644
 --- a/fs/ntfs/inode.h
 +++ b/fs/ntfs/inode.h
-@@ -332,7 +332,7 @@ int ntfs_truncate_vfs(struct inode *vi, loff_t new_size, loff_t i_size);
+@@ -330,7 +330,7 @@ int ntfs_read_inode_mount(struct inode *vi);
+ int ntfs_show_options(struct seq_file *sf, struct dentry *root);
+ int ntfs_truncate_vfs(struct inode *vi, loff_t new_size, loff_t i_size);
  
- int ntfs_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
+-int ntfs_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++int ntfs_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
  		 struct iattr *attr);
--int ntfs_getattr(struct mnt_idmap *idmap, const struct path *path,
-+int ntfs_getattr(const struct mnt_idmap *idmap, const struct path *path,
+ int ntfs_getattr(const struct mnt_idmap *idmap, const struct path *path,
  		struct kstat *stat, unsigned int request_mask,
- 		unsigned int query_flags);
- 
 diff --git a/fs/ntfs3/file.c b/fs/ntfs3/file.c
-index f7baa202dc28..f4d08346d25d 100644
+index f4d08346d25d..52e1cd969e06 100644
 --- a/fs/ntfs3/file.c
 +++ b/fs/ntfs3/file.c
-@@ -261,7 +261,7 @@ long ntfs_compat_ioctl(struct file *filp, u32 cmd, unsigned long arg)
+@@ -703,7 +703,7 @@ static long ntfs_fallocate(struct file *file, int mode, loff_t vbo, loff_t len)
  /*
-  * ntfs_getattr - inode_operations::getattr
+  * ntfs_setattr - inode_operations::setattr
   */
--int ntfs_getattr(struct mnt_idmap *idmap, const struct path *path,
-+int ntfs_getattr(const struct mnt_idmap *idmap, const struct path *path,
- 		 struct kstat *stat, u32 request_mask, u32 flags)
+-int ntfs_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++int ntfs_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 		 struct iattr *attr)
  {
- 	struct inode *inode = d_inode(path->dentry);
+ 	struct inode *inode = d_inode(dentry);
 diff --git a/fs/ntfs3/ntfs_fs.h b/fs/ntfs3/ntfs_fs.h
-index d89609a17886..262b7ff2d6e1 100644
+index 262b7ff2d6e1..ea24126c70db 100644
 --- a/fs/ntfs3/ntfs_fs.h
 +++ b/fs/ntfs3/ntfs_fs.h
-@@ -553,7 +553,7 @@ extern const struct file_operations ntfs_dir_operations;
- int ntfs_fileattr_get(struct dentry *dentry, struct file_kattr *fa);
- int ntfs_fileattr_set(const struct mnt_idmap *idmap, struct dentry *dentry,
+@@ -555,7 +555,7 @@ int ntfs_fileattr_set(const struct mnt_idmap *idmap, struct dentry *dentry,
  		      struct file_kattr *fa);
--int ntfs_getattr(struct mnt_idmap *idmap, const struct path *path,
-+int ntfs_getattr(const struct mnt_idmap *idmap, const struct path *path,
+ int ntfs_getattr(const struct mnt_idmap *idmap, const struct path *path,
  		 struct kstat *stat, u32 request_mask, u32 flags);
- int ntfs_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
+-int ntfs_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++int ntfs_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
  		 struct iattr *attr);
+ int ntfs_file_open(struct inode *inode, struct file *file);
+ int ntfs_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
+diff --git a/fs/ocfs2/dlmfs/dlmfs.c b/fs/ocfs2/dlmfs/dlmfs.c
+index fef79b21a4a5..d3bfcada3e3b 100644
+--- a/fs/ocfs2/dlmfs/dlmfs.c
++++ b/fs/ocfs2/dlmfs/dlmfs.c
+@@ -188,7 +188,7 @@ static int dlmfs_file_release(struct inode *inode,
+  * We do ->setattr() just to override size changes.  Our size is the size
+  * of the LVB and nothing else.
+  */
+-static int dlmfs_file_setattr(struct mnt_idmap *idmap,
++static int dlmfs_file_setattr(const struct mnt_idmap *idmap,
+ 			      struct dentry *dentry, struct iattr *attr)
+ {
+ 	int error;
 diff --git a/fs/ocfs2/file.c b/fs/ocfs2/file.c
-index 24bbf607546c..befc6ebb2a06 100644
+index befc6ebb2a06..62f45a1b5ca1 100644
 --- a/fs/ocfs2/file.c
 +++ b/fs/ocfs2/file.c
-@@ -1317,7 +1317,7 @@ int ocfs2_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
- 	return status;
+@@ -1117,7 +1117,7 @@ static int ocfs2_extend_file(struct inode *inode,
+ 	return ret;
  }
  
--int ocfs2_getattr(struct mnt_idmap *idmap, const struct path *path,
-+int ocfs2_getattr(const struct mnt_idmap *idmap, const struct path *path,
- 		  struct kstat *stat, u32 request_mask, unsigned int flags)
+-int ocfs2_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++int ocfs2_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 		  struct iattr *attr)
  {
- 	struct inode *inode = d_inode(path->dentry);
+ 	int status = 0, size_change;
 diff --git a/fs/ocfs2/file.h b/fs/ocfs2/file.h
-index 08e4d6796531..b51c8e77dad7 100644
+index b51c8e77dad7..97492ee5789e 100644
 --- a/fs/ocfs2/file.h
 +++ b/fs/ocfs2/file.h
-@@ -52,7 +52,7 @@ int ocfs2_zero_extend(struct inode *inode, struct buffer_head *di_bh,
+@@ -50,7 +50,7 @@ int ocfs2_extend_no_holes(struct inode *inode, struct buffer_head *di_bh,
+ 			  u64 new_i_size, u64 zero_to);
+ int ocfs2_zero_extend(struct inode *inode, struct buffer_head *di_bh,
  		      loff_t zero_to);
- int ocfs2_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
+-int ocfs2_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++int ocfs2_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
  		  struct iattr *attr);
--int ocfs2_getattr(struct mnt_idmap *idmap, const struct path *path,
-+int ocfs2_getattr(const struct mnt_idmap *idmap, const struct path *path,
+ int ocfs2_getattr(const struct mnt_idmap *idmap, const struct path *path,
  		  struct kstat *stat, u32 request_mask, unsigned int flags);
- int ocfs2_permission(const struct mnt_idmap *idmap,
- 		     struct inode *inode,
+diff --git a/fs/omfs/file.c b/fs/omfs/file.c
+index 28f3b113340e..79a413f1dc0d 100644
+--- a/fs/omfs/file.c
++++ b/fs/omfs/file.c
+@@ -338,7 +338,7 @@ const struct file_operations omfs_file_operations = {
+ 	.splice_read = filemap_splice_read,
+ };
+ 
+-static int omfs_setattr(struct mnt_idmap *idmap,
++static int omfs_setattr(const struct mnt_idmap *idmap,
+ 			struct dentry *dentry, struct iattr *attr)
+ {
+ 	struct inode *inode = d_inode(dentry);
 diff --git a/fs/orangefs/inode.c b/fs/orangefs/inode.c
-index 536d5e842c55..100669ee5862 100644
+index 100669ee5862..75ac1e485e35 100644
 --- a/fs/orangefs/inode.c
 +++ b/fs/orangefs/inode.c
-@@ -848,7 +848,7 @@ int orangefs_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
+@@ -828,7 +828,7 @@ int __orangefs_setattr_mode(struct dentry *dentry, struct iattr *iattr)
  /*
-  * Obtain attributes of an object given a dentry
+  * Change attributes of an object referenced by dentry.
   */
--int orangefs_getattr(struct mnt_idmap *idmap, const struct path *path,
-+int orangefs_getattr(const struct mnt_idmap *idmap, const struct path *path,
- 		     struct kstat *stat, u32 request_mask, unsigned int flags)
+-int orangefs_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++int orangefs_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 		     struct iattr *iattr)
  {
  	int ret;
 diff --git a/fs/orangefs/orangefs-kernel.h b/fs/orangefs/orangefs-kernel.h
-index a5c9e7be4005..3bf01c0c763b 100644
+index 3bf01c0c763b..348fe340c5d5 100644
 --- a/fs/orangefs/orangefs-kernel.h
 +++ b/fs/orangefs/orangefs-kernel.h
-@@ -354,7 +354,7 @@ int __orangefs_setattr(struct inode *, struct iattr *);
+@@ -352,7 +352,7 @@ struct inode *orangefs_new_inode(struct super_block *sb,
+ 
+ int __orangefs_setattr(struct inode *, struct iattr *);
  int __orangefs_setattr_mode(struct dentry *dentry, struct iattr *iattr);
- int orangefs_setattr(struct mnt_idmap *, struct dentry *, struct iattr *);
+-int orangefs_setattr(struct mnt_idmap *, struct dentry *, struct iattr *);
++int orangefs_setattr(const struct mnt_idmap *, struct dentry *, struct iattr *);
  
--int orangefs_getattr(struct mnt_idmap *idmap, const struct path *path,
-+int orangefs_getattr(const struct mnt_idmap *idmap, const struct path *path,
+ int orangefs_getattr(const struct mnt_idmap *idmap, const struct path *path,
  		     struct kstat *stat, u32 request_mask, unsigned int flags);
- 
- int orangefs_permission(const struct mnt_idmap *idmap,
 diff --git a/fs/overlayfs/inode.c b/fs/overlayfs/inode.c
-index 18e4cbe154cf..b765780686e6 100644
+index b765780686e6..622e9bb833af 100644
 --- a/fs/overlayfs/inode.c
 +++ b/fs/overlayfs/inode.c
-@@ -168,7 +168,7 @@ static inline int ovl_real_getattr_nosec(struct super_block *sb,
- 		return vfs_getattr_nosec(path, stat, request_mask, flags);
- }
+@@ -18,7 +18,7 @@
+ #include "overlayfs.h"
  
--int ovl_getattr(struct mnt_idmap *idmap, const struct path *path,
-+int ovl_getattr(const struct mnt_idmap *idmap, const struct path *path,
- 		struct kstat *stat, u32 request_mask, unsigned int flags)
+ 
+-int ovl_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++int ovl_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 		struct iattr *attr)
  {
- 	struct dentry *dentry = path->dentry;
+ 	int err;
 diff --git a/fs/overlayfs/overlayfs.h b/fs/overlayfs/overlayfs.h
-index 1759221dcad5..02a822dc8e5e 100644
+index 02a822dc8e5e..f0eac9ae1e38 100644
 --- a/fs/overlayfs/overlayfs.h
 +++ b/fs/overlayfs/overlayfs.h
-@@ -950,6 +950,6 @@ static inline bool ovl_force_readonly(struct ovl_fs *ofs)
+@@ -948,7 +948,7 @@ static inline bool ovl_force_readonly(struct ovl_fs *ofs)
+ /* xattr.c */
+ 
  const struct xattr_handler * const *ovl_xattr_handlers(struct ovl_fs *ofs);
- int ovl_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
+-int ovl_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++int ovl_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
  		struct iattr *attr);
--int ovl_getattr(struct mnt_idmap *idmap, const struct path *path,
-+int ovl_getattr(const struct mnt_idmap *idmap, const struct path *path,
+ int ovl_getattr(const struct mnt_idmap *idmap, const struct path *path,
  		struct kstat *stat, u32 request_mask, unsigned int flags);
- ssize_t ovl_listxattr(struct dentry *dentry, char *list, size_t size);
 diff --git a/fs/pidfs.c b/fs/pidfs.c
-index 5bc136de8660..38868ac99950 100644
+index 38868ac99950..c37c17bcdbdc 100644
 --- a/fs/pidfs.c
 +++ b/fs/pidfs.c
-@@ -829,7 +829,7 @@ static int pidfs_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
- 	return anon_inode_setattr(idmap, dentry, attr);
- }
- 
--static int pidfs_getattr(struct mnt_idmap *idmap, const struct path *path,
-+static int pidfs_getattr(const struct mnt_idmap *idmap, const struct path *path,
- 			 struct kstat *stat, u32 request_mask,
- 			 unsigned int query_flags)
+@@ -823,7 +823,7 @@ static struct vfsmount *pidfs_mnt __ro_after_init;
+  * implemented. Let's reject it completely until we have a clean
+  * permission concept for pidfds.
+  */
+-static int pidfs_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++static int pidfs_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 			 struct iattr *attr)
  {
+ 	return anon_inode_setattr(idmap, dentry, attr);
 diff --git a/fs/proc/base.c b/fs/proc/base.c
-index 8dc43c846298..3278c37e5cde 100644
+index 3278c37e5cde..5a18636ba81f 100644
 --- a/fs/proc/base.c
 +++ b/fs/proc/base.c
-@@ -1994,7 +1994,7 @@ static struct inode *proc_pid_make_base_inode(struct super_block *sb,
- 	return inode;
- }
+@@ -702,7 +702,7 @@ static int proc_pid_syscall(struct seq_file *m, struct pid_namespace *ns,
+ /*                       Here the fs part begins                        */
+ /************************************************************************/
  
--int pid_getattr(struct mnt_idmap *idmap, const struct path *path,
-+int pid_getattr(const struct mnt_idmap *idmap, const struct path *path,
- 		struct kstat *stat, u32 request_mask, unsigned int query_flags)
+-int proc_nochmod_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++int proc_nochmod_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 		 struct iattr *attr)
  {
- 	struct inode *inode = d_inode(path->dentry);
-@@ -3936,7 +3936,7 @@ static int proc_task_readdir(struct file *file, struct dir_context *ctx)
- 	return 0;
- }
- 
--static int proc_task_getattr(struct mnt_idmap *idmap,
-+static int proc_task_getattr(const struct mnt_idmap *idmap,
- 			     const struct path *path, struct kstat *stat,
- 			     u32 request_mask, unsigned int query_flags)
- {
-diff --git a/fs/proc/fd.c b/fs/proc/fd.c
-index 0653bceb730d..7214a7495380 100644
---- a/fs/proc/fd.c
-+++ b/fs/proc/fd.c
-@@ -342,7 +342,7 @@ int proc_fd_permission(const struct mnt_idmap *idmap,
- 	return rv;
- }
- 
--static int proc_fd_getattr(struct mnt_idmap *idmap,
-+static int proc_fd_getattr(const struct mnt_idmap *idmap,
- 			const struct path *path, struct kstat *stat,
- 			u32 request_mask, unsigned int query_flags)
- {
+ 	int error;
 diff --git a/fs/proc/generic.c b/fs/proc/generic.c
-index 26086a283672..4c4f1e63f68f 100644
+index 4c4f1e63f68f..2b1971da4a85 100644
 --- a/fs/proc/generic.c
 +++ b/fs/proc/generic.c
-@@ -135,7 +135,7 @@ static int proc_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
- 	return 0;
+@@ -117,7 +117,7 @@ static bool pde_subdir_insert(struct proc_dir_entry *dir,
+ 	return true;
  }
  
--static int proc_getattr(struct mnt_idmap *idmap,
-+static int proc_getattr(const struct mnt_idmap *idmap,
- 			const struct path *path, struct kstat *stat,
- 			u32 request_mask, unsigned int query_flags)
+-static int proc_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++static int proc_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 		struct iattr *iattr)
  {
+ 	struct inode *inode = d_inode(dentry);
 diff --git a/fs/proc/internal.h b/fs/proc/internal.h
-index 04bd6c9e65a7..706fae7d30be 100644
+index 706fae7d30be..b9aaac41c283 100644
 --- a/fs/proc/internal.h
 +++ b/fs/proc/internal.h
-@@ -258,7 +258,7 @@ extern int proc_pid_statm(struct seq_file *, struct pid_namespace *,
-  * base.c
-  */
+@@ -260,7 +260,7 @@ extern int proc_pid_statm(struct seq_file *, struct pid_namespace *,
  extern const struct dentry_operations pid_dentry_operations;
--extern int pid_getattr(struct mnt_idmap *, const struct path *,
-+extern int pid_getattr(const struct mnt_idmap *, const struct path *,
+ extern int pid_getattr(const struct mnt_idmap *, const struct path *,
  		       struct kstat *, u32, unsigned int);
- int proc_nochmod_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
+-int proc_nochmod_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++int proc_nochmod_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
  			struct iattr *attr);
-diff --git a/fs/proc/proc_net.c b/fs/proc/proc_net.c
-index 00cc385bce21..b1f5eafb069a 100644
---- a/fs/proc/proc_net.c
-+++ b/fs/proc/proc_net.c
-@@ -308,7 +308,7 @@ static struct dentry *proc_tgid_net_lookup(struct inode *dir,
- 	return de;
- }
- 
--static int proc_tgid_net_getattr(struct mnt_idmap *idmap,
-+static int proc_tgid_net_getattr(const struct mnt_idmap *idmap,
- 				 const struct path *path, struct kstat *stat,
- 				 u32 request_mask, unsigned int query_flags)
- {
+ extern void proc_pid_evict_inode(struct proc_inode *);
+ extern struct inode *proc_pid_make_inode(struct super_block *, struct task_struct *, umode_t);
 diff --git a/fs/proc/proc_sysctl.c b/fs/proc/proc_sysctl.c
-index 5315d891f244..bd6730000b27 100644
+index bd6730000b27..d1cfd2941359 100644
 --- a/fs/proc/proc_sysctl.c
 +++ b/fs/proc/proc_sysctl.c
-@@ -834,7 +834,7 @@ static int proc_sys_setattr(struct mnt_idmap *idmap,
+@@ -817,7 +817,7 @@ static int proc_sys_permission(const struct mnt_idmap *idmap,
+ 	return error;
+ }
+ 
+-static int proc_sys_setattr(struct mnt_idmap *idmap,
++static int proc_sys_setattr(const struct mnt_idmap *idmap,
+ 			    struct dentry *dentry, struct iattr *attr)
+ {
+ 	struct inode *inode = d_inode(dentry);
+diff --git a/fs/ramfs/file-nommu.c b/fs/ramfs/file-nommu.c
+index fb471bf88ab7..7ed6fba134c6 100644
+--- a/fs/ramfs/file-nommu.c
++++ b/fs/ramfs/file-nommu.c
+@@ -22,7 +22,7 @@
+ #include <linux/uaccess.h>
+ #include "internal.h"
+ 
+-static int ramfs_nommu_setattr(struct mnt_idmap *, struct dentry *, struct iattr *);
++static int ramfs_nommu_setattr(const struct mnt_idmap *, struct dentry *, struct iattr *);
+ static unsigned long ramfs_nommu_get_unmapped_area(struct file *file,
+ 						   unsigned long addr,
+ 						   unsigned long len,
+@@ -161,7 +161,7 @@ static int ramfs_nommu_resize(struct inode *inode, loff_t newsize, loff_t size)
+  * handle a change of attributes
+  * - we're specifically interested in a change of size
+  */
+-static int ramfs_nommu_setattr(struct mnt_idmap *idmap,
++static int ramfs_nommu_setattr(const struct mnt_idmap *idmap,
+ 			       struct dentry *dentry, struct iattr *ia)
+ {
+ 	struct inode *inode = d_inode(dentry);
+diff --git a/fs/smb/client/cifsfs.h b/fs/smb/client/cifsfs.h
+index c0adc5219213..51692e14c4dd 100644
+--- a/fs/smb/client/cifsfs.h
++++ b/fs/smb/client/cifsfs.h
+@@ -80,7 +80,7 @@ int cifs_revalidate_mapping(struct inode *inode);
+ int cifs_zap_mapping(struct inode *inode);
+ int cifs_getattr(const struct mnt_idmap *idmap, const struct path *path,
+ 		 struct kstat *stat, u32 request_mask, unsigned int flags);
+-int cifs_setattr(struct mnt_idmap *idmap, struct dentry *direntry,
++int cifs_setattr(const struct mnt_idmap *idmap, struct dentry *direntry,
+ 		 struct iattr *attrs);
+ int cifs_fiemap(struct inode *inode, struct fiemap_extent_info *fei, u64 start,
+ 		u64 len);
+diff --git a/fs/smb/client/inode.c b/fs/smb/client/inode.c
+index 132f9e072b77..248b7891e687 100644
+--- a/fs/smb/client/inode.c
++++ b/fs/smb/client/inode.c
+@@ -3549,7 +3549,7 @@ cifs_setattr_nounix(struct dentry *direntry, struct iattr *attrs)
+ }
+ 
+ int
+-cifs_setattr(struct mnt_idmap *idmap, struct dentry *direntry,
++cifs_setattr(const struct mnt_idmap *idmap, struct dentry *direntry,
+ 	     struct iattr *attrs)
+ {
+ 	struct cifs_sb_info *cifs_sb = CIFS_SB(direntry->d_sb);
+diff --git a/fs/tracefs/event_inode.c b/fs/tracefs/event_inode.c
+index 6e3513b13cfa..6f6daac88621 100644
+--- a/fs/tracefs/event_inode.c
++++ b/fs/tracefs/event_inode.c
+@@ -182,7 +182,7 @@ static void update_attr(struct eventfs_attr *attr, struct iattr *iattr)
+ 	}
+ }
+ 
+-static int eventfs_set_attr(struct mnt_idmap *idmap, struct dentry *dentry,
++static int eventfs_set_attr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 			    struct iattr *iattr)
+ {
+ 	const struct eventfs_entry *entry;
+diff --git a/fs/tracefs/inode.c b/fs/tracefs/inode.c
+index 44448f1a2bb1..5020365ca704 100644
+--- a/fs/tracefs/inode.c
++++ b/fs/tracefs/inode.c
+@@ -207,7 +207,7 @@ static int tracefs_getattr(const struct mnt_idmap *idmap,
  	return 0;
  }
  
--static int proc_sys_getattr(struct mnt_idmap *idmap,
-+static int proc_sys_getattr(const struct mnt_idmap *idmap,
- 			    const struct path *path, struct kstat *stat,
- 			    u32 request_mask, unsigned int query_flags)
+-static int tracefs_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++static int tracefs_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 			   struct iattr *attr)
  {
-diff --git a/fs/proc/root.c b/fs/proc/root.c
-index 99adddfeb4a4..7fbbe92bf73a 100644
---- a/fs/proc/root.c
-+++ b/fs/proc/root.c
-@@ -402,7 +402,7 @@ void __init proc_root_init(void)
- 	register_filesystem(&proc_fs_type);
- }
- 
--static int proc_root_getattr(struct mnt_idmap *idmap,
-+static int proc_root_getattr(const struct mnt_idmap *idmap,
- 			     const struct path *path, struct kstat *stat,
- 			     u32 request_mask, unsigned int query_flags)
- {
-diff --git a/fs/smb/client/cifsfs.h b/fs/smb/client/cifsfs.h
-index cf09d915bedd..c0adc5219213 100644
---- a/fs/smb/client/cifsfs.h
-+++ b/fs/smb/client/cifsfs.h
-@@ -78,7 +78,7 @@ int cifs_revalidate_file(struct file *filp);
- int cifs_revalidate_dentry(struct dentry *dentry);
- int cifs_revalidate_mapping(struct inode *inode);
- int cifs_zap_mapping(struct inode *inode);
--int cifs_getattr(struct mnt_idmap *idmap, const struct path *path,
-+int cifs_getattr(const struct mnt_idmap *idmap, const struct path *path,
- 		 struct kstat *stat, u32 request_mask, unsigned int flags);
- int cifs_setattr(struct mnt_idmap *idmap, struct dentry *direntry,
- 		 struct iattr *attrs);
-diff --git a/fs/smb/client/inode.c b/fs/smb/client/inode.c
-index e3610e456bd4..132f9e072b77 100644
---- a/fs/smb/client/inode.c
-+++ b/fs/smb/client/inode.c
-@@ -2932,7 +2932,7 @@ int cifs_revalidate_dentry(struct dentry *dentry)
- 	return cifs_revalidate_mapping(inode);
- }
- 
--int cifs_getattr(struct mnt_idmap *idmap, const struct path *path,
-+int cifs_getattr(const struct mnt_idmap *idmap, const struct path *path,
- 		 struct kstat *stat, u32 request_mask, unsigned int flags)
- {
- 	struct cifs_sb_info *cifs_sb = CIFS_SB(path->dentry);
-diff --git a/fs/stat.c b/fs/stat.c
-index c461c3054234..fe351818d1d6 100644
---- a/fs/stat.c
-+++ b/fs/stat.c
-@@ -79,7 +79,7 @@ EXPORT_SYMBOL(fill_mg_cmtime);
-  * uid and gid filds. On non-idmapped mounts or if permission checking is to be
-  * performed on the raw inode simply pass @nop_mnt_idmap.
-  */
--void generic_fillattr(struct mnt_idmap *idmap, u32 request_mask,
-+void generic_fillattr(const struct mnt_idmap *idmap, u32 request_mask,
- 		      struct inode *inode, struct kstat *stat)
- {
- 	vfsuid_t vfsuid = i_uid_into_vfsuid(idmap, inode);
-diff --git a/fs/tracefs/inode.c b/fs/tracefs/inode.c
-index 995b8d0f8d33..44448f1a2bb1 100644
---- a/fs/tracefs/inode.c
-+++ b/fs/tracefs/inode.c
-@@ -196,7 +196,7 @@ static int tracefs_permission(const struct mnt_idmap *idmap,
- 	return generic_permission(idmap, inode, mask);
- }
- 
--static int tracefs_getattr(struct mnt_idmap *idmap,
-+static int tracefs_getattr(const struct mnt_idmap *idmap,
- 			   const struct path *path, struct kstat *stat,
- 			   u32 request_mask, unsigned int flags)
- {
-diff --git a/fs/ubifs/dir.c b/fs/ubifs/dir.c
-index 57640b6ff72d..c67954f6bee0 100644
---- a/fs/ubifs/dir.c
-+++ b/fs/ubifs/dir.c
-@@ -1667,7 +1667,7 @@ static int ubifs_rename(const struct mnt_idmap *idmap,
- 	return do_rename(old_dir, old_dentry, new_dir, new_dentry, flags);
- }
- 
--int ubifs_getattr(struct mnt_idmap *idmap, const struct path *path,
-+int ubifs_getattr(const struct mnt_idmap *idmap, const struct path *path,
- 		  struct kstat *stat, u32 request_mask, unsigned int flags)
- {
- 	loff_t size;
+ 	unsigned int ia_valid = attr->ia_valid;
 diff --git a/fs/ubifs/file.c b/fs/ubifs/file.c
-index e73c28b12f97..bfc1bd0203ad 100644
+index bfc1bd0203ad..244b835fc82a 100644
 --- a/fs/ubifs/file.c
 +++ b/fs/ubifs/file.c
-@@ -1611,7 +1611,7 @@ static const char *ubifs_get_link(struct dentry *dentry,
- 	return fscrypt_get_symlink(inode, ui->data, ui->data_len, done);
- }
- 
--static int ubifs_symlink_getattr(struct mnt_idmap *idmap,
-+static int ubifs_symlink_getattr(const struct mnt_idmap *idmap,
- 				 const struct path *path, struct kstat *stat,
- 				 u32 request_mask, unsigned int query_flags)
- {
-diff --git a/fs/ubifs/ubifs.h b/fs/ubifs/ubifs.h
-index af0ef3583aeb..d455a67fe411 100644
---- a/fs/ubifs/ubifs.h
-+++ b/fs/ubifs/ubifs.h
-@@ -2028,7 +2028,7 @@ int ubifs_update_time(struct inode *inode, enum fs_update_time type,
- /* dir.c */
- struct inode *ubifs_new_inode(struct ubifs_info *c, struct inode *dir,
- 			      umode_t mode, bool is_xattr);
--int ubifs_getattr(struct mnt_idmap *idmap, const struct path *path,
-+int ubifs_getattr(const struct mnt_idmap *idmap, const struct path *path,
- 		  struct kstat *stat, u32 request_mask, unsigned int flags);
- int ubifs_check_dir_empty(struct inode *dir);
- 
-diff --git a/fs/udf/symlink.c b/fs/udf/symlink.c
-index a05d1888a2ba..df41bf5a05b1 100644
---- a/fs/udf/symlink.c
-+++ b/fs/udf/symlink.c
-@@ -133,7 +133,7 @@ static int udf_symlink_filler(struct file *file, struct folio *folio)
+@@ -1251,7 +1251,7 @@ static int do_setattr(struct ubifs_info *c, struct inode *inode,
  	return err;
  }
  
--static int udf_symlink_getattr(struct mnt_idmap *idmap,
-+static int udf_symlink_getattr(const struct mnt_idmap *idmap,
- 			       const struct path *path, struct kstat *stat,
- 			       u32 request_mask, unsigned int flags)
+-int ubifs_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++int ubifs_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 		  struct iattr *attr)
  {
+ 	int err;
+diff --git a/fs/ubifs/ubifs.h b/fs/ubifs/ubifs.h
+index d455a67fe411..b85b45a0564b 100644
+--- a/fs/ubifs/ubifs.h
++++ b/fs/ubifs/ubifs.h
+@@ -2020,7 +2020,7 @@ int ubifs_calc_dark(const struct ubifs_info *c, int spc);
+ 
+ /* file.c */
+ int ubifs_fsync(struct file *file, loff_t start, loff_t end, int datasync);
+-int ubifs_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++int ubifs_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 		  struct iattr *attr);
+ int ubifs_update_time(struct inode *inode, enum fs_update_time type,
+ 		      unsigned int flags);
+diff --git a/fs/udf/file.c b/fs/udf/file.c
+index 57d11606a2a7..02e9314818dc 100644
+--- a/fs/udf/file.c
++++ b/fs/udf/file.c
+@@ -212,7 +212,7 @@ const struct file_operations udf_file_operations = {
+ 	.setlease		= generic_setlease,
+ };
+ 
+-static int udf_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++static int udf_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 		       struct iattr *attr)
+ {
+ 	struct inode *inode = d_inode(dentry);
+diff --git a/fs/ufs/inode.c b/fs/ufs/inode.c
+index 440d014cc5ed..c9ff8673fa66 100644
+--- a/fs/ufs/inode.c
++++ b/fs/ufs/inode.c
+@@ -1195,7 +1195,7 @@ static int ufs_truncate(struct inode *inode, loff_t size)
+ 	return err;
+ }
+ 
+-int ufs_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++int ufs_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 		struct iattr *attr)
+ {
+ 	struct inode *inode = d_inode(dentry);
+diff --git a/fs/ufs/ufs.h b/fs/ufs/ufs.h
+index 788e025056b2..541566f5b5fb 100644
+--- a/fs/ufs/ufs.h
++++ b/fs/ufs/ufs.h
+@@ -120,7 +120,7 @@ extern struct inode *ufs_iget(struct super_block *, unsigned long);
+ extern int ufs_write_inode (struct inode *, struct writeback_control *);
+ extern int ufs_sync_inode (struct inode *);
+ extern void ufs_evict_inode (struct inode *);
+-extern int ufs_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++extern int ufs_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 		       struct iattr *attr);
+ 
+ /* namei.c */
 diff --git a/fs/vboxsf/utils.c b/fs/vboxsf/utils.c
-index 298bfc93255c..6a5a47a32075 100644
+index 6a5a47a32075..8775fbee1ce6 100644
 --- a/fs/vboxsf/utils.c
 +++ b/fs/vboxsf/utils.c
-@@ -233,7 +233,7 @@ int vboxsf_inode_revalidate(struct dentry *dentry)
+@@ -258,7 +258,7 @@ int vboxsf_getattr(const struct mnt_idmap *idmap, const struct path *path,
  	return 0;
  }
  
--int vboxsf_getattr(struct mnt_idmap *idmap, const struct path *path,
-+int vboxsf_getattr(const struct mnt_idmap *idmap, const struct path *path,
- 		   struct kstat *kstat, u32 request_mask, unsigned int flags)
+-int vboxsf_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++int vboxsf_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 		   struct iattr *iattr)
  {
- 	int err;
+ 	struct vboxsf_inode *sf_i = VBOXSF_I(d_inode(dentry));
 diff --git a/fs/vboxsf/vfsmod.h b/fs/vboxsf/vfsmod.h
-index b61afd0ce842..9c713b8e7aa2 100644
+index 9c713b8e7aa2..59a4e44c4005 100644
 --- a/fs/vboxsf/vfsmod.h
 +++ b/fs/vboxsf/vfsmod.h
-@@ -98,7 +98,7 @@ int vboxsf_stat(struct vboxsf_sbi *sbi, struct shfl_string *path,
- 		struct shfl_fsobjinfo *info);
- int vboxsf_stat_dentry(struct dentry *dentry, struct shfl_fsobjinfo *info);
- int vboxsf_inode_revalidate(struct dentry *dentry);
--int vboxsf_getattr(struct mnt_idmap *idmap, const struct path *path,
-+int vboxsf_getattr(const struct mnt_idmap *idmap, const struct path *path,
+@@ -101,7 +101,7 @@ int vboxsf_inode_revalidate(struct dentry *dentry);
+ int vboxsf_getattr(const struct mnt_idmap *idmap, const struct path *path,
  		   struct kstat *kstat, u32 request_mask,
  		   unsigned int query_flags);
- int vboxsf_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
+-int vboxsf_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++int vboxsf_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 		   struct iattr *iattr);
+ struct shfl_string *vboxsf_path_from_dentry(struct vboxsf_sbi *sbi,
+ 					    struct dentry *dentry);
 diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 791af2db7124..19fd83cea18b 100644
+index 19fd83cea18b..535e8a9e071e 100644
 --- a/fs/xfs/xfs_iops.c
 +++ b/fs/xfs/xfs_iops.c
-@@ -679,7 +679,7 @@ xfs_report_atomic_write(
+@@ -1130,7 +1130,7 @@ xfs_vn_setattr_size(
  
  STATIC int
- xfs_vn_getattr(
+ xfs_vn_setattr(
 -	struct mnt_idmap	*idmap,
 +	const struct mnt_idmap	*idmap,
- 	const struct path	*path,
- 	struct kstat		*stat,
- 	u32			request_mask,
+ 	struct dentry		*dentry,
+ 	struct iattr		*iattr)
+ {
+diff --git a/fs/zonefs/super.c b/fs/zonefs/super.c
+index ff43d6d1ea30..b97f1f2b8dda 100644
+--- a/fs/zonefs/super.c
++++ b/fs/zonefs/super.c
+@@ -533,7 +533,7 @@ static int zonefs_show_options(struct seq_file *seq, struct dentry *root)
+ 	return 0;
+ }
+ 
+-static int zonefs_inode_setattr(struct mnt_idmap *idmap,
++static int zonefs_inode_setattr(const struct mnt_idmap *idmap,
+ 				struct dentry *dentry, struct iattr *iattr)
+ {
+ 	struct inode *inode = d_inode(dentry);
 diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 2b9ae72010f0..c79fd3776bbf 100644
+index c79fd3776bbf..55d8e7e473ff 100644
 --- a/include/linux/fs.h
 +++ b/include/linux/fs.h
-@@ -2013,7 +2013,7 @@ struct inode_operations {
+@@ -2012,7 +2012,7 @@ struct inode_operations {
+ 		      umode_t,dev_t);
  	int (*rename) (const struct mnt_idmap *, struct inode *, struct dentry *,
  			struct inode *, struct dentry *, unsigned int);
- 	int (*setattr) (struct mnt_idmap *, struct dentry *, struct iattr *);
--	int (*getattr) (struct mnt_idmap *, const struct path *,
-+	int (*getattr) (const struct mnt_idmap *, const struct path *,
+-	int (*setattr) (struct mnt_idmap *, struct dentry *, struct iattr *);
++	int (*setattr) (const struct mnt_idmap *, struct dentry *, struct iattr *);
+ 	int (*getattr) (const struct mnt_idmap *, const struct path *,
  			struct kstat *, u32, unsigned int);
  	ssize_t (*listxattr) (struct dentry *, char *, size_t);
- 	int (*fiemap)(struct inode *, struct fiemap_extent_info *, u64 start,
-@@ -3204,7 +3204,7 @@ extern int page_symlink(struct inode *inode, const char *symname, int len);
- extern const struct inode_operations page_symlink_inode_operations;
- extern void kfree_link(void *);
- void fill_mg_cmtime(struct kstat *stat, u32 request_mask, struct inode *inode);
--void generic_fillattr(struct mnt_idmap *, u32, struct inode *, struct kstat *);
-+void generic_fillattr(const struct mnt_idmap *, u32, struct inode *, struct kstat *);
- void generic_fill_statx_attr(struct inode *inode, struct kstat *stat);
- void generic_fill_statx_atomic_writes(struct kstat *stat,
- 				      unsigned int unit_min,
-@@ -3263,7 +3263,7 @@ extern loff_t dcache_dir_lseek(struct file *, loff_t, int);
+@@ -2707,7 +2707,7 @@ static inline int bmap(struct inode *inode,  sector_t *block)
+ }
+ #endif
+ 
+-int notify_change(struct mnt_idmap *, struct dentry *,
++int notify_change(const struct mnt_idmap *, struct dentry *,
+ 		  struct iattr *, struct delegated_inode *);
+ int inode_permission(const struct mnt_idmap *, struct inode *, int);
+ int generic_permission(const struct mnt_idmap *, struct inode *, int);
+@@ -3261,7 +3261,7 @@ extern int dcache_dir_open(struct inode *, struct file *);
+ extern int dcache_dir_close(struct inode *, struct file *);
+ extern loff_t dcache_dir_lseek(struct file *, loff_t, int);
  extern int dcache_readdir(struct file *, struct dir_context *);
- extern int simple_setattr(struct mnt_idmap *, struct dentry *,
+-extern int simple_setattr(struct mnt_idmap *, struct dentry *,
++extern int simple_setattr(const struct mnt_idmap *, struct dentry *,
  			  struct iattr *);
--extern int simple_getattr(struct mnt_idmap *, const struct path *,
-+extern int simple_getattr(const struct mnt_idmap *, const struct path *,
+ extern int simple_getattr(const struct mnt_idmap *, const struct path *,
  			  struct kstat *, u32, unsigned int);
- extern int simple_statfs(struct dentry *, struct kstatfs *);
- extern int simple_open(struct inode *inode, struct file *file);
+diff --git a/include/linux/lsm_hook_defs.h b/include/linux/lsm_hook_defs.h
+index ad05971e6137..194084f60746 100644
+--- a/include/linux/lsm_hook_defs.h
++++ b/include/linux/lsm_hook_defs.h
+@@ -140,9 +140,9 @@ LSM_HOOK(int, 0, inode_readlink, struct dentry *dentry)
+ LSM_HOOK(int, 0, inode_follow_link, struct dentry *dentry, struct inode *inode,
+ 	 bool rcu)
+ LSM_HOOK(int, 0, inode_permission, struct inode *inode, int mask)
+-LSM_HOOK(int, 0, inode_setattr, struct mnt_idmap *idmap, struct dentry *dentry,
++LSM_HOOK(int, 0, inode_setattr, const struct mnt_idmap *idmap, struct dentry *dentry,
+ 	 struct iattr *attr)
+-LSM_HOOK(void, LSM_RET_VOID, inode_post_setattr, struct mnt_idmap *idmap,
++LSM_HOOK(void, LSM_RET_VOID, inode_post_setattr, const struct mnt_idmap *idmap,
+ 	 struct dentry *dentry, int ia_valid)
+ LSM_HOOK(int, 0, inode_getattr, const struct path *path)
+ LSM_HOOK(int, 0, inode_xattr_skipcap, const char *name)
 diff --git a/include/linux/nfs_fs.h b/include/linux/nfs_fs.h
-index b2828ea03abe..7b307dea7ce7 100644
+index 7b307dea7ce7..d2c716322c6f 100644
 --- a/include/linux/nfs_fs.h
 +++ b/include/linux/nfs_fs.h
-@@ -437,7 +437,7 @@ extern int nfs_refresh_inode(struct inode *, struct nfs_fattr *);
- extern int nfs_post_op_update_inode(struct inode *inode, struct nfs_fattr *fattr);
- extern int nfs_post_op_update_inode_force_wcc(struct inode *inode, struct nfs_fattr *fattr);
- extern int nfs_post_op_update_inode_force_wcc_locked(struct inode *inode, struct nfs_fattr *fattr);
--extern int nfs_getattr(struct mnt_idmap *, const struct path *,
-+extern int nfs_getattr(const struct mnt_idmap *, const struct path *,
- 		       struct kstat *, u32, unsigned int);
- extern void nfs_access_add_cache(struct inode *, struct nfs_access_entry *, const struct cred *);
- extern void nfs_access_set_mask(struct nfs_access_entry *, u32);
+@@ -450,7 +450,7 @@ extern int nfs_clear_invalid_mapping(struct address_space *mapping);
+ extern bool nfs_mapping_need_revalidate_inode(struct inode *inode);
+ extern int nfs_revalidate_mapping(struct inode *inode, struct address_space *mapping);
+ extern int nfs_revalidate_mapping_rcu(struct inode *inode);
+-extern int nfs_setattr(struct mnt_idmap *, struct dentry *, struct iattr *);
++extern int nfs_setattr(const struct mnt_idmap *, struct dentry *, struct iattr *);
+ extern void nfs_setattr_update_inode(struct inode *inode, struct iattr *attr, struct nfs_fattr *);
+ extern void nfs_setsecurity(struct inode *inode, struct nfs_fattr *fattr);
+ extern struct nfs_open_context *get_nfs_open_context(struct nfs_open_context *ctx);
+diff --git a/include/linux/security.h b/include/linux/security.h
+index d4100396da27..c7691feb8f8e 100644
+--- a/include/linux/security.h
++++ b/include/linux/security.h
+@@ -422,9 +422,9 @@ int security_inode_readlink(struct dentry *dentry);
+ int security_inode_follow_link(struct dentry *dentry, struct inode *inode,
+ 			       bool rcu);
+ int security_inode_permission(struct inode *inode, int mask);
+-int security_inode_setattr(struct mnt_idmap *idmap,
++int security_inode_setattr(const struct mnt_idmap *idmap,
+ 			   struct dentry *dentry, struct iattr *attr);
+-void security_inode_post_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++void security_inode_post_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 				 int ia_valid);
+ int security_inode_getattr(const struct path *path);
+ int security_inode_setxattr(const struct mnt_idmap *idmap,
+@@ -979,7 +979,7 @@ static inline int security_inode_permission(struct inode *inode, int mask)
+ 	return 0;
+ }
+ 
+-static inline int security_inode_setattr(struct mnt_idmap *idmap,
++static inline int security_inode_setattr(const struct mnt_idmap *idmap,
+ 					 struct dentry *dentry,
+ 					 struct iattr *attr)
+ {
+@@ -987,7 +987,7 @@ static inline int security_inode_setattr(struct mnt_idmap *idmap,
+ }
+ 
+ static inline void
+-security_inode_post_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++security_inode_post_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 			    int ia_valid)
+ { }
+ 
+diff --git a/mm/secretmem.c b/mm/secretmem.c
+index d29865075b6e..7bb6e426ac6e 100644
+--- a/mm/secretmem.c
++++ b/mm/secretmem.c
+@@ -161,7 +161,7 @@ const struct address_space_operations secretmem_aops = {
+ 	.migrate_folio	= secretmem_migrate_folio,
+ };
+ 
+-static int secretmem_setattr(struct mnt_idmap *idmap,
++static int secretmem_setattr(const struct mnt_idmap *idmap,
+ 			     struct dentry *dentry, struct iattr *iattr)
+ {
+ 	struct inode *inode = d_inode(dentry);
 diff --git a/mm/shmem.c b/mm/shmem.c
-index 656235b2f9c5..b27e5f23dc93 100644
+index b27e5f23dc93..2c086c2b604e 100644
 --- a/mm/shmem.c
 +++ b/mm/shmem.c
-@@ -1292,7 +1292,7 @@ void shmem_truncate_range(struct inode *inode, loff_t lstart, uoff_t lend)
+@@ -1326,7 +1326,7 @@ static int shmem_getattr(const struct mnt_idmap *idmap,
+ 	return 0;
  }
- EXPORT_SYMBOL_GPL(shmem_truncate_range);
  
--static int shmem_getattr(struct mnt_idmap *idmap,
-+static int shmem_getattr(const struct mnt_idmap *idmap,
- 			 const struct path *path, struct kstat *stat,
- 			 u32 request_mask, unsigned int query_flags)
+-static int shmem_setattr(struct mnt_idmap *idmap,
++static int shmem_setattr(const struct mnt_idmap *idmap,
+ 			 struct dentry *dentry, struct iattr *attr)
  {
+ 	struct inode *inode = d_inode(dentry);
+diff --git a/net/socket.c b/net/socket.c
+index 052273ad081a..c0ab6a3ad8ed 100644
+--- a/net/socket.c
++++ b/net/socket.c
+@@ -670,7 +670,7 @@ static ssize_t sockfs_listxattr(struct dentry *dentry, char *buffer,
+ 	return used;
+ }
+ 
+-static int sockfs_setattr(struct mnt_idmap *idmap,
++static int sockfs_setattr(const struct mnt_idmap *idmap,
+ 			  struct dentry *dentry, struct iattr *iattr)
+ {
+ 	int err = simple_setattr(&nop_mnt_idmap, dentry, iattr);
+diff --git a/security/integrity/evm/evm_main.c b/security/integrity/evm/evm_main.c
+index 10a0b39dd9b7..9bfea858df2d 100644
+--- a/security/integrity/evm/evm_main.c
++++ b/security/integrity/evm/evm_main.c
+@@ -956,7 +956,7 @@ static int evm_attr_change(const struct mnt_idmap *idmap,
+  * Permit update of file attributes when files have a valid EVM signature,
+  * except in the case of them having an immutable portable signature.
+  */
+-static int evm_inode_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++static int evm_inode_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 			     struct iattr *attr)
+ {
+ 	unsigned int ia_valid = attr->ia_valid;
+@@ -1008,7 +1008,7 @@ static int evm_inode_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
+  * This function is called from notify_change(), which expects the caller
+  * to lock the inode's i_mutex.
+  */
+-static void evm_inode_post_setattr(struct mnt_idmap *idmap,
++static void evm_inode_post_setattr(const struct mnt_idmap *idmap,
+ 				   struct dentry *dentry, int ia_valid)
+ {
+ 	if (!evm_revalidate_status(NULL))
+diff --git a/security/integrity/ima/ima_appraise.c b/security/integrity/ima/ima_appraise.c
+index cfc20c63a814..659b71e77ac8 100644
+--- a/security/integrity/ima/ima_appraise.c
++++ b/security/integrity/ima/ima_appraise.c
+@@ -634,7 +634,7 @@ void ima_update_xattr(struct ima_iint_cache *iint, struct file *file)
+  * This function is called from notify_change(), which expects the caller
+  * to lock the inode's i_mutex.
+  */
+-static void ima_inode_post_setattr(struct mnt_idmap *idmap,
++static void ima_inode_post_setattr(const struct mnt_idmap *idmap,
+ 				   struct dentry *dentry, int ia_valid)
+ {
+ 	struct inode *inode = d_backing_inode(dentry);
+diff --git a/security/security.c b/security/security.c
+index 9a3ae6746fb3..304048f26d03 100644
+--- a/security/security.c
++++ b/security/security.c
+@@ -1855,7 +1855,7 @@ int security_inode_permission(struct inode *inode, int mask)
+  *
+  * Return: Returns 0 if permission is granted.
+  */
+-int security_inode_setattr(struct mnt_idmap *idmap,
++int security_inode_setattr(const struct mnt_idmap *idmap,
+ 			   struct dentry *dentry, struct iattr *attr)
+ {
+ 	if (unlikely(IS_PRIVATE(d_backing_inode(dentry))))
+@@ -1872,7 +1872,7 @@ EXPORT_SYMBOL_GPL(security_inode_setattr);
+  *
+  * Update inode security field after successful setting file attributes.
+  */
+-void security_inode_post_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++void security_inode_post_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 				 int ia_valid)
+ {
+ 	if (unlikely(IS_PRIVATE(d_backing_inode(dentry))))
+diff --git a/security/selinux/hooks.c b/security/selinux/hooks.c
+index b7c6eba08fdc..1e59fb67dffb 100644
+--- a/security/selinux/hooks.c
++++ b/security/selinux/hooks.c
+@@ -3297,7 +3297,7 @@ static int selinux_inode_permission(struct inode *inode, int requested)
+ 	return rc;
+ }
+ 
+-static int selinux_inode_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++static int selinux_inode_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 				 struct iattr *iattr)
+ {
+ 	const struct cred *cred = current_cred();
+diff --git a/security/smack/smack_lsm.c b/security/smack/smack_lsm.c
+index df4fc6ff26aa..bb78569b3d5b 100644
+--- a/security/smack/smack_lsm.c
++++ b/security/smack/smack_lsm.c
+@@ -1270,7 +1270,7 @@ static int smack_inode_permission(struct inode *inode, int mask)
+  *
+  * Returns 0 if access is permitted, an error code otherwise
+  */
+-static int smack_inode_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++static int smack_inode_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 			       struct iattr *iattr)
+ {
+ 	struct smk_audit_info ad;
+diff --git a/virt/kvm/guest_memfd.c b/virt/kvm/guest_memfd.c
+index 625e62e1a031..5c084d5393a6 100644
+--- a/virt/kvm/guest_memfd.c
++++ b/virt/kvm/guest_memfd.c
+@@ -506,7 +506,7 @@ static const struct address_space_operations kvm_gmem_aops = {
+ #endif
+ };
+ 
+-static int kvm_gmem_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++static int kvm_gmem_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 			    struct iattr *attr)
+ {
+ 	return -EINVAL;
 
 -- 
 2.53.0
