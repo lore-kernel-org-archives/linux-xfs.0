@@ -1,41 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0CFB1DF980
-	for <linux-xfs@vger.kernel.org>; Tue,  1 Sep 2026 08:27:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 944E9310784;
+	Tue,  1 Sep 2026 08:39:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788251278; cv=none; b=Z/NggOAzPXFBn/4OMhVXtJe72u6ljuc7Uv1Zxmd3ny/NPSxG2AFOHPQcq+RBBTbe2uTmfinSgjS8SDFkAPJLSJzGIrNh84S1ZMS27VOKYG9BLc8Jgntz7G2my+0+j1StzI3p4E9HjFSSM4qdtQenl1WEkXADpE4KJETgXeJnjME=
+	t=1788251943; cv=none; b=ntE/UWR3A6QUymEXVvGNVxD9N/WZrCuENneVeU3/zazHqZTwjku7wDMItEJU+nCQSnSbxmdQKcS1+W7lgiB1Wy43zUrJd/l2LOM2DyQUGQ+6LUE4ZPCGkwBp5S3NSPav4spqSRsKyqFK6zcMtIeFYnavbQoDdlwI6BizPXtXqSE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788251278; c=relaxed/simple;
-	bh=DHipKYKODJw6RA1+ObmH6JOvyPgJon25vsiZF/UYL6c=;
+	s=arc-20240116; t=1788251943; c=relaxed/simple;
+	bh=Q8rtIrAI/5YduudyVzsG7RUzA/U5EKFszaVpxqG/Uuk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=AKCBFDKkJgGT6G+zlSBnnkEtyxoDHpYPuv+Yv3qK6Ejx6ShgyE4TjkFNuAWMIq/YbjOj/cmbUj+pn8XeI0MH+SyaE4r5CgseGEp7EpaAPQyyqQIaZ4KDa2CMhQjBzItk8MFnOyYVnRkGuqRrQTacLEvyfRxKEoPhiQnT3Ic1PG8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CfyGC9Mx; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=SBb7bK7YBPp352b2S+gqpTOIU/sX1aZJrfmBMd3T+eHTMgB6CsIKl9s8iZbjeomVEpVDQrBfkRqQb2hiRU2sThSLcPct6uu+GepMw+hRizSw3Pe6QDUN6syhWaQnzejXAa6u21CIqJ0ld5jeLgzsa9Nu3H1uFVVTkfQFqM/zxSY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WJuxSrOJ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CfyGC9Mx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8DA921F000E9;
-	Tue,  1 Sep 2026 08:27:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WJuxSrOJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 53A971F000E9;
+	Tue,  1 Sep 2026 08:38:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788251276;
-	bh=+h735eYwRAWwZyaNh0NXY97WBIyquCPnhelAzj3vYH8=;
+	s=k20260515; t=1788251942;
+	bh=zhkPVoqdfinJ81L4Qda11eGJhGh7cb57yzPtQyej4UY=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=CfyGC9MxEmnMSLAwTK2sRIJct8Vsn5UpoxIx4Pfstqu9GZn3jfg+gQSpwvxAcXDI+
-	 JuJBGuNdSkRrROhQjHi7228tECcZDKKmMkLMK7+dVmRiTeT1R5MZ459ZNYCsAMXzES
-	 YJAcs36Wh7A4h2saqrOhO5d4aPJUyKmwp5zDuHbkLd72BcJa7mwcePzf3ngwpglXMS
-	 dHw3C7KuCyfyg+Op1PG5+LeWHHsJopBHIDUeWNOfYQqesv04wFvFumXnI7UVr596g7
-	 4PDacatA74ANjXpIXVnn5yNk75orbU0LjxFja1OjLNzD0a449kpulwoQl6aQ9RwtVE
-	 2CHc2xzpbxYHQ==
-Date: Tue, 1 Sep 2026 10:27:51 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: Hans Holmberg <hans.holmberg@wdc.com>
-Cc: linux-xfs@vger.kernel.org, hch@lst.de, djwong@kernel.org, 
-	dlemoal@kernel.org, shinichiro.kawasaki@wdc.com, sashiko-bot@kernel.org
-Subject: Re: [PATCH] xfs: prevent race in zoned space reservations
-Message-ID: <apaMXvIq-1eKE7s_@andromeda.toxiclabs.cc>
-References: <20260826123219.73978-1-hans.holmberg@wdc.com>
- <apUqKvNgd1Onghg2@andromeda.toxiclabs.cc>
- <b1cb1564-9ac0-4b34-8526-d5e2b455d757@wdc.com>
+	b=WJuxSrOJHVIaYS/NlK4tlQD+/TDWYLeVY0YHxIv5/5+arLO9bCoXq1XQQn7W0WQTk
+	 OewR+G1WLuEEQ+OVVVUDoXomVVDUtVLtYmSfvmJlgYBvxOEJxQDt+fPlqyfleE0N6x
+	 6JaEjX/c975qqbBneSKvwQ2atHc60iK+VjMn9cDm4V+2e1FMsDIaGHM1F0BA6rubXZ
+	 PRCmjJzQa08KshgjKq3q/5CxJz5kElWeVWNpyAE3dAJJsf7pOFfzmQ6Of1v3ekrRrp
+	 LX0sK1h/kPFqx8mqDAWL/Pvl3zJIQpUTzcOClDHpsD+KDzNFPXWGitJiEhThdYJndt
+	 w4+dB9trevm6g==
+Date: Tue, 1 Sep 2026 20:33:35 +0800
+From: Zorro Lang <zlang@kernel.org>
+To: Anand Jain <asj@kernel.org>
+Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, 
+	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	linux-f2fs-devel@lists.sourceforge.net, djwong@kernel.org
+Subject: Re: [PATCH v8 01/13] fstests: add _loop_image_create_clone() helper
+Message-ID: <apa_4wZ21FydhN8U@zlang-mailbox>
+Mail-Followup-To: Anand Jain <asj@kernel.org>, fstests@vger.kernel.org, 
+	linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	linux-f2fs-devel@lists.sourceforge.net, djwong@kernel.org
+References: <cover.1784949154.git.asj@kernel.org>
+ <4fa4f6bc500e0496e3d8598d38cf69597493a25b.1784949154.git.asj@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,73 +47,129 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <b1cb1564-9ac0-4b34-8526-d5e2b455d757@wdc.com>
+In-Reply-To: <4fa4f6bc500e0496e3d8598d38cf69597493a25b.1784949154.git.asj@kernel.org>
 
-On Tue, Sep 01, 2026 at 09:07:21AM +0200, Hans Holmberg wrote:
-> On 31/08/2026 09:19, Carlos Maiolino wrote:
-> > On Wed, Aug 26, 2026 at 02:32:19PM +0200, Hans Holmberg wrote:
-> >> xfs_zoned_add_available() checks whether the reservation list is empty
-> >> before adding blocks to the available-space counter.  This check is not
-> >> serialized against a task adding itself to the reservation list however.
-> >>
-> >> This allows the space provider to observe an empty list, after which a
-> >> reserver can enqueue itself and retry the counter before the new space is
-> >> added.  The provider then adds the space and returns without waking the
-> >> now-eligible reserver, leaving it asleep until GC or another event
-> >> provides a wakeup, potentially adding seconds to max write latency.
-> >>
-> >> Take the reservation lock before updating the counter and checking the
-> >> list.  Use list_empty() because the list is now inspected under its lock.
-> >>
-> >> Taking a per-mount lock when handing back space is far from ideal, but
-> >> benchmarking with null_blk showed no measurable performance regression.
-> >>
-> >> Fixes: 0bb2193056b5 ("xfs: add support for zoned space reservations")
-> >> Reported-by: Sashiko <sashiko-bot@kernel.org>
-> >> Closes: https://sashiko.dev/#/patchset/20260609075655.1698743-1-hch@lst.de?part=2
-> >> Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
-> >> ---
-> >>  fs/xfs/xfs_zone_space_resv.c | 8 ++++----
-> >>  1 file changed, 4 insertions(+), 4 deletions(-)
-> >>
-> >> diff --git a/fs/xfs/xfs_zone_space_resv.c b/fs/xfs/xfs_zone_space_resv.c
-> >> index 5c6e6ef627e4..7aa3c74fb2e0 100644
-> >> --- a/fs/xfs/xfs_zone_space_resv.c
-> >> +++ b/fs/xfs/xfs_zone_space_resv.c
-> >> @@ -85,13 +85,13 @@ xfs_zoned_add_available(
-> >>  	struct xfs_zone_info		*zi = mp->m_zone_info;
-> >>  	struct xfs_zone_reservation	*reservation;
-> >>  
-> >> -	if (list_empty_careful(&zi->zi_reclaim_reservations)) {
-> >> -		xfs_add_freecounter(mp, XC_FREE_RTAVAILABLE, count_fsb);
-> >> +	spin_lock(&zi->zi_reservation_lock);
-> >> +	xfs_add_freecounter(mp, XC_FREE_RTAVAILABLE, count_fsb);
-> >> +	if (list_empty(&zi->zi_reclaim_reservations)) {
-> >> +		spin_unlock(&zi->zi_reservation_lock);
-> >>  		return;
-> >>  	}
-> >>  
-> >> -	spin_lock(&zi->zi_reservation_lock);
-> >> -	xfs_add_freecounter(mp, XC_FREE_RTAVAILABLE, count_fsb);
-> >>  	count_fsb = xfs_sum_freecounter(mp, XC_FREE_RTAVAILABLE);
-> >>  	list_for_each_entry(reservation, &zi->zi_reclaim_reservations, entry) {
-> >>  		if (reservation->count_fsb > count_fsb)
-> > 
-> > Looks good to me:
-> > 
-> > Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-> > 
-> > FWIW, don't xfs_zoned_reserve_available() might have a similar problem
-> > when decreasing the free counter? I'm not that much literate on zoned,
-> > but a quick look seemed reserving space might hit a similar problem?!
-> > 
+On Sat, Jul 25, 2026 at 03:38:58PM +0800, Anand Jain wrote:
+> Introduce _loop_image_create_clone() and _loop_image_destroy() to mkfs an
+> image file and clone it to another image file, and attach a loop device to
+> them. And its destroy part.
 > 
-> It's a good question, in xfs_zoned_reserve_available, a writer could
-> theoretically race and skip ahead of another writer that was lining up
-> to wait for available space.
+> Signed-off-by: Anand Jain <asj@kernel.org>
+> ---
+>  common/rc | 65 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 65 insertions(+)
 > 
-> So while xfs_zoned_reserve_available is not guaranteed to be 100% fair,
-> I think the alternative (adding the lock on the reserve path) is too costly. 
+> diff --git a/common/rc b/common/rc
+> index 106f044adc2d..e8ff5be0c547 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -1520,6 +1520,71 @@ _scratch_resvblks()
+>  	esac
+>  }
+>  
+> +# Create a small loop image, run an optional tuning function ($2) on it,
+> +# clone it, and attach both to loop devices, returned in ($1).
+> +# Args:
+> +#   $1: Nameref to return the array of allocated loop devices [base, clone].
+> +#   $2: Optional callback function to tune the base filesystem before cloning.
+> +_loop_image_create_clone()
 
-Oh, thanks for looking into it. I certainly didn't think about the costs
-implied here!
+To capture both the relationship and distinction between this function and
+existing _create_loop_device, I'd like to rename it to *_create_cloned_loop_devs*.
+
+> +{
+> +	local -n _ret=$1
+> +	local pre_clone_tune_func="$2"
+> +	local img_file=$TEST_DIR/${seq}.img
+> +	local img_file_clone=$TEST_DIR/${seq}_clone.img
+> +	local size=$(_small_fs_size_mb 128) # Smallest possible
+> +	local loop_devs=()
+> +
+> +	# Since we copy the block device image, we keep its size small.
+> +	_require_fs_space $TEST_DIR $((size * 1024 * 2))
+> +
+> +	_create_file_sized $((size * 1024 * 1024)) $img_file ||
+> +				_fail "Failed: Create $img_file $size"
+> +
+> +	loop_devs=("$(_create_loop_device $img_file)")
+> +
+> +	case $FSTYP in
+> +	xfs)
+> +		_mkfs_dev -s size=4096 "${loop_devs[0]}"
+
+Why xfs needs a specific "-s size=4096" ? Hardcoding this parameter might cause
+failures in certain incompatible environments.
+
+> +		;;
+> +	btrfs)
+> +		_mkfs_dev "${loop_devs[0]}"
+
+If btrfs is handled the same way as the default `*)` branch below, there is
+no need to have a dedicated branch for it.
+
+> +		;;
+> +	*)
+> +		_mkfs_dev "${loop_devs[0]}"
+> +		;;
+> +	esac
+> +
+> +	# Only execute if the function argument is not empty
+> +	if [ -n "$pre_clone_tune_func" ]; then
+> +		$pre_clone_tune_func "${loop_devs[0]}"
+> +	fi
+> +
+> +	sync "${loop_devs[0]}"
+
+Since the mkfs command above operates directly on a loop device, I wanted to
+make sure, can the sync command be targeted at a block device, and does it
+guarantee a cache flush or blockdev page cache sync ?
+
+How about:
+  sync -d "${loop_devs[0]}"
+  blockdev --flushbufs "${loop_devs[0]}"
+or any better idea?
+
+> +	cp $img_file $img_file_clone || _fail "Failed to copy cloned image"
+> +
+> +	loop_devs+=("$(_create_loop_device $img_file_clone)")
+> +
+> +	_ret=()
+> +	for i in "${loop_devs[@]}"; do
+> +		_ret+=("$i")
+> +	done
+
+How about:
+  _ret=("${loop_devs[@]}")
+directly?
+
+> +}
+> +
+> +# Teardown loop devices and delete their underlying backing image files.
+> +# Accepts a list of loop device paths (e.g., /dev/loop0 /dev/loop1).
+> +_loop_image_destroy()
+
+To keep it consistent with the renamed function above, we could rename this
+to *_destroy_cloned_loop_devs*. Alternatively, if we don't consider it
+clone-specific, *destroy_loop_devs* would also be good to me.
+
+Thanks,
+Zorro
+
+> +{
+> +	for d in "$@"; do
+> +		# Retrieve the path of the backing file
+> +		local f=$(losetup --noheadings --output BACK-FILE $d)
+> +
+> +		# Detach the loop device from the backing file
+> +		_destroy_loop_device "$d"
+> +
+> +		# Clean up the backing disk image file
+> +		[ -n "$f" ] && rm -f "$f"
+> +	done
+> +}
+>  
+>  # Repair scratch filesystem.  Returns 0 if the FS is good to go (either no
+>  # errors found or errors were fixed) and nonzero otherwise; also spits out
+> -- 
+> 2.43.0
+> 
