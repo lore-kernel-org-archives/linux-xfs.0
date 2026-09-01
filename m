@@ -1,34 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 242ED2737F9;
-	Tue,  1 Sep 2026 12:15:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EAF2547F2D1;
+	Tue,  1 Sep 2026 12:15:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788264941; cv=none; b=mX/Uk53ON6e+eaQflOck2VAIKBc4FUJ4EvsEzvpdkngy7vjb4NmCUetED3SDxGD7A7cIefkiT4MxJRGG0zQxdV31CJnW/u32lczA/5Wob21R4Sq350RGKm6xVXE+rdHX2XRvL3MjZwYOFciUHXqQQkqMYM+MzRwsyqdTtDdTiuY=
+	t=1788264947; cv=none; b=ci/jnOVu9s3+zNdHtVCCrJVoZte94kcJsW15Gg8hzuFUhr5X0N4AIZnpajzPK89Kjt2ogCgB2MkqxDZzT5keWxmTGNqyIgdo8VgQtREwqfS30AR1//hqBYv0KVRHyeQ2B5M4yldVVn24TOJwYX7xJr44+oNJskmbhVYsTJf3z+U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788264941; c=relaxed/simple;
-	bh=qy9XcKanPj+htf+xSmQLLVd4CKdjqT+bYJk8o7hKXEo=;
+	s=arc-20240116; t=1788264947; c=relaxed/simple;
+	bh=zmmTaxP3w9Ap370Jb8dkDTgP4AXT6dhSS9hn8nGKgIU=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=VuuMyqNvYX9ZevkY/HNDBAzIW0abKKKfL5QX3efAh55dl2QdmDpFusE1WAyjYtC2Puh5WQF+Tdqa9D+KnZ2W19kg6weI9HCUJQd97NCOC04GpaEKLphND106oMZpL2IYfPm86FchIW8/GH3DcKn8seq0yPRq7st9l6Hc4lgFjpk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i2kKKF16; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:To:Cc; b=tcvP4DekzTnNtZpn6v7L3/3HwcPldQSIQKSxNQp11ReRo3sTKwb3BJucnAYGv74Pn7blWVb5ZGho4iOKU92jHBFnQyR7L4jGIaXpnX8IEFIMNi1ptPvkGY4FmFDBlaBoZIY9/isIFPMiKoTy+/KPYGRW8xAK1+VQ7DCbToYI6to=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VSb+7YQI; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i2kKKF16"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7CA441F00A3D;
-	Tue,  1 Sep 2026 12:15:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VSb+7YQI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 502DA1F000E9;
+	Tue,  1 Sep 2026 12:15:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788264939;
-	bh=WDY8H3MaG9kK9POoq90aNN9DCiEJzaVaRPF+c/QBIMk=;
+	s=k20260515; t=1788264944;
+	bh=4/q6G4Y4GUSiDUQDgCd6gubiNGsZPubH42jyHMDwHSk=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=i2kKKF16N8IKOjVqC1T/rq57nk+cUJTXLUnyCCjnxXjvl+JpOahWJ3SH+7np1UZPD
-	 TtsANnpsRLOmNF9FXvzaAggW66Co5PmnaiGiXA0sV85wjLpZXhpjQvnYhOVwCOmZtl
-	 GQMaRvPdQudcOH76okH03nY0u6Jj+/GIS8/xg/gkjYL9zHorr5fSa3INPp7GRIX9DS
-	 KzbP7Qb/3kc0WZjRBNfU1nR/R+Hh+kJ+CcqwXASy8mXX6/MklTW52FVyg3354e1haf
-	 R/DUtVlfNL6rPth0zFZ1guq5WjZFdAK9PPbI1TfIT8vNSWiEVWY6q2n7w2ZAPRTqg/
-	 HwXtICvqQTAcQ==
+	b=VSb+7YQI/6k59PyVNCmbLuGNtOwXa0IyPjofc/6Ami1d47kjIdYlJ8XeeRZ/5yXM2
+	 zH2VBCaagB2gxn6gh/rnG14dinMznZtYWgY6JWZM9+SDbxlIZckPWGAQ3STM4d5iqI
+	 HLhdpXv0FKPXsQZfR8Pc+9+jWB57zRLAfZQXboQCjP8wH2NDnlioZrUfyVKoKkl1UB
+	 abPcBwk2oYDoXFgYQZiwdXQeSsiZ08X6SbvNqsBrs3iYc+DAIhmIGLkaFRqajugqsR
+	 iaz5LYSrKVLH9h6/VOq+NEZAJcCAJpdWPvGnHZgYs/V2jBwDZd+AGvrcjU7pZtMGm6
+	 yhE97dkND982w==
 From: Christian Brauner <brauner@kernel.org>
-Date: Tue, 01 Sep 2026 14:14:36 +0200
-Subject: [PATCH 11/27] fs: port acl to const mnt_idmap
+Date: Tue, 01 Sep 2026 14:14:37 +0200
+Subject: [PATCH 12/27] fs: port ->permission() to pass const mnt_idmap
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -37,7 +37,7 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260901-work-idmap-const-v1-11-54ccd48e100b@kernel.org>
+Message-Id: <20260901-work-idmap-const-v1-12-54ccd48e100b@kernel.org>
 References: <20260901-work-idmap-const-v1-0-54ccd48e100b@kernel.org>
 In-Reply-To: <20260901-work-idmap-const-v1-0-54ccd48e100b@kernel.org>
 To: linux-fsdevel@vger.kernel.org
@@ -52,12 +52,12 @@ Cc: Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
  linux-cifs@vger.kernel.org, linux-kernel@vger.kernel.org, 
  "Christian Brauner (Amutable)" <brauner@kernel.org>
 X-Mailer: b4 0.17-dev-db0b7
-X-Developer-Signature: v=1; a=openpgp-sha256; l=19692; i=brauner@kernel.org;
- h=from:subject:message-id; bh=qy9XcKanPj+htf+xSmQLLVd4CKdjqT+bYJk8o7hKXEo=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWRNO7j2dKdz368DJpO0J37vOiF+N33D+YUPOQ/Ehc4x4
- 9t55Zb78o5SFgYxLgZZMUUWh3aTcLnlPBWbjTI1YOawMoEMYeDiFICJbNrFyPBbuL5u10xV0zlF
- KnZXE1YYLDu0a+GCM9+C9prY++o7CT5gZLi1pO/O3nn1M7xnlsYtt9tT+/iZYZeXduqMrQ88TNW
- +zmADAA==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=32593; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=zmmTaxP3w9Ap370Jb8dkDTgP4AXT6dhSS9hn8nGKgIU=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWRNO7iWcRPH82U6TzPVKjZ2lfHnnvITe3h11v47WR1/J
+ CJd/xx71FHKwiDGxSArpsji0G4SLrecp2KzUaYGzBxWJpAhDFycAjAR/nRGhhXmqz78W6d4Z5bi
+ Cqepn/o8Z19aEFCkocJ2ZM36RKc5GlsZGTYGPTzfIb0lq1S29O/sD4otrQeXS3NkZV6/4fwzUZq
+ Lmx0A
 X-Developer-Key: i=brauner@kernel.org; a=openpgp;
  fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
@@ -77,434 +77,770 @@ No functional changes.
 
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- fs/ntfs/ea.c                          |  4 ++--
- fs/ntfs/ea.h                          |  2 +-
- fs/ntfs/namei.c                       |  2 +-
- fs/ntfs3/inode.c                      |  2 +-
- fs/ntfs3/ntfs_fs.h                    |  4 ++--
- fs/ntfs3/xattr.c                      |  4 ++--
- fs/posix_acl.c                        |  6 +++---
- include/linux/lsm_hook_defs.h         |  8 ++++----
- include/linux/posix_acl.h             |  4 ++--
- include/linux/security.h              | 16 ++++++++--------
- security/integrity/evm/evm_main.c     | 10 +++++-----
- security/integrity/ima/ima_appraise.c |  4 ++--
- security/security.c                   |  8 ++++----
- security/selinux/hooks.c              |  6 +++---
- security/smack/smack_lsm.c            |  6 +++---
- 15 files changed, 43 insertions(+), 43 deletions(-)
+ Documentation/filesystems/locking.rst |  2 +-
+ Documentation/filesystems/vfs.rst     |  2 +-
+ fs/afs/internal.h                     |  2 +-
+ fs/afs/security.c                     |  2 +-
+ fs/attr.c                             |  2 +-
+ fs/autofs/root.c                      |  4 ++--
+ fs/bad_inode.c                        |  2 +-
+ fs/btrfs/inode.c                      |  2 +-
+ fs/btrfs/ioctl.c                      |  2 +-
+ fs/ceph/inode.c                       |  2 +-
+ fs/ceph/super.h                       |  2 +-
+ fs/coda/coda_linux.h                  |  2 +-
+ fs/coda/dir.c                         |  2 +-
+ fs/coda/pioctl.c                      |  4 ++--
+ fs/ecryptfs/inode.c                   |  2 +-
+ fs/failfs.c                           |  2 +-
+ fs/fuse/dir.c                         |  2 +-
+ fs/gfs2/inode.c                       |  2 +-
+ fs/gfs2/inode.h                       |  2 +-
+ fs/hostfs/hostfs_kern.c               |  2 +-
+ fs/internal.h                         |  2 +-
+ fs/kernfs/inode.c                     |  2 +-
+ fs/kernfs/kernfs-internal.h           |  2 +-
+ fs/namei.c                            | 22 +++++++++++-----------
+ fs/nfs/dir.c                          |  2 +-
+ fs/nilfs2/inode.c                     |  2 +-
+ fs/nilfs2/nilfs.h                     |  2 +-
+ fs/ocfs2/file.c                       |  2 +-
+ fs/ocfs2/file.h                       |  2 +-
+ fs/orangefs/inode.c                   |  2 +-
+ fs/orangefs/orangefs-kernel.h         |  2 +-
+ fs/overlayfs/inode.c                  |  2 +-
+ fs/overlayfs/overlayfs.h              |  2 +-
+ fs/proc/base.c                        |  4 ++--
+ fs/proc/fd.c                          |  4 ++--
+ fs/proc/fd.h                          |  2 +-
+ fs/proc/proc_sysctl.c                 |  2 +-
+ fs/smb/client/cifsfs.c                |  2 +-
+ fs/smb/server/vfs.c                   |  2 +-
+ fs/smb/server/vfs.h                   |  2 +-
+ fs/tracefs/inode.c                    |  2 +-
+ include/linux/fs.h                    |  8 ++++----
+ include/linux/nfs_fs.h                |  2 +-
+ security/selinux/selinuxfs.c          |  2 +-
+ 44 files changed, 61 insertions(+), 61 deletions(-)
 
-diff --git a/fs/ntfs/ea.c b/fs/ntfs/ea.c
-index cdd306933d73..744ea8c446e5 100644
---- a/fs/ntfs/ea.c
-+++ b/fs/ntfs/ea.c
-@@ -998,7 +998,7 @@ struct posix_acl *ntfs_get_acl(struct mnt_idmap *idmap, struct dentry *dentry,
- 	return acl;
+diff --git a/Documentation/filesystems/locking.rst b/Documentation/filesystems/locking.rst
+index 844d65eb47a5..5af7d3bfcd5e 100644
+--- a/Documentation/filesystems/locking.rst
++++ b/Documentation/filesystems/locking.rst
+@@ -74,7 +74,7 @@ prototypes::
+ 	int (*readlink) (struct dentry *, char __user *,int);
+ 	const char *(*get_link) (struct dentry *, struct inode *, struct delayed_call *);
+ 	void (*truncate) (struct inode *);
+-	int (*permission) (struct mnt_idmap *, struct inode *, int, unsigned int);
++	int (*permission) (const struct mnt_idmap *, struct inode *, int, unsigned int);
+ 	struct posix_acl * (*get_inode_acl)(struct inode *, int, bool);
+ 	int (*setattr) (struct mnt_idmap *, struct dentry *, struct iattr *);
+ 	int (*getattr) (struct mnt_idmap *, const struct path *, struct kstat *, u32, unsigned int);
+diff --git a/Documentation/filesystems/vfs.rst b/Documentation/filesystems/vfs.rst
+index d3a93eec3945..b7e476f70185 100644
+--- a/Documentation/filesystems/vfs.rst
++++ b/Documentation/filesystems/vfs.rst
+@@ -428,7 +428,7 @@ As of kernel 2.6.22, the following members are defined:
+ 		int (*readlink) (struct dentry *, char __user *,int);
+ 		const char *(*get_link) (struct dentry *, struct inode *,
+ 					 struct delayed_call *);
+-		int (*permission) (struct mnt_idmap *, struct inode *, int);
++		int (*permission) (const struct mnt_idmap *, struct inode *, int);
+ 		struct posix_acl * (*get_inode_acl)(struct inode *, int, bool);
+ 		int (*setattr) (struct mnt_idmap *, struct dentry *, struct iattr *);
+ 		int (*getattr) (struct mnt_idmap *, const struct path *, struct kstat *, u32, unsigned int);
+diff --git a/fs/afs/internal.h b/fs/afs/internal.h
+index 290873bac89b..e772da2a15f2 100644
+--- a/fs/afs/internal.h
++++ b/fs/afs/internal.h
+@@ -1530,7 +1530,7 @@ extern void afs_cache_permit(struct afs_vnode *, struct key *, unsigned int,
+ extern struct key *afs_request_key(struct afs_cell *);
+ extern struct key *afs_request_key_rcu(struct afs_cell *);
+ extern int afs_check_permit(struct afs_vnode *, struct key *, afs_access_t *);
+-extern int afs_permission(struct mnt_idmap *, struct inode *, int);
++extern int afs_permission(const struct mnt_idmap *, struct inode *, int);
+ extern void __exit afs_clean_up_permit_cache(void);
+ 
+ /*
+diff --git a/fs/afs/security.c b/fs/afs/security.c
+index 6d00d62a65ed..fd040f7c6766 100644
+--- a/fs/afs/security.c
++++ b/fs/afs/security.c
+@@ -428,7 +428,7 @@ int afs_check_permit(struct afs_vnode *vnode, struct key *key,
+  * - AFS ACLs are attached to directories only, and a file is controlled by its
+  *   parent directory's ACL
+  */
+-int afs_permission(struct mnt_idmap *idmap, struct inode *inode,
++int afs_permission(const struct mnt_idmap *idmap, struct inode *inode,
+ 		   int mask)
+ {
+ 	struct afs_vnode *vnode = AFS_FS_I(inode);
+diff --git a/fs/attr.c b/fs/attr.c
+index 23f1347ff240..c5033afe04bf 100644
+--- a/fs/attr.c
++++ b/fs/attr.c
+@@ -369,7 +369,7 @@ void setattr_copy(const struct mnt_idmap *idmap, struct inode *inode,
+ }
+ EXPORT_SYMBOL(setattr_copy);
+ 
+-int may_setattr(struct mnt_idmap *idmap, struct inode *inode,
++int may_setattr(const struct mnt_idmap *idmap, struct inode *inode,
+ 		unsigned int ia_valid)
+ {
+ 	int error;
+diff --git a/fs/autofs/root.c b/fs/autofs/root.c
+index b36439f4521e..3158df448025 100644
+--- a/fs/autofs/root.c
++++ b/fs/autofs/root.c
+@@ -11,7 +11,7 @@
+ 
+ #include "autofs_i.h"
+ 
+-static int autofs_dir_permission(struct mnt_idmap *, struct inode *, int);
++static int autofs_dir_permission(const struct mnt_idmap *, struct inode *, int);
+ static int autofs_dir_symlink(struct mnt_idmap *, struct inode *,
+ 			      struct dentry *, const char *);
+ static int autofs_dir_unlink(struct inode *, struct dentry *);
+@@ -552,7 +552,7 @@ static struct dentry *autofs_lookup(struct inode *dir,
+ 	return NULL;
  }
  
--static noinline int ntfs_set_acl_ex(struct mnt_idmap *idmap,
-+static noinline int ntfs_set_acl_ex(const struct mnt_idmap *idmap,
- 				    struct inode *inode, struct posix_acl *acl,
- 				    int type, bool init_acl)
+-static int autofs_dir_permission(struct mnt_idmap *idmap,
++static int autofs_dir_permission(const struct mnt_idmap *idmap,
+ 				 struct inode *inode, int mask)
  {
-@@ -1086,7 +1086,7 @@ int ntfs_set_acl(struct mnt_idmap *idmap, struct dentry *dentry,
- 	return ntfs_set_acl_ex(idmap, d_inode(dentry), acl, type, false);
+ 	if (mask & MAY_WRITE) {
+diff --git a/fs/bad_inode.c b/fs/bad_inode.c
+index 486c40f73e51..c2cfa9395bc9 100644
+--- a/fs/bad_inode.c
++++ b/fs/bad_inode.c
+@@ -89,7 +89,7 @@ static int bad_inode_readlink(struct dentry *dentry, char __user *buffer,
+ 	return -EIO;
  }
  
--int ntfs_init_acl(struct mnt_idmap *idmap, struct inode *inode,
-+int ntfs_init_acl(const struct mnt_idmap *idmap, struct inode *inode,
- 		  struct inode *dir)
+-static int bad_inode_permission(struct mnt_idmap *idmap,
++static int bad_inode_permission(const struct mnt_idmap *idmap,
+ 				struct inode *inode, int mask)
  {
- 	struct posix_acl *default_acl, *acl;
-diff --git a/fs/ntfs/ea.h b/fs/ntfs/ea.h
-index acb39c2a6fbc..9d17abc2e491 100644
---- a/fs/ntfs/ea.h
-+++ b/fs/ntfs/ea.h
-@@ -21,7 +21,7 @@ struct posix_acl *ntfs_get_acl(struct mnt_idmap *idmap, struct dentry *dentry,
- 			       int type);
- int ntfs_set_acl(struct mnt_idmap *idmap, struct dentry *dentry,
- 		 struct posix_acl *acl, int type);
--int ntfs_init_acl(struct mnt_idmap *idmap, struct inode *inode,
-+int ntfs_init_acl(const struct mnt_idmap *idmap, struct inode *inode,
- 		  struct inode *dir);
- #else
- #define ntfs_get_acl NULL
-diff --git a/fs/ntfs/namei.c b/fs/ntfs/namei.c
-index 7091b2496fac..e2cf1ab6935a 100644
---- a/fs/ntfs/namei.c
-+++ b/fs/ntfs/namei.c
-@@ -391,7 +391,7 @@ static int ntfs_sd_add_everyone(struct ntfs_inode *ni)
+ 	return -EIO;
+diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
+index d5a78d9027e2..7bf38f069116 100644
+--- a/fs/btrfs/inode.c
++++ b/fs/btrfs/inode.c
+@@ -9375,7 +9375,7 @@ int btrfs_prealloc_file_range_trans(struct inode *inode,
+  * we are marking them with IOP_FASTPERM_MAY_EXEC, allowing path lookup to
+  * elide calls here.
+  */
+-static int btrfs_permission(struct mnt_idmap *idmap,
++static int btrfs_permission(const struct mnt_idmap *idmap,
+ 			    struct inode *inode, int mask)
+ {
+ 	struct btrfs_root *root = BTRFS_I(inode)->root;
+diff --git a/fs/btrfs/ioctl.c b/fs/btrfs/ioctl.c
+index 8eacdc2ee4de..9d6302547b12 100644
+--- a/fs/btrfs/ioctl.c
++++ b/fs/btrfs/ioctl.c
+@@ -1726,7 +1726,7 @@ static noinline int btrfs_search_path_in_tree(struct btrfs_root *root, u64 dirid
+ 	return 0;
+ }
+ 
+-static int btrfs_search_path_in_tree_user(struct mnt_idmap *idmap,
++static int btrfs_search_path_in_tree_user(const struct mnt_idmap *idmap,
+ 				struct inode *inode,
+ 				struct btrfs_ioctl_ino_lookup_user_args *args)
+ {
+diff --git a/fs/ceph/inode.c b/fs/ceph/inode.c
+index 3921b601ad59..b8527f67e3f0 100644
+--- a/fs/ceph/inode.c
++++ b/fs/ceph/inode.c
+@@ -3098,7 +3098,7 @@ int ceph_do_getvxattr(struct inode *inode, const char *name, void *value,
+  * Check inode permissions.  We verify we have a valid value for
+  * the AUTH cap, then call the generic handler.
+  */
+-int ceph_permission(struct mnt_idmap *idmap, struct inode *inode,
++int ceph_permission(const struct mnt_idmap *idmap, struct inode *inode,
+ 		    int mask)
+ {
+ 	int err;
+diff --git a/fs/ceph/super.h b/fs/ceph/super.h
+index e9a9d5737c80..ef9861797eb2 100644
+--- a/fs/ceph/super.h
++++ b/fs/ceph/super.h
+@@ -1166,7 +1166,7 @@ static inline int ceph_do_getattr(struct inode *inode, int mask, bool force)
+ {
+ 	return __ceph_do_getattr(inode, NULL, mask, force);
+ }
+-extern int ceph_permission(struct mnt_idmap *idmap,
++extern int ceph_permission(const struct mnt_idmap *idmap,
+ 			   struct inode *inode, int mask);
+ 
+ struct ceph_iattr {
+diff --git a/fs/coda/coda_linux.h b/fs/coda/coda_linux.h
+index dd6277d87afb..5ee6cedd3865 100644
+--- a/fs/coda/coda_linux.h
++++ b/fs/coda/coda_linux.h
+@@ -46,7 +46,7 @@ extern const struct file_operations coda_ioctl_operations;
+ /* operations shared over more than one file */
+ int coda_open(struct inode *i, struct file *f);
+ int coda_release(struct inode *i, struct file *f);
+-int coda_permission(struct mnt_idmap *idmap, struct inode *inode,
++int coda_permission(const struct mnt_idmap *idmap, struct inode *inode,
+ 		    int mask);
+ int coda_revalidate_inode(struct inode *);
+ int coda_getattr(struct mnt_idmap *, const struct path *, struct kstat *,
+diff --git a/fs/coda/dir.c b/fs/coda/dir.c
+index 67148edfadee..e8db5960b61b 100644
+--- a/fs/coda/dir.c
++++ b/fs/coda/dir.c
+@@ -73,7 +73,7 @@ static struct dentry *coda_lookup(struct inode *dir, struct dentry *entry, unsig
+ }
+ 
+ 
+-int coda_permission(struct mnt_idmap *idmap, struct inode *inode,
++int coda_permission(const struct mnt_idmap *idmap, struct inode *inode,
+ 		    int mask)
+ {
+ 	int error;
+diff --git a/fs/coda/pioctl.c b/fs/coda/pioctl.c
+index 36e35c15561a..c457e9bab94b 100644
+--- a/fs/coda/pioctl.c
++++ b/fs/coda/pioctl.c
+@@ -24,7 +24,7 @@
+ #include "coda_linux.h"
+ 
+ /* pioctl ops */
+-static int coda_ioctl_permission(struct mnt_idmap *idmap,
++static int coda_ioctl_permission(const struct mnt_idmap *idmap,
+ 				 struct inode *inode, int mask);
+ static long coda_pioctl(struct file *filp, unsigned int cmd,
+ 			unsigned long user_data);
+@@ -41,7 +41,7 @@ const struct file_operations coda_ioctl_operations = {
+ };
+ 
+ /* the coda pioctl inode ops */
+-static int coda_ioctl_permission(struct mnt_idmap *idmap,
++static int coda_ioctl_permission(const struct mnt_idmap *idmap,
+ 				 struct inode *inode, int mask)
+ {
+ 	return (mask & MAY_EXEC) ? -EACCES : 0;
+diff --git a/fs/ecryptfs/inode.c b/fs/ecryptfs/inode.c
+index 525297c7ebd8..6dafca14ca78 100644
+--- a/fs/ecryptfs/inode.c
++++ b/fs/ecryptfs/inode.c
+@@ -849,7 +849,7 @@ int ecryptfs_truncate(struct dentry *dentry, loff_t new_length)
+ }
+ 
+ static int
+-ecryptfs_permission(struct mnt_idmap *idmap, struct inode *inode,
++ecryptfs_permission(const struct mnt_idmap *idmap, struct inode *inode,
+ 		    int mask)
+ {
+ 	return inode_permission(&nop_mnt_idmap,
+diff --git a/fs/failfs.c b/fs/failfs.c
+index 66a36da3d236..cec6cad99eb2 100644
+--- a/fs/failfs.c
++++ b/fs/failfs.c
+@@ -22,7 +22,7 @@ bool failfs_mnt(const struct vfsmount *mnt)
+ 	return mnt->mnt_sb == failfs_root_path.mnt->mnt_sb;
+ }
+ 
+-static int failfs_permission(struct mnt_idmap *idmap, struct inode *inode,
++static int failfs_permission(const struct mnt_idmap *idmap, struct inode *inode,
+ 			     int mask)
+ {
+ 	return -EOPNOTSUPP;
+diff --git a/fs/fuse/dir.c b/fs/fuse/dir.c
+index 7a204f55ca84..4b87973c727d 100644
+--- a/fs/fuse/dir.c
++++ b/fs/fuse/dir.c
+@@ -1763,7 +1763,7 @@ static int fuse_perm_getattr(struct inode *inode, int mask)
+  * access request is sent.  Execute permission is still checked
+  * locally based on file mode.
+  */
+-static int fuse_permission(struct mnt_idmap *idmap,
++static int fuse_permission(const struct mnt_idmap *idmap,
+ 			   struct inode *inode, int mask)
+ {
+ 	struct fuse_conn *fc = get_fuse_conn(inode);
+diff --git a/fs/gfs2/inode.c b/fs/gfs2/inode.c
+index f361876c5583..1b1d22abe1d4 100644
+--- a/fs/gfs2/inode.c
++++ b/fs/gfs2/inode.c
+@@ -1963,7 +1963,7 @@ static const char *gfs2_get_link(struct dentry *dentry,
+  * Returns: errno
+  */
+ 
+-int gfs2_permission(struct mnt_idmap *idmap, struct inode *inode,
++int gfs2_permission(const struct mnt_idmap *idmap, struct inode *inode,
+ 		    int mask)
+ {
+ 	int may_not_block = mask & MAY_NOT_BLOCK;
+diff --git a/fs/gfs2/inode.h b/fs/gfs2/inode.h
+index 2fcd96dd1361..373473eb091c 100644
+--- a/fs/gfs2/inode.h
++++ b/fs/gfs2/inode.h
+@@ -97,7 +97,7 @@ int gfs2_dinode_dealloc(struct gfs2_inode *ip);
+ 
+ struct inode *gfs2_lookupi(struct inode *dir, const struct qstr *name,
+ 			   int is_root);
+-int gfs2_permission(struct mnt_idmap *idmap,
++int gfs2_permission(const struct mnt_idmap *idmap,
+ 		    struct inode *inode, int mask);
+ struct inode *gfs2_lookup_meta(struct inode *dip, const char *name);
+ void gfs2_dinode_out(const struct gfs2_inode *ip, void *buf);
+diff --git a/fs/hostfs/hostfs_kern.c b/fs/hostfs/hostfs_kern.c
+index 7add056d47d8..0d5c5f11f913 100644
+--- a/fs/hostfs/hostfs_kern.c
++++ b/fs/hostfs/hostfs_kern.c
+@@ -774,7 +774,7 @@ static int hostfs_rename2(struct mnt_idmap *idmap,
+ 	return err;
+ }
+ 
+-static int hostfs_permission(struct mnt_idmap *idmap,
++static int hostfs_permission(const struct mnt_idmap *idmap,
+ 			     struct inode *ino, int desired)
+ {
+ 	char *name;
+diff --git a/fs/internal.h b/fs/internal.h
+index 161b0cafe17f..a502b1fbacd2 100644
+--- a/fs/internal.h
++++ b/fs/internal.h
+@@ -55,7 +55,7 @@ extern int filename_lookup(int dfd, struct filename *name, unsigned flags,
+ 			   struct path *path, const struct path *root);
+ int filename_rmdir(int dfd, struct filename *name);
+ int filename_unlinkat(int dfd, struct filename *name);
+-int may_linkat(struct mnt_idmap *idmap, const struct path *link);
++int may_linkat(const struct mnt_idmap *idmap, const struct path *link);
+ int filename_renameat2(int olddfd, struct filename *oldname, int newdfd,
+ 		 struct filename *newname, unsigned int flags);
+ int filename_mkdirat(int dfd, struct filename *name, umode_t mode);
+diff --git a/fs/kernfs/inode.c b/fs/kernfs/inode.c
+index 237dcdd73fc2..d53d104e54d5 100644
+--- a/fs/kernfs/inode.c
++++ b/fs/kernfs/inode.c
+@@ -272,7 +272,7 @@ void kernfs_evict_inode(struct inode *inode)
+ 	kernfs_put(kn);
+ }
+ 
+-int kernfs_iop_permission(struct mnt_idmap *idmap,
++int kernfs_iop_permission(const struct mnt_idmap *idmap,
+ 			  struct inode *inode, int mask)
+ {
+ 	struct kernfs_node *kn;
+diff --git a/fs/kernfs/kernfs-internal.h b/fs/kernfs/kernfs-internal.h
+index aa784b540b36..0f6f412213f6 100644
+--- a/fs/kernfs/kernfs-internal.h
++++ b/fs/kernfs/kernfs-internal.h
+@@ -171,7 +171,7 @@ extern struct kmem_cache *kernfs_node_cache, *kernfs_iattrs_cache;
+  */
+ extern const struct xattr_handler * const kernfs_xattr_handlers[];
+ void kernfs_evict_inode(struct inode *inode);
+-int kernfs_iop_permission(struct mnt_idmap *idmap,
++int kernfs_iop_permission(const struct mnt_idmap *idmap,
+ 			  struct inode *inode, int mask);
+ int kernfs_iop_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
+ 		       struct iattr *iattr);
+diff --git a/fs/namei.c b/fs/namei.c
+index db82daec3646..f5e00ae41ed4 100644
+--- a/fs/namei.c
++++ b/fs/namei.c
+@@ -371,7 +371,7 @@ struct filename *complete_getname(struct delayed_filename *v)
+  * On non-idmapped mounts or if permission checking is to be performed on the
+  * raw inode simply pass @nop_mnt_idmap.
+  */
+-static int check_acl(struct mnt_idmap *idmap,
++static int check_acl(const struct mnt_idmap *idmap,
+ 		     struct inode *inode, int mask)
+ {
+ #ifdef CONFIG_FS_POSIX_ACL
+@@ -435,7 +435,7 @@ static inline bool no_acl_inode(struct inode *inode)
+  * On non-idmapped mounts or if permission checking is to be performed on the
+  * raw inode simply pass @nop_mnt_idmap.
+  */
+-static int acl_permission_check(struct mnt_idmap *idmap,
++static int acl_permission_check(const struct mnt_idmap *idmap,
+ 				struct inode *inode, int mask)
+ {
+ 	unsigned int mode = inode->i_mode;
+@@ -518,7 +518,7 @@ static int acl_permission_check(struct mnt_idmap *idmap,
+  * On non-idmapped mounts or if permission checking is to be performed on the
+  * raw inode simply pass @nop_mnt_idmap.
+  */
+-int generic_permission(struct mnt_idmap *idmap, struct inode *inode,
++int generic_permission(const struct mnt_idmap *idmap, struct inode *inode,
+ 		       int mask)
+ {
+ 	int ret;
+@@ -575,7 +575,7 @@ EXPORT_SYMBOL(generic_permission);
+  * flag in inode->i_opflags, that says "this has not special
+  * permission function, use the fast case".
+  */
+-static inline int do_inode_permission(struct mnt_idmap *idmap,
++static inline int do_inode_permission(const struct mnt_idmap *idmap,
+ 				      struct inode *inode, int mask)
+ {
+ 	if (unlikely(!(inode->i_opflags & IOP_FASTPERM))) {
+@@ -625,7 +625,7 @@ static int sb_permission(struct super_block *sb, struct inode *inode, int mask)
+  *
+  * When checking for MAY_APPEND, MAY_WRITE must also be set in @mask.
+  */
+-int inode_permission(struct mnt_idmap *idmap,
++int inode_permission(const struct mnt_idmap *idmap,
+ 		     struct inode *inode, int mask)
+ {
+ 	int retval;
+@@ -680,7 +680,7 @@ EXPORT_SYMBOL(inode_permission);
+  * on IOP_FASTPERM can still get the optimization if they set IOP_FASTPERM_MAY_EXEC
+  * on their directory inodes.
+  */
+-static __always_inline int lookup_inode_permission_may_exec(struct mnt_idmap *idmap,
++static __always_inline int lookup_inode_permission_may_exec(const struct mnt_idmap *idmap,
+ 	struct inode *inode, int mask)
+ {
+ 	/* Lookup already checked this to return -ENOTDIR */
+@@ -1314,7 +1314,7 @@ static inline int may_follow_link(struct nameidata *nd, const struct inode *inod
+  *
+  * Otherwise returns true.
+  */
+-static bool safe_hardlink_source(struct mnt_idmap *idmap,
++static bool safe_hardlink_source(const struct mnt_idmap *idmap,
+ 				 struct inode *inode)
+ {
+ 	umode_t mode = inode->i_mode;
+@@ -1357,7 +1357,7 @@ static bool safe_hardlink_source(struct mnt_idmap *idmap,
+  *
+  * Returns 0 if successful, -ve on error.
+  */
+-int may_linkat(struct mnt_idmap *idmap, const struct path *link)
++int may_linkat(const struct mnt_idmap *idmap, const struct path *link)
+ {
+ 	struct inode *inode = link->dentry->d_inode;
+ 
+@@ -1952,7 +1952,7 @@ static struct dentry *lookup_slow_killable(const struct qstr *name,
+ 	return res;
+ }
+ 
+-static inline int may_lookup(struct mnt_idmap *idmap,
++static inline int may_lookup(const struct mnt_idmap *idmap,
+ 			     struct nameidata *restrict nd)
+ {
+ 	int err, mask;
+@@ -4228,7 +4228,7 @@ bool may_open_dev(const struct path *path)
+ 		!(path->mnt->mnt_sb->s_iflags & SB_I_NODEV);
+ }
+ 
+-static int may_open(struct mnt_idmap *idmap, const struct path *path,
++static int may_open(const struct mnt_idmap *idmap, const struct path *path,
+ 		    int acc_mode, int flag)
+ {
+ 	struct dentry *dentry = path->dentry;
+@@ -4312,7 +4312,7 @@ static inline int open_to_namei_flags(int flag)
+ 	return flag;
+ }
+ 
+-static int may_o_create(struct mnt_idmap *idmap,
++static int may_o_create(const struct mnt_idmap *idmap,
+ 			const struct path *dir, struct dentry *dentry,
+ 			umode_t mode)
+ {
+diff --git a/fs/nfs/dir.c b/fs/nfs/dir.c
+index 49394123bd09..7574bc2fb677 100644
+--- a/fs/nfs/dir.c
++++ b/fs/nfs/dir.c
+@@ -3393,7 +3393,7 @@ static int nfs_execute_ok(struct inode *inode, int mask)
  	return ret;
  }
  
--static struct ntfs_inode *__ntfs_create(struct mnt_idmap *idmap, struct inode *dir,
-+static struct ntfs_inode *__ntfs_create(const struct mnt_idmap *idmap, struct inode *dir,
- 		__le16 *name, u8 name_len, mode_t mode, dev_t dev,
- 		const char *target, int target_len)
+-int nfs_permission(struct mnt_idmap *idmap,
++int nfs_permission(const struct mnt_idmap *idmap,
+ 		   struct inode *inode,
+ 		   int mask)
  {
-diff --git a/fs/ntfs3/inode.c b/fs/ntfs3/inode.c
-index 56b4f6469a28..a9fdd33f2886 100644
---- a/fs/ntfs3/inode.c
-+++ b/fs/ntfs3/inode.c
-@@ -1381,7 +1381,7 @@ ntfs_create_reparse_buffer(struct ntfs_sb_info *sbi, const char *symname,
-  *
-  * NOTE: if fnd != NULL (ntfs_atomic_open) then @dir is locked
-  */
--int ntfs_create_inode(struct mnt_idmap *idmap, struct inode *dir,
-+int ntfs_create_inode(const struct mnt_idmap *idmap, struct inode *dir,
- 		      struct dentry *dentry, const struct cpu_str *uni,
- 		      umode_t mode, dev_t dev, const char *symname, u32 size,
- 		      struct ntfs_fnd *fnd)
-diff --git a/fs/ntfs3/ntfs_fs.h b/fs/ntfs3/ntfs_fs.h
-index 5811d89d67b3..a2b74f41048f 100644
---- a/fs/ntfs3/ntfs_fs.h
-+++ b/fs/ntfs3/ntfs_fs.h
-@@ -803,7 +803,7 @@ int ntfs_set_size(struct inode *inode, u64 new_size);
- int ntfs3_write_inode(struct inode *inode, struct writeback_control *wbc);
- int ntfs_sync_inode(struct inode *inode);
- int inode_read_data(struct inode *inode, void *data, size_t bytes);
--int ntfs_create_inode(struct mnt_idmap *idmap, struct inode *dir,
-+int ntfs_create_inode(const struct mnt_idmap *idmap, struct inode *dir,
- 		      struct dentry *dentry, const struct cpu_str *uni,
- 		      umode_t mode, dev_t dev, const char *symname, u32 size,
- 		      struct ntfs_fnd *fnd);
-@@ -967,7 +967,7 @@ struct posix_acl *ntfs_get_acl(struct mnt_idmap *idmap, struct dentry *dentry,
- 			       int type);
- int ntfs_set_acl(struct mnt_idmap *idmap, struct dentry *dentry,
- 		 struct posix_acl *acl, int type);
--int ntfs_init_acl(struct mnt_idmap *idmap, struct inode *inode,
-+int ntfs_init_acl(const struct mnt_idmap *idmap, struct inode *inode,
- 		  struct inode *dir);
- #else
- #define ntfs_get_acl NULL
-diff --git a/fs/ntfs3/xattr.c b/fs/ntfs3/xattr.c
-index 594ef6860b93..d800735477c3 100644
---- a/fs/ntfs3/xattr.c
-+++ b/fs/ntfs3/xattr.c
-@@ -595,7 +595,7 @@ struct posix_acl *ntfs_get_acl(struct mnt_idmap *idmap, struct dentry *dentry,
- 	return acl;
+diff --git a/fs/nilfs2/inode.c b/fs/nilfs2/inode.c
+index 34e6096069ad..9342f651bf9b 100644
+--- a/fs/nilfs2/inode.c
++++ b/fs/nilfs2/inode.c
+@@ -943,7 +943,7 @@ int nilfs_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
+ 	return err;
  }
  
--static noinline int ntfs_set_acl_ex(struct mnt_idmap *idmap,
-+static noinline int ntfs_set_acl_ex(const struct mnt_idmap *idmap,
- 				    struct inode *inode, struct posix_acl *acl,
- 				    int type, bool init_acl)
+-int nilfs_permission(struct mnt_idmap *idmap, struct inode *inode,
++int nilfs_permission(const struct mnt_idmap *idmap, struct inode *inode,
+ 		     int mask)
  {
-@@ -688,7 +688,7 @@ int ntfs_set_acl(struct mnt_idmap *idmap, struct dentry *dentry,
-  *
-  * Called from ntfs_create_inode().
-  */
--int ntfs_init_acl(struct mnt_idmap *idmap, struct inode *inode,
-+int ntfs_init_acl(const struct mnt_idmap *idmap, struct inode *inode,
- 		  struct inode *dir)
- {
- 	struct posix_acl *default_acl, *acl;
-diff --git a/fs/posix_acl.c b/fs/posix_acl.c
-index f9c55a59c6c6..b279804ebf56 100644
---- a/fs/posix_acl.c
-+++ b/fs/posix_acl.c
-@@ -378,7 +378,7 @@ EXPORT_SYMBOL(posix_acl_from_mode);
-  * by the acl. Returns -E... otherwise.
-  */
- int
--posix_acl_permission(struct mnt_idmap *idmap, struct inode *inode,
-+posix_acl_permission(const struct mnt_idmap *idmap, struct inode *inode,
- 		     const struct posix_acl *acl, int want)
- {
- 	const struct posix_acl_entry *pa, *pe, *mask_obj;
-@@ -709,7 +709,7 @@ EXPORT_SYMBOL_GPL(posix_acl_create);
-  *
-  * Called from set_acl inode operations.
-  */
--int posix_acl_update_mode(struct mnt_idmap *idmap,
-+int posix_acl_update_mode(const struct mnt_idmap *idmap,
- 			  struct inode *inode, umode_t *mode_p,
- 			  struct posix_acl **acl)
- {
-@@ -889,7 +889,7 @@ EXPORT_SYMBOL (posix_acl_to_xattr);
-  * Return: On success, the size of the stored uapi posix acls, on error a
-  * negative errno.
-  */
--static ssize_t vfs_posix_acl_to_xattr(struct mnt_idmap *idmap,
-+static ssize_t vfs_posix_acl_to_xattr(const struct mnt_idmap *idmap,
- 				      struct inode *inode,
- 				      const struct posix_acl *acl, void *buffer,
- 				      size_t size)
-diff --git a/include/linux/lsm_hook_defs.h b/include/linux/lsm_hook_defs.h
-index 65c9609ec207..30897590258f 100644
---- a/include/linux/lsm_hook_defs.h
-+++ b/include/linux/lsm_hook_defs.h
-@@ -159,15 +159,15 @@ LSM_HOOK(void, LSM_RET_VOID, inode_post_removexattr, struct dentry *dentry,
- 	 const char *name)
- LSM_HOOK(int, 0, inode_file_setattr, struct dentry *dentry, struct file_kattr *fa)
- LSM_HOOK(int, 0, inode_file_getattr, struct dentry *dentry, struct file_kattr *fa)
--LSM_HOOK(int, 0, inode_set_acl, struct mnt_idmap *idmap,
-+LSM_HOOK(int, 0, inode_set_acl, const struct mnt_idmap *idmap,
- 	 struct dentry *dentry, const char *acl_name, struct posix_acl *kacl)
- LSM_HOOK(void, LSM_RET_VOID, inode_post_set_acl, struct dentry *dentry,
- 	 const char *acl_name, struct posix_acl *kacl)
--LSM_HOOK(int, 0, inode_get_acl, struct mnt_idmap *idmap,
-+LSM_HOOK(int, 0, inode_get_acl, const struct mnt_idmap *idmap,
- 	 struct dentry *dentry, const char *acl_name)
--LSM_HOOK(int, 0, inode_remove_acl, struct mnt_idmap *idmap,
-+LSM_HOOK(int, 0, inode_remove_acl, const struct mnt_idmap *idmap,
- 	 struct dentry *dentry, const char *acl_name)
--LSM_HOOK(void, LSM_RET_VOID, inode_post_remove_acl, struct mnt_idmap *idmap,
-+LSM_HOOK(void, LSM_RET_VOID, inode_post_remove_acl, const struct mnt_idmap *idmap,
- 	 struct dentry *dentry, const char *acl_name)
- LSM_HOOK(int, 0, inode_need_killpriv, struct dentry *dentry)
- LSM_HOOK(int, 0, inode_killpriv, struct mnt_idmap *idmap,
-diff --git a/include/linux/posix_acl.h b/include/linux/posix_acl.h
-index 62d497763e25..7c6cfcae0a9d 100644
---- a/include/linux/posix_acl.h
-+++ b/include/linux/posix_acl.h
-@@ -84,7 +84,7 @@ struct posix_acl *posix_acl_clone(const struct posix_acl *acl, gfp_t flags);
- int posix_acl_chmod(struct mnt_idmap *, struct dentry *, umode_t);
- extern int posix_acl_create(struct inode *, umode_t *, struct posix_acl **,
- 		struct posix_acl **);
--int posix_acl_update_mode(struct mnt_idmap *, struct inode *, umode_t *,
-+int posix_acl_update_mode(const struct mnt_idmap *, struct inode *, umode_t *,
- 			  struct posix_acl **);
- 
- int simple_set_acl(struct mnt_idmap *, struct dentry *,
-@@ -96,7 +96,7 @@ void set_cached_acl(struct inode *inode, int type, struct posix_acl *acl);
- void forget_cached_acl(struct inode *inode, int type);
- void forget_all_cached_acls(struct inode *inode);
- int posix_acl_valid(struct user_namespace *, const struct posix_acl *);
--int posix_acl_permission(struct mnt_idmap *, struct inode *,
-+int posix_acl_permission(const struct mnt_idmap *, struct inode *,
- 			 const struct posix_acl *, int);
- 
- static inline void cache_no_acl(struct inode *inode)
-diff --git a/include/linux/security.h b/include/linux/security.h
-index 4598a13657ee..12bc12e243bf 100644
---- a/include/linux/security.h
-+++ b/include/linux/security.h
-@@ -430,16 +430,16 @@ int security_inode_getattr(const struct path *path);
- int security_inode_setxattr(struct mnt_idmap *idmap,
- 			    struct dentry *dentry, const char *name,
- 			    const void *value, size_t size, int flags);
--int security_inode_set_acl(struct mnt_idmap *idmap,
-+int security_inode_set_acl(const struct mnt_idmap *idmap,
- 			   struct dentry *dentry, const char *acl_name,
- 			   struct posix_acl *kacl);
- void security_inode_post_set_acl(struct dentry *dentry, const char *acl_name,
- 				 struct posix_acl *kacl);
--int security_inode_get_acl(struct mnt_idmap *idmap,
-+int security_inode_get_acl(const struct mnt_idmap *idmap,
- 			   struct dentry *dentry, const char *acl_name);
--int security_inode_remove_acl(struct mnt_idmap *idmap,
-+int security_inode_remove_acl(const struct mnt_idmap *idmap,
- 			      struct dentry *dentry, const char *acl_name);
--void security_inode_post_remove_acl(struct mnt_idmap *idmap,
-+void security_inode_post_remove_acl(const struct mnt_idmap *idmap,
- 				    struct dentry *dentry,
- 				    const char *acl_name);
- void security_inode_post_setxattr(struct dentry *dentry, const char *name,
-@@ -1003,7 +1003,7 @@ static inline int security_inode_setxattr(struct mnt_idmap *idmap,
- 	return cap_inode_setxattr(dentry, name, value, size, flags);
+ 	struct nilfs_root *root = NILFS_I(inode)->i_root;
+diff --git a/fs/nilfs2/nilfs.h b/fs/nilfs2/nilfs.h
+index 4fc42d3787a4..0eaa191f70b8 100644
+--- a/fs/nilfs2/nilfs.h
++++ b/fs/nilfs2/nilfs.h
+@@ -302,7 +302,7 @@ extern void nilfs_evict_inode(struct inode *);
+ extern int nilfs_setattr(struct mnt_idmap *, struct dentry *,
+ 			 struct iattr *);
+ extern void nilfs_write_failed(struct address_space *mapping, loff_t to);
+-int nilfs_permission(struct mnt_idmap *idmap, struct inode *inode,
++int nilfs_permission(const struct mnt_idmap *idmap, struct inode *inode,
+ 		     int mask);
+ int nilfs_load_inode_block(struct inode *inode, struct buffer_head **pbh);
+ extern int nilfs_inode_dirty(struct inode *);
+diff --git a/fs/ocfs2/file.c b/fs/ocfs2/file.c
+index d6e977ba6565..24bbf607546c 100644
+--- a/fs/ocfs2/file.c
++++ b/fs/ocfs2/file.c
+@@ -1349,7 +1349,7 @@ int ocfs2_getattr(struct mnt_idmap *idmap, const struct path *path,
+ 	return err;
  }
  
--static inline int security_inode_set_acl(struct mnt_idmap *idmap,
-+static inline int security_inode_set_acl(const struct mnt_idmap *idmap,
- 					 struct dentry *dentry,
- 					 const char *acl_name,
- 					 struct posix_acl *kacl)
-@@ -1016,21 +1016,21 @@ static inline void security_inode_post_set_acl(struct dentry *dentry,
- 					       struct posix_acl *kacl)
- { }
- 
--static inline int security_inode_get_acl(struct mnt_idmap *idmap,
-+static inline int security_inode_get_acl(const struct mnt_idmap *idmap,
- 					 struct dentry *dentry,
- 					 const char *acl_name)
+-int ocfs2_permission(struct mnt_idmap *idmap, struct inode *inode,
++int ocfs2_permission(const struct mnt_idmap *idmap, struct inode *inode,
+ 		     int mask)
  {
- 	return 0;
+ 	int ret, had_lock;
+diff --git a/fs/ocfs2/file.h b/fs/ocfs2/file.h
+index 41e65e45a9f3..08e4d6796531 100644
+--- a/fs/ocfs2/file.h
++++ b/fs/ocfs2/file.h
+@@ -54,7 +54,7 @@ int ocfs2_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
+ 		  struct iattr *attr);
+ int ocfs2_getattr(struct mnt_idmap *idmap, const struct path *path,
+ 		  struct kstat *stat, u32 request_mask, unsigned int flags);
+-int ocfs2_permission(struct mnt_idmap *idmap,
++int ocfs2_permission(const struct mnt_idmap *idmap,
+ 		     struct inode *inode,
+ 		     int mask);
+ 
+diff --git a/fs/orangefs/inode.c b/fs/orangefs/inode.c
+index cd3273c88e03..8e6eeec501bc 100644
+--- a/fs/orangefs/inode.c
++++ b/fs/orangefs/inode.c
+@@ -872,7 +872,7 @@ int orangefs_getattr(struct mnt_idmap *idmap, const struct path *path,
+ 	return ret;
  }
  
--static inline int security_inode_remove_acl(struct mnt_idmap *idmap,
-+static inline int security_inode_remove_acl(const struct mnt_idmap *idmap,
- 					    struct dentry *dentry,
- 					    const char *acl_name)
+-int orangefs_permission(struct mnt_idmap *idmap,
++int orangefs_permission(const struct mnt_idmap *idmap,
+ 			struct inode *inode, int mask)
  {
- 	return 0;
+ 	int ret;
+diff --git a/fs/orangefs/orangefs-kernel.h b/fs/orangefs/orangefs-kernel.h
+index 1451fc2c1917..c582ceffb26e 100644
+--- a/fs/orangefs/orangefs-kernel.h
++++ b/fs/orangefs/orangefs-kernel.h
+@@ -357,7 +357,7 @@ int orangefs_setattr(struct mnt_idmap *, struct dentry *, struct iattr *);
+ int orangefs_getattr(struct mnt_idmap *idmap, const struct path *path,
+ 		     struct kstat *stat, u32 request_mask, unsigned int flags);
+ 
+-int orangefs_permission(struct mnt_idmap *idmap,
++int orangefs_permission(const struct mnt_idmap *idmap,
+ 			struct inode *inode, int mask);
+ 
+ int orangefs_update_time(struct inode *inode, enum fs_update_time type,
+diff --git a/fs/overlayfs/inode.c b/fs/overlayfs/inode.c
+index 0364e7d08ad7..1166381f1852 100644
+--- a/fs/overlayfs/inode.c
++++ b/fs/overlayfs/inode.c
+@@ -303,7 +303,7 @@ int ovl_getattr(struct mnt_idmap *idmap, const struct path *path,
+ 	return err;
  }
  
--static inline void security_inode_post_remove_acl(struct mnt_idmap *idmap,
-+static inline void security_inode_post_remove_acl(const struct mnt_idmap *idmap,
- 						  struct dentry *dentry,
- 						  const char *acl_name)
- { }
-diff --git a/security/integrity/evm/evm_main.c b/security/integrity/evm/evm_main.c
-index 06e187c9912d..aaf228ebed7c 100644
---- a/security/integrity/evm/evm_main.c
-+++ b/security/integrity/evm/evm_main.c
-@@ -652,7 +652,7 @@ static int evm_inode_removexattr(struct mnt_idmap *idmap, struct dentry *dentry,
- }
+-int ovl_permission(struct mnt_idmap *idmap,
++int ovl_permission(const struct mnt_idmap *idmap,
+ 		   struct inode *inode, int mask)
+ {
+ 	struct inode *upperinode = ovl_inode_upper(inode);
+diff --git a/fs/overlayfs/overlayfs.h b/fs/overlayfs/overlayfs.h
+index 6508f30aaaca..513ba93c7d1b 100644
+--- a/fs/overlayfs/overlayfs.h
++++ b/fs/overlayfs/overlayfs.h
+@@ -802,7 +802,7 @@ int ovl_set_nlink_lower(struct dentry *dentry);
+ unsigned int ovl_get_nlink(struct ovl_fs *ofs, struct dentry *lowerdentry,
+ 			   struct dentry *upperdentry,
+ 			   unsigned int fallback);
+-int ovl_permission(struct mnt_idmap *idmap, struct inode *inode,
++int ovl_permission(const struct mnt_idmap *idmap, struct inode *inode,
+ 		   int mask);
  
  #ifdef CONFIG_FS_POSIX_ACL
--static int evm_inode_set_acl_change(struct mnt_idmap *idmap,
-+static int evm_inode_set_acl_change(const struct mnt_idmap *idmap,
- 				    struct dentry *dentry, const char *name,
- 				    struct posix_acl *kacl)
+diff --git a/fs/proc/base.c b/fs/proc/base.c
+index 6a39de424f62..8dc43c846298 100644
+--- a/fs/proc/base.c
++++ b/fs/proc/base.c
+@@ -743,7 +743,7 @@ static bool has_pid_permissions(struct proc_fs_info *fs_info,
+ }
+ 
+ 
+-static int proc_pid_permission(struct mnt_idmap *idmap,
++static int proc_pid_permission(const struct mnt_idmap *idmap,
+ 			       struct inode *inode, int mask)
  {
-@@ -671,7 +671,7 @@ static int evm_inode_set_acl_change(struct mnt_idmap *idmap,
+ 	struct proc_fs_info *fs_info = proc_sb_info(inode->i_sb);
+@@ -3607,7 +3607,7 @@ int proc_pid_readdir(struct file *file, struct dir_context *ctx)
+  * This function makes sure that the node is always accessible for members of
+  * same thread group.
+  */
+-static int proc_tid_comm_permission(struct mnt_idmap *idmap,
++static int proc_tid_comm_permission(const struct mnt_idmap *idmap,
+ 				    struct inode *inode, int mask)
+ {
+ 	bool is_same_tgroup;
+diff --git a/fs/proc/fd.c b/fs/proc/fd.c
+index 0f9a1556f2a3..0653bceb730d 100644
+--- a/fs/proc/fd.c
++++ b/fs/proc/fd.c
+@@ -82,7 +82,7 @@ static int seq_fdinfo_open(struct inode *inode, struct file *file)
+  * that the current task has PTRACE_MODE_READ in addition to the normal
+  * POSIX-like checks.
+  */
+-static int proc_fdinfo_permission(struct mnt_idmap *idmap, struct inode *inode,
++static int proc_fdinfo_permission(const struct mnt_idmap *idmap, struct inode *inode,
+ 				  int mask)
+ {
+ 	bool allowed = false;
+@@ -323,7 +323,7 @@ static struct dentry *proc_lookupfd(struct inode *dir, struct dentry *dentry,
+  * /proc/pid/fd needs a special permission handler so that a process can still
+  * access /proc/self/fd after it has executed a setuid().
+  */
+-int proc_fd_permission(struct mnt_idmap *idmap,
++int proc_fd_permission(const struct mnt_idmap *idmap,
+ 		       struct inode *inode, int mask)
+ {
+ 	struct task_struct *p;
+diff --git a/fs/proc/fd.h b/fs/proc/fd.h
+index 7e7265f7e06f..77f2e4f38592 100644
+--- a/fs/proc/fd.h
++++ b/fs/proc/fd.h
+@@ -10,7 +10,7 @@ extern const struct inode_operations proc_fd_inode_operations;
+ extern const struct file_operations proc_fdinfo_operations;
+ extern const struct inode_operations proc_fdinfo_inode_operations;
+ 
+-extern int proc_fd_permission(struct mnt_idmap *idmap,
++extern int proc_fd_permission(const struct mnt_idmap *idmap,
+ 			      struct inode *inode, int mask);
+ 
+ static inline unsigned int proc_fd(struct inode *inode)
+diff --git a/fs/proc/proc_sysctl.c b/fs/proc/proc_sysctl.c
+index 04a382178c65..5315d891f244 100644
+--- a/fs/proc/proc_sysctl.c
++++ b/fs/proc/proc_sysctl.c
+@@ -788,7 +788,7 @@ static int proc_sys_readdir(struct file *file, struct dir_context *ctx)
  	return 0;
  }
- #else
--static inline int evm_inode_set_acl_change(struct mnt_idmap *idmap,
-+static inline int evm_inode_set_acl_change(const struct mnt_idmap *idmap,
- 					   struct dentry *dentry,
- 					   const char *name,
- 					   struct posix_acl *kacl)
-@@ -693,7 +693,7 @@ static inline int evm_inode_set_acl_change(struct mnt_idmap *idmap,
-  *
-  * Return: zero on success, -EPERM on failure.
-  */
--static int evm_inode_set_acl(struct mnt_idmap *idmap, struct dentry *dentry,
-+static int evm_inode_set_acl(const struct mnt_idmap *idmap, struct dentry *dentry,
- 			     const char *acl_name, struct posix_acl *kacl)
+ 
+-static int proc_sys_permission(struct mnt_idmap *idmap,
++static int proc_sys_permission(const struct mnt_idmap *idmap,
+ 			       struct inode *inode, int mask)
  {
- 	enum integrity_status evm_status;
-@@ -745,7 +745,7 @@ static int evm_inode_set_acl(struct mnt_idmap *idmap, struct dentry *dentry,
-  *
-  * Return: zero on success, -EPERM on failure.
-  */
--static int evm_inode_remove_acl(struct mnt_idmap *idmap, struct dentry *dentry,
-+static int evm_inode_remove_acl(const struct mnt_idmap *idmap, struct dentry *dentry,
- 				const char *acl_name)
- {
- 	return evm_inode_set_acl(idmap, dentry, acl_name, NULL);
-@@ -926,7 +926,7 @@ static void evm_inode_post_removexattr(struct dentry *dentry,
-  * Update the 'security.evm' xattr with the EVM HMAC re-calculated after
-  * removing posix acls.
-  */
--static inline void evm_inode_post_remove_acl(struct mnt_idmap *idmap,
-+static inline void evm_inode_post_remove_acl(const struct mnt_idmap *idmap,
- 					     struct dentry *dentry,
- 					     const char *acl_name)
- {
-diff --git a/security/integrity/ima/ima_appraise.c b/security/integrity/ima/ima_appraise.c
-index 6b21db789ef1..1aed041c127a 100644
---- a/security/integrity/ima/ima_appraise.c
-+++ b/security/integrity/ima/ima_appraise.c
-@@ -790,7 +790,7 @@ static int ima_inode_setxattr(struct mnt_idmap *idmap, struct dentry *dentry,
- 	return result;
+ 	/*
+diff --git a/fs/smb/client/cifsfs.c b/fs/smb/client/cifsfs.c
+index 7ecd70efdfea..b1ecbcfb154e 100644
+--- a/fs/smb/client/cifsfs.c
++++ b/fs/smb/client/cifsfs.c
+@@ -402,7 +402,7 @@ static long cifs_fallocate(struct file *file, int mode, loff_t off, loff_t len)
+ 	return rc;
  }
  
--static int ima_inode_set_acl(struct mnt_idmap *idmap, struct dentry *dentry,
-+static int ima_inode_set_acl(const struct mnt_idmap *idmap, struct dentry *dentry,
- 			     const char *acl_name, struct posix_acl *kacl)
+-static int cifs_permission(struct mnt_idmap *idmap,
++static int cifs_permission(const struct mnt_idmap *idmap,
+ 			   struct inode *inode, int mask)
  {
- 	if (evm_revalidate_status(acl_name))
-@@ -815,7 +815,7 @@ static int ima_inode_removexattr(struct mnt_idmap *idmap, struct dentry *dentry,
- 	return result;
+ 	unsigned int sbflags = cifs_sb_flags(CIFS_SB(inode));
+diff --git a/fs/smb/server/vfs.c b/fs/smb/server/vfs.c
+index cb52dce113b9..0361de56edc2 100644
+--- a/fs/smb/server/vfs.c
++++ b/fs/smb/server/vfs.c
+@@ -115,7 +115,7 @@ static int ksmbd_vfs_path_lookup(struct ksmbd_share_config *share_conf,
+ 	return 0;
  }
  
--static int ima_inode_remove_acl(struct mnt_idmap *idmap, struct dentry *dentry,
-+static int ima_inode_remove_acl(const struct mnt_idmap *idmap, struct dentry *dentry,
- 				const char *acl_name)
+-void ksmbd_vfs_query_maximal_access(struct mnt_idmap *idmap,
++void ksmbd_vfs_query_maximal_access(const struct mnt_idmap *idmap,
+ 				   struct dentry *dentry, __le32 *daccess)
  {
- 	return ima_inode_set_acl(idmap, dentry, acl_name, NULL);
-diff --git a/security/security.c b/security/security.c
-index 2ee276ab15c5..e81dcda3050b 100644
---- a/security/security.c
-+++ b/security/security.c
-@@ -1953,7 +1953,7 @@ int security_inode_setxattr(struct mnt_idmap *idmap,
-  *
-  * Return: Returns 0 if permission is granted.
-  */
--int security_inode_set_acl(struct mnt_idmap *idmap,
-+int security_inode_set_acl(const struct mnt_idmap *idmap,
- 			   struct dentry *dentry, const char *acl_name,
- 			   struct posix_acl *kacl)
- {
-@@ -1990,7 +1990,7 @@ void security_inode_post_set_acl(struct dentry *dentry, const char *acl_name,
-  *
-  * Return: Returns 0 if permission is granted.
-  */
--int security_inode_get_acl(struct mnt_idmap *idmap,
-+int security_inode_get_acl(const struct mnt_idmap *idmap,
- 			   struct dentry *dentry, const char *acl_name)
- {
- 	if (unlikely(IS_PRIVATE(d_backing_inode(dentry))))
-@@ -2009,7 +2009,7 @@ int security_inode_get_acl(struct mnt_idmap *idmap,
-  *
-  * Return: Returns 0 if permission is granted.
-  */
--int security_inode_remove_acl(struct mnt_idmap *idmap,
-+int security_inode_remove_acl(const struct mnt_idmap *idmap,
- 			      struct dentry *dentry, const char *acl_name)
- {
- 	if (unlikely(IS_PRIVATE(d_backing_inode(dentry))))
-@@ -2026,7 +2026,7 @@ int security_inode_remove_acl(struct mnt_idmap *idmap,
-  * Update inode security data after successfully removing posix acls on
-  * @dentry in @idmap. The posix acls are identified by @acl_name.
-  */
--void security_inode_post_remove_acl(struct mnt_idmap *idmap,
-+void security_inode_post_remove_acl(const struct mnt_idmap *idmap,
- 				    struct dentry *dentry, const char *acl_name)
- {
- 	if (unlikely(IS_PRIVATE(d_backing_inode(dentry))))
-diff --git a/security/selinux/hooks.c b/security/selinux/hooks.c
-index 035aaf113d1d..672d6374d8b0 100644
---- a/security/selinux/hooks.c
-+++ b/security/selinux/hooks.c
-@@ -3453,20 +3453,20 @@ static int selinux_inode_setxattr(struct mnt_idmap *idmap,
- 			    &ad);
+ 	*daccess = cpu_to_le32(FILE_READ_ATTRIBUTES | READ_CONTROL);
+diff --git a/fs/smb/server/vfs.h b/fs/smb/server/vfs.h
+index 9f4b003166e5..9c8b5b288926 100644
+--- a/fs/smb/server/vfs.h
++++ b/fs/smb/server/vfs.h
+@@ -74,7 +74,7 @@ struct ksmbd_kstat {
+ };
+ 
+ int ksmbd_vfs_lock_parent(struct dentry *parent, struct dentry *child);
+-void ksmbd_vfs_query_maximal_access(struct mnt_idmap *idmap,
++void ksmbd_vfs_query_maximal_access(const struct mnt_idmap *idmap,
+ 				   struct dentry *dentry, __le32 *daccess);
+ int ksmbd_vfs_create(struct ksmbd_work *work, const char *name, umode_t mode);
+ int ksmbd_vfs_mkdir(struct ksmbd_work *work, const char *name, umode_t mode);
+diff --git a/fs/tracefs/inode.c b/fs/tracefs/inode.c
+index f3d6188a3b7b..7cf32384ad50 100644
+--- a/fs/tracefs/inode.c
++++ b/fs/tracefs/inode.c
+@@ -189,7 +189,7 @@ static void set_tracefs_inode_owner(struct inode *inode)
+ 		inode->i_gid = gid;
  }
  
--static int selinux_inode_set_acl(struct mnt_idmap *idmap,
-+static int selinux_inode_set_acl(const struct mnt_idmap *idmap,
- 				 struct dentry *dentry, const char *acl_name,
- 				 struct posix_acl *kacl)
+-static int tracefs_permission(struct mnt_idmap *idmap,
++static int tracefs_permission(const struct mnt_idmap *idmap,
+ 			      struct inode *inode, int mask)
  {
- 	return dentry_has_perm(current_cred(), dentry, FILE__SETATTR);
+ 	set_tracefs_inode_owner(inode);
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 91a23c8dbbf6..f815594dd8cb 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1994,7 +1994,7 @@ enum fs_update_time {
+ struct inode_operations {
+ 	struct dentry * (*lookup) (struct inode *,struct dentry *, unsigned int);
+ 	const char * (*get_link) (struct dentry *, struct inode *, struct delayed_call *);
+-	int (*permission) (struct mnt_idmap *, struct inode *, int);
++	int (*permission) (const struct mnt_idmap *, struct inode *, int);
+ 	struct posix_acl * (*get_inode_acl)(struct inode *, int, bool);
+ 
+ 	int (*readlink) (struct dentry *, char __user *,int);
+@@ -2709,8 +2709,8 @@ static inline int bmap(struct inode *inode,  sector_t *block)
+ 
+ int notify_change(struct mnt_idmap *, struct dentry *,
+ 		  struct iattr *, struct delegated_inode *);
+-int inode_permission(struct mnt_idmap *, struct inode *, int);
+-int generic_permission(struct mnt_idmap *, struct inode *, int);
++int inode_permission(const struct mnt_idmap *, struct inode *, int);
++int generic_permission(const struct mnt_idmap *, struct inode *, int);
+ static inline int file_permission(struct file *file, int mask)
+ {
+ 	return inode_permission(file_mnt_idmap(file),
+@@ -3397,7 +3397,7 @@ static inline bool generic_ci_validate_strict_name(struct inode *dir,
+ }
+ #endif
+ 
+-int may_setattr(struct mnt_idmap *idmap, struct inode *inode,
++int may_setattr(const struct mnt_idmap *idmap, struct inode *inode,
+ 		unsigned int ia_valid);
+ int setattr_prepare(struct mnt_idmap *, struct dentry *, struct iattr *);
+ extern int inode_newsize_ok(const struct inode *, loff_t offset);
+diff --git a/include/linux/nfs_fs.h b/include/linux/nfs_fs.h
+index b85a73ae7919..b2828ea03abe 100644
+--- a/include/linux/nfs_fs.h
++++ b/include/linux/nfs_fs.h
+@@ -441,7 +441,7 @@ extern int nfs_getattr(struct mnt_idmap *, const struct path *,
+ 		       struct kstat *, u32, unsigned int);
+ extern void nfs_access_add_cache(struct inode *, struct nfs_access_entry *, const struct cred *);
+ extern void nfs_access_set_mask(struct nfs_access_entry *, u32);
+-extern int nfs_permission(struct mnt_idmap *, struct inode *, int);
++extern int nfs_permission(const struct mnt_idmap *, struct inode *, int);
+ extern int nfs_open(struct inode *, struct file *);
+ extern int nfs_attribute_cache_expired(struct inode *inode);
+ extern int nfs_revalidate_inode(struct inode *inode, unsigned long flags);
+diff --git a/security/selinux/selinuxfs.c b/security/selinux/selinuxfs.c
+index c7d91476971c..a0be7f1b5993 100644
+--- a/security/selinux/selinuxfs.c
++++ b/security/selinux/selinuxfs.c
+@@ -1782,7 +1782,7 @@ static struct dentry *sel_make_dir(struct dentry *dir, const char *name,
+ 	return sel_attach(dir, name, inode);
  }
  
--static int selinux_inode_get_acl(struct mnt_idmap *idmap,
-+static int selinux_inode_get_acl(const struct mnt_idmap *idmap,
- 				 struct dentry *dentry, const char *acl_name)
+-static int reject_all(struct mnt_idmap *idmap, struct inode *inode, int mask)
++static int reject_all(const struct mnt_idmap *idmap, struct inode *inode, int mask)
  {
- 	return dentry_has_perm(current_cred(), dentry, FILE__GETATTR);
+ 	return -EPERM;	// no access for anyone, root or no root.
  }
- 
--static int selinux_inode_remove_acl(struct mnt_idmap *idmap,
-+static int selinux_inode_remove_acl(const struct mnt_idmap *idmap,
- 				    struct dentry *dentry, const char *acl_name)
- {
- 	return dentry_has_perm(current_cred(), dentry, FILE__SETATTR);
-diff --git a/security/smack/smack_lsm.c b/security/smack/smack_lsm.c
-index 8e88ac65fd7f..244cdb49e928 100644
---- a/security/smack/smack_lsm.c
-+++ b/security/smack/smack_lsm.c
-@@ -1543,7 +1543,7 @@ static int smack_inode_removexattr(struct mnt_idmap *idmap,
-  *
-  * Returns 0 if access is permitted, an error code otherwise
-  */
--static int smack_inode_set_acl(struct mnt_idmap *idmap,
-+static int smack_inode_set_acl(const struct mnt_idmap *idmap,
- 			       struct dentry *dentry, const char *acl_name,
- 			       struct posix_acl *kacl)
- {
-@@ -1566,7 +1566,7 @@ static int smack_inode_set_acl(struct mnt_idmap *idmap,
-  *
-  * Returns 0 if access is permitted, an error code otherwise
-  */
--static int smack_inode_get_acl(struct mnt_idmap *idmap,
-+static int smack_inode_get_acl(const struct mnt_idmap *idmap,
- 			       struct dentry *dentry, const char *acl_name)
- {
- 	struct smk_audit_info ad;
-@@ -1588,7 +1588,7 @@ static int smack_inode_get_acl(struct mnt_idmap *idmap,
-  *
-  * Returns 0 if access is permitted, an error code otherwise
-  */
--static int smack_inode_remove_acl(struct mnt_idmap *idmap,
-+static int smack_inode_remove_acl(const struct mnt_idmap *idmap,
- 				  struct dentry *dentry, const char *acl_name)
- {
- 	struct smk_audit_info ad;
 
 -- 
 2.53.0
