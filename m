@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A5C5442388;
-	Tue,  1 Sep 2026 20:29:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B5C94A3F1D;
+	Tue,  1 Sep 2026 20:30:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788294570; cv=none; b=DHDd+PUEf7VoHobdeFJsDgVb8lkvRb/5BV/Rp/l8OVyABHxGnjp+8yk2qBlmRDzl8FFRv3sD2pwrzBmozNseWgEOpf0gkd9NVz3jwNAoYr1G3ZcV+F1qxCxDSPmQwCWoinOZj/t/tLI6DSC5wvTZSZryjAZ3GtM875hG8Tsrpig=
+	t=1788294637; cv=none; b=cfPUorwVcLUD0bJWH/WB+EMHk1jGHZtQOuISDaeQadP3FSPZlrXfqXyP1kbBwD118T1bXDu1dAHc2/6LeipiWnEgR4y5nV9eopY4UQXmRcwsuutpiyiOYXaUFVwpjYFBMzDxpj5DN4jV5EgW3lxY+WS2yKxETMFkpQMLcl+rBgE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788294570; c=relaxed/simple;
-	bh=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=;
+	s=arc-20240116; t=1788294637; c=relaxed/simple;
+	bh=6T6cm9p7xef6eTYRLkIy168YNjvqH+1p+bliQPcRg2k=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=T7SIOhGcuwGOJjCa903UcS7riAMQD0GP/dsmH2XnqY27gDmZRCyAw9HxdXlNgiCWrNBr/7B1j9920xVT6B7JhUwpH9EwoToEk/FhAesC39YO3jnbdxyvdb8JMwtOoPjWYNacIaL+Xi/CowLqiEusk+nlu3kE5cWM2UhB0hWtGnM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GHnc9AkM; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZvYRQDpHMCMBsj6Yl26dA1KlqVn8pYm/NW8PwFnk3GtQIPHhveRgoxEamJIXNeDbWYxwUseKXq1omWtPPafpmHCH2BjFXQFbZETwoX2nitRy7JkQIG7lDfnAocFvZXVASJnX+7uNaQmibXZEiVO62SU43sfK/iRCcpaFzT0bDJg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RHlrdHe2; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GHnc9AkM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B7E891F000E9;
-	Tue,  1 Sep 2026 20:29:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RHlrdHe2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A2F7C1F000E9;
+	Tue,  1 Sep 2026 20:30:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788294568;
-	bh=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=;
+	s=k20260515; t=1788294635;
+	bh=rKxIIP5PkuS4vkzJXkQJBUfKdiqUK3/TwzXzoEBcn1M=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=GHnc9AkMu8ce9n+HMBvbAn8Krm1Gsxh5hDD1NQ1ORMazndd1HS5Sx8sLT4L0ZVE85
-	 CjFJ/EADfsbbqTS6ffNi/Tftm43kSBjFiscGjTIImubwVFY7HfXlidLB/pZhTRnliN
-	 a4XWeiCk73rMN8fgQfKvj8ArcdQnl/BKJVWrgjwLh5Ze909jVnfMlyygkCQ0ws2z+u
-	 ww1ByKFUujuPbPMQYWK8uTlkh/ALd36LoWiM9JuqcNk52ddaFNHjyu1rmKl9v6Azrg
-	 C6tsysr8aheQGci7u4LU1KK9m+vZKCbkcBNcRqrRXQ3xxq2Am7n9VmXEBsBxvuCPYh
-	 X9AChjoqqLvjA==
-Date: Wed, 2 Sep 2026 04:29:22 +0800
+	b=RHlrdHe2uQopFVcfoSEPzRjR43pmmEpmDSPwiJDme+xi+gzFee2Jj0X+9zoN4ns1i
+	 ZDLxilXfmQ+NAFxhia7IvlU858S2U/TeuzNtkr55yeqOBz9QfYZImWlE+Sk9GRB8mB
+	 QavpCtMFgNjICty5IbUB9euLCkPC1Kwvt+lkbgZdQKtMU/piMDdxiqriyljnf+4u2V
+	 bmFsnuxOyQJDdeZoiBZ52XgFSDgJZzoM0t3pteU/hJtPNux4IYdDfj+Qyz/kS1eGP9
+	 mMnsdAjeUM1mEec1NmJuB7tRlzFLlWWSGKT64XpsiAMv+Is9bPqP1xNC3xoSf4Lr+g
+	 ClPu4+F1Gp/4w==
+Date: Wed, 2 Sep 2026 04:30:29 +0800
 From: Zorro Lang <zlang@kernel.org>
 To: Anand Jain <asj@kernel.org>
 Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, 
@@ -34,7 +34,7 @@ Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org,
 	linux-f2fs-devel@lists.sourceforge.net, djwong@kernel.org
 Subject: Re: [PATCH v8 11/13] fstests: verify exportfs file handles on cloned
  filesystems
-Message-ID: <apc0FKW7Zuez4SeB@zlang-mailbox>
+Message-ID: <apc1uPbA2hKofHA6@zlang-mailbox>
 Mail-Followup-To: Anand Jain <asj@kernel.org>, fstests@vger.kernel.org, 
 	linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, 
 	linux-f2fs-devel@lists.sourceforge.net, djwong@kernel.org
@@ -50,3 +50,116 @@ Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <7afe9c82cce1540ea0f8cc1f3d1306c24b6cc84d.1784949155.git.asj@kernel.org>
 
+On Sat, Jul 25, 2026 at 03:39:08PM +0800, Anand Jain wrote:
+> Ensure that exportfs can correctly decode file handles on a cloned
+> filesystem across a mount cycle, by file handles generated on a
+> cloned device remain valid after mount cycle.
+> 
+> Signed-off-by: Anand Jain <asj@kernel.org>
+> ---
+>  tests/generic/805     | 80 +++++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/805.out |  2 ++
+>  2 files changed, 82 insertions(+)
+>  create mode 100644 tests/generic/805
+>  create mode 100644 tests/generic/805.out
+> 
+> diff --git a/tests/generic/805 b/tests/generic/805
+> new file mode 100644
+> index 000000000000..5827eee039df
+> --- /dev/null
+> +++ b/tests/generic/805
+> @@ -0,0 +1,80 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2026 Anand Jain <asj@kernel.org>.  All Rights Reserved.
+> +#
+> +# FS QA Test No. 805
+> +# Verify that file handles encoded on a cloned filesystem remain valid and
+> +# resolvable via open_by_handle across a mount cycle and mount order swap.
+> +
+> +. ./common/preamble
+> +
+> +_begin_fstest auto quick exportfs clone
+> +
+> +_require_test
+> +_require_block_device $TEST_DEV
+> +_require_exportfs
+> +_require_loop
+> +_require_test_program "open_by_handle"
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -r -f $tmp.*
+> +	_unmount $mnt1 2>/dev/null
+> +	_unmount $mnt2 2>/dev/null
+> +	_loop_image_destroy "${devs[@]}" 2> /dev/null
+> +}
+> +
+> +# Create test dir and test files, encode file handles and store to tmp file
+> +create_test_files()
+> +{
+> +	rm -rf $testdir
+> +	mkdir -p $testdir
+> +	$here/src/open_by_handle -cwp -o $tmp.handles_file $testdir $NUMFILES
+> +}
+> +
+> +# Attempt to read and decode the saved file handles on the targeted mount point.
+> +test_file_handles()
+> +{
+> +	local opt=$1
+> +	local when=$2
+> +
+> +	echo test_file_handles after $when
+> +	$here/src/open_by_handle $opt -i $tmp.handles_file $mnt2 $NUMFILES
+> +}
+> +
+> +# Setup base loop device and its clone
+> +devs=()
+> +_loop_image_create_clone devs
+> +mkdir -p $TEST_DIR/$seq
+> +mnt1=$TEST_DIR/$seq/mnt1
+> +mnt2=$TEST_DIR/$seq/mnt2
+> +mkdir -p $mnt1
+> +mkdir -p $mnt2
+> +
+> +# Mount both identical UUID filesystems simultaneously
+> +_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[0]} $mnt1 || \
+> +						_fail "Failed to mount dev1"
+> +_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[1]} $mnt2 || \
+> +						_fail "Failed to mount dev2"
+> +
+> +NUMFILES=1
+
+NUMFILES=${LOAD_FACTOR} ?
+
+> +testdir=$mnt2/testdir
+> +
+> +# Decode file handles of files/dir after cycle mount
+> +create_test_files
+> +
+> +# Cycle mounts and reverse initialization sequence to check if
+> +# file handle lookups are okay
+> +_unmount $mnt1
+> +_unmount $mnt2
+> +_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[1]} $mnt2 || \
+> +						_fail "Failed to mount dev2"
+> +_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[0]} $mnt1 || \
+> +						_fail "Failed to mount dev1"
+> +
+> +# Verify file handles can still be resolved post-mount-cycle
+> +test_file_handles -rp "cycle mount"
+> +
+> +status=0
+> +exit
+> diff --git a/tests/generic/805.out b/tests/generic/805.out
+> new file mode 100644
+> index 000000000000..29b11ec77ffb
+> --- /dev/null
+> +++ b/tests/generic/805.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 805
+> +test_file_handles after cycle mount
+> -- 
+> 2.43.0
+> 
