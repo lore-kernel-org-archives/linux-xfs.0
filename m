@@ -1,126 +1,143 @@
-Received: from mail-wr1-f46.google.com (mail-wr1-f46.google.com [209.85.221.46])
+Received: from mail-pj1-f47.google.com (mail-pj1-f47.google.com [209.85.216.47])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4527F366042
-	for <linux-xfs@vger.kernel.org>; Wed,  2 Sep 2026 17:45:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.221.46
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788371153; cv=pass; b=sf7GohTe3arb93jNqtcoDt8UvvhHB3vxvVTfHUe1VSWOx6krbPCyhwL8Aze/Nt2DlFqW56ZcUodDHoVi1Co097YzuxNQHM3qz8smCKveKvApWVb+Kcri7EMNV/5XdrZhMkkHJ9fzWWLnVeUZ7QHqAv3Hp7stWexZRQKk2Ebv1QU=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788371153; c=relaxed/simple;
-	bh=K0HXSYdoGd6S9dM22plvKSCWPk9aEGxVwTcguAvww6E=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=VuyDvRnbFHWX8luevU+cCciHT9YoezWqrb4AF2gYdlN9+DKQYbSkeCFvRXdr+UCHIBdck3g5SNTK6rHa2SmxytL6xJGW5Kz79Dv+gxtb2neDDkUv8+fvurVCXLy86lCsUZ3TiTWn8EgLqI+W/H6z35IbBql6OOR7nDoJqVIXuWg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=VlsTot0D; arc=pass smtp.client-ip=209.85.221.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5477637BE70
+	for <linux-xfs@vger.kernel.org>; Wed,  2 Sep 2026 18:22:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.47
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1788373351; cv=none; b=NX/b+LFpEpAlr5AwGilCvVjKyt57v1emJlIjKH5V3x84Gac9MgDMiBAKMzpDWsl/oG76qGaZvJTg48o1VZ9VnjTBbr7Zx9GgDGBdEqpPvmC+6Z9QChn0aVSCNZUND7bwYErfhoiWkYG+i0QAipnuMJkh+isr4flWMMlwdzDc4yw=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1788373351; c=relaxed/simple;
+	bh=NVVTGnB37/fY4kDzzxNAhZ2/5WJSJaVtQxGRcCwpNPs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=fYCfWyf3itviVFhN/4IetOxhiRxp8Uwwl9j8vjDXJ4uuYW0vGjLo5t5TNBKOoc0Ht2OVqTawlgrgX+qIvIoVgGUrf2UMXDEbzAZzvWkyG/tnb4AmY+8BqFcL9AybtytKRBo/+cmG/zDvnoXZZ1UESSg1urAwoEVMXNx+/RiIf3I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ec7IYQ2q; arc=none smtp.client-ip=209.85.216.47
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VlsTot0D"
-Received: by mail-wr1-f46.google.com with SMTP id ffacd0b85a97d-48436216a98so916676f8f.0
-        for <linux-xfs@vger.kernel.org>; Wed, 02 Sep 2026 10:45:52 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1788371150; cv=none;
-        d=google.com; s=arc-20260327;
-        b=eFAF0aLwVa57VipYibtew70xug+73uHmbKwi0H8wmTnwmy7Z/6+M8Qt+Zle7H/xFlG
-         nby2jBEywqwX6gQKmkV7GuRH0Ot7E+vJzJ6tlmbEiZScD5DCsTSZLOwLR1FqwXxZoKfl
-         vqYZTRvJ9ixGunr703nqhI+ApxmHOjMHEFDnpNwPnhegRoMJ+qjF/2RroOthpGWZ4cBW
-         DdypsRtCd7nGnSZmQSXqlE+m8i2VK6R+403b6wGAZ5P1cKJO7sBWK66LxQF24tcfkZAj
-         K3oD8Uin1q4kH/ytX8s2skP/kmVUCW5Je4TjlNsR08aACbWt5cfNKNS99dZ+OSJ4stTr
-         4WeA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=c5v4QLo29+9sYIlbxOvZxTqf1Ctg+I+izJ9dnI+b66k=;
-        fh=HvDlXY4zMmqKbuVey6kXFj8PicxEIFEsqN3jV0JYbqI=;
-        b=Y1vyrPqxq+iFIp+ceXPnr1lKWry0IAAFdRPtxPoI9FWg2JJdBKQsR1s8SuKvN+uyt0
-         zXRHxr2GXuB+l+b0ZPbEr3ea0vlfk1HCcGoL2i66XVOYgK+2eMVyNBCicMrnUXLxL3ug
-         Kie1I8YzBjmQ7KNUJkK8RWB0V/eGEyUORutpbq5VVCiKxnzLSe+nz6k8LZiRuXwcltRo
-         MtGBOfde1qj/n/UvGbr/oSUNyopeQjfFDlk+sgr7tXFpirvGnfVFwxajIi7JHxObdFbr
-         GFN77x9V6s88vbOBy3ZCJIPOW7f920gclLDS/bqeMg5uWPMwJTA7vV1BV86tRGIEOGwK
-         w9og==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ec7IYQ2q"
+Received: by mail-pj1-f47.google.com with SMTP id 98e67ed59e1d1-398b3c37877so1859583a91.0
+        for <linux-xfs@vger.kernel.org>; Wed, 02 Sep 2026 11:22:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788371150; x=1788975950; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+        d=gmail.com; s=20251104; t=1788373350; x=1788978150; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=c5v4QLo29+9sYIlbxOvZxTqf1Ctg+I+izJ9dnI+b66k=;
-        b=VlsTot0DuYqoC1uVS0+e46rqEw54gX/8RoJftJey6uS4qtgDyq2L42tIag4JLFES8b
-         e3SxHmU3++trX1P8SBayIhCmUWHGU2UfEmpfswvTXYROB2pyACACd1td5jpy6hx30FFF
-         NzjzBKb74P9EIc/I72L/cR+5J7mkkJSphddDr/VBQ9edji6L5bp8n9Zwqjldd6kD8pG6
-         n9eMbLMjt6OgCbjxzXQeiVMlGFXar+2+n3PQqV4/mQCgH6Nm2Oe1cUxp/Fb8h7bNSekx
-         kSU91cyvRwriwlXN9VvExNqQzsVNKDHJkn1KmM2X9ovsVYdbd/22I6sZeNs6L6/BkgBW
-         ugOw==
+        bh=qPrGa15l+jPzGGVJJ+aWuDwK7J17t8ka2erG7mJIoHw=;
+        b=ec7IYQ2qpVHYYqvZuFz/wcRrv+BcMGfvnuXTjUAKO7k4CwoQ17hSYpMju1sZr3xS2k
+         XKlesOOeAenjvL4ZXImfyNCStl7+c0wBZhRZbyJo6NqJcfln+z0aXB08ttyV51g5m3rc
+         ZjOD251vtaapGLje3hBpKv9iDIMruXVs2azPlc2jnhHrDvXvNpxxCqPMps4tzddmzIwO
+         +uc9vGEs1Pkq6ztpUlzb/SCMblqt9ENl4eaBtm2NisCGtlLA44ThcdU+V99rXFCrMxiJ
+         nhUgF/0oF+AVb5CyKeTHRby7mLih4Y67SX/qXGfkTGRJENvtO/5UbEiPkWa6h1WzYdNC
+         UwLw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788371150; x=1788975950;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
+        d=1e100.net; s=20251104; t=1788373350; x=1788978150;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=c5v4QLo29+9sYIlbxOvZxTqf1Ctg+I+izJ9dnI+b66k=;
-        b=X+E66iKj+qWHFH/ifjxaDWoC7Yx410pExavXIW31DAeAlQFOpXvTH2qzImgtcm8I+o
-         IVT6q+mDBoA5RdFvlh4SNZDk4zTsjrGLG8FYaMZTK72SnUk5EZbFtlxp/C0JRsiyalGd
-         dXNMRd/GGT1iMLtHSZ+JjewvNIWvJygxg8y/tWSUtls7Sv3sboywEQGzYym0wRXUgBAn
-         0tgIwO+/FV/PsAO0as+OYyldL7q5GBTVsIlz7O5jE6FS5LbJ+6KY5lw9Zl/YS/upkzc1
-         Iw2oa4HeOh5CUM76DFRPYihSr4m4TahvKKYoFR8FSeoi0MlJHopBG1U4mUpFcHz6uT8z
-         MvHg==
-X-Forwarded-Encrypted: i=1; AKwUvBwT8f7dL6tUYc64e6au/eKC4FJXi3tmDgV1rcwVeFH6nv+7o7el4dvLE/62lBlCwTr6OUonDS4DHBU=@vger.kernel.org
-X-Gm-Message-State: AFuF++m44gGjlopg0iIC+jBNVTByknfoHmsW+KMaVGXdYPMDDgk+AfQE
-	nTkEzSw0qlggol3Q+BybHTMFEpjr4yMpXBInViXaE+6gwAl0XoKoN71I3QtVJzEdZcOlogPIplz
-	ygJ2UG0u+PgFpIX9GXPupvqxdzm0GT7A=
-X-Gm-Gg: AYBFou2NaKZ6Y0jZUL2szaiGEWWdiinLkME9nHcmtol8Dlmi86jiLyHYJ1HiJ24NssX
-	0tBkqO9p86BhyMA2RRxi/82sc8Il/SiRu0ejHIot3zLfcwDPn2sqtcimtbiFeP0XTcWZSxuqTWX
-	D/ixjE5zrub6xmZVPb/LIp6dm8pilWtfJGtv84XQlJ4H7Yz/AsPxa65OtUGdbNI3DWdi/yPUet8
-	/OPZs4LtPjBFidSKabTJrJ+G0bd4xoHlD4hq5Tb5eSm0Imjs69UhbRgEl3vmNLqEazeVPXUUfbU
-	/LPAcNPqutkaLO4Cwi4ZS8KDyre6v1MdY2BQQF/t/5k2UW1NT8wIy6axpsqjeY2aejIV+ewi3MY
-	AfP90/Ugzua2DUrphWnmXEC3lr2U=
-X-Received: by 2002:a05:6000:b8b:b0:484:4874:db4e with SMTP id
- ffacd0b85a97d-484913b96damr9005716f8f.17.1788371150252; Wed, 02 Sep 2026
- 10:45:50 -0700 (PDT)
+        bh=qPrGa15l+jPzGGVJJ+aWuDwK7J17t8ka2erG7mJIoHw=;
+        b=ffy4WmrqtIhxct8dL97wpF0gNBYh4C64GsVJuqKL5ip4t4Cj+tJXiIJxNUy9P1nouJ
+         gh2sqOSECRqcQtpZlq9rapciTi5cIerCPfochk0+iBUC8Nil0uRQHiIo629jQAa6Ntp1
+         ZwBq7WsUUCoViEpvBr+Tugs1xCtx18CkY5hnfHlta1ZpQWW+7JiipsI/7oajvlqQFf+/
+         pCCvHfqpbAQHwNSpMqeHQoUG5KuzlX0P5kH3UqAdUBAaxonhgTYJ1vPcV7ud4xPm8i9W
+         LsUBaX62ir2FGbbs/E2ljRpUT1lc5mGD3QmJ6H789r+Cc9zG+zxFAvbmWbj9o1VmNwqA
+         8oJQ==
+X-Forwarded-Encrypted: i=1; AKwUvBwUcgXEtLsXhDk92guXVaDguORMXzTyweJDmjdLA076tZUEFEgUKxejNX+ToUrdO68BD6vpzilXdns=@vger.kernel.org
+X-Gm-Message-State: AFuF++mS1Uwugk37ae6j5vRRs531H2yvFRsxLblNFLkI0hkS4XjLYZ09
+	41mrEoWPfmCuWTENr2U/fWP9XGJvARZaR6Eg5v6OIAbwu8JrYHUWfYApE8UBsoo=
+X-Gm-Gg: AYBFou2MtoXPv73uC3huaGB9Dz8tn2TAkD7lMpyv1eOWFUaSPsp6Jt2Yc5NDtNV+Auq
+	/mkuFUbnJjfnBwuaH6pJXqsSFd4e/2OyQT9v53xaeuRoJ7jUn73XDgzVbKKJcAw2tT40T0ng9lm
+	TtX/+FlZXraKV7BlLjSyfqnNtEzaPk8Q7A+Drd/tGeIUjJoUJytCKKZHujBYe7P5csl5gsx6iGl
+	sviHR2TRrF5SQQ81IQxLQbsBClb8mTQKvs8pFxKCOFRf0jsIjgFcW/yyugM+SzFOz5L+m6FQUz5
+	8BX+GQU3CdlKt26C2HR7KIQzMhk9P0KD2agzQtYnaKHwbiDtvENk5U3ucFfA3HzVQxsaIlGGXcT
+	GLZN7FQQwXW6AB0a6GFl2zLrUaXJyTE0K6+zJD88Hm57glN/Cp5nlW9XkRX4R+Btk0/Na309W3X
+	4FqTX9OGDTs+i+Xjh6B72GA1OlAk+UcTnDVp4ijXqLEZFV9qV9xGBA9n7nDiDDZhwlDAEpolVbB
+	msdbMUM+OVBs9IaGcDbkGwSOJnqyR4WYgnZDfM=
+X-Received: by 2002:a17:90b:4a07:b0:38e:97f0:aa4b with SMTP id 98e67ed59e1d1-39aee0e5ca1mr8288945a91.13.1788373349409;
+        Wed, 02 Sep 2026 11:22:29 -0700 (PDT)
+Received: from anuj-MacBookPro ([2406:7400:63:f76b:3efb:3463:cad7:ba39])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-32f079f1f4fsm8613791eec.11.2026.09.02.11.22.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 02 Sep 2026 11:22:28 -0700 (PDT)
+Date: Wed, 2 Sep 2026 23:52:21 +0530
+From: Anuj Gupta <anuj1072538@gmail.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, Christian Brauner <brauner@kernel.org>, 
+	"Darrick J. Wong" <djwong@kernel.org>, Carlos Maiolino <cem@kernel.org>, 
+	Tal Zussman <tz2294@columbia.edu>, Anuj Gupta <anuj20.g@samsung.com>, linux-block@vger.kernel.org, 
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 09/17] xfs: move PI generation into xfs_submit_zoned_bio
+Message-ID: <64756fpdb36bljyx6zmlcgdhv6ksly6zfhua6ierzga2jd6bl7@wyz5ar4cbba6>
+References: <20260831064010.2574896-1-hch@lst.de>
+ <20260831064010.2574896-10-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260729192737.3190206-1-joannelkoong@gmail.com>
- <20260730-habseligkeiten-adrett-axthieb-e619a48325ad@brauner> <20260731-hirte-hacken-atmen-bdecd01097f1@brauner>
-In-Reply-To: <20260731-hirte-hacken-atmen-bdecd01097f1@brauner>
-From: Joanne Koong <joannelkoong@gmail.com>
-Date: Wed, 2 Sep 2026 10:45:38 -0700
-X-Gm-Features: AcwNN1VeQfLr-lGWKTHuj31ux7CqT9nCh6MBY2zMFOnFauLHmsLD9R1qSF4ix5E
-Message-ID: <CAJnrk1aX__NiZs-RE1N1MzDVeCsRt12d_mwX_K7Eq2bHtNfdYA@mail.gmail.com>
-Subject: Re: (subset) [PATCH v5 00/22] iomap: convert to in-iter iomap_next() model
-To: Christian Brauner <brauner@kernel.org>
-Cc: hch@lst.de, "Darrick J . Wong" <djwong@kernel.org>, linux-fsdevel@vger.kernel.org, 
-	changfengnan@bytedance.com, kbusch@kernel.org, 
-	Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>, Jonathan Corbet <corbet@lwn.net>, 
-	David Sterba <dsterba@suse.com>, Gao Xiang <xiang@kernel.org>, Namjae Jeon <linkinjeon@kernel.org>, 
-	"Theodore Ts'o" <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>, Miklos Szeredi <miklos@szeredi.hu>, 
-	Andreas Gruenbacher <agruenba@redhat.com>, Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>, 
-	Hyunchul Lee <hyc.lee@gmail.com>, 
-	Konstantin Komarov <almaz.alexandrovich@paragon-software.com>, Carlos Maiolino <cem@kernel.org>, 
-	Damien Le Moal <dlemoal@kernel.org>, libaokun@linux.alibaba.com, bfoster@redhat.com, 
-	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260831064010.2574896-10-hch@lst.de>
 
-On Fri, Jul 31, 2026 at 6:40=E2=80=AFAM Christian Brauner <brauner@kernel.o=
-rg> wrote:
->
-> > [20/22] iomap: remove ->iomap_begin()/->iomap_end() legacy path
-> >         https://git.kernel.org/vfs/vfs/c/0210c4ba2547
->
-> That accidently slipped in. I have not dropped this from the v7.3 merge
-> window. I'll get a v7.3-rc1.iomap ready with the last three patches.
->
+>  xfs_open_zone_free_rcu(
+> @@ -890,6 +891,8 @@ xfs_submit_zoned_bio(
+>  		xfs_mark_rtg_boundary(ioend);
+>  	}
+>  
+> +	if (ioend->io_flags & IOMAP_IOEND_INTEGRITY)
+> +		fs_bio_integrity_generate(&ioend->io_bio);
+>  	submit_bio(&ioend->io_bio);
 
-Hi Christian,
+It seems to me that IOMAP_IOEND_INTEGRITY might never be set here. The
+zoned write iomaps in xfs_zoned_map_blocks() and
+xfs_zoned_direct_write_iomap_begin() do not set IOMAP_F_INTEGRITY based
+on bdev_has_integrity_csum(). Should both paths set it? I didn't have a
+zoned device to confirm this so this is just from a bit of code reading
+only.
 
-Hope you're having a great week so far. I'm not seeing the last 3
-patches as part of v7.3-rc1. Do you think it would make more sense to
-have it be included in rc2 or to have it be part of v7.4? I'm happy
-with either, just wanted to flag this in case I'm missing something.
+This looks like a pre-existing bug from 6bbb4d96f797 ("xfs: support T10
+protection information") which can be fixed with something like this?
 
-Thanks,
-Joanne
+[PATCH] xfs: set IOMAP_F_INTEGRITY for zoned writes on integrity devices
+
+Neither xfs_zoned_map_blocks() nor xfs_zoned_direct_write_iomap_begin()
+sets IOMAP_F_INTEGRITY based on bdev_has_integrity_csum(), so PI
+generation is silently skipped for zoned writes on integrity-enabled
+devices. Add the check in both paths.
+
+Fixes: 6bbb4d96f797 ("xfs: support T10 protection information")
+Signed-off-by: Anuj Gupta <anuj20.g@samsung.com>
+---
+ fs/xfs/xfs_aops.c  | 2 ++
+ fs/xfs/xfs_iomap.c | 2 ++
+ 2 files changed, 4 insertions(+)
+
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 76918bd15ca8..f813c0150c62 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -459,6 +459,8 @@ xfs_zoned_map_blocks(
+ 	wpc->iomap.offset = offset;
+ 	wpc->iomap.length = XFS_FSB_TO_B(mp, count_fsb);
+ 	wpc->iomap.flags = IOMAP_F_ANON_WRITE;
++	if (bdev_has_integrity_csum(wpc->iomap.bdev))
++		wpc->iomap.flags |= IOMAP_F_INTEGRITY;
+ 
+ 	trace_xfs_zoned_map_blocks(ip, offset, wpc->iomap.length);
+ 	return 0;
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 225c3de88d03..d7d88231d28b 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -1086,6 +1086,8 @@ xfs_zoned_direct_write_iomap_begin(
+ 	iomap->offset = offset;
+ 	iomap->length = length;
+ 	iomap->flags = IOMAP_F_ANON_WRITE;
++	if (bdev_has_integrity_csum(iomap->bdev))
++		iomap->flags |= IOMAP_F_INTEGRITY;
+ 	return 0;
+ }
+ 
+-- 
