@@ -1,38 +1,38 @@
-Received: from canpmsgout08.his.huawei.com (canpmsgout08.his.huawei.com [113.46.200.223])
+Received: from canpmsgout05.his.huawei.com (canpmsgout05.his.huawei.com [113.46.200.220])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41B7348C8AF;
-	Wed,  2 Sep 2026 13:17:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.223
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92F6549EC70;
+	Wed,  2 Sep 2026 13:17:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.220
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788355027; cv=none; b=kmyrPIgIyJsABhec52E6c9UskuOL+5nJrpjrHZZDzRUitZTpIK4otep1REds1aR5saJwexT3nI0r4ozGvQHqL76QON5nTlyBVf+hQDe06bRDJLyTtcWcT2s88pvmPDoJI6KMdbNuaBZ28I5ZQaT2S0ObUec7+OwHg4X+ZPIGi+w=
+	t=1788355030; cv=none; b=MbtFhuaiv47rtrncYnD1D7Z2PKd0MioVw92wjSHVJ8X94A/iPyE+23ROYzuids4NA/fEa7GWvsoXdetyFOgJDWEyJWIAtDgohm5lkMgmEHly4MK6GcYEkJbD7TtzWcLvVdqeVum9pDvq9k1fKoOuBmTK6VcbYA5gy+rXkvBoRhs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788355027; c=relaxed/simple;
-	bh=Y6ZMkcQu7k15mSxiuSv0YF3tYm3dKpM75JU24537c9k=;
+	s=arc-20240116; t=1788355030; c=relaxed/simple;
+	bh=pgNslJrKhmPb1hHc6kl0vAueUScUWIrh8wDYsXrwges=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=aIGFQHkF/YIotcuqZCTCZfGpwkyUSV/wF2uAQbFu5p5SFTvqP/1QJDDzD6+H2QyT+eN4sNlFxmZKT2vpF+UJbVUp/MHZfxFLCvrATYpuiLUX9buZEEDScaFyCk6CLKp+TuGfVdKw2d5GGWrdQGpoofi+tpf5wvVy0tMu8uRxEnQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=VFXbj+lH; arc=none smtp.client-ip=113.46.200.223
+	 MIME-Version:Content-Type; b=kZA9wjjpgkjbOcpcg0rIqQoK/4TvGXS7tiw90f+t5LlrFaFVcpiskeQaVSucLor3M6+pYkXP2Y8/acEGYRf5BfZ0elyuRvzjSD4HKcte9UTfL56fWMSLujh/nnP+pGHebNkV2FpPWG0W/oyOnAFdRCi1B16L+l9vOIHEJ+nAlEc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=mw4c/0xt; arc=none smtp.client-ip=113.46.200.220
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="VFXbj+lH"
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="mw4c/0xt"
 dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
 	c=relaxed/relaxed; q=dns/txt;
 	h=From;
-	bh=ow5+5zT/Qz68HwOR7hge2aByrndRNdMarakE/QBZiCg=;
-	b=VFXbj+lHggagP9n/+yQoCKVOFSLN5qmHvAnRjc2SuoDmJBsGdpPCXwi+W2WH7xOFN+Duw+met
-	4pa0nh3ChZr4eZ/gMFSfxyKgyVzUWeIRpZU2PL5uAcSir8zGNthTUTV+CBUW+Cfiv++XPqmCWGl
-	sjTRNDtuTETjbI1+REajJNU=
-Received: from mail.maildlp.com (unknown [172.19.162.92])
-	by canpmsgout08.his.huawei.com (SkyGuard) with ESMTPS id 4hZjf663f0zmV7C;
-	Wed,  2 Sep 2026 21:06:06 +0800 (CST)
+	bh=ysZbMcSHTTzwuIanrUUU6kasifEXs9ieZAuSRi3i5b8=;
+	b=mw4c/0xtanmWd0QxLrju3Xztcdo7XZF0X2hkxOoQgxfwaKUn6tAlOoKJkZUSwlRvdVMwiRtSF
+	RrVNqdP5C9qZVKF3UgdGBuF0ZuabhGmBs+LBxg+fDrrWYFvP6qlNNHw5F5HsWYSaf3FlLv7uepA
+	C97OE8HihM640DhopBVYge8=
+Received: from mail.maildlp.com (unknown [172.19.162.197])
+	by canpmsgout05.his.huawei.com (SkyGuard) with ESMTPS id 4hZjdb5PRKz12LGW;
+	Wed,  2 Sep 2026 21:05:39 +0800 (CST)
 Received: from kwepemk300003.china.huawei.com (unknown [7.202.195.93])
-	by mail.maildlp.com (Postfix) with ESMTPS id 1D00940586;
-	Wed,  2 Sep 2026 21:16:57 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id ECAED40579;
+	Wed,  2 Sep 2026 21:16:55 +0800 (CST)
 Received: from ubuntu (10.50.87.83) by kwepemk300003.china.huawei.com
  (7.202.195.93) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.45; Wed, 2 Sep
- 2026 21:16:56 +0800
+ 2026 21:16:55 +0800
 From: Kefeng Wang <wangkefeng.wang@huawei.com>
 To: <brauner@kernel.org>, <djwong@kernel.org>, <cem@kernel.org>,
 	<akpm@linux-foundation.org>, <vbabka@kernel.org>, <surenb@google.com>,
@@ -41,9 +41,9 @@ To: <brauner@kernel.org>, <djwong@kernel.org>, <cem@kernel.org>,
 	<shakeel.butt@linux.dev>, <ljs@kernel.org>
 CC: <linux-xfs@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
 	<linux-mm@kvack.org>, Kefeng Wang <wangkefeng.wang@huawei.com>
-Subject: [PATCH 3/4] mm: replace PF_KSWAPD flag with kthread_func() check
-Date: Wed, 2 Sep 2026 21:16:52 +0800
-Message-ID: <20260902131653.1338227-4-wangkefeng.wang@huawei.com>
+Subject: [PATCH 1/4] xfs: remove dead kswapd flag inheritance from btree split worker
+Date: Wed, 2 Sep 2026 21:16:50 +0800
+Message-ID: <20260902131653.1338227-2-wangkefeng.wang@huawei.com>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260902131653.1338227-1-wangkefeng.wang@huawei.com>
 References: <20260902131653.1338227-1-wangkefeng.wang@huawei.com>
@@ -58,105 +58,97 @@ Content-Type: text/plain
 X-ClientProxiedBy: kwepems500002.china.huawei.com (7.221.188.17) To
  kwepemk300003.china.huawei.com (7.202.195.93)
 
-The preceding commits removed the last consumer that propagated
-PF_KSWAPD beyond kswapd itself (XFS btree split worker inheritance).
-The only remaining setter of PF_KSWAPD is kswapd(), and every
-current_is_kswapd() caller only needs to check whether the current
-task *is* the kswapd thread, not whether it inherited the flag.
+Commit 1f6d64829db7 ("xfs: block allocation work needs to be kswapd
+aware") added PF_MEMALLOC | PF_KSWAPD inheritance to
+xfs_btree_split_worker() so that block allocation offloaded from
+kswapd to a workqueue thread could access emergency memory reserves
+and avoid reclaim throttling.
 
-Replace the flag-based test with kthread_func(current) == kswapd,
-freeing the 0x00020000 PF flag bit.
+pageout() no longer calls ->writepage() for filesystem folios -- it
+returns PAGE_ACTIVATE for non-shmem, non-anon pages.  kswapd therefore
+never enters XFS writeback and cannot reach btree split.  The only
+path that offloads btree splits is unwritten extent conversion at IO
+completion (xfs_end_io -> xfs_iomap_write_unwritten), which runs in
+a workqueue context where current_is_kswapd() is always false.
+
+Let's remove the dead kswapd flag and related codes.
 
 Signed-off-by: Kefeng Wang <wangkefeng.wang@huawei.com>
 ---
- include/linux/sched.h                    |  2 +-
- include/linux/swap.h                     |  7 +------
- mm/vmscan.c                              | 10 ++++++++--
- tools/sched_ext/include/scx/common.bpf.h |  1 -
- 4 files changed, 10 insertions(+), 10 deletions(-)
+ fs/xfs/libxfs/xfs_btree.c | 18 +-----------------
+ fs/xfs/xfs_platform.h     |  4 ----
+ 2 files changed, 1 insertion(+), 21 deletions(-)
 
-diff --git a/include/linux/sched.h b/include/linux/sched.h
-index 8b3d47a325cc..86394121b6c0 100644
---- a/include/linux/sched.h
-+++ b/include/linux/sched.h
-@@ -1809,7 +1809,7 @@ extern struct pid *cad_pid;
- #define PF_USER_WORKER		0x00004000	/* Kernel thread cloned from userspace thread */
- #define PF_NOFREEZE		0x00008000	/* This thread should not be frozen */
- #define PF_KCOMPACTD		0x00010000	/* I am kcompactd */
--#define PF_KSWAPD		0x00020000	/* I am kswapd */
-+#define PF__HOLE__00020000	0x00020000
- #define PF_MEMALLOC_NOFS	0x00040000	/* All allocations inherit GFP_NOFS. See memalloc_nfs_save() */
- #define PF_MEMALLOC_NOIO	0x00080000	/* All allocations inherit GFP_NOIO. See memalloc_noio_save() */
- #define PF_LOCAL_THROTTLE	0x00100000	/* Throttle writes only against the bdi I write to,
-diff --git a/include/linux/swap.h b/include/linux/swap.h
-index a72ecf12c00d..fc290e29e4a9 100644
---- a/include/linux/swap.h
-+++ b/include/linux/swap.h
-@@ -25,12 +25,6 @@
- #define SWAP_FLAGS_VALID	(SWAP_FLAG_PRIO_MASK | SWAP_FLAG_PREFER | \
- 				 SWAP_FLAG_DISCARD | SWAP_FLAG_DISCARD_ONCE | \
- 				 SWAP_FLAG_DISCARD_PAGES)
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 60ef7f08b1d3..6738d9d1511b 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -2994,7 +2994,6 @@ struct xfs_btree_split_args {
+ 	struct xfs_btree_cur	**curp;
+ 	int			*stat;		/* success/failure */
+ 	int			result;
+-	bool			kswapd;	/* allocation in kswapd context */
+ 	struct completion	*done;
+ 	struct work_struct	work;
+ };
+@@ -3008,33 +3007,18 @@ xfs_btree_split_worker(
+ {
+ 	struct xfs_btree_split_args	*args = container_of(work,
+ 						struct xfs_btree_split_args, work);
+-	unsigned long		pflags;
+-	unsigned long		new_pflags = 0;
 -
--static inline int current_is_kswapd(void)
--{
--	return current->flags & PF_KSWAPD;
--}
+-	/*
+-	 * we are in a transaction context here, but may also be doing work
+-	 * in kswapd context, and hence we may need to inherit that state
+-	 * temporarily to ensure that we don't block waiting for memory reclaim
+-	 * in any way.
+-	 */
+-	if (args->kswapd)
+-		new_pflags |= PF_MEMALLOC | PF_KSWAPD;
 -
- /*
-  * MAX_SWAPFILES defines the maximum number of swaptypes: things which can
-  * be swapped to.  The swap type and the offset into that swap type are
-@@ -339,6 +333,7 @@ void check_move_unevictable_folios(struct folio_batch *fbatch);
+-	current_set_flags_nested(&pflags, new_pflags);
+ 	xfs_trans_set_context(args->cur->bc_tp);
  
- extern void __meminit kswapd_run(int nid);
- extern void __meminit kswapd_stop(int nid);
-+bool current_is_kswapd(void);
+ 	args->result = __xfs_btree_split(args->cur, args->level, args->ptrp,
+ 					 args->key, args->curp, args->stat);
  
- #ifdef CONFIG_SWAP
- int add_swap_extent(struct swap_info_struct *sis, unsigned long start_page,
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 07ba86634b84..775d3f71a9de 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -7468,7 +7468,7 @@ static int kswapd(void *p)
- 	 * us from recursively trying to free more memory as we're
- 	 * trying to free the first piece of memory in the first place).
+ 	xfs_trans_clear_context(args->cur->bc_tp);
+-	current_restore_flags_nested(&pflags, new_pflags);
+ 
+ 	/*
+ 	 * Do not access args after complete() has run here. We don't own args
+ 	 * and the owner may run and free args before we return here.
  	 */
--	tsk->flags |= PF_MEMALLOC | PF_KSWAPD;
-+	tsk->flags |= PF_MEMALLOC;
- 	set_freezable();
- 
- 	WRITE_ONCE(pgdat->kswapd_order, 0);
-@@ -7518,11 +7518,17 @@ static int kswapd(void *p)
- 			goto kswapd_try_sleep;
- 	}
- 
--	tsk->flags &= ~(PF_MEMALLOC | PF_KSWAPD);
-+	tsk->flags &= ~PF_MEMALLOC;
- 
- 	return 0;
+ 	complete(args->done);
+-
  }
  
-+bool current_is_kswapd(void)
-+{
-+	return kthread_func(current) == kswapd;
-+}
-+EXPORT_SYMBOL_GPL(current_is_kswapd);
-+
  /*
-  * A zone is low on free memory or too fragmented for high-order memory.  If
-  * kswapd should reclaim (direct reclaim is deferred), wake it up for the zone's
-diff --git a/tools/sched_ext/include/scx/common.bpf.h b/tools/sched_ext/include/scx/common.bpf.h
-index 76f5e025e107..3e095343ae84 100644
---- a/tools/sched_ext/include/scx/common.bpf.h
-+++ b/tools/sched_ext/include/scx/common.bpf.h
-@@ -32,7 +32,6 @@
- #define PF_IO_WORKER			0x00000010	/* Task is an IO worker */
- #define PF_WQ_WORKER			0x00000020	/* I'm a workqueue worker */
- #define PF_KCOMPACTD			0x00010000      /* I am kcompactd */
--#define PF_KSWAPD			0x00020000      /* I am kswapd */
- #define PF_KTHREAD			0x00200000	/* I am a kernel thread */
- #define PF_EXITING			0x00000004
- #define CLOCK_MONOTONIC			1
+@@ -3078,7 +3062,7 @@ xfs_btree_split(
+ 	args.curp = curp;
+ 	args.stat = stat;
+ 	args.done = &done;
+-	args.kswapd = current_is_kswapd();
++
+ 	INIT_WORK_ONSTACK(&args.work, xfs_btree_split_worker);
+ 	queue_work(xfs_alloc_wq, &args.work);
+ 	wait_for_completion(&done);
+diff --git a/fs/xfs/xfs_platform.h b/fs/xfs/xfs_platform.h
+index 5d542e95fe44..a49fa159894d 100644
+--- a/fs/xfs/xfs_platform.h
++++ b/fs/xfs/xfs_platform.h
+@@ -115,10 +115,6 @@ typedef __u32			xfs_nlink_t;
+ #define xfs_blockgc_secs	xfs_params.blockgc_timer.val
+ 
+ #define current_cpu()		(raw_smp_processor_id())
+-#define current_set_flags_nested(sp, f)		\
+-		(*(sp) = current->flags, current->flags |= (f))
+-#define current_restore_flags_nested(sp, f)	\
+-		(current->flags = ((current->flags & ~(f)) | (*(sp) & (f))))
+ 
+ #define NBBY		8		/* number of bits per byte */
+ 
 -- 
 2.55.0
 
