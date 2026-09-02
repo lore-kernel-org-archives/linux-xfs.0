@@ -1,39 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62E89155757;
-	Wed,  2 Sep 2026 05:44:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28DC838C415;
+	Wed,  2 Sep 2026 05:45:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788327894; cv=none; b=RjRw+4qaX7wmuoQw6FX3dg2h5d7Dkl/lyR8wEkR87jbl3ZGMZq4HUX+i+9Ez1iOY5q3POOvwX/D25j+94/r+AFPVclrftv2zpFhcCBFPY0+pmBWwE0wI+VuqbnUq7wwO637JiseA8VOvZYPu+MoEkWYT8PwkDcsqBX6Iz1OuKRg=
+	t=1788327910; cv=none; b=CMQ8X8+M+D5lPOllgHDXI2ExgYMzcXvlo/tbGPFJx2zkGbRCOaS5P0gpL6bYNQ0aArhRPUAm7bzUCdRrCqYJPSTgWBVv1EmbfTr8QH4DHH/EFlIaJ0GbyBCSC1M5W4m+PQb3gJFapnsH/1ptCZ58qqi5NGykI18DHJrVUNFwV0s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788327894; c=relaxed/simple;
-	bh=OjX9ZpTPdoqc2G7NW/pXmu/sveVrO9C8UWHCietsrnQ=;
+	s=arc-20240116; t=1788327910; c=relaxed/simple;
+	bh=+Wk44bF/0iuvwn109DgMY9iJL9t2Wk1I37mTNLSDH44=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=r/22sG3Y0xFRyQjJ45ctEca4LAshpyPk/QhaLei1OA4kiUzVxio7hMv3CGlYj4eXc0bzIl7OxyhAfhMe7i3ica5I1bcGcIbdy99RTu44L6dkhueihiXryWJ2nEgbSxk4pMzJ5Vhex0/dHkP2k9qM+mrgQvnOMCPzGq6fWPnVWfk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VbOls7s8; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=UoLL7RGAEFkoiNzLj0+UxpoI/usNIp/M1RLQuYa+F3vDepMVkaynL/c2KxVkOTPI+vWCZXhlcYx8zXW7lPVM06RRCdFQxnxI1BrZHtM14ulIna9GfkvzjJKx/GxoFYn5TLKqz0B9mEbC5gKic6jR6NtbNKC2zuAM5dK7SIkS8Fc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CrmqK3tJ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VbOls7s8"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id E42C21F000E9;
-	Wed,  2 Sep 2026 05:44:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CrmqK3tJ"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 667C81F000E9;
+	Wed,  2 Sep 2026 05:45:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788327893;
-	bh=7VToqIbNigHuAubz5lk1OfQbRfK+VT8UpAC7jXFC8fM=;
+	s=k20260515; t=1788327908;
+	bh=r88GzeaQGvnNHKTGKZHLfwMUBlmwJJxdbxMCxHXHxH8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=VbOls7s8l5wLU57kvswWKZxZGvOq6XCd43yNriIUBPaJ74097qcOtgDYPc8SJTyic
-	 WsmeVGf5ESvFLJegHFA2iyG/vO/NxuQ7ZcwezjSYnk4/XSt+LVhMef7dcaf/a+q3HU
-	 Rro7i4bGRUZH6s9z3ohjNr/jw387Kp0YJ08emesQSapxW9zaBcOC/cVIpukyx2JCRV
-	 LjfayMiqHjHCnpmEtDomnIXe07/ArbX5Wtr9y5V56cfo75H7Aq7J4pUOG3MggSr6+w
-	 5co62pbgO4eVktKjQhrQtrYF/v2VuQxNHO0wD6krdpQeO1nuPMd7ewTvQ7Uw5yCtUy
-	 ffiY1mvpTlJlQ==
-Date: Tue, 01 Sep 2026 22:44:52 -0700
-Subject: [PATCH 6/6] xfs: fix bnobt repair space reservation disposal failure
+	b=CrmqK3tJmMaUmjqlqHdMIfn8dH9ukyfhn43YkI8xCKiqIYfTYMtYKsFEu+hk8CsSF
+	 AQCSNOzwFrQIA2yeh4ffNvXBkh039RYMOT0OFA4/O6NwqXyCrcFvp3yHxARFagywFi
+	 BTTboG3V35LLjapvIRzsA8yM13qzXpvuf/kYb+iCffaGfhpcsydPL0Q0ZwIvYUUp29
+	 Thd3W24ISXWlhAPmek8AMPH8YDEhMdeJtR7xAQ235NKRzE71QBVJyokFv4emakZWco
+	 TKNAjA+omvCL9X843jWDmzHfQ4pg+PdrilSyC0gtrouWgYpR9/7LdzEcJJum8NGGGe
+	 Jcnf3S6l2S1FQ==
+Date: Tue, 01 Sep 2026 22:45:08 -0700
+Subject: [PATCH 1/6] xfs: don't spin forever on zero-length dirents when
+ salvaging them
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, hch@lst.de, djwong@kernel.org
 Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <178832749549.3507209.7789046496766271639.stgit@frogsfrogsfrogs>
-In-Reply-To: <178832749387.3507209.8650516312948237987.stgit@frogsfrogsfrogs>
-References: <178832749387.3507209.8650516312948237987.stgit@frogsfrogsfrogs>
+Message-ID: <178832749856.3507493.9558405265791933554.stgit@frogsfrogsfrogs>
+In-Reply-To: <178832749800.3507493.12247008945704358106.stgit@frogsfrogsfrogs>
+References: <178832749800.3507493.12247008945704358106.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,76 +46,48 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-LOLLM complains that we don't bubble failures from xrep_abt_dispose_one
-upwards in the callstack.  A failure to clean up the space used (or
-reserved but not used) by the new bnobt/cntbt should be reported.
+LOLLM noticed that xrep_dir_recover_data can spin forever if it
+encounters an unused dirent that claims to have length zero.  Fix that,
+and prevent the same thing from happening with a zero-length entry.
 
-Cc: <stable@vger.kernel.org> # v6.8
-Fixes: 4bdfd7d15747b1 ("xfs: repair free space btrees")
+Cc: <stable@vger.kernel.org> # v6.10
+Fixes: b1991ee3e7cf85 ("xfs: online repair of directories")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Assisted-by: LOLLM # finding obvious bugs
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/scrub/alloc_repair.c |   18 ++++++++++++------
- 1 file changed, 12 insertions(+), 6 deletions(-)
+ fs/xfs/scrub/dir_repair.c |    8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/scrub/alloc_repair.c b/fs/xfs/scrub/alloc_repair.c
-index dce6ab0429dcfe..95e318e4f3a6c7 100644
---- a/fs/xfs/scrub/alloc_repair.c
-+++ b/fs/xfs/scrub/alloc_repair.c
-@@ -571,7 +571,7 @@ xrep_abt_dispose_one(
-  * allocation, and blocks that didn't get used can be freed via the usual
-  * (deferred) means.
-  */
--STATIC void
-+STATIC int
- xrep_abt_dispose_reservations(
- 	struct xrep_abt		*ra,
- 	int			error)
-@@ -582,9 +582,13 @@ xrep_abt_dispose_reservations(
- 		goto junkit;
+diff --git a/fs/xfs/scrub/dir_repair.c b/fs/xfs/scrub/dir_repair.c
+index 1c088cfba10ea9..0c1224d05d579a 100644
+--- a/fs/xfs/scrub/dir_repair.c
++++ b/fs/xfs/scrub/dir_repair.c
+@@ -484,18 +484,24 @@ xrep_dir_recover_data(
+ 	while (offset < end) {
+ 		struct xfs_dir2_data_unused	*dup = bp->b_addr + offset;
+ 		struct xfs_dir2_data_entry	*dep = bp->b_addr + offset;
++		unsigned int			advance;
  
- 	list_for_each_entry_safe(resv, n, &ra->new_bnobt.resv_list, list) {
--		error = xrep_abt_dispose_one(ra, resv);
--		if (error)
-+		int		error2 = xrep_abt_dispose_one(ra, resv);
-+
-+		if (error2) {
-+			if (!error)
-+				error = error2;
- 			goto junkit;
-+		}
- 	}
+ 		if (xchk_should_terminate(rd->sc, &error))
+ 			return error;
  
- junkit:
-@@ -596,6 +600,7 @@ xrep_abt_dispose_reservations(
+ 		/* Skip unused entries. */
+ 		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
++			if (!dup->length)
++				break;
+ 			offset += be16_to_cpu(dup->length);
+ 			continue;
+ 		}
  
- 	xrep_newbt_cancel(&ra->new_bnobt);
- 	xrep_newbt_cancel(&ra->new_cntbt);
-+	return error;
- }
+ 		/* Don't walk off the end of the block. */
+-		offset += xfs_dir2_data_entsize(rd->sc->mp, dep->namelen);
++		advance = xfs_dir2_data_entsize(rd->sc->mp, dep->namelen);
++		if (!advance)
++			break;
++		offset += advance;
+ 		if (offset > end)
+ 			break;
  
- /* Retrieve free space data for bulk load. */
-@@ -801,7 +806,9 @@ xrep_abt_build_new_trees(
- 		goto err_newbt;
- 
- 	/* Dispose of any unused blocks and the accounting information. */
--	xrep_abt_dispose_reservations(ra, error);
-+	error = xrep_abt_dispose_reservations(ra, error);
-+	if (error)
-+		return error;
- 
- 	return xrep_roll_ag_trans(sc);
- 
-@@ -812,8 +819,7 @@ xrep_abt_build_new_trees(
- 	xfs_btree_del_cursor(cnt_cur, error);
- 	xfs_btree_del_cursor(bno_cur, error);
- err_newbt:
--	xrep_abt_dispose_reservations(ra, error);
--	return error;
-+	return xrep_abt_dispose_reservations(ra, error);
- }
- 
- /*
 
