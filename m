@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB15338758C;
-	Wed,  2 Sep 2026 05:42:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6781E155757;
+	Wed,  2 Sep 2026 05:42:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788327721; cv=none; b=pTF+l6nOb2IwZNQEUwLJTkWBgYj2bCHy8eBj0iutkdNfnazp/Kj63tuKvCIKA7I8LwuAEBgGXAJG7gXiGJmtrrUuDzVqyhHezEE4SeO1xKxxj/lfy6y90Z6C8GhXCvJt20j9xYAUxr4/ZKmgUznsZszlccX+ZAkYd8Tz4DFgATA=
+	t=1788327737; cv=none; b=Azqr1thWJREBO6HLvyZkOHl4aUKeF4G9Z7uqM/Cxdu7FljwWeFgp4MnPGMaXED4RhVbCtv9hroVyh4fhr1Espd4hWdBHQY9Cs3AXQGpDPe29Squy6Qi5sJi1wclWnb++WJnBllgyCt3QZEP7yPovp7BgCd5VoUiArAmcybLeLKs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788327721; c=relaxed/simple;
-	bh=pvob5cN74H9qF+wsMgrEqIR9HUb7wFCagJARzm5diYM=;
+	s=arc-20240116; t=1788327737; c=relaxed/simple;
+	bh=MuUMfjVw0YQDp22UeVoiCL3kvKsXW0nEL0YeZlWgptQ=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=LbhNSlKWFTJEGj23Xkt1ztfD87cUT66ykXgvF0+/Hg4o0/os0dUPINb6X7Pz2Qp5veeWsrP8VJsr7cu1ooz1g2ncEgvmNHFEo0/XIycYkOkYDNq1asooPrLLl5ayWmwO18hogBjrVTlO9UJNm9jEtXQD6//jggdvayNqZMsNEZc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JiXae3/t; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=LyadYBXWbFZgJQGUcU9Mg2rXv34peTFJPHJVU6MrMymEkN5lWGQxHiGIScH0bwX8Zhcew6NuLyTK84p8qsmf2sqdX5KMaJPd6nvg4zbdotVN04AlpouWXr6fawJXDn+ExbcOn/l4e4DM9zSlYSSufjQ0wwSWWNAftYpP7QLk4gc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c437hZL2; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JiXae3/t"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 689171F000E9;
-	Wed,  2 Sep 2026 05:42:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c437hZL2"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id E09D21F000E9;
+	Wed,  2 Sep 2026 05:42:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788327720;
-	bh=W0TpSnJPgFNcNvUuSoIdaO+dTLKF9gQ0ZuB/GJJcU4Y=;
+	s=k20260515; t=1788327736;
+	bh=MMVtrMNx7oKQD9PsYGOHp/fbkdtEK5WZw2qsP4E3lhE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=JiXae3/tCQJIVBePor3UNhh35CEd112RJqiUKpk+RyG9y3m8A35KcLKaittuDwOGp
-	 SosyRjE44zh7hd3ua+SjSNQIcFFP+WlCSQqn5ryuhLynb4Xcn4U0Wq0XbGLpU82Q4b
-	 bo8R9TUZv0E8WlP+obKCIPMBmLdlwJ/JdglP7hMev34n1UblYbxRYlrsxDnMO8SIVy
-	 vKNkBGDqqV6tkkW1MjFnX6mUuPb/3UUgpH69N4s549ey5sq3KgUFdHYYoVhvYASJpF
-	 BIBmfkbeBzt2jwLWULSqk9js1VY3d2DKy4ta3adr1pEasYT3If0Dn84VNT7qdGNozG
-	 b0cUgc4NH2v+A==
-Date: Tue, 01 Sep 2026 22:41:59 -0700
-Subject: [PATCH 1/6] xfs: fix unit conversions in per_binval computation
+	b=c437hZL272EWaGtsoHzrleR8F475IYEc8wo8yOydvYLF+Hv6KU7ilTNjXdjoPpp+2
+	 M9Mx057ZRkhEg/zYuBArNycC+r/eUoayRCEDyCGxLiucUtKQQiRRsCsKCWmLsnZv2f
+	 SQkc3u6WnLEVMY5GXm0TDMqx18R0rH9GVVs779VKLIUrUDqGLZphyI4qeqmcHKJqYe
+	 gc4BKGqD9UlKKPuk5SV1y9OgcczduCUS+xpPT8R2GoEtCGGAMlTAC+h+MwH/9/yPVH
+	 OP/ezgeAIY1F06ix972i67UdNFFBi+NSMA0vNf5laKbHDR55+earvk9XUHnLDwONa+
+	 JKX18P0oghQ3g==
+Date: Tue, 01 Sep 2026 22:42:15 -0700
+Subject: [PATCH 2/6] xfs: fix short ifork reaping computation in
+ xreap_bmapi_binval
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, hch@lst.de, djwong@kernel.org
 Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <178832749031.3506928.7471175126550499558.stgit@frogsfrogsfrogs>
+Message-ID: <178832749052.3506928.14635066427910794988.stgit@frogsfrogsfrogs>
 In-Reply-To: <178832748977.3506928.16933046913052359243.stgit@frogsfrogsfrogs>
 References: <178832748977.3506928.16933046913052359243.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,41 +46,36 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-LOLLM noticed that we're doing the unit conversion in the per_binval
-computation backwards -- xfs_buf_inval_log_space's second parameter is
-supposed to be in bytes, but max_binval is in units of fsblocks.  Hence
-the conversion should be FSB -> B, not the other way around.
+LOLLM got really confused about the update to imap->br_blockcount in
+xreap_bmapi_binval if xreap_inc_binval returns false.  The intent of
+this code is that we shorten the imap to whatever length of space we
+invalidated so that the next iteration through the loop will start
+wherever we left off.  Unfortunately, the calculation sets br_blockcount
+to the amount of *unfinished* work, which means that we pointlessly
+re-scan blocks that we already reaped.  This is benign, but we should
+fix the computation anyway.
 
-Cc: <stable@vger.kernel.org> # v6.18
-Fixes: b2311ec6778fcd ("xfs: compute per-AG extent reap limits dynamically")
+Cc: <stable@vger.kernel.org> # v6.10
+Fixes: 5befb047b9f4de ("xfs: add the ability to reap entire inode forks")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Assisted-by: LOLLM # finding obvious bugs
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/scrub/reap.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ fs/xfs/scrub/reap.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 
 diff --git a/fs/xfs/scrub/reap.c b/fs/xfs/scrub/reap.c
-index fcd14c1703ea04..496c6eab555e91 100644
+index 496c6eab555e91..f698b9be3dd1df 100644
 --- a/fs/xfs/scrub/reap.c
 +++ b/fs/xfs/scrub/reap.c
-@@ -601,7 +601,7 @@ xreap_configure_agextent_limits(
- 
- 	/* Maximum overhead of invalidating one buffer. */
- 	const unsigned int	per_binval =
--		xfs_buf_inval_log_space(1, XFS_B_TO_FSBT(mp, max_binval));
-+		xfs_buf_inval_log_space(1, XFS_FSB_TO_B(mp, max_binval));
- 
- 	/*
- 	 * For each transaction in a reap chain, we can delete some number of
-@@ -680,7 +680,7 @@ xreap_configure_agcow_limits(
- 
- 	/* Overhead of invalidating one buffer */
- 	const unsigned int	per_binval =
--		xfs_buf_inval_log_space(1, XFS_B_TO_FSBT(mp, max_binval));
-+		xfs_buf_inval_log_space(1, XFS_FSB_TO_B(mp, max_binval));
- 
- 	/*
- 	 * For each transaction in a reap chain, we can delete some number of
+@@ -1399,7 +1399,7 @@ xreap_bmapi_binval(
+ 			 * far we've gotten.
+ 			 */
+ 			if (!xreap_inc_binval(rs)) {
+-				imap->br_blockcount = agbno_next - bno;
++				imap->br_blockcount = bno - agbno;
+ 				goto out;
+ 			}
+ 		}
 
