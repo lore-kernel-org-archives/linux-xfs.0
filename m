@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C7AD33DED1;
-	Wed,  2 Sep 2026 05:44:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D706D155757;
+	Wed,  2 Sep 2026 05:44:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788327863; cv=none; b=naF3M/ZkunffJHT+5xmzzIw9jTOC1SQcqOCC1YBBJ3AxVWgZNxccEzVfiiNt1Gng/tzfxOr+qrs2Vzwzh3VqkUY4ERUeL8vWDcI3A9tIGrWd4GZxV63guS1gThEbYsq/WChQvgthnAgdpUDF2WwY/6Zyjw/xmSm1IuLc2m99HTU=
+	t=1788327878; cv=none; b=kEbVR4iDoBbR91uwpp6jm0G0MVDLnB40rzpoYIsaTAo3UXE+ySBLW40MrZgRaCFyK7zlwnmq56Jw6FUT0OTM9++p1jw9sBtVpEJOtt1dUyG0w/X98Z1Flo4rWArwneMz3dt1SEiUp+eD+8FP8XOkTKksarL1m35E4ny4gvR4nFI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788327863; c=relaxed/simple;
-	bh=qwvm8K6FhI44MhPeRHkN/CScIiJLjXwZeVC5+/pwBSU=;
+	s=arc-20240116; t=1788327878; c=relaxed/simple;
+	bh=EKDqrG4cMvfL4A7QxyjKtKZfvoP87yln10Rr1RBCaPE=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ifYhCwveck8AzH9yTs9y1Mfo4Zsf/ac76s3u/2GTIHAm+8L5SClxsVd0GbbCtIHhGfADAJLKTozOwWbWsVi8R6HpOvaLtcgt3vABbdSpYtBmtyLpm4tHIgWUKxP34x2uJ/N/R/Grh+qIDf+Uh1M94BVAnlW40NeomXRIPAD1pZM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a4QiRVeL; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=BrFvWjZKBYrziXgX2aMA7uhojkM28kzS/7Z5hrxJzMEcKtpOMJaHgH6S61yqk4lYfvUaV2tySJ9cqXcT/aMbMyxSL0lbud0axd7Ky8mb86rw33OHINKt3KnZWGCJWANCR0AHEy5qoYYgQkh1EOZt0o1y6xgU20HOVo9tVefLd5A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DBR6z6hG; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a4QiRVeL"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id DAA331F000E9;
-	Wed,  2 Sep 2026 05:44:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DBR6z6hG"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 66F301F000E9;
+	Wed,  2 Sep 2026 05:44:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788327862;
-	bh=en6hu8jG7x/04cDEOTo6INMsHLXS9DsBYtPP3jujVgk=;
+	s=k20260515; t=1788327877;
+	bh=YRAhDbqgjFS729UnL5NQtqa0LG7eZEiJaHLuhcDK4s4=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=a4QiRVeLw0jTrgfVd+hm3UFWIrR5nkpQlFe81i6BkvwG5R6imd+GlP0iMyeN+r94a
-	 A0Q4Nvtrlc6oOERn59six/xIjhTwZNN0NhzR09Su9Mmpi+Ycnv0vjhYmiBMIqMX8BC
-	 13fPS0WP7VoPi6wPFWd0DU+XOpUUSe2DjlwplK4Djj9ztmRUiyZ3thBCX/yPLwCPS3
-	 I4xpyKvSWf2QsS5lVGDDWHMm7negMrTeUhfY2ZWuxmpP/BLmyX3gYYtuKBDUgPSNB1
-	 vqJXjNZ+3cojFCvtL1oyrPSqXnblZTazCO0NKm/DWwH0v6xCugJiQRZ2qNFOW62AwD
-	 zNtRmjk65Vueg==
-Date: Tue, 01 Sep 2026 22:44:21 -0700
-Subject: [PATCH 4/6] xfs: actually recover intended file sizes in
- xfs_xmi_item_recover_intent
+	b=DBR6z6hGqxT/7BzjYhNuNdQ1Etok889dYxpHActnH8GpRE1v7RlV9jBSeADCuc2b5
+	 T/ylPWuaf2Nn60RArvaJtZCwSWB09KNkjsaYSopKm8iI9WsrhTJdhndt+Y1Kx+XiK/
+	 KcK7cTKwRowSONBIir9C2bBUhauAZxSsZJZOkm6yvYT8UFBBmhBS1toY5aUZ1lrype
+	 ltYZp3+szSlShPQ+AE/JvDP/xRwHrFMrJ3SyTpG5+W3wfFvMaAE9ccDd9bi8HIOhYh
+	 p/fNA8k2//JLMLo1PtzSIdrvFDkhZDar29/M79Eqrn6Av7tPsrqZVEQzCV7ekHEbPr
+	 gYukNZVuOeylA==
+Date: Tue, 01 Sep 2026 22:44:37 -0700
+Subject: [PATCH 5/6] xfs: don't modify file attributes or poke fsnotify for
+ dry runs
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, hch@lst.de, djwong@kernel.org
 Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <178832749507.3507209.974632272982178994.stgit@frogsfrogsfrogs>
+Message-ID: <178832749528.3507209.11787129781318331688.stgit@frogsfrogsfrogs>
 In-Reply-To: <178832749387.3507209.8650516312948237987.stgit@frogsfrogsfrogs>
 References: <178832749387.3507209.8650516312948237987.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,58 +46,48 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-LOLLM points out that xfs_xmi_item_recover_intent doesn't actually
-restore the isize1 and isize2 fields that were recovered from an
-unfinished exchmaps log intent item.  Instead, xfs_exchmaps_init_intent
-sets the wrong isize values from the recovered inodes, with the result
-that the file sizes are not set correctly when item recovery finishes.
-Fix this by restoring isize[12] from the log item.
+I noticed that we shouldn't be removing file privileges when doing a dry
+run of an exchange-range operation.  LOLLM also points out that a dry
+run shouldn't poke fsnotify because we don't actually change the files.
+Fix both by gating them on !DRY_RUN.
 
 Cc: <stable@vger.kernel.org> # v6.10
-Fixes: 966ceafc7a4371 ("xfs: create deferred log items for file mapping exchanges")
+Fixes: 42672471f938cd ("xfs: bind together the front and back ends of the file range exchange code")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Assisted-by: LOLLM # finding obvious bugs
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_exchmaps_item.c |   19 ++++++++++++++++++-
- 1 file changed, 18 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_exchrange.c |   12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_exchmaps_item.c b/fs/xfs/xfs_exchmaps_item.c
-index c3745d33e54ea2..dd5d92ca1010fe 100644
---- a/fs/xfs/xfs_exchmaps_item.c
-+++ b/fs/xfs/xfs_exchmaps_item.c
-@@ -344,7 +344,17 @@ xfs_xmi_validate(
- 	if (!xfs_verify_fileext(mp, xlf->xmi_startoff1, xlf->xmi_blockcount))
- 		return false;
+diff --git a/fs/xfs/xfs_exchrange.c b/fs/xfs/xfs_exchrange.c
+index 94965a6c2187ff..c69ecd6a19de4f 100644
+--- a/fs/xfs/xfs_exchrange.c
++++ b/fs/xfs/xfs_exchrange.c
+@@ -504,6 +504,9 @@ xfs_exchange_range_finish(
+ {
+ 	int			error;
  
--	return xfs_verify_fileext(mp, xlf->xmi_startoff2, xlf->xmi_blockcount);
-+	if (!xfs_verify_fileext(mp, xlf->xmi_startoff2, xlf->xmi_blockcount))
-+		return false;
++	if (fxr->flags & XFS_EXCHANGE_RANGE_DRY_RUN)
++		return 0;
 +
-+	if (xlf->xmi_flags & XFS_EXCHMAPS_SET_SIZES) {
-+		if ((int64_t)xlf->xmi_isize1 < 0)
-+			return false;
-+		if ((int64_t)xlf->xmi_isize2 < 0)
-+			return false;
+ 	error = file_remove_privs(fxr->file1);
+ 	if (error)
+ 		return error;
+@@ -783,9 +786,12 @@ xfs_exchange_range(
+ 	if (ret)
+ 		return ret;
+ 
+-	fsnotify_modify(fxr->file1);
+-	if (fxr->file2 != fxr->file1)
+-		fsnotify_modify(fxr->file2);
++	if (!(fxr->flags & XFS_EXCHANGE_RANGE_DRY_RUN)) {
++		fsnotify_modify(fxr->file1);
++		if (fxr->file2 != fxr->file1)
++			fsnotify_modify(fxr->file2);
 +	}
 +
-+	return true;
+ 	return 0;
  }
- 
- /*
-@@ -403,6 +413,13 @@ xfs_xmi_item_recover_intent(
- 	*ipp1 = ip1;
- 	*ipp2 = ip2;
- 	xmi = xfs_exchmaps_init_intent(req);
-+
-+	/* Restore intended file sizes from recovered logged item */
-+	if (req->flags & XFS_EXCHMAPS_SET_SIZES) {
-+		xmi->xmi_isize1 = xlf->xmi_isize1;
-+		xmi->xmi_isize2 = xlf->xmi_isize2;
-+	}
-+
- 	xfs_defer_add_item(dfp, &xmi->xmi_list);
- 	return xmi;
  
 
