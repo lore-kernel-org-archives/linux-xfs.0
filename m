@@ -1,125 +1,112 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B40194A64F3;
-	Wed,  2 Sep 2026 16:50:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C47E3655CA
+	for <linux-xfs@vger.kernel.org>; Wed,  2 Sep 2026 17:40:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788367855; cv=none; b=CfBzYJxkXHihtTw8+OrjFtgWN8Bvb3ZmzGMmmYZ7IOIs8DroezHbN2X0ks/x3zrbdP8AaudSTOJhVD8eviG+nsD5x4TrOdtkmxyFREUZW1ntMeZB5LFKG+bcFI6FUbnMHZ1hHpilIiL+XCrytWBythgERw4iweXo48I6s7+zTZ8=
+	t=1788370836; cv=none; b=bMVJ5Rk7a+mDA2j+4VOlSWNEesNF+BQr6djTTr8b8QVw+jq0SI7tBQAka1hnqmoMLqPSzSVoLSWiSaZkba2DyycEsg08Gu7csdwe+dFW3um2uDvyN0QdNguNWxcIVLHWqofX5Y1iUiINyg8N6JM/qvPofmWFiKkFxzje7H/iKLk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788367855; c=relaxed/simple;
-	bh=VDERqC/8E1fr5wLOAz/MQmcomAlN476K9ODA2RkWYnw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RMl/xlg2EwRD/bS4qu6Q769JU64kdS10RDi0ERDlFN7v0NrlvyLke7Vly3qmvEgy4gHR5byJX6bD+Ep7BMZ6nY6PY6W80L56Wzh+joRpitCGNwIUlnbwRlvbOIg1U0hbft48+Lpzj8dcqsDIOSBbDNbgqBdZhR4ZDfSR6v3aATI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Uu8Of3nv; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788370836; c=relaxed/simple;
+	bh=MEtHkeEYXpQsVWDfvzGS1PEoAI9qP9ynXKvjoJAIsXE=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type; b=ZoJU0xnq/c+p0ryHyu/cHtHtZozc3PUfK3BPrWuymi5OpWOXHclQGZoAExu3ZDGxz/zrmlYDALEFYw8Y8HaRaQ903r6tbtbCazk41R83vPpaa0em79Clt51/KxEdXULlbCivUEe8r126fDqZgYy5FSkDZhMrXASgl1gVhmrZApM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=VU+0OG4Z; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Uu8Of3nv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 32F881F000E9;
-	Wed,  2 Sep 2026 16:50:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788367853;
-	bh=dk1n0Erkc0W7OsAdxs9vZFLbW6YpiKCTSDoFkUjUt4I=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Uu8Of3nv5/EhKJvFp+Nf+C/I0KTX3sKpymAjpunKGLpoQryDZak+20DW7G9VqX4u1
-	 UdvLyLLJewORRON1T8BBTbjLMBYxNoJMjkii57vZkYgpHxyOrMXjtp0pKdLnDIq4s4
-	 6YntJPZYs9YDn4JxKyhXjQfNRkt2Yl9m1q+Q29Bjln0cSOW4HQfRXdytj1Y55ZdWP7
-	 5S5mI6nzIVSPRXBP8/LCv9n/ruW8TgIsct9Qap0YXdmA5vkBKHzxA6NYm+4y45a523
-	 qYH9FqTdAFq1kXW1Ax9pjSfyQ6RfFChSSqWeHzGw3nrPBSd4bAso8mE471RRsABLAq
-	 V17/i/vrmB/zw==
-Date: Wed, 2 Sep 2026 06:50:52 -1000
-From: Tejun Heo <tj@kernel.org>
-To: Chuck Lever <cel@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Dave Chinner <dgc@kernel.org>,
-	Ran Hongyun <ranhongyun1@huawei.com>, catherine.hoang@oracle.com,
-	chandan.babu@oracle.com, "Darrick J. Wong" <djwong@kernel.org>,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Zhihao Cheng <chengzhihao1@huawei.com>,
-	yangerkun <yangerkun@huawei.com>, yi.zhang@huawei.com,
-	Wangyang Guo <wangyang.guo@intel.com>,
-	Tim Chen <tim.c.chen@linux.intel.com>,
-	Lai Jiangshan <jiangshanlai@gmail.com>
-Subject: Re: [QUESTION] xfs: Can we remove flush_workqueue from
- xlog_cil_push_now?
-Message-ID: <aphT7DIGHK1Og0jr@slm.duckdns.org>
-References: <20260827033654.1172495-1-ranhongyun1@huawei.com>
- <apSnC9p0X04cKxDj@dread>
- <20260902073556.GA27223@lst.de>
- <21557715-124e-40dc-a470-82904374fc44@app.fastmail.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="VU+0OG4Z"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1788370833;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=Lc61K+bdIQMZZfYwvz9qerIdG45c2dXdEIhcksRk9AQ=;
+	b=VU+0OG4Zrl3ZVnWM64JqPsglcE60FRxzZbOlnSM+KCpZeN0uG8lKQHsmPYdwlbIjkEg+V5
+	k1mjBWu9MPSZtaQyY+OG1jgUP9vod5TjA4BpPqFigHShcjpHsqmvx40RWHSnliJ8zDUjFh
+	1WWEr5mgxgHqp1Hw0Dz6he++3NPBwBU=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-332-vcbveC0TNMm8XQ43YqvmqA-1; Wed,
+ 02 Sep 2026 13:40:32 -0400
+X-MC-Unique: vcbveC0TNMm8XQ43YqvmqA-1
+X-Mimecast-MFC-AGG-ID: vcbveC0TNMm8XQ43YqvmqA_1788370831
+Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 0FFE0195396F
+	for <linux-xfs@vger.kernel.org>; Wed,  2 Sep 2026 17:40:31 +0000 (UTC)
+Received: from bfoster (headnet05.pony-001.prod.iad2.dc.redhat.com [10.2.32.117])
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id A89DE1800765
+	for <linux-xfs@vger.kernel.org>; Wed,  2 Sep 2026 17:40:30 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+To: linux-xfs@vger.kernel.org
+Subject: [PATCH v3 0/4] xfs: fix a couple sparse chunk alloc problems
+Date: Wed,  2 Sep 2026 13:40:21 -0400
+Message-ID: <20260902174025.284387-1-bfoster@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <21557715-124e-40dc-a470-82904374fc44@app.fastmail.com>
+Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-Hello,
+Hi all,
 
-On Wed, Sep 02, 2026 at 10:23:14AM -0400, Chuck Lever wrote:
-> 
-> On Wed, Sep 02, 2026 at 09:35:56AM +0200, Christoph Hellwig wrote:
-> > On Mon, Aug 31, 2026 at 07:56:27AM +1000, Dave Chinner wrote:
-> > > However, behavioural changes like this seem like an infrastructure
-> > > regression, and trying to modify callers to hide that regression is
-> > > a bandaid. This affects all UNBOUND workqueues, not just this one,
-> > > and we do not need per-cpu scheduling for workqueues with such low
-> > > work and concurrency counts - there can only be 4 pushs scheduled
-> > > and running concurrently at any time on this work queue. Hence we
-> > > don't even need NUMA queuing - a single global queue would work just
-> > > fine...
-> >
-> > Yeah, a lot of the recent workqueue changes had a lot of adverse effects.
-> > We really need to come up with a way to queue work to task context (or a
-> > different task context) that doesn't require reverse engineering "smart"
-> > behavior in the backend.  This has become a never ending whack-a-mole
-> > unfortunately.
-> 
-> Agreed.
+Here's v3 of the series to fix the sparse chunk alloc shutdown. The
+original report is available here[1].
 
-Well, the changes aren't gratuituous. They're mostly driven by the
-increasing number of cpus in systems. Hardware has been scaling pretty fast
-and workqueue needs to keep up. Sure, there may be things that could have
-gone smoother but you'd need to solve the same problems no matter what.
+This is mostly the same fundamental idea as v2, but the implementation
+has been slightly reworked. Instead of creating and using a _minleft()
+freelist calculation variant, we rework the min freelist helper to
+calculate a min and a max for multi-alloc cases. The max is used
+appropriately based on allocations that set args->minleft.
 
-> So, I've been chasing the other end of this trade-off. On the NFS client,
-> rpciod, nfsiod, and xprtiod see sustained completion traffic from many
-> CPUs, and with the default WQ_AFFN_CACHE_SHARD scope they lose a large
-> fraction of their cycles to the pool lock on enqueue and dequeue. The
-> fix there is a finer affinity scope (WQ_AFFN_SMT), so more pools and
-> fewer CPUs per lock:
-> 
->   https://lore.kernel.org/linux-nfs/20260831-performance-v1-0-8d9fd9b67f96@kernel.org/
+Patches 1 and 2 are unchanged from v2. Patch 3 is new and refactors the
+semantics of xfs_alloc_min_freelist() as described above. Patch 4 is the
+same general fix as v2, but rather than create its own helper the max
+value is passed along with the min and they are used appropriately for
+length checks and available space calculations.
 
-And this was worse before because we had a single pool per node for all
-unbound workqueues. You're using exactly the new feature that's made
-available to solve scalability problems.
+I've also since realized that XFS_DEBUG seems to be what defeats the
+custom reproducer, for whatever reason, so I can confirm this still
+survives that test on !DEBUG. Otherwise the series survives fstests
+without regression.
 
-> That is the converse of Ran's problem. flush_workqueue_prep_pwqs()
-> walks every pwq and takes the pool lock once per pool change along the
-> way, so a finer scope makes each flush take more locks, and a coarser
-> scope makes the producers contend more. The pwq walk itself is
-> per-CPU at every scope, which is the part no scope setting removes.
-> 
-> For Ran's immediate purpose, patch 5/8 of that series may be useful:
-> 
->   https://lore.kernel.org/linux-nfs/20260831-performance-v1-5-8d9fd9b67f96@kernel.org/
-> 
-> It exports alloc_workqueue_attrs(), apply_workqueue_attrs(), and
-> free_workqueue_attrs(), so a module can set affn_scope on its own
-> workqueue after alloc_workqueue().
-> 
-> With that, xfs_cil could set WQ_AFFN_SYSTEM on xc_push_wq and get the
-> single global pool Dave describes, without touching the boot-time
-> default or relying on WQ_SYSFS, which XFS_WQFLAGS() adds only in
-> DEBUG builds. That would let Ran measure the flush cost against a
-> one-pool walk directly rather than through the per-NUMA proxy in the
-> table.
+Thoughts, reviews, flames appreciated.
 
-Try http://lkml.kernel.org/r/20260901210929.3092513-1-tj@kernel.org first?
+Brian
 
-Thanks.
+v3:
+- Added patch 3 to refactor xfs_alloc_min_freelist() and calculate
+  min/max.
+- Updated patch 4 to use the max value for space available and longest
+  extent checks.
+v2: https://lore.kernel.org/linux-xfs/20260814132239.271492-1-bfoster@redhat.com/
+- Reworked fix logic into allocator instead of sparse inode alloc
+  specific.
+- Dropped Fixes: tag since this is no longer directly correlated to
+  sparse inodes.
+v1: https://lore.kernel.org/linux-xfs/20260731163337.152522-1-bfoster@redhat.com/
+
+[1] https://lore.kernel.org/linux-xfs/20260717130429.1838767-1-matt@readmodwrite.com/
+
+Brian Foster (4):
+  xfs: set minleft correctly for sparse chunk errortag allocation
+  xfs: support additional levels in the agfl minimum calculation
+  xfs: calculate AGFL max to support multiple-alloc transactions
+  xfs: incorporate increased AGFL min requirement for minleft allocs
+
+ fs/xfs/libxfs/xfs_alloc.c  | 106 +++++++++++++++++++++++++++----------
+ fs/xfs/libxfs/xfs_alloc.h  |   7 +--
+ fs/xfs/libxfs/xfs_bmap.c   |   7 ++-
+ fs/xfs/libxfs/xfs_ialloc.c |  14 ++---
+ 4 files changed, 93 insertions(+), 41 deletions(-)
 
 -- 
-tejun
+2.55.0
+
