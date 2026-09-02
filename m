@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E81C738E113;
-	Wed,  2 Sep 2026 05:49:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B7AD387361;
+	Wed,  2 Sep 2026 05:49:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788328143; cv=none; b=i41ntpKRvGFVnkvqyrtNqwu9ai3+ufjSkC/Ty+aO6YKq7BIWKRynwTjPPHSfOYO2TgcmDlAC5emVlOkCVU6EJs2jB04Er7z3Wl5+jpkY3AMIwA6pnMdr7RgDqpuEDNMI1sb1CuuBhZp3yxAvUvtS86YnzHVj4MLnwvj4QyYJYZs=
+	t=1788328158; cv=none; b=uwWyODsxDo0NmLgWchJwFQf4U1apaEFdN9t7i4XWvLpMonivfQJAXHpg6EC1Jm2yjeEeRCi60G/IIYbypbXEBgr+iM7stUQxjDtW1A087ChmGyApmbgJwf/5GTw6Nk1xUgSuZuUGOsCz/GE5lqXzpLut0wLTUFzNxlwvZCHGLEM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788328143; c=relaxed/simple;
-	bh=jvUKhtCvsYDriTu7mNOtfaZnRp6v7GSv4RjPWcWOmrs=;
+	s=arc-20240116; t=1788328158; c=relaxed/simple;
+	bh=HwgHKjV1MdhGR4R4gsiOxOBL00BDZqbB/6HiFSwQS4Q=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=FwBeel8MOshbOQuH6eJxCvkS0l8P4PJ2KiIq31MDjrqas5JheBOcUVjhc768gXptZmH66hLJ4BgQJc9Vh3s9sldZBMgyHJbhf0hOb6nUs6tk+3XX5wjHHvYEq+wRU8Sxo+fxe2V2IWh1Wb3BLOzRw3qpIArMFw83GmGLl9DZBe4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JxobDlh+; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=dSubolRz6tnhtJd3GboYJ/EFrTocuqbu1w7gmwEKaFMoq7k6Y1bXtn+cRT+RBu/xGt5+G9O09wykJhLxPdV4JDhk26umxizn8RkEppzpNpfAoKOYxMuPzrAsLFwmreSuePhoyrPCm6yhFzIsb7xS545Lb3VNCJOElrys7F9Ii0E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YVSZikfQ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JxobDlh+"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 839A51F000E9;
-	Wed,  2 Sep 2026 05:49:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YVSZikfQ"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 115A81F000E9;
+	Wed,  2 Sep 2026 05:49:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788328141;
-	bh=vSqmG9ngYgBXDJKcKmrtC59tGe6Xz+/WeNRGE/kYCQo=;
+	s=k20260515; t=1788328157;
+	bh=V3CBnoAVT4YwBdPbD+NfXuHXk4+eBseD1E5Fny8dqco=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=JxobDlh+jydaAwbEHN6fcFYZMBnaYlmNUoqlWAdloa1gPnG7VS3sKrWceU5Eh1PKO
-	 xnJuMsDSEpvXy0muNxveLF6DYnT3mPwqY8XS5V1kJQqL/pigpSK6WQnVVkqvcacRZh
-	 ollec56V5u32OTf+4jtXWiV5gRNF+jyHPrsIROiMwGbF8A3zYpIo7LlI2JbuJJZPdi
-	 PaX8hzuMgOulTvjUci/K9kBZYzmB0fxNlb8WCTPx5ClVPA4KqZWiw27LNH+v1vhQcx
-	 JjrB4UupZaMj4cKfFX4WitWESWcWGHhuIfFKkwg97P7E1DOM2u8Aw+0HvVjV/rd0ie
-	 1TnBq9fagGRpA==
-Date: Tue, 01 Sep 2026 22:49:01 -0700
-Subject: [PATCH 2/5] xfs: truncate quota file correctly when repairing quota
- file
+	b=YVSZikfQc0zzfVeHKm9xutG6nZQllEmzwkNuAU28oIqeCYJnhk9tllw/FDrPZp7GQ
+	 BEoc0bMOgz0ZNWp/SrlfDjvKjzS47uSYIUWyl6Vmh+NXXIFjOWa7FojJAaVZghErdy
+	 dYNuWxR/YuFLzNmJQvxa4bEWEhrM93HGavynt7PoxhH7zPL/Dnh4DgiB8VtyFGlIL5
+	 2rhc0SZWB2JqdtnKgHnDcKCT8IAF4TSyFPBk19QlQiNEmG4ft5NTjZCXy3tXZmj+ws
+	 DZpt9tYjyqpW6Q13PCFAII7aPVURMbf5vW8oGqf3Wc3zJjUr3YZVMdzoXH81VQFYCq
+	 ARqnZofOCnRXA==
+Date: Tue, 01 Sep 2026 22:49:16 -0700
+Subject: [PATCH 3/5] xfs: compute dquot checksum after resetting dd_lsn in
+ repair
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, hch@lst.de, djwong@kernel.org
 Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <178832750752.3508131.12269209789139517612.stgit@frogsfrogsfrogs>
+Message-ID: <178832750773.3508131.8667220003399042973.stgit@frogsfrogsfrogs>
 In-Reply-To: <178832750681.3508131.6009513367948627110.stgit@frogsfrogsfrogs>
 References: <178832750681.3508131.6009513367948627110.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,34 +46,32 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-LOLLM noticed that xrep_quota_data_fork screws up the unit handling when
-it computes the offset at which to start truncating the quota file.
-max_dquid_off is the file block offset containing the highest possible
-dquot, and xfs_bunmapi_range takes the starting file block offset.
-Therefore, it makes no sense to multiply max_dquid_off by the blocksize;
-all we need to do is start truncating at the next block.
+LOLLM complains that xrep_quota_block updates dd_lsn after calculating
+the crc of the ondisk dquot.  That's clearly broken, so fix that.
 
 Cc: <stable@vger.kernel.org> # v6.8
 Fixes: a5b91555403e3a ("xfs: repair quotas")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Assisted-by: LOLLM # finding obvious bugs
 ---
- fs/xfs/scrub/quota_repair.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ fs/xfs/scrub/quota_repair.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 
 diff --git a/fs/xfs/scrub/quota_repair.c b/fs/xfs/scrub/quota_repair.c
-index 487bd4f68ebb2a..ca3ac6728339d1 100644
+index ca3ac6728339d1..9d0097c5656184 100644
 --- a/fs/xfs/scrub/quota_repair.c
 +++ b/fs/xfs/scrub/quota_repair.c
-@@ -455,8 +455,7 @@ xrep_quota_data_fork(
+@@ -364,10 +364,10 @@ xrep_quota_block(
+ 				defq->rtb.time);
  
- 	if (truncate) {
- 		/* Erase everything after the block containing the max dquot */
--		error = xfs_bunmapi_range(&sc->tp, sc->ip, 0,
--				max_dqid_off * sc->mp->m_sb.sb_blocksize,
-+		error = xfs_bunmapi_range(&sc->tp, sc->ip, 0, max_dqid_off + 1,
- 				XFS_MAX_FILEOFF);
- 		if (error)
- 			goto out;
+ 		/* We only support v5 filesystems so always set these. */
++		dqblk->dd_lsn = 0;
+ 		uuid_copy(&dqblk->dd_uuid, &sc->mp->m_sb.sb_meta_uuid);
+ 		xfs_update_cksum((char *)dqblk, sizeof(struct xfs_dqblk),
+ 				 XFS_DQUOT_CRC_OFF);
+-		dqblk->dd_lsn = 0;
+ 	}
+ 	switch (dqtype) {
+ 	case XFS_DQTYPE_USER:
 
