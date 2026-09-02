@@ -1,46 +1,41 @@
-Received: from mta1.migadu.com (out-115.mta1.migadu.com [95.215.58.115])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D27324A9D72
-	for <linux-xfs@vger.kernel.org>; Wed,  2 Sep 2026 15:36:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.115
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43C724A64D6;
+	Wed,  2 Sep 2026 15:37:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788363417; cv=none; b=Rlvly1rUZvdl4pqMEAYyIavrgJTZJy5WMJNgXzIauVvdDZjaHeM4O2mBWLzaEqjGa67Yrd+Fa20BAr2UlZwfVO5U9WbvHTai0N3w/VkqM5BKwGZHz6K0xUZz95YlatwgkEndE0iO+X0DK+nwflSkIavhJMiZDnE+Ms8x77mBxZA=
+	t=1788363436; cv=none; b=k/8EwOt7+1i5wj+pFUe3qULRl525WQLs3Q6aqI3GT1X8wgBnhfQnAB4jhEgRF7Gssx726dJBXhoTNmmN2pFYxJgspivPeuzIvDIVCNetAQWGTWXCKCHd0MauiqmFdQO00iFddgSaFKMF+TC4Y2A/hVQW83vvTLcmSeXLmjAUt5A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788363417; c=relaxed/simple;
-	bh=nQsYSlZTDghUio3blhbx1zI+jv+vMKfhKPaFPZydeaw=;
+	s=arc-20240116; t=1788363436; c=relaxed/simple;
+	bh=tg/biQZJ8A15u81Yho47yR0mdfrZmRAqNwXAAixKXJM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=b2GteyeQasUcL0qqb9XyFy9BWPFy8xZSEi1ICPfnQLrpGYMc0alxsQ20sfkFrjz1hZ1CWwWMN/foJl0c5tPTmIjyP+W6mrbN/s2HOftsCT53fywK75bqIBKrEClaNBxGBMNXv2hZEC/+DMpMttmaB32tzh8xQxdyxnQ+VUZhWpc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=oc+mui4m; arc=none smtp.client-ip=95.215.58.115
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	 Content-Type:Content-Disposition:In-Reply-To; b=qPIiUSDrwK0gJK/yPBnrQIGBs+dbdoxHe5N5C8zohYUWnLtpK4/ogHCvWa/C7HeiomC+QpGOhFKqAqTXXx7vucsTo6qu1xrUn+k41IzF9eJ4mrpk5QXnIRcB22wkus4h0mt9lwkrlvWBnOJgflTzn77FlSpj+I7dIp6ciChI1+w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Vi9gnkcx; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="oc+mui4m"
-X-Envelope-To: linux-xfs@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=nQsYSlZTDghUio3blhbx1zI+jv+vMKfhKPaFPZydeaw=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1788363395; v=1; x=1788968195;
- b=oc+mui4mfm5rkivU1QIe2HncQpjw+MEoitTI9PcMQigNEVtPvlvaXTCZbyyw54KEovPfWuYr
- FMDVbSteUoEMvG6UyNNT9oZ0023l36gQ0Epc/YKy4GNGpHBUuwoIHtX5Cou73RvtqEADC0Z3sC+
- bmevzRE8s1I8UoJK1O4hDGvo=
-X-Envelope-To: linux-xfs@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 0dc618aa284fdb5a;
-	Wed, 02 Sep 2026 15:36:35 +0000
-X-Mizu-Trace-ID: 0dc618aa284fdb5a
-X-Migadu-Flow: FLOW_OUT
-Date: Wed, 2 Sep 2026 08:36:30 -0700
-From: Shakeel Butt <shakeel.butt@linux.dev>
-To: Kefeng Wang <wangkefeng.wang@huawei.com>
-Cc: brauner@kernel.org, djwong@kernel.org, cem@kernel.org, 
-	akpm@linux-foundation.org, vbabka@kernel.org, surenb@google.com, mhocko@suse.com, 
-	brendan.jackman@linux.dev, hannes@cmpxchg.org, ziy@nvidia.com, david@kernel.org, 
-	qi.zheng@linux.dev, ljs@kernel.org, linux-xfs@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [PATCH 3/4] mm: replace PF_KSWAPD flag with kthread_func() check
-Message-ID: <aphCZEkORT4GFkle@linux.dev>
-References: <20260902131653.1338227-1-wangkefeng.wang@huawei.com>
- <20260902131653.1338227-4-wangkefeng.wang@huawei.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Vi9gnkcx"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id C79501F000E9;
+	Wed,  2 Sep 2026 15:37:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788363423;
+	bh=FEuaXBfKge6LQfMfQvhHogwpvoCPLY8EjPWntedn/RY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=Vi9gnkcx0yrsrXPSgm/0yYLZcxND4HKypzJ5Cm92gQWimGelG9RPN8abOajNfVZtq
+	 VLtI6pvuFTYbqmITqHy1tlH9f+JAxMNDZ5DhZG/aHqDdgOIsUnttA1PC3yckWUvmZG
+	 K4UZGx+Lmr7TGI9Wm9wYYbrZuj4wrgxNP4dN222jmqXomOPHUao/0msrcLWJhVMvw9
+	 CBYd36QuUCTcQzohPo4TW+IabNqd0nvj1AVY14RmKan9O7iX1TAyLVGNhtr8Xp/dhs
+	 NoFmcyztV91gEFMxyt8EK3RebEcdrogn/ZX58CORwA93pm2QCQTEW6SyBN3Geyb9wk
+	 7aEUvCxv/kLRw==
+Date: Wed, 2 Sep 2026 08:37:03 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: cem@kernel.org, stable@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/5] xfs: compute dquot checksum after resetting dd_lsn
+ in repair
+Message-ID: <20260902153703.GN1933798@frogsfrogsfrogs>
+References: <178832750681.3508131.6009513367948627110.stgit@frogsfrogsfrogs>
+ <178832750773.3508131.8667220003399042973.stgit@frogsfrogsfrogs>
+ <20260902072341.GC26173@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -49,18 +44,30 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260902131653.1338227-4-wangkefeng.wang@huawei.com>
+In-Reply-To: <20260902072341.GC26173@lst.de>
 
-On Wed, Sep 02, 2026 at 09:16:52PM +0800, Kefeng Wang wrote:
-> The preceding commits removed the last consumer that propagated
-> PF_KSWAPD beyond kswapd itself (XFS btree split worker inheritance).
-> The only remaining setter of PF_KSWAPD is kswapd(), and every
-> current_is_kswapd() caller only needs to check whether the current
-> task *is* the kswapd thread, not whether it inherited the flag.
+On Wed, Sep 02, 2026 at 09:23:41AM +0200, Christoph Hellwig wrote:
+> On Tue, Sep 01, 2026 at 10:49:16PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > LOLLM complains that xrep_quota_block updates dd_lsn after calculating
+> > the crc of the ondisk dquot.  That's clearly broken, so fix that.
 > 
-> Replace the flag-based test with kthread_func(current) == kswapd,
-> freeing the 0x00020000 PF flag bit.
+> Yeah:
 > 
-> Signed-off-by: Kefeng Wang <wangkefeng.wang@huawei.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
+> Also why do we set the lsn to 0, shouldn't that contain a valid value
+> (probably the current LSN, but I'd have to look deeper at what this
+> does in detail)
 
-Acked-by: Shakeel Butt <shakeel.butt@linux.dev>
+Hmm.  When I wrote this dquot repair code I was mirroring what
+xfs_qm_init_dquot_blk does (memsets the new dquot buffer to zeroes,
+doesn't explicitly touch dd_lsn).
+
+It probably ought to be set to the current LSN but we don't really have
+a dquot log item for determining that, and assigning 0 here means that
+any subsequent logged dquot item will always be recovered into the
+ondisk dquot that xrep_quota_block writes.
+
+--D
