@@ -1,36 +1,36 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 810383876BA;
-	Wed,  2 Sep 2026 05:41:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02B02155757;
+	Wed,  2 Sep 2026 05:41:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788327699; cv=none; b=D6N4sZjDyh/qLrpmo/h6zUsoWqhDj7puj5Kx9zPII3S7uXDN2sc15C1PPOhIH2tJ1IxNLqEChwKdH3Qq/EMCCQA2RPPVPTXE26rJijdNnohE4F59PkrDuLKlnnYQj3XQbjParFuTCNiNh0jjEYPgVjFkzGxay++DLBdJDnFMpZM=
+	t=1788327705; cv=none; b=cgtwx/wJvj/beDrkcqZIFZq/EKp/zmSTkNPzeGa97z4+ndvVJEq+oqnpjTH0IgyoFBD2NijfhFW70V2FBU7yCNuWSRRQ5Md+LbUm2lfQlBnnY44rfPUTbSCFQK8QCIdXf+o+uhK/M+wOLPoaiCIeuaDJvz6fJq4T3GZZ4a/fhJA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788327699; c=relaxed/simple;
-	bh=d2hXwG/z4YRS5drfte7z7zWJ3nFuf2/1PJ/+G25ZMPI=;
-	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=od40oUHtvJtMHNL6w7g+/BIrqOzDqNQv4EBixw9m4jXqJ0c4aCtfkaI5Ej/TcYJ7ottawW61JoJAHC5NGkzVDC0nco8V2QTm9l0FsIy25Xw4UzfgefAMO5kGFfrho6+MmkBolSrGai1BZlznxJ78r9gKAC6OhlRa4ShBnBJeoFk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b0Zodlsj; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788327705; c=relaxed/simple;
+	bh=xPtaMoYvazOcEe3Qdkvav1rJF/DNPdYIv4auok8F++w=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=pDFkqt9u3T4aUDtiqJsdjZogar8nJxUkvrucM5R05NNGx0DgrN5uZn98JXviUo6k7VVlO6XzF09J4TioaN4/0CqNdzIv9mptS9yknMRTp9GSBUmoDgswAECL+WmzHd+aq5W2OK/Zxz9trbM9ffBO6XAfyVLOtsIjuwl27Sha0OM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YVGM2K6R; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b0Zodlsj"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 0BD101F000E9;
-	Wed,  2 Sep 2026 05:41:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YVGM2K6R"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 8622A1F000E9;
+	Wed,  2 Sep 2026 05:41:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788327698;
-	bh=Vz0TDMBxC2T2K7xP2OuIpNaRo3XEtb3onnY7tfSk2Xg=;
+	s=k20260515; t=1788327703;
+	bh=NDIg5vTgu/QtSW5uyZL8tQL5+OQKXkfLmYPk1DcFtO0=;
 	h=Date:Subject:From:To:Cc;
-	b=b0ZodlsjY15JuKFOzOgRV5ob0bSZbuG9LzU2GHcpNiAlfSadNNgP/uZ1BwFIx70TB
-	 agacdEEFROYOVVQINeXqMR24dHE8UwSBXAq7te00MXzO+8tl9bVZhyy6VxroXljWY3
-	 A7TYnJEMphlnC9+oSbdBB5a2VNeuilL8m2zwKQkag9vWit+4eNy0ojr9Jz5+B3KM2C
-	 qzlk9nwR5Vq59JL4qe4ly/JDBgu0u4t/bS7yYDyUgwcLm919VOP4sIwbTiHoiBvVEn
-	 fTV+09DdLOgzfv6mkGXVDqrBl7857vPUtdf9MzmwW4SoAFL/zPm/9a/jWCN3eqCcHm
-	 x7iup5VZJAR4A==
-Date: Tue, 01 Sep 2026 22:41:37 -0700
-Subject: [PATCHSET v2 2/5] xfs: LLM-inspired bug fixes, part 6
+	b=YVGM2K6RRpC8ro9aFrxxIrDxP8cEiexxR9fGtE4XOGsLEMk/DL38cYhzVF/m4YBs9
+	 ZXY3vtm8rvJYM0vW0+i+nbuweffLVpDg7wHTklEsZm2Ey025FSF7CCoKpvyQ8PZ5dR
+	 ALaG3drlBsAie6R0AIBjW0hL0CnVaicVmV5mDrIAAZPU7hWsOLTSlhPrKlIFQh5Xlz
+	 M3Xnv2M56nNJaK9uMnk8pqDUZ5F8VOupKcvUXe1TXEg5+r3wElt0w3KeIe9tvaFZ0c
+	 BTkHiPmj3Gc05mUxQfsRAdw70inTZi5Zaoxy++snwx9ifK3SKFEZO41isRtJSKtodD
+	 AaqQUgNkENx1A==
+Date: Tue, 01 Sep 2026 22:41:43 -0700
+Subject: [PATCHSET v3 3/5] xfs: LLM-inspired bug fixes, part 7
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, hch@lst.de, djwong@kernel.org
 Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <178832749387.3507209.8650516312948237987.stgit@frogsfrogsfrogs>
+Message-ID: <178832749800.3507493.12247008945704358106.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,10 +42,11 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-Here's a sixth batch of xfs fixes resulting from a LLaMma.  Mwa mwa
+Here's a seventh batch of xfs fixes resulting from a LLaMma.  Mwa mwa
 mwa...
 
-v2: add RVBs, address some review comments
+v2: add rvbs, tweak some of the commit messages
+v3: add more rvbs, finish review
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -56,25 +57,19 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=llm-fixes-6
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=llm-fixes-7
 ---
 Commits in this patchset:
- * xfs: fix xfs_rtrmapbt_mem_cursor for non-rmap filesystems
- * xfs: preserve owner on in-memory btree creation
- * xfs: don't leak new_bp if xfs_btree_bload_drop_buf fails
- * xfs: actually recover intended file sizes in xfs_xmi_item_recover_intent
- * xfs: don't modify file attributes or poke fsnotify for dry runs
- * xfs: fix bnobt repair space reservation disposal failure
+ * xfs: don't spin forever on zero-length dirents when salvaging them
+ * xfs: don't stash removename operations with unknown ftype
+ * xfs: log the tempip after we convert it to extents format
+ * xfs: fix parent rec lookup initialization in xrep_metapath_unlink
+ * xfs: handle reconnecting metadir subdirectories
+ * xfs: lock the healthmon when inserting unmount event
 ---
- fs/xfs/libxfs/xfs_btree_mem.c     |    2 ++
- fs/xfs/libxfs/xfs_btree_staging.c |    4 +++-
- fs/xfs/libxfs/xfs_rtrmap_btree.c  |    2 +-
- fs/xfs/scrub/alloc_repair.c       |   18 ++++++++++++------
- fs/xfs/xfs_exchmaps_item.c        |   19 ++++++++++++++++++-
- fs/xfs/xfs_exchrange.c            |   12 +++++++++---
- 6 files changed, 45 insertions(+), 12 deletions(-)
+ fs/xfs/scrub/dir_repair.c     |   27 ++++++++++++-
+ fs/xfs/scrub/metapath.c       |   85 ++++++++++++++++++++++++++++++++++++++++-
+ fs/xfs/scrub/symlink_repair.c |    2 -
+ fs/xfs/xfs_healthmon.c        |    6 +++
+ 4 files changed, 114 insertions(+), 6 deletions(-)
 
-Unreviewed patches in this series are:
-
-[PATCHSET v2 2/5] xfs: LLM-inspired bug fixes, part 6
-  [PATCH 5/6] xfs: don't modify file attributes or poke fsnotify for
