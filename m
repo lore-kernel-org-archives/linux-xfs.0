@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B7AD387361;
-	Wed,  2 Sep 2026 05:49:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B63735B632;
+	Wed,  2 Sep 2026 05:49:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788328158; cv=none; b=uwWyODsxDo0NmLgWchJwFQf4U1apaEFdN9t7i4XWvLpMonivfQJAXHpg6EC1Jm2yjeEeRCi60G/IIYbypbXEBgr+iM7stUQxjDtW1A087ChmGyApmbgJwf/5GTw6Nk1xUgSuZuUGOsCz/GE5lqXzpLut0wLTUFzNxlwvZCHGLEM=
+	t=1788328174; cv=none; b=V5haOJmQAlKStVG16ahoXc9H2dMWTpsLaGnjp3O3v3ErRbJv7qJsA8lpRIorFTCT/w8SFlMs2RqIXfsy1plp0KOK7se2vahrPheXFVbl7GwOOquBLPMHmncHPgVBKH53SmEmRi2ddlgZXLfHpAAm1hILVmfjDJuExS/dtTbs7PI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788328158; c=relaxed/simple;
-	bh=HwgHKjV1MdhGR4R4gsiOxOBL00BDZqbB/6HiFSwQS4Q=;
+	s=arc-20240116; t=1788328174; c=relaxed/simple;
+	bh=5KAyypkrn8YqrEqYNh89m3YdVJCM/L2Wl2PR68jv+jA=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=dSubolRz6tnhtJd3GboYJ/EFrTocuqbu1w7gmwEKaFMoq7k6Y1bXtn+cRT+RBu/xGt5+G9O09wykJhLxPdV4JDhk26umxizn8RkEppzpNpfAoKOYxMuPzrAsLFwmreSuePhoyrPCm6yhFzIsb7xS545Lb3VNCJOElrys7F9Ii0E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YVSZikfQ; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=nupTXc4UNykhgUDSMZ8L2he1BQQRJW4LJ11hUp0MdC84z9C0QApuaXJA0M0AtFKoeEsyGTPn+5VzH3fP2tcL7aPzdS7ggw9fZVLTumsEEmkQcNKArirkGxDgTiioYU/+vlFNLEBTtygoMM03KBKafs7iqJKR+Edt/mUDkCPU2Zg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ay8D2FR0; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YVSZikfQ"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 115A81F000E9;
-	Wed,  2 Sep 2026 05:49:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ay8D2FR0"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 91D271F000E9;
+	Wed,  2 Sep 2026 05:49:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788328157;
-	bh=V3CBnoAVT4YwBdPbD+NfXuHXk4+eBseD1E5Fny8dqco=;
+	s=k20260515; t=1788328172;
+	bh=Q9kJWU/IUgMcX3WVWOe2kzHulvZOFIJ2lSbA3wx0fd4=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=YVSZikfQc0zzfVeHKm9xutG6nZQllEmzwkNuAU28oIqeCYJnhk9tllw/FDrPZp7GQ
-	 BEoc0bMOgz0ZNWp/SrlfDjvKjzS47uSYIUWyl6Vmh+NXXIFjOWa7FojJAaVZghErdy
-	 dYNuWxR/YuFLzNmJQvxa4bEWEhrM93HGavynt7PoxhH7zPL/Dnh4DgiB8VtyFGlIL5
-	 2rhc0SZWB2JqdtnKgHnDcKCT8IAF4TSyFPBk19QlQiNEmG4ft5NTjZCXy3tXZmj+ws
-	 DZpt9tYjyqpW6Q13PCFAII7aPVURMbf5vW8oGqf3Wc3zJjUr3YZVMdzoXH81VQFYCq
-	 ARqnZofOCnRXA==
-Date: Tue, 01 Sep 2026 22:49:16 -0700
-Subject: [PATCH 3/5] xfs: compute dquot checksum after resetting dd_lsn in
- repair
+	b=ay8D2FR0VXww74EYsYR4DHieSi3QRmNcdoDMVxwPdZ4Fzrj2hqgSGG3tvQN8WJKoI
+	 cgC2Zk/Ci7oVKJJkSvGo6da2gkXYZWTWCOrzrQTW/EmYxxRrRJlvU0MelMXiNtrgun
+	 WCddfh8hFIJMuTUnkYhjkEUjyliVOIGtzfP30gwMb+jwVgZWfI5zag/XdjZ7TATLSF
+	 A87vPABadkYyr3MoqQvg+NCiyJP52LTJVf6cHQVPsJ9IL2WlHuT4EIRmyIQqEpkhX1
+	 tis/sxGPlHpJjBA03O80NesS5OxE1Hnk73JcHYCvhxHAL8x/aQrTG2FA1iv+JVyX7L
+	 d2hbFYvtaUI3A==
+Date: Tue, 01 Sep 2026 22:49:32 -0700
+Subject: [PATCH 4/5] xfs: fix backwards skipping logic in xrep_quota_block
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, hch@lst.de, djwong@kernel.org
 Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <178832750773.3508131.8667220003399042973.stgit@frogsfrogsfrogs>
+Message-ID: <178832750794.3508131.17764052841526629326.stgit@frogsfrogsfrogs>
 In-Reply-To: <178832750681.3508131.6009513367948627110.stgit@frogsfrogsfrogs>
 References: <178832750681.3508131.6009513367948627110.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,8 +45,10 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-LOLLM complains that xrep_quota_block updates dd_lsn after calculating
-the crc of the ondisk dquot.  That's clearly broken, so fix that.
+LOLLM complains about the logic in xrep_quota_block that skips
+reinitializing the ondisk dquot if there aren't any problems that would
+impede a dqiterate walk later.  I got the type checking logic backwards,
+which is the source of the problem.  Fix that.
 
 Cc: <stable@vger.kernel.org> # v6.8
 Fixes: a5b91555403e3a ("xfs: repair quotas")
@@ -59,19 +60,16 @@ Assisted-by: LOLLM # finding obvious bugs
 
 
 diff --git a/fs/xfs/scrub/quota_repair.c b/fs/xfs/scrub/quota_repair.c
-index ca3ac6728339d1..9d0097c5656184 100644
+index 9d0097c5656184..be825448288ed8 100644
 --- a/fs/xfs/scrub/quota_repair.c
 +++ b/fs/xfs/scrub/quota_repair.c
-@@ -364,10 +364,10 @@ xrep_quota_block(
- 				defq->rtb.time);
- 
- 		/* We only support v5 filesystems so always set these. */
-+		dqblk->dd_lsn = 0;
- 		uuid_copy(&dqblk->dd_uuid, &sc->mp->m_sb.sb_meta_uuid);
- 		xfs_update_cksum((char *)dqblk, sizeof(struct xfs_dqblk),
- 				 XFS_DQUOT_CRC_OFF);
--		dqblk->dd_lsn = 0;
- 	}
- 	switch (dqtype) {
- 	case XFS_DQTYPE_USER:
+@@ -325,7 +325,7 @@ xrep_quota_block(
+ 		 * If there's nothing that would impede a dqiterate, we're
+ 		 * done.
+ 		 */
+-		if ((ddq->d_type & XFS_DQTYPE_REC_MASK) != dqtype ||
++		if ((ddq->d_type & XFS_DQTYPE_REC_MASK) == dqtype &&
+ 		    id == be32_to_cpu(ddq->d_id)) {
+ 			xfs_trans_brelse(sc->tp, bp);
+ 			return 0;
 
