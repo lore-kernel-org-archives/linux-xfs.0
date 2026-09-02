@@ -1,39 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B33233263B;
-	Wed,  2 Sep 2026 05:46:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4438038758C;
+	Wed,  2 Sep 2026 05:46:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788327987; cv=none; b=osx/rDUMKBLQSGjfR+S0AemwhDt2h91jAPsrlfkUk6XjNXur38OiM/K6sv+2WrFdDH31xD9JcpGuTde29L+5RnGPD5vhRl1J+wqsnkhFgDvEY1j2JFXPcNfVnrkAW2mNGqT9nFUJ+FOTroeFaknVvUlfH4pZSNNL74HavLj5pgA=
+	t=1788328003; cv=none; b=kfC/d1kjtxMEU3xn86YbTDBBHnbVkwNY9GisuDCpZ+/bcx55Sbt2BFIh0qJcQ7vYgX0D66hcbLGyS25YIDrdUjHQiBqHz0UwVNTDjm7pNtXS9dEMoM9a/CVDV4VD0a/zmU8S3ob3vCzS1EkA+WbsUTajTmoP6aDXFdzc3u17zMA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788327987; c=relaxed/simple;
-	bh=SrHFmhQVG7qq3yR1IPLjB3npwPb9nyfPb/MNNSa2Gx4=;
+	s=arc-20240116; t=1788328003; c=relaxed/simple;
+	bh=nVpF4wyG+/JhHxAtTERbbN7545dDGbp7Kb7rMcJY1mM=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=JDfWZTqU+FmHozfQxpqhGZ1iCLUuFyhmlbHSwvUhyF9vd4Q4Zy6sgBFqqd4kf8zZ8i4OR5Tz3+VPtTw21NWmoD2DkIvtEemxF+IsMOwc0CEqAih3C0N//6X2gNf4qOmsfLxTGSTPowdFm+hnJ/N8Y3wb/ksB+LqNyNzHa56lepM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VDFUObPE; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=GX3y5O5DMVdbzl6yUkGAxE1KJz6YDEzD1WZvfs0cZS6i0PKZtIJXnyL8yzRh4qccVKRQubO/S0Y3b1niy7E/UNYw1EMWFNTJxZDPtMJkRyl7MG0buebAm8nzZt/n2NpetjTdobQtDhKELUpkCQpCprW8zePbBF8KlvR5Dh5rIJI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UHT+O2E4; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VDFUObPE"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 3A1371F000E9;
-	Wed,  2 Sep 2026 05:46:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UHT+O2E4"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id B40331F000E9;
+	Wed,  2 Sep 2026 05:46:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788327986;
-	bh=+J6MbXSiL/MEpPJCal4sMj6ay7Lyi798PSjNAiEoL14=;
+	s=k20260515; t=1788328001;
+	bh=brjgHdSwNSdwpswBRqNZakL3E339/j8n7QZs7FYDgL0=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=VDFUObPE5nq7y4Oi7FuiVUmt3IrjT3lPAntHV7ACC59QD/vQUvp2WJS2mjVI9phAA
-	 FaTPP+Y+1wr9fx99TSjbxZcLlMWw4NSKPcLJBtVxmUtdc2uqz27sz8rXMiNoJpccMo
-	 CuHoDXRAzqEemetVphthSNK+L2HQlI8WppIe1IlHIERnNgoVyD4k56SOSzbEZ8cyqk
-	 a03tUaUeav5BYuw2T3v0eAw2exgJgxCeAMKjrscNpdQHxkEV999PiwJ1Q+tFAEX0Vd
-	 ccWdluxhr4PS8iNxp3wzY1AdV9Jo7YCfvXXL/3AhrOoc8d7W/tu73Im6ufQ2hxY7eQ
-	 lsb6ufSTnRsYw==
-Date: Tue, 01 Sep 2026 22:46:25 -0700
-Subject: [PATCH 6/6] xfs: lock the healthmon when inserting unmount event
+	b=UHT+O2E40AQ+w672zWZCnFi5aTiaJw3Amby6yHUUFbWy54cYNDeDHLHboeNr9QLz2
+	 Sygq7BPPdJJwnVGwek6PAJiKWTe95o7szVk4wsLTNAFtWMZm9305NfYn5bS4pGFWJy
+	 dJA16FCjtxkdPFh2eux9FA/Rx9orOQeuD1gBhzrrYAClxEuAp3Zl5vuhhk1p0Q+sXL
+	 81dDMMCI/A4bj3yNfTsjdC5TJDk5arS1zwqe66WBfg2PAHKUKh5DHoH2p9uVMl8t+P
+	 ssUTJt88OgDEVQbFEhicRpuA9ClighUKQINF0qbb5bsgFHrNd0aZxqFPVwdPA7HP0n
+	 qLOL0bpCqeBDA==
+Date: Tue, 01 Sep 2026 22:46:41 -0700
+Subject: [PATCH 1/8] xfs: always set xfs_healthmon::first_event when inserting
+ at front of list
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, hch@lst.de, djwong@kernel.org
 Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <178832749961.3507493.2323960743439180395.stgit@frogsfrogsfrogs>
-In-Reply-To: <178832749800.3507493.12247008945704358106.stgit@frogsfrogsfrogs>
-References: <178832749800.3507493.12247008945704358106.stgit@frogsfrogsfrogs>
+Message-ID: <178832750287.3507776.8244145130516180990.stgit@frogsfrogsfrogs>
+In-Reply-To: <178832750217.3507776.15975397025387963886.stgit@frogsfrogsfrogs>
+References: <178832750217.3507776.15975397025387963886.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,50 +46,38 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-LOLLM complains that xfs_healthmon_unmount does an unlocked insert of
-the unmount event into the health monitor's event list.  Fix that.
+LOLLM complains that while __xfs_healthmon_insert is supposed to insert
+an event at the head of the list, it doesn't do that correctly if the
+list isn't empty.  In that case it *should* make our new event point to
+the current head, and then make the head point to the new event, but
+it doesn't actually update the head so we never see the new event.
+
+Fix this by always reassigning first_event.  A subsequent patch will
+clean this up to use a standard list_head, but I felt it important to
+call out the bug fix first.
 
 Cc: <stable@vger.kernel.org> # v7.0
-Fixes: 25ca57fa3624ca ("xfs: convey filesystem unmount events to the health monitor")
+Fixes: b3a289a2a9397b ("xfs: create event queuing, formatting, and discovery infrastructure")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Assisted-by: LOLLM # finding obvious bugs
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_healthmon.c |    6 ++++++
- 1 file changed, 6 insertions(+)
+ fs/xfs/xfs_healthmon.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
 
 diff --git a/fs/xfs/xfs_healthmon.c b/fs/xfs/xfs_healthmon.c
-index 4521ffdab9f1ae..3ae5f4496ad1aa 100644
+index 3ae5f4496ad1aa..a4efc084a8fc0b 100644
 --- a/fs/xfs/xfs_healthmon.c
 +++ b/fs/xfs/xfs_healthmon.c
-@@ -272,6 +272,8 @@ __xfs_healthmon_insert(
- {
- 	struct timespec64		now;
- 
-+	lockdep_assert_held(&hm->lock);
-+
- 	ktime_get_coarse_real_ts64(&now);
+@@ -278,8 +278,7 @@ __xfs_healthmon_insert(
  	event->time_ns = (now.tv_sec * NSEC_PER_SEC) + now.tv_nsec;
  
-@@ -294,6 +296,8 @@ __xfs_healthmon_push(
- {
- 	struct timespec64		now;
- 
-+	lockdep_assert_held(&hm->lock);
-+
- 	ktime_get_coarse_real_ts64(&now);
- 	event->time_ns = (now.tv_sec * NSEC_PER_SEC) + now.tv_nsec;
- 
-@@ -415,8 +419,10 @@ xfs_healthmon_unmount(
- 	 * There's nothing actionable for userspace after an unmount.  Once
- 	 * we've inserted the unmount event, hm no longer owns that event.
- 	 */
-+	mutex_lock(&hm->lock);
- 	__xfs_healthmon_insert(hm, hm->unmount_event);
- 	hm->unmount_event = NULL;
-+	mutex_unlock(&hm->lock);
- 
- 	xfs_healthmon_detach(hm);
- 	xfs_healthmon_put(hm);
+ 	event->next = hm->first_event;
+-	if (!hm->first_event)
+-		hm->first_event = event;
++	hm->first_event = event;
+ 	if (!hm->last_event)
+ 		hm->last_event = event;
+ 	xfs_healthmon_bump_events(hm);
 
