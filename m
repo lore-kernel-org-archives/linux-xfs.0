@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 086F147F786;
-	Wed,  2 Sep 2026 16:35:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1CB44A5EA8;
+	Wed,  2 Sep 2026 16:36:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788366955; cv=none; b=hZFloCcg25Q+zuL3eM9YombtDHG9fJjmfV6EhTkWON2BQBaNPmrvKBr9fAvz7wHfi12STFr4TsXlsug+xz3kvEvMZ0qiLlA5Rr+PfO6hUYGMe620cEsI6uHIoO7eMu8PDohcpVF5dZ9KwAh8FbDUylozO52k7GdBRjos940gVxU=
+	t=1788366983; cv=none; b=r4L1rFWGejP5OXhz5nx96lec+O2XAPgebjZkKlBa0ypYDJq9DXSJRy5O7wz1J8d5tSaYGl3ap6GM8LUWnh24b4Icnx3qc/87QkNnIEXwCPBcn6Fvg4CElxQFAu8v/sIb3zbhmaEQEPXtiAVCFOk2FsRWPCk2RgOwVvTXpfH6+WE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788366955; c=relaxed/simple;
-	bh=sqNtSfdNCaTQb/2mf73osRumdi1Z06osl4U/LVAk7AU=;
+	s=arc-20240116; t=1788366983; c=relaxed/simple;
+	bh=j5dyCZzGZXhc8sCrjRwlYOrRtSy0ib5mtj3XnDYvKWI=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=nPNuX8KDK84j0nXja06PXtPaVcFYaMlOnypygLB/igp7ivqT945A1LD90EXVYTFFkGP4WgsmnwoIs+yPpT4Cq77OEPLPeegFMOnSYsFB4t4GVkt3naMBp/j/LaQ/lExm00yD7PMZHOOy8+zWqaGoNYwg5MqvzaaAh2tRo7+ONZ4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RUx12r4I; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=Ytj8dwgbM2nWN7nqoQ7YWCWfUpoBJh2eAS7qraN+//IIFtUX5DDMYZZj+cFN217nZQrykRtRJX8wmAt/ZYJQX8jA7oxx2Xr9aI+Uvk69v8huPwv+g3yrrHb2bS3xEOqRk/yi5BfOMeh/Zt+0H3VOIoA+v7a0oKOqp3RYV86c2M8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Te8Jy+zU; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RUx12r4I"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8512B1F000E9;
-	Wed,  2 Sep 2026 16:35:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Te8Jy+zU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 05A3E1F000E9;
+	Wed,  2 Sep 2026 16:36:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788366953;
-	bh=ac8jsX+DMtEi6vVSz6czKKoo3d1DKY5/tg/cm1MFQFw=;
+	s=k20260515; t=1788366981;
+	bh=X9qWhK86vAI0vw7PjTHIwO4q0yPRh2De+EC1ifXqR+I=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=RUx12r4IWkNLDsowdrG0tIOgZVYvTtRlYFpwS7Ps2MMhUDo8igPTsx5tqCIx+dq7Z
-	 P45rLsyOHNZ648U94ptQfeZK2A6TIPNQ1jReHuNNaBFn1FpxVy8yWXLcWIeku6ogf3
-	 phduk3qLzEe+N5cPT55mwg37gegxI/Km0KI7fLBcmLItsmKIyiPbKfe055cCnOgsmT
-	 Hj6e5Xzpy/SOMfU4n1Jfo/4KJG55kbI+nqf+WVv1ur153KlNEiDkd3z+uNSX3O5xxx
-	 wK869ki2JRA8vPt7m9JGtU8shMYnwNuJVRQ2YKntYe6yvK8KFGuG1wfJG6pEikmfAv
-	 4BdET61TLKMcQ==
-Message-ID: <86fc18f6-8c21-4738-9a10-64a2fa48cc1f@kernel.org>
-Date: Wed, 2 Sep 2026 18:35:48 +0200
+	b=Te8Jy+zUvZ0hd3XPvJweck6BpFfsKl4b97KSDSeiEwaoxE8x281Ees0rBoToIajjE
+	 VaBnjFMzSefJGYmXbhUagIcNzPwWXHZIbhu5C1r9Nz6l97tYk8i5D8i30945uNkD+/
+	 N6uO+Jz651ZEyyf9kDC9lkHkuN/W8Dzrvu34NsDPALyCF1jTmSc8IaagV0zXrh8YqM
+	 SG9dUmXPNncJ+LMw6rlHX6DWA5kWD+JN884AXB2TAuJEGk7mQcGfMBBltHfReDw+6L
+	 C5vMZb/dARDxGVaFxBZnGQuxfEXA+uvI04JxDzmZtlLjInnxlOv5Msta+IqaZbOts0
+	 jKL8IRkjqT2rg==
+Message-ID: <a16ecfe1-5e1d-488a-9c63-7ca38f099117@kernel.org>
+Date: Wed, 2 Sep 2026 18:36:16 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -35,7 +35,9 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 3/4] mm: replace PF_KSWAPD flag with kthread_func() check
+Subject: Re: [PATCH 4/4] mm: replace PF_KCOMPACTD flag with kthread_func()
+ check
+Content-Language: en-US
 To: Kefeng Wang <wangkefeng.wang@huawei.com>, brauner@kernel.org,
  djwong@kernel.org, cem@kernel.org, akpm@linux-foundation.org,
  surenb@google.com, mhocko@suse.com, brendan.jackman@linux.dev,
@@ -44,9 +46,8 @@ To: Kefeng Wang <wangkefeng.wang@huawei.com>, brauner@kernel.org,
 Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
  linux-mm@kvack.org
 References: <20260902131653.1338227-1-wangkefeng.wang@huawei.com>
- <20260902131653.1338227-4-wangkefeng.wang@huawei.com>
+ <20260902131653.1338227-5-wangkefeng.wang@huawei.com>
 From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
-Content-Language: en-US
 Autocrypt: addr=vbabka@kernel.org; keydata=
  xsFNBFZdmxYBEADsw/SiUSjB0dM+vSh95UkgcHjzEVBlby/Fg+g42O7LAEkCYXi/vvq31JTB
  KxRWDHX0R2tgpFDXHnzZcQywawu8eSq0LxzxFNYMvtB7sV1pxYwej2qx9B75qW2plBs+7+YB
@@ -86,111 +87,21 @@ Autocrypt: addr=vbabka@kernel.org; keydata=
  NcaZ+c6J4H+nEJGi2SkHAUJz5oBzuThvPudLvPA/SK8sKoM01IRxSihev/S/5WLazXB1PGem
  OCbvzC1IjWJJraxiDJ5IygokapUa2RP7+WBR22skQ3SSl6G107QgWKSyTOGWEaRmV53vxQLV
  jXuCmzSSasTL60zq5yGrT4/DYQVSNEUiUbG4pYekxJujNeEDkUlky0Y=
-In-Reply-To: <20260902131653.1338227-4-wangkefeng.wang@huawei.com>
+In-Reply-To: <20260902131653.1338227-5-wangkefeng.wang@huawei.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 9/2/26 15:16, Kefeng Wang wrote:
-> The preceding commits removed the last consumer that propagated
-> PF_KSWAPD beyond kswapd itself (XFS btree split worker inheritance).
-> The only remaining setter of PF_KSWAPD is kswapd(), and every
-> current_is_kswapd() caller only needs to check whether the current
-> task *is* the kswapd thread, not whether it inherited the flag.
+> PF_KCOMPACTD was introduced by commit ce6d9c1c2b5c ("NFS: fix
+> nfs_release_folio() to not deadlock via kcompactd writeback") so
+> nfs_release_folio() could detect kcompactd context and skip
+> writeback.  The flag is only consumed by current_is_kcompactd(),
+> whose sole caller is nfs_release_folio().
 > 
-> Replace the flag-based test with kthread_func(current) == kswapd,
-> freeing the 0x00020000 PF flag bit.
+> Replace the flag-based check with kthread_func(current) == kcompactd,
+> freeing the 0x00010000 PF flag bit.
 > 
 > Signed-off-by: Kefeng Wang <wangkefeng.wang@huawei.com>
 
 Acked-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
-
-> ---
->  include/linux/sched.h                    |  2 +-
->  include/linux/swap.h                     |  7 +------
->  mm/vmscan.c                              | 10 ++++++++--
->  tools/sched_ext/include/scx/common.bpf.h |  1 -
->  4 files changed, 10 insertions(+), 10 deletions(-)
-> 
-> diff --git a/include/linux/sched.h b/include/linux/sched.h
-> index 8b3d47a325cc..86394121b6c0 100644
-> --- a/include/linux/sched.h
-> +++ b/include/linux/sched.h
-> @@ -1809,7 +1809,7 @@ extern struct pid *cad_pid;
->  #define PF_USER_WORKER		0x00004000	/* Kernel thread cloned from userspace thread */
->  #define PF_NOFREEZE		0x00008000	/* This thread should not be frozen */
->  #define PF_KCOMPACTD		0x00010000	/* I am kcompactd */
-> -#define PF_KSWAPD		0x00020000	/* I am kswapd */
-> +#define PF__HOLE__00020000	0x00020000
->  #define PF_MEMALLOC_NOFS	0x00040000	/* All allocations inherit GFP_NOFS. See memalloc_nfs_save() */
->  #define PF_MEMALLOC_NOIO	0x00080000	/* All allocations inherit GFP_NOIO. See memalloc_noio_save() */
->  #define PF_LOCAL_THROTTLE	0x00100000	/* Throttle writes only against the bdi I write to,
-> diff --git a/include/linux/swap.h b/include/linux/swap.h
-> index a72ecf12c00d..fc290e29e4a9 100644
-> --- a/include/linux/swap.h
-> +++ b/include/linux/swap.h
-> @@ -25,12 +25,6 @@
->  #define SWAP_FLAGS_VALID	(SWAP_FLAG_PRIO_MASK | SWAP_FLAG_PREFER | \
->  				 SWAP_FLAG_DISCARD | SWAP_FLAG_DISCARD_ONCE | \
->  				 SWAP_FLAG_DISCARD_PAGES)
-> -
-> -static inline int current_is_kswapd(void)
-> -{
-> -	return current->flags & PF_KSWAPD;
-> -}
-> -
->  /*
->   * MAX_SWAPFILES defines the maximum number of swaptypes: things which can
->   * be swapped to.  The swap type and the offset into that swap type are
-> @@ -339,6 +333,7 @@ void check_move_unevictable_folios(struct folio_batch *fbatch);
->  
->  extern void __meminit kswapd_run(int nid);
->  extern void __meminit kswapd_stop(int nid);
-> +bool current_is_kswapd(void);
->  
->  #ifdef CONFIG_SWAP
->  int add_swap_extent(struct swap_info_struct *sis, unsigned long start_page,
-> diff --git a/mm/vmscan.c b/mm/vmscan.c
-> index 07ba86634b84..775d3f71a9de 100644
-> --- a/mm/vmscan.c
-> +++ b/mm/vmscan.c
-> @@ -7468,7 +7468,7 @@ static int kswapd(void *p)
->  	 * us from recursively trying to free more memory as we're
->  	 * trying to free the first piece of memory in the first place).
->  	 */
-> -	tsk->flags |= PF_MEMALLOC | PF_KSWAPD;
-> +	tsk->flags |= PF_MEMALLOC;
->  	set_freezable();
->  
->  	WRITE_ONCE(pgdat->kswapd_order, 0);
-> @@ -7518,11 +7518,17 @@ static int kswapd(void *p)
->  			goto kswapd_try_sleep;
->  	}
->  
-> -	tsk->flags &= ~(PF_MEMALLOC | PF_KSWAPD);
-> +	tsk->flags &= ~PF_MEMALLOC;
->  
->  	return 0;
->  }
->  
-> +bool current_is_kswapd(void)
-> +{
-> +	return kthread_func(current) == kswapd;
-> +}
-> +EXPORT_SYMBOL_GPL(current_is_kswapd);
-> +
->  /*
->   * A zone is low on free memory or too fragmented for high-order memory.  If
->   * kswapd should reclaim (direct reclaim is deferred), wake it up for the zone's
-> diff --git a/tools/sched_ext/include/scx/common.bpf.h b/tools/sched_ext/include/scx/common.bpf.h
-> index 76f5e025e107..3e095343ae84 100644
-> --- a/tools/sched_ext/include/scx/common.bpf.h
-> +++ b/tools/sched_ext/include/scx/common.bpf.h
-> @@ -32,7 +32,6 @@
->  #define PF_IO_WORKER			0x00000010	/* Task is an IO worker */
->  #define PF_WQ_WORKER			0x00000020	/* I'm a workqueue worker */
->  #define PF_KCOMPACTD			0x00010000      /* I am kcompactd */
-> -#define PF_KSWAPD			0x00020000      /* I am kswapd */
->  #define PF_KTHREAD			0x00200000	/* I am a kernel thread */
->  #define PF_EXITING			0x00000004
->  #define CLOCK_MONOTONIC			1
 
