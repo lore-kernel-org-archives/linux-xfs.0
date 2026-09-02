@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9119305693;
-	Wed,  2 Sep 2026 05:43:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A5A9155757;
+	Wed,  2 Sep 2026 05:43:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788327816; cv=none; b=J0UToDZkmp5rF1Zef6q2mZQk6Ijxo3iM06KK7PqzJG7laG2y0dXYY8BcFuCXPkj+5kf3UvdXYjwUoRrArzfbDpxNaokddpvPDRjZQHAZf8V1A3mIn391wIizixzE/HTfdSjVepRfNjCcQX3CBR5taEU6kSpbzmB9tdjeVp/N8/s=
+	t=1788327832; cv=none; b=jELrAO3fiSRzYRD2MQNIOcPB8svZve031CC2oIDoZbcunMSAqkMOtJaWRlM+WMaxSa6roNXInUeDwrLpPT6bYBGQGX9hE0rSNlsG9dt9Ta9f28pJ5f4BCOLA8nxZrRduURExc3/scEKqpdTLYGfo7EfNtAPLblDZpoqesIcIYFw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788327816; c=relaxed/simple;
-	bh=M7iok7LL9DeOBsUrV0YKCJJkz7N0PfAD2HueBVGME3k=;
+	s=arc-20240116; t=1788327832; c=relaxed/simple;
+	bh=+n2yX2g4irqb8kJBpLny2nhFi5S188NBHCf6PDYPryE=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=pyo1tlFnPGcCS24O14OZ+pAVgOK+LC8j6EWV+rkC14SqMn23C2O7E6lShDx4/9eDQFlbiy0tdM1kjSFVltqE813/XoI3Ca2QhIgVoGbCJwOOqgA69/aasXNI5hpe+ORkyzFspKX0ZbiWZnRt320NHdmbwY6l52cZmKOjc47ub9Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XUGhjs1E; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=XBR7x1ecWRinXEaTLtfvFD9wPWiOv2SEf1j93sNUj5gj0zEPifbj3NCcE9MgxSRgxhXH5alg9Vh9WX4Niww2S9XHAjXr9sEARyFIMZIHkCYptv1HJslVhdygyUPlyRirw56OvliSUDc+ztKRSEViKYIH3hiMe1jYGI+njAkSkTA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j0ntX9KS; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XUGhjs1E"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 41BC01F000E9;
-	Wed,  2 Sep 2026 05:43:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j0ntX9KS"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id C2B521F000E9;
+	Wed,  2 Sep 2026 05:43:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788327815;
-	bh=G5jdjM9x+a1EIJfBgYi/j6Ait6scDTCx8zmfpsMiRoQ=;
+	s=k20260515; t=1788327830;
+	bh=L7QeijKxhR1jH12vtSZqNUwUgUXn/Kb1WlijwUS824U=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=XUGhjs1EdMV4D1+sXlRwPl1MDqmizhyEhnj1UdJBemuP5Chm2oegNKB472mGN32jJ
-	 sdE4tLhSkEvfBgO2CboZ8XltFZCkjs3Bd+JYim0mSxyWi3AR0QwaT4fo4vqLhECS5n
-	 RPqNO7KeNJhpHfU+lASuaHMLcVrxUS8kqMqnW/8oTYYle8lxn9ukcDocmRiq0DBZkC
-	 DjAoFEWImG5+pOp9StCEvrTBFFk4B5d9Sr54+kp+7F1NWJOLZC/90FnYQTDx5leG0s
-	 Bi7ZHzQAhQfMEfGqQuhGXq3Zf9Z950QCtK2g6imf4aoUa3uK6IV5SbwiPKudl8R3tG
-	 BxtWmq1Iu/p4g==
-Date: Tue, 01 Sep 2026 22:43:34 -0700
-Subject: [PATCH 1/6] xfs: fix xfs_rtrmapbt_mem_cursor for non-rmap filesystems
+	b=j0ntX9KSX4mbJcxxRQWPKPYZ51EVYQ3MpGKufl5TKDd024MqKDjjdp3QLokIgoVuR
+	 x0jnj9QS9iTAJKqm4EwhSRZdCBUpb701SSDxKuSvpNbTITGDmk+yOJCrHKQVjUYhYN
+	 pnbWytTWfJpjEirs0Ke/6GjMY1ln/iZk/V6/HOJrg4K2hwcjk3A+DHgWGjFMz0a96m
+	 iTmSo/BY5yYeGL6+ter3VlTndgLPFKwX364BB8CHEZqJGFwAvHVyuysB37D+EN47GF
+	 tzxie2szvBju4cjWAcfR7i6Wp+TbWDDeLVdiaegNa7SiopSkxAs4l0iRK39tMnzpci
+	 c9X5LQD0iqajQ==
+Date: Tue, 01 Sep 2026 22:43:50 -0700
+Subject: [PATCH 2/6] xfs: preserve owner on in-memory btree creation
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, hch@lst.de, djwong@kernel.org
 Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <178832749444.3507209.986722117041125252.stgit@frogsfrogsfrogs>
+Message-ID: <178832749465.3507209.1331497746659651125.stgit@frogsfrogsfrogs>
 In-Reply-To: <178832749387.3507209.8650516312948237987.stgit@frogsfrogsfrogs>
 References: <178832749387.3507209.8650516312948237987.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,36 +45,39 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-It's possible to construct an in-memory rtrmap btree for filesystems
-that don't have the rmap feature enabled.  The kernel doesn't do this,
-but xfs_repair will, if asked to reindex a filesystem that has rtreflink
-enabled but not rtrmap.  Therefore, we must create the cursor with
-enough levels to handle a maximally sized btree possible.
+LOLLM points out a minor bug where a higher level function creating an
+in-memory btree is required to pass in an owner number, but the creation
+function erases that.  In-memory btrees are ephemeral so this really
+doesn't matter except for debugging.  But let's fix this papercut.
 
-Note that the rtrmapbt btree cursor slab creates objects large enough to
-handle xfs_rtrmap_maxlevels_ondisk() levels, so setting bc_nlevels to
-the same value isn't costing us any extra memory.
-
-Cc: <stable@vger.kernel.org> # v6.14
-Fixes: 4a61f12eb11958 ("xfs: create a shadow rmap btree during realtime rmap repair")
+Cc: <stable@vger.kernel.org> # v6.9
+Fixes: a095686a238352 ("xfs: support in-memory btrees")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+Assisted-by: LOLLM # finding obvious bugs
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_rtrmap_btree.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_btree_mem.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
 
-diff --git a/fs/xfs/libxfs/xfs_rtrmap_btree.c b/fs/xfs/libxfs/xfs_rtrmap_btree.c
-index 0cb2113d5b4045..a15e460a1ec7f4 100644
---- a/fs/xfs/libxfs/xfs_rtrmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_rtrmap_btree.c
-@@ -618,7 +618,7 @@ xfs_rtrmapbt_mem_cursor(
- 	struct xfs_btree_cur	*cur;
+diff --git a/fs/xfs/libxfs/xfs_btree_mem.c b/fs/xfs/libxfs/xfs_btree_mem.c
+index 37136a70e56d66..1d83a4251ceeb6 100644
+--- a/fs/xfs/libxfs/xfs_btree_mem.c
++++ b/fs/xfs/libxfs/xfs_btree_mem.c
+@@ -117,6 +117,7 @@ xfbtree_init(
+ 	struct xfs_buftarg		*btp,
+ 	const struct xfs_btree_ops	*ops)
+ {
++	unsigned long long		owner = xfbt->owner;
+ 	unsigned int			blocklen = xfbtree_rec_bytes(mp, ops);
+ 	unsigned int			keyptr_len;
+ 	int				error;
+@@ -133,6 +134,7 @@ xfbtree_init(
  
- 	cur = xfs_btree_alloc_cursor(mp, tp, &xfs_rtrmapbt_mem_ops,
--			mp->m_rtrmap_maxlevels, xfs_rtrmapbt_cur_cache);
-+			xfs_rtrmapbt_maxlevels_ondisk(), xfs_rtrmapbt_cur_cache);
- 	cur->bc_mem.xfbtree = xfbt;
- 	cur->bc_nlevels = xfbt->nlevels;
- 	cur->bc_group = xfs_group_hold(rtg_group(rtg));
+ 	memset(xfbt, 0, sizeof(*xfbt));
+ 	xfbt->target = btp;
++	xfbt->owner = owner;
+ 
+ 	/* Set up min/maxrecs for this btree. */
+ 	keyptr_len = ops->key_len + sizeof(__be64);
 
