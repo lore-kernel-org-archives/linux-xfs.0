@@ -1,38 +1,38 @@
-Received: from canpmsgout02.his.huawei.com (canpmsgout02.his.huawei.com [113.46.200.217])
+Received: from canpmsgout09.his.huawei.com (canpmsgout09.his.huawei.com [113.46.200.224])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 791A949EC65;
-	Wed,  2 Sep 2026 13:17:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.217
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9E8C49F101;
+	Wed,  2 Sep 2026 13:17:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.224
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788355031; cv=none; b=ohZ48j3yxEsoxOEqhcC++ipzkFH0AO33nVfvv6b5WdphA0Js6Dej8AeMRcWI1s6mCS/4sxivlV3YQdO4pIcGiddxgLNK3CGSfaCq65kDkclI4wnuSsWOUWfi10YX53lLy2QGxPmQ15dDAe5AKx7MBpY4D1xgxrkTFH269BGhEfQ=
+	t=1788355032; cv=none; b=frCXdzbeJZ8uPNXJ6VX2BM7lrF5BOFZAD/8Q1ydmAC+xy16lRjIkI4j1t0HydsRi5MgvcQ5VFeouSCTahWiFkhrAoOyuOom5VQbUqRCXBzfRauRJ30/6Ycqlk8/JCMDq1xqiGPpG/ZBlH4XAtFrU88aQPncGUlezgssBS7eq1Pg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788355031; c=relaxed/simple;
-	bh=FYd4TyB1H+lGzCqw0X4fzpyPftb+f1/FwMG5bgRpz6E=;
+	s=arc-20240116; t=1788355032; c=relaxed/simple;
+	bh=9bt6NMV9ceOL/vjGrcjGG7cSY+UGf1eV85GtEuj2XLE=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=JM3SY03bux9pfe38+wPT26xMxL07zKHuC/gSy+fv25f6kqpdIpHi/I5HYr5U6orfpIlYlG33TzBBZRWZn8/pk04AS2DpDNM/jM2hh5peoyjtp+s06CMqlK2P+tHAJOA9sEw9uhxSqs83vBHSv24+/j8IW0LZYYhb1wAlyH3sm2M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=2RG9sDFc; arc=none smtp.client-ip=113.46.200.217
+	 MIME-Version:Content-Type; b=H8uSJHvb8eYHp4xM0kpXtWHUB2qh6Dsuhrfa5pH9G9t9/VHjUS/JaSpQr2xkfDF10hKQoM+bCtPxNVRvdhm6IPdZqyFDrRRHmUs6nSBTFsaYIOm0f9M3dxM+tTV2lrJsKKg8Q+nODjOcgxEMfBdierB0Fw858kHPuJR6tK5Coxo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=4yWgN6Ji; arc=none smtp.client-ip=113.46.200.224
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="2RG9sDFc"
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="4yWgN6Ji"
 dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
 	c=relaxed/relaxed; q=dns/txt;
 	h=From;
-	bh=nsItdggoL/pH70R61fsubbblLKE8u/0wryCQVrxs0VM=;
-	b=2RG9sDFcgMpmLnKYwyCd+Aat75j5gFfE2K+rc2lyv6wU3o2Lnnetiw/ZC4yS+kihU5WUmZbe4
-	o5KIP8sxOK31IxMMaFG84XSa9pv4RE0SRfYSAymq2wlfboEwxY20a5x/dyYI8mR17lIslcRVKvJ
-	MQYc1jht7/h6/RE7RTFEF1A=
-Received: from mail.maildlp.com (unknown [172.19.162.140])
-	by canpmsgout02.his.huawei.com (SkyGuard) with ESMTPS id 4hZjfB3RfCzcb0T;
-	Wed,  2 Sep 2026 21:06:10 +0800 (CST)
+	bh=FMutdLgk3E5wynZZWQtCn7gpgPrrKwjYS6nAK+VT9Fs=;
+	b=4yWgN6Ji+pHgL66Tyv+Pt77YqPukAmGoBSzl5v4R65ckzp0UVzPnbqeLlchftp40qqfRVot4Z
+	2ZRwspAsOcgeVFqX5YMlApaiQQg/fJWcH8YGibc2ccDZmQbhIqZs3Xi5VBZWOy5hjR2dtHz41FH
+	sKO8x2guDQ5cD05eT0Grjig=
+Received: from mail.maildlp.com (unknown [172.19.163.214])
+	by canpmsgout09.his.huawei.com (SkyGuard) with ESMTPS id 4hZjf81NP9z1cyPY;
+	Wed,  2 Sep 2026 21:06:08 +0800 (CST)
 Received: from kwepemk300003.china.huawei.com (unknown [7.202.195.93])
-	by mail.maildlp.com (Postfix) with ESMTPS id 71F94202E6;
-	Wed,  2 Sep 2026 21:16:56 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id 9CB424057C;
+	Wed,  2 Sep 2026 21:16:57 +0800 (CST)
 Received: from ubuntu (10.50.87.83) by kwepemk300003.china.huawei.com
  (7.202.195.93) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.45; Wed, 2 Sep
- 2026 21:16:55 +0800
+ 2026 21:16:56 +0800
 From: Kefeng Wang <wangkefeng.wang@huawei.com>
 To: <brauner@kernel.org>, <djwong@kernel.org>, <cem@kernel.org>,
 	<akpm@linux-foundation.org>, <vbabka@kernel.org>, <surenb@google.com>,
@@ -41,9 +41,9 @@ To: <brauner@kernel.org>, <djwong@kernel.org>, <cem@kernel.org>,
 	<shakeel.butt@linux.dev>, <ljs@kernel.org>
 CC: <linux-xfs@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
 	<linux-mm@kvack.org>, Kefeng Wang <wangkefeng.wang@huawei.com>
-Subject: [PATCH 2/4] iomap: simplify writepages reclaim guard
-Date: Wed, 2 Sep 2026 21:16:51 +0800
-Message-ID: <20260902131653.1338227-3-wangkefeng.wang@huawei.com>
+Subject: [PATCH 4/4] mm: replace PF_KCOMPACTD flag with kthread_func() check
+Date: Wed, 2 Sep 2026 21:16:53 +0800
+Message-ID: <20260902131653.1338227-5-wangkefeng.wang@huawei.com>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260902131653.1338227-1-wangkefeng.wang@huawei.com>
 References: <20260902131653.1338227-1-wangkefeng.wang@huawei.com>
@@ -58,30 +58,114 @@ Content-Type: text/plain
 X-ClientProxiedBy: kwepems500002.china.huawei.com (7.221.188.17) To
  kwepemk300003.china.huawei.com (7.202.195.93)
 
-Now that kswapd can no longer reach filesystem writeback (pageout()
-returns PAGE_ACTIVATE for non-shmem, non-anon folios), any PF_MEMALLOC
-context in iomap_writepages() indicates a VM regression, simplify
-the check by removing PF_KSWAPD.
+PF_KCOMPACTD was introduced by commit ce6d9c1c2b5c ("NFS: fix
+nfs_release_folio() to not deadlock via kcompactd writeback") so
+nfs_release_folio() could detect kcompactd context and skip
+writeback.  The flag is only consumed by current_is_kcompactd(),
+whose sole caller is nfs_release_folio().
+
+Replace the flag-based check with kthread_func(current) == kcompactd,
+freeing the 0x00010000 PF flag bit.
 
 Signed-off-by: Kefeng Wang <wangkefeng.wang@huawei.com>
 ---
- fs/iomap/buffered-io.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ include/linux/compaction.h               | 11 ++++++-----
+ include/linux/sched.h                    |  2 +-
+ mm/compaction.c                          |  9 ++++++---
+ tools/sched_ext/include/scx/common.bpf.h |  1 -
+ 4 files changed, 13 insertions(+), 10 deletions(-)
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 0a5ebfda90f1..6306ca747f3b 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -2077,8 +2077,7 @@ iomap_writepages(struct iomap_writepage_ctx *wpc)
- 	 * Writeback from reclaim context should never happen except in the case
- 	 * of a VM regression so warn about it and refuse to write the data.
- 	 */
--	if (WARN_ON_ONCE((current->flags & (PF_MEMALLOC | PF_KSWAPD)) ==
--			PF_MEMALLOC))
-+	if (WARN_ON_ONCE((current->flags & PF_MEMALLOC)))
- 		return -EIO;
+diff --git a/include/linux/compaction.h b/include/linux/compaction.h
+index 66a2f70e9e01..691c09f0a697 100644
+--- a/include/linux/compaction.h
++++ b/include/linux/compaction.h
+@@ -81,10 +81,6 @@ static inline unsigned long compact_gap(unsigned int order)
+ 	return min(2UL << order, COMPACT_CLUSTER_MAX);
+ }
  
- 	while ((folio = writeback_iter(mapping, wpc->wbc, folio, &error))) {
+-static inline int current_is_kcompactd(void)
+-{
+-	return current->flags & PF_KCOMPACTD;
+-}
+ 
+ #ifdef CONFIG_COMPACTION
+ 
+@@ -103,7 +99,7 @@ extern void compaction_defer_reset(struct zone *zone, int order,
+ 
+ bool compaction_zonelist_suitable(struct alloc_context *ac, int order,
+ 					int alloc_flags, gfp_t gfp_mask);
+-
++bool current_is_kcompactd(void);
+ extern void __meminit kcompactd_run(int nid);
+ extern void __meminit kcompactd_stop(int nid);
+ extern void wakeup_kcompactd(pg_data_t *pgdat, int order, int highest_zoneidx);
+@@ -120,6 +116,11 @@ static inline bool compaction_suitable(struct zone *zone, int order,
+ 	return false;
+ }
+ 
++static inline bool current_is_kcompactd(void)
++{
++	return false;
++}
++
+ static inline void kcompactd_run(int nid)
+ {
+ }
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index 86394121b6c0..eb12ff4cea6c 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -1808,7 +1808,7 @@ extern struct pid *cad_pid;
+ #define PF_USED_MATH		0x00002000	/* If unset the fpu must be initialized before use */
+ #define PF_USER_WORKER		0x00004000	/* Kernel thread cloned from userspace thread */
+ #define PF_NOFREEZE		0x00008000	/* This thread should not be frozen */
+-#define PF_KCOMPACTD		0x00010000	/* I am kcompactd */
++#define PF__HOLE__00010000	0x00010000
+ #define PF__HOLE__00020000	0x00020000
+ #define PF_MEMALLOC_NOFS	0x00040000	/* All allocations inherit GFP_NOFS. See memalloc_nfs_save() */
+ #define PF_MEMALLOC_NOIO	0x00080000	/* All allocations inherit GFP_NOIO. See memalloc_noio_save() */
+diff --git a/mm/compaction.c b/mm/compaction.c
+index a049415512c6..4994e200bbec 100644
+--- a/mm/compaction.c
++++ b/mm/compaction.c
+@@ -3197,7 +3197,6 @@ static int kcompactd(void *p)
+ 	long default_timeout = msecs_to_jiffies(HPAGE_FRAG_CHECK_INTERVAL_MSEC);
+ 	long timeout = default_timeout;
+ 
+-	current->flags |= PF_KCOMPACTD;
+ 	set_freezable();
+ 
+ 	pgdat->kcompactd_max_order = 0;
+@@ -3254,11 +3253,15 @@ static int kcompactd(void *p)
+ 			pgdat->proactive_compact_trigger = false;
+ 	}
+ 
+-	current->flags &= ~PF_KCOMPACTD;
+-
+ 	return 0;
+ }
+ 
++bool current_is_kcompactd(void)
++{
++	return kthread_func(current) == kcompactd;
++}
++EXPORT_SYMBOL_GPL(current_is_kcompactd);
++
+ /*
+  * This kcompactd start function will be called by init and node-hot-add.
+  * On node-hot-add, kcompactd will moved to proper cpus if cpus are hot-added.
+diff --git a/tools/sched_ext/include/scx/common.bpf.h b/tools/sched_ext/include/scx/common.bpf.h
+index 3e095343ae84..807ef881ce2d 100644
+--- a/tools/sched_ext/include/scx/common.bpf.h
++++ b/tools/sched_ext/include/scx/common.bpf.h
+@@ -31,7 +31,6 @@
+ #define PF_IDLE				0x00000002	/* I am an IDLE thread */
+ #define PF_IO_WORKER			0x00000010	/* Task is an IO worker */
+ #define PF_WQ_WORKER			0x00000020	/* I'm a workqueue worker */
+-#define PF_KCOMPACTD			0x00010000      /* I am kcompactd */
+ #define PF_KTHREAD			0x00200000	/* I am a kernel thread */
+ #define PF_EXITING			0x00000004
+ #define CLOCK_MONOTONIC			1
 -- 
 2.55.0
 
