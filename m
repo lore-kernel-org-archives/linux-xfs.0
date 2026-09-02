@@ -1,83 +1,162 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from canpmsgout08.his.huawei.com (canpmsgout08.his.huawei.com [113.46.200.223])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E52E46C4CD;
-	Wed,  2 Sep 2026 10:47:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41B7348C8AF;
+	Wed,  2 Sep 2026 13:17:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.223
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788346068; cv=none; b=eDu6FnNnGgqcLl1QOvxRaIsMgPAuiR+FYbAlqjId3Kdr5h1q94a8V0g6T2dYNO5wFK4aktR22JfYMaXeEJY5HPgvzCMUaUhI4ml/yHeA7dBEqt/2if9ATVloSaF2PkF+Ns6qpIDjbvS0OgK5YrTy6TpCwMFSz2VAwuVqxbjwJH0=
+	t=1788355027; cv=none; b=kmyrPIgIyJsABhec52E6c9UskuOL+5nJrpjrHZZDzRUitZTpIK4otep1REds1aR5saJwexT3nI0r4ozGvQHqL76QON5nTlyBVf+hQDe06bRDJLyTtcWcT2s88pvmPDoJI6KMdbNuaBZ28I5ZQaT2S0ObUec7+OwHg4X+ZPIGi+w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788346068; c=relaxed/simple;
-	bh=T1eX0M1hUR91onB6YIMO4/r3htVRzHdZDrQE0+m3g/E=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=mjGlkGbZ4PwfBsq52v90PRWnj/AQVNkDu+CEhAmuI19h0dzixpcqdWp3RLy2M1KLgak5J4XJAcaZ5LsNLmBfCvpA0NqAUU+Hvn3n5oehWuoYdRp7gEhmOqI5eVvPUkXq5qkVaOUIeccW89r70nsY7B5Zm/yjIKSbQqxEZZB8e8E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=ECMn3hjr; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1788355027; c=relaxed/simple;
+	bh=Y6ZMkcQu7k15mSxiuSv0YF3tYm3dKpM75JU24537c9k=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=aIGFQHkF/YIotcuqZCTCZfGpwkyUSV/wF2uAQbFu5p5SFTvqP/1QJDDzD6+H2QyT+eN4sNlFxmZKT2vpF+UJbVUp/MHZfxFLCvrATYpuiLUX9buZEEDScaFyCk6CLKp+TuGfVdKw2d5GGWrdQGpoofi+tpf5wvVy0tMu8uRxEnQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=VFXbj+lH; arc=none smtp.client-ip=113.46.200.223
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ECMn3hjr"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=Qt/W3DSxMQKIwG+yUDdW7Q2R2X7cicnF1/L0NrB0XIs=; b=ECMn3hjrfpjO+4jRc0BJUqRldG
-	C8pEzEh7EAe2mFlZ6f4a2lleEZ7PEM+QsgJr346Sy8Fy/yhlby7UPNX3JhH1RG+Y5AglE0pJP1FQy
-	wEj9lzPR40rM2WqAV0+LcLKb0PSBk/tMtNVuqB72N0v3kDMjMuem2dvLAxeuBxP+RsmhRb2ArqGUw
-	5UgHEtIj9vrq/1vzPHMU3avyhWXV/1RKw9VnXlqJPiLcjnE2RnjlGo/miLnynKIaZ8l8J0zIKOg7r
-	BY0TlTJCCVDapg6RVFC8yj5UgAK9J4pV2nD4kZYPaoKZv5FgVy8YG3V9NISPx/tukGxMyTiUVd8AV
-	zHiq5Pow==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1x1iV8-0000000EOUL-1SWG;
-	Wed, 02 Sep 2026 10:47:30 +0000
-Date: Wed, 2 Sep 2026 03:47:30 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Salvatore Dipietro <dipiets@amazon.it>
-Cc: vbabka@kernel.org, hannes@cmpxchg.org, willy@infradead.org,
-	abuehaze@amazon.com, akpm@linux-foundation.org, alisaidi@amazon.com,
-	blakgeof@amazon.com, rvvandan@amazon.com, brauner@kernel.org,
-	dgc@kernel.org, dipietro.salvatore@gmail.com, djwong@kernel.org,
-	hch@infradead.org, jackmanb@google.com,
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-mm@kvack.org, linux-xfs@vger.kernel.org, mhocko@suse.com,
-	ritesh.list@gmail.com, stable@vger.kernel.org, surenb@google.com,
-	ziy@nvidia.com
-Subject: Re: [PATCH v3] mm/page_alloc: avoid direct compaction for costly
- __GFP_NORETRY allocations
-Message-ID: <apf-wsCj_5QvAPcV@infradead.org>
-References: <7ddb704c-76a9-4071-8969-06fa1403eb07@kernel.org>
- <20260827092100.3988386-1-dipiets@amazon.it>
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="VFXbj+lH"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=ow5+5zT/Qz68HwOR7hge2aByrndRNdMarakE/QBZiCg=;
+	b=VFXbj+lHggagP9n/+yQoCKVOFSLN5qmHvAnRjc2SuoDmJBsGdpPCXwi+W2WH7xOFN+Duw+met
+	4pa0nh3ChZr4eZ/gMFSfxyKgyVzUWeIRpZU2PL5uAcSir8zGNthTUTV+CBUW+Cfiv++XPqmCWGl
+	sjTRNDtuTETjbI1+REajJNU=
+Received: from mail.maildlp.com (unknown [172.19.162.92])
+	by canpmsgout08.his.huawei.com (SkyGuard) with ESMTPS id 4hZjf663f0zmV7C;
+	Wed,  2 Sep 2026 21:06:06 +0800 (CST)
+Received: from kwepemk300003.china.huawei.com (unknown [7.202.195.93])
+	by mail.maildlp.com (Postfix) with ESMTPS id 1D00940586;
+	Wed,  2 Sep 2026 21:16:57 +0800 (CST)
+Received: from ubuntu (10.50.87.83) by kwepemk300003.china.huawei.com
+ (7.202.195.93) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.45; Wed, 2 Sep
+ 2026 21:16:56 +0800
+From: Kefeng Wang <wangkefeng.wang@huawei.com>
+To: <brauner@kernel.org>, <djwong@kernel.org>, <cem@kernel.org>,
+	<akpm@linux-foundation.org>, <vbabka@kernel.org>, <surenb@google.com>,
+	<mhocko@suse.com>, <brendan.jackman@linux.dev>, <hannes@cmpxchg.org>,
+	<ziy@nvidia.com>, <david@kernel.org>, <qi.zheng@linux.dev>,
+	<shakeel.butt@linux.dev>, <ljs@kernel.org>
+CC: <linux-xfs@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
+	<linux-mm@kvack.org>, Kefeng Wang <wangkefeng.wang@huawei.com>
+Subject: [PATCH 3/4] mm: replace PF_KSWAPD flag with kthread_func() check
+Date: Wed, 2 Sep 2026 21:16:52 +0800
+Message-ID: <20260902131653.1338227-4-wangkefeng.wang@huawei.com>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20260902131653.1338227-1-wangkefeng.wang@huawei.com>
+References: <20260902131653.1338227-1-wangkefeng.wang@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260827092100.3988386-1-dipiets@amazon.it>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: kwepems500002.china.huawei.com (7.221.188.17) To
+ kwepemk300003.china.huawei.com (7.202.195.93)
 
-On Thu, Aug 27, 2026 at 09:21:00AM +0000, Salvatore Dipietro wrote:
-> 
-> On Wed, Jul 22, 2026 at 02:35:00PM +0200, Vlastimil Babka (SUSE) wrote:
-> > AFAICS both your v3 and the implemented Johannes' suggestion effectively
-> > make all the compact_first logic dead code - at least for the intended THP
-> > use case based on costly_order. It will only continue to do something for
-> > the non-movable order>0  case. So that's a significant change which will not
-> > show up in your results, but might affect other workloads (I'd expect mainly
-> > by having fewer THPs).
-> 
-> Right - the change above modifies THP allocation requests as well. So instead
-> of applying it to every costly __GFP_NORETRY allocation, I restrict it to
-> callers that do not ask for __GFP_THISNODE. That leaves the local-node THP
-> attempt untouched: the same bit pair is already tested further down the function 
-> to bail out of the compact_first block (page_alloc.c:4899), and alloc_pages_mpol()
-> sets both flags on the local-node-first attempt (mempolicy.c:2476-2478).
-> 
-> I tested this with my PostgreSQL workload on kernel v7.2-rc7 and results look good:
-> 
-> Baseline:       70,735 tps
-> This version:  144,670 tps  (145,280 / 144,037 / 144,694)  +104.5%
+The preceding commits removed the last consumer that propagated
+PF_KSWAPD beyond kswapd itself (XFS btree split worker inheritance).
+The only remaining setter of PF_KSWAPD is kswapd(), and every
+current_is_kswapd() caller only needs to check whether the current
+task *is* the kswapd thread, not whether it inherited the flag.
 
-This looks really nice.  Can you turn this into a formal patch?
+Replace the flag-based test with kthread_func(current) == kswapd,
+freeing the 0x00020000 PF flag bit.
+
+Signed-off-by: Kefeng Wang <wangkefeng.wang@huawei.com>
+---
+ include/linux/sched.h                    |  2 +-
+ include/linux/swap.h                     |  7 +------
+ mm/vmscan.c                              | 10 ++++++++--
+ tools/sched_ext/include/scx/common.bpf.h |  1 -
+ 4 files changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index 8b3d47a325cc..86394121b6c0 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -1809,7 +1809,7 @@ extern struct pid *cad_pid;
+ #define PF_USER_WORKER		0x00004000	/* Kernel thread cloned from userspace thread */
+ #define PF_NOFREEZE		0x00008000	/* This thread should not be frozen */
+ #define PF_KCOMPACTD		0x00010000	/* I am kcompactd */
+-#define PF_KSWAPD		0x00020000	/* I am kswapd */
++#define PF__HOLE__00020000	0x00020000
+ #define PF_MEMALLOC_NOFS	0x00040000	/* All allocations inherit GFP_NOFS. See memalloc_nfs_save() */
+ #define PF_MEMALLOC_NOIO	0x00080000	/* All allocations inherit GFP_NOIO. See memalloc_noio_save() */
+ #define PF_LOCAL_THROTTLE	0x00100000	/* Throttle writes only against the bdi I write to,
+diff --git a/include/linux/swap.h b/include/linux/swap.h
+index a72ecf12c00d..fc290e29e4a9 100644
+--- a/include/linux/swap.h
++++ b/include/linux/swap.h
+@@ -25,12 +25,6 @@
+ #define SWAP_FLAGS_VALID	(SWAP_FLAG_PRIO_MASK | SWAP_FLAG_PREFER | \
+ 				 SWAP_FLAG_DISCARD | SWAP_FLAG_DISCARD_ONCE | \
+ 				 SWAP_FLAG_DISCARD_PAGES)
+-
+-static inline int current_is_kswapd(void)
+-{
+-	return current->flags & PF_KSWAPD;
+-}
+-
+ /*
+  * MAX_SWAPFILES defines the maximum number of swaptypes: things which can
+  * be swapped to.  The swap type and the offset into that swap type are
+@@ -339,6 +333,7 @@ void check_move_unevictable_folios(struct folio_batch *fbatch);
+ 
+ extern void __meminit kswapd_run(int nid);
+ extern void __meminit kswapd_stop(int nid);
++bool current_is_kswapd(void);
+ 
+ #ifdef CONFIG_SWAP
+ int add_swap_extent(struct swap_info_struct *sis, unsigned long start_page,
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 07ba86634b84..775d3f71a9de 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -7468,7 +7468,7 @@ static int kswapd(void *p)
+ 	 * us from recursively trying to free more memory as we're
+ 	 * trying to free the first piece of memory in the first place).
+ 	 */
+-	tsk->flags |= PF_MEMALLOC | PF_KSWAPD;
++	tsk->flags |= PF_MEMALLOC;
+ 	set_freezable();
+ 
+ 	WRITE_ONCE(pgdat->kswapd_order, 0);
+@@ -7518,11 +7518,17 @@ static int kswapd(void *p)
+ 			goto kswapd_try_sleep;
+ 	}
+ 
+-	tsk->flags &= ~(PF_MEMALLOC | PF_KSWAPD);
++	tsk->flags &= ~PF_MEMALLOC;
+ 
+ 	return 0;
+ }
+ 
++bool current_is_kswapd(void)
++{
++	return kthread_func(current) == kswapd;
++}
++EXPORT_SYMBOL_GPL(current_is_kswapd);
++
+ /*
+  * A zone is low on free memory or too fragmented for high-order memory.  If
+  * kswapd should reclaim (direct reclaim is deferred), wake it up for the zone's
+diff --git a/tools/sched_ext/include/scx/common.bpf.h b/tools/sched_ext/include/scx/common.bpf.h
+index 76f5e025e107..3e095343ae84 100644
+--- a/tools/sched_ext/include/scx/common.bpf.h
++++ b/tools/sched_ext/include/scx/common.bpf.h
+@@ -32,7 +32,6 @@
+ #define PF_IO_WORKER			0x00000010	/* Task is an IO worker */
+ #define PF_WQ_WORKER			0x00000020	/* I'm a workqueue worker */
+ #define PF_KCOMPACTD			0x00010000      /* I am kcompactd */
+-#define PF_KSWAPD			0x00020000      /* I am kswapd */
+ #define PF_KTHREAD			0x00200000	/* I am a kernel thread */
+ #define PF_EXITING			0x00000004
+ #define CLOCK_MONOTONIC			1
+-- 
+2.55.0
 
