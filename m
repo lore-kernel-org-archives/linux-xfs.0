@@ -1,36 +1,93 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DF802D8767
-	for <linux-xfs@vger.kernel.org>; Thu,  3 Sep 2026 06:58:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 400133F5BDC
+	for <linux-xfs@vger.kernel.org>; Thu,  3 Sep 2026 08:32:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788418691; cv=none; b=gAwNeb6Dw1NUMEhkQoOLtDyWMH25buXYBUudZ6+YWNzZs2FF645A3w0erOMzEwTEHhONLoEbzIGpgGU074ycD89bUig/kw9YkrLFU73GyjNRLihuOZ9F2KH0QiR6+ZkSa3ZF+vy7HupOKKg3B4HfZ/gVAgzn9WyVmZzuKui3TEg=
+	t=1788424326; cv=none; b=f1o+FmW0QVxkzWEtADuR3cX/9p9liTn08cLDVTdK+4Z8odNjMWoQrmutqzra+SFWlB3TUe92p6yzYkE7S3tVpkE+on9W8fvUadM1XcH5Izr/7w5L9M7KkcYq6KbdbVHeuTuzSVeIBMIqyum5/MzEvIhrGld8cjah7nX+D5P4Gms=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788418691; c=relaxed/simple;
-	bh=dFItehqxqh8oR7n+fBuBFgkaiuNedH3VfqdFEwEptMo=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=kWk2Fz2uxGZBKHI6rmg9CNHMqBYVtayKwKMEjIFIEsbP7wGkDq7TTKB9Iosmcw8uzj4eJ6a2oovOREKCUzRrNl45ibl0/WKICrCiGigdfvAy7moiBvM71IhFvmuRqfBM6GCiolOuAMrcsUKAFM1h5fQGM5monQ2Vic6VKpsQjso=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BtpYs62P; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788424326; c=relaxed/simple;
+	bh=BNbYlX09kh4qdoGiq+7yFzj3ttO9GR22rE5gdx2gMLk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=iNdbuONOTUgZ30uCpCJC5qB3+XxskfVjq/cmTYiO8EzwjNyKnACZ2vpS1F2bYrkLWoqLw2s4/w0P5wtL99PNcVEY0PeDxPpXkQxyZfwsMgUP5BhQN/AQwzcqQTDfbqBPbt9tvTc4FddhBhqo34C0ng3+wXYltn21blcXta3uwnI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=OON2u6TF; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=alCrCdvt; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BtpYs62P"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67E771F000E9
-	for <linux-xfs@vger.kernel.org>; Thu,  3 Sep 2026 06:58:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788418690;
-	bh=Swfm1aQkxJmc5BwSFTYYUrIJMReSW1EZp5q5Xglu2NA=;
-	h=Date:From:To:Subject;
-	b=BtpYs62Pqlvss2kMI2RMSREPP/LPlVVzruCzQvr7LfeeYvugBQe+OQWmgfhnGcZpd
-	 MR3iFThmQI0P5tBjRtXOCQRxFu6ctAV3k62al8O5MdUa8UyQzKhiDUcHnPFGswHGa0
-	 r1ioFB7XvbjWJwxbzcQiq4pZzZvwL1HUxfnbjJ3CG5D5DD4eo/KfMTirBburvTGW60
-	 wUtCUWsb0/z1/04rccb0VjKIDjZukzDoSYOK9innFXIVBYjC2DY/MfORai74GFz2lv
-	 YaDyi8goIt4hfSV4yQI8wMrar7RdD8+WUanuij8WCr5JxXT4O/V6ju/FxH+zCIihHJ
-	 FR5Ur3Uz1eezw==
-Date: Thu, 3 Sep 2026 08:58:06 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE V2] xfs-linux: for-next rebased to c44f3db4f4c0
-Message-ID: <apkaERVAa2F2S-jU@andromeda.toxiclabs.cc>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OON2u6TF";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="alCrCdvt"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1788424324;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ogGzNZa5gsK9u5I5fEWc5bMO9Svs2RAfGHetZAFSDjo=;
+	b=OON2u6TFwlh4qqxGg029C9vqAOiHY1BVdhhZqX0XdYHOYdWAjRcPqL4F3dn6s2qLp2AKYE
+	va9/zhQAWxHPeHcN6XapHKyz1GStb2bKKmkbapv8njP4VxyCEgIIdrmH6w8gEz3hDeUajI
+	wqz3y0D+4WQezBO0GB5vdvGYkI2T9Cs=
+Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
+ [209.85.128.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-692-kv2LonIkNh-XNY0l2dolWQ-1; Thu, 03 Sep 2026 04:32:02 -0400
+X-MC-Unique: kv2LonIkNh-XNY0l2dolWQ-1
+X-Mimecast-MFC-AGG-ID: kv2LonIkNh-XNY0l2dolWQ_1788424321
+Received: by mail-wm1-f72.google.com with SMTP id 5b1f17b1804b1-49cc954a3edso13593985e9.2
+        for <linux-xfs@vger.kernel.org>; Thu, 03 Sep 2026 01:32:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1788424321; x=1789029121; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=ogGzNZa5gsK9u5I5fEWc5bMO9Svs2RAfGHetZAFSDjo=;
+        b=alCrCdvt4EdFDMRRGGemPF/Bef07LNsWz7gauCc/coDqvg8H5dkpDsdwjMV2F5nzr5
+         QfXJTnwfcECoBrrfBIJ6TpAv/Jp4UJtugVbjlw9c/V4n9gkcGcEAmxeEvzoxLtQfI/0q
+         zV/B6ixDD+3qblWY/b+/ErUiZEffvXv/C9bbwqjr0KVKzEYXOYbl9xxfBXqBDXw8dTmB
+         P8DTpF8/2WTWAQKs2TxzZUPl8CoxYQDxKxAGTupaerxyrKCXs+G6MofuhXQsoBnH1Xtq
+         prf5EDI7/Etc8vKEaQ0lo6+LCm0nEpRsg4+zMxFa0gmtmMKFXc8Dlr0QuK0D1cPkJs6u
+         eZTQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788424321; x=1789029121;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=ogGzNZa5gsK9u5I5fEWc5bMO9Svs2RAfGHetZAFSDjo=;
+        b=qOz5yZTx4UsstFVr8yZiqUHF+uzD3cDctaysAUcfdXnC2kNxbIhqwLvlshudFe64Yk
+         l85clPhTF42dqLwofUs2ubfeocXQL9ywlQI28o0iderKotSJFJG+u362zLC3D5Tj1ITv
+         A3Dh5yN/PO8CWM0Hi2gRRxEXrP3nTvitYfJ896231VUXipGNk05di9W4WwUBndSFczeB
+         dsxs38H5nhd9IwY6LtZdAJn/cHDFvIaK2HHzREkG1pSxOKHOFXIlTL8jNZrqiaqW2Aeh
+         5Mh66W2wreB11wmA4OI8rjb+W6JP6PiUaMRYZzfhh+zyeHnAobYThK+GFPMyoi/dCbKW
+         OYHw==
+X-Forwarded-Encrypted: i=1; AKwUvBykRONq/efSrbzttgJheB2JHqE66ynZGu/Qjgdl0O18vZUGLnP42I65EZwMAKMJY1afWGu2mA4Mu+c=@vger.kernel.org
+X-Gm-Message-State: AFuF++nF1WL0kzxih6C8XOjy7bkanVvDXxH6mjAElrbnwBFVRh3g1zxx
+	70wvovN9ULIviXU8IPNXr5LP6+9KdJ7jAOvViKwsAy2uROtqkj6OrXElRVNOiNPfA5BxbghihOu
+	zLcbV1t6vvcDJYpEVt9LANK8pvcJw0uGSyLL+PiG+ZKbTXJnBzd17IHn2Laf/
+X-Gm-Gg: AYBFou3h/uTqKK6ATGto4+gCOOjVrGD1MVpRV7B8oZP4BekdAZiZ4AH4pUyH8OgBoGz
+	LNkmfUb7VUysKS5CCtyPQVG+2oTx87LxFhQAcPA7kF6kBYWy3eGV85VzlGEs8i8LXaSuLq2G4y8
+	5oK4MOy51aivpKg2JrHEPLIfR04HJgHRlpGlm0TGuLZOjKvMZZ8VlVr3+SltSNpuJnmxLB47eD3
+	d+AEQmmSWBmRz67H1wVrgTHOkRpB/MjXt4cFJUey199bVjjGyElmBdAKSJ0i8lTqpPm6fAxSTUq
+	gcaRbeaa9H1kdGpNxsBO5j29lazZp+nJUcbnXgxIaGpUFtZgOWEsgXYfU4Y06IViGEpr84bmcdb
+	XsU6J4c8FvTO2cr1dSa66AB1FOUs8lSyPPw==
+X-Received: by 2002:a05:600c:1c27:b0:49c:dcec:bd27 with SMTP id 5b1f17b1804b1-49ce57fd7bamr169949885e9.8.1788424321435;
+        Thu, 03 Sep 2026 01:32:01 -0700 (PDT)
+X-Received: by 2002:a05:600c:1c27:b0:49c:dcec:bd27 with SMTP id 5b1f17b1804b1-49ce57fd7bamr169948785e9.8.1788424320922;
+        Thu, 03 Sep 2026 01:32:00 -0700 (PDT)
+Received: from aalbersh-thinkpadx1carbongen13.rmtcz.csb ([217.30.74.39])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49ce58da3acsm227922825e9.0.2026.09.03.01.31.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 03 Sep 2026 01:32:00 -0700 (PDT)
+Date: Thu, 3 Sep 2026 10:31:59 +0200
+From: Andrey Albershteyn <aalbersh@redhat.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Andrey Albershteyn <aalbersh@kernel.org>, linux-xfs@vger.kernel.org, 
+	bestswngs@gmail.com, brauner@kernel.org, cem@kernel.org, chuck.lever@oracle.com, 
+	cmaiolino@redhat.com, dawei.feng@seu.edu.cn, gaoyingjie@uniontech.com, hch@lst.de, 
+	jiapenglin@tencent.com, roland.mainz@nrubsig.org, xmei5@asu.edu
+Subject: Re: [PATCH 00/21] xfsprogs: libxfs sync for v7.2
+Message-ID: <apkoOtfg4WE86PgQ@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+References: <20260824104022.420566-1-aalbersh@kernel.org>
+ <20260824181431.GN6072@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -39,110 +96,25 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20260824181431.GN6072@frogsfrogsfrogs>
 
+On 2026-08-24 11:14:31, Darrick J. Wong wrote:
+> On Mon, Aug 24, 2026 at 12:39:58PM +0200, Andrey Albershteyn wrote:
+> > Hi all,
+> > 
+> > This is libxfs sync for v7.1..v7.2.
+> > 
+> > ...
+> >  
+> > -	return ba->bi_owner->i_ino - bb->bi_owner->i_ino;
+> > +	return I_INO(ba->bi_owner) - I_INO(bb->bi_owner);
+> 
+> I did some cmp_init conversion for this file:
+> https://lore.kernel.org/linux-xfs/178302226322.845537.14974268104031687429.stgit@frogsfrogsfrogs/
 
-Hi folks,
+Oh I forgot that you already did the sync, I will rebase those
+"Fixes" on top of your version then and resend it.
 
-The for-next branch of the xfs-linux repository at:
+-- 
+- Andrey
 
-	gitolite.kernel.org:/pub/scm/fs/xfs/xfs-linux.git
-
-has just been *REBASED*.
-
-Patches are exactly the same as the previous from a few minutes ago,
-with a reordering so to postpone a few of the patches below to 7.4 by
-hch's suggestion.
-
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
-
-The new head of the for-next branch is commit:
-
-c44f3db4f4c0 xfs: remove an extra cast in xfs_file_compat_ioctl
-
-42 new commits:
-
-Anuj Gupta (1):
-      [724d0bae9604] xfs: release alleged child inode on metapath unlink error
-
-Christoph Hellwig (24):
-      [144d8bc332fa] xfs: fix the lock annotation on xfs_iget_cache_hit
-      [928a0ff252b1] xfs: fix the lock annotation in xfs_extent_busy_update_extent
-      [e3bae00ffa91] xfs: fix the lock annotation in xfs_mru_cache_lookup
-      [167da957c7e3] xfs: improve lock annotations in the log code
-      [f3cc0483ffe3] xfs: add lock annotations to xfs_try_open_zone
-      [4bb0fb3366fa] xfs: add lock annotations to xlog_state_shutdown_callbacks
-      [0a9c62fb4ef5] xfs: add a lock annotation to xlog_cil_push_background
-      [ca753f8184db] xfs: add lock annotations to xfs_ail_delete*
-      [cc38e26e3f94] xfs: remove an outdated comment above xfs_file_ioctl
-      [4e58106b3cf8] xfs: rename xfs_ioc_swapext to xfs_swapext
-      [d551ed0e7ed3] xfs: rename xfs_ioctl_fs_counts to xfs_ioc_fs_counts
-      [ddb7719b20b7] xfs: rename xfs_ioctl_getset_resblocks to xfs_ioc_getset_resblocks
-      [1e6f3dd66fc1] xfs: split out the handler for XFS_IOC_DIOINFO
-      [b6128807c04d] xfs: split out the handlers for XFS_IOC_.*HANDLE
-      [4f80ca267bd2] xfs: split out the handler for XFS_IOC_SWAPEXT
-      [92b649340587] xfs: split out the handlers for XFS_IOC_FSGROWFS*
-      [3534db92bfd7] xfs: split out the handler for XFS_IOC_GOINGDOWN
-      [a3083bc5a617] xfs: split out the handler for XFS_IOC_ERROR_INJECTION
-      [126092c37ae8] xfs: split out the handler for XFS_IOC_FREE_EOFBLOCKS
-      [1e4c3089ab63] xfs: split out the handlers for XFS_IOC_FSGROWFS_*_32
-      [a0f3142afdcb] xfs: cleanup XFS_IOC_GETVERSION_32 handling
-      [c1f331382b61] xfs: split out the handlers for XFS_IOC_SWAPEXT_32
-      [0a0a7894f3db] xfs: split out the handlers for XFS_IOC_*_BY_HANDLE_32
-      [c44f3db4f4c0] xfs: remove an extra cast in xfs_file_compat_ioctl
-
-Darrick J. Wong (7):
-      [153c75d93cd5] xfs: fix media verification ioctl for internal rt volumes
-      [556928b50187] xfs: don't spin forever on zero-length dirents when salvaging them
-      [3db0206c6423] xfs: don't stash removename operations with unknown ftype
-      [6bd830b68329] xfs: log the tempip after we convert it to extents format
-      [5b5ea66f124c] xfs: fix parent rec lookup initialization in xrep_metapath_unlink
-      [cd2d27b0c32a] xfs: handle reconnecting metadir subdirectories
-      [fbb8c1b636be] xfs: lock the healthmon when inserting unmount event
-
-Eric Sandeen (2):
-      [7f49bf8378c7] xfs: fix reclaimed page accounting in xfs_buf_free
-      [97a956fb8cc2] xfs: mark slab-allocated xfs_buf backing memory as __GFP_RECLAIMABLE
-
-Hans Holmberg (1):
-      [d5ae1c095942] xfs: prevent race in zoned space reservations
-
-Javier Tia (6):
-      [4f434e6c6b3c] xfs: initialise error in xfs_defer_finish_one()
-      [69d300eba1ef] xfs: give the deferred barrier op type a name
-      [5d46cb54112a] xfs: report the error that made deferred work shut down the fs
-      [ae66b1508239] xfs: correct the parent pointer space reservation comment
-      [05276cd720f9] xfs: initialise args->total for parent pointer updates
-      [4476c24bd779] xfs: assert the reservation covers each da fork growth
-
-Lin Jiapeng (1):
-      [f3772e189ee8] xfs: fix exchange-range reflink flag clearing issue with INO1_WRITTEN
-
-Code Diffstat:
-
- fs/xfs/libxfs/xfs_da_btree.c    |   1 +
- fs/xfs/libxfs/xfs_defer.c       |  18 +-
- fs/xfs/libxfs/xfs_exchmaps.c    |  10 ++
- fs/xfs/libxfs/xfs_parent.c      |  12 +-
- fs/xfs/libxfs/xfs_trans_space.c |  19 +-
- fs/xfs/scrub/dir_repair.c       |  27 ++-
- fs/xfs/scrub/metapath.c         |  87 ++++++++-
- fs/xfs/scrub/symlink_repair.c   |   2 +-
- fs/xfs/xfs_buf.c                |   4 +-
- fs/xfs/xfs_extent_busy.c        |   4 +-
- fs/xfs/xfs_healthmon.c          |   6 +
- fs/xfs/xfs_icache.c             |   3 +-
- fs/xfs/xfs_ioctl.c              | 385 +++++++++++++++++++++++-----------------
- fs/xfs/xfs_ioctl.h              |   4 +-
- fs/xfs/xfs_ioctl32.c            | 188 +++++++++++---------
- fs/xfs/xfs_log.c                |  33 ++--
- fs/xfs/xfs_log_cil.c            |   3 +-
- fs/xfs/xfs_log_priv.h           |   4 +-
- fs/xfs/xfs_mru_cache.c          |   2 +-
- fs/xfs/xfs_trans_ail.c          |   4 +-
- fs/xfs/xfs_verify_media.c       |  24 ++-
- fs/xfs/xfs_zone_alloc.c         |   2 +
- fs/xfs/xfs_zone_space_resv.c    |   8 +-
- 23 files changed, 563 insertions(+), 287 deletions(-)
