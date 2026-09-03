@@ -1,73 +1,73 @@
 Received: from flow-a3-smtp.messagingengine.com (flow-a3-smtp.messagingengine.com [103.168.172.138])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E9AE4D90D4;
-	Thu,  3 Sep 2026 18:30:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0ABA37F300;
+	Thu,  3 Sep 2026 18:30:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.138
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788460207; cv=none; b=DdydLNKZhCVqO9ur0Zk2G9GQiCLALwHtxcXoKIWq4lRGwxd/kyQ6b2TN6MKN53MjZKvA9L5Bn9ecrAZFGNhelDi4IdYPlyBI7PNruqCnl4g0j7zPC3goeFkdid3xFldiyZw1Ewa9EYlmWlOx19+ApWimZskQSSy/bIv324NhNLk=
+	t=1788460206; cv=none; b=egFy4RWlZABhcHlZ+WikGk4JcCLCu7Y76aWAoWfNRhvpkikb+NRn6lnjjTr6WOP701nt7Pktn1Q52Jx6OTnQ8LoAjigHnkNQ679g0Z2azH0KBF/qGtI2SZjLZCv2A5/DPi4XP+vNEv51T6xMu4RRb2dzNRAVdmA7RiFoyZboZwY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788460207; c=relaxed/simple;
-	bh=AGl0yqzbyZIZ3+w9gehbrVCg4atEJD8pd5d/L+GIIrk=;
+	s=arc-20240116; t=1788460206; c=relaxed/simple;
+	bh=zRIFoaHBJ/MC2atUK1+Tog7TQjnA75nOcSUuGToSjjM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=lEiZUTEL3TDLyEzwo45rwWx13ub5hDDSRgUOFtCaUgnZDjUx7UNP7aQ6SQ3Vxq2IM/EXMxPufvviAqdP4SLfr0z381PAM/PuE0CzW8XeyEU4NzS0zWAr9KySXwb6z0hQ7cvi3fSSxcTmC6CyxpJKgYM7uNu/vN+w61/joT3scG8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=shutemov.name; spf=pass smtp.mailfrom=shutemov.name; dkim=pass (2048-bit key) header.d=shutemov.name header.i=@shutemov.name header.b=MsuyO2Pz; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=DbzgCr/L; arc=none smtp.client-ip=103.168.172.138
+	 MIME-Version; b=F8sOHvPDlCyGvThiXbuMfoam59c74agcos7YJwY66js8ZUZQ403IzxbjgLfKVxMVS23g9fDtr5nihFvfm+3ox1pam8GRvLCf5f9svn6XUuFo4hmYHEWJsP78rFETuBEdotteFrsZP29jd3SxKQ7VibxPR0Mn6BCnicMKRXpem2g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=shutemov.name; spf=pass smtp.mailfrom=shutemov.name; dkim=pass (2048-bit key) header.d=shutemov.name header.i=@shutemov.name header.b=PCGah2gW; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=mqQeKYgE; arc=none smtp.client-ip=103.168.172.138
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=shutemov.name
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shutemov.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shutemov.name header.i=@shutemov.name header.b="MsuyO2Pz";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="DbzgCr/L"
-Received: from phl-compute-12.internal (phl-compute-12.internal [10.202.2.52])
-	by mailflow.phl.internal (Postfix) with ESMTP id 6205213801BF;
-	Thu,  3 Sep 2026 14:29:56 -0400 (EDT)
+	dkim=pass (2048-bit key) header.d=shutemov.name header.i=@shutemov.name header.b="PCGah2gW";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="mqQeKYgE"
+Received: from phl-compute-02.internal (phl-compute-02.internal [10.202.2.42])
+	by mailflow.phl.internal (Postfix) with ESMTP id 47A8613801C9;
+	Thu,  3 Sep 2026 14:29:58 -0400 (EDT)
 Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-12.internal (MEProxy); Thu, 03 Sep 2026 14:29:56 -0400
+  by phl-compute-02.internal (MEProxy); Thu, 03 Sep 2026 14:29:58 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shutemov.name;
 	 h=cc:cc:content-transfer-encoding:content-type:date:date:from
 	:from:in-reply-to:in-reply-to:message-id:mime-version:references
-	:reply-to:subject:subject:to:to; s=fm2; t=1788460196; x=
-	1788467396; bh=YaDn1Mr2KlX00kBdrNWD4+vAoqqgrXa7uJO/7qm/H4k=; b=M
-	suyO2PzQqzmatJVuanDQjvKAb46heIMEBntMOnbccW2xwfQ7TL4F5/zuk7rQyUJS
-	rd5/xkqFWmEWenrjDe/V4e/M7dcmR4+TQ8E0SRvNJ6IAkv+n4IKK4sS53vNWigOP
-	nWhIeMS0/gRlzHUx+MIx+6a28K9TfOqLMu2BW+X4LWTCYD+ikvyDBKR3Uo1/Wo/T
-	jI9QP9z+sZJLxVQ769Y+WayAEtFibHUfqPrS8gSf/zCmbLmZF2dTxYjrbpw8y+rI
-	N31IBypoX7BjgTu2pCRXTtyUxqsiwsJnYdM+2P2mTMUUE+Khy+Y/mg3enbD66MGI
-	7Dd+hHVuD2my0zHurTXEQ==
+	:reply-to:subject:subject:to:to; s=fm2; t=1788460198; x=
+	1788467398; bh=l6U5JT6Kk2/xs1EJ8XhRce8llmfDGx2KTryruEjZgvk=; b=P
+	CGah2gWTAOY3yv9onzlevaf6PtRIBJ9KvNO1H4h/R0CAu5V6o573OecJUZW1hu50
+	OcmQbEEBiUm3A95KwPzs+qFC+qc0sLn9LyR/Cf8f+pvXz1W5077bFvLSFYz0iHes
+	h3VeE+9hOMYTTukruZdGnajEF1rEAnh2I9G3mNOzCXhbZVEnP8dx0VRV18hTi457
+	tSTXD693EWCrTXyZG8w3a+YJ4Oks4aVp4y2h/7DqGcLCHWEBoh88TTzikvGkRoP5
+	htQGU7HY0nCHLtpnfcfcjv+7tdKKmaZB+puK5Hm7Xw42kXoV5iU+toStgRhIsvNj
+	xZCfPWW4Ub5+o4KhpHoVg==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
 	messagingengine.com; h=cc:cc:content-transfer-encoding
 	:content-type:date:date:feedback-id:feedback-id:from:from
 	:in-reply-to:in-reply-to:message-id:mime-version:references
 	:reply-to:subject:subject:to:to:x-me-proxy:x-me-sender
-	:x-me-sender:x-sasl-enc; s=fm1; t=1788460196; x=1788467396; bh=Y
-	aDn1Mr2KlX00kBdrNWD4+vAoqqgrXa7uJO/7qm/H4k=; b=DbzgCr/Le1sX11vVP
-	7GmorVE4FqVpz6jCtJaCoTYDUUaOSIPXO8DJ7CKC/LbnppB56MXf0otj2AskYUxp
-	YdFxPXYda3pL/fKW9u6CU8/4UUGEx6373kLAjc0vvyCtbGu0qkkCDFdknBtgmY52
-	/R7oem3dvIsTrcmtZoDfLxlRpJXEfAzgU9ngP+dmS4hgSQmRViv5rkyq9XCCCMIi
-	yrCuYj/FuL4CVvhNtDxg1GB10I8ZJ1g15nTKV9ye++E2i19Ow6jwUC8ldnkZFmKg
-	5Pj5z+Cc9nxtSMZXOD/950oU7spRLNEJZ1Nn55a7F6HByJPQmo+IU3M92QhyltiP
-	RXdeg==
-X-ME-Sender: <xms:pLyZaqjrww7eX7ego3SJEDa4QrDqkZLsARcKqdLOqhQJMRxAr0glEw>
-    <xme:pLyZaqsbjHSLh8okLoiKDj0hwa9GWz3NPp_F_62DqYjMIPM9zwNHTRHmqA02sLSGO
-    joCNBnZoY4C-2qfCF4BqSOc12OD2-vH6OYtrMhVXRqKokMEd506AWAL>
-X-ME-Received: <xmr:pLyZas6vAZ8zuJ59pSqTFLsImJJJGbx6xBeY3Mp49F47Ot4JTmvwjoqyOeE>
+	:x-me-sender:x-sasl-enc; s=fm1; t=1788460198; x=1788467398; bh=l
+	6U5JT6Kk2/xs1EJ8XhRce8llmfDGx2KTryruEjZgvk=; b=mqQeKYgEAME01DRGP
+	c/4LZYMnGGlrYHdQXWflNww59PC4u8jo0l8zi85PR/DAwDBpzoT1UaxU1Xv5M5F9
+	vGfOPVdGmRY0Zpn4ZAAnw+p/iSs8DUSejpEgl9RfarDJZboK2qoPGz1L7rA2W9Yk
+	r/PceP3oNQWKpy1uKFhsZau2Q3ZPpvEMGsvdEYdbHbldnirD5VKCfYHN8yyPWyA3
+	i5h9AewDwpdj/vYmcZwQfp6QOSW6rdaooaOKKiBJybJZIYe45AK4m7Mi/V6Rg44l
+	ubJ1xF4tMXkJ6pVf/7Q04ynsSjc7DWDvTCE3CBVvYYN5z0hyRuYZRTCvxgoI9YZh
+	e6e/A==
+X-ME-Sender: <xms:pbyZaoRUCYH2PUUjjqJtWAh_uOO-I_rVSclY6p7fZrOEJwoXWMOK9g>
+    <xme:pbyZam1LSJxdLeG8m4H9735RrL4DxIdClB-0Th7_MrJMa9jd1Ux2pXzzXwWvR5Lou
+    TQN_c2NnjPGewb6sH2Mb4W3ZFycQ1wJsILlaw9Zez2MNnNgWrXLt3Td>
+X-ME-Received: <xmr:pbyZaozgj8PBbF-nn7R25JcfLCPGz4JsKjz0RlbFBRWv12J62Y85yEx0lto>
 X-ME-Proxy-Cause: dmFkZTFt7tpQ23d6ma5ZKwjaUeV/XmiCXSwfUJTD/UMTaTx+tQ6P98fG4/H3PFA7hJFxaU
     SY7i6N6X86D7HaHpdbLHvMivEhulOmq3NoSfdg1pBrJA6v+lfq2ALheALUZjz6o7Nf8BIz
     DWIHLTWCbkC3w9bMwM7vsWb978omVdOmMplVzO2fLHjMRy1E/CxFkmf+2uWv7frAXfMOWG
     H/vdAXIPTaxMrzbmklMnL5PmRnZSJQIp5M1ihNDwszNqcLBuKJXCEkMPvIWqkfKnePof3W
-    BlQ363pN/8dtwFHD474IAw0kAsBZ9JYvF7V9lEJnX7ro/M4XAHwxRodQrXyCYUn1NLN+V2
-    WlXbIyuCNTMYS9ZmYmi7Wi/90XXuwuQ/NA/yJbaBk7n4YmF/Fa7zOdJg1WdYIjDOJdp6hh
-    ptgs59nDPCUW9de3B9V4/fpiGW/B1vB3mzc/YQWuOYT279QwjVDtwX05wgL7hFPCYvgkEC
-    dRxtjhl5ExCKf1Ug6ah2j8izXWrb0RpAwbstfBWXHLZvPuUhLVmo9ZXao281T/269HgiaM
-    BF2KNnURXUG9XwSdzbaOR26vJd7tKUTSlkp/0SwBs4DAf3or5HjA/lXjm8s22buqgPuj4W
-    neilQdGiiklz/Q2Bt/PY2bT3OTIIocN02kwpbSSn+Pc+3VDCbU+3378snzgg
-X-ME-Proxy: <xmx:pLyZaluq4wuw1zIoG9ly3QX0jzyx36jeJE6YX6xMjWEfKFC1k_qvog>
-    <xmx:pLyZam3jJft_79npmN_AeiUprT5MmsTI-SKejrh9vWzM1vxPAEJFfQ>
-    <xmx:pLyZaq8btlIZK8VscVtIl7FRFxwGCRHm5XFrT258jFt6sp9XgcarhA>
-    <xmx:pLyZakA1Gw2xX5tA5Wc8wj7z-xSBmzGKnauuE9BwxjiFoAOuOm0PwA>
-    <xmx:pLyZag_ApqD5w0e2L6JT6zp1taXyXALe51YF2M8KMDw6_yrfrwJd4FKY>
+    BlQ363pN/8dtwFHD474IAw0kAsBZ9JYvF7V9lEJnX7ro/M4XAHwxRodQrXyCYUn1NLN+Ds
+    vTSbwwlQXD/Xc/IRcU3516zJNmer5W7iJlak/JBkZGlLVXh5Jz1RDWZJv/HmQhCZSFe6/+
+    LFT/aJzbopf1p7NE1DGDPW43exOhHSL2cH4V3IRUOv3StBhh/IZwpAlWaVz/iAgnjLIo3w
+    ASK19DmhYX/RmFv3Osm2M4Ssd32+t4yegh9IdZHWic5Dxo0QmUYnp7ikHtJMkkfzVZTIW4
+    QEexuTLPtB9MjxXyNFFVeKtVwKxsm7kXcZEh75wncogm4njYAvO9anhmQGa6ywTuDI5cTg
+    /2HiBPo8JwB+W+Rw+qVIlUFyQdOeeenoeStd8WAmWkEgqh6whFzfNtMu6ruw
+X-ME-Proxy: <xmx:pbyZapup6kMrevu5uz00sBXrWWMm0MRdVTxYqeFQPuchma-oHVMgFg>
+    <xmx:pbyZaqQ0gKJQTo8-LJ3yvXIwiXEBeMbLhdnYZGFPBXijjmMPna7VEQ>
+    <xmx:pbyZaoJaVom8vs6iatKmyuwuSQiZdhyvFOBDgHY9d28AG5cKHSR5Ag>
+    <xmx:pbyZaqCtsWX4IOtptiXBCouIP--7hhUUNuUaMQvVkKAzFdUfI0VqNA>
+    <xmx:pryZajmWbjgqzCdK0tFJm5QriJiY3WuHLeA3st8pXKkxXWDyw21JoxkW>
 Feedback-ID: ie3994620:Fastmail
 Received: by mail.messagingengine.com (Postfix) with ESMTPA; Thu,
- 3 Sep 2026 14:29:55 -0400 (EDT)
+ 3 Sep 2026 14:29:57 -0400 (EDT)
 From: Kiryl Shutsemau <kirill@shutemov.name>
 To: akpm@linux-foundation.org,
 	"Matthew Wilcox (Oracle)" <willy@infradead.org>,
@@ -95,9 +95,9 @@ Cc: Lorenzo Stoakes <ljs@kernel.org>,
 	linux-kernel@vger.kernel.org,
 	kernel-team@meta.com,
 	"Kiryl Shutsemau (Meta)" <kas@kernel.org>
-Subject: [RFC PATCH 3/5] mm: keep the mmap dirty range down to the faulting page
-Date: Thu,  3 Sep 2026 19:29:41 +0100
-Message-ID: <20260903182943.662461-4-kirill@shutemov.name>
+Subject: [RFC PATCH 4/5] iomap: narrow page_mkwrite() dirtying to the faulting page
+Date: Thu,  3 Sep 2026 19:29:42 +0100
+Message-ID: <20260903182943.662461-5-kirill@shutemov.name>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260903182943.662461-1-kirill@shutemov.name>
 References: <20260903182943.662461-1-kirill@shutemov.name>
@@ -111,134 +111,117 @@ Content-Transfer-Encoding: 8bit
 
 From: "Kiryl Shutsemau (Meta)" <kas@kernel.org>
 
-Two places in the fault path dirty a whole folio when a single page was
-written.
+iomap already tracks dirty state per block and iomap_writeback_folio()
+already walks the bitmap and submits only the dirty ranges. The
+buffered write path sets just the range it copied. Only the mmap path
+sets everything, because iomap_dirty_folio() covers the whole folio.
 
-fault_dirty_shared_page() marks the folio dirty after a write fault on a
-shared mapping. Only the page the fault was for has been stored to, so
-pass that range instead. A PMD-mapped folio is still dirtied whole,
-since a PMD has one dirty bit and there is nothing finer to report.
+Add iomap_dirty_folio_range() for the new a_ops->dirty_folio_range(),
+and have iomap_page_mkwrite() dirty just the page the fault was for.
+Blocks are still allocated for the whole folio; only the dirty range
+narrows.
 
-set_pte_range() marks a whole batch of entries dirty on a write fault,
-which destroys the per-page dirty information before the pages have been
-written to. Leave the batch clean for a shared mapping of a filesystem
-that implements a_ops->dirty_folio_range(), and let the hardware set the
-bit on the first store to each page. Anywhere else nothing reads those
-bits, and on architectures without a hardware dirty bit a clean batch
-costs a fault per page for nothing. That covers shmem, which has no
-dirty state below the folio.
-
-The page the fault was for is dirtied right away. It is about to be
-stored to, so leaving it clean would only move the work to a second page
-table walk or fault.
+iomap_dirty_folio() becomes a call to it covering the whole folio.
 
 Assisted-by: Claude:claude-opus-5
 Signed-off-by: Kiryl Shutsemau (Meta) <kas@kernel.org>
 ---
- mm/memory.c | 58 +++++++++++++++++++++++++++++++++++++++++++++++++----
- 1 file changed, 54 insertions(+), 4 deletions(-)
+ fs/iomap/buffered-io.c | 37 ++++++++++++++++++++++++++++---------
+ include/linux/iomap.h  |  2 ++
+ 2 files changed, 30 insertions(+), 9 deletions(-)
 
-diff --git a/mm/memory.c b/mm/memory.c
-index 8da0f945141b..27a059e0c016 100644
---- a/mm/memory.c
-+++ b/mm/memory.c
-@@ -3778,10 +3778,19 @@ static vm_fault_t fault_dirty_shared_page(struct vm_fault *vmf)
- 	struct vm_area_struct *vma = vmf->vma;
- 	struct address_space *mapping;
- 	struct folio *folio = page_folio(vmf->page);
-+	size_t off = folio_page_idx(folio, vmf->page) << PAGE_SHIFT;
- 	bool dirtied;
- 	bool page_mkwrite = vma->vm_ops && vma->vm_ops->page_mkwrite;
- 
--	dirtied = folio_mark_dirty(folio);
-+	/*
-+	 * A PMD entry has one dirty bit for the whole folio, so there is no
-+	 * finer information to pass on. A PTE-mapped folio only has the page
-+	 * the fault was for dirtied so far.
-+	 */
-+	if (pmd_trans_huge(pmdp_get_lockless(vmf->pmd)))
-+		dirtied = folio_mark_dirty(folio);
-+	else
-+		dirtied = folio_mark_dirty_range(folio, off, PAGE_SIZE);
- 	VM_BUG_ON_FOLIO(folio_test_anon(folio), folio);
- 	/*
- 	 * Take a local copy of the address_space - folio.mapping may be zeroed
-@@ -5625,6 +5634,31 @@ vm_fault_t do_set_pmd(struct vm_fault *vmf, struct folio *folio, struct page *pa
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 0a5ebfda90f1..8d8a8acab01a 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -847,14 +847,18 @@ void iomap_invalidate_folio(struct folio *folio, size_t offset, size_t len)
  }
- #endif
+ EXPORT_SYMBOL_GPL(iomap_invalidate_folio);
  
-+/*
-+ * May the whole batch be marked dirty?
-+ *
-+ * Only a shared mapping of a filesystem that tracks dirty state per block says
-+ * no. There the page table dirty bits are the only record of which parts of a
-+ * large folio were written through the mapping, so pages nobody has stored to
-+ * have to stay clean and let the hardware set the bit on the first store.
-+ *
-+ * Everywhere else nothing ever reads those bits, and on hardware without a
-+ * dirty bit leaving them clean costs a fault per page for nothing. That covers
-+ * shmem, which has no dirty state below the folio.
-+ */
-+static bool can_dirty_whole_batch(struct vm_fault *vmf, unsigned int nr,
-+				  bool prefault)
++bool iomap_dirty_folio_range(struct address_space *mapping, struct folio *folio,
++		size_t off, size_t len)
 +{
-+	struct vm_area_struct *vma = vmf->vma;
-+
-+	if (!(vmf->flags & FAULT_FLAG_WRITE) || prefault || nr == 1)
-+		return true;
-+	if (!(vma->vm_flags & VM_SHARED))
-+		return true;
-+
-+	return !vma->vm_file->f_mapping->a_ops->dirty_folio_range;
++	ifs_alloc(mapping->host, folio, 0);
++	iomap_set_range_dirty(folio, off, len);
++	return filemap_dirty_folio(mapping, folio);
 +}
++EXPORT_SYMBOL_GPL(iomap_dirty_folio_range);
 +
- /**
-  * set_pte_range - Set a range of PTEs to point to pages in a folio.
-  * @vmf: Fault description.
-@@ -5639,6 +5673,7 @@ void set_pte_range(struct vm_fault *vmf, struct folio *folio,
- 	struct vm_area_struct *vma = vmf->vma;
- 	bool write = vmf->flags & FAULT_FLAG_WRITE;
- 	bool prefault = !in_range(vmf->address, addr, nr * PAGE_SIZE);
-+	bool dirty_batch = can_dirty_whole_batch(vmf, nr, prefault);
- 	pte_t entry;
- 
- 	flush_icache_pages(vma, page, nr);
-@@ -5649,10 +5684,13 @@ void set_pte_range(struct vm_fault *vmf, struct folio *folio,
- 	else
- 		entry = pte_sw_mkyoung(entry);
- 
--	if (write)
--		entry = maybe_mkwrite(pte_mkdirty(entry), vma);
--	else if (pte_write(entry) && folio_test_dirty(folio))
-+	if (write) {
-+		if (dirty_batch)
-+			entry = pte_mkdirty(entry);
-+		entry = maybe_mkwrite(entry, vma);
-+	} else if (pte_write(entry) && folio_test_dirty(folio)) {
- 		entry = pte_mkdirty(entry);
-+	}
- 	if (unlikely(vmf_orig_pte_uffd_wp(vmf)))
- 		entry = pte_mkuffd(entry);
- 	/* copy-on-write page */
-@@ -5665,6 +5703,18 @@ void set_pte_range(struct vm_fault *vmf, struct folio *folio,
- 	}
- 	set_ptes(vma->vm_mm, addr, vmf->pte, entry, nr);
- 
-+	/*
-+	 * The page the fault was for is about to be stored to, so dirty it
-+	 * here rather than leave the store to a second page table walk, or to
-+	 * a second fault where the dirty bit is maintained in software.
-+	 */
-+	if (!dirty_batch) {
-+		pte_t *ptep = vmf->pte + ((vmf->address - addr) >> PAGE_SHIFT);
-+
-+		ptep_set_access_flags(vma, vmf->address, ptep,
-+				      pte_mkdirty(ptep_get(ptep)), 1);
-+	}
-+
- 	/* no need to invalidate: a not-present page won't be cached */
- 	update_mmu_cache_range(vmf, vma, addr, vmf->pte, nr);
+ bool iomap_dirty_folio(struct address_space *mapping, struct folio *folio)
+ {
+-	struct inode *inode = mapping->host;
+-	size_t len = folio_size(folio);
+-
+-	ifs_alloc(inode, folio, 0);
+-	iomap_set_range_dirty(folio, 0, len);
+-	return filemap_dirty_folio(mapping, folio);
++	return iomap_dirty_folio_range(mapping, folio, 0, folio_size(folio));
  }
+ EXPORT_SYMBOL_GPL(iomap_dirty_folio);
+ 
+@@ -1804,7 +1808,7 @@ iomap_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
+ EXPORT_SYMBOL_GPL(iomap_truncate_page);
+ 
+ static int iomap_folio_mkwrite_iter(struct iomap_iter *iter,
+-		struct folio *folio)
++		struct folio *folio, size_t dirty_off, size_t dirty_len)
+ {
+ 	loff_t length = iomap_length(iter);
+ 	int ret;
+@@ -1817,7 +1821,7 @@ static int iomap_folio_mkwrite_iter(struct iomap_iter *iter,
+ 		block_commit_write(folio, 0, length);
+ 	} else {
+ 		WARN_ON_ONCE(!folio_test_uptodate(folio));
+-		folio_mark_dirty(folio);
++		folio_mark_dirty_range(folio, dirty_off, dirty_len);
+ 	}
+ 
+ 	return iomap_iter_advance(iter, length);
+@@ -1832,6 +1836,7 @@ vm_fault_t iomap_page_mkwrite(struct vm_fault *vmf, const struct iomap_ops *ops,
+ 		.private	= private,
+ 	};
+ 	struct folio *folio = page_folio(vmf->page);
++	size_t dirty_off, dirty_len;
+ 	ssize_t ret;
+ 
+ 	folio_lock(folio);
+@@ -1840,8 +1845,22 @@ vm_fault_t iomap_page_mkwrite(struct vm_fault *vmf, const struct iomap_ops *ops,
+ 		goto out_unlock;
+ 	iter.pos = folio_pos(folio);
+ 	iter.len = ret;
++
++	/*
++	 * Blocks are still allocated for the whole folio, but only the page
++	 * the fault was for has been written, so that is all that has to be
++	 * written back.  A racing truncate can leave that page beyond i_size,
++	 * and then there is nothing to dirty.
++	 */
++	dirty_off = folio_page_idx(folio, vmf->page) << PAGE_SHIFT;
++	if (dirty_off < ret)
++		dirty_len = min_t(size_t, PAGE_SIZE, ret - dirty_off);
++	else
++		dirty_len = 0;
++
+ 	while ((ret = iomap_iter(&iter, ops)) > 0)
+-		iter.status = iomap_folio_mkwrite_iter(&iter, folio);
++		iter.status = iomap_folio_mkwrite_iter(&iter, folio,
++						       dirty_off, dirty_len);
+ 
+ 	if (ret < 0)
+ 		goto out_unlock;
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index bc7ae6327dbf..3cf2ac751409 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -443,6 +443,8 @@ struct folio *iomap_get_folio(struct iomap_iter *iter, loff_t pos, size_t len);
+ bool iomap_release_folio(struct folio *folio, gfp_t gfp_flags);
+ void iomap_invalidate_folio(struct folio *folio, size_t offset, size_t len);
+ bool iomap_dirty_folio(struct address_space *mapping, struct folio *folio);
++bool iomap_dirty_folio_range(struct address_space *mapping, struct folio *folio,
++		size_t off, size_t len);
+ void iomap_folio_mark_uptodate(struct folio *folio);
+ int iomap_file_unshare(struct inode *inode, loff_t pos, loff_t len,
+ 		const struct iomap_ops *ops,
 -- 
 2.54.0
 
