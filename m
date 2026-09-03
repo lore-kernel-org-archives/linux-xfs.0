@@ -1,70 +1,73 @@
 Received: from flow-a3-smtp.messagingengine.com (flow-a3-smtp.messagingengine.com [103.168.172.138])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B2F8456DEB;
-	Thu,  3 Sep 2026 18:29:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 245DB389114;
+	Thu,  3 Sep 2026 18:29:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.138
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788460199; cv=none; b=Fs/8PJCwj0b3QK7FSAIwgX0efDFrtoF0ASlt8V7nIdkbELPgASqkRmXUU7kla79n0LMn+EJLJzycn8duyiGxt58C7Kpp6dgI8rviFaTnZko4FfADWC6zQw5RNnabwP8CQKTh+DHfnx/cRZGoong1+XMnOyyrJVpDBViw7Ki+B/w=
+	t=1788460203; cv=none; b=X5iPkZDrwsTUFmVVEr9ox/GN3xJTgligk1aVqkxmD4MTazD+hHzh0X0FFDYDKfmE7PayZKD07FQ7+1gFKC3EXhSxcJj/46CnJLhhXq+BqwWz7bbzdmrOsOuTN/Qd6K/SvUuI7Ad363Avv2PMEKmeORg0EvmvSjuarrTqSshtTMM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788460199; c=relaxed/simple;
-	bh=1W7kQwDNtrHeaK9OxcA8p3YHzc48GC5xPjvjcaW9Acs=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=BvRF2SqPk8h2pqPCD8u4KIXnDyXddoZ5fKfujRPcbXVmHq5N2TAMtn5GuzXhmJCmZ6lyIIc/WFb6H2aknmn/937FyC7UFQGRnqq8QJqPqOAafwfd0brI1gBYCUaobKoZ/udShAapG7QAKLh3IjUDz3o9gB/TJaEo7R8ZwUooJ08=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=shutemov.name; spf=pass smtp.mailfrom=shutemov.name; dkim=pass (2048-bit key) header.d=shutemov.name header.i=@shutemov.name header.b=CxPtMTTH; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=OhhE1bUo; arc=none smtp.client-ip=103.168.172.138
+	s=arc-20240116; t=1788460203; c=relaxed/simple;
+	bh=scTVfOEUItjdosptvl+093FHTl2lw3ZCIX81xPIg3T4=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=DbE/bngPP7AoKdSrCUAh8u1Gw6LuGJEYkiKFLT+PVqF6UvBvciaDX3Bpf2pvW0QDzIrfP5iC4SA+m/YtFVDuO01qWflG6xawHUHvX6rI2WlK9ByGKe2/kLnk3emjV51EzsLBsWN9vNyhJIA3+EjRvV9CwuIAxe/SED5WDTugze8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=shutemov.name; spf=pass smtp.mailfrom=shutemov.name; dkim=pass (2048-bit key) header.d=shutemov.name header.i=@shutemov.name header.b=bJdZVe6I; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=kbCRJOxh; arc=none smtp.client-ip=103.168.172.138
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=shutemov.name
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shutemov.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shutemov.name header.i=@shutemov.name header.b="CxPtMTTH";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="OhhE1bUo"
-Received: from phl-compute-09.internal (phl-compute-09.internal [10.202.2.49])
-	by mailflow.phl.internal (Postfix) with ESMTP id 15D9E1380124;
-	Thu,  3 Sep 2026 14:29:50 -0400 (EDT)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-09.internal (MEProxy); Thu, 03 Sep 2026 14:29:50 -0400
+	dkim=pass (2048-bit key) header.d=shutemov.name header.i=@shutemov.name header.b="bJdZVe6I";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="kbCRJOxh"
+Received: from phl-compute-04.internal (phl-compute-04.internal [10.202.2.44])
+	by mailflow.phl.internal (Postfix) with ESMTP id 6F8C61380127;
+	Thu,  3 Sep 2026 14:29:52 -0400 (EDT)
+Received: from phl-frontend-03 ([10.202.2.162])
+  by phl-compute-04.internal (MEProxy); Thu, 03 Sep 2026 14:29:52 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shutemov.name;
 	 h=cc:cc:content-transfer-encoding:content-type:date:date:from
-	:from:in-reply-to:message-id:mime-version:reply-to:subject
-	:subject:to:to; s=fm2; t=1788460190; x=1788467390; bh=/fSatvsWZM
-	4B4zf1fK77XqXosYANLT56ve8NWTcWTZ8=; b=CxPtMTTH9TkAa4aDnaEhmQJnIK
-	efRiwvfMnObkLuGH7iQqwfG1yb9qqYqizLmy0KgQo0q1KhW0t7or1QIOAK7oSMXZ
-	JWKzUokFOVxClmmOKUZEi8hMmZPTmif8ArOkwEko2ICIxusw6F9h2JrFdxkxDDLZ
-	0/2dZejfo4kuFRzQonWU2C5xdZjEb4EPkr+TQZDb1rAZHnr+ZO9whXAN2XmTSn2R
-	PVqDRIggND452Jr4ju6hXShQAR2+rNTPIVMSMOsKEYzliniHgN79qYq2tR2j+ksS
-	CXb61vPkO9gq1KNJWXlGRaFC+1RbwcwW2sskmmqxXxNn+kBrrlUjhGJKLNCg==
+	:from:in-reply-to:in-reply-to:message-id:mime-version:references
+	:reply-to:subject:subject:to:to; s=fm2; t=1788460192; x=
+	1788467392; bh=IXAbT3RhlQhLzfRcazVV9LtEcGIthgKmvu2c4KjzvuY=; b=b
+	JdZVe6I4o5MKZYcnL79xg8tI+zVR1JDmMZgYVFSYtR8SqW35SnCD7g/95joxvX5X
+	aXeiCt5fmfyFzCFRue3W5UV8XRQiKuUdwWOZwCtQqvOZT3DWv3JVv9JcG0K0dy6z
+	+1IVzKjiCAydrk/jYoZ1N3nIx389GaoHaCK2qtKzAVusk0BCT4q9ut3ribRdqaFG
+	3HOpf7GrmP3YSG5BASFZXnNUluqBvZ5WDJcF3TCq0hn7D6N+dW0IClv4L2Igw1yN
+	0SRbbPhLWrY43keGKQ6H09PipuQM+A3hWHhhodd3Kn23f1D/Bpqli04sb3NZY55g
+	qRsG7UEihGe/b4uDG3AVw==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
 	messagingengine.com; h=cc:cc:content-transfer-encoding
 	:content-type:date:date:feedback-id:feedback-id:from:from
-	:in-reply-to:message-id:mime-version:reply-to:subject:subject:to
-	:to:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=
-	1788460190; x=1788467390; bh=/fSatvsWZM4B4zf1fK77XqXosYANLT56ve8
-	NWTcWTZ8=; b=OhhE1bUoRtN1xxHczEJYxz8pVDzzd2dfvyqTeKV4iRF8ifBvC3M
-	8wEVHHHKhN/QNBMwXLMPL1od+mwkljYIbiPX9CW3Il/eMqLqKmUg48x7b++2nLDp
-	b91FRn8vFFgHJ7LxfOd8rKTIliSSYTMOL7cvV4OXU64y+iJLLZTF4QWf3neIIRZr
-	aCcz5ATg1CTKxgScWSN0Qf/ECLF4lnGNQfvkqLeaGcuKL5sTRiXRWsgI5kXvbHF/
-	E6NuAJHTgkfhTF8kPWt84/41TateQXMqT4X2+pHqvm0Ph7IbOE28ygTYLuaLF8gm
-	LyGdd/SwXoLiVOAHV1E/Ij6reIB8Oi63J0w==
-X-ME-Sender: <xms:nbyZapCYC7gXPp0GMMkMgtXsWAWvZd-zVwEHqMcLjCxAOex-B6GIQA>
-    <xme:nbyZaokMcjRmjIg-G1qDOo8hJmQwuI1o3wyYT7qAM_NJj-9PpzeTnx4UvaHY2B3gH
-    H53MBDdcKBs-1qYY8g3mtdBTps97sag9vlkOu2RUF4zIhelN2dZBgg>
-X-ME-Received: <xmr:nbyZanhBpl7Pg_hBzPBTwGHlagURlR6uWONjTBft8212oj3QYkZuY0D_82M>
-X-ME-Proxy-Cause: dmFkZTGzhS0EF+xT7L4APxnR4/6WqwEo/DPnzsf1SrAf29Hq8MqzP2TtfK1qR/Svqk+STv
-    H4nyfck5vC3zIkbYydfT1Ttl2XZBvWEsTV9U7KUCJvpYiKzH3LLS1TpMk1G8Q3iTlEeqt6
-    uCqSQ5F3FzkpEfnpwRBCLOGhNeU0tP6d3OQbhYO3M7PmyvCrhn3qG+OlNDPJKGyZgSthfF
-    vI3CoYKv29fWoxbxnpYFUa5xdbF0HB1C9u4CCfeYbHoB3NBJzU8b73sgbQ99wHxzD/oqD9
-    nmFhnPrAi7wEECNbyJ9wz2vD++cZExRKpHmU0uZ7vFfONmUZQ/wkCcSDV+9t34/IO9YOpX
-    pt+pno6vg2zNg0rB6w6K2L0RQq3qbN6xHrl+RlvfD0EmGDW67TeFKmpYKwvv1xlSl5Kkm0
-    SE4iL2xcx9DW6rY5bgR+REp8zE5GL9YG+8NUiCkwx05ewzr6QX8VfNRh6KzIcE5GJ5XTsB
-    ZYoViLRJvipGySeYV7w0MxnMC6kyzC2lVOdcVwljW7AhR06y5j6vujQrPsj8SrNAN5eaUm
-    77U79F2B3v+mIDhCNPw5iZZgNk5WfrNqorNrSF3AVWPeFfUhlwhd9VKZyAXG2cOtjgfoMo
-    d44VAQf4TsN8v+Ebzh3NAJC3CE5akd2vrGCbHdw0KuQ0kRfP1NWLkvVEbD9A
-X-ME-Proxy: <xmx:nbyZahf2FWn5k8aa0ijhYFfvDJYQmyhZg7BxSakhXkalyeEk4pH-bw>
-    <xmx:nbyZanAt92YMvc_4qWmEMegxLEaqerfxji1JD_BriReXo8ModkjJPw>
-    <xmx:nbyZal6RlVehtUw9FikKgP0RrqyDufUaoaVaK5J6tssv14zcvv3K-w>
-    <xmx:nbyZakyxtVw9rNEDX2187f1xaiu6W_iG3mnZWnSq_1qMt2o_2pPM_g>
-    <xmx:nryZalVKCWmbfmDcii_JrBWGoRPFo6iHGYKV16G-Hpo7yN4I-dl1qQdz>
+	:in-reply-to:in-reply-to:message-id:mime-version:references
+	:reply-to:subject:subject:to:to:x-me-proxy:x-me-sender
+	:x-me-sender:x-sasl-enc; s=fm1; t=1788460192; x=1788467392; bh=I
+	XAbT3RhlQhLzfRcazVV9LtEcGIthgKmvu2c4KjzvuY=; b=kbCRJOxh0BQ9soMyK
+	QxcADm17Z9hOm4OlolGPi0SrnBWReUD2ckX/nmzuoJlifUXT6nVBhFveGt7kp86I
+	BnaLnr/WTe6DmCjOeP6bgSptQ3TrHOtcweAgVyJsMM4FEVVowAsHxo9HZh2GYxJP
+	uhkXHeZIiWJoRdjnor/KDYrMnLyDXy8aPN9AaPhwQlrA9WGNax8Z6gR43tQYVFt7
+	SI8w6ywcrUIaoGlEkDxAbqrzOTz/u+xfjzqrsLxoJU2QUR5Na6pquTBGZUvF+Svo
+	GjArvPzD9Y1qBtyLUEtcEeooiKmLA9xiMHAKAYthIN241qIz4BAMOTGEXD1cJLv/
+	JZoHg==
+X-ME-Sender: <xms:oLyZamQVGNdkczEUw4ujq98e6mKSDthX3ByZkbfJBzaRrCB8NjcRIw>
+    <xme:oLyZas2qWZCSsLMlpneve1pcewfBC8z-DSIzcuqlmd7JJZnOwZ29Gv1ahNWm-MEfq
+    6mcQNjj8keHqV_x0S3pnkv8jxU4RaRw2WuxDTXm4A6DlRb95W6d3soc>
+X-ME-Received: <xmr:oLyZamy8JXdk65FfrqWfFcm-YhebnVaoNqI7dB_fvCU9WgNwpMo8tSysjdU>
+X-ME-Proxy-Cause: dmFkZTFt7tpQ23d6ma5ZKwjaUeV/XmiCXSwfUJTD/UMTaTx+tQ6P98fG4/H3PFA7hJFxaU
+    SY7i6N6X86D7HaHpdbLHvMivEhulOmq3NoSfdg1pBrJA6v+lfq2ALheALUZjz6o7Nf8BIz
+    DWIHLTWCbkC3w9bMwM7vsWb978omVdOmMplVzO2fLHjMRy1E/CxFkmf+2uWv7frAXfMOWG
+    H/vdAXIPTaxMrzbmklMnL5PmRnZSJQIp5M1ihNDwszNqcLBuKJXCEkMPvIWqkfKnePof3W
+    BlQ363pN/8dtwFHD474IAw0kAsBZ9JYvF7V9lEJnX7ro/M4XAHwxRodQrXyCYUn1NLN+PM
+    0vfdcaBQjLc+HudZy9eIbs9FNURWggrBI09gzzjkvwtrJdKDbJanKkcjjxbA2wXLW5vmPV
+    JHY7vjUWVS+tCavA8PcCB9/d4IboR/rmYFx7WSmkm5HX3rO99EzxgghTPold4UY7N8MLio
+    ckoVvpjoVQYAuSOMa6WiILvVCXgNSpWb0YmrSVSnYN92LolbIS1ZBUCtfZZgzD+yHUUE+T
+    3FBZrWGSTxV07/NgqDrk6AcNrJhpdb5ML5pWJ3Z4RwgqVY2AvQVvFXk+au178of9NJo1VX
+    Jwuxz1BTVNt4FUyEe/8GbpTWtyYMn6RCqGxKo1ht9sgk2Nnrd0PTSdbQ5Fwg
+X-ME-Proxy: <xmx:oLyZavuHxFCaE__idzlzleST_Hwy-4aB04oK_DIUgC8jEW3q8LHPAQ>
+    <xmx:oLyZaoQjjhlR8coJrZ_7t3YPgze8Cuq1_c-6TgUlJgMjd6abvXYz7Q>
+    <xmx:oLyZauJPYjUgw6MdakKpR9BRlup7X0NbjErrk6zDsKCZ7fX1m80wNg>
+    <xmx:oLyZaoBnvdnVk_Tvhk9ijT6N82rviIKB8b6A451oA5FwPRg7zil38w>
+    <xmx:oLyZapmtWYRjOs4e0_n9fIvuUjvPFeShLUaw9klDPO2pwpgb7Bt7NY2G>
 Feedback-ID: ie3994620:Fastmail
 Received: by mail.messagingengine.com (Postfix) with ESMTPA; Thu,
- 3 Sep 2026 14:29:48 -0400 (EDT)
+ 3 Sep 2026 14:29:51 -0400 (EDT)
 From: Kiryl Shutsemau <kirill@shutemov.name>
 To: akpm@linux-foundation.org,
 	"Matthew Wilcox (Oracle)" <willy@infradead.org>,
@@ -92,10 +95,12 @@ Cc: Lorenzo Stoakes <ljs@kernel.org>,
 	linux-kernel@vger.kernel.org,
 	kernel-team@meta.com,
 	"Kiryl Shutsemau (Meta)" <kas@kernel.org>
-Subject: [RFC PATCH 0/5] mm: sub-folio dirty tracking for PTE-mapped mmap writes
-Date: Thu,  3 Sep 2026 19:29:38 +0100
-Message-ID: <20260903182943.662461-1-kirill@shutemov.name>
+Subject: [RFC PATCH 1/5] mm: let folio_mkclean() report which pages had dirty PTEs
+Date: Thu,  3 Sep 2026 19:29:39 +0100
+Message-ID: <20260903182943.662461-2-kirill@shutemov.name>
 X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20260903182943.662461-1-kirill@shutemov.name>
+References: <20260903182943.662461-1-kirill@shutemov.name>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -106,63 +111,177 @@ Content-Transfer-Encoding: 8bit
 
 From: "Kiryl Shutsemau (Meta)" <kas@kernel.org>
 
-A store through a shared file mapping dirties the whole folio. With large
-page cache folios that turns a 4K store into 2M of writeback: one dirty
-bit per folio, and writeback has no way to know which part changed.
+folio_mkclean() walks every mapping of a folio and clears the dirty and
+write bits of each page table entry. It has the per-entry dirty bit in
+hand while doing that, but only counts how many entries it cleaned.
 
-XFS already knows better. iomap tracks dirty state per block and
-iomap_writeback_folio() submits only the dirty ranges, and the buffered
-write path sets just the range it copied. Only the mmap path throws that
-away, because iomap_dirty_folio() covers the whole folio.
+For a large folio those bits are the only record of which parts of the
+folio were written through a mapping. Everything downstream has to
+assume the whole folio changed because that information is dropped here.
 
-Narrowing the dirtying at page_mkwrite() time does not work on its own:
-set_pte_range() batch-maps a whole folio writable on the first shared
-write fault, so the stores that follow never fault and never reach the
-filesystem.
+Add folio_mkclean_dirtymap(), which takes a bitmap and sets a bit for every
+page of the folio whose entry was dirty. folio_mkclean() becomes a
+wrapper that passes no bitmap, so there is no change in behaviour yet.
 
-So harvest the hardware instead. folio_clear_dirty_for_io() already calls
-folio_mkclean(), whose rmap walk reads pte_dirty() for every entry of the
-folio and throws it away. Those bits are the only record of which parts
-of a large folio were written through a mapping. Collect them there and
-hand the filesystem the runs that were dirty, through a new
-a_ops->dirty_folio_range().
+A PMD entry has one dirty bit for the whole folio, so a PMD-mapped folio
+reports all of its pages as dirty. That is the best that can be done:
+the hardware does not track anything finer for a PMD.
 
-All of this is about PTE-mapped folios. A PMD-mapped folio has a single
-dirty bit for the 2M it maps, so there is nothing finer to harvest, and
-it keeps writing back whole. Keeping shared write faults off PMDs is a
-separate patch and not part of this posting.
+Assisted-by: Claude:claude-opus-5
+Signed-off-by: Kiryl Shutsemau (Meta) <kas@kernel.org>
+---
+ include/linux/rmap.h |  7 ++++++
+ mm/rmap.c            | 56 +++++++++++++++++++++++++++++++++++---------
+ 2 files changed, 52 insertions(+), 11 deletions(-)
 
-On a 512M file in 2M folios on XFS, storing one byte per folio and
-calling msync() wrote 512M before and writes 1M after, with identical
-minor fault counts.
-
-Not addressed here:
-
- - Dirty accounting stays folio-granular. A 4K store still counts as 2M
-   against dirty_ratio and balance_dirty_pages().
- - iomap_page_mkwrite() still allocates blocks for the whole folio.
- - Filesystems without per-block dirty state see no change.
-
-Kiryl Shutsemau (Meta) (5):
-  mm: let folio_mkclean() report which pages had dirty PTEs
-  mm: add a_ops->dirty_folio_range() and use the mkclean dirty harvest
-  mm: keep the mmap dirty range down to the faulting page
-  iomap: narrow page_mkwrite() dirtying to the faulting page
-  xfs: track mmap dirty state per block
-
- fs/iomap/buffered-io.c | 37 +++++++++++++-----
- fs/xfs/xfs_aops.c      |  2 +-
- include/linux/fs.h     |  3 ++
- include/linux/iomap.h  |  2 +
- include/linux/mm.h     |  1 +
- include/linux/rmap.h   |  7 ++++
- mm/memory.c            | 58 ++++++++++++++++++++++++++--
- mm/page-writeback.c    | 87 +++++++++++++++++++++++++++++++++++++++---
- mm/rmap.c              | 56 +++++++++++++++++++++------
- 9 files changed, 222 insertions(+), 31 deletions(-)
-
-
-base-commit: 0a0d1d55dad570724bf8c7ea83409639cfb4be9b
+diff --git a/include/linux/rmap.h b/include/linux/rmap.h
+index 8dc0871e5f00..6fc0a6020252 100644
+--- a/include/linux/rmap.h
++++ b/include/linux/rmap.h
+@@ -927,6 +927,7 @@ unsigned long page_address_in_vma(const struct folio *folio,
+  * returns the number of cleaned PTEs.
+  */
+ int folio_mkclean(struct folio *);
++int folio_mkclean_dirtymap(struct folio *folio, unsigned long *dirty_map);
+ 
+ int mapping_wrprotect_range(struct address_space *mapping, pgoff_t pgoff,
+ 		unsigned long pfn, unsigned long nr_pages);
+@@ -990,6 +991,12 @@ static inline int folio_mkclean(struct folio *folio)
+ {
+ 	return 0;
+ }
++
++static inline int folio_mkclean_dirtymap(struct folio *folio,
++					 unsigned long *dirty_map)
++{
++	return 0;
++}
+ #endif	/* CONFIG_MMU */
+ 
+ #endif	/* _LINUX_RMAP_H */
+diff --git a/mm/rmap.c b/mm/rmap.c
+index 1f72d279ba68..aaf45ac79fa8 100644
+--- a/mm/rmap.c
++++ b/mm/rmap.c
+@@ -1100,12 +1100,18 @@ int folio_referenced(struct folio *folio, int is_locked,
+ 	return rwc.contended ? -1 : pra.referenced;
+ }
+ 
+-static int page_vma_mkclean_one(struct page_vma_mapped_walk *pvmw)
++struct mkclean_state {
++	unsigned long *dirty_map;
++	int cleaned;
++};
++
++static int page_vma_mkclean_one(struct page_vma_mapped_walk *pvmw,
++				unsigned long *dirty_map)
+ {
+-	int cleaned = 0;
+ 	struct vm_area_struct *vma = pvmw->vma;
+-	struct mmu_notifier_range range;
+ 	unsigned long address = pvmw->address;
++	struct mmu_notifier_range range;
++	int cleaned = 0;
+ 
+ 	/*
+ 	 * We have to assume the worse case ie pmd for invalidation. Note that
+@@ -1134,6 +1140,15 @@ static int page_vma_mkclean_one(struct page_vma_mapped_walk *pvmw)
+ 			if (!pte_dirty(entry) && !pte_write(entry))
+ 				continue;
+ 
++			if (dirty_map && pte_dirty(entry)) {
++				pgoff_t idx = linear_page_index(vma, address) -
++					      pvmw->pgoff;
++
++				/* The walk only visits pages of this folio */
++				VM_WARN_ON_ONCE(idx >= pvmw->nr_pages);
++				__set_bit(idx, dirty_map);
++			}
++
+ 			flush_cache_page(vma, address, pte_pfn(entry));
+ 			entry = ptep_clear_flush(vma, address, pte);
+ 			entry = pte_wrprotect(entry);
+@@ -1155,6 +1170,9 @@ static int page_vma_mkclean_one(struct page_vma_mapped_walk *pvmw)
+ 			if (!pmd_dirty(entry) && !pmd_write(entry))
+ 				continue;
+ 
++			if (dirty_map && pmd_dirty(entry))
++				bitmap_set(dirty_map, 0, pvmw->nr_pages);
++
+ 			flush_cache_range(vma, address,
+ 					  address + HPAGE_PMD_SIZE);
+ 			entry = pmdp_invalidate(vma, address, pmd);
+@@ -1181,9 +1199,9 @@ static bool page_mkclean_one(struct folio *folio, struct vm_area_struct *vma,
+ 			     unsigned long address, void *arg)
+ {
+ 	DEFINE_FOLIO_VMA_WALK(pvmw, folio, vma, address, PVMW_SYNC);
+-	int *cleaned = arg;
++	struct mkclean_state *state = arg;
+ 
+-	*cleaned += page_vma_mkclean_one(&pvmw);
++	state->cleaned += page_vma_mkclean_one(&pvmw, state->dirty_map);
+ 
+ 	return true;
+ }
+@@ -1196,12 +1214,23 @@ static bool invalid_mkclean_vma(struct vm_area_struct *vma, void *arg)
+ 	return true;
+ }
+ 
+-int folio_mkclean(struct folio *folio)
++/**
++ * folio_mkclean_dirtymap - Write-protect a folio and report what was dirty.
++ * @folio: The folio to clean.
++ * @dirty_map: Bitmap of at least folio_nr_pages(@folio) bits, or NULL.
++ *
++ * Write-protects and cleans every mapping of @folio.  With @dirty_map, sets a
++ * bit for each page whose entry was dirty; a PMD-mapped folio has one dirty
++ * bit for all of it, so every page is reported.
++ *
++ * Return: the number of page table entries cleaned.
++ */
++int folio_mkclean_dirtymap(struct folio *folio, unsigned long *dirty_map)
+ {
+-	int cleaned = 0;
++	struct mkclean_state state = { .dirty_map = dirty_map };
+ 	struct address_space *mapping;
+ 	struct rmap_walk_control rwc = {
+-		.arg = (void *)&cleaned,
++		.arg = (void *)&state,
+ 		.rmap_one = page_mkclean_one,
+ 		.invalid_vma = invalid_mkclean_vma,
+ 	};
+@@ -1217,7 +1246,12 @@ int folio_mkclean(struct folio *folio)
+ 
+ 	rmap_walk(folio, &rwc);
+ 
+-	return cleaned;
++	return state.cleaned;
++}
++
++int folio_mkclean(struct folio *folio)
++{
++	return folio_mkclean_dirtymap(folio, NULL);
+ }
+ EXPORT_SYMBOL_GPL(folio_mkclean);
+ 
+@@ -1241,7 +1275,7 @@ static bool mapping_wrprotect_range_one(struct folio *folio,
+ 		.flags		= PVMW_SYNC,
+ 	};
+ 
+-	state->cleaned += page_vma_mkclean_one(&pvmw);
++	state->cleaned += page_vma_mkclean_one(&pvmw, NULL);
+ 
+ 	return true;
+ }
+@@ -1324,7 +1358,7 @@ int pfn_mkclean_range(unsigned long pfn, unsigned long nr_pages, pgoff_t pgoff,
+ 	pvmw.address = vma_address(vma, pgoff, nr_pages);
+ 	VM_BUG_ON_VMA(pvmw.address == -EFAULT, vma);
+ 
+-	return page_vma_mkclean_one(&pvmw);
++	return page_vma_mkclean_one(&pvmw, NULL);
+ }
+ 
+ static void __folio_mod_stat(struct folio *folio, int nr, int nr_pmdmapped)
 -- 
 2.54.0
 
