@@ -1,93 +1,40 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 400133F5BDC
-	for <linux-xfs@vger.kernel.org>; Thu,  3 Sep 2026 08:32:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2D6D3F8257
+	for <linux-xfs@vger.kernel.org>; Thu,  3 Sep 2026 09:44:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788424326; cv=none; b=f1o+FmW0QVxkzWEtADuR3cX/9p9liTn08cLDVTdK+4Z8odNjMWoQrmutqzra+SFWlB3TUe92p6yzYkE7S3tVpkE+on9W8fvUadM1XcH5Izr/7w5L9M7KkcYq6KbdbVHeuTuzSVeIBMIqyum5/MzEvIhrGld8cjah7nX+D5P4Gms=
+	t=1788428696; cv=none; b=itHmxZ7eVQC3oiGTdkuFGeJeKOYNYzJUR9ci1jNyTkanYV1u4fFf8sngb6k+jNCndpyJTcoDb45/pZc0YBOmRZ2WuLrOsnhUHY+zuKdYgPjpgkV/sz4DYiFzL8idCaeU6G+KJhedgcrEyyvuuDguUWH6QoSE3NJy1NntX+JxM7Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788424326; c=relaxed/simple;
-	bh=BNbYlX09kh4qdoGiq+7yFzj3ttO9GR22rE5gdx2gMLk=;
+	s=arc-20240116; t=1788428696; c=relaxed/simple;
+	bh=yJmNz9L7aPzZmZ+yDdWddN8NI8A4/IbhgszS34ZjY6Y=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=iNdbuONOTUgZ30uCpCJC5qB3+XxskfVjq/cmTYiO8EzwjNyKnACZ2vpS1F2bYrkLWoqLw2s4/w0P5wtL99PNcVEY0PeDxPpXkQxyZfwsMgUP5BhQN/AQwzcqQTDfbqBPbt9tvTc4FddhBhqo34C0ng3+wXYltn21blcXta3uwnI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=OON2u6TF; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=alCrCdvt; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=fv0TTBk6J+X9+prmxhHuRVavNVHdJpKmeJPeLMQXZXtTBKNdp1etlVNPIE9CePuw0VxeCpK0aJIa06MT0VfyfPZCszOGT2a8tWlhUDspHm0NfvKcGVG9hYLmMFFcP8aYUFDuataQpHMxQUDMlSryDNREJjvOktmrwBxCtHW9E28=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CMT+QHyH; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OON2u6TF";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="alCrCdvt"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1788424324;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ogGzNZa5gsK9u5I5fEWc5bMO9Svs2RAfGHetZAFSDjo=;
-	b=OON2u6TFwlh4qqxGg029C9vqAOiHY1BVdhhZqX0XdYHOYdWAjRcPqL4F3dn6s2qLp2AKYE
-	va9/zhQAWxHPeHcN6XapHKyz1GStb2bKKmkbapv8njP4VxyCEgIIdrmH6w8gEz3hDeUajI
-	wqz3y0D+4WQezBO0GB5vdvGYkI2T9Cs=
-Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
- [209.85.128.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-692-kv2LonIkNh-XNY0l2dolWQ-1; Thu, 03 Sep 2026 04:32:02 -0400
-X-MC-Unique: kv2LonIkNh-XNY0l2dolWQ-1
-X-Mimecast-MFC-AGG-ID: kv2LonIkNh-XNY0l2dolWQ_1788424321
-Received: by mail-wm1-f72.google.com with SMTP id 5b1f17b1804b1-49cc954a3edso13593985e9.2
-        for <linux-xfs@vger.kernel.org>; Thu, 03 Sep 2026 01:32:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1788424321; x=1789029121; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=ogGzNZa5gsK9u5I5fEWc5bMO9Svs2RAfGHetZAFSDjo=;
-        b=alCrCdvt4EdFDMRRGGemPF/Bef07LNsWz7gauCc/coDqvg8H5dkpDsdwjMV2F5nzr5
-         QfXJTnwfcECoBrrfBIJ6TpAv/Jp4UJtugVbjlw9c/V4n9gkcGcEAmxeEvzoxLtQfI/0q
-         zV/B6ixDD+3qblWY/b+/ErUiZEffvXv/C9bbwqjr0KVKzEYXOYbl9xxfBXqBDXw8dTmB
-         P8DTpF8/2WTWAQKs2TxzZUPl8CoxYQDxKxAGTupaerxyrKCXs+G6MofuhXQsoBnH1Xtq
-         prf5EDI7/Etc8vKEaQ0lo6+LCm0nEpRsg4+zMxFa0gmtmMKFXc8Dlr0QuK0D1cPkJs6u
-         eZTQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788424321; x=1789029121;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=ogGzNZa5gsK9u5I5fEWc5bMO9Svs2RAfGHetZAFSDjo=;
-        b=qOz5yZTx4UsstFVr8yZiqUHF+uzD3cDctaysAUcfdXnC2kNxbIhqwLvlshudFe64Yk
-         l85clPhTF42dqLwofUs2ubfeocXQL9ywlQI28o0iderKotSJFJG+u362zLC3D5Tj1ITv
-         A3Dh5yN/PO8CWM0Hi2gRRxEXrP3nTvitYfJ896231VUXipGNk05di9W4WwUBndSFczeB
-         dsxs38H5nhd9IwY6LtZdAJn/cHDFvIaK2HHzREkG1pSxOKHOFXIlTL8jNZrqiaqW2Aeh
-         5Mh66W2wreB11wmA4OI8rjb+W6JP6PiUaMRYZzfhh+zyeHnAobYThK+GFPMyoi/dCbKW
-         OYHw==
-X-Forwarded-Encrypted: i=1; AKwUvBykRONq/efSrbzttgJheB2JHqE66ynZGu/Qjgdl0O18vZUGLnP42I65EZwMAKMJY1afWGu2mA4Mu+c=@vger.kernel.org
-X-Gm-Message-State: AFuF++nF1WL0kzxih6C8XOjy7bkanVvDXxH6mjAElrbnwBFVRh3g1zxx
-	70wvovN9ULIviXU8IPNXr5LP6+9KdJ7jAOvViKwsAy2uROtqkj6OrXElRVNOiNPfA5BxbghihOu
-	zLcbV1t6vvcDJYpEVt9LANK8pvcJw0uGSyLL+PiG+ZKbTXJnBzd17IHn2Laf/
-X-Gm-Gg: AYBFou3h/uTqKK6ATGto4+gCOOjVrGD1MVpRV7B8oZP4BekdAZiZ4AH4pUyH8OgBoGz
-	LNkmfUb7VUysKS5CCtyPQVG+2oTx87LxFhQAcPA7kF6kBYWy3eGV85VzlGEs8i8LXaSuLq2G4y8
-	5oK4MOy51aivpKg2JrHEPLIfR04HJgHRlpGlm0TGuLZOjKvMZZ8VlVr3+SltSNpuJnmxLB47eD3
-	d+AEQmmSWBmRz67H1wVrgTHOkRpB/MjXt4cFJUey199bVjjGyElmBdAKSJ0i8lTqpPm6fAxSTUq
-	gcaRbeaa9H1kdGpNxsBO5j29lazZp+nJUcbnXgxIaGpUFtZgOWEsgXYfU4Y06IViGEpr84bmcdb
-	XsU6J4c8FvTO2cr1dSa66AB1FOUs8lSyPPw==
-X-Received: by 2002:a05:600c:1c27:b0:49c:dcec:bd27 with SMTP id 5b1f17b1804b1-49ce57fd7bamr169949885e9.8.1788424321435;
-        Thu, 03 Sep 2026 01:32:01 -0700 (PDT)
-X-Received: by 2002:a05:600c:1c27:b0:49c:dcec:bd27 with SMTP id 5b1f17b1804b1-49ce57fd7bamr169948785e9.8.1788424320922;
-        Thu, 03 Sep 2026 01:32:00 -0700 (PDT)
-Received: from aalbersh-thinkpadx1carbongen13.rmtcz.csb ([217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49ce58da3acsm227922825e9.0.2026.09.03.01.31.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 03 Sep 2026 01:32:00 -0700 (PDT)
-Date: Thu, 3 Sep 2026 10:31:59 +0200
-From: Andrey Albershteyn <aalbersh@redhat.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CMT+QHyH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B8D161F000E9;
+	Thu,  3 Sep 2026 09:44:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788428695;
+	bh=0eAJtczIcV/vL+9G0ntTZ5k4+tq9nKLhUxhMcMgb+vE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=CMT+QHyHNzqs7Hj8bWSH2RaRwfUW+MM4BYgygUc1BRZKko2X48R+DXaTIaF3UHwQ1
+	 TwRRZRyveleN6fdqJZPAcOZ9uE2qN8+7k6Au29AeJ61mDl5Xd7UT2ilVnGz//OUIif
+	 2JpF4joRZmxewdl245CijOJ4u85pZ/ZjmBlOCe41Raq8ltLv86nA3tG4gPco/mhAHH
+	 XzuLNV9EIG9QUTLnr/k+TMjgf61J1fx7T3/tdz1X0KajOz345Y/DTHkbxvIn20oT+I
+	 xPuaYPq9OlkYze+9nIVmRPGVFGYQMn46hVmlyUU6413L8gvs/PFzINv8fHpRmb+WYz
+	 O8DkzMlWScdpQ==
+Date: Thu, 3 Sep 2026 11:44:51 +0200
+From: Andrey Albershteyn <aalbersh@kernel.org>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Andrey Albershteyn <aalbersh@kernel.org>, linux-xfs@vger.kernel.org, 
-	bestswngs@gmail.com, brauner@kernel.org, cem@kernel.org, chuck.lever@oracle.com, 
-	cmaiolino@redhat.com, dawei.feng@seu.edu.cn, gaoyingjie@uniontech.com, hch@lst.de, 
-	jiapenglin@tencent.com, roland.mainz@nrubsig.org, xmei5@asu.edu
-Subject: Re: [PATCH 00/21] xfsprogs: libxfs sync for v7.2
-Message-ID: <apkoOtfg4WE86PgQ@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
-References: <20260824104022.420566-1-aalbersh@kernel.org>
- <20260824181431.GN6072@frogsfrogsfrogs>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/1] xfs_scrub: terminate systemd services if the
+ sysadmin unmounts
+Message-ID: <aplAW3FFxQ-AM_us@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+References: <178821870236.2381099.2561252941543842548.stgit@frogsfrogsfrogs>
+ <178821870256.2381099.4607775862934813829.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -96,25 +43,32 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260824181431.GN6072@frogsfrogsfrogs>
+In-Reply-To: <178821870256.2381099.4607775862934813829.stgit@frogsfrogsfrogs>
 
-On 2026-08-24 11:14:31, Darrick J. Wong wrote:
-> On Mon, Aug 24, 2026 at 12:39:58PM +0200, Andrey Albershteyn wrote:
-> > Hi all,
-> > 
-> > This is libxfs sync for v7.1..v7.2.
-> > 
-> > ...
-> >  
-> > -	return ba->bi_owner->i_ino - bb->bi_owner->i_ino;
-> > +	return I_INO(ba->bi_owner) - I_INO(bb->bi_owner);
+On 2026-08-31 16:26:34, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> I did some cmp_init conversion for this file:
-> https://lore.kernel.org/linux-xfs/178302226322.845537.14974268104031687429.stgit@frogsfrogsfrogs/
+> We should make sure that any systemd services started on behalf of an
+> XFS mount are torn down when the mount goes away.  On a modern system,
+> calling umount(8) while there's an xfs_scrub service running on that
+> mount point will successfully remove the mount from the caller's mount
+> namespace, but the filesystem remains mounted in the service's private
+> mount namespace, with the effect that the filesystem stays mounted.
+> This is probably not what the user wants.
+> 
+> Per cks' blog, the way to fix this is through a BindTo= clause.
+> 
+> Note: This isn't needed for xfs_healer because it only maintains a soft
+> reference to the mounted filesystem and can reconnect to a filesystem if
+> its mounts move.
+> 
+> Link: https://utcc.utoronto.ca/~cks/space/blog/linux/SystemdStopOnFSUnmount
+> Cc: <linux-xfs@vger.kernel.org> # v6.10.0
+> Fixes: 0109639eede4dc ("xfs_scrub: tighten up the security on the background systemd service")
+> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 
-Oh I forgot that you already did the sync, I will rebase those
-"Fixes" on top of your version then and resend it.
+Looks good to me
+Reviewed-by: Andrey Albershteyn <aalbersh@kernel.org>
 
 -- 
 - Andrey
-
