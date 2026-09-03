@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 314A8493656
-	for <linux-xfs@vger.kernel.org>; Thu,  3 Sep 2026 11:41:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B4F345FFDC
+	for <linux-xfs@vger.kernel.org>; Thu,  3 Sep 2026 11:41:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788435669; cv=none; b=qwC+11mtZO3flBbr3xAjwjHIKoY3N8Ygv0C31P+NoIm2Ig4lra76gqrKPU6RiTSgLgTIB6l8Lr5o98Vu/BL2Je8urL7wdPbKzXRj65c4WMVznAaywvBGKIhkXuOrJiKGHRt5y6/tFqCsEYEWp+F4TfmTn9470rQNng9xTFVf1ZU=
+	t=1788435673; cv=none; b=Yhv2vFKfsAbU6nFbLs9nMkPYh4HeGCWur82QdTXPPU7REQlGUHcF+OIoJRvCgTtTJ21eGCUdpi7qiD4d6GUNhtCTUfAxRLlhUKMcpxkd7UcQhxzWOwc5lThjsNtKzqVhsfcr/yDEx93YXrddgegfDgxh/8NNRk8zxHYsLXtTaME=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788435669; c=relaxed/simple;
-	bh=RbFTJSYmw9MYQClSQlXVonVwh2xy4Kp3NMW8NO6bALw=;
+	s=arc-20240116; t=1788435673; c=relaxed/simple;
+	bh=6FgUclgiiu/mPY0ZwOf/W7SFGYcGzt1CF5fKIz6gGMw=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Q+s9r3oLH1iG9xisExk88NV8wDxNaSKLxFRZRO2O4zCZ+fhwx4EbJADTTcxEjtkshQ4YSJHBNbVKoREvkyJYijKrfcW8Ny+OU6uwTpuf7+6opCzRxVC6LIcioT90eO38p3YyOqNQMWV2AlGdiNc5Zsqn4+xqRYFwuuNVX5rz+hg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ifzi7etp; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=SqJEbPkRy2iB4KvlAyGo+DraOdJCkfSUvmMw6sm051sPwqVQalwVQTFWOblQoRiUyGNhw0UBk5vZ+S80Xx5z+T0Gl2oLumi4gH2DO6ojqVGhuG4nhPfRIziWC1eehNGyEFfIE++vfPYR3Etx8evFJYc0WNE1iH1XXtYeQNlcPjU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dMGzIjBn; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ifzi7etp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 24CDF1F00A3F;
-	Thu,  3 Sep 2026 11:40:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dMGzIjBn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 44C441F00A3A;
+	Thu,  3 Sep 2026 11:41:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788435659;
-	bh=0kfddkv6Ejz8MemMORgGYiYBuhYvrja+7CAV8ccB0bk=;
+	s=k20260515; t=1788435666;
+	bh=lGdYD9gaLJMrsbwDZPt6dAWu3QTaezOM8j43HZzAHCo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=ifzi7etpma/9pq6hzeH+wUhui286oRvrO72P5W33MVEvixB4BRdR/nmuFufP8GP39
-	 BKE6P254uAeKWWddN6ie+jzIEFnK9uWn0PXMJ68ugGNp9cLD571Nt/h3WGLy+re4PT
-	 m0qpZIZ/ZhF/z2FLWQp/uyTTY3CMyCX+vSuI0hWsq1LK98Yc98NoxzCt+R7RhRAQ0p
-	 yI3sohP0x6Zq+boYCt2u/3BOx6vdAdorIEx7+EXp16sWLO8w81UJ93eYAszBHpk864
-	 V6uctt0VuzCI3uvII1HHHcf4gB4zrf72LzQ/j1ru16VeEzF0eHCRjwgQVqi5+kwv6i
-	 +XIEQB87A1fJw==
+	b=dMGzIjBnYAJQrZBJAIraTixDtLDRV4Ztz+Q8R6X7efd9R6aYze7qInaGkTR1Hs6tp
+	 PdwgNy4FuZo8VSc0UQa5c8LoYqFuHYU2r/TDWMbsKAYFv4e4z6myU7eYrKc0fS6dYD
+	 SRgMivUMDGZucgDXd+DlKxYYeIQLsIYt4NbMaH7o0ymF2xBV1rc+Td1E4EuRFkJ9O1
+	 8qHngmUzojZ2XA+jOP9EW3qnwgU4Q9J22WGQUPKp8ntm7ijDsYM5YZ6TwKccBFHoTf
+	 XypqD27bf4Z83FjySC8s08cKEAAewg71Ieq3uEKvPHcUSPBFk6A3MZTm5Xf9TnhgMe
+	 MJjkKA6naZMPw==
 From: Andrey Albershteyn <aalbersh@kernel.org>
 To: linux-xfs@vger.kernel.org,
 	aalbersh@kernel.org
@@ -41,9 +41,9 @@ Cc: bestswngs@gmail.com,
 	jiapenglin@tencent.com,
 	roland.mainz@nrubsig.org,
 	xmei5@asu.edu
-Subject: [PATCH v2 04/23] xfs: add a XFS_INODE_TO_AGNO helper
-Date: Thu,  3 Sep 2026 13:39:46 +0200
-Message-ID: <20260903114022.570210-5-aalbersh@kernel.org>
+Subject: [PATCH v2 06/23] xfs: add a XFS_INO_TO_FSB helper
+Date: Thu,  3 Sep 2026 13:39:48 +0200
+Message-ID: <20260903114022.570210-7-aalbersh@kernel.org>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20260903114022.570210-1-aalbersh@kernel.org>
 References: <20260903114022.570210-1-aalbersh@kernel.org>
@@ -57,9 +57,9 @@ Content-Transfer-Encoding: 8bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Source kernel commit: a22166add624818a6c43b807d37f99483ba268a6
+Source kernel commit: f8b7c9a8b0a9e43b054981d134b426d9464264f6
 
-Add a shortcut for the common XFS_INO_TO_AGNO(mp, ip->i_ino) pattern.
+Add a shortcut for the common XFS_INO_TO_FSB(mp, ip->i_ino) pattern.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
@@ -67,124 +67,95 @@ Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 Signed-off-by: Carlos Maiolino <cem@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- db/iunlink.c            | 4 ++--
- libxfs/inode.c          | 2 +-
- libxfs/xfs_dir2.c       | 4 ++--
- libxfs/xfs_format.h     | 2 ++
- libxfs/xfs_ialloc.c     | 2 +-
- libxfs/xfs_inode_util.c | 2 +-
- repair/pptr.c           | 2 +-
- 7 files changed, 10 insertions(+), 8 deletions(-)
+ libxfs/xfs_bmap.c   | 8 +++-----
+ libxfs/xfs_btree.c  | 6 ++----
+ libxfs/xfs_format.h | 2 ++
+ repair/bulkload.c   | 2 +-
+ 4 files changed, 8 insertions(+), 10 deletions(-)
 
-diff --git a/db/iunlink.c b/db/iunlink.c
-index c73f818242b9..20946c967f54 100644
---- a/db/iunlink.c
-+++ b/db/iunlink.c
-@@ -22,7 +22,7 @@ count_rtblocks(
- 	if (error) {
- 		dbprintf(
- _("could not read AG %u agino %u extents, err=%d\n"),
--				XFS_INO_TO_AGNO(ip->i_mount, ip->i_ino),
-+				XFS_INODE_TO_AGNO(ip),
- 				XFS_INO_TO_AGINO(ip->i_mount, ip->i_ino),
- 				error);
- 		return 0;
-@@ -247,7 +247,7 @@ create_unlinked(
+diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
+index 96975f88497a..d211d31697a2 100644
+--- a/libxfs/xfs_bmap.c
++++ b/libxfs/xfs_bmap.c
+@@ -675,8 +675,7 @@ xfs_bmap_extents_to_btree(
+ 	args.minlen = args.maxlen = args.prod = 1;
+ 	args.wasdel = wasdel;
+ 	*logflagsp = 0;
+-	error = xfs_alloc_vextent_start_ag(&args,
+-				XFS_INO_TO_FSB(mp, ip->i_ino));
++	error = xfs_alloc_vextent_start_ag(&args, XFS_INODE_TO_FSB(ip));
+ 	if (error)
+ 		goto out_root_realloc;
  
- 	dbprintf(_("Created unlinked inode %llu in agno %u\n"),
- 			(unsigned long long)ip->i_ino,
--			XFS_INO_TO_AGNO(mp, ip->i_ino));
-+			XFS_INODE_TO_AGNO(ip));
- 	libxfs_irele(ip);
- 	return error;
- out_rele:
-diff --git a/libxfs/inode.c b/libxfs/inode.c
-index dc7e227e8ee9..83741b971171 100644
---- a/libxfs/inode.c
-+++ b/libxfs/inode.c
-@@ -159,7 +159,7 @@ libxfs_iget(
- 	ip->i_prev_unlinked = NULLAGINO;
- 	spin_lock_init(&VFS_I(ip)->i_lock);
+@@ -822,8 +821,7 @@ xfs_bmap_local_to_extents(
+ 	 */
+ 	args.total = total;
+ 	args.minlen = args.maxlen = args.prod = 1;
+-	error = xfs_alloc_vextent_start_ag(&args,
+-			XFS_INO_TO_FSB(args.mp, ip->i_ino));
++	error = xfs_alloc_vextent_start_ag(&args, XFS_INODE_TO_FSB(ip));
+ 	if (error)
+ 		goto done;
  
--	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
-+	pag = xfs_perag_get(mp, XFS_INODE_TO_AGNO(ip));
- 	error = xfs_imap(pag, tp, ip->i_ino, &ip->i_imap, 0);
- 	xfs_perag_put(pag);
- 
-diff --git a/libxfs/xfs_dir2.c b/libxfs/xfs_dir2.c
-index 1a13fec25e15..562d617254b2 100644
---- a/libxfs/xfs_dir2.c
-+++ b/libxfs/xfs_dir2.c
-@@ -918,7 +918,7 @@ xfs_dir_add_child(
- 	if (VFS_I(ip)->i_nlink == 0) {
- 		struct xfs_perag	*pag;
- 
--		pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
-+		pag = xfs_perag_get(mp, XFS_INODE_TO_AGNO(ip));
- 		error = xfs_iunlink_remove(tp, pag, ip);
- 		xfs_perag_put(pag);
- 		if (error)
-@@ -1245,7 +1245,7 @@ xfs_dir_rename_children(
- 
- 		ASSERT(VFS_I(du_wip->ip)->i_nlink == 0);
- 
--		pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, du_wip->ip->i_ino));
-+		pag = xfs_perag_get(mp, XFS_INODE_TO_AGNO(du_wip->ip));
- 		error = xfs_iunlink_remove(tp, pag, du_wip->ip);
- 		xfs_perag_put(pag);
- 		if (error)
-diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
-index 779dac59b1f3..36a00c174f1e 100644
---- a/libxfs/xfs_format.h
-+++ b/libxfs/xfs_format.h
-@@ -1276,6 +1276,8 @@ static inline bool xfs_dinode_is_metadir(const struct xfs_dinode *dip)
- 	XFS_INO_AGNO_BITS(mp) + XFS_INO_AGINO_BITS(mp)
- #define	XFS_INO_TO_AGNO(mp,i)		\
- 	((xfs_agnumber_t)((i) >> XFS_INO_AGINO_BITS(mp)))
-+#define	XFS_INODE_TO_AGNO(ip)		\
-+	XFS_INO_TO_AGNO((ip)->i_mount, (ip)->i_ino)
- #define	XFS_INO_TO_AGINO(mp,i)		\
- 	((xfs_agino_t)(i) & XFS_INO_MASK(XFS_INO_AGINO_BITS(mp)))
- #define	XFS_INO_TO_AGBNO(mp,i)		\
-diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
-index 31c818f9870f..abfba2bfabaf 100644
---- a/libxfs/xfs_ialloc.c
-+++ b/libxfs/xfs_ialloc.c
-@@ -1865,7 +1865,7 @@ xfs_dialloc_pick_ag(
- 	if (S_ISDIR(mode))
- 		return (atomic_inc_return(&mp->m_agirotor) - 1) % mp->m_maxagi;
- 
--	start_agno = XFS_INO_TO_AGNO(mp, dp->i_ino);
-+	start_agno = XFS_INODE_TO_AGNO(dp);
- 	if (start_agno >= mp->m_maxagi)
- 		start_agno = 0;
- 
-diff --git a/libxfs/xfs_inode_util.c b/libxfs/xfs_inode_util.c
-index fd8441bf9b83..8e439dc2f4fa 100644
---- a/libxfs/xfs_inode_util.c
-+++ b/libxfs/xfs_inode_util.c
-@@ -528,7 +528,7 @@ xfs_iunlink(
- 	ASSERT(VFS_I(ip)->i_mode != 0);
- 	trace_xfs_iunlink(ip);
- 
--	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
-+	pag = xfs_perag_get(mp, XFS_INODE_TO_AGNO(ip));
- 
- 	/* Get the agi buffer first.  It ensures lock ordering on the list. */
- 	error = xfs_read_agi(pag, tp, 0, &agibp);
-diff --git a/repair/pptr.c b/repair/pptr.c
-index 6a9e072b360d..dc1ea2288eac 100644
---- a/repair/pptr.c
-+++ b/repair/pptr.c
-@@ -1050,7 +1050,7 @@ crosscheck_file_parent_ptrs(
- 	struct ag_pptr		*ag_pptr, *prev_ag_pptr = NULL;
- 	struct file_pptr	*file_pptr;
- 	struct xfs_mount	*mp = ip->i_mount;
--	xfs_agnumber_t		agno = XFS_INO_TO_AGNO(mp, ip->i_ino);
-+	xfs_agnumber_t		agno = XFS_INODE_TO_AGNO(ip);
- 	xfs_agino_t		agino = XFS_INO_TO_AGINO(mp, ip->i_ino);
+@@ -3584,7 +3582,7 @@ xfs_bmap_btalloc_best_length(
+ 	xfs_extlen_t		blen = 0;
  	int			error;
  
+-	ap->blkno = XFS_INO_TO_FSB(args->mp, ap->ip->i_ino);
++	ap->blkno = XFS_INODE_TO_FSB(ap->ip);
+ 	if (!xfs_bmap_adjacent(ap))
+ 		ap->eof = false;
+ 
+diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
+index 4ab0d8d3789b..0069fba162a8 100644
+--- a/libxfs/xfs_btree.c
++++ b/libxfs/xfs_btree.c
+@@ -3240,8 +3240,7 @@ xfs_btree_new_iroot(
+ 	if (level > 0)
+ 		aptr = *xfs_btree_ptr_addr(cur, 1, block);
+ 	else
+-		aptr.l = cpu_to_be64(XFS_INO_TO_FSB(cur->bc_mp,
+-				cur->bc_ino.ip->i_ino));
++		aptr.l = cpu_to_be64(XFS_INODE_TO_FSB(cur->bc_ino.ip));
+ 
+ 	/* Allocate the new block. If we can't do it, we're toast. Give up. */
+ 	error = xfs_btree_alloc_block(cur, &aptr, &nptr, stat);
+@@ -5606,8 +5605,7 @@ xfs_btree_alloc_metafile_block(
+ 	ASSERT(xfs_is_metadir_inode(ip));
+ 
+ 	xfs_rmap_ino_bmbt_owner(&args.oinfo, ip->i_ino, cur->bc_ino.whichfork);
+-	error = xfs_alloc_vextent_start_ag(&args,
+-			XFS_INO_TO_FSB(cur->bc_mp, ip->i_ino));
++	error = xfs_alloc_vextent_start_ag(&args, XFS_INODE_TO_FSB(ip));
+ 	if (error)
+ 		return error;
+ 	if (args.fsbno == NULLFSBLOCK) {
+diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
+index f812c6782492..9886af0507e3 100644
+--- a/libxfs/xfs_format.h
++++ b/libxfs/xfs_format.h
+@@ -1289,6 +1289,8 @@ static inline bool xfs_dinode_is_metadir(const struct xfs_dinode *dip)
+ 	((int)(i) & XFS_INO_MASK(XFS_INO_OFFSET_BITS(mp)))
+ #define	XFS_INO_TO_FSB(mp,i)		\
+ 	XFS_AGB_TO_FSB(mp, XFS_INO_TO_AGNO(mp,i), XFS_INO_TO_AGBNO(mp,i))
++#define	XFS_INODE_TO_FSB(ip)		\
++	XFS_INO_TO_FSB((ip)->i_mount, (ip)->i_ino)
+ #define	XFS_AGINO_TO_INO(mp,a,i)	\
+ 	(((xfs_ino_t)(a) << XFS_INO_AGINO_BITS(mp)) | (i))
+ #define	XFS_AGINO_TO_AGBNO(mp,i)	((i) >> XFS_INO_OFFSET_BITS(mp))
+diff --git a/repair/bulkload.c b/repair/bulkload.c
+index a9e51de0a24c..6bc110071f02 100644
+--- a/repair/bulkload.c
++++ b/repair/bulkload.c
+@@ -32,7 +32,7 @@ bulkload_init_inode(
+ 	int				whichfork,
+ 	const struct xfs_owner_info	*oinfo)
+ {
+-	bulkload_init_ag(bkl, sc, oinfo, XFS_INO_TO_FSB(sc->mp, sc->ip->i_ino));
++	bulkload_init_ag(bkl, sc, oinfo, XFS_INODE_TO_FSB(sc->ip));
+ 	bkl->ifake.if_fork = kmem_cache_zalloc(xfs_ifork_cache, 0);
+ 	bkl->ifake.if_fork_size = xfs_inode_fork_size(sc->ip, whichfork);
+ }
 -- 
 2.55.0
 
