@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8106A311597;
-	Thu,  3 Sep 2026 05:51:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20762349CE2;
+	Thu,  3 Sep 2026 05:51:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788414667; cv=none; b=jAx9eitobUJ9vKa09qUVZTlW3uqmb/uort4RK2/RHxrL+B9PDTnmQE1zAXIW49vOpRR2nkjgycUal2C7DSzsCo1H859xW3KaP0e35qI1Sx8QJIfr1vJkZxq8fvGcI5UTecUZlD8YiQR0fNdSmR7ol/y67efnl78R/1MVVxxK+00=
+	t=1788414683; cv=none; b=BwrsjXjTqRv8iZ5ecNwFoxMJEcyhQYiFZv3ZaPIZDp23llzjfejZz+Jbdu4FgXBG1T66n4V8lWKolTQkgUnWXgOn0gAD1eoB6ATGJIBV0EgUlT3DIjsIzUdaTTcReEF924a7GUIknXP1e3GWKeBcJp8viOPTS5uhjzChpmOBUyc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788414667; c=relaxed/simple;
-	bh=mBgXclfb/qQfgr597BuikgWPKz/y1fvZC9cbraOd36E=;
+	s=arc-20240116; t=1788414683; c=relaxed/simple;
+	bh=SELk6k0D0oZ+Lw0iR9PLfJKRQyJuJlN6aJ8U0P1y+9o=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=gl5Vd36zYEQFWEtnfCSmbj1aHqumAp4Lr6vyfFi5+66QFEuyzAxCbED1TuVFPaGOLU8msLXa/hbypMr3D1IoyBzkqnp+zD2hBD4U0zQHm6gKtqOCkqeUglsUcccpWn4vhDXICHCpOgmXv2O5MFQ+XetoHM4hsHdDaPQMlGLwjjI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NyOsEC07; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=cVWIPSnrU405dGepXdl+kddxTrGZra+yrNRzQZSgodVRO3wwnEQpXgSHvVGgdZbfBNc+SBHg2aULUwF1crk0avsIIQ5A7nRWRGdBgUCR14zHG5YJzCyogqaKwjvfyMkeHqwgQIl8VOjx7aG8i8pT2lqOm8w0i8dw3+e6geksvEY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ltCPJ7tD; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NyOsEC07"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 10C831F000E9;
-	Thu,  3 Sep 2026 05:51:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ltCPJ7tD"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 9509A1F000E9;
+	Thu,  3 Sep 2026 05:51:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788414666;
-	bh=DQfo2JJNySAzq367tdlcblwNZxPD2P6a7JnKXYs6G4E=;
+	s=k20260515; t=1788414681;
+	bh=G9+jAysNzUebFfICvZdZVwDV0KhyM/YNtlGsDxBJZLg=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=NyOsEC07jQjx2J7dOqxzsqxODjs+aV+9e//I9+ZNWLraTKljTeo+BnUCi3qCbcJ7E
-	 wM/z2KUhVou6124V84NGHBlYhnQclw9JyVKR8+TLjspPzNkcdMSrxqCA5nFkPx1N9l
-	 ZkpU51DwAZQTu5Nx6AKssv2Q2/hGNem0nFWgZHEXkHtGgASG2XRkGraJ9STpBKoZfj
-	 ipzCgaxTk00tl0lU0MIXJTaU9Ic865rHSrJBCObKkXBuQG+WmfUO74kr9c2rODUHnm
-	 Bl8+P6wPiiLCETmA9xCZxUho6usk7bTe5/k99IJQSaIgZG5GI7sd5yerGY5zhLIBvn
-	 aRtCoyj+chuNw==
-Date: Wed, 02 Sep 2026 22:51:05 -0700
-Subject: [PATCH 1/6] xfs: cross-reference the rtgroup superblock extent,
- not block
+	b=ltCPJ7tDy3pndr2lY39aYfi1nNwFVWLqpr8JlO2aTJTuUyP6wiN+V6CjsyabGOcS7
+	 caBaJJHi8Vk6am6kOspwMKXq5ypFKWxkXDoy6XV2Qzt9m/G3MQyvPiF1Qf2slEI8fA
+	 pifrl/SLfmQ0zGobG0ynK3yWb+QuBUTih+OZGeH6cmJaj+sH7qgAOvkhA1idgqJxk/
+	 LshyWTn+YFwXmY8Uo28CIwnH2qS84ozw6dpRfmSaTghatneLnSZPrO57ezMQJi3SSd
+	 K2iqY/8hrdKKcUNFTVm14AyFUotx6Ryvl1PRP8HOvla2qPoc9aAG/w4h3k0/SuFB1T
+	 ryQVieZifshsg==
+Date: Wed, 02 Sep 2026 22:51:21 -0700
+Subject: [PATCH 2/6] xfs: use the rtgroup extent count to find rtrefcount gaps
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: hch@lst.de, cem@kernel.org, djwong@kernel.org
 Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <178840969850.484660.6737366204336091136.stgit@frogsfrogsfrogs>
+Message-ID: <178840969871.484660.14165734512664639226.stgit@frogsfrogsfrogs>
 In-Reply-To: <178840969793.484660.11718284266382755759.stgit@frogsfrogsfrogs>
 References: <178840969793.484660.11718284266382755759.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,37 +45,57 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-LOLLM noticed that when libxfs creates a realtime superblock, it will
-create an rtrmapbt record covering the entire rtextent in which the
-superblock lives.  However, the cross-referencing checks only look for
-the first block, which means that we can miss a corrupt rtrmap record.
-That will get picked up by the rtrmap scrubber, but we should make the
-rgsuper scrubber more robust anyway.
+LOLLM noticed an anachronism from the early days of rtrefcount where the
+refcount btree would handle 64-bit block numbers -- we pass rtblocks
+into the gap finder, but rtrefcount btrees are sharded by rtgroup now.
+This isn't really a problem for us since we're only looking for
+overlapping rtrmap records to flag, but let's fix this sillyness.
 
-Cc: <stable@vger.kernel.org> # v6.13
-Fixes: 3f1bdf50ab1b9c ("xfs: scrub the realtime group superblock")
+Also fix some stale comments.
+
+Cc: <stable@vger.kernel.org> # v6.14
+Fixes: 30f47950dc2eba ("xfs: check reference counts of gaps between rt refcount records")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Assisted-by: LOLLM # finding obvious bugs
 ---
- fs/xfs/scrub/rgsuper.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ fs/xfs/scrub/rtrefcount.c |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/rgsuper.c b/fs/xfs/scrub/rgsuper.c
-index 2bd2c0351b35f7..6e2abe5dc27cd5 100644
---- a/fs/xfs/scrub/rgsuper.c
-+++ b/fs/xfs/scrub/rgsuper.c
-@@ -36,8 +36,10 @@ xchk_rgsuperblock_xref(
- 	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
- 		return;
- 
--	xchk_xref_is_used_rt_space(sc, xfs_rgbno_to_rtb(sc->sr.rtg, 0), 1);
--	xchk_xref_is_only_rt_owned_by(sc, 0, 1, &XFS_RMAP_OINFO_FS);
-+	xchk_xref_is_used_rt_space(sc, xfs_rgbno_to_rtb(sc->sr.rtg, 0),
-+			sc->mp->m_sb.sb_rextsize);
-+	xchk_xref_is_only_rt_owned_by(sc, 0, sc->mp->m_sb.sb_rextsize,
-+			&XFS_RMAP_OINFO_FS);
+diff --git a/fs/xfs/scrub/rtrefcount.c b/fs/xfs/scrub/rtrefcount.c
+index de100178f41c70..a024d50cf9d20f 100644
+--- a/fs/xfs/scrub/rtrefcount.c
++++ b/fs/xfs/scrub/rtrefcount.c
+@@ -428,7 +428,7 @@ static inline void
+ xchk_rtrefcountbt_xref_gaps(
+ 	struct xfs_scrub	*sc,
+ 	struct xchk_rtrefcbt_records *rrc,
+-	xfs_rtblock_t		bno)
++	xfs_rgblock_t		bno)
+ {
+ 	struct xfs_rmap_irec	low;
+ 	struct xfs_rmap_irec	high;
+@@ -538,7 +538,7 @@ xchk_refcount_xref_rmap(
+ 		xchk_btree_xref_set_corrupt(sc, sc->sr.rmap_cur, 0);
  }
  
+-/* Scrub the refcount btree for some AG. */
++/* Scrub the refcount btree for some rtgroup. */
  int
+ xchk_rtrefcountbt(
+ 	struct xfs_scrub	*sc)
+@@ -564,10 +564,10 @@ xchk_rtrefcountbt(
+ 
+ 	/*
+ 	 * Check that all blocks between the last refcount > 1 record and the
+-	 * end of the rt volume have at most one reverse mapping.
++	 * end of the rtgroup have at most one reverse mapping.
+ 	 */
+-	xchk_rtrefcountbt_xref_gaps(sc, &rrc, sc->mp->m_sb.sb_rblocks);
+-
++	xchk_rtrefcountbt_xref_gaps(sc, &rrc,
++			xfs_rtx_to_rgbno(sc->sr.rtg, sc->mp->m_sb.sb_rgextents));
+ 	xchk_refcount_xref_rmap(sc, &btree_oinfo, rrc.cow_blocks);
+ 
+ 	return 0;
 
