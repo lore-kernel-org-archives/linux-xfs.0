@@ -1,40 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC52154763
-	for <linux-xfs@vger.kernel.org>; Thu,  3 Sep 2026 06:05:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C9563B71B9;
+	Thu,  3 Sep 2026 06:06:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788415561; cv=none; b=q+dmJhj89Zu+VgKl0oRTa7dabkPfcrguMKpZtoLuKNuMXt6WlxU7LQJhYogZsKa3eSGSbAkZNbHCuiKFGp3M5UGWczdfYWIeYqD72GfnUDesCvi2b71FLaBwxTsn7gjd2BLjoy2hzmPqGWCgtRHTAxhAOJBY2CggN9K9t2uxjxE=
+	t=1788415562; cv=none; b=irLHk0CYl0U3utLxnwfRcU/N/9tAcFvCO+kZjfBUa1jo4dT/ozibyWRCBnI6QZIjuP9Sb3GKFKTN6oA/xOh2odW1sDK6ZeiQd1AOopGQRe7f6vI3dg+W6WesmyCTr2TtbM+qxmFgskH9FaZUHtiHbdefMOEDYUCqyZ9oIB9dnYI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788415561; c=relaxed/simple;
-	bh=MMOIgSJCl+7uW1jz+JNMjOrAAd3bBucov5tDng6XaN8=;
+	s=arc-20240116; t=1788415562; c=relaxed/simple;
+	bh=8vKxvD5rnsA9Lk5u40COaL8yDrJkiPfkHX8qaIvPwbQ=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=X5bslnBUgOjNqKOO0KIQi/7vGJxs+Wa8VwMFMtpd6wvvgFv9muqLUE4uIkYev54kZfQMZXHao+sD1Or4MYQ0WCpQYzdHS9DneqUFAm4FgG+gjmrW75cfXlz/LJq70ZDPf78835b0qdPLgHSU4VkYzOmC4vnb/Kel0L3S1nUWmUE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aW6rFc6g; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=JR59GyJVkuEndSg8E3yV+dHyXXkkbn7TloB7OTaBl7tsn5Dh91iFmZtmep3UtFo1ORfJ7cvve8Yk6bS+jdeIWpglE1rprSbUYMMjwLIz/skfmAgOQ+BIt1V4sJhW7/TEJ3huJ7wmzYXIv914aZzp7y6A7bmCYZJQlx7lETrGI9A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cPIfoYyZ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aW6rFc6g"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E08121F00A3A;
-	Thu,  3 Sep 2026 06:05:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cPIfoYyZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0EFD41F000E9;
+	Thu,  3 Sep 2026 06:05:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788415559;
-	bh=a4VjLbyRcde8YjPr1GXNVA8BG5neSQaj9+T+7RGbHuI=;
+	s=k20260515; t=1788415561;
+	bh=dGbuKQzCb+UHwOAPHwE1ViHqK+C4Fg3jIdt76aIXTtE=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=aW6rFc6gdH1gJEEpHJ3Hs4ykR/R/KcrGQh5tP2cnWIlL/THkfU8r/HPYy1cQuuj9N
-	 itxrKZT6wWHmwZRlOEXESbeUHU8ZFSFYOUc1AmRbgt0gOKpqEzXOqljWQbtOF5pb8I
-	 34thDXjTmQ2RzaDuXXuBritw531hxuT0FXJTqRiVAxdkpZfPMSPue9qYxpj/ShuWVX
-	 1qo68rmTBgp28GCQdd0xvhH0NGW30x+hMX0SVD4qGgz9jhBNWyS8DYcl6YL5ExZHcj
-	 YZw5w3TiFOaqdJ6hNFx8soU4nQE1NEobxB+LMARUQAS0TtL6gZWuZDYwUY1hPEFmE/
-	 POynwkbKLw2cQ==
+	b=cPIfoYyZW6NF//rtHPEyX3rn/E7aOumoJoVXn9MVIibiBOO7cVroG4F3YamCpdax1
+	 RhsACg7jW73ZeQSUTazJMva1sACyNkfkdtlmERHcMZYaFkmk+dgSBbZx0lL2TjoOLE
+	 iEwe4wO98AfOz14PGIJPDzn2+v6LzKtMSKBBSS8M18/WZJQxrOdSsWEZ5I6o0yeD+A
+	 i366l8RXuZ0IIV/cwwazmhKCkNHn9RfnEBRSFnM1soQxV2+EpkoeTePXLTCaiRIdNO
+	 FfshleO8C7DCNdrTXokVByJOgyRxaJckVJy7x3TC3+EyVxNcKso8mkESXyBWF0J8zn
+	 mw1hbDCKiF15A==
 From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org, Hans Holmberg <hans.holmberg@wdc.com>
-Cc: hch@lst.de, djwong@kernel.org, dlemoal@kernel.org, 
- shinichiro.kawasaki@wdc.com, sashiko-bot@kernel.org
-In-Reply-To: <20260826123219.73978-1-hans.holmberg@wdc.com>
-References: <20260826123219.73978-1-hans.holmberg@wdc.com>
-Subject: Re: [PATCH] xfs: prevent race in zoned space reservations
-Message-Id: <178841555761.1198521.11039319583293305814.b4-ty@kernel.org>
-Date: Thu, 03 Sep 2026 08:05:57 +0200
+To: linux-xfs@vger.kernel.org, Lin Jiapeng <ljp1205831794@gmail.com>
+Cc: stable@vger.kernel.org, djwong@kernel.org, hch@lst.de, 
+ jiapenglin@tencent.com
+In-Reply-To: <20260728071921.81156-1-jiapenglin@tencent.com>
+References: <20260728071921.81156-1-jiapenglin@tencent.com>
+Subject: Re: [PATCH v3] xfs: fix exchange-range reflink flag clearing issue
+ with INO1_WRITTEN
+Message-Id: <178841555975.1198521.11635969278161610368.b4-ty@kernel.org>
+Date: Thu, 03 Sep 2026 08:05:59 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,23 +46,28 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.3
 
-On Wed, 26 Aug 2026 14:32:19 +0200, Hans Holmberg wrote:
-> xfs_zoned_add_available() checks whether the reservation list is empty
-> before adding blocks to the available-space counter.  This check is not
-> serialized against a task adding itself to the reservation list however.
+On Tue, 28 Jul 2026 15:19:10 +0800, Lin Jiapeng wrote:
+> When exchanging two full-file ranges, xmi_can_exchange_reflink_flags()
+> can move the reflink inode flag from the file that currently has it to
+> the other file, as long as exactly one side is marked.  This assumes
+> that the file contents, and therefore all shared extents, are exchanged.
 > 
-> This allows the space provider to observe an empty list, after which a
-> reserver can enqueue itself and retry the counter before the new space is
-> added.  The provider then adds the space and returns without waking the
-> now-eligible reserver, leaving it asleep until GC or another event
-> provides a wakeup, potentially adding seconds to max write latency.
+> That assumption is not true when XFS_EXCHMAPS_INO1_WRITTEN is set.
+> xfs_exchmaps_can_skip_mapping() can skip hole and unwritten mappings
+> from file1, so an exchange can complete without moving every mapping
+> that the earlier flag-swap decision accounted for.  In that case the
+> post-operation cleanup can clear the reflink flag from an inode that
+> still owns shared written extents.  Later writes then take the
+> non-reflink write path and may update blocks that should still have
+> been protected by CoW, which shows up as data corruption between
+> reflink-related files.
 > 
 > [...]
 
 Applied to for-next, thanks!
 
-[1/1] xfs: prevent race in zoned space reservations
-      commit: d5ae1c0959420e536c9ac3a1a32f04c73f52bd09
+[1/1] xfs: fix exchange-range reflink flag clearing issue with INO1_WRITTEN
+      commit: f3772e189ee8e37860c2bb365f6ac3517db937e9
 
 Best regards,
 -- 
