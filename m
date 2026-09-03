@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51853495518
-	for <linux-xfs@vger.kernel.org>; Thu,  3 Sep 2026 11:42:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EFAF45560F
+	for <linux-xfs@vger.kernel.org>; Thu,  3 Sep 2026 11:42:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788435733; cv=none; b=TnIdaDZYWeyAZUxmSf8YHNzv5wf28I/VddRN+SVVgpx0dpuPRDfG1SavjkxarCxbMNEQoQwAWsPe2I3cll7NtzFOgbGq+1N3HK0p8BuZ2XwPOqZUxF9KpgpIQ90zKmdHTIpqhpDf7NX7odteF59+2sgmt5NIclxRdiURWYiB6mQ=
+	t=1788435737; cv=none; b=ARNf5ECR+fk1J/P9fXp47HawDx2/7DxFfFoQz9DMvrdVtNPsEW/sERpru0xBieGiMSkshNCsacuf8Y034z52BcnpV39V+GO6CCdKUyB3/eRsnVFsYsp1N9bdypmTFL70lIUlKw9d0YeO6VsPBs5Q9pqKdiuV9+xP7CNXpj21Aq0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788435733; c=relaxed/simple;
-	bh=omC1PaN+AyjRgj8T5oM4LbkFXe/dXINKoYAZYKhMWn4=;
+	s=arc-20240116; t=1788435737; c=relaxed/simple;
+	bh=s9lY/ZqAS5PthkZi3jgr+3PTNzJHVfFKv7iKwyjLOxM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=QMHucEuebytBMfcL0Gc0L4Z+NoUr8THYFOwJlSGIGS3Z2xxzg5MuEGKpfnQmjZlfkh45aBo5iRIMA4EiA/UMExwf+3Z7F/LDW5saFY1RGI48BY1pOqgy4aR7ny6q+mCDChqRpslVKeizgWdnkzze6/Vfwo1heiS82aWqZDBt0MU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i2xuvv6N; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=Ro9OUfSS1sXqJygdkTggn7cCRhpKVjSRw/HGPvl3v/HRFnSL8bQUG6u6SXxk0xK/85/mO2dS1YlkFAoMleZe2h2bMotwaorVCbZyOW6VZNKhijPINob2uLrZYfYnmedQ6QQMm/2JSGXpNVDzX736z68TII30WuXdXs91uHXRI3E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FwhUY2cC; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i2xuvv6N"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ADFB21F00A3A;
-	Thu,  3 Sep 2026 11:41:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FwhUY2cC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BC8CD1F00A3D;
+	Thu,  3 Sep 2026 11:42:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788435718;
-	bh=nSFK7mpw7crsDIQSQbKr/KMQK2nNGQKi7Ehdigr8Hzw=;
+	s=k20260515; t=1788435725;
+	bh=40P8cljSeQzo3FsN+ah8Uc6vgF/nmXdWxy8upHW/8Es=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=i2xuvv6NDhkF9Hui5An3xoFlgCMkHudYahFQU2SsDnQd3nbmEARHpJjIJuJxcJTt1
-	 vGYLMSQlMt0XseGcvNE6pP73056iE9uYsDoQk+yGPOOZfIJhO5n7PmQ6y/XQNJ+IEC
-	 SE+BPDyUw2TeCadhEX/ebkqriCcPnDw0tRfa7wueW8EPOaKhDi6KR90jcM/Kp4hjZ9
-	 AmZEuxaiIpcHcZto80tGjOaEbZ1OoWAjcSiuTq/H+5sQLjQj5Zab1JBtTrpUs+2sbr
-	 6FOy1tYJ54lwGCyODpxetwbkQJHZwJDLqasoIpNjbAaJ/3EqbX90JKAqHsJ00h17lH
-	 lGjL8PL3oN9+w==
+	b=FwhUY2cCdNpo/zAricm43tCQdZf9hlfqddsFNyCjZgkzonSw5u6SCGE+hFkMvCDaB
+	 ez1o7LifSpw/ZaHPzpuukDLb8yaTC2ftYVJDLOxC4I5pmGQ8PGEMti4CDodtCbuYSa
+	 dY6Lbvl6NHTAtA/719jB5Zot9FTMLjPiabfsgHR2RjcaWRKlpU9H9W0FNxsKPEWGzS
+	 2/nss0SJCTUDM2G2LeaKnled32ck4jrmrRvw86hIbh9wrs/ToDWh8wcMCCMlMQZxPM
+	 sm3ySiTQ3eAmCghQaTPYpX9U6SbLxV9DN00E3xyrbIEyQ9Emr+CHMgR/ZU1IvWKbEV
+	 aPS/g7Uz/mrnw==
 From: Andrey Albershteyn <aalbersh@kernel.org>
 To: linux-xfs@vger.kernel.org,
 	aalbersh@kernel.org
@@ -41,9 +41,9 @@ Cc: bestswngs@gmail.com,
 	jiapenglin@tencent.com,
 	roland.mainz@nrubsig.org,
 	xmei5@asu.edu
-Subject: [PATCH v2 21/23] xfs: fix off-by-one in rtrefcount btree root level validation
-Date: Thu,  3 Sep 2026 13:40:03 +0200
-Message-ID: <20260903114022.570210-22-aalbersh@kernel.org>
+Subject: [PATCH v2 23/23] xfs: check v5 superblock features early
+Date: Thu,  3 Sep 2026 13:40:05 +0200
+Message-ID: <20260903114022.570210-24-aalbersh@kernel.org>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20260903114022.570210-1-aalbersh@kernel.org>
 References: <20260903114022.570210-1-aalbersh@kernel.org>
@@ -55,85 +55,47 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Xiang Mei <xmei5@asu.edu>
+From: Christoph Hellwig <hch@lst.de>
 
-Source kernel commit: cc3144da377de5fb422d44a2311f978623f7c900
+Source kernel commit: eb6b2cc1fc8ad566d746d128a559989ff0bba5cc
 
-xfs_rtrefcountbt_compute_maxlevels() sets
+When working on a new features that reuses the existing pad in the
+superblock, I noticed that mounting such a file system on an old kernel
+logs a rather confusing warning:
 
-mp->m_rtrefc_maxlevels = min(d_maxlevels, r_maxlevels) + 1;
+XFS (vdc): Metadir superblock padding fields must be zero.
 
-where the trailing "+ 1" already accounts for the inode-root level, so the
-deepest valid on-disk root level is m_rtrefc_maxlevels - 1 and a cursor must
-satisfy bc_nlevels <= bc_maxlevels (= m_rtrefc_maxlevels).
+This is because we only validate the various feature fields in v5
+superblocks after the common superblock validation helper is called.
 
-The two on-disk validation paths, xfs_rtrefcountbt_verify() and
-xfs_iformat_rtrefcount(), check the root level with ">" instead of ">=", so a
-crafted rtreflink (metadir + realtime + reflink) image whose
-/rtgroups/N.refcount inode has bb_level == m_rtrefc_maxlevels is accepted on
-mount. xfs_rtrefcountbt_init_cursor() then sets bc_nlevels = bb_level + 1,
-exceeding bc_maxlevels by one. Since the xfs_rtrefcountbt_cur slab object is
-sized for exactly bc_maxlevels entries, the first btree op on such a cursor
-indexes bc_levels[m_rtrefc_maxlevels] past the end of the object. This is
-reached by the first rtrefcount cursor built after mount, via log/CoW
-recovery (xfs_reflink_recover_cow() during xfs_mountfs()) or an
-FS_IOC_GETFSMAP over the realtime device.
+Fix this by calling the feature validation first.
 
-Reject a root level equal to m_rtrefc_maxlevels, matching the ">=" form
-already used by the sibling data-device refcount/rmap verifiers and the
-in-memory rtrmap verifier.
-
-BUG: KASAN: slab-out-of-bounds in xfs_btree_lookup (fs/xfs/libxfs/xfs_btree.c:2101)
-Write of size 2 at addr ffff888018391658 by task exploit/144
-xfs_btree_lookup (fs/xfs/libxfs/xfs_btree.c:2101)
-xfs_btree_query_range (fs/xfs/libxfs/xfs_btree.c:5308)
-xfs_refcount_recover_cow_leftovers (fs/xfs/libxfs/xfs_refcount.c:2113)
-xfs_reflink_recover_cow (fs/xfs/xfs_reflink.c:1085)
-xlog_recover_finish (fs/xfs/xfs_log_recover.c:3551)
-xfs_mountfs (fs/xfs/xfs_mount.c:1158)
-xfs_fs_fill_super (fs/xfs/xfs_super.c:1940)
-get_tree_bdev_flags (fs/super.c:1634)
-vfs_get_tree (fs/super.c:1694)
-path_mount (fs/namespace.c:4161)
-__x64_sys_mount (fs/namespace.c:4367)
-entry_SYSCALL_64_after_hwframe (arch/x86/entry/entry_64.S:121)
-The buggy address belongs to the cache xfs_rtrefcountbt_cur of size 216
-The buggy address is located 8 bytes to the right of
-allocated 216-byte region [ffff888018391578, ffff888018391650)
-Kernel panic - not syncing: Fatal exception
-
-Fixes: 9abe03a0e4f978 ("xfs: introduce realtime refcount btree ondisk definitions")
-Reported-by: Weiming Shi <bestswngs@gmail.com>
-Signed-off-by: Xiang Mei <xmei5@asu.edu>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Fixes: eca383fcd63b ("xfs: refactor superblock verifiers")
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Carlos Maiolino <cem@kernel.org>
 ---
- libxfs/xfs_rtrefcount_btree.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ libxfs/xfs_sb.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/libxfs/xfs_rtrefcount_btree.c b/libxfs/xfs_rtrefcount_btree.c
-index 2c51b618e1ce..02230c8ef0f0 100644
---- a/libxfs/xfs_rtrefcount_btree.c
-+++ b/libxfs/xfs_rtrefcount_btree.c
-@@ -199,7 +199,7 @@ xfs_rtrefcountbt_verify(
- 	if (fa)
- 		return fa;
- 	level = be16_to_cpu(block->bb_level);
--	if (level > mp->m_rtrefc_maxlevels)
-+	if (level >= mp->m_rtrefc_maxlevels)
- 		return __this_address;
+diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
+index 7a1d85b86e59..7097bb61d48d 100644
+--- a/libxfs/xfs_sb.c
++++ b/libxfs/xfs_sb.c
+@@ -1116,10 +1116,10 @@ xfs_sb_read_verify(
+ 	 * because _verify_common checks the on-disk values.
+ 	 */
+ 	__xfs_sb_from_disk(&sb, dsb, false);
+-	error = xfs_validate_sb_common(mp, bp, &sb);
+-	if (error)
+-		goto out_error;
+ 	error = xfs_validate_sb_read(mp, &sb);
++	if (error)
++		goto out_error;
++	error = xfs_validate_sb_common(mp, bp, &sb);
  
- 	return xfs_btree_fsblock_verify(bp, mp->m_rtrefc_mxr[level != 0]);
-@@ -649,7 +649,7 @@ xfs_iformat_rtrefcount(
- 	numrecs = be16_to_cpu(dfp->bb_numrecs);
- 	level = be16_to_cpu(dfp->bb_level);
- 
--	if (level > mp->m_rtrefc_maxlevels ||
-+	if (level >= mp->m_rtrefc_maxlevels ||
- 	    xfs_rtrefcount_droot_space_calc(level, numrecs) > dsize) {
- 		xfs_inode_mark_sick(ip, XFS_SICK_INO_CORE);
- 		return -EFSCORRUPTED;
+ out_error:
+ 	if (error == -EFSCORRUPTED || error == -EFSBADCRC)
 -- 
 2.55.0
 
