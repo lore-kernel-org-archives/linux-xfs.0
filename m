@@ -1,91 +1,86 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC47D3947AC
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94C93353A6D
 	for <linux-xfs@vger.kernel.org>; Thu,  3 Sep 2026 20:36:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788467819; cv=none; b=Un1zrsyxUbtDc0Jw/VqMMxm9fGcE+lDAMeuqqivJoxhrF/1gQqrGgrfiOwPO41/xP9zWAtTNSn+32Hn8vuNYtNdwObgJmxKoSnpHP1GIXqsb3x+Xy5oosNhp9nrnWqkQ0Ojn2mGWEk6ifoJRJz0AFL95GfNHwk0aZafU2gEC7OY=
+	t=1788467819; cv=none; b=O7koTCNPy3ySZrAE23lnxTUrsEIwrmvs+dReDM8Num0DiCBmRC34tPHCLJbk4T02cF6wG8erNzBRxeicMfi/2t4XORIDgAnmg/39SMJhaKDsBfcZ6gvuD70vvdj4SsshW2KNZ2TyAI26ucKALH08EkZPTHFsFQ+QlzNbyA891v4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1788467819; c=relaxed/simple;
-	bh=H407BUyMcf2oyyisxFqX+2jOaF5HoF1SQ/YApzclPd0=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Dh+6WQRIpSb/qa1JnFBy0mbq+4s8VZ51gjgBwdV2JLczXUWOuSWot28f3CyJNwFIj+i1VuJWI5zeuV3Hptniv0I9pQebd7CSOhTEIQHW4h7adbbCdgLHYJ3/FcDfhOwzvBYmdbEXNgIfz6pKWE8aOULZYyKJw3rlyeL15lqwMDs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=PyKMJjlt; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=t+7MM7U2; arc=none smtp.client-ip=170.10.133.124
+	bh=RnvcejmhrZ+0gvGQ3eVgfs1JrKNGT+mu8w9bNfmDnPU=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version; b=BlKSDVwOsYPdb9s8M5mqNsJHOLbNJjj88GejpsvD6iNO7PJFLYoZLH4BPlQFXMZMfGcMUhP4xrDwjEdHpOo+Jkr6QZeQiT4E+1vhV75gFOWP2QWbMmPRWclGVJK6fC/G1jwFvb8qbC8DxE8vF0KHZyc+4h9aBpAvqRQqA7s4iKc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=SBmkbY5M; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=ljMUPDFK; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="PyKMJjlt";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="t+7MM7U2"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="SBmkbY5M";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="ljMUPDFK"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1788467804;
+	s=mimecast20190719; t=1788467803;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=b9O/eAUq4hB+sAeOEFssVvacALDKMr3XqpE9PYvjpFE=;
-	b=PyKMJjltu9OM99uduRq/lOGwDgWFS1Usvz0V1hTyA7FTWHQOSNpXG+8CzvlWwNWXJ7Ar0R
-	VLToGM8j+vaemD2Ew/plg8pJDpoDNR62TIs/7tmZw/dSCXJKiQyW/PurTdkTG+hVMKeyxv
-	64iY/v5fzDWnZe7hULiKnQsSMN56jKk=
-Received: from mail-qk1-f197.google.com (mail-qk1-f197.google.com
- [209.85.222.197]) by relay.mimecast.com with ESMTP with STARTTLS
+	 to:to:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=xCadLlUi7rlbzcM3bvc2A64kD3i9uNEZS4K6KORkPPM=;
+	b=SBmkbY5MdQ/JhFugRb5x6aWUuynf4HEuH8zEvV9SzcHUYjfUur3N5lACTzLm8BmV2Bj+iJ
+	M6QbkLpXIfxul+kBqQ9A1MMwwEC6IVTHYmwNM/3zzFNxCX0Ro052/AodFo2fri/GsoS5v/
+	l6OA2Dexyoj50/udxOOneUE5w7DoZWg=
+Received: from mail-qk1-f199.google.com (mail-qk1-f199.google.com
+ [209.85.222.199]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-652-2hC-5zN9MqKbAFbEFbJmzg-1; Thu, 03 Sep 2026 16:36:43 -0400
-X-MC-Unique: 2hC-5zN9MqKbAFbEFbJmzg-1
-X-Mimecast-MFC-AGG-ID: 2hC-5zN9MqKbAFbEFbJmzg_1788467803
-Received: by mail-qk1-f197.google.com with SMTP id af79cd13be357-939694871aaso42510685a.2
-        for <linux-xfs@vger.kernel.org>; Thu, 03 Sep 2026 13:36:43 -0700 (PDT)
+ us-mta-659-exNTQfHtOH23gWUsqKNv6w-1; Thu, 03 Sep 2026 16:36:42 -0400
+X-MC-Unique: exNTQfHtOH23gWUsqKNv6w-1
+X-Mimecast-MFC-AGG-ID: exNTQfHtOH23gWUsqKNv6w_1788467801
+Received: by mail-qk1-f199.google.com with SMTP id af79cd13be357-93903622880so257811685a.0
+        for <linux-xfs@vger.kernel.org>; Thu, 03 Sep 2026 13:36:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1788467802; x=1789072602; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=b9O/eAUq4hB+sAeOEFssVvacALDKMr3XqpE9PYvjpFE=;
-        b=t+7MM7U2upu5jZQwZHjeAok2yQ8f5KmpvZiw/6IS1NUrpgmsvgo1eiyLOg2QcWejks
-         pmOfQYbwVZZc/ARx7+/+oaF4psiEhLZVFCTIHLS3mXSJ8tapiStZOgOkhg2w7VxXQm8b
-         3exPllPGT60o4kZvRLhTas5iiEetTCNGijK3ugD1GFfuvvnO7ABRjI5oQfnVB+CXY8g6
-         DhYrx2VaFYFGj99f2HQqtPt92usdXHBjUIvjpTdmHL262Z3eqEv7FabzvXLbOdI0xLVZ
-         GE/1QE9Igr6GawuHUay9RtaCjZqJf4OfqjgXgccTZknZxoxXGBmPr3wiuwaZGkxHVkPe
-         dSPg==
+        d=redhat.com; s=google; t=1788467801; x=1789072601; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:to
+         :from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=xCadLlUi7rlbzcM3bvc2A64kD3i9uNEZS4K6KORkPPM=;
+        b=ljMUPDFK4xiTGtpBjhyGMgd8Z4f5wFEh8/ssnTsYbZ3vOXs+7yGqnhQggimlUt9MXn
+         apc9mg9ObdpzUhmAicb0ftsZbmODsZnOSfhbrEcO5o2jBCGgb/qMUghbDkx5RUPtJO3B
+         VbM6NbJgIn2UoFBY6RJZtsLeRJnEHs2FUyWww0IhgZCiz1eAJjSXU3naPKFSLp9W8y1W
+         Hh0GnZO4f+zyBVjSAMNQxDEfx0/FyEJrfG2OFrAmcCawBYtV/D4kBQfGDPnGQPrEHMqF
+         e9P05zr41wECvp9ms8eYX8lrC4guxI/J2NWR7dyrx7qQoI+PVEoS2DEnrEwaeW8uzC1E
+         Zjxw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788467802; x=1789072602;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=b9O/eAUq4hB+sAeOEFssVvacALDKMr3XqpE9PYvjpFE=;
-        b=WEm2CUxBQiX6d19Vd+3ueiA3a7Q0+y3JkQaeJUhmYQAHMI20bzrWMEA4gdnGfv4Qnz
-         izllLIMP0GQwD4ukAMwU3qCgxLHPb4Db0cT8wz/D7zbFI7CNDnG4/oX6FFT9sBEcM6Xz
-         o89dSG2zIL91grARqVJwgbRolJt+NdCpThLSIbNV0Sb7CUVxoWVFEqMTSRwoNH1pWv2O
-         lDP+1Ue0BBjb23cWcWXA3W+cfLbOYWj4RA1DyzDRqkmEF6eUgFujq/gHa3TAJI4KaWZ3
-         anlTAnK3OOGyTagXVuxQYcuIX1YbGr+sDBP/IL/WcM1kMQfbV8BGcHzt5rMpsHbE7Npg
-         3ckA==
-X-Gm-Message-State: AFuF++l3j30yXf+d+UEHzj6ryNq/9Fu1JoTe7aSbl4aj1NYNivguJyGG
-	PQ7aKKpdD3Nh4OiSewJptKnjrdu9ievu7SEQXg/fS1Km7WPhkvts2iFeIS39sLPo3X8XteOCpNg
-	3TN4a0GbQR6d/JrzdR1P9fTEQtEd01NnUy7Rdr39p1BsQjEhpzw9uzff6OUZmqHHAno0mQZzVi7
-	MyND5wSVK5c9CSPRssEmrrF75uHlPdsaNzpTIZRFJjRp2W
-X-Gm-Gg: AYBFou1dJf7v9+jDMdAoDtu4Ubb+irTTURPluXOXupVjpcEXekhqeKXoVCUdDYCglPk
-	eOuZS2DAIrqPXGhd7R2oMF5CPlfH7pbP6kfX87urr/V7q7Ur7xddPj36cnBmJ9rj+zWjqXQ28Rs
-	VRtBUXJacp3fT4nEIU2x0Zn3sXNGQqi3I78yjF0ElXEidTcj7jwberEpdWlMHsemfa2pdeuRFbU
-	Y3Mh8ThbkSEdCMvt6YWeWAzBXlou5JsUkPJPT8RxgRZQi1QZ5CV4iKrVwW5DL0dLlf9+D+pEJc2
-	DgF1V9+yn78zgFHwv2wDuWLHddON72wxRWQae50J2rM07Fty0Px8G76fYZKS5QPdVTcyG6mQgfi
-	uVZP1iPS1xU05voEPmH1aJEBBGnRcX2bbP/EOUDRw
-X-Received: by 2002:a05:620a:7087:b0:939:7f87:ff22 with SMTP id af79cd13be357-9398045fd75mr117917685a.36.1788467802514;
-        Thu, 03 Sep 2026 13:36:42 -0700 (PDT)
-X-Received: by 2002:a05:620a:7087:b0:939:7f87:ff22 with SMTP id af79cd13be357-9398045fd75mr117913085a.36.1788467801873;
+        d=1e100.net; s=20251104; t=1788467801; x=1789072601;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:to
+         :from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=xCadLlUi7rlbzcM3bvc2A64kD3i9uNEZS4K6KORkPPM=;
+        b=F7EkxDdBb4wt5KfT71jMvwAGNUnr1QoTqiha7Rd6ltKGOoS8m0GCpdc/BiFqqvigsZ
+         loOLpNhuhtIyLMxX4luQ8j8iNNhETM5nErmDHXFiTiOnjKn6oPfCZ8pTcF1X+WmBG272
+         zdYmgpq2j1Tlpjh+V7uSR3VVwKCEjTtM/yCvtsvkVUvA/wfkIlBrIX1ohvSj+9xm+6Ra
+         aAlzG2og7khKrv7NugmLCYXqPrpAFCgjCIN5yKuO5ZdNFqa8opJuZZlh1RASdwEbX+OE
+         S3+9ylmmunIEGWwiL6T+R2XsEHhZTPu4+B/xvYmUOjRhBrZ71oU2x8E7WAeakDUSmpgg
+         1q/Q==
+X-Gm-Message-State: AFuF++n1bHuG7jZpCyv78jzjoeOiQdRiNjwE+LW+Pp/glF4Pbmr0HdO5
+	Tj0oVRX5e9inuhyw2mAIw1viZ0PnWqaWiGzbHlcfHyjPnYeShUwouV4lGI8lZ0eb8x46kzB3yx1
+	74lQ9VxlstExMk7wcx6768vYm5vr6qUAFHl4PRcbHSqkYR0oUA3yLaFzu2sS1BFhiMrrV0iThhQ
+	SjsUfdMorM8BnDAmb2Au/Y1MunHhdwlI6dtpF5nHtlA8LX
+X-Gm-Gg: AYBFou1VxgsnCz6fiIXdx3cN7Gom/LDXfJSksD/JxnQcz85c9VO2tSs/indBdGFo4aK
+	tIpf8H4dgSThiQ6DuVIUeAoFwBeEPYWZioJUyKXpdlGg0K59AL1VMUSU380gJw/LSWEPPuIUjnY
+	V7YQiP8DOEzeRplKvZTlp0m5iAaAmhQRCWO85c9bkqwasw4Pve6AbieoH/4a4dSWObac4sB+JM3
+	Z542ujtt8fj85qdDvQfQH2sWQ57csmarGGb0kE99Q89BEFePhndbLeBbxdORhaukij+4nIPJKf5
+	YOSfXsZHn7rwKLrJ9dKnOsT6mCTj5dVAPpSvob66NtN4+wRXEOACVfCGPjLTd2iEIJbQG7Wi5g6
+	adI8Ojz/++PSQApGG3N3QWRfsxHZT3g2BJCpRxJWE
+X-Received: by 2002:a05:620a:2950:b0:92e:fed1:beba with SMTP id af79cd13be357-93981429bf4mr39353985a.3.1788467801479;
         Thu, 03 Sep 2026 13:36:41 -0700 (PDT)
+X-Received: by 2002:a05:620a:2950:b0:92e:fed1:beba with SMTP id af79cd13be357-93981429bf4mr39348285a.3.1788467800725;
+        Thu, 03 Sep 2026 13:36:40 -0700 (PDT)
 Received: from big24.tailafb26a.ts.net (97-127-68-83.mpls.qwest.net. [97.127.68.83])
         by smtp.gmail.com with ESMTPSA id af79cd13be357-9397faf927bsm51152485a.8.2026.09.03.13.36.40
+        for <linux-xfs@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 03 Sep 2026 13:36:41 -0700 (PDT)
+        Thu, 03 Sep 2026 13:36:40 -0700 (PDT)
 From: Eric Sandeen <sandeen@redhat.com>
 To: linux-xfs@vger.kernel.org
-Cc: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 1/2] xfs_repair: distinguish true ENOMEM from "not found" in cache_node_get
-Date: Thu,  3 Sep 2026 13:42:43 -0500
-Message-ID: <20260903203638.1094907-2-sandeen@redhat.com>
+Subject: [PATCH 0/2 V2] xfs_repair: improve caching in the face of ENOMEM
+Date: Thu,  3 Sep 2026 13:42:42 -0500
+Message-ID: <20260903203638.1094907-1-sandeen@redhat.com>
 X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260903203638.1094907-1-sandeen@redhat.com>
-References: <20260903203638.1094907-1-sandeen@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -94,137 +89,37 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-When cache_node_get() needs a new node it calls cache_node_allocate(),
-which returns NULL for two very different reasons:
+V2:
+- Flip the order of the patches; put the bugfix first and the
+  cache expansion guard second, at which point it's just defensive.
 
- - the cache is already full (c_count has reached c_maxcount), or
- - an underlying allocation actually failed with ENOMEM.
+- Be more explicit about an enomem return due to a real allocation
+  failure; don't try to figure that out indirectly as before.
 
-These require different responses. A full cache should be shaken to free
-slots and, failing that, expanded. An actual ENOMEM should be returned
-to the caller to deal with.
+- Actually care about the return values as pointed out by djwong.
 
-To achieve this, make cache_node_allocate() say which case occurred via
-a new *enomem parameter, set true only for a real allocation failure.
-Cache shaking still happens before returning ENOMEM, as this may actually
-free memory and allow new allocations to succeed.
+There are problems with how we react to cache allocation failures that
+are more apparent before:
+6b6239689e36 ("libxfs: unmap xmbuf pages to avoid disaster")
+landed, but with enough pressure they show up again.
 
-Also fix the stale return-value comment, which had the hit/new-node
-cases backwards.
+Two problems: cache_expand has no bounds checking, so call it enough
+and c_maxcount will overflow, which typically results in an infinite
+loop.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
- libxfs/cache.c | 39 ++++++++++++++++++++++++++++++++++-----
- 1 file changed, 34 insertions(+), 5 deletions(-)
+That can be triggered by the fact that today, an underlying ENOMEM
+can look like a "cache too small" return, so we double when that
+won't help at all. Do that enough times and kaboom.
 
-diff --git a/libxfs/cache.c b/libxfs/cache.c
-index d5d9ba56..21e4c0c0 100644
---- a/libxfs/cache.c
-+++ b/libxfs/cache.c
-@@ -284,15 +284,26 @@ cache_shake(
- /*
-  * Allocate a new hash node (updating atomic counter in the process),
-  * unless doing so will push us over the maximum cache size.
-+ *
-+ * Returns NULL on failure.  A NULL return can mean two different things:
-+ * either the cache is already full (c_count has reached c_maxcount), or
-+ * the underlying allocation genuinely failed with ENOMEM.  These call for
-+ * very different responses from the caller, so report which one happened
-+ * via *enomem: it is set true only for a real allocation failure, and
-+ * left false when we cannot allocate another node in the current cache
-+ * size.
-  */
- static struct cache_node *
- cache_node_allocate(
- 	struct cache *		cache,
--	cache_key_t		key)
-+	cache_key_t		key,
-+	bool			*enomem)
- {
- 	unsigned int		nodesfree;
- 	struct cache_node *	node;
- 
-+	*enomem = false;
-+
- 	pthread_mutex_lock(&cache->c_mutex);
- 	nodesfree = (cache->c_count < cache->c_maxcount);
- 	if (nodesfree) {
-@@ -309,6 +320,7 @@ cache_node_allocate(
- 		pthread_mutex_lock(&cache->c_mutex);
- 		cache->c_count--;
- 		pthread_mutex_unlock(&cache->c_mutex);
-+		*enomem = true;
- 		return NULL;
- 	}
- 	pthread_mutex_init(&node->cn_mutex, NULL);
-@@ -366,8 +378,9 @@ __cache_node_purge(
-  * hit, in which case this will all be over quickly and painlessly.
-  * Otherwise, we allocate a new node, taking care not to expand the
-  * cache beyond the requested maximum size (shrink it if it would).
-- * Returns one if hit in cache, otherwise zero.  A node is _always_
-- * returned, however.
-+ * Returns zero if hit in cache, one if a new node was allocated.  If
-+ * allocation fails with a genuine ENOMEM we return -1 with a NULL
-+ * *nodep; in every other case a node is returned.
-  */
- int
- cache_node_get(
-@@ -384,6 +397,8 @@ cache_node_get(
- 	unsigned int		hashidx;
- 	int			priority = 0;
- 	int			purged = 0;
-+	int			ret;
-+	bool			enomem = false;
- 
- 	hashidx = cache->hash(key, cache->c_hashsize, cache->c_hashshift);
- 	hash = cache->c_hash + hashidx;
-@@ -457,7 +472,7 @@ next_object:
- 		/*
- 		 * not found, allocate a new entry
- 		 */
--		node = cache_node_allocate(cache, key);
-+		node = cache_node_allocate(cache, key, &enomem);
- 		if (node)
- 			break;
- 		priority = cache_shake(cache, priority, false);
-@@ -467,6 +482,18 @@ next_object:
- 		 * If we exceed CACHE_MAX_PRIORITY all slots are full; grow it.
- 		 */
- 		if (priority > CACHE_MAX_PRIORITY) {
-+			/*
-+			 * We've shaken every priority level and still can't
-+			 * allocate.  If the last attempt failed with a real
-+			 * ENOMEM rather than simply a full cache, then neither
-+			 * shaking nor growing the cache can help - give up and
-+			 * let the caller handle the failure.
-+			 */
-+			if (enomem) {
-+				node = NULL;
-+				ret = -1;
-+				goto out;
-+			}
- 			priority = 0;
- 			cache_expand(cache);
- 		}
-@@ -479,7 +506,9 @@ next_object:
- 	hash->ch_count++;
- 	list_add(&node->cn_hash, &hash->ch_list);
- 	pthread_mutex_unlock(&hash->ch_mutex);
-+	ret = 1;
- 
-+out:
- 	if (purged) {
- 		pthread_mutex_lock(&cache->c_mutex);
- 		cache->c_count -= purged;
-@@ -487,7 +516,7 @@ next_object:
- 	}
- 
- 	*nodep = node;
--	return 1;
-+	return ret;
- }
- 
- void
--- 
-2.55.0
+I can trigger this with something like:
+
+mkfs.xfs -d file,name=testfile.img,agcount=10000,size=1t
+echo 1000 > /proc/sys/vm/max_map_count
+xfs_repair -n -P -m 1280 testfile.img
+
+to force an ENOMEM from the max map count, though the actual
+max_map_count value needed varies depending on the machine I'm on,
+for some reason.
+
+These were quickly tested with ./check -g quick
 
