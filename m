@@ -1,36 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 270FD311597;
-	Thu,  3 Sep 2026 05:51:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8106A311597;
+	Thu,  3 Sep 2026 05:51:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788414662; cv=none; b=G4XweoqM44vwmiRAIj6m/oI1l/noqT3/T40rSnG5Aefc7iax5l+udwi30FLVcCT1eupuDe/vLyadrdXiT38TLnrQT1BAj9zTveoXaV1jk6wEfSLPA8if/itFeq5NFFIjhlFEUhxoeDiGpDADd/zc7VQaJQ69QABRNUoGVKiFLD4=
+	t=1788414667; cv=none; b=jAx9eitobUJ9vKa09qUVZTlW3uqmb/uort4RK2/RHxrL+B9PDTnmQE1zAXIW49vOpRR2nkjgycUal2C7DSzsCo1H859xW3KaP0e35qI1Sx8QJIfr1vJkZxq8fvGcI5UTecUZlD8YiQR0fNdSmR7ol/y67efnl78R/1MVVxxK+00=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788414662; c=relaxed/simple;
-	bh=n79RYO/BJz/jTRhr4DAjdRAvuoY47V5JIlKsdKMt4g8=;
-	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=du5D8Np2HCYeJOgpaRiMSy/ChXSGzqnJ38VBq45x4+mmzgD3PJIzoKfIKlueHCt1WL7zVip5mo6UUjmt0aM2zhp1AgmhDE6lr4gGxt5gy7fAfER9AAxoOhT3LyI41orkXEx5o+AVhxzweKIomiHamDOA5FuvAS8ebVODHWp1HVE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d5RNQHeG; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788414667; c=relaxed/simple;
+	bh=mBgXclfb/qQfgr597BuikgWPKz/y1fvZC9cbraOd36E=;
+	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=gl5Vd36zYEQFWEtnfCSmbj1aHqumAp4Lr6vyfFi5+66QFEuyzAxCbED1TuVFPaGOLU8msLXa/hbypMr3D1IoyBzkqnp+zD2hBD4U0zQHm6gKtqOCkqeUglsUcccpWn4vhDXICHCpOgmXv2O5MFQ+XetoHM4hsHdDaPQMlGLwjjI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NyOsEC07; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d5RNQHeG"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 85D881F000E9;
-	Thu,  3 Sep 2026 05:51:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NyOsEC07"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 10C831F000E9;
+	Thu,  3 Sep 2026 05:51:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788414660;
-	bh=f74QrAAonV82jIsB6vdhvZ8Y/2GM/ahdT7hXkkIG1JQ=;
-	h=Date:Subject:From:To:Cc;
-	b=d5RNQHeGZLL9XknMG61DFuGXlTWj6A4toGc9Xddz177kiOSYNrKQ0sxU/HlxdZpiG
-	 lnmyCpNOiJPOfoxVa+Hts1WzmJlUYFm/pRulmbV4ML4Djkeo5Kcgtl05D80F33parV
-	 HAJUxlVzZkqtNDGvABc3bJ/47Lde9nFU28NhxQJizE1HzxH/fQ0cIj6MFMxYDB6M9b
-	 kIHoSkhIdvsLLjRjAy5z015a4Pt3AT5VqfsLocsupIlUTRuNzOb3TUlR4XeP5hC9Lz
-	 8inECDrW8nKwf7OUEiqSmfQfCqskBFkPnb0p6fdY599LHpht96sSimtUE3xoC+A489
-	 RhHM0MigGxdrQ==
-Date: Wed, 02 Sep 2026 22:51:00 -0700
-Subject: [PATCHSET] xfs: LLM-inspired bug fixes, part 10
+	s=k20260515; t=1788414666;
+	bh=DQfo2JJNySAzq367tdlcblwNZxPD2P6a7JnKXYs6G4E=;
+	h=Date:Subject:From:To:Cc:In-Reply-To:References;
+	b=NyOsEC07jQjx2J7dOqxzsqxODjs+aV+9e//I9+ZNWLraTKljTeo+BnUCi3qCbcJ7E
+	 wM/z2KUhVou6124V84NGHBlYhnQclw9JyVKR8+TLjspPzNkcdMSrxqCA5nFkPx1N9l
+	 ZkpU51DwAZQTu5Nx6AKssv2Q2/hGNem0nFWgZHEXkHtGgASG2XRkGraJ9STpBKoZfj
+	 ipzCgaxTk00tl0lU0MIXJTaU9Ic865rHSrJBCObKkXBuQG+WmfUO74kr9c2rODUHnm
+	 Bl8+P6wPiiLCETmA9xCZxUho6usk7bTe5/k99IJQSaIgZG5GI7sd5yerGY5zhLIBvn
+	 aRtCoyj+chuNw==
+Date: Wed, 02 Sep 2026 22:51:05 -0700
+Subject: [PATCH 1/6] xfs: cross-reference the rtgroup superblock extent,
+ not block
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: hch@lst.de, cem@kernel.org, djwong@kernel.org
 Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <178840969793.484660.11718284266382755759.stgit@frogsfrogsfrogs>
+Message-ID: <178840969850.484660.6737366204336091136.stgit@frogsfrogsfrogs>
+In-Reply-To: <178840969793.484660.11718284266382755759.stgit@frogsfrogsfrogs>
+References: <178840969793.484660.11718284266382755759.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -40,36 +44,39 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-Here's a tenth batch of xfs fixes resulting from a LLaMma.  Mwa mwa
-mwa...
+LOLLM noticed that when libxfs creates a realtime superblock, it will
+create an rtrmapbt record covering the entire rtextent in which the
+superblock lives.  However, the cross-referencing checks only look for
+the first block, which means that we can miss a corrupt rtrmap record.
+That will get picked up by the rtrmap scrubber, but we should make the
+rgsuper scrubber more robust anyway.
 
-If you're going to start using this code, I strongly recommend pulling
-from my git trees, which are linked below.
-
-With a bit of luck, this should all go splendidly.
-Comments and questions are, as always, welcome.
-
---D
-
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=llm-fixes-10
+Cc: <stable@vger.kernel.org> # v6.13
+Fixes: 3f1bdf50ab1b9c ("xfs: scrub the realtime group superblock")
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+Assisted-by: LOLLM # finding obvious bugs
 ---
-Commits in this patchset:
- * xfs: cross-reference the rtgroup superblock extent, not block
- * xfs: use the rtgroup extent count to find rtrefcount gaps
- * xfs: strengthen the "is cow staging" helpers in scrub
- * xfs: fix rtrefcount btree block counting in scrub
- * xfs: make the rtsummary repair fix the file size too
- * xfs: count escaped corruption errors in scrub stats
----
- fs/xfs/scrub/stats.h            |    4 +-
- fs/xfs/scrub/refcount.c         |    6 ++-
- fs/xfs/scrub/rgsuper.c          |    6 ++-
- fs/xfs/scrub/rtrefcount.c       |   80 ++++++++++++++++++++++++++++++++-------
- fs/xfs/scrub/rtsummary_repair.c |    3 +
- fs/xfs/scrub/scrub.c            |    3 -
- fs/xfs/scrub/stats.c            |   28 +++++++++-----
- 7 files changed, 98 insertions(+), 32 deletions(-)
+ fs/xfs/scrub/rgsuper.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+
+diff --git a/fs/xfs/scrub/rgsuper.c b/fs/xfs/scrub/rgsuper.c
+index 2bd2c0351b35f7..6e2abe5dc27cd5 100644
+--- a/fs/xfs/scrub/rgsuper.c
++++ b/fs/xfs/scrub/rgsuper.c
+@@ -36,8 +36,10 @@ xchk_rgsuperblock_xref(
+ 	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
+ 		return;
+ 
+-	xchk_xref_is_used_rt_space(sc, xfs_rgbno_to_rtb(sc->sr.rtg, 0), 1);
+-	xchk_xref_is_only_rt_owned_by(sc, 0, 1, &XFS_RMAP_OINFO_FS);
++	xchk_xref_is_used_rt_space(sc, xfs_rgbno_to_rtb(sc->sr.rtg, 0),
++			sc->mp->m_sb.sb_rextsize);
++	xchk_xref_is_only_rt_owned_by(sc, 0, sc->mp->m_sb.sb_rextsize,
++			&XFS_RMAP_OINFO_FS);
+ }
+ 
+ int
 
