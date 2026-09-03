@@ -1,40 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3BE23C1D58
-	for <linux-xfs@vger.kernel.org>; Thu,  3 Sep 2026 06:06:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D053A54763;
+	Thu,  3 Sep 2026 06:06:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788415570; cv=none; b=SRXPfbmVCE9v9xLhk8RWNWKRiiAlwL8SsBRAKKO7RAhJrP/RjiIHTuFPb5UOSgYITjIbl2YnSyWczD4PpSGI0e5QzzVLF8UvimBNtOMHMhYB6mQLAcwXMbEWpzM1StPfBrAXX4K1RqqPupw6pkLiYxjEeTIVzXeA2vvRe/Dmyiw=
+	t=1788415572; cv=none; b=lcZFdxGq3Jys3gR4cV37cVvWsjq5g8PGHv/PGONdx5Ytt3J5MBQL5MT5T6yqJ0Ag4JedqWKa3U4UtejuFg5fR9OAOAHe7leCi7bxBEjLCLNKUDeqVr6q122WK5LOnR19k65dzsC2RaV0FUvnMHt/V0XK1qNr7GAfU5vFO2qjwaY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788415570; c=relaxed/simple;
-	bh=cCIEUVo/Jia8Lx2nKVOiztZq9JDiPbLGe1tteX94G34=;
+	s=arc-20240116; t=1788415572; c=relaxed/simple;
+	bh=uKqBuLVnIwLzg78VDMd0UqiOotrHaJmpOaxoW0yZWpw=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=JTBXHoCiBMz6lfJM1ck881ldA47xqi6pMBdUlmzD15Nc2sPX4+cZOZ/jj3qkwDGMOGiyGf24aczhrUYWNx6tb1KURBSwIk1ppNOuqIlKJhhv3wPjY5PJJ7sSp8JTug9A9oQCrsspA3OdrYmoFj9HKzpZvdqRPw3tG9ESl+acFQ0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kz3tkHMY; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=if2XH+VCNl6CgDNQzh0dh9QAToddmgKDkAvLF3pDTyujkuPOjnV8zyOy/D6+MB6KUw4lvwxguIY8boetehU5YXFcSHRKzlzRze6RvfbGOs5zk4pMeRKpyboOZZGqEbhb8UE3T7quACHzsggAMh+ax5vCM9/duo6M2wW5xAYEAKU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MNkEsTRE; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kz3tkHMY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D29DA1F000E9;
-	Thu,  3 Sep 2026 06:06:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MNkEsTRE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 317AB1F00A3A;
+	Thu,  3 Sep 2026 06:06:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788415569;
-	bh=AsF4YFw2onqGCJ4WdRp+Ycu4ldt/bkf2CI5LTB+nf74=;
+	s=k20260515; t=1788415571;
+	bh=4EpF+2j0c9CnenLScxaemdSfSyd+z9TzLjRp+3WIrVI=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=kz3tkHMYcIq6VkQkjjbQzMH977NFxWohWgyMwAYShVL4zXkrc6izv0ZDW7+kpCkBf
-	 5kxdio4hHD20sD5Ftl7Ll9vcQ9lf5jXSO9PwgnXiK7Oha1po+sm/qHmDzJtLJsiWWs
-	 jc89pPFzvI6IBG6VpwtSOXvWOTA2ZVZOaHlXXzFFosN85nCzVPqpBJ2byLzbIZhpV+
-	 Lz7EBDNMX75KLwphb5pYWV1mhn+CBRhHzKZ2NY8PKkLsAOCHBBjt1v59f8irCsUPqI
-	 mbpMe09TGn0x+tY//Tp9pF8oUDaBZ/kqVj+/5LVKo6Ct+xpnnGrFdrvSu2ldwBvJLn
-	 YvSCVaJvYKT/Q==
+	b=MNkEsTREYlfGifRY+rCCLo4kXc0mgLi2g6zmDDdSiQCUR3J0VBL8zzeMgJcHG1BmS
+	 /hR39UVZL60/fJuQQqtFFtaAX3bpqs4dKGjAcxy4LhKniDy4qmutaMBhl3tJgyFYkL
+	 t4of+gD73TRE2oiRPIx9rKQDSlayNRhY+liR6q8PFcgzIa9Otdglxlt8EFDWmEmwN9
+	 yDsPejy2rOXKhFrLPvJp876z21bmGCMOUcvpL+MJ2sA2Qv0mVr/tkNhTjpQxpmWqjg
+	 pgtIpWVDZ51lEx0wT3cYVVnjHm+FZr5PafjuVgkS5avtLsF0xxNWrRSgGSNnB+slgS
+	 WLxlv5B20YhjQ==
 From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>
-Cc: Christoph Hellwig <hch@infradead.org>
-In-Reply-To: <ce64892a-c991-486d-8650-d40a6452699e@sandeen.net>
-References: <ce64892a-c991-486d-8650-d40a6452699e@sandeen.net>
-Subject: Re: [PATCH v2] xfs: mark slab-allocated xfs_buf backing memory as
- __GFP_RECLAIMABLE
-Message-Id: <178841556855.1198521.10851446476367006341.b4-ty@kernel.org>
-Date: Thu, 03 Sep 2026 08:06:08 +0200
+To: djwong@kernel.org, hch@lst.de, Anuj Gupta <anuj20.g@samsung.com>
+Cc: linux-xfs@vger.kernel.org, stable@vger.kernel.org, 
+ Carlos Maiolino <cmaiolino@redhat.com>
+In-Reply-To: <20260901054348.808571-1-anuj20.g@samsung.com>
+References: <CGME20260901054416epcas5p13e8b9a5e5e8ebe10715f735c82ded916@epcas5p1.samsung.com>
+ <20260901054348.808571-1-anuj20.g@samsung.com>
+Subject: Re: [PATCH v2] xfs: release alleged child inode on metapath unlink
+ error
+Message-Id: <178841556989.1198521.17542664209670800283.b4-ty@kernel.org>
+Date: Thu, 03 Sep 2026 08:06:09 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,17 +47,16 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.3
 
-On Fri, 21 Aug 2026 17:26:39 -0500, Eric Sandeen wrote:
-> xfs_bufs have a shrinker and are therefore reclaimable, as is the memory
-> backing them. Mark slab-allocated backing memory as __GFP_RECLAIMABLE in
-> the kmalloc path so that it is accounted properly.
+On Tue, 01 Sep 2026 11:13:48 +0530, Anuj Gupta wrote:
+> If xchk_metapath_ilock_parent_and_child() fails after xchk_iget()
+> succeeds, release the inode reference before returning.
 > 
 > 
 
 Applied to for-next, thanks!
 
-[1/1] xfs: mark slab-allocated xfs_buf backing memory as __GFP_RECLAIMABLE
-      commit: 033067938274649f611286f8404b6e5c50c3f1f2
+[1/1] xfs: release alleged child inode on metapath unlink error
+      commit: f7cc83204d79537c6bddd6c28d77dd0625eb6aea
 
 Best regards,
 -- 
