@@ -1,208 +1,230 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80379397347;
-	Thu,  3 Sep 2026 19:55:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC47D3947AC
+	for <linux-xfs@vger.kernel.org>; Thu,  3 Sep 2026 20:36:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788465364; cv=none; b=JZq03noHcCD1KyToB9gX1Uw9f7RjKAcWwA2FiSpvZpkL+FU70NvY4HxeGmqgn4RJzyILDheiouz3/07ZCMLxIm9twM67kd9TDanAKSiiBl5vTGicLKmtzOYGSMse3TQCtZ3V+KJxCIgjpqHpNr5SR1KQY7TC3ydrYvifLhvItpQ=
+	t=1788467819; cv=none; b=Un1zrsyxUbtDc0Jw/VqMMxm9fGcE+lDAMeuqqivJoxhrF/1gQqrGgrfiOwPO41/xP9zWAtTNSn+32Hn8vuNYtNdwObgJmxKoSnpHP1GIXqsb3x+Xy5oosNhp9nrnWqkQ0Ojn2mGWEk6ifoJRJz0AFL95GfNHwk0aZafU2gEC7OY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788465364; c=relaxed/simple;
-	bh=TgZZTTsZ6LqLUJkBT2c3k6hBKBn+yENi4da+hBRAVns=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=N4AWQA+uBBnop2eedxR9nP7G4qRC0rxEGISx4XCP+7BlPCsivNT6iSi7DLzLJl8G6VSNVBVICYgq/AprhiqqM3pTpWlrjBPBtl6hXZMtkFvgtapndbs7ZQEOmQi29JWGm+n8EHIxwrw3G2c0g7TcAjFQS6ooNoUaCyx+3ACfoEg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=RTa9IYvW; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=CFg+9dYm; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=ZZOpl9GX; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=SsuNNNEm; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1788467819; c=relaxed/simple;
+	bh=H407BUyMcf2oyyisxFqX+2jOaF5HoF1SQ/YApzclPd0=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=Dh+6WQRIpSb/qa1JnFBy0mbq+4s8VZ51gjgBwdV2JLczXUWOuSWot28f3CyJNwFIj+i1VuJWI5zeuV3Hptniv0I9pQebd7CSOhTEIQHW4h7adbbCdgLHYJ3/FcDfhOwzvBYmdbEXNgIfz6pKWE8aOULZYyKJw3rlyeL15lqwMDs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=PyKMJjlt; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=t+7MM7U2; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="RTa9IYvW";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="CFg+9dYm";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="ZZOpl9GX";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="SsuNNNEm"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id B310E22237;
-	Thu,  3 Sep 2026 19:55:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1788465343; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="PyKMJjlt";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="t+7MM7U2"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1788467804;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=S/Erzy3qipSog21XmSRx+P/p00l6BX/qJZPWZvzZbSI=;
-	b=RTa9IYvWr7tGW2jZp+DEqsmOO4wo0p/zNOm3E98Fy7mcLnp1qoUJNo55E4KsNRznO+7ijg
-	dMHsKqHVOGT49LMRn4yu1Ady01BVijv4bw7yRmLlRPUpxFhaF5H+QH+Z5ahgeSAaK2cpcv
-	u2W8X+m7BwxK6s5yBJvSj7G4q0JVbCk=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1788465343;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=S/Erzy3qipSog21XmSRx+P/p00l6BX/qJZPWZvzZbSI=;
-	b=CFg+9dYmO96Hwaqod/zU66rVwAo5M4L0rNh7WS5r0GuLh/E1yZyKisoB6G7bArc8F3soPB
-	fHjfdfnue0iR7yBg==
-Authentication-Results: smtp-out1.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1788465339; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=S/Erzy3qipSog21XmSRx+P/p00l6BX/qJZPWZvzZbSI=;
-	b=ZZOpl9GXzWFguyRkJIL9k5Y/7whPO2Adk5/8ftBff3g+LhDqNJL6FiYqe084lCTI9uUBZL
-	3IL0j5aYKlppzTTIRHWeG8yzuIam2xdSK56wfSPaFyJ9wFjOLlK3eqIcs9WWGTYRipDO8i
-	AEWREz/4pNR0KEn80gfWpTowRheQWJo=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1788465339;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=S/Erzy3qipSog21XmSRx+P/p00l6BX/qJZPWZvzZbSI=;
-	b=SsuNNNEmrr8o/kFytiLZzYYkZwBlE7YGMXNxL4Nxp7YKsR0qgS9kW+527BbOfaO83Tv21q
-	16E6Z8iUVnnyVdBg==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id EFF23136D9;
-	Thu,  3 Sep 2026 19:55:37 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id XGgBN7nQmWoHVgAAD6G6ig
-	(envelope-from <pfalcato@suse.de>); Thu, 03 Sep 2026 19:55:37 +0000
-Date: Thu, 3 Sep 2026 20:55:36 +0100
-From: Pedro Falcato <pfalcato@suse.de>
-To: Kiryl Shutsemau <kirill@shutemov.name>
-Cc: akpm@linux-foundation.org, 
-	"Matthew Wilcox (Oracle)" <willy@infradead.org>, David Hildenbrand <david@kernel.org>, 
-	Lorenzo Stoakes <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, 
-	Vlastimil Babka <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
-	Suren Baghdasaryan <surenb@google.com>, Michal Hocko <mhocko@suse.com>, Jan Kara <jack@suse.cz>, 
-	Rik van Riel <riel@surriel.com>, Harry Yoo <harry@kernel.org>, Lance Yang <lance.yang@linux.dev>, 
-	Jann Horn <jannh@google.com>, Alexander Viro <viro@zeniv.linux.org.uk>, 
-	Christian Brauner <brauner@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>, 
-	Carlos Maiolino <cem@kernel.org>, Usama Arif <usama.arif@linux.dev>, linux-mm@kvack.org, 
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	kernel-team@meta.com, "Kiryl Shutsemau (Meta)" <kas@kernel.org>
-Subject: Re: [RFC PATCH 0/5] mm: sub-folio dirty tracking for PTE-mapped mmap
- writes
-Message-ID: <apnO6MyHhCilamqJ@pedro-suse.lan>
-References: <20260903182943.662461-1-kirill@shutemov.name>
+	bh=b9O/eAUq4hB+sAeOEFssVvacALDKMr3XqpE9PYvjpFE=;
+	b=PyKMJjltu9OM99uduRq/lOGwDgWFS1Usvz0V1hTyA7FTWHQOSNpXG+8CzvlWwNWXJ7Ar0R
+	VLToGM8j+vaemD2Ew/plg8pJDpoDNR62TIs/7tmZw/dSCXJKiQyW/PurTdkTG+hVMKeyxv
+	64iY/v5fzDWnZe7hULiKnQsSMN56jKk=
+Received: from mail-qk1-f197.google.com (mail-qk1-f197.google.com
+ [209.85.222.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-652-2hC-5zN9MqKbAFbEFbJmzg-1; Thu, 03 Sep 2026 16:36:43 -0400
+X-MC-Unique: 2hC-5zN9MqKbAFbEFbJmzg-1
+X-Mimecast-MFC-AGG-ID: 2hC-5zN9MqKbAFbEFbJmzg_1788467803
+Received: by mail-qk1-f197.google.com with SMTP id af79cd13be357-939694871aaso42510685a.2
+        for <linux-xfs@vger.kernel.org>; Thu, 03 Sep 2026 13:36:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1788467802; x=1789072602; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=b9O/eAUq4hB+sAeOEFssVvacALDKMr3XqpE9PYvjpFE=;
+        b=t+7MM7U2upu5jZQwZHjeAok2yQ8f5KmpvZiw/6IS1NUrpgmsvgo1eiyLOg2QcWejks
+         pmOfQYbwVZZc/ARx7+/+oaF4psiEhLZVFCTIHLS3mXSJ8tapiStZOgOkhg2w7VxXQm8b
+         3exPllPGT60o4kZvRLhTas5iiEetTCNGijK3ugD1GFfuvvnO7ABRjI5oQfnVB+CXY8g6
+         DhYrx2VaFYFGj99f2HQqtPt92usdXHBjUIvjpTdmHL262Z3eqEv7FabzvXLbOdI0xLVZ
+         GE/1QE9Igr6GawuHUay9RtaCjZqJf4OfqjgXgccTZknZxoxXGBmPr3wiuwaZGkxHVkPe
+         dSPg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788467802; x=1789072602;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=b9O/eAUq4hB+sAeOEFssVvacALDKMr3XqpE9PYvjpFE=;
+        b=WEm2CUxBQiX6d19Vd+3ueiA3a7Q0+y3JkQaeJUhmYQAHMI20bzrWMEA4gdnGfv4Qnz
+         izllLIMP0GQwD4ukAMwU3qCgxLHPb4Db0cT8wz/D7zbFI7CNDnG4/oX6FFT9sBEcM6Xz
+         o89dSG2zIL91grARqVJwgbRolJt+NdCpThLSIbNV0Sb7CUVxoWVFEqMTSRwoNH1pWv2O
+         lDP+1Ue0BBjb23cWcWXA3W+cfLbOYWj4RA1DyzDRqkmEF6eUgFujq/gHa3TAJI4KaWZ3
+         anlTAnK3OOGyTagXVuxQYcuIX1YbGr+sDBP/IL/WcM1kMQfbV8BGcHzt5rMpsHbE7Npg
+         3ckA==
+X-Gm-Message-State: AFuF++l3j30yXf+d+UEHzj6ryNq/9Fu1JoTe7aSbl4aj1NYNivguJyGG
+	PQ7aKKpdD3Nh4OiSewJptKnjrdu9ievu7SEQXg/fS1Km7WPhkvts2iFeIS39sLPo3X8XteOCpNg
+	3TN4a0GbQR6d/JrzdR1P9fTEQtEd01NnUy7Rdr39p1BsQjEhpzw9uzff6OUZmqHHAno0mQZzVi7
+	MyND5wSVK5c9CSPRssEmrrF75uHlPdsaNzpTIZRFJjRp2W
+X-Gm-Gg: AYBFou1dJf7v9+jDMdAoDtu4Ubb+irTTURPluXOXupVjpcEXekhqeKXoVCUdDYCglPk
+	eOuZS2DAIrqPXGhd7R2oMF5CPlfH7pbP6kfX87urr/V7q7Ur7xddPj36cnBmJ9rj+zWjqXQ28Rs
+	VRtBUXJacp3fT4nEIU2x0Zn3sXNGQqi3I78yjF0ElXEidTcj7jwberEpdWlMHsemfa2pdeuRFbU
+	Y3Mh8ThbkSEdCMvt6YWeWAzBXlou5JsUkPJPT8RxgRZQi1QZ5CV4iKrVwW5DL0dLlf9+D+pEJc2
+	DgF1V9+yn78zgFHwv2wDuWLHddON72wxRWQae50J2rM07Fty0Px8G76fYZKS5QPdVTcyG6mQgfi
+	uVZP1iPS1xU05voEPmH1aJEBBGnRcX2bbP/EOUDRw
+X-Received: by 2002:a05:620a:7087:b0:939:7f87:ff22 with SMTP id af79cd13be357-9398045fd75mr117917685a.36.1788467802514;
+        Thu, 03 Sep 2026 13:36:42 -0700 (PDT)
+X-Received: by 2002:a05:620a:7087:b0:939:7f87:ff22 with SMTP id af79cd13be357-9398045fd75mr117913085a.36.1788467801873;
+        Thu, 03 Sep 2026 13:36:41 -0700 (PDT)
+Received: from big24.tailafb26a.ts.net (97-127-68-83.mpls.qwest.net. [97.127.68.83])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-9397faf927bsm51152485a.8.2026.09.03.13.36.40
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 03 Sep 2026 13:36:41 -0700 (PDT)
+From: Eric Sandeen <sandeen@redhat.com>
+To: linux-xfs@vger.kernel.org
+Cc: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH 1/2] xfs_repair: distinguish true ENOMEM from "not found" in cache_node_get
+Date: Thu,  3 Sep 2026 13:42:43 -0500
+Message-ID: <20260903203638.1094907-2-sandeen@redhat.com>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20260903203638.1094907-1-sandeen@redhat.com>
+References: <20260903203638.1094907-1-sandeen@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260903182943.662461-1-kirill@shutemov.name>
-X-Spam-Level: 
-X-Spam-Score: -4.30
-X-Spam-Flag: NO
-X-Spamd-Result: default: False [-4.30 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	ARC_NA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	MISSING_XM_UA(0.00)[];
-	RCPT_COUNT_TWELVE(0.00)[26];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FROM_HAS_DN(0.00)[];
-	TO_DN_SOME(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo]
+Content-Transfer-Encoding: 8bit
 
-On Thu, Sep 03, 2026 at 07:29:38PM +0100, Kiryl Shutsemau wrote:
-> From: "Kiryl Shutsemau (Meta)" <kas@kernel.org>
-> 
-> A store through a shared file mapping dirties the whole folio. With large
-> page cache folios that turns a 4K store into 2M of writeback: one dirty
-> bit per folio, and writeback has no way to know which part changed.
-> 
-> XFS already knows better. iomap tracks dirty state per block and
-> iomap_writeback_folio() submits only the dirty ranges, and the buffered
-> write path sets just the range it copied. Only the mmap path throws that
-> away, because iomap_dirty_folio() covers the whole folio.
-> 
+When cache_node_get() needs a new node it calls cache_node_allocate(),
+which returns NULL for two very different reasons:
 
-Hmm, I believe Willy already had some patches; I don't know what came of
-them (I think he's out for now).
+ - the cache is already full (c_count has reached c_maxcount), or
+ - an underlying allocation actually failed with ENOMEM.
 
-> Narrowing the dirtying at page_mkwrite() time does not work on its own:
-> set_pte_range() batch-maps a whole folio writable on the first shared
-> write fault, so the stores that follow never fault and never reach the
-> filesystem.
+These require different responses. A full cache should be shaken to free
+slots and, failing that, expanded. An actual ENOMEM should be returned
+to the caller to deal with.
 
-Help me out here: in which case does this happen? page fault handling is a
-mess... I think page_mkwrite is always called, no? in do_shared_fault().
+To achieve this, make cache_node_allocate() say which case occurred via
+a new *enomem parameter, set true only for a real allocation failure.
+Cache shaking still happens before returning ENOMEM, as this may actually
+free memory and allow new allocations to succeed.
 
-> 
-> So harvest the hardware instead. folio_clear_dirty_for_io() already calls
-> folio_mkclean(), whose rmap walk reads pte_dirty() for every entry of the
-> folio and throws it away. Those bits are the only record of which parts
-> of a large folio were written through a mapping. Collect them there and
-> hand the filesystem the runs that were dirty, through a new
-> a_ops->dirty_folio_range().
+Also fix the stale return-value comment, which had the hit/new-node
+cases backwards.
 
-I think this goes against what we're trying to pull off. We want a single
-method of dirtying folios, not 3.
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+ libxfs/cache.c | 39 ++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 34 insertions(+), 5 deletions(-)
 
-Ideally(tm) we would have a single mkwrite interface.
-
-> 
-> All of this is about PTE-mapped folios. A PMD-mapped folio has a single
-> dirty bit for the 2M it maps, so there is nothing finer to harvest, and
-> it keeps writing back whole. Keeping shared write faults off PMDs is a
-> separate patch and not part of this posting.
-> 
-> On a 512M file in 2M folios on XFS, storing one byte per folio and
-> calling msync() wrote 512M before and writes 1M after, with identical
-> minor fault counts.
-
-But the effects are definitely nice though :)
-
-> 
-> Not addressed here:
-> 
->  - Dirty accounting stays folio-granular. A 4K store still counts as 2M
->    against dirty_ratio and balance_dirty_pages().
-
-That is correct; I don't think doing subpage accounting makes any sense,
-the whole folio is still dirty, and for reclaim purposes can't be thrown
-away (unless you added gnarly split logic for file folios as well).
-
->  - iomap_page_mkwrite() still allocates blocks for the whole folio.
->  - Filesystems without per-block dirty state see no change.
-> 
-> Kiryl Shutsemau (Meta) (5):
->   mm: let folio_mkclean() report which pages had dirty PTEs
->   mm: add a_ops->dirty_folio_range() and use the mkclean dirty harvest
->   mm: keep the mmap dirty range down to the faulting page
->   iomap: narrow page_mkwrite() dirtying to the faulting page
->   xfs: track mmap dirty state per block
-> 
->  fs/iomap/buffered-io.c | 37 +++++++++++++-----
->  fs/xfs/xfs_aops.c      |  2 +-
->  include/linux/fs.h     |  3 ++
->  include/linux/iomap.h  |  2 +
->  include/linux/mm.h     |  1 +
->  include/linux/rmap.h   |  7 ++++
->  mm/memory.c            | 58 ++++++++++++++++++++++++++--
->  mm/page-writeback.c    | 87 +++++++++++++++++++++++++++++++++++++++---
->  mm/rmap.c              | 56 +++++++++++++++++++++------
->  9 files changed, 222 insertions(+), 31 deletions(-)
-> 
-> 
-> base-commit: 0a0d1d55dad570724bf8c7ea83409639cfb4be9b
-> -- 
-> 2.54.0
-> 
-
+diff --git a/libxfs/cache.c b/libxfs/cache.c
+index d5d9ba56..21e4c0c0 100644
+--- a/libxfs/cache.c
++++ b/libxfs/cache.c
+@@ -284,15 +284,26 @@ cache_shake(
+ /*
+  * Allocate a new hash node (updating atomic counter in the process),
+  * unless doing so will push us over the maximum cache size.
++ *
++ * Returns NULL on failure.  A NULL return can mean two different things:
++ * either the cache is already full (c_count has reached c_maxcount), or
++ * the underlying allocation genuinely failed with ENOMEM.  These call for
++ * very different responses from the caller, so report which one happened
++ * via *enomem: it is set true only for a real allocation failure, and
++ * left false when we cannot allocate another node in the current cache
++ * size.
+  */
+ static struct cache_node *
+ cache_node_allocate(
+ 	struct cache *		cache,
+-	cache_key_t		key)
++	cache_key_t		key,
++	bool			*enomem)
+ {
+ 	unsigned int		nodesfree;
+ 	struct cache_node *	node;
+ 
++	*enomem = false;
++
+ 	pthread_mutex_lock(&cache->c_mutex);
+ 	nodesfree = (cache->c_count < cache->c_maxcount);
+ 	if (nodesfree) {
+@@ -309,6 +320,7 @@ cache_node_allocate(
+ 		pthread_mutex_lock(&cache->c_mutex);
+ 		cache->c_count--;
+ 		pthread_mutex_unlock(&cache->c_mutex);
++		*enomem = true;
+ 		return NULL;
+ 	}
+ 	pthread_mutex_init(&node->cn_mutex, NULL);
+@@ -366,8 +378,9 @@ __cache_node_purge(
+  * hit, in which case this will all be over quickly and painlessly.
+  * Otherwise, we allocate a new node, taking care not to expand the
+  * cache beyond the requested maximum size (shrink it if it would).
+- * Returns one if hit in cache, otherwise zero.  A node is _always_
+- * returned, however.
++ * Returns zero if hit in cache, one if a new node was allocated.  If
++ * allocation fails with a genuine ENOMEM we return -1 with a NULL
++ * *nodep; in every other case a node is returned.
+  */
+ int
+ cache_node_get(
+@@ -384,6 +397,8 @@ cache_node_get(
+ 	unsigned int		hashidx;
+ 	int			priority = 0;
+ 	int			purged = 0;
++	int			ret;
++	bool			enomem = false;
+ 
+ 	hashidx = cache->hash(key, cache->c_hashsize, cache->c_hashshift);
+ 	hash = cache->c_hash + hashidx;
+@@ -457,7 +472,7 @@ next_object:
+ 		/*
+ 		 * not found, allocate a new entry
+ 		 */
+-		node = cache_node_allocate(cache, key);
++		node = cache_node_allocate(cache, key, &enomem);
+ 		if (node)
+ 			break;
+ 		priority = cache_shake(cache, priority, false);
+@@ -467,6 +482,18 @@ next_object:
+ 		 * If we exceed CACHE_MAX_PRIORITY all slots are full; grow it.
+ 		 */
+ 		if (priority > CACHE_MAX_PRIORITY) {
++			/*
++			 * We've shaken every priority level and still can't
++			 * allocate.  If the last attempt failed with a real
++			 * ENOMEM rather than simply a full cache, then neither
++			 * shaking nor growing the cache can help - give up and
++			 * let the caller handle the failure.
++			 */
++			if (enomem) {
++				node = NULL;
++				ret = -1;
++				goto out;
++			}
+ 			priority = 0;
+ 			cache_expand(cache);
+ 		}
+@@ -479,7 +506,9 @@ next_object:
+ 	hash->ch_count++;
+ 	list_add(&node->cn_hash, &hash->ch_list);
+ 	pthread_mutex_unlock(&hash->ch_mutex);
++	ret = 1;
+ 
++out:
+ 	if (purged) {
+ 		pthread_mutex_lock(&cache->c_mutex);
+ 		cache->c_count -= purged;
+@@ -487,7 +516,7 @@ next_object:
+ 	}
+ 
+ 	*nodep = node;
+-	return 1;
++	return ret;
+ }
+ 
+ void
 -- 
-Pedro
+2.55.0
+
