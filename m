@@ -1,30 +1,40 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0E6134D384
-	for <linux-xfs@vger.kernel.org>; Thu,  3 Sep 2026 05:44:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE81B274B46;
+	Thu,  3 Sep 2026 05:49:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788414252; cv=none; b=AkGFX8EkEBwW0kpws9QBFKIp8KOae/TtDSNN151IlXFlFlP0bIdnsVYimkkcYBNtM7Vr1ml66PW3uKPzYFD0AaFdX4maXn51VrDR0j6MJNb/Lns905/Qt/+0KNDdnNMtyVVakS4k4clhwf1oZhuIszb7zJ481d4RP/TPmq9SRmA=
+	t=1788414593; cv=none; b=GuSpGtkDCi+JkCCa2zlKJMHvcjd3VB6oAPcZEKKqnVV5ejHtxgi0aLf4jS+/9K/YyYWuk40XKph3Q9+99/3zA+nYOFMMWFmLlMHFpOndKONxt8UuQyY0QISWBs1A+hEL0rdVzCbHDOOL1tDH6mh2d0Z1IoBe6odcAGczuJVNOuo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788414252; c=relaxed/simple;
-	bh=lYBvhnat+dY698Ld8zPFz0wufOXM+Qe9Myrne2o/IQM=;
+	s=arc-20240116; t=1788414593; c=relaxed/simple;
+	bh=rPPOs8u4XytoxM5tcx7WhPtdGWiQyGD16F9RQ5Eeqnk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=grkZTaPeis8NozaSfHEXRg69R39MnNtmdhA2jE632PImWpN5wL1pCtO6d6F3OCrXRd+N+aKgNpFTe1bjR2DyjAgODzKOvae1Meclvs7eKsZ6um38fkhGDKOLWmZu4IY6D4A1UOT0qtvV7w1ihbNgbhB5oVJmn9VWaRpjw5KBCJk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 9DE0D6732A; Thu,  3 Sep 2026 07:44:06 +0200 (CEST)
-Date: Thu, 3 Sep 2026 07:44:06 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 6/6] xfs: flush multiple device caches in parallel in
- xlog_write_iclog
-Message-ID: <20260903054406.GA16748@lst.de>
-References: <20260902054942.111988-1-hch@lst.de> <20260902054942.111988-7-hch@lst.de> <20260902161858.GT1933798@frogsfrogsfrogs>
+	 Content-Type:Content-Disposition:In-Reply-To; b=NHKcN0Jx0CuNgPqhos+rQz0izTPRw0ahYNv43wiBqxYJLYbspGh5IQtvfMU7B4XJtV3/OpnXp7uAOSj+npcn62zkHLQHdBMvuwLUx/hYu0vuJmvBk/77n4dIEklCqIX8e5i/TlgsRp4s1vmwet1PsKUO9jve8M6C7xTxBLZoe6s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PZIea2Bm; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PZIea2Bm"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 60EB31F000E9;
+	Thu,  3 Sep 2026 05:49:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788414592;
+	bh=8j0aP5zKhZral47ld72z4I4Ol4mpWs8Pih4oQD8ILOg=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=PZIea2Bm3icKwxqF4dyCG7FBO4dNWtjofxrXieo12JcZxO1MM3jFqQjwVi9j656gI
+	 tIjF3wiavStZ603EWxKDeHjEvuxAfh1SYbXWOh334GUhNe+cbhEg+kNrWtc32I9VKx
+	 onf+im4GRqpJXmHhstkQwRjiQw+D27syWUyjtby4+U/R5VVqVGwHt+owxaZYnRYSzc
+	 Ed+vlL5j68obpVjQhTHvnk4FavUznp0vYYXFW00gmSC2jwXiL8rnEgBrENcBu9I1jG
+	 u7bB7v8O44qZ6SrEsBZwDh7kx+mp8+TeGERSfP+edzDZmfFIb6zlBeYg2RI5tTz3K7
+	 anFB694UjHZYg==
+Date: Wed, 2 Sep 2026 22:49:52 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: cem@kernel.org, hch@lst.de
+Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: [PATCH v1.1 3/5] xfs: compute dquot checksum after resetting dd_lsn
+ in repair
+Message-ID: <20260903054952.GV1933798@frogsfrogsfrogs>
+References: <178832750681.3508131.6009513367948627110.stgit@frogsfrogsfrogs>
+ <178832750773.3508131.8667220003399042973.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -33,29 +43,43 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260902161858.GT1933798@frogsfrogsfrogs>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <178832750773.3508131.8667220003399042973.stgit@frogsfrogsfrogs>
 
-On Wed, Sep 02, 2026 at 09:18:58AM -0700, Darrick J. Wong wrote:
-> On Wed, Sep 02, 2026 at 08:49:20AM +0300, Christoph Hellwig wrote:
-> > When xlog_write_iclog needs to flush the cache for more than one devices,
-> > the current implementations does this sequentially, which adds up the
-> > flush latency for all devices.  Switch to kicking off all cache flushes
-> > in parallel so that only the longest latency bounds the time of the log
-> > I/O.  This removes the REQ_PREFLUSH optimization for the log device,
-> > but as that flag is never passed on to the device and just very slightly
-> > reduce the latency by queueing the following write from a lower-level
-> > context it is trivially shadowed by the latency improvements of the
-> > parallel flush commands.
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
-> That looks like a neat trick.  Do you see any performance speedups from
-> flushing in parallel?
+From: Darrick J. Wong <djwong@kernel.org>
 
-I haven't really done a benchmark, as all the devices I test multi-device
-setups don't expose volatile write caches, so I actually had to create
-a synthetic setup to fully test this in qemu.  But I can kick off a run
-using say consumer SSDs.  I expect it to significantly speed up fsync
-bound workloads.
+LOLLM complains that xrep_quota_block updates dd_lsn after calculating
+the crc of the ondisk dquot.  That's clearly broken, so fix that.
 
+Cc: <stable@vger.kernel.org> # v6.8
+Fixes: a5b91555403e3a ("xfs: repair quotas")
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+Assisted-by: LOLLM # finding obvious bugs
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/scrub/quota_repair.c |    9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/fs/xfs/scrub/quota_repair.c b/fs/xfs/scrub/quota_repair.c
+index ca3ac6728339d1..5c22bb6ccffa4e 100644
+--- a/fs/xfs/scrub/quota_repair.c
++++ b/fs/xfs/scrub/quota_repair.c
+@@ -363,11 +363,18 @@ xrep_quota_block(
+ 				ddq->d_rtbcount, &ddq->d_rtbtimer,
+ 				defq->rtb.time);
+ 
++		/*
++		 * This transaction operates on raw disk buffers, so we don't
++		 * have a dquot log item to assign the LSN for us.  Instead,
++		 * set it to zero so that log recovery will always replay any
++		 * logged dquot item atop this buffer.
++		 */
++		dqblk->dd_lsn = 0;
++
+ 		/* We only support v5 filesystems so always set these. */
+ 		uuid_copy(&dqblk->dd_uuid, &sc->mp->m_sb.sb_meta_uuid);
+ 		xfs_update_cksum((char *)dqblk, sizeof(struct xfs_dqblk),
+ 				 XFS_DQUOT_CRC_OFF);
+-		dqblk->dd_lsn = 0;
+ 	}
+ 	switch (dqtype) {
+ 	case XFS_DQTYPE_USER:
