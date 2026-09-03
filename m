@@ -1,29 +1,30 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD64A3C1D5F;
-	Thu,  3 Sep 2026 06:10:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72FDB37756F;
+	Thu,  3 Sep 2026 06:11:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788415813; cv=none; b=dvjhbQ8BRcEwDxYsUopudKJkr3r0/CkaACCptzypR54d8RNgYKHJJ/zLs4q/8FWza68wzbBPonMa2JCNn8NE2Cyivjrk1XgMnXtdr854mkleCv+QYUiBHsTFgoV+IKO9optqMZLytQnyBoajwlz8fZqvunCjzwGiwynckIimbXg=
+	t=1788415873; cv=none; b=LQuHGIGXY0J8drmSiKHKBdpgmFg+hUu3GIWuHyOPMB6yEfacISRdjHsI6RihvBJOvcYPuA4azDyadmc4Ibyas7za++dMyvVibmQ/ccrPZTYG7jlZ1tpmaijTiH/S9RvHwq0fVCj7oa/ul54VKqk5DMAZZWe5ystUXIM7UWgFhbw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788415813; c=relaxed/simple;
-	bh=SzpDaaWkLEa29YKQwy5leUfa+GjQWsIvvKHozEb09Rw=;
+	s=arc-20240116; t=1788415873; c=relaxed/simple;
+	bh=oE9xHVvD+a1JS4J7lWrxkiBvMpA8LSXss5x7l5D63t0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sd5mDrazfnz3Wkbc4jJGChEhjOqBQYwJKT0dXuamZME1kWPntO2Fe0BQ9kkosvsDqHSttx54YHcxq35+UqMS/K60R2vIcaX4uOmQvz+RFY/35XRq6sXcVfYCjj0IlJzu2Opbiu/MFELD2xf2/hMjMllNorTO/pwIff3BQ6MRmCI=
+	 Content-Type:Content-Disposition:In-Reply-To; b=ARcFt8mfZ3h5hCvK9oD81xEZ3epK9tM4ilYI25Z3KsXZCQFfReZpVI6rXBgnCUo4XQuibF6Zm24N/bhs01Z+hCF+fhftb74077T6tyF/sIZjT9tNbOD8g8jAkAJT2zaFR2ZV+Rm8qiSLB4+gOVPjb1OGE4e7jzWUIm7yTdrZQHU=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id EEEB36732A; Thu,  3 Sep 2026 08:10:07 +0200 (CEST)
-Date: Thu, 3 Sep 2026 08:10:07 +0200
+	id 193F76732A; Thu,  3 Sep 2026 08:11:09 +0200 (CEST)
+Date: Thu, 3 Sep 2026 08:11:08 +0200
 From: Christoph Hellwig <hch@lst.de>
 To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: hch@lst.de, cem@kernel.org, stable@vger.kernel.org,
 	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/6] xfs: fix rtrefcount btree block counting in scrub
-Message-ID: <20260903061007.GD17233@lst.de>
-References: <178840969793.484660.11718284266382755759.stgit@frogsfrogsfrogs> <178840969914.484660.12780329653421744867.stgit@frogsfrogsfrogs>
+Subject: Re: [PATCH 5/6] xfs: make the rtsummary repair fix the file size
+ too
+Message-ID: <20260903061108.GE17233@lst.de>
+References: <178840969793.484660.11718284266382755759.stgit@frogsfrogsfrogs> <178840969935.484660.8039849140582704928.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -32,28 +33,18 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <178840969914.484660.12780329653421744867.stgit@frogsfrogsfrogs>
+In-Reply-To: <178840969935.484660.8039849140582704928.stgit@frogsfrogsfrogs>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Wed, Sep 02, 2026 at 10:51:52PM -0700, Darrick J. Wong wrote:
+On Wed, Sep 02, 2026 at 10:52:07PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> LOLLM started on a long tangent about how xchk_refcount_xref_rmap
-> shouldn't nope out if sc->sa.rmap_cur isn't set, because nothing ever
-> sets that field.  It's right about the condition, but misses the bigger
-> problem,
-
-I see a pattern there :)
-
-> which is that to count the rtrefcount btree blocks, we have to
-> walk all rmap records in each AG in the data section.  That was papered
-> over by the incorrect !sc->sa.rmap_cur test.
-> 
-> In other words, we need a perag iteration loop here.  Restructure the
-> code to do that, and now it'll all work properly.  Fix the confusing
-> function name prefix.
+> LOLLM noticed that the rtsummary repair code will create a new rtsummary
+> with the correct file size, but it won't force the new file size to be
+> set on the existing rtsummary file, leaving the rtsummary corrupt.  Fix
+> this by setting up the tempfile mapping-exchange to run to the end of
+> both files, which is the magic offset needed to reset the file size.
 
 Looks good:
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-
