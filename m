@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2D6D3F8257
-	for <linux-xfs@vger.kernel.org>; Thu,  3 Sep 2026 09:44:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49E914457A6
+	for <linux-xfs@vger.kernel.org>; Thu,  3 Sep 2026 11:14:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788428696; cv=none; b=itHmxZ7eVQC3oiGTdkuFGeJeKOYNYzJUR9ci1jNyTkanYV1u4fFf8sngb6k+jNCndpyJTcoDb45/pZc0YBOmRZ2WuLrOsnhUHY+zuKdYgPjpgkV/sz4DYiFzL8idCaeU6G+KJhedgcrEyyvuuDguUWH6QoSE3NJy1NntX+JxM7Q=
+	t=1788434046; cv=none; b=eJyf28B81FcFXbkeu78ud3Jt5Zp6fuSVEe5aeK/VOdxmhZNRNSRIVVu7FLkszoewwa8Wd3JWh/UDAzNTOkdYtWrYSxfDME50dS+/AHu4tbVsaV6uKqidEpdLR70gUVOI0vN8T5BI1R9gw9JaviqeGFazCVy+tiQXp6z+OIp39Ig=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788428696; c=relaxed/simple;
-	bh=yJmNz9L7aPzZmZ+yDdWddN8NI8A4/IbhgszS34ZjY6Y=;
+	s=arc-20240116; t=1788434046; c=relaxed/simple;
+	bh=gT36V3j6KEKJk8QgSLYqjSbRO/avz8Sspf5lphiYTW0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fv0TTBk6J+X9+prmxhHuRVavNVHdJpKmeJPeLMQXZXtTBKNdp1etlVNPIE9CePuw0VxeCpK0aJIa06MT0VfyfPZCszOGT2a8tWlhUDspHm0NfvKcGVG9hYLmMFFcP8aYUFDuataQpHMxQUDMlSryDNREJjvOktmrwBxCtHW9E28=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CMT+QHyH; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=opv8lCBDU2EsHyvkG0jpSE8oZU4FXFPYj6upuczriFYhwgPf7NvGmufcU9isXhbGZhylQI2qb4NEkxri+o59m43Oo0ciME0VmmOkmrRe9sp3n6BHl9bQlWdFs/CwYIe7Kgyov8Zpj26LG9Kz0pr2cIWtwbpyx3+lhHPEVR8aGx8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iA7i8FI9; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CMT+QHyH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B8D161F000E9;
-	Thu,  3 Sep 2026 09:44:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iA7i8FI9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2A7D91F000E9;
+	Thu,  3 Sep 2026 11:14:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788428695;
-	bh=0eAJtczIcV/vL+9G0ntTZ5k4+tq9nKLhUxhMcMgb+vE=;
+	s=k20260515; t=1788434044;
+	bh=TV8SRXyskbnkI72ncZcBuSOW6UvlJpOnZrLYMO33sVs=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=CMT+QHyHNzqs7Hj8bWSH2RaRwfUW+MM4BYgygUc1BRZKko2X48R+DXaTIaF3UHwQ1
-	 TwRRZRyveleN6fdqJZPAcOZ9uE2qN8+7k6Au29AeJ61mDl5Xd7UT2ilVnGz//OUIif
-	 2JpF4joRZmxewdl245CijOJ4u85pZ/ZjmBlOCe41Raq8ltLv86nA3tG4gPco/mhAHH
-	 XzuLNV9EIG9QUTLnr/k+TMjgf61J1fx7T3/tdz1X0KajOz345Y/DTHkbxvIn20oT+I
-	 xPuaYPq9OlkYze+9nIVmRPGVFGYQMn46hVmlyUU6413L8gvs/PFzINv8fHpRmb+WYz
-	 O8DkzMlWScdpQ==
-Date: Thu, 3 Sep 2026 11:44:51 +0200
+	b=iA7i8FI9qdR6iVcHuSJNgBeE/hQ5OP/QVwe994UEHZ8MelzhutQUk+IkVQImFGHhk
+	 BRhDvAHkuGlsTEOon7VQg+p2oGhR4aNcmC8UtbqRc93EGfttvrVr5w0RpK8KlEwbFd
+	 1yvtRN/xblPnl3zAnqGUBt3afHb6c/6cz7Oawy2R9rliQdOhXRYaJvjQFoEbfRMIUD
+	 iNd8B/1mAK42b2LTFPq0XVAEsKxe5L0jTnvd8KS/lYaAgbbd+gokHHWBptcR8iy8xD
+	 r7BWGQ1i1b7WHrNa8E8AYtqkmH/4/gu7YF4/f9TgXIAhmavHkcNK9df6sfhYHEil92
+	 UYsbQR38xXMZg==
+Date: Thu, 3 Sep 2026 13:14:01 +0200
 From: Andrey Albershteyn <aalbersh@kernel.org>
 To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/1] xfs_scrub: terminate systemd services if the
- sysadmin unmounts
-Message-ID: <aplAW3FFxQ-AM_us@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
-References: <178821870236.2381099.2561252941543842548.stgit@frogsfrogsfrogs>
- <178821870256.2381099.4607775862934813829.stgit@frogsfrogsfrogs>
+Subject: Re: [PATCH 2/5] mkfs: print config file for a given mkfs
+ configuration
+Message-ID: <aplVuRd-qsqVFW0Q@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+References: <178821870568.2381199.9038448943413709082.stgit@frogsfrogsfrogs>
+ <178821870627.2381199.2536649416350488195.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,31 +43,77 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <178821870256.2381099.4607775862934813829.stgit@frogsfrogsfrogs>
+In-Reply-To: <178821870627.2381199.2536649416350488195.stgit@frogsfrogsfrogs>
 
-On 2026-08-31 16:26:34, Darrick J. Wong wrote:
+On 2026-08-31 16:27:05, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> We should make sure that any systemd services started on behalf of an
-> XFS mount are torn down when the mount goes away.  On a modern system,
-> calling umount(8) while there's an xfs_scrub service running on that
-> mount point will successfully remove the mount from the caller's mount
-> namespace, but the filesystem remains mounted in the service's private
-> mount namespace, with the effect that the filesystem stays mounted.
-> This is probably not what the user wants.
+> Add a -c makecfg= switch to mkfs to emit a mkfs.xfs configuration file
+> documenting the user-visible filesystem featuresets of the configured
+> filesystem.  This can be used to emit default configuration files as we
+> do once a year for each LTS.
 > 
-> Per cks' blog, the way to fix this is through a BindTo= clause.
+> Note that geometry information is not written to the configuration file.
 > 
-> Note: This isn't needed for xfs_healer because it only maintains a soft
-> reference to the mounted filesystem and can reconnect to a filesystem if
-> its mounts move.
-> 
-> Link: https://utcc.utoronto.ca/~cks/space/blog/linux/SystemdStopOnFSUnmount
-> Cc: <linux-xfs@vger.kernel.org> # v6.10.0
-> Fixes: 0109639eede4dc ("xfs_scrub: tighten up the security on the background systemd service")
 > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> ---
+>  libfrog/fsgeom.h       |    3 
+>  libfrog/fsgeom.c       |  376 ++++++++++++++++++++++++++++++++++++++++++++++++
+>  man/man8/mkfs.xfs.8.in |    6 +
+>  mkfs/xfs_mkfs.c        |   44 +++++-
+>  4 files changed, 428 insertions(+), 1 deletion(-)
+> 
+> ...
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index 74bbb677eee2b6..212e17a354d8be 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -61,6 +61,7 @@ enum {
+>  
+>  enum {
+>  	C_OPTFILE = 0,
+> +	C_MAKECFG,
+>  	C_MAX_OPTS,
+>  };
+>  
+> @@ -312,6 +313,7 @@ static struct opt_params copts = {
+>  	.name = 'c',
+>  	.subopts = {
+>  		[C_OPTFILE] = "options",
+> +		[C_MAKECFG] = "makecfg",
+>  		[C_MAX_OPTS] = NULL,
+>  	},
+>  	.subopt_params = {
+> @@ -319,6 +321,10 @@ static struct opt_params copts = {
+>  		  .conflicts = { { NULL, LAST_CONFLICT } },
+>  		  .defaultval = SUBOPT_NEEDS_VAL,
+>  		},
+> +		{ .index = C_MAKECFG,
+> +		  .conflicts = { { NULL, LAST_CONFLICT } },
+> +		  .defaultval = 1,
+> +		},
+>  	},
+>  };
+>  
+> @@ -1072,6 +1078,7 @@ struct cli_params {
+>  
+>  	char	*cfgfile;
+>  	char	*protofile;
+> +	char	*makecfg;
+>  
+>  	enum fsprop_autofsck autofsck;
+>  
+> @@ -1207,7 +1214,7 @@ usage( void )
+>  {
+>  	fprintf(stderr, _("Usage: %s\n\
+>  /* blocksize */		[-b size=num]\n\
+> -/* config file */	[-c options=xxx]\n\
+> +/* config file */	[-c options=xxx,makecfg=0|1]\n\
 
-Looks good to me
+Shouldn't this be makecfg=xxx?
+
+Otherwise, looks good to me
 Reviewed-by: Andrey Albershteyn <aalbersh@kernel.org>
 
 -- 
