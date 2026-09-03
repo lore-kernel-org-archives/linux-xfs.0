@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EFAF45560F
-	for <linux-xfs@vger.kernel.org>; Thu,  3 Sep 2026 11:42:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67323493656
+	for <linux-xfs@vger.kernel.org>; Thu,  3 Sep 2026 11:42:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788435737; cv=none; b=ARNf5ECR+fk1J/P9fXp47HawDx2/7DxFfFoQz9DMvrdVtNPsEW/sERpru0xBieGiMSkshNCsacuf8Y034z52BcnpV39V+GO6CCdKUyB3/eRsnVFsYsp1N9bdypmTFL70lIUlKw9d0YeO6VsPBs5Q9pqKdiuV9+xP7CNXpj21Aq0=
+	t=1788435747; cv=none; b=ZurE2od67y5xhZ9BAUm69dUpRXnQbyaolLm90OvewKZ6yN7c+vqrrdHkafjZauBgQ+Fok0vG2ZjPPHni7bnW/olRgr8rtjRSUuO2lKYo0XXl6FKN6xjJqv8ouYqRvykBUNHEXoajIro1ImnC5n+5Aqbaw85swmB3yD3NI7Yg7r0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788435737; c=relaxed/simple;
-	bh=s9lY/ZqAS5PthkZi3jgr+3PTNzJHVfFKv7iKwyjLOxM=;
+	s=arc-20240116; t=1788435747; c=relaxed/simple;
+	bh=v6XBl7bMUOOP10MaaScPx3rRf/NRTFqlvzrIzZG9278=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Ro9OUfSS1sXqJygdkTggn7cCRhpKVjSRw/HGPvl3v/HRFnSL8bQUG6u6SXxk0xK/85/mO2dS1YlkFAoMleZe2h2bMotwaorVCbZyOW6VZNKhijPINob2uLrZYfYnmedQ6QQMm/2JSGXpNVDzX736z68TII30WuXdXs91uHXRI3E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FwhUY2cC; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=iT4+bw+cqLhCQSgOClXUcjypz2+NW4OI7rmjFpSzluU3aVIcSvrMoaTluWQgbM2JAALJOtcRnjphRH4ADGbgI4baTLeHdNk1CSbPH1MgMcrqYGS0V0TMg3klIC6HE4JMCHfqmcowU2aR2cOU2psD8Nv+Poa1yBMCpILBBgoit+k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h9eojbdl; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FwhUY2cC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BC8CD1F00A3D;
-	Thu,  3 Sep 2026 11:42:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h9eojbdl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 244B31F00A3E;
+	Thu,  3 Sep 2026 11:41:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788435725;
-	bh=40P8cljSeQzo3FsN+ah8Uc6vgF/nmXdWxy8upHW/8Es=;
+	s=k20260515; t=1788435722;
+	bh=koFWBEpamxhmmyFaNYU6tz05UHjjYiy2PYzUtQ+Jk68=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=FwhUY2cCdNpo/zAricm43tCQdZf9hlfqddsFNyCjZgkzonSw5u6SCGE+hFkMvCDaB
-	 ez1o7LifSpw/ZaHPzpuukDLb8yaTC2ftYVJDLOxC4I5pmGQ8PGEMti4CDodtCbuYSa
-	 dY6Lbvl6NHTAtA/719jB5Zot9FTMLjPiabfsgHR2RjcaWRKlpU9H9W0FNxsKPEWGzS
-	 2/nss0SJCTUDM2G2LeaKnled32ck4jrmrRvw86hIbh9wrs/ToDWh8wcMCCMlMQZxPM
-	 sm3ySiTQ3eAmCghQaTPYpX9U6SbLxV9DN00E3xyrbIEyQ9Emr+CHMgR/ZU1IvWKbEV
-	 aPS/g7Uz/mrnw==
+	b=h9eojbdlFJWNuREW6lLXWmV9u5rTfh7gj6csDgIr3S+ix/5JuxdqKQ0MDOiHoQWhJ
+	 YBSr9hPxqShThKyQRaQdm+0beEnsct0RmGiuWZyz+fH/g723CEMztO0/hFr1Q+wJJL
+	 Hyd6/+Fblhm/xaUyBuItDKqxBvFt/sCii6Of5nAL/Yca48jAbox/1jaNxm9zCBL9gy
+	 qVNs1I/JPFM0CwyzPsc/b3fu+vmU8wGvMldYeQJuaxuBDZpiu12y1ESaOmgGMlaY+q
+	 3sWfNNVJI3C4NcLLIg/jWPS2ghSBU4OA9D1Z/a+Xcl9mWzLOBva1nXyNdPDe70wUvJ
+	 UuYWeFtur9DrQ==
 From: Andrey Albershteyn <aalbersh@kernel.org>
 To: linux-xfs@vger.kernel.org,
 	aalbersh@kernel.org
@@ -40,10 +40,11 @@ Cc: bestswngs@gmail.com,
 	hch@lst.de,
 	jiapenglin@tencent.com,
 	roland.mainz@nrubsig.org,
-	xmei5@asu.edu
-Subject: [PATCH v2 23/23] xfs: check v5 superblock features early
-Date: Thu,  3 Sep 2026 13:40:05 +0200
-Message-ID: <20260903114022.570210-24-aalbersh@kernel.org>
+	xmei5@asu.edu,
+	Lin Jiapeng <ljp1205831794@gmail.com>
+Subject: [PATCH v2 22/23] xfs: fix exchange-range reflink flag clearing issue with INO1_WRITTEN
+Date: Thu,  3 Sep 2026 13:40:04 +0200
+Message-ID: <20260903114022.570210-23-aalbersh@kernel.org>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20260903114022.570210-1-aalbersh@kernel.org>
 References: <20260903114022.570210-1-aalbersh@kernel.org>
@@ -55,47 +56,62 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Christoph Hellwig <hch@lst.de>
+From: Lin Jiapeng <ljp1205831794@gmail.com>
 
-Source kernel commit: eb6b2cc1fc8ad566d746d128a559989ff0bba5cc
+Source kernel commit: b2d5a81dae385333f9734910277fbf94c78bd17f
 
-When working on a new features that reuses the existing pad in the
-superblock, I noticed that mounting such a file system on an old kernel
-logs a rather confusing warning:
+When exchanging two full-file ranges, xmi_can_exchange_reflink_flags()
+can move the reflink inode flag from the file that currently has it to
+the other file, as long as exactly one side is marked.  This assumes
+that the file contents, and therefore all shared extents, are exchanged.
 
-XFS (vdc): Metadir superblock padding fields must be zero.
+That assumption is not true when XFS_EXCHMAPS_INO1_WRITTEN is set.
+xfs_exchmaps_can_skip_mapping() can skip hole and unwritten mappings
+from file1, so an exchange can complete without moving every mapping
+that the earlier flag-swap decision accounted for.  In that case the
+post-operation cleanup can clear the reflink flag from an inode that
+still owns shared written extents.  Later writes then take the
+non-reflink write path and may update blocks that should still have
+been protected by CoW, which shows up as data corruption between
+reflink-related files.
 
-This is because we only validate the various feature fields in v5
-superblocks after the common superblock validation helper is called.
+Fix this by disabling the reflink flag exchange whenever
+XFS_EXCHMAPS_INO1_WRITTEN is requested.  The contents exchange can still
+proceed; the conservative outcome is that both inodes keep the reflink
+flag.  The regular reflink flag cleanup path can drop the extra flag
+later once the inode no longer has shared extents.
 
-Fix this by calling the feature validation first.
-
-Fixes: eca383fcd63b ("xfs: refactor superblock verifiers")
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reported-by: Lin Jiapeng (TencentOS Red Team) <jiapenglin@tencent.com>
+Fixes: 966ceafc7a43 ("xfs: create deferred log items for file mapping exchanges")
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Lin Jiapeng <jiapenglin@tencent.com>
 Signed-off-by: Carlos Maiolino <cem@kernel.org>
 ---
- libxfs/xfs_sb.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ libxfs/xfs_exchmaps.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
-index 7a1d85b86e59..7097bb61d48d 100644
---- a/libxfs/xfs_sb.c
-+++ b/libxfs/xfs_sb.c
-@@ -1116,10 +1116,10 @@ xfs_sb_read_verify(
- 	 * because _verify_common checks the on-disk values.
- 	 */
- 	__xfs_sb_from_disk(&sb, dsb, false);
--	error = xfs_validate_sb_common(mp, bp, &sb);
--	if (error)
--		goto out_error;
- 	error = xfs_validate_sb_read(mp, &sb);
-+	if (error)
-+		goto out_error;
-+	error = xfs_validate_sb_common(mp, bp, &sb);
+diff --git a/libxfs/xfs_exchmaps.c b/libxfs/xfs_exchmaps.c
+index 3347dee2c1a8..78bd421b26d5 100644
+--- a/libxfs/xfs_exchmaps.c
++++ b/libxfs/xfs_exchmaps.c
+@@ -956,6 +956,16 @@ xmi_can_exchange_reflink_flags(
+ {
+ 	struct xfs_mount		*mp = req->ip1->i_mount;
  
- out_error:
- 	if (error == -EFSCORRUPTED || error == -EFSBADCRC)
++	/*
++	 * The INO1_WRITTEN optimization can skip exchanging hole and
++	 * unwritten mappings, which means we cannot guarantee that all
++	 * shared extents actually moved to the other file.  Clearing the
++	 * reflink flag of an inode that still holds shared extents breaks
++	 * the CoW write path, so refuse to exchange the flags in that case.
++	 */
++	if (req->flags & XFS_EXCHMAPS_INO1_WRITTEN)
++		return false;
++
+ 	if (hweight32(reflink_state) != 1)
+ 		return false;
+ 	if (req->startoff1 != 0 || req->startoff2 != 0)
 -- 
 2.55.0
 
