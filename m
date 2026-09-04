@@ -1,76 +1,94 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A407F29ACC5
-	for <linux-xfs@vger.kernel.org>; Fri,  4 Sep 2026 11:32:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 474993A6F11;
+	Fri,  4 Sep 2026 11:47:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788521566; cv=none; b=ighaDt7LFCrL3Q6VlMqSQ7yIj/yN4sspvImAtLi4uJYjW5/HiAM4SgTMbKjjB4dltcSD650uHG5mNCJRkl9qNT+BFb80sWFwMWBZLz+3bHfz/vG3H2zXT/+PZZHbwKdqIryN7SBUJhoeKEvvUH5eFz7LAsFKHU2ISaQ0Oh4tknY=
+	t=1788522422; cv=none; b=H6rHsIP6fUfWc/8oflpFR6iGXV+CmSzofVhBGchn3pfYnWVJQ2cJ5izO0vy27VY33Q5KonER0XSkck8SbhuoxqwHQbBQvI3WxHnOai+SQRYqHZYE8L68v1NfCG66qCy7lMBfSc8cpq/dEaym+3K8deHB99SM23X5jqQEP7KaWh0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788521566; c=relaxed/simple;
-	bh=UwGAgYw8jMrU89ql5KECdpeUHCv6azbhs/trmriFUZQ=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=M9aQ6RolXx8jz5+ldNE9vepJTFvbT18GZmSkoDBECW72P0OU+ahVn/VGcl2IZ3rpeNfuJ8V5cyJb1pl86AXosZ5/mFsZ2057it3tgisNgjKy2zaw1LvFZHj2X78+X2+rpO7NXQu0FguXNfGjgtMVGiWTRiLASRqGs2ywXH62UyI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=e9kdY2Jk; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788522422; c=relaxed/simple;
+	bh=No7RxpqQJwgIJeJlpjDe0CUFOgagiIf6Q+PYrkQFE4Q=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=lgNpQOlqyodcf1XRXVFue9i/aoUfPHgrIDBiAGSTO19Ugh9vnG1vGIduTgm9AELWUSyiePDw2dF8w0NjtZrw7wrFnpBpsfqEnWiQjSn6fSctx86v5TVgokih4MECN60DjPCiiUdZFMy7lM0yIYpkDQIAKVAY6chXoxzVFhTcswk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fyUwTLQJ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="e9kdY2Jk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A23C41F00A3D
-	for <linux-xfs@vger.kernel.org>; Fri,  4 Sep 2026 11:32:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fyUwTLQJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 89F9B1F00A3D;
+	Fri,  4 Sep 2026 11:46:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788521565;
-	bh=ATZhJHFxm1U0VYUIEMxTLAh7nfTG2QXjp0ROO/56gMs=;
-	h=From:To:Subject:Date:In-Reply-To:References;
-	b=e9kdY2JkNMWE5bJV+z9Vdm4Ffmx7U+L2W+5RFqYHGDEfcvWQtPI7xoCMou2y5aRlt
-	 jfJigAt7xmgWAXIIthC8gnLRFSiVOhCMIEv/yD7JDCJrm8SsFzKCBdQ/qkGkX63Z9q
-	 Uj8ldz22rRG9g4FKGxPgVr3UJy4vAnA89qfw5uUFqrTYucMBjtjBqlu2hCbTmuwThF
-	 C/7rScMf9DIcQ+xhIT8Wo2P3B6kf0qUhMvsyrGlG6rkyAeuT8N8Gu0Lkc2tVVGZnBH
-	 uYBXSNosrdkoxqTyeLf528g/ashx/RAetnhuIe23oMsesl8WSd8NcdgH5hsDj6RY2h
-	 GJfri4Rda+wUQ==
-From: cem@kernel.org
-To: linux-xfs@vger.kernel.org
-Subject: [RFC PATCH 3/3] xfs: make xfs_iomap_write_direct() report an error to xfs_trans_cancel
-Date: Fri,  4 Sep 2026 13:32:23 +0200
-Message-ID: <20260904113231.1408890-4-cem@kernel.org>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260904113231.1408890-1-cem@kernel.org>
-References: <20260904113231.1408890-1-cem@kernel.org>
+	s=k20260515; t=1788522420;
+	bh=YtoXJyjR8/C4xJI+BwDO07bbXr32ODV2nIQdgU3Ckes=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date;
+	b=fyUwTLQJRIXJp3VrqRYW2BjefRQK3/yM2//HHtDeYWKcwMbsT2ITfarC6sEqHhSy+
+	 ymtgATA8JI9+st+FWhugXaEfosw+GvPR1dnY2a7XIGbVjTr/sije6RImMVr7wE7zpZ
+	 aPD0itVbBEhkbabofDoVZx/1srlFatDsPlMjmgcgqhO0XLJwtGWgPitMCLyGIZm68g
+	 VfnHtW/aWlE8FOlN9TBfq7T+/AJChI+dHincbPxaEK95Kl30NKrc6i2NlJBIEjXVpS
+	 HgVNoJWJw8FCXtbzNjElJESHOwoN3Eq7TRId4p4khzqcm9ypr2T0+vNjv9RNNWkKZJ
+	 yBaMlbnbNKdIA==
+From: Christian Brauner <brauner@kernel.org>
+To: hch@lst.de, "Darrick J . Wong" <djwong@kernel.org>, 
+ linux-fsdevel@vger.kernel.org, Joanne Koong <joannelkoong@gmail.com>
+Cc: changfengnan@bytedance.com, kbusch@kernel.org, 
+ Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>, 
+ Jonathan Corbet <corbet@lwn.net>, David Sterba <dsterba@suse.com>, 
+ Gao Xiang <xiang@kernel.org>, Namjae Jeon <linkinjeon@kernel.org>, 
+ Theodore Ts'o <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>, 
+ Miklos Szeredi <miklos@szeredi.hu>, 
+ Andreas Gruenbacher <agruenba@redhat.com>, 
+ Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>, 
+ Hyunchul Lee <hyc.lee@gmail.com>, 
+ Konstantin Komarov <almaz.alexandrovich@paragon-software.com>, 
+ Carlos Maiolino <cem@kernel.org>, Damien Le Moal <dlemoal@kernel.org>, 
+ libaokun@linux.alibaba.com, bfoster@redhat.com, linux-ext4@vger.kernel.org, 
+ linux-xfs@vger.kernel.org
+In-Reply-To: <20260729192737.3190206-1-joannelkoong@gmail.com>
+References: <20260729192737.3190206-1-joannelkoong@gmail.com>
+Subject: Re: (subset) [PATCH v5 00/22] iomap: convert to in-iter
+ iomap_next() model
+Message-Id: <20260904-darauf-relikt-plazieren-5dbecdd0ae68@brauner>
+Date: Fri, 04 Sep 2026 13:46:53 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.17-dev-db0b7
 
-From: Carlos Maiolino <cem@kernel.org>
+On Wed, 29 Jul 2026 12:27:15 -0700, Joanne Koong wrote:
+> This series implements a suggestion by Christoph for finishing the conversion
+> of iomap to an iterator model. This revives Matthew's previous RFC [1], which
+> had the same intention.
+> 
+> Every iomap operation currently drives its iteration through a struct
+> iomap_ops, which contains two callbacks, ->iomap_begin() and ->iomap_end().
+> iomap_iter() only ever sees these as pointers, so every step of every
+> iteration is an indirect call, including on the hottest paths.
+> 
+> [...]
 
-I've been in the situation a few times where the transaction got
-cancelled by some reason. Most of time because bmapi_write failed and I
-start a guessing game trying to understand why.
+Applied to the vfs-7.3.iomap.final branch of the vfs/vfs.git tree.
+Patches in the vfs-7.3.iomap.final branch should appear in linux-next soon.
 
-So if xfs_iomap_write_direct fails and it causes the transaction to be
-cancelled, send the error to xfs_trans_cancel so the error gets logged
-into the kernel log buffer.
+Please report any outstanding bugs that were missed during review in a
+new review to the original patch series allowing us to drop it.
 
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-Signed-off-by: Carlos Maiolino <cem@kernel.org>
----
- fs/xfs/xfs_iomap.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+It's encouraged to provide Acked-bys and Reviewed-bys even though the
+patch has now been applied. If possible patch trailers will be updated.
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index ff05e6b1b0bb..3d1a52757697 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -344,7 +344,7 @@ xfs_iomap_write_direct(
- 	return error;
- 
- out_trans_cancel:
--	xfs_trans_cancel(tp);
-+	xfs_trans_cancel(tp, error);
- 	goto out_unlock;
- }
- 
--- 
-2.55.0
+Note that commit hashes shown below are subject to change due to rebase,
+trailer updates or similar. If in doubt, please check the listed branch.
+
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
+branch: vfs-7.3.iomap.final
+
+[20/22] iomap: remove ->iomap_begin()/->iomap_end() legacy path
+        https://git.kernel.org/vfs/vfs/c/71864822ce32
+[21/22] iomap: pass iomap_iter_next_fn directly instead of struct iomap_ops
+        https://git.kernel.org/vfs/vfs/c/2a3b6fe7a17f
+[22/22] Documentation: iomap: update docs to reflect iomap_iter_next model
+        https://git.kernel.org/vfs/vfs/c/e16ceb1b6c03
 
