@@ -1,103 +1,176 @@
-Received: from mail-ot1-f45.google.com (mail-ot1-f45.google.com [209.85.210.45])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 088E34908BA
-	for <linux-xfs@vger.kernel.org>; Fri,  4 Sep 2026 12:36:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85F14331ECC;
+	Fri,  4 Sep 2026 13:16:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788525423; cv=none; b=r6XLc90Xu7xJXdbCuZsfaGlE3KkNbzCNVj/y6em3t6Nw3hGhe1UM9qW3JluyVQIN+0zV7h1JA+yeqZPBRY7nQDnvDaCCweGZv+E1Ma2ej40w30VTKP77NclMgoi+86n/Y4r9BeaiRnGJr5TIygZRWVUEjMP9dx6aPnPTp9HwNG8=
+	t=1788527795; cv=none; b=AHn7j9py5FEu5gzMmms38lRk8RzCptr+ZI9Vkzo3Tsu7Yx0XZU+fGMHrxg3CFFP5vODCk5mO2y5w2yEfzLf+C8TdNnrF2bP9EpMhCQmjDLXFUkSqdWV5/mgmBWncLEc+fhm/TwUVIT5B7veHZ7KPM5wYPDf3+DIHpYlGdnkQr74=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788525423; c=relaxed/simple;
-	bh=ZcsYmzObhoBHTNNPxAvGqe+roZExk0LXIokEa/TA6Ic=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=WZYusNDpc6lDGycPyDHFUnfheGzwe0X8ptamqCmo29KgUIzVODARDMaEoKbIqKsUDYc1PLrOzOHoqouAb71SbFFOhQY46yo8m39+WX60I5i98KdYC2P9iSz/ylx73RhWn8N0laoc9MqdVG51dzCtLdpWqRIlBhjn+GZFye4Jy/4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lodhtimT; arc=none smtp.client-ip=209.85.210.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1788527795; c=relaxed/simple;
+	bh=+YgkWcDU8F3CNaYEXZudihIoXQWNpf9rXlg5KlKStok=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=LQqW6yTFdOOGo4FdtNpPH5XfWtB1yhbJYIlKahYkCOa1X8VsfFpG0PZ/IyxcUOutZiGZxUcybM4oHXsdVYgymq8KWCe2S2kWTncPj/s2HrY1EuVHQTO5kR2nzgjravfyeQCoiUr5rj0XGnUfFl1OVwr9Uz7qwWfUaFqzPiFsHIE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jqJS67ci; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lodhtimT"
-Received: by mail-ot1-f45.google.com with SMTP id 46e09a7af769-7f6617c7536so522760a34.1
-        for <linux-xfs@vger.kernel.org>; Fri, 04 Sep 2026 05:36:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788525418; x=1789130218; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=VPjqeXAhECP/NeKzLhAoGYW0KJpn2e3tAGUkNRRmt4k=;
-        b=lodhtimT8tqPkYGOkCF5l6lp+i8CONSr6KfDgkGnsEsg+GfgIBsiK9G/8LgzcfcXcs
-         wJ8T0R+ECQFDqeDqDh3mPWQNF8BIg8NJdBSDvWl1zrksT5KU7x/hrn9u3VH7qaHLJry9
-         g0WzOqCsu3pP/gCo18JjLwIm55Zqzr/y8o1/zqg5CuQ2c4eJyuOoq1407CkmAnaBGRPH
-         oTqwIUm2wp/ELA+NvGkL65g8bedb85Vt/A3YcLKVXYswpuGdrzfwprOrS9hccRYcu2GH
-         nZlAspB4jr/qKqQ228LTXCaKoeVvRuGplSQqNo1R7RjBO0ZUDJL+O0lPG/yMfuZHWKHC
-         GJrg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788525418; x=1789130218;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=VPjqeXAhECP/NeKzLhAoGYW0KJpn2e3tAGUkNRRmt4k=;
-        b=cvb2aivLpBbRlhcnq/DFUt4tz+SinLBFYS/G7FmD4XA7lHTX90TSQg2WXDx062bg3T
-         9UVrBcdA5X4NHvmiojuxZzi3GQ3ThIo47MczUXe5mP7yTCkCAKl6L59YCeuQKoolmtfL
-         jSNDWZFRc+SJ2eXknxHMygGH+l0I7JAXrKVmhdEALF2MIh5m48vOo1Blo/jITzd+ARLL
-         OQNGDaPiCw+biD1v3gZEgozSDtmVdJNqFW4740NDzJtpzTx49k86B2sQmUUrutoO14jp
-         /Wk6LP3C5oDZ/a3PiGNr+RXctQ8sJNaKzc4bRuI03v9ofgFw3sWFbNQWpQf2Oh7LzaoU
-         9msA==
-X-Gm-Message-State: AFuF++kZ/HygKWaNyy+apgLrEFoSdiEx4RamZROynX5If0ldwB9Rbg6+
-	wF3vvFpVUaHE7+nczDqN87zqe5i6M3bVC4WSUVbBLp+qJSWvxmUNgyQ=
-X-Gm-Gg: AYBFou20h8KZQ+k0WMoF4YGgcPTbLHjjQyE6iY8dtiRbC6J5i0+FGRqx66p23rJdTIl
-	TXnDbF3JbqNwnTKYSaka7obq9IWO79e9IZaitj2j7od6K3BcveIr/dbNwOfwi/Q0G4wNffmZz4R
-	D1iTeNf7zru1oRsJXGTPhBmox/7yKV24VavrGkP+F9tTAV/l/VdHhnzcM8qrorirA74Ryc5X9/j
-	Ond2D0pt1xULD3lmxjgE8Hciv4QlCr8/+0+CZwLwAGWeqOb7zffiOH9LK4egDHe721CyD2+Fm2r
-	zNblz79RBktHk+JCa5Jzb+zQcKokO3sEF168V2YSUWcZDsd4YWOjI3pigO/ArUBEx+GLdNIPmhP
-	uRrgqeq24ogPIs3l+fZfhwRd5498w7Sey68np5RFHwBbqKUE4+8MPIDZzpfcEBEfcBsh7tk6G/j
-	NOOliSYdpDSzQQhLBar3HOOuvtWqS6wqNmL0UoaDRKB/SghC/ta9E8aJfqMwjB+WTN9WqHIIARq
-	cFzF+cD0HrUiDigG8zNEGj+CppXbA==
-X-Received: by 2002:a05:6820:561c:b0:6b7:46e9:9713 with SMTP id 006d021491bc7-6b746e9a381mr1437857eaf.67.1788525418491;
-        Fri, 04 Sep 2026 05:36:58 -0700 (PDT)
-Received: from anuj-MacBookPro.. ([2406:7400:63:f76b:f0cd:302:7fec:2f27])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3339bbebf2fsm6944495eec.25.2026.09.04.05.36.55
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 04 Sep 2026 05:36:57 -0700 (PDT)
-From: Anuj Gupta <anuj1072538@gmail.com>
-To: cem@kernel.org,
-	djwong@kernel.org
-Cc: linux-xfs@vger.kernel.org,
-	Anuj Gupta <anuj20.g@samsung.com>
-Subject: [PATCH] xfs: remove unused xfs_reflink_remap_range declaration
-Date: Fri,  4 Sep 2026 18:06:41 +0530
-Message-ID: <20260904123641.3028007-1-anuj1072538@gmail.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jqJS67ci"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5B6241F00A3D;
+	Fri,  4 Sep 2026 13:16:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788527793;
+	bh=7xz3dVVSPaNCSu+TmzDC/laQc7aTwDlAjQNDpRDfNLw=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=jqJS67ciU8r/gwH5GW4JTDmrSPYbgOZZMidG9VZmw+2fOKt3PF8XK2q+bV9+7dmtI
+	 r4d0YccsVpzt8QqCVcZ/DkkDbPFRQbHhp8xZtbsrb+g8o4SsMM96dMQlhT1rtE2iMk
+	 gMgDvZTMydw/VUBTCdWlopfxYplH38jIfcHqU5BKbacEXcblDfjQl+lRv/jFnSuQ4q
+	 Vrl/wfB9yVzntv9LNE23ilqqXrUeKon+C+NS1ng7/lrWxeEgOkOVzeYLJ60PdxCLuS
+	 dMBLlOLzY6zfZuQHTuH/UWtX921ISHeyuy26PS4PutOJ14dojduEX6allkHqtPe6zc
+	 c91StGoYJ0Hig==
+Date: Fri, 4 Sep 2026 15:16:29 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: Hemanth Selam <hemanth.selam@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/2] xfs: fix repeated words in comments
+Message-ID: <aprEgoAcpxbOblRi@andromeda.toxiclabs.cc>
+References: <20260904112909.8197-1-hemanth.selam@gmail.com>
+ <20260904112909.8197-3-hemanth.selam@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260904112909.8197-3-hemanth.selam@gmail.com>
 
-From: Anuj Gupta <anuj20.g@samsung.com>
+On Fri, Sep 04, 2026 at 04:59:04PM +0530, Hemanth Selam wrote:
+> Drop words accidentally written twice, reported by checkpatch.pl as a
+> possible repeated word.  Only touches comments, no code changes.
+> 
+> Assisted-by: Cursor:claude-opus-5
+> Signed-off-by: Hemanth Selam <hemanth.selam@gmail.com>
 
-The implementation was inlined into xfs_file_remap_range() by commit
-3fc9f5e40931 ("xfs: remove xfs_reflink_remap_range"), leaving this
-declaration orphaned.
+There are no need for these two be in separated patches, and please get
+rid of the model there. We are not allowing models to be specified in
+the patch descriptions anymore.
 
-Signed-off-by: Anuj Gupta <anuj20.g@samsung.com>
----
- fs/xfs/xfs_reflink.h | 3 ---
- 1 file changed, 3 deletions(-)
-
-diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-index 9d1ed9bb0bee..683c1841e640 100644
---- a/fs/xfs/xfs_reflink.h
-+++ b/fs/xfs/xfs_reflink.h
-@@ -48,9 +48,6 @@ extern int xfs_reflink_end_cow(struct xfs_inode *ip, xfs_off_t offset,
- int xfs_reflink_end_atomic_cow(struct xfs_inode *ip, xfs_off_t offset,
- 		xfs_off_t count);
- extern int xfs_reflink_recover_cow(struct xfs_mount *mp);
--extern loff_t xfs_reflink_remap_range(struct file *file_in, loff_t pos_in,
--		struct file *file_out, loff_t pos_out, loff_t len,
--		unsigned int remap_flags);
- extern int xfs_reflink_inode_has_shared_extents(struct xfs_trans *tp,
- 		struct xfs_inode *ip, bool *has_shared);
- extern int xfs_reflink_clear_inode_flag(struct xfs_inode *ip,
--- 
-2.43.0
-
+> ---
+>  fs/xfs/libxfs/xfs_exchmaps.c   | 2 +-
+>  fs/xfs/libxfs/xfs_inode_buf.c  | 2 +-
+>  fs/xfs/scrub/agheader_repair.c | 2 +-
+>  fs/xfs/scrub/alloc_repair.c    | 2 +-
+>  fs/xfs/scrub/reap.c            | 2 +-
+>  fs/xfs/xfs_bmap_item.c         | 2 +-
+>  fs/xfs/xfs_zone_alloc.c        | 2 +-
+>  fs/xfs/xfs_zone_gc.c           | 2 +-
+>  8 files changed, 8 insertions(+), 8 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_exchmaps.c b/fs/xfs/libxfs/xfs_exchmaps.c
+> index 3efed37cb98a..6a66b6075e0a 100644
+> --- a/fs/xfs/libxfs/xfs_exchmaps.c
+> +++ b/fs/xfs/libxfs/xfs_exchmaps.c
+> @@ -395,7 +395,7 @@ xfs_exchmaps_one_step(
+>  	/*
+>  	 * Re-add both mappings.  We exchange the file offsets between the two
+>  	 * maps and add the opposite map, which has the effect of filling the
+> -	 * logical offsets we just unmapped, but with with the physical mapping
+> +	 * logical offsets we just unmapped, but with the physical mapping
+>  	 * information exchanged.
+>  	 */
+>  	swap(irec1->br_startoff, irec2->br_startoff);
+> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> index e4c3f7b24e95..0340e2189921 100644
+> --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> @@ -626,7 +626,7 @@ xfs_dinode_verify(
+>  	 * have di_nlink track the link count, even if the actual filesystem
+>  	 * only supported V1 inodes (i.e. di_onlink).  When writing out the
+>  	 * ondisk inode, it would set both the ondisk di_nlink and di_onlink to
+> -	 * the the incore di_nlink value, which is why we cannot check for
+> +	 * the incore di_nlink value, which is why we cannot check for
+>  	 * di_nlink==0 on a V1 inode.  V2/3 inodes would get written out with
+>  	 * di_onlink==0, so we can check that.
+>  	 */
+> diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
+> index 2104512f1ee1..493efa2b2f0d 100644
+> --- a/fs/xfs/scrub/agheader_repair.c
+> +++ b/fs/xfs/scrub/agheader_repair.c
+> @@ -1352,7 +1352,7 @@ xrep_iunlink_mark_ondisk(
+>  
+>  /*
+>   * Walk an iunlink bucket's inode list.  For each inode that should be on this
+> - * chain, clear its entry in in iunlink_bmp because it's ok and we don't need
+> + * chain, clear its entry in iunlink_bmp because it's ok and we don't need
+>   * to touch it further.
+>   */
+>  STATIC int
+> diff --git a/fs/xfs/scrub/alloc_repair.c b/fs/xfs/scrub/alloc_repair.c
+> index dce6ab0429dc..84ae88ca027a 100644
+> --- a/fs/xfs/scrub/alloc_repair.c
+> +++ b/fs/xfs/scrub/alloc_repair.c
+> @@ -338,7 +338,7 @@ xrep_cntbt_extent_cmp(
+>  }
+>  
+>  /*
+> - * Sort the free extents by length so so that we can put the records into the
+> + * Sort the free extents by length so that we can put the records into the
+>   * cntbt in the correct order.  Don't let userspace kill us if we're resorting
+>   * after allocating btree blocks.
+>   */
+> diff --git a/fs/xfs/scrub/reap.c b/fs/xfs/scrub/reap.c
+> index fcd14c1703ea..d1f4b7159af2 100644
+> --- a/fs/xfs/scrub/reap.c
+> +++ b/fs/xfs/scrub/reap.c
+> @@ -172,7 +172,7 @@ static inline bool xreap_is_dirty(const struct xreap_state *rs)
+>  }
+>  
+>  /*
+> - * Decide if we need to roll the transaction to clear out the the log
+> + * Decide if we need to roll the transaction to clear out the log
+>   * reservation that we allocated to buffer invalidations.
+>   */
+>  static inline bool xreap_want_binval_roll(const struct xreap_state *rs)
+> diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+> index 89f6e79a955f..aa5b41629747 100644
+> --- a/fs/xfs/xfs_bmap_item.c
+> +++ b/fs/xfs/xfs_bmap_item.c
+> @@ -339,7 +339,7 @@ xfs_bmap_update_get_group(
+>  
+>  	/*
+>  	 * Bump the intent count on behalf of the deferred rmap and refcount
+> -	 * intent items that that we can queue when we finish this bmap work.
+> +	 * intent items that we can queue when we finish this bmap work.
+>  	 * This new intent item will bump the intent count before the bmap
+>  	 * intent drops the intent count, ensuring that the intent count
+>  	 * remains nonzero across the transaction roll.
+> diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
+> index bdbb60cc5d5b..f678015457c9 100644
+> --- a/fs/xfs/xfs_zone_alloc.c
+> +++ b/fs/xfs/xfs_zone_alloc.c
+> @@ -826,7 +826,7 @@ xfs_get_cached_zone(
+>  }
+>  
+>  /*
+> - * Stash our zone in the inode so that is is reused for future allocations.
+> + * Stash our zone in the inode so that is reused for future allocations.
+>   *
+>   * The open_zone structure will be pinned until either the inode is freed or
+>   * until the cached open zone is replaced with a different one because the
+> diff --git a/fs/xfs/xfs_zone_gc.c b/fs/xfs/xfs_zone_gc.c
+> index 5fdcf98a2133..54b70ed2922f 100644
+> --- a/fs/xfs/xfs_zone_gc.c
+> +++ b/fs/xfs/xfs_zone_gc.c
+> @@ -46,7 +46,7 @@
+>   * before remapping.
+>   *
+>   * Once a zone does not contain any valid data, be that through GC or user
+> - * block removal, it is queued for for a zone reset.  The reset operation
+> + * block removal, it is queued for a zone reset.  The reset operation
+>   * carefully ensures that the RT device cache is flushed and all transactions
+>   * referencing the rmap have been committed to disk.
+>   */
+> -- 
+> 2.48.1
+> 
+> 
