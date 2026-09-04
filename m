@@ -1,45 +1,51 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 948DB445ACD;
-	Fri,  4 Sep 2026 09:34:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F877445AC6;
+	Fri,  4 Sep 2026 09:54:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788514484; cv=none; b=K7nunfogWe3ca9FfgStlRtYSKRRnDgWsurh/HUcyF1CAzYqF/GcSI2ssw0y88Na7Qsza2x2DHK52r+FTC5ez/VTyHh5OW/8qR8/vcOT+h+NbrKyNU7jWfs+taL++JR764C9LfEm5ugmE+D+ZCYwEj2ZXLyz+RssH1TQvRyo3Exk=
+	t=1788515696; cv=none; b=D+8EQ88vuSQc623sUNz+6Kn6pGeaEWyAgx8WH6qVk/EQjTG8AivuX/xCiTnJelSyZyBvGevpA086fQkoyE2j6RksEo5bL8iZ/xQQWG14AFu8UZ8JfsoPTez5e5tJ0wZ4iznvkoXpJ0CwCr7sMtCbkZUMWEhSy+7+BgKb3lVLDJk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788514484; c=relaxed/simple;
-	bh=RaAQC1csl/TZXaFPApDzX6VvxQ/8nf34Pz0A5s9J87o=;
+	s=arc-20240116; t=1788515696; c=relaxed/simple;
+	bh=eJdBf1rdIxDT5xpJUkFuSybvkBG661dnEGS9ikAwuv0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bihUak2+EqnoVVGMDMIdosQviefrXy/qZYIgFhpbeIdUKnkWWBfMi3OIgKdkbEbf276gxJL+QnLJzYp09/hx9eQSX8Ty6jQ1mFtuo8b2RBSJUUeJG5p1ldPh4NPC0e4cXJF6AEF26nNE524RoWqIYTbkgWP7qYsOiBew8a5UySU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MP+7vBL4; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=hR4O+DcgtZIDaGL+Hzyzh5AWrrb8xDyAQ0m//2TE7D5VqllfGSkEH1+ItneFzDXN/nDnYuC8Hwg4tDRep2OaDGNwZZ7+M8/3Qgz1PwHvajQT9EaEvbAHdshBWa8JbIs1z0Hc01jRhw7jbJkBNXwPd8w2WnHct005QxvwG4zJEZE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AYBz7On/; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MP+7vBL4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 53C921F00A3D;
-	Fri,  4 Sep 2026 09:34:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AYBz7On/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 578801F00A3D;
+	Fri,  4 Sep 2026 09:54:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788514483;
-	bh=eK397mSRVgm1qG90uV7zAPfrgCr1A8mrhqFDHCunWWU=;
+	s=k20260515; t=1788515694;
+	bh=s6vbWpY5Z/G7ZlqVuOMJfoiEqYIeiGW1jnFkESRWPQw=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=MP+7vBL4CvZI8+aPjTemUNhZqygTPRJsrM48ckDbY6znvXHMXoCdgptFL3eP0SrXV
-	 9UIwYJnGwO3EMtZJPbTAwfE5XGwRhNEApT/RS8oROfqjyJbRY6Fhsn8CcFmt7P1IrP
-	 oWCm+RlxLuwYXotdgllqn3bnLzE/dCkGs4b+JAjQptz6KoJCYdjxAegePnGOPPKkpU
-	 dAMpq/zIrNwrcBTzAz+vbadLH0COjmFu9p+bqScj2ZT46xdpsMlnmdYvvTRprVFfPU
-	 7CKX1SP3al+vXQPaqpbTc3/8xtG4pZC6nptsxHrZmr1/rA64v8Wf/wwM4KTWbg2PcO
-	 1Bn1WFM20fdug==
-Date: Fri, 4 Sep 2026 11:34:37 +0200
+	b=AYBz7On/UKbMSHwv9pVA4LB8ojOthiXuJxV9KIMV3Y47XYk8NGQWdNvUu2+pBg5on
+	 MBGlopAjnUcKYVewLRfzBrYLoiPJwSeyt/doI7klYZqjFSZdSFBuzquq1/6C6az3Il
+	 /Z0bvawzV4l/VLSb9Vmv+iO9w1H5ts7eVdQxh6NTA1hcvoPuSDYrJgKE8ZL3yfyeQT
+	 +o1KVJgJhmtWjBAwAF5moWjvnQwwWpjbcOL/zUP/pyyMKvSTq0UsNleSIkYNULqdFQ
+	 z9yWQ19Qy5i52Zpqi86uT9OA8YBOYGxdHRS4g9T+Dh0sYiHjpw2+1TAgtvAkGn4Kj8
+	 Kh/mf9BL3/mfQ==
+Date: Fri, 4 Sep 2026 11:54:47 +0200
 From: Christian Brauner <brauner@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Christoph Hellwig <hch@lst.de>, Jan Kara <jack@suse.cz>, 
-	Jens Axboe <axboe@kernel.dk>, Alexander Viro <viro@zeniv.linux.org.uk>, 
-	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org, Chris Mason <clm@fb.com>, 
-	David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, 
-	linux-ext4@vger.kernel.org, Gao Xiang <xiang@kernel.org>, linux-erofs@lists.ozlabs.org
-Subject: Re: [PATCH RFC 4/8] xfs: port to fs_bdev_file_open_by_path()
-Message-ID: <20260904-resignieren-ambiente-beweis-b7a6044bb60f@brauner>
-References: <20260602-work-super-bdev_holder_global-v1-0-bb0fd82f3861@kernel.org>
- <20260602-work-super-bdev_holder_global-v1-4-bb0fd82f3861@kernel.org>
- <apLx7pdNVkHPkrAq@infradead.org>
+To: Joanne Koong <joannelkoong@gmail.com>
+Cc: hch@lst.de, "Darrick J . Wong" <djwong@kernel.org>, 
+	linux-fsdevel@vger.kernel.org, changfengnan@bytedance.com, kbusch@kernel.org, 
+	Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>, Jonathan Corbet <corbet@lwn.net>, 
+	David Sterba <dsterba@suse.com>, Gao Xiang <xiang@kernel.org>, 
+	Namjae Jeon <linkinjeon@kernel.org>, Theodore Ts'o <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>, 
+	Miklos Szeredi <miklos@szeredi.hu>, Andreas Gruenbacher <agruenba@redhat.com>, 
+	Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>, Hyunchul Lee <hyc.lee@gmail.com>, 
+	Konstantin Komarov <almaz.alexandrovich@paragon-software.com>, Carlos Maiolino <cem@kernel.org>, 
+	Damien Le Moal <dlemoal@kernel.org>, libaokun@linux.alibaba.com, bfoster@redhat.com, 
+	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: (subset) [PATCH v5 00/22] iomap: convert to in-iter iomap_next()
+ model
+Message-ID: <20260904-setzlinge-hausbank-bewarben-bc80609b311a@brauner>
+References: <20260729192737.3190206-1-joannelkoong@gmail.com>
+ <20260730-habseligkeiten-adrett-axthieb-e619a48325ad@brauner>
+ <20260731-hirte-hacken-atmen-bdecd01097f1@brauner>
+ <CAJnrk1aX__NiZs-RE1N1MzDVeCsRt12d_mwX_K7Eq2bHtNfdYA@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,22 +54,25 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <apLx7pdNVkHPkrAq@infradead.org>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAJnrk1aX__NiZs-RE1N1MzDVeCsRt12d_mwX_K7Eq2bHtNfdYA@mail.gmail.com>
 
-On Sat, Aug 29, 2026 at 07:51:26AM -0700, Christoph Hellwig wrote:
-> This causes regressions in xfstests xfs/006 xfs/264 when running with
-> a RT device because reopening the dm substitutef RT device returns
-> -EBUSY:
+On Wed, Sep 02, 2026 at 10:45:38AM -0700, Joanne Koong wrote:
+> On Fri, Jul 31, 2026 at 6:40 AM Christian Brauner <brauner@kernel.org> wrote:
+> >
+> > > [20/22] iomap: remove ->iomap_begin()/->iomap_end() legacy path
+> > >         https://git.kernel.org/vfs/vfs/c/0210c4ba2547
+> >
+> > That accidently slipped in. I have not dropped this from the v7.3 merge
+> > window. I'll get a v7.3-rc1.iomap ready with the last three patches.
+> >
 > 
-> [   20.814542] XFS (dm-0): log I/O error -5
-> [   20.815055] XFS (dm-0): Filesystem has been shut down due to log error (0x2).
-> [   20.815960] XFS (dm-0): Please unmount the filesystem and rectify the problem(s).
-> [   20.906440] device-mapper: zone: dm-1 using native zone append
-> [   20.954262] XFS (dm-0): Invalid device [/dev/mapper/error-rttest.264], error=-16
-> [   20.970876] XFS (dm-0): Invalid device [/dev/mapper/error-rttest.264], error=-16
+> Hi Christian,
 > 
-> I'm also a bit surprised a RFC patch without any xfs rviews landed in
-> Linus tree, especially as the series alsso got various NAKs..
+> Hope you're having a great week so far. I'm not seeing the last 3
+> patches as part of v7.3-rc1. Do you think it would make more sense to
+> have it be included in rc2 or to have it be part of v7.4? I'm happy
+> with either, just wanted to flag this in case I'm missing something.
 
-I said I'll wait for Jan to comment and once he Acked it it landed in
--next for multiple months.
+No, we can still try and send it for -rc2. I'll pick them up in a
+second.
