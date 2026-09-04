@@ -1,71 +1,71 @@
-Received: from mail-oo1-f47.google.com (mail-oo1-f47.google.com [209.85.161.47])
+Received: from mail-ot1-f48.google.com (mail-ot1-f48.google.com [209.85.210.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECE634746C1
-	for <linux-xfs@vger.kernel.org>; Fri,  4 Sep 2026 11:29:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0385C4756DF
+	for <linux-xfs@vger.kernel.org>; Fri,  4 Sep 2026 11:29:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788521360; cv=none; b=KYJmJLM/FaQsy61oF1sv6Tzzdt0roHwoCyJBMhmrufQ/f0LhC4kWoHUARna1qwZKtMeHusR4cFSA4k41eLAlk4ZOq52ascGKSw58T3ybmAFzNUtye3PtRTvWXVzMKPJOJKhm8Z2fmXaJq0atc0mzdJil5BSqGZQPOjzp/qevMco=
+	t=1788521364; cv=none; b=QuwHab6jKpegVwfw1AUtb5jpxVyTCC1pPGEkT6YS5j1P1kgs3p9ZJAC8lvP707q3D1dPrXh+zzhEu+QIQsPIPVb8RrS5STkH+9Gl4Zk+Cyv+47NP7ydFzf4HkwKNW5H1COed5N1ahZGEwXTm/puKBnXV0qOccglxmv+SfWNjpJw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788521360; c=relaxed/simple;
-	bh=KXC/47lyfU6Fd+iI58P2dXNlPaGiEdTE+UkO1h9fEqo=;
+	s=arc-20240116; t=1788521364; c=relaxed/simple;
+	bh=Lj1PD2f9pz9Ij9feSfZgUHW3PElHqmhNb8Lh8E2bENM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=S9kVI8SeYgE+huYFGDDiRGx7doAUBzJMNBNvX+KcFwxcHcWCln0wcQbDRntAXo7cYzxO64mOununeSknbSbQZC4j77aob2XhmOCq4DskgcQaNniDNZNBIdC0QV873xXHA6FPWAAJb4YHpo0VqzRKuMTTzcpHeuRAkezAn2JELNo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Da8VEQbm; arc=none smtp.client-ip=209.85.161.47
+	 MIME-Version; b=d/1QL3XhCYBWKb9Boe7o8IVfYqa1y4eTwhvkybREozSkdMaSK+KSVrs3yJrDNzOrQ0H9Rjh+SXqC3NScfaMzuQAE+G0kKxwmq4MSEf59uA06nG6QvCayG/X8zowrAx0W4Ae6W4Z8QTA9onZmBacIJ/VbrB75eelOleaiF/VUA4Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=iCVLi3Kx; arc=none smtp.client-ip=209.85.210.48
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Da8VEQbm"
-Received: by mail-oo1-f47.google.com with SMTP id 006d021491bc7-6b1c75f0049so662987eaf.3
-        for <linux-xfs@vger.kernel.org>; Fri, 04 Sep 2026 04:29:18 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iCVLi3Kx"
+Received: by mail-ot1-f48.google.com with SMTP id 46e09a7af769-7eb6573bd52so934468a34.3
+        for <linux-xfs@vger.kernel.org>; Fri, 04 Sep 2026 04:29:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788521358; x=1789126158; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1788521362; x=1789126162; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=donC4cVxpSvViWFIHyYJ5B8ZHRJStvZlBU6xIf4stOU=;
-        b=Da8VEQbmY1sV2XQE27OcKCb1gs8+O3C6qVmrmhUBlrp49U9vQb89da1qXNMdIPxgdI
-         9fpo4jb2EhITlCA+WNhHE9haYL3hYh2pqeijf/MiZNGXE/fkbvWlWUeZ5Dc9i2H9R+J0
-         myTvNJe0bI58mnKoOEz2D7FEKlCAOcOjKIDe0KF7A9B2ehy79tz3UG0cjP+k+yFWHi3B
-         wouJWFXFynyABkGhjjhIuo1X68LIw5o0fSUB9rP9YfCBhenFk45is86vlAMXE+/tYGEZ
-         pAdLyDSN3WZJ+L1PInU1a5aEEgWAou88u/rcLN4HbrR2rT0cBUauOaaE8JgDcQEP0diC
-         Txgg==
+        bh=tveKHrh1E9a3s6wI0Ntl0PNo6E2y3iS+apLHkE6dGO8=;
+        b=iCVLi3KxtwLY0huIxj3w4ZkcrZ4tvFlnEIBQA5LH3CxwBkEIO8e1tnQljW3eV7L/tQ
+         b3mgLi48UEfE7inKX6R0djNVCDvjIN0ozdd1T1BWo4ktcq/r+LMKOiNedTe8gl2Vh3oQ
+         FC11Rk56n98xfeUUBHVDpJsvh8hUkWzg1MgPUVZde99m9mvunqd+B+d4eeVO3+EsNGff
+         ISnRYLahy5DKRMGhZOk+VmpL0KGjW+dGXdKOERlFeejsFTN/75C7+t8JjezFj0JUI1s1
+         DCC7Yw5y8n9DhSXuDEYsa/DSjVNHmPmDwaQ5/GM1bRXDhDDrULFlbTAovT+yn9D8ozJe
+         IPYw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788521358; x=1789126158;
+        d=1e100.net; s=20251104; t=1788521362; x=1789126162;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=donC4cVxpSvViWFIHyYJ5B8ZHRJStvZlBU6xIf4stOU=;
-        b=KKvgpV7PmZ9VZhbPztlV6NDQnCnSdZCIMd7SrdYmANwBtp9MQpxKNcfpzelhB8pPpV
-         z/jjcYnOHcKV/g2vXRDZCupBCshHbwhp+sIi/CYKT0ky5MT8MQVU/OLyRtEwPOpL9n9I
-         khz+sEUuK39TEjxe/dKd+36F0ayZZpVXcUE1vLcOtIPeZQhCm0P26r1OrFazNmhqWATn
-         VFME7KzIPta/dCtnpIxb13FSCWlVVSSZn8KIyaeWX5IJhBNAKTs4DQux64Ff5MgenR6u
-         mfixw0FsheJi7i2HEFXKgjwpv9POWTiuF43AkMxyn+datFVDBgYQiKrwic2Ek5KNBjfs
-         SUIg==
-X-Forwarded-Encrypted: i=1; AKwUvBxurqwagMgWa8B99yDJ9qmvZish3rlcak/5NK7Zcju0scWIbCqF1uo+2jzNHe/3tmFYkGu7HpnP1TE=@vger.kernel.org
-X-Gm-Message-State: AFuF++l0evnRTu+Jnx9Ji5ZFVMSSHob2C9MVO3OkVpWLN2q4sqBOuTaO
-	/EoE/Pc6Rx2yOeSXd9YNqd0eYyceA1Q2MpWlOZKK1VvBOdAUaSffOg9sip+CGLtsO4M=
-X-Gm-Gg: AYBFou0sAFYUHlJgTpS+Gr7uRq2DLRj0YopNOeJOq1jIupQHOiD4QNn68qD2nPtZz2b
-	r5HixdKM+mEsIO/sURhE4WQXWj9xQl682N6J4f55zbsdtQ/f4v8jBjCZgUi6MOGK0p3mlpIaOHd
-	PMKLvARlxj5er7X5SVEIjKheXyj5WE67ZwutwsRIPRdsgI5vj0J9aVqjO14SjxYMdhsDjpHvbZR
-	mfYA1Nl3HM9jVQrFSZe0I09TbFB1XQGfvLPYQJG2T6KTjFs/cndkhd7MJWWiFzWEcn6CoPsebvF
-	hstBdYcH+q29Oe5nq5kJwVSWt24GwxBoKAN0QRtxOsBikO482YHykDlDU1q913f7RUidfQFtVJx
-	9wF8xcqPu5t3hLBGPJhyO5LMHnPwG4cwDQzyH9V5c+TSbw04BaD95h8FlaLIncet5SPOZ11yuw5
-	EQk93vrUmNB8HuppylYQRU+OaM3ICVP6HhUbQesA2t69k8DpzZkaATZ3OHqGVynQUhgE5EbUjne
-	9zkx2fBZwo46HM=
-X-Received: by 2002:a05:6820:616:b0:6b1:bdd9:45d with SMTP id 006d021491bc7-6b6fcbdeb26mr3935249eaf.21.1788521357738;
-        Fri, 04 Sep 2026 04:29:17 -0700 (PDT)
+        bh=tveKHrh1E9a3s6wI0Ntl0PNo6E2y3iS+apLHkE6dGO8=;
+        b=Kur10Zr8otmcaNVMEVokMr80u7uiqeCWAjvsLEKE61ScRhJfDJKjeKarGk6oXQcsSK
+         n2Ndsesocx77LhDTTFiGTtJuI24bwNHXFghQ82N7lN444inmYMmHIsx4dIsieT5cTS1d
+         spshdc4Gm8aAgQNi7Fld1ahd1M1+jFv3YDPjYWjASGCW54Kodeh1L+JYZqjKqfAOoBwr
+         Dreblvo3KxnqxXBJA3GtN3ISiNNEb5IwMDY9Sxl/i1qQpy91/qgx8QQKbxCRgIkn/AFH
+         6JODD5bFvHlPa44eWPDgbgdJeTKpedalWsqivUHWEEvfD/aSmac/VxVlCMWQtYvPW1Xw
+         WW1Q==
+X-Forwarded-Encrypted: i=1; AKwUvBwl46h/o7VpZMFYKPcL6zCcH4BiljvX+42aGupdg27jbb4dF5rs8pKNCM6Fl0asBJbJqXQcFGbeqpQ=@vger.kernel.org
+X-Gm-Message-State: AFuF++mdchzF2ase8SDeYAOZIVDfDDdCX9Ifx6h4evJyDmpVbPrz6xI0
+	pgTyB7XMPGBTm2hY0W8spDYVDDZIS8TcSvoH5XI+QqRai04ud/XqGHmZ
+X-Gm-Gg: AYBFou1KuWbD19bdLsUtAx+YhHPWDdJTgx7GUVBtHojMdbVVhGpodEsMPFj/l+rZeJH
+	HD2ZJM/GUfvjM7exMxXlldyOiehsjnv4Lu+Lk44js11d6KjrECMJEVC7stahA2SpUo0GoCesx+R
+	js+wcxXdT1Lk6xkNbTlX2VDqorPjdJbGWkKrsDgf34xin0BJT9aWYS0WsyReImp1WsWQCxSeKA8
+	yu2WQcrYi8MlMQ3vJ32rtEU9KWwoM4BdGwzz8RA3YQl0V5SIDZk5S8UWOfa/cJgRibhmAA2Tdfm
+	nY+tgVtouSUIXLkCOqIh2IqhR4oX1a+1kKKzFJN5446iEApFhUYLhFtJsNJdt0XySwClJF6IXr2
+	Vq/i8Pnbka5h5mzufv6bC5D2xiNCusEDefIWbeMhCieqFigoiAch0SNZoQLE0xHPcfogvTHlp/t
+	oEF+btPbosHKOVuQZAd9Ud82pyxPvx91Nlc8ZMp+gCy/0sl1yiI8NrFoSVlrpSYZzpWHNWk9Wgk
+	ePICuxI9rcqPiKh2jbFQYWQbw==
+X-Received: by 2002:a05:6820:188d:b0:6b3:6658:cb02 with SMTP id 006d021491bc7-6b6fdac57d8mr3533484eaf.33.1788521361804;
+        Fri, 04 Sep 2026 04:29:21 -0700 (PDT)
 Received: from volcano9f6e-hostos.amd.com ([165.204.217.251])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1432435648esm7443259c88.5.2026.09.04.04.29.15
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1432435648esm7443259c88.5.2026.09.04.04.29.19
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 04 Sep 2026 04:29:17 -0700 (PDT)
+        Fri, 04 Sep 2026 04:29:21 -0700 (PDT)
 From: Hemanth Selam <hemanth.selam@gmail.com>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: linux-kernel@vger.kernel.org,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 1/2] xfs: fix typos in comments
-Date: Fri,  4 Sep 2026 16:59:03 +0530
-Message-ID: <20260904112909.8197-2-hemanth.selam@gmail.com>
+Subject: [PATCH 2/2] xfs: fix repeated words in comments
+Date: Fri,  4 Sep 2026 16:59:04 +0530
+Message-ID: <20260904112909.8197-3-hemanth.selam@gmail.com>
 X-Mailer: git-send-email 2.48.1
 In-Reply-To: <20260904112909.8197-1-hemanth.selam@gmail.com>
 References: <20260904112909.8197-1-hemanth.selam@gmail.com>
@@ -77,150 +77,126 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Fix typos in comments, reported by scripts/checkpatch.pl using the
-misspelling list in scripts/spelling.txt.  Only touches comments, no code
-changes.
+Drop words accidentally written twice, reported by checkpatch.pl as a
+possible repeated word.  Only touches comments, no code changes.
 
 Assisted-by: Cursor:claude-opus-5
 Signed-off-by: Hemanth Selam <hemanth.selam@gmail.com>
 ---
- fs/xfs/libxfs/xfs_ag.h        | 2 +-
- fs/xfs/libxfs/xfs_alloc.c     | 4 ++--
- fs/xfs/libxfs/xfs_attr_leaf.c | 2 +-
- fs/xfs/libxfs/xfs_errortag.h  | 2 +-
- fs/xfs/libxfs/xfs_format.h    | 2 +-
- fs/xfs/scrub/dirtree.c        | 2 +-
- fs/xfs/xfs_inode.c            | 2 +-
- fs/xfs/xfs_log_cil.c          | 2 +-
- fs/xfs/xfs_platform.h         | 2 +-
- 9 files changed, 10 insertions(+), 10 deletions(-)
+ fs/xfs/libxfs/xfs_exchmaps.c   | 2 +-
+ fs/xfs/libxfs/xfs_inode_buf.c  | 2 +-
+ fs/xfs/scrub/agheader_repair.c | 2 +-
+ fs/xfs/scrub/alloc_repair.c    | 2 +-
+ fs/xfs/scrub/reap.c            | 2 +-
+ fs/xfs/xfs_bmap_item.c         | 2 +-
+ fs/xfs/xfs_zone_alloc.c        | 2 +-
+ fs/xfs/xfs_zone_gc.c           | 2 +-
+ 8 files changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
-index fd22fe598931..ee636b66a72f 100644
---- a/fs/xfs/libxfs/xfs_ag.h
-+++ b/fs/xfs/libxfs/xfs_ag.h
-@@ -207,7 +207,7 @@ xfs_perag_next(
+diff --git a/fs/xfs/libxfs/xfs_exchmaps.c b/fs/xfs/libxfs/xfs_exchmaps.c
+index 3efed37cb98a..6a66b6075e0a 100644
+--- a/fs/xfs/libxfs/xfs_exchmaps.c
++++ b/fs/xfs/libxfs/xfs_exchmaps.c
+@@ -395,7 +395,7 @@ xfs_exchmaps_one_step(
+ 	/*
+ 	 * Re-add both mappings.  We exchange the file offsets between the two
+ 	 * maps and add the opposite map, which has the effect of filling the
+-	 * logical offsets we just unmapped, but with with the physical mapping
++	 * logical offsets we just unmapped, but with the physical mapping
+ 	 * information exchanged.
+ 	 */
+ 	swap(irec1->br_startoff, irec2->br_startoff);
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index e4c3f7b24e95..0340e2189921 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -626,7 +626,7 @@ xfs_dinode_verify(
+ 	 * have di_nlink track the link count, even if the actual filesystem
+ 	 * only supported V1 inodes (i.e. di_onlink).  When writing out the
+ 	 * ondisk inode, it would set both the ondisk di_nlink and di_onlink to
+-	 * the the incore di_nlink value, which is why we cannot check for
++	 * the incore di_nlink value, which is why we cannot check for
+ 	 * di_nlink==0 on a V1 inode.  V2/3 inodes would get written out with
+ 	 * di_onlink==0, so we can check that.
+ 	 */
+diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
+index 2104512f1ee1..493efa2b2f0d 100644
+--- a/fs/xfs/scrub/agheader_repair.c
++++ b/fs/xfs/scrub/agheader_repair.c
+@@ -1352,7 +1352,7 @@ xrep_iunlink_mark_ondisk(
+ 
+ /*
+  * Walk an iunlink bucket's inode list.  For each inode that should be on this
+- * chain, clear its entry in in iunlink_bmp because it's ok and we don't need
++ * chain, clear its entry in iunlink_bmp because it's ok and we don't need
+  * to touch it further.
+  */
+ STATIC int
+diff --git a/fs/xfs/scrub/alloc_repair.c b/fs/xfs/scrub/alloc_repair.c
+index dce6ab0429dc..84ae88ca027a 100644
+--- a/fs/xfs/scrub/alloc_repair.c
++++ b/fs/xfs/scrub/alloc_repair.c
+@@ -338,7 +338,7 @@ xrep_cntbt_extent_cmp(
  }
  
  /*
-- * Per-ag geometry infomation and validation
-+ * Per-ag geometry information and validation
+- * Sort the free extents by length so so that we can put the records into the
++ * Sort the free extents by length so that we can put the records into the
+  * cntbt in the correct order.  Don't let userspace kill us if we're resorting
+  * after allocating btree blocks.
   */
- xfs_agblock_t xfs_ag_block_count(struct xfs_mount *mp, xfs_agnumber_t agno);
- void xfs_agino_range(struct xfs_mount *mp, xfs_agnumber_t agno,
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index d99602bcc16f..f762dcce8d13 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -3487,7 +3487,7 @@ xfs_alloc_read_agf(
+diff --git a/fs/xfs/scrub/reap.c b/fs/xfs/scrub/reap.c
+index fcd14c1703ea..d1f4b7159af2 100644
+--- a/fs/xfs/scrub/reap.c
++++ b/fs/xfs/scrub/reap.c
+@@ -172,7 +172,7 @@ static inline bool xreap_is_dirty(const struct xreap_state *rs)
  }
  
  /*
-- * Pre-proces allocation arguments to set initial state that we don't require
-+ * Pre-process allocation arguments to set initial state that we don't require
-  * callers to set up correctly, as well as bounds check the allocation args
-  * that are set up.
+- * Decide if we need to roll the transaction to clear out the the log
++ * Decide if we need to roll the transaction to clear out the log
+  * reservation that we allocated to buffer invalidations.
   */
-@@ -3608,7 +3608,7 @@ xfs_alloc_vextent_finish(
- 	 * ABBA AGF deadlocks because a future allocation attempt in this
- 	 * transaction may attempt to lock a lower number AGF.
- 	 *
--	 * We can't release the AGF until the transaction is commited, so at
-+	 * We can't release the AGF until the transaction is committed, so at
- 	 * this point we must update the "first allocation" tracker to point at
- 	 * this AG if the tracker is empty or points to a lower AG. This allows
- 	 * the next allocation attempt to be modified appropriately to avoid
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index b6288395f853..2c80f4fd0b78 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -1715,7 +1715,7 @@ xfs_attr3_leaf_add_work(
- 			/*
- 			 * This freemap entry starts at the old end of the
- 			 * leaf entry array, so we need to adjust its base
--			 * upward to accomodate the larger array.
-+			 * upward to accommodate the larger array.
- 			 */
- 			diff = sizeof(struct xfs_attr_leaf_entry);
- 		} else if (ichdr->freemap[i].size > 0 &&
-diff --git a/fs/xfs/libxfs/xfs_errortag.h b/fs/xfs/libxfs/xfs_errortag.h
-index 6de207fed2d8..f0c83f1f0b3b 100644
---- a/fs/xfs/libxfs/xfs_errortag.h
-+++ b/fs/xfs/libxfs/xfs_errortag.h
-@@ -83,7 +83,7 @@
- #define XFS_RANDOM_DEFAULT				100
+ static inline bool xreap_want_binval_roll(const struct xreap_state *rs)
+diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+index 89f6e79a955f..aa5b41629747 100644
+--- a/fs/xfs/xfs_bmap_item.c
++++ b/fs/xfs/xfs_bmap_item.c
+@@ -339,7 +339,7 @@ xfs_bmap_update_get_group(
+ 
+ 	/*
+ 	 * Bump the intent count on behalf of the deferred rmap and refcount
+-	 * intent items that that we can queue when we finish this bmap work.
++	 * intent items that we can queue when we finish this bmap work.
+ 	 * This new intent item will bump the intent count before the bmap
+ 	 * intent drops the intent count, ensuring that the intent count
+ 	 * remains nonzero across the transaction roll.
+diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
+index bdbb60cc5d5b..f678015457c9 100644
+--- a/fs/xfs/xfs_zone_alloc.c
++++ b/fs/xfs/xfs_zone_alloc.c
+@@ -826,7 +826,7 @@ xfs_get_cached_zone(
+ }
  
  /*
-- * Table of errror injection knobs.  The parameters to the XFS_ERRTAG macro are:
-+ * Table of error injection knobs.  The parameters to the XFS_ERRTAG macro are:
-  *   1. The XFS_ERRTAG_ flag but without the prefix;
-  *   2. The name of the sysfs knob; and
-  *   3. The default value for the knob.
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index dd0ed046fbe9..1a7a7e60a170 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -1051,7 +1051,7 @@ enum xfs_dinode_fmt {
-  * block is 1KB in size.
+- * Stash our zone in the inode so that is is reused for future allocations.
++ * Stash our zone in the inode so that is reused for future allocations.
   *
-  * With XFS_MAX_EXTCNT_DATA_FORK_SMALL representing maximum extent count and
-- * with 1KB sized blocks, a file can reach upto,
-+ * with 1KB sized blocks, a file can reach up to,
-  * 1KB * (2^31) = 2TB
+  * The open_zone structure will be pinned until either the inode is freed or
+  * until the cached open zone is replaced with a different one because the
+diff --git a/fs/xfs/xfs_zone_gc.c b/fs/xfs/xfs_zone_gc.c
+index 5fdcf98a2133..54b70ed2922f 100644
+--- a/fs/xfs/xfs_zone_gc.c
++++ b/fs/xfs/xfs_zone_gc.c
+@@ -46,7 +46,7 @@
+  * before remapping.
   *
-  * This is much larger than the theoretical maximum size of a directory
-diff --git a/fs/xfs/scrub/dirtree.c b/fs/xfs/scrub/dirtree.c
-index b2cf6e5439d9..469ba30670f0 100644
---- a/fs/xfs/scrub/dirtree.c
-+++ b/fs/xfs/scrub/dirtree.c
-@@ -994,7 +994,7 @@ xchk_dirtree(
- 	return error;
- }
- 
--/* Does the directory targetted by this scrub have no parents? */
-+/* Does the directory targeted by this scrub have no parents? */
- bool
- xchk_dirtree_parentless(const struct xchk_dirtree *dl)
- {
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 030a7c8f2c12..621513d7215e 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2669,7 +2669,7 @@ xfs_irele(
- }
- 
- /*
-- * Ensure all commited transactions touching the inode are written to the log.
-+ * Ensure all committed transactions touching the inode are written to the log.
+  * Once a zone does not contain any valid data, be that through GC or user
+- * block removal, it is queued for for a zone reset.  The reset operation
++ * block removal, it is queued for a zone reset.  The reset operation
+  * carefully ensures that the RT device cache is flushed and all transactions
+  * referencing the rmap have been committed to disk.
   */
- int
- xfs_log_force_inode(
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index 639f875a8fb2..defd121690f5 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -1369,7 +1369,7 @@ xlog_cil_cleanup_whiteouts(
-  * allocation context. However, we do not want to block on memory reclaim
-  * recursing back into the filesystem because this push may have been triggered
-  * by memory reclaim itself. Hence we really need to run under full GFP_NOFS
-- * contraints here.
-+ * constraints here.
-  */
- static void
- xlog_cil_push_work(
-diff --git a/fs/xfs/xfs_platform.h b/fs/xfs/xfs_platform.h
-index 5d542e95fe44..745d715b4c64 100644
---- a/fs/xfs/xfs_platform.h
-+++ b/fs/xfs/xfs_platform.h
-@@ -153,7 +153,7 @@ static inline void delay(long ticks)
- /*
-  * XFS wrapper structure for sysfs support. It depends on external data
-  * structures and is embedded in various internal data structures to implement
-- * the XFS sysfs object heirarchy. Define it here for broad access throughout
-+ * the XFS sysfs object hierarchy. Define it here for broad access throughout
-  * the codebase.
-  */
- struct xfs_kobj {
 -- 
 2.48.1
 
