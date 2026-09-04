@@ -1,41 +1,83 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qk1-f193.google.com (mail-qk1-f193.google.com [209.85.222.193])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52B573D891E;
-	Fri,  4 Sep 2026 16:06:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6FEA3CB570
+	for <linux-xfs@vger.kernel.org>; Fri,  4 Sep 2026 16:10:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.193
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788538006; cv=none; b=guoa+55/Suqt0BGLQlJHA8fVq5JijMevWO9UWLdrJaGXimoBluRRNhg/S/nj+zpveRSVSY1EQf5fQUkO5r2Tn9NMIKGWcLJjIBmQqeIMuQUZ3uudbNddQtCwfK0zWGvjKGueLdjw7aGX/c0SVvKKE58gLVSnP1pGC0cNlLOst54=
+	t=1788538214; cv=none; b=Z9SFDsMdM28FtYV1VGENaqyVZ4XFoLOJ8T92U5H1sI4xQ678HAo4ivpvgZU3iHisUSnsCC4jubWcN3Dj+FwUIKDUhKXywwI+bztU86nnSnUzVlgdjl7VogHKhxAjXpphger5aybgC3zFeHwHfKD/KvVXoS18n2G3sk5P81uP33Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788538006; c=relaxed/simple;
-	bh=xeQiDBPvVXf3mhzDJuaGWk/QtgZ3jOrmHhgWPeOL0fM=;
+	s=arc-20240116; t=1788538214; c=relaxed/simple;
+	bh=P2rW3hKxGUs4nS+9TbwXfR4YDLmtL/y0lG03tWYudJA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=foRyaRTifEFjAnfoe601QO64aLxUJdGE0KAbdr8LKYWnpmcg9wKXFVgiY+GoLNgQxUlsFURl4VbmWiMUhBvUJxQKsYAKu5utA5SjHwDsBLKcZZSI7bKr6vrgT/3LFg9UjyYVyDhvjL8OBPJX/k3jBdTRrh4b41KipRxAXhpdzAM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dRPBiL1A; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=L2CjuhPPfZN/O49nY9+LSf6TSHv/OGNsh6Qk/dGNi/GFVOqsbUEQiFLUmX6ncZXJq9y0c8pXvSHk9zusyikgL+KGe+TEkBxLJpOI25WvSJwqK7YP5HP5FsIdAhatov/G2iHHYQjlKcAvxg+9LeRkwvx7A8YjoqdYSFofiPD8Qic=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org; spf=pass smtp.mailfrom=cmpxchg.org; dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b=DmCaI5xL; arc=none smtp.client-ip=209.85.222.193
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmpxchg.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dRPBiL1A"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 4CCD51F00A3E;
-	Fri,  4 Sep 2026 16:06:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788538001;
-	bh=ja9SnIsCHUkvSSnRXW4N3nERb2UOdb8zsr0Mp+uth98=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=dRPBiL1AdUqoGi/4NbKu6IP4bkjX9VQL3dblGC4i4B9rhVO3JEjLbyIhQKCbpPLZ3
-	 eIIRrDGCcsDJpt+k2cBoSd8pZcC6mkP0h3z3wU+3rHuiqTvwQRH6s10/5zKwMubKfE
-	 bHLz8kpi6M9tqeGsxYXDZcDS7x9Pxuik8QEXbwtoCpXgph/Ps3lBe3w6g+VCBRkxfT
-	 Fk90V9J5qMnPQdz1DzJOwN/1if6rl6CRBl5CYrR5u1QgmhqU+yEISLZqFOwwCKWqWg
-	 Vx7Cg/Xs9UMaGfbROxYibLuQTfCS0axG8U0rRjQEoDvke/Fv0uKKToG3Vi2vnhbxUp
-	 +mXg8fSBqM9ng==
-Date: Fri, 4 Sep 2026 09:06:40 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: Hemanth Selam <hemanth.selam@gmail.com>, linux-kernel@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs: fix repeated words in comments
-Message-ID: <20260904160640.GA1933798@frogsfrogsfrogs>
-References: <20260904112909.8197-1-hemanth.selam@gmail.com>
- <20260904112909.8197-3-hemanth.selam@gmail.com>
- <aprEgoAcpxbOblRi@andromeda.toxiclabs.cc>
+	dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b="DmCaI5xL"
+Received: by mail-qk1-f193.google.com with SMTP id af79cd13be357-936623c6dd3so274288485a.0
+        for <linux-xfs@vger.kernel.org>; Fri, 04 Sep 2026 09:10:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg.org; s=google; t=1788538210; x=1789143010; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=O/dj2tdiAd1cTUZz8ylHlEPfPG8XqvRkzCQtnk9erCM=;
+        b=DmCaI5xLdtgImeWjLVgsIqsmgPQ4DAXHguOCh3zd/vPzYByUzl19eHDfSvAfYCZ6LF
+         Niefw1NlDOt8u7MIOa6OoivV1099PVfu4ujXzr2fpF5HwRj9Z5UXbk7XN0Jeo605tTyn
+         mB8MVE1/8SXklDvMVQpDejmtBfSCH0PEblBti8TEJDhjaQt+OlShc7HGV4IISDBk8Ugs
+         noNBLtB1seYRNGGZzXNfeQk0TQUs8IeNMs+Y+BUU+lN6vlEZAs12oWQy9qBNOO8wCOh+
+         N7sw3gVmc3P2jgF9FcqJ0ydLuJcqXA4UXjV6LdUcSznBs/LFuw+7Q/3lbkCRM6b7VWTC
+         zqLA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788538210; x=1789143010;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=O/dj2tdiAd1cTUZz8ylHlEPfPG8XqvRkzCQtnk9erCM=;
+        b=T/G0J4uBNAYxlcoNM1dumWLj4YrIBznxufiVPauUB1QSDas0jKSyaSDK4Fxsv+rdOA
+         q7hNrTBCYDNr4lNV6J/YVwtQEiUyFOH6wpdGx160DDFuICmJrfK5dvQUaYr84vv2nOEm
+         VygROsMFEfI2ARrGch9USkyUkx4aJ2dpDY1Ys0ad98ugb07QFrHIAKeJPNrrt/+U6Gzy
+         c7RnEJicGnQ0Tm3Kg7Ozc5JY1Gwr+6atJ0Nl1K2YS621FIQUCMikYmw0YTLmiqxBNlkC
+         4Ojij4tm5uLi95KfYEhqOQsYX0GdzNnWais3/9yZotOCs7g1cYou/LGnlMTR/on0vTZa
+         ZJsQ==
+X-Forwarded-Encrypted: i=1; AKwUvBz8QZtMRzUok1L8WKHJlWqqGu7DOhCsJEWqYHVPGYmCTRG8h0t+wlTmIIOJ5dqearMQVD354y2vspE=@vger.kernel.org
+X-Gm-Message-State: AFuF++mmT4mpOXJoYRrUVYgSOO+aR7oCn8hQ/0h3aZSJXjjlremxbVVG
+	u6q62WafhEx81euhN8D5GB+CD/bpg8/fNZAjp2nqClGABCAYpI0bLFaDxYawXniIZow=
+X-Gm-Gg: AYBFou2Nx+ejgIqra0Sn5up1PajcCzNYdtoG8pGWHDdyZQPIFJjZJqnjkvmeKAGkFYx
+	KZncO6B1bP2bxKab3cgMwN9La0cnj4/dDbtzo4Rj539wm84jMhouaK3feyp+rAU1t43ab8duaK8
+	6gkf/0TXBvQcBZzfXOZbqcgnZjL9aETUAwBgGau57nqQKZggI6n4sBXpr+zE6BUMpIQ1eRqM3/C
+	5a5uUCW4kL8FIXoEZZoGhPWrHxG/14tdDIYMJAcnhWnfLgjPyaTL6A2uv7E2/WUZOpYh/FLll9S
+	8WjVwa4jiwvS2ZBHYcOhs+VhGHPugZHdZdL2+Akaigc/gSMIcbJfzQ5RXabuKQHcmDIdNgQrC+O
+	ZkOg6493cS7SHK3rrxcs+pycei9PVIqsE9RJlojz0/4Hr41W2R9cGZ1Qp9pDBSuLxt+FjDZ9fma
+	SP+0K9GIk8vKidO2Ob/0ZJEpyZFpLHy5sIaFc6
+X-Received: by 2002:a05:620a:6cc6:b0:930:f285:5ee9 with SMTP id af79cd13be357-9396e0b2fc3mr1194176885a.20.1788538206229;
+        Fri, 04 Sep 2026 09:10:06 -0700 (PDT)
+Received: from localhost ([2603:7001:f100:501::2])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-9104067b125sm23869576d6.29.2026.09.04.09.10.04
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 04 Sep 2026 09:10:05 -0700 (PDT)
+Date: Fri, 4 Sep 2026 12:10:00 -0400
+From: Johannes Weiner <hannes@cmpxchg.org>
+To: Salvatore Dipietro <dipiets@amazon.it>
+Cc: linux-kernel@vger.kernel.org, hch@infradead.org, abuehaze@amazon.com,
+	akpm@linux-foundation.org, alisaidi@amazon.com, blakgeof@amazon.com,
+	brauner@kernel.org, dgc@kernel.org, dipietro.salvatore@gmail.com,
+	djwong@kernel.org, jackmanb@google.com,
+	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+	linux-xfs@vger.kernel.org, mhocko@suse.com, ritesh.list@gmail.com,
+	rvvandan@amazon.com, stable@vger.kernel.org, surenb@google.com,
+	vbabka@kernel.org, willy@infradead.org, ziy@nvidia.com,
+	Vlastimil Babka <vbabka@suse.cz>,
+	David Hildenbrand <david@redhat.com>,
+	Christoph Hellwig <hch@lst.de>,
+	Brendan Jackman <brendan.jackman@linux.dev>
+Subject: Re: [PATCH v4] mm/page_alloc: avoid direct compaction for costly
+ __GFP_NORETRY allocations
+Message-ID: <20260904161000.GC6641@cmpxchg.org>
+References: <20260904115629.3993331-1-dipiets@amazon.it>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,141 +86,72 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aprEgoAcpxbOblRi@andromeda.toxiclabs.cc>
+In-Reply-To: <20260904115629.3993331-1-dipiets@amazon.it>
 
-On Fri, Sep 04, 2026 at 03:16:29PM +0200, Carlos Maiolino wrote:
-> On Fri, Sep 04, 2026 at 04:59:04PM +0530, Hemanth Selam wrote:
-> > Drop words accidentally written twice, reported by checkpatch.pl as a
-> > possible repeated word.  Only touches comments, no code changes.
-> > 
-> > Assisted-by: Cursor:claude-opus-5
-> > Signed-off-by: Hemanth Selam <hemanth.selam@gmail.com>
+On Fri, Sep 04, 2026 at 11:56:28AM +0000, Salvatore Dipietro wrote:
+> Commit 5d8edfb900d5 ("iomap: Copy larger chunks from userspace")
+> introduced high-order folio allocations in the iomap buffered write
+> path.  When memory is fragmented, each failed costly-order allocation
+> enters __alloc_pages_slowpath() which runs direct compaction and
+> drain_all_pages(), causing a 0.38x throughput drop on PostgreSQL
+> pgbench (simple-update) with 1024 clients on a 96-vCPU arm64 system.
 > 
-> There are no need for these two be in separated patches, and please get
-> rid of the model there. We are not allowing models to be specified in
-> the patch descriptions anymore.
-
-I agree, all these minor edits could be a single largish patch.
-
---D
-
-> > ---
-> >  fs/xfs/libxfs/xfs_exchmaps.c   | 2 +-
-> >  fs/xfs/libxfs/xfs_inode_buf.c  | 2 +-
-> >  fs/xfs/scrub/agheader_repair.c | 2 +-
-> >  fs/xfs/scrub/alloc_repair.c    | 2 +-
-> >  fs/xfs/scrub/reap.c            | 2 +-
-> >  fs/xfs/xfs_bmap_item.c         | 2 +-
-> >  fs/xfs/xfs_zone_alloc.c        | 2 +-
-> >  fs/xfs/xfs_zone_gc.c           | 2 +-
-> >  8 files changed, 8 insertions(+), 8 deletions(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_exchmaps.c b/fs/xfs/libxfs/xfs_exchmaps.c
-> > index 3efed37cb98a..6a66b6075e0a 100644
-> > --- a/fs/xfs/libxfs/xfs_exchmaps.c
-> > +++ b/fs/xfs/libxfs/xfs_exchmaps.c
-> > @@ -395,7 +395,7 @@ xfs_exchmaps_one_step(
-> >  	/*
-> >  	 * Re-add both mappings.  We exchange the file offsets between the two
-> >  	 * maps and add the opposite map, which has the effect of filling the
-> > -	 * logical offsets we just unmapped, but with with the physical mapping
-> > +	 * logical offsets we just unmapped, but with the physical mapping
-> >  	 * information exchanged.
-> >  	 */
-> >  	swap(irec1->br_startoff, irec2->br_startoff);
-> > diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-> > index e4c3f7b24e95..0340e2189921 100644
-> > --- a/fs/xfs/libxfs/xfs_inode_buf.c
-> > +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-> > @@ -626,7 +626,7 @@ xfs_dinode_verify(
-> >  	 * have di_nlink track the link count, even if the actual filesystem
-> >  	 * only supported V1 inodes (i.e. di_onlink).  When writing out the
-> >  	 * ondisk inode, it would set both the ondisk di_nlink and di_onlink to
-> > -	 * the the incore di_nlink value, which is why we cannot check for
-> > +	 * the incore di_nlink value, which is why we cannot check for
-> >  	 * di_nlink==0 on a V1 inode.  V2/3 inodes would get written out with
-> >  	 * di_onlink==0, so we can check that.
-> >  	 */
-> > diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
-> > index 2104512f1ee1..493efa2b2f0d 100644
-> > --- a/fs/xfs/scrub/agheader_repair.c
-> > +++ b/fs/xfs/scrub/agheader_repair.c
-> > @@ -1352,7 +1352,7 @@ xrep_iunlink_mark_ondisk(
-> >  
-> >  /*
-> >   * Walk an iunlink bucket's inode list.  For each inode that should be on this
-> > - * chain, clear its entry in in iunlink_bmp because it's ok and we don't need
-> > + * chain, clear its entry in iunlink_bmp because it's ok and we don't need
-> >   * to touch it further.
-> >   */
-> >  STATIC int
-> > diff --git a/fs/xfs/scrub/alloc_repair.c b/fs/xfs/scrub/alloc_repair.c
-> > index dce6ab0429dc..84ae88ca027a 100644
-> > --- a/fs/xfs/scrub/alloc_repair.c
-> > +++ b/fs/xfs/scrub/alloc_repair.c
-> > @@ -338,7 +338,7 @@ xrep_cntbt_extent_cmp(
-> >  }
-> >  
-> >  /*
-> > - * Sort the free extents by length so so that we can put the records into the
-> > + * Sort the free extents by length so that we can put the records into the
-> >   * cntbt in the correct order.  Don't let userspace kill us if we're resorting
-> >   * after allocating btree blocks.
-> >   */
-> > diff --git a/fs/xfs/scrub/reap.c b/fs/xfs/scrub/reap.c
-> > index fcd14c1703ea..d1f4b7159af2 100644
-> > --- a/fs/xfs/scrub/reap.c
-> > +++ b/fs/xfs/scrub/reap.c
-> > @@ -172,7 +172,7 @@ static inline bool xreap_is_dirty(const struct xreap_state *rs)
-> >  }
-> >  
-> >  /*
-> > - * Decide if we need to roll the transaction to clear out the the log
-> > + * Decide if we need to roll the transaction to clear out the log
-> >   * reservation that we allocated to buffer invalidations.
-> >   */
-> >  static inline bool xreap_want_binval_roll(const struct xreap_state *rs)
-> > diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-> > index 89f6e79a955f..aa5b41629747 100644
-> > --- a/fs/xfs/xfs_bmap_item.c
-> > +++ b/fs/xfs/xfs_bmap_item.c
-> > @@ -339,7 +339,7 @@ xfs_bmap_update_get_group(
-> >  
-> >  	/*
-> >  	 * Bump the intent count on behalf of the deferred rmap and refcount
-> > -	 * intent items that that we can queue when we finish this bmap work.
-> > +	 * intent items that we can queue when we finish this bmap work.
-> >  	 * This new intent item will bump the intent count before the bmap
-> >  	 * intent drops the intent count, ensuring that the intent count
-> >  	 * remains nonzero across the transaction roll.
-> > diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
-> > index bdbb60cc5d5b..f678015457c9 100644
-> > --- a/fs/xfs/xfs_zone_alloc.c
-> > +++ b/fs/xfs/xfs_zone_alloc.c
-> > @@ -826,7 +826,7 @@ xfs_get_cached_zone(
-> >  }
-> >  
-> >  /*
-> > - * Stash our zone in the inode so that is is reused for future allocations.
-> > + * Stash our zone in the inode so that is reused for future allocations.
-> >   *
-> >   * The open_zone structure will be pinned until either the inode is freed or
-> >   * until the cached open zone is replaced with a different one because the
-> > diff --git a/fs/xfs/xfs_zone_gc.c b/fs/xfs/xfs_zone_gc.c
-> > index 5fdcf98a2133..54b70ed2922f 100644
-> > --- a/fs/xfs/xfs_zone_gc.c
-> > +++ b/fs/xfs/xfs_zone_gc.c
-> > @@ -46,7 +46,7 @@
-> >   * before remapping.
-> >   *
-> >   * Once a zone does not contain any valid data, be that through GC or user
-> > - * block removal, it is queued for for a zone reset.  The reset operation
-> > + * block removal, it is queued for a zone reset.  The reset operation
-> >   * carefully ensures that the RT device cache is flushed and all transactions
-> >   * referencing the rmap have been committed to disk.
-> >   */
-> > -- 
-> > 2.48.1
-> > 
-> > 
+> The root issue is that direct compaction is too expensive for hot
+> allocation paths that have fallbacks to smaller allocations.
+> __filemap_get_folio_mpol() already marks higher-order allocations with
+> __GFP_NORETRY | __GFP_NOWARN, signalling that the caller can handle
+> failure.  However, the page allocator still attempts full direct
+> compaction for costly orders with __GFP_NORETRY, which is unnecessarily
+> aggressive when the caller will simply retry at a lower order.
 > 
+> For costly-order allocations with __GFP_NORETRY, clear
+> __GFP_DIRECT_RECLAIM at the very start of the slowpath, before
+> can_direct_reclaim, can_compact and the nofail checks are evaluated.
+> This makes the entire slowpath treat the request as non-blocking: no
+> direct reclaim, no direct compaction and no drain_all_pages() IPI
+> across every CPU. kswapd (and in turn kcompactd) is still woken further
+> down for background defragmentation, so compaction keeps working for
+> long-term system health while being removed from the latency-critical
+> direct allocation path.
+> 
+> Allocations that also request __GFP_THISNODE are exempted.  That flag
+> pairing identifies the local-node-first THP attempt issued by
+> alloc_pages_mpol() (mempolicy.c), which relies on direct compaction to
+> form transparent huge pages.
+> 
+> Test environment:
+>   Hardware:  AWS EC2 m8g.24xlarge (96 vCPU, arm64)
+>              12x 1TB IO2 32000 IOPS RAID0 XFS
+>   OS:        AL2023
+>   Kernel:    v7.3-rc1
+>   Database:  PostgreSQL 18.4
+>   Workload:  pgbench simple-update, 1024 clients, 96 threads, 1200s
+> 
+> Results (average of 3 runs, TPS):
+> 
+>   Config                   Avg TPS      % vs Baseline
+>   baseline (no patch)       59,408       -
+>   With this patch          155,409      +161.6%
+> 
+> Link: https://lore.kernel.org/all/20260403193535.9970-1-dipiets@amazon.it/T/#t [v1]
+> Link: https://lore.kernel.org/linux-mm/20260420161404.642-1-dipiets@amazon.it/T/#u [v2]
+> Link: https://lore.kernel.org/all/20260710143437.12379-1-dipiets@amazon.it/T/#u [v3]
+> Fixes: 5d8edfb900d5 ("iomap: Copy larger chunks from userspace")
+> Cc: stable@vger.kernel.org
+> Cc: Andrew Morton <akpm@linux-foundation.org>
+> Cc: Vlastimil Babka <vbabka@suse.cz>
+> Cc: David Hildenbrand <david@redhat.com>
+> Cc: Michal Hocko <mhocko@suse.com>
+> Cc: Johannes Weiner <hannes@cmpxchg.org>
+> Cc: Matthew Wilcox <willy@infradead.org>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Dave Chinner <dgc@kernel.org>
+> Cc: Ritesh Harjani <ritesh.list@gmail.com>
+> Cc: linux-mm@kvack.org
+> Cc: linux-fsdevel@vger.kernel.org
+> Cc: linux-xfs@vger.kernel.org
+> Signed-off-by: Salvatore Dipietro <dipiets@amazon.it>
+
+Looks good to me, thanks for keeping at it.
+
+Reviewed-by: Johannes Weiner <hannes@cmpxchg.org>
