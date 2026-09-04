@@ -1,370 +1,359 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68672367F3A
-	for <linux-xfs@vger.kernel.org>; Fri,  4 Sep 2026 01:31:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9CEC3A9D9B
+	for <linux-xfs@vger.kernel.org>; Fri,  4 Sep 2026 03:29:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788485512; cv=none; b=XfTyHB/d0qegA1vrfQbjGgKMz98CrtrZ8D7PN5XbZ7oAIOE5gDVkrx3ygpsOV9Y/JfW1AwvXm5Q08EtlJMjE1zO5oTovaJwO+IjV5sMdBqwfVWqHdYZmk8z6MH+oQKRDuSGkLf5J0RPjgFHWPWb95+EEjwllr7NQjs6XF9dHBFc=
+	t=1788492583; cv=none; b=fvLw349qqDfxlwNvWS7FW9nTLn/Qz+O3ijkPKESkUP/dh6h3OuU4fwKV1US81mMLPJza5iooBBQV29oa2sMOybTvWL5Mq6ilewV9ShPYKXlu9ohm/fX4p198vaDlfaHEcMONiYlwNIhJL9RAfSFVwKMjUTxxG0Yla0OZz34kttw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788485512; c=relaxed/simple;
-	bh=yRD2LKyykRDk3wqOuhn8V2j9qhqZiW3Sz+iHoNzauJc=;
-	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=sh800dipVaJzHtN+eNRNcHWfLqWZxq7my/LhKmiD34EU4hZVh8mI8HY+tqw9+PTx+uytEdwzNDp8S6HwsF7RsTetWNo5QY0AG0Mr0Cw7/E3qjMzcqWvAyrUtCaKB4YQS8hxzrCEWGhT0nQY5WOSnZfCjpssgxp60H+002v5fC58=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TclHJEaU; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788492583; c=relaxed/simple;
+	bh=DNGpK3815nIlt/nynUMWlrttj8jQEIjkklIi2Zyt9a4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=EPM5cnh8MQlqX2z4m/uhFIHZwb2aDtajylGoPkADDjbwx+Mj4BQ1hMZ37oiQakri37FGtRPbdC2TTaAy3QHoZ9+Djbnpx6lZqdm01p5b7qsbQRdLnkWCLaXR+YxDCSHug1SCYr8x/L5is4M/GLpmlIVHyWHHoUvhKALbde5Q44k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jwQyA9BF; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TclHJEaU"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 12A321F000E9;
-	Fri,  4 Sep 2026 01:31:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jwQyA9BF"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 50BB01F00A3D;
+	Fri,  4 Sep 2026 03:29:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788485511;
-	bh=ApeTq/c2bh8MxlPAbwqyxCpj7evJre/XoK84QqnjMao=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=TclHJEaUWR7y4s4nLOiILXc7xyHDr8uwJj/GwwLII7KiOWBTCA3YM82yu8X1HnCfo
-	 8t+sUNH38PaRw2Et7Bsd3bD9B6uVgquyTg33CPBHKJkC1oMDWRJzr1gEqbzP7k3mbO
-	 QG/LsYQFUjOQmt5d3rc5WvLlo1Cwk5939PLueUM4FxI5+R1+c4R9oWI9MtoiPHcejI
-	 6p3mSt2OEGFW5cENXfapvv0TysT6VJv3e/caJhh2SJfVoAOewTuD30H7LcFaHRky1w
-	 zixFhDxT94o8bDLFZPQGXnsW7H7qNKZFg2yh94K2/MmYTp4tgmAcYbTdfJ2mrOG0HL
-	 ZeBSNY8ISqyrg==
-Date: Thu, 03 Sep 2026 18:31:50 -0700
-Subject: [PATCH 8/8] mkfs: allow specification of default options via
- configuration file
+	s=k20260515; t=1788492579;
+	bh=8w47DMpMDy/oqzgVtDKuX1kUMzy9HuFquFvuFENP3H4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=jwQyA9BFubDz9H085O8Vz+nHNNxgs9vhgXnjsYVJx1QaHlUNT3UlUSfQr0W4/gx85
+	 B8moZlJBMTTKs/LiCiuUjuUG67yZ5mObBbNLxwCfjUQla9kgD6I4OgsQ6jTnkl2T5L
+	 TY7abQ0P4EXkEL1JcdmTWGE4Ml0G1fodnQWdcn8MjfUClYb/WUddr1dl1FC2aAr2I9
+	 AR1WXXiRmXsgdD0jZYkLouvU3hJxerqdQPmeifvcoVIm0pDrVtIZny6hVoSw+zEBsU
+	 emEMAGpEtHPtfZbdnorzC4WI9FXHgO744hJBcwr8Qd4/PVC9wjn1f7yyPPivthAHCn
+	 e83Qk/MZKsRig==
+Date: Thu, 3 Sep 2026 20:29:38 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: djwong@kernel.org, aalbersh@kernel.org
-Cc: hch@infradead.org, tytso@mit.edu, linux-xfs@vger.kernel.org
-Message-ID: <178848535005.1052910.13292787681188923824.stgit@frogsfrogsfrogs>
-In-Reply-To: <178848534822.1052910.754281019922260552.stgit@frogsfrogsfrogs>
+To: aalbersh@kernel.org
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 5/8] makecfg: handle metadir quota options
+Message-ID: <20260904032938.GX1933798@frogsfrogsfrogs>
 References: <178848534822.1052910.754281019922260552.stgit@frogsfrogsfrogs>
+ <178848534949.1052910.5093950459218799636.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <178848534949.1052910.5093950459218799636.stgit@frogsfrogsfrogs>
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Thu, Sep 03, 2026 at 06:31:04PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> A different LOLLM pointed out that the mkfs configuration file generator
+> should generate config file lines for the quota accounting/enforcement
+> mkfs options for metadir filesystems, because those quota flags persist
+> across mounts.  Add the necessary pieces to do that.
+> 
+> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> ---
+>  libfrog/fsgeom.h |   11 ++++++++-
+>  db/info.c        |    3 ++
+>  libfrog/fsgeom.c |   69 +++++++++++++++++++++++++++++++++++++++++++++++++++++-
+>  mkfs/xfs_mkfs.c  |    4 ++-
+>  spaceman/info.c  |   51 ++++++++++++++++++++++++++++++++++++++--
+>  5 files changed, 131 insertions(+), 7 deletions(-)
+> 
+> 
+> diff --git a/libfrog/fsgeom.h b/libfrog/fsgeom.h
+> index 1109dd2bcdb4cc..c3d865f0783e52 100644
+> --- a/libfrog/fsgeom.h
+> +++ b/libfrog/fsgeom.h
+> @@ -217,7 +217,16 @@ bytes_per_rtgroup(
+>  		fsgeo->blocksize;
+>  }
+>  
+> +/* These should correspond to XFS_[UGP]UOTA_{ACCT,ENFD} */
+> +#define MAKECFG_UQUOTA_ACCT	0x0001 /* user quota accounting ON */
+> +#define MAKECFG_UQUOTA_ENFD	0x0002 /* user quota limits enforced */
+> +#define MAKECFG_GQUOTA_ACCT	0x0040 /* group quota accounting ON */
+> +#define MAKECFG_GQUOTA_ENFD	0x0080 /* group quota limits enforced */
+> +#define MAKECFG_PQUOTA_ACCT	0x0008 /* project quota accounting ON */
+> +#define MAKECFG_PQUOTA_ENFD	0x0200 /* project quota limits enforced */
+> +
+>  int xfrog_write_mkfs_config(const struct xfs_fsop_geom *fsgeo,
+> -		const struct fsxattr *fsx, int autofsck, FILE *fp);
+> +		unsigned int qflags, const struct fsxattr *fsx, int autofsck,
+> +		FILE *fp);
+>  
+>  #endif /* __LIBFROG_FSGEOM_H__ */
+> diff --git a/db/info.c b/db/info.c
+> index 3621f0b53e031b..ad1933a2e7dedb 100644
+> --- a/db/info.c
+> +++ b/db/info.c
+> @@ -440,7 +440,8 @@ makecfg_f(
+>  		close_fp = true;
+>  	}
+>  
+> -	error = xfrog_write_mkfs_config(&geo, &fsx, autofsck, fp);
+> +	error = xfrog_write_mkfs_config(&geo, mp->m_sb.sb_qflags, &fsx,
+> +			autofsck, fp);
+>  	if (error) {
+>  		if (close_fp)
+>  			perror(argv[optind]);
+> diff --git a/libfrog/fsgeom.c b/libfrog/fsgeom.c
+> index fdb7b96e06b246..f1ca7e73df638a 100644
+> --- a/libfrog/fsgeom.c
+> +++ b/libfrog/fsgeom.c
+> @@ -262,6 +262,12 @@ enum {
+>  	M_BIGTIME,
+>  	M_METADIR,
+>  	M_AUTOFSCK,
+> +	M_UQUOTA,
+> +	M_GQUOTA,
+> +	M_PQUOTA,
+> +	M_UQNOENFORCE,
+> +	M_GQNOENFORCE,
+> +	M_PQNOENFORCE,
+>  	M_MAX_OPTS,
+>  };
+>  
+> @@ -298,6 +304,7 @@ struct mkfs_config_opt;
+>  struct mkfs_config_data {
+>  	const struct xfs_fsop_geom	*fsgeo;
+>  	const struct fsxattr		*fsx;
+> +	unsigned int			qflags;
+>  	enum fsprop_autofsck		autofsck;
+>  };
+>  
+> @@ -307,9 +314,11 @@ typedef int (*opt_print_fn)(const struct mkfs_config_opt *opt,
+>  
+>  struct mkfs_config_opt {
+>  	const char		*name;
+> +	opt_print_fn		print_fn;
+>  	uint64_t		fsgeom_flag;
+>  	uint64_t		xflags_flag;
+> -	opt_print_fn		print_fn;
+> +	unsigned int		qflags_mask;
+> +	unsigned int		qflags;
+>  };
+>  
+>  struct mkfs_config_section {
+> @@ -351,6 +360,26 @@ print_xflag(
+>  	return 0;
+>  }
+>  
+> +static int
+> +print_qflags(
+> +	const struct mkfs_config_opt	*opt,
+> +	const struct mkfs_config_data	*data,
+> +	FILE				*fp)
+> +{
+> +	int				ret;
+> +
+> +	/* quota flags are only persisted on metadir filesystems */
+> +	if (!(data->fsgeo->flags & XFS_FSOP_GEOM_FLAGS_METADIR))
+> +		return 0;
+> +	if ((data->qflags & opt->qflags_mask) != opt->qflags)
+> +		return 0;
+> +
+> +	ret = fprintf(fp, "%s=1\n", opt->name);
+> +	if (ret <= 0)
+> +		return ret;
+> +	return 0;
+> +}
+> +
+>  static int
+>  print_projinherit(
+>  	const struct mkfs_config_opt	*opt,
+> @@ -497,6 +526,42 @@ static const struct mkfs_config_section config_sections[] = {
+>  				.name		= "autofsck",
+>  				.print_fn	= print_autofsck,
+>  			},
+> +			[M_UQUOTA] = {
+> +				.name		= "uquota",
+> +				.qflags		= MAKECFG_UQUOTA_ACCT | MAKECFG_UQUOTA_ENFD,
+> +				.qflags_mask	= MAKECFG_UQUOTA_ACCT | MAKECFG_UQUOTA_ENFD,
+> +				.print_fn	= print_qflags,
+> +			},
+> +			[M_GQUOTA] = {
+> +				.name		= "gquota",
+> +				.qflags		= MAKECFG_GQUOTA_ACCT | MAKECFG_GQUOTA_ENFD,
+> +				.qflags_mask	= MAKECFG_GQUOTA_ACCT | MAKECFG_GQUOTA_ENFD,
+> +				.print_fn	= print_qflags,
+> +			},
+> +			[M_PQUOTA] = {
+> +				.name		= "pquota",
+> +				.qflags		= MAKECFG_PQUOTA_ACCT | MAKECFG_PQUOTA_ENFD,
+> +				.qflags_mask	= MAKECFG_PQUOTA_ACCT | MAKECFG_PQUOTA_ENFD,
+> +				.print_fn	= print_qflags,
+> +			},
+> +			[M_UQNOENFORCE] = {
+> +				.name		= "uqnoenforce",
+> +				.qflags		= MAKECFG_UQUOTA_ACCT,
+> +				.qflags_mask	= MAKECFG_UQUOTA_ACCT | MAKECFG_UQUOTA_ENFD,
+> +				.print_fn	= print_qflags,
+> +			},
+> +			[M_GQNOENFORCE] = {
+> +				.name		= "gqnoenforce",
+> +				.qflags		= MAKECFG_GQUOTA_ACCT,
+> +				.qflags_mask	= MAKECFG_GQUOTA_ACCT | MAKECFG_GQUOTA_ENFD,
+> +				.print_fn	= print_qflags,
+> +			},
+> +			[M_PQNOENFORCE] = {
+> +				.name		= "pqnoenforce",
+> +				.qflags		= MAKECFG_PQUOTA_ACCT,
+> +				.qflags_mask	= MAKECFG_PQUOTA_ACCT | MAKECFG_PQUOTA_ENFD,
+> +				.print_fn	= print_qflags,
+> +			},
+>  			[M_MAX_OPTS] = { },
+>  		},
+>  	},
+> @@ -584,6 +649,7 @@ static const struct mkfs_config_section config_sections[] = {
+>  int
+>  xfrog_write_mkfs_config(
+>  	const struct xfs_fsop_geom		*fsgeo,
+> +	unsigned int				qflags,
+>  	const struct fsxattr			*fsx,
+>  	int					autofsck,
+>  	FILE					*fp)
+> @@ -592,6 +658,7 @@ xfrog_write_mkfs_config(
+>  		.fsgeo				= fsgeo,
+>  		.fsx				= fsx,
+>  		.autofsck			= autofsck,
+> +		.qflags				= qflags,
+>  	};
+>  	const struct mkfs_config_section	*section = config_sections;
+>  	const struct mkfs_config_opt		*opt;
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index 5b6dabb76fabfe..5c45e0248d1de6 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -6229,8 +6229,8 @@ main(
+>  		}
+>  
+>  		libxfs_fs_geometry(mp, &geo, XFS_FS_GEOM_MAX_STRUCT_VER);
+> -		error = xfrog_write_mkfs_config(&geo, &cli.fsx, cli.autofsck,
+> -				fp);
+> +		error = xfrog_write_mkfs_config(&geo, cli.sb_feat.qflags,
+> +				&cli.fsx, cli.autofsck, fp);
+>  		if (error) {
+>  			perror(cli.makecfg);
+>  			exit(1);
+> diff --git a/spaceman/info.c b/spaceman/info.c
+> index 653b8ff98f5c3f..121556e6bd9909 100644
+> --- a/spaceman/info.c
+> +++ b/spaceman/info.c
+> @@ -3,6 +3,7 @@
+>   * Copyright (C) 2018 Oracle.  All Rights Reserved.
+>   * Author: Darrick J. Wong <darrick.wong@oracle.com>
+>   */
+> +#include <sys/quota.h>
+>  #include "libxfs.h"
+>  #include "command.h"
+>  #include "init.h"
+> @@ -11,6 +12,7 @@
+>  #include "libfrog/fsproperties.h"
+>  #include "libfrog/fsprops.h"
+>  #include "space.h"
+> +#include "include/xqm.h"
+>  
+>  static void
+>  info_help(void)
+> @@ -88,7 +90,7 @@ get_autofsck(
+>  		ret = 0;
+>  		goto out_fph;
+>  	}
+> -	if (ret)
+> +	if (ret || !valuelen)
+>  		goto out_fph;
+>  
+>  	*autofsck = fsprop_autofsck_read(valuebuf);
+> @@ -98,6 +100,43 @@ get_autofsck(
+>  	return ret;
+>  }
+>  
+> +struct qflags_xlate {
+> +	unsigned int	qs_flag;
+> +	unsigned int	mkcfg_qflag;
+> +};
+> +
+> +static const struct qflags_xlate qsflags_xlate[] = {
+> +	{ .qs_flag = XFS_QUOTA_UDQ_ACCT, .mkcfg_qflag = MAKECFG_UQUOTA_ACCT },
+> +	{ .qs_flag = XFS_QUOTA_UDQ_ENFD, .mkcfg_qflag = MAKECFG_UQUOTA_ENFD },
+> +	{ .qs_flag = XFS_QUOTA_GDQ_ACCT, .mkcfg_qflag = MAKECFG_GQUOTA_ACCT },
+> +	{ .qs_flag = XFS_QUOTA_GDQ_ENFD, .mkcfg_qflag = MAKECFG_GQUOTA_ENFD },
+> +	{ .qs_flag = XFS_QUOTA_PDQ_ACCT, .mkcfg_qflag = MAKECFG_PQUOTA_ACCT },
+> +	{ .qs_flag = XFS_QUOTA_PDQ_ENFD, .mkcfg_qflag = MAKECFG_PQUOTA_ENFD },
+> +};
+> +
+> +static int
+> +get_qflags(
+> +	struct fileio		*f,
+> +	unsigned int		*qflags)
+> +{
+> +	struct fs_quota_stat	qstat;
+> +	int			i;
+> +	int			ret;
+> +
+> +	*qflags = 0;
+> +
+> +	ret = quotactl(QCMD(Q_XGETQSTAT, 0), f->fs_path.fs_name, 0,
+> +			(void *)&qstat);
+> +	if (ret)
+> +		return ret;
 
-Ted asked for the ability to set default mkfs options, but to retain the
-ability respecify options via a separate configuration file or cli
-options.  This would be useful for running fstests with the default
-featureset of (say) Linux 5.15 LTS, while still allowing individual
-testcases to provide their own overrides.  It's certainly less messy
-than what Ted does today, which is a bash script that copies the desired
-config file and changes things.
+This needs to handle the kernel returning ENOSYS, which means either
+that quota wasn't compiled into the kernel or it wasn't enabled.  In
+this case it's sufficient to set qflags to 0.
 
-Cc: tytso@mit.edu
-Cc: hch@infradead.org
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
----
- man/man8/mkfs.xfs.8.in |   16 ++++-
- mkfs/xfs_mkfs.c        |  160 ++++++++++++++++++++++++++++++++++++++++++------
- 2 files changed, 153 insertions(+), 23 deletions(-)
+	if (ret) {
+		if (errno == ENOSYS)
+			return 0;
+		return ret;
+	}
 
+Will fix that for the next version.
 
-diff --git a/man/man8/mkfs.xfs.8.in b/man/man8/mkfs.xfs.8.in
-index f28f668a1e7e68..521b73bed8c747 100644
---- a/man/man8/mkfs.xfs.8.in
-+++ b/man/man8/mkfs.xfs.8.in
-@@ -152,10 +152,22 @@ .SH OPTIONS
- .BI \-c " configuration_file_option"
- This option specifies the files that mkfs configuration will be obtained from.
- The valid
--.I configuration_file_option
--is:
-+.I configuration_file_options
-+are:
- .RS 1.2i
- .TP
-+.BI defaults= name
-+Default configuration options will be sourced from the file specified by the
-+.I name
-+option string.
-+This option can be use either an absolute or relative path to the configuration
-+file to be read.
-+Sample configuration files can be found in @mkfs_cfg_dir@.
-+Options specified through the default configuration file can be overridden by
-+a configuration file specified via
-+.B options=
-+or command line arguments, in that order.
-+.TP
- .BI makecfg= path
- Write a configuration file to the file specified by the
- .I path
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 5c45e0248d1de6..7c81f5a975532e 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -62,6 +62,7 @@ enum {
- enum {
- 	C_OPTFILE = 0,
- 	C_MAKECFG,
-+	C_DEFOPTFILE,
- 	C_MAX_OPTS,
- };
- 
-@@ -314,6 +315,7 @@ static struct opt_params copts = {
- 	.subopts = {
- 		[C_OPTFILE] = "options",
- 		[C_MAKECFG] = "makecfg",
-+		[C_DEFOPTFILE] = "defaults",
- 		[C_MAX_OPTS] = NULL,
- 	},
- 	.subopt_params = {
-@@ -325,6 +327,10 @@ static struct opt_params copts = {
- 		  .conflicts = { { NULL, LAST_CONFLICT } },
- 		  .defaultval = 1,
- 		},
-+		{ .index = C_DEFOPTFILE,
-+		  .conflicts = { { NULL, LAST_CONFLICT } },
-+		  .defaultval = SUBOPT_NEEDS_VAL,
-+		},
- 	},
- };
- 
-@@ -1077,6 +1083,7 @@ struct cli_params {
- 	int	blocksize;
- 
- 	char	*cfgfile;
-+	char	*defcfgfile;
- 	char	*protofile;
- 	char	*makecfg;
- 
-@@ -1214,7 +1221,7 @@ usage( void )
- {
- 	fprintf(stderr, _("Usage: %s\n\
- /* blocksize */		[-b size=num]\n\
--/* config file */	[-c options=path,makecfg=path\n\
-+/* config file */	[-c options=path,makecfg=path,defaults=path\n\
- /* metadata */		[-m crc=0|1,finobt=0|1,uuid=xxx,rmapbt=0|1,reflink=0|1,\n\
- 			    inobtcount=0|1,bigtime=0|1,autofsck=xxx,\n\
- 			    metadir=0|1]\n\
-@@ -1800,6 +1807,30 @@ cfgfile_opts_parser(
- 		else
- 			cli->makecfg = getstr(value, opts, subopt);
- 		break;
-+	case C_DEFOPTFILE:
-+		/* already processed by defcfgfile_opts_parser; ignored */
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+	return 0;
-+}
-+
-+static int
-+defcfgfile_opts_parser(
-+	struct opt_params	*opts,
-+	int			subopt,
-+	const char		*value,
-+	struct cli_params	*cli)
-+{
-+	switch (subopt) {
-+	case C_OPTFILE:
-+	case C_MAKECFG:
-+		/* will be processed by cfgfile_opts_parser; ignored */
-+		break;
-+	case C_DEFOPTFILE:
-+		cli->defcfgfile = getstr(value, opts, subopt);
-+		break;
- 	default:
- 		return -EINVAL;
- 	}
-@@ -2266,13 +2297,15 @@ sector_opts_parser(
- 	return 0;
- }
- 
--static struct subopts {
-+struct subopts {
- 	struct opt_params *opts;
- 	int		(*parser)(struct opt_params	*opts,
- 				  int			subopt,
- 				  const char		*value,
- 				  struct cli_params	*cli);
--} subopt_tab[] = {
-+};
-+
-+static const struct subopts subopt_tab[] = {
- 	{ &bopts, block_opts_parser },
- 	{ &copts, cfgfile_opts_parser },
- 	{ &dopts, data_opts_parser },
-@@ -2286,15 +2319,21 @@ static struct subopts {
- 	{ NULL, NULL },
- };
- 
-+static const struct subopts defcfg_subopt_tab[] = {
-+	{ &copts, defcfgfile_opts_parser },
-+	{ NULL, NULL },
-+};
-+
- static void
- parse_subopts(
--	char		opt,
--	char		*arg,
--	struct cli_params *cli)
-+	char			opt,
-+	char			*arg,
-+	const struct subopts	*stab,
-+	struct cli_params	*cli)
- {
--	struct subopts	*sop = &subopt_tab[0];
--	char		*p;
--	int		ret = 0;
-+	const struct subopts	*sop = stab;
-+	char			*p, *duparg;
-+	int			ret = 0;
- 
- 	while (sop->opts) {
- 		if (sop->opts->name == opt)
-@@ -2306,7 +2345,8 @@ parse_subopts(
- 	if (!sop->opts)
- 		return;
- 
--	p = arg;
-+	/* getsubopt modifies duparg */
-+	p = duparg = strdup(arg);
- 	while (*p != '\0') {
- 		char	**subopts = (char **)sop->opts->subopts;
- 		char	*value;
-@@ -2318,19 +2358,20 @@ parse_subopts(
- 		if (ret)
- 			unknown(opt, value);
- 	}
-+	free(duparg);
- }
- 
- static bool
- parse_cfgopt(
--	const char	*section,
--	const char	*name,
--	const char	*value,
--	struct cli_params *cli)
-+	const char		*section,
-+	const char		*name,
-+	const char		*value,
-+	struct cli_params	*cli)
- {
--	struct subopts	*sop = &subopt_tab[0];
--	char		**subopts;
--	int		ret = 0;
--	int		i;
-+	const struct subopts	*sop = &subopt_tab[0];
-+	char			**subopts;
-+	int			ret = 0;
-+	int			i;
- 
- 	while (sop->opts) {
- 		if (sop->opts->ini_section[0] != '\0' &&
-@@ -5789,6 +5830,64 @@ cfgfile_parse(
- 		cli->cfgfile);
- }
- 
-+static void
-+reset_seen(
-+	struct opt_params	*opts)
-+{
-+	unsigned int		i;
-+
-+	for (i = 0; i < MAX_SUBOPTS; i++) {
-+		opts->subopt_params[i].seen = false;
-+		opts->subopt_params[i].str_seen = false;
-+	}
-+}
-+
-+static void
-+defcfgfile_parse(
-+	struct cli_params	*cli)
-+{
-+	int			error;
-+
-+	if (!cli->defcfgfile)
-+		return;
-+
-+	error = ini_parse(cli->defcfgfile, cfgfile_parse_ini, cli);
-+	if (error) {
-+		if (error > 0) {
-+			fprintf(stderr,
-+		_("%s: Unrecognised input on line %d. Aborting.\n"),
-+				cli->defcfgfile, error);
-+		} else if (error == -1) {
-+			fprintf(stderr,
-+		_("Unable to open defaults config file %s. Aborting.\n"),
-+				cli->defcfgfile);
-+		} else if (error == -2) {
-+			fprintf(stderr,
-+		_("Memory allocation failure parsing %s. Aborting.\n"),
-+				cli->defcfgfile);
-+		} else {
-+			fprintf(stderr,
-+		_("Unknown error %d opening defaults config file %s. Aborting.\n"),
-+				error, cli->defcfgfile);
-+		}
-+		exit(1);
-+	}
-+	printf(_("Parameters parsed from defaults config file %s successfully\n"),
-+		cli->defcfgfile);
-+
-+	/* Now make it look like we haven't seen any cli options. */
-+	reset_seen(&bopts);
-+	reset_seen(&copts);
-+	reset_seen(&dopts);
-+	reset_seen(&iopts);
-+	reset_seen(&lopts);
-+	reset_seen(&mopts);
-+	reset_seen(&nopts);
-+	reset_seen(&popts);
-+	reset_seen(&ropts);
-+	reset_seen(&sopts);
-+}
-+
- static void
- set_autofsck(
- 	struct xfs_mount	*mp,
-@@ -5938,6 +6037,17 @@ check_rt_meta_prealloc(
- 	mp->m_finobt_nores = false;
- }
- 
-+static inline int
-+getopt_mkfs(
-+	int			argc,
-+	char *const		argv[],
-+	const struct option	*longopts,
-+	int			*longindex)
-+{
-+	return getopt_long(argc, argv, "b:c:d:i:l:L:m:n:KNp:qr:s:CfV",
-+			longopts, longindex);
-+}
-+
- int
- main(
- 	int			argc,
-@@ -6044,8 +6154,16 @@ main(
- 	memcpy(&cli.sb_feat, &dft.sb_feat, sizeof(cli.sb_feat));
- 	memcpy(&cli.fsx, &dft.fsx, sizeof(cli.fsx));
- 
--	while ((c = getopt_long(argc, argv, "b:c:d:i:l:L:m:n:KNp:qr:s:CfV",
--					long_options, &option_index)) != EOF) {
-+	/* Load default configuration, if specified */
-+	while ((c = getopt_mkfs(argc, argv, long_options, &option_index)) != EOF) {
-+		if (c == 'c') {
-+			parse_subopts(c, optarg, defcfg_subopt_tab, &cli);
-+		}
-+	}
-+	defcfgfile_parse(&cli);
-+	optind = 1;
-+
-+	while ((c = getopt_mkfs(argc, argv, long_options, &option_index)) != EOF) {
- 		switch (c) {
- 		case 0:
- 			break;
-@@ -6063,7 +6181,7 @@ main(
- 		case 'p':
- 		case 'r':
- 		case 's':
--			parse_subopts(c, optarg, &cli);
-+			parse_subopts(c, optarg, subopt_tab, &cli);
- 			break;
- 		case 'L':
- 			if (strlen(optarg) > sizeof(sbp->sb_fname))
+--D
 
+> +	for (i = 0; i < ARRAY_SIZE(qsflags_xlate); i++)
+> +		if (qstat.qs_flags & qsflags_xlate[i].qs_flag)
+> +			*qflags |= qsflags_xlate[i].mkcfg_qflag;
+> +
+> +	return 0;
+> +}
+> +
+>  static int makecfg_usage(void);
+>  
+>  static int
+> @@ -109,6 +148,7 @@ makecfg_f(
+>  	FILE			*fp;
+>  	bool			close_fp = false;
+>  	enum fsprop_autofsck	autofsck;
+> +	unsigned int		qflags;
+>  	int			c;
+>  	int			ret;
+>  
+> @@ -145,6 +185,12 @@ makecfg_f(
+>  		return 1;
+>  	}
+>  
+> +	ret = get_qflags(file, &qflags);
+> +	if (ret) {
+> +		perror("quotactl");
+> +		return 1;
+> +	}
+> +
+>  	if (optind == argc) {
+>  		fp = stdout;
+>  	} else {
+> @@ -156,7 +202,8 @@ makecfg_f(
+>  		close_fp = true;
+>  	}
+>  
+> -	ret = xfrog_write_mkfs_config(&file->xfd.fsgeom, &fsx, autofsck, fp);
+> +	ret = xfrog_write_mkfs_config(&file->xfd.fsgeom, qflags, &fsx,
+> +			autofsck, fp);
+>  	if (ret) {
+>  		if (close_fp)
+>  			perror(argv[optind]);
+> 
+> 
