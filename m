@@ -1,93 +1,103 @@
-Received: from pdx-out-008.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-008.esa.us-west-2.outbound.mail-perimeter.amazon.com [52.42.203.116])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ot1-f45.google.com (mail-ot1-f45.google.com [209.85.210.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E035C3F871B;
-	Fri,  4 Sep 2026 12:08:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=52.42.203.116
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 088E34908BA
+	for <linux-xfs@vger.kernel.org>; Fri,  4 Sep 2026 12:36:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788523729; cv=none; b=g9NtSSXIjW2fA5H+sANeVVqGcKudueAzN43hJoSJqiR+ickDfS4oQQCzQnWnvEWHgqZv1o1kf7u3YvnWFx1oa3e3HLYpn1W9vvrITYRffAQf4KIkaWn0cXj1gZonkmM+fdvc5gXWWS5svmowsoaNE6PLvnc2bqWD8fgvViqox+U=
+	t=1788525423; cv=none; b=r6XLc90Xu7xJXdbCuZsfaGlE3KkNbzCNVj/y6em3t6Nw3hGhe1UM9qW3JluyVQIN+0zV7h1JA+yeqZPBRY7nQDnvDaCCweGZv+E1Ma2ej40w30VTKP77NclMgoi+86n/Y4r9BeaiRnGJr5TIygZRWVUEjMP9dx6aPnPTp9HwNG8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788523729; c=relaxed/simple;
-	bh=yeQfZRe37uTQFMCzdgM6w8pnuJQjYBmF7q9HtXaNyyM=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=MrRucp8s5wALC1K6N2ojzLmysggiGXZtU6xziALTNEZM/5JQ+jg10LA5CtfZRjkelpSsJmQ37k4iDPLlFDB6RRigQLva8273zmyffdVjELeB8AGQM+TmZWV2xnJoFyrmNMaiDeM8QLfo/X8WvrkDaRyaLVE8TBFArz22jrJg8e8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.it; spf=pass smtp.mailfrom=amazon.it; dkim=pass (2048-bit key) header.d=amazon.it header.i=@amazon.it header.b=PA++hPy+; arc=none smtp.client-ip=52.42.203.116
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.it
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.it
+	s=arc-20240116; t=1788525423; c=relaxed/simple;
+	bh=ZcsYmzObhoBHTNNPxAvGqe+roZExk0LXIokEa/TA6Ic=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=WZYusNDpc6lDGycPyDHFUnfheGzwe0X8ptamqCmo29KgUIzVODARDMaEoKbIqKsUDYc1PLrOzOHoqouAb71SbFFOhQY46yo8m39+WX60I5i98KdYC2P9iSz/ylx73RhWn8N0laoc9MqdVG51dzCtLdpWqRIlBhjn+GZFye4Jy/4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lodhtimT; arc=none smtp.client-ip=209.85.210.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=amazon.it header.i=@amazon.it header.b="PA++hPy+"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lodhtimT"
+Received: by mail-ot1-f45.google.com with SMTP id 46e09a7af769-7f6617c7536so522760a34.1
+        for <linux-xfs@vger.kernel.org>; Fri, 04 Sep 2026 05:36:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=amazon.it; i=@amazon.it; q=dns/txt; s=amazoncorp2;
-  t=1788523727; x=1820059727;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=yeQfZRe37uTQFMCzdgM6w8pnuJQjYBmF7q9HtXaNyyM=;
-  b=PA++hPy+Uy/nAlaRkw8TmePgapMZWazidL6H3fdyrJ+7mHeFwMvi9tCz
-   yoyBYyp0uZDtv7OcIqUlElOn/0ETcB9Y9/gOP35ImSvt3KeQyik9LVIeX
-   U8ZXlhgpQbyoKbFaAVgzLHFYN22sVZzgYyaWmKopJZXWa3Ar59zKGknnE
-   VY6TmL0yKXez7O5saMdQDvdfzrmwa51VVVpzZvkVDPiXY7DdurNbsckSU
-   dXeK4X2hqAWOTPtmzZKmle8krrCk6tPMTajlR5IHN9Drgxy+V6H9p69LM
-   WUYSwGbcQqEk+8uzC3OXeL7WUEZ3jrPz5CFhf0eYdy6TVWzHiDUULmhiI
-   A==;
-X-CSE-ConnectionGUID: d/CPTFUJSGSK9F4J3yp0GQ==
-X-CSE-MsgGUID: aQlVFFEmSDOk9HvK8nEqgg==
-X-IronPort-AV: E=Sophos;i="6.25,262,1779148800"; 
-   d="scan'208";a="27848437"
-Received: from ip-10-5-12-219.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.12.219])
-  by internal-pdx-out-008.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Sep 2026 12:08:47 +0000
-Received: from EX19MTAUWB002.ant.amazon.com [205.251.233.48:18188]
- by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.14.124:2525] with esmtp (Farcaster)
- id e2747aa3-2a41-48cc-9cc9-c0602878100e; Fri, 4 Sep 2026 12:08:47 +0000 (UTC)
-X-Farcaster-Flow-ID: e2747aa3-2a41-48cc-9cc9-c0602878100e
-Received: from EX19D001UWA001.ant.amazon.com (10.13.138.214) by
- EX19MTAUWB002.ant.amazon.com (10.250.64.231) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.45;
- Fri, 4 Sep 2026 12:08:46 +0000
-Received: from dev-dsk-dipiets-1b-77b833da.eu-west-1.amazon.com
- (10.253.66.177) by EX19D001UWA001.ant.amazon.com (10.13.138.214) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.46; Fri, 4 Sep 2026
- 12:08:42 +0000
-From: Salvatore Dipietro <dipiets@amazon.it>
-To: <hch@infradead.org>
-CC: <abuehaze@amazon.com>, <akpm@linux-foundation.org>, <alisaidi@amazon.com>,
-	<blakgeof@amazon.com>, <brauner@kernel.org>, <dgc@kernel.org>,
-	<dipietro.salvatore@gmail.com>, <dipiets@amazon.it>, <djwong@kernel.org>,
-	<hannes@cmpxchg.org>, <jackmanb@google.com>, <linux-fsdevel@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-mm@kvack.org>,
-	<linux-xfs@vger.kernel.org>, <mhocko@suse.com>, <ritesh.list@gmail.com>,
-	<rvvandan@amazon.com>, <stable@vger.kernel.org>, <surenb@google.com>,
-	<vbabka@kernel.org>, <willy@infradead.org>, <ziy@nvidia.com>
-Subject: Re: [PATCH v3] mm/page_alloc: avoid direct compaction for costly __GFP_NORETRY allocations
-Date: Fri, 4 Sep 2026 12:08:28 +0000
-Message-ID: <20260904120828.4022204-1-dipiets@amazon.it>
-X-Mailer: git-send-email 2.50.1
-In-Reply-To: <apf-wsCj_5QvAPcV@infradead.org>
-References: <apf-wsCj_5QvAPcV@infradead.org>
+        d=gmail.com; s=20251104; t=1788525418; x=1789130218; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=VPjqeXAhECP/NeKzLhAoGYW0KJpn2e3tAGUkNRRmt4k=;
+        b=lodhtimT8tqPkYGOkCF5l6lp+i8CONSr6KfDgkGnsEsg+GfgIBsiK9G/8LgzcfcXcs
+         wJ8T0R+ECQFDqeDqDh3mPWQNF8BIg8NJdBSDvWl1zrksT5KU7x/hrn9u3VH7qaHLJry9
+         g0WzOqCsu3pP/gCo18JjLwIm55Zqzr/y8o1/zqg5CuQ2c4eJyuOoq1407CkmAnaBGRPH
+         oTqwIUm2wp/ELA+NvGkL65g8bedb85Vt/A3YcLKVXYswpuGdrzfwprOrS9hccRYcu2GH
+         nZlAspB4jr/qKqQ228LTXCaKoeVvRuGplSQqNo1R7RjBO0ZUDJL+O0lPG/yMfuZHWKHC
+         GJrg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788525418; x=1789130218;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=VPjqeXAhECP/NeKzLhAoGYW0KJpn2e3tAGUkNRRmt4k=;
+        b=cvb2aivLpBbRlhcnq/DFUt4tz+SinLBFYS/G7FmD4XA7lHTX90TSQg2WXDx062bg3T
+         9UVrBcdA5X4NHvmiojuxZzi3GQ3ThIo47MczUXe5mP7yTCkCAKl6L59YCeuQKoolmtfL
+         jSNDWZFRc+SJ2eXknxHMygGH+l0I7JAXrKVmhdEALF2MIh5m48vOo1Blo/jITzd+ARLL
+         OQNGDaPiCw+biD1v3gZEgozSDtmVdJNqFW4740NDzJtpzTx49k86B2sQmUUrutoO14jp
+         /Wk6LP3C5oDZ/a3PiGNr+RXctQ8sJNaKzc4bRuI03v9ofgFw3sWFbNQWpQf2Oh7LzaoU
+         9msA==
+X-Gm-Message-State: AFuF++kZ/HygKWaNyy+apgLrEFoSdiEx4RamZROynX5If0ldwB9Rbg6+
+	wF3vvFpVUaHE7+nczDqN87zqe5i6M3bVC4WSUVbBLp+qJSWvxmUNgyQ=
+X-Gm-Gg: AYBFou20h8KZQ+k0WMoF4YGgcPTbLHjjQyE6iY8dtiRbC6J5i0+FGRqx66p23rJdTIl
+	TXnDbF3JbqNwnTKYSaka7obq9IWO79e9IZaitj2j7od6K3BcveIr/dbNwOfwi/Q0G4wNffmZz4R
+	D1iTeNf7zru1oRsJXGTPhBmox/7yKV24VavrGkP+F9tTAV/l/VdHhnzcM8qrorirA74Ryc5X9/j
+	Ond2D0pt1xULD3lmxjgE8Hciv4QlCr8/+0+CZwLwAGWeqOb7zffiOH9LK4egDHe721CyD2+Fm2r
+	zNblz79RBktHk+JCa5Jzb+zQcKokO3sEF168V2YSUWcZDsd4YWOjI3pigO/ArUBEx+GLdNIPmhP
+	uRrgqeq24ogPIs3l+fZfhwRd5498w7Sey68np5RFHwBbqKUE4+8MPIDZzpfcEBEfcBsh7tk6G/j
+	NOOliSYdpDSzQQhLBar3HOOuvtWqS6wqNmL0UoaDRKB/SghC/ta9E8aJfqMwjB+WTN9WqHIIARq
+	cFzF+cD0HrUiDigG8zNEGj+CppXbA==
+X-Received: by 2002:a05:6820:561c:b0:6b7:46e9:9713 with SMTP id 006d021491bc7-6b746e9a381mr1437857eaf.67.1788525418491;
+        Fri, 04 Sep 2026 05:36:58 -0700 (PDT)
+Received: from anuj-MacBookPro.. ([2406:7400:63:f76b:f0cd:302:7fec:2f27])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3339bbebf2fsm6944495eec.25.2026.09.04.05.36.55
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 04 Sep 2026 05:36:57 -0700 (PDT)
+From: Anuj Gupta <anuj1072538@gmail.com>
+To: cem@kernel.org,
+	djwong@kernel.org
+Cc: linux-xfs@vger.kernel.org,
+	Anuj Gupta <anuj20.g@samsung.com>
+Subject: [PATCH] xfs: remove unused xfs_reflink_remap_range declaration
+Date: Fri,  4 Sep 2026 18:06:41 +0530
+Message-ID: <20260904123641.3028007-1-anuj1072538@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-ClientProxiedBy: EX19D032UWA001.ant.amazon.com (10.13.139.62) To
- EX19D001UWA001.ant.amazon.com (10.13.138.214)
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
+From: Anuj Gupta <anuj20.g@samsung.com>
 
-Hi Christoph,
+The implementation was inlined into xfs_file_remap_range() by commit
+3fc9f5e40931 ("xfs: remove xfs_reflink_remap_range"), leaving this
+declaration orphaned.
 
-On Tue, Sep 02, 2026 at 10:47:00AM +0000, Christoph Hellwig wrote:
-> This looks really nice. Can you turn this into a formal patch?
+Signed-off-by: Anuj Gupta <anuj20.g@samsung.com>
+---
+ fs/xfs/xfs_reflink.h | 3 ---
+ 1 file changed, 3 deletions(-)
 
-I've submitted it as a formal patch: https://lore.kernel.org/all/20260904115629.3993331-1-dipiets@amazon.it/
-
-Salvatore
-
-
-
-AMAZON DEVELOPMENT CENTER ITALY SRL, viale Monte Grappa 3/5, 20124 Milano, Italia, Registro delle Imprese di Milano Monza Brianza Lodi REA n. 2504859, Capitale Sociale: 10.000 EUR i.v., Cod. Fisc. e P.IVA 10100050961, Societa con Socio Unico
-
-
+diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
+index 9d1ed9bb0bee..683c1841e640 100644
+--- a/fs/xfs/xfs_reflink.h
++++ b/fs/xfs/xfs_reflink.h
+@@ -48,9 +48,6 @@ extern int xfs_reflink_end_cow(struct xfs_inode *ip, xfs_off_t offset,
+ int xfs_reflink_end_atomic_cow(struct xfs_inode *ip, xfs_off_t offset,
+ 		xfs_off_t count);
+ extern int xfs_reflink_recover_cow(struct xfs_mount *mp);
+-extern loff_t xfs_reflink_remap_range(struct file *file_in, loff_t pos_in,
+-		struct file *file_out, loff_t pos_out, loff_t len,
+-		unsigned int remap_flags);
+ extern int xfs_reflink_inode_has_shared_extents(struct xfs_trans *tp,
+ 		struct xfs_inode *ip, bool *has_shared);
+ extern int xfs_reflink_clear_inode_flag(struct xfs_inode *ip,
+-- 
+2.43.0
 
