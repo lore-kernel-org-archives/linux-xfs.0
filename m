@@ -1,136 +1,138 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from canpmsgout06.his.huawei.com (canpmsgout06.his.huawei.com [113.46.200.221])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F19B17A2FC
-	for <linux-xfs@vger.kernel.org>; Thu,  3 Sep 2026 21:49:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC3E1157487;
+	Fri,  4 Sep 2026 00:41:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.221
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788472151; cv=none; b=au31B02b+PLZ7oQ/zVKFpXJC5wWkiDkLLXbmzSBT7Lh4L1xmtIhDYI4cf3MZl2okjLmPzBOISxX4P7T4MaFJ/UBzMbQbEF7obi6xrKGD8/7pnH+JTc/rjrH9KWH3nbNGonP5l7/xqcFc3LcvpniuIQKYBUevUXzNPFgGwUS+UT8=
+	t=1788482503; cv=none; b=saRtZNBB2fMHpUNyAdGsbbtZsnswUarTgGEe28/Np9CjvzrVokN0esbG8zEmE0cj3LHaF/YiyLXWxTWXDEF4nfl4c+EhYYHrQonLdJAwyXb/PFsWg3zEGZUykOmIuK4lByr1EcVHWtH/8wkwcm4WF9sKFmLInb4mksmUYXcPwcs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788472151; c=relaxed/simple;
-	bh=HiO+Rad5TDb3gkEyESoDGhZkE/Z0JiOp4ssXu3N8EvY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HjzCOUbODit9ooOJsMRaJZ7AIYT2pcWndpd4e4CiuJJ2KyQpz2k9F5H+ZmWkruImlvDDZzNfEOastIs6w9IMtZpo1j0R+FGqUD6z6v/xtp6AiUmSGc/ezQPawFibvhUJevIOuC/icx68TQnxZKtXJZWsFJn/rAVDZ7F7I4nEmKU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YJYghB5E; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788482503; c=relaxed/simple;
+	bh=6ibX29HqF8Rzv+1AUMabNMdMaf5ohc237U8b1DUWcXk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=KAxZXsJGFP6OqEIF0JQzmNpF6TlWu4cF4qZo2KuA18yP8/ygqkraO1+uIj+zZcA11a7dp2LyKrO2y84YhdPJqoNbSc9jdXgfUe4eW1YPOLBnt2b2SRip1btC9vpNIlFqeWAMRu926QiA68j/i2qKzjY2jwGgkyDg6eRjFsfxuV0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=ICElzZeO; arc=none smtp.client-ip=113.46.200.221
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YJYghB5E"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id ECD8D1F000E9;
-	Thu,  3 Sep 2026 21:49:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788472150;
-	bh=ShU8BcnUh1ydra72ygGKOA+mA8KEbS41yfhtE5RJ8b4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=YJYghB5EjBzR7HhvDqC8kfdbztUmrAyOUnW50epsKLezrFA/ULm0v1QfsoCV4rZpY
-	 J5QUDxDJUOSi31kjfVBq0ZGJUgV7+egbjyogTn53cQj8I2L+9WBXQUbc1B35V65X/9
-	 6705tu2VT1zEGwS42h0f1D2V4Q7lnsXGdh41vOYddWq3OM7PClxKPzsQiV013BZzu6
-	 HCZVtumsfSFvo2Kuwg1OunFvRi1SbC/ht5gaUAQ7x4AsAMmCQHAn3blaE0QUFeWaUP
-	 d1yhwOrdOQXYV+221IvPUNXuAgaNoAbh1728sU7x3NP2Hl2FfU8qbEXF02sirdzj2y
-	 bTSM/kO9KaBAQ==
-Date: Thu, 3 Sep 2026 14:49:09 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Andrey Albershteyn <aalbersh@kernel.org>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/5] mkfs: print config file for a given mkfs
- configuration
-Message-ID: <20260903214909.GW1933798@frogsfrogsfrogs>
-References: <178821870568.2381199.9038448943413709082.stgit@frogsfrogsfrogs>
- <178821870627.2381199.2536649416350488195.stgit@frogsfrogsfrogs>
- <aplVuRd-qsqVFW0Q@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="ICElzZeO"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=3YK94SrrP/vItYLu0yuChfSeE7HGX/g9ss7iDjP+W/0=;
+	b=ICElzZeOv+DVZa16XDC103N2kHZ60MA3ETG79mvIQYQqCeUK0/6slyujbQnm37mvwhbaQKUz0
+	Z0w5bGkxGfDmetQGKazZ6Icwv4W8F3G/VQGnivrCSa+YU0kGj8vMf7+o1zWQzUQAaJEolgMJ9vh
+	kss0kI5ab3y7zhIO1l0/Z9M=
+Received: from mail.maildlp.com (unknown [172.19.162.197])
+	by canpmsgout06.his.huawei.com (SkyGuard) with ESMTPS id 4hbcnX2nLjzRhWS;
+	Fri,  4 Sep 2026 08:30:40 +0800 (CST)
+Received: from kwepemk300003.china.huawei.com (unknown [7.202.195.93])
+	by mail.maildlp.com (Postfix) with ESMTPS id 3EF1240579;
+	Fri,  4 Sep 2026 08:41:29 +0800 (CST)
+Received: from [10.174.177.243] (10.174.177.243) by
+ kwepemk300003.china.huawei.com (7.202.195.93) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45; Fri, 4 Sep 2026 08:41:27 +0800
+Message-ID: <62729d59-198d-4ed2-b1e1-b18384e73b98@huawei.com>
+Date: Fri, 4 Sep 2026 08:41:26 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aplVuRd-qsqVFW0Q@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] xfs: fix NOFS state corruption in btree split worker
+To: Brian Foster <bfoster@redhat.com>
+CC: <brauner@kernel.org>, <djwong@kernel.org>, <cem@kernel.org>,
+	<akpm@linux-foundation.org>, <vbabka@kernel.org>, <surenb@google.com>,
+	<mhocko@suse.com>, <brendan.jackman@linux.dev>, <hannes@cmpxchg.org>,
+	<ziy@nvidia.com>, <david@kernel.org>, <qi.zheng@linux.dev>,
+	<shakeel.butt@linux.dev>, <ljs@kernel.org>, <linux-xfs@vger.kernel.org>,
+	<linux-fsdevel@vger.kernel.org>, <linux-mm@kvack.org>
+References: <20260902134417.c44503a1d65533f81fb1c391@linux-foundation.org>
+ <20260903133756.2006032-1-wangkefeng.wang@huawei.com>
+ <apl7hNnt0lR5HFXA@bfoster>
+Content-Language: en-US
+From: Kefeng Wang <wangkefeng.wang@huawei.com>
+In-Reply-To: <apl7hNnt0lR5HFXA@bfoster>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: kwepems500001.china.huawei.com (7.221.188.70) To
+ kwepemk300003.china.huawei.com (7.202.195.93)
 
-On Thu, Sep 03, 2026 at 01:14:01PM +0200, Andrey Albershteyn wrote:
-> On 2026-08-31 16:27:05, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Add a -c makecfg= switch to mkfs to emit a mkfs.xfs configuration file
-> > documenting the user-visible filesystem featuresets of the configured
-> > filesystem.  This can be used to emit default configuration files as we
-> > do once a year for each LTS.
-> > 
-> > Note that geometry information is not written to the configuration file.
-> > 
-> > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-> > ---
-> >  libfrog/fsgeom.h       |    3 
-> >  libfrog/fsgeom.c       |  376 ++++++++++++++++++++++++++++++++++++++++++++++++
-> >  man/man8/mkfs.xfs.8.in |    6 +
-> >  mkfs/xfs_mkfs.c        |   44 +++++-
-> >  4 files changed, 428 insertions(+), 1 deletion(-)
-> > 
-> > ...
-> > 
-> > diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> > index 74bbb677eee2b6..212e17a354d8be 100644
-> > --- a/mkfs/xfs_mkfs.c
-> > +++ b/mkfs/xfs_mkfs.c
-> > @@ -61,6 +61,7 @@ enum {
-> >  
-> >  enum {
-> >  	C_OPTFILE = 0,
-> > +	C_MAKECFG,
-> >  	C_MAX_OPTS,
-> >  };
-> >  
-> > @@ -312,6 +313,7 @@ static struct opt_params copts = {
-> >  	.name = 'c',
-> >  	.subopts = {
-> >  		[C_OPTFILE] = "options",
-> > +		[C_MAKECFG] = "makecfg",
-> >  		[C_MAX_OPTS] = NULL,
-> >  	},
-> >  	.subopt_params = {
-> > @@ -319,6 +321,10 @@ static struct opt_params copts = {
-> >  		  .conflicts = { { NULL, LAST_CONFLICT } },
-> >  		  .defaultval = SUBOPT_NEEDS_VAL,
-> >  		},
-> > +		{ .index = C_MAKECFG,
-> > +		  .conflicts = { { NULL, LAST_CONFLICT } },
-> > +		  .defaultval = 1,
-> > +		},
-> >  	},
-> >  };
-> >  
-> > @@ -1072,6 +1078,7 @@ struct cli_params {
-> >  
-> >  	char	*cfgfile;
-> >  	char	*protofile;
-> > +	char	*makecfg;
-> >  
-> >  	enum fsprop_autofsck autofsck;
-> >  
-> > @@ -1207,7 +1214,7 @@ usage( void )
-> >  {
-> >  	fprintf(stderr, _("Usage: %s\n\
-> >  /* blocksize */		[-b size=num]\n\
-> > -/* config file */	[-c options=xxx]\n\
-> > +/* config file */	[-c options=xxx,makecfg=0|1]\n\
+
+
+On 9/3/2026 9:52 PM, Brian Foster wrote:
+> On Thu, Sep 03, 2026 at 09:37:56PM +0800, Kefeng Wang wrote:
+>> xfs_btree_split_worker() calls xfs_trans_set_context() and
+>> xfs_trans_clear_context() on the caller's transaction, overwriting
+>> tp->t_pflags with the worker's NOFS state. When the caller already has
+>> PF_MEMALLOC_NOFS set (e.g. xfs_end_ioend_write, xfs_dio_write_end_io),
+>> the corrupted tp->t_pflags causes xfs_trans_free() to erroneously clear
+>> the caller's NOFS protection.
+>>
+>> Use memalloc_nofs_save/restore with a local variable instead so
+>> tp->t_pflags is never touched.
+>>
+>> Closes: https://sashiko.dev/#/patchset/20260902131653.1338227-1-wangkefeng.wang@huawei.com
+>> Fixes: 756b1c343333 ("xfs: use current->journal_info for detecting transaction recursion")
+>> Signed-off-by: Kefeng Wang <wangkefeng.wang@huawei.com>
+>> ---
 > 
-> Shouldn't this be makecfg=xxx?
-
-I think they all should be "=path" because they take file paths
-specifically.  I'll amend this patch to change this to
-
-/* config file */  [-c options=path,makecfg=path]\n\
-
-> Otherwise, looks good to me
-> Reviewed-by: Andrey Albershteyn <aalbersh@kernel.org>
-
-Thanks for reviewing!  A Sashiko review (I can run that internally now)
-generated some complaints about xfrog_write_mkfs_config not handling the
-quota mkfs options on metadir filesystems, and that there are a couple
-of V4 options that it should emit.  I'll resend the series with those
-two pieces of new functionality.
-
---D
-
-> -- 
-> - Andrey
+> I agree that the Sashiko analysis looks correct. The only thing I wonder
+> is whether it might be a bit cleaner to have the set_context() helper
+> return the context instead of hardcode the assignment to ->t_pflags so
+> it can be used in both places. The reasoning is just that the current
+> arrangement kind of makes it easy to repeat this mistake in the future.
 > 
+> Then again, it's a single line helper so maybe another option could be
+> to just remove and open code it. I suppose the pro of keeping the helper
+> is that it's a decent spot to document the concern and why it returns a
+> value, etc. *shrug* Thoughts?
+
+
+I personally tend to remove the helper functions, but let's see what 
+others think.
+
+> 
+> (Please don't change this patch just on my comments alone. Let's see if
+> others have input first..).
+> 
+> Brian
+> 
+>>   fs/xfs/libxfs/xfs_btree.c | 10 ++++++++--
+>>   1 file changed, 8 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+>> index 6738d9d1511b..8ae4b94e6995 100644
+>> --- a/fs/xfs/libxfs/xfs_btree.c
+>> +++ b/fs/xfs/libxfs/xfs_btree.c
+>> @@ -3007,12 +3007,18 @@ xfs_btree_split_worker(
+>>   {
+>>   	struct xfs_btree_split_args	*args = container_of(work,
+>>   						struct xfs_btree_split_args, work);
+>> -	xfs_trans_set_context(args->cur->bc_tp);
+>> +	unsigned int			nofs_flags;
+>> +
+>> +	/*
+>> +	 * Don't use xfs_trans_set_context() here: it would overwrite the
+>> +	 * caller's saved NOFS state in tp->t_pflags.  Use a local scope.
+>> +	 */
+>> +	nofs_flags = memalloc_nofs_save();
+>>   
+>>   	args->result = __xfs_btree_split(args->cur, args->level, args->ptrp,
+>>   					 args->key, args->curp, args->stat);
+>>   
+>> -	xfs_trans_clear_context(args->cur->bc_tp);
+>> +	memalloc_nofs_restore(nofs_flags);
+>>   
+>>   	/*
+>>   	 * Do not access args after complete() has run here. We don't own args
+>> -- 
+>> 2.55.0
+>>
+>>
+> 
+> 
+
