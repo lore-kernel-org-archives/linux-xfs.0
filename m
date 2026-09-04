@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E6DB374A1E
-	for <linux-xfs@vger.kernel.org>; Fri,  4 Sep 2026 01:31:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5098367F3A
+	for <linux-xfs@vger.kernel.org>; Fri,  4 Sep 2026 01:31:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788485481; cv=none; b=YruwUW7Xjm5klelm3x+m43N+ScShKgnbF8aAYPxPR+p0SMYa6qlBrdE+vEP754ALu9D+SivDIvTpJ16AuyiHOcfE9lK8rvXOLEte7cMnU8WBwf3PekwZHFO0pp9zOBh4liGUmcyZwyx7/P8n8UhIhQ4ss9amwUyTsJUwAC7/qN4=
+	t=1788485497; cv=none; b=KGYtRSaNGrSMTJwnd8lh5xJV4DBjyQAqMXzBwanNNNGT+AlePjnKAAm/RqIkoMZialOUWFQl3hJk1ErEEvYJAzNkzJITKP/4/0vz9CPINmQ9nsMlqfncxe9IEVFjYNjkOd/cP8llyzlAHpWXPpQS/wgBcvluTtd11MHqgxaoagg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788485481; c=relaxed/simple;
-	bh=zR0IaOl0aJAjEtBk7QTvduZm3mtkJbRxCmvyO02lMHk=;
+	s=arc-20240116; t=1788485497; c=relaxed/simple;
+	bh=ch76ZyBG3SMGSM3BCg0K+AZPCrIPEAQ7GutS/m7qBY4=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=juwwc38HSyzPreHrO0ldvi4UIFZipZA05Dz/4o58T26/8GUlmShMvmS2hi+HAUYWZ1r8fb3HL5vZTifMk2/vBmPSOalWC4qST9mtgfuCLL3KLWvP/Yx0w3nrivQ1mNyhatw4LGoQkqJHjGCXkjwOhusiOHKKzX9NWiRgkXv2g7Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bWrKFbZU; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=Vva7NgOJgVCUDL8HYllcxJ/i7o3oyac3hPgUW+LwGsbe4kmLl+mZzQI1kAiJalGIL6kz4rSQVrNfLAG95cjNybaoxz3nCavvjampAICZYBmv+mnF3lk9U8baqYfxBuazsZwop3SPpaNPYzMbW708xzk+1sMV1VVV+nPFXbuOC/4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Y2Pmo2bA; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bWrKFbZU"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 09EFE1F000E9;
-	Fri,  4 Sep 2026 01:31:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y2Pmo2bA"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 86C8D1F000E9;
+	Fri,  4 Sep 2026 01:31:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788485480;
-	bh=Dwp+xSWrfF9ru9xy/oueG4X2mWUHZOGEDpIfnNBocho=;
+	s=k20260515; t=1788485495;
+	bh=37ZGMM+WN9i6FbE/yvZUHuMaZm0Apor/YXL84RIP4JE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=bWrKFbZU2Wg/kQFCy3tHjNWuSmoxnnRSAjLKehK8P3RZOPB0c2cJ2YWBa0IQ5XHwV
-	 Y54qK4/RdHFYlXZnuioNQD9hoctVagE7t8ZifC2DdiD05SgmP+YQdWtSmSkpLV1GVa
-	 MS2LUYUei8ryqYaLwEsylFyd+9haT1PvN3gkoyeyszUPvgtvp9PhJmCn9EOCt9RAFF
-	 QAQ38dbhXKGNbUmfQMUr127d/lsRpQ2msorQhI+YXAOXM83fyWHwT2h14pU3BdlkQt
-	 WA5soeUNBauR1pI1oEjW2FssiGbUlfi4D9avQtjxLnJh7ws0swSin26RAUIVKpoDP6
-	 J2pe9aH8llI4g==
-Date: Thu, 03 Sep 2026 18:31:19 -0700
-Subject: [PATCH 6/8] makecfg: handle old V4 options that are almost always on
- by default
+	b=Y2Pmo2bAPtcBOo3OBVB/2Gte6QvUhYzWI99zp/X8uiwjZrpdman/DAl7Me3OwdxYN
+	 WWoYEOpXM1TIFDc8rn0aaSP4EFrHxaIOqwwJsXy+oJRjhKcxC0RAa9yF6JxeCK6KNY
+	 7/BGhpvzb4FwtDetVPb8rdEjgundrHl3pfuuuA8+CUfWuyIWJw/hXuehWRHmtMrGcI
+	 zu9Txtxrfuv03Cp89lQOTteSmNh1ngiWp1uDm+aV/LDjY0mxiyWgX2i1xMqpC0Rv2i
+	 HPMlWRsuGgqZFrpRjVQk/eAF/YDFduGH458QxN8ADfkhFuKL/d5ArYbdxyPhUKUGCd
+	 dZFjgZ834KehA==
+Date: Thu, 03 Sep 2026 18:31:35 -0700
+Subject: [PATCH 7/8] xfs_admin: print configuration file for mounted
+ filesystems
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <178848534968.1052910.10475992759746401803.stgit@frogsfrogsfrogs>
+Message-ID: <178848534987.1052910.13294619123998525889.stgit@frogsfrogsfrogs>
 In-Reply-To: <178848534822.1052910.754281019922260552.stgit@frogsfrogsfrogs>
 References: <178848534822.1052910.754281019922260552.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,89 +46,82 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-The same alternate LOLLM also observed that there are a couple of V4
-options that are always enabled on a V5 filesystem.  Since we support V4
-for another 4 years, add these two options but only for the weird case
-where someone wants to turn them off.
+Teach xfs_admin to emit a mkfs.xfs config file for a mounted or
+unmounted filesystem.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+-
+Reviewed-by: Andrey Albershteyn <aalbersh@kernel.org>
 ---
- libfrog/fsgeom.c |   39 +++++++++++++++++++++++++++++++++++++++
- 1 file changed, 39 insertions(+)
+ db/xfs_admin.sh      |   15 +++++++++++++--
+ man/man8/xfs_admin.8 |    7 +++++++
+ 2 files changed, 20 insertions(+), 2 deletions(-)
 
 
-diff --git a/libfrog/fsgeom.c b/libfrog/fsgeom.c
-index f1ca7e73df638a..24effad2678765 100644
---- a/libfrog/fsgeom.c
-+++ b/libfrog/fsgeom.c
-@@ -284,6 +284,7 @@ enum {
- 	I_SPINODES = 0,
- 	I_NREXT64,
- 	I_EXCHANGE,
-+	I_PROJID32BIT,
- 	I_MAX_OPTS,
- };
+diff --git a/db/xfs_admin.sh b/db/xfs_admin.sh
+index 52a658ba4a540f..13a876ad8d1377 100755
+--- a/db/xfs_admin.sh
++++ b/db/xfs_admin.sh
+@@ -11,16 +11,20 @@ DB_OPTS=""
+ DB_DEV_OPTS=""
+ REPAIR_OPTS=""
+ IO_OPTS=""
++SPACEMAN_OPTS=""
+ REPAIR_DEV_OPTS=""
+ LOG_OPTS=""
+-USAGE="Usage: xfs_admin [-efjlpuV] [-c 0|1] [-L label] [-O v5_feature] [-r rtdev] [-U uuid] device [logdev]"
++USAGE="Usage: xfs_admin [-efjlpuV] [-C cfgfile] [-c 0|1] [-L label] [-O v5_feature] [-r rtdev] [-U uuid] device [logdev]"
  
-@@ -299,6 +300,11 @@ enum {
- 	R_MAX_OPTS,
- };
+-while getopts "c:efjlL:O:pr:uU:V" c
++while getopts "C:c:efjlL:O:pr:uU:V" c
+ do
+ 	case $c in
+ 	c)	REPAIR_OPTS=$REPAIR_OPTS" -c lazycount="$OPTARG
+ 		require_offline=1
+ 		;;
++	C)	DB_OPTS=$DB_OPTS" -c 'makecfg "$OPTARG"'"
++		SPACEMAN_OPTS=$SPACEMAN_OPTS" -c 'makecfg "$OPTARG"'"
++		;;
+ 	e)	DB_OPTS=$DB_OPTS" -c 'version extflg'"
+ 		require_offline=1
+ 		;;
+@@ -72,6 +76,13 @@ case $# in
+ 				exit 2
+ 			fi
  
-+enum {
-+	L_LAZYSBCNTR,
-+	L_MAX_OPTS,
-+};
++			if [ -n "$SPACEMAN_OPTS" ]; then
++				eval xfs_spaceman -p xfs_admin $SPACEMAN_OPTS "$mntpt"
++				res=$?
++				test $res -ne 0 && exit $res
++				test -n "$IO_OPTS" || exit $res
++			fi
 +
- struct mkfs_config_opt;
- 
- struct mkfs_config_data {
-@@ -342,6 +348,24 @@ print_fsgeom(
- 	return 0;
- }
- 
-+static int
-+print_fsgeom_only_if_missing(
-+	const struct mkfs_config_opt	*opt,
-+	const struct mkfs_config_data	*data,
-+	FILE				*fp)
-+{
-+	const struct xfs_fsop_geom	*fsgeo = data->fsgeo;
-+	int				ret;
-+
-+	if (fsgeo->flags & opt->fsgeom_flag)
-+		return 0;
-+
-+	ret = fprintf(fp, "%s=0\n", opt->name);
-+	if (ret <= 0)
-+		return ret;
-+	return 0;
-+}
-+
- static int
- print_xflag(
- 	const struct mkfs_config_opt	*opt,
-@@ -606,9 +630,24 @@ static const struct mkfs_config_section config_sections[] = {
- 				.name		= "exchange",
- 				.fsgeom_flag	= XFS_FSOP_GEOM_FLAGS_EXCHANGE_RANGE,
- 			},
-+			[I_PROJID32BIT] = {
-+				.name		= "projid32bit",
-+				.fsgeom_flag	= XFS_FSOP_GEOM_FLAGS_PROJID32,
-+				.print_fn	= print_fsgeom_only_if_missing,
-+			},
- 			[I_MAX_OPTS] = { },
- 		},
- 	},
-+	{
-+		.ini_section = "log",
-+		.subopts = {
-+			[L_LAZYSBCNTR] = {
-+				.name		= "lazy-count",
-+				.fsgeom_flag	= XFS_FSOP_GEOM_FLAGS_LAZYSB,
-+				.print_fn	= print_fsgeom_only_if_missing,
-+			},
-+		},
-+	},
- 	{
- 		.ini_section = "naming",
- 		.subopts = {
+ 			if [ -n "$IO_OPTS" ]; then
+ 				eval xfs_io -p xfs_admin $IO_OPTS "$mntpt"
+ 				exit $?
+diff --git a/man/man8/xfs_admin.8 b/man/man8/xfs_admin.8
+index 63f8ee90307b30..d2652c0598f551 100644
+--- a/man/man8/xfs_admin.8
++++ b/man/man8/xfs_admin.8
+@@ -8,6 +8,8 @@ .SH SYNOPSIS
+ ] [
+ .BI \-O " featurelist"
+ ] [
++.BR "\-C " cfgfile
++] [
+ .BR "\-c 0" | 1
+ ] [
+ .B \-L
+@@ -85,6 +87,11 @@ .SH OPTIONS
+ .B \-u
+ Print the current filesystem UUID (Universally Unique IDentifier).
+ .TP
++.BI "\-C " path
++Write a configuration file to the given path that can be re-read by mkfs.xfs
++for a future filesystem format attempt.
++This file will contain only user-visible features.
++.TP
+ .BR "\-c 0" | 1
+ Enable (1) or disable (0) lazy-counters in the filesystem.
+ .IP
 
