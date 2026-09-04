@@ -1,27 +1,27 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 070C8419FB0;
-	Fri,  4 Sep 2026 06:13:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF4E841D204;
+	Fri,  4 Sep 2026 06:13:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788502437; cv=none; b=psRNiLV+D1q3mqVYG4xbNSQyCMT7YokH3BlmFHds7Dr+UjBso1UW+3i+CJxUunIjwztcoAWOkj77TiDFx8HrmIFXa0rn7IlBGtPMV+I3MNaRVSYEQjWQsgEpIzXFhMx611XUyPasiwAJlNBhyAM9XQFDXX+FgG3L+O3/doamxec=
+	t=1788502438; cv=none; b=OHrCX6h/B2moTbxm+Hm+uC9e73JZSfxJbvbyUUqgrXHEdLAFlBcXHvqcc7XcCSRAMe/siGbqSG6V8N+X6p3ENRfw2vMwupBrHEle+wxxBffAAKq9VX/JJ7LYAkO0QrcUX/MKS91O9WhwVsXqmgqPqcKDmESgqNAZC0n5fCIjhYQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788502437; c=relaxed/simple;
-	bh=/DLlz09o7G5yTC/pdR4ntqZXukfqSChR5QrE3u4iNmU=;
+	s=arc-20240116; t=1788502438; c=relaxed/simple;
+	bh=Qc3skb2l/T96vCLnWJ2qAyiSmRfUBmOMvKBWQ6deZw8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=OSGGkfUG4f9Bf2OzewkpkBlo8Q7PGHOpTXZvYJ1JeoroyrOnNWnVV+kqA8bvzpwg4IcVCw2hqSM/xvnHxm7+e084ggTwF1QRGKcdng0bITnGz1Xx8PBamgQScRFfqZLZoSWnqWNhViXn+TJPMbZd8k5O1GLp5Sn9oN66pVkTAhI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+	 MIME-Version; b=niptvspGiYcy/4EMzcmL/t7AW4btR2MR+jf/3a+BVUoU/GibeUH/ra66LpODDJqR1+CRkTL0vkp1Nxr262B0LYaWLtR68+gpr+PQLJPNtt471uA7FGwu0p3jA8fSA9OIaQKk3Jc9em9aKefAIqlFYYOCTvoMkP66fwQe8ZWQGiQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.198])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4hbmNh2d8CzYQtyH;
-	Fri,  4 Sep 2026 14:13:08 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.170])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4hbmNT6THszKHMTN;
+	Fri,  4 Sep 2026 14:12:57 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 7D17340DD8;
+	by mail.maildlp.com (Postfix) with ESMTP id 8D7014056D;
 	Fri,  4 Sep 2026 14:13:52 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.50.85.155])
-	by APP1 (Coremail) with UTF8SMTPSA id cCh0CgCHbwqeYZpqTb3FAg--.50434S7;
+	by APP1 (Coremail) with UTF8SMTPSA id cCh0CgCHbwqeYZpqTb3FAg--.50434S9;
 	Fri, 04 Sep 2026 14:13:52 +0800 (CST)
 From: Zizhi Wo <wozizhi@huaweicloud.com>
 To: cem@kernel.org,
@@ -33,9 +33,9 @@ Cc: linux-kernel@vger.kernel.org,
 	yangerkun@huawei.com,
 	chengzhihao1@huawei.com,
 	wozizhi@huawei.com
-Subject: [PATCH 3/5] xfs: remove unused xfs_buf_iodone declaration
-Date: Fri,  4 Sep 2026 14:06:46 +0800
-Message-ID: <20260904060648.1966130-4-wozizhi@huaweicloud.com>
+Subject: [PATCH 5/5] xfs: remove never-implemented scrub declarations
+Date: Fri,  4 Sep 2026 14:06:48 +0800
+Message-ID: <20260904060648.1966130-6-wozizhi@huaweicloud.com>
 X-Mailer: git-send-email 2.52.0
 In-Reply-To: <20260904060648.1966130-1-wozizhi@huaweicloud.com>
 References: <20260904060648.1966130-1-wozizhi@huaweicloud.com>
@@ -46,52 +46,93 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgCHbwqeYZpqTb3FAg--.50434S7
-X-Coremail-Antispam: 1UD129KBjvdXoWrZrW7Kw1xtw45JF17tw1fJFb_yoWDJrX_K3
-	y3Kr4Sqa4UJry7Aw47Gr4vqFyqqa1xCan7CayUAas0qw12q3ZYvrWDAFyUZr9Ig39xJr1f
-	Ja45WrWjgr9FyjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbTAYFVCjjxCrM7AC8VAFwI0_Wr0E3s1l1xkIjI8I6I8E6xAIw20E
-	Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l82xGYIkIc2x26280x7IE14v26r1rM2
-	8IrcIa0xkI8VCY1x0267AKxVW5JVCq3wA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK
-	021l84ACjcxK6xIIjxv20xvE14v26r4j6ryUM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F
-	4j6r4UJwA2z4x0Y4vEx4A2jsIE14v26F4UJVW0owA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_
-	GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx
-	0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWU
-	JVW8JwACjcxG0xvY0x0EwIxGrwCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrw
-	CFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE
-	14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2
-	IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxK
-	x2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI
-	0_Gr1j6F4UJbIYCTnIWIevJa73UjIFyTuYvjxUFF4iUUUUU
+X-CM-TRANSID:cCh0CgCHbwqeYZpqTb3FAg--.50434S9
+X-Coremail-Antispam: 1UD129KBjvJXoWxArW5Aw18Jr1kZr15Ar48Crg_yoW5Ww43pa
+	18Kw15GFWDJr15uaykZF1rZ34jg3s3GrW7urs5Gw43Z3s8CryrKF17Kr1DA3Wjga1YgrW7
+	uF1qq34kWwnxCFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUBFb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUAV
+	Cq3wA2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0
+	rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW5JVW7JwA2z4x0Y4vE2Ix0cI8IcVCY1x0267
+	AKxVWxJVW8Jr1l84ACjcxK6I8E87Iv67AKxVWxJr0_GcWl84ACjcxK6I8E87Iv6xkF7I0E
+	14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7
+	xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Y
+	z7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lc7CjxVAaw2AFwI0_Jw0_GFyl42xK82IYc2Ij64
+	vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8G
+	jcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2I
+	x0cI8IcVAFwI0_JFI_Gr1lIxAIcVC0I7IYx2IY6xkF7I0E14v26F4j6r4UJwCI42IY6xAI
+	w20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr0_Cr1lIxAIcVC2z280aVCY1x
+	0267AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x07UZTmfUUUUU=
 X-CM-SenderInfo: pzr2x6tkl6x35dzhxuhorxvhhfrp/
 
 From: Zizhi Wo <wozizhi@huawei.com>
 
-Commit 664ffb8a429a ("xfs: move the buffer retry logic to xfs_buf.c")
-removed the xfs_buf_iodone() implementation and its last caller in
-favour of xfs_buf_ioend_finish(), but the declaration in xfs_buf_item.h was
-left behind. It has been a dead prototype ever since (2020).
+Commit dcb660f9222f ("xfs: probe the scrub ioctl") added a declaration for
+xfs_scrub_tester() (now xchk_tester) as a placeholder in 2017, but the
+function was never implemented.
 
-Remove the stale declaration.
+Likewise commit 99d9d8d05da2 ("xfs: scrub inode block mappings") declared
+xfs_scrub_setup_inode_bmap_data() (now xchk_setup_inode_bmap_data) in 2017,
+which was never implemented either; the scrub ioctl table uses
+xchk_setup_inode_bmap() for BMBTD/BMBTA/BMBTC checks.
+
+Finally, the !CONFIG_XFS_ONLINE_REPAIR stub of xrep_tempfile_iolock_both()
+added by commit 84c14ee39dd3 ("xfs: create temporary files and directories
+for online repair") has no callers.
+
+Remove these dead declarations and the unused stub.
 
 Assisted-by: Claude-Code:GLM-5.2
 Signed-off-by: Zizhi Wo <wozizhi@huawei.com>
 ---
- fs/xfs/xfs_buf_item.h | 1 -
- 1 file changed, 1 deletion(-)
+Note: if any of them are intended to be implemented in the future, please
+just ignore the corresponding patch. I'm only sending these because they
+have been sitting unimplemented since 2017.
 
-diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
-index 3159325dd17b..28c79989d725 100644
---- a/fs/xfs/xfs_buf_item.h
-+++ b/fs/xfs/xfs_buf_item.h
-@@ -60,7 +60,6 @@ static inline void xfs_buf_dquot_iodone(struct xfs_buf *bp)
- {
+ fs/xfs/scrub/common.h   | 1 -
+ fs/xfs/scrub/scrub.h    | 1 -
+ fs/xfs/scrub/tempfile.h | 4 ----
+ 3 files changed, 6 deletions(-)
+
+diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
+index 9d627fd50687..f0f073a93413 100644
+--- a/fs/xfs/scrub/common.h
++++ b/fs/xfs/scrub/common.h
+@@ -74,7 +74,6 @@ int xchk_setup_ag_rmapbt(struct xfs_scrub *sc);
+ int xchk_setup_ag_refcountbt(struct xfs_scrub *sc);
+ int xchk_setup_inode(struct xfs_scrub *sc);
+ int xchk_setup_inode_bmap(struct xfs_scrub *sc);
+-int xchk_setup_inode_bmap_data(struct xfs_scrub *sc);
+ int xchk_setup_directory(struct xfs_scrub *sc);
+ int xchk_setup_xattr(struct xfs_scrub *sc);
+ int xchk_setup_symlink(struct xfs_scrub *sc);
+diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
+index 6d7d3523b71f..737a5d6db15f 100644
+--- a/fs/xfs/scrub/scrub.h
++++ b/fs/xfs/scrub/scrub.h
+@@ -261,7 +261,6 @@ static inline int xchk_nothing(struct xfs_scrub *sc)
  }
- #endif /* CONFIG_XFS_QUOTA */
--void	xfs_buf_iodone(struct xfs_buf *);
- bool	xfs_buf_log_check_iovec(struct kvec *iovec);
  
- unsigned int xfs_buf_inval_log_space(unsigned int map_count,
+ /* Metadata scrubbers */
+-int xchk_tester(struct xfs_scrub *sc);
+ int xchk_superblock(struct xfs_scrub *sc);
+ int xchk_agf(struct xfs_scrub *sc);
+ int xchk_agfl(struct xfs_scrub *sc);
+diff --git a/fs/xfs/scrub/tempfile.h b/fs/xfs/scrub/tempfile.h
+index 71c1b54599c3..d44ed43bafe0 100644
+--- a/fs/xfs/scrub/tempfile.h
++++ b/fs/xfs/scrub/tempfile.h
+@@ -39,10 +39,6 @@ int xrep_tempfile_roll_trans(struct xfs_scrub *sc);
+ void xrep_tempfile_copyout_local(struct xfs_scrub *sc, int whichfork);
+ bool xrep_is_tempfile(const struct xfs_inode *ip);
+ #else
+-static inline void xrep_tempfile_iolock_both(struct xfs_scrub *sc)
+-{
+-	xchk_ilock(sc, XFS_IOLOCK_EXCL);
+-}
+ # define xrep_is_tempfile(ip)		(false)
+ # define xrep_tempfile_adjust_directory_tree(sc)	(0)
+ # define xrep_tempfile_rele(sc)
 -- 
 2.52.0
 
