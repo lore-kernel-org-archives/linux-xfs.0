@@ -1,359 +1,97 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9CEC3A9D9B
-	for <linux-xfs@vger.kernel.org>; Fri,  4 Sep 2026 03:29:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 070C8419FB0;
+	Fri,  4 Sep 2026 06:13:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788492583; cv=none; b=fvLw349qqDfxlwNvWS7FW9nTLn/Qz+O3ijkPKESkUP/dh6h3OuU4fwKV1US81mMLPJza5iooBBQV29oa2sMOybTvWL5Mq6ilewV9ShPYKXlu9ohm/fX4p198vaDlfaHEcMONiYlwNIhJL9RAfSFVwKMjUTxxG0Yla0OZz34kttw=
+	t=1788502437; cv=none; b=psRNiLV+D1q3mqVYG4xbNSQyCMT7YokH3BlmFHds7Dr+UjBso1UW+3i+CJxUunIjwztcoAWOkj77TiDFx8HrmIFXa0rn7IlBGtPMV+I3MNaRVSYEQjWQsgEpIzXFhMx611XUyPasiwAJlNBhyAM9XQFDXX+FgG3L+O3/doamxec=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788492583; c=relaxed/simple;
-	bh=DNGpK3815nIlt/nynUMWlrttj8jQEIjkklIi2Zyt9a4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EPM5cnh8MQlqX2z4m/uhFIHZwb2aDtajylGoPkADDjbwx+Mj4BQ1hMZ37oiQakri37FGtRPbdC2TTaAy3QHoZ9+Djbnpx6lZqdm01p5b7qsbQRdLnkWCLaXR+YxDCSHug1SCYr8x/L5is4M/GLpmlIVHyWHHoUvhKALbde5Q44k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jwQyA9BF; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jwQyA9BF"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 50BB01F00A3D;
-	Fri,  4 Sep 2026 03:29:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788492579;
-	bh=8w47DMpMDy/oqzgVtDKuX1kUMzy9HuFquFvuFENP3H4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=jwQyA9BFubDz9H085O8Vz+nHNNxgs9vhgXnjsYVJx1QaHlUNT3UlUSfQr0W4/gx85
-	 B8moZlJBMTTKs/LiCiuUjuUG67yZ5mObBbNLxwCfjUQla9kgD6I4OgsQ6jTnkl2T5L
-	 TY7abQ0P4EXkEL1JcdmTWGE4Ml0G1fodnQWdcn8MjfUClYb/WUddr1dl1FC2aAr2I9
-	 AR1WXXiRmXsgdD0jZYkLouvU3hJxerqdQPmeifvcoVIm0pDrVtIZny6hVoSw+zEBsU
-	 emEMAGpEtHPtfZbdnorzC4WI9FXHgO744hJBcwr8Qd4/PVC9wjn1f7yyPPivthAHCn
-	 e83Qk/MZKsRig==
-Date: Thu, 3 Sep 2026 20:29:38 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: aalbersh@kernel.org
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 5/8] makecfg: handle metadir quota options
-Message-ID: <20260904032938.GX1933798@frogsfrogsfrogs>
-References: <178848534822.1052910.754281019922260552.stgit@frogsfrogsfrogs>
- <178848534949.1052910.5093950459218799636.stgit@frogsfrogsfrogs>
+	s=arc-20240116; t=1788502437; c=relaxed/simple;
+	bh=/DLlz09o7G5yTC/pdR4ntqZXukfqSChR5QrE3u4iNmU=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=OSGGkfUG4f9Bf2OzewkpkBlo8Q7PGHOpTXZvYJ1JeoroyrOnNWnVV+kqA8bvzpwg4IcVCw2hqSM/xvnHxm7+e084ggTwF1QRGKcdng0bITnGz1Xx8PBamgQScRFfqZLZoSWnqWNhViXn+TJPMbZd8k5O1GLp5Sn9oN66pVkTAhI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.198])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4hbmNh2d8CzYQtyH;
+	Fri,  4 Sep 2026 14:13:08 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id 7D17340DD8;
+	Fri,  4 Sep 2026 14:13:52 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.50.85.155])
+	by APP1 (Coremail) with UTF8SMTPSA id cCh0CgCHbwqeYZpqTb3FAg--.50434S7;
+	Fri, 04 Sep 2026 14:13:52 +0800 (CST)
+From: Zizhi Wo <wozizhi@huaweicloud.com>
+To: cem@kernel.org,
+	dgc@kernel.org,
+	djwong@kernel.org,
+	hch@lst.de,
+	linux-xfs@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	yangerkun@huawei.com,
+	chengzhihao1@huawei.com,
+	wozizhi@huawei.com
+Subject: [PATCH 3/5] xfs: remove unused xfs_buf_iodone declaration
+Date: Fri,  4 Sep 2026 14:06:46 +0800
+Message-ID: <20260904060648.1966130-4-wozizhi@huaweicloud.com>
+X-Mailer: git-send-email 2.52.0
+In-Reply-To: <20260904060648.1966130-1-wozizhi@huaweicloud.com>
+References: <20260904060648.1966130-1-wozizhi@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <178848534949.1052910.5093950459218799636.stgit@frogsfrogsfrogs>
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgCHbwqeYZpqTb3FAg--.50434S7
+X-Coremail-Antispam: 1UD129KBjvdXoWrZrW7Kw1xtw45JF17tw1fJFb_yoWDJrX_K3
+	y3Kr4Sqa4UJry7Aw47Gr4vqFyqqa1xCan7CayUAas0qw12q3ZYvrWDAFyUZr9Ig39xJr1f
+	Ja45WrWjgr9FyjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbTAYFVCjjxCrM7AC8VAFwI0_Wr0E3s1l1xkIjI8I6I8E6xAIw20E
+	Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l82xGYIkIc2x26280x7IE14v26r1rM2
+	8IrcIa0xkI8VCY1x0267AKxVW5JVCq3wA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK
+	021l84ACjcxK6xIIjxv20xvE14v26r4j6ryUM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F
+	4j6r4UJwA2z4x0Y4vEx4A2jsIE14v26F4UJVW0owA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_
+	GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx
+	0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWU
+	JVW8JwACjcxG0xvY0x0EwIxGrwCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrw
+	CFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE
+	14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2
+	IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxK
+	x2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI
+	0_Gr1j6F4UJbIYCTnIWIevJa73UjIFyTuYvjxUFF4iUUUUU
+X-CM-SenderInfo: pzr2x6tkl6x35dzhxuhorxvhhfrp/
 
-On Thu, Sep 03, 2026 at 06:31:04PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> A different LOLLM pointed out that the mkfs configuration file generator
-> should generate config file lines for the quota accounting/enforcement
-> mkfs options for metadir filesystems, because those quota flags persist
-> across mounts.  Add the necessary pieces to do that.
-> 
-> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-> ---
->  libfrog/fsgeom.h |   11 ++++++++-
->  db/info.c        |    3 ++
->  libfrog/fsgeom.c |   69 +++++++++++++++++++++++++++++++++++++++++++++++++++++-
->  mkfs/xfs_mkfs.c  |    4 ++-
->  spaceman/info.c  |   51 ++++++++++++++++++++++++++++++++++++++--
->  5 files changed, 131 insertions(+), 7 deletions(-)
-> 
-> 
-> diff --git a/libfrog/fsgeom.h b/libfrog/fsgeom.h
-> index 1109dd2bcdb4cc..c3d865f0783e52 100644
-> --- a/libfrog/fsgeom.h
-> +++ b/libfrog/fsgeom.h
-> @@ -217,7 +217,16 @@ bytes_per_rtgroup(
->  		fsgeo->blocksize;
->  }
->  
-> +/* These should correspond to XFS_[UGP]UOTA_{ACCT,ENFD} */
-> +#define MAKECFG_UQUOTA_ACCT	0x0001 /* user quota accounting ON */
-> +#define MAKECFG_UQUOTA_ENFD	0x0002 /* user quota limits enforced */
-> +#define MAKECFG_GQUOTA_ACCT	0x0040 /* group quota accounting ON */
-> +#define MAKECFG_GQUOTA_ENFD	0x0080 /* group quota limits enforced */
-> +#define MAKECFG_PQUOTA_ACCT	0x0008 /* project quota accounting ON */
-> +#define MAKECFG_PQUOTA_ENFD	0x0200 /* project quota limits enforced */
-> +
->  int xfrog_write_mkfs_config(const struct xfs_fsop_geom *fsgeo,
-> -		const struct fsxattr *fsx, int autofsck, FILE *fp);
-> +		unsigned int qflags, const struct fsxattr *fsx, int autofsck,
-> +		FILE *fp);
->  
->  #endif /* __LIBFROG_FSGEOM_H__ */
-> diff --git a/db/info.c b/db/info.c
-> index 3621f0b53e031b..ad1933a2e7dedb 100644
-> --- a/db/info.c
-> +++ b/db/info.c
-> @@ -440,7 +440,8 @@ makecfg_f(
->  		close_fp = true;
->  	}
->  
-> -	error = xfrog_write_mkfs_config(&geo, &fsx, autofsck, fp);
-> +	error = xfrog_write_mkfs_config(&geo, mp->m_sb.sb_qflags, &fsx,
-> +			autofsck, fp);
->  	if (error) {
->  		if (close_fp)
->  			perror(argv[optind]);
-> diff --git a/libfrog/fsgeom.c b/libfrog/fsgeom.c
-> index fdb7b96e06b246..f1ca7e73df638a 100644
-> --- a/libfrog/fsgeom.c
-> +++ b/libfrog/fsgeom.c
-> @@ -262,6 +262,12 @@ enum {
->  	M_BIGTIME,
->  	M_METADIR,
->  	M_AUTOFSCK,
-> +	M_UQUOTA,
-> +	M_GQUOTA,
-> +	M_PQUOTA,
-> +	M_UQNOENFORCE,
-> +	M_GQNOENFORCE,
-> +	M_PQNOENFORCE,
->  	M_MAX_OPTS,
->  };
->  
-> @@ -298,6 +304,7 @@ struct mkfs_config_opt;
->  struct mkfs_config_data {
->  	const struct xfs_fsop_geom	*fsgeo;
->  	const struct fsxattr		*fsx;
-> +	unsigned int			qflags;
->  	enum fsprop_autofsck		autofsck;
->  };
->  
-> @@ -307,9 +314,11 @@ typedef int (*opt_print_fn)(const struct mkfs_config_opt *opt,
->  
->  struct mkfs_config_opt {
->  	const char		*name;
-> +	opt_print_fn		print_fn;
->  	uint64_t		fsgeom_flag;
->  	uint64_t		xflags_flag;
-> -	opt_print_fn		print_fn;
-> +	unsigned int		qflags_mask;
-> +	unsigned int		qflags;
->  };
->  
->  struct mkfs_config_section {
-> @@ -351,6 +360,26 @@ print_xflag(
->  	return 0;
->  }
->  
-> +static int
-> +print_qflags(
-> +	const struct mkfs_config_opt	*opt,
-> +	const struct mkfs_config_data	*data,
-> +	FILE				*fp)
-> +{
-> +	int				ret;
-> +
-> +	/* quota flags are only persisted on metadir filesystems */
-> +	if (!(data->fsgeo->flags & XFS_FSOP_GEOM_FLAGS_METADIR))
-> +		return 0;
-> +	if ((data->qflags & opt->qflags_mask) != opt->qflags)
-> +		return 0;
-> +
-> +	ret = fprintf(fp, "%s=1\n", opt->name);
-> +	if (ret <= 0)
-> +		return ret;
-> +	return 0;
-> +}
-> +
->  static int
->  print_projinherit(
->  	const struct mkfs_config_opt	*opt,
-> @@ -497,6 +526,42 @@ static const struct mkfs_config_section config_sections[] = {
->  				.name		= "autofsck",
->  				.print_fn	= print_autofsck,
->  			},
-> +			[M_UQUOTA] = {
-> +				.name		= "uquota",
-> +				.qflags		= MAKECFG_UQUOTA_ACCT | MAKECFG_UQUOTA_ENFD,
-> +				.qflags_mask	= MAKECFG_UQUOTA_ACCT | MAKECFG_UQUOTA_ENFD,
-> +				.print_fn	= print_qflags,
-> +			},
-> +			[M_GQUOTA] = {
-> +				.name		= "gquota",
-> +				.qflags		= MAKECFG_GQUOTA_ACCT | MAKECFG_GQUOTA_ENFD,
-> +				.qflags_mask	= MAKECFG_GQUOTA_ACCT | MAKECFG_GQUOTA_ENFD,
-> +				.print_fn	= print_qflags,
-> +			},
-> +			[M_PQUOTA] = {
-> +				.name		= "pquota",
-> +				.qflags		= MAKECFG_PQUOTA_ACCT | MAKECFG_PQUOTA_ENFD,
-> +				.qflags_mask	= MAKECFG_PQUOTA_ACCT | MAKECFG_PQUOTA_ENFD,
-> +				.print_fn	= print_qflags,
-> +			},
-> +			[M_UQNOENFORCE] = {
-> +				.name		= "uqnoenforce",
-> +				.qflags		= MAKECFG_UQUOTA_ACCT,
-> +				.qflags_mask	= MAKECFG_UQUOTA_ACCT | MAKECFG_UQUOTA_ENFD,
-> +				.print_fn	= print_qflags,
-> +			},
-> +			[M_GQNOENFORCE] = {
-> +				.name		= "gqnoenforce",
-> +				.qflags		= MAKECFG_GQUOTA_ACCT,
-> +				.qflags_mask	= MAKECFG_GQUOTA_ACCT | MAKECFG_GQUOTA_ENFD,
-> +				.print_fn	= print_qflags,
-> +			},
-> +			[M_PQNOENFORCE] = {
-> +				.name		= "pqnoenforce",
-> +				.qflags		= MAKECFG_PQUOTA_ACCT,
-> +				.qflags_mask	= MAKECFG_PQUOTA_ACCT | MAKECFG_PQUOTA_ENFD,
-> +				.print_fn	= print_qflags,
-> +			},
->  			[M_MAX_OPTS] = { },
->  		},
->  	},
-> @@ -584,6 +649,7 @@ static const struct mkfs_config_section config_sections[] = {
->  int
->  xfrog_write_mkfs_config(
->  	const struct xfs_fsop_geom		*fsgeo,
-> +	unsigned int				qflags,
->  	const struct fsxattr			*fsx,
->  	int					autofsck,
->  	FILE					*fp)
-> @@ -592,6 +658,7 @@ xfrog_write_mkfs_config(
->  		.fsgeo				= fsgeo,
->  		.fsx				= fsx,
->  		.autofsck			= autofsck,
-> +		.qflags				= qflags,
->  	};
->  	const struct mkfs_config_section	*section = config_sections;
->  	const struct mkfs_config_opt		*opt;
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index 5b6dabb76fabfe..5c45e0248d1de6 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -6229,8 +6229,8 @@ main(
->  		}
->  
->  		libxfs_fs_geometry(mp, &geo, XFS_FS_GEOM_MAX_STRUCT_VER);
-> -		error = xfrog_write_mkfs_config(&geo, &cli.fsx, cli.autofsck,
-> -				fp);
-> +		error = xfrog_write_mkfs_config(&geo, cli.sb_feat.qflags,
-> +				&cli.fsx, cli.autofsck, fp);
->  		if (error) {
->  			perror(cli.makecfg);
->  			exit(1);
-> diff --git a/spaceman/info.c b/spaceman/info.c
-> index 653b8ff98f5c3f..121556e6bd9909 100644
-> --- a/spaceman/info.c
-> +++ b/spaceman/info.c
-> @@ -3,6 +3,7 @@
->   * Copyright (C) 2018 Oracle.  All Rights Reserved.
->   * Author: Darrick J. Wong <darrick.wong@oracle.com>
->   */
-> +#include <sys/quota.h>
->  #include "libxfs.h"
->  #include "command.h"
->  #include "init.h"
-> @@ -11,6 +12,7 @@
->  #include "libfrog/fsproperties.h"
->  #include "libfrog/fsprops.h"
->  #include "space.h"
-> +#include "include/xqm.h"
->  
->  static void
->  info_help(void)
-> @@ -88,7 +90,7 @@ get_autofsck(
->  		ret = 0;
->  		goto out_fph;
->  	}
-> -	if (ret)
-> +	if (ret || !valuelen)
->  		goto out_fph;
->  
->  	*autofsck = fsprop_autofsck_read(valuebuf);
-> @@ -98,6 +100,43 @@ get_autofsck(
->  	return ret;
->  }
->  
-> +struct qflags_xlate {
-> +	unsigned int	qs_flag;
-> +	unsigned int	mkcfg_qflag;
-> +};
-> +
-> +static const struct qflags_xlate qsflags_xlate[] = {
-> +	{ .qs_flag = XFS_QUOTA_UDQ_ACCT, .mkcfg_qflag = MAKECFG_UQUOTA_ACCT },
-> +	{ .qs_flag = XFS_QUOTA_UDQ_ENFD, .mkcfg_qflag = MAKECFG_UQUOTA_ENFD },
-> +	{ .qs_flag = XFS_QUOTA_GDQ_ACCT, .mkcfg_qflag = MAKECFG_GQUOTA_ACCT },
-> +	{ .qs_flag = XFS_QUOTA_GDQ_ENFD, .mkcfg_qflag = MAKECFG_GQUOTA_ENFD },
-> +	{ .qs_flag = XFS_QUOTA_PDQ_ACCT, .mkcfg_qflag = MAKECFG_PQUOTA_ACCT },
-> +	{ .qs_flag = XFS_QUOTA_PDQ_ENFD, .mkcfg_qflag = MAKECFG_PQUOTA_ENFD },
-> +};
-> +
-> +static int
-> +get_qflags(
-> +	struct fileio		*f,
-> +	unsigned int		*qflags)
-> +{
-> +	struct fs_quota_stat	qstat;
-> +	int			i;
-> +	int			ret;
-> +
-> +	*qflags = 0;
-> +
-> +	ret = quotactl(QCMD(Q_XGETQSTAT, 0), f->fs_path.fs_name, 0,
-> +			(void *)&qstat);
-> +	if (ret)
-> +		return ret;
+From: Zizhi Wo <wozizhi@huawei.com>
 
-This needs to handle the kernel returning ENOSYS, which means either
-that quota wasn't compiled into the kernel or it wasn't enabled.  In
-this case it's sufficient to set qflags to 0.
+Commit 664ffb8a429a ("xfs: move the buffer retry logic to xfs_buf.c")
+removed the xfs_buf_iodone() implementation and its last caller in
+favour of xfs_buf_ioend_finish(), but the declaration in xfs_buf_item.h was
+left behind. It has been a dead prototype ever since (2020).
 
-	if (ret) {
-		if (errno == ENOSYS)
-			return 0;
-		return ret;
-	}
+Remove the stale declaration.
 
-Will fix that for the next version.
+Assisted-by: Claude-Code:GLM-5.2
+Signed-off-by: Zizhi Wo <wozizhi@huawei.com>
+---
+ fs/xfs/xfs_buf_item.h | 1 -
+ 1 file changed, 1 deletion(-)
 
---D
+diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
+index 3159325dd17b..28c79989d725 100644
+--- a/fs/xfs/xfs_buf_item.h
++++ b/fs/xfs/xfs_buf_item.h
+@@ -60,7 +60,6 @@ static inline void xfs_buf_dquot_iodone(struct xfs_buf *bp)
+ {
+ }
+ #endif /* CONFIG_XFS_QUOTA */
+-void	xfs_buf_iodone(struct xfs_buf *);
+ bool	xfs_buf_log_check_iovec(struct kvec *iovec);
+ 
+ unsigned int xfs_buf_inval_log_space(unsigned int map_count,
+-- 
+2.52.0
 
-> +	for (i = 0; i < ARRAY_SIZE(qsflags_xlate); i++)
-> +		if (qstat.qs_flags & qsflags_xlate[i].qs_flag)
-> +			*qflags |= qsflags_xlate[i].mkcfg_qflag;
-> +
-> +	return 0;
-> +}
-> +
->  static int makecfg_usage(void);
->  
->  static int
-> @@ -109,6 +148,7 @@ makecfg_f(
->  	FILE			*fp;
->  	bool			close_fp = false;
->  	enum fsprop_autofsck	autofsck;
-> +	unsigned int		qflags;
->  	int			c;
->  	int			ret;
->  
-> @@ -145,6 +185,12 @@ makecfg_f(
->  		return 1;
->  	}
->  
-> +	ret = get_qflags(file, &qflags);
-> +	if (ret) {
-> +		perror("quotactl");
-> +		return 1;
-> +	}
-> +
->  	if (optind == argc) {
->  		fp = stdout;
->  	} else {
-> @@ -156,7 +202,8 @@ makecfg_f(
->  		close_fp = true;
->  	}
->  
-> -	ret = xfrog_write_mkfs_config(&file->xfd.fsgeom, &fsx, autofsck, fp);
-> +	ret = xfrog_write_mkfs_config(&file->xfd.fsgeom, qflags, &fsx,
-> +			autofsck, fp);
->  	if (ret) {
->  		if (close_fp)
->  			perror(argv[optind]);
-> 
-> 
