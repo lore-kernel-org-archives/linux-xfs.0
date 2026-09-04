@@ -1,140 +1,211 @@
-Received: from mail-oa2-f1.google.com (mail-oa2-f1.google.com [74.125.231.65])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60C103DA5B4
-	for <linux-xfs@vger.kernel.org>; Fri,  4 Sep 2026 14:03:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.231.65
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60F3E3E3169;
+	Fri,  4 Sep 2026 14:12:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788530614; cv=none; b=GxxSMGpdo5DKwcTXNPErUHErL5F/X+vquv2ZEG9sWlUlTbxq4PQcH+vZLm9/kDNolfOu68yg5tBwJV4p7VtpTZ10L7Y8ExL6N5AMjtt5LNCVSr89OHpCJmcjul1ojfLJBLyG25/uguOW9tPPC+SGQgZ/omSIHz3l8pjEf6yjuDA=
+	t=1788531125; cv=none; b=oVzHoOYN6AmfUm6+l246XYs8+56+htIH0cga2/bIHy1Fp60AXHzjRtJW4WmC55KHpQs+bRAYL2xfQRYREENVUV6GfXNL88XPsLI4z+eWVm7daNQGYcjn/oGB+tmy+Z9nbm3JokMzQ8NtdFhlbmLMGgyki1mvPhf+Gz4gYuzQsNU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788530614; c=relaxed/simple;
-	bh=KLQpm+4rW18F/LCxmpfihOOpO3cvxVC+reaLNVdE6vo=;
-	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=PIBBMMP11jGn6rugHJkL2725d1J72X90nRvmh8BHi4yxZwMF8tfYrykaoObj0S6RrTAZxXLf/qTZZ4lV23Rdp1PzQE6zmmLYnSjZH4o8hSZD0wJKSVHCt4zy3VxCPnoe4TSBVRaU3shufEhNiBdM+RP/nrLH8nGwRfGNN5ZWlz4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=74.125.231.65
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-oa2-f1.google.com with SMTP id 586e51a60fabf-448a12ddfb4so345742fac.1
-        for <linux-xfs@vger.kernel.org>; Fri, 04 Sep 2026 07:03:32 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788530611; x=1789135411;
-        h=content-type:to:from:subject:message-id:date:mime-version
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=cfQPBot0l1tu7zjFYCxi2tGovOJQZpN5cLMRUsOMHVY=;
-        b=ro8kyydxdBPDido83N3ckja1yNGlw6Uwt15IJIQ/in5lPyL7yoPbFUNZWpU3+zY0Ya
-         yjjg/c2zMoUunu08lB4rVdbHwAHLCd0HOVpJhzB8HFY2FKV8IEK194V4XIIe7ZaiEQ0b
-         L0g3KN6xn3eUrYVqdjfu5OpINo/psuhW7w5zx39F+vna6HTFaHvmZwKkqsAFoS33JDdR
-         oeJZYdevlpUNZ+pGX3SvShUKu4uvTu2pwQ731nPoC45CqeDD81qWAMDn/Rx6xb1Uf7Uc
-         ICpJrbw1WeQ7J+nG4n5jlY//RKxtELDeSD/1MwDYz/GqjFNzl0G+m+t7Q+bNqgR6Fo/J
-         VM+w==
-X-Forwarded-Encrypted: i=1; AKwUvBzuXMGX25C84PSXf1SICvPo/QSOh5BAhf5pKg9ZLgWU6jhOWUPbNsWQfjdOV/hAjScK3EF7iL54VyQ=@vger.kernel.org
-X-Gm-Message-State: AFuF++lXOX8/d5PdBHEYYUZVXCBKEWhaTsMxDGi4qIvr5iLQjqXn3eSG
-	1jzSEjY/16RUpgKh7XA/CC2ySmQn4p7BnWBWfoIMk4oMSI1F/zYMv+37naWpIQIKeCQ8JfpUSBG
-	sLIcceFF8+YBjjv3CG/l7EVRoeWxbOUpjtS4phEcQjiv1tKodJ0SlJrEbWrA=
+	s=arc-20240116; t=1788531125; c=relaxed/simple;
+	bh=4hPXPpMVtufBarZhUpztHFuCmYQv+MJIYTrof+gNltY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=IQ8XghXWW8l1LxvAWDOXdVO1VsJDgY3zi4aLWY45xdsaYjB5zD9s31ItdSekkfSlr5QSOcsxTFvphp7JSIPz3w1Y+nCsYNlUDSX+zWQB4HYA0ZhgXr0fcq28oRV9CDC8hI0p06U4jcS03OwbaqZdAcuQ+vqG6BjGhrrgrdXlyiA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BrE+ZMtf; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BrE+ZMtf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6D4211F00A3D;
+	Fri,  4 Sep 2026 14:11:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788531124;
+	bh=HslPyUpRcbehZSDwq6RcvWYGlQd9VOcvDUYf4trg7Og=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=BrE+ZMtfse74Rx9gXb8TBDlul9CFpphp+iDqcuvaKvn+la0P4nw5x+dpLJxpxymss
+	 Fs3KqhtyP8Y5icHlBfXtie/e7n3oDDCiUPhZMb2z4zlcBvtOi8L+OmAJuavGfAlGrs
+	 cXtecutkELrLQLHpstHEKDgODcyKR1f9W8IYLMCJ5IN1eY5iumCefMXOEHCTqsuitP
+	 ny3AZ/M7WoDBugBXgLtjoiKCabNy4omvWzIwPrvn8EX3kpo73VlkRer+YmR0M1jHGH
+	 kROjVJDipV2iUMvn9dIfWNAesAHo6z6phJRoseA1bL5GIfnFKW3k4F/FOU9ZFkNNN+
+	 E/dfVEFGq0SAg==
+Message-ID: <8cc503d9-04a1-4d90-874c-ada6c0ac5147@kernel.org>
+Date: Fri, 4 Sep 2026 16:11:57 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6820:1623:b0:6ae:8a52:ffa9 with SMTP id
- 006d021491bc7-6b6fbdc5bdcmr4671256eaf.3.1788530611282; Fri, 04 Sep 2026
- 07:03:31 -0700 (PDT)
-Date: Fri, 04 Sep 2026 07:03:31 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <6a9acfb3.d07ac993.c20e9.0000.GAE@google.com>
-Subject: [syzbot] [xfs?] WARNING in __xfs_healthmon_insert
-From: syzbot <syzbot+ccdf3469f5f653bff7ac@syzkaller.appspotmail.com>
-To: cem@kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4] mm/page_alloc: avoid direct compaction for costly
+ __GFP_NORETRY allocations
+Content-Language: en-US
+To: Salvatore Dipietro <dipiets@amazon.it>, linux-kernel@vger.kernel.org,
+ hch@infradead.org
+Cc: abuehaze@amazon.com, akpm@linux-foundation.org, alisaidi@amazon.com,
+ blakgeof@amazon.com, brauner@kernel.org, dgc@kernel.org,
+ dipietro.salvatore@gmail.com, djwong@kernel.org, hannes@cmpxchg.org,
+ linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+ linux-xfs@vger.kernel.org, mhocko@suse.com, ritesh.list@gmail.com,
+ rvvandan@amazon.com, stable@vger.kernel.org, surenb@google.com,
+ willy@infradead.org, ziy@nvidia.com, David Hildenbrand <david@redhat.com>,
+ Christoph Hellwig <hch@lst.de>, Brendan Jackman <brendan.jackman@linux.dev>
+References: <20260904115629.3993331-1-dipiets@amazon.it>
+From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
+Autocrypt: addr=vbabka@kernel.org; keydata=
+ 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
+In-Reply-To: <20260904115629.3993331-1-dipiets@amazon.it>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Hello,
+On 9/4/26 13:56, Salvatore Dipietro wrote:
+> Commit 5d8edfb900d5 ("iomap: Copy larger chunks from userspace")
+> introduced high-order folio allocations in the iomap buffered write
+> path.  When memory is fragmented, each failed costly-order allocation
+> enters __alloc_pages_slowpath() which runs direct compaction and
+> drain_all_pages(), causing a 0.38x throughput drop on PostgreSQL
+> pgbench (simple-update) with 1024 clients on a 96-vCPU arm64 system.
+> 
+> The root issue is that direct compaction is too expensive for hot
+> allocation paths that have fallbacks to smaller allocations.
+> __filemap_get_folio_mpol() already marks higher-order allocations with
+> __GFP_NORETRY | __GFP_NOWARN, signalling that the caller can handle
+> failure.  However, the page allocator still attempts full direct
+> compaction for costly orders with __GFP_NORETRY, which is unnecessarily
+> aggressive when the caller will simply retry at a lower order.
+> 
+> For costly-order allocations with __GFP_NORETRY, clear
+> __GFP_DIRECT_RECLAIM at the very start of the slowpath, before
+> can_direct_reclaim, can_compact and the nofail checks are evaluated.
+> This makes the entire slowpath treat the request as non-blocking: no
+> direct reclaim, no direct compaction and no drain_all_pages() IPI
+> across every CPU. kswapd (and in turn kcompactd) is still woken further
+> down for background defragmentation, so compaction keeps working for
+> long-term system health while being removed from the latency-critical
+> direct allocation path.
+> 
+> Allocations that also request __GFP_THISNODE are exempted.  That flag
+> pairing identifies the local-node-first THP attempt issued by
+> alloc_pages_mpol() (mempolicy.c), which relies on direct compaction to
+> form transparent huge pages.
+> 
+> Test environment:
+>   Hardware:  AWS EC2 m8g.24xlarge (96 vCPU, arm64)
+>              12x 1TB IO2 32000 IOPS RAID0 XFS
+>   OS:        AL2023
+>   Kernel:    v7.3-rc1
+>   Database:  PostgreSQL 18.4
+>   Workload:  pgbench simple-update, 1024 clients, 96 threads, 1200s
+> 
+> Results (average of 3 runs, TPS):
+> 
+>   Config                   Avg TPS      % vs Baseline
+>   baseline (no patch)       59,408       -
+>   With this patch          155,409      +161.6%
+> 
+> Link: https://lore.kernel.org/all/20260403193535.9970-1-dipiets@amazon.it/T/#t [v1]
+> Link: https://lore.kernel.org/linux-mm/20260420161404.642-1-dipiets@amazon.it/T/#u [v2]
+> Link: https://lore.kernel.org/all/20260710143437.12379-1-dipiets@amazon.it/T/#u [v3]
+> Fixes: 5d8edfb900d5 ("iomap: Copy larger chunks from userspace")
+> Cc: stable@vger.kernel.org
+> Cc: Andrew Morton <akpm@linux-foundation.org>
+> Cc: Vlastimil Babka <vbabka@suse.cz>
+> Cc: David Hildenbrand <david@redhat.com>
+> Cc: Michal Hocko <mhocko@suse.com>
+> Cc: Johannes Weiner <hannes@cmpxchg.org>
+> Cc: Matthew Wilcox <willy@infradead.org>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Dave Chinner <dgc@kernel.org>
+> Cc: Ritesh Harjani <ritesh.list@gmail.com>
+> Cc: linux-mm@kvack.org
+> Cc: linux-fsdevel@vger.kernel.org
+> Cc: linux-xfs@vger.kernel.org
+> Signed-off-by: Salvatore Dipietro <dipiets@amazon.it>
 
-syzbot found the following issue on:
+I guess this will have to do until unlikely(we figure out a better API)...
 
-HEAD commit:    9d80aa4617b3 Add linux-next specific files for 20260903
-git tree:       linux-next
-console+strace: https://syzkaller.appspot.com/x/log.txt?x=134908f9580000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=bb4a32c282cc2ec7
-dashboard link: https://syzkaller.appspot.com/bug?extid=ccdf3469f5f653bff7ac
-compiler:       Debian clang version 22.1.8 (++20260613092233+e80beda6e255-1~exp1~20260613092250.77), Debian LLD 22.1.8
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=17422b49580000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=174908f9580000
+Acked-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
 
-Downloadable assets:
-disk image: https://storage.googleapis.com/syzbot-assets/417a63e8ac61/disk-9d80aa46.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/a1d004c189c1/vmlinux-9d80aa46.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/97413e5bd243/bzImage-9d80aa46.xz
-mounted in repro: https://storage.googleapis.com/syzbot-assets/39404573136a/mount_0.gz
-  fsck result: failed (log: https://syzkaller.appspot.com/x/fsck.log?x=113e0215580000)
+> ---
+> v4: Clear __GFP_DIRECT_RECLAIM early in the slowpath and exempt
+>     __GFP_THISNODE so THP attempt keeps using direct compaction
+> v3: Move to mm/page_alloc.c, wake kcompactd instead of avoiding it
+> v2: Move from fs/iomap/buffered-io.c to mm/filemap.c
+> v1: Avoid compaction in iomap folio allocation
+> 
+>  mm/page_alloc.c | 18 +++++++++++++++---
+>  1 file changed, 15 insertions(+), 3 deletions(-)
+> 
+> diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+> index 12fac9084c48..542c2ec31061 100644
+> --- a/mm/page_alloc.c
+> +++ b/mm/page_alloc.c
+> @@ -4784,10 +4784,10 @@ static inline struct page *
+>  __alloc_pages_slowpath(gfp_t gfp_mask, unsigned int order,
+>  						struct alloc_context *ac)
+>  {
+> -	bool can_direct_reclaim = gfp_mask & __GFP_DIRECT_RECLAIM;
+> -	bool can_compact = can_direct_reclaim && gfp_compaction_allowed(gfp_mask);
+> -	bool nofail = gfp_mask & __GFP_NOFAIL;
+>  	const bool costly_order = order > PAGE_ALLOC_COSTLY_ORDER;
+> +	bool can_direct_reclaim;
+> +	bool can_compact;
+> +	bool nofail;
+>  	struct page *page = NULL;
+>  	unsigned int alloc_flags;
+>  	unsigned long did_some_progress;
+> @@ -4802,6 +4802,18 @@ __alloc_pages_slowpath(gfp_t gfp_mask, unsigned int order,
+>  	bool can_retry_reserves = true;
+>  	unsigned long alloc_start_time = jiffies;
+>  
+> +	/*
+> +	 * Costly __GFP_NORETRY callers have a cheap fallback, so don't stall
+> +	 * them in reclaim or compaction. __GFP_THISNODE callers are exempt.
+> +	 */
+> +	if (costly_order && (gfp_mask & __GFP_NORETRY) &&
+> +	    !(gfp_mask & __GFP_THISNODE))
+> +		gfp_mask &= ~__GFP_DIRECT_RECLAIM;
+> +
+> +	can_direct_reclaim = gfp_mask & __GFP_DIRECT_RECLAIM;
+> +	can_compact = can_direct_reclaim && gfp_compaction_allowed(gfp_mask);
+> +	nofail = gfp_mask & __GFP_NOFAIL;
+> +
+>  	if (unlikely(nofail)) {
+>  		/*
+>  		 * Also we don't support __GFP_NOFAIL without __GFP_DIRECT_RECLAIM,
 
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+ccdf3469f5f653bff7ac@syzkaller.appspotmail.com
-
-XFS (loop0): Quotacheck needed: Please wait.
-XFS (loop0): Quotacheck: 
-XFS (loop0): Quotacheck: Done.
-------------[ cut here ]------------
-debug_locks && !(lock_is_held(&(&hm->lock)->dep_map) != 0)
-WARNING: fs/xfs/xfs_healthmon.c:275 at __xfs_healthmon_insert+0x32b/0x4e0 fs/xfs/xfs_healthmon.c:275, CPU#0: syz-executor227/5634
-Modules linked in:
-CPU: 0 UID: 0 PID: 5634 Comm: syz-executor227 Not tainted syzkaller #0 PREEMPT(full) 
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 07/24/2026
-RIP: 0010:__xfs_healthmon_insert+0x32b/0x4e0 fs/xfs/xfs_healthmon.c:275
-Code: 00 00 48 8d 65 d8 5b 41 5c 41 5d 41 5e 41 5f 5d c3 cc cc cc cc cc e8 84 1f 29 fe 90 0f 0b 90 e9 51 ff ff ff e8 76 1f 29 fe 90 <0f> 0b 90 e9 a9 fd ff ff e8 68 1f 29 fe 48 8d 3d 41 df e3 0c 67 48
-RSP: 0018:ffffc90003c0fbe0 EFLAGS: 00010293
-RAX: ffffffff839eb57a RBX: dffffc0000000000 RCX: ffff88807f2c9f40
-RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000000
-RBP: ffffc90003c0fc90 R08: ffffffff907a6a7f R09: 1ffffffff20f4d4f
-R10: dffffc0000000000 R11: fffffbfff20f4d50 R12: 0000000000000000
-R13: 1ffff92000781f80 R14: ffff8880342dec00 R15: ffffc90003c0fc20
-FS:  0000555577e8a400(0000) GS:ffff888124cc0000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00000000006a9ee0 CR3: 0000000075370000 CR4: 00000000003526f0
-Call Trace:
- <TASK>
- xfs_ioc_health_monitor+0x4ac/0x760 fs/xfs/xfs_healthmon.c:1222
- xfs_file_ioctl+0x9fb/0xf40 fs/xfs/xfs_ioctl.c:1534
- vfs_ioctl fs/ioctl.c:51 [inline]
- __do_sys_ioctl fs/ioctl.c:597 [inline]
- __se_sys_ioctl+0xfc/0x170 fs/ioctl.c:583
- do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
- do_syscall_64+0x166/0x520 arch/x86/entry/syscall_64.c:84
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
-RIP: 0033:0x7fa707f17349
-Code: c0 79 93 eb d5 48 8d 7c 1d 00 eb 99 0f 1f 44 00 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 d8 ff ff ff f7 d8 64 89 01 48
-RSP: 002b:00007ffc0c2721a8 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
-RAX: ffffffffffffffda RBX: 00007ffc0c2722d8 RCX: 00007fa707f17349
-RDX: 0000200000000080 RSI: 0000000040205844 RDI: 0000000000000004
-RBP: 0000000000000001 R08: 0000000000000000 R09: 00007ffc0c2722d8
-R10: 0000000000000000 R11: 0000000000000246 R12: 00007ffc0c2722c8
-R13: 0000000000000002 R14: 00007fa707fa9c80 R15: 0000000000000002
- </TASK>
-
-
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-
-If the report is already addressed, let syzbot know by replying with:
-#syz fix: exact-commit-title
-
-If you want syzbot to run the reproducer, reply with:
-#syz test: git://repo/address.git branch-or-commit-hash
-If you attach or paste a git patch, syzbot will apply it before testing.
-
-If you want to overwrite report's subsystems, reply with:
-#syz set subsystems: new-subsystem
-(See the list of subsystem names on the web dashboard)
-
-If the report is a duplicate of another one, reply with:
-#syz dup: exact-subject-of-another-report
-
-If you want to undo deduplication, reply with:
-#syz undup
