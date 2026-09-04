@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1856D346FB3
-	for <linux-xfs@vger.kernel.org>; Fri,  4 Sep 2026 06:26:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A19B041E6A6
+	for <linux-xfs@vger.kernel.org>; Fri,  4 Sep 2026 06:26:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788503195; cv=none; b=H2uctKa8REsoUrdc33qMAU47p8vWG2wNMdIDVtE3/ICzpIgjBxx6u+SpUQkVLau1wvEQfa9yA1+YozyaRgc59x8269W8oE5N0Qxo7J+ZkeEj6tLY2xDOEnSRiHd2C/LX2LUzC6StyRwaxltj3LISnBEaWlxdPWeG5zJdRkRDXOQ=
+	t=1788503210; cv=none; b=i3NG1UnHNS5OJf7HTHbHbgLYriHCx7ZBRankDWmIWEMhTrqBc/sHo6UoxvU/pTcriWVJUME/1g4hNjIbQ0KU983wN5myHtN7GmnNX8YsKKxWIlg9gVRGgJAbZf8kExkDyCRuf/Goo3VY1zP27Y9aIBDalt4ERexAS6YBnWi8rf8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788503195; c=relaxed/simple;
-	bh=HHJdDv7QJuo+MLC9MYmTezAclhww1glC+82pXNkUaG8=;
+	s=arc-20240116; t=1788503210; c=relaxed/simple;
+	bh=GvUJfAN4fyacmvDNHuKAudHpmfjPeDf8KpuIulVNYgk=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ZM8gfsPBEuVrltOdfiTg6AWjSALgjG3WF1uWHA29KmXUGdIdqBiAeTEWJ1aB5XOk7riMBK0Gn/aL0+mPAsgG0rMy90lHX9hSac2kc+sq7EAj+4bgMzLHyk+XE+Ui1rOz6bWbd8T+GIurqRNChgkpnSNvOvBvOVUF6qjMKtyrBR8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c4Bj9DF6; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=gzCLlHe/72dNXzw+f+BIsFbiDqDG8fDVB5KntcCQZkInWFN8bfwiiVEWwogR6XeLI22PRyTufpHq0hQhhwVLacnOkO7RWvvZZcilz3MJd1mUCakEJvvHu78MLwDR7oiNz68bB3xWN/gLRipV2qHztXAWYsVk9opXgvHx1XigFZU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GKB9WmTZ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c4Bj9DF6"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id A5B391F00A3D;
-	Fri,  4 Sep 2026 06:26:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GKB9WmTZ"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 326E31F00A3E;
+	Fri,  4 Sep 2026 06:26:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788503193;
-	bh=PvEiDdrJ7VAuHASDJeAfaPD0OcbJJrJfcR/vSF2aGpc=;
+	s=k20260515; t=1788503209;
+	bh=8v8/iGRamaQpnPwIZGbEWnplX7B0DnYOtXX/HFrCa1o=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=c4Bj9DF6460XT4iC1+imLtshIxbCTDEKu1B83edX4wA0nI5SPY4475nOLkLM/5wCC
-	 ZAaQCAaQCxEnbDEPmtVlzsOXr/W1gaamzPu8dm/wGthlFP3d5FMQe+mVzuIbm046oO
-	 sAEJ6CnQluR0pF9K6cUrlq2oYPeccJD/lp6JnJje0lipXrfiSLhSN0yWP/q6EsJWnN
-	 HehZfOfhWUhYzVGCQl5bFp/fFp3x9GSuMtYhOxAMuPEsa/eMbq2SwSqSCvQ8+04BTR
-	 8p0cJjjxLdfJToHJofWa3yinXrWlT3Oq9829SYZQHPqNoJpf0hItid6RnY/h9WBdgf
-	 QNC7+wKp/oidg==
-Date: Thu, 03 Sep 2026 23:26:33 -0700
-Subject: [PATCH 3/6] xfs: report runtime failures in scrub
+	b=GKB9WmTZ8K4QBhSKgVx13SOvT/pyMzx8Fe29E47nSl8g96Q7BsagREYLMcCyyrHnu
+	 z07YSSCdJbz6eozsmSSioBFXMIHAj2btvttFqEI2uBUrMLETwsIL9uRo11tooPGTl3
+	 UBpeE16ccssEF3AwRkk5/NtJK+ZaSNYd/8elQijJwuMmt03dHuHEFMZx31TlXveKPE
+	 8R0wx8HijU0TU3ezoUlMMSQ4DeFL/xBSncq6i1Y26uB8N5fFupQ/+S9UVk2M87Fqsz
+	 MRxCs7tbgKYfSQ7iOb7m13ghM4nbMrYObFGx63SyObU0xP66A7c7YFPkaea30FjCIG
+	 v146x9x6uIo9w==
+Date: Thu, 03 Sep 2026 23:26:48 -0700
+Subject: [PATCH 4/6] xfs: remove redundant function declaration
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, hch@lst.de, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <178850312561.1198660.15558855470989904766.stgit@frogsfrogsfrogs>
+Message-ID: <178850312582.1198660.18019501735306969631.stgit@frogsfrogsfrogs>
 In-Reply-To: <178850312462.1198660.3332635535003842521.stgit@frogsfrogsfrogs>
 References: <178850312462.1198660.3332635535003842521.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,64 +45,25 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add a new counter so that we can track the number of runtime failures
-encountered during scrubs.
+Remove this useless code.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/scrub/stats.c |   14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
+ fs/xfs/scrub/dabtree.h |    2 --
+ 1 file changed, 2 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/stats.c b/fs/xfs/scrub/stats.c
-index da0c05ffe5cd0b..3339cae4b39d14 100644
---- a/fs/xfs/scrub/stats.c
-+++ b/fs/xfs/scrub/stats.c
-@@ -29,6 +29,7 @@ struct xchk_scrub_stats {
- 	uint32_t		incomplete;
- 	uint32_t		warning;
- 	uint32_t		retries;
-+	uint32_t		runtime_errors;
+diff --git a/fs/xfs/scrub/dabtree.h b/fs/xfs/scrub/dabtree.h
+index de291e3b77dd8e..d654c125feb4d8 100644
+--- a/fs/xfs/scrub/dabtree.h
++++ b/fs/xfs/scrub/dabtree.h
+@@ -37,8 +37,6 @@ bool xchk_da_process_error(struct xchk_da_btree *ds, int level, int *error);
+ void xchk_da_set_corrupt(struct xchk_da_btree *ds, int level);
+ void xchk_da_set_preen(struct xchk_da_btree *ds, int level);
  
- 	/* repair stats */
- 	uint32_t		repair_invocations;
-@@ -110,7 +111,7 @@ xchk_stats_format(
- 		spin_unlock(&css->css_lock);
- 
- 		ret = scnprintf(buf, remaining,
-- "%s %u %u %u %u %u %u %u %u %u %llu %u %u %llu\n",
-+ "%s %u %u %u %u %u %u %u %u %u %llu %u %u %llu %u\n",
- 				name_map[i],
- 				(unsigned int)fss.invocations,
- 				(unsigned int)fss.clean,
-@@ -124,7 +125,8 @@ xchk_stats_format(
- 				(unsigned long long)fss.checktime_us,
- 				(unsigned int)fss.repair_invocations,
- 				(unsigned int)fss.repair_success,
--				(unsigned long long)fss.repairtime_us);
-+				(unsigned long long)fss.repairtime_us,
-+				(unsigned int)fss.runtime_errors);
- 		if (ret <= 0)
- 			break;
- 
-@@ -207,13 +209,17 @@ xchk_stats_merge_one(
- 	}
- 
- 	/* caller applies this same transformation after we return */
--	if (error == -EFSCORRUPTED || error == -EFSBADCRC)
-+	if (error == -EFSCORRUPTED || error == -EFSBADCRC) {
- 		sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
-+		error = 0;
-+	}
- 
- 	css = &cs->cs_stats[sm->sm_type];
- 	spin_lock(&css->css_lock);
- 	css->invocations++;
--	if (!(sm_flags & XFS_SCRUB_OFLAG_UNCLEAN))
-+	if (error)
-+		css->runtime_errors++;
-+	else if (!(sm_flags & XFS_SCRUB_OFLAG_UNCLEAN))
- 		css->clean++;
- 	if (sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
- 		css->corrupt++;
+-void xchk_da_set_preen(struct xchk_da_btree *ds, int level);
+-
+ int xchk_da_btree_hash(struct xchk_da_btree *ds, int level, __be32 *hashp);
+ int xchk_da_btree(struct xfs_scrub *sc, int whichfork,
+ 		xchk_da_btree_rec_fn scrub_fn, void *private);
 
