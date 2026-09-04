@@ -1,195 +1,154 @@
-Received: from pdx-out-008.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-008.esa.us-west-2.outbound.mail-perimeter.amazon.com [52.42.203.116])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40652495022;
-	Fri,  4 Sep 2026 11:57:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=52.42.203.116
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 829CB483816
+	for <linux-xfs@vger.kernel.org>; Fri,  4 Sep 2026 11:57:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788523031; cv=none; b=FPO7BX4xrt3YBHK9HIeNJgwUR91nvBsVaIMY9rZMIFQMJo3I0Y+7HoUZeWY4mQ6I8ZZvDAlONdtqyT5xaucrz+UOnRA010rc0mfsgVCjNo2sU1jfHSDmZkyuJrzzOPkX5z8Yw8PJs23+mOYGuxi3X7CJClqgwS3gThkWD8oUlwU=
+	t=1788523050; cv=none; b=YzccVbaf265eK8S3LF+/B6sI3VRbr/JJBq0mTfxTqP7QtWsU7iEqXEE4VqBwa8GbIH/xAOIRWPooHaoR/OusHwYT3PkTFaFrdjrCuUHjue0DcClwRwXWIM8Qcya/54S6HOPK+oxZINZKPH7fYpbm8SjyAT45smAU5tqJe/1YX3k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788523031; c=relaxed/simple;
-	bh=KCaZ/7WPMv1EdIHUVBFLlhu9macY3vqtcdBoHCcEwpU=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=uTM8zBAoPYos05GuTFMp9UEgRBYMkeoGhS0Lj7L4OtPvCW9k/dKX5L0wRgHgRUgM2rPapHjMjFP0fOPriy56jTqzscOtaykyYFRlFegA5cbl55vyLT1/lDJJ/U1WTXFn1Qu6rzP3kHW4dyCB0WUA3lpq87wssMCYloamJcnd+LQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.it; spf=pass smtp.mailfrom=amazon.it; dkim=pass (2048-bit key) header.d=amazon.it header.i=@amazon.it header.b=fxr57ki3; arc=none smtp.client-ip=52.42.203.116
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.it
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.it
+	s=arc-20240116; t=1788523050; c=relaxed/simple;
+	bh=wrvfzrEdM/uDFhEcGj6V/Ybh8Gkp65IRZs3bgw+ECnU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=R14jDflyPl2Tq6gRlVts1n5zuL4iZUT7Lxu6xfddOOtsu8Vjjy5GOXkucGUKu++4g5lWk8dgtfz8ikgwfPOvYiN3D75D6/EUF1t3MeqxJa+cqC2sePk8kE0YgEcl88K34KOTgRAzj3L/ekgUikLGre4ZdZbczqa4CabAmSOROLg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=LSbL1Kzd; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=amazon.it header.i=@amazon.it header.b="fxr57ki3"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=amazon.it; i=@amazon.it; q=dns/txt; s=amazoncorp2;
-  t=1788523028; x=1820059028;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=SOjD2ZTgpTZf/InCnmcmr36L5a0mZycSlAjIYBy93Ps=;
-  b=fxr57ki3c516dtzG+fuseZO5S6xSjMpG5UdTBPTK4X19gu0zl82BZnZC
-   z06PQwn8jnR7F2P0pzy20JJOGBmKv72Ca8++l0MbDfbZwKLxwugbBzTJa
-   akzgqHM4R8YRbZcBcKzZqbWFthCVCITyBlkOHo8tnKZtzd4NrAy2ZPggA
-   acYY0uTPZ77AxRo8zpDk3fEZfQ2B4D/LQB2uUNdsDrreThQ2jRrZ/U/6m
-   CJpDqcItlgVwVRbmjKPGP3Rnluu45PqKUsdjvHG04E4mev7mK3MkEAOUB
-   kBn4gBuZ0OGOHRgwQqt6LngTRqqWFYSimMjpQ3svuDPcf99yMOXUyjzH5
-   w==;
-X-CSE-ConnectionGUID: iAXNTirhSJaOs9v4vT772A==
-X-CSE-MsgGUID: O4XTqRyDTUOIEtI3JKf8Ig==
-X-IronPort-AV: E=Sophos;i="6.25,262,1779148800"; 
-   d="scan'208";a="27847546"
-Received: from ip-10-5-12-219.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.12.219])
-  by internal-pdx-out-008.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Sep 2026 11:57:03 +0000
-Received: from EX19MTAUWA001.ant.amazon.com [205.251.233.236:15535]
- by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.60.115:2525] with esmtp (Farcaster)
- id b4a5571f-f245-4ceb-b67a-51094f9b8089; Fri, 4 Sep 2026 11:57:02 +0000 (UTC)
-X-Farcaster-Flow-ID: b4a5571f-f245-4ceb-b67a-51094f9b8089
-Received: from EX19D001UWA001.ant.amazon.com (10.13.138.214) by
- EX19MTAUWA001.ant.amazon.com (10.250.64.218) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.45;
- Fri, 4 Sep 2026 11:57:02 +0000
-Received: from dev-dsk-dipiets-1b-77b833da.eu-west-1.amazon.com
- (10.253.66.177) by EX19D001UWA001.ant.amazon.com (10.13.138.214) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.46; Fri, 4 Sep 2026
- 11:56:57 +0000
-From: Salvatore Dipietro <dipiets@amazon.it>
-To: <linux-kernel@vger.kernel.org>, <hch@infradead.org>
-CC: <abuehaze@amazon.com>, <akpm@linux-foundation.org>, <alisaidi@amazon.com>,
-	<blakgeof@amazon.com>, <brauner@kernel.org>, <dgc@kernel.org>,
-	<dipietro.salvatore@gmail.com>, <dipiets@amazon.it>, <djwong@kernel.org>,
-	<hannes@cmpxchg.org>, <jackmanb@google.com>, <linux-fsdevel@vger.kernel.org>,
-	<linux-mm@kvack.org>, <linux-xfs@vger.kernel.org>, <mhocko@suse.com>,
-	<ritesh.list@gmail.com>, <rvvandan@amazon.com>, <stable@vger.kernel.org>,
-	<surenb@google.com>, <vbabka@kernel.org>, <willy@infradead.org>,
-	<ziy@nvidia.com>, Vlastimil Babka <vbabka@suse.cz>, David Hildenbrand
-	<david@redhat.com>, Christoph Hellwig <hch@lst.de>, Brendan Jackman
-	<brendan.jackman@linux.dev>
-Subject: [PATCH v4] mm/page_alloc: avoid direct compaction for costly __GFP_NORETRY allocations
-Date: Fri, 4 Sep 2026 11:56:28 +0000
-Message-ID: <20260904115629.3993331-1-dipiets@amazon.it>
-X-Mailer: git-send-email 2.50.1
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LSbL1Kzd"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1788523047;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=CPg2Y8Ab9TMf2vxyVV/kS7aQIsnoV2gfrzkwQRvEWzQ=;
+	b=LSbL1KzdugAQu7oXdYEga1UyqzRziI7FdsPBEDPdsme2+0MmHtTGWMLPXZEILCt9VVsK/J
+	MDOxk8MJ/Mg+LYC7rB8zObgzOfU0S0dUHLOSsJ3mCKYe523gl/Y7+ia+wsTRx7Qv3RMhp4
+	o3YbUaaJcLh6YFxC/wOreekgXDZfIQ0=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-141-LjJgyifANwiag7sKBhjNow-1; Fri,
+ 04 Sep 2026 07:57:24 -0400
+X-MC-Unique: LjJgyifANwiag7sKBhjNow-1
+X-Mimecast-MFC-AGG-ID: LjJgyifANwiag7sKBhjNow_1788523041
+Received: from mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.95])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id C78BA195DE0B;
+	Fri,  4 Sep 2026 11:57:20 +0000 (UTC)
+Received: from bfoster (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
+	by mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 7A50B5BC;
+	Fri,  4 Sep 2026 11:57:17 +0000 (UTC)
+Date: Fri, 4 Sep 2026 07:57:15 -0400
+From: Brian Foster <bfoster@redhat.com>
+To: Kefeng Wang <wangkefeng.wang@huawei.com>
+Cc: brauner@kernel.org, djwong@kernel.org, cem@kernel.org,
+	akpm@linux-foundation.org, vbabka@kernel.org, surenb@google.com,
+	mhocko@suse.com, brendan.jackman@linux.dev, hannes@cmpxchg.org,
+	ziy@nvidia.com, david@kernel.org, qi.zheng@linux.dev,
+	shakeel.butt@linux.dev, ljs@kernel.org, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+Subject: Re: [PATCH] xfs: fix NOFS state corruption in btree split worker
+Message-ID: <apqyG_d6jEUqcMN-@bfoster>
+References: <20260902134417.c44503a1d65533f81fb1c391@linux-foundation.org>
+ <20260903133756.2006032-1-wangkefeng.wang@huawei.com>
+ <apl7hNnt0lR5HFXA@bfoster>
+ <62729d59-198d-4ed2-b1e1-b18384e73b98@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-ClientProxiedBy: EX19D031UWC003.ant.amazon.com (10.13.139.252) To
- EX19D001UWA001.ant.amazon.com (10.13.138.214)
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <62729d59-198d-4ed2-b1e1-b18384e73b98@huawei.com>
+X-Scanned-By: MIMEDefang 3.6 on 10.30.177.95
 
-Commit 5d8edfb900d5 ("iomap: Copy larger chunks from userspace")
-introduced high-order folio allocations in the iomap buffered write
-path.  When memory is fragmented, each failed costly-order allocation
-enters __alloc_pages_slowpath() which runs direct compaction and
-drain_all_pages(), causing a 0.38x throughput drop on PostgreSQL
-pgbench (simple-update) with 1024 clients on a 96-vCPU arm64 system.
+On Fri, Sep 04, 2026 at 08:41:26AM +0800, Kefeng Wang wrote:
+> 
+> 
+> On 9/3/2026 9:52 PM, Brian Foster wrote:
+> > On Thu, Sep 03, 2026 at 09:37:56PM +0800, Kefeng Wang wrote:
+> > > xfs_btree_split_worker() calls xfs_trans_set_context() and
+> > > xfs_trans_clear_context() on the caller's transaction, overwriting
+> > > tp->t_pflags with the worker's NOFS state. When the caller already has
+> > > PF_MEMALLOC_NOFS set (e.g. xfs_end_ioend_write, xfs_dio_write_end_io),
+> > > the corrupted tp->t_pflags causes xfs_trans_free() to erroneously clear
+> > > the caller's NOFS protection.
+> > > 
+> > > Use memalloc_nofs_save/restore with a local variable instead so
+> > > tp->t_pflags is never touched.
+> > > 
+> > > Closes: https://sashiko.dev/#/patchset/20260902131653.1338227-1-wangkefeng.wang@huawei.com
+> > > Fixes: 756b1c343333 ("xfs: use current->journal_info for detecting transaction recursion")
+> > > Signed-off-by: Kefeng Wang <wangkefeng.wang@huawei.com>
+> > > ---
+> > 
+> > I agree that the Sashiko analysis looks correct. The only thing I wonder
+> > is whether it might be a bit cleaner to have the set_context() helper
+> > return the context instead of hardcode the assignment to ->t_pflags so
+> > it can be used in both places. The reasoning is just that the current
+> > arrangement kind of makes it easy to repeat this mistake in the future.
+> > 
+> > Then again, it's a single line helper so maybe another option could be
+> > to just remove and open code it. I suppose the pro of keeping the helper
+> > is that it's a decent spot to document the concern and why it returns a
+> > value, etc. *shrug* Thoughts?
+> 
+> 
+> I personally tend to remove the helper functions, but let's see what others
+> think.
+> 
 
-The root issue is that direct compaction is too expensive for hot
-allocation paths that have fallbacks to smaller allocations.
-__filemap_get_folio_mpol() already marks higher-order allocations with
-__GFP_NORETRY | __GFP_NOWARN, signalling that the caller can handle
-failure.  However, the page allocator still attempts full direct
-compaction for costly orders with __GFP_NORETRY, which is unnecessarily
-aggressive when the caller will simply retry at a lower order.
+I noticed after writing this that there were many more open coded nofs
+calls than I originally thought, so this is a fair point. After some
+thought I think this is a reasonable approach regardless:
 
-For costly-order allocations with __GFP_NORETRY, clear
-__GFP_DIRECT_RECLAIM at the very start of the slowpath, before
-can_direct_reclaim, can_compact and the nofail checks are evaluated.
-This makes the entire slowpath treat the request as non-blocking: no
-direct reclaim, no direct compaction and no drain_all_pages() IPI
-across every CPU. kswapd (and in turn kcompactd) is still woken further
-down for background defragmentation, so compaction keeps working for
-long-term system health while being removed from the latency-critical
-direct allocation path.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Allocations that also request __GFP_THISNODE are exempted.  That flag
-pairing identifies the local-node-first THP attempt issued by
-alloc_pages_mpol() (mempolicy.c), which relies on direct compaction to
-form transparent huge pages.
+You might want to send as a standalone patch though..
 
-Test environment:
-  Hardware:  AWS EC2 m8g.24xlarge (96 vCPU, arm64)
-             12x 1TB IO2 32000 IOPS RAID0 XFS
-  OS:        AL2023
-  Kernel:    v7.3-rc1
-  Database:  PostgreSQL 18.4
-  Workload:  pgbench simple-update, 1024 clients, 96 threads, 1200s
+Brian
 
-Results (average of 3 runs, TPS):
-
-  Config                   Avg TPS      % vs Baseline
-  baseline (no patch)       59,408       -
-  With this patch          155,409      +161.6%
-
-Link: https://lore.kernel.org/all/20260403193535.9970-1-dipiets@amazon.it/T/#t [v1]
-Link: https://lore.kernel.org/linux-mm/20260420161404.642-1-dipiets@amazon.it/T/#u [v2]
-Link: https://lore.kernel.org/all/20260710143437.12379-1-dipiets@amazon.it/T/#u [v3]
-Fixes: 5d8edfb900d5 ("iomap: Copy larger chunks from userspace")
-Cc: stable@vger.kernel.org
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Vlastimil Babka <vbabka@suse.cz>
-Cc: David Hildenbrand <david@redhat.com>
-Cc: Michal Hocko <mhocko@suse.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Matthew Wilcox <willy@infradead.org>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Dave Chinner <dgc@kernel.org>
-Cc: Ritesh Harjani <ritesh.list@gmail.com>
-Cc: linux-mm@kvack.org
-Cc: linux-fsdevel@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org
-Signed-off-by: Salvatore Dipietro <dipiets@amazon.it>
----
-v4: Clear __GFP_DIRECT_RECLAIM early in the slowpath and exempt
-    __GFP_THISNODE so THP attempt keeps using direct compaction
-v3: Move to mm/page_alloc.c, wake kcompactd instead of avoiding it
-v2: Move from fs/iomap/buffered-io.c to mm/filemap.c
-v1: Avoid compaction in iomap folio allocation
-
- mm/page_alloc.c | 18 +++++++++++++++---
- 1 file changed, 15 insertions(+), 3 deletions(-)
-
-diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-index 12fac9084c48..542c2ec31061 100644
---- a/mm/page_alloc.c
-+++ b/mm/page_alloc.c
-@@ -4784,10 +4784,10 @@ static inline struct page *
- __alloc_pages_slowpath(gfp_t gfp_mask, unsigned int order,
- 						struct alloc_context *ac)
- {
--	bool can_direct_reclaim = gfp_mask & __GFP_DIRECT_RECLAIM;
--	bool can_compact = can_direct_reclaim && gfp_compaction_allowed(gfp_mask);
--	bool nofail = gfp_mask & __GFP_NOFAIL;
- 	const bool costly_order = order > PAGE_ALLOC_COSTLY_ORDER;
-+	bool can_direct_reclaim;
-+	bool can_compact;
-+	bool nofail;
- 	struct page *page = NULL;
- 	unsigned int alloc_flags;
- 	unsigned long did_some_progress;
-@@ -4802,6 +4802,18 @@ __alloc_pages_slowpath(gfp_t gfp_mask, unsigned int order,
- 	bool can_retry_reserves = true;
- 	unsigned long alloc_start_time = jiffies;
- 
-+	/*
-+	 * Costly __GFP_NORETRY callers have a cheap fallback, so don't stall
-+	 * them in reclaim or compaction. __GFP_THISNODE callers are exempt.
-+	 */
-+	if (costly_order && (gfp_mask & __GFP_NORETRY) &&
-+	    !(gfp_mask & __GFP_THISNODE))
-+		gfp_mask &= ~__GFP_DIRECT_RECLAIM;
-+
-+	can_direct_reclaim = gfp_mask & __GFP_DIRECT_RECLAIM;
-+	can_compact = can_direct_reclaim && gfp_compaction_allowed(gfp_mask);
-+	nofail = gfp_mask & __GFP_NOFAIL;
-+
- 	if (unlikely(nofail)) {
- 		/*
- 		 * Also we don't support __GFP_NOFAIL without __GFP_DIRECT_RECLAIM,
--- 
-2.50.1
-
-
-
-
-AMAZON DEVELOPMENT CENTER ITALY SRL, viale Monte Grappa 3/5, 20124 Milano, Italia, Registro delle Imprese di Milano Monza Brianza Lodi REA n. 2504859, Capitale Sociale: 10.000 EUR i.v., Cod. Fisc. e P.IVA 10100050961, Societa con Socio Unico
-
-
+> > 
+> > (Please don't change this patch just on my comments alone. Let's see if
+> > others have input first..).
+> > 
+> > Brian
+> > 
+> > >   fs/xfs/libxfs/xfs_btree.c | 10 ++++++++--
+> > >   1 file changed, 8 insertions(+), 2 deletions(-)
+> > > 
+> > > diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+> > > index 6738d9d1511b..8ae4b94e6995 100644
+> > > --- a/fs/xfs/libxfs/xfs_btree.c
+> > > +++ b/fs/xfs/libxfs/xfs_btree.c
+> > > @@ -3007,12 +3007,18 @@ xfs_btree_split_worker(
+> > >   {
+> > >   	struct xfs_btree_split_args	*args = container_of(work,
+> > >   						struct xfs_btree_split_args, work);
+> > > -	xfs_trans_set_context(args->cur->bc_tp);
+> > > +	unsigned int			nofs_flags;
+> > > +
+> > > +	/*
+> > > +	 * Don't use xfs_trans_set_context() here: it would overwrite the
+> > > +	 * caller's saved NOFS state in tp->t_pflags.  Use a local scope.
+> > > +	 */
+> > > +	nofs_flags = memalloc_nofs_save();
+> > >   	args->result = __xfs_btree_split(args->cur, args->level, args->ptrp,
+> > >   					 args->key, args->curp, args->stat);
+> > > -	xfs_trans_clear_context(args->cur->bc_tp);
+> > > +	memalloc_nofs_restore(nofs_flags);
+> > >   	/*
+> > >   	 * Do not access args after complete() has run here. We don't own args
+> > > -- 
+> > > 2.55.0
+> > > 
+> > > 
+> > 
+> > 
+> 
 
