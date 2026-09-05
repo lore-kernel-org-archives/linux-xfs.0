@@ -1,137 +1,192 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5196A2116F4;
-	Sat,  5 Sep 2026 00:24:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E776238166
+	for <linux-xfs@vger.kernel.org>; Sat,  5 Sep 2026 01:08:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788567869; cv=none; b=l5pew0cX+2MfW+MPv7W/re0aCRQWibsBOZ8TUVEsgoF7+/60Vw9wMZ3MMBnvxJZsbD4RgOaC5hc1DK42uay/xJL3tvkgcb1fCD4/NnvLzRRT9QFhTP2fKXH6pQIONBrhcqFNBwCXDxeyzRJwkZ1zmLvuMYW1vyTiIXQJDr/Hgnc=
+	t=1788570534; cv=none; b=bc9ndZqi6lRXw4lm6Hf7NXf0wxbsOVX/xBlief7EA+LziGHVPgdubWBEwI0KltMW7ZAWKiy/B4e42T9XtaApsdcRzIHugCTvoH2ScRm0kBGCzf/pxZ1V3t1JU/DqtR5L+pMWOUEYh9UnM3b/wvgyKpwCgyZ5CXdmpmgW0usT+A8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788567869; c=relaxed/simple;
-	bh=iwNzIiHTJADI6zpjxWyjOrUKMVt6XIVPWWxV/zzsqgY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=oVByzY+ajgt2w0ZWTr38YblXnd0sHHvA6x3IAh2t5l4AqBuv3jclcxelI+stXMj9LQZahZIQS0KptJ0tPnf3sYMKm5MoBWnIHW3xe2a0QdV68+c2+KKJAlFeNhv2JxnKDQb38GInK6fjojb400HZG4J/OOoQocFWbPooqL0rPwg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.170])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4hcDZb6ZVZzKHMRG;
-	Sat,  5 Sep 2026 08:23:19 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 0843D4056D;
-	Sat,  5 Sep 2026 08:24:16 +0800 (CST)
-Received: from [10.174.176.179] (unknown [10.174.176.179])
-	by APP1 (Coremail) with UTF8SMTPSA id cCh0CgBHMAsuYZtqzgYjAw--.63215S3;
-	Sat, 05 Sep 2026 08:24:15 +0800 (CST)
-Message-ID: <1e6efb44-3b7d-4687-a1b8-25767ae1e1dd@huaweicloud.com>
-Date: Sat, 5 Sep 2026 08:24:13 +0800
+	s=arc-20240116; t=1788570534; c=relaxed/simple;
+	bh=CZd+JpmvhTdeVY4Du0/ldPfqWzeCv4D86Hs3FQBLTAc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=kIE46zokKtaXUysvb3insnj3B01bfTorRHj3gD0MclJ5E9iMLJrO+R+DXSQ+GpUBFM1dU66UNdgNvfqqnj4YkP4Q75KTWR7UNT4Q/VNwTLTUUSmBTxPOI5Ia80w+hLR+yZEQpTts30nykUw5MDEr9Bc7GdpQq/yoBMN3xi1PVLI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kHNC7+pZ; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kHNC7+pZ"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 91C491F00A3D;
+	Sat,  5 Sep 2026 01:08:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788570532;
+	bh=r1+3CKMrYI1RhwlLH5mJqHee2sy7R7V0TSNZbQaf+kE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=kHNC7+pZt9XVqly1M1GvnVCTmkkRGldZTXF0e4rop+//XLCgl+MCf+f2Rsx/5HsBH
+	 6ix12iu13DflBCD03RTSVDeEsJ7ljqLXvUTZqUWMZ9ZGmDDP1VXKgxfOstX2xXzBp7
+	 HIaxqUErZS4U6T4r9eYj1PUG0uFza/I+8Ib8Jpgbkb1tGqzrIGTvLN6/kAE4pnkE6u
+	 bwFdzDGvAwtq8Klw1HC30ECUOw73dXP4xrrqS//RsGs8qYyLW51i27WnETt6SchbTh
+	 uO6LzDQPD3IzUkSzvvGvHeReqWJT9NHbtnFdECcBxGQ/OdX2Kqu0/LSvUH9ASApRVJ
+	 stsazwpP2lnGA==
+Date: Fri, 4 Sep 2026 18:08:51 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: cem@kernel.org
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [RFC PATCH 1/3] xfs: add xfs_error_report the ability to display
+ an error code
+Message-ID: <20260905010851.GE1933798@frogsfrogsfrogs>
+References: <20260904113231.1408890-1-cem@kernel.org>
+ <20260904113231.1408890-2-cem@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 0/5] xfs: remove leftover dead declarations in headers
-To: Carlos Maiolino <cem@kernel.org>, Zizhi Wo <wozizhi@huaweicloud.com>
-Cc: dgc@kernel.org, djwong@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org,
- linux-kernel@vger.kernel.org, yangerkun@huawei.com, chengzhihao1@huawei.com
-References: <20260904060648.1966130-1-wozizhi@huaweicloud.com>
- <aprh7OnJPCL-iIIK@andromeda.toxiclabs.cc>
-From: Zizhi Wo <wozizhi@huaweicloud.com>
-In-Reply-To: <aprh7OnJPCL-iIIK@andromeda.toxiclabs.cc>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgBHMAsuYZtqzgYjAw--.63215S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7Kr45ZF1xAr4UGw4fKw4DJwb_yoW5Jr1rp3
-	yrW3Wqka1DJry29Fn2q3Z7JFy2q3yxJrW7JFn5Zw1I9w1DArnFgryakFsY9F98GrZayw4Y
-	q3yjqF98u3WUZFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUkm14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26r1I6r4UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
-	6F4UM28EF7xvwVC2z280aVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Cr
-	1j6rxdM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj
-	6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr
-	0_Gr1lF7xvr2IY64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxkF7I0En4kS14v26r1q
-	6r43MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI
-	0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y
-	0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxV
-	WUJVW8JwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1l
-	IxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjfUonmRUUUUU
-X-CM-SenderInfo: pzr2x6tkl6x35dzhxuhorxvhhfrp/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260904113231.1408890-2-cem@kernel.org>
 
-
-
-在 2026/9/4 23:24, Carlos Maiolino 写道:
-> On Fri, Sep 04, 2026 at 02:06:43PM +0800, Zizhi Wo wrote:
->> While reading the XFS log code I noticed that the implementation of
->> xlog_assign_tail_lsn() had already been removed, but its declaration was
->> left behind in the header. Such orphaned declarations (implementation gone,
->> no callers) can simply be dropped.
->>
->> Suspecting more of these existed, I scanned the XFS headers (using GLM-5.2
->> to help, then verified each by hand) and this series removes the leftover
->> declarations I could confirm. Some of these have been stale for a long time
->> -- the oldest dates back to 2006.
->>
->> Note that scrub still has a fair number of functions that do have
->> implementations but no callers (e.g. xchk_process_rt_error). I'm not sure
->> removing those is appropriate, since they may be intended for future use,
->> so they are not touched here.
->>
->> Cleanup only, no functional change.
->>
->> Zizhi Wo (5):
->>    xfs: remove unused xlog_assign_tail_lsn declarations
->>    xfs: remove unused xfs_iext_realloc declaration
->>    xfs: remove unused xfs_buf_iodone declaration
->>    xfs: remove unused kmem_to_page helper
->>    xfs: remove never-implemented scrub declarations
+On Fri, Sep 04, 2026 at 01:32:21PM +0200, cem@kernel.org wrote:
+> From: Carlos Maiolino <cem@kernel.org>
 > 
-
-Hi Carlos,
-
-Thanks a lot for the review.
-
-> Honestly this all could have been a single patch, I don't believe the
-> 'when the last user was gone' matters at least for me as I could find if
-> through a quick `git log` scan. Darrick was fine with it so I won't
-> enforce it to be a single cleanup patch.
+> Users could opt to request an error code to be printed
 > 
-
-My original intent behind splitting was to keep each removal in its own
-commit, so that during review one could tell directly from the commit
-message why each symbol was left behind, without having to dig through
-the history separately -- even though every change is tiny.
-
-But I agree that a quick `git log` scan serves the same purpose, so I'll
-fold them into a single cleanup patch in v2.
-
-
-> At least get rid of the "Assisted-By: <model>" thing and send a new
-> version as we don't accept models discrimination anymore.
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> Signed-off-by: Carlos Maiolino <cem@kernel.org>
+> ---
+>  fs/xfs/xfs_error.c         |  7 ++++++-
+>  fs/xfs/xfs_error.h         | 10 +++++-----
+>  fs/xfs/xfs_exchmaps_item.c |  6 +++---
+>  fs/xfs/xfs_inode_item.c    |  2 +-
+>  fs/xfs/xfs_log_recover.c   |  2 +-
+>  5 files changed, 16 insertions(+), 11 deletions(-)
 > 
-> Carlos
+> diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+> index dbd87e137694..1c882b910ffd 100644
+> --- a/fs/xfs/xfs_error.c
+> +++ b/fs/xfs/xfs_error.c
+> @@ -377,6 +377,7 @@ void
+>  xfs_error_report(
+>  	const char		*tag,
+>  	int			level,
+> +	int			error,
+>  	struct xfs_mount	*mp,
+>  	const char		*filename,
+>  	int			linenum,
+> @@ -387,6 +388,10 @@ xfs_error_report(
+>  		"Internal error %s at line %d of file %s.  Caller %pS",
+>  			    tag, linenum, filename, failaddr);
+>  
+> +		if (error)
+> +			xfs_alert_tag(mp, XFS_PTAG_ERROR_REPORT,
+> +				      "Error Code: %d", error);
+
+/me wonders, should the error erport just go in the "Internal error..."
+message above?
+
+"Internal error $tag ($error) at line..."
+
+> +
+>  		xfs_stack_trace();
+>  	}
+>  }
+> @@ -404,7 +409,7 @@ xfs_corruption_error(
+>  {
+>  	if (buf && level <= xfs_error_level)
+>  		xfs_hex_dump(buf, bufsize);
+> -	xfs_error_report(tag, level, mp, filename, linenum, failaddr);
+> +	xfs_error_report(tag, level, 0, mp, filename, linenum, failaddr);
+>  	xfs_alert(mp, "Corruption detected. Unmount and run xfs_repair");
+>  }
+>  
+> diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
+> index 0b9c5ba8a598..1a1aa60e92f2 100644
+> --- a/fs/xfs/xfs_error.h
+> +++ b/fs/xfs/xfs_error.h
+> @@ -8,9 +8,9 @@
+>  
+>  struct xfs_mount;
+>  
+> -extern void xfs_error_report(const char *tag, int level, struct xfs_mount *mp,
+> -			const char *filename, int linenum,
+> -			xfs_failaddr_t failaddr);
+> +extern void xfs_error_report(const char *tag, int level, int error,
+> +			     struct xfs_mount *mp, const char *filename,
+> +			     int linenum, xfs_failaddr_t failaddr);
+>  extern void xfs_corruption_error(const char *tag, int level,
+>  			struct xfs_mount *mp, const void *buf, size_t bufsize,
+>  			const char *filename, int linenum,
+> @@ -25,8 +25,8 @@ extern void xfs_inode_verifier_error(struct xfs_inode *ip, int error,
+>  			const char *name, const void *buf, size_t bufsz,
+>  			xfs_failaddr_t failaddr);
+>  
+> -#define	XFS_ERROR_REPORT(e, lvl, mp)	\
+> -	xfs_error_report(e, lvl, mp, __FILE__, __LINE__, __return_address)
+> +#define	XFS_ERROR_REPORT(e, lvl, error, mp)	\
+> +	xfs_error_report(e, lvl, error, mp, __FILE__, __LINE__, __return_address)
+>  #define	XFS_CORRUPTION_ERROR(e, lvl, mp, buf, bufsize)	\
+>  	xfs_corruption_error(e, lvl, mp, buf, bufsize, \
+>  			     __FILE__, __LINE__, __return_address)
+> diff --git a/fs/xfs/xfs_exchmaps_item.c b/fs/xfs/xfs_exchmaps_item.c
+> index 264a121c5e16..b94c5e5e6549 100644
+> --- a/fs/xfs/xfs_exchmaps_item.c
+> +++ b/fs/xfs/xfs_exchmaps_item.c
+> @@ -559,13 +559,13 @@ xlog_recover_xmi_commit_pass2(
+>  
+>  	len = sizeof(struct xfs_xmi_log_format);
+>  	if (item->ri_buf[0].i_len != len) {
+> -		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, log->l_mp);
+> +		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, 0, log->l_mp);
+
+These should be -EFSCORRUPTED, not 0, right?
+
+--D
+
+>  		return -EFSCORRUPTED;
+>  	}
+>  
+>  	xmi_formatp = item->ri_buf[0].i_addr;
+>  	if (xmi_formatp->__pad != 0) {
+> -		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, log->l_mp);
+> +		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, 0, log->l_mp);
+>  		return -EFSCORRUPTED;
+>  	}
+>  
+> @@ -600,7 +600,7 @@ xlog_recover_xmd_commit_pass2(
+>  
+>  	xmd_formatp = item->ri_buf[0].i_addr;
+>  	if (item->ri_buf[0].i_len != sizeof(struct xfs_xmd_log_format)) {
+> -		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, log->l_mp);
+> +		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, 0, log->l_mp);
+>  		return -EFSCORRUPTED;
+>  	}
+>  
+> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+> index c6cb0b6b9e46..862b7d7d3ce4 100644
+> --- a/fs/xfs/xfs_inode_item.c
+> +++ b/fs/xfs/xfs_inode_item.c
+> @@ -1185,7 +1185,7 @@ xfs_inode_item_format_convert(
+>  	struct xfs_inode_log_format_32	*in_f32 = buf->i_addr;
+>  
+>  	if (buf->i_len != sizeof(*in_f32)) {
+> -		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, NULL);
+> +		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, 0, NULL);
+>  		return -EFSCORRUPTED;
+>  	}
+>  
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index 2f76531842f8..083e4bf61e2b 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -2932,7 +2932,7 @@ xlog_recover_process(
+>  		 * fatal log corruption failure.
+>  		 */
+>  		if (xfs_has_crc(log->l_mp)) {
+> -			XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, log->l_mp);
+> +			XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, 0, log->l_mp);
+>  			return -EFSCORRUPTED;
+>  		}
+>  	}
+> -- 
+> 2.55.0
 > 
-
-Sure, I'll drop the "Assisted-By:" tag as well.
-Will send v2 shortly.
-
-Thanks,
-Zizhi Wo
-
->>
->>   fs/xfs/scrub/common.h   |  1 -
->>   fs/xfs/scrub/scrub.h    |  1 -
->>   fs/xfs/scrub/tempfile.h |  4 ----
->>   fs/xfs/xfs_buf_item.h   |  1 -
->>   fs/xfs/xfs_inode.h      |  1 -
->>   fs/xfs/xfs_log.h        |  2 --
->>   fs/xfs/xfs_platform.h   | 11 -----------
->>   7 files changed, 21 deletions(-)
->>
->> -- 
->> 2.52.0
->>
->>
-
+> 
