@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E776238166
-	for <linux-xfs@vger.kernel.org>; Sat,  5 Sep 2026 01:08:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DF032459EA
+	for <linux-xfs@vger.kernel.org>; Sat,  5 Sep 2026 01:10:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788570534; cv=none; b=bc9ndZqi6lRXw4lm6Hf7NXf0wxbsOVX/xBlief7EA+LziGHVPgdubWBEwI0KltMW7ZAWKiy/B4e42T9XtaApsdcRzIHugCTvoH2ScRm0kBGCzf/pxZ1V3t1JU/DqtR5L+pMWOUEYh9UnM3b/wvgyKpwCgyZ5CXdmpmgW0usT+A8=
+	t=1788570656; cv=none; b=lmPi9WVuWaw/udC1K20q6ivAvzRyK2Q35yr65QutWXCQW5zDnwOh4fF9ljsZ/X4s1YiuYZbhvvvWV7fX5K1k+Jht+l9Ov31FmKVZmEy8i/3FSPhpWrpa2R+SXwPlJflKw82LahEDmr+01Yw2cgv/bEvbtSNsLy/IdvCyUPrRF0s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788570534; c=relaxed/simple;
-	bh=CZd+JpmvhTdeVY4Du0/ldPfqWzeCv4D86Hs3FQBLTAc=;
+	s=arc-20240116; t=1788570656; c=relaxed/simple;
+	bh=tzA6KIHjKDUNnraMWlCiPYQyEZezs8dTximKHMMDtDw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=kIE46zokKtaXUysvb3insnj3B01bfTorRHj3gD0MclJ5E9iMLJrO+R+DXSQ+GpUBFM1dU66UNdgNvfqqnj4YkP4Q75KTWR7UNT4Q/VNwTLTUUSmBTxPOI5Ia80w+hLR+yZEQpTts30nykUw5MDEr9Bc7GdpQq/yoBMN3xi1PVLI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kHNC7+pZ; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=OxHfFigGfTXYqM0XPQeXMKfOe5SCbuX+9pl9X6W/dYNcod2ePq8eroKNatI6L3m7RJGMnllcNRJOmrix/tAhkqmTKzHQ4Am/GzoRAW7JlDWHwrxuhRIeGGiCRs3BaqkqFrsa6LAkbrTEpFmcJn6DQ8X7TuIUeDWPzZgJ0WfWn9Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RhjwZG3N; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kHNC7+pZ"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 91C491F00A3D;
-	Sat,  5 Sep 2026 01:08:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RhjwZG3N"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id E077F1F00A3D;
+	Sat,  5 Sep 2026 01:10:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788570532;
-	bh=r1+3CKMrYI1RhwlLH5mJqHee2sy7R7V0TSNZbQaf+kE=;
+	s=k20260515; t=1788570655;
+	bh=WeAqouUDG1vKd9ZhsRwyyargjNQKc1YzNCwxgt5bswA=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=kHNC7+pZt9XVqly1M1GvnVCTmkkRGldZTXF0e4rop+//XLCgl+MCf+f2Rsx/5HsBH
-	 6ix12iu13DflBCD03RTSVDeEsJ7ljqLXvUTZqUWMZ9ZGmDDP1VXKgxfOstX2xXzBp7
-	 HIaxqUErZS4U6T4r9eYj1PUG0uFza/I+8Ib8Jpgbkb1tGqzrIGTvLN6/kAE4pnkE6u
-	 bwFdzDGvAwtq8Klw1HC30ECUOw73dXP4xrrqS//RsGs8qYyLW51i27WnETt6SchbTh
-	 uO6LzDQPD3IzUkSzvvGvHeReqWJT9NHbtnFdECcBxGQ/OdX2Kqu0/LSvUH9ASApRVJ
-	 stsazwpP2lnGA==
-Date: Fri, 4 Sep 2026 18:08:51 -0700
+	b=RhjwZG3N3uWPXlbCRCaE9y7F+2vkDdo3SzMOKYLhwsGCrfkW2Fh2UoAgGq7SIIEDx
+	 WJ9UwUFUY/+YKCiYVxx53YREtMdoai7LCRDtXVxZcF8vkW1S8xWXYxLZKfHkbg8ZVi
+	 hoBeFnKOgG7iIFgdeAB5hReFXp420a3wzAJVKEUsfrSdZ+4L7oulliwMy4bYEWoBZ0
+	 Qa9P2qtefKHDlVv7jux17u1z49IghQpiuOIIyMuDiI6eWjZG0RswcrHKdyEsNg5HZm
+	 G8NfbYvTKxwJPSiLB4AI7WLX5Z+JY9h+Y/orHQtTNjSi0VG3jGPkndXlmeUwx6KpqF
+	 35alZ52k7sJgw==
+Date: Fri, 4 Sep 2026 18:10:54 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Subject: Re: [RFC PATCH 1/3] xfs: add xfs_error_report the ability to display
- an error code
-Message-ID: <20260905010851.GE1933798@frogsfrogsfrogs>
+Subject: Re: [RFC PATCH 2/3] xfs: enable xfs_trans_cancel() to report and
+ error code
+Message-ID: <20260905011054.GF1933798@frogsfrogsfrogs>
 References: <20260904113231.1408890-1-cem@kernel.org>
- <20260904113231.1408890-2-cem@kernel.org>
+ <20260904113231.1408890-3-cem@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,149 +43,93 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260904113231.1408890-2-cem@kernel.org>
+In-Reply-To: <20260904113231.1408890-3-cem@kernel.org>
 
-On Fri, Sep 04, 2026 at 01:32:21PM +0200, cem@kernel.org wrote:
+On Fri, Sep 04, 2026 at 01:32:22PM +0200, cem@kernel.org wrote:
 > From: Carlos Maiolino <cem@kernel.org>
 > 
-> Users could opt to request an error code to be printed
-> 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> Signed-off-by: Carlos Maiolino <cem@kernel.org>
-> ---
->  fs/xfs/xfs_error.c         |  7 ++++++-
->  fs/xfs/xfs_error.h         | 10 +++++-----
->  fs/xfs/xfs_exchmaps_item.c |  6 +++---
->  fs/xfs/xfs_inode_item.c    |  2 +-
->  fs/xfs/xfs_log_recover.c   |  2 +-
->  5 files changed, 16 insertions(+), 11 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-> index dbd87e137694..1c882b910ffd 100644
-> --- a/fs/xfs/xfs_error.c
-> +++ b/fs/xfs/xfs_error.c
-> @@ -377,6 +377,7 @@ void
->  xfs_error_report(
->  	const char		*tag,
->  	int			level,
-> +	int			error,
->  	struct xfs_mount	*mp,
->  	const char		*filename,
->  	int			linenum,
-> @@ -387,6 +388,10 @@ xfs_error_report(
->  		"Internal error %s at line %d of file %s.  Caller %pS",
->  			    tag, linenum, filename, failaddr);
->  
-> +		if (error)
-> +			xfs_alert_tag(mp, XFS_PTAG_ERROR_REPORT,
-> +				      "Error Code: %d", error);
+> Once in a while it's useful to know exactly what kind of error caused a
+> transaction to be cancelled.
+> Enable xfs_trans_cancel() to receive an error code to be reported.
 
-/me wonders, should the error erport just go in the "Internal error..."
-message above?
+Stylistically I think I'd rather have an explicit @error and some macros
+to avoid the va_args machinery.
 
-"Internal error $tag ($error) at line..."
 
-> +
->  		xfs_stack_trace();
->  	}
->  }
-> @@ -404,7 +409,7 @@ xfs_corruption_error(
->  {
->  	if (buf && level <= xfs_error_level)
->  		xfs_hex_dump(buf, bufsize);
-> -	xfs_error_report(tag, level, mp, filename, linenum, failaddr);
-> +	xfs_error_report(tag, level, 0, mp, filename, linenum, failaddr);
->  	xfs_alert(mp, "Corruption detected. Unmount and run xfs_repair");
->  }
->  
-> diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
-> index 0b9c5ba8a598..1a1aa60e92f2 100644
-> --- a/fs/xfs/xfs_error.h
-> +++ b/fs/xfs/xfs_error.h
-> @@ -8,9 +8,9 @@
->  
->  struct xfs_mount;
->  
-> -extern void xfs_error_report(const char *tag, int level, struct xfs_mount *mp,
-> -			const char *filename, int linenum,
-> -			xfs_failaddr_t failaddr);
-> +extern void xfs_error_report(const char *tag, int level, int error,
-> +			     struct xfs_mount *mp, const char *filename,
-> +			     int linenum, xfs_failaddr_t failaddr);
->  extern void xfs_corruption_error(const char *tag, int level,
->  			struct xfs_mount *mp, const void *buf, size_t bufsize,
->  			const char *filename, int linenum,
-> @@ -25,8 +25,8 @@ extern void xfs_inode_verifier_error(struct xfs_inode *ip, int error,
->  			const char *name, const void *buf, size_t bufsz,
->  			xfs_failaddr_t failaddr);
->  
-> -#define	XFS_ERROR_REPORT(e, lvl, mp)	\
-> -	xfs_error_report(e, lvl, mp, __FILE__, __LINE__, __return_address)
-> +#define	XFS_ERROR_REPORT(e, lvl, error, mp)	\
-> +	xfs_error_report(e, lvl, error, mp, __FILE__, __LINE__, __return_address)
->  #define	XFS_CORRUPTION_ERROR(e, lvl, mp, buf, bufsize)	\
->  	xfs_corruption_error(e, lvl, mp, buf, bufsize, \
->  			     __FILE__, __LINE__, __return_address)
-> diff --git a/fs/xfs/xfs_exchmaps_item.c b/fs/xfs/xfs_exchmaps_item.c
-> index 264a121c5e16..b94c5e5e6549 100644
-> --- a/fs/xfs/xfs_exchmaps_item.c
-> +++ b/fs/xfs/xfs_exchmaps_item.c
-> @@ -559,13 +559,13 @@ xlog_recover_xmi_commit_pass2(
->  
->  	len = sizeof(struct xfs_xmi_log_format);
->  	if (item->ri_buf[0].i_len != len) {
-> -		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, log->l_mp);
-> +		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, 0, log->l_mp);
+void __xfs_trans_cancel(struct xfs_trans *tp, int error) {...}
 
-These should be -EFSCORRUPTED, not 0, right?
+#define xfs_trans_cancel(tp) __xfs_trans_cancel(tp, 0)
+#define xfs_trans_cancel_with(tp, error) __xfs_trans_cancel(tp, error)
 
 --D
 
->  		return -EFSCORRUPTED;
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> Signed-off-by: Carlos Maiolino <cem@kernel.org>
+> ---
+>  fs/xfs/xfs_trans.c | 12 +++++++++---
+>  fs/xfs/xfs_trans.h |  8 +++++++-
+>  2 files changed, 16 insertions(+), 4 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+> index c6657072361a..f6004590565b 100644
+> --- a/fs/xfs/xfs_trans.c
+> +++ b/fs/xfs/xfs_trans.c
+> @@ -971,12 +971,18 @@ xfs_trans_commit(
+>   * xfs_trans_commit().
+>   */
+>  void
+> -xfs_trans_cancel(
+> -	struct xfs_trans	*tp)
+> +_xfs_trans_cancel(
+> +	struct xfs_trans	*tp, ...)
+>  {
+>  	struct xfs_mount	*mp = tp->t_mountp;
+>  	struct xlog		*log = mp->m_log;
+>  	bool			dirty = (tp->t_flags & XFS_TRANS_DIRTY);
+> +	int			error = 0;
+> +	va_list			args;
+> +
+> +	va_start(args, tp);
+> +	error = va_arg(args, int);
+> +	va_end(args);
+>  
+>  	trace_xfs_trans_cancel(tp, _RET_IP_);
+>  
+> @@ -999,7 +1005,7 @@ xfs_trans_cancel(
+>  	 * here.
+>  	 */
+>  	if (dirty && !xfs_is_shutdown(mp)) {
+> -		XFS_ERROR_REPORT("xfs_trans_cancel", XFS_ERRLEVEL_LOW, mp);
+> +		XFS_ERROR_REPORT("xfs_trans_cancel", XFS_ERRLEVEL_LOW, error, mp);
+>  		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
 >  	}
+>  #ifdef DEBUG
+> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+> index 2b366851e9a4..05cc7464eb3b 100644
+> --- a/fs/xfs/xfs_trans.h
+> +++ b/fs/xfs/xfs_trans.h
+> @@ -213,6 +213,13 @@ xfs_trans_read_buf(
+>  				      flags, bpp, ops);
+>  }
 >  
->  	xmi_formatp = item->ri_buf[0].i_addr;
->  	if (xmi_formatp->__pad != 0) {
-> -		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, log->l_mp);
-> +		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, 0, log->l_mp);
->  		return -EFSCORRUPTED;
->  	}
+> +void _xfs_trans_cancel(xfs_trans_t *, ...);
+> +
+> +#define xfs_trans_cancel(tp, ...)		\
+> +({						\
+> +	_xfs_trans_cancel(tp, ##__VA_ARGS__);	\
+> +})
+> +
+>  struct xfs_buf	*xfs_trans_getsb(struct xfs_trans *);
+>  struct xfs_buf	*xfs_trans_getrtsb(struct xfs_trans *tp);
 >  
-> @@ -600,7 +600,7 @@ xlog_recover_xmd_commit_pass2(
+> @@ -237,7 +244,6 @@ void		xfs_trans_log_inode(xfs_trans_t *, struct xfs_inode *, uint);
+>  int		xfs_trans_commit(struct xfs_trans *);
+>  int		xfs_trans_roll(struct xfs_trans **);
+>  int		xfs_trans_roll_inode(struct xfs_trans **, struct xfs_inode *);
+> -void		xfs_trans_cancel(xfs_trans_t *);
+>  int		xfs_trans_ail_init(struct xfs_mount *);
+>  void		xfs_trans_ail_destroy(struct xfs_mount *);
 >  
->  	xmd_formatp = item->ri_buf[0].i_addr;
->  	if (item->ri_buf[0].i_len != sizeof(struct xfs_xmd_log_format)) {
-> -		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, log->l_mp);
-> +		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, 0, log->l_mp);
->  		return -EFSCORRUPTED;
->  	}
->  
-> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-> index c6cb0b6b9e46..862b7d7d3ce4 100644
-> --- a/fs/xfs/xfs_inode_item.c
-> +++ b/fs/xfs/xfs_inode_item.c
-> @@ -1185,7 +1185,7 @@ xfs_inode_item_format_convert(
->  	struct xfs_inode_log_format_32	*in_f32 = buf->i_addr;
->  
->  	if (buf->i_len != sizeof(*in_f32)) {
-> -		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, NULL);
-> +		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, 0, NULL);
->  		return -EFSCORRUPTED;
->  	}
->  
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index 2f76531842f8..083e4bf61e2b 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -2932,7 +2932,7 @@ xlog_recover_process(
->  		 * fatal log corruption failure.
->  		 */
->  		if (xfs_has_crc(log->l_mp)) {
-> -			XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, log->l_mp);
-> +			XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, 0, log->l_mp);
->  			return -EFSCORRUPTED;
->  		}
->  	}
 > -- 
 > 2.55.0
 > 
