@@ -1,621 +1,182 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0086131F9BD;
-	Mon,  7 Sep 2026 21:36:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4B0C34F46F;
+	Mon,  7 Sep 2026 22:54:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788817020; cv=none; b=baek5wd0iAYyUzrBqVC4yp+380PHfgmvQvWsxz4zg1XBaelH9OKiMy2fHJ/goWtH9bXsBSdGZ9znKkyD0sp7RkGaAidgLq5eBIbg6uGqB96qHTbuC8KouurqYPzrFiVza0kVoT+YhjNUv4jDzKNsIUheGuJ+ZpI4ltyvIfTWHL4=
+	t=1788821643; cv=none; b=J85ofdkDs3/7SRcKAOMCKnov6Q6wHinMKxsp+FV4T4JY3pwlnwOr6eHcOUVDYq8hcIZgoR/9+fWzrROSOeY2htYsScUbI5EJu4vqGE9vtoNug6fyEJSQ+hAAvykwxBvm1KwVB09rg0Gy7n+RF/f7q267Q2JnChQ6fUCnQuCVcpU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788817020; c=relaxed/simple;
-	bh=7SPxr/i89miBb4ShKuJXSlwexLm12hi5U+Fm3z3hmKE=;
+	s=arc-20240116; t=1788821643; c=relaxed/simple;
+	bh=eSFdUlDLf2GZqgNMTJLFYHhvCCl+0x38KjNsNQw87jU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Si7VWMnuncMyY9hqtp/Ar2q8TyR3TCRT024dS+2kqz7k6kbHOVdT3o52aFgG7e9OZNKlYxdVw+r9IyZNPBuAcBSpiJb/aMORDluDbQZZiu5JNKHzf3YHg9NGMbzUNi9wAlVpjJ+hwnjgfnL5KwwFVCh4aoaEkTadJ+g+SNzvQRc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FmQ1HhCI; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=Cjvam5aWb858zsVKBiMA86E48rBo2GkA04vwD7dDIck9Ee+QC5Wllu5k7BWMpwvRqpErKt53S5lXFkcGV/oP932i8tvUh/TIRZ21InkwElWLpRfYc75jswB/r9BG2uNA9+w+5J+ypcN3L2Uy2Rj6BhzEfc5uW4dKs1EtLxm8/lQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D1vhTQZ9; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FmQ1HhCI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F35841F00A3A;
-	Mon,  7 Sep 2026 21:36:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D1vhTQZ9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 08E601F00A3A;
+	Mon,  7 Sep 2026 22:53:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788817017;
-	bh=5vgayFQN5jvTzOA4tlyQafqU2JlOuT/xE3w3tbgnjs0=;
+	s=k20260515; t=1788821641;
+	bh=Ika8T9omcjuRCfkjDk2wfiEqxdav9REiF7ZEPsYL/ww=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=FmQ1HhCIlZk7ib359uhQlMTtEnxVwWBn13C1qS70aRPa88xVx3blLhI5B7sKIBjGV
-	 CV7FtlHnKEIpaPtDuzl+PNf609zmQFjM4KNajUn7teiiHBcmRZHUXWvn5r/uKbno/v
-	 8mQ6bvGl2eJUFNPo1OUTYrWNarNhl7JwIhQL7I1S+kYG6O8enAB4q72UOZThU8Ny1Y
-	 o6g0G4V5xV7ZFRa5Op9tSdzp8l7BuNaqGKLWIbxyGmWgX87HArJCcl1M/IAMgX+mmh
-	 oNCLyfe13UyDsZo/F8XVHh3LDwt1M5BBdxBIh0MLho8Y0ucNvbgINobz0b9blzEbWn
-	 T6GngZ1bUgAQg==
-Date: Tue, 8 Sep 2026 07:36:48 +1000
+	b=D1vhTQZ9Mf2DnBAECm8J/ixfQdoCnlML5UnK1toL+ClxpkmrtJzLVqEPl5kfraNUZ
+	 6H8M+C59wDgspGpPEvrako4uCKn4YzuiJZNxfcFugmWYwdk+eolahbKpCcd3ptW77t
+	 onE+kbgGJG5AHChLEdJk5ugcOM4Q8ptjfqxffa6BsXMtig3NJQS0ieMBA+x0Y1tQaE
+	 Is+ecuW9GAuCQAijVsUnmdKk6G8mPrOqb2QlSrfST2Bpw3ff7oJ6Aag3u8wWwICEaN
+	 Pp0joc0I1zuHssNhO5vGk9WhVrhs+0Zni5i/IRa86Boh9cUTPCTxUsaInVuh/i5vU2
+	 4cX3YxisAlP8g==
+Date: Tue, 8 Sep 2026 08:53:52 +1000
 From: Dave Chinner <dgc@kernel.org>
-To: Hongling Zeng <zenghongling@kylinos.cn>
-Cc: cem@kernel.org, darrick.wong@oracle.com, chandanrlinux@gmail.com,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	zhongling0719@126.com, stable@vger.kernel.org
-Subject: Re: [PATCH v2] xfs: bound logged region access in inode buffer
- recovery
-Message-ID: <ap8ucHIw-pKLhh9c@dread>
-References: <20260907080450.314067-1-zenghongling@kylinos.cn>
+To: Eric Peterson <linuxinstalled@gmail.com>
+Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org, eric.peterson@hpe.com
+Subject: Re: [PATCH] xfs: add per-mount read/write I/O completion counters
+Message-ID: <ap9AgBQXDMM7UhYe@dread>
+References: <20260828033429.4070267-1-linuxinstalled@gmail.com>
+ <apSgHPl4er6Jy9xi@dread>
+ <20260902053230.4073608-1-linuxinstalled@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260907080450.314067-1-zenghongling@kylinos.cn>
+In-Reply-To: <20260902053230.4073608-1-linuxinstalled@gmail.com>
 
-On Mon, Sep 07, 2026 at 04:04:50PM +0800, Hongling Zeng wrote:
-> xlog_recover_do_inode_buffer() reads the logged di_next_unlinked field
-> from a log record buffer at a computed offset:
+On Tue, Sep 01, 2026 at 11:32:30PM -0600, Eric Peterson wrote:
+> On Mon, Aug 31, 2026 at 09:38 UTC, Dave Chinner wrote:
+> > Hence I'm asking how this new metric is supposed to be used and
+> > correlated to observed/measured application behaviour. i.e. what
+> > insight does it give you into application performance that can only
+> > be derived from this point in time snapshot?
 > 
->         logged_nextp = item->ri_buf[item_index].iov_base +
->                         next_unlinked_offset - reg_buf_offset;
->         *buffer_nextp = *logged_nextp;
+> My apologies - it wasn't my intention to come across as patronizing.
+> I was unsure what background was or wasn't common ground, so I erred on
+> the side of more detail.
 > 
-> The only protection against reading past the log record buffer are
-> ASSERT()s, which compile away on non-DEBUG kernels.  The existing
-> XFS_IS_CORRUPT(*logged_nextp == 0) check also dereferences the pointer
-> before validating that the computed offset lies within the logged region.
+> You're right about the sampling limitation: a slowly-sampled
+> point-in-time queue depth value cannot characterize bursty,
+> sub-interval concurrency. If the goal is to resolve what happens inside
+> a 10ms burst, this is the wrong tool - per-op tooling (tracepoints,
+> histograms) is the right one, and this is not meant to replace it.
 > 
-> A crafted log record can make the computed offset exceed iov_len, causing
-> an out-of-bounds read from the log record buffer during inode buffer
-> recovery.
-> 
-> Convert the relevant ASSERT-only checks into runtime corruption checks and
-> verify that the logged di_next_unlinked field lies entirely within the log
-> iovec before dereferencing it.
-> 
-> Fixes: 1094d3f12363 ("xfs: refactor log recovery buffer item dispatch for pass2 commit functions")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Hongling Zeng <zenghongling@kylinos.cn>
+> The important part is that this is a property of the sampling rate, not
+> of the counters. Nyquist-Shannon says that to observe a phenomenon at
+> timescale T you have to sample at >= 2/T; if you sample slower than the
+> behavior you care about, it will be missed. This is true of any sampled
+> counter, including the existing submission counter - in your 10Hz pmval
+> example, xfs.read has exactly the same property. The sampling rate is a
+> policy choice for the user to match to what they're trying to observe.
 
-<sigh>
+I know what nyquist sampling implies - that's exactly why I gave
+that example to demonstrate how point in time sampling of
+instantaneous values is not representative.
 
-I'm going to say what I've said before again here, and it applies to
-the BLF bitmap range checks patches you posted yesterday, too:
+In more detail, the nyquist sampling theorem only holds when -every
+sample is representative of the overall waveform-. You also need to
+know what the highest frequency of the waveform is to be able to
+reconstruct the behaviour.
 
-Hacking the same types of region size and range checks into every
-log item type in an ad-hoc manner is not the right way to address
-these log item verification issues.
+The problem with using nyquist here is that the queue depth is an
+instantaneous value metric - it is not a repeating waveform. Hence
+nyquist says it is impossible to recover a valid signal from the
+metric because the sample rate must be 2x instantaneous.
 
-We need to add a robust verification layer to the journal to verify
-all the journal level metadata (e.g. ophdrs, transaction headers,
-initial log item regions, per-log item type verification, etc) so
-that we check *all* the journal items for sanity before we use them.
+Something like a summing value (i.e. read count) does allow nyquist
+theorem to be applied, because the delta between samples leads to a
+meaningful waveform - the read rate per sample period. But you
+cannot convert an instantaneous value calculated from summing
+variables into a rate metric - it is always an instantaneous value
+and that means the delta between samples is meaningless when placed
+in a time series. i.e. there is no frequency component that nyquist
+sampling theorem can recover from it.
 
-This is the same architecture we use for metadata (the verifier
-layer) and it applies to the journal for the same reasons and
-provides the same benefits (i.e. validate at first access, rest of
-the code can assume validity and not have to clutter logic with
-random validity checks to prevent bad behaviour.)
+Let's go further. Last email I said "ignoring per-cpu summing
+jitter". Did you think about that at all?
 
-The high level design doc and rough plan I put together last time I
-brought this up is in the patch below. If you're not willing or able
-to spent time and tokens on fixing this entire class of problems for
-everyone, then let please let me know ASAP.
+Look at how the samples are presented to userspace:
 
--Dave.
+	for each counter group {
+		for each counter in group {
+			for each cpu {
+				sum counter
+			}
+			print counter val
+		}
+	}
+
+Think about that for a moment. What happens when you have hundreds
+of CPUs (just call it N)?
+
+Yeah, summing each counter is an expensive operation, involving
+accessing N cachelines for each counter. If each of those stats is
+being actively modified whilst the sum is in progress, we take cache
+miss on each CPU for each counter. Let's be charitable and call that
+100ns per CPU. For a thousand CPUs, that means it takes 100us to
+sample that counter.
+
+Now, read completion was placed directly after reads, so there is a
+window of 100us between the sampling of each per cpu value.
+
+Consider that a buffered read could take as little as a few
+microseconds to run. That means that across the sampling of read +
+read completion, each CPU could start and complete multiple buffered
+IOs.
+
+In that situation, we have on a single CPU:
+
+read 1 ....
+sample read		X
+read 1 complete
+read 2 ....
+read 2 complete
+read 3 ....
+read 3 complete
+....
+read N ....
+sample read_complete	X + (N - 1)
+
+In this situation, the "queue depth" on this CPU which is (read -
+read_complete) returns -(N - 1). What does a -negative queue depth-
+mean?
+
+And what happens when there is sufficient other read/read_complete
+differences on other CPUs that this negative sample cancels out all
+the other positive "queue depths"?
+
+IOWs, we can't even trust the instantaneous value of the queue depth
+calculation to be a valid representation of the state of the
+filesystem at a single point in time. Hence any downstream use of
+the value (regardless of the sample rate) is not going to be any
+more trustworthy than the instantaneous value....
+
+> Answering your question, it lets userspace characterize filesystem
+> queue depth over time. The places where this is useful are the ones
+> where the desired signal persists across multiple sample periods,
+> leading to a representative measurement:
+....
+
+All of these use cases are based on the assumption that the
+underlying metric and the sampling method produces a valid and/or
+meaningful representation of the current filesystem state.
+
+I am not convinced that this is a valid assumption because of the
+nature of the sampling - an instantaneous value sample cannot be
+representative of overall behaviour, regardless of the sampling
+rate.
+
+However, if you really, really want this counter added then I won't
+oppose it based on the fact I think it cannot be used the way you
+want to use it - I'll just ignore it like I do all the other useless
+stats we still keep around from the days of Irix for userspace
+compatibility reasons.
+
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 dgc@kernel.org
-
-xfs: add log recovery item validation design document
-
-Add a design document describing a systematic approach to validating log
-items during journal recovery. Log item data read from the journal cannot
-be fully trusted - corruption from torn writes, hardware errors or
-software bugs can produce invalid type codes, wrong region counts,
-truncated regions or internally inconsistent format structures that the
-current recovery code largely uses unchecked.
-
-The document describes a three-layer validation scheme (generic region
-header decode, per-region type-specific validation, and full cross-region
-item validation), the treatment of the transaction header as a validated
-region type, and a set of additional safety fixes for the generic region
-assembly code. It also lays out a phased implementation plan.
-
-Assisted-by: LLM
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- Documentation/filesystems/xfs/index.rst            |   1 +
- .../xfs/xfs-log-recovery-validation-design.rst     | 477 +++++++++++++++++++++
- 2 files changed, 478 insertions(+)
-
-diff --git a/Documentation/filesystems/xfs/index.rst b/Documentation/filesystems/xfs/index.rst
-index ab66c57a5d18..231c1382b27a 100644
---- a/Documentation/filesystems/xfs/index.rst
-+++ b/Documentation/filesystems/xfs/index.rst
-@@ -9,6 +9,7 @@ XFS Filesystem Documentation
-    :numbered:
- 
-    xfs-delayed-logging-design
-+   xfs-log-recovery-validation-design
-    xfs-maintainer-entry-profile
-    xfs-self-describing-metadata
-    xfs-online-fsck-design
-diff --git a/Documentation/filesystems/xfs/xfs-log-recovery-validation-design.rst b/Documentation/filesystems/xfs/xfs-log-recovery-validation-design.rst
-new file mode 100644
-index 000000000000..188b1bebf171
---- /dev/null
-+++ b/Documentation/filesystems/xfs/xfs-log-recovery-validation-design.rst
-@@ -0,0 +1,477 @@
-+.. SPDX-License-Identifier: GPL-2.0
-+.. _xfs_log_recovery_validation:
-+
-+===================================
-+XFS Log Recovery Item Validation
-+===================================
-+
-+Problem
-+=======
-+
-+When recovering the journal, ``xlog_recover_add_to_trans()`` decodes ophdr
-+regions to rebuild log items from the journal data. The first 4 bytes of
-+each new item's first region are used to determine the item type (2 bytes)
-+and region count (2 bytes). These values drive memory allocation, region
-+accumulation, and later the ``commit_pass1``/``commit_pass2`` handlers cast
-+the accumulated region data to type-specific format structures and use fields
-+from them to drive buffer reads, inode updates, and intent replay.
-+
-+The transaction header (``struct xfs_trans_header``) is also decoded inline
-+in ``add_to_trans`` with its own bespoke validation (magic number check, max
-+length check). It does not handle the zero-length first fragment case
-+that occurs when the iclog has exactly enough space for the start record
-+ophdr plus one more ophdr but no data — in that case ``add_to_trans``
-+silently returns at the ``len == 0`` check before ever reaching the header
-+parsing code.
-+
-+The problem is that this data comes from the journal and cannot be fully
-+trusted. Corruption — whether from torn writes, hardware errors, or
-+software bugs — can produce invalid type codes, wrong region counts,
-+truncated regions, or internally inconsistent format structures. The
-+current code has minimal validation:
-+
-+- ``ilf_size`` is checked against 0 and ``XLOG_MAX_REGIONS_IN_ITEM``
-+- ``oh_len`` is checked against the log record boundary
-+- The transaction header checks magic and max length but not ``len == 0``
-+- Some commit handlers check individual field sizes
-+
-+However, there is no systematic validation, and many commit handlers cast
-+``ri_buf[N].iov_base`` to format structures without checking
-+``ri_cnt >= N+1`` or ``iov_len >= sizeof(format_struct)``. This risks
-+crashes, buffer overruns, and use of garbage data to drive disk I/O during
-+recovery.
-+
-+Design
-+======
-+
-+Add three layers of validation, each catching problems at the earliest
-+possible point.
-+
-+Layer 1: Region header decode (generic)
-+---------------------------------------
-+
-+When: In ``xlog_recover_add_to_trans()`` when ``ri_total == 0`` (first
-+region of a new item).
-+
-+Currently the code reads ``ilf_size`` from the region data to set
-+``ri_total``, and the item type is not looked up until much later in
-+``xlog_recover_reorder_trans()``. The transaction header is handled as a
-+special case with inline validation. Move all first-region validation
-+earlier and make it uniform:
-+
-+a) Validate ``len >= 4`` (minimum to read type + size fields). All log
-+   regions are 32-bit aligned, so the minimum fragment of any region
-+   is 4 bytes. A first fragment smaller than 4 bytes is corruption.
-+   Note: ``len == 0`` is valid for the transaction header when the iclog
-+   has exactly enough space for the start ophdr plus one more ophdr
-+   but no data — this must be handled as a continuation (see below).
-+b) Read the item type from the first 2 bytes
-+c) Look up the item ops via ``xlog_find_item_ops()``
-+d) If the type is unknown, reject immediately with ``-EFSCORRUPTED``
-+e) Store ``item->ri_ops`` at this point (currently done in
-+   ``reorder_trans``)
-+f) Validate ``ilf_size`` against ``ops->min_regions`` and
-+   ``ops->max_regions``
-+g) Validate ``len >= ops->min_hdr_len`` (the minimum format header size)
-+
-+Transaction header as a validated type
-+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+
-+The transaction header (``struct xfs_trans_header``) is currently decoded
-+inline in ``add_to_trans`` with bespoke magic number and length checks, and
-+its continuation is handled separately in ``add_to_cont_trans``. Instead,
-+treat it as a regular validated type within the same framework:
-+
-+- Add a pseudo item type (e.g. ``XFS_LI_TRANS_HDR`` or use the magic
-+  number ``XFS_TRANS_HEADER_MAGIC`` as the type code) with its own
-+  ``xlog_recover_item_ops`` entry.
-+- ``min_regions = 1``, ``max_regions = 1``
-+- ``min_hdr_len = sizeof(struct xfs_trans_header)``
-+- ``validate_region`` checks ``iov_len == sizeof(struct xfs_trans_header)``
-+  and the magic number
-+- No ``commit_pass1``/``commit_pass2`` callbacks — after validation, the
-+  decoded transaction header is copied to ``trans->r_theader`` as before
-+
-+This eliminates the special-case parsing in ``add_to_trans`` and
-+``add_to_cont_trans`` for the transaction header. The zero-length first
-+fragment case is handled uniformly: it arrives as a continuation
-+(``oh_len == 0``, ``XLOG_CONTINUE_TRANS`` set), and the continuation
-+infrastructure assembles the complete region before ``validate_region``
-+checks it.
-+
-+The ``ilf_size`` field of the transaction header format is a bit different
-+— ``xfs_trans_header`` uses ``th_num_items`` rather than the generic
-+``ilf_size`` at offset 2. Since the transaction header always has exactly
-+1 region, we don't need to read ``ilf_size`` from it. The
-+``ops->min_regions == ops->max_regions == 1`` is sufficient.
-+
-+Alternatively, the transaction header could be handled without a full
-+ops entry by having the generic code recognise it as a special case
-+at step (b) and apply its fixed constraints directly. Either approach
-+works; the ops entry is cleaner but the special case is simpler.
-+
-+New fields in ``struct xlog_recover_item_ops``::
-+
-+    uint16_t    min_regions;    /* minimum valid ri_total */
-+    uint16_t    max_regions;    /* maximum valid ri_total */
-+    uint16_t    min_hdr_len;    /* minimum ri_buf[0].iov_len */
-+
-+These are compile-time constants per item type. Examples:
-+
-+===========  ===========  ===========  ==============================
-+Item Type    min_regions  max_regions  min_hdr_len
-+===========  ===========  ===========  ==============================
-+TRANS_HDR    1            1            sizeof(xfs_trans_header)
-+BUF          2            XLOG_MAX..   sizeof(xfs_buf_log_format)
-+INODE        2            4            sizeof(xfs_inode_log_format)
-+DQUOT        2            2            sizeof(xfs_dq_logformat)
-+EFI          1            1            sizeof(xfs_efi_log_format)
-+EFD          1            1            sizeof(xfs_efd_log_format)
-+RUI          1            1            sizeof(xfs_rui_log_format)
-+RUD          1            1            sizeof(xfs_rud_log_format)
-+CUI          1            1            sizeof(xfs_cui_log_format)
-+CUD          1            1            sizeof(xfs_cud_log_format)
-+BUI          1            1            sizeof(xfs_bui_log_format)
-+BUD          1            1            sizeof(xfs_bud_log_format)
-+ATTRI        2            5            sizeof(xfs_attri_log_format)
-+ATTRD        1            1            sizeof(xfs_attrd_log_format)
-+XMI          1            1            sizeof(xfs_xmi_log_format)
-+XMD          1            1            sizeof(xfs_xmd_log_format)
-+ICREATE      1            1            sizeof(xfs_icreate_log)
-+QUOTAOFF     1            1            sizeof(xfs_qoff_logformat)
-+===========  ===========  ===========  ==============================
-+
-+(RT variants same as their non-RT counterparts.)
-+
-+Handling first region split across continuations
-+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+
-+All log regions are 32-bit aligned, so the minimum first fragment size
-+is 4 bytes — enough to read both the type and size fields. If ``len < 4``
-+on a non-continuation ophdr, this is unconditionally corrupt.
-+
-+The exception is the transaction header: when the iclog has exactly
-+enough space for the ``XLOG_START_TRANS`` ophdr plus one more ophdr but no
-+data, ``oh_len == 0`` for the transaction header ophdr and the data arrives
-+entirely via continuation. This is a valid zero-length first fragment
-+that the generic code must handle:
-+
-+- When ``len == 0`` and this is the first region of a new item (``r_itemq``
-+  is empty or the current item is full), we cannot read the type.
-+  Since only the transaction header can legitimately have ``len == 0``
-+  at this point, and it will always arrive as the first item in the
-+  transaction, we can identify this case by checking that the
-+  transaction's item list is empty (i.e. we haven't seen the
-+  transaction header yet). Set ``ri_in_continuation`` and defer all
-+  validation to when the continuation completes the region.
-+
-+- For all other items (non-empty ``r_itemq``), ``len == 0`` on a new region
-+  is corruption.
-+
-+When the first region is split but ``len >= 4`` (the common continuation
-+case for log items), the ops lookup and ``ilf_size`` validation can be done
-+immediately. The ``min_hdr_len`` check is deferred until the continuation
-+completes the region, at which point ``validate_region`` runs on the
-+complete ``ri_buf[0]``.
-+
-+The continuation path (``add_to_cont_trans``) uses ``kvrealloc`` to grow
-+the region buffer. Since ``ri_ops`` is set (or will be set when the
-+continuation completes for the deferred transaction header case), the
-+accumulated size (``old_len + len``) can be bounds-checked against a
-+type-specific maximum for the current region index before doing the
-+realloc.
-+
-+The BUF item is special: it always has at least 2 regions (the format
-+header and at least one data region), but the format header's size is
-+variable because it contains an inline bitmap. The ``min_hdr_len`` should
-+be the fixed portion of ``xfs_buf_log_format`` (without the bitmap), and
-+per-region validation (layer 2) checks the full header size including
-+the bitmap.
-+
-+Layer 2: Per-region validation (type-specific)
-+----------------------------------------------
-+
-+When: In ``xlog_recover_add_to_trans()`` after each region is added to the
-+item (after ``ri_cnt`` is incremented), and in
-+``xlog_recover_add_to_cont_trans()`` after a continuation region is
-+appended.
-+
-+New callback in ``struct xlog_recover_item_ops``::
-+
-+    int (*validate_region)(struct xlog *log,
-+                           struct xlog_recover_item *item,
-+                           int region_index);
-+
-+Called after the region at ``region_index`` has been fully assembled.
-+
-+For regions that arrive complete in a single ophdr, ``validate_region`` is
-+called from ``xlog_recover_add_to_trans()`` immediately after the region
-+is added.
-+
-+For regions that are split across op records (continuations), the region
-+is built incrementally by ``xlog_recover_add_to_cont_trans()`` which
-+reallocates and appends data. Two levels of validation apply:
-+
-+a) Before the realloc in ``add_to_cont_trans``: bounds check the
-+   accumulated size (``old_len + len``) against the type-specific maximum
-+   for the current region index. This uses the ``ops->max_region_size``
-+   field or a simple per-type upper bound to prevent unbounded memory
-+   allocation from a corrupt continuation stream.
-+
-+b) After the continuation region is complete: call ``validate_region`` to
-+   do the full type-specific validation. A continuation is complete
-+   when the next non-continuation ophdr arrives (either a new region
-+   via ``add_to_trans`` or a commit via ``xlog_recover_commit_trans``).
-+
-+   To track this, add a boolean ``ri_in_continuation`` flag to
-+   ``struct xlog_recover_item``. Set it in ``add_to_cont_trans`` when data
-+   is appended. When ``add_to_trans`` is next called and the tail item has
-+   ``ri_in_continuation`` set, the previous region was completed by the
-+   continuation — call ``validate_region`` for it (at ``ri_cnt - 1``) and
-+   clear the flag before proceeding with the new region. Similarly,
-+   when ``xlog_recover_commit_trans`` is called, check the tail item for
-+   ``ri_in_continuation`` and validate the final region if needed.
-+
-+Each item type implements ``validate_region`` to check size bounds:
-+
-+INODE
-+    | region 0: ``iov_len == sizeof(xfs_inode_log_format)`` or
-+      ``iov_len == sizeof(xfs_inode_log_format_32)``
-+    | region 1: ``iov_len >= sizeof(xfs_dinode)``,
-+      ``iov_len <= xfs_log_dinode_size(mp)``
-+    | region 2: ``iov_len >= 0`` (data fork, variable size),
-+      ``iov_len <= XFS_DFORK_DSIZE(...)`` (need inode core to check)
-+    | region 3: ``iov_len >= 0`` (attr fork, variable size),
-+      ``iov_len <= XFS_DFORK_ASIZE(...)``
-+
-+BUF
-+    | region 0: ``iov_len >= sizeof(xfs_buf_log_format)`` base size,
-+      ``blf_map_size`` is consistent with ``iov_len``
-+    | region 1+: data regions, ``iov_len > 0``,
-+      ``iov_len <= blf_len * BBSIZE`` (can't exceed buffer size),
-+      ``iov_len % XFS_BLF_CHUNK == 0``
-+
-+DQUOT
-+    | region 0: ``iov_len == sizeof(xfs_dq_logformat)``
-+    | region 1: ``iov_len >= sizeof(xfs_disk_dquot)``
-+
-+EFI/RUI/CUI/BUI (single-region intent items)
-+    | region 0: ``iov_len ==`` calculated size based on ``nextents`` field,
-+      ``nextents >= 1``, ``nextents <=`` type-specific maximum
-+
-+EFD/RUD/CUD/BUD/ATTRD/XMD (single-region done items)
-+    | region 0: ``iov_len == sizeof(format_struct)``
-+
-+ATTRI
-+    | region 0: ``iov_len == sizeof(xfs_attri_log_format)``
-+    | region 1+: name/value regions, sizes bounded by
-+      ``XATTR_NAME_MAX``, ``XATTR_SIZE_MAX``
-+
-+XMI
-+    | region 0: ``iov_len == sizeof(xfs_xmi_log_format)``
-+
-+ICREATE
-+    | region 0: ``iov_len == sizeof(xfs_icreate_log)``
-+
-+QUOTAOFF
-+    | region 0: ``iov_len == sizeof(xfs_qoff_logformat)``
-+
-+Layer 3: Full item validation (type-specific, cross-region)
-+-----------------------------------------------------------
-+
-+When: After the item is fully assembled (``ri_cnt == ri_total``). This can
-+be checked in ``xlog_recover_add_to_trans()`` right after incrementing
-+``ri_cnt``, or in ``xlog_recover_reorder_trans()`` before the item is
-+sorted into the replay lists. The latter is simpler as it's a single call
-+site, but the former catches problems before the item is added to the
-+transaction's item list.
-+
-+Preferred: validate in ``xlog_recover_reorder_trans()`` after the ops
-+lookup (which will now be a simple ``ri_ops`` dereference since we set it in
-+layer 1). This keeps the validation in one place and runs after all
-+continuations have been resolved.
-+
-+New callback in ``struct xlog_recover_item_ops``::
-+
-+    int (*validate_item)(struct xlog *log,
-+                         struct xlog_recover_item *item);
-+
-+Each item type implements ``validate_item`` to do cross-region structural
-+checks:
-+
-+INODE
-+    - Verify ``ri_cnt`` matches the fields set in ``ilf_fields`` (e.g. if
-+      ``XFS_ILOG_DDATA`` is set, ``ri_buf[2]`` must exist and have sane
-+      size)
-+    - Verify dinode core fields in ``ri_buf[1]`` are self-consistent:
-+      fork format vs fork size vs region length
-+    - Verify ``ilf_ino`` is within valid range
-+
-+BUF
-+    - Verify ``blf_blkno + blf_len`` doesn't exceed filesystem size
-+    - Verify the number of data regions matches the bitmap in the
-+      format header
-+    - Verify ``blf_flags`` contains only valid flag bits
-+
-+DQUOT
-+    - Verify ``dq_id``, ``dq_type`` are valid
-+    - Run ``xfs_dquot_verify()`` on ``ri_buf[1]`` data
-+
-+EFI
-+    - Verify ``efi_nextents`` matches the region size
-+    - Verify each extent's startblock/blockcount are within fs bounds
-+
-+ATTRI
-+    - Verify ``alfi_op_flags`` matches a known operation
-+    - Verify ``ri_cnt`` matches the expected region count for the operation
-+    - Verify name/value region sizes match
-+      ``alfi_name_len``/``alfi_value_len``
-+
-+Other intent/done items
-+    similar field-level validation
-+
-+ICREATE
-+    - Already has validation in
-+      ``xlog_recover_icreate_commit_pass2()``, move the checks to
-+      ``validate_item``
-+
-+QUOTAOFF
-+    - Verify ``qf_flags`` contains only valid quota flags
-+
-+Additional fixes in the generic code
-+------------------------------------
-+
-+Beyond the three validation layers, fix these issues in the generic
-+region assembly code:
-+
-+1. ``xlog_recover_add_to_cont_trans()``:
-+
-+   - Check ``ri_cnt > 0`` before accessing ``ri_buf[ri_cnt-1]``
-+   - Check ``item->ri_buf != NULL`` before accessing it
-+   - Bounds-check ``(old_len + len)`` against type-specific max region
-+     size before calling ``kvrealloc``
-+
-+2. ``xlog_recover_add_to_trans()``:
-+
-+   - Check ``len >= 4`` before reading the type and size fields (except
-+     for the zero-length transaction header continuation case)
-+   - After looking up ops, validate ``ilf_size`` against ops constraints
-+     before using it for the ``kzalloc_objs`` allocation
-+
-+3. ``xlog_recover_process_data()``:
-+
-+   - Validate ``oh_len`` is 4-byte aligned (all regions must be 32-bit
-+     aligned per the existing comment)
-+
-+4. ``ITEM_TYPE`` macro:
-+
-+   - Add a check in ``xlog_recover_reorder_trans()`` that
-+     ``ri_buf[0].iov_len >= 4`` before accessing the type code (this is
-+     now redundant with layer 1 but is a safety net)
-+
-+Implementation Plan
-+===================
-+
-+The infrastructure fields and callbacks in ``struct
-+xlog_recover_item_ops`` (the ``min_regions``/``max_regions``/``min_hdr_len``
-+fields and the ``validate_region`` callback) are introduced first, before
-+the transaction header ops entry that uses them. Later patches populate
-+those fields and callbacks for the remaining item types and wire up the
-+generic call sites. Each patch builds cleanly and is independently
-+testable.
-+
-+Phase 1: Generic infrastructure, early ops lookup, transaction header
-+---------------------------------------------------------------------
-+
-+Patch 1: Add validation infrastructure to the ops struct
-+    - Add the ``min_regions``/``max_regions``/``min_hdr_len`` fields to
-+      ``struct xlog_recover_item_ops``
-+    - Add the ``validate_region`` callback to ``struct
-+      xlog_recover_item_ops``
-+    - No behaviour change yet: the fields are zero and the callback is
-+      NULL for all existing item types; nothing reads them until later
-+      patches
-+
-+Patch 2: Treat the transaction header as a validated region type
-+    - Add an ops entry for the transaction header keyed on the low 16 bits
-+      of ``XFS_TRANS_HEADER_MAGIC``, with ``min_regions = 1``,
-+      ``max_regions = 1``, ``min_hdr_len = sizeof(struct xfs_trans_header)``
-+      and a ``validate_region`` that checks ``iov_len`` and the magic
-+      number
-+    - Remove the bespoke transaction header parsing from ``add_to_trans``
-+      and ``add_to_cont_trans``; route through the generic region assembly
-+    - Handle the zero-length first fragment case (``len == 0`` with empty
-+      ``r_itemq``) by deferring to the continuation path
-+    - Add the ``validate_region`` call site(s) needed for the transaction
-+      header (generic call sites for all other types are wired in Patch 7)
-+    - After validation, copy the decoded header to ``trans->r_theader``
-+      as before
-+
-+Patch 3: Move item ops lookup to add_to_trans (first region decode)
-+    - Look up and store ``ri_ops`` when ``ri_total == 0``
-+    - Validate ``len >= 4`` before reading type/size
-+    - Reject unknown item types immediately
-+    - Remove the ops lookup from ``xlog_recover_reorder_trans()`` (it
-+      becomes a simple NULL check / assertion)
-+
-+Patch 4: Populate min_regions/max_regions/min_hdr_len for all item types
-+    - The three fields were added to ``struct xlog_recover_item_ops`` in
-+      Patch 1; populate them for all remaining item types
-+    - Add generic checks in ``add_to_trans`` after ops lookup:
-+      ``ilf_size >= ops->min_regions && ilf_size <= ops->max_regions``,
-+      ``len >= ops->min_hdr_len`` (for non-continuation first regions)
-+
-+Patch 5: Fix generic safety issues
-+    - ``add_to_cont_trans``: check ``ri_cnt > 0`` and ``ri_buf != NULL``
-+    - ``add_to_cont_trans``: bounds-check accumulated region size before
-+      ``kvrealloc``
-+    - ``process_data``: validate ``oh_len`` alignment
-+
-+Patch 6: Add ri_in_continuation tracking
-+    - Add ``ri_in_continuation`` flag to ``struct xlog_recover_item``
-+    - Set in ``add_to_cont_trans`` when data is appended
-+    - Check and clear in ``add_to_trans`` when a new region starts
-+      (previous continuation region is now complete)
-+    - Check in ``xlog_recover_commit_trans`` for the final region case
-+
-+Phase 2: Per-region validation
-+------------------------------
-+
-+Patch 7: Wire up generic validate_region call sites
-+    - The ``validate_region`` callback was added to the ops struct in
-+      Patch 1; wire up the generic call sites for all item types
-+    - Call it from ``add_to_trans`` after each complete region is added
-+    - Call it from ``add_to_trans`` when ``ri_in_continuation`` is cleared
-+      (just-completed continuation region)
-+    - Call it from ``xlog_recover_commit_trans`` if the final region was
-+      a continuation
-+
-+Patches 8-N: Implement validate_region for each item type
-+    - Start with the transaction header (magic, exact size)
-+    - Then simple fixed-size types (done items, ICREATE, QUOTAOFF)
-+    - Then single-region variable types (EFI, RUI, CUI, BUI)
-+    - Then multi-region types (DQUOT, BUF)
-+    - Finally complex types (INODE, ATTRI)
-+
-+Phase 3: Full item validation
-+-----------------------------
-+
-+Patch M: Add validate_item callback infrastructure
-+    - Add the callback to the ops struct
-+    - Call it from ``xlog_recover_reorder_trans()`` after ops verification
-+    - Return ``-EFSCORRUPTED`` on failure, aborting recovery
-+
-+Patches M+1 to M+N: Implement validate_item for each item type
-+    - Move existing validation out of ``commit_pass2`` into
-+      ``validate_item`` where possible (e.g. ICREATE field checks)
-+    - Add new cross-region validation
-+    - Order: simple types first, complex types last
-+    - INODE validation is the most complex (fork format vs region size)
-+
-+Phase 4: Cleanup
-+----------------
-+
-+- Remove redundant validation from ``commit_pass1``/``commit_pass2`` that
-+  is now covered by ``validate_region``/``validate_item``
-+- Add ``ASSERT()``\ s in commit handlers to verify validation has run
-+- Review and update error messages for consistency
