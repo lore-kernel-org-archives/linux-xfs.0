@@ -1,41 +1,50 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F9E74028F2
-	for <linux-xfs@vger.kernel.org>; Mon,  7 Sep 2026 08:01:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C939430794;
+	Mon,  7 Sep 2026 08:05:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788768068; cv=none; b=lF2ztq8bDySD2Pjq3xapMT/vevHxqUM4hk5p4MrGyGO7tkvX0/vPbVtmeVipMM+G75r5rOfSF8/sNZVJ7geSSKU+GbMBrzelGfke+YI9axXp/kpIDK1MWd99Um0Yd3XWDYvWQWfvfZGKGnhU4NDPfqGygqEZQc1nQ8hSRJ9Cca8=
+	t=1788768304; cv=none; b=Xv9V65CBISMDhX0xsnSGXHFl5paU1sHLyYZnkI52SKAVjdNq4ViQI+xEfn/jd1xo59lCva4KjTq61vZSENWL8Plb3QdVpPD3xpxu4KA1PcJ6D5fWnRv05hPKyWIJioHwGqgbGt4fObdnRITRv4gwLBGgtd8s9rO6YWCk67kVn6Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788768068; c=relaxed/simple;
-	bh=PtjNZqMQQiAfg7DvITLF8dp5u+nnWtdT0HqI4qL2moc=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=BdNF5Dxq6HtzfHlQjrIMiYdW9Fh18Ej96P0gd9UaZjx571VeYW3QEmGcFpWA03BrhZ5RiZxf/ePg6keVY9HOHpUFbbf311giZGxzUYPA2u8g8OBIb/F6sykRei1vg7nkjxbzNx4/U2gTf1mqs11CofsMy4tmlwGJugNzmegnll0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=SvBey8mN; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="SvBey8mN"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=Km1AcRy68j68nxt3xy7EDcl7FgdrVE1wbW1tQ8r53G8=; b=SvBey8mNEKqhCXkWkktoKkGOCw
-	DLnrnoG7tPIlU+S/aqTFyE2PM59l1iideFINTZelBj5Cbd5xsI3Z5oOCwHhwmTaOIFv12JZyQgDvF
-	vTCoWQzhESvkLB8wamuYPAuGyI2yctqwk6QIUOdzkiY94/9KOtQdKQxya0LwNtSjpeGkRblLIU7IM
-	ubD0f0rJM8oM2JM8vwCPjyCB+gh/MSrbZ9edgCv68U8QRM3cQZ7fLAINgKbkq+x8jeEgk3FrRL9EU
-	PGPb40EjG8cSNnFh+0KD+6SaiD42pF7hup5m6QIRqtl7TJenEH0lr6T7GA8uoZWQyGHz8es13W0wH
-	+eW/hJpw==;
-Received: from [93.123.20.121] (helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1x3UHo-00000006DQx-209t;
-	Mon, 07 Sep 2026 08:01:06 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: aalbersh@kernel.org
-Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH] xfs_io: cleanup headers
-Date: Mon,  7 Sep 2026 11:01:00 +0300
-Message-ID: <20260907080100.749981-1-hch@lst.de>
-X-Mailer: git-send-email 2.53.0
+	s=arc-20240116; t=1788768304; c=relaxed/simple;
+	bh=5m1B4aJfXf5H5hsdLodfWQ9mjy7DVnphdpQJv2/UOqI=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=DD84wWG8gdXqDJ+uGNoZnKsY+KGrimjS9TDhrHL6Ok1hZRA+PG44ya/CPq9nczU2kpljqMdjQTdIIkvKfUkMkt6hKZkRqmdlBw1NRAwEUWlk1ZalAYkHJw1vOcBQnDao1S3nIyHap9mhSP2ClxETO8r4gt2QZ2UWTr+MK5lUxjM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: cfc4e500aa9211f19a56ed5b684f684d-20260907
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.19,REQID:e97009ba-17e3-4291-a8af-612b61fc4278,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:0
+X-CID-META: VersionHash:7db8b62,CLOUDID:99c7b48fa2e5c16f576352676cb42907,BulkI
+	D:nil,BulkQuantity:0,SF:102|850|865|898,TC:nil,Content:0|15|50|99,EDM:-3,I
+	P:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0
+	,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: cfc4e500aa9211f19a56ed5b684f684d-20260907
+X-User: zenghongling@kylinos.cn
+Received: from localhost.localdomain [(10.44.16.150)] by mailgw.kylinos.cn
+	(envelope-from <zenghongling@kylinos.cn>)
+	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
+	with ESMTP id 1613542824; Mon, 07 Sep 2026 16:04:55 +0800
+From: Hongling Zeng <zenghongling@kylinos.cn>
+To: cem@kernel.org,
+	darrick.wong@oracle.com,
+	chandanrlinux@gmail.com
+Cc: linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	zhongling0719@126.com,
+	Hongling Zeng <zenghongling@kylinos.cn>,
+	stable@vger.kernel.org
+Subject: [PATCH v2] xfs: bound logged region access in inode buffer recovery
+Date: Mon,  7 Sep 2026 16:04:50 +0800
+Message-Id: <20260907080450.314067-1-zenghongling@kylinos.cn>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,247 +52,103 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Drop extra externs and deep tab indentation of the function and
-variable names.
+xlog_recover_do_inode_buffer() reads the logged di_next_unlinked field
+from a log record buffer at a computed offset:
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+        logged_nextp = item->ri_buf[item_index].iov_base +
+                        next_unlinked_offset - reg_buf_offset;
+        *buffer_nextp = *logged_nextp;
+
+The only protection against reading past the log record buffer are
+ASSERT()s, which compile away on non-DEBUG kernels.  The existing
+XFS_IS_CORRUPT(*logged_nextp == 0) check also dereferences the pointer
+before validating that the computed offset lies within the logged region.
+
+A crafted log record can make the computed offset exceed iov_len, causing
+an out-of-bounds read from the log record buffer during inode buffer
+recovery.
+
+Convert the relevant ASSERT-only checks into runtime corruption checks and
+verify that the logged di_next_unlinked field lies entirely within the log
+iovec before dereferencing it.
+
+Fixes: 1094d3f12363 ("xfs: refactor log recovery buffer item dispatch for pass2 commit functions")
+Cc: stable@vger.kernel.org
+Signed-off-by: Hongling Zeng <zenghongling@kylinos.cn>
 ---
- io/init.h |  10 ++--
- io/io.h   | 164 +++++++++++++++++++++++++++---------------------------
- 2 files changed, 87 insertions(+), 87 deletions(-)
+Change in v2:
+ --Rebase top of for-next and re-send.
+---
+ fs/xfs/xfs_buf_item_recover.c | 40 ++++++++++++++++++++++++++++++++---
+ 1 file changed, 37 insertions(+), 3 deletions(-)
 
-diff --git a/io/init.h b/io/init.h
-index d4d1968cc1e1..97a93761d64f 100644
---- a/io/init.h
-+++ b/io/init.h
-@@ -8,10 +8,10 @@
- #define CMD_NOMAP_OK	(1<<1)	/* command doesn't need a mapped region	*/
- #define CMD_FOREIGN_OK	CMD_FLAG_FOREIGN_OK
+diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
+index 7148716366ba..8e06a68db310 100644
+--- a/fs/xfs/xfs_buf_item_recover.c
++++ b/fs/xfs/xfs_buf_item_recover.c
+@@ -651,6 +651,9 @@ xlog_recover_do_inode_buffer(
+ 	int				inodes_per_buf;
+ 	xfs_agino_t			*logged_nextp;
+ 	xfs_agino_t			*buffer_nextp;
++	size_t				buf_size;
++	size_t				iov_len;
++	size_t				rel_off;
  
--extern char	*progname;
--extern int	exitcode;
--extern int	expert;
--extern size_t	pagesize;
-+extern char *progname;
-+extern int exitcode;
-+extern int expert;
-+extern size_t pagesize;
- extern struct timeval stopwatch;
+ 	trace_xfs_log_recover_buf_inode_buf(mp->m_log, buf_f);
  
--extern void init_cvtnum(size_t *blocksize, size_t *sectsize);
-+void init_cvtnum(size_t *blocksize, size_t *sectsize);
-diff --git a/io/io.h b/io/io.h
-index 5f1f278d14a0..50e01b3cd229 100644
---- a/io/io.h
-+++ b/io/io.h
-@@ -45,11 +45,13 @@ typedef struct fileio {
- 	struct fs_path	fs_path;	/* XFS path information */
- } fileio_t;
+@@ -714,17 +717,48 @@ xlog_recover_do_inode_buffer(
+ 			return -EFSCORRUPTED;
+ 		}
  
--extern fileio_t		*filetable;	/* open file table */
--extern int		filecount;	/* number of open files */
--extern fileio_t		*file;		/* active file in file table */
--extern int filelist_f(void);
--extern int stat_f(int argc, char **argv);
-+extern fileio_t *filetable;	/* open file table */
-+extern int filecount;		/* number of open files */
-+extern fileio_t *file;		/* active file in file table */
++		buf_size = BBTOB(bp->b_length);
++		if (XFS_IS_CORRUPT(mp, reg_buf_bytes > buf_size ||
++			   reg_buf_offset > buf_size - reg_buf_bytes)) {
++			xfs_alert(mp,
++	"Bad inode buffer log bitmap region (off %d, len %d, buf_size %zu).",
++				reg_buf_offset, reg_buf_bytes, buf_size);
++			return -EFSCORRUPTED;
++		}
 +
-+int filelist_f(void);
-+int stat_f(int argc, char **argv);
++		if (XFS_IS_CORRUPT(mp,
++				item->ri_buf[item_index].iov_base == NULL)) {
++			xfs_alert(mp, "NULL inode buffer log record.");
++			return -EFSCORRUPTED;
++		}
 +
- /*
-  * Memory mapped file regions
-  */
-@@ -62,111 +64,109 @@ typedef struct mmap_region {
- 	char		*name;		/* name of backing file */
- } mmap_region_t;
- 
--extern mmap_region_t	*maptable;	/* mmap'd region array */
--extern int		mapcount;	/* #entries in the mapping table */
--extern mmap_region_t	*mapping;	/* active mapping table entry */
--extern int maplist_f(void);
--extern void *check_mapping_range(mmap_region_t *, off_t, size_t, int);
-+extern mmap_region_t *maptable;	/* mmap'd region array */
-+extern int mapcount;		/* #entries in the mapping table */
-+extern mmap_region_t *mapping;	/* active mapping table entry */
++		iov_len = item->ri_buf[item_index].iov_len;
++		if (XFS_IS_CORRUPT(mp, iov_len < reg_buf_bytes)) {
++			xfs_alert(mp,
++	"Bad inode buffer log record length (iov_len %zu, region len %d).",
++				iov_len, reg_buf_bytes);
++			return -EFSCORRUPTED;
++		}
 +
-+int maplist_f(void);
-+void *check_mapping_range(mmap_region_t *, off_t, size_t, int);
+ 		ASSERT(item->ri_buf[item_index].iov_base != NULL);
+ 		ASSERT((item->ri_buf[item_index].iov_len % XFS_BLF_CHUNK) == 0);
+ 		ASSERT((reg_buf_offset + reg_buf_bytes) <= BBTOB(bp->b_length));
  
- /*
-  * Various xfs_io helper routines/globals
-  */
- 
--extern off_t		filesize(void);
--extern int		openfile(char *, struct xfs_fsop_geom *, int, mode_t,
--				 struct fs_path *);
--extern int		addfile(char *, int , struct xfs_fsop_geom *, int,
--				struct fs_path *);
--extern int		closefile(void);
--extern void		print_xflags(uint, int, int, const char *, int, int);
--
--extern unsigned int	recurse_all;
--extern unsigned int	recurse_dir;
--
--extern void		*io_buffer;
--extern size_t		io_buffersize;
--extern int		vectors;
--extern struct iovec	*iov;
--extern int		alloc_buffer(size_t, int, unsigned int);
--extern int		read_buffer(int, off_t, long long, long long *,
--					int, int);
--extern void		dump_buffer(off_t, ssize_t);
--
--extern void		attr_init(void);
--extern void		bmap_init(void);
--extern void		encrypt_init(void);
--extern void		file_init(void);
--extern void		flink_init(void);
--extern void		freeze_init(void);
--extern void		fsuuid_init(void);
--extern void		fsync_init(void);
--extern void		getrusage_init(void);
--extern void		help_init(void);
--extern void		imap_init(void);
--extern void		inject_init(void);
--extern void		label_init(void);
--extern void		mmap_init(void);
--extern void		open_init(void);
--extern void		parent_init(void);
--extern void		pread_init(void);
--extern void		prealloc_init(void);
--extern void		pwrite_init(void);
--extern void		quit_init(void);
--extern void		resblks_init(void);
--extern void		seek_init(void);
--extern void		shutdown_init(void);
--extern void		stat_init(void);
--extern void		swapext_init(void);
--extern void		sync_init(void);
--extern void		truncate_init(void);
--extern void		utimes_init(void);
--extern void		fadvise_init(void);
--extern void		sendfile_init(void);
--extern void		madvise_init(void);
--extern void		mincore_init(void);
--extern void		fiemap_init(void);
-+off_t  filesize(void);
-+int openfile(char *, struct xfs_fsop_geom *, int, mode_t, struct fs_path *);
-+int addfile(char *, int , struct xfs_fsop_geom *, int, struct fs_path *);
-+int closefile(void);
-+void print_xflags(uint, int, int, const char *, int, int);
++		rel_off = next_unlinked_offset - reg_buf_offset;
++		if (XFS_IS_CORRUPT(mp, rel_off > iov_len ||
++			   sizeof(xfs_agino_t) > iov_len - rel_off)) {
++			xfs_alert(mp,
++	"Bad inode buffer log record offset (rel_off %zu, iov_len %zu).",
++				rel_off, iov_len);
++			return -EFSCORRUPTED;
++		}
 +
-+extern unsigned int recurse_all;
-+extern unsigned int recurse_dir;
-+
-+extern void *io_buffer;
-+extern size_t io_buffersize;
-+extern int vectors;
-+extern struct iovec *iov;
-+
-+int alloc_buffer(size_t, int, unsigned int);
-+int read_buffer(int, off_t, long long, long long *, int, int);
-+void dump_buffer(off_t, ssize_t);
-+void attr_init(void);
-+void bmap_init(void);
-+void encrypt_init(void);
-+void file_init(void);
-+void flink_init(void);
-+void freeze_init(void);
-+void fsuuid_init(void);
-+void fsync_init(void);
-+void getrusage_init(void);
-+void help_init(void);
-+void imap_init(void);
-+void inject_init(void);
-+void label_init(void);
-+void mmap_init(void);
-+void open_init(void);
-+void parent_init(void);
-+void pread_init(void);
-+void prealloc_init(void);
-+void pwrite_init(void);
-+void quit_init(void);
-+void resblks_init(void);
-+void seek_init(void);
-+void shutdown_init(void);
-+void stat_init(void);
-+void swapext_init(void);
-+void sync_init(void);
-+void truncate_init(void);
-+void utimes_init(void);
-+void fadvise_init(void);
-+void sendfile_init(void);
-+void madvise_init(void);
-+void mincore_init(void);
-+void fiemap_init(void);
- 
- #ifdef HAVE_COPY_FILE_RANGE
--extern void		copy_range_init(void);
-+void copy_range_init(void);
- #else
- #define copy_range_init()	do { } while (0)
- #endif
- 
- #ifdef HAVE_CACHESTAT
--extern void cachestat_init(void);
-+void cachestat_init(void);
- #else
- #define cachestat_init() do { } while (0)
- #endif
- 
--extern void		sync_range_init(void);
--extern void		readdir_init(void);
--extern void		reflink_init(void);
--extern void		cowextsize_init(void);
-+void sync_range_init(void);
-+void readdir_init(void);
-+void reflink_init(void);
-+void cowextsize_init(void);
- 
- #ifdef HAVE_GETFSMAP
--extern void		fsmap_init(void);
-+void fsmap_init(void);
- #else
- # define fsmap_init()	do { } while (0)
- #endif
- 
- #ifdef HAVE_DEVMAPPER
--extern void		log_writes_init(void);
-+void log_writes_init(void);
- #else
- #define log_writes_init()      do { } while (0)
- #endif
- 
--extern void		scrub_init(void);
--extern void		repair_init(void);
--extern void		crc32cselftest_init(void);
--extern void		bulkstat_init(void);
--void			exchangerange_init(void);
--void			fsprops_init(void);
--void			aginfo_init(void);
--void			healthmon_init(void);
--void			verifymedia_init(void);
-+void scrub_init(void);
-+void repair_init(void);
-+void crc32cselftest_init(void);
-+void bulkstat_init(void);
-+void exchangerange_init(void);
-+void fsprops_init(void);
-+void aginfo_init(void);
-+void healthmon_init(void);
-+void verifymedia_init(void);
- 
- #ifdef HAVE_LISTMOUNT
--void			listmount_init(void);
-+void listmount_init(void);
- #else
--# define		listmount_init()	do { } while (0)
-+# define listmount_init()	do { } while (0)
- #endif
+ 		/*
+ 		 * The current logged region contains a copy of the
+ 		 * current di_next_unlinked field.  Extract its value
+-		 * and copy it to the buffer copy.
++		 * and copy it to the on disk inode buffer.
+ 		 */
+-		logged_nextp = item->ri_buf[item_index].iov_base +
+-				next_unlinked_offset - reg_buf_offset;
++		logged_nextp = item->ri_buf[item_index].iov_base + rel_off;
+ 		if (XFS_IS_CORRUPT(mp, *logged_nextp == 0)) {
+ 			xfs_alert(mp,
+ 		"Bad inode buffer log record (ptr = "PTR_FMT", bp = "PTR_FMT"). "
 -- 
-2.53.0
+2.25.1
 
