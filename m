@@ -1,132 +1,93 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6891A2BE03C;
-	Sun,  6 Sep 2026 23:05:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A06A4371897
+	for <linux-xfs@vger.kernel.org>; Mon,  7 Sep 2026 04:24:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788735918; cv=none; b=ERXFQQKbdfh27dd80oc2E3mQ+F7EXA3M6m2K5Rh8XrlqCDB10z5CvWcPy+4/0rLrIQo0WojEHyWCn5Q6oB8wxWsxg8XHbqhSVkfFaoztarAzl3ULrdc//vasG4vH7QYSMBtCbAFjp/yWfP716zd/sO+yaOjm6D/U8rHHLHSn9Cw=
+	t=1788755053; cv=none; b=L12004EwMICN3Rkzl2OquASHRSyRoL3IIb72jGeJ1BqHMG/LUMdIS7P0DOkdFbj3rEBTg7Ap2qCfq3w6xem4QpSVE28Pgarv3ueEQC8qsy+53L5YEcNmlmTsn2lcVUim7umZOhM9jopvXJuffVZeytIhpB/5TVIjQBE8pPVRIE4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788735918; c=relaxed/simple;
-	bh=y9jBvSyYrbjCnWD+ynO0ZAOlYOFyxf/8hw7FIhm2yZk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HDDHk8yp5cM7gJrt+2XSNeNYpJfg2UPBBivG+bmQntpaQ/W1c0juzq1KtE6qXA0dqcwI6P2Oq13i4gmJTXL1z8kaoJYncQoi6gf3GvMMCwaD4ts7DG88mR3vt76VNZZTDK+/s2+XCIE4Ejmz+dRL3JP0G1lfWXJn36NKLRHlmFg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JKpgL+U4; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788755053; c=relaxed/simple;
+	bh=Rsjr1yfqpRZogIYDKpcWoHVl8TF7P3u3pRV0DoL8qxA=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=m5jR8BT1QTI94zXO6BRC7oQ1mExj5e0P2BksAgNeHshRwE8rd/MwrS/q8bS6E16NYSwSVw6FDrf2h17+U52ESYkERLLI267c5eC03rcegmoYl6R34CXQZ9GV0ZcNgVhaRiozMViu+97Ypc3yIgViCaF853Daok/t9qTVn4ZSIto=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jE48A/zL; arc=none smtp.client-ip=209.85.216.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JKpgL+U4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91B921F00A3A;
-	Sun,  6 Sep 2026 23:05:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788735917;
-	bh=azoo0pX+3AIYzE2g/eGc3kL5OniqDxseTzcbFubdQLU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=JKpgL+U4xlNFixXBnAA2Wa3j8oJlvb3HTDY/coujxaGy/qHOJQh2CmKsxLkS9wo9R
-	 uhwE4PG1QlCwceNT55FSQy3XrsxhCp1+kyeJZ40sqoOVtu8kelfuKIxzgocLIpGdo7
-	 G4obCwQW0MzajzT0pPNZk43gdWUI9ECvp46xtGiooOd5DgB14rMVKbof/EtlxOR4P4
-	 UBRK8cRL3A3FTO+K4RxYf5s3QzHFH8DelKXPWqtJNo0K59JC5KxUKt3g9niGpQRgqQ
-	 KDLCp+FRrJTuMFurhbWUD+CoijRR9YL5pfH5usQ3AMMCWVn/6M4F1L2LfhPisCF3HS
-	 FSiyRpjbdZRUQ==
-Date: Mon, 7 Sep 2026 09:05:04 +1000
-From: Dave Chinner <dgc@kernel.org>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Salvatore Dipietro <dipiets@amazon.it>, linux-kernel@vger.kernel.org,
-	hch@infradead.org, abuehaze@amazon.com, alisaidi@amazon.com,
-	blakgeof@amazon.com, brauner@kernel.org,
-	dipietro.salvatore@gmail.com, djwong@kernel.org, hannes@cmpxchg.org,
-	jackmanb@google.com, linux-fsdevel@vger.kernel.org,
-	linux-mm@kvack.org, linux-xfs@vger.kernel.org, mhocko@suse.com,
-	ritesh.list@gmail.com, rvvandan@amazon.com, stable@vger.kernel.org,
-	surenb@google.com, vbabka@kernel.org, willy@infradead.org,
-	ziy@nvidia.com, Vlastimil Babka <vbabka@suse.cz>,
-	David Hildenbrand <david@redhat.com>,
-	Christoph Hellwig <hch@lst.de>,
-	Brendan Jackman <brendan.jackman@linux.dev>
-Subject: Re: [PATCH v4] mm/page_alloc: avoid direct compaction for costly
- __GFP_NORETRY allocations
-Message-ID: <ap3xoHb-GtxZXkMd@dread>
-References: <20260904115629.3993331-1-dipiets@amazon.it>
- <20260905174239.99e31515fabe220aa7d8e6fa@linux-foundation.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jE48A/zL"
+Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-39682983a0fso3362158a91.3
+        for <linux-xfs@vger.kernel.org>; Sun, 06 Sep 2026 21:24:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1788755051; x=1789359851; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=nXfNDY7tWpXp99dzNDmwQ7Ck7bpB01oTJ0ndVCdj1sA=;
+        b=jE48A/zL3edtOtoHYsi7GigrcHmea+TpSzQybT5s0blE9eOH9AHZ+vBxX5TC3PDfwp
+         81pw+yYMxobf1ukoPHk+EsNLh4BN2MXL4At8kzMj7RtbxDGDemlelI/l4AzucUF/LrYH
+         SXAyIjF2K/RUglZVk2r7jeSTX92JPEogXuA/qSw4lPppGtIMo1KUKgeRhA4kJo80Gaoy
+         dDc+zzpRfjD1HfxAMccwlKYqLQf9s0pn9OSSy1IzHwc2Se4xBfH+rp0th4Iz8H45Qeec
+         r5ua23tP4jB4PP360apLh51t3kea+faVgIuYPm6w3fbHk/LOyjRslaUfp1nl0lSJjyut
+         iAGg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788755051; x=1789359851;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=nXfNDY7tWpXp99dzNDmwQ7Ck7bpB01oTJ0ndVCdj1sA=;
+        b=A9tIZBhX1lGjmbKhgxAsWRr++aD2ExihVdqIlq3/WWRv0aMNJvfNrJzRy7QaHu9MUI
+         1j6yWbv85MbwrnPmNjm/viGu2Lk1jLrGlEo0NV5w0MSyqyX/nZjNJ1ML+FzBqqjoWJvn
+         gFfnLeHBJYduiayokzS7MsueR0tfom/X17sYhyrUsq8goF0i7pa5NVjekMo1HjGPbxom
+         ZaKP3smblV1bJeeLbvqgMc7Qy54x8uvlBWZqozA6q/HGfzQfHHquqq4UK87XhCId3yh4
+         1/4WOxUxmRuVzXzSHt8lhVaTEKinEOb3RiMydlmD9G+mbRDGLw8oRIeQcIeVIBhJf+Fu
+         5Ilw==
+X-Forwarded-Encrypted: i=1; AKwUvBw8CXcYROrSk7dfUsrq8vhk+JJJKWOKbb2wHdn0oktg2yjzccjeTnjqzjp3hYeIOMmAlJj+vxBsYkg=@vger.kernel.org
+X-Gm-Message-State: AFuF++lVSSnZCLRlkRd5BRJL9IoNjzVatfOb4wAP5UCftRhyMDc1jJBe
+	7Br+UpYdcYRAGb/y8BLOFfK6v7HY89JgPgQWlSnTsjahePOTE6kUOSrylYvkTYJx
+X-Gm-Gg: AYBFou1lCfat5w12Va+cRhw2FU2FLS2QcgRc3gejSIFqfVrNR7AYRLxdd/JcPI6DRtF
+	29x0RWmOqVLqpWcrImNiRQX357jfpYI6aqV7uWas/J9Q1ALDvu5zyDyzgdKFTiqWD/t9Pe+eedm
+	T/52kLQmHB/iSqCuzuzhzrVDyw6Kp59Y2vi1evO5ksG+9yxRC7jgIk4dzeUto9M5CzqEFyjpYii
+	X18K8jh2JcQoMrMvupx897PBsuMm7FUuPRSPAWyTIowGs8BSflVGQxffZVRMiYbz7EdJGxLzJmX
+	sZIQProLQR4y8o4CFhz+L2kW2UYDsigeu54k54utQZOgKv4Z9nPf8fHy8s9nTCeZgI8TEgtQ4KB
+	SyulU8rBmDGYjhDnysciGMAH+V1bVBzMAphJ9bdNI1Ptq8L4a88VCmPqX5s0a6pti/ccG4fLdur
+	XaPPG4VxCPz79geYO1K5zGyROaFCHUiG3LXEJNg1arICQMUuYZ+8jimmcoB1zb7GIkVbdDTXibs
+	ybquxBWIdn7Pg==
+X-Received: by 2002:a17:90b:57d0:b0:395:4de0:b78f with SMTP id 98e67ed59e1d1-39b260d28eamr29533902a91.1.1788755050737;
+        Sun, 06 Sep 2026 21:24:10 -0700 (PDT)
+Received: from volcano9f6e-hostos.amd.com ([165.204.217.251])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3342af0bc08sm22629643eec.17.2026.09.06.21.24.09
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 06 Sep 2026 21:24:10 -0700 (PDT)
+From: Hemanth Selam <hemanth.selam@gmail.com>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: linux-kernel@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/2] xfs: fix repeated words in comments
+Date: Mon,  7 Sep 2026 09:53:59 +0530
+Message-ID: <20260907042402.12893-3-hemanth.selam@gmail.com>
+X-Mailer: git-send-email 2.48.1
+In-Reply-To: <20260904112909.8197-3-hemanth.selam@gmail.com>
+References: <20260904112909.8197-3-hemanth.selam@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260905174239.99e31515fabe220aa7d8e6fa@linux-foundation.org>
+Content-Transfer-Encoding: 8bit
 
-On Sat, Sep 05, 2026 at 05:42:39PM -0700, Andrew Morton wrote:
-> On Fri, 4 Sep 2026 11:56:28 +0000 Salvatore Dipietro <dipiets@amazon.it> wrote:
-> 
-> > Commit 5d8edfb900d5 ("iomap: Copy larger chunks from userspace")
-> > introduced high-order folio allocations in the iomap buffered write
-> > path.  When memory is fragmented, each failed costly-order allocation
-> > enters __alloc_pages_slowpath() which runs direct compaction and
-> > drain_all_pages(), causing a 0.38x throughput drop on PostgreSQL
-> > pgbench (simple-update) with 1024 clients on a 96-vCPU arm64 system.
-> 
-> Is there anything particularly unusual about this test case?
-> 
-> > Results (average of 3 runs, TPS):
-> > 
-> >   Config                   Avg TPS      % vs Baseline
-> >   baseline (no patch)       59,408       -
-> >   With this patch          155,409      +161.6%
-> 
-> Is this back to pre-5d8edfb900d5 performance?
-> 
-> > Link: https://lore.kernel.org/all/20260403193535.9970-1-dipiets@amazon.it/T/#t [v1]
-> > Link: https://lore.kernel.org/linux-mm/20260420161404.642-1-dipiets@amazon.it/T/#u [v2]
-> > Link: https://lore.kernel.org/all/20260710143437.12379-1-dipiets@amazon.it/T/#u [v3]
-> > Fixes: 5d8edfb900d5 ("iomap: Copy larger chunks from userspace")
-> 
-> That's three years old.  v6.10.  
-> 
-> This is not good.  Can you think of an exceptional reason why this took
-> so long to surface, or is it simply that our testing isn't good?
+Please drop this patch, one of its hunks is wrong.
 
-Neither.  We've know about these excessive high-order allocation->
-direct reclaim compaction costs for a lot longer than this, and have
-quite a number of filesystem based workloads that have been easily
-able to reproduce it on demand.  XFS first worked around direct
-compaction overhead back around ~5.17/18.
+  fs/xfs/xfs_zone_alloc.c
+    "Stash our zone in the inode so that is is reused for future
+     allocations."
 
-So why has it taken so long for this to be (kinda) fixed in the
-memory reclaim code?
+This is not a doubled "is"; it is "it is" misspelt.  My change leaves
+"so that is reused", which has no subject.  The correct fix would be
 
-It is not for lack of awareness or trying.
+    "so that it is reused for future allocations"
 
-I've responded to about half a dozen "direct compaction is
-expensive" bug reports in the past couple of years where I've said
-"this needs to be fixed in the reclaim code, not at the individual
-call sites". Not just fs stuff, but graphics and other subsystems,
-too.
-
-However, convincing the MM manintainers to do anything w.r.t.
-changing memory reclaim takes forever, and requires excessive
-amounts of persistence before anything happens despite clear
-evidence of the issue and the performance numbers showing how costly
-direct compaction actually is.
-
-A directly relatable example of this is kvmalloc() semantics. We
-needed kvmalloc() use fail fast semantics for the high order
-kmalloc() because it is much less costly to fall back to vmalloc()
-than do direct compaction....
-
-This was what the XFS changes in 5.17 worked around, and that fix
-didn't get pulled into the kvmalloc() implementation until 6.15 with
-commit 46459154f997 ("mm: kvmalloc: make kmalloc fast path real fast
-path").
-
-IOWs, it often takes years from "bad behaviour known" to "fixed in
-MM infrastructure", and most of that time is spent trying to
-convince the MM maintainers that the (relatively simple) fix needs
-to be done in the MM code itself...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-dgc@kernel.org
+Carlos, you also asked me to fold the two patches together and drop the
+mechanical wording from the changelog - I will do that in v2 and include
+this correction, unless you would rather not see the series again.
