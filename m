@@ -1,40 +1,33 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42338B67E;
-	Mon,  7 Sep 2026 04:51:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D5F8372071;
+	Mon,  7 Sep 2026 05:51:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788756712; cv=none; b=TwPPwiOtQHQ21i8+9DAq4ixQLe5OmZeQNOl+QOlCsGE0ECVfteKpHgtQKlBPIVOuehtIp3/jURk/iqpk3qBcVBR8n6Y5HubK/3OA7Qx6JmVC/F/c+dQDOp8w3P7aXt3xxKt/WEaYYthgKZkATmj8FaJMriEbBGrlHgdDjOU9y6U=
+	t=1788760279; cv=none; b=LJ4uegTuNwyb1xCYc0syfol0g4Y2vqNUJ8vBMY/7UScIGNQQXdtvoQe+h8HykS0oz4T+mIbb71KO3ILIJOQu+TntydJCjQWB+G/wuwYyMQLep4pCqUNlj5yPMn2VAT2H8vDSwFnDlYymeBm7etov5FQIgcpPTPVga7w22Dm6BlY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788756712; c=relaxed/simple;
-	bh=+MXKlJAov58gtG93q8tDLmznKP8z0hLSfSynIEcXGng=;
+	s=arc-20240116; t=1788760279; c=relaxed/simple;
+	bh=Ci5NtyhwS3oxdXOyb4+5nH7uQ1fWYVQ+PGdgWh8KXT8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qX63Qy0QLS6uuNmYlz6DvKbOG3mx2Jz9GLc4DxzgJUObcSB32MA0KxxiO0+dFngyNuyqnZSKIyEGqMfH8MO0sIrvb6q2VgfeEyOei7thxhKKYPOYCYfrxh751Mywf3X33i2AZimmgp0jETr+L2GYiGXJsVcuNtIgmrtGVdTXaiY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jq6Ege4T; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jq6Ege4T"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id C8C6C1F00A3F;
-	Mon,  7 Sep 2026 04:51:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788756710;
-	bh=1Ikc1biHGxJou0UnQc3IcR3YBL3trRjV6xLxFc4bRA8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=jq6Ege4TL5ao/eTCGUFfM/ECBPTTu1evKZBrdjpQwgWevTxE6aJfAiIaJQFG1C45J
-	 +229QiSd+SpoWPjZqR0XZ/OkxkQ3o768RiMhzDuo9uiWj66Y1D/48MObvuKOC8d0Gz
-	 PS1gbN6fxY8JnOr5aCfTVMZWEwAikgNlj9PztYXRRrNx2MzsCfQWftKM1K8HxyHV6R
-	 8ywywxZmHj1bPpADX3IrklD6ZOWrVAIyBTWHymBTBIiAF7yQvfYh3a72UZFg74gFeW
-	 OgM1t0bDj/gWG8UJwSxID0XO4bGbfUZg42aT130g+I5TC9vpH1TNc1RicZQVjCwgso
-	 uCn65MqlAX3dA==
-Date: Sun, 6 Sep 2026 21:51:50 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Deepanshu Kartikey <kartikey406@gmail.com>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	syzbot+ccdf3469f5f653bff7ac@syzkaller.appspotmail.com
-Subject: Re: [PATCH] xfs: take hm->lock in xfs_ioc_health_monitor() before
- insert
-Message-ID: <20260907045150.GI1933798@frogsfrogsfrogs>
-References: <20260906144629.17009-1-kartikey406@gmail.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=BzL2x3GDYXKVvohfKZz6fWMf9KuEqU8vog6pY8PMWkMBQTM9mUy2MHbZ+aNle2mZAdbC6TByYZnfS8usdQ7WN/jy7lPXXRSQ1nV707RXQ2A+kvGH97Uj4DiRv8HyTFp//7M6V7T780rXg19iRoOtlTKVscAnosZyDVmtDxuioGk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 28F6F68D05; Mon,  7 Sep 2026 07:51:14 +0200 (CEST)
+Date: Mon, 7 Sep 2026 07:51:13 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Anuj Gupta <anuj1072538@gmail.com>
+Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+	Christian Brauner <brauner@kernel.org>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Carlos Maiolino <cem@kernel.org>, Tal Zussman <tz2294@columbia.edu>,
+	Anuj Gupta <anuj20.g@samsung.com>, linux-block@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 09/17] xfs: move PI generation into xfs_submit_zoned_bio
+Message-ID: <20260907055113.GD31481@lst.de>
+References: <20260831064010.2574896-1-hch@lst.de> <20260831064010.2574896-10-hch@lst.de> <64756fpdb36bljyx6zmlcgdhv6ksly6zfhua6ierzga2jd6bl7@wyz5ar4cbba6>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,45 +36,42 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260906144629.17009-1-kartikey406@gmail.com>
+In-Reply-To: <64756fpdb36bljyx6zmlcgdhv6ksly6zfhua6ierzga2jd6bl7@wyz5ar4cbba6>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Sun, Sep 06, 2026 at 08:16:29PM +0530, Deepanshu Kartikey wrote:
-> __xfs_healthmon_insert() asserts that hm->lock is held
-> (lockdep_assert_held), but xfs_ioc_health_monitor() called it right
-> after allocating hm, before ever taking the lock, triggering a
-> lockdep warning.
+On Wed, Sep 02, 2026 at 11:52:21PM +0530, Anuj Gupta wrote:
+> >  xfs_open_zone_free_rcu(
+> > @@ -890,6 +891,8 @@ xfs_submit_zoned_bio(
+> >  		xfs_mark_rtg_boundary(ioend);
+> >  	}
+> >  
+> > +	if (ioend->io_flags & IOMAP_IOEND_INTEGRITY)
+> > +		fs_bio_integrity_generate(&ioend->io_bio);
+> >  	submit_bio(&ioend->io_bio);
 > 
-> Take hm->lock around the call.
+> It seems to me that IOMAP_IOEND_INTEGRITY might never be set here. The
+> zoned write iomaps in xfs_zoned_map_blocks() and
+> xfs_zoned_direct_write_iomap_begin() do not set IOMAP_F_INTEGRITY based
+> on bdev_has_integrity_csum(). Should both paths set it? I didn't have a
+> zoned device to confirm this so this is just from a bit of code reading
+> only.
 > 
-> Fixes: b3a289a2a9397 ("xfs: create event queuing, formatting, and discovery infrastructure")
-> Reported-by: syzbot+ccdf3469f5f653bff7ac@syzkaller.appspotmail.com
-> Closes: https://syzkaller.appspot.com/bug?extid=ccdf3469f5f653bff7ac
-> Signed-off-by: Deepanshu Kartikey <kartikey406@gmail.com>
+> This looks like a pre-existing bug from 6bbb4d96f797 ("xfs: support T10
+> protection information") which can be fixed with something like this?
 
-Heh, I added a patch just like this one to my own tree.
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Yeah.  I'm pretty sure I had a fix for this in the queue, but it looks
+like that got lost when rebasing on top of xfs_iomap_set_anon_write,
+which itself came from a Sashiko review for a trivial bug when
+setting this flag.
 
---D
+> [PATCH] xfs: set IOMAP_F_INTEGRITY for zoned writes on integrity devices
+> 
+> Neither xfs_zoned_map_blocks() nor xfs_zoned_direct_write_iomap_begin()
+> sets IOMAP_F_INTEGRITY based on bdev_has_integrity_csum(), so PI
+> generation is silently skipped for zoned writes on integrity-enabled
+> devices. Add the check in both paths.
 
-> ---
->  fs/xfs/xfs_healthmon.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_healthmon.c b/fs/xfs/xfs_healthmon.c
-> index 3ae5f4496ad1..2f762f90d329 100644
-> --- a/fs/xfs/xfs_healthmon.c
-> +++ b/fs/xfs/xfs_healthmon.c
-> @@ -1219,7 +1219,9 @@ xfs_ioc_health_monitor(
->  	}
->  	running_event->type = XFS_HEALTHMON_RUNNING;
->  	running_event->domain = XFS_HEALTHMON_MOUNT;
-> +	mutex_lock(&hm->lock);
->  	__xfs_healthmon_insert(hm, running_event);
-> +	mutex_unlock(&hm->lock);
->  
->  	/*
->  	 * Preallocate the unmount event so that we can't fail to notify the
-> -- 
-> 2.34.1
-> 
-> 
+This seems to be against a tree that doens't have
+xfs_iomap_set_anon_write yet.  I've rebased it on top of that and
+added it to my queue (keeping your attribution).
+
