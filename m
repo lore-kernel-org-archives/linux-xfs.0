@@ -1,79 +1,245 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C94CC340401
-	for <linux-xfs@vger.kernel.org>; Mon,  7 Sep 2026 07:27:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DAC8740FDAD;
+	Mon,  7 Sep 2026 07:30:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788766070; cv=none; b=X8vXL1INV0wPLTsIO6vmH3JZDFO+L/9D0c5NXtZ4QWiFOSXkPi8bQE2I0h38TBAGZ2sZ0EByaQ5sExEjaW8a91dK3cNUR15zGJfUfsEuB4tXSx3hT/yM6iykzVv9yZHcUAe742YfKXGkdb6UwOUNcIfz2BVVQ3IXENxxeyXn4PM=
+	t=1788766217; cv=none; b=dHVK/xo1jQI6MGCTdFEef+O3uPgVrkBrcHTWO3qH5JfisYNPGEpN4EYuSlHery+1Y18ZcNX1hEwTELWZbzFPG+J28X1YFfDkAwalQpYNo+7Xmwaz+bLv5NLb6orCPCW/h6ZKcaRi8WPBTzSLRLq+FtsgqY0+mC/pSYFQZUvB0FQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788766070; c=relaxed/simple;
-	bh=uLS5sa6x4r1DyQh+28uN3OwsuYPLx/QznCb1+NQz3qs=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Ku6S2SjTkXgyg5iuAwXIDUl000N0RqYAtiKqicYFKCsHbF1b6JRS7nJQ3HwjNuN1B8VB11rQ6BDOoWps6/giB+H6kcNNX/mR1ncYdFVKBShmTtYSEXu+1g9URGghSngsuxwaRiF51u64d9T7KRm7v5IpNHNtK8g2kBXv/KcMe5M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=rf6mHgHJ; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1788766217; c=relaxed/simple;
+	bh=svv6muD9hszgHilNpJg3Fvfty/+6yyQ325GAbLVD+LM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=nsZUUjYpvyd6o/sT+SBq/N3hJV4ickKC0HGYTDcs8OfhqHdqBxxXDKNT+wqoWPbha2zbUzto1S5WQhY69cSRjqPfLyF2vt+UpviKZcC5pQl0cURJElQStlCYjDdj4K0rXWH3zMX6oqRvmc7iVNdzdEJzPFbCDLdmEUARgH5UlpE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IWaarEKX; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="rf6mHgHJ"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=sPQ/GlgsJyDgAMKF6N3qvulpvYjD3ahmh4NVGIm3cLY=; b=rf6mHgHJ6pG8h0IKa/BqbpUn2i
-	Nqc9SBBx8IrSW5HK6LG3FEouDUB5Q1gzEoBN97VQWldpE4HvZrbB04kFNQcaGX3Q8YMDp67MwMPaj
-	on9RZZUuFAKfV3lsehEBqGl3Y+MHitmKcdFt1/GFp2J2bX5QZ5H9xmwtt6ZRRJojkxmgwRnwkjYpL
-	zFQm+TcDByYL3OuAEBcCni0AkahPJoC98bMpiWAmi1nbQfBxlz6FKY4QLiwfTXFNxxUjufTJtXwJ7
-	0cv0DDuK92is3NsLTZulhedeQwDBOLunE8796oon0PtxrfT//GI4G9blIboy+T3Eepo7j5PXCRrxV
-	TpayKo+Q==;
-Received: from [93.123.20.121] (helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1x3TlY-000000069vL-0k4i;
-	Mon, 07 Sep 2026 07:27:44 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: cem@kernel.org
-Cc: anuj20.g@samsung.com,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH] xfs: set IOMAP_F_INTEGRITY for zoned writes on integrity devices
-Date: Mon,  7 Sep 2026 10:27:39 +0300
-Message-ID: <20260907072739.719289-1-hch@lst.de>
-X-Mailer: git-send-email 2.53.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IWaarEKX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C62B91F00A3A;
+	Mon,  7 Sep 2026 07:30:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788766215;
+	bh=/tpCXcNTxR15hZHrvxHbLtYdqjcKUmFt0AW82RaDF3k=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=IWaarEKXnNsEq4AcRA76zzMw/cQHTWhq7UWcw9YuwNblXvg8j4PlTUHPN8PEWn2xC
+	 1wFD/4Fd41C+wcqMHghpq/qHvHpCLTSDGJpVbmeXtLeHHIjjbRydk/Rb+WqMEBUz6i
+	 33b2zxNXWaS6Ml36srWf+a+CPCMG23XL5PWAVA95mb48jzYymhdfKAy9jtZ1C0QEfH
+	 OjGhjewr+IB7RWw49omorVydBu4d0SM8xpBc94OsjQM07kkjTP4d8GKqVx5fjG9rTX
+	 4q8Gl7uv82jqI4CXOdKTfKzlZbMKdfRHZSuqHPd7Y8+jG0RAqqR5WKuHtzakBRX/Qs
+	 oKMJLkHg8VwEg==
+Message-ID: <be13228a-f35e-4868-9b56-6452c34abc60@kernel.org>
+Date: Mon, 7 Sep 2026 09:30:09 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4] mm/page_alloc: avoid direct compaction for costly
+ __GFP_NORETRY allocations
+Content-Language: en-US
+To: Zi Yan <ziy@nvidia.com>, Salvatore Dipietro <dipiets@amazon.it>,
+ linux-kernel@vger.kernel.org, hch@infradead.org
+Cc: abuehaze@amazon.com, akpm@linux-foundation.org, alisaidi@amazon.com,
+ blakgeof@amazon.com, brauner@kernel.org, dgc@kernel.org,
+ dipietro.salvatore@gmail.com, djwong@kernel.org, hannes@cmpxchg.org,
+ linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+ linux-xfs@vger.kernel.org, mhocko@suse.com, ritesh.list@gmail.com,
+ rvvandan@amazon.com, stable@vger.kernel.org, surenb@google.com,
+ willy@infradead.org, David Hildenbrand <david@redhat.com>,
+ Christoph Hellwig <hch@lst.de>, Brendan Jackman <brendan.jackman@linux.dev>
+References: <20260904115629.3993331-1-dipiets@amazon.it>
+ <8cc503d9-04a1-4d90-874c-ada6c0ac5147@kernel.org>
+ <DL6MKKOOL5DX.1R3Q77UTXBFYT@nvidia.com>
+From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
+Autocrypt: addr=vbabka@kernel.org; keydata=
+ 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
+In-Reply-To: <DL6MKKOOL5DX.1R3Q77UTXBFYT@nvidia.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-From: Anuj Gupta <anuj20.g@samsung.com>
+On 9/4/26 17:08, Zi Yan wrote:
+> On Fri Sep 4, 2026 at 10:11 AM EDT, Vlastimil Babka (SUSE) wrote:
+>> On 9/4/26 13:56, Salvatore Dipietro wrote:
+>>> Commit 5d8edfb900d5 ("iomap: Copy larger chunks from userspace")
+>>> introduced high-order folio allocations in the iomap buffered write
+>>> path.  When memory is fragmented, each failed costly-order allocation
+>>> enters __alloc_pages_slowpath() which runs direct compaction and
+>>> drain_all_pages(), causing a 0.38x throughput drop on PostgreSQL
+>>> pgbench (simple-update) with 1024 clients on a 96-vCPU arm64 system.
+>>> 
+>>> The root issue is that direct compaction is too expensive for hot
+>>> allocation paths that have fallbacks to smaller allocations.
+>>> __filemap_get_folio_mpol() already marks higher-order allocations with
+>>> __GFP_NORETRY | __GFP_NOWARN, signalling that the caller can handle
+>>> failure.  However, the page allocator still attempts full direct
+>>> compaction for costly orders with __GFP_NORETRY, which is unnecessarily
+>>> aggressive when the caller will simply retry at a lower order.
+>>> 
+>>> For costly-order allocations with __GFP_NORETRY, clear
+>>> __GFP_DIRECT_RECLAIM at the very start of the slowpath, before
+>>> can_direct_reclaim, can_compact and the nofail checks are evaluated.
+>>> This makes the entire slowpath treat the request as non-blocking: no
+>>> direct reclaim, no direct compaction and no drain_all_pages() IPI
+>>> across every CPU. kswapd (and in turn kcompactd) is still woken further
+>>> down for background defragmentation, so compaction keeps working for
+>>> long-term system health while being removed from the latency-critical
+>>> direct allocation path.
+>>> 
+>>> Allocations that also request __GFP_THISNODE are exempted.  That flag
+>>> pairing identifies the local-node-first THP attempt issued by
+>>> alloc_pages_mpol() (mempolicy.c), which relies on direct compaction to
+>>> form transparent huge pages.
+>>> 
+>>> Test environment:
+>>>   Hardware:  AWS EC2 m8g.24xlarge (96 vCPU, arm64)
+>>>              12x 1TB IO2 32000 IOPS RAID0 XFS
+>>>   OS:        AL2023
+>>>   Kernel:    v7.3-rc1
+>>>   Database:  PostgreSQL 18.4
+>>>   Workload:  pgbench simple-update, 1024 clients, 96 threads, 1200s
+>>> 
+>>> Results (average of 3 runs, TPS):
+>>> 
+>>>   Config                   Avg TPS      % vs Baseline
+>>>   baseline (no patch)       59,408       -
+>>>   With this patch          155,409      +161.6%
+>>> 
+>>> Link: https://lore.kernel.org/all/20260403193535.9970-1-dipiets@amazon.it/T/#t [v1]
+>>> Link: https://lore.kernel.org/linux-mm/20260420161404.642-1-dipiets@amazon.it/T/#u [v2]
+>>> Link: https://lore.kernel.org/all/20260710143437.12379-1-dipiets@amazon.it/T/#u [v3]
+>>> Fixes: 5d8edfb900d5 ("iomap: Copy larger chunks from userspace")
+>>> Cc: stable@vger.kernel.org
+>>> Cc: Andrew Morton <akpm@linux-foundation.org>
+>>> Cc: Vlastimil Babka <vbabka@suse.cz>
+>>> Cc: David Hildenbrand <david@redhat.com>
+>>> Cc: Michal Hocko <mhocko@suse.com>
+>>> Cc: Johannes Weiner <hannes@cmpxchg.org>
+>>> Cc: Matthew Wilcox <willy@infradead.org>
+>>> Cc: Christoph Hellwig <hch@lst.de>
+>>> Cc: Dave Chinner <dgc@kernel.org>
+>>> Cc: Ritesh Harjani <ritesh.list@gmail.com>
+>>> Cc: linux-mm@kvack.org
+>>> Cc: linux-fsdevel@vger.kernel.org
+>>> Cc: linux-xfs@vger.kernel.org
+>>> Signed-off-by: Salvatore Dipietro <dipiets@amazon.it>
+>>
+>> I guess this will have to do until unlikely(we figure out a better API)...
+> 
+> We could add a "new_gfp = gfp_policy(gfp)" to adjust input gfp based on
+> various policies we currently have.
 
-xfs_iomap_set_anon_write does not set IOMAP_F_INTEGRITY based on
-bdev_has_integrity_csum(), so file system PI generation is silently
-skipped for zoned writes on integrity-enabled devices, and left to
-the block layer PI generation.
+Maybe with the help of alloc_flags to avoid the limitated count of gfp flags.
 
-Fixes: 6bbb4d96f797 ("xfs: support T10 protection information")
-Signed-off-by: Anuj Gupta <anuj20.g@samsung.com>
-[hch: ported to the recently introduced xfs_iomap_set_anon_write()]
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_iomap.h | 2 ++
- 1 file changed, 2 insertions(+)
+> Even better if callers can do that
+> instead.
 
-diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
-index c906c62d46f3..f2520a9b3a13 100644
---- a/fs/xfs/xfs_iomap.h
-+++ b/fs/xfs/xfs_iomap.h
-@@ -41,6 +41,8 @@ xfs_iomap_set_anon_write(
- 	iomap->offset = offset;
- 	iomap->length = length;
- 	iomap->flags = IOMAP_F_ANON_WRITE | IOMAP_F_DIRTY;
-+	if (bdev_has_integrity_csum(iomap->bdev))
-+		iomap->flags |= IOMAP_F_INTEGRITY;
- }
- 
- static inline xfs_filblks_t
--- 
-2.53.0
+Not sure about burdening the callers (e.g. "every filesystem should do X"
+etc), unless they are some intermediate wrappers within mm itself.
+For example, THP (but only anonymous?) is now handled in such a special way,
+it could be a candidate. But I also have a vague feeling this was already
+done in the past. Worth investigating perhaps.
+
+>>
+>> Acked-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
+>>
+>>> ---
+>>> v4: Clear __GFP_DIRECT_RECLAIM early in the slowpath and exempt
+>>>     __GFP_THISNODE so THP attempt keeps using direct compaction
+>>> v3: Move to mm/page_alloc.c, wake kcompactd instead of avoiding it
+>>> v2: Move from fs/iomap/buffered-io.c to mm/filemap.c
+>>> v1: Avoid compaction in iomap folio allocation
+>>> 
+>>>  mm/page_alloc.c | 18 +++++++++++++++---
+>>>  1 file changed, 15 insertions(+), 3 deletions(-)
+>>> 
+>>> diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+>>> index 12fac9084c48..542c2ec31061 100644
+>>> --- a/mm/page_alloc.c
+>>> +++ b/mm/page_alloc.c
+>>> @@ -4784,10 +4784,10 @@ static inline struct page *
+>>>  __alloc_pages_slowpath(gfp_t gfp_mask, unsigned int order,
+>>>  						struct alloc_context *ac)
+>>>  {
+>>> -	bool can_direct_reclaim = gfp_mask & __GFP_DIRECT_RECLAIM;
+>>> -	bool can_compact = can_direct_reclaim && gfp_compaction_allowed(gfp_mask);
+>>> -	bool nofail = gfp_mask & __GFP_NOFAIL;
+>>>  	const bool costly_order = order > PAGE_ALLOC_COSTLY_ORDER;
+>>> +	bool can_direct_reclaim;
+>>> +	bool can_compact;
+>>> +	bool nofail;
+>>>  	struct page *page = NULL;
+>>>  	unsigned int alloc_flags;
+>>>  	unsigned long did_some_progress;
+>>> @@ -4802,6 +4802,18 @@ __alloc_pages_slowpath(gfp_t gfp_mask, unsigned int order,
+>>>  	bool can_retry_reserves = true;
+>>>  	unsigned long alloc_start_time = jiffies;
+>>>  
+>>> +	/*
+>>> +	 * Costly __GFP_NORETRY callers have a cheap fallback, so don't stall
+>>> +	 * them in reclaim or compaction. __GFP_THISNODE callers are exempt.
+>>> +	 */
+> 
+> Should this also be documented in gfp_types.h? It currently only says,
+> 
+> "__GFP_NORETRY: The VM implementation will try only very lightweight
+> memory direct reclaim to get some memory under memory pressure (thus it
+> can sleep)."
+> 
+> Otherwise,
+> 
+> Acked-by: Zi Yan <ziy@nvidia.com>
+> 
+>>> +	if (costly_order && (gfp_mask & __GFP_NORETRY) &&
+>>> +	    !(gfp_mask & __GFP_THISNODE))
+>>> +		gfp_mask &= ~__GFP_DIRECT_RECLAIM;
+>>> +
+>>> +	can_direct_reclaim = gfp_mask & __GFP_DIRECT_RECLAIM;
+>>> +	can_compact = can_direct_reclaim && gfp_compaction_allowed(gfp_mask);
+>>> +	nofail = gfp_mask & __GFP_NOFAIL;
+>>> +
+>>>  	if (unlikely(nofail)) {
+>>>  		/*
+>>>  		 * Also we don't support __GFP_NOFAIL without __GFP_DIRECT_RECLAIM,
+> 
+> 
+> 
+> 
 
