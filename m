@@ -1,83 +1,79 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8530340680F
-	for <linux-xfs@vger.kernel.org>; Mon,  7 Sep 2026 06:40:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C94CC340401
+	for <linux-xfs@vger.kernel.org>; Mon,  7 Sep 2026 07:27:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788763202; cv=none; b=CW4zgFNICfHS3K036bW7EjOYP/Xp71ATmibv7t+8Shvc0xwkgF6Bi2X6XAoDnRcG45bgAL/m0BPg3YVIPBs/qcSny3UDldOyP7sRgR2BuspIN1TZE3kAr3ZIMeOrlCNPTAIDhBfg/vO5CroohqcKkYHXSTl0Tx9cu25xqz3eiuA=
+	t=1788766070; cv=none; b=X8vXL1INV0wPLTsIO6vmH3JZDFO+L/9D0c5NXtZ4QWiFOSXkPi8bQE2I0h38TBAGZ2sZ0EByaQ5sExEjaW8a91dK3cNUR15zGJfUfsEuB4tXSx3hT/yM6iykzVv9yZHcUAe742YfKXGkdb6UwOUNcIfz2BVVQ3IXENxxeyXn4PM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788763202; c=relaxed/simple;
-	bh=4JuMM/vo5a7l/z5reWA67enzqmR0GdCxjh1UbKxCIy4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jczCR5ev69+I2S6yjdncQknguZlFdWxQDh21gYU2EFPeOdKxsDmi86b26YYWQYf8W7M5kNQ4s50NIZnnmT6tSCFtHR4Bcir0Rh8KsjlFGk/CneI2N9do14cj59oongPQvIZHEzIu5KdQ97o1QQ1BiH8irp87v/ovHmuEZQEhwGA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DE9CyXf2; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788766070; c=relaxed/simple;
+	bh=uLS5sa6x4r1DyQh+28uN3OwsuYPLx/QznCb1+NQz3qs=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Ku6S2SjTkXgyg5iuAwXIDUl000N0RqYAtiKqicYFKCsHbF1b6JRS7nJQ3HwjNuN1B8VB11rQ6BDOoWps6/giB+H6kcNNX/mR1ncYdFVKBShmTtYSEXu+1g9URGghSngsuxwaRiF51u64d9T7KRm7v5IpNHNtK8g2kBXv/KcMe5M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=rf6mHgHJ; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DE9CyXf2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0E6C1F00A3A;
-	Mon,  7 Sep 2026 06:39:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788763201;
-	bh=BfZUX+OLgnCO7M12iGXMhwGQv9YFzNHwPSDQKeSmaSI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=DE9CyXf2vMAMxx8QyOSwvZ9KgSfbI8NQ/SsvqUwmiFUILUYwj7gCedYLQ4xniKAi7
-	 ywYs0bLeAabsFJW4Pcq1s8WqJiLpJtLr5kwI3PWZNdjZclrwNP4oBOp6hh6bGF7Fy3
-	 BgAwBZQHIuYZrSqOaGLNYRZq+p/HKUAvJxyTQ6RY8FUsjS2TcJ5gH7slW3+J3C3OMP
-	 Jp7SE3reDRgLmqSKkhyRifj8wEOqMKVrKU1WWqpP8wt83adfi406cP28I0EJjupHgl
-	 NVf2Ri414rbQCdseid97eA5dZWbfbPgJGQmIrje8S7yKhBPdRcHxoJkLVfntAlbMqd
-	 1+irG2lM8VZGA==
-Date: Mon, 7 Sep 2026 08:39:57 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [RFC PATCH 1/3] xfs: add xfs_error_report the ability to display
- an error code
-Message-ID: <ap5cC9SQ2c3RbwfJ@andromeda.toxiclabs.cc>
-References: <20260904113231.1408890-1-cem@kernel.org>
- <20260904113231.1408890-2-cem@kernel.org>
- <20260905010851.GE1933798@frogsfrogsfrogs>
- <ap5T_Pcvk4QAMcWb@infradead.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="rf6mHgHJ"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=sPQ/GlgsJyDgAMKF6N3qvulpvYjD3ahmh4NVGIm3cLY=; b=rf6mHgHJ6pG8h0IKa/BqbpUn2i
+	Nqc9SBBx8IrSW5HK6LG3FEouDUB5Q1gzEoBN97VQWldpE4HvZrbB04kFNQcaGX3Q8YMDp67MwMPaj
+	on9RZZUuFAKfV3lsehEBqGl3Y+MHitmKcdFt1/GFp2J2bX5QZ5H9xmwtt6ZRRJojkxmgwRnwkjYpL
+	zFQm+TcDByYL3OuAEBcCni0AkahPJoC98bMpiWAmi1nbQfBxlz6FKY4QLiwfTXFNxxUjufTJtXwJ7
+	0cv0DDuK92is3NsLTZulhedeQwDBOLunE8796oon0PtxrfT//GI4G9blIboy+T3Eepo7j5PXCRrxV
+	TpayKo+Q==;
+Received: from [93.123.20.121] (helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1x3TlY-000000069vL-0k4i;
+	Mon, 07 Sep 2026 07:27:44 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: cem@kernel.org
+Cc: anuj20.g@samsung.com,
+	linux-xfs@vger.kernel.org
+Subject: [PATCH] xfs: set IOMAP_F_INTEGRITY for zoned writes on integrity devices
+Date: Mon,  7 Sep 2026 10:27:39 +0300
+Message-ID: <20260907072739.719289-1-hch@lst.de>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ap5T_Pcvk4QAMcWb@infradead.org>
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Sun, Sep 06, 2026 at 11:04:44PM -0700, Christoph Hellwig wrote:
-> On Fri, Sep 04, 2026 at 06:08:51PM -0700, Darrick J. Wong wrote:
-> > > @@ -387,6 +388,10 @@ xfs_error_report(
-> > >  		"Internal error %s at line %d of file %s.  Caller %pS",
-> > >  			    tag, linenum, filename, failaddr);
-> > >  
-> > > +		if (error)
-> > > +			xfs_alert_tag(mp, XFS_PTAG_ERROR_REPORT,
-> > > +				      "Error Code: %d", error);
-> > 
-> > /me wonders, should the error erport just go in the "Internal error..."
-> > message above?
-> > 
-> > "Internal error $tag ($error) at line..."
-> 
-> Yeah, that seems much easier to follow.  Maybe make it conditional on
-> an error being passed.
-> 
-> > > +extern void xfs_error_report(const char *tag, int level, int error,
-> > > +			     struct xfs_mount *mp, const char *filename,
-> > > +			     int linenum, xfs_failaddr_t failaddr);
-> 
-> .. and let's drop the pointless extern here while we touch this.
-> 
-> > > -			XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, log->l_mp);
-> > > +			XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, 0, log->l_mp);
-> 
-> Overly long line here now.
-> 
-> 
+From: Anuj Gupta <anuj20.g@samsung.com>
 
-Thanks both for the review. I'll work on it and send a proper patch
-later on, I need to finish a case for xfstests first, then I'll move to
-this one...
+xfs_iomap_set_anon_write does not set IOMAP_F_INTEGRITY based on
+bdev_has_integrity_csum(), so file system PI generation is silently
+skipped for zoned writes on integrity-enabled devices, and left to
+the block layer PI generation.
+
+Fixes: 6bbb4d96f797 ("xfs: support T10 protection information")
+Signed-off-by: Anuj Gupta <anuj20.g@samsung.com>
+[hch: ported to the recently introduced xfs_iomap_set_anon_write()]
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_iomap.h | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
+index c906c62d46f3..f2520a9b3a13 100644
+--- a/fs/xfs/xfs_iomap.h
++++ b/fs/xfs/xfs_iomap.h
+@@ -41,6 +41,8 @@ xfs_iomap_set_anon_write(
+ 	iomap->offset = offset;
+ 	iomap->length = length;
+ 	iomap->flags = IOMAP_F_ANON_WRITE | IOMAP_F_DIRTY;
++	if (bdev_has_integrity_csum(iomap->bdev))
++		iomap->flags |= IOMAP_F_INTEGRITY;
+ }
+ 
+ static inline xfs_filblks_t
+-- 
+2.53.0
+
