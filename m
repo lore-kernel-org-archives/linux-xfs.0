@@ -1,93 +1,87 @@
-Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A06A4371897
-	for <linux-xfs@vger.kernel.org>; Mon,  7 Sep 2026 04:24:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42338B67E;
+	Mon,  7 Sep 2026 04:51:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788755053; cv=none; b=L12004EwMICN3Rkzl2OquASHRSyRoL3IIb72jGeJ1BqHMG/LUMdIS7P0DOkdFbj3rEBTg7Ap2qCfq3w6xem4QpSVE28Pgarv3ueEQC8qsy+53L5YEcNmlmTsn2lcVUim7umZOhM9jopvXJuffVZeytIhpB/5TVIjQBE8pPVRIE4=
+	t=1788756712; cv=none; b=TwPPwiOtQHQ21i8+9DAq4ixQLe5OmZeQNOl+QOlCsGE0ECVfteKpHgtQKlBPIVOuehtIp3/jURk/iqpk3qBcVBR8n6Y5HubK/3OA7Qx6JmVC/F/c+dQDOp8w3P7aXt3xxKt/WEaYYthgKZkATmj8FaJMriEbBGrlHgdDjOU9y6U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788755053; c=relaxed/simple;
-	bh=Rsjr1yfqpRZogIYDKpcWoHVl8TF7P3u3pRV0DoL8qxA=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=m5jR8BT1QTI94zXO6BRC7oQ1mExj5e0P2BksAgNeHshRwE8rd/MwrS/q8bS6E16NYSwSVw6FDrf2h17+U52ESYkERLLI267c5eC03rcegmoYl6R34CXQZ9GV0ZcNgVhaRiozMViu+97Ypc3yIgViCaF853Daok/t9qTVn4ZSIto=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jE48A/zL; arc=none smtp.client-ip=209.85.216.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1788756712; c=relaxed/simple;
+	bh=+MXKlJAov58gtG93q8tDLmznKP8z0hLSfSynIEcXGng=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=qX63Qy0QLS6uuNmYlz6DvKbOG3mx2Jz9GLc4DxzgJUObcSB32MA0KxxiO0+dFngyNuyqnZSKIyEGqMfH8MO0sIrvb6q2VgfeEyOei7thxhKKYPOYCYfrxh751Mywf3X33i2AZimmgp0jETr+L2GYiGXJsVcuNtIgmrtGVdTXaiY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jq6Ege4T; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jE48A/zL"
-Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-39682983a0fso3362158a91.3
-        for <linux-xfs@vger.kernel.org>; Sun, 06 Sep 2026 21:24:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788755051; x=1789359851; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=nXfNDY7tWpXp99dzNDmwQ7Ck7bpB01oTJ0ndVCdj1sA=;
-        b=jE48A/zL3edtOtoHYsi7GigrcHmea+TpSzQybT5s0blE9eOH9AHZ+vBxX5TC3PDfwp
-         81pw+yYMxobf1ukoPHk+EsNLh4BN2MXL4At8kzMj7RtbxDGDemlelI/l4AzucUF/LrYH
-         SXAyIjF2K/RUglZVk2r7jeSTX92JPEogXuA/qSw4lPppGtIMo1KUKgeRhA4kJo80Gaoy
-         dDc+zzpRfjD1HfxAMccwlKYqLQf9s0pn9OSSy1IzHwc2Se4xBfH+rp0th4Iz8H45Qeec
-         r5ua23tP4jB4PP360apLh51t3kea+faVgIuYPm6w3fbHk/LOyjRslaUfp1nl0lSJjyut
-         iAGg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788755051; x=1789359851;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=nXfNDY7tWpXp99dzNDmwQ7Ck7bpB01oTJ0ndVCdj1sA=;
-        b=A9tIZBhX1lGjmbKhgxAsWRr++aD2ExihVdqIlq3/WWRv0aMNJvfNrJzRy7QaHu9MUI
-         1j6yWbv85MbwrnPmNjm/viGu2Lk1jLrGlEo0NV5w0MSyqyX/nZjNJ1ML+FzBqqjoWJvn
-         gFfnLeHBJYduiayokzS7MsueR0tfom/X17sYhyrUsq8goF0i7pa5NVjekMo1HjGPbxom
-         ZaKP3smblV1bJeeLbvqgMc7Qy54x8uvlBWZqozA6q/HGfzQfHHquqq4UK87XhCId3yh4
-         1/4WOxUxmRuVzXzSHt8lhVaTEKinEOb3RiMydlmD9G+mbRDGLw8oRIeQcIeVIBhJf+Fu
-         5Ilw==
-X-Forwarded-Encrypted: i=1; AKwUvBw8CXcYROrSk7dfUsrq8vhk+JJJKWOKbb2wHdn0oktg2yjzccjeTnjqzjp3hYeIOMmAlJj+vxBsYkg=@vger.kernel.org
-X-Gm-Message-State: AFuF++lVSSnZCLRlkRd5BRJL9IoNjzVatfOb4wAP5UCftRhyMDc1jJBe
-	7Br+UpYdcYRAGb/y8BLOFfK6v7HY89JgPgQWlSnTsjahePOTE6kUOSrylYvkTYJx
-X-Gm-Gg: AYBFou1lCfat5w12Va+cRhw2FU2FLS2QcgRc3gejSIFqfVrNR7AYRLxdd/JcPI6DRtF
-	29x0RWmOqVLqpWcrImNiRQX357jfpYI6aqV7uWas/J9Q1ALDvu5zyDyzgdKFTiqWD/t9Pe+eedm
-	T/52kLQmHB/iSqCuzuzhzrVDyw6Kp59Y2vi1evO5ksG+9yxRC7jgIk4dzeUto9M5CzqEFyjpYii
-	X18K8jh2JcQoMrMvupx897PBsuMm7FUuPRSPAWyTIowGs8BSflVGQxffZVRMiYbz7EdJGxLzJmX
-	sZIQProLQR4y8o4CFhz+L2kW2UYDsigeu54k54utQZOgKv4Z9nPf8fHy8s9nTCeZgI8TEgtQ4KB
-	SyulU8rBmDGYjhDnysciGMAH+V1bVBzMAphJ9bdNI1Ptq8L4a88VCmPqX5s0a6pti/ccG4fLdur
-	XaPPG4VxCPz79geYO1K5zGyROaFCHUiG3LXEJNg1arICQMUuYZ+8jimmcoB1zb7GIkVbdDTXibs
-	ybquxBWIdn7Pg==
-X-Received: by 2002:a17:90b:57d0:b0:395:4de0:b78f with SMTP id 98e67ed59e1d1-39b260d28eamr29533902a91.1.1788755050737;
-        Sun, 06 Sep 2026 21:24:10 -0700 (PDT)
-Received: from volcano9f6e-hostos.amd.com ([165.204.217.251])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3342af0bc08sm22629643eec.17.2026.09.06.21.24.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 06 Sep 2026 21:24:10 -0700 (PDT)
-From: Hemanth Selam <hemanth.selam@gmail.com>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: linux-kernel@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs: fix repeated words in comments
-Date: Mon,  7 Sep 2026 09:53:59 +0530
-Message-ID: <20260907042402.12893-3-hemanth.selam@gmail.com>
-X-Mailer: git-send-email 2.48.1
-In-Reply-To: <20260904112909.8197-3-hemanth.selam@gmail.com>
-References: <20260904112909.8197-3-hemanth.selam@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jq6Ege4T"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id C8C6C1F00A3F;
+	Mon,  7 Sep 2026 04:51:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788756710;
+	bh=1Ikc1biHGxJou0UnQc3IcR3YBL3trRjV6xLxFc4bRA8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=jq6Ege4TL5ao/eTCGUFfM/ECBPTTu1evKZBrdjpQwgWevTxE6aJfAiIaJQFG1C45J
+	 +229QiSd+SpoWPjZqR0XZ/OkxkQ3o768RiMhzDuo9uiWj66Y1D/48MObvuKOC8d0Gz
+	 PS1gbN6fxY8JnOr5aCfTVMZWEwAikgNlj9PztYXRRrNx2MzsCfQWftKM1K8HxyHV6R
+	 8ywywxZmHj1bPpADX3IrklD6ZOWrVAIyBTWHymBTBIiAF7yQvfYh3a72UZFg74gFeW
+	 OgM1t0bDj/gWG8UJwSxID0XO4bGbfUZg42aT130g+I5TC9vpH1TNc1RicZQVjCwgso
+	 uCn65MqlAX3dA==
+Date: Sun, 6 Sep 2026 21:51:50 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Deepanshu Kartikey <kartikey406@gmail.com>
+Cc: cem@kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	syzbot+ccdf3469f5f653bff7ac@syzkaller.appspotmail.com
+Subject: Re: [PATCH] xfs: take hm->lock in xfs_ioc_health_monitor() before
+ insert
+Message-ID: <20260907045150.GI1933798@frogsfrogsfrogs>
+References: <20260906144629.17009-1-kartikey406@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260906144629.17009-1-kartikey406@gmail.com>
 
-Please drop this patch, one of its hunks is wrong.
+On Sun, Sep 06, 2026 at 08:16:29PM +0530, Deepanshu Kartikey wrote:
+> __xfs_healthmon_insert() asserts that hm->lock is held
+> (lockdep_assert_held), but xfs_ioc_health_monitor() called it right
+> after allocating hm, before ever taking the lock, triggering a
+> lockdep warning.
+> 
+> Take hm->lock around the call.
+> 
+> Fixes: b3a289a2a9397 ("xfs: create event queuing, formatting, and discovery infrastructure")
+> Reported-by: syzbot+ccdf3469f5f653bff7ac@syzkaller.appspotmail.com
+> Closes: https://syzkaller.appspot.com/bug?extid=ccdf3469f5f653bff7ac
+> Signed-off-by: Deepanshu Kartikey <kartikey406@gmail.com>
 
-  fs/xfs/xfs_zone_alloc.c
-    "Stash our zone in the inode so that is is reused for future
-     allocations."
+Heh, I added a patch just like this one to my own tree.
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
-This is not a doubled "is"; it is "it is" misspelt.  My change leaves
-"so that is reused", which has no subject.  The correct fix would be
+--D
 
-    "so that it is reused for future allocations"
-
-Carlos, you also asked me to fold the two patches together and drop the
-mechanical wording from the changelog - I will do that in v2 and include
-this correction, unless you would rather not see the series again.
+> ---
+>  fs/xfs/xfs_healthmon.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/fs/xfs/xfs_healthmon.c b/fs/xfs/xfs_healthmon.c
+> index 3ae5f4496ad1..2f762f90d329 100644
+> --- a/fs/xfs/xfs_healthmon.c
+> +++ b/fs/xfs/xfs_healthmon.c
+> @@ -1219,7 +1219,9 @@ xfs_ioc_health_monitor(
+>  	}
+>  	running_event->type = XFS_HEALTHMON_RUNNING;
+>  	running_event->domain = XFS_HEALTHMON_MOUNT;
+> +	mutex_lock(&hm->lock);
+>  	__xfs_healthmon_insert(hm, running_event);
+> +	mutex_unlock(&hm->lock);
+>  
+>  	/*
+>  	 * Preallocate the unmount event so that we can't fail to notify the
+> -- 
+> 2.34.1
+> 
+> 
