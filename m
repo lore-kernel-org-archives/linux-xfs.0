@@ -1,45 +1,41 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D90513CFF5C
-	for <linux-xfs@vger.kernel.org>; Mon,  7 Sep 2026 07:35:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F9E74028F2
+	for <linux-xfs@vger.kernel.org>; Mon,  7 Sep 2026 08:01:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788766508; cv=none; b=oLA2pug0HuSV1Mbc8GlWo3j1cfspuFDD+IjAeQAT+sRd4LDAyeKBBrFHznDpTfvOZIfesCzgY8BDx3FE41URkqz2A3EgSyGntIRA79mJkpIZzh4VkTkl9dqhjZUQdd0V7KduGUUW8w87/RmpcklKs6bG07dNmJiO7LottCvSPtE=
+	t=1788768068; cv=none; b=lF2ztq8bDySD2Pjq3xapMT/vevHxqUM4hk5p4MrGyGO7tkvX0/vPbVtmeVipMM+G75r5rOfSF8/sNZVJ7geSSKU+GbMBrzelGfke+YI9axXp/kpIDK1MWd99Um0Yd3XWDYvWQWfvfZGKGnhU4NDPfqGygqEZQc1nQ8hSRJ9Cca8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788766508; c=relaxed/simple;
-	bh=jSZ9lpmra+NKoHccggoZ86IrZs+PhQSDSzfzcKtyt6Y=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=pzHv6sTwv7CgT5SCV3H/9Rg6zrxQHkhgmLcsA7VA/tOtxGyHhq7E2+JETJ0eQeJ58rCbZnuK9MbAN5zdPnERh0gw1ch/+T5SbVrKksCRrqVXYU/r5X5ZCYoZlBdKeTQX/rEgqLEe2yyKa9vj/5eAyBmYSD+hgP+PJ57I61WZfzA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=WEZinVL5; arc=none smtp.client-ip=198.137.202.133
+	s=arc-20240116; t=1788768068; c=relaxed/simple;
+	bh=PtjNZqMQQiAfg7DvITLF8dp5u+nnWtdT0HqI4qL2moc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=BdNF5Dxq6HtzfHlQjrIMiYdW9Fh18Ej96P0gd9UaZjx571VeYW3QEmGcFpWA03BrhZ5RiZxf/ePg6keVY9HOHpUFbbf311giZGxzUYPA2u8g8OBIb/F6sykRei1vg7nkjxbzNx4/U2gTf1mqs11CofsMy4tmlwGJugNzmegnll0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=SvBey8mN; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="WEZinVL5"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="SvBey8mN"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=hqq9q3KQm9IcrVxMfCRmOXejegOiKIlsR26121rVbqs=; b=WEZinVL5vEPFBy4zKrnVNiM7A3
-	Hdw7/JcJQjALO2XnaoCIvzcOehFtD1n6Y9liFZQ9bSaX5BDtuEGVWIYNBoZVipvhg8LvJ2G/LjK3+
-	d4e6xeua/YA8y15c1zrr89zEk9ovY5lkzZtXyPvZZVErsmAhL22OxbPKKCvyXzwpur8OJDBdu6o9p
-	nL6Ag6gcb4LR7Z1PA79tl4oLwhv8ia6RNFsFNMcfK3OmYIjJUsWcPmsv1ssF838C44zu5wu0YLwpP
-	7NGdC9yZya5QYfqzT1WbR8vJka0QkNwETN97ucDtg1n8wCZue9KuX082CSjKmyWgS3aAzRAPu86H5
-	TlmtiV1A==;
-Received: from [91.92.197.219] (helo=localhost)
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=Km1AcRy68j68nxt3xy7EDcl7FgdrVE1wbW1tQ8r53G8=; b=SvBey8mNEKqhCXkWkktoKkGOCw
+	DLnrnoG7tPIlU+S/aqTFyE2PM59l1iideFINTZelBj5Cbd5xsI3Z5oOCwHhwmTaOIFv12JZyQgDvF
+	vTCoWQzhESvkLB8wamuYPAuGyI2yctqwk6QIUOdzkiY94/9KOtQdKQxya0LwNtSjpeGkRblLIU7IM
+	ubD0f0rJM8oM2JM8vwCPjyCB+gh/MSrbZ9edgCv68U8QRM3cQZ7fLAINgKbkq+x8jeEgk3FrRL9EU
+	PGPb40EjG8cSNnFh+0KD+6SaiD42pF7hup5m6QIRqtl7TJenEH0lr6T7GA8uoZWQyGHz8es13W0wH
+	+eW/hJpw==;
+Received: from [93.123.20.121] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1x3Tsd-00000006AXO-0179;
-	Mon, 07 Sep 2026 07:35:04 +0000
+	id 1x3UHo-00000006DQx-209t;
+	Mon, 07 Sep 2026 08:01:06 +0000
 From: Christoph Hellwig <hch@lst.de>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: linux-xfs@vger.kernel.org,
-	"Darrick J. Wong" <djwong@kernel.org>
-Subject: [PATCH 3/3] xfs: avoid extra cache flushes for multi-device file systems in xfs_fsync
-Date: Mon,  7 Sep 2026 10:33:09 +0300
-Message-ID: <20260907073427.719935-4-hch@lst.de>
+To: aalbersh@kernel.org
+Cc: linux-xfs@vger.kernel.org
+Subject: [PATCH] xfs_io: cleanup headers
+Date: Mon,  7 Sep 2026 11:01:00 +0300
+Message-ID: <20260907080100.749981-1-hch@lst.de>
 X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260907073427.719935-1-hch@lst.de>
-References: <20260907073427.719935-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -49,92 +45,245 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-When xlog_force_lsn sets log_flushed, it has just called xlog_force_iclog
-through xlog_force_and_check_iclog, which sets XLOG_ICL_NEED_FLUSH before
-writing out the head iclog.  This means that we already flushed the log,
-data, and (with the recent fix) RT devices before writing out the iclog
-start record and no extra cache flushed is required.
-
-This optimizes the external log case, and fixes a performance regression
-due to double RT dev flushes with "xfs: also flush the RT device cache in
-xlog_write_iclog".
-
-The explicit flush of the data that the device resides on when no iclog
-was written out is still required.
+Drop extra externs and deep tab indentation of the function and
+variable names.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/xfs_file.c | 36 +++++++++---------------------------
- 1 file changed, 9 insertions(+), 27 deletions(-)
+ io/init.h |  10 ++--
+ io/io.h   | 164 +++++++++++++++++++++++++++---------------------------
+ 2 files changed, 87 insertions(+), 87 deletions(-)
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 0d31fea67a2c..d8202da15aca 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -129,7 +129,6 @@ xfs_file_fsync(
- 	int			datasync)
- {
- 	struct xfs_inode	*ip = XFS_I(file->f_mapping->host);
--	struct xfs_mount	*mp = ip->i_mount;
- 	int			log_flushed = 0;
- 	int			error;
+diff --git a/io/init.h b/io/init.h
+index d4d1968cc1e1..97a93761d64f 100644
+--- a/io/init.h
++++ b/io/init.h
+@@ -8,10 +8,10 @@
+ #define CMD_NOMAP_OK	(1<<1)	/* command doesn't need a mapped region	*/
+ #define CMD_FOREIGN_OK	CMD_FLAG_FOREIGN_OK
  
-@@ -139,27 +138,17 @@ xfs_file_fsync(
- 	if (error)
- 		return error;
+-extern char	*progname;
+-extern int	exitcode;
+-extern int	expert;
+-extern size_t	pagesize;
++extern char *progname;
++extern int exitcode;
++extern int expert;
++extern size_t pagesize;
+ extern struct timeval stopwatch;
  
--	if (xfs_is_shutdown(mp))
-+	if (xfs_is_shutdown(ip->i_mount))
- 		return -EIO;
+-extern void init_cvtnum(size_t *blocksize, size_t *sectsize);
++void init_cvtnum(size_t *blocksize, size_t *sectsize);
+diff --git a/io/io.h b/io/io.h
+index 5f1f278d14a0..50e01b3cd229 100644
+--- a/io/io.h
++++ b/io/io.h
+@@ -45,11 +45,13 @@ typedef struct fileio {
+ 	struct fs_path	fs_path;	/* XFS path information */
+ } fileio_t;
  
- 	xfs_iflags_clear(ip, XFS_ITRUNCATED);
+-extern fileio_t		*filetable;	/* open file table */
+-extern int		filecount;	/* number of open files */
+-extern fileio_t		*file;		/* active file in file table */
+-extern int filelist_f(void);
+-extern int stat_f(int argc, char **argv);
++extern fileio_t *filetable;	/* open file table */
++extern int filecount;		/* number of open files */
++extern fileio_t *file;		/* active file in file table */
++
++int filelist_f(void);
++int stat_f(int argc, char **argv);
++
+ /*
+  * Memory mapped file regions
+  */
+@@ -62,111 +64,109 @@ typedef struct mmap_region {
+ 	char		*name;		/* name of backing file */
+ } mmap_region_t;
  
- 	/*
--	 * If we have an RT and/or log subvolume we need to make sure to flush
--	 * the write cache the device used for file data first.  This is to
--	 * ensure newly written file data make it to disk before logging the new
--	 * inode size in case of an extending write.
--	 */
--	if (XFS_IS_REALTIME_INODE(ip) && mp->m_rtdev_targp != mp->m_ddev_targp)
--		error = blkdev_issue_flush(mp->m_rtdev_targp->bt_bdev);
--	else if (mp->m_logdev_targp != mp->m_ddev_targp)
--		error = blkdev_issue_flush(mp->m_ddev_targp->bt_bdev);
--	if (error)
--		return error;
+-extern mmap_region_t	*maptable;	/* mmap'd region array */
+-extern int		mapcount;	/* #entries in the mapping table */
+-extern mmap_region_t	*mapping;	/* active mapping table entry */
+-extern int maplist_f(void);
+-extern void *check_mapping_range(mmap_region_t *, off_t, size_t, int);
++extern mmap_region_t *maptable;	/* mmap'd region array */
++extern int mapcount;		/* #entries in the mapping table */
++extern mmap_region_t *mapping;	/* active mapping table entry */
++
++int maplist_f(void);
++void *check_mapping_range(mmap_region_t *, off_t, size_t, int);
+ 
+ /*
+  * Various xfs_io helper routines/globals
+  */
+ 
+-extern off_t		filesize(void);
+-extern int		openfile(char *, struct xfs_fsop_geom *, int, mode_t,
+-				 struct fs_path *);
+-extern int		addfile(char *, int , struct xfs_fsop_geom *, int,
+-				struct fs_path *);
+-extern int		closefile(void);
+-extern void		print_xflags(uint, int, int, const char *, int, int);
 -
--	/*
--	 * If the inode has a inode log item attached, it may need the journal
--	 * flushed to persist any changes the log item might be tracking.
-+	 * If the inode has a log item attached, we must force the log up to the
-+	 * last LSN in which the inode was modified to ensure all metadata is
-+	 * persisted.  The log force will flush the caches for all devices
-+	 * before writing the log records unless it is a no-op because there are
-+	 * no modifications to this inode that need to be pushed out.
- 	 */
- 	if (ip->i_itemp) {
- 		error = xfs_fsync_flush_log(ip, datasync, &log_flushed);
-@@ -173,17 +162,10 @@ xfs_file_fsync(
- 	 * when no metadata needed to be committed.
- 	 *
- 	 * Use the inode's actual file data target rather than assuming the
--	 * main data device. Realtime inodes with a separate realtime device
--	 * are flushed before the log force, so this fallback only applies
--	 * when the file data target is the same as the log target.
-+	 * main data device.
- 	 */
--	if (!log_flushed) {
--		struct xfs_buftarg *file_targp = xfs_inode_buftarg(ip);
+-extern unsigned int	recurse_all;
+-extern unsigned int	recurse_dir;
 -
--		if (mp->m_logdev_targp == file_targp)
--			return blkdev_issue_flush(file_targp->bt_bdev);
--	}
+-extern void		*io_buffer;
+-extern size_t		io_buffersize;
+-extern int		vectors;
+-extern struct iovec	*iov;
+-extern int		alloc_buffer(size_t, int, unsigned int);
+-extern int		read_buffer(int, off_t, long long, long long *,
+-					int, int);
+-extern void		dump_buffer(off_t, ssize_t);
 -
-+	if (!log_flushed)
-+		return blkdev_issue_flush(xfs_inode_buftarg(ip)->bt_bdev);
- 	return 0;
- }
+-extern void		attr_init(void);
+-extern void		bmap_init(void);
+-extern void		encrypt_init(void);
+-extern void		file_init(void);
+-extern void		flink_init(void);
+-extern void		freeze_init(void);
+-extern void		fsuuid_init(void);
+-extern void		fsync_init(void);
+-extern void		getrusage_init(void);
+-extern void		help_init(void);
+-extern void		imap_init(void);
+-extern void		inject_init(void);
+-extern void		label_init(void);
+-extern void		mmap_init(void);
+-extern void		open_init(void);
+-extern void		parent_init(void);
+-extern void		pread_init(void);
+-extern void		prealloc_init(void);
+-extern void		pwrite_init(void);
+-extern void		quit_init(void);
+-extern void		resblks_init(void);
+-extern void		seek_init(void);
+-extern void		shutdown_init(void);
+-extern void		stat_init(void);
+-extern void		swapext_init(void);
+-extern void		sync_init(void);
+-extern void		truncate_init(void);
+-extern void		utimes_init(void);
+-extern void		fadvise_init(void);
+-extern void		sendfile_init(void);
+-extern void		madvise_init(void);
+-extern void		mincore_init(void);
+-extern void		fiemap_init(void);
++off_t  filesize(void);
++int openfile(char *, struct xfs_fsop_geom *, int, mode_t, struct fs_path *);
++int addfile(char *, int , struct xfs_fsop_geom *, int, struct fs_path *);
++int closefile(void);
++void print_xflags(uint, int, int, const char *, int, int);
++
++extern unsigned int recurse_all;
++extern unsigned int recurse_dir;
++
++extern void *io_buffer;
++extern size_t io_buffersize;
++extern int vectors;
++extern struct iovec *iov;
++
++int alloc_buffer(size_t, int, unsigned int);
++int read_buffer(int, off_t, long long, long long *, int, int);
++void dump_buffer(off_t, ssize_t);
++void attr_init(void);
++void bmap_init(void);
++void encrypt_init(void);
++void file_init(void);
++void flink_init(void);
++void freeze_init(void);
++void fsuuid_init(void);
++void fsync_init(void);
++void getrusage_init(void);
++void help_init(void);
++void imap_init(void);
++void inject_init(void);
++void label_init(void);
++void mmap_init(void);
++void open_init(void);
++void parent_init(void);
++void pread_init(void);
++void prealloc_init(void);
++void pwrite_init(void);
++void quit_init(void);
++void resblks_init(void);
++void seek_init(void);
++void shutdown_init(void);
++void stat_init(void);
++void swapext_init(void);
++void sync_init(void);
++void truncate_init(void);
++void utimes_init(void);
++void fadvise_init(void);
++void sendfile_init(void);
++void madvise_init(void);
++void mincore_init(void);
++void fiemap_init(void);
  
+ #ifdef HAVE_COPY_FILE_RANGE
+-extern void		copy_range_init(void);
++void copy_range_init(void);
+ #else
+ #define copy_range_init()	do { } while (0)
+ #endif
+ 
+ #ifdef HAVE_CACHESTAT
+-extern void cachestat_init(void);
++void cachestat_init(void);
+ #else
+ #define cachestat_init() do { } while (0)
+ #endif
+ 
+-extern void		sync_range_init(void);
+-extern void		readdir_init(void);
+-extern void		reflink_init(void);
+-extern void		cowextsize_init(void);
++void sync_range_init(void);
++void readdir_init(void);
++void reflink_init(void);
++void cowextsize_init(void);
+ 
+ #ifdef HAVE_GETFSMAP
+-extern void		fsmap_init(void);
++void fsmap_init(void);
+ #else
+ # define fsmap_init()	do { } while (0)
+ #endif
+ 
+ #ifdef HAVE_DEVMAPPER
+-extern void		log_writes_init(void);
++void log_writes_init(void);
+ #else
+ #define log_writes_init()      do { } while (0)
+ #endif
+ 
+-extern void		scrub_init(void);
+-extern void		repair_init(void);
+-extern void		crc32cselftest_init(void);
+-extern void		bulkstat_init(void);
+-void			exchangerange_init(void);
+-void			fsprops_init(void);
+-void			aginfo_init(void);
+-void			healthmon_init(void);
+-void			verifymedia_init(void);
++void scrub_init(void);
++void repair_init(void);
++void crc32cselftest_init(void);
++void bulkstat_init(void);
++void exchangerange_init(void);
++void fsprops_init(void);
++void aginfo_init(void);
++void healthmon_init(void);
++void verifymedia_init(void);
+ 
+ #ifdef HAVE_LISTMOUNT
+-void			listmount_init(void);
++void listmount_init(void);
+ #else
+-# define		listmount_init()	do { } while (0)
++# define listmount_init()	do { } while (0)
+ #endif
 -- 
 2.53.0
 
