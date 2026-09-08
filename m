@@ -1,41 +1,87 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3556C3A9D9D
-	for <linux-xfs@vger.kernel.org>; Tue,  8 Sep 2026 09:56:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B03EB50AC03;
+	Tue,  8 Sep 2026 10:26:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788861401; cv=none; b=jyVuBF/vyN2qmmvcU5TwD2uX5sZWBq5YhLe6vOJ6p8WrZh6t8g7zb6EX5qYej1Sp6jHiaqyOmXJmkJLbfZ1lUG7aenpOEQsPHU9JnxT5WmToTBI1vooWH3MJObzrjpWcuuD/g8FCByem3CqnmpLIi8YE0UFPYOkJewyRvXQhGD8=
+	t=1788863164; cv=none; b=Zu4NEw/SQhuUpVcn7KDQwAWwOEH31DrpuFbfWff0V/WtdTTt6RL5L3A8B3CZ7jR3FfS2tAgFeaRO4tBKg4JcYXNy9QE3SzkAdxxNZ8/XnzZa9VqDvYRyQXW6N4KG2Kck/o5dBG7+L/kX+K/XSO/59jJFw5Lmqf+W9DYGHOUDJiI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788861401; c=relaxed/simple;
-	bh=R7lM5Zosd5nHml3Ck2ZtjqjjJo30clynol9/wSMRJZA=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=rbDQCr87r87btgP03aX7Zw6HsW7E0i/167xdA0ldCmpzeAmbUCRlCExyZb0D5JfTCCAsmRyPfNn6XNvvqkoNVH42luaHMkuS0F/UvvoxQfWFZetCXaJZarp1zsbXO1bJa3u9Z0BPNXH9gUtGYtQqmqT3h0EEnY0whNpchTfaz4U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FMhkzw7d; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788863164; c=relaxed/simple;
+	bh=kj8+rr3XsvevpmwaEHchFcZsnsbkCeg6AeWTZ7KEBiE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=LF47tgLNN02N0n3iCHGJv6DettRDyNGyQqQmXZAkpVEm7uEJL11DnYMpLaa5/v5nssCJ4+qWd2uTZWYalxiQAOLNj+J6gXQB3SMjYoiyzQUWc0fUot/h7IViK3+8WPi77JZP14CM2WoO84g50ftz7u849tzIXNpMGq7/mPFbsIE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=uJFDxLXA; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=OFfKr48x; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=VTlBUETL; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=82G4fWuP; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FMhkzw7d"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4FBFC1F00A3A;
-	Tue,  8 Sep 2026 09:56:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788861399;
-	bh=NnxIZRcH4bFmJ5w8n8oQ8jBuVF6xVnG6H0/K2qK+sKI=;
-	h=Date:From:To:Cc:Subject;
-	b=FMhkzw7dC/l0Sc4PGn6J7AVOMRHqKxuXlzglzFEE1P93y/bmr6DMzI7dsSnKoxdb+
-	 cPteTWtm/mx4y58yOsxqlvpmtl6xt60yhghmUu8lIcu2SqcguDU6vrlLJaMse19gE2
-	 jPEVcHpZ1lP68II+cfi90NXYRqbMh1P4WDhGubdHAR20BfnsCC/tsOr8SHWNZbd/cU
-	 YrNCzCqKkJ+94CSROxu9139GNGqeGoVAezbeeEg++DFEOGmrKs9zAale2CCP6Pd7Kh
-	 4tG/U4a0fTgRs+eTfzUe0Ih61UJvkzjVHEtnp6+d5fC1ocaiOTDLQ9LGendVTHRTC1
-	 KuX+iPHAe9ozw==
-Date: Tue, 8 Sep 2026 11:56:33 +0200
-From: Andrey Albershteyn <aalbersh@kernel.org>
-To: linux-xfs@vger.kernel.org
-Cc: aalbersh@kernel.org, bestswngs@gmail.com, brauner@kernel.org, 
-	cem@kernel.org, chuck.lever@oracle.com, cmaiolino@redhat.com, 
-	dawei.feng@seu.edu.cn, djwong@kernel.org, gaoyingjie@uniontech.com, 
-	hans.holmberg@wdc.com, hch@lst.de, jiapenglin@tencent.com, roland.mainz@nrubsig.org, 
-	sandeen@redhat.com, xmei5@asu.edu
-Subject: [ANNOUNCE] xfsprogs: for-next updated to 643a5d8ffd76
-Message-ID: <ap_bvOk1MuYh3VBZ@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="uJFDxLXA";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="OFfKr48x";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="VTlBUETL";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="82G4fWuP"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 7CF5621A0A;
+	Tue,  8 Sep 2026 10:25:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1788863156; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=HWD7Ln/F+2C9HZbAZUN+8f83ZRprJd/wvmSWmBxQkYI=;
+	b=uJFDxLXA5DbAYlDoeSveMh87fjVzq1bmvjs1NDUJi1cc6w+wQ5F5YVxf6W/Epck6jT0g8U
+	NNyyhz2EVt6h2WwNngOo5teCHvQ3O8yoPv3psWfpiJDgvcjx8DSyfuZZptvn66VBJkyFKh
+	6UpLSZIH6XgfU6ZffqPeKwBPl9GN8Fs=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1788863156;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=HWD7Ln/F+2C9HZbAZUN+8f83ZRprJd/wvmSWmBxQkYI=;
+	b=OFfKr48xkS9b/ohjwQbtGXNntopkYLGqdnceoRD/9awnrcwmIO64v/gC7b/GYCzQrDSje5
+	oUKHj3yOvVKmFQBQ==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=VTlBUETL;
+	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=82G4fWuP
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1788863152; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=HWD7Ln/F+2C9HZbAZUN+8f83ZRprJd/wvmSWmBxQkYI=;
+	b=VTlBUETL/4Ph5cXA8nR5ca9UeAn9s/kK2t5IsyEBqLrbNi4LGDx1do550Uf8p0gczyOF/t
+	q9lNBZjtHPLlGCMuYmUGVk1ommhqF8cf+gBgDRT+ueZ3iHYSwjTNBWgzs3oywle3FBOwg+
+	HhQdHuk5vPP6xW9EBb/O3FOM9Lf7zQY=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1788863152;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=HWD7Ln/F+2C9HZbAZUN+8f83ZRprJd/wvmSWmBxQkYI=;
+	b=82G4fWuPi9H5SXLFe71vbkiqeDMQQdZ0RWhnF2iyB3xzODAJPqbQOWOAc1LOU6JJDjf0wg
+	h4yq1+j8J5iCFxAA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 5BFA01347F;
+	Tue,  8 Sep 2026 10:25:52 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id 3ddwFrDin2rFFAAAD6G6ig
+	(envelope-from <jack@suse.cz>); Tue, 08 Sep 2026 10:25:52 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+	id E385CA12E2; Tue, 08 Sep 2026 12:25:36 +0200 (CEST)
+Date: Tue, 8 Sep 2026 12:25:36 +0200
+From: Jan Kara <jack@suse.cz>
+To: cem@kernel.org
+Cc: zlang@kernel.org, djwong@kernel.org, hch@lst.de, 
+	linux-xfs@vger.kernel.org, fstests@vger.kernel.org, jack@suse.cz
+Subject: Re: [RFC PATCH 2/2] generic: add test for quota enforcement via a
+ nfs share
+Message-ID: <c4fsyxsecb23xpvxcqrahn3s6rhy7vewhic36mcop7fdonav4q@ni6t7yv5fkhx>
+References: <20260907164054.111393-1-cem@kernel.org>
+ <20260907164054.111393-3-cem@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,138 +90,185 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20260907164054.111393-3-cem@kernel.org>
+X-Spam-Score: -4.01
+X-Rspamd-Queue-Id: 7CF5621A0A
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Spam-Level: 
+X-Rspamd-Action: no action
+X-Spamd-Result: default: False [-4.01 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	DNSWL_BLOCKED(0.00)[2a07:de40:b281:104:10:150:64:97:from,2a07:de40:b281:106:10:150:64:167:received];
+	RCPT_COUNT_SEVEN(0.00)[7];
+	ARC_NA(0.00)[];
+	MISSING_XM_UA(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	RCVD_COUNT_THREE(0.00)[3];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,suse.cz:dkim,suse.cz:email,suse.com:email];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	TO_DN_NONE(0.00)[];
+	RCVD_TLS_LAST(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DKIM_TRACE(0.00)[suse.cz:+]
+X-Spam-Flag: NO
 
-Hi folks,
+On Mon 07-09-26 18:40:48, cem@kernel.org wrote:
+> From: Carlos Maiolino <cem@kernel.org>
+> 
+> This tests the quota enforcement when changing the group of a file via a
+> NFS share, caused by mishandling of capabilities check.
+> This initially has been found with a XFS filesystem backing the NFS
+> share, but this still possible to occur on a different filesystem if it
+> happens to also mishandle capabilities check.
+> 
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-The xfsprogs for-next branch in repository at:
+Looks good to me. Feel free to add:
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+Reviewed-by: Jan Kara <jack@suse.cz>
 
-has just been updated.
+								Honza
 
-Patches often get missed, so if your outstanding patches are properly reviewed
-on the list and not included in this update, please let me know.
-
-The new head of the for-next branch is commit:
-
-643a5d8ffd766ab2b4837144f230d2a51048f97b
-
-New commits:
-
-Andrey Albershteyn (1):
-      [4f927c6d2dab] xfs: fix null pointer dereference in tracepoint
-
-Christoph Hellwig (17):
-      [7bfd7d172384] xfs_db: improve the fsmap man page entry
-      [3febcf8307d6] xfs: add a XFS_INODE_TO_AGNO helper
-      [41023f3078bc] xfs: add a XFS_INODE_TO_AGINO helper
-      [0025466aebf4] xfs: add a XFS_INO_TO_FSB helper
-      [c46b610bf32c] xfs: add a xfs_rmap_inode_bmbt_owner
-      [d6d344c41f52] xfs: add a xfs_rmap_inode_owner helper
-      [cb4d9f4a55d8] xfs: remove the i_ino field in struct xfs_inode
-      [4c95910197bb] xfs: cleanup xfs_imap
-      [ea1901a24f7f] xfs: remove im_len field in struct xfs_imap
-      [2f3f536cb02f] xfs: massage xfs_imap_to_bp into xfs_read_icluster
-      [d8268ecd7d81] xfs: store an agbno in struct xfs_imap
-      [bcb506336f9c] xfs: mark struct xfs_imap as __packed
-      [7dce29be4422] xfs: pass back updated nb from xfs_growfs_compute_deltas
-      [fbd9f710190a] xfs: cleanup xfs_growfs_compute_deltas
-      [1c461401d63c] xfs: move XFS_LSN_CMP to xfs_log_format.h
-      [468400494950] xfs: check v5 superblock features early
-      [cff14b3bd2bb] xfs_io: cleanup headers
-
-Chuck Lever (1):
-      [54d45f9bedfe] xfs: Report case sensitivity in fileattr_get
-
-Darrick J. Wong (2):
-      [9595e21992a8] libxfs: convert diff_items helpers to cmp_int
-      [85cd98501769] xfs: fix pointer arithmetic error on 32-bit systems
-
-Dawei Feng (1):
-      [c2e1a925e98f] xfs: fix memory leak in xfs_dqinode_metadir_create()
-
-Eric Sandeen (1):
-      [643a5d8ffd76] mkfs: Emit a clearer message if too-small log is due to AG geometry
-
-Hans Holmberg (1):
-      [ba7c0e339296] libxfs: report device open errors during topology probing
-
-Lin Jiapeng (1):
-      [8d5bb64656fe] xfs: fix exchange-range reflink flag clearing issue with INO1_WRITTEN
-
-Xiang Mei (1):
-      [4efde4fd2a12] xfs: fix off-by-one in rtrefcount btree root level validation
-
-Yingjie Gao (1):
-      [7885cad313d0] xfs: fix exchmaps reservation limit check
-
-Code Diffstat:
-
- db/attrset.c                  |   2 +-
- db/bmap_inflate.c             |   4 +-
- db/dquot.c                    |   2 +-
- db/iunlink.c                  |  13 ++--
- db/namei.c                    |  14 ++--
- db/rdump.c                    |   2 +-
- include/linux.h               |  17 +++++
- include/xfs_inode.h           |   7 +-
- include/xfs_trans.h           |  18 -----
- io/init.h                     |  10 +--
- io/io.h                       | 158 +++++++++++++++++++++---------------------
- libxfs/defer_item.c           |   8 +--
- libxfs/inode.c                |   8 +--
- libxfs/iunlink.c              |   4 +-
- libxfs/libxfs_api_defs.h      |   2 +-
- libxfs/listxattr.c            |   4 +-
- libxfs/logitem.c              |  17 +++--
- libxfs/topology.c             |   8 ++-
- libxfs/util.c                 |   2 +-
- libxfs/xfs_ag.c               |  42 ++++++-----
- libxfs/xfs_ag.h               |   5 +-
- libxfs/xfs_attr.c             |   2 +-
- libxfs/xfs_attr_leaf.c        |   2 +-
- libxfs/xfs_bmap.c             |  20 +++---
- libxfs/xfs_bmap_btree.c       |   8 +--
- libxfs/xfs_bmap_btree.h       |   2 +-
- libxfs/xfs_btree.c            |  18 +++--
- libxfs/xfs_btree_staging.c    |   2 +-
- libxfs/xfs_da_btree.c         |   2 +-
- libxfs/xfs_defer.c            |   2 +-
- libxfs/xfs_dir2.c             |  44 ++++++------
- libxfs/xfs_dir2_node.c        |   2 +-
- libxfs/xfs_dir2_sf.c          |   4 +-
- libxfs/xfs_dquot_buf.c        |  14 +++-
- libxfs/xfs_exchmaps.c         |  20 ++++--
- libxfs/xfs_format.h           |   6 ++
- libxfs/xfs_ialloc.c           |  90 ++++++++++--------------
- libxfs/xfs_inode_buf.c        |  24 +++----
- libxfs/xfs_inode_buf.h        |  13 ++--
- libxfs/xfs_inode_fork.c       |   6 +-
- libxfs/xfs_inode_util.c       |  15 ++--
- libxfs/xfs_log_format.h       |  13 ++++
- libxfs/xfs_metadir.c          |   2 +-
- libxfs/xfs_parent.c           |   8 +--
- libxfs/xfs_parent.h           |   2 +-
- libxfs/xfs_rmap.c             |   6 +-
- libxfs/xfs_rmap.h             |   4 ++
- libxfs/xfs_rtbitmap.c         |   4 +-
- libxfs/xfs_rtrefcount_btree.c |   8 +--
- libxfs/xfs_rtrmap_btree.c     |   4 +-
- libxfs/xfs_sb.c               |   6 +-
- libxfs/xfs_symlink_remote.c   |   6 +-
- man/man8/xfs_db.8             |  16 ++++-
- mkfs/proto.c                  |  16 ++---
- mkfs/xfs_mkfs.c               |  19 ++++-
- repair/bmap_repair.c          |  12 ++--
- repair/bulkload.c             |   2 +-
- repair/phase6.c               | 128 +++++++++++++++++-----------------
- repair/pptr.c                 | 100 +++++++++++++-------------
- repair/quotacheck.c           |   8 +--
- repair/rt.c                   |   6 +-
- repair/rtrefcount_repair.c    |   2 +-
- repair/rtrmap_repair.c        |   2 +-
- repair/xfs_repair.c           |   2 +-
- 64 files changed, 543 insertions(+), 476 deletions(-)
-
+> ---
+>  tests/generic/803     | 106 ++++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/803.out |   2 +
+>  2 files changed, 108 insertions(+)
+>  create mode 100755 tests/generic/803
+>  create mode 100644 tests/generic/803.out
+> 
+> diff --git a/tests/generic/803 b/tests/generic/803
+> new file mode 100755
+> index 000000000000..ab889466d80f
+> --- /dev/null
+> +++ b/tests/generic/803
+> @@ -0,0 +1,106 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2026 Red Hat.  All Rights Reserved.
+> +#
+> +# FS QA Test No. 803
+> +#
+> +# Regression test for group quota evasion via NFS.
+> +#
+> +# A user belonging to two groups with quotas enforced on both could bypass
+> +# group quota by changing a file's group via an NFS client. The NFS server
+> +# runs as root (real credentials) but impersonates the client user via
+> +# override_creds() (effective credentials). The old code used
+> +# has_capability_noaudit(), which checks real credentials, causing
+> +# XFS_QMOPT_FORCE_RES to be set and bypassing quota checks.
+> +#
+> +. ./common/preamble
+> +_begin_fstest auto quick quota
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	[ -n "$mpoint" ] && $UMOUNT_PROG $mpoint 2>/dev/null
+> +	sleep 2
+> +	[ -n "$exportdir" ] && exportfs -u 127.0.0.1:$exportdir 2>/dev/null
+> +	_stop_rpcbind
+> +	$added_to_fsgqa2 && gpasswd -d fsgqa fsgqa2 >> $seqres.full 2>&1
+> +	rm -rf $tmp.* $mpoint
+> +}
+> +
+> +# Import common functions.
+> +. ./common/filter
+> +. ./common/quota
+> +. ./common/nfs
+> +
+> +_require_scratch
+> +_require_quota
+> +_require_user
+> +_require_group fsgqa2
+> +_require_nfs_server
+> +_require_nfs_client
+> +
+> +_fixed_by_kernel_commit e2f62a9744ebad3bcb6347a648e615026e9efeff \
+> +	"xfs: fix capability check in xfs"
+> +
+> +added_to_fsgqa2=false
+> +
+> +_qmount_option "usrquota,grpquota"
+> +_scratch_mkfs >> $seqres.full 2>&1
+> +_qmount
+> +
+> +# Ensure fsgqa belongs to both fsgqa and fsgqa2 groups.
+> +if ! id fsgqa | grep -qw fsgqa2; then
+> +	gpasswd -a fsgqa fsgqa2 >> $seqres.full 2>&1 || \
+> +		_notrun "Cannot add fsgqa to fsgqa2 group"
+> +	added_to_fsgqa2=true
+> +fi
+> +
+> +exportdir=$SCRATCH_MNT/exportdir
+> +mpoint=$TEST_DIR/mpoint-$seq
+> +nfs_userdir=$mpoint/userdir
+> +
+> +mkdir -p $exportdir/userdir $mpoint
+> +chown fsgqa:fsgqa $exportdir/userdir
+> +
+> +setquota -g fsgqa  0 2048 0 0 $SCRATCH_MNT
+> +setquota -g fsgqa2 0 4096 0 0 $SCRATCH_MNT
+> +
+> +# Use exportfs directly so we don't need to deal with /etc/exports file
+> +exportfs -o rw,insecure,no_root_squash,sync 127.0.0.1:$exportdir \
+> +	>> $seqres.full 2>&1 || _fail "NFS export of $exportdir failed"
+> +mount -t nfs -o vers=4 127.0.0.1:$exportdir $mpoint \
+> +	>> $seqres.full 2>&1 || _fail "NFS mount of $exportdir at $mpoint failed"
+> +
+> +# Write a 2MiB file via the NFS share as fsgqa, filling the fsgqa group quota.
+> +_su fsgqa -c "dd if=/dev/zero of=$nfs_userdir/file1 bs=1M count=2 conv=fsync" \
+> +	>> $seqres.full 2>&1
+> +
+> +# Confirm we hit fsgqa group quota limit, a second write must fail.
+> +_su fsgqa -c "dd if=/dev/zero of=$nfs_userdir/verify bs=1M count=1 conv=fsync" \
+> +	>> $seqres.full 2>&1 \
+> +	&& _fail "fsgqa group quota not enforced after writing 2MiB"
+> +rm -f $nfs_userdir/verify
+> +
+> +# Change file1 group to fsgqa2 using the NFS share.
+> +_su fsgqa -c "chgrp fsgqa2 $nfs_userdir/file1" \
+> +	|| _fail "chgrp of file1 to fsgqa2 failed unexpectedly"
+> +
+> +# Write a second 2MiB file via NFS as fsgqa.
+> +_su fsgqa -c "dd if=/dev/zero of=$nfs_userdir/file2 bs=1M count=2 conv=fsync" \
+> +	>> $seqres.full 2>&1
+> +
+> +# Change file2 to group fsgqa2 via using the NFS share.
+> +_su fsgqa -c "chgrp fsgqa2 $nfs_userdir/file2" \
+> +	|| _fail "chgrp of file2 to fsgqa2 failed unexpectedly"
+> +
+> +# Write a third 2MiB file via the NFS share as fsgqa.
+> +_su fsgqa -c "dd if=/dev/zero of=$nfs_userdir/file3 bs=1M count=2 conv=fsync" \
+> +	>> $seqres.full 2>&1
+> +
+> +# This chgrp must fail: fsgqa2 is at its 4MiB hardlimit.
+> +_user_do "chgrp fsgqa2 $nfs_userdir/file3" | \
+> +	sed "s|$nfs_userdir|MPOINT/userdir|g"
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/generic/803.out b/tests/generic/803.out
+> new file mode 100644
+> index 000000000000..3830b8595793
+> --- /dev/null
+> +++ b/tests/generic/803.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 803
+> +chgrp: changing group of 'MPOINT/userdir/file3': Disk quota exceeded
+> -- 
+> 2.55.0
+> 
 -- 
-- Andrey
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
