@@ -1,182 +1,143 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from m16.mail.126.com (m16.mail.126.com [220.197.31.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4B0C34F46F;
-	Mon,  7 Sep 2026 22:54:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F38041C6A;
+	Tue,  8 Sep 2026 02:18:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788821643; cv=none; b=J85ofdkDs3/7SRcKAOMCKnov6Q6wHinMKxsp+FV4T4JY3pwlnwOr6eHcOUVDYq8hcIZgoR/9+fWzrROSOeY2htYsScUbI5EJu4vqGE9vtoNug6fyEJSQ+hAAvykwxBvm1KwVB09rg0Gy7n+RF/f7q267Q2JnChQ6fUCnQuCVcpU=
+	t=1788833904; cv=none; b=m3l4PtMjBZm4gCWz5wwVqPMUHRFPW5PIjjaFPOKzTTkMQESiglLvSM01LT30+wo6uR3ca38PnT32bPdhtb5kPqqZC9ftN4BuCKzju0T9m6Zdt4DkSnty5mUuH2zjlJy3MIrAw6UiFJE8TVoIQMcrCEbfBhVgbMplHA8D3ZSQLbw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788821643; c=relaxed/simple;
-	bh=eSFdUlDLf2GZqgNMTJLFYHhvCCl+0x38KjNsNQw87jU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Cjvam5aWb858zsVKBiMA86E48rBo2GkA04vwD7dDIck9Ee+QC5Wllu5k7BWMpwvRqpErKt53S5lXFkcGV/oP932i8tvUh/TIRZ21InkwElWLpRfYc75jswB/r9BG2uNA9+w+5J+ypcN3L2Uy2Rj6BhzEfc5uW4dKs1EtLxm8/lQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D1vhTQZ9; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788833904; c=relaxed/simple;
+	bh=YI5XWM2vIbeaTqAD4dMZrDmq04eSZo1WcgGIMDXZARE=;
+	h=Message-ID:Date:From:MIME-Version:To:CC:Subject:References:
+	 In-Reply-To:Content-Type; b=m8YjAlbF6DXgxIrHgTreG7UkKP5PTTeNCx09PMem66snlxw/IdEMClRg+zewYplfY3Ps8mnEcfgjAOJMnOHZjT1qmHJKEc956g7reuFxLjQDOs7KqUaEEbydsTHqwSmO0mgfVCsSHrENfITokvMUYoxiCA9wEZl4UKGRJy6436Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=126.com; spf=pass smtp.mailfrom=126.com; dkim=pass (1024-bit key) header.d=126.com header.i=@126.com header.b=Hux03YSM; arc=none smtp.client-ip=220.197.31.6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=126.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=126.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D1vhTQZ9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 08E601F00A3A;
-	Mon,  7 Sep 2026 22:53:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788821641;
-	bh=Ika8T9omcjuRCfkjDk2wfiEqxdav9REiF7ZEPsYL/ww=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=D1vhTQZ9Mf2DnBAECm8J/ixfQdoCnlML5UnK1toL+ClxpkmrtJzLVqEPl5kfraNUZ
-	 6H8M+C59wDgspGpPEvrako4uCKn4YzuiJZNxfcFugmWYwdk+eolahbKpCcd3ptW77t
-	 onE+kbgGJG5AHChLEdJk5ugcOM4Q8ptjfqxffa6BsXMtig3NJQS0ieMBA+x0Y1tQaE
-	 Is+ecuW9GAuCQAijVsUnmdKk6G8mPrOqb2QlSrfST2Bpw3ff7oJ6Aag3u8wWwICEaN
-	 Pp0joc0I1zuHssNhO5vGk9WhVrhs+0Zni5i/IRa86Boh9cUTPCTxUsaInVuh/i5vU2
-	 4cX3YxisAlP8g==
-Date: Tue, 8 Sep 2026 08:53:52 +1000
-From: Dave Chinner <dgc@kernel.org>
-To: Eric Peterson <linuxinstalled@gmail.com>
-Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org, eric.peterson@hpe.com
-Subject: Re: [PATCH] xfs: add per-mount read/write I/O completion counters
-Message-ID: <ap9AgBQXDMM7UhYe@dread>
-References: <20260828033429.4070267-1-linuxinstalled@gmail.com>
- <apSgHPl4er6Jy9xi@dread>
- <20260902053230.4073608-1-linuxinstalled@gmail.com>
+	dkim=pass (1024-bit key) header.d=126.com header.i=@126.com header.b="Hux03YSM"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=126.com;
+	s=s110527; h=Message-ID:Date:From:MIME-Version:To:Subject:
+	Content-Type; bh=Rm0Rv7fok0SCJUn9VSjAe7VIwlYtln47RXDjm3iS2Tc=;
+	b=Hux03YSMo3dG/xZPhiI9wwuANbSAtM8KtiNyOwZL3QppaSJZBe4z6SapzRNHuk
+	N3DE+kW73sw5OeZ3ADVqT/e5vLyRXDWcQwqslYY+B2o9uVlXwtgcXlhAT0W3+7Uz
+	a957BsvFs327N0tgKFH0OCFLG9DGZTs3qOImaiUrdELo4=
+Received: from localhost.localdomain (unknown [])
+	by gzga-smtp-mtada-g1-1 (Coremail) with SMTP id _____wDH78pDcJ9q_O+sAg--.19288S2;
+	Tue, 08 Sep 2026 10:17:39 +0800 (CST)
+Message-ID: <6A9F7022.6020206@126.com>
+Date: Tue, 08 Sep 2026 10:17:06 +0800
+From: Hongling Zeng <zhongling0719@126.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:31.0) Gecko/20100101 Thunderbird/31.2.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260902053230.4073608-1-linuxinstalled@gmail.com>
+To: Dave Chinner <dgc@kernel.org>, 
+ Hongling Zeng <zenghongling@kylinos.cn>
+CC: cem@kernel.org, darrick.wong@oracle.com, chandanrlinux@gmail.com, 
+ linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ stable@vger.kernel.org
+Subject: Re: [PATCH v2] xfs: bound logged region access in inode buffer recovery
+References: <20260907080450.314067-1-zenghongling@kylinos.cn> <ap8ucHIw-pKLhh9c@dread>
+In-Reply-To: <ap8ucHIw-pKLhh9c@dread>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wDH78pDcJ9q_O+sAg--.19288S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxWF1rCr4kZr1UGr13XF15CFg_yoWrXFy8pF
+	Z3KF4q9rnrtFZ2yFs2vw4UX3yFka93tay5GFn8Arn5Cr15Gw1aqFWftF1jqFy7CrnYva1j
+	qr4UXasrWas8Za7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07j-WrJUUUUU=
+X-CM-SenderInfo: x2kr0wpolqwiqxrzqiyswou0bp/xtbBrgOuf2qfcEMTjAAA3l
 
-On Tue, Sep 01, 2026 at 11:32:30PM -0600, Eric Peterson wrote:
-> On Mon, Aug 31, 2026 at 09:38 UTC, Dave Chinner wrote:
-> > Hence I'm asking how this new metric is supposed to be used and
-> > correlated to observed/measured application behaviour. i.e. what
-> > insight does it give you into application performance that can only
-> > be derived from this point in time snapshot?
-> 
-> My apologies - it wasn't my intention to come across as patronizing.
-> I was unsure what background was or wasn't common ground, so I erred on
-> the side of more detail.
-> 
-> You're right about the sampling limitation: a slowly-sampled
-> point-in-time queue depth value cannot characterize bursty,
-> sub-interval concurrency. If the goal is to resolve what happens inside
-> a 10ms burst, this is the wrong tool - per-op tooling (tracepoints,
-> histograms) is the right one, and this is not meant to replace it.
-> 
-> The important part is that this is a property of the sampling rate, not
-> of the counters. Nyquist-Shannon says that to observe a phenomenon at
-> timescale T you have to sample at >= 2/T; if you sample slower than the
-> behavior you care about, it will be missed. This is true of any sampled
-> counter, including the existing submission counter - in your 10Hz pmval
-> example, xfs.read has exactly the same property. The sampling rate is a
-> policy choice for the user to match to what they're trying to observe.
 
-I know what nyquist sampling implies - that's exactly why I gave
-that example to demonstrate how point in time sampling of
-instantaneous values is not representative.
+在 2026年09月08日 05:36, Dave Chinner 写道:
+> On Mon, Sep 07, 2026 at 04:04:50PM +0800, Hongling Zeng wrote:
+>> xlog_recover_do_inode_buffer() reads the logged di_next_unlinked field
+>> from a log record buffer at a computed offset:
+>>
+>>          logged_nextp = item->ri_buf[item_index].iov_base +
+>>                          next_unlinked_offset - reg_buf_offset;
+>>          *buffer_nextp = *logged_nextp;
+>>
+>> The only protection against reading past the log record buffer are
+>> ASSERT()s, which compile away on non-DEBUG kernels.  The existing
+>> XFS_IS_CORRUPT(*logged_nextp == 0) check also dereferences the pointer
+>> before validating that the computed offset lies within the logged region.
+>>
+>> A crafted log record can make the computed offset exceed iov_len, causing
+>> an out-of-bounds read from the log record buffer during inode buffer
+>> recovery.
+>>
+>> Convert the relevant ASSERT-only checks into runtime corruption checks and
+>> verify that the logged di_next_unlinked field lies entirely within the log
+>> iovec before dereferencing it.
+>>
+>> Fixes: 1094d3f12363 ("xfs: refactor log recovery buffer item dispatch for pass2 commit functions")
+>> Cc: stable@vger.kernel.org
+>> Signed-off-by: Hongling Zeng <zenghongling@kylinos.cn>
+> <sigh>
+>
+> I'm going to say what I've said before again here, and it applies to
+> the BLF bitmap range checks patches you posted yesterday, too:
+>
+> Hacking the same types of region size and range checks into every
+> log item type in an ad-hoc manner is not the right way to address
+> these log item verification issues.
+>
+> We need to add a robust verification layer to the journal to verify
+> all the journal level metadata (e.g. ophdrs, transaction headers,
+> initial log item regions, per-log item type verification, etc) so
+> that we check *all* the journal items for sanity before we use them.
+>
+> This is the same architecture we use for metadata (the verifier
+> layer) and it applies to the journal for the same reasons and
+> provides the same benefits (i.e. validate at first access, rest of
+> the code can assume validity and not have to clutter logic with
+> random validity checks to prevent bad behaviour.)
+>
+> The high level design doc and rough plan I put together last time I
+> brought this up is in the patch below. If you're not willing or able
+> to spent time and tokens on fixing this entire class of problems for
+> everyone, then let please let me know ASAP.
+>
+> -Dave.
+   Hi Dave,
 
-In more detail, the nyquist sampling theorem only holds when -every
-sample is representative of the overall waveform-. You also need to
-know what the highest frequency of the waveform is to be able to
-reconstruct the behaviour.
+   Thanks for the detailed feedback. I understand the concern: the ad-hoc
+   region checks I posted don't address log recovery validation
+   systematically.
 
-The problem with using nyquist here is that the queue depth is an
-instantaneous value metric - it is not a repeating waveform. Hence
-nyquist says it is impossible to recover a valid signal from the
-metric because the sample rate must be 2x instantaneous.
+   I'll withdraw the inode buffer and BLF bitmap patches and switch to
+   the design-driven approach. I'll post your patch 5 first (the
+   unchecked ri_buf[ri_cnt-1] in add_to_cont_trans(), the unbounded
+   kvrealloc() there, the missing oh_len alignment check in
+   process_data() - all reachable bugs, no restructuring), then work
+   through the rest of Phase 1.
 
-Something like a summing value (i.e. read count) does allow nyquist
-theorem to be applied, because the delta between samples leads to a
-meaningful waveform - the read rate per sample period. But you
-cannot convert an instantaneous value calculated from summing
-variables into a rate metric - it is always an instantaneous value
-and that means the delta between samples is meaningless when placed
-in a time series. i.e. there is no frequency component that nyquist
-sampling theorem can recover from it.
+   Three points to confirm before coding:
 
-Let's go further. Last email I said "ignoring per-cpu summing
-jitter". Did you think about that at all?
+   1. I don't see a write-side guarantee that a region is split at most
+      once - xlog_write_partial() can emit multiple continuations. So
+      beyond your patch 2 treating the header as a normal accumulated
+      region, note that today a third fragment walks into
+      ri_buf[ri_cnt-1] with ri_cnt == 0 / ri_buf == NULL. Correct?
 
-Look at how the samples are presented to userspace:
+   2. For the zero-length first fragment: if this is old-log
+      compatibility only, I'd document it that way and keep the special
+      handling as narrow as possible rather than introducing a generic
+      anonymous item state. Note the doc's ri_in_continuation has no
+      owner at that point since no item exists yet - narrow handling
+      avoids that entirely.
 
-	for each counter group {
-		for each counter in group {
-			for each cpu {
-				sum counter
-			}
-			print counter val
-		}
-	}
+   3. For testing I'll cover each phase with crafted-log images and run
+      xfstests. My bigger worry is over-strict validation rejecting valid
+      logs, which only shows up replaying real crash logs - what
+      coverage do you expect there? And should the design doc go in
+      first so the series can reference it?
 
-Think about that for a moment. What happens when you have hundreds
-of CPUs (just call it N)?
+   Thanks,
+   Hongling
 
-Yeah, summing each counter is an expensive operation, involving
-accessing N cachelines for each counter. If each of those stats is
-being actively modified whilst the sum is in progress, we take cache
-miss on each CPU for each counter. Let's be charitable and call that
-100ns per CPU. For a thousand CPUs, that means it takes 100us to
-sample that counter.
-
-Now, read completion was placed directly after reads, so there is a
-window of 100us between the sampling of each per cpu value.
-
-Consider that a buffered read could take as little as a few
-microseconds to run. That means that across the sampling of read +
-read completion, each CPU could start and complete multiple buffered
-IOs.
-
-In that situation, we have on a single CPU:
-
-read 1 ....
-sample read		X
-read 1 complete
-read 2 ....
-read 2 complete
-read 3 ....
-read 3 complete
-....
-read N ....
-sample read_complete	X + (N - 1)
-
-In this situation, the "queue depth" on this CPU which is (read -
-read_complete) returns -(N - 1). What does a -negative queue depth-
-mean?
-
-And what happens when there is sufficient other read/read_complete
-differences on other CPUs that this negative sample cancels out all
-the other positive "queue depths"?
-
-IOWs, we can't even trust the instantaneous value of the queue depth
-calculation to be a valid representation of the state of the
-filesystem at a single point in time. Hence any downstream use of
-the value (regardless of the sample rate) is not going to be any
-more trustworthy than the instantaneous value....
-
-> Answering your question, it lets userspace characterize filesystem
-> queue depth over time. The places where this is useful are the ones
-> where the desired signal persists across multiple sample periods,
-> leading to a representative measurement:
-....
-
-All of these use cases are based on the assumption that the
-underlying metric and the sampling method produces a valid and/or
-meaningful representation of the current filesystem state.
-
-I am not convinced that this is a valid assumption because of the
-nature of the sampling - an instantaneous value sample cannot be
-representative of overall behaviour, regardless of the sampling
-rate.
-
-However, if you really, really want this counter added then I won't
-oppose it based on the fact I think it cannot be used the way you
-want to use it - I'll just ignore it like I do all the other useless
-stats we still keep around from the days of Irix for userspace
-compatibility reasons.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-dgc@kernel.org
