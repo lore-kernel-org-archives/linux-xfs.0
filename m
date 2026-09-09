@@ -1,43 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA6BB33B6D1;
-	Wed,  9 Sep 2026 15:00:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A30885803AB;
+	Wed,  9 Sep 2026 16:05:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788966008; cv=none; b=qlq4pHiymOA7mFP1NsD8Mte831rnVNuz/i+GQkqQi8yyY0COYMYiYkxaOp1KfjjZceTIBfoOIj1SgSCC6D58eGx16MZ+T/MU6/642CTYoMQcV4ROl0wcDxzIIS1kXAWF+cqqEMC63hQloi26ImZRoMKxtbY36qwQ+x6lOajWB8U=
+	t=1788969903; cv=none; b=L9Jee8cOMaPUDffRJ8/0iWmp6yvjPFkFUWDQSC13XyhVp7IHtIxniM7+lHNcyXrJxmFXpNHBscZxSwPmdqClBBmowS1mGSt6iFmZLaTiTlgr//FZlRbpfhnvWwspdWgMNTk6eL7vRjr2nRhJJ6Z6Xwx17R06mpwmN4Y4VAEjBWI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788966008; c=relaxed/simple;
-	bh=g4m1gKdMTdCxg104An1Y9sCiHNXvJs78tkbRNXotnzU=;
+	s=arc-20240116; t=1788969903; c=relaxed/simple;
+	bh=v7Xt2B7MRBNPYS5d73/jlBh914BIr3LH+zzxX1vgLcQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=e3bJ3ohzRTQAZKeq7EdJAxtcrFLrfe6HBwtELLEc5tIrMObLhuvRdMBprK/1FvjLbBngYt3cmgKKr/hRFeqaGrvOM383dfq+NZdC4Mfl+H3aufTcI2isCL4Q6Tdf4CiyutJpF8sXlmdXvCMRuwCRj2OBjQH8cji4yfvfEyCayiQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZdtgkGch; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=e7MunptgGum+6WYpTR6U5i+RL7XbosI0+jdYQ6XW5Ocg1C6v25fN07zX1TYkjMtlut3nLS53aAxoIAt85pV9yovqJ5upI9gHuMH05ofy7Yh9fi2qatQYnzabHNuNolovZpyWSgtlsT36TA9HWhJvKGwalo7+jIWLU4fv1iUSzcc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PVPwxT1c; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZdtgkGch"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id B71AA1F00A3A;
-	Wed,  9 Sep 2026 15:00:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PVPwxT1c"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 7BC7E1F00A3A;
+	Wed,  9 Sep 2026 16:05:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788966006;
-	bh=zS3XqRL2PoOQq+0k0oZrFC1/uQguDtXXXg5075PhYRw=;
+	s=k20260515; t=1788969902;
+	bh=b/yeayGXFTPVH5rnlvrZLlDbzbq4dQgNc6j4CSlO3kE=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=ZdtgkGch5Dlob77IzvQ4FmcWXEh6SES7HZv1mecqtm42LXgrNsvb3PuCh8jqkErjt
-	 mVcYCLImsvTwQIxZM5/B7J0kcvEmSYYMXB4XZIxJNQQpWOrPCe0MSu2WIg2pB6mpZw
-	 jH/hQuNXT9ga1K63iu7fCl2U7lcqRTBQvnc0owZ5D1ZkZH64gKMXv3tC2yEPxLdnNK
-	 7aPQmkvOijmD9DwTenDt+U71nEQN/ohWHT+saOKZO997cSXOX/sbChlbzt1qA+cvhE
-	 BWB6HnffsId8WYIR6vaNNG1Hz7jI/G8ijAJEh25sLowFQiS8AHNpV5J0SJ0j7M3Xpj
-	 XF70xLqvq1s4Q==
-Date: Wed, 9 Sep 2026 08:00:06 -0700
+	b=PVPwxT1cYloqsXx94a2jXiVd0Z8hkfQ6VapkhnozSpweAFjHKdQ0jlSafpzQY/PGf
+	 /FaIvzies5is1VwYwSyO6ObBaOrPUCZs3r0fuX/f1ZCjSgBW9yAwq9BFS9m7uh1aar
+	 C0cIg/BNUWTLlmAbqmXFkjEssRYmbF8IlJlkXnCfd6Gev71oPn7cJYvzdDElXX9z92
+	 wx2mNTuAXkgQxJT1ecCAblj122ViHESEf90ZnLV6DENPTvNF2jdPd3VbPWtmXFVe8P
+	 LPv/0B2vRtno/HsBE83l76b2V3sc/E4VhBVuQ3u0aW+54fQz6hvrVQJAnrynJ+9VtZ
+	 VCKYK2CcBoRsA==
+Date: Wed, 9 Sep 2026 09:05:01 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Andrey Albershteyn <aalbersh@kernel.org>
-Cc: Alejandro Colomar <alx@kernel.org>, linux-man@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] man/man2: introduce man page for
- file_getattr/file_setattr syscalls
-Message-ID: <20260909150006.GH2619314@frogsfrogsfrogs>
-References: <20260907131747.1389798-1-aalbersh@kernel.org>
- <20260908144051.GJ6047@frogsfrogsfrogs>
- <aqEWjV-NCUuPJlwr@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, Christian Brauner <brauner@kernel.org>,
+	Carlos Maiolino <cem@kernel.org>, Tal Zussman <tz2294@columbia.edu>,
+	Anuj Gupta <anuj20.g@samsung.com>, linux-block@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 03/16] block: add a bio_prepare_reissue helper
+Message-ID: <20260909160501.GI2619314@frogsfrogsfrogs>
+References: <20260909060924.1102037-1-hch@lst.de>
+ <20260909060924.1102037-4-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,460 +45,69 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aqEWjV-NCUuPJlwr@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+In-Reply-To: <20260909060924.1102037-4-hch@lst.de>
 
-On Wed, Sep 09, 2026 at 10:29:34AM +0200, Andrey Albershteyn wrote:
-> On 2026-09-08 07:40:51, Darrick J. Wong wrote:
-> > On Mon, Sep 07, 2026 at 03:17:43PM +0200, Andrey Albershteyn wrote:
-> > > Add manual pages for file_getattr() and file_setattr() syscalls and
-> > > struct file_attr used as input/output argument.
-> > > 
-> > > Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
-> > > Link: https://lore.kernel.org/all/20250630-xattrat-syscall-v6-0-c4e3bc35227b@kernel.org/
-> > > ---
-> > >  man/man2/file_getattr.2      | 286 +++++++++++++++++++++++++++++
-> > >  man/man2/file_setattr.2      | 340 +++++++++++++++++++++++++++++++++++
-> > >  man/man2type/file_attr.2type | 187 +++++++++++++++++++
-> > >  3 files changed, 813 insertions(+)
-> > >  create mode 100644 man/man2/file_getattr.2
-> > >  create mode 100644 man/man2/file_setattr.2
-> > >  create mode 100644 man/man2type/file_attr.2type
-> > > 
-> > > diff --git a/man/man2/file_getattr.2 b/man/man2/file_getattr.2
-> > > new file mode 100644
-> > > index 000000000000..f1aec2ad8c42
-> > > --- /dev/null
-> > > +++ b/man/man2/file_getattr.2
-> > > @@ -0,0 +1,286 @@
-> > > +.\" Copyright, the authors of the Linux man-pages project
-> > > +.\"
-> > > +.\" SPDX-License-Identifier: Linux-man-pages-copyleft
-> > > +.\"
-> > > +.TH file_getattr 2 (date) "Linux man-pages (unreleased)"
-> > > +.SH NAME
-> > > +file_getattr \- get filesystem inode attributes
-> > > +.SH SYNOPSIS
-> > > +.nf
-> > > +.BR "#include <linux/fcntl.h>" "      /* " AT_* " constants */"
-> > > +.BR "#include <linux/fs.h>" "         /* struct " file_attr " and " FS_XFLAG_* " constants */"
-> > > +.BR "#include <sys/syscall.h>" "      /* " SYS_* " constants */"
-> > > +.B #include <unistd.h>
-> > > +.P
-> > > +.B long syscall(SYS_file_getattr,
-> > > +.BI "               int " dirfd ", const char *" pathname ,
-> > > +.BI "               struct file_attr *" fattr ", size_t " size ,
-> > > +.BI "               unsigned int " flags );
-> > > +.fi
-> > > +.P
-> > > +.IR Note :
-> > > +glibc provides no wrapper for
-> > > +.BR file_getattr (),
-> > > +use
-> > > +.BR syscall (2)
-> > > +instead.
-> > > +.SH DESCRIPTION
-> > > +The
-> > > +.BR file_getattr ()
-> > > +system call retrieves filesystem file attributes
-> > > +from the file specified by
-> > > +.IR pathname .
-> > > +.P
-> > > +This system call provides functionality similar to the
-> > > +.B FS_IOC_FSGETXATTR
-> > > +.BR ioctl (2)
-> > > +operation,
-> > > +but with the advantage that the file does not need to be opened.
-> > > +By using a pathname,
-> > > +.BR file_getattr ()
-> > > +can retrieve filesystem file attributes
-> > > +from all file types,
-> > > +including special files such as FIFOs, sockets, block devices, character
-> > > +devices, and symlinks, where opening targeted inode may not be possible.
-> > 
-> > opening the targeted inode...
-> > 
-> > > +.P
-> > > +As with
-> > > +.BR openat (2),
-> > > +if
-> > > +.I pathname
-> > > +is relative,
-> > > +then it is interpreted relative to the directory
-> > > +referred to by the file descriptor
-> > > +.IR dirfd .
-> > > +The special value
-> > > +.B AT_FDCWD
-> > > +could be used to refer to the current working directory of the calling process.
-> > > +If
-> > > +.I pathname
-> > > +is absolute,
-> > > +then
-> > > +.I dirfd
-> > > +is ignored.
-> > > +.P
-> > > +The
-> > > +.I fattr
-> > > +argument is a pointer to a
-> > > +.I file_attr
-> > > +structure.
-> > > +This structure will be filled with file attributes.
-> > > +This structure is described in
-> > > +.BR file_attr(2type) .
-> > > +.P
-> > > +The
-> > > +.I size
-> > > +argument specifies the size of the buffer pointed to by
-> > > +.IR fattr .
-> > > +The size indicates version of the structure in use, refer to
-> > > +.B file_attr(2type)
-> > > +for more information on versioning.
-> > > +.P
-> > > +Userspace applications should zero-initialize
-> > > +.I struct file_attr
-> > > +before calling
-> > > +.BR file_getattr ()
-> > > +to ensure that fields not filled in by older kernels
-> > > +will have predictable values.
-> > > +.P
-> > > +The
-> > > +.I flags
-> > > +argument is a bit mask, available flags are:
-> > > +.TP
-> > > +.B AT_EMPTY_PATH
-> > > +If
-> > > +.I pathname
-> > > +is an empty string,
-> > > +operate on the file referred to by
-> > > +.IR dirfd .
-> > > +In this case,
-> > > +.I dirfd
-> > > +can refer to any type of file,
-> > > +not just a directory.
-> > > +If
-> > > +.I dirfd
-> > > +is
-> > > +.BR AT_FDCWD ,
-> > > +the call fails with the error
-> > > +.BR EBADF .
-> > > +.TP
-> > > +.B AT_SYMLINK_NOFOLLOW
-> > > +If
-> > > +.I pathname
-> > > +is a symbolic link,
-> > > +do not dereference it;
-> > > +instead get attributes of the symbolic link inode itself.
-> > > +By default, symbolic links are dereferenced.
-> > > +.SH RETURN VALUE
-> > > +On success,
-> > > +zero is returned.
-> > > +On error,
-> > > +\-1 is returned,
-> > > +and
-> > > +.I errno
-> > > +is set to indicate the error.
-> > > +.SH ERRORS
-> > > +.TP
-> > > +.B E2BIG
-> > > +.I size
-> > > +is too big (larger than
-> > > +.BR PAGE_SIZE ).
-> > > +.TP
-> > > +.B EACCES
-> > > +Search permission is denied for one of the directories
-> > > +in the path prefix of
-> > > +.IR pathname .
-> > > +.TP
-> > > +.B EBADF
-> > > +.I pathname
-> > > +is relative but
-> > > +.I dirfd
-> > > +is neither
-> > > +.B AT_FDCWD
-> > > +nor a valid file descriptor.
-> > > +.TP
-> > > +.B EBADF
-> > > +.I pathname
-> > > +is an empty string,
-> > > +.B AT_EMPTY_PATH
-> > > +was specified,
-> > > +but
-> > > +.I dirfd
-> > > +is an invalid file descriptor.
-> > > +.TP
-> > > +.B EFAULT
-> > > +.I pathname
-> > > +or
-> > > +.I fattr
-> > > +is an invalid pointer.
-> > > +.TP
-> > > +.B EINVAL
-> > > +Invalid flag specified in
-> > > +.IR flags .
-> > > +.TP
-> > > +.B EINVAL
-> > > +.I size
-> > > +is smaller than
-> > > +.BR FILE_ATTR_SIZE_VER0 .
-> > > +.TP
-> > > +.B ELOOP
-> > > +Too many symbolic links encountered while resolving
-> > > +.IR pathname .
-> > > +.TP
-> > > +.B ENAMETOOLONG
-> > > +.I pathname
-> > > +is too long.
-> > > +.TP
-> > > +.B ENOENT
-> > > +A component of
-> > > +.I pathname
-> > > +does not exist,
-> > > +or
-> > > +.I pathname
-> > > +is an empty string and
-> > > +.B AT_EMPTY_PATH
-> > > +was not specified in
-> > > +.IR flags .
-> > > +.TP
-> > > +.B ENOMEM
-> > > +Insufficient kernel memory was available.
-> > > +.TP
-> > > +.B ENOTDIR
-> > > +A component of the path prefix of
-> > > +.I pathname
-> > > +is not a directory or,
-> > > +.I pathname
-> > > +is relative and
-> > > +.I dirfd
-> > > +is a file descriptor referring to a file other than a directory.
-> > > +.TP
-> > > +.B EOPNOTSUPP
-> > > +The filesystem does not support getting attributes on this type of inode.
-> > > +.SH HISTORY
-> > > +.SS Linux 6.17
-> > > +This system call is introduced as a more flexible alternative to the
-> > > +FS_IOC_FSGETXATTR
-> > > +.BR ioctl (2)
-> > > +which could work on any type of files.
-> > 
-> > "...any type of file."
-> > 
-> > > +.SH NOTES
-> > > +This system call is designed to be extensible.
-> > > +The
-> > > +.I size
-> > > +argument allows userspace applications to indicate
-> > > +which version of the
-> > > +.I file_attr
-> > > +structure they are using,
-> > > +enabling the kernel to support both old and new versions
-> > > +of the structure simultaneously.
-> > > +.P
-> > > +If
-> > > +.I size
-> > > +is smaller than the structure size the kernel expects,
-> > > +only the fields that fit within
-> > > +.I size
-> > > +will be filled in.
-> > > +If
-> > > +.I size
-> > > +is larger than the kernel's structure size,
-> > > +the extra bytes are zeroed.
-> > 
-> > The extra bytes at the end are zeroed?  Then why does userspace need to
-> > zero fattr before passing it in?
+On Wed, Sep 09, 2026 at 09:08:52AM +0300, Christoph Hellwig wrote:
+> Add a helper to a clear a bio for reissue without a lot of the
+> pointless clearing and reinitializing done by bio_reset and bio_reuse,
+> and keeping the page pinning flag intact.
 > 
-> Zeroing is not required for "file_getattr"
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Oh.  Right.  Comment withdrawn.
-
-> > 
-> > (I mean, it's good practice, if nothing else to shut up valgrind not
-> > being able to notice that an ioctl initializes what otherwise looks like
-> > an uninitialized stack object.)
-> > 
-> > > +.SH EXAMPLES
-> > > +The program below demonstrates the use of
-> > > +.BR file_getattr ()
-> > > +to retrieve and display file attributes.
-> > > +.P
-> > > +.in +4n
-> > > +.EX
-> > > +#include <fcntl.h>
-> > > +#include <linux/fs.h>
-> > > +#include <stdio.h>
-> > > +#include <stdlib.h>
-> > > +#include <sys/syscall.h>
-> > > +#include <unistd.h>
-> > > +
-> > > +#ifndef SYS_file_getattr
-> > > +#define SYS_file_getattr 467
-> > > +#endif
-> > > +
-> > > +int
-> > > +main(int argc, char *argv[])
-> > > +{
-> > > +    struct file_attr fa = { 0 };
-> > > +    int dfd;
-> > > +    long ret;
-> > > +
-> > > +    if (argc != 2) {
-> > > +        fprintf(stderr, "Usage: %s <filename>\\n", argv[0]);
-> > > +        exit(EXIT_FAILURE);
-> > > +    }
-> > > +
-> > > +    ret = syscall(SYS_file_getattr, AT_FDCWD, argv[1], &fa, sizeof(fa), 0);
-> > > +    if (ret == \-1) {
-> > > +        perror("file_getattr");
-> > > +        exit(EXIT_FAILURE);
-> > > +    }
-> > > +
-> > > +    printf("File attributes:\\n");
-> > > +    printf("  xflags:     0x%llx\\n", (unsigned long long)fa.fa_xflags);
-> > > +    printf("  extsize:    %u\\n", fa.fa_extsize);
-> > > +    printf("  nextents:   %u\\n", fa.fa_nextents);
-> > > +    printf("  projid:     %u\\n", fa.fa_projid);
-> > > +    printf("  cowextsize: %u\\n", fa.fa_cowextsize);
-> > > +
-> > > +    /*
-> > > +     * Try setting NODUMP flag with chattr +d ./foo to see the difference
-> > > +     */
-> > > +    if (fa.fa_xflags & FS_XFLAG_NODUMP)
-> > > +        printf("  NODUMP flag is set\\n");
-> > > +
-> > > +    exit(EXIT_SUCCESS);
-> > > +}
-> > > +.EE
-> > > +.in
-> > > +.SH SEE ALSO
-> > > +.BR file_setattr (2),
-> > > +.BR file_attr (2type),
-> > > +.BR ioctl (2),
-> > > +.BR ioctl_fs (2),
-> > > +.BR openat (2)
-> > > diff --git a/man/man2/file_setattr.2 b/man/man2/file_setattr.2
-> > > new file mode 100644
-> > > index 000000000000..596750dc79c8
-> > > --- /dev/null
-> > > +++ b/man/man2/file_setattr.2
-> > > @@ -0,0 +1,340 @@
-> > > +.\" Copyright, the authors of the Linux man-pages project
-> > > +.\"
-> > > +.\" SPDX-License-Identifier: Linux-man-pages-copyleft
-> > > +.\"
-> > > +.TH file_setattr 2 (date) "Linux man-pages (unreleased)"
-> > > +.SH NAME
-> > > +file_setattr \- set filesystem inode attributes
-> > > +.SH SYNOPSIS
-> > > +.nf
-> > > +.BR "#include <linux/fcntl.h>" "      /* Definition of " AT_* " constants */"
-> > > +.BR "#include <linux/fs.h>" "         /* Definition of " FILE_ATTR_* \
-> > > +" and " FS_XFLAG_* " constants */"
-> > > +.BR "#include <sys/syscall.h>" "      /* Definition of " SYS_* " constants */"
-> > > +.B #include <unistd.h>
-> > > +.P
-> > > +.B long syscall(SYS_file_setattr,
-> > > +.BI "               int " dirfd ", const char *" pathname ,
-> > > +.BI "               struct file_attr *" fattr ", size_t " size ,
-> > > +.BI "               unsigned int " flags );
-> > > +.fi
-> > > +.P
-> > > +.IR Note :
-> > > +glibc provides no wrapper for
-> > > +.BR file_setattr (),
-> > > +necessitating the use of
-> > > +.BR syscall (2).
-> > > +.SH DESCRIPTION
-> > > +The
-> > > +.BR file_setattr ()
-> > > +system call sets filesystem inode attributes
-> > > +on the file specified by
-> > > +.IR pathname .
-> > > +.P
-> > > +This system call provides functionality similar to the
-> > > +.B FS_IOC_FSSETXATTR
-> > > +.BR ioctl (2)
-> > > +operation,
-> > > +but with the advantage that the file does not need to be opened.
-> > > +By using a pathname instead of requiring an open file descriptor,
-> > > +.BR file_setattr ()
-> > > +can manipulate filesystem inode attributes
-> > > +on all file types,
-> > > +including special files (FIFOs, sockets, block devices, character devices)
-> > > +where opening the file may have side effects or may not be possible.
-> > > +With
-> > > +.BR ioctl (2),
-> > > +it is not always possible to obtain a file descriptor that refers
-> > > +directly to the filesystem inode for special files.
-> > > +.P
-> > > +As with
-> > > +.BR openat (2),
-> > > +if
-> > > +.I pathname
-> > > +is relative,
-> > > +then it is interpreted relative to the directory
-> > > +referred to by the file descriptor
-> > > +.I dirfd
-> > > +(or the current working directory of the calling process,
-> > > +if
-> > > +.I dirfd
-> > > +is the special value
-> > > +.BR AT_FDCWD ).
-> > > +If
-> > > +.I pathname
-> > > +is absolute,
-> > > +then
-> > > +.I dirfd
-> > > +is ignored.
-> > > +.P
-> > > +The
-> > > +.I fattr
-> > > +argument is a pointer to a
-> > > +.I file_attr
-> > > +structure,
-> > > +which specifies the attributes to set on the file.
-> > > +This structure is described in
-> > > +.BR file_attr (2type).
-> > > +.P
-> > > +The
-> > > +.I size
-> > > +argument specifies the size of the buffer pointed to by
-> > > +.IR fattr .
-> > > +The size indicates version of the structure in use, refer to
-> > > +.B file_attr(2type)
-> > > +for more information on versioning.
-> > > +.P
-> > > +User-space applications should zero-initialize
-> > > +.I struct file_attr
-> > > +to ensure that future fields added to the structure
-> > > +will be treated as no-ops if the structure definition is updated
-> > > +but the application is not.
-> > 
-> > I thought they were supposed to call file_getattr() to initialize fattr
-> > before making whatever changes they want and calling file_setattr()?
-> 
-> Yes, if file_getattr() is used for initialization then zeroing is
-> not required as kernel will zero/check that everything fits, but if
-> used by itself then zeroing would be necessary to work with older
-> kernels. What about this:
-> 
-> 	.P
-> 	User-space applications should use
-> 	.B file_getattr(2)
-> 	to initialize
-> 	.I fattr
-> 	structure beforehand or zero-initialize
-> 	.I struct file_attr
-> 	to ensure that future fields added to the structure
-> 	will be treated as no-ops if the structure definition is updated
-> 	but the application is not.
-
-I don't see how zeroing (instead of calling file_getattr) would ever
-make sense since that would turn off pre-existing attributes, but I do
-like the sentence "User-space applications should use file_getattr(2) to
-initialize fattr beforehand."
+Looks good to me,
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
+> ---
+>  block/bio.c         | 20 ++++++++++++++++++++
+>  include/linux/bio.h |  1 +
+>  2 files changed, 21 insertions(+)
+> 
+> diff --git a/block/bio.c b/block/bio.c
+> index 5792a059ef2a..7f7654e60dd4 100644
+> --- a/block/bio.c
+> +++ b/block/bio.c
+> @@ -320,6 +320,26 @@ void bio_reuse(struct bio *bio, blk_opf_t opf)
+>  }
+>  EXPORT_SYMBOL_GPL(bio_reuse);
+>  
+> +/**
+> + * bio_prepare_reissue - prepare a bio for reuissing the original I/O
+> + * @bio:	bio to reuse
+> + * @bdev:	block device to use the bio for
+> + *
+> + * Prepare @bio to be resubmitted to retry the original operation.
+> + * The caller must reset bio->bi_iter to the original state.
+> + */
+> +void bio_prepare_reissue(struct bio *bio, struct block_device *bdev)
+> +{
+> +	bio->bi_bdev = bdev;
+> +	bio_associate_blkg(bio);
+> +	bio->bi_flags &=
+> +		(BIO_PAGE_PINNED | BIO_CLONED | BIO_QUIET | BIO_REFFED);
+> +	bio->bi_status = BLK_STS_OK;
+> +	bio->bi_bvec_gap_bit = 0;
+> +	atomic_set(&bio->__bi_remaining, 1);
+> +}
+> +EXPORT_SYMBOL_GPL(bio_prepare_reissue);
+> +
+>  static struct bio *__bio_chain_endio(struct bio *bio)
+>  {
+>  	struct bio *parent = bio->bi_private;
+> diff --git a/include/linux/bio.h b/include/linux/bio.h
+> index 584b6abf6baf..bfa3c0e97b6f 100644
+> --- a/include/linux/bio.h
+> +++ b/include/linux/bio.h
+> @@ -479,6 +479,7 @@ static inline void bio_init_inline(struct bio *bio, struct block_device *bdev,
+>  extern void bio_uninit(struct bio *);
+>  void bio_reset(struct bio *bio, struct block_device *bdev, blk_opf_t opf);
+>  void bio_reuse(struct bio *bio, blk_opf_t opf);
+> +void bio_prepare_reissue(struct bio *bio, struct block_device *bdev);
+>  void bio_chain(struct bio *, struct bio *);
+>  void bio_await(struct bio *bio, void *priv,
+>  	       void (*submit)(struct bio *bio, void *priv));
 > -- 
-> - Andrey
+> 2.53.0
+> 
 > 
