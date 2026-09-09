@@ -1,120 +1,254 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from fhigh-b3-smtp.messagingengine.com (fhigh-b3-smtp.messagingengine.com [202.12.124.154])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73BD93D9DB3;
-	Tue,  8 Sep 2026 23:00:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 479772931DF;
+	Wed,  9 Sep 2026 01:09:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.154
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788908423; cv=none; b=fIJAZ/ZBji2Hmjkf0737gOV7gQykpkP2o15QKjleOENzqf0wjLK8HDdZLZ/TnA0trv0mkAr0xPHkQTYtWYkieoINKxmP1tC6McDE3s4zKmlzJaukFh11y2n278T0E3J4YEJw5juP2lgfgbN/0sFOws7QwSbJBkFbSV7n3ZrnGA0=
+	t=1788916192; cv=none; b=XF71361GPQE5BqhmVEP168vXtnrhPLbfBSZEEryttbxCVB4Fkzx1/bdIdOx6mSQubZMyd5IQt+KPKi5IhbaP8fn1ZfiKNIyjskdgv2Rpbx0r0R6b96OKJWNvLIiOQbgI0TLMIFD/5Askgb6ARQzUC9HoeGUm36A7P/jhDOSkjws=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788908423; c=relaxed/simple;
-	bh=lwjFeGoCwHwf0RhLsg74GELBxSAXXN7ly37dd0Lng+o=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cq+R/ekpaYey3n6QtCYVPcCscJxZvuGeyOjiQceDsUVvSI/KR03mtQOZRsUwwvE/gOp6q0oqrfLNvKEJtU6rpDeHdB+HrzdsjSQIUqA6r/ZlhkIgh9ToDPWQMAnhVgufHMmQRjLuDbPI12T6I80dK0/qexrvuQ6FAjtoMjz4o8k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SmS/HH9p; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788916192; c=relaxed/simple;
+	bh=ei4CJKSBX+0XhUzNXVKSUcQg5ErIoFZEKxRK8mO7+NA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=FwbtDwe+UH1UUk6g9Tk9+TSqixt9j5PQ4p1Vk7i3UToKEH3mH0JDFCzkixuuerdaxx/RlkSTQDX288eebx3lUcCmW+Cssh0B0FGMyAreaEVpWoLLaqhBIQ60cTDGAVviS0+QBO2ATyy+yA+7WxVQZN7yj+cT19JFDdi1i8WAL0Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net; spf=pass smtp.mailfrom=sandeen.net; dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b=LD5D10Vl; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=R9J9dOAc; arc=none smtp.client-ip=202.12.124.154
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandeen.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SmS/HH9p"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67B671F00A3A;
-	Tue,  8 Sep 2026 23:00:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788908422;
-	bh=Nt4uaGZn/6bmzshlKxJ9+ij5yYtfxkJje7wsxu8z5hE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=SmS/HH9pqP7PiJDvXP7YQfPcXwbX7xKB2XpPzeMzWK0UyAdCNhp959gDLCKL9tuJC
-	 0yNgnpn+CHngo5uEAsvlAnUX5l4SVHBJ90uYVHZr4pZG4HzBq90kEvXOGZ4DukKuUg
-	 TvIzYMrqpJ45EKOKbEfwFAnDVdj0wMUhM1KveY9h1KZ/bmmNyUAB4n/28YIX3Cfnim
-	 S8lZGiULxGVXiGyQanCsdDIVHtGqO3U0MkO+BmQq69qaCH9K1WsPqlah/Dap8lcsBK
-	 cfZZyhmIEMH6pl8FFqD5k/pSosrSLZ/sFs0BafHu1sRUa14fW7UjlEjadDPxLcKz4y
-	 OpUyn/zCYp3GA==
-Date: Wed, 9 Sep 2026 09:00:13 +1000
-From: Dave Chinner <dgc@kernel.org>
-To: Hongling Zeng <zhongling0719@126.com>
-Cc: Hongling Zeng <zenghongling@kylinos.cn>, cem@kernel.org,
-	darrick.wong@oracle.com, chandanrlinux@gmail.com,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: Re: [PATCH v2] xfs: bound logged region access in inode buffer
- recovery
-Message-ID: <aqCTfSqqywJ5qKcY@dread>
-References: <20260907080450.314067-1-zenghongling@kylinos.cn>
- <ap8ucHIw-pKLhh9c@dread>
- <6A9F7022.6020206@126.com>
- <ap-sV2Cc5U5fNMmo@dread>
- <6A9FBDB3.20705@126.com>
+	dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b="LD5D10Vl";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="R9J9dOAc"
+Received: from phl-compute-06.internal (phl-compute-06.internal [10.202.2.46])
+	by mailfhigh.stl.internal (Postfix) with ESMTP id 748197A0137;
+	Tue,  8 Sep 2026 21:09:49 -0400 (EDT)
+Received: from phl-frontend-03 ([10.202.2.162])
+  by phl-compute-06.internal (MEProxy); Tue, 08 Sep 2026 21:09:49 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm1; t=1788916189;
+	 x=1789002589; bh=fkMIiEIrILqEL7Wey6xMHBmtt9EgvuVUfO6oqn+GF1Q=; b=
+	LD5D10VlbPSPQ/k3+oIKQ7RhRdwQhacAC7zIkNJBWYHmcFkmcMyTvsk32PbZApCl
+	xKDwNJo5Ju3TnLoHNGSoa/gOARbKh58q+ZEpxDDmps1H6KGFRcv6GO8zxIQdHvaZ
+	INO8LoKyOuKGJAqndquBGbMliHE4P5wtjleIeURgzL8y0JvwjTjL2RAS8onAKNs9
+	r2dlZZbKlHa/CT7RXFin6SBxHtqQfy2KDmvsFlnj+6eMberdnCpX2mS8x9VOh308
+	BqbP4Z5hzajC/qL6XAZ4Mx7LJlsvID+BKPk9vRq0MyzXDTmtiXDhe2X8j0VNVTqF
+	O4pyXItKWVg7Q7LLg53/9w==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1788916189; x=
+	1789002589; bh=fkMIiEIrILqEL7Wey6xMHBmtt9EgvuVUfO6oqn+GF1Q=; b=R
+	9J9dOAcW+6043eZgptdqYgvIpKZDoArLskIdu6Sz0g3AGQ2nNOzMg3/dio2U2L1e
+	Rs52yD0OJjK99NCOti9+FTElP5n6b74WF9/wRTmJNcJtJqQgrdYNHdVYdtAJY273
+	t2zMpj7xTqN/7aGG2Zl8dC2w1Rz6mvsEE7b+IGScCa6ylQXh3lUxAAkvlaIjV4gz
+	BwVRuznCENEtk17gxVPqse1UyfJiunAwsFliybOIM4JbLXZgyHU+GTOnR+c8EKFX
+	waddt11vTI7eSxpH88Pmvvc5tM2JPyoYAZSh/EMzDFgMWni5zTud/sggCbYgwPk4
+	HllglvpK1+ajKY1pfV5Sg==
+X-ME-Sender: <xms:3bGgaq6Z5JN-0Zzld0-sC5xRmkIukCX_TRmcpUXH_pcpYg9_sUCdMQ>
+    <xme:3bGgalbtcHAUCnCFprEnLBwo3Aa051iJq_I2FzVxSYU5d7xEVHryhcomOum4d-ntW
+    ZofVeqj0VL1jIFbqupwQTgieBy_VUj2UVVSBlqFtdNfeOM8b59CSuKC_Q>
+X-ME-Received: <xmr:3bGgapgOrul8b-rki5QxVzbb5PI52_Q3n7R5MNkSdQSPNUOO2eWm2IAZNrlnoZFnaOYGwcz20JfobHVTjeaX4yvs>
+X-ME-Proxy-Cause: dmFkZTGEAv5fg+wcke1DSNBEvDRG+tvrwCJBkRg+GLkMxqB2HvJkEBN1VfcdAUWjws6mDC
+    JcPtD/z695C1UcibIkKRYOTtnqcsurzJMnCzLpkDmSr2GDyAaMlWkjUewpNAhS0/ucurcF
+    wFQEE2oHWswOEwDtHQrMOo6dG6rA7bC9sQwtORzOQKeKi6hAGWjmD/tbpr+2pbbOVUIWkH
+    8UtJLCC2C7VArLMhEGhfQldx53nu6dzgI26TkEsRmPo7xSTYXp5zKFnbtyBokm1XuO/zCN
+    HwTUQ7J3RX54+QExFGnZ1fKJcv6DfXbp7ubcym8LPDzbThnQSZiDCWZKrXzIzkkZTFFjiJ
+    Z8Nuoo6LF09C7k/xNsVL+NEaicnL7yMuN9J8627IBQ999ymrv++wk/VBvmMEe5WMtV0Xvw
+    dezTyoRrnFpbfM6gyyRi5DtdhAwVdLtoK5Wro0ie2Msn5mZS+OFDd4l5im5YZORD8c0ZfG
+    MjwkoGI2p4wgW44ZC7xpG0zFYwrXYgRb7Rl8Dh3rcREg/tyx71Vd3UCX1sFGPTlN6fYPVW
+    7vcyt5cTT6ku9NN2z90tBER9AfkVONNBgPFtpbLVvdAkqGVLh3vrsYvnuLYzg5w29CG/e7
+    X1ppboD+085IgF2y+yaQK6ORi/h+oAO8KdCzFgLWzjy0Z6oh/8H8cLUVvQ9g
+X-ME-Proxy: <xmx:3bGgam8gVSi8SIO3Ihy3T0LvExLf2Mmiy5u-wCqPsZkGUXnen_N84A>
+    <xmx:3bGgakrR7yXO29UY1QCsw4EjRO7PYBFz0325txuw4NVxBVrUG5T8HA>
+    <xmx:3bGgauXZzbAmVptM603sTvuybcRV_CyZl1sx8O1uXnDYOaHr4o-2ug>
+    <xmx:3bGgajDfSPfRcbIUYUoLycvcS9mWgFcmo4HXkyCZ2mQI9dC9cOWnJg>
+    <xmx:3bGgalsVgW08aSaHvr8sQ3cMctqiSDuyNThHpHHZ6gpVZ1GmzTrZ4ztt>
+Feedback-ID: i2b59495a:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
+ 8 Sep 2026 21:09:48 -0400 (EDT)
+Message-ID: <1c5bebcd-76f5-407f-b3af-a6170fff2497@sandeen.net>
+Date: Tue, 8 Sep 2026 20:09:47 -0500
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <6A9FBDB3.20705@126.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] xfs: add per-mount read/write I/O completion counters
+To: Eric Peterson <linuxinstalled@gmail.com>, Carlos Maiolino
+ <cem@kernel.org>, linux-xfs@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Eric Peterson <eric.peterson@hpe.com>
+References: <20260828033429.4070267-1-linuxinstalled@gmail.com>
+Content-Language: en-US
+From: Eric Sandeen <sandeen@sandeen.net>
+In-Reply-To: <20260828033429.4070267-1-linuxinstalled@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Tue, Sep 08, 2026 at 03:48:03PM +0800, Hongling Zeng wrote:
-> 在 2026年09月08日 14:33, Dave Chinner 写道:
-> > Don't take the design doc as being complete or correct - it's a
-> > working document and really only serves as the initial high level
-> > plan I fleshed out.
-> > 
-> > Indeed, I implemented a chunk of it yesterday afternoon (i.e.
-> > before I saw your patch this morning) and my findings change quite a
-> > bit of the generic infrastructure to make it handle the transaction
-> > header without having to special case it. So from that perspective,
-> > it's already out of date...
-> > 
-> > I'll post what I have in the series later this afternoon so you can
-> > get up to speed.
+On 8/27/26 10:34 PM, Eric Peterson wrote:
+> From: Eric Peterson <eric.peterson@hpe.com>
+> 
+> Add two per-mount statistics counters, xs_read_completions and
+> xs_write_completions, to complement the existing xs_read_calls and
+> xs_write_calls counters. The existing counters count I/O submissions
+> (entries); the new counters count I/O completions. The pair (calls,
+> completions) lets a consumer compute outstanding I/O as a queue depth
+> (calls - completions) and, via Little's law, derive an approximate
+> response time in userspace without any hot-path timestamping.
 
-Ok, I just posted my current WIP to the log-verification-1 branch in
-my kernel.org repo
-(https://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git)
+After reading through this thread, it occurs to me that it might
+be worth asking my favorite question: what problem are you trying
+to solve?
 
-This is completely untested, I've only made sure it compiles. Don't
-expect it to work. If you do start adding to it, build on top of it
-and point me to the git repo where all your new work can be found.
+Please don't answer with LLM output.
 
-What I've implemented so far is the refactoring necessary to
-implement generic handling of log item verification and decoding,
-converted the special case transhdr decoding to use the generic
-infrastructure, and implemented fairly complete ophdr validation,
-including validation of the log unmount record (which isn't
-validated in any way right now).
+Thanks,
+-Eric
 
-Design has changed to use methods for item specific region count
-checking, as well as adding a completion method that allows item
-types to consume the item rather than queuing it for later recovery
-(both needed for the transhdr conversion). Implementation has been
-refined to avoid decoding ophdrs until sufficient validation has
-been performed to guarantee the buffer pointer is sane and is long
-enough to contain a full ophdr, and then it valdates the rest of the
-ophdr before passing it to the processing code.
+> The counters are plain monotonic increments (no clock reads), so they
+> add negligible cost to the read/write path. Per-op timestamping was
+> deliberately not used: a clock read on the hot path costs ~20-30 ns on
+> TSC but hundreds of ns to ~1 us on HPET, which would be a regression for
+> general users. Queue depth from completion counters is an approximation
+> (instantaneous depth); this is a deliberate design choice, not
+> a placeholder.
+> 
+> Completions are accounted at exactly the same sites where XFS already
+> accounts the xs_*_bytes counters, so their semantics match the existing
+> byte counters per path:
+> 
+>   - Reads are counted at the frame in xfs_file_read_iter and
+>     xfs_file_splice_read.
+>   - Buffered writes are counted at the frame, i.e. when data reaches
+>     the page cache, mirroring how xs_write_bytes is accounted for
+>     buffered writes -- not at physical writeback.
+>   - DAX writes are counted at the frame after the synchronous
+>     dax_iomap_rw copy returns, mirroring xs_write_bytes for DAX.
+>   - Direct I/O writes are counted at true completion in
+>     xfs_dio_write_end_io, which is async-safe and fires for both sync
+>     and async DIO, mirroring xs_write_bytes for DIO.
+> 
+> Caveat: async O_DIRECT reads are counted at submission, not completion,
+> because XFS has no read end_io today (iomap_dio_rw is called with NULL
+> ops for reads). This matches the existing read-byte semantics.
+> 
+> The counters are uint32_t and wrap like the existing xs_*_calls
+> counters; userspace diffs handle wrap.
+> 
+> The per-mount stats file gains a new appended "rwcmpl" line printing
+> write and read completions. The existing "rw" line is unchanged, so
+> positional parsers of "rw" are unaffected:
+> 
+>   rw     <write_calls>       <read_calls>
+>   rwcmpl <write_completions> <read_completions>
+> 
+> Signed-off-by: Eric Peterson <eric.peterson@hpe.com>
+> ---
+> 
+> Notes for reviewers (not part of the commit log):
+> 
+> * Placement: the new "rwcmpl" group is inserted between "rw" and
+>   "attr" in the xstats[] table. The "rw" line itself is unchanged,
+>   and "rwcmpl" is appended after it, but lines below "rw" in
+>   /proc/fs/xfs/stat shift by one for strictly positional parsers. I
+>   can instead append the group at the END of the table if preferred.
+> 
+> * checkpatch --strict reports two CHECKs preferring u32 over uint32_t
+>   for the new fields. They are kept as uint32_t to match struct
+>   __xfsstats, whose every field is uint32_t; changing only these two
+>   would break local consistency.
+> 
+> * Testing: fstests -g auto on v6.12.74 shows baseline and patched
+>   fail the identical 6/1277 tests -- zero regressions. The rwcmpl
+>   interface was verified on hardware (rw >= rwcmpl, counters
+>   advance under load). This for-next port applies cleanly with no
+>   drift and compiles clean; a runtime -g quick smoke on for-next was
+>   omitted as the logic is identical to the tested v6.12.74 patch.
+>  fs/xfs/xfs_file.c  | 11 +++++++++--
+>  fs/xfs/xfs_stats.c |  3 ++-
+>  fs/xfs/xfs_stats.h |  2 ++
+>  3 files changed, 13 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 426a67b813..3ecd4ed534 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -347,8 +347,10 @@ xfs_file_read_iter(
+>  	else
+>  		ret = xfs_file_buffered_read(iocb, to);
+>  
+> -	if (ret > 0)
+> +	if (ret > 0) {
+>  		XFS_STATS_ADD(mp, xs_read_bytes, ret);
+> +		XFS_STATS_INC(mp, xs_read_completions);
+> +	}
+>  	return ret;
+>  }
+>  
+> @@ -375,8 +377,10 @@ xfs_file_splice_read(
+>  	xfs_ilock(ip, XFS_IOLOCK_SHARED);
+>  	ret = filemap_splice_read(in, ppos, pipe, len, flags);
+>  	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
+> -	if (ret > 0)
+> +	if (ret > 0) {
+>  		XFS_STATS_ADD(mp, xs_read_bytes, ret);
+> +		XFS_STATS_INC(mp, xs_read_completions);
+> +	}
+>  	return ret;
+>  }
+>  
+> @@ -663,6 +667,7 @@ xfs_dio_write_end_io(
+>  	 * for it on submission.
+>  	 */
+>  	XFS_STATS_ADD(ip->i_mount, xs_write_bytes, size);
+> +	XFS_STATS_INC(ip->i_mount, xs_write_completions);
+>  
+>  	/*
+>  	 * We can allocate memory here while doing writeback on behalf of
+> @@ -1032,6 +1037,7 @@ xfs_file_dax_write(
+>  
+>  	if (ret > 0) {
+>  		XFS_STATS_ADD(ip->i_mount, xs_write_bytes, ret);
+> +		XFS_STATS_INC(ip->i_mount, xs_write_completions);
+>  
+>  		/* Handle various SYNC-type writes */
+>  		ret = generic_write_sync(iocb, ret);
+> @@ -1098,6 +1104,7 @@ xfs_file_buffered_write(
+>  
+>  	if (ret > 0) {
+>  		XFS_STATS_ADD(ip->i_mount, xs_write_bytes, ret);
+> +		XFS_STATS_INC(ip->i_mount, xs_write_completions);
+>  		/* Handle various SYNC-type writes */
+>  		ret = generic_write_sync(iocb, ret);
+>  	}
+> diff --git a/fs/xfs/xfs_stats.c b/fs/xfs/xfs_stats.c
+> index c13d600732..5b276666b6 100644
+> --- a/fs/xfs/xfs_stats.c
+> +++ b/fs/xfs/xfs_stats.c
+> @@ -40,7 +40,8 @@ int xfs_stats_format(struct xfsstats __percpu *stats, char *buf)
+>  		{ "log",		xfsstats_offset(xs_try_logspace)},
+>  		{ "push_ail",		xfsstats_offset(xs_xstrat_quick)},
+>  		{ "xstrat",		xfsstats_offset(xs_write_calls)	},
+> -		{ "rw",			xfsstats_offset(xs_attr_get)	},
+> +		{ "rw",			xfsstats_offset(xs_write_completions)	},
+> +		{ "rwcmpl",		xfsstats_offset(xs_attr_get)	},
+>  		{ "attr",		xfsstats_offset(xs_iflush_count)},
+>  		{ "icluster",		xfsstats_offset(xs_inodes_active) },
+>  		{ "vnodes",		xfsstats_offset(xb_get)		},
+> diff --git a/fs/xfs/xfs_stats.h b/fs/xfs/xfs_stats.h
+> index 57c32b86c3..608d12d0c6 100644
+> --- a/fs/xfs/xfs_stats.h
+> +++ b/fs/xfs/xfs_stats.h
+> @@ -93,6 +93,8 @@ struct __xfsstats {
+>  	uint32_t		xs_xstrat_split;
+>  	uint32_t		xs_write_calls;
+>  	uint32_t		xs_read_calls;
+> +	uint32_t		xs_write_completions;
+> +	uint32_t		xs_read_completions;
+>  	uint32_t		xs_attr_get;
+>  	uint32_t		xs_attr_set;
+>  	uint32_t		xs_attr_remove;
 
-The next steps are to start implementing the per-item type
-validation functions.
-
-I also noticed that the head/tail search code that reads log
-record headers doesn't really do much validation on the log record
-headers. We probably need to address that, too, so we can detect
-corrupted headers during the head/tail search and avoid finding
-incorrect head/tail records as a result.
-
-> Once your series is posted I'll start with review and the
-> recoveryloop / logprint-based testing, then take the per-type
-> validate_region() / validate_item() implementations on top of your
-> iterator.
-
-I think it's probably better that you first read the code yourself
-and develop an understanding of what needs to be done without the
-aid of an LLM. See if you can find bugs in what I've already done
--without- an LLM - you will learn the code at the same time, and
-then be in a much better place to guide an LLM through later stages
-of development.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-dgc@kernel.org
