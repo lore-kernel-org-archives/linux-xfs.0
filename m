@@ -1,37 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0CB2923C4F3;
-	Wed,  9 Sep 2026 06:02:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FCC123C4F3;
+	Wed,  9 Sep 2026 06:03:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788933778; cv=none; b=Ptyn05WwW51+Hjm3ZLw+TX9pmEA2E1q+xV3TmNQ1LkcDcms2uFVt8nPObsLVY/z4bFJVSrBN8JS7drLWcHokM6gTVSa2aSkqtOKePXKLbqt6hjGl6nCK9WbF837KziwPn/EtmPGWHFgru2ecs2R5P0GwFO8dVG40wOpBSBg5C8I=
+	t=1788933784; cv=none; b=hz/CxAw+D0wfM2W8m8mWRpwibip+hyHYdpoqNnofhj1PPBEiK94tP8JnrB/oCXRJ3QmqBELtNTdFs91u6+IXh2Dy6CTmVII2I+VkhmM4sSEWXxI5dtrHJg9ROmA5gOCPi9ZwFOrcTll2ljUFUSEacZz4MxXLVL/jJf6SiBE8AWk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788933778; c=relaxed/simple;
-	bh=sKRw7KZ8ttvQl+KNBbYCwWysyjdFWCFJ92pGwlp2nvE=;
-	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=SeXkiwN+8+HFjhSRSuavBDlNZD73CmpBFHWqRxvKeKSsA+29NBykWwhG2OdMvlicj7x0av0PMD/Cscb8Qid8uaOpYt6IwEOVEun8egFqYwF+VawBsM821yOl8wNL7OhwNMkNgMPrmYcE304VZeGYBQr8muMIDlYzYDpG74FRzZE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kpKDLfCO; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788933784; c=relaxed/simple;
+	bh=2MVrFZHK6kW1mkiwdodzVcnDKkjH0pDbnD+ouAL6gc4=;
+	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=TAAzyjqf3BhBZP0fR/3EPtTray9FYIvP6qe8BpQglZp6fEu/JdYnvPTHDGlAnFpYA2Ij8XI3OasPS3nhs9d30DYWTgxgitjF33RRwEcgJy3WG5cYraUTF9u6bE1OoRGIlqo5qNtiy+mM4DrfremexhPlqB9EMNTElWwfPZVITac=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CFQ6jV/g; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kpKDLfCO"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id D6F781F00A3D;
-	Wed,  9 Sep 2026 06:02:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CFQ6jV/g"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 68BE31F00A3D;
+	Wed,  9 Sep 2026 06:03:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788933776;
-	bh=LGdU9JpPO53XoOGb/QS4XJv2hXc40JLhapQB9dQUZKw=;
-	h=Date:Subject:From:To:Cc;
-	b=kpKDLfCOfUSyyjtJ4Jj4Q7S74y5jHOQZ4WkRLwsctb8RlHhPDEpEDuRfkmxreSQGG
-	 qVurMd+3Gh9sJhW+jqvulqIwfFh/9Ik5CkjvGuBn8CSz4oiQYXsxcCJ/+iROj1ZrCv
-	 stfu9JA5/m0C6Yy8hxgs0RwTp5xzFeAMFiczRkjQIAhVANTPna1VpeEDalcttlrJhK
-	 8MK4oWkLCiaB2j6HIM5BiuF3/7DatW8p8cbaUVrBdKC0RxBex3Itu3ezGGoNKBiy4y
-	 CDa9iMgkqFDdqFde/bikichmv8MncVqBKKkYPud0rThqKJUUYDhjdwsfuQu/FBmOdi
-	 37ol8OAeDHr1w==
-Date: Tue, 08 Sep 2026 23:02:56 -0700
-Subject: [PATCHSET 2/2] xfs: LLM-inspired bug fixes, part 12
+	s=k20260515; t=1788933782;
+	bh=UTdTU+gtoXg94bIhp44lNEFePRmx3UylopforKJJcUM=;
+	h=Date:Subject:From:To:Cc:In-Reply-To:References;
+	b=CFQ6jV/gSweqxMiFFVE77lMlfQzQl2na/hADHUdIx7+UJ053WW7ndLHl2UQxJA7wW
+	 QAQXFYR2Z6W2k1cLEv7t19nT2TFF5QvvZIAg1zwTGGZ6FUw4ARepk3PNfuSwTZVv21
+	 VroP7JjqC30zQppC8eMaDFnU4JbfSG3kKVOFML6dWpIHJx+nJFn9wIRVorlS+C0uDo
+	 aMsQpk6Pnouq9CNNB5S9zJVfhI1tVG1q1N02v4RahYnK+kruWImoL+adxCK1o7+RUP
+	 F9DLgfGAOqQwdaiIl8Gguhubm+3LUs1/FnHXDwhCD//qkFR3eOkQz+TaVM0nmTe2qV
+	 2arzhYg7w54jg==
+Date: Tue, 08 Sep 2026 23:03:02 -0700
+Subject: [PATCH 1/6] xfs: snapshot scrub stats when rendering them
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: hch@lst.de, cem@kernel.org, djwong@kernel.org
-Cc: floss@jetm.me, dgc@kernel.org, stable@vger.kernel.org,
- linux-xfs@vger.kernel.org
-Message-ID: <178892936573.4057962.16225191041041958394.stgit@frogsfrogsfrogs>
+Cc: cmaiolino@redhat.com, stable@vger.kernel.org, linux-xfs@vger.kernel.org
+Message-ID: <178892936205.4057682.11929830543923107453.stgit@frogsfrogsfrogs>
+In-Reply-To: <178892936145.4057682.2272084577851638021.stgit@frogsfrogsfrogs>
+References: <178892936145.4057682.2272084577851638021.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -41,37 +43,75 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-Here's a twelveth batch of xfs fixes resulting from a LLaMma.  Mwa mwa
-mwa...
+LOLLM complains about concurrency problems in the scrub stats code
+because xchk_stats_format doesn't synchronize in any way with updates.
+These stats are only reported through debugfs so I don't think it really
+matters, but I guess I exist to make bots happy now.
 
-If you're going to start using this code, I strongly recommend pulling
-from my git trees, which are linked below.
+Note: We snapshot the entire stats object with a spinlock so that we
+don't have to worry about users seeing slightly weird numbers (e.g.
+invocations has incremented but none of the outcomes have been yet) if
+we race with xchk_stats_merge_one.  This isn't a hot path.
 
-With a bit of luck, this should all go splendidly.
-Comments and questions are, as always, welcome.
-
---D
-
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=llm-fixes-12
+Cc: <stable@vger.kernel.org> # v6.6
+Fixes: d7a74cad8f4513 ("xfs: track usage statistics of online fsck")
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+Assisted-by: LOLLM # finding obvious bugs
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 ---
-Commits in this patchset:
- * xfs: fix under-reservation of blocks when repairing sf directories
- * xfs: actually check internal-rtdev fields in the superblock
- * xfs: fix rtrmap cross-referencing elision logic
- * xfs: fix termination logic in xchk_bmap
- * xfs: fix replaying dirent removals into the temporary directory
- * xfs: reset parent pointer args before each dir tree unlink repair
- * xfs: advance the findparent inode scan cursor while holding ILOCK
----
- fs/xfs/scrub/agheader.c       |    7 +++++
- fs/xfs/scrub/attr_repair.c    |    2 +-
- fs/xfs/scrub/bmap.c           |    7 +++--
- fs/xfs/scrub/dir_repair.c     |    4 ++-
- fs/xfs/scrub/dirtree_repair.c |    1 +
- fs/xfs/scrub/findparent.c     |   54 +++++++++++++++++++++++++++--------------
- fs/xfs/scrub/tempfile.c       |   28 ++++++++++++++++-----
- 7 files changed, 72 insertions(+), 31 deletions(-)
+ fs/xfs/scrub/stats.c |   32 +++++++++++++++++++-------------
+ 1 file changed, 19 insertions(+), 13 deletions(-)
+
+
+diff --git a/fs/xfs/scrub/stats.c b/fs/xfs/scrub/stats.c
+index 76f2515188d1b1..f3f1fbfb6d9955 100644
+--- a/fs/xfs/scrub/stats.c
++++ b/fs/xfs/scrub/stats.c
+@@ -99,25 +99,31 @@ xchk_stats_format(
+ 	int			ret = 0;
+ 
+ 	for (i = 0; i < XFS_SCRUB_TYPE_NR; i++, css++) {
++		struct xchk_scrub_stats	fss;
++
+ 		if (!name_map[i])
+ 			continue;
+ 
++		spin_lock(&css->css_lock);
++		memcpy(&fss, css, offsetof(struct xchk_scrub_stats, css_lock));
++		spin_unlock(&css->css_lock);
++
+ 		ret = scnprintf(buf, remaining,
+  "%s %u %u %u %u %u %u %u %u %u %llu %u %u %llu\n",
+ 				name_map[i],
+-				(unsigned int)css->invocations,
+-				(unsigned int)css->clean,
+-				(unsigned int)css->corrupt,
+-				(unsigned int)css->preen,
+-				(unsigned int)css->xfail,
+-				(unsigned int)css->xcorrupt,
+-				(unsigned int)css->incomplete,
+-				(unsigned int)css->warning,
+-				(unsigned int)css->retries,
+-				(unsigned long long)css->checktime_us,
+-				(unsigned int)css->repair_invocations,
+-				(unsigned int)css->repair_success,
+-				(unsigned long long)css->repairtime_us);
++				(unsigned int)fss.invocations,
++				(unsigned int)fss.clean,
++				(unsigned int)fss.corrupt,
++				(unsigned int)fss.preen,
++				(unsigned int)fss.xfail,
++				(unsigned int)fss.xcorrupt,
++				(unsigned int)fss.incomplete,
++				(unsigned int)fss.warning,
++				(unsigned int)fss.retries,
++				(unsigned long long)fss.checktime_us,
++				(unsigned int)fss.repair_invocations,
++				(unsigned int)fss.repair_success,
++				(unsigned long long)fss.repairtime_us);
+ 		if (ret <= 0)
+ 			break;
+ 
 
