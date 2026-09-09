@@ -1,35 +1,35 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 593FA376A06;
-	Wed,  9 Sep 2026 06:10:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 334E03A48E4;
+	Wed,  9 Sep 2026 06:11:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788934257; cv=none; b=sZ3pPEn0LXQd/jFdJMISFCGqfzMUAfG+0ZIXoWCp98OCRSC392k9ENzv7sF+dMtysx2sIYeWXLA6i2M9gqDs9ALoYzFWXIzKgRrUSf+jgi2gHZwrChRS0fpMI8LuD3nWI5rG74EyFgFX7UrNACdIZ66Fvltx1q7suX07i2d6XeU=
+	t=1788934264; cv=none; b=o8TX5jV+Rv2qsACjWVZQhBpAq6lA08QwXQ7qk/QbHmlGpxrxCpl6rG9v4l+5P1xIrIzxJ2m4vsfgBUqB1G5MJdBG7QmwPp5jbLgtqEBtGssZiiw5FSczaWRmJCRBzo9xOfSyG+dRBqn0H8iF3E3ra9IjeiuF0li2g90uzCvV4OQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788934257; c=relaxed/simple;
-	bh=8n9g/Q3fzH/AVROxfeqK3uFc4/xB/YC7Dc0Npt3uS1k=;
+	s=arc-20240116; t=1788934264; c=relaxed/simple;
+	bh=1TNzZ7sjG6VwpfGRkiRQNPR4jovUmI3AvioGiiI0+zE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=lZ3jlb/MrIoq5p0LLKADIPDNRjYIE+r4p84wxNJEJUEW0buOpkE1UzynlLJw+ynQP5hpIXCVHPTOYrBSqU2pOb0tIpGmif2/jFl7+rwCIZnOpwx21kCWWlFvbqAlPAQx11uYIAcCDqaW9rjj/JDk0jZ1JLr5BSFL4/ZApNIoRIQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=APVQCRrf; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=ucDOgkKhMKtYZB0HC0Q2L79NNUP7AqfZXVefpvPJ5Q21J6bPwhfxC5+tkAMRi7ApyLIgJy2oIFwgeDBBEwnPZcoKilMkhS7xlQb7p+6QKObhntzrbwetU4oSX0ao1KZwR/zjzNbGSZWg4ZWKfnCUWA/ha7tqVqkJ2rKTP0emYfI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=WHh0iJS3; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="APVQCRrf"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="WHh0iJS3"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=mBfMekdYh9Ze04ZQDVwYHco4YHYETGeQ27CubZPTigc=; b=APVQCRrfsRjDfhu9iAKoYBKVtp
-	S5YWH6nsfBoHRvX8EjpZQIZypK02upPENhhGv13KaHtz3YLEW3K5omLIK/mBrWFCCOAvwa/y8Pmks
-	TP4jbkCfKRphWKuxIu42eycB7JI3MYHbGMKCI4t4tG9TWlFyT7KhE4TLAR1PbpRff7RzyA0pd8pwe
-	UnL2vKCgq7YlcRuG4ShQSuCaYXimtg+DGZMvUOiJ5Gx7qAtFaNNvg6opd6sHn9fwteqJV3CEau+qC
-	ZzhdzJdi28X0iImm46PtzqS8V5s0HtHnb8ptuwEWAHR30aWCYBjByLdqB6hO4y+bB4zMo9yfb8XuI
-	Fj4TWnpA==;
+	bh=jtsndzrGjc60AU1LrjPLVnSNBjTH8u95z3/ZmN5miUo=; b=WHh0iJS31SasCV5SjscNKICHZ7
+	8nqcPejXDhE3hprg1ZzzEuZA9W5PMhj3dBBb++5nHCNjalHRZnrRyrlttRSyzB7QRCwmdJYl455VE
+	CTeDnyLcHYZY0azRZRV24zeXAQqAIRvHG4134GbDzuiI60vJTHkUQEJ3NszFHZG5gs7CvLyTRZ9Yq
+	2abboAywdY6R+NIfhr7NQ4mqhVt5vzVmWvdYS79ESkYQr2yToZjA3894LpM5UcfoqWaEcZ7NJAep3
+	WH3e843iNtsRuygATUvG7vuhpCsPPDfdAZMDlekMM7T5IKP/7TPP/8pbjE6H6WKdI//nelHdiN8Tp
+	YM1FSrXA==;
 Received: from [62.74.3.53] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1x4BWI-0000000AqnN-2Eme;
-	Wed, 09 Sep 2026 06:10:55 +0000
+	id 1x4BWP-0000000Aqo5-1xIM;
+	Wed, 09 Sep 2026 06:11:01 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Jens Axboe <axboe@kernel.dk>,
 	Christian Brauner <brauner@kernel.org>,
@@ -40,9 +40,9 @@ Cc: Tal Zussman <tz2294@columbia.edu>,
 	linux-block@vger.kernel.org,
 	linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org
-Subject: [PATCH 14/16] xfs: add error injection for lazy bounce buffering
-Date: Wed,  9 Sep 2026 09:09:03 +0300
-Message-ID: <20260909060924.1102037-15-hch@lst.de>
+Subject: [PATCH 15/16] xfs: log a message at mount time when using integrity protection
+Date: Wed,  9 Sep 2026 09:09:04 +0300
+Message-ID: <20260909060924.1102037-16-hch@lst.de>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260909060924.1102037-1-hch@lst.de>
 References: <20260909060924.1102037-1-hch@lst.de>
@@ -55,63 +55,50 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Add an error injection knob to exercise the lazy bounce buffering
-code path, i.e. to inject direct I/O re-read using the bounce buffer.
+Log a message in the kernel when using T10 protection information.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_errortag.h | 6 ++++--
- fs/xfs/xfs_ioend.c           | 5 ++++-
- 2 files changed, 8 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_buf.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_errortag.h b/fs/xfs/libxfs/xfs_errortag.h
-index 6de207fed2d8..2dc441da0333 100644
---- a/fs/xfs/libxfs/xfs_errortag.h
-+++ b/fs/xfs/libxfs/xfs_errortag.h
-@@ -75,7 +75,8 @@
- #define XFS_ERRTAG_METAFILE_RESV_CRITICAL		45
- #define XFS_ERRTAG_FORCE_ZERO_RANGE			46
- #define XFS_ERRTAG_ZONE_RESET				47
--#define XFS_ERRTAG_MAX					48
-+#define XFS_ERRTAG_BOUNCE_REREAD			48
-+#define XFS_ERRTAG_MAX					49
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index ee7c2e9c0340..eee491c01d8c 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -5,6 +5,7 @@
+  */
+ #include "xfs_platform.h"
+ #include <linux/backing-dev.h>
++#include <linux/blk-integrity.h>
+ #include <linux/dax.h>
  
- /*
-  * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
-@@ -137,7 +138,8 @@ XFS_ERRTAG(WRITE_DELAY_MS,	write_delay_ms,		3000) \
- XFS_ERRTAG(EXCHMAPS_FINISH_ONE,	exchmaps_finish_one,	1) \
- XFS_ERRTAG(METAFILE_RESV_CRITICAL, metafile_resv_crit,	4) \
- XFS_ERRTAG(FORCE_ZERO_RANGE,	force_zero_range,	4) \
--XFS_ERRTAG(ZONE_RESET,		zone_reset,		1)
-+XFS_ERRTAG(ZONE_RESET,		zone_reset,		1)  \
-+XFS_ERRTAG(BOUNCE_REREAD,	bounce_reread,		XFS_RANDOM_DEFAULT)
- #endif /* XFS_ERRTAG */
+ #include "xfs_shared.h"
+@@ -1694,6 +1695,7 @@ xfs_configure_buftarg(
+ 	struct xfs_mount	*mp = btp->bt_mount;
  
- #endif /* __XFS_ERRORTAG_H_ */
-diff --git a/fs/xfs/xfs_ioend.c b/fs/xfs/xfs_ioend.c
-index 4fba8558d8d2..e70be5b86f0b 100644
---- a/fs/xfs/xfs_ioend.c
-+++ b/fs/xfs/xfs_ioend.c
-@@ -16,6 +16,8 @@
- #include "xfs_reflink.h"
- #include "xfs_zone_alloc.h"
- #include "xfs_ioend.h"
-+#include "xfs_error.h"
-+#include "xfs_errortag.h"
- #include <linux/bio-integrity.h>
+ 	if (btp->bt_bdev) {
++		struct blk_integrity *bi = bdev_get_integrity(btp->bt_bdev);
+ 		int		error;
  
- static void
-@@ -107,7 +109,8 @@ xfs_end_io_read(
- 			 * but right now we can't distinguish them from other
- 			 * (i.e, reftag) errors.
- 			 */
--			if (error) {
-+			if (error ||
-+			    XFS_TEST_ERROR(mp, XFS_ERRTAG_BOUNCE_REREAD)) {
- 				xfs_read_bounce_and_resubmit(ioend);
- 				return;
- 			}
+ 		error = bdev_validate_blocksize(btp->bt_bdev, sectorsize);
+@@ -1706,6 +1708,15 @@ xfs_configure_buftarg(
+ 
+ 		if (bdev_can_atomic_write(btp->bt_bdev))
+ 			xfs_configure_buftarg_atomic_writes(btp);
++
++		if (!bi)
++			;
++		else if (btp->bt_bdev == btp->bt_mount->m_super->s_bdev)
++			xfs_info(mp, "using %s integrity profile",
++				blk_integrity_profile_name(bi));
++		else
++			xfs_info(mp, "using %s integrity profile for %pg",
++				blk_integrity_profile_name(bi), btp->bt_bdev);
+ 	}
+ 
+ 	btp->bt_meta_sectorsize = sectorsize;
 -- 
 2.53.0
 
