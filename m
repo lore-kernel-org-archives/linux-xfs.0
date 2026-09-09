@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9ADD25C6EE;
-	Wed,  9 Sep 2026 06:05:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE567322C88;
+	Wed,  9 Sep 2026 06:06:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788933954; cv=none; b=Bt9CXVnVGU9W0ahJzRJUBuj/9IjAHKUt3LyJRsLP3X7BGfMMtYO6O4lEyWVNqK5bMwiRv8FeTMDeJbUkuOQiK68aD33XFGI1ZzTreKSpQUawZ3AYsYua0tdAsysmSFprgD06ce8+cgXU6DcUj2LQ72p0/jxfIuLOZ0LuiNQNQoY=
+	t=1788933970; cv=none; b=Ay/GcEd+3J4RLKo78M+CfRaTcPZe+sLqme3Wbi8rGV69itZzcM5ERuXAi/PyW+MCn9sY+zs907eMXKW/8hLn1/126Ansh4Hgq0Mz/CqGPxJzPS6lQW+M5myY+hxLU5/HsNmGGZkiPNiG8efkYM5YyzvUFm1JFgSMuPV+XgXM3b8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788933954; c=relaxed/simple;
-	bh=t9QmQVupWe7Q2CKtOyO2a3NUgDr8RNizsvPPuFomu60=;
+	s=arc-20240116; t=1788933970; c=relaxed/simple;
+	bh=aL8rpkoEU9fOUiyqKYzqoHGlaRSiFoW2zdGgPdLQCpA=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=fmPM5LcnCeA/B4wT2kvstjrmOw19nI2Vv1tR68viw0y4ZiUx+ZdGeMh4ODK534L31hp1KvJZMNhxbsfOGa4axTZVKfSwd3XOMS/DJsiUVrCrrIaXrJ9VnqNe+5efueDgupL2Mb2yY+js1gWY5Sm+AHpb4FtEy3izuUVUHESp8hM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cePzWyyY; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=OpfhpWo/crQ+oQhUcx9qhjF4vbbaR9k1cUR83lXllRmb9IIiP5Dj+oWPR4MmNW5YeWBjUT4RCejrhCgHyIukvlWcumBQvu7u9ev7Nh5rzSokbgZHR0YcJOnx0VsAzwGGiMbg2wHfjxIHSLHIhxpkbngkKiOfeweYxCjn6ngKpd0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EYq4lNys; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cePzWyyY"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 490BF1F00A3A;
-	Wed,  9 Sep 2026 06:05:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EYq4lNys"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id C6EA41F00A3A;
+	Wed,  9 Sep 2026 06:06:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788933953;
-	bh=rtyudFbjvNS9UGYtwfZYKu8fO1gAcL6ecHMoXLm9+Lk=;
+	s=k20260515; t=1788933968;
+	bh=w8Ac5wV+HERXZzBn8+QrFf0k0XNqyegEFbjjUICntXo=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=cePzWyyYsZ2zcZWbEIvGY31JDy3ZxWMKpCY7Qnsa3/CHkoC9j2/FGahXzf/IWHzQv
-	 tS9KXyxRn1ZcpB6fUy95Bkb2bBY1s+ncNzsxzq1hzwUkR9xH4Ecq6cY9CyTQTtbT1u
-	 /3iBzHdbvNfDW93ElZHPP2EENVGDgsokmoZ5OUtYpvLG7cPauAWkbSnt5G88nZzGig
-	 ZNtwM1j2DQ2zdXRkXEZIyL1ASJPOwpv5Za0Sn/25mbiw3ElYc9KjV8kzNQVN1khso9
-	 hYfQYDMyd/PBNK9jeyqeV19TTUcR01Sa5VKxoC3v7iSyunZOE64RPXmP5BfwfQI8cQ
-	 jrNrjedtUq0KA==
-Date: Tue, 08 Sep 2026 23:05:52 -0700
-Subject: [PATCH 6/7] xfs: reset parent pointer args before each dir tree
- unlink repair
+	b=EYq4lNyslaTHDN7mrG77hACRwq0swBvsjMJ6zcc40r2Qyius5LCD2wFIJzdW6Svx6
+	 b6xpybLV5dujC6eA7YQEOW94nWeez9Pskpv3BwG2WV506zcn8klHwZ/8rk+7X9FQea
+	 V0l41fIZlzdYXJQQYtlUROCekfP7ALc4shtCKDd2XeWfQjrNgG95gedcy8WqFOFIot
+	 6CmL9aaDDb+sLTekP+GSqGtfzCxvUriScktNY/aLtjNfE7sAK81Kysnwi0UP5nP8Lf
+	 iAto+oz6eMabbCHyINvCsy4U2xdNeRQ0M8tmVhJkSJlI9Ki2OMo5viZEjoftqru8o4
+	 dn4d5FfJD38UQ==
+Date: Tue, 08 Sep 2026 23:06:08 -0700
+Subject: [PATCH 7/7] xfs: advance the findparent inode scan cursor while
+ holding ILOCK
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: hch@lst.de, cem@kernel.org, djwong@kernel.org
 Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <178892936749.4057962.1251607208695971705.stgit@frogsfrogsfrogs>
+Message-ID: <178892936771.4057962.16778990010632981835.stgit@frogsfrogsfrogs>
 In-Reply-To: <178892936573.4057962.16225191041041958394.stgit@frogsfrogsfrogs>
 References: <178892936573.4057962.16225191041041958394.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,31 +46,127 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-LOLLM noticed that xfs_parent_removename only partially initializes the
-passed-in parent pointer arguments object.  In the directory tree repair
-code, we could decide to remove multiple links to a file, so we don't
-want state from one call to bleed into the next one.  Zero the whole
-thing explicitly.
+LOLLM pointed out a race condition in xrep_findparent_scan -- the
+directory live update hook holds the directory ILOCK when it calls the
+xchk_iscan_want_live_update predicate to figure out if it needs to
+remember the live update, but xrep_findparent_scan drops the directory
+ILOCK before advancing the cursor.  Therefore, it's possible for a live
+update to check the scan cursor after the scan drops the ILOCK but
+before the scan updates its cursor.  If this happens, we'll fail to
+record the live update.  Fix this by moving the cursor update logic
+inside xrep_findparent_walk_directory.
+
+Note that for non-directories it's ok to advance the cursor without
+holding any ILOCK because the findparent scan only cares about directory
+parents, not the children.
 
 Cc: <stable@vger.kernel.org> # v6.10
-Fixes: 3f31406aef493b ("xfs: fix corruptions in the directory tree")
+Fixes: a07b45576264e7 ("xfs: scan the filesystem to repair a directory dotdot entry")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Assisted-by: LOLLM # finding obvious bugs
 ---
- fs/xfs/scrub/dirtree_repair.c |    1 +
- 1 file changed, 1 insertion(+)
+ fs/xfs/scrub/findparent.c |   54 ++++++++++++++++++++++++++++++---------------
+ 1 file changed, 36 insertions(+), 18 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/dirtree_repair.c b/fs/xfs/scrub/dirtree_repair.c
-index 8acd55b8c7696d..1d1eafcf6eb598 100644
---- a/fs/xfs/scrub/dirtree_repair.c
-+++ b/fs/xfs/scrub/dirtree_repair.c
-@@ -479,6 +479,7 @@ xrep_dirtree_unlink(
+diff --git a/fs/xfs/scrub/findparent.c b/fs/xfs/scrub/findparent.c
+index 04b6b96b0a30ed..eab3ac2704befe 100644
+--- a/fs/xfs/scrub/findparent.c
++++ b/fs/xfs/scrub/findparent.c
+@@ -139,32 +139,52 @@ xrep_findparent_dirent(
+ 	return 0;
+ }
+ 
+-/*
+- * If this is a directory, walk the dirents looking for any that point to the
+- * scrub target inode.
+- */
+-STATIC int
+-xrep_findparent_walk_directory(
+-	struct xrep_findparent_info	*fpi)
++static inline bool
++xrep_findparent_want_scan_file(
++	const struct xrep_findparent_info	*fpi)
+ {
+-	struct xfs_scrub		*sc = fpi->sc;
+-	struct xfs_inode		*dp = fpi->dp;
+-	unsigned int			lock_mode;
+-	int				error = 0;
++	const struct xfs_scrub			*sc = fpi->sc;
++	const struct xfs_inode			*dp = fpi->dp;
++
++	/* Only directories can be parents */
++	if (!S_ISDIR(VFS_IC(dp)->i_mode))
++		return false;
+ 
+ 	/*
+ 	 * The inode being scanned cannot be its own parent, nor can any
+ 	 * temporary directory we created to stage this repair.
+ 	 */
+ 	if (dp == sc->ip || dp == sc->tempip)
+-		return 0;
++		return false;
+ 
+ 	/*
+ 	 * Similarly, temporary files created to stage a repair cannot be the
+ 	 * parent of this inode.
+ 	 */
+ 	if (xrep_is_tempfile(dp))
++		return false;
++
++	return true;
++}
++
++/*
++ * If this is a directory, walk the dirents looking for any that point to the
++ * scrub target inode.
++ */
++STATIC int
++xrep_findparent_walk_file(
++	struct xrep_findparent_info	*fpi)
++{
++	struct xfs_scrub		*sc = fpi->sc;
++	struct xfs_inode		*dp = fpi->dp;
++	unsigned int			lock_mode;
++	int				error = 0;
++
++	if (!xrep_findparent_want_scan_file(fpi)) {
++		if (fpi->parent_scan)
++			xchk_iscan_mark_visited(&fpi->parent_scan->iscan, dp);
+ 		return 0;
++	}
+ 
+ 	/*
+ 	 * Scan the directory to see if there it contains an entry pointing to
+@@ -201,6 +221,8 @@ xrep_findparent_walk_directory(
+ 		goto out_unlock;
+ 
+ out_unlock:
++	if (fpi->parent_scan)
++		xchk_iscan_mark_visited(&fpi->parent_scan->iscan, dp);
+ 	xfs_iunlock(dp, lock_mode);
+ 	return error;
+ }
+@@ -308,11 +330,7 @@ xrep_findparent_scan(
+ 	ASSERT(S_ISDIR(VFS_IC(sc->ip)->i_mode));
+ 
+ 	while ((ret = xchk_iscan_iter(&pscan->iscan, &fpi.dp)) == 1) {
+-		if (S_ISDIR(VFS_I(fpi.dp)->i_mode))
+-			ret = xrep_findparent_walk_directory(&fpi);
+-		else
+-			ret = 0;
+-		xchk_iscan_mark_visited(&pscan->iscan, fpi.dp);
++		ret = xrep_findparent_walk_file(&fpi);
+ 		xchk_irele(sc, fpi.dp);
+ 		if (ret)
+ 			break;
+@@ -401,7 +419,7 @@ xrep_findparent_confirm(
+ 		goto out_rele;
  	}
  
- 	if (xfs_has_parent(sc->mp)) {
-+		memset(&dl->ppargs, 0, sizeof(dl->ppargs));
- 		error = xfs_parent_removename(sc->tp, &dl->ppargs, dp,
- 				&dl->xname, sc->ip);
- 		if (error)
+-	error = xrep_findparent_walk_directory(&fpi);
++	error = xrep_findparent_walk_file(&fpi);
+ 	if (error)
+ 		goto out_rele;
+ 
 
