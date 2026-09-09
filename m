@@ -1,103 +1,133 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from m16.mail.126.com (m16.mail.126.com [117.135.210.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B0BE302CC1;
-	Wed,  9 Sep 2026 06:12:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 211D739A807;
+	Wed,  9 Sep 2026 07:41:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788934350; cv=none; b=UwOaPIXTx2NIxCiwX0Oel1tqBFJ/kZmIM63Pxd91UZ/WaKBfBU09YqWnEaZSM53eYiN8vsnk7FnJFM6Fm1ee2Qm7olvrkpyZCkam1nEBxYRJ2k67vH6Baoma5AnmmjEau5MFx9Ogw8myEi3Geu7Fx0dHm9HkFiT2GYOPmd0VNyE=
+	t=1788939684; cv=none; b=UcFozc4EllOeIT6YlzEYe/8K2I8C7Ry6qGHgFczx1uWxmUzTLTHbbvDJCl1+Hz87n49L3zrLQ+kmRhfaZ4OVkeVcEnBAG2KvG5b6+6ij9Po2UcGcI4En8sLdTKTQky151I7OYnd2Lwhn6pZA1sH0nwsO5nRzzmnQbaxPvYaDOFY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788934350; c=relaxed/simple;
-	bh=/HSGzhhCGfAKOr0ksyK5rCyWeTHFO6fV07hOmKs+MHw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=F5XbZ8NQl2fleRe8S5cxpPh1WNdYhHjh3nA4hHm9D1CgXj6/gwWX6C39bwb5Pj2yN5Ch71xzXYhQlkICOVSaKSPKGwCBffpMKmw+862TRkOFDkdH69KdQ5dZ1GturNYzcj71QznvCqQdO54kD8ZntoBHB1n5LuUznYFFmng7tDM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=ZCII80jm; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1788939684; c=relaxed/simple;
+	bh=Y7IMMoAe0P9D+WRSBkVBPj9oQEY3shNsdP/66A1tL4I=;
+	h=Message-ID:Date:From:MIME-Version:To:CC:Subject:References:
+	 In-Reply-To:Content-Type; b=K27hrBhcayzAAipGuYhoXq+RYh9haDy7V3qDHs8ZRUJnU/6FxcO8s9yuHLxFIldAHjXy69npAZ0SmkcPAk4ZNZuopuJnFX4QNwfa0uYiiIwwqEHIPyLCl049mDLDE+t3q16eyGiZVcsxsXx2607pFu9FpE3BV8qLbDOoiIaPEhM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=126.com; spf=pass smtp.mailfrom=126.com; dkim=pass (1024-bit key) header.d=126.com header.i=@126.com header.b=BQWwQEFN; arc=none smtp.client-ip=117.135.210.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=126.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=126.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ZCII80jm"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=5RTlTTuTGuZI8S4XM7VIrtv7XQ6b3ZOyGtBEq4+Q7N4=; b=ZCII80jmHC7kLXJW6qYVWEJheg
-	zTqXpVZj2uq8lJZqB63d/VyG/nMkP+allHu+cqis6iUT7aG5WK2WH+l2nduz09BByCjayA5zXh8YJ
-	C/hb1xWuS99ItmAYRLtCfLKVRAbeeMoBapRB7SfF/6Hk27D3f4COXmmwxfGioZq5R7wPAQMTN3/RM
-	qdZptBpyRn7bNBKbka3+5HibDZPnilBD6DExQzzkSMeDPmfECI5nNrgPWJL3QB3juqjLg6lS6iNDJ
-	EbWQEAbKG3sKs2kntplY+k/w/qdmaPst2elzRaemYHzTCkqILyspaW9egHrH0ug9NZtthROHyh77B
-	ivgAjf4g==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1x4BXo-0000000ArD8-3vsN;
-	Wed, 09 Sep 2026 06:12:28 +0000
-Date: Tue, 8 Sep 2026 23:12:28 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: cem@kernel.org, zlang@kernel.org, linux-xfs@vger.kernel.org,
-	fstests@vger.kernel.org, jack@suse.cz, Chuck Lever <cel@kernel.org>,
-	Jeff Layton <jlayton@kernel.org>, linux-nfs@vger.kernel.org
-Subject: Re: [RFC PATCH 1/2] common/nfs: add management helpers
-Message-ID: <aqD4zBD06P1LJKM2@infradead.org>
-References: <20260907164054.111393-1-cem@kernel.org>
- <20260907164054.111393-2-cem@kernel.org>
- <20260908142226.GL839663@frogsfrogsfrogs>
+	dkim=pass (1024-bit key) header.d=126.com header.i=@126.com header.b="BQWwQEFN"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=126.com;
+	s=s110527; h=Message-ID:Date:From:MIME-Version:To:Subject:
+	Content-Type; bh=4mhyiuXHdkylIUvNmVFXSgeIj+5kPbmYba+P1UHgLak=;
+	b=BQWwQEFNU6pIwfslX/GRUvhdQ4UUt//wHQmg4W2mhyqtLR5IsLaO3VXLrzjw9U
+	3lczSi5mI64qhsqykYJx+aD1VYH4FPQ9LEdlnKKh77wLG8M48kUMNZs/oCI49Sxh
+	3KxftANAu/oCtYU5srbsorHAVOo1S38HeLeEdjz8UMWUo=
+Received: from localhost.localdomain (unknown [])
+	by gzsmtp4 (Coremail) with SMTP id PykvCgD3X1yBDaFqM2k+HQ--.2132S2;
+	Wed, 09 Sep 2026 15:40:49 +0800 (CST)
+Message-ID: <6AA10D61.6030403@126.com>
+Date: Wed, 09 Sep 2026 15:40:17 +0800
+From: Hongling Zeng <zhongling0719@126.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:31.0) Gecko/20100101 Thunderbird/31.2.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260908142226.GL839663@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+To: Dave Chinner <dgc@kernel.org>
+CC: Hongling Zeng <zenghongling@kylinos.cn>, cem@kernel.org, 
+ darrick.wong@oracle.com, chandanrlinux@gmail.com, 
+ linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ stable@vger.kernel.org
+Subject: Re: [PATCH v2] xfs: bound logged region access in inode buffer recovery
+References: <20260907080450.314067-1-zenghongling@kylinos.cn> <ap8ucHIw-pKLhh9c@dread> <6A9F7022.6020206@126.com> <ap-sV2Cc5U5fNMmo@dread> <6A9FBDB3.20705@126.com> <aqCTfSqqywJ5qKcY@dread>
+In-Reply-To: <aqCTfSqqywJ5qKcY@dread>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:PykvCgD3X1yBDaFqM2k+HQ--.2132S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxAr1UZFy7tF1kWF4kJF1xGrg_yoW5Kr17pF
+	WfKa18urWkJ34IvrykAF48JaySgrZ5Ga9xGr98t34DAFn8KrnxKFWvya1Y9Fy7CrnYg34j
+	vw4jyw4qg34UAaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07j-WrJUUUUU=
+X-CM-SenderInfo: x2kr0wpolqwiqxrzqiyswou0bp/xtbBoQJmN2qhDYIqCgAA3W
 
-On Tue, Sep 08, 2026 at 07:22:26AM -0700, Darrick J. Wong wrote:
-> > +# Start rpcbind if it is not already running.
-> > +_start_rpcbind()
-> > +{
-> > +	rpcinfo -p localhost > /dev/null 2>&1 && return 0
-> > +	rpcbind 2>> $seqres.full || _notrun "Cannot start rpcbind"
-> > +	/usr/sbin/rpc.statd 2>> $seqres.full || _notrun "Cannot start rpc.statd"
-> > +	/usr/sbin/rpc.idmapd 2>> $seqres.full || _notrun "Cannot start rpc.idmapd"
-> > +	/usr/sbin/nfsdcld 2>> $seqres.full || _notrun "Cannot start nfsdcld"
-> 
-> Aren't these daemons usually configured as system services?
-> 
-> # service rpcbind start
-> 
-> etc?
 
-They usually are, but doing that as part of a test feels wrong.
-Adding the relevant maintainers and list.
+在 2026年09月09日 07:00, Dave Chinner 写道:
+> On Tue, Sep 08, 2026 at 03:48:03PM +0800, Hongling Zeng wrote:
+>> 在 2026年09月08日 14:33, Dave Chinner 写道:
+>>> Don't take the design doc as being complete or correct - it's a
+>>> working document and really only serves as the initial high level
+>>> plan I fleshed out.
+>>>
+>>> Indeed, I implemented a chunk of it yesterday afternoon (i.e.
+>>> before I saw your patch this morning) and my findings change quite a
+>>> bit of the generic infrastructure to make it handle the transaction
+>>> header without having to special case it. So from that perspective,
+>>> it's already out of date...
+>>>
+>>> I'll post what I have in the series later this afternoon so you can
+>>> get up to speed.
+> Ok, I just posted my current WIP to the log-verification-1 branch in
+> my kernel.org repo
+> (https://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git)
+>
+> This is completely untested, I've only made sure it compiles. Don't
+> expect it to work. If you do start adding to it, build on top of it
+> and point me to the git repo where all your new work can be found.
+>
+> What I've implemented so far is the refactoring necessary to
+> implement generic handling of log item verification and decoding,
+> converted the special case transhdr decoding to use the generic
+> infrastructure, and implemented fairly complete ophdr validation,
+> including validation of the log unmount record (which isn't
+> validated in any way right now).
+>
+> Design has changed to use methods for item specific region count
+> checking, as well as adding a completion method that allows item
+> types to consume the item rather than queuing it for later recovery
+> (both needed for the transhdr conversion). Implementation has been
+> refined to avoid decoding ophdrs until sufficient validation has
+> been performed to guarantee the buffer pointer is sane and is long
+> enough to contain a full ophdr, and then it valdates the rest of the
+> ophdr before passing it to the processing code.
+>
+> The next steps are to start implementing the per-item type
+> validation functions.
+>
+> I also noticed that the head/tail search code that reads log
+> record headers doesn't really do much validation on the log record
+> headers. We probably need to address that, too, so we can detect
+> corrupted headers during the head/tail search and avoid finding
+> incorrect head/tail records as a result.
+>
+>> Once your series is posted I'll start with review and the
+>> recoveryloop / logprint-based testing, then take the per-type
+>> validate_region() / validate_item() implementations on top of your
+>> iterator.
+> I think it's probably better that you first read the code yourself
+> and develop an understanding of what needs to be done without the
+> aid of an LLM. See if you can find bugs in what I've already done
+> -without- an LLM - you will learn the code at the same time, and
+> then be in a much better place to guide an LLM through later stages
+> of development.
+>
+> Cheers,
+>
+> Dave.
+>
+Thanks for posting the WIP series.
 
-> 
-> > +}
-> > +
-> > +# Stop rpcbind.
-> > +_stop_rpcbind()
-> > +{
-> > +	pkill rpcbind 2>/dev/null
-> > +}
-> > +
-> > +# Start the NFS server if not already running.
-> > +_start_nfsd()
-> > +{
-> > +	rpcinfo -p localhost 2>/dev/null | grep -q nfs && return 0
-> > +	rpc.nfsd 2>> $seqres.full || _notrun "Cannot start rpc.nfsd"
-> > +	rpc.mountd 2>> $seqres.full || _notrun "Cannot start rpc.mountd"
-> > +}
-> > +
-> > +# Stop the NFS server.
-> > +_stop_nfsd()
-> > +{
-> > +	rpc.nfsd 0 2>/dev/null
-> > +	pkill rpc.mountd 2>/dev/null
-> 
-> If the system under test has nfs filesystems mounted, won't killing
-> those daemons also break the mounts?
-> 
-> I think that might break testing of nfs itself, and nfs-booted testing
-> nodes as well?
+I’ll work from the log-verification-1 branch and first study the generic
+iterator and item handling rather than extending the old special cases.
+I’ll pay particular attention to arbitrary continuation fragments,
+zero-length first fragments, transaction-header completion, and cleanup
+on malformed input.
 
-Possibly.  I guess if we want to save we need to launch a container
-or at least a network namespace this is bound too. 
+I’ll review the existing code for bugs before adding the per-item 
+validation functions, and will point you to my repository once I have
+work based on the branch.
+
+Thanks,
+Hongling
+
