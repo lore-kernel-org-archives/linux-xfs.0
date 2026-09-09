@@ -1,39 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8EC17442FD1
-	for <linux-xfs@vger.kernel.org>; Wed,  9 Sep 2026 13:15:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27A38550DDA
+	for <linux-xfs@vger.kernel.org>; Wed,  9 Sep 2026 13:15:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788959729; cv=none; b=WV37AajgYZFsi5MtPnayXq/Y8rUWt7WP3Q8/ivXG//jsKlicjlOgewW+/IKZ/lwr74Gna/wbC7HEogxffdNSqb3VZ65hzM2ymCYIRt9n1bt/JGLXxjC40Q/7+e1w1+SNdlCZxdrS67vV0Q18Vh9YyLdVcduKR7wB5N5TTg3cq3E=
+	t=1788959754; cv=none; b=nI1Xm0XwkUnQPd7iu8L3jYJl/uctiTunUvdE/MiYE9XjEecQWHU6iOPBikxhY+ivBKVtJtgOcngBVa4lGFJTjjoiGep6JefcNcQG90W/V32bQp3lf7DasIunLyMO5VFhnsNmKjBHMXYUhS+6SUWSc228l6Nhm/FVLi2uQWMMXtM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788959729; c=relaxed/simple;
-	bh=R042BRp24UxdP6GevtuVRxCE16UoYqkWrCDfNF0zMwQ=;
+	s=arc-20240116; t=1788959754; c=relaxed/simple;
+	bh=VWJ6O06xV8WxX1oRiiVvwkBMHwbensOKoTz+TGfxAPY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fk6V8WAlY+lRHM7nJmosCcO38ybpJTRbDLvJK8gpWikauM14clgjMc5I41//IbXMZAph8POqi3jMopegp9IAYs9HMTZcIAAv0IsLr7yI9/OjEOfQ/s23Mz07RJSlETJYuPdQzNDtMXJV/Ea5FKtgvcl86/E0B7Dke3py4Q+G7eE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WEl8Mapk; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=C1/7HApZ+KWEOxu+R4r7/v4rgxU/CB0a0jsjc9VnAPNm0gCdBIgXQi3oiwtOZh8RjP+/tJeA2ej6jK2BjrEpB5ZIZG22UP09muhgMqMNcLjKTDLEL9tJX53uKNgO82BMbBs6wpy7Jj8HZmVSbry49nuQnShPcSXivhr5QpKsRYo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SW4iwIBq; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WEl8Mapk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6FC011F00A3A;
-	Wed,  9 Sep 2026 13:15:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SW4iwIBq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 07B751F00A3D;
+	Wed,  9 Sep 2026 13:15:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788959728;
-	bh=B0ys/c7roybSde9pLIQI6u3TDmVogxDXpe/c+jqjaCA=;
+	s=k20260515; t=1788959752;
+	bh=IYJ1HCNdFGc8vOKgU97tjcToozxCApdrse73edJCtbY=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=WEl8MapkqM7riKkZLsJNIYQwFKchbMCCNbGQ90DzCl0LcmPgH+1uBrYhneuoO58w7
-	 Ew1lvil/2ZtjMUhsEylWtrvzA4h7igv7Y495DuCJDLDTKnIlwWBkSs7p3E+LPrrded
-	 bYvtgd/nQnRTYdt8e8/+o1dMzT42pEYF9tIXEPtaHDshRHeFDNysjsvfRQGc03LNK3
-	 oMrZ/W9fDxYeg9nXGReZ66GU80bU69Pite9/sLfedRALRUW7tZ2yUqUUR529BbI1Ag
-	 Q27wwZ+i4/LW8sX4PrIk/cAkqm6s9bWptVJ89mAiozDdBRDEAvPWww3T3bZ0FtAmzf
-	 Fx33iFrfMC49A==
-Date: Wed, 9 Sep 2026 15:15:24 +0200
+	b=SW4iwIBqZTIdFjOZKk8IrferlHYG448m+pK6HKLbOkrzmg5Qs7/26QVEICCXEJ93E
+	 tyBhaJCM24vCtNN8OZFxFEjnVErT/maBpc+Iu9xso3ghJNEGaw2E+D+LQ0zsbK8viP
+	 +reQ5g1blKuybIZ1HrLYoxGYsQK8E01bEA9syOwOTxaADjzHXuZvvbDTiExxevoibP
+	 MNWttfydleSsjJozxpahC5eLmletL06I7rK8LWT3RG8Ulo0LnffOb/nR9IVaZiV3bt
+	 BioIo7G8Z/O583CXHqxwd/p81FlsuEy74jCoinhNZ8zjaLoPlk+QUYJNxKQ/Dhwsjj
+	 eKWgpN4a2X+eg==
+Date: Wed, 9 Sep 2026 15:15:50 +0200
 From: Andrey Albershteyn <aalbersh@kernel.org>
 To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 5/9] makecfg: handle metadir quota options
-Message-ID: <aqFafEzViIfLdFQ5@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+Subject: Re: [PATCH 6/9] makecfg: handle old V4 options that are almost
+ always on by default
+Message-ID: <aqFb8x2qQ6rrTYfP@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
 References: <178892910484.4047311.5337345469992668181.stgit@frogsfrogsfrogs>
- <178892910621.4047311.16295302909903460048.stgit@frogsfrogsfrogs>
+ <178892910641.4047311.14095703802962095779.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,15 +43,15 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <178892910621.4047311.16295302909903460048.stgit@frogsfrogsfrogs>
+In-Reply-To: <178892910641.4047311.14095703802962095779.stgit@frogsfrogsfrogs>
 
-On 2026-09-08 23:01:33, Darrick J. Wong wrote:
+On 2026-09-08 23:01:48, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> A different LOLLM pointed out that the mkfs configuration file generator
-> should generate config file lines for the quota accounting/enforcement
-> mkfs options for metadir filesystems, because those quota flags persist
-> across mounts.  Add the necessary pieces to do that.
+> The same alternate LOLLM also observed that there are a couple of V4
+> options that are always enabled on a V5 filesystem.  Since we support V4
+> for another 4 years, add these two options but only for the weird case
+> where someone wants to turn them off.
 > 
 > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 
