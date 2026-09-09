@@ -1,44 +1,48 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF57A322C88
-	for <linux-xfs@vger.kernel.org>; Wed,  9 Sep 2026 06:06:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EB30376A06;
+	Wed,  9 Sep 2026 06:09:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788934006; cv=none; b=huSOnrHYskxFmXZeFDAwDizohU3x0S6+ASjnRlJQVB294whLhvqOAMkC+XxNL/+vK3wAfvA6oszeR3jNV6dkcZWxoXmILkqLURTqjY5hioxDwUPJPjYGcknI+mL0k4XVSnTgIylZBqZ4EXK/OvtfDOHSPvNg5QG1xYCsbZ7isXI=
+	t=1788934175; cv=none; b=CjREyeosXAJw1j63baUFaW81f+kV9jqW+pMiRIHct9aZJqGZjRJg0OEV7Hj4Rq5VE4F0thH4wx14BVjlDkq2cc6qTzgGSEJbSz/xEA6y+fdTJYDtBG+F3b5juhrNJOvagJcXsA42ahKICz1JUzTl+wBtIJjL/mGD/4z0J5UgZ5Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788934006; c=relaxed/simple;
-	bh=ttUY8rOmP/wrjtUWH2JotWIxLe0K2lRDuyBE/g1RE6A=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=k+GZetN4iZguDsdxwKwN6HKkkt6Mdi0M+P1QV86HC8ZQvgp1xF3apxtJpLpEqGg5NAbmXlU4tEctkyjrZcyols2gJ7HQFusytmF5p03hJAxFXvMcBQUjhl+rFKOq4SE+qYGeksKP/AiiCp1E7lZWK60aHLlQkdSU229NIT/2jMI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=mUIqjZGT; arc=none smtp.client-ip=198.137.202.133
+	s=arc-20240116; t=1788934175; c=relaxed/simple;
+	bh=r50sqoThbYc4myXpga5PehtlqgJWFPDPeWrAjzFeBBc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=GuGfDihEufUlGkml96UJli1ewJD4JV+0tLByojD/UI4jNqQQlq+w6pXGQE26weLG0DyalUTIfcGFy4SWkEhQFTrXRVkivFtxhfaj+f0aAJMG9Iyw5BQ+WjOBp2jtJN72+zp9h95zmX3ob5PGbg/3AfRtpOa4zFPVcX0XTxJAKfg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=v3pTO9qs; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="mUIqjZGT"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="v3pTO9qs"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=I/O8tJSa6fSeZuCsvJW63HePV+OMSNxQ0R4EY7xnsF4=; b=mUIqjZGT3teGDYIIhMBjn8jX0F
-	ewtxgRcvIDdzLhM/rdFmfbOAwAtEPAOI2vLA7Pn2pvr/5+mAU4GquiH7V5g7XkFJ3zLuV7B1AcQA7
-	dlqm4zuPV9d8iPBo0Jq0cpx8EjaNv7Oo/QVECdDbXvhTvWciEPCVKT3Nb3JAlf7KbphJEKZ2+RqpT
-	lP43Wh0DGzJTms3J5hgIxwSkCGEh/SxqX2s9IUva4J+Z+gg0ludaow2antzh5d0aEcmOetuYs56Kh
-	KWieKGvqJ5cFmgONtrQUX6EHL6/6A7j1gggmtT0zZqG6xRFN4ZxOo5X61td7K/EhkZoSN2/oNe/YD
-	kpuqzrkw==;
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=pR8fMHGb6lehlhbZg0P6MM/nYVxYu2HnDxXPvMOVor8=; b=v3pTO9qs0m/YggYA8bOwTyrS98
+	pdyoqrtkaxY+LiguBaF0qZWep+emePh7CClj3FXP0ZIVuXY76dn1lBGKoSYXx5TaOvAAo0g+EtnI9
+	YqVNiLhQiaHrAliyGdRUncR5ebbPneN28359ME9CEIP/jWV4h2ek0RNo81itNluZdcmmeGO3tJ1kH
+	TAIlUNckj8JzZX7ECPlM28DJxmAMfJ4KB8hZUIjIKpUgCHeaUCtv2xMKMNkIzXkiyTukdkXtaoY/j
+	SxcLYKtHc1OMuxIP4zw1KDhx9dvnJN0PRE2Gu3iRyME1F3in5VY6wTzPh1DZdvnOK+B21e4YzUF+9
+	GJSGStig==;
 Received: from [62.74.3.53] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1x4BS7-0000000AqKA-10N5;
-	Wed, 09 Sep 2026 06:06:36 +0000
+	id 1x4BUv-0000000Aqe0-1QcO;
+	Wed, 09 Sep 2026 06:09:29 +0000
 From: Christoph Hellwig <hch@lst.de>
-To: cem@kernel.org
-Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH] xfs: convert all !XFS_RT stubs to inline functions
-Date: Wed,  9 Sep 2026 09:05:26 +0300
-Message-ID: <20260909060619.1101875-2-hch@lst.de>
+To: Jens Axboe <axboe@kernel.dk>,
+	Christian Brauner <brauner@kernel.org>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Carlos Maiolino <cem@kernel.org>
+Cc: Tal Zussman <tz2294@columbia.edu>,
+	Anuj Gupta <anuj20.g@samsung.com>,
+	linux-block@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org
+Subject: lazy bounce buffering for checksummed reads v3
+Date: Wed,  9 Sep 2026 09:08:49 +0300
+Message-ID: <20260909060924.1102037-1-hch@lst.de>
 X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260909060619.1101875-1-hch@lst.de>
-References: <20260909060619.1101875-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,81 +52,59 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Avoid random compiler warnings about unused variables when CONFIG_XFS_RT
-is not set.
+Hi all,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_rtalloc.h | 49 ++++++++++++++++++++++++++++++++++++++------
- 1 file changed, 43 insertions(+), 6 deletions(-)
+this series improves performance and resource usage for reads from
+devices that require stable pages due to checksumming on XFS.
 
-diff --git a/fs/xfs/xfs_rtalloc.h b/fs/xfs/xfs_rtalloc.h
-index 78a690b489ed..1d5108861acd 100644
---- a/fs/xfs/xfs_rtalloc.h
-+++ b/fs/xfs/xfs_rtalloc.h
-@@ -46,10 +46,34 @@ int xfs_rtalloc_reinit_frextents(struct xfs_mount *mp);
- int xfs_growfs_check_rtgeom(const struct xfs_mount *mp, xfs_rfsblock_t dblocks,
- 		xfs_rfsblock_t rblocks, xfs_agblock_t rextsize);
- #else
--# define xfs_growfs_rt(mp,in)				(-ENOSYS)
--# define xfs_rtalloc_reinit_frextents(m)		(0)
--# define xfs_rtmount_readsb(mp)				(0)
--# define xfs_rtmount_freesb(mp)				((void)0)
-+static inline int
-+xfs_growfs_rt(
-+	struct xfs_mount	*mp,
-+	struct xfs_growfs_rt	*in)
-+{
-+	return -ENOSYS;
-+}
-+
-+static inline int
-+xfs_rtalloc_reinit_frextents(
-+	struct xfs_mount	*mp)
-+{
-+	return 0;
-+}
-+
-+static inline int
-+xfs_rtmount_readsb(
-+	struct xfs_mount	*mp)
-+{
-+	return 0;
-+}
-+
-+static inline void
-+xfs_rtmount_freesb(
-+	struct xfs_mount	*mp)
-+{
-+}
-+
- static inline int		/* error */
- xfs_rtmount_init(
- 	xfs_mount_t	*mp)	/* file system mount structure */
-@@ -60,8 +84,21 @@ xfs_rtmount_init(
- 	xfs_warn(mp, "Not built with CONFIG_XFS_RT");
- 	return -ENOSYS;
- }
--# define xfs_rtmount_inodes(m)  (((mp)->m_sb.sb_rblocks == 0)? 0 : (-ENOSYS))
--# define xfs_rtunmount_inodes(m)
-+
-+static inline int
-+xfs_rtmount_inodes(
-+	struct xfs_mount	*mp)
-+{
-+	if (mp->m_sb.sb_rblocks)
-+		return -ENOSYS;
-+	return 0;
-+}
-+
-+static inline void
-+xfs_rtunmount_inodes(
-+	struct xfs_mount	*mp)
-+{
-+}
- 
- static inline int
- xfs_growfs_check_rtgeom(const struct xfs_mount *mp,
--- 
-2.53.0
+Currently XFS unconditionally bounce buffers reads on such devices to
+prevent user modifications to the buffer from corrupting the data,
+leading to checksum failures.
 
+This uses DRAM bandwidth and CPU cycles for copies that are not needed
+most of the time, and due to the use of a bio_vec for the bounce
+buffer to smaller than wanted and unaligned I/O sizes when using 4k
+user pages (i.e. 1MB-4k I/O).
+
+This series addresses this by reading without the bounce buffer first,
+and then only allocating a buffer and reading into that again on an
+initial checksum failure.  To accommodate for rare (or hypothetical?)
+applications that have legitimate needs to frequently modify in-flight
+buffers, a sysfs know is provided to revert to the old behavior.
+
+NOTE/QUESTION TO SUBSYSTEM MAINTAINERS: The patches in this series are
+split over 3 subsystems, and I'd love to hear from the maintainers
+about their preferences for merging this.
+
+The baseline of this series is mainline with the
+"misc block PI / bounce buffering fixes" series.
+
+
+A git tree is available to help with the review here:
+
+    git://git.infradead.org/users/hch/misc.git lazy-bounce
+
+Gitweb:
+
+    https://git.infradead.org/?p=users/hch/misc.git;a=shortlog;h=refs/heads/lazy-bounce
+
+Changes since v2:
+ - break out of bio_iov_iter_get_pages when bi_size reaches maxlen
+ - various fixes for pre-existing issues pointed out by Sashiko
+ - generate zone PI a bit earlier
+ - initialize the csum dir in sysfs unconditionally to protect against the
+   rather theoretical case of the flag changing underneath us
+ - redo sysfs initialization order to avoid a cleanup bug
+ - use NOFS allocations in xfs_read_bounce_and_resubmit
+ - rework bio setup for reissue to not leave land mines for other uses
+ - fix commit message typos
+ - fix comment typos
+
+Changes since v1:
+ - rebase on 7.3rc-1 and xfs for-next, which has the bio complete in
+   task support merged
+ - remove the now unused IOMAP_DIO_BOUNCE support for reads
+ - fix compilation with integrity disabled
+ - make I/O size limitation actually work
+ - clear REQ_POLLED when bounce buffering
+ - use sysfs string match helpers to allow non -n echo
