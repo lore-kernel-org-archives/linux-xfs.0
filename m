@@ -1,36 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FC0E38E11C
-	for <linux-xfs@vger.kernel.org>; Wed,  9 Sep 2026 06:00:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECC6438E8DA
+	for <linux-xfs@vger.kernel.org>; Wed,  9 Sep 2026 06:00:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788933627; cv=none; b=amyVU5m4UDusA9oMDBCmp+jIbxciqHY7j/D4s06Bq49saki6nw3PZvt60NU3XlA8Xq+CkWhLCWXtJWxnfq8U71y7IlLqMB1rOVGAU0yFVcrVB8hKjUWTp14a+BtFZMIFSpZ1Au/ko3WCt2M6bncxu0OfvOEMxucVch9F+vFB620=
+	t=1788933633; cv=none; b=DvTqYsRflKQkcXRtU+RN0HJY0pdZkwm+eCcH5mMaYTD5X41eNzMylpfCS01NjkS9bgmbSoWhGHqxt6xLaJ4c7bE40t1RD5TD16jOnuf3yaJV0VxraWtcc/ZxsnFCQ2/c7/d7qBJbykf2K0xmVEriHujsMqQ8a8NZxbJe92yueZM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788933627; c=relaxed/simple;
-	bh=orizcTDkq0n+ch4tj3t9LBSWkVsvEBqrS938hu7jzu0=;
-	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=D2HEk1H4KI0QDz7qvKdxeZGJ5QXw/iqqFsENm63u0Dl3ZC5ml4T0699/Q2emU4rYXjB9AMZVrQjYhiDOFDw1pBJGwpAzGCVMxKPIP3KC4dwUMXfO69BT4YXDdQHrOpeAaVdGI2ryKGUgPFyET58dPssCUZaGq9N7Xh78gJUC8LM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ejejfPiG; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788933633; c=relaxed/simple;
+	bh=GQzfNJTxby2sj9mExU6MIflVgddAByqb74A6iNjwto8=;
+	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=S04JQ646AjdKXf7cZvomHi9EnYCmdvdnY5zILwmnX18awS0Wzs9+MQ0jaC4LZ8+enTxbrlTBSgkBYo5KTcASPAuMBepPJmnFtYmJfkJQyDT7x3SoqumV/8HgTGy/YqZYZheZEgZQm0AIMbb0Ha3Qzpz4qKFCZeX9R/Emp99CAyg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dEVRmfKC; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ejejfPiG"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 063F31F00A3D;
-	Wed,  9 Sep 2026 06:00:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dEVRmfKC"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 8803D1F00A3D;
+	Wed,  9 Sep 2026 06:00:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788933626;
-	bh=FOe17Yadq0QWE1uHm3CiY3NDzpO4aZw2EjBpeTyJGYk=;
-	h=Date:Subject:From:To:Cc;
-	b=ejejfPiGsOCVxzZDd4fRMUMzJxaiXx5P9DSGptfG6klLa4uCv/iXAiyeRa/t0pyLR
-	 QKYFsVfEaYXep28flJ5mC848DiJv42uLULhlwqFl/cdscdQIOTXjIj72A2jw5eEAId
-	 v2Wx3U6ZTVL4JX5nvOC+lXHMjbCZVcYukl/ChqAkjdr2xklUWcAOaNYGW5w6bXwo9Y
-	 lklgxq+bDhAHFTDwvPuTw7xvJpYYT2t4kqOSnlx31ZXXbsLhxY8WlDPGw1xkFRAqKQ
-	 MtVQuOfOYAH6D8/G77JGWac/Zx8CSEov6tdFOc8SSXFGjlH0AhrNrUpPLYUxqrbrnz
-	 zB3KgLTchDmRw==
-Date: Tue, 08 Sep 2026 23:00:25 -0700
-Subject: [PATCHSET v3] xfsprogs: generate mkfs.xfs config files
+	s=k20260515; t=1788933631;
+	bh=jxAIuKqMaUn3/beSbqiYt43RZWzR4rcVipPqCuuBwhk=;
+	h=Date:Subject:From:To:Cc:In-Reply-To:References;
+	b=dEVRmfKCLXINVrVqoXece+t1ZnfOJWD4QYP7iHBhfEqdsS3ZNGmHUSCg8MSru7doL
+	 DwHaLsAqZngcD3jlODaJYdJ6wBQT8+HALCe3SXGMY6iBRBbDRuZT239Qm247mqLX+b
+	 2HYJxycqPDR3aJp7ZC9//tz254yjsnvj3p9ba+wm+DAd3v8Xerq6OZFBPwbrAsQphx
+	 WaLTWFXGh8bJKtiGmf3sJSmeW4hD89EKyTKYRE9IjaWAPNUrbjaxGrC9bmaTToJaVb
+	 uFbwOr4JmSH5Ks4+yPTxpx8FPiDer5v0Rz7Hm5naTrLb8TXu+W35CfHdEeLXKEfSMQ
+	 r1odSHQnblCyQ==
+Date: Tue, 08 Sep 2026 23:00:31 -0700
+Subject: [PATCH 1/9] mkfs: automatically upgrade autofsck earlier
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
-Cc: hch@infradead.org, tytso@mit.edu, linux-xfs@vger.kernel.org
-Message-ID: <178892910484.4047311.5337345469992668181.stgit@frogsfrogsfrogs>
+Cc: linux-xfs@vger.kernel.org
+Message-ID: <178892910547.4047311.12714199545208525271.stgit@frogsfrogsfrogs>
+In-Reply-To: <178892910484.4047311.5337345469992668181.stgit@frogsfrogsfrogs>
+References: <178892910484.4047311.5337345469992668181.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -40,63 +43,54 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-Every year, we generate a new mkfs.xfs configuration file to match the
-stable feature set of that year's LTS kernel.  Right now I just do this
-by copying the old configuration file and tweaking the values by hand.
+Move this chunk of code earlier in mkfs.xfs because a subsequent patch
+will need the final value of cli.autofsck at the point where we do the
+dry run reporting stuff.  Nobody changes cli.autofsck after
+validate_sb_features().
 
-Instead, let's create some library code that can emit the same
-configuration variables that we've been shipping for some years now,
-and hook that up to mkfs/xfs_db/xfs_spaceman so that we can generate
-them either from the mkfs defaults or pre-existing filesystems.
-
-v2: add rvb tags, add the defaults file patch from before, add a few
-more metadata/v4 feature bits for spice
-v3: add more file-related options and default config files
-
-If you're going to start using this code, I strongly recommend pulling
-from my git trees, which are linked below.
-
-With a bit of luck, this should all go splendidly.
-Comments and questions are, as always, welcome.
-
---D
-
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=generate-cfgfiles
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+Reviewed-by: Andrey Albershteyn <aalbersh@kernel.org>
 ---
-Commits in this patchset:
- * mkfs: automatically upgrade autofsck earlier
- * mkfs: print config file for a given mkfs configuration
- * xfs_db: print configuration file for mounted filesystems
- * xfs_spaceman: print configuration file for mounted filesystems
- * makecfg: handle metadir quota options
- * makecfg: handle old V4 options that are almost always on by default
- * makecfg: add a few more file related options
- * xfs_admin: print configuration file for mounted filesystems
- * mkfs: allow specification of default options via configuration file
----
- libfrog/fsgeom.h        |   12 +
- configure.ac            |    1 
- db/info.c               |  201 ++++++++++++++++
- db/xfs_admin.sh         |   15 +
- include/builddefs.in    |    1 
- libfrog/fsgeom.c        |  594 +++++++++++++++++++++++++++++++++++++++++++++++
- m4/package_libcdev.m4   |   19 ++
- man/man8/mkfs.xfs.8.in  |   23 ++
- man/man8/xfs_admin.8    |    7 +
- man/man8/xfs_db.8       |    6 
- man/man8/xfs_spaceman.8 |    6 
- mkfs/xfs_mkfs.c         |  213 ++++++++++++++---
- spaceman/Makefile       |    4 
- spaceman/info.c         |  218 +++++++++++++++++
- 14 files changed, 1286 insertions(+), 34 deletions(-)
+ mkfs/xfs_mkfs.c |   18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-Unreviewed patches in this series:
 
-[PATCHSET v3] xfsprogs: generate mkfs.xfs config files
-  [PATCH 5/9] makecfg: handle metadir quota options
-  [PATCH 6/9] makecfg: handle old V4 options that are almost always on
-  [PATCH 7/9] makecfg: add a few more file related options
-  [PATCH 9/9] mkfs: allow specification of default options via
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 4f11c9de339c2a..56e6f892e455dc 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -6123,6 +6123,15 @@ main(
+ 	validate_zoned(&cfg, &cli, &dft, &zt);
+ 	validate_sb_features(&cfg, &cli);
+ 
++	/*
++	 * If the filesystem has full backreferences and the user didn't
++	 * express an autofsck preference, enable online repair because they
++	 * might as well get some useful functionality from the extra metadata.
++	 */
++	if (cli.autofsck == FSPROP_AUTOFSCK_UNSET &&
++	    cli.sb_feat.rmapbt && cli.sb_feat.parent_pointers)
++		cli.autofsck = FSPROP_AUTOFSCK_REPAIR;
++
+ 	/*
+ 	 * we've now completed basic validation of the features, sector and
+ 	 * block sizes, so from this point onwards we use the values found in
+@@ -6314,15 +6323,6 @@ main(
+ 	if (mp->m_sb.sb_agcount > 1)
+ 		rewrite_secondary_superblocks(mp);
+ 
+-	/*
+-	 * If the filesystem has full backreferences and the user didn't
+-	 * express an autofsck preference, enable online repair because they
+-	 * might as well get some useful functionality from the extra metadata.
+-	 */
+-	if (cli.autofsck == FSPROP_AUTOFSCK_UNSET &&
+-	    cli.sb_feat.rmapbt && cli.sb_feat.parent_pointers)
+-		cli.autofsck = FSPROP_AUTOFSCK_REPAIR;
+-
+ 	if (cli.autofsck != FSPROP_AUTOFSCK_UNSET)
+ 		set_autofsck(mp, &cli);
+ 
+
