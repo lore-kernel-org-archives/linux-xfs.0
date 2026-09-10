@@ -1,74 +1,79 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 021D2369D7A;
-	Thu, 10 Sep 2026 06:01:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 794D930EF63;
+	Thu, 10 Sep 2026 06:07:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789020080; cv=none; b=JYB7IBe43OCnfU6JBGNx/Q81BdPYXHigm86sOTMtLirmAAYgDE+AoazvvC5+D5X9qMqxA33a29ooaDI++WRN4c2u4Jv6VyzrsU6pxcaBF1oasSPyHIhgQI/E9F7ODi4crsl9cGn8+GO2+1fDE38p+TjXKjU5Su6uJ7MIBJmJW0M=
+	t=1789020427; cv=none; b=MfkI4ylW/6t0OvBt3YKE+mcL16j5ujQtCURUCEaMPtwEis/dqeEtGap6BMII2vkKhhhR9N35+j/TyNEyS+UBgiPLZFC9lPrKx54eNArkOXjEdtpbGOF4l06aE+Prio+KHpAm5uUFUlW6nnu8KqthX2cuHqkyusZt+oNa5pLu2rA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789020080; c=relaxed/simple;
-	bh=iqMTar/e8AhdHFcEKctsdEbmp6zMshSTTWgHBi9gpq0=;
-	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=HkREIlSQXK2oRxtohDaY4j/JjSP/6CmxxGtr7RJ+CqzB8+36PXK4VqSQqhTzeXrdA81UIiJCmCTZqNHXEq9EDgvwyIdCv2Lm1n/3SAFmiGwMNCYDf9juxNoec2zENrJfQm30y31oCjZOrR5aWiCnW9ZxyitNaZIMcnntDHHGssw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UlyVsagj; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789020427; c=relaxed/simple;
+	bh=GuklswbYRk8EYb82mABzcr7LBu8iWQdB0WrzQvfyrf8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=gskvIEMTuRy7v6+2wph5b1yzsn5Naq0cim2dlXOjK3TQ4sJ0Ww2BjswGKlWDOzNFauyfOxF9V26oZfdLhZ7CRUV41KKs8NOdSbKZB1lxQ88iGWAQTxfWAAxuT4/v+V7/GtZEj+7k2SjWFf8c0SIWi9xfpFVzDl7d13NO9FpbZ9Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jjqdE17x; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UlyVsagj"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id CE8031F000FF;
-	Thu, 10 Sep 2026 06:01:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jjqdE17x"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 0DF431F000FF;
+	Thu, 10 Sep 2026 06:07:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789020078;
-	bh=zb+pgwCa7Gcp+0k2IykZIPzs4udrqCMd0onX9X24IpY=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=UlyVsagjMZ2BgYdsXTDP1NEE4HynBx8wghPCoswic6lJ9nZsAAmzeZaUnKydHsNuE
-	 1sqOdNzMPcpmTRZ3gn14gwmqp11N+zVb55+Qu2v+YoILdHVB5c/jev8f7FqEPYXhOO
-	 OP960duRNcBr0m/yNjhqaIIa4BWSOlVJcL1Da0F4HlC3cHo0v9/C8O8LCw27B1LvCd
-	 okZ/YGkh0Hny8xu5MCw4B0spoPCrdC269FO5RN7udh0QNAthaT5XgSHwTbJhqy9ihd
-	 RFhkXyB/k9qNORw44SPlr1UY3B8T6JjLHDINnOj+K0rP/XS1u0vdmc48O24QW2J+sw
-	 qV0rEdB903FpA==
-Date: Wed, 09 Sep 2026 23:01:18 -0700
-Subject: [PATCH 6/6] xfs: use correct jiffies comparison function in
- xchk_maybe_relax
+	s=k20260515; t=1789020426;
+	bh=nOylofx3XljWsfWb1rgg2Z8rQlbMXk1v7xJM3t4UkSE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=jjqdE17xFtq86Ik5aSiQ67i6gtXd+ynBI2lrwVfYA0zuXjgU31NEyhSiCB73Ikn/v
+	 jDDUKPhYAHD1vTFRh1zn++I5dlp6obwoUkabyC1ocuQy+kZcdSdGU2YMqPczXG3Bzy
+	 J/ULaw+WHRVaCRrAvuOf7JOgiK/DHDfHT/N2LXF3oT3UJeuEDfitXvxL/JLSm/qdRP
+	 4Q3TDdcuSdCpMPByMNuMPazqnh2+rwjRV9Xl+MkfpPpoW7Q3Pl4mLRGj0z8adVuMSJ
+	 17DdVS/UloQT8ABhf4xBWQfBy2038qjcdbc+e3q+MxetpRMKYxNbr2ihG5lxGRZ5KF
+	 0Ii8eQ210zevQ==
+Date: Wed, 9 Sep 2026 23:07:05 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: djwong@kernel.org, cem@kernel.org, hch@lst.de
-Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <178901989959.361651.2838640248053656232.stgit@frogsfrogsfrogs>
-In-Reply-To: <178901989791.361651.4660674894120948649.stgit@frogsfrogsfrogs>
-References: <178901989791.361651.4660674894120948649.stgit@frogsfrogsfrogs>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Kefeng Wang <wangkefeng.wang@huawei.com>, brauner@kernel.org,
+	cem@kernel.org, akpm@linux-foundation.org, vbabka@kernel.org,
+	surenb@google.com, mhocko@suse.com, brendan.jackman@linux.dev,
+	hannes@cmpxchg.org, ziy@nvidia.com, david@kernel.org,
+	qi.zheng@linux.dev, shakeel.butt@linux.dev, ljs@kernel.org,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-mm@kvack.org, Yun Zhou <yun.zhou@windriver.com>
+Subject: Re: [PATCH] xfs: fix NOFS state corruption in btree split worker
+Message-ID: <20260910060705.GB6253@frogsfrogsfrogs>
+References: <20260902134417.c44503a1d65533f81fb1c391@linux-foundation.org>
+ <20260903133756.2006032-1-wangkefeng.wang@huawei.com>
+ <aqJEWmUN3Jsajoyl@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aqJEWmUN3Jsajoyl@infradead.org>
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Wed, Sep 09, 2026 at 10:47:06PM -0700, Christoph Hellwig wrote:
+> Adding Yun Zhou, whoch touched this area recently.
+> 
+> On Thu, Sep 03, 2026 at 09:37:56PM +0800, Kefeng Wang wrote:
+> > xfs_btree_split_worker() calls xfs_trans_set_context() and
+> > xfs_trans_clear_context() on the caller's transaction, overwriting
+> > tp->t_pflags with the worker's NOFS state. When the caller already has
+> > PF_MEMALLOC_NOFS set (e.g. xfs_end_ioend_write, xfs_dio_write_end_io),
+> > the corrupted tp->t_pflags causes xfs_trans_free() to erroneously clear
+> > the caller's NOFS protection.
+> > 
+> > Use memalloc_nofs_save/restore with a local variable instead so
+> > tp->t_pflags is never touched.
+> 
+> Looks good:
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
+> Btw, if you have some spare time, it would be nice to kill
+> xfs_trans_set_context/xfs_trans_clear_context as follow up given that
+> they keep causing confusion.
 
-LOLLM points out that we're supposed to use time_after_eq, not a raw >=
-operation here, or else jiffies wraps can go unnoticed.  Fix this.
+Yes please, the wrappers have not been useful for making anyone's life
+easier. :/
 
-Cc: <stable@vger.kernel.org> # v6.10
-Fixes: 271557de7cbfde ("xfs: reduce the rate of cond_resched calls inside scrub")
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-Assisted-by: LOLLM # finding obvious bugs
----
- fs/xfs/scrub/scrub.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-
-diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
-index 6d7d3523b71f25..7ade1d005efef6 100644
---- a/fs/xfs/scrub/scrub.h
-+++ b/fs/xfs/scrub/scrub.h
-@@ -40,7 +40,7 @@ static inline int xchk_maybe_relax(struct xchk_relax *widget)
- 		return 0;
- 	widget->resched_nr = 0;
- 
--	if (unlikely(widget->next_resched <= jiffies)) {
-+	if (unlikely(time_after_eq(jiffies, widget->next_resched))) {
- 		cond_resched();
- 		widget->next_resched = XCHK_RELAX_NEXT;
- 	}
-
+--D
