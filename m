@@ -1,45 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5333D4A4983;
-	Thu, 10 Sep 2026 15:09:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 433A649CF40;
+	Thu, 10 Sep 2026 15:12:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789052946; cv=none; b=EwWaEJ6oWYreMmPWalTQ/ASmq4vcmsi4Rv6799ADx7L8hB+vpNuO6sb8zQIPpyIvsuioGpDapMpTUaTRi2R6wPYM9vwDeivVCEyZwRAjSJvo6mCAIJOD+rta0c1AANRURVrWK95VC58+bC9MJ43AcUGVsvygadUWE9EAtGxsBAw=
+	t=1789053135; cv=none; b=tmUZ35ifv2M6HzAFKEl5NUBoK3BTfa49VmCovNEDI+sImwxVu327UTJKWP2r1RQ7rEO4d05FhiJkSat8jtF3O+8mUuLUxUYQYy0nih3+41dPirSpDCj95HymGh+xCUiGyAPgmc91bmth/Pg8wzQgZgZYITbBkj0hIpv/L9xeAlU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789052946; c=relaxed/simple;
-	bh=ElTHav3YRvSamwMgbeP0+OBBpsbQ5uRBgER4GmaV6mc=;
+	s=arc-20240116; t=1789053135; c=relaxed/simple;
+	bh=pz9zSip1lMk1Nr4nKF7jofEa0orwD+FmAM3RoymraqU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=K2cGIatcJt3SHEUyH29u09Orb0uXWQWenN5eivCKqiD6MI3ACo+V+OkdcfOqt1gmLKUpW+Bx+OzGNm9THTiShBc5PWh+7UxqpEIdYUCQeMPPIr5hi9grGWNyTiGbH63qeMWwizewsOeiCLNuk6VvULQmNR572TLiXk53raBRt7s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RuBvHwHU; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=u3WLIpE9+Abw7+Buji5rFcjKC6GLLT1mdVzWC+LFUlzk74T731sC32Qr+6QhODgjXzzWAlbhTsBSZyzx4KA60St0kU98CaeEuXA+tr9aParwiQGdreOCu4QZI77S3V5sdfdaMo2H+A+Vv6/Z9Qlmc1nfaqtViZXTiZFbyynloKE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D9Ukx+S5; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RuBvHwHU"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 7585C1F00893;
-	Thu, 10 Sep 2026 15:08:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D9Ukx+S5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 411C61F000FF;
+	Thu, 10 Sep 2026 15:12:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789052938;
-	bh=QINm46LqgvxXX38G/1bwyjev8OepYKK1sH7tzLP6Stk=;
+	s=k20260515; t=1789053127;
+	bh=x/R1LbM+eF/GDGvhS+5wzOAueal9TQij8xv9x+P+lFk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=RuBvHwHUuuXBX6hfqXqz6hehjO1PPOAq5sXP7GeSrnlO+80sjyfxDm9T/DGNwlJt+
-	 dO3RlYSuiRZfX8mvsiQhZY921bMjfvMo6JCtIVOoxiG5fc71yClCp/7h/Ciygx6+tF
-	 kVlJhgoMR6oSw87nMQbN4C7hfZULSnv/vPs+VUzqJfFpqoWcZL2ho0YKpZ36Kk/YNm
-	 nlVnQCWBDhoSQefavngCb8wjr1qu399z9A1PBY/76Q4P7O/1qrql3rJUNwX5DXCWLp
-	 kfdXopXbfigBqCUn1iVSrlePcVfNEPsLen0yZlrz2D6rsRKttCVomKPDFpusZeqPOe
-	 1ftoLyv0HGnAA==
-Date: Thu, 10 Sep 2026 08:08:58 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>, dgc@kernel.org, floss@jetm.me,
-	stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/7] xfs: fix under-reservation of blocks when repairing
- sf directories
-Message-ID: <20260910150858.GD6253@frogsfrogsfrogs>
-References: <178892936573.4057962.16225191041041958394.stgit@frogsfrogsfrogs>
- <178892936640.4057962.1916451282677820756.stgit@frogsfrogsfrogs>
- <20260910050031.GB26687@lst.de>
- <aqJANTuQQMEIqcmO@andromeda.toxiclabs.cc>
- <20260910060907.GC6253@frogsfrogsfrogs>
- <20260910094344.GA5330@lst.de>
+	b=D9Ukx+S5wTv1Tg34vEtjTo4H5h96V8AtLvKJi+cDT5xOw92ZwygUBuNmRMu4KcqB/
+	 cUwJjokU0YZgZr2QRyU5nod8x+8/ry7EIxDkI5zP4fIt4x0DNrqhTMZIVM8mU5FE2C
+	 GmXb6FtZLS0X+1bXMdt+KCrJEKedNhZa4+zJdz4aezyFmyuzI0spXnDI7SmAvlmCqw
+	 LyboXtpeL7vQooiobaMtf/XT/VP3inMBbB+fL9cNXp6fC9Ldo8xCgprpXErMnQeK6U
+	 VjZTGTkupmnfaf0k7L9roz2k3pWjHOXeLNPA0NYCggLqeAUmueMBLMz3denXzeLSNQ
+	 cDdMrdkRWd11g==
+Date: Thu, 10 Sep 2026 17:12:03 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Shigeru Yoshida <syoshida@redhat.com>, 
+	Deepanshu Kartikey <kartikey406@gmail.com>, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] xfs: fix double mutex_lock() call in
+ xfs_ioc_health_monitor()
+Message-ID: <aqLICraoDc_Jvlif@andromeda.toxiclabs.cc>
+References: <20260910132956.538828-1-syoshida@redhat.com>
+ <20260910145720.GB6238@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,18 +44,57 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260910094344.GA5330@lst.de>
+In-Reply-To: <20260910145720.GB6238@frogsfrogsfrogs>
 
-On Thu, Sep 10, 2026 at 11:43:44AM +0200, Christoph Hellwig wrote:
-> On Wed, Sep 09, 2026 at 11:09:07PM -0700, Darrick J. Wong wrote:
-> > I prefer not to leave a logic bomb in the scrub code in case we ever
-> > have multi-fsblock attr blocks.
+On Thu, Sep 10, 2026 at 07:57:20AM -0700, Darrick J. Wong wrote:
+> On Thu, Sep 10, 2026 at 10:29:55PM +0900, Shigeru Yoshida wrote:
+> > Commit 4870da4f49ae ("xfs: take hm->lock in xfs_ioc_health_monitor()
+> > before insert") intended to protect the __xfs_healthmon_insert() call
+> > with hm->lock, but the second mutex operation was accidentally left as
+> > mutex_lock() instead of mutex_unlock(), causing self-deadlock. Change
+> > the second call to mutex_unlock() as originally intended.
+> > 
+> > Fixes: 4870da4f49ae ("xfs: take hm->lock in xfs_ioc_health_monitor() before insert")
+> > Signed-off-by: Shigeru Yoshida <syoshida@redhat.com>
 > 
-> There's plenty of logic bombs to unwind in that case :)
+> The original patch I reviewed unlocked hm->lock correctly, not sure how
+> it got corrupted by the tooling such that we need this.  I think cem
+> fixed it already(?) but in case anyone needs it,
+
+yes, it's fixed already... I had not a single clue what happened, I
+haven't changed any patch manually on this batch, might have been the
+tooling with some weird fuzz to fix context conflicts, but most likely I
+screwed up somewhere.
+
+Whatever the reason, this is on me for not having double-checked the
+result once I pulled the patches in, so I'm really sorry for that.
+
+And thanks again Yoshida for having spotted it.
+
 > 
-> Best if we want to prepare for that would be to use xfs_dabuf_nfsb
-> and make sure we use a helper like that everywhere.
-
-Actually, I like that a lot better.  Let me rework the patch with that.
-
---D
+> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+> 
+> --D
+> 
+> > ---
+> >  fs/xfs/xfs_healthmon.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/fs/xfs/xfs_healthmon.c b/fs/xfs/xfs_healthmon.c
+> > index 6dc3f69d6798..c3749675ef19 100644
+> > --- a/fs/xfs/xfs_healthmon.c
+> > +++ b/fs/xfs/xfs_healthmon.c
+> > @@ -1225,7 +1225,7 @@ xfs_ioc_health_monitor(
+> >  	running_event->domain = XFS_HEALTHMON_MOUNT;
+> >  	mutex_lock(&hm->lock);
+> >  	__xfs_healthmon_insert(hm, INSERT_HEAD, running_event);
+> > -	mutex_lock(&hm->lock);
+> > +	mutex_unlock(&hm->lock);
+> >  
+> >  	/*
+> >  	 * Preallocate the unmount event so that we can't fail to notify the
+> > -- 
+> > 2.55.0
+> > 
+> > 
+> 
