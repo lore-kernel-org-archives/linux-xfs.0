@@ -1,40 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFA67456290
-	for <linux-xfs@vger.kernel.org>; Thu, 10 Sep 2026 10:40:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDA3F455638
+	for <linux-xfs@vger.kernel.org>; Thu, 10 Sep 2026 10:40:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789036810; cv=none; b=e8KFv8E+F/DHCGF8A7VLSAxGZsGaNHtLizZ40fdpm510qVaKdrU5iTSpYE0s5Mmq0+WRrawnbuV5PFf4MdFvxv2cbrSXAXDkDjWGSsNoo5qrjCEC6ysiFCTmZ632IsSI3EAdLXm/XcxbKUFHzG2fYwptDSFUocn9/v8Fd0XJ5k4=
+	t=1789036855; cv=none; b=TTRWLSkzTLCBqck2LmN7vZIf33cv/6R6dOXBB2mc06ksqsLYNveLDv+ql2lUkqTzJLTk0l/AF7lTrCTLMhkKmVikB0d3HNK/oKe/RrVBRUG18OOWLz5kUvdX9SQZGVmUUZ45WqUmlr3u4KxFgxTNj+YzcxsirBVVVmFOeGj/9Ls=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789036810; c=relaxed/simple;
-	bh=eODZx7t2k7qZ/vaHEW5GJcT1+Lo7XL/fMxyqjo23XvI=;
+	s=arc-20240116; t=1789036855; c=relaxed/simple;
+	bh=LDJG0nPjeoT+MCcUtbFCO2gWsKjQAnZ4dusSE5TU2AQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HMvQxxCmEovTyJ/yhFRuA8w1qENv3mXcUiNLJa3yZ1iB4iIt4DnwYIKtbvaieOiBStDm+jZub7qaV1v50hYfsEU207b3gVROcSaUqoPizswPn/gdOMnsojP3+1FTNHb1mskeY+KVj9MWjOrk7lnCHCNE95kdmWow8ZZvryXeRUQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=m49kV01o; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=NhYgUp3/qWrxN/sOva8v2BfFCpgTW9xCdLNT3rbiLtn1iuM2vkQvj7gWAIs+EsHeM7ftVk5LeK2Bga4xTjwDXB1Y708+TExUMBq+RSFDEuwCmbPJn4c9xkN36PsC9w3ylBzUUpiKDOTwgneE5qZpxEXyjfjOvZwQLZo7pOY/AHY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VBkhlVlU; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="m49kV01o"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8BEEF1F000FF;
-	Thu, 10 Sep 2026 10:40:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VBkhlVlU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 876AF1F000FF;
+	Thu, 10 Sep 2026 10:40:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789036808;
-	bh=NOEBTdxstV+d5BiWn0L23pUQNYbD27GyFMPt0LVjrZc=;
+	s=k20260515; t=1789036853;
+	bh=ua6xWXTyhqfX8IEq3GyZ+wTgmiaf1zRFh6iBlcPSHP4=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=m49kV01oqoikFzSvyMCXbB3yXpksGcrEeY1Q2Zcvoy37NTNCbuXEm/SPlFBpGxcqq
-	 5htqLbiXwvdep+7vuJtYLOAJTZI6CuIhHP956tvkdpEgPz8cz6GOjN/oDRsC8D0R5q
-	 Uebc9Ir6NG7eL2sN+qh/u5SY7ujsdpla+Dz8p/I6EKSb6USqaEyoWjXvojryMU8hY+
-	 AY5+pH6CHE+q1qaFlaHKMo9xZCuCSGN0JGunGntgSsTQpJ15+rwq0Kr1Xm8JqUDdoz
-	 74Vcl5qL4wD//M64XU0HZHEZEnX2Y40llXqbK4+/q3+xIV3QVQLICkJpqbMwEo+Vfc
-	 v+SlkwDvzQ7hw==
-Date: Thu, 10 Sep 2026 12:40:04 +0200
+	b=VBkhlVlUIW05O1e4yO5Et7VpQUZrHRaEqE24+DYXvVY3u6a2l9sJ8htCp9eKYNH9J
+	 OQve5KB24LfHPvQ3oMBwJrWfA5oMAbUoOdpspgQdn1TSSF0D6fEJjyNA5ddhWSeIrC
+	 /1J1QmJklaAfWtuHnJMkHKMYswqiw+AeMQ9pjY6xsccnKGFDxY2BfcWd/DEfFW1xgE
+	 KygFwh4Gbo23/jonERtrSYEO0ZZJJB9OKjT+eMIfEz+k3Z7oGDto/2JCC+Eyfq7fsU
+	 njkszxhFgqq2TCdxqgKunO8MIUbru9voGAqeyTOHQF0N4vEznrztg5UO7xdG+gUe2L
+	 UnMntyy14Y3jw==
+Date: Thu, 10 Sep 2026 12:40:50 +0200
 From: Carlos Maiolino <cem@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <djwong@kernel.org>
-Subject: Re: [PATCH 1/3] xfs: also flush the RT device cache in
- xlog_write_iclog
-Message-ID: <aqKH6E2TRw2AeKVz@andromeda.toxiclabs.cc>
+Subject: Re: [PATCH 2/3] xfs: don't continue on error in xfs_fsync
+Message-ID: <aqKJKvmUoZy-Q8gE@andromeda.toxiclabs.cc>
 References: <20260907073427.719935-1-hch@lst.de>
- <20260907073427.719935-2-hch@lst.de>
+ <20260907073427.719935-3-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,113 +42,75 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260907073427.719935-2-hch@lst.de>
+In-Reply-To: <20260907073427.719935-3-hch@lst.de>
 
-On Mon, Sep 07, 2026 at 10:33:07AM +0300, Christoph Hellwig wrote:
-> The cache flush before writing the CIL start record no only needs to
-> ensure any metadata covered by the overwritten part of the log is on
-> stable storage, but also that any data pointed to by metadata logged
-> is on stable storage, as otherwise log recovery could created allocated
-> blocks that point to stale data.  Fortunately the code already
-> handles this right for the data device, but it also needs to flush
-> the RT device for this to work for data on the RT device.
+On Mon, Sep 07, 2026 at 10:33:08AM +0300, Christoph Hellwig wrote:
+> As soon as we get an error from cache flushing or log forcing, there
+> is no point in continuing as the data integrity is already impacted.
+> Return the error instead of continuing to do more work.
 > 
-> Also update the comments to explicitly mention this case.
-> 
-> This omission goes back to the first days of cache control in XFS.
-> 
-> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+> ---
 
 Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-> ---
->  fs/xfs/xfs_log.c     | 45 ++++++++++++++++++++++++++++++--------------
->  fs/xfs/xfs_log_cil.c |  7 ++++---
->  2 files changed, 35 insertions(+), 17 deletions(-)
+
+>  fs/xfs/xfs_file.c | 19 +++++++++----------
+>  1 file changed, 9 insertions(+), 10 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index 2a34611d81f6..f4f81d893e8c 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -1544,6 +1544,35 @@ xlog_bio_end_io(
->  		   &iclog->ic_end_io_work);
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 426a67b813a7..0d31fea67a2c 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -130,8 +130,8 @@ xfs_file_fsync(
+>  {
+>  	struct xfs_inode	*ip = XFS_I(file->f_mapping->host);
+>  	struct xfs_mount	*mp = ip->i_mount;
+> -	int			error, err2;
+>  	int			log_flushed = 0;
+> +	int			error;
+>  
+>  	trace_xfs_file_fsync(ip);
+>  
+> @@ -154,15 +154,17 @@ xfs_file_fsync(
+>  		error = blkdev_issue_flush(mp->m_rtdev_targp->bt_bdev);
+>  	else if (mp->m_logdev_targp != mp->m_ddev_targp)
+>  		error = blkdev_issue_flush(mp->m_ddev_targp->bt_bdev);
+> +	if (error)
+> +		return error;
+>  
+>  	/*
+>  	 * If the inode has a inode log item attached, it may need the journal
+>  	 * flushed to persist any changes the log item might be tracking.
+>  	 */
+>  	if (ip->i_itemp) {
+> -		err2 = xfs_fsync_flush_log(ip, datasync, &log_flushed);
+> -		if (err2 && !error)
+> -			error = err2;
+> +		error = xfs_fsync_flush_log(ip, datasync, &log_flushed);
+> +		if (error)
+> +			return error;
+>  	}
+>  
+>  	/*
+> @@ -178,14 +180,11 @@ xfs_file_fsync(
+>  	if (!log_flushed) {
+>  		struct xfs_buftarg *file_targp = xfs_inode_buftarg(ip);
+>  
+> -		if (mp->m_logdev_targp == file_targp) {
+> -			err2 = blkdev_issue_flush(file_targp->bt_bdev);
+> -			if (err2 && !error)
+> -				error = err2;
+> -		}
+> +		if (mp->m_logdev_targp == file_targp)
+> +			return blkdev_issue_flush(file_targp->bt_bdev);
+>  	}
+>  
+> -	return error;
+> +	return 0;
 >  }
 >  
-> +/*
-> + * When using multiple devices, we also need to flush the data and RT device
-> + * caches first to ensure that all metadata writeback covered by the LSN in
-> + * this iclog is on stable storage. This is slow, but it *must* complete
-> + * before we issue the external log IO.
-> + *
-> + * If the flush fails, we cannot conclude that past metadata writeback from
-> + * the log succeeded.  Repeating the flush is not possible, hence we must
-> + * shut down with log IO error to avoid shutdown re-entering this path and
-> + * erroring out again.
-> + */
-> +static int
-> +xlog_flush_data_caches(
-> +	struct xlog		*log)
-> +{
-> +	struct xfs_mount	*mp = log->l_mp;
-> +
-> +	if (log->l_targ != mp->m_ddev_targp) {
-> +		if (blkdev_issue_flush(mp->m_ddev_targp->bt_bdev))
-> +			return -EIO;
-> +	}
-> +	if (mp->m_rtdev_targp && mp->m_rtdev_targp != mp->m_ddev_targp) {
-> +		if (blkdev_issue_flush(mp->m_rtdev_targp->bt_bdev))
-> +			return -EIO;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
->  STATIC void
->  xlog_write_iclog(
->  	struct xlog		*log,
-> @@ -1588,21 +1617,9 @@ xlog_write_iclog(
->  	iclog->ic_bio.bi_private = iclog;
->  
->  	if (iclog->ic_flags & XLOG_ICL_NEED_FLUSH) {
-> -		iclog->ic_bio.bi_opf |= REQ_PREFLUSH;
-> -		/*
-> -		 * For external log devices, we also need to flush the data
-> -		 * device cache first to ensure all metadata writeback covered
-> -		 * by the LSN in this iclog is on stable storage. This is slow,
-> -		 * but it *must* complete before we issue the external log IO.
-> -		 *
-> -		 * If the flush fails, we cannot conclude that past metadata
-> -		 * writeback from the log succeeded.  Repeating the flush is
-> -		 * not possible, hence we must shut down with log IO error to
-> -		 * avoid shutdown re-entering this path and erroring out again.
-> -		 */
-> -		if (log->l_targ != log->l_mp->m_ddev_targp &&
-> -		    blkdev_issue_flush(log->l_mp->m_ddev_targp->bt_bdev))
-> +		if (xlog_flush_data_caches(log))
->  			goto shutdown;
-> +		iclog->ic_bio.bi_opf |= REQ_PREFLUSH;
->  	}
->  	if (iclog->ic_flags & XLOG_ICL_NEED_FUA)
->  		iclog->ic_bio.bi_opf |= REQ_FUA;
-> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> index 166531018ce4..f9e07a32f60f 100644
-> --- a/fs/xfs/xfs_log_cil.c
-> +++ b/fs/xfs/xfs_log_cil.c
-> @@ -1055,9 +1055,10 @@ xlog_cil_set_ctx_write_state(
->  		spin_unlock(&cil->xc_push_lock);
->  
->  		/*
-> -		 * Make sure the metadata we are about to overwrite in the log
-> -		 * has been flushed to stable storage before this iclog is
-> -		 * issued.
-> +		 * Flush the write cache before writing the start record so that
-> +		 * the metadata we are about to overwrite in the log and the
-> +		 * data that new allocations in this context refer to are
-> +		 * persisted to stable storage before this iclog is written.
->  		 */
->  		spin_lock(&cil->xc_log->l_icloglock);
->  		iclog->ic_flags |= XLOG_ICL_NEED_FLUSH;
+>  static int
 > -- 
 > 2.53.0
 > 
