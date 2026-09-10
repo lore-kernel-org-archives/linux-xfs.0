@@ -1,181 +1,227 @@
-Received: from pdx-out-010.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-010.esa.us-west-2.outbound.mail-perimeter.amazon.com [52.12.53.23])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71C7947C112;
-	Thu, 10 Sep 2026 11:46:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=52.12.53.23
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED7D3476066;
+	Thu, 10 Sep 2026 11:48:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789040809; cv=none; b=cV1Ku7oVUvasXv8YBIFLxZdfCeF4J2a25VDK3/jdiBzoE5WMIpRW2UzOUk1vyoWfJegs27RkE9LZKEyQU4vF/Vmb9MeY4Zrqtw/lrVcn1/Dz4kwMXjCS3PvwoFeKej8zXvvFBCOy4SGRutF++bYQaQXum+J8niZB0TOfBKzqJ/k=
+	t=1789040919; cv=none; b=ijR7kp6gOJVFGb3hri1ayRfsIETFm/Z63AAv9vC1HpphUn842bOL2D5MrFcxhmlqbMCAAn/NJrJ6MPZXWm0dzJx0YrmdlUW6/F3bOvAkjoJ24R/sahG2OAfA45IkUetXJnWsry/Mnpd6aYqvmzpEwbn4cfn749R6C4AycLeH/pQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789040809; c=relaxed/simple;
-	bh=d7z6KPD6K9yAbT6rqth8+0jINVsF/Bf64K/NCCQDth4=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=NcaRyy2ZMkK1VvZ8bQ1ELq4Wh/dUC+NiaqiZL2P+M1hKxFYjvwDFIS0SIhR4etJrwTuHChhvGYCbzpNyD8L8oYOcMX2Z2i72+Kn51BAnHT4zQDWO+VhiATcLuoIuqyl5aDmbG/iD/c76aWeF+vtY71gbDjwjfIHgNz5eoiu2Pa0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.it; spf=pass smtp.mailfrom=amazon.it; dkim=pass (2048-bit key) header.d=amazon.it header.i=@amazon.it header.b=AEcqfbDC; arc=none smtp.client-ip=52.12.53.23
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.it
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.it
+	s=arc-20240116; t=1789040919; c=relaxed/simple;
+	bh=CeaHlpCWLJ2yKz0lH73JkFUe1oJdPEOvnXPlshzH8Ic=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=PJesXG1gBY7CR9PJMWgfdfNoNM0GWO9LfQm4UX6czgdNTxKmTGsiQXdqn6mnV4NCzLwJ5nUwN0eEdvPe13O7LSb/OwmnsOkPlDkElXwhU0F1jyEk5RIzdwRHg8IWmT9sWOfWrPDq2dIqUiJ8nhkpB2RreP3074bomk6gsZ6U6Ao=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aOgzenAe; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=amazon.it header.i=@amazon.it header.b="AEcqfbDC"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=amazon.it; i=@amazon.it; q=dns/txt; s=amazoncorp2;
-  t=1789040802; x=1820576802;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=zIxMe7CUOIbyICiMyGkhisOqvvsyopgrlubg8GsVc3c=;
-  b=AEcqfbDCDXAvt011rwBnjlhxM/xy9gfu1gvUpXPZXotAMAjJ9Myhu5HM
-   nOLmFmTVnAnCR/mbrwijotmrd5la9u4SJq5zjGE8qLithggsmyZSOqaDj
-   rbPoQ26MVEYRXneC29m5Cr39l4u5rLBJQ/ZOAMc9xgMeneq4NM7cI7MOC
-   /qovnsQOaVGvSUZf7As3kazauQhjgKdaM/9HdyOJzTyUCdZ5ypaNn3gtp
-   T5qfCbnrlq+pwlsbna2DOwBhsRGLhs9LqfscnZl3iSXaGWuZnO/qBtl8b
-   ykPvVSmzksI8EH8T5tlNAKQ7RuGdVqf3g3Gq1/8QYrubGj8ZBvbXhjBHB
-   A==;
-X-CSE-ConnectionGUID: PrxB9U2pTCO3cOtOxIS8kQ==
-X-CSE-MsgGUID: 71u9WAD7TGq5z4s2L10l2A==
-X-IronPort-AV: E=Sophos;i="6.27,95,1787011200"; 
-   d="scan'208";a="28190348"
-Received: from ip-10-5-12-219.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.12.219])
-  by internal-pdx-out-010.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Sep 2026 11:46:36 +0000
-Received: from EX19MTAUWB001.ant.amazon.com [205.251.233.104:31293]
- by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.22.113:2525] with esmtp (Farcaster)
- id 723b55c1-1dd1-4458-a7f0-829821daf3d6; Thu, 10 Sep 2026 11:46:36 +0000 (UTC)
-X-Farcaster-Flow-ID: 723b55c1-1dd1-4458-a7f0-829821daf3d6
-Received: from EX19D001UWA001.ant.amazon.com (10.13.138.214) by
- EX19MTAUWB001.ant.amazon.com (10.250.64.248) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.45;
- Thu, 10 Sep 2026 11:46:36 +0000
-Received: from dev-dsk-dipiets-1b-77b833da.eu-west-1.amazon.com
- (10.253.66.177) by EX19D001UWA001.ant.amazon.com (10.13.138.214) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.46; Thu, 10 Sep 2026
- 11:46:31 +0000
-From: Salvatore Dipietro <dipiets@amazon.it>
-To: <akpm@linux-foundation.org>
-CC: <abuehaze@amazon.com>, <alisaidi@amazon.com>, <blakgeof@amazon.com>,
-	<brauner@kernel.org>, <brendan.jackman@linux.dev>, <david@redhat.com>,
-	<dgc@kernel.org>, <dipietro.salvatore@gmail.com>, <dipiets@amazon.it>,
-	<djwong@kernel.org>, <hannes@cmpxchg.org>, <hch@infradead.org>, <hch@lst.de>,
-	<jackmanb@google.com>, <linux-fsdevel@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-mm@kvack.org>,
-	<linux-xfs@vger.kernel.org>, <mhocko@suse.com>, <ritesh.list@gmail.com>,
-	<rvvandan@amazon.com>, <stable@vger.kernel.org>, <surenb@google.com>,
-	<vbabka@kernel.org>, <vbabka@suse.cz>, <willy@infradead.org>,
-	<ziy@nvidia.com>
-Subject: Re: [PATCH v4] mm/page_alloc: avoid direct compaction for costly __GFP_NORETRY allocations
-Date: Thu, 10 Sep 2026 11:46:02 +0000
-Message-ID: <20260910114602.926944-1-dipiets@amazon.it>
-X-Mailer: git-send-email 2.50.1
-In-Reply-To: <20260905174239.99e31515fabe220aa7d8e6fa@linux-foundation.org>
-References: <20260905174239.99e31515fabe220aa7d8e6fa@linux-foundation.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aOgzenAe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 94E411F000FF;
+	Thu, 10 Sep 2026 11:48:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789040917;
+	bh=w/6SaUpGwcR/4xz/rdTBJGbaGTe457lx4yZJNtdCTc0=;
+	h=Subject:From:To:Cc:Date:In-Reply-To:References;
+	b=aOgzenAe37aW1u0ymR0Ak0eb4UxS+CUZf3eTXIm2PurJHTjn8hLbOKVGN2yMnRTEu
+	 oWURFfjRc3becSe4LBhWcaJwS3Sjv/Hi+40WUx59lF3+3k9lst1SrEMOlfC2GDBJBJ
+	 wtfumIUPF/gxKecHXXgcy50VVh9U128VUv9SANHfeA5lkxS7w6Jl3XA0On4aFRXKhJ
+	 qY8sysh73d90IGc9I98L52MFteLprVdmI/yaAvcMN3kgJ73YsvmC08kWAaUy2YgvC1
+	 qe9mCuibd1C1gI6ZXZCUHps47LIQow07SMj5dtb5w9wsdppmtH10PG22IC/drsUOuX
+	 +we/8Ml5yZpXA==
+Message-ID: <e8e6de7e0034eea0c874c1d9fd7d64f8040514e9.camel@kernel.org>
+Subject: Re: [RFC PATCH 1/2] common/nfs: add management helpers
+From: Jeff Layton <jlayton@kernel.org>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, "Darrick J. Wong"
+ <djwong@kernel.org>, 	zlang@kernel.org, linux-xfs@vger.kernel.org,
+ fstests@vger.kernel.org, jack@suse.cz,  Chuck Lever <cel@kernel.org>,
+ linux-nfs@vger.kernel.org
+Date: Thu, 10 Sep 2026 07:48:34 -0400
+In-Reply-To: <aqKWMY5yebKmUE6_@andromeda.toxiclabs.cc>
+References: <20260907164054.111393-1-cem@kernel.org>
+	 <20260907164054.111393-2-cem@kernel.org>
+	 <20260908142226.GL839663@frogsfrogsfrogs> <aqD4zBD06P1LJKM2@infradead.org>
+	 <208df4dabcb9db9c6c7d00f4cf2f63fa3be815e1.camel@kernel.org>
+	 <aqKWMY5yebKmUE6_@andromeda.toxiclabs.cc>
+Autocrypt: addr=jlayton@kernel.org; prefer-encrypt=mutual;
+ keydata=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
+ QZIQXVeAA+smfTT0tDrisj1U5x6ZB9b3nBg65kc=
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.60.2 (3.60.2-1.fc44) 
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-ClientProxiedBy: EX19D035UWB002.ant.amazon.com (10.13.138.97) To
- EX19D001UWA001.ant.amazon.com (10.13.138.214)
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 
+On Thu, 2026-09-10 at 13:40 +0200, Carlos Maiolino wrote:
+> On Thu, Sep 10, 2026 at 07:30:46AM -0400, Jeff Layton wrote:
+> > On Tue, 2026-09-08 at 23:12 -0700, Christoph Hellwig wrote:
+> > > On Tue, Sep 08, 2026 at 07:22:26AM -0700, Darrick J. Wong wrote:
+> > > > > +# Start rpcbind if it is not already running.
+> > > > > +_start_rpcbind()
+> > > > > +{
+> > > > > +	rpcinfo -p localhost > /dev/null 2>&1 && return 0
+> > > > > +	rpcbind 2>> $seqres.full || _notrun "Cannot start rpcbind"
+> > > > > +	/usr/sbin/rpc.statd 2>> $seqres.full || _notrun "Cannot start r=
+pc.statd"
+> > > > > +	/usr/sbin/rpc.idmapd 2>> $seqres.full || _notrun "Cannot start =
+rpc.idmapd"
+> > > > > +	/usr/sbin/nfsdcld 2>> $seqres.full || _notrun "Cannot start nfs=
+dcld"
+> > > >=20
+> > > > Aren't these daemons usually configured as system services?
+> > > >=20
+> > > > # service rpcbind start
+> > > >=20
+> > > > etc?
+> > >=20
+> > > They usually are, but doing that as part of a test feels wrong.
+> > > Adding the relevant maintainers and list.
+> > >=20
+> > >=20
+> >=20
+> > I don't see a problem with using the normal systemd services as long as
+> > you're just doing a "start" instead of an "enable". That would be a lot
+> > less likely to bitrot than these scripts.
+>=20
+> My only concern regarding using systemd services is portability. I tried
+> to keep the test agnostic to the init system being used, but it indeed
+> would be way easier to put this into xfstests if we just accept this
+> will be a __not_run on systemd-less distros. Giving the majority of
+> people I know frequently running xfstests (including me) uses
+> systemd-based distros, this wouldn't be a problem for me personally...
+>=20
 
-On Sat, 05 Sep 2026 17:42:39 -0700 Andrew Morton <akpm@linux-foundation.org> wrote:
+That's what I'd probably do. If someone wants to step up and do
+something for non-systemd distros then they can have at it.
 
-> Is there anything particularly unusual about this test case?
+Alternately, you could use systemd and just fall back to what you're
+doing now in the case where it's not present. My only fear there is
+that the non-systemd cases would probably bitrot because no one would
+use them.
 
-It is a stock pgbench simple-update PostgreSQL workload on a large
-instance (96 vCPUs), using standard PostgreSQL settings and with no huge
-pages assigned to the database. We deliberately overprovision the
-pgbench clients: 1024 clients over 96 threads. That keeps enough writers
-in the buffered write path concurrently to hit the costly-order
-allocation failure path continuously. The memory fragmentation comes from 
-page tables: PostgreSQL spawns a new process per client, and those page
-tables consume ~40% of memory, which significantly limits the page cache
-and the free memory available.
+That said, if you're doing all of this in a container then it shouldn't
+matter much how it gets started.
 
+> >=20
+> > > > > +}
+> > > > > +
+> > > > > +# Stop rpcbind.
+> > > > > +_stop_rpcbind()
+> > > > > +{
+> > > > > +	pkill rpcbind 2>/dev/null
+> > > > > +}
+> > > > > +
+> > > > > +# Start the NFS server if not already running.
+> > > > > +_start_nfsd()
+> > > > > +{
+> > > > > +	rpcinfo -p localhost 2>/dev/null | grep -q nfs && return 0
+> > > > > +	rpc.nfsd 2>> $seqres.full || _notrun "Cannot start rpc.nfsd"
 
-> > Results (average of 3 runs, TPS):
-> >
-> >   Config                   Avg TPS      % vs Baseline
-> >   baseline (no patch)       59,408       -
-> >   With this patch          155,409      +161.6%
->
-> Is this back to pre-5d8edfb900d5 performance?
+If you do decide to go this route, note that rpc.nfsd is being
+deprecated. We have a new tool for managing the server now called
+"nfsdctl" that you probably want to use when possible.
 
-Yes - fully recovered. Here is the summary, same host and workload
-throughout, average of 3 runs:
+> > > > > +	rpc.mountd 2>> $seqres.full || _notrun "Cannot start rpc.mountd=
+"
+> > > > > +}
+> > > > > +
+> > > > > +# Stop the NFS server.
+> > > > > +_stop_nfsd()
+> > > > > +{
+> > > > > +	rpc.nfsd 0 2>/dev/null
+> > > > > +	pkill rpc.mountd 2>/dev/null
+> > > >=20
+> > > > If the system under test has nfs filesystems mounted, won't killing
+> > > > those daemons also break the mounts?
+> > > >=20
+> > > > I think that might break testing of nfs itself, and nfs-booted test=
+ing
+> > > > nodes as well?
+> > >=20
+> > > Possibly.  I guess if we want to save we need to launch a container
+> > > or at least a network namespace this is bound too.=20
+> >=20
+> > Doing this in a container would be better and less likely to interfere
+> > with other stuff running on the box. Our container isolation is still
+> > not 100% perfect with nfsd (there is still a global mutex, etc.), but
+> > we're getting closer.
+> >=20
+> > --=20
+> > Jeff Layton <jlayton@kernel.org>
+> >=20
 
-  Config                                        Avg TPS   % vs baseline
-  AL2023 stock 6.1 kernel                       136,942            n/a
-  v7.3-rc1 baseline (no patch)                   59,408             -
-  v7.3-rc1, 5d8edfb900d5 behaviour reverted     151,184        +154.5%
-  v7.3-rc1 + v4                                 155,409        +161.6%
-
-The 6.1 row predates 5d8edfb900d5 entirely. A different kernel version,
-so not directly comparable, but it shows the performance this workload
-used to get on this host.
-
-A literal "git revert 5d8edfb900d5" does not apply to v7.3-rc1 -
-iomap_write_iter() has been rewritten since - so the reverted row is a
-one-line behavioural revert, forcing the write loop back to copying at
-most PAGE_SIZE per iteration:
-
-  -	size_t chunk = mapping_max_folio_size(mapping);
-  +	size_t chunk = PAGE_SIZE;
-
-which is what the pre-5d8edfb900d5 loop computed. That makes
-iomap_get_folio() pass no order hint, so the path issues only order-0
-allocations.
-
-
-> AI review asked a few serious-looking questions:
-> 	https://sashiko.dev/#/patchset/20260904115629.3993331-1-dipiets@amazon.it
-
-Thanks for pointing that out. To address them, we can have something
-like the patch below. Performance results are still similar to v4. Happy
-to submit a formal v5 patch with it if you would like.
-
-  Config                                        Avg TPS   % vs baseline
-  v7.3-rc1 baseline (no patch)                   59,408             -
-  v7.3-rc1 + v4                                 155,409        +161.6%
-  v7.3-rc1 + proposed patch                     161,994        +172.7%
-
-diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-index 12fac9084c48..be8b0d72a2db 100644
---- a/mm/page_alloc.c
-+++ b/mm/page_alloc.c
-@@ -4784,10 +4784,22 @@ static inline struct page *
- __alloc_pages_slowpath(gfp_t gfp_mask, unsigned int order,
- 						struct alloc_context *ac)
- {
--	bool can_direct_reclaim = gfp_mask & __GFP_DIRECT_RECLAIM;
-+	const bool costly_order = order > PAGE_ALLOC_COSTLY_ORDER;
-+	/*
-+	 * Costly __GFP_NORETRY callers have a cheap fallback to a lower order,
-+	 * so don't stall them in direct reclaim or direct compaction.  Exempt
-+	 * __GFP_THISNODE (the THP attempt from alloc_pages_mpol() needs direct
-+	 * compaction) and __GFP_NOFAIL (must not be made to fail).  Don't
-+	 * clear __GFP_DIRECT_RECLAIM from gfp_mask instead: that would also
-+	 * change the alloc_flags derived by alloc_flags_slowpath().
-+	 */
-+	const bool costly_noretry = costly_order &&
-+		(gfp_mask & __GFP_NORETRY) &&
-+		!(gfp_mask & (__GFP_THISNODE | __GFP_NOFAIL));
-+	bool can_direct_reclaim = !costly_noretry &&
-+		(gfp_mask & __GFP_DIRECT_RECLAIM);
- 	bool can_compact = can_direct_reclaim && gfp_compaction_allowed(gfp_mask);
- 	bool nofail = gfp_mask & __GFP_NOFAIL;
--	const bool costly_order = order > PAGE_ALLOC_COSTLY_ORDER;
- 	struct page *page = NULL;
- 	unsigned int alloc_flags;
- 	unsigned long did_some_progress;
-
-
-Thanks,
-Salvatore
-
-
-
-AMAZON DEVELOPMENT CENTER ITALY SRL, viale Monte Grappa 3/5, 20124 Milano, Italia, Registro delle Imprese di Milano Monza Brianza Lodi REA n. 2504859, Capitale Sociale: 10.000 EUR i.v., Cod. Fisc. e P.IVA 10100050961, Societa con Socio Unico
-
-
-
+--=20
+Jeff Layton <jlayton@kernel.org>
