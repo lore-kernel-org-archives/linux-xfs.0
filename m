@@ -1,156 +1,140 @@
-Received: from flow-b5-smtp.messagingengine.com (flow-b5-smtp.messagingengine.com [202.12.124.140])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7558B493D55;
-	Thu, 10 Sep 2026 13:36:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.140
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05E4C494A1E
+	for <linux-xfs@vger.kernel.org>; Thu, 10 Sep 2026 13:43:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789047388; cv=none; b=L4rOXWEpE8TIj/R6rBdjFOALAi0m1GrpXOTbza95p86iUYrn0wqTQ+Vz1LH+31Fiyp4DtS4/cIM9DhobJs0ZlAb7zBqIBXnf3kEBNylrUGyuZWttAJOa8hCnUy65mJr/DO4NAOwYBqJ2PDyiiqPqpOhiNcY5xSudsvN82SqMyPw=
+	t=1789047782; cv=none; b=BdZui2TLYEuRgG8F85oSnNRKzex2A0xOBFdfMR3kR+6Z5P268VQ0aHId+LoCrl7Tiy5glcyz4NbWUyFiJoBM4lu1rTzRwk9F5IEUrTWcHzJcXMbUstJetBcxKaeqs8OBNb2s4gF3s5nZnjAlL8Mj/6XTBy3yPiYGLMn4m1SVCGU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789047388; c=relaxed/simple;
-	bh=mFzSoT/R8c1Nd73kJmUZCG6wf+klMYpnbTHGbu06jnQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PId3DnDdQYL8TRTj5wqMdN9Os3ZLb1E7c229fOxspErP8HkqQgAIE3mU5R8X9ijFQFathxxsxNNtEQteBPMORrQSxvzSU2XQq3zSLndOQgk89HAi2gPf4vFqFWrLWlT6yMMaVPjUBZb9Dk2h5EG5vAaP8Yx4zCCAw3MBTL7hR7Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=shutemov.name; spf=pass smtp.mailfrom=shutemov.name; dkim=pass (2048-bit key) header.d=shutemov.name header.i=@shutemov.name header.b=JiC/FNcc; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=IoUTrepy; arc=none smtp.client-ip=202.12.124.140
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=shutemov.name
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shutemov.name
+	s=arc-20240116; t=1789047782; c=relaxed/simple;
+	bh=98ToWsIS5d7IjM6ytuYwT3/Jd61Z99/5CcphE1jQArU=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=ohkd9DRshFkrV/4+2zSN0sKH5kQYNQd3iwWra4krYQPGuUm3F7wWt5wk08DJrp/49sx26QV6lq1kPJkKoVOyofsAvIz4deyt+MUqzIC8rC9Vara0rqEHE1YoDDj5DbqubiWcfPbm4Etz8h8mXledSXGyaniAEq59xG5uBdkIacQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=iyr3whHP; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=QL/SaU4q; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shutemov.name header.i=@shutemov.name header.b="JiC/FNcc";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="IoUTrepy"
-Received: from phl-compute-08.internal (phl-compute-08.internal [10.202.2.48])
-	by mailflow.stl.internal (Postfix) with ESMTP id 53394130031B;
-	Thu, 10 Sep 2026 09:36:24 -0400 (EDT)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-08.internal (MEProxy); Thu, 10 Sep 2026 09:36:25 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shutemov.name;
-	 h=cc:cc:content-type:content-type:date:date:from:from
-	:in-reply-to:in-reply-to:message-id:mime-version:references
-	:reply-to:subject:subject:to:to; s=fm2; t=1789047384; x=
-	1789054584; bh=Aix6zD+sWAhHCK96XTqdVIPFcUsbKpScTo8omJZ7kRI=; b=J
-	iC/FNccl0yH8eZLx8Y1aA3k5KkWHnq/SUgCGyekPoT/VyPpPrQTTHxbCn774XPfu
-	y+OtArhkvOMs8178JTM/BKjum34C28rfNShUl9uo1JeCNqmmvZUTIZLXDNM6Im8q
-	sLtNlryUoZDEICm2fG/k9QuyUXqjLBLG8a2IOpctkwJfdX2OyW6GP4AlH4u4MugR
-	ok5ztUySC4ICl2NqI+95e879rCmMyP3bn2AvtNIKu/QwMFgSyEeOjSZo7UtiKooM
-	1UPOyj9+JXZ5Voi1xsXtLKQdq6URhZcljDW6WXHgFudXyh4aI/3QEVQ8A2fu0ycx
-	e7fuDH45gUZFIcPEmVYhg==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-type:content-type:date:date
-	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
-	:message-id:mime-version:references:reply-to:subject:subject:to
-	:to:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=
-	1789047384; x=1789054584; bh=Aix6zD+sWAhHCK96XTqdVIPFcUsbKpScTo8
-	omJZ7kRI=; b=IoUTrepyYSR/bEiVJoM6S3gFlo/l0qjcU7cPRIJFHAdTeJIL9Tz
-	AxlXVqLy4UglZ0QEYVoTgXoVQPc6oK8K6+ic9X5YjPsqMIILcajf8DkK6Cg+m0Lv
-	1J/UJEuwOC/cylj5dYO4IWS+eMzcU0G4uzEfv48dMAwRDbNtYsRY1Bi/UKxSCyTl
-	srbKccBjrnKKKlvJUNOTRTB+ZgWjkfb0rv6y1L/X32QCq5WAlbCgp9i+PFWMvLxF
-	EwEJGDWI6D3jSw/p030sYcVVEHM3bxgzY7JbpciivHKYNlvGQd8g4KZWWK9zHVQm
-	Nm26BOEiho6RxJNoK19o8EAsZljaavd1rjw==
-X-ME-Sender: <xms:V7KiasHiw0d7B0joUAwkdvU8Bga4XWJHRXpeEZTe_kuhdQGwp3EAbA>
-    <xme:V7KianV5efMMkCR84uqLsLP9iF3dRSN08zFokNrRb_iykiESwg0mFmNCHUJ88xX1h
-    xzAJzMU6lcoYmRhdIge3qr8eytQ_68Re5KYBMjMfWJB1MjJhFq7WDFx>
-X-ME-Received: <xmr:V7KiaqeJ7u0PeZS6fdgBUhpQriOniVjSUV2qnx3uEXOKbKe-DSblJxw4ntg>
-X-ME-Proxy-Cause: dmFkZTE/cV7Y3B5vfmq4FxwBW5zjIOR+OZ0Xq5wNE0R+9MV5eEb7Vmg3gWUSzcydLMYKsT
-    k0AEiBx5vAV4G3V3qjltmxAKxV5+/EjuIP6hv39fDwwxRv8x0NwLBFQwKfQdcq+44hzyHZ
-    3/uAyOhAF7+IUKa8FH5q0canFhSzlKFsCqOHb9P8uJE2LFS6hBfLubEv+qPLaOReHYiNDI
-    t7k34surxCm87KQlVrWSwkDE1ybXWYCPpf0JDb1ntZexrcY4FQjImfSwEXvhyEyq9EMbag
-    ZRrwqKZ/zrY7HPzA9+r3qwYLqtLJwM3F3LvVn+dQgoholjbS3YyVg7nrSnhOjJXpJWvdAB
-    bsesbw6nh2xKNlCbjDZaLS+F1fclhtk/tkGvO8q3VrPNgjZRN8cAr1LvpkeXgLQlTk4eD0
-    oBgAWaBpWJY6p3DxNoxJdTkhb1HcO47WICrGjLw8NjRs6Li3q3dAaah3w5GIP6MphuoJdv
-    KaZWhP3av+E8Ee6yVrdqcpk5gs3GC0a9ykMnyqXjOvjFeElgQbEXDsGkZo9ImEoQ+bsWUz
-    kZI1Dy7J/mPKKtvJ5mXRIkHCWlOuO5LJ0imcYavY5eiQ1kQkbc/VDgMLnSThrB/LeIJo/f
-    l21N7br/2Qlm+OfDCuECU3ibjKMGb473+BUWv8mxDr+KQjqxFWJ1rLsrD9qQ
-X-ME-Proxy: <xmx:V7KiamTCFHjpmBE-EEinApbKeCrS6JG3nHB4MLcdlUegeDHp7naQGg>
-    <xmx:V7KiasBRTn6630SaHyJ8qQzwVrY0YsQiHDfSJ83W053CWDz3RnN5SA>
-    <xmx:V7KiassB-nsQ0HGdKsvQQfAE0osTulGGqkk9TyOj2cEUzMFCNLr1Mw>
-    <xmx:V7Kial4KoUrfK9nBSFF_muO3jGSz5q9aAxvFhSblQNCsz7bEbrW5Zg>
-    <xmx:WLKianwh14UVD3RXq0BoVMyJjbOORFjiIgq0wIdt5yyEc40WI17Hm9lf>
-Feedback-ID: ie3994620:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Thu,
- 10 Sep 2026 09:36:22 -0400 (EDT)
-Date: Thu, 10 Sep 2026 14:36:21 +0100
-From: Kiryl Shutsemau <kirill@shutemov.name>
-To: Usama Arif <usama.arif@linux.dev>
-Cc: akpm@linux-foundation.org, 
-	"Matthew Wilcox (Oracle)" <willy@infradead.org>, David Hildenbrand <david@kernel.org>, 
-	Lorenzo Stoakes <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, 
-	Vlastimil Babka <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
-	Suren Baghdasaryan <surenb@google.com>, Michal Hocko <mhocko@suse.com>, Jan Kara <jack@suse.cz>, 
-	Rik van Riel <riel@surriel.com>, Harry Yoo <harry@kernel.org>, Lance Yang <lance.yang@linux.dev>, 
-	Jann Horn <jannh@google.com>, Alexander Viro <viro@zeniv.linux.org.uk>, 
-	Christian Brauner <brauner@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>, 
-	Carlos Maiolino <cem@kernel.org>, Pedro Falcato <pfalcato@suse.de>, linux-mm@kvack.org, 
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	kernel-team@meta.com
-Subject: Re: [RFC PATCH 1/5] mm: let folio_mkclean() report which pages had
- dirty PTEs
-Message-ID: <aqKxU5iOuWjK58Al@thinkstation>
-References: <20260903182943.662461-2-kirill@shutemov.name>
- <20260909101212.894871-1-usama.arif@linux.dev>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="iyr3whHP";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="QL/SaU4q"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1789047779;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=pJZZpHiP7CPuGKYWAqqyZAd3k8D84Jqu2Jb8Skkggz8=;
+	b=iyr3whHPyiAwG5dn8E/SfzANIpfltrCwqPHUy1X5Bn1qhp/6ZF5b7jj1FtJad5e7FRR8E1
+	LXOr40oKG6Xws8LSrQGjYVDObwyAKzgWqm64cwAtMMSCsACrOLF6ayVtz7U/WeNj8/Hx6a
+	adR1MONlYTf7jfW6Mqs/vkFCrzzEuKw=
+Received: from mail-pg1-f199.google.com (mail-pg1-f199.google.com
+ [209.85.215.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-84-xKdxUOLhPyOlP3ELQBbN3Q-1; Thu, 10 Sep 2026 09:42:57 -0400
+X-MC-Unique: xKdxUOLhPyOlP3ELQBbN3Q-1
+X-Mimecast-MFC-AGG-ID: xKdxUOLhPyOlP3ELQBbN3Q_1789047776
+Received: by mail-pg1-f199.google.com with SMTP id 41be03b00d2f7-cc132709c76so9835786a12.3
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Sep 2026 06:42:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1789047776; x=1789652576; darn=vger.kernel.org;
+        h=content-type:mime-version:message-id:date:user-agent:references
+         :in-reply-to:subject:cc:to:from:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=pJZZpHiP7CPuGKYWAqqyZAd3k8D84Jqu2Jb8Skkggz8=;
+        b=QL/SaU4qUMxjSQDoGVgI34D9SeUM45rCEafQP1B24QyBd/58GnMl6eNnwwI8wYIQYi
+         U1BhM44Cvfb2+nw3/Bq3HjuvjfX0YfgC8qlfgW8nmgdACCyaFGKBDHDcIB+NHQfkJV/p
+         LjrA0onvWMG0yUY1kpLw3zZCBAzfkcjyVKtlaPB5mDOErgEaNGx03HBL+J+LLeuSBxVI
+         +9OicTHJciHa4GkOfVBKAMg2sch82Ba3YnegfDZm2NP6ee5LO3SXHPI0+kKEQSSkRdw3
+         L4S/l9UpMDDUxkMnKrHypUatNlH5AZvm/tn3xBpvZNqZ8FizF45osAEbHtyT1Ve6PfhX
+         mb5g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1789047776; x=1789652576;
+        h=content-type:mime-version:message-id:date:user-agent:references
+         :in-reply-to:subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to:content-type;
+        bh=pJZZpHiP7CPuGKYWAqqyZAd3k8D84Jqu2Jb8Skkggz8=;
+        b=XrjMQTJ9Dx2M89DJisT9OD0oV7TDV0QrdhLS/Gd2OCMShumYuHvzcdHBrSYb34WoAW
+         wUikxV6iyUPXZgvoO21hAhNB3RK5F19RIZ6D+7vSL/Sn+ITsKX7mKmaR/fYBTQiCQrxy
+         4Qq6LaLEEpxo9L5D8Kr5G7qgo6NO5KvF26qr6SA6zzROvv19W/NbrZIaNIVAJFoIAe9m
+         PlJYCdhLVWYplnjV/ZduWzdT+ZvsXAcY6zU3CwqfQk7pNH2cAV9TBFrhqXt64UOYxAbT
+         weG4P+6ywKRU1eF25D91wxh7/rF1JYGAfOWeOLxuMRWX5zIOGlfCLvlpFQBvRWARqrvQ
+         DkOA==
+X-Forwarded-Encrypted: i=1; AKwUvBxmHTPwgxyXKZaWdxguT7RZVc2wSDKAxOdYDKIjI9ZaVCbAO4FqfkPqV21pKDhVBz3XIsXA161EPMs=@vger.kernel.org
+X-Gm-Message-State: AFuF++myWgJsWVAJARZm4gsrQiHXikQdM7rD3CBNIvsUzoAN4BLA/nRC
+	fk7DEFyH5K8EqZ1hKKdddjhtpEYxzi34geMq6hgQ+/PZKOvyrCa9PNi8GMAXH2hpEo0EeLg1z3i
+	h/W4htIC4cb650RcblXoWLAZYQ6ZR5FYm1uboF/i2hKpSgG2ngSRx4rzIM9lZpQ==
+X-Gm-Gg: AYBFou2dZj+LBDY1BMFodN0zGrU+ksJ7FVaBrs7/rf/5/MJK9HUQ4rP7CAG2pWs15Q3
+	4NOnv4oI/iU6+CxdUYBZe+J9pJYYbFzXbtrwrrR8JDS8v2D1ATmdHj+1ITqBGFV548dozLYgHkX
+	Im+Mvcpb829j4TE5w71QvSGGG/5cpFiuvvzob3klhkcGcLOosoMZU6TX6uW0xA18JaUOlHzrxyI
+	PJFD8glsMsAchP9p4/JLHPVFGRUtHoA161QL2di/nugcXsTC//A/8HPP1hrJwRSidm1Tu83Is/8
+	w/n0AedpaB6WWFphtKkyJAmQV4SqBRKQG88UwJwEhClK3kDqgZ0pJrnvkTXMlFMBGnjU3bephA=
+	=
+X-Received: by 2002:a17:90b:268d:b0:398:b71e:60c1 with SMTP id 98e67ed59e1d1-39d70ae1201mr11368185a91.12.1789047776237;
+        Thu, 10 Sep 2026 06:42:56 -0700 (PDT)
+X-Received: by 2002:a17:90b:268d:b0:398:b71e:60c1 with SMTP id 98e67ed59e1d1-39d70ae1201mr11368108a91.12.1789047775647;
+        Thu, 10 Sep 2026 06:42:55 -0700 (PDT)
+Received: from localhost ([240d:1a:c0d:9f00:be24:11ff:fe35:71b3])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cc467df7beesm7140566a12.7.2026.09.10.06.42.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 10 Sep 2026 06:42:55 -0700 (PDT)
+From: Shigeru Yoshida <syoshida@redhat.com>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>,  "Darrick J. Wong"
+ <djwong@kernel.org>,  Deepanshu Kartikey <kartikey406@gmail.com>,
+  linux-xfs@vger.kernel.org,  linux-kernel@vger.kernel.org,
+  syzbot+ccdf3469f5f653bff7ac@syzkaller.appspotmail.com
+Subject: Re: [PATCH] xfs: take hm->lock in xfs_ioc_health_monitor() before
+ insert
+In-Reply-To: <aqJ6yulX3XBEoj4u@andromeda.toxiclabs.cc> (Carlos Maiolino's
+	message of "Thu, 10 Sep 2026 11:40:09 +0200")
+References: <20260906144629.17009-1-kartikey406@gmail.com>
+	<20260907045150.GI1933798@frogsfrogsfrogs>
+	<aqI7LFBkAhMSaDnx@infradead.org>
+	<aqJ6yulX3XBEoj4u@andromeda.toxiclabs.cc>
+User-Agent: mu4e 1.12.12; emacs 30.2
+Date: Thu, 10 Sep 2026 22:42:53 +0900
+Message-ID: <87y0d99q8y.fsf@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260909101212.894871-1-usama.arif@linux.dev>
+Content-Type: text/plain
 
-On Wed, Sep 09, 2026 at 03:12:10AM -0700, Usama Arif wrote:
-> The old whole-folio behavior did not need to know which PTE became
-> dirty, so this timing window was harmless. Sub-folio tracking makes the
-> final dirty state correctness-critical.
+Carlos Maiolino <cem@kernel.org> writes:
 
-Good catch, thanks. I should have known better.
+> On Wed, Sep 09, 2026 at 10:07:56PM -0700, Christoph Hellwig wrote:
+>> On Sun, Sep 06, 2026 at 09:51:50PM -0700, Darrick J. Wong wrote:
+>> > On Sun, Sep 06, 2026 at 08:16:29PM +0530, Deepanshu Kartikey wrote:
+>> > > __xfs_healthmon_insert() asserts that hm->lock is held
+>> > > (lockdep_assert_held), but xfs_ioc_health_monitor() called it right
+>> > > after allocating hm, before ever taking the lock, triggering a
+>> > > lockdep warning.
+>> > > 
+>> > > Take hm->lock around the call.
+>> > > 
+>> > > Fixes: b3a289a2a9397 ("xfs: create event queuing, formatting, and discovery infrastructure")
+>> > > Reported-by: syzbot+ccdf3469f5f653bff7ac@syzkaller.appspotmail.com
+>> > > Closes: https://syzkaller.appspot.com/bug?extid=ccdf3469f5f653bff7ac
+>> > > Signed-off-by: Deepanshu Kartikey <kartikey406@gmail.com>
+>> > 
+>> > Heh, I added a patch just like this one to my own tree.
+>> > Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+>> 
+>> Can we get this queued up ASAP?  It's also causing a lot of failures in
+>> our zoned XFS CI.
+>> 
+>> 
+>
+> Done. It's in for-next already. Not sure if I'll manage to push the
+> attrs fsblock fix yet this -rc, but this one will go to Linus on
+> Saturday
 
-Fixup below.
+I noticed that the second mutex operation in this commit was
+accidentally left as mutex_lock() instead of mutex_unlock(). I've
+sent a fix as a separate patch ("xfs: fix double mutex_lock() call
+in xfs_ioc_health_monitor()"). Feel free to use it if it helps.
 
-diff --git a/mm/rmap.c b/mm/rmap.c
-index aaf45ac79fa8..9b8b9428f802 100644
---- a/mm/rmap.c
-+++ b/mm/rmap.c
-@@ -1140,6 +1140,15 @@ static int page_vma_mkclean_one(struct page_vma_mapped_walk *pvmw,
- 			if (!pte_dirty(entry) && !pte_write(entry))
- 				continue;
- 
-+			flush_cache_page(vma, address, pte_pfn(entry));
-+			entry = ptep_clear_flush(vma, address, pte);
-+
-+			/*
-+			 * Take the dirty bit from what the clear returned, not
-+			 * from the value read above. The entry is writable, so
-+			 * the CPU can set the bit at any point before the
-+			 * clear, and the page table lock does not stop it.
-+			 */
- 			if (dirty_map && pte_dirty(entry)) {
- 				pgoff_t idx = linear_page_index(vma, address) -
- 					      pvmw->pgoff;
-@@ -1149,8 +1158,6 @@ static int page_vma_mkclean_one(struct page_vma_mapped_walk *pvmw,
- 				__set_bit(idx, dirty_map);
- 			}
- 
--			flush_cache_page(vma, address, pte_pfn(entry));
--			entry = ptep_clear_flush(vma, address, pte);
- 			entry = pte_wrprotect(entry);
- 			entry = pte_mkclean(entry);
- 			set_pte_at(vma->vm_mm, address, pte, entry);
-@@ -1170,12 +1177,14 @@ static int page_vma_mkclean_one(struct page_vma_mapped_walk *pvmw,
- 			if (!pmd_dirty(entry) && !pmd_write(entry))
- 				continue;
- 
--			if (dirty_map && pmd_dirty(entry))
--				bitmap_set(dirty_map, 0, pvmw->nr_pages);
--
- 			flush_cache_range(vma, address,
- 					  address + HPAGE_PMD_SIZE);
- 			entry = pmdp_invalidate(vma, address, pmd);
-+
-+			/* See the PTE case above */
-+			if (dirty_map && pmd_dirty(entry))
-+				bitmap_set(dirty_map, 0, pvmw->nr_pages);
-+
- 			entry = pmd_wrprotect(entry);
- 			entry = pmd_mkclean(entry);
- 			set_pmd_at(vma->vm_mm, address, pmd, entry);
--- 
-  Kiryl Shutsemau / Kirill A. Shutemov
+Thanks,
+Shigeru
+
