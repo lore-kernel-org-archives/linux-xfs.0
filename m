@@ -1,133 +1,96 @@
-Received: from mout-p-202.mailbox.org (mout-p-202.mailbox.org [80.241.56.172])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEC3F47127D;
-	Thu, 10 Sep 2026 11:20:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF2CA472090
+	for <linux-xfs@vger.kernel.org>; Thu, 10 Sep 2026 11:23:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789039237; cv=none; b=AA6sTjBiQQWIDhsCQS0Ac9r77hP+J0E2N+icc8kJR/a59WusQ1/xz7fS8afLlEV6tsQg0Ywtqeuw7Eno95UZVLBJKh1lzuqBnRV5XyfmzgIrUliSIQSdRXizhP6MPq/XJhkDRSRqltX0nFPD7ICtMLQCkUio1bXFIw+vaokn/h8=
+	t=1789039395; cv=none; b=pfxNXOmuBSNOZW3AWMrj1n3xvwiX2o6FrDMTfqJe/IC5A7pmMXqiQudeLduaE0GGRlrobpFw/w75x0rVn2EcS3aFVTNABAM2xjDolHjZUHL/eN3e1CWm34Vd0Bz9wlcsZpg2VgjuoPon70AN9gMWIharFbhKk/VPzEaLCcvbzqw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789039237; c=relaxed/simple;
-	bh=RCGYJEhBSAF5DE2tJhdVvO5rz8NP6FGV2iRExhOfowM=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=RbsNjj2W+3Ompfp4WptPeIuQF1ihu6xVt2BHWlPXvUOTXICsRaDnZf9nY7tnGT1QajbOQQG/OkMpgJLSugROShoEBZGjvBojRNned6HrI8TLB7EkHe0evcW5fVjwu3GmCyN3qr7GYX05EiJFDAUANzb5quOc3PkDLOkKBVO4bc4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=pankajraghav.com; arc=none smtp.client-ip=80.241.56.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
-Received: from smtp1.mailbox.org (smtp1.mailbox.org [IPv6:2001:67c:2050:b231:465::1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-202.mailbox.org (Postfix) with ESMTPS id 4hgZwZ32K6zMlDk;
-	Thu, 10 Sep 2026 13:20:30 +0200 (CEST)
-Authentication-Results: outgoing_mbo_mout;
-	dkim=none;
-	spf=pass (outgoing_mbo_mout: domain of kernel@pankajraghav.com designates 2001:67c:2050:b231:465::1 as permitted sender) smtp.mailfrom=kernel@pankajraghav.com
-From: Pankaj Raghav <p.raghav@samsung.com>
-To: Alejandro Colomar <alx@kernel.org>,
-	linux-man@vger.kernel.org
-Cc: pankaj.raghav@linux.dev,
-	linux-xfs@vger.kernel.org,
-	gost.dev@samsung.com,
-	linux-ext4@vger.kernel.org,
-	hch@lst.de,
-	"Darrick J . Wong" <djwong@kernel.org>,
-	Zhang Yi <yi.zhang@huaweicloud.com>,
-	Pankaj Raghav <p.raghav@samsung.com>
-Subject: [PATCH v3] man/man2/fallocate.2: Add doc for FALLOC_FL_WRITE_ZEROES
-Date: Thu, 10 Sep 2026 13:20:23 +0200
-Message-ID: <20260910112023.2591987-1-p.raghav@samsung.com>
+	s=arc-20240116; t=1789039395; c=relaxed/simple;
+	bh=9wVP9A0L3zRtyRS9v22DCUXa2arSdWhipEy27nVx2Bc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=lvFeC0AG1IASkjWMzgLFq2LEsSqCZ2oC+4oDKSvX9I/5WAJXw4Jmw46c34Cn6tM1EAlnXuJ5n9ozwnbiI7/rLOSEusTT4Ez7/kcFYJPKFNxTfOphWvzEBhyPwivhXmjxHYs26txcLOOwkgTTZMbmxFrmS7Cj2L9ki7AAGsUsIHo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fXKi96Ji; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fXKi96Ji"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 49D041F000FF;
+	Thu, 10 Sep 2026 11:23:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789039393;
+	bh=v50RFKo0o6bfIQ+cQjU94qkW5uFA6lWlCaZ4jvMj2V8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=fXKi96Ji4JfAD/jtitwh2CLbd5tkTt6zkKXIZL9RvS/8XXQ0pgGiYXiz4VchdNZ0i
+	 bt6oj0AtHF/3AJgnip3y5e4IE/tkfa/KEGJtFf43rrJSDc1pAOvlnJIJ1kq2E2Zqnk
+	 dZHFJE9yxnnJou9/UUD+sudfh2c79Z3KwrB54E+sB6Tp2v0s83N3l0iRk85Jz7atrf
+	 RN4JTF3/k3MwgChsOZo4CJlF1ZtWhqr68mqtwBPE3v0Qb19npu8wNSN22T2P4wyida
+	 SjhquU59kyPJDCpdRDwWR8maRZRWZ7mp79F8ZpJ4r+7+4SUL8F6L/EGMdpOcPJpZBj
+	 U9dBWEFW2j/tg==
+Date: Thu, 10 Sep 2026 13:23:09 +0200
+From: Andrey Albershteyn <aalbersh@kernel.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: hch@infradead.org, tytso@mit.edu, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 9/9] mkfs: allow specification of default options via
+ configuration file
+Message-ID: <aqKS26rODvx78JP6@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+References: <178892910484.4047311.5337345469992668181.stgit@frogsfrogsfrogs>
+ <178892910697.4047311.7950680370504292957.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Rspamd-Queue-Id: 4hgZwZ32K6zMlDk
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <178892910697.4047311.7950680370504292957.stgit@frogsfrogsfrogs>
 
-This flag was added to the kernel in v6.17.  As of now, only ext4 and
-block device nodes support this flag.
+On 2026-09-08 23:02:35, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> Ted asked for the ability to set default mkfs options, but to retain the
+> ability respecify options via a separate configuration file or cli
+> options.  This would be useful for running fstests with the default
+> featureset of (say) Linux 5.15 LTS, while still allowing individual
+> testcases to provide their own overrides.  It's certainly less messy
+> than what Ted does today, which is a bash script that copies the desired
+> config file and changes things.
+> 
+> Cc: tytso@mit.edu
+> Cc: hch@infradead.org
+> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> ---
+>  man/man8/mkfs.xfs.8.in |   16 ++++-
+>  mkfs/xfs_mkfs.c        |  158 ++++++++++++++++++++++++++++++++++++++++++------
+>  2 files changed, 151 insertions(+), 23 deletions(-)
+> 
+> 
+> diff --git a/man/man8/mkfs.xfs.8.in b/man/man8/mkfs.xfs.8.in
+> index fb62d579a26a2d..d915e72330304b 100644
+> --- a/man/man8/mkfs.xfs.8.in
+> +++ b/man/man8/mkfs.xfs.8.in
+> @@ -152,10 +152,22 @@ .SH OPTIONS
+>  .BI \-c " configuration_file_option"
+>  This option specifies the files that mkfs configuration will be obtained from.
+>  The valid
+> -.I configuration_file_option
+> -is:
+> +.I configuration_file_options
+> +are:
+>  .RS 1.2i
+>  .TP
+> +.BI defaults= name
+> +Default configuration options will be sourced from the file specified by the
+> +.I name
+> +option string.
+> +This option can be use either an absolute or relative path to the configuration
+> +file to be read.
+> +Sample configuration files can be found in @mkfs_cfg_dir@.
 
-Cc: Zhang Yi <yi.zhang@huaweicloud.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Darrick J. Wong <djwong@kernel.org>
-Cc: gost.dev@samsung.com
-Cc: linux-ext4@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org
-Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
----
-Changes since v2:
-- Changed the commit format based on Alejandro's feedback.
-- I have retained "preallocated" term based on Zhang Yi's feedback[1]
+Shouldn't this also mention makecfg?
 
+Otherwise, looks good to me
+Reviewed-by: Andrey Albershteyn <aalbersh@kernel.org>
 
-Note:
-This feature was recently added to XFS and it is expected to land in
-v7.3. I will update this man page again once v7.3 is released.
-
-[1] https://lore.kernel.org/linux-man/3f17d214-f69c-47b6-abf6-4437cc5840c0@huaweicloud.com/
-
- man/man2/fallocate.2 | 38 ++++++++++++++++++++++++++++++++++++++
- 1 file changed, 38 insertions(+)
-
-diff --git a/man/man2/fallocate.2 b/man/man2/fallocate.2
-index ef6586c77..48a8c3468 100644
---- a/man/man2/fallocate.2
-+++ b/man/man2/fallocate.2
-@@ -244,6 +244,43 @@ SMB3 (since Linux 3.17)
- .IP \[bu]
- Btrfs (since Linux 4.16)
- .\" commit f27451f229966874a8793995b8e6b74326d125df
-+.SS Writing zeroes in file space
-+Specifying the
-+.B FALLOC_FL_WRITE_ZEROES
-+flag (available since Linux 6.17)
-+.\" commit 7bd43cc79cab3850f34da0a31d5b042b701590ef
-+in
-+.I mode
-+physically zeros space in the byte range starting at
-+.I offset
-+and continuing for
-+.I size
-+bytes.
-+Within the specified range,
-+blocks are preallocated for the regions that span the holes
-+in the file.
-+After a successful call,
-+subsequent reads from this range will return zeros and
-+subsequent writes to that range do not require further
-+changes to the file mapping metadata.
-+.P
-+Zeroing is done within the filesystem.
-+The filesystem may use a hardware-accelerated zeroing command
-+or may submit regular writes.
-+The behavior depends on the filesystem design and the
-+available hardware.
-+.P
-+No other flags may be specified in
-+.I mode
-+in conjunction with
-+.BR FALLOC_FL_WRITE_ZEROES .
-+.P
-+Not all filesystems support
-+.BR FALLOC_FL_WRITE_ZEROES ;
-+if a filesystem doesn't support the operation, an error is returned.
-+The operation is supported only in ext4 (only for extent-based files)
-+since Linux 6.17.
-+.\" commit f4265b8d32c49ff95711e6fef7d05245a2905b30
- .SS Increasing file space
- Specifying the
- .B FALLOC_FL_INSERT_RANGE
-@@ -385,6 +422,7 @@ or
- is
- .BR FALLOC_FL_COLLAPSE_RANGE ,
- .BR FALLOC_FL_ZERO_RANGE ,
-+.BR FALLOC_FL_WRITE_ZEROES ,
- or
- .BR FALLOC_FL_INSERT_RANGE ,
- but the file referred to by
-
-base-commit: d926b42e0ea0406d5c2556e18205eced92d053f1
 -- 
-2.51.2
-
+- Andrey
