@@ -1,137 +1,133 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mout-p-202.mailbox.org (mout-p-202.mailbox.org [80.241.56.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDE273ADBB4
-	for <linux-xfs@vger.kernel.org>; Thu, 10 Sep 2026 10:52:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEC3F47127D;
+	Thu, 10 Sep 2026 11:20:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789037554; cv=none; b=nMaxgJUQn3QecBFf7UHBmpMDti3qXriPijwKhhd2XzywRJwnGssI3ZJreSu2uqBCYNl/AE4ATVvgoqX67t1nWc9Lh7SAE2nUekUcMxgV7WcT1PXZbubTxNif0elO1n+5QupCtWt8U2wf39fqTgSeM8gSMSYBOVeUk60tGNoQ6qk=
+	t=1789039237; cv=none; b=AA6sTjBiQQWIDhsCQS0Ac9r77hP+J0E2N+icc8kJR/a59WusQ1/xz7fS8afLlEV6tsQg0Ywtqeuw7Eno95UZVLBJKh1lzuqBnRV5XyfmzgIrUliSIQSdRXizhP6MPq/XJhkDRSRqltX0nFPD7ICtMLQCkUio1bXFIw+vaokn/h8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789037554; c=relaxed/simple;
-	bh=TWgBlRaVXLTtLjOmAuVvSAmywddg0l61Fc/+fKsNUVs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=H3KP/S+URxLccXDVgGOi29eTK34mMNV64vpW+3irUaTdcn6cJIBbwjXfUhJJrUINUP3nFcz1Z8YxkQKdcwcrJfYWwaroLgWgk/bso4LSIomDnK4pwQwXYBR58TnGMCJQr/OyF6dENreei8LJtjdA+PV6Edo6PGye1G2/4GSfBE0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V24Y4oJg; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V24Y4oJg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D941D1F000FF;
-	Thu, 10 Sep 2026 10:52:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789037552;
-	bh=UXPi+z3HUSDQiT1ezutmVeefzpGF2q0YwI/U/PLmfAA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=V24Y4oJgImynOS09pQsEKK0ABmTO2OTFsQBL6UEVGRKzkFwHdxNGxVBLNwdZZKQmr
-	 QVMLFZWJXHWMgvAxjvcWkk+90/qw/M3la+hswfdRRGSZyhfsaxys1Kj+nDriPllyMU
-	 MG3tdRwSgeWx6GoibPvUiLSEJNp1PrdDowRiZv9bEr6+4jmYlsmrU/eop1TsdaHYjW
-	 Oopx/7s4f/NxpcmSWGZ7mJFwcM3/qgYPsNB/rtaX8/bV5xKUP3dbS1wOSlsaTbN51T
-	 aE5e8o1sp5jp2bPyynMPuGVMlyXSSxB/MywyIqdcHC8t88aWgyNn+F7otYRZxzjrB1
-	 ZPXy7MmLAHz8Q==
-Date: Thu, 10 Sep 2026 12:52:29 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: convert all !XFS_RT stubs to inline functions
-Message-ID: <aqKLCEHV7KYnSl0D@andromeda.toxiclabs.cc>
-References: <20260909060619.1101875-1-hch@lst.de>
- <20260909060619.1101875-2-hch@lst.de>
+	s=arc-20240116; t=1789039237; c=relaxed/simple;
+	bh=RCGYJEhBSAF5DE2tJhdVvO5rz8NP6FGV2iRExhOfowM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=RbsNjj2W+3Ompfp4WptPeIuQF1ihu6xVt2BHWlPXvUOTXICsRaDnZf9nY7tnGT1QajbOQQG/OkMpgJLSugROShoEBZGjvBojRNned6HrI8TLB7EkHe0evcW5fVjwu3GmCyN3qr7GYX05EiJFDAUANzb5quOc3PkDLOkKBVO4bc4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=pankajraghav.com; arc=none smtp.client-ip=80.241.56.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
+Received: from smtp1.mailbox.org (smtp1.mailbox.org [IPv6:2001:67c:2050:b231:465::1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-202.mailbox.org (Postfix) with ESMTPS id 4hgZwZ32K6zMlDk;
+	Thu, 10 Sep 2026 13:20:30 +0200 (CEST)
+Authentication-Results: outgoing_mbo_mout;
+	dkim=none;
+	spf=pass (outgoing_mbo_mout: domain of kernel@pankajraghav.com designates 2001:67c:2050:b231:465::1 as permitted sender) smtp.mailfrom=kernel@pankajraghav.com
+From: Pankaj Raghav <p.raghav@samsung.com>
+To: Alejandro Colomar <alx@kernel.org>,
+	linux-man@vger.kernel.org
+Cc: pankaj.raghav@linux.dev,
+	linux-xfs@vger.kernel.org,
+	gost.dev@samsung.com,
+	linux-ext4@vger.kernel.org,
+	hch@lst.de,
+	"Darrick J . Wong" <djwong@kernel.org>,
+	Zhang Yi <yi.zhang@huaweicloud.com>,
+	Pankaj Raghav <p.raghav@samsung.com>
+Subject: [PATCH v3] man/man2/fallocate.2: Add doc for FALLOC_FL_WRITE_ZEROES
+Date: Thu, 10 Sep 2026 13:20:23 +0200
+Message-ID: <20260910112023.2591987-1-p.raghav@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260909060619.1101875-2-hch@lst.de>
+Content-Transfer-Encoding: 8bit
+X-Rspamd-Queue-Id: 4hgZwZ32K6zMlDk
 
-On Wed, Sep 09, 2026 at 09:05:26AM +0300, Christoph Hellwig wrote:
-> Avoid random compiler warnings about unused variables when CONFIG_XFS_RT
-> is not set.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_rtalloc.h | 49 ++++++++++++++++++++++++++++++++++++++------
->  1 file changed, 43 insertions(+), 6 deletions(-)
+This flag was added to the kernel in v6.17.  As of now, only ext4 and
+block device nodes support this flag.
 
-This looks good.
-
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-
-Regarding rebasing 7.4, we still have plenty of time to do that, I will
-do it once Linus pulls in the next fixes so it won't mess up with hashes
-on for-next. Then I can rebase 7.4 on top of the new -rc once the
-patches gets in.
+Cc: Zhang Yi <yi.zhang@huaweicloud.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Darrick J. Wong <djwong@kernel.org>
+Cc: gost.dev@samsung.com
+Cc: linux-ext4@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org
+Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+---
+Changes since v2:
+- Changed the commit format based on Alejandro's feedback.
+- I have retained "preallocated" term based on Zhang Yi's feedback[1]
 
 
-> 
-> diff --git a/fs/xfs/xfs_rtalloc.h b/fs/xfs/xfs_rtalloc.h
-> index 78a690b489ed..1d5108861acd 100644
-> --- a/fs/xfs/xfs_rtalloc.h
-> +++ b/fs/xfs/xfs_rtalloc.h
-> @@ -46,10 +46,34 @@ int xfs_rtalloc_reinit_frextents(struct xfs_mount *mp);
->  int xfs_growfs_check_rtgeom(const struct xfs_mount *mp, xfs_rfsblock_t dblocks,
->  		xfs_rfsblock_t rblocks, xfs_agblock_t rextsize);
->  #else
-> -# define xfs_growfs_rt(mp,in)				(-ENOSYS)
-> -# define xfs_rtalloc_reinit_frextents(m)		(0)
-> -# define xfs_rtmount_readsb(mp)				(0)
-> -# define xfs_rtmount_freesb(mp)				((void)0)
-> +static inline int
-> +xfs_growfs_rt(
-> +	struct xfs_mount	*mp,
-> +	struct xfs_growfs_rt	*in)
-> +{
-> +	return -ENOSYS;
-> +}
-> +
-> +static inline int
-> +xfs_rtalloc_reinit_frextents(
-> +	struct xfs_mount	*mp)
-> +{
-> +	return 0;
-> +}
-> +
-> +static inline int
-> +xfs_rtmount_readsb(
-> +	struct xfs_mount	*mp)
-> +{
-> +	return 0;
-> +}
-> +
-> +static inline void
-> +xfs_rtmount_freesb(
-> +	struct xfs_mount	*mp)
-> +{
-> +}
-> +
->  static inline int		/* error */
->  xfs_rtmount_init(
->  	xfs_mount_t	*mp)	/* file system mount structure */
-> @@ -60,8 +84,21 @@ xfs_rtmount_init(
->  	xfs_warn(mp, "Not built with CONFIG_XFS_RT");
->  	return -ENOSYS;
->  }
-> -# define xfs_rtmount_inodes(m)  (((mp)->m_sb.sb_rblocks == 0)? 0 : (-ENOSYS))
-> -# define xfs_rtunmount_inodes(m)
-> +
-> +static inline int
-> +xfs_rtmount_inodes(
-> +	struct xfs_mount	*mp)
-> +{
-> +	if (mp->m_sb.sb_rblocks)
-> +		return -ENOSYS;
-> +	return 0;
-> +}
-> +
-> +static inline void
-> +xfs_rtunmount_inodes(
-> +	struct xfs_mount	*mp)
-> +{
-> +}
->  
->  static inline int
->  xfs_growfs_check_rtgeom(const struct xfs_mount *mp,
-> -- 
-> 2.53.0
-> 
-> 
+Note:
+This feature was recently added to XFS and it is expected to land in
+v7.3. I will update this man page again once v7.3 is released.
+
+[1] https://lore.kernel.org/linux-man/3f17d214-f69c-47b6-abf6-4437cc5840c0@huaweicloud.com/
+
+ man/man2/fallocate.2 | 38 ++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 38 insertions(+)
+
+diff --git a/man/man2/fallocate.2 b/man/man2/fallocate.2
+index ef6586c77..48a8c3468 100644
+--- a/man/man2/fallocate.2
++++ b/man/man2/fallocate.2
+@@ -244,6 +244,43 @@ SMB3 (since Linux 3.17)
+ .IP \[bu]
+ Btrfs (since Linux 4.16)
+ .\" commit f27451f229966874a8793995b8e6b74326d125df
++.SS Writing zeroes in file space
++Specifying the
++.B FALLOC_FL_WRITE_ZEROES
++flag (available since Linux 6.17)
++.\" commit 7bd43cc79cab3850f34da0a31d5b042b701590ef
++in
++.I mode
++physically zeros space in the byte range starting at
++.I offset
++and continuing for
++.I size
++bytes.
++Within the specified range,
++blocks are preallocated for the regions that span the holes
++in the file.
++After a successful call,
++subsequent reads from this range will return zeros and
++subsequent writes to that range do not require further
++changes to the file mapping metadata.
++.P
++Zeroing is done within the filesystem.
++The filesystem may use a hardware-accelerated zeroing command
++or may submit regular writes.
++The behavior depends on the filesystem design and the
++available hardware.
++.P
++No other flags may be specified in
++.I mode
++in conjunction with
++.BR FALLOC_FL_WRITE_ZEROES .
++.P
++Not all filesystems support
++.BR FALLOC_FL_WRITE_ZEROES ;
++if a filesystem doesn't support the operation, an error is returned.
++The operation is supported only in ext4 (only for extent-based files)
++since Linux 6.17.
++.\" commit f4265b8d32c49ff95711e6fef7d05245a2905b30
+ .SS Increasing file space
+ Specifying the
+ .B FALLOC_FL_INSERT_RANGE
+@@ -385,6 +422,7 @@ or
+ is
+ .BR FALLOC_FL_COLLAPSE_RANGE ,
+ .BR FALLOC_FL_ZERO_RANGE ,
++.BR FALLOC_FL_WRITE_ZEROES ,
+ or
+ .BR FALLOC_FL_INSERT_RANGE ,
+ but the file referred to by
+
+base-commit: d926b42e0ea0406d5c2556e18205eced92d053f1
+-- 
+2.51.2
+
