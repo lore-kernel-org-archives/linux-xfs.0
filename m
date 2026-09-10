@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF08D30EF63;
-	Thu, 10 Sep 2026 06:00:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DF79248896;
+	Thu, 10 Sep 2026 06:00:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789020033; cv=none; b=Dk/CJI0bioA7hqeI28eNr40n/ag1PKskO6RR040w1D34Ou9u1X/RRBdMdOKUrCog9V4zIME79qYN9205fJ6PyhmaMr6+TNv18Gp4hIQlyM4NLfBJiIS/t4dPeTATBr8QDaeFTGFGhoMpHssdRCOr0aRqHmUar3ejvzVcJSaXpqk=
+	t=1789020049; cv=none; b=WU/tdG9scjYnk9giDmD7VEKaUcTXPfGVdogQgGo/29aCo5X3fzDFAjBZqs9gWIk0ivLMo6Om9GNzlr7aepjrt3vCcytVXmK/0LGQCS4eCM7xiH3/nnU/ik5Z3+/l3lVu9QMlNy0FleLwStk7YqyFxyRRwvfLel4uHkcgcMZ4zys=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789020033; c=relaxed/simple;
-	bh=v+sJ3ypw2UlLWJ3aDrJOhnexULXyMT7OgZ1YwD3efik=;
+	s=arc-20240116; t=1789020049; c=relaxed/simple;
+	bh=j8p/K5ycc9kBYfA3xC3AqlDu3KeE676+wWjKIMobDAE=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=k1Z80olxcdORxT0yC+MSHnJ+wteScA4Kqa99Uv75S9lyReOLaCRKwmrk/c9NuiVBow5Y3oChZA06k/4Gs+BOdzr947KraFpzBoiCLTHUPyncgzlxNlK1w7SQ0f/4CX+8wrtQCrmTLgJYeU61kt9x+3bTkK8b4fBw2EozqLYIevc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mCDnWdkF; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=oZhfueW1kiIL3Yh4MkNv6oNaEh4AfRRF+Fmq5zBPNrYqZDPWQx3b0U6utN8m4C/TE6SfHTZnittasgCMLi0KL7D6KxzX6KydMmKDvusJ9rp5eQipqVaUqx/xl+YaPKf05J4f/7Gr6wVK8+q+0FSAmniKCT2pYGMJZT6WpC9WcLI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V37YFIj5; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mCDnWdkF"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 4760E1F00898;
-	Thu, 10 Sep 2026 06:00:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V37YFIj5"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id C86421F000FF;
+	Thu, 10 Sep 2026 06:00:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789020032;
-	bh=QczdJq0luOE4/Ur1cX1yl8WUldE12FuCNL2He82Bmg0=;
+	s=k20260515; t=1789020047;
+	bh=vxGevTzjUBQK0SrKppT5IAK6Zm/0BdEZ6V7CbC5O76Q=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=mCDnWdkFX9t9ezD95MWz8eo2QcAesT15QFls5BmhNSzF0qiXdwAeqRr4mVQnJAL7p
-	 et0nU3k3QIs3+MEkPapxqKSxAVPwShX5GSlV6bjsVBfhIgaOhGPZAVzIbI7fknak9r
-	 Na7RyI1RCPTAlC65u12cvlXg2vAUNrS0lgkxr6OXpD5FBRJDY8XkAtX1jhy3fbhaAz
-	 R05g2N2twq67DrGkiZrEUuPXWEmhdrkyZKPtmoFMFJqkasAyvtfwOvJDKmvDwHxVMe
-	 2wN3q3Y0Rugoz44vVsAD5fKLXdcGo2b5QFw9FMMkCcz889skN9dH5Ry7ZHx/LkzcOc
-	 7om+UOVDfxcog==
-Date: Wed, 09 Sep 2026 23:00:31 -0700
-Subject: [PATCH 3/6] xfs: fix attr fork block count checks in
- xrep_inode_blockcounts
+	b=V37YFIj5oxP0Gke+JWwW7FTCPpEFSv4EfakoIPDZsN+Ly8uxCw8hMsHxeopbhm72z
+	 /W8uiO79ja8NukxCT2geZ6O/ydAoClXpNK1SQJ5wXnv/pMIl+6sDpaZAta1a1VRScY
+	 kh1K4g7HK7XB/nn7BOWQ3CbjWo4pj4jzaVGNecw92qmbfv7rCYLEvmQLJ85hbSX+bE
+	 D7A0rmFgIkmyVnqgsOQY/K/snPlAThT527kEelEHDFl6k7j8AYMsuizeIihnA5+QgT
+	 DfYZaTSFMdSFoEPzEU71/NOyfujQWW2idMgDI2x2uE2/YlaLOyNmiW42zykd362D6l
+	 MbPgs+NBVq8gA==
+Date: Wed, 09 Sep 2026 23:00:47 -0700
+Subject: [PATCH 4/6] xfs: release orphanage dir inode if chown fails
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org, hch@lst.de
 Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <178901989892.361651.4678916214576712344.stgit@frogsfrogsfrogs>
+Message-ID: <178901989915.361651.3303301107990083757.stgit@frogsfrogsfrogs>
 In-Reply-To: <178901989791.361651.4660674894120948649.stgit@frogsfrogsfrogs>
 References: <178901989791.361651.4660674894120948649.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,33 +45,38 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-LOLLM points out that a file has an attr fork, it will call
-xchk_inode_count_blocks to set @ablocks to the number of fsblocks mapped
-by the attr fork; but then it'll compare @blocks (aka the count of
-fsblocks mapped by the data fork).  We already checked that and we never
-do anything with @acount, so I think this is clearly a bug.  Fix the
-comparison.
+LOLLM points out that we leak the igrab'd reference to the orphanage
+directory inode if chowning it fails.  Fix that.
 
-Cc: <stable@vger.kernel.org> # v6.8
-Fixes: 2d295fe65776d1 ("xfs: repair inode records")
+Cc: <stable@vger.kernel.org> # v6.10
+Fixes: 1e58a8ccf2597c ("xfs: move orphan files to the orphanage")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Assisted-by: LOLLM # finding obvious bugs
 ---
- fs/xfs/scrub/inode_repair.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/scrub/orphanage.c |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/scrub/inode_repair.c b/fs/xfs/scrub/inode_repair.c
-index 8bc508336aa5f4..b87c2214623383 100644
---- a/fs/xfs/scrub/inode_repair.c
-+++ b/fs/xfs/scrub/inode_repair.c
-@@ -1702,7 +1702,7 @@ xrep_inode_blockcounts(
- 				&acount);
- 		if (error)
- 			return error;
--		if (count >= sc->mp->m_sb.sb_dblocks)
-+		if (acount >= sc->mp->m_sb.sb_dblocks)
- 			return -EFSCORRUPTED;
- 		error = xrep_ino_ensure_extent_count(sc, XFS_ATTR_FORK,
- 				nextents);
+diff --git a/fs/xfs/scrub/orphanage.c b/fs/xfs/scrub/orphanage.c
+index 3aca66869b8000..21e31eeaa042f9 100644
+--- a/fs/xfs/scrub/orphanage.c
++++ b/fs/xfs/scrub/orphanage.c
+@@ -192,12 +192,16 @@ xrep_orphanage_create(
+ 	/* Make sure the orphanage is owned by root. */
+ 	error = xrep_chown_orphanage(sc, XFS_I(orphanage_inode));
+ 	if (error)
+-		goto out_dput_orphanage;
++		goto out_rele_orphanage;
+ 
+ 	/* Stash the reference for later and bail out. */
+ 	sc->orphanage = XFS_I(orphanage_inode);
+ 	sc->orphanage_ilock_flags = 0;
++	orphanage_inode = NULL;
+ 
++out_rele_orphanage:
++	if (orphanage_inode)
++		xchk_irele(sc, XFS_I(orphanage_inode));
+ out_dput_orphanage:
+ 	end_creating(orphanage_dentry);
+ out_dput_root:
 
