@@ -1,44 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4755146C833;
-	Thu, 10 Sep 2026 11:30:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E77D1476694;
+	Thu, 10 Sep 2026 11:34:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789039850; cv=none; b=awMclc1/QTeRLCjNd+VedFPnBcRTqEJ2mxmT4hjkLPi6B2nHoyqcK73L71/C5Z9JkyjVBubGhY5ZlmUQCqHGeInTRmcQkN7oPeRGhF/0N4mA89I+xdiDNnNPRxYGkHMJU7lLpHX+h1I0Z4JTpxGNHQUr3nEv8GBhXXyUmNbZTsM=
+	t=1789040087; cv=none; b=gIurG+gek8oEysW6dAeUZOu523Wc6g8WrcNhgBke2qsUF9eqhtcZIShkEMbDrYP9SniHajEbtgv61Gf5SmkTke1ILdv9GseGCpVjTw8FmThlJLia+heuHhcsth9F0xepRnfRk4qqvwkXXu2ZYGF+7jMVHyBXmWbNPFb35V3MGMM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789039850; c=relaxed/simple;
-	bh=wZsXUCu/EetlovHHpa/qhlsFS1Q44L3OnAaH4WLXKRQ=;
+	s=arc-20240116; t=1789040087; c=relaxed/simple;
+	bh=hDqWr9xlRvgArq+mx7X+y24g7DkLFSDkDAQjpM/Z4tg=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=VqOB0SMLWc8ay3YJr2Ejh2v7qVAfToDTdAKmm86G1jhuZ8b5j8APfmMKE75+xD7Ev6X+EFzbVff9dBZNS8NpbLD+L6J4Ua3pJRKXis1nWCinVHCaUimTZHV3sEd/ZvYH2QDoZ0EjqvqzZma/pJECKrcFbbLQ8441a1mS/8RiEtw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l8oR1rb/; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:MIME-Version; b=jt8U0Zt3HPa6lbLolqWyvtkWxnBpwA3G+VsRhiI9mUxZQ6ud/JRmkfud3WJvo5PUCe01qbyIU9a1ONv0SxWU4705+7Z4dxwtwSQm8Zejabr6o6J3515kyM90nLeWtlZPOOkToUXaqHDjHtEYT3e12qRA2S1rg1Cnm4jaS1LHLr0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oGAxyzPh; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l8oR1rb/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 293211F000FF;
-	Thu, 10 Sep 2026 11:30:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oGAxyzPh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0B5271F000FF;
+	Thu, 10 Sep 2026 11:34:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789039848;
-	bh=8S1ywZpukOB83w+Hx6kuzFwom9V4ld1Bpj+uScYisjo=;
+	s=k20260515; t=1789040085;
+	bh=H0/yLvJdO0IIgjpyHZ96Avcg6Gv1RvJhM1p0WfML1Wc=;
 	h=Subject:From:To:Cc:Date:In-Reply-To:References;
-	b=l8oR1rb/6KtwBDN6sD27qC1xtbLiOKDMKiQ8r4PRhcyLnidCuzmzmiVaRxEcLVo7q
-	 9OZ11cjFhm6oJoDXAoIwgYnf1a56qPCn1TPGfaATfmXAU/bdnr60mYueEaxIwT9BXb
-	 T7oajEWnFoq4b5UeF5fjWRJqkwNrWNTyofwXrQPCLD9HxX15R/DCbVKLx85TrfHTNS
-	 Wcl+kwlCOFVCdCl/c/0kag/s6iezmdNJIuEZR7HzHivFQ931eqCIxfpFhw9T/mBxLA
-	 8dXP6932jyv85dpfMWdQ+xQmA8CFazk3M01iJjspouhP/S66SEPzHOIMtNKaSs9VqS
-	 k74y32vy+fyZA==
-Message-ID: <208df4dabcb9db9c6c7d00f4cf2f63fa3be815e1.camel@kernel.org>
-Subject: Re: [RFC PATCH 1/2] common/nfs: add management helpers
+	b=oGAxyzPhpn/DIRDvf86kJnSmwK+su5Vdi2qqj06IMjW/BUyadxW4A+YZ70EpFLbSi
+	 v8s9nxYL5o/xf7l1Lp3pnJOULofRiLjx5QJQErSjthYdIfBITeSXfh0XyzAW4RPFdw
+	 7q/jtNRRYJhFZzCP7iLTLBHAOEcv32gIqD9vdt9hQ1OIXHZNLrDEvfF08VTgxeFzBQ
+	 qt0E2pL0aWMv28WfKobxvBUfHJiBAGVpzm48jGC3y962G6zfmSd/IYm8rubw++n78s
+	 USQeAg6XOPloQwEwa2mXtmw0/hpT+3TJsvKvsQBbUumHMB3UWWvfvOiJhjL4mfZ181
+	 /iToBXOl9l4RQ==
+Message-ID: <1df4f57669494c7684b140dba7c7226475ea68c9.camel@kernel.org>
+Subject: Re: [RFC PATCH 0/2] quota evasion test and nfs helpers
 From: Jeff Layton <jlayton@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>, "Darrick J. Wong"
- <djwong@kernel.org>
-Cc: cem@kernel.org, zlang@kernel.org, linux-xfs@vger.kernel.org, 
-	fstests@vger.kernel.org, jack@suse.cz, Chuck Lever <cel@kernel.org>, 
-	linux-nfs@vger.kernel.org
-Date: Thu, 10 Sep 2026 07:30:46 -0400
-In-Reply-To: <aqD4zBD06P1LJKM2@infradead.org>
+To: cem@kernel.org, zlang@kernel.org
+Cc: djwong@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org, 
+	fstests@vger.kernel.org, jack@suse.cz, linux-nfs@vger.kernel.org, Chuck
+ Lever	 <chuck.lever@oracle.com>
+Date: Thu, 10 Sep 2026 07:34:43 -0400
+In-Reply-To: <20260907164054.111393-1-cem@kernel.org>
 References: <20260907164054.111393-1-cem@kernel.org>
-	 <20260907164054.111393-2-cem@kernel.org>
-	 <20260908142226.GL839663@frogsfrogsfrogs> <aqD4zBD06P1LJKM2@infradead.org>
 Autocrypt: addr=jlayton@kernel.org; prefer-encrypt=mutual;
  keydata=mQINBE6V0TwBEADXhJg7s8wFDwBMEvn0qyhAnzFLTOCHooMZyx7XO7dAiIhDSi7G1NPxw
  n8jdFUQMCR/GlpozMFlSFiZXiObE7sef9rTtM68ukUyZM4pJ9l0KjQNgDJ6Fr342Htkjxu/kFV1Wv
@@ -123,70 +120,79 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
-On Tue, 2026-09-08 at 23:12 -0700, Christoph Hellwig wrote:
-> On Tue, Sep 08, 2026 at 07:22:26AM -0700, Darrick J. Wong wrote:
-> > > +# Start rpcbind if it is not already running.
-> > > +_start_rpcbind()
-> > > +{
-> > > +	rpcinfo -p localhost > /dev/null 2>&1 && return 0
-> > > +	rpcbind 2>> $seqres.full || _notrun "Cannot start rpcbind"
-> > > +	/usr/sbin/rpc.statd 2>> $seqres.full || _notrun "Cannot start rpc.s=
-tatd"
-> > > +	/usr/sbin/rpc.idmapd 2>> $seqres.full || _notrun "Cannot start rpc.=
-idmapd"
-> > > +	/usr/sbin/nfsdcld 2>> $seqres.full || _notrun "Cannot start nfsdcld=
-"
-> >=20
-> > Aren't these daemons usually configured as system services?
-> >=20
-> > # service rpcbind start
-> >=20
-> > etc?
+On Mon, 2026-09-07 at 18:40 +0200, cem@kernel.org wrote:
+> From: Carlos Maiolino <cem@kernel.org>
 >=20
-> They usually are, but doing that as part of a test feels wrong.
-> Adding the relevant maintainers and list.
+> Hi folks.
 >=20
+> I'm flagging these as RFC because I'd like an input in the approach I
+> took here regarding how to setup a local nfs-server to reproduce the bug
+> recently fixed on xfs quotas.
+>=20
+> The issue is regarding how we checked the credentials before proceeding
+> with quota enforcement / or not. And due the chgrp() being run through a
+> NSF share, xfs used the wrong credentials allowing an user to evade
+> quotas.
+>=20
+> The TL;DR; for the approach is:
+> 	- setup a xfs fs with an user belonging to two groups with group
+> 	  quotas enforced
+> 	- Setup a local nfs server/client and mount it locally through
+> 	  loopback
+> 	- use the user to fill in the share until it exceeds quota
+> 	- change group of the file to the second group.
+> 	- repeat a couple times until the second group quota is
+> 	  exceeded.
+>=20
+> I'm using the already existing user/groups. The tests uses exportfs direc=
+tly
+> instead of seeting up a exports file, and I added a few new helpers to
+> start/stop nfsd and rpcbind. The latter I did as an attempt to make the t=
+est
+> systemd-agnostic. It is working even if nfs-server systemd service is dis=
+abled,
+> but I didn't try on a systemd-less OS.
+>=20
+> While writing it I stumped on a weird issue that I'm not exactly sure
+> how to fix (or if it's perhaps a bug on umount):
+>=20
+> During cleanup(), I umount the share and unexport the it so the rest
+> of the generic cleanup can take place, specially umounting the scratch
+> fs There is some timing though required by umount() to properly cleanup
+> internal kernel structures before it can be unexported. I honestly
+> assumed umount() was synchronous (unless lazy umount) and once it returne=
+d
+> it was "done". But for some reason I didn't dig into, I need to wait a
+> bit between unmounting the share and unexporting it.
+> I tried to wait until the mount was excluded from /proc/mounts but even
+> after the mount is gone, something still holds the share a bit
+> preventing it to be unexported. So I went with a 2 second sleep :)
 >=20
 
-I don't see a problem with using the normal systemd services as long as
-you're just doing a "start" instead of an "enable". That would be a lot
-less likely to bitrot than these scripts.
+It may be that nfsd still has some state held here that is being
+cleaned up. Chuck has a patchset in progress that may help this:
 
-> > > +}
-> > > +
-> > > +# Stop rpcbind.
-> > > +_stop_rpcbind()
-> > > +{
-> > > +	pkill rpcbind 2>/dev/null
-> > > +}
-> > > +
-> > > +# Start the NFS server if not already running.
-> > > +_start_nfsd()
-> > > +{
-> > > +	rpcinfo -p localhost 2>/dev/null | grep -q nfs && return 0
-> > > +	rpc.nfsd 2>> $seqres.full || _notrun "Cannot start rpc.nfsd"
-> > > +	rpc.mountd 2>> $seqres.full || _notrun "Cannot start rpc.mountd"
-> > > +}
-> > > +
-> > > +# Stop the NFS server.
-> > > +_stop_nfsd()
-> > > +{
-> > > +	rpc.nfsd 0 2>/dev/null
-> > > +	pkill rpc.mountd 2>/dev/null
-> >=20
-> > If the system under test has nfs filesystems mounted, won't killing
-> > those daemons also break the mounts?
-> >=20
-> > I think that might break testing of nfs itself, and nfs-booted testing
-> > nodes as well?
+https://lore.kernel.org/linux-nfs/20260419-umount-kills-nfsv4-state-v9-0-06=
+60bd06d2b6@oracle.com/
+
+
+> Overall the test works, passing on a patched kernel or failing
+> otherwise.
 >=20
-> Possibly.  I guess if we want to save we need to launch a container
-> or at least a network namespace this is bound too.=20
-
-Doing this in a container would be better and less likely to interfere
-with other stuff running on the box. Our container isolation is still
-not 100% perfect with nfsd (there is still a global mutex, etc.), but
-we're getting closer.
+> Comments? Flames? Stones?
+>=20
+> Cheers.
+>=20
+> Carlos Maiolino (2):
+>   common/nfs: add management helpers
+>   generic: add test for quota enforcement via a nfs share
+>=20
+>  common/nfs            |  55 ++++++++++++++++++++++
+>  tests/generic/803     | 106 ++++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/803.out |   2 +
+>  3 files changed, 163 insertions(+)
+>  create mode 100755 tests/generic/803
+>  create mode 100644 tests/generic/803.out
 
 --=20
 Jeff Layton <jlayton@kernel.org>
