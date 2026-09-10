@@ -1,42 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B581B25228D;
-	Thu, 10 Sep 2026 05:31:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CC0534DCE4;
+	Thu, 10 Sep 2026 05:42:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789018303; cv=none; b=g78hp6QskUHk+RvQZi71V8CsiRU/YlIZDzQm4rNg9qfy2KXi5x25jEYxpY1EXLqyMiFYMsF/HrX9faqt3SE9N0qUyumDeAzqN3XwfRZN+j524BLWcO3ItwWd6OMb1jJ2VkULBVahRoX8Gp+phYBSBSO/yRD6dcVGqH18r1+i11I=
+	t=1789018957; cv=none; b=BGLynwYnc4J6PwXCEGXANaGf8MXrHNBimb9wguUlknLl9q2p0R9Nhd4fs/KSvnzu/J6DQ4S/aVj67mgf/Iz08/flQH4wk8rEyf16Nz3O2fsnZ3A/N72Tq/5u6hvUnxjjB5hA1zpNF61Sbs0Q2vrWXuLeJtTtTR1Wr9XHXWaeObw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789018303; c=relaxed/simple;
-	bh=jm0FXUlzhEk51BDrFANyga7WNeOqnXpBC/OhDj06vlU=;
+	s=arc-20240116; t=1789018957; c=relaxed/simple;
+	bh=QrslRF6hiu8Xv38xtplUGLT6382NiF41R2AxjTgY8fA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TyiYhu/3ntmMbBWdrnGFnBl2bPxmpZ4gCHchF5zihPw/Xnte+mIhVePp/yK9JEBKx0GBnEYojiAcHWNlqoChr2yIi9Ys3q4Zr0BwQoNT7dH4Eev4O22gsGbIXaxZfHPNqT8aaj7eJG6wK61uFMBGWNLtzBuJyxuqzhRygN+tz1U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=o2WzCrOE; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=pW2+3vs7aIh0Vvcwc+WjXKwafR3z0mFuSta9+mYcNunsIQWo6LrrKZU9hmXRt4AaOYYVTSxtswhdeX+a/YmNRLZv4K8dxlClbxSJ76SEBSOLWTflv0YeSJiZo2pu6tXy/swz7IkmS1DcD2GjRzr/8hCZUA9nzlxUqeiY/AjUyso=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=M/5cGuLi; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="o2WzCrOE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F392D1F000FF;
-	Thu, 10 Sep 2026 05:31:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="M/5cGuLi"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5E2A91F000FF;
+	Thu, 10 Sep 2026 05:42:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789018302;
-	bh=LQ2gkzf9X0BU5XOiFqcl3ujZ5dmTu8PMNVA8Ebpo/38=;
+	s=k20260515; t=1789018949;
+	bh=XLHUPUsY4zU609kLOwL6OpA1t12rkCqpJqfIp94AxNI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=o2WzCrOERsfT5JdVtUKNdEH9A3O8B21y13xV2y93pZdHJCTQ5WTs+zcJ4LuMVBw4g
-	 VBSg4PQDQpF7fvI2x26V6phM8paASidDXTZeUPZNrXUa+bAoE/yeWwgA9IphTDrwwl
-	 sf16p9S9wvJ13Rd54GRGYwD/9+Gu4OnUtz2sg8VXKfxzINURbBIMc5Lj9M6dPwG5ZR
-	 r/p60myrmfS3nDskqMZFK0H3Ii0STtbqHK2ooLBVb/rw0inlOeS/qkCFFQLgAADkxK
-	 q10IxhMcTR2bk5an7RzlNvbeaSeV6ebBeIR/6xiER2E6WOlyav5qoAAQvQm2IdwWv/
-	 0KFx34LXVVOmg==
-Date: Thu, 10 Sep 2026 07:31:37 +0200
+	b=M/5cGuLiPI+PZrShMD+QBpHZwl39PKn96B6aCQE7HAJGmFI/kRVhDpFUoUcEFBjDd
+	 fKc2Qx+CGOiMY043qCdT4JWlbyCaI9/jfKf5mhC1SOGHQujAKLVleIyoOdHxvwH8fQ
+	 xgPB65dTPj8b3b9CwnJzkCFzhfHVQE0ajfpRU0SHd7BRKJ1LojCzTkkUqliD2BiJYq
+	 rOYw9liftX7tGZvmL68x1zU9akeN2bo4m4XoH0cJgoRwGkDpIJHhSR2zEgufEFke8M
+	 BrmdMFL7eUWbMJMXxavKA+lWeSNQwaDHAaPkJLvfZqfsHjLqz8xBSqLqzh+aYmQT45
+	 OWeK8WAeAPUOg==
+Date: Thu, 10 Sep 2026 07:42:24 +0200
 From: Carlos Maiolino <cem@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, dgc@kernel.org, floss@jetm.me, 
-	stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/7] xfs: fix under-reservation of blocks when repairing
- sf directories
-Message-ID: <aqJANTuQQMEIqcmO@andromeda.toxiclabs.cc>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: hch@lst.de, stable@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/7] xfs: actually check internal-rtdev fields in the
+ superblock
+Message-ID: <aqJDNZLzHfzNV52Z@andromeda.toxiclabs.cc>
 References: <178892936573.4057962.16225191041041958394.stgit@frogsfrogsfrogs>
- <178892936640.4057962.1916451282677820756.stgit@frogsfrogsfrogs>
- <20260910050031.GB26687@lst.de>
+ <178892936663.4057962.1670503099807440927.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,38 +43,46 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260910050031.GB26687@lst.de>
+In-Reply-To: <178892936663.4057962.1670503099807440927.stgit@frogsfrogsfrogs>
 
-On Thu, Sep 10, 2026 at 07:00:31AM +0200, Christoph Hellwig wrote:
-> On Tue, Sep 08, 2026 at 11:04:35PM -0700, Darrick J. Wong wrote:
-> > +static inline unsigned int
-> > +xrep_tempexch_estimate_sf_resblks(
-> > +	struct xfs_scrub	*sc,
-> > +	int			whichfork)
-> > +{
-> > +	if (whichfork == XFS_ATTR_FORK)
-> > +		return sc->mp->m_attr_geo->fsbcount;
-> > +	if (S_ISDIR(VFS_I(sc->ip)->i_mode))
-> > +		return sc->mp->m_dir_geo->fsbcount;
-> > +	return 1;
+On Tue, Sep 08, 2026 at 11:04:50PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> geo->fsbcount for attrs is a always 1 and a lot of code relies on that,
-> so this feels a bit overcomplicated and misleading (but still correct).
+> LOLLM points out that the superblock scrubber doesn't check the new
+> fields that were added for internal realtime volumes when we added zoned
+> device support.
 > 
-> What about the more usual:
-> 
-> 	if (S_ISDIR(VFS_I(sc->ip)->i_mode) && whichfork == XFS_DATA_FORK)
-> 		return sc->mp->m_dir_geo->fsbcount;
-> 	return 1;
+> Cc: <stable@vger.kernel.org> # v6.15
+> Fixes: 2167eaabe2fadd ("xfs: define the zoned on-disk format")
+> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> Assisted-by: LOLLM # finding obvious bugs
 
-Either are fine to me so feel free to add:
+This looks fine
 
 Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
+> ---
+>  fs/xfs/scrub/agheader.c |    7 +++++++
+>  1 file changed, 7 insertions(+)
 > 
-> ?
 > 
-> Otherwise looks good:
+> diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
+> index 1fa66aa68e169f..fa5d32ec020aec 100644
+> --- a/fs/xfs/scrub/agheader.c
+> +++ b/fs/xfs/scrub/agheader.c
+> @@ -418,6 +418,13 @@ xchk_superblock(
+>  			xchk_block_set_corrupt(sc, bp);
+>  	}
+>  
+> +	if (xfs_has_zoned(mp)) {
+> +		if (sb->sb_rtstart != cpu_to_be64(mp->m_sb.sb_rtstart))
+> +			xchk_block_set_corrupt(sc, bp);
+> +		if (sb->sb_rtreserved != cpu_to_be64(mp->m_sb.sb_rtreserved))
+> +			xchk_block_set_corrupt(sc, bp);
+> +	}
+> +
+>  	/* Everything else must be zero. */
+>  	sblen = xchk_superblock_ondisk_size(mp);
+>  	if (memchr_inv((char *)sb + sblen, 0, BBTOB(bp->b_length) - sblen))
 > 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
 > 
