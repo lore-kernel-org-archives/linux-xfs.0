@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45CB747A87A;
-	Thu, 10 Sep 2026 11:56:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6EFE471246;
+	Thu, 10 Sep 2026 11:57:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789041414; cv=none; b=DPHOoR3SgFo7MQ+uI3L82sb/F6LroYcFJnFi3XtmwYwvw6nJbc43oIhtgcDVOTaiYVpPF6hbY9QxD4zpvVh6JeFkon7xkxzM+/SyoI9X5dEOiZJM1JhR7IzB5kdbP//KuJq0baL+xkuRSy0iEh7Ncz65j7iYAa0OIJlZUAUgDuM=
+	t=1789041454; cv=none; b=fNRS9tVpCX51W6wxYTIkBXX4XXFiQABgBbnApiFg45/22OFltySbxQMHcW/vo4D7GLSuEOaDHER0z/Gl14C/qU1ecOhf6YI/6Ozx3CdvF6hcW1fEDLz2szSN+ZTICcWju0MPQScYE0LWBpEyzUXWfHyjh141oQKdL+X+vYnP4qU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789041414; c=relaxed/simple;
-	bh=3sK9FeDXBQWrMpZqF7eB+mpAaqABcPjn+pj590Pjxbc=;
+	s=arc-20240116; t=1789041454; c=relaxed/simple;
+	bh=t4NoV1gAg0tnNAU/7rvY+icOWw6B3xrfZIy/AWdSz9M=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ghI06vSNa3uNN4saeqmejx2Ew07gjMBA8LlCQd5vUWy4P8lpt6Mgp6shnMTmbEDbf1tq2esSdi1KfrZW7eBJT2pYV2Fco64tQjqXShbfASYZZSihCFdi96s8ku0/CG8mnyFXY2nNeIGssfxAIzGQ5sxRKrx3089r17LkBn1H9C0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mBYR7A+E; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=V4EtKtjA3XorfTxL/Q4HcVXQjkH2LrV9ZOUy0crwBDhgqMFJ2EE69idlnX3FAyoHb58hqmZeZR8B+U8sTwdmSeafvE1LTuPNlcx/NDH90j82g8E6kiWmpEEzBQVeAJY6/qaaxUr3XGU3bpCh93sqhLZgUP7jNa6A6SiVpn57Op8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iZL9wiLq; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mBYR7A+E"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51FC21F000FF;
-	Thu, 10 Sep 2026 11:56:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iZL9wiLq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6887B1F000FF;
+	Thu, 10 Sep 2026 11:57:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789041411;
-	bh=PTv5gjnoUkgmckYg25Wd/ghR+9+1LKQRAbj4/Rz6hR0=;
+	s=k20260515; t=1789041453;
+	bh=Mgh8waXa9eS3cTcLGuswtFpFRzduf+4/BpkuuXgbHnc=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=mBYR7A+E5z+EvsOhBN7DfdtkE3x9n3oGaFrh40fXMQwQq6v/VuATJp93OAVBpcdsJ
-	 /2x0vHU7OjE29cqp3dLj80QthvfsdFR7OzpWhX4Ex8X+ycWO/SwTQCs3TwpDz5SQip
-	 wokGMjREagLm/mw3zpaMLnOLw6OeqvoHIrUGxnjBsEY7R8LlQTeSDDh7ZassM+vhgn
-	 YkMlBWUBo25M/ndAiVZ/xur5sTx3NUSPGsI/iCT9jKj/49d4a4gjYNlb4RCxezsZNs
-	 /OcUcxbHOYBUZDlVobiSbrDu40TTl7iIXt6qisrv4hk+Oupv53Uks6b0x1810wZFA4
-	 1NxZid0h/Z6AA==
-Message-ID: <63cda829-631c-4758-9aee-7c07ef6a16f9@kernel.org>
-Date: Thu, 10 Sep 2026 13:56:43 +0200
+	b=iZL9wiLq7AUskmc+WJh3qzBBsQ6sONeIgaI+0RRAYtyX30gteNdyL/GReVBlp2E+w
+	 CKU7Q+TiwPuC7pH/4qxX7FlUkR9AvQcli5bW5zgIUwUp9N+Jw/P2PT0w4Wb6YBvoFY
+	 CgKs3QiX7/D5mq3BI/w+ndqMCRV8yFtHM/X3J5XYo04Tt5TR3FINWBtQ1vJQ1GdgOc
+	 sD6/MAq/GoFWVSgI6IdMVSoadiOf8r9CVghoUO8jBT4Xndj+Orx12FlBYtQa9yAvn/
+	 Fhqr7P9vAGUE1dm46VrkqKPXlrJiDgKympDAHwhFDG5Dx9L+gIZHy38en6b11YFraW
+	 5B+kn8i4wBKgQ==
+Message-ID: <561b379d-7ab3-4f78-94d9-7a056c5ddb1c@kernel.org>
+Date: Thu, 10 Sep 2026 13:57:26 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -35,7 +35,8 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 3/4] mm: replace PF_KSWAPD flag with kthread_func() check
+Subject: Re: [PATCH 4/4] mm: replace PF_KCOMPACTD flag with kthread_func()
+ check
 To: Kefeng Wang <wangkefeng.wang@huawei.com>, brauner@kernel.org,
  djwong@kernel.org, cem@kernel.org, akpm@linux-foundation.org,
  vbabka@kernel.org, surenb@google.com, mhocko@suse.com,
@@ -44,7 +45,7 @@ To: Kefeng Wang <wangkefeng.wang@huawei.com>, brauner@kernel.org,
 Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
  linux-mm@kvack.org
 References: <20260902131653.1338227-1-wangkefeng.wang@huawei.com>
- <20260902131653.1338227-4-wangkefeng.wang@huawei.com>
+ <20260902131653.1338227-5-wangkefeng.wang@huawei.com>
 From: "David Hildenbrand (Arm)" <david@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=david@kernel.org; keydata=
@@ -91,16 +92,24 @@ Autocrypt: addr=david@kernel.org; keydata=
  3iyY2Nsd7JxfKu1PRhCGwXzRw5TlfEsoRI7V9A8isUCoqE2Dzh3FvYHVeX4Us+bRL/oqareJ
  CIFqgYMyvHj7Q06kTKmauOe4Nf0l0qEkIuIzfoLJ3qr5UyXc2hLtWyT9Ir+lYlX9efqh7mOY
  qIws/H2t
-In-Reply-To: <20260902131653.1338227-4-wangkefeng.wang@huawei.com>
+In-Reply-To: <20260902131653.1338227-5-wangkefeng.wang@huawei.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 9/2/26 15:16, Kefeng Wang wrote:
-> The preceding commits removed the last consumer that propagated
+> PF_KCOMPACTD was introduced by commit ce6d9c1c2b5c ("NFS: fix
+> nfs_release_folio() to not deadlock via kcompactd writeback") so
+> nfs_release_folio() could detect kcompactd context and skip
+> writeback.  The flag is only consumed by current_is_kcompactd(),
+> whose sole caller is nfs_release_folio().
+> 
+> Replace the flag-based check with kthread_func(current) == kcompactd,
+> freeing the 0x00010000 PF flag bit.
+> 
+> Signed-off-by: Kefeng Wang <wangkefeng.wang@huawei.com>
+> ---
 
-We avoid talking about commits or patches.
-
-"There are no more consumers that ..."
+Reviewed-by: David Hildenbrand (Arm) <david@kernel.org>
 
 -- 
 Cheers,
