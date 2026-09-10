@@ -1,44 +1,90 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA3DE48F854
-	for <linux-xfs@vger.kernel.org>; Thu, 10 Sep 2026 13:29:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 773214AB1CB
+	for <linux-xfs@vger.kernel.org>; Thu, 10 Sep 2026 13:31:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789046969; cv=none; b=rWVIe6XQ2yQsMfoduQ1O8673gVaTrOP7pYo23enfSA/ZA11PdQ53Bex33k5tYYtduwR48joZ/ejUOQTxNHEluw7vfh1v9x36f2kd54vlQTrj/B8EQkMZWyDo8TB9Q0g9jHkKCCUfrq9vB3GKZDzRRe97s4mVW284TOMZWrAAee8=
+	t=1789047094; cv=none; b=nDg1IZFU/WHKuM/RFvzQLM9LUkNq8YJNwU5pW4C8wbzjb5rmqKIP/inPdwB3Gw2rMVxinBSUFiNTxI5xzXqFalPpLZ+3qmPb0FDIfeSYhCV3p1S1/NkgOAm9Sd8jG7sISwgYeKS+50OlzNhz/sAyYvt5g50KtJm3bG6pPAkAgVE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789046969; c=relaxed/simple;
-	bh=IusIMd5tv3oiABgmeGFUYaMf3616lPNJyDcPWHsiPvg=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=cFkrW6tNj7BLrga1xakWmiIMnkwZIiEV0kdkZItSMW2o8+NPXuklVw8H81+2OA/SkoOCr5+zz6pxdsH52xEg1OvcTklxS2YaNYVWquFi0PYNhyBoLHiH3Mbxo4NNcSuLyQPT11nGPrOCYpQKlcCnWfT5Y9MwMfeg5tm1IHLGe70=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=IE0clsk2; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1789047094; c=relaxed/simple;
+	bh=9aWxhq6aPkbkBA5Bm034rqeiube8V2OfXvl3w7mnWNc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=E133eszZTt5wpWV0xFAC8sINFQ8TAQjVeg8avdXObyuVXNc93sOCKy1rPb0PeEr/0emRWfsIcmn/bI/jA7geL48AwUHM19YfTS+J8MvozfnO+TafTZwDv5saXKNMsKpji7WYC/U2Enp7RRlOCyYriNeiLA0S7LKLIgXvI3Xs3ZY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=aoZrjCzy; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=bBR9se2t; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="IE0clsk2"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=nyVhWMkRzes2MlqozW9YBbBqnICyKhwUfao3LZ9pdoM=; b=IE0clsk2VoHarTUI6uW/Gay/si
-	97SM4x2KwnGQu5NlmbOUPVs+LUks8W/Lpm8JcmMR7cL/CZXYDumC/1if4WStfxPaNPRqDR/AD1tpu
-	LK3C788IavyuFamCrS9/hXwla4wOQZgPHeYbTwu9NGfunlTeELeTT4tlRldWWaxqi4uKpKqgXhX4X
-	UORIDEnAijE9qeH1ft0RveyDYne2PPYd46yLSoOam4b2n7oCtqfJSGTUr9qE51wRof4aae44zbG1I
-	uY89iWaWMU1eoW6qwy3ijB+j5jZOm3j66vuCt9ty79APrvP25jl0pNdgHMu4UbzNNNDR0+U8COFUK
-	ftGL2aAg==;
-Received: from [2001:4bb8:2c4:6e16:7921:e451:555c:a765] (helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1x4eqE-0000000ESvX-19g3;
-	Thu, 10 Sep 2026 13:29:27 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Andrey Albershteyn <aalbersh@kernel.org>
-Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH 8/8] libxfs: provide xfs_quota.h
-Date: Thu, 10 Sep 2026 15:28:38 +0200
-Message-ID: <20260910132840.1541283-9-hch@lst.de>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260910132840.1541283-1-hch@lst.de>
-References: <20260910132840.1541283-1-hch@lst.de>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="aoZrjCzy";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="bBR9se2t"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1789047092;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=GrVnlBtAuLm+sbH5l8hpM9T8LdGQ5QcnQOqckPlEqwg=;
+	b=aoZrjCzya6VwkK2vXPUhRmPINbdwV/3bNdpRkXvoBi0FwsSfTxgRuekbZMrs27Ut62WRfG
+	HE1vz9ydHttw0NF00SKNzgKY5TKRHF7DCa2FCipLTIHWfv3mjO5kqXk48SRRjrW4ISNCcw
+	yfUWYXsg/VRgClGvIqedtQXjYWuvQeY=
+Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com
+ [209.85.216.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-589-ECN3-zx4NtuGzjTfo3u_DA-1; Thu, 10 Sep 2026 09:31:31 -0400
+X-MC-Unique: ECN3-zx4NtuGzjTfo3u_DA-1
+X-Mimecast-MFC-AGG-ID: ECN3-zx4NtuGzjTfo3u_DA_1789047090
+Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-3965ba1ba3eso2920005a91.2
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Sep 2026 06:31:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1789047090; x=1789651890; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=GrVnlBtAuLm+sbH5l8hpM9T8LdGQ5QcnQOqckPlEqwg=;
+        b=bBR9se2tJfGo1fA5NEj6DkKfhAQXPH97nsmwaKkgIng/6M6t8dF8xMVH2DlidZncRg
+         UmToKc2A32HGQ0hQhorsMlLt06aU7EEl41ige/lTEjFWojhby32Ss4n9q7VTnCjj20aC
+         GMN2M+Lmmc1OBowM//pukyCQw/7KVUXSGMBSR0AWQjHcEQdhoHkpw0L+00QneG9X2073
+         yryPDVUAv0Ru5tTumJxGvDVoFwsjPMyUO+rI1Z7m0LQc6VTdzcpXYQdAfsDIWp7VBaA4
+         ENQYbBUZfeCKJ2jr7Hk9v0yPzG5b6W1JSuenhfj5n8amwrHvSUx0Au4RDL5+bOaslrIK
+         /Pqw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1789047090; x=1789651890;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=GrVnlBtAuLm+sbH5l8hpM9T8LdGQ5QcnQOqckPlEqwg=;
+        b=rn8xhEfSR9MGrt1f4lNDjx9Nl46zQt4dDIxH917zzynHgqls79C5b5gXHVFcwJeQJ5
+         GVjD0d210CivvCYVumiIFtzfESZypaHIB+fYQ9a8lKEcnBpl7aUbpylsIvf+qFeqpXjl
+         SIx3HL1yI0Yhs5I9aFCbSmmzo+op+xwr9W+o4TVhGMPYNXEbQkbJ6gCy2IGsBTE8Lufn
+         xDg9oIxm6mreQrPnT+sYeSv3IC2FniXusGPUUWhOhYDij1kTbEPD+0tyLYVmO76LVv8t
+         Y1j/SWp/OagG7ICVuhciKw7wEZtkchpvNUxhFJXG/zIKYdte6X2dclLPTjeVNVopLg6f
+         cFxw==
+X-Forwarded-Encrypted: i=1; AKwUvBwZ9DoW+6kyDR2WeX3FVmzgtrJiS2nIYYt26FZDouKHphY4qkSw8eyuCBk758BSv7FpWwyTT27AMoI=@vger.kernel.org
+X-Gm-Message-State: AFuF++nGFgEZL38umzgaxXlwb7ipGec+NSBvC81BmT/+raxCk6QQ1BRl
+	Xd9W9oRsQdFfQC9t5ubG8S2jz+s/FfDsFoLPcdZ52zFv59TTERfjDDvCVf6RVOdbtRL1RsSfCsa
+	Z2Obwyw3Jj14sSRmdhQAxIUA+vuVM1Writ0/zgqrnTLigrVGiDi0gXuhGc8TXAg==
+X-Gm-Gg: AYBFou2kHn7MMwoQ7DPCJyUpj0t6NKD3nNe+dOw2JzUKjIDJaPsNm6vYwnyw1lrQvSf
+	tk2gKfOgPTRdV/VHJzZKMS0qZY/8cp64Gka7TpSccxPnsgDTDZQ9cPdWwATZuxA6a47MetXTK+Q
+	bptOnsIqpZoqhH/UuH1pNrxlmhoK4pUKAICaGXfsWyn6zIKbHbJ27Fklq+nobP+Vky7bFbxhbz0
+	cVU24OD88NV/IYDErlltZYHNJJ8xNlg6Ffv1GiSfqc7wTgV3ZUNnUV/5vUZsvolLEhCCbOz//81
+	tol8my6GaeiBaY/OrNnJUuO0uufurm2y3LK82IcGIokb8AoUKx60508SjD+dBI+GvGEs6KfpfuO
+	rRsYFmwFRFFvePJg6ifureEwY
+X-Received: by 2002:a17:90b:384e:b0:366:3517:1aa2 with SMTP id 98e67ed59e1d1-39d707b291amr10389485a91.0.1789047089871;
+        Thu, 10 Sep 2026 06:31:29 -0700 (PDT)
+X-Received: by 2002:a17:90b:384e:b0:366:3517:1aa2 with SMTP id 98e67ed59e1d1-39d707b291amr10389329a91.0.1789047089066;
+        Thu, 10 Sep 2026 06:31:29 -0700 (PDT)
+Received: from kernel-devel.tail62cea.ts.net ([240d:1a:c0d:9f00:be24:11ff:fe35:71b3])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39d7e77b1afsm5032004a91.5.2026.09.10.06.31.26
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 10 Sep 2026 06:31:27 -0700 (PDT)
+From: Shigeru Yoshida <syoshida@redhat.com>
+To: Carlos Maiolino <cem@kernel.org>,
+	Deepanshu Kartikey <kartikey406@gmail.com>,
+	"Darrick J. Wong" <djwong@kernel.org>
+Cc: Shigeru Yoshida <syoshida@redhat.com>,
+	linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] xfs: fix double mutex_lock() call in xfs_ioc_health_monitor()
+Date: Thu, 10 Sep 2026 22:29:55 +0900
+Message-ID: <20260910132956.538828-1-syoshida@redhat.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,213 +92,32 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Reduce spurious include differences to the kernel files.
+Commit 4870da4f49ae ("xfs: take hm->lock in xfs_ioc_health_monitor()
+before insert") intended to protect the __xfs_healthmon_insert() call
+with hm->lock, but the second mutex operation was accidentally left as
+mutex_lock() instead of mutex_unlock(), causing self-deadlock. Change
+the second call to mutex_unlock() as originally intended.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Fixes: 4870da4f49ae ("xfs: take hm->lock in xfs_ioc_health_monitor() before insert")
+Signed-off-by: Shigeru Yoshida <syoshida@redhat.com>
 ---
- libxfs/Makefile          |  1 +
- libxfs/stubs/xfs_quota.h | 20 ++++++++++++++++++++
- libxfs/xfs_attr.c        |  2 +-
- libxfs/xfs_bmap.c        |  2 +-
- libxfs/xfs_bmap_btree.c  |  2 +-
- libxfs/xfs_btree.c       |  1 +
- libxfs/xfs_dquot_buf.c   |  2 +-
- libxfs/xfs_exchmaps.c    |  1 +
- libxfs/xfs_metadir.c     |  1 +
- libxfs/xfs_metafile.c    |  1 +
- libxfs/xfs_platform.h    | 15 ---------------
- libxfs/xfs_trans_resv.c  |  2 +-
- 12 files changed, 30 insertions(+), 20 deletions(-)
- create mode 100644 libxfs/stubs/xfs_quota.h
+ fs/xfs/xfs_healthmon.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/libxfs/Makefile b/libxfs/Makefile
-index bf681435969c..9795982b0e83 100644
---- a/libxfs/Makefile
-+++ b/libxfs/Makefile
-@@ -78,6 +78,7 @@ HFILES = \
- 	stubs/xfs_extent_busy.h \
- 	stubs/xfs_inode.h \
- 	stubs/xfs_mount.h \
-+	stubs/xfs_quota.h \
- 	stubs/xfs_trace.h \
- 	stubs/xfs_trans.h
+diff --git a/fs/xfs/xfs_healthmon.c b/fs/xfs/xfs_healthmon.c
+index 6dc3f69d6798..c3749675ef19 100644
+--- a/fs/xfs/xfs_healthmon.c
++++ b/fs/xfs/xfs_healthmon.c
+@@ -1225,7 +1225,7 @@ xfs_ioc_health_monitor(
+ 	running_event->domain = XFS_HEALTHMON_MOUNT;
+ 	mutex_lock(&hm->lock);
+ 	__xfs_healthmon_insert(hm, INSERT_HEAD, running_event);
+-	mutex_lock(&hm->lock);
++	mutex_unlock(&hm->lock);
  
-diff --git a/libxfs/stubs/xfs_quota.h b/libxfs/stubs/xfs_quota.h
-new file mode 100644
-index 000000000000..7bc545bd5449
---- /dev/null
-+++ b/libxfs/stubs/xfs_quota.h
-@@ -0,0 +1,20 @@
-+#ifndef __XFS_QUOTA_H__
-+#define __XFS_QUOTA_H__
-+
-+#include "xfs_quota_defs.h"
-+
-+#define xfs_trans_mod_dquot_byino(t,i,f,d)		({ \
-+	uint _f = (f); \
-+	_f = _f; /* shut up gcc */ \
-+})
-+#define xfs_trans_reserve_quota_nblks(t,i,b,n,f)	(0)
-+
-+/* hack too silence gcc */
-+static inline int retzero(void) { return 0; }
-+#define xfs_trans_unreserve_quota_nblks(t,i,b,n,f)	retzero()
-+#define xfs_quota_unreserve_blkres(i,b) 		retzero()
-+
-+#define xfs_quota_reserve_blkres(i,b)		(0)
-+#define xfs_qm_dqattach(i)			(0)
-+
-+#endif  /* __XFS_QUOTA_H__ */
-diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
-index bff809676701..57a0a175c286 100644
---- a/libxfs/xfs_attr.c
-+++ b/libxfs/xfs_attr.c
-@@ -21,7 +21,7 @@
- #include "xfs_attr.h"
- #include "xfs_attr_leaf.h"
- #include "xfs_attr_remote.h"
--#include "xfs_quota_defs.h"
-+#include "xfs_quota.h"
- #include "xfs_trans_space.h"
- #include "xfs_trace.h"
- #include "defer_item.h"
-diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-index 1d3460da84ca..cec59446711b 100644
---- a/libxfs/xfs_bmap.c
-+++ b/libxfs/xfs_bmap.c
-@@ -22,10 +22,10 @@
- #include "xfs_bmap_btree.h"
- #include "xfs_errortag.h"
- #include "xfs_error.h"
-+#include "xfs_quota.h"
- #include "xfs_trans_space.h"
- #include "xfs_trace.h"
- #include "xfs_attr_leaf.h"
--#include "xfs_quota_defs.h"
- #include "xfs_rmap.h"
- #include "xfs_ag.h"
- #include "xfs_ag_resv.h"
-diff --git a/libxfs/xfs_bmap_btree.c b/libxfs/xfs_bmap_btree.c
-index 5b82e732d3ad..758a4b1ccf5b 100644
---- a/libxfs/xfs_bmap_btree.c
-+++ b/libxfs/xfs_bmap_btree.c
-@@ -19,10 +19,10 @@
- #include "xfs_bmap_btree.h"
- #include "xfs_bmap.h"
- #include "xfs_error.h"
-+#include "xfs_quota.h"
- #include "xfs_trace.h"
- #include "xfs_rmap.h"
- #include "xfs_ag.h"
--#include "xfs_quota_defs.h"
- 
- static struct kmem_cache	*xfs_bmbt_cur_cache;
- 
-diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
-index 3f820e7999a6..425fbefc31ad 100644
---- a/libxfs/xfs_btree.c
-+++ b/libxfs/xfs_btree.c
-@@ -31,6 +31,7 @@
- #include "xfs_rtrmap_btree.h"
- #include "xfs_bmap.h"
- #include "xfs_rmap.h"
-+#include "xfs_quota.h"
- #include "xfs_metafile.h"
- #include "xfs_rtrefcount_btree.h"
- 
-diff --git a/libxfs/xfs_dquot_buf.c b/libxfs/xfs_dquot_buf.c
-index b0cb2a2b1cc4..0e59106303c4 100644
---- a/libxfs/xfs_dquot_buf.c
-+++ b/libxfs/xfs_dquot_buf.c
-@@ -11,8 +11,8 @@
- #include "xfs_log_format.h"
- #include "xfs_trans_resv.h"
- #include "xfs_mount.h"
--#include "xfs_quota_defs.h"
- #include "xfs_inode.h"
-+#include "xfs_quota.h"
- #include "xfs_trans.h"
- #include "xfs_error.h"
- #include "xfs_health.h"
-diff --git a/libxfs/xfs_exchmaps.c b/libxfs/xfs_exchmaps.c
-index 7b9bba1d971c..7d6f949aa1f3 100644
---- a/libxfs/xfs_exchmaps.c
-+++ b/libxfs/xfs_exchmaps.c
-@@ -14,6 +14,7 @@
- #include "xfs_inode.h"
- #include "xfs_trans.h"
- #include "xfs_bmap.h"
-+#include "xfs_quota.h"
- #include "xfs_exchmaps.h"
- #include "xfs_trace.h"
- #include "xfs_bmap_btree.h"
-diff --git a/libxfs/xfs_metadir.c b/libxfs/xfs_metadir.c
-index aecffb11a310..74c4596ee4cf 100644
---- a/libxfs/xfs_metadir.c
-+++ b/libxfs/xfs_metadir.c
-@@ -18,6 +18,7 @@
- #include "xfs_metadir.h"
- #include "xfs_trace.h"
- #include "xfs_inode.h"
-+#include "xfs_quota.h"
- #include "xfs_ialloc.h"
- #include "xfs_bmap_btree.h"
- #include "xfs_da_format.h"
-diff --git a/libxfs/xfs_metafile.c b/libxfs/xfs_metafile.c
-index 7973feb3b411..71f004e9dc64 100644
---- a/libxfs/xfs_metafile.c
-+++ b/libxfs/xfs_metafile.c
-@@ -17,6 +17,7 @@
- #include "xfs_metafile.h"
- #include "xfs_trace.h"
- #include "xfs_inode.h"
-+#include "xfs_quota.h"
- #include "xfs_errortag.h"
- #include "xfs_error.h"
- #include "xfs_alloc.h"
-diff --git a/libxfs/xfs_platform.h b/libxfs/xfs_platform.h
-index 542e633f0ffe..d09fb0aae00f 100644
---- a/libxfs/xfs_platform.h
-+++ b/libxfs/xfs_platform.h
-@@ -394,21 +394,6 @@ xfs_buf_readahead(
- 
- #define xfs_trans_inode_buf(tp, bp)		((void) 0)
- 
--/* quota bits */
--#define xfs_trans_mod_dquot_byino(t,i,f,d)		({ \
--	uint _f = (f); \
--	_f = _f; /* shut up gcc */ \
--})
--#define xfs_trans_reserve_quota_nblks(t,i,b,n,f)	(0)
--
--/* hack too silence gcc */
--static inline int retzero(void) { return 0; }
--#define xfs_trans_unreserve_quota_nblks(t,i,b,n,f)	retzero()
--#define xfs_quota_unreserve_blkres(i,b) 		retzero()
--
--#define xfs_quota_reserve_blkres(i,b)		(0)
--#define xfs_qm_dqattach(i)			(0)
--
- #define uuid_copy(s,d)		platform_uuid_copy((s),(d))
- #define uuid_equal(s,d)		(platform_uuid_compare((s),(d)) == 0)
- 
-diff --git a/libxfs/xfs_trans_resv.c b/libxfs/xfs_trans_resv.c
-index 9294b72e61b7..5b7660b1cd8a 100644
---- a/libxfs/xfs_trans_resv.c
-+++ b/libxfs/xfs_trans_resv.c
-@@ -15,9 +15,9 @@
- #include "xfs_da_btree.h"
- #include "xfs_inode.h"
- #include "xfs_bmap_btree.h"
-+#include "xfs_quota.h"
- #include "xfs_trans.h"
- #include "xfs_trans_space.h"
--#include "xfs_quota_defs.h"
- #include "xfs_rtbitmap.h"
- #include "xfs_trace.h"
- #include "defer_item.h"
+ 	/*
+ 	 * Preallocate the unmount event so that we can't fail to notify the
 -- 
-2.53.0
+2.55.0
 
