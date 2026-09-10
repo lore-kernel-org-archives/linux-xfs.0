@@ -1,106 +1,97 @@
-Received: from mail-oi1-f176.google.com (mail-oi1-f176.google.com [209.85.167.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6C3F36B90C
-	for <linux-xfs@vger.kernel.org>; Thu, 10 Sep 2026 20:51:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2348E3ACEE2;
+	Thu, 10 Sep 2026 22:00:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789073498; cv=none; b=Ln7JWDRrQ41igyigy6I7wiSd9XicKqr5DrLFyzh//vJYFakoJVeh3KOYcQTs/6v8Sin9h0o8uM6fecxSBnQOGRicTXUQr8825GI1maf/9qw9+M4YcvTecjHHKJw9MYZnmWz2bjohV/A/agc5Ckjxwph6xrF207ikq0Wbh6pqXOI=
+	t=1789077659; cv=none; b=HbHXMfLslFaOpEHSmiyG8+fbrC4v2dvoN/LZIBvwjTw2KjHGU6yZhWYqn1eQmkSSMER1ELdplr0p99pHsX0ODt4Ra43BBI7RD5gp4gRC/zZWBdKw0/Urad9oeSjQ1Djx6OScHlixZmD7Co2mzD5AGriC9o2nR9ospfQYcMoehj4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789073498; c=relaxed/simple;
-	bh=lQ1tC8QyyXsDWotGX0Dze7Qq9KJn6duOUqMRQ51l/t0=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=jS5GUbqJOy2eBze332GslHDEAjaB4kVijE1KyshYXpJGB8QkldxRgGCzVyMrubQhqi55TtiFG4skc5Qq2A9KiK7B/yRR151n809mILI3gAGcxGSXeAAC+DMA8ydQSWBqvkso6iyiH+BN5YxAf6wJ+9jScuRA1wBr4VGmTkjZclo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b=qyAe0Gp+; arc=none smtp.client-ip=209.85.167.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	s=arc-20240116; t=1789077659; c=relaxed/simple;
+	bh=GXS2REQZfVhwiioAR+tvLzShnfy+wv3gtlYG29uBL3g=;
+	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
+	 Mime-Version:Content-Type; b=ZRfjy3z/73c9epx8301q+135ab3AEBqyP7fZ0v1soizekHF9q+hTXd5tgSibjLJ6XYaMP2ff2T/CJcY+Nv/I4N13N2z2oOsQbJp+qfrm9Oi9bAekIPFSqkys1Fvk97949ihysUsTdNDP+STLPUn0bSib0e+hozJpUFbkLIEm0G0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=fK39eLC2; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b="qyAe0Gp+"
-Received: by mail-oi1-f176.google.com with SMTP id 5614622812f47-4c14d66d922so153193b6e.0
-        for <linux-xfs@vger.kernel.org>; Thu, 10 Sep 2026 13:51:35 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="fK39eLC2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 070241F000FF;
+	Thu, 10 Sep 2026 22:00:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20251104.gappssmtp.com; s=20251104; t=1789073494; x=1789678294; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :references:cc:to:from:subject:user-agent:mime-version:date
-         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=GXMKHM4ByjQtPNS9X+R9gCOHk8uolkvlV5huzt/Ejg0=;
-        b=qyAe0Gp+5MJD41P0biXsS+Tm0HKWVFusfBdr9lw1bFjum0QXINGToLWe3CtCYKJLzP
-         mBCuIRz/76OmagJleXEv3Bv34AwPLVWb8g2XWC8qslvJ3tiUei3HkNC/2ZLl4qBipMdH
-         qSjuY5eFLiqF1axrzdsuju/LUT05moIPnXAayc4h0Y+oGbqayjp10hSlr/iRIwyLWAWN
-         Nl9nxWeW8LX7syvxrhW0/jOCeRrnsZA/x4bTf/mR8NJlgFsTKlF+5vKeEdBt1o46RLZI
-         jk0llL/4HRqbWf0SK1oeMwc5YFrwyRUFB07A8lRQDQvmvP4V5CpDHShEiq0t27SDF4em
-         MWQw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789073494; x=1789678294;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :references:cc:to:from:subject:user-agent:mime-version:date
-         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=GXMKHM4ByjQtPNS9X+R9gCOHk8uolkvlV5huzt/Ejg0=;
-        b=N8W1JjRoAkkPhCMHwdTpiY7NPPXMGFPo4IOpTjXV3p5EDyyXNuksobJIekDqnAi0q0
-         nJTdcDl8BQvaSFMRLeNIIHIsr0Z6P1dlsTLSPtJS/Wg7IEy8f3zKi1DMdJ42pR7JZNNw
-         Kh/CvNGlhBSDRsRW6Sqw00MzHq7bDIqKZopGUu9DUJJpSFC6KA+Y7hLSfbdVK3ajFB1r
-         C/1+WZi/xFbiIQlBJyd1ik33rcECDV+lN0J8a/fIfywjDI25VOH/sNuNsW0Emz0VqcFy
-         MvW2eakdW197++clMns9JCSQuu6kvSz9/idAp3yh/V+D6dz38EnI6dTFDav01VaCNHI6
-         y0Sw==
-X-Forwarded-Encrypted: i=1; AKwUvByS9CHBVdkpplaYUdbV2SFVq2aKWrxPdLFzzcgfBDyLWmVS2WcwYEPzeXYWY2IzSXpNJTOc/rry8UA=@vger.kernel.org
-X-Gm-Message-State: AFuF++kl7VPx7/tyYZET5rro6qj5azm9VdMJq7tZ/ypCkRBeN6DXXDDk
-	LLHB5s9I95/nVHUS9FxZdRvq6/swe0eXTLVhnpaDU/WHrDyqpBjUWm0MZ4wtAFYMZSo=
-X-Gm-Gg: AYBFou1GtKqCBpvTMGQIgn6bGv66m/dLNFhzBD9eR51ZheFz06qqK9EXwMvxG3q0adJ
-	+QY6+OX5u9n9WO56MQToFLq6jT/uLjwjgS9AqJGA8ZWAaFie5n0Ii9aWmh9EsESeXFQ1JHzRrs+
-	zAGp2afa5CaXB3qRSc9wpMagjXskUb6OKZrbzzMtLBG6R2CehmOCJQelpfRqwQaSWQz4y0SUqQX
-	HZChOhSbp7zf56oXQJmm4IFNfroSnpo4H101BVYSmheCed5FSj6C7D2Ak/QyRfmJxVEimNhE3Bk
-	ptHLIhORMAa1j1vNVg3s06L3JAGk6Z6abrmcMM7nr+EojFdaXsaLHW2C1XOVFV/Ey+PMaDTDPLm
-	AF6zVp98yxDxhGHIUSp8ZS6iqks/PCfDPN+VpEmra31v45oQRVpFBUiB68SoAYI6rS+eCzJjsN0
-	ND1n/Z03ul7Po4zfrHDM7ZKuISOYxQeAqgsRusnA5GoMcIvYYB5LLFhVhadKMnwFiTJA7ImwOGx
-	AVP++K2MESKRYogOs27/TGHZmC46xQVXxo5kkBnp2rrhDcF5bFTfhhb
-X-Received: by 2002:a05:6808:1a09:b0:4b9:a88b:8895 with SMTP id 5614622812f47-4c31cf44127mr554822b6e.43.1789073494540;
-        Thu, 10 Sep 2026 13:51:34 -0700 (PDT)
-Received: from [192.168.1.102] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id 5614622812f47-4c330daa69asm282875b6e.5.2026.09.10.13.51.33
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 10 Sep 2026 13:51:33 -0700 (PDT)
-Message-ID: <cff350b3-836f-4953-97f3-d664164746b4@kernel.dk>
-Date: Thu, 10 Sep 2026 14:51:33 -0600
+	d=linux-foundation.org; s=korg; t=1789077657;
+	bh=XCbZRJJSfwFq8fSpu5C5V6NUIqHCcbuO98gGM5adtIw=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=fK39eLC2b0vu1d3w2C5YFr0zE38rwHGnqt1hiqpOiDNabPVcXfSWOoVTWdJa41D3v
+	 oii8bg896U7MfHwkeq0lnsDlofLZ2feOp+esT7Y37c0m16NA9v1xAoEe31JU5RQuiQ
+	 QCBZ9ehiGjpded5wUGYFHFn8Dg9T+5mk1K6wcsfc=
+Date: Thu, 10 Sep 2026 15:00:56 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Salvatore Dipietro <dipiets@amazon.it>
+Cc: <abuehaze@amazon.com>, <alisaidi@amazon.com>, <blakgeof@amazon.com>,
+ <brauner@kernel.org>, <brendan.jackman@linux.dev>, <david@redhat.com>,
+ <dgc@kernel.org>, <dipietro.salvatore@gmail.com>, <djwong@kernel.org>,
+ <hannes@cmpxchg.org>, <hch@infradead.org>, <hch@lst.de>,
+ <jackmanb@google.com>, <linux-fsdevel@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <linux-mm@kvack.org>,
+ <linux-xfs@vger.kernel.org>, <mhocko@suse.com>, <ritesh.list@gmail.com>,
+ <rvvandan@amazon.com>, <stable@vger.kernel.org>, <surenb@google.com>,
+ <vbabka@kernel.org>, <vbabka@suse.cz>, <willy@infradead.org>,
+ <ziy@nvidia.com>
+Subject: Re: [PATCH v4] mm/page_alloc: avoid direct compaction for costly
+ __GFP_NORETRY allocations
+Message-Id: <20260910150056.499c6312198f1898acb68adb@linux-foundation.org>
+In-Reply-To: <20260910114602.926944-1-dipiets@amazon.it>
+References: <20260905174239.99e31515fabe220aa7d8e6fa@linux-foundation.org>
+	<20260910114602.926944-1-dipiets@amazon.it>
+X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: lazy bounce buffering for checksummed reads v3
-From: Jens Axboe <axboe@kernel.dk>
-To: Christoph Hellwig <hch@lst.de>, Christian Brauner <brauner@kernel.org>,
- "Darrick J. Wong" <djwong@kernel.org>, Carlos Maiolino <cem@kernel.org>
-Cc: Tal Zussman <tz2294@columbia.edu>, Anuj Gupta <anuj20.g@samsung.com>,
- linux-block@vger.kernel.org, linux-xfs@vger.kernel.org,
- linux-fsdevel@vger.kernel.org
-References: <20260909060924.1102037-1-hch@lst.de>
- <fe537c5f-114d-4d9a-817d-93f359e12924@kernel.dk>
-Content-Language: en-US
-In-Reply-To: <fe537c5f-114d-4d9a-817d-93f359e12924@kernel.dk>
-Content-Type: text/plain; charset=UTF-8
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
-On 9/10/26 2:50 PM, Jens Axboe wrote:
-> On 9/9/26 12:08 AM, Christoph Hellwig wrote:
->> NOTE/QUESTION TO SUBSYSTEM MAINTAINERS: The patches in this series are
->> split over 3 subsystems, and I'd love to hear from the maintainers
->> about their preferences for merging this.
+On Thu, 10 Sep 2026 11:46:02 +0000 Salvatore Dipietro <dipiets@amazon.it> wrote:
+
 > 
-> It's a little hard to split as you have eg block patches both at the
-> start and beginning... In the spirit of getting this some runtime, I'm
-> going to queue it up in a separate branch,
-> for-7.4/lazy-bounce-buffering for now.
+> On Sat, 05 Sep 2026 17:42:39 -0700 Andrew Morton <akpm@linux-foundation.org> wrote:
+> 
+> > Is there anything particularly unusual about this test case?
+> 
+> It is a stock pgbench simple-update PostgreSQL workload on a large
+> instance (96 vCPUs), using standard PostgreSQL settings and with no huge
+> pages assigned to the database. We deliberately overprovision the
+> pgbench clients: 1024 clients over 96 threads. That keeps enough writers
+> in the buffered write path concurrently to hit the costly-order
+> allocation failure path continuously. The memory fragmentation comes from 
+> page tables: PostgreSQL spawns a new process per client, and those page
+> tables consume ~40% of memory, which significantly limits the page cache
+> and the free memory available.
 
-On 2nd thought since this already relies on stuff in the XFS tree
-apparently, you can just add my
+OK, thanks.
 
-Reviewed-by: Jens Axboe <axboe@kernel.dk>
+> 
+> > > Results (average of 3 runs, TPS):
+> > >
+> > >   Config                   Avg TPS      % vs Baseline
+> > >   baseline (no patch)       59,408       -
+> > >   With this patch          155,409      +161.6%
+> >
+> > Is this back to pre-5d8edfb900d5 performance?
+> 
+> Yes - fully recovered.
 
-to the block patches. Would probably make everybody's life easier.
+Great.  That's worth mentioning in the changelog.
 
--- 
-Jens Axboe
+> 
+> > AI review asked a few serious-looking questions:
+> > 	https://sashiko.dev/#/patchset/20260904115629.3993331-1-dipiets@amazon.it
+> 
+> Thanks for pointing that out. To address them, we can have something
+> like the patch below. Performance results are still similar to v4. Happy
+> to submit a formal v5 patch with it if you would like.
+
+Yes please, a v5 would be good.
+
 
