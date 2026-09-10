@@ -1,126 +1,181 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from pdx-out-010.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-010.esa.us-west-2.outbound.mail-perimeter.amazon.com [52.12.53.23])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C806E4582EF;
-	Thu, 10 Sep 2026 11:40:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71C7947C112;
+	Thu, 10 Sep 2026 11:46:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=52.12.53.23
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789040451; cv=none; b=c6j64ahsrBJAhyYMzqJVd6mXPypaR04bWYNOZ8nhWOoGin3q4K9p22X2AgrZprbN3Zkj71Mv8pxS0TvkRZ9YNJcS3w/A3bLxA1cZN1EQTL61HqbE52xJqkIbGujK3u0UHmkrqsmL8KlqjzCOnDFkZH5scf+rl9d1n2XzYiIYmX4=
+	t=1789040809; cv=none; b=cV1Ku7oVUvasXv8YBIFLxZdfCeF4J2a25VDK3/jdiBzoE5WMIpRW2UzOUk1vyoWfJegs27RkE9LZKEyQU4vF/Vmb9MeY4Zrqtw/lrVcn1/Dz4kwMXjCS3PvwoFeKej8zXvvFBCOy4SGRutF++bYQaQXum+J8niZB0TOfBKzqJ/k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789040451; c=relaxed/simple;
-	bh=KklE+Hr9lHrkfqKr55b1pyQCo4ZNcE9E/mqsaG6l5OM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=nc1ry0gjaL/Yve9uxj+zXXUD+EZUVt6rGt6/CEbkKorLgnuXTZkcPpIFJtuYlQnpSe3B7EX+WWIEVZFu3ODcypGmlbnosMblw5X0AFFDpmJwpZFvL+bNXIYBnRpndBzdkGKnpr8wCZ9Kj2kw7tuISlxfpmG3Men/O2XwjYbdWRE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PPnC12SU; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789040809; c=relaxed/simple;
+	bh=d7z6KPD6K9yAbT6rqth8+0jINVsF/Bf64K/NCCQDth4=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=NcaRyy2ZMkK1VvZ8bQ1ELq4Wh/dUC+NiaqiZL2P+M1hKxFYjvwDFIS0SIhR4etJrwTuHChhvGYCbzpNyD8L8oYOcMX2Z2i72+Kn51BAnHT4zQDWO+VhiATcLuoIuqyl5aDmbG/iD/c76aWeF+vtY71gbDjwjfIHgNz5eoiu2Pa0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.it; spf=pass smtp.mailfrom=amazon.it; dkim=pass (2048-bit key) header.d=amazon.it header.i=@amazon.it header.b=AEcqfbDC; arc=none smtp.client-ip=52.12.53.23
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.it
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.it
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PPnC12SU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77C771F000FF;
-	Thu, 10 Sep 2026 11:40:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789040449;
-	bh=xlMMqsd9T4BDh+CHmkrIy8z//a0wpFijF41uVmhuA2E=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=PPnC12SUioGBK3aax90C0EH+oL/LQlOLFjjkZ2ZAbvHWtFvcvlEUN/1M0SXf4y3pz
-	 OP1Y09vwE4zELSxvVc2mmcGL1JwNMSzSlVvX+P1guug02pRrm/PlSsWZ2llNnXW9Jm
-	 2nWWuj8snvTIbeUfbiBvYeeY3rrJCLw3Tts7iV2bF+82F/fIXTL23aG6zv+GMWWvvc
-	 pnhzZCFhVMkzp2aWzKgN47qrN3WCuMUvjHZtxBh/fMR7Q9eca/LVkqpSiw8FIHSST/
-	 +4ynmhOCl64mfUgI1lwOGyDH+FegtYfz9OhFbVH7PsuvJp9Mp+MlTVxIeUiXO2+8Kg
-	 ez7ZppGvAYyag==
-Date: Thu, 10 Sep 2026 13:40:44 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: Jeff Layton <jlayton@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, 
-	"Darrick J. Wong" <djwong@kernel.org>, zlang@kernel.org, linux-xfs@vger.kernel.org, 
-	fstests@vger.kernel.org, jack@suse.cz, Chuck Lever <cel@kernel.org>, 
-	linux-nfs@vger.kernel.org
-Subject: Re: [RFC PATCH 1/2] common/nfs: add management helpers
-Message-ID: <aqKWMY5yebKmUE6_@andromeda.toxiclabs.cc>
-References: <20260907164054.111393-1-cem@kernel.org>
- <20260907164054.111393-2-cem@kernel.org>
- <20260908142226.GL839663@frogsfrogsfrogs>
- <aqD4zBD06P1LJKM2@infradead.org>
- <208df4dabcb9db9c6c7d00f4cf2f63fa3be815e1.camel@kernel.org>
+	dkim=pass (2048-bit key) header.d=amazon.it header.i=@amazon.it header.b="AEcqfbDC"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=amazon.it; i=@amazon.it; q=dns/txt; s=amazoncorp2;
+  t=1789040802; x=1820576802;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=zIxMe7CUOIbyICiMyGkhisOqvvsyopgrlubg8GsVc3c=;
+  b=AEcqfbDCDXAvt011rwBnjlhxM/xy9gfu1gvUpXPZXotAMAjJ9Myhu5HM
+   nOLmFmTVnAnCR/mbrwijotmrd5la9u4SJq5zjGE8qLithggsmyZSOqaDj
+   rbPoQ26MVEYRXneC29m5Cr39l4u5rLBJQ/ZOAMc9xgMeneq4NM7cI7MOC
+   /qovnsQOaVGvSUZf7As3kazauQhjgKdaM/9HdyOJzTyUCdZ5ypaNn3gtp
+   T5qfCbnrlq+pwlsbna2DOwBhsRGLhs9LqfscnZl3iSXaGWuZnO/qBtl8b
+   ykPvVSmzksI8EH8T5tlNAKQ7RuGdVqf3g3Gq1/8QYrubGj8ZBvbXhjBHB
+   A==;
+X-CSE-ConnectionGUID: PrxB9U2pTCO3cOtOxIS8kQ==
+X-CSE-MsgGUID: 71u9WAD7TGq5z4s2L10l2A==
+X-IronPort-AV: E=Sophos;i="6.27,95,1787011200"; 
+   d="scan'208";a="28190348"
+Received: from ip-10-5-12-219.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.12.219])
+  by internal-pdx-out-010.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Sep 2026 11:46:36 +0000
+Received: from EX19MTAUWB001.ant.amazon.com [205.251.233.104:31293]
+ by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.22.113:2525] with esmtp (Farcaster)
+ id 723b55c1-1dd1-4458-a7f0-829821daf3d6; Thu, 10 Sep 2026 11:46:36 +0000 (UTC)
+X-Farcaster-Flow-ID: 723b55c1-1dd1-4458-a7f0-829821daf3d6
+Received: from EX19D001UWA001.ant.amazon.com (10.13.138.214) by
+ EX19MTAUWB001.ant.amazon.com (10.250.64.248) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.45;
+ Thu, 10 Sep 2026 11:46:36 +0000
+Received: from dev-dsk-dipiets-1b-77b833da.eu-west-1.amazon.com
+ (10.253.66.177) by EX19D001UWA001.ant.amazon.com (10.13.138.214) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.46; Thu, 10 Sep 2026
+ 11:46:31 +0000
+From: Salvatore Dipietro <dipiets@amazon.it>
+To: <akpm@linux-foundation.org>
+CC: <abuehaze@amazon.com>, <alisaidi@amazon.com>, <blakgeof@amazon.com>,
+	<brauner@kernel.org>, <brendan.jackman@linux.dev>, <david@redhat.com>,
+	<dgc@kernel.org>, <dipietro.salvatore@gmail.com>, <dipiets@amazon.it>,
+	<djwong@kernel.org>, <hannes@cmpxchg.org>, <hch@infradead.org>, <hch@lst.de>,
+	<jackmanb@google.com>, <linux-fsdevel@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-mm@kvack.org>,
+	<linux-xfs@vger.kernel.org>, <mhocko@suse.com>, <ritesh.list@gmail.com>,
+	<rvvandan@amazon.com>, <stable@vger.kernel.org>, <surenb@google.com>,
+	<vbabka@kernel.org>, <vbabka@suse.cz>, <willy@infradead.org>,
+	<ziy@nvidia.com>
+Subject: Re: [PATCH v4] mm/page_alloc: avoid direct compaction for costly __GFP_NORETRY allocations
+Date: Thu, 10 Sep 2026 11:46:02 +0000
+Message-ID: <20260910114602.926944-1-dipiets@amazon.it>
+X-Mailer: git-send-email 2.50.1
+In-Reply-To: <20260905174239.99e31515fabe220aa7d8e6fa@linux-foundation.org>
+References: <20260905174239.99e31515fabe220aa7d8e6fa@linux-foundation.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <208df4dabcb9db9c6c7d00f4cf2f63fa3be815e1.camel@kernel.org>
+X-ClientProxiedBy: EX19D035UWB002.ant.amazon.com (10.13.138.97) To
+ EX19D001UWA001.ant.amazon.com (10.13.138.214)
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 
-On Thu, Sep 10, 2026 at 07:30:46AM -0400, Jeff Layton wrote:
-> On Tue, 2026-09-08 at 23:12 -0700, Christoph Hellwig wrote:
-> > On Tue, Sep 08, 2026 at 07:22:26AM -0700, Darrick J. Wong wrote:
-> > > > +# Start rpcbind if it is not already running.
-> > > > +_start_rpcbind()
-> > > > +{
-> > > > +	rpcinfo -p localhost > /dev/null 2>&1 && return 0
-> > > > +	rpcbind 2>> $seqres.full || _notrun "Cannot start rpcbind"
-> > > > +	/usr/sbin/rpc.statd 2>> $seqres.full || _notrun "Cannot start rpc.statd"
-> > > > +	/usr/sbin/rpc.idmapd 2>> $seqres.full || _notrun "Cannot start rpc.idmapd"
-> > > > +	/usr/sbin/nfsdcld 2>> $seqres.full || _notrun "Cannot start nfsdcld"
-> > > 
-> > > Aren't these daemons usually configured as system services?
-> > > 
-> > > # service rpcbind start
-> > > 
-> > > etc?
-> > 
-> > They usually are, but doing that as part of a test feels wrong.
-> > Adding the relevant maintainers and list.
-> > 
-> > 
-> 
-> I don't see a problem with using the normal systemd services as long as
-> you're just doing a "start" instead of an "enable". That would be a lot
-> less likely to bitrot than these scripts.
 
-My only concern regarding using systemd services is portability. I tried
-to keep the test agnostic to the init system being used, but it indeed
-would be way easier to put this into xfstests if we just accept this
-will be a __not_run on systemd-less distros. Giving the majority of
-people I know frequently running xfstests (including me) uses
-systemd-based distros, this wouldn't be a problem for me personally...
+On Sat, 05 Sep 2026 17:42:39 -0700 Andrew Morton <akpm@linux-foundation.org> wrote:
 
-> 
-> > > > +}
-> > > > +
-> > > > +# Stop rpcbind.
-> > > > +_stop_rpcbind()
-> > > > +{
-> > > > +	pkill rpcbind 2>/dev/null
-> > > > +}
-> > > > +
-> > > > +# Start the NFS server if not already running.
-> > > > +_start_nfsd()
-> > > > +{
-> > > > +	rpcinfo -p localhost 2>/dev/null | grep -q nfs && return 0
-> > > > +	rpc.nfsd 2>> $seqres.full || _notrun "Cannot start rpc.nfsd"
-> > > > +	rpc.mountd 2>> $seqres.full || _notrun "Cannot start rpc.mountd"
-> > > > +}
-> > > > +
-> > > > +# Stop the NFS server.
-> > > > +_stop_nfsd()
-> > > > +{
-> > > > +	rpc.nfsd 0 2>/dev/null
-> > > > +	pkill rpc.mountd 2>/dev/null
-> > > 
-> > > If the system under test has nfs filesystems mounted, won't killing
-> > > those daemons also break the mounts?
-> > > 
-> > > I think that might break testing of nfs itself, and nfs-booted testing
-> > > nodes as well?
-> > 
-> > Possibly.  I guess if we want to save we need to launch a container
-> > or at least a network namespace this is bound too. 
-> 
-> Doing this in a container would be better and less likely to interfere
-> with other stuff running on the box. Our container isolation is still
-> not 100% perfect with nfsd (there is still a global mutex, etc.), but
-> we're getting closer.
-> 
-> -- 
-> Jeff Layton <jlayton@kernel.org>
-> 
+> Is there anything particularly unusual about this test case?
+
+It is a stock pgbench simple-update PostgreSQL workload on a large
+instance (96 vCPUs), using standard PostgreSQL settings and with no huge
+pages assigned to the database. We deliberately overprovision the
+pgbench clients: 1024 clients over 96 threads. That keeps enough writers
+in the buffered write path concurrently to hit the costly-order
+allocation failure path continuously. The memory fragmentation comes from 
+page tables: PostgreSQL spawns a new process per client, and those page
+tables consume ~40% of memory, which significantly limits the page cache
+and the free memory available.
+
+
+> > Results (average of 3 runs, TPS):
+> >
+> >   Config                   Avg TPS      % vs Baseline
+> >   baseline (no patch)       59,408       -
+> >   With this patch          155,409      +161.6%
+>
+> Is this back to pre-5d8edfb900d5 performance?
+
+Yes - fully recovered. Here is the summary, same host and workload
+throughout, average of 3 runs:
+
+  Config                                        Avg TPS   % vs baseline
+  AL2023 stock 6.1 kernel                       136,942            n/a
+  v7.3-rc1 baseline (no patch)                   59,408             -
+  v7.3-rc1, 5d8edfb900d5 behaviour reverted     151,184        +154.5%
+  v7.3-rc1 + v4                                 155,409        +161.6%
+
+The 6.1 row predates 5d8edfb900d5 entirely. A different kernel version,
+so not directly comparable, but it shows the performance this workload
+used to get on this host.
+
+A literal "git revert 5d8edfb900d5" does not apply to v7.3-rc1 -
+iomap_write_iter() has been rewritten since - so the reverted row is a
+one-line behavioural revert, forcing the write loop back to copying at
+most PAGE_SIZE per iteration:
+
+  -	size_t chunk = mapping_max_folio_size(mapping);
+  +	size_t chunk = PAGE_SIZE;
+
+which is what the pre-5d8edfb900d5 loop computed. That makes
+iomap_get_folio() pass no order hint, so the path issues only order-0
+allocations.
+
+
+> AI review asked a few serious-looking questions:
+> 	https://sashiko.dev/#/patchset/20260904115629.3993331-1-dipiets@amazon.it
+
+Thanks for pointing that out. To address them, we can have something
+like the patch below. Performance results are still similar to v4. Happy
+to submit a formal v5 patch with it if you would like.
+
+  Config                                        Avg TPS   % vs baseline
+  v7.3-rc1 baseline (no patch)                   59,408             -
+  v7.3-rc1 + v4                                 155,409        +161.6%
+  v7.3-rc1 + proposed patch                     161,994        +172.7%
+
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+index 12fac9084c48..be8b0d72a2db 100644
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -4784,10 +4784,22 @@ static inline struct page *
+ __alloc_pages_slowpath(gfp_t gfp_mask, unsigned int order,
+ 						struct alloc_context *ac)
+ {
+-	bool can_direct_reclaim = gfp_mask & __GFP_DIRECT_RECLAIM;
++	const bool costly_order = order > PAGE_ALLOC_COSTLY_ORDER;
++	/*
++	 * Costly __GFP_NORETRY callers have a cheap fallback to a lower order,
++	 * so don't stall them in direct reclaim or direct compaction.  Exempt
++	 * __GFP_THISNODE (the THP attempt from alloc_pages_mpol() needs direct
++	 * compaction) and __GFP_NOFAIL (must not be made to fail).  Don't
++	 * clear __GFP_DIRECT_RECLAIM from gfp_mask instead: that would also
++	 * change the alloc_flags derived by alloc_flags_slowpath().
++	 */
++	const bool costly_noretry = costly_order &&
++		(gfp_mask & __GFP_NORETRY) &&
++		!(gfp_mask & (__GFP_THISNODE | __GFP_NOFAIL));
++	bool can_direct_reclaim = !costly_noretry &&
++		(gfp_mask & __GFP_DIRECT_RECLAIM);
+ 	bool can_compact = can_direct_reclaim && gfp_compaction_allowed(gfp_mask);
+ 	bool nofail = gfp_mask & __GFP_NOFAIL;
+-	const bool costly_order = order > PAGE_ALLOC_COSTLY_ORDER;
+ 	struct page *page = NULL;
+ 	unsigned int alloc_flags;
+ 	unsigned long did_some_progress;
+
+
+Thanks,
+Salvatore
+
+
+
+AMAZON DEVELOPMENT CENTER ITALY SRL, viale Monte Grappa 3/5, 20124 Milano, Italia, Registro delle Imprese di Milano Monza Brianza Lodi REA n. 2504859, Capitale Sociale: 10.000 EUR i.v., Cod. Fisc. e P.IVA 10100050961, Societa con Socio Unico
+
+
+
