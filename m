@@ -1,140 +1,97 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oo2-f43.google.com (mail-oo2-f43.google.com [74.125.231.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6820637E2E5;
-	Thu, 10 Sep 2026 16:50:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21D163B71AA
+	for <linux-xfs@vger.kernel.org>; Thu, 10 Sep 2026 20:50:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.231.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789059052; cv=none; b=NhIWAhlmwRWJFQheK35qpgMpw3Mu62TWEsoNGURRlr8yKo2OQxGlm/COLJRUbjieyhs+MJe/aMab/iLS3rdFrKxG9leM8ds6ex7pNqrqDNJRHiPs1cbfWTQlrQJO1sMWtZG6SkiuwHh2eq7sy4XqMRq8+B3DSQL3o5yBsLHVPQk=
+	t=1789073409; cv=none; b=ZrkD/h2O6fPckHBimxp1O1tJcLyKuSKlhKcckTNaZR1o7lBLJm6F/sUsQgojeTS93npjBSlP24pDdbbqTi/E3zMhGfnLFADGFalIB465Muy7INoAnT/he85PEMgQlwEaz6EE2fuDMF2U6Eo/SoctbiQYnzO5Me9qpRWHr1MowBQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789059052; c=relaxed/simple;
-	bh=ve+YzAe1THUrssJx9M0hn0ogePi0eRNIQbzjOTvRZBc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=kRQHszbEPnhkd4isG+5eTIlopqmh1dgMXuxVwELdT0PggxC6IObmP5A8yNh/gJcXXpg0jF1Jq7gJiSIISxXJ5dgJhjMR62sarBh/0RMScoKssK+bXHJa3PdmaluoBBElMYwOGwyKwwP0uFa/1oK3M32xTGKm/9H8bDZs/+sDBng=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gBOAFJFX; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789073409; c=relaxed/simple;
+	bh=DMskuNQVMj+uoBFxEGvl83x9Kmbf58EB1yX4IXsdyAQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=i4X+10/VBfIvBhFmmtw7yiFrqfjFJ0ipMFdFLP5fsZCxzOkskwcXXxtGN8hjA6QT5FqNcynBf8+Tim0/A9dGiq+zmIG/JimT0j7TAzXvDvHRdjfU93hniKGYPwZqqmtDRz1f3DVytIcdXZ09M4Pe7CGXt0Cmr0WeUcykvbrZn7I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b=CpBOYaFI; arc=none smtp.client-ip=74.125.231.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gBOAFJFX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CC68E1F000FF;
-	Thu, 10 Sep 2026 16:50:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789059050;
-	bh=IqJaHL1SoRN/fotdlqk5VLMGRkmaCB9LrRkSUPHbFYk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=gBOAFJFXcsUfzZ7HUbA2L4BZ/os79bLL9sOZgRLs+QlBJSJOQ9RapQCnGB3aBUfua
-	 dU4uAhYx4Ex4W7yZ8J1OKmWo9jLpC4xIlQ+FqBupnW42bnSg8aJi/pYdqZ04e92yUd
-	 Kxf5Arcsc6UTWxPzArcx9PNNdg0hyysSJyrgydPuhURYVcHD90qTNOm+fkNsi+Es/p
-	 x0fsJv2vtUtcQSGs4X3uCWnTV2WW9Hjkr7hiJc7NU+nKPWc4v44ugdz21y5vYaZ9TL
-	 0+G/AOSfXmU7SOsAUirPtDS9Tm6eiLyxNMtwHc228ZMAFuVYKTf8WujBfcO/I9+Y+q
-	 ZL+hMLxpHPoig==
-Date: Thu, 10 Sep 2026 18:50:46 +0200
-From: Alejandro Colomar <alx@kernel.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Andrey Albershteyn <aalbersh@kernel.org>, linux-man@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, 
-	linux-api@vger.kernel.org
-Subject: Re: [PATCH v2] man/man2: introduce man page for
- file_getattr/file_setattr syscalls
-Message-ID: <aqLfs-6crlKiqZw9@devuan>
-References: <20260910104120.3964799-1-aalbersh@kernel.org>
- <aqKgTGHh3nDnM3eh@devuan>
- <20260910161204.GE6238@frogsfrogsfrogs>
- <aqLY-1do_4hmZpfI@devuan>
- <20260910164428.GF6238@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b="CpBOYaFI"
+Received: by mail-oo2-f43.google.com with SMTP id 46e09a7af769-7fccd4c3f36so174379a34.3
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Sep 2026 13:50:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20251104.gappssmtp.com; s=20251104; t=1789073407; x=1789678207; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=pZdl25+fTdFEnFxWqmQ6klfnpO36ISnMAYm6McTSM6g=;
+        b=CpBOYaFIry/s/eHA4Rq9upG7oOTNN1kuNiXh3xH1pik8JOaDYehMbrbv4fBk9pKaXh
+         lBLScF4Eq3/maprx9zN8xTMNaJqQJVSHvMPAgWMRTZEBCjxlujKlWNHdwhCnOSrsidxQ
+         tnSHQzcgL/MuuHYeaBSeUj2fus04xjoJh+kdPEQgaq4bAq8B4l4t5yA0eVcg69PaJsZj
+         MtClqjmw+jV/QWKkZVTuMF6y0VRd9y9psdlx+0Yrs9n+fjA/pkrmLsEriSyMv+6w0aAa
+         egS5mHWNt5H8cj2YYU+tQapufHtp4tXfOxNTYenvQevUu3sdMr89OWFubdNzc3LWaij6
+         3TLw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1789073407; x=1789678207;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=pZdl25+fTdFEnFxWqmQ6klfnpO36ISnMAYm6McTSM6g=;
+        b=tJEZ5ggOpWiYpbcotr+Q95Imgmiad7iJRUfQk6f2oVUCKm14CimXRcHxEh/jX3rDGv
+         3B+fLfPOci4zXUO7XNCpPkNExbqMK2iJD1wRTUaHSQmEIiS22mHdhjhwIo65U6expgj7
+         PteqkQvtopwddzUhwI2OAQjyk6MzVbHyBv9tL/rqWZcUpNvBI+mPGw4IYX0BhhNYs8D+
+         TcPsfIm8na22pm8hQdC/r4e9SrCaDpgEvZdeKVKzcc9SjojnibukXgBK/WLtDMawVScb
+         DRkd0QjJ5Brk2z5uPH+pa8EUc6X+FcP/dXXq7pjjSyrseGS9bf5F6itUWTT/c1cY/xYO
+         Jn3A==
+X-Forwarded-Encrypted: i=1; AKwUvBwWG1ewX5KtIh/CzYI2xSiJZsC4IBRaiwb5h46VDmEEX31VWbufz7m6Pk1/kjDVBD9AgYpnrRst+YI=@vger.kernel.org
+X-Gm-Message-State: AFuF++nVoJyvAe4nUKcA5IYN7nuM5s2bcdSmanOMLl8UyyYepDwxZNoR
+	Vvyi/bAJXuLAjkRmF9hOQCtGVb3kubVfXemi2AZeBl6CwlxDbPUw1rcggw0dOli+Irg=
+X-Gm-Gg: AYBFou3cN5upAe0Lo/9qN8T2H/q+1J4a/W+3mR4Gyp6mVJpKsCspVJp97Q4P2NscMMo
+	LcXQ+AmUETchvKRAx2msuiV+h5LjuoOLAUmW7Xn+yPTA3WfmoWPLRk9TERtaivU6X1u22MmHGCb
+	Uu/fGjEeD9YyXq5/jYO0Y5YVOMoNDiDVTcPY/GYEXZnT6Ln/w/PqhnjEJYoAPPvB/UgXdD0rZyb
+	ltIFoc1+HVk9kyOwGOuNBKBVIHuCicQstXf3bT3ROxxBzRVWYb9mJyi4WVedTj5Nu1A59/+jK7+
+	b6Ymx4hyJr4iuvRgYmQcG1wKTrN/FJVclmYQCN0XXWU/2DrAaQzXI6VkUX6A45PeBD18sU1vOWo
+	xoOduZJ/KDxI9sTDDPAgzKOBhxbH3JvcBu5z47yhSTVgXeiDcFL72Cz3sksHbIyUdRGqtOELjue
+	B8JPUGxxutW2AdofT08N87aX0iLL3jcweUPfPf4/mJB5qFGP9u7Icb+DuPb0dXvqo5p+a6tECXk
+	DotJZkZK1ajf9VGPPlzIKbgGPupU/P/sZ9iT1PWy7y95c/6j121NhWL
+X-Received: by 2002:a05:6830:2702:b0:7f4:ea33:8f56 with SMTP id 46e09a7af769-803fec05043mr748651a34.6.1789073406770;
+        Thu, 10 Sep 2026 13:50:06 -0700 (PDT)
+Received: from [192.168.1.102] ([96.43.243.2])
+        by smtp.gmail.com with ESMTPSA id 46e09a7af769-803f670d8c4sm611145a34.19.2026.09.10.13.50.05
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 10 Sep 2026 13:50:05 -0700 (PDT)
+Message-ID: <fe537c5f-114d-4d9a-817d-93f359e12924@kernel.dk>
+Date: Thu, 10 Sep 2026 14:50:04 -0600
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="5wzgosbtrgpzmppd"
-Content-Disposition: inline
-In-Reply-To: <20260910164428.GF6238@frogsfrogsfrogs>
+User-Agent: Mozilla Thunderbird
+Subject: Re: lazy bounce buffering for checksummed reads v3
+To: Christoph Hellwig <hch@lst.de>, Christian Brauner <brauner@kernel.org>,
+ "Darrick J. Wong" <djwong@kernel.org>, Carlos Maiolino <cem@kernel.org>
+Cc: Tal Zussman <tz2294@columbia.edu>, Anuj Gupta <anuj20.g@samsung.com>,
+ linux-block@vger.kernel.org, linux-xfs@vger.kernel.org,
+ linux-fsdevel@vger.kernel.org
+References: <20260909060924.1102037-1-hch@lst.de>
+Content-Language: en-US
+From: Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <20260909060924.1102037-1-hch@lst.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
+On 9/9/26 12:08 AM, Christoph Hellwig wrote:
+> NOTE/QUESTION TO SUBSYSTEM MAINTAINERS: The patches in this series are
+> split over 3 subsystems, and I'd love to hear from the maintainers
+> about their preferences for merging this.
 
---5wzgosbtrgpzmppd
-Content-Type: text/plain; protected-headers=v1; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-From: Alejandro Colomar <alx@kernel.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Andrey Albershteyn <aalbersh@kernel.org>, linux-man@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, 
-	linux-api@vger.kernel.org
-Subject: Re: [PATCH v2] man/man2: introduce man page for
- file_getattr/file_setattr syscalls
-Message-ID: <aqLfs-6crlKiqZw9@devuan>
-References: <20260910104120.3964799-1-aalbersh@kernel.org>
- <aqKgTGHh3nDnM3eh@devuan>
- <20260910161204.GE6238@frogsfrogsfrogs>
- <aqLY-1do_4hmZpfI@devuan>
- <20260910164428.GF6238@frogsfrogsfrogs>
-MIME-Version: 1.0
-In-Reply-To: <20260910164428.GF6238@frogsfrogsfrogs>
+It's a little hard to split as you have eg block patches both at the
+start and beginning... In the spirit of getting this some runtime, I'm
+going to queue it up in a separate branch,
+for-7.4/lazy-bounce-buffering for now.
 
-Hi Darrick,
-
-> Date: 2026-09-10 09:44:28-0700
-> From: "Darrick J. Wong" <djwong@kernel.org>
->
-[...]
-> > > > Should we document FS_IOC_FSGETXATTR in a new FS_IOC_FSGETXATTR(2co=
-nst)
-> > > > manual page?
-> > >=20
-> > > https://www.man7.org/linux/man-pages/man2/ioctl_xfs_fssetxattr.2.html
-> >=20
-> > Thanks!  I didn't know that page.
-> >=20
-> > I see the page uses the constants as XFS_ instead of FS_?  I think the
->=20
-> The sorded history of the xfs(ish) file attributes calls is that they
-> began their lives as XFS_IOC_FSGETXATTR since they were XFS-specific.
-> Then we tried to make them "generic" by removing the 'X', and that's how
-> we got FS_IOC_FSGETXATTR.  Finally Andrey came along and made them
-> proper syscalls with path-lookup abilities ... but for now they use the
-> same struct as the old XFS_IOC_FSGETXATTR.
->=20
-> Personally I think we should only document XFS_IOC_FSGETXATTR (in
-> xfsprogs) and file_getattr (in man-pages).  And leave FS_IOC_FSGETXATTR
-> unmentioned.
->=20
-[...]
->=20
-> quotactl (and xattrs) have a similar weird history of originating in XFS
-> and later getting yanked into the vfs.  Every time I have to go look up
-> the quota syscalls I just get a headache. :/
-
-Thanks!  That makes sense.  :)
-
-
-Cheers,
-Alex
-
->=20
-> --D
-
---=20
-<https://www.alejandro-colomar.es>
-
---5wzgosbtrgpzmppd
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCgAdFiEES7Jt9u9GbmlWADAi64mZXMKQwqkFAmqi3+AACgkQ64mZXMKQ
-wqnqGA//UFWo6BWamWW0lHUOwM1TBq/jb8eQNiDgOZ8S/EEotA/iGJSxnjFasvcW
-dxSaYDVVfom1gEWv1UDGO56rwVDB2Onwj65k3OJZ+JYm9o04VvRZ5ZeMxWXPXmxV
-AmTpan0viSRx0ZYMiBTDEkDDc0M8qnh5msYUyif4HLnDqVg5JBOBQ6byfd90x8Jw
-wwvC3TR0P8nZDxIPfoRmtk1Y3Cw5R6YNevcv4YILsTA8tMXNoirqE88zSsNRkL6l
-ZY8dwetCnS+FjlI/qDBrWEIHoXh+6Clzbj5Uk1HFE20e0uA/RALMjvr1FQGd95K/
-34yuJMo8K+ydyVjggpWT10D5cIDaZ8RBa4qJadS30l/UGkDkshHLx/dJ0ZvG3tFx
-mfb7x/AfH7PkpE88bAw1IIhf3x9a3YbCNbzjj9Sc+dpBorQebEoZAKlrzqAEH5JR
-gqKy56L6enutEO7UwZp2MkTFcUjM2MvKEIwm3ZCxOxunj7LFtkVl+8Noy8xGdACD
-FhZso906rr4wnHvXmE4mVV6i7QZevqAO7m/EXyl3qnXX5AmeMVKiDZL6nBJx1cFp
-yOX+g/faY3pFJyBZMG1KRptNBTuITHLoig3DJdKbeCbszOOf2E5b7URsM8cxIaUJ
-BmtGCalk11zMO8TJKG/cM3d0gkhI0Fu5T2/BiRPecE6S0iF4vq0=
-=3ZuC
------END PGP SIGNATURE-----
-
---5wzgosbtrgpzmppd--
+-- 
+Jens Axboe
