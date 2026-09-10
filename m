@@ -1,123 +1,156 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from flow-b5-smtp.messagingengine.com (flow-b5-smtp.messagingengine.com [202.12.124.140])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 773214AB1CB
-	for <linux-xfs@vger.kernel.org>; Thu, 10 Sep 2026 13:31:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7558B493D55;
+	Thu, 10 Sep 2026 13:36:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.140
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789047094; cv=none; b=nDg1IZFU/WHKuM/RFvzQLM9LUkNq8YJNwU5pW4C8wbzjb5rmqKIP/inPdwB3Gw2rMVxinBSUFiNTxI5xzXqFalPpLZ+3qmPb0FDIfeSYhCV3p1S1/NkgOAm9Sd8jG7sISwgYeKS+50OlzNhz/sAyYvt5g50KtJm3bG6pPAkAgVE=
+	t=1789047388; cv=none; b=L4rOXWEpE8TIj/R6rBdjFOALAi0m1GrpXOTbza95p86iUYrn0wqTQ+Vz1LH+31Fiyp4DtS4/cIM9DhobJs0ZlAb7zBqIBXnf3kEBNylrUGyuZWttAJOa8hCnUy65mJr/DO4NAOwYBqJ2PDyiiqPqpOhiNcY5xSudsvN82SqMyPw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789047094; c=relaxed/simple;
-	bh=9aWxhq6aPkbkBA5Bm034rqeiube8V2OfXvl3w7mnWNc=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=E133eszZTt5wpWV0xFAC8sINFQ8TAQjVeg8avdXObyuVXNc93sOCKy1rPb0PeEr/0emRWfsIcmn/bI/jA7geL48AwUHM19YfTS+J8MvozfnO+TafTZwDv5saXKNMsKpji7WYC/U2Enp7RRlOCyYriNeiLA0S7LKLIgXvI3Xs3ZY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=aoZrjCzy; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=bBR9se2t; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1789047388; c=relaxed/simple;
+	bh=mFzSoT/R8c1Nd73kJmUZCG6wf+klMYpnbTHGbu06jnQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=PId3DnDdQYL8TRTj5wqMdN9Os3ZLb1E7c229fOxspErP8HkqQgAIE3mU5R8X9ijFQFathxxsxNNtEQteBPMORrQSxvzSU2XQq3zSLndOQgk89HAi2gPf4vFqFWrLWlT6yMMaVPjUBZb9Dk2h5EG5vAaP8Yx4zCCAw3MBTL7hR7Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=shutemov.name; spf=pass smtp.mailfrom=shutemov.name; dkim=pass (2048-bit key) header.d=shutemov.name header.i=@shutemov.name header.b=JiC/FNcc; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=IoUTrepy; arc=none smtp.client-ip=202.12.124.140
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=shutemov.name
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shutemov.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="aoZrjCzy";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="bBR9se2t"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1789047092;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=GrVnlBtAuLm+sbH5l8hpM9T8LdGQ5QcnQOqckPlEqwg=;
-	b=aoZrjCzya6VwkK2vXPUhRmPINbdwV/3bNdpRkXvoBi0FwsSfTxgRuekbZMrs27Ut62WRfG
-	HE1vz9ydHttw0NF00SKNzgKY5TKRHF7DCa2FCipLTIHWfv3mjO5kqXk48SRRjrW4ISNCcw
-	yfUWYXsg/VRgClGvIqedtQXjYWuvQeY=
-Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com
- [209.85.216.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-589-ECN3-zx4NtuGzjTfo3u_DA-1; Thu, 10 Sep 2026 09:31:31 -0400
-X-MC-Unique: ECN3-zx4NtuGzjTfo3u_DA-1
-X-Mimecast-MFC-AGG-ID: ECN3-zx4NtuGzjTfo3u_DA_1789047090
-Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-3965ba1ba3eso2920005a91.2
-        for <linux-xfs@vger.kernel.org>; Thu, 10 Sep 2026 06:31:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1789047090; x=1789651890; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=GrVnlBtAuLm+sbH5l8hpM9T8LdGQ5QcnQOqckPlEqwg=;
-        b=bBR9se2tJfGo1fA5NEj6DkKfhAQXPH97nsmwaKkgIng/6M6t8dF8xMVH2DlidZncRg
-         UmToKc2A32HGQ0hQhorsMlLt06aU7EEl41ige/lTEjFWojhby32Ss4n9q7VTnCjj20aC
-         GMN2M+Lmmc1OBowM//pukyCQw/7KVUXSGMBSR0AWQjHcEQdhoHkpw0L+00QneG9X2073
-         yryPDVUAv0Ru5tTumJxGvDVoFwsjPMyUO+rI1Z7m0LQc6VTdzcpXYQdAfsDIWp7VBaA4
-         ENQYbBUZfeCKJ2jr7Hk9v0yPzG5b6W1JSuenhfj5n8amwrHvSUx0Au4RDL5+bOaslrIK
-         /Pqw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789047090; x=1789651890;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=GrVnlBtAuLm+sbH5l8hpM9T8LdGQ5QcnQOqckPlEqwg=;
-        b=rn8xhEfSR9MGrt1f4lNDjx9Nl46zQt4dDIxH917zzynHgqls79C5b5gXHVFcwJeQJ5
-         GVjD0d210CivvCYVumiIFtzfESZypaHIB+fYQ9a8lKEcnBpl7aUbpylsIvf+qFeqpXjl
-         SIx3HL1yI0Yhs5I9aFCbSmmzo+op+xwr9W+o4TVhGMPYNXEbQkbJ6gCy2IGsBTE8Lufn
-         xDg9oIxm6mreQrPnT+sYeSv3IC2FniXusGPUUWhOhYDij1kTbEPD+0tyLYVmO76LVv8t
-         Y1j/SWp/OagG7ICVuhciKw7wEZtkchpvNUxhFJXG/zIKYdte6X2dclLPTjeVNVopLg6f
-         cFxw==
-X-Forwarded-Encrypted: i=1; AKwUvBwZ9DoW+6kyDR2WeX3FVmzgtrJiS2nIYYt26FZDouKHphY4qkSw8eyuCBk758BSv7FpWwyTT27AMoI=@vger.kernel.org
-X-Gm-Message-State: AFuF++nGFgEZL38umzgaxXlwb7ipGec+NSBvC81BmT/+raxCk6QQ1BRl
-	Xd9W9oRsQdFfQC9t5ubG8S2jz+s/FfDsFoLPcdZ52zFv59TTERfjDDvCVf6RVOdbtRL1RsSfCsa
-	Z2Obwyw3Jj14sSRmdhQAxIUA+vuVM1Writ0/zgqrnTLigrVGiDi0gXuhGc8TXAg==
-X-Gm-Gg: AYBFou2kHn7MMwoQ7DPCJyUpj0t6NKD3nNe+dOw2JzUKjIDJaPsNm6vYwnyw1lrQvSf
-	tk2gKfOgPTRdV/VHJzZKMS0qZY/8cp64Gka7TpSccxPnsgDTDZQ9cPdWwATZuxA6a47MetXTK+Q
-	bptOnsIqpZoqhH/UuH1pNrxlmhoK4pUKAICaGXfsWyn6zIKbHbJ27Fklq+nobP+Vky7bFbxhbz0
-	cVU24OD88NV/IYDErlltZYHNJJ8xNlg6Ffv1GiSfqc7wTgV3ZUNnUV/5vUZsvolLEhCCbOz//81
-	tol8my6GaeiBaY/OrNnJUuO0uufurm2y3LK82IcGIokb8AoUKx60508SjD+dBI+GvGEs6KfpfuO
-	rRsYFmwFRFFvePJg6ifureEwY
-X-Received: by 2002:a17:90b:384e:b0:366:3517:1aa2 with SMTP id 98e67ed59e1d1-39d707b291amr10389485a91.0.1789047089871;
-        Thu, 10 Sep 2026 06:31:29 -0700 (PDT)
-X-Received: by 2002:a17:90b:384e:b0:366:3517:1aa2 with SMTP id 98e67ed59e1d1-39d707b291amr10389329a91.0.1789047089066;
-        Thu, 10 Sep 2026 06:31:29 -0700 (PDT)
-Received: from kernel-devel.tail62cea.ts.net ([240d:1a:c0d:9f00:be24:11ff:fe35:71b3])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39d7e77b1afsm5032004a91.5.2026.09.10.06.31.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 10 Sep 2026 06:31:27 -0700 (PDT)
-From: Shigeru Yoshida <syoshida@redhat.com>
-To: Carlos Maiolino <cem@kernel.org>,
-	Deepanshu Kartikey <kartikey406@gmail.com>,
-	"Darrick J. Wong" <djwong@kernel.org>
-Cc: Shigeru Yoshida <syoshida@redhat.com>,
-	linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] xfs: fix double mutex_lock() call in xfs_ioc_health_monitor()
-Date: Thu, 10 Sep 2026 22:29:55 +0900
-Message-ID: <20260910132956.538828-1-syoshida@redhat.com>
-X-Mailer: git-send-email 2.55.0
+	dkim=pass (2048-bit key) header.d=shutemov.name header.i=@shutemov.name header.b="JiC/FNcc";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="IoUTrepy"
+Received: from phl-compute-08.internal (phl-compute-08.internal [10.202.2.48])
+	by mailflow.stl.internal (Postfix) with ESMTP id 53394130031B;
+	Thu, 10 Sep 2026 09:36:24 -0400 (EDT)
+Received: from phl-frontend-04 ([10.202.2.163])
+  by phl-compute-08.internal (MEProxy); Thu, 10 Sep 2026 09:36:25 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shutemov.name;
+	 h=cc:cc:content-type:content-type:date:date:from:from
+	:in-reply-to:in-reply-to:message-id:mime-version:references
+	:reply-to:subject:subject:to:to; s=fm2; t=1789047384; x=
+	1789054584; bh=Aix6zD+sWAhHCK96XTqdVIPFcUsbKpScTo8omJZ7kRI=; b=J
+	iC/FNccl0yH8eZLx8Y1aA3k5KkWHnq/SUgCGyekPoT/VyPpPrQTTHxbCn774XPfu
+	y+OtArhkvOMs8178JTM/BKjum34C28rfNShUl9uo1JeCNqmmvZUTIZLXDNM6Im8q
+	sLtNlryUoZDEICm2fG/k9QuyUXqjLBLG8a2IOpctkwJfdX2OyW6GP4AlH4u4MugR
+	ok5ztUySC4ICl2NqI+95e879rCmMyP3bn2AvtNIKu/QwMFgSyEeOjSZo7UtiKooM
+	1UPOyj9+JXZ5Voi1xsXtLKQdq6URhZcljDW6WXHgFudXyh4aI/3QEVQ8A2fu0ycx
+	e7fuDH45gUZFIcPEmVYhg==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-type:content-type:date:date
+	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
+	:message-id:mime-version:references:reply-to:subject:subject:to
+	:to:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=
+	1789047384; x=1789054584; bh=Aix6zD+sWAhHCK96XTqdVIPFcUsbKpScTo8
+	omJZ7kRI=; b=IoUTrepyYSR/bEiVJoM6S3gFlo/l0qjcU7cPRIJFHAdTeJIL9Tz
+	AxlXVqLy4UglZ0QEYVoTgXoVQPc6oK8K6+ic9X5YjPsqMIILcajf8DkK6Cg+m0Lv
+	1J/UJEuwOC/cylj5dYO4IWS+eMzcU0G4uzEfv48dMAwRDbNtYsRY1Bi/UKxSCyTl
+	srbKccBjrnKKKlvJUNOTRTB+ZgWjkfb0rv6y1L/X32QCq5WAlbCgp9i+PFWMvLxF
+	EwEJGDWI6D3jSw/p030sYcVVEHM3bxgzY7JbpciivHKYNlvGQd8g4KZWWK9zHVQm
+	Nm26BOEiho6RxJNoK19o8EAsZljaavd1rjw==
+X-ME-Sender: <xms:V7KiasHiw0d7B0joUAwkdvU8Bga4XWJHRXpeEZTe_kuhdQGwp3EAbA>
+    <xme:V7KianV5efMMkCR84uqLsLP9iF3dRSN08zFokNrRb_iykiESwg0mFmNCHUJ88xX1h
+    xzAJzMU6lcoYmRhdIge3qr8eytQ_68Re5KYBMjMfWJB1MjJhFq7WDFx>
+X-ME-Received: <xmr:V7KiaqeJ7u0PeZS6fdgBUhpQriOniVjSUV2qnx3uEXOKbKe-DSblJxw4ntg>
+X-ME-Proxy-Cause: dmFkZTE/cV7Y3B5vfmq4FxwBW5zjIOR+OZ0Xq5wNE0R+9MV5eEb7Vmg3gWUSzcydLMYKsT
+    k0AEiBx5vAV4G3V3qjltmxAKxV5+/EjuIP6hv39fDwwxRv8x0NwLBFQwKfQdcq+44hzyHZ
+    3/uAyOhAF7+IUKa8FH5q0canFhSzlKFsCqOHb9P8uJE2LFS6hBfLubEv+qPLaOReHYiNDI
+    t7k34surxCm87KQlVrWSwkDE1ybXWYCPpf0JDb1ntZexrcY4FQjImfSwEXvhyEyq9EMbag
+    ZRrwqKZ/zrY7HPzA9+r3qwYLqtLJwM3F3LvVn+dQgoholjbS3YyVg7nrSnhOjJXpJWvdAB
+    bsesbw6nh2xKNlCbjDZaLS+F1fclhtk/tkGvO8q3VrPNgjZRN8cAr1LvpkeXgLQlTk4eD0
+    oBgAWaBpWJY6p3DxNoxJdTkhb1HcO47WICrGjLw8NjRs6Li3q3dAaah3w5GIP6MphuoJdv
+    KaZWhP3av+E8Ee6yVrdqcpk5gs3GC0a9ykMnyqXjOvjFeElgQbEXDsGkZo9ImEoQ+bsWUz
+    kZI1Dy7J/mPKKtvJ5mXRIkHCWlOuO5LJ0imcYavY5eiQ1kQkbc/VDgMLnSThrB/LeIJo/f
+    l21N7br/2Qlm+OfDCuECU3ibjKMGb473+BUWv8mxDr+KQjqxFWJ1rLsrD9qQ
+X-ME-Proxy: <xmx:V7KiamTCFHjpmBE-EEinApbKeCrS6JG3nHB4MLcdlUegeDHp7naQGg>
+    <xmx:V7KiasBRTn6630SaHyJ8qQzwVrY0YsQiHDfSJ83W053CWDz3RnN5SA>
+    <xmx:V7KiassB-nsQ0HGdKsvQQfAE0osTulGGqkk9TyOj2cEUzMFCNLr1Mw>
+    <xmx:V7Kial4KoUrfK9nBSFF_muO3jGSz5q9aAxvFhSblQNCsz7bEbrW5Zg>
+    <xmx:WLKianwh14UVD3RXq0BoVMyJjbOORFjiIgq0wIdt5yyEc40WI17Hm9lf>
+Feedback-ID: ie3994620:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Thu,
+ 10 Sep 2026 09:36:22 -0400 (EDT)
+Date: Thu, 10 Sep 2026 14:36:21 +0100
+From: Kiryl Shutsemau <kirill@shutemov.name>
+To: Usama Arif <usama.arif@linux.dev>
+Cc: akpm@linux-foundation.org, 
+	"Matthew Wilcox (Oracle)" <willy@infradead.org>, David Hildenbrand <david@kernel.org>, 
+	Lorenzo Stoakes <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, 
+	Vlastimil Babka <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
+	Suren Baghdasaryan <surenb@google.com>, Michal Hocko <mhocko@suse.com>, Jan Kara <jack@suse.cz>, 
+	Rik van Riel <riel@surriel.com>, Harry Yoo <harry@kernel.org>, Lance Yang <lance.yang@linux.dev>, 
+	Jann Horn <jannh@google.com>, Alexander Viro <viro@zeniv.linux.org.uk>, 
+	Christian Brauner <brauner@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>, 
+	Carlos Maiolino <cem@kernel.org>, Pedro Falcato <pfalcato@suse.de>, linux-mm@kvack.org, 
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	kernel-team@meta.com
+Subject: Re: [RFC PATCH 1/5] mm: let folio_mkclean() report which pages had
+ dirty PTEs
+Message-ID: <aqKxU5iOuWjK58Al@thinkstation>
+References: <20260903182943.662461-2-kirill@shutemov.name>
+ <20260909101212.894871-1-usama.arif@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260909101212.894871-1-usama.arif@linux.dev>
 
-Commit 4870da4f49ae ("xfs: take hm->lock in xfs_ioc_health_monitor()
-before insert") intended to protect the __xfs_healthmon_insert() call
-with hm->lock, but the second mutex operation was accidentally left as
-mutex_lock() instead of mutex_unlock(), causing self-deadlock. Change
-the second call to mutex_unlock() as originally intended.
+On Wed, Sep 09, 2026 at 03:12:10AM -0700, Usama Arif wrote:
+> The old whole-folio behavior did not need to know which PTE became
+> dirty, so this timing window was harmless. Sub-folio tracking makes the
+> final dirty state correctness-critical.
 
-Fixes: 4870da4f49ae ("xfs: take hm->lock in xfs_ioc_health_monitor() before insert")
-Signed-off-by: Shigeru Yoshida <syoshida@redhat.com>
----
- fs/xfs/xfs_healthmon.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Good catch, thanks. I should have known better.
 
-diff --git a/fs/xfs/xfs_healthmon.c b/fs/xfs/xfs_healthmon.c
-index 6dc3f69d6798..c3749675ef19 100644
---- a/fs/xfs/xfs_healthmon.c
-+++ b/fs/xfs/xfs_healthmon.c
-@@ -1225,7 +1225,7 @@ xfs_ioc_health_monitor(
- 	running_event->domain = XFS_HEALTHMON_MOUNT;
- 	mutex_lock(&hm->lock);
- 	__xfs_healthmon_insert(hm, INSERT_HEAD, running_event);
--	mutex_lock(&hm->lock);
-+	mutex_unlock(&hm->lock);
+Fixup below.
+
+diff --git a/mm/rmap.c b/mm/rmap.c
+index aaf45ac79fa8..9b8b9428f802 100644
+--- a/mm/rmap.c
++++ b/mm/rmap.c
+@@ -1140,6 +1140,15 @@ static int page_vma_mkclean_one(struct page_vma_mapped_walk *pvmw,
+ 			if (!pte_dirty(entry) && !pte_write(entry))
+ 				continue;
  
- 	/*
- 	 * Preallocate the unmount event so that we can't fail to notify the
++			flush_cache_page(vma, address, pte_pfn(entry));
++			entry = ptep_clear_flush(vma, address, pte);
++
++			/*
++			 * Take the dirty bit from what the clear returned, not
++			 * from the value read above. The entry is writable, so
++			 * the CPU can set the bit at any point before the
++			 * clear, and the page table lock does not stop it.
++			 */
+ 			if (dirty_map && pte_dirty(entry)) {
+ 				pgoff_t idx = linear_page_index(vma, address) -
+ 					      pvmw->pgoff;
+@@ -1149,8 +1158,6 @@ static int page_vma_mkclean_one(struct page_vma_mapped_walk *pvmw,
+ 				__set_bit(idx, dirty_map);
+ 			}
+ 
+-			flush_cache_page(vma, address, pte_pfn(entry));
+-			entry = ptep_clear_flush(vma, address, pte);
+ 			entry = pte_wrprotect(entry);
+ 			entry = pte_mkclean(entry);
+ 			set_pte_at(vma->vm_mm, address, pte, entry);
+@@ -1170,12 +1177,14 @@ static int page_vma_mkclean_one(struct page_vma_mapped_walk *pvmw,
+ 			if (!pmd_dirty(entry) && !pmd_write(entry))
+ 				continue;
+ 
+-			if (dirty_map && pmd_dirty(entry))
+-				bitmap_set(dirty_map, 0, pvmw->nr_pages);
+-
+ 			flush_cache_range(vma, address,
+ 					  address + HPAGE_PMD_SIZE);
+ 			entry = pmdp_invalidate(vma, address, pmd);
++
++			/* See the PTE case above */
++			if (dirty_map && pmd_dirty(entry))
++				bitmap_set(dirty_map, 0, pvmw->nr_pages);
++
+ 			entry = pmd_wrprotect(entry);
+ 			entry = pmd_mkclean(entry);
+ 			set_pmd_at(vma->vm_mm, address, pmd, entry);
 -- 
-2.55.0
-
+  Kiryl Shutsemau / Kirill A. Shutemov
