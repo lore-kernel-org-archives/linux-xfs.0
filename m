@@ -1,116 +1,198 @@
-Received: from mail-ot1-f54.google.com (mail-ot1-f54.google.com [209.85.210.54])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from pdx-out-003.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-003.esa.us-west-2.outbound.mail-perimeter.amazon.com [44.246.68.102])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 159E521CA02
-	for <linux-xfs@vger.kernel.org>; Fri, 11 Sep 2026 13:38:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EBED0348896;
+	Fri, 11 Sep 2026 14:21:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=44.246.68.102
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789133930; cv=none; b=XeenZ0LaoY+4GKEJLtEf6K/BGLjbA4NRkxRtEV2J1kQb/QhWcV1TX2VsPS26vCHklfPYbU20LW/sriX1nyNdnJ0oVtcZq3HJOin3lnPYPqgRUrDP4vgpdX0wigGaE6XvbbcbXAL5vZwUjTuia6vkfS7uUHuP2b+0ggmlzBk4gEU=
+	t=1789136499; cv=none; b=FwMPe3/YcTRTe1UZ1H/uL5rFlrqM6Lb6KmR51LdHQfSNNpXIOanRNQHhjuiT3SRXKCVZVdczzKHqyZbCwJHk9FS3IHsQjsoDz9cmJ7ozTA8Vw/Ds6TeGgTSeP8dUrz4UN++fDSjI4TBAsFfG7tRwuPcvnXEtp1B/NfGcZMumikw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789133930; c=relaxed/simple;
-	bh=5SC3HT3+5ycGwWh5KBASibBcRAJzdLO3KnH4sjbmFDM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=lAa9mM8P73wK28RqxXJTZESxR8RTJ80upTNec4FbuxyYkZS0rCpZzVbY7UpcNF/s+67cu1NIKEww75xV5hdwapv0rhpU6tao4vkVMu2RgjsWmAIHON5q0m1RelkWMR4wnknHdCTAxhcM5OdAwbNf//PeEJvJtWVpqspqug8nGi4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b=sD9i0EPj; arc=none smtp.client-ip=209.85.210.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	s=arc-20240116; t=1789136499; c=relaxed/simple;
+	bh=VUEzRwZBbW36v01xG0o83cDpXLNyNmfI9HXo44wIdn4=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=QHM+ExN9vJVlqjbuhzy6P3tJmOnGrhKxj4ajVreKaoybMzRyINs2XukvN60LnHbPpWxnm0X7n9ofpo1cNEhFHVMhRIOz4eOe9nPnY5MeAu21hfTj+oHYHKexr3v3ogc5fynrJcY7jZGeH0Zjcs7aCYy1HXZZ25Q/MgBzuKhm0S4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.it; spf=pass smtp.mailfrom=amazon.it; dkim=pass (2048-bit key) header.d=amazon.it header.i=@amazon.it header.b=OYDx4bVs; arc=none smtp.client-ip=44.246.68.102
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.it
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.it
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b="sD9i0EPj"
-Received: by mail-ot1-f54.google.com with SMTP id 46e09a7af769-8049e44d0c3so416429a34.3
-        for <linux-xfs@vger.kernel.org>; Fri, 11 Sep 2026 06:38:46 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=amazon.it header.i=@amazon.it header.b="OYDx4bVs"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20251104.gappssmtp.com; s=20251104; t=1789133926; x=1789738726; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=sCKlIYEc3WBtqZTRSmkKr4C+yXpeMrWNJb+k5yI49J0=;
-        b=sD9i0EPjj0Ig68IeGg90WglA7IXGd9HwDQFuhbJxnkZjB9Si4yn+4RIQak7mynH8zH
-         +1igcCeXsxwsXgponQPQcytQjaWGZlR66ar561qN73PpPOlr9uGsjcgjobCPKB/avnlv
-         a6LoshCKEOCyssaM+uYy0Rz5r8mafFkENxpBEAhYYNyTBGSrJ2MW1OIYtHElh1gFbyeS
-         25eZHFxVSNu4fZY/OuFp1yh2tYbwRN9s8O9Uj3iLNMsZMMstNEZ+LW7X1oDFuiHn3V1Z
-         zR3n/XKfT4kjiRHGzC/hy2wBLC4+VjYpRg05efGSlP9DZfjmhocxWk6aScfTYbWrKgFU
-         RHKA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789133926; x=1789738726;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=sCKlIYEc3WBtqZTRSmkKr4C+yXpeMrWNJb+k5yI49J0=;
-        b=Wj49xFJZIxxxNRJFzqpivutKEICfzNxtAuigoDTf7er9qhrhQXDHA4miqrm+3ym4mA
-         FPWndlYFOhkDe2DOojaNksySxivfD1gi3ADOsveN7CD8JVnPCsAz83aHWp0ECtJbyhPc
-         OvKqrp6C1ghnQiMnwbkLncg1J5rKiQMp2XsuVxxyLNd2i0SlRCzKrNIl8AMqrepkiShh
-         P3B1AD+csN0upNUxo6Np0R5TiEzk31N16taxt0DfEBAhzU6XjgA8saSOGzjRhTJT8Gh1
-         Vi+OkL7CAIu1rW7ANAKLLUa6xkxr+W1+5R2zcUfdz3QRbdrdP2Y3Qqh/JDPTqumoaYBf
-         BDqg==
-X-Forwarded-Encrypted: i=1; AKwUvBwIWX3OuU+NZ/Z+OqAe/Cl918BJxUBbRBwOdCYbyHz0RF9jiH1WV7ABXMX2TsUmLC0mZRWY98pBAqc=@vger.kernel.org
-X-Gm-Message-State: AFuF++mkFvoiSP5OanTGTIR6f26R7CdTrphIQVc/fbAcDH4yOIw3uNFG
-	OvC6xmcVsTucfJV87TeGzRaDMbkr90hG9jkf5mp/J0Zb4dY0HXV77LlQNMflWpt1xYc=
-X-Gm-Gg: AYBFou1SF5n7wm7VYy71v3R1JlHm/shyRUNxAEv5fvUqKMQoE1QcB9WRuydS40DYDJa
-	q05wIc86l6cyMR737phEv1qqpuPbi1TLyxBQV9f7MakB6KpMO+vVm0BiqeucAYLI1BrL0ehOX9Z
-	nxXn2zlQOgmla0qVNR6hFI9+HulSeRK3UcCDArw4cpK1dMhLQTO3A9XbCQyQj4TeOi9l8DTFRCq
-	u/QEGDtY03bI3Vx4VRXB/h1MrRd3jNuViYp7GPSUzCMsO+dSJytFC7NSK60ge6TsNN40iQ/O1Ar
-	kWuFfiBSosrpa4y9QIzw8FAXyf7xA6dhtP2gqICa5Sj3RSSuEA/gOlxC61k1UkTLkNsL7a8Zob6
-	z7bVxeaJHNl/tQn6yEWism7nfH92Lv518Ahh0hCRpnoPa6NntajMDuAWY6t+PVLF2kZQFVmEt/U
-	Kq0siNbjMFioQHJuPu79sabWlaFU3WaKkKZQsrG/XopP3+cfJdBJvEH2a0BrbkL3TvOfqxQpIFo
-	lZ2b2iyTr7b3iOY8fXNZcLw3ObA0lUZsqtCW9bWdeNhVNp1NEmmjwKt
-X-Received: by 2002:a05:6830:7314:b0:7ee:19dc:b00 with SMTP id 46e09a7af769-803fd2514b3mr3323405a34.3.1789133925938;
-        Fri, 11 Sep 2026 06:38:45 -0700 (PDT)
-Received: from [192.168.1.102] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id 46e09a7af769-8051005d845sm206965a34.24.2026.09.11.06.38.44
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 11 Sep 2026 06:38:45 -0700 (PDT)
-Message-ID: <2325107b-8c45-4304-aaa5-f8c768d619bf@kernel.dk>
-Date: Fri, 11 Sep 2026 07:38:44 -0600
+  d=amazon.it; i=@amazon.it; q=dns/txt; s=amazoncorp2;
+  t=1789136498; x=1820672498;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=gptPpxw0wFk91egaNInUnptSeER0SPdng9bGfnf/tP4=;
+  b=OYDx4bVs8WPzmf1ZCTC6WZ+uu1YRP/M2lVFUTIXC98/4zFEUwY87NTPz
+   0oHsa6QWY9tk0WxX3HAunbKkUdyvNCTnfEsbc68imQ5NiJHWTAlEo+TZH
+   RI+nMjmcSMjNsfrAyw/FFU3q+9FXBo1wZhZWIhbyDrB3+jWaMx2wu5oXi
+   HBcRAnZMAc8Ebu5BThQ5YRSUc2V4m9qPLajoF4z9czcgoeMiZqgJR73L7
+   KwDQDaWx2u3Gru/UmNIZuDunnAEcYkAF85WJ6qRUcSNyZLq0YwXrQcotx
+   Kiqq/IFyPGUdHkcu3dVYFuCvOCnORLHgYv4dEMIYAbZLC5u44OjUd/qDz
+   w==;
+X-CSE-ConnectionGUID: I7XG1V8IQNGYo35kGCunpg==
+X-CSE-MsgGUID: TOfcsjxZS1+qduGqGhMONw==
+X-IronPort-AV: E=Sophos;i="6.27,97,1787011200"; 
+   d="scan'208";a="28340119"
+Received: from ip-10-5-9-48.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.9.48])
+  by internal-pdx-out-003.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2026 14:21:35 +0000
+Received: from EX19MTAUWB001.ant.amazon.com [205.251.233.51:24846]
+ by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.62.198:2525] with esmtp (Farcaster)
+ id 15edf2e1-39ad-4826-a4a7-d73e88fdd306; Fri, 11 Sep 2026 14:21:35 +0000 (UTC)
+X-Farcaster-Flow-ID: 15edf2e1-39ad-4826-a4a7-d73e88fdd306
+Received: from EX19D001UWA001.ant.amazon.com (10.13.138.214) by
+ EX19MTAUWB001.ant.amazon.com (10.250.64.248) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.45;
+ Fri, 11 Sep 2026 14:21:34 +0000
+Received: from dev-dsk-dipiets-1b-77b833da.eu-west-1.amazon.com
+ (10.253.66.177) by EX19D001UWA001.ant.amazon.com (10.13.138.214) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.46; Fri, 11 Sep 2026
+ 14:21:30 +0000
+From: Salvatore Dipietro <dipiets@amazon.it>
+To: <linux-kernel@vger.kernel.org>
+CC: <hch@infradead.org>, <abuehaze@amazon.com>, <akpm@linux-foundation.org>,
+	<alisaidi@amazon.com>, <blakgeof@amazon.com>, <brauner@kernel.org>,
+	<dgc@kernel.org>, <dipietro.salvatore@gmail.com>, <dipiets@amazon.it>,
+	<djwong@kernel.org>, <hannes@cmpxchg.org>, <jackmanb@google.com>,
+	<linux-fsdevel@vger.kernel.org>, <linux-mm@kvack.org>,
+	<linux-xfs@vger.kernel.org>, <mhocko@suse.com>, <ritesh.list@gmail.com>,
+	<rvvandan@amazon.com>, <stable@vger.kernel.org>, <surenb@google.com>,
+	<vbabka@kernel.org>, <willy@infradead.org>, <ziy@nvidia.com>, Vlastimil Babka
+	<vbabka@suse.cz>, David Hildenbrand <david@redhat.com>, Christoph Hellwig
+	<hch@lst.de>, Brendan Jackman <brendan.jackman@linux.dev>
+Subject: [PATCH v5] mm/page_alloc: avoid direct compaction for costly  __GFP_NORETRY allocations
+Date: Fri, 11 Sep 2026 14:21:02 +0000
+Message-ID: <20260911142102.2294202-1-dipiets@amazon.it>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: lazy bounce buffering for checksummed reads v3
-To: Christoph Hellwig <hch@lst.de>
-Cc: Christian Brauner <brauner@kernel.org>,
- "Darrick J. Wong" <djwong@kernel.org>, Carlos Maiolino <cem@kernel.org>,
- Tal Zussman <tz2294@columbia.edu>, Anuj Gupta <anuj20.g@samsung.com>,
- linux-block@vger.kernel.org, linux-xfs@vger.kernel.org,
- linux-fsdevel@vger.kernel.org
-References: <20260909060924.1102037-1-hch@lst.de>
- <fe537c5f-114d-4d9a-817d-93f359e12924@kernel.dk>
- <cff350b3-836f-4953-97f3-d664164746b4@kernel.dk>
- <20260911114438.GA21957@lst.de>
-Content-Language: en-US
-From: Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <20260911114438.GA21957@lst.de>
-Content-Type: text/plain; charset=UTF-8
+X-ClientProxiedBy: EX19D031UWC003.ant.amazon.com (10.13.139.252) To
+ EX19D001UWA001.ant.amazon.com (10.13.138.214)
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 
-On 9/11/26 5:44 AM, Christoph Hellwig wrote:
-> On Thu, Sep 10, 2026 at 02:51:33PM -0600, Jens Axboe wrote:
->>> It's a little hard to split as you have eg block patches both at the
->>> start and beginning... In the spirit of getting this some runtime, I'm
->>> going to queue it up in a separate branch,
->>> for-7.4/lazy-bounce-buffering for now.
->>
->> On 2nd thought since this already relies on stuff in the XFS tree
->> apparently, you can just add my
->>
->> Reviewed-by: Jens Axboe <axboe@kernel.dk>
->>
->> to the block patches. Would probably make everybody's life easier.
-> 
-> No, the current series is just on top of mainline with the block
-> fixes for Sashiko existing issues comments split out.  Which probably
-> was a mistake, as that now lead to a side-discussion and Sashiko can't
-> apply it any more because it is too stupid to parse the cover letter.
-> 
-> I guess I'll do another resend with the two of those that stick
-> included, and I'll leave the third on to John, who already has a
-> handle on it.
+Commit 5d8edfb900d5 ("iomap: Copy larger chunks from userspace")
+introduced high-order folio allocations in the iomap buffered write
+path.  When memory is fragmented, each failed costly-order allocation
+enters __alloc_pages_slowpath() which runs direct compaction and
+drain_all_pages(), causing a 0.38x throughput drop on PostgreSQL
+pgbench (simple-update) with 1024 clients on a 96-vCPU arm64 system.
 
-OK, I've got it in for-7.4/lazy-bounce-buffering now.
+The root issue is that direct compaction is too expensive for hot
+allocation paths that have fallbacks to smaller allocations.
+__filemap_get_folio_mpol() already marks higher-order allocations with
+__GFP_NORETRY | __GFP_NOWARN, signalling that the caller can handle
+failure.  However, the page allocator still attempts full direct
+compaction for costly orders with __GFP_NORETRY, which is unnecessarily
+aggressive when the caller will simply retry at a lower order.
 
+For costly-order allocations with __GFP_NORETRY, suppress direct reclaim
+for the whole slowpath by computing can_direct_reclaim (and hence
+can_compact) as false.  The !can_direct_reclaim check near the top of
+the slowpath then short-circuits to nopage: no direct reclaim, no direct
+compaction and no drain_all_pages() IPI across every CPU.  kswapd (and
+in turn kcompactd) is still woken further down for background
+defragmentation, so compaction keeps working for long-term system health
+while being removed from the latency-critical direct allocation path.
+
+Allocations that also request __GFP_THISNODE are exempted.  That flag
+pairing identifies the local-node-first THP attempt issued by
+alloc_pages_mpol() (mempolicy.c), which relies on direct compaction to
+form transparent huge pages.  __GFP_NOFAIL is exempted as well, so a
+must-not-fail allocation is never made to fail.
+
+Test environment:
+  Hardware:  AWS EC2 m8g.24xlarge (96 vCPU, arm64)
+             12x 1TB IO2 32000 IOPS RAID0 XFS
+  OS:        AL2023
+  Kernel:    v7.3-rc1
+  Database:  PostgreSQL 18.4
+  Workload:  pgbench simple-update, 1024 clients, 96 threads, 1200s
+
+Results (average of 3 runs, TPS):
+  Config                                       Avg TPS   % vs baseline
+  AL2023 stock 6.1 kernel (pre-5d8edfb900d5)   136,942           n/a
+  v7.3-rc1 baseline (no patch)                  59,408             -
+  v7.3-rc1 + this patch                        161,994       +172.7%
+
+The patch fully recovers the pre-5d8edfb900d5 performance, bringing
+throughput back above the pre-regression level and well clear of the
+~59k baseline.  The AL2023 6.1 row runs a kernel that predates commit
+5d8edfb900d5 ("iomap: Copy larger chunks from userspace"), so it is not
+directly comparable, but it shows the pre-regression level and confirms
+that the ~59k baseline is the anomaly and not the norm.
+
+
+Link: https://lore.kernel.org/all/20260403193535.9970-1-dipiets@amazon.it/T/#t [v1]
+Link: https://lore.kernel.org/linux-mm/20260420161404.642-1-dipiets@amazon.it/T/#u [v2]
+Link: https://lore.kernel.org/all/20260710143437.12379-1-dipiets@amazon.it/T/#u [v3]
+Link: https://lore.kernel.org/all/20260904115629.3993331-1-dipiets@amazon.it/T/#u [v4]
+Fixes: 5d8edfb900d5 ("iomap: Copy larger chunks from userspace")
+Cc: stable@vger.kernel.org
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Vlastimil Babka <vbabka@suse.cz>
+Cc: David Hildenbrand <david@redhat.com>
+Cc: Michal Hocko <mhocko@suse.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Matthew Wilcox <willy@infradead.org>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Dave Chinner <dgc@kernel.org>
+Cc: Ritesh Harjani <ritesh.list@gmail.com>
+Cc: Zi Yan <ziy@nvidia.com>
+Cc: linux-mm@kvack.org
+Cc: linux-fsdevel@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org
+Signed-off-by: Salvatore Dipietro <dipiets@amazon.it>
+---
+v5: Derive the decision into a local flag instead of mutating gfp_mask
+v4: Clear __GFP_DIRECT_RECLAIM early in the slowpath and exempt
+    __GFP_THISNODE so THP attempt keeps using direct compaction
+v3: Move to mm/page_alloc.c, wake kcompactd instead of avoiding it
+v2: Move from fs/iomap/buffered-io.c to mm/filemap.c
+v1: Avoid compaction in iomap folio allocation
+
+ mm/page_alloc.c | 16 ++++++++++++++--
+ 1 file changed, 14 insertions(+), 2 deletions(-)
+
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+index 12fac9084c48..be8b0d72a2db 100644
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -4784,10 +4784,22 @@ static inline struct page *
+ __alloc_pages_slowpath(gfp_t gfp_mask, unsigned int order,
+ 						struct alloc_context *ac)
+ {
+-	bool can_direct_reclaim = gfp_mask & __GFP_DIRECT_RECLAIM;
++	const bool costly_order = order > PAGE_ALLOC_COSTLY_ORDER;
++	/*
++	 * Costly __GFP_NORETRY callers have a cheap fallback to a lower order,
++	 * so don't stall them in direct reclaim or direct compaction.  Exempt
++	 * __GFP_THISNODE (the THP attempt from alloc_pages_mpol() needs direct
++	 * compaction) and __GFP_NOFAIL (must not be made to fail).  Don't
++	 * clear __GFP_DIRECT_RECLAIM from gfp_mask instead: that would also
++	 * change the alloc_flags derived by alloc_flags_slowpath().
++	 */
++	const bool costly_noretry = costly_order &&
++		(gfp_mask & __GFP_NORETRY) &&
++		!(gfp_mask & (__GFP_THISNODE | __GFP_NOFAIL));
++	bool can_direct_reclaim = !costly_noretry &&
++		(gfp_mask & __GFP_DIRECT_RECLAIM);
+ 	bool can_compact = can_direct_reclaim && gfp_compaction_allowed(gfp_mask);
+ 	bool nofail = gfp_mask & __GFP_NOFAIL;
+-	const bool costly_order = order > PAGE_ALLOC_COSTLY_ORDER;
+ 	struct page *page = NULL;
+ 	unsigned int alloc_flags;
+ 	unsigned long did_some_progress;
 -- 
-Jens Axboe
+2.50.1
+
+
+
+
+AMAZON DEVELOPMENT CENTER ITALY SRL, viale Monte Grappa 3/5, 20124 Milano, Italia, Registro delle Imprese di Milano Monza Brianza Lodi REA n. 2504859, Capitale Sociale: 10.000 EUR i.v., Cod. Fisc. e P.IVA 10100050961, Societa con Socio Unico
+
+
+
