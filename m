@@ -1,30 +1,42 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0891455624
-	for <linux-xfs@vger.kernel.org>; Fri, 11 Sep 2026 15:38:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23C7049DBB6
+	for <linux-xfs@vger.kernel.org>; Fri, 11 Sep 2026 15:48:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789141091; cv=none; b=dvxdvh0HCfLM84/GKKesTDGLNUzv7i2dXsGqs59SxT6wtfAEugwJslnLu1mUCd398U6PLRy9YTQwRTyUQC1XVG4lYkIDlCFH1hDxQlFoJi6+w0f41UBjCh++XhvuQXjt51j7FW35zVJm6Aa/zI/77KA+V2kbGSI4VhFqN4BN8O0=
+	t=1789141720; cv=none; b=Sw04Y4kXVgP1zIeuU/jSKci/7QFcmZvAshFinvr5o6KQljKK9OF/gvTuZ3rZwMKbc9xXivZmo/Yp63lRRDJ7Pm972+2OYgPPay8S1SKTfn/JtIPJDQMxL/7MQLogruhh3diYSQA/ABOjRlQSedxBfP/mOMJPBrSXyxOsn2LqBRU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789141091; c=relaxed/simple;
-	bh=k+8qV/drWV75+QS7JGVy0aSGo683SGrCPHq7d337L7U=;
+	s=arc-20240116; t=1789141720; c=relaxed/simple;
+	bh=fe+1Qj5vLyf3NdfTGRTjQ4V8No28W+RB/VYq64smeic=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PKLwoYcCxH2cXzq3+YsPUOzeJBwyqoo6uE02HSgXzUP5h4egYN3TVKk9Ayrn2uI6XWYSppEiiAidM94F0piwszKRthtXB330jZ/AKTWgaupSeoHzO3lErq1nuKPwbkcOoeQIgJtTQqg9nPQKE785NYZbrKBFhxoYsl/Bz0iC1AU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 020FA68D05; Fri, 11 Sep 2026 17:38:06 +0200 (CEST)
-Date: Fri, 11 Sep 2026 17:38:05 +0200
-From: Christoph Hellwig <hch@lst.de>
+	 Content-Type:Content-Disposition:In-Reply-To; b=FbhGDjIrMGA2yILXTC5YN4AeQMx8dxoFk6THqYNtuMgAyDFJBP4IQrtl+nbsdo0vtbnJmwcRwSGIsnwn7KnLv1z4MR0A+sijyr4tC0Y16TdbX5r0ajq+AZXqztkr0KxMYOEnaNH2WBeyztyWn8wAaspyySm38jGJXInpeKuwnbk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=t0/m7zMI; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="t0/m7zMI"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=gGMRRLI+q42PSfB8sOU62EIWPkDt148Nggocz9G5T1A=; b=t0/m7zMIuMYYasTP7j9Oyg+Yok
+	zETH6fj0+6/JB0G71votAT2OvInQu0RavQt/GQBWLGGiYrTRPm5LraPZL01VLNXE3M51Bpp1wcrfA
+	/G+slQirwEiGdII/GQSvYKQyE0pvn+Rd1m7sBEj8ewYUEW7HpZgi7OZq9Z/3gm/LpGsaUXvr1elPw
+	/tgRQmKxvOYHc3o/KxC++QTOZL82CyGXy6aqaazp0HmE5BIl0RwCMeiQ7vrN7DuU8V4lgZeGAlbFW
+	rneBKiqpYzcP+hV3i7PU6T35gGL1y5elgjCKH9g7yVxf13q8hHABb0iVNwex36x+CdHdJPoI9+1Ac
+	J9H7Hcng==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1x53US-0000000H8D0-0q2r;
+	Fri, 11 Sep 2026 15:48:38 +0000
+Date: Fri, 11 Sep 2026 08:48:36 -0700
+From: Christoph Hellwig <hch@infradead.org>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>,
-	Andrey Albershteyn <aalbersh@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/3] libxfs: don't set mp->m_rtdev_targp when no RT
- devices is provided
-Message-ID: <20260911153805.GA27644@lst.de>
-References: <20260911144559.1959740-1-hch@lst.de> <20260911144559.1959740-2-hch@lst.de> <20260911145726.GE6265@frogsfrogsfrogs> <20260911151120.GA26893@lst.de> <20260911153026.GF6265@frogsfrogsfrogs>
+Cc: aalbersh@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 5/9] makecfg: handle metadir quota options
+Message-ID: <aqQi1BNvhModkvb1@infradead.org>
+References: <178892910484.4047311.5337345469992668181.stgit@frogsfrogsfrogs>
+ <178892910621.4047311.16295302909903460048.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -33,40 +45,27 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260911153026.GF6265@frogsfrogsfrogs>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <178892910621.4047311.16295302909903460048.stgit@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Fri, Sep 11, 2026 at 08:30:26AM -0700, Darrick J. Wong wrote:
-> > And that is what we get with this patch.  The zeroing is done by
-> > zeroing the entire mount structure in the callers of libxfs_mount
-> > (don't ask me why..).
-> 
-> Sorry, but I don't see how we get to m_rtdev_targp==NULL with this
-> patch?  The end of libxfs_buftarg_init becomes:
+On Tue, Sep 08, 2026 at 11:01:33PM -0700, Darrick J. Wong wrote:
+>  
+> +/* These should correspond to XFS_[UGP]UOTA_{ACCT,ENFD} */
 
-...
+CAn we reuse those?  If not at least add the missing Q in QUOTA here :)
 
-> In the case where the rt and data devices are not the same, we create a
-> new buftarg object, even if xi->rt.dev == 0.  That only happens if we
-> didn't set xi->rt.name to a path, which means that libxfs_device_open
-> ignores it:
+> diff --git a/configure.ac b/configure.ac
+> index 40ccd88aa2a950..8a2505e37c70ab 100644
+> --- a/configure.ac
+> +++ b/configure.ac
+> @@ -195,6 +195,7 @@ if test "$have_listmount" = "yes"; then
+>  fi
+>  AC_HAVE_STATMOUNT_SUPPORTED_MASK
+>  AC_HAVE_FANOTIFY_MOUNTINFO
+> +AC_HAVE_QUOTACTL_FD
 
-Yeah, you're right.  We'll have a separate m_rtdev_targp, but it
-will have a NULL dev.  rtmount_init rejects this except for xfs_db,
-but xfs_db can see a "weird" targp.
+Shouldn't the AC_HAVE_QUOTACTL_FD go into a separate patch, including
+a generic helper?  I assume most other uqotactl users would prefer
+that as well when available.
 
-> OTOH there are other places that use other checks that clearly assume
-> that m_rtdev_targp is always present:
-> 
-> libxfs/init.c:311:      if (mp->m_rtdev_targp->bt_bdev == 0 && !xfs_is_debugger(mp)) {
-> libxfs/init.c:1034:     if (mp->m_rtdev_targp != mp->m_ddev_targp)
-> libxfs/init.c:1035:             libxfs_buftarg_free(mp->m_rtdev_targp);
-> 
-> Ok maybe this patch is fine as-is?  But xfsprogs needs a treewide change
-> to make the "do we have a rt device attached?" checks match the kernel
-> code?
-
-It has passed pretty extensive testing so it must be perfect (TM).
-But I agree that another cleanup pass to better match the kernel
-sounds like a good idea.  I'll add it to my bucket list.
-
+Otherwise this looks good from a quick look.
