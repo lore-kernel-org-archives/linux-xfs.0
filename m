@@ -1,76 +1,50 @@
-Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from canpmsgout10.his.huawei.com (canpmsgout10.his.huawei.com [113.46.200.225])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F8F3443C12
-	for <linux-xfs@vger.kernel.org>; Fri, 11 Sep 2026 10:26:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D20F42C50F
+	for <linux-xfs@vger.kernel.org>; Fri, 11 Sep 2026 10:42:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.225
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789122373; cv=none; b=aZEGekEMQXhvyV/bph5f7omthY08ueRZTvlYfLieLBTQTWWzDfbaAtYOkp3GE7Mwim/1YRiG/qnGLQI1dAQZm1jLEAACInghjI1zVpE2gZSWdHiXajgiNLvZV445hw/jux93SdhGjnpB/TTxUqybUc+8Sy09Fnbh+RHliUBxvmw=
+	t=1789123372; cv=none; b=XE0NaCquK+RfHEBVNF0EeIxfXwUzg7qyeuusVKI1G3I56L2N4+VOSJ784/TtCwrbX4F5Ann4QY63bcFCvhRbg15yl4gTyWTqYZwkcv34pv9lsk0D+WAJssBRmoQfMd1t8t/3SEf1LKpQWooMUvXzrTHYgyUC0H4LRcbY3yvA170=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789122373; c=relaxed/simple;
-	bh=eqVZgeBn3pFGkDvZueVueXd23kt1HUk/Ka9kdogQI7k=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=n+a9Rp18XszTCbqi4SsOWBfPgB6GLmCDP+eoYGWZhj92vdWvgOLrXXsf+eQsdOG7Cpm5nK8IUf4xtUWsp8qmjOtRtVOf9XGRKrlXJsJ/CS42g4aPMJ6D+0zaRirrSvA1V/itxNpBVNF1tf+bCObXwlNV/akbALYpO88BCmjolsE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=aCAzeJty; arc=none smtp.client-ip=209.85.214.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1789123372; c=relaxed/simple;
+	bh=joyG0BCixO1ASKVLrSZkrPkBEpV7lZG7kWpNYGccE7M=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=mphHWRRaQEoWcmopCvDbO7y/bBtPv9nqBMSDY7Xf8XPJKgLifbXNz2l51fY755PCTKxjAxutJC+oJpL3B8VV0axhP3lE6PGrNh4yJPc+RVLnCKsQLidQh5X/9yv76YfrH9QIk+w2DjEwVHex6AVc1tu73S60xCj5ByFp5w9T89s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=nnpT2cZm; arc=none smtp.client-ip=113.46.200.225
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aCAzeJty"
-Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-2d9520b9155so7684625ad.3
-        for <linux-xfs@vger.kernel.org>; Fri, 11 Sep 2026 03:26:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1789122370; x=1789727170; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=yz8Wf/76e1pwHAM3SmDXbmtzcXfyZlPBJr/oXRWCwns=;
-        b=aCAzeJtyyg8KnJWpOVWtsobv94cf9zhcRY0fZGNfkg6vh7xDkj0ewh6bH38ReXLM2D
-         5nQ0a90TJ87P4HwrImPZyaAd+ORZfO85WeohyYFS4YFfuy3OYez67r5kXrXcURdcprZZ
-         NvTq/xY2uhtdfKu60r/gFBk2y1Y1plfqRSle6I3u43LHeDRhBPM+A4ilOuki97iUxN96
-         G7C4NV7HItwMjlwPQYl0RSrOExPJK4y4jN6r25HAYimnoeGukseU7OuejkUiVra6gAEw
-         RfTvdE0MfGcdGaNyHy2G68RfiCpPG0Chys/5/S8qUpFywcQNP4fgSXRCnas2Z1lMSL8K
-         pIBA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789122370; x=1789727170;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=yz8Wf/76e1pwHAM3SmDXbmtzcXfyZlPBJr/oXRWCwns=;
-        b=j+ZDJE5t1U+TmlHtlzeujxD7LZ7GLGEEgupNaveU6zUskrespXnMHE40K0stlYrVIi
-         oFcLYoBAfPeaVoZwaVo3fvzARNUMhuFkdVqVsSF9ewmLeQCgJpJM/imyd0lSngKDTDUn
-         Du3y9fPYak39YksXOQTXtBbOl3y6xwssyo4lKtAxvyNLx7i6WmMPUBQrv0U4DxUsF5Sz
-         SFx9WaZjlrtt/oIR63svnD0MvfGa3V2egHnmCaLCpXMg6Ktuz2EgG4T73hWn512MKsdp
-         pDuX5N02jUQRsawt6k4MYc/YN+eZiUsbcPEebcO9qkNzbRQ+GcPVuZWLPCm/yDU9aYpX
-         wYUQ==
-X-Forwarded-Encrypted: i=1; AKwUvBxRlJk1o26IhDMhiWd4M0PQ20VBsmdKP8C40RG4do7a2A4Oy7yV2hEqVPFwiP6M9QiwaUCkZRmDZV4=@vger.kernel.org
-X-Gm-Message-State: AFuF++n1so54knHjQ0KVLGb1lEem1bduHf1+VJJxKmiDMqWjbImHyxob
-	ECoCWGBmD9gsWNUfeFv7DGxefeifsTLN20fVG95+HnWHRBoB9qsLltUi
-X-Gm-Gg: AYBFou1GSNEalUUJmx/Da8nOkNNtnLEj3XTnNw+sigTXsq4dhNqgIKklQWDNbuY/m+1
-	NcdlDrO4CRE/Kd08C34PY8W3Gw7sPavuu7rYTEURjvVJfq6YWSBQPF0BjIEHN7jqYvg+RmL1a61
-	uJ6qLWZhicvCvQxw+asjxFf+NAfZk8B05v1H4mv8vsIOm2R9eIe5Ty2HJORWmiv1ZesPs9hmYaA
-	oIPltOLESV7khLP5kjWAO6acTRvgTWzQQQBQYayijISQzME39YSKmeeCUTzIAYDPE50BTVo4F+O
-	BM2V88q+ksu06B+Nu3kYLhlgeyoaLWeO/cpfrEo7pxN2EsQRWguJS9GSKSYvEgd+ZnDyknM8R0V
-	CE6bW9lyWoD/wUKd8AUX3X8kOXuMOAKxMLTBymoo45TYn/dj9cWELIup3akeezBVTc6QiY+lkNM
-	WQXvR8AklMP4U4ZIJeDcP4mwKUxsBSO3AJfuEe/ihTvKkgkorOqCYbC3Sy9zSVu7zlddPYeYiWc
-	DB4
-X-Received: by 2002:a17:902:ce0f:b0:2dd:8b2:6e64 with SMTP id d9443c01a7336-2dd2a336804mr84860135ad.12.1789122369587;
-        Fri, 11 Sep 2026 03:26:09 -0700 (PDT)
-Received: from Default ([2409:40f4:1034:ff33:e7d7:d190:816c:e597])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-33ba4ed295esm6220095eec.15.2026.09.11.03.26.04
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 11 Sep 2026 03:26:08 -0700 (PDT)
-From: Jeffin Philip <jeffinphilip14@gmail.com>
-To: cem@kernel.org
-Cc: dgc@kernel.org,
-	linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Jeffin Philip <jeffinphilip14@gmail.com>
-Subject: [RFC PATCH 2/2] xfs: change xfs_trans_ail_delete return type to bool
-Date: Fri, 11 Sep 2026 15:55:02 +0530
-Message-ID: <20260911102502.163566-3-jeffinphilip14@gmail.com>
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="nnpT2cZm"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=JoVoBVxuIFJPpqnozZOrMDxgd4k13M4SmVAjlfUXrmM=;
+	b=nnpT2cZmBzPvNpe5wDsrZeDU6+909TNgNIwRSH/svg5T0aZM2GLTIDI+lm6vKFWpRz2SuDObp
+	FQRQGx+bdcQj8dzw4/0WUczwICkWlY/52W3Fq4lGpeyjKuwlAYnyTfgUwTPtxOBHr/4UePS8SmP
+	r7HWFvu6oJen4jzIN6kRspI=
+Received: from mail.maildlp.com (unknown [172.19.163.200])
+	by canpmsgout10.his.huawei.com (SkyGuard) with ESMTPS id 4hh9nw3ffDz1K96s;
+	Fri, 11 Sep 2026 18:31:48 +0800 (CST)
+Received: from kwepemk300003.china.huawei.com (unknown [7.202.195.93])
+	by mail.maildlp.com (Postfix) with ESMTPS id 4759E40563;
+	Fri, 11 Sep 2026 18:42:44 +0800 (CST)
+Received: from ubuntu (10.50.87.83) by kwepemk300003.china.huawei.com
+ (7.202.195.93) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.45; Fri, 11 Sep
+ 2026 18:42:43 +0800
+From: Kefeng Wang <wangkefeng.wang@huawei.com>
+To: Carlos Maiolino <cem@kernel.org>, <linux-xfs@vger.kernel.org>
+CC: "Darrick J. Wong" <djwong@kernel.org>, Shakeel Butt
+	<shakeel.butt@linux.dev>, Brian Foster <bfoster@redhat.com>, Dave Chinner
+	<dchinner@redhat.com>, Kefeng Wang <wangkefeng.wang@huawei.com>, Christoph
+ Hellwig <hch@lst.de>
+Subject: [PATCH RESEND 2/2] xfs: fix NOFS state corruption in btree split worker
+Date: Fri, 11 Sep 2026 18:42:27 +0800
+Message-ID: <20260911104227.2028941-3-wangkefeng.wang@huawei.com>
 X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260911102502.163566-1-jeffinphilip14@gmail.com>
-References: <20260911102502.163566-1-jeffinphilip14@gmail.com>
+In-Reply-To: <20260911104227.2028941-1-wangkefeng.wang@huawei.com>
+References: <20260911104227.2028941-1-wangkefeng.wang@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -78,59 +52,54 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: kwepems500001.china.huawei.com (7.221.188.70) To
+ kwepemk300003.china.huawei.com (7.202.195.93)
 
-Change xfs_trans_ail_delete's return type from void to
-bool which returns true if the item was removed from
-AIL and false in case of shutdown(item not in AIL).
-Reflect the change in header file too.
+xfs_btree_split_worker() calls xfs_trans_set_context() and
+xfs_trans_clear_context() on the caller's transaction, overwriting
+tp->t_pflags with the worker's NOFS state. When the caller already has
+PF_MEMALLOC_NOFS set (e.g. xfs_end_ioend_write, xfs_dio_write_end_io),
+the corrupted tp->t_pflags causes xfs_trans_free() to erroneously clear
+the caller's NOFS protection.
 
-Signed-off-by: Jeffin Philip <jeffinphilip14@gmail.com>
+Use memalloc_nofs_save/restore with a local variable instead so
+tp->t_pflags is never touched.
+
+Closes: https://sashiko.dev/#/patchset/20260902131653.1338227-1-wangkefeng.wang@huawei.com
+Fixes: 756b1c343333 ("xfs: use current->journal_info for detecting transaction recursion")
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Kefeng Wang <wangkefeng.wang@huawei.com>
 ---
- fs/xfs/xfs_trans_ail.c  | 5 +++--
- fs/xfs/xfs_trans_priv.h | 2 +-
- 2 files changed, 4 insertions(+), 3 deletions(-)
+ fs/xfs/libxfs/xfs_btree.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index 99a9bf3762b7..b17b677586a0 100644
---- a/fs/xfs/xfs_trans_ail.c
-+++ b/fs/xfs/xfs_trans_ail.c
-@@ -913,7 +913,7 @@ xfs_ail_delete_one(
- 	return 0;
- }
- 
--void
-+bool
- xfs_trans_ail_delete(
- 	struct xfs_log_item	*lip,
- 	int			shutdown_type)
-@@ -931,12 +931,13 @@ xfs_trans_ail_delete(
- 					__func__);
- 			xlog_force_shutdown(log, shutdown_type);
- 		}
--		return;
-+		return false;
- 	}
- 
- 	clear_bit(XFS_LI_FAILED, &lip->li_flags);
- 	tail_lsn = xfs_ail_delete_one(ailp, lip);
- 	xfs_ail_update_finish(ailp, tail_lsn);	/* drops the AIL lock */
-+	return true;
- }
- 
- int
-diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
-index f945f0450b16..b00c803941c7 100644
---- a/fs/xfs/xfs_trans_priv.h
-+++ b/fs/xfs/xfs_trans_priv.h
-@@ -100,7 +100,7 @@ void xfs_trans_ail_insert(struct xfs_ail *ailp, struct xfs_log_item *lip,
- xfs_lsn_t xfs_ail_delete_one(struct xfs_ail *ailp, struct xfs_log_item *lip);
- void xfs_ail_update_finish(struct xfs_ail *ailp, xfs_lsn_t old_lsn)
- 			__releases(ailp->ail_lock);
--void xfs_trans_ail_delete(struct xfs_log_item *lip, int shutdown_type);
-+bool xfs_trans_ail_delete(struct xfs_log_item *lip, int shutdown_type);
- 
- static inline void xfs_ail_push(struct xfs_ail *ailp)
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 6738d9d1511b..a0133d662096 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -3007,12 +3007,18 @@ xfs_btree_split_worker(
  {
+ 	struct xfs_btree_split_args	*args = container_of(work,
+ 						struct xfs_btree_split_args, work);
+-	xfs_trans_set_context(args->cur->bc_tp);
++	unsigned int nofs_flags;
++
++	/*
++	 * Don't use xfs_trans_set_context() here: it would overwrite the
++	 * caller's saved NOFS state in tp->t_pflags.  Use a local scope.
++	 */
++	nofs_flags = memalloc_nofs_save();
+ 
+ 	args->result = __xfs_btree_split(args->cur, args->level, args->ptrp,
+ 					 args->key, args->curp, args->stat);
+ 
+-	xfs_trans_clear_context(args->cur->bc_tp);
++	memalloc_nofs_restore(nofs_flags);
+ 
+ 	/*
+ 	 * Do not access args after complete() has run here. We don't own args
 -- 
 2.55.0
 
