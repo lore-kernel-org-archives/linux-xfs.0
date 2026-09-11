@@ -1,178 +1,116 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ot1-f54.google.com (mail-ot1-f54.google.com [209.85.210.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1174746D572
-	for <linux-xfs@vger.kernel.org>; Fri, 11 Sep 2026 12:29:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 159E521CA02
+	for <linux-xfs@vger.kernel.org>; Fri, 11 Sep 2026 13:38:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789129767; cv=none; b=Ca4yEOH6ioh6QdbKGQyNOX1ogeaYWmT3D9wicB68b/iv/cTShHvUV/mMGQWQM2Fn/l4hDws8Ilg0nlfPMxjHnLTbbqUApmKJRkiVjwJMlDDe+lvYhgrXeALhY9GD4nVeB0LKzyIPth99iqhMEZLPsyqY6C48aVNGvh7mKMnLDNg=
+	t=1789133930; cv=none; b=XeenZ0LaoY+4GKEJLtEf6K/BGLjbA4NRkxRtEV2J1kQb/QhWcV1TX2VsPS26vCHklfPYbU20LW/sriX1nyNdnJ0oVtcZq3HJOin3lnPYPqgRUrDP4vgpdX0wigGaE6XvbbcbXAL5vZwUjTuia6vkfS7uUHuP2b+0ggmlzBk4gEU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789129767; c=relaxed/simple;
-	bh=T3gwrRxJh6Cy97RaI3Cf7lL2JE9EXNvDLhEQKn44Mmw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=aFHnTCusVCAOKyhrgQfbedaUJfC97vduGSJoyR+PsfB2uZxQ4i03GxQPscFvVZDkgMfvfcVRlYCy/Q2evIJ4m+dU5Qvg94WhPe2l8j3AadJuMXLFchyJg4ElspTQgO/AOFmmWjZICwbpV7HG2GoextmSInWQF7Q9JnYBMcus1Ug=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=heTBO3fQ; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789133930; c=relaxed/simple;
+	bh=5SC3HT3+5ycGwWh5KBASibBcRAJzdLO3KnH4sjbmFDM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=lAa9mM8P73wK28RqxXJTZESxR8RTJ80upTNec4FbuxyYkZS0rCpZzVbY7UpcNF/s+67cu1NIKEww75xV5hdwapv0rhpU6tao4vkVMu2RgjsWmAIHON5q0m1RelkWMR4wnknHdCTAxhcM5OdAwbNf//PeEJvJtWVpqspqug8nGi4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b=sD9i0EPj; arc=none smtp.client-ip=209.85.210.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="heTBO3fQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 12E311F0089A;
-	Fri, 11 Sep 2026 12:29:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789129764;
-	bh=cpzZ2ANgZedef8K8wqKxpGMje/v4n2y0z60TAeNXQdw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=heTBO3fQiHpZ6yuhL8qaJTWRk4+jmHVx+1R6a3lE13jeS5DGzRaGhA0wwv93ODYfW
-	 RKtW0auX2IlRwbksN9RwGwTg+wxkm3Y/F71RbgV7Y625S0VnKtrhufH8zoLJTfOpYN
-	 +2E5bRttVX5HEVy/CsRWu0DJgnIx1LugCJPAFVmh6kL35riA3TgULrtVkPNRCb+2CZ
-	 4zLfZahGhX4yzwQ4eCosdG4OtY8Rc2nMQK1lQMF2kSZI/HL5+7qOaUSZwEsG8PG/CM
-	 SX1ulh9mAWu7GwjofRBYmLL3XiEudPWXzAttJt0nMD+ZYdFAp6CtQrwYYMSiun2s+T
-	 +9XubCygSYqKw==
-Date: Fri, 11 Sep 2026 14:29:21 +0200
-From: Alejandro Colomar <alx@kernel.org>
-To: Andrey Albershteyn <aalbersh@kernel.org>
-Cc: linux-xfs@vger.kernel.org, djwong@kernel.org
-Subject: Re: [PATCH] man: document that XFS_IOC_FS[G|S]ETXATTR can not be
- used on special files
-Message-ID: <aqPy-NvMiHD9Vemb@devuan>
-References: <20260911114746.343945-1-aalbersh@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b="sD9i0EPj"
+Received: by mail-ot1-f54.google.com with SMTP id 46e09a7af769-8049e44d0c3so416429a34.3
+        for <linux-xfs@vger.kernel.org>; Fri, 11 Sep 2026 06:38:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20251104.gappssmtp.com; s=20251104; t=1789133926; x=1789738726; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=sCKlIYEc3WBtqZTRSmkKr4C+yXpeMrWNJb+k5yI49J0=;
+        b=sD9i0EPjj0Ig68IeGg90WglA7IXGd9HwDQFuhbJxnkZjB9Si4yn+4RIQak7mynH8zH
+         +1igcCeXsxwsXgponQPQcytQjaWGZlR66ar561qN73PpPOlr9uGsjcgjobCPKB/avnlv
+         a6LoshCKEOCyssaM+uYy0Rz5r8mafFkENxpBEAhYYNyTBGSrJ2MW1OIYtHElh1gFbyeS
+         25eZHFxVSNu4fZY/OuFp1yh2tYbwRN9s8O9Uj3iLNMsZMMstNEZ+LW7X1oDFuiHn3V1Z
+         zR3n/XKfT4kjiRHGzC/hy2wBLC4+VjYpRg05efGSlP9DZfjmhocxWk6aScfTYbWrKgFU
+         RHKA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1789133926; x=1789738726;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=sCKlIYEc3WBtqZTRSmkKr4C+yXpeMrWNJb+k5yI49J0=;
+        b=Wj49xFJZIxxxNRJFzqpivutKEICfzNxtAuigoDTf7er9qhrhQXDHA4miqrm+3ym4mA
+         FPWndlYFOhkDe2DOojaNksySxivfD1gi3ADOsveN7CD8JVnPCsAz83aHWp0ECtJbyhPc
+         OvKqrp6C1ghnQiMnwbkLncg1J5rKiQMp2XsuVxxyLNd2i0SlRCzKrNIl8AMqrepkiShh
+         P3B1AD+csN0upNUxo6Np0R5TiEzk31N16taxt0DfEBAhzU6XjgA8saSOGzjRhTJT8Gh1
+         Vi+OkL7CAIu1rW7ANAKLLUa6xkxr+W1+5R2zcUfdz3QRbdrdP2Y3Qqh/JDPTqumoaYBf
+         BDqg==
+X-Forwarded-Encrypted: i=1; AKwUvBwIWX3OuU+NZ/Z+OqAe/Cl918BJxUBbRBwOdCYbyHz0RF9jiH1WV7ABXMX2TsUmLC0mZRWY98pBAqc=@vger.kernel.org
+X-Gm-Message-State: AFuF++mkFvoiSP5OanTGTIR6f26R7CdTrphIQVc/fbAcDH4yOIw3uNFG
+	OvC6xmcVsTucfJV87TeGzRaDMbkr90hG9jkf5mp/J0Zb4dY0HXV77LlQNMflWpt1xYc=
+X-Gm-Gg: AYBFou1SF5n7wm7VYy71v3R1JlHm/shyRUNxAEv5fvUqKMQoE1QcB9WRuydS40DYDJa
+	q05wIc86l6cyMR737phEv1qqpuPbi1TLyxBQV9f7MakB6KpMO+vVm0BiqeucAYLI1BrL0ehOX9Z
+	nxXn2zlQOgmla0qVNR6hFI9+HulSeRK3UcCDArw4cpK1dMhLQTO3A9XbCQyQj4TeOi9l8DTFRCq
+	u/QEGDtY03bI3Vx4VRXB/h1MrRd3jNuViYp7GPSUzCMsO+dSJytFC7NSK60ge6TsNN40iQ/O1Ar
+	kWuFfiBSosrpa4y9QIzw8FAXyf7xA6dhtP2gqICa5Sj3RSSuEA/gOlxC61k1UkTLkNsL7a8Zob6
+	z7bVxeaJHNl/tQn6yEWism7nfH92Lv518Ahh0hCRpnoPa6NntajMDuAWY6t+PVLF2kZQFVmEt/U
+	Kq0siNbjMFioQHJuPu79sabWlaFU3WaKkKZQsrG/XopP3+cfJdBJvEH2a0BrbkL3TvOfqxQpIFo
+	lZ2b2iyTr7b3iOY8fXNZcLw3ObA0lUZsqtCW9bWdeNhVNp1NEmmjwKt
+X-Received: by 2002:a05:6830:7314:b0:7ee:19dc:b00 with SMTP id 46e09a7af769-803fd2514b3mr3323405a34.3.1789133925938;
+        Fri, 11 Sep 2026 06:38:45 -0700 (PDT)
+Received: from [192.168.1.102] ([96.43.243.2])
+        by smtp.gmail.com with ESMTPSA id 46e09a7af769-8051005d845sm206965a34.24.2026.09.11.06.38.44
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 11 Sep 2026 06:38:45 -0700 (PDT)
+Message-ID: <2325107b-8c45-4304-aaa5-f8c768d619bf@kernel.dk>
+Date: Fri, 11 Sep 2026 07:38:44 -0600
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="xkovro4qd6lx23iv"
-Content-Disposition: inline
-In-Reply-To: <20260911114746.343945-1-aalbersh@kernel.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: lazy bounce buffering for checksummed reads v3
+To: Christoph Hellwig <hch@lst.de>
+Cc: Christian Brauner <brauner@kernel.org>,
+ "Darrick J. Wong" <djwong@kernel.org>, Carlos Maiolino <cem@kernel.org>,
+ Tal Zussman <tz2294@columbia.edu>, Anuj Gupta <anuj20.g@samsung.com>,
+ linux-block@vger.kernel.org, linux-xfs@vger.kernel.org,
+ linux-fsdevel@vger.kernel.org
+References: <20260909060924.1102037-1-hch@lst.de>
+ <fe537c5f-114d-4d9a-817d-93f359e12924@kernel.dk>
+ <cff350b3-836f-4953-97f3-d664164746b4@kernel.dk>
+ <20260911114438.GA21957@lst.de>
+Content-Language: en-US
+From: Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <20260911114438.GA21957@lst.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
+On 9/11/26 5:44 AM, Christoph Hellwig wrote:
+> On Thu, Sep 10, 2026 at 02:51:33PM -0600, Jens Axboe wrote:
+>>> It's a little hard to split as you have eg block patches both at the
+>>> start and beginning... In the spirit of getting this some runtime, I'm
+>>> going to queue it up in a separate branch,
+>>> for-7.4/lazy-bounce-buffering for now.
+>>
+>> On 2nd thought since this already relies on stuff in the XFS tree
+>> apparently, you can just add my
+>>
+>> Reviewed-by: Jens Axboe <axboe@kernel.dk>
+>>
+>> to the block patches. Would probably make everybody's life easier.
+> 
+> No, the current series is just on top of mainline with the block
+> fixes for Sashiko existing issues comments split out.  Which probably
+> was a mistake, as that now lead to a side-discussion and Sashiko can't
+> apply it any more because it is too stupid to parse the cover letter.
+> 
+> I guess I'll do another resend with the two of those that stick
+> included, and I'll leave the third on to John, who already has a
+> handle on it.
 
---xkovro4qd6lx23iv
-Content-Type: text/plain; protected-headers=v1; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-From: Alejandro Colomar <alx@kernel.org>
-To: Andrey Albershteyn <aalbersh@kernel.org>
-Cc: linux-xfs@vger.kernel.org, djwong@kernel.org
-Subject: Re: [PATCH] man: document that XFS_IOC_FS[G|S]ETXATTR can not be
- used on special files
-Message-ID: <aqPy-NvMiHD9Vemb@devuan>
-References: <20260911114746.343945-1-aalbersh@kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20260911114746.343945-1-aalbersh@kernel.org>
+OK, I've got it in for-7.4/lazy-bounce-buffering now.
 
-Hi Andrey,
-
-> Date: 2026-09-11 13:47:44+0200
-> From: Andrey Albershteyn <aalbersh@kernel.org>
->
-> Add a CAVEATS section with an note that these ioctls can not be used on
-> special files and leave a reference to an alternative pathname based
-> syscall interface.
->=20
-
-Please add:
-
-Cc: Alejandro Colomar <alx@kernel.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>
-
-> Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
-> ---
-
-Thanks!
-
->  man/man2/ioctl_xfs_fsgetxattr.2 | 19 ++++++++++++++++++-
->  1 file changed, 18 insertions(+), 1 deletion(-)
->=20
-> diff --git a/man/man2/ioctl_xfs_fsgetxattr.2 b/man/man2/ioctl_xfs_fsgetxa=
-ttr.2
-> index 25a9ba7965d1..5d223138e419 100644
-> --- a/man/man2/ioctl_xfs_fsgetxattr.2
-> +++ b/man/man2/ioctl_xfs_fsgetxattr.2
-> @@ -238,6 +238,23 @@ Caller did not have permission to change the attribu=
-tes.
->  This API is implemented by the ext4, xfs, btrfs, and f2fs filesystems on=
- the
->  Linux kernel.
->  Not all fields may be understood by filesystems other than xfs.
-> +.SH CAVEATS
-> +The
-> +.B XFS_IOC_FSGETXATTR
-> +and
-> +.B XFS_IOC_FSSETXATTR
-> +.BR ioctl (2)
-> +operations require the user to open the file, but this may not be possib=
-le or
-> +lead to side effects on special files such as FIFOs, sockets, block devi=
-ces,
-> +character devices, and symlinks.
-
-I'd recommend that this project should use semantic newlines.
-See man-pages(7):
-
-	$ MANWIDTH=3D64 man man-pages | awk '/Use semantic newlines/,/^$/'
-	   Use semantic newlines
-	     In  the  source  of a manual page, new sentences should be
-	     started on new lines, long sentences should be split  into
-	     lines at clause breaks (commas, semicolons, colons, and so
-	     on),  and  long  clauses  should be split at phrase bound=E2=80=90
-	     aries.  This convention, sometimes known as "semantic new=E2=80=90
-	     lines", makes it easier to  see  the  effect  of  patches,
-	     which  often operate at the level of individual sentences,
-	     clauses, or phrases.
-
-However, I notice that the project isn't using them, so it's up to them
-whether they want it for new documentation.  I'd recommend using them.
-
-> +.P
-> +For a pathname based interface see
-
-s/pathname based/pathname-based/
-
-See <https://www.grammar-monster.com/lessons/hyphens_in_compound_adjectives=
-=2Ehtm>
-
-Also, s/see/see the/
-
-> +.BR file_getattr (2)
-> +and
-> +.BR file_setattr (2)
-> +syscalls.
->  .SH SEE ALSO
->  .BR ioctl (2),
-> -.BR ioctl_iflags (2)
-> +.BR ioctl_iflags (2),
-> +.BR file_getattr (2),
-> +.BR file_setattr (2)
-
-Other than those minor details:
-
-Reviewed-by: Alejandro Colomar <alx@kernel.org>
-
-
-Have a lovely day!
-Alex
-
---=20
-<https://www.alejandro-colomar.es>
-
---xkovro4qd6lx23iv
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCgAdFiEES7Jt9u9GbmlWADAi64mZXMKQwqkFAmqj9CEACgkQ64mZXMKQ
-wqnWyg//aiijxW1QTtphujsXmrTD0W49wGoF2Cd5bcGRNHQ3K0A3TwA4dtRyshV4
-pJM1aU1AhhXVyAErXgBjkJia6y2rO+TYvCgCdKNnvXQRlhmYamSB02ffn5Q7hJNK
-AT4KECrRDO9QG0Soah8wxKiJ+WS3pHRE+MYu90t+cuE4+cBdULnMb9n3neICEa5A
-W8odiq+QGWQNL2CaTh3tV/WHD3l8uubKv0bHd7y0R7BxC6/9bQdio6hg1Wr6Odgh
-y8f6D5LFZxCGQsxLAVq8XW176Pc7drf2UNCeDo8QNEz4fa1j5ovmgWqPyUehC2FV
-fBwPl63P33Q09co79x/3TKg+v7dTEOSEhjmCvReiXfFfOHBRneoQniwwUXeTBvOF
-98q8oW7+RzP7LtbOjKoD2HOOaRXKYgSku6KFOydi0U7BUIOCPLkJR8nCT/RaSlM/
-rAiP5yysm+61L13w6au/y/3/zDiesYOd4Slf/Ud55K+v5j7pBIaVn3uJvSJutPlG
-6cZwMIMsdEXpr3DgMeZZUDql1/ufQTwirth+uY+jMXkaxr0R/grEKHx5oqv9li1p
-w8etLnAAJXdRUDumadowlxslCFFHSZaqFmZsMCFyEx3UhINoB7H23on8x4ow9ha1
-vD4DW7udZW8l7wwGYqtIqBnPFGO62lahzHOtmkgk0JZQFxqTV9M=
-=3gSY
------END PGP SIGNATURE-----
-
---xkovro4qd6lx23iv--
+-- 
+Jens Axboe
