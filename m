@@ -1,41 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90F9C49E14D;
-	Fri, 11 Sep 2026 04:42:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D5E529ACFD
+	for <linux-xfs@vger.kernel.org>; Fri, 11 Sep 2026 04:43:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789101751; cv=none; b=ILC8hfcYlRpv1Fg3aRDw0OFy+vVbY/IqE5H9rR6NUUEeQhe6+xCVWVGhrcw6HFmmXkFVw92vpqS6t5i9jLq/+2dF/cqctOwq1PUt/TyXDTNpRqPn9yCcb6d0xKtS4l2d3qVH7rQ8jilEvEfMOlsfn3EAwyvU/UmwU+qM6lXXFrE=
+	t=1789101834; cv=none; b=F4Yk/lordkiYCIJ9V2rsSDf45/TNj2CHyWiCE1XmOuhQXWrCyCLOPJIYoUepqkMdbOuwLQcpfXYVwv7ekjypGGkyKUKPwiAnrE38L5/yC/GNmfsQUGSRIwyVplHbOVByrwIzgg70jr+5GtZBXieQ48idJn6N7Dp9yjOWeMdfVUI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789101751; c=relaxed/simple;
-	bh=PydXb6PBgApGSiNN9Rj5r4wzPd/jdCZBqiQre1zwHic=;
+	s=arc-20240116; t=1789101834; c=relaxed/simple;
+	bh=ghSVKRqOLAhAKIT4FOZJ7IN/T5mZ7jwvwuNWbYd8BQ8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pME4nOA1TDS4ERjttcGfLtfoxqsGJQxl0iC9oPzDT7pAYV/9Iyw4X3JXQu1dRSdYPkkkvr8++oM/Jod8T7CFS76iof8I6VjsPO/JLUjRYIHiUobXG2kVRYRS3ZPohGP31a6UwcoDx54DSmFSLTHfxRLIeSsPcic/XYLEVW8bEeY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T+ykzGZ+; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=aivBnmy7WqUOdU9nC58jigWCuTpPcYDNYinyVe1ukWFhxEGuQxZDW2hAUKASpuGB2ExulmniLAhxnVzzydwyXj0vWgVStSEZgSOc/bpMGPgAsELmuzHab+EPrrcSKUQsnSLjyu9OC0cAhtAyea7vIZM8PC0zb6m2wb9X1hVZidg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jBDeJS0a; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T+ykzGZ+"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 2F8DF1F00893;
-	Fri, 11 Sep 2026 04:42:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jBDeJS0a"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 0089D1F000FF;
+	Fri, 11 Sep 2026 04:43:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789101749;
-	bh=lGjR7XPjv7rUL/Tf5tqyIJwjj8Z1YUuwILSZZwXlNTI=;
+	s=k20260515; t=1789101833;
+	bh=UFf3HnKClH+iArEJHWBgy+M1xPYWXvOeSdTtCPXKDSo=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=T+ykzGZ+XjLvgJzVmsEpI5o/L4Mbo+lDXBjtdhP50+8xvCxMHFEKaUcalsl4Ig3i9
-	 NWZ7eYNbdtlfB4ubDQI5EtGQqS28aOKOhgPrZcQshAKUTGBu+j9Ah+v5cVWbe104D7
-	 e7JtZA3fKkg9ysaraU3Mgvu1yEcSNcUi20EXwOpdRXPM1RwsQpmBf5YfCMMpa4X6Uz
-	 RJ+m5C2BVVLV34Wr1uOesUsbNxCVJmg6WcHzbuqiFTkowKRxeEBJRvW3Bkz+ZRaYv7
-	 OYBHbXPAu4S57aBJKNKEHU5qQh/XP3mxE4BqFHHJNOPRYYs+59yNOrfEB4TnYHvnPM
-	 bowg/0QHEhoMg==
-Date: Thu, 10 Sep 2026 21:42:28 -0700
+	b=jBDeJS0agWbpEUbGtIf0mpSThMHHu1YKj5pCgJrc/85fn8PzXeHns5KbbfdBS0yib
+	 aA1wIbvCbOnDgn0zsLRM9yoJKWEFf82t3BaDfSJ9WAdlHiUBRfDuR18oT5F/DOkJjS
+	 J+p7ZUtne+5zq5+d3T/gZVergTlQ1aaYeVUKapB86RDY2FfZ3ToluYJTULKYpRiKbQ
+	 lXkBRlGMR6ejLahdh8BXaHbRHz0HmRDeoWZd4nkv1LhZwiof3ZnAOgxOKl4HbA8cGe
+	 CEc7pejwJlOZDiy14u552S20IgmZYH1dYfuI2QGgAxydb1B7Xy2NygvZ2r34A+UDsR
+	 ieBtBddKVsikg==
+Date: Thu, 10 Sep 2026 21:43:52 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: hch@lst.de, cem@kernel.org
-Cc: dgc@kernel.org, floss@jetm.me, stable@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH v1.1 1/7] xfs: fix under-reservation of blocks when repairing
- sf directories
-Message-ID: <20260911044228.GA6265@frogsfrogsfrogs>
-References: <178892936573.4057962.16225191041041958394.stgit@frogsfrogsfrogs>
- <178892936640.4057962.1916451282677820756.stgit@frogsfrogsfrogs>
+To: aalbersh@kernel.org
+Cc: hch@infradead.org, tytso@mit.edu, linux-xfs@vger.kernel.org
+Subject: [PATCH v3.1 9/9] mkfs: allow specification of default options via
+ configuration file
+Message-ID: <20260911044352.GB6265@frogsfrogsfrogs>
+References: <178892910484.4047311.5337345469992668181.stgit@frogsfrogsfrogs>
+ <178892910697.4047311.7950680370504292957.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,209 +43,330 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <178892936640.4057962.1916451282677820756.stgit@frogsfrogsfrogs>
+In-Reply-To: <178892910697.4047311.7950680370504292957.stgit@frogsfrogsfrogs>
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Whilst running QA on XFS for-next as of 7.3-rc2 with MKFS_OPTIONS="-n
-size=8192", I observed the following (trimmed) dmesg splat:
+Ted asked for the ability to set default mkfs options, but to retain the
+ability respecify options via a separate configuration file or cli
+options.  This would be useful for running fstests with the default
+featureset of (say) Linux 5.15 LTS, while still allowing individual
+testcases to provide their own overrides.  It's certainly less messy
+than what Ted does today, which is a bash script that copies the desired
+config file and changes things.
 
- XFS: Assertion failed: args->total >= dp->i_nblocks - nblks, file: fs/xfs/libxfs/xfs_da_btree.c, line: 2387
- WARNING: fs/xfs/xfs_message.c:104 at assfail+0x46/0x4a [xfs], CPU#0: xfs_scrub/1426511
- CPU: 0 UID: 0 PID: 1426511 Comm: xfs_scrub Tainted: G        W           7.3.0-rc2-djwx #rc2 PREEMPT(lazy)  6e418570b606a39783b0e7e7b30dc407b965f9e8
- Tainted: [W]=WARN
- RIP: 0010:assfail+0x46/0x4a [xfs]
- RSP: 0018:ffffc900010d7890 EFLAGS: 00010246
- RAX: 0000000000000000 RBX: 0000000000000000 RCX: 00000000ffffffd1
- RDX: 0000000000000000 RSI: 0000000000000021 RDI: ffffffffa059fd38
- RBP: 0000000000000002 R08: 0000000000000000 R09: 0000000000000000
- R10: 000000000000000a R11: 000000007fffffff R12: ffffc900010d7940
- R13: ffff888368d8f980 R14: ffffc900010d7a48 R15: ffffc900010d78d0
- FS:  00007f445c5ce680(0000) GS:ffff8884a97ea000(0000) knlGS:0000000000000000
- CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
- CR2: 00007f443803b9a8 CR3: 0000000107a4b000 CR4: 00000000003506f0
- Call Trace:
-  <TASK>
-  xfs_da_grow_inode_int+0x2e0/0x300 [xfs 5de2257e14108c136f11317e6bbb8ac77efd392c]
-  xfs_dir2_grow_inode+0x6e/0x150 [xfs 5de2257e14108c136f11317e6bbb8ac77efd392c]
-  xfs_dir2_sf_to_block+0x149/0x870 [xfs 5de2257e14108c136f11317e6bbb8ac77efd392c]
-  xrep_dir_swap_prep+0xe2/0x110 [xfs 5de2257e14108c136f11317e6bbb8ac77efd392c]
-  xrep_dir_swap+0xfb/0x2f0 [xfs 5de2257e14108c136f11317e6bbb8ac77efd392c]
-  xrep_dir_rebuild_tree+0x99/0x100 [xfs 5de2257e14108c136f11317e6bbb8ac77efd392c]
-  xrep_directory+0x83/0x1c0 [xfs 5de2257e14108c136f11317e6bbb8ac77efd392c]
-  xrep_attempt+0x4f/0x1e0 [xfs 5de2257e14108c136f11317e6bbb8ac77efd392c]
-  xfs_scrub_metadata+0x393/0x5b0 [xfs 5de2257e14108c136f11317e6bbb8ac77efd392c]
-  xfs_ioc_scrubv_metadata+0x306/0x570 [xfs 5de2257e14108c136f11317e6bbb8ac77efd392c]
-  xfs_file_ioctl+0xa4f/0x1150 [xfs 5de2257e14108c136f11317e6bbb8ac77efd392c]
-  __x64_sys_ioctl+0x76/0xc0
-  do_syscall_64+0x7a/0x3b0
-  entry_SYSCALL_64_after_hwframe+0x4b/0x53
-
-This is a consequence of commit 0fe77e57588b98, which added the
-following assertion to xfs_da_grow_inode_int:
-
- ASSERT(args->total >= dp->i_nblocks - nblks);
-
-Tracing this back to xrep_dir_swap_prep, I noticed that the xfs_da_args
-object that's passed to xfs_dir2_sf_to_block sets args->total to 1.
-This is incorrect because mkfs set the directory block size to 8k and
-the filesystem block size to 4k.  In other words, args->total should be
-2 here, not 1.
-
-Dave Chinner tripped over the same problem with the same branch through
-a different channel -- his test setup set the fs block size to 1k, in
-which case the directory block size is still set to 4k.  Here,
-args->total should be 4.
-
-Changing the assignment of args->total to sc->mp->m_dir_geo->fsbcount
-makes the assertion go away, but that isn't a complete fix.  In
-xrep_tempexch_estimate, we also incorrectly assume that a shortform
-conversion requires 1 fsblock when it should be m_dir_geo->fsbcount.
-Without that, we can under-reserve space in the transaction and cause a
-filesystem shutdown.
-
-Note that the xfs_dabuf_nfsb helper will compute the correct value for
-directories and xattr, so we use that instead of open-coding the logic.
-Also fix xrep_xattr_swap_prep to assign args->total via xfs_dabuf_nfsb
-to avoid one logic bomb if we ever support multi-fsblock attrs.
-
-Cc: <stable@vger.kernel.org> # v6.10
-Cc: floss@jetm.me
-Reported-by: dgc@kernel.org
-Fixes: 629fdaf5f5b1b7 ("xfs: use atomic extent swapping to fix user file fork data")
-Tripped-by: 0fe77e57588b98 ("xfs: assert the reservation covers each da fork growth")
+Cc: tytso@mit.edu
+Cc: hch@infradead.org
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Reviewed-by: Andrey Albershteyn <aalbersh@kernel.org>
 ---
-v1.1: use xfs_dabuf_nfsb instead of opencoding the logic
+v3.1: say more in the manpage update about makecfg vs. default
 ---
- fs/xfs/libxfs/xfs_da_btree.h |    2 ++
- fs/xfs/libxfs/xfs_da_btree.c |    2 +-
- fs/xfs/scrub/attr_repair.c   |    2 +-
- fs/xfs/scrub/dir_repair.c    |    2 +-
- fs/xfs/scrub/tempfile.c      |   29 ++++++++++++++++++++++-------
- 5 files changed, 27 insertions(+), 10 deletions(-)
+ man/man8/mkfs.xfs.8.in |   25 +++++++-
+ mkfs/xfs_mkfs.c        |  158 ++++++++++++++++++++++++++++++++++++++++++------
+ 2 files changed, 160 insertions(+), 23 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
-index afcf2d3c7a21c0..a718b1ceb0aab7 100644
---- a/fs/xfs/libxfs/xfs_da_btree.h
-+++ b/fs/xfs/libxfs/xfs_da_btree.h
-@@ -244,4 +244,6 @@ xfs_failaddr_t xfs_da3_node_header_check(struct xfs_buf *bp, xfs_ino_t owner);
- 
- extern struct kmem_cache	*xfs_da_state_cache;
- 
-+int xfs_dabuf_nfsb(struct xfs_mount *mp, int whichfork);
+diff --git a/man/man8/mkfs.xfs.8.in b/man/man8/mkfs.xfs.8.in
+index fb62d579a26a2d..006ec2874033f7 100644
+--- a/man/man8/mkfs.xfs.8.in
++++ b/man/man8/mkfs.xfs.8.in
+@@ -152,10 +152,31 @@ .SH OPTIONS
+ .BI \-c " configuration_file_option"
+ This option specifies the files that mkfs configuration will be obtained from.
+ The valid
+-.I configuration_file_option
+-is:
++.I configuration_file_options
++are:
+ .RS 1.2i
+ .TP
++.BI defaults= path
++Default configuration options will be sourced from the file specified by the
++.I name
++option string.
++This option can be use either an absolute or relative path to the configuration
++file to be read.
++Options specified through the default configuration file can be overridden by
++a configuration file specified via
++.B options=
++or by command line arguments, in that order.
 +
- #endif	/* __XFS_DA_BTREE_H__ */
-diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-index 7938d2324e8769..9955b084c94b9f 100644
---- a/fs/xfs/libxfs/xfs_da_btree.c
-+++ b/fs/xfs/libxfs/xfs_da_btree.c
-@@ -130,7 +130,7 @@ xfs_da_state_reset(
- 	state->mp = state->args->dp->i_mount;
- }
++Sample configuration files can be found in @mkfs_cfg_dir@.
++This option also accepts configuration files generated by the
++.B makecfg
++suboption below, or by the
++.B makecfg
++subcommand of
++.B xfs_db
++and
++.BR xfs_spaceman .
++.TP
+ .BI makecfg= path
+ Write a configuration file to the file specified by the
+ .I path
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 38a5769188b05a..334367b81555ec 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -62,6 +62,7 @@ enum {
+ enum {
+ 	C_OPTFILE = 0,
+ 	C_MAKECFG,
++	C_DEFOPTFILE,
+ 	C_MAX_OPTS,
+ };
  
--static inline int xfs_dabuf_nfsb(struct xfs_mount *mp, int whichfork)
-+inline int xfs_dabuf_nfsb(struct xfs_mount *mp, int whichfork)
+@@ -314,6 +315,7 @@ static struct opt_params copts = {
+ 	.subopts = {
+ 		[C_OPTFILE] = "options",
+ 		[C_MAKECFG] = "makecfg",
++		[C_DEFOPTFILE] = "defaults",
+ 		[C_MAX_OPTS] = NULL,
+ 	},
+ 	.subopt_params = {
+@@ -325,6 +327,10 @@ static struct opt_params copts = {
+ 		  .conflicts = { { NULL, LAST_CONFLICT } },
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
++		{ .index = C_DEFOPTFILE,
++		  .conflicts = { { NULL, LAST_CONFLICT } },
++		  .defaultval = SUBOPT_NEEDS_VAL,
++		},
+ 	},
+ };
+ 
+@@ -1077,6 +1083,7 @@ struct cli_params {
+ 	int	blocksize;
+ 
+ 	char	*cfgfile;
++	char	*defcfgfile;
+ 	char	*protofile;
+ 	char	*makecfg;
+ 
+@@ -1214,7 +1221,7 @@ usage( void )
  {
- 	if (whichfork == XFS_DATA_FORK)
- 		return mp->m_dir_geo->fsbcount;
-diff --git a/fs/xfs/scrub/attr_repair.c b/fs/xfs/scrub/attr_repair.c
-index 6e6af142f1fb8e..28f92e9ba72b24 100644
---- a/fs/xfs/scrub/attr_repair.c
-+++ b/fs/xfs/scrub/attr_repair.c
-@@ -1294,7 +1294,7 @@ xrep_xattr_swap_prep(
- 			.geo		= sc->mp->m_attr_geo,
- 			.whichfork	= XFS_ATTR_FORK,
- 			.trans		= sc->tp,
--			.total		= 1,
-+			.total		= xfs_dabuf_nfsb(sc->mp, XFS_ATTR_FORK),
- 			.owner		= I_INO(sc->ip),
- 		};
- 
-diff --git a/fs/xfs/scrub/dir_repair.c b/fs/xfs/scrub/dir_repair.c
-index 31a23c5f386ae6..d9d6b7e2abda72 100644
---- a/fs/xfs/scrub/dir_repair.c
-+++ b/fs/xfs/scrub/dir_repair.c
-@@ -1488,7 +1488,7 @@ xrep_dir_swap_prep(
- 			.geo		= sc->mp->m_dir_geo,
- 			.whichfork	= XFS_DATA_FORK,
- 			.trans		= sc->tp,
--			.total		= 1,
-+			.total		= xfs_dabuf_nfsb(sc->mp, XFS_DATA_FORK),
- 			.owner		= I_INO(sc->ip),
- 		};
- 
-diff --git a/fs/xfs/scrub/tempfile.c b/fs/xfs/scrub/tempfile.c
-index 98820003b9298f..59a9213a3c7ddf 100644
---- a/fs/xfs/scrub/tempfile.c
-+++ b/fs/xfs/scrub/tempfile.c
-@@ -649,6 +649,19 @@ xrep_tempexch_prep_request(
+ 	fprintf(stderr, _("Usage: %s\n\
+ /* blocksize */		[-b size=num]\n\
+-/* config file */	[-c options=path,makecfg=path\n\
++/* config file */	[-c options=path,makecfg=path,defaults=path\n\
+ /* metadata */		[-m crc=0|1,finobt=0|1,uuid=xxx,rmapbt=0|1,reflink=0|1,\n\
+ 			    inobtcount=0|1,bigtime=0|1,autofsck=xxx,\n\
+ 			    metadir=0|1]\n\
+@@ -1797,6 +1804,30 @@ cfgfile_opts_parser(
+ 	case C_MAKECFG:
+ 		cli->makecfg = getstr(value, opts, subopt);
+ 		break;
++	case C_DEFOPTFILE:
++		/* already processed by defcfgfile_opts_parser; ignored */
++		break;
++	default:
++		return -EINVAL;
++	}
++	return 0;
++}
++
++static int
++defcfgfile_opts_parser(
++	struct opt_params	*opts,
++	int			subopt,
++	const char		*value,
++	struct cli_params	*cli)
++{
++	switch (subopt) {
++	case C_OPTFILE:
++	case C_MAKECFG:
++		/* will be processed by cfgfile_opts_parser; ignored */
++		break;
++	case C_DEFOPTFILE:
++		cli->defcfgfile = getstr(value, opts, subopt);
++		break;
+ 	default:
+ 		return -EINVAL;
+ 	}
+@@ -2263,13 +2294,15 @@ sector_opts_parser(
  	return 0;
  }
  
-+static inline unsigned int
-+xrep_tempexch_estimate_sf_resblks(
-+	struct xfs_scrub	*sc,
-+	int			whichfork)
-+{
-+	/* repairing a symlink target */
-+	if (S_ISLNK(VFS_I(sc->ip)->i_mode) && whichfork == XFS_DATA_FORK)
-+		return 1;
+-static struct subopts {
++struct subopts {
+ 	struct opt_params *opts;
+ 	int		(*parser)(struct opt_params	*opts,
+ 				  int			subopt,
+ 				  const char		*value,
+ 				  struct cli_params	*cli);
+-} subopt_tab[] = {
++};
 +
-+	/* everything else is a directory or an xattr structure */
-+	return xfs_dabuf_nfsb(sc->mp, whichfork);
++static const struct subopts subopt_tab[] = {
+ 	{ &bopts, block_opts_parser },
+ 	{ &copts, cfgfile_opts_parser },
+ 	{ &dopts, data_opts_parser },
+@@ -2283,15 +2316,21 @@ static struct subopts {
+ 	{ NULL, NULL },
+ };
+ 
++static const struct subopts defcfg_subopt_tab[] = {
++	{ &copts, defcfgfile_opts_parser },
++	{ NULL, NULL },
++};
++
+ static void
+ parse_subopts(
+-	char		opt,
+-	char		*arg,
+-	struct cli_params *cli)
++	char			opt,
++	char			*arg,
++	const struct subopts	*stab,
++	struct cli_params	*cli)
+ {
+-	struct subopts	*sop = &subopt_tab[0];
+-	char		*p;
+-	int		ret = 0;
++	const struct subopts	*sop = stab;
++	char			*p, *duparg;
++	int			ret = 0;
+ 
+ 	while (sop->opts) {
+ 		if (sop->opts->name == opt)
+@@ -2303,7 +2342,14 @@ parse_subopts(
+ 	if (!sop->opts)
+ 		return;
+ 
+-	p = arg;
++	/* getsubopt modifies duparg */
++	duparg = strdup(arg);
++	if (!duparg) {
++		perror("allocating memory");
++		exit(1);
++	}
++
++	p = duparg;
+ 	while (*p != '\0') {
+ 		char	**subopts = (char **)sop->opts->subopts;
+ 		char	*value;
+@@ -2315,19 +2361,20 @@ parse_subopts(
+ 		if (ret)
+ 			unknown(opt, value);
+ 	}
++	free(duparg);
+ }
+ 
+ static bool
+ parse_cfgopt(
+-	const char	*section,
+-	const char	*name,
+-	const char	*value,
+-	struct cli_params *cli)
++	const char		*section,
++	const char		*name,
++	const char		*value,
++	struct cli_params	*cli)
+ {
+-	struct subopts	*sop = &subopt_tab[0];
+-	char		**subopts;
+-	int		ret = 0;
+-	int		i;
++	const struct subopts	*sop = &subopt_tab[0];
++	char			**subopts;
++	int			ret = 0;
++	int			i;
+ 
+ 	while (sop->opts) {
+ 		if (sop->opts->ini_section[0] != '\0' &&
+@@ -5803,6 +5850,64 @@ cfgfile_parse(
+ 		cli->cfgfile);
+ }
+ 
++static void
++reset_seen(
++	struct opt_params	*opts)
++{
++	unsigned int		i;
++
++	for (i = 0; i < MAX_SUBOPTS; i++) {
++		opts->subopt_params[i].seen = false;
++		opts->subopt_params[i].str_seen = false;
++	}
 +}
 +
- /*
-  * Fill out the mapping exchange resource estimation structures in preparation
-  * for exchanging the contents of a metadata file that we've rebuilt in the
-@@ -663,6 +676,8 @@ xrep_tempexch_estimate(
- 	struct xfs_ifork	*ifp;
- 	struct xfs_ifork	*tifp;
- 	int			whichfork = xfs_exchmaps_reqfork(req);
-+	unsigned int		sf_resblks =
-+		xrep_tempexch_estimate_sf_resblks(sc, whichfork);
- 	int			state = 0;
++static void
++defcfgfile_parse(
++	struct cli_params	*cli)
++{
++	int			error;
++
++	if (!cli->defcfgfile)
++		return;
++
++	error = ini_parse(cli->defcfgfile, cfgfile_parse_ini, cli);
++	if (error) {
++		if (error > 0) {
++			fprintf(stderr,
++		_("%s: Unrecognised input on line %d. Aborting.\n"),
++				cli->defcfgfile, error);
++		} else if (error == -1) {
++			fprintf(stderr,
++		_("Unable to open defaults config file %s. Aborting.\n"),
++				cli->defcfgfile);
++		} else if (error == -2) {
++			fprintf(stderr,
++		_("Memory allocation failure parsing %s. Aborting.\n"),
++				cli->defcfgfile);
++		} else {
++			fprintf(stderr,
++		_("Unknown error %d opening defaults config file %s. Aborting.\n"),
++				error, cli->defcfgfile);
++		}
++		exit(1);
++	}
++	printf(_("Parameters parsed from defaults config file %s successfully\n"),
++		cli->defcfgfile);
++
++	/* Now make it look like we haven't seen any cli options. */
++	reset_seen(&bopts);
++	reset_seen(&copts);
++	reset_seen(&dopts);
++	reset_seen(&iopts);
++	reset_seen(&lopts);
++	reset_seen(&mopts);
++	reset_seen(&nopts);
++	reset_seen(&popts);
++	reset_seen(&ropts);
++	reset_seen(&sopts);
++}
++
+ static void
+ set_autofsck(
+ 	struct xfs_mount	*mp,
+@@ -6058,8 +6163,19 @@ main(
+ 	memcpy(&cli.sb_feat, &dft.sb_feat, sizeof(cli.sb_feat));
+ 	memcpy(&cli.fsx, &dft.fsx, sizeof(cli.fsx));
  
- 	/*
-@@ -693,9 +708,9 @@ xrep_tempexch_estimate(
- 		 * plus the block we converted.
- 		 */
- 		req->ip1_bcount = sc->tempip->i_nblocks;
--		req->ip2_bcount = 1;
-+		req->ip2_bcount = sf_resblks;
- 		req->nr_exchanges = 1 + tifp->if_nextents;
--		req->resblks = 1;
-+		req->resblks = sf_resblks;
- 		break;
- 	case 2:
- 		/*
-@@ -707,10 +722,10 @@ xrep_tempexch_estimate(
- 		 * is (worst case) the extent count of the file being repaired
- 		 * plus the block we converted.
- 		 */
--		req->ip1_bcount = 1;
-+		req->ip1_bcount = sf_resblks;
- 		req->ip2_bcount = sc->ip->i_nblocks;
- 		req->nr_exchanges = 1 + ifp->if_nextents;
--		req->resblks = 1;
-+		req->resblks = sf_resblks;
- 		break;
- 	case 3:
- 		/*
-@@ -722,10 +737,10 @@ xrep_tempexch_estimate(
- 		 * fileoff 0.  Presumably, the caller could not exchange the
- 		 * two inode fork areas directly.
- 		 */
--		req->ip1_bcount = 1;
--		req->ip2_bcount = 1;
-+		req->ip1_bcount = sf_resblks;
-+		req->ip2_bcount = sf_resblks;
- 		req->nr_exchanges = 1;
--		req->resblks = 2;
-+		req->resblks = 2 * sf_resblks;
- 		break;
- 	}
- 
+-	while ((c = getopt_long(argc, argv, "b:c:d:i:l:L:m:n:KNp:qr:s:CfV",
+-					long_options, &option_index)) != EOF) {
++#define MKFS_GETOPT_STRING "b:c:d:i:l:L:m:n:KNp:qr:s:CfV"
++	/* Load default configuration, if specified */
++	while ((c = getopt_long(argc, argv, MKFS_GETOPT_STRING,
++				long_options, &option_index)) != EOF) {
++		if (c == 'c')
++			parse_subopts(c, optarg, defcfg_subopt_tab, &cli);
++	}
++	defcfgfile_parse(&cli);
++	optind = 1;
++
++	/* Do the real option parsing */
++	while ((c = getopt_long(argc, argv, MKFS_GETOPT_STRING,
++				long_options, &option_index)) != EOF) {
+ 		switch (c) {
+ 		case 0:
+ 			break;
+@@ -6077,7 +6193,7 @@ main(
+ 		case 'p':
+ 		case 'r':
+ 		case 's':
+-			parse_subopts(c, optarg, &cli);
++			parse_subopts(c, optarg, subopt_tab, &cli);
+ 			break;
+ 		case 'L':
+ 			if (strlen(optarg) > sizeof(sbp->sb_fname))
