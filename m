@@ -1,41 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EA2649B5B7
-	for <linux-xfs@vger.kernel.org>; Fri, 11 Sep 2026 16:03:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA37C49DB91
+	for <linux-xfs@vger.kernel.org>; Fri, 11 Sep 2026 16:04:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789142615; cv=none; b=MgBd2Aq+UlTqnB7vFrgo1/be/+aV4tDsjJK2zS9lF9+C08jIghgrJCWr/ayYxSnL3yZ7lWaMnNQx8u18VU2uMlkjUnTKpxndQZITaTpXVrt+BEyL7WNN7PUsxjiO0MgiVFt3Qin7itOb/1i+RssDt+olPSKfN1czDBHNv4JMOq4=
+	t=1789142669; cv=none; b=q6m17BHoJUS/Hxz5EuNMBJKvhFe5l5hEEhHfBkxKy1rlEzucyivuDTnS1J1ojlV3vuCvNUHJ0hH9vuk2lWVkbkanpJzdZFde81DTYsHxLiHCTbxw2g/6plborPgliCl/9t9EDOoBMjCEV0FJDGT0YZFlQGoNUIQ3JZn9Dx4kUQs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789142615; c=relaxed/simple;
-	bh=zjYhg7T+8cedZOv12dRei9Q7a7Ip7Ku8khLhiT31v5Y=;
+	s=arc-20240116; t=1789142669; c=relaxed/simple;
+	bh=8JFO80Mewk6lvCHIYI/6Emadfgwo7btn0ptYXEOZkOs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=m8ClHKMws46yU1uuVHNOTeY3rEnQjhx72edYlJ5+4mRpjqmeMUJaciHrNxipfgxZDl72GRrSCsejwb3v+v1wWuWRzWQ4gXQv17xtx0xwcYDTjlTW7CU2UkPPJTrgDYaIQGy0S21M4VbDWo1oyYFJT1j856KApmL10Ei6XSn6jTc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FsnHqaVJ; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=dfyzkFLWYhxvhDysrtG+AZSjM4msPNf5BgjWQ2ufV3euMYdwrQB0YUK1q+dy3UIwZHhmzzQAI02JGrANVnTEeP2MAzzBNpYTKv+ySCohE768co62qxYWUyhwiCXfJk4z5A2TgP1zdm9ySx+1947nwd1IlJeko6riAgU0CrS05VQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V6OFaOHv; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FsnHqaVJ"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id D0E711F000FF;
-	Fri, 11 Sep 2026 16:03:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V6OFaOHv"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 39A311F000FF;
+	Fri, 11 Sep 2026 16:04:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789142613;
-	bh=zjYhg7T+8cedZOv12dRei9Q7a7Ip7Ku8khLhiT31v5Y=;
+	s=k20260515; t=1789142668;
+	bh=yahVQdvxIBtRsXFMPuBPcJD5Ef/mPVnrTVaqcQM/AaU=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=FsnHqaVJ0QntCXuA1sDQj/nJvaWyYjNefNw3mUdkKuB/Byn2j+/ihFv14xW1OWQ7f
-	 pmnA7tQfPvlwQa5B4QEXLM6mJGK2XS2hlLJc7FDfQ6K/TKXb+b3u9GkQscXspGy8LM
-	 N9ByMnu12hGvijAOjyIz9ZCBRMXoTTNKBULPYrxS5xNb0k0rAYAbYHnZqt6L1Bnp8Z
-	 iBqHJNPOC+cvKNEX7Dmf41oarwsZjT1v3ZTi+cBcQcWdJHTIJIIuJXa9C9C1yuf3hg
-	 9k4bRqGJRyyfe+yZG7txpxRiN+F5PMB5GKo+Nb3rp00Fk8fl60cedMijpTV+VPEa1K
-	 A92OCjiXPfbSQ==
-Date: Fri, 11 Sep 2026 09:03:33 -0700
+	b=V6OFaOHvnmK8ItUxxnkMDnd7XJdFaKH89XEmFRHc/8TYpiOi7XdZDZU7eF8ltlF+b
+	 JCGaRlVhA012syKza3cKW4rs4XkTCWwzZwhSyxomf5RSqgNsVSjT57kBZvgJSFQakY
+	 AlrVeQ7SbZSrqfznvTfISuzrVZhh6ZPW7zP6pwKbyNcIXH4cXUIiSkDWfUYr6xnpAj
+	 g6bpcR7b/kMIbOGdo7XH2i31baT91+fU0Og0k46R9HRjeaobq3HvQ9jpy32axWQS7t
+	 AJPFWneqCqi8LNebsMwFCBKsfRYYPWatnp+8xjQq5aDo393qfvxc+Qkyz9u7vz2FCr
+	 Tn/KaKiBwFw6w==
+Date: Fri, 11 Sep 2026 09:04:27 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@infradead.org>
 Cc: aalbersh@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 6/9] makecfg: handle old V4 options that are almost
- always on by default
-Message-ID: <20260911160333.GH6265@frogsfrogsfrogs>
+Subject: Re: [PATCH 7/9] makecfg: add a few more file related options
+Message-ID: <20260911160427.GI6265@frogsfrogsfrogs>
 References: <178892910484.4047311.5337345469992668181.stgit@frogsfrogsfrogs>
- <178892910641.4047311.14095703802962095779.stgit@frogsfrogsfrogs>
- <aqQi9rMA7f7fCeZ6@infradead.org>
+ <178892910659.4047311.5368828900056094997.stgit@frogsfrogsfrogs>
+ <aqQjFPaZMbPVIoip@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,18 +43,17 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aqQi9rMA7f7fCeZ6@infradead.org>
+In-Reply-To: <aqQjFPaZMbPVIoip@infradead.org>
 
-On Fri, Sep 11, 2026 at 08:49:10AM -0700, Christoph Hellwig wrote:
-> Looks good, but I'd really expect this to just go into the original
-> patch?
+On Fri, Sep 11, 2026 at 08:49:40AM -0700, Christoph Hellwig wrote:
+> On Tue, Sep 08, 2026 at 11:02:04PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Add a few more configuration options for directory and inode related
+> > options that might cause user-observable behavior changes.
+> 
+> Why not add those to the original patch?  What makes them different?
 
-Andrey had already reviewed the original patch, so I put all the new
-bits into separate patches so that (a) if Andrey pulled the patches into
-for-next then I wouldn't have to separate out the changes, and (b) if he
-decided to re-read the series, he could focus on the obvious new stuff.
-
-Longer term I'm going to merge all three of these back into the main
-patch since Andrey did actually review all the new stuff.
+Same answer as for patch 6.
 
 --D
