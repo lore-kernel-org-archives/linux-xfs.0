@@ -1,30 +1,42 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23AE6368D62
-	for <linux-xfs@vger.kernel.org>; Fri, 11 Sep 2026 15:11:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DED0C3563FB
+	for <linux-xfs@vger.kernel.org>; Fri, 11 Sep 2026 15:12:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789139487; cv=none; b=OIoV6Evq9FsIHjnJ85DCZyIPtHH3z0Wc+YD52l2zWDSt08+zbJHOH0rB6p5o5d+Jb92m5K0zJa5QHgYXgDmzjWWQlruIXVX5cxtFAIpF1A2HObhTAKLTEZ1qMQvqOzvLLqwvtTW+325jLe9GVKPdCMaS5Mg9z38z7KauJQ7Sl5Y=
+	t=1789139543; cv=none; b=K0STQG3cH3q8Vl2lJBocRDn9VY0NgLlJm82beJx4Y0SwDbERa/fGZpfU18Fx4mP9Ot/rqVX8FBTodQIfUUp6MRwHMUSs6XVzGUL79fa4sHBt1o3421MauzN7V724d+c9N2RBIDLUg3efcDYVapSVY+PzN6+PPnXKl5bWDI0Ah34=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789139487; c=relaxed/simple;
-	bh=/2tJf5w7qmKe0RhiQjS1Xzett3CeMB3cjfqaClXWuiM=;
+	s=arc-20240116; t=1789139543; c=relaxed/simple;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=F8BrdJPD3KMxQj67vcd3o8mtwAzFIpPpl+uPtKYbUagIKsVw/OmWB4nOfrJuWstWahLRUkjKeUmC8TdG2zEHoSmZbxUqWO1ypasFkl/fhuj+wEUJ10tnRNUtVbOaAwYEgFzX6lQW0epjSg4/QXH5eqSFa0s1kU+st3p3+UCHKWM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id DF6D668C7B; Fri, 11 Sep 2026 17:11:20 +0200 (CEST)
-Date: Fri, 11 Sep 2026 17:11:20 +0200
-From: Christoph Hellwig <hch@lst.de>
+	 Content-Type:Content-Disposition:In-Reply-To; b=IQh9+G2IPbamUoecl00IWJTILAgcSgdCt//9vx/8wTM/zN7J4UeNgLgZZ9tqRkY2B+mXgAkNBX7qwEqgQ7g47u1XviS+RXYo5HoutZ9Ngqpms5GaDh+AH8MkQk/5jMcdKaOa0TL7jHSIRJZ8gNO0KmTgfNIYYFx/mPNssvesyjw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=sKIooBAE; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="sKIooBAE"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=sKIooBAE3OCkBlPfGK5v3gWrpq
+	GNIhUdsE+aHFcH3wNrGl4l2Tf3IgpfitpniilWCE72ycbts1x5JV3jvI8DtYgrSR7+4NQKhXFRXfK
+	12GQaIw5WZTnNBKbRTzub0O/EwPRyDYbGV48QVSk+nwpxmRnCQBB/crMXBDWeTbue9KboQU6ygI3y
+	NxRTSplfg2KSzXJtfwC7Jr4RewL6vNsnhI/zMH7BGVjOlgpno8sE2LsXWM9A1LFmj46giczP9aCf6
+	tfVvZ0p4VlpcJWf+SjIfoKfv0FXQHYbD+zudErSersUNtj/nXh/8Dsfx+vg6/DU9PqqndsCrj+sUg
+	gw3sQFUA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1x52vM-0000000H0sp-1evY;
+	Fri, 11 Sep 2026 15:12:20 +0000
+Date: Fri, 11 Sep 2026 08:12:20 -0700
+From: Christoph Hellwig <hch@infradead.org>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>,
-	Andrey Albershteyn <aalbersh@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/3] libxfs: don't set mp->m_rtdev_targp when no RT
- devices is provided
-Message-ID: <20260911151120.GA26893@lst.de>
-References: <20260911144559.1959740-1-hch@lst.de> <20260911144559.1959740-2-hch@lst.de> <20260911145726.GE6265@frogsfrogsfrogs>
+Cc: aalbersh@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/9] mkfs: automatically upgrade autofsck earlier
+Message-ID: <aqQaVNZbsniCFePB@infradead.org>
+References: <178892910484.4047311.5337345469992668181.stgit@frogsfrogsfrogs>
+ <178892910547.4047311.12714199545208525271.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -33,31 +45,10 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260911145726.GE6265@frogsfrogsfrogs>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <178892910547.4047311.12714199545208525271.stgit@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Fri, Sep 11, 2026 at 07:57:26AM -0700, Darrick J. Wong wrote:
-> > -	if (!xi->rt.dev || xi->rt.dev == xi->data.dev)
-> > +	if (xi->rt.dev == xi->data.dev)
-> >  		mp->m_rtdev_targp = mp->m_ddev_targp;
-> >  	else
-> >  		mp->m_rtdev_targp = libxfs_buftarg_alloc(mp, xi, &xi->rt,
-> 
-> Does this mean that m_rtdev_targp is never NULL, even when we don't
-> specify or have a rt device attached?
+Looks good:
 
-I think that is the case right now.
-
-> I would have expected this to be:
-> 
-> 	if (!xi->rt.dev)
-> 		mp->m_rtdev_targp = NULL;
-> 	else if (xi->rt.dev == xi->data.dev)
-> 		mp->m_rtdev_targp = mp->m_ddev_targp;
-> 	else
-> 		mp->m_rtdev_targp = libxfs_buftarg_alloc(...);
-
-And that is what we get with this patch.  The zeroing is done by
-zeroing the entire mount structure in the callers of libxfs_mount
-(don't ask me why..).
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
