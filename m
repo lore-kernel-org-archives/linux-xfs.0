@@ -1,196 +1,120 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F15FC328B7F;
-	Thu, 10 Sep 2026 22:44:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79B8E370D4D
+	for <linux-xfs@vger.kernel.org>; Fri, 11 Sep 2026 00:00:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789080295; cv=none; b=PPtNfP1ME43WIIxY940unXnrdOQtjU1/pibkOFHbVd6wL/yI1VZYuSAOGa5yoH7FycUkZM94ebJAUpKiCYf1LeTqszazz8kqlHX/N4HTPKDKETqDJY9w68rMBUQb0qRubxPu/oMEqFXek3nXwuef4iDm+Xk3/cuWehTaTz4Yl4M=
+	t=1789084832; cv=none; b=Y3btvV3PUQWxBHfq+DEkF2UMBwQh+cEIDx9/NaUdFYwVkMB9WKHFYUAZkNUhmDUZsRh3d7QAkL/W3Y4we48RlaylluXgCed/GOl3DpbleXrU/DKdZi6aSsPri6bSbSP6s1dvC9d26V0Ll/3Ow2xJftY1gmJgiH1k0lqPV2aip3Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789080295; c=relaxed/simple;
-	bh=CZ8nQyucNegn2UDxWN0JvXOSCwRgmP4QSCyjWlJqlmo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pe5L4VzVyeRlRLHKVguhBgIEZGypZaUqqZnFeRH4/nh1krhIYoMX8h6h2jKwGkKhbymxti+fPXfhk96V3/Kz72qxYeh+/uM4WGxy29cOqxS9skx33lQrw+FtqhWzXJOIuOUIcOoqaSrJNVf+5oG2XPSkU3FxHYqxrBDh03YHE+A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ldkj2rI1; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789084832; c=relaxed/simple;
+	bh=3KUR6t0AsaA9SjJf1itJV4UsWyIfNCivzbPZHr57FsY=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=TD4wAVEVlUP1xQuUwlJWHeHhLlYAAXYkQxb4gh36ACNKjiiju9lURev6puwwgYDhdEJsVsMAKErQl+QN32NRjwP6+UlxbtSEG58sergMRJ0YkFBd8MFOlJ9rW1ikzeBaeiDuVfoTsxeR28j67DOK/iRPLP19MsDxKHLRvFQYLmM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=iO/P/XDi; arc=none smtp.client-ip=209.85.216.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ldkj2rI1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A8C5D1F000FF;
-	Thu, 10 Sep 2026 22:44:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789080293;
-	bh=x+Pt5UIyTMBsib1qfVymqrjhCVQnnWBpLVqZNnjtdys=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Ldkj2rI1yAZIDk7c6RZx6+IkzwKhRv9HDK2yjQQLpbHnhOyrZ+lMKbgqMwsgxMjzW
-	 wZEtPaQRDznZmWASBlLQDpbtnUtmFs/QP9bbeANNPe0kAj9AXE9uhlSw1BPalJAer7
-	 gV4VenCn9ioo9pC5nNSZi4DwtjrDZJ0t+BOJPMWYAxeuDZDiTnqwYQ1H377zLYVZhZ
-	 UjmxFVJKqJQm/StKH/AL6oVSo9lYD1oa9+Q4QPIQXok74C/LL4xN2FSfOkrBigWYDV
-	 P6W+gkKb8IpAhn7OnW11hYDKz9d14b0injQYcGZC0HZC/+KA9Rpvjjo6kxFM/DXhbo
-	 eN3ntmc0OcHAg==
-Date: Fri, 11 Sep 2026 00:44:49 +0200
-From: Alejandro Colomar <alx@kernel.org>
-To: Zhang Yi <yi.zhang@huaweicloud.com>
-Cc: Pankaj Raghav <p.raghav@samsung.com>, linux-man@vger.kernel.org, 
-	pankaj.raghav@linux.dev, linux-xfs@vger.kernel.org, gost.dev@samsung.com, 
-	linux-ext4@vger.kernel.org, hch@lst.de, "Darrick J . Wong" <djwong@kernel.org>
-Subject: Re: [PATCH v3] man/man2/fallocate.2: Add doc for
- FALLOC_FL_WRITE_ZEROES
-Message-ID: <aqMyw2dBeyzicF0s@devuan>
-References: <20260910112023.2591987-1-p.raghav@samsung.com>
- <5d02e7dd-fa9e-497b-b1f6-9cc0f2a45c8f@huaweicloud.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iO/P/XDi"
+Received: by mail-pj1-f51.google.com with SMTP id 98e67ed59e1d1-39b2ad862bdso403831a91.2
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Sep 2026 17:00:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1789084831; x=1789689631; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=3KUR6t0AsaA9SjJf1itJV4UsWyIfNCivzbPZHr57FsY=;
+        b=iO/P/XDi6qxstUTQt/4dgRlxuRcfLpsIyXNExMyAjXtsGlOrfd6JYNtR9CXFq0pFnk
+         Jgs9lEl8jJzmfI6mDnjRAuqGNwKIyxBf2MrtOoHqsCu2rBT9TWyunv8J57Zjj6EculoR
+         20cxu7oDlbf4v64N7lOYBlEFKQV3jvAquqR7u61GiOWTJsubQSdWs2k/KfwOAa+XALRA
+         qavZHk+QzCgOVKcjNm2JREtlD4eVw5YUdFeh/LThHW4nBVSrFYMM8QtSRLrHY3YcT26K
+         XYNpKKplV6afHO0e8NHD01mIdLjaiMJ7wEvnkrnUUr+S8P6U+Xnh/FFg2qpRLiaJQwuU
+         RCZQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1789084831; x=1789689631;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=3KUR6t0AsaA9SjJf1itJV4UsWyIfNCivzbPZHr57FsY=;
+        b=dq+FZDgF9WiWhIMj9S4w5Vki+OZp1QbixfM5GYzkb0huRHkbFWg3A85sgx18rDw+5e
+         hU1EYr4RV9er/vF0WGPtS3CGcs8OMrcyaF15cOqi/ucPxZnQ2cmDoFDoYxXWCBd1edYE
+         Jfs2TjAoOr/2eK2ooGuMWv2YEy0sw5+KlBlHw46IMXYr1hqgBDHeRjcSuBhIKc+1mN86
+         o0tPB6YcH82rIhAkN3/RGE7o5gx2g9c80cn9uu0npViNFGZIpWhoyV+4KtAg56SBsRcZ
+         gubelnY7IaFchFZwYYkzxKa6l+IqvHmo+d13VGp0xyGmGMGL0X8ZLNe/YlQh1S3gxKP9
+         cZTg==
+X-Forwarded-Encrypted: i=1; AKwUvByRsEwi6EIolUvcTy0DkwVQBdEsRhEp+sHmu96EIBsnIFfUbuKc/8AqNc4x3eOknAIQVOLRGXGaOl0=@vger.kernel.org
+X-Gm-Message-State: AFuF++mvzNo5OriYHSFkn2mDWaXnWZsxIHkQKpJtMR5XoNGQ+hpSOsDm
+	zUD61GdRUzLkUr/a0RE+hSkZXkGpWtLPnsca3gzcfr5EwgW1jOJA7fzs
+X-Gm-Gg: AYBFou1rL9tcNiB/YJdx7BFH8KsoxBLinipmNyHIiJuRO/aj58CFNunctPPnXCmk159
+	QnFm70JdmmN4CxKnN0EtanmmJ8kwan6Ox0BWsazs0P408WWO04eS2FqFFpUbCfOC06aSUBxAypQ
+	k7cVr8+mILG50OErx6j4YtqfO3N9nVbDzXlH0V8UEjs5E9uFjKIL5Mku1jGgVEFXFiz2f/6JX+m
+	M51KVEvwH3NSN5V4kArXxaHbxfgm7sBnmO9OMoIU0Na3Z3wTJFNRkZFCHPSxHnNCcKzENiaI8bi
+	c4ULhjhkkTrL7jvw3iJvCXs0FZelh0Lw2bR8TEa1HItm30e8mbYIteyk54g6l7CnWkPeex9eO/q
+	0QuiZNplT5mX0o2XTpVZ8EI9dxevww+fQlqnNWxXdxFAgD1KA8qniHP+4ij5u5Dg7u5J14h6xj6
+	hwI7NeljYdERj1cHA50oESFtEWRwF8ExGs1Oxev9w3Fasdt+5/Jm8eR0CRoBfsaEyfBjIiZzwLY
+	6yYOLDfTNu7eqekvnCZJAt47u0erXLIztoVTCogkM7GX4/kuPa2yQU=
+X-Received: by 2002:a17:90b:5287:b0:398:9bd5:490d with SMTP id 98e67ed59e1d1-39d9c22e224mr2133451a91.20.1789084830361;
+        Thu, 10 Sep 2026 17:00:30 -0700 (PDT)
+Received: from lima-xfs.. (174-126-236-85.cpe.sparklight.net. [174.126.236.85])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39d9d8cd962sm221097a91.2.2026.09.10.17.00.29
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 10 Sep 2026 17:00:29 -0700 (PDT)
+From: Eric Peterson <linuxinstalled@gmail.com>
+To: Eric Sandeen <sandeen@sandeen.net>,
+	linux-xfs@vger.kernel.org
+Cc: Carlos Maiolino <cem@kernel.org>,
+	Dave Chinner <dgc@kernel.org>,
+	linux-kernel@vger.kernel.org,
+	eric.peterson@hpe.com,
+	Eric Peterson <linuxinstalled@gmail.com>
+Subject: Re: [PATCH] xfs: add per-mount read/write I/O completion counters
+Date: Thu, 10 Sep 2026 18:00:02 -0600
+Message-Id: <20260911000002.4089325-1-linuxinstalled@gmail.com>
+X-Mailer: git-send-email 2.39.5
+In-Reply-To: <1c5bebcd-76f5-407f-b3af-a6170fff2497@sandeen.net>
+References: <20260828033429.4070267-1-linuxinstalled@gmail.com> <1c5bebcd-76f5-407f-b3af-a6170fff2497@sandeen.net>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="mrj5i4kujh6ttiqm"
-Content-Disposition: inline
-In-Reply-To: <5d02e7dd-fa9e-497b-b1f6-9cc0f2a45c8f@huaweicloud.com>
+Content-Transfer-Encoding: 8bit
 
+Eric,
 
---mrj5i4kujh6ttiqm
-Content-Type: text/plain; protected-headers=v1; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-From: Alejandro Colomar <alx@kernel.org>
-To: Zhang Yi <yi.zhang@huaweicloud.com>
-Cc: Pankaj Raghav <p.raghav@samsung.com>, linux-man@vger.kernel.org, 
-	pankaj.raghav@linux.dev, linux-xfs@vger.kernel.org, gost.dev@samsung.com, 
-	linux-ext4@vger.kernel.org, hch@lst.de, "Darrick J . Wong" <djwong@kernel.org>
-Subject: Re: [PATCH v3] man/man2/fallocate.2: Add doc for
- FALLOC_FL_WRITE_ZEROES
-Message-ID: <aqMyw2dBeyzicF0s@devuan>
-References: <20260910112023.2591987-1-p.raghav@samsung.com>
- <5d02e7dd-fa9e-497b-b1f6-9cc0f2a45c8f@huaweicloud.com>
-MIME-Version: 1.0
-In-Reply-To: <5d02e7dd-fa9e-497b-b1f6-9cc0f2a45c8f@huaweicloud.com>
+I have an application that sends IO through several different layers.
+In my case:
+Ethernet adapter -> NFS -> XFS -> Block device -> SSD
 
-Hi Zhang, Pankaj,
+I already have visibility of qdepth/RT and IOPS at the ethernet
+adapter, block dev, and SSD, but I'm missing information about what is
+going on in the middle.
 
-> Date: 2026-09-10 20:26:23+0800
-> From: Zhang Yi <yi.zhang@huaweicloud.com>
->
-> On 9/10/2026 7:20 PM, Pankaj Raghav wrote:
-> > This flag was added to the kernel in v6.17.  As of now, only ext4 and
-> > block device nodes support this flag.
-> >=20
-> > Cc: Zhang Yi <yi.zhang@huaweicloud.com>
-> > Cc: Christoph Hellwig <hch@lst.de>
-> > Cc: Darrick J. Wong <djwong@kernel.org>
-> > Cc: gost.dev@samsung.com
-> > Cc: linux-ext4@vger.kernel.org
-> > Cc: linux-xfs@vger.kernel.org
-> > Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
->=20
-> Looks good to me.
->=20
-> Reviewed-by: Zhang Yi <yi.zhang@huawei.com>
+I wanted a "light touch" way of measuring what is going on in the middle
+so that I could have hard data about the performance impact of my
+changes.
+As part of that "light touch", I wanted to avoid a method that would
+artificially inflate metrics due to the increased load from
+instrumentation.
+In addition, my approach was to follow the existing code structure of
+counters that were already present.
 
-Thanks!  I've applied the patch and the tag.
+Regarding Dave's points about edge cases he illustrated, I am in
+agreement with them on the technical basis.
+If precision is decided to be more important than overhead, then this is
+not the right course of action.
+However, I disagree that the edge cases make this a "useless" way of
+taking measurements.
+As I shared, there are still several applications that would benefit
+from this.
 
+Regarding whether these counters get merged or not, I already have them
+present in my kernel builds.
+My personal needs are met.
+I chose to submit a patch because I believed others could also find
+benefit from them.
+If the cost of the stat was cheap enough, and given the right
+understanding of the caveats of this method, it was worth sharing.
 
-Have a lovely night!
-Alex
-
->=20
-> > ---
-> > Changes since v2:
-> > - Changed the commit format based on Alejandro's feedback.
-> > - I have retained "preallocated" term based on Zhang Yi's feedback[1]
-> >=20
-> >=20
-> > Note:
-> > This feature was recently added to XFS and it is expected to land in
-> > v7.3. I will update this man page again once v7.3 is released.
-> >=20
-> > [1] https://lore.kernel.org/linux-man/3f17d214-f69c-47b6-abf6-4437cc584=
-0c0@huaweicloud.com/
-> >=20
-> >  man/man2/fallocate.2 | 38 ++++++++++++++++++++++++++++++++++++++
-> >  1 file changed, 38 insertions(+)
-> >=20
-> > diff --git a/man/man2/fallocate.2 b/man/man2/fallocate.2
-> > index ef6586c77..48a8c3468 100644
-> > --- a/man/man2/fallocate.2
-> > +++ b/man/man2/fallocate.2
-> > @@ -244,6 +244,43 @@ SMB3 (since Linux 3.17)
-> >  .IP \[bu]
-> >  Btrfs (since Linux 4.16)
-> >  .\" commit f27451f229966874a8793995b8e6b74326d125df
-> > +.SS Writing zeroes in file space
-> > +Specifying the
-> > +.B FALLOC_FL_WRITE_ZEROES
-> > +flag (available since Linux 6.17)
-> > +.\" commit 7bd43cc79cab3850f34da0a31d5b042b701590ef
-> > +in
-> > +.I mode
-> > +physically zeros space in the byte range starting at
-> > +.I offset
-> > +and continuing for
-> > +.I size
-> > +bytes.
-> > +Within the specified range,
-> > +blocks are preallocated for the regions that span the holes
-> > +in the file.
-> > +After a successful call,
-> > +subsequent reads from this range will return zeros and
-> > +subsequent writes to that range do not require further
-> > +changes to the file mapping metadata.
-> > +.P
-> > +Zeroing is done within the filesystem.
-> > +The filesystem may use a hardware-accelerated zeroing command
-> > +or may submit regular writes.
-> > +The behavior depends on the filesystem design and the
-> > +available hardware.
-> > +.P
-> > +No other flags may be specified in
-> > +.I mode
-> > +in conjunction with
-> > +.BR FALLOC_FL_WRITE_ZEROES .
-> > +.P
-> > +Not all filesystems support
-> > +.BR FALLOC_FL_WRITE_ZEROES ;
-> > +if a filesystem doesn't support the operation, an error is returned.
-> > +The operation is supported only in ext4 (only for extent-based files)
-> > +since Linux 6.17.
-> > +.\" commit f4265b8d32c49ff95711e6fef7d05245a2905b30
-> >  .SS Increasing file space
-> >  Specifying the
-> >  .B FALLOC_FL_INSERT_RANGE
-> > @@ -385,6 +422,7 @@ or
-> >  is
-> >  .BR FALLOC_FL_COLLAPSE_RANGE ,
-> >  .BR FALLOC_FL_ZERO_RANGE ,
-> > +.BR FALLOC_FL_WRITE_ZEROES ,
-> >  or
-> >  .BR FALLOC_FL_INSERT_RANGE ,
-> >  but the file referred to by
-> >=20
-> > base-commit: d926b42e0ea0406d5c2556e18205eced92d053f1
->=20
-
---=20
-<https://www.alejandro-colomar.es>
-
---mrj5i4kujh6ttiqm
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCgAdFiEES7Jt9u9GbmlWADAi64mZXMKQwqkFAmqjMuEACgkQ64mZXMKQ
-wqnS7A/+LYEoLVnI/bZ0fbz54C13p9BizrU+aH68+LFDEUURKla2cr993+pmBy3g
-3pQkS4O2hBD/gs578XjR8EojVEJ7ctUKUd+cqehl2V3LRB9U4kDu5PyQOXTH6B/g
-pFk43bX/oto4j9f1xJhoKEKcPU5x8YVZV4OSp4i/IjSqXszJv0fmetExwDSMR+j9
-MsEyPXOP78mgCCFInL5Z5pKNDiiS2rAx6CkXAEefiWVT66673ObJ2RYW9NXNrdKd
-CBe4x4/thiVv5rfeIIMYO9HEKPsLMcdKUgpeID3JSe08AX/Bh/n4mrkf2kkQu0qx
-egRwgSrHf6IpQvSco6mrnmA6QHVmg5uOud0whiW/7U0D/Z0agem0XqqBsNFNasGc
-fcLK7fcvaDhyFI52W9X9Pb8PRwzTL/ZEefxVSq0J9Op7WCFMpFUFdkx8Tg483oLA
-9AKx5K76FxhDZ47puNIs5JssAoDqrLRViDf08lwCDQLaj5l6za/3JaWKDDC0Xst/
-3MiGGp164gYr4kqxWem715fTcnVWsuVUOQ8IFxjiRJ0u2YbCTdN+BuH7CFO/vG0g
-G3zKM9IgYo7nM6XbgAAl40/jtJu3A6rGiusjPTyYR8mEHErxSIKI6+YVN4C/4lAy
-H4xN/G0TnJiI3j5sw30CwDE3GVkBJFEPEONw6vOIBqIlkyNNATo=
-=Ane6
------END PGP SIGNATURE-----
-
---mrj5i4kujh6ttiqm--
+-Other Eric
