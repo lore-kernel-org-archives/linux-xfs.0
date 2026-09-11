@@ -1,136 +1,167 @@
-Received: from mail-ot1-f54.google.com (mail-ot1-f54.google.com [209.85.210.54])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 077FE4A3F21
-	for <linux-xfs@vger.kernel.org>; Fri, 11 Sep 2026 16:41:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52E864A0F13;
+	Fri, 11 Sep 2026 17:42:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789144912; cv=none; b=h6fT//OCUNdpoHWbjKV57Ckp4DT9epXc/L+hzOObodNhVX9Midcdj/JF1007p6/KwbK8aFCt3vYkOZa5gqW9LzU+s0GxYDQ0xjrU6/iK/mzTxApG54T2t6nxpRGDZ1Se//OFbIxtYict/EpOZbN0DoApLRMrNc8lDk2/wPNoQs8=
+	t=1789148571; cv=none; b=fUSSMI9wBcSj+qLWEFsLMWUMiLf2Khw8M4VhAuCQYG5jyaE1a8s0Lbf6DqG0miyXxOyaf0E1Wf4e/L136kqNUEuljl0SAPh+zThQ1TuIrT9AfCluG4Del+m4p0jZHzADmCJ6OqfyF9J7sVlH3wJYynFtqtC+CD/uXEGmmf3pRaE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789144912; c=relaxed/simple;
-	bh=iOeKZl+2yYu5n26PAKQjFv7EqGjGpA9xCYCNrpFSoUc=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=nsW+y3KbjE+uUxVv2PXHSIFeSamJ/tMxcrgNf3XTw7xIGeSBoyWLTr5jBAM751EIUFKv3bENm4k2sx2Ioe3gRdAnuK9b79ZXMqvBDZYCy4so+932RYeZEujQp6W03J1sl/OaoAoKfF0rUYB5gqgq7r9CJ373nNaxVjnDNHrfzRs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b=UJsGGxZ3; arc=none smtp.client-ip=209.85.210.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	s=arc-20240116; t=1789148571; c=relaxed/simple;
+	bh=+j6N2ru0WJf8d04Uzu76W9zwWyzxh+qgzW54PAWNOLs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=cC24FLJmiVBpjzcHAOFWjuu9PevfRPa6CDwRt5yNNeOmIRf2gEAtLNxHvbIIH7336P1Z7gtY+S9VIwf5adZJ7j1F2DPVQNT2S83QAifOsm3JDhImGXSMzUyWwAMVCBUJwn13viX1sBrD4b5isI3TCcMVfVUMhH5fV0SLQ+4h6fI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bjoaFtOe; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b="UJsGGxZ3"
-Received: by mail-ot1-f54.google.com with SMTP id 46e09a7af769-7f5934ba2a5so650373a34.3
-        for <linux-xfs@vger.kernel.org>; Fri, 11 Sep 2026 09:41:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20251104.gappssmtp.com; s=20251104; t=1789144903; x=1789749703; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:date:message-id
-         :subject:references:in-reply-to:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=EzuL2B1Q778W6cbggFtdaW2ynfw2sIwJibVyXt7Oz3E=;
-        b=UJsGGxZ3wuw31Ouo2AGAEnQWUkP2HP3H49T5x1zYb/JIxtkq2UklaLU5wnt2IwFjzS
-         lmZhF1ZRN5G9I5ETzOKpyDPS1aOItyiwoZNTbXUHjHKQ8UByHX6ov3zZSaDERwOFmVQN
-         qq9XniE3kmugXXxRmOiwWWib3ll9APvruZEHQj89cyn1mk36HXXHDJW3dc307c2wFFaH
-         whbJHzFa1f1cY/bqPz7v8ETLMe+nmASD12/Cqop0JO2XMRh0Wok4iF/5gtfb6inlse1r
-         X2dXHoYJcE1m84BH6ER6a2KGQT5B50tCBleLTV9F/9V/I7xqIlCxv2H3d/tBxnuSH+B9
-         cWpA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789144903; x=1789749703;
-        h=content-transfer-encoding:content-type:mime-version:date:message-id
-         :subject:references:in-reply-to:cc:to:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=EzuL2B1Q778W6cbggFtdaW2ynfw2sIwJibVyXt7Oz3E=;
-        b=UtzIIcaCCohp0CfdpYb4hpJkPF9Ega2dzApV/xMJn2IZjim+LeQZvfcTRKOluM4/k/
-         yhQIS5QxbWa54NEt2i0jyWxi6OsAQ7qiV6ymNZhxNzqA44wthLG6zbYGQy2C+OwCgw7W
-         OsEAEqNGJpbaEz88b2MiBStBu+EPV4H21Z+Ythe/1uAT9kYdDKvJtEgmKdWoYS1UAfh4
-         ig37CAfWujXe7/p9wEUdvPE/1AYFOFsSkTxRWuKTNdu5CJ3oKRK6xfNUvkp28oG95Kuq
-         uol2M9EyioEVEY1A17klQ10+SAU92UNKuwepI3lWXYOPosxldRSvg9sCw/7zo1crwKkT
-         Df+Q==
-X-Forwarded-Encrypted: i=1; AKwUvBzws5TyBXcRi45tWWMuCYcZ0wxuVxoKRB341UiQHrcDIqt1edNQlAsoTYN7J4/ZvS+95dFNhJ/SW14=@vger.kernel.org
-X-Gm-Message-State: AFuF++l2HTvdPEA64yxmxpr+X4R9KUBiuq85CALG+sKQ6/czTSakXfqb
-	g1YeVB+qeJvgYXaDVbDLLKkRwg+wyBol11BovO9BNMA4qn4h5bZM+uxSqtsTQSKxEOI=
-X-Gm-Gg: AYBFou3Z7zUoqvtZJWmA+B8VIzcoFAgmnp3H7xGOAiwkIkFhPTc2TAf0w+9D95rlfgP
-	GFGfAiha2u9/UVfDaGNV6Kqyaa6OiLfp3DFmdeqt8SgAbmdyq9h+fbliSzmbhYsd2k8Oe9k/w1W
-	i2c5BUqKu+ghno6RK9iPj+YgoEl97kSijlx2fuvKR9FS3RfzBrvMi+TjUCPwl2Ex4akTcwHNs7M
-	+m7Yv1lrj4jc80Eq+U6etVz5096AjGn9gsGaeWs2Km3xz+t247njuM73D1tCF5H3kOioMfiYLj2
-	8jqeXGEEWWCfnKMt3zsra7EuI/+Z4uJDGyT2LrfDKAVg4hDJFLDe4dFcv7bL6gZDEMruQP/CmbZ
-	tA505YUyDbAyQXwknoj9lX1g5wrS6ZBsBM5nPm7xdOGB0r8Kn9QJGNnUJuZCsMwcbu7UUwGWVQ1
-	Hwg23BAiMOG/aNXfx73gBZdPEqIIgFlfV7KR+hCGKhkw+gJXuPLAX+7Zb5fseqjg+5Q1+0E/n06
-	gSkaEz3TNwmxjwSKga0fzOVpSm8V8+hW42dp9878ld+rDyRFKw=
-X-Received: by 2002:a05:6830:4390:b0:800:bca4:5626 with SMTP id 46e09a7af769-803ff447ademr4057338a34.19.1789144903340;
-        Fri, 11 Sep 2026 09:41:43 -0700 (PDT)
-Received: from [127.0.0.1] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id 46e09a7af769-80477ea9138sm1764401a34.1.2026.09.11.09.41.42
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 11 Sep 2026 09:41:42 -0700 (PDT)
-From: Jens Axboe <axboe@kernel.dk>
-To: Christian Brauner <brauner@kernel.org>, 
- "Darrick J. Wong" <djwong@kernel.org>, Carlos Maiolino <cem@kernel.org>, 
- Christoph Hellwig <hch@lst.de>
-Cc: Tal Zussman <tz2294@columbia.edu>, Anuj Gupta <anuj20.g@samsung.com>, 
- linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, 
- linux-fsdevel@vger.kernel.org
-In-Reply-To: <20260909060924.1102037-2-hch@lst.de>
-References: <20260909060924.1102037-2-hch@lst.de>
-Subject: Re: [PATCH 01/16] block: split bio_iov_iter_bounce_write
-Message-Id: <178914490220.653901.14299562273015668594.b4-ty@b4>
-Date: Fri, 11 Sep 2026 10:41:42 -0600
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bjoaFtOe"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 79A631F00893;
+	Fri, 11 Sep 2026 17:42:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789148568;
+	bh=bTgLdHEJd4F/ATN9FDiyzCsrpd5bhCioRy3qnyPw6+Q=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=bjoaFtOeh0Alkrj1/viQqa/yDUG/V9N77rEyDKcLbqbSBxA459UtYVZRyWr0ukWyb
+	 WWHUWuPk1R4gB/5XDjDEbiXo8Z3RNRz6sk4BCXDpNQk50unB+H3ZsBq6l29cEtCx1S
+	 JgcR/81M1qp4hxSEXASdHRRxHUuAVu0mff/wRowVHtSDCZVFWekFuHsQ4k8L6n3TXm
+	 nq59mPsUXqQf4/uP3GQCfsSUb9AzuTzBZpqmAgBpw2F/WSzns3uSj/vymYOund4HH2
+	 vJ059E/8eAAVuprzkR/nB12IEMLFgBSSmS6FrJh2m6fiGzNn7ei9jt6WGyE85mbfa3
+	 L3yHkmTMcyyfQ==
+Date: Fri, 11 Sep 2026 10:42:47 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Yun Zhou <yun.zhou@windriver.com>
+Cc: cem@kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3] xfs: don't hold buffer locks across sync transaction
+ commit in xfs_sync_sb_buf
+Message-ID: <20260911174247.GK6265@frogsfrogsfrogs>
+References: <20260731031010.2627884-1-yun.zhou@windriver.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.15.2
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260731031010.2627884-1-yun.zhou@windriver.com>
 
-
-On Wed, 09 Sep 2026 09:08:50 +0300, Christoph Hellwig wrote:
-> Factor out a bio_alloc_bounce_folios helper that we'll use for a
-> different take on read-side bounce buffering soon.
+On Fri, Jul 31, 2026 at 11:10:10AM +0800, Yun Zhou wrote:
+> xfs_sync_sb_buf() holds sb/rtsb buffer locks across a synchronous
+> xfs_trans_commit(), which flushes the CIL push workqueue internally.
+> If shutdown occurs during the CIL push, xfs_buf_item_unpin() needs to
+> lock these buffers to fail them, causing a deadlock:
 > 
-> For that make it and also bio_free_folios available to callers outside of
-> bio.c.
+>   setlabel:          holds buf lock -> flush_workqueue(xfs-cil)
+>   CIL push worker:   xfs_buf_item_unpin -> xfs_buf_lock(same buf)
+> 
+> Remove the xfs_trans_bhold() calls so that commit releases the buffer
+> locks normally.  After the sync commit, re-acquire the buffers via
+> mp->m_sb_bp / mp->m_rtsb_bp for the on-disk writeback.
+> 
+> Fixes: f7664b31975b ("xfs: implement online get/set fs label")
+> Reported-by: syzbot+837bcd54843dd6262f2f@syzkaller.appspotmail.com
+> Closes: https://syzkaller.appspot.com/bug?extid=837bcd54843dd6262f2f
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Yun Zhou <yun.zhou@windriver.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> ---
+> v3:
+>  - Drop xfs_buf_hold/xfs_buf_relse, use lock/unlock directly (Christoph).
+> 
+> v2:
+>  - Remove the bp variable and pass xfs_trans_getsb(tp) directly to
+>    xfs_log_rtsb() to fix compilation warnings when CONFIG_XFS_RT=n.
+>  - Convert xfs_log_rtsb() stub from macro to inline function to avoid
+>    the need for (void) casting (Christoph).
+> ---
+>  fs/xfs/libxfs/xfs_rtgroup.h |  6 +++++-
+>  fs/xfs/libxfs/xfs_sb.c      | 37 +++++++++++++++++--------------------
+>  2 files changed, 22 insertions(+), 21 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_rtgroup.h b/fs/xfs/libxfs/xfs_rtgroup.h
+> index c0b9f9f2c413..fca2eb74908c 100644
+> --- a/fs/xfs/libxfs/xfs_rtgroup.h
+> +++ b/fs/xfs/libxfs/xfs_rtgroup.h
+> @@ -359,7 +359,11 @@ static inline int xfs_initialize_rtgroups(struct xfs_mount *mp,
+>  # define xfs_rtgroup_unlock(rtg, gf)		((void)0)
+>  # define xfs_rtgroup_trans_join(tp, rtg, gf)	((void)0)
+>  # define xfs_update_rtsb(bp, sb_bp)	((void)0)
+> -# define xfs_log_rtsb(tp, sb_bp)	(NULL)
+> +static inline struct xfs_buf *xfs_log_rtsb(struct xfs_trans *tp,
+> +		const struct xfs_buf *sb_bp)
+> +{
+> +	return NULL;
+> +}
+>  # define xfs_rtgroup_get_geometry(rtg, rgeo)	(-EOPNOTSUPP)
+>  #endif /* CONFIG_XFS_RT */
+>  
+> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+> index 47322adb7690..2664728f2d8f 100644
+> --- a/fs/xfs/libxfs/xfs_sb.c
+> +++ b/fs/xfs/libxfs/xfs_sb.c
+> @@ -1470,36 +1470,33 @@ xfs_sync_sb_buf(
+>  	bool			update_rtsb)
+>  {
+>  	struct xfs_trans	*tp;
+> -	struct xfs_buf		*bp;
+> -	struct xfs_buf		*rtsb_bp = NULL;
+>  	int			error;
+>  
+>  	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_sb, 0, 0, 0, &tp);
+>  	if (error)
+>  		return error;
+>  
+> -	bp = xfs_trans_getsb(tp);
+>  	xfs_log_sb(tp);
+> -	xfs_trans_bhold(tp, bp);
+> -	if (update_rtsb) {
+> -		rtsb_bp = xfs_log_rtsb(tp, bp);
+> -		if (rtsb_bp)
+> -			xfs_trans_bhold(tp, rtsb_bp);
+> -	}
+> +	if (update_rtsb)
+> +		xfs_log_rtsb(tp, xfs_trans_getsb(tp));
+>  	xfs_trans_set_sync(tp);
+>  	error = xfs_trans_commit(tp);
+>  	if (error)
+> -		goto out;
+> -	/*
+> -	 * write out the sb buffer to get the changes to disk
+> -	 */
+> -	error = xfs_bwrite(bp);
+> -	if (!error && rtsb_bp)
+> -		error = xfs_bwrite(rtsb_bp);
+> -out:
+> -	if (rtsb_bp)
+> -		xfs_buf_relse(rtsb_bp);
+> -	xfs_buf_relse(bp);
+> +		return error;
+> +
+> +	/* Re-acquire and write the sb and rtsb to disk. */
+> +	xfs_buf_lock(mp->m_sb_bp);
+
+FYI, this causes porting problems to xfsprogs' libxfs because userspace
+doesn't have m_sb_bp or m_rtsb_bp pointers in struct xfs_mount.  It's
+not a big deal to add them, but if anyone ever wants to call
+xfs_sync_sb_buf then we're going to have to figure out when to populate
+those pointers.
+
+--D
+
+> +	error = xfs_bwrite(mp->m_sb_bp);
+> +	xfs_buf_unlock(mp->m_sb_bp);
+> +	if (error)
+> +		return error;
+> +
+> +	if (update_rtsb && mp->m_rtsb_bp) {
+> +		xfs_buf_lock(mp->m_rtsb_bp);
+> +		error = xfs_bwrite(mp->m_rtsb_bp);
+> +		xfs_buf_unlock(mp->m_rtsb_bp);
+> +	}
+> +
+>  	return error;
+>  }
+>  
+> -- 
+> 2.43.0
 > 
 > 
-> [...]
-
-Applied, thanks!
-
-[01/16] block: split bio_iov_iter_bounce_write
-        commit: 44c209f294b88bfa55fc5fcb9753ed925ceeab6b
-[02/16] block: export fs_bio_integrity_{alloc,free}
-        commit: 7848da3b1ec374620318bba49328093c99e846d4
-[03/16] block: add a bio_prepare_reissue helper
-        commit: 584e6e36b6d0b95af00e0ee38bab43607152c981
-[04/16] iomap: respect maximum I/O size in iomap_dio_bio_iter_one
-        commit: 1112619902b89849da2d05a1125c3bc029d8f576
-[05/16] iomap: add a iomap_ioend_flags helper
-        commit: d3ff80dc0c51e0a13cf8bf5c06656175377147fd
-[06/16] iomap: add a IOMAP_IOEND_INTEGRITY flag
-        commit: d06c1744acb73ea1a4c21873208b971928ae5a97
-[07/16] iomap,xfs: move T10 PI handling for direct I/O into ->submit_io
-        commit: 946df943d1ccc826e4e66cd12a5fb13abcd99e59
-[08/16] xfs: move PI generation into xfs_submit_zoned_bio
-        commit: d0573f6a723f3484627c046d7dad81bf48d8fd3d
-[09/16] block,iomap: fix protection information verification with initial bvec offset
-        commit: 71987f0e9eb53492de97e7ca0037e04e2f818620
-[10/16] iomap: better read bounce buffering support
-        commit: 7daf4cc7161e92765a6a8b21f7b2abe83b414b16
-[11/16] xfs: use BIO_COMPLETE_IN_TASK for bounce buffered read I/Os
-        commit: 4427c12e8ae5c5cb6ced698d993cf75cb3b52040
-[12/16] iomap,xfs: move integrity verification to the file system
-        commit: 8a70309165a78ac12c0d3fd8e9da334b0b4d8d6a
-[13/16] xfs: add support for lazy direct read bounce buffering
-        commit: e5c3fdd8a0af34c1ff75808bb60fdcbefd37639d
-[14/16] xfs: add error injection for lazy bounce buffering
-        commit: 715f6122e78bac6a502af6f694dd4a20b4b064ae
-[15/16] xfs: log a message at mount time when using integrity protection
-        commit: 30f76ca12478237ad6c585f9d5996f57f44e3e29
-[16/16] block,iomap: remove the old read side bounce buffering support
-        commit: f6c63fe642795117124d6ea7eca39ba8823e30f9
-
-Best regards,
--- 
-Jens Axboe
-
-
-
