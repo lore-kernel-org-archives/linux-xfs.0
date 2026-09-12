@@ -1,386 +1,255 @@
-Received: from m16.mail.126.com (m16.mail.126.com [117.135.210.7])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D08DB38A72F;
-	Sat, 12 Sep 2026 07:03:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82C062F531B
+	for <linux-xfs@vger.kernel.org>; Sat, 12 Sep 2026 14:54:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789196631; cv=none; b=Re3xiaZGEid2pCAaEBi0JFNToh9zMwW84fb/MrB2XoKdZz0OutDLPhbHgUbTnbMfjdpp8D1ufJOdjgH4TYSE4PCQOFD3ng4GTcCYxhnaPhq1cjGO0n2TAglA7cIcGToHGKK+8vni2Do4aJZbh+evSFAVr+34+1bcfsnX8CLY5+w=
+	t=1789224875; cv=none; b=mQS8KXheVS+2y0CXXSrsWYMtOdsZGsDfQz0dcWv8nG3OeMbcguwCHxzTFPj8cVhedWLrFZOEymYLqqOFfo7y8MB3n3BQSh/fD3rYNWqjTYvqaK/hv87P9i+xLKngbRMrdpf/H3IEF5rEBqZSih6LkNx4BNtu35l4PaMuijrpHt8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789196631; c=relaxed/simple;
-	bh=GiMTaWgb3BB6LAYXSwi1zqWets6P9YfXOSzrVDf0ffY=;
-	h=Message-ID:Date:From:MIME-Version:To:CC:Subject:References:
-	 In-Reply-To:Content-Type; b=IrmKsOK6tWnHz2jR+5WGuDQAe4oaPmRNlTh+uxrBIVNUKmidemQKZNdgPWJgsMNXRpp6uCB/JH2kgakPdme+ldC0Ts3gQDpTZbDLEd3AuEZjHDOmzsBv7fSu/IHCFOthULgz/MLeALM2XGBhbW8c+83DyqRnUvrhOCOcTY1pY+U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=126.com; spf=pass smtp.mailfrom=126.com; dkim=pass (1024-bit key) header.d=126.com header.i=@126.com header.b=WzD+JkNa; arc=none smtp.client-ip=117.135.210.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=126.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=126.com
+	s=arc-20240116; t=1789224875; c=relaxed/simple;
+	bh=bihfBrpn9MKR/Uc+S78Oia0zdRRbClKJV2mQNcKmiok=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=nKoVkHmf0N7206l+fAwILS8h1zFTrewDOJG9vCEncT4pAQ8k5SXaOZKgogFbOAaqmBUeQ55c9eVR4qJTOW2ioYAsIqt5hlgi9ggC04bWTPPZSfCkTWO7ulHUXQ4Z3fNs0Y/ngSGhHA+97nmd2CW525yhedH2/75uUFGrqM9efNY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DBsDqfCv; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=126.com header.i=@126.com header.b="WzD+JkNa"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=126.com;
-	s=s110527; h=Message-ID:Date:From:MIME-Version:To:Subject:
-	Content-Type; bh=fXlYEH4Lq0PoWj6BWNlC67MzSdHGmdJyaYuDh4O+w9g=;
-	b=WzD+JkNaZm2PR+hFbEmOnCqRCEDGWZxYF1iR3DYhsjbOKiTMpIooqCgds5d/b3
-	FO8nmZ6lMzsK2aY3YQMPQFkTLfX3ubc/IFx4TDTmCgBABwQsVzv8HfP89B99iqWB
-	Rr2q5ckJov99UfiajoEBw1MpIgPMs82FR36vESTvM3UnM=
-Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g0-1 (Coremail) with SMTP id _____wDXj_I0+aRqMAH_Aw--.2396S2;
-	Sat, 12 Sep 2026 15:03:17 +0800 (CST)
-Message-ID: <6AA4F918.7020309@126.com>
-Date: Sat, 12 Sep 2026 15:02:48 +0800
-From: Hongling Zeng <zhongling0719@126.com>
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:31.0) Gecko/20100101 Thunderbird/31.2.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DBsDqfCv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 68D861F00893;
+	Sat, 12 Sep 2026 14:54:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789224873;
+	bh=pH0C+q5AFlAYbxE6Msnk6cjQrBz4mIMAGGW1wvCrvYo=;
+	h=Date:From:To:Cc:Subject;
+	b=DBsDqfCvurO3j1ko1urFR8YrkIhIw73KZtNYTj+C3d0YmbeNzQ/rMsmVVmaj1Ge0d
+	 Hm3fc57WFLk+6Fx4GDeKlwPlx937G1xogA4V4OcfnD+IGD/cPqz7NzwXrFrCmLlWdn
+	 bIbeTFwlZL4o9bD0TRL/yM3E1SAcP6S5+BUmJW/t98rFHev/b/+k6IqoF7aTo8ngTs
+	 1Vjoxozx70bghSD8dwrk4zNymE7d2VlM8/tQRbhNsNg+Zp8bKRDSsVJbE2yirF1U0Q
+	 JlSraTYUoYjwimNvRJIuZqdWtj4XhlpYr86mhQ7+gR3KgOmMI7bYxR90y+pH3bgvu9
+	 rwhrl10/PoxZg==
+Date: Sat, 12 Sep 2026 16:54:29 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: torvalds@linux-foundation.org
+Cc: linux-xfs@vger.kernel.org
+Subject: [GIT PULL] XFS: Fixes for v7.3-rc3
+Message-ID: <aqUKwxI9Bsw4VUZg@nidhogg.toxiclabs.cc>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-To: Dave Chinner <dgc@kernel.org>
-CC: Hongling Zeng <zenghongling@kylinos.cn>, cem@kernel.org, 
- darrick.wong@oracle.com, chandanrlinux@gmail.com, 
- linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
- stable@vger.kernel.org
-Subject: Re: [PATCH v2] xfs: bound logged region access in inode buffer recovery
-References: <20260907080450.314067-1-zenghongling@kylinos.cn> <ap8ucHIw-pKLhh9c@dread> <6A9F7022.6020206@126.com> <ap-sV2Cc5U5fNMmo@dread>
-In-Reply-To: <ap-sV2Cc5U5fNMmo@dread>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wDXj_I0+aRqMAH_Aw--.2396S2
-X-Coremail-Antispam: 1Uf129KBjvAXoW3Cw43tF4DCr15Kw4ktr4DXFb_yoW8GF43Ao
-	WS9w4Iqw4UKr17CF1qkw18G3s3X3WS9rn3JrWjq34YvF4jqw4UAa4fGwnrZa9IyFW8uas7
-	J348Jwn0yrZrXFn3n29KB7ZKAUJUUUU8529EdanIXcx71UUUUU7v73VFW2AGmfu7bjvjm3
-	AaLaJ3UbIYCTnIWIevJa73UjIFyTuYvjxUsdWrUUUUU
-X-CM-SenderInfo: x2kr0wpolqwiqxrzqiyswou0bp/xtbBoBVPIGqk+TV3TgAA3h
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
+Hello Linus,
 
-在 2026年09月08日 14:33, Dave Chinner 写道:
-> On Tue, Sep 08, 2026 at 10:17:06AM +0800, Hongling Zeng wrote:
->> 在 2026年09月08日 05:36, Dave Chinner 写道:
->>> On Mon, Sep 07, 2026 at 04:04:50PM +0800, Hongling Zeng wrote:
->>>> xlog_recover_do_inode_buffer() reads the logged di_next_unlinked field
->>>> from a log record buffer at a computed offset:
->>>>
->>>>           logged_nextp = item->ri_buf[item_index].iov_base +
->>>>                           next_unlinked_offset - reg_buf_offset;
->>>>           *buffer_nextp = *logged_nextp;
->>>>
->>>> The only protection against reading past the log record buffer are
->>>> ASSERT()s, which compile away on non-DEBUG kernels.  The existing
->>>> XFS_IS_CORRUPT(*logged_nextp == 0) check also dereferences the pointer
->>>> before validating that the computed offset lies within the logged region.
->>>>
->>>> A crafted log record can make the computed offset exceed iov_len, causing
->>>> an out-of-bounds read from the log record buffer during inode buffer
->>>> recovery.
->>>>
->>>> Convert the relevant ASSERT-only checks into runtime corruption checks and
->>>> verify that the logged di_next_unlinked field lies entirely within the log
->>>> iovec before dereferencing it.
->>>>
->>>> Fixes: 1094d3f12363 ("xfs: refactor log recovery buffer item dispatch for pass2 commit functions")
->>>> Cc: stable@vger.kernel.org
->>>> Signed-off-by: Hongling Zeng <zenghongling@kylinos.cn>
->>> <sigh>
->>>
->>> I'm going to say what I've said before again here, and it applies to
->>> the BLF bitmap range checks patches you posted yesterday, too:
->>>
->>> Hacking the same types of region size and range checks into every
->>> log item type in an ad-hoc manner is not the right way to address
->>> these log item verification issues.
->>>
->>> We need to add a robust verification layer to the journal to verify
->>> all the journal level metadata (e.g. ophdrs, transaction headers,
->>> initial log item regions, per-log item type verification, etc) so
->>> that we check *all* the journal items for sanity before we use them.
->>>
->>> This is the same architecture we use for metadata (the verifier
->>> layer) and it applies to the journal for the same reasons and
->>> provides the same benefits (i.e. validate at first access, rest of
->>> the code can assume validity and not have to clutter logic with
->>> random validity checks to prevent bad behaviour.)
->>>
->>> The high level design doc and rough plan I put together last time I
->>> brought this up is in the patch below. If you're not willing or able
->>> to spent time and tokens on fixing this entire class of problems for
->>> everyone, then let please let me know ASAP.
->>>
->>> -Dave.
->>    Hi Dave,
->>
->>    Thanks for the detailed feedback. I understand the concern: the ad-hoc
->>    region checks I posted don't address log recovery validation
->>    systematically.
->>
->>    I'll withdraw the inode buffer and BLF bitmap patches and switch to
->>    the design-driven approach. I'll post your patch 5 first (the
->>    unchecked ri_buf[ri_cnt-1] in add_to_cont_trans(), the unbounded
->>    kvrealloc() there, the missing oh_len alignment check in
->>    process_data() - all reachable bugs, no restructuring), then work
->>    through the rest of Phase 1.
->>
->>    Three points to confirm before coding:
-> Don't take the design doc as being complete or correct - it's a
-> working document and really only serves as the initial high level
-> plan I fleshed out.
->
-> Indeed, I implemented a chunk of it yesterday afternoon (i.e.
-> before I saw your patch this morning) and my findings change quite a
-> bit of the generic infrastructure to make it handle the transaction
-> header without having to special case it. So from that perspective,
-> it's already out of date...
->
-> I'll post what I have in the series later this afternoon so you can
-> get up to speed.
->
->>    1. I don't see a write-side guarantee that a region is split at most
->>       once - xlog_write_partial() can emit multiple continuations. So
->>       beyond your patch 2 treating the header as a normal accumulated
->>       region, note that today a third fragment walks into
->>       ri_buf[ri_cnt-1] with ri_cnt == 0 / ri_buf == NULL. Correct?
-> The iterator structure behind the item decoding should handle
-> decoding regions split into an arbitrary number of ophdr regions
-> without issue.
->
-> That's kinda the point of it; ensure the region is
-> fully extracted from the journal before we try to decode any of it.
-> Hence we have to handle CONTINUE/WAS_CONT regions as partial
-> additives until we get to the final WAS_CONT region that closes off
-> the region as a whole.
->
->>    2. For the zero-length first fragment: if this is old-log
->>       compatibility only,
-> Real thing, go look at xlog_write_get_iclog_space() and
-> consider what happens when the lv_chain passed to xlog_write() gets
-> it's first iclog with only space for two ophdrs left in it....
->
->>       I'd document it that way and keep the special
->>       handling as narrow as possible rather than introducing a generic
->>       anonymous item state. Note the doc's ri_in_continuation has no
->>       owner at that point since no item exists yet - narrow handling
->>       avoids that entirely.
-> The special case handling for it is awful, and IMO needs to go away
-> because it is actually buggy and makes it much harder to reason
-> about what is a valid item in a transaction....
->
->>    3. For testing I'll cover each phase with crafted-log images and run
->>       xfstests.
-> This is why I have been rewriting xfs_logprint in rust: so it has
-> the same capabilities as xfs_db in terms of being able to walk,
-> parse and modify individual items in the journal. i.e. to be able to
-> explicitly fuzz the journal in a systematic, programmable and
-> reproducable way and hence avoid the need for hundreds of corrupted
-> images to test all the corner cases....
->
-> And, FWIW, the iterator + generic item handling design of the
-> validator for the kernel code is a fairly close translation of the
-> layered generic item type verification my new rust logprint code
-> already uses.
->
->>       My bigger worry is over-strict validation rejecting valid
->>       logs, which only shows up replaying real crash logs - what
->>       coverage do you expect there? And should the design doc go in
->>       first so the series can reference it?
-> We have extensive journal recovery stress and validity tests in
-> fstests (e.g. the recoveryloop group), and so I'm really not worried
-> about structure verification being too strict. I'd much prefer to
-> err on the "extremely strict" side right now, and loosen if needed.
-> I don't think it will be an issue, because if the journal
-> verification comes across improperly formatted items then it points
-> to a runtime bug that needs to be fixed, not a journal recovery
-> issue.
->
-> i.e. I'd much prefer we have strict verification because that finds
-> logic bugs on both sides during testing, that way they do not end up
-> in production systems...
->
-> -Dave.
->
-Hi Dave,
+Could you please pull patches included in the tag below?
 
-I reviewed part of the series per commit and tested recovery behaviour 
-against the current tip (ecf8aa53, "handle zero length continuation op
-headers during recovery"). A few notes and two followup fixes are below.
+An attempt merge against your current TOT has been successful.
 
-1. Per-commit observations
+This tag contains a more than usual amount of fixes.
 
-  - 5b115b1 ("lift transaction header parsing out of the region
-    assembly") says it is behaviour-preserving. That is true for normal
-    streams, but not for pre-ad3e3693182b zero-length first fragments:
-    those used to be skipped and are rejected until ecf8aa53 restores the
-    handling. This is fine within the series, but the changelog may be
-    misleading if the refactor is backported alone.
+The highlights here are a block under reservation fix which caused
+an assert to be triggered in non-default configurations.  The assert,
+initially added on 7.3-rc2 just makes the problem explicit but is not
+the cause.  Another highlight is a missed lock/unlock mutex in the xfs
+healthmonitor which was causing lockdeps warnings.
 
-  - In the window [895f4c5, ecf8aa53), a skipped zero-length first
-    fragment can leave trans->r_cur_item NULL; the following WAS_CONT
-    continuation then dereferences it in xlog_recover_add_to_cont_trans().
-    So that window oopses during recovery rather than failing cleanly.
+Besides those two, this also contains a myriad of fixes for random bugs
+found by LLM tools in the healthmon, scrub and online repair.
 
-  - In the window [895f4c5, ca71ea1f), a 1-3 byte op header length can
-    reach xlog_recover_add_to_trans(), which reads ilf_type/ilf_size from
-    a kvmalloc'd buffer shorter than 4 bytes. ASAN catches this as a heap
-    over-read. ca71ea1f closes it with the op header length/alignment
-    validation.
+A few bug fixes for zoned xfs are also included.
 
-  - Minor doc/changelog nits: 895f4c5's changelog and the rst say the
-    zero-length first fragment case is handled uniformly, but that is only
-    true after ecf8aa53. Also, ecf8aa53's doc update says the r_cur_item
-    guard is in "Patch 5", but it lands in ecf8aa53 itself.
+This also includes an accounting fix for our buffer slab cache where the
+memory payload associated to each object was not being properly
+accounted for.
 
-2. Behaviour testing
+The remaining of the patches are a few lock context annotations added
+and/or fixed. They are mostly disabled by now, but still worth fixing
+before we get them enabled.
 
-We extracted the recovery functions from 857882e, 895f4c5 and ecf8aa53
-into a small userspace harness with ASAN, and replayed crafted op record
-streams through them: unsplit and split transaction headers, zero-length
-first and middle fragments, short fragments, stray WAS_CONT records,
-truncated item plus commit, and normal transactions.
+And last but not least, a few clean ups.
 
-A few results:
+Please notice that a few of these patches (the last 17 patches to be
+specific), were added to linux-next only yesterday Sep 11. But yet I'm
+sending the pull request because some of them they are important to be
+fixed as soon as possible. A few of those patches were in linux-next
+before but I needed to rebase the tree so they changed hashes. But as
+usual, I did test all of them here in my regression suite before
+sending you the pull request.
 
-  - A 3-way transaction header split such as 4+4+8 is silently assembled
-    incorrectly at 857882e: the continuation tail-copy path writes the
-    middle fragment to the wrong offset, later fragments overwrite it, and
-    recovery still succeeds with a corrupted r_theader. 895f4c5 fixes this.
-
-  - A stray WAS_CONT continuation crashes via the empty-queue list walk
-    already at 857882e, so that predates this series. ecf8aa53 turns it
-    into -EFSCORRUPTED.
-
-  - Zero-length middle continuation fragments now assemble correctly via
-    the generic path. The old bespoke transaction-header path rejected
-    them.
-
-  - Well-formed streams behaved the same across the three commits.
-
-I can send the full matrix if useful.
-
-3. Two followup fixes
-
-These are against ecf8aa53 and are independent. I am including them
-inline for now since the final base is not settled; happy to post proper
-patches once it is.
-
-First, xlog_recover_commit_trans() walks r_itemq only and ignores
-trans->r_cur_item. If a commit record arrives while an item is still
-being rebuilt, that item is silently dropped and the transaction commits
-less metadata than the log records describe. A transaction whose only
-content never completed can also commit as if it were empty.
-
-Reject commits with a pending r_cur_item. This also catches the
-zero-length-opener sentinel case. I did not change XLOG_UNMOUNT_TRANS,
-where dropping the partial transaction matches the existing skip
-semantics.
-
----
-  fs/xfs/xfs_log_recover.c | 15 +++++++++++++++
-  1 file changed, 15 insertions(+)
-
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index d32b4de9215e..0ff898b71419 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -2163,6 +2163,21 @@ xlog_recover_commit_trans(
-         LIST_HEAD                       (ra_list);
-         LIST_HEAD                       (done_list);
-
-+       /*
-+        * r_cur_item is queued only when its final fragment arrives.  If a
-+        * commit record arrives while it is still set, recovery would 
-otherwise
-+        * drop the unfinished item and replay less metadata than the log
-+        * records describe.  Treat that as a truncated transaction.
-+        */
-+       if (trans->r_cur_item) {
-+               xfs_warn(log->l_mp, "%s: commit with incomplete item",
-+                       __func__);
-+               return -EFSCORRUPTED;
-+       }
-+
-         #define XLOG_RECOVER_COMMIT_QUEUE_MAX 100
-
-         hlist_del_init(&trans->r_list);
-
-Second, xlog_recover_add_to_cont_trans() can grow the region under
-assembly with kvrealloc on every continuation record. A corrupt log can
-therefore grow a single region without a practical bound, and repeated
-realloc/copy makes the work quadratic in the number of fragments.
-
-Add a generic recovery-time cap. No writer-produced region should come
-close to this; per-item limits can tighten it later.
-
----
-  fs/xfs/libxfs/xfs_log_recover.h |  9 +++++++++
-  fs/xfs/xfs_log_recover.c        | 14 ++++++++++++++
-  2 files changed, 23 insertions(+)
-
-diff --git a/fs/xfs/libxfs/xfs_log_recover.h 
-b/fs/xfs/libxfs/xfs_log_recover.h
-index d2e128fca058..a6a29d5572be 100644
---- a/fs/xfs/libxfs/xfs_log_recover.h
-+++ b/fs/xfs/libxfs/xfs_log_recover.h
-@@ -149,6 +149,15 @@ extern const struct xlog_recover_item_ops 
-xlog_rtcud_item_ops;
-
-  #define XLOG_MAX_REGIONS_IN_ITEM   (XFS_MAX_BLOCKSIZE / XFS_BLF_CHUNK 
-/ 2 + 1)
-
-+/*
-+ * Generic recovery-time cap for a single log region assembled from
-+ * continuation op records.  This prevents corrupt continuation streams 
-from
-+ * growing a region without bound, or from driving unbounded 
-realloc/copy work.
-+ */
-+#define XLOG_MAX_REGION_SIZE        (2 * XFS_MAX_BLOCKSIZE)
-+
-  /*
-   * item headers are in ri_buf[0].  Additional buffers follow.
-   */
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index d32b4de9215e..02d28b610850 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -2405,9 +2405,23 @@ xlog_recover_add_to_cont_trans(
-                 return -EFSCORRUPTED;
-         }
-
-         old_ptr = item->ri_buf[item->ri_cnt - 1].iov_base;
-         old_len = item->ri_buf[item->ri_cnt - 1].iov_len;
-
-+       /*
-+        * Bound the region being assembled so a corrupt continuation stream
-+        * cannot grow it without limit.
-+        */
-+       if (old_len > XLOG_MAX_REGION_SIZE - len) {
-+               xfs_warn(log->l_mp,
-+                       "%s: continuation region too large (%d > %d)",
-+                       __func__, old_len + len, XLOG_MAX_REGION_SIZE);
-+               return -EFSCORRUPTED;
-+       }
-+
-         ptr = xlog_kvmalloc(old_len + len);
-         memcpy(ptr, old_ptr, old_len);
-         memcpy(ptr + old_len, dp, len);
-
-Both fixes were checked in the harness: truncated-item+commit and
-zero-length-opener+commit now fail cleanly, and continuation streams that
-grow past the cap return -EFSCORRUPTED. A region grown to about 64KB
-through continuations still assembles and commits normally.
-
-4. Small cleanups
-
-  - xlog_find_item_ops() is a first-match linear scan, so duplicate
-    item_type entries would silently shadow later ones. The table is unique
-    today, but a debug/build-time check would catch future mistakes.
-
-  - xlog_recover_nregions() warns about a bad number of regions "in inode
-    log format", but the helper is now generic for item types without
-    ->validate_nregions. The warning should probably be made generic too.
-
-Happy to run these cases through recoveryloop or the logprint-rust fuzzer
-once that is ready.
 
 Thanks,
-Hongling
+Carlos
 
+"The following changes since commit df2908090cda368b01ff43709f51890076c56157:
 
+  Linux 7.3-rc2 (2026-09-06 15:07:20 -0700)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-fixes-7.3-rc3
+
+for you to fetch changes up to ad4497a92caba4630f75c80d49cb947026213280:
+
+  xfs: advance the findparent inode scan cursor while holding ILOCK (2026-09-11 08:45:11 +0200)
+
+----------------------------------------------------------------
+xfs: fixes for 7.3-rc3
+
+Signed-off-by: Carlos Maiolino <cem@kernel.org>
+
+----------------------------------------------------------------
+Anuj Gupta (2):
+      xfs: release alleged child inode on metapath unlink error
+      xfs: set IOMAP_F_INTEGRITY for zoned writes on integrity devices
+
+Christoph Hellwig (11):
+      xfs: fix the lock annotation on xfs_iget_cache_hit
+      xfs: fix the lock annotation in xfs_extent_busy_update_extent
+      xfs: fix the lock annotation in xfs_mru_cache_lookup
+      xfs: improve lock annotations in the log code
+      xfs: add lock annotations to xfs_try_open_zone
+      xfs: add lock annotations to xlog_state_shutdown_callbacks
+      xfs: add a lock annotation to xlog_cil_push_background
+      xfs: add lock annotations to xfs_ail_delete*
+      xfs: also flush the RT device cache in xlog_write_iclog
+      xfs: don't continue on error in xfs_fsync
+      xfs: avoid extra cache flushes for multi-device file systems in xfs_fsync
+
+Darrick J. Wong (50):
+      xfs: fix media verification ioctl for internal rt volumes
+      xfs: don't spin forever on zero-length dirents when salvaging them
+      xfs: don't stash removename operations with unknown ftype
+      xfs: log the tempip after we convert it to extents format
+      xfs: fix parent rec lookup initialization in xrep_metapath_unlink
+      xfs: handle reconnecting metadir subdirectories
+      xfs: lock the healthmon when inserting unmount event
+      xfs: fix unit conversions in per_binval computation
+      xfs: fix short ifork reaping computation in xreap_bmapi_binval
+      xfs: fix name string recording in slowpath pptr tracepoints
+      xfs: don't leak dqacct if rhashtable insertion fails
+      xfs: fix the rtrmap and rtrefcount _maxlevels_ondisk functions
+      xfs: fix xfs_rtrmapbt_mem_cursor for non-rmap filesystems
+      xfs: preserve owner on in-memory btree creation
+      xfs: don't leak new_bp if xfs_btree_bload_drop_buf fails
+      xfs: actually recover intended file sizes in xfs_xmi_item_recover_intent
+      xfs: don't modify file attributes or poke fsnotify for dry runs
+      xfs: fix bnobt repair space reservation disposal failure
+      xfs: always set xfs_healthmon::first_event when inserting at front of list
+      xfs: move healthmon event merge tracepoint
+      xfs: port healthmon event list to list_head
+      xfs: merge healthmon insert/push helpers
+      xfs: check healthmon outbuffer space correctly
+      xfs: bump lost_prev_errors if we lose even the healthmon lost event
+      xfs: report nonexistent parents as a filesystem corruption
+      xfs: destroy seen inode bitmap when we fail to add a dirpath
+      xfs: signal inode btree xref error if get_rec returns an error
+      xfs: truncate quota file correctly when repairing quota file
+      xfs: compute dquot checksum after resetting dd_lsn in repair
+      xfs: fix backwards skipping logic in xrep_quota_block
+      xfs: fix backwards mergeability logic in refcount scrubber
+      xfs: cross-reference the rtgroup superblock extent, not block
+      xfs: use the rtgroup extent count to find rtrefcount gaps
+      xfs: strengthen the "is cow staging" helpers in scrub
+      xfs: fix rtrefcount btree block counting in scrub
+      xfs: make the rtsummary repair fix the file size too
+      xfs: count escaped corruption errors in scrub stats
+      xfs: snapshot scrub stats when rendering them
+      xfs: report healthy filesystem events in scrub stats
+      xfs: report runtime failures in scrub
+      xfs: remove redundant function declaration
+      xfs: snapshot old AGFL before rewriting it
+      xfs: bail out on bitmap errors in xrep_agfl_fill
+      xfs: fix under-reservation of blocks when repairing sf directories
+      xfs: actually check internal-rtdev fields in the superblock
+      xfs: fix rtrmap cross-referencing elision logic
+      xfs: fix termination logic in xchk_bmap
+      xfs: fix replaying dirent removals into the temporary directory
+      xfs: reset parent pointer args before each dir tree unlink repair
+      xfs: advance the findparent inode scan cursor while holding ILOCK
+
+Deepanshu Kartikey (1):
+      xfs: take hm->lock in xfs_ioc_health_monitor() before insert
+
+Eric Sandeen (2):
+      xfs: fix reclaimed page accounting in xfs_buf_free
+      xfs: mark slab-allocated xfs_buf backing memory as __GFP_RECLAIMABLE
+
+Hans Holmberg (1):
+      xfs: prevent race in zoned space reservations
+
+Javier Tia (6):
+      xfs: initialise error in xfs_defer_finish_one()
+      xfs: give the deferred barrier op type a name
+      xfs: report the error that made deferred work shut down the fs
+      xfs: correct the parent pointer space reservation comment
+      xfs: initialise args->total for parent pointer updates
+      xfs: assert the reservation covers each da fork growth
+
+Lin Jiapeng (1):
+      xfs: fix exchange-range reflink flag clearing issue with INO1_WRITTEN
+
+Zizhi Wo (1):
+      xfs: remove several unused and never-implemented declarations
+
+ fs/xfs/libxfs/xfs_btree_mem.c        |   2 +
+ fs/xfs/libxfs/xfs_btree_staging.c    |   4 +-
+ fs/xfs/libxfs/xfs_da_btree.c         |   3 +-
+ fs/xfs/libxfs/xfs_da_btree.h         |   2 +
+ fs/xfs/libxfs/xfs_defer.c            |  18 ++++-
+ fs/xfs/libxfs/xfs_exchmaps.c         |  10 +++
+ fs/xfs/libxfs/xfs_parent.c           |  12 +++-
+ fs/xfs/libxfs/xfs_rtrefcount_btree.c |   7 +-
+ fs/xfs/libxfs/xfs_rtrmap_btree.c     |   6 +-
+ fs/xfs/libxfs/xfs_trans_space.c      |  19 +++++-
+ fs/xfs/scrub/agheader.c              |   7 ++
+ fs/xfs/scrub/agheader_repair.c       |  39 ++++++++---
+ fs/xfs/scrub/alloc_repair.c          |  18 +++--
+ fs/xfs/scrub/attr_repair.c           |   2 +-
+ fs/xfs/scrub/bmap.c                  |   7 +-
+ fs/xfs/scrub/common.h                |   1 -
+ fs/xfs/scrub/dabtree.h               |   2 -
+ fs/xfs/scrub/dir_repair.c            |  31 +++++++--
+ fs/xfs/scrub/dirtree.c               |  31 ++++++++-
+ fs/xfs/scrub/dirtree_repair.c        |   2 +
+ fs/xfs/scrub/findparent.c            |  54 ++++++++++-----
+ fs/xfs/scrub/ialloc.c                |   4 ++
+ fs/xfs/scrub/metapath.c              |  87 +++++++++++++++++++++++-
+ fs/xfs/scrub/quota_repair.c          |  14 ++--
+ fs/xfs/scrub/quotacheck.c            |   4 +-
+ fs/xfs/scrub/reap.c                  |   6 +-
+ fs/xfs/scrub/refcount.c              |   8 ++-
+ fs/xfs/scrub/rgsuper.c               |   6 +-
+ fs/xfs/scrub/rtrefcount.c            |  82 +++++++++++++++++-----
+ fs/xfs/scrub/rtsummary_repair.c      |   3 +-
+ fs/xfs/scrub/scrub.c                 |   3 +-
+ fs/xfs/scrub/scrub.h                 |   1 -
+ fs/xfs/scrub/stats.c                 |  69 ++++++++++++-------
+ fs/xfs/scrub/stats.h                 |   4 +-
+ fs/xfs/scrub/symlink_repair.c        |   2 +-
+ fs/xfs/scrub/tempfile.c              |  29 ++++++--
+ fs/xfs/scrub/tempfile.h              |   4 --
+ fs/xfs/scrub/trace.h                 |  35 +++++++++-
+ fs/xfs/xfs_buf.c                     |   4 +-
+ fs/xfs/xfs_buf_item.h                |   1 -
+ fs/xfs/xfs_exchmaps_item.c           |  19 +++++-
+ fs/xfs/xfs_exchrange.c               |  12 +++-
+ fs/xfs/xfs_extent_busy.c             |   4 +-
+ fs/xfs/xfs_file.c                    |  47 ++++---------
+ fs/xfs/xfs_healthmon.c               | 128 +++++++++++++++++++----------------
+ fs/xfs/xfs_healthmon.h               |   5 +-
+ fs/xfs/xfs_icache.c                  |   3 +-
+ fs/xfs/xfs_inode.h                   |   1 -
+ fs/xfs/xfs_iomap.h                   |   2 +
+ fs/xfs/xfs_log.c                     |  78 ++++++++++++++-------
+ fs/xfs/xfs_log.h                     |   2 -
+ fs/xfs/xfs_log_cil.c                 |  10 +--
+ fs/xfs/xfs_log_priv.h                |   4 +-
+ fs/xfs/xfs_mru_cache.c               |   2 +-
+ fs/xfs/xfs_trace.h                   |   4 +-
+ fs/xfs/xfs_trans_ail.c               |   4 +-
+ fs/xfs/xfs_verify_media.c            |  24 +++++--
+ fs/xfs/xfs_zone_alloc.c              |   2 +
+ fs/xfs/xfs_zone_space_resv.c         |   8 +--
+ 59 files changed, 715 insertions(+), 287 deletions(-)"
