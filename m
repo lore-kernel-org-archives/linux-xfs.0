@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D130442369
-	for <linux-xfs@vger.kernel.org>; Mon, 14 Sep 2026 11:57:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30BBA348C77
+	for <linux-xfs@vger.kernel.org>; Mon, 14 Sep 2026 11:57:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789387078; cv=none; b=jQnFv8FaYJGdkSjCgWWm/wshgFL4b1XCyPS9ni4yCqoLXfD2VJJLGXbu3OltNdd16HKWmQrVkGC6ItNyLGa2JCghbm2YSArN9H6S+mKhi3lGVkI3YNYvI0yVzUSDD/m35RmfWt2Pf1/oAeK66QTw+i4jdVfGXaY6yhWXUeSNhi0=
+	t=1789387080; cv=none; b=iSdTuzyeHLabg32JRDyjI8IKwyyu8+g9jOYS2ltG67nOFO0Rgh7urXL0gaN/mwinjvcGdPc4y1XUcaGBC2bmqZGX/PYtu99sFd63n02K4GRN7S8GPiQW9a0E+dBEEALiPI7kcFOQDwG8XT1OScNDp2FD5E0srFtw4kVet/QH1To=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789387078; c=relaxed/simple;
-	bh=Dy4rLN9BfPWCBVStHeD0R/056Cy0DGbDMEBs8G5WbQ8=;
+	s=arc-20240116; t=1789387080; c=relaxed/simple;
+	bh=eN2ZlkgebznxWOKHLjDEjOQcBHNL29MZ8vdFD74TjxU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=XQGIuH+H2WD7dA6fFWo65ebJemmMc+MXwSHUM9MRb1yQxFBOwj97TZdWNi46EYCBVr5K+lphhLusYaVTrKQ8EAla6o6bRcaF4vu09FbpbRtiVxcWn+Kvir3kJZ3wSrM4axIMc2c4q7fFqEWiV077kM/OsrvI3HBPpw0e2M7FDTc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HGsk4c6p; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=cqik6E7cnppLrSqOFY6LwFP78fKO92pci3ZZFr0STuiTE4NFncov0HOuky0XhgjXs3RDIdrY/tzcWHcyhkr1PdxlJvFemlbfkOuOZrrZoi1l0cO5UlE3fG3IJKDxJIAOflg81jrOHSS4lqXTVFClfz+klcHOP5+SkIkPt5q+s7c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ee+2f7IS; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HGsk4c6p"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A4ACE1F00893;
-	Mon, 14 Sep 2026 11:57:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ee+2f7IS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78F3D1F000FF;
+	Mon, 14 Sep 2026 11:57:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789387077;
-	bh=qQL4AfwX3uTuhU2zSsg6aml5uAY8COFlCTa1b4yMNU0=;
+	s=k20260515; t=1789387078;
+	bh=sSt85GRInvKH3vgSt1itghuvZ6zm9tR2CV5enkuOqQs=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=HGsk4c6p3Wki15wYCJjIKDbpmqjnF19cELimk8tAZThybDr/zhkvvAjWkDL/PYO4e
-	 8H68t2DuS8wEBR0GLtwRUvliigFEibtYzqaP01VdQLrW5Ur30b7UTd9j7Auc3qBzgv
-	 toTC8LhYZkq25iTDqnY8i64AVDkS7L5xmi3eVhxj2pHXq3UAi+nF+DOyT9njBD77ex
-	 YuytBEZMp0XSyi0vldxEdtLMz1bmVp6Ad4JBLs6voxb9OvkcZ8g4H0Hl6zBCbw3Sd5
-	 BSjxm5ylDXtOiSFRrm+C/qvjArrwAoln/xhpoYwpzS6V7vkyvEVaRu34JfjywKv3nM
-	 bDIovHKBhi5Lw==
+	b=Ee+2f7IS0mZDa5x9zWY9keIiE+AO09uyazpzIlA5j2ThcLgIASSTr0NFoFM7XJUYD
+	 PwNzIzrFlSiSYXavi12ZaHpiODtEx7q5IWCLOI0vaCFPYmwCKSOaI5aBMUJZQHgeNH
+	 NwPX2sQtTownlbE5EtNtw0A90RASH92udhpq8hCKf3kWB7iii6w98OzT3KBWOfpCJi
+	 PUuDIYyvn7IojePlsOmbmdRMOm8tQ9V0Sa5yjwD3HA1QEpCmWvgBzD7tD6bCVQ7EnV
+	 KoGqUYcsc0/0qmGiDjnpZPUz1gQpnX6OkYMRUYgyzDuWYdhLv8OF6DKT7Y5k2H8XB5
+	 hYDZzYZGVrXiA==
 From: cem@kernel.org
 To: cem@kernel.org
 Cc: djwong@kernel.org,
 	hchc@last.de,
 	sandeen@sandeen.net,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH v2 2/3] xfs: enable xfs_trans_cancel() to report and error code
-Date: Mon, 14 Sep 2026 13:57:40 +0200
-Message-ID: <20260914115746.82122-3-cem@kernel.org>
+Subject: [PATCH v2 3/3] xfs: make xfs_iomap_write_direct() report an error to xfs_trans_cancel
+Date: Mon, 14 Sep 2026 13:57:41 +0200
+Message-ID: <20260914115746.82122-4-cem@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260914115746.82122-1-cem@kernel.org>
 References: <20260914115746.82122-1-cem@kernel.org>
@@ -48,69 +48,32 @@ Content-Transfer-Encoding: 8bit
 
 From: Carlos Maiolino <cem@kernel.org>
 
-Once in a while it's useful to know exactly what kind of error caused a
-transaction to be cancelled.
-Enable xfs_trans_cancel() to receive an error code to be reported.
+I've been in the situation a few times where the transaction got
+cancelled by some reason. Most of time because bmapi_write failed and I
+start a guessing game trying to understand why.
+
+So if xfs_iomap_write_direct fails and it causes the transaction to be
+cancelled, send the error to xfs_trans_cancel so the error gets logged
+into the kernel log buffer.
 
 Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
-V2:
-	- Parenthesize macro parameters
+ fs/xfs/xfs_iomap.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- fs/xfs/xfs_trans.c | 8 +++++---
- fs/xfs/xfs_trans.h | 6 +++++-
- 2 files changed, 10 insertions(+), 4 deletions(-)
-
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 5c522790e5be..395c896673fe 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -943,8 +943,9 @@ xfs_trans_commit(
-  * xfs_trans_commit().
-  */
- void
--xfs_trans_cancel(
--	struct xfs_trans	*tp)
-+__xfs_trans_cancel(
-+	struct xfs_trans	*tp,
-+	int			error)
- {
- 	struct xfs_mount	*mp = tp->t_mountp;
- 	struct xlog		*log = mp->m_log;
-@@ -971,7 +972,8 @@ xfs_trans_cancel(
- 	 * here.
- 	 */
- 	if (dirty && !xfs_is_shutdown(mp)) {
--		XFS_ERROR_REPORT("xfs_trans_cancel", XFS_ERRLEVEL_LOW, 0, mp);
-+		XFS_ERROR_REPORT("xfs_trans_cancel", XFS_ERRLEVEL_LOW,
-+				 error, mp);
- 		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
- 	}
- #ifdef DEBUG
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index eb83c5dac032..855a46433154 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -213,6 +213,11 @@ xfs_trans_read_buf(
- 				      flags, bpp, ops);
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 7c6238fed61e..4906a4828d11 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -358,7 +358,7 @@ xfs_iomap_write_direct(
+ 	return error;
+ 
+ out_trans_cancel:
+-	xfs_trans_cancel(tp);
++	xfs_trans_cancel_error(tp, error);
+ 	goto out_unlock;
  }
- 
-+void __xfs_trans_cancel(xfs_trans_t *, int);
-+
-+#define xfs_trans_cancel(tp) __xfs_trans_cancel((tp), (0))
-+#define xfs_trans_cancel_error(tp, error) __xfs_trans_cancel((tp), (error))
-+
- struct xfs_buf	*xfs_trans_getsb(struct xfs_trans *);
- struct xfs_buf	*xfs_trans_getrtsb(struct xfs_trans *tp);
- 
-@@ -237,7 +242,6 @@ void		xfs_trans_log_inode(xfs_trans_t *, struct xfs_inode *, uint);
- int		xfs_trans_commit(struct xfs_trans *);
- int		xfs_trans_roll(struct xfs_trans **);
- int		xfs_trans_roll_inode(struct xfs_trans **, struct xfs_inode *);
--void		xfs_trans_cancel(xfs_trans_t *);
- int		xfs_trans_ail_init(struct xfs_mount *);
- void		xfs_trans_ail_destroy(struct xfs_mount *);
  
 -- 
 2.55.0
