@@ -1,36 +1,36 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EE9937F306
-	for <linux-xfs@vger.kernel.org>; Mon, 14 Sep 2026 05:48:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6F7A31ED93
+	for <linux-xfs@vger.kernel.org>; Mon, 14 Sep 2026 05:48:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789364887; cv=none; b=WA4YSQoVYUJGjx/5L27GxbUdDhlBRogCITHeZdTjkCi5O571LTRXGS+/+BuVsqGmqU/GRMfRACn6ShhuMC5zHSl8UKN20GcuYOyeQlzJxDQ6hJMpHIo0LkmLocpEY1xAIsNm/f5GXUVFLM5E4GUpdVG/B/09kYtlX2yAcNWfnIQ=
+	t=1789364895; cv=none; b=S2pgWOk2SQR+EUWA2CBcm0jcxcg1fRZCHnONUDi9MZsJgBh5TOmE70TE7pwURXgmzFpctwEbKEZwtgVkYRGNyowfCmrf5tbkRo+HEZvXtcThmL4LUT0Vx5icA/141IPdHPVB6W1RWchwrRb2m5Nd2X2fGxgtfo4NHH9lYbyLBAA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789364887; c=relaxed/simple;
-	bh=gfPFrUQVlQuzDfiXl3GNsJ9GGH2jB0daos7JRXb+9jo=;
-	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=HRj33V2ZKUkOI+P+AqNrHw8jjSCNw8gN9l3C/Ab5cUGPxZsemK3/ab1hmcAiklglsA9Sc80S8z2xRvW325Zd6ziXac33qXW5bP+NOAmy5f3ntsiA94jiuym7qj8hqbYa2+03l12RMCAbr2rsisj8AIaroJDy+rHsIlDqmxiTaWU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hUEVRbQK; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789364895; c=relaxed/simple;
+	bh=5oZ8I1Le7yjONwzqFEecdHdQDUE8LIbno94WheN7BDg=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=QCunD4a2ZyJ0yXOB8BoMUR6vrzKTJZGVAPg70JURybqY+EkWl08PbRLWtwD3vu+NEJxC7Ys6ulhrpmAkRP2fkNkk1lcQZQFiXZkTpWYJ0OaLsjW4NS8Rmth/8DyBedgFDyawo3yf7zeez59vMBzQzVXfvIGNfr6dDMuH1WNGOhI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YB3aSGnn; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hUEVRbQK"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id E19181F000FF;
-	Mon, 14 Sep 2026 05:48:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YB3aSGnn"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 815151F000FF;
+	Mon, 14 Sep 2026 05:48:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789364886;
-	bh=sAEoKMpHv+5gfHpEsB6SfeN0rqiOSJVA/8BKb2dL3Gs=;
+	s=k20260515; t=1789364891;
+	bh=kTnJwuWN1D22JhR+V0Ilhzv71/lQ1O2dZ2BdbYYnUHo=;
 	h=Date:Subject:From:To:Cc;
-	b=hUEVRbQKqWXwqONiYKNenqrt+X5khHWR6wDtL95NhCzshwqm/+OXd4htNAoAeabRG
-	 VQd8IiCX1xi4h9632aSD8QDX5nI7OHlSZU37edVndYJervi6KTDyht4TPVqmmK+ebn
-	 UMih6J21f4GxrBj1q4szGzquyLNy6ysTPDZB5lyI18cg8aUS8SGyO/SvMlRuaIcN7G
-	 6/sVgf0qSG17qC4cbOuVRsCwMy0wCZw2+DVQVFZvwo7qz/5aoyqy6oHN+jTk371wxl
-	 3uISk7I6RozG8qW/QzjUVFealYRENXPbipgM7hp6rTKYPyc1ydgXZQyAQweFvbLfaV
-	 an1LGleVOrAbA==
-Date: Sun, 13 Sep 2026 22:48:05 -0700
-Subject: [PATCHSET v4 1/2] xfsprogs: generate mkfs.xfs config files
+	b=YB3aSGnnSGnCj2fcsVffb5rWNNuwJy7s2YpwMIetJ/d6vds676ZgoPbSsZLGsYHA7
+	 +bNA1cBbbQ+idabKQr8n3M33I5nH7U5WvtSzZ7KignCGMZGsemkdHW66lPKt2HGg/J
+	 50xwv0xKwY3vWCArLRfEQh/mKr1muheyy6V89UIMSpbXM2ZgmZaCOMwJjfHnvbuy8M
+	 XuUko9MCHpupKLFIbfoT594LS1HVuXZZ2YiL4ib1gSVMrikfFbcjqJnn5bcVtCriwU
+	 GVvUuEn6xgxAZYS1UvaOgOUTnzOLJk1jJZj5HI7sot6AzBgiECqQrhLi+7dbqFHM0t
+	 FtP6w9oUt3F+g==
+Date: Sun, 13 Sep 2026 22:48:11 -0700
+Subject: [PATCHSET 2/2] xfsprogs: use quotactl_fd when possible
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
-Cc: tytso@mit.edu, hch@lst.de, hch@infradead.org, linux-xfs@vger.kernel.org
-Message-ID: <178936484431.2108437.14645667775156303668.stgit@frogsfrogsfrogs>
+Cc: linux-xfs@vger.kernel.org
+Message-ID: <178936484773.2108717.13238892511050788442.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,20 +42,15 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-Every year, we generate a new mkfs.xfs configuration file to match the
-stable feature set of that year's LTS kernel.  Right now I just do this
-by copying the old configuration file and tweaking the values by hand.
+xfs_quota (really, quotactl()) has an interesting interface quirk in
+that one passes a path to a block device in order to administer quotas
+on a mounted filesystem.  Linux 5.17 added a new quotactl_fd syscall
+so that one only has to have an open fd to the target filesystem.
 
-Instead, let's create some library code that can emit the same
-configuration variables that we've been shipping for some years now,
-and hook that up to mkfs/xfs_db/xfs_spaceman so that we can generate
-them either from the mkfs defaults or pre-existing filesystems.
-
-v2: add rvb tags, add the defaults file patch from before, add a few
-    more metadata/v4 feature bits for spice
-v3: add more file-related options and default config files
-v4: address comments about manpage updates, split the quotactl_fd parts
-    into a separate series, compact all the makecfg patches into one
+Let's port xfsprogs to this new syscall because repeated path lookups
+in xfs_quota mean that it's prone to failure if the device gets renamed
+while it's running (e.g. lvm).  Weirder still, you can unmount the
+filesystem while xfs_quota is running.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -66,25 +61,38 @@ Comments and questions are, as always, welcome.
 --D
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=generate-cfgfiles
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=quotactl-fd
 ---
 Commits in this patchset:
- * mkfs: automatically upgrade autofsck earlier
- * mkfs: print config file for a given mkfs configuration
- * xfs_db: print configuration file for mounted filesystems
- * xfs_spaceman: print configuration file for mounted filesystems
- * xfs_admin: print configuration file for mounted filesystems
- * mkfs: allow specification of default options via configuration file
+ * libfrog: hoist xfsquotactl out of xfs_quota
+ * libfrog: clean up xfsquotactl a little bit
+ * libfrog: enhance struct fs_path to store optional mount fd
+ * libfrog: try to pass struct fs_path objects to quotactl wrapper
+ * libfrog: add quotactl_fd support to xfsquotactl
+ * xfs_quota: open the filesystem mountpoint for quota operations
+ * xfs_spaceman: port makecfg to use xfsquotactl
 ---
- libfrog/fsgeom.h        |    4 
- db/info.c               |  201 +++++++++++++++
- db/xfs_admin.sh         |   15 +
- libfrog/fsgeom.c        |  629 +++++++++++++++++++++++++++++++++++++++++++++++
- man/man8/mkfs.xfs.8.in  |   33 ++
- man/man8/xfs_admin.8    |    8 +
- man/man8/xfs_db.8       |    7 +
- man/man8/xfs_spaceman.8 |    7 +
- mkfs/xfs_mkfs.c         |  213 ++++++++++++++--
- spaceman/info.c         |  201 +++++++++++++++
- 10 files changed, 1284 insertions(+), 34 deletions(-)
+ libfrog/paths.h       |    1 +
+ libfrog/quotactl.h    |   30 ++++++++++++++++++++++++
+ quota/init.h          |    2 ++
+ quota/quota.h         |   18 +-------------
+ configure.ac          |    1 +
+ include/builddefs.in  |    1 +
+ libfrog/Makefile      |    6 +++++
+ libfrog/paths.c       |    3 ++
+ libfrog/quotactl.c    |   45 +++++++++++++++++++++++++++---------
+ m4/package_libcdev.m4 |   19 +++++++++++++++
+ quota/Makefile        |    2 +-
+ quota/edit.c          |   36 +++++++++++++++++------------
+ quota/free.c          |   11 +++++----
+ quota/init.c          |   15 ++++++++++++
+ quota/path.c          |    4 ++-
+ quota/project.c       |    7 ++++++
+ quota/quota.c         |    6 +++--
+ quota/report.c        |   61 ++++++++++++++++++++++++-------------------------
+ quota/state.c         |   38 ++++++++++++++++++-------------
+ spaceman/info.c       |    7 ++----
+ 20 files changed, 208 insertions(+), 105 deletions(-)
+ create mode 100644 libfrog/quotactl.h
+ rename quota/linux.c => libfrog/quotactl.c (53%)
 
