@@ -1,88 +1,88 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9B58351C0B
-	for <linux-xfs@vger.kernel.org>; Mon, 14 Sep 2026 22:30:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1EFC37187E
+	for <linux-xfs@vger.kernel.org>; Mon, 14 Sep 2026 22:30:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789425025; cv=none; b=YJ97EVj/l65ao4ND+DgwFUJsNNB+rp1pHha3/ShBiAuDk0QE/0hpM03eFgfJGWhb6ojIJQv4cg4sykU01pwFrsJhTSIZmEaYN4toNCrgqSJdanyARKOaIsrRl+NFta0PzhFiLlniyrwKxWMPYhCHnWg+FOZFpMobEpWGCrh6pBc=
+	t=1789425030; cv=none; b=oktN/LL910BEWIS3i3CZLnQ1j6jFx8rhRRngbAi17orDE/J8qcOYRLir8bUrPC1SOfpinv80apBwQHi/u7guBO28Uts7eSHaBvzC519bao1hBzWmO9ROLzknjEUW0Mb/rSRs9RfmM6LsVIZ7aO53a5qD8fDId/TSsvsq0Q2iySQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789425025; c=relaxed/simple;
-	bh=1U9MtmjQS8rTsFetd5f9gqtGeAgV5Hb2oCwC5wePK10=;
+	s=arc-20240116; t=1789425030; c=relaxed/simple;
+	bh=m7TLGBmV671OLagG+MTvGZPJz59AmHxDDGwIvbSKiNc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ksAO6aHdgzKPP2j6ybRGclVi/Zco/pzVl2eaA3VV22BChXWMkyqm1GJ5i31GaC9Bj5sDqHFFcrEoWi4E3GQPt0gl4mg6rVOZhHaE2F7/rArPNFuTCG6cKgebJSnwQmbLxAi0dZ6UqBMDR9CP9QZoOK+mR0IOggshI+oA/fI9DwI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=VBcVPvO/; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=tXxqyab1; arc=none smtp.client-ip=170.10.133.124
+	 MIME-Version; b=KaHvxbBHuDby3CoOhiCXgHFRDSo6YS9iFOynMEH1X4wIw2/faL70OzENcoAbDoWFeJsIhWxTnphM+Bx5TR44eDBe5qes95wEp0Ozyt10QKlYIcHyLscszYs4KyBrq1MzUDyHhMllrDKB1+bERTSRbMf9HdfVBNmhI3hkKGY1NJo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=BsZnD+My; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=TmiABH5j; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="VBcVPvO/";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="tXxqyab1"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BsZnD+My";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="TmiABH5j"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1789425022;
+	s=mimecast20190719; t=1789425027;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=zdYN3TkuPCTA83dlb0z2HolmOPBsL0A+P6pUFC1TV6o=;
-	b=VBcVPvO/YqoU8N26c0JoVSLfafioIOvekuaoMM//Y56aOTL4KkUZDXrCeJGr2rVCSgYvkk
-	hrTv5k7KHVO0pIzAu/T2JmEPjOavYSufye/+kdPXcUFmGUVWDqcE9wShAJgTA/4cCZS6+f
-	cRr07jUmxfeq8Hn1CKjTcN36ihSJQjA=
+	bh=wQ41Ui+KrY/JTWi6MvSZzgPeexByJ5Nkwu/BiQnGhSc=;
+	b=BsZnD+MyIVNCdzBVrBsC2oXSzb1ChqJWu3APTemFPEtTuTWOhrVH3o0gynWYFWn9KD/Wq3
+	WkyeSoImRIKi7sHtK4u7v4KQ3j7gP+oOKB1uBtV4fhcDxDzp5zM9nEXVZJmTBut82dwUcn
+	AMkc57oy7AqslY5VkGVhbip3/lg4vTc=
 Received: from mail-qt1-f197.google.com (mail-qt1-f197.google.com
  [209.85.160.197]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-526-Q0HyETMCO7WuEAv7jleCVQ-1; Mon, 14 Sep 2026 18:30:21 -0400
-X-MC-Unique: Q0HyETMCO7WuEAv7jleCVQ-1
-X-Mimecast-MFC-AGG-ID: Q0HyETMCO7WuEAv7jleCVQ_1789425021
-Received: by mail-qt1-f197.google.com with SMTP id d75a77b69052e-530ef71ee55so30665241cf.0
-        for <linux-xfs@vger.kernel.org>; Mon, 14 Sep 2026 15:30:21 -0700 (PDT)
+ us-mta-379-m-CoIIZAMDS4BeR__xKYdw-1; Mon, 14 Sep 2026 18:30:24 -0400
+X-MC-Unique: m-CoIIZAMDS4BeR__xKYdw-1
+X-Mimecast-MFC-AGG-ID: m-CoIIZAMDS4BeR__xKYdw_1789425024
+Received: by mail-qt1-f197.google.com with SMTP id d75a77b69052e-52fc16ac179so6373491cf.0
+        for <linux-xfs@vger.kernel.org>; Mon, 14 Sep 2026 15:30:24 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1789425021; x=1790029821; darn=vger.kernel.org;
+        d=redhat.com; s=google; t=1789425024; x=1790029824; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=zdYN3TkuPCTA83dlb0z2HolmOPBsL0A+P6pUFC1TV6o=;
-        b=tXxqyab1hndOb2pViLovaws16mZ2uq1BIEL7QZN0RqQVrQJxb6r8rTQN0lU46yf/K9
-         dTpmgfE3ooXPfAFuyUjHhZQNDH7OSRLr6UYLMusxjoYiB+ofMLpTJYoYWIbtmnWZ2uqq
-         3e02PJ8TqZCH4qt/5qmtpB/gT90N+A+vSgGTX0FdlMnzruPx7DKuN8k/G6D0BWSqQjRn
-         tUIb66t4B2dtk+ztPj0AYmZ6Dhu1FD5EsoFlSRScQW0yBuEPUN9bXnaGnIsyGv3tHlbK
-         o+WeHWOCqomc1xajfwDKFQ4WmL6LLB8t3pMTj/h+Tgkoz29xYr0hGHdccCZn82YVtdCd
-         l56Q==
+        bh=wQ41Ui+KrY/JTWi6MvSZzgPeexByJ5Nkwu/BiQnGhSc=;
+        b=TmiABH5jK3UZGTVpQMerm8yPUIRAI5O3qKkOH1RY3MGhXmoMonpaNw5WCcV/HcKE0+
+         MKPmmyPV0/wKPvLm7rYlonUaMf7h7uKSObMQF6I6xu/Q2H8QU+yUClMGmIsW+DsvgG0k
+         bMGUWy0aQT4rwbM/VHLKhspAVageh+wUX4AxICjQh7HiWkwm4/05w0lNu5HJlwTOY67p
+         ANBDRWQVS8EOYpYxJ66WVmldo//4M7ZQcAk/DIwLVV80f/mGk4BKkgQheQpsTUm0iVWI
+         TjxiDsLI0l9Nohe6CeMmcnEGKd95DvLzTEWwdy790/7nWOUIyul1AXk0WxKEYA3+GOma
+         hLkg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789425021; x=1790029821;
+        d=1e100.net; s=20260707; t=1789425024; x=1790029824;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=zdYN3TkuPCTA83dlb0z2HolmOPBsL0A+P6pUFC1TV6o=;
-        b=rIAaHT0BwJYz0QjFsi9eszJwwiFBnpnSDZzBU2669n8cbDL7OEbQutjNTnkS9WB7b1
-         4bQPfDFXzwjPi9LKFfTTfcoH+ZbKWkPb6VzXGweGdENa3KBZLxtwU9tBBRykloo6Gc3f
-         BdDpiKmOv+oYX8XBoH3raruF0D79qEzR/CcLAfSYWSjw5Z3cFA/sq9RBtIQkeup0+UaF
-         9hClv2yh5yo4jMxswteEQtGb+PmMSmCi2dbHYsQDwwK3j2VRq7HaYO+Aco8gaWZQOuA3
-         PT7R4+whWbP51iXYy6s/WyB+d3mCMgEz9Fon6TTuJp5a3pKYXaBHvbZU59brvDUJUg3x
-         u/Tw==
-X-Gm-Message-State: AFuF++n7PYn2QhWnYXLuQs+9kkKa2fs23tkiMFnu0e2ltT3NMh1HrPVv
-	R1AqxexV3Lxpus7rnsak23ABqjqNbB5PW7FptqJxfkLNW0G85L+taya52ZENdl0SbdOBLfMJOEc
-	Ad/dsWc9yT+Vs/eBcFou86FbtsgZ8gMz+BxY3QkRW/ZYrLgcH5bKMHQ37v94hPI6wy+qCs2heFz
-	7agOFL9Qqby4l/rw79ybEECCnpRSzEVnf+ZXs+YAdCWPdnfgU=
-X-Gm-Gg: AYBFou0opSnSd7PK4P3BtvyO3zI6aTLIvR7KsFxtit1mLsQA6Fia1tOif2Z+NSsYKTV
-	cwllQDYKZ8kM9kX44Xmyr8te8zsZ+BINs+OJ13u/qufBjHXTkC7IL5VCdfOmSzJv9oIzQsx+3ZH
-	lsMfoEquFudsGU4b9dm1fUv6fDoYVps05HGL1iTjH0V9+2pyBlKY8Q3f9+m8iB0qTqOAl5QxSjS
-	ZA1pVKA3pQSi/BCWZvup+vZtcMDW3KHakYhMnYqgI3OFV26FsmvqThwP8vQsM8G7CUF6lTFr+Ry
-	2N1IECpCVib51bM5NWyj7LI0mPU/WH28h/YcTgD2WQ2fCGlnSQY5GvwespmUxdMdeao/+BQDKQn
-	x3L5BWFiH+M3GOv+tPkYKj5JrYAWMyqmKH3qI0A==
-X-Received: by 2002:a05:622a:1496:b0:531:190c:8600 with SMTP id d75a77b69052e-531190c8b3emr28292131cf.32.1789425021107;
-        Mon, 14 Sep 2026 15:30:21 -0700 (PDT)
-X-Received: by 2002:a05:622a:1496:b0:531:190c:8600 with SMTP id d75a77b69052e-531190c8b3emr28291161cf.32.1789425020406;
-        Mon, 14 Sep 2026 15:30:20 -0700 (PDT)
+        bh=wQ41Ui+KrY/JTWi6MvSZzgPeexByJ5Nkwu/BiQnGhSc=;
+        b=et2peOCYKRpLYuvHxVY6XtFo/zisiAKGvmIA+pt1i/oKxXRT4JR6JzSW4D6mVBhZPJ
+         jTj7IUtRvkXdpA3VLNKmLSPZPZ1wOG55oLDbD6/FNRxF/HL/DYMn/dYJqAk0cz87fEkr
+         ofOvmZZ8ZDxmBdHXOh6tQhXiavDrrurBcZKzwlwP8MDTow5Vju9Y+AM6eZo+nMA2KvFh
+         GGBRQts7llplvQlirNv/bWE9VxBIiZQHe9/e1o1piMFHJHkdgRRTzK3WCDtpWHjoMCSI
+         lecIT9aybDDRlJXFZpDNIALYcmSt+2axByni3xT5Pdrjq8LB95nZwokM+XyFoS1CwOn+
+         PNEQ==
+X-Gm-Message-State: AFuF++lXOIWDaZcRBi+Bv8wsv/nIdXXl9hizTeRbSPzIN+N45aEBrsJ3
+	xF+GdhxvFVpHELm3Jm+hLPa1kTBONenzUU/o9wp/xTX1Bdvb7MhTOgbzFWZ4vlD9U6xPOlzF6aE
+	ve502D13VFXORrZPLMmSteDXS7+9VhjB1CBvwjMu8j2NiYyovfRq07gPXevFPBUPUflob9oW1aJ
+	rzHX3a3j7wLSzOzSeh4Me0QE8086joQuztzTo2rvdR9abjSqc=
+X-Gm-Gg: AYBFou0Js+1qQHj/9t67z+HYgsKDImNqWBQrz+LDY0wkNyezyPS5pG2rT+cptlbXH/u
+	5puuyotpV5dq/tSTCpQA/psg2IGIeSc1PclVvh+G/2Njj51eBKHodNwD53AkXk9JLWUUosENk6r
+	Kwmw7fWkLAmskSnN4vFMgWn32BfQVunldCnzpZhw+bYjqMf/3mtsvwuImDZREIB2Td7I8nWR95i
+	gWmeCTwmjZchad98N8ejBo0+dOYCaTyuH32kx654glvGXy60DHWlRs+At9LE3vFf4bj3ucIUfxN
+	nXorUwi6Jz1whanYW43qCKSIYR7155Q3QcUCcOz8nErVWuAIqpWBJX6firf3wywFIHRsrZjYXgJ
+	2beuAwtS1fdl7h42+VXBgvTTr0vGbXsFrehklGw==
+X-Received: by 2002:a05:622a:aa8e:20b0:531:10c:a525 with SMTP id d75a77b69052e-5311994f696mr14290221cf.0.1789425023831;
+        Mon, 14 Sep 2026 15:30:23 -0700 (PDT)
+X-Received: by 2002:a05:622a:aa8e:20b0:531:10c:a525 with SMTP id d75a77b69052e-5311994f696mr14289781cf.0.1789425023180;
+        Mon, 14 Sep 2026 15:30:23 -0700 (PDT)
 Received: from big24.sandeen.net (97-116-156-223.mpls.qwest.net. [97.116.156.223])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-530fa03dc30sm56084041cf.15.2026.09.14.15.30.19
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-530fa03dc30sm56084041cf.15.2026.09.14.15.30.22
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 14 Sep 2026 15:30:19 -0700 (PDT)
+        Mon, 14 Sep 2026 15:30:22 -0700 (PDT)
 From: Eric Sandeen <sandeen@redhat.com>
 To: linux-xfs@vger.kernel.org
 Cc: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH V2 11/14] xfs: remove unused mp argument from xfs_calc_default_atomic_ioend_reservation()
-Date: Mon, 14 Sep 2026 17:28:57 -0500
-Message-ID: <20260914223007.1587017-12-sandeen@redhat.com>
+Subject: [PATCH V2 13/14] xfs: remove unused mp argument from xfs_verify_fileoff()
+Date: Mon, 14 Sep 2026 17:28:59 -0500
+Message-ID: <20260914223007.1587017-14-sandeen@redhat.com>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260914223007.1587017-1-sandeen@redhat.com>
 References: <20260914223007.1587017-1-sandeen@redhat.com>
@@ -96,48 +96,118 @@ Content-Transfer-Encoding: 8bit
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- fs/xfs/libxfs/xfs_trans_resv.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ fs/xfs/libxfs/xfs_types.c   | 5 ++---
+ fs/xfs/libxfs/xfs_types.h   | 2 +-
+ fs/xfs/scrub/inode_repair.c | 2 +-
+ fs/xfs/scrub/quota.c        | 2 +-
+ fs/xfs/scrub/quota_repair.c | 4 ++--
+ fs/xfs/xfs_inode.c          | 2 +-
+ fs/xfs/xfs_super.c          | 2 +-
+ 7 files changed, 9 insertions(+), 10 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-index 3151e97ca8ff..57f682f0b54a 100644
---- a/fs/xfs/libxfs/xfs_trans_resv.c
-+++ b/fs/xfs/libxfs/xfs_trans_resv.c
-@@ -1292,7 +1292,6 @@ xfs_calc_namespace_reservations(
- 
- STATIC void
- xfs_calc_default_atomic_ioend_reservation(
+diff --git a/fs/xfs/libxfs/xfs_types.c b/fs/xfs/libxfs/xfs_types.c
+index b5b0b6334d11..32e6c0aaf467 100644
+--- a/fs/xfs/libxfs/xfs_types.c
++++ b/fs/xfs/libxfs/xfs_types.c
+@@ -232,7 +232,6 @@ xfs_verify_dablk(
+ /* Check that a file block offset does not exceed the maximum. */
+ bool
+ xfs_verify_fileoff(
 -	struct xfs_mount	*mp,
- 	struct xfs_trans_resv	*resp)
+ 	xfs_fileoff_t		off)
  {
- 	/* Pick a default that will scale reasonably for the log size. */
-@@ -1398,7 +1397,7 @@ xfs_trans_resv_calc(
- 	 * Now that we've finished computing the static reservations, we can
- 	 * compute the dynamic reservation for atomic writes.
- 	 */
--	xfs_calc_default_atomic_ioend_reservation(mp, resp);
-+	xfs_calc_default_atomic_ioend_reservation(resp);
+ 	return off <= XFS_MAX_FILEOFF;
+@@ -248,8 +247,8 @@ xfs_verify_fileext(
+ 	if (off + len <= off)
+ 		return false;
+ 
+-	if (!xfs_verify_fileoff(mp, off))
++	if (!xfs_verify_fileoff(off))
+ 		return false;
+ 
+-	return xfs_verify_fileoff(mp, off + len - 1);
++	return xfs_verify_fileoff(off + len - 1);
  }
+diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
+index d217220d2054..adae81149680 100644
+--- a/fs/xfs/libxfs/xfs_types.h
++++ b/fs/xfs/libxfs/xfs_types.h
+@@ -280,7 +280,7 @@ bool xfs_verify_icount(struct xfs_mount *mp, unsigned long long icount);
+ bool xfs_verify_dablk(xfs_fileoff_t off);
+ void xfs_icount_range(struct xfs_mount *mp, unsigned long long *min,
+ 		unsigned long long *max);
+-bool xfs_verify_fileoff(struct xfs_mount *mp, xfs_fileoff_t off);
++bool xfs_verify_fileoff(xfs_fileoff_t off);
+ bool xfs_verify_fileext(struct xfs_mount *mp, xfs_fileoff_t off,
+ 		xfs_fileoff_t len);
  
- /*
-@@ -1508,7 +1507,7 @@ xfs_calc_atomic_write_log_geometry(
+diff --git a/fs/xfs/scrub/inode_repair.c b/fs/xfs/scrub/inode_repair.c
+index cdfde3cea5fb..e12525838e6c 100644
+--- a/fs/xfs/scrub/inode_repair.c
++++ b/fs/xfs/scrub/inode_repair.c
+@@ -933,7 +933,7 @@ xrep_dinode_bad_bmbt_fork(
  
- 	ASSERT(blockcount > 0);
+ 		fkp = xfs_bmdr_key_addr(dfp, i);
+ 		fileoff = be64_to_cpu(fkp->br_startoff);
+-		if (!xfs_verify_fileoff(sc->mp, fileoff))
++		if (!xfs_verify_fileoff(fileoff))
+ 			return true;
  
--	xfs_calc_default_atomic_ioend_reservation(mp, M_RES(mp));
-+	xfs_calc_default_atomic_ioend_reservation(M_RES(mp));
+ 		fpp = xfs_bmdr_ptr_addr(dfp, i, dmxr);
+diff --git a/fs/xfs/scrub/quota.c b/fs/xfs/scrub/quota.c
+index 222812fe202c..8c6ba1240fd5 100644
+--- a/fs/xfs/scrub/quota.c
++++ b/fs/xfs/scrub/quota.c
+@@ -89,7 +89,7 @@ xchk_quota_item_bmap(
+ 	int			nmaps = 1;
+ 	int			error;
  
- 	per_intent = xfs_calc_atomic_write_ioend_geometry(mp, &step_size);
- 
-@@ -1545,7 +1544,7 @@ xfs_calc_atomic_write_reservation(
- 	 * use the defaults.
- 	 */
- 	if (blockcount == 0) {
--		xfs_calc_default_atomic_ioend_reservation(mp, M_RES(mp));
-+		xfs_calc_default_atomic_ioend_reservation(M_RES(mp));
+-	if (!xfs_verify_fileoff(mp, offset)) {
++	if (!xfs_verify_fileoff(offset)) {
+ 		xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, offset);
  		return 0;
  	}
+diff --git a/fs/xfs/scrub/quota_repair.c b/fs/xfs/scrub/quota_repair.c
+index 59302e8afc7e..9ab373c1994c 100644
+--- a/fs/xfs/scrub/quota_repair.c
++++ b/fs/xfs/scrub/quota_repair.c
+@@ -116,8 +116,8 @@ xrep_quota_item_bmap(
+ 	int			error;
  
+ 	/* The computed file offset should always be valid. */
+-	if (!xfs_verify_fileoff(mp, offset)) {
+-		ASSERT(xfs_verify_fileoff(mp, offset));
++	if (!xfs_verify_fileoff(offset)) {
++		ASSERT(xfs_verify_fileoff(offset));
+ 		return -EFSCORRUPTED;
+ 	}
+ 	dq->q_fileoffset = offset;
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 64643fb8b591..842627af4061 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1064,7 +1064,7 @@ xfs_itruncate_extents_flags(
+ 	 * the page cache can't scale that far.
+ 	 */
+ 	first_unmap_block = XFS_B_TO_FSB(mp, (xfs_ufsize_t)new_size);
+-	if (!xfs_verify_fileoff(mp, first_unmap_block)) {
++	if (!xfs_verify_fileoff(first_unmap_block)) {
+ 		WARN_ON_ONCE(first_unmap_block > XFS_MAX_FILEOFF);
+ 		return 0;
+ 	}
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index b24db75eaedc..2edc2a497883 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1889,7 +1889,7 @@ xfs_fs_fill_super(
+ 	 * Avoid integer overflow by comparing the maximum bmbt offset to the
+ 	 * maximum pagecache offset in units of fs blocks.
+ 	 */
+-	if (!xfs_verify_fileoff(mp, XFS_B_TO_FSBT(mp, MAX_LFS_FILESIZE))) {
++	if (!xfs_verify_fileoff(XFS_B_TO_FSBT(mp, MAX_LFS_FILESIZE))) {
+ 		xfs_warn(mp,
+ "MAX_LFS_FILESIZE block offset (%llu) exceeds extent map maximum (%llu)!",
+ 			 XFS_B_TO_FSBT(mp, MAX_LFS_FILESIZE),
 -- 
 2.55.0
 
