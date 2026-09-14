@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6D7A374A19
-	for <linux-xfs@vger.kernel.org>; Mon, 14 Sep 2026 05:50:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A85E38332A
+	for <linux-xfs@vger.kernel.org>; Mon, 14 Sep 2026 05:51:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789365062; cv=none; b=msRPs1yiQ75BRRY9EeJDIYKcyPfqiD96wkpy7qkts0efUqHqqi1/kpgU6AEiZPWU+CYPxMwLW0yyPP+SU5Gh5Oxj4ETQNAmXdMg7C4s8be0J/brk3hr+DhatkdhFhNoZ7G2fsc5FyGmtxPPCZHxcqMhRLRSQfpC+mdLMnpRuIKw=
+	t=1789365074; cv=none; b=uWBPkDFZGqRnbyVTUGjhRoU8lcKpWKwnqpYMjB78Oj1sX5JlUj3iFBxxeCG+zVc5Dvoilan/r1HZD3NxB8gXBEuMrwttYJ8cHxiti85PAExqz/609KKdH+MHxFp175V1ys81GEiXW0m/GN4IUdku7dMy7o1qTCeN6H/rafNT56Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789365062; c=relaxed/simple;
-	bh=1W3BvLkKT+Zd4nKhCGRufBVc5j4JZx3H7vd7Jys4IyM=;
+	s=arc-20240116; t=1789365074; c=relaxed/simple;
+	bh=uagFbP2s4BbfjBWc8Vci2Y0aupbB/QBW55tHQEllVPk=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=B+0Lmkfezid1Hvochb+X6OTChK88vUxfbbbTkeXUdKSUHnRYrcbY24VHZ4T5rAF7RSaZJTbWWud2TdNn+62PZBnfT+00AegJFCFljJ9bS9zUx1wUnsLdrvdKqn6tq5YYVlnqLffrUC/lrNzbzsbfhPtEzyII5bsymfxKnjwwWm8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Y6n9sLK/; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=JlOPphuq5q7dzsxbZ+oATSNN6gzMa7W2yLVF/s0WdmMH+I94ehYXTLTpLbsYGtpUsneltxvx82SNgdnauC3D0LIKnrzTndY6jtNE6rVoZldTItzv1BHj4XWdiY+t3NzWEzgNeds7/SbJf03G2sxAQu63Mge+gbKwR6r/aa87/Is=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AxyyMCIb; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y6n9sLK/"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 7F8C81F000FF;
-	Mon, 14 Sep 2026 05:50:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AxyyMCIb"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 675F01F000FF;
+	Mon, 14 Sep 2026 05:51:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789365053;
-	bh=cwUXJvCq2tb9fKRkX/7/4ndf4ziu+hbz1GrSeplIW3Q=;
+	s=k20260515; t=1789365069;
+	bh=pQNgHAswxa5zuZBb2UqSftxjRZKv0pnnOAeMoZGoSfs=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=Y6n9sLK/iXlGlUvyD8PhxrnLyRuBFUZJAVJkuRfMfCi/BAdk6iNreV5LLQd6+wv28
-	 +V9iU8FNVIi3unNsP0pBT+NB4OG3J++Jyl0aHHS0hTO6anVgHZZHwBJOu0mAl/1vGj
-	 nNystAyrHXmYe+rI2+NTUsJtFHMqaA69H2tlaC6sDzE+yhfZAXIiMFcLlP+nNxvJ+j
-	 GKRGPtuWwsXGBuZIMf1huiueCIzOaB/A8EO7u6q+PfjTJD2Te7Q3Ox5IzUqJ25mAI8
-	 ciCRbCtXG5dM0BEZBp42DYBnLIoqoy3FkJ8zxAoEN4G2l2XM07e68nP76MG/qupd9T
-	 zVDuxlu6EMbxQ==
-Date: Sun, 13 Sep 2026 22:50:53 -0700
-Subject: [PATCH 5/7] libfrog: add quotactl_fd support to xfsquotactl
+	b=AxyyMCIbqgbw66bLkrTB8pl5Qa8Hb37XXjEU7wTACflhJWeLLB51ZDTjkhJc4xzrd
+	 cg1eRldhQRcBjME9/AlYEhHWLyHCli9Oy7Wo9y8ZIxhMI/JVx2AfF/GHvG05OKW8Sd
+	 SBuXra/YB5Y8jgrR6QQZSRAbEHT+vMlHciP/LLe3cRTS56hM1uDNuCUOEI1HnaXtef
+	 f7PFFLPWjv36W+wMgH2YoYeMGIVj8jC+8QF4Rfa6IhUsDcnsMP/xYxY5UC0XayakTs
+	 PZKkbHROQ+aync4TbDRHpXeUPJCLN5rLGT0bpu0Fb+LrH4TcP4/smrqjL5A6J0NXVv
+	 04qMBmqWdMOhg==
+Date: Sun, 13 Sep 2026 22:51:08 -0700
+Subject: [PATCH 6/7] xfs_quota: open the filesystem mountpoint for quota
+ operations
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <178936484899.2108717.17872277106848553305.stgit@frogsfrogsfrogs>
+Message-ID: <178936484918.2108717.4779652680175945955.stgit@frogsfrogsfrogs>
 In-Reply-To: <178936484773.2108717.13238892511050788442.stgit@frogsfrogsfrogs>
 References: <178936484773.2108717.13238892511050788442.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,176 +46,79 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add support for the quotactl_fd syscall to the xfsquotactl call in
-libfrog.  I rearranged the function arguments so that the fs connection
-point (either an open fd or the fs source) come first.
+Change xfs_quota's behavior so that it tries to open the filesystem
+mountpoint when it's starting up.  This enables it to use the
+quotactl_fd system call instead of the kernel having to do a path lookup
+of the data device.  Doing so adds robustness against the data device
+getting renamed (e.g. lvm rename) while xfs_quota is running.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- libfrog/quotactl.h    |    2 +-
- configure.ac          |    1 +
- include/builddefs.in  |    1 +
- libfrog/Makefile      |    4 ++++
- libfrog/quotactl.c    |   15 +++++++++++++--
- m4/package_libcdev.m4 |   19 +++++++++++++++++++
- quota/edit.c          |    7 ++++---
- 7 files changed, 43 insertions(+), 6 deletions(-)
+ quota/init.h    |    2 ++
+ quota/init.c    |   15 +++++++++++++++
+ quota/project.c |    7 +++++++
+ 3 files changed, 24 insertions(+)
 
 
-diff --git a/libfrog/quotactl.h b/libfrog/quotactl.h
-index dae03b787b7663..9df9327402726d 100644
---- a/libfrog/quotactl.h
-+++ b/libfrog/quotactl.h
-@@ -20,7 +20,7 @@ enum xfs_quota_cmd {
- 	XFS_GETNEXTQUOTA, /* get disk limits and usage */
- };
+diff --git a/quota/init.h b/quota/init.h
+index 9191d822e55819..e85cfa45580cb2 100644
+--- a/quota/init.h
++++ b/quota/init.h
+@@ -19,3 +19,5 @@ extern void	report_init(void);
+ extern void	state_init(void);
  
--int xfsquotactl(enum xfs_quota_cmd xcommand, const char *device,
-+int xfsquotactl(int mnt_fd, const char *device, enum xfs_quota_cmd xcommand,
- 		unsigned int xtype, unsigned int id, void *addr);
- 
- struct fs_path;
-diff --git a/configure.ac b/configure.ac
-index 40ccd88aa2a950..8a2505e37c70ab 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -195,6 +195,7 @@ if test "$have_listmount" = "yes"; then
- fi
- AC_HAVE_STATMOUNT_SUPPORTED_MASK
- AC_HAVE_FANOTIFY_MOUNTINFO
-+AC_HAVE_QUOTACTL_FD
- 
- if test "$enable_ubsan" = "yes" || test "$enable_ubsan" = "probe"; then
-         AC_PACKAGE_CHECK_UBSAN
-diff --git a/include/builddefs.in b/include/builddefs.in
-index 3b52d1afd7031c..5d2e6c1b90ddbe 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -126,6 +126,7 @@ HAVE_LISTMOUNT_NS_FD = @have_listmount_ns_fd@
- HAVE_STATMOUNT_SUPPORTED_MASK = @have_statmount_supported_mask@
- NEED_INTERNAL_STATMOUNT = @need_internal_statmount@
- HAVE_FANOTIFY_MOUNTINFO = @have_fanotify_mountinfo@
-+HAVE_QUOTACTL_FD = @have_quotactl_fd@
- 
- GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
- #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
-diff --git a/libfrog/Makefile b/libfrog/Makefile
-index b0e8d1a10cd0c7..c7bcd6a778d702 100644
---- a/libfrog/Makefile
-+++ b/libfrog/Makefile
-@@ -108,6 +108,10 @@ ifeq ($(HAVE_LISTMOUNT_NS_FD),yes)
- CFLAGS+=-DHAVE_LISTMOUNT_NS_FD
- endif
- 
-+ifeq ($(HAVE_QUOTACTL_FD),yes)
-+CFLAGS += -DHAVE_QUOTACTL_FD
-+endif
+ extern void init_cvtnum(unsigned int *, unsigned int *);
 +
- default: ltdepend $(LTLIBRARY) $(GETTEXT_PY)
- 
- crc32table.h: gen_crc32table.c crc32defs.h
-diff --git a/libfrog/quotactl.c b/libfrog/quotactl.c
-index 6129fa155ce75e..19b5405be47946 100644
---- a/libfrog/quotactl.c
-+++ b/libfrog/quotactl.c
-@@ -56,14 +56,24 @@ xcommand_to_qcommand(
- 
- int
- xfsquotactl(
--	enum xfs_quota_cmd	xcommand,
-+	int			mnt_fd,
- 	const char		*device,
-+	enum xfs_quota_cmd	xcommand,
- 	uint			xtype,
- 	uint			id,
- 	void			*addr)
- {
- 	const int		op = QCMD(xcommand_to_qcommand(xcommand),
- 					  xtype_to_qtype(xtype));
-+	int			ret = -1;
-+
-+	errno = ENOSYS;
-+#ifdef HAVE_QUOTACTL_FD
-+	if (mnt_fd >= 0)
-+		ret = syscall(SYS_quotactl_fd, mnt_fd, op, id, addr);
-+#endif
-+	if (ret != -1 || errno != ENOSYS)
-+		return ret;
- 
- 	return quotactl(op, device, id, addr);
- }
-@@ -76,5 +86,6 @@ xfrog_quotactl(
- 	uint			id,
- 	void			*addr)
- {
--	return xfsquotactl(xcommand, mount->fs_name, xtype, id, addr);
-+	return xfsquotactl(mount->mnt_fd, mount->fs_name, xcommand, xtype, id,
-+			addr);
- }
-diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
-index 9586bc01fe0f25..5c1b6e4667d0ee 100644
---- a/m4/package_libcdev.m4
-+++ b/m4/package_libcdev.m4
-@@ -476,3 +476,22 @@ AC_DEFUN([AC_HAVE_FANOTIFY_MOUNTINFO],
-        AC_MSG_RESULT(no))
-     AC_SUBST(have_fanotify_mountinfo)
-   ])
-+
-+#
-+# Check if we have a quotactl_fd system call (5.14).
-+#
-+AC_DEFUN([AC_HAVE_QUOTACTL_FD],
-+  [AC_MSG_CHECKING([for quotactl_fd])
-+    AC_LINK_IFELSE(
-+    [AC_LANG_PROGRAM([[
-+#define _GNU_SOURCE
-+#include <sys/syscall.h>
-+#include <unistd.h>
-+  ]], [[
-+	return syscall(SYS_quotactl_fd);
-+  ]])
-+    ], have_quotactl_fd=yes
-+       AC_MSG_RESULT(yes),
-+       AC_MSG_RESULT(no))
-+    AC_SUBST(have_quotactl_fd)
-+  ])
-diff --git a/quota/edit.c b/quota/edit.c
-index d28a4319024038..cf4f8cdaeead63 100644
---- a/quota/edit.c
-+++ b/quota/edit.c
-@@ -140,6 +140,7 @@ set_limits(
- 	uint32_t	id,
- 	uint		type,
- 	uint		mask,
-+	int		mnt_fd,
- 	char		*dev,
- 	uint64_t	*bsoft,
- 	uint64_t	*bhard,
-@@ -162,7 +163,7 @@ set_limits(
- 	d.d_rtb_hardlimit = *rtbhard;
- 	d.d_rtb_softlimit = *rtbsoft;
- 
--	if (xfsquotactl(XFS_SETQLIM, dev, type, id, (void *)&d) < 0) {
-+	if (xfsquotactl(mnt_fd, dev, XFS_SETQLIM, type, id, (void *)&d) < 0) {
- 		exitcode = 1;
- 		fprintf(stderr, _("%s: cannot set limits: %s\n"),
- 				progname, strerror(errno));
-@@ -310,7 +311,7 @@ limit_f(
- 	if (id == -1)
- 		return 0;
- 
--	set_limits(id, type, mask, fs_path->fs_name,
-+	set_limits(id, type, mask, fs_path->mnt_fd, fs_path->fs_name,
- 		   &bsoft, &bhard, &isoft, &ihard, &rtbsoft, &rtbhard);
++void open_mnt_fds(void);
+diff --git a/quota/init.c b/quota/init.c
+index 9425827591c798..e7fae917d641b7 100644
+--- a/quota/init.c
++++ b/quota/init.c
+@@ -128,6 +128,19 @@ init_check_command(
  	return 0;
  }
-@@ -356,7 +357,7 @@ restore_file(
- 			mask = FS_DQ_ISOFT|FS_DQ_IHARD|FS_DQ_BSOFT|FS_DQ_BHARD;
- 			if (cnt == 7)
- 				mask |= FS_DQ_RTBSOFT|FS_DQ_RTBHARD;
--			set_limits(id, type, mask, dev, &bsoft, &bhard,
-+			set_limits(id, type, mask, -1, dev, &bsoft, &bhard,
- 					&isoft, &ihard, &rtbsoft, &rtbhard);
- 		}
- 	}
+ 
++void
++open_mnt_fds(void)
++{
++	int		c;
++
++	for (c = 0; c < fs_count; c++) {
++		if (fs_table[c].mnt_fd < 0) {
++			/* if this fails, we fall back to path-based quotactl */
++			fs_table[c].mnt_fd = open(fs_table[c].fs_dir, O_RDONLY);
++		}
++	}
++}
++
+ static void
+ init(
+ 	int		argc,
+@@ -189,6 +202,8 @@ init(
+ 		fs_path = fs_table_lookup(argv[optind], FS_MOUNT_POINT);
+ 	else
+ 		fs_path = &fs_table[0];
++
++	open_mnt_fds();
+ }
+ 
+ int
+diff --git a/quota/project.c b/quota/project.c
+index 33449e01ef4dbb..9b057df75b6aed 100644
+--- a/quota/project.c
++++ b/quota/project.c
+@@ -296,6 +296,13 @@ _("%s: cannot setup path for project dir %s: %s\n"),
+ 					progname, optarg, strerror(error));
+ 				return 0;
+ 			}
++
++			/*
++			 * fs_table could have been arbitrarily rearranged by
++			 * fs_table_insert, so we need to try to open any new
++			 * mounts.
++			 */
++			open_mnt_fds();
+ 			break;
+ 		case 's':
+ 			type = SETUP_PROJECT;
 
