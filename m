@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E06037F739
-	for <linux-xfs@vger.kernel.org>; Mon, 14 Sep 2026 05:50:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2A393806CA
+	for <linux-xfs@vger.kernel.org>; Mon, 14 Sep 2026 05:50:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789365017; cv=none; b=h4L1pjkVaj+/0cpDFXZJZja8I8p2TWdRoIw5nTqqKS6Yw26WXzaProroH+A4B7WeLC8KHzgDTAHrNpiMQd5Cg7NatRIFA7uoc5phSDfE7gg2Oy98/6Eo5jOcpti+LGu5crIsZYSsGjsfaHlu3IeZnepgGozoMrkPXzibEcMItVY=
+	t=1789365034; cv=none; b=CenKqkIMyF5pkVNcVZNByltgBZ+gzDJsA5cy3jMBbWvbmsUYjj1AvmFPA+UH/kFRkEr+aodGv9MtgKM25BBzBbX8EZIoAE1f9wyV0EMV04m8tE0YSEqgRv1mTguqYv7sIT11M31a82t1+l3005PVU83EocFHMotDQ7N2ax0jB7M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789365017; c=relaxed/simple;
-	bh=nObh/ZQjE0CPvTp4Eb6qgTnUcuqjYGM6IX0a04Q+s3I=;
+	s=arc-20240116; t=1789365034; c=relaxed/simple;
+	bh=dZyUF40b1EKUBPHJIeoiRvyVaoLBZGcDtz5TB5HGVfE=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=m8pBO6v1hiR6xe3yk7rUlO1oPVyEBHe8DHeUSXu0xm6QU+jLdEBnSvFD55gkfx/oLZKDqj9GWar9Oa2nsLjqjEh7jaqrL8N4lBovyV4BJLKFWpqJIdtIpqxv9AV9tlAp90FAcXzghU60GubtdmL1RnrJ1KHKSGiabrMI0JbaN9M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=odMFSitz; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=P7YmkIAuihvXpplxXs4AqBhhYUPT0urLifpqXfdIgQli10vRr41Thha51Da2HGhlafhec3Ck8akEAieCE7MFOGG9BYaY7zCe9YI8RmN1Wva9ZruR6kFZfSX6WIYzxMnQwWW8D8Gps6huNHpvN8LIc2PaUJGGFmNwLK8QKUfJ8Rc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hw6/loAc; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="odMFSitz"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id AAF631F000FF;
-	Mon, 14 Sep 2026 05:50:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hw6/loAc"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 45F5E1F000FF;
+	Mon, 14 Sep 2026 05:50:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789365006;
-	bh=xveh9vI9f2o4Say1xazGc9XIIetfOfZQ6UlluZrTMWs=;
+	s=k20260515; t=1789365022;
+	bh=QCpd/5daWyRpe56BNpxhdW5fnwMsWP3zXOarOBr8Ax8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=odMFSitzoCYjF+0sP/lH1uZ4aNgSnxwb1m8i55KX+wNPcmpXuE5zOYpo74hSKZX4U
-	 wcQLGi7s9J9Mn8nl1r1s3a4hOR9Y9lOIr+RrN6Kp0cupHeL8j2Eb/voEuox2qlBXXi
-	 l4EORpNLbM8jNjiNJoKQFKms+X+/A+909D+F3fwk8WXIW8LCCclEGvIYBDIG+GPrm7
-	 XSitcfa9zbS5JgpfAY0B/tSNuvd6JlT7dc32IEmG+df3RscH+EED+93k5DSh/gRjy1
-	 Nzjne0aNmpzi21QNqitwpM0D5+ocv9wAaA1Lc2tFZEczjLJSwssMwn4yvlOuthLDcc
-	 zw5X+IKNym5ZQ==
-Date: Sun, 13 Sep 2026 22:50:06 -0700
-Subject: [PATCH 2/7] libfrog: clean up xfsquotactl a little bit
+	b=hw6/loAcc77Q67OlbEXmYNRPWvpKPF9Fiixoi3TCoEsrVE1h+UqvmC4nOwqGzpm1i
+	 Eufy0F2H66eqzCfouczuweISMtYE7bVxcDixUQ4pdCuhq30E0SybefQLOEuoiIX3UG
+	 IcU5l8w/QM0d981QhEW4es4YOBjmlLJ4V6kuxgp1LTfROul9IuoZzra0PLNmvpXi8e
+	 zGy5JNF/6SSAJZKv1Csog6fdG/DQ2KDt57YVQftj7LxQnfLPhAdpyFk1U0RU2h7xMn
+	 lgTS3xM7Kq4iCWUBM9lrZydCYKI0zukHBdEX9Yq+Qfe00r2WJ6zGtbkhWxzOWPnKJD
+	 NEAqJ4JSMiHhw==
+Date: Sun, 13 Sep 2026 22:50:21 -0700
+Subject: [PATCH 3/7] libfrog: enhance struct fs_path to store optional mount
+ fd
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <178936484843.2108717.10271335394491802697.stgit@frogsfrogsfrogs>
+Message-ID: <178936484862.2108717.5940087474719549167.stgit@frogsfrogsfrogs>
 In-Reply-To: <178936484773.2108717.13238892511050788442.stgit@frogsfrogsfrogs>
 References: <178936484773.2108717.13238892511050788442.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,82 +46,50 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Clean up this function so that we actually take advantage of enums for
-the quota command, and get ready for adding quotactl_fd in the next
-patch.
+The fs_path object stores information about various mounted XFS(?)
+filesystems.  We'd like to be able to store an fd to an open file on
+each mounted filesystem, so add a mnt_fd field to fs_path for that
+purpose.  Users can store a fd in here if they want, and it'll get
+cleaned up when the fs_table is destroyed.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- libfrog/quotactl.h |   10 ++++------
- libfrog/quotactl.c |   22 ++++++++++------------
- 2 files changed, 14 insertions(+), 18 deletions(-)
+ libfrog/paths.h |    1 +
+ libfrog/paths.c |    3 +++
+ 2 files changed, 4 insertions(+)
 
 
-diff --git a/libfrog/quotactl.h b/libfrog/quotactl.h
-index f76d02567408a0..5e351d53bb4b1e 100644
---- a/libfrog/quotactl.h
-+++ b/libfrog/quotactl.h
-@@ -8,12 +8,7 @@
+diff --git a/libfrog/paths.h b/libfrog/paths.h
+index 306fd3cb8fde57..90689e7ab69fe8 100644
+--- a/libfrog/paths.h
++++ b/libfrog/paths.h
+@@ -29,6 +29,7 @@ typedef struct fs_path {
+ 	char		*fs_dir;	/* Directory / mount point	*/
+ 	uint		fs_flags;	/* FS_{MOUNT_POINT,PROJECT_PATH}*/
+ 	uint		fs_prid;	/* Project ID for tree root	*/
++	int		mnt_fd;		/* optional fd for mountpoint	*/
+ } fs_path_t;
  
- #include "xqm.h"
+ extern int fs_count;		/* number of entries in fs table */
+diff --git a/libfrog/paths.c b/libfrog/paths.c
+index a5dfab48ec1e2a..d4cf65810c0029 100644
+--- a/libfrog/paths.c
++++ b/libfrog/paths.c
+@@ -206,6 +206,7 @@ fs_table_insert(
+ 	fs_path->fs_datadev = datadev;
+ 	fs_path->fs_logdev = logdev;
+ 	fs_path->fs_rtdev = rtdev;
++	fs_path->mnt_fd = -1;
+ 	fs_count++;
+ 	if (!(flags & FS_FOREIGN))
+ 		xfs_fs_count++;
+@@ -232,6 +233,8 @@ fs_table_destroy(void)
+ 	struct fs_path	*fsp;
  
--/*
-- * System call definitions mapping to platform-specific quotactl
-- */
--extern int xfsquotactl(int __cmd, const char *__device,
--			uint __type, uint __id, void * __addr);
--enum {
-+enum xfs_quota_cmd {
- 	XFS_QUOTAON,	/* enable accounting/enforcement */
- 	XFS_QUOTAOFF,	/* disable accounting/enforcement */
- 	XFS_GETQUOTA,	/* get disk limits and usage */
-@@ -25,4 +20,7 @@ enum {
- 	XFS_GETNEXTQUOTA, /* get disk limits and usage */
- };
- 
-+int xfsquotactl(enum xfs_quota_cmd xcommand, const char *device,
-+		unsigned int xtype, unsigned int id, void *addr);
-+
- #endif /* LIBFROG_QUOTACTL_H_ */
-diff --git a/libfrog/quotactl.c b/libfrog/quotactl.c
-index ffef72b44eeadf..81df2baf4a76b4 100644
---- a/libfrog/quotactl.c
-+++ b/libfrog/quotactl.c
-@@ -28,9 +28,9 @@ xtype_to_qtype(
- 
- static int
- xcommand_to_qcommand(
--	uint		command)
-+	enum xfs_quota_cmd	xcommand)
- {
--	switch (command) {
-+	switch (xcommand) {
- 	case XFS_QUOTAON:
- 		return Q_XQUOTAON;
- 	case XFS_QUOTAOFF:
-@@ -55,16 +55,14 @@ xcommand_to_qcommand(
- 
- int
- xfsquotactl(
--	int		command,
--	const char	*device,
--	uint		type,
--	uint		id,
--	void		*addr)
-+	enum xfs_quota_cmd	xcommand,
-+	const char		*device,
-+	uint			xtype,
-+	uint			id,
-+	void			*addr)
- {
--	int		qcommand, qtype;
-+	const int		op = QCMD(xcommand_to_qcommand(xcommand),
-+					  xtype_to_qtype(xtype));
- 
--	qtype = xtype_to_qtype(type);
--	qcommand = xcommand_to_qcommand(command);
--
--	return quotactl(QCMD(qcommand, qtype), device, id, addr);
-+	return quotactl(op, device, id, addr);
- }
+ 	for (i = 0, fsp = fs_table; i < fs_count; i++, fsp++) {
++		if (fsp->mnt_fd >= 0)
++			close(fsp->mnt_fd);
+ 		free(fsp->fs_name);
+ 		free(fsp->fs_dir);
+ 		free(fsp->fs_log);
 
