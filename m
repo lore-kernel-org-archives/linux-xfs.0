@@ -1,79 +1,39 @@
-Received: from mail-pj2-f12.google.com (mail-pj2-f12.google.com [74.125.227.140])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D5C037D12E
-	for <linux-xfs@vger.kernel.org>; Mon, 14 Sep 2026 09:32:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.140
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D87C3B42E7
+	for <linux-xfs@vger.kernel.org>; Mon, 14 Sep 2026 10:47:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789378347; cv=none; b=ujMpeKsXdl19NtNMbAqykC13qlAhUTl7JsPGe4LyVGxgEBZd92+xFpHVU/BQpYC72AXfNXlFKsAtTlVN4ItJ4LCmXVlg2UKamt7SDyX+fth6vvVWOndGnRNORQSAlGFreyayTWOib9mYePQT9+eu4Bk5x3wLxFDkDtVYfnkrO5c=
+	t=1789382880; cv=none; b=L0JY1LYFzAKMZCdftz6M+VaovKI1DFyLwKJujD0htSMwm/MfuqqUcPM2kbwpOBfZUGyhrmi9C474WMxtKP4dKyuYjZ3SRUaCzTXPFVQ0SCSe4gCoMmgPle6FfTQnotKHeJ/c/HWWBkhXfTXYTT2WBWcLyqF+7NweMEQ07Mw5OHA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789378347; c=relaxed/simple;
-	bh=ThjuJJIilkFnb3x21CQlJpZVJrdeK0DbvDM3qFJoTpc=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=dy8cfvmOMByDrJzOjcu5Yxfgn227V/nKLeVi0cTnaZhA761W2wSE0SWpwVjdBA1pNy0J7ss+qWvUQz+tLqDoFH6dPbel/5Uo0EcMIM1laeQaIUAUg9GQZLJag/5eh/6Eu7qV6xltlwzrZ6lQrNvSVM1iIvwdj1+6EYuByQf7yTc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=EfNcv0nh; arc=none smtp.client-ip=74.125.227.140
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1789382880; c=relaxed/simple;
+	bh=mwdFy7ZsvD8+6QRIQukzUwnGt6wB8pr7P0aTII8joyg=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=X8rkg5DDe7r7YV813SFy6ZN+3DmIy7bqnbN7rCLK8eGm7BxURMdaVHsZ+ngqAORg9sHDrbVYU7JHSQzSY/+wRWpDxUIoXElbdj2Sl9r4Eg5Osx7bsV4/lvdwGaH7z16ntAx/bh0TNs1x1zXC4i3kyMCq9uO5LMvg3YA49j+swm8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JI2ZmXt5; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EfNcv0nh"
-Received: by mail-pj2-f12.google.com with SMTP id 98e67ed59e1d1-396ccc02279so1638230a91.1
-        for <linux-xfs@vger.kernel.org>; Mon, 14 Sep 2026 02:32:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1789378345; x=1789983145; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=VIqJAEv0wE0GewharGE+LoF/XSc70c9h3/w9GQFRHEs=;
-        b=EfNcv0nhAz915vEkIxvjKWZxBqPhCt9u/GJJGs26srntvITLsxbYwJIoedxe5PfXNC
-         YHip9UY+4Am9Bhzo8lHDNvkRFHIXHFgNRvXpUgXhi5N1Y65xf8u7jQGV1xu+3WTxVr00
-         GTnedh2PND+7CLz8lunF4JIEutfu/e/gON8pn2cqv85hjrPDqqOKrQbvXhAzyH2E5upU
-         T3tivVUDEfiZSMQyxQJcAIy/6H+TwOJPhGHxTk35fKqqY5LdFhDKRahwWH+XTvi8dgmh
-         KBeLCBslKV6zq/fHM4BEEzR/dTeIFv3oXaMfoowlv7kUNw+jkrwxh5YlzpQwkvXhIUmS
-         tfnA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789378345; x=1789983145;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=VIqJAEv0wE0GewharGE+LoF/XSc70c9h3/w9GQFRHEs=;
-        b=XczTejHXxaTxQbv+c61k3fH9pjsqb2yHiDdlM3JfCDIbFJPe496PqlMwZvewD9kFCx
-         KsGHLDHmyO98Ht7cvKn86y9NWUgxAHi9ebK7udRUEsHc7fPeqGciaZixj7B0id5Udpck
-         jPZ2xEGbAj+nu81omMjgFhPqnaLEwqCLIP+D/8lN5ulSuMB8sxsxzRWEONpt3H+g9Vyh
-         YLFMRWu1wIWibavJudVEUZ+edAF95wmiKEY5dOg+ydPMdhdUE2p25VaCwA3rGdB3iQju
-         lvd1yv4a7Dth255dGyCn6ItWOQ+emCoZMI4JaChl7uuO48S2px+oSXjRw+KazDJHuzzZ
-         D+pQ==
-X-Forwarded-Encrypted: i=1; AKwUvBy4YDvtUjXdKq1sTXOViYhyEqppNrLsDcpomcmzRyQlIiQ++TMa84jHLnGbSV6jabH5u0x+rauslek=@vger.kernel.org
-X-Gm-Message-State: AFuF++n3WfD59MfW/0NIPU0nAGGXj22xWGSoWcxoK20AOxHfDUR68hfq
-	x+pIfipEH7lXUBV3D2fSILqis6UbGkpLSUvf47Z3Z3OHvIM70XP8M7qf2iWMnaIA9C6wZw==
-X-Gm-Gg: AYBFou0pLiszI8aAj5l/E27JsYn9p4b7uLM3CnzC2jJo23Zu2beTwdYzHz/lfQRheNZ
-	04A0DyamTGyQqlEGgAmpyHtfr+mB/nJI5TdFNiSjlmx8EHEF/uXqoCnXznYUkM6XWvf8symPV5Q
-	/kjLjFq4GGXEDszuv1A/Y8Mf18D4UDmpTGHZCpH02XWSxh+q1bzemBZe2kIpi1j865DA4gYe2si
-	NZv+qITnbiG1jnrz4jvlB7N5tX3OaZzgF/eQZyEOIbXybhRajPeVe33wDV1f8hvw9MocZax7VOu
-	x+/h3gwtItHeR2ycqjNJH14zjj29h9dPxa2MjUpqZnr/9OjuBeQl6Cmv2UKAD3VNzgykkjtwTBl
-	QEbtTUR+Ua2LnBCd4nCGjIsx+xksAANUnUifxJEJskKIQlJ7eWTGlgkpEQOrZNPoj1topiFkkM8
-	xhbgke+AcDKCcEy2e6MgjuauT5mkbcOuqhbHRTSqtEA+zbcUhDU4IJcWUUUJa3j9vlytc5eieQY
-	SO9F1D6E4Ldy38NfHeIl43waU++luEtUqjby19Hzx165obzUnH6oLKqvoLs4VVe2gmaPzoEu+mq
-	7lZ79K+aY8AK/3qnza6V7PzV/wV/87Duu0WDVk8XzUCkXdRegJ44i6LqQkGaAQV10+9R14gEayb
-	nbrqk7NsWBRg=
-X-Received: by 2002:a17:90b:57e7:b0:38e:57a3:f218 with SMTP id 98e67ed59e1d1-39dec05d7femr3897850a91.13.1789378344844;
-        Mon, 14 Sep 2026 02:32:24 -0700 (PDT)
-Received: from cs-1047136853211-default.asia-southeast1-b.c.t54fbfa9bf0658dcb-tp.internal (155.135.143.34.bc.googleusercontent.com. [34.143.135.155])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39d951d6b08sm20414733a91.8.2026.09.14.02.32.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 14 Sep 2026 02:32:24 -0700 (PDT)
-From: Aditya Prakash Srivastava <aditya.ansh182@gmail.com>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: "Darrick J . Wong" <djwong@kernel.org>,
-	Christoph Hellwig <hch@lst.de>,
-	linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Aditya Prakash Srivastava <aditya.ansh182@gmail.com>
-Subject: [PATCH v6 1/1] xfs: prevent close() from hanging on frozen filesystems
-Date: Mon, 14 Sep 2026 09:31:51 +0000
-Message-ID: <20260914093152.1698-2-aditya.ansh182@gmail.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20260914093152.1698-1-aditya.ansh182@gmail.com>
-References: <20260914093152.1698-1-aditya.ansh182@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JI2ZmXt5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1A7A41F000FF;
+	Mon, 14 Sep 2026 10:47:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789382875;
+	bh=OvGdtPA9K7UqJvnrZIWy2Air35gSjKnBwLj7VhquKVY=;
+	h=From:To:Cc:Subject:Date;
+	b=JI2ZmXt59gdxZpATeNVHae09/gTHiezHxsecFTpM6N+Maj5vtQC24JcLxAvq8tbz0
+	 VL77Jbv10GgwL94dnyRvSq+Gxg+NHfARUSiA1DEINZnguT+JKMplTcsGYH+66oGjuy
+	 lFmKXuB/pc1y7AITLbn/rQCzXs/ZXnwWvfIkzyvdEgjX3NI1zma4HERKU/dnebMyOQ
+	 nIU2tYbeEP3UwtLhVu/IUxmUPvABoXTNgDOG9S/GIK0xNBhpRNx6Y6C2nndL2lacLZ
+	 FAv8qtnsH5a6yjo6W8g1QudoV1dJSOeifejl+gcX/6bkDKqGStNlEShQ05iAXQN5KP
+	 LeCmn+61WY+UA==
+From: Andrey Albershteyn <aalbersh@kernel.org>
+To: aalbersh@kernel.org,
+	linux-xfs@vger.kernel.org
+Cc: Alejandro Colomar <alx@kernel.org>,
+	djwong@kernel.org
+Subject: [PATCH v2] man: document that XFS_IOC_FS[G|S]ETXATTR can not be used on special files
+Date: Mon, 14 Sep 2026 12:47:48 +0200
+Message-ID: <20260914104750.1727589-1-aalbersh@kernel.org>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -82,55 +42,55 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-When a file is closed, xfs_file_release() attempts to trim speculative
-post-EOF blocks. This requires allocating a transaction, which blocks
-indefinitely if the filesystem is frozen.
+Add a CAVEATS section with an note that these ioctls can not be used on
+special files and leave a reference to an alternative pathname based
+syscall interface.
 
-Fix the hang by wrapping the preallocation cleanup block with
-sb_start_write_trylock() and xfs_ilock_nowait() to bypass the trim
-best-effort when the filesystem is frozen or locking fails.
+Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
+Reviewed-by: Alejandro Colomar <alx@kernel.org>
 
-Suggested-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Aditya Prakash Srivastava <aditya.ansh182@gmail.com>
 ---
- fs/xfs/xfs_file.c | 22 +++++++++++++---------
- 1 file changed, 13 insertions(+), 9 deletions(-)
+Changes from v1:
+- Use semantic newlines
+- pathname-based
+- RvB
+---
+ man/man2/ioctl_xfs_fsgetxattr.2 | 23 ++++++++++++++++++++++-
+ 1 file changed, 22 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index d8202da15aca..dd6d2e08faff 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1872,17 +1872,21 @@ xfs_file_release(
- 		return 0;
- 
- 	/*
--	 * If we can't get the iolock just skip truncating the blocks past EOF
--	 * because we could deadlock with the mmap_lock otherwise. We'll get
--	 * another chance to drop them once the last reference to the inode is
--	 * dropped, so we'll never leak blocks permanently.
-+	 * If we can't get the iolock or if the filesystem is frozen, just skip
-+	 * truncating the blocks past EOF because we could deadlock with the
-+	 * mmap_lock or hang the close() call. We'll get another chance to drop
-+	 * them once the last reference to the inode is dropped, so we'll never
-+	 * leak blocks permanently.
- 	 */
- 	if (!xfs_iflags_test(ip, XFS_EOFBLOCKS_RELEASED) &&
--	    xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL)) {
--		if (xfs_can_free_eofblocks(ip) &&
--		    !xfs_iflags_test_and_set(ip, XFS_EOFBLOCKS_RELEASED))
--			xfs_free_eofblocks(ip);
--		xfs_iunlock(ip, XFS_IOLOCK_EXCL);
-+	    sb_start_write_trylock(mp->m_super)) {
-+		if (xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL)) {
-+			if (xfs_can_free_eofblocks(ip) &&
-+			    !xfs_iflags_test_and_set(ip, XFS_EOFBLOCKS_RELEASED))
-+				xfs_free_eofblocks(ip);
-+			xfs_iunlock(ip, XFS_IOLOCK_EXCL);
-+		}
-+		sb_end_write(mp->m_super);
- 	}
- 
- 	return 0;
+diff --git a/man/man2/ioctl_xfs_fsgetxattr.2 b/man/man2/ioctl_xfs_fsgetxattr.2
+index 25a9ba7965d1..db5eb232319e 100644
+--- a/man/man2/ioctl_xfs_fsgetxattr.2
++++ b/man/man2/ioctl_xfs_fsgetxattr.2
+@@ -238,6 +238,27 @@ Caller did not have permission to change the attributes.
+ This API is implemented by the ext4, xfs, btrfs, and f2fs filesystems on the
+ Linux kernel.
+ Not all fields may be understood by filesystems other than xfs.
++.SH CAVEATS
++The
++.B XFS_IOC_FSGETXATTR
++and
++.B XFS_IOC_FSSETXATTR
++.BR ioctl (2)
++operations require the user to open the file,
++but this may not be possible or
++lead to side effects on special files such as FIFOs,
++sockets,
++block devices,
++character devices,
++and symlinks.
++.P
++For a pathname-based interface see the
++.BR file_getattr (2)
++and
++.BR file_setattr (2)
++syscalls.
+ .SH SEE ALSO
+ .BR ioctl (2),
+-.BR ioctl_iflags (2)
++.BR ioctl_iflags (2),
++.BR file_getattr (2),
++.BR file_setattr (2)
 -- 
-2.47.3
+2.55.0
 
