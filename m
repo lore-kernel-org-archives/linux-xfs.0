@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83EB837F8DC
-	for <linux-xfs@vger.kernel.org>; Mon, 14 Sep 2026 05:50:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6D7A374A19
+	for <linux-xfs@vger.kernel.org>; Mon, 14 Sep 2026 05:50:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789365048; cv=none; b=TCCqpzXbbCFZD/JB60+6eCWTojQsmX2qBDO25hb3u+d7yH4uvSL+FzTkSoBpzq+ZF0aQKDmQftU+DD0eTWJVBIzgndZfB9oHqKGi6ISx26HM+5JqROP2MXFfRAbPx2eb1ouKjVAojTqtvq1Qvg/83KwvxwvznZDXflaVG50yi0M=
+	t=1789365062; cv=none; b=msRPs1yiQ75BRRY9EeJDIYKcyPfqiD96wkpy7qkts0efUqHqqi1/kpgU6AEiZPWU+CYPxMwLW0yyPP+SU5Gh5Oxj4ETQNAmXdMg7C4s8be0J/brk3hr+DhatkdhFhNoZ7G2fsc5FyGmtxPPCZHxcqMhRLRSQfpC+mdLMnpRuIKw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789365048; c=relaxed/simple;
-	bh=I8rrLnd3vjtoG5IyKKwHMxNY70VazVVgwokkXzQcGOM=;
+	s=arc-20240116; t=1789365062; c=relaxed/simple;
+	bh=1W3BvLkKT+Zd4nKhCGRufBVc5j4JZx3H7vd7Jys4IyM=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=YoftJ0+PIXx6JSMvdgg3e5oe/DWO7IuS2E8hUaOggnfRZynrVqFd4AGPILMqUZfb9Cs425yrIE3VlPqS73Kg9WlUnC6fvajz2ez+Rq1GBr/q+Q5xUpFB44fauu8TwUN9CxCpUKKlP6rLYaiBbWOdMf5jtDQ2Ee7580+C290H18A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WoSMgA/r; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=B+0Lmkfezid1Hvochb+X6OTChK88vUxfbbbTkeXUdKSUHnRYrcbY24VHZ4T5rAF7RSaZJTbWWud2TdNn+62PZBnfT+00AegJFCFljJ9bS9zUx1wUnsLdrvdKqn6tq5YYVlnqLffrUC/lrNzbzsbfhPtEzyII5bsymfxKnjwwWm8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Y6n9sLK/; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WoSMgA/r"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id DDBDE1F000FF;
-	Mon, 14 Sep 2026 05:50:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y6n9sLK/"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 7F8C81F000FF;
+	Mon, 14 Sep 2026 05:50:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789365038;
-	bh=XkkfiMxSAhCjdZ7mQC2gsxhq8tDHHKfyaPcjE6Z3i40=;
+	s=k20260515; t=1789365053;
+	bh=cwUXJvCq2tb9fKRkX/7/4ndf4ziu+hbz1GrSeplIW3Q=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=WoSMgA/rUwKAY9SSlFfsP/6Mzd6EWMFfkDceteWovlK6MPp0DyeCHLvnaP6dt3KeE
-	 T4w6lEYlH+ftGrpl/VyErF8T3rBzjQMjhJqQa0FDZu+l36pj6uBH9xOjanApCLMZ7l
-	 rprUG3qBOn+yCTxQ01R1+Z4eERsqCtPTLOSHWecASwvUE8lNgua8JAYTXcaEqmqVC4
-	 6TWWGSZnGAP0v1E2w5jhiOHwzgb6Fm/DPg//DrLxbwchh+h3h45bIssYqVBS7ReORi
-	 OuXiyjXNsA8s7LG4wbKp3c6/iP2J8eYYiWI/1Ca9AGs6/8uxMEcMFzZ6d12AojbrwP
-	 FP7h66/53idxw==
-Date: Sun, 13 Sep 2026 22:50:37 -0700
-Subject: [PATCH 4/7] libfrog: try to pass struct fs_path objects to quotactl
- wrapper
+	b=Y6n9sLK/iXlGlUvyD8PhxrnLyRuBFUZJAVJkuRfMfCi/BAdk6iNreV5LLQd6+wv28
+	 +V9iU8FNVIi3unNsP0pBT+NB4OG3J++Jyl0aHHS0hTO6anVgHZZHwBJOu0mAl/1vGj
+	 nNystAyrHXmYe+rI2+NTUsJtFHMqaA69H2tlaC6sDzE+yhfZAXIiMFcLlP+nNxvJ+j
+	 GKRGPtuWwsXGBuZIMf1huiueCIzOaB/A8EO7u6q+PfjTJD2Te7Q3Ox5IzUqJ25mAI8
+	 ciCRbCtXG5dM0BEZBp42DYBnLIoqoy3FkJ8zxAoEN4G2l2XM07e68nP76MG/qupd9T
+	 zVDuxlu6EMbxQ==
+Date: Sun, 13 Sep 2026 22:50:53 -0700
+Subject: [PATCH 5/7] libfrog: add quotactl_fd support to xfsquotactl
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <178936484880.2108717.3928521689854404034.stgit@frogsfrogsfrogs>
+Message-ID: <178936484899.2108717.17872277106848553305.stgit@frogsfrogsfrogs>
 In-Reply-To: <178936484773.2108717.13238892511050788442.stgit@frogsfrogsfrogs>
 References: <178936484773.2108717.13238892511050788442.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,510 +45,176 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-We're going to adapt xfs_quota to use quotactl_fd(), so to prepare for
-that, we need to pass fs_path pointers as deep into the stack as we can
-so that xfs_quota can open the associated mountpoint(s) and stash the
-fds in the fs_path objects; and then pass that to our quotactl wrapper.
+Add support for the quotactl_fd syscall to the xfsquotactl call in
+libfrog.  I rearranged the function arguments so that the fs connection
+point (either an open fd or the fs source) come first.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- libfrog/quotactl.h |    4 +++
- libfrog/quotactl.c |   12 ++++++++++
- quota/edit.c       |   29 ++++++++++++++-----------
- quota/free.c       |   11 +++++----
- quota/path.c       |    4 ++-
- quota/quota.c      |    6 +++--
- quota/report.c     |   61 ++++++++++++++++++++++++++--------------------------
- quota/state.c      |   38 +++++++++++++++++++-------------
- 8 files changed, 97 insertions(+), 68 deletions(-)
+ libfrog/quotactl.h    |    2 +-
+ configure.ac          |    1 +
+ include/builddefs.in  |    1 +
+ libfrog/Makefile      |    4 ++++
+ libfrog/quotactl.c    |   15 +++++++++++++--
+ m4/package_libcdev.m4 |   19 +++++++++++++++++++
+ quota/edit.c          |    7 ++++---
+ 7 files changed, 43 insertions(+), 6 deletions(-)
 
 
 diff --git a/libfrog/quotactl.h b/libfrog/quotactl.h
-index 5e351d53bb4b1e..dae03b787b7663 100644
+index dae03b787b7663..9df9327402726d 100644
 --- a/libfrog/quotactl.h
 +++ b/libfrog/quotactl.h
-@@ -23,4 +23,8 @@ enum xfs_quota_cmd {
- int xfsquotactl(enum xfs_quota_cmd xcommand, const char *device,
+@@ -20,7 +20,7 @@ enum xfs_quota_cmd {
+ 	XFS_GETNEXTQUOTA, /* get disk limits and usage */
+ };
+ 
+-int xfsquotactl(enum xfs_quota_cmd xcommand, const char *device,
++int xfsquotactl(int mnt_fd, const char *device, enum xfs_quota_cmd xcommand,
  		unsigned int xtype, unsigned int id, void *addr);
  
-+struct fs_path;
-+int xfrog_quotactl(const struct fs_path *mount, enum xfs_quota_cmd xcommand,
-+		uint xtype, uint id, void *addr);
+ struct fs_path;
+diff --git a/configure.ac b/configure.ac
+index 40ccd88aa2a950..8a2505e37c70ab 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -195,6 +195,7 @@ if test "$have_listmount" = "yes"; then
+ fi
+ AC_HAVE_STATMOUNT_SUPPORTED_MASK
+ AC_HAVE_FANOTIFY_MOUNTINFO
++AC_HAVE_QUOTACTL_FD
+ 
+ if test "$enable_ubsan" = "yes" || test "$enable_ubsan" = "probe"; then
+         AC_PACKAGE_CHECK_UBSAN
+diff --git a/include/builddefs.in b/include/builddefs.in
+index 3b52d1afd7031c..5d2e6c1b90ddbe 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -126,6 +126,7 @@ HAVE_LISTMOUNT_NS_FD = @have_listmount_ns_fd@
+ HAVE_STATMOUNT_SUPPORTED_MASK = @have_statmount_supported_mask@
+ NEED_INTERNAL_STATMOUNT = @need_internal_statmount@
+ HAVE_FANOTIFY_MOUNTINFO = @have_fanotify_mountinfo@
++HAVE_QUOTACTL_FD = @have_quotactl_fd@
+ 
+ GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
+ #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
+diff --git a/libfrog/Makefile b/libfrog/Makefile
+index b0e8d1a10cd0c7..c7bcd6a778d702 100644
+--- a/libfrog/Makefile
++++ b/libfrog/Makefile
+@@ -108,6 +108,10 @@ ifeq ($(HAVE_LISTMOUNT_NS_FD),yes)
+ CFLAGS+=-DHAVE_LISTMOUNT_NS_FD
+ endif
+ 
++ifeq ($(HAVE_QUOTACTL_FD),yes)
++CFLAGS += -DHAVE_QUOTACTL_FD
++endif
 +
- #endif /* LIBFROG_QUOTACTL_H_ */
+ default: ltdepend $(LTLIBRARY) $(GETTEXT_PY)
+ 
+ crc32table.h: gen_crc32table.c crc32defs.h
 diff --git a/libfrog/quotactl.c b/libfrog/quotactl.c
-index 81df2baf4a76b4..6129fa155ce75e 100644
+index 6129fa155ce75e..19b5405be47946 100644
 --- a/libfrog/quotactl.c
 +++ b/libfrog/quotactl.c
-@@ -4,6 +4,7 @@
-  * All Rights Reserved.
-  */
+@@ -56,14 +56,24 @@ xcommand_to_qcommand(
  
-+#include "libfrog/paths.h"
- #include "libfrog/quotactl.h"
- #include <sys/quota.h>
- 
-@@ -66,3 +67,14 @@ xfsquotactl(
+ int
+ xfsquotactl(
+-	enum xfs_quota_cmd	xcommand,
++	int			mnt_fd,
+ 	const char		*device,
++	enum xfs_quota_cmd	xcommand,
+ 	uint			xtype,
+ 	uint			id,
+ 	void			*addr)
+ {
+ 	const int		op = QCMD(xcommand_to_qcommand(xcommand),
+ 					  xtype_to_qtype(xtype));
++	int			ret = -1;
++
++	errno = ENOSYS;
++#ifdef HAVE_QUOTACTL_FD
++	if (mnt_fd >= 0)
++		ret = syscall(SYS_quotactl_fd, mnt_fd, op, id, addr);
++#endif
++	if (ret != -1 || errno != ENOSYS)
++		return ret;
  
  	return quotactl(op, device, id, addr);
  }
+@@ -76,5 +86,6 @@ xfrog_quotactl(
+ 	uint			id,
+ 	void			*addr)
+ {
+-	return xfsquotactl(xcommand, mount->fs_name, xtype, id, addr);
++	return xfsquotactl(mount->mnt_fd, mount->fs_name, xcommand, xtype, id,
++			addr);
+ }
+diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
+index 9586bc01fe0f25..5c1b6e4667d0ee 100644
+--- a/m4/package_libcdev.m4
++++ b/m4/package_libcdev.m4
+@@ -476,3 +476,22 @@ AC_DEFUN([AC_HAVE_FANOTIFY_MOUNTINFO],
+        AC_MSG_RESULT(no))
+     AC_SUBST(have_fanotify_mountinfo)
+   ])
 +
-+int
-+xfrog_quotactl(
-+	const struct fs_path	*mount,
-+	enum xfs_quota_cmd	xcommand,
-+	uint			xtype,
-+	uint			id,
-+	void			*addr)
-+{
-+	return xfsquotactl(xcommand, mount->fs_name, xtype, id, addr);
-+}
++#
++# Check if we have a quotactl_fd system call (5.14).
++#
++AC_DEFUN([AC_HAVE_QUOTACTL_FD],
++  [AC_MSG_CHECKING([for quotactl_fd])
++    AC_LINK_IFELSE(
++    [AC_LANG_PROGRAM([[
++#define _GNU_SOURCE
++#include <sys/syscall.h>
++#include <unistd.h>
++  ]], [[
++	return syscall(SYS_quotactl_fd);
++  ]])
++    ], have_quotactl_fd=yes
++       AC_MSG_RESULT(yes),
++       AC_MSG_RESULT(no))
++    AC_SUBST(have_quotactl_fd)
++  ])
 diff --git a/quota/edit.c b/quota/edit.c
-index 1a3b2d9f959be8..d28a4319024038 100644
+index d28a4319024038..cf4f8cdaeead63 100644
 --- a/quota/edit.c
 +++ b/quota/edit.c
-@@ -469,11 +469,12 @@ set_timer(
- 	uint32_t		id,
- 	uint			type,
- 	uint			mask,
--	char			*dev,
-+	const struct fs_path	*mount,
- 	time64_t		value)
- {
- 	struct fs_disk_quota	d;
- 	time64_t		btimer, itimer, rtbtimer;
-+	int			ret;
- 
- 	memset(&d, 0, sizeof(d));
- 
-@@ -485,7 +486,8 @@ set_timer(
- 		time_t	now;
- 
- 		/* Get quota to find out whether user is past soft limits */
--		if (xfsquotactl(XFS_GETQUOTA, dev, type, id, (void *)&d) < 0) {
-+		ret = xfrog_quotactl(mount, XFS_GETQUOTA, type, id, &d);
-+		if (ret < 0) {
- 			exitcode = 1;
- 			fprintf(stderr, _("%s: cannot get quota: %s\n"),
- 					progname, strerror(errno));
-@@ -517,7 +519,8 @@ set_timer(
- 	d.d_id = id;
- 	encode_timers(&d, btimer, itimer, rtbtimer);
+@@ -140,6 +140,7 @@ set_limits(
+ 	uint32_t	id,
+ 	uint		type,
+ 	uint		mask,
++	int		mnt_fd,
+ 	char		*dev,
+ 	uint64_t	*bsoft,
+ 	uint64_t	*bhard,
+@@ -162,7 +163,7 @@ set_limits(
+ 	d.d_rtb_hardlimit = *rtbhard;
+ 	d.d_rtb_softlimit = *rtbsoft;
  
 -	if (xfsquotactl(XFS_SETQLIM, dev, type, id, (void *)&d) < 0) {
-+	ret = xfrog_quotactl(mount, XFS_SETQLIM, type, id, &d);
-+	if (ret < 0) {
++	if (xfsquotactl(mnt_fd, dev, XFS_SETQLIM, type, id, (void *)&d) < 0) {
  		exitcode = 1;
- 		fprintf(stderr, _("%s: cannot set timer: %s\n"),
+ 		fprintf(stderr, _("%s: cannot set limits: %s\n"),
  				progname, strerror(errno));
-@@ -601,19 +604,20 @@ timer_f(
+@@ -310,7 +311,7 @@ limit_f(
  	if (id == -1)
  		return 0;
  
--	set_timer(id, type, mask, fs_path->fs_name, value);
-+	set_timer(id, type, mask, fs_path, value);
+-	set_limits(id, type, mask, fs_path->fs_name,
++	set_limits(id, type, mask, fs_path->mnt_fd, fs_path->fs_name,
+ 		   &bsoft, &bhard, &isoft, &ihard, &rtbsoft, &rtbhard);
  	return 0;
  }
- 
- static void
- set_warnings(
--	uint32_t	id,
--	uint		type,
--	uint		mask,
--	char		*dev,
--	uint		value)
-+	uint32_t		id,
-+	uint			type,
-+	uint			mask,
-+	const struct fs_path	*mount,
-+	uint			value)
- {
--	fs_disk_quota_t	d;
-+	struct fs_disk_quota	d;
-+	int			ret;
- 
- 	memset(&d, 0, sizeof(d));
- 	d.d_version = FS_DQUOT_VERSION;
-@@ -624,7 +628,8 @@ set_warnings(
- 	d.d_bwarns = value;
- 	d.d_rtbwarns = value;
- 
--	if (xfsquotactl(XFS_SETQLIM, dev, type, id, (void *)&d) < 0) {
-+	ret = xfrog_quotactl(mount, XFS_SETQLIM, type, id, &d);
-+	if (ret < 0) {
- 		exitcode = 1;
- 		fprintf(stderr, _("%s: cannot set warnings: %s\n"),
- 				progname, strerror(errno));
-@@ -699,7 +704,7 @@ warn_f(
- 	if (id == -1)
- 		return 0;
- 
--	set_warnings(id, type, mask, fs_path->fs_name, value);
-+	set_warnings(id, type, mask, fs_path, value);
- 	return 0;
- }
- 
-diff --git a/quota/free.c b/quota/free.c
-index ea9c112f314a12..5793885c44fd1e 100644
---- a/quota/free.c
-+++ b/quota/free.c
-@@ -136,11 +136,11 @@ projects_free_space_data(
- 	fs_disk_quota_t		d;
- 	struct fsxattr		fsx;
- 	uint			type = XFS_PROJ_QUOTA;
--	char			*dev = path->fs_name;
- 	int			fd;
-+	int			ret;
- 
--	if (xfsquotactl(XFS_GETQSTAT, dev, type, 0, &qfs) < 0 ||
--			!(qfs.qs_flags & XFS_QUOTA_PDQ_ACCT))
-+	ret = xfrog_quotactl(path, XFS_GETQSTAT, type, 0, &qfs);
-+	if (ret < 0 || !(qfs.qs_flags & XFS_QUOTA_PDQ_ACCT))
- 		return 0;
- 
- 	if ((fd = open(path->fs_dir, O_RDONLY)) < 0) {
-@@ -174,8 +174,9 @@ projects_free_space_data(
- 		return 0;
+@@ -356,7 +357,7 @@ restore_file(
+ 			mask = FS_DQ_ISOFT|FS_DQ_IHARD|FS_DQ_BSOFT|FS_DQ_BHARD;
+ 			if (cnt == 7)
+ 				mask |= FS_DQ_RTBSOFT|FS_DQ_RTBHARD;
+-			set_limits(id, type, mask, dev, &bsoft, &bhard,
++			set_limits(id, type, mask, -1, dev, &bsoft, &bhard,
+ 					&isoft, &ihard, &rtbsoft, &rtbhard);
+ 		}
  	}
- 
--	xfsquotactl(XFS_QSYNC, dev, type, fsx.fsx_projid, NULL);
--	if (xfsquotactl(XFS_GETQUOTA, dev, type, fsx.fsx_projid, &d) < 0) {
-+	xfrog_quotactl(path, XFS_QSYNC, type, fsx.fsx_projid, NULL);
-+	ret = xfrog_quotactl(path, XFS_GETQUOTA, type, fsx.fsx_projid, &d);
-+	if (ret < 0) {
- 		perror("XFS_GETQUOTA");
- 		close(fd);
- 		return 0;
-diff --git a/quota/path.c b/quota/path.c
-index 16b8bec4d883c0..4654f1553c65e0 100644
---- a/quota/path.c
-+++ b/quota/path.c
-@@ -39,8 +39,8 @@ printpath(
- 		if (prj)
- 			printf(_(", %s"), prj->pr_name);
- 		printf(")");
--	} else if (xfsquotactl(XFS_GETQSTAT, path->fs_name, 0, 0,
--			       (void *)&qstat) == 0 && qstat.qs_flags) {
-+	} else if (xfrog_quotactl(path, XFS_GETQSTAT, 0, 0, &qstat) == 0 &&
-+			qstat.qs_flags) {
- 		c = 0;
- 		printf(" (");
- 		if (qstat.qs_flags & XFS_QUOTA_UDQ_ENFD)
-diff --git a/quota/quota.c b/quota/quota.c
-index 08a07b2088817b..e1dfad62b9d762 100644
---- a/quota/quota.c
-+++ b/quota/quota.c
-@@ -53,9 +53,11 @@ quota_mount(
- 	char		c[8], h[8], s[8];
- 	uint		qflags;
- 	int		count;
-+	int		ret;
- 
--	xfsquotactl(XFS_QSYNC, dev, type, 0, NULL);
--	if (xfsquotactl(XFS_GETQUOTA, dev, type, id, (void *)&d) < 0)
-+	xfrog_quotactl(mount, XFS_QSYNC, type, id, NULL);
-+	ret = xfrog_quotactl(mount, XFS_GETQUOTA, type, id, &d);
-+	if (ret < 0)
- 		return 0;
- 
- 	dquot_fudge_numbers(&d);
-diff --git a/quota/report.c b/quota/report.c
-index 2acf81b81ba612..86eaa50f84c20b 100644
---- a/quota/report.c
-+++ b/quota/report.c
-@@ -61,13 +61,14 @@ report_help(void)
- 
- static int
- get_dquot(
--	struct fs_disk_quota *d,
--	uint		id,
--	uint		type,
--	char		*dev,
--	int		flags)
-+	struct fs_disk_quota	*d,
-+	uint			id,
-+	uint			type,
-+	const struct fs_path	*mount,
-+	int			flags)
- {
--	int		cmd;
-+	int			cmd;
-+	int			ret;
- 
- 	if (flags & GETNEXTQUOTA_FLAG)
- 		cmd = XFS_GETNEXTQUOTA;
-@@ -75,7 +76,8 @@ get_dquot(
- 		cmd = XFS_GETQUOTA;
- 
- 	/* Fall back silently if XFS_GETNEXTQUOTA fails, warn on XFS_GETQUOTA */
--	if (xfsquotactl(cmd, dev, type, id, (void *)d) < 0) {
-+	ret = xfrog_quotactl(mount, cmd, type, id, d);
-+	if (ret < 0) {
- 		if (errno != ENOENT && errno != ENOSYS && errno != ESRCH &&
- 		    cmd == XFS_GETQUOTA)
- 			perror("XFS_GETQUOTA");
-@@ -140,8 +142,7 @@ dump_limits_any_type(
- 		return;
- 	}
- 
--	while (get_dquot(&d, id, type, mount->fs_name,
--				flags | GETNEXTQUOTA_FLAG) &&
-+	while (get_dquot(&d, id, type, mount, flags | GETNEXTQUOTA_FLAG) &&
- 			!(upper && (d.d_id > upper))) {
- 		dump_file(fp, &d, mount->fs_name);
- 		id = d.d_id + 1;
-@@ -157,8 +158,7 @@ dump_limits_any_type(
- 			struct group *g;
- 			setgrent();
- 			while ((g = getgrent()) != NULL) {
--				if (get_dquot(&d, g->gr_gid, type,
--							mount->fs_name, 0) &&
-+				if (get_dquot(&d, g->gr_gid, type, mount, 0) &&
- 						!(lower && (d.d_id < lower)) &&
- 						!(upper && (d.d_id > upper)))
- 					dump_file(fp, &d, mount->fs_name);
-@@ -170,8 +170,7 @@ dump_limits_any_type(
- 			struct fs_project *p;
- 			setprent();
- 			while ((p = getprent()) != NULL) {
--				if (get_dquot(&d, p->pr_prid, type,
--							mount->fs_name, 0) &&
-+				if (get_dquot(&d, p->pr_prid, type, mount, 0) &&
- 						!(lower && (d.d_id < lower)) &&
- 						!(upper && (d.d_id > upper)))
- 					dump_file(fp, &d, mount->fs_name);
-@@ -183,8 +182,7 @@ dump_limits_any_type(
- 			struct passwd *u;
- 			setpwent();
- 			while ((u = getpwent()) != NULL) {
--				if (get_dquot(&d, u->pw_uid, type,
--							mount->fs_name, 0) &&
-+				if (get_dquot(&d, u->pw_uid, type, mount, 0) &&
- 						!(lower && (d.d_id < lower)) &&
- 						!(upper && (d.d_id > upper)))
- 					dump_file(fp, &d, mount->fs_name);
-@@ -466,7 +464,7 @@ report_user_mount(
- 	struct fs_disk_quota	d;
- 	uint		id = lower;
- 
--	while (get_dquot(&d, id, XFS_USER_QUOTA, mount->fs_name,
-+	while (get_dquot(&d, id, XFS_USER_QUOTA, mount,
- 				flags | GETNEXTQUOTA_FLAG) &&
- 			!(upper && (d.d_id > upper))) {
- 		report_mount(fp, &d, NULL, form, XFS_USER_QUOTA, mount, flags);
-@@ -480,7 +478,7 @@ report_user_mount(
- 		setpwent();
- 		while ((u = getpwent()) != NULL) {
- 			if (get_dquot(&d, u->pw_uid, XFS_USER_QUOTA,
--						mount->fs_name, flags) &&
-+						mount, flags) &&
- 					!(lower && (d.d_id < lower)) &&
- 					!(upper && (d.d_id > upper))) {
- 				report_mount(fp, &d, u->pw_name, form,
-@@ -508,7 +506,7 @@ report_group_mount(
- 	struct fs_disk_quota	d;
- 	uint		id = lower;
- 
--	while (get_dquot(&d, id, XFS_GROUP_QUOTA, mount->fs_name,
-+	while (get_dquot(&d, id, XFS_GROUP_QUOTA, mount,
- 				flags | GETNEXTQUOTA_FLAG) &&
- 			!(upper && (d.d_id > upper))) {
- 		report_mount(fp, &d, NULL, form, XFS_GROUP_QUOTA, mount, flags);
-@@ -522,7 +520,7 @@ report_group_mount(
- 		setgrent();
- 		while ((g = getgrent()) != NULL) {
- 			if (get_dquot(&d, g->gr_gid, XFS_GROUP_QUOTA,
--						mount->fs_name, flags) &&
-+						mount, flags) &&
- 					!(lower && (d.d_id < lower)) &&
- 					!(upper && (d.d_id > upper))) {
- 				report_mount(fp, &d, g->gr_name, form,
-@@ -549,7 +547,7 @@ report_project_mount(
- 	struct fs_disk_quota	d;
- 	uint		id = lower;
- 
--	while (get_dquot(&d, id, XFS_PROJ_QUOTA, mount->fs_name,
-+	while (get_dquot(&d, id, XFS_PROJ_QUOTA, mount,
- 				flags | GETNEXTQUOTA_FLAG) &&
- 			!(upper && (d.d_id > upper))) {
- 		report_mount(fp, &d, NULL, form, XFS_PROJ_QUOTA, mount, flags);
-@@ -565,7 +563,7 @@ report_project_mount(
- 			 * Print default project quota, even if projid 0
- 			 * isn't defined
- 			 */
--			if (get_dquot(&d, 0, XFS_PROJ_QUOTA, mount->fs_name,
-+			if (get_dquot(&d, 0, XFS_PROJ_QUOTA, mount,
- 						flags) &&
- 					!(lower && (d.d_id < lower)) &&
- 					!(upper && (d.d_id > upper))) {
-@@ -578,7 +576,7 @@ report_project_mount(
- 		setprent();
- 		while ((p = getprent()) != NULL) {
- 			if (get_dquot(&d, p->pr_prid, XFS_PROJ_QUOTA,
--						mount->fs_name, flags) &&
-+						mount, flags) &&
- 					!(lower && (d.d_id < lower)) &&
- 					!(upper && (d.d_id > upper))) {
- 				report_mount(fp, &d, p->pr_name, form,
-@@ -605,15 +603,16 @@ report_any_type(
- {
- 	fs_cursor_t	cursor;
- 	fs_path_t	*mount;
-+	int		ret;
- 
- 	if (type & XFS_USER_QUOTA) {
- 		fs_cursor_initialise(dir, FS_MOUNT_POINT, &cursor);
- 		while ((mount = fs_cursor_next_entry(&cursor))) {
- 			if (!foreign_allowed && (mount->fs_flags & FS_FOREIGN))
- 				continue;
--			if (xfsquotactl(XFS_QSYNC, mount->fs_name,
--						XFS_USER_QUOTA, 0, NULL) < 0
--					&& errno != ENOENT && errno != ENOSYS)
-+			ret = xfrog_quotactl(mount, XFS_QSYNC, XFS_USER_QUOTA,
-+					0, NULL);
-+			if (ret < 0 && errno != ENOENT && errno != ENOSYS)
- 				perror("XFS_QSYNC user quota");
- 			report_user_mount(fp, form, mount,
- 						lower, upper, flags);
-@@ -624,9 +623,9 @@ report_any_type(
- 		while ((mount = fs_cursor_next_entry(&cursor))) {
- 			if (!foreign_allowed && (mount->fs_flags & FS_FOREIGN))
- 				continue;
--			if (xfsquotactl(XFS_QSYNC, mount->fs_name,
--						XFS_GROUP_QUOTA, 0, NULL) < 0
--					&& errno != ENOENT && errno != ENOSYS)
-+			ret = xfrog_quotactl(mount, XFS_QSYNC, XFS_GROUP_QUOTA,
-+					0, NULL);
-+			if (ret < 0 && errno != ENOENT && errno != ENOSYS)
- 				perror("XFS_QSYNC group quota");
- 			report_group_mount(fp, form, mount,
- 						lower, upper, flags);
-@@ -637,9 +636,9 @@ report_any_type(
- 		while ((mount = fs_cursor_next_entry(&cursor))) {
- 			if (!foreign_allowed && (mount->fs_flags & FS_FOREIGN))
- 				continue;
--			if (xfsquotactl(XFS_QSYNC, mount->fs_name,
--						XFS_PROJ_QUOTA, 0, NULL) < 0
--					&& errno != ENOENT && errno != ENOSYS)
-+			ret = xfrog_quotactl(mount, XFS_QSYNC, XFS_PROJ_QUOTA,
-+					0, NULL);
-+			if (ret < 0 && errno != ENOENT && errno != ENOSYS)
- 				perror("XFS_QSYNC proj quota");
- 			report_project_mount(fp, form, mount,
- 						lower, upper, flags);
-diff --git a/quota/state.c b/quota/state.c
-index 43fb700f9a7317..3679c247ea6204 100644
---- a/quota/state.c
-+++ b/quota/state.c
-@@ -202,9 +202,12 @@ state_quotafile_stat(
- 	bool			accounting, enforcing;
- 	struct fs_qfilestatv	*qsv;
- 	char			*dev = mount->fs_name;
-+	int			ret;
- 
--	if (xfsquotactl(XFS_GETQSTATV, dev, type, 0, (void *)sv) < 0) {
--		if (xfsquotactl(XFS_GETQSTAT, dev, type, 0, (void *)s) < 0) {
-+	ret = xfrog_quotactl(mount, XFS_GETQSTATV, type, 0, sv);
-+	if (ret < 0) {
-+		ret = xfrog_quotactl(mount, XFS_GETQSTAT, type, 0, sv);
-+		if (ret < 0) {
- 			if (flags & VERBOSE_FLAG)
- 				fprintf(fp,
- 					_("%s quota are not enabled on %s\n"),
-@@ -351,6 +354,7 @@ enable_enforcement(
- 	uint		flags)
- {
- 	fs_path_t	*mount;
-+	int		ret;
- 
- 	mount = fs_table_lookup(dir, FS_MOUNT_POINT);
- 	if (!mount) {
-@@ -358,8 +362,8 @@ enable_enforcement(
- 		fprintf(stderr, "%s: unknown mount point %s\n", progname, dir);
- 		return;
- 	}
--	dir = mount->fs_name;
--	if (xfsquotactl(XFS_QUOTAON, dir, type, 0, (void *)&qflags) < 0) {
-+	ret = xfrog_quotactl(mount, XFS_QUOTAON, type, 0, &qflags);
-+	if (ret < 0) {
- 		if (errno == EEXIST)
- 			fprintf(stderr,
- 				_("Quota enforcement already enabled.\n"));
-@@ -381,6 +385,7 @@ disable_enforcement(
- 	uint		flags)
- {
- 	fs_path_t	*mount;
-+	int		ret;
- 
- 	mount = fs_table_lookup(dir, FS_MOUNT_POINT);
- 	if (!mount) {
-@@ -388,8 +393,8 @@ disable_enforcement(
- 		fprintf(stderr, "%s: unknown mount point %s\n", progname, dir);
- 		return;
- 	}
--	dir = mount->fs_name;
--	if (xfsquotactl(XFS_QUOTAOFF, dir, type, 0, (void *)&qflags) < 0) {
-+	ret = xfrog_quotactl(mount, XFS_QUOTAOFF, type, 0, &qflags);
-+	if (ret < 0) {
- 		if (errno == EEXIST)
- 			fprintf(stderr,
- 				_("Quota enforcement already disabled.\n"));
-@@ -411,6 +416,7 @@ quotaoff(
- 	uint		flags)
- {
- 	fs_path_t	*mount;
-+	int		ret;
- 
- 	mount = fs_table_lookup(dir, FS_MOUNT_POINT);
- 	if (!mount) {
-@@ -418,8 +424,8 @@ quotaoff(
- 		fprintf(stderr, "%s: unknown mount point %s\n", progname, dir);
- 		return;
- 	}
--	dir = mount->fs_name;
--	if (xfsquotactl(XFS_QUOTAOFF, dir, type, 0, (void *)&qflags) < 0) {
-+	ret = xfrog_quotactl(mount, XFS_QUOTAOFF, type, 0, &qflags);
-+	if (ret) {
- 		if (errno == EEXIST || errno == ENOSYS)
- 			fprintf(stderr, _("Quota already off.\n"));
- 		else
-@@ -431,12 +437,13 @@ quotaoff(
- 
- static int
- remove_qtype_extents(
--	char		*dir,
--	uint		type)
-+	const struct fs_path	*mount,
-+	uint			type)
- {
--	int	error = 0;
-+	int			error;
- 
--	if ((error = xfsquotactl(XFS_QUOTARM, dir, type, 0, (void *)&type)) < 0)
-+	error = xfrog_quotactl(mount, XFS_QUOTARM, type, 0, &type);
-+	if (error < 0)
- 		perror("XFS_QUOTARM");
- 	return error;
- }
-@@ -455,17 +462,16 @@ remove_extents(
- 		fprintf(stderr, "%s: unknown mount point %s\n", progname, dir);
- 		return;
- 	}
--	dir = mount->fs_name;
- 	if (type & XFS_USER_QUOTA) {
--		if (remove_qtype_extents(dir, XFS_USER_QUOTA) < 0)
-+		if (remove_qtype_extents(mount, XFS_USER_QUOTA) < 0)
- 			return;
- 	}
- 	if (type & XFS_GROUP_QUOTA) {
--		if (remove_qtype_extents(dir, XFS_GROUP_QUOTA) < 0)
-+		if (remove_qtype_extents(mount, XFS_GROUP_QUOTA) < 0)
- 			return;
- 	}
- 	if (type & XFS_PROJ_QUOTA) {
--		if (remove_qtype_extents(dir, XFS_PROJ_QUOTA) < 0)
-+		if (remove_qtype_extents(mount, XFS_PROJ_QUOTA) < 0)
- 			return;
- 	}
- 	if (flags & VERBOSE_FLAG)
 
