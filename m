@@ -1,64 +1,66 @@
-Received: from mail-pz2-f12.google.com (mail-pz2-f12.google.com [74.125.228.12])
+Received: from mail-pj2-f12.google.com (mail-pj2-f12.google.com [74.125.227.140])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B3BE3E8685
-	for <linux-xfs@vger.kernel.org>; Mon, 14 Sep 2026 09:32:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.228.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D5C037D12E
+	for <linux-xfs@vger.kernel.org>; Mon, 14 Sep 2026 09:32:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.140
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789378335; cv=none; b=VIYeLmu4uyG/vnks1sn4n08h5a5J+aImCt/m3plGUnT/uverXlaetqt1wLlJYrYcjnY/NlD4EemN9cAzddTrteXvCdEU3EPCsGZoB1k6+aiMLXrc6Fo1Fh/UYASq+InNeaxYr+2wDkpApA6Wgwl85keul44Ro5JNYlW+rdKhD0o=
+	t=1789378347; cv=none; b=ujMpeKsXdl19NtNMbAqykC13qlAhUTl7JsPGe4LyVGxgEBZd92+xFpHVU/BQpYC72AXfNXlFKsAtTlVN4ItJ4LCmXVlg2UKamt7SDyX+fth6vvVWOndGnRNORQSAlGFreyayTWOib9mYePQT9+eu4Bk5x3wLxFDkDtVYfnkrO5c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789378335; c=relaxed/simple;
-	bh=1IdoY1hiT6PmkTeljw6MT7zrKtvU8liEHU6LWcr8124=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=PXCQvkug8YudQdi6L9KsePyDzkOQcEHgtXJ6VYKOVla321E6eNqRKgvHRBdFmDR0X3vXX8ZECYiAvayAyDJIoszHnJnqttEO1O35yWMk4VNQ2JhkjAdSYyzV4fcn+8d0GAKtDzXvMU22QLurSGhc50DrOU/mvcMPIvpVk13l7EA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Dk8jzMDc; arc=none smtp.client-ip=74.125.228.12
+	s=arc-20240116; t=1789378347; c=relaxed/simple;
+	bh=ThjuJJIilkFnb3x21CQlJpZVJrdeK0DbvDM3qFJoTpc=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=dy8cfvmOMByDrJzOjcu5Yxfgn227V/nKLeVi0cTnaZhA761W2wSE0SWpwVjdBA1pNy0J7ss+qWvUQz+tLqDoFH6dPbel/5Uo0EcMIM1laeQaIUAUg9GQZLJag/5eh/6Eu7qV6xltlwzrZ6lQrNvSVM1iIvwdj1+6EYuByQf7yTc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=EfNcv0nh; arc=none smtp.client-ip=74.125.227.140
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Dk8jzMDc"
-Received: by mail-pz2-f12.google.com with SMTP id 41be03b00d2f7-cc1cea4bfd1so1310958a12.0
-        for <linux-xfs@vger.kernel.org>; Mon, 14 Sep 2026 02:32:13 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EfNcv0nh"
+Received: by mail-pj2-f12.google.com with SMTP id 98e67ed59e1d1-396ccc02279so1638230a91.1
+        for <linux-xfs@vger.kernel.org>; Mon, 14 Sep 2026 02:32:25 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1789378333; x=1789983133; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=fUgUbIzBHavhcx103b2rVszh/STl0E/XwGRt39cKnyM=;
-        b=Dk8jzMDc1MpJzUyRROkorzogF28rUqt8PpiLyLwdEp3qEOU7h/sGptIbgPtngWs0hb
-         sIJFmowjKbL9UUANISSbcv+hepwRfyCY3qYXEzMATdw6aBBeBtqIt8yCTz208fgtytg6
-         9KVlmpKw8hCLbNPk5Bj3ngyGTZ9hQZEGy4wDGujp/+laP1rE5RzUcx8gCJHytXeA1wfB
-         hbHZQ32YgYSuJgEJQ85voGZqjNYvww3NwR8Y99xcX1/FD031GtAF9RZfuOGkDx89T/wz
-         782+G6PuSeL+CvSXBgdL6oQCjz29z7Q8PHPmOrR/YeWB2lKRKsnktaF5ok1nG5cq3ZAs
-         L4mA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789378333; x=1789983133;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20251104; t=1789378345; x=1789983145; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=fUgUbIzBHavhcx103b2rVszh/STl0E/XwGRt39cKnyM=;
-        b=P5KWCmMSpofTFLNcjdBi9nwCxjN2Ip6/n4f2GQArc3F7TcSX9f8eoZlc/GyMcq6S9w
-         6fz3yirFda4k9ftZuMS+kEt+vbOR7ui2ak6jokMuY/MaP8H5XJmc//HXejSTrxEPD1TF
-         sofZ4KMy5tybhcUiXO7vOK03nRGHC9xkGJ6q6yM8MZaMkz7SaCls3iSbY+mV2R+3fwkf
-         Al1G2pAqzdY+5I211usnwdXQN1BKYgvzTSI5/Y0Dt7Q5KYkUyX6de+dbicKJSTlxilPo
-         rnrmxjssvFugEs29Scszwu0jx+g64kUKDZMOxblW3U0wWDx1Fvm3XIt4Wg8bRkL0WA04
-         1+qg==
-X-Forwarded-Encrypted: i=1; AKwUvBw2s8HKUP31sPBqMJbzQrrYKdG5H9v+GZ6+XeeIvCWqiB4P3tv8FdQxxtJNzbMAzg/JMJoCFdwaAaE=@vger.kernel.org
-X-Gm-Message-State: AFuF++mUqMCTbRA77AOAybRAZg8+FjyJ+fPYNXFlwaj8kns16jHn4+nY
-	QrbXX9VFF8PUBAbD1R06DtTgv3VMip5IVsVWxqhr2/E6e/6229HcrCtT
-X-Gm-Gg: AYBFou3auvf+YsH3kw29hpeZSsUZfGHaN40lg7a4P2YFCJjrht+1QwhYORBb76ohKlC
-	j9kRwMmdzEdGP9SA99BLOHr6yuMpIhiq21qLhgW5ve40aJF1PwqsVhQKJoCX93oop6JsUXdCeiK
-	Dx6Lxm7/B1e+xS5aY5Lusg0Yqd0a9iEjfOiAEyksZNOzVO+Y/Qbmkuo6SV7NV4EQrlvC5yYZxNU
-	Cu/mum1OCmYVA7AD8oxLFqpdiFiN1fFDdfEJidwYrZlSd2v27/Qv7ZI8kqjgc00ef6yHrf7YTr0
-	LXHnvoYS3iinhURGVUP1IjeYcw8JR2CZlDO0kprD0vGnAFwsmUpesqYXVPnHxxms8O8EZAHMkhf
-	HTwLKbp7sRx3pv/lH0A9oWsltG5XNNPK5fOYkuLO0JIy9UlebY8UG924QcI9LhOQCB5G7cwwvBj
-	PRJm1VR4rJibQIVCQei7D5HZIfmAbihuHs1d5EXHrqQSPItGmLUDWDXQgI84ePnLsqpZd5rxp6k
-	UsGYGnDt+4pjqKke3akG9FBoiROzVCi5Q0F2ITTYPaXqv7TQD+OTs2W7pK7k2uI9PSJLdlxJoQt
-	oEp9FMeP6NlJYCA2aZWIOU1W/vrlCnR6M9SGmZ60EdmxFXG/aoxLf0+Y94HqA5JjRetaiT+uofl
-	L5AYkqFgcbFM=
-X-Received: by 2002:a17:90b:534c:b0:39d:f08e:e6e7 with SMTP id 98e67ed59e1d1-39df08f09b2mr2513332a91.9.1789378333338;
-        Mon, 14 Sep 2026 02:32:13 -0700 (PDT)
+        bh=VIqJAEv0wE0GewharGE+LoF/XSc70c9h3/w9GQFRHEs=;
+        b=EfNcv0nhAz915vEkIxvjKWZxBqPhCt9u/GJJGs26srntvITLsxbYwJIoedxe5PfXNC
+         YHip9UY+4Am9Bhzo8lHDNvkRFHIXHFgNRvXpUgXhi5N1Y65xf8u7jQGV1xu+3WTxVr00
+         GTnedh2PND+7CLz8lunF4JIEutfu/e/gON8pn2cqv85hjrPDqqOKrQbvXhAzyH2E5upU
+         T3tivVUDEfiZSMQyxQJcAIy/6H+TwOJPhGHxTk35fKqqY5LdFhDKRahwWH+XTvi8dgmh
+         KBeLCBslKV6zq/fHM4BEEzR/dTeIFv3oXaMfoowlv7kUNw+jkrwxh5YlzpQwkvXhIUmS
+         tfnA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1789378345; x=1789983145;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=VIqJAEv0wE0GewharGE+LoF/XSc70c9h3/w9GQFRHEs=;
+        b=XczTejHXxaTxQbv+c61k3fH9pjsqb2yHiDdlM3JfCDIbFJPe496PqlMwZvewD9kFCx
+         KsGHLDHmyO98Ht7cvKn86y9NWUgxAHi9ebK7udRUEsHc7fPeqGciaZixj7B0id5Udpck
+         jPZ2xEGbAj+nu81omMjgFhPqnaLEwqCLIP+D/8lN5ulSuMB8sxsxzRWEONpt3H+g9Vyh
+         YLFMRWu1wIWibavJudVEUZ+edAF95wmiKEY5dOg+ydPMdhdUE2p25VaCwA3rGdB3iQju
+         lvd1yv4a7Dth255dGyCn6ItWOQ+emCoZMI4JaChl7uuO48S2px+oSXjRw+KazDJHuzzZ
+         D+pQ==
+X-Forwarded-Encrypted: i=1; AKwUvBy4YDvtUjXdKq1sTXOViYhyEqppNrLsDcpomcmzRyQlIiQ++TMa84jHLnGbSV6jabH5u0x+rauslek=@vger.kernel.org
+X-Gm-Message-State: AFuF++n3WfD59MfW/0NIPU0nAGGXj22xWGSoWcxoK20AOxHfDUR68hfq
+	x+pIfipEH7lXUBV3D2fSILqis6UbGkpLSUvf47Z3Z3OHvIM70XP8M7qf2iWMnaIA9C6wZw==
+X-Gm-Gg: AYBFou0pLiszI8aAj5l/E27JsYn9p4b7uLM3CnzC2jJo23Zu2beTwdYzHz/lfQRheNZ
+	04A0DyamTGyQqlEGgAmpyHtfr+mB/nJI5TdFNiSjlmx8EHEF/uXqoCnXznYUkM6XWvf8symPV5Q
+	/kjLjFq4GGXEDszuv1A/Y8Mf18D4UDmpTGHZCpH02XWSxh+q1bzemBZe2kIpi1j865DA4gYe2si
+	NZv+qITnbiG1jnrz4jvlB7N5tX3OaZzgF/eQZyEOIbXybhRajPeVe33wDV1f8hvw9MocZax7VOu
+	x+/h3gwtItHeR2ycqjNJH14zjj29h9dPxa2MjUpqZnr/9OjuBeQl6Cmv2UKAD3VNzgykkjtwTBl
+	QEbtTUR+Ua2LnBCd4nCGjIsx+xksAANUnUifxJEJskKIQlJ7eWTGlgkpEQOrZNPoj1topiFkkM8
+	xhbgke+AcDKCcEy2e6MgjuauT5mkbcOuqhbHRTSqtEA+zbcUhDU4IJcWUUUJa3j9vlytc5eieQY
+	SO9F1D6E4Ldy38NfHeIl43waU++luEtUqjby19Hzx165obzUnH6oLKqvoLs4VVe2gmaPzoEu+mq
+	7lZ79K+aY8AK/3qnza6V7PzV/wV/87Duu0WDVk8XzUCkXdRegJ44i6LqQkGaAQV10+9R14gEayb
+	nbrqk7NsWBRg=
+X-Received: by 2002:a17:90b:57e7:b0:38e:57a3:f218 with SMTP id 98e67ed59e1d1-39dec05d7femr3897850a91.13.1789378344844;
+        Mon, 14 Sep 2026 02:32:24 -0700 (PDT)
 Received: from cs-1047136853211-default.asia-southeast1-b.c.t54fbfa9bf0658dcb-tp.internal (155.135.143.34.bc.googleusercontent.com. [34.143.135.155])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39d951d6b08sm20414733a91.8.2026.09.14.02.32.11
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39d951d6b08sm20414733a91.8.2026.09.14.02.32.22
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 14 Sep 2026 02:32:12 -0700 (PDT)
+        Mon, 14 Sep 2026 02:32:24 -0700 (PDT)
 From: Aditya Prakash Srivastava <aditya.ansh182@gmail.com>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: "Darrick J . Wong" <djwong@kernel.org>,
@@ -66,10 +68,12 @@ Cc: "Darrick J . Wong" <djwong@kernel.org>,
 	linux-xfs@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Aditya Prakash Srivastava <aditya.ansh182@gmail.com>
-Subject: [PATCH v6 0/1] xfs: prevent close() hangs on frozen filesystems
-Date: Mon, 14 Sep 2026 09:31:50 +0000
-Message-ID: <20260914093152.1698-1-aditya.ansh182@gmail.com>
+Subject: [PATCH v6 1/1] xfs: prevent close() from hanging on frozen filesystems
+Date: Mon, 14 Sep 2026 09:31:51 +0000
+Message-ID: <20260914093152.1698-2-aditya.ansh182@gmail.com>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260914093152.1698-1-aditya.ansh182@gmail.com>
+References: <20260914093152.1698-1-aditya.ansh182@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -78,42 +82,55 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Hi Christoph, Darrick, and Carlos,
+When a file is closed, xfs_file_release() attempts to trim speculative
+post-EOF blocks. This requires allocating a transaction, which blocks
+indefinitely if the filesystem is frozen.
 
-This is version 6 of the patch series addressing the close() system
-call hanging indefinitely on frozen XFS filesystems (Bugzilla #205833).
+Fix the hang by wrapping the preallocation cleanup block with
+sb_start_write_trylock() and xfs_ilock_nowait() to bypass the trim
+best-effort when the filesystem is frozen or locking fails.
 
-In v5, I introduced a transaction allocation flag
-(XFS_TRANS_WRITECOUNT_TRYLOCK) to handle the trylock inside
-__xfs_trans_alloc() and propagated it down to xfs_free_eofblocks().
-Christoph suggested this design and reviewed the implementation.
-
-However, Darrick suggested that the deadlock can be resolved much
-more simply at the VFS-layer within xfs_file_release() by surrounding
-the existing check with sb_start_write_trylock() instead of passing
-transaction allocation flags all the way down.
-
-This v6 implements that VFS-layer trylock approach. It modifies only a
-single file (fs/xfs/xfs_file.c). If sb_start_write_trylock() fails (meaning
-the filesystem is frozen or freezing), we simply skip the speculative
-preallocation trim.
-
-I would appreciate your guidance on which of the two architectural
-paths is preferred for XFS:
-1. The v5 transaction-flag approach (centralized within xfs_trans_alloc).
-2. The v6 VFS-level trylock approach (localized within xfs_file_release).
-
-If the v5 approach is preferred, I will rebase the transaction-flag
-patches onto the current master and submit them as a new version.
-
-Thanks,
-Aditya
-
-Aditya Prakash Srivastava (1):
-  xfs: prevent close() from hanging on frozen filesystems
-
+Suggested-by: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: Aditya Prakash Srivastava <aditya.ansh182@gmail.com>
+---
  fs/xfs/xfs_file.c | 22 +++++++++++++---------
  1 file changed, 13 insertions(+), 9 deletions(-)
 
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index d8202da15aca..dd6d2e08faff 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -1872,17 +1872,21 @@ xfs_file_release(
+ 		return 0;
+ 
+ 	/*
+-	 * If we can't get the iolock just skip truncating the blocks past EOF
+-	 * because we could deadlock with the mmap_lock otherwise. We'll get
+-	 * another chance to drop them once the last reference to the inode is
+-	 * dropped, so we'll never leak blocks permanently.
++	 * If we can't get the iolock or if the filesystem is frozen, just skip
++	 * truncating the blocks past EOF because we could deadlock with the
++	 * mmap_lock or hang the close() call. We'll get another chance to drop
++	 * them once the last reference to the inode is dropped, so we'll never
++	 * leak blocks permanently.
+ 	 */
+ 	if (!xfs_iflags_test(ip, XFS_EOFBLOCKS_RELEASED) &&
+-	    xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL)) {
+-		if (xfs_can_free_eofblocks(ip) &&
+-		    !xfs_iflags_test_and_set(ip, XFS_EOFBLOCKS_RELEASED))
+-			xfs_free_eofblocks(ip);
+-		xfs_iunlock(ip, XFS_IOLOCK_EXCL);
++	    sb_start_write_trylock(mp->m_super)) {
++		if (xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL)) {
++			if (xfs_can_free_eofblocks(ip) &&
++			    !xfs_iflags_test_and_set(ip, XFS_EOFBLOCKS_RELEASED))
++				xfs_free_eofblocks(ip);
++			xfs_iunlock(ip, XFS_IOLOCK_EXCL);
++		}
++		sb_end_write(mp->m_super);
+ 	}
+ 
+ 	return 0;
 -- 
 2.47.3
+
