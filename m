@@ -1,90 +1,103 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F8B131ED93
-	for <linux-xfs@vger.kernel.org>; Mon, 14 Sep 2026 05:51:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DC213E9C05;
+	Mon, 14 Sep 2026 08:21:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789365093; cv=none; b=RYyW2abJI3n+kkaubByaHJqFMUQyNR70bO9+S4tuJTZzZj83r02FccyrtSkD1NZgSVScg3AeobsolN7Fdtjwec9AS6O90HBjftBqznpbdOxAsPRxUEA8RIvwyOa/PVAzPEcA/11W6/kuvRMBpj2oSpHUuyfT0sMp1g2oE4VyrP0=
+	t=1789374118; cv=none; b=h325wdYMhtXe5VP2GWWQrZiS7NeXHIboQqQToQHUcOuTyGpLHmzfFptiiaKPJOm9bwAh4/Zk8aQXYmetXdxsteE5DFVofttKWwFbA6LKhNYHEjsw6D34O6Fo6kpucl48jAp9CwiHy+jUBSGuRBk05Ebk6PNWfQMYrF/nA7ciPaA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789365093; c=relaxed/simple;
-	bh=JqXDdofdQSmpeXk0Xpmf4ghLc9t/liPsqaoMktYWDrc=;
-	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=YJkmwqYLm3L1LRDYP2CHZwWQ65TZsqiK6JpHvbKRQYDz6AxTaO0vPLhSqsR4JhG1UxCb4+5+c41T8CkKciioZHoyukY2eqn7579xr0+75Z1R0GsrLsGZfUlRy4tYBO5y21feyrZVybH6qtu5QA0573AV5lcmyQAblPeHKPjMlTY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XZYjbKvb; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XZYjbKvb"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id F348C1F000FF;
-	Mon, 14 Sep 2026 05:51:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789365085;
-	bh=cAIxkeRKowDeeBWEXJ1lG8zNU2S2GDEQwvGg8o5F5Ds=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=XZYjbKvbguvetwulRRRCnLmooLsFbyQ9apsTupc2votyD0grHSJYXt0xD3VaKcJ5n
-	 8ZFjukEWh0Xf9wyaG2qVLKRL1/6/xjv8YsGzONhrx6uAmNsV6hN2UrS1hk1gzqNnq0
-	 NveMQG/hJjhZlyZoE38vtNDKodJ9LVVAG89s0ius7bTXiD8oboAknFcyoTqvJA0S+f
-	 GxqO+DhTYCDrfuQrKF+6vfVLCdgvsAIT3fUM1jVvj9faUCmYwEz140r+eY+vm752QJ
-	 DDIuN8nPGFtESurBDpuPvVUBToo7prKqGt6MYHWiR9i1myLVKjPtiOG8QPO0PzVuGl
-	 A0BHELkVHa4eQ==
-Date: Sun, 13 Sep 2026 22:51:24 -0700
-Subject: [PATCH 7/7] xfs_spaceman: port makecfg to use xfsquotactl
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: aalbersh@kernel.org, djwong@kernel.org
-Cc: linux-xfs@vger.kernel.org
-Message-ID: <178936484936.2108717.8402857786114618949.stgit@frogsfrogsfrogs>
-In-Reply-To: <178936484773.2108717.13238892511050788442.stgit@frogsfrogsfrogs>
-References: <178936484773.2108717.13238892511050788442.stgit@frogsfrogsfrogs>
+	s=arc-20240116; t=1789374118; c=relaxed/simple;
+	bh=LbnFp4+CT2nMOLz80Ij7J5fZfBQD52afATNGtK1Yvp4=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=MvuGnLUbeFq6QstsGlAQytzoXRAJrRGtQSYCGSxDGjtAEuyQWCuDhvu1/KivGUpdk8g3eu0h3/cTP4EMw5T8uG3onY7Ec6+VImC//RxSUOzfxuTX9LoxjoGm6Sbbze0gWaZ59qDLbjXjYTCj9BQhRiCZJa619Bn2Zh2h80gSRxw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: 52e29e64b01511f19a56ed5b684f684d-20260914
+X-CTIC-Tags:
+	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NAME, HR_CC_NO_NAME, HR_CTE_8B
+	HR_CTT_MISS, HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_NAME
+	HR_SJ_DIGIT_LEN, HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER, HR_SJ_NOR_SYM
+	HR_SJ_PHRASE, HR_SJ_PHRASE_LEN, HR_SJ_WS, HR_TO_COUNT, HR_TO_DOMAIN_COUNT
+	HR_TO_NO_NAME, IP_TRUSTED, SRC_TRUSTED, DN_TRUSTED, SA_TRUSTED
+	SA_EXISTED, SN_TRUSTED, SN_EXISTED, SPF_NOPASS, DKIM_NOPASS
+	DMARC_NOPASS, CIE_BAD, CIE_GOOD, CIE_GOOD_SPF, GTI_FG_BS
+	GTI_RG_INFO, GTI_C_BU, AMN_GOOD, ABX_MISS_RDNS
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.19,REQID:f822e2ca-3bbb-4bba-b338-b46171f08832,IP:15,
+	URL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
+	N:release,TS:10
+X-CID-INFO: VERSION:1.3.19,REQID:f822e2ca-3bbb-4bba-b338-b46171f08832,IP:15,UR
+	L:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:10
+X-CID-META: VersionHash:7db8b62,CLOUDID:09e111d4de98d9f656132ae5247fdfa6,BulkI
+	D:260914162149TY3AGGQF,BulkQuantity:0,SF:10|66|78|102|127|850|865|898,TC:n
+	il,Content:0|15|50|99,EDM:-3,IP:-2,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,B
+	EC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 52e29e64b01511f19a56ed5b684f684d-20260914
+X-User: yijiangshan@kylinos.cn
+Received: from localhost.localdomain [(116.128.244.171)] by mailgw.kylinos.cn
+	(envelope-from <yijiangshan@kylinos.cn>)
+	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
+	with ESMTP id 680573069; Mon, 14 Sep 2026 16:21:45 +0800
+From: Jiangshan Yi <yijiangshan@kylinos.cn>
+To: cem@kernel.org
+Cc: djwong@kernel.org,
+	ljp1205831794@gmail.com,
+	gaoyingjie@uniontech.com,
+	linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	13667453960@163.com,
+	Jiangshan Yi <yijiangshan@kylinos.cn>
+Subject: [PATCH] xfs: remove duplicate INO1_WRITTEN check
+Date: Mon, 14 Sep 2026 16:21:11 +0800
+Message-Id: <20260914082111.195006-1-yijiangshan@kylinos.cn>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-From: Darrick J. Wong <djwong@kernel.org>
+Commit a23eca88448e ("xfs: fix exchange-range reflink flag clearing
+issue with INO1_WRITTEN") duplicated commit b2d5a81dae38 ("xfs: fix
+exchange-range reflink flag clearing issue with INO1_WRITTEN"), so
+xmi_can_exchange_reflink_flags() ended up with two identical
+XFS_EXCHMAPS_INO1_WRITTEN checks.  The second one is dead code,
+since the first one already returned false.  Remove it.
 
-Port this code to use our xfsquotactl function, which means that we can
-call quotactl_fd/quotactl in the same manner as xfs_quota does.
-
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+Signed-off-by: Jiangshan Yi <yijiangshan@kylinos.cn>
 ---
- spaceman/info.c |    7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ fs/xfs/libxfs/xfs_exchmaps.c | 10 ----------
+ 1 file changed, 10 deletions(-)
 
-
-diff --git a/spaceman/info.c b/spaceman/info.c
-index bacc48e8aa796f..56c7a05c3f81ec 100644
---- a/spaceman/info.c
-+++ b/spaceman/info.c
-@@ -3,7 +3,6 @@
-  * Copyright (C) 2018 Oracle.  All Rights Reserved.
-  * Author: Darrick J. Wong <darrick.wong@oracle.com>
-  */
--#include <sys/quota.h>
- #include "libxfs.h"
- #include "command.h"
- #include "init.h"
-@@ -11,8 +10,8 @@
- #include "libfrog/fsgeom.h"
- #include "libfrog/fsproperties.h"
- #include "libfrog/fsprops.h"
-+#include "libfrog/quotactl.h"
- #include "space.h"
--#include "include/xqm.h"
+diff --git a/fs/xfs/libxfs/xfs_exchmaps.c b/fs/xfs/libxfs/xfs_exchmaps.c
+index 49eda8d0994d..3efed37cb98a 100644
+--- a/fs/xfs/libxfs/xfs_exchmaps.c
++++ b/fs/xfs/libxfs/xfs_exchmaps.c
+@@ -959,16 +959,6 @@ xmi_can_exchange_reflink_flags(
+ {
+ 	struct xfs_mount		*mp = req->ip1->i_mount;
  
- static void
- info_help(void)
-@@ -126,8 +125,8 @@ get_qflags(
- 	*qflags = 0;
- 
- 	/* GETQSTAT returns qflags for all quota types, not just user */
--	ret = quotactl(QCMD(Q_XGETQSTAT, USRQUOTA), f->fs_path.fs_name, 0,
--			(void *)&qstat);
-+	ret = xfsquotactl(f->xfd.fd, f->fs_path.fs_name, XFS_GETQSTAT,
-+			XFS_USER_QUOTA, 0, (void *)&qstat);
- 	if (ret) {
- 		/*
- 		 * ENOSYS means quota is not enabled or compiled in; ENODEV
+-	/*
+-	 * The INO1_WRITTEN optimization can skip exchanging hole and
+-	 * unwritten mappings, which means we cannot guarantee that all
+-	 * shared extents actually moved to the other file.  Clearing the
+-	 * reflink flag of an inode that still holds shared extents breaks
+-	 * the CoW write path, so refuse to exchange the flags in that case.
+-	 */
+-	if (req->flags & XFS_EXCHMAPS_INO1_WRITTEN)
+-		return false;
+-
+ 	/*
+ 	 * The INO1_WRITTEN optimization can skip exchanging hole and
+ 	 * unwritten mappings, which means we cannot guarantee that all
+-- 
+2.25.1
 
