@@ -1,40 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E03ED370D54
-	for <linux-xfs@vger.kernel.org>; Mon, 14 Sep 2026 05:49:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 584BB37F32F
+	for <linux-xfs@vger.kernel.org>; Mon, 14 Sep 2026 05:49:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789364977; cv=none; b=Oi9CWYiQ9N8LMOMV79VM+YpPGoOnV8Nq4Z+6peyBqea5WcdpymXVv+HVN4qE6PR+zWoBIFITWBmWBzXRwhikyzAMBXfd4mPdosA0LMN4sItTR0q/e/HOxS7EWoTgfZjXz6Aad/MW8tugYtv50wyv0rQaNEKP5yx+otf3b8dRKGc=
+	t=1789364994; cv=none; b=l5ZtyA8EtjlgAgeck1nP7DU9l0VySBe+fG+UJi7zaDch2u6a0dj/h6Ml7E1d2AOVCttFnzUdPVKDwtZz3qe8/LZKQdtqf+4htBBkfmeSi3V2jvgtZA+B/ihoJuRJdlNo59AgL3VSXiD5bVQ3S0q5qrQLM/VtPWrarAYCt3fQrU8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789364977; c=relaxed/simple;
-	bh=RPKGMK5vFvF5jYUjDoqu8x5Z+8P10aYtee2OiEXjn/Y=;
+	s=arc-20240116; t=1789364994; c=relaxed/simple;
+	bh=OOyWV/uLo+dwCr9FOXt7NnYxra0vdt/Wdic7jFdFwgc=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=cv6MglzQR+0tolvNRsNhgbrGbxoDIET1EWMO4qM3uGlki81JPyDrVxqjCQuvPQYj80+U4T+VhrIabW6I+VA2f+s3CMSxhvqjCi5IVGwc5NUuJ7sg/8SyCZjLIwCTRyK8slfRMRrPFI6vnSowjDVsT/hcg9LkMIad9svMNLy15Tg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GmrX4vr8; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=t92nLhwXUrWO17WBM5faeGNF83Bup+g0qg0pzwl1qRLe1pu6N+YRzTApM8LgfSaPzpSperdnVLUf/uICRe6Lr8zhdQUQNqjr6yrYLQZ1K4kF92Z7+YS4OTUgtyNHMBPVbn3ZB2DYddrpYVURe6jSVKoQjvjSMFhUQRLiMOmddt4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dIR2Y1y2; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GmrX4vr8"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 7AEFD1F000FF;
-	Mon, 14 Sep 2026 05:49:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dIR2Y1y2"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 19BFF1F00893;
+	Mon, 14 Sep 2026 05:49:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789364975;
-	bh=jvPWiCBAXgqSWBSrqYyLbEQBaFOQBIg83xGBlNjFaQE=;
+	s=k20260515; t=1789364991;
+	bh=/Hlq2nRQ0WSbpJB+rFEI0vKGeyMeRMpS3c7y4LaPQ5s=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=GmrX4vr82yjcoBMUKcNtNK+pnqMsBFbr6W18VG5Plcw0QJS8gxoLPzOjikuaiEzz6
-	 cqBVi8o1bSB5Z0gZKFzvLJw5UqfLBJw/QhaxXmNUv7Ww6VG527mzCk30X/ESdDQG9g
-	 z4KeknjIqfPA7PggEqMmYylEPXz5l41yEARcadaY/wRCxvf8Th7UVKBswb/9q9BSDC
-	 JXNiPkaOdjrhXUtwizpiKuyxpekvGdGxgiVRZeMlpwLLRP001DKvtkGf3MFg3ddqb2
-	 lU5OOM3DqP2VQLYYvNpxH6hru90iFPBMR6AHox1Ku+paW5HWeDLz0jjFeD1M6w9/9O
-	 DBWywp/oCQ9Yg==
-Date: Sun, 13 Sep 2026 22:49:35 -0700
-Subject: [PATCH 6/6] mkfs: allow specification of default options via
- configuration file
+	b=dIR2Y1y22zVJyeju9ZsVZKunwOFsWmmv3MvB1cc2SwruurCYSwSyz/gqaiBiRZEKR
+	 3ZKItoHOdplIELv30LJ7Iaa1DtF5G9Zsd4GO5BtI6+/ns3su6D9fVcUy7H8BBeFQXO
+	 fxhVZkHEQXX62IEKlXPZinqfR4juxw8PMp+QgYGI15y3FPcf9NlysJqsJ+WAZE6aJr
+	 Nhr66nTeMQYtkshK2Y/I9JWGKRWw0KLpcU932z73+BCe5i3In3HLm/FyU4AlJ+vgRV
+	 gOTkmPNuSsThLg13TlmZGsBP002NuVKD1p3wVOrTffjhbVchpM/EePEJgPj2lJPPN1
+	 qxWpCyhUZRyJQ==
+Date: Sun, 13 Sep 2026 22:49:50 -0700
+Subject: [PATCH 1/7] libfrog: hoist xfsquotactl out of xfs_quota
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
-Cc: hch@infradead.org, hch@lst.de, tytso@mit.edu, linux-xfs@vger.kernel.org
-Message-ID: <178936484569.2108437.13950018516249835101.stgit@frogsfrogsfrogs>
-In-Reply-To: <178936484431.2108437.14645667775156303668.stgit@frogsfrogsfrogs>
-References: <178936484431.2108437.14645667775156303668.stgit@frogsfrogsfrogs>
+Cc: linux-xfs@vger.kernel.org
+Message-ID: <178936484825.2108717.5578837464044937948.stgit@frogsfrogsfrogs>
+In-Reply-To: <178936484773.2108717.13238892511050788442.stgit@frogsfrogsfrogs>
+References: <178936484773.2108717.13238892511050788442.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,327 +45,138 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Ted asked for the ability to set default mkfs options, but to retain the
-ability respecify options via a separate configuration file or cli
-options.  This would be useful for running fstests with the default
-featureset of (say) Linux 5.15 LTS, while still allowing individual
-testcases to provide their own overrides.  It's certainly less messy
-than what Ted does today, which is a bash script that copies the desired
-config file and changes things.
+Hoist this generic function to libfrog so that we can share it with
+xfs_spaceman later on.
 
-Cc: tytso@mit.edu
-Cc: hch@infradead.org
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-Reviewed-by: Andrey Albershteyn <aalbersh@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- man/man8/mkfs.xfs.8.in |   25 +++++++-
- mkfs/xfs_mkfs.c        |  158 ++++++++++++++++++++++++++++++++++++++++++------
- 2 files changed, 160 insertions(+), 23 deletions(-)
+ libfrog/quotactl.h |   28 ++++++++++++++++++++++++++++
+ quota/quota.h      |   18 +-----------------
+ libfrog/Makefile   |    2 ++
+ libfrog/quotactl.c |    2 +-
+ quota/Makefile     |    2 +-
+ 5 files changed, 33 insertions(+), 19 deletions(-)
+ create mode 100644 libfrog/quotactl.h
+ rename quota/linux.c => libfrog/quotactl.c (97%)
 
 
-diff --git a/man/man8/mkfs.xfs.8.in b/man/man8/mkfs.xfs.8.in
-index ed64e01aec4c55..927cd075bf8a5d 100644
---- a/man/man8/mkfs.xfs.8.in
-+++ b/man/man8/mkfs.xfs.8.in
-@@ -152,10 +152,31 @@ .SH OPTIONS
- .BI \-c " configuration_file_option"
- This option specifies the files that mkfs configuration will be obtained from.
- The valid
--.I configuration_file_option
--is:
-+.I configuration_file_options
-+are:
- .RS 1.2i
- .TP
-+.BI defaults= path
-+Default configuration options will be sourced from the file specified by the
-+.I name
-+option string.
-+This option can be use either an absolute or relative path to the configuration
-+file to be read.
-+Options specified through the default configuration file can be overridden by
-+a configuration file specified via
-+.B options=
-+or by command line arguments, in that order.
+diff --git a/libfrog/quotactl.h b/libfrog/quotactl.h
+new file mode 100644
+index 00000000000000..f76d02567408a0
+--- /dev/null
++++ b/libfrog/quotactl.h
+@@ -0,0 +1,28 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright (c) 2005 Silicon Graphics, Inc.
++ * All Rights Reserved.
++ */
++#ifndef LIBFROG_QUOTACTL_H_
++#define LIBFROG_QUOTACTL_H_
 +
-+Sample configuration files can be found in @mkfs_cfg_dir@.
-+This option also accepts configuration files generated by the
-+.B makecfg
-+suboption below, or by the
-+.B makecfg
-+subcommand of
-+.B xfs_db
-+and
-+.BR xfs_spaceman .
-+.TP
- .BI makecfg= path
- Write a configuration file to the file specified by the
- .I path
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 38a5769188b05a..334367b81555ec 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -62,6 +62,7 @@ enum {
- enum {
- 	C_OPTFILE = 0,
- 	C_MAKECFG,
-+	C_DEFOPTFILE,
- 	C_MAX_OPTS,
- };
- 
-@@ -314,6 +315,7 @@ static struct opt_params copts = {
- 	.subopts = {
- 		[C_OPTFILE] = "options",
- 		[C_MAKECFG] = "makecfg",
-+		[C_DEFOPTFILE] = "defaults",
- 		[C_MAX_OPTS] = NULL,
- 	},
- 	.subopt_params = {
-@@ -325,6 +327,10 @@ static struct opt_params copts = {
- 		  .conflicts = { { NULL, LAST_CONFLICT } },
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
-+		{ .index = C_DEFOPTFILE,
-+		  .conflicts = { { NULL, LAST_CONFLICT } },
-+		  .defaultval = SUBOPT_NEEDS_VAL,
-+		},
- 	},
- };
- 
-@@ -1077,6 +1083,7 @@ struct cli_params {
- 	int	blocksize;
- 
- 	char	*cfgfile;
-+	char	*defcfgfile;
- 	char	*protofile;
- 	char	*makecfg;
- 
-@@ -1214,7 +1221,7 @@ usage( void )
- {
- 	fprintf(stderr, _("Usage: %s\n\
- /* blocksize */		[-b size=num]\n\
--/* config file */	[-c options=path,makecfg=path\n\
-+/* config file */	[-c options=path,makecfg=path,defaults=path\n\
- /* metadata */		[-m crc=0|1,finobt=0|1,uuid=xxx,rmapbt=0|1,reflink=0|1,\n\
- 			    inobtcount=0|1,bigtime=0|1,autofsck=xxx,\n\
- 			    metadir=0|1]\n\
-@@ -1797,6 +1804,30 @@ cfgfile_opts_parser(
- 	case C_MAKECFG:
- 		cli->makecfg = getstr(value, opts, subopt);
- 		break;
-+	case C_DEFOPTFILE:
-+		/* already processed by defcfgfile_opts_parser; ignored */
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+	return 0;
-+}
++#include "xqm.h"
 +
-+static int
-+defcfgfile_opts_parser(
-+	struct opt_params	*opts,
-+	int			subopt,
-+	const char		*value,
-+	struct cli_params	*cli)
-+{
-+	switch (subopt) {
-+	case C_OPTFILE:
-+	case C_MAKECFG:
-+		/* will be processed by cfgfile_opts_parser; ignored */
-+		break;
-+	case C_DEFOPTFILE:
-+		cli->defcfgfile = getstr(value, opts, subopt);
-+		break;
- 	default:
- 		return -EINVAL;
- 	}
-@@ -2263,13 +2294,15 @@ sector_opts_parser(
- 	return 0;
- }
- 
--static struct subopts {
-+struct subopts {
- 	struct opt_params *opts;
- 	int		(*parser)(struct opt_params	*opts,
- 				  int			subopt,
- 				  const char		*value,
- 				  struct cli_params	*cli);
--} subopt_tab[] = {
++/*
++ * System call definitions mapping to platform-specific quotactl
++ */
++extern int xfsquotactl(int __cmd, const char *__device,
++			uint __type, uint __id, void * __addr);
++enum {
++	XFS_QUOTAON,	/* enable accounting/enforcement */
++	XFS_QUOTAOFF,	/* disable accounting/enforcement */
++	XFS_GETQUOTA,	/* get disk limits and usage */
++	XFS_SETQLIM,	/* set disk limits */
++	XFS_GETQSTAT,	/* get quota subsystem status */
++	XFS_QUOTARM,	/* free disk space used by dquots */
++	XFS_QSYNC,	/* flush delayed allocate space */
++	XFS_GETQSTATV,	/* newer version of quota stats */
++	XFS_GETNEXTQUOTA, /* get disk limits and usage */
 +};
 +
-+static const struct subopts subopt_tab[] = {
- 	{ &bopts, block_opts_parser },
- 	{ &copts, cfgfile_opts_parser },
- 	{ &dopts, data_opts_parser },
-@@ -2283,15 +2316,21 @@ static struct subopts {
- 	{ NULL, NULL },
++#endif /* LIBFROG_QUOTACTL_H_ */
+diff --git a/quota/quota.h b/quota/quota.h
+index ece920ef6c1b46..82132e88c671c7 100644
+--- a/quota/quota.h
++++ b/quota/quota.h
+@@ -9,6 +9,7 @@
+ #include "xqm.h"
+ #include "libfrog/paths.h"
+ #include "libfrog/projects.h"
++#include "libfrog/quotactl.h"
+ #include <stdbool.h>
+ 
+ /*
+@@ -20,23 +21,6 @@ enum {
+ 	XFS_RTBLOCK_QUOTA =	0x4,
  };
  
-+static const struct subopts defcfg_subopt_tab[] = {
-+	{ &copts, defcfgfile_opts_parser },
-+	{ NULL, NULL },
-+};
-+
- static void
- parse_subopts(
--	char		opt,
--	char		*arg,
--	struct cli_params *cli)
-+	char			opt,
-+	char			*arg,
-+	const struct subopts	*stab,
-+	struct cli_params	*cli)
- {
--	struct subopts	*sop = &subopt_tab[0];
--	char		*p;
--	int		ret = 0;
-+	const struct subopts	*sop = stab;
-+	char			*p, *duparg;
-+	int			ret = 0;
+-/*
+- * System call definitions mapping to platform-specific quotactl
+- */
+-extern int xfsquotactl(int __cmd, const char *__device,
+-			uint __type, uint __id, void * __addr);
+-enum {
+-	XFS_QUOTAON,	/* enable accounting/enforcement */
+-	XFS_QUOTAOFF,	/* disable accounting/enforcement */
+-	XFS_GETQUOTA,	/* get disk limits and usage */
+-	XFS_SETQLIM,	/* set disk limits */
+-	XFS_GETQSTAT,	/* get quota subsystem status */
+-	XFS_QUOTARM,	/* free disk space used by dquots */
+-	XFS_QSYNC,	/* flush delayed allocate space */
+-	XFS_GETQSTATV,	/* newer version of quota stats */
+-	XFS_GETNEXTQUOTA, /* get disk limits and usage */
+-};
+-
+ /*
+  * Utility routines
+  */
+diff --git a/libfrog/Makefile b/libfrog/Makefile
+index 6ada83407e48c5..b0e8d1a10cd0c7 100644
+--- a/libfrog/Makefile
++++ b/libfrog/Makefile
+@@ -33,6 +33,7 @@ logging.c \
+ paths.c \
+ projects.c \
+ ptvar.c \
++quotactl.c \
+ radix-tree.c \
+ randbytes.c \
+ scrub.c \
+@@ -67,6 +68,7 @@ logging.h \
+ paths.h \
+ projects.h \
+ ptvar.h \
++quotactl.h \
+ radix-tree.h \
+ randbytes.h \
+ scrub.h \
+diff --git a/quota/linux.c b/libfrog/quotactl.c
+similarity index 97%
+rename from quota/linux.c
+rename to libfrog/quotactl.c
+index 63e0d34ce28c4e..ffef72b44eeadf 100644
+--- a/quota/linux.c
++++ b/libfrog/quotactl.c
+@@ -4,7 +4,7 @@
+  * All Rights Reserved.
+  */
  
- 	while (sop->opts) {
- 		if (sop->opts->name == opt)
-@@ -2303,7 +2342,14 @@ parse_subopts(
- 	if (!sop->opts)
- 		return;
+-#include "quota.h"
++#include "libfrog/quotactl.h"
+ #include <sys/quota.h>
  
--	p = arg;
-+	/* getsubopt modifies duparg */
-+	duparg = strdup(arg);
-+	if (!duparg) {
-+		perror("allocating memory");
-+		exit(1);
-+	}
-+
-+	p = duparg;
- 	while (*p != '\0') {
- 		char	**subopts = (char **)sop->opts->subopts;
- 		char	*value;
-@@ -2315,19 +2361,20 @@ parse_subopts(
- 		if (ret)
- 			unknown(opt, value);
- 	}
-+	free(duparg);
- }
+ #ifndef PRJQUOTA
+diff --git a/quota/Makefile b/quota/Makefile
+index da5a1489e468b2..296cea44129e7f 100644
+--- a/quota/Makefile
++++ b/quota/Makefile
+@@ -8,7 +8,7 @@ include $(TOPDIR)/include/builddefs
+ LTCOMMAND = xfs_quota
+ HFILES = init.h quota.h
+ CFILES = init.c util.c \
+-	edit.c free.c linux.c path.c project.c quot.c quota.c report.c state.c
++	edit.c free.c path.c project.c quot.c quota.c report.c state.c
  
- static bool
- parse_cfgopt(
--	const char	*section,
--	const char	*name,
--	const char	*value,
--	struct cli_params *cli)
-+	const char		*section,
-+	const char		*name,
-+	const char		*value,
-+	struct cli_params	*cli)
- {
--	struct subopts	*sop = &subopt_tab[0];
--	char		**subopts;
--	int		ret = 0;
--	int		i;
-+	const struct subopts	*sop = &subopt_tab[0];
-+	char			**subopts;
-+	int			ret = 0;
-+	int			i;
- 
- 	while (sop->opts) {
- 		if (sop->opts->ini_section[0] != '\0' &&
-@@ -5803,6 +5850,64 @@ cfgfile_parse(
- 		cli->cfgfile);
- }
- 
-+static void
-+reset_seen(
-+	struct opt_params	*opts)
-+{
-+	unsigned int		i;
-+
-+	for (i = 0; i < MAX_SUBOPTS; i++) {
-+		opts->subopt_params[i].seen = false;
-+		opts->subopt_params[i].str_seen = false;
-+	}
-+}
-+
-+static void
-+defcfgfile_parse(
-+	struct cli_params	*cli)
-+{
-+	int			error;
-+
-+	if (!cli->defcfgfile)
-+		return;
-+
-+	error = ini_parse(cli->defcfgfile, cfgfile_parse_ini, cli);
-+	if (error) {
-+		if (error > 0) {
-+			fprintf(stderr,
-+		_("%s: Unrecognised input on line %d. Aborting.\n"),
-+				cli->defcfgfile, error);
-+		} else if (error == -1) {
-+			fprintf(stderr,
-+		_("Unable to open defaults config file %s. Aborting.\n"),
-+				cli->defcfgfile);
-+		} else if (error == -2) {
-+			fprintf(stderr,
-+		_("Memory allocation failure parsing %s. Aborting.\n"),
-+				cli->defcfgfile);
-+		} else {
-+			fprintf(stderr,
-+		_("Unknown error %d opening defaults config file %s. Aborting.\n"),
-+				error, cli->defcfgfile);
-+		}
-+		exit(1);
-+	}
-+	printf(_("Parameters parsed from defaults config file %s successfully\n"),
-+		cli->defcfgfile);
-+
-+	/* Now make it look like we haven't seen any cli options. */
-+	reset_seen(&bopts);
-+	reset_seen(&copts);
-+	reset_seen(&dopts);
-+	reset_seen(&iopts);
-+	reset_seen(&lopts);
-+	reset_seen(&mopts);
-+	reset_seen(&nopts);
-+	reset_seen(&popts);
-+	reset_seen(&ropts);
-+	reset_seen(&sopts);
-+}
-+
- static void
- set_autofsck(
- 	struct xfs_mount	*mp,
-@@ -6058,8 +6163,19 @@ main(
- 	memcpy(&cli.sb_feat, &dft.sb_feat, sizeof(cli.sb_feat));
- 	memcpy(&cli.fsx, &dft.fsx, sizeof(cli.fsx));
- 
--	while ((c = getopt_long(argc, argv, "b:c:d:i:l:L:m:n:KNp:qr:s:CfV",
--					long_options, &option_index)) != EOF) {
-+#define MKFS_GETOPT_STRING "b:c:d:i:l:L:m:n:KNp:qr:s:CfV"
-+	/* Load default configuration, if specified */
-+	while ((c = getopt_long(argc, argv, MKFS_GETOPT_STRING,
-+				long_options, &option_index)) != EOF) {
-+		if (c == 'c')
-+			parse_subopts(c, optarg, defcfg_subopt_tab, &cli);
-+	}
-+	defcfgfile_parse(&cli);
-+	optind = 1;
-+
-+	/* Do the real option parsing */
-+	while ((c = getopt_long(argc, argv, MKFS_GETOPT_STRING,
-+				long_options, &option_index)) != EOF) {
- 		switch (c) {
- 		case 0:
- 			break;
-@@ -6077,7 +6193,7 @@ main(
- 		case 'p':
- 		case 'r':
- 		case 's':
--			parse_subopts(c, optarg, &cli);
-+			parse_subopts(c, optarg, subopt_tab, &cli);
- 			break;
- 		case 'L':
- 			if (strlen(optarg) > sizeof(sbp->sb_fname))
+ LLDLIBS = $(LIBXCMD) $(LIBFROG)
+ LTDEPENDENCIES = $(LIBXCMD) $(LIBFROG)
 
