@@ -1,41 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 589E048EC99
-	for <linux-xfs@vger.kernel.org>; Mon, 14 Sep 2026 15:00:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B4B948643D;
+	Mon, 14 Sep 2026 15:05:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789398058; cv=none; b=C+HImCCEh27DNoSzLSIztbMOer8nr8H1Fp2gqR7Dl63gnDDySi3MVR5sUWqm+PXp/lqt/1cnWNWNXuT2sPR0a2SEq8/+TfpJLXIqrgiAgyhrRcG3pBoYNUFv/2OkX8EPxXTQz0p3Is6SyriV5XjeU6k47nxuSWmSS6Gj67ZfWBE=
+	t=1789398352; cv=none; b=a0N6DzRf6qaz5VELJhp3DWvbkVuc3drzmNE9guVesRP1wzpRp7pyh4b5m15grxJ8rCIyEGZxbbVApT1RUzUS5tRjHTz2C17V9rvVJJXaYHvYtt2x3uGqAImO7eDeDm4T4/g/Aq+iDtZh5riftdZRw/tKO5iRXGAmYSatHHUByyk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789398058; c=relaxed/simple;
-	bh=R4MibrhFjHpLlKFli2ZZdIPaG65N5+BZmIEPYGiAovQ=;
+	s=arc-20240116; t=1789398352; c=relaxed/simple;
+	bh=xZWQ2zjSflSPtpH8GxcGKdnWuzWgxzBvXnwYXAYqhl4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=BUDxQ6lZ7dCgXazYH3R2fedawxOua0LgFVO/l8fUKnzmpztL7snDcTggoD62RjjmGIiWZ15KBpNRwSMeuT1zH7C5Q9tZrd/gbR3b6IMJ/2orTva/9f5SgAgNLErM92rYB1QRMBXBW/vh4s2piJqsXC7Q6t+Fpir+dUfIPG+li58=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IxhFU5lk; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=Gd3dbY8ZusEcxc13bRFldquyTOqsqsNGwRDt05cTnr3VOTv7njm1B8iu+UlFDGYtOQI99gkSlxvQiWRgjkAiPHy+p/SQVlaJmwpSizrfHAp5cyhylDf2LY6iCD4h7DLp+BQs3ZWOMlEek7YdvMG8zjwem1ctbJ0lpQzFVRWcSzY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IioRmap/; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IxhFU5lk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C110F1F0089A;
-	Mon, 14 Sep 2026 15:00:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IioRmap/"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id D16991F00893;
+	Mon, 14 Sep 2026 15:05:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789398056;
-	bh=1vMg2ysMUcD4FonZUmm+l5zrEtKEtK40LCciz89RF+c=;
+	s=k20260515; t=1789398349;
+	bh=vvKITJcYQgzh2hEi+wt48NuedpLUcXbpT6DKOA9q8kk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=IxhFU5lk/wo5xIN07IOrW/rpzwQxWNJ8ta3pozLXOdiEdvU3zMw/BCdJ6z5+QSlsO
-	 xiiumdqaDdGRuj8Or8oLAWiooH1TWmv4t2SlkeY5ppo9g1OkDbl990cnUeAoi9zsay
-	 l8PJlwdy1B7buP+9VJ+f8UK0Rs+jSrneQwE2OQubtlU1Q/PFXDibs1+Sey6qGn+Xzt
-	 H21vuqjosIpOZWY2DMQuWa3DCpTn2cYSYZ++ks2Nr66QArneICa8HvRcfN+eTGEvjN
-	 4yI4dGSHHvbeBRmoAewFmQ+x9OwBAwSriY+9IFWCA8BIYX6ULBNEtRyYCeLZTP6+8p
-	 uSSxcwtmyE2GA==
-Date: Mon, 14 Sep 2026 17:00:51 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: hchc@last.de, sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2 1/3] xfs: add xfs_error_report the ability to display
- an error code
-Message-ID: <aqgLft0IEhUocC8R@cronus.toxiclabs.cc>
-References: <20260914115746.82122-1-cem@kernel.org>
- <20260914115746.82122-2-cem@kernel.org>
- <20260914144224.GG6283@frogsfrogsfrogs>
+	b=IioRmap/0CkLbsriKWFcwzhWnyFDK12tE2OrlADRCCt0D/d1Ul9636m+cGPGlPDNW
+	 Uk6JH9Mn7rkqBRna6wbOtoTmJ3KBv88eGT+mwSEmhAHN0Dx2MSMPUYo4xzY10rdR9h
+	 3sSFq52KEpUwVPGV+G/SmcDSg9YVG+vKZY3uryYtuF00S2jzwwmttMrvL50PZ5NL96
+	 bqyXBHar60y4GPW9rmf3andlzjReoib511nVVoY+nTGv6hfqrufQtsykMNBv0XApci
+	 U1NuN4CIRjDODQF+1346BH6uTiIGL3Pd1dx+egu61+UeYwxf91ZeSfR+nDU0x2LgoY
+	 +w4lLyv3wVYNQ==
+Date: Mon, 14 Sep 2026 08:05:49 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: zlang@kernel.org, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: test libxfs handling of missing RT devices
+Message-ID: <20260914150549.GO6265@frogsfrogsfrogs>
+References: <20260914113634.2448723-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,211 +41,104 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260914144224.GG6283@frogsfrogsfrogs>
+In-Reply-To: <20260914113634.2448723-1-hch@lst.de>
 
-On Mon, Sep 14, 2026 at 07:42:24AM -0700, Darrick J. Wong wrote:
-> On Mon, Sep 14, 2026 at 01:57:39PM +0200, cem@kernel.org wrote:
-> > From: Carlos Maiolino <cem@kernel.org>
-> > 
-> > Users could opt to request an error code to be printed now.
-> > This relies on errname() and CONFIG_SYMBOLIC_ERRNAME without requiring it
+On Mon, Sep 14, 2026 at 01:36:34PM +0200, Christoph Hellwig wrote:
+> Test that libxfs rejects initializing a file systems unless in debugger
+> mode by running xfs_repair and xfs_db with missing arguments.  For
+> db additionally test that command that require a RT device still do not
+> work even after libxfs can be initialized using a missing RT device.
 > 
-> Eh?  No it doesn't...
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  tests/xfs/2300     | 48 ++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/2300.out | 14 ++++++++++++++
+>  2 files changed, 62 insertions(+)
+>  create mode 100755 tests/xfs/2300
+>  create mode 100644 tests/xfs/2300.out
 > 
-> > to be enabled.
-> > Report 'unkown error' If CONFIG_SYMBOLIC_ERRNAME is not enabled or the
-> > user passes 0 as an error.
-> > 
-> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> > 
-> > ---
-> > V2:
-> > 	- Fix commit description s/_NAME/_ERRNAME
-> > 	- xfs_corruption_error should call xfs_error_report with
-> > 	  -EFSCORRUPTED
-> > 	- Modify xfs_error_report to only print out the error number if
-> > 	  it received an error from the caller.
-> > 	- Don't use errname() anymore.
+> diff --git a/tests/xfs/2300 b/tests/xfs/2300
+> new file mode 100755
+> index 000000000000..70c1d6bad9cc
+> --- /dev/null
+> +++ b/tests/xfs/2300
+> @@ -0,0 +1,48 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0-or-later
+> +# Copyright (c) 2026 Christoph Hellwig.
+> +#
+> +# FS QA Test No. 2300
+> +#
+> +# Tests that repair refuses to work without -r argument, and xfs_db works fine
+> +# even without it to check libxfs initialization behavior with missing RT
+> +# devices.
+> +#
+> +. ./common/preamble
+> +_begin_fstest auto quick repair db
+> +
+> +. ./common/filter
+> +
+> +_cleanup()
+> +{
+> +	_unmount $LOOP_MNT 2>/dev/null
+> +	[ -n "$loop_dev" ] && _destroy_loop_device $loop_dev
+> +	rm -rf $LOOP_IMG $LOOP_MNT
+
+I don't see any users of loop devices here?
+
+Otherwise this test looks ok to me.
+
+--D
+
+> +	cd /
+> +	rm -f $tmp.*
+> +}
+> +
+> +_require_scratch_nocheck
+> +_require_realtime
+> +
+> +if [ -z "$SCRATCH_RTDEV" ]; then
+> +	_notrun "external RT device required"
+> +fi
+> +
+> +_scratch_mkfs >> $seqres.full 2>&1
+> +
+> +echo "Dumping superblock using xfs_db without rtdev"
+> +$XFS_DB_PROG $SCRATCH_DEV -c 'sb 0' -c 'p' >> $seqres.full
+> +
+> +echo "Loading RT superblock using xfs_db without rtdev, should fail"
+> +$XFS_DB_PROG $SCRATCH_DEV -c 'rtsb'
+> +
+> +echo "Running xfs_repair -n without rt device, should fail"
+> +$XFS_REPAIR_PROG -n $SCRATCH_DEV
+> +
+> +echo "Running xfs_repair without rt device, should fail"
+> +$XFS_REPAIR_PROG $SCRATCH_DEV
+> +
+> +
+> +status=0
+> +exit
+> diff --git a/tests/xfs/2300.out b/tests/xfs/2300.out
+> new file mode 100644
+> index 000000000000..50aab2b83ec9
+> --- /dev/null
+> +++ b/tests/xfs/2300.out
+> @@ -0,0 +1,14 @@
+> +QA output created by 2300
+> +Dumping superblock using xfs_db without rtdev
+> +Loading RT superblock using xfs_db without rtdev, should fail
+> +realtime device not loaded, use -R.
+> +Running xfs_repair -n without rt device, should fail
+> +Phase 1 - find and verify superblock...
+> +xfs_repair: filesystem has a realtime subvolume
+> +xfs_repair: realtime device init failed
+> +xfs_repair: cannot repair this filesystem.  Sorry.
+> +Running xfs_repair without rt device, should fail
+> +Phase 1 - find and verify superblock...
+> +xfs_repair: filesystem has a realtime subvolume
+> +xfs_repair: realtime device init failed
+> +xfs_repair: cannot repair this filesystem.  Sorry.
+> -- 
+> 2.53.0
 > 
-> ...right?
-
-Of course I'd forget something... I'll fix that for next version...
-
-
-> 
-> >  fs/xfs/xfs_error.c         | 16 +++++++++++-----
-> >  fs/xfs/xfs_error.h         |  9 +++++----
-> >  fs/xfs/xfs_exchmaps_item.c |  9 ++++++---
-> >  fs/xfs/xfs_inode_item.c    |  3 ++-
-> >  fs/xfs/xfs_log_recover.c   |  3 ++-
-> >  fs/xfs/xfs_trans.c         |  2 +-
-> >  6 files changed, 27 insertions(+), 15 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-> > index 9ece70fd94ca..c943717f1dd7 100644
-> > --- a/fs/xfs/xfs_error.c
-> > +++ b/fs/xfs/xfs_error.c
-> > @@ -241,16 +241,21 @@ void
-> >  xfs_error_report(
-> >  	const char		*tag,
-> >  	int			level,
-> > +	int			error,
-> >  	struct xfs_mount	*mp,
-> >  	const char		*filename,
-> >  	int			linenum,
-> >  	xfs_failaddr_t		failaddr)
-> >  {
-> >  	if (level <= xfs_error_level) {
-> > -		xfs_alert_tag(mp, XFS_PTAG_ERROR_REPORT,
-> > -		"Internal error %s at line %d of file %s.  Caller %pS",
-> > -			    tag, linenum, filename, failaddr);
-> > -
-> > +		if (error)
-> > +			xfs_alert_tag(mp, XFS_PTAG_ERROR_REPORT,
-> > +"Internal error %s (%d) at line %d of file %s.  Caller %pS",
-> > +				tag, error, linenum, filename, failaddr);
-> > +		else
-> > +			xfs_alert_tag(mp, XFS_PTAG_ERROR_REPORT,
-> > +"Internal error %s at line %d of file %s.  Caller %pS",
-> > +				tag, linenum, filename, failaddr);
-> 
-> /me wonders if we should add a tracepoint to these error reporting
-> functions so that one isn't totally reliant on scraping dmesg, but maybe
-> adding fserror_report_metadata is more appropriate for that?  Will have
-> to ruminate on that for a while.
-
-Hmmm, what you think about controlling with the tracepoint? Spitting out
-the error? *If* that's the case, the problem I see is when users hit the
-error we can't enable a tracepoint on a past error :P so I'd rather have
-it logged in dmesg without needing to rely on having tracepoints enabled
-or not.
-
-Or perhaps I missed your point here?
-
-> 
-> In the meantime, this patch looks fine to me,
-> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-
-Thanks!
-
-
-> 
-> --D
-> 
-> >  		xfs_stack_trace();
-> >  	}
-> >  }
-> > @@ -268,7 +273,8 @@ xfs_corruption_error(
-> >  {
-> >  	if (buf && level <= xfs_error_level)
-> >  		xfs_hex_dump(buf, bufsize);
-> > -	xfs_error_report(tag, level, mp, filename, linenum, failaddr);
-> > +	xfs_error_report(tag, level, -EFSCORRUPTED, mp,
-> > +			 filename, linenum, failaddr);
-> >  	xfs_alert(mp, "Corruption detected. Unmount and run xfs_repair");
-> >  }
-> >  
-> > diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
-> > index 05fc1d1cf521..3c76d0dad51c 100644
-> > --- a/fs/xfs/xfs_error.h
-> > +++ b/fs/xfs/xfs_error.h
-> > @@ -8,8 +8,9 @@
-> >  
-> >  struct xfs_mount;
-> >  
-> > -void xfs_error_report(const char *tag, int level, struct xfs_mount *mp,
-> > -		const char *filename, int linenum, xfs_failaddr_t failaddr);
-> > +void xfs_error_report(const char *tag, int level, int error,
-> > +		struct xfs_mount *mp, const char *filename,
-> > +		int linenum, xfs_failaddr_t failaddr);
-> >  void xfs_corruption_error(const char *tag, int level, struct xfs_mount *mp,
-> >  		const void *buf, size_t bufsize, const char *filename,
-> >  		int linenum, xfs_failaddr_t failaddr);
-> > @@ -20,8 +21,8 @@ void xfs_verifier_error(struct xfs_buf *bp, int error, xfs_failaddr_t failaddr);
-> >  void xfs_inode_verifier_error(struct xfs_inode *ip, int error, const char *name,
-> >  		const void *buf, size_t bufsz, xfs_failaddr_t failaddr);
-> >  
-> > -#define	XFS_ERROR_REPORT(e, lvl, mp)	\
-> > -	xfs_error_report(e, lvl, mp, __FILE__, __LINE__, __return_address)
-> > +#define	XFS_ERROR_REPORT(e, lvl, error, mp)	\
-> > +	xfs_error_report(e, lvl, error, mp, __FILE__, __LINE__, __return_address)
-> >  #define	XFS_CORRUPTION_ERROR(e, lvl, mp, buf, bufsize)	\
-> >  	xfs_corruption_error(e, lvl, mp, buf, bufsize, \
-> >  			     __FILE__, __LINE__, __return_address)
-> > diff --git a/fs/xfs/xfs_exchmaps_item.c b/fs/xfs/xfs_exchmaps_item.c
-> > index dd5d92ca1010..9f499a80038c 100644
-> > --- a/fs/xfs/xfs_exchmaps_item.c
-> > +++ b/fs/xfs/xfs_exchmaps_item.c
-> > @@ -573,13 +573,15 @@ xlog_recover_xmi_commit_pass2(
-> >  
-> >  	len = sizeof(struct xfs_xmi_log_format);
-> >  	if (item->ri_buf[0].iov_len != len) {
-> > -		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, log->l_mp);
-> > +		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW,
-> > +				 -EFSCORRUPTED, log->l_mp);
-> >  		return -EFSCORRUPTED;
-> >  	}
-> >  
-> >  	xmi_formatp = item->ri_buf[0].iov_base;
-> >  	if (xmi_formatp->__pad != 0) {
-> > -		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, log->l_mp);
-> > +		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW,
-> > +				 -EFSCORRUPTED, log->l_mp);
-> >  		return -EFSCORRUPTED;
-> >  	}
-> >  
-> > @@ -614,7 +616,8 @@ xlog_recover_xmd_commit_pass2(
-> >  
-> >  	xmd_formatp = item->ri_buf[0].iov_base;
-> >  	if (item->ri_buf[0].iov_len != sizeof(struct xfs_xmd_log_format)) {
-> > -		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, log->l_mp);
-> > +		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW,
-> > +				 -EFSCORRUPTED, log->l_mp);
-> >  		return -EFSCORRUPTED;
-> >  	}
-> >  
-> > diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-> > index 99d6ecccdaa7..a29c90f0650f 100644
-> > --- a/fs/xfs/xfs_inode_item.c
-> > +++ b/fs/xfs/xfs_inode_item.c
-> > @@ -1229,7 +1229,8 @@ xfs_inode_item_format_convert(
-> >  	struct xfs_inode_log_format_32	*in_f32 = buf->iov_base;
-> >  
-> >  	if (buf->iov_len != sizeof(*in_f32)) {
-> > -		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, NULL);
-> > +		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW,
-> > +				 -EFSCORRUPTED, NULL);
-> >  		return -EFSCORRUPTED;
-> >  	}
-> >  
-> > diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> > index e7e49529658b..e92afc455d0f 100644
-> > --- a/fs/xfs/xfs_log_recover.c
-> > +++ b/fs/xfs/xfs_log_recover.c
-> > @@ -2945,7 +2945,8 @@ xlog_recover_process(
-> >  		 * fatal log corruption failure.
-> >  		 */
-> >  		if (xfs_has_crc(log->l_mp)) {
-> > -			XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, log->l_mp);
-> > +			XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW,
-> > +					 -EFSCORRUPTED, log->l_mp);
-> >  			return -EFSCORRUPTED;
-> >  		}
-> >  	}
-> > diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> > index 1b36cf12d4e3..5c522790e5be 100644
-> > --- a/fs/xfs/xfs_trans.c
-> > +++ b/fs/xfs/xfs_trans.c
-> > @@ -971,7 +971,7 @@ xfs_trans_cancel(
-> >  	 * here.
-> >  	 */
-> >  	if (dirty && !xfs_is_shutdown(mp)) {
-> > -		XFS_ERROR_REPORT("xfs_trans_cancel", XFS_ERRLEVEL_LOW, mp);
-> > +		XFS_ERROR_REPORT("xfs_trans_cancel", XFS_ERRLEVEL_LOW, 0, mp);
-> >  		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-> >  	}
-> >  #ifdef DEBUG
-> > -- 
-> > 2.55.0
-> > 
 > 
