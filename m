@@ -1,158 +1,75 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D64B3C3432
-	for <linux-xfs@vger.kernel.org>; Mon, 14 Sep 2026 11:13:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D2DA440A36
+	for <linux-xfs@vger.kernel.org>; Mon, 14 Sep 2026 11:35:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789384398; cv=none; b=JberfcifdjQAOo+9UFiht1HCFNjQGgj/MzoE40nQxJF3r0D8WkC8EiymkqSrtcP4JobAUMm4PpQqgZ+C+I8kWRj5inaud83w4YrQP+27AI7PSHavP3hj203WdBtDP9Qony01x/YqGF1XrpJk2nCI4WKg4BBH/XEAK3N6FjFI098=
+	t=1789385747; cv=none; b=j1cwMtH2VkLCNOUyC8BuAx30OVxWyNoV7XtnLbadp9ERt/DvzCwRFas2ZTVidbCK6YdZETcLxyECXBlTn8dbobPSmlVKi9TqeQ1JGwWGu6aenisMdDt400NfMK5JbJjCqrlMJpPvXRmCTEzKNMM529VMvi7tkW40X1qwBEEojmg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789384398; c=relaxed/simple;
-	bh=uBNI3g009Lb/Z17XD4dhYQOWJmGvmxC/1IDK2vf/eU0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bowOZKQLtaJdJ1i+C/+nCOmJf23pWMYbstzk2JpVwXP+f0ORgTC35YZojVxy/xYnOXshznvjBHB57NAwZpYu1shzSNaIQ047jduC4HadhoY3p6gqRNktghlTc+HGGaG6sP2yXswv18PiktiMK2g+22PgF9Trvn53t+W7sFIDPEM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Wq146Fpu; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789385747; c=relaxed/simple;
+	bh=am600qOentaVdzkNYRXqgmt9M4Sq3LYg8QtlKuuWbWI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=PdAUUW+CFC/5y0zRA7guJUFpKTsS37Q8ew9BiZl1mb1a8BmNp6qinb9FYz2YJRhXY11gERBhkXvzoPDZvjtsdm1CEek2daOmfOYsJvzneioH03CAKBhtK0wtwujcIdGrebRnGPTZHyhYhhko+ngmqpS2qRniH4JRjU1if+WjQGs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=QlgZCaw/; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Wq146Fpu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3819A1F000FF;
-	Mon, 14 Sep 2026 11:13:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789384397;
-	bh=WemTGF9iyxbTABE7c6Y0LJ2rwWzCXDNob2vioSX7oKc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Wq146FpuGz9/vyZOt+t741KJJ/CLm45A1tvvSrv/1kG6nBGQhUTthndeF1HUB5+3F
-	 oJ4WzCPhOYXCO/CVVG2ANwBTj5Qa/N+UKFJRCUz3U1qIp+xu5qsWhYTiCzzZ5vh8hc
-	 89DhK5gpvodTjW+uhd84KQHo/h2nOec7VyocIop1gOeAOoZSosVzF8PqEj2uAAvd8Q
-	 Hkih4ILx6xfEMaFc9eEnfJJVBFmzn1sFwIon8X7p2zwon5kZRznnd03zfttEMYKBb0
-	 4InEd9u4i3+DFjDEbgn/g0rZ/6fE1NVUjv5kNBCaKxHyJWYmMYbszpidC03mwrcgv3
-	 PJpyvhOMNuapA==
-Date: Mon, 14 Sep 2026 13:13:13 +0200
-From: Alejandro Colomar <alx@kernel.org>
-To: Andrey Albershteyn <aalbersh@kernel.org>
-Cc: linux-xfs@vger.kernel.org, djwong@kernel.org
-Subject: Re: [PATCH v2] man: document that XFS_IOC_FS[G|S]ETXATTR can not be
- used on special files
-Message-ID: <aqfWdytgDSDDB2Cs@devuan>
-References: <20260914104750.1727589-1-aalbersh@kernel.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="QlgZCaw/"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=15cuRtOuRo5Dyi2mkfHVHxsS0RP86jqB+wC/jYZGIvg=; b=QlgZCaw/kKskBhj+FIMDMUBRbW
+	Uitm23/VLJoxXxbofxc5BfL3OP1aUZD5xDbYZC27pT9QRorCiJ/NSjOw/1Vka4ar+aSVCMka9tTQG
+	iYPket0tZcXrLKVmiLTJCyrj1N9XNtT2YNw4PoeSEtyPwosb6JJr016FeQZqcqLYmlC1Kv4hFTC4/
+	NWnjnlGP/iY/6j5LNTtCVJFrszrqtC9oosLKgjE/UGhN/hlEcXO4A6E/Yae59ZBnnWTfZN34EBUGI
+	mVrLvOqv9fxQor1mySZMyEAZ+t15zGcJjQVhRbo0WqsPrqrlGig3z+vB/pbpBI9CctsLcGUQ09hsR
+	Gj1TNwPQ==;
+Received: from [94.154.173.22] (helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1x64yL-00000003Gyo-3hcO;
+	Mon, 14 Sep 2026 11:35:42 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: cem@kernel.org
+Cc: djwong@kernel.org,
+	hans.holmberg@wdc.com,
+	dlemoal@kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: [PATCH] xfs: don't try to get a reference to a NULL oz in xfs_get_cached_zone
+Date: Mon, 14 Sep 2026 13:35:38 +0200
+Message-ID: <20260914113538.2448661-1-hch@lst.de>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="a4szdht7c3v4b6eb"
-Content-Disposition: inline
-In-Reply-To: <20260914104750.1727589-1-aalbersh@kernel.org>
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
+oz can be NULL when we resample it after taking i_flags_lock, so account
+for that.
 
---a4szdht7c3v4b6eb
-Content-Type: text/plain; protected-headers=v1; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-From: Alejandro Colomar <alx@kernel.org>
-To: Andrey Albershteyn <aalbersh@kernel.org>
-Cc: linux-xfs@vger.kernel.org, djwong@kernel.org
-Subject: Re: [PATCH v2] man: document that XFS_IOC_FS[G|S]ETXATTR can not be
- used on special files
-Message-ID: <aqfWdytgDSDDB2Cs@devuan>
-References: <20260914104750.1727589-1-aalbersh@kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20260914104750.1727589-1-aalbersh@kernel.org>
+Fixes: 2d829cc76777 ("xfs: fix racy open zone caching")
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_zone_alloc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Hi Andrey,
+diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
+index bede79859671..8cdd473d8144 100644
+--- a/fs/xfs/xfs_zone_alloc.c
++++ b/fs/xfs/xfs_zone_alloc.c
+@@ -819,7 +819,7 @@ xfs_get_cached_zone(
+ 		spin_unlock(&ip->i_flags_lock);
+ 	}
+ 
+-	if (!atomic_inc_not_zero(&oz->oz_ref))
++	if (oz && !atomic_inc_not_zero(&oz->oz_ref))
+ 		oz = NULL;
+ out_unlock:
+ 	rcu_read_unlock();
+-- 
+2.53.0
 
-> Date: 2026-09-14 12:47:48+0200
-> From: Andrey Albershteyn <aalbersh@kernel.org>
->
-> Add a CAVEATS section with an note that these ioctls can not be used on
-> special files and leave a reference to an alternative pathname based
-> syscall interface.
->=20
-> Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
-> Reviewed-by: Alejandro Colomar <alx@kernel.org>
->=20
-> ---
-> Changes from v1:
-> - Use semantic newlines
-> - pathname-based
-> - RvB
-> ---
->  man/man2/ioctl_xfs_fsgetxattr.2 | 23 ++++++++++++++++++++++-
->  1 file changed, 22 insertions(+), 1 deletion(-)
->=20
-> diff --git a/man/man2/ioctl_xfs_fsgetxattr.2 b/man/man2/ioctl_xfs_fsgetxa=
-ttr.2
-> index 25a9ba7965d1..db5eb232319e 100644
-> --- a/man/man2/ioctl_xfs_fsgetxattr.2
-> +++ b/man/man2/ioctl_xfs_fsgetxattr.2
-> @@ -238,6 +238,27 @@ Caller did not have permission to change the attribu=
-tes.
->  This API is implemented by the ext4, xfs, btrfs, and f2fs filesystems on=
- the
->  Linux kernel.
->  Not all fields may be understood by filesystems other than xfs.
-> +.SH CAVEATS
-> +The
-> +.B XFS_IOC_FSGETXATTR
-> +and
-> +.B XFS_IOC_FSSETXATTR
-> +.BR ioctl (2)
-> +operations require the user to open the file,
-> +but this may not be possible or
-> +lead to side effects on special files such as FIFOs,
-
-I'd break the line before 'FIFOs' too.  Since FIFOs is a member of a
-list that follows, it should be treated like the other elements in the
-list.
-
-Other than that, LGTM.
-
-
-Have a lovely day!
-Alex
-
-> +sockets,
-> +block devices,
-> +character devices,
-> +and symlinks.
-> +.P
-> +For a pathname-based interface see the
-> +.BR file_getattr (2)
-> +and
-> +.BR file_setattr (2)
-> +syscalls.
->  .SH SEE ALSO
->  .BR ioctl (2),
-> -.BR ioctl_iflags (2)
-> +.BR ioctl_iflags (2),
-> +.BR file_getattr (2),
-> +.BR file_setattr (2)
-> --=20
-> 2.55.0
->=20
-
---=20
-<https://www.alejandro-colomar.es>
-
---a4szdht7c3v4b6eb
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCgAdFiEES7Jt9u9GbmlWADAi64mZXMKQwqkFAmqn1skACgkQ64mZXMKQ
-wqkQ1BAAk9qvUy7emGM7fsP/VrZQ01PQ0UMmpE8CPZao3Cq6BbRhc+2TN/cwFe45
-TEaJsbYaDUuknh4DP19KWKMlEoe84voWjaM+odx5LwmekpZhEn91NjE6qH7gZNtX
-nTTmxjE3OVKhrvXb81J9k99tu6TRp6tTo4ZISTmFwY7O6ZYmoIScSCAuyxIUnKjF
-4mtHelwnj++UovntKMOMQMDej2v/0E9Tva4/kGbl5IYXGhkBwqw2Z4xD090FtCaU
-iVZ0AhcKTJZRjN02TFHjVmM7v3EymAiSejoClD8j/j7pdpIimrtgr/EYdhU49DKO
-g4Jp4SwkZnwsC45v8fwbpGYGUJ2BZx/UHgux0rhDLu3UFC3jAOUI7zRGw+1E5CUR
-Fne4kjSj9Xbk18SaliCi52QGvWyYdwj1vV21P346peJxcwt9ee78hq4AW8QuaW7q
-2wa4FvGarxTHSCuJbnKOyJLeC7Kqv1ToEcRt58zvMVzXmEO2idauaBTbMz4HGZMN
-RX8InfFnHkiQ6YXdmRoWXKodfcr7DOC/TPu1mp4dqXpsnhTJR29RFQMOXmxeLhRk
-XzEEJes+yiUCYduqTYbzieaGRDSfh4hEKCEbMN+n3L73daH26kDnzPdMmWV5k52m
-I8t4BhlAIwtZI/KblYVh01tttgVIoT8QiQiCiGwGmjR42/n2ack=
-=dq5D
------END PGP SIGNATURE-----
-
---a4szdht7c3v4b6eb--
