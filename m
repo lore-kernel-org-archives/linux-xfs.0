@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A17327FD43
-	for <linux-xfs@vger.kernel.org>; Mon, 14 Sep 2026 05:49:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E03ED370D54
+	for <linux-xfs@vger.kernel.org>; Mon, 14 Sep 2026 05:49:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789364961; cv=none; b=kP/KILGd5p7LLf46Vfm3/pgnGbIyTHp5WrNcJMdlbyCXcy7LmYruK1+ciotT8nEZIHw2tuLikk0isAnAo1RJlg3s/DcwFJCUzXXnpP+RMsJmnhXawm63kE2dpcjwB904ICuH2MZ0gD80WtIcJ0nzeKidCH2TMs4Zyd3D4NqAuaw=
+	t=1789364977; cv=none; b=Oi9CWYiQ9N8LMOMV79VM+YpPGoOnV8Nq4Z+6peyBqea5WcdpymXVv+HVN4qE6PR+zWoBIFITWBmWBzXRwhikyzAMBXfd4mPdosA0LMN4sItTR0q/e/HOxS7EWoTgfZjXz6Aad/MW8tugYtv50wyv0rQaNEKP5yx+otf3b8dRKGc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789364961; c=relaxed/simple;
-	bh=QYi917k6YvzkDzEfq0s1QcHfDEyIqstRkjsqnvuQuFE=;
+	s=arc-20240116; t=1789364977; c=relaxed/simple;
+	bh=RPKGMK5vFvF5jYUjDoqu8x5Z+8P10aYtee2OiEXjn/Y=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=UJjIUMHDPGl43Dfk3lMqfJqpWkmx6WLI6Afg6WNKfsGnCiaDLfIPPPjJo77rfPbkIUbdz9GTWWvHBoxd6RGxu8RAN0lkbhXX7ca8aG344OaRE641q3Qki+Iq/y7HrhxIEt8kVDB8QHJGFTOAfJNI5d7f+mx2cdx3X1oZzdJkGJE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JB+xqFdB; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=cv6MglzQR+0tolvNRsNhgbrGbxoDIET1EWMO4qM3uGlki81JPyDrVxqjCQuvPQYj80+U4T+VhrIabW6I+VA2f+s3CMSxhvqjCi5IVGwc5NUuJ7sg/8SyCZjLIwCTRyK8slfRMRrPFI6vnSowjDVsT/hcg9LkMIad9svMNLy15Tg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GmrX4vr8; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JB+xqFdB"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id E5A2F1F000FF;
-	Mon, 14 Sep 2026 05:49:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GmrX4vr8"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 7AEFD1F000FF;
+	Mon, 14 Sep 2026 05:49:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789364960;
-	bh=VBn8ql1BKGmBLziPFCdinQ5SCkJ28qpPlpAaUuU3WOI=;
+	s=k20260515; t=1789364975;
+	bh=jvPWiCBAXgqSWBSrqYyLbEQBaFOQBIg83xGBlNjFaQE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=JB+xqFdB0M6VGZLe3z2ZsJYIzDdgVig83zKrWfibS0wLwnLLZP9LboYEsp0r3QO53
-	 Z+B5UpiXYShfTfPDl7eRbEhoXm0JC8VQIaFtVNTd55VBWxoWDrQGXFwCsnNDRXPHcP
-	 S9wmX7eSY2iRgsXJ9r937d5eHNZy2oxUCinN6/iasNCkM9SoZndxWzyQwypNaDWoBN
-	 Rvzs37YvTjE1uGaEIcHjAdwxKZ2K5jgY0uM3oxxmrtYu0OZAimjb0InpBlAt+5TVBG
-	 QVe2GNwnVVboot7fKj7eYKXAivO8Ynv75IlCZTrJWcu4NhE3SUQMBSPunxQeCcj84U
-	 LZ5AITfLW1bHg==
-Date: Sun, 13 Sep 2026 22:49:19 -0700
-Subject: [PATCH 5/6] xfs_admin: print configuration file for mounted
- filesystems
+	b=GmrX4vr82yjcoBMUKcNtNK+pnqMsBFbr6W18VG5Plcw0QJS8gxoLPzOjikuaiEzz6
+	 cqBVi8o1bSB5Z0gZKFzvLJw5UqfLBJw/QhaxXmNUv7Ww6VG527mzCk30X/ESdDQG9g
+	 z4KeknjIqfPA7PggEqMmYylEPXz5l41yEARcadaY/wRCxvf8Th7UVKBswb/9q9BSDC
+	 JXNiPkaOdjrhXUtwizpiKuyxpekvGdGxgiVRZeMlpwLLRP001DKvtkGf3MFg3ddqb2
+	 lU5OOM3DqP2VQLYYvNpxH6hru90iFPBMR6AHox1Ku+paW5HWeDLz0jjFeD1M6w9/9O
+	 DBWywp/oCQ9Yg==
+Date: Sun, 13 Sep 2026 22:49:35 -0700
+Subject: [PATCH 6/6] mkfs: allow specification of default options via
+ configuration file
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
-Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <178936484550.2108437.14869952452109310408.stgit@frogsfrogsfrogs>
+Cc: hch@infradead.org, hch@lst.de, tytso@mit.edu, linux-xfs@vger.kernel.org
+Message-ID: <178936484569.2108437.13950018516249835101.stgit@frogsfrogsfrogs>
 In-Reply-To: <178936484431.2108437.14645667775156303668.stgit@frogsfrogsfrogs>
 References: <178936484431.2108437.14645667775156303668.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,83 +46,327 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Teach xfs_admin to emit a mkfs.xfs config file for a mounted or
-unmounted filesystem.
+Ted asked for the ability to set default mkfs options, but to retain the
+ability respecify options via a separate configuration file or cli
+options.  This would be useful for running fstests with the default
+featureset of (say) Linux 5.15 LTS, while still allowing individual
+testcases to provide their own overrides.  It's certainly less messy
+than what Ted does today, which is a bash script that copies the desired
+config file and changes things.
 
+Cc: tytso@mit.edu
+Cc: hch@infradead.org
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Andrey Albershteyn <aalbersh@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- db/xfs_admin.sh      |   15 +++++++++++++--
- man/man8/xfs_admin.8 |    8 ++++++++
- 2 files changed, 21 insertions(+), 2 deletions(-)
+ man/man8/mkfs.xfs.8.in |   25 +++++++-
+ mkfs/xfs_mkfs.c        |  158 ++++++++++++++++++++++++++++++++++++++++++------
+ 2 files changed, 160 insertions(+), 23 deletions(-)
 
 
-diff --git a/db/xfs_admin.sh b/db/xfs_admin.sh
-index 52a658ba4a540f..13a876ad8d1377 100755
---- a/db/xfs_admin.sh
-+++ b/db/xfs_admin.sh
-@@ -11,16 +11,20 @@ DB_OPTS=""
- DB_DEV_OPTS=""
- REPAIR_OPTS=""
- IO_OPTS=""
-+SPACEMAN_OPTS=""
- REPAIR_DEV_OPTS=""
- LOG_OPTS=""
--USAGE="Usage: xfs_admin [-efjlpuV] [-c 0|1] [-L label] [-O v5_feature] [-r rtdev] [-U uuid] device [logdev]"
-+USAGE="Usage: xfs_admin [-efjlpuV] [-C cfgfile] [-c 0|1] [-L label] [-O v5_feature] [-r rtdev] [-U uuid] device [logdev]"
- 
--while getopts "c:efjlL:O:pr:uU:V" c
-+while getopts "C:c:efjlL:O:pr:uU:V" c
- do
- 	case $c in
- 	c)	REPAIR_OPTS=$REPAIR_OPTS" -c lazycount="$OPTARG
- 		require_offline=1
- 		;;
-+	C)	DB_OPTS=$DB_OPTS" -c 'makecfg "$OPTARG"'"
-+		SPACEMAN_OPTS=$SPACEMAN_OPTS" -c 'makecfg "$OPTARG"'"
-+		;;
- 	e)	DB_OPTS=$DB_OPTS" -c 'version extflg'"
- 		require_offline=1
- 		;;
-@@ -72,6 +76,13 @@ case $# in
- 				exit 2
- 			fi
- 
-+			if [ -n "$SPACEMAN_OPTS" ]; then
-+				eval xfs_spaceman -p xfs_admin $SPACEMAN_OPTS "$mntpt"
-+				res=$?
-+				test $res -ne 0 && exit $res
-+				test -n "$IO_OPTS" || exit $res
-+			fi
-+
- 			if [ -n "$IO_OPTS" ]; then
- 				eval xfs_io -p xfs_admin $IO_OPTS "$mntpt"
- 				exit $?
-diff --git a/man/man8/xfs_admin.8 b/man/man8/xfs_admin.8
-index 63f8ee90307b30..b118b338fb53aa 100644
---- a/man/man8/xfs_admin.8
-+++ b/man/man8/xfs_admin.8
-@@ -8,6 +8,8 @@ .SH SYNOPSIS
- ] [
- .BI \-O " featurelist"
- ] [
-+.BR "\-C " cfgfile
-+] [
- .BR "\-c 0" | 1
- ] [
- .B \-L
-@@ -85,6 +87,12 @@ .SH OPTIONS
- .B \-u
- Print the current filesystem UUID (Universally Unique IDentifier).
+diff --git a/man/man8/mkfs.xfs.8.in b/man/man8/mkfs.xfs.8.in
+index ed64e01aec4c55..927cd075bf8a5d 100644
+--- a/man/man8/mkfs.xfs.8.in
++++ b/man/man8/mkfs.xfs.8.in
+@@ -152,10 +152,31 @@ .SH OPTIONS
+ .BI \-c " configuration_file_option"
+ This option specifies the files that mkfs configuration will be obtained from.
+ The valid
+-.I configuration_file_option
+-is:
++.I configuration_file_options
++are:
+ .RS 1.2i
  .TP
-+.BI "\-C " path
-+Write a configuration file to the given path that can be re-read by mkfs.xfs
-+for a future filesystem format attempt.
-+This file will contain only user-visible features.
-+Filesystem geometry information is not written to the configuration file.
++.BI defaults= path
++Default configuration options will be sourced from the file specified by the
++.I name
++option string.
++This option can be use either an absolute or relative path to the configuration
++file to be read.
++Options specified through the default configuration file can be overridden by
++a configuration file specified via
++.B options=
++or by command line arguments, in that order.
++
++Sample configuration files can be found in @mkfs_cfg_dir@.
++This option also accepts configuration files generated by the
++.B makecfg
++suboption below, or by the
++.B makecfg
++subcommand of
++.B xfs_db
++and
++.BR xfs_spaceman .
 +.TP
- .BR "\-c 0" | 1
- Enable (1) or disable (0) lazy-counters in the filesystem.
- .IP
+ .BI makecfg= path
+ Write a configuration file to the file specified by the
+ .I path
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 38a5769188b05a..334367b81555ec 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -62,6 +62,7 @@ enum {
+ enum {
+ 	C_OPTFILE = 0,
+ 	C_MAKECFG,
++	C_DEFOPTFILE,
+ 	C_MAX_OPTS,
+ };
+ 
+@@ -314,6 +315,7 @@ static struct opt_params copts = {
+ 	.subopts = {
+ 		[C_OPTFILE] = "options",
+ 		[C_MAKECFG] = "makecfg",
++		[C_DEFOPTFILE] = "defaults",
+ 		[C_MAX_OPTS] = NULL,
+ 	},
+ 	.subopt_params = {
+@@ -325,6 +327,10 @@ static struct opt_params copts = {
+ 		  .conflicts = { { NULL, LAST_CONFLICT } },
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
++		{ .index = C_DEFOPTFILE,
++		  .conflicts = { { NULL, LAST_CONFLICT } },
++		  .defaultval = SUBOPT_NEEDS_VAL,
++		},
+ 	},
+ };
+ 
+@@ -1077,6 +1083,7 @@ struct cli_params {
+ 	int	blocksize;
+ 
+ 	char	*cfgfile;
++	char	*defcfgfile;
+ 	char	*protofile;
+ 	char	*makecfg;
+ 
+@@ -1214,7 +1221,7 @@ usage( void )
+ {
+ 	fprintf(stderr, _("Usage: %s\n\
+ /* blocksize */		[-b size=num]\n\
+-/* config file */	[-c options=path,makecfg=path\n\
++/* config file */	[-c options=path,makecfg=path,defaults=path\n\
+ /* metadata */		[-m crc=0|1,finobt=0|1,uuid=xxx,rmapbt=0|1,reflink=0|1,\n\
+ 			    inobtcount=0|1,bigtime=0|1,autofsck=xxx,\n\
+ 			    metadir=0|1]\n\
+@@ -1797,6 +1804,30 @@ cfgfile_opts_parser(
+ 	case C_MAKECFG:
+ 		cli->makecfg = getstr(value, opts, subopt);
+ 		break;
++	case C_DEFOPTFILE:
++		/* already processed by defcfgfile_opts_parser; ignored */
++		break;
++	default:
++		return -EINVAL;
++	}
++	return 0;
++}
++
++static int
++defcfgfile_opts_parser(
++	struct opt_params	*opts,
++	int			subopt,
++	const char		*value,
++	struct cli_params	*cli)
++{
++	switch (subopt) {
++	case C_OPTFILE:
++	case C_MAKECFG:
++		/* will be processed by cfgfile_opts_parser; ignored */
++		break;
++	case C_DEFOPTFILE:
++		cli->defcfgfile = getstr(value, opts, subopt);
++		break;
+ 	default:
+ 		return -EINVAL;
+ 	}
+@@ -2263,13 +2294,15 @@ sector_opts_parser(
+ 	return 0;
+ }
+ 
+-static struct subopts {
++struct subopts {
+ 	struct opt_params *opts;
+ 	int		(*parser)(struct opt_params	*opts,
+ 				  int			subopt,
+ 				  const char		*value,
+ 				  struct cli_params	*cli);
+-} subopt_tab[] = {
++};
++
++static const struct subopts subopt_tab[] = {
+ 	{ &bopts, block_opts_parser },
+ 	{ &copts, cfgfile_opts_parser },
+ 	{ &dopts, data_opts_parser },
+@@ -2283,15 +2316,21 @@ static struct subopts {
+ 	{ NULL, NULL },
+ };
+ 
++static const struct subopts defcfg_subopt_tab[] = {
++	{ &copts, defcfgfile_opts_parser },
++	{ NULL, NULL },
++};
++
+ static void
+ parse_subopts(
+-	char		opt,
+-	char		*arg,
+-	struct cli_params *cli)
++	char			opt,
++	char			*arg,
++	const struct subopts	*stab,
++	struct cli_params	*cli)
+ {
+-	struct subopts	*sop = &subopt_tab[0];
+-	char		*p;
+-	int		ret = 0;
++	const struct subopts	*sop = stab;
++	char			*p, *duparg;
++	int			ret = 0;
+ 
+ 	while (sop->opts) {
+ 		if (sop->opts->name == opt)
+@@ -2303,7 +2342,14 @@ parse_subopts(
+ 	if (!sop->opts)
+ 		return;
+ 
+-	p = arg;
++	/* getsubopt modifies duparg */
++	duparg = strdup(arg);
++	if (!duparg) {
++		perror("allocating memory");
++		exit(1);
++	}
++
++	p = duparg;
+ 	while (*p != '\0') {
+ 		char	**subopts = (char **)sop->opts->subopts;
+ 		char	*value;
+@@ -2315,19 +2361,20 @@ parse_subopts(
+ 		if (ret)
+ 			unknown(opt, value);
+ 	}
++	free(duparg);
+ }
+ 
+ static bool
+ parse_cfgopt(
+-	const char	*section,
+-	const char	*name,
+-	const char	*value,
+-	struct cli_params *cli)
++	const char		*section,
++	const char		*name,
++	const char		*value,
++	struct cli_params	*cli)
+ {
+-	struct subopts	*sop = &subopt_tab[0];
+-	char		**subopts;
+-	int		ret = 0;
+-	int		i;
++	const struct subopts	*sop = &subopt_tab[0];
++	char			**subopts;
++	int			ret = 0;
++	int			i;
+ 
+ 	while (sop->opts) {
+ 		if (sop->opts->ini_section[0] != '\0' &&
+@@ -5803,6 +5850,64 @@ cfgfile_parse(
+ 		cli->cfgfile);
+ }
+ 
++static void
++reset_seen(
++	struct opt_params	*opts)
++{
++	unsigned int		i;
++
++	for (i = 0; i < MAX_SUBOPTS; i++) {
++		opts->subopt_params[i].seen = false;
++		opts->subopt_params[i].str_seen = false;
++	}
++}
++
++static void
++defcfgfile_parse(
++	struct cli_params	*cli)
++{
++	int			error;
++
++	if (!cli->defcfgfile)
++		return;
++
++	error = ini_parse(cli->defcfgfile, cfgfile_parse_ini, cli);
++	if (error) {
++		if (error > 0) {
++			fprintf(stderr,
++		_("%s: Unrecognised input on line %d. Aborting.\n"),
++				cli->defcfgfile, error);
++		} else if (error == -1) {
++			fprintf(stderr,
++		_("Unable to open defaults config file %s. Aborting.\n"),
++				cli->defcfgfile);
++		} else if (error == -2) {
++			fprintf(stderr,
++		_("Memory allocation failure parsing %s. Aborting.\n"),
++				cli->defcfgfile);
++		} else {
++			fprintf(stderr,
++		_("Unknown error %d opening defaults config file %s. Aborting.\n"),
++				error, cli->defcfgfile);
++		}
++		exit(1);
++	}
++	printf(_("Parameters parsed from defaults config file %s successfully\n"),
++		cli->defcfgfile);
++
++	/* Now make it look like we haven't seen any cli options. */
++	reset_seen(&bopts);
++	reset_seen(&copts);
++	reset_seen(&dopts);
++	reset_seen(&iopts);
++	reset_seen(&lopts);
++	reset_seen(&mopts);
++	reset_seen(&nopts);
++	reset_seen(&popts);
++	reset_seen(&ropts);
++	reset_seen(&sopts);
++}
++
+ static void
+ set_autofsck(
+ 	struct xfs_mount	*mp,
+@@ -6058,8 +6163,19 @@ main(
+ 	memcpy(&cli.sb_feat, &dft.sb_feat, sizeof(cli.sb_feat));
+ 	memcpy(&cli.fsx, &dft.fsx, sizeof(cli.fsx));
+ 
+-	while ((c = getopt_long(argc, argv, "b:c:d:i:l:L:m:n:KNp:qr:s:CfV",
+-					long_options, &option_index)) != EOF) {
++#define MKFS_GETOPT_STRING "b:c:d:i:l:L:m:n:KNp:qr:s:CfV"
++	/* Load default configuration, if specified */
++	while ((c = getopt_long(argc, argv, MKFS_GETOPT_STRING,
++				long_options, &option_index)) != EOF) {
++		if (c == 'c')
++			parse_subopts(c, optarg, defcfg_subopt_tab, &cli);
++	}
++	defcfgfile_parse(&cli);
++	optind = 1;
++
++	/* Do the real option parsing */
++	while ((c = getopt_long(argc, argv, MKFS_GETOPT_STRING,
++				long_options, &option_index)) != EOF) {
+ 		switch (c) {
+ 		case 0:
+ 			break;
+@@ -6077,7 +6193,7 @@ main(
+ 		case 'p':
+ 		case 'r':
+ 		case 's':
+-			parse_subopts(c, optarg, &cli);
++			parse_subopts(c, optarg, subopt_tab, &cli);
+ 			break;
+ 		case 'L':
+ 			if (strlen(optarg) > sizeof(sbp->sb_fname))
 
