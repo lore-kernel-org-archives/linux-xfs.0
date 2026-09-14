@@ -1,41 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24C4D481252;
-	Mon, 14 Sep 2026 14:59:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 589E048EC99
+	for <linux-xfs@vger.kernel.org>; Mon, 14 Sep 2026 15:00:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789397995; cv=none; b=KO4gB70nMZltFtlvoTpxHkVdEZ+fezHaSg+vnb/06qeeJ7IGoWNTPjdYIJSUdy/kTkLT39Ooq7JoxI0FKGtspndeCCRQRJxB8Xo89WsF82mGFfS9DeNhNwbqvn+N92yle/pEGyAi6RRCmFNnw7Z95vPSvHf5HEVb/L4fcU5Bvro=
+	t=1789398058; cv=none; b=C+HImCCEh27DNoSzLSIztbMOer8nr8H1Fp2gqR7Dl63gnDDySi3MVR5sUWqm+PXp/lqt/1cnWNWNXuT2sPR0a2SEq8/+TfpJLXIqrgiAgyhrRcG3pBoYNUFv/2OkX8EPxXTQz0p3Is6SyriV5XjeU6k47nxuSWmSS6Gj67ZfWBE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789397995; c=relaxed/simple;
-	bh=pomLZpXYjbZV9ElQXD4mMIOKN1blqI2XXO6ECHpit7Y=;
+	s=arc-20240116; t=1789398058; c=relaxed/simple;
+	bh=R4MibrhFjHpLlKFli2ZZdIPaG65N5+BZmIEPYGiAovQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hB933iZsTjn4zDqLZH+wUBdUrleNr0fBMQR1WsmmRF2xIG/qxCq/8t6OQCe563icG8FhT1mWqHbo4+G5IM1+loKfOeMqoGQ4MiPVaKIIgYWPCS5wxArO1CiAWhIT/XqzSxhJ9H5wzUh3EedLZW8bv7pXaQKm0gZXp7SUbGT2CTY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Uk59BdKU; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=BUDxQ6lZ7dCgXazYH3R2fedawxOua0LgFVO/l8fUKnzmpztL7snDcTggoD62RjjmGIiWZ15KBpNRwSMeuT1zH7C5Q9tZrd/gbR3b6IMJ/2orTva/9f5SgAgNLErM92rYB1QRMBXBW/vh4s2piJqsXC7Q6t+Fpir+dUfIPG+li58=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IxhFU5lk; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Uk59BdKU"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id ED0811F00893;
-	Mon, 14 Sep 2026 14:59:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IxhFU5lk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C110F1F0089A;
+	Mon, 14 Sep 2026 15:00:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789397993;
-	bh=rBZYkr8kF0+qFvB8Qh3LQcWRtjyHCb+IZdMwvL2J5I8=;
+	s=k20260515; t=1789398056;
+	bh=1vMg2ysMUcD4FonZUmm+l5zrEtKEtK40LCciz89RF+c=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Uk59BdKUZKGOAuE+Jfm14ffclvcLsCE+vdIl0sw4M510CvxAZA4ALn6p/fsV4xamL
-	 6vYk/uaoi8a+ScLw4nrqeigIidyshcPmO9ljDXcyCH+nq6pZX3Qrb8EKabvEiM5wbH
-	 H3/YNACf5V7iX7HmgiU4TkfNauPY343uQA0cRf1R3O67pGlw9xqpAXJa3+lUcCsobB
-	 S7/iQylBW41Qff01hXGVHUpDM4iCMRIhAcXwxkPcsrVW+2koXT4hmdzzn7m2ofo237
-	 gtfNgubiJ7DwIxo4wWCLV6ykmC4UG4Hw7+9LhfJP5GJefcrtgGadf9Q11qo/9CCUic
-	 gTgxYf+wn1wOg==
-Date: Mon, 14 Sep 2026 07:59:52 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Aditya Prakash Srivastava <aditya.ansh182@gmail.com>
-Cc: Carlos Maiolino <cem@kernel.org>, Christoph Hellwig <hch@lst.de>,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v6 1/1] xfs: prevent close() from hanging on frozen
- filesystems
-Message-ID: <20260914145952.GN6265@frogsfrogsfrogs>
-References: <20260914093152.1698-1-aditya.ansh182@gmail.com>
- <20260914093152.1698-2-aditya.ansh182@gmail.com>
+	b=IxhFU5lk/wo5xIN07IOrW/rpzwQxWNJ8ta3pozLXOdiEdvU3zMw/BCdJ6z5+QSlsO
+	 xiiumdqaDdGRuj8Or8oLAWiooH1TWmv4t2SlkeY5ppo9g1OkDbl990cnUeAoi9zsay
+	 l8PJlwdy1B7buP+9VJ+f8UK0Rs+jSrneQwE2OQubtlU1Q/PFXDibs1+Sey6qGn+Xzt
+	 H21vuqjosIpOZWY2DMQuWa3DCpTn2cYSYZ++ks2Nr66QArneICa8HvRcfN+eTGEvjN
+	 4yI4dGSHHvbeBRmoAewFmQ+x9OwBAwSriY+9IFWCA8BIYX6ULBNEtRyYCeLZTP6+8p
+	 uSSxcwtmyE2GA==
+Date: Mon, 14 Sep 2026 17:00:51 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: hchc@last.de, sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2 1/3] xfs: add xfs_error_report the ability to display
+ an error code
+Message-ID: <aqgLft0IEhUocC8R@cronus.toxiclabs.cc>
+References: <20260914115746.82122-1-cem@kernel.org>
+ <20260914115746.82122-2-cem@kernel.org>
+ <20260914144224.GG6283@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,65 +44,211 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260914093152.1698-2-aditya.ansh182@gmail.com>
+In-Reply-To: <20260914144224.GG6283@frogsfrogsfrogs>
 
-On Mon, Sep 14, 2026 at 09:31:51AM +0000, Aditya Prakash Srivastava wrote:
-> When a file is closed, xfs_file_release() attempts to trim speculative
-> post-EOF blocks. This requires allocating a transaction, which blocks
-> indefinitely if the filesystem is frozen.
+On Mon, Sep 14, 2026 at 07:42:24AM -0700, Darrick J. Wong wrote:
+> On Mon, Sep 14, 2026 at 01:57:39PM +0200, cem@kernel.org wrote:
+> > From: Carlos Maiolino <cem@kernel.org>
+> > 
+> > Users could opt to request an error code to be printed now.
+> > This relies on errname() and CONFIG_SYMBOLIC_ERRNAME without requiring it
 > 
-> Fix the hang by wrapping the preallocation cleanup block with
-> sb_start_write_trylock() and xfs_ilock_nowait() to bypass the trim
-> best-effort when the filesystem is frozen or locking fails.
+> Eh?  No it doesn't...
 > 
-> Suggested-by: Darrick J. Wong <djwong@kernel.org>
-> Signed-off-by: Aditya Prakash Srivastava <aditya.ansh182@gmail.com>
+> > to be enabled.
+> > Report 'unkown error' If CONFIG_SYMBOLIC_ERRNAME is not enabled or the
+> > user passes 0 as an error.
+> > 
+> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> > 
+> > ---
+> > V2:
+> > 	- Fix commit description s/_NAME/_ERRNAME
+> > 	- xfs_corruption_error should call xfs_error_report with
+> > 	  -EFSCORRUPTED
+> > 	- Modify xfs_error_report to only print out the error number if
+> > 	  it received an error from the caller.
+> > 	- Don't use errname() anymore.
+> 
+> ...right?
 
-Looks great, can't wait to see how the integration testing goes ;)
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Of course I'd forget something... I'll fix that for next version...
 
---D
 
-> ---
->  fs/xfs/xfs_file.c | 22 +++++++++++++---------
->  1 file changed, 13 insertions(+), 9 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index d8202da15aca..dd6d2e08faff 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1872,17 +1872,21 @@ xfs_file_release(
->  		return 0;
->  
->  	/*
-> -	 * If we can't get the iolock just skip truncating the blocks past EOF
-> -	 * because we could deadlock with the mmap_lock otherwise. We'll get
-> -	 * another chance to drop them once the last reference to the inode is
-> -	 * dropped, so we'll never leak blocks permanently.
-> +	 * If we can't get the iolock or if the filesystem is frozen, just skip
-> +	 * truncating the blocks past EOF because we could deadlock with the
-> +	 * mmap_lock or hang the close() call. We'll get another chance to drop
-> +	 * them once the last reference to the inode is dropped, so we'll never
-> +	 * leak blocks permanently.
->  	 */
->  	if (!xfs_iflags_test(ip, XFS_EOFBLOCKS_RELEASED) &&
-> -	    xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL)) {
-> -		if (xfs_can_free_eofblocks(ip) &&
-> -		    !xfs_iflags_test_and_set(ip, XFS_EOFBLOCKS_RELEASED))
-> -			xfs_free_eofblocks(ip);
-> -		xfs_iunlock(ip, XFS_IOLOCK_EXCL);
-> +	    sb_start_write_trylock(mp->m_super)) {
-> +		if (xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL)) {
-> +			if (xfs_can_free_eofblocks(ip) &&
-> +			    !xfs_iflags_test_and_set(ip, XFS_EOFBLOCKS_RELEASED))
-> +				xfs_free_eofblocks(ip);
-> +			xfs_iunlock(ip, XFS_IOLOCK_EXCL);
-> +		}
-> +		sb_end_write(mp->m_super);
->  	}
->  
->  	return 0;
-> -- 
-> 2.47.3
+> >  fs/xfs/xfs_error.c         | 16 +++++++++++-----
+> >  fs/xfs/xfs_error.h         |  9 +++++----
+> >  fs/xfs/xfs_exchmaps_item.c |  9 ++++++---
+> >  fs/xfs/xfs_inode_item.c    |  3 ++-
+> >  fs/xfs/xfs_log_recover.c   |  3 ++-
+> >  fs/xfs/xfs_trans.c         |  2 +-
+> >  6 files changed, 27 insertions(+), 15 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+> > index 9ece70fd94ca..c943717f1dd7 100644
+> > --- a/fs/xfs/xfs_error.c
+> > +++ b/fs/xfs/xfs_error.c
+> > @@ -241,16 +241,21 @@ void
+> >  xfs_error_report(
+> >  	const char		*tag,
+> >  	int			level,
+> > +	int			error,
+> >  	struct xfs_mount	*mp,
+> >  	const char		*filename,
+> >  	int			linenum,
+> >  	xfs_failaddr_t		failaddr)
+> >  {
+> >  	if (level <= xfs_error_level) {
+> > -		xfs_alert_tag(mp, XFS_PTAG_ERROR_REPORT,
+> > -		"Internal error %s at line %d of file %s.  Caller %pS",
+> > -			    tag, linenum, filename, failaddr);
+> > -
+> > +		if (error)
+> > +			xfs_alert_tag(mp, XFS_PTAG_ERROR_REPORT,
+> > +"Internal error %s (%d) at line %d of file %s.  Caller %pS",
+> > +				tag, error, linenum, filename, failaddr);
+> > +		else
+> > +			xfs_alert_tag(mp, XFS_PTAG_ERROR_REPORT,
+> > +"Internal error %s at line %d of file %s.  Caller %pS",
+> > +				tag, linenum, filename, failaddr);
 > 
+> /me wonders if we should add a tracepoint to these error reporting
+> functions so that one isn't totally reliant on scraping dmesg, but maybe
+> adding fserror_report_metadata is more appropriate for that?  Will have
+> to ruminate on that for a while.
+
+Hmmm, what you think about controlling with the tracepoint? Spitting out
+the error? *If* that's the case, the problem I see is when users hit the
+error we can't enable a tracepoint on a past error :P so I'd rather have
+it logged in dmesg without needing to rely on having tracepoints enabled
+or not.
+
+Or perhaps I missed your point here?
+
+> 
+> In the meantime, this patch looks fine to me,
+> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+
+Thanks!
+
+
+> 
+> --D
+> 
+> >  		xfs_stack_trace();
+> >  	}
+> >  }
+> > @@ -268,7 +273,8 @@ xfs_corruption_error(
+> >  {
+> >  	if (buf && level <= xfs_error_level)
+> >  		xfs_hex_dump(buf, bufsize);
+> > -	xfs_error_report(tag, level, mp, filename, linenum, failaddr);
+> > +	xfs_error_report(tag, level, -EFSCORRUPTED, mp,
+> > +			 filename, linenum, failaddr);
+> >  	xfs_alert(mp, "Corruption detected. Unmount and run xfs_repair");
+> >  }
+> >  
+> > diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
+> > index 05fc1d1cf521..3c76d0dad51c 100644
+> > --- a/fs/xfs/xfs_error.h
+> > +++ b/fs/xfs/xfs_error.h
+> > @@ -8,8 +8,9 @@
+> >  
+> >  struct xfs_mount;
+> >  
+> > -void xfs_error_report(const char *tag, int level, struct xfs_mount *mp,
+> > -		const char *filename, int linenum, xfs_failaddr_t failaddr);
+> > +void xfs_error_report(const char *tag, int level, int error,
+> > +		struct xfs_mount *mp, const char *filename,
+> > +		int linenum, xfs_failaddr_t failaddr);
+> >  void xfs_corruption_error(const char *tag, int level, struct xfs_mount *mp,
+> >  		const void *buf, size_t bufsize, const char *filename,
+> >  		int linenum, xfs_failaddr_t failaddr);
+> > @@ -20,8 +21,8 @@ void xfs_verifier_error(struct xfs_buf *bp, int error, xfs_failaddr_t failaddr);
+> >  void xfs_inode_verifier_error(struct xfs_inode *ip, int error, const char *name,
+> >  		const void *buf, size_t bufsz, xfs_failaddr_t failaddr);
+> >  
+> > -#define	XFS_ERROR_REPORT(e, lvl, mp)	\
+> > -	xfs_error_report(e, lvl, mp, __FILE__, __LINE__, __return_address)
+> > +#define	XFS_ERROR_REPORT(e, lvl, error, mp)	\
+> > +	xfs_error_report(e, lvl, error, mp, __FILE__, __LINE__, __return_address)
+> >  #define	XFS_CORRUPTION_ERROR(e, lvl, mp, buf, bufsize)	\
+> >  	xfs_corruption_error(e, lvl, mp, buf, bufsize, \
+> >  			     __FILE__, __LINE__, __return_address)
+> > diff --git a/fs/xfs/xfs_exchmaps_item.c b/fs/xfs/xfs_exchmaps_item.c
+> > index dd5d92ca1010..9f499a80038c 100644
+> > --- a/fs/xfs/xfs_exchmaps_item.c
+> > +++ b/fs/xfs/xfs_exchmaps_item.c
+> > @@ -573,13 +573,15 @@ xlog_recover_xmi_commit_pass2(
+> >  
+> >  	len = sizeof(struct xfs_xmi_log_format);
+> >  	if (item->ri_buf[0].iov_len != len) {
+> > -		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, log->l_mp);
+> > +		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW,
+> > +				 -EFSCORRUPTED, log->l_mp);
+> >  		return -EFSCORRUPTED;
+> >  	}
+> >  
+> >  	xmi_formatp = item->ri_buf[0].iov_base;
+> >  	if (xmi_formatp->__pad != 0) {
+> > -		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, log->l_mp);
+> > +		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW,
+> > +				 -EFSCORRUPTED, log->l_mp);
+> >  		return -EFSCORRUPTED;
+> >  	}
+> >  
+> > @@ -614,7 +616,8 @@ xlog_recover_xmd_commit_pass2(
+> >  
+> >  	xmd_formatp = item->ri_buf[0].iov_base;
+> >  	if (item->ri_buf[0].iov_len != sizeof(struct xfs_xmd_log_format)) {
+> > -		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, log->l_mp);
+> > +		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW,
+> > +				 -EFSCORRUPTED, log->l_mp);
+> >  		return -EFSCORRUPTED;
+> >  	}
+> >  
+> > diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+> > index 99d6ecccdaa7..a29c90f0650f 100644
+> > --- a/fs/xfs/xfs_inode_item.c
+> > +++ b/fs/xfs/xfs_inode_item.c
+> > @@ -1229,7 +1229,8 @@ xfs_inode_item_format_convert(
+> >  	struct xfs_inode_log_format_32	*in_f32 = buf->iov_base;
+> >  
+> >  	if (buf->iov_len != sizeof(*in_f32)) {
+> > -		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, NULL);
+> > +		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW,
+> > +				 -EFSCORRUPTED, NULL);
+> >  		return -EFSCORRUPTED;
+> >  	}
+> >  
+> > diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> > index e7e49529658b..e92afc455d0f 100644
+> > --- a/fs/xfs/xfs_log_recover.c
+> > +++ b/fs/xfs/xfs_log_recover.c
+> > @@ -2945,7 +2945,8 @@ xlog_recover_process(
+> >  		 * fatal log corruption failure.
+> >  		 */
+> >  		if (xfs_has_crc(log->l_mp)) {
+> > -			XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, log->l_mp);
+> > +			XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW,
+> > +					 -EFSCORRUPTED, log->l_mp);
+> >  			return -EFSCORRUPTED;
+> >  		}
+> >  	}
+> > diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+> > index 1b36cf12d4e3..5c522790e5be 100644
+> > --- a/fs/xfs/xfs_trans.c
+> > +++ b/fs/xfs/xfs_trans.c
+> > @@ -971,7 +971,7 @@ xfs_trans_cancel(
+> >  	 * here.
+> >  	 */
+> >  	if (dirty && !xfs_is_shutdown(mp)) {
+> > -		XFS_ERROR_REPORT("xfs_trans_cancel", XFS_ERRLEVEL_LOW, mp);
+> > +		XFS_ERROR_REPORT("xfs_trans_cancel", XFS_ERRLEVEL_LOW, 0, mp);
+> >  		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+> >  	}
+> >  #ifdef DEBUG
+> > -- 
+> > 2.55.0
+> > 
 > 
