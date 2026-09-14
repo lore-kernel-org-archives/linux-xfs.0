@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C12A2E7165;
-	Mon, 14 Sep 2026 17:25:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15D884963CA;
+	Mon, 14 Sep 2026 17:25:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789406738; cv=none; b=mb4zQn7t9vhaeCwHJysav1oLrLNVx9cSNxdUdfAYSKAOpFErPPhl04WDaaZ0lpio7f8W0T1MOvaZnFiZqFxiYqvEVIaZkkL9rzCxr8wzHs6jLbgLUmaRuKZmOdEW8yKmTFySVr9cNfTXqXUAR7pyICrXKg5oeyku0jwnw/JpjiY=
+	t=1789406742; cv=none; b=Xui99Ph4Qu3osimnKXjc/BLHFzH6xrZNGrC/KgvnnTwaww4w2cqiEk2uilZJFiVauVdeb/OJPOvNA/md0F8xDSSZbHB7Zl9ZUfPQcanvX+pQtXvPw7mPnO2ebN8QsYZ83qhYpCXMAQ+HZWeZAkfsPR0mc8x/82OzBupR1CPbrqA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789406738; c=relaxed/simple;
-	bh=Zf3691MswbAZfWfxLo1cFo4lOuGeVXoP9FgSbKL4Hkg=;
+	s=arc-20240116; t=1789406742; c=relaxed/simple;
+	bh=5ayAGfMjiIlDs8q6zSVLOFS4Ux0UyH4CeVv3gODjKgs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=IhCLBI1Kt7y4vL/dz/Z9FmsbdUyh4Md3WJD/A0d6qtLA4+YWizR72ObGWtzL0jnLiX+PWYF03CAgbkJvJc6/lBSdZRouOUxFo8RQKwUxCetBmqnAzMBzpfCloabhKjZHzuief5kaXZOWY4Yy+5Ahi4RP4Y7IaMKCrSNy8NBYnbk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=A8SoN8ZV; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=p6K1uoo+FIlfqkgGyRU6oR2bUQ48L7EnGVe54AySXsJro3Zjn8PX9tfm2ZFCQKvWNFywOTGeSZkPivd8x+9LDTF0RmQugc25XLIc/rwUpomFNKVbYpLD+QMS+cDpjBWLhenKlQnhCGsQhPAD2GbT0BtvzQLmg0ngdq698+KB4ek=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TEm5Jq+w; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A8SoN8ZV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4068F1F000FF;
-	Mon, 14 Sep 2026 17:25:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TEm5Jq+w"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B60781F00893;
+	Mon, 14 Sep 2026 17:25:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789406737;
-	bh=9PVgKiXjGpFIZee+OkaSaw39Yf1qRKw7H+0w9BHBi3M=;
+	s=k20260515; t=1789406740;
+	bh=rDiPHfbSLd6SIcPIvLOCdjC51/CEQe2eqX7uUKX5UlU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=A8SoN8ZVVgPMSGnhgG+hwi1x5TS5FEKP5NCLFLsHjYQcDa/S6RPUMBFV+YRD5EQZX
-	 gPuocZH6v7E6K2xmClnBvou2ftA5QuRLEU9bwUA3Pmv1cgeLZDzCq5s5i/+3NtHcoD
-	 jzFZhiX+B42ud6Rk0hfhbDhLRYkjZSt2ukE3qS0h3CRG/K64Ah1dbGcJDuLItVqpow
-	 R041V2adELIwITeNVbolvYFWYtk9C38n3lvdwLAnwCa1SiyL+zC3Gq41IYNXgBoZ4/
-	 V4ykiQoEp8/4c7b275EcVNNAP7QuPZB/aiiuRgLSt9iK/E1HaODO3hF2VDovcqRtDO
-	 RiI0K3enAQ5Jw==
+	b=TEm5Jq+wVatOAgYUGZd+8u/+acvZXpYYKtZtYeaLTijD28RjgSsR653HxcVzWgw63
+	 JUQQQFEc2REOjMHhP1fXE30ntDgDIlkYdLW4CGFgYAvsEZ8Sr76iGVHaVG+w/zcRFs
+	 3SJoJuMSyNY3rbp68tR4lSGRYXztYoueAMltLveO06IQRNc3BdjxcxHKqxb/0zSPd6
+	 i+UJRwtGVipyH+neMigBLuSvdkA3YBYxL9WJPzAhzPCmVjslpMW38nS0bebeOm8vRB
+	 KXLdmOGvmc3/BbdeenGPxZ+a67Uy/nYXNFCNC+3rCamau8XcRm9kihQcvDFhxUr9XG
+	 OPi6FS3HZBJsQ==
 From: Zorro Lang <zlang@kernel.org>
 To: fstests@vger.kernel.org
 Cc: linux-xfs@vger.kernel.org,
 	linux-btrfs@vger.kernel.org,
 	Anand Suveer Jain <asj@kernel.org>,
 	Chao Yu <chao@kernel.org>
-Subject: [PATCH 3/5] common/rc: add helpers for /sys/fs/$FSTYP/features/
-Date: Tue, 15 Sep 2026 01:25:07 +0800
-Message-ID: <20260914172509.3799016-4-zlang@kernel.org>
+Subject: [PATCH 4/5] common/rc: use common helper in _require_fanotify_ioerrors for f2fs
+Date: Tue, 15 Sep 2026 01:25:08 +0800
+Message-ID: <20260914172509.3799016-5-zlang@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260914172509.3799016-1-zlang@kernel.org>
 References: <20260914172509.3799016-1-zlang@kernel.org>
@@ -46,81 +46,30 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-More and more test cases depend on /sys/fs/$FSTYP/features/ entries.
-To improve code structure and maintainability, introduce the
- - _has_fs_sysfs_feature_attr
- - _get_fs_sysfs_feature_attr
- - _require_fs_sysfs_feature_attr
-helpers.
+The f2fs branch of _require_fanotify_ioerrors() reads the raw
+/sys/fs/f2fs/features/fserror path.  Use the new
+_get_fs_sysfs_feature_attr helper instead.
 
 Signed-off-by: Zorro Lang <zlang@kernel.org>
 ---
- common/rc | 52 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 52 insertions(+)
+ common/rc | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/common/rc b/common/rc
-index b99e28a5..439ca0d5 100644
+index 439ca0d5..711c5507 100644
 --- a/common/rc
 +++ b/common/rc
-@@ -5535,6 +5535,58 @@ _require_fs_sysfs_dev_attr()
- 	_notrun "This test requires /sys/fs/${FSTYP}/${dname}/${attr}"
- }
- 
-+# Print the content of /sys/fs/$FSTYP/features/$ATTR
-+#
-+# Only one argument is needed:
-+#  - attr: path name under /sys/fs/$FSTYP/features
-+#
-+# Usage example:
-+#   _get_fs_sysfs_feature_attr send_stream_version
-+_get_fs_sysfs_feature_attr()
-+{
-+	local attr=$1
-+
-+	if [ -z "$attr" ];then
-+		_fail "Usage: _get_fs_sysfs_feature_attr <attr>"
-+	fi
-+
-+	cat /sys/fs/${FSTYP}/features/${attr}
-+}
-+
-+# Test for the existence of a sysfs entry at /sys/fs/$FSTYP/features/$ATTR
-+#
-+# Only one argument is needed:
-+#  - attr: path name under /sys/fs/$FSTYP/features
-+#
-+# Usage example:
-+#   _has_fs_sysfs_feature_attr raid56
-+_has_fs_sysfs_feature_attr()
-+{
-+	local attr=$1
-+
-+	if [ -z "$attr" ];then
-+		_fail "Usage: _has_fs_sysfs_feature_attr <attr>"
-+	fi
-+
-+	test -e /sys/fs/${FSTYP}/features/${attr}
-+}
-+
-+# Require the existence of a sysfs entry at /sys/fs/$FSTYP/features/$ATTR
-+#
-+# Only one argument is needed:
-+#  - attr: path name under /sys/fs/$FSTYP/features
-+#
-+# Usage example:
-+#   _require_fs_sysfs_feature_attr raid56
-+_require_fs_sysfs_feature_attr()
-+{
-+	local attr=$1
-+
-+	_has_fs_sysfs_feature_attr "$attr" && return
-+
-+	_notrun "This test requires /sys/fs/${FSTYP}/features/${attr}"
-+}
-+
- # Generic test for specific filesystem feature.
- # Currently only implemented to test overlayfs features.
- _require_scratch_feature()
+@@ -6308,8 +6308,8 @@ _require_fanotify_ioerrors()
+ 		test -n "$x" && return 0
+ 		;;
+ 	f2fs)
+-		local feat_file="/sys/fs/f2fs/features/fserror"
+-		if [ -f "$feat_file" ] && [ "$(cat "$feat_file")" = "supported" ]; then
++		x="$(_get_fs_sysfs_feature_attr fserror 2>/dev/null)"
++		if [ "$x" = "supported" ];then
+ 			return 0
+ 		fi
+ 		;;
 -- 
 2.55.0
 
