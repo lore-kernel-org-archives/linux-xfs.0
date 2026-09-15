@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E950378D9A;
-	Tue, 15 Sep 2026 05:38:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C65F6378D9A;
+	Tue, 15 Sep 2026 05:38:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789450705; cv=none; b=hMvoK/1Dgz7b7sA/BPxOOX+fXxSi3wTWGcmlKdzj0sT4NgdsyNVoYlrsMU3wH6cs6k3YE93+GrG4hGmFR6AZJLRgj2PSGNpLxtM/k8GMnGcDrj1PyocjujGuSu+fS6m6V3yxyQugd07G9GIXFrdreYrNDac0G71A9eBVAMESI74=
+	t=1789450720; cv=none; b=aJxp9hFSRYjmO1ubmf+qIQh+dGk1en6ZCTkWCpFBnYjLH8+P1c3+igvArnYJgoU4XWPR7b4kFkMdu1fZ7LlwRY/LB6PslRR1Ck2bQXZXvu/uB3y/kQgY1bwWAFpuUk/xWqicjRkuGBBsSAhH5INgiNyEKODy6gSeK+1WR8fIkKY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789450705; c=relaxed/simple;
-	bh=IM8T/HpgK3AkfYs6TlHWuEPuVDeIsj5qEdFBYGIcbvs=;
+	s=arc-20240116; t=1789450720; c=relaxed/simple;
+	bh=giqgBnGzHZ5SeonDmd+wnwBNqkGqo7xW8bNnhXWvffQ=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=XJA7U21MQPgKF03xCOrw0hFNCPghVRN4L6QrYHP+KSCSBuxytW/K2npvszFF7+J5Otv2svSAmezwRqE/pX36zwUcC9q7oxeIkUBYuusGESHHPDT5xCkGuNzdRDjzzkFY6O74Z3UZPwFJ37/BW6uwoICLourhvutpohuuypKWzf0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Rg2kgiBJ; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=sc9wtMXYBqvkPqdC5/rNDclKvRYQr5egMzRE+Ogw6tu3mH3KEKlX702c0Ncee2ZLeqKHJiYcF7HO0YI6uvAJCxev7CK37IsU/O88mufXzlhveh64+7eMlPO8JQi8+nsN8k/wKD0IMpHX93nOtUgNalR1cHaASbfHGDX0MZU0oOQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f0hVjUo/; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Rg2kgiBJ"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id A61441F000FF;
-	Tue, 15 Sep 2026 05:38:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f0hVjUo/"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 4DFFE1F000FF;
+	Tue, 15 Sep 2026 05:38:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789450703;
-	bh=IfbLkzPoNwsmMp2BJC+xedu23k8+vdXGim7lECDBZJ8=;
+	s=k20260515; t=1789450719;
+	bh=O6mhLfKqMpzzHRGdNydZEVXMprYKwrRuiq+CtWTiQ44=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=Rg2kgiBJFBBtrhLguYKJ2o/4Et5w66YOGSdDDKJPRF4rg0ATwUkwER+nm3h63jAUd
-	 0z9BHZ2ObLy6CoKTuZrber6+0X46TyqgjuOOFZFdNQ4/+jGL9oIbzoBBTgYZmDIYh8
-	 /1Gv6Q+2iRsVhtNRg3nGnZpYXW6qSFvXX+z8/qk8Czwcz086mFADz9dTNycdZ+suDs
-	 vuhbP4hheuQTvu08syAjTl2S7mCG07oZJ6uTDfKsf3As+kPl6PAYV5/rEOHQF7bsjm
-	 lXUfQCsyzNJGBn3nk5xgUhLw0J2oVJd2YBzLlzqMTKYLXkQQ01TbzSH3zVmG83CTNE
-	 h7M8K5uwbVQFg==
-Date: Mon, 14 Sep 2026 22:38:23 -0700
-Subject: [PATCH 07/11] xfs: fix blockgc group quota scanning when usrquota
- isn't enforced
+	b=f0hVjUo/e/4J0fgzJ4IeAABI5Cw6g0haEse5XW3os7jps9bnrAbZwMpVLc7dw8KHo
+	 to0koDcAGkCOo0vvbtl86YFfZd3gvRM3c+vIrzFen5xsWzXvXJ9JhvJjIfIdlfmUyE
+	 qn+AHllha8AtQ7Wl7VSdINwXvIR87bbttRI01fSykTYut4cH1pVmpvoY2dNVgQc7/I
+	 H7LNd1i97f4PZZw6Nb3fTV2Jdmn0V2PwKQsSpHfGw9pXLHM0BSyYqtOr0XK0MQo0PO
+	 d2HUMEQIUCFmOPWye2jyJZGAMIRLiYc3FwJhh2G0ef88a/ZZZp+2pRzaCAj7K0J5O1
+	 MpERgBptmXeOQ==
+Date: Mon, 14 Sep 2026 22:38:38 -0700
+Subject: [PATCH 08/11] xfs: fix cursor and pointer handling when recovering
+ iunlink buckets
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <178945048648.3061055.15354036415153320075.stgit@frogsfrogsfrogs>
+Message-ID: <178945048669.3061055.10490235412243530399.stgit@frogsfrogsfrogs>
 In-Reply-To: <178945048435.3061055.16384804993810925544.stgit@frogsfrogsfrogs>
 References: <178945048435.3061055.16384804993810925544.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,31 +46,90 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-LOLLM noticed the copy-paste error here -- if user quotas aren't
-enforced but we're near the group quota limit, we fail to set FLAG_GID
-and hence we might not actually free any preallocations, causing
-unnecessary EDQUOT.  Fix that.
+LOLLM pointed out a bug in xlog_recover_iunlink_bucket:
 
-Cc: <stable@vger.kernel.org> # v5.12
-Fixes: c237dd7c709432 ("xfs: flush eof/cowblocks if we can't reserve quota for inode creation")
+1. We don't null out prev_ip after releasing it, which can lead to UAF
+   problems if the inodegc flush call in the loop fails.
+
+at which point I noticed even more bugs:
+
+2. If the inodegc flush inside the loop fails, we also leak @ip.
+
+3. We set prev_agino to agino having already advanced agino, which
+   results in inodes with i_prev_unlinked set to itself.
+
+4. If we exit the bottom of the loop with prev_ip set, then prev_ip
+   aliases ip and we also set its i_prev_unlinked to itself.
+
+Bugs 3 and 4 introduce loops into the unlinked list, though these loops
+don't surface because we immediately flush each unlinked inode after
+loading it.
+
+Fix all of these issues.
+
+Cc: <stable@vger.kernel.org> # v6.0
+Fixes: 04755d2e5821b3 ("xfs: refactor xlog_recover_process_iunlinks()")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Assisted-by: LOLLM # finding obvious bugs
 ---
- fs/xfs/xfs_icache.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/xfs_log_recover.c |   13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 82dac88e3c4c71..de8be344e987d0 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1653,7 +1653,7 @@ xfs_blockgc_free_dquots(
- 		do_work = true;
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index e7e49529658be3..cf0d610265fe76 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -2736,12 +2736,13 @@ xlog_recover_iunlink_bucket(
+ {
+ 	struct xfs_mount	*mp = pag_mount(pag);
+ 	struct xfs_inode	*prev_ip = NULL;
+-	struct xfs_inode	*ip;
+ 	xfs_agino_t		prev_agino, agino;
+ 	int			error = 0;
+ 
+ 	agino = be32_to_cpu(agi->agi_unlinked[bucket]);
+ 	while (agino != NULLAGINO) {
++		struct xfs_inode	*ip;
++
+ 		error = xfs_iget(mp, NULL, xfs_agino_to_ino(pag, agino), 0, 0,
+ 				&ip);
+ 		if (error)
+@@ -2750,11 +2751,11 @@ xlog_recover_iunlink_bucket(
+ 		ASSERT(VFS_I(ip)->i_nlink == 0);
+ 		ASSERT(VFS_I(ip)->i_mode != 0);
+ 		xfs_iflags_clear(ip, XFS_IRECOVERY);
+-		agino = ip->i_next_unlinked;
+ 
+ 		if (prev_ip) {
+ 			ip->i_prev_unlinked = prev_agino;
+ 			xfs_irele(prev_ip);
++			prev_ip = NULL;
+ 
+ 			/*
+ 			 * Ensure the inode is removed from the unlinked list
+@@ -2766,18 +2767,20 @@ xlog_recover_iunlink_bucket(
+ 			 * complete.
+ 			 */
+ 			error = xfs_inodegc_flush(mp);
+-			if (error)
+-				break;
++			if (error) {
++				xfs_irele(ip);
++				return error;
++			}
+ 		}
+ 
+ 		prev_agino = agino;
++		agino = ip->i_next_unlinked;
+ 		prev_ip = ip;
  	}
  
--	if (XFS_IS_UQUOTA_ENFORCED(mp) && gdqp && xfs_dquot_lowsp(gdqp)) {
-+	if (XFS_IS_GQUOTA_ENFORCED(mp) && gdqp && xfs_dquot_lowsp(gdqp)) {
- 		icw.icw_gid = make_kgid(mp->m_super->s_user_ns, gdqp->q_id);
- 		icw.icw_flags |= XFS_ICWALK_FLAG_GID;
- 		do_work = true;
+ 	if (prev_ip) {
+ 		int	error2;
+ 
+-		ip->i_prev_unlinked = prev_agino;
+ 		xfs_irele(prev_ip);
+ 
+ 		error2 = xfs_inodegc_flush(mp);
 
