@@ -1,119 +1,141 @@
-Received: from pdx-out-005.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-005.esa.us-west-2.outbound.mail-perimeter.amazon.com [52.13.214.179])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A936D4B3364;
-	Tue, 15 Sep 2026 16:02:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=52.13.214.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E7353D3D1D
+	for <linux-xfs@vger.kernel.org>; Tue, 15 Sep 2026 16:15:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789488134; cv=none; b=a3iEZjtgWE2aNIBKI52RhmpPD2k1ZTILfgERNyQCyJ9TAv6aks9Shks3dZaBcUWB7uyKeVPP7HXki5gUJoOlT9fqY/8mcZVmgMv5p81BhS3gjATysN1j+xva0ZC9IqLme3TIZGE0pzJJiyf3xESW9oaVSwKGO8CScSvssDiWmCg=
+	t=1789488935; cv=none; b=ipf5K1lihpRB+5+kIuFBKs4kgJhYv5hQwcCIOCq2s7u6HYaWrPNmv9EPHqc68oV9nLBKgqCPmflz0eOn7HOVsKJP0pUMYFN50uDZBffx8eQlEFeOST2gGswHGYbbb/bRuS55x7ox+P0WdN+SW6ZdQVlkQlxbUxpV/6w+8f18cIk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789488134; c=relaxed/simple;
-	bh=tSXDKJA3syhrSNEZG47C+W2QQY3zaHqZ9KSolvwTOyU=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ILqYAU5IL+OABsN9ZLjSl3xnFvTXnDNN/ZA8+iEMQpQdNzBwVgGY1+zHhKJBr/X1BNv3M1Epzlar0V5DhhQICxOIcR6Is/TAKgMadpUPxG1mGZb9bFcj3XeDwU6Eb91XQlQ6Uhm/EvSDMcMuOUe2lMuqaN2bZd8693+UUywL/AE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.it; spf=pass smtp.mailfrom=amazon.it; dkim=pass (2048-bit key) header.d=amazon.it header.i=@amazon.it header.b=s3Si+wro; arc=none smtp.client-ip=52.13.214.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.it
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.it
+	s=arc-20240116; t=1789488935; c=relaxed/simple;
+	bh=i6yGLwOhkSeHNsLf99sE0i3z1xwRvkNB9dpojaTQYfw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ksZNqj1SZtzQD7ZNgI4X82S9AHAFcayO8mlg0U2HBctPIxyLiaQ0KiG028ZzfWnCUQaL8QiPfP5xYWS+1WwPzJekP4LRPfclL3fFHK1ru1YfwqAQVBoe3eRkQ1Q1dYB+BISZMyRNEP5k1saiPJ22Bm1iybj/+dglnVQ84cw5+Ok=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ekzoJFOE; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=amazon.it header.i=@amazon.it header.b="s3Si+wro"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=amazon.it; i=@amazon.it; q=dns/txt; s=amazoncorp2;
-  t=1789488131; x=1821024131;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=zH2AffRhpysneQJNXQPa9UtiFiIZCjOUG9PhR8vSPsI=;
-  b=s3Si+wronE6HXXBco3LTJ3Oaoxey4fZJD0WwbYWgquyN3Po72L+YXVlJ
-   36Yy6m/pK5SY7ZghBopPgp//FC9pupuVrnWLW/JBKG2nGacyzY4hqI5t2
-   Nv6FCVl7GdTX7cVgQb5lJRKDAUlTExN0Zx+l313t2vVTLjsopshFudnZt
-   dwHNe30SvPRONKs0MTEap2zc7wLBKe1FE9ndO2nGOpdC2UCLm0rrB11+F
-   5uOwfqqYdkrxic9TvRq+xMf9bV4Dp5mGD4LdqKg8xGoNFH15+SUx9GvDM
-   VcuhQrNclyi+6ItqBLWkQJxo54UW1XlKjTfsL/y74y9sO/ehY3vGcUDlX
-   Q==;
-X-CSE-ConnectionGUID: u92piRZrSFapAw+TyK//UQ==
-X-CSE-MsgGUID: YKI+s6tzTVW5liA/y0xZ6g==
-X-IronPort-AV: E=Sophos;i="6.27,103,1787011200"; 
-   d="scan'208";a="28716152"
-Received: from ip-10-5-6-203.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.6.203])
-  by internal-pdx-out-005.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Sep 2026 16:02:08 +0000
-Received: from EX19MTAUWB001.ant.amazon.com [205.251.233.51:27276]
- by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.19.159:2525] with esmtp (Farcaster)
- id 15f7d0fc-d5b9-43a9-b411-4c5574972f7d; Tue, 15 Sep 2026 16:02:08 +0000 (UTC)
-X-Farcaster-Flow-ID: 15f7d0fc-d5b9-43a9-b411-4c5574972f7d
-Received: from EX19D001UWA001.ant.amazon.com (10.13.138.214) by
- EX19MTAUWB001.ant.amazon.com (10.250.64.248) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.46;
- Tue, 15 Sep 2026 16:02:08 +0000
-Received: from dev-dsk-dipiets-1b-77b833da.eu-west-1.amazon.com
- (10.253.66.177) by EX19D001UWA001.ant.amazon.com (10.13.138.214) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.46; Tue, 15 Sep 2026
- 16:02:03 +0000
-From: Salvatore Dipietro <dipiets@amazon.it>
-To: <akpm@linux-foundation.org>, <hannes@cmpxchg.org>
-CC: <abuehaze@amazon.com>, <alisaidi@amazon.com>, <blakgeof@amazon.com>,
-	<brauner@kernel.org>, <brendan.jackman@linux.dev>, <david@redhat.com>,
-	<dgc@kernel.org>, <dipietro.salvatore@gmail.com>, <dipiets@amazon.it>,
-	<djwong@kernel.org>, <hch@infradead.org>, <hch@lst.de>,
-	<jackmanb@google.com>, <linux-fsdevel@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-mm@kvack.org>,
-	<linux-xfs@vger.kernel.org>, <mhocko@suse.com>, <ritesh.list@gmail.com>,
-	<rvvandan@amazon.com>, <stable@vger.kernel.org>, <surenb@google.com>,
-	<vbabka@kernel.org>, <vbabka@suse.cz>, <willy@infradead.org>,
-	<ziy@nvidia.com>
-Subject: Re: [PATCH v5] mm/page_alloc: avoid direct compaction for costly __GFP_NORETRY allocations
-Date: Tue, 15 Sep 2026 16:00:42 +0000
-Message-ID: <20260915160042.1265958-1-dipiets@amazon.it>
-X-Mailer: git-send-email 2.50.1
-In-Reply-To: <20260911093209.d9181d5950778897935f6bcb@linux-foundation.org>
-References: <20260911093209.d9181d5950778897935f6bcb@linux-foundation.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ekzoJFOE"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id C0E0C1F000FF;
+	Tue, 15 Sep 2026 16:15:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789488933;
+	bh=Gvxj2abD/nEnzWy13lXpsvt0Vadx5WBjS3wTIiNyY/w=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=ekzoJFOELnobKxt/XcJiln1pfm8KjqulSHBOMGqKjck+C3AGB8BDVP4MCi4dthADQ
+	 OXwyJeV/14NGdk5TbM0ytsJV6L1mmuZ0Qm0DVqlDvsy3oePqBwrPqdbz3cI4mpeNV0
+	 YuYCMiZ6ky5hAWWUSAsgT4XM5wnq+rozvmwc3GFyX7ohN57+CiYFkyBxdm70svLIQC
+	 3Bm77y6drzTVMhk4T6wKexDhMa3zCd5YJMgochuMXQsnPpD+Rj/5PgsIpzQLkXiF0H
+	 GLKWdW4jL/T0PaeJoB25xMK7KxJOI6bJspE1xDoIXgzfr4NIO4hU3dPwOindIIKTdo
+	 Ec/b9UDQiLQxw==
+Date: Tue, 15 Sep 2026 09:15:33 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Andrey Albershteyn <aalbersh@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 4/7] libfrog: try to pass struct fs_path objects to
+ quotactl wrapper
+Message-ID: <20260915161533.GD2705364@frogsfrogsfrogs>
+References: <178936484773.2108717.13238892511050788442.stgit@frogsfrogsfrogs>
+ <178936484880.2108717.3928521689854404034.stgit@frogsfrogsfrogs>
+ <aqkeeAgNLMFFqgcl@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+ <aqk5gM82hhqq-Upd@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-ClientProxiedBy: EX19D031UWC004.ant.amazon.com (10.13.139.246) To
- EX19D001UWA001.ant.amazon.com (10.13.138.214)
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aqk5gM82hhqq-Upd@infradead.org>
 
+On Tue, Sep 15, 2026 at 05:26:40AM -0700, Christoph Hellwig wrote:
+> On Tue, Sep 15, 2026 at 12:34:33PM +0200, Andrey Albershteyn wrote:
+> > > +	const struct fs_path	*mount,
+> > > +	enum xfs_quota_cmd	xcommand,
+> > > +	uint			xtype,
+> > > +	uint			id,
+> > > +	void			*addr)
+> > > +{
+> > > +	return xfsquotactl(xcommand, mount->fs_name, xtype, id, addr);
+> > 
+> > The xfsquotactl() can be unfolded here and calls may be replaced
+> > with xfrog_quotactl(), no?
+> 
+> Yeah, looks like we should be able to kill it.  But maybe do that
+> as a follow on cleanup?
 
-On Fri, 11 Sep 2026 09:32:00 -0700 Andrew Morton <akpm@linux-foundation.org> wrote:
+Hrm.  There are two xfsquotactl() callers remaining after this patch.
+One of them is set_limits() in quota/edit.c.  One of the callers of
+set_limits is limit_f, which could very well pass through the fs_path
+like everywhere else:
 
-> does any of this look real?
+	set_limits(id, type, mask, fs_path->mnt_fd, fs_path->fs_name,
+		   &bsoft, &bhard, &isoft, &ihard, &rtbsoft, &rtbhard);
 
-The mechanism seems real, but it only shows up with vm.defrag_mode=1,
-which is off by default.
+Obviously a good candidate for passing the fs_path instead of the raw
+pieces.
 
-With defrag_mode=1, a costly __GFP_NORETRY allocation that used to fail
-cleanly can now succeed by fragmenting another migratetype's pageblock,
-which seems like the wrong trade for a caller whose premise is a cheap
-lower-order fallback. Johannes, do we want to keep it strict?
-If so, we could add a condition like below. It is equally
-applicable to v4 and v5. Happy to send it separately or in v6.
+The other set_limits caller is restore_file:
 
-	/*
-	 * Reclaim/compaction cannot run, so defrag_mode's strategy
-	 * of enforcing ALLOC_NOFRAGMENT cannot be fulfilled. Allow
-	 * fallbacks rather than failing the allocation outright.
-	 * Not for costly __GFP_NORETRY: those have a cheap lower
-	 * order fallback, so failing beats fragmenting.
-	 */
-	if (defrag_mode && (alloc_flags & ALLOC_NOFRAGMENT) &&
-	    !(costly_order && (gfp_mask & __GFP_NORETRY)) &&
-	    (gfp_mask & __GFP_KSWAPD_RECLAIM)) {
-		alloc_flags &= ~ALLOC_NOFRAGMENT;
-		goto retry;
+static void
+restore_file(
+	FILE		*fp,
+	uint		type)
+{
+	char		buffer[512];
+	char		dev[512];
+	uint		mask;
+	int		cnt;
+	uint32_t	id;
+	uint64_t	bsoft, bhard, isoft, ihard, rtbsoft, rtbhard;
+
+	while (fgets(buffer, sizeof(buffer), fp) != NULL) {
+		if (strncmp("fs = ", buffer, 5) == 0) {
+			/*
+			 * Copy the device name to dev, strip off the trailing
+			 * newline, and move on to the next line.
+			 */
+			strncpy(dev, buffer + 5, sizeof(dev) - 1);
+			dev[strlen(dev) - 1] = '\0';
+			continue;
+		}
+		rtbsoft = rtbhard = 0;
+		cnt = sscanf(buffer, "%u %llu %llu %llu %llu %llu %llu\n",
+				&id,
+				(unsigned long long *)&bsoft,
+				(unsigned long long *)&bhard,
+				(unsigned long long *)&isoft,
+				(unsigned long long *)&ihard,
+				(unsigned long long *)&rtbsoft,
+				(unsigned long long *)&rtbhard);
+		if (cnt == 5 || cnt == 7) {
+			mask = FS_DQ_ISOFT|FS_DQ_IHARD|FS_DQ_BSOFT|FS_DQ_BHARD;
+			if (cnt == 7)
+				mask |= FS_DQ_RTBSOFT|FS_DQ_RTBHARD;
+			set_limits(id, type, mask, -1, dev, &bsoft, &bhard,
+					&isoft, &ihard, &rtbsoft, &rtbhard);
+		}
+	}
+}
+
+Here, we have a device string, but no open fd to it.  I could construct
+a fake fs_path object to use the xfrog_quotactl() interface, but that's
+kinda nasty so I'd rather just leave it as an xfsquotactl() site.
+
+The second caller is makecfg_f -> get_qflags, which is added in a couple
+of patches.  That one I could just pass it through
+
+	mount = fs_table_lookup_mount(file->name);
+	if (!mount) {
+		fprintf(stderr, _("%s: Not a XFS mount point.\n"), file->name);
+		return 1;
 	}
 
+	mount->mnt_fd = file->xfd.fd;
+	ret = get_qflags(mount, &qflags);
+	mount->mnt_fd = -1;
 
-Salvatore
+Regrettably, struct fileio in spaceman/ is private to xfs_spaceman so
+there's no general way to pass that to a libfrog function, which is why
+we have to play switcheroo games with mount->mnt_fd here.
 
-
-
-
-
-AMAZON DEVELOPMENT CENTER ITALY SRL, viale Monte Grappa 3/5, 20124 Milano, Italia, Registro delle Imprese di Milano Monza Brianza Lodi REA n. 2504859, Capitale Sociale: 10.000 EUR i.v., Cod. Fisc. e P.IVA 10100050961, Societa con Socio Unico
-
-
-
+--D
