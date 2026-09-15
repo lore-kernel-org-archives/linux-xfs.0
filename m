@@ -1,47 +1,31 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59CDB6FC5;
-	Tue, 15 Sep 2026 06:37:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA90037A496;
+	Tue, 15 Sep 2026 06:37:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789454226; cv=none; b=QVnplK/omUTpEHSwBH0IbKP1CABGC2qUbLYFwu+XdxNoohoH1BlXJRRIH1fnGKXLYRtFz5lq/b+mzaO+RLnHMScyj/CUorFNo9sjeXkdybJmsZ7cAXAy4EL8Xfp0sdVL1ejgr2Y+StkSz1Y9l/FyaQ5ExL7Cx4ipQA3Lax5hW2w=
+	t=1789454279; cv=none; b=Y2aKU6/Gvdfk5RBa0MDlZeXG+9TJrMCkMLErH+4c6VZsw0oRMVFebYIy6ffUetxhyOwEG/l1Yiuf94NqjpKYuKeUGhjmzjSCJjhwIeo0Ilsizz78BeBncpVFz14jLdO7RwOZ4SQV4LorY+5nXnIYYwsJaXoDcsF37vlYealZEuM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789454226; c=relaxed/simple;
-	bh=9dpLU790yr6BvWPN4uN9Ofxtt0ngh6LpS8kTFga2aVE=;
+	s=arc-20240116; t=1789454279; c=relaxed/simple;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=F26m19DH/Sbs/Q+MJlu+qJqLFvl96DfQf7rA+vr89v8eN9IWtzhNIA+6lO+96AMEa53qST/0+9nxXGi7lgGHGkpfzK0oVuz0gnzGnhXngmaxTp0jNfE+HoKsQnpOaTG3PiGln/spR1PIv+o/olLVuzDjWPblbzbtDkgUhIXYXjU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=B1VKq6sY; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="B1VKq6sY"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=UgfSs7l2UiblMitONWa2ILOf/vc42d67TCvKj8Opi+0=; b=B1VKq6sYIMAiFy3/TvYqSFG9L8
-	AWGm6nIfa3erQctRivx47A47sdE3aGUa0pe5VzaF9sOB95mCur2QF/hoqWao3tKkfVACR92606cQ4
-	IBoJiOh7g2KL/tUgW1IExwonAmtrKjtHMYQTn73gNkDJy4PgVjyMRT7Wa/xTGDM5FakgypBDYreXD
-	ptCiPWxcZ+fQTY9cMGpJHqyzP1qp3hK0mTpseAjan4KVmtaGA226bIWEQuA+Qdn8zAyXAruPwmZaD
-	wLMt+Of5b+lSAIlLy2CKPwW5PRl1J3D/Gyxx3xRlLDGez00yhwnjGb4Gq3UjVehQJO+/YEo5RRXcl
-	MnB8Cy3A==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1x6MXT-00000005L9v-1caa;
-	Tue, 15 Sep 2026 06:21:08 +0000
-Date: Mon, 14 Sep 2026 23:21:07 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: "Zhou, Yun" <yun.zhou@windriver.com>, cem@kernel.org,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Andrey Albershteyn <aalbersh@redhat.com>
-Subject: Re: [PATCH v3] xfs: don't hold buffer locks across sync transaction
- commit in xfs_sync_sb_buf
-Message-ID: <aqjj04f66MqUXgdV@infradead.org>
-References: <20260731031010.2627884-1-yun.zhou@windriver.com>
- <20260911174247.GK6265@frogsfrogsfrogs>
- <4ff8e91e-a5b2-4754-ac9a-20f64f169af0@windriver.com>
- <20260915043105.GB2705364@frogsfrogsfrogs>
+	 Content-Type:Content-Disposition:In-Reply-To; b=Imvbcduc/5foEe4ehltaiB+MyEvsv3PsFOhrg/LoDjL/X/CQ9NXPvL5B2ydHvkvWtsvzROG4oFjmN97T9FwzucTOXizTY+tIz/VDZG2EB/F9XUlsktyq/e+GZSPatOESa30RGhxQvN0CR9m4F6BCq4X5Pu7pFafoUT6W4CxDROU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 0009868C4E; Tue, 15 Sep 2026 08:37:53 +0200 (CEST)
+Date: Tue, 15 Sep 2026 08:37:53 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Aditya Prakash Srivastava <aditya.ansh182@gmail.com>
+Cc: Carlos Maiolino <cem@kernel.org>,
+	"Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v6 1/1] xfs: prevent close() from hanging on frozen
+ filesystems
+Message-ID: <20260915063753.GB13293@lst.de>
+References: <20260914093152.1698-1-aditya.ansh182@gmail.com> <20260914093152.1698-2-aditya.ansh182@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -50,18 +34,9 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260915043105.GB2705364@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20260914093152.1698-2-aditya.ansh182@gmail.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Mon, Sep 14, 2026 at 09:31:05PM -0700, Darrick J. Wong wrote:
-> > 
-> > Alternatively, since xfs_ioc_setlabel() is currently the only caller
-> > and it's kernel-only, we could just move xfs_sync_sb_buf() out of
-> > libxfs into xfs_ioctl.c.
-> 
-> Probably safer to do that, since there's no other user of that function,
-> and none in userspace.
+Looks good:
 
-Yeah, I was going to suggest to move it out of libxfs as well.
-Either xfs_ioctl.c or something like xfs_mount.c if we think it will
-be reused elsewhere in the near future.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
