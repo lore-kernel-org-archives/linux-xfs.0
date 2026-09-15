@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E4C0378D9A;
-	Tue, 15 Sep 2026 05:38:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E55A6378D9A;
+	Tue, 15 Sep 2026 05:39:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789450736; cv=none; b=maoQN4FScJNAc6dk12hEgMsumqPCGX+VlnI+7PTKdnTW/wzLVsqCyrZKiXhriWuJk0O3D7tIQl17/iDl3CncALUsHTJkXbEanI7UL2mUAcd9Oq/caMFEPc97MUHqrjHPmWjLdHpHIR8O6duv8dZSZ5YG+zaEJOicHF2Sxu07Zv8=
+	t=1789450752; cv=none; b=f5PdKYfpZ7i8gv9lTig8nH5Rim2KIavEMSyPLh1apOqEbArtssrMxUtf4p5s3yfavRlVX60TbzIIBkAU/L4Sz5TUsY9HZbSjZT+KcYKu4Ltbtng5cwvGrtP4Exb/qB8Vg6t9Mv+UcNxnrl4dRGKeJEs6+hLCVyWPKOfxBCCkk+4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789450736; c=relaxed/simple;
-	bh=UMX48jKeATHWb1u1LEBxkTGJG2JDWhdLtkFmMyv39Ak=;
+	s=arc-20240116; t=1789450752; c=relaxed/simple;
+	bh=wVfYwVAOsF/yIDJ+nT0n43F+g3veqApsmwBO2CWZeI0=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=DT2LxQPfTtr5sdxxR7MyTtnVTXihHuL1BE+Rrgkw2769XUVNkI14llmeyp22vrlZc4x8mQZU4SxUgsNiWdNKZkwo3agLe6vB/J5qzmwuJSbkH+SMSAyN8+FgSZSkrezrw0Yk7WkZWXUN9U67TZxAN92mrYi4Ii5PHs/KuaqFuoU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=flC+7ne9; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=NUj/hvqaBYTEGNT0CqSUAGkVJcMI9pWSuVkGhZeBdvN6Ew9EbUHov2imqC4eqEOsTPJKGRIQbndV/G2CW2xjFbUMtrnrLSnie1dAfqNHdalZVlOOtkLs0LMeQBdtg3N3PwBrd0KX7FohVFgbu7c+l7JPsT1efF8krisA8pBhklk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j0a/gsYt; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="flC+7ne9"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 250341F000FF;
-	Tue, 15 Sep 2026 05:38:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j0a/gsYt"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id BE1FB1F000FF;
+	Tue, 15 Sep 2026 05:39:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789450735;
-	bh=CspbFF1XQ9bvtKFBfcjgZTzM1ZHIjrn72X6FdPRtjvM=;
+	s=k20260515; t=1789450750;
+	bh=+rEhUmTuUeC6OYcC3EqLC7uQagw2HTcVZgRErJeH23I=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=flC+7ne9iukR2BMDW4nJR4EFjXUJSV4qjc5DNgRHaZfti7+FdWtdaml2oUEOOa2aP
-	 6nFXx4bX+JpG9V1XpPqegtYJnJEzfG2bdIZLnIXEv97mkWUn4AWnf824hVrILyPcqp
-	 gZrxXiWgq6DHWUTy66n7bYlBklBRd2cVl6E7BnnqxXUo5bAtnEQrBdoYPir6rd+OQm
-	 kTsR7/hTMrHXk3Xx7CZs5C/D0Pk7faRlTXN+BSD9GqM9+CxyLc7DNS25yEhN++6ujI
-	 OeRkD0bn8bJ8f5HW1k+n8zzAZzFrFFeYRQ8UoGXn5n2DLypd/LdAZp0RGz1rGc9IeC
-	 HRtvsbiJGzGTg==
-Date: Mon, 14 Sep 2026 22:38:54 -0700
-Subject: [PATCH 09/11] xfs: drop dquot flush lock when we can't find a buffer
- to flush
+	b=j0a/gsYtt+zetpURw7WqIfgttAeLko3Zgi9U+j9QYmkByJiN7Q0eaAMex5x1MXV5u
+	 i99eYYuXX6Sfdc63I56hZhD2P3y0twFuJLcC3CJevcSoKrgpK1nqUscEUC/+8ABVpA
+	 mg3aBZ7/WI75OYQ31CmfyTWeo8wkDIwqgVYBfcHuvJ99HMMkkcORiDlPg6KmDLwIPJ
+	 uZu/+UW+21PvzYoxXCH4pQ6HYV33YiUe58sKt8AoCA83OdJFblZpP9nPj8SyOArN9q
+	 PEzkIl6C1dxmpP4a607O04rWoxFybX9Eow7biHeJyynbpLcw+659FUpI2deyL1I2LJ
+	 EX8UCm44wC7ag==
+Date: Mon, 14 Sep 2026 22:39:10 -0700
+Subject: [PATCH 10/11] xfs: don't let hidden_space go negative in
+ xfs_metafile_resv_init
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <178945048690.3061055.7567460343709434849.stgit@frogsfrogsfrogs>
+Message-ID: <178945048710.3061055.166604831227371652.stgit@frogsfrogsfrogs>
 In-Reply-To: <178945048435.3061055.16384804993810925544.stgit@frogsfrogsfrogs>
 References: <178945048435.3061055.16384804993810925544.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,47 +46,45 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-LOLLM noticed that xfs_qm_flush_one fails to drop the dquot flush lock
-if it can't grab the buffer associated with the dquot.  Since there's no
-buffer, nobody else is going to drop the dqflock, so we need to do it
-ourselves.
+LOLLM points out that if the amount of fdblocks that we can reserve for
+a metadata btree file goes below the space already used by that file,
+then the hidden_space subtraction can underflow, causing
+xfs_dec_fdblocks to subtract a huge amount of space.  We never want the
+target to be less than the used sapce, so fix the logic that adjusts
+dblocks_avail downwards.
 
-Cc: <stable@vger.kernel.org> # v6.13
-Fixes: ca378189fdfa89 ("xfs: convert quotacheck to attach dquot buffers")
+Also fix an error in the adjacent comment.
+
+Cc: <stable@vger.kernel.org> # v6.15
+Fixes: 1df8d75030b787 ("xfs: make metabtree reservations global")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Assisted-by: LOLLM # finding obvious bugs
 ---
- fs/xfs/xfs_qm.c |   10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ fs/xfs/libxfs/xfs_metafile.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index 99a82107b8e6f2..54d00d543b513a 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -1432,16 +1432,22 @@ xfs_qm_flush_one(
+diff --git a/fs/xfs/libxfs/xfs_metafile.c b/fs/xfs/libxfs/xfs_metafile.c
+index 71f004e9dc6451..1f54d39003c27c 100644
+--- a/fs/xfs/libxfs/xfs_metafile.c
++++ b/fs/xfs/libxfs/xfs_metafile.c
+@@ -297,14 +297,14 @@ xfs_metafile_resv_init(
+ 		goto out_unlock;
  
- 	error = xfs_dquot_use_attached_buf(dqp, &bp);
- 	if (error)
--		goto out_unlock;
-+		goto out_dqflock;
- 	if (!bp) {
- 		error = -EFSCORRUPTED;
--		goto out_unlock;
-+		goto out_dqflock;
- 	}
+ 	/*
+-	 * Space taken by the per-AG metadata btrees are accounted on-disk as
+-	 * used space.  We therefore only hide the space that is reserved but
+-	 * not used by the trees.
++	 * Space taken by metadata btrees are accounted on-disk as used space.
++	 * We therefore only hide the space that is reserved but not used by
++	 * the trees.
+ 	 */
+ 	if (used > target)
+ 		target = used;
+ 	else if (target > dblocks_avail)
+-		target = dblocks_avail;
++		target = max(dblocks_avail, used);
+ 	hidden_space = target - used;
  
- 	error = xfs_qm_dqflush(dqp, bp);
- 	if (!error)
- 		xfs_buf_delwri_queue(bp, buffer_list);
- 	xfs_buf_relse(bp);
-+	mutex_unlock(&dqp->q_qlock);
-+	xfs_qm_dqrele(dqp);
-+	return error;
-+
-+out_dqflock:
-+	xfs_dqfunlock(dqp);
- out_unlock:
- 	mutex_unlock(&dqp->q_qlock);
- 	xfs_qm_dqrele(dqp);
+ 	error = xfs_dec_fdblocks(mp, hidden_space, true);
 
