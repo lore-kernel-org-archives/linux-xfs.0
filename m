@@ -1,209 +1,326 @@
-Received: from mx0b-0064b401.pphosted.com (mx0b-0064b401.pphosted.com [205.220.178.238])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B5823947B8;
-	Tue, 15 Sep 2026 07:56:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.178.238
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789459007; cv=fail; b=ayqtCb3HG9D73FU2xo/1FA3cqJgoevFdYDUvuh4EjcF1+sdbGAj8/RY5NNveUBZcGV6FkIeRyXSM+zA/7djkGyVFr47wA9L5IJ90lWPVw4RHdnhWFQTiXWPv6h6+J63lCfQQ6SkNAtwLK3vmhiI9ckyhFFwtqPM0l3ANeqqIUeo=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789459007; c=relaxed/simple;
-	bh=4iZ+8T7oCczMuBq/HL8h7ehiY6dcMg1LF8aT/tGenhs=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=cUWUDCOagqQsRjWi27c5XFPA+pwK5q3Bx5g96CL8W9yjeIR9aW3/BlRX7WwV6x2iKIXKyT6sTBIQuTrzUnJbaVk3g9aBban3cZGVsgsKDlgrAyft3ezHxxdbq2fyWcUnjGz0p/M3ERSp3ZnLOzvh89hGWZCNrgIlT3OxVEbhYnI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=windriver.com; spf=pass smtp.mailfrom=windriver.com; dkim=pass (2048-bit key) header.d=windriver.com header.i=@windriver.com header.b=qJXwduYZ; arc=fail smtp.client-ip=205.220.178.238
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=windriver.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=windriver.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 394F6476CF5;
+	Tue, 15 Sep 2026 08:41:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789461698; cv=none; b=FXDwFgXYWSc9DGhWZgCerjGjxRmNVBZTLs5TTwCd3QrE2q8vFDzoR/6v2HXh3o0oXVnt0ZihLZoV1e3c7bh9AORPVn2Pjetak2tom8WDM9EQu4trYrYEmMk0mTEFRSGFD2MdwkEc2pYbKlS8GJmCBC6oSHeIzjR33/BqTcLaLOY=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789461698; c=relaxed/simple;
+	bh=6qmo9Qcr3CRQJ3+WT9lp+gZPrfCe1hQKL8lCc0T2dig=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=mHAeUNov0bnQKrhi3NtXL3NPPyyTt1KWD/nVUtLiNc+FOjLqPwRSeV0JPceDs1/2F3ETlvfydDP9tkKf23Z7jJC1SONFbr2/NhLVHRo3SMPGB0jzzq+np7bXiSVXywJkS9Ktw0JdvoZVnrvyqZq3t/S890ARRHnlMvfjM80lwa4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c0ExvamT; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=windriver.com header.i=@windriver.com header.b="qJXwduYZ"
-Received: from pps.filterd (m0250811.ppops.net [127.0.0.1])
-	by mx0a-0064b401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68F6asQQ2946957;
-	Tue, 15 Sep 2026 07:10:10 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=windriver.com;
-	 h=cc:content-transfer-encoding:content-type:date:from
-	:in-reply-to:message-id:mime-version:references:subject:to; s=
-	PPS06212021; bh=DVqg976GR3x4ouGVyl1R3iooAyYL8euywhCsAVMxd3w=; b=
-	qJXwduYZYOaCXraSq5mBUGMrfGW3W+vdQEmHUGh09IaNGaeJBHe8Mqcr0e5pbgw/
-	cRnt333cZvw8JBRk0zicYkg4t7rN2oNt5AzfrbeYljTQhxRMGXkBaeiPsYaO1QSi
-	MPmFNUDYOurWFMK3lUXCVTBwooLL3EDGreSbEDmMwwKusx+mZlOG6TI83JaQdYZg
-	KOoGMxYFBmZx+yXTJ54/UAAQI0dO44jltumeiqHAqCfqggm6YiMpREVcxloOlf0c
-	vlgcwoa0wPkNZuFQmLcxOIIXO31ppaFSARmKVD7uiGLlf7ANRVulRXXiIGH/OEUp
-	Ieh9b9hwHfHlNj4TH+bBHw==
-Received: from ph7pr06cu001.outbound.protection.outlook.com (mail-westus3azon11020128.outbound.protection.outlook.com [52.101.201.128])
-	by mx0a-0064b401.pphosted.com (PPS) with ESMTPS id 4gmxxnnhpj-1
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Tue, 15 Sep 2026 07:10:10 +0000 (GMT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=S7cKuED+widYZIUGKwcnlj3GmXvaFuamwMFDMMp7ld5+DWfwldbNmprJg8LoWm97eoIkUj38dLcUXBw5wYLdC3LpuhDX766Zu3XdKqyakg0OAmHk6RkmNTatOdlZ49hqxwIAhKlUyv9lQbU16KKmxaxB/Meu6Tinui/20yR390orU5bs4Y0uIL/dER/0nLlmJZ/0UZpwfETgW/T0Ok9juqbsOHfyJR8/cXZRtu/7Ke+05cGbAjiTNCydR3RLzWNKAzRBQ7bswEvpGLgIe4pWyVdFXnDj7XmvFsnzcueNYzuxcDZ6WHPTO2IAqzZRNYSvXdIuF/E3GBUQEmaTG5vdMg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=DVqg976GR3x4ouGVyl1R3iooAyYL8euywhCsAVMxd3w=;
- b=LnmRL0/jzdpJi+vB2QFzHuYiJ+imVYC7/Qw/3JK/sxg1kNNSCV+lnGLPgH7lSON8iNRTzOa6GoQQ2/guxg5E4yn/rx2yiIcFxH+8ZcyHFGGAziLOWhrtDmaCD+qfpTZp3ivfsEJvQ5AahnoHQUOSMy5uVvMQEgvjjyCXQYXwIVyzzsyr+X8Db6DNXYOHb/MFQyapPvrx+N5DmW18oigbWmdf1SPXTwy4HgPZhasWp35qaCLZi42EoD8uhQ+AW6Ix9gybUBbaAyAIh18NiQfcL6cZr3KNuvv4Utpvxl2JjdvBzTZEfC7zZVbnTyybsjzgxeSFvtQrCdg5X/H70bVrUA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=windriver.com; dmarc=pass action=none
- header.from=windriver.com; dkim=pass header.d=windriver.com; arc=none
-Received: from CH0PR11MB5332.namprd11.prod.outlook.com (2603:10b6:610:bf::17)
- by IA4PR11MB9177.namprd11.prod.outlook.com (2603:10b6:208:569::19) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.406.12; Tue, 15 Sep
- 2026 07:10:08 +0000
-Received: from CH0PR11MB5332.namprd11.prod.outlook.com
- ([fe80::8f86:8d08:45bf:ec13]) by CH0PR11MB5332.namprd11.prod.outlook.com
- ([fe80::8f86:8d08:45bf:ec13%6]) with mapi id 15.21.0406.007; Tue, 15 Sep 2026
- 07:10:08 +0000
-Message-ID: <38377447-ffa2-43ef-bbfa-43d05decda1e@windriver.com>
-Date: Tue, 15 Sep 2026 15:09:57 +0800
-User-Agent: Mozilla Thunderbird Beta
-Subject: Re: [PATCH] xfs: fix NOFS state corruption in btree split worker
-To: Christoph Hellwig <hch@infradead.org>,
-        Kefeng Wang <wangkefeng.wang@huawei.com>
-Cc: brauner@kernel.org, djwong@kernel.org, cem@kernel.org,
-        akpm@linux-foundation.org, vbabka@kernel.org, surenb@google.com,
-        mhocko@suse.com, brendan.jackman@linux.dev, hannes@cmpxchg.org,
-        ziy@nvidia.com, david@kernel.org, qi.zheng@linux.dev,
-        shakeel.butt@linux.dev, ljs@kernel.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
-References: <20260902134417.c44503a1d65533f81fb1c391@linux-foundation.org>
- <20260903133756.2006032-1-wangkefeng.wang@huawei.com>
- <aqJEWmUN3Jsajoyl@infradead.org>
-Content-Language: en-US
-From: "Zhou, Yun" <yun.zhou@windriver.com>
-In-Reply-To: <aqJEWmUN3Jsajoyl@infradead.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SL2P216CA0094.KORP216.PROD.OUTLOOK.COM (2603:1096:101:3::9)
- To CH0PR11MB5332.namprd11.prod.outlook.com (2603:10b6:610:bf::17)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c0ExvamT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9B0F51F000FF;
+	Tue, 15 Sep 2026 08:41:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789461696;
+	bh=D6sT82EGLDkjRXlB7oWqUdhk8Omtt31fyp17BHvjdVw=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=c0ExvamT81iXHMpCnT5VfAGkxhaGcom/7NqPMwC6CeukAMaAGcm9vDD4f4HFc1zfB
+	 paT1Zy1Dqi39jmChmNoIwpIS+XbYcbPkQl08x3Oa368ieSSLIIvTDG6KzdrevvS5rB
+	 gTf8korrd9FQ1kVcqtIrVqtu6uzFvyPjhl8iUlCszW3lx5oRz5yYTEg9dghGO8hTWh
+	 Y1cecNNCq1q8xjaEovAMMrxm/NkZpliugLfFV4E+3La24r5UjPyijoGKCRuxd5hkx7
+	 R/qW0dUkQUAUafCjMrJeOjPlghG+hZA5RgmaylK8qNoTMVet4iyWMBceFyKj/5FhUQ
+	 Mst4gc4VcgP/Q==
+Date: Tue, 15 Sep 2026 10:41:32 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: Hemanth Selam <hemanth.selam@gmail.com>
+Cc: djwong@kernel.org, linux-xfs@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3] xfs: fix typos and repeated words in comments
+Message-ID: <aqkEtustR7T-fPyk@nidhogg.toxiclabs.cc>
+References: <20260911073007.22530-1-hemanth.selam@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH0PR11MB5332:EE_|IA4PR11MB9177:EE_
-X-MS-Office365-Filtering-Correlation-Id: 4df308d6-f6a9-4a16-8fc5-08df12f85fba
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|23010399003|1800799024|376014|7416014|56012099006|11063799006|4143699003|10067099003|22082099003|18002099003;
-X-Microsoft-Antispam-Message-Info:
-	ia1vA+/71tApKpP8MIQLHK56nA/qs0ECRtJVOvJV2h7uR3NyCVKyzDYLzI8OrgZreUMVCokBIf2zmvW3Ja/DP14Wv8DTwlNHKKU6xeF7ErCLDYr8LXmFzdDA6MWI/e5Z7czpaBf2xsC6KWkVnAhFMP/Ap1zVpDHMwYwZwPziaMPoON88xz6bKWygEWW1HSExCZhJ4+yxTRa23DPsAo+oU8Dbsa9V7FlJOGHaV5Zs6YWlwT4MQf5xyB9nTOfng+LjFSXg0QdUXKmHdqJvBYf1E88BNeITmQpzt/BudzlRwxICt+vs6NN3rDDaplRsRH4sCKvME5LK8NZI4eGkDIYab/z0ZSAVHYCBuwfb5rCTKF3AXdBUtfAtJnS+0e+mAWixNa0NSK31HXlz3F4ikfDzCrid4aoNzjsSWEt/hGSKLhFxNc0AVoiKNCZh+rVMSEKKZetQUSpYEoNHH7CfEKVTy9dT0eTXIqokIzBwngQbr51BYIphZS6oEGozT5L3Sc/keEhWdNVGg6XYOrNyapi99iAcefi5jP+PUHIXe5dWt10xvVT6ZJQLuv97L6rZkBdtCcD2VdYM7If+BUMvQil+2sJ/ItcpmsdzOI9RDbxCCD3sGTi+5f6Rf1WiLfCvGmwdD1S22988zPQcHahSIXelKTvz5mQRnN+Ca/9zkitfv/w=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH0PR11MB5332.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(23010399003)(1800799024)(376014)(7416014)(56012099006)(11063799006)(4143699003)(10067099003)(22082099003)(18002099003);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?aUJDZHZnTkppVkx6UnNhWktjL3VoaVA5M0dOM3FySjRrelIyY0VXTXh6Y1l1?=
- =?utf-8?B?b3d0ZVR3TkZCbFFHMUpMR3lhd0FhS09SenBoRTl1dU1hYmVici91TkNudzFo?=
- =?utf-8?B?N2hhUFpzUk00L2Y1TkI0VWs1V0RrT004ZW1EV3JnKzV3N2dRR204NmNhYjJF?=
- =?utf-8?B?QjZWVGhPUGxWbXlFRGV4aW1FaEtUUmpxN2dtTWZ1STE5ZW1LKzhEMEJRbjNa?=
- =?utf-8?B?TzhzWFRBcGs5UGoyeW9aa3IrSjhhVWpsSjRPQ2F1VnJrQ0pMelpJd3F4ck9M?=
- =?utf-8?B?MnIxUmt1ZHZYT0VrQXl1WlV1azJqckNaSVp1SlNxTko3SHBOeE5OVm1nWDRJ?=
- =?utf-8?B?VHphbmRxNGY4cFpFdTB2aEtteXBacUlqaUliQUhocEp2Q24zTUt5bGtlK3lC?=
- =?utf-8?B?dHRFRWVwaStFK2grTFVMYjMyS2x3dTlPdXM4bkM0dlRGVVNlVzJMMmlEZVVk?=
- =?utf-8?B?VWdMckFvYk1yZWxuZkp0L0JGZUl4REphTG84V3dBR0Y4Q1F1RDRQbmxtM0xk?=
- =?utf-8?B?NVZ5dkI4M0xCaUFhLzMrdHZEY1pvSDV4cWpocDNhUWxKL1I4SVRxVFo5Q0VV?=
- =?utf-8?B?c2xyb05nbmI5WlUxVW5tZ2hzZEFUWlBxYk5nV0Exd3YxNTNqbWdBMVVoTGtq?=
- =?utf-8?B?SEk1ZDhoajFVc0pDaTRsK3A0TEtXSWlLZmhReDJuZS85Q3B2UXg1am1UTVFB?=
- =?utf-8?B?SVk5ai9FZ2RFY2V6UGpETkhrOG5EVFBrdllTTFE3VzNVNVV1d2J4NmhYaFRt?=
- =?utf-8?B?VGQvM01LSlpFNVNhSXQyYWhGK3hOcE4yVnFEU0p4bHh0SjFlNGV3MHR6bVd1?=
- =?utf-8?B?WE95ZXZsWkZmMmRQbGc4c1ZwRG9EWk9YWkV2S1lIU1doeTZ1NXZjT3VkcDU1?=
- =?utf-8?B?NHp1cVpwbmE0RStKQU9RMFFnSHp0ZzI5NFQzOS9oczhuYURJb3JRWXVUc0tM?=
- =?utf-8?B?cGI2UXYzY21VbnFVbzNET2R2a0I5V3B2cXZiRDEvUGxZdldlM21uTURuZ2t6?=
- =?utf-8?B?WFpUM29YY2Q0YWJhd1ZYMEkxZis2cUMxVklUeFRtODB2UnR4QXp6R3Rid0pN?=
- =?utf-8?B?YnV6a2xLSUxqakNUUkJZL2FYV0JoaGQzbmhsSHpCaDJKd2xYZ1RoNjJhTklB?=
- =?utf-8?B?a1VTTGZpM3duZi9oSXZFT2lkdHJ6Qzl4VUY3U2ZPMHcxTU15OTBBMCtrSWhz?=
- =?utf-8?B?dzErbFB5US8xdExjRzVYanB2a2ZKb3dHU29IQ2ttVlQyNjVBcGpjTlpsbm55?=
- =?utf-8?B?LzFWMEtidUZxYVFnczhEeFdFK2pPUnpOajUrdldsb3lTb3hRaVp2N2IxSG5i?=
- =?utf-8?B?OGh1NVVXdkZKS2JaTWJ3c3YxaUZJbU9YOE0xaTZJSWdGQlNycDJodVVoZ0VY?=
- =?utf-8?B?SmFqb3dacWtvQis5QVpCakZxWlExTHRROW5HblROUDlrNWk0SDZJRDhaNHJm?=
- =?utf-8?B?YkwzdVg4cE5JTUNVazVzYVZadzZjUDFPQmUwT1RIcU1NelkvLzl3SjdEU29Y?=
- =?utf-8?B?WlU2LzBWaFpmNzVnb2dPQXR4bGpEY1lJcDR5Qys4ZkNUR25jNHdDeDRyOFpp?=
- =?utf-8?B?TE4ycUxnUVZvYW9sMU8yZGdSd3ViUFRpdU1vRVk4ZGYzZDZSemROUk5IRDdK?=
- =?utf-8?B?TEo4aE9xSGZUbE9rVUpoODBGU3VZem1SeE5vMXF5aStySnRDdEhmOWQweEJH?=
- =?utf-8?B?VlFJSEZCMzB4d29VbXl0UFZrVEdDMW1WV1p1cGlKNjdjekJsU05tWDNVQk1T?=
- =?utf-8?B?KzVhRENGQTNoSTRQYlhMUE40WnliWXhZcFhQZndDaW0rOEk1ZVhqamU0alZx?=
- =?utf-8?B?ek52YlJqMFkwQURFRHA0Y0RJNGxKV3Y3QnV3SmxhaU9KWndha1BtdVhWOEdF?=
- =?utf-8?B?d0t6OTVxdmlaWVhCQ21BYXZta1BrUzRUVDQ4M0h3TlNLM3NIYXN1TGpwYkxP?=
- =?utf-8?B?YzFGYitqcXJvem9KZHl4QjFna1Z1cjY4VHVYNk1STzRLUy9TdUpjdWJLc1hv?=
- =?utf-8?B?UUMvZ3ZOaW9kdDFINFBDMFI5bHJCam42VG8vSWk3T21PbC9GdlNRcnk3YnZj?=
- =?utf-8?B?eVFvYUVzbi81WFo4UEVVS0p6ai9UdjdqNzBidnlvMmp3SUNSZkhpUHkvUXhG?=
- =?utf-8?B?NUR6NjBDZzFEQ3MyTC9Tclp3OC9kOEpmeW1OVGQ3aGZMZVV0bTZjMEVrL3p4?=
- =?utf-8?B?U0hpc1NjTGpXVlBsS0NpOEhPbXdLMGc1cmE2VlkyT2VGNnNVVHFXN2J2aDZ6?=
- =?utf-8?B?TWt1TUxIVEJEMngxZkwwc051VXlSaEFCRzBseXNsL29SUTR6KytDT3djNXpD?=
- =?utf-8?B?S2VvcTRTSVBueGRlRnpxSDlia3FuU0JwMHBsL09BaXE2bmNpQzhNUT09?=
-X-Exchange-RoutingPolicyChecked:
-	AZpbsy/7xFtHx/Sv2/C1lUNMfprswr0z6AOw/1B/PnWeweEod9FNRxdhvZ3/w3TbITTWmt9D0YzZ35QP+aoduB1yw8j0/RjUqgsqrALogIQBfs02sa4dv9j3u/GMDTXo7RgFLmJyRxOkDrf6FoeqsriJ26zE5Zgf87kvcML1VKSxVGbW31hQYOZ4BDzZf8VBlLt7c7q17nGxIOsZpt9xppusLmq+ULiTKJzV6I04z+4skst3/Dxi0TOTuSymAOeQluhs5NoqYk+zu1DY3jwI/r6zloqzErEG988Xb8SrHyz7DXaRR0J1/Lgjhn9PTPsX7qzv6MPBTwy7WQ79m5xmGA==
-X-OriginatorOrg: windriver.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4df308d6-f6a9-4a16-8fc5-08df12f85fba
-X-MS-Exchange-CrossTenant-AuthSource: CH0PR11MB5332.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Sep 2026 07:10:08.0223
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 8ddb2873-a1ad-4a18-ae4e-4644631433be
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: hTRfg5omUth/lkESvenfnqjozRe1vXo6oDtMA2TGBFmh7Zjomandd74WVlW/9d4bVXhH/XJGeV8PAZow+qaeyg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA4PR11MB9177
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTE1MDEwMSBTYWx0ZWRfX1rJUDr7ByspJ
- jmpq4i9438N+pooXVBD0oDv75U4PkeNB8vN1ksaSXmvenILm4Oo2+Cefjdo/R4XT/QU5QuK+snM
- AewPehUROjUjHDby/UeVxfBIcz8TjM29J8bilhdnp/f/VTW+n+XA
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTE1MDEwMSBTYWx0ZWRfXxBLUoRBTtbK9
- lQ1E9EGFCWoqdHe1wdHSlDFyYrSnPGBtshlyfoCz88g5RErFE0g0IIeL3BQjSBcEjKYRFhGSZaO
- T+0NFrvXpDNPRxxJ5NQBPsatx98/Vq78Z8RF0M7vPJb4cNMOn1X7g98ue+KjYgNOuUstnVbJOyV
- RiJYMp4+17TXn+eacfknLYg48iKHL4ksR+58aRg08djto4Kf4oSYl9uWz0l8AziKpO7eaYsu5kP
- MH4MS/C1dGybuzy3lf3TZBDGpwfE5AdYnNBfka6CnLXWBUC8Xki1zaK88EHcVPgjBP9gSa4P+Tu
- X3EJqYVYQZJv2TjjLD4UVuqvp9wvWULd8D4stzuB6rBjlHkZ1f/Uw8B/sOJyUT3iEklr3ojKQqC
- 6UdfzfuvWnCaHrCyGDLLuvQ+U0itFM+TlmpCWY1apmCOsojUYbL3lBx/L/s7p6+lEKpv0YtsKSf
- vLJePfh0I+giIL0ycQA==
-X-Proofpoint-GUID: KjWHkw3ntzdR0Kr38oGE2KFQfxVNvuSc
-X-Proofpoint-ORIG-GUID: KjWHkw3ntzdR0Kr38oGE2KFQfxVNvuSc
-X-Authority-Analysis: v=2.4 cv=R4mWitRX c=1 sm=1 tr=0 ts=6aa8ef52 cx=c_pps
- a=4KArvT8Zi35IyF0Kdx8dHw==:117 a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19
- a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19 a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19
- a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=bi6dqmuHe4P4UrxVR6um:22 a=klDOsUkWDRETUCZYPvoE:22
- a=VwQbUJbxAAAA:8 a=t7CeM3EgAAAA:8 a=Ho_WGFeys7JuTpoeC9gA:9 a=QEXdDO2ut3YA:10
- a=FdTzh2GWekK77mhwV6Dw:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-09-15_02,2026-09-14_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- adultscore=0 phishscore=0 priorityscore=1501 impostorscore=0
- lowpriorityscore=0 bulkscore=0 malwarescore=0 spamscore=0 clxscore=1011
- suspectscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2609040000
- definitions=main-2609150101
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260911073007.22530-1-hemanth.selam@gmail.com>
 
-
-
-On 9/10/26 13:47, Christoph Hellwig wrote:
-> Adding Yun Zhou, whoch touched this area recently.
+On Fri, Sep 11, 2026 at 01:00:07PM +0530, Hemanth Selam wrote:
+> Correct ten misspellings and eight accidentally doubled words in
+> comments.  No code changes.
 > 
-> On Thu, Sep 03, 2026 at 09:37:56PM +0800, Kefeng Wang wrote:
->> xfs_btree_split_worker() calls xfs_trans_set_context() and
->> xfs_trans_clear_context() on the caller's transaction, overwriting
->> tp->t_pflags with the worker's NOFS state. When the caller already has
->> PF_MEMALLOC_NOFS set (e.g. xfs_end_ioend_write, xfs_dio_write_end_io),
->> the corrupted tp->t_pflags causes xfs_trans_free() to erroneously clear
->> the caller's NOFS protection.
->>
->> Use memalloc_nofs_save/restore with a local variable instead so
->> tp->t_pflags is never touched.
+> The doubled word in xfs_zone_alloc.c was not a duplicate: "so that is is
+> reused" is "it is" misspelt, so that one reads "so that it is reused"
+> rather than dropping a word.
 > 
-> Looks good:
+> Signed-off-by: Hemanth Selam <hemanth.selam@gmail.com>
+> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+> ---
+
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+
+> v3: dropped the Assisted-by trailer, as Carlos asked.  No change to the
+>     patch itself; the diff is byte for byte the v2 one.
 > 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> v2:
+>  - fold the two patches into one, as Carlos and Darrick asked
+>  - xfs_zone_alloc.c: "so that it is reused"; v1 dropped the second "is",
+>    which left the sentence with no subject
+>  - Darrick's Reviewed-by was given on v1; the xfs_zone_alloc.c hunk
+>    changed after that review, so please re-check that one line
 > 
-> Btw, if you have some spare time, it would be nice to kill
-> xfs_trans_set_context/xfs_trans_clear_context as follow up given that
-> they keep causing confusion.
-
-Yes, you finished reviewing this patch [1] in July. However, I'm not 
-sure about its current status. Perhaps I should ping Carlos to check?
-
-[1] 
-https://lore.kernel.org/all/20260720050522.3101824-1-yun.zhou@windriver.com/
-
-Thanks,
-Yun
+> v2: https://lore.kernel.org/all/20260910045550.54432-1-hemanth.selam@gmail.com/
+> v1: https://lore.kernel.org/all/20260904112909.8197-1-hemanth.selam@gmail.com/
+> 
+>  fs/xfs/libxfs/xfs_ag.h         | 2 +-
+>  fs/xfs/libxfs/xfs_alloc.c      | 4 ++--
+>  fs/xfs/libxfs/xfs_attr_leaf.c  | 2 +-
+>  fs/xfs/libxfs/xfs_errortag.h   | 2 +-
+>  fs/xfs/libxfs/xfs_exchmaps.c   | 2 +-
+>  fs/xfs/libxfs/xfs_format.h     | 2 +-
+>  fs/xfs/libxfs/xfs_inode_buf.c  | 2 +-
+>  fs/xfs/scrub/agheader_repair.c | 2 +-
+>  fs/xfs/scrub/alloc_repair.c    | 2 +-
+>  fs/xfs/scrub/dirtree.c         | 2 +-
+>  fs/xfs/scrub/reap.c            | 2 +-
+>  fs/xfs/xfs_bmap_item.c         | 2 +-
+>  fs/xfs/xfs_inode.c             | 2 +-
+>  fs/xfs/xfs_log_cil.c           | 2 +-
+>  fs/xfs/xfs_platform.h          | 2 +-
+>  fs/xfs/xfs_zone_alloc.c        | 2 +-
+>  fs/xfs/xfs_zone_gc.c           | 2 +-
+>  17 files changed, 18 insertions(+), 18 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
+> index fd22fe598931..ee636b66a72f 100644
+> --- a/fs/xfs/libxfs/xfs_ag.h
+> +++ b/fs/xfs/libxfs/xfs_ag.h
+> @@ -207,7 +207,7 @@ xfs_perag_next(
+>  }
+>  
+>  /*
+> - * Per-ag geometry infomation and validation
+> + * Per-ag geometry information and validation
+>   */
+>  xfs_agblock_t xfs_ag_block_count(struct xfs_mount *mp, xfs_agnumber_t agno);
+>  void xfs_agino_range(struct xfs_mount *mp, xfs_agnumber_t agno,
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index d99602bcc16f..f762dcce8d13 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+> @@ -3487,7 +3487,7 @@ xfs_alloc_read_agf(
+>  }
+>  
+>  /*
+> - * Pre-proces allocation arguments to set initial state that we don't require
+> + * Pre-process allocation arguments to set initial state that we don't require
+>   * callers to set up correctly, as well as bounds check the allocation args
+>   * that are set up.
+>   */
+> @@ -3608,7 +3608,7 @@ xfs_alloc_vextent_finish(
+>  	 * ABBA AGF deadlocks because a future allocation attempt in this
+>  	 * transaction may attempt to lock a lower number AGF.
+>  	 *
+> -	 * We can't release the AGF until the transaction is commited, so at
+> +	 * We can't release the AGF until the transaction is committed, so at
+>  	 * this point we must update the "first allocation" tracker to point at
+>  	 * this AG if the tracker is empty or points to a lower AG. This allows
+>  	 * the next allocation attempt to be modified appropriately to avoid
+> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+> index b6288395f853..2c80f4fd0b78 100644
+> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
+> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+> @@ -1715,7 +1715,7 @@ xfs_attr3_leaf_add_work(
+>  			/*
+>  			 * This freemap entry starts at the old end of the
+>  			 * leaf entry array, so we need to adjust its base
+> -			 * upward to accomodate the larger array.
+> +			 * upward to accommodate the larger array.
+>  			 */
+>  			diff = sizeof(struct xfs_attr_leaf_entry);
+>  		} else if (ichdr->freemap[i].size > 0 &&
+> diff --git a/fs/xfs/libxfs/xfs_errortag.h b/fs/xfs/libxfs/xfs_errortag.h
+> index 6de207fed2d8..f0c83f1f0b3b 100644
+> --- a/fs/xfs/libxfs/xfs_errortag.h
+> +++ b/fs/xfs/libxfs/xfs_errortag.h
+> @@ -83,7 +83,7 @@
+>  #define XFS_RANDOM_DEFAULT				100
+>  
+>  /*
+> - * Table of errror injection knobs.  The parameters to the XFS_ERRTAG macro are:
+> + * Table of error injection knobs.  The parameters to the XFS_ERRTAG macro are:
+>   *   1. The XFS_ERRTAG_ flag but without the prefix;
+>   *   2. The name of the sysfs knob; and
+>   *   3. The default value for the knob.
+> diff --git a/fs/xfs/libxfs/xfs_exchmaps.c b/fs/xfs/libxfs/xfs_exchmaps.c
+> index 3efed37cb98a..6a66b6075e0a 100644
+> --- a/fs/xfs/libxfs/xfs_exchmaps.c
+> +++ b/fs/xfs/libxfs/xfs_exchmaps.c
+> @@ -395,7 +395,7 @@ xfs_exchmaps_one_step(
+>  	/*
+>  	 * Re-add both mappings.  We exchange the file offsets between the two
+>  	 * maps and add the opposite map, which has the effect of filling the
+> -	 * logical offsets we just unmapped, but with with the physical mapping
+> +	 * logical offsets we just unmapped, but with the physical mapping
+>  	 * information exchanged.
+>  	 */
+>  	swap(irec1->br_startoff, irec2->br_startoff);
+> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> index dd0ed046fbe9..1a7a7e60a170 100644
+> --- a/fs/xfs/libxfs/xfs_format.h
+> +++ b/fs/xfs/libxfs/xfs_format.h
+> @@ -1051,7 +1051,7 @@ enum xfs_dinode_fmt {
+>   * block is 1KB in size.
+>   *
+>   * With XFS_MAX_EXTCNT_DATA_FORK_SMALL representing maximum extent count and
+> - * with 1KB sized blocks, a file can reach upto,
+> + * with 1KB sized blocks, a file can reach up to,
+>   * 1KB * (2^31) = 2TB
+>   *
+>   * This is much larger than the theoretical maximum size of a directory
+> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> index e4c3f7b24e95..0340e2189921 100644
+> --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> @@ -626,7 +626,7 @@ xfs_dinode_verify(
+>  	 * have di_nlink track the link count, even if the actual filesystem
+>  	 * only supported V1 inodes (i.e. di_onlink).  When writing out the
+>  	 * ondisk inode, it would set both the ondisk di_nlink and di_onlink to
+> -	 * the the incore di_nlink value, which is why we cannot check for
+> +	 * the incore di_nlink value, which is why we cannot check for
+>  	 * di_nlink==0 on a V1 inode.  V2/3 inodes would get written out with
+>  	 * di_onlink==0, so we can check that.
+>  	 */
+> diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
+> index 2104512f1ee1..493efa2b2f0d 100644
+> --- a/fs/xfs/scrub/agheader_repair.c
+> +++ b/fs/xfs/scrub/agheader_repair.c
+> @@ -1352,7 +1352,7 @@ xrep_iunlink_mark_ondisk(
+>  
+>  /*
+>   * Walk an iunlink bucket's inode list.  For each inode that should be on this
+> - * chain, clear its entry in in iunlink_bmp because it's ok and we don't need
+> + * chain, clear its entry in iunlink_bmp because it's ok and we don't need
+>   * to touch it further.
+>   */
+>  STATIC int
+> diff --git a/fs/xfs/scrub/alloc_repair.c b/fs/xfs/scrub/alloc_repair.c
+> index dce6ab0429dc..84ae88ca027a 100644
+> --- a/fs/xfs/scrub/alloc_repair.c
+> +++ b/fs/xfs/scrub/alloc_repair.c
+> @@ -338,7 +338,7 @@ xrep_cntbt_extent_cmp(
+>  }
+>  
+>  /*
+> - * Sort the free extents by length so so that we can put the records into the
+> + * Sort the free extents by length so that we can put the records into the
+>   * cntbt in the correct order.  Don't let userspace kill us if we're resorting
+>   * after allocating btree blocks.
+>   */
+> diff --git a/fs/xfs/scrub/dirtree.c b/fs/xfs/scrub/dirtree.c
+> index b2cf6e5439d9..469ba30670f0 100644
+> --- a/fs/xfs/scrub/dirtree.c
+> +++ b/fs/xfs/scrub/dirtree.c
+> @@ -994,7 +994,7 @@ xchk_dirtree(
+>  	return error;
+>  }
+>  
+> -/* Does the directory targetted by this scrub have no parents? */
+> +/* Does the directory targeted by this scrub have no parents? */
+>  bool
+>  xchk_dirtree_parentless(const struct xchk_dirtree *dl)
+>  {
+> diff --git a/fs/xfs/scrub/reap.c b/fs/xfs/scrub/reap.c
+> index fcd14c1703ea..d1f4b7159af2 100644
+> --- a/fs/xfs/scrub/reap.c
+> +++ b/fs/xfs/scrub/reap.c
+> @@ -172,7 +172,7 @@ static inline bool xreap_is_dirty(const struct xreap_state *rs)
+>  }
+>  
+>  /*
+> - * Decide if we need to roll the transaction to clear out the the log
+> + * Decide if we need to roll the transaction to clear out the log
+>   * reservation that we allocated to buffer invalidations.
+>   */
+>  static inline bool xreap_want_binval_roll(const struct xreap_state *rs)
+> diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+> index 89f6e79a955f..aa5b41629747 100644
+> --- a/fs/xfs/xfs_bmap_item.c
+> +++ b/fs/xfs/xfs_bmap_item.c
+> @@ -339,7 +339,7 @@ xfs_bmap_update_get_group(
+>  
+>  	/*
+>  	 * Bump the intent count on behalf of the deferred rmap and refcount
+> -	 * intent items that that we can queue when we finish this bmap work.
+> +	 * intent items that we can queue when we finish this bmap work.
+>  	 * This new intent item will bump the intent count before the bmap
+>  	 * intent drops the intent count, ensuring that the intent count
+>  	 * remains nonzero across the transaction roll.
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 030a7c8f2c12..621513d7215e 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -2669,7 +2669,7 @@ xfs_irele(
+>  }
+>  
+>  /*
+> - * Ensure all commited transactions touching the inode are written to the log.
+> + * Ensure all committed transactions touching the inode are written to the log.
+>   */
+>  int
+>  xfs_log_force_inode(
+> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+> index 639f875a8fb2..defd121690f5 100644
+> --- a/fs/xfs/xfs_log_cil.c
+> +++ b/fs/xfs/xfs_log_cil.c
+> @@ -1369,7 +1369,7 @@ xlog_cil_cleanup_whiteouts(
+>   * allocation context. However, we do not want to block on memory reclaim
+>   * recursing back into the filesystem because this push may have been triggered
+>   * by memory reclaim itself. Hence we really need to run under full GFP_NOFS
+> - * contraints here.
+> + * constraints here.
+>   */
+>  static void
+>  xlog_cil_push_work(
+> diff --git a/fs/xfs/xfs_platform.h b/fs/xfs/xfs_platform.h
+> index 5d542e95fe44..745d715b4c64 100644
+> --- a/fs/xfs/xfs_platform.h
+> +++ b/fs/xfs/xfs_platform.h
+> @@ -153,7 +153,7 @@ static inline void delay(long ticks)
+>  /*
+>   * XFS wrapper structure for sysfs support. It depends on external data
+>   * structures and is embedded in various internal data structures to implement
+> - * the XFS sysfs object heirarchy. Define it here for broad access throughout
+> + * the XFS sysfs object hierarchy. Define it here for broad access throughout
+>   * the codebase.
+>   */
+>  struct xfs_kobj {
+> diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
+> index bdbb60cc5d5b..b8230b5bf4e3 100644
+> --- a/fs/xfs/xfs_zone_alloc.c
+> +++ b/fs/xfs/xfs_zone_alloc.c
+> @@ -826,7 +826,7 @@ xfs_get_cached_zone(
+>  }
+>  
+>  /*
+> - * Stash our zone in the inode so that is is reused for future allocations.
+> + * Stash our zone in the inode so that it is reused for future allocations.
+>   *
+>   * The open_zone structure will be pinned until either the inode is freed or
+>   * until the cached open zone is replaced with a different one because the
+> diff --git a/fs/xfs/xfs_zone_gc.c b/fs/xfs/xfs_zone_gc.c
+> index 5fdcf98a2133..54b70ed2922f 100644
+> --- a/fs/xfs/xfs_zone_gc.c
+> +++ b/fs/xfs/xfs_zone_gc.c
+> @@ -46,7 +46,7 @@
+>   * before remapping.
+>   *
+>   * Once a zone does not contain any valid data, be that through GC or user
+> - * block removal, it is queued for for a zone reset.  The reset operation
+> + * block removal, it is queued for a zone reset.  The reset operation
+>   * carefully ensures that the RT device cache is flushed and all transactions
+>   * referencing the rmap have been committed to disk.
+>   */
+> -- 
+> 2.48.1
+> 
+> 
