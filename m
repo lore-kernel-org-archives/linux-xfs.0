@@ -1,29 +1,45 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49BB3217723;
-	Tue, 15 Sep 2026 06:39:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9A11400E1A;
+	Tue, 15 Sep 2026 06:56:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789454367; cv=none; b=pAGw04bfAq1E84fcd9Tf51w5pq73a5eUKQASTDjlj0j7MgD3IMghdfI52GFedwWQ4geJXl0mNNwgcHiQh4mWWvxt1NfRq3o6iFj2m8bCkENJbIoehGVO/R8B2VNWJ1hGnX3uOgTfcjcOc/vx9LNz2RG6oOAkw3UP+7D5vhD6+sI=
+	t=1789455367; cv=none; b=WtPVHr2kAVY0ZG+o1gSzOz1Vx27qeCWWFuCaVjsTCqIWjREwXuqo9cN7Orgpj+0JGZJJFen9anfs9ZaxVrFYcQEnaTRnFHqca4JcIbQAsh7MLvaWBNxiIKsSMUXrWHtLssmGXg2zuhmXJlKaoJ3p9Feh1r94+eSqg6YCOZmsRzc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789454367; c=relaxed/simple;
-	bh=ymuOc6ZkV3PbxOLugLkkCRimy3zoBZq7/eJaiFb5vdI=;
+	s=arc-20240116; t=1789455367; c=relaxed/simple;
+	bh=8IdLlPXvoe31kO6jKmCMqgiDXCZ5lM0ZDO9Hn1L/k7o=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Vz2Y4IUlgjNwvo/nD2WbskU71GrSI8+squD3bTmrz2n7Of7m/41IWcZUla/pNlemUf6M3jAMYQIpOd+wcwFNTAyMohbWiaJAyaaw+Eke2H224QYmcSVeDNnGxcm8gNDxPIxllb5QqiTgjphyYs6BBLmPQVA9+4kcGnyRCjuPtjI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 0ADE268C4E; Tue, 15 Sep 2026 08:39:23 +0200 (CEST)
-Date: Tue, 15 Sep 2026 08:39:22 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, cem@kernel.org, stable@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 6/6] xfs: check di_forkoff correctly in scrub
-Message-ID: <20260915063922.GB13345@lst.de>
-References: <178910161988.174887.8958318922224347752.stgit@frogsfrogsfrogs> <178910162147.174887.15828411239184280666.stgit@frogsfrogsfrogs> <20260911150745.GA26822@lst.de> <20260911155919.GG6265@frogsfrogsfrogs>
+	 Content-Type:Content-Disposition:In-Reply-To; b=OuKbS64DDGpajg8BDbwfqz4bYl/1HhITyQUNI9XSuOuq5L5PzLThvZs/Q7LvK84PilGrmGPbhmAdMzzNvka/0vGACCOYGw1k7RSmsup2Lzrn47lkK+Vh3R3ofAGhF2AKAEgVZZWrvAyv3Jrl2WHLvgvEofuhilDSSLBehAee4Bo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=ztwZ5NKQ; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ztwZ5NKQ"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=AY83ECO/YDlPLhw6AJgiaR/IIzS36P8IDca1RoNPMsI=; b=ztwZ5NKQmPq7CMbG9KCDQbCKFo
+	PMfaei3Q/Scd4P2NIHEHR/4xon9ChquFI6c3Nj3eqHhOSmCkRgmTEnLejD83p/TEMHqKBblLuDHLL
+	h4C0vi6/qu4nxjNsW0vEtc+r2FTXRz1fI352uv3kyR4BenZMDpyOH32+wFgCR73DHl+hQq8n1ehSx
+	7LGu4jkwyJ3Ix5pfzIm2KzkBn2OrZLqpd0akBSMK8YBgrZrZ0YEl5Rk5JArdl+I5PEKR9PdJAkkXp
+	t49e5ZUz+3G4j1IQxQUauSXxkO1x8LxkknbHRYkDHMM+7Aa+34J9NCOFr9oLxPKknBV9ro6PlUZEQ
+	Z0Gqn/0Q==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1x6N5K-00000005Osr-0ay1;
+	Tue, 15 Sep 2026 06:56:06 +0000
+Date: Mon, 14 Sep 2026 23:56:06 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Zorro Lang <zlang@kernel.org>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-btrfs@vger.kernel.org, Anand Suveer Jain <asj@kernel.org>,
+	Chao Yu <chao@kernel.org>
+Subject: Re: [PATCH 1/5] fstests: consolidate _require_fs_sysfs and
+ _require_fs_sysfs_attr
+Message-ID: <aqjsBs6QUtIukk05@infradead.org>
+References: <20260914172509.3799016-1-zlang@kernel.org>
+ <20260914172509.3799016-2-zlang@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -32,28 +48,26 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260911155919.GG6265@frogsfrogsfrogs>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20260914172509.3799016-2-zlang@kernel.org>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Fri, Sep 11, 2026 at 08:59:19AM -0700, Darrick J. Wong wrote:
-> On Fri, Sep 11, 2026 at 05:07:45PM +0200, Christoph Hellwig wrote:
-> > On Thu, Sep 10, 2026 at 10:54:58PM -0700, Darrick J. Wong wrote:
-> > > The di_forkoff check in xchk_dinode is incorrect, according to LOLLM.
-> > > XFS_DFORK_BOFF returns a byte count relative to the start of the literal
-> > > area, not the start of the inode.  Therefore, this check won't flag
-> > > di_forkoff values that are larger than the literal area but not the
-> > > inode size itself.  Fix this check; sadly the old APTR code was correct.
-> > 
-> > The fi looks good, but I really which we could encapsulate this
-> > magic >> 3 a bit better (here and elsewhere).
+On Tue, Sep 15, 2026 at 01:25:05AM +0800, Zorro Lang wrote:
+> There is heavy overlap between _require_fs_sysfs and
+> _require_fs_sysfs_attr, and their ambiguous names make it difficult
+> to tell them apart.
 > 
-> I /did/ think about adding a cleanup to do:
-> 
-> #define XFS_B_TO_FORKOFF(b)	((b) >> 3)
-> #define XFS_FORKOFF_TO_B(f)	((f) << 3)
-> 
-> and then code like this:
+> So merge them into a single function with "_dev_" included in the
+> name to distinguish per-device entries from other paths like
+> /sys/fs/$FSTYP/features/.
 
-That would be nice.  Especially with a comment explaining the odd
-encoding a bit more.
+I have a bit of a hard time understanding this message.  From looking
+at the diff this seems to:
 
+ - rename _has_fs_sysfs_attr to _has_fs_sysfs_dev_attr
+ - rename _get_fs_sysfs_attr to _get_fs_sysfs_dev_attr
+ - rename _set_fs_sysfs_attr to _set_fs_sysfs_dev_attr
+ - rename _require_fs_sysfs_attr to _require_fs_sysfs_dev_attr
+ - remove _require_fs_sysfs
+
+right?  Maybe spell that out and split the pure renames from code
+removal?
