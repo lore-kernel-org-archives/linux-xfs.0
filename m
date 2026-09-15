@@ -1,46 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5204946C4AF;
-	Tue, 15 Sep 2026 09:19:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0037396D28
+	for <linux-xfs@vger.kernel.org>; Tue, 15 Sep 2026 09:32:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789463983; cv=none; b=CKkZ7J3qpZJkovgqmv9Kq1MAy4v8LZJ7cPlSXy9P12xs+afXHIz11IdJmUUGEEFY/2AI9N2fsZsk4t4yfNI8broXJVcCznng7zGm7fC1I/oBI54pRPGY8u8vjiw6HMR//mMQNHyztbjc+ZFh5uhZzaB+u4b4talHO/c2m/ujEaM=
+	t=1789464725; cv=none; b=PdDhR3LKtUwQLWNU3v9JYEvnydg3xFVsevnOjljby1bvH1yXlyh3x8Eoieko6Qz9wM8B2mvfjE40hG+k7SZ6zJFOR4JzveEAy71RuaEtyOtZhT5YTza6vTH12vi8SGM95EzXPHfZkdpt1G2XKbZKq8c3OA9BNYxAvv5pAThLOeI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789463983; c=relaxed/simple;
-	bh=atXfnM0HGFzNdiaoXC0xldQViYj+oXPhnhdhrh23qSU=;
+	s=arc-20240116; t=1789464725; c=relaxed/simple;
+	bh=ya/4JKPSuy57UyDwrtg4ysCxoNorSeKcfEfSB/0aIp0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PbNXLv+v0iarkNLKPACttg456RDQcGEWYJQ6N8DEM41F0p0HaW1LdLPrBhmm7M+CUFHahrdD0tYcKXFd4Htq+/nRDyaC5ActwjfLgzxC3YiJVVnE6cQYiagTuVQIC8juD5gMVWrnxXYH13pyp1G1yqBbLPOTmai25U+WgYXm12Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ne36Z5E0; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=Vi8BZwTZfE1eknE/IxnXcHj8TbguEgNTqp4DStIbCxzay70Sfcd2sNVJn4jedA8G5A3yA7mn77koWbLUfnA71HhWYnY+16pKI6vvE5Av2F1gdRX1b6re3VO+1WHEdF0XcW7n3lMwkTLfTCNaPZtBMxYYOMJzHdjihQJeg16pEV8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=akrClmXB; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ne36Z5E0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8564B1F000FF;
-	Tue, 15 Sep 2026 09:19:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="akrClmXB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 54E7E1F000FF;
+	Tue, 15 Sep 2026 09:32:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789463981;
-	bh=9WB1e/2MQV+b7qkpkJIoykj9JwyVRXM7+/yJBvrMtOA=;
+	s=k20260515; t=1789464723;
+	bh=m1QtDS6G9MQ7wP1BO+RBE/zqB8nR/dkfrdevx94wqr4=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=ne36Z5E0okmsrSkA9AWinJI6ebJIl58mipyEkrPsaDOJ/ieGL0xltqR4Jwi9rgoMN
-	 3GZfMmiMEAGhIpLhDuG+IQXOa2GdggfbRoaV03z2+F4qQE0S7/42f/meL9IPQELO1I
-	 fFRpRUPkSx/qY0SPDsRLCH4UVJzL425lMbb6DbeFBQV3I5o7ptser7WGm+tyqp+vj9
-	 q68JoQrkx+Owk6y3IIHgwqjlytv3nU70huLEZu6wuqIIUmBBCv9jwfqhuAzyRHrJdk
-	 9QE/Q+1q/hXfMndQCXHPqZCMnkbt2hM6DADCt7KFdrbghMP7VMmpbNRMayjv4r8spI
-	 HiErzATK+pYoA==
-Date: Tue, 15 Sep 2026 11:19:34 +0200
+	b=akrClmXBzwyeHHSrpwYoygexvKJ0Rd0YjIWzwFj8zuzwLK1J6lrksTHyCmBBOnsDz
+	 IEYFKuh/NJ5TT1f5n45RnRcEE3uIJ0qhZQSALWY/S25lIYjjFOfU/YH9ewQYUEGPzH
+	 7iIOaW2PIHIYwD7FuiHx/bEpUQPsZukqOOJ/V0G/MvOHKB5sPoAcmfBcH6i08KV58d
+	 NEBkwjgsraNko3/W3K18rZIFpYMOrvoH3SHEDWNuVRVRW85qT1b/lVdBq6nIGFUHaa
+	 1vDFMzdXsWz0ML/RTmdKbuuRGrz3AwzC2dnlc2DGdT2StNbeTARIo8gpr5ue8dkz22
+	 CpoDWOGE8iJEg==
+Date: Tue, 15 Sep 2026 11:31:58 +0200
 From: Carlos Maiolino <cem@kernel.org>
-To: "Zhou, Yun" <yun.zhou@windriver.com>
-Cc: Christoph Hellwig <hch@infradead.org>, 
-	Kefeng Wang <wangkefeng.wang@huawei.com>, brauner@kernel.org, djwong@kernel.org, akpm@linux-foundation.org, 
-	vbabka@kernel.org, surenb@google.com, mhocko@suse.com, brendan.jackman@linux.dev, 
-	hannes@cmpxchg.org, ziy@nvidia.com, david@kernel.org, qi.zheng@linux.dev, 
-	shakeel.butt@linux.dev, ljs@kernel.org, linux-xfs@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [PATCH] xfs: fix NOFS state corruption in btree split worker
-Message-ID: <aqkKPU8HNkt_uV-m@nidhogg.toxiclabs.cc>
-References: <20260902134417.c44503a1d65533f81fb1c391@linux-foundation.org>
- <20260903133756.2006032-1-wangkefeng.wang@huawei.com>
- <aqJEWmUN3Jsajoyl@infradead.org>
- <38377447-ffa2-43ef-bbfa-43d05decda1e@windriver.com>
+To: Kefeng Wang <wangkefeng.wang@huawei.com>
+Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <djwong@kernel.org>, 
+	Shakeel Butt <shakeel.butt@linux.dev>, Brian Foster <bfoster@redhat.com>, 
+	Dave Chinner <dchinner@redhat.com>
+Subject: Re: [PATCH RESEND 0/2] xfs: fix NOFS state corruption in btree split
+ worker
+Message-ID: <aqkQS4QJw25V0oLo@nidhogg.toxiclabs.cc>
+References: <20260911104227.2028941-1-wangkefeng.wang@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -49,65 +44,41 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <38377447-ffa2-43ef-bbfa-43d05decda1e@windriver.com>
+In-Reply-To: <20260911104227.2028941-1-wangkefeng.wang@huawei.com>
 
-On Tue, Sep 15, 2026 at 03:09:57PM +0800, Zhou, Yun wrote:
+Now with some more context about this...
+
+On Fri, Sep 11, 2026 at 06:42:25PM +0800, Kefeng Wang wrote:
+> xfs_trans_set_context() overwrites tp->t_pflags, dropping the
+> caller's NOFS protection. Replace it with local
+> memalloc_nofs_save()/restore() to fix it, also drop the obsolete
+> kswapd flag inheritance, which simplifying the fix.
 > 
+> Note:
+> - rebased on v7.3-rc2
+> - Add ACK/RB
+> - split the patches, suggested by Christoph Hellwig[1]
 > 
-> On 9/10/26 13:47, Christoph Hellwig wrote:
-> > Adding Yun Zhou, whoch touched this area recently.
-> > 
-> > On Thu, Sep 03, 2026 at 09:37:56PM +0800, Kefeng Wang wrote:
-> > > xfs_btree_split_worker() calls xfs_trans_set_context() and
-> > > xfs_trans_clear_context() on the caller's transaction, overwriting
-> > > tp->t_pflags with the worker's NOFS state. When the caller already has
-> > > PF_MEMALLOC_NOFS set (e.g. xfs_end_ioend_write, xfs_dio_write_end_io),
-> > > the corrupted tp->t_pflags causes xfs_trans_free() to erroneously clear
-> > > the caller's NOFS protection.
-> > > 
-> > > Use memalloc_nofs_save/restore with a local variable instead so
-> > > tp->t_pflags is never touched.
-> > 
-> > Looks good:
-> > 
-> > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > 
-> > Btw, if you have some spare time, it would be nice to kill
-> > xfs_trans_set_context/xfs_trans_clear_context as follow up given that
-> > they keep causing confusion.
+> [1] https://lore.kernel.org/linux-mm/aqOp035i41XIrDXg@infradead.org/
 > 
-> Yes, you finished reviewing this patch [1] in July. However, I'm not sure
-> about its current status. Perhaps I should ping Carlos to check?
+> Kefeng Wang (2):
+>   xfs: remove dead kswapd flag inheritance from btree split worker
+
+I don't think Christoph suggested you to send this patch again as this
+has been already picked up by Andrew,
+
+>   xfs: fix NOFS state corruption in btree split worker
+
+but only this...
+
+Let me confirm it then I'll pick just this one up if that's the case.
+
+
 > 
-> [1]
-> https://lore.kernel.org/all/20260720050522.3101824-1-yun.zhou@windriver.com/
+>  fs/xfs/libxfs/xfs_btree.c | 22 ++++++----------------
+>  fs/xfs/xfs_platform.h     |  4 ----
+>  2 files changed, 6 insertions(+), 20 deletions(-)
+> 
+> -- 
+> 2.55.0
 
-Ok, now I see why Kefeng Wang re-sent these patches...
-
-The first submission in July slipped through the cracks (I was on vacation
-that specific week FWIW). Feel free to give me a heads up if something
-don't get pulled in 1 or 2 weeks.
-
-This one though is buried in a multi-subsystem series because you sent
-the patch In-Reply-To one of the emails in that thread.
-Please don't send patches as In-Reply-To something else, specially to a
-multi-subsystem series because it's really easy to skip such patches.
-
-And then I got a "Re-Send" series with zero information why it has
-been re-sent, and one of the patches in that series was already picked
-up by Andrew. So I can't simply merge that here and mess up with what
-Andrew already planned.
-
-If this patch can be merged before:
-
-commit 14ec230f93fa928090507cfdc67ca67e928d0c9f		(linux-mm)
-Author: Kefeng Wang <wangkefeng.wang@huawei.com>
-Date:   Wed Sep 2 21:16:50 2026 +0800
-
-    xfs: remove dead kswapd flag inheritance from btree split worker
-
-then please re-send it, otherwise wait for the above patch to land in
-Linus's tree, rebase and re-send.
-
-Cheers,
-Carlos
