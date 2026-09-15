@@ -1,73 +1,97 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta0.migadu.com (out-155.mta0.migadu.com [91.218.175.155])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADB394A3F0F;
-	Tue, 15 Sep 2026 14:46:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D8DE4A4EED
+	for <linux-xfs@vger.kernel.org>; Tue, 15 Sep 2026 14:48:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.155
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789483622; cv=none; b=shb0Q+ZWDy1O19UxvCUFhTaj4EgaQKnzY1U6Aslmhg5XYl7U4CPOMiQipEjcJAD5JrTIWIN//VRks4Z40yhWNeOEshUENO6HG+EPRODHjt2fqZigRBF2ryQ1E3mTwWRm9kkTYn6C5V1HFb1d43cYv2+ebwtZkRn9BZPwcQAH0vE=
+	t=1789483714; cv=none; b=fiBtThCpxNkmhm3ThohMHRnO7m54Id6/4ZohQ/EDEw/ZyWvvff7xaYAvVD0h+ojgsDQhGGGnmu82DnHZbvDzsBfgDZzFgyUoSA9Jb6ltrNa4rJwXklfo6d/iH9RVnviFvfJaVU+8JMIYnLz9NLg9Hwh4XBgtunQWQxHCqbGXQ2Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789483622; c=relaxed/simple;
-	bh=GzlxikgKcP58QrC2XpftUX6QdHoPzGsBNgyfudO1yqQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fAfXYTrhTmnsKaw0IJOO+FuLy1iCvNNPyc59Kq77SdzADjlsOhQtgDc0e5JOJwp5PwCyfV5Im7RefSF3nKEg1M/kICbA3XO+CpFKB9sSnIAnPnPtoSQThxIxIMfHwtJoc+eynxE5DNU0miN84lEb2uxEKKxkJ5n4yebO/6HDo/4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DFX8FH8j; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789483714; c=relaxed/simple;
+	bh=58sNhp/bc3J/r6FUCPkydNTfvMea6X+K8puzGUs7pjA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=JVOvJ024JCVeRtNOngLrnnRUMlfr5ViYeqik7QwfX8XFPkDFPaiY20JNoKe64iN9ZPTizuvkyPhEWGgpAM33oC6cGwBVTaTy7L24Y7/JHodTP7NFuexZNt3OEjV8lpP0wt3lyeb7u5m/GKIcG6AsrWDc8s45trEI052ppIjudcI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=k3I5SbGN; arc=none smtp.client-ip=91.218.175.155
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DFX8FH8j"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CB3301F000FF;
-	Tue, 15 Sep 2026 14:46:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789483615;
-	bh=35qZg+bj5nGKRVslcAVBYHun+Ac6P3OZO7Vfrb8Jcig=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=DFX8FH8j3W04/KOTNATMYaXoiZDcrbW7LMEnqwlAHnX3rv26rCWonRnT2a8JihAtr
-	 ITQRIvYnN5moZDne0ZWqJR8MnOcTxFNqwqQKCFPxTqAswOhUA5ZmykbfoWRdnOZt0m
-	 994i97lW7Ke5/KZXMJCvD0zG1kf4dCCDkTSC6Vwjc72OLk3Kua+pSssCJNzLOzg5hl
-	 ALzs3J43Ck2+5AuNAwhXo+qwoICOHmyfBAVImtCOury76j6eEcofz8VgxE3BmzxqZq
-	 i0enQx3BGShKhDeN0dfQ0UpHpAW1dG10oQcu07qC5IYWpy41CD1KLUnQpNFVQ0aXrc
-	 JhdgPhqqZW3NA==
-Date: Tue, 15 Sep 2026 22:46:48 +0800
-From: Zorro Lang <zlang@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>, 
-	Anand Suveer Jain <asj@kernel.org>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	linux-btrfs@vger.kernel.org, Chao Yu <chao@kernel.org>
-Subject: Re: [PATCH 2/5] common/sysfs: adjust function naming
-Message-ID: <aqlXp3ySGW8VCQIk@zlang-mailbox>
-Mail-Followup-To: Christoph Hellwig <hch@infradead.org>, 
-	Anand Suveer Jain <asj@kernel.org>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	linux-btrfs@vger.kernel.org, Chao Yu <chao@kernel.org>
-References: <20260914172509.3799016-1-zlang@kernel.org>
- <20260914172509.3799016-3-zlang@kernel.org>
- <aqjsZZD4RPVK-uBn@infradead.org>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="k3I5SbGN"
+X-Envelope-To: linux-xfs@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=58sNhp/bc3J/r6FUCPkydNTfvMea6X+K8puzGUs7pjA=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1789483709; v=1; x=1790088509;
+ b=k3I5SbGNuNj0dSMdjoRKUjTDgcp0/YLmlkPW1yZfvLLp0czORhWhFzRjuu0JkKF9YPOaUOGY
+ TNTN+M6ErB1cK2lvNmYfpXIcx6nzFVrKrYeDIgvBkrmjD4coNLsxlVTvaIOHW2EUAg13Ci5bzeW
+ X0kw/ZQs0ZxGzUnUfRFEwRWE=
+X-Envelope-To: linux-xfs@vger.kernel.org
+Received: by mta10.migadu.com with ESMTPS id 5b23032ef28ca6da;
+	Tue, 15 Sep 2026 14:48:19 +0000
+X-Mizu-Trace-ID: 5b23032ef28ca6da
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <ed224f94-f605-4be0-8a0a-0b3d481e46ae@linux.dev>
+Date: Tue, 15 Sep 2026 15:48:13 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aqjsZZD4RPVK-uBn@infradead.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [bug report] fstests generic/774 hang again
+To: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+ "Darrick J. Wong" <djwong@kernel.org>
+References: <aqkP9CTUvlC2YCIb@shinmob>
+ <98190f62-ccc3-49df-934d-f168e293c485@linux.dev> <aqkv-2opTlWD6bzU@shinmob>
+Content-Language: en-US
+From: John Garry <john.garry@linux.dev>
+In-Reply-To: <aqkv-2opTlWD6bzU@shinmob>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Mon, Sep 14, 2026 at 11:57:41PM -0700, Christoph Hellwig wrote:
-> On Tue, Sep 15, 2026 at 01:25:06AM +0800, Zorro Lang wrote:
-> > Add the _dev_ infix to helper functions associated with
-> > /sys/fs/$FSTYP/<devices> to distinguish them from upcoming
-> > /sys/fs/$FSTYP/features/ related helpers.
+On 9/15/26 12:48, Shin'ichiro Kawasaki wrote:
+> On Sep 15, 2026 / 11:00, John Garry wrote:
+>> On 9/15/26 10:34, Shin'ichiro Kawasaki wrote:
+>>> I observe the fstests test case generic/774 hangs, when I run it for xfs on 8GiB
+>>> TCMU fileio devices. Actually I once reported this hang symptom in last October,
+>>> and Darrick and John kindly took some actions [1]. Since then, the hang
+>>> disappeared and I have not observed the hang almost one year. However, my test
+>>> system started reporting the hang again last week.
+>>>
+>>> [1] https://lore.kernel.org/linux-xfs/cmk52aqexackyz65phxgme55a3tdrermo3o4skr4lo4pwvvvcp@jmcblnfikbp2/#t
+>>
+>> This was the series to resolve, I think:
+>> https://lore.kernel.org/fstests/176279908967.605950.2192923313361120314.stgit@frogsfrogsfrogs/T/#t
+>>
+>> As an experiment, can you reduce the file size further, like:
+>>
+>> --- a/tests/generic/774
+>> +++ b/tests/generic/774
+>> @@ -29,7 +29,7 @@ aw_bsize=$(_max "$awu_min_write" "$((awu_max_write/4))")
+>>   fsbsize=$(_get_block_size $SCRATCH_MNT)
+>>
+>>   threads=$(_min "$(($(nproc) * 2 * LOAD_FACTOR))" "100")
+>> -filesize=$((aw_bsize * threads * 10))
+>> +filesize=$((aw_bsize * threads))
+>>   depth=$threads
+>>   aw_io_size=$((filesize / threads))
+>>   aw_io_inc=$aw_io_size
 > 
-> Should these even exist as separate helper?  And if so they probably
-> should have btrfs in the names?
-
-Hmm... as far as I know, btrfs is the only filesystem that exposes this
-"policy" concept under /sys/fs/$FSTYP/ (correct me if I'm wrong). I'm
-not sure if this was intended to be a generic design; if not, it makes
-sense to add the btrfs prefix and move it over to common/btrfs.
-
-These helpers were originally introduced by Anand. *Anand*, what do you think?
-If you agree that too, I can help to do that in next version.
-
-Thanks,
-Zorro
-
+> Thanks for the response. I repeated the test case 100 times with the change
+> above, and I did not observe the hang. The change looks avoiding the hang.
 > 
+>>
+>>>
+>>> FYI, here I attache the kernel message [2].
+>>
+>> Is mainline baseline hanging, i.e. v7.3-rc2?
+> 
+> I will try this out tomorrow.
+
+thanks
+
+About the kernel code, I am wondering if using IOMAP_DIO_FORCE_WAIT for 
+CoW-based atomics could help avoid this issue as we seem to be bogged 
+down in lock contention.
+
