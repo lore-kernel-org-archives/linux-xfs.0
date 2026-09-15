@@ -1,101 +1,113 @@
-Received: from canpmsgout01.his.huawei.com (canpmsgout01.his.huawei.com [113.46.200.216])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F238429CEE
-	for <linux-xfs@vger.kernel.org>; Tue, 15 Sep 2026 09:14:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.216
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5204946C4AF;
+	Tue, 15 Sep 2026 09:19:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789463677; cv=none; b=u1IxHluXNLmHa1pR9iMgcRKxWchTrjY/PmFeteTvxcm6uqUSrwLiPwrd0c5N8rukZMr4wfr2iqLzkZFKJ6FhaSFnivI4F5qu6n0o3atXHGpAu7bPlePUzjRrpQB5iDRxCHez/LXtl0Y9UgBLM6bu0jrZ3oF+kwJ7YHSQ2eOIZ30=
+	t=1789463983; cv=none; b=CKkZ7J3qpZJkovgqmv9Kq1MAy4v8LZJ7cPlSXy9P12xs+afXHIz11IdJmUUGEEFY/2AI9N2fsZsk4t4yfNI8broXJVcCznng7zGm7fC1I/oBI54pRPGY8u8vjiw6HMR//mMQNHyztbjc+ZFh5uhZzaB+u4b4talHO/c2m/ujEaM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789463677; c=relaxed/simple;
-	bh=0n6AdGVS5P+eF2ga1YxPl4XDc/wekF1pE10Og/Yd7Ec=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=kQIxRSa2XqOvq6TsPI/DIZJTOwNZDl9Av4YtBvuYhHhGSxHOLz0nY6AK2L63Dkyt6QBHIZt/qgd9xezh+CmV6B1F3Owdp2mdz2C9uuhoHFj5mdHkoxcKzlAOUNAOaB61FYiAe+235DQjCM5e9BF/PSlb+5MoQNcrtElMrmSb7EU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=EV+8MFXt; arc=none smtp.client-ip=113.46.200.216
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	s=arc-20240116; t=1789463983; c=relaxed/simple;
+	bh=atXfnM0HGFzNdiaoXC0xldQViYj+oXPhnhdhrh23qSU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=PbNXLv+v0iarkNLKPACttg456RDQcGEWYJQ6N8DEM41F0p0HaW1LdLPrBhmm7M+CUFHahrdD0tYcKXFd4Htq+/nRDyaC5ActwjfLgzxC3YiJVVnE6cQYiagTuVQIC8juD5gMVWrnxXYH13pyp1G1yqBbLPOTmai25U+WgYXm12Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ne36Z5E0; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="EV+8MFXt"
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=J2zW61WVOZY4rw4igsUliAvDl4bDTDdHAiPPtHE50lg=;
-	b=EV+8MFXtwxVxBXnTTXaeylroocrOm9CRKtWyuSRTHpJqwzGGfbhaq77xBnpfuNR42ajww03ec
-	ZtjUpemjdnI0v4CEqK2Tp6OF8+CfoHHUX0DG2Giw/jlbpriQigy8Xb6I49WWJ1zvRcyuel17JhW
-	ezhG1uatEvLjRlGZR9WI5HI=
-Received: from mail.maildlp.com (unknown [172.19.162.197])
-	by canpmsgout01.his.huawei.com (SkyGuard) with ESMTPS id 4hkbdG36TMz1T4Fq;
-	Tue, 15 Sep 2026 17:02:42 +0800 (CST)
-Received: from kwepemk300003.china.huawei.com (unknown [7.202.195.93])
-	by mail.maildlp.com (Postfix) with ESMTPS id 72D6C40579;
-	Tue, 15 Sep 2026 17:14:22 +0800 (CST)
-Received: from [10.174.177.243] (10.174.177.243) by
- kwepemk300003.china.huawei.com (7.202.195.93) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.45; Tue, 15 Sep 2026 17:14:20 +0800
-Message-ID: <954e1e73-3507-442c-aa95-569dd2e908a8@huawei.com>
-Date: Tue, 15 Sep 2026 17:14:18 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ne36Z5E0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8564B1F000FF;
+	Tue, 15 Sep 2026 09:19:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789463981;
+	bh=9WB1e/2MQV+b7qkpkJIoykj9JwyVRXM7+/yJBvrMtOA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=ne36Z5E0okmsrSkA9AWinJI6ebJIl58mipyEkrPsaDOJ/ieGL0xltqR4Jwi9rgoMN
+	 3GZfMmiMEAGhIpLhDuG+IQXOa2GdggfbRoaV03z2+F4qQE0S7/42f/meL9IPQELO1I
+	 fFRpRUPkSx/qY0SPDsRLCH4UVJzL425lMbb6DbeFBQV3I5o7ptser7WGm+tyqp+vj9
+	 q68JoQrkx+Owk6y3IIHgwqjlytv3nU70huLEZu6wuqIIUmBBCv9jwfqhuAzyRHrJdk
+	 9QE/Q+1q/hXfMndQCXHPqZCMnkbt2hM6DADCt7KFdrbghMP7VMmpbNRMayjv4r8spI
+	 HiErzATK+pYoA==
+Date: Tue, 15 Sep 2026 11:19:34 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: "Zhou, Yun" <yun.zhou@windriver.com>
+Cc: Christoph Hellwig <hch@infradead.org>, 
+	Kefeng Wang <wangkefeng.wang@huawei.com>, brauner@kernel.org, djwong@kernel.org, akpm@linux-foundation.org, 
+	vbabka@kernel.org, surenb@google.com, mhocko@suse.com, brendan.jackman@linux.dev, 
+	hannes@cmpxchg.org, ziy@nvidia.com, david@kernel.org, qi.zheng@linux.dev, 
+	shakeel.butt@linux.dev, ljs@kernel.org, linux-xfs@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+Subject: Re: [PATCH] xfs: fix NOFS state corruption in btree split worker
+Message-ID: <aqkKPU8HNkt_uV-m@nidhogg.toxiclabs.cc>
+References: <20260902134417.c44503a1d65533f81fb1c391@linux-foundation.org>
+ <20260903133756.2006032-1-wangkefeng.wang@huawei.com>
+ <aqJEWmUN3Jsajoyl@infradead.org>
+ <38377447-ffa2-43ef-bbfa-43d05decda1e@windriver.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH RESEND 0/2] xfs: fix NOFS state corruption in btree split
- worker
-To: Carlos Maiolino <cem@kernel.org>
-CC: <linux-xfs@vger.kernel.org>, "Darrick J. Wong" <djwong@kernel.org>,
-	Shakeel Butt <shakeel.butt@linux.dev>, Brian Foster <bfoster@redhat.com>,
-	Dave Chinner <dchinner@redhat.com>
-References: <20260911104227.2028941-1-wangkefeng.wang@huawei.com>
- <aqkIetDJZa56Qvx_@nidhogg.toxiclabs.cc>
-Content-Language: en-US
-From: Kefeng Wang <wangkefeng.wang@huawei.com>
-In-Reply-To: <aqkIetDJZa56Qvx_@nidhogg.toxiclabs.cc>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: kwepems100002.china.huawei.com (7.221.188.206) To
- kwepemk300003.china.huawei.com (7.202.195.93)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <38377447-ffa2-43ef-bbfa-43d05decda1e@windriver.com>
 
-
-
-On 9/15/2026 4:58 PM, Carlos Maiolino wrote:
-> On Fri, Sep 11, 2026 at 06:42:25PM +0800, Kefeng Wang wrote:
->> xfs_trans_set_context() overwrites tp->t_pflags, dropping the
->> caller's NOFS protection. Replace it with local
->> memalloc_nofs_save()/restore() to fix it, also drop the obsolete
->> kswapd flag inheritance, which simplifying the fix.
->>
->> Note:
->> - rebased on v7.3-rc2
->> - Add ACK/RB
->> - split the patches, suggested by Christoph Hellwig[1]
+On Tue, Sep 15, 2026 at 03:09:57PM +0800, Zhou, Yun wrote:
 > 
->> [1] https://lore.kernel.org/linux-mm/aqOp035i41XIrDXg@infradead.org/
 > 
-> Can you please give me some more context on why are you resending it? I
-> received an email from Andrew that he had pulled this patch already from
-> the previous series.
-> You were Cc'ed on the email so I'm assuming you didn't see it?
+> On 9/10/26 13:47, Christoph Hellwig wrote:
+> > Adding Yun Zhou, whoch touched this area recently.
+> > 
+> > On Thu, Sep 03, 2026 at 09:37:56PM +0800, Kefeng Wang wrote:
+> > > xfs_btree_split_worker() calls xfs_trans_set_context() and
+> > > xfs_trans_clear_context() on the caller's transaction, overwriting
+> > > tp->t_pflags with the worker's NOFS state. When the caller already has
+> > > PF_MEMALLOC_NOFS set (e.g. xfs_end_ioend_write, xfs_dio_write_end_io),
+> > > the corrupted tp->t_pflags causes xfs_trans_free() to erroneously clear
+> > > the caller's NOFS protection.
+> > > 
+> > > Use memalloc_nofs_save/restore with a local variable instead so
+> > > tp->t_pflags is never touched.
+> > 
+> > Looks good:
+> > 
+> > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > 
+> > Btw, if you have some spare time, it would be nice to kill
+> > xfs_trans_set_context/xfs_trans_clear_context as follow up given that
+> > they keep causing confusion.
 > 
+> Yes, you finished reviewing this patch [1] in July. However, I'm not sure
+> about its current status. Perhaps I should ping Carlos to check?
+> 
+> [1]
+> https://lore.kernel.org/all/20260720050522.3101824-1-yun.zhou@windriver.com/
 
-Andrew only merged the dead kswapd flags part without the important
-bugfix. as Christoph said in above link[1], he suggest me send a
-standalone series that we can get the bugfix into 7.3 and -stable with
-as few dependencies as possible. So I rebase on v7.3-rc2 and resend
-them. If I misunderstood, please correct me.
+Ok, now I see why Kefeng Wang re-sent these patches...
 
+The first submission in July slipped through the cracks (I was on vacation
+that specific week FWIW). Feel free to give me a heads up if something
+don't get pulled in 1 or 2 weeks.
 
->>
->> Kefeng Wang (2):
->>    xfs: remove dead kswapd flag inheritance from btree split worker
->>    xfs: fix NOFS state corruption in btree split worker
->>
->>   fs/xfs/libxfs/xfs_btree.c | 22 ++++++----------------
->>   fs/xfs/xfs_platform.h     |  4 ----
->>   2 files changed, 6 insertions(+), 20 deletions(-)
->>
->> -- 
->> 2.55.0
+This one though is buried in a multi-subsystem series because you sent
+the patch In-Reply-To one of the emails in that thread.
+Please don't send patches as In-Reply-To something else, specially to a
+multi-subsystem series because it's really easy to skip such patches.
 
+And then I got a "Re-Send" series with zero information why it has
+been re-sent, and one of the patches in that series was already picked
+up by Andrew. So I can't simply merge that here and mess up with what
+Andrew already planned.
+
+If this patch can be merged before:
+
+commit 14ec230f93fa928090507cfdc67ca67e928d0c9f		(linux-mm)
+Author: Kefeng Wang <wangkefeng.wang@huawei.com>
+Date:   Wed Sep 2 21:16:50 2026 +0800
+
+    xfs: remove dead kswapd flag inheritance from btree split worker
+
+then please re-send it, otherwise wait for the above patch to land in
+Linus's tree, rebase and re-send.
+
+Cheers,
+Carlos
