@@ -1,42 +1,45 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DF594A64CC
-	for <linux-xfs@vger.kernel.org>; Tue, 15 Sep 2026 12:28:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 851B03C1D60;
+	Tue, 15 Sep 2026 14:33:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789475283; cv=none; b=fWSOIIYU2zv46lQaLyDxEoqG/rub9PwIdT5WHah7rdbzbE4xkpyxvQGf22HOeNV2cop2m6xm32KSiWoW+0RdkepoMk7UhflbgZOyYkCpoZX/p1PdJz+GLGH6rEohyQVpYK8oey1oicesL7Gw7xb2HqQBXM9M5a4Z51pMgWXsYtI=
+	t=1789482799; cv=none; b=kqEdQ6Dmsm+vzEZTDmS0ig3ziFgSN1GqOVkGHtHTi9OY6rvWUCtOPDp8UomtxrbPawlZ6R/CC0spY7rlpu7Th1IxI/j8OFeCoWvvlcEblz/M0J2bnJxnlrpUA9IQ/MMBGX4UcoNOtTx0zdeGwGBWG4ltzamagwIv0CS1aRbPFo0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789475283; c=relaxed/simple;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
+	s=arc-20240116; t=1789482799; c=relaxed/simple;
+	bh=rjTRfmdF4dsNXIAfifa6pydf6YTF6cVSnvIqvX7O1Q4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rFLOsHJIqjpY8dMpukl7ObG+KiirTU/SeuwCD6dNZm/7eth1wHeNC/dUbnOF/OlQX3ra/Xtz1nqWNFx6xMlG01t1v+pppTJCWgMevSIC8Zx0dIhztNK/fn1F3Po6diSiEBZgaqJolTO/BXgho56rtYmU0nGLWpOJF5jknCxe/do=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=jvnpcto+; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=tuYpWL0LBgZedLOb86SUxGvc7+zI3BHfaZp1YT/g2v/P43WhkIoZs0+RuueFp51mSTV+X4XNvbChLzHu9btpkCervHUqX0TOqyUIxftLdil/LXgep25jGf7A2dqAQTaCO3VYhqqeI9iaa0W+QX5jRqLfrtDIre34c8c3VluLSCg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hERgPY0e; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="jvnpcto+"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=jvnpcto+/Iefey/fb8yvGQ9hTW
-	RSlrtx8Dr8eabmxcxbov4zByRKvXXsf7MSQX9OCB9vtg75mlO4rSJe/lQWM2qc4PCeWDh5uWmhF9W
-	BP6R+hEWqggpXDemqpju3w+PuYCOSSXQ6H3y99Az/h5O4rqncijc3HKUFqV7rFLXMmyxR7jeh59bx
-	7cYGZ2+w+/F/94hS9F2KsB5tvCr9ODkq7kNgR/FIpn3iZYAiXKn1SrO8A4Hykjpr3L+8I8gnIHvvd
-	pJAaZ3dDTz3kAcKQR4AD2i+pWKq54yQp0MpS3zOZG8hv2+bVPS43D8JKw4Me475zu9nq1h7oJLm5S
-	QIbFbxbg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1x6SGX-00000006Uhs-4ACb;
-	Tue, 15 Sep 2026 12:28:01 +0000
-Date: Tue, 15 Sep 2026 05:28:01 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: aalbersh@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 7/7] xfs_spaceman: port makecfg to use xfsquotactl
-Message-ID: <aqk50W18LVZYD1Ae@infradead.org>
-References: <178936484773.2108717.13238892511050788442.stgit@frogsfrogsfrogs>
- <178936484936.2108717.8402857786114618949.stgit@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hERgPY0e"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F17F01F000FF;
+	Tue, 15 Sep 2026 14:33:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789482797;
+	bh=IERLX791zoT9cunZ7MeYik3FY+K7SJSY2TwlhRRhNQo=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=hERgPY0eLxZqNGHb7tujVhURflHo2JK4lwdXzNrHF1KNpT6oGV5dam5YluC6k1fHG
+	 MES+fH1GS83nO6GgDiLcSFA/tRL/7MJ/6gDTzqmfDFg8ieT+sNZvJbZUx0ocFdjSkr
+	 hHy9RZiwATlid6W5/ZLBEa30WZQWN/yxTdfc1YnJYkmoJcWeuDJ2iwH3X78ovFRqYT
+	 YoIlSIRafnsU7XwzEMWyvRXWHc/R2fkh5yLyc7gUWMncBe9dqr7/Dlv/N+gjd9Ij0Q
+	 yUlmfMM949Fq03e+excpfatYtyTXMaRc7Fj+1ZoM9fUj65zQtNClJ/gKIYvwS09qOs
+	 +SyrMbgXVcZGQ==
+Date: Tue, 15 Sep 2026 22:33:10 +0800
+From: Zorro Lang <zlang@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	linux-btrfs@vger.kernel.org, Anand Suveer Jain <asj@kernel.org>, Chao Yu <chao@kernel.org>
+Subject: Re: [PATCH 1/5] fstests: consolidate _require_fs_sysfs and
+ _require_fs_sysfs_attr
+Message-ID: <aqlUOwnGPYBauYYF@zlang-mailbox>
+Mail-Followup-To: Christoph Hellwig <hch@infradead.org>, 
+	fstests@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, 
+	Anand Suveer Jain <asj@kernel.org>, Chao Yu <chao@kernel.org>
+References: <20260914172509.3799016-1-zlang@kernel.org>
+ <20260914172509.3799016-2-zlang@kernel.org>
+ <aqjsBs6QUtIukk05@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,9 +48,35 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <178936484936.2108717.8402857786114618949.stgit@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <aqjsBs6QUtIukk05@infradead.org>
 
-Looks good:
+On Mon, Sep 14, 2026 at 11:56:06PM -0700, Christoph Hellwig wrote:
+> On Tue, Sep 15, 2026 at 01:25:05AM +0800, Zorro Lang wrote:
+> > There is heavy overlap between _require_fs_sysfs and
+> > _require_fs_sysfs_attr, and their ambiguous names make it difficult
+> > to tell them apart.
+> > 
+> > So merge them into a single function with "_dev_" included in the
+> > name to distinguish per-device entries from other paths like
+> > /sys/fs/$FSTYP/features/.
+> 
+> I have a bit of a hard time understanding this message.  From looking
+> at the diff this seems to:
+> 
+>  - rename _has_fs_sysfs_attr to _has_fs_sysfs_dev_attr
+>  - rename _get_fs_sysfs_attr to _get_fs_sysfs_dev_attr
+>  - rename _set_fs_sysfs_attr to _set_fs_sysfs_dev_attr
+>  - rename _require_fs_sysfs_attr to _require_fs_sysfs_dev_attr
+>  - remove _require_fs_sysfs
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+And remove _has_fs_sysfs.
+
+> 
+> right?  Maybe spell that out and split the pure renames from code
+> removal?
+
+Sure, that makes sense. I will incorporate the rename into PATCH 2/5 in
+the next revision.
+
+Thanks,
+Zorro
