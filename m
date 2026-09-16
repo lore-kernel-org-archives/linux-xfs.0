@@ -1,156 +1,200 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30A284DE700
-	for <linux-xfs@vger.kernel.org>; Wed, 16 Sep 2026 21:45:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43F4C4BA1D1
+	for <linux-xfs@vger.kernel.org>; Wed, 16 Sep 2026 22:24:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789595139; cv=none; b=hDDoA60bggSb/n856XwH1w3RB+UIIBbuFzNLt/08q/HcGS3hYydxBQKO1QGl4xUr58ZpK0DjGWLW8bOSpUnCOCGjTm4+dvtJGsYesdIPgSV1UoLHQTNmYcWPYr/Pt3UO8tddIje7teJ3FCEKgwFKCi4/8R7/Igxe7LJz2mYCEak=
+	t=1789597457; cv=none; b=L/EEw5U4z1+R83c4uGJW6FCZFadojz8Vm2+xmOAUnt7Tot9QsicAkb/0UqIXmcjL09CGru7Ojbz31joQ6hUyZ6coYhWgc5q+ztJqEqxgbvqc+O/VyTwAYM+MAs4gwUHp/iCwgo+KS0ZFM3JGq0PrCDaoeyBCyODJbJp53YRxedQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789595139; c=relaxed/simple;
-	bh=Ub9MeVQWEdhxBkujm10vcCgzGJLmOA1/qZSFLLdX4cw=;
+	s=arc-20240116; t=1789597457; c=relaxed/simple;
+	bh=whx8M7kTsA5m7rCTPZZhp7d/pmffM9vGgr0qbKNnPXY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=O0gOzC0QGGPQqnWggRHgdN8lHwfxY7AWMkGp1NgtAFI4mZUkXyxm39nKJwWeJDrlGsE38YyDbP9mDxEDTeXEQNiQPzAmjSP7iIup4ZDWcBSqCsiEZSbv11+Js8cpgF4kTbpSNzcnesHm6nQ+vf4qqfOeK3C1zipZOG3WgsQsB6Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ij0eGizj; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=pZnxYEa7H+WlFSdeytNw3FTgKIuwtqgFxdAk3hT7f05qI6E1VicV2AEw07H6u0ZHVJ0VRMASLq4qaUhEDtAlRxzGKkGctxRfy1x54eZ8aCsH+OZQD9E4GWiVDg/CnVskkdW1Ny833Nw/Jff/kE+WqN+GodFtnzDmJReB+GfMPDE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IJzu8e9X; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ij0eGizj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7AD021F000FF;
-	Wed, 16 Sep 2026 21:45:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IJzu8e9X"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BB81E1F000FF;
+	Wed, 16 Sep 2026 22:24:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789595122;
-	bh=r3eGn9llUQqU94NuvWy11xvk28E55bbmLXa5hcGHF4o=;
+	s=k20260515; t=1789597447;
+	bh=Ktv9a5vygZTw+OpWV1HQGqzPZagFxltJ2w3GIHgH+Lo=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=ij0eGizjIZ7BRncrBFfsv2N28HYlYJtEGbri51Fl5dgSZcvRBJCzI9sdgYVFSgJ1x
-	 0++64IHHDsbsIwwVilVyu5oZhS1syeVTRlwMpUGlUdICS6vkWh/BMfwX2Pme+AiFLu
-	 XdAstZG3u9QJE2J7Tz9FopL0qZ2DDgT8QP992DAGU+vlH5huAmLujdfSKAxAeTyNk5
-	 5lnek2HVUg6/hw5Cw5XwnHD7VaxFNOMK20erDmhG0/bjthSxIh6j2AUnk2v9WY56Y7
-	 85pIPestQAlCyqZ1zzVY+k/3cFar72j1KLU7+Ph5zI24pb2aqONWXmhq9ybgIIHapQ
-	 PrRf5Gbqy1Qaw==
-Date: Thu, 17 Sep 2026 07:45:04 +1000
+	b=IJzu8e9XH3d4yag2bNfPNiJziRO1c2ivOdkX6LGE0RRYx+fzsI+jWhDnhDblnfrHy
+	 InWrR7rr1s5cYjcUVBNVBGJweU58y5CdeJ4aFTzKpmpSh0caRy131pQuNKU//9gyWQ
+	 mbjkJbg2dNstYUW26IGwjiulonCfji7g2IfBRr15ZOJaqemS6R6BUMnm6UjeaGRQE1
+	 y1EHIGn8+WdiWdFspXd8vDCq64ui5oUW0wMkpOaH+s1cEgOepySvfdissTafaPRarB
+	 re4w+SFCQHc3EG2FrcZOYY/nUWs0oUQ8HYhEoNI0osWDHF64ajKWFp9jDYKs2EAJdv
+	 ceh5+qUBO8Oag==
+Date: Thu, 17 Sep 2026 08:23:58 +1000
 From: Dave Chinner <dgc@kernel.org>
-To: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+To: John Garry <john.g.garry@oracle.com>
+Cc: John Garry <john.garry@linux.dev>,
 	"Darrick J. Wong" <djwong@kernel.org>,
-	John Garry <john.garry@linux.dev>
+	Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 Subject: Re: [bug report] fstests generic/774 hang again
-Message-ID: <aqsN4GOXthkF8rOI@dread>
+Message-ID: <aqsW_iNwYAjYldVf@dread>
 References: <aqkP9CTUvlC2YCIb@shinmob>
+ <98190f62-ccc3-49df-934d-f168e293c485@linux.dev>
+ <aqkv-2opTlWD6bzU@shinmob>
+ <ed224f94-f605-4be0-8a0a-0b3d481e46ae@linux.dev>
+ <20260915145046.GC2705364@frogsfrogsfrogs>
+ <db4ab609-af16-4c5d-aa98-c0655625a2df@linux.dev>
+ <9bf23063-e6e5-4595-8ff9-27383c99e5a6@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <aqkP9CTUvlC2YCIb@shinmob>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <9bf23063-e6e5-4595-8ff9-27383c99e5a6@oracle.com>
 
-On Tue, Sep 15, 2026 at 06:34:50PM +0900, Shin'ichiro Kawasaki wrote:
-> I observe the fstests test case generic/774 hangs, when I run it for xfs on 8GiB
-> TCMU fileio devices. Actually I once reported this hang symptom in last October,
-> and Darrick and John kindly took some actions [1]. Since then, the hang
-> disappeared and I have not observed the hang almost one year. However, my test
-> system started reporting the hang again last week.
+On Wed, Sep 16, 2026 at 11:23:16AM +0100, John Garry wrote:
+> On 15/09/2026 16:41, John Garry wrote:
+> > On 9/15/26 15:50, Darrick J. Wong wrote:
+> > > > thanks
+> > > > 
+> > > > About the kernel code, I am wondering if using IOMAP_DIO_FORCE_WAIT for
+> > > > CoW-based atomics could help avoid this issue as we seem to be
+> > > > bogged down
+> > > > in lock contention.
+> > > Which lock is being contended, anyway?  It looks like the ILOCK?
+> > 
+> > Yeah, I think so Re. ilock. I had some perf data illustrating this from
+> > last year, which I can't seem to find, so I will re-generate it.
 > 
-> [1] https://lore.kernel.org/linux-xfs/cmk52aqexackyz65phxgme55a3tdrermo3o4skr4lo4pwvvvcp@jmcblnfikbp2/#t
+> Here is perf call graph snippet when running fio with 72x threads issuing
+> 4KB atomic writes on 1MB file:
 > 
-> FYI, here I attache the kernel message [2]. I observed the hang last week with
-> the kernel on the xfs/for-next branch at the commit 0ca15a1a1151 ("xfs: remove
-> an extra cast in xfs_file_compat_ioctl"). Today, I tried again with the kernel
-> at current xfs/for-next branch tip 4266ffdfd7cb ("xfs: remove an extra cast in
-> xfs_file_compat_ioctl"), and observed the hang again. The hang can be recreated
-> in stable manner by repeating the test case 20 times or so.
+> --50.46%--xfs_file_dio_write_atomic
+> |
+> |--37.19%--iomap_dio_rw
+> |          |
+> |      --37.14%--__iomap_dio_rw
+> |           |
+> |       --36.50%--iomap_iter
+> |            |
+> |             --36.49%--xfs_atomic_write_cow_iomap_next
+> |                  |
+> |                  |--27.34%--xfs_ilock
+> |                  |          |
+> |                  |      --27.34%--down_write
+> |                  |           |
+> |                  |       --27.28%--rwsem_down_write_slowpath
+> |                  |            |
+> |                  |            |--24.65%--osq_lock
+> |                  |            |
+> |                  |             --2.35%--rwsem_spin_on_owner
+> |                  |
+> |                  |--7.62%--xfs_trans_alloc_inode
+> |                  |          |
+> |                  |      --7.59%--xfs_ilock
+
+Where's the other half of the lock contention?
+
+If this is all there is, it's because of concurrent submission of
+serialising IO, and xfs_atomic_write_cow_iomap_begin() is the first
+place in the IO submission path that we hit a serialising lock. That
+indicates a problem with high level IO serialisation, not a problem
+with the ILOCK.
+
+> Notice how much time we spend getting that ilock.
 > 
-> I also tried other test cases in atmoicwrites group, and observed no failure.
+> We could try something like this:
 > 
->  generic/765        [not run] write atomic not supported by this block device
->  generic/767         11s
->  generic/768         13s
->  generic/769         13s
->  generic/770         32s
->  generic/773        [not run] write atomic not supported by this block device
->  generic/774        (skipped)
->  generic/775         293s
->  generic/776        [notrun] write atomic not supported by this block device
->  generic/778         48s
->  xfs/838            [not run] External volumes not in use, skipped this test
->  xfs/839            [not run] XFS error injection requires CONFIG_XFS_DEBUG
->  xfs/840            [not run] write atomic not supported by this block device
+> ----8<------
 > 
-> Action for fix will be appreciated. If I can do anything on my test node, please
-> let me know.
-.....
+> [PATCH] xfs: serialize CoW-based atomic writes
+> 
+> We have had reports of system hangs when testing Cow-based atomic writes
+> for large block sizes.
+> 
+> Analysis has shown large contention on the the per-inode ilock,
+> superficially in creating the mapping in
+> xfs_atomic_write_cow_iomap_begin().
+> 
+> Serialize atomic writes to reduce this contention. In some cases this may
+> reduce performance, but high performance has not been a requirement so far
+> for CoW-based atomic writes.
+> 
+> Signed-off-by: John Garry <john.garry@linux.dev>
+> 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index d8202da15aca..ff48757cf0f0 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -819,10 +819,12 @@ xfs_file_dio_write_atomic(
+>  	 * HW offload should be faster, so try that first if it is already
+>  	 * known that the write length is not too large.
+>  	 */
+> -	if (ocount > xfs_inode_buftarg(ip)->bt_awu_max)
+> +	if (ocount > xfs_inode_buftarg(ip)->bt_awu_max) {
+>  		dops = &xfs_atomic_write_cow_iomap_ops;
+> -	else
+> +		dio_flags |= IOMAP_DIO_FORCE_WAIT;
+> +	} else {
+>  		dops = &xfs_direct_write_iomap_ops;
+> +	}
+> 
+>  retry:
+>  	ret = xfs_ilock_iocb_for_write(iocb, &iolock);
+> @@ -840,6 +842,8 @@ xfs_file_dio_write_atomic(
+>  	}
+> 
+>  	trace_xfs_file_direct_write(iocb, from);
+> +	if (dio_flags & IOMAP_DIO_FORCE_WAIT)
+> +		inode_dio_wait(VFS_I(ip));
 
-A bunch of threads waiting on the ILOCK here:
+Based on my comment above, this seems like the wrong approach to me.
 
- down_write_nested+0x1c0/0x1f0
- xfs_reflink_end_atomic_cow+0x2f3/0x560 [xfs]
- xfs_dio_write_end_io+0x4b7/0x650 [xfs]
- iomap_dio_complete+0x140/0xb20
- iomap_dio_complete_work+0x58/0x90
- process_one_work+0x947/0x1760
+We serialise concurrent DIO write submission when necessary by
+taking the IOLOCK_EXCL instead of IOLOCK_SHARED (e.g. EOF
+extension). inode_dio_wait() waits for completion of all DIO (read
+and write), but we don't need to wait for completions if all we need
+to do is serialise IO submission.
 
-And the holder:
+Hence if we know we are going to do a software COW for the write, we
+should take IOLOCK_EXCL to serialise submission up high. Waiting
+until we are deep into the IO path and serialising on the 
+internal metadata ILOCK is much, much harder to do efficiently and
+correctly.
 
- schedule+0xe5/0x2e0
- xlog_grant_head_wait+0x175/0xac0 [xfs]
- xlog_grant_head_check+0x312/0x3f0 [xfs]
- xfs_log_regrant+0x380/0x7d0 [xfs]
- xfs_trans_roll+0x2d9/0x420 [xfs]
- xfs_defer_trans_roll+0x11e/0x4b0 [xfs]
- xfs_defer_finish_noroll+0x460/0xe70 [xfs]
- xfs_trans_commit+0xfc/0x180 [xfs]
- xfs_reflink_end_atomic_cow+0x3b2/0x560 [xfs]
- xfs_dio_write_end_io+0x4b7/0x650 [xfs]
- iomap_dio_complete+0x140/0xb20
- iomap_dio_complete_work+0x58/0x90
- process_one_work+0x947/0x1760
+i.e. we need to take the ILOCK vs transaction reservation vs unbound
+user-controlled concurrency deadlock problem out of
+the equation. Using the IOLOCK achieves this because IO submission
+blocks on the IOLOCK rather than on the ILOCK whilst holding a
+transaction reservation.
 
-is waiting on log space whilst holding the ILOCK.
+> I also notice that in xfs_atomic_write_cow_iomap_next() we drop the ilock
+> for calling xfs_trans_alloc_inode() (which immediately grabs the same lock).
+> It would seem that could be improved.
 
-This looks to me like the test runs out of log space because of all
-the IO completions holding transaction reservations waiting on the
-ILOCK, whilst the ILOCK holder can't get enough log space to regrant
-on transaction roll to continue the transaction.
+Doubt it - holding the ILOCK across transaction reservation
+guarantees journal space deadlocks will occur.  That's why the
+suboptimal pattern of 'lock - check - unlock - trans_alloc - lock -
+check' exists throughout XFS inode modification paths.
 
-Oh:
+FWIW, that's one of the anit-patterns that the patchset I posted
+recently begins to address:
 
-STATIC void
-xfs_calc_default_atomic_ioend_reservation(
-        struct xfs_mount        *mp,
-        struct xfs_trans_resv   *resp)
-{
-        /* Pick a default that will scale reasonably for the log size. */
-        resp->tr_atomic_ioend = resp->tr_itruncate;
-}
+https://lore.kernel.org/linux-xfs/20260819001442.1451892-1-dgc@kernel.org/
 
-Which means each reservation is probably holding hundreds of KB to
-MB of journal reservation. If the journal is 64MB in size, then a
-few dozen o these might be all that is needed to consume all the
-reservation space.
+It creates consistently correct patterns in the IO path by changes all the
+individual alloc-lock-check-mod-commit-unlock loops to an "atomic"
+alloc-lock, check-mod-roll loop, commit-unlock pattern.
 
-Hmmm - there are at least 30 tasks stuck in
-xfs_reflink_end_atomic_cow(), another 30 stuck in
-xfs_vn_update_time() holding reservations, and significant number
-xfs_atomic_write_cow_iomap_begin()->xfs_trans_alloc_inode() holding
-tr_write reservations.
+IOWs, multi-part extent modifications are all done under a single
+lock/unlock pair, and so appear atomic to all other extent map and
+modification operations. This makes many of the nasty IO corner
+cases that lead to sub-optimal behaviour (like data corruption or
+lock contention in COW workloads due to continual bouncing of the
+ILOCK between submission and completion contexts) largely go away...
 
-IOWs, smells of the journal being run out of reservation space, and
-no new space being able to be freed because all the dirty inodes
-in the journal that need to be written back to free up space are
-locked waiting for journal space to come free....
-
-How big is the journal in the filesystem being tested? If you
-increase the size of the journal, does it go away? Can you get a
-dump of the transaction reservation sizes for the filesystem in
-question (the xfs_db logres command can do this, IIRC) and then run
-the math on the reservations held from the dump of all the blocked
-tasks holding locks to see if this matches the size of the journal
-in the fs?
-
-Cheers,
-
-Dave.
+-Dave.
 -- 
 Dave Chinner
 dgc@kernel.org
