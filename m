@@ -1,41 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 967E637C930;
-	Wed, 16 Sep 2026 12:06:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FCF248D86B;
+	Wed, 16 Sep 2026 12:06:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789560413; cv=none; b=Zh/8DgWWbQBlnyl5UoLJZ3EnKxY6Z7ivaomLj0AsNFyTH70rYnmpXw2hKDatjGCXbJnKYNiu+1AbixCWMC9NGzNzW5kyFw7tkk5a8ECiEBTYJIgqn+v4wofh/QAXsl+/JfsJsaE9fhUOepIUp6io57LnxlZvbR/lVStxi0WM0eI=
+	t=1789560414; cv=none; b=uqS5Q62qSFFFwwLK3+Ezy8WekB+3dSUbgJsB0pC6FMNZMht3hOC2/6+Z/VQeuId5pbmUMgKiEOPOWsr8f9lQAufrpr2+1s2yA6CMUp3HZ16Elp9S9ckuXIv2hQSxq3CE5LzfWTG0LJJvvO8sLg49ysrL5r9HpazE0RqEZFM/0co=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789560413; c=relaxed/simple;
-	bh=V9WmN3pS9RQt3VJdSTU3OsV+czBArpTcxUhzd5C60LA=;
+	s=arc-20240116; t=1789560414; c=relaxed/simple;
+	bh=sJfyPSRSCi921XUibwlhn86EDykFnPLqnQGQUoDbv+I=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=QW+IBftviS8OwwQJeOjfOPwfaJKBJBToCT5h+OibrUzLscum4Z3pgO1tP++LtGjz3AWp/8JQHoo8Gq201iT+5aeDlZmYi8TC3SJvA8dg8MzDuvnIAoxLcwyayInpsZhXPPAmhV+RqzH4Dy8d7S2c4CIk3Ze/g2FYKMJ65RgzUKM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AgdnOPoX; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=NTb29ObLmjky6PNnbx7fQyH7NJOBfz3rrJF9tN/Efo0BjIjMRPvE7vv3JfCj4dKMaUQyOOYvk9UaK/JROkqQD+GTgvMMKEAcg6k3D1k1P2Amfz2K7y0h6Uz7zjghBon8nc+G430CEoS9E3vPVGPdi2FwukYbq4A4hNHfiIsU9S8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XqVNqZrc; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AgdnOPoX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1A1C61F0089A;
-	Wed, 16 Sep 2026 12:06:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XqVNqZrc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D70FC1F00893;
+	Wed, 16 Sep 2026 12:06:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789560405;
-	bh=3BVXiVmYcM6ZXh0uAhydcd0lKmWtt4lNRNnh97r56I4=;
+	s=k20260515; t=1789560401;
+	bh=NDbZ5oWYDY4NfdAdp/cW4oV3ub4ZSbhVmR5rxE1rXvE=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=AgdnOPoXxVubyQ8Uc4YeQcA9bm/Y741cELaSbSEqVbtSciP0vZlAHOUPXPWwS+wKm
-	 02Qm/vz4zTb2ugjjGZPyZt2qC83uuzScWEFod/jn5Le3TCN3Ry05TCOR0tvyUi6afe
-	 GEyXYZYBCIZlVXXdqVbrxcK5jMO/9UR+WAGm7dxIIX9tQ5g9ZgXLkedZVf5kudSDsU
-	 JUZDSILEOhUqH5x+LIDWmQ6PXLdBmHV1w8+UaCLAKDD2sJx6Rnp0MIGhBaft//ru1x
-	 q2EAmY5Ns8u1cI+pP+t57zj/lPTW6TbHcBXM1K6zJ6PYinEMJwVJpYnGVTiu9YxKSl
-	 3hNOUB7VXN/rA==
+	b=XqVNqZrcnE0mY2UvqTGPqle38MpkSihI2b/xUj8mqTZwZ7tDCBu9kvs8wKr8eLSSa
+	 hBOXWKEaCEHJuHA5h7gJ7lrNP/DPqVwzMzRExD7POxYhkpVmpyqb5JxlVw0Q9DRED/
+	 wJTtU4kKXz1siuND4rxtrIpdyhOsXNWED1S2aWrjmPSXcLgTxXM62k/rwa2aiOnzjo
+	 0pc4UkZdRqJvCcnyIdG7DRlrFexZFqSnbo4DoaO6coYR1nIjiqOd/gw1lMGUQ4gqLu
+	 Mlaqf8kL82Uigt9FDsvcOxmQLJbsi1M6nM3ZNF/5/8eUsRd4Epnz1j8yCCJ0Ve5OYs
+	 NQonjeP7NOdng==
 From: Carlos Maiolino <cem@kernel.org>
-To: Jiangshan Yi <yijiangshan@kylinos.cn>
-Cc: djwong@kernel.org, ljp1205831794@gmail.com, gaoyingjie@uniontech.com, 
- linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
- 13667453960@163.com
-In-Reply-To: <20260914082111.195006-1-yijiangshan@kylinos.cn>
-References: <20260914082111.195006-1-yijiangshan@kylinos.cn>
-Subject: Re: [PATCH] xfs: remove duplicate INO1_WRITTEN check
-Message-Id: <178956040379.10466.12341783504062469919.b4-ty@kernel.org>
-Date: Wed, 16 Sep 2026 14:06:43 +0200
+To: hch@lst.de, "Darrick J. Wong" <djwong@kernel.org>
+Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
+In-Reply-To: <178910161988.174887.8958318922224347752.stgit@frogsfrogsfrogs>
+References: <178910161988.174887.8958318922224347752.stgit@frogsfrogsfrogs>
+Subject: Re: [PATCHSET] xfs: LLM-inspired bug fixes, part 14
+Message-Id: <178956040056.10466.14255436339615019963.b4-ty@kernel.org>
+Date: Wed, 16 Sep 2026 14:06:40 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,20 +44,32 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.3
 
-On Mon, 14 Sep 2026 16:21:11 +0800, Jiangshan Yi wrote:
-> Commit a23eca88448e ("xfs: fix exchange-range reflink flag clearing
-> issue with INO1_WRITTEN") duplicated commit b2d5a81dae38 ("xfs: fix
-> exchange-range reflink flag clearing issue with INO1_WRITTEN"), so
-> xmi_can_exchange_reflink_flags() ended up with two identical
-> XFS_EXCHMAPS_INO1_WRITTEN checks.  The second one is dead code,
-> since the first one already returned false.  Remove it.
+On Thu, 10 Sep 2026 22:53:34 -0700, Darrick J. Wong wrote:
+> Here's a fourteenth batch of xfs fixes resulting from a LLaMma.  Mwa mwa
+> mwa...
+> 
+> If you're going to start using this code, I strongly recommend pulling
+> from my git trees, which are linked below.
+> 
+> With a bit of luck, this should all go splendidly.
+> Comments and questions are, as always, welcome.
 > 
 > [...]
 
 Applied to for-next, thanks!
 
-[1/1] xfs: remove duplicate INO1_WRITTEN check
-      commit: ce2b91bebc7bc0495fe3ad5ee47e4977fbb77fc5
+[1/6] xfs: check padding field in xfs_ioc_commit_range
+      commit: 3083ba8dde765a9ab2337f3db68d00724a6b1202
+[2/6] xfs: don't call xfs_exchange_range_finish for a dry run
+      commit: 8fc18580ec17f90beac4c933fbe4c74dcd3b7f36
+[3/6] xfs: use the correct reservations for rtrmap/refcount recovery
+      commit: 471e0b6e2ddac9e16b8dc2153d6e5575fefb8a2f
+[4/6] xfs: fix integer overflows in xbitmap set functions
+      commit: 46c1b6674a7b3a8385e7fa27f4efc6f45eddf967
+[5/6] xfs: only flag zero padding for dir3 data blocks, not dir3 block blocks
+      commit: c54110d814c3e8ed6bbbb5e02874994ed9f668ac
+[6/6] xfs: check di_forkoff correctly in scrub
+      commit: e9193f2f1ce32d02b9230094ffdbfab715ab6137
 
 Best regards,
 -- 
