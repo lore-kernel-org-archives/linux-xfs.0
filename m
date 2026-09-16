@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FCF248D86B;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 139EE4E66A3;
 	Wed, 16 Sep 2026 12:06:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789560414; cv=none; b=uqS5Q62qSFFFwwLK3+Ezy8WekB+3dSUbgJsB0pC6FMNZMht3hOC2/6+Z/VQeuId5pbmUMgKiEOPOWsr8f9lQAufrpr2+1s2yA6CMUp3HZ16Elp9S9ckuXIv2hQSxq3CE5LzfWTG0LJJvvO8sLg49ysrL5r9HpazE0RqEZFM/0co=
+	t=1789560414; cv=none; b=tfloCzeroWCBtDwLBRZbwTydvIfiMo9jppOHxPRvFF1jX2fidokvCUd/DbQ500r4sYnD4wEjyRVb+Ss6RbVZ5+qFujA+fHq6A1+cVwNTTUVo2SpYJSrkHy3OOco4ik4tc9rrptYqhPX6GeyPATV/53VvC5Uj6d4EpbZeld4TKe0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1789560414; c=relaxed/simple;
-	bh=sJfyPSRSCi921XUibwlhn86EDykFnPLqnQGQUoDbv+I=;
+	bh=B/kcsNPAuR5SSilIx+u1oYV9N/yASshRXmU/9Bfo7os=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=NTb29ObLmjky6PNnbx7fQyH7NJOBfz3rrJF9tN/Efo0BjIjMRPvE7vv3JfCj4dKMaUQyOOYvk9UaK/JROkqQD+GTgvMMKEAcg6k3D1k1P2Amfz2K7y0h6Uz7zjghBon8nc+G430CEoS9E3vPVGPdi2FwukYbq4A4hNHfiIsU9S8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XqVNqZrc; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=sea96HQAwMLdScy3Trlu3ACukrOFYqEn3HFKa8OoNCoLQ01GAJ0OJMdUI1qSe0tYNrV3LDKXGJWYhE9sMVC+Sz6SIDHLsbL2eAn9ggq5ByQ0Cw8ew3Z2vezHrPJNDfw5omk3OJOj9B38NilEYwbDZtWPQ0z3Rl0JdYLcwiFOy0c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PwlEOu1w; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XqVNqZrc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D70FC1F00893;
-	Wed, 16 Sep 2026 12:06:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PwlEOu1w"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 573EA1F000FF;
+	Wed, 16 Sep 2026 12:06:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789560401;
-	bh=NDbZ5oWYDY4NfdAdp/cW4oV3ub4ZSbhVmR5rxE1rXvE=;
+	s=k20260515; t=1789560400;
+	bh=avQSMGxf3urZsOOPDNQr8o0Hm6tBgiCGfW1YYsQSua4=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=XqVNqZrcnE0mY2UvqTGPqle38MpkSihI2b/xUj8mqTZwZ7tDCBu9kvs8wKr8eLSSa
-	 hBOXWKEaCEHJuHA5h7gJ7lrNP/DPqVwzMzRExD7POxYhkpVmpyqb5JxlVw0Q9DRED/
-	 wJTtU4kKXz1siuND4rxtrIpdyhOsXNWED1S2aWrjmPSXcLgTxXM62k/rwa2aiOnzjo
-	 0pc4UkZdRqJvCcnyIdG7DRlrFexZFqSnbo4DoaO6coYR1nIjiqOd/gw1lMGUQ4gqLu
-	 Mlaqf8kL82Uigt9FDsvcOxmQLJbsi1M6nM3ZNF/5/8eUsRd4Epnz1j8yCCJ0Ve5OYs
-	 NQonjeP7NOdng==
+	b=PwlEOu1wWedzexF7N+o8y40z0tz+nfZnwllnan6qDqZQNfWcTbbthsfHuNzdjzYU7
+	 yd9R5oO7dHPsuPvgZU7FsnPCCTBkwbp169R7olmBRbDaICp04p6ZLAV9dpS5uOkBfr
+	 2T1dhsPOeodjyaQKjbhXke75mihRij3xa1O/tEfet5ywaB93oB6kLEkgOcmKXKuYJf
+	 aowaQHAdUIcmoGtNA7xK8733K8fBa2LuK5HOF9PUZxmFgUAjX1qXuH6kd9dXSayRTu
+	 bANhKc1PBPr/ftDdlNdcHwbyPCp4SbxAtoDc22VlDMeBEeZU3EWpwsjIPnpRX4d5RZ
+	 Dp58DN08NULZA==
 From: Carlos Maiolino <cem@kernel.org>
 To: hch@lst.de, "Darrick J. Wong" <djwong@kernel.org>
 Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-In-Reply-To: <178910161988.174887.8958318922224347752.stgit@frogsfrogsfrogs>
-References: <178910161988.174887.8958318922224347752.stgit@frogsfrogsfrogs>
-Subject: Re: [PATCHSET] xfs: LLM-inspired bug fixes, part 14
-Message-Id: <178956040056.10466.14255436339615019963.b4-ty@kernel.org>
-Date: Wed, 16 Sep 2026 14:06:40 +0200
+In-Reply-To: <178901989791.361651.4660674894120948649.stgit@frogsfrogsfrogs>
+References: <178901989791.361651.4660674894120948649.stgit@frogsfrogsfrogs>
+Subject: Re: [PATCHSET] xfs: LLM-inspired bug fixes, part 13
+Message-Id: <178956039904.10466.12265208795098637359.b4-ty@kernel.org>
+Date: Wed, 16 Sep 2026 14:06:39 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,8 +44,8 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.3
 
-On Thu, 10 Sep 2026 22:53:34 -0700, Darrick J. Wong wrote:
-> Here's a fourteenth batch of xfs fixes resulting from a LLaMma.  Mwa mwa
+On Wed, 09 Sep 2026 22:59:53 -0700, Darrick J. Wong wrote:
+> Here's a thirteenth batch of xfs fixes resulting from a LLaMma.  Mwa mwa
 > mwa...
 > 
 > If you're going to start using this code, I strongly recommend pulling
@@ -58,18 +58,18 @@ On Thu, 10 Sep 2026 22:53:34 -0700, Darrick J. Wong wrote:
 
 Applied to for-next, thanks!
 
-[1/6] xfs: check padding field in xfs_ioc_commit_range
-      commit: 3083ba8dde765a9ab2337f3db68d00724a6b1202
-[2/6] xfs: don't call xfs_exchange_range_finish for a dry run
-      commit: 8fc18580ec17f90beac4c933fbe4c74dcd3b7f36
-[3/6] xfs: use the correct reservations for rtrmap/refcount recovery
-      commit: 471e0b6e2ddac9e16b8dc2153d6e5575fefb8a2f
-[4/6] xfs: fix integer overflows in xbitmap set functions
-      commit: 46c1b6674a7b3a8385e7fa27f4efc6f45eddf967
-[5/6] xfs: only flag zero padding for dir3 data blocks, not dir3 block blocks
-      commit: c54110d814c3e8ed6bbbb5e02874994ed9f668ac
-[6/6] xfs: check di_forkoff correctly in scrub
-      commit: e9193f2f1ce32d02b9230094ffdbfab715ab6137
+[1/6] xfs: guard against igrab failure in xrep_findparent_from_dcache
+      commit: 5b644229bd677d52c4efa5973c1fab842c57f896
+[2/6] xfs: don't assert when XFS_SCRUB_TYPE_HEALTHY scans return corruption
+      commit: afbccf99f7f82117cba9ad4b0b006692030f49e8
+[3/6] xfs: fix attr fork block count checks in xrep_inode_blockcounts
+      commit: bb991b7f79dd34cc5f24db0f736bf75630c970e7
+[4/6] xfs: release orphanage dir inode if chown fails
+      commit: 1c32cdc986467eaffeedb6c5334852809555b82d
+[5/6] xfs: release AGFL after walking it during rmapbt repair
+      commit: 8b4ad2814274d43ed8bdfcf857efb8c79815d9c6
+[6/6] xfs: use correct jiffies comparison function in xchk_maybe_relax
+      commit: 984aab2d905a8557fafb27cd9e8713d6d12b3437
 
 Best regards,
 -- 
