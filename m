@@ -1,217 +1,1061 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CDF84D0A17;
-	Wed, 16 Sep 2026 11:24:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 836644B04B1;
+	Wed, 16 Sep 2026 11:51:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789557891; cv=none; b=aQTvwBwhfPWMxcnlE++t9k/JqT+utSMAeSEkgtcFJ7MmKv4LkbOvBOudesaZ32Hx7pcv5B9B7uAPHJTIl0HbkCoEYx3jWe+qiXCEXskQCXbAT8g76syHOyf6cIBxSHYazHfyDB9TcwMF6t8sUII2NL+g22dTFpVf7Lwvz7gaJF8=
+	t=1789559525; cv=none; b=lroNFMQiTpaUAooWHkxfx2QTX1vGGlEo84JCiq+H2nzztwASk07nErUJVK0LLZ7jYBINuH3CaboziSZklfdaKM9ZeEiU4zT0l3a+IIWIzi/l09hWT4ag3qFZng1mbI4vbP0x5t6//gSGKScXVDEAwUdvtMFg06r7ICgXa2pdC98=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789557891; c=relaxed/simple;
-	bh=RZci0qwO+deyOL1zjEehaH4/1yFnr58F3J6yMrrLkxQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=OuNH5e2KZk253mEZTqdMY1I9pA9CZkxkXqXtEugV35UqHGlQxyxYKgjS9DaDkhRNWzAyQ5k/70hwzwzgjSLcgE6JckxlXeA8jImrc8DkvIAyR2KvYsTtngMg1Sq5ZwcKSQRyNgjJBSpP6PZBTDjfEvPu5BgtVQP1yBB7777VEbk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lSY66ISb; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789559525; c=relaxed/simple;
+	bh=COg8cO39C0HaoBxwM1gFEEOpCm3EDGD+AIS+u4pXkKo=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=LVBxtnzvYEimilZ1Tr67lRgxMjtnz6xBifbHRH8qQQu9ZvHMCviadhNDx65lKgE4ksOBqHGdtG44Tg6JwTl75JrEgffetlQI19GJqnoZp41Kg4UKG8d+Mas40vht0OmGUp2iTXM0BsR0rN5dZrEQs04eXZk4bFgbzwFBL8bvR24=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LJJtf+b6; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lSY66ISb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 880781F00899;
-	Wed, 16 Sep 2026 11:24:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LJJtf+b6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 874EB1F000FF;
+	Wed, 16 Sep 2026 11:51:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789557878;
-	bh=9yMRewUVdtk5FTKiyrOjdk+WbBNSVZ/plHkzP6P2SuQ=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=lSY66ISb3m9U6walw2ED+kaCgM2gABW2AgoPJjdeVg7dafwfXiiS2VY9yNMLoovS0
-	 /HCNS6C7dbRdwLV1mezft/EYCTQWtw6Xi2W0ZCbP26gE+1GrfcGaLMTA4/DJvg/n38
-	 X/L2iOHwfiwTNOWhnDMCMyh1rNq2RpYqDKDcErBTvZki/edYI8yFEwlyKCn31B4x/k
-	 j6xN5+ZIjaHBC0ob6CJz6pWn0+FlGblBUjDWi3ulUKl7e5lIjuwWR2baLBBAH/99MV
-	 CbshddnS3zF9W6QG8Nps7bkVMotFH0RLER0n6+Xxw/54ngx0wKejp3dXy08deTuSYr
-	 gN0Oz+amFoBEQ==
-Message-ID: <8d6a8a63-4adc-458a-b548-a47bf5ff8eb7@kernel.org>
-Date: Wed, 16 Sep 2026 13:24:31 +0200
+	s=k20260515; t=1789559512;
+	bh=yCAthROx0KYOMlJTk1Lsv9disR6/i3DPilBQqCRVBjo=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=LJJtf+b6V5j9G5jSILo26GVwskFrV5+aZEiKr2arJH55EUD2Xt5ERUL98VXfPoMS+
+	 6G1ZQ62Bt1/mRrjL63mFIhWoQJFPmXR1/FUYb8OHsxTrEoa+3woEzEUEsF+SGkdtDj
+	 ym5dN/bDEAIgQj23c3eT1v0O5y3vmMRcz+7+Hub89mi/bX+HLnwbikvdhwayz64ZHP
+	 oGPB5BwmPmB65qBcyiesp5RAS16QphQMpXsFNWbeXuJegeMVQabw4Dh2zHS9Jy0fVP
+	 MwKWQWG9XXcg1GOv51UoshianF4FlZypPOo/6c9i7CtTghOm8C7ZvnzALS5mGCw6DD
+	 jRtAhIa/GDLbA==
+From: Andrey Albershteyn <aalbersh@kernel.org>
+To: Alejandro Colomar <alx@kernel.org>,
+	linux-man@vger.kernel.org
+Cc: Andrey Albershteyn <aalbersh@kernel.org>,
+	linux-api@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	Christoph Hellwig <hch@lst.de>,
+	djwong@kernel.org
+Subject: [PATCH v4] man/man2: introduce man page for file_getattr/file_setattr syscalls
+Date: Wed, 16 Sep 2026 13:51:39 +0200
+Message-ID: <20260916115141.3500780-1-aalbersh@kernel.org>
+X-Mailer: git-send-email 2.54.0
+In-Reply-To: <20260914111107.1735564-1-aalbersh@kernel.org>
+References: <20260914111107.1735564-1-aalbersh@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4] mm/page_alloc: avoid direct compaction for costly
- __GFP_NORETRY allocations
-Content-Language: en-US
-To: Johannes Weiner <hannes@cmpxchg.org>,
- Salvatore Dipietro <dipiets@amazon.it>
-Cc: akpm@linux-foundation.org, abuehaze@amazon.com, alisaidi@amazon.com,
- blakgeof@amazon.com, brauner@kernel.org, brendan.jackman@linux.dev,
- david@redhat.com, dgc@kernel.org, dipietro.salvatore@gmail.com,
- djwong@kernel.org, hch@infradead.org, hch@lst.de,
- linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-mm@kvack.org, linux-xfs@vger.kernel.org, mhocko@suse.com,
- ritesh.list@gmail.com, rvvandan@amazon.com, stable@vger.kernel.org,
- surenb@google.com, willy@infradead.org, ziy@nvidia.com
-References: <20260905174239.99e31515fabe220aa7d8e6fa@linux-foundation.org>
- <20260910114602.926944-1-dipiets@amazon.it> <aqQlUr-1h07G8JWM@cmpxchg.org>
-From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
-Autocrypt: addr=vbabka@kernel.org; keydata=
- xsFNBFZdmxYBEADsw/SiUSjB0dM+vSh95UkgcHjzEVBlby/Fg+g42O7LAEkCYXi/vvq31JTB
- KxRWDHX0R2tgpFDXHnzZcQywawu8eSq0LxzxFNYMvtB7sV1pxYwej2qx9B75qW2plBs+7+YB
- 87tMFA+u+L4Z5xAzIimfLD5EKC56kJ1CsXlM8S/LHcmdD9Ctkn3trYDNnat0eoAcfPIP2OZ+
- 9oe9IF/R28zmh0ifLXyJQQz5ofdj4bPf8ecEW0rhcqHfTD8k4yK0xxt3xW+6Exqp9n9bydiy
- tcSAw/TahjW6yrA+6JhSBv1v2tIm+itQc073zjSX8OFL51qQVzRFr7H2UQG33lw2QrvHRXqD
- Ot7ViKam7v0Ho9wEWiQOOZlHItOOXFphWb2yq3nzrKe45oWoSgkxKb97MVsQ+q2SYjJRBBH4
- 8qKhphADYxkIP6yut/eaj9ImvRUZZRi0DTc8xfnvHGTjKbJzC2xpFcY0DQbZzuwsIZ8OPJCc
- LM4S7mT25NE5kUTG/TKQCk922vRdGVMoLA7dIQrgXnRXtyT61sg8PG4wcfOnuWf8577aXP1x
- 6mzw3/jh3F+oSBHb/GcLC7mvWreJifUL2gEdssGfXhGWBo6zLS3qhgtwjay0Jl+kza1lo+Cv
- BB2T79D4WGdDuVa4eOrQ02TxqGN7G0Biz5ZLRSFzQSQwLn8fbwARAQABzSNWbGFzdGltaWwg
- QmFia2EgPHZiYWJrYUBrZXJuZWwub3JnPsLBsAQTAQoAWhYhBKlA1DSZLC6OmRA9UCJPp+fM
- gqZkBQJqFFy6GxSAAAAAAAQADm1hbnUyLDIuNSsxLjEyLDIsMgIbAwUJGtCBUAULCQgHAwUV
- CgkICwUWAgMBAAIeBQIXgAAKCRAiT6fnzIKmZJIUEADFx/tREzUImHrEwVHeSvDFmA7tJysI
- UVrlvrM09E7GIuzphzv7jYmo8n3ANpCczLEVr4G0syYQdTigaZgv3+FQDIIzhKih1IHhu1Ei
- XHlywNWKnQxxQEUNi5Mwx43wQz5XVw9F1A7gtKBKNtfogO511hAbrzagrYajyQacEJ/+sfhZ
- 9Da8ltHIXD8pcYaHUfQgEusCgmEd9+KrUwrTbckFKmYq5chuE6yJ4J0EmWknL096jIE6CnzF
- FRslQ3B1UKDjxVsm1ZHfir5NeWszLkTvGFsddFaWTgh8UycESG6VQzKXjjewXu2pG7YQYRpj
- QKm1W5X2TkwWkXRBZTmfmbhxIUMh3+zf5wQ463rSmDN/8v81tdqBtAW6rH/kzg1GvkaTHXn0
- 507yEHFzBksk2viAuIxxr7km8+/KARYLIdGtx30EG8cKzAUZOK6WqxtNCsXUJNrVE8CWrCaD
- icoNu7Fs1c5hmPHdSTnU48ce67449DdnO4neLSNhRiGlMHJgfJUmgrxu/hcYeOZ3haWmEQ2w
- uW1Mh01OHi8QZHCEyAbABrPs9GUgccc/4eYXX9hIgxfSkYzn8f+8NuIFPWl/0uTvjgqU29FQ
- SbzOLxHq9439Ox40G5mS5eZXRGxITYR+6TXvRGI6P/264jvflnr/pDGUttaikU+0W+1uxgKH
- cmYbEc7ATQRbGTU1AQgAn0H6UrFiWcovkh6EXVcl+SeqyO6JHOPm+e9Wu0Vw+VIUvXZVUVVQ
- La1PQDUi6j00ChlcR66g9/V0sPIcSutacPKfdKYOBvzd4rlhL8rfrdEsQw5ApZxrA8kYZVMh
- FmBRKAa6wos25moTlMKpCWzTH84+WO5+ziCTsTUZASAToz3RdunTD+vQcHj0GqNTPAHK63sf
- bAB2I0BslZkXkY1RLb/YhuA6E7JyEd2pilZOrIuBGl/5q2qSakgnAVFWFBR/DO27JuAksYnq
- +aH8vI0xGvwn75KqSk4UzAkDzWSmO4ZHuahKtQgZNsMYV+PGayRBX9b9zbldzopoLBdqHc4n
- jQARAQABwsF8BBgBCgAmAhsMFiEEqUDUNJksLo6ZED1QIk+n58yCpmQFAmfIHFQFCRYU6J8A
- CgkQIk+n58yCpmS2PA//bqN1LfcotmArgElsa+0EGZSQlYgK48pm8WAeTXTngudP9IJ4SuKY
- HR5RNjHcBeqN+Me0zxRqYzRb8nGanHEkDyf4Im8DQM8d6vbyU+FcPmG4skud4kgS1zMHnlVd
- SXfSIwKC/hKgdHG8aBV7545Lz9X6Iohea+94wneD0aw/hqF+QWewGZhWJriWAZtvEkzNjQOi
- 4U9F/trLten/x7bpphDSnDMKJtITbtzATT1Dq7o7VpIUK1nCTQALMuMjKCdi8OdU/+V+R3O4
- 0PXWvX8qrvqYapVbZ+9KqT74FsuB0Ya9uXwgBF2Q6cRuETZk5vqaqKxzqoQZCO8AOz/58j6O
- 2RHNy/mZEN+7tJ5Tsq42zVJ4jxsT8b9YplavCMsnBgDeRWhcbYhCyttoL7nYISyWg4kQYZ/P
- wIV3OuNv2f8iKYsxNsRuClOAF82+gvqOy1/1pprFjy8uo2pkoOrb63aOP3vO5VHnRKgra6dq
- NcaZ+c6J4H+nEJGi2SkHAUJz5oBzuThvPudLvPA/SK8sKoM01IRxSihev/S/5WLazXB1PGem
- OCbvzC1IjWJJraxiDJ5IygokapUa2RP7+WBR22skQ3SSl6G107QgWKSyTOGWEaRmV53vxQLV
- jXuCmzSSasTL60zq5yGrT4/DYQVSNEUiUbG4pYekxJujNeEDkUlky0Y=
-In-Reply-To: <aqQlUr-1h07G8JWM@cmpxchg.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 9/11/26 17:59, Johannes Weiner wrote:
-> On Thu, Sep 10, 2026 at 11:46:02AM +0000, Salvatore Dipietro wrote:
->> 
->> On Sat, 05 Sep 2026 17:42:39 -0700 Andrew Morton <akpm@linux-foundation.org> wrote:
->> 
->> > Is there anything particularly unusual about this test case?
->> 
->> It is a stock pgbench simple-update PostgreSQL workload on a large
->> instance (96 vCPUs), using standard PostgreSQL settings and with no huge
->> pages assigned to the database. We deliberately overprovision the
->> pgbench clients: 1024 clients over 96 threads. That keeps enough writers
->> in the buffered write path concurrently to hit the costly-order
->> allocation failure path continuously. The memory fragmentation comes from 
->> page tables: PostgreSQL spawns a new process per client, and those page
->> tables consume ~40% of memory, which significantly limits the page cache
->> and the free memory available.
->> 
->> 
->> > > Results (average of 3 runs, TPS):
->> > >
->> > >   Config                   Avg TPS      % vs Baseline
->> > >   baseline (no patch)       59,408       -
->> > >   With this patch          155,409      +161.6%
->> >
->> > Is this back to pre-5d8edfb900d5 performance?
->> 
->> Yes - fully recovered. Here is the summary, same host and workload
->> throughout, average of 3 runs:
->> 
->>   Config                                        Avg TPS   % vs baseline
->>   AL2023 stock 6.1 kernel                       136,942            n/a
->>   v7.3-rc1 baseline (no patch)                   59,408             -
->>   v7.3-rc1, 5d8edfb900d5 behaviour reverted     151,184        +154.5%
->>   v7.3-rc1 + v4                                 155,409        +161.6%
->> 
->> The 6.1 row predates 5d8edfb900d5 entirely. A different kernel version,
->> so not directly comparable, but it shows the performance this workload
->> used to get on this host.
->> 
->> A literal "git revert 5d8edfb900d5" does not apply to v7.3-rc1 -
->> iomap_write_iter() has been rewritten since - so the reverted row is a
->> one-line behavioural revert, forcing the write loop back to copying at
->> most PAGE_SIZE per iteration:
->> 
->>   -	size_t chunk = mapping_max_folio_size(mapping);
->>   +	size_t chunk = PAGE_SIZE;
->> 
->> which is what the pre-5d8edfb900d5 loop computed. That makes
->> iomap_get_folio() pass no order hint, so the path issues only order-0
->> allocations.
->> 
->> 
->> > AI review asked a few serious-looking questions:
->> > 	https://sashiko.dev/#/patchset/20260904115629.3993331-1-dipiets@amazon.it
->> 
->> Thanks for pointing that out. To address them, we can have something
->> like the patch below. Performance results are still similar to v4. Happy
->> to submit a formal v5 patch with it if you would like.
-> 
-> The feedback looks misleading to me.
+Add manual pages for file_getattr() and file_setattr() syscalls and
+struct file_attr used as input/output argument.
 
-Agreed.
+Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
+Link: https://lore.kernel.org/all/20250630-xattrat-syscall-v6-0-c4e3bc35227b@kernel.org/
 
-> ALLOC_NON_BLOCKING itself is fine, it usually only means something in
-> conjunction with other flags, like __GFP_HIGH.
+---
+Changes from v3:
+- dropped VERSIONS section in file_attr.2type
+- reference arguments and errors from file_setattr to file_getattr
+- Minor wording fixes
+- Minor formatting fixes
+- Removed zero-initialized requirement
+- Interdiff with v3 below
 
-+1
+Changes from v2:
+- a few grammar fixes
+- styling fixes
+- sashiko.dev fixes (wrong AT_FDCWD combined with AT_EMPTY_PATH
+  description, unused "dfd")
+- dropped requirement to zero fattr before using file_setattr()
+- Pathname -> path
+- Dropped description of why FS_IOC_ aren't usable with special files
+- Fixed backslashes in the code examples
+---
+ man/man2/file_getattr.2      | 254 +++++++++++++++++++++++++++++++++++
+ man/man2/file_setattr.2      | 180 +++++++++++++++++++++++++
+ man/man2type/file_attr.2type | 151 +++++++++++++++++++++
+ 3 files changed, 585 insertions(+)
+ create mode 100644 man/man2/file_getattr.2
+ create mode 100644 man/man2/file_setattr.2
+ create mode 100644 man/man2type/file_attr.2type
 
-> The access to
-> MIGRATE_HIGHATOMIC that it points out is in itself too generous. This
-> seems like a real but separate bug. It will allow GFP_TRANSHUGE_LIGHT
-> into the highatomic reserves as well, for example.
+diff --git a/man/man2/file_getattr.2 b/man/man2/file_getattr.2
+new file mode 100644
+index 000000000000..fe804d97976b
+--- /dev/null
++++ b/man/man2/file_getattr.2
+@@ -0,0 +1,254 @@
++.\" Copyright, the authors of the Linux man-pages project
++.\"
++.\" SPDX-License-Identifier: Linux-man-pages-copyleft
++.\"
++.TH file_getattr 2 (date) "Linux man-pages (unreleased)"
++.SH NAME
++file_getattr \- get filesystem file attributes
++.SH SYNOPSIS
++.nf
++.BR "#include <linux/fcntl.h>" "      /* " AT_* " constants */"
++.BR "#include <linux/fs.h>" "         /* " FS_XFLAG_* " constants */"
++.BR "#include <sys/syscall.h>" "      /* " SYS_* " constants */"
++.B #include <unistd.h>
++.P
++.B long syscall(SYS_file_getattr,
++.BI "               int " dirfd ", const char *" path ,
++.BI "               struct file_attr *" fattr ", size_t " size ,
++.BI "               unsigned int " flags );
++.fi
++.SH DESCRIPTION
++The
++.BR file_getattr ()
++system call retrieves filesystem file attributes
++specified by path.
++.P
++As with
++.BR openat (2),
++if
++.I path
++is relative,
++then it is interpreted relative to the directory
++referred to by the file descriptor
++.IR dirfd .
++The special
++.I dirfd
++value
++.B AT_FDCWD
++can be used to refer to the current working directory of the calling process.
++If
++.I path
++is absolute,
++then
++.I dirfd
++is ignored.
++.P
++The
++.I fattr
++argument is a pointer to a
++.I file_attr
++structure.
++This structure will be filled with file attributes.
++This structure is described in
++.BR file_attr (2type).
++.P
++The
++.I size
++argument specifies the size of the structure pointed to by
++.IR fattr .
++The size indicates version of the structure in use, refer to
++.B file_attr (2type)
++for more information on versioning.
++.P
++The
++.I flags
++argument contains a bitwise OR of zero or more of the following constants:
++.TP
++.B AT_EMPTY_PATH
++If
++.I path
++is an empty string,
++operate on the file referred to by
++.IR dirfd .
++In this case,
++.I dirfd
++can refer to any type of file,
++not just a directory.
++.TP
++.B AT_SYMLINK_NOFOLLOW
++If
++.I path
++is a symbolic link,
++do not dereference it;
++instead get attributes of the symbolic link inode itself.
++By default, symbolic links are dereferenced.
++.SH RETURN VALUE
++On success,
++zero is returned.
++On error,
++\-1 is returned,
++and
++.I errno
++is set to indicate the error.
++.SH ERRORS
++.TP
++.B E2BIG
++.I size
++is too big (larger than
++.BR PAGE_SIZE ).
++.TP
++.B EACCES
++Search permission is denied for one of the directories
++in the path prefix of
++.IR path .
++.TP
++.B EBADF
++.I path
++is relative but
++.I dirfd
++is neither
++.B AT_FDCWD
++nor a valid file descriptor.
++.TP
++.B EBADF
++.I path
++is an empty string,
++.B AT_EMPTY_PATH
++was specified,
++but
++.I dirfd
++is neither
++.B AT_FDCWD
++nor a valid file descriptor.
++.TP
++.B EFAULT
++.I path
++or
++.I fattr
++is an invalid pointer.
++.TP
++.B EINVAL
++Unknown flag specified in
++.IR flags .
++.TP
++.B EINVAL
++.I size
++is smaller than
++.BR FILE_ATTR_SIZE_VER0 .
++.TP
++.B ELOOP
++Too many symbolic links encountered while resolving
++.IR path .
++.TP
++.B ENAMETOOLONG
++.I path
++is too long.
++.TP
++.B ENOENT
++A component of
++.I path
++does not exist,
++or
++.I path
++is an empty string and
++.B AT_EMPTY_PATH
++was not specified in
++.IR flags .
++.TP
++.B ENOMEM
++Insufficient kernel memory was available.
++.TP
++.B ENOTDIR
++A component of the path prefix of
++.I path
++is not a directory, or
++.I path
++is relative and
++.I dirfd
++is a file descriptor referring to a file other than a directory.
++.TP
++.B EOPNOTSUPP
++The filesystem does not support getting attributes on this type of inode.
++.SH HISTORY
++.SS Linux 6.17
++This system call is introduced.
++.SH NOTES
++This system call is designed to be extensible.
++The
++.I size
++argument allows user-space applications to indicate
++which version of the
++.I file_attr
++structure they are using,
++enabling the kernel to support both old and new versions
++of the structure simultaneously.
++.P
++If
++.I size
++is smaller than the structure size the kernel expects,
++only the fields that fit within
++.I size
++will be filled in.
++If
++.I size
++is larger than the kernel's structure size,
++the extra bytes are zeroed.
++.SH EXAMPLES
++The program below demonstrates the use of
++.BR file_getattr ()
++to retrieve and display file attributes.
++.P
++.in +4n
++.EX
++#include <fcntl.h>
++#include <linux/fs.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <sys/syscall.h>
++#include <unistd.h>
++
++#ifndef SYS_file_getattr
++#define SYS_file_getattr 467
++#endif
++
++int
++main(int argc, char *argv[])
++{
++    struct file_attr fa;
++    long ret;
++
++    if (argc != 2) {
++        fprintf(stderr, "Usage: %s <filename>\[rs]n", argv[0]);
++        exit(EXIT_FAILURE);
++    }
++
++    ret = syscall(SYS_file_getattr, AT_FDCWD, argv[1], &fa, sizeof(fa), 0);
++    if (ret == \-1) {
++        perror("file_getattr");
++        exit(EXIT_FAILURE);
++    }
++
++    printf("File attributes:\[rs]n");
++    printf("  xflags:     0x%llx\[rs]n", (unsigned long long) fa.fa_xflags);
++    printf("  extsize:    %u\[rs]n", fa.fa_extsize);
++    printf("  nextents:   %u\[rs]n", fa.fa_nextents);
++    printf("  projid:     %u\[rs]n", fa.fa_projid);
++    printf("  cowextsize: %u\[rs]n", fa.fa_cowextsize);
++
++    /*
++     * Try setting NODUMP flag with chattr +d ./foo to see the difference
++     */
++    if (fa.fa_xflags & FS_XFLAG_NODUMP)
++        printf("  NODUMP flag is set\[rs]n");
++
++    exit(EXIT_SUCCESS);
++}
++.EE
++.in
++.SH SEE ALSO
++.BR file_setattr (2),
++.BR file_attr (2type),
++.BR ioctl (2),
++.BR ioctl_fs (2),
++.BR openat (2),
++.BR ioctl_xfs_fssetxattr (2)
+diff --git a/man/man2/file_setattr.2 b/man/man2/file_setattr.2
+new file mode 100644
+index 000000000000..0389f42afb50
+--- /dev/null
++++ b/man/man2/file_setattr.2
+@@ -0,0 +1,180 @@
++.\" Copyright, the authors of the Linux man-pages project
++.\"
++.\" SPDX-License-Identifier: Linux-man-pages-copyleft
++.\"
++.TH file_setattr 2 (date) "Linux man-pages (unreleased)"
++.SH NAME
++file_setattr \- set filesystem file attributes
++.SH SYNOPSIS
++.nf
++.BR "#include <linux/fcntl.h>" "      /* Definition of " AT_* " constants */"
++.BR "#include <linux/fs.h>" "         /* Definition of " FS_XFLAG_* " constants */"
++.BR "#include <sys/syscall.h>" "      /* Definition of " SYS_* " constants */"
++.B #include <unistd.h>
++.P
++.B long syscall(SYS_file_setattr,
++.BI "               int " dirfd ", const char *" path ,
++.BI "               struct file_attr *" fattr ", size_t " size ,
++.BI "               unsigned int " flags );
++.fi
++.P
++.SH DESCRIPTION
++The
++.BR file_setattr ()
++system call sets filesystem file attributes
++on the file specified by path.
++.P
++The
++.IR dirfd ,
++.IR path ,
++.IR fattr ,
++.IR size ,
++and
++.I flags
++arguments behaves in the same way as in
++.BR file_getattr (2).
++The only difference is that
++user-space applications should use
++.BR file_getattr (2)
++to initialize
++.I fattr
++argument beforehand.
++.SH RETURN VALUE
++On success,
++zero is returned.
++On error,
++\-1 is returned,
++and
++.I errno
++is set to indicate the error.
++.SH ERRORS
++.P
++The errors are the same as returned by
++.BR file_getattr (2)
++with the addition of following ones:
++.TP
++.B E2BIG
++.I size
++indicates a version which the kernel doesn't support
++(the size is larger than the kernel expects)
++and new fields are non-zero.
++.TP
++.B EINVAL
++Invalid combination of parameters provided in
++.I fattr
++for this type of file or filesystem.
++.TP
++.B EPERM
++The caller does not have the necessary permissions
++to change the file attributes.
++.TP
++.B EROFS
++The file is on a read-only filesystem.
++.SH HISTORY
++.SS Linux 6.17
++This system call is introduced.
++.SH NOTES
++This system call is designed to be extensible.
++The
++.I size
++argument allows user-space applications to indicate
++which version of the
++.I file_attr
++structure they are using,
++enabling the kernel to support both old and new versions
++of the structure simultaneously.
++.P
++If
++.I size
++is smaller than the structure size the kernel expects,
++the kernel treats the missing fields as having zero values
++(which is a no-op).
++If
++.I size
++is larger than expected,
++the kernel checks that all unknown (to the kernel) fields are zero;
++if not,
++the call fails with
++.BR E2BIG .
++.SH EXAMPLES
++The program below demonstrates the use of
++.BR file_setattr ()
++to set the
++.B FS_XFLAG_NODUMP
++flag on a file.
++.P
++.in +4n
++.EX
++#include <fcntl.h>
++#include <linux/fcntl.h>
++#include <linux/fs.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <sys/syscall.h>
++#include <unistd.h>
++
++#ifndef SYS_file_getattr
++#define SYS_file_getattr 467
++#endif
++
++#ifndef SYS_file_setattr
++#define SYS_file_setattr 468
++#endif
++
++int
++main(int argc, char *argv[])
++{
++    struct file_attr fa;
++    int dfd;
++    long ret;
++
++    if (argc != 2) {
++        fprintf(stderr, "Usage: %s <filename>\[rs]n", argv[0]);
++        exit(EXIT_FAILURE);
++    }
++
++    dfd = open(argv[1], O_RDONLY);
++    if (dfd == \-1) {
++        perror("open");
++        exit(EXIT_FAILURE);
++    }
++
++    ret = syscall(SYS_file_getattr, dfd, "", &fa, sizeof(fa), AT_EMPTY_PATH);
++    if (ret == \-1) {
++        perror("file_getattr");
++        exit(EXIT_FAILURE);
++    }
++
++    printf("Current flags: 0x%llx\[rs]n", (unsigned long long) fa.fa_xflags);
++
++    fa.fa_xflags |= FS_XFLAG_NODUMP;
++
++    ret = syscall(SYS_file_setattr, dfd, "", &fa, sizeof(fa), AT_EMPTY_PATH);
++    if (ret == \-1) {
++        perror("file_setattr");
++        exit(EXIT_FAILURE);
++    }
++
++    ret = syscall(SYS_file_getattr, dfd, "", &fa, sizeof(fa), AT_EMPTY_PATH);
++    if (ret == \-1) {
++        perror("file_getattr");
++        exit(EXIT_FAILURE);
++    }
++
++    if (fa.fa_xflags & FS_XFLAG_NODUMP)
++        printf("flags 0x%llx (NODUMP flag is set)\[rs]n",
++            (unsigned long long) fa.fa_xflags);
++
++    exit(EXIT_SUCCESS);
++}
++.EE
++.in
++.SH SEE ALSO
++.BR file_getattr (2),
++.BR ioctl (2),
++.BR ioctl_fs (2),
++.BR openat (2),
++.BR file_attr (2type),
++.BR path_resolution (7),
++.BR ioctl_xfs_fssetxattr (2)
+diff --git a/man/man2type/file_attr.2type b/man/man2type/file_attr.2type
+new file mode 100644
+index 000000000000..221d97b5220d
+--- /dev/null
++++ b/man/man2type/file_attr.2type
+@@ -0,0 +1,151 @@
++.\" Copyright, the authors of the Linux man-pages project
++.\"
++.\" SPDX-License-Identifier: Linux-man-pages-copyleft
++.\"
++.TH file_attr 2type (date) "Linux man-pages (unreleased)"
++.SH NAME
++file_attr \- describe filesystem file attributes to get or set
++.SH SYNOPSIS
++.EX
++.B #include <linux/fs.h>
++.P
++.B struct file_attr {
++.BR "    u64  fa_xflags;" "     /* Extended flags */"
++.BR "    u32  fa_extsize;" "    /* Extent size hint */"
++.BR "    u32  fa_nextents;" "   /* Number of extents (read-only) */"
++.BR "    u32  fa_projid;" "     /* Project identifier */"
++.BR "    u32  fa_cowextsize;" " /* CoW extent size hint */"
++.B };
++.EE
++.SH DESCRIPTION
++Describes filesystem file attributes
++for use with the
++.BR file_getattr (2)
++and
++.BR file_setattr (2)
++system calls.
++.P
++The fields are as follows:
++.TP
++.I fa_xflags
++This field contains file attribute flags.
++It is a bit mask consisting of zero or more of the
++.B FS_XFLAG_*
++flags.
++Refer to the section
++.B FLAGS
++below for a list of all flags.
++.TP
++.I fa_extsize
++Extent size allocator hint in bytes.
++This value suggests a preferred extent size
++for new allocations to this file.
++.TP
++.I fa_nextents
++Number of data extents in the file (read-only).
++This field is filled in by
++.BR file_getattr (2)
++and is ignored by
++.BR file_setattr (2).
++.TP
++.I fa_projid
++Project identifier.
++Used by quota systems to group related files.
++.TP
++.I fa_cowextsize
++Copy-on-Write (CoW) extent size hint in bytes.
++This value suggests a preferred extent size
++for CoW operations.
++.SH FLAGS
++Flags can be:
++.RS
++.TP
++.B FS_XFLAG_REALTIME
++Data is stored in a realtime volume.
++.TP
++.B FS_XFLAG_IMMUTABLE
++File cannot be modified.
++.TP
++.B FS_XFLAG_APPEND
++All writes must append to the end of the file.
++.TP
++.B FS_XFLAG_SYNC
++All writes are synchronous.
++.TP
++.B FS_XFLAG_NOATIME
++Do not update file access time on reads.
++.TP
++.B FS_XFLAG_NODUMP
++Do not include file in backups.
++.TP
++.B FS_XFLAG_DAX
++Use Direct Access (DAX) for I/O operations.
++.TP
++.B FS_XFLAG_NODEFRAG
++Exclude this file from defragmentation operations.
++.TP
++.B FS_XFLAG_FILESTREAM
++Use filestream allocator for this file.
++.TP
++.B FS_XFLAG_EXTSIZE
++Use the extent size hint from the
++.I fa_extsize
++field.
++.TP
++.B FS_XFLAG_COWEXTSIZE
++Use the CoW extent size hint from the
++.I fa_cowextsize
++field.
++.RE
++.P
++Directory only flags:
++.RS
++.TP
++.B FS_XFLAG_RTINHERIT
++New files created in this directory inherit the realtime flag.
++.TP
++.B FS_XFLAG_NOSYMLINKS
++Disallow creation of symbolic links in this directory.
++.TP
++.B FS_XFLAG_EXTSZINHERIT
++New files created in this directory inherit the extent size hint.
++.TP
++.B FS_XFLAG_PROJINHERIT
++New files created in this directory inherit the project identifier.
++.RE
++.P
++The following flags are read-only:
++.RS
++.TP
++.B FS_XFLAG_PREALLOC
++File has preallocated extents.
++.TP
++.B FS_XFLAG_HASATTR
++File has extended attributes.
++.TP
++.B FS_XFLAG_VERITY
++File has fs-verity enabled.
++.TP
++.B FS_XFLAG_CASEFOLD
++The filesystem performs case-insensitive lookups (file and directory name
++comparisons ignore case).
++.TP
++.B FS_XFLAG_CASENONPRESERVING
++The filesystem does not preserve the case of file and directory names.
++.RE
++.P
++Not all filesystems support all flags.
++Setting unsupported flags may result in an
++.B EINVAL
++or
++.B EOPNOTSUPP
++error.
++.SH HISTORY
++.SS Linux v6.17
++This structure is introduced.
++.SS Linux v7.2
++The FS_XFLAG_CASEFOLD and FS_XFLAG_CASENONPRESERVING are introduced to enable
++upper layers, such as NFSD, to retrieve case sensitivity information.
++.SH SEE ALSO
++.BR file_getattr (2),
++.BR file_setattr (2)
 
-I don't follow this part. For ALLOC_HIGHATOMIC you need __GFP_HIGH in
-alloc_flags_nonblocking(). So GFP_TRANSHUGE_LIGHT won't get the access, no?
-
-> The rt issue seems made up too. We're talking about costly_order &&
-> __GFP_NORETRY allocations. Why would they need access to reserves?
-
-Yep.
-
-And the concern about warning is also moot as __GFP_NORETRY is still needed
-and its users virtually always add __GFP_NOWARN as well.
-
->>   Config                                        Avg TPS   % vs baseline
->>   v7.3-rc1 baseline (no patch)                   59,408             -
->>   v7.3-rc1 + v4                                 155,409        +161.6%
->>   v7.3-rc1 + proposed patch                     161,994        +172.7%
->> 
->> diff --git a/mm/page_alloc.c b/mm/page_alloc.c
->> index 12fac9084c48..be8b0d72a2db 100644
->> --- a/mm/page_alloc.c
->> +++ b/mm/page_alloc.c
->> @@ -4784,10 +4784,22 @@ static inline struct page *
->>  __alloc_pages_slowpath(gfp_t gfp_mask, unsigned int order,
->>  						struct alloc_context *ac)
->>  {
->> -	bool can_direct_reclaim = gfp_mask & __GFP_DIRECT_RECLAIM;
->> +	const bool costly_order = order > PAGE_ALLOC_COSTLY_ORDER;
->> +	/*
->> +	 * Costly __GFP_NORETRY callers have a cheap fallback to a lower order,
->> +	 * so don't stall them in direct reclaim or direct compaction.  Exempt
->> +	 * __GFP_THISNODE (the THP attempt from alloc_pages_mpol() needs direct
->> +	 * compaction) and __GFP_NOFAIL (must not be made to fail).  Don't
->> +	 * clear __GFP_DIRECT_RECLAIM from gfp_mask instead: that would also
->> +	 * change the alloc_flags derived by alloc_flags_slowpath().
->> +	 */
->> +	const bool costly_noretry = costly_order &&
->> +		(gfp_mask & __GFP_NORETRY) &&
->> +		!(gfp_mask & (__GFP_THISNODE | __GFP_NOFAIL));
->> +	bool can_direct_reclaim = !costly_noretry &&
->> +		(gfp_mask & __GFP_DIRECT_RECLAIM);
-> 
-> IMO this is worse because now there is a disconnect between these
-> flags and the gfp mask again. This sets us up for subtle bugs.
-> 
-> I much preferred v4.
-
-Unless I'm mistaken about that MIGRATE_HIGHATOMIC part, it seems all sashiko
-concerns can be dismissed and then indeed v4 is the better version.
+Interdiff against v3:
+  diff --git a/man/man2/file_getattr.2 b/man/man2/file_getattr.2
+  index 1168b23c5ce5..fe804d97976b 100644
+  --- a/man/man2/file_getattr.2
+  +++ b/man/man2/file_getattr.2
+  @@ -4,7 +4,7 @@
+   .\"
+   .TH file_getattr 2 (date) "Linux man-pages (unreleased)"
+   .SH NAME
+  -file_getattr \- get filesystem inode attributes
+  +file_getattr \- get filesystem file attributes
+   .SH SYNOPSIS
+   .nf
+   .BR "#include <linux/fcntl.h>" "      /* " AT_* " constants */"
+  @@ -21,7 +21,7 @@ file_getattr \- get filesystem inode attributes
+   The
+   .BR file_getattr ()
+   system call retrieves filesystem file attributes
+  -from the file.
+  +specified by path.
+   .P
+   As with
+   .BR openat (2),
+  @@ -31,9 +31,11 @@ is relative,
+   then it is interpreted relative to the directory
+   referred to by the file descriptor
+   .IR dirfd .
+  -The special value
+  +The special
+  +.I dirfd
+  +value
+   .B AT_FDCWD
+  -could be used to refer to the current working directory of the calling process.
+  +can be used to refer to the current working directory of the calling process.
+   If
+   .I path
+   is absolute,
+  @@ -55,16 +57,9 @@ The
+   argument specifies the size of the structure pointed to by
+   .IR fattr .
+   The size indicates version of the structure in use, refer to
+  -.B file_attr(2type)
+  +.B file_attr (2type)
+   for more information on versioning.
+   .P
+  -Userspace applications should zero-initialize
+  -.I struct file_attr
+  -before calling
+  -.BR file_getattr ()
+  -to ensure that fields not filled in by older kernels
+  -will have predictable values.
+  -.P
+   The
+   .I flags
+   argument contains a bitwise OR of zero or more of the following constants:
+  @@ -176,15 +171,12 @@ is a file descriptor referring to a file other than a directory.
+   The filesystem does not support getting attributes on this type of inode.
+   .SH HISTORY
+   .SS Linux 6.17
+  -This system call is introduced as a more flexible alternative to the
+  -FS_IOC_FSGETXATTR
+  -.BR ioctl (2)
+  -which could work on any type of file.
+  +This system call is introduced.
+   .SH NOTES
+   This system call is designed to be extensible.
+   The
+   .I size
+  -argument allows userspace applications to indicate
+  +argument allows user-space applications to indicate
+   which version of the
+   .I file_attr
+   structure they are using,
+  @@ -222,7 +214,7 @@ to retrieve and display file attributes.
+   int
+   main(int argc, char *argv[])
+   {
+  -    struct file_attr fa = { 0 };
+  +    struct file_attr fa;
+       long ret;
+   
+       if (argc != 2) {
+  diff --git a/man/man2/file_setattr.2 b/man/man2/file_setattr.2
+  index 2b30f25c64de..0389f42afb50 100644
+  --- a/man/man2/file_setattr.2
+  +++ b/man/man2/file_setattr.2
+  @@ -4,12 +4,11 @@
+   .\"
+   .TH file_setattr 2 (date) "Linux man-pages (unreleased)"
+   .SH NAME
+  -file_setattr \- set filesystem inode attributes
+  +file_setattr \- set filesystem file attributes
+   .SH SYNOPSIS
+   .nf
+   .BR "#include <linux/fcntl.h>" "      /* Definition of " AT_* " constants */"
+  -.BR "#include <linux/fs.h>" "         /* Definition of " FILE_ATTR_* \
+  -" and " FS_XFLAG_* " constants */"
+  +.BR "#include <linux/fs.h>" "         /* Definition of " FS_XFLAG_* " constants */"
+   .BR "#include <sys/syscall.h>" "      /* Definition of " SYS_* " constants */"
+   .B #include <unistd.h>
+   .P
+  @@ -23,77 +22,23 @@ file_setattr \- set filesystem inode attributes
+   The
+   .BR file_setattr ()
+   system call sets filesystem file attributes
+  -on the file.
+  -.P
+  -As with
+  -.BR openat (2),
+  -if
+  -.I path
+  -is relative,
+  -then it is interpreted relative to the directory
+  -referred to by the file descriptor
+  -.I dirfd
+  -(or the current working directory of the calling process,
+  -if
+  -.I dirfd
+  -is the special value
+  -.BR AT_FDCWD ).
+  -If
+  -.I path
+  -is absolute,
+  -then
+  -.I dirfd
+  -is ignored.
+  -.P
+  -The
+  -.I fattr
+  -argument is a pointer to a
+  -.I file_attr
+  -structure,
+  -which specifies the attributes to set on the file.
+  -This structure is described in
+  -.BR file_attr (2type).
+  -Userspace applications should use
+  -.B file_getattr(2)
+  -to initialize
+  -.I struct fattr
+  -beforehand.
+  -.P
+  -The
+  -.I size
+  -argument specifies the size of the structure pointed to by
+  -.IR fattr .
+  -The size indicates version of the structure in use, refer to
+  -.B file_attr(2type)
+  -for more information on versioning.
+  +on the file specified by path.
+   .P
+   The
+  +.IR dirfd ,
+  +.IR path ,
+  +.IR fattr ,
+  +.IR size ,
+  +and
+   .I flags
+  -argument contains a bitwise OR of zero or more of the following constants:
+  -.TP
+  -.B AT_EMPTY_PATH
+  -If
+  -.I path
+  -is an empty string,
+  -operate on the file referred to by
+  -.I dirfd
+  -(which may have been obtained using the
+  -.BR open (2)
+  -.B O_PATH
+  -flag).
+  -In this case,
+  -.I dirfd
+  -can refer to any type of file,
+  -not just a directory.
+  -.TP
+  -.B AT_SYMLINK_NOFOLLOW
+  -If
+  -.I path
+  -is a symbolic link,
+  -do not dereference it:
+  -instead set attributes on the symbolic link itself.
+  -By default (i.e., if this flag is not specified),
+  -symbolic links are dereferenced.
+  +arguments behaves in the same way as in
+  +.BR file_getattr (2).
+  +The only difference is that
+  +user-space applications should use
+  +.BR file_getattr (2)
+  +to initialize
+  +.I fattr
+  +argument beforehand.
+   .SH RETURN VALUE
+   On success,
+   zero is returned.
+  @@ -103,98 +48,22 @@ and
+   .I errno
+   is set to indicate the error.
+   .SH ERRORS
+  +.P
+  +The errors are the same as returned by
+  +.BR file_getattr (2)
+  +with the addition of following ones:
+   .TP
+   .B E2BIG
+   .I size
+  -is larger than
+  -.BR PAGE_SIZE .
+  -.TP
+  -.B E2BIG
+  -.I size
+  -indicates the version which kernel doesn't support (the size is larger than the
+  -kernel expects) and new fields are non-zero.
+  -.TP
+  -.B EACCES
+  -Search permission is denied for one of the directories
+  -in the path prefix of
+  -.IR path .
+  -(See also
+  -.BR path_resolution (7).)
+  -.TP
+  -.B EBADF
+  -.I path
+  -is relative but
+  -.I dirfd
+  -is neither
+  -.B AT_FDCWD
+  -nor a valid file descriptor.
+  -.TP
+  -.B EBADF
+  -.I path
+  -is an empty string,
+  -.B AT_EMPTY_PATH
+  -was specified in
+  -.IR flags ,
+  -and
+  -.I dirfd
+  -is neither
+  -.B AT_FDCWD
+  -nor a valid file descriptor.
+  -.TP
+  -.B EFAULT
+  -.I path
+  -or
+  -.I fattr
+  -is an invalid pointer.
+  -.TP
+  -.B EINVAL
+  -Unknown flag specified in
+  -.IR flags .
+  -.TP
+  -.B EINVAL
+  -.I size
+  -is smaller than
+  -.BR FILE_ATTR_SIZE_VER0 .
+  +indicates a version which the kernel doesn't support
+  +(the size is larger than the kernel expects)
+  +and new fields are non-zero.
+   .TP
+   .B EINVAL
+   Invalid combination of parameters provided in
+   .I fattr
+   for this type of file or filesystem.
+   .TP
+  -.B ELOOP
+  -Too many symbolic links encountered while resolving
+  -.IR path .
+  -.TP
+  -.B ENAMETOOLONG
+  -.I path
+  -is too long.
+  -.TP
+  -.B ENOENT
+  -A component of
+  -.I path
+  -does not exist,
+  -or
+  -.I path
+  -is an empty string and
+  -.B AT_EMPTY_PATH
+  -was not specified in
+  -.IR flags .
+  -.TP
+  -.B ENOMEM
+  -Insufficient kernel memory was available.
+  -.TP
+  -.B ENOTDIR
+  -A component of the path prefix of
+  -.I path
+  -is not a directory, or
+  -.I path
+  -is relative and
+  -.I dirfd
+  -is a file descriptor referring to a file other than a directory.
+  -.TP
+  -.B EOPNOTSUPP
+  -The filesystem does not support setting attributes on this type of inode.
+  -.TP
+   .B EPERM
+   The caller does not have the necessary permissions
+   to change the file attributes.
+  @@ -203,10 +72,7 @@ to change the file attributes.
+   The file is on a read-only filesystem.
+   .SH HISTORY
+   .SS Linux 6.17
+  -This system call is introduced as a more flexible alternative to the
+  -FS_IOC_FSSETXATTR
+  -.BR ioctl (2)
+  -which could work on any type of files.
+  +This system call is introduced.
+   .SH NOTES
+   This system call is designed to be extensible.
+   The
+  @@ -259,7 +125,7 @@ flag on a file.
+   int
+   main(int argc, char *argv[])
+   {
+  -    struct file_attr fa = { 0 };
+  +    struct file_attr fa;
+       int dfd;
+       long ret;
+   
+  diff --git a/man/man2type/file_attr.2type b/man/man2type/file_attr.2type
+  index fd426c19f5f0..221d97b5220d 100644
+  --- a/man/man2type/file_attr.2type
+  +++ b/man/man2type/file_attr.2type
+  @@ -140,45 +140,9 @@ Setting unsupported flags may result in an
+   or
+   .B EOPNOTSUPP
+   error.
+  -.SH VERSIONS
+  -.SS Structure size
+  -The structure size is defined by
+  -.B FILE_ATTR_SIZE_VER*
+  -which is also a version of the structure being used.
+  -The
+  -.I size
+  -parameter passed to
+  -.BR file_getattr (2)
+  -and
+  -.BR file_setattr (2)
+  -indicates the version of
+  -.I struct file_attr\fP.
+  -.SS FILE_ATTR_SIZE_VER0
+  -Size is 24 bytes.
+   .SH HISTORY
+   .SS Linux v6.17
+   This structure is introduced.
+  -The
+  -.I struct file_attr
+  -provides similar functionality to
+  -.I struct fsxattr
+  -used by the
+  -.B FS_IOC_FSGETXATTR
+  -and
+  -.B FS_IOC_FSSETXATTR
+  -.BR ioctl (2)
+  -operations,
+  -but is designed to be extensible through the
+  -.I size
+  -parameter of the system calls.
+  -.P
+  -Extra fields may be appended to the structure in future kernel versions.
+  -The kernel will expect new fields to be zeros
+  -for older versions of the structure.
+  -Therefore, a user
+  -.I must
+  -zero-fill the structure on initialization to keep compatibility with older
+  -kernels.
+   .SS Linux v7.2
+   The FS_XFLAG_CASEFOLD and FS_XFLAG_CASENONPRESERVING are introduced to enable
+   upper layers, such as NFSD, to retrieve case sensitivity information.
+-- 
+2.55.0
 
