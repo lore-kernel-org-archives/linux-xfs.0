@@ -1,179 +1,118 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ot1-f72.google.com (mail-ot1-f72.google.com [209.85.210.72])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9E294CC61A;
-	Wed, 16 Sep 2026 22:35:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED03B4E06C6
+	for <linux-xfs@vger.kernel.org>; Wed, 16 Sep 2026 22:46:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789598157; cv=none; b=iUUtlV6GywnYW4Dd1X8dORG4QplZLShVEv8xb07vSza9rdw7oEpJ9Ck8uaDNE2JSTY9Bwgb8pUi+hoVZECmjZPL4mg1dAJwPT+4UZsyaMIo33tZCsyquOjONywZkDv4qjy34LrEZhTvofejk60LwexGuxQGxPV8jbgHzn4zFAck=
+	t=1789598798; cv=none; b=tVmr2dJERya5tDgbyqj1GSvbwwRhnNzScCClgPTFrIuVX3CZgyg9YCvFoCMY0fz7dUiYhka5jOms16xCQDGRlKPAH3ia+pqCG6m69VLhstc00ym1zBD1lTV0Vdl0cmZmChNrvQm+RC8Jclcuw9vvniWxVqfwvu8TI9d2hUCx9xw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789598157; c=relaxed/simple;
-	bh=hTpQv1DiUrsiOgQA0Hk+QbE8a2iCKtBmD0nHiF9SP7Y=;
-	h=Date:From:To:Subject:Message-Id:In-Reply-To:References:
-	 Mime-Version:Content-Type; b=W62VI/d0bf2isdlUEOhXNnC2U0eygsUkr9cRU0h8PMXPAojypDVq/KHDNCha7Ow9S2i9uQ5BLLRs7xlFePqjuow8ovr86og/5y9VXZv+sMYFChCBB2ROPJe41d7mh1PW3NC8lNnAMXNL2JkHD3MV8xa7BPWgqD/XSAgb+EkyrbQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=S//aGnBP; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="S//aGnBP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7EBD51F000FF;
-	Wed, 16 Sep 2026 22:35:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux-foundation.org; s=korg; t=1789598141;
-	bh=HGLJYjgnhN5BomAgi3vT5WzHyjvAyhNIqlfJD73iIU0=;
-	h=Date:From:To:Subject:In-Reply-To:References;
-	b=S//aGnBPPGeBvhxSLtAXQy6/qOyf3BT9C340KFYopN6oDtBd14Tli6B4DgxKq7cBM
-	 YZV79cvnVzC0ZvMTpy+c2DlqK9OCO1pz/YigbZ7uSxpbddpyvIMMNlFv9rSuQYv+Py
-	 Q7DiEaE1wLjJ0f1IvOvNV7f0DFOEViM7CIQYiW74=
-Date: Wed, 16 Sep 2026 15:35:40 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Johannes Weiner <hannes@cmpxchg.org>, "Vlastimil Babka (SUSE)"
- <vbabka@kernel.org>, Salvatore Dipietro <dipiets@amazon.it>,
- abuehaze@amazon.com, alisaidi@amazon.com, blakgeof@amazon.com,
- brauner@kernel.org, brendan.jackman@linux.dev, david@redhat.com,
- dgc@kernel.org, dipietro.salvatore@gmail.com, djwong@kernel.org,
- hch@infradead.org, hch@lst.de, linux-fsdevel@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-mm@kvack.org,
- linux-xfs@vger.kernel.org, mhocko@suse.com, ritesh.list@gmail.com,
- rvvandan@amazon.com, stable@vger.kernel.org, surenb@google.com,
- willy@infradead.org, ziy@nvidia.com
-Subject: Re: [PATCH v4] mm/page_alloc: avoid direct compaction for costly
- __GFP_NORETRY allocations
-Message-Id: <20260916153540.9a3fb449f5b3fd481ca1b544@linux-foundation.org>
-In-Reply-To: <20260916153426.3265e2e152cebb6a8d66373d@linux-foundation.org>
-References: <20260905174239.99e31515fabe220aa7d8e6fa@linux-foundation.org>
-	<20260910114602.926944-1-dipiets@amazon.it>
-	<aqQlUr-1h07G8JWM@cmpxchg.org>
-	<8d6a8a63-4adc-458a-b548-a47bf5ff8eb7@kernel.org>
-	<aqq8pWI0u1IZNWHT@cmpxchg.org>
-	<20260916153426.3265e2e152cebb6a8d66373d@linux-foundation.org>
-X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+	s=arc-20240116; t=1789598798; c=relaxed/simple;
+	bh=LCKg0MXz47Q9n7t/K46oO0BkUTa0dHYB5QwrbZcHbVE=;
+	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
+	 Content-Type; b=gOtEZueJaN3Ti69SBZ3LBlawYN6UJZUaL21nhpGy9282rIXmhRCWHTCi8bpVtymxUPB714VRDdgUI6q8x5Qj/P87yJTNp6iB2zsgaEreLMJMSIOlLwetiG9tRH+oj8fCcYNEMniJr28W5hHsJojarLSy2H3oeDs59JIXtAf2cYI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.210.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-ot1-f72.google.com with SMTP id 46e09a7af769-7f4e9fe8b17so289234a34.1
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Sep 2026 15:46:30 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1789598787; x=1790203587;
+        h=content-type:to:from:subject:message-id:in-reply-to:date
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=LcizwlFxn2dDfjlSrFy6ssnr9nUP1n7/qJEJqqsStLE=;
+        b=hhVt5SmHEBE3/TRFdWDPx8G/6okttTDQn8ozQm9DY8ryLZRFBZxMiNUagBG0BWt1Xn
+         CNUPa+zaWtgQwsm+8RBCTkIUGfQzNQdVVrRNKc2whOtXDgWU+MjK2PaEE6q1SfkygS9B
+         //Dn3FCjhaDKedxRVi9FyOc459VzrD2laUTqxDcy9MrBR9UsUWN88w9av4aW5MlHjhg4
+         S8KAEcfOeSlZGC8Ms3d9XmGLIAi4FCo1eSBFPe5v1HGouYXMfzHT+qsui8bFrk1SVT8i
+         j+UAJESccQGAAeEIyLrUmVTtv2pEK1CAI2Qj4KnZ03bw1Sglr9u634Qa+qSmBScAF9NW
+         nXJw==
+X-Forwarded-Encrypted: i=1; AKwUvBw/CBiUVkIwqQRFgL2MsUavjzYOAih56AGtHyRlTJ9cs5n+ah+os+xuf24vPWeUlJ+S99SOGyrh3Do=@vger.kernel.org
+X-Gm-Message-State: AFuF++n5L2RN3oyETENcckeLtLmAahDx904rFxxrJ87QyeBVOFpqC7YL
+	6jQiAF+KQW3Ix2M1BrJUMzuR+D7KEhSZJHcc3fCkAmZZDtB4W6dCVjBqd9njoqLov1TyqQmPHaZ
+	p4wNGrMWetOw+oRq8zXgJ5CklDyxoj9BgRkoFrbpTbACOkNEe/1MpWDz0V8g=
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+X-Received: by 2002:a05:6820:1897:b0:6b7:46fc:1d7 with SMTP id
+ 006d021491bc7-6c7d41de430mr4519967eaf.54.1789598787523; Wed, 16 Sep 2026
+ 15:46:27 -0700 (PDT)
+Date: Wed, 16 Sep 2026 15:46:27 -0700
+In-Reply-To: <6aa8be26.a211d2ce.1a5198.02a4.GAE@google.com>
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6aab1c43.71f81b7d.278072.0001.GAE@google.com>
+Subject: Re: [syzbot] [iomap?] WARNING in iomap_read_inline_data (2)
+From: syzbot <syzbot+079e16bc964fb91acb4a@syzkaller.appspotmail.com>
+To: brauner@kernel.org, djwong@kernel.org, linux-fsdevel@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-On Wed, 16 Sep 2026 15:34:26 -0700 Andrew Morton <akpm@linux-foundation.org> wrote:
+syzbot has found a reproducer for the following issue on:
 
-> On Wed, 16 Sep 2026 11:58:29 -0400 Johannes Weiner <hannes@cmpxchg.org> wrote:
-> 
-> > > Unless I'm mistaken about that MIGRATE_HIGHATOMIC part, it seems all sashiko
-> > > concerns can be dismissed and then indeed v4 is the better version.
-> > 
-> > It looks like a real issue to me, but one that already exists
-> > independent of Salvatore's change.
-> 
-> So I'm hearing that I should drop v5 and revert to v4?
-> 
+HEAD commit:    9b87fdc9af2f Merge tag 'sched_ext-for-7.3-rc3-fixes' of gi..
+git tree:       git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+console output: https://syzkaller.appspot.com/x/log.txt?x=110993f9580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=8c5c3949d762a91f
+dashboard link: https://syzkaller.appspot.com/bug?extid=079e16bc964fb91acb4a
+compiler:       gcc (Debian 14.2.0-19) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=150993f9580000
 
-v4:
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+079e16bc964fb91acb4a@syzkaller.appspotmail.com
 
-From: Salvatore Dipietro <dipiets@amazon.it>
-Subject: mm/page_alloc: avoid direct compaction for costly __GFP_NORETRY allocations
-Date: Fri, 4 Sep 2026 11:56:28 +0000
+------------[ cut here ]------------
+size > iomap->length
+WARNING: fs/iomap/buffered-io.c:431 at iomap_read_inline_data+0x901/0xc10 fs/iomap/buffered-io.c:431, CPU#1: syz-executor183/6038
+Modules linked in:
+CPU: 1 UID: 0 PID: 6038 Comm: syz-executor183 Not tainted syzkaller #0 PREEMPT(full) 
+Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+RIP: 0010:iomap_read_inline_data+0x901/0xc10 fs/iomap/buffered-io.c:431
+Code: ff ff ff e8 31 37 51 ff 48 c7 c6 20 6b 0a 8c 48 89 ef e8 52 d9 a4 ff 90 0f 0b e8 4a 7a c4 ff e9 46 f7 ff ff e8 10 37 51 ff 90 <0f> 0b 90 48 b8 00 00 00 00 00 fc ff df 4c 89 fa 48 c1 ea 03 80 3c
+RSP: 0000:ffffc90003357538 EFLAGS: 00010293
+RAX: 0000000000000000 RBX: ffffc90003357790 RCX: 0000000000000000
+RDX: ffff888029fa4b00 RSI: ffffffff82bae840 RDI: ffff888029fa4b00
+RBP: ffffea0001030f80 R08: 0000000000000006 R09: 0000000000000005
+R10: 0000000000000014 R11: 0000000000000000 R12: 0000000000000014
+R13: ffffc900033577b8 R14: ffffc900033577e8 R15: ffffc900033577c0
+FS:  00007f4d0baf66c0(0000) GS:ffff8880d5c59000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f4d0a2f1000 CR3: 0000000059e5c000 CR4: 0000000000352ef0
+Call Trace:
+ <TASK>
+ iomap_read_folio_iter+0xc35/0xfd0 fs/iomap/buffered-io.c:571
+ iomap_read_folio+0x392/0x980 fs/iomap/buffered-io.c:676
+ ntfs_read_folio+0x298/0x4b0 fs/ntfs3/inode.c:856
+ filemap_read_folio+0xfc/0x3b0 mm/filemap.c:2520
+ filemap_fault+0x24b8/0x3130 mm/filemap.c:3689
+ __do_fault+0x10b/0x440 mm/memory.c:5565
+ do_read_fault mm/memory.c:6000 [inline]
+ do_fault+0xb3f/0x1830 mm/memory.c:6134
+ do_pte_missing mm/memory.c:4700 [inline]
+ handle_pte_fault mm/memory.c:6558 [inline]
+ __handle_mm_fault+0x150b/0x2f60 mm/memory.c:6707
+ handle_mm_fault+0x363/0xa20 mm/memory.c:6876
+ do_user_addr_fault+0x59c/0x12f0 arch/x86/mm/fault.c:1343
+ handle_page_fault arch/x86/mm/fault.c:1483 [inline]
+ exc_page_fault+0x6f/0xd0 arch/x86/mm/fault.c:1536
+ asm_exc_page_fault+0x26/0x30 arch/x86/include/asm/idtentry.h:595
+RIP: 0033:0x7f4d0cb0af39
+Code: 00 ba 04 00 00 00 be 00 10 00 00 48 89 df e8 7e 3e 02 00 8b 3d e0 4b 0c 00 b9 04 00 00 00 31 f6 ba 00 10 00 00 e8 87 34 02 00 <0f> b6 03 88 44 24 0f 8b 05 be 4b 0c 00 85 c0 74 c6 be 00 10 00 00
+RSP: 002b:00007f4d0baf6200 EFLAGS: 00010207
+RAX: 0000000000000000 RBX: 00007f4d0a2f1000 RCX: 00007f4d0cb2e3ca
+RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000003
+RBP: 0000000000000021 R08: 0000000000000003 R09: 0000000000000000
+R10: 0000000000000004 R11: 0000000000000246 R12: ffffffffffffffd0
+R13: 0000000000000002 R14: 00007ffe1da2f580 R15: 00007ffe1da2f668
+ </TASK>
 
-Commit 5d8edfb900d5 ("iomap: Copy larger chunks from userspace")
-introduced high-order folio allocations in the iomap buffered write path. 
-When memory is fragmented, each failed costly-order allocation enters
-__alloc_pages_slowpath() which runs direct compaction and
-drain_all_pages(), causing a 0.38x throughput drop on PostgreSQL pgbench
-(simple-update) with 1024 clients on a 96-vCPU arm64 system.
 
-The root issue is that direct compaction is too expensive for hot
-allocation paths that have fallbacks to smaller allocations. 
-__filemap_get_folio_mpol() already marks higher-order allocations with
-__GFP_NORETRY | __GFP_NOWARN, signalling that the caller can handle
-failure.  However, the page allocator still attempts full direct
-compaction for costly orders with __GFP_NORETRY, which is unnecessarily
-aggressive when the caller will simply retry at a lower order.
-
-For costly-order allocations with __GFP_NORETRY, clear
-__GFP_DIRECT_RECLAIM at the very start of the slowpath, before
-can_direct_reclaim, can_compact and the nofail checks are evaluated.  This
-makes the entire slowpath treat the request as non-blocking: no direct
-reclaim, no direct compaction and no drain_all_pages() IPI across every
-CPU.  kswapd (and in turn kcompactd) is still woken further down for
-background defragmentation, so compaction keeps working for long-term
-system health while being removed from the latency-critical direct
-allocation path.
-
-Allocations that also request __GFP_THISNODE are exempted.  That flag
-pairing identifies the local-node-first THP attempt issued by
-alloc_pages_mpol() (mempolicy.c), which relies on direct compaction to
-form transparent huge pages.
-
-Test environment:
-  Hardware:  AWS EC2 m8g.24xlarge (96 vCPU, arm64)
-             12x 1TB IO2 32000 IOPS RAID0 XFS
-  OS:        AL2023
-  Kernel:    v7.3-rc1
-  Database:  PostgreSQL 18.4
-  Workload:  pgbench simple-update, 1024 clients, 96 threads, 1200s
-
-Results (average of 3 runs, TPS):
-
-  Config                   Avg TPS      % vs Baseline
-  baseline (no patch)       59,408       -
-  With this patch          155,409      +161.6%
-
-Link: https://lore.kernel.org/all/20260403193535.9970-1-dipiets@amazon.it/T/#t [v1]
-Link: https://lore.kernel.org/linux-mm/20260420161404.642-1-dipiets@amazon.it/T/#u [v2]
-Link: https://lore.kernel.org/all/20260710143437.12379-1-dipiets@amazon.it/T/#u [v3]
-Link: https://lore.kernel.org/20260904115629.3993331-1-dipiets@amazon.it
-Fixes: 5d8edfb900d5 ("iomap: Copy larger chunks from userspace")
-Signed-off-by: Salvatore Dipietro <dipiets@amazon.it>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-Acked-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
-Acked-by: Zi Yan <ziy@nvidia.com>
-Reviewed-by: Johannes Weiner <hannes@cmpxchg.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Cc: David Hildenbrand <david@redhat.com>
-Cc: Michal Hocko <mhocko@suse.com>
-Cc: Matthew Wilcox <willy@infradead.org>
-Cc: Dave Chinner <dgc@kernel.org>
-Cc: Ritesh Harjani <ritesh.list@gmail.com>
-Cc: <stable@vger.kernel.org>
 ---
-
- mm/page_alloc.c |   18 +++++++++++++++---
- 1 file changed, 15 insertions(+), 3 deletions(-)
-
---- a/mm/page_alloc.c~mm-page_alloc-avoid-direct-compaction-for-costly-__gfp_noretry-allocations
-+++ a/mm/page_alloc.c
-@@ -4784,10 +4784,10 @@ static inline struct page *
- __alloc_pages_slowpath(gfp_t gfp_mask, unsigned int order,
- 						struct alloc_context *ac)
- {
--	bool can_direct_reclaim = gfp_mask & __GFP_DIRECT_RECLAIM;
--	bool can_compact = can_direct_reclaim && gfp_compaction_allowed(gfp_mask);
--	bool nofail = gfp_mask & __GFP_NOFAIL;
- 	const bool costly_order = order > PAGE_ALLOC_COSTLY_ORDER;
-+	bool can_direct_reclaim;
-+	bool can_compact;
-+	bool nofail;
- 	struct page *page = NULL;
- 	unsigned int alloc_flags;
- 	unsigned long did_some_progress;
-@@ -4802,6 +4802,18 @@ __alloc_pages_slowpath(gfp_t gfp_mask, u
- 	bool can_retry_reserves = true;
- 	unsigned long alloc_start_time = jiffies;
- 
-+	/*
-+	 * Costly __GFP_NORETRY callers have a cheap fallback, so don't stall
-+	 * them in reclaim or compaction. __GFP_THISNODE callers are exempt.
-+	 */
-+	if (costly_order && (gfp_mask & __GFP_NORETRY) &&
-+	    !(gfp_mask & __GFP_THISNODE))
-+		gfp_mask &= ~__GFP_DIRECT_RECLAIM;
-+
-+	can_direct_reclaim = gfp_mask & __GFP_DIRECT_RECLAIM;
-+	can_compact = can_direct_reclaim && gfp_compaction_allowed(gfp_mask);
-+	nofail = gfp_mask & __GFP_NOFAIL;
-+
- 	if (unlikely(nofail)) {
- 		/*
- 		 * Also we don't support __GFP_NOFAIL without __GFP_DIRECT_RECLAIM,
-_
-
+If you want syzbot to run the reproducer, reply with:
+#syz test: git://repo/address.git branch-or-commit-hash
+If you attach or paste a git patch, syzbot will apply it before testing.
