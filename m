@@ -1,209 +1,170 @@
-Received: from smtpout-04.galae.net (smtpout-04.galae.net [185.171.202.116])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qv2-f12.google.com (mail-qv2-f12.google.com [74.125.230.140])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B9C650EBFF;
-	Wed, 16 Sep 2026 14:26:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.171.202.116
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 309B14D7978
+	for <linux-xfs@vger.kernel.org>; Wed, 16 Sep 2026 15:58:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.230.140
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789568806; cv=none; b=HlenP0yMWSE2dTZ/M3TPwa/kzjp+r07T542cid1nmYNZ2RL818yhDu+EBLB3w3NENjjWDVfIwuqOreGj0TgcUubsnjyX9XHe/qTKymqSXBWC39VYa5um3Wov56eqpvO+/qT8bIvI2HeCgnbBNT6/VbH4xcF1YrxovxxSovAUqbA=
+	t=1789574327; cv=none; b=txqBnVVFfKZ9HUPgvNURPwFOjlkIpd3j61Ak27EAgX+B10QxHcSVMT/pHQkL0d8v9fpC8OZV1uacuzXAKVGXDdBQsQehOysGD8pmgWZuIVXmlVstR4gjOVy5hFn4znXvOAtZ9tjVmI+AWjyyBzVQ2w2YEYva4bdz0renkCPZftw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789568806; c=relaxed/simple;
-	bh=SRRj8Lp8tzYtrQyCSb79OsOMUaN+jBDusAL0HrXiVAk=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=lfK5DVzDXbda9SSTGy94tNuPIe7dtj/FpkhHO+qRW9gtQVCotQhOLoL9ph9eO/sE+wVogXBD+oXyVjjxdpwz3fRW604c+cZW1G6GJ7LOK+4kCc7Uo4yhxZEjdEbOLvNmQbRAkpDZa3FgE4fkS3TV9PZvvM1LtbZjt7j8ylfWGT4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=HqH7Eo+v; arc=none smtp.client-ip=185.171.202.116
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
+	s=arc-20240116; t=1789574327; c=relaxed/simple;
+	bh=+6aMjHH+Jl+Ml/kjCyAc+ni40OSaFZs1senFwZLmkis=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=IkvYLJOf9xvJ4jYD8vwecZZmcdV7T+Ic29C7p7+X6JOaxLH7lrWtnyhx06mQiB/ExILnUtitL0E21eikBHN0b8AYMvVgvqoSAQM/5oxGXOA2iuUUnGicUcGJgf/+q4SSigYYYI3BDuvNbA+vEScJKpGQsgZFQYMrWzjT6BG81Tg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org; spf=pass smtp.mailfrom=cmpxchg.org; dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b=mxy947Qa; arc=none smtp.client-ip=74.125.230.140
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmpxchg.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="HqH7Eo+v"
-Received: from smtpout-01.galae.net (smtpout-01.galae.net [212.83.139.233])
-	by smtpout-04.galae.net (Postfix) with ESMTPS id 69451C5CD63;
-	Wed, 16 Sep 2026 14:27:22 +0000 (UTC)
-Received: from mail.galae.net (mail.galae.net [212.83.136.155])
-	by smtpout-01.galae.net (Postfix) with ESMTPS id 5A66560337;
-	Wed, 16 Sep 2026 14:26:38 +0000 (UTC)
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 04CC811C7B048;
-	Wed, 16 Sep 2026 16:26:33 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=dkim;
-	t=1789568797; h=from:subject:date:message-id:to:cc:mime-version:content-type:
-	 content-transfer-encoding; bh=u95/IOetWw7YhA6piQhl/mbWIjAVJEKTMn5W6ZdL9Wo=;
-	b=HqH7Eo+vWLt21fAPLhP5Q3NNlH6qNXBsaP4ZPq2hfGA+CCnS7ljdSNB3oiygLzbNqbTwGw
-	JezCMt5qoLZh8vxDrnLTugO/eRFv3DaU3ycyopzO/j9HLPHTlBJWoe07RVS4jC5pNxPpT2
-	nIRZYyuoWoLjECiCwmT1mNW7OmBIS2pJ89cb136JM3WYyyTFxQc4F3OOc1U/u7LGgI8B1Y
-	20zhXxWx25654NSr1dSfIDVxL7cll0YrQdelPJWS84ScNA6oa/CCcNwodzt0YXB0mBw0gZ
-	OHUTS2szFLKhlhVPIhO1r7V3oBOMjotOmOP0kZqOMZA2FYMvJcrUyGHd6dl4MQ==
-From: "Miguel Gazquez (Schneider Electric)" <miguel.gazquez@bootlin.com>
-Date: Wed, 16 Sep 2026 16:26:27 +0200
-Subject: [PATCH 5.10.y] iomap: iomap: fix memory corruption when recording
- errors during writeback
+	dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b="mxy947Qa"
+Received: by mail-qv2-f12.google.com with SMTP id 6a1803df08f44-90cdfcbe208so11092386d6.0
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Sep 2026 08:58:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg.org; s=google; t=1789574314; x=1790179114; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=bjcBGUR39i2CtxsYZA+y8R1kv00jh+PXwHXxQnV1eiQ=;
+        b=mxy947Qail07AL9t2Ag0dSp7kFCQr+bAzVIypiyzW0zASsfINssXUmISG1WGaiaxL9
+         zMAIp6+RhmhTn4fPH+98BVQ7RIBBHGYvMJyFE+4/n6rubXroqjT1ofD3x7gSLqKAsZIL
+         Sq92DQFsU8zhBvSCtlYaBNSrEQh18Awe6Omn32t82761kFBwE7EL0rqpnQ4QvucznX+z
+         o8o1c48JZ+9pIgd8xih/5XrUvEGwFXbv3XaphihX05pMeqPSiqKen08/YeZdeXsOBFdD
+         Tvnxc2uOOrhqL56m59ngfpsIWwWFEH4NN1GvRoGx6uZ82TmniIt7+/aD/m5d6CO3Xwhi
+         bGRQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1789574314; x=1790179114;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=bjcBGUR39i2CtxsYZA+y8R1kv00jh+PXwHXxQnV1eiQ=;
+        b=ifpeswpeXK7FbetMr5MP/Jw1LAVaW9jkFxNZh/kjmY/z2SWkzngNl6obcVdX85nDy8
+         TW0Fgg5Ce36FiP+ZWosKu/uREWJYn88nqmNN3XkzHA32pIdo5vdT1Lt7YUmdEqkxgzSI
+         6GSTrcm63yoCKnkQYuDsERJVuHn3BnENpdrkmj1evEgc+tGTLpoOD8g/e4Dsb1BvJ5gw
+         00LcsgvBknb9FvBeNw02sxysZN0dUBj5ylMpG1VHUiah5HL75E69t/toOiPY9cbBz2ur
+         tgzHnCO2gt0529DBYXZ4Kdzj8wR0sDqQwTkhXSf7N79ejvHH5Pczr2qyzk5/wC0eNs1V
+         3qlA==
+X-Forwarded-Encrypted: i=1; AKwUvBymAPYUy9NqRaUrv+5KUZm86F0R2abKGCgYgvQ81imukQf+lz4fJdjkFvG6bfscdHaYPA75EpeZyys=@vger.kernel.org
+X-Gm-Message-State: AFuF++k7Toal1q1MKlnNYsDn5HSEybH8tQuuGLKflobDnVzhhGKE5Xzs
+	v+2R9lh53dMvehdLyjsXA02HX2nrOrFBZNpsHQgKvGdqdTyoZ+2asMRJWFqZD2mYeXQ=
+X-Gm-Gg: AYBFou3RA1oMwMtNAdS+q9Tm19xaQ7RhKSBwNqJxxI9sq4veFkfij/Zv0/3CSAA5aFr
+	MUY1gavjgeZSNFyaO5N6eeYKFwa/xUOU2bMPd13ofr+Jwcjqqg/gVTVvDeObIzDlQh9kNGRoaXU
+	FeJE6qXvCKSfymHDNtxaVR9r0bcOX/6L3sCmk2dKgU1kE15JimNCPtwkMbRzWezWS6rIkqB7ghC
+	cyV05k8XmTvmKbYA319jglpJaGp4193AmFNQvLWVUa6SF/DOzRUZ01VsrKlosBjsLKjqr31v8Sr
+	ctc7cPinX3rX3Q6Syu/B3tEfT7eJ0IfrVs5DaQSaV+O8huUEhP3aEe6/LZ8qPa327UbsXZJYpH0
+	z6x95YpOWA6VjR4i/Oi4LzDH/+YpB28s3oIFKLES+Rncor+kHdnZ2fU+qsPk5rm42KmNGU6IKbu
+	PtQZo0Qt1VkSIqGg+xhzhYLEmTNTJDL1ZYCMv+XZLeIZo1Ph7ncBduOXNKQD2J1DFv5Odngw==
+X-Received: by 2002:a05:6214:1248:b0:90e:96d1:40d3 with SMTP id 6a1803df08f44-9123d7a5b32mr54271566d6.20.1789574313980;
+        Wed, 16 Sep 2026 08:58:33 -0700 (PDT)
+Received: from localhost ([2603:7001:f100:500:365a:60ff:fe62:ff29])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-9123be609dcsm28537916d6.15.2026.09.16.08.58.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 16 Sep 2026 08:58:32 -0700 (PDT)
+Date: Wed, 16 Sep 2026 11:58:29 -0400
+From: Johannes Weiner <hannes@cmpxchg.org>
+To: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
+Cc: Salvatore Dipietro <dipiets@amazon.it>, akpm@linux-foundation.org,
+	abuehaze@amazon.com, alisaidi@amazon.com, blakgeof@amazon.com,
+	brauner@kernel.org, brendan.jackman@linux.dev, david@redhat.com,
+	dgc@kernel.org, dipietro.salvatore@gmail.com, djwong@kernel.org,
+	hch@infradead.org, hch@lst.de, linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+	linux-xfs@vger.kernel.org, mhocko@suse.com, ritesh.list@gmail.com,
+	rvvandan@amazon.com, stable@vger.kernel.org, surenb@google.com,
+	willy@infradead.org, ziy@nvidia.com
+Subject: Re: [PATCH v4] mm/page_alloc: avoid direct compaction for costly
+ __GFP_NORETRY allocations
+Message-ID: <aqq8pWI0u1IZNWHT@cmpxchg.org>
+References: <20260905174239.99e31515fabe220aa7d8e6fa@linux-foundation.org>
+ <20260910114602.926944-1-dipiets@amazon.it>
+ <aqQlUr-1h07G8JWM@cmpxchg.org>
+ <8d6a8a63-4adc-458a-b548-a47bf5ff8eb7@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260916-cve-2022-50406-v1-1-f4423f258ceb@bootlin.com>
-X-B4-Tracking: v=1; b=H4sIAAAAAAAC/yXMQQ7CMAxE0atUs8aVEyVGcBXEAowLZlFQAhWo6
- t0JsHwjzZ9RrbhVbLsZxSavfhsbwqqDXg7j2chPzYgchTdBSCejhkiZEwuJDMoxZU15jXa6Fxv
- 89QvukPvA/Rv7/16fx6vp41vDsnwAHQrQVXoAAAA=
-X-Change-ID: 20260916-cve-2022-50406-66fc0245c457
-To: stable@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, 
- "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, 
- linux-fsdevel@vger.kernel.org, 
- "Matthew Wilcox (Oracle)" <willy@infradead.org>, 
- Dave Chinner <dchinner@redhat.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@bootlin.com>, 
- "Darrick J. Wong" <djwong@kernel.org>, linux-kernel@vger.kernel.org, 
- "Miguel Gazquez (Schneider Electric)" <miguel.gazquez@bootlin.com>
-X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1789568793; l=6409;
- i=miguel.gazquez@bootlin.com; s=20250708; h=from:subject:message-id;
- bh=gXWECteyyuXK9ElQ+OQbY8mSmzeAtl/FSRC5hX+2z88=;
- b=n/JjlMTn1esm4ViCTJE8e28O7wtPHMuUZ81A57dUVU1l3Ve4Ep1O5A0kVjndJJRg9QTXOQwYt
- tX7LS6spkKABzgTTQHrPNQGSHvRDzxQou162V1rHboUx7thzHzxAHcH
-X-Developer-Key: i=miguel.gazquez@bootlin.com; a=ed25519;
- pk=k/2KI9jkmayaF0ghZ8QYUH9Wm/kFHDhl8QoZ0RHbr4w=
-X-Last-TLS-Session-Version: TLSv1.3
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <8d6a8a63-4adc-458a-b548-a47bf5ff8eb7@kernel.org>
 
-From: "Darrick J. Wong" <djwong@kernel.org>
+On Wed, Sep 16, 2026 at 01:24:31PM +0200, Vlastimil Babka (SUSE) wrote:
+> On 9/11/26 17:59, Johannes Weiner wrote:
+> > The access to
+> > MIGRATE_HIGHATOMIC that it points out is in itself too generous. This
+> > seems like a real but separate bug. It will allow GFP_TRANSHUGE_LIGHT
+> > into the highatomic reserves as well, for example.
+> 
+> I don't follow this part. For ALLOC_HIGHATOMIC you need __GFP_HIGH in
+> alloc_flags_nonblocking(). So GFP_TRANSHUGE_LIGHT won't get the access, no?
 
-Every now and then I see this crash on arm64:
+rmqueue_buddy() has this:
 
-Unable to handle kernel NULL pointer dereference at virtual address 00000000000000f8
-Buffer I/O error on dev dm-0, logical block 8733687, async page read
-Mem abort info:
-  ESR = 0x0000000096000006
-  EC = 0x25: DABT (current EL), IL = 32 bits
-  SET = 0, FnV = 0
-  EA = 0, S1PTW = 0
-  FSC = 0x06: level 2 translation fault
-Data abort info:
-  ISV = 0, ISS = 0x00000006
-  CM = 0, WnR = 0
-user pgtable: 64k pages, 42-bit VAs, pgdp=0000000139750000
-[00000000000000f8] pgd=0000000000000000, p4d=0000000000000000, pud=0000000000000000, pmd=0000000000000000
-Internal error: Oops: 96000006 [#1] PREEMPT SMP
-Buffer I/O error on dev dm-0, logical block 8733688, async page read
-Dumping ftrace buffer:
-Buffer I/O error on dev dm-0, logical block 8733689, async page read
-   (ftrace buffer empty)
-XFS (dm-0): log I/O error -5
-Modules linked in: dm_thin_pool dm_persistent_data
-XFS (dm-0): Metadata I/O Error (0x1) detected at xfs_trans_read_buf_map+0x1ec/0x590 [xfs] (fs/xfs/xfs_trans_buf.c:296).
- dm_bio_prison
-XFS (dm-0): Please unmount the filesystem and rectify the problem(s)
-XFS (dm-0): xfs_imap_lookup: xfs_ialloc_read_agi() returned error -5, agno 0
- dm_bufio dm_log_writes xfs nft_chain_nat xt_REDIRECT nf_nat nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 ip6t_REJECT
-potentially unexpected fatal signal 6.
- nf_reject_ipv6
-potentially unexpected fatal signal 6.
- ipt_REJECT nf_reject_ipv4
-CPU: 1 PID: 122166 Comm: fsstress Tainted: G        W          6.0.0-rc5-djwa #rc5 3004c9f1de887ebae86015f2677638ce51ee7
- rpcsec_gss_krb5 auth_rpcgss xt_tcpudp ip_set_hash_ip ip_set_hash_net xt_set nft_compat ip_set_hash_mac ip_set nf_tables
-Hardware name: QEMU KVM Virtual Machine, BIOS 1.5.1 06/16/2021
-pstate: 60001000 (nZCv daif -PAN -UAO -TCO -DIT +SSBS BTYPE=--)
- ip_tables
-pc : 000003fd6d7df200
- x_tables
-lr : 000003fd6d7df1ec
- overlay nfsv4
-CPU: 0 PID: 54031 Comm: u4:3 Tainted: G        W          6.0.0-rc5-djwa #rc5 3004c9f1de887ebae86015f2677638ce51ee7405
-Hardware name: QEMU KVM Virtual Machine, BIOS 1.5.1 06/16/2021
-Workqueue: writeback wb_workfn
-sp : 000003ffd9522fd0
- (flush-253:0)
-pstate: 60401005 (nZCv daif +PAN -UAO -TCO -DIT +SSBS BTYPE=--)
-pc : errseq_set+0x1c/0x100
-x29: 000003ffd9522fd0 x28: 0000000000000023 x27: 000002acefeb6780
-x26: 0000000000000005 x25: 0000000000000001 x24: 0000000000000000
-x23: 00000000ffffffff x22: 0000000000000005
-lr : __filemap_set_wb_err+0x24/0xe0
- x21: 0000000000000006
-sp : fffffe000f80f760
-x29: fffffe000f80f760 x28: 0000000000000003 x27: fffffe000f80f9f8
-x26: 0000000002523000 x25: 00000000fffffffb x24: fffffe000f80f868
-x23: fffffe000f80fbb0 x22: fffffc0180c26a78 x21: 0000000002530000
-x20: 0000000000000000 x19: 0000000000000000 x18: 0000000000000000
+			/*
+			 * If the allocation fails, allow OOM handling and
+			 * order-0 (atomic) allocs access to HIGHATOMIC
+			 * reserves as failing now is worse than failing a
+			 * high-order atomic allocation in the future.
+			 */
+			if (!page && (alloc_flags & (ALLOC_OOM|ALLOC_NON_BLOCK)))
+				page = __rmqueue_smallest(zone, order, MIGRATE_HIGHATOMIC);
 
-x17: 0000000000000000 x16: 0000000000000000 x15: 0000000000000000
-x14: 0000000000000001 x13: 0000000000470af3 x12: fffffc0058f70000
-x11: 0000000000000040 x10: 0000000000001b20 x9 : fffffe000836b288
-x8 : fffffc00eb9fd480 x7 : 0000000000f83659 x6 : 0000000000000000
-x5 : 0000000000000869 x4 : 0000000000000005 x3 : 00000000000000f8
-x20: 000003fd6d740020 x19: 000000000001dd36 x18: 0000000000000001
-x17: 000003fd6d78704c x16: 0000000000000001 x15: 000002acfac87668
-x2 : 0000000000000ffa x1 : 00000000fffffffb x0 : 00000000000000f8
-Call trace:
- errseq_set+0x1c/0x100
- __filemap_set_wb_err+0x24/0xe0
- iomap_do_writepage+0x5e4/0xd5c
- write_cache_pages+0x208/0x674
- iomap_writepages+0x34/0x60
- xfs_vm_writepages+0x8c/0xcc [xfs 7a861f39c43631f15d3a5884246ba5035d4ca78b]
-x14: 0000000000000000 x13: 2064656e72757465 x12: 0000000000002180
-x11: 000003fd6d8a82d0 x10: 0000000000000000 x9 : 000003fd6d8ae288
-x8 : 0000000000000083 x7 : 00000000ffffffff x6 : 00000000ffffffee
-x5 : 00000000fbad2887 x4 : 000003fd6d9abb58 x3 : 000003fd6d740020
-x2 : 0000000000000006 x1 : 000000000001dd36 x0 : 0000000000000000
-CPU: 1 PID: 122167 Comm: fsstress Tainted: G        W          6.0.0-rc5-djwa #rc5 3004c9f1de887ebae86015f2677638ce51ee7
- do_writepages+0x90/0x1c4
- __writeback_single_inode+0x4c/0x4ac
-Hardware name: QEMU KVM Virtual Machine, BIOS 1.5.1 06/16/2021
- writeback_sb_inodes+0x214/0x4ac
- wb_writeback+0xf4/0x3b0
-pstate: 60001000 (nZCv daif -PAN -UAO -TCO -DIT +SSBS BTYPE=--)
- wb_workfn+0xfc/0x580
- process_one_work+0x1e8/0x480
-pc : 000003fd6d7df200
- worker_thread+0x78/0x430
+It says "atomic", but it's checking only ALLOC_NON_BLOCK, which is
+broader than GFP_ATOMIC. alloc_flags_nonblocking();
 
-This crash is a result of iomap_writepage_map encountering some sort of
-error during writeback and wanting to set that error code in the file
-mapping so that fsync will report it.  Unfortunately, the code
-dereferences folio->mapping after unlocking the folio, which means that
-another thread could have removed the page from the page cache
-(writeback doesn't hold the invalidation lock) and give it to somebody
-else.
+	if (gfp_mask & __GFP_DIRECT_RECLAIM)
+		return 0;
 
-At best we crash the system like above; at worst, we corrupt memory or
-set an error on some other unsuspecting file while failing to record the
-problems with *this* file.  Regardless, fix the problem by reporting the
-error to the inode mapping.
+	if (gfp_mask & __GFP_NOMEMALLOC)
+		return 0;
 
-NOTE: Commit 598ecfbaa742 lifted the XFS writeback code to iomap, so
-this fix should be backported to XFS in the 4.6-5.4 kernels in addition
-to iomap in the 5.5-5.19 kernels.
+	alloc_flags |= ALLOC_NON_BLOCK;
 
-Fixes: e735c0079465 ("iomap: Convert iomap_add_to_ioend() to take a folio") # 5.17 onward
-Fixes: 598ecfbaa742 ("iomap: lift the xfs writeback code to iomap") # 5.5-5.16, needs backporting
-Fixes: 150d5be09ce4 ("xfs: remove xfs_cancel_ioend") # 4.6-5.4, needs backporting
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-Signed-off-by: Miguel Gazquez (Schneider Electric) <miguel.gazquez@bootlin.com>
----
- fs/iomap/buffered-io.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+	if (order > 0 && (gfp_mask & __GFP_HIGH))
+		alloc_flags |= ALLOC_HIGHATOMIC;
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 5ad3bf906b35..d0a141816f12 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -1434,7 +1434,7 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
- 	if (!count)
- 		end_page_writeback(page);
- done:
--	mapping_set_error(page->mapping, error);
-+	mapping_set_error(inode->i_mapping, error);
- 	return error;
- }
+So this can apply to random !direct_reclaim requests, no?
+
+I have to correct myself on GFP_TRANSHUGE_LIGHT because it happens to
+include __GFP_NOMEMALLOC, and so won't actually get ALLOC_NON_BLOCK.
+
+But what about random GFP_NOWAIT and & ~__GFP_DIRECT_RECLAIM sites?
+Those explicitly don't get watermark exemptions already, and weren't
+the intent of the rmqueue_buddy() exemption above.
+
+Something like this?
+
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+index 12fac9084c48..c79cc7aa4dff 100644
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -3246,7 +3246,8 @@ struct page *rmqueue_buddy(struct zone *preferred_zone, struct zone *zone,
+ 			 * reserves as failing now is worse than failing a
+ 			 * high-order atomic allocation in the future.
+ 			 */
+-			if (!page && (alloc_flags & (ALLOC_OOM|ALLOC_NON_BLOCK)))
++			if (!page && ((alloc_flags & ALLOC_OOM) ||
++				      ((alloc_flags & ALLOC_MASK_ATOMIC) == ALLOC_MASK_ATOMIC)))
+ 				page = __rmqueue_smallest(zone, order, MIGRATE_HIGHATOMIC);
  
+ 			if (!page) {
+diff --git a/mm/page_alloc.h b/mm/page_alloc.h
+index b9259deddb59..11714ddca254 100644
+--- a/mm/page_alloc.h
++++ b/mm/page_alloc.h
+@@ -60,6 +60,9 @@
+ /* Flags that allow allocations below the min watermark. */
+ #define ALLOC_RESERVES (ALLOC_NON_BLOCK|ALLOC_MIN_RESERVE|ALLOC_HIGHATOMIC|ALLOC_OOM)
+ 
++/* Flag combination from GFP_ATOMIC */
++#define ALLOC_MASK_ATOMIC (ALLOC_NON_BLOCK|ALLOC_MIN_RESERVE)
++
+ /*
+  * Structure for holding the mostly immutable allocation parameters passed
+  * between functions involved in allocations, including the alloc_pages*
 
----
-base-commit: 1797d8bf8d0c2e74defad605d14e3553d43a3caf
-change-id: 20260916-cve-2022-50406-66fc0245c457
+> Unless I'm mistaken about that MIGRATE_HIGHATOMIC part, it seems all sashiko
+> concerns can be dismissed and then indeed v4 is the better version.
 
-Best regards,
---  
-Miguel Gazquez (Schneider Electric) <miguel.gazquez@bootlin.com>
-
+It looks like a real issue to me, but one that already exists
+independent of Salvatore's change.
