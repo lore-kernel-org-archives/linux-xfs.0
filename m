@@ -1,42 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0A7A4B1D0D
-	for <linux-xfs@vger.kernel.org>; Thu, 17 Sep 2026 09:38:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B26C643DEC7
+	for <linux-xfs@vger.kernel.org>; Thu, 17 Sep 2026 10:22:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789637966; cv=none; b=SnBSbt5QXWFvBgRPJKt4SlnnrtHOo5ouGwLwk1cnY+RdjicHzNmsYzZU6mGlgvv16GNB+LlSLS261OulyHFy/fbcbYC7zmiFYF2gAlbgDeKWqbf39DCC2+XMBzwg+WBTw+rFD9DhoaTBHmJJTANZrn5s/w2KNTNiaaHaJ/KQdWY=
+	t=1789640549; cv=none; b=LRm/C1vuzKtECXt56BLGjv/VjYFXMgrwfyntFgjzy2FCByeB89hIPQATVhxDpTtkkF4o2w2G3IUemusiiaKZahLhFu1KcxOAoVt8xMB3SAqh0u+Y9Z1S+PjNA0kWyT60cqZQ3SE8ft9m6CNxkYA7DMQEOw4bd1n8yFwuxRvAANI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789637966; c=relaxed/simple;
-	bh=iJ6V7Ui6+px5ze5/Xy/V84vUNt9jg2iLgKfZ0kVNmUA=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=oGyXG6OfaPFraZ90Na/pwxTakphL5sKX3+zq7LLRaJ171x6+CMKmNTye6Tfrs1vw4daLg4LsSoU1nF0h719f5ywOys8DaGmb+p0+ZY4QGzfzgyIt3AYGAninMcWETZsv9jMYlpnVl223VekvMpyfTVdpQS6AoiJ5ArDEdWVShCQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fnItkFd2; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789640549; c=relaxed/simple;
+	bh=Um3y1Jkysd73jLV2XmYD/9ymkqjT86P1HCANAFTeJr4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ThG6q3nPLCrZpAmM40qB6+Zw6DkSHdVo4fgbOKJjDoyPJuvDgNKFOBUDAdppbBH19fSpRiLE5QBDJnQ6oFPy2ZsB5poeJ952p1AO72hv9+TjEU6qd62hy55rwuVEHHMW50GWG6wTA0RNXnV5n5vyky/yxzVYJx3jpVQ3j6EtMQs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Gcwy2icq; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fnItkFd2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C9E0A1F000FF;
-	Thu, 17 Sep 2026 09:38:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Gcwy2icq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BDEEE1F000FF;
+	Thu, 17 Sep 2026 10:22:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789637916;
-	bh=Vl9uoOY+NuniCeBXQO3V1pySg9QDcIfveqPWZNsuC4A=;
-	h=Date:From:To:Cc:Subject;
-	b=fnItkFd2MsBPCC4IuOWejKkkJzM04wb+mFCUOgauWgLZ5Rw8y1NEwxZwpjpjDUtb7
-	 0FcNOe70PsXAtRGckR/e3CYifV3Kxjf/0ttAITiY9GhaQ+x7lRVjw7w2ZNoIVPHdBn
-	 Tzle0/izgqiHGnrNlVudnbj5ropPFdIJFupcFLjT3aW61cRBDVZEOC1XgAnFMqIqB9
-	 UlmtWyScmR5AhyaNpFYNLU7Fi0EA+VLmmoaHdCPxKB/ZKOVzOalZ8uHVE1wav92YJx
-	 bxv922zE8NR7uovgkATUu60aNVZESfMCmg6UO9Urmw8El7QUa1tIBdak/pOuRUmq8j
-	 86uRgOheCYPlQ==
-Date: Thu, 17 Sep 2026 11:38:29 +0200
-From: Andrey Albershteyn <aalbersh@kernel.org>
-To: linux-xfs@vger.kernel.org
-Cc: aalbersh@kernel.org, alx@kernel.org, avinesh.kumar@suse.com, 
-	bestswngs@gmail.com, brauner@kernel.org, cem@kernel.org, chuck.lever@oracle.com, 
-	cmaiolino@redhat.com, dawei.feng@seu.edu.cn, djwong@kernel.org, 
-	gaoyingjie@uniontech.com, hans.holmberg@wdc.com, hch@infradead.org, hch@lst.de, 
-	jiapenglin@tencent.com, roland.mainz@nrubsig.org, sandeen@redhat.com, tytso@mit.edu, 
-	xmei5@asu.edu
-Subject: [ANNOUNCE] xfsprogs: v7.2.0 released
-Message-ID: <aqu0yB1tlW6w7xgG@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+	s=k20260515; t=1789640544;
+	bh=hmpgsHKdTM5OPKY+9H+M/7J+Ny6EwbFmMgxBkJRoTF8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=Gcwy2icqCGLoFAnCUUlAt/7182g+RE0aPF9RU6ukda3X+Sbq2wrfzqwlV7J3cm5+0
+	 OwdqjqTd0Au7AAj/4m37X2E59nRAIu3rqh0VfR4m90+vASzvjegX3+kcXMZvyxqGp1
+	 9dK/i2XXjkIPXmiACgZCvgu7S4Yto2EN7dgqQCMzn1TYAc6UgcD3EXTZPy3DiTfXHv
+	 8ZFRaZ11HFLJn8ukh0KoibQ2E9ViQF9fAL9nymn3FvQ2GuggQjOv7JdeV4LGJbcJ/D
+	 Np5H6H4eaz7dJBC9B2tGGPf+x+n1tZprBh3VnJkrPiI+Ab6RIm6ctLhw+RZLG7xOc6
+	 4xPSasycVoWrA==
+Date: Thu, 17 Sep 2026 12:22:19 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: hchc@last.de, sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2 1/3] xfs: add xfs_error_report the ability to display
+ an error code
+Message-ID: <aqu_L94q-ol8T2Vc@nidhogg.toxiclabs.cc>
+References: <20260914115746.82122-1-cem@kernel.org>
+ <20260914115746.82122-2-cem@kernel.org>
+ <20260914144224.GG6283@frogsfrogsfrogs>
+ <aqgLft0IEhUocC8R@cronus.toxiclabs.cc>
+ <20260914150827.GP6265@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,251 +46,226 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20260914150827.GP6265@frogsfrogsfrogs>
 
-Hi folks,
+On Mon, Sep 14, 2026 at 08:08:27AM -0700, Darrick J. Wong wrote:
+> On Mon, Sep 14, 2026 at 05:00:51PM +0200, Carlos Maiolino wrote:
+> > On Mon, Sep 14, 2026 at 07:42:24AM -0700, Darrick J. Wong wrote:
+> > > On Mon, Sep 14, 2026 at 01:57:39PM +0200, cem@kernel.org wrote:
+> > > > From: Carlos Maiolino <cem@kernel.org>
+> > > > 
+> > > > Users could opt to request an error code to be printed now.
+> > > > This relies on errname() and CONFIG_SYMBOLIC_ERRNAME without requiring it
+> > > 
+> > > Eh?  No it doesn't...
+> > > 
+> > > > to be enabled.
+> > > > Report 'unkown error' If CONFIG_SYMBOLIC_ERRNAME is not enabled or the
+> > > > user passes 0 as an error.
+> > > > 
+> > > > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> > > > 
+> > > > ---
+> > > > V2:
+> > > > 	- Fix commit description s/_NAME/_ERRNAME
+> > > > 	- xfs_corruption_error should call xfs_error_report with
+> > > > 	  -EFSCORRUPTED
+> > > > 	- Modify xfs_error_report to only print out the error number if
+> > > > 	  it received an error from the caller.
+> > > > 	- Don't use errname() anymore.
+> > > 
+> > > ...right?
+> > 
+> > Of course I'd forget something... I'll fix that for next version...
+> > 
+> > 
+> > > 
+> > > >  fs/xfs/xfs_error.c         | 16 +++++++++++-----
+> > > >  fs/xfs/xfs_error.h         |  9 +++++----
+> > > >  fs/xfs/xfs_exchmaps_item.c |  9 ++++++---
+> > > >  fs/xfs/xfs_inode_item.c    |  3 ++-
+> > > >  fs/xfs/xfs_log_recover.c   |  3 ++-
+> > > >  fs/xfs/xfs_trans.c         |  2 +-
+> > > >  6 files changed, 27 insertions(+), 15 deletions(-)
+> > > > 
+> > > > diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+> > > > index 9ece70fd94ca..c943717f1dd7 100644
+> > > > --- a/fs/xfs/xfs_error.c
+> > > > +++ b/fs/xfs/xfs_error.c
+> > > > @@ -241,16 +241,21 @@ void
+> > > >  xfs_error_report(
+> > > >  	const char		*tag,
+> > > >  	int			level,
+> > > > +	int			error,
+> > > >  	struct xfs_mount	*mp,
+> > > >  	const char		*filename,
+> > > >  	int			linenum,
+> > > >  	xfs_failaddr_t		failaddr)
+> > > >  {
+> > > >  	if (level <= xfs_error_level) {
+> > > > -		xfs_alert_tag(mp, XFS_PTAG_ERROR_REPORT,
+> > > > -		"Internal error %s at line %d of file %s.  Caller %pS",
+> > > > -			    tag, linenum, filename, failaddr);
+> > > > -
+> > > > +		if (error)
+> > > > +			xfs_alert_tag(mp, XFS_PTAG_ERROR_REPORT,
+> > > > +"Internal error %s (%d) at line %d of file %s.  Caller %pS",
+> > > > +				tag, error, linenum, filename, failaddr);
+> > > > +		else
+> > > > +			xfs_alert_tag(mp, XFS_PTAG_ERROR_REPORT,
+> > > > +"Internal error %s at line %d of file %s.  Caller %pS",
+> > > > +				tag, linenum, filename, failaddr);
+> > > 
+> > > /me wonders if we should add a tracepoint to these error reporting
+> > > functions so that one isn't totally reliant on scraping dmesg, but maybe
+> > > adding fserror_report_metadata is more appropriate for that?  Will have
+> > > to ruminate on that for a while.
+> > 
+> > Hmmm, what you think about controlling with the tracepoint? Spitting out
+> > the error? *If* that's the case, the problem I see is when users hit the
+> > error we can't enable a tracepoint on a past error :P so I'd rather have
+> > it logged in dmesg without needing to rely on having tracepoints enabled
+> > or not.
+> > 
+> > Or perhaps I missed your point here?
+> 
+> I wasn't going to delete anything out of these functions, just add a new
+> fserror_report_metadata() call.  dmesg scraping would continue working
+> as it always has, but now a monitoring program could watch for events
+> via fsnotify.
 
-The xfsprogs master branch in repository at:
+Ok, sounds reasonable, I'm happy to do it on another patch though, just
+to not go through yet another review round on this one.
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
-
-has just been updated.
-
-This release adds a new possibility to save configuration file with user-visible
-features, this file may latter be used to re-create filesystem. mkfs.xfs gained
-ability to read default configuration file, this configuration can be
-overwritten with command line arguments or separate configuration file.
-xfs_quota now uses quotactl_fd(2) when available, to prevent failures during
-mount point path lookup. A few minor improvements to error reporting, man pages,
-and a bunch of internal cleanups.
-
-Patches often get missed, so if your outstanding patches are properly reviewed
-on the list and not included in this update, please let me know.
-
-The for-next branch has also been updated to match the state of master.
-
-The new head of the master branch is commit:
-
-84c54d6c0c3b65a3d1f10c4d3ac926bf9ef49b0b
-
-New commits:
-
-Andrey Albershteyn (3):
-      [4f927c6d2dab] xfs: fix null pointer dereference in tracepoint
-      [9601f7fff5f5] man: document that XFS_IOC_FS[G|S]ETXATTR can not be used on special files
-      [84c54d6c0c3b] xfsprogs: Release v7.2.0
-
-Avinesh Kumar (1):
-      [2d8d811c789f] libfrog: make cmn_err() emit each message atomically to avoid torn output
-
-Christoph Hellwig (29):
-      [b7876c0e11a3] copy: log the error number when failing to write
-      [d6d4236027e3] copy: always align to at least page size
-      [7bfd7d172384] xfs_db: improve the fsmap man page entry
-      [3febcf8307d6] xfs: add a XFS_INODE_TO_AGNO helper
-      [41023f3078bc] xfs: add a XFS_INODE_TO_AGINO helper
-      [0025466aebf4] xfs: add a XFS_INO_TO_FSB helper
-      [c46b610bf32c] xfs: add a xfs_rmap_inode_bmbt_owner
-      [d6d344c41f52] xfs: add a xfs_rmap_inode_owner helper
-      [cb4d9f4a55d8] xfs: remove the i_ino field in struct xfs_inode
-      [4c95910197bb] xfs: cleanup xfs_imap
-      [ea1901a24f7f] xfs: remove im_len field in struct xfs_imap
-      [2f3f536cb02f] xfs: massage xfs_imap_to_bp into xfs_read_icluster
-      [d8268ecd7d81] xfs: store an agbno in struct xfs_imap
-      [bcb506336f9c] xfs: mark struct xfs_imap as __packed
-      [7dce29be4422] xfs: pass back updated nb from xfs_growfs_compute_deltas
-      [fbd9f710190a] xfs: cleanup xfs_growfs_compute_deltas
-      [1c461401d63c] xfs: move XFS_LSN_CMP to xfs_log_format.h
-      [468400494950] xfs: check v5 superblock features early
-      [cff14b3bd2bb] xfs_io: cleanup headers
-      [ea60844c0d45] libxfs: remove xfs_inode.i_size
-      [8f11dfa97f13] repair: remove the ip variable in ensure_rtgroup_file
-      [5b28e18c7b35] include: fix LIBHFILES in Makefile
-      [2a43f11f27fc] libxfs: remove a spurious xfs.h include in xfs_zones.c
-      [fcc640556e62] libxfs: move a few xfs_health.h includes
-      [dc153093e6a2] libxfs: find a better location for stub headers
-      [dadaec61aece] libxfs: rename buf_mem.h to xfs_buf_mem.h
-      [538b3d77a823] libxfs: provide xfs_error.h
-      [d505a55ff272] libxfs: provide xfs_extent_busy.h
-      [cea516062157] libxfs: provide xfs_quota.h
-
-Chuck Lever (1):
-      [54d45f9bedfe] xfs: Report case sensitivity in fileattr_get
-
-Darrick J. Wong (15):
-      [9595e21992a8] libxfs: convert diff_items helpers to cmp_int
-      [85cd98501769] xfs: fix pointer arithmetic error on 32-bit systems
-      [3659a959beef] mkfs: automatically upgrade autofsck earlier
-      [54bb98427105] mkfs: print config file for a given mkfs configuration
-      [b76315c9f7df] xfs_db: print configuration file for mounted filesystems
-      [b1d1ad39ec38] xfs_spaceman: print configuration file for mounted filesystems
-      [7606e83be029] xfs_admin: print configuration file for mounted filesystems
-      [ce4ee81aeded] mkfs: allow specification of default options via configuration file
-      [dea3a7fdc3c5] libfrog: hoist xfsquotactl out of xfs_quota
-      [bf356708c73b] libfrog: clean up xfsquotactl a little bit
-      [6571a916bb69] libfrog: enhance struct fs_path to store optional mount fd
-      [500da05860c7] libfrog: try to pass struct fs_path objects to quotactl wrapper
-      [2eef8aff59eb] libfrog: add quotactl_fd support to xfsquotactl
-      [3dc24f302503] xfs_quota: open the filesystem mountpoint for quota operations
-      [d1ad770c8e7e] xfs_spaceman: port makecfg to use xfsquotactl
-
-Dawei Feng (1):
-      [c2e1a925e98f] xfs: fix memory leak in xfs_dqinode_metadir_create()
-
-Eric Sandeen (1):
-      [643a5d8ffd76] mkfs: Emit a clearer message if too-small log is due to AG geometry
-
-Hans Holmberg (1):
-      [ba7c0e339296] libxfs: report device open errors during topology probing
-
-Lin Jiapeng (1):
-      [8d5bb64656fe] xfs: fix exchange-range reflink flag clearing issue with INO1_WRITTEN
-
-Xiang Mei (1):
-      [4efde4fd2a12] xfs: fix off-by-one in rtrefcount btree root level validation
-
-Yingjie Gao (1):
-      [7885cad313d0] xfs: fix exchmaps reservation limit check
-
-Code Diffstat:
-
- VERSION                                   |   4 +-
- configure.ac                              |   3 +-
- copy/xfs_copy.c                           |   8 +-
- db/attrset.c                              |   2 +-
- db/bmap_inflate.c                         |   4 +-
- db/dquot.c                                |   2 +-
- db/info.c                                 | 201 ++++++++++
- db/iunlink.c                              |  13 +-
- db/namei.c                                |  14 +-
- db/rdump.c                                |   2 +-
- db/xfs_admin.sh                           |  15 +-
- debian/changelog                          |   6 +
- doc/CHANGES                               |  16 +
- include/Makefile                          |   8 -
- include/builddefs.in                      |   4 +-
- include/libxfs.h                          |   3 +-
- include/linux.h                           |  17 +
- io/init.h                                 |  10 +-
- io/io.h                                   | 158 ++++----
- libfrog/Makefile                          |   6 +
- libfrog/fsgeom.c                          | 629 ++++++++++++++++++++++++++++++
- libfrog/fsgeom.h                          |   4 +
- libfrog/paths.c                           |   3 +
- libfrog/paths.h                           |   1 +
- quota/linux.c => libfrog/quotactl.c       |  45 ++-
- libfrog/quotactl.h                        |  30 ++
- libfrog/util.c                            |   2 +
- libxfs/Makefile                           |  12 +-
- libxfs/buf_mem.c                          |   3 +-
- libxfs/defer_item.c                       |   9 +-
- libxfs/init.c                             |   3 +-
- libxfs/inode.c                            |   8 +-
- libxfs/iunlink.c                          |   4 +-
- libxfs/libxfs_api_defs.h                  |   2 +-
- libxfs/listxattr.c                        |   4 +-
- libxfs/logitem.c                          |  17 +-
- libxfs/rdwr.c                             |   3 +-
- libxfs/{buf_mem.h => stubs/xfs_buf_mem.h} |   2 +
- libxfs/stubs/xfs_error.h                  |  34 ++
- libxfs/stubs/xfs_extent_busy.h            |  20 +
- {include => libxfs/stubs}/xfs_inode.h     |  17 +-
- {include => libxfs/stubs}/xfs_mount.h     |   0
- libxfs/stubs/xfs_quota.h                  |  20 +
- {include => libxfs/stubs}/xfs_trace.h     |   0
- {include => libxfs/stubs}/xfs_trans.h     |  18 -
- libxfs/topology.c                         |   8 +-
- libxfs/util.c                             |   2 +-
- libxfs/xfs_ag.c                           |  43 +-
- libxfs/xfs_ag.h                           |   5 +-
- libxfs/xfs_ag_resv.c                      |   1 +
- libxfs/xfs_alloc.c                        |   2 +
- libxfs/xfs_alloc_btree.c                  |   4 +-
- libxfs/xfs_attr.c                         |   4 +-
- libxfs/xfs_attr_leaf.c                    |   3 +-
- libxfs/xfs_attr_remote.c                  |   1 +
- libxfs/xfs_bmap.c                         |  23 +-
- libxfs/xfs_bmap_btree.c                   |  11 +-
- libxfs/xfs_bmap_btree.h                   |   2 +-
- libxfs/xfs_btree.c                        |  23 +-
- libxfs/xfs_btree_mem.c                    |   4 +-
- libxfs/xfs_btree_staging.c                |   2 +-
- libxfs/xfs_da_btree.c                     |   4 +-
- libxfs/xfs_defer.c                        |   2 +-
- libxfs/xfs_dir2.c                         |  45 +--
- libxfs/xfs_dir2_block.c                   |   1 +
- libxfs/xfs_dir2_data.c                    |   1 +
- libxfs/xfs_dir2_leaf.c                    |   1 +
- libxfs/xfs_dir2_node.c                    |   3 +-
- libxfs/xfs_dir2_sf.c                      |   4 +-
- libxfs/xfs_dquot_buf.c                    |  17 +-
- libxfs/xfs_exchmaps.c                     |  22 +-
- libxfs/xfs_format.h                       |   6 +
- libxfs/xfs_group.c                        |   2 +
- libxfs/xfs_ialloc.c                       |  91 ++---
- libxfs/xfs_ialloc_btree.c                 |   3 +-
- libxfs/xfs_inode_buf.c                    |  25 +-
- libxfs/xfs_inode_buf.h                    |  13 +-
- libxfs/xfs_inode_fork.c                   |   7 +-
- libxfs/xfs_inode_util.c                   |  16 +-
- libxfs/xfs_log_format.h                   |  13 +
- libxfs/xfs_metadir.c                      |   4 +-
- libxfs/xfs_metafile.c                     |   2 +
- libxfs/xfs_parent.c                       |   9 +-
- libxfs/xfs_parent.h                       |   2 +-
- libxfs/xfs_platform.h                     |  57 ---
- libxfs/xfs_refcount.c                     |   1 +
- libxfs/xfs_refcount_btree.c               |   3 +-
- libxfs/xfs_rmap.c                         |   7 +-
- libxfs/xfs_rmap.h                         |   4 +
- libxfs/xfs_rmap_btree.c                   |   7 +-
- libxfs/xfs_rtbitmap.c                     |   6 +-
- libxfs/xfs_rtgroup.c                      |   1 +
- libxfs/xfs_rtrefcount_btree.c             |  10 +-
- libxfs/xfs_rtrmap_btree.c                 |   9 +-
- libxfs/xfs_sb.c                           |   8 +-
- libxfs/xfs_symlink_remote.c               |   7 +-
- libxfs/xfs_trans_resv.c                   |   2 +-
- libxfs/xfs_zones.c                        |   1 -
- m4/package_libcdev.m4                     |  19 +
- man/man2/ioctl_xfs_fsgetxattr.2           |  24 +-
- man/man8/mkfs.xfs.8.in                    |  33 +-
- man/man8/xfs_admin.8                      |   8 +
- man/man8/xfs_db.8                         |  23 +-
- man/man8/xfs_spaceman.8                   |   7 +
- mkfs/proto.c                              |  16 +-
- mkfs/xfs_mkfs.c                           | 232 +++++++++--
- quota/Makefile                            |   2 +-
- quota/edit.c                              |  36 +-
- quota/free.c                              |  11 +-
- quota/init.c                              |  15 +
- quota/init.h                              |   2 +
- quota/path.c                              |   4 +-
- quota/project.c                           |   7 +
- quota/quota.c                             |   6 +-
- quota/quota.h                             |  18 +-
- quota/report.c                            |  61 ++-
- quota/state.c                             |  38 +-
- repair/bmap_repair.c                      |  12 +-
- repair/bulkload.c                         |   2 +-
- repair/phase6.c                           | 132 +++----
- repair/pptr.c                             | 100 ++---
- repair/quotacheck.c                       |   8 +-
- repair/rt.c                               |   6 +-
- repair/rtrefcount_repair.c                |   2 +-
- repair/rtrmap_repair.c                    |   2 +-
- repair/xfs_repair.c                       |   4 +-
- spaceman/info.c                           | 200 ++++++++++
- 127 files changed, 2244 insertions(+), 726 deletions(-)
- rename quota/linux.c => libfrog/quotactl.c (53%)
- create mode 100644 libfrog/quotactl.h
- rename libxfs/{buf_mem.h => stubs/xfs_buf_mem.h} (97%)
- create mode 100644 libxfs/stubs/xfs_error.h
- create mode 100644 libxfs/stubs/xfs_extent_busy.h
- rename {include => libxfs/stubs}/xfs_inode.h (96%)
- rename {include => libxfs/stubs}/xfs_mount.h (100%)
- create mode 100644 libxfs/stubs/xfs_quota.h
- rename {include => libxfs/stubs}/xfs_trace.h (100%)
- rename {include => libxfs/stubs}/xfs_trans.h (92%)
-
--- 
-- Andrey
+> 
+> --D
+> 
+> > > 
+> > > In the meantime, this patch looks fine to me,
+> > > Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+> > 
+> > Thanks!
+> > 
+> > 
+> > > 
+> > > --D
+> > > 
+> > > >  		xfs_stack_trace();
+> > > >  	}
+> > > >  }
+> > > > @@ -268,7 +273,8 @@ xfs_corruption_error(
+> > > >  {
+> > > >  	if (buf && level <= xfs_error_level)
+> > > >  		xfs_hex_dump(buf, bufsize);
+> > > > -	xfs_error_report(tag, level, mp, filename, linenum, failaddr);
+> > > > +	xfs_error_report(tag, level, -EFSCORRUPTED, mp,
+> > > > +			 filename, linenum, failaddr);
+> > > >  	xfs_alert(mp, "Corruption detected. Unmount and run xfs_repair");
+> > > >  }
+> > > >  
+> > > > diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
+> > > > index 05fc1d1cf521..3c76d0dad51c 100644
+> > > > --- a/fs/xfs/xfs_error.h
+> > > > +++ b/fs/xfs/xfs_error.h
+> > > > @@ -8,8 +8,9 @@
+> > > >  
+> > > >  struct xfs_mount;
+> > > >  
+> > > > -void xfs_error_report(const char *tag, int level, struct xfs_mount *mp,
+> > > > -		const char *filename, int linenum, xfs_failaddr_t failaddr);
+> > > > +void xfs_error_report(const char *tag, int level, int error,
+> > > > +		struct xfs_mount *mp, const char *filename,
+> > > > +		int linenum, xfs_failaddr_t failaddr);
+> > > >  void xfs_corruption_error(const char *tag, int level, struct xfs_mount *mp,
+> > > >  		const void *buf, size_t bufsize, const char *filename,
+> > > >  		int linenum, xfs_failaddr_t failaddr);
+> > > > @@ -20,8 +21,8 @@ void xfs_verifier_error(struct xfs_buf *bp, int error, xfs_failaddr_t failaddr);
+> > > >  void xfs_inode_verifier_error(struct xfs_inode *ip, int error, const char *name,
+> > > >  		const void *buf, size_t bufsz, xfs_failaddr_t failaddr);
+> > > >  
+> > > > -#define	XFS_ERROR_REPORT(e, lvl, mp)	\
+> > > > -	xfs_error_report(e, lvl, mp, __FILE__, __LINE__, __return_address)
+> > > > +#define	XFS_ERROR_REPORT(e, lvl, error, mp)	\
+> > > > +	xfs_error_report(e, lvl, error, mp, __FILE__, __LINE__, __return_address)
+> > > >  #define	XFS_CORRUPTION_ERROR(e, lvl, mp, buf, bufsize)	\
+> > > >  	xfs_corruption_error(e, lvl, mp, buf, bufsize, \
+> > > >  			     __FILE__, __LINE__, __return_address)
+> > > > diff --git a/fs/xfs/xfs_exchmaps_item.c b/fs/xfs/xfs_exchmaps_item.c
+> > > > index dd5d92ca1010..9f499a80038c 100644
+> > > > --- a/fs/xfs/xfs_exchmaps_item.c
+> > > > +++ b/fs/xfs/xfs_exchmaps_item.c
+> > > > @@ -573,13 +573,15 @@ xlog_recover_xmi_commit_pass2(
+> > > >  
+> > > >  	len = sizeof(struct xfs_xmi_log_format);
+> > > >  	if (item->ri_buf[0].iov_len != len) {
+> > > > -		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, log->l_mp);
+> > > > +		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW,
+> > > > +				 -EFSCORRUPTED, log->l_mp);
+> > > >  		return -EFSCORRUPTED;
+> > > >  	}
+> > > >  
+> > > >  	xmi_formatp = item->ri_buf[0].iov_base;
+> > > >  	if (xmi_formatp->__pad != 0) {
+> > > > -		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, log->l_mp);
+> > > > +		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW,
+> > > > +				 -EFSCORRUPTED, log->l_mp);
+> > > >  		return -EFSCORRUPTED;
+> > > >  	}
+> > > >  
+> > > > @@ -614,7 +616,8 @@ xlog_recover_xmd_commit_pass2(
+> > > >  
+> > > >  	xmd_formatp = item->ri_buf[0].iov_base;
+> > > >  	if (item->ri_buf[0].iov_len != sizeof(struct xfs_xmd_log_format)) {
+> > > > -		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, log->l_mp);
+> > > > +		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW,
+> > > > +				 -EFSCORRUPTED, log->l_mp);
+> > > >  		return -EFSCORRUPTED;
+> > > >  	}
+> > > >  
+> > > > diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+> > > > index 99d6ecccdaa7..a29c90f0650f 100644
+> > > > --- a/fs/xfs/xfs_inode_item.c
+> > > > +++ b/fs/xfs/xfs_inode_item.c
+> > > > @@ -1229,7 +1229,8 @@ xfs_inode_item_format_convert(
+> > > >  	struct xfs_inode_log_format_32	*in_f32 = buf->iov_base;
+> > > >  
+> > > >  	if (buf->iov_len != sizeof(*in_f32)) {
+> > > > -		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, NULL);
+> > > > +		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW,
+> > > > +				 -EFSCORRUPTED, NULL);
+> > > >  		return -EFSCORRUPTED;
+> > > >  	}
+> > > >  
+> > > > diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> > > > index e7e49529658b..e92afc455d0f 100644
+> > > > --- a/fs/xfs/xfs_log_recover.c
+> > > > +++ b/fs/xfs/xfs_log_recover.c
+> > > > @@ -2945,7 +2945,8 @@ xlog_recover_process(
+> > > >  		 * fatal log corruption failure.
+> > > >  		 */
+> > > >  		if (xfs_has_crc(log->l_mp)) {
+> > > > -			XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, log->l_mp);
+> > > > +			XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW,
+> > > > +					 -EFSCORRUPTED, log->l_mp);
+> > > >  			return -EFSCORRUPTED;
+> > > >  		}
+> > > >  	}
+> > > > diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+> > > > index 1b36cf12d4e3..5c522790e5be 100644
+> > > > --- a/fs/xfs/xfs_trans.c
+> > > > +++ b/fs/xfs/xfs_trans.c
+> > > > @@ -971,7 +971,7 @@ xfs_trans_cancel(
+> > > >  	 * here.
+> > > >  	 */
+> > > >  	if (dirty && !xfs_is_shutdown(mp)) {
+> > > > -		XFS_ERROR_REPORT("xfs_trans_cancel", XFS_ERRLEVEL_LOW, mp);
+> > > > +		XFS_ERROR_REPORT("xfs_trans_cancel", XFS_ERRLEVEL_LOW, 0, mp);
+> > > >  		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+> > > >  	}
+> > > >  #ifdef DEBUG
+> > > > -- 
+> > > > 2.55.0
+> > > > 
+> > > 
+> > 
+> 
