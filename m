@@ -1,101 +1,134 @@
-Received: from mail-pz2-f40.google.com (mail-pz2-f40.google.com [74.125.228.40])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 741744CDDE3
-	for <linux-xfs@vger.kernel.org>; Thu, 17 Sep 2026 20:08:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.228.40
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87B2347A88D
+	for <linux-xfs@vger.kernel.org>; Thu, 17 Sep 2026 21:20:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789675724; cv=none; b=OK/emksct8WDKwN6fbUG1HpHn+CASP8GLSrRUQSOFLD9rtJgqYfuE42Xd+14FpBl6RSBxCfFg6Ef8Avs+9l2pyH45Wj3zFMWAqCtsAjISa7fgG3DQaxLrcJX1741ddZR6CfrmEn0MDNOPuQBUqDR8CjgnwxMHeBh1nKfU5pEFoo=
+	t=1789680014; cv=none; b=cgfRgwX8/HMy7CWtRWpTiOtsr4lM4Uauu+iK4nlsLSH+UoLSHaTYUte3ZsdeaAQTXwZKs3PlPlMuf2SQ1WcKgof9h19aTHOJzLyhc0BAP62XI0UEa9RPHqaUblMDs0HAsaNOkp2VnVgQehXWrBhbev+uTShw6C6n8+GDS2Fdhqc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789675724; c=relaxed/simple;
-	bh=c3HGRrbnWOWFQra+UhT4B1+Acx3bI7Nw6k8KeWp9BS8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=YgRR08042ljN3I3SKjqZT60GWh25hMxlCScY4qf1HxJFx4nctkRJUUArgvb97ZQfH9uFwjOxPUyBnTifPsVEjex4LNeuXZ7LJ33kk72fwEjrMU/U1IRmVJtfPckIthb48wr3sc1thkgvuML6m7dtqfwIeP3EWEP8z4T8NGZ2VPo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jen6q8ym; arc=none smtp.client-ip=74.125.228.40
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1789680014; c=relaxed/simple;
+	bh=x+o5eBZt2ZV78DM0xb7yNywHu1y454YXoZuJnIfLvj0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Vt+5BZjlCGPUe8GYD4ReCqpr1zGHNwceDa6XVPv6a++jMIVWRy1iR8RdMaDl6mljcwejjFjwK9PxdDPA2/uKQw8kzTsVxUKkWFH/+CXvo9ia4aM1iEQS1q7iqwvxCtMwBffurouBv+ZwydaxRIM0sUCq41bOZOQMR1Xm828B3uE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gUQSI/Lt; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jen6q8ym"
-Received: by mail-pz2-f40.google.com with SMTP id 41be03b00d2f7-cc52bd91929so318343a12.2
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Sep 2026 13:08:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1789675723; x=1790280523; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=uxeSOe3mpO7CBa/xPERrffZOLH3W4cgq9X5vRuIxJTQ=;
-        b=jen6q8ymJASpncWVXVmPn46vw7aI+VLYZASMpnX1Vkq4SxTuimukIAoLc+KHMIftUK
-         f4YZdBIc5yEtahTyca+iwKJCqeKZX0TVR3n+T/U94iJKL5blp+6zzZ/xGnHSMEvWE9go
-         BnH9EnYa1eArbzw4TU6gi7vlu4Labi/Yoe4S00RPu4XnNCDMcRQrQ7teI1z1msNTrVBr
-         N61v6s6M+CVYxE9HE7HniccQV961hIOiBV1FcS8EEo/mt5c/rxsK0D9qP2ZcqCC/VqCE
-         qKXWvAB9FPUBJkywv4g+yfQhdUtXYywsFbut65gY95T9POuSvudbCUr1K0CeRlSDYtjF
-         0m9A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789675723; x=1790280523;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=uxeSOe3mpO7CBa/xPERrffZOLH3W4cgq9X5vRuIxJTQ=;
-        b=Eo42SVUphurhKG/6gA+dhHJOI3stpl6nSldns7Na2vI42mYbGVJJAxrk8H1I60vs0Z
-         o5o+rSaugtRAq6A8nTKkgpm9wShsz8WucUhL47Fcgiz7xewv2zVemRVQAXpF7WRmojc6
-         CswiCPylPRfRdzWpzUZQq3Tftp5G/xX6pRypIcR1u/gPogrsxRc0YXg1J8AWlJ1tQIUg
-         VMHnYdUL046JuWIDWIWKP/hRvecyAt8HU6n2nbwfWL560cNJKmbND/AvfvzdmpyOLSly
-         xTaRbZEe28+9hcCYBGIsjA5Dl1vTAfnkSrQOlZzaoxH0iNMelwO7vyaJFl9WUEKrSEr0
-         ybSA==
-X-Forwarded-Encrypted: i=1; AKwUvByunXCO5YQlpKBg9IAFSVnq4BaYEi6CJ9I4Rcf6aufcp2fWFGRYOfdSpOLYYXAn31OgByTOmHZGY1E=@vger.kernel.org
-X-Gm-Message-State: AFuF++nOOX8ypEUeOFyRUcUwKAU6/alyOo+Qqvalve5m77BVGHuUX8dY
-	ty/5qp/IvmtPGFlJ3rR0MdXBLVyw+mY+A5ruK+/bRef+w02cOqkz/uG9
-X-Gm-Gg: AYBFou1RWU6SWmF6pOk3xd4K6LIfVwnnczGGITAF4QObxAPGgunjBuKene6KcVgJLxQ
-	WMirkpJ8UGX5cfWH9Jjcaod4uA3diiaW8u/QOHPrDPkdgQ5b3tP1F8+FZnhmU9aNlsEzpUiM33z
-	ZvPoSW/GefEZ6kQueqVW0/XHwGANmibAhPoK72AwuJCf+bR9BB5WNNt218z51bbIj5OvnG2e9KI
-	JOe2eXQRE2UM2BGYTZFo3SA7/DnHEsGKDjuKhOT+niYdUQpR15wP/YOjWjVlwe6mzhDqM2EXQ95
-	esY+pCoBKeIVom884kgSln40wx6GeBlO03S5vpn0VgMPG2Bm0O61d/aihjPXI/nZ3we3WRjoBWW
-	PXB8kD+iDtLE8UXSgPTu9TXPj4lnmjL3XCAj8O5LJG5gv0JZ2k4YZZ2JyMd3neoIdmihLuybPPB
-	3RrB5WNUyi0mBBlyS5ZkRstd5nwC68+S+H3cnZSXxiyOUTWc1Mm+hO0KzHrZBMLxvsiRF7D5DIm
-	w==
-X-Received: by 2002:a17:90b:35d0:b0:398:9c00:29ec with SMTP id 98e67ed59e1d1-39e54d365a8mr510352a91.20.1789675722693;
-        Thu, 17 Sep 2026 13:08:42 -0700 (PDT)
-Received: from G15-5520 ([103.246.195.44])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-33bf5b2753csm33881159eec.31.2026.09.17.13.08.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 17 Sep 2026 13:08:42 -0700 (PDT)
-From: Lalit Shankar Chowdhury <lalitshankarch@gmail.com>
-To: Carlos Maiolino <cem@kernel.org>,
-	linux-xfs@vger.kernel.org (open list:XFS FILESYSTEM),
-	linux-kernel@vger.kernel.org (open list)
-Cc: Lalit Shankar Chowdhury <lalitshankarch@gmail.com>
-Subject: [PATCH] xfs: replace kvmalloc_array with kvzalloc_objs
-Date: Thu, 17 Sep 2026 20:08:35 +0000
-Message-ID: <20260917200835.31027-1-lalitshankarch@gmail.com>
-X-Mailer: git-send-email 2.53.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gUQSI/Lt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CCCFD1F000FF;
+	Thu, 17 Sep 2026 21:20:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789680013;
+	bh=InzmcATY8KaFEsmAqxSpocH/9yhRBeMf+E7+BoppHZs=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=gUQSI/Ltmfo/R04pm8Ljsai5htbE5IHasUE6R6IIKDAlNF8/NWgetr+pI/zPTwqXw
+	 N3B15z2YNwLuYbdSf2ifmiLfTprUJRvPE452A1Q5a93YuTVALFYuxUL3uvVldE/chq
+	 vnkMDnCxYhIKTLeN8ExVVwzvOceZ+BUiVOTCh5zI4if2ubD819sZYbgVfxIHTkNq1A
+	 THmorLkHVU1u/w2ZE0Q2rNzFdwrPLU3g3NZt4TWEoAcw5bwzWOKd0dQ88+IDCD2I3O
+	 L/ZMPr3Tjg4vJTB65Q77QadOkpP33V//ESTkEyTrOs1EdLQbu08HqXBpxn4bc6xrsd
+	 0ckehgBUqweLQ==
+Date: Fri, 18 Sep 2026 07:20:04 +1000
+From: Dave Chinner <dgc@kernel.org>
+To: John Garry <john.garry@linux.dev>
+Cc: John Garry <john.g.garry@oracle.com>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: [bug report] fstests generic/774 hang again
+Message-ID: <aqxZhKvsHFAyUM5k@dread>
+References: <aqkP9CTUvlC2YCIb@shinmob>
+ <98190f62-ccc3-49df-934d-f168e293c485@linux.dev>
+ <aqkv-2opTlWD6bzU@shinmob>
+ <ed224f94-f605-4be0-8a0a-0b3d481e46ae@linux.dev>
+ <20260915145046.GC2705364@frogsfrogsfrogs>
+ <db4ab609-af16-4c5d-aa98-c0655625a2df@linux.dev>
+ <9bf23063-e6e5-4595-8ff9-27383c99e5a6@oracle.com>
+ <aqsW_iNwYAjYldVf@dread>
+ <e651832b-75bc-4520-a45e-b79cd986d175@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <e651832b-75bc-4520-a45e-b79cd986d175@linux.dev>
 
-Replace kvmalloc_array() with the more concise kvzalloc_objs()
-implementation.
+On Thu, Sep 17, 2026 at 09:28:15AM +0100, John Garry wrote:
+> On 9/16/26 23:23, Dave Chinner wrote:
+> > On Wed, Sep 16, 2026 at 11:23:16AM +0100, John Garry wrote:
+> > > On 15/09/2026 16:41, John Garry wrote:
+> > > > On 9/15/26 15:50, Darrick J. Wong wrote:
+> > > > > > thanks
+> > > > > > 
+> > > > > > About the kernel code, I am wondering if using IOMAP_DIO_FORCE_WAIT for
+> > > > > > CoW-based atomics could help avoid this issue as we seem to be
+> > > > > > bogged down
+> > > > > > in lock contention.
+> > > > > Which lock is being contended, anyway?  It looks like the ILOCK?
+> > > > 
+> > > > Yeah, I think so Re. ilock. I had some perf data illustrating this from
+> > > > last year, which I can't seem to find, so I will re-generate it.
+> > > 
+> > > Here is perf call graph snippet when running fio with 72x threads issuing
+> > > 4KB atomic writes on 1MB file:
+> > > 
+> > > --50.46%--xfs_file_dio_write_atomic
+> > > |
+> > > |--37.19%--iomap_dio_rw
+> > > |          |
+> > > |      --37.14%--__iomap_dio_rw
+> > > |           |
+> > > |       --36.50%--iomap_iter
+> > > |            |
+> > > |             --36.49%--xfs_atomic_write_cow_iomap_next
+> > > |                  |
+> > > |                  |--27.34%--xfs_ilock
+> > > |                  |          |
+> > > |                  |      --27.34%--down_write
+> > > |                  |           |
+> > > |                  |       --27.28%--rwsem_down_write_slowpath
+> > > |                  |            |
+> > > |                  |            |--24.65%--osq_lock
+> > > |                  |            |
+> > > |                  |             --2.35%--rwsem_spin_on_owner
+> > > |                  |
+> > > |                  |--7.62%--xfs_trans_alloc_inode
+> > > |                  |          |
+> > > |                  |      --7.59%--xfs_ilock
+> > 
+> > Where's the other half of the lock contention?
+> 
+> I was expecting xfs_reflink_end_atomic_cow() -> xfs_ilock() to be a point of
+> contention as well, but it does not show up. I suppose that it because all
+> those threads at completion stage are sleeping.
+> 
+> However, there is this which I omitted:
+> 
+> --13.21%--xfs_file_write_checks
+>    |
+>       --13.18%--kiocb_modified
+>          |
+>             --13.17%--file_update_time_flags
+>                |
+>                   --13.16%--xfs_vn_update_time
+>                      |
+>                         --12.99%--xfs_ilock
+>                            |
+>                               --12.98%--down_write
 
-Signed-off-by: Lalit Shankar Chowdhury <lalitshankarch@gmail.com>
----
- fs/xfs/xfs_zone_alloc.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+Fair enough, I'd expect that from the all the threads blocked on the
+lock there in the hung task output.
 
-diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
-index 28c1e48909fa..82615045aa4c 100644
---- a/fs/xfs/xfs_zone_alloc.c
-+++ b/fs/xfs/xfs_zone_alloc.c
-@@ -1238,8 +1238,7 @@ static unsigned long *
- xfs_alloc_bucket_bitmap(
- 	struct xfs_mount	*mp)
- {
--	return kvmalloc_array(BITS_TO_LONGS(mp->m_sb.sb_rgcount),
--			sizeof(unsigned long), GFP_KERNEL | __GFP_ZERO);
-+	return kvzalloc_objs(unsigned long, BITS_TO_LONGS(mp->m_sb.sb_rgcount));
- }
- 
- static struct xfs_zone_info *
+....
+
+> JFYI, I have another log for a similar hang which we see one thread deadlock
+> for log space, below.
+
+Looks very similar. So, same questiosn about log size, etc.
+
+-Dave.
 -- 
-2.53.0
-
+Dave Chinner
+dgc@kernel.org
