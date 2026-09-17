@@ -1,353 +1,181 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.6])
+Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0FB9299A82
-	for <linux-xfs@vger.kernel.org>; Thu, 17 Sep 2026 06:17:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.6
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789625882; cv=none; b=Z/4Pcse85axqUBMogTSqLDhw3H2KJ8bUn/M4JU2tJuHRitQrF1SYgd6TO4SRSb5mgMK1J9kkYIqc1XJ6j5KJ/J8tvuyPrKgeCeqwySGwBxDSwp/NKed1AYZ3XmwBAl++3f8K2IvCYA+RbblFfHHcRuiZvpiRHRFgLIjkSYnLJOM=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789625882; c=relaxed/simple;
-	bh=FytPGvd6NZHill16AqVnEw51HUhkLvELRCjz9kKzCZ4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pF/hzcDdDXGXtCsz0RmuAHb1PbA/6Z/wxqrzP97s4AKuWmXOm0XmBZnUEGHlfb58TfQXi1fEY/qhFOFRCre3MBLQdlk5xgP+V24Hc7ajGVuHoBqF1xdYSkZHYtaJ2vTL4FiCQo8wgPXICtRrvI0vPCkKszdF8DFjS+N220Z9l6o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=mRA3bNa8; arc=none smtp.client-ip=192.198.163.6
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03293423EA2
+	for <linux-xfs@vger.kernel.org>; Thu, 17 Sep 2026 06:30:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=68.232.143.124
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789626662; cv=fail; b=M/so70hLEdpXA49OlU+dZc+W7F0FADg/Moz2hYoW/nbWZrzNMFASRhb8cI5L/YAXVLqCPCKhzFeE2hk/0YYCD/0vF0M2DYt53iGdb20J53oPmGmJrmFvY/Z3fWjx8dIVBvrhjpcOQnw/Ur+IccL8xfD6+WqX+fsmpoauC2/hek8=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789626662; c=relaxed/simple;
+	bh=pKoSh593SsR1ZZdRIj8zcgIohFR7RljVigcBS0pQ9QA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=rhCp8NYmQVtKrei/UFLCae7Fs4wZCv2zH6sQQFmnnKYSmUkbmvJ+DKP2lo1+jUNgtLC9JhGsm0ppcFMv50+Nj+tspwGdPZDvMh5zSAr/i9x8gD8U89jr3ODtVFmXmchoIXuLz/hCkNeQXZtIfTX5bKCD/+pSWLFJKwO0EVTrnXw=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=nB9rLrH1; dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b=cqKhP5vh; arc=fail smtp.client-ip=68.232.143.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="mRA3bNa8"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1789625879; x=1821161879;
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="nB9rLrH1";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="cqKhP5vh"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1789626659; x=1821162659;
   h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=FytPGvd6NZHill16AqVnEw51HUhkLvELRCjz9kKzCZ4=;
-  b=mRA3bNa8M43qljK4Xl6uSyJjPk6jhT7ZdRi82qN6xB05uhMG5LS3cUel
-   gaY7pL808v8E66uEXUV5N5YYQ7qr5EBavIYBBEBgQ5wBE0pwwlBGKsG7O
-   /p1IVxWiD+nM5s4fM5tT2PiX6lKCDvT+QMa9VBhVrujZfINuAI6HdJjM3
-   Zvhb0Qho7yFchCojJKwnjhK+NHh/Rqd4p4jK4KbejEBZBtdnaaAx+JFqB
-   O/6Enk16BHoHV/GE83I+yBMwRvcm/ODpz8YLq4PAdmXF29kqc4/22MMfY
-   ux/0j9HVYb7Jkuglc8BOgBl/kub6vDMlazpoEla8r+zE/x3/ZrQ7a1kCi
-   w==;
-X-CSE-ConnectionGUID: 1DBDG+XkQv6xxNQAi0xJnA==
-X-CSE-MsgGUID: xcod5FwvQMuDv1zdjCaHTg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11905"; a="520545"
-X-IronPort-AV: E=Sophos;i="6.27,103,1787036400"; 
-   d="scan'208";a="520545"
-Received: from fmviesa005.fm.intel.com ([10.60.135.145])
-  by fmvoesa116.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Sep 2026 23:17:58 -0700
-X-CSE-ConnectionGUID: AV/jYKInQsmMJw/GuMNb+g==
-X-CSE-MsgGUID: SJu2fMb5RN2JaBcBKhDeGQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,103,1787036400"; 
-   d="scan'208";a="278820783"
-Received: from ly-workstation.sh.intel.com (HELO ly-workstation) ([10.239.182.64])
-  by fmviesa005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Sep 2026 23:17:57 -0700
-Date: Thu, 17 Sep 2026 14:17:54 +0800
-From: "Lai, Yi" <yi1.lai@intel.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org,
-	"Darrick J. Wong" <djwong@kernel.org>, yi1.lai@intel.com
-Subject: Re: [PATCH 1/3] xfs: also flush the RT device cache in
- xlog_write_iclog
-Message-ID: <aquGEi4DdTPqdQEh@ly-workstation>
-References: <20260907073427.719935-1-hch@lst.de>
- <20260907073427.719935-2-hch@lst.de>
+   in-reply-to:mime-version;
+  bh=pKoSh593SsR1ZZdRIj8zcgIohFR7RljVigcBS0pQ9QA=;
+  b=nB9rLrH1AsW1LVZcmF9gyyJrETe4J3mihwnC3dZ3u9OWnienuD2zUmfg
+   f3R6Mhk7UFlpOdWvdISSF3oNOvnbXMw1Pxp+3TCYpufCBXwkCkuMxdiTs
+   mLVtOhMsNDYDXyFTZNa4tJCGsiVsOvFQSPSuYJT0l7qs7gxnoBD6/2TBF
+   YKIrYsVxhX1KJ01iJrU91w7sAfUQXyWks66RXzHOgp9IQ8soh0UgFVLTh
+   sCGLiovyzAPWGlQL+pmV/hZbtjTbkf+S0gNDxU5idWNBZZ4ty5w5OrSIP
+   eJUklxhCCXoHxh5ql+FXot16cHUu14OLOhuYxzukNjoEqYlDwFaZlclU6
+   g==;
+X-CSE-ConnectionGUID: +UoZhDzWSVerAfCi+3CZSg==
+X-CSE-MsgGUID: QYD6JncEQYO5so5rIJX9YQ==
+X-IronPort-AV: E=Sophos;i="6.27,103,1786982400"; 
+   d="scan'208";a="156808703"
+Received: from mail-southcentralusazon11012011.outbound.protection.outlook.com (HELO SN4PR2101CU001.outbound.protection.outlook.com) ([40.93.195.11])
+  by ob1.hgst.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 17 Sep 2026 14:30:53 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=EZqmCDt3TDkOxliq9gwWsDqdnEaSASmJvyiEMA6x138RU4NtALR5L4rt0Ix4d8stDm0BxIrMc9QOhPC3/t8eVlyKkgSGyiiuTHvFA33p3k8/BIxQBqGfLbarqJmWcqzofmWI41YWXn/eYx4l8PpMZ3DTj/bo4uNMMhPFcLRM0t6RHKy1HAJbJNqfD+gqnjFsJH4vy4H0tS42Cbd3ldLu2/FVBqFIlgYLvTZQHhFwvplZBLKQC6G5SNd5YQUdyfzFPd9mK9hfuAgxxabCLxoLQzMXrzZT7bNgQUKRUk+snJNQY3TYuN+TszlBaLPqIBW5/vcal/MMFGn7GapNfvVfAQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=P6rihmJyPyUJbohR5IY9HoGzvizBqoKBU/FLxGC8+JI=;
+ b=h5ZOZ9R69zculbLH1uL9zbvwgHum1rtRVUzJU6zSJZZSjBVmqfbsYbPaPRKwldAVvbfsi/R4lKs8d089Ajz3QACtNbZLLjZTYMZDAAvBM9EBgBPQG7P6xZBfBSw47fl4kGa1T6lmG+FefFemTpVBOmgXv0ckAdTDpxh9GipJ1S7sl0+97vP8Hnu/uyaJ6Ti13p9ioVgg63nmojwGdb5ks8iRMrLvUWk2sOphi/SbNGJt2gcU9Fzj12K7qJ82PzJD9EPqKsseKodHRFahKSw/fPjayQsoAJGFSTNAn3l3RqICB9LIIGXs6Rc+kuzT4SjhrCOKHA68ikli2CNIPLx5HQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=P6rihmJyPyUJbohR5IY9HoGzvizBqoKBU/FLxGC8+JI=;
+ b=cqKhP5vh+QQlv5c9OIP6RhMTZDlbxgwKDJacV1b8bl8TbyaEf/2KFHiz66zcmo/NramBnnomlta2vGcJJTyS7cxPhOcZKwZEUpb82jPxVDRzlfdaz34hHuZyg3dz/n5Uz5mn35x5QBaioc9Ix199gUAfuaC/DRJD3bkTVDhhIYY=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=wdc.com;
+Received: from DS3PR04MB10053.namprd04.prod.outlook.com (2603:10b6:8:38f::5)
+ by CH0PR04MB8049.namprd04.prod.outlook.com (2603:10b6:610:f5::18) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.428.12; Thu, 17 Sep
+ 2026 06:30:51 +0000
+Received: from DS3PR04MB10053.namprd04.prod.outlook.com
+ ([fe80::faeb:7524:f842:9f3a]) by DS3PR04MB10053.namprd04.prod.outlook.com
+ ([fe80::faeb:7524:f842:9f3a%4]) with mapi id 15.21.0428.011; Thu, 17 Sep 2026
+ 06:30:51 +0000
+Date: Thu, 17 Sep 2026 15:30:35 +0900
+From: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+To: John Garry <john.g.garry@oracle.com>
+Cc: John Garry <john.garry@linux.dev>, 
+	"Darrick J. Wong" <djwong@kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: [bug report] fstests generic/774 hang again
+Message-ID: <aquIXRz0tq7K4xPQ@shinmob>
+References: <aqkP9CTUvlC2YCIb@shinmob>
+ <98190f62-ccc3-49df-934d-f168e293c485@linux.dev>
+ <aqkv-2opTlWD6bzU@shinmob>
+ <ed224f94-f605-4be0-8a0a-0b3d481e46ae@linux.dev>
+ <20260915145046.GC2705364@frogsfrogsfrogs>
+ <db4ab609-af16-4c5d-aa98-c0655625a2df@linux.dev>
+ <9bf23063-e6e5-4595-8ff9-27383c99e5a6@oracle.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <9bf23063-e6e5-4595-8ff9-27383c99e5a6@oracle.com>
+X-ClientProxiedBy: TYCP286CA0318.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:400:3b7::6) To DS3PR04MB10053.namprd04.prod.outlook.com
+ (2603:10b6:8:38f::5)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260907073427.719935-2-hch@lst.de>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DS3PR04MB10053:EE_|CH0PR04MB8049:EE_
+X-MS-Office365-Filtering-Correlation-Id: 5a329d68-af80-4d6e-4e05-08df148537f7
+WDCIPOUTBOUND: EOP-TRUE
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|366016|376014|19092799006|23010399003|10067099003|11063799006|4143699003|56012099006|18002099003|22082099003;
+X-Microsoft-Antispam-Message-Info:
+	0vrJRTSPq4jD3e8I6FbMQfQz0tbQu31B5SLuFqTcy7NnGW6SWq6bN4V7iCFdoU6quqHH3yNSYKUg8kHIQXS7qe/DO/VS2FV6qAiNLTPMiirJP3t6Atv88aGgd2N41+CK9e7oObXqEP8rrOXS0JXGlmVHzpdxvXAxZvR7W1fPac7uFmsvwhHdvLzan5MO9be8nycxRU4ee1n4B/kc+f0DBGnEeZmhdwLkqY6i1/6eDmKZ1Yvs5VW1L3tSBZ3cYDltlbtWotGkkseaRV8byPXNINfcqyz/kyV02xjHTXpFZlfQ8aREX79lAq6XVxlm3dMsZeeczmURN1ic9nRCKlDOyJhO1IEAySuksE/kMZ02y1LyQ3VpnUIYVvzpdYO+6RsH3UrSSyIx+rxBn4BHlLAcbrIN97fpf4cU7YzQn1ZomGTjGX06ePDtN+q5UCaqgkXHxCte6yEsgNkyDsoPM1G7YFK4ozOQ/4/taNsmQuKh8FhPpgm/uum4zq8QjVbYYjWBKP6BMnQCF6NBZopwxNKlJ+ZGft73ZF1T6IqCXnxQsqQCSH+c7suNBnZCQL2f7flk+I6Cs9KsMeIEwHBAV/BII9RB7WugfvMMzdmzBIOxZTzh8zKBup/5irdyANRDBmt1jCjcxlKeXszyQoHLooaHAFvc2KKtXno05Xbfj/wIsUg=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS3PR04MB10053.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014)(19092799006)(23010399003)(10067099003)(11063799006)(4143699003)(56012099006)(18002099003)(22082099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?yuuo5hwVAeZQpjSGpb1G+Nl4uzUArnW+36GJ7Bql8Jt4g4YjNQoCq4OK4xE/?=
+ =?us-ascii?Q?77EN1Hp7pgzcN+XArfoq6CCJOrRyaNS4aBdJJ10tdU3ia4BcP43hXaSc8OwM?=
+ =?us-ascii?Q?DCocF1Km9y1DZ0ZV4aBlr8MN++D4CK1htIv6r/GER9UUIU+TDItnIhS+mjoS?=
+ =?us-ascii?Q?vN9cTcR74FBAXLNCM3NSNEqNirYAOXr3ZiwnlMmbTdqUKFEtthOrpUvcC0Qm?=
+ =?us-ascii?Q?RaLVLbLFxnWukujBcIhYPo+3W7QaVxyu4uiFhfJwxil7k603lgfiGmruEDAh?=
+ =?us-ascii?Q?FGSu9N5Qao250qgd4br30RF+c7J3/kHRQ43AvwG479HDZGmSbmag2gjB17Hs?=
+ =?us-ascii?Q?Im8MYweoM9HNwIwbkfiAxEGaG2bFBnl9fz0CmJpQAboV2RzBCjS+F7D2hCQy?=
+ =?us-ascii?Q?74JLktH/wyRgJu2xg//P8/o/ldvDSEWibv4bTd+c7/+GLtJe/swqq8ekh0Cc?=
+ =?us-ascii?Q?0vj3SbDQf1lryL/AH246YcO4yDeaJA9jjw+WQfyNDSrJMp/rrpcPA6fUdGA5?=
+ =?us-ascii?Q?aev5VIa0P7ruvwhu/uhww/Tsi6fkWtVTCYyLcWkGpgsGMC9ym9e1Bn0XGCYE?=
+ =?us-ascii?Q?lSzrkWwgzKUPSnXDUr4O0s96DFfTvw+R0MIaex3Shz7+CCyZZZF/GkZJwaPy?=
+ =?us-ascii?Q?R8rURqBW5+BGzcexLh0t4H074N6YnIq2GGN3NY0zlKOanV4/OBsJvm22KOdN?=
+ =?us-ascii?Q?0CTOsrBBNq8fYwXhK0eQzoN52J4vo6PdbDfKe+KS10GEqGg09lpYgaSue5b8?=
+ =?us-ascii?Q?2zMQwnRfK1ss3BojW2jXyIEg2pG+peQWg9902ztaCped3hMvLweoEoeSVfpe?=
+ =?us-ascii?Q?N6B0TYu22p68CN9Qb+ZWvYdZCJvryGzhKdLme5fvADzuWqPOE2lZRYuGVw1F?=
+ =?us-ascii?Q?3vNdcCzJpDOSOgw1kFQNzerqgpa//OxnGe5ReNKat16E47JbBzJnex9CyBBb?=
+ =?us-ascii?Q?1//qtgLyUix6rIzTsyojzJea9/a7Yt2Bk60ciqNpING2ofPf6nu/pJkH7hl/?=
+ =?us-ascii?Q?4mZk+PGTc8RrMtyYwQza00LMr7PiqRz80/+DxzqQZrgi1OtXLIs6zZAtmfrj?=
+ =?us-ascii?Q?0AGvdcxqKk3WyXz6blr4vJc3vNFWgabn7kg7W47tR4gC5dwC35zjgzjxZXJI?=
+ =?us-ascii?Q?OzxXZkRRGOSfG2NDACNSFdCpW/lrOsgLtxGfwLyyzIS9Unp3S9iLK0o4ADrr?=
+ =?us-ascii?Q?We/cpto9B9GgO6RidwanTi76+eTIByo8VsNkwUpTKnvwe3K4I5fXKrI7q6dM?=
+ =?us-ascii?Q?JRfcJugpVg82yZZEmyENGhnKYIBVNjDGTd3dInU4A9An8BMACydFWm2rDRRX?=
+ =?us-ascii?Q?dRs68OmJuRvn2dKGiiemWE1eXuQyzdEs6QKcCoAkIfmNNVfIk9dUF+yX45Cj?=
+ =?us-ascii?Q?mh5nff/LGHEWWLjVZkYVJ2e5fCRKxQzw6M+AYpuaDun/HeI3IEMCDNe9aehL?=
+ =?us-ascii?Q?H5l+WXka9xjiytQCFxhnTGb8vhEy1Enfblo4LVM2cb+Nm/Ccbze6rwrc3WUj?=
+ =?us-ascii?Q?0wLpIfznH48f0WrRvt1z4Qm9+69jRMF1EbUFfJ0pZvyyj+rRbfFXRAFHiKd+?=
+ =?us-ascii?Q?dhzdSCzbU2oJ0qwTBDRrNBhjJqJ96sTKVUCjvvs0hSAabIpEP8jNg3c9vHD1?=
+ =?us-ascii?Q?0AHtDGEtdnlKMu2+b8/Ldgp0H+GJRyNU3rvIScsf6UPrUeOLtYSQUeDWNYMp?=
+ =?us-ascii?Q?rciDc7xrSlBRWnwzc6aTke+nuTxldJFK6vRlBea8xpvUQeO5kNgLO7mKXDWB?=
+ =?us-ascii?Q?o9qqG8Hko8tdAKmkUuL+7bBM3Aq/WNw=3D?=
+X-Exchange-RoutingPolicyChecked:
+	QA0CTmGO2uqs8iPMNaeQ0zLjpsgDxSz0XRhkuTglr6j5Gedn9agYDwlQppdJnzfYPxp7ugmd3hr7EXz9aIJHOPVXd1dgOEIwXz20PkDZHRvbEguNPuSCKeNp5Cl6DSA/FqKpynaIlCzdJLyURNesJhVsskN3//2CAR1yLJxwzYk1Q5AKuR166Ic+mnQrMfIs1h8dsKwgwFYAMSPI1/jXJNT9G9ehnjTvLB5ehTAhFD0o26lV6o1TBUGiAUBhLLxk/4Yh0HfzyF1I4b1tCcDqKmqOn6OE71xv3aws7n+cNqJQl7fDtHcDBzkFqPzFUsyJ0YC1yWZvM0Ol7eY/mgWR+A==
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	N8f/nFy/71vigOj/q7LuQLrm8yvcfz65+Rxm94t+vXa5AzG8Xcy2+HwSH32F4AHz092rOcexBiLyRS5ANZ65RNjr3IO9gr9tgBnRchaTd54inJI5DRm88QsKXzw6H7VnU9exstjWywWhj06AFsZobeYafqPGvJ2BYt2n3xLcXowuNsLxmMjgRCPRMTsjMTVS6UKmgkpudY1yeu191UMG7LosVVWuyUzIYFT1GKEI5HyiCyAwmjq76xi0OuTgBZuIZIxZFEggVxZSgsHWG80mEIb2TBoeSQCJe0bnDB0inrGm0+Ir+SCpD+aWcpMAzk7vn5rWjIdIz4z8id8NY3fa7Y81g9FpQk1fvFT3A9awnRt7xoHWg5yd226SG6GmQNvRnGCBRKOAK20GT1TtF5tuXBu0RgdUYKfKvvCVdbSIG7VdnaVT7ABitno5aas61k/VNQ+CAcDuvai2QRHZBL5dIfDjU9HsLpihMVEqPDaK9BWV2Q7Ob9UDruTmoKMj7inet7MnFYvu6I9nNLXJy8uLPtEuuw8t5rkHDjU5CCJKuaWC4FHPo2yfJM3f39v/HSP+yvfhy10cLQ+fJLuY4jzG73M79GAGfKDFLy2WfPlZgnq6sMf3c2FN/801z7WKHeyh
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 5a329d68-af80-4d6e-4e05-08df148537f7
+X-MS-Exchange-CrossTenant-AuthSource: DS3PR04MB10053.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Sep 2026 06:30:51.3436
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: mixEx+wGza1MxgMhaZp5WdZtUv7K2aussFPrXDlPLNwtRABMcZP2kvctdOxaCYlJQxBeaenJ6ofUGRHVeYB9wnulu5dPlaARZWS5gNqmkpI=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH0PR04MB8049
 
-On Mon, Sep 07, 2026 at 10:33:07AM +0300, Christoph Hellwig wrote:
-> The cache flush before writing the CIL start record no only needs to
-> ensure any metadata covered by the overwritten part of the log is on
-> stable storage, but also that any data pointed to by metadata logged
-> is on stable storage, as otherwise log recovery could created allocated
-> blocks that point to stale data.  Fortunately the code already
-> handles this right for the data device, but it also needs to flush
-> the RT device for this to work for data on the RT device.
+On Sep 16, 2026 / 11:23, John Garry wrote:
+[...]
+> We could try something like this:
 > 
-> Also update the comments to explicitly mention this case.
+> ----8<------
 > 
-> This omission goes back to the first days of cache control in XFS.
+> [PATCH] xfs: serialize CoW-based atomic writes
 > 
-> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-> ---
->  fs/xfs/xfs_log.c     | 45 ++++++++++++++++++++++++++++++--------------
->  fs/xfs/xfs_log_cil.c |  7 ++++---
->  2 files changed, 35 insertions(+), 17 deletions(-)
+> We have had reports of system hangs when testing Cow-based atomic writes
+> for large block sizes.
 > 
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index 2a34611d81f6..f4f81d893e8c 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -1544,6 +1544,35 @@ xlog_bio_end_io(
->  		   &iclog->ic_end_io_work);
->  }
->  
-> +/*
-> + * When using multiple devices, we also need to flush the data and RT device
-> + * caches first to ensure that all metadata writeback covered by the LSN in
-> + * this iclog is on stable storage. This is slow, but it *must* complete
-> + * before we issue the external log IO.
-> + *
-> + * If the flush fails, we cannot conclude that past metadata writeback from
-> + * the log succeeded.  Repeating the flush is not possible, hence we must
-> + * shut down with log IO error to avoid shutdown re-entering this path and
-> + * erroring out again.
-> + */
-> +static int
-> +xlog_flush_data_caches(
-> +	struct xlog		*log)
-> +{
-> +	struct xfs_mount	*mp = log->l_mp;
-> +
-> +	if (log->l_targ != mp->m_ddev_targp) {
-> +		if (blkdev_issue_flush(mp->m_ddev_targp->bt_bdev))
-> +			return -EIO;
-> +	}
-> +	if (mp->m_rtdev_targp && mp->m_rtdev_targp != mp->m_ddev_targp) {
-> +		if (blkdev_issue_flush(mp->m_rtdev_targp->bt_bdev))
-> +			return -EIO;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
->  STATIC void
->  xlog_write_iclog(
->  	struct xlog		*log,
-> @@ -1588,21 +1617,9 @@ xlog_write_iclog(
->  	iclog->ic_bio.bi_private = iclog;
->  
->  	if (iclog->ic_flags & XLOG_ICL_NEED_FLUSH) {
-> -		iclog->ic_bio.bi_opf |= REQ_PREFLUSH;
-> -		/*
-> -		 * For external log devices, we also need to flush the data
-> -		 * device cache first to ensure all metadata writeback covered
-> -		 * by the LSN in this iclog is on stable storage. This is slow,
-> -		 * but it *must* complete before we issue the external log IO.
-> -		 *
-> -		 * If the flush fails, we cannot conclude that past metadata
-> -		 * writeback from the log succeeded.  Repeating the flush is
-> -		 * not possible, hence we must shut down with log IO error to
-> -		 * avoid shutdown re-entering this path and erroring out again.
-> -		 */
-> -		if (log->l_targ != log->l_mp->m_ddev_targp &&
-> -		    blkdev_issue_flush(log->l_mp->m_ddev_targp->bt_bdev))
-> +		if (xlog_flush_data_caches(log))
->  			goto shutdown;
-> +		iclog->ic_bio.bi_opf |= REQ_PREFLUSH;
->  	}
->  	if (iclog->ic_flags & XLOG_ICL_NEED_FUA)
->  		iclog->ic_bio.bi_opf |= REQ_FUA;
-> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> index 166531018ce4..f9e07a32f60f 100644
-> --- a/fs/xfs/xfs_log_cil.c
-> +++ b/fs/xfs/xfs_log_cil.c
-> @@ -1055,9 +1055,10 @@ xlog_cil_set_ctx_write_state(
->  		spin_unlock(&cil->xc_push_lock);
->  
->  		/*
-> -		 * Make sure the metadata we are about to overwrite in the log
-> -		 * has been flushed to stable storage before this iclog is
-> -		 * issued.
-> +		 * Flush the write cache before writing the start record so that
-> +		 * the metadata we are about to overwrite in the log and the
-> +		 * data that new allocations in this context refer to are
-> +		 * persisted to stable storage before this iclog is written.
->  		 */
->  		spin_lock(&cil->xc_log->l_icloglock);
->  		iclog->ic_flags |= XLOG_ICL_NEED_FLUSH;
-> -- 
-> 2.53.0
->
+> Analysis has shown large contention on the the per-inode ilock,
+> superficially in creating the mapping in
+> xfs_atomic_write_cow_iomap_begin().
+> 
+> Serialize atomic writes to reduce this contention. In some cases this may
+> reduce performance, but high performance has not been a requirement so far
+> for CoW-based atomic writes.
+> 
+> Signed-off-by: John Garry <john.garry@linux.dev>
+[...]
+> ---->8------
+> 
+> This is far from ideal, but I think that it should stops the hangs - having
+> the kernel hang is intolerable.
 
-Hi Christoph Hellwig,
+Thanks. I applied the patch on top of xfs/for-next branch commit 0ca15a1a1151,
+then repeated the test case 100 times on top of the kernel. I did not observe
+the hang. This patch looks avoiding the hang.
 
-Greetings!
-
-I used Syzkaller and found that there is INFO: task hung in xfs_buf_item_unpin in v7.3-rc3 kernel.
-
-After bisection and the first bad commit is:
-"
-ad0033e2dbd3 xfs: also flush the RT device cache in xlog_write_iclog
-"
-
-All detailed into can be found at:
-https://github.com/laifryiee/syzkaller_logs/tree/main/260916_125217_xfs_buf_item_unpin
-Syzkaller repro code:
-https://github.com/laifryiee/syzkaller_logs/tree/main/260916_125217_xfs_buf_item_unpin/repro.c
-Syzkaller repro syscall steps:
-https://github.com/laifryiee/syzkaller_logs/tree/main/260916_125217_xfs_buf_item_unpin/repro.prog
-Syzkaller report:
-https://github.com/laifryiee/syzkaller_logs/tree/main/260916_125217_xfs_buf_item_unpin/repro.report
-Kconfig(make olddefconfig):
-https://github.com/laifryiee/syzkaller_logs/tree/main/260916_125217_xfs_buf_item_unpin/kconfig_origin
-Bisect info:
-https://github.com/laifryiee/syzkaller_logs/tree/main/260916_125217_xfs_buf_item_unpin/bisect_info.log
-bzImage:
-https://github.com/laifryiee/syzkaller_logs/raw/refs/heads/main/260916_125217_xfs_buf_item_unpin/bzImage_ad0033e2dbd3ecc063dfe613060da5cbab9a4970
-Issue dmesg:
-https://github.com/laifryiee/syzkaller_logs/blob/main/260916_125217_xfs_buf_item_unpin/ad0033e2dbd3ecc063dfe613060da5cbab9a4970_dmesg.log
-
-"
-[  301.002002] INFO: task repro:753 blocked for more than 147 seconds.
-[  301.002027]       Not tainted 7.3.0-rc2-ad0033e2dbd3+ #1
-[  301.002036] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-[  301.002042] task:repro           state:D stack:0     pid:753   tgid:753   ppid:730    task_flags:0x400140 flags:0x00080802
-[  301.002061] Call Trace:
-[  301.002072]  <TASK>
-[  301.002081]  __schedule+0x113a/0x4ac0
-[  301.002135]  ? __pfx___schedule+0x10/0x10
-[  301.002151]  ? lock_release+0x151/0x2c0
-[  301.002184]  schedule+0xf6/0x2f0
-[  301.002198]  schedule_timeout+0x25c/0x2a0
-[  301.002215]  ? __pfx_schedule_timeout+0x10/0x10
-[  301.002234]  ? __this_cpu_preempt_check+0x21/0x30
-[  301.002251]  ? _raw_spin_unlock_irq+0x2c/0x70
-[  301.002264]  ? lockdep_hardirqs_on+0x86/0x110
-[  301.002281]  __down_common+0x366/0x940
-[  301.002302]  ? __pfx___down_common+0x10/0x10
-[  301.002317]  ? __pfx_do_raw_spin_lock+0x10/0x10
-[  301.002333]  ? rcu_is_watching+0x1a/0xc0
-[  301.002363]  __down+0x1d/0x30
-[  301.002377]  down+0xb5/0xe0
-[  301.002394]  xfs_buf_lock+0x122/0x4a0
-[  301.002427]  xfs_buf_item_unpin+0x1a6/0x5e0
-[  301.002449]  ? __pfx_xfs_buf_item_unpin+0x10/0x10
-[  301.002466]  xlog_cil_ail_insert+0x58f/0xbf0
-[  301.002494]  ? bpf_address_lookup+0x2e1/0x2f0
-[  301.002530]  ? __pfx_xlog_cil_ail_insert+0x10/0x10
-[  301.002555]  ? __lock_acquire+0x4c5/0x2440
-[  301.002589]  ? xlog_cil_committed+0x49d/0x640
-[  301.002608]  ? xlog_cil_committed+0x49d/0x640
-[  301.002628]  ? __this_cpu_preempt_check+0x21/0x30
-[  301.002649]  ? do_raw_spin_unlock+0x15c/0x200
-[  301.002670]  xlog_cil_committed+0x4aa/0x640
-[  301.002688]  ? xlog_state_shutdown_callbacks+0x1f3/0x3d0
-[  301.002710]  xlog_cil_process_committed+0xea/0x1a0
-[  301.002729]  ? do_raw_spin_unlock+0x15c/0x200
-[  301.002751]  xlog_state_shutdown_callbacks+0x1fb/0x3d0
-[  301.002766]  ? __kasan_check_write+0x18/0x20
-[  301.002799]  ? do_raw_spin_lock+0x13a/0x280
-[  301.002820]  ? __pfx_xlog_state_shutdown_callbacks+0x10/0x10
-[  301.002846]  xlog_force_shutdown+0x239/0x4c0
-[  301.002867]  xlog_write_iclog+0x59e/0x970
-[  301.002891]  xlog_sync+0x58d/0x9d0
-[  301.002909]  xlog_state_release_iclog+0x3c4/0x780
-[  301.002921]  ? xlog_state_switch_iclogs+0x40f/0x6b0
-[  301.002937]  xfs_log_force+0x6a9/0xbb0
-[  301.002955]  xfs_qm_dqflush+0xb8f/0xf90
-[  301.002977]  xfs_qm_flush_one+0x196/0x200
-[  301.002989]  ? __pfx_xfs_qm_flush_one+0x10/0x10
-[  301.002999]  ? __this_cpu_preempt_check+0x21/0x30
-[  301.003019]  xfs_qm_dquot_walk.isra.0+0x1df/0x410
-[  301.003030]  ? __pfx_xfs_qm_flush_one+0x10/0x10
-[  301.003042]  ? __pfx_xfs_qm_dquot_walk.isra.0+0x10/0x10
-[  301.003051]  ? xfs_pwork_destroy+0x35/0xb0
-[  301.003064]  ? xfs_iwalk_threaded+0x245/0x550
-[  301.003080]  ? __sanitizer_cov_trace_const_cmp8+0x1c/0x30
-[  301.003101]  ? __pfx_xfs_qm_dqusage_adjust+0x10/0x10
-[  301.003115]  ? __pfx_xfs_iwalk_threaded+0x10/0x10
-[  301.003131]  ? __pfx_xfs_iwalk_ag_work+0x10/0x10
-[  301.003150]  ? p9_virtio_zc_request+0x3d0/0x1540
-[  301.003168]  ? lockdep_init_map_type+0x50/0x260
-[  301.003185]  xfs_qm_quotacheck+0x73c/0xa30
-[  301.003194]  ? __kasan_check_write+0x18/0x20
-[  301.003208]  ? __pfx_xfs_qm_quotacheck+0x10/0x10
-[  301.003226]  xfs_qm_mount_quotas+0x19a/0x6f0
-[  301.003240]  xfs_mountfs+0x1b8e/0x1ed0
-[  301.003259]  ? __pfx_xfs_mountfs+0x10/0x10
-[  301.003294]  xfs_fs_fill_super+0x122d/0x1e80
-[  301.003315]  get_tree_bdev_flags+0x3d9/0x6c0
-[  301.003333]  ? __pfx_xfs_fs_fill_super+0x10/0x10
-[  301.004603] systemd-journald[139]: Data hash table of /run/log/journal/938775788448454bb5b34822d5730c41/system.journal has a fill level at 75.0 (5185 of 6912 items, 3981312 file size, 767 bytes per hash table item), suggesting rotation.
-[  301.004623] systemd-journald[139]: /run/log/journal/938775788448454bb5b34822d5730c41/system.journal: Journal header limits reached or header out-of-date, rotating.
-[  301.006610]  ? __pfx_get_tree_bdev_flags+0x10/0x10
-[  301.006657]  ? debug_smp_processor_id+0x20/0x30
-[  301.006685]  ? rcu_is_watching+0x1a/0xc0
-[  301.006716]  ? __pfx_xfs_fs_fill_super+0x10/0x10
-[  301.006747]  get_tree_bdev+0x29/0x40
-[  301.006776]  xfs_fs_get_tree+0x26/0x30
-[  301.006801]  vfs_get_tree+0xa1/0x390
-[  301.006828]  fc_mount+0x24/0x220
-[  301.006872]  path_mount+0x75b/0x2190
-[  301.006893]  ? lockdep_hardirqs_on+0x86/0x110
-[  301.006926]  ? __pfx_path_mount+0x10/0x10
-[  301.006946]  ? __kasan_slab_free+0x59/0x70
-[  301.006984]  ? putname+0xc6/0x130
-[  301.007017]  ? putname+0xcb/0x130
-[  301.007044]  __x64_sys_mount+0x2c3/0x340
-[  301.007065]  ? __x64_sys_mount+0x2c3/0x340
-[  301.007090]  ? __pfx___x64_sys_mount+0x10/0x10
-[  301.007116]  ? __audit_syscall_entry+0x393/0x4f0
-[  301.007160]  x64_sys_call+0x153a/0x21d0
-[  301.007195]  do_syscall_64+0xbc/0x5e0
-[  301.007223]  entry_SYSCALL_64_after_hwframe+0x76/0x7e
-[  301.007243] RIP: 0033:0x7fb07c03f7be
-[  301.007291] RSP: 002b:00007fff49cbe6a8 EFLAGS: 00000202 ORIG_RAX: 00000000000000a5
-[  301.007319] RAX: ffffffffffffffda RBX: 0000000000000000 RCX: 00007fb07c03f7be
-[  301.007333] RDX: 0000200000009600 RSI: 0000200000000100 RDI: 00007fff49cbe7f0
-[  301.007346] RBP: 00007fff49cbe880 R08: 00007fff49cbe6f0 R09: 0000000000000000
-[  301.007358] R10: 0000000000000008 R11: 0000000000000202 R12: 00007fff49cbe9f8
-[  301.007370] R13: 0000000000402ed3 R14: 000000000040de08 R15: 00007fb07c2fc000
-[  301.007411]  </TASK>
-[  301.007453] INFO: task repro:753 blocked on a semaphore likely last held by task repro:753
-"
-
-Hope this cound be insightful to you.
-
-Regards,
-Yi Lai
-
----
-
-If you don't need the following environment to reproduce the problem or if you
-already have one reproduced environment, please ignore the following information.
-
-How to reproduce:
-git clone https://gitlab.com/xupengfe/repro_vm_env.git
-cd repro_vm_env
-tar -xvf repro_vm_env.tar.gz
-cd repro_vm_env; ./start3.sh  // it needs qemu-system-x86_64 and I used v7.1.0
-  // start3.sh will load bzImage_2241ab53cbb5cdb08a6b2d4688feb13971058f65 v6.2-rc5 kernel
-  // You could change the bzImage_xxx as you want
-  // Maybe you need to remove line "-drive if=pflash,format=raw,readonly=on,file=./OVMF_CODE.fd \" for different qemu version
-You could use below command to log in, there is no password for root.
-ssh -p 10023 root@localhost
-
-After login vm(virtual machine) successfully, you could transfer reproduced
-binary to the vm by below way, and reproduce the problem in vm:
-gcc -pthread -o repro repro.c
-scp -P 10023 repro root@localhost:/root/
-
-Get the bzImage for target kernel:
-Please use target kconfig and copy it to kernel_src/.config
-make olddefconfig
-make -jx bzImage           //x should equal or less than cpu num your pc has
-
-Fill the bzImage file into above start3.sh to load the target kernel in vm.
-
-
-Tips:
-If you already have qemu-system-x86_64, please ignore below info.
-If you want to install qemu v7.1.0 version:
-git clone https://github.com/qemu/qemu.git
-cd qemu
-git checkout -f v7.1.0
-mkdir build
-cd build
-yum install -y ninja-build.x86_64
-yum -y install libslirp-devel.x86_64
-../configure --target-list=x86_64-softmmu --enable-kvm --enable-vnc --enable-gtk --enable-sdl --enable-usb-redir --enable-slirp
-make
-make install 
- 
