@@ -1,103 +1,71 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DABB4E36C9;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E89A4E4302;
 	Fri, 18 Sep 2026 11:16:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789730208; cv=none; b=C3f8TtqMJN/A/mFo/t6wF+C5MuQuxWSsB7wRn3nfFa/8JV7pVXvpA1cxhoyDWGOxOULzluU9yRpjidTfV6TNwOqVMMTyzVupKZDnaknZ1qwqPrYrLAe2neMb4DSNWHDFAEAM3tVNbQpLm7BLTeUPWJHOEb8Ze4UefPFpCZWnEsg=
+	t=1789730209; cv=none; b=EMLJ5W/vVzWewmPpDCJ1zvDSCbZxBx1Qbube4BDeV5FXBu56gKOHB8V8/Ta6tRld2T4WsHNR8pvk2kVoPXTu8BKwTXbhEf8sLcRJJEKKLJ0WDJdc+ikbh6IkbVsdr5qNZbh7HJ0Nrx2qDdOtdu9AT0tpWGVW+R2T/QXNPA7BtYU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789730208; c=relaxed/simple;
-	bh=lG0XvtN47lrmr2yjGsrjuEbv5pnG0/i67p2cCRVww04=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=XxMfOUih6BZjsO+FACeKrfkFp7qTI3BZyDW/xsyrmnfPEzLDWZ4iwbjVe1xraRHoERxfafxGfLKDEdJwLEWnRV/gr7oIGX/pRpaXhz1He/W4dOu/Jql5pT/juutQW6EL0qMhoKlTgZOo1rThiDjaDNG0e71Pz1K1lf8lRPBUhCw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jIGh1bCC; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789730209; c=relaxed/simple;
+	bh=+QPM9RAzDnrAzUPQMgUBgpfhbSWglRjQvNnPQ++gRBc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=uNFsuYZzEJOkRMgS5HsK7KBBe7C2LH06yo7RM+Ts0b6b7Q4xHnhJ17WliVqM9cey51ZQCilFVqAtan+sWmN/Xl/cW+ovJ+XsjzFGO61Kazxw9vWU23pqzBCZKF5w6dFdYoKeKciK9Qk7Agxs8xZyvCvOEwn5iHOl/iC1v5abuUQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=PjkcvBhx; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jIGh1bCC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 104631F000FF;
-	Fri, 18 Sep 2026 11:16:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789730207;
-	bh=HrtmR+UhuIlkdLxqdHwsV1MPMtkWUuoZJKrA9HvlOJs=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=jIGh1bCCHg3BhkViWBsaJivhESxfYbOwhZGv200dU2SW/TxAz+7XcZkqMSkRsoKVE
-	 JVv8OBX95iQXui/22wg4SDYw1lAFgPJ8Lwailg9kP/OEHs1Hkx/cGYwbat0X1t09jJ
-	 /uttCCuiFVw62vWmtdaoB0N6qugIdxc6YtQyFMENFHxNoAy9gOi3ZYIcKEQPqNXvvX
-	 RrKy7LGdO+Q8bRz5GACKfRU4/KQROEd5NmBFLM29pbmVAZ0sPwzaFCJew7onGKfJ5y
-	 t9KDGRrxPA5QqlQDMaOIF0p/PKZYdgnq+pmhyfVGVDPG21qPzRTgBXqJ7q5V0gKpve
-	 /LBFZRO5exAgg==
-From: Andrey Albershteyn <aalbersh@kernel.org>
-To: djwong@kernel.org,
-	ebiggers@kernel.org,
-	hch@lst.de,
-	Carlos Maiolino <cem@kernel.org>
-Cc: Andrey Albershteyn <aalbersh@kernel.org>,
-	fsverity@lists.linux.dev,
-	linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	linux-unionfs@vger.kernel.org,
-	linux-ext4@vger.kernel.org,
-	linux-f2fs-devel@lists.sourceforge.net,
-	linux-btrfs@vger.kernel.org,
-	david@fromorbit.com
-Subject: [PATCH v16 17/21] xfs: add fs-verity ioctls
-Date: Fri, 18 Sep 2026 13:15:29 +0200
-Message-ID: <20260918111539.1003439-18-aalbersh@kernel.org>
-X-Mailer: git-send-email 2.54.0
-In-Reply-To: <20260918111539.1003439-1-aalbersh@kernel.org>
-References: <20260918111539.1003439-1-aalbersh@kernel.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="PjkcvBhx"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=x77G3CVaJyxKp4fAHlS9sAQa88nysPfN50+PoRK8Zvk=; b=PjkcvBhx5loAG0ay8nQTiq7R1/
+	WP14xLTb+wHZbnww6bMJoLSeWn8M68JXLZ9X59VsRDO9EKWzw7nMY6Rlvq41+Co3IoLHKP/PQTYAd
+	eoGJByFaIoNJ6fshTMdFlqDyPncP8bbj6k/oH7D6cpxfls8wW2q9EkE41OzwR53wzzERTCdSnZrgi
+	WCtLBfbrgzCRoBYRj0TiiMs/JSMT5g1x2YLthiigZcsDt51OWwnqS2e+bGJY+KDNBZPpHVHdJRrCo
+	sFpbv/RanOdlxHi5DbxSHGtNwxY9xQD4tOU0NS894qoKHD51no1A6CHHqjPZ8aJyeiQlOvuaiRqPA
+	tm41zjKQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1x7WaE-0000000ECn4-2dga;
+	Fri, 18 Sep 2026 11:16:46 +0000
+Date: Fri, 18 Sep 2026 04:16:46 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: Lalit Shankar Chowdhury <lalitshankarch@gmail.com>,
+	"open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>,
+	open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] xfs: replace kvmalloc_array with kvzalloc_objs
+Message-ID: <aq0dnoWhkq9JZkiu@infradead.org>
+References: <20260917200835.31027-1-lalitshankarch@gmail.com>
+ <aqzHPqgh-rKqHRo-@nidhogg.toxiclabs.cc>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aqzHPqgh-rKqHRo-@nidhogg.toxiclabs.cc>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Add fs-verity ioctls to enable, dump metadata (descriptor and Merkle
-tree pages) and obtain file's digest.
+On Fri, Sep 18, 2026 at 07:16:32AM +0200, Carlos Maiolino wrote:
+> On Thu, Sep 17, 2026 at 08:08:35PM +0000, Lalit Shankar Chowdhury wrote:
+> > Replace kvmalloc_array() with the more concise kvzalloc_objs()
+> > implementation.
+> > 
+> > Signed-off-by: Lalit Shankar Chowdhury <lalitshankarch@gmail.com>
+> 
+> NAK...
+> 
+> This is used to allocate composite objects managed through a
+> slab cache. This is not for fundamental basic data types....
 
-[djwong: remove unnecessary casting]
+I don't think so.  While the naming of the helper is a bit
+unfortunate, it is intended for allocating arrays.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
----
- fs/xfs/xfs_ioctl.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
-
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 96ca3e480cb9..ac4c36f381b8 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -49,6 +49,7 @@
- 
- #include <linux/mount.h>
- #include <linux/fileattr.h>
-+#include <linux/fsverity.h>
- 
- /* Return 0 on success or positive error */
- int
-@@ -1466,6 +1467,19 @@ xfs_file_ioctl(
- 	case XFS_IOC_VERIFY_MEDIA:
- 		return xfs_ioc_verify_media(filp, arg);
- 
-+	case FS_IOC_ENABLE_VERITY:
-+		if (!xfs_has_verity(mp))
-+			return -EOPNOTSUPP;
-+		return fsverity_ioctl_enable(filp, arg);
-+	case FS_IOC_MEASURE_VERITY:
-+		if (!xfs_has_verity(mp))
-+			return -EOPNOTSUPP;
-+		return fsverity_ioctl_measure(filp, arg);
-+	case FS_IOC_READ_VERITY_METADATA:
-+		if (!xfs_has_verity(mp))
-+			return -EOPNOTSUPP;
-+		return fsverity_ioctl_read_metadata(filp, arg);
-+
- 	default:
- 		return -ENOTTY;
- 	}
--- 
-2.54.0
+But this function really should not exist, instead bitmap_alloc/free
+should be switched to th kvmalloc family so that it will just work
+for large allocations and we can kill the wrappers in XFS.
 
