@@ -1,77 +1,67 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 540E74E533D
-	for <linux-xfs@vger.kernel.org>; Thu, 17 Sep 2026 21:24:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A3A834C981;
+	Fri, 18 Sep 2026 00:52:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789680269; cv=none; b=VVt2wed17wilXx5wlLnIW15K/Guv2DBLLI1cIfCb4BFwmX1mYhjWhlxq5V/WCEaTbnhjTqYbAgl83cSEIDwIGddigviKLsCcn0SAnzzljuvU+J27fe2VnJPD8CWVXCiSyKwzJf3Gp0PiqSPxCNNnHzGiIG88MchooxriWS/Oxq4=
+	t=1789692776; cv=none; b=FcuqgfYLGCPNl5AU4JWdUmViW/SE7rA/72LcDh4tnxIQQBv5jUW5dtdQrWIvbwV2BegZzwHjYv6ezj0p0MRKwShCo3OC8ag19Q3v1TJ/kO/RRbnAzYmoBCxsc+GbkKkYt0EvtPSVFDEwpXcmt1vHNryJTLoD9vYSi6ydUA5C5XU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789680269; c=relaxed/simple;
-	bh=H+rMQtT5fkiWfM9mSL8Pcff/AxQsQJ9rT4zKFbklWpw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=FYq9oGiKbd+r717BrCCnF0sQSwdDw/ICUjrtpoI2qxeX58SDSU5w72ZnxDuGlLQuoA963pBvLaiDGI4ZPxYH/pDlPgPTKkxoYglmYbDDVhWJOIfpWRBJ8C1kUEM1IcyfXDrzguYk1/eiAFcfpaMxCpwUDd9KH47OJeI3uV55ffs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=arD5ID04; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789692776; c=relaxed/simple;
+	bh=vBMq0MlOelXMeviQviTVfGaqjcidlqdf5kQGPPj5w8Q=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=PusZMen7Ux0ByJX/FTDKdzNOGvLkOloc00ysdGrisp+spdayFva+WoDm7ZHeoKyo0L7/NYr4NXfS8rlh7ExOiMN+YjtlPuyp8MprhkErzsF4kg6C9T8UObUma5TXBUJ2sjgApWM6EmAcSAoo1BbHp3/Cd/BTqOYLkuXPlGYFjrg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DFArFAIe; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="arD5ID04"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CC1391F00899;
-	Thu, 17 Sep 2026 21:24:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DFArFAIe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CD20F1F00899;
+	Fri, 18 Sep 2026 00:52:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789680267;
-	bh=8vtUfKdGbjKhAK5UY723TQqi1U3xgbEj9G5q6mV3yus=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=arD5ID04jxvjirYjxsFSsKfWuKvERKgH//ea9HMNtfR7CcC25qjOZxy1c0nU/JmQO
-	 Ee0+1mnGiRyz67vvaFXxBm0/iDwDWazVF3oJfwJ729pr3MIp5Ny2cqwG0efft9Tiee
-	 anxS2xaJkGzDAadibIIAiNoCaKLiJb5JtPQLZbeub3YD+lpPJSbCAPtz4rtCSXbQPq
-	 wu8GPIJSJVL8pvmdAuN7osRB2/sJP7iFo2jK1s5x1Ji5j5z3tlJa+WA+OMJktdJniw
-	 v9Z2LM7iZO1VlM9hpottfEK5O6eRGNLpB++PA/mWHgKv9EogMxGXh+9pPMwRHtUCW7
-	 TIDXtS02bLNEQ==
-Date: Fri, 18 Sep 2026 07:24:19 +1000
-From: Dave Chinner <dgc@kernel.org>
-To: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+	s=k20260515; t=1789692775;
+	bh=wFBb2/xVBWpM5TnPu9s92lWFyTBaAPmu3T7veyxvxaQ=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=DFArFAIe+Pb5crGMYfHvi0nOVwLOXzvv2liLhCtVtNqe0xrqQ9z8fckcaCuN7IAbU
+	 1I9mDD+y0Yxx10+Nm7Yy0gluqSqL/USBcnjJT+NoRFgCw5FEVjLZTy6yhjzFQ4RN3t
+	 Tc7Wq7TVlZW5KliHU9Wl21xvZqsBL1P+S42eisaK1Lrozo252jV9mmBIZuB2T6jU8h
+	 NRh9Z/7yXW3E+IKs818Lx1i73sHX3oaYUmM0EoQtA5YrZQuOjZxihthOEj8eGKkBSu
+	 39ptb8wmUBhMc8JeT+oWpl1xIJFYGGK0NVbIIK1B1CNrzuH+bKcfwAx2FkYVMjJ2+i
+	 TadQlfwsKxPlA==
+From: Sasha Levin <sashal@kernel.org>
+To: stable@vger.kernel.org,
+	Christoph Hellwig <hch@infradead.org>,
+	"Darrick J. Wong" <darrick.wong@oracle.com>,
+	linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	"Matthew Wilcox (Oracle)" <willy@infradead.org>,
+	Dave Chinner <dchinner@redhat.com>
+Cc: Sasha Levin <sashal@kernel.org>,
+	Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
 	"Darrick J. Wong" <djwong@kernel.org>,
-	John Garry <john.garry@linux.dev>
-Subject: Re: [bug report] fstests generic/774 hang again
-Message-ID: <aqxag3TcgpYYVwTk@dread>
-References: <aqkP9CTUvlC2YCIb@shinmob>
- <aqsN4GOXthkF8rOI@dread>
- <aquJIL3Ztk3KBdHV@shinmob>
- <aqvER2bZyAO6H-4v@shinmob>
+	linux-kernel@vger.kernel.org,
+	"Miguel Gazquez (Schneider Electric)" <miguel.gazquez@bootlin.com>
+Subject: Re: [PATCH 5.10.y] iomap: iomap: fix memory corruption when recording errors during writeback
+Date: Thu, 17 Sep 2026 20:52:33 -0400
+Message-ID: <2026-09-17-daily-reply-0006-iomap-writeback-error@kernel.org>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260916-cve-2022-50406-v1-1-f4423f258ceb@bootlin.com>
+References: <20260916-cve-2022-50406-v1-1-f4423f258ceb@bootlin.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aqvER2bZyAO6H-4v@shinmob>
+Content-Transfer-Encoding: 8bit
 
-On Thu, Sep 17, 2026 at 07:45:11PM +0900, Shin'ichiro Kawasaki wrote:
-> On Sep 17, 2026 / 15:52, Shin'ichiro Kawasaki wrote:
-> [...]
-> > As suggested, now I'm trying to increase the journal/log section size.
-> > I added the mkfs options below:
-> > 
-> >   MKFS_OPTIONS="-l size=128m"
-> > 
-> > With this, I repeated the test case 30 times, and did not observe the hang.
-> > It looks like the log section size increase avoids the hang. I will keep it on
-> > running to see if the hang is observed after 100 times run.
-> 
-> The test case did not hang all through the 100 times repeated runs. Then
-> expanding the log section from 64MiB to 128MiB avoided the hang.
+> From: "Darrick J. Wong" <djwong@kernel.org>
+>
+> Every now and then I see this crash on arm64:
+>
+> Unable to handle kernel NULL pointer dereference at virtual address 00000000000000f8
 
-Ok, so the fix for the moment is to make the software COW path for
-atomic writes use IOLOCK_EXCL, rather than IOLOCK_SHARED. That will
-result in all the IO submission blocking on the IOLOCK with no other
-resources held rather than blocking on the ILOCK whilst holding an
-unreleasable transaction reservation.
+Queued for 5.15 and 5.10, thanks. 5.15 carries the same bug and your
+patch applies there as sent, so it went to both trees.
 
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-dgc@kernel.org
+Thanks,
+Sasha
