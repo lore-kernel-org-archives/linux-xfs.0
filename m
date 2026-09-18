@@ -1,106 +1,85 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oo1-f70.google.com (mail-oo1-f70.google.com [209.85.161.70])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D8D94E73AF;
-	Fri, 18 Sep 2026 11:44:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA0523E8C4C
+	for <linux-xfs@vger.kernel.org>; Fri, 18 Sep 2026 12:33:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.70
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789731858; cv=none; b=s7XRn+si9h/MJnBVk2X9+nZrhLN1WKruX7WZiZoV/+4UFyLEIv9OaTUjU8XQSBjuXIcUny4D6Oq+LLRa2carcb51kUfsWUfiTY7vkcBd0HIvxTVKl0f8425CeFfuCVTh/2g4YpiiCzyhQSF/5fmawHWP3FsQoiFQtTr2ft5DMLE=
+	t=1789734820; cv=none; b=mBg5kTMV2clteXSdRsBu5UDdqVK8/5HqKcH6/agAf0RmlnMUiMMIEc8OJGGVYlZUYvuvRnuOEZaUARJwONj/M/fIeYIJwaHfO0PC/ExYTz0gM7YouwH+gQ3MpnUkL7JjOFe6Jbfyl0r2VRXakDUJoog3XHbMIf+jGWpOHc6HLPI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789731858; c=relaxed/simple;
-	bh=MbAuGLR6IyXXEzqjalXjozskcbk8rLHdZrNkFg2Qk+k=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LuJ/f/BmTkrPkF7NtV+pFIrT/2ISRoz7bMRdbhbZiLNQajn2kMy3ywZTSI1Ln2csxxpuRK0a3XU++9yzDLsWOjnjnsDQbS8I0FypO/VtuCz4wzciFE39lYst05Rdi5YI3yUAkw7gMPh479pWzWiWA7JIG9150IgCqokuXPKWmqI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ih9X3Zzs; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ih9X3Zzs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4D91F1F00893;
-	Fri, 18 Sep 2026 11:44:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789731856;
-	bh=Do1tuTNTzX2QLjpWKaNXPZ78GPW84geW/qG9bZOwISM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Ih9X3Zzsa1Uar/0zKKbFHY7WhndK1+hd1YEMZCODG70r/73e/Aa2U2J0F8yql1AdK
-	 WpyemRrj7waBCSEaHCKQmJ6/ApVB5LPAvVDmrX88jpRcgDpYYTkM7aP+Y4Um5BlNDz
-	 rSW8dpGlZ0QzsaR/y0nR5XHfXIFYT24cyLCIvk9A3QVtaQFy1pd3pTwXEO/lB5gjoQ
-	 DS+w8o69yZ87mA+TuPK0vcY9c2nExRJ2aiokoptMRdWjQmqERScjAqzt274Wqx1zvG
-	 ei7WT0yJLTBNr7Q8SNxRPIjckKmFf19M4KHshiNqIqWH89D5eX5QijX+9r86khfLYR
-	 RPqaOXlsTk3cQ==
-Date: Fri, 18 Sep 2026 13:44:12 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Lalit Shankar Chowdhury <lalitshankarch@gmail.com>, 
-	"open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] xfs: replace kvmalloc_array with kvzalloc_objs
-Message-ID: <aq0i-bfEEMpwJ_Dk@nidhogg.toxiclabs.cc>
-References: <20260917200835.31027-1-lalitshankarch@gmail.com>
- <aqzHPqgh-rKqHRo-@nidhogg.toxiclabs.cc>
- <aq0dnoWhkq9JZkiu@infradead.org>
+	s=arc-20240116; t=1789734820; c=relaxed/simple;
+	bh=Is7wvlCDNFuTkMIQjkA29Su/3CAb75DA3JyfIB3ZuZ0=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=FRF2otGEIK9iCTi+EiFH8EwroQ0hFdi2idScWdalvc1ywrVSeHYiacKHHOEJgpSlOO1mughJ+KHxH6lTqRyU3/tWdhRd5RKGwxvi7kkll40pfhex5RhMo1zSCqUH+eAig6OGLJBPPEMgOYB9Sf7mrBueCLFLIRWQB7nnqTLEgW0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.161.70
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-oo1-f70.google.com with SMTP id 006d021491bc7-6a313ec13ceso1177644eaf.2
+        for <linux-xfs@vger.kernel.org>; Fri, 18 Sep 2026 05:33:37 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1789734815; x=1790339615;
+        h=content-type:to:from:subject:message-id:date:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=f+f+vVZ9rR97mcx0fgnCBsCIXu6W0ty4resqWReSqJY=;
+        b=Udomiqif2/Q+YezlYfa7R8EMYuMOQcER7R7qBsL6NQe1X9XebU7HVfLZkJbi3R6kWc
+         DLU84mOS+2nmL23moMlzEdarVRpLop1nrLrJ5vTtRTg/WaugZQ6PLvVxS7OAhdGbi1Z0
+         qn4wcW/D3grPViXpIXQFuiSGmgq6XVv/pxV6x5Inlo2593jW5fLyM15JfQlBfyO75Xic
+         FWrK6Ki+LdaTqUQG9Rq/NY7iXHtmtBJP9JrNNw7rku5zMZFEJb2UQYo5/26H0Hrpww5A
+         GsjRVI5CNVtj2MloVYLHsMu9ELEpfm3lVoKvUo5IZMK4z2rOMKSxpioxQ/BeVB5zLnrC
+         rENw==
+X-Forwarded-Encrypted: i=1; AKwUvBxyw6s9ycy1CR82zynCRUmU5tpuntT+8vsH7CcDOvd109+nUUqmYMT3D/ZmthFTyRAUxN2KiQnI8Dg=@vger.kernel.org
+X-Gm-Message-State: AFuF++nRkHIy8mVvIlleKKkZ7kykyPPi/t9BmaZUEpqBOtGvvoReTtqr
+	s3VsxzBvsfRY/6n7RKCAvnFiokBUbSwNPD2S86eE9fwsFKPT14ahJEAMfPjAPsxTpBfQ7q0RYd0
+	C+wh3dT699SReAEdocpgq2rdMkp/U6r6VB/sWPli5aDa0UhC5dbVZm3GmyQs=
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aq0dnoWhkq9JZkiu@infradead.org>
+X-Received: by 2002:a05:6820:a0b:b0:6c9:8460:c85d with SMTP id
+ 006d021491bc7-6ca9d44ebd6mr1825972eaf.69.1789734815312; Fri, 18 Sep 2026
+ 05:33:35 -0700 (PDT)
+Date: Fri, 18 Sep 2026 05:33:35 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6aad2f9f.71f81b7d.278072.002a.GAE@google.com>
+Subject: [syzbot] Monthly xfs report (Sep 2026)
+From: syzbot <syzbot+list69597c5575cf360a0538@syzkaller.appspotmail.com>
+To: cem@kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-On Fri, Sep 18, 2026 at 04:16:46AM -0700, Christoph Hellwig wrote:
-> On Fri, Sep 18, 2026 at 07:16:32AM +0200, Carlos Maiolino wrote:
-> > On Thu, Sep 17, 2026 at 08:08:35PM +0000, Lalit Shankar Chowdhury wrote:
-> > > Replace kvmalloc_array() with the more concise kvzalloc_objs()
-> > > implementation.
-> > > 
-> > > Signed-off-by: Lalit Shankar Chowdhury <lalitshankarch@gmail.com>
-> > 
-> > NAK...
-> > 
-> > This is used to allocate composite objects managed through a
-> > slab cache. This is not for fundamental basic data types....
-> 
-> I don't think so.  While the naming of the helper is a bit
-> unfortunate, it is intended for allocating arrays.
-> 
-> But this function really should not exist, instead bitmap_alloc/free
-> should be switched to th kvmalloc family so that it will just work
-> for large allocations and we can kill the wrappers in XFS.
-> 
+Hello xfs maintainers/developers,
 
-You meant something like this? Leaving xfs_alloc_bucket_bitmap() looks
-a bit better for me, to avoid overly long indentation.
-I don't think there are free_bitmap_bucket though, buckets are straight
-kvfree()'ed.
+This is a 31-day syzbot report for the xfs subsystem.
+All related reports/information can be found at:
+https://syzkaller.appspot.com/upstream/s/xfs
 
+During the period, 1 new issues were detected and 1 were fixed.
+In total, 10 issues are still open and 35 have already been fixed.
 
-diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
-index 28c1e48909fa..864020603dfb 100644
---- a/fs/xfs/xfs_zone_alloc.c
-+++ b/fs/xfs/xfs_zone_alloc.c
-@@ -1234,14 +1234,6 @@ xfs_calc_open_zones(
- 	return 0;
- }
- 
--static unsigned long *
--xfs_alloc_bucket_bitmap(
--	struct xfs_mount	*mp)
--{
--	return kvmalloc_array(BITS_TO_LONGS(mp->m_sb.sb_rgcount),
--			sizeof(unsigned long), GFP_KERNEL | __GFP_ZERO);
--}
--
- static struct xfs_zone_info *
- xfs_alloc_zone_info(
- 	struct xfs_mount	*mp)
-@@ -1260,7 +1252,10 @@ xfs_alloc_zone_info(
- 	init_waitqueue_head(&zi->zi_zone_wait);
- 	spin_lock_init(&zi->zi_used_buckets_lock);
- 	for (i = 0; i < XFS_ZONE_USED_BUCKETS; i++) {
--		zi->zi_used_bucket_bitmap[i] = xfs_alloc_bucket_bitmap(mp);
-+		zi->zi_used_bucket_bitmap[i] =
-+			kvmalloc_array(BITS_TO_LONGS(mp->m_sb.sb_rgcount),
-+					sizeof(unsigned long),
-+					GFP_KERNEL | GFP_ZERO);
- 		if (!zi->zi_used_bucket_bitmap[i])
- 			goto out_free_bitmaps;
- 	}
+Some of the still happening issues:
+
+Ref Crashes Repro Title
+<1> 901     Yes   possible deadlock in xfs_icwalk_ag (3)
+                  https://syzkaller.appspot.com/bug?extid=789028412a4af61a2b61
+<2> 2       No    WARNING in xfs_bmapi_convert_delalloc (3)
+                  https://syzkaller.appspot.com/bug?extid=0ce92d16209e30011ebc
+<3> 3029    Yes   INFO: task hung in sync_inodes_sb (5)
+                  https://syzkaller.appspot.com/bug?extid=30476ec1b6dc84471133
+<4> 13      No    KASAN: slab-use-after-free Read in xfs_defer_item_unpause
+                  https://syzkaller.appspot.com/bug?extid=e7f24354da9f7915bc54
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+To disable reminders for individual bugs, reply with the following command:
+#syz set <Ref> no-reminders
+
+To change bug's subsystems, reply with:
+#syz set <Ref> subsystems: new-subsystem
+
+You may send multiple commands in a single email message.
