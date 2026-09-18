@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45253457E67;
-	Fri, 18 Sep 2026 11:32:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D8D94E73AF;
+	Fri, 18 Sep 2026 11:44:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789731162; cv=none; b=NmAJyTOysEnSkftKeo3wAYfue4alSghBUTW2GnEi2WVIZ9MeeKiEXK/mPeLk9yyihquWE/vO0OjJoGh5E0LQ+Sf2EAsRyUerz/rayGZzwCLJ+dfuW0JjIjXOt7n4SAHlbN1nDkVsP8xXhzGbYkLpp1VBMI4s6UTShSI+9yVSdAo=
+	t=1789731858; cv=none; b=s7XRn+si9h/MJnBVk2X9+nZrhLN1WKruX7WZiZoV/+4UFyLEIv9OaTUjU8XQSBjuXIcUny4D6Oq+LLRa2carcb51kUfsWUfiTY7vkcBd0HIvxTVKl0f8425CeFfuCVTh/2g4YpiiCzyhQSF/5fmawHWP3FsQoiFQtTr2ft5DMLE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789731162; c=relaxed/simple;
-	bh=cmjyhAdcK/WkgHdVostjGBFNXp2EakwTuOJEd9PSvvY=;
+	s=arc-20240116; t=1789731858; c=relaxed/simple;
+	bh=MbAuGLR6IyXXEzqjalXjozskcbk8rLHdZrNkFg2Qk+k=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Mz+ZlnoTYhIJjItSUkiUIdC7KNA/gM+uQr3/+PTc4xlKJjQD0xMLCrYjiEb9GjXUUjtFqmLPkpn/i2HKkzFjNxDBX4NnlcRw73IMnbKH75wQutw3OnG+D9rtmzkgIO+9QNUfk2ouRD1aGgQVybIyr4U0W2kXeGbiOtAH8klHhko=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FfkKKvIh; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=LuJ/f/BmTkrPkF7NtV+pFIrT/2ISRoz7bMRdbhbZiLNQajn2kMy3ywZTSI1Ln2csxxpuRK0a3XU++9yzDLsWOjnjnsDQbS8I0FypO/VtuCz4wzciFE39lYst05Rdi5YI3yUAkw7gMPh479pWzWiWA7JIG9150IgCqokuXPKWmqI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ih9X3Zzs; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FfkKKvIh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 03B791F000FF;
-	Fri, 18 Sep 2026 11:32:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ih9X3Zzs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4D91F1F00893;
+	Fri, 18 Sep 2026 11:44:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789731161;
-	bh=Ij92FHptHJI6Kwyyc8AuywH9Pq/xn8IJW0Stq3h+K8M=;
+	s=k20260515; t=1789731856;
+	bh=Do1tuTNTzX2QLjpWKaNXPZ78GPW84geW/qG9bZOwISM=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=FfkKKvIh5sthZu2xEp5wPkjaYG2onLNKZ3PHcFHUpxrtYtQfch1RplxqAoUBAsBJp
-	 cm2lj5OanGZyKR7SIXkaK1WnhNxHWZtX0M1SV2HKT2Fb2c9rGeC3IpKPdgjmwzfWHw
-	 saR/+QX2xs3SUXYpBg68DmqX27hre4Pw3MvIhiqBZU65u6/xX3JwmpHZtldsvtuI37
-	 sTWy7WD0rvDMWycFhXYuRMqXOz5dpyY5V8ZXXMPyKB+x8WSTqgHvckGJpewRA6mBGH
-	 Q0FvjXIpF7cjOtu+2+LGY77SYdnj98jAb4m4+/REH+dj2VsQfHrd9beCiFaSg4S3BW
-	 dm4HjWIr3az6Q==
-Date: Fri, 18 Sep 2026 13:32:36 +0200
+	b=Ih9X3Zzsa1Uar/0zKKbFHY7WhndK1+hd1YEMZCODG70r/73e/Aa2U2J0F8yql1AdK
+	 WpyemRrj7waBCSEaHCKQmJ6/ApVB5LPAvVDmrX88jpRcgDpYYTkM7aP+Y4Um5BlNDz
+	 rSW8dpGlZ0QzsaR/y0nR5XHfXIFYT24cyLCIvk9A3QVtaQFy1pd3pTwXEO/lB5gjoQ
+	 DS+w8o69yZ87mA+TuPK0vcY9c2nExRJ2aiokoptMRdWjQmqERScjAqzt274Wqx1zvG
+	 ei7WT0yJLTBNr7Q8SNxRPIjckKmFf19M4KHshiNqIqWH89D5eX5QijX+9r86khfLYR
+	 RPqaOXlsTk3cQ==
+Date: Fri, 18 Sep 2026 13:44:12 +0200
 From: Carlos Maiolino <cem@kernel.org>
 To: Christoph Hellwig <hch@infradead.org>
 Cc: Lalit Shankar Chowdhury <lalitshankarch@gmail.com>, 
 	"open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 Subject: Re: [PATCH] xfs: replace kvmalloc_array with kvzalloc_objs
-Message-ID: <aq0e9Ne7KJYMc21-@nidhogg.toxiclabs.cc>
+Message-ID: <aq0i-bfEEMpwJ_Dk@nidhogg.toxiclabs.cc>
 References: <20260917200835.31027-1-lalitshankarch@gmail.com>
  <aqzHPqgh-rKqHRo-@nidhogg.toxiclabs.cc>
  <aq0dnoWhkq9JZkiu@infradead.org>
@@ -61,20 +61,46 @@ On Fri, Sep 18, 2026 at 04:16:46AM -0700, Christoph Hellwig wrote:
 > 
 > I don't think so.  While the naming of the helper is a bit
 > unfortunate, it is intended for allocating arrays.
-
-I see your point, but what kv(z)alloc_objs() do is essentially
-
-kmalloc(sizeof(object type) * count, GFP)...
-
-While I see why it's useful for composite types, I don't see the much
-the point of doing kvzalloc_objs(int, count)..
-And still kvmalloc_array() looks a better fit in this case IMO than
-kvmalloc_objs().
-
 > 
 > But this function really should not exist, instead bitmap_alloc/free
 > should be switched to th kvmalloc family so that it will just work
 > for large allocations and we can kill the wrappers in XFS.
 > 
 
-+1
+You meant something like this? Leaving xfs_alloc_bucket_bitmap() looks
+a bit better for me, to avoid overly long indentation.
+I don't think there are free_bitmap_bucket though, buckets are straight
+kvfree()'ed.
+
+
+diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
+index 28c1e48909fa..864020603dfb 100644
+--- a/fs/xfs/xfs_zone_alloc.c
++++ b/fs/xfs/xfs_zone_alloc.c
+@@ -1234,14 +1234,6 @@ xfs_calc_open_zones(
+ 	return 0;
+ }
+ 
+-static unsigned long *
+-xfs_alloc_bucket_bitmap(
+-	struct xfs_mount	*mp)
+-{
+-	return kvmalloc_array(BITS_TO_LONGS(mp->m_sb.sb_rgcount),
+-			sizeof(unsigned long), GFP_KERNEL | __GFP_ZERO);
+-}
+-
+ static struct xfs_zone_info *
+ xfs_alloc_zone_info(
+ 	struct xfs_mount	*mp)
+@@ -1260,7 +1252,10 @@ xfs_alloc_zone_info(
+ 	init_waitqueue_head(&zi->zi_zone_wait);
+ 	spin_lock_init(&zi->zi_used_buckets_lock);
+ 	for (i = 0; i < XFS_ZONE_USED_BUCKETS; i++) {
+-		zi->zi_used_bucket_bitmap[i] = xfs_alloc_bucket_bitmap(mp);
++		zi->zi_used_bucket_bitmap[i] =
++			kvmalloc_array(BITS_TO_LONGS(mp->m_sb.sb_rgcount),
++					sizeof(unsigned long),
++					GFP_KERNEL | GFP_ZERO);
+ 		if (!zi->zi_used_bucket_bitmap[i])
+ 			goto out_free_bitmaps;
+ 	}
