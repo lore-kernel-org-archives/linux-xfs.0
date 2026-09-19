@@ -1,75 +1,115 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mail.cloudnuke.org (mail.cloudnuke.org [163.123.236.66])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EE1F38AC6A;
-	Fri, 18 Sep 2026 21:35:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EDE929408
+	for <linux-xfs@vger.kernel.org>; Sat, 19 Sep 2026 00:16:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=163.123.236.66
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789767304; cv=none; b=hu3dlsm4FGD1N8Tsdk1QAGTV7A3reP6UBBiII4b3zdPPorixRj1bTEGKQK5Ehfpkld6cP/8zYK1N9JgwC4JgdJ3OQhA7EuxKIzO35f2kqNMleuilXbcp3GgXuAjiwmQr3FgRoZqo+X09w5PpSpxoYgjeWLKuZChj/oLbJhYFfiY=
+	t=1789776962; cv=none; b=c7oyX9FAV+dyvuxDdd51F0m8r5AYjhjv4fveNjVO/FhZKaoyrQ3hAJe9JIjku+aXld37bPcSziS1fozYBjwfkGhWuE0uZoGuRq9HoJ60ytvSBCtljVECnWpKBwkrdt+MCcP3Ga3+F++/C9QlsNkRk/LWNjGY0xQVv4HcaFbrNLM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789767304; c=relaxed/simple;
-	bh=NIMK8UH78gzW0ExsqRycQX21cVR/xFMXkxs3i+XwKkA=;
-	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
-	 Mime-Version:Content-Type; b=eSCBQ6SMp+DsInrfpsdkImDsC7SLK4RrHYsyak6T/iduZUR/sYsyK6HCoh+wVswgoxbDasvLxP+kcFgAiyJ/hjgBoxVp6vhuOXzfxBCzKUYw2F9M6Zln+cwZSX37gTyBm9pOV6Emm+e0zt1p1cZb/9zqrV4CoSvO2ToS2BqPqew=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=YaJzyj12; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789776962; c=relaxed/simple;
+	bh=wE0A3cRNrsnc7cZRj6FtKbmPElwnlCjofzDLH5trdLg=;
+	h=Message-ID:Date:MIME-Version:To:From:Subject:Content-Type; b=qPQiZhXAif0kAH6pEd1jmkd/W6MSGLCiUQg7f22Zq4JphbDIh++9PCMVNfOq+HNowWqPY+LEjJ3C0bKUbWPMJnSD4g4H43ywpgAwzRIG+J0ub22yQmtG8C6O5jxwv+JYyaQwmBp15j2LFSkHrOOiZTReimMQ3Jqye1vOD+78GFs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=cloudnuke.org; spf=pass smtp.mailfrom=cloudnuke.org; dkim=pass (4096-bit key) header.d=cloudnuke.org header.i=@cloudnuke.org header.b=p2+FBN7j; arc=none smtp.client-ip=163.123.236.66
+Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=cloudnuke.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cloudnuke.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="YaJzyj12"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AE40B1F000FF;
-	Fri, 18 Sep 2026 21:35:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux-foundation.org; s=korg; t=1789767303;
-	bh=LzrOWb7USfc3PFDPqWSCCytYQOmFmHMArNmcS4CbPM4=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=YaJzyj12zdYNf/Sp38pmFEguIVwlNkjfuCugKp+g1uMkq72x92tnb3Et0wjp9U07l
-	 DUbSRVJH/CR+z0Ecq4e/rcWN+XMiqAWAEyRnYEN/5gbxIlIEAGgaMT3Zii8mPQdvlb
-	 g6kBbv+wBsEiBEwDI5r0bdsPAAJ3zEJj47RpGvAY=
-Date: Fri, 18 Sep 2026 14:35:02 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
-Cc: Salvatore Dipietro <dipiets@amazon.it>, hannes@cmpxchg.org,
- abuehaze@amazon.com, alisaidi@amazon.com, blakgeof@amazon.com,
- brauner@kernel.org, brendan.jackman@linux.dev, david@redhat.com,
- dgc@kernel.org, dipietro.salvatore@gmail.com, djwong@kernel.org,
- hch@infradead.org, hch@lst.de, linux-fsdevel@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-mm@kvack.org,
- linux-xfs@vger.kernel.org, mhocko@suse.com, ritesh.list@gmail.com,
- rvvandan@amazon.com, stable@vger.kernel.org, surenb@google.com,
- willy@infradead.org, ziy@nvidia.com
-Subject: Re: [PATCH v5] mm/page_alloc: avoid direct compaction for costly
- __GFP_NORETRY allocations
-Message-Id: <20260918143502.b4fb3587b64e260e14485348@linux-foundation.org>
-In-Reply-To: <23676471-d90c-40cd-a357-e71b3d426425@kernel.org>
-References: <aqlvnm8AKp5f_UhG@cmpxchg.org>
-	<20260918063203.2802342-1-dipiets@amazon.it>
-	<23676471-d90c-40cd-a357-e71b3d426425@kernel.org>
-X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+	dkim=pass (4096-bit key) header.d=cloudnuke.org header.i=@cloudnuke.org header.b="p2+FBN7j"
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 821AD190649
+	for <linux-xfs@vger.kernel.org>; Fri, 18 Sep 2026 19:07:13 -0500 (CDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cloudnuke.org;
+	s=dkim; t=1789776434; h=from:subject:date:message-id:to:mime-version:content-type:
+	 content-transfer-encoding:content-language;
+	bh=ChicDlVJ0N2Tov65avAzsnNTq9QWU+/j/bQt6faldGk=;
+	b=p2+FBN7jmrUUlKWluV238pfqowr1J9lWEM10UPOiJ53KWv+e1NwxP+x/pce2oaKocDnwg1
+	xAazAPCqCKwkMzuRP7/77YnjAZZrC653ITukUH0JVia88EtVvg/XatpOZMq1Hn6XPtcIYW
+	EUt92DRGP15eaOUb3Il8pjtukyirFJtyMkkh4Cp0jXDlRSlaw2eIOB/d8MC61q3szMSTe+
+	sQgD6H6eHUwjR6F/oKeBQOSSJLYKliuS5hOMz4K6JEtbud2+JjH7clPel6Ejv7q9UXkD8u
+	+bLZ2EnB02o/kztJjfU1mv3747Ais0h+BRDk7C9FPKr0uSCJTYyihuEKYQgW2CPDRQ7wT6
+	BEAMAI7xwdqs761v1gKyaPyA0YJratf8BGbj1CqiqHGonRr5CNn7GemuLKyEKuoKoZaPsT
+	RmVUFQkmk0vEHpnK4QyVpnrn+gm6xF0ccqlotAsmgA0neyCow6mWlWZdFmm4WLiOZS7VDD
+	DsoMGjKhdcI1Glj+xn3PUIB96UrptguS6cXcu6UY4bNeubK5VECxPvUDobv0oRbxCGXQ0N
+	x90fzIaQdnCDECAROexM+ymtfuGuLhu+apaeD44tkDA4ghx/2VCW8GCaA48yhnzeezNuxV
+	viRa991Wl0+nTswaGtXZF92VlFUvcvNDjSulIFYITRMGvT9pUXPa4=
+Message-ID: <a4d94be7-f779-4118-855d-a3c3bc35af69@cloudnuke.org>
+Date: Fri, 18 Sep 2026 18:07:12 -0600
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+User-Agent: Betterbird (Linux)
+Content-Language: en-US
+To: linux-xfs@vger.kernel.org
+From: Theron York <theron.york@cloudnuke.org>
+Subject: xfsprogs-7.2.0: build failure on musl (undefined reference to
+ 'mallinfo')
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Last-TLS-Session-Version: TLSv1.3
 
-On Fri, 18 Sep 2026 08:40:05 +0200 "Vlastimil Babka (SUSE)" <vbabka@kernel.org> wrote:
+Hi,
 
-> On 9/18/26 08:32, Salvatore Dipietro wrote:
-> > 
-> > On Tue, Sep 15, 2026 at 04:17:00PM +0000, Johannes Weiner wrote:
-> >> It would be possible to remove the costly_order gate here and just
-> >> bail on __GFP_NORETRY. But no strong feelings.
-> > 
-> > Will do, I'll drop the costly_order gate and bail on __GFP_NORETRY.
-> > 
-> > Andrew, since you dropped v5 and restored v4 in mm-unstable, I'll send a
-> > v6 (v4 plus the above change) unless you'd rather have an incremental
-> > patch on top of v4. Let me know if anything else is needed on my side.
-> 
-> v4 is in mm-hotfixes-stable now, so an incremental fix will be easier now I
-> think.
-> 
+xfsprogs-7.2.0 fails to build on a musl-based system. The link step
+for xfs_scrub dies with an undefined reference to mallinfo(). This
+has also been reported in Gentoo as bug 982752:
 
-I just demoted it into mm-hotfixes-unstable.
+   https://bugs.gentoo.org/982752
 
-So a clean v6 would be best now, please.
+I'm reporting it here because it's a musl libc compatibility issue
+rather than a distribution-specific packaging bug.
+
+System:
+   - Gentoo, amd64, musl profile (x86_64-pc-linux-musl)
+   - binutils 2.47, gcc (or clang) as the toolchain, both reproduce
+   - xfsprogs-7.2.0 from upstream tarball (also reproduced via Gentoo 
+ebuild)
+   - musl version: 1.2.6-r1
+
+Error (with gcc + bfd, same with clang + lld):
+
+   ld.bfd: .../ltrans1.ltrans.o: in function `phase_end':
+   <artificial>:(.text+0xdb7): undefined reference to `mallinfo'
+   collect2: error: ld returned 1 exit status
+   gmake[2]: *** [../include/buildrules:65: xfs_scrub] Error 1
+
+The call site is scrub/xfs_scrub.c in phase_end():
+
+   #ifdef HAVE_MALLINFO
+       ...
+       mallinfo();
+       ...
+   #endif
+
+The build is being compiled with -DHAVE_MALLINFO on the command line,
+so the configure check is reporting mallinfo() as available when it
+is not. musl does not provide mallinfo() at all (nor mallinfo2()).
+Both are glibc extensions, and mallinfo() itself is deprecated in
+glibc since 2.33 in favor of mallinfo2().
+
+I suspect the autoconf check in configure.ac (or the relevant m4
+macro) is doing a compile-only or declaration-only test that passes
+on musl even though the symbol is never defined by the C library.
+Whatever the mechanism, HAVE_MALLINFO ends up defined and the link
+fails.
+
+A minimal fix would be to make the mallinfo() check a link test, or
+to gate it on __GLIBC__ specifically. Something like:
+
+   #if defined(HAVE_MALLINFO) && defined(__GLIBC__)
+
+in scrub/xfs_scrub.c would also work as a local workaround, but the
+root cause is in the configure check.
+
+I've also reproduced this with clang + lld; the error is identical
+apart from the linker driver. Happy to provide that log as well if
+useful.
+
+I checked the list archives first but couldn't find a recent thread
+covering this exact failure on 7.2.0. If there's a known fix or an
+existing patch I've missed, a pointer would be appreciated.
+
+Thanks,
+Theron York,
+
