@@ -1,123 +1,115 @@
-Received: from mail.cloudnuke.org (mail.cloudnuke.org [163.123.236.66])
+Received: from canpmsgout02.his.huawei.com (canpmsgout02.his.huawei.com [113.46.200.217])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5218B22E3F0
-	for <linux-xfs@vger.kernel.org>; Sat, 19 Sep 2026 17:49:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=163.123.236.66
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5DD93DD85C
+	for <linux-xfs@vger.kernel.org>; Sun, 20 Sep 2026 07:44:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.217
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789840179; cv=none; b=HlSfMfVdhmF0NUsEYb7Buam9SgMLUYBHAKLePu5wO+LFAx22mfY9pIJVF13Bp6C7+N5sp68zEAXALRZYe6fKYgq2ZthdSCgItC9Vty9ndzK2wQ0aGoiwJ86S/Q+TojzYcFNEkdsuWIAJuca/mRbJkl4Oz69HTXzSwoCkTj/V8vc=
+	t=1789890297; cv=none; b=Q+/Ec9cHDnVVfSfBrw68remZsSLMiyBRrgvg2ZChrzOv0PSkrKZpxQksyw27i8ljrCD4ZjER0LKbKN0+7h1/tOOpKVJsV7uUpRF7P7PUkgX2On6pBXAERY5G1IYlNro6RZ9ospKUV3bksSWtCEKcFcfX7QTAusqI+qAICQl7akM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789840179; c=relaxed/simple;
-	bh=/6CyoFIG0WMkGBjelv0bN1odg5oZtH8gfwu4jJcjpqw=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:References:
-	 In-Reply-To:Content-Type; b=eLz2rorV+D2nRIq6G9wv9VR6SDFpWGRu7PslsMnW/LK9oAPSF1strIu5aYshg+UoFbMdoS/OwKyEMCzaYGSfNa+OKzA7NC/7pv91eQQ849y5+3h5odi08l3JonbwLcOowrmFCNvQRjzirJHjxbcD+bW8yOAxjEdQCnjhp9KngZw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=cloudnuke.org; spf=pass smtp.mailfrom=cloudnuke.org; dkim=pass (4096-bit key) header.d=cloudnuke.org header.i=@cloudnuke.org header.b=Vu+cQjXU; arc=none smtp.client-ip=163.123.236.66
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=cloudnuke.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cloudnuke.org
+	s=arc-20240116; t=1789890297; c=relaxed/simple;
+	bh=tVouLdsXmzL69zN9OuHlzGNfMBImiv91GGdk398gxU0=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=NJ98MnUy1cnyPZByQzv/eBy6tAOyYt5cnEErxRqApt8dDONvfL7tI+iQ5L/MJZ+oaMs92y6PDL8wsq9Xp7BHnhnCR0eajv9RQMS4fwWA0lT8OMsD80+llj5i9rCXDjsvkuVhI2ykYkcfEFTPezS1v5EspNowe3StEjMq2zwnplQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=B6WChGat; arc=none smtp.client-ip=113.46.200.217
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (4096-bit key) header.d=cloudnuke.org header.i=@cloudnuke.org header.b="Vu+cQjXU"
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id DC6C719062A
-	for <linux-xfs@vger.kernel.org>; Sat, 19 Sep 2026 12:49:35 -0500 (CDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cloudnuke.org;
-	s=dkim; t=1789840176; h=from:subject:date:message-id:to:mime-version:content-type:
-	 content-transfer-encoding:content-language:in-reply-to:references;
-	bh=LfkmsjtvFkEOwQPMov7FbSKXajKpah06HD84yse5InU=;
-	b=Vu+cQjXUS0AP0iGasXJomi+txzcXTQh6+9f68oEKEXAzyHwU8G76Cv7f9rBtZhOQRqsPzR
-	YJ4AICrFJv1NcZYvpGNYnDwMme/gjXj/nfrtcT4M6XCq2ELfwxfVUp6ZvJmEd1NpU1Cjn+
-	E0avg4LX0f+bsHp1yFbZ6tGfPOhPRh1wyQAAQQAbBYFX8/r3Na/zoD9YUIERHSFV4dmtN6
-	xtrysCtp0B9rHL/rC9VRm5imV5RukJ3jRdrtXp7hCABBT9I05rAr9QORT44gxi8Wsxjj3F
-	joe0PhQwyK8jkYfJEA32899wma79Y0UukWAFr1OTZvCkecPV90GWCtsdlx26vgYEPQExRs
-	VZLND1YnmQWpRWaGfN7h/7vYQo5/j0mPbKkgM4ItoPqHuRS8y2dY8IdlUGT61RAoI8dNDL
-	fupPie5CFj1Mk7bXBVQbg62vzTWmdJXHz5UUJLBgEZWBhLk8U1aRA7HxW/rr/5XpxWcaPm
-	n41ibwqfEWXtRcjB2J0BHE8OYiPZrSQsbdl5EPQ8iGbHIaNnnTZFGGgIDYpeMYpZOg5tgL
-	nVu/X/HrLyK/CHo8+yX9ra3Dq0Gn/a9D39v8htvygulMpbFhRaVHTe70PLJVFEDxnGkr4c
-	+xiESFDpcJf9ophQ3Yql2crwANdnPRl8hozBibVOET3+2vyY63mrg=
-Message-ID: <f2a3da21-c3cc-4445-ad5b-44489c726d2e@cloudnuke.org>
-Date: Sat, 19 Sep 2026 11:49:34 -0600
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="B6WChGat"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=DFro4zs8hZxwHJLIIoe5G6RRHuh7hnEOeRP7dZn1JqU=;
+	b=B6WChGatMGKt3p7C47mBCtwCEtwRG2NKKRTlRPd5nnvIirQshfpK0WbI6hcCgJCmhsOLLkcmA
+	/RFpcZw1gJuKZhsmzOLhQW1UyO8hUGhjER/YDxq9Qn70rM/RJmXT6s80TpUid1ZJaEeeSJ4W3dv
+	g9maJbWi85/RtXeLUGybn3A=
+Received: from mail.maildlp.com (unknown [172.19.162.144])
+	by canpmsgout02.his.huawei.com (SkyGuard) with ESMTPS id 4hndPr26j3zcb3G;
+	Sun, 20 Sep 2026 15:33:20 +0800 (CST)
+Received: from kwepemk300003.china.huawei.com (unknown [7.202.195.93])
+	by mail.maildlp.com (Postfix) with ESMTPS id E56924056D;
+	Sun, 20 Sep 2026 15:44:38 +0800 (CST)
+Received: from ubuntu (10.50.87.83) by kwepemk300003.china.huawei.com
+ (7.202.195.93) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.45; Sun, 20 Sep
+ 2026 15:44:38 +0800
+From: Kefeng Wang <wangkefeng.wang@huawei.com>
+To: Carlos Maiolino <cem@kernel.org>, <linux-xfs@vger.kernel.org>
+CC: "Darrick J . Wong" <djwong@kernel.org>, Shakeel Butt
+	<shakeel.butt@linux.dev>, Dave Chinner <dchinner@redhat.com>, Kefeng Wang
+	<wangkefeng.wang@huawei.com>, Christoph Hellwig <hch@lst.de>, Brian Foster
+	<bfoster@redhat.com>
+Subject: [PATCH for-next v2] xfs: fix NOFS state corruption in btree split worker
+Date: Sun, 20 Sep 2026 15:30:14 +0800
+Message-ID: <20260920073014.2843814-1-wangkefeng.wang@huawei.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Betterbird (Linux)
-Subject: Re: xfsprogs-7.2.0: build failure on musl (undefined reference to
- 'mallinfo')
-From: Theron York <theron.york@cloudnuke.org>
-To: linux-xfs@vger.kernel.org
-References: <a4d94be7-f779-4118-855d-a3c3bc35af69@cloudnuke.org>
-Content-Language: en-US
-In-Reply-To: <a4d94be7-f779-4118-855d-a3c3bc35af69@cloudnuke.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Last-TLS-Session-Version: TLSv1.3
+Content-Type: text/plain
+X-ClientProxiedBy: kwepems100001.china.huawei.com (7.221.188.238) To
+ kwepemk300003.china.huawei.com (7.202.195.93)
 
+xfs_btree_split_worker() calls xfs_trans_set_context() and
+xfs_trans_clear_context() on the caller's transaction, overwriting
+tp->t_pflags with the worker's NOFS state. When the caller already has
+PF_MEMALLOC_NOFS set (e.g. xfs_end_ioend_write, xfs_dio_write_end_io),
+the corrupted tp->t_pflags causes xfs_trans_free() to erroneously clear
+the caller's NOFS protection.
 
-On 9/18/26 6:07 PM, Theron York wrote:
-> Hi,
->
-> xfsprogs-7.2.0 fails to build on a musl-based system. The link step
-> for xfs_scrub dies with an undefined reference to mallinfo(). This
-> has also been reported in Gentoo as bug 982752:
->
->   https://bugs.gentoo.org/982752
->
-> I'm reporting it here because it's a musl libc compatibility issue
-> rather than a distribution-specific packaging bug.
->
-> System:
->   - Gentoo, amd64, musl profile (x86_64-pc-linux-musl)
->   - binutils 2.47, gcc (or clang) as the toolchain, both reproduce
->   - xfsprogs-7.2.0 from upstream tarball (also reproduced via Gentoo 
-> ebuild)
->   - musl version: 1.2.6-r1
->
-> Error (with gcc + bfd, same with clang + lld):
->
->   ld.bfd: .../ltrans1.ltrans.o: in function `phase_end':
->   <artificial>:(.text+0xdb7): undefined reference to `mallinfo'
->   collect2: error: ld returned 1 exit status
->   gmake[2]: *** [../include/buildrules:65: xfs_scrub] Error 1
->
-> The call site is scrub/xfs_scrub.c in phase_end():
->
->   #ifdef HAVE_MALLINFO
->       ...
->       mallinfo();
->       ...
->   #endif
->
-> The build is being compiled with -DHAVE_MALLINFO on the command line,
-> so the configure check is reporting mallinfo() as available when it
-> is not. musl does not provide mallinfo() at all (nor mallinfo2()).
-> Both are glibc extensions, and mallinfo() itself is deprecated in
-> glibc since 2.33 in favor of mallinfo2().
->
-> I suspect the autoconf check in configure.ac (or the relevant m4
-> macro) is doing a compile-only or declaration-only test that passes
-> on musl even though the symbol is never defined by the C library.
-> Whatever the mechanism, HAVE_MALLINFO ends up defined and the link
-> fails.
->
-> A minimal fix would be to make the mallinfo() check a link test, or
-> to gate it on __GLIBC__ specifically. Something like:
->
->   #if defined(HAVE_MALLINFO) && defined(__GLIBC__)
->
-> in scrub/xfs_scrub.c would also work as a local workaround, but the
-> root cause is in the configure check.
->
-> I've also reproduced this with clang + lld; the error is identical
-> apart from the linker driver. Happy to provide that log as well if
-> useful.
->
-> I checked the list archives first but couldn't find a recent thread
-> covering this exact failure on 7.2.0. If there's a known fix or an
-> existing patch I've missed, a pointer would be appreciated.
->
-> Thanks,
-> Theron York,
->
->
-> after further review it’s expected behavior. Sorry for the noise; this 
-> can be closed,
+Use memalloc_nofs_save/restore with a local variable instead so
+tp->t_pflags is never touched.
+
+Closes: https://sashiko.dev/#/patchset/20260902131653.1338227-1-wangkefeng.wang@huawei.com
+Fixes: 756b1c343333 ("xfs: use current->journal_info for detecting transaction recursion")
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Kefeng Wang <wangkefeng.wang@huawei.com>
+---
+v2:
+- Send bugfix only based on xfs-linux/for-next, suggested by Carlos[1]
+  https://lore.kernel.org/linux-xfs/aqqGiu9W0G7dquoY@nidhogg.toxiclabs.cc/
+v1:
+- https://lore.kernel.org/linux-xfs/20260911104227.2028941-1-wangkefeng.wang@huawei.com/
+
+ fs/xfs/libxfs/xfs_btree.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 60ef7f08b1d3..239741132914 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -3010,6 +3010,7 @@ xfs_btree_split_worker(
+ 						struct xfs_btree_split_args, work);
+ 	unsigned long		pflags;
+ 	unsigned long		new_pflags = 0;
++	unsigned long		nofs_flags;
+ 
+ 	/*
+ 	 * we are in a transaction context here, but may also be doing work
+@@ -3021,12 +3022,17 @@ xfs_btree_split_worker(
+ 		new_pflags |= PF_MEMALLOC | PF_KSWAPD;
+ 
+ 	current_set_flags_nested(&pflags, new_pflags);
+-	xfs_trans_set_context(args->cur->bc_tp);
++
++	/*
++	 * Don't use xfs_trans_set_context() here: it would overwrite the
++	 * caller's saved NOFS state in tp->t_pflags. Use a local scope.
++	 */
++	nofs_flags = memalloc_nofs_save();
+ 
+ 	args->result = __xfs_btree_split(args->cur, args->level, args->ptrp,
+ 					 args->key, args->curp, args->stat);
+ 
+-	xfs_trans_clear_context(args->cur->bc_tp);
++	memalloc_nofs_restore(nofs_flags);
+ 	current_restore_flags_nested(&pflags, new_pflags);
+ 
+ 	/*
+-- 
+2.55.0
+
