@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E43A234994;
-	Mon, 21 Sep 2026 06:16:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70D13366054;
+	Mon, 21 Sep 2026 06:16:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789971378; cv=none; b=GRSDleieV1iu+z7XUl+PnJrBhwEkIW/s+I9vHjsQNBcePaOqdPO25HwZiyDYibDujGmw+/WNC5IWjLnIQXpcS7IHX6Mm52f3gDzA1PMbajHDIwJRLeI4k87y/qY6gKe7HadDpiElmH+k9iVQtddza7P/enH2R5R+MpPaV0nTgu4=
+	t=1789971394; cv=none; b=E+OS76CW/C2luu7+2BiCTDfWFkaDlG7UWNyiYMFD/tFBjLSL8Vvu4FMROrtG5o+jZyDesxGFNGs2PxONW6F+rY7mUJf3bAiWj9zGzmDezvTdxA/a8aGYtPvGkkq54cpdhgRRmI9HSgwuYmSimZ+fm1JFt+6y7W5UmrQU27WtAp8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789971378; c=relaxed/simple;
-	bh=chKTPhNKC5GTZqHlFrSZdHiFGL37y8E669PyY7f47EQ=;
+	s=arc-20240116; t=1789971394; c=relaxed/simple;
+	bh=zeK5Oo/zUMBFkg4eXNqE7zsNeiFXc+4SihYTh407y3A=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=hx7D/xwYGzmRLr1YRw9zJuMm//wqbpPu11reL72K51bhe9PoQ1SKiwf+aqaCwAXudzq62tWq8KP/ISxtOi2YMHOerbWNqa+bYzTaT+5rXoNglyImd9LbzlW2N8IcwTKl9Q2uCe1kufNTkC2T2xcWnCY3eRJGiJT3H4GIOtkbmxM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VfEPl+Ou; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=PyAL5uM/42leWwZ79eZkmeKwDW/Bq6wC1UmW+7CTdwJ0T9AM2FEmt38OOJkFCOLglwjnXavZvCTMHxvvE1d3SDDSyH47FWjvoIjOuS2C3Xg/SCcUWkqN7hAE5wggtN9C4VzV86irm1wS4Tev+FgMZO/4eBBeM+dbJcveUllFe9Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DHiq4grD; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VfEPl+Ou"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 65E641F000FF;
-	Mon, 21 Sep 2026 06:16:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DHiq4grD"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 092F41F000FF;
+	Mon, 21 Sep 2026 06:16:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789971377;
-	bh=APGdcctzhEZeBLA1z90JxBZE46TXwOJOr80TaCAxAM8=;
+	s=k20260515; t=1789971393;
+	bh=CtaTAm2gZRcqiYMQVcZRIQHCeYLs4E3QePbWRVnID8Y=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=VfEPl+OueHJSkaMlb0rYJ7uPO2x2ZpvWv8QFrWa4+X3MZuTQDPVO6S0JPKEPdh4JS
-	 B9bg3Ozb2Wy7pCSBT6i2+qQxaEW7yojUIIstDbpWHEp5M/V0TE/t/ojOi/JpHGcdkx
-	 fG3V/XanV+KY7b7NWLRbspmbfKnCw86lsTuOaoJ4B7CxpG5LzQ8duwRKynRva6NhKz
-	 /5cjsr8NpR1bXCxsy9ujM00E3LNNIQ/YYiU6IlYPIVppBiHzqRavgJXav3Lxa3otq4
-	 /oTxGV425QtAeYpgcXHZ1x3k4JbeHODnWA9OhtSLwsrCHm1mkYOrFxVl3tsDa5+zMd
-	 04xwtyEJu0+GQ==
-Date: Sun, 20 Sep 2026 23:16:17 -0700
-Subject: [PATCH 05/14] xfs: pass xfs_trans_resv object to reservation
- calculation helpers
+	b=DHiq4grD4BOEGcHXFdpqRv0gMHOWU/jdovZVX4CINnlCnpxh1rxvYoYfEkWsdAOru
+	 buXt6qM/cSxeOXucUbrBl9bVHQSQjpsKVHqO1+I3P8NB4wgf4nVJ1jexZg5/NGFuMS
+	 2jMtuTWDGyNA542HhB1sqkxGMWyDu543C8JivNicNcG6Sd3jz/cJugcyY4ofmve7ip
+	 04NVQ5oZDc1oPrJM5DUO2kQFuCZddaicvoz9avu02XbA9wIqc/S9gOOnnPi72qoa/Y
+	 /GVMQVpDxZw2dQPwNhBgX8m9u0Y++QnTIzXKiT2qbo++FCdowExmQ/X1hDmdhL33RE
+	 5MY2v7w/KoREQ==
+Date: Sun, 20 Sep 2026 23:16:32 -0700
+Subject: [PATCH 06/14] xfs: fix xfs_rename_space_res for non-pptr filesystems
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <178996120658.181988.9146739765881528995.stgit@frogsfrogsfrogs>
+Message-ID: <178996120679.181988.11124162026436295653.stgit@frogsfrogsfrogs>
 In-Reply-To: <178996120463.181988.9152653965555322220.stgit@frogsfrogsfrogs>
 References: <178996120463.181988.9152653965555322220.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,136 +45,36 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-xfs_calc_namespace_reservations computes the directory tree related
-transaction reservations for a given xfs_trans_resv object.  The helpers
-it relies on, however, read the live one from the xfs_mount even if
-we're doing this for minlogsize calculations.  In practice this
-shouldn't be a big deal since the minlogsize and live reservation
-objects don't differ in a meaningful way, but LOLLM complained about the
-inconsistency so let's fix it anyway.
+We don't need to reserve space for a parent pointer update for an
+existing target if parent pointers are disabled.  Fix this regression
+(which LOLLM noticed) so that rename reservations go back to what they
+were before parent pointers.
 
 Cc: <stable@vger.kernel.org> # v6.10
-Fixes: 7dba4a5fe1c5cd ("xfs: extend transaction reservations for parent attributes")
+Fixes: 5a8338c88284df ("xfs: Add parent pointers to rename")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Assisted-by: LOLLM # finding obvious bugs
 ---
- fs/xfs/libxfs/xfs_trans_resv.c |   38 ++++++++++++++++++++------------------
- 1 file changed, 20 insertions(+), 18 deletions(-)
+ fs/xfs/libxfs/xfs_trans_space.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-index 3151e97ca8ff6d..1c20a7c27aa1bf 100644
---- a/fs/xfs/libxfs/xfs_trans_resv.c
-+++ b/fs/xfs/libxfs/xfs_trans_resv.c
-@@ -606,10 +606,10 @@ static inline unsigned int xfs_calc_pptr_replace_overhead(void)
-  */
- STATIC uint
- xfs_calc_rename_reservation(
--	struct xfs_mount	*mp)
-+	struct xfs_mount	*mp,
-+	struct xfs_trans_resv	*resp)
- {
- 	unsigned int		overhead = XFS_DQUOT_LOGRES;
--	struct xfs_trans_resv	*resp = M_RES(mp);
- 	unsigned int		t1, t2, t3 = 0;
+diff --git a/fs/xfs/libxfs/xfs_trans_space.c b/fs/xfs/libxfs/xfs_trans_space.c
+index c4cd547033e584..7edd0d86f0bdb2 100644
+--- a/fs/xfs/libxfs/xfs_trans_space.c
++++ b/fs/xfs/libxfs/xfs_trans_space.c
+@@ -127,10 +127,10 @@ xfs_rename_space_res(
+ 		if (has_whiteout)
+ 			ret += xfs_parent_calc_space_res(mp, src_namelen);
+ 		ret += 2 * xfs_parent_calc_space_res(mp, target_namelen);
++
++		if (target_exists)
++			ret += xfs_parent_calc_space_res(mp, target_namelen);
+ 	}
  
- 	t1 = xfs_calc_inode_res(mp, 5) +
-@@ -715,10 +715,10 @@ xfs_link_log_count(
-  */
- STATIC uint
- xfs_calc_link_reservation(
--	struct xfs_mount	*mp)
-+	struct xfs_mount	*mp,
-+	struct xfs_trans_resv	*resp)
- {
- 	unsigned int		overhead = XFS_DQUOT_LOGRES;
--	struct xfs_trans_resv	*resp = M_RES(mp);
- 	unsigned int		t1, t2, t3 = 0;
- 
- 	overhead += xfs_calc_iunlink_remove_reservation(mp);
-@@ -777,10 +777,10 @@ xfs_remove_log_count(
-  */
- STATIC uint
- xfs_calc_remove_reservation(
--	struct xfs_mount	*mp)
-+	struct xfs_mount	*mp,
-+	struct xfs_trans_resv	*resp)
- {
- 	unsigned int            overhead = XFS_DQUOT_LOGRES;
--	struct xfs_trans_resv   *resp = M_RES(mp);
- 	unsigned int            t1, t2, t3 = 0;
- 
- 	overhead += xfs_calc_iunlink_add_reservation(mp);
-@@ -862,9 +862,9 @@ xfs_icreate_log_count(
- 
- STATIC uint
- xfs_calc_icreate_reservation(
--	struct xfs_mount	*mp)
-+	struct xfs_mount	*mp,
-+	struct xfs_trans_resv	*resp)
- {
--	struct xfs_trans_resv	*resp = M_RES(mp);
- 	unsigned int		overhead = XFS_DQUOT_LOGRES;
- 	unsigned int		t1, t2, t3 = 0;
- 
-@@ -911,9 +911,10 @@ xfs_mkdir_log_count(
-  */
- STATIC uint
- xfs_calc_mkdir_reservation(
--	struct xfs_mount	*mp)
-+	struct xfs_mount	*mp,
-+	struct xfs_trans_resv	*resp)
- {
--	return xfs_calc_icreate_reservation(mp);
-+	return xfs_calc_icreate_reservation(mp, resp);
- }
- 
- static inline unsigned int
-@@ -940,9 +941,10 @@ xfs_symlink_log_count(
-  */
- STATIC uint
- xfs_calc_symlink_reservation(
--	struct xfs_mount	*mp)
-+	struct xfs_mount	*mp,
-+	struct xfs_trans_resv	*resp)
- {
--	return xfs_calc_icreate_reservation(mp) +
-+	return xfs_calc_icreate_reservation(mp, resp) +
- 	       xfs_calc_buf_res(1, XFS_SYMLINK_MAXLEN);
- }
- 
-@@ -1265,27 +1267,27 @@ xfs_calc_namespace_reservations(
- {
- 	ASSERT(resp->tr_attrsetm.tr_logres > 0);
- 
--	resp->tr_rename.tr_logres = xfs_calc_rename_reservation(mp);
-+	resp->tr_rename.tr_logres = xfs_calc_rename_reservation(mp, resp);
- 	resp->tr_rename.tr_logcount = xfs_rename_log_count(mp, resp);
- 	resp->tr_rename.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
- 
--	resp->tr_link.tr_logres = xfs_calc_link_reservation(mp);
-+	resp->tr_link.tr_logres = xfs_calc_link_reservation(mp, resp);
- 	resp->tr_link.tr_logcount = xfs_link_log_count(mp, resp);
- 	resp->tr_link.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
- 
--	resp->tr_remove.tr_logres = xfs_calc_remove_reservation(mp);
-+	resp->tr_remove.tr_logres = xfs_calc_remove_reservation(mp, resp);
- 	resp->tr_remove.tr_logcount = xfs_remove_log_count(mp, resp);
- 	resp->tr_remove.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
- 
--	resp->tr_symlink.tr_logres = xfs_calc_symlink_reservation(mp);
-+	resp->tr_symlink.tr_logres = xfs_calc_symlink_reservation(mp, resp);
- 	resp->tr_symlink.tr_logcount = xfs_symlink_log_count(mp, resp);
- 	resp->tr_symlink.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
- 
--	resp->tr_create.tr_logres = xfs_calc_icreate_reservation(mp);
-+	resp->tr_create.tr_logres = xfs_calc_icreate_reservation(mp, resp);
- 	resp->tr_create.tr_logcount = xfs_icreate_log_count(mp, resp);
- 	resp->tr_create.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
- 
--	resp->tr_mkdir.tr_logres = xfs_calc_mkdir_reservation(mp);
-+	resp->tr_mkdir.tr_logres = xfs_calc_mkdir_reservation(mp, resp);
- 	resp->tr_mkdir.tr_logcount = xfs_mkdir_log_count(mp, resp);
- 	resp->tr_mkdir.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+-	if (target_exists)
+-		ret += xfs_parent_calc_space_res(mp, target_namelen);
+-
+ 	return ret;
  }
 
