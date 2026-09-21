@@ -1,295 +1,350 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5D7D39CCFD;
-	Mon, 21 Sep 2026 09:13:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77504477E40
+	for <linux-xfs@vger.kernel.org>; Mon, 21 Sep 2026 09:32:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789982040; cv=none; b=lQA8gK5/RT7YmtGc3VNc1P8WnTja6t2Fa7YoQBdCJRXLYmBrQ3d9Fx0fX18jzs2ADr4N2MLrUpumFPOrMq7dxVoDny+uVZgV1PWVNvQPF7FCrVEuptIUtnwA8xT5W+ktWOVQVKxNEm0zr1+gkwG41lLo3KUcCoPT++UD7Nqu2WQ=
+	t=1789983156; cv=none; b=cU79khNcaU0hkFxV/lcjSKUQeTwcK/7jp+8X1Zqq1rJgXacaEHEwiHRYXN5nBxc3u614bOJDHOYTtXmAWCmQNJr32kgUKplQytRn0PuuQTIcfaV7EAH66MtV1+99onkVsr+UThMs4QDEMECvXKzLfQifWbveloLm48f7y+zMeU8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789982040; c=relaxed/simple;
-	bh=Ta0mONJEgWqK4IOpydKvzfByfKA5pOCqingtiLqLF8o=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=e5LqMto+Snk5qE2nb7eugqPZvW0epeCVo3tVtlvbctStZENM7+hfo9DndHiK9f015nAkQHR7erSqmMwoGvKYm4SAWiiXUfdPGMEs9mWIQRMztC8X7UoNXb/f0X0FAOO3fEpuWICVMocJGrvcB7/kNG+1rCsn/1Sm37uvthJ/Li0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=pKci3Ps+; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1789983156; c=relaxed/simple;
+	bh=yejVs+D654tTvqK1udD/Pz/0gEmeh9SZV4OI+iLF8Zk=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type:
+	 References; b=isNZD/3hC5vKLpZ7vFPqrgbbzlzAMupZ9sP4ayUTQh6tPlaHw96tw4uUEpssEFu8lfKvWPlwb+EWAyunfuD32GQ9W2NeVWmbPxMVsrJlxkewX6Qkj7K93G+OnrsFtEmOhzts/+u5K30vSJ0Jz4IFI8jjDC9K5FRPTsZqsqYYmlg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=j1M1x06v; arc=none smtp.client-ip=203.254.224.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="pKci3Ps+"
-Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68L7ZNxo3153438;
-	Mon, 21 Sep 2026 09:13:08 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=pp1; bh=uHpbWh7ilinEK48bRJAdvGAA+5jlm2
-	rCmcP1EDTkoz4=; b=pKci3Ps+2aw2U5R77z+tRH0KMIIy39lGtvbMJ+gdtBZiRt
-	XhEm/AXhPSH3hctgwMPABnss/uqbHzSH593IUdAD2t4pjQOnxsX5vLIHSfY6x3gK
-	znL6s/QaX1WtfUM9j8rvnstSomglvHqgCbCYfTYltH9Ei7MsX2LNjWUsWorCgcvG
-	0qtD8l5oi0UC/su4IJAu8iEBMNpU8dabcnrH+D/UC2/tzBZG59Zm6dfX39wwwYxI
-	xxYWL++xeB/NilAV0eP7Yz2yschmDwBYfX9Pg1RX6zOYr1W2Q4fsSGanZGMRAXN9
-	vMByWddAzO5hDzSubz3hmo6wvj+JNaTeTyvqHUsg==
-Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4gske1fpws-1
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Mon, 21 Sep 2026 09:13:07 +0000 (GMT)
-Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma13.dal12v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 68L7HmQp931526;
-	Mon, 21 Sep 2026 09:13:07 GMT
-Received: from smtprelay04.fra02v.mail.ibm.com ([9.218.2.228])
-	by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 4gt6xgcdym-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 21 Sep 2026 09:13:07 +0000 (GMT)
-Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
-	by smtprelay04.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 68L9D51F8454422
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 21 Sep 2026 09:13:05 GMT
-Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 4BBD820040;
-	Mon, 21 Sep 2026 09:13:05 +0000 (GMT)
-Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 1D72420043;
-	Mon, 21 Sep 2026 09:13:00 +0000 (GMT)
-Received: from li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com (unknown [9.39.16.92])
-	by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-	Mon, 21 Sep 2026 09:12:59 +0000 (GMT)
-Date: Mon, 21 Sep 2026 14:42:57 +0530
-From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-To: Christian Brauner <brauner@kernel.org>, linux-fsdevel@vger.kernel.org
-Cc: "Darrick J . Wong" <djwong@kernel.org>, Carlos Maiolino <cem@kernel.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
-        Matthew Wilcox <willy@infradead.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Ritesh Harjani <ritesh.list@gmail.com>, Zhang Yi <yi.zhang@huawei.com>,
-        Christoph Hellwig <hch@lst.de>, Dave Chinner <dchinner@redhat.com>,
-        Daniel Gomez <da.gomez@kernel.org>,
-        Pankaj Raghav <pankaj.raghav@linux.dev>, Theodore Tso <tytso@mit.edu>,
-        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-mm@kvack.org
-Subject: Re: [RFC PATCH v3 05/11] xfs: Add RWF_WRITETHROUGH support to xfs
-Message-ID: <arD1GWfg3fH0FhIo@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
-References: <cover.1785908600.git.ojaswin@linux.ibm.com>
- <c284da9ae8f72cea47dfee7bd9f28a270c31a08d.1785908600.git.ojaswin@linux.ibm.com>
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="j1M1x06v"
+Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
+	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20260921093231epoutp046d3dde7d2fbdd2e05744a05afe6b20fc~XTDE6PJm_3173031730epoutp04S
+	for <linux-xfs@vger.kernel.org>; Mon, 21 Sep 2026 09:32:31 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20260921093231epoutp046d3dde7d2fbdd2e05744a05afe6b20fc~XTDE6PJm_3173031730epoutp04S
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1789983151;
+	bh=EMaHfMKNFjV9FQj1SxYOSOK1upDOwH3qB1HwFNS66xU=;
+	h=From:To:Cc:Subject:Date:References:From;
+	b=j1M1x06vGBOJQcwTYuxuKI0caC+/YAHPakwmBc6M7MJD/EwQoKDk+FJOPvtskF0Xk
+	 5B28VC+MRxxHEd3eKaARStLb6HCNej+CiBY7oRd44/HTpoNbmQ9zMflcYM0kaAEeen
+	 wHw9OPVU+HUEU8BpyI0dVb8lSlxZNcf8jQJ4HVoo=
+Received: from epsnrtp01.localdomain (unknown [182.195.42.153]) by
+	epcas5p3.samsung.com (KnoxPortal) with ESMTPS id
+	20260921093230epcas5p3616900193d5855cc393ec2d8572b9b31~XTDEiA1rh2777527775epcas5p3q;
+	Mon, 21 Sep 2026 09:32:30 +0000 (GMT)
+Received: from epcas5p2.samsung.com (unknown [182.195.38.95]) by
+	epsnrtp01.localdomain (Postfix) with ESMTP id 4hpJ0t0nFHz6B9mB; Mon, 21 Sep
+	2026 09:32:30 +0000 (GMT)
+Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
+	epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
+	20260921093229epcas5p387ee10f88335ddc5fc930ca919769a60~XTDDdvneJ2556525565epcas5p38;
+	Mon, 21 Sep 2026 09:32:29 +0000 (GMT)
+Received: from localhost.localdomain (unknown [107.99.41.245]) by
+	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+	20260921093227epsmtip1179220e572af23e4275c76b3e376a9d1~XTDB4R5mu0528305283epsmtip1_;
+	Mon, 21 Sep 2026 09:32:27 +0000 (GMT)
+From: Kanchan Joshi <joshi.k@samsung.com>
+To: brauner@kernel.org, hch@lst.de, djwong@kernel.org, dgc@kernel.org,
+	cem@kernel.org, jack@suse.cz, axboe@kernel.dk, kbusch@kernel.org
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	gost.dev@samsung.com, Kanchan Joshi <joshi.k@samsung.com>
+Subject: [PATCH v5 0/8] xfs write streams
+Date: Mon, 21 Sep 2026 15:01:39 +0530
+Message-Id: <20260921093147.59935-1-joshi.k@samsung.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c284da9ae8f72cea47dfee7bd9f28a270c31a08d.1785908600.git.ojaswin@linux.ibm.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Proofpoint-ORIG-GUID: XS3xRSuQdjeYIFIUQHGQYYN3KuZLWfc9
-X-Authority-Analysis: v=2.4 cv=EOCTQFZC c=1 sm=1 tr=0 ts=6ab0f524 cx=c_pps
- a=AfN7/Ok6k8XGzOShvHwTGQ==:117 a=AfN7/Ok6k8XGzOShvHwTGQ==:17
- a=kj9zAlcOel0A:10 a=VdqzKS8jKosA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=uAbxVGIbfxUO_5tXvNgY:22 a=pGLkceISAAAA:8
- a=VnNF1IyMAAAA:8 a=N6Loc1iCyasMdZpCZgQA:9 a=CjuIK1q_8ugA:10
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTIxMDEzMCBTYWx0ZWRfXxS1QcLmEMZV9
- lUHzF7Eylxtv46P8/KT/+lnTMiSyCfBmiSe3eGpQXWqW29y339SCozQI+9rtWFkA4d4Ga14yWqK
- s8+YtrcWgpJjK7C6HaCzIgoptX1UIG4=
-X-Proofpoint-GUID: QmoOPoBIiT2Xgnop7Sjxbxi1qTn-39yW
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTIxMDEzMCBTYWx0ZWRfX5sy/h8HRajq7
- mbYA4O3K+QkXU0RJy2e+pDazA3NMDYrsw4X7Q5YXBmtZyiWb/UeSUAqhEJxv/sajcaDkVjdXdaR
- 1CI3rJbFV0vbDFWGh+HpTFV5QysOKuL/sbyBbzNyNOEuq1WkqAeT9jdzq2iA9uJDhcIC0X97WBr
- nykKjjmsm2V2cWifiiDUh3SK9Rxr0c6sccv3E8oIsKEoFE+Dbhsn3NDMOpDgMXM7/k5EKVfqL3d
- RBa6UJioZFcANPSPwCF2mDdNZhg4PddrB67QOEo1Qp99gyXjSGybwPC3od4WrPi3V8PUr03QsD4
- R/EdKy/drQJlJxm/lIzYycrtw2KyE872zcoAtevQhD6D7B/ecJlaeaeDP7fAgOSeZewbEXsGcGM
- e2u7woLMJsTQxoIG/gpy5a5xxi5TTCAafqw/JyLhnr/HUUSMieOGTnNn8rIerEyWhlAD/T8C0uH
- gTI5+VhPxdMEYf9TM+w==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-09-21_03,2026-09-16_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- bulkscore=0 phishscore=0 priorityscore=1501 clxscore=1011 spamscore=0
- adultscore=0 impostorscore=0 lowpriorityscore=0 suspectscore=0 malwarescore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2609040000 definitions=main-2609210130
+Content-Transfer-Encoding: 8bit
+X-CMS-MailID: 20260921093229epcas5p387ee10f88335ddc5fc930ca919769a60
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+cpgsPolicy: CPGSC10-542,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20260921093229epcas5p387ee10f88335ddc5fc930ca919769a60
+References: <CGME20260921093229epcas5p387ee10f88335ddc5fc930ca919769a60@epcas5p3.samsung.com>
 
-On Wed, Aug 05, 2026 at 11:58:11AM +0530, Ojaswin Mujoo wrote:
-> Add the boilerplate needed to start supporting RWF_WRITETHROUGH in XFS.
-> We use the direct write ->iomap_begin() functions to ensure the range
-> under write through always has a real non-delalloc extent. We reuse the xfs
-> dio's end IO function to perform extent conversion and i_size handling
-> for us.
-> 
-> *Note on COW extent over DATA hole case*
-> 
-> In case of an unmapped COW extent over a DATA hole
-> (due to COW preallocations), leave the extent unmapped until we are just
-> about to send IO. At that time, use the ->writethrough_submit() call
-> back to convert the COW extent to written.
-> 
-> We initially tried converting during iomap begin() time (like dio does)
-> but that results in a stale data exposure as follows:
-> 
-> 1. iomap begin() - converts COW extent over DATA hole to written and
-> marks IOMAP_F_NEW to handle zeroing.
-> 2. During iomap_write_begin() -> realise extent is stale and return back
-> without zeroing.
-> 3. iomap begin() - Again sees the same COW extent but it's written
-> this time so we don't mark IOMAP_F_NEW
-> 4. Since IOMAP_F_NEW is unmarked, we never zeroout and hence expose
-> stale data.
-> 
-> To avoid the above, take the buffered IO approach of converting the
-> extent just before IO, when we are sure to have zeroed out the folio.
-> 
-> Co-developed-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-> Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-> Signed-off-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-> ---
->  fs/xfs/xfs_file.c | 83 +++++++++++++++++++++++++++++++++++++++++++----
->  1 file changed, 77 insertions(+), 6 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 768cabf6250b..4b45ceacd461 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -702,6 +702,36 @@ static const struct iomap_dio_ops xfs_dio_write_ops = {
->  	.end_io		= xfs_dio_write_end_io,
->  };
->  
-> +static int
-> +xfs_writethrough_end_io(
-> +	struct iomap_writethrough_ctx	*wt_ctx,
-> +	ssize_t				size,
-> +	int				error,
-> +	unsigned int			flags)
-> +{
-> +	struct xfs_inode *ip = XFS_I(wt_ctx->inode);
-> +	xfs_off_t offset = wt_ctx->iocb->ki_pos;
-> +
-> +	if (unlikely(error)) {
-> +		if (wt_ctx->flags & IOMAP_DIO_COW)
-> +			xfs_reflink_cancel_cow_range(ip, offset, size, true);
-> +
-> +		return error;
-> +	}
-> +
-> +	/*
-> +	 * writethrough completions are handled same as dio with the exception
-> +	 * that we need to explicitly change the i_disk_size. This is because
-> +	 * unlike dio, we have already updated the i_size and hence the
-> +	 * (i_disk_size < i_size) check will fail in dio code
-> +	 */
-> +	xfs_dio_write_end_io(wt_ctx->iocb, size, error, flags);
-> +	if (offset + size > ip->i_disk_size)
+This series introduces a generic interface [2,3] for write stream management on
+files.
+It enables spatial isolation (at sw and hw level) and concurrency improvments [1]
+in xfs by
+(a) steering each write stream to its own set of allocation groups (patch #5)
+    and realtime groups (patch #6).
+(b) connecting xfs write streams to block write streams (FDP capable NVMe).
 
-Okay so mostly the Sashiko reviews are straight forward but I would like
-to discuss one of it here:
+Write streams allow the abstraction provider (fs, block, raid etc.) to
+leverage application's intent (file relationships/lifecycle).
+- application: reserves a stream and sets it on the files it wants
+  placed together.
+- xfs: maps streams to AGs/RGs; allocates without interleaving; gains
+  higher concurrency due to reduced lock contention.
+- hardware: maps streams to underlying allocation unit; reduces device
+  internal write amplification, improved life, predictable QoS.
 
-  Is it safe to read ip->i_disk_size locklessly here?
+Also
+- A stream is handed out using an fd. The filesystem is free to map streams
+  onto its own geometry, and the reservation/fd machinery is generic
+ (fs/write_streams.c) so other filesystems can reuse it.
 
-  On 32-bit systems, a lockless read of a 64-bit value can result in a torn
-  read. If another thread is concurrently updating i_disk_size via
-  xfs_setfilesize(), a torn read might yield a spuriously large value.
+- Since high-level write stream (in xfs) and logical placement can work
+  without the low-level write streams (in block device), series has a general
+  value beyond the hardware that provides spatial isolation. Patches 1-7 are
+  software only and work on any block device; patch 8 aligns the stream
+  count to the hardware streams when the device has them.
 
-  Could this cause the offset + size > ip->i_disk_size condition to evaluate
-  to false, skipping the on-disk size update entirely?
+- write-stream is different from existing 'filestream' allocator which
+  maintains directory-to-AG associations in a global MRU cache. That
+  requires state managment and memory (and its reclaim). Proposed AG-set
+  based steering relies on simple, statless/lockless airthmatic that aligns
+  more with the default allocator heuristics.
 
-Although this seems like a valid concern and we can end up tearing
-i_disk_size read on 32 bit machines which can lead to a skipped disksize
-update, I see that same sort of unsafe checks for i_disk_size is also
-present in the endio code (xfs_ioend_is_append() call)
+[1]
+### Performance
 
-Shouldnt we ideally be fixing those sites as well or is there something
-I'm missing in xfs that makes this acceptable?
+1. On regular NVMe
 
-Regards,
-ojaswin
+a. Inter-stream concurrency
+---------------------------
+fio: 4k write, direct IO, 16 jobs, 1 directory, 16 files * 8GiB, iodepth 32
+xfs: 16 AGs, 4 write-streams
 
-> +		return xfs_setfilesize(ip, offset, size);
-> +
-> +	return 0;
-> +}
-> +
->  static void
->  xfs_dio_zoned_submit_io(
->  	const struct iomap_iter	*iter,
-> @@ -1033,6 +1063,39 @@ xfs_file_dax_write(
->  	return ret;
->  }
->  
-> +static int
-> +xfs_writethrough_submit(
-> +	struct inode		*inode,
-> +	struct iomap		*iomap,
-> +	loff_t			offset,
-> +	u64			count)
-> +{
-> +	int error = 0;
-> +	unsigned int		nofs_flag;
-> +
-> +	/*
-> +	 * Convert CoW extents to regular.
-> +	 *
-> +	 * We are under writethrough context with folio lock possibly held. To
-> +	 * avoid memory allocation deadlocks, set the task-wide nofs context.
-> +	 */
-> +	if (iomap->flags & IOMAP_F_SHARED) {
-> +		nofs_flag = memalloc_nofs_save();
-> +		error = xfs_reflink_convert_cow(XFS_I(inode), offset, count);
-> +		memalloc_nofs_restore(nofs_flag);
-> +	}
-> +
-> +	return error;
-> +}
-> +
-> +const struct iomap_writethrough_ops xfs_writethrough_ops = {
-> +	.ops			= &xfs_direct_write_iomap_ops,
-> +	.write_ops		= &xfs_iomap_write_ops,
-> +	.end_io		= xfs_writethrough_end_io,
-> +	.writethrough_submit	= &xfs_writethrough_submit
-> +};
-> +
-> +
->  STATIC ssize_t
->  xfs_file_buffered_write(
->  	struct kiocb		*iocb,
-> @@ -1055,9 +1118,13 @@ xfs_file_buffered_write(
->  		goto out;
->  
->  	trace_xfs_file_buffered_write(iocb, from);
-> -	ret = iomap_file_buffered_write(iocb, from,
-> -			&xfs_buffered_write_iomap_ops, &xfs_iomap_write_ops,
-> -			NULL);
-> +	if (iocb->ki_flags & IOCB_WRITETHROUGH) {
-> +		ret = iomap_file_writethrough_write(iocb, from,
-> +						    &xfs_writethrough_ops, NULL);
-> +	} else
-> +		ret = iomap_file_buffered_write(iocb, from,
-> +						&xfs_buffered_write_iomap_ops,
-> +						&xfs_iomap_write_ops, NULL);
->  
->  	/*
->  	 * If we hit a space limit, try to free up some lingering preallocated
-> @@ -1092,8 +1159,12 @@ xfs_file_buffered_write(
->  
->  	if (ret > 0) {
->  		XFS_STATS_ADD(ip->i_mount, xs_write_bytes, ret);
-> -		/* Handle various SYNC-type writes */
-> -		ret = generic_write_sync(iocb, ret);
-> +		/*
-> +		 * Handle various SYNC-type writes.
-> +		 * For writethrough, we handle sync during completion.
-> +		 */
-> +		if (!(iocb->ki_flags & IOCB_WRITETHROUGH))
-> +			ret = generic_write_sync(iocb, ret);
->  	}
->  	return ret;
->  }
-> @@ -2104,7 +2175,7 @@ const struct file_operations xfs_file_operations = {
->  	.remap_file_range = xfs_file_remap_range,
->  	.fop_flags	= FOP_MMAP_SYNC | FOP_BUFFER_RASYNC |
->  			  FOP_BUFFER_WASYNC | FOP_DIO_PARALLEL_WRITE |
-> -			  FOP_DONTCACHE,
-> +			  FOP_DONTCACHE | FOP_WRITETHROUGH,
->  	.setlease	= generic_setlease,
->  };
->  
-> -- 
-> 2.55.0
-> 
-> 
+base: 41 KIOPS
+write-stream AG-set: 227 KIOPS (+453%)
+here, 16 files are assigned 4 distinct write-streams (4 files/stream)
+
+b. Intra-stream concurrency
+----------------------------
+fio: 4k write, direct IO, 4 jobs, 1 directory, 4 files * 8GiB, iodepth 32
+xfs: 16 AGs, 4 write-streams, write-stream AG-set size = 4
+
+base: 59 KIOPS
+write-stream AG-set: 112 KIOPS (+89%)
+here, 4 files are assigned single write-stream
+
+2. On FDP-capable NVMe:
+RocksDB YCSB
+WAF (base vs write-stream): 35% Reduction
+
+
+[2]
+### Application interface
+
+Three new ioctls:
+      FS_IOC_WRITE_STREAM_GET_MAX  number of streams the filesystem offers
+      FS_IOC_WRITE_STREAM_ALLOC    reserve a stream, returns an fd
+      FS_IOC_WRITE_STREAM_SET      set or clear a stream on a file
+
+### Comparison with Write Hints (RWH_WRITE_LIFE_*)
+
+- Semantics: Write Hints describe 'data temperature' (e.g.,short/long/extreme),
+  implying a lifetime. Write Streams describe 'data placement'
+  (e.g., Bin 1/Bin 2), implying only separation.
+
+- Scalability: Write Hints are limited to a small, fixed enum (6 values).
+  Write streams are dynamic, provider-dependent values that can scale much
+  higher.
+
+- Discovery: The existing write-hint interface is advisory and decoupled
+  from underlying capabilties; application has no way to probe support
+  and cannot deterministically know which hints are valid. OTOH, write-streams
+  provide explicit discovery.
+
+- Usage model: application needs to get a handle (fd) for a write stream
+  before being able to use it. This avoids multi-application conflicts.
+
+Note: within the kernel, the separation between two constructs
+(write-hint and write-stream) had started from 6.16 itself.
+
+### Changelog
+
+since v4:
+https://lore.kernel.org/linux-xfs/20260717125538.508925-1-joshi.k@samsung.com/
+
+- stream reservation and fd handling moved to generic code, and the
+  stream id moved to struct inode from xfs inode (Darrick, Christoph)
+- stream id no longer shows in uapi: OPEN becomes ALLOC and returns
+  fd for any (unreserved) stream; OPEN_EXACT and GET are gone (Christoph)
+- ALLOC requires CAP_SYS_ADMIN (Christoph)
+- write stream and write life time hint are mutually exclusive at both
+  setters
+- stream pool lives on the buftarg (Christoph), which gives the realtime
+  device streams of its own: new patch to enable RT support (Christoph, Darrick)
+- software streams come first and work on any device; hardware streams
+  are enabled in the last (Christoph)
+
+since v3:
+https://lore.kernel.org/linux-block/20260616180555.33338-1-joshi.k@samsung.com/
+- add fd-based interface to open/set the write stream (Christoph)
+- move from single multiplexed ioctl to 4 distinct ioctls (Christoph)
+- add mutual exclusion checks against existing write-hint, filestream (Christoph)
+- uint16_t for write-stream within iomap and other streamlining (Darrick)
+
+since v2:
+https://lore.kernel.org/linux-fsdevel/20260309052944.156054-1-joshi.k@samsung.com/
+- xfs default allocator optimization using fixed-size generic AG set (Dave)
+- reuse the above to simplify the write-stream AG set handling
+- streamline the uapi; Use union for GET_MAX and GET/SET (Darrick)
+- uint16_t for write-stream within xfs inode and other cleanups (Darrick)
+
+since v1:
+https://lore.kernel.org/linux-fsdevel/20260216052540.217920-1-joshi.k@samsung.com/
+- swich from fcntl based to ioctl-based interface (Christian)
+- new patch (#4) that makes xfs allocator use the write streams for AG
+  selection
+- new patch (#5) that introduces software write streams in xfs.
+
+[3]
+### Interface example
+/*
+ * Minimal write-stream example.
+ *
+ *      cc -Wall -o ws-example ws-example.c
+ *      sudo ./ws-example /mnt/xfs        # data device
+ *      sudo ./ws-example /mnt/xfs rt     # realtime volume
+ *
+ * Reserves two streams.  a.dat gets the first; b.dat and c.dat share the
+ * second.  Each file then takes one 4K write, so a.dat is placed apart from
+ * b.dat and c.dat, which are placed together.
+ *
+ * With "rt" the files are made realtime first.
+ */
+
+#include <sys/ioctl.h>
+#include <err.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <linux/fs.h>
+
+struct fs_write_stream_set {
+        __s32   stream_fd;      /* IN: stream to set, -1 to clear */
+        __u32   flags;          /* IN: FS_WRITE_STREAM_SET_* */
+};
+
+#define FS_WRITE_STREAM_SET_CLEAR       (1U << 0)
+
+#define FS_IOC_WRITE_STREAM_GET_MAX     _IOR(0x15, 3, __u32)
+#define FS_IOC_WRITE_STREAM_ALLOC       _IO(0x15, 4)    /* returns an fd */
+#define FS_IOC_WRITE_STREAM_SET         _IOW(0x15, 5, struct fs_write_stream_set)
+
+static char buf[4096];
+
+/* create @name; with @rt, put it on the realtime volume */
+static int create_file(const char *dir, const char *name, int rt)
+{
+        struct fsxattr fa;
+        char path[512];
+        int fd;
+
+        snprintf(path, sizeof(path), "%s/%s", dir, name);
+
+        fd = open(path, O_CREAT | O_TRUNC | O_RDWR, 0644);
+        if (fd < 0)
+                err(1, "%s", path);
+        if (!rt)
+                return fd;
+
+        if (ioctl(fd, FS_IOC_FSGETXATTR, &fa))
+                err(1, "FSGETXATTR %s", name);
+        fa.fsx_xflags |= FS_XFLAG_REALTIME;
+        if (ioctl(fd, FS_IOC_FSSETXATTR, &fa))
+                err(1, "FSSETXATTR %s (no realtime volume?)", name);
+        return fd;
+}
+
+/* set @stream_fd on @fd, write 4K */
+static void write_on_stream(int fd, const char *name, int stream_fd)
+{
+        struct fs_write_stream_set set = { .stream_fd = stream_fd, .flags = 0 };
+
+        if (ioctl(fd, FS_IOC_WRITE_STREAM_SET, &set))
+                err(1, "SET %s", name);
+        if (write(fd, buf, sizeof(buf)) != sizeof(buf))
+                err(1, "write %s", name);
+        fsync(fd);
+        close(fd);
+}
+
+int main(int argc, char **argv)
+{
+        __u32 max = 0;
+        int rt, fa, fb, fc, s1, s2;
+
+        if (argc < 2 || argc > 3 || (argc == 3 && strcmp(argv[2], "rt")))
+                errx(2, "usage: %s <dir-on-xfs> [rt]", argv[0]);
+        rt = argc == 3;
+
+        fa = create_file(argv[1], "a.dat", rt);
+        fb = create_file(argv[1], "b.dat", rt);
+        fc = create_file(argv[1], "c.dat", rt);
+
+        /* query and reserve through a file on the device being placed on */
+        if (ioctl(fa, FS_IOC_WRITE_STREAM_GET_MAX, &max))
+                err(1, "GET_MAX");
+        printf("max streams: %u\n", max);
+        if (max < 2)
+                errx(1, "need at least 2 streams");
+
+        /* ALLOC returns the stream fd as the ioctl return value */
+        s1 = ioctl(fa, FS_IOC_WRITE_STREAM_ALLOC);
+        if (s1 < 0)
+                err(1, "ALLOC");
+        s2 = ioctl(fa, FS_IOC_WRITE_STREAM_ALLOC);
+        if (s2 < 0)
+                err(1, "ALLOC");
+
+        write_on_stream(fa, "a.dat", s1);
+        write_on_stream(fb, "b.dat", s2);
+        write_on_stream(fc, "c.dat", s2);
+
+        /* closing a stream fd releases the stream */
+        close(s1);
+        close(s2);
+
+        puts("a.dat on stream 1; b.dat and c.dat on stream 2");
+        puts("confirm AG/RG steering using xfs_bmap");
+        return 0;
+}
+
+Anuj Gupta (4):
+  fs: add write-stream management ioctls
+  fs: add generic write-stream management
+  xfs: implement software write-stream management
+  xfs: support write streams on realtime volumes
+
+Kanchan Joshi (4):
+  fs: add i_write_stream, exclusive with the write life time hint
+  xfs: write stream based AG placement
+  iomap: introduce and propagate write_stream
+  xfs: support hardware write streams
+
+ fs/Makefile                   |   2 +-
+ fs/fcntl.c                    |   7 ++
+ fs/inode.c                    |   1 +
+ fs/iomap/direct-io.c          |   1 +
+ fs/iomap/ioend.c              |   3 +
+ fs/write_streams.c            | 138 ++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_bmap.c      |  58 +++++++++++++-
+ fs/xfs/xfs_buf.c              |  35 +++++++++
+ fs/xfs/xfs_buf.h              |   6 ++
+ fs/xfs/xfs_inode.c            |  69 +++++++++++++++++
+ fs/xfs/xfs_inode.h            |   4 +
+ fs/xfs/xfs_ioctl.c            |  80 ++++++++++++++++++++
+ fs/xfs/xfs_iomap.c            |   1 +
+ fs/xfs/xfs_rtalloc.c          |  27 +++++++
+ fs/xfs/xfs_super.c            |  12 +++
+ include/linux/fs.h            |   2 +-
+ include/linux/iomap.h         |   1 +
+ include/linux/write_streams.h |  33 ++++++++
+ include/uapi/linux/fs.h       |  15 ++++
+ 19 files changed, 491 insertions(+), 4 deletions(-)
+ create mode 100644 fs/write_streams.c
+ create mode 100644 include/linux/write_streams.h
+
+-- 
+2.25.1
+
