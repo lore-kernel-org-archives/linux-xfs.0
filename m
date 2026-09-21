@@ -1,40 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96D793346A0
-	for <linux-xfs@vger.kernel.org>; Mon, 21 Sep 2026 03:36:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CCFA314D1F
+	for <linux-xfs@vger.kernel.org>; Mon, 21 Sep 2026 03:40:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789961779; cv=none; b=niI4HF246eXZDZ83iKIyI58NVRXjk1GRTQZRu+zViu4uIddBjrf4rZOFzDr906C9aezgMQKJy4tpEGBQBZTtplA4BJAf2uoxbcT+Bkl/d5+r2S2W2WKH4lR+KmPoZor19x1CmlPiLTOUksLLB/Z9wXbFRogiRZIvBqh/eBaNvSY=
+	t=1789962005; cv=none; b=blwWW5PIg7swmJH+izq6pG2O0zF92skaxBP85vEDzCbPS8sXgt56fxLhk5CGaZ8teLJ3YsFnGa46wGyoMa40hcKRBf2PnCGqRPE6/mtC4nll3W59is/Vlapwg8dGwkhdq20uGW9gAX03vm7iqX5QXVcJd+gRhly2tICSemxT6nQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789961779; c=relaxed/simple;
-	bh=SBwnvzxTDU+g2HgmrIg2U7Br90YYfqpW9QnmgS0oaPc=;
+	s=arc-20240116; t=1789962005; c=relaxed/simple;
+	bh=GAowq/dBINUACDh+u5duCNjeV+bFKzZCHtTzi2UqqYA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=FBDuDVSL4tI5YLG+dIJBGosBm08cHtlKfgM0G42jb7E99x4HhZYPz1CGM6uHbZW6Xxt50kiun6nmYuykVAFQOEcb5JzbnXWNVF/BOwAOvk/mL+nouW+kylqfH8RaS8zkahuHhAXL4gP6eqKVQ/FLQZ8kRgcaZJrUkcjBIcXJMmY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GSJjI+k1; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=EBHz/IHaOcK9asQ2GWdM39UJKrSg0DgzTirxkyo4KoIcrar/S8bnf+lk6SgbNDYo7JnSgCu12Nkhc6P1Ns8/q0Sz7bZziZM1nLATSVSBgY8oNbXIBJk7Y8KjdSXqWinPnfXpU0+T6CrpXBaF7M3Z3mluhaNsfXdv43GqCFcfX3Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=imumJcAe; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GSJjI+k1"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 13D501F000FF;
-	Mon, 21 Sep 2026 03:36:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="imumJcAe"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id A09801F000FF;
+	Mon, 21 Sep 2026 03:40:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789961778;
-	bh=J/rN1qayBi/o5/Qd1ZyMjFnmfa9PvrB1xb34MpxHFO0=;
+	s=k20260515; t=1789962003;
+	bh=TGTri38YrU1R3YIU910egb/w+F9YO9QlPRyi2gCidFc=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=GSJjI+k1l3aeNI8vWYkUbB6nLll5MTkEvZaWyEZfDdzfh2FfY8FC7/pZXBw4DXdXm
-	 0LRNHrE4AmhuK76e4UfbiLTc4TWa8MdNdoFc/WX5Tpj39NcmXYRIwF0vZ+xsrvszDH
-	 +5//AZ5KXGkLfuoDbF8FxgYPIkpfNsBMEhy6bpjakBsvFk1tnetuVeXO2FqxvhWRSt
-	 QgYHJfDQKfVZa9HPECCZDnPjF+azbQ0kK4EyQzHvVmtY7bWJaRIVG/CtMcfZuej7gN
-	 5zjx2FWsHgn5NSRX6qFzglrnV+KqDX00iLMkdRcJwjcpwj/tMkKwRbqOzzO9exfkJr
-	 fz6uqq1h9YD4g==
-Date: Sun, 20 Sep 2026 20:36:17 -0700
+	b=imumJcAeUg1rbVgF6eHc6n/FQfefrQ1Q6JfJXTnx8EaToNreEJea1mASjDGiv7h2c
+	 hPJ7tbFjiws8KEcIIxPJ4GdNs/VEMkJGPDdJw5LvB+S+RoQfOE/ffAPl0NH0XY+qvm
+	 qNb47pICEs7kSMUrtXj5uohsJ5j/9dLEO9rj0xFjaeM7BYFvvFJ5ceOUil9pIMxXio
+	 JR2S1kbB5zt56lUNY586wpaeDIIZhyc+s5iNbQTEUfyD/u0hQHvXknAZcvx7jaboPD
+	 ZdKalVOAxDirK23ZR4S+CVwb+cKhOiPrKlVjRccyJS+8r2LTsDYC10V897SsaIzuVH
+	 Xk29tOR2jE4Ew==
+Date: Sun, 20 Sep 2026 20:40:03 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: cem@kernel.org
-Cc: hch@lst.de, sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v3 1/3] xfs: add xfs_error_report the ability to display
- an error code
-Message-ID: <20260921033617.GF2705364@frogsfrogsfrogs>
-References: <20260917103633.14703-1-cem@kernel.org>
- <20260917103633.14703-2-cem@kernel.org>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs@vger.kernel.org, cem@kernel.org
+Subject: Re: [PATCH 0/2] xfs: dedupe realtime rmap btree code
+Message-ID: <20260921034003.GG2705364@frogsfrogsfrogs>
+References: <20260918181324.2472127-1-sandeen@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,180 +41,73 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260917103633.14703-2-cem@kernel.org>
+In-Reply-To: <20260918181324.2472127-1-sandeen@redhat.com>
 
-On Thu, Sep 17, 2026 at 12:35:46PM +0200, cem@kernel.org wrote:
-> From: Carlos Maiolino <cem@kernel.org>
+On Fri, Sep 18, 2026 at 01:01:31PM -0500, Eric Sandeen wrote:
+> xfs_rmap_btree.c and xfs_rtrmap_btree.c have a large amount of
+> duplicated code, differing only in function names which add "rt"
+> in the latter case. This can all be shared to reduce the cut & paste.
 > 
-> Users could opt to request an error code to be printed now.
+> Tested with an auto xfstests run as well as the rmap group with
+> rtdev & rmap enabled.
 > 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+>  xfs_rmap_btree.c   |   16 +--
+>  xfs_rmap_btree.h   |   26 ++++++
+>  xfs_rtrmap_btree.c |  230 +++------------------------------------------------
+>  3 files changed, 51 insertions(+), 221 deletions(-)
 
-Looks good,
+In general this looks good to me, though I'll add that the same sort of
+code deduplication could likely be done to the refcount btree code too.
+;)
+
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
-> ---
-> V3:
-> 	- Remove stale description aboutt ERRNAME
-> V2:
-> 	- Fix commit description s/_NAME/_ERRNAME
-> 	- xfs_corruption_error should call xfs_error_report with
-> 	  -EFSCORRUPTED
-> 	- Modify xfs_error_report to only print out the error number if
-> 	  it received an error from the caller.
-> 	- Don't use errname() anymore.
 > 
->  fs/xfs/xfs_error.c         | 16 +++++++++++-----
->  fs/xfs/xfs_error.h         |  9 +++++----
->  fs/xfs/xfs_exchmaps_item.c |  9 ++++++---
->  fs/xfs/xfs_inode_item.c    |  3 ++-
->  fs/xfs/xfs_log_recover.c   |  3 ++-
->  fs/xfs/xfs_trans.c         |  2 +-
->  6 files changed, 27 insertions(+), 15 deletions(-)
+> [root@fedora-rawhide xfstests-dev]# ./check -g rmap
+> FSTYP         -- xfs (non-debug)
+> PLATFORM      -- Linux/x86_64 fedora-rawhide 7.3.0-rc3+ #330 SMP
+> PREEMPT_DYNAMIC Fri Sep 18 10:23:43 CDT 2026
+> MKFS_OPTIONS  -- -f -rrtdev=/dev/loop0 -m rmapbt=1,reflink=1 /dev/vdb2
+> MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0
+> -ortdev=/dev/loop0 /dev/vdb2 /mnt/scratch
 > 
-> diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-> index 9ece70fd94ca..c943717f1dd7 100644
-> --- a/fs/xfs/xfs_error.c
-> +++ b/fs/xfs/xfs_error.c
-> @@ -241,16 +241,21 @@ void
->  xfs_error_report(
->  	const char		*tag,
->  	int			level,
-> +	int			error,
->  	struct xfs_mount	*mp,
->  	const char		*filename,
->  	int			linenum,
->  	xfs_failaddr_t		failaddr)
->  {
->  	if (level <= xfs_error_level) {
-> -		xfs_alert_tag(mp, XFS_PTAG_ERROR_REPORT,
-> -		"Internal error %s at line %d of file %s.  Caller %pS",
-> -			    tag, linenum, filename, failaddr);
-> -
-> +		if (error)
-> +			xfs_alert_tag(mp, XFS_PTAG_ERROR_REPORT,
-> +"Internal error %s (%d) at line %d of file %s.  Caller %pS",
-> +				tag, error, linenum, filename, failaddr);
-> +		else
-> +			xfs_alert_tag(mp, XFS_PTAG_ERROR_REPORT,
-> +"Internal error %s at line %d of file %s.  Caller %pS",
-> +				tag, linenum, filename, failaddr);
->  		xfs_stack_trace();
->  	}
->  }
-> @@ -268,7 +273,8 @@ xfs_corruption_error(
->  {
->  	if (buf && level <= xfs_error_level)
->  		xfs_hex_dump(buf, bufsize);
-> -	xfs_error_report(tag, level, mp, filename, linenum, failaddr);
-> +	xfs_error_report(tag, level, -EFSCORRUPTED, mp,
-> +			 filename, linenum, failaddr);
->  	xfs_alert(mp, "Corruption detected. Unmount and run xfs_repair");
->  }
->  
-> diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
-> index 05fc1d1cf521..3c76d0dad51c 100644
-> --- a/fs/xfs/xfs_error.h
-> +++ b/fs/xfs/xfs_error.h
-> @@ -8,8 +8,9 @@
->  
->  struct xfs_mount;
->  
-> -void xfs_error_report(const char *tag, int level, struct xfs_mount *mp,
-> -		const char *filename, int linenum, xfs_failaddr_t failaddr);
-> +void xfs_error_report(const char *tag, int level, int error,
-> +		struct xfs_mount *mp, const char *filename,
-> +		int linenum, xfs_failaddr_t failaddr);
->  void xfs_corruption_error(const char *tag, int level, struct xfs_mount *mp,
->  		const void *buf, size_t bufsize, const char *filename,
->  		int linenum, xfs_failaddr_t failaddr);
-> @@ -20,8 +21,8 @@ void xfs_verifier_error(struct xfs_buf *bp, int error, xfs_failaddr_t failaddr);
->  void xfs_inode_verifier_error(struct xfs_inode *ip, int error, const char *name,
->  		const void *buf, size_t bufsz, xfs_failaddr_t failaddr);
->  
-> -#define	XFS_ERROR_REPORT(e, lvl, mp)	\
-> -	xfs_error_report(e, lvl, mp, __FILE__, __LINE__, __return_address)
-> +#define	XFS_ERROR_REPORT(e, lvl, error, mp)	\
-> +	xfs_error_report(e, lvl, error, mp, __FILE__, __LINE__, __return_address)
->  #define	XFS_CORRUPTION_ERROR(e, lvl, mp, buf, bufsize)	\
->  	xfs_corruption_error(e, lvl, mp, buf, bufsize, \
->  			     __FILE__, __LINE__, __return_address)
-> diff --git a/fs/xfs/xfs_exchmaps_item.c b/fs/xfs/xfs_exchmaps_item.c
-> index dd5d92ca1010..9f499a80038c 100644
-> --- a/fs/xfs/xfs_exchmaps_item.c
-> +++ b/fs/xfs/xfs_exchmaps_item.c
-> @@ -573,13 +573,15 @@ xlog_recover_xmi_commit_pass2(
->  
->  	len = sizeof(struct xfs_xmi_log_format);
->  	if (item->ri_buf[0].iov_len != len) {
-> -		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, log->l_mp);
-> +		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW,
-> +				 -EFSCORRUPTED, log->l_mp);
->  		return -EFSCORRUPTED;
->  	}
->  
->  	xmi_formatp = item->ri_buf[0].iov_base;
->  	if (xmi_formatp->__pad != 0) {
-> -		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, log->l_mp);
-> +		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW,
-> +				 -EFSCORRUPTED, log->l_mp);
->  		return -EFSCORRUPTED;
->  	}
->  
-> @@ -614,7 +616,8 @@ xlog_recover_xmd_commit_pass2(
->  
->  	xmd_formatp = item->ri_buf[0].iov_base;
->  	if (item->ri_buf[0].iov_len != sizeof(struct xfs_xmd_log_format)) {
-> -		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, log->l_mp);
-> +		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW,
-> +				 -EFSCORRUPTED, log->l_mp);
->  		return -EFSCORRUPTED;
->  	}
->  
-> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-> index 99d6ecccdaa7..a29c90f0650f 100644
-> --- a/fs/xfs/xfs_inode_item.c
-> +++ b/fs/xfs/xfs_inode_item.c
-> @@ -1229,7 +1229,8 @@ xfs_inode_item_format_convert(
->  	struct xfs_inode_log_format_32	*in_f32 = buf->iov_base;
->  
->  	if (buf->iov_len != sizeof(*in_f32)) {
-> -		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, NULL);
-> +		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW,
-> +				 -EFSCORRUPTED, NULL);
->  		return -EFSCORRUPTED;
->  	}
->  
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index cf0d610265fe..457617979668 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -2948,7 +2948,8 @@ xlog_recover_process(
->  		 * fatal log corruption failure.
->  		 */
->  		if (xfs_has_crc(log->l_mp)) {
-> -			XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, log->l_mp);
-> +			XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW,
-> +					 -EFSCORRUPTED, log->l_mp);
->  			return -EFSCORRUPTED;
->  		}
->  	}
-> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> index 1b36cf12d4e3..5c522790e5be 100644
-> --- a/fs/xfs/xfs_trans.c
-> +++ b/fs/xfs/xfs_trans.c
-> @@ -971,7 +971,7 @@ xfs_trans_cancel(
->  	 * here.
->  	 */
->  	if (dirty && !xfs_is_shutdown(mp)) {
-> -		XFS_ERROR_REPORT("xfs_trans_cancel", XFS_ERRLEVEL_LOW, mp);
-> +		XFS_ERROR_REPORT("xfs_trans_cancel", XFS_ERRLEVEL_LOW, 0, mp);
->  		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
->  	}
->  #ifdef DEBUG
-> -- 
-> 2.55.0
+> generic/365  2s ...  2s
+> xfs/114      3s ...  2s
+> xfs/233      1s ...  1s
+> xfs/234      5s ...  5s
+> xfs/235      1s ...  1s
+> xfs/236      6s ...  6s
+> xfs/271      2s ...  2s
+> xfs/272      2s ...  2s
+> xfs/273      4s ...  5s
+> xfs/274      3s ...  3s
+> xfs/275            [not run] This test requires a valid $SCRATCH_LOGDEV
+> xfs/276      3s ...  3s
+> xfs/277      2s ...  2s
+> xfs/310      0s ...  1s
+> xfs/317            [not run] XFS error injection requires
+> CONFIG_XFS_DEBUG
+> xfs/331      2s ...  2s
+> xfs/332      1s ...  1s
+> xfs/334      1s ...  1s
+> xfs/335      4s ...  3s
+> xfs/336      5s ...  5s
+> xfs/337      5s ...  5s
+> xfs/338      2s ...  2s
+> xfs/339      2s ...  2s
+> xfs/340      2s ...  2s
+> xfs/341      1s ...  1s
+> xfs/342      2s ...  2s
+> xfs/343      2s ...  2s
+> xfs/450      1s ...  2s
+> Ran: generic/365 xfs/114 xfs/233 xfs/234 xfs/235 xfs/236 xfs/271 xfs/272
+> xfs/273 xfs/274 xfs/275 xfs/276 xfs/277 xfs/310 xfs/317 xfs/331 xfs/332
+> xfs/334 xfs/335 xfs/336 xfs/337 xfs/338 xfs/339 xfs/340 xfs/341 xfs/342
+> xfs/343 xfs/450
+> Not run: xfs/275 xfs/317
+> Passed all 28 tests
+> 
 > 
 > 
