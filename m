@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC98D234994
-	for <linux-xfs@vger.kernel.org>; Mon, 21 Sep 2026 06:17:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D4FC1A683D;
+	Mon, 21 Sep 2026 06:17:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789971441; cv=none; b=V63Dt9HN5zc6Fcyz/f0hj6M1Wkbb8XMmvwWUcrFP/dPT2GZeIHJIZhXbZuZRa9VfiqNQaLdIBI1mXWUnbEMakjLdm/ZSop7ofiMQEOBHdub+VlrYn7qXX6xwoawkPPlA3tC3hWhpTCGKdmDi9ZwAu6Mt0rmiCRo47ZJ1y8Kj6A0=
+	t=1789971457; cv=none; b=g2An2O0V7D1LYkgp9kWhi62HUmRsGBlMVpCdk4nGKuI7jTU4Q8PnfoiYenUsI4jjV6BHWXNXvsadTqaYHsEthyPiMlvaT1a8H5bhiFqNnqXRJEmyDwPVMo7CNf3nKBfvSIuTYvoCGHxCk10+uMamheVspoSK0BRnhw8k3NSJbyA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789971441; c=relaxed/simple;
-	bh=qEcdyA+vgeUlgq4hhK45y5+oGrMaCu1jMmesnl49h4g=;
+	s=arc-20240116; t=1789971457; c=relaxed/simple;
+	bh=LqTGUaYl71YscF848NDJHxPtxV11ir0x+RJBqlkso0c=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=S6cPWBnm+xKGwtBwkK8tmtF9uvAm8XuXIYhIttGyv2O8vrDS8V6c5E1ZCKoRr2RMpDP0a/F9d/5GsAw4hIQ47N2QNC+NsTyi/TjiLh9nKpzu5nog8D3yZnG9gqtVDQtquoFB1FN0lvrddIZuklEQ+ecLgGvT2EtRhabJYiDn6Go=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YBXe0Akc; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=IhfWHPX9gP7kS+rfbf3L/3yESItz34JPRm+COhP3gDdnTWcoNHcy1E8i6V39XLqIB3hbNqqidB/QOLIbepy8ZxNr5T3umaMwevlitKPs68A/OVplN9sVnTatHdjDiiQdwMNK26vxHl7sIIyTsC6elSmLxEWVkc2+jSzbXEo0MF8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=S3YZqZm4; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YBXe0Akc"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 1F6391F000FF;
-	Mon, 21 Sep 2026 06:17:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="S3YZqZm4"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id E9DCB1F000FF;
+	Mon, 21 Sep 2026 06:17:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789971440;
-	bh=lUlWW5CnxE0Xi5pY/YJ9Ikinti0qXFy9+lItngP6bEQ=;
+	s=k20260515; t=1789971456;
+	bh=pwNe/WzMMNL/CBgqQZTqb/1ag8fy8Bj+cXtG5tlDxFg=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=YBXe0AkclHKBYnZQjoGzfm2u7Bfl5TmxMzeRb8qKhsBpBTbI/c+s0sNqPOn/8OIdw
-	 KfJs6Xmc0hi3SNtm1xZWzw8/3ISR15N/MqXuFuwQiDdh/ZGpYXEBs0mdigqO1+cZfH
-	 58AoJjOP4QhHww6k5F6K0wggkRiqLS9HJtMUI/D2qj31yP4Yo/5esSHS+qj2szLGYz
-	 AnY23dClgdjY8BmCpqyknE+a0D/xCbAfZxWrgzXg+OiDa0Ei4S/TDSFa9jD3pxg/YM
-	 xHzs7MVZnfvmlsxod33iwMFABjammMboY8fa2lwvYyT90y8kZBRK9YW26SF2SKVgt7
-	 u4S97sOEhA3Qg==
-Date: Sun, 20 Sep 2026 23:17:19 -0700
-Subject: [PATCH 09/14] xfs: add missing healthmon trace strings
+	b=S3YZqZm4Kam8E/DF+n8l1auWkOs8AG1y0ZoeKpYT8IckbwpCQ2UifDvDFGCgKEUll
+	 eR7vU6FNNK31THQaETrjIRWDCYV+bi7SCaZnfnwmAIIZaFAFv5Z0FKmjP150j0DECv
+	 7kyMq/mnWI+3fVRiskVDCq100sXkTYnOQ8toTvQHmldjMfnRvwpCuZCvRXUdNd8LUK
+	 B2vthaU51z47KqHjTN//F1KyV6BY3P4RQokkHlf3Ey5vWWfLZPnwNPqG+tDqeLLqm8
+	 GGoINNOASySGYbHKeUr3qVOVgRajJ4FpD7wSTqCkklir4yrQZb7PyrexlfXw0bS9v2
+	 rLc0rVfWanqYQ==
+Date: Sun, 20 Sep 2026 23:17:35 -0700
+Subject: [PATCH 10/14] xfarray: don't crash when sorting if array element
+ crosses a folio
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
-Cc: linux-xfs@vger.kernel.org
-Message-ID: <178996120742.181988.4615087468034246498.stgit@frogsfrogsfrogs>
+Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
+Message-ID: <178996120763.181988.2563798655569721557.stgit@frogsfrogsfrogs>
 In-Reply-To: <178996120463.181988.9152653965555322220.stgit@frogsfrogsfrogs>
 References: <178996120463.181988.9152653965555322220.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,76 +46,56 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-LOLLM noticed that we don't have trace strings for all known healthmon
-types and domains.  Fix that.
+LOLLM points out that if an array element crosses a folio boundary,
+xfile_get_folio returns a NULL folio pointer.  If this happens,
+si->folio is also set to NULL, and calling folio_pos/folio_address will
+just crash the kernel.  Teach this function to handle this condition by
+falling back to reading the array element into scratchpad memory.
 
+Cc: <stable@vger.kernel.org> # v6.6
+Fixes: cf36f4f64c2d4e ("xfs: cache pages used for xfarray quicksort convergence")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Assisted-by: LOLLM # finding obvious bugs
 ---
- fs/xfs/xfs_trace.h |   28 +++++++++++++++++++++++++---
- 1 file changed, 25 insertions(+), 3 deletions(-)
+ fs/xfs/scrub/xfarray.c |   18 ++++++++++--------
+ 1 file changed, 10 insertions(+), 8 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 6aa379c2cf0cd1..0fc8927339b588 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -6030,32 +6030,54 @@ DEFINE_HEALTHMON_EVENT(xfs_healthmon_detach);
- DEFINE_HEALTHMON_EVENT(xfs_healthmon_report_unmount);
+diff --git a/fs/xfs/scrub/xfarray.c b/fs/xfs/scrub/xfarray.c
+index 2ce24bfe4c0fab..30a58e9d4378e4 100644
+--- a/fs/xfs/scrub/xfarray.c
++++ b/fs/xfs/scrub/xfarray.c
+@@ -830,22 +830,24 @@ xfarray_sort_scan(
+ 			return PTR_ERR(folio);
+ 		si->folio = folio;
  
- #define XFS_HEALTHMON_TYPE_STRINGS \
-+	{ XFS_HEALTHMON_RUNNING,	"run" }, \
- 	{ XFS_HEALTHMON_LOST,		"lost" }, \
- 	{ XFS_HEALTHMON_UNMOUNT,	"unmount" }, \
-+	{ XFS_HEALTHMON_SHUTDOWN,	"shutdown" }, \
- 	{ XFS_HEALTHMON_SICK,		"sick" }, \
- 	{ XFS_HEALTHMON_CORRUPT,	"corrupt" }, \
- 	{ XFS_HEALTHMON_HEALTHY,	"healthy" }, \
--	{ XFS_HEALTHMON_SHUTDOWN,	"shutdown" }
-+	{ XFS_HEALTHMON_MEDIA_ERROR,	"media" }, \
-+	{ XFS_HEALTHMON_BUFREAD,	"bufread" }, \
-+	{ XFS_HEALTHMON_BUFWRITE,	"bufwrite" }, \
-+	{ XFS_HEALTHMON_DIOREAD,	"dioread" }, \
-+	{ XFS_HEALTHMON_DIOWRITE,	"diowrite" }, \
-+	{ XFS_HEALTHMON_DATALOST,	"datalost" }
+-		si->first_folio_idx = xfarray_idx(si->array,
+-				folio_pos(si->folio) + si->array->obj_size - 1);
++		if (si->folio) {
++			si->first_folio_idx = xfarray_idx(si->array,
++					folio_pos(si->folio) + si->array->obj_size - 1);
  
- #define XFS_HEALTHMON_DOMAIN_STRINGS \
- 	{ XFS_HEALTHMON_MOUNT,		"mount" }, \
- 	{ XFS_HEALTHMON_FS,		"fs" }, \
- 	{ XFS_HEALTHMON_AG,		"ag" }, \
- 	{ XFS_HEALTHMON_INODE,		"inode" }, \
--	{ XFS_HEALTHMON_RTGROUP,	"rtgroup" }
-+	{ XFS_HEALTHMON_RTGROUP,	"rtgroup" }, \
-+	{ XFS_HEALTHMON_DATADEV,	"datadev" }, \
-+	{ XFS_HEALTHMON_RTDEV,		"rtdev" }, \
-+	{ XFS_HEALTHMON_LOGDEV,		"logdev" }, \
-+	{ XFS_HEALTHMON_FILERANGE,	"filerange" }
+-		next_pos = folio_next_pos(si->folio);
+-		si->last_folio_idx = xfarray_idx(si->array, next_pos - 1);
+-		if (xfarray_pos(si->array, si->last_folio_idx + 1) > next_pos)
+-			si->last_folio_idx--;
++			next_pos = folio_next_pos(si->folio);
++			si->last_folio_idx = xfarray_idx(si->array, next_pos - 1);
++			if (xfarray_pos(si->array, si->last_folio_idx + 1) > next_pos)
++				si->last_folio_idx--;
  
-+TRACE_DEFINE_ENUM(XFS_HEALTHMON_RUNNING);
- TRACE_DEFINE_ENUM(XFS_HEALTHMON_LOST);
--TRACE_DEFINE_ENUM(XFS_HEALTHMON_SHUTDOWN);
- TRACE_DEFINE_ENUM(XFS_HEALTHMON_UNMOUNT);
-+TRACE_DEFINE_ENUM(XFS_HEALTHMON_SHUTDOWN);
- TRACE_DEFINE_ENUM(XFS_HEALTHMON_SICK);
- TRACE_DEFINE_ENUM(XFS_HEALTHMON_CORRUPT);
- TRACE_DEFINE_ENUM(XFS_HEALTHMON_HEALTHY);
-+TRACE_DEFINE_ENUM(XFS_HEALTHMON_MEDIA_ERROR);
-+TRACE_DEFINE_ENUM(XFS_HEALTHMON_BUFREAD);
-+TRACE_DEFINE_ENUM(XFS_HEALTHMON_BUFWRITE);
-+TRACE_DEFINE_ENUM(XFS_HEALTHMON_DIOREAD);
-+TRACE_DEFINE_ENUM(XFS_HEALTHMON_DIOWRITE);
-+TRACE_DEFINE_ENUM(XFS_HEALTHMON_DATALOST);
+-		trace_xfarray_sort_scan(si, idx);
++			trace_xfarray_sort_scan(si, idx);
++		}
+ 	}
  
- TRACE_DEFINE_ENUM(XFS_HEALTHMON_MOUNT);
- TRACE_DEFINE_ENUM(XFS_HEALTHMON_FS);
- TRACE_DEFINE_ENUM(XFS_HEALTHMON_AG);
- TRACE_DEFINE_ENUM(XFS_HEALTHMON_INODE);
- TRACE_DEFINE_ENUM(XFS_HEALTHMON_RTGROUP);
-+TRACE_DEFINE_ENUM(XFS_HEALTHMON_DATADEV);
-+TRACE_DEFINE_ENUM(XFS_HEALTHMON_RTDEV);
-+TRACE_DEFINE_ENUM(XFS_HEALTHMON_LOGDEV);
-+TRACE_DEFINE_ENUM(XFS_HEALTHMON_FILERANGE);
+ 	/*
+ 	 * If this folio still doesn't cover the desired element, it must cross
+ 	 * a folio boundary.  Read into the scratchpad and we're done.
+ 	 */
+-	if (idx < si->first_folio_idx || idx > si->last_folio_idx) {
++	if (!si->folio || idx < si->first_folio_idx || idx > si->last_folio_idx) {
+ 		void		*temp = xfarray_scratch(si->array);
  
- DECLARE_EVENT_CLASS(xfs_healthmon_event_class,
- 	TP_PROTO(const struct xfs_healthmon *hm,
+ 		error = xfile_load(si->array->xfile, temp, si->array->obj_size,
 
