@@ -1,39 +1,48 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A0223F9F2D;
-	Mon, 21 Sep 2026 22:19:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4086B51EDF2;
+	Mon, 21 Sep 2026 22:29:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790029157; cv=none; b=SzxvDkgjgSNDpo4ZEtTTJGZavkxly4LqZQSOL2gVMWhyotMtXQMDuoUv4RiuYuS3J8HBZn41TN9EufP+SuLQRdmp+ZzNbsxjPyLCHXY0PCdYo9M3dr7bdne92MfeO0ojGtBgjXE5BQM7sF2C6XzYvUBv+oWueA1hvxHm4uH0Yzo=
+	t=1790029798; cv=none; b=Bl/XKNdUf1pOjMxxlRiYK44Z+0nmF2GYSyCRJM/WD9SZYlb/ZdlRrPZHw2mswE+uUK8p4kwSWhSVTsNNRlJ9E3qzhvyN3AjIGGP40aRtQO+df5vxRwskRnE7ROICM/vxEmQBphsMiChGERp85yiCAhhnQA8hUSdySlIuBnqbvNs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790029157; c=relaxed/simple;
-	bh=b5ZksdflgV+zrh3EiCXBE3eTHwA25Y0hkMKbpDgQUKY=;
+	s=arc-20240116; t=1790029798; c=relaxed/simple;
+	bh=sikBXLJqrajH4ARJP2eBg1MY614d9GTDi9k0/acvbCc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LEdL13SdWcn+wkHtWIuy6uJFnEM6Dd7wh9hSiue3lqa3hUlKFvh+ZqjmicXa0lAmIiW5xFG59hbV4rja+A1k3kOHwDNUCoEgN7QjEK4XDtAiw5DfO1+NLZMyUGSHkDJz/ayq5ZX7KaYXo/jYeODWZeG6WlrV8PwjtoHSaFyHWuY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gA5nmgzY; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=boj7pHVkIGZMu+JPPawZfYOOpIIhc6mjCZnK9CsLqxxXstjy78gKwBO8zwXsDQyAFvli5y/qChILl7AjaYYLK3yrn8YfD1axLwuBAOAFfsnYq8U7ouOqsLdOLgl9anyAQUL5xNXsZG+L/QUq6Jd3WPoNIZOiuUuy1JiKStht0xw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=I60jD1+7; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gA5nmgzY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A752F1F000FF;
-	Mon, 21 Sep 2026 22:19:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="I60jD1+7"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 314241F000FF;
+	Mon, 21 Sep 2026 22:29:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790029155;
-	bh=s+bV+8HfdSyVZngufDuRq5szpgPIBAkhen9uqlwvL+Y=;
+	s=k20260515; t=1790029794;
+	bh=bgL3iJjMR1yuBTVdRdC4x6uFfEX57QK0NKdzj3j7tlU=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=gA5nmgzYE1JTwLF2zOCf6GZeJGthkZibJKOBqN7wItiAph+Lz1hBxbVSVC7VxUe2h
-	 /X7K2z8XY+A3EcQrBXxTIOxD5IRPhpor2ElLR9GCQgty6BTZni0i/O4+XoR8hT63pV
-	 Zb/2zUWZBAkSTPrPE7gGlT/VG4Ezbq3+cQABQgRoXyLDBF/uWmj5YQigwEHCcW+BcV
-	 Av9ukr4GMz/M04fXxap3YOUyYpLwsdkr9MoIiRJDvyC4pDz6cRTLzr0WmWSDwdudtc
-	 KSds+5TlzUIRbpJTcD7G0qzP87Hmc2onaQ939T7U1AEsnL17uQnUvZ1ELI5gNo5CRN
-	 9vkBDFYrrhe7Q==
-Date: Tue, 22 Sep 2026 08:19:07 +1000
-From: Dave Chinner <dgc@kernel.org>
-To: Jeffin Philip <jeffinphilip14@gmail.com>
-Cc: cem@kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [RFC PATCH 0/2] xfs: change xfs log item refcount design
-Message-ID: <arGtW9KfyvFbcz60@dread>
-References: <aqsYHjEp-7TM1h8F@dread>
- <20260917035104.10762-1-jeffinphilip14@gmail.com>
+	b=I60jD1+7Ttgmd70eoW6kmvHBwCoxb/xNjfW4Bsrxlwu3HfrcqenNgDZPDuEN9DGOF
+	 Y/l6ARxiaanajGVC2p+WLHxRytWFOA4/SzslmLipeYdXl5CZawOSZXhPAdTgfocJ04
+	 HQ/QfOleXAtW/KSibE7ET0y3kZTmeFIgcaOadItH0gaedJM+9aRDm/+RR+MhQ1aH7t
+	 YrjDo1aA5SGXuSDjZooGl72rTc1HaGiJYQmjc12oU1XPAlih1ZJzy3l54huHvFCIte
+	 NwWh5EShOvFg2270kl4vZSZGAtdJ2zyEOTXFMBNIo/F1fxXuj0Tlb3+DOzHS1vnzyr
+	 wO8BR5g7/D69g==
+Date: Mon, 21 Sep 2026 15:29:53 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Andrea Parri <parri.andrea@gmail.com>
+Cc: Christian Brauner <brauner@kernel.org>,
+	Joanne Koong <joannelkoong@gmail.com>,
+	Brian Foster <bfoster@redhat.com>,
+	Damien Le Moal <dlemoal@kernel.org>, Hannes Reinecke <hare@suse.de>,
+	Daniel Gomez <da.gomez@samsung.com>,
+	Pankaj Raghav <p.raghav@samsung.com>,
+	Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: Re: [PATCH 1/3] iomap: don't resubmit an ioend after
+ ->writeback_submit() failed
+Message-ID: <20260921222953.GM6283@frogsfrogsfrogs>
+References: <20260921083133.2960-1-parri.andrea@gmail.com>
+ <20260921083133.2960-2-parri.andrea@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,77 +51,64 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260917035104.10762-1-jeffinphilip14@gmail.com>
+In-Reply-To: <20260921083133.2960-2-parri.andrea@gmail.com>
 
-On Thu, Sep 17, 2026 at 09:21:04AM +0530, Jeffin Philip wrote:
-> On Wed, September 16 2026 at 10:28 PM, Dave Chinner wrote:
-> >On Fri, Sep 11, 2026 at 03:55:00PM +0530, Jeffin Philip wrote:
-> >> This patch series is the first of the series where we attempt to convert
-> >> the XFS Log item reference counting design to be more generic
-> >> compared to the previous type-specific state to fix the "zero
-> >> refcount but in AIL means alive" state. The patch series follows
-> >> instructions outlined here[1].
-> >> 
-> >> Obviously, the wrappers will be integrated in type-specific functions
-> >> later on.
-> >> 
-> >> No behavioral change as of yet.
-> >> 
-> >> [1]: https://lore.kernel.org/all/aqI6v-_dc2DDSbgB@dread/
-> >> 
-> >> Jeffin Philip (2):
-> >>   xfs: add lockref and generic helpers for refcounting
-> >>   xfs: change xfs_trans_ail_delete return type to bool
-> >
-> >It's great to see you starting on this, but there's not much point
-> >in just posting wrappers that aren't used by anything. Until there
-> >is code that uses them, we can't really say anythign useful about
-> >the wrappers. e.g.
-> >
-> >Is the API optimal? Don't know.
-> >
-> >Is open coding the init correct for the generic case or is that just
-> >projecting an antipattern from the BLI reference counting? Don't
-> >know.
-> >
-> >And so on. Hence it's best to present the wrappers with the code
-> >that then uses them so we have the necessary context with which to
-> >review them.
+On Mon, Sep 21, 2026 at 10:31:31AM +0200, Andrea Parri wrote:
+> iomap_add_to_ioend() submits the pending ioend through
+> ->writeback_submit() before allocating a new one for the current range.
+> When the submission fails the helper completes the ioend with an error,
+> but iomap_add_to_ioend() returns the error without clearing
+> wpc->wb_ctx.  iomap_writepages() then submits whatever wpc->wb_ctx
+> points to, so the already completed ioend is submitted a second time.
 > 
-> The BLI changes have almost been finished and I am testing them. The
-> reason I did not post it is because I wanted it to face more proper
-> review and that is likely to be stricter when the patches are
-> few. I could still write the entire implementation and post it as a
-> giant patch series provided it does not fatigue the reviewers from
-> reviewing several tens of patches at a time. Until then, I feel like
-> it mould be much better to post 1 implementation step at a time in 1
-> patchset. If you prefer otherwise, that can be done too.
+> For XFS the second bio_endio() lands in xfs_end_bio(), which
+> list_add_tail()s the already linked ioend into ip->i_ioend_list.  This
+> corrupts the list and leaves a use-after-free/double-free window against
+> the ioend completion worker.
+> 
+> Clear wpc->wb_ctx when ->writeback_submit() fails.  The old
+> iomap_submit_ioend() cleared the context unconditionally; that clear was
+> lost when submission moved to iomap_ioend_writeback_submit().
+> 
+> Fixes: f4fa7981fa26c ("iomap: hide ioends from the generic writeback code")
+> Cc: stable@vger.kernel.org
 
-I'm not sure it wise to only convert a single item type at a time,
-as there are intricacies in different log item life cycles that may
-expose difficult to solve issues further down the track. If we've
-already converted and merged some of the code before we find that it
-needs a fundamental rework, then that's worse that asking reviewers
-to review a large patchset.
+Cc: <stable@vger.kernel.org> # v6.17
 
-e.g. the AIL needs to take reference counts and they need to be
-factored into log item life cycles, especially the shutdown
-processing of items in the AIL.  Right now the AIL is not
-responsible for removing items on shutdown because it does not hold
-a reference to them. Changing the AIL to own a reference to the log
-item means that there is a good chance that the shutdown behaviour
-for items in the AIL may need to change...
+> Assisted-by: LLM
+> Signed-off-by: Andrea Parri <parri.andrea@gmail.com>
+> ---
+>  fs/iomap/ioend.c | 10 +++++++++-
+>  1 file changed, 9 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/iomap/ioend.c b/fs/iomap/ioend.c
+> index 7bbbb417f9152..bb8575768d888 100644
+> --- a/fs/iomap/ioend.c
+> +++ b/fs/iomap/ioend.c
+> @@ -246,8 +246,16 @@ ssize_t iomap_add_to_ioend(struct iomap_writepage_ctx *wpc, struct folio *folio,
+>  new_ioend:
+>  		if (ioend) {
+>  			error = wpc->ops->writeback_submit(wpc, 0);
+> -			if (error)
+> +			if (error) {
+> +				/*
+> +				 * ->writeback_submit() completed the ioend with
+> +				 * an error, so drop the stale context.
+> +				 * iomap_writepages() would otherwise submit it a
+> +				 * second time.
+> +				 */
+> +				wpc->wb_ctx = NULL;
 
-So I'd be inclined to ensure at least have one of each group of item
-types is fully converted (e.g. buf, inode, dquot, EFI, quotaoff) so
-that most of the crouching tigers in the design have been flushed
-out before asing for code review.
+Do you need to do the same thing for the ->writeback_submit call in
+iomap_writepages?
 
-You can also push it to a git repo somewhere so people whoa re
-interested can look at it and give early feedback before you are
-ready to post it to the list for review...
+--D
 
--Dave.
--- 
-Dave Chinner
-dgc@kernel.org
+>  				return error;
+> +			}
+>  		}
+>  		wpc->wb_ctx = ioend = iomap_alloc_ioend(wpc, pos, ioend_flags);
+>  	}
+> -- 
+> 2.53.0
+> 
