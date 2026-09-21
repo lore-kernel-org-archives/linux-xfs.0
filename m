@@ -1,36 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F34035E94F;
-	Mon, 21 Sep 2026 06:13:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C72AF35AC1E
+	for <linux-xfs@vger.kernel.org>; Mon, 21 Sep 2026 06:13:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789971232; cv=none; b=rpVTYEM0RO2Sa9zs1QJ0xvo7hdSGQGRaNaK+cjmorH9QT5Rr8ARZQe+QBHU158K86wmhtHlSS1Xm+HOnMRK6rqNPiW1ea3nAzXDej1YGW2gF/gFLz57hi+jn+t3su54i0PK5kIiDqzZPqhy0SuYvMtKy4vH330qksVj7ENmjhnI=
+	t=1789971237; cv=none; b=f8z4p5Y3OJwLu+Lpy70v8Don/JfKCTu3Lrt6uusrbQICBoJ3GA9i7P+BsAdItI2z+r74qrM8s4O3/q/U4oadm8tuItD46zf22yaAjKZ6QZqMykDvJbj/61U8+wS6zm6J85W5Cmp2nfF63rRCY7c+Sy4TPZtlFofli5o3qcZiTkQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789971232; c=relaxed/simple;
-	bh=O7wiP4RoYNefZXtG2d+PyVcnq4CLXr/mfK4r/ArfLeE=;
-	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=ay90LxX8nV0CMYB6XRgqYG3NOtb4ICpgKuMrcGmSjXkDj8dy2r0Z1FgatGqITuIu3n3zwKMTbUffepzLkf5vQkzTiCwKPHbsmvQlHNyuJqXjqVCZwfN9UaFmyhpK4DqxrHIYnILfuyERy0bCjau4DA8qnEaA0s9qqRk7k6+XX1A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mJorVSS0; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789971237; c=relaxed/simple;
+	bh=zHTnO7kWHIncr+Ra/2FKPiYnHrp+30n96uQ/Rs0rvWw=;
+	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=mwjq5DWm9t3rLiYIclgCkKcVZJVhNWOlPLfpfITwwMireUOGDQR4lqUWJErlsc4j34C8kAo16n5aosNh6fOBp4AiV3n7ZGYt3gdHfTN9IzBGuplFD2tiBPBu688cqGxSUSWZYLP1SQyDBeTDUNKQemTvyW9hOCg58VzPSPgxg5w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KuLhqaQA; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mJorVSS0"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 0458B1F000FF;
-	Mon, 21 Sep 2026 06:13:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KuLhqaQA"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 9E4A61F000FF;
+	Mon, 21 Sep 2026 06:13:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789971231;
-	bh=bnHVGm1Oyh/jGCDxOySP77NwK38sjXrSjs5MWPA98N8=;
-	h=Date:Subject:From:To:Cc;
-	b=mJorVSS0m+ZJVVFWCmEepnGszTmC3oxt7xozTrRU1fqfMfy5McL0t38t43jrbsDGr
-	 npE4186AyYZojU+3Rbv0wjsdXBzU8iapahCG2BTzh0laBRm5UDO8mSmWJ0UvfaPH4a
-	 h2RrXD6gn6QFLa+DOQJ+z3XSOhlNlEj2zYL2NI+43QZdHZ0LJ5ckOVA5Cxymr61i9w
-	 51g+NOsrej+VRAhiyVNsKLM7eqE0gf3sCE3V/ysEzrtVytkDTE4aKydCMPdIiS5iI3
-	 HxOeaLykt6r2nZm0AZQDCGBnHKEpgDb69f0er8bCWLTdZo3RYBTaLcHPRGbIBfTHmg
-	 9kNiybmbM+Twg==
-Date: Sun, 20 Sep 2026 23:13:50 -0700
-Subject: [PATCHSET] xfs: LLM-inspired bug fixes, part 16
+	s=k20260515; t=1789971236;
+	bh=/26mo1Gb3vRIiaJeWUlDfoK2Ez3uPxo0qLjNhCV8E4M=;
+	h=Date:Subject:From:To:Cc:In-Reply-To:References;
+	b=KuLhqaQAsOE9A5x4nGkyQk1m/6grImhqwLhwKoKx54rSMrGfaq8+fAukhUKrpn1+C
+	 3JWVdqBnR09H94TdE3RxnANCJqRNwsKWO6HtSaGG46rEGgUmKT9SOEJIqN0MXuyLaS
+	 7Rh7XwQOz+I5tuzdVAbfy1ae74+ET4Wgh0qVGKB9ULy8CDQ2LFh03oi2hXgm2/1ccY
+	 P6kaIOV5hH6JsYdhzS3qE6XcYsBU2H72+KNUC7yichl3b5AW9jRk+Ot0rjYPJU+2sX
+	 fX9umH/fLa2r4AMRjW0ICQ51kh6KOdcTrpuvOWGo2UUnjKNoK6K457BK7smbXex/oU
+	 /nl3pUPhMF7QA==
+Date: Sun, 20 Sep 2026 23:13:56 -0700
+Subject: [PATCH 1/3] xfs_scrub: terminate systemd services if the sysadmin
+ unmounts
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: cem@kernel.org, djwong@kernel.org
-Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <178996120463.181988.9152653965555322220.stgit@frogsfrogsfrogs>
+To: aalbersh@kernel.org, djwong@kernel.org
+Cc: linux-xfs@vger.kernel.org, linux-xfs@vger.kernel.org
+Message-ID: <178996057657.169604.179721236454402577.stgit@frogsfrogsfrogs>
+In-Reply-To: <178996057628.169604.16261952311237371422.stgit@frogsfrogsfrogs>
+References: <178996057628.169604.16261952311237371422.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -40,60 +44,59 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-Here's a sixteenth batch of xfs fixes resulting from a LLaMma.  Mwa mwa
-mwa...
+We should make sure that any systemd services started on behalf of an
+XFS mount are torn down when the mount goes away.  On a modern system,
+calling umount(8) while there's an xfs_scrub service running on that
+mount point will successfully remove the mount from the caller's mount
+namespace, but the filesystem remains mounted in the service's private
+mount namespace, with the effect that the filesystem stays mounted.
+This is probably not what the user wants.
 
-If you're going to start using this code, I strongly recommend pulling
-from my git trees, which are linked below.
+Per cks' blog, the way to fix this is through a BindTo= clause.
 
-With a bit of luck, this should all go splendidly.
-Comments and questions are, as always, welcome.
+Note: This isn't needed for xfs_healer because it only maintains a soft
+reference to the mounted filesystem and can reconnect to a filesystem if
+its mounts move.
 
---D
-
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=llm-fixes-16
+Link: https://utcc.utoronto.ca/~cks/space/blog/linux/SystemdStopOnFSUnmount
+Cc: <linux-xfs@vger.kernel.org> # v6.10.0
+Fixes: 0109639eede4dc ("xfs_scrub: tighten up the security on the background systemd service")
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+Reviewed-by: Andrey Albershteyn <aalbersh@kernel.org>
 ---
-Commits in this patchset:
- * xfs: fix missing xfs_qm_adjust_dqlimits call in quotacheck repair
- * xfs: online quotacheck must dirty dquot if enforcement adjustments needed
- * xfs: fix buffer overruns in xfs_ioc_attr_list
- * xfs: clean up after failed metafile relinking
- * xfs: pass xfs_trans_resv object to reservation calculation helpers
- * xfs: fix xfs_rename_space_res for non-pptr filesystems
- * xfs: fix ondisk symlink target validation in xrep_dinode_check_dfork
- * xfs: fix maximum atomic cow length computation
- * xfs: add missing healthmon trace strings
- * xfarray: don't crash when sorting if array element crosses a folio
- * xfarray: don't allow users to unset in the middle of an array
- * xfs: don't allow sorting sparse arrays
- * xfs: simply the free space btree repair code
- * xfarray: warn against sorting arrays with identical elements
----
- fs/xfs/libxfs/xfs_metadir.h                        |    5 -
- fs/xfs/libxfs/xfs_symlink_remote.h                 |    2 
- fs/xfs/scrub/xfarray.h                             |    9 +
- fs/xfs/xfs_dquot.h                                 |    3 
- fs/xfs/xfs_trace.h                                 |   28 ++++
- .../filesystems/xfs/xfs-online-fsck-design.rst     |   13 --
- fs/xfs/libxfs/xfs_dquot_buf.c                      |   13 --
- fs/xfs/libxfs/xfs_inode_fork.c                     |    4 -
- fs/xfs/libxfs/xfs_metadir.c                        |   30 ++++-
- fs/xfs/libxfs/xfs_symlink_remote.c                 |    8 +
- fs/xfs/libxfs/xfs_trans_resv.c                     |   38 +++---
- fs/xfs/libxfs/xfs_trans_space.c                    |    6 -
- fs/xfs/scrub/alloc_repair.c                        |   15 +-
- fs/xfs/scrub/inode_repair.c                        |   26 ++++
- fs/xfs/scrub/quota_repair.c                        |    5 -
- fs/xfs/scrub/quotacheck_repair.c                   |   54 ++++++++
- fs/xfs/scrub/xfarray.c                             |  133 ++++++--------------
- fs/xfs/xfs_dquot.c                                 |   27 +++-
- fs/xfs/xfs_handle.c                                |    2 
- fs/xfs/xfs_qm.c                                    |    6 -
- fs/xfs/xfs_qm_syscalls.c                           |   17 +--
- fs/xfs/xfs_reflink.c                               |    7 +
- fs/xfs/xfs_trans_dquot.c                           |    6 -
- 23 files changed, 252 insertions(+), 205 deletions(-)
+ scrub/xfs_scrub@.service.in       |    3 +++
+ scrub/xfs_scrub_media@.service.in |    3 +++
+ 2 files changed, 6 insertions(+)
+
+
+diff --git a/scrub/xfs_scrub@.service.in b/scrub/xfs_scrub@.service.in
+index fb38319e95c148..3e4e79fe6a1913 100644
+--- a/scrub/xfs_scrub@.service.in
++++ b/scrub/xfs_scrub@.service.in
+@@ -19,6 +19,9 @@ ConditionCapability=CAP_SYS_RAWIO
+ ConditionPathIsMountPoint=%f
+ RequiresMountsFor=%f
+ 
++# Terminate service if someone unmounts the filesystem
++BindsTo=%i.mount
++
+ [Service]
+ Type=oneshot
+ Environment=SERVICE_MODE=1
+diff --git a/scrub/xfs_scrub_media@.service.in b/scrub/xfs_scrub_media@.service.in
+index 98cd1ac44fbebd..954b8e92a1ce53 100644
+--- a/scrub/xfs_scrub_media@.service.in
++++ b/scrub/xfs_scrub_media@.service.in
+@@ -19,6 +19,9 @@ ConditionCapability=CAP_SYS_RAWIO
+ ConditionPathIsMountPoint=%f
+ RequiresMountsFor=%f
+ 
++# Terminate service if someone unmounts the filesystem
++BindsTo=%i.mount
++
+ [Service]
+ Type=oneshot
+ Environment=SERVICE_MODE=1
 
