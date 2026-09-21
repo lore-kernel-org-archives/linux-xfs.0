@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4086B51EDF2;
-	Mon, 21 Sep 2026 22:29:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0AA17531AF7;
+	Mon, 21 Sep 2026 22:31:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790029798; cv=none; b=Bl/XKNdUf1pOjMxxlRiYK44Z+0nmF2GYSyCRJM/WD9SZYlb/ZdlRrPZHw2mswE+uUK8p4kwSWhSVTsNNRlJ9E3qzhvyN3AjIGGP40aRtQO+df5vxRwskRnE7ROICM/vxEmQBphsMiChGERp85yiCAhhnQA8hUSdySlIuBnqbvNs=
+	t=1790029917; cv=none; b=EfQSAlBJ9uXuajn5vJn39OMl++HfsKqQnWZozxJJxt/tr3xYb1k+CVRbIwe/TdIOQgmJcl+K8OI8O52EdBOFEx0202fprS07W7oLC7zqWO7EYZ2DmoTthSsKCLmbbF/PlGX+YxS9o1xMNePT8aLB+wjYvdw9jHbwsEXklCb00cw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790029798; c=relaxed/simple;
-	bh=sikBXLJqrajH4ARJP2eBg1MY614d9GTDi9k0/acvbCc=;
+	s=arc-20240116; t=1790029917; c=relaxed/simple;
+	bh=tsCQ+zpg4F2zagM6GtrWpM2tilqg0MFU1ly23obauDo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=boj7pHVkIGZMu+JPPawZfYOOpIIhc6mjCZnK9CsLqxxXstjy78gKwBO8zwXsDQyAFvli5y/qChILl7AjaYYLK3yrn8YfD1axLwuBAOAFfsnYq8U7ouOqsLdOLgl9anyAQUL5xNXsZG+L/QUq6Jd3WPoNIZOiuUuy1JiKStht0xw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=I60jD1+7; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=kC8meBWBcSl3u8Tz1bU7I4Q1TAsmlCXcb/AdRuydoR1lDghIaWH6E8DruSlQwKgarBIvCGpgipwrX38uB8sS+BA8uwBvQFFyxaSkv/LUjdrO0SCQWWm/RLu/nRXMUYb0Qt2q4W/Cmysr1qwdXDWxnNlOWRrxaiyiW+JB0ik7/3U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a6meAQoI; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="I60jD1+7"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 314241F000FF;
-	Mon, 21 Sep 2026 22:29:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a6meAQoI"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id D32E91F00893;
+	Mon, 21 Sep 2026 22:31:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790029794;
-	bh=bgL3iJjMR1yuBTVdRdC4x6uFfEX57QK0NKdzj3j7tlU=;
+	s=k20260515; t=1790029915;
+	bh=NVTuCHohVhjcoawPJgsIXobAsDLYbxQk7/cBSf6Wn+I=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=I60jD1+7Ttgmd70eoW6kmvHBwCoxb/xNjfW4Bsrxlwu3HfrcqenNgDZPDuEN9DGOF
-	 Y/l6ARxiaanajGVC2p+WLHxRytWFOA4/SzslmLipeYdXl5CZawOSZXhPAdTgfocJ04
-	 HQ/QfOleXAtW/KSibE7ET0y3kZTmeFIgcaOadItH0gaedJM+9aRDm/+RR+MhQ1aH7t
-	 YrjDo1aA5SGXuSDjZooGl72rTc1HaGiJYQmjc12oU1XPAlih1ZJzy3l54huHvFCIte
-	 NwWh5EShOvFg2270kl4vZSZGAtdJ2zyEOTXFMBNIo/F1fxXuj0Tlb3+DOzHS1vnzyr
-	 wO8BR5g7/D69g==
-Date: Mon, 21 Sep 2026 15:29:53 -0700
+	b=a6meAQoIVfs8Hie94ar6l8ckAZuo4gvM0upbRWKOXpNqNfWPlKHyZfV8aYQndbHdQ
+	 Rb19AJif1sruJyJ0327moJbUTHIuxpahgf9TVDPiw/3h97Lw4UM/aLn9WeG/dX2rf6
+	 vbMuByT+vihkyqDf+K/9xwMYK8VjQoFhxKZwTEHYrNgjGYWUNh5qAR1EftaCZDV1C7
+	 oVrqzGugRAgW7GIdXqdpchQviYU+s40nSLT0vnogtY7fdpI1J4M1kOw5M+OPQverWo
+	 NAD4fuxzgP9bVuc4v0CUlhdj9VRUlsx53ob6kQPlx6l+JK1F7zx/bf0de+sBdjWQlj
+	 fSI4wVlIADaEA==
+Date: Mon, 21 Sep 2026 15:31:55 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Andrea Parri <parri.andrea@gmail.com>
 Cc: Christian Brauner <brauner@kernel.org>,
@@ -38,11 +38,11 @@ Cc: Christian Brauner <brauner@kernel.org>,
 	Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Subject: Re: [PATCH 1/3] iomap: don't resubmit an ioend after
- ->writeback_submit() failed
-Message-ID: <20260921222953.GM6283@frogsfrogsfrogs>
+Subject: Re: [PATCH 2/3] iomap: don't lose a fiemap iteration error when
+ emitting the last extent
+Message-ID: <20260921223155.GN6283@frogsfrogsfrogs>
 References: <20260921083133.2960-1-parri.andrea@gmail.com>
- <20260921083133.2960-2-parri.andrea@gmail.com>
+ <20260921083133.2960-3-parri.andrea@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -51,64 +51,67 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260921083133.2960-2-parri.andrea@gmail.com>
+In-Reply-To: <20260921083133.2960-3-parri.andrea@gmail.com>
 
-On Mon, Sep 21, 2026 at 10:31:31AM +0200, Andrea Parri wrote:
-> iomap_add_to_ioend() submits the pending ioend through
-> ->writeback_submit() before allocating a new one for the current range.
-> When the submission fails the helper completes the ioend with an error,
-> but iomap_add_to_ioend() returns the error without clearing
-> wpc->wb_ctx.  iomap_writepages() then submits whatever wpc->wb_ctx
-> points to, so the already completed ioend is submitted a second time.
+On Mon, Sep 21, 2026 at 10:31:32AM +0200, Andrea Parri wrote:
+> iomap_fiemap() emits extents one behind: iomap_fiemap_iter() flushes the
+> previous extent and remembers the current one, and the remembered extent
+> is written with FIEMAP_EXTENT_LAST after the iteration loop.
 > 
-> For XFS the second bio_endio() lands in xfs_end_bio(), which
-> list_add_tail()s the already linked ioend into ip->i_ioend_list.  This
-> corrupts the list and leaves a use-after-free/double-free window against
-> the ioend completion worker.
+> That final flush overwrites ret, so when ->iomap_begin() fails partway
+> through the iteration the error is replaced by the result of
+> iomap_to_fiemap() (zero on success) and iomap_fiemap() returns success
+> with a truncated extent list whose last entry is wrongly marked as the
+> last extent in the file.  The pre-iomap_iter code returned the error
+> from inside the loop, before flushing the pending extent.
 > 
-> Clear wpc->wb_ctx when ->writeback_submit() fails.  The old
-> iomap_submit_ioend() cleared the context unconditionally; that clear was
-> lost when submission moved to iomap_ioend_writeback_submit().
+> Check for the iteration error before flushing the pending extent, so
+> that real errors are propagated and only a successful iteration emits
+> the final FIEMAP_EXTENT_LAST extent.  -ENOENT (no mapping) is still not
+> an error, and the pending extent is still emitted in that case.
 > 
-> Fixes: f4fa7981fa26c ("iomap: hide ioends from the generic writeback code")
+> Fixes: 7892386d35715 ("iomap: switch iomap_fiemap to use iomap_iter")
 > Cc: stable@vger.kernel.org
 
-Cc: <stable@vger.kernel.org> # v6.17
+Oooh, an oldie!
+
+Cc: <stable@vger.kernel.org> # v5.15
 
 > Assisted-by: LLM
 > Signed-off-by: Andrea Parri <parri.andrea@gmail.com>
-> ---
->  fs/iomap/ioend.c | 10 +++++++++-
->  1 file changed, 9 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/iomap/ioend.c b/fs/iomap/ioend.c
-> index 7bbbb417f9152..bb8575768d888 100644
-> --- a/fs/iomap/ioend.c
-> +++ b/fs/iomap/ioend.c
-> @@ -246,8 +246,16 @@ ssize_t iomap_add_to_ioend(struct iomap_writepage_ctx *wpc, struct folio *folio,
->  new_ioend:
->  		if (ioend) {
->  			error = wpc->ops->writeback_submit(wpc, 0);
-> -			if (error)
-> +			if (error) {
-> +				/*
-> +				 * ->writeback_submit() completed the ioend with
-> +				 * an error, so drop the stale context.
-> +				 * iomap_writepages() would otherwise submit it a
-> +				 * second time.
-> +				 */
-> +				wpc->wb_ctx = NULL;
 
-Do you need to do the same thing for the ->writeback_submit call in
-iomap_writepages?
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
->  				return error;
-> +			}
->  		}
->  		wpc->wb_ctx = ioend = iomap_alloc_ioend(wpc, pos, ioend_flags);
+> ---
+>  fs/iomap/fiemap.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/fs/iomap/fiemap.c b/fs/iomap/fiemap.c
+> index d11dadff82865..54b824b7edb5c 100644
+> --- a/fs/iomap/fiemap.c
+> +++ b/fs/iomap/fiemap.c
+> @@ -76,15 +76,15 @@ int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
+>  	while ((ret = iomap_iter(&iter, ops)) > 0)
+>  		iter.status = iomap_fiemap_iter(&iter, fi, &prev);
+>  
+> +	/* inode with no (attribute) mapping will give ENOENT */
+> +	if (ret < 0 && ret != -ENOENT)
+> +		return ret;
+> +
+>  	if (prev.type != IOMAP_HOLE) {
+>  		ret = iomap_to_fiemap(fi, &prev, FIEMAP_EXTENT_LAST);
+>  		if (ret < 0)
+>  			return ret;
 >  	}
+> -
+> -	/* inode with no (attribute) mapping will give ENOENT */
+> -	if (ret < 0 && ret != -ENOENT)
+> -		return ret;
+>  	return 0;
+>  }
+>  EXPORT_SYMBOL_GPL(iomap_fiemap);
 > -- 
 > 2.53.0
 > 
