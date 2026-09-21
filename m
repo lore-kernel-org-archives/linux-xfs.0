@@ -1,125 +1,115 @@
-Received: from mail-qv2-f12.google.com (mail-qv2-f12.google.com [74.125.230.140])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from fhigh-a2-smtp.messagingengine.com (fhigh-a2-smtp.messagingengine.com [103.168.172.153])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FE724AE8A8
-	for <linux-xfs@vger.kernel.org>; Mon, 21 Sep 2026 15:58:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.230.140
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBF3B4D7D2E
+	for <linux-xfs@vger.kernel.org>; Mon, 21 Sep 2026 17:57:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.153
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790006337; cv=none; b=CYj6bTMhGQ2X3vqpIiuAqJnGMe/A1p9ztggRtkpDkCsGikqBzAhNIhwTt9dW4ydM5W94L5YRv7xqv5hed0zjw+Sy9ggVBWOvKJcIqz8yZT75yP7TQ0HfpDrDBIvuM5hFLiXoQrAe445zbzoD537q7qYgB9ePnGcOUQntXZihgFs=
+	t=1790013422; cv=none; b=k3Qr3IUSkGmveDOwEo5o4g7oUVg43XBk1vJslfyXW0rKAIm8jqzMKX0cuCVhd3rj1zuWi/5Esm8Sjmekdmnbgo0C6yzlosQKr6fsOR1faufBR/PyKNZcTPjO7f7ACioPoayql3czfKv+836bW45we4HCd+RV3PXNuTZpavzA7IA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790006337; c=relaxed/simple;
-	bh=OLO+jzXikhFs7IArv/n/us8KnV/xU40MQ5N+CqeNGtA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jumLikm+xvoyV1V77D3qivcs01XXWlqD6F5+HUn2sw1VMkiM/CY4zvnlFGvmyPw9aubFwbpCu6IHTGgApOh3McnSooWfIi7hbGK3NgNTjQYPwYF53tdfj2jjhwgp+Gr9RYdb379JPfNlW1Hdtl05JD3TD8uOPGWwDl1wi099M58=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org; spf=pass smtp.mailfrom=cmpxchg.org; dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b=ibkb26Pw; arc=none smtp.client-ip=74.125.230.140
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmpxchg.org
+	s=arc-20240116; t=1790013422; c=relaxed/simple;
+	bh=5apKNpX+CcR0cAYrnlw+BTO7+52Mt1q1/iGhDHZEJ6o=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=cnTL5dcd1ZCqaVW+WuJ0cqLI3usw2ZKPvTcJpq7Qfblpx/qn6vTa2eh9BDxIfKKrjHQNk3kwUI0w/mhT92kdEjzaYD6rHjXRmfLEc3F119HQgmzPx1V1uaa0uRjNF0couWezCCjkIDGHDbaDf/Ntosq5Zl8Dr65wy+RVU+nseho=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net; spf=pass smtp.mailfrom=sandeen.net; dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b=T2W5YJMW; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=u+I9cyoi; arc=none smtp.client-ip=103.168.172.153
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandeen.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b="ibkb26Pw"
-Received: by mail-qv2-f12.google.com with SMTP id 6a1803df08f44-910531ea7feso30651286d6.0
-        for <linux-xfs@vger.kernel.org>; Mon, 21 Sep 2026 08:58:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg.org; s=google; t=1790006334; x=1790611134; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=YMayVPzqy74wYsK2+s0iOp7Kd4xLwxOjegiyzaJMk4o=;
-        b=ibkb26PwKeFh8h3IDEl552m7Km68fRBAixjECbFf2TEb7MPOhkmgX6cgYFnZI3DlQv
-         99T3tzsPHJf/3lmRDRp3s4m6GA+SU0EwWOmoFTmvz/nyxHQjCDBf0dp23N6bdYsqLqJH
-         c+E27S/+C7pJDAtWolMOufPFt3uKNuzqHeU3Ymlv1RUDcWRYK6/CIcM0cabhQbVnfu4d
-         Q8bz3C6krLgVpU8fl+9aaQYDgP7gUf2S1alLVk8JPp9DEp7cRO7vlEpDv3GPMmaocugo
-         qMwJJOsnK87RYmbi0M34KuAJ1WpR1G9HGWh8MuPMTCuo51e7M6PJ6DjdrQ1sC4AF0d4U
-         l18A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790006334; x=1790611134;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=YMayVPzqy74wYsK2+s0iOp7Kd4xLwxOjegiyzaJMk4o=;
-        b=nYfForJ9nE0g3tL+a5s89Bq3jbKcG0mpfBNwhUHdDiMN6+gE7SZO2QLfQurj1yYqmo
-         sRekgCBA1zSeWaFn2awxMS06INo8iZVuhokQng5Qz2fNN4VNZ8WPvZEgWwbbM3akoUhS
-         UcLo910diNJez55/5IVBJxSz7WrL9rX2hYcyVIvlQ2THim2lQt5cahVyHIYImRTH+eYG
-         qCOWjrvAXh8ybU7pLJuEMRyWGvnVBbl1RNrs2SGrNNGlQE9sNMD12Tm5UTolqTcg1/ez
-         dZqZIdVJhaj5On+n2Y3ppfVV9Pn/uASn8zcBIOHaiBSanMqS0xXPJfiK0SgWpIrKkXlO
-         2tOw==
-X-Forwarded-Encrypted: i=1; AKwUvBxxM65weYHpY8TNTCGFlCzIBtdC5SYFoUsfyVXrq8dja+dL1ug24snGDkQHQuB/ElQWj7wUDNY7UAg=@vger.kernel.org
-X-Gm-Message-State: AFuF++lUekrFjcSMtBVytRgHEJkQdf8HElhyiDsqYtHS+6nxQ5PcIrPP
-	NlXTeT/Qqcb98GtSeHCwdKJFerD3Wd4bw01bQNSCTHvlvomWoEiknEK+OnWGc9Sngms=
-X-Gm-Gg: AYBFou3bwtGPDRIrh1wMtlhe1RgcLUeU7WRRFEZMm1tc0pjRDv5z3SnrDWxDCxJTel8
-	t4dQgU7p97DUMInzZWTtpm424Z1kaKKHMyyP4DeFEtNziZYDeuyl4RlWcdy5GoUVz/0OP8U0CL9
-	xJceGZOqak7+f8fm6KeRkIiaA++rSuthZBToE2EueYBLKWkAUVBTWX0cs/UCcaDL0V1u9wO5WVQ
-	/WotndAfxWPbcgKipfwOCtVrItmW5XEvBj+Yv3aK8KF7f1W9VlHh9MiE3kV90yYrJ7+4geYBCwe
-	upZlyNHa9xZtpj3gRQ83o41lhGM1Jiu7FP2cGsiqmtGnvTQd9ekgll+Fc8+8NtkPhZHIUYDMFL0
-	/f4pdVDd4rlZ8WEuEQCgiW5dJnpBupZR3DZKNmFxGqczS9eDwHvjkpVzcfKirI1TD68aRvmnaQe
-	v7MV4g1ZNOrwPYwhpIxAYs5RDo4/CKeAMCnrwKLuigseaHeuWDatpYgm7MJQSKlldWE5TabgWQz
-	jM5N+o=
-X-Received: by 2002:a05:6214:27ee:b0:912:6067:f517 with SMTP id 6a1803df08f44-913fc979c79mr11430666d6.46.1790006333775;
-        Mon, 21 Sep 2026 08:58:53 -0700 (PDT)
-Received: from localhost ([2603:7001:f100:500:365a:60ff:fe62:ff29])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-91260a86f62sm70283746d6.33.2026.09.21.08.58.52
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 21 Sep 2026 08:58:53 -0700 (PDT)
-Date: Mon, 21 Sep 2026 11:58:52 -0400
-From: Johannes Weiner <hannes@cmpxchg.org>
-To: Matthew Wilcox <willy@infradead.org>
-Cc: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>,
-	Matt Fleming <matt@readmodwrite.com>,
-	Salvatore Dipietro <dipiets@amazon.it>, akpm@linux-foundation.org,
-	abuehaze@amazon.com, alisaidi@amazon.com, blakgeof@amazon.com,
-	brauner@kernel.org, brendan.jackman@linux.dev, david@redhat.com,
-	dgc@kernel.org, dipietro.salvatore@gmail.com, djwong@kernel.org,
-	hch@infradead.org, hch@lst.de, linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-	linux-xfs@vger.kernel.org, mhocko@suse.com, ritesh.list@gmail.com,
-	rvvandan@amazon.com, stable@vger.kernel.org, surenb@google.com,
-	ziy@nvidia.com
-Subject: Re: [PATCH 1/2] mm: page_alloc: do not give all non-blocking
- requests reserve access
-Message-ID: <arFUPOi6gadAvD3E@cmpxchg.org>
-References: <20260905174239.99e31515fabe220aa7d8e6fa@linux-foundation.org>
- <20260910114602.926944-1-dipiets@amazon.it>
- <aqQlUr-1h07G8JWM@cmpxchg.org>
- <8d6a8a63-4adc-458a-b548-a47bf5ff8eb7@kernel.org>
- <aqq8pWI0u1IZNWHT@cmpxchg.org>
- <9f415dc7-adad-4161-b20d-7c3173f50ff3@kernel.org>
- <arFBJdYaRx_iJNDA@cmpxchg.org>
- <arFBWvzXPYrKuIYi@cmpxchg.org>
- <arFFKGrpPwtTkoCi@casper.infradead.org>
+	dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b="T2W5YJMW";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="u+I9cyoi"
+Received: from phl-compute-05.internal (phl-compute-05.internal [10.202.2.45])
+	by mailfhigh.phl.internal (Postfix) with ESMTP id 9343114000E0;
+	Mon, 21 Sep 2026 13:56:59 -0400 (EDT)
+Received: from phl-frontend-03 ([10.202.2.162])
+  by phl-compute-05.internal (MEProxy); Mon, 21 Sep 2026 13:56:59 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm1; t=1790013419;
+	 x=1790099819; bh=uYU8q4fXtN41KLKnQqkkaVOie8JplVyw4Z/lVL6gFhQ=; b=
+	T2W5YJMWS5qSpXbgLcgxfyTmzD6cfmFK/+pPYI15hGR5LoSqPdYS60UR1A4OgCSp
+	DyLZhKC7MBVBywi/hwdpENKps1qYryhBMTcLyF5lP/MHDmVFgZ6ZXI+8OwRDLjnk
+	20ie/JSSj8RUapGtf2n0QCHPnaN3KTF4L4WNz/fXZbZ+X5xMog/KWFKOKX0RkpG1
+	H9dWuro2+Svu/ZitJd8pnPxkdn8ugF5ipC5W9vHnyyz1hVa02XugW4nxEy/ZR9mV
+	atFVrRl2Zkzaj4M43hAxv/75Mu7Vm7Yh8VazSKX0lnnDpp1ZhChvL79Hxxgn0eXY
+	zrrFxbBWBUnhbMk4C+XJpw==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1790013419; x=
+	1790099819; bh=uYU8q4fXtN41KLKnQqkkaVOie8JplVyw4Z/lVL6gFhQ=; b=u
+	+I9cyoiM4EXoxOosjKqDqnJglIMCL4k+LUXvAYzHLxEiocrtqcMozcplyY1aTc5T
+	vj8suLHXnSjuTJsLYQJ3mrjtr6ucVeypomI6ttRQkceleZ+MJjJNsgs+/Qjw8dkn
+	ujujRqcMAld2G9S9uTpnVKI6rBnq2Du6gNdNU4DV0Qwsgl6bfjAIcyvxKlopCJ24
+	GsNbUobpCaMqLxA/0zlOkrzGO05xh70c7DIxS2MCuSobLtmaaGs35elqurXsAa+D
+	/5BWhAf6yCyoQJyh4sguhPRgarRdUzltU8skIJjggmc8lI1ZJKUFw8OemyDijdtw
+	nOGiuu895hkZ1yRE51iXg==
+X-ME-Sender: <xms:62-xatFQGjxA-uUYkdLyyfMimtfsd2t_MQTtU1RbXHLLu06qVAEgWg>
+    <xme:62-xapMVqRUzkcAO9vTYpp5GCMqt1RHcx157IrvArL_8suGBd69o0qU3pU67nIiVf
+    jBC2Zu4cNOIpCMR1eINgtDjSPdudnHlcjNEjB_7eb9jvWfACzZLsBij_Q>
+X-ME-Received: <xmr:62-xanfU9iLLx95ra0QNK-QQ3LhC_HIjlcHElXPEYvcMwjtUEB5fMBEdN2tEbhExPGRTKcqB3r15VRu-f9iH22VjW-sQeA>
+X-ME-Proxy-Cause: dmFkZTE5Dm7B85PvvqGyQ5FiW+f9OIJilMbQvZYKDVEjVloyy/Opcv8Yni4+KE/YSnlV7j
+    p7VEy7VlqHb6MtEgFhB9qHUiwlEejzdktesqHojGRfWZQFpeQO/MJe+rfH5dv6Yljh4ZzY
+    UQj/aNAHu1mUcH8ANW2/hPaaq6V7RZDwku6nJwMPnDCVCq9fDlJjGlyn9p3pwvI1vcyAxg
+    HMrbEucPNooPDJtVdAarfvQcuAFO7yxGa+XnG1PzVWntYULr53To5CyvF3dso0ArB2Yz65
+    CU2lTis4mXUBE+oNxqPVMc0w5GPT7PZN/SmpjTzSPi3u/uAP+Js+TNuMmLb4hrxfe47Nl9
+    4Jgn1+ewdMFKuQ5H2XrD2eLWHxiYmtA5FVggbXyf8C2VGDBHcYqlnjjowEAWaks6tjr2m/
+    d48QoSJKeQC7unNKxJ8vpBP6z9/a4Yysd0VCNMH6T8cWcaU6hahA/r+DeRiytEFn4P0K9b
+    T6jNZDg6utGgcnwNDnTPZmIreyblZk/1FvEZXBo11+rl5weks1EiytNU+1X0Ir7lBdJQZ5
+    1qlIJ6sOwzemd7EmL6T7Kf6MDXCu84ZWG6O8asBSjkY15EKNFUz5jrZbFrb12d8+BgHHkR
+    A/467DnU8IQYil3G789QRX/fS8/NsydHFblCo5V7OM8gy5V2GxhGWILhsDuQ
+X-ME-Proxy: <xmx:62-xauuKUDtcMcDyd12rapdf8Dy4WesxcKEv7SKIeLLuNC9nmU6c9Q>
+    <xmx:62-xagkF1K3wtVdF6jipLhSoetLIbuU8ory25UZ6it_7xmi9SBnS1g>
+    <xmx:62-xaoyUFPajeq8rsZynTU8XVnyfr1hK1b-Oh2ZEDqDieNWliWoFTQ>
+    <xmx:62-xaqNPgvNEHUaCdfu45z97sRrCDCPcWuppUHrerjWQ_jj9oXtBdw>
+    <xmx:62-xatGEhAuyouSbHA0ZmfZ35YqQ7xJQeb6ZDiFSMbfn4pW1Tcdvw_FQ>
+Feedback-ID: i2b59495a:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
+ 21 Sep 2026 13:56:58 -0400 (EDT)
+Message-ID: <9d77197e-4d5e-49f3-a7cf-fdaf33c285cf@sandeen.net>
+Date: Mon, 21 Sep 2026 12:56:58 -0500
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <arFFKGrpPwtTkoCi@casper.infradead.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 0/2] xfs: dedupe realtime rmap btree code
+To: Christoph Hellwig <hch@infradead.org>, "Darrick J. Wong"
+ <djwong@kernel.org>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs@vger.kernel.org,
+ cem@kernel.org
+References: <20260918181324.2472127-1-sandeen@redhat.com>
+ <20260921034003.GG2705364@frogsfrogsfrogs> <arDprUJAb7QP1EVx@infradead.org>
+Content-Language: en-US
+From: Eric Sandeen <sandeen@sandeen.net>
+In-Reply-To: <arDprUJAb7QP1EVx@infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Mon, Sep 21, 2026 at 03:54:32PM +0100, Matthew Wilcox wrote:
-> On Mon, Sep 21, 2026 at 10:38:18AM -0400, Johannes Weiner wrote:
-> > +++ b/mm/page_alloc.c
-> > @@ -3246,7 +3246,9 @@ struct page *rmqueue_buddy(struct zone *preferred_zone, struct zone *zone,
-> >  			 * reserves as failing now is worse than failing a
-> >  			 * high-order atomic allocation in the future.
-> >  			 */
-> > -			if (!page && (alloc_flags & (ALLOC_OOM|ALLOC_NON_BLOCK)))
-> > +			if (!page &&
-> > +			    ((alloc_flags & ALLOC_OOM) ||
-> > +			     (alloc_flags & ALLOC_MASK_ATOMIC) == ALLOC_MASK_ATOMIC))
-> >  				page = __rmqueue_smallest(zone, order, MIGRATE_HIGHATOMIC);
+On 9/21/26 3:24 AM, Christoph Hellwig wrote:
+> On Sun, Sep 20, 2026 at 08:40:03PM -0700, Darrick J. Wong wrote:
+>> In general this looks good to me, though I'll add that the same sort of
+>> code deduplication could likely be done to the refcount btree code too.
 > 
-> Would this be slightly neater?
+> I thought the same while reading over the patches.  Also the exported
+> in patch 1 threw me off, but it didn't actually export anything.
 > 
-> static inline bool may_access_reserves(unsigned int alloc_flags)
-> {
-> 	if (alloc_flags & ALLOC_OOM)
-> 		return true;
-> 	if (alloc_flags & (ALLOC_NON_BLOCK | ALLOC_MIN_RESERVE)) ==
-> 	    (ALLOC_NON_BLOCK | ALLOC_MIN_RESERVE)
-> 		return true;
-> 	return false;
-> }
+> I'd be tempted to just merge the two patches as that's easier to follow,
+> but otherwise this looks good to me:
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+Oh, ok - I can merge them if folks prefer. (I kinda thought a prep patch
+/ use patch was simpler to follow but I really don't care either way.)
 
-I tend to be hesitant with single-use abstractions, but no objection
-if people think this is better.
+And yeah, you're both right about the refcount code, I should have thought
+of that. It's much shorter functions and my duplicate code scan was looking
+for bigger chunks, but I didn't fully engage my brain.
+
+Happy to send V2 with both, and merge each into a single patch if that's
+what people want.
+
+-Eric
