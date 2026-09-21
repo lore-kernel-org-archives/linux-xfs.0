@@ -1,115 +1,105 @@
-Received: from fhigh-a2-smtp.messagingengine.com (fhigh-a2-smtp.messagingengine.com [103.168.172.153])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBF3B4D7D2E
-	for <linux-xfs@vger.kernel.org>; Mon, 21 Sep 2026 17:57:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.153
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 766234ABBB2
+	for <linux-xfs@vger.kernel.org>; Mon, 21 Sep 2026 18:07:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790013422; cv=none; b=k3Qr3IUSkGmveDOwEo5o4g7oUVg43XBk1vJslfyXW0rKAIm8jqzMKX0cuCVhd3rj1zuWi/5Esm8Sjmekdmnbgo0C6yzlosQKr6fsOR1faufBR/PyKNZcTPjO7f7ACioPoayql3czfKv+836bW45we4HCd+RV3PXNuTZpavzA7IA=
+	t=1790014064; cv=none; b=C3I2srQbvBB0LliZwCH0tzyY8ZUWGmjcOrHy7n0Dw4DdFMBGa2S7UUxxwI3x6/FKR6PqdOdSwgXxA1i9nO9rJNA6TjdUZskQBzoK8PJH4Z9/tPkty1w8z5KsmIynFcZd3TtbhV8cVKtOonvhGPTSYLMXVZb6Pa+sxMbH2EYdw2I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790013422; c=relaxed/simple;
-	bh=5apKNpX+CcR0cAYrnlw+BTO7+52Mt1q1/iGhDHZEJ6o=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=cnTL5dcd1ZCqaVW+WuJ0cqLI3usw2ZKPvTcJpq7Qfblpx/qn6vTa2eh9BDxIfKKrjHQNk3kwUI0w/mhT92kdEjzaYD6rHjXRmfLEc3F119HQgmzPx1V1uaa0uRjNF0couWezCCjkIDGHDbaDf/Ntosq5Zl8Dr65wy+RVU+nseho=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net; spf=pass smtp.mailfrom=sandeen.net; dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b=T2W5YJMW; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=u+I9cyoi; arc=none smtp.client-ip=103.168.172.153
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandeen.net
+	s=arc-20240116; t=1790014064; c=relaxed/simple;
+	bh=+T0UsfU3X4YjOf5Y2LRAUCr1O+PNBgrbP5i3+Ui+Rro=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZESp1BCLh4AiRXFwvjKxraFGOyUsWxJdGdx39sTO8lNnKeDcoYAzAG+009T0kHQxJuuUqJDFxC2OUZHRv+ssmT/ygaKlvzze9kpXPWnw9fyQBYoovZKpYQMT1tP8Sk4HFJSiAJyaGrGGul2o1l9Hn3FsbRF3PVzhbgolWJu7cCc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=C6zMeiQp; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b="T2W5YJMW";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="u+I9cyoi"
-Received: from phl-compute-05.internal (phl-compute-05.internal [10.202.2.45])
-	by mailfhigh.phl.internal (Postfix) with ESMTP id 9343114000E0;
-	Mon, 21 Sep 2026 13:56:59 -0400 (EDT)
-Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-05.internal (MEProxy); Mon, 21 Sep 2026 13:56:59 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm1; t=1790013419;
-	 x=1790099819; bh=uYU8q4fXtN41KLKnQqkkaVOie8JplVyw4Z/lVL6gFhQ=; b=
-	T2W5YJMWS5qSpXbgLcgxfyTmzD6cfmFK/+pPYI15hGR5LoSqPdYS60UR1A4OgCSp
-	DyLZhKC7MBVBywi/hwdpENKps1qYryhBMTcLyF5lP/MHDmVFgZ6ZXI+8OwRDLjnk
-	20ie/JSSj8RUapGtf2n0QCHPnaN3KTF4L4WNz/fXZbZ+X5xMog/KWFKOKX0RkpG1
-	H9dWuro2+Svu/ZitJd8pnPxkdn8ugF5ipC5W9vHnyyz1hVa02XugW4nxEy/ZR9mV
-	atFVrRl2Zkzaj4M43hAxv/75Mu7Vm7Yh8VazSKX0lnnDpp1ZhChvL79Hxxgn0eXY
-	zrrFxbBWBUnhbMk4C+XJpw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1790013419; x=
-	1790099819; bh=uYU8q4fXtN41KLKnQqkkaVOie8JplVyw4Z/lVL6gFhQ=; b=u
-	+I9cyoiM4EXoxOosjKqDqnJglIMCL4k+LUXvAYzHLxEiocrtqcMozcplyY1aTc5T
-	vj8suLHXnSjuTJsLYQJ3mrjtr6ucVeypomI6ttRQkceleZ+MJjJNsgs+/Qjw8dkn
-	ujujRqcMAld2G9S9uTpnVKI6rBnq2Du6gNdNU4DV0Qwsgl6bfjAIcyvxKlopCJ24
-	GsNbUobpCaMqLxA/0zlOkrzGO05xh70c7DIxS2MCuSobLtmaaGs35elqurXsAa+D
-	/5BWhAf6yCyoQJyh4sguhPRgarRdUzltU8skIJjggmc8lI1ZJKUFw8OemyDijdtw
-	nOGiuu895hkZ1yRE51iXg==
-X-ME-Sender: <xms:62-xatFQGjxA-uUYkdLyyfMimtfsd2t_MQTtU1RbXHLLu06qVAEgWg>
-    <xme:62-xapMVqRUzkcAO9vTYpp5GCMqt1RHcx157IrvArL_8suGBd69o0qU3pU67nIiVf
-    jBC2Zu4cNOIpCMR1eINgtDjSPdudnHlcjNEjB_7eb9jvWfACzZLsBij_Q>
-X-ME-Received: <xmr:62-xanfU9iLLx95ra0QNK-QQ3LhC_HIjlcHElXPEYvcMwjtUEB5fMBEdN2tEbhExPGRTKcqB3r15VRu-f9iH22VjW-sQeA>
-X-ME-Proxy-Cause: dmFkZTE5Dm7B85PvvqGyQ5FiW+f9OIJilMbQvZYKDVEjVloyy/Opcv8Yni4+KE/YSnlV7j
-    p7VEy7VlqHb6MtEgFhB9qHUiwlEejzdktesqHojGRfWZQFpeQO/MJe+rfH5dv6Yljh4ZzY
-    UQj/aNAHu1mUcH8ANW2/hPaaq6V7RZDwku6nJwMPnDCVCq9fDlJjGlyn9p3pwvI1vcyAxg
-    HMrbEucPNooPDJtVdAarfvQcuAFO7yxGa+XnG1PzVWntYULr53To5CyvF3dso0ArB2Yz65
-    CU2lTis4mXUBE+oNxqPVMc0w5GPT7PZN/SmpjTzSPi3u/uAP+Js+TNuMmLb4hrxfe47Nl9
-    4Jgn1+ewdMFKuQ5H2XrD2eLWHxiYmtA5FVggbXyf8C2VGDBHcYqlnjjowEAWaks6tjr2m/
-    d48QoSJKeQC7unNKxJ8vpBP6z9/a4Yysd0VCNMH6T8cWcaU6hahA/r+DeRiytEFn4P0K9b
-    T6jNZDg6utGgcnwNDnTPZmIreyblZk/1FvEZXBo11+rl5weks1EiytNU+1X0Ir7lBdJQZ5
-    1qlIJ6sOwzemd7EmL6T7Kf6MDXCu84ZWG6O8asBSjkY15EKNFUz5jrZbFrb12d8+BgHHkR
-    A/467DnU8IQYil3G789QRX/fS8/NsydHFblCo5V7OM8gy5V2GxhGWILhsDuQ
-X-ME-Proxy: <xmx:62-xauuKUDtcMcDyd12rapdf8Dy4WesxcKEv7SKIeLLuNC9nmU6c9Q>
-    <xmx:62-xagkF1K3wtVdF6jipLhSoetLIbuU8ory25UZ6it_7xmi9SBnS1g>
-    <xmx:62-xaoyUFPajeq8rsZynTU8XVnyfr1hK1b-Oh2ZEDqDieNWliWoFTQ>
-    <xmx:62-xaqNPgvNEHUaCdfu45z97sRrCDCPcWuppUHrerjWQ_jj9oXtBdw>
-    <xmx:62-xatGEhAuyouSbHA0ZmfZ35YqQ7xJQeb6ZDiFSMbfn4pW1Tcdvw_FQ>
-Feedback-ID: i2b59495a:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
- 21 Sep 2026 13:56:58 -0400 (EDT)
-Message-ID: <9d77197e-4d5e-49f3-a7cf-fdaf33c285cf@sandeen.net>
-Date: Mon, 21 Sep 2026 12:56:58 -0500
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="C6zMeiQp"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1790014061;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Ddb+dnisDk6IFrtpOihrh9CoT4KAmSKdN6ihcGxdhtE=;
+	b=C6zMeiQpWa4yAcVL3tv3vstlReb2A7H0SM7+4S7R1dLQDNDX0A/FPLk8LovOBHtOdmusKT
+	rEu7I44ErYrM4PqkUo8ku+AztpdSf8n6JkQ8cHfZpl/FpOz4MyZQbNhICNxpzA/NYumaGj
+	KW8w2Nu6hIb7qNAQdHjBKcWBumvLFq8=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-21-rQ9njAx6OLyzvpB4FR5SlA-1; Mon,
+ 21 Sep 2026 14:07:39 -0400
+X-MC-Unique: rQ9njAx6OLyzvpB4FR5SlA-1
+X-Mimecast-MFC-AGG-ID: rQ9njAx6OLyzvpB4FR5SlA_1790014057
+Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 71C611955D78;
+	Mon, 21 Sep 2026 18:07:37 +0000 (UTC)
+Received: from bfoster (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 8A7F2195604C;
+	Mon, 21 Sep 2026 18:07:35 +0000 (UTC)
+Date: Mon, 21 Sep 2026 14:07:33 -0400
+From: Brian Foster <bfoster@redhat.com>
+To: Andrea Parri <parri.andrea@gmail.com>
+Cc: Christian Brauner <brauner@kernel.org>,
+	"Darrick J . Wong" <djwong@kernel.org>,
+	Joanne Koong <joannelkoong@gmail.com>,
+	Damien Le Moal <dlemoal@kernel.org>, Hannes Reinecke <hare@suse.de>,
+	Daniel Gomez <da.gomez@samsung.com>,
+	Pankaj Raghav <p.raghav@samsung.com>,
+	Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 0/3] iomap: fix error handling regressions
+Message-ID: <arFyZbS_pTpplxWw@bfoster>
+References: <20260921083133.2960-1-parri.andrea@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 0/2] xfs: dedupe realtime rmap btree code
-To: Christoph Hellwig <hch@infradead.org>, "Darrick J. Wong"
- <djwong@kernel.org>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs@vger.kernel.org,
- cem@kernel.org
-References: <20260918181324.2472127-1-sandeen@redhat.com>
- <20260921034003.GG2705364@frogsfrogsfrogs> <arDprUJAb7QP1EVx@infradead.org>
-Content-Language: en-US
-From: Eric Sandeen <sandeen@sandeen.net>
-In-Reply-To: <arDprUJAb7QP1EVx@infradead.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260921083133.2960-1-parri.andrea@gmail.com>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-On 9/21/26 3:24 AM, Christoph Hellwig wrote:
-> On Sun, Sep 20, 2026 at 08:40:03PM -0700, Darrick J. Wong wrote:
->> In general this looks good to me, though I'll add that the same sort of
->> code deduplication could likely be done to the refcount btree code too.
+On Mon, Sep 21, 2026 at 10:31:30AM +0200, Andrea Parri wrote:
+> Fix three independent error handling regressions in iomap:
 > 
-> I thought the same while reading over the patches.  Also the exported
-> in patch 1 threw me off, but it didn't actually export anything.
+>  - clear the writeback context after a failed ->writeback_submit() call,
+>    preventing an already completed ioend from being submitted again;
+>  - preserve an iomap iteration error when iomap_fiemap() has a pending
+>    extent to emit; and
+>  - preserve a direct I/O data path error when sub-block tail zeroing
+>    succeeds.
 > 
-> I'd be tempted to just merge the two patches as that's easier to follow,
-> but otherwise this looks good to me:
+> The fixes have no ordering dependencies and can be applied or backported
+> independently.  Each issue was reproduced before and after its respective
+> fix.
 > 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-Oh, ok - I can merge them if folks prefer. (I kinda thought a prep patch
-/ use patch was simpler to follow but I really don't care either way.)
 
-And yeah, you're both right about the refcount code, I should have thought
-of that. It's much shorter functions and my duplicate code scan was looking
-for bigger chunks, but I didn't fully engage my brain.
+These all look reasonable to me:
 
-Happy to send V2 with both, and merge each into a single patch if that's
-what people want.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
--Eric
+> Andrea Parri (3):
+>   iomap: don't resubmit an ioend after ->writeback_submit() failed
+>   iomap: don't lose a fiemap iteration error when emitting the last
+>     extent
+>   iomap: don't lose a failed direct I/O bio's error when zeroing the
+>     tail
+> 
+>  fs/iomap/direct-io.c | 11 ++++++++---
+>  fs/iomap/fiemap.c    |  8 ++++----
+>  fs/iomap/ioend.c     | 10 +++++++++-
+>  3 files changed, 21 insertions(+), 8 deletions(-)
+> 
+> 
+> base-commit: 93f51579e7df248780214094418f205253383cc5
+> -- 
+> 2.53.0
+> 
+
