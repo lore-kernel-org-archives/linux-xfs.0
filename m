@@ -1,60 +1,42 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 766234ABBB2
-	for <linux-xfs@vger.kernel.org>; Mon, 21 Sep 2026 18:07:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7ABB4F68CB
+	for <linux-xfs@vger.kernel.org>; Mon, 21 Sep 2026 18:17:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790014064; cv=none; b=C3I2srQbvBB0LliZwCH0tzyY8ZUWGmjcOrHy7n0Dw4DdFMBGa2S7UUxxwI3x6/FKR6PqdOdSwgXxA1i9nO9rJNA6TjdUZskQBzoK8PJH4Z9/tPkty1w8z5KsmIynFcZd3TtbhV8cVKtOonvhGPTSYLMXVZb6Pa+sxMbH2EYdw2I=
+	t=1790014631; cv=none; b=QqWwQe8oTeXWtq9k5QS8+iXV1L5kQyQi7jHPhaBhjyVbA+QWH9hl6J4QwqWXxjL1bNOQgljJv06vgREQmugA5xAf+8kL5k+R4ZAhz9kJT6dxgNnsJtH5Nhkj2cfhKzkVPsnPSrm7ftFnSGf64hDFtPWajz4KgRu0sCxGa7v3ifo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790014064; c=relaxed/simple;
-	bh=+T0UsfU3X4YjOf5Y2LRAUCr1O+PNBgrbP5i3+Ui+Rro=;
+	s=arc-20240116; t=1790014631; c=relaxed/simple;
+	bh=ZxBsY85y3H19nc4tR/fB3LmojMu6hZq1I1Ra/DDhl78=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZESp1BCLh4AiRXFwvjKxraFGOyUsWxJdGdx39sTO8lNnKeDcoYAzAG+009T0kHQxJuuUqJDFxC2OUZHRv+ssmT/ygaKlvzze9kpXPWnw9fyQBYoovZKpYQMT1tP8Sk4HFJSiAJyaGrGGul2o1l9Hn3FsbRF3PVzhbgolWJu7cCc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=C6zMeiQp; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=FMTwwKjF6txskMsw1/oEEz5Pwo/OyX8HX2bF8niO44A0xHyOmIELvj9wbpdPhR2uwhe/Qv4VH+Xg+sxmxF+CQ7Ydho/BvhTc68f3fzlgjVpUfu+wkPjMF/x5b23pRA3oacHuRAd/cZw/CY8qVgbshxTSzkELbXA71q2R9qoop+s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=efzI8LrM; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="C6zMeiQp"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1790014061;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Ddb+dnisDk6IFrtpOihrh9CoT4KAmSKdN6ihcGxdhtE=;
-	b=C6zMeiQpWa4yAcVL3tv3vstlReb2A7H0SM7+4S7R1dLQDNDX0A/FPLk8LovOBHtOdmusKT
-	rEu7I44ErYrM4PqkUo8ku+AztpdSf8n6JkQ8cHfZpl/FpOz4MyZQbNhICNxpzA/NYumaGj
-	KW8w2Nu6hIb7qNAQdHjBKcWBumvLFq8=
-Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-21-rQ9njAx6OLyzvpB4FR5SlA-1; Mon,
- 21 Sep 2026 14:07:39 -0400
-X-MC-Unique: rQ9njAx6OLyzvpB4FR5SlA-1
-X-Mimecast-MFC-AGG-ID: rQ9njAx6OLyzvpB4FR5SlA_1790014057
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 71C611955D78;
-	Mon, 21 Sep 2026 18:07:37 +0000 (UTC)
-Received: from bfoster (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 8A7F2195604C;
-	Mon, 21 Sep 2026 18:07:35 +0000 (UTC)
-Date: Mon, 21 Sep 2026 14:07:33 -0400
-From: Brian Foster <bfoster@redhat.com>
-To: Andrea Parri <parri.andrea@gmail.com>
-Cc: Christian Brauner <brauner@kernel.org>,
-	"Darrick J . Wong" <djwong@kernel.org>,
-	Joanne Koong <joannelkoong@gmail.com>,
-	Damien Le Moal <dlemoal@kernel.org>, Hannes Reinecke <hare@suse.de>,
-	Daniel Gomez <da.gomez@samsung.com>,
-	Pankaj Raghav <p.raghav@samsung.com>,
-	Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 0/3] iomap: fix error handling regressions
-Message-ID: <arFyZbS_pTpplxWw@bfoster>
-References: <20260921083133.2960-1-parri.andrea@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="efzI8LrM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0990B1F000FF;
+	Mon, 21 Sep 2026 18:17:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790014627;
+	bh=WTBUFY4rlLUpCchPHTsDgqflvQP6elt6MNVSMM11gag=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=efzI8LrMKddYaYn+3RnzY80o+784u2u3SDzQQM+Eo8YlGzhhynRyZew8TSVELDd5+
+	 7ZPdiowtmRgNE2aPJUvtl3jdVp4HNMhzpsU10AaulJcu0YnVrpiWlw/iJwo78xKJ+t
+	 xbt84Esmgo1IjNfzDbvLdUdrOdQY+dHMh58oLVJI3kg+FGXk4yf/GR11WhorjSEl65
+	 j/V0vXCewit3M6YJsdikP+8mJj4wVwHq9kGMUaWcFQ8YgXJJgPL3I2pAu+uHNzO7uw
+	 FmnFTv5fI2QxLvH+Ik+KRkqJ/6WPf9tc7RAGn7ZYcdXQGcYo2Q0G+ShCjRuCltJgOn
+	 skgBwsy/CyOrw==
+Date: Mon, 21 Sep 2026 20:17:02 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Christoph Hellwig <hch@infradead.org>, 
+	"Darrick J. Wong" <djwong@kernel.org>, Eric Sandeen <sandeen@redhat.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 0/2] xfs: dedupe realtime rmap btree code
+Message-ID: <arF0f9HTnMfcBo2M@cronus.toxiclabs.cc>
+References: <20260918181324.2472127-1-sandeen@redhat.com>
+ <20260921034003.GG2705364@frogsfrogsfrogs>
+ <arDprUJAb7QP1EVx@infradead.org>
+ <9d77197e-4d5e-49f3-a7cf-fdaf33c285cf@sandeen.net>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -63,43 +45,37 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260921083133.2960-1-parri.andrea@gmail.com>
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
+In-Reply-To: <9d77197e-4d5e-49f3-a7cf-fdaf33c285cf@sandeen.net>
 
-On Mon, Sep 21, 2026 at 10:31:30AM +0200, Andrea Parri wrote:
-> Fix three independent error handling regressions in iomap:
+On Mon, Sep 21, 2026 at 12:56:58PM -0500, Eric Sandeen wrote:
+> On 9/21/26 3:24 AM, Christoph Hellwig wrote:
+> > On Sun, Sep 20, 2026 at 08:40:03PM -0700, Darrick J. Wong wrote:
+> >> In general this looks good to me, though I'll add that the same sort of
+> >> code deduplication could likely be done to the refcount btree code too.
+> > 
+> > I thought the same while reading over the patches.  Also the exported
+> > in patch 1 threw me off, but it didn't actually export anything.
+> > 
+> > I'd be tempted to just merge the two patches as that's easier to follow,
+> > but otherwise this looks good to me:
+> > 
+> > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Oh, ok - I can merge them if folks prefer. (I kinda thought a prep patch
+> / use patch was simpler to follow but I really don't care either way.)
 > 
->  - clear the writeback context after a failed ->writeback_submit() call,
->    preventing an already completed ioend from being submitted again;
->  - preserve an iomap iteration error when iomap_fiemap() has a pending
->    extent to emit; and
->  - preserve a direct I/O data path error when sub-block tail zeroing
->    succeeds.
+> And yeah, you're both right about the refcount code, I should have thought
+> of that. It's much shorter functions and my duplicate code scan was looking
+> for bigger chunks, but I didn't fully engage my brain.
 > 
-> The fixes have no ordering dependencies and can be applied or backported
-> independently.  Each issue was reproduced before and after its respective
-> fix.
-> 
+> Happy to send V2 with both, and merge each into a single patch if that's
+> what people want.
 
-These all look reasonable to me:
+This sounds like a good plan for me :)
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+For the code in these patches though:
 
-> Andrea Parri (3):
->   iomap: don't resubmit an ioend after ->writeback_submit() failed
->   iomap: don't lose a fiemap iteration error when emitting the last
->     extent
->   iomap: don't lose a failed direct I/O bio's error when zeroing the
->     tail
-> 
->  fs/iomap/direct-io.c | 11 ++++++++---
->  fs/iomap/fiemap.c    |  8 ++++----
->  fs/iomap/ioend.c     | 10 +++++++++-
->  3 files changed, 21 insertions(+), 8 deletions(-)
-> 
-> 
-> base-commit: 93f51579e7df248780214094418f205253383cc5
-> -- 
-> 2.53.0
-> 
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
+> 
+> -Eric
+> 
