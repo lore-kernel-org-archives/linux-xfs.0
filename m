@@ -1,150 +1,145 @@
-Received: from out203-205-221-190.mail.qq.com (out203-205-221-190.mail.qq.com [203.205.221.190])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F6B742669A;
-	Tue, 22 Sep 2026 08:16:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.205.221.190
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9192A4F4D1D
+	for <linux-xfs@vger.kernel.org>; Tue, 22 Sep 2026 08:32:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790064975; cv=none; b=ml2e0OhQ6qVD0yym63eBigx2ot/Nk3hHxP4ffNGBhrdpFsLTyR219g+7b1AByA5pODrejo9abDuXUDBAGN+C+Uud7s7r+XI/pQIk3yyKEqkRtN6HV2Ga7ymnUOk0MoZEc9In9dRBdfhEfvLLphINsTuu7iT4TvUXe2v0zwIU6Ic=
+	t=1790065956; cv=none; b=dhAfw4ytDp5h4UZshpXKGcwWqbZ9lrv6eVdKtNETC6diKvKAnE5fYolbbUdGp05h56aFhYoyhiRL9kQz8rP4oLu6W350NKKznAFzIyr95CSmoC//QUbxrz6FyN+nMLrMKCua5c47Wx0Du2EW/b2Ydxrf7sBnDrJpjvkG0McP3Iw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790064975; c=relaxed/simple;
-	bh=auunV/y9N1n6oeLRBWQXLkS6mNa7Qmirpv0pLEZMbaA=;
-	h=Message-ID:From:To:Cc:Subject:Date:MIME-Version; b=VUDF3YoCHtO3iENtiuq83VTo8ZbFlvXRT4WtOv/mTtrS/+ipkLenEKdSkfj5WFRG1lTUZvrAxAUEFBFg8dqndLTKdXtJ929PyFGyqHn2xqbamt7iNY9nXXATJktHo+oPbq8shSX5bEAyfq+8qjMVeYpID1al0T8ZAvPvS7n5a78=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com; spf=pass smtp.mailfrom=qq.com; dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b=TvcWCrOf; arc=none smtp.client-ip=203.205.221.190
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
+	s=arc-20240116; t=1790065956; c=relaxed/simple;
+	bh=bxOLRyx+TtzIaCObuWShkyjhDbes/LDLjKEl4CexuEU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Z2KbaP1DHBLk10ECYlbgkkA1uUP8EEA/4r8pA96Hcahws/p15Zduqe9TYsznN/sL7sG4Fo4v4Rrdl0nNf7IIuYI8EgOYTrRNjd8hIw4tpbMaGSHT7/2RZJgW/n5nkBSzicHZ3uJmmgeDkcLRLPzTDua9YWdrcB9HYmpn/Oh+etI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=darM+GM1; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=Qz4gOev9; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b="TvcWCrOf"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
-	t=1790064956; bh=gTMAuBymzwXbO4QhnxE1u8IF/SR9SGdLXudTQ8ga908=;
-	h=From:To:Cc:Subject:Date;
-	b=TvcWCrOf+5eIHNP0crKedfkzs/PI6fe0DxYha0FJcu5SusQGYaZ3KOkqdijmVOzhh
-	 PSarbXuRNwnKMlzEyXsNA/QslNY4543ImFGX1rOXLA5svuGnJidjdMjkvP4TN+/gwG
-	 gTPY8+s9P54j0Q/TXp4U05yzmXDNdDiS3DJxK+M0=
-Received: from localhost.localdomain ([14.22.11.180])
-	by newxmesmtplogicsvrsza63-0.qq.com (NewEsmtp) with SMTP
-	id 3A891A77; Tue, 22 Sep 2026 16:14:40 +0800
-X-QQ-mid: xmsmtpt1790064880t24pduf66
-Message-ID: <tencent_F801A9436DFB447AAFEC63D3E615B8052405@qq.com>
-X-QQ-XMAILINFO: NbgegmlEc3Ju/YWiUVmyWq+p0LijjV/+Sxyvjhv7UyUTELPNjyURWALa3fsqNr
-	 02KXGJk8YwB/vT1Fka20J8U1R41LL1gRxB/1kzpelFluJc18yxSmxM4d1xyMby22FbR0KwQMqiCf
-	 he8oJiOXrmZ2AK3iqVoBIwkVVHXwy5WeUpkSJq8S0BUG2TwvtGdqbdFQqiYVtex7M1eZCHONIsS2
-	 bFNn6s7P7z5a7tRcgCSGBdjKX3MadK+sG/sXJgKukbeSFtor/VAqp3VJR0NRBPCfYuFTKiK76e84
-	 UhuhtpUGefgqt9/d3ayBkwSbGtQSGRFSRms1n+ScHo2sOIraJUU5fgKqYl0lTTVQFxTwigN1kPhG
-	 yIGp361r96MjIH+7rFIMcHqXlVTlkQzGx6bp5Sna8lXO73OELtTdrDm3RWapmJlgYRxWjNfJ8hHv
-	 nkty9GEc5Itm0Rmd6nSZQzxW4BphU6FUJvpzQtLQ+5b+37Et4YRsAgGi05uXHig1QuWevErnJ1SO
-	 gRzjQSeNcI8McQCCjhG/Yr7HUpyaCKLFlbFX39r2UDW4JcjHMg2PSl+L2xBI7bXPzVDTvDADWpyI
-	 z87QEJFUUFd6f7b3+EsGM3nNHCUtOMn1BcgP3KlHXaFUr5tAKaANC3Yb3Xmbmp1D7My/r3T9Ow59
-	 Tcdsx25yanCujEUvplOOmXschEv7RXpngbC3aAtMRzv+OBB7Dd45Szm/AmX3lUX5d3Ap2I8g+Qxw
-	 yLF3t+Ho8Icg2vrfT7w16WmAVkH11XMnrbYbrckGdm/JjbDMs+o0P8QmVayFFjTIfZzo+dXW1S3V
-	 sRPz1kIlu55741a6P1kuACv+qaA0hjY0uDVe7CrEsdLhw97NkU2H/MZPX2gCnLpFlAUCD4moi4Xr
-	 MsJm8G7ixt8vd5xnGTSLXTjIEYwk1zV02OEfoKmpPASLAmRHEUG3QKT+0Ho9CnVOG2A7aABcRHfe
-	 CoI55pyD6jq+lB5Z7tjEQhpgntff11x3YSGMRwHtsdmRjNZAokk0nleYbwD9WgHFDg1Zivs+hiBi
-	 2zfRRzS4LHoAt1rZofHZ0CcsZ6YRgf+rn3d7eKDTCux0cxPrGOGDDjBB5Wfbr4AO/09w4PXi1iNK
-	 MKYg8hooo674kAlrU=
-X-QQ-XMRINFO: Mp0Kj//9VHAxzExpfF+O8yhSrljjwrznVg==
-From: MingTao Huang <1037827920@qq.com>
-To: Carlos Maiolino <cem@kernel.org>,
-	Dave Chinner <dchinner@redhat.com>,
-	"Darrick J . Wong" <djwong@kernel.org>,
-	Chandan Babu R <chandanbabu@kernel.org>
-Cc: linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	MingTao Huang <mintaohuang@tencent.com>
-Subject: [PATCH] xfs: fix skipped flushing items not counted in xfsaild_push()
-Date: Tue, 22 Sep 2026 16:14:29 +0800
-X-OQ-MSGID: <20260922081429.627321-1-1037827920@qq.com>
-X-Mailer: git-send-email 2.43.7
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="darM+GM1";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="Qz4gOev9"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1790065953;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=v6HyFSOK4HYSfvcwVKnaiUCa+pWXMNUUzDe6nYFstxk=;
+	b=darM+GM1S7h7AqXoz/p1A47ibc7IZrqENT4BH8E54RGqEj00qmVsyh74xlHz83XqRwPI1l
+	mWpILjxgHKkufVL50NYBw2sk2uvFyOspjI9cKL3UE6v+UF6kUItDb/GlLszzLlDpri2Z4T
+	Gqo7vH9PvWasCr2KMUQ6+eH7JYvzC8o=
+Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com
+ [209.85.128.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-464-T1sIkCc9NvGCAfjlRg6ojA-1; Tue, 22 Sep 2026 04:32:29 -0400
+X-MC-Unique: T1sIkCc9NvGCAfjlRg6ojA-1
+X-Mimecast-MFC-AGG-ID: T1sIkCc9NvGCAfjlRg6ojA_1790065948
+Received: by mail-wm1-f71.google.com with SMTP id 5b1f17b1804b1-49fcd86b8d3so26823385e9.3
+        for <linux-xfs@vger.kernel.org>; Tue, 22 Sep 2026 01:32:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1790065948; x=1790670748; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=v6HyFSOK4HYSfvcwVKnaiUCa+pWXMNUUzDe6nYFstxk=;
+        b=Qz4gOev9TgVra5iOJWfTnbYEokCVKsZZUgM98FD6WKxETb+2CICQBG8jcqxWFdPrbv
+         cf6wdt+ujB5YeEcHJYuRkn8CK4IsSIsaeQgLb1AOid1GU2VkOBDgM6zaLxKBN4kVfebZ
+         amF/j7UhBtdBBIGHGO2yMskam0cpjPpF4kbhtgkJXJ5mXjX44+faUpCgF3EYfu/VgdIH
+         7WG8dtTdaLbsPxPTWd5NZW52Xep/pfo/msijT/oEnpLZZZ6uLBvrDMpJ+X/+BYLPMFb7
+         CjYY2bCexHm1KLIM93NpZ9JciGGb0Ay6sFee16y+WNwGJLKVcjV63Q1i25pBPCXdMsLf
+         L68g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790065948; x=1790670748;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=v6HyFSOK4HYSfvcwVKnaiUCa+pWXMNUUzDe6nYFstxk=;
+        b=aMZErdbP0FJZVQKAIiQWpmUQkpdZIl//9N8tDvBaX83bOniIiQq7MvSGB3FNQYszkS
+         NUchssuLJU6j7R1PNASaMc5bIUTO0dimsXqbjOO2VHN9GH8dyr0SpBIQT3c4b82CwUEI
+         Oy+xrn3c7DF2P5ZAdGf4mLL7uEIyzPQZy5Mv+nTSGPRHrMu9em7Q1avTQRSrZ+a2H4J8
+         BWZH7GCA7yVadcw0tMBbHeiEILTD6b334q+WweOftKnhem4a0acfsnCuhxj4e2xNCu92
+         c4axydXiw5UtlwGN5zdRuQjXwohdl7dtyzPS3zaaWEaGnqdI1BdlKASnnXVKI6vrKZkk
+         AgWw==
+X-Forwarded-Encrypted: i=1; AKwUvByg1FyMrUs2ZjfLMLSOzPnIUTQirPwFtZ9TWF282h6saKYaLgB8Wm9+ghPs1KdyKHhQr6sBMgDrvbE=@vger.kernel.org
+X-Gm-Message-State: AFuF++mYV+H0pfPqXgMK8Oa2Nv+j9tYKbGqQBPu/jwn+jq6tpAVyvETo
+	aQuPRfmL4BgrKWLYLqq2Uo9tcdV2/lzd9B6IHKvwCBRwn7ym2wApkZLk9pYvhjdJQllmiyxZJv/
+	Z196QJ5sA2zCyGT7d6TvrbU/JFU9btJv0Tett56iSQBJUffNmxmKAjEUO27EK
+X-Gm-Gg: AYBFou3/7jJvCXzO3jxz+Dw3Srw0379WHnecI6tHftmB67O3XbMyjjEfMYNoujkLN2t
+	dbULO068/83ioxZHmKht8O6vlzHD/3XlnpkoiFIG3pbcmTjRS7BpUBDTyD0PbhFm1wXs8SyLq4B
+	QlWDo/vV8tJfDh/wYP43/6qk5kE+WIcvLvs7WCrLQZRzEbFNDfrg4/jbgOaPYqG0ZMOdEI+pYPa
+	/d4Q2Gy1to1QQ88bbgLJQNHXueFgSZZeVIVqevp0qvmv6ofWgc2l3jtcEnRgtUP/AKArkmhOvER
+	19M6XE3OmBlfp4y1fpdHgR0tylZmsRMjOL5q91IrBBOoLZNE6t50glQVUHTg8ShG2XPA+2V4bDu
+	HAjUz+ev95IROTtapR8tJE6LY37EBrV6f1A==
+X-Received: by 2002:a05:600c:3f0b:b0:49d:1df6:2592 with SMTP id 5b1f17b1804b1-49fc5750c61mr161766925e9.21.1790065948503;
+        Tue, 22 Sep 2026 01:32:28 -0700 (PDT)
+X-Received: by 2002:a05:600c:3f0b:b0:49d:1df6:2592 with SMTP id 5b1f17b1804b1-49fc5750c61mr161766615e9.21.1790065948022;
+        Tue, 22 Sep 2026 01:32:28 -0700 (PDT)
+Received: from aalbersh-thinkpadx1carbongen13.rmtcz.csb ([217.30.74.39])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49fdabe8a2asm32746655e9.4.2026.09.22.01.32.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 22 Sep 2026 01:32:27 -0700 (PDT)
+Date: Tue, 22 Sep 2026 10:32:24 +0200
+From: Andrey Albershteyn <aalbersh@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, 
+	Andrey Albershteyn <aalbersh@kernel.org>, ebiggers@kernel.org, hch@lst.de, 
+	Carlos Maiolino <cem@kernel.org>, fsverity@lists.linux.dev, linux-fsdevel@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-ext4@vger.kernel.org, 
+	linux-f2fs-devel@lists.sourceforge.net, linux-btrfs@vger.kernel.org, david@fromorbit.com
+Subject: Re: [PATCH v16 13/21] xfs: add XFS_BMAPI_UNWRITTEN to unmap
+ unwritten extents in __xfs_bunmapi()
+Message-ID: <arI8cvh8rgIwmv9V@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+References: <20260918111539.1003439-1-aalbersh@kernel.org>
+ <20260918111539.1003439-14-aalbersh@kernel.org>
+ <20260922043402.GM2705364@frogsfrogsfrogs>
+ <arIsIhrWltHi9Aej@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <arIsIhrWltHi9Aej@infradead.org>
 
-From: MingTao Huang <mintaohuang@tencent.com>
+On 2026-09-22 00:20:02, Christoph Hellwig wrote:
+> On Mon, Sep 21, 2026 at 09:34:02PM -0700, Darrick J. Wong wrote:
+> > > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> > > index cc48f6e20e80..7ba76017ae56 100644
+> > > --- a/fs/xfs/libxfs/xfs_bmap.c
+> > > +++ b/fs/xfs/libxfs/xfs_bmap.c
+> > > @@ -5280,6 +5280,10 @@ __xfs_bunmapi(
+> > >  		if (del.br_startoff + del.br_blockcount > end + 1)
+> > >  			del.br_blockcount = end + 1 - del.br_startoff;
+> > >  
+> > > +		if ((flags & XFS_BMAPI_UNWRITTEN) &&
+> > > +				del.br_state != XFS_EXT_UNWRITTEN)
+> > 
+> > Odd indentation?
+> > 
+> > 		if ((flags & XFS_BMAPI_UNWRITTEN) &&
+> > 		    del.br_state != XFS_EXT_UNWRITTEN)
+> 
+> Yeah.
+> 
+> > /me again wonders if bunmapi ought to have its own flags instaed of
+> > reusing *some* of bmapi.  But I concede that ought to be a different
+> > cleanup, because figuring out which flags are for bunmapi.  I think it's
+> > REMAP, ATTR_FORK, NODISCARD, and UNWRITTEN?
+> 
+> I think that would create more confusion than it helps.  OTOH asserting
+> the valid flag would be helful.
+> 
+> Sashiko complains about interactions with the weird rtextent bunmap
+> behavior.  Should we disallow fsverity with a larger than fsb
+> rtextensive to not bother with this?  Btw, did you test this series
+> with RT classic and or zoned?
 
-Commit f3f7ae68a4ea ("xfs: skip flushing log items during push")
-introduced a fast path in xfsaild_push() that uses
-test_bit(XFS_LI_FLUSHING) to skip log items already being
-flushed.  However, the fast path jumps directly to the
-next_item label, bypassing flushing++, count++, and the
-ail_last_pushed_lsn update.  This causes three problems:
+yeah, I will disallow it
 
-1. The loop exit condition "count > 1000" becomes much harder to
-   trigger.  count was meant to track every item visited, but now it
-   only increments for non-flushing items that enter
-   xfsaild_push_item().  Each such item typically triggers an inode
-   cluster flush that marks dozens of neighbouring inodes as flushing,
-   so count effectively counts cluster flushes rather than individual
-   items.  The threshold shifts from 1000 items to ~1000 clusters,
-   letting the loop scan an order of magnitude more items per round.
-   Each cluster flush adds a buffer to ail_buf_list, and the resulting
-   oversized list causes xfs_buf_delwri_submit_nowait() -- which runs
-   list_sort() plus per-buffer trylock and IO submission -- to take so
-   long that the watchdog fires.
+I did many revisions back, but haven't tested recent versions, I
+will test with rt for the next version
 
-2. The timeout decision "(stuck + flushing) * 100 / count > 90" is
-   computed without the fast-path flushing items, so the flushing ratio
-   is severely under-reported.  When most of the AIL is flushing, the
-   ratio appears near 0%.  xfsaild therefore selects
-   "tout = 0" when it should select "tout = 20" (20 ms
-   back-off to let IO complete).  The zero-backoff tight loop compounds
-   the ail_buf_list accumulation across rounds.
-
-3. ail_last_pushed_lsn is not advanced past flushing items, so the
-   next push round restarts scanning from the same position, repeatedly
-   traversing items that are still in-flight.
-
-We hit this as a soft lockup during stress testing on an internal
-kernel that includes commit f3f7ae68a4ea ("xfs: skip flushing log
-items during push").  The xfsaild kthread was stuck for
-22 seconds inside xfs_buf_delwri_submit_nowait(), called from
-xfsaild_push(), processing an excessively large ail_buf_list:
-
-  watchdog: BUG: soft lockup - CPU#48 stuck for 22s! [xfsaild/dm-1:4931]
-  RIP: 0010:xfs_buf_delwri_submit_buffers+0xf2/0x250 [xfs]
-  Call Trace:
-   <TASK>
-   xfsaild_push+0x19b/0x7d0 [xfs]
-   xfsaild+0xb8/0x1a0 [xfs]
-   kthread+0xcc/0x100
-   ret_from_fork+0x5f/0xa0
-   ret_from_fork_asm+0x1b/0x30
-   </TASK>
-  Kernel panic - not syncing: softlockup: hung tasks
-
-Fix this by accounting for flushing items in the fast path -- increment
-flushing and count, and update ail_last_pushed_lsn -- to match what the
-XFS_ITEM_FLUSHING case in xfsaild_push_item() already does.  This
-ensures the loop exit condition, the timeout ratio, and the resume
-position all reflect the true state of the AIL.
-
-Fixes: f3f7ae68a4ea ("xfs: skip flushing log items during push")
-Signed-off-by: MingTao Huang <mintaohuang@tencent.com>
----
- fs/xfs/xfs_trans_ail.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
-
-diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index 99a9bf3762b7..0f72cd4e6983 100644
---- a/fs/xfs/xfs_trans_ail.c
-+++ b/fs/xfs/xfs_trans_ail.c
-@@ -580,8 +580,12 @@ xfsaild_push(
- 	lsn = lip->li_lsn;
- 	while ((XFS_LSN_CMP(lip->li_lsn, ailp->ail_target) <= 0)) {
- 
--		if (test_bit(XFS_LI_FLUSHING, &lip->li_flags))
-+		if (test_bit(XFS_LI_FLUSHING, &lip->li_flags)) {
-+			flushing++;
-+			count++;
-+			ailp->ail_last_pushed_lsn = lsn;
- 			goto next_item;
-+		}
- 
- 		xfsaild_process_logitem(ailp, lip, &stuck, &flushing);
- 		count++;
 -- 
-2.43.7
+- Andrey
 
