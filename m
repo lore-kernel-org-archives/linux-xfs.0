@@ -1,43 +1,42 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A53303403E8
-	for <linux-xfs@vger.kernel.org>; Tue, 22 Sep 2026 05:23:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 806273403E8
+	for <linux-xfs@vger.kernel.org>; Tue, 22 Sep 2026 05:24:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790054638; cv=none; b=gpRsLyl6O4J94nEm2kwtIttF6Lo1ENAEJTVmT4oIyoUxCwoFTjZvGAnwpqp9KdwY2dp8YRWhvrwNydrD2IWUmnq7MdeaX7jikBXSTE+7Dls58e2RI6W+nePyW8a/ogvJsR2SEj+KDNf+PBEqej1EIGv6sjA9F9TMA+/gCzQpDiA=
+	t=1790054662; cv=none; b=DieZ6Hj3JWNERfN8Vae8IRRFMhzlYt+krsIqecJipSNhOdupYeowVOdVWqh5UPTgeuHNjySSBUbbmY7vFt30JdcBCb7KBMqeT1Qi9gcNDeRsX/UBOLklrEa+7iIguqWtqhUgNxdqKDQ34IXITJFiY0ovJs0dXRZL8zGflNRDcQc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790054638; c=relaxed/simple;
-	bh=h5AmJhAbhvEEAfEzJpAV2RKDzIjKa5r31F2roiB6foI=;
+	s=arc-20240116; t=1790054662; c=relaxed/simple;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pTigqBS0EEeen+f6qnxUn8lWdU+rqYmL9099cCyYtLAQVvfcEfLZ6IwAT35ALzlYskAJJg9IfO/RBshvPuIgK3zooIot8ZxAZv/mMVN+LIwUhwfmTYU2SnHtydvBdziuKQos5+NF4IyUaL/haCzirqVWSwloXzVJ6EHli2/zaVY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=oL1daQvg; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=DQiRoZcqPXlT0/nYFvE+VSWurpND5EFcP+rlKnOVfXqiNOAm3v5FA8ETB0Jm9aNCaUgolHvCyeVUEaJKzplfvLwzLemhI0jHP3OIRvSi5Z7q/kaBWzkIYWK+Y456s8tEtea3cSGV2m3LUiEfma/pRQA3IZnztWl1wayMseEV/+I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=2l0MlwVi; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="oL1daQvg"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="2l0MlwVi"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=ifTToNmp6uVYxrVfQKMKYzBjPTFcR4BnnVHqXEf89MU=; b=oL1daQvg4YipkIACa/c5UTcbcr
-	dmHaXo4Y598OYnS35kx/5TsYrl4QjejU/oUR8cqT+WVjDWzEQF37Qxcpo8YpaaXkg0iZUKZpqRZBJ
-	raiT3RQzwudQxSDg+oPFeu4jTlFEEGi0H3krXUiwc6Lzfn7MS8LMXBuepBYr5+ZK+RQ0LxY02IKdk
-	dex/dJYh2A1XmTIRfx2Pnse07ZhaEjIuz1FHLS1UhYt+k8Twk06bEa5GO7D9RUwhzgI0usT+D+JG0
-	9W7Pq10Fyux9NaO3RfwJbzKuVinl+R4g1Q0e8GdeAzGepmQbLD9V/EU8TReRuOCaUXwM7NFYutH4Z
-	R9RoPShg==;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=2l0MlwVias6Kt+jquIwMV0Ms48
+	XSH3HwE2yyYt/6mlxLIC8ZlGQVdbuMkcchHUns1f56dt/O1Ec26TTaAYF+ehrvlWeATCfm65x3IIC
+	CT9Q+yEqDs+wK8dzQdcYiXK/MKMvFdXBC+o0USBCgs0rgkdDHJUxB5hlMFrZCvtXF7bNDsZ8Fhp7m
+	pN+kowytxBlQPFgMtO+HUzz9+BtiXjkvKUVKrEOSH68hfGojIxtS4Fd36suTOs8nOWoPKtXWg/jud
+	PZ2FTEEUa27ad4cWe3kYR84ugv5TaiXzDB0e5O/UP8pJ56nfL+ry0bM0Qrnd5m/qSGEublOYWHefy
+	RON4xtvg==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1x8syy-00000004EsR-0TJ3;
-	Tue, 22 Sep 2026 05:23:56 +0000
-Date: Mon, 21 Sep 2026 22:23:56 -0700
+	id 1x8szN-00000004EtO-09J6;
+	Tue, 22 Sep 2026 05:24:21 +0000
+Date: Mon, 21 Sep 2026 22:24:21 -0700
 From: Christoph Hellwig <hch@infradead.org>
 To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: cem@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 11/14] xfarray: don't allow users to unset in the middle
- of an array
-Message-ID: <arIQ7BTzDz3NhdiF@infradead.org>
+Subject: Re: [PATCH 12/14] xfs: don't allow sorting sparse arrays
+Message-ID: <arIRBf9sMJr6VEpI@infradead.org>
 References: <178996120463.181988.9152653965555322220.stgit@frogsfrogsfrogs>
- <178996120785.181988.9998461891697022684.stgit@frogsfrogsfrogs>
+ <178996120807.181988.9510302652927544095.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,20 +45,10 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <178996120785.181988.9998461891697022684.stgit@frogsfrogsfrogs>
+In-Reply-To: <178996120807.181988.9510302652927544095.stgit@frogsfrogsfrogs>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Sun, Sep 20, 2026 at 11:17:51PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> Now that we've merged online fsck, the only user of xfarray_unset is the
-> free space btree repair code, and it only needs to be able to remove
-> records from the end of the array.
-
-I don't get the " Now that we've merged" part.  Without that we would
-not have any user, right?
-
-Otherwise looks good:
+Looks good:
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 
