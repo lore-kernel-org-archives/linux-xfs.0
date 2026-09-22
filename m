@@ -1,69 +1,68 @@
-Received: from mail-qk1-f180.google.com (mail-qk1-f180.google.com [209.85.222.180])
+Received: from mail-qk2-f42.google.com (mail-qk2-f42.google.com [74.125.230.234])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2AB732E6BC
-	for <linux-xfs@vger.kernel.org>; Tue, 22 Sep 2026 13:56:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48FBB361DCB
+	for <linux-xfs@vger.kernel.org>; Tue, 22 Sep 2026 14:00:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.230.234
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790085382; cv=none; b=vBBbc4VZHaiiqz52i2uRHs/9XWaMQvQkHpmDfcKBO4RLuzPt/k857Ud0cvMgDs2cnfzR952WSHuuk8+Vt3fpfM6aGJKtVf9TSCA6DyDEs0Cbaikb9L+wag+MIVGMeqlfc75bpUZdaYkYEU2NAQdpUbfXIlO4kX+fFudxXwkFd7k=
+	t=1790085621; cv=none; b=CQUqLZy7wCYDTQPjyALZjAgG1jJgvnpiDyX3dgp3JtF3m1wYqL5/SWtFhrcp+sFV5UkJkTKn/dzoVMqO1BaTYcdpB9O3hJJjqU30YHIc4EeEpR3XN79ksVVb+p5bNjsoQWp0Z0nH7T9xlCgyHFpY3/8uFqiAimBJSOo2YhUlA3I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790085382; c=relaxed/simple;
-	bh=qtDivFE1nRVXw+3uzHe9eEkXALgMbbD+fmnKuWndtLM=;
+	s=arc-20240116; t=1790085621; c=relaxed/simple;
+	bh=Ysf9kNQ+33PxVdJ0LMg2niyZFgqOnLKjhyylnUl8qTk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=F+Ui7AOfb2QanDtboxa+iWmDTkmP4cAAgkHVuZQ/G3kMCdI1FHcqNnMMUHoOp0iIibPn+EwnypmPBFSI8nD+Zhsj4RAtKtFrJxCmqACVZnm+gWSvP1Vjh855aVwt9bAcya0BRN2F1XkbemoEDls+DibHADQcdgocjH8XLdeN6SU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org; spf=pass smtp.mailfrom=cmpxchg.org; dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b=WujKLC1p; arc=none smtp.client-ip=209.85.222.180
+	 Content-Type:Content-Disposition:In-Reply-To; b=aEcBbr9tH6Pr1sSBSRVqi8x2yOhSoc+p6XxZWI1OhvAsf3Quayz1O5F0sJZNSAKFvC+zE2gX0BpAeDDJmZvJJ6CkO3075zgEWqwUjTHgn/aNzlXYc4tSokU+uqcfjPgZ0Wm9wyzN0hu6l/wxjDQTsUe6PfFNgRuhSaTxja98PNo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org; spf=pass smtp.mailfrom=cmpxchg.org; dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b=cj7O5gEk; arc=none smtp.client-ip=74.125.230.234
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmpxchg.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b="WujKLC1p"
-Received: by mail-qk1-f180.google.com with SMTP id af79cd13be357-93c1c71fc6dso39518085a.0
-        for <linux-xfs@vger.kernel.org>; Tue, 22 Sep 2026 06:56:17 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b="cj7O5gEk"
+Received: by mail-qk2-f42.google.com with SMTP id af79cd13be357-93be29bb454so475272985a.1
+        for <linux-xfs@vger.kernel.org>; Tue, 22 Sep 2026 07:00:19 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg.org; s=google; t=1790085376; x=1790690176; darn=vger.kernel.org;
+        d=cmpxchg.org; s=google; t=1790085618; x=1790690418; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=hGu1NCAbAsmG5udT7RRBzA29qW1Tatxi7P64YgMVTYo=;
-        b=WujKLC1pLyMIV7C1PC6+pxhnVRNf6NhqS9lptVEWycA+sHsFcxBLI6rKYNrly90pUc
-         eHKMglOylGOpMfQLV52xt81UZJLoN+8WqyENe/SqFgAjcMN05B/0VKIQeHKvrexixmhL
-         /v/KiGiL5Ew4YebxmXAGPKmKYavtlx93y4mnrx+DCGOcDcML9NdUuHDfXhD8b+gFcU+Z
-         C4Jni3U4IkuahUyPXO6h2BU+/E+3NUgt/yD0b9YlRCzbAElY+u2ztZGa2kLZFXudZ/QX
-         7j/dQhKaY4r0xf6hJtwXTpuds1cneMbkswH9+AxszBFr+4QfLncJlHw9mWF4tQUglOnl
-         AS/g==
+        bh=yVPAItgeW/MMs80EWUUxpddBeukv+Oab4KQ44WwQXwc=;
+        b=cj7O5gEkRJ4IMPNvVXC4spsO4XZqIreKj/4TIEka7a2Tg2X69W3ijpeXyd1yJJfa6Y
+         /EDSrpGD54UCGGnzQtNRkoGJADXwaJ9xhx0B9hkHKLwf91mL4RrjJQuvAnCr6GWQrgZy
+         jRj2Rc+yKC+DSwBJAdjR0lGH3+22cHex3hSjhFeje8vbtTp7nQyLYGVbqJ6TcMP1KDW5
+         LFSZS4sarD0yf6habVL5nm1pizHGRPz/i+fFLJT2HyKvhX6OP64PVbmjaZ4oCE8KPFwc
+         gv8uzwp2v9IamQ0RQQNSkAsvc20TKsvLH4zskQXRm6ZWKb/wx3PxhWLp6AUDYu7llg62
+         +MlA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790085376; x=1790690176;
+        d=1e100.net; s=20260707; t=1790085618; x=1790690418;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=hGu1NCAbAsmG5udT7RRBzA29qW1Tatxi7P64YgMVTYo=;
-        b=g24JL1vpPR9QMqycWzk6CWC2uKLWJpycffk8cgh1Vpd5oXGgHugMeenFPwF/tErYtr
-         za7gwyHkN/ulhWa0YsscANMnY5TxUozSh9pD8ktfOy3Pc/xEsl2SSsVq4dH4K9R3sAMN
-         QSCScGTHaT4qN8AbKyjpyGixr78eaVpbhJKZmUub4hqShFxoM9dNnzh4nPC10UoDA+qp
-         pkAiZAkTd2BQCCbdU4S0WxFxRg2N9K5Ng+X9XUCc5KHxCOXyZEh1Od0pIukBl8/1Ivje
-         EMyKHUOBHXRamzfAUOyrjDuDF4WJf7N8OFuR30GqzmO4NIxwD03W4IFTP+L5tWh2MEDV
-         8EXg==
-X-Forwarded-Encrypted: i=1; AKwUvByNF4rvQa+8rwOb3UW80+u8JyAwpbp6bXr0nypsjjFyYtpkBeS+C8Xq8BlSMisZ1lJLDs2lFiPWTCo=@vger.kernel.org
-X-Gm-Message-State: AFuF++lhgGBluXHD1TePS5P2R6V+QqyorOnOHk3OPkYeBs3+V/zGTC1s
-	EJesWVpAb6ip0bFywO7AGiS+l2zxIf4g7RCYV2ZUSfCYTtj4RGMjGBa8Fgou9Ygj3x0=
-X-Gm-Gg: AYBFou1u9FB423w45zH/NgKxhR7lVLnwtkyIs8e4X9cQubdfbK4GbLDOb7f/iLOZaEQ
-	y771tYBiJjM5y3wDBtMti3TSXFsPsFoNw0a4R/h3ZHnSJFf2jGY1tUOvkAqpHs5Rs36pIqFauNw
-	uo4q/e8BXUocxXp32ra2RwDOXd/g4Teu/TqBwNNnNaAr79Y0fFmFGyfntXB9G0mc7VCF3pKu9OI
-	sIQpZZ/1/Qyv5ZNksKW7apYQ9M0rOUP8tnAvKA9+ec/GQsGyBrEn4xgg6fiTKZXtjl9xC/oCdON
-	mnyMYHt9JHmhSeLkz58jeFTmuyLh9JcHVyeVIuPc4PK4DAzJ3nlcyAoT5IFMA6mA5ZD108QXHBJ
-	R+UgHjvhewE9p/asltsZ5wk+oq9X6qN6GK7+4Xr18991K7+Ugs1gffkVsQZO+4OzZ1ZEwYkT2Zx
-	tYDKF79gQCH4uXrTmVRwL4BZf2tqmiY+TLoNFCMr1Wj2HR38E+OMbCFzQKWUGhaP/HOvXd
-X-Received: by 2002:a05:620a:444a:b0:939:c7dc:8712 with SMTP id af79cd13be357-93c17e489a1mr426789785a.15.1790085376405;
-        Tue, 22 Sep 2026 06:56:16 -0700 (PDT)
+        bh=yVPAItgeW/MMs80EWUUxpddBeukv+Oab4KQ44WwQXwc=;
+        b=xcz4zP42HFDiG8kluxDceAZHDUgFRg6qpOT/OT1257SMSn2muReRquJEnvWurNx3rC
+         G/7R9EkdboB/S3fzpmuvtdJXEhV5aLC0CHIMyyS8KlldnSk7qLFXJ9S+2s1DmsU33Hsj
+         fyT+Wt1KN08zqY7jeprtguCM76kakRLVvQxLEulwin8dFvMHcTSIexl4uc+t6MjcBAmX
+         6RQsB/HBgm0dKAxQ94YBq0kQqQ/nCdG/hohk3ynzClZ42f2mdpacZBDIe5U2BAAHqFTQ
+         PnxMhiClaFSehhDo2FnXFF3HVv9uoPqcakkTQ3qxtUUiW9qlKdSqwiGT+PGIXELX0mXj
+         mvLw==
+X-Forwarded-Encrypted: i=1; AKwUvBx8ue4Ialvvk8U/zns+9mAXQun/IMWXiOYrXRm7ewjwVLM3H0Pvl+qhEoVxc8ui82AI0sv8FUsPYOU=@vger.kernel.org
+X-Gm-Message-State: AFuF++kIyPLsNjdcvAoOOKBUzhw+ZLTRb4v1JnZXs8Fm4WyLKNTbsRzo
+	4lp0Z8OnZltk/fEuuAs0NYqeifS2gwU0DcEutme0vXFZgmMoTmyh4pJhda1UmV6Wnyc=
+X-Gm-Gg: AYBFou1az5iHVKW6B8wuHkTwxHVlWhaWTNQJba+M4kGnnnUNk6VE9jQjF83ROrJKsN3
+	z8Wix+ZjRff8QGbwwL/VJlTwrAg+LZVD6hkIPdpc2qSNY5r916uyBnMiz+/gubgBbvGrW58G/pQ
+	jd9ZXjHxj6ZRLdXMpZ6KX6kTwLiJxcM+Tv9531ar/BxbOaK29D0KcOcebqCslDqqjVVVLwQAosS
+	IxgezVPY+Bs5KNKXi6Oh7xaHDmWOKWbcp2+bkiFrCVGDuRmTQXsEcMJAEoCf+UG+VynO17/3/Z4
+	Syi2sQIQ2ja7bxD6pA+k+zio01yMHY476/t7q34ympUNEx6BrtRKbXopvQEK3QFUHKzRO+qeJbe
+	Fyy632w9T242DBZO51s76JW4aUeVBMwzyVZqb2PjTDKo9luv8UO/9QJE3CqLp1ZLtmG9ZH3qlXl
+	95FcoAWvGShBxpGfiuQb3sY09h2KNbd3V26zkRUS+WbuWv4aJqq1Vrr6MWICndFSszq9kE
+X-Received: by 2002:a05:620a:298a:b0:93b:d7a0:d9f0 with SMTP id af79cd13be357-93c19a9ab32mr348786585a.74.1790085617903;
+        Tue, 22 Sep 2026 07:00:17 -0700 (PDT)
 Received: from localhost ([2603:7001:f100:500:365a:60ff:fe62:ff29])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-93c1d17afcfsm151272285a.20.2026.09.22.06.56.15
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-93c1d23e22esm152156485a.40.2026.09.22.07.00.17
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 22 Sep 2026 06:56:15 -0700 (PDT)
-Date: Tue, 22 Sep 2026 09:56:12 -0400
+        Tue, 22 Sep 2026 07:00:17 -0700 (PDT)
+Date: Tue, 22 Sep 2026 10:00:16 -0400
 From: Johannes Weiner <hannes@cmpxchg.org>
 To: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
-Cc: Matthew Wilcox <willy@infradead.org>,
-	Matt Fleming <matt@readmodwrite.com>,
+Cc: Matt Fleming <matt@readmodwrite.com>,
 	Salvatore Dipietro <dipiets@amazon.it>, akpm@linux-foundation.org,
 	abuehaze@amazon.com, alisaidi@amazon.com, blakgeof@amazon.com,
 	brauner@kernel.org, brendan.jackman@linux.dev, david@redhat.com,
@@ -72,20 +71,19 @@ Cc: Matthew Wilcox <willy@infradead.org>,
 	linux-kernel@vger.kernel.org, linux-mm@kvack.org,
 	linux-xfs@vger.kernel.org, mhocko@suse.com, ritesh.list@gmail.com,
 	rvvandan@amazon.com, stable@vger.kernel.org, surenb@google.com,
-	ziy@nvidia.com
-Subject: Re: [PATCH 1/2] mm: page_alloc: do not give all non-blocking
- requests reserve access
-Message-ID: <arKI_AwXQxicc_iH@cmpxchg.org>
-References: <20260910114602.926944-1-dipiets@amazon.it>
+	willy@infradead.org, ziy@nvidia.com
+Subject: Re: [PATCH 2/2] mm: page_alloc: remove ALLOC_NON_BLOCK from
+ ALLOC_RESERVES
+Message-ID: <arKJ8BXOXknpmiu4@cmpxchg.org>
+References: <20260905174239.99e31515fabe220aa7d8e6fa@linux-foundation.org>
+ <20260910114602.926944-1-dipiets@amazon.it>
  <aqQlUr-1h07G8JWM@cmpxchg.org>
  <8d6a8a63-4adc-458a-b548-a47bf5ff8eb7@kernel.org>
  <aqq8pWI0u1IZNWHT@cmpxchg.org>
  <9f415dc7-adad-4161-b20d-7c3173f50ff3@kernel.org>
  <arFBJdYaRx_iJNDA@cmpxchg.org>
- <arFBWvzXPYrKuIYi@cmpxchg.org>
- <arFFKGrpPwtTkoCi@casper.infradead.org>
- <arFUPOi6gadAvD3E@cmpxchg.org>
- <c4a6d3db-8b57-400d-a377-a7acbf45d3ba@kernel.org>
+ <arFBr22V60BMmVpl@cmpxchg.org>
+ <72674485-6ec2-4cb4-a854-b937333cbf97@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -94,111 +92,50 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <c4a6d3db-8b57-400d-a377-a7acbf45d3ba@kernel.org>
+In-Reply-To: <72674485-6ec2-4cb4-a854-b937333cbf97@kernel.org>
 
-On Tue, Sep 22, 2026 at 01:52:41PM +0200, Vlastimil Babka (SUSE) wrote:
+On Tue, Sep 22, 2026 at 02:06:34PM +0200, Vlastimil Babka (SUSE) wrote:
+> On 9/21/26 4:39 PM, Johannes Weiner wrote:
+> > 1ebbb21811b7 ("mm/page_alloc: explicitly define how __GFP_HIGH
+> > non-blocking allocations accesses reserves") stopped handing out
+> > reserve access for ALLOC_NON_BLOCK on its own: the extra 25% below the
+> > min watermark is now only granted on top of ALLOC_MIN_RESERVE. But the
+> > flag was left in ALLOC_RESERVES, which produces something odd:
+> > 
+> > With the ALLOC_RESERVES match, __zone_watermark_unusable_free() doesn't
+> > subtract the free highatomic pages for them. So in the slowpath, they
+> > get to consume regular blocks below the min watermark by the number of
+> > free highatomic pages. The highatomic reserve is capped at 1% of the
+> > zone, which on any decently sized machine is a multiple of the min
+> > watermark: GFP_NOWAIT can drain regular memory to zero.
+> > 
+> > The user-visible result is brutal hiccups during bursts of GFP_NOWAIT
+> > allocations under memory pressure. On a 32G box with an anonymous
+> > working set, swap, and a filled 290M highatomic reserve, a GFP_NOWAIT
+> > burst drove regular free memory in the 28G Normal zone (min=60M) to
+> > 28M, 0.8M and 0.6M in three runs. Swapout failed to allocate its swap
+> > table, reclaim scanned 13M pages to reclaim 200k, page faults stalled
+> > for tens to hundreds of milliseconds. The machine survives it, but not
+> > by design: direct reclaimers eventually fail and start unreserving
+> > highatomic blocks, until the allocation succeeds or the reserve is
+> > gone and the OOM killer runs. That reserve exists for high-order
+> > atomic allocations; here it is destroyed to bail out a GFP_NOWAIT
+> > consumer that was never entitled to the memory.
 > 
-> 
-> On 9/21/26 5:58 PM, Johannes Weiner wrote:
-> > On Mon, Sep 21, 2026 at 03:54:32PM +0100, Matthew Wilcox wrote:
-> >> On Mon, Sep 21, 2026 at 10:38:18AM -0400, Johannes Weiner wrote:
-> >>> +++ b/mm/page_alloc.c
-> >>> @@ -3246,7 +3246,9 @@ struct page *rmqueue_buddy(struct zone *preferred_zone, struct zone *zone,
-> >>>  			 * reserves as failing now is worse than failing a
-> >>>  			 * high-order atomic allocation in the future.
-> >>>  			 */
-> >>> -			if (!page && (alloc_flags & (ALLOC_OOM|ALLOC_NON_BLOCK)))
-> >>> +			if (!page &&
-> >>> +			    ((alloc_flags & ALLOC_OOM) ||
-> >>> +			     (alloc_flags & ALLOC_MASK_ATOMIC) == ALLOC_MASK_ATOMIC))
-> >>>  				page = __rmqueue_smallest(zone, order, MIGRATE_HIGHATOMIC);
-> >>
-> >> Would this be slightly neater?
-> >>
-> >> static inline bool may_access_reserves(unsigned int alloc_flags)
-> >> {
-> >> 	if (alloc_flags & ALLOC_OOM)
-> >> 		return true;
-> >> 	if (alloc_flags & (ALLOC_NON_BLOCK | ALLOC_MIN_RESERVE)) ==
-> >> 	    (ALLOC_NON_BLOCK | ALLOC_MIN_RESERVE)
-> >> 		return true;
-> >> 	return false;
-> >> }
-> 
-> I think it should be named e.g. may_access_highatomic_reserves() as
-> may_access_reserves() is rather generic and would seem to imply an
-> ALLOC_RESERVES match (see 2/2).
+> This suggests to me that a LLM review of 1/2 spotted this issue and also
+> (or you) constructed a test doing the GFP_NOWAIT bursts to confirm the
+> impact, but it has not been observed in production? But if it was, can
+> we make it clear?
 
-Note that it doesn't actually check ALLOC_HIGHATOMIC itself. It's just
-the hail-mary AFTER trying the primary migratetype. So the name still
-doesn't look right, and rmqueue_buddy() reads kind of awkardly:
+Yes, and yes. The test is manufactured, I just pushed it to stick to a
+realistic sequence of events. But it wasn't observed in the wild.
 
-if (alloc_flags & ALLOC_HIGHATOMIC)
-	page = __rmqueue_smallest(..., MIGRATE_HIGHATOMIC);
-if (!page) {
-	page = __rmqueue(..., migratetype, ...);
+> The change itself is fine and we don't need ALLOC_NON_BLOCK in
+> ALLOC_RESERVES. But I wonder if we should also make the
+> __zone_watermark_unusable_free() check more precise, by using
+> may_access_highatomic_reserves() there instead of ALLOC_RESERVES?
+> Which would mean that the function should however also evaluate
+> ALLOC_HIGHATOMIC, and restrict the other checks to order=0, to be usable
+> from both callers.
 
-	/* Allow OOM and order-0 atomic */
-	if (!page && may_access_highatomic_reserve())
-		page = __rmqueue_smallest(..., MIGRATE_HIGHATOMIC);
-}
-
-It would have to be may_access_highatomic_reserve_as_last_resort() or
-something?
-
-Hm, this is a mess. Looking closer, I think there is more breakage,
-name aside.
-
-You suggest in 2/2 to use the same helper in unusable_free. But I
-think that's broken. My 2/2 does not look like the full fix either:
-
-The fundamental problem is including the highatomics reserves in the
-watermark check for any allocations that first prefer a different
-migratetype - "regular memory". Any time we do this, we allow those
-allocations to draw down regular memory to 0 based on the presence of
-the highatomic reserves. And when reclaim, swap etc. come along there
-is nothing left for them. ALLOC_NO_WATERMARKS e.g. permits ignoring
-the wmarks but doesn't grant access to highatomic *freelists*.
-
-So I think there are two choices:
-
-(1) Let *everything* with some sort of reserve access fall back to
-highatomic, or
-
-(2) Only allow ALLOC_HIGHATOMIC to include highatomic reserves in
-their watermarks check. With limited opportunistic fallback to the
-highatomics *freelists*, like the order-0 atomics above.
-
-My intuition is that (1) might weaken the highatomic reserves to the
-point of uselessness, and we should probably go with (2):
-
-watermarks:
-if (alloc_flags & ALLOC_HIGHATOMIC)
-	unusable_free += zone->nr_free_highatomic
-
-freelists:
-if (alloc_flags & ALLOC_HIGHATOMIC)
-	page = __rmqueue_smallest(..., MIGRATE_HIGHATOMIC);
-if (!page) {
-	page = __rmqueue(..., migratetype, ...);
-	/* Opportunistic fallback for order-0 atomics */
-	if (!page && opportunistic_highatomic_fallback())
-		page = __rmqueue_smallest(..., MIGRATE_HIGHATOMIC);
-}
-
-> > I tend to be hesitant with single-use abstractions, but no objection
-> > if people think this is better.
-> 
-> True but single-use ALLOC_MASK_ATOMIC is also not that great, and the
-> usage makes the code hard to decipher. And see my reply to 2/2.
-
-There is one small upside, which is that it pairs with the
-ALLOC_HIGHATOMIC check that precedes it. The comment says "order-0
-atomics" get a hail mary, but there is no order check. That order-0
-comes out of the sequence of events here: we first check highatomic,
-which is order > 0 && atomic. If that, and the native type, fail, we
-do the hail mary for atomic, which must be by definition order-0.
-
-If you abstract that privilege into a generic "can access highatomic
-reserves" without an order check, it tempts refactors that cause bugs
-like the above.
+I responded to this in 1/2 because it had more context.
