@@ -1,86 +1,96 @@
-Received: from mail-wm2-f12.google.com (mail-wm2-f12.google.com [74.125.225.140])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78CB1524AE6
-	for <linux-xfs@vger.kernel.org>; Tue, 22 Sep 2026 09:10:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.140
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 141F649E5DC
+	for <linux-xfs@vger.kernel.org>; Tue, 22 Sep 2026 09:14:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790068220; cv=none; b=ngrmSTLLTOwSG7NLx6DMajqAXM+gnFDoPZVjbkV0OJ6+siYC2d2wXjXmXdoXLIPv7otnbIkrtjG6TloKfdlmJOa1GGrrgDOpuXtBXVH9FAebJme85gRC57odDeL5HwHBD46WlF/3ZtRSVSDrZavx3OIIBIvXZLXz0AA2xnybHTI=
+	t=1790068444; cv=none; b=q8TMCOIEcr5NSimkuKgau02iq72IUHB3bF+FoIgncRxuz4xw8JQc4ffkx2jlNm8B6/1s92dhR84ojJKEkH8CZGQprKYOFmCkFc+SxsEj1Lo6ArwzakLXHMLP7Dkh4WVomjiKwmU92zvtk7xrkgLyzILPhHNjHYnlDPvM6mixhXU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790068220; c=relaxed/simple;
-	bh=wkOW124WuFQQCipMuwELLw27Qx4x1bj/S8RRLSKncZk=;
+	s=arc-20240116; t=1790068444; c=relaxed/simple;
+	bh=x6HQo2Ql98Umszl1bLbKyaBGyakHflH2Y/8sgqKcP6M=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bsrgVaeeQJqvpnPnpasgjn+wpSEihushofnlr4lM4oQT31xYdtkAIviGa9yaC9487hKO4DmgBZfpgms5Lf3wFQdQwg95HVLvW9zGOJMkvi0gsC/QIU6wNU/vym7DrLA9/Iz9ulWJMNUAh71XuOQN9zmheFuDHwW/FW+6QreZLGw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=qGY+AXxt; arc=none smtp.client-ip=74.125.225.140
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=MjJlwTjEIa79MJMiDpSKiVgKLFQKXTg7D0/8nEfXsVSzPgA0KBwlAdaYUH0KbG44E02D0f2WIucvS8X7TBx/V6d1fy4zB4yWhBrdGIZNneyNnOTE6daryZ7/Ac0+BT3nbkOPaayca6RccPfTqxdJOjqn83H8ByLzBCim8kLBwww=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=hV6zEvB9; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=l1HC45aM; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="qGY+AXxt"
-Received: by mail-wm2-f12.google.com with SMTP id 5b1f17b1804b1-49ccff31419so32915555e9.3
-        for <linux-xfs@vger.kernel.org>; Tue, 22 Sep 2026 02:10:18 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hV6zEvB9";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="l1HC45aM"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1790068442;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=o4baz/6RzxjMCiX3WhcQq7uKFgXpKloXgi45FkMIoFs=;
+	b=hV6zEvB9MV/3PE4+QjdWGdmy0XXPOKBVCJnmXFQ5JOXrGbDHeFWLPGTHqjxzbMaFja+Ihr
+	MjApVfll9zcmaBufKgbyUckoVzu/5xbUJ3pM20+X/W7nYa3AsaCcpdeUN3FAIiMnFr1eWf
+	V1fbIQ2Q4VxLadoS2/tuwaz/3Gly6mk=
+Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
+ [209.85.128.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-637-2sjrkoZ2N2inhN04HrSBPA-1; Tue, 22 Sep 2026 05:14:00 -0400
+X-MC-Unique: 2sjrkoZ2N2inhN04HrSBPA-1
+X-Mimecast-MFC-AGG-ID: 2sjrkoZ2N2inhN04HrSBPA_1790068439
+Received: by mail-wm1-f72.google.com with SMTP id 5b1f17b1804b1-490a767b782so30873825e9.2
+        for <linux-xfs@vger.kernel.org>; Tue, 22 Sep 2026 02:13:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790068216; x=1790673016; darn=vger.kernel.org;
+        d=redhat.com; s=google; t=1790068439; x=1790673239; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=95n40ZP9Z6iTAIldKB90q2CM8xGRzAwUON6dqMEGMLY=;
-        b=qGY+AXxt7623LzERg/mEE6+Ms7RT/rJ3c4pQ6qIeCUP/sUVfnkqW3bjYHDjkr45pwr
-         zH1JbgnOgOdVafF0n+Bf8PnKUf5wR8pc3AOoREg2mslfPW5YQG9yuLde870ytLkWVTjQ
-         JgIbaxrTrFpvt+IJhtMV7Y+SxYGznJNGW27XYYTS5PertN0ho2CZSU0aNLqVzOPMcu3w
-         K/aDKu4JlDeFFd4QnFRZTVX9NH3lt9fhDrcLWggaMsnDP8uH4c44bHz75iEhep1s6cDg
-         hlqEAzSwHoFO7czr2kOTEZGzfvDfum/gMjMzEzq7zsdG/KsmWoNj1p0RHihsNZXqgyQr
-         R/qQ==
+        bh=o4baz/6RzxjMCiX3WhcQq7uKFgXpKloXgi45FkMIoFs=;
+        b=l1HC45aMBgZ3xdsjio+YOyFachXKLMHZ43yaEiUZSxWNLhureP/1vW00dqcUTs4Cfs
+         cAZ7eDbExdfqfd7jumDGq05Wqgy43tgavAFljqCZwrZDPlodroYA7n0cw53ZsFu88knm
+         /vUil+LjTJ2WzWoEnH/r2T1nHlFILNDmT8T84h5WGMfoWudwr6aALc4ysvJURZyvNsm+
+         WkHIfqXvEnDl7/f+lAfOPN2nP/ooQQTMbcT5x2AodvDKawVN93woRz2w7FCYoDQ8UmJV
+         4o/kz4S8Oxs91owRFPG390XpDgUi3Z9VrbKXP8ePWIar68iP6lU+M0SuEWokdxpZkRu6
+         eexA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790068216; x=1790673016;
+        d=1e100.net; s=20260707; t=1790068439; x=1790673239;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=95n40ZP9Z6iTAIldKB90q2CM8xGRzAwUON6dqMEGMLY=;
-        b=k86I3Y6p5roG5zsK4fx+kE7Ob7iRPm0GfSKU9xCfn7AdeRJFhyrtMmJQvUJLpQDBxF
-         G5IFYQuundhEwDttturD3f9EIYI/eQtksxHOYx6gJh5awtRKM3pOw0U9nzye5rQyCJpm
-         7xjNICoHvR7EvbDFYpSKW5QlnEPjqZy/odq4m1BcpKN5CF6fQYPwUMWgWuzYnwc9aTdC
-         AAjDiAjt8ey9d2+iwMeUj6E3/X3C0M+kcc+vgNOQ6xa4LZiJWD0y7XEDiBEVqs0k4j5S
-         Ulr4idU1FUqT2yr4Ui0GPHzo0HWlU5HsfuZufF8YkBQ3/aCV7xtFvIe6Xqkb21FpU9OC
-         8SkQ==
-X-Forwarded-Encrypted: i=1; AKwUvBwzpbAgBb/TduRiuz+P5gJZfEpkrAcZ50ogCTA12XOcAH0hPxXZOtWrt/ipDi/xMHqf2hj+kBka/As=@vger.kernel.org
-X-Gm-Message-State: AFuF++knlLuDo6B181afupUFxCerQDsHzP6qqb/k65SE32GO0jWFKGid
-	kxrse/W/BhccNLBMJ94EPnkP6uak3gIp9AZFw8Dc9o/n4t8JS5KLh4bE
-X-Gm-Gg: AYBFou2++znezNsRASqaYE2yjp5+Ibm4iO+kF87TXoroWr8nguUu0ceVn2r4njT1JCQ
-	9YOEunbD6ZKIfgxrYBxUAc8noTHiVHPxf/5uuH29dNloCN/9tmu20H2dIyo0x/vGPV3Jlgub5DT
-	TcXRGFepVnFLCqoFpwliU8wV8byd7Y1RrybD2F3gEGm80MxvNIr43BVhwAYqAwBH2sI9UjwEW5o
-	kUHKrRpPHCgulhsSMfLuFPqxTHufqlEPJvJKVunS4b7wcXyPlKfIjtrt2vvx4NSP2/BnKMguEO4
-	zhVvC9ADnYbxRK/Qq3TFFJeVabn2eN+WekgufmyIjo8iShpXDaVanGCKMKjIZDPGevi/+DfC/nC
-	VIX3haM9taiNPZD249LTaKiJRaphj0Jjzgxl6xK1JFO8PvlseG6ItdVtW738Tm2CTuXcISm7LnQ
-	ut6wDlkw4hdVjtloSOLmj33asnkHJjngK6B9YKpEmtaXyVV2ow4WOooeTdMwgCioZoJjycnAoOh
-	GmC98UwJdsa8Mt6HBkZs7O8IMsWbkVeZ2WKZs2d9ULhJBavOU/FZwGQz/uoP+BzkOoDhGpPhSMh
-	rf3w
-X-Received: by 2002:a05:600c:4e16:b0:49e:8377:c880 with SMTP id 5b1f17b1804b1-49fc574a641mr164997875e9.33.1790068216048;
-        Tue, 22 Sep 2026 02:10:16 -0700 (PDT)
-Received: from andreayoga.localdomain (93-42-14-189.ip84.fastwebnet.it. [93.42.14.189])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49fda8f04f7sm57710925e9.0.2026.09.22.02.10.14
+        bh=o4baz/6RzxjMCiX3WhcQq7uKFgXpKloXgi45FkMIoFs=;
+        b=mS2X/EOpQpDQs9NVEaBnjmxmXA/r7UuoKNqL5PT2+i0AqXe76k2EkrX+aBhF3ec9Bf
+         AbLG44nM1Mg5eS8RyzuQRHaHfjxOG6eu/rDC5nvdEpqReKsdjfLALiQ/lqEGOOWB7jQ7
+         N2I29JiU2fIUDbdlQMKSuMWVMMRAPCaXmlyEc9x4//JurYsNJ2zP8sOufIzyh2ER+Lzq
+         ptDCnhIKHBC+AqRS8PSlw+MTuG3rcH4eRmwWhDPZmKfbWJQLvOfA7uVBaz8lHIG64JKT
+         RMeyuJRXXZqKFcbi0DHWBNKO+LCTxAOzwXg0WGFG7BsF5PvhoOuCGcFKicOiZpEBRaxk
+         dwvQ==
+X-Forwarded-Encrypted: i=1; AKwUvBzLFopkKGYpnkFSIqcXpoQmSYRLMr5QUyJ0eeTSj4JdIMetmNd8XxS9ZTBio8yqmOoIhL3hccjlmfc=@vger.kernel.org
+X-Gm-Message-State: AFuF++kVZs2SrZt2vv/ErSPd9wOyAzh5yXLGIeyI3q5nYa/AC4qf0n6B
+	LDgzunoxs5LX4Gap9LXOzAMuLIw8pa2uRTbtruiqODihxwE6JJMQWJvSLlwrmg6LnaPj7ZEhN0C
+	cxnnntkJ7JSHRAKCDWR1aL5qrCiIiTEpuklNenmRsA43BSobH5Y9nlja1UvFp
+X-Gm-Gg: AYBFou1YU776iWmQdAKdrbXZnWHw5W+XnFL3hWROEiJFiv3MOvvLw55TDm634eIF+oh
+	a9zL9isclsxtfVR8UQfF8LdM1SXSRdZsALG+md80JuuZMdwfywxqVpR9uGdm/R5k2Icfpwz9mAC
+	PmW0NUVHilwJHRRQtHv4JTIMLsmmE2wLJlfdVtOAG3vRUFTp8IB03fbO6JpfXcWEurzT03XbUfB
+	VHDj6nOnXNITpu4WCTcd6GaNkQFUlVVaGBcKHCp2yjx8buo94jAYBVnkeup34qljf+6+NRWrM1X
+	RJJIJcv277j/uit4bLk9jdBYCqrKkWU07hvHXst/WXr7Z/s/eTIjgYBEKTqKqVPkM14GsSAwmkv
+	E5BbgJtzqJFXYYpqztGDF8yjhXVZ/xux3xA==
+X-Received: by 2002:a05:600c:46c7:b0:49e:7a00:b9a5 with SMTP id 5b1f17b1804b1-49fc56dbb20mr184454645e9.4.1790068438825;
+        Tue, 22 Sep 2026 02:13:58 -0700 (PDT)
+X-Received: by 2002:a05:600c:46c7:b0:49e:7a00:b9a5 with SMTP id 5b1f17b1804b1-49fc56dbb20mr184454405e9.4.1790068438389;
+        Tue, 22 Sep 2026 02:13:58 -0700 (PDT)
+Received: from aalbersh-thinkpadx1carbongen13.rmtcz.csb ([217.30.74.39])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49fdaa4e47csm74372105e9.1.2026.09.22.02.13.57
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 22 Sep 2026 02:10:15 -0700 (PDT)
-Date: Tue, 22 Sep 2026 11:10:13 +0200
-From: Andrea Parri <parri.andrea@gmail.com>
+        Tue, 22 Sep 2026 02:13:58 -0700 (PDT)
+Date: Tue, 22 Sep 2026 11:13:57 +0200
+From: Andrey Albershteyn <aalbersh@redhat.com>
 To: Christoph Hellwig <hch@infradead.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>,
-	Christian Brauner <brauner@kernel.org>,
-	Joanne Koong <joannelkoong@gmail.com>,
-	Brian Foster <bfoster@redhat.com>,
-	Damien Le Moal <dlemoal@kernel.org>, Hannes Reinecke <hare@suse.de>,
-	Daniel Gomez <da.gomez@samsung.com>,
-	Pankaj Raghav <p.raghav@samsung.com>,
-	Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: Re: [PATCH 3/3] iomap: don't lose a failed direct I/O bio's error
- when zeroing the tail
-Message-ID: <arJF9USiUqIEWB1M@andreayoga.localdomain>
-References: <20260921083133.2960-1-parri.andrea@gmail.com>
- <20260921083133.2960-4-parri.andrea@gmail.com>
- <20260921223432.GO6283@frogsfrogsfrogs>
- <arIT5A3MR7VtCeba@infradead.org>
+Cc: Andrey Albershteyn <aalbersh@kernel.org>, djwong@kernel.org, 
+	ebiggers@kernel.org, Carlos Maiolino <cem@kernel.org>, fsverity@lists.linux.dev, 
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-unionfs@vger.kernel.org, 
+	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, 
+	linux-btrfs@vger.kernel.org, david@fromorbit.com
+Subject: Re: [PATCH v16 12/21] xfs: use read ioend for fsverity data
+ verification
+Message-ID: <arJFUV3WDkY6zmfD@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+References: <20260918111539.1003439-1-aalbersh@kernel.org>
+ <20260918111539.1003439-13-aalbersh@kernel.org>
+ <arIrtgZ3-9zNuru_@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -89,21 +99,51 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <arIT5A3MR7VtCeba@infradead.org>
+In-Reply-To: <arIrtgZ3-9zNuru_@infradead.org>
 
-> > Why ssize_t?  iomap_dio_zero returns int, right?
+On 2026-09-22 00:18:14, Christoph Hellwig wrote:
+> On Fri, Sep 18, 2026 at 01:15:24PM +0200, Andrey Albershteyn wrote:
+> > +	if (IS_ENABLED(CONFIG_FS_VERITY) && !error && ioend->io_vi &&
+> > +			xfs_fsverity_is_file_data(ip, ioend->io_offset)) {
+> > +		if (ioend->io_flags & IOMAP_IOEND_INTEGRITY) {
+> > +			fsv_ioend = kmem_cache_zalloc(xfs_fsverity_ioend_cache,
+> > +					GFP_KERNEL);
+> > +			if (!fsv_ioend) {
 > 
-> More importantly iomap_dio_zero can only return an error for a
-> logic bomb assert using WARN_ON.  I'd suggest to simply return without
-> an error there and remove the handling of the iomap_dio_zero return
-> value entirely, as it clearly casues more harm than it helps.
+> This needs a mempool to be deadlock safe.
+> 
+> > +				iomap_finish_ioends(ioend, -ENOMEM);
+> > +				return;
+> > +			}
+> > +			fsv_ioend->ioend = ioend;
+> > +			INIT_WORK(&fsv_ioend->work, xfs_end_fsverity_io_read);
+> > +
+> > +			fsverity_enqueue_verify_work(&fsv_ioend->work);
+> > +			return;
+> > +		}
+> > +
+> > +		fsverity_verify_bio(ioend->io_vi, &ioend->io_bio);
+> > +		error = blk_status_to_errno(ioend->io_bio.bi_status);
+> 
+> And I think you always need to do the offload because fsverity can
+> synchronously read metadata.
+> 
 
-Agreed, that's cleaner than retyping the local.  I'll drop the
-zerror/ret handling entirely for v2 and just call iomap_dio_zero()
-without capturing its return.
+hmmm not sure what case you see here.
 
-Darrick, that also answers your question, the type mismatch goes
-away since there's no local variable left.
+Without integrity:
+For data reads we get here. Here, while verifing data page, fsverity
+requests reads of merkle tree pages which WILL NOT go through this
+path as no read completion is done for them.
 
-Thanks!
-  Andrea
+With integrity:
+For data reads we get here. Here, while verifing data page, fsverity
+requests reads of merkle tree pages which WILL go through this
+path as they need integrity verification on the read completion.
+Therefore, to use this workqueue for merkle tree pages integrity
+verification we offload data block verification to fsverity
+workqueue.
+
+-- 
+- Andrey
+
