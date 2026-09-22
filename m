@@ -1,45 +1,47 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85A14544D72
-	for <linux-xfs@vger.kernel.org>; Tue, 22 Sep 2026 12:50:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1D7054CF5F;
+	Tue, 22 Sep 2026 13:17:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790081442; cv=none; b=tWWp2K098Hqh+GfI17vkLVjBIh+hGnPVKCGfebYsxFawlGRBOm4cPbTmF+A0sYqZVoxsARml5VQMpmXkaWDosLVaQHYkRGVUEdAwhUYhlb+p1tFyVqi+llAUiaRABdiZu/ZlQWQiYVo1zluNw3T2sBgE6+AozR8n4aHGzKyxG+w=
+	t=1790083074; cv=none; b=u6vG7a9i08TeVp8dZ9tCCUaC/PozhXy4LY06VA480OBer6S1h5XWTwKD4Mp/qI0X+DKpD3irFly3TkxuK3wppNu0qcyDku0Xig5F0jjGCYVbpEB3VshL2+9T9GfyU1Wc5stOCo11Im8U+7OQ6OJa/XfSEjgy55Hddo0PXDmGNPw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790081442; c=relaxed/simple;
-	bh=tLAUHd/itfeZAtA5o1MRKu2+oEjq9FRJQk/z/S4qiZc=;
+	s=arc-20240116; t=1790083074; c=relaxed/simple;
+	bh=YABjEExd+hqzO7ghVtgMdywWrwp9buOxGk2M0QWRZ/o=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=blbgOO4tDocwE1uwGyPKDl1agdkoW8NgmtZpHXtRmCZ+3XHfsOQlS7zmJQCsQwH7GFaIOWSDT7EcsNuUiNkRRjfWQ72fANE34HxAwCHMEztvWeIoJTlJgRAG2RG6zwt666zqWFZEWoDJvDeBwQqIoAdbtEcoqMVYgTPTtx0TBJw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Z11NYkpP; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=FJj9M1P4MkJdF1jU++fMpsxyz/DV2TpyF1s+gRPKQFqk5XcK8lsSCJpZkmEgN5jqbQ0JWYNtpu5nRgthTKO2UBQk/PHAGRfL7YNUlU1fpDPZLeYTYCST0Cfw/nbewMgvN4EnJJVBbBP+KvUjMY+/Ui2I6GjmOqWVnIKZD+5R9eg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LItG2pLh; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Z11NYkpP"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=5v2OziYQDpbQqzEHM59H4odT+VXDLZ+l4vbPkmP8LcU=; b=Z11NYkpPRjn1EpOJx6QF4tiQuZ
-	i7xL+Zwm5rCU3veUaLpNo4c9+WXwnwe6gL+j+RZxvw2FGpWzsUPDSs0zVOK+mVBvn3zex+DPvu7Fl
-	igXf5aT8OrV6LdpYnQuimV58zqAPegp2nL0mL45DCYSaI6QnSNhu43szb/jWk2RMu9K7ACfU3O2B1
-	S4SNHJVEMrZZbhW+MaiWlv0LTKq0dFvYLMtN3i5roVf8qfEjOQP1pJDKUo1KyPsa86TkSKYvLabT5
-	UVJA2i7MVI0FMlN/Er7ETL/iUpguS+mGutGx5Ttu1gzJysUQmIr0ZdJvpahWfE3MFQpNnbWOAmJ5j
-	9RwwvjXA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1x8zxJ-00000005Mg6-02Ko;
-	Tue, 22 Sep 2026 12:50:41 +0000
-Date: Tue, 22 Sep 2026 05:50:40 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Wilfred Mallawa <wilfred.opensource@gmail.com>
-Cc: "Darrick J . Wong" <djwong@kernel.org>, Christoph Hellwig <hch@lst.de>,
-	Alistair Francis <alistair.francis@wdc.com>,
-	Damien Le'Moal <dlemoal@kernel.org>, linux-xfs@vger.kernel.org,
-	Wilfred Mallawa <wilfred.mallawa@wdc.com>,
-	Carlos Maiolino <cem@kernel.org>
-Subject: Re: [PATCH 1/3] xfs: add write pointer to xfs_rtgroup_geometry
-Message-ID: <arJ5oJeAOezhOGsP@infradead.org>
-References: <20260313002456.3823811-1-wilfred.opensource@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LItG2pLh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 853CA1F000FF;
+	Tue, 22 Sep 2026 13:17:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790083072;
+	bh=y0TF6dZ0xnYCANhgcMjOAc6HW+EA3FufymkDE0+X2Zs=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=LItG2pLh3KPQ/p+d7a4wOA0boFie1ob3IDRcXzH6ioMezFCCOsUG1gZ2on/oWtkvx
+	 83UOFHHkfLa0FTNOImhUjAA3igZOKxLk/c/ck25MUmiuHXiO9MFD1HMM3X7EcFrK5M
+	 +aUQnNpphmiRk4rFyDPfioCQs43V7E75XDmS4NMs7o5Ny9anolntzasNASolpxsnhm
+	 Mm2REZ4Ku0cmd2J6oxh8TYoQDZTxDS4QQjcc+9sgiXKzvtg9eXqvFdHz6BujDSMxDx
+	 n01AhHf9uZHkgyfNC5pBpylVv/XqCfhE8NQwE7I47cbCt2NJuLKCQXzb8xE8MoR0av
+	 b2yz04pVuWGhw==
+Date: Tue, 22 Sep 2026 15:17:46 +0200
+From: Andrey Albershteyn <aalbersh@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Andrey Albershteyn <aalbersh@redhat.com>, djwong@kernel.org, 
+	ebiggers@kernel.org, Carlos Maiolino <cem@kernel.org>, fsverity@lists.linux.dev, 
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-unionfs@vger.kernel.org, 
+	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, 
+	linux-btrfs@vger.kernel.org, david@fromorbit.com
+Subject: Re: [PATCH v16 12/21] xfs: use read ioend for fsverity data
+ verification
+Message-ID: <arJ_y1LCSrYFgOeh@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+References: <20260918111539.1003439-1-aalbersh@kernel.org>
+ <20260918111539.1003439-13-aalbersh@kernel.org>
+ <arIrtgZ3-9zNuru_@infradead.org>
+ <arJFUV3WDkY6zmfD@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+ <arJ1KAvP-4fWVvzW@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,67 +50,35 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260313002456.3823811-1-wilfred.opensource@gmail.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <arJ1KAvP-4fWVvzW@infradead.org>
 
-It looks like patches 2 and 3 in this series never made it into
-the xfsprogs repository despite being fully reviewed.  Can we get them
-picked up?
+On 2026-09-22 05:31:36, Christoph Hellwig wrote:
+> On Tue, Sep 22, 2026 at 11:13:57AM +0200, Andrey Albershteyn wrote:
+> > > And I think you always need to do the offload because fsverity can
+> > > synchronously read metadata.
+> > > 
+> > 
+> > hmmm not sure what case you see here.
+> > 
+> > Without integrity:
+> > For data reads we get here. Here, while verifing data page, fsverity
+> > requests reads of merkle tree pages which WILL NOT go through this
+> > path as no read completion is done for them.
+> > 
+> > With integrity:
+> > For data reads we get here. Here, while verifing data page, fsverity
+> > requests reads of merkle tree pages which WILL go through this
+> > path as they need integrity verification on the read completion.
+> > Therefore, to use this workqueue for merkle tree pages integrity
+> > verification we offload data block verification to fsverity
+> > workqueue.
+> 
+> Yes, but we want to be able to use the bio defer path for other
+> things including iomap error handling (I'm about to send a series
+> for that).  So please always make fsverity do it's thing so that
+> we don't add really complicated dependency chains.
 
-On Fri, Mar 13, 2026 at 10:24:54AM +1000, Wilfred Mallawa wrote:
-> From: Wilfred Mallawa <wilfred.mallawa@wdc.com>
-> 
-> Source kernel commit: c6ce65cb17aa9321687d1b8a842487f839e1a548
-> 
-> There is currently no XFS ioctl that allows userspace to retrieve the
-> write pointer for a specific realtime group block for zoned XFS. On zoned
-> block devices, userspace can obtain this information via zone reports from
-> the underlying device. However, for zoned XFS operating on regular block
-> devices, no equivalent mechanism exists.
-> 
-> Access to the realtime group write pointer is useful to userspace
-> development and analysis tools such as Zonar [1]. So extend the existing
-> struct xfs_rtgroup_geometry to add a new rg_writepointer field. This field
-> is valid if XFS_RTGROUP_GEOM_WRITEPOINTER flag is set. The rg_writepointer
-> field specifies the location of the current writepointer as a block offset
-> into the respective rtgroup.
-> 
-> [1] https://lwn.net/Articles/1059364/
-> 
-> Signed-off-by: Wilfred Mallawa <wilfred.mallawa@wdc.com>
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Carlos Maiolino <cem@kernel.org>
-> Signed-off-by: Wilfred Mallawa <wilfred.mallawa@wdc.com>
-> ---
->  libxfs/xfs_fs.h | 5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
-> 
-> diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-> index d165de607..185f09f32 100644
-> --- a/libxfs/xfs_fs.h
-> +++ b/libxfs/xfs_fs.h
-> @@ -995,7 +995,8 @@ struct xfs_rtgroup_geometry {
->  	__u32 rg_sick;		/* o: sick things in ag */
->  	__u32 rg_checked;	/* o: checked metadata in ag */
->  	__u32 rg_flags;		/* i/o: flags for this ag */
-> -	__u32 rg_reserved[27];	/* o: zero */
-> +	__u32 rg_writepointer;  /* o: write pointer block offset for zoned */
-> +	__u32 rg_reserved[26];	/* o: zero */
->  };
->  #define XFS_RTGROUP_GEOM_SICK_SUPER	(1U << 0)  /* superblock */
->  #define XFS_RTGROUP_GEOM_SICK_BITMAP	(1U << 1)  /* rtbitmap */
-> @@ -1003,6 +1004,8 @@ struct xfs_rtgroup_geometry {
->  #define XFS_RTGROUP_GEOM_SICK_RMAPBT	(1U << 3)  /* reverse mappings */
->  #define XFS_RTGROUP_GEOM_SICK_REFCNTBT	(1U << 4)  /* reference counts */
->  
-> +#define XFS_RTGROUP_GEOM_WRITEPOINTER  (1U << 0)  /* write pointer */
-> +
->  /* Health monitor event domains */
->  
->  /* affects the whole fs */
-> -- 
-> 2.53.0
-> 
-> 
----end quoted text---
+ah ok, I see, I will change that
+
+-- 
+- Andrey
