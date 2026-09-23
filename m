@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59DC5224B13;
-	Wed, 23 Sep 2026 06:02:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4104E3B71DD;
+	Wed, 23 Sep 2026 06:02:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790143340; cv=none; b=LoH9w7Th2TnnSqAI2TTVWgtJsOGKDb2rfrdt5HWvhhZMAk1yUISc1DrCo9jbrzIxetobAcNRumkINm7++J3s8XYQihD46zyQgVB3IMjXv8pS+OeU4X1ji1OtVurpykTM2DOfU+5yxAvDwNEiIbCTHT6tujkMg8WrFC2GBd+lbPo=
+	t=1790143357; cv=none; b=kXHZMqJ63ZXAu3Jb2DzyJO9dSKs2F97Xwsx8KK3vPzQRD+PRlx+yh3SPaFLbZPjJdqhlxDDHTIbVDbXRHiaT3X30/QLoytMXWBP+Atf3Gw3Sr7hTHwOtaxqLIzuw6+qyNvHJaZp4P7gyKn7X2HmSUhNsuyR4aOGoHnB2cxhzXZc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790143340; c=relaxed/simple;
-	bh=m6RZ6M29FZSepIlY0FK5Yb8orogPJyjZNO/+mjLJiA0=;
+	s=arc-20240116; t=1790143357; c=relaxed/simple;
+	bh=P338lbTYDsyJTYZeqOZhPGyGtoNDOCPC4Se8gUFjUXM=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=UZJp02oX7M9pmiVo+//+ylH6yRVBqSlnYKh7v0ECpOfYqBO2tM8tFl9wJYEkxCj/1OA2Z27Q9YqLEoNN3pKbcC2QO+ZkguBr6kefRD1DVWW6IT7iS+6eVfXblbG39yMfMj6+mtdY9wUJAqjPkiUtwz72va0y4oQRHtmXRhpkIjc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bInfKBtJ; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=E9TGI6Gm1iM0FiSc6qdJ4YzFvF7gEeSH4lrs+xiEiRoYuImAFidVqYIKm0D+uNYm1vDAVwYHUw1xwLPsf9BfCPDYZXKqjqZwNB7Foj8ZSsc1mziCCeK4yONFG25PhEtrZ9N4nMcm+ImGwzqcAPgKpDSBzdBnf0HNRpyTlq15nyI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WesvtG30; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bInfKBtJ"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id E9A5B1F000FF;
-	Wed, 23 Sep 2026 06:02:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WesvtG30"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 8BE231F000FF;
+	Wed, 23 Sep 2026 06:02:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790143339;
-	bh=NA2LOO3CYAw5Q54VXgt5Rr8enYtilpRSzZKj8hDiDUU=;
+	s=k20260515; t=1790143354;
+	bh=MywcLotdvMOmkY9kDE5Kx2KU1fE+n8dwr1bEWkXx8Po=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=bInfKBtJA4Ik66NE9Yb9sSKuAtcHFPpxw4BtAxDy6lYfkw2DO+aKxOLEsxjAqXS8a
-	 hMvxOOxxFkf4wrDxOoi0i2Jniddd0ReEq0+X3ZPsaj/CgUWhWzmqrEu7edgwJvYG9T
-	 4GTSC3JMO2pYDW4yy2AKQIyQvw6TiTLDvsCH9kVzgZliK14VJ9lkeV9+uatgxEgV9j
-	 VArep7FDyDmxaC3xTbHB+0j75RvqWvJab7wcafQMlawJY+bNfdAcdK38BNdxPhYkko
-	 t8qcLRO8GU94a5VHgKX2HYoHKVZg7jgIMcqZwt2Sz7w1lPbUhjnor7r/ObNAlcMLxs
-	 hjh3EseN0OI0Q==
-Date: Tue, 22 Sep 2026 23:02:18 -0700
-Subject: [PATCH 06/12] xfs: fix integer overflow problem when setting large
- free areas
+	b=WesvtG30iKA8D/qTuaAkfhkCq2vYJeAPJc1WsamnWzhwkvHgdaZ99kQIVQlwbLwPK
+	 svW7GpRZ5oW3Ysc5GDEapVyrEZUyH3x9RcTACWkzr947PWsthaxoWfa5cdLSB9XUh2
+	 NP9OGQPM0Oz4BAOjGdHUI9ykvfP0RjS6HWxcUCWG/dqkn33u/3ZK2SxWf7nPMw+wu2
+	 QQShHSJrSmvHc9PBQMKzT64jtYqq+o6hjzJE645S0kVFAhLYJf7gYOY+Opk88E8cX/
+	 Bsjh+Cnu8HBLCudTzpVuukLujETx3+MhIc0PlfMpNx9QdK/8CFmS41630VkbXKm6gx
+	 BgqfrkZtdZbiw==
+Date: Tue, 22 Sep 2026 23:02:34 -0700
+Subject: [PATCH 07/12] xfs: fix buffer overflow in corrupt inline attr
+ structure
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <179014159671.1875436.8939376627577757057.stgit@frogsfrogsfrogs>
+Message-ID: <179014159692.1875436.11611001761091180522.stgit@frogsfrogsfrogs>
 In-Reply-To: <179014159469.1875436.5857342164999236687.stgit@frogsfrogsfrogs>
 References: <179014159469.1875436.5857342164999236687.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,32 +46,75 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-LOLLM points out that the min_t comparison in xrep_rtbitmap_mark_free
-operates on a 64-bit bitmap word offset quantity and a 32-bit
-words-per-block ratio.  Unfortunately, I should have done the comparison
-with the (64-bit) xrep_wordoff_t type, but used the 32-bit word count
-type.  Oops.
+LOLLM noticed a buffer overrun if the xattr scrubber encounters a file
+with a shortform attr fork with sf->count > 0 but if_bytes ==
+sizeof(struct xfs_attr_sf_hdr).  Basically, we have enough data to have
+a header with a nonzero count, but no space for any of those shortform
+entries.  In this case, the xfs_attr_sf_nextentry() call will run off
+the end of if_data and blow up.
 
-Cc: <stable@vger.kernel.org> # v6.14
-Fixes: 8defee8dff2b20 ("xfs: online repair of realtime bitmaps for a realtime group")
+Cc: <stable@vger.kernel.org> # v6.4
+Fixes: ae0506eba78fd1 ("xfs: check used space of shortform xattr structures")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Assisted-by: LOLLM # finding obvious bugs
 ---
- fs/xfs/scrub/rtbitmap_repair.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/scrub/attr.c        |   11 +++++++++--
+ fs/xfs/scrub/attr_repair.c |    3 +++
+ 2 files changed, 12 insertions(+), 2 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/rtbitmap_repair.c b/fs/xfs/scrub/rtbitmap_repair.c
-index 442a17bf972029..f63aaaff783d50 100644
---- a/fs/xfs/scrub/rtbitmap_repair.c
-+++ b/fs/xfs/scrub/rtbitmap_repair.c
-@@ -276,7 +276,7 @@ xrep_rtbitmap_mark_free(
- 		xrep_wordoff_t	rem;
- 		xrep_wordcnt_t	wordcnt;
+diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
+index d5226939c81072..7600c711362583 100644
+--- a/fs/xfs/scrub/attr.c
++++ b/fs/xfs/scrub/attr.c
+@@ -590,12 +590,17 @@ xchk_xattr_check_sf(
+ 	}
  
--		wordcnt = min_t(xrep_wordcnt_t, nextwordoff - wordoff,
-+		wordcnt = min_t(xrep_wordoff_t, nextwordoff - wordoff,
- 				bufwsize);
+ 	for (i = 0; i < sf->count; i++) {
+-		unsigned char		*name = sfe->nameval;
+-		unsigned char		*value = &sfe->nameval[sfe->namelen];
++		unsigned char		*name;
++		unsigned char		*value;
  
- 		/*
+ 		if (xchk_should_terminate(sc, &error))
+ 			return error;
+ 
++		if ((unsigned char *)(sfe + 1) >= end) {
++			xchk_fblock_set_corrupt(sc, XFS_ATTR_FORK, 0);
++			break;
++		}
++
+ 		next = xfs_attr_sf_nextentry(sfe);
+ 		if ((unsigned char *)next > end) {
+ 			xchk_fblock_set_corrupt(sc, XFS_ATTR_FORK, 0);
+@@ -618,6 +623,7 @@ xchk_xattr_check_sf(
+ 			break;
+ 		}
+ 
++		name = sfe->nameval;
+ 		if (!xchk_xattr_set_map(sc, ab->usedmap,
+ 				(char *)name - (char *)sf,
+ 				sfe->namelen)) {
+@@ -625,6 +631,7 @@ xchk_xattr_check_sf(
+ 			break;
+ 		}
+ 
++		value = &sfe->nameval[sfe->namelen];
+ 		if (!xchk_xattr_set_map(sc, ab->usedmap,
+ 				(char *)value - (char *)sf,
+ 				sfe->valuelen)) {
+diff --git a/fs/xfs/scrub/attr_repair.c b/fs/xfs/scrub/attr_repair.c
+index 28f92e9ba72b24..ac433a5467516d 100644
+--- a/fs/xfs/scrub/attr_repair.c
++++ b/fs/xfs/scrub/attr_repair.c
+@@ -477,6 +477,9 @@ xrep_xattr_recover_sf(
+ 		if (xchk_should_terminate(sc, &error))
+ 			return error;
+ 
++		if ((unsigned char *)(sfe + 1) >= end)
++			break;
++
+ 		next = xfs_attr_sf_nextentry(sfe);
+ 		if ((unsigned char *)next > end)
+ 			break;
 
