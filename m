@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA8CE3BB13A
-	for <linux-xfs@vger.kernel.org>; Wed, 23 Sep 2026 05:58:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA7003921D1
+	for <linux-xfs@vger.kernel.org>; Wed, 23 Sep 2026 05:58:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790143105; cv=none; b=s7q+a8nkvl53CnSiSHmsbFwSUo7oswdL0uuo8lk+S2uQ+0KQ3AxcvhV3jQ8SavUX0PrNIXXtqxgQ1VL7IPOuaXO0mnYjoo12qwzgAvFdpcWKnMI3YpTfR2hrL0gnjPJM7ZB/fTtExu76Fnw2mipAw8axXvfUQOHZpiZNuksDntM=
+	t=1790143121; cv=none; b=ApJe02YI733URQJ3qFqn8JweB+Wwg9loRT2z9Re7jUOGMBNSWxPvlaZy/VnJsEusZiqpzY/fWk898rM6FhxaPvzlH+/QQWIxqWp0EwncxOK1BvulWVoQgSe/q1HWgnjXNuEN2uFSXXL+0f0vZZNbMd+2knv3d48v9FysD3U/s4I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790143105; c=relaxed/simple;
-	bh=sHS/m/vd9XOOu/Oie8kY3UC9R1De/znWQ8yx45kBIyE=;
+	s=arc-20240116; t=1790143121; c=relaxed/simple;
+	bh=xQIHKuGB4udcwgPZNbKtzTrCIDhytodkCUzBOe6GXVQ=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=TkeqNwEgAWtB67RwOsC0AGOT3BqiDLMMFkhXdj5N1g9L0xgkqNpSOucV0rXWFDzqQYW5B7tdTEYJ9Cq/yM72dFhgm5P405UcVrSBqPFtLBjFSvPEDDOHEwfNe6cr2a9sSWTxAZt5Y7hs6WYVacO+6tcUKuBSLl6UO7Gj738p3ZY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fvPIiCfm; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=foCmZ4RNuvXC44CmVQFbwrgTHS8D7HVIc5oGsKAgTxpDhBi4DRkN8ZbN6pvYExWQROQg5X9SYGBtBooIZZ4hwXX6op4bv7ooNw3vDs8Uj3XVoJxZUqpe05yGuz+0/WSmzV+4hRj+3qwD8uu8CR1eiyrSAbBQQ7eclBVCfFgF9t4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XuspyES4; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fvPIiCfm"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id A0F991F000FF;
-	Wed, 23 Sep 2026 05:58:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XuspyES4"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 408A81F000FF;
+	Wed, 23 Sep 2026 05:58:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790143104;
-	bh=V6iG/mS17xFEQ3cdOVsUe+P5o/4gtkDIYAD07KHmgpY=;
+	s=k20260515; t=1790143120;
+	bh=5hveoQ23PXYYXT8rSSjdrj1jv9zSmqa4ybw4sauoAIk=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=fvPIiCfmiH1fTkFJ52fS2N2UUTjK2CgFZ/2B/gbCeoQY+2XvuIyFk+BSWKr3qdMwp
-	 5gUaKsFaVnijFpZ1Z0dZPhBlhyc31rZGEw2Xs15m6h/81baL+VE4HJ3y8OA0ygZ+gi
-	 XhttZpQUHhasR3sbbnHkhcaRtbzbWm0hICtih7uLUdSOS6+5LhC+X5EWUzljZuBSGM
-	 Dz+AZ5JeBOnP1Aaa/hzHaJW4knW4WHApiyRw4VrEccai75T/cOoj91xmia0Nl9gXhx
-	 hLtIu/V19LYYDszlNsdVFbqczEpzJK7+5xI8sOt++iQQrud8a8A+6O5lZOFmydS1KI
-	 UtyJLRACExnhQ==
-Date: Tue, 22 Sep 2026 22:58:24 -0700
-Subject: [PATCH 04/13] xfs: clean up after failed metafile relinking
+	b=XuspyES4iWVY/PsDbqcbCdNKTynMjwjjgTdw8XnqF9EOYJXRTDYeEAL8icBZj5HO6
+	 7k+3vZVv55gzpKSlOUMwyBTKG83USg8Lr6QWiwUm5k7ohUPJ7Pvats+4Fa/RvCg1vy
+	 nKez9O2Sg/YiNZgQEL+npMCYi3tOAA5ML/JVAiyKyTNw+W25D+Fsy6wr75A7Evj7ca
+	 EocxcfUUrQU4qWQjz+ro+XTOU/pCZoKre1zTF6Q0x5Qpa2XgdHRystm0JsOS3En/k+
+	 oXCl7sS/nj68ck53xabTzMC/3Xi8APd5D0WQaXMSfac62TIHuIrPbslrCcRIuIm4Pa
+	 ys7VA06ECDB6w==
+Date: Tue, 22 Sep 2026 22:58:39 -0700
+Subject: [PATCH 05/13] xfs: pass xfs_trans_resv object to reservation
+ calculation helpers
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <179014159013.1874904.6962968533158888275.stgit@frogsfrogsfrogs>
+Message-ID: <179014159035.1874904.12521506365701207605.stgit@frogsfrogsfrogs>
 In-Reply-To: <179014158847.1874904.13591868745136552281.stgit@frogsfrogsfrogs>
 References: <179014158847.1874904.13591868745136552281.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,127 +46,136 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Once we start a metadir update to link in a file, we have to commit or
-cancel it, just like any other operation.  LOLLM pointed out that I
-forgot that, so fix it.  This fixes a bug in xfs_repair.
+xfs_calc_namespace_reservations computes the directory tree related
+transaction reservations for a given xfs_trans_resv object.  The helpers
+it relies on, however, read the live one from the xfs_mount even if
+we're doing this for minlogsize calculations.  In practice this
+shouldn't be a big deal since the minlogsize and live reservation
+objects don't differ in a meaningful way, but LOLLM complained about the
+inconsistency so let's fix it anyway.
 
-However, in commit e80fbe1ad8eff7, we made xfs_metadir_cancel a static
-function within xfs_metadir.c, so we can't just add a xfs_metadir_cancel
-call to xfs_dqinode_metadir_link.
-
-Instead, create a new xfs_metadir_link_file helper in xfs_metadir.c that
-takes only the xfs_metadir_update object, and handles everything from
-start to finish.  This enables us to make xfs_metadir_commit a static
-function too.
-
-Fixes: e80fbe1ad8eff7 ("xfs: use metadir for quota inodes")
+Fixes: 7dba4a5fe1c5cd ("xfs: extend transaction reservations for parent attributes")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+Assisted-by: LOLLM # finding obvious bugs
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_metadir.h   |    5 +----
- fs/xfs/libxfs/xfs_dquot_buf.c |   13 +------------
- fs/xfs/libxfs/xfs_metadir.c   |   30 +++++++++++++++++++++++++++---
- 3 files changed, 29 insertions(+), 19 deletions(-)
+ fs/xfs/libxfs/xfs_trans_resv.c |   38 ++++++++++++++++++++------------------
+ 1 file changed, 20 insertions(+), 18 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_metadir.h b/fs/xfs/libxfs/xfs_metadir.h
-index e434b9d1c93200..b64f9fc5ca7867 100644
---- a/fs/xfs/libxfs/xfs_metadir.h
-+++ b/fs/xfs/libxfs/xfs_metadir.h
-@@ -38,10 +38,7 @@ int xfs_metadir_create_file(struct xfs_metadir_update *upd, umode_t mode,
- 		xfs_metadir_createfn create, void *priv,
- 		struct xfs_inode **ipp);
- 
--int xfs_metadir_start_link(struct xfs_metadir_update *upd);
--int xfs_metadir_link(struct xfs_metadir_update *upd);
--
--int xfs_metadir_commit(struct xfs_metadir_update *upd);
-+int xfs_metadir_link_file(struct xfs_metadir_update *upd);
- 
- int xfs_metadir_mkdir(struct xfs_inode *dp, const char *path,
- 		struct xfs_inode **ipp);
-diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
-index 77954d1d924cc3..6c8a9afdfb1c0f 100644
---- a/fs/xfs/libxfs/xfs_dquot_buf.c
-+++ b/fs/xfs/libxfs/xfs_dquot_buf.c
-@@ -454,19 +454,8 @@ xfs_dqinode_metadir_link(
- 		.path			= xfs_dqinode_path(type),
- 		.ip			= ip,
- 	};
--	int				error;
- 
--	error = xfs_metadir_start_link(&upd);
--	if (error)
--		return error;
--
--	error = xfs_metadir_link(&upd);
--	if (error)
--		return error;
--
--	xfs_trans_log_inode(upd.tp, upd.ip, XFS_ILOG_CORE);
--
--	return xfs_metadir_commit(&upd);
-+	return xfs_metadir_link_file(&upd);
- }
- #endif /* __KERNEL__ */
- 
-diff --git a/fs/xfs/libxfs/xfs_metadir.c b/fs/xfs/libxfs/xfs_metadir.c
-index 7c6b086b73db61..1ff26e55b1864f 100644
---- a/fs/xfs/libxfs/xfs_metadir.c
-+++ b/fs/xfs/libxfs/xfs_metadir.c
-@@ -317,7 +317,7 @@ xfs_metadir_create(
-  * Begin the process of linking a metadata file by allocating transactions
-  * and locking whatever resources we're going to need.
+diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+index 3151e97ca8ff6d..1c20a7c27aa1bf 100644
+--- a/fs/xfs/libxfs/xfs_trans_resv.c
++++ b/fs/xfs/libxfs/xfs_trans_resv.c
+@@ -606,10 +606,10 @@ static inline unsigned int xfs_calc_pptr_replace_overhead(void)
   */
--int
-+static int
- xfs_metadir_start_link(
- 	struct xfs_metadir_update	*upd)
+ STATIC uint
+ xfs_calc_rename_reservation(
+-	struct xfs_mount	*mp)
++	struct xfs_mount	*mp,
++	struct xfs_trans_resv	*resp)
  {
-@@ -364,7 +364,7 @@ xfs_metadir_start_link(
-  * The path (up to the final component) must already exist, but the final
-  * component must not already exist.
+ 	unsigned int		overhead = XFS_DQUOT_LOGRES;
+-	struct xfs_trans_resv	*resp = M_RES(mp);
+ 	unsigned int		t1, t2, t3 = 0;
+ 
+ 	t1 = xfs_calc_inode_res(mp, 5) +
+@@ -715,10 +715,10 @@ xfs_link_log_count(
   */
--int
-+static int
- xfs_metadir_link(
- 	struct xfs_metadir_update	*upd)
+ STATIC uint
+ xfs_calc_link_reservation(
+-	struct xfs_mount	*mp)
++	struct xfs_mount	*mp,
++	struct xfs_trans_resv	*resp)
  {
-@@ -409,7 +409,7 @@ xfs_metadir_link(
- #endif /* ! __KERNEL__ */
+ 	unsigned int		overhead = XFS_DQUOT_LOGRES;
+-	struct xfs_trans_resv	*resp = M_RES(mp);
+ 	unsigned int		t1, t2, t3 = 0;
  
- /* Commit a metadir update and unlock/drop all resources. */
--int
-+static int
- xfs_metadir_commit(
- 	struct xfs_metadir_update	*upd)
+ 	overhead += xfs_calc_iunlink_remove_reservation(mp);
+@@ -777,10 +777,10 @@ xfs_remove_log_count(
+  */
+ STATIC uint
+ xfs_calc_remove_reservation(
+-	struct xfs_mount	*mp)
++	struct xfs_mount	*mp,
++	struct xfs_trans_resv	*resp)
  {
-@@ -499,3 +499,27 @@ xfs_metadir_mkdir(
+ 	unsigned int            overhead = XFS_DQUOT_LOGRES;
+-	struct xfs_trans_resv   *resp = M_RES(mp);
+ 	unsigned int            t1, t2, t3 = 0;
  
- 	return xfs_metadir_create_file(&upd, S_IFDIR, NULL, NULL, ipp);
+ 	overhead += xfs_calc_iunlink_add_reservation(mp);
+@@ -862,9 +862,9 @@ xfs_icreate_log_count(
+ 
+ STATIC uint
+ xfs_calc_icreate_reservation(
+-	struct xfs_mount	*mp)
++	struct xfs_mount	*mp,
++	struct xfs_trans_resv	*resp)
+ {
+-	struct xfs_trans_resv	*resp = M_RES(mp);
+ 	unsigned int		overhead = XFS_DQUOT_LOGRES;
+ 	unsigned int		t1, t2, t3 = 0;
+ 
+@@ -911,9 +911,10 @@ xfs_mkdir_log_count(
+  */
+ STATIC uint
+ xfs_calc_mkdir_reservation(
+-	struct xfs_mount	*mp)
++	struct xfs_mount	*mp,
++	struct xfs_trans_resv	*resp)
+ {
+-	return xfs_calc_icreate_reservation(mp);
++	return xfs_calc_icreate_reservation(mp, resp);
  }
-+
-+#ifndef __KERNEL__
-+/* Link a metadata file into a metadata directory. */
-+int
-+xfs_metadir_link_file(
-+	struct xfs_metadir_update	*upd)
-+{
-+	int				error;
-+
-+	error = xfs_metadir_start_link(upd);
-+	if (error)
-+		return error;
-+
-+	error = xfs_metadir_link(upd);
-+	if (error) {
-+		xfs_metadir_cancel(upd, error);
-+		return error;
-+	}
-+
-+	xfs_trans_log_inode(upd->tp, upd->ip, XFS_ILOG_CORE);
-+
-+	return xfs_metadir_commit(upd);
-+}
-+#endif /* ! __KERNEL__ */
+ 
+ static inline unsigned int
+@@ -940,9 +941,10 @@ xfs_symlink_log_count(
+  */
+ STATIC uint
+ xfs_calc_symlink_reservation(
+-	struct xfs_mount	*mp)
++	struct xfs_mount	*mp,
++	struct xfs_trans_resv	*resp)
+ {
+-	return xfs_calc_icreate_reservation(mp) +
++	return xfs_calc_icreate_reservation(mp, resp) +
+ 	       xfs_calc_buf_res(1, XFS_SYMLINK_MAXLEN);
+ }
+ 
+@@ -1265,27 +1267,27 @@ xfs_calc_namespace_reservations(
+ {
+ 	ASSERT(resp->tr_attrsetm.tr_logres > 0);
+ 
+-	resp->tr_rename.tr_logres = xfs_calc_rename_reservation(mp);
++	resp->tr_rename.tr_logres = xfs_calc_rename_reservation(mp, resp);
+ 	resp->tr_rename.tr_logcount = xfs_rename_log_count(mp, resp);
+ 	resp->tr_rename.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+ 
+-	resp->tr_link.tr_logres = xfs_calc_link_reservation(mp);
++	resp->tr_link.tr_logres = xfs_calc_link_reservation(mp, resp);
+ 	resp->tr_link.tr_logcount = xfs_link_log_count(mp, resp);
+ 	resp->tr_link.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+ 
+-	resp->tr_remove.tr_logres = xfs_calc_remove_reservation(mp);
++	resp->tr_remove.tr_logres = xfs_calc_remove_reservation(mp, resp);
+ 	resp->tr_remove.tr_logcount = xfs_remove_log_count(mp, resp);
+ 	resp->tr_remove.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+ 
+-	resp->tr_symlink.tr_logres = xfs_calc_symlink_reservation(mp);
++	resp->tr_symlink.tr_logres = xfs_calc_symlink_reservation(mp, resp);
+ 	resp->tr_symlink.tr_logcount = xfs_symlink_log_count(mp, resp);
+ 	resp->tr_symlink.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+ 
+-	resp->tr_create.tr_logres = xfs_calc_icreate_reservation(mp);
++	resp->tr_create.tr_logres = xfs_calc_icreate_reservation(mp, resp);
+ 	resp->tr_create.tr_logcount = xfs_icreate_log_count(mp, resp);
+ 	resp->tr_create.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+ 
+-	resp->tr_mkdir.tr_logres = xfs_calc_mkdir_reservation(mp);
++	resp->tr_mkdir.tr_logres = xfs_calc_mkdir_reservation(mp, resp);
+ 	resp->tr_mkdir.tr_logcount = xfs_mkdir_log_count(mp, resp);
+ 	resp->tr_mkdir.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+ }
 
