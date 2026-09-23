@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38D45415F3B;
-	Wed, 23 Sep 2026 05:58:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA8CE3BB13A
+	for <linux-xfs@vger.kernel.org>; Wed, 23 Sep 2026 05:58:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790143090; cv=none; b=qw54MIBzx7txeH8EQxh69JumuNc5G2Wypv+aGxl3zfSGPKWnDr2mbMUGUWinqMZvMDdHLqhY2LAfsi3yqNuCzlOCgibgX81vzRK0EJJrkitLPk4deSHgyXvI6bH9g5mLkj/tvP1s3NqGNcrxGBH59ae8mD90JRJ55STrXyJFZiM=
+	t=1790143105; cv=none; b=s7q+a8nkvl53CnSiSHmsbFwSUo7oswdL0uuo8lk+S2uQ+0KQ3AxcvhV3jQ8SavUX0PrNIXXtqxgQ1VL7IPOuaXO0mnYjoo12qwzgAvFdpcWKnMI3YpTfR2hrL0gnjPJM7ZB/fTtExu76Fnw2mipAw8axXvfUQOHZpiZNuksDntM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790143090; c=relaxed/simple;
-	bh=hJ5JTN2DiO4TkOZdKXdRsjgid+Bm9yKfkXuud/5oaT0=;
+	s=arc-20240116; t=1790143105; c=relaxed/simple;
+	bh=sHS/m/vd9XOOu/Oie8kY3UC9R1De/znWQ8yx45kBIyE=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=iKDE1dQFtDpqUR9+Obodh5Sm9sgZcmHwY6PLIsvpcL7fi4sz5caxuiW12Fn1G2IJoyh3r5bVvpvsQs+ZkJSbdDFs9XQ694qBjg1oWv6EdHgvGsETayaFjXSyIkVsUctPfk+6zcYaPyi86tccTiE28v48kCTJ+3/e+bTMsCWkxFg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fFPIkTrN; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=TkeqNwEgAWtB67RwOsC0AGOT3BqiDLMMFkhXdj5N1g9L0xgkqNpSOucV0rXWFDzqQYW5B7tdTEYJ9Cq/yM72dFhgm5P405UcVrSBqPFtLBjFSvPEDDOHEwfNe6cr2a9sSWTxAZt5Y7hs6WYVacO+6tcUKuBSLl6UO7Gj738p3ZY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fvPIiCfm; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fFPIkTrN"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 104441F0089A;
-	Wed, 23 Sep 2026 05:58:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fvPIiCfm"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id A0F991F000FF;
+	Wed, 23 Sep 2026 05:58:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790143089;
-	bh=Crt2zxWLLuLUE4BsnLS2pv8dhMVrVXCcnIDvOGrjVLw=;
+	s=k20260515; t=1790143104;
+	bh=V6iG/mS17xFEQ3cdOVsUe+P5o/4gtkDIYAD07KHmgpY=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=fFPIkTrNXH70RDMPuX9zXQTWWXvuVGL+k4GNha4TPwIaOj1rOChBwsoqb5C7C+Bjt
-	 IgkBrGuV2W1KX+FlMVNoBEAjmFDyyKB5YFkQrFrqcEQCO2bjpBV8KYItx3ddqnHICH
-	 cKeCmUSYnYQ/y1dlckH8+ZDLN9PMvE8YlAdq4tZj+JX/X31CJHZyW2SlPETRYZs1Pk
-	 JIhiYSUXuJpVn4nx9Jf5BLgVtza7LDU+JmzH8JZZDI6gwPoAyp6TafK/PX7+idH9OJ
-	 ZI2A8XgWLfrOWWADZKgd/cX0ifRiEpxZ1s+VfLrsfC9iSpEHGC23iZiJ1x02kTZP8z
-	 EQcKG9lGhmC/Q==
-Date: Tue, 22 Sep 2026 22:58:08 -0700
-Subject: [PATCH 03/13] xfs: fix buffer overruns in xfs_ioc_attr_list
+	b=fvPIiCfmiH1fTkFJ52fS2N2UUTjK2CgFZ/2B/gbCeoQY+2XvuIyFk+BSWKr3qdMwp
+	 5gUaKsFaVnijFpZ1Z0dZPhBlhyc31rZGEw2Xs15m6h/81baL+VE4HJ3y8OA0ygZ+gi
+	 XhttZpQUHhasR3sbbnHkhcaRtbzbWm0hICtih7uLUdSOS6+5LhC+X5EWUzljZuBSGM
+	 Dz+AZ5JeBOnP1Aaa/hzHaJW4knW4WHApiyRw4VrEccai75T/cOoj91xmia0Nl9gXhx
+	 hLtIu/V19LYYDszlNsdVFbqczEpzJK7+5xI8sOt++iQQrud8a8A+6O5lZOFmydS1KI
+	 UtyJLRACExnhQ==
+Date: Tue, 22 Sep 2026 22:58:24 -0700
+Subject: [PATCH 04/13] xfs: clean up after failed metafile relinking
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
-Cc: hch@lst.de, stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <179014158992.1874904.15961657710909637002.stgit@frogsfrogsfrogs>
+Cc: hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <179014159013.1874904.6962968533158888275.stgit@frogsfrogsfrogs>
 In-Reply-To: <179014158847.1874904.13591868745136552281.stgit@frogsfrogsfrogs>
 References: <179014158847.1874904.13591868745136552281.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,33 +45,127 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-When we converted the al_offset array in struct xfs_attrlist into a VLA,
-the size of the object shrank by 4 bytes.  Unfortunately, the buffer
-size validation in the attrlist ioctl wasn't updated to notice this, so
-the al_offset[0] assignment blindly writes off the end of the buffer.
-LOLLM noticed the omitted check and complained.
+Once we start a metadir update to link in a file, we have to commit or
+cancel it, just like any other operation.  LOLLM pointed out that I
+forgot that, so fix it.  This fixes a bug in xfs_repair.
 
-Cc: <stable@vger.kernel.org> # v6.5
-Fixes: 371baf5c9750a2 ("xfs: convert flex-array declarations in struct xfs_attrlist*")
+However, in commit e80fbe1ad8eff7, we made xfs_metadir_cancel a static
+function within xfs_metadir.c, so we can't just add a xfs_metadir_cancel
+call to xfs_dqinode_metadir_link.
+
+Instead, create a new xfs_metadir_link_file helper in xfs_metadir.c that
+takes only the xfs_metadir_update object, and handles everything from
+start to finish.  This enables us to make xfs_metadir_commit a static
+function too.
+
+Fixes: e80fbe1ad8eff7 ("xfs: use metadir for quota inodes")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-Assisted-by: LOLLM # finding obvious bugs
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_handle.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_metadir.h   |    5 +----
+ fs/xfs/libxfs/xfs_dquot_buf.c |   13 +------------
+ fs/xfs/libxfs/xfs_metadir.c   |   30 +++++++++++++++++++++++++++---
+ 3 files changed, 29 insertions(+), 19 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_handle.c b/fs/xfs/xfs_handle.c
-index 0689cade8f74c2..fd9d4d8258fff2 100644
---- a/fs/xfs/xfs_handle.c
-+++ b/fs/xfs/xfs_handle.c
-@@ -409,7 +409,7 @@ xfs_ioc_attr_list(
- 	void				*buffer;
- 	int				error;
+diff --git a/fs/xfs/libxfs/xfs_metadir.h b/fs/xfs/libxfs/xfs_metadir.h
+index e434b9d1c93200..b64f9fc5ca7867 100644
+--- a/fs/xfs/libxfs/xfs_metadir.h
++++ b/fs/xfs/libxfs/xfs_metadir.h
+@@ -38,10 +38,7 @@ int xfs_metadir_create_file(struct xfs_metadir_update *upd, umode_t mode,
+ 		xfs_metadir_createfn create, void *priv,
+ 		struct xfs_inode **ipp);
  
--	if (bufsize < sizeof(struct xfs_attrlist) ||
-+	if (bufsize < struct_size(alist, al_offset, 1) ||
- 	    bufsize > XFS_XATTR_LIST_MAX)
- 		return -EINVAL;
+-int xfs_metadir_start_link(struct xfs_metadir_update *upd);
+-int xfs_metadir_link(struct xfs_metadir_update *upd);
+-
+-int xfs_metadir_commit(struct xfs_metadir_update *upd);
++int xfs_metadir_link_file(struct xfs_metadir_update *upd);
  
+ int xfs_metadir_mkdir(struct xfs_inode *dp, const char *path,
+ 		struct xfs_inode **ipp);
+diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
+index 77954d1d924cc3..6c8a9afdfb1c0f 100644
+--- a/fs/xfs/libxfs/xfs_dquot_buf.c
++++ b/fs/xfs/libxfs/xfs_dquot_buf.c
+@@ -454,19 +454,8 @@ xfs_dqinode_metadir_link(
+ 		.path			= xfs_dqinode_path(type),
+ 		.ip			= ip,
+ 	};
+-	int				error;
+ 
+-	error = xfs_metadir_start_link(&upd);
+-	if (error)
+-		return error;
+-
+-	error = xfs_metadir_link(&upd);
+-	if (error)
+-		return error;
+-
+-	xfs_trans_log_inode(upd.tp, upd.ip, XFS_ILOG_CORE);
+-
+-	return xfs_metadir_commit(&upd);
++	return xfs_metadir_link_file(&upd);
+ }
+ #endif /* __KERNEL__ */
+ 
+diff --git a/fs/xfs/libxfs/xfs_metadir.c b/fs/xfs/libxfs/xfs_metadir.c
+index 7c6b086b73db61..1ff26e55b1864f 100644
+--- a/fs/xfs/libxfs/xfs_metadir.c
++++ b/fs/xfs/libxfs/xfs_metadir.c
+@@ -317,7 +317,7 @@ xfs_metadir_create(
+  * Begin the process of linking a metadata file by allocating transactions
+  * and locking whatever resources we're going to need.
+  */
+-int
++static int
+ xfs_metadir_start_link(
+ 	struct xfs_metadir_update	*upd)
+ {
+@@ -364,7 +364,7 @@ xfs_metadir_start_link(
+  * The path (up to the final component) must already exist, but the final
+  * component must not already exist.
+  */
+-int
++static int
+ xfs_metadir_link(
+ 	struct xfs_metadir_update	*upd)
+ {
+@@ -409,7 +409,7 @@ xfs_metadir_link(
+ #endif /* ! __KERNEL__ */
+ 
+ /* Commit a metadir update and unlock/drop all resources. */
+-int
++static int
+ xfs_metadir_commit(
+ 	struct xfs_metadir_update	*upd)
+ {
+@@ -499,3 +499,27 @@ xfs_metadir_mkdir(
+ 
+ 	return xfs_metadir_create_file(&upd, S_IFDIR, NULL, NULL, ipp);
+ }
++
++#ifndef __KERNEL__
++/* Link a metadata file into a metadata directory. */
++int
++xfs_metadir_link_file(
++	struct xfs_metadir_update	*upd)
++{
++	int				error;
++
++	error = xfs_metadir_start_link(upd);
++	if (error)
++		return error;
++
++	error = xfs_metadir_link(upd);
++	if (error) {
++		xfs_metadir_cancel(upd, error);
++		return error;
++	}
++
++	xfs_trans_log_inode(upd->tp, upd->ip, XFS_ILOG_CORE);
++
++	return xfs_metadir_commit(upd);
++}
++#endif /* ! __KERNEL__ */
 
