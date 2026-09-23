@@ -1,126 +1,148 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-vs2-f43.google.com (mail-vs2-f43.google.com [74.125.227.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01D8A47A88C
-	for <linux-xfs@vger.kernel.org>; Wed, 23 Sep 2026 10:49:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1AD124ACC6F
+	for <linux-xfs@vger.kernel.org>; Wed, 23 Sep 2026 11:57:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790160551; cv=none; b=E7BtGa7nnRzQNngP207MnfyYRAQ1hpkSBYMBBtiA5tTG1z04JpAUo8oF3oGhYnlhwXjNpVcX3/enNlght2fAIF6Jwh9YUy/x1Lrkb700fzlsKlruCMX8hje6Y6U6b3biOdsDAaUvLeGZVV0C6tw9Iotv7C0yxgyUzk9iUyHQuZ8=
+	t=1790164682; cv=none; b=q1YT5o3oeJa+rcSWMupVKCEZieHaI3G5dcaoF48++aQbQtU0gMoubM29T84Kx+WFVhJ94IGegb1gkz6mVgOVtpD9L/B/r0eZnHX32pQYC4/ycO9Ws/XWStJRv6NU1VWD9fR3bUEiexTeKvqfK7bmnfGAvYWKK6Dhx1Ot0zGzueI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790160551; c=relaxed/simple;
-	bh=8Ydr4QF/Vdgkl4fB9kFfIYAag2cPR80zbrZ6d2txsj0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dxWy27S9bMQhb8fdr/i8Fa/OvaSM5kcmHgAknD2Jq44UlRgVNhzcZxffEsh192WQT2VbW4/tzz53kjqoDsPmvWAOQEzUBB1Xbb7oqVRyYSjccmSy3AzmUKRS61lDu5xNQ5VMyy0qgPBYjnZChvkzrvk00afMnP3mtv96UK2fJUQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=n236dpWe; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790164682; c=relaxed/simple;
+	bh=QYUa20pIZh2wxiF+T5Z9fR8QFbYCIIP9R0h4qS+mLH4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=oL3flIz9KmE2pcfNcLammJya/JTrSWAQDQ/Xe0J23zKrgxlLNMKJxBM1Hy0CiZ8/9Wiq6uqBr1j3d4x4/qep9vcztDZ2DhP2LN8rQSHA3HBA+NQu0VpHfnz/V6EfLs1TouVkQYNTmnR/BVdJ7oGCbUFai9BNaL8nNdk8QUTQT+o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=pwanlu1Y; arc=none smtp.client-ip=74.125.227.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n236dpWe"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CDA351F00893;
-	Wed, 23 Sep 2026 10:49:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790160546;
-	bh=e5Ao7BgWHkb5zk7lor2Igh8M7KTYmDrEIbtPs21RYpk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=n236dpWeHpWGx6Hu0wlggVjFy+bDd/2yei2bIar7CWvhBU7t2nMOMDZBh2omRF9iO
-	 YKitHd98MrTK0lVWI8lBTxZ7NULxYc6gGOJU0o/IpVqmLTAHieuTEBqmNM9RpMFVwT
-	 JRjrOG+q2yItJxX2kF6IazMrFNHKIMhm3LxNHnblWvlaVxdCvSgPNo8Y5/TSJcYhHz
-	 M+SVRjQMiNKTyZ5oWE3kz8b4elgWePxR6aXG7UDVXTuNxB3B9w8qsur+NZqvc3HkJ9
-	 lsTovEw9f+vnDr7kDdFjmT0NnOaV1xVjnkaE1SNF41/pwnGG/VWdIKA17SaT3xAcuR
-	 jhT/IvJgcGGSw==
-Date: Wed, 23 Sep 2026 12:49:01 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: djwong@kernel.org, sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v3 2/3] xfs: enable xfs_trans_cancel() to report and
- error code
-Message-ID: <arOjRDxCUZj3FvKP@nidhogg.toxiclabs.cc>
-References: <20260917103633.14703-1-cem@kernel.org>
- <20260917103633.14703-3-cem@kernel.org>
- <20260921083356.GB20936@lst.de>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="pwanlu1Y"
+Received: by mail-vs2-f43.google.com with SMTP id ada2fe7eead31-791a9878aa9so281217137.0
+        for <linux-xfs@vger.kernel.org>; Wed, 23 Sep 2026 04:57:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1790164673; x=1790769473; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=fcqVoGIOsqHneznya0CjxdKSZ/9QYnIEWsldQdbwafY=;
+        b=pwanlu1Y5uhorzXbF2bYqznbUDl3U0lbePyU4DsYEOzt7gbYpuQAXPEbmOlcrlOQeV
+         T51ojFvBOg9XNqn1OnZsl3pRZxFuQH/VH0Pxu2jYO9l/XmtgVwnJf69nsbOCEdLLY6y5
+         uhsp6xqnMq10JKr4l3vK40tppAC4GCYi3Lt+sEGSEuwDIwTSBmZD1kELJNpPwvRwUY9f
+         yeRnZQSV0bCR+g8gH1IkurGBZ8HV7URwCXp6u3HaoAMnsHIYk0uvGP/XdwCh5ZffGnos
+         FYchKWwXe96WJtPbCmnpRExCu2vLxgxqP+vk6NPHjFFqXOsBNKeFZjoyM0DO0njHf1ZY
+         HHbQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790164673; x=1790769473;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=fcqVoGIOsqHneznya0CjxdKSZ/9QYnIEWsldQdbwafY=;
+        b=Nyx/4rpzVYzkb/pKY1JlRSeco4KYOANEpikDWaTu4dYf3P+J63Aqh1Nb7MsbrSQaFR
+         YsT8SXV1PP7nmPYa/zmQLcwGg1vrfashl1NjIM5pDC3BOmmbYctImbSq0y/fY+uNPzOh
+         iVoVrmTVvEmbPwLUvGUr0CD8fPAEpeWv/JtM9vmt6prrYN7GY9+kmgxogUAy+7H/Lxbb
+         8pbMLnAc+ArJRU7aDWXLOVIsR34OwlzI1K5St1aOdHVRHpLfKJjf5Vvqig8U2yIYdH/j
+         o+Tv1UOMM7ayIHX3gm51U+2O/AeJuQ5QXgWDKlHElcd3/PQItGZUVsETJBPjRl4X65Io
+         iUkw==
+X-Gm-Message-State: AFuF++nGvUYHGBEWG7Fj77sja6uexAJVKsTK8wYqzlWMItsvzi6yioEY
+	W9LjtGAGegbzrkgyYol7JUt/Doe4qvUr5oEqFlAvIaSsRRO79lmcmkUz+7eK2g==
+X-Gm-Gg: AYBFou08GobpYSJB19T7lpnk+SmTpRZcfJhQ2PK074v4rgZp2yQ/pwFr0zq2/wVQxXj
+	xB8Ifi6V5b72IHzRzBOWV0lf3CgqlLkJ9uPQRrAz1kl8a2NdoQGEYdhbbcnAIbcMK5LkKyXg5xA
+	1U07thRXW0Sf9kZrG+xmrIi+k1TVZcyZWjYJ+Oh1taRXVK5+XZr8pkegdORvyvIulX9TVr4d1Xm
+	5nLq99AApd3UDQoDHNAtXH7xRO5nk5n31APsBlTFDZcpca85iHWvMqh7WPxNQm6U8bY4ufTrRCA
+	I85s4lAqA5vT3HnM/8ixdeY8dXnZt+Co9x6AAyTmzaUMXcvq5GGsIrbqnxqL42XovUlj/4NBevi
+	Rob3+B5AiQSo6KyGGhwzy5tomDEB74ICRFFjvEnLgDnUnyhlw75ZCCOkvXMMhFYvymKWQO7ywZE
+	3QoDGL1zoqSXA04xPc+/OPqkWAgbdUxqftWv12LTt7w9Eah2uDVi3p9ZNgxH4acUxW
+X-Received: by 2002:a05:6102:689b:b0:7a1:f7d2:e831 with SMTP id ada2fe7eead31-7ac1d4f3614mr1859344137.17.1790164673544;
+        Wed, 23 Sep 2026 04:57:53 -0700 (PDT)
+Received: from beelink.. ([187.13.30.172])
+        by smtp.gmail.com with ESMTPSA id a1e0cc1a2514c-98517a8ecaesm2629757241.12.2026.09.23.04.57.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 23 Sep 2026 04:57:53 -0700 (PDT)
+From: Aldo Ariel Panzardo <qwe.aldo@gmail.com>
+To: linux-xfs@vger.kernel.org,
+	Carlos Maiolino <cem@kernel.org>
+Cc: "Darrick J . Wong" <djwong@kernel.org>,
+	linux-kernel@vger.kernel.org,
+	Aldo Ariel Panzardo <qwe.aldo@gmail.com>,
+	stable@vger.kernel.org
+Subject: [PATCH v2 RESEND] xfs: bound inode fork length against the fork size during log recovery
+Date: Wed, 23 Sep 2026 08:57:44 -0300
+Message-ID: <20260923115744.3160635-1-qwe.aldo@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260921083356.GB20936@lst.de>
+Content-Transfer-Encoding: 8bit
 
-On Mon, Sep 21, 2026 at 10:33:56AM +0200, Christoph Hellwig wrote:
-> On Thu, Sep 17, 2026 at 12:35:47PM +0200, cem@kernel.org wrote:
-> > From: Carlos Maiolino <cem@kernel.org>
-> > 
-> > Once in a while it's useful to know exactly what kind of error caused a
-> > transaction to be cancelled.
-> > Enable xfs_trans_cancel() to receive an error code to be reported.
-> > 
-> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> > Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-> > ---
-> > V3:
-> > 	- Kill typedef from __xfs_trans_cancel
-> > 	- Remove uneeded wrap of parameter 0
-> > V2:
-> > 	- Parenthesize macro parameters
-> > 
-> >  fs/xfs/xfs_trans.c | 8 +++++---
-> >  fs/xfs/xfs_trans.h | 6 +++++-
-> >  2 files changed, 10 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> > index 5c522790e5be..395c896673fe 100644
-> > --- a/fs/xfs/xfs_trans.c
-> > +++ b/fs/xfs/xfs_trans.c
-> > @@ -943,8 +943,9 @@ xfs_trans_commit(
-> >   * xfs_trans_commit().
-> >   */
-> >  void
-> > -xfs_trans_cancel(
-> > -	struct xfs_trans	*tp)
-> > +__xfs_trans_cancel(
-> > +	struct xfs_trans	*tp,
-> > +	int			error)
-> >  {
-> >  	struct xfs_mount	*mp = tp->t_mountp;
-> >  	struct xlog		*log = mp->m_log;
-> > @@ -971,7 +972,8 @@ xfs_trans_cancel(
-> >  	 * here.
-> >  	 */
-> >  	if (dirty && !xfs_is_shutdown(mp)) {
-> > -		XFS_ERROR_REPORT("xfs_trans_cancel", XFS_ERRLEVEL_LOW, 0, mp);
-> > +		XFS_ERROR_REPORT("xfs_trans_cancel", XFS_ERRLEVEL_LOW,
-> > +				 error, mp);
-> >  		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-> >  	}
-> >  #ifdef DEBUG
-> > diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-> > index eb83c5dac032..36a49622b870 100644
-> > --- a/fs/xfs/xfs_trans.h
-> > +++ b/fs/xfs/xfs_trans.h
-> > @@ -213,6 +213,11 @@ xfs_trans_read_buf(
-> >  				      flags, bpp, ops);
-> >  }
-> >  
-> > +void __xfs_trans_cancel(struct xfs_trans *, int);
-> > +
-> > +#define xfs_trans_cancel(tp) __xfs_trans_cancel((tp), 0)
-> > +#define xfs_trans_cancel_error(tp, error) __xfs_trans_cancel((tp), (error))
-> 
-> Can we turn these into inlines instead of macros?
+xlog_recover_inode_commit_pass2() copies an inode log item's data/attr
+fork region into the inode buffer using the on-log region length without
+bounding it against the fork capacity, e.g.:
 
-This sounds good.
+	len = item->ri_buf[2].iov_len;
+	memcpy(XFS_DFORK_DPTR(dip), src, len);
 
-> 
-> And do away with the pointless __xfs_trans_cancel, just implement
-> xfs_trans_cancel_error in xfs_trans.c, and wrap xfs_trans_cancel around
-> it.
+The only guard is an ASSERT, which is a no-op on production kernels
+(CONFIG_XFS_DEBUG off), and xfs_dinode_verify() runs only after the copy.
+A crafted image with a dirty log can therefore drive a heap out-of-bounds
+write at mount time. The XFS_ILOG_DBROOT sibling already passes
+XFS_DFORK_DSIZE as a bound; the DDATA/DEXT and ADATA/AEXT memcpy paths
+did not.
 
-The main reason I created __xfs_trans_cancel was to avoid a fs/xfs/*
-change of calls to xfs_trans_cancel().
+Bound each logged fork region against the destination fork size before
+copying it, and reject the log item with -EFSCORRUPTED when it does not
+fit. Because the recovered inode is only verified after the fork data has
+been copied in, the checks are done up front, before any memcpy into the
+on-disk inode.
 
-If you think that's a must, I can do that in this patch, otherwise I'd
-prefer to add it on a separate patch just removing the call, without any
-logic change.
-What do you think?
+Fixes: 658fa68b6f34 ("xfs: refactor log recovery inode item dispatch for pass2 commit functions")
+Cc: <stable@vger.kernel.org> # v5.8
+Signed-off-by: Aldo Ariel Panzardo <qwe.aldo@gmail.com>
+---
+v2: cc stable # v5.8 (per Darrick).  Move both fork-length checks to the
+    top of the fork-copy block, before any memcpy into the on-disk
+    inode, and drop the now-redundant ASSERT.
 
-Cheers.
+ fs/xfs/xfs_inode_item_recover.c | 20 +++++++++++++++++++-
+ 1 file changed, 19 insertions(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_inode_item_recover.c b/fs/xfs/xfs_inode_item_recover.c
+index 169a8fe3bf0a..6c7dd7dd7032 100644
+--- a/fs/xfs/xfs_inode_item_recover.c
++++ b/fs/xfs/xfs_inode_item_recover.c
+@@ -507,6 +507,25 @@ xlog_recover_inode_commit_pass2(
+ 	ASSERT(!(fields & XFS_ILOG_DFORK) ||
+ 	       (len == xlog_calc_iovec_len(in_f->ilf_dsize)));
+ 
++	/*
++	 * The recovered inode is verified only after the fork data has been
++	 * copied into it, so bound each logged fork region against the size of
++	 * its fork now, before the memcpy below can overrun the on-disk inode.
++	 * The DBROOT/ABROOT cases already bound their copies against the fork
++	 * size.
++	 */
++	if ((fields & (XFS_ILOG_DDATA | XFS_ILOG_DEXT)) &&
++	    item->ri_buf[2].iov_len > XFS_DFORK_DSIZE(dip, mp)) {
++		error = -EFSCORRUPTED;
++		goto out_release;
++	}
++	if ((fields & (XFS_ILOG_ADATA | XFS_ILOG_AEXT)) &&
++	    item->ri_buf[(fields & XFS_ILOG_DFORK) ? 3 : 2].iov_len >
++	    XFS_DFORK_ASIZE(dip, mp)) {
++		error = -EFSCORRUPTED;
++		goto out_release;
++	}
++
+ 	switch (fields & XFS_ILOG_DFORK) {
+ 	case XFS_ILOG_DDATA:
+ 	case XFS_ILOG_DEXT:
+@@ -546,7 +565,6 @@ xlog_recover_inode_commit_pass2(
+ 		case XFS_ILOG_ADATA:
+ 		case XFS_ILOG_AEXT:
+ 			dest = XFS_DFORK_APTR(dip);
+-			ASSERT(len <= XFS_DFORK_ASIZE(dip, mp));
+ 			memcpy(dest, src, len);
+ 			break;
+ 
+-- 
+2.53.0
+
