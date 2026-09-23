@@ -1,82 +1,103 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B04CD3546C0;
-	Wed, 23 Sep 2026 04:44:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BF5F4334D2;
+	Wed, 23 Sep 2026 05:57:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790138646; cv=none; b=iiLaDP0XHjF4nmMqJT77zRUfdcOxVbXSZo3rrHsjzljljBZ8rCUfyByz5r5R3DRdECPvCdUYcfeZPkorsoDACaIOJ5cOcmqLbpfhZRyWn2Db6FmBbb9y4p+PvEzPyaw2uPf8H/0RyLZZ/v20V2GYKLNFjOhJ7TmLIE9CPLoWuQw=
+	t=1790143048; cv=none; b=PmqLfqGnoJqK6MfSBC3tUV5q0Bz7i6SmFjicGxjNWNCUxx1ZSuGdFI2dmNkCjuw0jYxhrk1ogktn93HrcN97KLAtzhV8V/uTq3rMiFkgR9VXDhz3eIdrFqA5d1XLwpYNdSvCSkWXW7qBOIdlLu1EFeKzNUM1lt8rBapUpo4F9sc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790138646; c=relaxed/simple;
-	bh=3K1In4nT3i2HdiuMdKKzMjhK07IZEuKn6Ukoh+Vhlys=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=mRqzfC6h2lCUVHF1tmHdac/LLMvqHPInqAYsNCk88pz3Irf7hKDUUfe61gW4g4LjxEyyg3ZK+Av2MwFzdbPCR4SNtQTV5GBWAHnSjl7XSwdEv0jyiYG+G4sapk/R+iPAG4vmhUY4XVrhaWMGhSvLeCDGi2bMIPHObfaswb3vf50=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=JOydNZmk; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1790143048; c=relaxed/simple;
+	bh=SaB5jJBF08Pr31lcPuoS29hfJH1VTV6sMgQsyFbnulA=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=NqVXTO1M6Kp8VAfaxuC0Jif/0iYNprsROXjdA56edr7kJULK/NpGUYvuvYN3p6w/1uURNeTjFGQrGuo1zYTmP+XodGnPQtGXTtdvyKCGmGSD7WdMcBYiY84shHs9ih/y7C171sakqMHEaxad9YSy06rE8wjujMnj5acR/KzltqU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HnClBjll; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="JOydNZmk"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=3rrTkfCLkv5vG8mm0BkucV5d5ipKmcNjzN+oEKrrF4Y=; b=JOydNZmkvLmfHed3Px4rMYO9fW
-	ovH3G1XC9S1RqxA9m4xOFtseOap20xWrt11xXV9ro3mhmrMkwLiQYjNx9DJ5OU/jVvreTwXo7wkz7
-	E1RmjRTmmDGMGPxsBWYQg7xSUEeom5MHDX9CHR1Q4ZreWi/JrfahFI/iCKtQ8HNGSMoQ2dhqsLcdd
-	2SfRB5K4vBZ5g/6EgsFwSXMO/pALL7eqXnGTTnUKUmY+YTY/dtuus6GWDlk6fsqjUDYTUemDMYNPE
-	1Tcaegw/NCnx2HYskpeIz3PqJkEAbcypYR6nU9GSgrKqBcV4Y/NKFmDUOpnxl/f+lLsiPYVaScByF
-	3j9NSTaw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1x9Epv-0000000780Q-3ycD;
-	Wed, 23 Sep 2026 04:44:03 +0000
-Date: Tue, 22 Sep 2026 21:44:03 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Andrey Albershteyn <aalbersh@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Andrey Albershteyn <aalbersh@redhat.com>, djwong@kernel.org,
-	ebiggers@kernel.org, hch@lst.de, Carlos Maiolino <cem@kernel.org>,
-	fsverity@lists.linux.dev, linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-unionfs@vger.kernel.org,
-	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-	linux-btrfs@vger.kernel.org, david@fromorbit.com
-Subject: Re: [PATCH v16 15/21] xfs: add fs-verity support
-Message-ID: <arNZE37P5khvkJYK@infradead.org>
-References: <20260918111539.1003439-1-aalbersh@kernel.org>
- <20260918111539.1003439-16-aalbersh@kernel.org>
- <arIszDCcy0VbRVFp@infradead.org>
- <arI-5Ejg0Xw7OVmH@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
- <arJ1dfejt4DyCsvG@infradead.org>
- <arKAqsuSoxvM1yKt@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HnClBjll"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id AB28E1F000FF;
+	Wed, 23 Sep 2026 05:57:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790143046;
+	bh=cD7rWyT8jdb94QVW+ufhgRXYvXtAZ+F0XiILWebhxnM=;
+	h=Date:Subject:From:To:Cc;
+	b=HnClBjlljFpYTEzEMFQDX0oj4Fi6+gH+6VoM54KDdSLb90cjwqJq4HwCTT32NGU8b
+	 urJcReFNdwANoILixGmlRsJwe6UMG/NQ36t2XnZ6qolQhvv9DK4TMktIUFqyT6o0V6
+	 22kZzsgmW+pIBWr250tvvlVsB0Akg5tRG3c+bm/uagjMYnDpjEMJO4cL+NYF6lREs0
+	 gmBd0MOD1DQKPLKMgO8U0xC9+ODsVSGt1B81QWNb/eEQzKnM7eTlKPY9ZhKg+52Zo6
+	 LCjzbCbRPcBUlZ8D0gyFPI1kRWWQI5CgQMT1YRPtP7BJw0m842iW69JSIpz7c4hUHe
+	 Wx4uTASF29kdg==
+Date: Tue, 22 Sep 2026 22:57:26 -0700
+Subject: [PATCHSET v2 1/2] xfs: LLM-inspired bug fixes, part 16
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: cem@kernel.org, djwong@kernel.org
+Cc: stable@vger.kernel.org, hch@lst.de, dgc@kernel.org,
+ linux-xfs@vger.kernel.org
+Message-ID: <179014158847.1874904.13591868745136552281.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <arKAqsuSoxvM1yKt@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 
-On Tue, Sep 22, 2026 at 03:27:54PM +0200, Andrey Albershteyn wrote:
-> > 
-> > Yeah, but what is the ilock trying to protect against?  ilock is
-> > the innermost sleeping lock and protects modifications to the
-> > inode fields and the extent mapping.   Higher level synchronization
-> > is done using the iolock and the mmaplock (which is already taken
-> > here).
-> > 
-> 
-> hmm maybe I don't understand what you addressing here but don't I
-> need ilock for xfs_itruncate_extents() used with this transaction.
-> So, doing extent removal.
-> 
-> With this function I want to remove post EOF pages from pagecache
-> and then remove post EOF extents on that inode.
-> 
-> iolock is already hold, mmaplock is for pagecache truncation and
-> ilock for extents removal.
+Hi all,
 
-So there should be no reason to hold it over the call to
-truncate_inode_pages.  I.e., you should be able to move the locking
-and ijoin below that.
+Here's a sixteenth batch of xfs fixes resulting from a LLaMma.  Mwa mwa
+mwa...
+
+v2: add RVB tags, integrate some review feedback from humans and LOLLM
+
+If you're going to start using this code, I strongly recommend pulling
+from my git trees, which are linked below.
+
+With a bit of luck, this should all go splendidly.
+Comments and questions are, as always, welcome.
+
+--D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=llm-fixes-16
+---
+Commits in this patchset:
+ * xfs: fix missing xfs_qm_adjust_dqlimits call in quotacheck repair
+ * xfs: online quotacheck must dirty dquot if enforcement adjustments needed
+ * xfs: fix buffer overruns in xfs_ioc_attr_list
+ * xfs: clean up after failed metafile relinking
+ * xfs: pass xfs_trans_resv object to reservation calculation helpers
+ * xfs: fix xfs_rename_space_res for non-pptr filesystems
+ * xfs: fix ondisk symlink target validation in xrep_dinode_check_dfork
+ * xfs: add missing healthmon trace strings
+ * xfarray: don't crash when sorting if array element crosses a folio
+ * xfarray: don't allow users to unset in the middle of an array
+ * xfs: don't allow sorting sparse arrays
+ * xfs: simply the free space btree repair code
+ * xfarray: warn against sorting arrays with identical elements
+---
+ fs/xfs/libxfs/xfs_metadir.h                        |    5 
+ fs/xfs/libxfs/xfs_symlink_remote.h                 |    2 
+ fs/xfs/scrub/xfarray.h                             |    9 -
+ fs/xfs/xfs_dquot.h                                 |    2 
+ fs/xfs/xfs_trace.h                                 |   28 ++-
+ .../filesystems/xfs/xfs-online-fsck-design.rst     |   13 -
+ fs/xfs/libxfs/xfs_dquot_buf.c                      |   13 -
+ fs/xfs/libxfs/xfs_inode_fork.c                     |    4 
+ fs/xfs/libxfs/xfs_metadir.c                        |   30 +++
+ fs/xfs/libxfs/xfs_symlink_remote.c                 |    8 +
+ fs/xfs/libxfs/xfs_trans_resv.c                     |   38 ++--
+ fs/xfs/libxfs/xfs_trans_space.c                    |    6 -
+ fs/xfs/scrub/alloc_repair.c                        |   15 +
+ fs/xfs/scrub/inode_repair.c                        |   26 ++-
+ fs/xfs/scrub/quota_repair.c                        |    5 
+ fs/xfs/scrub/quotacheck_repair.c                   |   54 +++++
+ fs/xfs/scrub/xfarray.c                             |  201 ++++++++------------
+ fs/xfs/xfs_dquot.c                                 |   20 +-
+ fs/xfs/xfs_handle.c                                |    2 
+ fs/xfs/xfs_qm.c                                    |    6 -
+ fs/xfs/xfs_trans_dquot.c                           |    6 -
+ 21 files changed, 277 insertions(+), 216 deletions(-)
+
+Unreviewed patches in this series:
+
+[PATCHSET v2 1/2] xfs: LLM-inspired bug fixes, part 16
+  [PATCH 09/13] xfarray: don't crash when sorting if array element
