@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E9183921D8;
-	Wed, 23 Sep 2026 06:01:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35AAB3955CF
+	for <linux-xfs@vger.kernel.org>; Wed, 23 Sep 2026 06:01:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790143293; cv=none; b=qICnoTeJZB1bvgQ0/Jf+VTv6Ntr+N75EmB50aKhvTWIe1+y4ZMO6Phb8swPB/cgI/ugAaxT5UoY7m1FB2wJRcuCZdcKrvi3nuZO/PgpphQ5MCkRu8pCJbsRLFCCoRjH2yV7478bWUQir6K8d47RQxQyfs7UjEaWiT3ekuLjzBnc=
+	t=1790143309; cv=none; b=LANvc2PBMZ0ODBmm4mutMcHUG2Uq5qCcGhiaiEyL7v0vFMiTuWjTt7sEMDM/a4KRUw7QPAT9CWfnIzelJHGOJ0CcnTRksxgJg2V8JLqhZCNaUpnYsV4TSyQKsX9VClNMg7L2uZF6lgCdWi+8oC+tkVOL7/L+lCSY9ijhxUpvHKo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790143293; c=relaxed/simple;
-	bh=sov7UFdNGy7ABSzU/IXOLOAiVTwAzhgUWBnWex5BmiY=;
+	s=arc-20240116; t=1790143309; c=relaxed/simple;
+	bh=/5CDBlM+iMcgJkyogjU3AYVwIJgGx9l0S10qXI40CZw=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=T/ttVX1VObN6wzmuJfN0MDMIALjKnIQuYPt7b5COUNDIxqzZhfLpA4+y3QHEf/3IJlwNeVoXFSrGOWbZcrdVTmEE7adXV/z9HGEz/3ACfeMCVE79npx8pa3fc/KQXkKrPXUPIzyqUnWRmXh7I7D+YcB15bhMqtHJuFpaxnb+ePI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Oglug6sq; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=DH6HqJvpmvwJBhcox2iDb6XFK11KHbfYG9GKBwQNTCl/zj5L81yQIgX7JR2lhWlnPYsLNQdB1vajpWhFaoibrL7/QCQwN7w/2Tl7m63sCZHMQshwWGAC96YfBm7jcoPQ4ppVBZjWQyjhyW2Ts8qBSio45VND31A9Tjkrchn9CL4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X+jJkcqg; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Oglug6sq"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 23C3F1F000FF;
-	Wed, 23 Sep 2026 06:01:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X+jJkcqg"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id BA8221F000FF;
+	Wed, 23 Sep 2026 06:01:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790143292;
-	bh=wgRVOkST1vEaKK9CLCIe2zQdpbfGhK8cfpyuNa05zY4=;
+	s=k20260515; t=1790143307;
+	bh=1li4J6CXZTRgOPA0N3Z3HKnm1JWffdg5sb6n5Ij2DRw=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=Oglug6sqDTyNRGIFeXNXcZOixeECJiSoFwmatbMzTxG6UX3rxjdSsxYC430iXR1ym
-	 5IJjv9nEzxdqsDLJN2Uod1/P6rgtN7J85tqekgC0eLZZc9/mgDgB/TMsL1o7fPBG9C
-	 jgBJ2V21QpdoSzBybdo5/qBALk0BSZwq0lDUS75cgtpqCfp1H1dAgWmyx5UxkV/97c
-	 BCrVXAtWWFwTfPhs/VMWRth9V3Besv0Ci47XzaBu+4Pj5BpxKldp9reM00w/6XgdCk
-	 0+LW9X5nAe3qctIPd7kuDZBLYacpJYJtYirV+UiiLYira40ZRpDmWureZpnvLRinT0
-	 oBFC0dtfIDscA==
-Date: Tue, 22 Sep 2026 23:01:31 -0700
-Subject: [PATCH 03/12] xfs: clear the symlink zapped flag if inline symlink is
- ok
+	b=X+jJkcqgVN/vmTiTMGB8Ox2a4TBNQWzk98HCILy8Fx3alhY8AvMLHOI9UObpOLJPv
+	 rZfKLBcJvPL9evntnINrTmFhMnvW37iGOpIziSXBCaw/5oSO4uB2lQ2B+OOMu3En2r
+	 nJ2kr5mVPukg/Jnup7wLFGeP6AcrN+yDa1ECT1RJv0BoLuxx3PVMpXjqEWuAXVkKSz
+	 /E8gntr5C0pLMFkFiYRq77jSrBvFUrTSwquel2ZqbOU1WO9jldHrccMk6exZrIPBQ9
+	 Xmvqb294pb0AVqql7F2joqfCZR+0OtDUeaKl916Js1RspexL27wSLv2kPEPSL0hsh8
+	 t9k993u+npYGg==
+Date: Tue, 22 Sep 2026 23:01:47 -0700
+Subject: [PATCH 04/12] xfs: reinitialize dquot block if non-first dquot can't
+ load
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
-Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <179014159607.1875436.4270560289215383490.stgit@frogsfrogsfrogs>
+Cc: linux-xfs@vger.kernel.org
+Message-ID: <179014159628.1875436.12664781946205413707.stgit@frogsfrogsfrogs>
 In-Reply-To: <179014159469.1875436.5857342164999236687.stgit@frogsfrogsfrogs>
 References: <179014159469.1875436.5857342164999236687.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,50 +46,62 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-LOLLM noticed that we fail to clear the SYMLINK_ZAPPED flag if an inline
-symlink checks out ok, even after a repair.  Fix that.
+LOLLM noticed that the early exit logic in xrep_quota_block is defective
+because it only looks in the first ondisk dquot for corruption that
+would prevent dquots from loading.  We need to scan all the dquots in
+the block, not just the first one.
 
-Cc: <stable@vger.kernel.org> # v6.8
-Fixes: d9041681dd2f53 ("xfs: set inode sick state flags when we zap either ondisk fork")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Assisted-by: LOLLM # finding obvious bugs
 ---
- fs/xfs/scrub/symlink.c |   17 ++++++++---------
- 1 file changed, 8 insertions(+), 9 deletions(-)
+ fs/xfs/scrub/quota_repair.c |   16 +++++++++++-----
+ 1 file changed, 11 insertions(+), 5 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/symlink.c b/fs/xfs/scrub/symlink.c
-index 91d40b9fb5c6d2..ed9ca7f737c3cc 100644
---- a/fs/xfs/scrub/symlink.c
-+++ b/fs/xfs/scrub/symlink.c
-@@ -70,21 +70,20 @@ xchk_symlink(
- 		return 0;
- 	}
+diff --git a/fs/xfs/scrub/quota_repair.c b/fs/xfs/scrub/quota_repair.c
+index 89f7ea4f92ef4a..dbbeb858c13c4c 100644
+--- a/fs/xfs/scrub/quota_repair.c
++++ b/fs/xfs/scrub/quota_repair.c
+@@ -294,7 +294,6 @@ xrep_quota_block(
+ 	xfs_dqid_t		id)
+ {
+ 	struct xfs_dqblk	*dqblk;
+-	struct xfs_disk_dquot	*ddq;
+ 	struct xfs_quotainfo	*qi = sc->mp->m_quotainfo;
+ 	struct xfs_def_quota	*defq = xfs_get_defquota(qi, dqtype);
+ 	struct xfs_buf		*bp = NULL;
+@@ -316,14 +315,21 @@ xrep_quota_block(
+ 		break;
+ 	case 0:
+ 		dqblk = bp->b_addr;
+-		ddq = &dqblk[0].dd_diskdq;
++		error = 0;
  
--	/* Inline symlink? */
- 	if (ifp->if_format == XFS_DINODE_FMT_LOCAL) {
-+		/* Inline symlink? */
- 		if (len > xfs_inode_data_fork_size(ip) ||
- 		    len > strnlen(ifp->if_data, xfs_inode_data_fork_size(ip)))
- 			xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, 0);
--		return 0;
-+	} else {
-+		/* Remote symlink; must read the contents. */
-+		error = xfs_symlink_remote_read(sc->ip, sc->buf);
-+		if (!xchk_fblock_process_error(sc, XFS_DATA_FORK, 0, &error))
-+			return error;
-+		if (strnlen(sc->buf, XFS_SYMLINK_MAXLEN) < len)
-+			xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, 0);
- 	}
+ 		/*
+ 		 * If there's nothing that would impede a dqiterate, we're
+ 		 * done.
+ 		 */
+-		if ((ddq->d_type & XFS_DQTYPE_REC_MASK) == dqtype &&
+-		    id == be32_to_cpu(ddq->d_id)) {
++		for (i = 0; i < qi->qi_dqperchunk; i++, dqblk++) {
++			struct xfs_disk_dquot	*ddq = &dqblk->dd_diskdq;
++
++			if ((ddq->d_type & XFS_DQTYPE_REC_MASK) != dqtype ||
++			    id + i != be32_to_cpu(ddq->d_id))
++				error++;
++		}
++
++		if (!error) {
+ 			xfs_trans_brelse(sc->tp, bp);
+ 			return 0;
+ 		}
+@@ -336,7 +342,7 @@ xrep_quota_block(
+ 	dqblk = bp->b_addr;
+ 	bp->b_ops = &xfs_dquot_buf_ops;
+ 	for (i = 0; i < qi->qi_dqperchunk; i++, dqblk++) {
+-		ddq = &dqblk->dd_diskdq;
++		struct xfs_disk_dquot	*ddq = &dqblk->dd_diskdq;
  
--	/* Remote symlink; must read the contents. */
--	error = xfs_symlink_remote_read(sc->ip, sc->buf);
--	if (!xchk_fblock_process_error(sc, XFS_DATA_FORK, 0, &error))
--		return error;
--	if (strnlen(sc->buf, XFS_SYMLINK_MAXLEN) < len)
--		xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, 0);
--
- 	/* If a remote symlink is clean, it is clearly not zapped. */
- 	xchk_mark_healthy_if_clean(sc, XFS_SICK_INO_SYMLINK_ZAPPED);
- 	return 0;
+ 		trace_xrep_disk_dquot(sc->mp, dqtype, id + i);
+ 
 
