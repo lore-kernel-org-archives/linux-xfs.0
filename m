@@ -1,44 +1,52 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17360346782
-	for <linux-xfs@vger.kernel.org>; Wed, 23 Sep 2026 04:39:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B04CD3546C0;
+	Wed, 23 Sep 2026 04:44:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790138389; cv=none; b=SNPGdUJbYhoUe3uGNn7yaerMgUSV39tnU9ypULxnZB0DtCCpUAUWqH0o3T5wnFx84qA29oM9VwoDvBNnKK4owFmn6xOwr/kJDHL0D5dfn1XlIc/KQxVjO8+p6qaeX+KrYRyurAAxqr+RZa/ny0z80GLzJNZ+N9p36KGAoGJ2dDU=
+	t=1790138646; cv=none; b=iiLaDP0XHjF4nmMqJT77zRUfdcOxVbXSZo3rrHsjzljljBZ8rCUfyByz5r5R3DRdECPvCdUYcfeZPkorsoDACaIOJ5cOcmqLbpfhZRyWn2Db6FmBbb9y4p+PvEzPyaw2uPf8H/0RyLZZ/v20V2GYKLNFjOhJ7TmLIE9CPLoWuQw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790138389; c=relaxed/simple;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
+	s=arc-20240116; t=1790138646; c=relaxed/simple;
+	bh=3K1In4nT3i2HdiuMdKKzMjhK07IZEuKn6Ukoh+Vhlys=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sfOf92H3pf+h8RdqIgebqSofLu/yEMWkf+7uBgdIA90GblpiEjVprBAv4UiWLfPqFeBLTVKQd6JjD6RdOWNb85+214mhrD/z6hBctvGkUEwkW6IHMF+8FeefrZdtDon2P7rVTtsVSV5PXEn48O8vUylqdsPxS71y41TNUaHQ5Eg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=UJRzAelf; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=mRqzfC6h2lCUVHF1tmHdac/LLMvqHPInqAYsNCk88pz3Irf7hKDUUfe61gW4g4LjxEyyg3ZK+Av2MwFzdbPCR4SNtQTV5GBWAHnSjl7XSwdEv0jyiYG+G4sapk/R+iPAG4vmhUY4XVrhaWMGhSvLeCDGi2bMIPHObfaswb3vf50=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=JOydNZmk; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="UJRzAelf"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="JOydNZmk"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=UJRzAelfYMPKhfFGirBZWcLEJK
-	If82f4AXvwEGnWZP4e5UxAkNtAPcVnxvVxjUsSfd9TADMerN14C8VP9wKhW6gMNvUtEGQyyt6IYy6
-	rydNRemas/Du/N7yE+spgxRcYSmvpOQvWkAWU5ZMqduwZ1qzV3MUpzV3r7h7GVEATlLHhQt/TUV6E
-	qd9DHDL4Eg7rQVEqWOyV/jIa5T8wmnh19uMKMfJ7f/+jn7AyS1c1dakHjz5mDispsKcZ9COHDiEEy
-	nZq5BaxzzhdWEzHMPB3R55WJRyM6KCJ41hhvnFOC7DDbD2HYLUijipJ1E476ZxCwSggT+2azmF3zI
-	JbjmqS7w==;
+	bh=3rrTkfCLkv5vG8mm0BkucV5d5ipKmcNjzN+oEKrrF4Y=; b=JOydNZmkvLmfHed3Px4rMYO9fW
+	ovH3G1XC9S1RqxA9m4xOFtseOap20xWrt11xXV9ro3mhmrMkwLiQYjNx9DJ5OU/jVvreTwXo7wkz7
+	E1RmjRTmmDGMGPxsBWYQg7xSUEeom5MHDX9CHR1Q4ZreWi/JrfahFI/iCKtQ8HNGSMoQ2dhqsLcdd
+	2SfRB5K4vBZ5g/6EgsFwSXMO/pALL7eqXnGTTnUKUmY+YTY/dtuus6GWDlk6fsqjUDYTUemDMYNPE
+	1Tcaegw/NCnx2HYskpeIz3PqJkEAbcypYR6nU9GSgrKqBcV4Y/NKFmDUOpnxl/f+lLsiPYVaScByF
+	3j9NSTaw==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1x9Eln-000000077gk-1zt7;
-	Wed, 23 Sep 2026 04:39:47 +0000
-Date: Tue, 22 Sep 2026 21:39:47 -0700
+	id 1x9Epv-0000000780Q-3ycD;
+	Wed, 23 Sep 2026 04:44:03 +0000
+Date: Tue, 22 Sep 2026 21:44:03 -0700
 From: Christoph Hellwig <hch@infradead.org>
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs@vger.kernel.org, cem@kernel.org, hch@infradead.org,
-	djwong@kernel.org
-Subject: Re: [PATCH 2/2] xfs: share the AG refcount btree with the rt
- refcount btree
-Message-ID: <arNYE_0ZqelqeM-7@infradead.org>
-References: <20260922231845.3266784-1-sandeen@redhat.com>
- <20260922231845.3266784-3-sandeen@redhat.com>
+To: Andrey Albershteyn <aalbersh@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	Andrey Albershteyn <aalbersh@redhat.com>, djwong@kernel.org,
+	ebiggers@kernel.org, hch@lst.de, Carlos Maiolino <cem@kernel.org>,
+	fsverity@lists.linux.dev, linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-unionfs@vger.kernel.org,
+	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+	linux-btrfs@vger.kernel.org, david@fromorbit.com
+Subject: Re: [PATCH v16 15/21] xfs: add fs-verity support
+Message-ID: <arNZE37P5khvkJYK@infradead.org>
+References: <20260918111539.1003439-1-aalbersh@kernel.org>
+ <20260918111539.1003439-16-aalbersh@kernel.org>
+ <arIszDCcy0VbRVFp@infradead.org>
+ <arI-5Ejg0Xw7OVmH@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+ <arJ1dfejt4DyCsvG@infradead.org>
+ <arKAqsuSoxvM1yKt@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,10 +55,28 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260922231845.3266784-3-sandeen@redhat.com>
+In-Reply-To: <arKAqsuSoxvM1yKt@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Looks good:
+On Tue, Sep 22, 2026 at 03:27:54PM +0200, Andrey Albershteyn wrote:
+> > 
+> > Yeah, but what is the ilock trying to protect against?  ilock is
+> > the innermost sleeping lock and protects modifications to the
+> > inode fields and the extent mapping.   Higher level synchronization
+> > is done using the iolock and the mmaplock (which is already taken
+> > here).
+> > 
+> 
+> hmm maybe I don't understand what you addressing here but don't I
+> need ilock for xfs_itruncate_extents() used with this transaction.
+> So, doing extent removal.
+> 
+> With this function I want to remove post EOF pages from pagecache
+> and then remove post EOF extents on that inode.
+> 
+> iolock is already hold, mmaplock is for pagecache truncation and
+> ilock for extents removal.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-
+So there should be no reason to hold it over the call to
+truncate_inode_pages.  I.e., you should be able to move the locking
+and ijoin below that.
