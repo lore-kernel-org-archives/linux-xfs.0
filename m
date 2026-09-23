@@ -1,123 +1,266 @@
-Received: from mail-vs2-f40.google.com (mail-vs2-f40.google.com [74.125.227.40])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86AA64DA540
-	for <linux-xfs@vger.kernel.org>; Wed, 23 Sep 2026 11:58:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.40
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DF7351CF6B
+	for <linux-xfs@vger.kernel.org>; Wed, 23 Sep 2026 13:44:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790164725; cv=none; b=a6K+YkIRwenzYXo8/kjvxWNBdr3CUuKFIT3HZ0LsB3EIoO7IMoC+2BOI2x2bDAuKnR9MeOiJ0aoxIjYX/M3bc/UkLptoCgyr6P8Z+llVDJ1LR/r24BLnh8HNNdfa4j8dGNlgt41UzysKCDLujQ+Qmzm7LDQC1bnm8UbPalzjpvk=
+	t=1790171088; cv=none; b=bxQ3Avl+FLB7JizexoKTaRKjKqN7d1/ZBZ+rw5nLtJYjq2a2o+XlM9tL5F0Tkflm4y8HcTMN3+peVLPTg7PWm1rbqH2doeg7krMVDqCsiZlZ5te6LvTy6xignyQfg7grdgN2vPJyFq/OhJQh2MxExn8aAala3bgizx/iHpM8sLE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790164725; c=relaxed/simple;
-	bh=g1HCBr8bsZcnUx3gO40OyrqGIOY7LwAa+VsmFs5/+V8=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=UGyyMoNpGdtfY6S0JfgQ4lasNhO8MXr//xCkA0ZBj60VQaXZVlqjZGGj+0i6MaBPpCjyKqprUn9NuQcQhi03R3ETqrVIYPnUsKOnol6i8NqvocXoj0Btp0G4cFDGtegCcaWCAhQg5VyHu9rnvACW0MAtveEZSgNHrdUy96vCqik=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=h/DD0KnQ; arc=none smtp.client-ip=74.125.227.40
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1790171088; c=relaxed/simple;
+	bh=kE9Lyk8gNuMYMbH3LFiUp+OaSx9a97sEr0BuQW4+sYk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=FFHTFhv9a39cKzQQlbU5rCFmDDh1Lhk3vthf2vs99xHRfLbKKH2dSC6XQdhqnFsUOEQc05SX/i5DrzkEd5prFsA05sWO+Ga1VjfKP4FobAf2Jxm+4U8rMkwCDvsYuVAoy+U79j8IYoHIwrM4zPvk/Yb01DrAUwJjhkQvA7wtMQg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=aCY4rq1n; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="h/DD0KnQ"
-Received: by mail-vs2-f40.google.com with SMTP id ada2fe7eead31-78a4c5c582eso316720137.3
-        for <linux-xfs@vger.kernel.org>; Wed, 23 Sep 2026 04:58:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790164718; x=1790769518; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=lN2b/UwZ6UTOnQoQGsvb5dcfV+ZMY1X8+RCUQeVLWRk=;
-        b=h/DD0KnQOc2oGXVJR2/COVNTGXNVlfKXHWxIUF5spcvkjpAYkYW7oLUdPeVzz4rdkF
-         n/NdqC5ze33Y7o/hEZ8R8qTuPFjpYRhhLr/1YI/VePA0qLDSDHQVIJFtSG4DwoF1AVif
-         IkdXgFhI9EvyUyq1a4/M3qFkNUAE9KpWnGbysAVHsC/g/kaziU1+Z4vapZ7R5BWv917v
-         /PsEqWf6V2ZXndXr42HcoaM1ybOi8BBiOUM7oENIp00GQXzFrZYh9Mvdk5GBsf/v6f0B
-         8li/nd/lc89m/PKKSQvGnsVWj1F1VHb9ppdmQ88s039MxNiOME9XKL6xlWanU/VJobNj
-         sltQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790164718; x=1790769518;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=lN2b/UwZ6UTOnQoQGsvb5dcfV+ZMY1X8+RCUQeVLWRk=;
-        b=2k0WhNp9Dmzp+GLL7lu5sTqO0QqspTAaN7Y74+XWeLUNIf2A8skaQ0Py7N03eAqg3S
-         j4J6KJrfaAiyu0pV+/PdII1N6SHzacxfj7lRytNg6jnaab0R+aH+UpCWufpaeGqe5b05
-         slpdauTi07LhLY3uH/dZe1jZVuHdtWtUJRB6IxkR0De8fe2Xmgy4TLubVESckwmdsmCF
-         mGBRlyPb34MwgF64glJ/hE+2OHEmNqjN3cL7TqvbPpXZp43ZhjupXPbZA1ATMeI2IfF7
-         bGoebb4CAQLfwOw030AoEST/7LLz3YSezixp3CZWBj9suYenUwVGqIBEucFb+PhL+AAJ
-         xqSg==
-X-Gm-Message-State: AFuF++lf4zdQuXK+sVXWjQxqNdU/UWDKr1j5NYAQHfdpdDuiBw3BktIw
-	pKxJUD3ffDQCqQ04yZ1dWqr4Th+PJ2bWHrKk0UAgUQs1Gz09u8C2ZzuhDL+yZg==
-X-Gm-Gg: AYBFou3W3WAo2NGLzK+2nhjmVJYGMjVBFfjTlYpW2FvbY7T2IwPR3XXMf9wJega7N3B
-	Zdp/xQAe6b3ekZoYTapKIZ//DcI4FOkVyqyhkfngraLKs6FYWk0iKGTSriU4FG19GPOO0Yzopc8
-	4MmTPRyoRIBNagVg4t1H1GEw+yTai4CL82ASapR9NJGyIXylcWhDZyg2+4m5w4Vycah49hNZQ52
-	P5tlCsqV5ndcX7ogATwBTC2oul1cuZr71JC/i+v9OrzHhnIzSKzufJMSGNacf2NBVYFpPbkNtRH
-	wOdaxO8p7afAaP77TRScsMuB8R9eQYVvRbG4XbjFLpiT2ALqgFArjAzzpwaDEAUXhUlD5UfW6aq
-	1IxlUbWOe7klM7Z6nJnJYkBFJtJoeQjMvs5n+eNXYJHzJNhGSlQnfg+Iv4kMOBtIKeI888mamI4
-	ji4lySCn/poMm0s4VSjQ43CKDQJDSThU4DfNrP/LzldVVYy1F6ub/poxBVMboVEGg=
-X-Received: by 2002:a05:6102:94b:b0:7a6:a24e:8140 with SMTP id ada2fe7eead31-7ac1bd45308mr2260190137.14.1790164718584;
-        Wed, 23 Sep 2026 04:58:38 -0700 (PDT)
-Received: from beelink.. ([187.13.30.172])
-        by smtp.gmail.com with ESMTPSA id a1e0cc1a2514c-985167e6fcfsm3257250241.0.2026.09.23.04.58.35
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 23 Sep 2026 04:58:38 -0700 (PDT)
-From: Aldo Ariel Panzardo <qwe.aldo@gmail.com>
-To: linux-xfs@vger.kernel.org,
-	Carlos Maiolino <cem@kernel.org>
-Cc: "Darrick J . Wong" <djwong@kernel.org>,
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="aCY4rq1n"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1790171085;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=4OQMq1C0NOJobvtPRm2xkdzTOVK4hQpsY9hlZ3iTuGI=;
+	b=aCY4rq1nR4nnZTWDyDRUYKgfJuAzPRjC9xcAithWsc1HboeAD9SC1LLkldhRv6vf7eKmxP
+	YCxW8zodfXyV0qjmBMX9LsdJXZ/KuITerzRS6mdL0xFCVV7jiQ6r85sgyxnYqAmH/qzY5F
+	V6ZFXHLaPJZdfREm+jjy/7vv+M0NROw=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-548-6nzWd2aAPqi10Zgm4T2EUQ-1; Wed,
+ 23 Sep 2026 09:44:39 -0400
+X-MC-Unique: 6nzWd2aAPqi10Zgm4T2EUQ-1
+X-Mimecast-MFC-AGG-ID: 6nzWd2aAPqi10Zgm4T2EUQ_1790171077
+Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id E15481944D31;
+	Wed, 23 Sep 2026 13:44:36 +0000 (UTC)
+Received: from bfoster (headnet05.pony-001.prod.iad2.dc.redhat.com [10.2.32.117])
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 4D723180057E;
+	Wed, 23 Sep 2026 13:44:35 +0000 (UTC)
+Date: Wed, 23 Sep 2026 09:44:32 -0400
+From: Brian Foster <bfoster@redhat.com>
+To: Dave Chinner <dgc@kernel.org>
+Cc: MingTao Huang <1037827920@qq.com>, Carlos Maiolino <cem@kernel.org>,
+	Dave Chinner <dchinner@redhat.com>,
+	"Darrick J . Wong" <djwong@kernel.org>,
+	Chandan Babu R <chandanbabu@kernel.org>, linux-xfs@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Aldo Ariel Panzardo <qwe.aldo@gmail.com>,
-	stable@vger.kernel.org
-Subject: [PATCH v2 RESEND 2/2] xfs: reject remote xattr entries with an out-of-range value length
-Date: Wed, 23 Sep 2026 08:58:23 -0300
-Message-ID: <20260923115823.3305596-3-qwe.aldo@gmail.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20260923115823.3305596-1-qwe.aldo@gmail.com>
-References: <20260923115823.3305596-1-qwe.aldo@gmail.com>
+	MingTao Huang <mintaohuang@tencent.com>
+Subject: Re: [PATCH] xfs: fix skipped flushing items not counted in
+ xfsaild_push()
+Message-ID: <arPXwKnDMVMj-oMK@bfoster>
+References: <tencent_F801A9436DFB447AAFEC63D3E615B8052405@qq.com>
+ <arL9Xrmf5Q7wd3T4@dread>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <arL9Xrmf5Q7wd3T4@dread>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
-xfs_attr3_leaf_verify_entry() validates a remote attribute entry's name
-but never bounds its on-disk value length (xfs_attr_leaf_name_remote.
-valuelen, a __be32). A crafted leaf with valuelen = 0x80000000 passes
-the verifier and the CRC.
+On Wed, Sep 23, 2026 at 08:12:46AM +1000, Dave Chinner wrote:
+> On Tue, Sep 22, 2026 at 04:14:29PM +0800, MingTao Huang wrote:
+> > From: MingTao Huang <mintaohuang@tencent.com>
+> > 
+> > Commit f3f7ae68a4ea ("xfs: skip flushing log items during push")
+> > introduced a fast path in xfsaild_push() that uses
+> > test_bit(XFS_LI_FLUSHING) to skip log items already being
+> > flushed.  However, the fast path jumps directly to the
+> > next_item label, bypassing flushing++, count++, and the
+> > ail_last_pushed_lsn update.  This causes three problems:
+> 
+> Right, they get skipped because they are already flushing and we are
+> not doing anything with them. i.e. they've already been accounted as
+> flushing (e.g. inodes that were gathered into a single buffer flush
+> by xfs_iflush_cluster()) and the buffer is already either on the
+> delwri list for submission or under IO.
+> 
+> > 
+> > 1. The loop exit condition "count > 1000" becomes much harder to
+> >    trigger.  count was meant to track every item visited, but now it
+> 
+> No it isn't.
+> 
+> As the author of this code, I can say for certain that the intent of
+> 'count' is to count the number of items we made pushing decisions
+> about, not count the number of items we have iterated. 
+> 
+> The purpose of 'flushing' is to account for the number of buffers we
+> accumulate on the delwri list before we submit it. As count is
+> incremented whenever flushing is incremented, it currently forms
+> an upper bound to the number of buffers that can be queued on the
+> delwri list in a single push iteration.
+> 
+> The purpose of 'stuck' is to account for items that could not be
+> placed on the delwri list because they were locked, pinned or
+> otherwise unavailable for flushing.
+> 
+> 'success' is not directly counted, because there is no further
+> action that needs to be taken for them; they are simply counted,
+> and hence contribute to the flush/stuck ratio decisions later.
+> 
+> IOWs, every 'push decision' that could add a buffer to the delwri
+> list is accounted by 'count', and flushing/stuck indicate what
+> decision was made.
+> 
+> The point of LI_FLUSHING was simply to skip over all the items that
+> would not change either count, flushing or stuck because they have
+> already been accounted to 'count' and 'flushing' by a prior push
+> decision.
+> 
+> >    only increments for non-flushing items that enter
+> >    xfsaild_push_item().
+> 
+> Exactly - count is the number of items we made new pushing decsions
+> about.
+> 
+> >    Each such item typically triggers an inode
+> >    cluster flush that marks dozens of neighbouring inodes as flushing,
+> >    so count effectively counts cluster flushes rather than individual
+> >    items. 
+> 
+> Yes, that is exactly the intent - a single cluster buffer on the
+> delwri list covers up to 32 inode items on the AIL. That is -one IO-
+> for up to 32 items on the AIL, and it is -IO- that we are trying to
+> account for and optimise here, not log items.
+> 
+> >    The threshold shifts from 1000 items to ~1000 clusters,
+> 
+> No, the count has always been '1000 new buffer IO decisions made',
+> not '1000 items processed'.
+> 
+> >    letting the loop scan an order of magnitude more items per round.
+> >    Each cluster flush adds a buffer to ail_buf_list, and the resulting
+> >    oversized list causes xfs_buf_delwri_submit_nowait() -- which runs
+> >    list_sort() plus per-buffer trylock and IO submission -- to take so
+> >    long that the watchdog fires.
+> 
+> How? count bounds the delwri list to 1000 buffers at most. That's
+> very intentional, and the number is based on benchmarking results.
+> 
 
-That length is later assigned into the signed int args->rmtvaluelen
-(xfs_attr3_leaf_getvalue), becoming negative, which slips past the signed
--ERANGE check in xfs_attr_copy_value(); a getxattr() with a small buffer
-then memcpy()s a full remote block into the small kvalue buffer
-(xfs_attr_rmtval_copyout) -- a heap out-of-bounds write with
-attacker-controlled content, from an unprivileged getxattr(2) on a
-mounted crafted image.
+I'm confused by some of the reasoning here. Maybe I'm missing something,
+but that count check looks like it only limits the current pass. The
+flushing value is basically just input into the thread throttling (i.e.
+schedule timeout) behavior. So ISTM that if the majority of the AIL is
+flushing, we'd historically want to schedule out and wait for I/O to
+complete, whereas what this patch describes is a scenario where we now
+spin around until enough items clear off the list in that particular
+situation.
 
-Reject remote entries whose value length exceeds XFS_XATTR_SIZE_MAX in
-the leaf verifier, so the malicious block is rejected at read time.
+Prior to the optimization in ~2024, it looks like we'd account all these
+flushing items and back off. Also FWIW, looking back at that commit it
+doesn't say anything about bounding I/O (not to say this isn't a natural
+side effect of xfaild throttling). That commit seems mainly focused on
+reducing ->iop_push() call overhead and the implementation only focuses
+on inode items, so altogether this strikes me as more of an (perfectly
+valid) optimization than fundamental behavior change in how the
+processing thread or ail accounting should work.
 
-Fixes: c84760659dcf ("xfs: check attribute leaf block structure")
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Aldo Ariel Panzardo <qwe.aldo@gmail.com>
----
-v2: cc stable (per Darrick).  Now 2/2 of a series: 1/2 fixes the signed
-    value-length check in xfs_attr_copy_value(); this read-time verifier
-    fix is otherwise unchanged from v1.
+> i.e.  A thousand items on a list takes a couple of milliseconds to
+> sort. I/O submission of that list takes a couple of milliseconds if
+> it doesn't block (i.e. the IO subsystem has to be faster than the
+> CPU IO submission loop to avoid block on a full queue), and if it
+> does block, we want all the IO submission to merge as effectively as
+> possible in the queue so that we use as few IO slots in the queue as
+> possible.
+> 
+> Hence the submission code should not be running around in a hard
+> loop for 22s because of a list that is too long. The buffer list
+> length is -bounded- by count, and that should prevent these sorts of
+> issues.
+> 
+> > 2. The timeout decision "(stuck + flushing) * 100 / count > 90" is
+> >    computed without the fast-path flushing items, so the flushing ratio
+> >    is severely under-reported.
+> 
+> No, the accounting this check is acting on is correct. The action we
+> take is based on the all the items we tried to push this iteration,
+> not the indirect LI_FLUSHING items that we didn't make a decision
+> about or are still in progress from the previous iteration.
+> 
+> >    When most of the AIL is flushing, the
+> >    ratio appears near 0%.
+> 
+> How did you get into a state where most of the AIL is flushing and
+> no progress is being made transitioning items out of flushing state?
+> 
+> i.e. if delwri submission is not making progress, then the ail push
+> will keep appending to the delwri list (by design, so we retry
+> flushing items until submission succeeds). This will result in
+> transitioning most of the AIL to flushing state and queued on the
+> delwri list. This is a symptom of the delwri submission not
+> making progress and rather than a problem with AIL flushing
+> accounting.
+> 
+> i.e. we need to know why delwri submission is not making progress,
+> as that is likely the real cause of the problem. i.e. it is unlikely
+> that this has anythign to do with how we account for item push
+> decisions, and it is likely your changes just slow down or change
+> the timing of item pushing sufficiently to avoid whatever issue is
+> occuring in delwri submission.
+> 
+> >    xfsaild therefore selects
+> >    "tout = 0" when it should select "tout = 20" (20 ms
+> >    back-off to let IO complete).  The zero-backoff tight loop compounds
+> >    the ail_buf_list accumulation across rounds.
+> > 
+> > 3. ail_last_pushed_lsn is not advanced past flushing items, so the
+> >    next push round restarts scanning from the same position, repeatedly
+> >    traversing items that are still in-flight.
+> 
+> This is why we do not account for flushing items that we skip. It will
+> walk over them as fast as possible until it reaches items that it
+> can push. Those items will then be accounted as
+> flushing/stuck/count. This will then move the last_lsn forwards
+> appropriately or trigger a log force or backoff sleep and so it
+> should not get stuck spinning for 22s in that case, either.
+> 
+> > We hit this as a soft lockup during stress testing on an internal
+> > kernel that includes commit f3f7ae68a4ea ("xfs: skip flushing log
+> > items during push").  The xfsaild kthread was stuck for
+> > 22 seconds inside xfs_buf_delwri_submit_nowait(), called from
+> > xfsaild_push(), processing an excessively large ail_buf_list:
+> 
+> Tell me how the delwri list got so long that it gets stuck inside
+> xfs_buf_delwri_submit_nowait(). Whatever caused that is the bug that
+> we need to understand and fix - changing accounting to make gross
+> behavioural changes that result in exceedingly inefficient CPU usage
+> and break IO optimisations is not the way to address a list length
+> that has apparently excceeded the bounds built into the code...
+> 
 
- fs/xfs/libxfs/xfs_attr_leaf.c | 2 ++
- 1 file changed, 2 insertions(+)
+I think the presumption being made here is that the list is growing
+excessively because xfsaild is failing to back off when the majority of
+(inode) items on the list are in the flushing state.
 
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index d0f7753659c9..948dc8b26fe6 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -339,6 +339,8 @@ xfs_attr3_leaf_verify_entry(
- 		if (!(ent->flags & XFS_ATTR_INCOMPLETE) &&
- 		    rentry->valueblk == 0)
- 			return __this_address;
-+		if (be32_to_cpu(rentry->valuelen) > XFS_XATTR_SIZE_MAX)
-+			return __this_address;
- 	}
- 
- 	if (name_end > buf_end)
--- 
-2.53.0
+I guess it would be interesting to know how long the buf list actually
+is, and whether the soft lockup warning is purely due to buf list size,
+or more of a combination of ail list size/state, buf list size, and
+xfsaild thread spinning behavior (we also changed the default timeout to
+0).
+
+More of a side note to the discussion and related to the actual patch...
+if we did go with something like this ISTM to make more sense to let
+xfsaild_push_item() detect and return the flushing state (i.e. similar
+to how we handle failed state) so the accounting all exists in one
+place, rather than duplicating it for the optimization. Just my .02.
+
+Brian
+
+> -Dave.
+> 
+> 
+> -- 
+> Dave Chinner
+> dgc@kernel.org
+> 
 
