@@ -1,171 +1,55 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFCC043CEFE;
-	Wed, 23 Sep 2026 06:03:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B9BC43CECB;
+	Wed, 23 Sep 2026 06:28:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790143439; cv=none; b=DyD2wZUtSmFaVX1F5IoefsYHtde85yf0JB8lXF0UJ5ka2yNryjXF5dnkTI2WuZ2xANW0rg71IuB21uVuS21/d/vjTVJy3PhCjJ3wkNb6iMH7M4BbkL6CbtbmbpshCGD8CKm9KMxUmV9PskKrBjMWLO1PDCsq+A+Ro1qnhV3vQ2s=
+	t=1790144926; cv=none; b=FalV0fYuJeG7V2SDiOCg/djGjP0dTum3nEC5eLNKxa0uSuQqYHQLECTw/fwdp04ifCZ0KcAB5b+RKNTdnCyoeXoIJ5zu6xiq9Hd/IW+52sULJ9QT2qId6Dsx0blrcLAhcp+eDywnNRAJJnmTyhh7GQEoudALibJH7/60t6sDxMU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790143439; c=relaxed/simple;
-	bh=/j6RHopjBnqsJjgS6pijd/imos2YQNhUAZIyRvFGWm4=;
-	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=NhjN+4C4PHa7li71dD5g3RAUor1ktNGTFckcT8QsPyHQmfuwI3ijjrhg1HBxNguf0fPHFWQW7/IS0HGJtoa9ez+mzK1vy293D5Q+xic2u1MIQWun3w/tLZrw/1wDxMQm0orfHMi57nHZPLfX5q+EhVtzB5PrUNMhDY8pTW6bb8s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BHhV8Ea6; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790144926; c=relaxed/simple;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=jQsqR9EZfe5cO3SBaAq+jr94zOv/Gj3cCQ3FKB5Fsb2oIHPrxwDA+UICMksFsekQVMS6cWOsdS5VfCPSIz5JZJ2nJCp0AY+W2YEcSsIaXOaOCCF7vMzmn8ABIlUafDs71ydRETktXuH48uhL51Vtw3fD05lvq4/k834uuW0Lph0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=mDcgACzG; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BHhV8Ea6"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id A9EE21F00899;
-	Wed, 23 Sep 2026 06:03:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790143432;
-	bh=uvPaxxmXvyzIL0vRnKL+GptCIc5/dYYTPCdCBBDI6e4=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=BHhV8Ea68HfO8oQGBZQLI+4I4/H30L7pUSXhklq5qqKC3rvMpIT8SRYD7xFXiN4Ek
-	 40xTxVPWqoVZJtnenmrf+DxTPGXAmYoUVH7lpATj8ZqEteqXiDiQ0OSUexyMHoXfRp
-	 8t6dDEFBlYI+pubN6aaTFitypBtRu3TqLmYZWmSmCWVRmFhMMABC0EfrIL2cQypsH0
-	 /ntpEQPHg2kE2J0GwJdhCFUi98izrlEequefM3mE8L9QvtinUfKNeMZ6AvLSdUiIvb
-	 PqqN/SJ29WW6kSwfpNfB4lMAzpFd3D+GNlzSD+5a5j6csX2qnddqjO5+saXaqBjyVa
-	 rpC/ThkXeuYHA==
-Date: Tue, 22 Sep 2026 23:03:52 -0700
-Subject: [PATCH 12/12] xfs: avoid cross-rtgroup reaping after a repair
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: cem@kernel.org, djwong@kernel.org
-Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <179014159798.1875436.7915121855965899039.stgit@frogsfrogsfrogs>
-In-Reply-To: <179014159469.1875436.5857342164999236687.stgit@frogsfrogsfrogs>
-References: <179014159469.1875436.5857342164999236687.stgit@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="mDcgACzG"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=mDcgACzGTLs/pyMsKeOtkYQ5+R
+	PZlwD6zeYd05PrHSUHUBLjHq3+wFRXuH20AgHTjyia0s0yBda8h0/YfQstem0vmPrQJpdtJZe8aN+
+	DWrpRrv55N2UIb9AFCpXGm552W+ZUyr2wwP6DHTJhWI6lO+DqDItTIrVKP69SutjLYSdY64V6jda4
+	uUVkG2/ASj0zJjvT7Hr6JbBv4ZdQfITPNNlGthnAsCQ/2DiMW8vRfOmmt3hxdDPJMOdFMc6b2mXzl
+	IqB6WONXCr0m9L2Nh3+5rwmUAp6tFoIbBADuVajxcd5B7wm/f/EWM2M5i0oFu1Brb0UZLOH4fOCk6
+	nk+eQMCw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1x9GT8-00000007H2E-10ib;
+	Wed, 23 Sep 2026 06:28:38 +0000
+Date: Tue, 22 Sep 2026 23:28:38 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: cem@kernel.org, stable@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 09/13] xfarray: don't crash when sorting if array element
+ crosses a folio
+Message-ID: <arNxlqbY32US6vTW@infradead.org>
+References: <179014158847.1874904.13591868745136552281.stgit@frogsfrogsfrogs>
+ <179014159120.1874904.10223064447351373669.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <179014159120.1874904.10223064447351373669.stgit@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-From: Darrick J. Wong <djwong@kernel.org>
+Looks good:
 
-LOLLM notices that the extents stored in a xrtb_bitmap (aka xfs_rtblock
-bitmap) can span multiple rtgroups due to two circumstances.  The first
-is that the size of an rtgroup is an exact power of two, which means
-that rtgroups are adjacent in the segmented xfs_rtblock_t address space.
-This is fairly common to reduce the amount of multiplication and
-division needed to handle space on the rt volume.
-
-The second is that (unlike in the original rtgroups design), rtgroups do
-not have fixed-location metadata like AGs do, which means that there's
-nothing to force a break between rtgroups.
-
-Therefore, we must loop through the rtgroups in xreap_rtmeta_extent to
-avoid running off the end of an rtgroup while reaping.
-
-Cc: <stable@vger.kernel.org> # v6.14
-Fixes: fd97fe1112088c ("xfs: fix CoW forks for realtime files")
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-Assisted-by: LOLLM # finding obvious bugs
----
- fs/xfs/scrub/reap.c |   59 +++++++++++++++++++++++++++++++++++++++++----------
- 1 file changed, 48 insertions(+), 11 deletions(-)
-
-
-diff --git a/fs/xfs/scrub/reap.c b/fs/xfs/scrub/reap.c
-index f698b9be3dd1df..bf04a85bc81689 100644
---- a/fs/xfs/scrub/reap.c
-+++ b/fs/xfs/scrub/reap.c
-@@ -1080,26 +1080,23 @@ xreap_configure_rgcow_limits(
- 				 XFS_RTGLOCK_RMAP | \
- 				 XFS_RTGLOCK_REFCOUNT)
- 
--/*
-- * Break a rt file metadata extent into sub-extents by fate (crosslinked, not
-- * crosslinked), and dispose of each sub-extent separately.  The extent must
-- * be aligned to a realtime extent.
-- */
--STATIC int
--xreap_rtmeta_extent(
--	uint64_t		rtbno,
-+static int
-+xreap_rtgroup_extent(
-+	struct xreap_state	*rs,
-+	xfs_rtblock_t		rtbno,
- 	uint64_t		len,
--	void			*priv)
-+	xfs_rgblock_t		*done)
- {
--	struct xreap_state	*rs = priv;
- 	struct xfs_scrub	*sc = rs->sc;
- 	xfs_rgblock_t		rgbno = xfs_rtb_to_rgbno(sc->mp, rtbno);
--	xfs_rgblock_t		rgbno_next = rgbno + len;
-+	xfs_rgblock_t		rgbno_next;
- 	int			error = 0;
- 
- 	ASSERT(sc->ip != NULL);
- 	ASSERT(!sc->sr.rtg);
- 
-+	*done = 0;
-+
- 	/*
- 	 * We're reaping blocks after repairing file metadata, which means that
- 	 * we have to init the xchk_ag structure ourselves.
-@@ -1110,6 +1107,7 @@ xreap_rtmeta_extent(
- 
- 	xfs_rtgroup_lock(sc->sr.rtg, XREAP_RTGLOCK_ALL);
- 
-+	rgbno_next = rgbno + min(len, (uint64_t)rtg_blocks(sc->sr.rtg) - rgbno);
- 	while (rgbno < rgbno_next) {
- 		xfs_extlen_t	rglen;
- 		bool		crosslinked;
-@@ -1136,6 +1134,7 @@ xreap_rtmeta_extent(
- 		}
- 
- 		rgbno += rglen;
-+		*done += rglen;
- 	}
- 
- out_unlock:
-@@ -1145,6 +1144,44 @@ xreap_rtmeta_extent(
- 	return error;
- }
- 
-+/*
-+ * Break a rt file metadata extent into sub-extents by fate (crosslinked, not
-+ * crosslinked), and dispose of each sub-extent separately.  The extent must
-+ * be aligned to a realtime extent.
-+ */
-+STATIC int
-+xreap_rtmeta_extent(
-+	uint64_t		rtbno,
-+	uint64_t		len,
-+	void			*priv)
-+{
-+	struct xreap_state	*rs = priv;
-+	int			error;
-+
-+	/*
-+	 * Space from adjacent rtgroups can be stored as a single bitmap extent
-+	 * because rtgroups do not have fixed-location metadata such as a
-+	 * per-group superblock that cannot be reaped.  Handle these overlaps
-+	 * by only reaping within a single rtgroup at a time.
-+	 *
-+	 * In the somewhat unlikely event that an rtgroup size is not a power
-+	 * of two, the segmented nature of xfs_rtblock_t prevents space in
-+	 * adjacent rtgroups from merging in the bitmap.
-+	 */
-+	while (len > 0) {
-+		xfs_rgblock_t	done = 0;
-+
-+		error = xreap_rtgroup_extent(rs, rtbno, len, &done);
-+		if (error)
-+			return error;
-+
-+		rtbno += done;
-+		len -= done;
-+	}
-+
-+	return 0;
-+}
-+
- /*
-  * Dispose of every block of every rt metadata extent in the bitmap.
-  * Do not use this to dispose of the mappings in an ondisk inode fork.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
