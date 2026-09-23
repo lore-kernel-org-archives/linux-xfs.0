@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06BD6361DA7;
-	Wed, 23 Sep 2026 06:03:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFCC043CEFE;
+	Wed, 23 Sep 2026 06:03:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790143423; cv=none; b=Q0ZN42/sA7DEtXfWcaAHVkF5DdtoaN4sxOnDb+DQ6O/nqqENPcQxEUEDm3zI3sNR4QPCqZAkas+ap/yuvWJaplbEPx541Q8bixG2lPNUeUjEZ8A8dhJjQJrGj9tRcTA1Ya4Lwx4R2ItlvbNZ5VsyKAEq+jYYYG/nq3fEaRokqFs=
+	t=1790143439; cv=none; b=DyD2wZUtSmFaVX1F5IoefsYHtde85yf0JB8lXF0UJ5ka2yNryjXF5dnkTI2WuZ2xANW0rg71IuB21uVuS21/d/vjTVJy3PhCjJ3wkNb6iMH7M4BbkL6CbtbmbpshCGD8CKm9KMxUmV9PskKrBjMWLO1PDCsq+A+Ro1qnhV3vQ2s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790143423; c=relaxed/simple;
-	bh=Beem9XbnbCtNmmph6kw/GOjuLc0Y0jHoQ6OmTBP+ZgQ=;
+	s=arc-20240116; t=1790143439; c=relaxed/simple;
+	bh=/j6RHopjBnqsJjgS6pijd/imos2YQNhUAZIyRvFGWm4=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Za29ftk+hIG/zX3QEemrUAbrauVNNq/peTzHtG/7mRJdQ4sIftL+cI3Xc+TV2MH8qux8H4yqcbPTdPBX1R9SppBWRNMICuN2Pe2iGJ/hMpNch24e7WlprBESCzYOXXU9GkjgNBUz6lpCsh9HCy/sYj+E4ZiAAJ7lD1MqYUwYoQY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Zlo4jcEt; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=NhjN+4C4PHa7li71dD5g3RAUor1ktNGTFckcT8QsPyHQmfuwI3ijjrhg1HBxNguf0fPHFWQW7/IS0HGJtoa9ez+mzK1vy293D5Q+xic2u1MIQWun3w/tLZrw/1wDxMQm0orfHMi57nHZPLfX5q+EhVtzB5PrUNMhDY8pTW6bb8s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BHhV8Ea6; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Zlo4jcEt"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 107F11F0089A;
-	Wed, 23 Sep 2026 06:03:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BHhV8Ea6"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id A9EE21F00899;
+	Wed, 23 Sep 2026 06:03:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790143417;
-	bh=yzCEMFi8VfTHopUidWs1rcyrc44Ch1zUARO8qCIvkPY=;
+	s=k20260515; t=1790143432;
+	bh=uvPaxxmXvyzIL0vRnKL+GptCIc5/dYYTPCdCBBDI6e4=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=Zlo4jcEtrHt8hsjci3VKxqPsHs4PMBXxu5duKChlsWOUWq4OHF3vNH9ONYkkNgtuW
-	 ea/BKuJvVW9RhsuoWA1B9YVO2WOk3nwpE0f8Lm0b77FPP/24EiM07/uP70NjhDXqi+
-	 har0FARy+XIky86ivqFriRFOjqUDbDW1UyIIzaIJfPqdVNtzY+RP5K82ei882c2EdJ
-	 dsOswvVgTadUf4pAnnv1DdViJuDDk7k1n7yZoWsj95TQTkbCXRwLs2MhTKIFDjVcp1
-	 2mQHSDexz4fMvBxLZUCkGUHwvCZL1ZMYoK67xAmkiShPbMhtKd11RLszCOdj3f20gt
-	 +aIBud9WmD6uA==
-Date: Tue, 22 Sep 2026 23:03:36 -0700
-Subject: [PATCH 11/12] xfs: actually lock the metafile reservation when
- adjusting after repair
+	b=BHhV8Ea68HfO8oQGBZQLI+4I4/H30L7pUSXhklq5qqKC3rvMpIT8SRYD7xFXiN4Ek
+	 40xTxVPWqoVZJtnenmrf+DxTPGXAmYoUVH7lpATj8ZqEteqXiDiQ0OSUexyMHoXfRp
+	 8t6dDEFBlYI+pubN6aaTFitypBtRu3TqLmYZWmSmCWVRmFhMMABC0EfrIL2cQypsH0
+	 /ntpEQPHg2kE2J0GwJdhCFUi98izrlEequefM3mE8L9QvtinUfKNeMZ6AvLSdUiIvb
+	 PqqN/SJ29WW6kSwfpNfB4lMAzpFd3D+GNlzSD+5a5j6csX2qnddqjO5+saXaqBjyVa
+	 rpC/ThkXeuYHA==
+Date: Tue, 22 Sep 2026 23:03:52 -0700
+Subject: [PATCH 12/12] xfs: avoid cross-rtgroup reaping after a repair
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
-Cc: hch@lst.de, stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <179014159777.1875436.9839611902429627901.stgit@frogsfrogsfrogs>
+Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
+Message-ID: <179014159798.1875436.7915121855965899039.stgit@frogsfrogsfrogs>
 In-Reply-To: <179014159469.1875436.5857342164999236687.stgit@frogsfrogsfrogs>
 References: <179014159469.1875436.5857342164999236687.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,70 +45,127 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-LOLLM reported that xrep_reset_metafile_resv performs unlocked loads
-and stores to the metadata file space reservation counters and thus can
-race with other threads.  Fix this by taking the lock.
+LOLLM notices that the extents stored in a xrtb_bitmap (aka xfs_rtblock
+bitmap) can span multiple rtgroups due to two circumstances.  The first
+is that the size of an rtgroup is an exact power of two, which means
+that rtgroups are adjacent in the segmented xfs_rtblock_t address space.
+This is fairly common to reduce the amount of multiplication and
+division needed to handle space on the rt volume.
 
-Cc: <hch@lst.de>
-Cc: <stable@vger.kernel.org> # v6.15
-Fixes: 1df8d75030b787 ("xfs: make metabtree reservations global")
+The second is that (unlike in the original rtgroups design), rtgroups do
+not have fixed-location metadata like AGs do, which means that there's
+nothing to force a break between rtgroups.
+
+Therefore, we must loop through the rtgroups in xreap_rtmeta_extent to
+avoid running off the end of an rtgroup while reaping.
+
+Cc: <stable@vger.kernel.org> # v6.14
+Fixes: fd97fe1112088c ("xfs: fix CoW forks for realtime files")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Assisted-by: LOLLM # finding obvious bugs
 ---
- fs/xfs/scrub/repair.c |   18 ++++++++++++------
- 1 file changed, 12 insertions(+), 6 deletions(-)
+ fs/xfs/scrub/reap.c |   59 +++++++++++++++++++++++++++++++++++++++++----------
+ 1 file changed, 48 insertions(+), 11 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-index c2a437416227a8..956aa75218aa24 100644
---- a/fs/xfs/scrub/repair.c
-+++ b/fs/xfs/scrub/repair.c
-@@ -1377,12 +1377,14 @@ xrep_reset_metafile_resv(
+diff --git a/fs/xfs/scrub/reap.c b/fs/xfs/scrub/reap.c
+index f698b9be3dd1df..bf04a85bc81689 100644
+--- a/fs/xfs/scrub/reap.c
++++ b/fs/xfs/scrub/reap.c
+@@ -1080,26 +1080,23 @@ xreap_configure_rgcow_limits(
+ 				 XFS_RTGLOCK_RMAP | \
+ 				 XFS_RTGLOCK_REFCOUNT)
+ 
+-/*
+- * Break a rt file metadata extent into sub-extents by fate (crosslinked, not
+- * crosslinked), and dispose of each sub-extent separately.  The extent must
+- * be aligned to a realtime extent.
+- */
+-STATIC int
+-xreap_rtmeta_extent(
+-	uint64_t		rtbno,
++static int
++xreap_rtgroup_extent(
++	struct xreap_state	*rs,
++	xfs_rtblock_t		rtbno,
+ 	uint64_t		len,
+-	void			*priv)
++	xfs_rgblock_t		*done)
  {
- 	struct xfs_mount	*mp = sc->mp;
- 	int64_t			delta;
--	int			error;
-+	int			error = 0;
+-	struct xreap_state	*rs = priv;
+ 	struct xfs_scrub	*sc = rs->sc;
+ 	xfs_rgblock_t		rgbno = xfs_rtb_to_rgbno(sc->mp, rtbno);
+-	xfs_rgblock_t		rgbno_next = rgbno + len;
++	xfs_rgblock_t		rgbno_next;
+ 	int			error = 0;
+ 
+ 	ASSERT(sc->ip != NULL);
+ 	ASSERT(!sc->sr.rtg);
+ 
++	*done = 0;
 +
-+	mutex_lock(&mp->m_metafile_resv_lock);
- 
- 	delta = mp->m_metafile_resv_used + mp->m_metafile_resv_avail -
- 		mp->m_metafile_resv_target;
- 	if (delta == 0)
--		return 0;
-+		goto out_resv_lock;
- 
  	/*
- 	 * Too many blocks have been reserved, transfer some from the incore
-@@ -1398,7 +1400,7 @@ xrep_reset_metafile_resv(
- 			mp->m_metafile_resv_avail -= give_back;
+ 	 * We're reaping blocks after repairing file metadata, which means that
+ 	 * we have to init the xchk_ag structure ourselves.
+@@ -1110,6 +1107,7 @@ xreap_rtmeta_extent(
+ 
+ 	xfs_rtgroup_lock(sc->sr.rtg, XREAP_RTGLOCK_ALL);
+ 
++	rgbno_next = rgbno + min(len, (uint64_t)rtg_blocks(sc->sr.rtg) - rgbno);
+ 	while (rgbno < rgbno_next) {
+ 		xfs_extlen_t	rglen;
+ 		bool		crosslinked;
+@@ -1136,6 +1134,7 @@ xreap_rtmeta_extent(
  		}
  
--		return 0;
-+		goto out_resv_lock;
+ 		rgbno += rglen;
++		*done += rglen;
  	}
  
- 	/*
-@@ -1412,14 +1414,18 @@ xrep_reset_metafile_resv(
- 		if (delta == 0) {
- 			xfs_warn(sc->mp,
- "Insufficient free space to reset metabtree reservation after repair.");
--			return 0;
-+			error = 0;
-+			goto out_resv_lock;
- 		}
- 		error = xfs_dec_fdblocks(mp, delta, true);
- 	}
- 	if (error)
--		return error;
-+		goto out_resv_lock;
- 
- 	xfs_mod_sb_delalloc(mp, delta);
- 	mp->m_metafile_resv_avail += delta;
--	return 0;
-+
-+out_resv_lock:
-+	mutex_unlock(&mp->m_metafile_resv_lock);
-+	return error;
+ out_unlock:
+@@ -1145,6 +1144,44 @@ xreap_rtmeta_extent(
+ 	return error;
  }
+ 
++/*
++ * Break a rt file metadata extent into sub-extents by fate (crosslinked, not
++ * crosslinked), and dispose of each sub-extent separately.  The extent must
++ * be aligned to a realtime extent.
++ */
++STATIC int
++xreap_rtmeta_extent(
++	uint64_t		rtbno,
++	uint64_t		len,
++	void			*priv)
++{
++	struct xreap_state	*rs = priv;
++	int			error;
++
++	/*
++	 * Space from adjacent rtgroups can be stored as a single bitmap extent
++	 * because rtgroups do not have fixed-location metadata such as a
++	 * per-group superblock that cannot be reaped.  Handle these overlaps
++	 * by only reaping within a single rtgroup at a time.
++	 *
++	 * In the somewhat unlikely event that an rtgroup size is not a power
++	 * of two, the segmented nature of xfs_rtblock_t prevents space in
++	 * adjacent rtgroups from merging in the bitmap.
++	 */
++	while (len > 0) {
++		xfs_rgblock_t	done = 0;
++
++		error = xreap_rtgroup_extent(rs, rtbno, len, &done);
++		if (error)
++			return error;
++
++		rtbno += done;
++		len -= done;
++	}
++
++	return 0;
++}
++
+ /*
+  * Dispose of every block of every rt metadata extent in the bitmap.
+  * Do not use this to dispose of the mappings in an ondisk inode fork.
 
