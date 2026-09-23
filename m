@@ -1,53 +1,53 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 623F940DB55
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6A6F52D2D6
 	for <linux-xfs@vger.kernel.org>; Wed, 23 Sep 2026 16:15:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790180134; cv=none; b=pv/XRAivQ+oV9+++rSEZJChtv8t9q4QsISwgFoJkATT2d+fyWXar4nH5q0T5VV0WEAZVoOx8XzfjHtVpzT7r9XUyKWRNRfZH0lntFXsfbmw/BXbe3QNbhH2pAE5ouIo8QqEVQhHux9UWUAA7pnI4M7DEmxU4vGd3gzSrLPcOMxA=
+	t=1790180135; cv=none; b=rINh+DJ6LDlRtvjypfR7YUL5eUqRlnI6hcF2ibIyAYtK4ifXbJ/m1j2sMH5HJAQHFg6sk0eoXQl1ngOcn1eWnRpTzHVfFOapmQAocRHmdDE1uOllgkHo5PaFKVflwjf9b829s1k7BpYyuEG7ufoAtHhEvNuejarPoTD0Jn+0Rw4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790180134; c=relaxed/simple;
-	bh=ZDXh7o+1UKnJaRVlvRnJ7xe+xkumPfMlncyS3BgU5P8=;
+	s=arc-20240116; t=1790180135; c=relaxed/simple;
+	bh=6Lj8wvoE28FWEUbr+u/7F1aYhRgfyw3YQWCchXGDEFc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=So4yyADrU351wLE/Fzkcw5ePMKE2gqm+SxJjVjtdwZ7+UVD7VbCiZCDzms+FLo+jbI0gCmJ9HIZcXDN2uSGVNjphvc5HVRXPyjvhapP31s+GV3uZxm1zxfculnGbttPtR3Doek2zbpc4Gjlol3xVGuXYMMRY9Wjb+G86RdzGN+o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=HyLGrnEx; arc=none smtp.client-ip=170.10.133.124
+	 MIME-Version:Content-Type; b=nhNw3t/r8A+QXsNMy9ieRo6m8WfZky5ViEmWay8PanHv3j7ZaCHtsdwOAFwhocvvKvlakw1dUZyXwZvVwCELnebqBF+sZePslWD2Gm4gmtB8w+tJ27pcRUrW6YVk4GU6EaecmUEzSwC+LKpOMDpQ+hXlRpH4MYMMG+ziwLAdoA8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=CcJMn2ht; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="HyLGrnEx"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="CcJMn2ht"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
 	s=mimecast20190719; t=1790180131;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=ph3gEO60ZwWO6d3hzry9e2Jvp2Qcg533I/yA9xfxUcA=;
-	b=HyLGrnExcJjVYh7D1GDaivqwqnp+WTg7OfqWBEOX6HbPibJLAcCtGcKDLCwokJtjB2Dg1u
-	2UkCItmdwIgQzlcddwwCSpj78YIvpoKVmieKDVKaQj2RKI4LuP2/3GovTdc6t4A6aQzhj7
-	X3m9NI7pfBFfa0uVrtPGThcMGRdcsHo=
-Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+	bh=PqGzUyXPv4WgTgOXBUIV3ZGF+AWAI8GTQ57reh7Aupg=;
+	b=CcJMn2htgGNmPSMGmbDGPJKqpH/hEUEvnAv0Yr3lu2c1OoeN3tP6+LzTqrcNkfIy7Jv3kS
+	XR0A6FI22oQXE8m+9yiDKp46jyKTJ84fxbFDllwzVYQp6Tzk9gE8bIR4PBNQD9mZBS84gL
+	Ay8cDp23QVsEfoQoHJGsOZZiyeKziv4=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-532-Ua3kNCNNP_6Om8ViPDJr0w-1; Wed,
- 23 Sep 2026 12:15:29 -0400
-X-MC-Unique: Ua3kNCNNP_6Om8ViPDJr0w-1
-X-Mimecast-MFC-AGG-ID: Ua3kNCNNP_6Om8ViPDJr0w_1790180128
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-368-v3vDN4xDNgiZY2_GzAOA1g-1; Wed,
+ 23 Sep 2026 12:15:28 -0400
+X-MC-Unique: v3vDN4xDNgiZY2_GzAOA1g-1
+X-Mimecast-MFC-AGG-ID: v3vDN4xDNgiZY2_GzAOA1g_1790180127
 Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id BE9B2195FD34;
-	Wed, 23 Sep 2026 16:15:28 +0000 (UTC)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 4F35219775FB;
+	Wed, 23 Sep 2026 16:15:27 +0000 (UTC)
 Received: from bfoster.redhat.corp (headnet05.pony-001.prod.iad2.dc.redhat.com [10.2.32.117])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 3B8253000218;
-	Wed, 23 Sep 2026 16:15:28 +0000 (UTC)
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id C24523000223;
+	Wed, 23 Sep 2026 16:15:26 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
 To: linux-xfs@vger.kernel.org
 Cc: Carlos Maiolino <cem@kernel.org>
-Subject: [PATCH v4 4/4] xfs: incorporate increased AGFL min requirement for minleft allocs
-Date: Wed, 23 Sep 2026 12:15:24 -0400
-Message-ID: <20260923161524.416059-5-bfoster@redhat.com>
+Subject: [PATCH v4 2/4] xfs: support additional levels in the agfl minimum calculation
+Date: Wed, 23 Sep 2026 12:15:22 -0400
+Message-ID: <20260923161524.416059-3-bfoster@redhat.com>
 In-Reply-To: <20260923161524.416059-1-bfoster@redhat.com>
 References: <20260923161524.416059-1-bfoster@redhat.com>
 Precedence: bulk
@@ -60,242 +60,82 @@ Content-Type: text/plain
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-Matt Fleming reports a filesystem shutdown due to inobt block
-allocation failure during sparse chunk allocation. Inode creation
-can involve multiple allocations in a transaction: the initial chunk
-allocation and inode btree blocks via inobt record insertion. This
-is expected to be safe by using the minleft parameter on the chunk
-allocation to guarantee the selected AG has blocks available for
-a followup inobt insertion.
-
-The sequence that leads to this failure is that the alloc and inode
-btrees are all full (require a full split on next insertion) and the
-AG has just enough free space to satisfy a sparse chunk allocation
-with minleft set (i.e. 7 blocks in this example). The chunk
-allocation splits a free extent, triggers full allocbt splits, and
-consumes 4 free blocks for the chunk and 4 AGFL blocks for the
-btrees.
-
-Next, the inobt record insertion triggers an inobt split. The AG has
-enough free blocks, but the allocbt splits caused by the chunk
-allocation have increased the min AGFL requirement for the AG due to
-btree level increases. The AGFL requirement as calculated by
-xfs_alloc_fix_freelist() is:
-
-	free + AGFL - res - minfree - minleft = avail
-
-This evaluates to the following on initial chunk allocation:
-
-	2514 + 8 - 2505 - 8 - 2 = 7
-
-... and then after the chunk allocation but before the inobt block
-allocation:
-
-	2510 + 4 - 2505 - 12 - 0 = -3
-
-This causes the inobt alloc to fail despite minleft being set in the
-first allocation. The error path cancels the dirty transaction and
-shuts down the fs. The problem here is that while minleft ensures
-free blocks are available for the inobt insert, it is not sufficient
-to cover the increase of the AGFL min free requirement.
-
-To address this, first have xfs_alloc_freelist() return both min and
-max freelist values. The min value is the current AGFL requirement
-and remains used for actual AGFL sizing. The max value calculates
-the worst case AGFL requirement after potential allocbt splits
-during the current allocation. Incorporate the max value into space
-availability checks for AG selection and the longest free extent
-calculation. The latter is necessary because callers like the bmap
-layer can size allocation requests based on the longest free extent.
-Without this, aligned allocs can end up oversized, prematurely fail,
-and fall back to non-aligned to make up the difference.
-
-This ensures the selected AG has enough blocks for both the caller's
-minleft value and the worst case AGFL increase. In the example
-above, the initial calculation now evaluates to 3 blocks available
-instead of 7 and the inode allocation fails gracefully with -ENOSPC.
+xfs_alloc_min_freelist() calculates the worst case AGFL block
+requirement for a full split plus partial refill for each alloc
+btree. An upcoming patch needs to calculate the requirement for
+multiple level increases, so add an optional extra levels parameter
+and factor out a wrapper function for the common case of a single
+split. No functional changes.
 
 Assisted-by: LLM
-Reported-by: Matt Fleming <matt@readmodwrite.com>
 Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Mark Tinguely <mark.tinguely@oracle.com>
 ---
- fs/xfs/libxfs/xfs_alloc.c | 58 +++++++++++++++++++++++++++------------
- fs/xfs/libxfs/xfs_alloc.h |  3 +-
- fs/xfs/libxfs/xfs_bmap.c  |  6 ++--
- 3 files changed, 47 insertions(+), 20 deletions(-)
+ fs/xfs/libxfs/xfs_alloc.c | 31 +++++++++++++++++++++++--------
+ 1 file changed, 23 insertions(+), 8 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index af63926cc9ee..86f74a2dfa10 100644
+index f762dcce8d13..b2525c58051b 100644
 --- a/fs/xfs/libxfs/xfs_alloc.c
 +++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -2397,31 +2397,36 @@ xfs_alloc_compute_maxlevels(
- }
+@@ -2439,17 +2439,22 @@ xfs_alloc_longest_free_extent(
  
  /*
-- * Find the length of the longest extent in an AG.  The 'need' parameter
-- * specifies how much space we're going to need for the AGFL and the
-- * 'reserved' parameter tells us how many blocks in this AG are reserved for
-+ * Find the length of the longest extent in an AG. The @min_free and @max_free
-+ * parameters specify how much space we're going to need for the AGFL and the
-+ * @reserved parameter tells us how many blocks in this AG are reserved for
-  * other callers.
+  * Compute the minimum length of the AGFL in the given AG.  If @pag is NULL,
+- * return the largest possible minimum length.
++ * return the largest possible minimum length. The base calculation accounts
++ * for a single full split per btree. @extra_levels adds additional split
++ * levels to compute the prospective AGFL requirement increase for
++ * multi-allocation transactions.
   */
- xfs_extlen_t
- xfs_alloc_longest_free_extent(
- 	struct xfs_perag	*pag,
--	xfs_extlen_t		need,
-+	xfs_extlen_t		min_free,
-+	xfs_extlen_t		max_free,
- 	xfs_extlen_t		reserved)
+-unsigned int
+-xfs_alloc_min_freelist(
++static unsigned int
++__xfs_alloc_min_freelist(
+ 	struct xfs_mount	*mp,
+-	struct xfs_perag	*pag)
++	struct xfs_perag	*pag,
++	unsigned int		extra_levels)
  {
- 	xfs_extlen_t		delta = 0;
- 
- 	/*
--	 * If the AGFL needs a recharge, we'll have to subtract that from the
--	 * longest extent.
-+	 * If the AGFL needs a recharge, subtract that from the longest extent
-+	 * because AGFL refill happens before the alloc.
- 	 */
--	if (need > pag->pagf_flcount)
--		delta = need - pag->pagf_flcount;
-+	if (min_free > pag->pagf_flcount)
-+		delta = min_free - pag->pagf_flcount;
- 
- 	/*
--	 * If we cannot maintain others' reservations with space from the
--	 * not-longest freesp extents, we'll have to subtract /that/ from
--	 * the longest extent too.
-+	 * Extra AGFL blocks beyond the min are reserved by ->minleft during
-+	 * allocation. Similar to reserved, these blocks are not available to
-+	 * this allocation. Check if we can preserve the combined total without
-+	 * the longest extent. If not, deduct the necessary blocks from the
-+	 * longest extent.
- 	 */
-+	if (max_free > min_free)
-+		reserved += max_free - min_free;
- 	if (pag->pagf_freeblks - pag->pagf_longest < reserved)
- 		delta += reserved - (pag->pagf_freeblks - pag->pagf_longest);
- 
-@@ -2519,6 +2524,7 @@ static bool
- xfs_alloc_space_available(
- 	struct xfs_alloc_arg	*args,
- 	xfs_extlen_t		min_free,
-+	xfs_extlen_t		max_free,
- 	int			flags)
- {
- 	struct xfs_perag	*pag = args->pag;
-@@ -2526,15 +2532,32 @@ xfs_alloc_space_available(
- 	xfs_extlen_t		reservation; /* blocks that are still reserved */
- 	int			available;
- 	xfs_extlen_t		agflcount;
-+	xfs_extlen_t		minleft;
- 
- 	if (flags & XFS_ALLOC_FLAG_FREEING)
- 		return true;
- 
- 	reservation = xfs_ag_resv_needed(pag, args->resv);
- 
-+	/*
-+	 * minleft implies a multi-alloc transaction. If set, the first alloc
-+	 * might cause btree splits that increase the AGFL requirement for the
-+	 * next. This worst case requirement is calculated in max_free.
-+	 *
-+	 * We don't prepopulate the AGFL because we don't know in advance if
-+	 * splits will occur. Instead, add the delta to minleft so it is
-+	 * accounted for in AG selection. This ensures the AG has enough space
-+	 * for the caller's minleft plus that needed to repopulate the AGFL on
-+	 * the next alloc if splits do occur.
-+	 */
-+	minleft = args->minleft;
-+	if (minleft)
-+		minleft += max_free - min_free;
-+
- 	/* do we have enough contiguous free space for the allocation? */
- 	alloc_len = args->minlen + (args->alignment - 1) + args->minalignslop;
--	longest = xfs_alloc_longest_free_extent(pag, min_free, reservation);
-+	longest = xfs_alloc_longest_free_extent(pag, min_free,
-+			minleft ? max_free : min_free, reservation);
- 	if (longest < alloc_len)
- 		return false;
- 
-@@ -2545,7 +2568,7 @@ xfs_alloc_space_available(
- 	 */
- 	agflcount = min_t(xfs_extlen_t, pag->pagf_flcount, min_free);
- 	available = (int)(pag->pagf_freeblks + agflcount -
--			  reservation - min_free - args->minleft);
-+			  reservation - min_free - minleft);
- 	if (available < (int)max(args->total, alloc_len))
- 		return false;
- 
-@@ -2859,6 +2882,7 @@ xfs_alloc_fix_freelist(
- 	struct xfs_alloc_arg	targs;	/* local allocation arguments */
- 	xfs_agblock_t		bno;	/* freelist block */
- 	xfs_extlen_t		min_free;/* total blocks needed in freelist */
-+	xfs_extlen_t		max_free; /* max freelist requirement */
- 	int			error = 0;
- 
- 	/* deferred ops (AGFL block frees) require permanent transactions */
-@@ -2886,8 +2910,8 @@ xfs_alloc_fix_freelist(
- 		goto out_agbp_relse;
- 	}
- 
--	xfs_alloc_freelist(mp, pag, &min_free, NULL);
--	if (!xfs_alloc_space_available(args, min_free, alloc_flags |
-+	xfs_alloc_freelist(mp, pag, &min_free, &max_free);
-+	if (!xfs_alloc_space_available(args, min_free, max_free, alloc_flags |
- 			XFS_ALLOC_FLAG_CHECK))
- 		goto out_agbp_relse;
- 
-@@ -2910,8 +2934,8 @@ xfs_alloc_fix_freelist(
- 		xfs_agfl_reset(tp, agbp, pag);
- 
- 	/* If there isn't enough total space or single-extent, reject it. */
--	xfs_alloc_freelist(mp, pag, &min_free, NULL);
--	if (!xfs_alloc_space_available(args, min_free, alloc_flags))
-+	xfs_alloc_freelist(mp, pag, &min_free, &max_free);
-+	if (!xfs_alloc_space_available(args, min_free, max_free, alloc_flags))
- 		goto out_agbp_relse;
- 
- 	if (IS_ENABLED(CONFIG_XFS_DEBUG) && args->alloc_minlen_only) {
-diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-index 44a10f4a22a2..5812c9b5e609 100644
---- a/fs/xfs/libxfs/xfs_alloc.h
-+++ b/fs/xfs/libxfs/xfs_alloc.h
-@@ -70,7 +70,8 @@ unsigned int xfs_alloc_set_aside(struct xfs_mount *mp);
- unsigned int xfs_alloc_ag_max_usable(struct xfs_mount *mp);
- 
- xfs_extlen_t xfs_alloc_longest_free_extent(struct xfs_perag *pag,
--		xfs_extlen_t need, xfs_extlen_t reserved);
-+		xfs_extlen_t min_free, xfs_extlen_t max_free,
-+		xfs_extlen_t reserved);
- void xfs_alloc_freelist(struct xfs_mount *mp, struct xfs_perag *pag,
- 		unsigned int *min_free, unsigned int *max_free);
- int xfs_alloc_get_freelist(struct xfs_perag *pag, struct xfs_trans *tp,
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index d6be6734bd90..9bffde1484a7 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -3150,6 +3150,7 @@ xfs_bmap_longest_free_extent(
- {
- 	xfs_extlen_t		longest;
+ 	/* AG btrees have at least 1 level. */
+ 	const unsigned int	bno_level = pag ? pag->pagf_bno_level : 1;
+ 	const unsigned int	cnt_level = pag ? pag->pagf_cnt_level : 1;
+ 	const unsigned int	rmap_level = pag ? pag->pagf_rmap_level : 1;
++	const unsigned int	levels = 1 + extra_levels;
  	unsigned int		min_free;
-+	unsigned int		max_free;
- 	int			error = 0;
  
- 	if (!xfs_perag_initialised_agf(pag)) {
-@@ -3159,8 +3160,9 @@ xfs_bmap_longest_free_extent(
- 			return error;
- 	}
+ 	ASSERT(mp->m_alloc_maxlevels > 0);
+@@ -2476,15 +2481,25 @@ xfs_alloc_min_freelist(
+ 	 */
  
--	xfs_alloc_freelist(pag_mount(pag), pag, &min_free, NULL);
--	longest = xfs_alloc_longest_free_extent(pag, min_free,
-+	/* bmap allocs always have minleft set, so account for max_free */
-+	xfs_alloc_freelist(pag_mount(pag), pag, &min_free, &max_free);
-+	longest = xfs_alloc_longest_free_extent(pag, min_free, max_free,
- 				xfs_ag_resv_needed(pag, XFS_AG_RESV_NONE));
- 	if (*blen < longest)
- 		*blen = longest;
+ 	/* space needed by-bno freespace btree */
+-	min_free = min(bno_level + 1, mp->m_alloc_maxlevels) * 2 - 2;
++	min_free = min(bno_level + levels, mp->m_alloc_maxlevels) * 2 - 2;
+ 	/* space needed by-size freespace btree */
+-	min_free += min(cnt_level + 1, mp->m_alloc_maxlevels) * 2 - 2;
++	min_free += min(cnt_level + levels, mp->m_alloc_maxlevels) * 2 - 2;
+ 	/* space needed reverse mapping used space btree */
+-	if (xfs_has_rmapbt(mp))
+-		min_free += min(rmap_level + 1, mp->m_rmap_maxlevels) * 2 - 2;
++	if (xfs_has_rmapbt(mp)) {
++		min_free += min(rmap_level + levels,
++				mp->m_rmap_maxlevels) * 2 - 2;
++	}
+ 	return min_free;
+ }
+ 
++unsigned int
++xfs_alloc_min_freelist(
++	struct xfs_mount	*mp,
++	struct xfs_perag	*pag)
++{
++	return __xfs_alloc_min_freelist(mp, pag, 0);
++}
++
+ /*
+  * Check if the operation we are fixing up the freelist for should go ahead or
+  * not. If we are freeing blocks, we always allow it, otherwise the allocation
 -- 
 2.55.0
 
