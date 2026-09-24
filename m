@@ -1,41 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A9674AFE29;
-	Thu, 24 Sep 2026 19:04:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAD8D4C67F6;
+	Thu, 24 Sep 2026 19:34:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790276686; cv=none; b=u1y1hOZGNFxp6f1NkgRCrh3sAdJxn+9xgdce/SPM7ECDtu0zpIYSp406q0/nuGO2q4q8W7VQmrz/2y+JNA4bRwOlPsbUXiBr6liE59dw7OfSSO0AE1seh3pC/o49A31rNSSpRs0o5cC5+ZZ+txU7lsAECLm9rBE5SqzTt4UkYiM=
+	t=1790278477; cv=none; b=DtElUM1jQ3r0/KFqXzr5nU3ZW5SkoOi0foXX5jire9kMWALlJj/q55AsysNyYv+46o+EZxIkq6gh+cUyNedW1vKDUdRjtFdV5e3+MiKTtg98k9fHtW3cZ8ytB8OS44y7MQsmHCAlVlUu0qbKToEEMSSSvbEvtUBOCVaUOhq1g8o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790276686; c=relaxed/simple;
-	bh=n/mGDdA4vGy+lsfOSITKeJFB6K8dosLYn0tWIErbnZU=;
+	s=arc-20240116; t=1790278477; c=relaxed/simple;
+	bh=HQf0TdAqwDQEacVHCR3u4gRHpsr8oTiks2l/tvFhJJE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jcaxqZHybRbqj5ZoBZK95DfMb7cx3vMba8ze0eBKBA8IURT80LbOgWOF9wEKq6W1+gPNLnj2IiO8uUYY555Zn3a5SUR8l0UwlxGH178HRkZ/6gGh9sbP4zmf1qHuyNLDZ7fH3kvQfpJtwZBbDRZYNgS0zfhMLbanUpW8jgAcHV8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QWiUArgx; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=Nf16kqboR80PjKaQFxc5JxNIz0UNlSlnsWjjbeadjV3VvXK4tjBQ2dtp6LMSOuUKolFdtBnQ/ZGDlWtfXTe6iofSp1oqOUZ/zFwe6n823H091XLeyDtStLuheqpjdTFpnIToHwDKYjR6ZpWt1aXtLHPggJXDvs5HOoWT7ZCFf1U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ogru1OAP; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QWiUArgx"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 075301F000FF;
-	Thu, 24 Sep 2026 19:04:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ogru1OAP"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id D49831F000FF;
+	Thu, 24 Sep 2026 19:34:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790276681;
-	bh=zJRHMJhAY4hd8flYH3L1mFTJcar4lkY4nEVMHUWAeZ0=;
+	s=k20260515; t=1790278471;
+	bh=8XMT9M/PHTig4c4MhxCVlBHCwL8rBCmYnEllXmg5IRw=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=QWiUArgx/Odg0vCuGDpdSld2Yo1mr4DvaHaIqPnzwlQplORAxhT/lJWqBFYxAo65Z
-	 5s8g9bWsAJae5gTRX5AIqvt7LbZyqyuuwVkIxPMp5Z07abauy4S56iwl++h6Qzg5xQ
-	 F1OsdgPQEW0RrBi5IIWHDpcRwhxn5wk8cZAHfdywhnnVUg4jh9yIFFSaruJygdd1CT
-	 xhN6+DH/RtdkOe3iL2O3kvzg8LcM+RJC7iIhEk+vgXrz5/RZNm43kOq/OAjK/a5eJv
-	 toU35hpcKVkxFV/Y5swJpbUTlMqSLZo+VvAhpFm6xUm1eECqQC/N+AK2xR3fLaz007
-	 0yAGIttoyA0YQ==
-Date: Thu, 24 Sep 2026 12:04:40 -0700
+	b=ogru1OAPro0BH8/E/gHgBs86ajYlQeO8DbGxNkf0xBKKuAt61pE0wcWzQSLDdIoHp
+	 Y73+IaywyKnAqSxwyxu6kycK1C+pExh9BPoZJQHriA6ji6bZq/WFG26XkjTz66Xbp2
+	 QKt7rqm8wJJ8C6+XCWkFDQ3PREIG60JOWWRKIF6NnG+ieKXAKnjPmeiDxGDEW+jtMp
+	 jrDmlZ2WvJ+NIM1+EdMq4XvmNZ6rXAALB/Kwes39YCFdTe5oj8XQhfkTi+Vf0TllAf
+	 40Kg0o6EWcH77trybeo5mbE0KmvKF1tH2Wz6PfNod/JSMJLQQb590SDlfObc+C7PpE
+	 u4NpTz5HBzZgA==
+Date: Thu, 24 Sep 2026 12:34:31 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@infradead.org>
 Cc: cem@kernel.org, stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 06/12] xfs: fix integer overflow problem when setting
- large free areas
-Message-ID: <20260924190440.GQ2705364@frogsfrogsfrogs>
+Subject: Re: [PATCH 12/12] xfs: avoid cross-rtgroup reaping after a repair
+Message-ID: <20260924193431.GR2705364@frogsfrogsfrogs>
 References: <179014159469.1875436.5857342164999236687.stgit@frogsfrogsfrogs>
- <179014159671.1875436.8939376627577757057.stgit@frogsfrogsfrogs>
- <arS6U6GRYEQaSBIZ@infradead.org>
+ <179014159798.1875436.7915121855965899039.stgit@frogsfrogsfrogs>
+ <arS7tTCQGhyHjoou@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,25 +43,32 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <arS6U6GRYEQaSBIZ@infradead.org>
+In-Reply-To: <arS7tTCQGhyHjoou@infradead.org>
 
-On Wed, Sep 23, 2026 at 10:51:15PM -0700, Christoph Hellwig wrote:
-> On Tue, Sep 22, 2026 at 11:02:18PM -0700, Darrick J. Wong wrote:
+On Wed, Sep 23, 2026 at 10:57:09PM -0700, Christoph Hellwig wrote:
+> On Tue, Sep 22, 2026 at 11:03:52PM -0700, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > LOLLM points out that the min_t comparison in xrep_rtbitmap_mark_free
-> > operates on a 64-bit bitmap word offset quantity and a 32-bit
-> > words-per-block ratio.  Unfortunately, I should have done the comparison
-> > with the (64-bit) xrep_wordoff_t type, but used the 32-bit word count
-> > type.  Oops.
+> > LOLLM notices that the extents stored in a xrtb_bitmap (aka xfs_rtblock
+> > bitmap) can span multiple rtgroups due to two circumstances.  The first
+> > is that the size of an rtgroup is an exact power of two, which means
+> > that rtgroups are adjacent in the segmented xfs_rtblock_t address space.
+> > This is fairly common to reduce the amount of multiplication and
+> > division needed to handle space on the rt volume.
+> > 
+> > The second is that (unlike in the original rtgroups design), rtgroups do
+> > not have fixed-location metadata like AGs do, which means that there's
+> > nothing to force a break between rtgroups.
+> > 
+> > Therefore, we must loop through the rtgroups in xreap_rtmeta_extent to
+> > avoid running off the end of an rtgroup while reaping.
 > 
-> I don't think we'll see rtbitmaps beyond 32-bits in our lifetimes, but
-> the fix still looks good:
+> This fix looks good.
 > 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Sashiko complains this could use some additional input sanitization,
+> though.
 
-I really hope not.  You can't create them at all with rtgroups, and that
-usecase was horribly broken (and still unfixed) on old kernels.  Thanks
-for the review!
+Oh yeah.  If rgbno points into the gap between rtgroups, we should
+advance *done to the start of the next rtgroup.
 
 --D
