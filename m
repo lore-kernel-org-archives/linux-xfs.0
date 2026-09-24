@@ -1,42 +1,42 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 694054483BF
-	for <linux-xfs@vger.kernel.org>; Thu, 24 Sep 2026 09:58:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84D9C4119E0
+	for <linux-xfs@vger.kernel.org>; Thu, 24 Sep 2026 09:58:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790243899; cv=none; b=kkahkxWHWNf7WcagK5QRoGp/Oun1AhyYw999Qd8K1uA//ZQ4dAKegihhGea+aYkMNlyGoHyaoCUgCpanR19iV3u7JsEZO6TOEsB1UvM8JlcX3dSCsPFKbZs411kOqe8RxaV0JTNyjpb6ih6y+6qFK3RwlS6obV0LgkS4xvAsphI=
+	t=1790243901; cv=none; b=rtcQXJcIakdljyratjjlA4Cy3iozW7TF3umPaWwqQG/myZCypaUXT0YS80S86gp1/WOcOTjaVSCgSqV7qbOvtrZU53QIJvwD/Qn6ViR3P6VbOu4YueG0AJ45SDAiFkaiR5J9O2mT7ww1Aw1ucPxGeM6cPpVI8yy0+Fm9P2LIRE4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790243899; c=relaxed/simple;
-	bh=wIvJznwWdG0Vda8pnW/3MKV1JwYJ9eEfimjXNyPvh5U=;
+	s=arc-20240116; t=1790243901; c=relaxed/simple;
+	bh=w/+4LTsPA7OLOSSCB5HxMhs7bSJNhnsylc3g2mrd8G0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=J5Ly8Bndrcx82K+SwfTHyf/kevLIBG6x+UBBxFua1Y+YtULHGO0PLKAQo0BMj8i3W/VZPHtUVgWmysUdxFRPocVj2KW9gt6X88D9SRiPttcMq23SxxSAYKGPgWaOyJgsEYPEvONPB/3CcpQH7XECkyNhcC6lapZ7vErif5Sl19U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=fXIT3CUF; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=UuyLxDMbqPPAB43rgtNJb+gsZkGwLYukMrjqXxHnDAseC36l1RPRvjwJzbbZlin0jlR0KqZbk/viFVk5HlopzTGKvGeZJpq9bXll5xqoHA2jDvvcW604SuH7EhrQUvvv4D8i/H7W6wxOeWgBltwncGQgLLzaRXCZJ8pstKdy7+o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=YJYU7u6/; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="fXIT3CUF"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="YJYU7u6/"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=RxXDizziAascK0xvo0WO2laNq2Cu6D9VDMYZJtOk0xA=; b=fXIT3CUFFEDIes9AcZnRCPGQ8Z
-	VeK3/XYn7Ihr3PpMrBbNghMNCIf47oTZnAyhDPj6BSIvEaKd1D+7KmQKRGMKTuqSG7W4UrjpCwuMO
-	iBzvyK/EtJqO65yFydpQrJVu/Ao0Why/5I2MfHTN4BM8/QpRptZcRaZDnoBedlwcW0AaZPKseB8IR
-	/JaMM6EwKuh5VVYfQK2dVq9V405TrjUh8TuNFvBwll157oFp3GL3zSp3NKT8c2/F0x+IX2ZTbRkse
-	03MCkw4h5dn50myR5X8io+wT5g0bZR+j+G9DrmWFMoEmuYYwwApTOWgwtmaqSO3DWXprnV0LFvUh/
-	jxGh8MwA==;
+	bh=hhdkMrADLaQVQfW/4BnBExDSuL06N/IrJTJ61CSHwSs=; b=YJYU7u6/gXP9HlP+fAQH/FsJ6W
+	stwtCxomORXf9QjzoTN7hbldsXqA2F1S0HcwGgevfYZyjRxuwHPPwzYXGolcXIILRqbytw/8Bzq3b
+	+lG5deufdWIQ0BdaHSW9kKXu/f4iNiqcQo9jDmbNfKvmMhwL/9YEogB7jz5kF+a+/HafiajX8X0HV
+	7oHe18/MsFA2bDfB4uxgzqPF+73Z1nTw+PX3g8OvnAKDpL9slMTY+8hBaKzWwY7eBwtwCGGQfzVa5
+	6fBYcPVK/FVmbaVGUellCYsjuVMmtkLVwRKYz0MrROwP6ryFRRCX/3IvEelHTT/OCIIiIYp7WM/pf
+	Z6H0zX7A==;
 Received: from 85-127-111-79.dsl.dynamic.surfer.at ([85.127.111.79] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1x9gDH-0000000AeNB-46hs;
-	Thu, 24 Sep 2026 09:58:00 +0000
+	id 1x9gDO-0000000AeNR-1Bnn;
+	Thu, 24 Sep 2026 09:58:06 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: "Darrick J . Wong" <djwong@kernel.org>,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 5/9] xfs: use bdev_rw_virt in xfs_verify_media
-Date: Thu, 24 Sep 2026 11:57:06 +0200
-Message-ID: <20260924095740.2732474-6-hch@lst.de>
+Subject: [PATCH 7/9] xfs: split xfs_end_ioend_write
+Date: Thu, 24 Sep 2026 11:57:08 +0200
+Message-ID: <20260924095740.2732474-8-hch@lst.de>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260924095740.2732474-1-hch@lst.de>
 References: <20260924095740.2732474-1-hch@lst.de>
@@ -49,102 +49,134 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Use bdev_rw_virt for reading data from disk.  This simply uses an
-on-stack bio and bio_vec and removes the need to allocate an bio and
-reset it for each iteration.  Because bdev_rw_virt returns a negative
-errno, pass that on to xfs_verify_media_error to avoid a double
-conversion.
+Split out a separate helper for the zoned I/O completions as the code
+flow is pretty different already and will become even more so soon.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_verify_media.c | 41 +++++++++++----------------------------
- 1 file changed, 11 insertions(+), 30 deletions(-)
+ fs/xfs/xfs_ioend.c | 63 ++++++++++++++++++++++++++++------------------
+ 1 file changed, 39 insertions(+), 24 deletions(-)
 
-diff --git a/fs/xfs/xfs_verify_media.c b/fs/xfs/xfs_verify_media.c
-index 8ce3773aa875..71f4d6c832a9 100644
---- a/fs/xfs/xfs_verify_media.c
-+++ b/fs/xfs/xfs_verify_media.c
-@@ -229,8 +229,10 @@ xfs_verify_media_error(
- 	struct xfs_buftarg	*btp,
- 	xfs_daddr_t		daddr,
- 	unsigned int		bio_bbcount,
--	blk_status_t		bio_status)
-+	int			error)
+diff --git a/fs/xfs/xfs_ioend.c b/fs/xfs/xfs_ioend.c
+index 258c6130bee8..f0e01ac34de8 100644
+--- a/fs/xfs/xfs_ioend.c
++++ b/fs/xfs/xfs_ioend.c
+@@ -147,11 +147,40 @@ xfs_ioend_submit_read(
+ }
+ 
+ static void
+-xfs_ioend_put_open_zones(
++xfs_end_ioend_write_zoned(
+ 	struct iomap_ioend	*ioend)
  {
-+	blk_status_t		bio_status = errno_to_blk_status(error);
+-	struct iomap_ioend *tmp;
++	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
++	struct xfs_open_zone	*oz = ioend->io_private;
++	struct iomap_ioend	*tmp;
++	int			error = -EIO;
 +
- 	trace_xfs_verify_media_error(mp, me, btp->bt_dev, daddr, bio_bbcount,
- 			bio_status);
++	ASSERT(!(ioend->io_flags & IOMAP_IOEND_SHARED));
++
++	if (xfs_is_shutdown(ip->i_mount))
++		goto done;
  
-@@ -239,7 +241,7 @@ xfs_verify_media_error(
- 	 * successfully verify any bytes at all.
- 	 */
- 	if (me->me_start_daddr == daddr)
--		me->me_ioerror = -blk_status_to_errno(bio_status);
-+		me->me_ioerror = -error;
- 
++	/*
++	 * Zoned writes update the in-core open zone accounting before I/O
++	 * submission.  A failed write leaves that state inconsistent, so shut
++	 * down the filesystem instead of letting later writers wait forever for
++	 * open zone space to become available.
++	 */
++	error = blk_status_to_errno(ioend->io_bio.bi_status);
++	if (unlikely(error)) {
++		xfs_force_shutdown(ip->i_mount, SHUTDOWN_META_IO_ERROR);
++		goto done;
++	}
++
++	error = xfs_zoned_end_io(ip, ioend->io_offset, ioend->io_size,
++			ioend->io_sector, oz, NULLFSBLOCK);
++	if (error)
++		goto done;
++
++	if (!(ioend->io_flags & IOMAP_IOEND_DIRECT) &&
++	    xfs_ioend_is_append(ioend))
++		error = xfs_setfilesize(ip, ioend->io_offset, ioend->io_size);
++done:
  	/*
- 	 * PI validation failures, medium errors, or general IO errors are
-@@ -266,7 +268,6 @@ xfs_verify_media(
- 	struct xfs_verify_media	*me)
+ 	 * Put the open zone for all ioends merged into this one (if any).
+ 	 */
+@@ -162,8 +191,9 @@ xfs_ioend_put_open_zones(
+ 	 * The main ioend might not have an open zone if the submission failed
+ 	 * before xfs_zone_alloc_and_submit got called.
+ 	 */
+-	if (ioend->io_private)
+-		xfs_open_zone_put(ioend->io_private);
++	if (oz)
++		xfs_open_zone_put(oz);
++	iomap_finish_ioends(ioend, error);
+ }
+ 
+ static void
+@@ -172,7 +202,6 @@ xfs_end_ioend_write(
  {
- 	struct xfs_buftarg	*btp = NULL;
--	struct bio		*bio;
- 	struct folio		*folio;
- 	xfs_daddr_t		daddr;
- 	uint64_t		bbcount;
-@@ -332,33 +333,16 @@ xfs_verify_media(
- 
- 	trace_xfs_verify_media(mp, me, btp->bt_dev, daddr, bbcount, folio);
- 
--	bio = bio_alloc(btp->bt_bdev, 1, REQ_OP_READ, GFP_KERNEL);
--	if (!bio) {
--		error = -ENOMEM;
--		goto out_folio;
--	}
--
--	while (bbcount > 0) {
-+	for (;;) {
- 		unsigned int	bio_bbcount;
--		blk_status_t	bio_status;
--
--		bio_reset(bio, btp->bt_bdev, REQ_OP_READ);
--		bio->bi_iter.bi_sector = daddr;
--		bio_add_folio_nofail(bio, folio,
--				min(bbcount << SECTOR_SHIFT, folio_size(folio)),
--				0);
- 
+ 	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
+ 	struct xfs_mount	*mp = ip->i_mount;
+-	bool			is_zoned = xfs_is_zoned_inode(ip);
+ 	xfs_off_t		offset = ioend->io_offset;
+ 	size_t			size = ioend->io_size;
+ 	int			error;
+@@ -194,19 +223,7 @@ xfs_end_ioend_write(
+ 	 */
+ 	error = blk_status_to_errno(ioend->io_bio.bi_status);
+ 	if (unlikely(error)) {
 -		/*
--		 * Save the length of the bio before we submit it, because we
--		 * need the original daddr and length for reporting IO errors
--		 * if the bio fails.
+-		 * Zoned writes update the in-core open zone accounting before
+-		 * I/O submission.  A failed write leaves that state
+-		 * inconsistent, so shut down the filesystem instead of letting
+-		 * later writers wait forever for open zone space to become
+-		 * available.
 -		 */
--		bio_bbcount = bio->bi_iter.bi_size >> SECTOR_SHIFT;
--		submit_bio_wait(bio);
--		bio_status = bio->bi_status;
--		if (bio_status != BLK_STS_OK) {
-+		bio_bbcount = min(bbcount, folio_size(folio) >> SECTOR_SHIFT);
-+		error = bdev_rw_virt(btp->bt_bdev, daddr, folio_address(folio),
-+				bio_bbcount << SECTOR_SHIFT,
-+				REQ_OP_READ);
-+		if (error) {
- 			xfs_verify_media_error(mp, me, btp, daddr, bio_bbcount,
--					bio_status);
-+					error);
- 			error = 0;
- 			break;
- 		}
-@@ -386,10 +370,7 @@ xfs_verify_media(
+-		if (is_zoned) {
+-			xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
+-			goto done;
+-		}
+ 		if (ioend->io_flags & IOMAP_IOEND_SHARED) {
+-			ASSERT(!is_zoned);
+ 			xfs_reflink_cancel_cow_range(ip, offset, size, true);
+ 			xfs_bmap_punch_delalloc_range(ip, XFS_DATA_FORK, offset,
+ 					offset + size, NULL);
+@@ -217,10 +234,7 @@ xfs_end_ioend_write(
+ 	/*
+ 	 * Success: commit the COW or unwritten blocks if needed.
+ 	 */
+-	if (is_zoned)
+-		error = xfs_zoned_end_io(ip, offset, size, ioend->io_sector,
+-				ioend->io_private, NULLFSBLOCK);
+-	else if (ioend->io_flags & IOMAP_IOEND_SHARED)
++	if (ioend->io_flags & IOMAP_IOEND_SHARED)
+ 		error = xfs_reflink_end_cow(ip, offset, size);
+ 	else if (ioend->io_flags & IOMAP_IOEND_UNWRITTEN)
+ 		error = xfs_iomap_write_unwritten(ip, offset, size, false);
+@@ -230,8 +244,6 @@ xfs_end_ioend_write(
+ 	    xfs_ioend_is_append(ioend))
+ 		error = xfs_setfilesize(ip, offset, size);
+ done:
+-	if (is_zoned)
+-		xfs_ioend_put_open_zones(ioend);
+ 	iomap_finish_ioends(ioend, error);
+ }
+ 
+@@ -276,7 +288,10 @@ xfs_end_io(
+ 			io_list))) {
+ 		list_del_init(&ioend->io_list);
+ 		iomap_ioend_try_merge(ioend, &tmp);
+-		xfs_end_ioend_write(ioend);
++		if (xfs_is_zoned_inode(ip))
++			xfs_end_ioend_write_zoned(ioend);
++		else
++			xfs_end_ioend_write(ioend);
  		cond_resched();
  	}
- 
--	bio_put(bio);
--out_folio:
- 	folio_put(folio);
--
- 	if (error)
- 		return error;
- 
+ 	memalloc_nofs_restore(nofs_flag);
 -- 
 2.53.0
 
