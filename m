@@ -1,73 +1,77 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta-101a.earthlink-vadesecure.net (mta-101b.earthlink-vadesecure.net [51.81.61.61])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2708E48C408
-	for <linux-xfs@vger.kernel.org>; Thu, 24 Sep 2026 20:44:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 507343A7F62;
+	Thu, 24 Sep 2026 21:25:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=51.81.61.61
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790282679; cv=none; b=FQfm+puVsP1UD3Ow236fkgNgdmN1CLCRYZrhj/vpcc9nsH14w4oGNH+2ODk1I5yhHNH1guWChobKbUsd0r0Ch0AQrC0aVLqZ8l9ANFjT6LBDMohy/JwT5evwRvzpA6XH5t/6leHpOVdIobznBVNygp6jeaq2oQbWeVc2IGC3ZD0=
+	t=1790285123; cv=none; b=F7abqY/WRcEWs8BvEO7iUgC3lN77jlwa91i6l7SoUzdAGKzx4lPhMB6fPMjSnaJ47Hg58lPAHtuJ/bbG1mh5csLPxtbN8tnTUb6WjpYZF8oRWIqsQJ0eybXPYs+Qgzlc536vXs7OqQNztbeByem88VLbaXbcagXuMUc/sFH7Uqo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790282679; c=relaxed/simple;
-	bh=QRfO/qzgvQx1CY2DMQEnnTzDbsQrZ5dNDbt97tsafeg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SRh24G04h6X5PUDtmZM6cDsll/HaouNsbYTf+oqPSI0ws4OlgvDaUWrztSZwj/8DFV2f10EO+jJIYshQZKc1pCH6tjfg2n7Vr5DjiLNg/7gZ5ngQz3X+5lt9Qb+4jrLP9AArHRImHRRXorm8VuyAqRRrbmKVp8Y98o80okHbM7Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fUmIzUdr; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790285123; c=relaxed/simple;
+	bh=DxCx3we6ZjEK4UXm1yjCug7ohEPFNqgc11uCqEFmFq4=;
+	h=From:Content-Type:Mime-Version:Subject:Message-Id:Date:Cc:To; b=b5u/nDUwObmwZTMz5A+Y2n62MzB/UTrePMxTWJWVMUrjr9Mx1LMSJpddhREZ7c0ipdzoMkBpV6XRhMa0JqLF38WLOS1o3CdEMfAQeWPHaSuzjXs+77OWsl2Aru4frdW0/FA5PJg83L7Rt717ImKXqqNl9rrkwwxwLO8oxqzKmUI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com; spf=fail smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=earthlink.net header.i=@earthlink.net header.b=rf4vu/+l; arc=none smtp.client-ip=51.81.61.61
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fUmIzUdr"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 994C51F000FF;
-	Thu, 24 Sep 2026 20:44:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790282677;
-	bh=xYdBFdiDfbmHApAhiFbwsgRfXhHQ8FMcp/Q0YoWEavc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=fUmIzUdrvwvqCjpEpd9C4YPzK7yWx4u4svM61N1ON/Cb2EBlv7tdeEoLgMF1jiGZi
-	 jniC2YwLQu0xTchUbnYgkvG7eynmsc5zYnr7chbgnW41EbCdIMev23WZj31e7MvsZY
-	 oPkkm9Qh9qd4gd6f98MA0jcrOUn4E0Wdkvi1Kpfz30RNGGN9ZXqAc847KD9C9giEEF
-	 cajgNPMTEyy/Hbva55ceZJOLT5w9prl9PGPprXkrdQLkVCXvmMSm0nxlTP5F5p/fUA
-	 9m/t/PglN0mOFWDvfRN8ZWbjBGV8/3YpxVDUGNwdvIoSLdCh1Y/Yw9nafK8WXZNtUu
-	 1nV1QzxX2I5TQ==
-Date: Thu, 24 Sep 2026 13:44:37 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Andrey Albershteyn <aalbersh@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 04/32] libxfs: add DIV_ROUND_UP_ULL
-Message-ID: <20260924204437.GC2705364@frogsfrogsfrogs>
-References: <20260924100512.2733748-1-hch@lst.de>
- <20260924100512.2733748-5-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=earthlink.net header.i=@earthlink.net header.b="rf4vu/+l"
+DKIM-Signature: v=1; a=rsa-sha256; bh=6XTHg8xlOhcXzepC7o7MZKfFwE5+WFjVghW5FZ
+ jd9GE=; c=relaxed/relaxed; d=earthlink.net; h=from:reply-to:subject:
+ date:to:cc:resent-date:resent-from:resent-to:resent-cc:in-reply-to:
+ references:list-id:list-help:list-unsubscribe:list-unsubscribe-post:
+ list-subscribe:list-post:list-owner:list-archive; q=dns/txt;
+ s=dk12062016; t=1790285118; x=1790889918; b=rf4vu/+lTT6w+4qxhmjP5MDBi2N
+ wVZp51F4RdR0cESK8qsnS9qEhmNNLdEYm3l5Xsfuc8/AEyg4ylKkvElppr2FnPfu1IyTLO9
+ 1r3oxisZ8ovsZLmUdxxjDefreDwbtbc3BZm/2ihZ8ftsbdM1+UDHPZ5NeHrdboTEY22Edlf
+ AUbpziYH1BRb8493mdazgO0uGFE2x72455z7PhSEq+QxNI99yTfzwCwt31lkzBESF0KFf4C
+ 7a9WxAI/y0LI6dmiA2GiV4WM4mPFR9JgJwzQ0O0TXeutthd+lCnQH9Gh25HDzxE3VXopJBJ
+ DUC1cvlAf8Jh7G2GfYhSGSU3Tyrl7JQ==
+Received: from smtpclient.apple ([47.219.251.75])
+ by vsel1nmtao01p.internal.vadesecure.com with ngmta
+ id 5a1004f9-18d85ed44749f0a2; Thu, 24 Sep 2026 21:25:18 +0000
+From: Steve Shoecraft <spshoecraft@gmail.com>
+Content-Type: text/plain;
+	charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260924100512.2733748-5-hch@lst.de>
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3864.700.51.1.1\))
+Subject: [RFC] MXFS: a shared-disk clustered filesystem derived from XFS
+Message-Id: <56847E8D-EA83-4984-82F3-9BC93E4C02FF@gmail.com>
+Date: Thu, 24 Sep 2026 16:25:06 -0500
+Cc: linux-xfs@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
+X-Mailer: Apple Mail (2.3864.700.51.1.1)
 
-On Thu, Sep 24, 2026 at 12:03:54PM +0200, Christoph Hellwig wrote:
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  libxfs/xfs_platform.h | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/libxfs/xfs_platform.h b/libxfs/xfs_platform.h
-> index d09fb0aae00f..a61d50de9dc0 100644
-> --- a/libxfs/xfs_platform.h
-> +++ b/libxfs/xfs_platform.h
-> @@ -212,6 +212,7 @@ void inode_init_owner(struct mnt_idmap *idmap, struct inode *inode,
->  #define round_up(x, y) ((((x)-1) | __round_mask(x, y))+1)
->  #define round_down(x, y) ((x) & ~__round_mask(x, y))
->  #define DIV_ROUND_UP(n,d) (((n) + (d) - 1) / (d))
-> +#define DIV_ROUND_UP_ULL(n,d) DIV_ROUND_UP(n,d)
 
-Er... shouldn't there be some sort of u64 cast here?
+I asked claude code for an email body and this is what It said:
 
---D
+  MXFS is a Linux shared-disk clustered filesystem derived from XFS: several
+  nodes mount the same block device read/write, with distributed locking,
+  cache coherency, fencing (SCSI persistent reservations) and journal
+  recovery of failed nodes.
 
->  
->  /*
->   * Handling for kernel bitmap types.
-> -- 
-> 2.53.0
-> 
-> 
+  It is built as an out-of-tree module. The xfs/ tree is XFS forked from the
+  6.19 development cycle and heavily modified, plus a coordination overlay,
+  a DLM and a platform layer; it is not a patch series against upstream.
+
+  The code was written by an AI coding agent (Anthropic's Claude Code),
+  directed by me; I have not reviewed it line by line. The README states
+  this at the top.
+
+  The released configuration is two nodes over the TCP DLM transport,
+  verified on specific kernels (Ubuntu 24.04 6.8, Proxmox VE 9 6.17/7.0,
+  RHEL 9.8), and it passes the project's two-node test suite. Other
+  configurations (more nodes, a disk-based lock transport) are in
+  development. Open defects, with their evidence, are tracked publicly in
+  the repository (data/defects.json).
+
+  I am not proposing upstream inclusion. I am looking for review from
+  filesystem and XFS developers, especially of the locking, coherency and
+  recovery design, and of where it diverges from XFS's assumptions.
+
+  https://github.com/sshoecraft/mxfs
+
