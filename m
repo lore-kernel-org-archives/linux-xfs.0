@@ -1,366 +1,235 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30FA8415F38
-	for <linux-xfs@vger.kernel.org>; Thu, 24 Sep 2026 13:14:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 893C13CB2E9;
+	Thu, 24 Sep 2026 14:34:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790255662; cv=none; b=IYiXqAByRd9am8Jp1QevRiyv4CqfuP0uJfkU8jpxX4NS+mngG4+ySxsnHjdti+HI1biSJAnmZUpiGagDQBdSFiekfXsXqU7TCh0jzJ91OcBIqRJmuDUAOh8dJqfSGANUWos+v1oqnOYFfyo6wyER70EB+JZjofbQNzJYaqRmCYg=
+	t=1790260453; cv=none; b=Jp4cPnmlG+4AeU3aHlMQIQvr1MFUR2L7pv9Lbnd5jtKDM2levQTn+F6R8e6SArWIYHavNWYkd8YIzMGt/uJBEaQfdIPzwG0upbqchRij4Ws4WfIVGayJjJR87bJG9url61HOsixMFptBDfYz+Kxg3E+YQPdKWqkA6nC9AJjXkys=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790255662; c=relaxed/simple;
-	bh=ATZbRIfq4UpThCnBcv+dwCAUQPXfCgBsL3gSTg1CPOY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=FiWVaTnlUnWyspd7v273P+GZxDkwtxRrI5qqkuxs8Wvwo8vsJ3iRuYCSqWG26qiqFSKFW8q11Khm1uSEoghdPkDwQP/ahvAa/aGVd4vILlVEmyy/ALphY20O08ilwnq7dSuugZT5EH44OoqSSu2pdbchmMu6lyPKDAG1a3ixWds=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=cTtdpqii; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1790260453; c=relaxed/simple;
+	bh=7jT32T51qObWY1wqjMDG5dVQft2v5PNq7oRvCSDGF3A=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=HNlhlqqMxe1b48tQkME1xu/nCQrn9LNZ3ElrOiYXmd+wg2ds8qEgWV3Wz+d6dff7yTnTAmcdVyg1a1NdKAQUfqe2RrjTV9gQbGFw8PmtclOh/++RNPD0GNi9p+QmelhqAdX4uoThhF7Bo1j9UO2AiQ4/0lu1dIkEG8/nJhLlnmM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fAWWQW+Y; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="cTtdpqii"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1790255659;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=MitoeYYlpbSJWW9z9MLVb+CxdiE+QchsEdfGdjrn79U=;
-	b=cTtdpqiiIfD1PoLr/YqQe7MXYydOQFsrqertmnP42dVNUzocEkVHIUI4hXEhSxMvL1eI5/
-	Fkwuf7I32PV/ACVIldkQcy8w6ecCc+Y2Kc4KrK1+qfGoF9cKnLlO1KjoLnCZjzElXjvVxg
-	OhXB3SpFjsm4dJHtUNAgvzMDdI+cptA=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-696-bKP4hhULO_uM-gk8S0AA9A-1; Thu,
- 24 Sep 2026 09:14:15 -0400
-X-MC-Unique: bKP4hhULO_uM-gk8S0AA9A-1
-X-Mimecast-MFC-AGG-ID: bKP4hhULO_uM-gk8S0AA9A_1790255654
-Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 5C9F7189F076;
-	Thu, 24 Sep 2026 13:14:14 +0000 (UTC)
-Received: from bfoster (headnet05.pony-001.prod.iad2.dc.redhat.com [10.2.32.117])
-	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id A2142180049F;
-	Thu, 24 Sep 2026 13:14:13 +0000 (UTC)
-Date: Thu, 24 Sep 2026 09:14:11 -0400
-From: Brian Foster <bfoster@redhat.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org, Carlos Maiolino <cem@kernel.org>
-Subject: Re: [PATCH v4 4/4] xfs: incorporate increased AGFL min requirement
- for minleft allocs
-Message-ID: <arUiIxOed6Ldf8FN@bfoster>
-References: <20260923161524.416059-1-bfoster@redhat.com>
- <20260923161524.416059-5-bfoster@redhat.com>
- <20260924011542.GH2705364@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fAWWQW+Y"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 540A11F00899;
+	Thu, 24 Sep 2026 14:34:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790260451;
+	bh=5s/G29r5xlQqoidU08e1WfbzuhCV/MEnckaYH46M6N4=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=fAWWQW+Y+CK3KEpZnau1N5gWdiMD5xMnDis+H57BJy3MqgvUHH0XsZQk4NWb8zNNk
+	 f3SDtdDFKtuMQ5MA0WwSbrS6KAn2N74/Z13FOIFHz5d3nF7ShGg9HI/QvHTWv70K7c
+	 KPT+cvyOZ9HYFuABx/SF3GmfHk/ciVcwh9LPb9joqlpBoW2UegkoDDKLO95vgbr3ll
+	 FN3hfCKgVv7ucxPdDlyuKuuKPMafYDGmB6Wmlwelp5VgqMqKAgaMF0kEQJHKsAVv2n
+	 oFXv3CqbdOGk9GJ52+JsBnl6NedYm4nQUAVFUzLCjLl8P8fTDQUvy+lNvRLn5S8HMY
+	 JM/hjbJV4adBA==
+Message-ID: <54f42979-fc19-44ff-bd11-cb43f13bcd32@kernel.org>
+Date: Thu, 24 Sep 2026 16:34:04 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260924011542.GH2705364@frogsfrogsfrogs>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/2] mm: page_alloc: do not give all non-blocking requests
+ reserve access
+Content-Language: en-US
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Matthew Wilcox <willy@infradead.org>, Matt Fleming
+ <matt@readmodwrite.com>, Salvatore Dipietro <dipiets@amazon.it>,
+ akpm@linux-foundation.org, abuehaze@amazon.com, alisaidi@amazon.com,
+ blakgeof@amazon.com, brauner@kernel.org, brendan.jackman@linux.dev,
+ david@redhat.com, dgc@kernel.org, dipietro.salvatore@gmail.com,
+ djwong@kernel.org, hch@infradead.org, hch@lst.de,
+ linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-mm@kvack.org, linux-xfs@vger.kernel.org, mhocko@suse.com,
+ ritesh.list@gmail.com, rvvandan@amazon.com, stable@vger.kernel.org,
+ surenb@google.com, ziy@nvidia.com
+References: <20260910114602.926944-1-dipiets@amazon.it>
+ <aqQlUr-1h07G8JWM@cmpxchg.org>
+ <8d6a8a63-4adc-458a-b548-a47bf5ff8eb7@kernel.org>
+ <aqq8pWI0u1IZNWHT@cmpxchg.org>
+ <9f415dc7-adad-4161-b20d-7c3173f50ff3@kernel.org>
+ <arFBJdYaRx_iJNDA@cmpxchg.org> <arFBWvzXPYrKuIYi@cmpxchg.org>
+ <arFFKGrpPwtTkoCi@casper.infradead.org> <arFUPOi6gadAvD3E@cmpxchg.org>
+ <c4a6d3db-8b57-400d-a377-a7acbf45d3ba@kernel.org>
+ <arKI_AwXQxicc_iH@cmpxchg.org>
+From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
+Autocrypt: addr=vbabka@kernel.org; keydata=
+ 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
+In-Reply-To: <arKI_AwXQxicc_iH@cmpxchg.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Wed, Sep 23, 2026 at 06:15:42PM -0700, Darrick J. Wong wrote:
-> On Wed, Sep 23, 2026 at 12:15:24PM -0400, Brian Foster wrote:
-> > Matt Fleming reports a filesystem shutdown due to inobt block
-> > allocation failure during sparse chunk allocation. Inode creation
-> > can involve multiple allocations in a transaction: the initial chunk
-> > allocation and inode btree blocks via inobt record insertion. This
-> > is expected to be safe by using the minleft parameter on the chunk
-> > allocation to guarantee the selected AG has blocks available for
-> > a followup inobt insertion.
-> > 
-> > The sequence that leads to this failure is that the alloc and inode
-> > btrees are all full (require a full split on next insertion) and the
-> > AG has just enough free space to satisfy a sparse chunk allocation
-> > with minleft set (i.e. 7 blocks in this example). The chunk
-> > allocation splits a free extent, triggers full allocbt splits, and
-> > consumes 4 free blocks for the chunk and 4 AGFL blocks for the
-> > btrees.
-> > 
-> > Next, the inobt record insertion triggers an inobt split. The AG has
-> > enough free blocks, but the allocbt splits caused by the chunk
-> > allocation have increased the min AGFL requirement for the AG due to
-> > btree level increases. The AGFL requirement as calculated by
-> > xfs_alloc_fix_freelist() is:
-> > 
-> > 	free + AGFL - res - minfree - minleft = avail
-> > 
-> > This evaluates to the following on initial chunk allocation:
-> > 
-> > 	2514 + 8 - 2505 - 8 - 2 = 7
-> > 
-> > ... and then after the chunk allocation but before the inobt block
-> > allocation:
-> > 
-> > 	2510 + 4 - 2505 - 12 - 0 = -3
-> > 
-> > This causes the inobt alloc to fail despite minleft being set in the
-> > first allocation. The error path cancels the dirty transaction and
-> > shuts down the fs. The problem here is that while minleft ensures
-> > free blocks are available for the inobt insert, it is not sufficient
-> > to cover the increase of the AGFL min free requirement.
-> > 
-> > To address this, first have xfs_alloc_freelist() return both min and
-> > max freelist values. The min value is the current AGFL requirement
-> > and remains used for actual AGFL sizing. The max value calculates
-> > the worst case AGFL requirement after potential allocbt splits
-> > during the current allocation. Incorporate the max value into space
-> > availability checks for AG selection and the longest free extent
-> > calculation. The latter is necessary because callers like the bmap
-> > layer can size allocation requests based on the longest free extent.
-> > Without this, aligned allocs can end up oversized, prematurely fail,
-> > and fall back to non-aligned to make up the difference.
-> > 
-> > This ensures the selected AG has enough blocks for both the caller's
-> > minleft value and the worst case AGFL increase. In the example
-> > above, the initial calculation now evaluates to 3 blocks available
-> > instead of 7 and the inode allocation fails gracefully with -ENOSPC.
-> > 
-> > Assisted-by: LLM
-> > Reported-by: Matt Fleming <matt@readmodwrite.com>
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > Reviewed-by: Mark Tinguely <mark.tinguely@oracle.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_alloc.c | 58 +++++++++++++++++++++++++++------------
-> >  fs/xfs/libxfs/xfs_alloc.h |  3 +-
-> >  fs/xfs/libxfs/xfs_bmap.c  |  6 ++--
-> >  3 files changed, 47 insertions(+), 20 deletions(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> > index af63926cc9ee..86f74a2dfa10 100644
-> > --- a/fs/xfs/libxfs/xfs_alloc.c
-> > +++ b/fs/xfs/libxfs/xfs_alloc.c
-> > @@ -2397,31 +2397,36 @@ xfs_alloc_compute_maxlevels(
-> >  }
-> >  
-> >  /*
-> > - * Find the length of the longest extent in an AG.  The 'need' parameter
-> > - * specifies how much space we're going to need for the AGFL and the
-> > - * 'reserved' parameter tells us how many blocks in this AG are reserved for
-> > + * Find the length of the longest extent in an AG. The @min_free and @max_free
-> > + * parameters specify how much space we're going to need for the AGFL and the
-> > + * @reserved parameter tells us how many blocks in this AG are reserved for
-> >   * other callers.
-> >   */
-> >  xfs_extlen_t
-> >  xfs_alloc_longest_free_extent(
-> >  	struct xfs_perag	*pag,
-> > -	xfs_extlen_t		need,
-> > +	xfs_extlen_t		min_free,
-> > +	xfs_extlen_t		max_free,
-> >  	xfs_extlen_t		reserved)
-> >  {
-> >  	xfs_extlen_t		delta = 0;
-> >  
-> >  	/*
-> > -	 * If the AGFL needs a recharge, we'll have to subtract that from the
-> > -	 * longest extent.
-> > +	 * If the AGFL needs a recharge, subtract that from the longest extent
-> > +	 * because AGFL refill happens before the alloc.
-> >  	 */
-> > -	if (need > pag->pagf_flcount)
-> > -		delta = need - pag->pagf_flcount;
-> > +	if (min_free > pag->pagf_flcount)
-> > +		delta = min_free - pag->pagf_flcount;
-> >  
-> >  	/*
-> > -	 * If we cannot maintain others' reservations with space from the
-> > -	 * not-longest freesp extents, we'll have to subtract /that/ from
-> > -	 * the longest extent too.
-> > +	 * Extra AGFL blocks beyond the min are reserved by ->minleft during
-> > +	 * allocation. Similar to reserved, these blocks are not available to
-> > +	 * this allocation. Check if we can preserve the combined total without
-> > +	 * the longest extent. If not, deduct the necessary blocks from the
-> > +	 * longest extent.
-> >  	 */
-> > +	if (max_free > min_free)
-> > +		reserved += max_free - min_free;
+On 9/22/26 15:56, Johannes Weiner wrote:
+> On Tue, Sep 22, 2026 at 01:52:41PM +0200, Vlastimil Babka (SUSE) wrote:
+>> 
+>> 
+>> On 9/21/26 5:58 PM, Johannes Weiner wrote:
+>> > On Mon, Sep 21, 2026 at 03:54:32PM +0100, Matthew Wilcox wrote:
+>> >> On Mon, Sep 21, 2026 at 10:38:18AM -0400, Johannes Weiner wrote:
+>> >>> +++ b/mm/page_alloc.c
+>> >>> @@ -3246,7 +3246,9 @@ struct page *rmqueue_buddy(struct zone *preferred_zone, struct zone *zone,
+>> >>>  			 * reserves as failing now is worse than failing a
+>> >>>  			 * high-order atomic allocation in the future.
+>> >>>  			 */
+>> >>> -			if (!page && (alloc_flags & (ALLOC_OOM|ALLOC_NON_BLOCK)))
+>> >>> +			if (!page &&
+>> >>> +			    ((alloc_flags & ALLOC_OOM) ||
+>> >>> +			     (alloc_flags & ALLOC_MASK_ATOMIC) == ALLOC_MASK_ATOMIC))
+>> >>>  				page = __rmqueue_smallest(zone, order, MIGRATE_HIGHATOMIC);
+>> >>
+>> >> Would this be slightly neater?
+>> >>
+>> >> static inline bool may_access_reserves(unsigned int alloc_flags)
+>> >> {
+>> >> 	if (alloc_flags & ALLOC_OOM)
+>> >> 		return true;
+>> >> 	if (alloc_flags & (ALLOC_NON_BLOCK | ALLOC_MIN_RESERVE)) ==
+>> >> 	    (ALLOC_NON_BLOCK | ALLOC_MIN_RESERVE)
+>> >> 		return true;
+>> >> 	return false;
+>> >> }
+>> 
+>> I think it should be named e.g. may_access_highatomic_reserves() as
+>> may_access_reserves() is rather generic and would seem to imply an
+>> ALLOC_RESERVES match (see 2/2).
 > 
-> Hmm.  So @min_free here is the minimum number of blocks that we have to
-> keep on the AGFL to handle bnobt/cntbt/rmapbt btree expansions, right?
-> And @max_free is the same, but assuming that they all increase one level
-> in height, right?  So we're adding to @reserved the quantity of fsblocks
-> needed to handle adding that new layer and then making the "Can this AG
-> handle this much allocation?" decision?
+> Note that it doesn't actually check ALLOC_HIGHATOMIC itself. It's just
+> the hail-mary AFTER trying the primary migratetype. So the name still
+> doesn't look right, and rmqueue_buddy() reads kind of awkardly:
 > 
-
-Yep.
-
-> /me wonders if they should be called min_agfl and max_agfl,
-> respectively, but that only makes sense if the answers to the above are
-> all 'yes'.
+> if (alloc_flags & ALLOC_HIGHATOMIC)
+> 	page = __rmqueue_smallest(..., MIGRATE_HIGHATOMIC);
+> if (!page) {
+> 	page = __rmqueue(..., migratetype, ...);
 > 
-
-Do you mean within this function, or across the board? IIRC here I was
-generally just trying to keep things consistent wrt naming (i.e. I found
-the 'need' naming here annoyingly confusing) across the various function
-calls, but I'm not opposed to just renaming them all to min/max_agfl or
-whatever..
-
-> >  	if (pag->pagf_freeblks - pag->pagf_longest < reserved)
-> >  		delta += reserved - (pag->pagf_freeblks - pag->pagf_longest);
-> >  
-> > @@ -2519,6 +2524,7 @@ static bool
-> >  xfs_alloc_space_available(
-> >  	struct xfs_alloc_arg	*args,
-> >  	xfs_extlen_t		min_free,
-> > +	xfs_extlen_t		max_free,
-> >  	int			flags)
-> >  {
-> >  	struct xfs_perag	*pag = args->pag;
-> > @@ -2526,15 +2532,32 @@ xfs_alloc_space_available(
-> >  	xfs_extlen_t		reservation; /* blocks that are still reserved */
-> >  	int			available;
-> >  	xfs_extlen_t		agflcount;
-> > +	xfs_extlen_t		minleft;
-> >  
-> >  	if (flags & XFS_ALLOC_FLAG_FREEING)
-> >  		return true;
-> >  
-> >  	reservation = xfs_ag_resv_needed(pag, args->resv);
-> >  
-> > +	/*
-> > +	 * minleft implies a multi-alloc transaction. If set, the first alloc
-> > +	 * might cause btree splits that increase the AGFL requirement for the
-> > +	 * next. This worst case requirement is calculated in max_free.
-> > +	 *
-> > +	 * We don't prepopulate the AGFL because we don't know in advance if
-> > +	 * splits will occur. Instead, add the delta to minleft so it is
-> > +	 * accounted for in AG selection. This ensures the AG has enough space
-> > +	 * for the caller's minleft plus that needed to repopulate the AGFL on
-> > +	 * the next alloc if splits do occur.
-> > +	 */
-> > +	minleft = args->minleft;
-> > +	if (minleft)
-> > +		minleft += max_free - min_free;
-> > +
-> >  	/* do we have enough contiguous free space for the allocation? */
-> >  	alloc_len = args->minlen + (args->alignment - 1) + args->minalignslop;
-> > -	longest = xfs_alloc_longest_free_extent(pag, min_free, reservation);
-> > +	longest = xfs_alloc_longest_free_extent(pag, min_free,
-> > +			minleft ? max_free : min_free, reservation);
+> 	/* Allow OOM and order-0 atomic */
+> 	if (!page && may_access_highatomic_reserve())
+> 		page = __rmqueue_smallest(..., MIGRATE_HIGHATOMIC);
+> }
 > 
-> My first thought was "Why do we only supply max_free if minleft>0?" but
-> I think that's the part that provides "...plus that needed to repopulate
-> the AGFL on the next alloc...", right?  (the important phrase here being
-> "next alloc")
+> It would have to be may_access_highatomic_reserve_as_last_resort() or
+> something?
 > 
-
-Yeah.. minleft is a dual purpose thing here. First, it indicates a
-"multi-allocation" case (as Dave coined in a prior thread) as minleft
-implies there will be a followup allocation with minleft reset back to
-zero under the same transaction/agf lock.
-
-Second, in that multi-alloc case, we need to make sure that the first
-allocation requires not only that the pure minleft value set by the
-caller remains available after the allocation, but also enough to
-satisfy the potentially increased AGFL requirement that the associated
-gatekeeping logic will enforce on the followup allocation.
-
-The main reason for the separate min/max fields and using
-minleft/reservation for this extra space is that just bumping min_free
-(or min_agfl) would spuriously populate and depopulate the AGFL across
-these allocations for the uncommon worst case.
-
-> If the answers to all my questions are yes then I think I've understood
-> this well enough to say
-> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+> Hm, this is a mess. Looking closer, I think there is more breakage,
+> name aside.
 > 
-
-Thanks. Let me know what you were looking for on the naming thing and
-I'll either tack on a full rename patch or respin this with more
-selective changes..
-
-Brian
-
-> --D
+> You suggest in 2/2 to use the same helper in unusable_free. But I
+> think that's broken. My 2/2 does not look like the full fix either:
 > 
-> >  	if (longest < alloc_len)
-> >  		return false;
-> >  
-> > @@ -2545,7 +2568,7 @@ xfs_alloc_space_available(
-> >  	 */
-> >  	agflcount = min_t(xfs_extlen_t, pag->pagf_flcount, min_free);
->   	available = (int)(pag->pagf_freeblks + agflcount -
-> > -			  reservation - min_free - args->minleft);
-> > +			  reservation - min_free - minleft);
-> >  	if (available < (int)max(args->total, alloc_len))
-> >  		return false;
-> >  
-> > @@ -2859,6 +2882,7 @@ xfs_alloc_fix_freelist(
-> >  	struct xfs_alloc_arg	targs;	/* local allocation arguments */
-> >  	xfs_agblock_t		bno;	/* freelist block */
-> >  	xfs_extlen_t		min_free;/* total blocks needed in freelist */
-> > +	xfs_extlen_t		max_free; /* max freelist requirement */
-> >  	int			error = 0;
-> >  
-> >  	/* deferred ops (AGFL block frees) require permanent transactions */
-> > @@ -2886,8 +2910,8 @@ xfs_alloc_fix_freelist(
-> >  		goto out_agbp_relse;
-> >  	}
-> >  
-> > -	xfs_alloc_freelist(mp, pag, &min_free, NULL);
-> > -	if (!xfs_alloc_space_available(args, min_free, alloc_flags |
-> > +	xfs_alloc_freelist(mp, pag, &min_free, &max_free);
-> > +	if (!xfs_alloc_space_available(args, min_free, max_free, alloc_flags |
-> >  			XFS_ALLOC_FLAG_CHECK))
-> >  		goto out_agbp_relse;
-> >  
-> > @@ -2910,8 +2934,8 @@ xfs_alloc_fix_freelist(
-> >  		xfs_agfl_reset(tp, agbp, pag);
-> >  
-> >  	/* If there isn't enough total space or single-extent, reject it. */
-> > -	xfs_alloc_freelist(mp, pag, &min_free, NULL);
-> > -	if (!xfs_alloc_space_available(args, min_free, alloc_flags))
-> > +	xfs_alloc_freelist(mp, pag, &min_free, &max_free);
-> > +	if (!xfs_alloc_space_available(args, min_free, max_free, alloc_flags))
-> >  		goto out_agbp_relse;
-> >  
-> >  	if (IS_ENABLED(CONFIG_XFS_DEBUG) && args->alloc_minlen_only) {
-> > diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-> > index 44a10f4a22a2..5812c9b5e609 100644
-> > --- a/fs/xfs/libxfs/xfs_alloc.h
-> > +++ b/fs/xfs/libxfs/xfs_alloc.h
-> > @@ -70,7 +70,8 @@ unsigned int xfs_alloc_set_aside(struct xfs_mount *mp);
-> >  unsigned int xfs_alloc_ag_max_usable(struct xfs_mount *mp);
-> >  
-> >  xfs_extlen_t xfs_alloc_longest_free_extent(struct xfs_perag *pag,
-> > -		xfs_extlen_t need, xfs_extlen_t reserved);
-> > +		xfs_extlen_t min_free, xfs_extlen_t max_free,
-> > +		xfs_extlen_t reserved);
-> >  void xfs_alloc_freelist(struct xfs_mount *mp, struct xfs_perag *pag,
-> >  		unsigned int *min_free, unsigned int *max_free);
-> >  int xfs_alloc_get_freelist(struct xfs_perag *pag, struct xfs_trans *tp,
-> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> > index d6be6734bd90..9bffde1484a7 100644
-> > --- a/fs/xfs/libxfs/xfs_bmap.c
-> > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> > @@ -3150,6 +3150,7 @@ xfs_bmap_longest_free_extent(
-> >  {
-> >  	xfs_extlen_t		longest;
-> >  	unsigned int		min_free;
-> > +	unsigned int		max_free;
-> >  	int			error = 0;
-> >  
-> >  	if (!xfs_perag_initialised_agf(pag)) {
-> > @@ -3159,8 +3160,9 @@ xfs_bmap_longest_free_extent(
-> >  			return error;
-> >  	}
-> >  
-> > -	xfs_alloc_freelist(pag_mount(pag), pag, &min_free, NULL);
-> > -	longest = xfs_alloc_longest_free_extent(pag, min_free,
-> > +	/* bmap allocs always have minleft set, so account for max_free */
-> > +	xfs_alloc_freelist(pag_mount(pag), pag, &min_free, &max_free);
-> > +	longest = xfs_alloc_longest_free_extent(pag, min_free, max_free,
-> >  				xfs_ag_resv_needed(pag, XFS_AG_RESV_NONE));
-> >  	if (*blen < longest)
-> >  		*blen = longest;
-> > -- 
-> > 2.55.0
-> > 
-> > 
-> 
+> The fundamental problem is including the highatomics reserves in the
+> watermark check for any allocations that first prefer a different
+> migratetype - "regular memory". Any time we do this, we allow those
+> allocations to draw down regular memory to 0 based on the presence of
+> the highatomic reserves. And when reclaim, swap etc. come along there
+> is nothing left for them. ALLOC_NO_WATERMARKS e.g. permits ignoring
+> the wmarks but doesn't grant access to highatomic *freelists*.
 
+Hmm yes, we'd have to be nuanced about which freelists we allow allocating
+from depending on their particular watermarks. I.e. if we passed the
+watermark checks only thanks to zone->nr_free_highatomic, we would have to
+try those first. I assume it would be complicated and perhaps with perf
+impact. But maybe if we managed to keep this complexity outside of fastpath
+attempts?
+
+The CMA handling had a similar issue and now we have that balancing
+heuristic since 16867664936e ("mm,page_alloc,cma: conditionally prefer cma
+pageblocks for movable allocations")
+
+> So I think there are two choices:
+> 
+> (1) Let *everything* with some sort of reserve access fall back to
+> highatomic, or
+> 
+> (2) Only allow ALLOC_HIGHATOMIC to include highatomic reserves in
+> their watermarks check. With limited opportunistic fallback to the
+> highatomics *freelists*, like the order-0 atomics above.
+> 
+> My intuition is that (1) might weaken the highatomic reserves to the
+> point of uselessness, and we should probably go with (2):
+
+I think the goal of commit 281dd25c1a01 ("mm/page_alloc: let GFP_ATOMIC
+order-0 allocs access highatomic reserves") would be defeated with (2). The
+order-0 atomic fallback to MIGRATE_HIGHATOMIC freelists would be there, but
+the watermark check would never let such allocation through anymore, if
+there wasn't a free page on the regular freelists? So it would become (some
+races aside maybe) a dead code?
+
+I guess your current patches are a compromise that can work, as patch 2/2
+improves the current worse-than-(1) state to exclude the plain non-block
+allocations.
+
+> watermarks:
+> if (alloc_flags & ALLOC_HIGHATOMIC)
+> 	unusable_free += zone->nr_free_highatomic
+> 
+> freelists:
+> if (alloc_flags & ALLOC_HIGHATOMIC)
+> 	page = __rmqueue_smallest(..., MIGRATE_HIGHATOMIC);
+> if (!page) {
+> 	page = __rmqueue(..., migratetype, ...);
+> 	/* Opportunistic fallback for order-0 atomics */
+> 	if (!page && opportunistic_highatomic_fallback())
+> 		page = __rmqueue_smallest(..., MIGRATE_HIGHATOMIC);
+> }
+> 
+>> > I tend to be hesitant with single-use abstractions, but no objection
+>> > if people think this is better.
+>> 
+>> True but single-use ALLOC_MASK_ATOMIC is also not that great, and the
+>> usage makes the code hard to decipher. And see my reply to 2/2.
+> 
+> There is one small upside, which is that it pairs with the
+> ALLOC_HIGHATOMIC check that precedes it. The comment says "order-0
+> atomics" get a hail mary, but there is no order check. That order-0
+> comes out of the sequence of events here: we first check highatomic,
+> which is order > 0 && atomic. If that, and the native type, fail, we
+> do the hail mary for atomic, which must be by definition order-0.
+> 
+> If you abstract that privilege into a generic "can access highatomic
+> reserves" without an order check, it tempts refactors that cause bugs
+> like the above.
+
+Ack.
