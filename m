@@ -1,42 +1,42 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B5CF3F104E
-	for <linux-xfs@vger.kernel.org>; Thu, 24 Sep 2026 10:05:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0152A3A5E87
+	for <linux-xfs@vger.kernel.org>; Thu, 24 Sep 2026 10:05:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790244355; cv=none; b=OCxBNbo55TN9iKaTH4TjgngQKAforyZ0GzMX4RtH31cp+MGH9tHfMfTYfTa6YfytAifj1LIgtr6kZljzMx7u4MyI9zHOyIsc96BnQWbRWBKH0sWU1hGnssoOk9RJmFWJsO4WjNW8DTy8Y4zv8bjMYamyyWdo+mJmKqJ2NVWLSs4=
+	t=1790244358; cv=none; b=ihpOT6bzMAWpinVdW3UMpk5LW5yXcS5UmtQ2wLrS+AjtvRA+K3hsh0LRWYuPCrgQWlVs8yMqEY+W7Fz5aFGxiPKXJkEek/JJl7aoB2Yl6ZuYMH7k7p4v8ZP7QmcRUdSMG+kOH47+5reY02xvHBcqCyKfHtGRcjLeTnNwjaDVWhI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790244355; c=relaxed/simple;
-	bh=fnfM97Ze/8iehfXNRabfaZd5mFAUcEH/VVy1mVe2VZo=;
+	s=arc-20240116; t=1790244358; c=relaxed/simple;
+	bh=MCs7gKzu5IIOGtf+yP397Z5M7Fzqtnt72yX2CTh+fwg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=rWnXrIuYh3FJ6IRXlqFQ+sAZDeoiG7Ao6jiZGXSYb0LyWfy56d68MdpthMt87Ktsie964QivhdvFyLBBb0eL8fMtZ5i/lT9zOlR3dS6N8ZPfMm/la0igmriH/psiXCz+zquNDg3aHm07Hr+E/+Idx7bIDG7pI3MWGO3mQKT3lus=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=POt0qcLp; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=EFRYt/n+X3zOvZfNw+O3cGu8m0R0Zc2BJpXiDxFduzyhyt4Dxn8G03KUktoqyv9YkIY85IFZPbJ8Tlyv6EC20+TjQo5//zvFR4ZG9LgoKsJoM+RYyW3XjvDolZC3GWPJbGSsC5WCdrNRbnNs4Y4Sqy7u8udExclek1F+fmz5kCQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=a1uhpffF; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="POt0qcLp"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="a1uhpffF"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=lU+OBV1swr6/LDXIu7UoXiUZFqGOQAdDH43hOsT/viE=; b=POt0qcLpbFMwME/UTl3R1hTgg8
-	XzAI7ynk0nGnqY9ngG8qpGIWocyhVL+Sg/oyAk96TOPxtmGV/AUn4/8pDjU/ry/f7hpri83akFBpL
-	tEbNi2NvRqnbi298Z7aEeCIedm3WXfs9ozwJrWsJnobPpFSkiGIHw7DZZ4h+C96Maedg78nbYLHWi
-	BkuepypQjpuWnldZg5eQ3rm+RAiqiMer7T10mKTC6aHOWx7UYS/M1YXyR6qFfknuzvTZFZn9bjC/a
-	w6E/hixKGPPSXWRLs5+7ta3Jj+cYmT4XFVAtPiQJ0ii4YI59demLKuqQMm7woSlbUvLL9QfKxGyYX
-	txQj4cMQ==;
+	bh=KvMi4fn8r/gaVr0NlliGuPY/f0teQ1OmtWbI2A0v9eg=; b=a1uhpffFseJdCI/c8yz4Q6M5pE
+	b0UolbXt5RBpeS74KZmNeepzDzdF8unj03QXGqx6rGvmb1bT9xg0HjiTjvm7U5T7s8vOCLilYbJbK
+	4C7p59VugKtrwkpS7KG1c7gq8KRqUPJBeGPOSGUf5fGbiMRy/iKa5s5oJaCELU+s1WCYwW5PKwOE8
+	lAnN5Gn70gdVwn4STxm5tIXNYyb5joOxAR0M0q2BzYQwgcXGYT4RLfC4biTHpBa75AuXM2TMVyHn1
+	sCCXESY54Xum/HADE3cxtts/F0xwnOKVR2wjzm2UFFsvcEoZmacYyh0tjcBWz7+1KrSy+NiNeiquz
+	tYCXGAGQ==;
 Received: from 85-127-111-79.dsl.dynamic.surfer.at ([85.127.111.79] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1x9gKl-0000000AfFT-3kW3;
-	Thu, 24 Sep 2026 10:05:44 +0000
+	id 1x9gKp-0000000AfGL-0IAF;
+	Thu, 24 Sep 2026 10:05:47 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Andrey Albershteyn <aalbersh@kernel.org>
 Cc: "Darrick J . Wong" <djwong@kernel.org>,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 09/32] FIXUP
-Date: Thu, 24 Sep 2026 12:03:59 +0200
-Message-ID: <20260924100512.2733748-10-hch@lst.de>
+Subject: [PATCH 10/32] xfs: add error injection for lazy bounce buffering
+Date: Thu, 24 Sep 2026 12:04:00 +0200
+Message-ID: <20260924100512.2733748-11-hch@lst.de>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260924100512.2733748-1-hch@lst.de>
 References: <20260924100512.2733748-1-hch@lst.de>
@@ -49,52 +49,42 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
----
- libxfs/libxfs_io.h    | 6 ++++++
- libxfs/rdwr.c         | 2 --
- libxfs/xfs_platform.h | 1 -
- 3 files changed, 6 insertions(+), 3 deletions(-)
+Source kernel commit: 021b211991604298126b47f03abe2ab234048c4c
 
-diff --git a/libxfs/libxfs_io.h b/libxfs/libxfs_io.h
-index 5562e2928254..bd0d9ec04bea 100644
---- a/libxfs/libxfs_io.h
-+++ b/libxfs/libxfs_io.h
-@@ -293,4 +293,10 @@ xfs_buftarg_verify_daddr(
- 	return daddr < xfs_buftarg_nr_sectors(btp);
- }
+Add an error injection knob to exercise the lazy bounce buffering
+code path, i.e. to inject direct I/O re-read using the bounce buffer.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ libxfs/xfs_errortag.h | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/libxfs/xfs_errortag.h b/libxfs/xfs_errortag.h
+index 6de207fed2d8..2dc441da0333 100644
+--- a/libxfs/xfs_errortag.h
++++ b/libxfs/xfs_errortag.h
+@@ -75,7 +75,8 @@
+ #define XFS_ERRTAG_METAFILE_RESV_CRITICAL		45
+ #define XFS_ERRTAG_FORCE_ZERO_RANGE			46
+ #define XFS_ERRTAG_ZONE_RESET				47
+-#define XFS_ERRTAG_MAX					48
++#define XFS_ERRTAG_BOUNCE_REREAD			48
++#define XFS_ERRTAG_MAX					49
  
-+static inline void
-+xfs_buf_set_uptodate(
-+	struct xfs_buf 		*bp)
-+{
-+}
-+
- #endif	/* __LIBXFS_IO_H__ */
-diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-index 90f2d56687ca..9b6cbd4aa158 100644
---- a/libxfs/rdwr.c
-+++ b/libxfs/rdwr.c
-@@ -1426,8 +1426,6 @@ __xfs_buf_mark_corrupt(
- 	struct xfs_buf		*bp,
- 	xfs_failaddr_t		fa)
- {
--	ASSERT(bp->b_flags & XBF_DONE);
--
- 	xfs_buf_corruption_error(bp, fa);
- 	xfs_buf_stale(bp);
- }
-diff --git a/libxfs/xfs_platform.h b/libxfs/xfs_platform.h
-index 0aeb80fb8244..d9cfcec4c1a0 100644
---- a/libxfs/xfs_platform.h
-+++ b/libxfs/xfs_platform.h
-@@ -322,7 +322,6 @@ static inline unsigned long long mask64_if_power2(unsigned long b)
+ /*
+  * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
+@@ -137,7 +138,8 @@ XFS_ERRTAG(WRITE_DELAY_MS,	write_delay_ms,		3000) \
+ XFS_ERRTAG(EXCHMAPS_FINISH_ONE,	exchmaps_finish_one,	1) \
+ XFS_ERRTAG(METAFILE_RESV_CRITICAL, metafile_resv_crit,	4) \
+ XFS_ERRTAG(FORCE_ZERO_RANGE,	force_zero_range,	4) \
+-XFS_ERRTAG(ZONE_RESET,		zone_reset,		1)
++XFS_ERRTAG(ZONE_RESET,		zone_reset,		1)  \
++XFS_ERRTAG(BOUNCE_REREAD,	bounce_reread,		XFS_RANDOM_DEFAULT)
+ #endif /* XFS_ERRTAG */
  
- /* buffer management */
- #define XBF_TRYLOCK			0
--#define XBF_DONE			0
- #define xfs_buf_stale(bp)		((bp)->b_flags |= LIBXFS_B_STALE)
- #define XFS_BUF_UNDELAYWRITE(bp)	((bp)->b_flags &= ~LIBXFS_B_DIRTY)
- 
+ #endif /* __XFS_ERRORTAG_H_ */
 -- 
 2.53.0
 
