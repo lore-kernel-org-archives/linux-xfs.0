@@ -1,35 +1,35 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9C9E46C831;
-	Thu, 24 Sep 2026 10:02:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9FC13AC0C8;
+	Thu, 24 Sep 2026 10:02:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790244143; cv=none; b=JLkY/l2MEVbFvhF6noBKzdJzYa8RlALI0xo+KPGp9jNj+6lmIzkCLvmkQllEwIccFazS6VT1BO339wjQxiNHjuh4um+0E3XF8oE9kDzl76rn761S1Din384MhlOCN7UoiQwNyHdqSddMjN4A51MnkvE0zN3S14cES8PcOtdGQ6Q=
+	t=1790244145; cv=none; b=dvzdyjxvDHW2xKcqJRUd8/akYxHZvdheCkC9BgTUjCpINOXQ9Zh2DFUpMWhlN2JnqWRgAUg6EOCXErajEMq6DQwe/RJ2jV073JBMI3bvuorQcScd1UT1I9vQ1N6sdVMrGsNoxG+q7FByDyqzNF9lFj4S/pZJyJqH+J+vJoVXHuE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790244143; c=relaxed/simple;
-	bh=Z0r1wTK8bGpsKRFnB33ykrrPmi5j4oHqcZ459esDxkI=;
+	s=arc-20240116; t=1790244145; c=relaxed/simple;
+	bh=jk8jIf2zkjsivNMm0TInFfXhUfDzqhoulBhAINN9ZJ0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=P/Q4uBGhss+G3u206JAEBaZr19z6jzEJesMmyRjEUpmhZAKo6SA4JkTt5lePJ88jBmzGZ5p1RUWtyUpdMYjNpvQfbiOBiuCRlLReWXfdcN3nq4G/e9Hos62EWh8BJFJnXhO7Etq/KbFfBqsj/AGEKhJE5/iQezVRzX4476Pt5nc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=qQkfnU4M; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=LtKMNz5JwNJPZNTBoYmCKdYPQpZ7UivPyj8aWiOL9HRLMBm0S0tNPrUU7PohNlfKp8OGTlO7uJVu0MhCdjNiZw/3E+ZIIX4wV3CY0IulxWCxfeBF9Mys6AFrD+E7nN9T/rGkMRtkgOpsDkS4VtAnuW5AO9JD2jj6nEpQupy2Hjs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=ywdCQkeG; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="qQkfnU4M"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ywdCQkeG"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=33sU0H/XDVxXsGb/GYo7Jnngk9mRy3dKwaZGdg5Vni0=; b=qQkfnU4MqVrtOMvu9lpV/+xZJ7
-	bPqz5iJEe1Gq/XCzFcQDXa4kx/8Oon5lrP2mH/ieXNjalCBs1Ck8lwwGoy7j7k259lVRnsv9IEAAk
-	N22ygFVUiJ0m+fKQgksw6AyhZoJmDu1hgoGWRW5fc2XHUyFYiqf9pgSeulOwdEiLju4rAdnSYUKIK
-	bqRjRabZbW5JoMMzSSOjYpBTVBClvGD26J0AUYk+Rf3OBcYbRPTg8vlCqP/Hg9d8kZtTA0qpVTfjS
-	EZbJw16Uy0XP1NmUPjrXzwYA+LR6VS9KH3H2zJGsDAdJTnTafV9zPo1WJa1UlUe1U4C1xLIuU2JhI
-	GnebTsQw==;
+	bh=dPv94LCSnxf/9QP2pSuf9/oZy2LebDi8OKeOyhC2ncw=; b=ywdCQkeGC2BFF2LcLBW9lrNy3x
+	r6b+pQyLYuBc3gdBvDBfAlF+R/WDeKDK82PBFGmNSOy3iCQGysjy+l9BiHAfmdHOysT3Q4VR8ArSb
+	WNWG0YHOxo2qElwm+eCSlubx1tAjh0z2tvWVOf89TKF7B7l+Gsc8RRVPvcMgZzQRyuviPUkeCjSVS
+	7hm3goGGfobVPYmFeiZJid0SZswN8eVoXpXYviXUPPQNuEexGKwGL3GihBXeZD7z//HbsiqtNsqJT
+	itqC1ore4Oz9wSSe3Oleg63Jw31fsVGDTs6Vo4nVdSY+lqv6WJgV7io1TDHGpbVcLx+YqNUD6jQn5
+	KhgWkdLg==;
 Received: from 85-127-111-79.dsl.dynamic.surfer.at ([85.127.111.79] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1x9gHK-0000000AegH-14IK;
-	Thu, 24 Sep 2026 10:02:10 +0000
+	id 1x9gHN-0000000AehH-3yi4;
+	Thu, 24 Sep 2026 10:02:14 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: "Darrick J . Wong" <djwong@kernel.org>,
@@ -37,9 +37,9 @@ Cc: "Darrick J . Wong" <djwong@kernel.org>,
 	Christian Brauner <brauner@kernel.org>,
 	linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org
-Subject: [PATCH 18/21] xfs: don't try to verify checksums on empty zones
-Date: Thu, 24 Sep 2026 11:59:50 +0200
-Message-ID: <20260924100032.2733101-19-hch@lst.de>
+Subject: [PATCH 19/21] xfs: report RT data checksum information via XFS_FSOP_GEOM
+Date: Thu, 24 Sep 2026 11:59:51 +0200
+Message-ID: <20260924100032.2733101-20-hch@lst.de>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260924100032.2733101-1-hch@lst.de>
 References: <20260924100032.2733101-1-hch@lst.de>
@@ -52,88 +52,53 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-xfs_scrub can sometimes send XFS_IOC_VERIFY_MEDIA ioctls for ranges
-that have never been written since the last zone reset, which will
-lead to checksum verification failures.
-
-Protect against this by checking that the range is valid.  If the report
-flag is set, a verification failure could lead to health reports and
-the file system being marked corrupt, so lock out zone racing reset
-completions for this case as well.
+Report the RT data checksum flag and the checksum algorithm to userspace.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_verify_media.c | 44 ++++++++++++++++++++++++++++++++++++---
- 1 file changed, 41 insertions(+), 3 deletions(-)
+ fs/xfs/libxfs/xfs_fs.h | 6 +++++-
+ fs/xfs/libxfs/xfs_sb.c | 5 +++++
+ 2 files changed, 10 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_verify_media.c b/fs/xfs/xfs_verify_media.c
-index 46a19405c9e5..fc739f7ffa4e 100644
---- a/fs/xfs/xfs_verify_media.c
-+++ b/fs/xfs/xfs_verify_media.c
-@@ -25,6 +25,8 @@
- #include "xfs_rtcsum.h"
- #include "xfs_trace.h"
- #include "xfs_verify_media.h"
-+#include "xfs_zone_alloc.h"
-+#include "xfs_zone_priv.h"
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index 185f09f327c0..afe83ff23ef3 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -191,7 +191,10 @@ struct xfs_fsop_geom {
+ 	__u32		rgcount;	/* number of realtime groups	*/
+ 	__u64		rtstart;	/* start of internal rt section */
+ 	__u64		rtreserved;	/* RT (zoned) reserved blocks	*/
+-	__u64		reserved[14];	/* reserved space		*/
++	__u8		rtcsum_type;	/* RT data checksum type	*/
++	__u8		rtcsum_blklog;	/* log2 of rtcsum bsize		*/
++	__u8		reserved_pad[6];/* reserved space		*/
++	__u64		reserved[13];	/* reserved space		*/
+ };
  
- #include <linux/fserror.h>
+ #define XFS_FSOP_GEOM_SICK_COUNTERS	(1 << 0)  /* summary counters */
+@@ -250,6 +253,7 @@ typedef struct xfs_fsop_resblks {
+ #define XFS_FSOP_GEOM_FLAGS_PARENT	(1 << 25) /* linux parent pointers */
+ #define XFS_FSOP_GEOM_FLAGS_METADIR	(1 << 26) /* metadata directories */
+ #define XFS_FSOP_GEOM_FLAGS_ZONED	(1 << 27) /* zoned rt device */
++#define XFS_FSOP_GEOM_FLAGS_DATA_CSUM	(1 << 28) /* data checksums */
  
-@@ -288,6 +290,43 @@ xfs_submit_verify_bio(
- 	return 0;
- }
- 
-+static int
-+xfs_csum_verify_metafile(
-+	struct xfs_mount	*mp,
-+	struct bio		*bio,
-+	struct bvec_iter	*saved_iter,
-+	void			*csum_buf,
-+	xfs_fsblock_t		bno)
-+{
-+	struct xfs_rtgroup	*rtg;
-+	int			error = 0;
-+
-+	rtg = xfs_rtgroup_get(mp, xfs_rtb_to_rgno(mp, bno));
-+	if (!rtg)
-+		return -EFSCORRUPTED;
-+
-+	/*
-+	 * Only validate the checksums for valid data, as data never written
-+	 * will not have valid checksums.  We need to hold the ilock on the rmap
-+	 * inode to prevent freeing of blocks and thus a zone reset to happen
-+	 * underneath us.
-+	 *
-+	 * Note that this still relies on cooperating userspace, as there also
-+	 * can be blocks that were written but never recorded after an unclean
-+	 * shutdown, which this check does not catch.  It purely tries to deal
-+	 * with races vs the previous FSMAP output used by xfs_scrub.
-+	 */
-+	xfs_ilock(rtg_rmap(rtg), XFS_ILOCK_SHARED);
-+	if (!xa_get_mark(&mp->m_groups[XG_TYPE_RTG].xa, rtg_rgno(rtg),
-+			XFS_RTG_FREE)) {
-+		error = xfs_csum_verify(mp, bio, saved_iter, csum_buf, bno,
-+				false);
+ /*
+  * Minimum and maximum sizes need for growth checks.
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index 3a470aec6c0c..506caf3e5201 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -1660,6 +1660,11 @@ xfs_fs_geometry(
+ 		geo->flags |= XFS_FSOP_GEOM_FLAGS_METADIR;
+ 	if (xfs_has_zoned(mp))
+ 		geo->flags |= XFS_FSOP_GEOM_FLAGS_ZONED;
++	if (xfs_has_rtcsum(mp)) {
++		geo->flags |= XFS_FSOP_GEOM_FLAGS_DATA_CSUM;
++		geo->rtcsum_type = mp->m_sb.sb_rtcsum_type;
++		geo->rtcsum_blklog = mp->m_sb.sb_rtcsum_blklog;
 +	}
-+	xfs_iunlock(rtg_rmap(rtg), XFS_ILOCK_SHARED);
-+	xfs_rtgroup_put(rtg);
-+	return error;
-+}
-+
- static int
- xfs_submit_verify_bio_csum(
- 	struct xfs_mount	*mp,
-@@ -332,9 +371,8 @@ xfs_submit_verify_bio_csum(
- 	if (error)
- 		goto out_buf_rele;
- 
--	error = xfs_csum_verify(mp, &bio, &saved_iter,
--			csum_bp->b_addr + xfs_rtb_to_rtcsumoff(mp, bno), bno,
--			false);
-+	error = xfs_csum_verify_metafile(mp, &bio, &saved_iter,
-+			csum_bp->b_addr + xfs_rtb_to_rtcsumoff(mp, bno), bno);
- 	if (error)
- 		goto out_media_error;
+ 	geo->rtsectsize = sbp->sb_blocksize;
+ 	geo->dirblocksize = xfs_dir2_dirblock_bytes(sbp);
  
 -- 
 2.53.0
