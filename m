@@ -1,43 +1,43 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33639468C15;
-	Thu, 24 Sep 2026 10:09:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54349472F97;
+	Thu, 24 Sep 2026 10:09:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790244583; cv=none; b=aX7SNDOwlWbferpkfLtZ8L/kVMDk1j1DgYLN0gInjDaz7Iyr8pZ85JTNEOXm93XCyi/4MQ6Sr+rY+FPXFElQtqN32jHtYMbRG6F1bN9HDiECiZGHz2TMjitzl0v9FEBYL7xlSZXfDD0VploqAQo1UK1rSlY2q0lJIiNco5LQa7g=
+	t=1790244589; cv=none; b=laUUmwTAI++9Eq+Bi4cVa3ZLqmDwKM135lkCEqXg+lWQGluqUiHjm4iVGJY2cNY1Wpsvbb9YPbNPhGqJ5w7XH28fa1djnJUGTugrmRu3K9Db26sFiJX70wDvfeXZKjQR2oL7DkbP0T1iWj/IKwTm8mnkfe+Q6SvTPX6ACuKdQ3U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790244583; c=relaxed/simple;
-	bh=3UyPy2SNDmfWYKjEX7vO3Xnw+qhlyQw/pko9rmkMNSQ=;
+	s=arc-20240116; t=1790244589; c=relaxed/simple;
+	bh=KjtlvELRf/GRymTyCc3b20UYbPT25RSBb3HP2gSuzsA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=KseZqxpl+fGxsyZ7if1hRKmufPS6Pi2rfQv9Ye358PC+I4LLSmHoBukcYBYAAhq0S+B9wFzG8ZPkaSk/32BnSOBMZSdSPmAKB89PZ4kTSyHqMVc2dZJeZWzPodpRK7/pP/9V71IkZXiHEmlUpMeREgRYeWGNnkxhch8KyT17PZc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=htqscCIA; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=LYR+Ud0LjzSukBmQQXIsGLZ9nvWLl2n+Ski4ZXheozFHzuxrimHsRlrzgx3NuSsntWdL7hK5xZm1/F9kX7cE6GdY3colOup5/z79lLz8txvnqqj3IR56FaK70WYqPIvCAmhwoNwVefWFuvpUmUgXKTwNBFHmjk6oW+t7CoZy9Qg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=KgTA/Uc+; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="htqscCIA"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="KgTA/Uc+"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=85Oz3yMeaV9xXp8k0wAbZilV/rszXZVHK5syr7smjGE=; b=htqscCIABufS6JaYfkHUIi/rXE
-	/o5iBLz8VICVropgVJbsEYX1TnyYvnoYlOKN0l/bpx84roDflIishB9PvLlB05czCxxhntQ/DQIk1
-	x1n5sIXcXr3T6zj7cV/a9aXKXqVgNELNEApQEZTRftF60PaDW5D8jmqTGcYoCAo7pAIl3FqOWgngV
-	QTfei6q9DljlkPidNBUgCXkt/D6vPrFHJ2Rlu0jYTWX4PKrBiv6fncIeFIRJVSwhv/EgcJp+O0D5X
-	BZo3Tb0T6HPZrBytfkROkBNBgQ6gcYs0H6DotrsnHxar18tgfq8Q8WRBJPMCFKq5xe43xjvRZvomF
-	LXXqZATA==;
+	bh=RDqrA9lSZK4eYow8jLT7BWanbLiA5woYIBT41JURGis=; b=KgTA/Uc+oRF/VYFTPk+3DBc8rL
+	W6WOFb9ZD/wXouokxK0ACtW7GkUUfucZJhn93Won9wBahfk13xsQB/UHspDBejQh536cUT3hKu0bI
+	HX/e4f3iwYHw9owedeCQC/LP6z088md7d8kZIc1cQhx3ZT0jgYD/6nankXEFELNXzgQJyz/+HkHkO
+	ZpqrKCUCfXgM2ZXHUGpSnllHLwU0RrU4hND/lxZXRuoNcanY8mJvZC2K5AfbM23QisVtPnK6acF5u
+	9D5J5exgQQi4suy13VEpN+yDxKdjwpnpEASu9ydqDKvnMS+40aCJXd2JknPXoLRBv2NDhdSqdUTMJ
+	xJ8El2Zw==;
 Received: from 85-127-111-79.dsl.dynamic.surfer.at ([85.127.111.79] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1x9gOQ-0000000AfpE-2iZE;
-	Thu, 24 Sep 2026 10:09:31 +0000
+	id 1x9gOX-0000000Afpq-1NW3;
+	Thu, 24 Sep 2026 10:09:37 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Zorro Lang <zlang@kernel.org>
 Cc: "Darrick J. Wong" <djwong@kernel.org>,
 	fstests@vger.kernel.org,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 08/13] xfs/2303: test that data checksums detect data misplacement
-Date: Thu, 24 Sep 2026 12:07:49 +0200
-Message-ID: <20260924100855.2734089-9-hch@lst.de>
+Subject: [PATCH 10/13] xfs/2305: version of generic/475 that run xfs_scrub -x for each iteration
+Date: Thu, 24 Sep 2026 12:07:51 +0200
+Message-ID: <20260924100855.2734089-11-hch@lst.de>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260924100855.2734089-1-hch@lst.de>
 References: <20260924100855.2734089-1-hch@lst.de>
@@ -50,122 +50,106 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Test that data checksums detect data corruption due to misplacement
-by changing the backing files for two zones using the zloop driver.
+To check both the metadata integrity and file system checksums after
+log replay.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- tests/xfs/2303     | 88 ++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/2303.out |  5 +++
- 2 files changed, 93 insertions(+)
- create mode 100755 tests/xfs/2303
- create mode 100644 tests/xfs/2303.out
+ tests/xfs/2305     | 75 ++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/2305.out |  2 ++
+ 2 files changed, 77 insertions(+)
+ create mode 100755 tests/xfs/2305
+ create mode 100644 tests/xfs/2305.out
 
-diff --git a/tests/xfs/2303 b/tests/xfs/2303
+diff --git a/tests/xfs/2305 b/tests/xfs/2305
 new file mode 100755
-index 000000000000..7f53fdf94bff
+index 000000000000..277f81c13887
 --- /dev/null
-+++ b/tests/xfs/2303
-@@ -0,0 +1,88 @@
++++ b/tests/xfs/2305
+@@ -0,0 +1,75 @@
 +#! /bin/bash
 +# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2026 Christoph Hellwig
++# Copyright (c) 2017 Oracle, Inc.  All Rights Reserved.
 +#
-+# FS QA Test No. 2303
++# FS QA Test No. 2305
 +#
-+# Test that data checksums detect data corruption due to misplacement
-+# by changing the backing files for two zones using the zloop driver.
++# Copied from generic/475, with added xfs_scrub -x calls for each iteration to
++# verify the integrity of all file data and metadata.
++#
++# Test log recovery with repeated (simulated) disk failures.  We kick
++# off fsstress on the scratch fs, then switch out the underlying device
++# with dm-error to see what happens when the disk goes down.  Having
++# taken down the fs in this manner, remount it and repeat.  This test
++# is a Good Enough (tm) simulation of our internal multipath failure
++# testing efforts.
 +#
 +. ./common/preamble
-+. ./common/filter
-+. ./common/renameat2
-+. ./common/zoned
++_begin_fstest shutdown auto log metadata eio recoveryloop smoketest datacsum
 +
-+_begin_fstest auto zone quick datacsum
-+
++# Override the default cleanup function.
 +_cleanup()
 +{
-+	[ -n "$mnt" ] && _unmount $mnt 2>/dev/null
-+	[ -n "$loop_dev" ] && _destroy_loop_device $loop_dev
-+	_destroy_zloop $zloop_dev
++	_kill_fsstress
++	_dmerror_unmount
++	_dmerror_cleanup
 +	cd /
-+	rm -rf $loopfile $zloopdir $mnt
++	rm -f $tmp.*
 +}
 +
-+_require_test
-+_require_renameat2 "exchange"
-+_require_loop
-+_require_zloop
-+# hack to only run for block based file systems
-+_require_block_device $SCRATCH_DEV
++# Import common functions.
++. ./common/dmerror
 +
-+loopfile="$TEST_DIR/loopfile"
-+zloopdir="$TEST_DIR/zloop"
-+mnt="$TEST_DIR/mnt"
++# Modify as appropriate.
 +
-+rm -rf $loopfile $zloopdir $mnt
-+mkdir -p $mnt
-+truncate -s 1g $loopfile
++_require_scratch
++_require_dm_target error
 +
-+loop_dev=$(_create_loop_device $loopfile)
-+zloop_dev=$(_create_zloop $zloopdir 256 0)
-+zloop_id=$(echo $zloop_dev | grep -oE '[0-9]+$')
++echo "Silence is golden."
 +
-+_try_mkfs_dev $loop_dev -r rtdev=$zloop_dev,csum=crc32c \
-+	>> $seqres.full 2>&1 || \
-+	_notrun "cannot mkfs filesystem with data checksums"
-+_mount $loop_dev -o rtdev=$zloop_dev $mnt
++_scratch_mkfs >> $seqres.full 2>&1
++_require_metadata_journaling $SCRATCH_DEV
++_dmerror_init
++_dmerror_mount
 +
-+dd if=/dev/urandom of=$mnt/file1 bs=4k count=1 conv=fsync >/dev/null 2>&1
-+dd if=/dev/zero of=$mnt/file2 bs=4k count=1 conv=fsync >/dev/null 2>&1
++while _soak_loop_running $((50 * TIME_FACTOR)); do
++	_run_fsstress_bg -d $SCRATCH_MNT -n 999999 -p $((LOAD_FACTOR * 4))
 +
-+xfs_bmap -v $mnt/file1 >> $seqres.full 2>&1
-+xfs_bmap -v $mnt/file2 >> $seqres.full 2>&1
++	# purposely include 0 second sleeps to test shutdown immediately after
++	# recovery
++	sleep $((RANDOM % 3))
 +
-+rg1=`xfs_bmap -v $mnt/file1 | head -n 3 | _filter_bmap_gno`
-+rg2=`xfs_bmap -v $mnt/file2 | head -n 3 | _filter_bmap_gno`
-+if [ "$rg1" == "$rg2" ]; then
-+	_fail "both files placed in same RG: $rg1 $rg2"
-+fi
++	# This test aims to simulate sudden disk failure, which means that we
++	# do not want to quiesce the filesystem or otherwise give it a chance
++	# to flush its logs.  Therefore we want to call dmsetup with the
++	# --nolockfs parameter; to make this happen we must call the load
++	# error table helper *without* 'lockfs'.
++	_dmerror_load_error_table
 +
-+zloop_filename1=$(printf "seq-%06u\n" $rg1)
-+backing_file1="$zloopdir/$zloop_id/$zloop_filename1"
-+zloop_filename2=$(printf "seq-%06u\n" $rg2)
-+backing_file2="$zloopdir/$zloop_id/$zloop_filename2"
++	_kill_fsstress
 +
-+_unmount $mnt 2>/dev/null
-+_destroy_zloop $zloop_dev
++	# Mount again to replay log after loading working table, so we have a
++	# consistent XFS after test.
++	_dmerror_unmount || _fail "unmount failed"
++	_dmerror_load_working_table
++	_dmerror_mount || _fail "mount failed"
 +
-+# intentionally corrupt data by swapping the two zone files
-+ls -i $backing_file1 $backing_file2 >> $seqres.full
-+echo "swapping file $backing_file1 and $backing_file2" >> $seqres.full
-+$here/src/renameat2 -x $backing_file1 $backing_file2
-+ls -i $backing_file1 $backing_file2 >> $seqres.full
++	$XFS_SCRUB_PROG -x $SCRATCH_MNT >> $seqres.full 2>&1
++	if [ $? -ne 0 ]; then
++		_fail "scrub found errors"
++	fi
++done
 +
-+zloop_dev=$(_create_zloop $zloopdir 256 0)
-+zloop_id=$(echo $zloop_dev | grep -oE '[0-9]+$')
-+_mount $loop_dev -o rtdev=$zloop_dev $mnt
-+
-+# should return an error on buffered read
-+echo "Reading file1 using cat - should fail"
-+cat $mnt/file1 > /dev/null | _filter_test_dir
-+
-+# same with direct I/O
-+echo "Reading file2 using O_DIRECT - should fail"
-+xfs_io -d $mnt/file2 -c 'pread 0 200M' | _filter_test_dir
-+
-+_exit 0
-diff --git a/tests/xfs/2303.out b/tests/xfs/2303.out
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/2305.out b/tests/xfs/2305.out
 new file mode 100644
-index 000000000000..fca2c4830e3c
+index 000000000000..8265227294ca
 --- /dev/null
-+++ b/tests/xfs/2303.out
-@@ -0,0 +1,5 @@
-+QA output created by 2303
-+Reading file1 using cat - should fail
-+cat: /mnt/test/mnt/file1: Input/output error
-+Reading file2 using O_DIRECT - should fail
-+pread: Input/output error
++++ b/tests/xfs/2305.out
+@@ -0,0 +1,2 @@
++QA output created by 2305
++Silence is golden.
 -- 
 2.53.0
 
