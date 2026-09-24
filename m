@@ -1,42 +1,42 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE81045D915
-	for <linux-xfs@vger.kernel.org>; Thu, 24 Sep 2026 10:06:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69D4D46C4AE
+	for <linux-xfs@vger.kernel.org>; Thu, 24 Sep 2026 10:06:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790244385; cv=none; b=KbSe/6MjYRtEKuasv1sbUV/2Tj/wvUki8odoPZ9QmTT3vhnCSKJhdnNmBbaufZDrnC3T+R7F47pQ9I+3DGSJ8EaSeB0FQzV1vqLN7u0SKMqoc8hqBODSfsrmFcAbOHDRwM42mFwnoEQ8E4k3VgLYFjerJIccjbEfuAXPAcoj2SM=
+	t=1790244389; cv=none; b=teCivhfjSQ3l+txvv5CaLTu/P7JAhaBJGO1NHZal5j2/tLBerCAlOx+XZUDnLDZitdIcrCQtAtZ8JWWWv/iFRz02Owi5VbX/YjsYnEqWfrQeAbw0Y2z03gZbVNcAkwUhdNKtJyBUvoeTLQfWt4UnqG+ucDQZ4vxhY8lGZ3ZbSJ4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790244385; c=relaxed/simple;
-	bh=F28CqPwxc02LNI3TeHsbP2+XNloNnzgfyOo5EECdHNc=;
+	s=arc-20240116; t=1790244389; c=relaxed/simple;
+	bh=MCgbq5480ENYo51SGK0soxpnA3m+hKd3mmldFI6ehvU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=gjxerRGfgunH0cpny6AJ6xyIX5/4uCRbamcBn1ARq5DBIaR4lyjPeL9UpdtJ3txWfTGHiYeX9LYZ5TP7GXcSJO5KBTybdBbPlY/BcZBScU09baGftQi7PMzdUNZf3hhszD1Bf572ksZaSgyU1rHPHLCXtqgeSwTfkIJOO0Bjz1M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=K4DF8gOO; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=o/V497VIoG/YtuSYaUeCdpxsPO6xSoN4p+6Z7/vYwT3dWfALWLBPYGcZohT+J2I7SmR8Yt26uUoR0QoWLgxp63aj9t7qMum+UTICkoBmJvArqlAA46vfhqFJVR48eU22iHr4pREKVmXsL70ukpQ3awrVQNt04E78EV7ycISkWo8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=48fJp5gz; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="K4DF8gOO"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="48fJp5gz"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=w1t2jYXiWUkhtLVcz0SqE+rVXXWGg2SA3ArLegjQPl8=; b=K4DF8gOOHFErxAUTgluSjc8jWj
-	ainhF8BuwHGHBjOVFHdxdlFmtEFO5BwKJOQtATF5iT3IbEQ62fcAJ60I63NW+UOV4WjeQhTc2zcEG
-	A4s2EYXT2Zi4M7K3igZ5QQWX00SSrvo+tHMFiGbq9LdqrrnDA5PC3Ki/aSVzobYwS25Gm77DNga0H
-	IAEQFAYCrFm6NMthdTqKx+YDJn48Oa6mAb/PEpD1HIM2y0N3KQ1hmO/RszRUxiPEBN9k9nQKO80fb
-	01fgUQyE2Tmshpdb3FkjswAMiFcTjcjGqC02/K7SsnyifuxzN53wOiTH2Z6TQQewHnLVBUZNLhPFQ
-	aZQqhVMQ==;
+	bh=EdiOKyn9PdsS7/+r7ap+d38z7VO9D8FirBgDPTDa/x4=; b=48fJp5gzBJ+tDtzNxXTZozM7mG
+	6R/+kU+wSB1C5tMUUNBFPZb5VHpvIPrBlm7G/N3c1FIpNkNDY1OGF1YRsnoKVtKmLAFZU1sD8prt7
+	MqTIHjgP2ss/149XIqqycswVmbLwawgOkibJQ4kutneaeFu8dL0Q/IUUA8sKK/GVEgsLGNFZ0iPVF
+	iKpzJYZMi45pGZT2t/Qf1L4samPIibCnNlAoHTYHpgmEjIN5/ff5fkKH+mHGcvz4SBvow6jokHfgs
+	mbD0Z1UO12FocRUr0eAICDIJjdbP6s13SUhqKNEqS8ECccG0nrvZHQiXstaOz9hGC1W/AST9dVpZW
+	31ZY8wDg==;
 Received: from 85-127-111-79.dsl.dynamic.surfer.at ([85.127.111.79] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1x9gLG-0000000AfMB-0yoF;
-	Thu, 24 Sep 2026 10:06:15 +0000
+	id 1x9gLL-0000000AfMy-11fk;
+	Thu, 24 Sep 2026 10:06:19 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Andrey Albershteyn <aalbersh@kernel.org>
 Cc: "Darrick J . Wong" <djwong@kernel.org>,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 16/32] xfs: add a xfs_rtblock_payload helper
-Date: Thu, 24 Sep 2026 12:04:06 +0200
-Message-ID: <20260924100512.2733748-17-hch@lst.de>
+Subject: [PATCH 17/32] xfs: prepare xfs_rtfile_initialize_blocks for larger than FSB blocks
+Date: Thu, 24 Sep 2026 12:04:07 +0200
+Message-ID: <20260924100512.2733748-18-hch@lst.de>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260924100512.2733748-1-hch@lst.de>
 References: <20260924100512.2733748-1-hch@lst.de>
@@ -49,100 +49,146 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Source kernel commit: c63d609c1ed6dd49664e4f822a70abaf2572b35b
+Source kernel commit: e2ab369189d3a62e28b9f7a1de255a21bc8b1534
 
-Add a helper to calculate the rtblock payload start with or without the
-self-describing metadata header.
+The upcoming RT data checksum feature will use larger than FSB blocks.
+Prepare xfs_rtfile_initialize_blocks to pass the number of FSBs per
+RT blocks, and to pass bmapi_flags to ask for contiguous allocation.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_rtbitmap.c |  9 ++-------
- libxfs/xfs_rtbitmap.h | 27 ++++++++++++---------------
- 2 files changed, 14 insertions(+), 22 deletions(-)
+ libxfs/xfs_rtbitmap.c | 44 +++++++++++++++++++++++++------------------
+ libxfs/xfs_rtbitmap.h |  3 ++-
+ 2 files changed, 28 insertions(+), 19 deletions(-)
 
 diff --git a/libxfs/xfs_rtbitmap.c b/libxfs/xfs_rtbitmap.c
-index 245cdd9c22ca..39a6b45d9526 100644
+index 39a6b45d9526..3abc495c2a3c 100644
 --- a/libxfs/xfs_rtbitmap.c
 +++ b/libxfs/xfs_rtbitmap.c
-@@ -1408,7 +1408,6 @@ xfs_rtfile_initialize_block(
+@@ -1343,6 +1343,7 @@ xfs_rtfile_alloc_blocks(
+ 	struct xfs_inode	*ip,
+ 	xfs_fileoff_t		offset_fsb,
+ 	xfs_filblks_t		count_fsb,
++	uint32_t		bmapi_flags,
+ 	struct xfs_bmbt_irec	*map)
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
+@@ -1364,7 +1365,7 @@ xfs_rtfile_alloc_blocks(
+ 		goto out_trans_cancel;
+ 
+ 	error = xfs_bmapi_write(tp, ip, offset_fsb, count_fsb,
+-			XFS_BMAPI_METADATA, 0, map, &nmap);
++			XFS_BMAPI_METADATA | bmapi_flags, 0, map, &nmap);
+ 	if (error)
+ 		goto out_trans_cancel;
+ 
+@@ -1402,34 +1403,43 @@ xfs_rtfile_initialize_block(
+ 	struct xfs_rtgroup	*rtg,
+ 	enum xfs_rtg_inodes	type,
+ 	xfs_fsblock_t		fsbno,
+-	void			*data)
++	xfs_filblks_t		nblks,
++	void			**data)
+ {
+ 	struct xfs_mount	*mp = rtg_mount(rtg);
  	struct xfs_inode	*ip = rtg->rtg_inodes[type];
++	size_t			len = XFS_FSB_TO_B(mp, nblks);
++	size_t			copylen = len;
++	struct xfs_trans_res	tres = M_RES(mp)->tr_growrtzero;
  	struct xfs_trans	*tp;
  	struct xfs_buf		*bp;
--	void			*bufdata;
- 	const size_t		copylen = mp->m_blockwsize << XFS_WORDLOG;
+-	const size_t		copylen = mp->m_blockwsize << XFS_WORDLOG;
  	int			error;
  
-@@ -1424,16 +1423,12 @@ xfs_rtfile_initialize_block(
+-	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_growrtzero, 0, 0, 0, &tp);
++	tres.tr_logres *= nblks;
++	error = xfs_trans_alloc(mp, &tres, 0, 0, 0, &tp);
+ 	if (error)
+ 		return error;
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+ 
+ 	error = xfs_trans_get_buf(tp, mp->m_ddev_targp,
+-			XFS_FSB_TO_DADDR(mp, fsbno), mp->m_bsize, 0, &bp);
++			XFS_FSB_TO_DADDR(mp, fsbno), BTOBB(len), 0, &bp);
+ 	if (error) {
  		xfs_trans_cancel(tp);
  		return error;
  	}
--	bufdata = bp->b_addr;
  
++	if (xfs_has_rtgroups(mp))
++		copylen -= sizeof(struct xfs_rtbuf_blkinfo);
++
  	xfs_rtfile_initialize_buf(rtg, type, bp, tp);
--
--	if (xfs_has_rtgroups(mp))
--		bufdata += sizeof(struct xfs_rtbuf_blkinfo);
- 	if (data)
--		memcpy(bufdata, data, copylen);
-+		memcpy(xfs_rtblock_payload(bp), data, copylen);
- 	else
--		memset(bufdata, 0, copylen);
-+		memset(xfs_rtblock_payload(bp), 0, copylen);
- 	xfs_trans_log_buf(tp, bp, 0, mp->m_sb.sb_blocksize - 1);
+-	if (data)
+-		memcpy(xfs_rtblock_payload(bp), data, copylen);
+-	else
++	if (*data) {
++		memcpy(xfs_rtblock_payload(bp), *data, copylen);
++		*data += copylen;
++	} else {
+ 		memset(xfs_rtblock_payload(bp), 0, copylen);
+-	xfs_trans_log_buf(tp, bp, 0, mp->m_sb.sb_blocksize - 1);
++	}
++	xfs_trans_log_buf(tp, bp, 0, len - 1);
  	return xfs_trans_commit(tp);
  }
+ 
+@@ -1444,33 +1454,31 @@ xfs_rtfile_initialize_blocks(
+ 	enum xfs_rtg_inodes	type,
+ 	xfs_fileoff_t		offset_fsb,	/* offset to start from */
+ 	xfs_fileoff_t		end_fsb,	/* offset to allocate to */
++	xfs_filblks_t		bsize,
++	uint32_t		bmapi_flags,
+ 	void			*data)		/* data to fill the blocks */
+ {
+-	struct xfs_mount	*mp = rtg_mount(rtg);
+-	const size_t		copylen = mp->m_blockwsize << XFS_WORDLOG;
+-
+ 	while (offset_fsb < end_fsb) {
+ 		struct xfs_bmbt_irec	map;
+ 		xfs_filblks_t		i;
+ 		int			error;
+ 
+ 		error = xfs_rtfile_alloc_blocks(rtg->rtg_inodes[type],
+-				offset_fsb, end_fsb - offset_fsb, &map);
++				offset_fsb, end_fsb - offset_fsb, bmapi_flags,
++				&map);
+ 		if (error)
+ 			return error;
+ 
+ 		/*
+-		 * Now we need to clear the allocated blocks.
++		 * Now we need to clear or initialize the allocated blocks.
+ 		 *
+ 		 * Do this one block per transaction, to keep it simple.
+ 		 */
+-		for (i = 0; i < map.br_blockcount; i++) {
++		for (i = 0; i < map.br_blockcount; i += bsize) {
+ 			error = xfs_rtfile_initialize_block(rtg, type,
+-					map.br_startblock + i, data);
++					map.br_startblock + i, bsize, &data);
+ 			if (error)
+ 				return error;
+-			if (data)
+-				data += copylen;
+ 		}
+ 
+ 		offset_fsb = map.br_startoff + map.br_blockcount;
 diff --git a/libxfs/xfs_rtbitmap.h b/libxfs/xfs_rtbitmap.h
-index 4a87e1fd3e99..750d74fbf4ed 100644
+index 750d74fbf4ed..e9e3378d15aa 100644
 --- a/libxfs/xfs_rtbitmap.h
 +++ b/libxfs/xfs_rtbitmap.h
-@@ -20,6 +20,16 @@ struct xfs_rtalloc_args {
- 	xfs_fileoff_t		sumoff;	/* summary block number */
- };
- 
-+/* Return the payload of the buffer after the optional header. */
-+static inline void *
-+xfs_rtblock_payload(
-+	struct xfs_buf		*bp)
-+{
-+	if (!xfs_has_rtgroups(bp->b_mount))
-+		return bp->b_addr;
-+	return bp->b_addr + sizeof(struct xfs_rtbuf_blkinfo);
-+}
-+
- static inline xfs_rtblock_t
- xfs_rtx_to_rtb(
- 	struct xfs_rtgroup	*rtg,
-@@ -221,14 +231,7 @@ xfs_rbmblock_wordptr(
- 	struct xfs_rtalloc_args	*args,
- 	unsigned int		index)
- {
--	struct xfs_mount	*mp = args->mp;
--	union xfs_rtword_raw	*words;
--	struct xfs_rtbuf_blkinfo *hdr = args->rbmbp->b_addr;
--
--	if (xfs_has_rtgroups(mp))
--		words = (union xfs_rtword_raw *)(hdr + 1);
--	else
--		words = args->rbmbp->b_addr;
-+	union xfs_rtword_raw	*words = xfs_rtblock_payload(args->rbmbp);
- 
- 	return words + index;
- }
-@@ -312,13 +315,7 @@ xfs_rsumblock_infoptr(
- 	struct xfs_rtalloc_args	*args,
- 	unsigned int		index)
- {
--	union xfs_suminfo_raw	*info;
--	struct xfs_rtbuf_blkinfo *hdr = args->sumbp->b_addr;
--
--	if (xfs_has_rtgroups(args->mp))
--		info = (union xfs_suminfo_raw *)(hdr + 1);
--	else
--		info = args->sumbp->b_addr;
-+	union xfs_suminfo_raw	*info = xfs_rtblock_payload(args->sumbp);
- 
- 	return info + index;
- }
+@@ -410,7 +410,8 @@ void xfs_rtfile_initialize_buf(struct xfs_rtgroup *rtg,
+ 		struct xfs_trans *tp);
+ int xfs_rtfile_initialize_blocks(struct xfs_rtgroup *rtg,
+ 		enum xfs_rtg_inodes type, xfs_fileoff_t offset_fsb,
+-		xfs_fileoff_t end_fsb, void *data);
++		xfs_fileoff_t end_fsb, xfs_filblks_t bsize,
++		uint32_t bmapi_flags, void *data);
+ int xfs_rtbitmap_create(struct xfs_rtgroup *rtg, struct xfs_inode *ip,
+ 		struct xfs_trans *tp, bool init);
+ int xfs_rtsummary_create(struct xfs_rtgroup *rtg, struct xfs_inode *ip,
 -- 
 2.53.0
 
