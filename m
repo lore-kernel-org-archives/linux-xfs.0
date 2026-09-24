@@ -1,35 +1,35 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA20446AA85;
-	Thu, 24 Sep 2026 10:01:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0068846D0A2;
+	Thu, 24 Sep 2026 10:01:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790244108; cv=none; b=i9fdVnva3tXOTwBOk7OcFJ2xEdkemJsICvF1ZXADBPdN5wvD/2UHTuLIQlQd2RE/nyqDr9o8Sd98oop7zXMxanmI+KghM0seGUw/JcFdYcDnkuLPbNYpuk3KTiVXquyfoUkjhUA1fCcJxOOJ58uylIF8HwwASlAvAzuyZF17Bh4=
+	t=1790244109; cv=none; b=KsSo1yZGbeO+ypIN222neJDkY7fvmCT8AdIHO+qnKtI+udsonFL39EmBqKsHaA/ZEDqYWB/C7eubfoIM/HtPr/VlbKVl20OPpePzskTQgA+FhzpSgMQ8xcmY8Aq43IyYz62TmT3xKn95qwAk0BFXoFEdsucKBWToPrzWHpJg2Ew=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790244108; c=relaxed/simple;
-	bh=jixoMfPlOALzSvodHPR6QuGSRy9b295sSCd3j2LBj5Y=;
+	s=arc-20240116; t=1790244109; c=relaxed/simple;
+	bh=eLo1rsyHtXtT+gkopy2vqGM+gTVFE0ZpOtTj0+ZnpUs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=lwebQ0HiSbSmUEIb8k4Ikbc+sbsZdbIKMdZkDvwr2dw9h4nIqIXFj2sm4rJzaYdvExDfIXXUdi01BBzWYoYrwybzDaEh6U4zPWWgxr+uCNbqLeLpSmHKKyXUEyn4E32QOK7M5ez2ZoAHvrDalymo2DjGmDlb+cztInPuYgosZJU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=3Lhl7l5o; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=VOc1EZ9J6vqfdO+WHQje+uPJJh8m33FG4WW4eYf4fe6E7slh2fzpTS/E0e7EiUxixAte1IQMfQ1PjoHIRJinKhkfsWX88BssJmi9yGlvh6w6NiqW0H+JlGX9xXljKxnhj4vArbipyAX9LLhGX27SV3gqK7CjJs2UelqodcAKByg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=rOYuRoKn; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="3Lhl7l5o"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="rOYuRoKn"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=t6Hc+5RLBHAklx6PoQQzU3UhI/fQtGi95i6zobXj7H4=; b=3Lhl7l5o3CAiN3XjtuoKCzF9ej
-	qpl+4j71D+VBDjzxDBRTrSMZKFMJmSUNR+DCPYnWUoZPSyyhFmo9k8m4PywpAFwegg+7mWvp87Zgk
-	dS9qCwt/OWvTT9PAcYaIwaa3r+gQ9CElzyWH8O0c3EAioF3PZGQLe2bmfW0htdry4t1zsuOa4B5e6
-	Y7SdEDdL69iyYJ1M63ypCY00UwxI2DP840rjajOESd8ClBchP9CxGO7iw6YGQFKgaUQGOzvBjLnbF
-	tsIiXnGgFIpn3ALFbEiLDM6320+laSaMlf3wLx61G8QDsgl6qcHGqJyA1tvbbMt99Hc7aWyaGCpDO
-	1BZZIaKw==;
+	bh=WWKD46qYAoEjP6hJeKLYcTCzLZRw3KpWDR7DjUytxaI=; b=rOYuRoKn3NrQqk/l+gBkxxFT1K
+	e9PblmRo4yRo7qBs1aIee67JmuyYNuoLi0xcpvVKexvXESsrtor/bUIj0eoGLkRB55G7an2AK38XB
+	68Le2HcwSoG8ifXwfBsKRbO833CxEtDTRC+L7KaVV3yGW2sKC5NawVqX6JJNGEIvMU067FeKTY8RG
+	nRoKcqN0hxbzyx7jC4hUeu/xyOyYuQ0wTRRsggFyxYznH4zGE5fSfE63wGr4YfTIEQXzqvWgrtcQn
+	Ons880+ef905u/WWHewiYpaJwXY9WBaQg/rmzfvFnKd/V8KZl3WFDQxb5aDgyH8FXzQ2ccysFQruu
+	q18RPR2w==;
 Received: from 85-127-111-79.dsl.dynamic.surfer.at ([85.127.111.79] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1x9gGq-0000000AeZh-37jA;
-	Thu, 24 Sep 2026 10:01:41 +0000
+	id 1x9gGf-0000000AeXw-3acb;
+	Thu, 24 Sep 2026 10:01:30 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: "Darrick J . Wong" <djwong@kernel.org>,
@@ -37,9 +37,9 @@ Cc: "Darrick J . Wong" <djwong@kernel.org>,
 	Christian Brauner <brauner@kernel.org>,
 	linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org
-Subject: [PATCH 11/21] xfs: core RT data checksum support
-Date: Thu, 24 Sep 2026 11:59:43 +0200
-Message-ID: <20260924100032.2733101-12-hch@lst.de>
+Subject: [PATCH 09/21] xfs: add support for per-RTG csum files
+Date: Thu, 24 Sep 2026 11:59:41 +0200
+Message-ID: <20260924100032.2733101-10-hch@lst.de>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260924100032.2733101-1-hch@lst.de>
 References: <20260924100032.2733101-1-hch@lst.de>
@@ -52,75 +52,124 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Support reading and writing of data checksum buffers, and generating
-and verifying the checksum.
+Add the definitions for another per-RTG file that stores data checksums
+for the RTG.  The file is fully preallocated at mkfs/growfs time, and
+thus bmap lookups for it can be performed without taking locks.
 
-All data checksum buffers for an open zone are pre-allocated at zone open
-time, so that we never have to read in a partially written buffer as part
-of a data write, which would otherwise impose very expensive seeks and
-stall writes.
+Checksums are organized in fixed size large (initially 32Kib or 64KiB)
+blocks to reduce the lookup and read overhead compare to using the
+smaller file system block size.
+
+Each block uses the standard RT file header for self-describing metadata
+and can thus reuse the buf_ops including the verifier.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/Kconfig          |   1 +
- fs/xfs/Makefile         |   1 +
- fs/xfs/xfs_inode.h      |   5 +
- fs/xfs/xfs_rtcsum.c     | 317 ++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_rtcsum.h     |  23 +++
- fs/xfs/xfs_super.c      |  14 ++
- fs/xfs/xfs_sysfs.c      |   2 +
- fs/xfs/xfs_zone_alloc.c |  32 +++-
- fs/xfs/xfs_zone_priv.h  |   8 +
- 9 files changed, 399 insertions(+), 4 deletions(-)
- create mode 100644 fs/xfs/xfs_rtcsum.c
- create mode 100644 fs/xfs/xfs_rtcsum.h
+ fs/xfs/Makefile                |   1 +
+ fs/xfs/libxfs/xfs_cksum.h      |   7 +-
+ fs/xfs/libxfs/xfs_health.h     |   4 +-
+ fs/xfs/libxfs/xfs_rtbitmap.c   |  10 +++
+ fs/xfs/libxfs/xfs_rtcsumfile.c |  94 +++++++++++++++++++++
+ fs/xfs/libxfs/xfs_rtcsumfile.h | 150 +++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_rtgroup.c    |  10 +++
+ fs/xfs/libxfs/xfs_rtgroup.h    |   6 ++
+ fs/xfs/libxfs/xfs_shared.h     |   1 +
+ fs/xfs/xfs_buf_item_recover.c  |   7 ++
+ fs/xfs/xfs_platform.h          |   1 +
+ fs/xfs/xfs_rtalloc.c           |   7 ++
+ 12 files changed, 296 insertions(+), 2 deletions(-)
+ create mode 100644 fs/xfs/libxfs/xfs_rtcsumfile.c
+ create mode 100644 fs/xfs/libxfs/xfs_rtcsumfile.h
 
-diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
-index b99da294e9a3..424a04b507a6 100644
---- a/fs/xfs/Kconfig
-+++ b/fs/xfs/Kconfig
-@@ -106,6 +106,7 @@ config XFS_RT
- 	bool "XFS Realtime subvolume support"
- 	depends on XFS_FS
- 	default BLK_DEV_ZONED
-+	select CRC64
- 	help
- 	  If you say Y here you will be able to mount and use XFS filesystems
- 	  which contain a realtime subvolume.  The realtime subvolume is a
 diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 79ea4136fbba..0d57bf0701ec 100644
+index 399a207f2d0e..79ea4136fbba 100644
 --- a/fs/xfs/Makefile
 +++ b/fs/xfs/Makefile
-@@ -142,6 +142,7 @@ xfs-$(CONFIG_XFS_QUOTA)		+= xfs_dquot.o \
+@@ -64,6 +64,7 @@ xfs-y				+= $(addprefix libxfs/, \
+ xfs-$(CONFIG_XFS_RT)		+= $(addprefix libxfs/, \
+ 				   xfs_rtbitmap.o \
+ 				   xfs_rtgroup.o \
++				   xfs_rtcsumfile.o \
+ 				   xfs_zones.o \
+ 				   )
  
- # xfs_rtbitmap is shared with libxfs
- xfs-$(CONFIG_XFS_RT)		+= xfs_rtalloc.o \
-+				   xfs_rtcsum.o \
- 				   xfs_zone_alloc.o \
- 				   xfs_zone_gc.o \
- 				   xfs_zone_info.o \
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 34c1038ebfcd..9ed2fbfe86ff 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -376,6 +376,11 @@ static inline bool xfs_inode_can_sw_atomic_write(const struct xfs_inode *ip)
- 	return xfs_can_sw_atomic_write(ip->i_mount);
- }
+diff --git a/fs/xfs/libxfs/xfs_cksum.h b/fs/xfs/libxfs/xfs_cksum.h
+index 999a290cfd72..315b85ff78ae 100644
+--- a/fs/xfs/libxfs/xfs_cksum.h
++++ b/fs/xfs/libxfs/xfs_cksum.h
+@@ -2,7 +2,12 @@
+ #ifndef _XFS_CKSUM_H
+ #define _XFS_CKSUM_H 1
  
-+static inline bool xfs_is_rtcsum_inode(const struct xfs_inode *ip)
-+{
-+	return xfs_has_rtcsum(ip->i_mount) && XFS_IS_REALTIME_INODE(ip);
-+}
-+
+-#define XFS_CRC_SEED	(~(uint32_t)0)
++/*
++ * crc32c() does not include the inversion at the beginning and end, while
++ * crc64_nvme() does.
++ */
++#define XFS_CRC_SEED		(~(uint32_t)0)
++#define XFS_CRC64_SEED		0
+ 
  /*
-  * In-core inode flags.
-  */
-diff --git a/fs/xfs/xfs_rtcsum.c b/fs/xfs/xfs_rtcsum.c
+  * Calculate the intermediate checksum for a buffer that has the CRC field
+diff --git a/fs/xfs/libxfs/xfs_health.h b/fs/xfs/libxfs/xfs_health.h
+index 1d45cf5789e8..349093e75268 100644
+--- a/fs/xfs/libxfs/xfs_health.h
++++ b/fs/xfs/libxfs/xfs_health.h
+@@ -72,6 +72,7 @@ struct xfs_rtgroup;
+ #define XFS_SICK_RG_SUMMARY	(1 << 2)  /* rt groups summary */
+ #define XFS_SICK_RG_RMAPBT	(1 << 3)  /* reverse mappings */
+ #define XFS_SICK_RG_REFCNTBT	(1 << 4)  /* reference counts */
++#define XFS_SICK_RG_CSUM	(1 << 5)  /* data checksums */
+ 
+ /* Observable health issues for AG metadata. */
+ #define XFS_SICK_AG_SB		(1 << 0)  /* superblock */
+@@ -119,7 +120,8 @@ struct xfs_rtgroup;
+ 				 XFS_SICK_RG_BITMAP | \
+ 				 XFS_SICK_RG_SUMMARY | \
+ 				 XFS_SICK_RG_RMAPBT | \
+-				 XFS_SICK_RG_REFCNTBT)
++				 XFS_SICK_RG_REFCNTBT | \
++				 XFS_SICK_RG_CSUM)
+ 
+ #define XFS_SICK_AG_PRIMARY	(XFS_SICK_AG_SB | \
+ 				 XFS_SICK_AG_AGF | \
+diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
+index db6a22b4506a..12e67e1abd3b 100644
+--- a/fs/xfs/libxfs/xfs_rtbitmap.c
++++ b/fs/xfs/libxfs/xfs_rtbitmap.c
+@@ -125,9 +125,18 @@ const struct xfs_buf_ops xfs_rtsummary_buf_ops = {
+ 	.verify_struct	= xfs_rtbuf_verify,
+ };
+ 
++const struct xfs_buf_ops xfs_rtcsum_buf_ops = {
++	.name		= "xfs_rtcsum",
++	.magic		= { 0, cpu_to_be32(XFS_RTCSUM_MAGIC) },
++	.verify_read	= xfs_rtbuf_verify_read,
++	.verify_write	= xfs_rtbuf_verify_write,
++	.verify_struct	= xfs_rtbuf_verify,
++};
++
+ static const struct xfs_buf_ops *xfs_rtblock_buf_ops[XFS_RTGI_MAX] = {
+ 	[XFS_RTGI_SUMMARY]	= &xfs_rtsummary_buf_ops,
+ 	[XFS_RTGI_BITMAP]	= &xfs_rtbitmap_buf_ops,
++	[XFS_RTGI_CSUM]		= &xfs_rtcsum_buf_ops,
+ };
+ 
+ const struct xfs_buf_ops *
+@@ -143,6 +152,7 @@ xfs_rtblock_ops(
+ static enum xfs_blft xfs_rtblock_buf_types[XFS_RTGI_MAX] = {
+ 	[XFS_RTGI_SUMMARY]	= XFS_BLFT_RTSUMMARY_BUF,
+ 	[XFS_RTGI_BITMAP]	= XFS_BLFT_RTBITMAP_BUF,
++	[XFS_RTGI_CSUM]		= XFS_BLFT_RTCSUM_BUF,
+ };
+ 
+ /* Release cached rt bitmap and summary buffers. */
+diff --git a/fs/xfs/libxfs/xfs_rtcsumfile.c b/fs/xfs/libxfs/xfs_rtcsumfile.c
 new file mode 100644
-index 000000000000..7cdc5a5029eb
+index 000000000000..fc71c52beafd
 --- /dev/null
-+++ b/fs/xfs/xfs_rtcsum.c
-@@ -0,0 +1,317 @@
++++ b/fs/xfs/libxfs/xfs_rtcsumfile.c
+@@ -0,0 +1,94 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
 + * Copyright (c) 2026 Christoph Hellwig.
@@ -135,492 +184,361 @@ index 000000000000..7cdc5a5029eb
 +#include "xfs_mount.h"
 +#include "xfs_inode.h"
 +#include "xfs_bmap.h"
-+#include "xfs_rtgroup.h"
 +#include "xfs_rtbitmap.h"
 +#include "xfs_bmap_btree.h"
 +#include "xfs_trans.h"
-+#include "xfs_buf_item.h"
-+#include "xfs_trans_space.h"
 +#include "xfs_error.h"
 +#include "xfs_health.h"
-+#include "xfs_rtcsum.h"
-+#include "xfs_zone_priv.h"
-+#include <linux/iomap.h>
-+
-+static_assert(IOMAP_CSUM_MAX_SIZE <= XFS_RTCSUM_MAX_WRITE);
-+
-+static const char *xfs_data_csum_names[XFS_CSUM_TYPE_MAX] = {
-+	[XFS_CSUM_TYPE_CRC32C]	= "crc32c",
-+	[XFS_CSUM_TYPE_CRC64]	= "crc64",
-+};
-+
-+int
-+xfs_csum_verify(
-+	struct xfs_mount	*mp,
-+	struct bio		*bio,
-+	struct bvec_iter	*iter,
-+	void			*csum_buf,
-+	xfs_fsblock_t		bno,
-+	bool			verbose)
-+{
-+	unsigned int		bsize = mp->m_sb.sb_blocksize;
-+	unsigned int		csum_size = 1u << mp->m_rtcsum_shift;
-+	unsigned int		offset = 0;
-+	union xfs_csum		csum;
-+	union xfs_disk_csum	dsum;
-+
-+	do {
-+		struct bio_vec	bv = mp_bvec_iter_bvec(bio->bi_io_vec, *iter);
-+
-+		if (offset == 0)
-+			xfs_csum_seed(mp, &csum);
-+		bv.bv_len = min(bv.bv_len, bsize - offset);
-+		xfs_csum_gen(mp, bvec_virt(&bv), bv.bv_len, &csum);
-+		offset += bv.bv_len;
-+		if (offset == bsize) {
-+			xfs_csum_finalize(mp, &dsum, &csum);
-+			if (unlikely(memcmp(&dsum, csum_buf, csum_size) != 0))
-+				goto mismatch;
-+			bno++;
-+			csum_buf += csum_size;
-+			offset = 0;
-+		}
-+		bio_advance_iter_single(bio, iter, bv.bv_len);
-+	} while (iter->bi_size);
-+
-+	return 0;
-+
-+mismatch:
-+	if (verbose) {
-+		xfs_warn_ratelimited(mp,
-+"data csum mismatch for rtblock 0x%llx: 0x%*phN (expected 0x%*phN)",
-+			bno, csum_size, &csum, csum_size, csum_buf);
-+	}
-+	return -EIO;
-+}
-+
-+void
-+xfs_csum_generate(
-+	struct xfs_mount	*mp,
-+	struct bio		*bio,
-+	void			*csum_buf)
-+{
-+	struct bvec_iter	iter = bio->bi_iter;
-+	unsigned int		bsize = mp->m_sb.sb_blocksize;
-+	unsigned int		csum_size = 1u << mp->m_rtcsum_shift;
-+	unsigned int		offset = 0;
-+	union xfs_csum		csum;
-+
-+	do {
-+		struct bio_vec	bv = mp_bvec_iter_bvec(bio->bi_io_vec, iter);
-+
-+		if (offset == 0)
-+			xfs_csum_seed(mp, &csum);
-+		bv.bv_len = min(bv.bv_len, bsize - offset);
-+		xfs_csum_gen(mp, bvec_virt(&bv), bv.bv_len, &csum);
-+		offset += bv.bv_len;
-+		if (offset == bsize) {
-+			xfs_csum_finalize(mp, csum_buf, &csum);
-+			csum_buf += csum_size;
-+			offset = 0;
-+		}
-+		bio_advance_iter_single(bio, &iter, bv.bv_len);
-+	} while (iter.bi_size);
-+}
-+
-+/*
-+ * Read the checksum buffer for @rtg/@csum_off and return it unlocked.
-+ *
-+ * We don't need to lock read access to the buffer because checksums will not
-+ * change until the @rtg is reset.
-+ */
-+int
-+xfs_rtcsum_read_async(
-+	struct xfs_mount	*mp,
-+	xfs_rtblock_t		fsbno,
-+	struct xfs_buf		**bpp)
-+{
-+	xfs_daddr_t		csum_daddr;
-+	struct xfs_rtgroup	*rtg;
-+	int			error;
-+
-+	rtg = xfs_rtgroup_get(mp, xfs_rtb_to_rgno(mp, fsbno));
-+	if (!rtg)
-+		return -EFSCORRUPTED;
-+	error = xfs_rtcsum_bmap(rtg, xfs_rtb_to_rgbno(mp, fsbno), &csum_daddr);
-+	if (!error)
-+		error = xfs_buf_read_async(mp->m_ddev_targp, csum_daddr,
-+				BTOBB(mp->m_rtcsum_bsize), &xfs_rtcsum_buf_ops,
-+				bpp);
-+	xfs_rtgroup_put(rtg);
-+	return error;
-+}
-+
-+/*
-+ * When opening a zone for writing, do a speculative buf_get for each csum
-+ * buffer.  This ensures we usually have a buffer in-memory when we actually
-+ * start writing to it.
-+ *
-+ * Without this we'd have to read the buffer from disk, as we don't know if
-+ * anyone has already written to it by the time we get to the buffer due to
-+ * completion reordering.
-+ *
-+ * When reopening a partially written zone at mount time, just read ahead
-+ * the entire csums for the zone.
-+ */
-+int
-+xfs_rtcsum_open_zone(
-+	struct xfs_open_zone	*oz)
-+{
-+	struct xfs_rtgroup	*rtg = oz->oz_rtg;
-+	struct xfs_mount	*mp = rtg_mount(rtg);
-+	xfs_rgblock_t		rgbno = 0;
-+	int			i, error;
-+
-+	for (i = 0; i < oz->oz_nr_csum_bufs; i++) {
-+		xfs_daddr_t	csum_daddr;
-+		struct xfs_buf	*bp;
-+
-+		error = xfs_rtcsum_bmap(rtg, rgbno, &csum_daddr);
-+		if (error)
-+			goto out_error;
-+
-+		if (oz->oz_allocated) {
-+			error = xfs_buf_read_async(mp->m_ddev_targp, csum_daddr,
-+					BTOBB(mp->m_rtcsum_bsize),
-+					&xfs_rtcsum_buf_ops, &bp);
-+		} else {
-+			error = xfs_buf_get(mp->m_ddev_targp, csum_daddr,
-+					BTOBB(mp->m_rtcsum_bsize), &bp);
-+			if (!error) {
-+				bp->b_flags = XBF_DONE;
-+				xfs_rtfile_initialize_buf(rtg, XFS_RTGI_CSUM,
-+						bp, NULL);
-+			}
-+			xfs_buf_unlock(bp);
-+		}
-+		if (error)
-+			goto out_error;
-+		oz->oz_csum_bufs[i] = bp;
-+		rgbno += (xfs_rtcsum_payload_size(mp) /
-+			  (1u << mp->m_rtcsum_shift));
-+	}
-+
-+	return 0;
-+
-+out_error:
-+	while (--i >= 0)
-+		xfs_buf_rele(oz->oz_csum_bufs[i]);
-+	return error;
-+}
-+
-+void
-+xfs_rtcsum_free_zone(
-+	struct xfs_open_zone	*oz)
-+{
-+	unsigned int		i;
-+
-+	for (i = 0; i < oz->oz_nr_csum_bufs; i++)
-+		xfs_buf_rele(oz->oz_csum_bufs[i]);
-+}
-+
-+static int
-+xfs_rtcsum_log_one(
-+	struct xfs_open_zone	*oz,
-+	xfs_rgblock_t		rgbno,
-+	const void		*csum,
-+	xfs_extlen_t		nfsb,
-+	struct xfs_trans	*tp,
-+	xfs_extlen_t		*nr)
-+{
-+	struct xfs_rtgroup	*rtg = oz->oz_rtg;
-+	struct xfs_mount	*mp = rtg_mount(rtg);
-+	unsigned int		boff = xfs_rgb_to_rtcsumoff(mp, rgbno);
-+	struct xfs_buf		*bp;
-+	unsigned int		len;
-+	int			error;
-+
-+	bp = oz->oz_csum_bufs[xfs_rgb_to_rtcsumblock(mp, rgbno)];
-+	error = xfs_buf_read_async_wait(bp);
-+	if (error) {
-+		if (xfs_metadata_is_sick(error))
-+			xfs_rtginode_mark_sick(rtg, XFS_RTGI_CSUM);
-+		return error;
-+	}
-+
-+	xfs_buf_hold(bp);
-+	xfs_buf_lock(bp);
-+	xfs_trans_bjoin(tp, bp);
-+	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_RTCSUM_BUF);
-+
-+	*nr = min(nfsb,
-+		xfs_rtcsum_len_to_extlen(mp, mp->m_rtcsum_bsize - boff));
-+	len = xfs_extlen_to_rtcsum_len(mp, *nr);
-+	memcpy(bp->b_addr + boff, csum, len);
-+
-+	/*
-+	 * Avoid realloc churn as we're filling the buffer (almost) sequentially
-+	 * and rather fast.
-+	 */
-+	bp->b_log_item->bli_flags |= XFS_BLI_PREALLOC;
-+	xfs_trans_log_buf(tp, bp, boff, boff + len - 1);
-+	return 0;
-+}
-+
-+int
-+xfs_rtcsum_log(
-+	struct xfs_open_zone	*oz,
-+	xfs_daddr_t		daddr,
-+	unsigned int		data_len,
-+	const void		*csum)
-+{
-+	struct xfs_mount	*mp = rtg_mount(oz->oz_rtg);
-+	xfs_rgblock_t		rgbno = xfs_daddr_to_rgbno(mp, daddr);
-+	xfs_extlen_t		nfsb = XFS_B_TO_FSB(mp, data_len);
-+	struct xfs_trans_res	tres = M_RES(mp)->tr_csum;
-+	struct xfs_trans	*tp;
-+	int			error;
-+
-+	tres.tr_logres = xfs_calc_csum_reservation(mp,
-+				xfs_extlen_to_rtcsum_len(mp, nfsb));
-+	ASSERT(tres.tr_logres <= M_RES(mp)->tr_csum.tr_logres);
-+
-+	error = xfs_trans_alloc(mp, &tres, 0, 0, 0, &tp);
-+	if (error)
-+		return error;
-+
-+	do {
-+		xfs_extlen_t nr;
-+
-+		error = xfs_rtcsum_log_one(oz, rgbno, csum, nfsb, tp, &nr);
-+		if (error)
-+			goto out_trans_cancel;
-+		rgbno += nr;
-+		nfsb -= nr;
-+		csum += xfs_extlen_to_rtcsum_len(mp, nr);
-+	} while (nfsb);
-+
-+	return xfs_trans_commit(tp);
-+
-+out_trans_cancel:
-+	xfs_trans_cancel(tp);
-+	return error;
-+}
-+
-+int
-+xfs_rtcsum_mount(
-+	struct xfs_mount	*mp)
-+{
-+	/*
-+	 * Supporting highmem would require less efficient loops for the
-+	 * checksumming.  We could do that with a separate code path, but
-+	 * there isn't much of a point in the extra test coverage required just
-+	 * for obsolete 32-bit platforms.
-+	 */
-+	if (IS_ENABLED(CONFIG_HIGHMEM)) {
-+		xfs_alert(mp,
-+"CONFIG_HIGHMEM not supported with data checksums.");
-+		return -EINVAL;
-+	}
-+
-+	/*
-+	 * We can't support data checksums on DAX because the direct access
-+	 * doesn't allow computing and verifying the checksums.
-+	 */
-+	if (xfs_has_dax_always(mp)) {
-+		xfs_warn(mp, "dax=always not supported with data checksums");
-+		return -EINVAL;
-+	}
-+	mp->m_features |= XFS_FEAT_DAX_NEVER;
-+
-+	xfs_info(mp, "using %s for RT device data checksums",
-+		xfs_data_csum_names[mp->m_sb.sb_rtcsum_type]);
-+
-+	return 0;
-+}
-diff --git a/fs/xfs/xfs_rtcsum.h b/fs/xfs/xfs_rtcsum.h
-new file mode 100644
-index 000000000000..bd16f5a99451
---- /dev/null
-+++ b/fs/xfs/xfs_rtcsum.h
-@@ -0,0 +1,23 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+#ifndef _XFS_RTCSUM_H
-+#define _XFS_RTCSUM_H
-+
 +#include "xfs_rtcsumfile.h"
 +
-+void xfs_csum_generate(struct xfs_mount *mp, struct bio *bio,
-+		void *csum_buf);
-+int xfs_csum_verify(struct xfs_mount *mp, struct bio *bio,
-+		struct bvec_iter *iter, void *csum_buf,
-+		xfs_fsblock_t bno, bool verbose);
++int
++xfs_rtcsum_bmap(
++	struct xfs_rtgroup	*rtg,
++	xfs_rgblock_t		rgbno,
++	xfs_daddr_t		*daddr)
++{
++	struct xfs_mount	*mp = rtg_mount(rtg);
++	struct xfs_inode	*csumip = rtg_csum(rtg);
++	struct xfs_ifork	*ifp = &csumip->i_df;
++	unsigned int		csum_block = xfs_rgb_to_rtcsumblock(mp, rgbno);
++	xfs_fileoff_t		start_fsb =
++		XFS_B_TO_FSB(mp, mp->m_rtcsum_bsize) * csum_block;
++	struct xfs_iext_cursor	icur;
++	struct xfs_bmbt_irec	got;
 +
-+int xfs_rtcsum_read_async(struct xfs_mount *mp, xfs_rtblock_t fsbno,
-+		struct xfs_buf **bpp);
-+int xfs_rtcsum_log(struct xfs_open_zone *oz, xfs_daddr_t daddr,
-+		unsigned int data_len, const void *csum);
++	ASSERT(!xfs_need_iread_extents(ifp));
 +
-+int xfs_rtcsum_open_zone(struct xfs_open_zone *oz);
-+void xfs_rtcsum_free_zone(struct xfs_open_zone *oz);
-+
-+int xfs_rtcsum_mount(struct xfs_mount *mp);
-+
-+#endif /* _XFS_RTCSUM_H */
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index fce1d2905c94..5a6769239f35 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -50,6 +50,7 @@
- #include "xfs_rtalloc.h"
- #include "xfs_zone_alloc.h"
- #include "xfs_healthmon.h"
-+#include "xfs_rtcsum.h"
- #include "scrub/stats.h"
- #include "scrub/rcbag_btree.h"
- 
-@@ -1953,6 +1954,19 @@ xfs_fs_fill_super(
- 		}
- 	}
- 
-+	if (xfs_has_rtcsum(mp)) {
-+		if (!IS_ENABLED(CONFIG_XFS_RT) || !xfs_has_zoned(mp)) {
-+			xfs_alert(mp,
-+	"zoned allocator required for RT data checksums");
-+			error = -EINVAL;
-+			goto out_filestream_unmount;
-+		}
-+
-+		error = xfs_rtcsum_mount(mp);
-+		if (error)
-+			goto out_filestream_unmount;
-+	}
-+
- 	if (xfs_has_reflink(mp)) {
- 		if (xfs_has_realtime(mp) &&
- 		    !xfs_reflink_supports_rextsize(mp, mp->m_sb.sb_rextsize)) {
-diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-index e77917ac179d..c1ae9b7c4cc1 100644
---- a/fs/xfs/xfs_sysfs.c
-+++ b/fs/xfs/xfs_sysfs.c
-@@ -401,6 +401,8 @@ static bool
- xfs_has_read_bounce(
- 	struct xfs_mount	*mp)
- {
-+	if (xfs_has_rtcsum(mp))
-+		return true;
- 	if (bdev_has_integrity_csum(mp->m_ddev_targp->bt_bdev))
- 		return true;
- 	if (mp->m_rtdev_targp &&
-diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
-index bbdff9abe2b2..9d9a713684b9 100644
---- a/fs/xfs/xfs_zone_alloc.c
-+++ b/fs/xfs/xfs_zone_alloc.c
-@@ -26,6 +26,7 @@
- #include "xfs_zones.h"
- #include "xfs_trace.h"
- #include "xfs_mru_cache.h"
-+#include "xfs_rtcsum.h"
- #include <linux/bio-integrity.h>
- 
- static void
-@@ -42,8 +43,10 @@ void
- xfs_open_zone_put(
- 	struct xfs_open_zone	*oz)
- {
--	if (atomic_dec_and_test(&oz->oz_ref))
-+	if (atomic_dec_and_test(&oz->oz_ref)) {
-+		xfs_rtcsum_free_zone(oz);
- 		call_rcu(&oz->oz_rcu, xfs_open_zone_free_rcu);
-+	}
- }
- 
- static inline uint32_t
-@@ -416,9 +419,12 @@ xfs_init_open_zone(
- 	enum rw_hint		write_hint,
- 	bool			is_gc)
- {
-+	unsigned int		nr_csum_bufs = xfs_rtcsum_bufs_per_rtg(rtg);
- 	struct xfs_open_zone	*oz;
-+	int			error;
- 
--	oz = kzalloc_obj(*oz, GFP_NOFS | __GFP_NOFAIL);
-+	oz = kzalloc_flex(*oz, oz_csum_bufs, nr_csum_bufs,
-+			GFP_NOFS | __GFP_NOFAIL);
- 	spin_lock_init(&oz->oz_alloc_lock);
- 	atomic_set(&oz->oz_ref, 1);
- 	oz->oz_rtg = rtg;
-@@ -426,6 +432,14 @@ xfs_init_open_zone(
- 	oz->oz_written = write_pointer;
- 	oz->oz_write_hint = write_hint;
- 	oz->oz_is_gc = is_gc;
-+	oz->oz_nr_csum_bufs = nr_csum_bufs;
-+	if (nr_csum_bufs) {
-+		error = xfs_rtcsum_open_zone(oz);
-+		if (error) {
-+			kfree(oz);
-+			return ERR_PTR(error);
-+		}
-+	}
- 
- 	/*
- 	 * All dereferences of rtg->rtg_open_zone hold the ILOCK for the rmap
-@@ -449,6 +463,7 @@ xfs_open_zone(
- {
- 	struct xfs_zone_info	*zi = mp->m_zone_info;
- 	XA_STATE		(xas, &mp->m_groups[XG_TYPE_RTG].xa, 0);
-+	struct xfs_open_zone	*oz;
- 	struct xfs_group	*xg;
- 
- 	/*
-@@ -469,7 +484,14 @@ xfs_open_zone(
- 	xas_unlock(&xas);
- 
- 	set_current_state(TASK_RUNNING);
--	return xfs_init_open_zone(to_rtg(xg), 0, write_hint, is_gc);
-+	oz = xfs_init_open_zone(to_rtg(xg), 0, write_hint, is_gc);
-+	if (IS_ERR(oz)) {
-+		xfs_rtgroup_rele(to_rtg(xg));
-+		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_ONDISK);
-+		return NULL;
-+	}
-+
-+	return oz;
- }
- 
- static struct xfs_open_zone *
-@@ -1144,9 +1166,11 @@ xfs_init_zone(
- 		/* zone is open */
- 		struct xfs_open_zone *oz;
- 
--		atomic_inc(&rtg_group(rtg)->xg_active_ref);
- 		oz = xfs_init_open_zone(rtg, write_pointer, WRITE_LIFE_NOT_SET,
- 				false);
-+		if (IS_ERR(oz))
-+			return PTR_ERR(oz);
-+		atomic_inc(&rtg_group(rtg)->xg_active_ref);
- 		list_add_tail(&oz->oz_entry, &zi->zi_open_zones);
- 		zi->zi_nr_open_zones++;
- 
-diff --git a/fs/xfs/xfs_zone_priv.h b/fs/xfs/xfs_zone_priv.h
-index fcb57506d8e6..322a031e6ba0 100644
---- a/fs/xfs/xfs_zone_priv.h
-+++ b/fs/xfs/xfs_zone_priv.h
-@@ -42,6 +42,14 @@ struct xfs_open_zone {
- 	struct xfs_rtgroup	*oz_rtg;
- 
- 	struct rcu_head		oz_rcu;
++	if (XFS_IS_CORRUPT(mp, ifp->if_nextents != 1))
++		goto sick;
 +
 +	/*
-+	 * Checksum buffers.  All checksum buffers for an open zone are pinned
-+	 * into memory so that we never need to read them in to log checksums
-+	 * for a write.
++	 * We can do an unlocked lookup here because the bmap btree for the
++	 * csum files is immutable once created.
 +	 */
-+	unsigned int		oz_nr_csum_bufs;
-+	struct xfs_buf		*oz_csum_bufs[] __counted_by(oz_nr_csum_bufs);
++	if (XFS_IS_CORRUPT(mp, !xfs_iext_lookup_extent(csumip, ifp, start_fsb,
++			&icur, &got)))
++		goto sick;
++	if (XFS_IS_CORRUPT(mp, got.br_startoff > start_fsb))
++		goto sick;
++
++	start_fsb -= got.br_startoff;
++	*daddr = XFS_FSB_TO_DADDR(mp, got.br_startblock + start_fsb);
++	return 0;
++sick:
++	xfs_rtginode_mark_sick(rtg, XFS_RTGI_CSUM);
++	return -EFSCORRUPTED;
++}
++
++xfs_off_t
++xfs_rtcsum_file_size(
++	struct xfs_rtgroup	*rtg)
++{
++	struct xfs_mount	*mp = rtg_mount(rtg);
++	uint64_t		raw_size;
++
++	raw_size = (xfs_off_t)rtg_blocks(rtg) << mp->m_rtcsum_shift;
++	return DIV_ROUND_UP_ULL(raw_size, xfs_rtcsum_payload_size(mp)) *
++			mp->m_rtcsum_bsize;
++}
++
++int
++xfs_rtcsum_alloc_blocks(
++	struct xfs_rtgroup	*rtg)
++{
++	struct xfs_mount	*mp = rtg_mount(rtg);
++
++	return xfs_rtfile_initialize_blocks(rtg, XFS_RTGI_CSUM, 0,
++			XFS_B_TO_FSB(mp, rtg_csum(rtg)->i_disk_size),
++			XFS_B_TO_FSB(mp, mp->m_rtcsum_bsize),
++			XFS_BMAPI_CONTIG, NULL);
++}
++
++int
++xfs_rtcsum_create(
++	struct xfs_rtgroup	*rtg,
++	struct xfs_inode	*ip,
++	struct xfs_trans	*tp,
++	bool			init)
++{
++	ip->i_disk_size = xfs_rtcsum_file_size(rtg);
++	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
++	return 0;
++}
+diff --git a/fs/xfs/libxfs/xfs_rtcsumfile.h b/fs/xfs/libxfs/xfs_rtcsumfile.h
+new file mode 100644
+index 000000000000..8aacac05adc3
+--- /dev/null
++++ b/fs/xfs/libxfs/xfs_rtcsumfile.h
+@@ -0,0 +1,150 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++#ifndef _XFS_RTCSUMFILE_H
++#define _XFS_RTCSUMFILE_H
++
++#include "xfs_rtgroup.h"
++
++/*
++ * Maximum size of a checksum buffer for writes, used for the log reservation.
++ */
++#define XFS_RTCSUM_MAX_WRITE	SZ_64K
++
++/*
++ * Size of the actual payload in the RT data checksum block.  This excludes the
++ * self-describing metadata header.
++ */
++static inline unsigned int
++xfs_rtcsum_payload_size(
++	struct xfs_mount	*mp)
++{
++	return mp->m_rtcsum_bsize - sizeof(struct xfs_rtbuf_blkinfo);
++}
++
++/* Convert data length in logical blocks to checksum length in bytes. */
++static inline unsigned int
++xfs_extlen_to_rtcsum_len(
++	struct xfs_mount	*mp,
++	xfs_extlen_t		nb)
++{
++	return nb << mp->m_rtcsum_shift;
++}
++
++/* Convert checksum length in bytes to data length in logical blocks. */
++static inline xfs_extlen_t
++xfs_rtcsum_len_to_extlen(
++	struct xfs_mount	*mp,
++	unsigned int		csum_len)
++{
++	return csum_len >> mp->m_rtcsum_shift;
++}
++
++/* Convert an rgbno to the csum byte position in the csum file. */
++static inline xfs_off_t
++xfs_rgb_to_rtcsumpos(
++	struct xfs_mount	*mp,
++	xfs_rtblock_t		rgbno)
++{
++	return (xfs_off_t)rgbno << mp->m_rtcsum_shift;
++}
++
++/* Convert an rgbno to the csum block index in the csum file. */
++static inline unsigned int
++xfs_rgb_to_rtcsumblock(
++	struct xfs_mount	*mp,
++	xfs_rtblock_t		rgbno)
++{
++	return div_u64(xfs_rgb_to_rtcsumpos(mp, rgbno),
++			xfs_rtcsum_payload_size(mp));
++}
++
++/* Convert an rgbno to a the checksum offset within an rt csum block. */
++static inline unsigned int
++xfs_rgb_to_rtcsumoff(
++	struct xfs_mount	*mp,
++	xfs_rgblock_t		rgbno)
++{
++	uint32_t		off;
++
++	div_u64_rem(xfs_rgb_to_rtcsumpos(mp, rgbno),
++			xfs_rtcsum_payload_size(mp), &off);
++	return sizeof(struct xfs_rtbuf_blkinfo) + off;
++}
++
++/* Convert an rtbno to a the checksum offset within an rt csum block. */
++static inline unsigned int
++xfs_rtb_to_rtcsumoff(
++	struct xfs_mount	*mp,
++	xfs_rtblock_t		fsbno)
++{
++	return xfs_rgb_to_rtcsumoff(mp, xfs_rtb_to_rgbno(mp, fsbno));
++}
++
++int xfs_rtcsum_bmap(struct xfs_rtgroup *rtg, xfs_rgblock_t rgbno,
++		xfs_daddr_t *daddr);
++xfs_off_t xfs_rtcsum_file_size(struct xfs_rtgroup *rtg);
++int xfs_rtcsum_alloc_blocks(struct xfs_rtgroup *rtg);
++int xfs_rtcsum_create(struct xfs_rtgroup *rtg, struct xfs_inode *ip,
++		struct xfs_trans *tp, bool init);
++
++static inline unsigned int
++xfs_rtcsum_bufs_per_rtg(
++	struct xfs_rtgroup	*rtg)
++{
++	struct xfs_mount	*mp = rtg_mount(rtg);
++
++	if (xfs_has_rtcsum(mp))
++		return div_u64(xfs_rtcsum_file_size(rtg), mp->m_rtcsum_bsize);
++	return 0;
++}
++
++static inline xfs_filblks_t
++xfs_rtcsum_max_len(
++	struct xfs_mount	*mp,
++	xfs_fsblock_t		fsbno)
++{
++	return xfs_rtcsum_len_to_extlen(mp,
++			mp->m_rtcsum_bsize - xfs_rtb_to_rtcsumoff(mp, fsbno));
++}
++
++union xfs_csum {
++	uint32_t		crc32c;
++	uint64_t		crc64;
++};
++
++static __always_inline void
++xfs_csum_seed(
++	struct xfs_mount	*mp,
++	union xfs_csum		*csum)
++{
++	if (mp->m_sb.sb_rtcsum_type == XFS_CSUM_TYPE_CRC32C)
++		csum->crc32c = XFS_CRC_SEED;
++	else
++		csum->crc64 = XFS_CRC64_SEED;
++}
++
++static __always_inline void
++xfs_csum_gen(
++	struct xfs_mount	*mp,
++	void			*data,
++	unsigned int		len,
++	union xfs_csum		*csum)
++{
++	if (mp->m_sb.sb_rtcsum_type == XFS_CSUM_TYPE_CRC32C)
++		csum->crc32c = crc32c(csum->crc32c, data, len);
++	else
++		csum->crc64 = crc64_nvme(csum->crc64, data, len);
++}
++
++static __always_inline void
++xfs_csum_finalize(
++	struct xfs_mount	*mp,
++	union xfs_disk_csum	*to,
++	union xfs_csum		*csum)
++{
++	if (mp->m_sb.sb_rtcsum_type == XFS_CSUM_TYPE_CRC32C)
++		to->crc32c = cpu_to_le32(~csum->crc32c);
++	else
++		to->crc64 = cpu_to_le64(csum->crc64);
++}
++
++#endif /* _XFS_RTCSUMFILE_H */
+diff --git a/fs/xfs/libxfs/xfs_rtgroup.c b/fs/xfs/libxfs/xfs_rtgroup.c
+index fe7222bbe449..22ad71798b62 100644
+--- a/fs/xfs/libxfs/xfs_rtgroup.c
++++ b/fs/xfs/libxfs/xfs_rtgroup.c
+@@ -35,6 +35,7 @@
+ #include "xfs_metadir.h"
+ #include "xfs_rtrmap_btree.h"
+ #include "xfs_rtrefcount_btree.h"
++#include "xfs_rtcsumfile.h"
+ 
+ /* Find the first usable fsblock in this rtgroup. */
+ static inline uint32_t
+@@ -394,6 +395,15 @@ static const struct xfs_rtginode_ops xfs_rtginode_ops[XFS_RTGI_MAX] = {
+ 		.enabled	= xfs_has_reflink,
+ 		.create		= xfs_rtrefcountbt_create,
+ 	},
++	[XFS_RTGI_CSUM] = {
++		.name		= "csum",
++		.metafile_type	= XFS_METAFILE_RTCSUM,
++		.sick		= XFS_SICK_RG_CSUM,
++		.fmt_mask	= (1U << XFS_DINODE_FMT_EXTENTS) |
++				  (1U << XFS_DINODE_FMT_BTREE),
++		.enabled	= xfs_has_rtcsum,
++		.create		= xfs_rtcsum_create,
++	},
  };
  
- /*
+ /* Return the shortname of this rtgroup inode. */
+diff --git a/fs/xfs/libxfs/xfs_rtgroup.h b/fs/xfs/libxfs/xfs_rtgroup.h
+index f26e324f0de3..5cca0f4dd25a 100644
+--- a/fs/xfs/libxfs/xfs_rtgroup.h
++++ b/fs/xfs/libxfs/xfs_rtgroup.h
+@@ -16,6 +16,7 @@ enum xfs_rtg_inodes {
+ 	XFS_RTGI_SUMMARY,	/* allocation summary */
+ 	XFS_RTGI_RMAP,		/* rmap btree inode */
+ 	XFS_RTGI_REFCOUNT,	/* refcount btree inode */
++	XFS_RTGI_CSUM,		/* data checksum inode */
+ 
+ 	XFS_RTGI_MAX,
+ };
+@@ -109,6 +110,11 @@ static inline struct xfs_inode *rtg_refcount(const struct xfs_rtgroup *rtg)
+ 	return rtg->rtg_inodes[XFS_RTGI_REFCOUNT];
+ }
+ 
++static inline struct xfs_inode *rtg_csum(const struct xfs_rtgroup *rtg)
++{
++	return rtg->rtg_inodes[XFS_RTGI_CSUM];
++}
++
+ /* Passive rtgroup references */
+ static inline struct xfs_rtgroup *
+ xfs_rtgroup_get(
+diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
+index b1e0d9bc1f7d..8a60f2c56fe7 100644
+--- a/fs/xfs/libxfs/xfs_shared.h
++++ b/fs/xfs/libxfs/xfs_shared.h
+@@ -40,6 +40,7 @@ extern const struct xfs_buf_ops xfs_refcountbt_buf_ops;
+ extern const struct xfs_buf_ops xfs_rmapbt_buf_ops;
+ extern const struct xfs_buf_ops xfs_rtbitmap_buf_ops;
+ extern const struct xfs_buf_ops xfs_rtsummary_buf_ops;
++extern const struct xfs_buf_ops xfs_rtcsum_buf_ops;
+ extern const struct xfs_buf_ops xfs_rtbuf_ops;
+ extern const struct xfs_buf_ops xfs_rtsb_buf_ops;
+ extern const struct xfs_buf_ops xfs_rtrefcountbt_buf_ops;
+diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
+index 57929f115055..ed74dcdbe483 100644
+--- a/fs/xfs/xfs_buf_item_recover.c
++++ b/fs/xfs/xfs_buf_item_recover.c
+@@ -414,6 +414,13 @@ xlog_recover_validate_buf_type(
+ 		}
+ 		bp->b_ops = xfs_rtblock_ops(mp, XFS_RTGI_SUMMARY);
+ 		break;
++	case XFS_BLFT_RTCSUM_BUF:
++		if (xfs_has_rtgroups(mp) && magic32 != XFS_RTCSUM_MAGIC) {
++			warnmsg = "Bad rtcsum magic!";
++			break;
++		}
++		bp->b_ops = &xfs_rtcsum_buf_ops;
++		break;
+ #endif /* CONFIG_XFS_RT */
+ 	default:
+ 		xfs_warn(mp, "Unknown buffer type %d!",
+diff --git a/fs/xfs/xfs_platform.h b/fs/xfs/xfs_platform.h
+index 5d542e95fe44..c478d8935f61 100644
+--- a/fs/xfs/xfs_platform.h
++++ b/fs/xfs/xfs_platform.h
+@@ -16,6 +16,7 @@
+ #include <linux/slab.h>
+ #include <linux/vmalloc.h>
+ #include <linux/crc32c.h>
++#include <linux/crc64.h>
+ #include <linux/module.h>
+ #include <linux/mutex.h>
+ #include <linux/file.h>
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index 78a1c066c7eb..e2b6113772b6 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -32,6 +32,7 @@
+ #include "xfs_error.h"
+ #include "xfs_trace.h"
+ #include "xfs_rtrefcount_btree.h"
++#include "xfs_rtcsumfile.h"
+ #include "xfs_reflink.h"
+ #include "xfs_zone_alloc.h"
+ 
+@@ -898,6 +899,12 @@ xfs_growfs_rt_zoned(
+ 	xfs_rtbxlen_t		freed_rtx;
+ 	int			error;
+ 
++	if (xfs_has_rtcsum(mp)) {
++		error = xfs_rtcsum_alloc_blocks(rtg);
++		if (error)
++			return error;
++	}
++
+ 	/*
+ 	 * Calculate new sb and mount fields for this round.  Also ensure the
+ 	 * rtg_extents value is uptodate as the rtbitmap code relies on it.
 -- 
 2.53.0
 
