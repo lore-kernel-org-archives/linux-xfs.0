@@ -1,39 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C692A46EC73
-	for <linux-xfs@vger.kernel.org>; Thu, 24 Sep 2026 18:57:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F34C536A01A
+	for <linux-xfs@vger.kernel.org>; Thu, 24 Sep 2026 19:01:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790276239; cv=none; b=laxMi9JJaEUaaH3+oRJzOAcfpXJdnB26Yx66+EYjGMi3dekIPhz/C4qVrzhy7/TxUq+9hEysfeDG+s/b12cfOKIB+jZvEpQVVZU/WpZQEXfgIw8j+dIuXrw96hnMKW1fUsAXHcVUcgxuQZjpftWMOYqwZnKwECXbvFojSBDpNHA=
+	t=1790276505; cv=none; b=NEHBC1EsWN2BYjkrTw6/ENykXoi9P9/tmx1ARr3WhWm+IdgzKEVd7DU9tzLmWBMF75EMtqyQr28v+iI+NAaqdQUFUaymGM5Cw5fEk4v7uAwkA3UFSUmgIzpm+XWr142awLc0V8RraIXeB9QJ2nBH/IEQjsqJ3t+ER9Fwcd110hw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790276239; c=relaxed/simple;
-	bh=yI6zL61qWZwq/pfaeHlOaEBjMvKwkj6NMjYeG88ZJoM=;
+	s=arc-20240116; t=1790276505; c=relaxed/simple;
+	bh=7hSMZ9XmrZrq6MbHdPSoLSrgQ6P4/wciDJGjjwcOcLE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZeCkGcsLkB9L/xvwkVoIyncgzRwXUFNKmuyMi6Mev8cU0EJpdxvfIR+pKYqknowCBdh2ighu408mRbEw+yISyHltefSciflSgpLyW9vYDI7z/G+LsRxO8oY3A84ErOzbWQsWfdl+YNoQzskKQZqrAx3/1ZrP7FAdzt8pv66JT4Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G6y0VJ2B; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=SHhePXTHz1Izy2nuo9r5a38NVR6VFOApWBZ7h7QMTMNbAelirc0iYrGgIUo0pXEYsN7OUAF/lWNzH1/8XagZUxvzGkvysGRQtQOiACQDqM4HyL+chwKyhb/mwTTHG92mT4lBclHGGogCHkVqREjG0ImuvUNYOY/fgWi9Xt/WzZQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=g86l7R5D; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G6y0VJ2B"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id E01A81F00893;
-	Thu, 24 Sep 2026 18:57:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="g86l7R5D"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 1E3071F00898;
+	Thu, 24 Sep 2026 19:01:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790276237;
-	bh=m2WR+w5sMN5lVPmfDPHJYrVszXmVHIMgbTNR6LMXmdQ=;
+	s=k20260515; t=1790276499;
+	bh=1YxWt0tb1Rr+w69f9Bh6BSChanGoTSYWyLc5K2Hvdi0=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=G6y0VJ2BfQMx/chkjOxVWRkHgsjAhGr2FYFYNy6rka2noSg2/ejYgBMkdGdeCS0M1
-	 IBFaAq+zW2qVBf/5k0ZbW+g+zbop+ehVALOoynhOPW+KvjptuaeDQzSFoUfndjki31
-	 /M/Ns0p4Gbdby0NVuEcjOcPuBi10EW3cAqVww7EGgivxXiqRxzdFtExp7DfO2sHFzj
-	 CM1bBVE/0ZqRRJYlXpDXuYj/kTAU3odv5Y4apZujSzITiYhcwUZq++VrezWuki70dz
-	 z1D3VZb+jGdNE6YmG4ekcd7xSUVO5KeTx5OU38ymmJwf7MunboyodvNAz4ZgTR8y6n
-	 z3D5mQTlQOeZA==
-Date: Thu, 24 Sep 2026 11:57:16 -0700
+	b=g86l7R5DNA9nui49+Mk6ePjA96zdCEV6iM2MgDKsEPApxykTkA1GdPbjNGb2Bh1dm
+	 1surKyqb+GmO6hKg5FJavgZjDGdqt5NyvQHwHUJBxL7x1zAUMi80TiiKeNYscCbP31
+	 1GH2NSoCtFmOwMZFQg/sbS9CXlVA6EIWjzhO1Icwf320YZAW8QEJHvLaoSIrDA5KiG
+	 3viZK812XkJws2Tde5LiyjJFrDitty/lAHpTpTdW+528wzNULk1ZkgTzfQ9cqWabsM
+	 aGue/DM6JsvyrI6GUXOkSuFDw+3NznWEZZIA5Y9UNF8SV0kpTNwAakL5hKD8x5Anma
+	 trBwnmLicH2zA==
+Date: Thu, 24 Sep 2026 12:01:38 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: cem@kernel.org
-Cc: linux-xfs@vger.kernel.org, hch@lst.de, sandeen@sandeen.net
-Subject: Re: [PATCH v4 2/3] xfs: introduce xfs_trans_cancel_error()
-Message-ID: <20260924185716.GN2705364@frogsfrogsfrogs>
-References: <20260924151638.38535-1-cem@kernel.org>
- <20260924151638.38535-3-cem@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/9] xfs: centralize setting of buf_ops/buf_type/magic
+ for rtblocks
+Message-ID: <20260924190138.GO2705364@frogsfrogsfrogs>
+References: <20260924095740.2732474-1-hch@lst.de>
+ <20260924095740.2732474-2-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,92 +43,157 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260924151638.38535-3-cem@kernel.org>
+In-Reply-To: <20260924095740.2732474-2-hch@lst.de>
 
-On Thu, Sep 24, 2026 at 05:16:29PM +0200, cem@kernel.org wrote:
-> From: Carlos Maiolino <cem@kernel.org>
+On Thu, Sep 24, 2026 at 11:57:02AM +0200, Christoph Hellwig wrote:
+> Add two tables for the buf_ops and buf_type, and derive the magic from
+> the buf_ops to make have a single source of truth for the different RT
+> block variants.  This cleans up the existing code and makes adding another
+> type of block/file easier.
 > 
-> Once in a while it's useful to know exactly what kind of error caused a
-> transaction to be cancelled. Currently xfs_trans_cancel() is unable to
-> print out this information. So rename old xfs_trans_cancel to
-> xfs_trans_cancel_error() which will accept an error code to be printed
-> and add a new inline xfs_trans_cancel() to be used on places where an
-> error number report is not explicitly needed (and also avoid dozens of
-> file modifications to the new API).
-> 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> ---
-> V4:
-> 	- Remove macros in lieu of an inline function
-> 	- Rename patch to a better description
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Looks good still; thanks to hch for pointing out a more sensible way to
-do the cancel function.
-
+Seems like a reasonable hoist here.
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
-> V3:
-> 	- Kill typedef from __xfs_trans_cancel
-> 	- Remove uneeded wrap of parameter 0
+> ---
+>  fs/xfs/libxfs/xfs_rtbitmap.c | 40 +++++++++++++++++++++---------------
+>  fs/xfs/libxfs/xfs_rtbitmap.h | 15 ++------------
+>  2 files changed, 25 insertions(+), 30 deletions(-)
 > 
->  fs/xfs/xfs_trans.c | 8 +++++---
->  fs/xfs/xfs_trans.h | 9 ++++++++-
->  2 files changed, 13 insertions(+), 4 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> index 5c522790e5be..8f0c308f312f 100644
-> --- a/fs/xfs/xfs_trans.c
-> +++ b/fs/xfs/xfs_trans.c
-> @@ -943,8 +943,9 @@ xfs_trans_commit(
->   * xfs_trans_commit().
->   */
->  void
-> -xfs_trans_cancel(
-> -	struct xfs_trans	*tp)
-> +xfs_trans_cancel_error(
-> +	struct xfs_trans	*tp,
-> +	int			error)
->  {
->  	struct xfs_mount	*mp = tp->t_mountp;
->  	struct xlog		*log = mp->m_log;
-> @@ -971,7 +972,8 @@ xfs_trans_cancel(
->  	 * here.
->  	 */
->  	if (dirty && !xfs_is_shutdown(mp)) {
-> -		XFS_ERROR_REPORT("xfs_trans_cancel", XFS_ERRLEVEL_LOW, 0, mp);
-> +		XFS_ERROR_REPORT("xfs_trans_cancel", XFS_ERRLEVEL_LOW,
-> +				 error, mp);
->  		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
->  	}
->  #ifdef DEBUG
-> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-> index eb83c5dac032..edb0cfff4d3c 100644
-> --- a/fs/xfs/xfs_trans.h
-> +++ b/fs/xfs/xfs_trans.h
-> @@ -237,7 +237,7 @@ void		xfs_trans_log_inode(xfs_trans_t *, struct xfs_inode *, uint);
->  int		xfs_trans_commit(struct xfs_trans *);
->  int		xfs_trans_roll(struct xfs_trans **);
->  int		xfs_trans_roll_inode(struct xfs_trans **, struct xfs_inode *);
-> -void		xfs_trans_cancel(xfs_trans_t *);
-> +void		xfs_trans_cancel_error(struct xfs_trans *, int);
->  int		xfs_trans_ail_init(struct xfs_mount *);
->  void		xfs_trans_ail_destroy(struct xfs_mount *);
+> diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
+> index e62786e90f7b..3f7877220e05 100644
+> --- a/fs/xfs/libxfs/xfs_rtbitmap.c
+> +++ b/fs/xfs/libxfs/xfs_rtbitmap.c
+> @@ -125,6 +125,26 @@ const struct xfs_buf_ops xfs_rtsummary_buf_ops = {
+>  	.verify_struct	= xfs_rtbuf_verify,
+>  };
 >  
-> @@ -280,4 +280,11 @@ xfs_trans_clear_context(
->  	memalloc_nofs_restore(tp->t_pflags);
->  }
->  
-> +static inline void
-> +xfs_trans_cancel(
-> +	struct xfs_trans	*tp)
+> +static const struct xfs_buf_ops *xfs_rtblock_buf_ops[XFS_RTGI_MAX] = {
+> +	[XFS_RTGI_SUMMARY]	= &xfs_rtsummary_buf_ops,
+> +	[XFS_RTGI_BITMAP]	= &xfs_rtbitmap_buf_ops,
+> +};
+> +
+> +const struct xfs_buf_ops *
+> +xfs_rtblock_ops(
+> +	struct xfs_mount	*mp,
+> +	enum xfs_rtg_inodes	type)
 > +{
-> +	return xfs_trans_cancel_error(tp, 0);
+> +	if (!xfs_has_rtgroups(mp))
+> +		return &xfs_rtbuf_ops;
+> +	return xfs_rtblock_buf_ops[type];
 > +}
 > +
->  #endif	/* __XFS_TRANS_H__ */
+> +static enum xfs_blft xfs_rtblock_buf_types[XFS_RTGI_MAX] = {
+> +	[XFS_RTGI_SUMMARY]	= XFS_BLFT_RTSUMMARY_BUF,
+> +	[XFS_RTGI_BITMAP]	= XFS_BLFT_RTBITMAP_BUF,
+> +};
+> +
+>  /* Release cached rt bitmap and summary buffers. */
+>  void
+>  xfs_rtbuf_cache_relse(
+> @@ -158,7 +178,6 @@ xfs_rtbuf_get(
+>  	xfs_fileoff_t		*coffp;	/* cached block number */
+>  	struct xfs_buf		*bp;	/* block buffer, result */
+>  	struct xfs_bmbt_irec	map;
+> -	enum xfs_blft		buf_type;
+>  	int			nmap = 1;
+>  	int			error;
+>  
+> @@ -166,12 +185,10 @@ xfs_rtbuf_get(
+>  	case XFS_RTGI_SUMMARY:
+>  		cbpp = &args->sumbp;
+>  		coffp = &args->sumoff;
+> -		buf_type = XFS_BLFT_RTSUMMARY_BUF;
+>  		break;
+>  	case XFS_RTGI_BITMAP:
+>  		cbpp = &args->rbmbp;
+>  		coffp = &args->rbmoff;
+> -		buf_type = XFS_BLFT_RTBITMAP_BUF;
+>  		break;
+>  	default:
+>  		return -EINVAL;
+> @@ -222,7 +239,7 @@ xfs_rtbuf_get(
+>  		}
+>  	}
+>  
+> -	xfs_trans_buf_set_type(args->tp, bp, buf_type);
+> +	xfs_trans_buf_set_type(args->tp, bp, xfs_rtblock_buf_types[type]);
+>  	*cbpp = bp;
+>  	*coffp = block;
+>  	return 0;
+> @@ -1375,16 +1392,8 @@ xfs_rtfile_initialize_block(
+>  	struct xfs_buf		*bp;
+>  	void			*bufdata;
+>  	const size_t		copylen = mp->m_blockwsize << XFS_WORDLOG;
+> -	enum xfs_blft		buf_type;
+>  	int			error;
+>  
+> -	if (type == XFS_RTGI_BITMAP)
+> -		buf_type = XFS_BLFT_RTBITMAP_BUF;
+> -	else if (type == XFS_RTGI_SUMMARY)
+> -		buf_type = XFS_BLFT_RTSUMMARY_BUF;
+> -	else
+> -		return -EINVAL;
+> -
+>  	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_growrtzero, 0, 0, 0, &tp);
+>  	if (error)
+>  		return error;
+> @@ -1399,16 +1408,13 @@ xfs_rtfile_initialize_block(
+>  	}
+>  	bufdata = bp->b_addr;
+>  
+> -	xfs_trans_buf_set_type(tp, bp, buf_type);
+> +	xfs_trans_buf_set_type(tp, bp, xfs_rtblock_buf_types[type]);
+>  	bp->b_ops = xfs_rtblock_ops(mp, type);
+>  
+>  	if (xfs_has_rtgroups(mp)) {
+>  		struct xfs_rtbuf_blkinfo	*hdr = bp->b_addr;
+>  
+> -		if (type == XFS_RTGI_BITMAP)
+> -			hdr->rt_magic = cpu_to_be32(XFS_RTBITMAP_MAGIC);
+> -		else
+> -			hdr->rt_magic = cpu_to_be32(XFS_RTSUMMARY_MAGIC);
+> +		hdr->rt_magic = bp->b_ops->magic[1];
+>  		hdr->rt_owner = cpu_to_be64(I_INO(ip));
+>  		hdr->rt_blkno = cpu_to_be64(XFS_FSB_TO_DADDR(mp, fsbno));
+>  		hdr->rt_lsn = 0;
+> diff --git a/fs/xfs/libxfs/xfs_rtbitmap.h b/fs/xfs/libxfs/xfs_rtbitmap.h
+> index 22e5d9cd95f4..375cc48e1a53 100644
+> --- a/fs/xfs/libxfs/xfs_rtbitmap.h
+> +++ b/fs/xfs/libxfs/xfs_rtbitmap.h
+> @@ -354,19 +354,6 @@ xfs_suminfo_add(
+>  	return info->old;
+>  }
+>  
+> -static inline const struct xfs_buf_ops *
+> -xfs_rtblock_ops(
+> -	struct xfs_mount	*mp,
+> -	enum xfs_rtg_inodes	type)
+> -{
+> -	if (xfs_has_rtgroups(mp)) {
+> -		if (type == XFS_RTGI_SUMMARY)
+> -			return &xfs_rtsummary_buf_ops;
+> -		return &xfs_rtbitmap_buf_ops;
+> -	}
+> -	return &xfs_rtbuf_ops;
+> -}
+> -
+>  /*
+>   * Functions for walking free space rtextents in the realtime bitmap.
+>   */
+> @@ -419,6 +406,8 @@ xfs_filblks_t xfs_rtbitmap_blockcount_len(struct xfs_mount *mp,
+>  xfs_filblks_t xfs_rtsummary_blockcount(struct xfs_mount *mp,
+>  		unsigned int *rsumlevels);
+>  
+> +const struct xfs_buf_ops *xfs_rtblock_ops(struct xfs_mount *mp,
+> +		enum xfs_rtg_inodes type);
+>  int xfs_rtfile_initialize_blocks(struct xfs_rtgroup *rtg,
+>  		enum xfs_rtg_inodes type, xfs_fileoff_t offset_fsb,
+>  		xfs_fileoff_t end_fsb, void *data);
 > -- 
-> 2.55.0
+> 2.53.0
 > 
 > 
