@@ -1,35 +1,35 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CC7046A5E8;
-	Thu, 24 Sep 2026 10:02:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83DDB446BFA;
+	Thu, 24 Sep 2026 10:01:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790244129; cv=none; b=n2oSCFqz07XbrFOpcP5b6A4PBZ0AgPzcmElZe+ctWR+Wp405r8Q25R+azchr7PXUtBNWRmwoPsXNuWM77HGo3QNOvEcQ1KtVy4TeeDXiFW+EZXbEc3OSSkxp1TPO2aartybkwHttaGtfcjFk69pjhHzMVJCY+41Z/X8D3KvNmB8=
+	t=1790244131; cv=none; b=DAWws3aVRUfixNF6E/qoJp99zTW72CUwoTQyohZJrk8BuH2Gs6wQ7/vTDQrpQZ+3CmnJjk245pxa+zdmEXl+20PtiFXtsRMmVV5KvzhB4PPOND+1OftK70sJ8fO6AICUcMUsivCcBUlB0or59r4kXwGyMVqy6z9v2lnZ2kenhtY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790244129; c=relaxed/simple;
-	bh=2abOQD4A34jmQFI321PSsYPVk7Ei9ogAmDQ3MjsfZQw=;
+	s=arc-20240116; t=1790244131; c=relaxed/simple;
+	bh=QcmtjpALx9cT8XgDAM+vk5ZpKfgPeeOtOf4BFy68FyI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=q3y6uuYEOYMSt4Ipd5Zsg0PxEAAlSxUN6e/0zp053bF8JY9gWX0r65mi9gWno9qTx3pkr9GAT2pSldPGY86W0/UBK1BRmeGsyBbF1lOyJVtnkCemBiAj1jGTDj1Kd0zhHeIkNH0EkPII9C9o1T29arG3S4sW/Z2kK/6gc5VhNBA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=zcqsvEXx; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=OgqjuiB4RA0EhJFOgjNvkD0B+0NN8f043gHlqTnMslcXA2twsUYVFjv6MUpysq+UFUdZeasMxR0hrarlCmEI/wH2riQBTiMzhlDcCblfW00GAi04Bf/VJABSQ8hJPAY6XCZQGoBXBEzZkfNFWoX0H0Egzk2bjnFD8yhyFoNxQLU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=j344hhIN; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="zcqsvEXx"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="j344hhIN"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=YxVCvQYak92KjMPtYk0kym7IKmzayQT8ori4nhMarlc=; b=zcqsvEXxEsbaXg31cEb5TfLuhL
-	l3+noXFFVGSkmNl+CRmz5z44SrtPGXaV11nE6RZcXO8G8QOvO4jLfDPb46DsLGcO91TWZQlORWsYx
-	lPCTI32UwONKMUmSTO/0UfSKgyXuJsYHzrZyP5igm+Azda88hUj6shGDKz1MJaX2AvfawsVeQ6pOD
-	avBZ9b31Oe429v9oYjgsr+KrhuNvFJQBlOt6uLeE3nWi1xRvyqVO/sl+uHXp/ZRS8ZzNnvrpCzeIk
-	8dG74T04XmOrG7p2naFUjAtzHY6r0kGGO71DcpqOYKtXJi1S01nnY0qnt+Fhj2e2SIUPVwnTjfeGM
-	C8kUjM3A==;
+	bh=q+HUvMdov/cF5QuF/MfIz8oK+ITqeZzn/IrCNw+NIPE=; b=j344hhINE3v3Vquf/Rq5Zc3qA6
+	JUmcFVD7Lunh9rS4ws7NhpNIQtRFodles63Wxkzmyi3B+AIl9sASYgeW8rdV/XLzIwPWPfo6vn7Lo
+	NPyYv7z0jEWv4ZHt+FLWWNg1p1Acm5BQT2qpzZSDfVOylwW78cFNjMw0ds7bcJnsMPnfWpayd6/+k
+	Ey8t05FoJJ8Hm6HgjcKd1E0eBNIVaH+CdyHA0O825P34knrsH7dGNUfEk4D5s40FtthaduE893JOw
+	1i4CT8bfBc93O9tjSqI83gTYeMH/zmt5P2v1xp1/lHfGtNv/iYybnwyKsTzuTiz+lc4p163FoEpcD
+	fsD8pxdA==;
 Received: from 85-127-111-79.dsl.dynamic.surfer.at ([85.127.111.79] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1x9gH9-0000000Aee8-1PQ0;
-	Thu, 24 Sep 2026 10:01:59 +0000
+	id 1x9gH5-0000000AedZ-13je;
+	Thu, 24 Sep 2026 10:01:55 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: "Darrick J . Wong" <djwong@kernel.org>,
@@ -37,9 +37,9 @@ Cc: "Darrick J . Wong" <djwong@kernel.org>,
 	Christian Brauner <brauner@kernel.org>,
 	linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org
-Subject: [PATCH 15/21] xfs: add support for writing with data checksums
-Date: Thu, 24 Sep 2026 11:59:47 +0200
-Message-ID: <20260924100032.2733101-16-hch@lst.de>
+Subject: [PATCH 14/21] xfs: add support for reading with data checksums
+Date: Thu, 24 Sep 2026 11:59:46 +0200
+Message-ID: <20260924100032.2733101-15-hch@lst.de>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260924100032.2733101-1-hch@lst.de>
 References: <20260924100032.2733101-1-hch@lst.de>
@@ -52,271 +52,249 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-All write to checksummed files need to use ioends so that the checksum
-can be verified from process context.
+All reads from files with data checksums have the returned iomaps for
+data blocks limited to be inside a single RT csum file block, so that
+each data read only needs to deal with a single checksum buffer.
 
-The ioend submission path allocates the csum buffer and attaches it to
-the ioend before generating the checksum from the file data.  The I/O
-completion then logs the checksums into the buffers for the LBAs that
-were written.
+All reads on checksummed files need to use ioends so that the checksum
+can be verified from process context.  The ioend submission path looks
+up the checksum buffer and kicks of an asynchronous read of it.  The
+completion path waits for the buffer if needed and verifies the checksum.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_file.c       |  7 +++---
- fs/xfs/xfs_ioend.c      | 38 ++++++++++++++++++++++++++++++++
- fs/xfs/xfs_ioend.h      |  2 ++
- fs/xfs/xfs_iomap.c      | 49 ++++++++++++++++++++++++++++++++++++-----
- fs/xfs/xfs_iomap.h      |  4 +++-
- fs/xfs/xfs_reflink.c    |  2 +-
- fs/xfs/xfs_zone_alloc.c |  5 +++++
- 7 files changed, 97 insertions(+), 10 deletions(-)
+ fs/xfs/xfs_aops.c  |   4 +-
+ fs/xfs/xfs_ioend.c | 108 +++++++++++++++++++++++++++++++++++++++------
+ fs/xfs/xfs_iomap.c |  23 ++++++++--
+ 3 files changed, 114 insertions(+), 21 deletions(-)
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 5b25f33527c0..a38191760f81 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1073,7 +1073,8 @@ xfs_file_buffered_write(
- 
- 	trace_xfs_file_buffered_write(iocb, from);
- 	ret = iomap_file_buffered_write(iocb, from,
--			&xfs_buffered_write_iomap_ops, &xfs_iomap_write_ops,
-+			&xfs_buffered_write_iomap_ops,
-+			xfs_get_iomap_write_ops(ip),
- 			NULL);
- 
- 	/*
-@@ -1154,8 +1155,8 @@ xfs_file_buffered_write_zoned(
- retry:
- 	trace_xfs_file_buffered_write(iocb, from);
- 	ret = iomap_file_buffered_write(iocb, from,
--			&xfs_buffered_write_iomap_ops, &xfs_iomap_write_ops,
--			&ac);
-+			&xfs_buffered_write_iomap_ops,
-+			xfs_get_iomap_write_ops(ip), &ac);
- 	if (ret == -ENOSPC && !cleared_space) {
- 		/*
- 		 * Kick off writeback to convert delalloc space and release the
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index c30e688cfc9f..931795316de4 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -599,9 +599,7 @@ static inline const struct iomap_read_ops *
+ xfs_get_iomap_read_ops(
+ 	const struct address_space	*mapping)
+ {
+-	struct xfs_inode		*ip = XFS_I(mapping->host);
+-
+-	if (bdev_has_integrity_csum(xfs_inode_buftarg(ip)->bt_bdev))
++	if (mapping_stable_writes(mapping))
+ 		return &xfs_iomap_read_ops;
+ 	return &iomap_bio_read_ops;
+ }
 diff --git a/fs/xfs/xfs_ioend.c b/fs/xfs/xfs_ioend.c
-index 7570a1b915c0..7b9c82e3c449 100644
+index 54bd0995ac29..7570a1b915c0 100644
 --- a/fs/xfs/xfs_ioend.c
 +++ b/fs/xfs/xfs_ioend.c
-@@ -235,6 +235,37 @@ xfs_ioend_submit_read(
- 	submit_bio(bio);
- }
+@@ -14,12 +14,72 @@
+ #include "xfs_trace.h"
+ #include "xfs_bmap_util.h"
+ #include "xfs_reflink.h"
++#include "xfs_rtcsum.h"
+ #include "xfs_zone_alloc.h"
+ #include "xfs_ioend.h"
+ #include "xfs_error.h"
+ #include "xfs_errortag.h"
+ #include <linux/bio-integrity.h>
  
-+int
-+xfs_ioend_submit_read_sync(
-+	struct bio		*bio,
-+	struct inode		*inode,
-+	loff_t			file_offset,
-+	u16			ioend_flags)
++static bool
++xfs_rtcsum_prepare_read(
++	struct iomap_ioend	*ioend)
 +{
-+	struct xfs_inode	*ip = XFS_I(inode);
-+	struct iomap_ioend	*ioend;
-+	struct bvec_iter	saved_iter;
++	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
++	struct xfs_mount	*mp = ip->i_mount;
++	struct xfs_buf		*bp;
 +	int			error;
 +
-+	ASSERT(!(ioend_flags & IOMAP_IOEND_DIRECT));
++	error = -EIO;
++	if (WARN_ON_ONCE(ioend->io_bio.bi_iter.bi_idx))
++		goto fail;
 +
-+	ioend = iomap_init_ioend(inode, bio, file_offset, ioend_flags);
-+	if (xfs_is_rtcsum_inode(ip) && !xfs_rtcsum_prepare_read(ioend))
-+		return blk_status_to_errno(bio->bi_status);
-+	if (ioend_flags & IOMAP_IOEND_INTEGRITY)
-+		fs_bio_integrity_alloc(bio);
-+	saved_iter = bio->bi_iter;
-+	error = submit_bio_wait(bio);
-+	if (bio_integrity(bio)) {
-+		if (!error)
-+			error = fs_bio_integrity_verify(bio, &saved_iter);
-+		fs_bio_integrity_free(bio);
-+	}
-+	if (xfs_is_rtcsum_inode(ip))
-+		error = xfs_rtcsum_verify_ioend(ioend, error);
++	error = xfs_rtcsum_read_async(mp,
++			xfs_daddr_to_rtb(mp, ioend->io_sector), &bp);
++	if (error)
++		goto fail;
++	ioend->io_private = bp;
++	return true;
++
++fail:
++	ioend->io_bio.bi_status = errno_to_blk_status(error);
++	bio_endio(&ioend->io_bio);
++	return false;
++}
++
++static int
++xfs_rtcsum_verify_ioend(
++	struct iomap_ioend	*ioend,
++	int			error)
++{
++	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
++	struct xfs_mount	*mp = ip->i_mount;
++	xfs_rtblock_t		bno = xfs_daddr_to_rtb(mp, ioend->io_sector);
++	unsigned int		bsize = mp->m_sb.sb_blocksize;
++	struct xfs_buf		*bp = ioend->io_private;
++	struct bvec_iter	iter = {
++		.bi_size	= roundup(ioend->io_size, bsize),
++		.bi_offset	= ioend->io_bvec_offset,
++	};
++
++	/* No bp for early xfs_rtcsum_prepare_read failures. */
++	if (!bp)
++		return error;
++
++	if (error)
++		goto out_rele;
++	error = xfs_buf_read_async_wait(bp);
++	if (error)
++		goto out_rele;
++
++	error = xfs_csum_verify(mp, &ioend->io_bio, &iter,
++				bp->b_addr + xfs_rtb_to_rtcsumoff(mp, bno), bno,
++				true);
++out_rele:
++	xfs_buf_rele(bp);
 +	return error;
 +}
 +
  static void
- xfs_end_ioend_write_zoned(
- 	struct iomap_ioend	*ioend)
-@@ -261,6 +292,13 @@ xfs_end_ioend_write_zoned(
- 		goto done;
+ xfs_dio_bounce_end_io(
+ 	struct bio		*bio)
+@@ -30,6 +90,9 @@ xfs_dio_bounce_end_io(
+ 
+ 	if ((ioend->io_flags & IOMAP_IOEND_INTEGRITY) && !bio->bi_status)
+ 		error = iomap_ioend_integrity_verify(ioend);
++	if (xfs_is_rtcsum_inode(XFS_I(ioend->io_inode)))
++		error = xfs_rtcsum_verify_ioend(ioend, error);
++
+ 	iomap_bounce_read_end_io(ioend, orig_bio, error);
+ }
+ 
+@@ -39,6 +102,9 @@ xfs_bounce_submit_ioend(
+ {
+ 	if (ioend->io_flags & IOMAP_IOEND_INTEGRITY)
+ 		fs_bio_integrity_alloc(&ioend->io_bio);
++	if (xfs_is_rtcsum_inode(XFS_I(ioend->io_inode)) &&
++	    !xfs_rtcsum_prepare_read(ioend))
++		return;
+ 	ioend->io_bio.bi_end_io = xfs_dio_bounce_end_io;
+ 	bio_set_flag(&ioend->io_bio, BIO_COMPLETE_IN_TASK);
+ 	submit_bio(&ioend->io_bio);
+@@ -108,25 +174,36 @@ xfs_end_io_read(
+ 	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	int			error = blk_status_to_errno(bio->bi_status);
++	bool			is_csum_error = false;
+ 
+ 	if (!error && (ioend->io_flags & IOMAP_IOEND_INTEGRITY)) {
+ 		error = iomap_ioend_integrity_verify(ioend);
+-		if ((ioend->io_flags & IOMAP_IOEND_DIRECT) &&
+-		    READ_ONCE(mp->m_read_bounce) == XFS_READ_BOUNCE_LAZY) {
+-			/*
+-			 * We only really need to retry for guard tag errors,
+-			 * but right now we can't distinguish them from other
+-			 * (i.e, reftag) errors.
+-			 */
+-			if (error ||
+-			    XFS_TEST_ERROR(mp, XFS_ERRTAG_BOUNCE_REREAD)) {
+-				xfs_read_bounce_and_resubmit(ioend);
+-				return;
+-			}
+-		}
++		/*
++		 * We only really need to retry for guard tag errors, but right
++		 * now we can't distinguish them from other (i.e, reftag) errors.
++		 */
++		if (error)
++			is_csum_error = true;
  	}
  
+-	iomap_finish_ioends(ioend, error);
 +	if (xfs_is_rtcsum_inode(ip)) {
-+		error = xfs_rtcsum_log(oz, ioend->io_sector, ioend->io_size,
-+				ioend->io_csum);
-+		if (error)
-+			goto done;
++		error = xfs_rtcsum_verify_ioend(ioend, error);
++		if (error && !bio->bi_status)
++			is_csum_error = true;
 +	}
 +
- 	error = xfs_zoned_end_io(ip, ioend->io_offset, ioend->io_size,
- 			ioend->io_sector, oz, NULLFSBLOCK);
- 	if (error)
-diff --git a/fs/xfs/xfs_ioend.h b/fs/xfs/xfs_ioend.h
-index 7c2a1ea3e6ed..f01aa208c61f 100644
---- a/fs/xfs/xfs_ioend.h
-+++ b/fs/xfs/xfs_ioend.h
-@@ -14,5 +14,7 @@ static inline bool xfs_ioend_is_append(struct iomap_ioend *ioend)
- void xfs_end_bio(struct bio *bio);
- void xfs_ioend_submit_read(struct inode *inode, struct bio *bio,
- 		loff_t file_offset, u16 ioend_flags);
-+int xfs_ioend_submit_read_sync(struct bio *bio, struct inode *inode,
-+		loff_t file_offset, u16 ioend_flags);
++	/*
++	 * If we saw a checksum failure on a direct I/O read that uses lazy
++	 * bouncing, resubmit the read using a bounce buffer so that we can
++	 * guarantee this was not caused by the user corrupting the buffer.
++	 */
++	if ((ioend->io_flags & IOMAP_IOEND_DIRECT) &&
++	    READ_ONCE(mp->m_read_bounce) == XFS_READ_BOUNCE_LAZY &&
++	    (is_csum_error ||
++	     (!error && XFS_TEST_ERROR(mp, XFS_ERRTAG_BOUNCE_REREAD))))
++		xfs_read_bounce_and_resubmit(ioend);
++	else
++		iomap_finish_ioends(ioend, error);
+ }
  
- #endif /* __XFS_IOEND_H */
+ void
+@@ -148,6 +225,9 @@ xfs_ioend_submit_read(
+ 		return;
+ 	}
+ 
++	if (xfs_is_rtcsum_inode(ip) && !xfs_rtcsum_prepare_read(ioend))
++		return;
++
+ 	if (ioend_flags & IOMAP_IOEND_INTEGRITY)
+ 		fs_bio_integrity_alloc(bio);
+ 	bio->bi_end_io = xfs_end_io_read;
 diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 0e4396e52809..75d02a32a36a 100644
+index 6701be9325ef..0e4396e52809 100644
 --- a/fs/xfs/xfs_iomap.c
 +++ b/fs/xfs/xfs_iomap.c
-@@ -33,6 +33,7 @@
+@@ -32,6 +32,7 @@
+ #include "xfs_rtbitmap.h"
  #include "xfs_icache.h"
  #include "xfs_zone_alloc.h"
- #include "xfs_rtcsum.h"
-+#include "xfs_ioend.h"
++#include "xfs_rtcsum.h"
  
  #define XFS_ALLOC_ALIGN(mp, off) \
  	(((off) >> mp->m_allocsize_log) << mp->m_allocsize_log)
-@@ -93,10 +94,45 @@ xfs_iomap_valid(
- 	return true;
- }
+@@ -166,6 +167,8 @@ xfs_bmbt_to_iomap(
+ 	}
  
--const struct iomap_write_ops xfs_iomap_write_ops = {
-+static const struct iomap_write_ops xfs_iomap_write_ops = {
- 	.iomap_valid		= xfs_iomap_valid,
- };
- 
-+static int
-+xfs_csum_read_folio_range(
-+	const struct iomap_iter	*iter,
-+	struct folio		*folio,
-+	loff_t			pos,
-+	size_t			len)
-+{
-+	const struct iomap	*srcmap = iomap_iter_srcmap(iter);
-+	unsigned int		ioend_flags = iomap_ioend_flags(&iter->iomap);
-+	struct bio		*bio;
-+	int			error;
-+
-+	bio = bio_alloc_bioset(srcmap->bdev, 1, REQ_OP_READ, GFP_NOFS,
-+			&iomap_ioend_bioset);
-+	bio->bi_iter.bi_sector = iomap_sector(srcmap, pos);
-+	bio_add_folio_nofail(bio, folio, len, offset_in_folio(folio, pos));
-+	error = xfs_ioend_submit_read_sync(bio, iter->inode, pos, ioend_flags);
-+	bio_put(bio);
-+	return error;
-+}
-+
-+static const struct iomap_write_ops xfs_iomap_csum_write_ops = {
-+	.iomap_valid		= xfs_iomap_valid,
-+	.read_folio_range	= xfs_csum_read_folio_range,
-+};
-+
-+const struct iomap_write_ops *
-+xfs_get_iomap_write_ops(
-+	struct xfs_inode	*ip)
-+{
+ 	iomap->validity_cookie = sequence_cookie;
 +	if (xfs_is_rtcsum_inode(ip))
-+		return &xfs_iomap_csum_write_ops;
-+	return &xfs_iomap_write_ops;
-+}
++		iomap->csum_shift = mp->m_rtcsum_shift;
+ 	return 0;
+ }
+ 
+@@ -2227,16 +2230,28 @@ xfs_read_iomap_begin(
+ 		return error;
+ 	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb, &imap,
+ 			       &nimaps, 0);
+-	if (!error && ((flags & IOMAP_REPORT) || IS_DAX(inode)))
++	if (error)
++		goto out_unlock;
 +
- int
- xfs_bmbt_to_iomap(
- 	struct xfs_inode	*ip,
-@@ -1617,6 +1653,9 @@ xfs_zoned_fill_srcmap(
- 	 * There is a data fork mapping, only map until the end of it.
- 	 */
- 	xfs_trim_extent(&smap, offset_fsb, *end_fsb - offset_fsb);
-+	if (xfs_is_rtcsum_inode(ip))
-+		smap.br_blockcount = min(smap.br_blockcount,
-+			xfs_rtcsum_max_len(ip->i_mount, smap.br_startblock));
- 	*end_fsb = min(*end_fsb, smap.br_startoff + smap.br_blockcount);
- 	return xfs_bmbt_to_iomap(ip, srcmap, &smap, flags, 0,
- 			xfs_iomap_inode_sequence(ip, 0));
-@@ -2415,8 +2454,8 @@ xfs_zero_range(
- 		return dax_zero_range(inode, pos, len, did_zero,
- 				      &xfs_dax_write_iomap_ops);
- 	return iomap_zero_range(inode, pos, len, did_zero,
--			&xfs_buffered_write_iomap_ops, &xfs_iomap_write_ops,
--			ac);
-+			&xfs_buffered_write_iomap_ops,
-+			xfs_get_iomap_write_ops(ip), ac);
- }
- 
- int
-@@ -2432,6 +2471,6 @@ xfs_truncate_page(
- 		return dax_truncate_page(inode, pos, did_zero,
- 					&xfs_dax_write_iomap_ops);
- 	return iomap_truncate_page(inode, pos, did_zero,
--			&xfs_buffered_write_iomap_ops, &xfs_iomap_write_ops,
--			ac);
-+			&xfs_buffered_write_iomap_ops,
-+			xfs_get_iomap_write_ops(ip), ac);
- }
-diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
-index f2520a9b3a13..bb35e58d31ee 100644
---- a/fs/xfs/xfs_iomap.h
-+++ b/fs/xfs/xfs_iomap.h
-@@ -43,6 +43,7 @@ xfs_iomap_set_anon_write(
- 	iomap->flags = IOMAP_F_ANON_WRITE | IOMAP_F_DIRTY;
- 	if (bdev_has_integrity_csum(iomap->bdev))
- 		iomap->flags |= IOMAP_F_INTEGRITY;
-+	iomap->csum_shift = ip->i_mount->m_rtcsum_shift;
- }
- 
- static inline xfs_filblks_t
-@@ -69,6 +70,8 @@ int xfs_read_iomap_begin(struct inode *inode, loff_t offset,
- 		loff_t length, unsigned flags, struct iomap *iomap,
- 		struct iomap *srcmap);
- 
-+const struct iomap_write_ops *xfs_get_iomap_write_ops(struct xfs_inode *ip);
-+
- extern const struct iomap_ops xfs_buffered_write_iomap_ops;
- extern const struct iomap_ops xfs_direct_write_iomap_ops;
- extern const struct iomap_ops xfs_zoned_direct_write_iomap_ops;
-@@ -77,6 +80,5 @@ extern const struct iomap_ops xfs_seek_iomap_ops;
- extern const struct iomap_ops xfs_xattr_iomap_ops;
- extern const struct iomap_ops xfs_dax_write_iomap_ops;
- extern const struct iomap_ops xfs_atomic_write_cow_iomap_ops;
--extern const struct iomap_write_ops xfs_iomap_write_ops;
- 
- #endif /* __XFS_IOMAP_H__*/
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 480136136635..6edbe12777ac 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1918,7 +1918,7 @@ xfs_reflink_unshare(
- 	else
- 		error = iomap_file_unshare(inode, offset, len,
- 				&xfs_buffered_write_iomap_ops,
--				&xfs_iomap_write_ops);
-+				xfs_get_iomap_write_ops(ip));
- 	if (error)
- 		goto out;
- 
-diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
-index 9d9a713684b9..71cd35352e2e 100644
---- a/fs/xfs/xfs_zone_alloc.c
-+++ b/fs/xfs/xfs_zone_alloc.c
-@@ -27,6 +27,7 @@
- #include "xfs_trace.h"
- #include "xfs_mru_cache.h"
- #include "xfs_rtcsum.h"
-+#include "xfs_rtcsum.h"
- #include <linux/bio-integrity.h>
- 
- static void
-@@ -934,6 +935,10 @@ xfs_zone_alloc_and_submit(
- 
- 	if (ioend->io_flags & IOMAP_IOEND_INTEGRITY)
- 		fs_bio_integrity_generate(&ioend->io_bio);
-+	if (xfs_is_rtcsum_inode(ip)) {
-+		xfs_csum_generate(mp, &ioend->io_bio,
-+				iomap_csum_alloc(ioend, mp->m_rtcsum_shift));
++	if ((flags & IOMAP_REPORT) || IS_DAX(inode)) {
+ 		error = xfs_reflink_trim_around_shared(ip, &imap, &shared);
++		if (error)
++			goto out_unlock;
++	} else if (!isnullstartblock(imap.br_startblock) &&
++		   xfs_is_rtcsum_inode(ip)) {
++		imap.br_blockcount = min(imap.br_blockcount,
++				xfs_rtcsum_max_len(mp, imap.br_startblock));
 +	}
++
+ 	seq = xfs_iomap_inode_sequence(ip, shared ? IOMAP_F_SHARED : 0);
+ 	xfs_iunlock(ip, lockmode);
+-
+-	if (error)
+-		return error;
+ 	trace_xfs_iomap_found(ip, offset, length, XFS_DATA_FORK, &imap);
+ 	return xfs_bmbt_to_iomap(ip, iomap, &imap, flags,
+ 				 shared ? IOMAP_F_SHARED : 0, seq);
++
++out_unlock:
++	xfs_iunlock(ip, lockmode);
++	return error;
+ }
  
- 	/*
- 	 * If we don't have a locally cached zone in this write context, see if
+ static DEFINE_IOMAP_ITER_NEXT(xfs_read_iomap_next, xfs_read_iomap_begin);
 -- 
 2.53.0
 
