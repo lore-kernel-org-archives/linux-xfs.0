@@ -1,65 +1,65 @@
-Received: from mail-wr2-f35.google.com (mail-wr2-f35.google.com [74.125.225.99])
+Received: from mail-wm2-f12.google.com (mail-wm2-f12.google.com [74.125.225.140])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB1744477E3
-	for <linux-xfs@vger.kernel.org>; Thu, 24 Sep 2026 09:13:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.99
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63AB744A40A
+	for <linux-xfs@vger.kernel.org>; Thu, 24 Sep 2026 09:13:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.140
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790241184; cv=none; b=GTFfy7TJuLFmoYive3+fnBReR+NlVLojEr0zkwrlGU6puo5TYazt0IMbQrDYE9AwjUT/wpkxRxUJujUrdwDxuM7z7f8v9tZLGHi8tuC4rNtpRWYsBktKhK9trxEpeHuCKBHgI6fmlyKzxT/gLcmDH8XWWXYF/fLlNKhVlWFKxa0=
+	t=1790241187; cv=none; b=j3hG0KyWbDIRdgUm2XtBuYz/65bDG97Cq453BR9zWTEetlK6/uxMPNd2bSXW6giSIWGp7L8Re5TbtwKULhLj2j2y4lol8LEWN+6b1wcs5FmQOsYRA4n/gO6g0SUMX9iZkLi4Xiyz3+b4AOk9y2y9myd2INzEaY83mMRyuqNKTeY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790241184; c=relaxed/simple;
-	bh=RYRoyEZy3AZX96/W22uGNOvKvksOSwlIn7uO1WdQA74=;
+	s=arc-20240116; t=1790241187; c=relaxed/simple;
+	bh=R2v6XIS8rFzH1++61DHzZpR8Odr/UFZzSld3CIqALtM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=CON2SBnxTbbA9fg/G1w4EjhmXtui/YyVQj76iVoq/Tb+7d251GxbZP/CxpKH1pWRl71d6zwj0aYqtyP+IEdRP1mbT0BmVEi55FfGHS7u3Svzn4ZgL++m7/YlFrFfop3MLakm0aDmoIAqpQCCc7Pi5liHDC+rVpMpgrUyKd/BxMg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=mWJgp0cD; arc=none smtp.client-ip=74.125.225.99
+	 MIME-Version; b=fuvFPQM+3CNz2viOOnkyOvNYkeDkplEzY1bJ7W5q2nMGsRq6giqe4V5sn5fFVfDCWKCNmrKik7Vom161MFmAeZr3Kz2BvQsr0FMa49Es1M9NXxO9Tt0EVJU33mYjf43lHdznpnJi515h92muMfuDyN+Lb+sDoEhkeoF3CqLncAk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UYuIOpz7; arc=none smtp.client-ip=74.125.225.140
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mWJgp0cD"
-Received: by mail-wr2-f35.google.com with SMTP id ffacd0b85a97d-4887635e952so25638f8f.1
-        for <linux-xfs@vger.kernel.org>; Thu, 24 Sep 2026 02:13:02 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UYuIOpz7"
+Received: by mail-wm2-f12.google.com with SMTP id 5b1f17b1804b1-49e620fa473so10890265e9.1
+        for <linux-xfs@vger.kernel.org>; Thu, 24 Sep 2026 02:13:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790241181; x=1790845981; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1790241183; x=1790845983; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=3/GiZQj0CaseyrQZxOd/ioPb55nZ1v2BOlX+DpEu3BI=;
-        b=mWJgp0cD0DM87D2738zgSOVYuR5hlg//Uu1mCt4DFc1sNCWyFPabhj8TSsKKcg+9f1
-         Cn6RagoOVukVH8bJwQHzu3Zb7vpj4zNXSxWlcP5xUh+B7F+bQdvVi4c3CJ7LAlTIRcch
-         vhpAEH9DvQETawOVRa0mhXxkAPUjQqR8s57Ix3z+Y/zp29yX6rm+4yod+sHu5k9l1AKE
-         etGCuatNuKciF/FjDiLvPczKZ+Q9MI0M6+AhUdAYn9AVMTWqi1rjEYZs4KhO5JY1weKi
-         AI1AapihHnre2QpaWYSd6n5ihPyGGlrt1sRR42XZSEbjFWZmOGyFRuUVqMpAXInq+9Td
-         +wXg==
+        bh=Q3UEIk5rnMiFTRGuZ99oPenAjQD9CsZRbMnKE/eY65Q=;
+        b=UYuIOpz7j6vU2ibj8cfoBAxRZK2IAanJQ8c6r++AJPUZ3U7iw2r8DUjdaybDb1sDOb
+         h5Z78rP4R8WHZpcj5Tk+YsSPgnAGdcaPxWrRR97l634lFp2CWvK5w1FP1Q/jmlsj6nYm
+         RADQH+5FgGnJ7fe8L3BigTcEMBSm2tRPJh7gcJH36nvS6t6krVZnE8HPfMI0JCAQKUHT
+         Wkr7fCpJpW9LLeb3xhAnvSDU25WTfACbZGWP4D9cl5yvhsvPxn2KFsVVYh9C35wgWY79
+         6EPC61Tb4AkETEhvL2No1XWittJnoE5YiSHDI8y9mBOHJrHqEwF41GmQBKWj6/zz/VPX
+         d83Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790241181; x=1790845981;
+        d=1e100.net; s=20260707; t=1790241183; x=1790845983;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=3/GiZQj0CaseyrQZxOd/ioPb55nZ1v2BOlX+DpEu3BI=;
-        b=KiK/LdNUJ5AlNaeSRX77aOEjrQdyiANjd/TImjeqax4OTX2HWPgBqVbHMKiwjU1/5u
-         rzM3avZOFAxt9FitokOT0SgG6DlPa0kRmVuJ2ClNgYK4WUyX4+bmrd5l4LrG0TkPBncO
-         G8JHlNx+ULZ4VKnm4Xl9RGJ0V79KndxJkrAN89HFrEYe0V8lwMF//6RJgQY4xoCBIXLh
-         GjWTYZbP0cyrS3tvGxXnmOY24V8SVDdKILbNyEpuAW0V74RPxQL4aSsLz8p3B8CraWIh
-         aoTwGmGH/EnnhD9+7Mo/iOYyH7q6lBMWBt7giYMeydmq9SOtrhuzkaUV8yPv+qVMC3Li
-         sh2Q==
-X-Forwarded-Encrypted: i=1; AKwUvBz+UEPT45w1Cy4YEdrfoxwoUcKYYpUHq7riJyLFMw7prmaGLbBx5od6VT3w03b/3ItgWxT8iaiKr1w=@vger.kernel.org
-X-Gm-Message-State: AFuF++nRJhCxB0HyK2Mop3b2QT+N1Igz26J908RwzvYMNI+qtcf0vKvi
-	rX7q6SUnmY7sRhSN8rq4N95ihm2X9hupAr1+cyLI6H6KEm44YV+I+hvF
-X-Gm-Gg: AYBFou1LDUH2+x8QQWqJ5xCx/Iigl9Mave0cLCgpKMR6OeUG7bDriiZ2QJH1wP08Enq
-	vmPMDJzdJ2quyYyTsrh8UeM26WtQWouq4d1Psua5Bc4tZu8u4KaSkzWnI+VKfMLxjiPoleXbARk
-	1p52uMBJBsxjgriNB8LEMH97WtDoKqB88cFkYzJ3IgfijNvCMkY2rJ44XDae2C0HGZaPJ2X0wKo
-	4Dd7DgD62wA9cIruQEglKs9cFZBuJr+st0xvXoXTl06MqJ0x5gUnR/ftKvfCl8Yxdyc+AvTd1Qv
-	L20C8lUQQ5btocjwnYqoFFtXl4OLXTH7wZzoBIec5mBFkpZ2YEqZYZH5IENNCImLry0U49ISsPF
-	aNvQ06oo0TXXUeQca6ZkyGyvcb0+IPj+GmXOwQBuTqpo1rCXrYeTWEb9b3KVREIcTnsl/ev0dex
-	vpwGDNhkPBBjr2WxehCO8y5xc5+lxHgvt3OV4u+t0qHrCqWoQjmMdhlmhL3hgpsUgWteAEjtXk6
-	rerwIy4QVgKJK2lFApoVJKFeZg/6xWihN6tltRu5VYMO/4NoJSgis9BT18MI5svMTotrZOTWiUN
-	+km9
-X-Received: by 2002:a05:6000:41f5:b0:47f:9158:5924 with SMTP id ffacd0b85a97d-4887169cfd7mr3162682f8f.9.1790241180882;
-        Thu, 24 Sep 2026 02:13:00 -0700 (PDT)
+        bh=Q3UEIk5rnMiFTRGuZ99oPenAjQD9CsZRbMnKE/eY65Q=;
+        b=gQHJfqh5dSunpHVNu5I8hs4cUGs3dyR51/9KQCyFe6VIQFCDs+RCWDMYDCWzzjFN2s
+         XLwefCuFajz5sZm4hsk+rfGP48eCVAzX1s0JH1UfWZFWhpVkkoIlb7MNfhgzw2auZy5r
+         yucE1+onJs0+U6R16WldgbLSoWCZiRKblJl/7ihePBtxom2GKl2rBnEoow9UHNNi/xgZ
+         h5mA4AIq/STf2C2X++vg2XVLClWSLGx1YkjuEvPIQkrb+0IRp5FQfOd+2tDbBJe+Afe7
+         FyaEKr5V34mn38CHS69I3jzjPzz6nWexY7M98hUDHwb7D73lvnw6yzX5ns6USM9s8MPS
+         VLCg==
+X-Forwarded-Encrypted: i=1; AKwUvBxRvcSHRu653hy3QcDsbAcTM8DnPp+hpMad0MINm7+zmG8D/rkaBqAkY803j38Km9e2PrprLxvRiUY=@vger.kernel.org
+X-Gm-Message-State: AFuF++nhf3AxnLArzP2oHydywqMgM5u1fRclmmJpYYWwoeZQRpH21mhj
+	S5B997UwHTJHmqYeQI0xElHa8xtyRMwpUE7xewLGCzzfPUr4L0f964wE
+X-Gm-Gg: AYBFou0lwtgQF1EVaEZU5/Y6Onco665O3r6Vyq5RwsXFXR7fColk45DIf7IKxOaSjOt
+	sbLvd7xq4nP0iSn16McEkv76PxRlaWBUuA0POTVXjrs8nUVNTqgcOHWxkXBX8JsA5PzJ7Tf6H44
+	Jc1hpTovlBnfCGwesa4Fe11+uSy7qk8R5VoJjJQ6vVDbxwzlzbRFG0k7Gb3Zee3cixK9D2Mw51r
+	fqtXQUY0LvyIrpQ84Mv9BFu34kJkJiceLV9y6Btn6hnc1k6MNYDa9J9LZCyfsobjIa9oRi4zdWJ
+	0r6btbaCtQpaM7Zj11mTk/YNix1qN23Eurdu+Y57v0d9qk/ifP5UuRoNOU+boyOwqKo+rUWUhEM
+	7Bk9hBNrbBEzC6XBjwre85ZflX+rWasdSKaRo/4iXYXK5NJMqILDiZnFmDoYZhTD2m37Hlf6Y//
+	5drnbp1SBUpUTUq5CSkkdof8w3/eS7N9ma7wI0EPvS3/3dj/h1kEl5ZQt/SRp6QGgHk3ZsVKoAU
+	3JqqWg5pf7IfSJa46c/4spDKGNohAa6t5DSpn/bCHXOZ6dWqxyC37zi5Ao/elPvBnN6kiaLiS6C
+	xhSVt7bfoinv1iA=
+X-Received: by 2002:a05:600c:a015:b0:49f:c199:e1e2 with SMTP id 5b1f17b1804b1-49fe6700006mr27711555e9.28.1790241183440;
+        Thu, 24 Sep 2026 02:13:03 -0700 (PDT)
 Received: from andreayoga.localdomain (93-42-14-189.ip84.fastwebnet.it. [93.42.14.189])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4886848636asm12756677f8f.6.2026.09.24.02.12.59
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4886848636asm12756677f8f.6.2026.09.24.02.13.01
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 24 Sep 2026 02:13:00 -0700 (PDT)
+        Thu, 24 Sep 2026 02:13:03 -0700 (PDT)
 From: Andrea Parri <parri.andrea@gmail.com>
 To: Christian Brauner <brauner@kernel.org>,
 	Carlos Maiolino <cem@kernel.org>,
@@ -76,11 +76,10 @@ Cc: Andrea Parri <parri.andrea@gmail.com>,
 	linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org,
-	Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v2 3/4] iomap: don't lose a fiemap iteration error when emitting the last extent
-Date: Thu, 24 Sep 2026 11:11:53 +0200
-Message-ID: <20260924091203.198225-4-parri.andrea@gmail.com>
+	stable@vger.kernel.org
+Subject: [PATCH v2 4/4] iomap: don't lose a failed direct I/O bio's error when zeroing the tail
+Date: Thu, 24 Sep 2026 11:11:54 +0200
+Message-ID: <20260924091203.198225-5-parri.andrea@gmail.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260924091203.198225-1-parri.andrea@gmail.com>
 References: <20260924091203.198225-1-parri.andrea@gmail.com>
@@ -92,57 +91,93 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-iomap_fiemap() emits extents one behind: iomap_fiemap_iter() flushes the
-previous extent and remembers the current one, and the remembered extent
-is written with FIEMAP_EXTENT_LAST after the iteration loop.
+iomap_dio_bio_iter() falls through to the sub-block tail zeroing when
+the data bio submission fails, so that the rest of the block is still
+zeroed and stale data is not exposed.  The zeroing result was assigned
+to ret, which overwrote the submission error with the successful
+zeroing result (zero) and the failed write was reported as success.
 
-That final flush overwrites ret, so when ->iomap_begin() fails partway
-through the iteration the error is replaced by the result of
-iomap_to_fiemap() (zero on success) and iomap_fiemap() returns success
-with a truncated extent list whose last entry is wrongly marked as the
-last extent in the file.  The pre-iomap_iter code returned the error
-from inside the loop, before flushing the pending extent.
+iomap_dio_zero() can only return an error from a can't-happen
+WARN_ON_ONCE() (nr_vecs exceeding BIO_MAX_VECS, which the existing
+comment there says "shall never be reached" for any in-tree
+filesystem), so it isn't a real runtime failure worth reporting to
+userspace, let alone one worth losing the actual submission error for.
+Make iomap_dio_zero() return void and drop the error handling at both
+call sites instead of threading the result through a separate
+variable.
 
-Check for the iteration error before flushing the pending extent, so
-that real errors are propagated and only a successful iteration emits
-the final FIEMAP_EXTENT_LAST extent.  -ENOENT (no mapping) is still not
-an error, and the pending extent is still emitted in that case.
-
-Fixes: 7892386d3571 ("iomap: switch iomap_fiemap to use iomap_iter")
-Cc: <stable@vger.kernel.org> # v5.15
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Fixes: 10553a91652d ("iomap: fix iomap_dio_zero() for fs bs > system page size")
+Cc: stable@vger.kernel.org
 Assisted-by: LLM
 Signed-off-by: Andrea Parri <parri.andrea@gmail.com>
 ---
- fs/iomap/fiemap.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ fs/iomap/direct-io.c | 19 +++++++------------
+ 1 file changed, 7 insertions(+), 12 deletions(-)
 
-diff --git a/fs/iomap/fiemap.c b/fs/iomap/fiemap.c
-index d11dadff82865..54b824b7edb5c 100644
---- a/fs/iomap/fiemap.c
-+++ b/fs/iomap/fiemap.c
-@@ -76,15 +76,15 @@ int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
- 	while ((ret = iomap_iter(&iter, ops)) > 0)
- 		iter.status = iomap_fiemap_iter(&iter, fi, &prev);
- 
-+	/* inode with no (attribute) mapping will give ENOENT */
-+	if (ret < 0 && ret != -ENOENT)
-+		return ret;
-+
- 	if (prev.type != IOMAP_HOLE) {
- 		ret = iomap_to_fiemap(fi, &prev, FIEMAP_EXTENT_LAST);
- 		if (ret < 0)
- 			return ret;
- 	}
--
--	/* inode with no (attribute) mapping will give ENOENT */
--	if (ret < 0 && ret != -ENOENT)
--		return ret;
- 	return 0;
+diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+index 8b4039d16ce89..e00995c296c79 100644
+--- a/fs/iomap/direct-io.c
++++ b/fs/iomap/direct-io.c
+@@ -296,8 +296,9 @@ u32 iomap_finish_ioend_direct(struct iomap_ioend *ioend)
+ 	return vec_count;
  }
- EXPORT_SYMBOL_GPL(iomap_fiemap);
+ 
+-static int iomap_dio_zero(const struct iomap_iter *iter, struct iomap_dio *dio,
+-		loff_t pos, unsigned len)
++static void iomap_dio_zero(const struct iomap_iter *iter,
++			   struct iomap_dio *dio, loff_t pos,
++			   unsigned int len)
+ {
+ 	struct inode *inode = file_inode(dio->iocb->ki_filp);
+ 	struct bio *bio;
+@@ -305,14 +306,14 @@ static int iomap_dio_zero(const struct iomap_iter *iter, struct iomap_dio *dio,
+ 	int nr_vecs = max(1, i_blocksize(inode) / folio_size(zero_folio));
+ 
+ 	if (!len)
+-		return 0;
++		return;
+ 
+ 	/*
+ 	 * This limit shall never be reached as most filesystems have a
+ 	 * maximum blocksize of 64k.
+ 	 */
+ 	if (WARN_ON_ONCE(nr_vecs > BIO_MAX_VECS))
+-		return -EINVAL;
++		return;
+ 
+ 	bio = iomap_dio_alloc_bio(iter, dio, nr_vecs,
+ 				  REQ_OP_WRITE | REQ_SYNC | REQ_IDLE);
+@@ -328,8 +329,6 @@ static int iomap_dio_zero(const struct iomap_iter *iter, struct iomap_dio *dio,
+ 		len -= io_len;
+ 	}
+ 	iomap_dio_submit_bio(iter, dio, bio, pos);
+-
+-	return 0;
+ }
+ 
+ static ssize_t iomap_dio_bio_iter_one(struct iomap_iter *iter,
+@@ -541,10 +540,7 @@ static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
+ 	if (need_zeroout) {
+ 		/* zero out from the start of the block to the write offset */
+ 		pad = pos & (fs_block_size - 1);
+-
+-		ret = iomap_dio_zero(iter, dio, pos - pad, pad);
+-		if (ret)
+-			goto out;
++		iomap_dio_zero(iter, dio, pos - pad, pad);
+ 	}
+ 
+ 	do {
+@@ -582,8 +578,7 @@ static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
+ 		/* zero out from the end of the write to the end of the block */
+ 		pad = pos & (fs_block_size - 1);
+ 		if (pad)
+-			ret = iomap_dio_zero(iter, dio, pos,
+-					     fs_block_size - pad);
++			iomap_dio_zero(iter, dio, pos, fs_block_size - pad);
+ 	}
+ out:
+ 	/* Undo iter limitation to current extent */
 -- 
 2.53.0
 
