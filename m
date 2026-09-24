@@ -1,42 +1,42 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F8184457A4
-	for <linux-xfs@vger.kernel.org>; Thu, 24 Sep 2026 09:58:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 694054483BF
+	for <linux-xfs@vger.kernel.org>; Thu, 24 Sep 2026 09:58:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790243900; cv=none; b=F701Wp6QPCCEDY54T60zfgd4HaKoomBkfB+s0TBs/B7wnmjDtLkzc9ChMYiUkQcQx4ZCbiNknkuBcx1+CHHXvfUvrAdIMoItFiqjHW4unETE6OByCpIWW6u4bRNrtC0eRTWxWRGvXUxgfZcg1vYywmrG9XH+ZQpUO1jH5HesVLo=
+	t=1790243899; cv=none; b=kkahkxWHWNf7WcagK5QRoGp/Oun1AhyYw999Qd8K1uA//ZQ4dAKegihhGea+aYkMNlyGoHyaoCUgCpanR19iV3u7JsEZO6TOEsB1UvM8JlcX3dSCsPFKbZs411kOqe8RxaV0JTNyjpb6ih6y+6qFK3RwlS6obV0LgkS4xvAsphI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790243900; c=relaxed/simple;
-	bh=HUkZGF/CP7U+laPFngy668ob1AXrLd0qdFjXrTzV/4k=;
+	s=arc-20240116; t=1790243899; c=relaxed/simple;
+	bh=wIvJznwWdG0Vda8pnW/3MKV1JwYJ9eEfimjXNyPvh5U=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Bvyo8T7m07vuBG9xpWWJKWc8/0S6czLGHFWZ1aqy8IgLobL+TIczpW9gAwfwxTrkv070DwQKp/9T1ITDSvAHLYRwhRE6XaC00NMMysizuBAIjNBKTIjKoHen6WytccHv2i3y/upLdg2TYmLVeszhY7mlv5YufuAC7j8ruajp29c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=IRFwDUX9; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=J5Ly8Bndrcx82K+SwfTHyf/kevLIBG6x+UBBxFua1Y+YtULHGO0PLKAQo0BMj8i3W/VZPHtUVgWmysUdxFRPocVj2KW9gt6X88D9SRiPttcMq23SxxSAYKGPgWaOyJgsEYPEvONPB/3CcpQH7XECkyNhcC6lapZ7vErif5Sl19U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=fXIT3CUF; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="IRFwDUX9"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="fXIT3CUF"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=RyoWmcIgcQofGCQkVARRqmPujZt6+vAU2fOwO1vnAPw=; b=IRFwDUX9+Q3bROEHoJ6HUMn/Dp
-	FL7fJorMwUN0xX+mziawKpCgPu4SsCNWvTbTBZKZqPT+mgSBaEXOaKvdVZhS1Ga0AWK3HKKyP/cK7
-	MBphETEoFidYk+3buRTr9Y/AHG6IAWxGOqs3Od0PnhSXXM2fKEn7NKw3im41uTOf3iiMCqEqeb+5/
-	kMfVBu6/G/ZRP93eGbZlkZeVHDnSydi2FOgT9rK+SX3SJyc7lNLy4vxBi5GemYbfiC1E5IWj3nuB+
-	Vye8BqwSE3DXKs5HfV9gOWcpONUa0R8dJlW9XErX/dI7F7cVr23B1Anq39017Lc7CejcZNumU4WWU
-	tfbxHiKQ==;
+	bh=RxXDizziAascK0xvo0WO2laNq2Cu6D9VDMYZJtOk0xA=; b=fXIT3CUFFEDIes9AcZnRCPGQ8Z
+	VeK3/XYn7Ihr3PpMrBbNghMNCIf47oTZnAyhDPj6BSIvEaKd1D+7KmQKRGMKTuqSG7W4UrjpCwuMO
+	iBzvyK/EtJqO65yFydpQrJVu/Ao0Why/5I2MfHTN4BM8/QpRptZcRaZDnoBedlwcW0AaZPKseB8IR
+	/JaMM6EwKuh5VVYfQK2dVq9V405TrjUh8TuNFvBwll157oFp3GL3zSp3NKT8c2/F0x+IX2ZTbRkse
+	03MCkw4h5dn50myR5X8io+wT5g0bZR+j+G9DrmWFMoEmuYYwwApTOWgwtmaqSO3DWXprnV0LFvUh/
+	jxGh8MwA==;
 Received: from 85-127-111-79.dsl.dynamic.surfer.at ([85.127.111.79] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1x9gDR-0000000AeNY-20wn;
-	Thu, 24 Sep 2026 09:58:09 +0000
+	id 1x9gDH-0000000AeNB-46hs;
+	Thu, 24 Sep 2026 09:58:00 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: "Darrick J . Wong" <djwong@kernel.org>,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 8/9] xfs: factor out a xfs_zoned_fill_srcmap helper
-Date: Thu, 24 Sep 2026 11:57:09 +0200
-Message-ID: <20260924095740.2732474-9-hch@lst.de>
+Subject: [PATCH 5/9] xfs: use bdev_rw_virt in xfs_verify_media
+Date: Thu, 24 Sep 2026 11:57:06 +0200
+Message-ID: <20260924095740.2732474-6-hch@lst.de>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260924095740.2732474-1-hch@lst.de>
 References: <20260924095740.2732474-1-hch@lst.de>
@@ -49,86 +49,102 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-The code filling the srcmap in xfs_zoned_buffered_write_iomap_begin isn't
-terribly complicated, but fairly deeply indented and will become a bit
-more complex soon.  Factor it into a helper and add some comments.
+Use bdev_rw_virt for reading data from disk.  This simply uses an
+on-stack bio and bio_vec and removes the need to allocate an bio and
+reset it for each iteration.  Because bdev_rw_virt returns a negative
+errno, pass that on to xfs_verify_media_error to avoid a double
+conversion.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_iomap.c | 53 ++++++++++++++++++++++++++++++----------------
- 1 file changed, 35 insertions(+), 18 deletions(-)
+ fs/xfs/xfs_verify_media.c | 41 +++++++++++----------------------------
+ 1 file changed, 11 insertions(+), 30 deletions(-)
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 7c6238fed61e..7bc17f179be7 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -1588,6 +1588,37 @@ xfs_bmapi_reserve_delalloc(
- 	return error;
- }
+diff --git a/fs/xfs/xfs_verify_media.c b/fs/xfs/xfs_verify_media.c
+index 8ce3773aa875..71f4d6c832a9 100644
+--- a/fs/xfs/xfs_verify_media.c
++++ b/fs/xfs/xfs_verify_media.c
+@@ -229,8 +229,10 @@ xfs_verify_media_error(
+ 	struct xfs_buftarg	*btp,
+ 	xfs_daddr_t		daddr,
+ 	unsigned int		bio_bbcount,
+-	blk_status_t		bio_status)
++	int			error)
+ {
++	blk_status_t		bio_status = errno_to_blk_status(error);
++
+ 	trace_xfs_verify_media_error(mp, me, btp->bt_dev, daddr, bio_bbcount,
+ 			bio_status);
  
-+static int
-+xfs_zoned_fill_srcmap(
-+	struct xfs_inode	*ip,
-+	xfs_fileoff_t		offset_fsb,
-+	xfs_fileoff_t		*end_fsb,
-+	unsigned		flags,
-+	struct iomap		*srcmap)
-+{
-+	struct xfs_bmbt_irec	smap;
-+	struct xfs_iext_cursor	scur;
-+
-+	if (!xfs_iext_lookup_extent(ip, &ip->i_df, offset_fsb, &scur, &smap))
-+		smap.br_startoff = *end_fsb; /* fake hole until EOF */
-+	if (smap.br_startoff > offset_fsb) {
-+		/*
-+		 * There is a hole at @offset_fsb.  Only map until the end of
-+		 * the of it.
-+		 */
-+		*end_fsb = min(*end_fsb, smap.br_startoff);
-+		return 0;
-+	}
-+
-+	/*
-+	 * There is a data fork mapping, only map until the end of it.
-+	 */
-+	*end_fsb = min(*end_fsb, smap.br_startoff + smap.br_blockcount);
-+	xfs_trim_extent(&smap, offset_fsb, *end_fsb - offset_fsb);
-+	return xfs_bmbt_to_iomap(ip, srcmap, &smap, flags, 0,
-+			xfs_iomap_inode_sequence(ip, 0));
-+}
-+
- static int
- xfs_zoned_buffered_write_iomap_begin(
- 	struct inode		*inode,
-@@ -1655,24 +1686,10 @@ xfs_zoned_buffered_write_iomap_begin(
- 	if (!IS_ALIGNED(offset, mp->m_sb.sb_blocksize) ||
- 	    !IS_ALIGNED(offset + count, mp->m_sb.sb_blocksize) ||
- 	    (flags & IOMAP_ZERO)) {
--		struct xfs_bmbt_irec	smap;
--		struct xfs_iext_cursor	scur;
+@@ -239,7 +241,7 @@ xfs_verify_media_error(
+ 	 * successfully verify any bytes at all.
+ 	 */
+ 	if (me->me_start_daddr == daddr)
+-		me->me_ioerror = -blk_status_to_errno(bio_status);
++		me->me_ioerror = -error;
+ 
+ 	/*
+ 	 * PI validation failures, medium errors, or general IO errors are
+@@ -266,7 +268,6 @@ xfs_verify_media(
+ 	struct xfs_verify_media	*me)
+ {
+ 	struct xfs_buftarg	*btp = NULL;
+-	struct bio		*bio;
+ 	struct folio		*folio;
+ 	xfs_daddr_t		daddr;
+ 	uint64_t		bbcount;
+@@ -332,33 +333,16 @@ xfs_verify_media(
+ 
+ 	trace_xfs_verify_media(mp, me, btp->bt_dev, daddr, bbcount, folio);
+ 
+-	bio = bio_alloc(btp->bt_bdev, 1, REQ_OP_READ, GFP_KERNEL);
+-	if (!bio) {
+-		error = -ENOMEM;
+-		goto out_folio;
+-	}
 -
--		if (!xfs_iext_lookup_extent(ip, &ip->i_df, offset_fsb, &scur,
--				&smap))
--			smap.br_startoff = end_fsb; /* fake hole until EOF */
--		if (smap.br_startoff > offset_fsb) {
--			end_fsb = min(end_fsb, smap.br_startoff);
--		} else {
--			end_fsb = min(end_fsb,
--				smap.br_startoff + smap.br_blockcount);
--			xfs_trim_extent(&smap, offset_fsb,
--					end_fsb - offset_fsb);
--			error = xfs_bmbt_to_iomap(ip, srcmap, &smap, flags, 0,
--					xfs_iomap_inode_sequence(ip, 0));
--			if (error)
--				goto out_unlock;
--		}
-+		error = xfs_zoned_fill_srcmap(ip, offset_fsb, &end_fsb, flags,
-+				srcmap);
-+		if (error)
-+			goto out_unlock;
+-	while (bbcount > 0) {
++	for (;;) {
+ 		unsigned int	bio_bbcount;
+-		blk_status_t	bio_status;
+-
+-		bio_reset(bio, btp->bt_bdev, REQ_OP_READ);
+-		bio->bi_iter.bi_sector = daddr;
+-		bio_add_folio_nofail(bio, folio,
+-				min(bbcount << SECTOR_SHIFT, folio_size(folio)),
+-				0);
+ 
+-		/*
+-		 * Save the length of the bio before we submit it, because we
+-		 * need the original daddr and length for reporting IO errors
+-		 * if the bio fails.
+-		 */
+-		bio_bbcount = bio->bi_iter.bi_size >> SECTOR_SHIFT;
+-		submit_bio_wait(bio);
+-		bio_status = bio->bi_status;
+-		if (bio_status != BLK_STS_OK) {
++		bio_bbcount = min(bbcount, folio_size(folio) >> SECTOR_SHIFT);
++		error = bdev_rw_virt(btp->bt_bdev, daddr, folio_address(folio),
++				bio_bbcount << SECTOR_SHIFT,
++				REQ_OP_READ);
++		if (error) {
+ 			xfs_verify_media_error(mp, me, btp, daddr, bio_bbcount,
+-					bio_status);
++					error);
+ 			error = 0;
+ 			break;
+ 		}
+@@ -386,10 +370,7 @@ xfs_verify_media(
+ 		cond_resched();
  	}
  
- 	if (!ip->i_cowfp)
+-	bio_put(bio);
+-out_folio:
+ 	folio_put(folio);
+-
+ 	if (error)
+ 		return error;
+ 
 -- 
 2.53.0
 
