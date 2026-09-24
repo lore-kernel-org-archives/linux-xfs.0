@@ -1,129 +1,96 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta1.migadu.com (out-146.mta1.migadu.com [95.215.58.146])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEB8F388379;
-	Thu, 24 Sep 2026 06:03:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34CE042901E
+	for <linux-xfs@vger.kernel.org>; Thu, 24 Sep 2026 07:25:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.146
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790229798; cv=none; b=biFztDgGX07A0yUMfiWZJFmAtd446hiYC3zOITF7i3H63CTMaNUVoG0v+7ZsIPGoxs5RJnM2VUOGRrYnqgluGs1f4ZUszZgg1GQlwJ47VC91On+DOlcA6k81h4WzqCCgBFc3QVb7IvB9g3wNdZmPxSW9mbPdMT6M3ToP3QTb8/w=
+	t=1790234734; cv=none; b=M9wsY1yImiCiUJ8UIXW9lAL6ng5SnzZrHCsp8ER8jHRQRbMjE2L3DN0GEiwT4URxPUJLcw8dIvHN4Mr2IfsVY7Dr9K9qxNFoUv2rhaxsvh07vq8tpArXWcopQpO5QfcwgjbJQadLRzjK+cjUbs1kgPIEMD4tnhDMt9dW15CdtjU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790229798; c=relaxed/simple;
-	bh=CVc2ZN/8gUe6mfwlgbx0pGlggpoveNKAuukR7cETk7I=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=V7Te7b2TDS+/nH9NO01w0rf98dtjCFcEv9kGzyPLot4yEKv7NLCGTYXHhntK/3rNz3pJGD8EdLqRBGZmpZS2sNAsINF7MuJovY4v4OnzUY8bfyQ5kHDHRPEgJAZVcNx94Uw7e99TM0LdAr7Tz8scWxuDH15l7QucKmWNpLtIcyw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YiUDfJkz; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790234734; c=relaxed/simple;
+	bh=kpxnQ+T5dm8y5ACvCTrDn+fdvTMPwnbCt6gITaWVTuo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=BX2eHc8XMvNroEFFCpkXZTJgVRwWXBAkNo6Q/CiYxn+fve5Y25lQT4bjpM0qgZkymSEIYqemOznqvaG6ZZQZDH4/ft8rkF7olzTSYRyywfboe1j00jaTuILUv6geBcxWldGr4vBzBWd6qwJpy17+uBHJCOsi8Sz3jm+9RFYbOIc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=pJN41egy; arc=none smtp.client-ip=95.215.58.146
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YiUDfJkz"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id DEF541F00893;
-	Thu, 24 Sep 2026 06:03:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790229796;
-	bh=NiKagCKFf7UtHLLMSvYsFjI6GWPVcFpSJjIISlscCRk=;
-	h=Date:From:To:Cc:Subject;
-	b=YiUDfJkzXufG63XSvdO1tb6t7O9iqqhGILJpQqFb2HqoZ8iCBWC8kSU2CbLzwfrN9
-	 gRB0fKHE/iKBEshgCeKcxofS7bznii/j6RxWb/X1GaZyc7hj8j0iAYJlFyJ/fjZwnW
-	 DXqrKdxwHfWmJuxrQ30qeicof281jnUnyfssMNWwlKYISy8Pzt6W6tjFWsFLi1/DVi
-	 qCNVjQd2jkt6H7nNqIwMukzg/T0XtUfpTeDMeMz/vj+91LkqZGw3y24RaYgb0bDu96
-	 At7G7TID5rXLt+2k/NZxOCdl3TZh8dFpVmCxnygi5KvRn3T1EbOAigiDvbrZwKvotB
-	 ntuoIFeM1Mv0A==
-Date: Wed, 23 Sep 2026 23:03:15 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Zorro Lang <zlang@kernel.org>
-Cc: fstests <fstests@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
-Subject: [PATCH] generic/{349,350,351}: fix scsi_debug parameter quoting
- issues
-Message-ID: <20260924060315.GF6253@frogsfrogsfrogs>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="pJN41egy"
+X-Envelope-To: linux-xfs@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=kpxnQ+T5dm8y5ACvCTrDn+fdvTMPwnbCt6gITaWVTuo=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1790234729; v=1; x=1790839529;
+ b=pJN41egyVCryAaV6ao9m7YngC4qBSQsCnSPCGMrCjfd6tFfw0q20VZ31s30Ye9zIc7yWVyui
+ sOiOfuxeE3FtwultfeAPQvHD8yErRlneQ40YwcS7asSsFKEQyc94rdlK5R0urLX3GEP5o1/hvx9
+ Bej49lTUUweUId8U2iTQ7QIY=
+X-Envelope-To: linux-xfs@vger.kernel.org
+Received: by mta10.migadu.com with ESMTPS id 61f703b09c6c258b;
+	Thu, 24 Sep 2026 07:25:07 +0000
+X-Mizu-Trace-ID: 61f703b09c6c258b
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <5ded31ca-fabf-4492-ab5f-75cf43118714@linux.dev>
+Date: Thu, 24 Sep 2026 08:25:02 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 7/9] iomap: reject atomic writes in
+ iomap_file_buffered_write()
+To: Tal Zussman <tz2294@columbia.edu>, Jens Axboe <axboe@kernel.dk>,
+ Christoph Hellwig <hch@lst.de>,
+ Johannes Thumshirn <johannes.thumshirn@wdc.com>,
+ Luis Chamberlain <mcgrof@kernel.org>, Hannes Reinecke <hare@kernel.org>,
+ "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+ Christian Brauner <brauner@kernel.org>, "Darrick J. Wong"
+ <djwong@kernel.org>, Keith Busch <kbusch@kernel.org>,
+ "Martin K. Petersen" <mkp@kernel.org>
+Cc: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+ linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+References: <20260923-blkdev-fixes-v5-0-89e60d66eb38@columbia.edu>
+ <20260923-blkdev-fixes-v5-7-89e60d66eb38@columbia.edu>
+Content-Language: en-US
+From: John Garry <john.garry@linux.dev>
+In-Reply-To: <20260923-blkdev-fixes-v5-7-89e60d66eb38@columbia.edu>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-From: Darrick J. Wong <djwong@kernel.org>
+On 9/24/26 00:56, Tal Zussman wrote:
+> Buffered atomic writes are not currently supported. The page cache
+> writes folios back independently, so it cannot guarantee that a range is
+> written atomically. iomap_file_buffered_write() does not check for
+> IOCB_ATOMIC, so a direct write that falls back to it would complete an
+> atomic write without atomicity. While no such case currently exists,
+> fail IOCB_ATOMIC writes with -EOPNOTSUPP, so that a future fallback
+> cannot complete an atomic write non-atomically.
+> 
+> Suggested-by: John Garry <john.garry@linux.dev>
+> Signed-off-by: Tal Zussman <tz2294@columbia.edu>
 
-Commit a90ba59dca447d reworked the argument handling code inside
-_get_scsi_debug_dev to put all the remaining arguments (after we extract
-the first four arguments) inside an array that gets passed to modprobe:
+Reviewed-by: John Garry <john.garry@linux.dev>
 
-	opts+=("$@")
+> ---
+>   fs/iomap/buffered-io.c | 4 ++++
+>   1 file changed, 4 insertions(+)
+> 
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index 0a5ebfda90f1..e6654cfe1cbf 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -1304,6 +1304,10 @@ iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *i,
+>   	};
+>   	ssize_t ret;
+>   
+> +	/* Buffered atomic writes are not supported */
+> +	if (iocb->ki_flags & IOCB_ATOMIC)
+> +		return -EOPNOTSUPP;
+> +
+>   	if (iocb->ki_flags & IOCB_NOWAIT)
+>   		iter.flags |= IOMAP_NOWAIT;
+>   	if (iocb->ki_flags & IOCB_DONTCACHE)
+> 
 
-This code takes every command line argument and copies them into the
-array verbatim.  Contrast this to what it did before (excerpted):
-
-	opts="...dev_size_mb=$size $@"
-	echo "scsi_debug options $opts" >> $seqres.full
-	modprobe scsi_debug $opts
-
-The old code put all the arguments into a string, then passed the string
-unquoted to modprobe, which means that any spaces in the parameters
-given to _get_scsi_debug_dev become argument separators in the modprobe
-call.  Put more simply, passing "foo=1 bar=1" to _get_scsi_debug_dev
-results in "foo=1" "bar=1" being passed to modprobe.
-
-Now we no longer do that, which causes these three tests to fail with:
-
-	scsi_debug: `1 lbpws10=1' invalid for parameter `lbpws'
-
-because we're effectively passing lbpws="1 lbpws10=1" to scsi_debug.
-Fix this by removing the quoting from the three tests.
-
-Cc: <fstests@vger.kernel.org> # v2026.09.22
-Fixes: a90ba59dca447d ("common/scsi_debug: don't slow down I/O")
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
----
- tests/generic/349 |    2 +-
- tests/generic/350 |    2 +-
- tests/generic/351 |    4 ++--
- 3 files changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/tests/generic/349 b/tests/generic/349
-index 72fbda412ea41c..0d019d4ab46170 100755
---- a/tests/generic/349
-+++ b/tests/generic/349
-@@ -20,7 +20,7 @@ _require_scsi_debug
- _require_xfs_io_command "fzero"
- 
- echo "Create and format"
--dev=$(_get_scsi_debug_dev 512 512 0 4 "lbpws=1 lbpws10=1")
-+dev=$(_get_scsi_debug_dev 512 512 0 4 lbpws=1 lbpws10=1)
- _pwrite_byte 0x62 0 4m $dev >> $seqres.full
- 
- echo "Zero range"
-diff --git a/tests/generic/350 b/tests/generic/350
-index 6079a8d5032303..7dcdda03a613ff 100755
---- a/tests/generic/350
-+++ b/tests/generic/350
-@@ -20,7 +20,7 @@ _require_scsi_debug
- _require_xfs_io_command "fpunch"
- 
- echo "Create and format"
--dev=$(_get_scsi_debug_dev 512 512 0 4 "lbpws=1 lbpws10=1")
-+dev=$(_get_scsi_debug_dev 512 512 0 4 lbpws=1 lbpws10=1)
- _pwrite_byte 0x62 0 4m $dev >> $seqres.full
- 
- echo "Zero punch"
-diff --git a/tests/generic/351 b/tests/generic/351
-index e73b70e4d7957e..374ea1afe46d76 100755
---- a/tests/generic/351
-+++ b/tests/generic/351
-@@ -27,7 +27,7 @@ _require_xfs_io_command "fzero"
- _require_xfs_io_command "fpunch"
- 
- echo "Create and format"
--dev=$(_get_scsi_debug_dev 4096 4096 0 4 "lbpws=1 lbpws10=1")
-+dev=$(_get_scsi_debug_dev 4096 4096 0 4 lbpws=1 lbpws10=1)
- _pwrite_byte 0x62 0 4m $dev >> $seqres.full
- $XFS_IO_PROG -c "fsync" $dev
- 
-@@ -70,7 +70,7 @@ echo "Destroy device"
- _put_scsi_debug_dev
- 
- echo "Create w/o unmap or writesame and format"
--dev=$(_get_scsi_debug_dev 512 512 0 4 "lbpws=0 lbpws10=0 lbpu=0 write_same_length=0 unmap_max_blocks=0")
-+dev=$(_get_scsi_debug_dev 512 512 0 4 lbpws=0 lbpws10=0 lbpu=0 write_same_length=0 unmap_max_blocks=0)
- _pwrite_byte 0x62 0 4m $dev >> $seqres.full
- $XFS_IO_PROG -c "fsync" $dev
- 
