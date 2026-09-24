@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34138370D7C;
-	Thu, 24 Sep 2026 11:36:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6053E4746B3;
+	Thu, 24 Sep 2026 11:38:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790249814; cv=none; b=WlOi1O/3YdCJmnsO15Iu348dcKzZa6YZ+iYeNBQdNrsqCGI4cN+vSmECyZsyMj+2vlga5iVv4qGhjSr5XXZiZaT3e3rbLziBX5YYbeJdWYKdY5jBk5IqTuXK4CgQAxKOqOe8ajq/lmXpqevJ2AW86ldkTxlyTIweGKR6UvnhCH0=
+	t=1790249916; cv=none; b=sReyk88gAxx959i9urBFyFAUsvrdXsH3o/Gz6euec+9gqubsRz2fUbArwIyLwYtjMRw/0hpIb625L5dvfFT2I19mOI4jLDoLbu/G++2F2WvjcQYASx0C3Grr4W2rozcm9orweBLt8Ef1l41d7bUmWuyuHI7Pl3z/6IqkJQY5OzI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790249814; c=relaxed/simple;
-	bh=Aaxcjc0xFQV860Ea8OyRF7Lkc2RXrkkU2q9HOfpGIQY=;
+	s=arc-20240116; t=1790249916; c=relaxed/simple;
+	bh=xRJ//L7/GhCFVehFq3WovnpRWL81yhDw1Z1nUq0OBZY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=BCD1IYaIDTgKkFE2mPv+UF6Ym5gbB2Dyvi0HBZuOJo5UA/OWkS81hY1F02tTlgggJ7rrsOErUpP80THdUa/sqZqi5Jf2YaP4J5On+iFaBDZBfbfm3HLf418Ru+No31sV0rGey/f+SMnkdTS1QlEseGVbKbCMqZ3+Pw3akMkL89Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MB/ZGJi2; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=j9aTzXQ+JctovvY0aG9Pq+CyiEy+UTS8LZPBLh1TdLpHniBkbpzg/jcvYakkr8fg6jJ7sJnxIbVwy09a3JOeziqkJeY4ebe6tA3/vHIOkKUk3+NVzBRc+NlNqSgPsC6HxnlFRvboXqMQ5pxtOsp0gbsVjFfcv8zC4Zl+BjzCa84=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Gjs0c+b9; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MB/ZGJi2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 565731F000FF;
-	Thu, 24 Sep 2026 11:36:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Gjs0c+b9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 435791F000FF;
+	Thu, 24 Sep 2026 11:38:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790249808;
-	bh=Ob6SZGs22MaiArlkXsl87eym/XxNN25bTFL7Cvn+YAE=;
+	s=k20260515; t=1790249913;
+	bh=OqCrtCGgXXEf6QWkP/rDUVyjLDUqCpf1kFD9GdQ4c6c=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=MB/ZGJi2cUdLjmXmGzEUiGfStT6AosNRqc6HdIsBBC/sY8NSpzx28tNxb5mJl5e94
-	 s9ocHkKrjFOEsOriRBCFtxcwPc2HGKqd2JPug0YjEfYdA0g9Edj65y612Iit4+x7Gz
-	 h+Kar7JH64cY82+9zqumXSOMsuwxMfD1ENcDrzIt1BYBQd8wPa5Hcf9p3k6PK2a3F6
-	 jiWLSRlY2UhlQl9kOeUxQ+eWaE3GGBCDhnC+6fI4kN0LIc7G/j7Bz5prkeO3y5uCg0
-	 KgirNc/nmyX1zSnw6oVIf+KeOCorWgVQ++6fwgE66MaFvApAIlNmgqb/ZZT1A6s1bU
-	 ySEFYtToVNyJQ==
-Date: Thu, 24 Sep 2026 13:36:45 +0200
+	b=Gjs0c+b9FtVib5MaCrePyAwbjJCGQI2g2LXccmjlK2HMlVmzoZXV8RI2oJzRVz/6O
+	 Xibpra4JVJNcGzGqTngUCMhjb2YGK/HIcncJS5bgIl2KnKeVDqYPL9th9Gn03l8R13
+	 GvUlnCyGnEd4ejghYUZbYO68X1PSB4xP+8E9vfAF6QxtEwEnjk0ax0pYTkTMXXNkfw
+	 lIm+QnPfOgaf7KuDLCvagmJK7DPYYEnL1XtX7Fk9aLDCvphrxJvGIfBF8rR/LjoydV
+	 IAqJWXjJQ7nf17LDwYaHjQQGdAbguP8gnRBbcOPk7Cv+vz6RSF9vbSuKQS4cHtlL9y
+	 eyuRcV0aL91Gg==
+Date: Thu, 24 Sep 2026 13:38:30 +0200
 From: Andrey Albershteyn <aalbersh@kernel.org>
 To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: Zorro Lang <zlang@kernel.org>, fstests <fstests@vger.kernel.org>, 
 	xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] generic/{349,350,351}: fix scsi_debug parameter quoting
- issues
-Message-ID: <arUIImXClDcDKN7g@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
-References: <20260924060315.GF6253@frogsfrogsfrogs>
+Subject: Re: [PATCH] generic/805: skip this test if we can't mount the
+ filesystem
+Message-ID: <arULpLAWh-Jt2k4w@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+References: <20260924060245.GE6253@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,39 +43,24 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260924060315.GF6253@frogsfrogsfrogs>
+In-Reply-To: <20260924060245.GE6253@frogsfrogsfrogs>
 
-On 2026-09-23 23:03:15, Darrick J. Wong wrote:
+On 2026-09-23 23:02:45, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Commit a90ba59dca447d reworked the argument handling code inside
-> _get_scsi_debug_dev to put all the remaining arguments (after we extract
-> the first four arguments) inside an array that gets passed to modprobe:
+> This test doesn't work on filesystems with external devices (e.g. xfs
+> realtime) because the SCRATCH_DEV gets formatted with regular scratch fs
+> options but the filesystem is mounted with a bare _mount call, not
+> _scratch_mount.  Since SCRATCH_DEV is not the dm-linear device created
+> earlier in the test, we can't really use that either.
 > 
-> 	opts+=("$@")
+> In any case, if we can't mount the filesystem immediately after
+> formatting it, then we're not satisfying a test precondition.  Change
+> the _fail to _notrun.
 > 
-> This code takes every command line argument and copies them into the
-> array verbatim.  Contrast this to what it did before (excerpted):
+> While we're at it, fix the cleanup function so that unmount failures
+> don't pollute the output.
 > 
-> 	opts="...dev_size_mb=$size $@"
-> 	echo "scsi_debug options $opts" >> $seqres.full
-> 	modprobe scsi_debug $opts
-> 
-> The old code put all the arguments into a string, then passed the string
-> unquoted to modprobe, which means that any spaces in the parameters
-> given to _get_scsi_debug_dev become argument separators in the modprobe
-> call.  Put more simply, passing "foo=1 bar=1" to _get_scsi_debug_dev
-> results in "foo=1" "bar=1" being passed to modprobe.
-> 
-> Now we no longer do that, which causes these three tests to fail with:
-> 
-> 	scsi_debug: `1 lbpws10=1' invalid for parameter `lbpws'
-> 
-> because we're effectively passing lbpws="1 lbpws10=1" to scsi_debug.
-> Fix this by removing the quoting from the three tests.
-> 
-> Cc: <fstests@vger.kernel.org> # v2026.09.22
-> Fixes: a90ba59dca447d ("common/scsi_debug: don't slow down I/O")
 > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 
 Looks good to me
