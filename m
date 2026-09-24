@@ -1,74 +1,45 @@
-Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE36342981E
-	for <linux-xfs@vger.kernel.org>; Thu, 24 Sep 2026 09:13:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 602164570E9
+	for <linux-xfs@vger.kernel.org>; Thu, 24 Sep 2026 09:57:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790241231; cv=none; b=k58DCCbgtwiHNRNvJ/iZXnPSzkjp4v4z2lDlYtvohh52uEWsLb+TnpX2TCfEUxQkQvQ+pLxHDwW/CUwKKygsJRWFCb7lSMuKRnZltYY595Xo1xkxYQrZJz4aExek79n7x+Sa7XPyMOfeQVbJH0/y1tSUwVPTBEWt0hiNOKgeCH0=
+	t=1790243881; cv=none; b=jkKt6y9badxyfax+RqNrvbbW+Evb7zYke905RCwY21s1HS0W9CaEBCCzu7c+RWu7llHJ5K9loNUUFXUrl9B6hswpWVd/hv/3rtl3huN8q4alDGOCZDxljwfKRRmqxv51IpGfYxb/lXbibu/5LN1Q1Eb5ArQMOVe4ybKh5k97Xrs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790241231; c=relaxed/simple;
-	bh=juyi4OjVWA80iRkJ3ycXk+GZZld7CzggVm97TSrxBK0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=J4oZbqtdFfGCffMiVBEdFQmvrlRjyzeisHwtomIwd+6e1x2C5yKlASTISahxcagqZIzj249oi6lKbGTIWarqcFeps6ARlJAPzo6pYE+uaoXfGq99bYM38Ht5nkSrm6JjK1u18IBXHK2KRNgE45ZlLfdMiYISnNuIrx+WH8xXvB8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=T92mBs52; arc=none smtp.client-ip=209.85.128.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1790243881; c=relaxed/simple;
+	bh=sRF6QT43ndu3mUlgXVe372doOdFo+IRZBXAvDTcQ71E=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=L+ppeghWo+Gx7ZlK79PNhtFRYa8LWLlPfXFtfy9u3C5xbY3dsIqdXoLcVRg/IpilEdwoYabrOOnWni2W+XMO4Yiij4Uw41npXfzPvoEYgjcHlf0raNyS2kcMrZYV0O377XqKoHGNuIuOk+xGXAph91tpc9uVMbXjDipzoqj7bv0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=uwRdy50K; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="T92mBs52"
-Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-495437bb891so3474045e9.1
-        for <linux-xfs@vger.kernel.org>; Thu, 24 Sep 2026 02:13:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790241228; x=1790846028; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=xPVKV8/dlbuxm2O8DaNNJgk0/9BiC4IkG7M+UZS5G88=;
-        b=T92mBs52lSvyTObT4fQGpGdwPQ5AbYdghWZ4SqTb5jDdcJSWGwvMsQ09wFHOb4T7nx
-         tCn/HefmTkAsT9b7xLL9uEF7er7F3lxNfS5tkzgiWgUPdAxmVlLwDA+wtnR4qirs8Fea
-         SUygNF/6W7hOmKM5wPiHdzcw5T12SFgMEZky3ycMTHtmNjXsVvvYbplFSAP0NXmOfRw7
-         xfS5fxaowX0BmAzaP/G2eobMoE+qrmHE0/Auj84txPhwtiYarnwgAvk4FESoK8zb++Ft
-         V5PfdMSOp0VnSl7cZPpPUaCVfvZGPT/n+Cpp81VS6/5+mh4IxScXvdP6aM4GuannbsYE
-         4aYw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790241228; x=1790846028;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=xPVKV8/dlbuxm2O8DaNNJgk0/9BiC4IkG7M+UZS5G88=;
-        b=tusdt0Ux9uIaAvT1QaUEUvfGlURmDSpPmf3Si1ZCyhm99u4z10FaYh3h9KOGhL/jPi
-         NBubUZGUm6A8CqhmzahsE0wGyUr011zXkyfxvoUFpemDhEkeM2xfIsO7CH3WrLGZvdMg
-         VMwfzdW2Pnn1vCk9qWK3vHCzZBjlwYhb6/XKWhm7mjbutXWEcw3Ypnlwbri5Yk8IbNvq
-         nWcNeU02TczljKXsTLRw3NFlYntenDOOGX34BA7y/FS3+NgdWCEdAIAJCEB9eEcn+TAC
-         lZV7ymQoEhhfE3V2npImQtj3+A5PCsHUjZOY7kq7EevV7H1FI3HBTpNdLRred+6M9iwy
-         5qPw==
-X-Forwarded-Encrypted: i=1; AKwUvBy+mlha7ngBUS3jK9ZoHLdsG809MNLOoTcFUvhcH07sTyKygPLAR9+MGUDcUNeSCNtYgAfpJcP0wgM=@vger.kernel.org
-X-Gm-Message-State: AFuF++nts6C0bNhlyewSoM6PtM2y77YSTIpn0iqc9DGZhHg10p8jP/Bh
-	Jg2O93/VVOVjoTpUNtt8hgOg6om789/G3V2BEmJClD8NQPYR6TujnK4f
-X-Gm-Gg: AYBFou1gvBz0wVSkpi8ME7+p1MK7WerlSgKhN9WMLpR/Dr9OLgqmoYgeYtQWu3wVWlv
-	iswoBWGHVV7u1G26hjoxAeieFvO5UjCqXFv/2eL74Sjuz4fzEoV8+yZ1yNSHSPoLliWs83TWKLh
-	Boh1paRctAquC/YiVwGqVgxIAYjBPYwiKZWetm34+DEJJoXkQ4a9KDTPL1rSzFsQHKJ/kzqSaqy
-	3HsTEyDsY8/jgattixdmgprpLQpQggeOSFZuUyTtRtnUdQObAI+T9WWA/6Ls3SL0ZjyR7TomGeW
-	lkD9diOhHBOMumC+nn4VZtSKaNz8TB2+whx5hRURHtHCjhUt7BVAyoH1zB2wpzHfreyYQQq985k
-	GhTaYB87zzZ8g7YAlNZFxmLhKn3RiVTiG+LnLPk2id/ileOrT8A0ZNo/G1dCOBddG1/gXB4gd8+
-	/lxUyzu++7jCzA3J0fXel9OaQHygQBo9hmrHNbsDQdRskG9XHaep7EChhrVkYHUMX6wtxeRGxC1
-	4rk3EFSu88d51SKio2xargoAnvhPu2TyRkoy8tW8zJ3G7rgMkgjDFHnKjATETskjq2rIWzx9fjN
-	WhLtsMxAhPQVzgI=
-X-Received: by 2002:a05:600c:c101:b0:49d:27ee:79c9 with SMTP id 5b1f17b1804b1-49fe66d63fcmr25086305e9.8.1790241227757;
-        Thu, 24 Sep 2026 02:13:47 -0700 (PDT)
-Received: from andreayoga.localdomain (93-42-14-189.ip84.fastwebnet.it. [93.42.14.189])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48868779472sm13583550f8f.23.2026.09.24.02.13.46
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 24 Sep 2026 02:13:47 -0700 (PDT)
-From: Andrea Parri <parri.andrea@gmail.com>
-To: fstests@vger.kernel.org
-Cc: Andrea Parri <parri.andrea@gmail.com>,
-	"Darrick J . Wong" <djwong@kernel.org>,
-	Zorro Lang <zlang@kernel.org>,
-	Christoph Hellwig <hch@infradead.org>,
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="uwRdy50K"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
+	:Reply-To:Content-Type:Content-ID:Content-Description;
+	bh=ZXpV4D0SukIyf5PJPNY7rcFuHmOWBqE65hqDGgNiX8U=; b=uwRdy50KkTtFCzFc+xVMQKIVok
+	f/kFOQoFecJEb5Di+AQAdWK4HsSXEoNyJIWk2ri7y3QbUtJpEB/d6ZjkJQ2uMI7FJsiCjWx/xuGS7
+	T3Jw+m8kaaSc/hmfTmVMBKqG4F1DsCyGXJ8c1y+sNZe4GSf1dWFahPtIkPNa84xfWO99puIC1R02f
+	F017FIC1Sx9+Ket/jOPvL9gtanrsRBD5yM+1nLodNuMUi8CCnDpBMOhzJGJ6sgzNCfjdSZnusbmEX
+	QO5Gb9Ls9wI+O9NUV9sA5GJEDsrYDzq24dSOkk4Gn3Pt7+TLZjP74UgXTYOmtkPfPSrQx1tY9gVjQ
+	5ZTGjo3A==;
+Received: from 85-127-111-79.dsl.dynamic.surfer.at ([85.127.111.79] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1x9gD5-0000000AeMG-1403;
+	Thu, 24 Sep 2026 09:57:47 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: "Darrick J . Wong" <djwong@kernel.org>,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH] xfs: exercise a failed CoW conversion during writeback
-Date: Thu, 24 Sep 2026 11:13:36 +0200
-Message-ID: <20260924091338.198407-1-parri.andrea@gmail.com>
+Subject: [PATCH 1/9] xfs: centralize setting of buf_ops/buf_type/magic for rtblocks
+Date: Thu, 24 Sep 2026 11:57:02 +0200
+Message-ID: <20260924095740.2732474-2-hch@lst.de>
 X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260924095740.2732474-1-hch@lst.de>
+References: <20260924095740.2732474-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -76,123 +47,149 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-iomap_add_to_ioend() submits the pending ioend through
-->writeback_submit() before allocating a new one for the current
-range.  For XFS, xfs_writeback_submit() converts the ioend's CoW
-extents via xfs_reflink_convert_cow() before submitting the bio; if
-that conversion fails, ->writeback_submit() completes the ioend with
-an error and returns it.  A kernel bug left the stale ioend behind in
-wpc->wb_ctx, which iomap_writepages() then submitted a second time,
-corrupting XFS's ip->i_ioend_list.
+Add two tables for the buf_ops and buf_type, and derive the magic from
+the buf_ops to make have a single source of truth for the different RT
+block variants.  This cleans up the existing code and makes adding another
+type of block/file easier.
 
-Exercise this path with the wb_cow_convert_error error tag: reflink a
-file, dirty several widely separated ranges of the shared extent so
-that a single writepages() call has to build and submit more than one
-ioend, inject the error, and let writeback run.  On a kernel without
-the fix this reliably hits a "list_add double add" WARN from
-xfs_end_bio(); on a fixed kernel writeback just fails cleanly.
-
-This requires the wb_cow_convert_error XFS error tag; the test cleanly
-not-runs on kernels without it.
-
-Signed-off-by: Andrea Parri <parri.andrea@gmail.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- tests/xfs/842     | 70 +++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/842.out |  7 +++++
- 2 files changed, 77 insertions(+)
- create mode 100755 tests/xfs/842
- create mode 100644 tests/xfs/842.out
+ fs/xfs/libxfs/xfs_rtbitmap.c | 40 +++++++++++++++++++++---------------
+ fs/xfs/libxfs/xfs_rtbitmap.h | 15 ++------------
+ 2 files changed, 25 insertions(+), 30 deletions(-)
 
-diff --git a/tests/xfs/842 b/tests/xfs/842
-new file mode 100755
-index 0000000000000..c15760a4c7f89
---- /dev/null
-+++ b/tests/xfs/842
-@@ -0,0 +1,70 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2026 Andrea Parri.  All Rights Reserved.
-+#
-+# FS QA Test No. 842
-+#
-+# Regression test for a failed ->writeback_submit() call leaving a stale
-+# wpc->wb_ctx behind.  iomap_writepages() then resubmits whatever
-+# wpc->wb_ctx points to, i.e. the ioend that ->writeback_submit() already
-+# completed with an error.  For XFS the second bio_endio() lands back in
-+# xfs_end_bio(), which list_add_tail()s the already-linked ioend into
-+# ip->i_ioend_list a second time, corrupting the list.
-+#
-+# The only in-tree way for XFS's ->writeback_submit() to fail is a
-+# failing xfs_reflink_convert_cow(), so this uses the
-+# wb_cow_convert_error error tag to force that on a reflinked file whose
-+# CoW extents are dirtied in several widely separated ranges, so that a
-+# single writepages() call has to submit more than one ioend.
-+#
-+. ./common/preamble
-+_begin_fstest auto quick clone
+diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
+index e62786e90f7b..3f7877220e05 100644
+--- a/fs/xfs/libxfs/xfs_rtbitmap.c
++++ b/fs/xfs/libxfs/xfs_rtbitmap.c
+@@ -125,6 +125,26 @@ const struct xfs_buf_ops xfs_rtsummary_buf_ops = {
+ 	.verify_struct	= xfs_rtbuf_verify,
+ };
+ 
++static const struct xfs_buf_ops *xfs_rtblock_buf_ops[XFS_RTGI_MAX] = {
++	[XFS_RTGI_SUMMARY]	= &xfs_rtsummary_buf_ops,
++	[XFS_RTGI_BITMAP]	= &xfs_rtbitmap_buf_ops,
++};
 +
-+# Import common functions.
-+. ./common/filter
-+. ./common/reflink
-+. ./common/inject
++const struct xfs_buf_ops *
++xfs_rtblock_ops(
++	struct xfs_mount	*mp,
++	enum xfs_rtg_inodes	type)
++{
++	if (!xfs_has_rtgroups(mp))
++		return &xfs_rtbuf_ops;
++	return xfs_rtblock_buf_ops[type];
++}
 +
-+_require_cp_reflink
-+_require_scratch_reflink
-+_require_xfs_io_error_injection "wb_cow_convert_error"
-+_require_kernel_config CONFIG_LIST_HARDENED
++static enum xfs_blft xfs_rtblock_buf_types[XFS_RTGI_MAX] = {
++	[XFS_RTGI_SUMMARY]	= XFS_BLFT_RTSUMMARY_BUF,
++	[XFS_RTGI_BITMAP]	= XFS_BLFT_RTBITMAP_BUF,
++};
 +
-+blksz=65536
-+nr=8
-+sz=$((blksz * nr * 2))
-+
-+echo "Format and mount"
-+_scratch_mkfs >> $seqres.full 2>&1
-+_scratch_mount
-+
-+echo "Create reflinked file with several CoW extents"
-+_pwrite_byte 0x58 0 $sz $SCRATCH_MNT/file1 >> $seqres.full
-+_scratch_sync
-+_cp_reflink $SCRATCH_MNT/file1 $SCRATCH_MNT/file2
-+
-+# Dirty several widely separated ranges of file2's CoW extents so that a
-+# single writepages() call has to submit more than one ioend.
-+seq=0
-+while [ $seq -lt $nr ]; do
-+	off=$((seq * blksz * 2))
-+	_pwrite_byte 0x59 $off $blksz $SCRATCH_MNT/file2 >> $seqres.full
-+	seq=$((seq + 1))
-+done
-+
-+echo "Inject wb_cow_convert_error"
-+_scratch_inject_error "wb_cow_convert_error"
-+
-+echo "Trigger writeback with CoW conversion forced to fail"
-+_scratch_sync
-+
-+_scratch_inject_error "wb_cow_convert_error" 0
-+
-+echo "Remount"
-+_scratch_cycle_mount
-+
-+echo "Silence is golden"
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/842.out b/tests/xfs/842.out
-new file mode 100644
-index 0000000000000..72c9c67e7d5fb
---- /dev/null
-+++ b/tests/xfs/842.out
-@@ -0,0 +1,7 @@
-+QA output created by 842
-+Format and mount
-+Create reflinked file with several CoW extents
-+Inject wb_cow_convert_error
-+Trigger writeback with CoW conversion forced to fail
-+Remount
-+Silence is golden
+ /* Release cached rt bitmap and summary buffers. */
+ void
+ xfs_rtbuf_cache_relse(
+@@ -158,7 +178,6 @@ xfs_rtbuf_get(
+ 	xfs_fileoff_t		*coffp;	/* cached block number */
+ 	struct xfs_buf		*bp;	/* block buffer, result */
+ 	struct xfs_bmbt_irec	map;
+-	enum xfs_blft		buf_type;
+ 	int			nmap = 1;
+ 	int			error;
+ 
+@@ -166,12 +185,10 @@ xfs_rtbuf_get(
+ 	case XFS_RTGI_SUMMARY:
+ 		cbpp = &args->sumbp;
+ 		coffp = &args->sumoff;
+-		buf_type = XFS_BLFT_RTSUMMARY_BUF;
+ 		break;
+ 	case XFS_RTGI_BITMAP:
+ 		cbpp = &args->rbmbp;
+ 		coffp = &args->rbmoff;
+-		buf_type = XFS_BLFT_RTBITMAP_BUF;
+ 		break;
+ 	default:
+ 		return -EINVAL;
+@@ -222,7 +239,7 @@ xfs_rtbuf_get(
+ 		}
+ 	}
+ 
+-	xfs_trans_buf_set_type(args->tp, bp, buf_type);
++	xfs_trans_buf_set_type(args->tp, bp, xfs_rtblock_buf_types[type]);
+ 	*cbpp = bp;
+ 	*coffp = block;
+ 	return 0;
+@@ -1375,16 +1392,8 @@ xfs_rtfile_initialize_block(
+ 	struct xfs_buf		*bp;
+ 	void			*bufdata;
+ 	const size_t		copylen = mp->m_blockwsize << XFS_WORDLOG;
+-	enum xfs_blft		buf_type;
+ 	int			error;
+ 
+-	if (type == XFS_RTGI_BITMAP)
+-		buf_type = XFS_BLFT_RTBITMAP_BUF;
+-	else if (type == XFS_RTGI_SUMMARY)
+-		buf_type = XFS_BLFT_RTSUMMARY_BUF;
+-	else
+-		return -EINVAL;
+-
+ 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_growrtzero, 0, 0, 0, &tp);
+ 	if (error)
+ 		return error;
+@@ -1399,16 +1408,13 @@ xfs_rtfile_initialize_block(
+ 	}
+ 	bufdata = bp->b_addr;
+ 
+-	xfs_trans_buf_set_type(tp, bp, buf_type);
++	xfs_trans_buf_set_type(tp, bp, xfs_rtblock_buf_types[type]);
+ 	bp->b_ops = xfs_rtblock_ops(mp, type);
+ 
+ 	if (xfs_has_rtgroups(mp)) {
+ 		struct xfs_rtbuf_blkinfo	*hdr = bp->b_addr;
+ 
+-		if (type == XFS_RTGI_BITMAP)
+-			hdr->rt_magic = cpu_to_be32(XFS_RTBITMAP_MAGIC);
+-		else
+-			hdr->rt_magic = cpu_to_be32(XFS_RTSUMMARY_MAGIC);
++		hdr->rt_magic = bp->b_ops->magic[1];
+ 		hdr->rt_owner = cpu_to_be64(I_INO(ip));
+ 		hdr->rt_blkno = cpu_to_be64(XFS_FSB_TO_DADDR(mp, fsbno));
+ 		hdr->rt_lsn = 0;
+diff --git a/fs/xfs/libxfs/xfs_rtbitmap.h b/fs/xfs/libxfs/xfs_rtbitmap.h
+index 22e5d9cd95f4..375cc48e1a53 100644
+--- a/fs/xfs/libxfs/xfs_rtbitmap.h
++++ b/fs/xfs/libxfs/xfs_rtbitmap.h
+@@ -354,19 +354,6 @@ xfs_suminfo_add(
+ 	return info->old;
+ }
+ 
+-static inline const struct xfs_buf_ops *
+-xfs_rtblock_ops(
+-	struct xfs_mount	*mp,
+-	enum xfs_rtg_inodes	type)
+-{
+-	if (xfs_has_rtgroups(mp)) {
+-		if (type == XFS_RTGI_SUMMARY)
+-			return &xfs_rtsummary_buf_ops;
+-		return &xfs_rtbitmap_buf_ops;
+-	}
+-	return &xfs_rtbuf_ops;
+-}
+-
+ /*
+  * Functions for walking free space rtextents in the realtime bitmap.
+  */
+@@ -419,6 +406,8 @@ xfs_filblks_t xfs_rtbitmap_blockcount_len(struct xfs_mount *mp,
+ xfs_filblks_t xfs_rtsummary_blockcount(struct xfs_mount *mp,
+ 		unsigned int *rsumlevels);
+ 
++const struct xfs_buf_ops *xfs_rtblock_ops(struct xfs_mount *mp,
++		enum xfs_rtg_inodes type);
+ int xfs_rtfile_initialize_blocks(struct xfs_rtgroup *rtg,
+ 		enum xfs_rtg_inodes type, xfs_fileoff_t offset_fsb,
+ 		xfs_fileoff_t end_fsb, void *data);
 -- 
 2.53.0
 
