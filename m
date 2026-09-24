@@ -1,128 +1,85 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA88B472076;
-	Thu, 24 Sep 2026 10:09:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34138370D7C;
+	Thu, 24 Sep 2026 11:36:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790244609; cv=none; b=JN7TED1irepEkWykqQJD/zA2ZYDrml/TPDDcyCiaa8xrJDzWWVkWqay9LC4WvrQ+cgu7iNsSeijF4r6VV74NYCyOI4qtzPjYsJOG68K4ZX1CxmbajbcKL7yNsaubcwTOno1ju+w9LsSmbHfYNLA7yx8wgd3ms6k7bDTFnhn7rrI=
+	t=1790249814; cv=none; b=WlOi1O/3YdCJmnsO15Iu348dcKzZa6YZ+iYeNBQdNrsqCGI4cN+vSmECyZsyMj+2vlga5iVv4qGhjSr5XXZiZaT3e3rbLziBX5YYbeJdWYKdY5jBk5IqTuXK4CgQAxKOqOe8ajq/lmXpqevJ2AW86ldkTxlyTIweGKR6UvnhCH0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790244609; c=relaxed/simple;
-	bh=vCzC8tAyCTHowgx1v6eePqfNezBCXxgTLLsjiaVqhGU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=QiozqCwm3YOnpWTgHrqXrCs3SEbiVSc0Fix+0NZTXm2ek638FBx5a0reiiv+bJDUABdNVfY26eY71aYKFH7LuGPmYA2NLtIuOiXE/yWACWAF6g+kMY5kOig+0GdnfcvS2ckZnhjLOQhDkhk5WinWsZFfXiZIumTZwpNaIjB9mm8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=KpbZMZOw; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1790249814; c=relaxed/simple;
+	bh=Aaxcjc0xFQV860Ea8OyRF7Lkc2RXrkkU2q9HOfpGIQY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=BCD1IYaIDTgKkFE2mPv+UF6Ym5gbB2Dyvi0HBZuOJo5UA/OWkS81hY1F02tTlgggJ7rrsOErUpP80THdUa/sqZqi5Jf2YaP4J5On+iFaBDZBfbfm3HLf418Ru+No31sV0rGey/f+SMnkdTS1QlEseGVbKbCMqZ3+Pw3akMkL89Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MB/ZGJi2; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="KpbZMZOw"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=HokaT/t81JSHhHKcF/0j9Vc5khw6N4Ze7Xf+3gWn9aQ=; b=KpbZMZOwUwNDFYBAjJzQ9pBrLU
-	JSC4OQ5xIkqQFN3HYYqpDss4slnvwCOnproX4EHHtwZek0l+ccr3e+bJe3myzj/FFqTA0nEYXsLtk
-	qZZqWObc5+pa7MlKosw+GJHvTtKL1KpA2M2Lbrx/NhxEtUT7SnJ+XMKctevzYdPOHf8egGtrzY9/j
-	r2yqcSFDK83BoWzveJgv0Y1iX5k31Tg1/3RYq8Oa08dcNzOkgyqPK74z41VVDuD7kaWVTFD3cNF9c
-	934YLUVqLVY/9Y50xfw06E83/uAEWUBYuHKSgpoBGnjBcyZeFV1KYHVnFqxCOvhGSvHhonh3Qama6
-	wSVsXZjQ==;
-Received: from 85-127-111-79.dsl.dynamic.surfer.at ([85.127.111.79] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1x9gOh-0000000Afr9-1L1Y;
-	Thu, 24 Sep 2026 10:09:47 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Zorro Lang <zlang@kernel.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>,
-	fstests@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH 13/13] xfs/2308: test rebuilding of csum files in xfs_repair
-Date: Thu, 24 Sep 2026 12:07:54 +0200
-Message-ID: <20260924100855.2734089-14-hch@lst.de>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260924100855.2734089-1-hch@lst.de>
-References: <20260924100855.2734089-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MB/ZGJi2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 565731F000FF;
+	Thu, 24 Sep 2026 11:36:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790249808;
+	bh=Ob6SZGs22MaiArlkXsl87eym/XxNN25bTFL7Cvn+YAE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=MB/ZGJi2cUdLjmXmGzEUiGfStT6AosNRqc6HdIsBBC/sY8NSpzx28tNxb5mJl5e94
+	 s9ocHkKrjFOEsOriRBCFtxcwPc2HGKqd2JPug0YjEfYdA0g9Edj65y612Iit4+x7Gz
+	 h+Kar7JH64cY82+9zqumXSOMsuwxMfD1ENcDrzIt1BYBQd8wPa5Hcf9p3k6PK2a3F6
+	 jiWLSRlY2UhlQl9kOeUxQ+eWaE3GGBCDhnC+6fI4kN0LIc7G/j7Bz5prkeO3y5uCg0
+	 KgirNc/nmyX1zSnw6oVIf+KeOCorWgVQ++6fwgE66MaFvApAIlNmgqb/ZZT1A6s1bU
+	 ySEFYtToVNyJQ==
+Date: Thu, 24 Sep 2026 13:36:45 +0200
+From: Andrey Albershteyn <aalbersh@kernel.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Zorro Lang <zlang@kernel.org>, fstests <fstests@vger.kernel.org>, 
+	xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] generic/{349,350,351}: fix scsi_debug parameter quoting
+ issues
+Message-ID: <arUIImXClDcDKN7g@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+References: <20260924060315.GF6253@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260924060315.GF6253@frogsfrogsfrogs>
 
-Plus handling of corrupted csum files in the kernel as a side effect.
+On 2026-09-23 23:03:15, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> Commit a90ba59dca447d reworked the argument handling code inside
+> _get_scsi_debug_dev to put all the remaining arguments (after we extract
+> the first four arguments) inside an array that gets passed to modprobe:
+> 
+> 	opts+=("$@")
+> 
+> This code takes every command line argument and copies them into the
+> array verbatim.  Contrast this to what it did before (excerpted):
+> 
+> 	opts="...dev_size_mb=$size $@"
+> 	echo "scsi_debug options $opts" >> $seqres.full
+> 	modprobe scsi_debug $opts
+> 
+> The old code put all the arguments into a string, then passed the string
+> unquoted to modprobe, which means that any spaces in the parameters
+> given to _get_scsi_debug_dev become argument separators in the modprobe
+> call.  Put more simply, passing "foo=1 bar=1" to _get_scsi_debug_dev
+> results in "foo=1" "bar=1" being passed to modprobe.
+> 
+> Now we no longer do that, which causes these three tests to fail with:
+> 
+> 	scsi_debug: `1 lbpws10=1' invalid for parameter `lbpws'
+> 
+> because we're effectively passing lbpws="1 lbpws10=1" to scsi_debug.
+> Fix this by removing the quoting from the three tests.
+> 
+> Cc: <fstests@vger.kernel.org> # v2026.09.22
+> Fixes: a90ba59dca447d ("common/scsi_debug: don't slow down I/O")
+> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- tests/xfs/2308     | 47 ++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/2308.out |  4 ++++
- 2 files changed, 51 insertions(+)
- create mode 100755 tests/xfs/2308
- create mode 100644 tests/xfs/2308.out
+Looks good to me
+Reviewed-by: Andrey Albershteyn <aalbersh@kernel.org>
 
-diff --git a/tests/xfs/2308 b/tests/xfs/2308
-new file mode 100755
-index 000000000000..5c4f647ced7a
---- /dev/null
-+++ b/tests/xfs/2308
-@@ -0,0 +1,47 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0-or-later
-+# Copyright (c) 2026 Christoph Hellwig.
-+#
-+# FS QA Test No. 2308
-+#
-+# Corrupt rtcsum and check that scrub and different kinds of reads catch them.
-+#
-+. ./common/preamble
-+_begin_fstest auto quick zone datacsum scrub
-+
-+. ./common/filter
-+. ./common/fuzzy
-+
-+_require_scratch_nocheck
-+
-+_scratch_mkfs >> $seqres.full 2>&1
-+_scratch_mount
-+_require_xfs_data_csum $TEST_DIR
-+
-+cat /bin/sh > $SCRATCH_MNT/sh
-+sync $SCRATCH_MNT
-+
-+rg=`xfs_bmap -v $SCRATCH_MNT/sh | _filter_bmap_gno`
-+rg="${rg// /}"
-+
-+_scratch_unmount
-+
-+$XFS_DB_PROG -x $SCRATCH_DEV \
-+	-c "path -m /rtgroups/$rg.csum" \
-+	-c 'dblock 0' \
-+	-c 'write csums[0] 4266'
-+
-+_scratch_mount
-+$XFS_SCRUB_PROG -x -a 1 $SCRATCH_MNT >> $seqres.full 2>&1
-+if [ $? -eq 0 ]; then
-+	_fail "scrub did not find corruption"
-+fi
-+
-+# Test buffered I/O
-+$XFS_IO_PROG -c 'pread 0 64k' $SCRATCH_MNT/sh
-+
-+# Test direct  I/O
-+$XFS_IO_PROG -d -c 'pread 0 64k' $SCRATCH_MNT/sh
-+
-+status=0
-+exit
-diff --git a/tests/xfs/2308.out b/tests/xfs/2308.out
-new file mode 100644
-index 000000000000..55f6a0c97264
---- /dev/null
-+++ b/tests/xfs/2308.out
-@@ -0,0 +1,4 @@
-+QA output created by 2308
-+csums[0] = 4266
-+pread: Input/output error
-+pread: Input/output error
 -- 
-2.53.0
-
+- Andrey
