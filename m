@@ -1,77 +1,56 @@
-Received: from mta0.migadu.com (out-247.mta0.migadu.com [91.218.175.247])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6B4C332EBB
-	for <linux-xfs@vger.kernel.org>; Fri, 25 Sep 2026 13:37:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.247
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB42A376A0D;
+	Fri, 25 Sep 2026 14:49:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790343431; cv=none; b=BtiYiqSkIhtOTuOI0O5uBNWHeDv26OtMD8KMn+Pg8Xu3y9llkTreOdUcLlx4a5ZInO/N2IYWtslAx05ZVaFzzXr83E3wIMzBkfLr+wnqYaNkwQyS8aT4fbPO/KCgkwUjdu3+RYpc3tzzDhXeBpkK1zF/1vXT14fMhWb6WOF8i6I=
+	t=1790347788; cv=none; b=iELncGY8Klrte4uAPq8JzOoZQtkr2vPnFw0E142ORSvPXIs5FGCMUqesSW19w4hnPaE88zHhUFLh+ESN0xU91vTQ8lMw3OTZrKBruAYWb2c0Uyk49KYaJf37HPLgDBIE0RXeqvkNUi8M2osOUe/9W3eQRG4/cKx42MuM4E6qzu4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790343431; c=relaxed/simple;
-	bh=yUbhz4q8Bk6ad7ykhWaGlMSrczLK4cYYxIxLGl+Ap/U=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=OOWjCCkrfJ1TAwDpoRUjMYbfnQugVS3rDuQ9kTTtlpLjXQezDbGsprMWUfc2o9BkDoV4fQQjhwY2gRcjn+Dr/6hbjbDEqjJONhAGvQULoHudldQclahIbYLYVInEuYVRTomsDe97BbdR5BHqZycLAjaAka3mOyxUVwccBkSaYBw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Vn+8m5D3; arc=none smtp.client-ip=91.218.175.247
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1790347788; c=relaxed/simple;
+	bh=a3R1OhS54AAEPr5eBSMSeAzCNr0p77mW1cVE++7Chbg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=lvG8GZYvE69jWdnMA6ztwwmFXlutETKQqyECuJpGS089UYkcFu7oHQXOnUK5KS+i81lV/SFEnVVTHjM5pb82/UbgKy6MgYgpcNzeUsN/YjXT4X7S+KZU18V94Cd/pUXwSXPGTEZvHE9pcrlqwJsOK58PLoa8L7nG7LLZ7ah+dl4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jG0V+PnC; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Vn+8m5D3"
-X-Envelope-To: linux-xfs@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=yUbhz4q8Bk6ad7ykhWaGlMSrczLK4cYYxIxLGl+Ap/U=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1790343427; v=1; x=1790948227;
- b=Vn+8m5D3XbZZbmpKW7i1GL+bvbo5sKSYuE2nPA2GuBqNylNoSfWFPYzhIe36e9OTc/1cu8wH
- ojAoxowslfc5l7IKiugjESin6K+vCIml6X0/DUSsE8DuIy6ZOEphUFKFcpb5RgIK3c9drm4l7Tu
- T1oBvIFQUn5SUs7kHN44bO1A=
-X-Envelope-To: linux-xfs@vger.kernel.org
-Received: by mta12.migadu.com with ESMTPS id 5d53d689c26fed9d;
-	Fri, 25 Sep 2026 13:37:07 +0000
-X-Mizu-Trace-ID: 5d53d689c26fed9d
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <69579dae-285d-472c-ba69-4279e5170502@linux.dev>
-Date: Fri, 25 Sep 2026 14:37:06 +0100
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jG0V+PnC"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 385DD1F000FF;
+	Fri, 25 Sep 2026 14:49:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790347786;
+	bh=a3R1OhS54AAEPr5eBSMSeAzCNr0p77mW1cVE++7Chbg=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=jG0V+PnC7CAb8eJoq3y/yLH4MpFo0d5f7hLd1vCXn8G8m1EkoHv2lwWrzd1buBU0v
+	 xnLJT3LAM94Fx9NAWh41sXgmLUNxbi3GMa8wFWVI01YigL/KINy38RZq0kdjaKdGcF
+	 P/EFnLKOwCURjYjOqXgQsS8nQEnQHKvaQDzsXTlJX/ekHqKQ9BN20jQ+joQLbv6Tp2
+	 N3ozxeTh6L4GUQyhee7uF1V/5UQTLNV2xruX33a522G4jwc5veGphH0b9pl/7CsAax
+	 nac6xg+0iDhHS+/5hevJBuJ6v08hRZLaPr4YBShSFQzcKfTafJmCHgGJMGqEqekUcB
+	 CGR35BVAmt6aQ==
+Date: Fri, 25 Sep 2026 07:49:45 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Zorro Lang <zlang@kernel.org>, fstests <fstests@vger.kernel.org>,
+	xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] generic/805: skip this test if we can't mount the
+ filesystem
+Message-ID: <20260925144945.GN2705364@frogsfrogsfrogs>
+References: <20260924060245.GE6253@frogsfrogsfrogs>
+ <arX_YZb_Gmxrx3zb@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 5/9] block: fail a short atomic pin in
- bio_iov_iter_get_pages()
-To: Tal Zussman <tz2294@columbia.edu>, Jens Axboe <axboe@kernel.dk>,
- Christoph Hellwig <hch@lst.de>,
- Johannes Thumshirn <johannes.thumshirn@wdc.com>,
- Luis Chamberlain <mcgrof@kernel.org>, Hannes Reinecke <hare@kernel.org>,
- "Matthew Wilcox (Oracle)" <willy@infradead.org>,
- Christian Brauner <brauner@kernel.org>, "Darrick J. Wong"
- <djwong@kernel.org>, Keith Busch <kbusch@kernel.org>,
- "Martin K. Petersen" <mkp@kernel.org>
-Cc: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
- linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
- Sashiko <sashiko-bot@kernel.org>
-References: <20260923-blkdev-fixes-v5-0-89e60d66eb38@columbia.edu>
- <20260923-blkdev-fixes-v5-5-89e60d66eb38@columbia.edu>
-Content-Language: en-US
-From: John Garry <john.garry@linux.dev>
-In-Reply-To: <20260923-blkdev-fixes-v5-5-89e60d66eb38@columbia.edu>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <arX_YZb_Gmxrx3zb@infradead.org>
 
-On 9/24/26 00:56, Tal Zussman wrote:
-> On a partial page pin, __blkdev_direct_IO_simple() and
-> __blkdev_direct_IO_async() submit what was pinned with REQ_ATOMIC set
-> and leave the rest to the buffered fallback, tearing an IOCB_ATOMIC
-> write.
-> 
-> This can be triggered deterministically. A 16K pwritev2(RWF_ATOMIC)
-> whose last page is PROT_NONE, on a scsi_debug device with atomic_wr=1,
-> completes short with only three of the four pages written, violating
-> RWF_ATOMIC semantics.
+On Thu, Sep 24, 2026 at 09:58:09PM -0700, Christoph Hellwig wrote:
+> I think my version of this is better - we really should never
+> use the scratch helpers unless using a real scratch fs.
 
-I don't mean to load more work, but a blktests case for this would be 
-great. I am consider doing it if you are too busy.
+<nod> I think your patch works too, though if we can't _mkfs the
+synthesized device then there's no point in continuing the test.
 
-Thanks!
+--D
