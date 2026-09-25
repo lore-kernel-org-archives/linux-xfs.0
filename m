@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 921C04F0533
-	for <linux-xfs@vger.kernel.org>; Fri, 25 Sep 2026 22:52:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD52A3CFF65
+	for <linux-xfs@vger.kernel.org>; Fri, 25 Sep 2026 22:55:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790376757; cv=none; b=JasvpOxXwTXkqqEO8t2sw2I6TLbu102oWhEAkMc7dIZSPoafxQ+H582v5NmKKofs6cQlTdz5Y1Y7e5/Kv8M1e5rFj1ROgYkFJLmwxLoFyCH2HTY9kJ9Neebos8CBJY3809g1gPAOO/hUXuLoolzM7iyP2RizRFq1wn6Wj2KCimM=
+	t=1790376936; cv=none; b=BHndWXts7En75WvXHNf2XPA7z2v0n223FpZdfa7QmutOZ924EHBfO/ckmcly0b57QvY1fpQdG12eKOqpnfuKTUD1gQ6gJNvPBM/DKQK/uoyuXXTiLVCOr0N1ikSpgdgIT1XvLjUlYJm8+llnXsy+FKK9aJAMQFmthaPivosMpoU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790376757; c=relaxed/simple;
-	bh=2f2u3iv0c8xM3ZJDWltel/AlGTXprZ5c+TlR/Ekfyl0=;
+	s=arc-20240116; t=1790376936; c=relaxed/simple;
+	bh=RgNjWZEGKJVEZKFxCavHh/RGoON4ZKaanqC7GwQDJ08=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=kV1VrEo5t/d4Svujjk4Ee56YXwcgfYPuxHKiH/l77cKOzc2NEUaOXo46M1M6UFKF0e6qJNuvQx7a4GdeS6w8GRJWg1Mm2TC83aZY3PnsXKsS7M9rSoK7fSi94zSb01vHVPW53sCGaCGyqolkGrDgoqrkcQtDMBT+LsV8u5SK0xM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h34fhzBU; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=ByfFQvT/TGcR5q2ouo8kT40V9QXSive0UP74aWNv7NeejkMORN8RbOB3XHpi5EJ2Nf9wI7hXc/trmAXVXDBZqKa4mouG5U/5SWYBOGO1OvIBMDrMGCxX2xYEdnxmzoiIqScF1KvzzfKxjY3AVuynNISVSodxF0CYgsegp6KNGIc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cua6+pHB; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h34fhzBU"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 1C0441F000FF;
-	Fri, 25 Sep 2026 22:52:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cua6+pHB"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 795691F000FF;
+	Fri, 25 Sep 2026 22:55:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790376754;
-	bh=3eveiN94YpB6j/zeTvZlru8Ng6S+h4NwKHDQEW3ZoX4=;
+	s=k20260515; t=1790376935;
+	bh=V/4G4l84DRQHPbEtQPjupTlN5Y3CN62fuzjoK7hm8IM=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=h34fhzBUB+X/qNlSpJ2hbs2ccqoq2JKj+AkYxcbbBzEXnDEopfds+5XDu5e0QqLVj
-	 r2DUIioo8Ti2isuJJ5qi2Vx9hZ1OAjy4nIQ6HWa7XQnp8yXYWh7x9587NbZVPszBER
-	 5DDPb1eHVe0/bjgUdAlaijfrkfjyHlfnb5IlZ/lb9j504/c0TsJ7Nfp/qsHQjJCYep
-	 KhdxuBvVh2Tyu3DrDNoddLE1vBoZmH3CtwD65AkTaYYdk37e75/QCiFaGBi8PQ+zky
-	 VYiTc7AddMnLhWNIIcGBeYwXR/cEhYnAyX/RAxMVa8Q4Uh3W8qWxPiO3y1YrGuOamj
-	 jLmAcljZPIykg==
-Date: Fri, 25 Sep 2026 15:52:33 -0700
+	b=cua6+pHBoFYmY5AAF0DZAuskYUFKoPYQ9vjc5K7zoMxo/KqddoOkvkcg1xB/iyexq
+	 qO5meSMGJa7WhVgBU7x/3ED812ZrMhNFvdlZsxKhAZIv89DcUYFd49Ig6JOEnwpph+
+	 4aYsAsN3N0QYtbeKYQpxG3GUIxdT4mN3HX6NhwgEZzZ/sh6YKBgtVZAWLUGtzkFqEk
+	 C3ivn2gt03IPsC8JC0n0tzBFtUpSX7lU1J231HcM3eBUCjGu49Z1eOLyrF+fHPVc3i
+	 1xgHAXbpa+2JcQhgXtcV+0K5EFU3YcH8jWxfB6xzF5hRPV9y2s0xE8SvqMq8WhZMMi
+	 NJYnr1bQCvJZA==
+Date: Fri, 25 Sep 2026 15:55:35 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: small cleanups to help code sharing with xfsprogs
-Message-ID: <20260925225233.GZ2705364@frogsfrogsfrogs>
-References: <20260925151841.3385994-1-hch@lst.de>
+Cc: Andrey Albershteyn <aalbersh@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: reduce libxfs to kernel differences
+Message-ID: <20260925225535.GA2705364@frogsfrogsfrogs>
+References: <20260925152107.3386097-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -41,43 +41,23 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260925151841.3385994-1-hch@lst.de>
+In-Reply-To: <20260925152107.3386097-1-hch@lst.de>
 
-On Fri, Sep 25, 2026 at 05:18:25PM +0200, Christoph Hellwig wrote:
+On Fri, Sep 25, 2026 at 05:20:19PM +0200, Christoph Hellwig wrote:
 > Hi all,
 > 
-> this series has a few trivial cleanups and code moves that help
-> sharing more code with xfsprogs.
+> this series cleans up libxfs to further reduce the difference to
+> the kernel version, and to reuse xfs_trans.h and the various log item
+> headers that my kernel series moved to libxfs.
 
-Hrmm.  This is a somewhat different approach than what Chris Wedgwood
-did for his log port to userspace.  What do the maintainers think?  I'll
-defer to them as to whether pushing some of the log code into
-fs/xfs/libxfs is better than pushing all the log code to fs/xfs/libxlog.
+This looks fine to me, though same as the previous patchset I'll let
+Carlos and Andrey figure out which libxfsification they want to merge.
 
-The code changes look ok, so for the whole series,
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
---D
+> Note that in this series, it uses the Linux 7.2 versions of the kernel
+> headers as libxfs hasn't been resynced with 7.3 yet.
 
-> 
-> Diffstat:
->  libxfs/xfs_attr_item.h     |    2 --
->  libxfs/xfs_bmap_item.h     |    2 --
->  libxfs/xfs_buf_item.h      |    2 --
->  libxfs/xfs_defer.c         |    1 -
->  libxfs/xfs_exchmaps_item.h |    2 --
->  libxfs/xfs_extfree_item.h  |    2 --
->  libxfs/xfs_inode_buf.c     |    3 ---
->  libxfs/xfs_inode_item.h    |    2 --
->  libxfs/xfs_inode_util.c    |    1 -
->  libxfs/xfs_refcount.c      |    1 -
->  libxfs/xfs_refcount_item.h |    2 --
->  libxfs/xfs_rmap_item.h     |    2 --
->  libxfs/xfs_rtbitmap.c      |    1 -
->  libxfs/xfs_rtgroup.c       |    1 -
->  libxfs/xfs_sb.c            |    1 -
->  libxfs/xfs_trans.h         |    2 --
->  libxfs/xfs_trans_inode.c   |    2 --
->  xfs_platform.h             |    1 +
->  18 files changed, 1 insertion(+), 29 deletions(-)
-> 
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=libxfs-7.3-sync_2026-09-20
+
+--D
