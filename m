@@ -1,43 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 748BA483BCD
-	for <linux-xfs@vger.kernel.org>; Fri, 25 Sep 2026 23:03:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 933AD4052D9;
+	Fri, 25 Sep 2026 23:20:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790377411; cv=none; b=cWlhD7iNhTL5i3OnO0fM49/lF2kJW1CPOIWBdIWkHSAWUVODETw0CNW1ZPyPmSz5KN2DQcqgLJFq+3HSLhO0viSvjOjyI/HyFhZYi7pPi2ql+VSCSYwN9BWLAyENlTya/Y2Aavb1PHxTl0xsZOdobjfVw3Vb3InRzkSaJNIHoh4=
+	t=1790378422; cv=none; b=Y/44lYI6XDUYTSpHjxbNzFGVDD6fWJLHwpmlNe7ct59BRQNWuEGSKrxC4efjyjf6gwCCdh9OWsGWW5CCZCFUNTJvWB3BjBOPqTsczWhmi862Q90LrpFIEX5KFDrfPtKe0cSloHpH5bdA5kci5gWQMjA/6+kwf9iSw6GzX3Aw2F8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790377411; c=relaxed/simple;
-	bh=/LrxfYGOOM1R7niSmpWnHxay2+DPlxssp6qhEPtACiM=;
+	s=arc-20240116; t=1790378422; c=relaxed/simple;
+	bh=36cCmxVwE3fsb3fUNG4uiEhVrMrFuIX9YOYN0IH8ewc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gtyFBkf6yDyns37QHf68wpepWjAAPC8iPJw27VLNBxpWdXbFT3wcxYYzOqbtzhWANRjHHiZEyCAhNWUgNbrRqpHfJBYFvnFe2Uu7J6sklyHYBTJ2Q0huCd739dK2OF0GRq6gh5ImpUJyiTCXFYKLj9HWDJrxbqA5Evg+eKY/Ius=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ORnz8ARZ; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=VzujR3S2gjwISoZTKdp1+Bc+OJuODeTXzSPG89nB20cSRX9BkJPWkUePZ2Xrc/B7ZoAlPztgPObDnPnnAChy+piTjNoxwjtKcmk8kppTl0KsrO8O9lpg2yVjd9T6m+iBPcNjuuRhRedNLSTK0sryIjc/lo8MBSFEro8Mm9avHvY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=B2KHIXNi; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ORnz8ARZ"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id EA8AC1F000FF;
-	Fri, 25 Sep 2026 23:03:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="B2KHIXNi"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 257BE1F000FF;
+	Fri, 25 Sep 2026 23:20:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790377410;
-	bh=Jp2uQYNlwrWnfZrIygDLHcKJjvf/tey/591PMS5ewTo=;
+	s=k20260515; t=1790378421;
+	bh=ud+OSprfGeM+tvPnEcElGgFrsytW4zd8TTr7HTW5pA8=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=ORnz8ARZTPjRLzhnpjK5jCBicaTlTZwmjmqbevyUPm4zL2PJ3QMcuS8y+7ZJSO7Op
-	 h4+Gb5EYOJWfz9NRkSaj9GUHfMPIDol+HeGoaviwgdrbCuq6zom7Qav1kjBbN0YgEI
-	 LGQxXjhQf+dM4eWPG9lBq/rGD7SqPrwBGAOUgndx1haTrPaT6sSX/hwBJDQveOb4Wu
-	 s0FB2WHClqm+CHxqj7rWYC82ZJ7CLG9EiEFYxpT7F5389gVAxu752LbfDNnQHoyM/5
-	 wgl0GxC1gGoguFwzpRKuHaLH7Aq630ukxbt4+WyQ+AtNRXNEQ0+UFEC0ohTf5s/2gz
-	 xbaBBrbon0+dw==
-Date: Fri, 25 Sep 2026 16:03:29 -0700
+	b=B2KHIXNikRDHECzvf5Zzjc+tnBRgpTFGLHVi+dAj26MQnIpjbvzvpjbVOWht4ud1g
+	 Pf3LRJkemSSQceMmNwtipVo9n1arKGuvYOWP9qshU9ThyYIMQ+is2eq4YpIBGAR3Rz
+	 RgbKpZHC/x5IOexil92vlcuPaDRFib2zM+PpUd8+uZb9HiTLY1g6ics3Nohk9/eIpI
+	 y5QCbGCwMntRHAJbZOlW3Cm3mTPETNEvSca+MdC1IJnX5iLO863knZOiHFx9EuAv9F
+	 n0VFNxX93T9Pc3N3F7w19nJhOrQbRsDRyD53mE/0NdWEzBpoILy+NjzKppBFO6h5qj
+	 IUIp6iIMMzL2A==
+Date: Fri, 25 Sep 2026 16:20:20 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Cc: Dave Chinner <dgc@kernel.org>,
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-	John Garry <john.garry@linux.dev>
-Subject: Re: [bug report] fstests generic/774 hang again
-Message-ID: <20260925230329.GE2705364@frogsfrogsfrogs>
-References: <aqkP9CTUvlC2YCIb@shinmob>
- <aqsN4GOXthkF8rOI@dread>
- <20260922002814.GK2705364@frogsfrogsfrogs>
- <arXPSS6ikVMDaI7w@shinmob>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Carlos Maiolino <cem@kernel.org>, Jens Axboe <axboe@kernel.dk>,
+	Christian Brauner <brauner@kernel.org>, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 11/21] xfs: core RT data checksum support
+Message-ID: <20260925232020.GF2705364@frogsfrogsfrogs>
+References: <20260924100032.2733101-1-hch@lst.de>
+ <20260924100032.2733101-12-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,189 +44,274 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <arXPSS6ikVMDaI7w@shinmob>
+In-Reply-To: <20260924100032.2733101-12-hch@lst.de>
 
-On Fri, Sep 25, 2026 at 10:38:07AM +0900, Shin'ichiro Kawasaki wrote:
-> On Sep 21, 2026 / 17:28, Darrick J. Wong wrote:
-> > On Thu, Sep 17, 2026 at 07:45:04AM +1000, Dave Chinner wrote:
-> [...]
-> > > A bunch of threads waiting on the ILOCK here:
-> > > 
-> > >  down_write_nested+0x1c0/0x1f0
-> > >  xfs_reflink_end_atomic_cow+0x2f3/0x560 [xfs]
-> > >  xfs_dio_write_end_io+0x4b7/0x650 [xfs]
-> > >  iomap_dio_complete+0x140/0xb20
-> > >  iomap_dio_complete_work+0x58/0x90
-> > >  process_one_work+0x947/0x1760
-> > > 
-> > > And the holder:
-> > > 
-> > >  schedule+0xe5/0x2e0
-> > >  xlog_grant_head_wait+0x175/0xac0 [xfs]
-> > >  xlog_grant_head_check+0x312/0x3f0 [xfs]
-> > >  xfs_log_regrant+0x380/0x7d0 [xfs]
-> > >  xfs_trans_roll+0x2d9/0x420 [xfs]
-> > >  xfs_defer_trans_roll+0x11e/0x4b0 [xfs]
-> > >  xfs_defer_finish_noroll+0x460/0xe70 [xfs]
-> > >  xfs_trans_commit+0xfc/0x180 [xfs]
-> > >  xfs_reflink_end_atomic_cow+0x3b2/0x560 [xfs]
-> > >  xfs_dio_write_end_io+0x4b7/0x650 [xfs]
-> > >  iomap_dio_complete+0x140/0xb20
-> > >  iomap_dio_complete_work+0x58/0x90
-> > >  process_one_work+0x947/0x1760
-> > > 
-> > > is waiting on log space whilst holding the ILOCK.
-> > > 
-> > > This looks to me like the test runs out of log space because of all
-> > > the IO completions holding transaction reservations waiting on the
-> > > ILOCK, whilst the ILOCK holder can't get enough log space to regrant
-> > > on transaction roll to continue the transaction.
-> > 
-> > Agreed.
-> > 
-> > Why are we calling xlog_grant_head_check from within
-> > xfs_reflink_end_atomic_cow?  I think the reason for doing that is
-> > because we've exhausted t_cnt in the ticket (i.e. we've already rolled
-> > more than tr_logcount times).
-> > 
-> > Oh.  tr_atomic_ioend.tr_logcount is 5 on a rmap+reflink filesystem,
-> > which it inherits from tr_itruncate.  However, tr_itruncate is only
-> > intended to remove two extents from a file, so it only needs 5 rolls.
-> > Coincidentally we calculate 5 rolls for each atomic extent remapping
-> > operation.
-> > 
-> > For atomic write ioends, what if we increased tr_logcount to 5x the
-> > number of remappings that would have to occur to finish the write?
-> > That would preallocate all the permanent reservation we'd need before we
-> > take the ILOCK, which avoids the situation of needing to obtain more log
-> > space while holding ILOCK.
-> > 
-> > The downside is that you'd have to limit the software awu_max even
-> > further, perhaps to 40% of the log size divided by
-> > (tr_logres*tr_logcount).  However, we'd still be able to handle
-> > concurrent atomic writes to different parts of the file, at least until
-> > fragmentation got bad.
+On Thu, Sep 24, 2026 at 11:59:43AM +0200, Christoph Hellwig wrote:
+> Support reading and writing of data checksum buffers, and generating
+> and verifying the checksum.
 > 
-> Darrick, thanks for the idea. I wanted to try out the idea, so I cooled
-> the experimental patch below. Is this what you meant? It is a very rough
-> patch, and does not reflect the "limit the software awu_max even further"
-> part, it is just for experiment.
+> All data checksum buffers for an open zone are pre-allocated at zone open
+> time, so that we never have to read in a partially written buffer as part
+> of a data write, which would otherwise impose very expensive seeks and
+> stall writes.
 > 
-> Anyway, I applied this patch on top of the kernel xfs/for-next branch git
-> hash 0ca15a1a1151, and repeated the test case g774. It did not hang after
-> 100 times repeat, so it looks working.
-> 
-> 
-> From c90ec246b0b9e14097b0ad1d1ef5661261dd61db Mon Sep 17 00:00:00 2001
-> From: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-> Date: Thu, 24 Sep 2026 19:08:32 +0900
-> Subject: [PATCH] xfs: try out Darrick's idea for g774 hang
-> 
-> [experimental patch]
-> 
-> Darrick's idea from
-> https://lore.kernel.org/linux-xfs/20260922002814.GK2705364@frogsfrogsfrogs/
-> 
-> The deadlock of g774 caused by grant space while holding ILOCK. To avoid the
-> deadlock, allocate enough space before taking the ILOCK by increasing
-> tr_logcount. 5 rolls are required for each extent, then multiply tr_logcount
-> by 5.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/xfs/xfs_reflink.c | 33 ++++++++++++++++++++++++++++++++-
->  1 file changed, 32 insertions(+), 1 deletion(-)
+>  fs/xfs/Kconfig          |   1 +
+>  fs/xfs/Makefile         |   1 +
+>  fs/xfs/xfs_inode.h      |   5 +
+>  fs/xfs/xfs_rtcsum.c     | 317 ++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_rtcsum.h     |  23 +++
+>  fs/xfs/xfs_super.c      |  14 ++
+>  fs/xfs/xfs_sysfs.c      |   2 +
+>  fs/xfs/xfs_zone_alloc.c |  32 +++-
+>  fs/xfs/xfs_zone_priv.h  |   8 +
+>  9 files changed, 399 insertions(+), 4 deletions(-)
+>  create mode 100644 fs/xfs/xfs_rtcsum.c
+>  create mode 100644 fs/xfs/xfs_rtcsum.h
 > 
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index 48013613663..9d3da713a01 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -1020,6 +1020,28 @@ xfs_reflink_end_cow(
->  	return error;
+> diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
+> index b99da294e9a3..424a04b507a6 100644
+> --- a/fs/xfs/Kconfig
+> +++ b/fs/xfs/Kconfig
+> @@ -106,6 +106,7 @@ config XFS_RT
+>  	bool "XFS Realtime subvolume support"
+>  	depends on XFS_FS
+>  	default BLK_DEV_ZONED
+> +	select CRC64
+>  	help
+>  	  If you say Y here you will be able to mount and use XFS filesystems
+>  	  which contain a realtime subvolume.  The realtime subvolume is a
+> diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+> index 79ea4136fbba..0d57bf0701ec 100644
+> --- a/fs/xfs/Makefile
+> +++ b/fs/xfs/Makefile
+> @@ -142,6 +142,7 @@ xfs-$(CONFIG_XFS_QUOTA)		+= xfs_dquot.o \
+>  
+>  # xfs_rtbitmap is shared with libxfs
+>  xfs-$(CONFIG_XFS_RT)		+= xfs_rtalloc.o \
+> +				   xfs_rtcsum.o \
+>  				   xfs_zone_alloc.o \
+>  				   xfs_zone_gc.o \
+>  				   xfs_zone_info.o \
+> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+> index 34c1038ebfcd..9ed2fbfe86ff 100644
+> --- a/fs/xfs/xfs_inode.h
+> +++ b/fs/xfs/xfs_inode.h
+> @@ -376,6 +376,11 @@ static inline bool xfs_inode_can_sw_atomic_write(const struct xfs_inode *ip)
+>  	return xfs_can_sw_atomic_write(ip->i_mount);
 >  }
 >  
-> +/*
-> + * Number of transaction rolls needed to remap a single extent during an atomic
-> + * write ioend.
-> + */
-> +#define XFS_ATOMIC_IOEND_ROLLS	5
-> +
-> +/*
-> + * Compute the number of log operations to reserve for an atomic write ioend
-> + * that remaps @blockcount blocks with a @logres byte reservation.
-> + */
-> +STATIC int
-> +xfs_calc_atomic_write_ioend_logcount(
-> +	struct xfs_mount	*mp,
-> +	xfs_extlen_t		blockcount,
-> +	unsigned int		logres)
+> +static inline bool xfs_is_rtcsum_inode(const struct xfs_inode *ip)
 > +{
-> +	if (blockcount == 0 || logres == 0)
-> +		return M_RES(mp)->tr_atomic_ioend.tr_logcount;
-> +
-> +	return blockcount * XFS_ATOMIC_IOEND_ROLLS;
+> +	return xfs_has_rtcsum(ip->i_mount) && XFS_IS_REALTIME_INODE(ip);
 > +}
 > +
 >  /*
->   * Fully remap all of the file's data fork at once, which is the critical part
->   * in achieving atomic behaviour.
-> @@ -1036,6 +1058,7 @@ xfs_reflink_end_atomic_cow(
->  	xfs_fileoff_t			end_fsb;
->  	int				error = 0;
->  	struct xfs_mount		*mp = ip->i_mount;
-> +	struct xfs_trans_res		resv = M_RES(mp)->tr_atomic_ioend;
->  	struct xfs_trans		*tp;
->  	unsigned int			resblks;
->  
-> @@ -1051,7 +1074,15 @@ xfs_reflink_end_atomic_cow(
->  	resblks = (end_fsb - offset_fsb) *
->  			XFS_NEXTENTADD_SPACE_RES(mp, 1, XFS_DATA_FORK);
->  
-> -	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_atomic_ioend, resblks, 0,
-> +	/*
-> +	 * Reserve enough log operations to remap every block of this write
-> +	 * before we take ILOCK, so that no roll below has to wait for grant
-> +	 * space while holding ILOCK.
-> +	 */
-> +	resv.tr_logcount = xfs_calc_atomic_write_ioend_logcount(mp,
-> +			end_fsb - offset_fsb, resv.tr_logres);
+>   * In-core inode flags.
+>   */
+> diff --git a/fs/xfs/xfs_rtcsum.c b/fs/xfs/xfs_rtcsum.c
+> new file mode 100644
+> index 000000000000..7cdc5a5029eb
+> --- /dev/null
+> +++ b/fs/xfs/xfs_rtcsum.c
+> @@ -0,0 +1,317 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * Copyright (c) 2026 Christoph Hellwig.
+> + */
+> +#include "xfs_platform.h"
+> +#include "xfs_fs.h"
+> +#include "xfs_format.h"
+> +#include "xfs_log_format.h"
+> +#include "xfs_shared.h"
+> +#include "xfs_trans_resv.h"
+> +#include "xfs_bit.h"
+> +#include "xfs_mount.h"
+> +#include "xfs_inode.h"
+> +#include "xfs_bmap.h"
+> +#include "xfs_rtgroup.h"
+> +#include "xfs_rtbitmap.h"
+> +#include "xfs_bmap_btree.h"
+> +#include "xfs_trans.h"
+> +#include "xfs_buf_item.h"
+> +#include "xfs_trans_space.h"
+> +#include "xfs_error.h"
+> +#include "xfs_health.h"
+> +#include "xfs_rtcsum.h"
+> +#include "xfs_zone_priv.h"
+> +#include <linux/iomap.h>
 > +
-> +	error = xfs_trans_alloc(mp, &resv, resblks, 0,
->  			XFS_TRANS_RESERVE, &tp);
->  	if (error)
->  		return error;
+> +static_assert(IOMAP_CSUM_MAX_SIZE <= XFS_RTCSUM_MAX_WRITE);
+> +
+> +static const char *xfs_data_csum_names[XFS_CSUM_TYPE_MAX] = {
+> +	[XFS_CSUM_TYPE_CRC32C]	= "crc32c",
+> +	[XFS_CSUM_TYPE_CRC64]	= "crc64",
+> +};
+> +
+> +int
+> +xfs_csum_verify(
+> +	struct xfs_mount	*mp,
+> +	struct bio		*bio,
+> +	struct bvec_iter	*iter,
+> +	void			*csum_buf,
+> +	xfs_fsblock_t		bno,
+> +	bool			verbose)
+> +{
+> +	unsigned int		bsize = mp->m_sb.sb_blocksize;
+> +	unsigned int		csum_size = 1u << mp->m_rtcsum_shift;
+> +	unsigned int		offset = 0;
+> +	union xfs_csum		csum;
+> +	union xfs_disk_csum	dsum;
+> +
+> +	do {
+> +		struct bio_vec	bv = mp_bvec_iter_bvec(bio->bi_io_vec, *iter);
+> +
+> +		if (offset == 0)
+> +			xfs_csum_seed(mp, &csum);
+> +		bv.bv_len = min(bv.bv_len, bsize - offset);
+> +		xfs_csum_gen(mp, bvec_virt(&bv), bv.bv_len, &csum);
+> +		offset += bv.bv_len;
+> +		if (offset == bsize) {
+> +			xfs_csum_finalize(mp, &dsum, &csum);
+> +			if (unlikely(memcmp(&dsum, csum_buf, csum_size) != 0))
+> +				goto mismatch;
+> +			bno++;
+> +			csum_buf += csum_size;
+> +			offset = 0;
+> +		}
+> +		bio_advance_iter_single(bio, iter, bv.bv_len);
+> +	} while (iter->bi_size);
+> +
+> +	return 0;
+> +
+> +mismatch:
+> +	if (verbose) {
+> +		xfs_warn_ratelimited(mp,
+> +"data csum mismatch for rtblock 0x%llx: 0x%*phN (expected 0x%*phN)",
+> +			bno, csum_size, &csum, csum_size, csum_buf);
+> +	}
+> +	return -EIO;
+> +}
+> +
+> +void
+> +xfs_csum_generate(
+> +	struct xfs_mount	*mp,
+> +	struct bio		*bio,
+> +	void			*csum_buf)
+> +{
+> +	struct bvec_iter	iter = bio->bi_iter;
+> +	unsigned int		bsize = mp->m_sb.sb_blocksize;
+> +	unsigned int		csum_size = 1u << mp->m_rtcsum_shift;
+> +	unsigned int		offset = 0;
+> +	union xfs_csum		csum;
+> +
+> +	do {
+> +		struct bio_vec	bv = mp_bvec_iter_bvec(bio->bi_io_vec, iter);
+> +
+> +		if (offset == 0)
+> +			xfs_csum_seed(mp, &csum);
+> +		bv.bv_len = min(bv.bv_len, bsize - offset);
+> +		xfs_csum_gen(mp, bvec_virt(&bv), bv.bv_len, &csum);
+> +		offset += bv.bv_len;
+> +		if (offset == bsize) {
+> +			xfs_csum_finalize(mp, csum_buf, &csum);
+> +			csum_buf += csum_size;
+> +			offset = 0;
+> +		}
+> +		bio_advance_iter_single(bio, &iter, bv.bv_len);
+> +	} while (iter.bi_size);
+> +}
+> +
+> +/*
+> + * Read the checksum buffer for @rtg/@csum_off and return it unlocked.
 
-Yeah, I think you're on the right track with the dynamic tr_logcount
-changes but I wonder if you want to constrain the max software atomic
-write size so that we don't end up with gigantic chains that consume
-significant portions of the log for a single write?
+      Read the checksum buffer for @fsbno?
 
-Admittedly I see the multi-megabyte atomic write limits and marvel at
-how far we've drifted from the original requirements.
+> + *
+> + * We don't need to lock read access to the buffer because checksums will not
+> + * change until the @rtg is reset.
+> + */
+> +int
+> +xfs_rtcsum_read_async(
+> +	struct xfs_mount	*mp,
+> +	xfs_rtblock_t		fsbno,
+> +	struct xfs_buf		**bpp)
+> +{
+> +	xfs_daddr_t		csum_daddr;
+> +	struct xfs_rtgroup	*rtg;
+> +	int			error;
+> +
+> +	rtg = xfs_rtgroup_get(mp, xfs_rtb_to_rgno(mp, fsbno));
+> +	if (!rtg)
+> +		return -EFSCORRUPTED;
+> +	error = xfs_rtcsum_bmap(rtg, xfs_rtb_to_rgbno(mp, fsbno), &csum_daddr);
+> +	if (!error)
+> +		error = xfs_buf_read_async(mp->m_ddev_targp, csum_daddr,
+> +				BTOBB(mp->m_rtcsum_bsize), &xfs_rtcsum_buf_ops,
+> +				bpp);
+> +	xfs_rtgroup_put(rtg);
+> +	return error;
+> +}
+> +
+> +/*
+> + * When opening a zone for writing, do a speculative buf_get for each csum
+> + * buffer.  This ensures we usually have a buffer in-memory when we actually
+> + * start writing to it.
+> + *
+> + * Without this we'd have to read the buffer from disk, as we don't know if
+> + * anyone has already written to it by the time we get to the buffer due to
+> + * completion reordering.
+> + *
+> + * When reopening a partially written zone at mount time, just read ahead
+> + * the entire csums for the zone.
+> + */
+> +int
+> +xfs_rtcsum_open_zone(
+> +	struct xfs_open_zone	*oz)
+> +{
+> +	struct xfs_rtgroup	*rtg = oz->oz_rtg;
+> +	struct xfs_mount	*mp = rtg_mount(rtg);
+> +	xfs_rgblock_t		rgbno = 0;
+> +	int			i, error;
+> +
+> +	for (i = 0; i < oz->oz_nr_csum_bufs; i++) {
+> +		xfs_daddr_t	csum_daddr;
+> +		struct xfs_buf	*bp;
+> +
+> +		error = xfs_rtcsum_bmap(rtg, rgbno, &csum_daddr);
+> +		if (error)
+> +			goto out_error;
+> +
+> +		if (oz->oz_allocated) {
+> +			error = xfs_buf_read_async(mp->m_ddev_targp, csum_daddr,
+> +					BTOBB(mp->m_rtcsum_bsize),
+> +					&xfs_rtcsum_buf_ops, &bp);
+> +		} else {
+> +			error = xfs_buf_get(mp->m_ddev_targp, csum_daddr,
+> +					BTOBB(mp->m_rtcsum_bsize), &bp);
+> +			if (!error) {
+> +				bp->b_flags = XBF_DONE;
+> +				xfs_rtfile_initialize_buf(rtg, XFS_RTGI_CSUM,
+> +						bp, NULL);
+> +			}
+> +			xfs_buf_unlock(bp);
+> +		}
+> +		if (error)
+> +			goto out_error;
+> +		oz->oz_csum_bufs[i] = bp;
+> +		rgbno += (xfs_rtcsum_payload_size(mp) /
+> +			  (1u << mp->m_rtcsum_shift));
+> +	}
+> +
+> +	return 0;
+> +
+> +out_error:
+> +	while (--i >= 0)
+> +		xfs_buf_rele(oz->oz_csum_bufs[i]);
+
+/me wonders if this should null out oz_csum_bufs to avoid the
+possibility of dangling pointers?  Though I think the only caller will
+free the oz if this function returns error so it might not matter much.
 
 --D
-
-diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-index 1c20a7c27aa1bf..2e84544cd22a0a 100644
---- a/fs/xfs/libxfs/xfs_trans_resv.c
-+++ b/fs/xfs/libxfs/xfs_trans_resv.c
-@@ -1473,6 +1473,10 @@ xfs_calc_max_atomic_write_fsblocks(
-        struct xfs_mount                *mp)
- {
-        const struct xfs_trans_res      *resv = &M_RES(mp)->tr_atomic_ioend;
-+       const unsigned int              max_log_bytes =
-+               XFS_FSB_TO_B(mp, mp->m_sb.sb_logblocks * 10 / 4);
-+       const unsigned int              log_bytes_per_aw_block =
-+               (resv->tr_logres * resv->tr_logcount * 5) / 4;
-        unsigned int                    per_intent = 0;
-        unsigned int                    step_size = 0;
-        unsigned int                    ret = 0;
-@@ -1483,6 +1487,9 @@ xfs_calc_max_atomic_write_fsblocks(
- 
-                if (resv->tr_logres >= step_size)
-                        ret = (resv->tr_logres - step_size) / per_intent;
-+
-+               if (ret > 0 && log_bytes_per_aw_block > max_log_bytes / ret)
-+                       ret = max_log_bytes / log_bytes_per_aw_block;
-        }
- 
-        trace_xfs_calc_max_atomic_write_fsblocks(mp, per_intent, step_size,
-
