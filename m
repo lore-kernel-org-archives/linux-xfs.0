@@ -1,109 +1,222 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E80C64FB9C4
-	for <linux-xfs@vger.kernel.org>; Fri, 25 Sep 2026 22:42:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2F6647CA77
+	for <linux-xfs@vger.kernel.org>; Fri, 25 Sep 2026 22:43:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790376162; cv=none; b=NniHKXa/GRi/3qBw9R1vW7O4fn0GijKzz9t5GFK/Ur+aN7Kuw4RiN07q3ea9mjnabF/H/LCKG7XqO7Mk0Es18gmYCkYf9ssfoURfJFMdPkvGPgu8aiErDQDvk7NAbzOxKA5dQwQcMNQxHsya0zggcRj3ABE3/7ll2KnR2pQk/ww=
+	t=1790376187; cv=none; b=ItmBEK3xcUrVKAmKhMQTSFmx7wD5QFb2qaubw8uqef9W2+NJulJD+z1IRMp0JcaQwnQqwQXUYLOoBbqw+nvyLvy/+u1BfwILI66RfgNssfHI1pvX13r0jpp/nYDJhSyuaKtvwtz374mI5IW1PAwmg7pRv+OnXB6TECzKfO+UXoA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790376162; c=relaxed/simple;
-	bh=C1sC7mmJ/kndqOnT5Kc4fJ0cjomd9exQgziQRBGf8Qk=;
+	s=arc-20240116; t=1790376187; c=relaxed/simple;
+	bh=fS3/gtib5sGmzGqbRCebiVLkKGrcGvF8FxOlqRgPYL4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=r5NVgmrhrZbKlbZEAHjOcDTlFNg5+onPrLgwx4qG+5jQxv+8My1dxbUoF92kSqJsvqA+ZxZI/phZ+b7D9geT/u79zyRJCxHuxfZlnM6/kqau+hGMgCMN9ZE3/PTrXgemHMWkwe1L7gSdDG3JoPgBeex3w63L8I+m3F3P/plNF+w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WemHV0bM; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=hmPFKFEW2OE66xyxhe3H5sKXE8Oq4dzxJKlicNv3M/0gkR87FGD09AXpDYj41BiNBTz+WiMbO9E2xBTeu30VQ5Eads0zkZaOF4RAOQrZhDdVNUKE0fPr9cUW6B93xLIIezk4rfULNVQxgaxVjpER/Ok6rS7CoGbi2HSZrPjlcJc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=E2F4Bn2h; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WemHV0bM"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 8339E1F000FF;
-	Fri, 25 Sep 2026 22:42:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="E2F4Bn2h"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id B27BD1F00893;
+	Fri, 25 Sep 2026 22:43:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790376158;
-	bh=EuenrW+Tzd8JEl1J5t6gSscYCvisVo2PzIo+TBbpKq4=;
+	s=k20260515; t=1790376182;
+	bh=Cos8eUEyFGtto4GJ1ewBEiDMgEIC5+FPP3bC/PJrfaE=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=WemHV0bMzeJI7g9KQ7ItKbwg0K0zEwyAfgDTIConnPShhqcNGlChosj6hVtBI2e+I
-	 LcLBmBXrU0+S5fIj2r4S6QhZBc0aOPlS87vp6C1HMBP8Ljez/porhpcq43v2gryJCN
-	 f2Z+6laPPOmz6I/lS/eX6mxFOZiVGWnGa+3HyVxttCdt8U8Fpph3bkmxqJnKEK76n4
-	 NNt6bDC2yCIrI2l11pLIRNb7K4ykraFrxwtnfdfbDjbxWgjMgdsASCyIMKpBUG2+bK
-	 ZsigolkV164F2d9G5etvLXO7XRo/d1p0RQw+bFm3s0iBHsSV8ziTHLkP7AuLmQcqxX
-	 eHsKRwe7QNGUw==
-Date: Fri, 25 Sep 2026 15:42:38 -0700
+	b=E2F4Bn2h9+G6qeJ/7Hrlww38tUmynp1gfXI91HvrCFvjwdLn9trkPQSmaJKFWf95c
+	 bBtCShAVB/GhwAktV+ORWvdj3icHHFaLX+lNo6WKLq9198dN9boSLXHzYSWJoULUWh
+	 1UcMjHcp8t9bNTxpjQ34GosllZkYTu/NsI3GVmjPgdOVBNlGS0OWKGr8eM3eLVbBK4
+	 JCYL9KFOacpqavF18C8tIwQ8DuYJaakQF9a5nYE587H3zhIwDq9YXxCAAqhPZTNO8j
+	 i939o+f/SthketTURJ/0SGAhTmgzTe372rF2uEIeXsBD9mZ7hqOQsWKtbAFE8HhtQD
+	 lDxs47rZZPsbQ==
+Date: Fri, 25 Sep 2026 15:43:02 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Andrey Albershteyn <aalbersh@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 07/10] libxfs: fix buftarg initialization for the RT
- device
-Message-ID: <20260925224238.GV2705364@frogsfrogsfrogs>
+Subject: Re: [PATCH 08/10] libxfs: rename bt_bdev*
+Message-ID: <20260925224302.GW2705364@frogsfrogsfrogs>
 References: <20260925051336.2997014-1-hch@lst.de>
- <20260925051336.2997014-8-hch@lst.de>
+ <20260925051336.2997014-9-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260925051336.2997014-8-hch@lst.de>
+In-Reply-To: <20260925051336.2997014-9-hch@lst.de>
 
-On Fri, Sep 25, 2026 at 07:12:53AM +0200, Christoph Hellwig wrote:
-> libxfs_buftarg_init currently sets the rtdev targp to the ddev one when
-> no explicit RT device is provided, which allows tools like repair to
-> proceed without a specified RT device when they should not, and
-> potentially can cause data corruption.
+On Fri, Sep 25, 2026 at 07:12:54AM +0200, Christoph Hellwig wrote:
+> Unlike the kernel, there is no block device concept in libxfs.
 > 
-> Fix this by delaying the RT buftarg initialization to libxfs_mount,
-> where we can check if the superblock indicates an internal RT device.
-> This works because all external callers of libxfs_buftarg_init never
-> need the RT device as they just examine the sb and/or log,
+> Rename the bt_bdev field to bt_dev as it stores a dev_t, and bt_bdev_fd
+> to just bt_fd to make the naming a bit less confusing.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-😬😬😬
+Make sense to me;
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
 > ---
->  libxfs/init.c | 11 +++++------
->  1 file changed, 5 insertions(+), 6 deletions(-)
+>  libxfs/buf_mem.c   |  4 ++--
+>  libxfs/init.c      | 10 +++++-----
+>  libxfs/libxfs_io.h |  4 ++--
+>  libxfs/rdwr.c      | 12 ++++++------
+>  repair/prefetch.c  |  2 +-
+>  repair/zoned.c     |  2 +-
+>  6 files changed, 17 insertions(+), 17 deletions(-)
 > 
+> diff --git a/libxfs/buf_mem.c b/libxfs/buf_mem.c
+> index 3c8452de9689..f3db59dfc63e 100644
+> --- a/libxfs/buf_mem.c
+> +++ b/libxfs/buf_mem.c
+> @@ -294,8 +294,8 @@ xmbuf_alloc(
+>  
+>  	/* Initialize buffer target */
+>  	btp->bt_mount = mp;
+> -	btp->bt_bdev = (dev_t)-1;
+> -	btp->bt_bdev_fd = -1;
+> +	btp->bt_dev = (dev_t)-1;
+> +	btp->bt_fd = -1;
+>  	btp->bt_xfile = xfile;
+>  	btp->bcache = cache;
+>  
 > diff --git a/libxfs/init.c b/libxfs/init.c
-> index 842a2e1e09a9..97c5286c00a9 100644
+> index 97c5286c00a9..5a4b255165ab 100644
 > --- a/libxfs/init.c
 > +++ b/libxfs/init.c
-> @@ -554,8 +554,7 @@ libxfs_buftarg_reinit(
+> @@ -457,8 +457,8 @@ libxfs_buftarg_alloc(
+>  		exit(1);
+>  	}
+>  	btp->bt_mount = mp;
+> -	btp->bt_bdev = dev->dev;
+> -	btp->bt_bdev_fd = dev->fd;
+> +	btp->bt_dev = dev->dev;
+> +	btp->bt_fd = dev->fd;
+>  	btp->bt_xfile = NULL;
+>  	btp->flags = 0;
+>  	pthread_mutex_init(&btp->lock, NULL);
+> @@ -534,7 +534,7 @@ libxfs_buftarg_reinit(
+>  	struct xfs_mount	*mp,
+>  	struct libxfs_init	*xi)
+>  {
+> -	if (mp->m_ddev_targp->bt_bdev != xi->data.dev ||
+> +	if (mp->m_ddev_targp->bt_dev != xi->data.dev ||
+>  	    mp->m_ddev_targp->bt_mount != mp) {
+>  		fprintf(stderr,
+>  			_("%s: bad buftarg reinit, ddev\n"),
+> @@ -544,7 +544,7 @@ libxfs_buftarg_reinit(
+>  
+>  	if (mp->m_logdev_targp != mp->m_ddev_targp) {
+>  		if ((xi->log.dev && xi->log.dev == xi->data.dev) ||
+> -		    mp->m_logdev_targp->bt_bdev != xi->log.dev ||
+> +		    mp->m_logdev_targp->bt_dev != xi->log.dev ||
+>  		    mp->m_logdev_targp->bt_mount != mp) {
+>  			fprintf(stderr,
+>  				_("%s: bad buftarg reinit, logdev\n"),
+> @@ -554,7 +554,7 @@ libxfs_buftarg_reinit(
 >  	}
 >  
 >  	if (mp->m_rtdev_targp && mp->m_rtdev_targp != mp->m_ddev_targp) {
-> -		if ((xi->rt.dev && xi->rt.dev == xi->data.dev) ||
-> -		    mp->m_rtdev_targp->bt_bdev != xi->rt.dev ||
-> +		if (mp->m_rtdev_targp->bt_bdev != xi->rt.dev ||
+> -		if (mp->m_rtdev_targp->bt_bdev != xi->rt.dev ||
+> +		if (mp->m_rtdev_targp->bt_dev != xi->rt.dev ||
 >  		    mp->m_rtdev_targp->bt_mount != mp) {
 >  			fprintf(stderr,
 >  				_("%s: bad buftarg reinit, rtdev\n"),
-> @@ -587,10 +586,6 @@ libxfs_buftarg_init(
->  		mp->m_logdev_targp = mp->m_ddev_targp;
->  	else
->  		mp->m_logdev_targp = libxfs_buftarg_alloc(mp, xi, &xi->log);
-> -	if (!xi->rt.dev || xi->rt.dev == xi->data.dev)
-> -		mp->m_rtdev_targp = mp->m_ddev_targp;
-> -	else
-> -		mp->m_rtdev_targp = libxfs_buftarg_alloc(mp, xi, &xi->rt);
+> diff --git a/libxfs/libxfs_io.h b/libxfs/libxfs_io.h
+> index 5562e2928254..d861763a2a63 100644
+> --- a/libxfs/libxfs_io.h
+> +++ b/libxfs/libxfs_io.h
+> @@ -25,8 +25,8 @@ struct xfs_buftarg {
+>  	struct xfs_mount	*bt_mount;
+>  	pthread_mutex_t		lock;
+>  	unsigned long		writes_left;
+> -	dev_t			bt_bdev;
+> -	int			bt_bdev_fd;
+> +	dev_t			bt_dev;
+> +	int			bt_fd;
+>  	struct xfile		*bt_xfile;
+>  	unsigned int		flags;
+>  	struct cache		*bcache;	/* buffer cache */
+> diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+> index 14cfec7a2859..837288be0307 100644
+> --- a/libxfs/rdwr.c
+> +++ b/libxfs/rdwr.c
+> @@ -62,7 +62,7 @@ static void libxfs_brelse(struct cache_node *node);
+>  int
+>  libxfs_device_zero(struct xfs_buftarg *btp, xfs_daddr_t start, uint len)
+>  {
+> -	int		fd = btp->bt_bdev_fd;
+> +	int		fd = btp->bt_fd;
+>  	xfs_off_t	start_offset, end_offset, offset;
+>  	ssize_t		zsize, bytes;
+>  	size_t		len_bytes;
+> @@ -608,7 +608,7 @@ int
+>  libxfs_readbufr(struct xfs_buftarg *btp, xfs_daddr_t blkno, struct xfs_buf *bp,
+>  		int len, int flags)
+>  {
+> -	int	fd = btp->bt_bdev_fd;
+> +	int	fd = btp->bt_fd;
+>  	int	bytes = BBTOB(len);
+>  	int	error;
+>  
+> @@ -644,7 +644,7 @@ libxfs_readbuf_verify(
+>  int
+>  libxfs_readbufr_map(struct xfs_buftarg *btp, struct xfs_buf *bp, int flags)
+>  {
+> -	int	fd = btp->bt_bdev_fd;
+> +	int	fd = btp->bt_fd;
+>  	int	error = 0;
+>  	void	*buf;
+>  	int	i;
+> @@ -834,7 +834,7 @@ int
+>  libxfs_bwrite(
+>  	struct xfs_buf	*bp)
+>  {
+> -	int		fd = bp->b_target->bt_bdev_fd;
+> +	int		fd = bp->b_target->bt_fd;
+>  
+>  	/*
+>  	 * we never write buffers that are marked stale. This indicates they
+> @@ -1109,10 +1109,10 @@ libxfs_blkdev_issue_flush(
+>  {
+>  	int			ret;
+>  
+> -	if (btp->bt_bdev == 0)
+> +	if (btp->bt_dev == 0)
+>  		return 0;
+>  
+> -	ret = platform_flush_device(btp->bt_bdev_fd, btp->bt_bdev);
+> +	ret = platform_flush_device(btp->bt_fd, btp->bt_dev);
+>  	return ret ? -errno : 0;
 >  }
 >  
->  /* Compute maximum possible height for per-AG btree types for this fs. */
-> @@ -739,6 +734,10 @@ libxfs_mount(
->  	if (flags & LIBXFS_MOUNT_REPORT_CORRUPTION)
->  		xfs_set_reporting_corruption(mp);
->  	libxfs_buftarg_init(mp, xi);
-> +	if (sb->sb_rtstart)
-> +		mp->m_rtdev_targp = mp->m_ddev_targp;
-> +	else if (xi->rt.dev)
-> +		mp->m_rtdev_targp = libxfs_buftarg_alloc(mp, xi, &xi->rt);
->  	libxfs_setup_write_error_injection(mp);
->  
->  	if (xi->data.name)
+> diff --git a/repair/prefetch.c b/repair/prefetch.c
+> index 3d26636e5e56..3e03ae7f0210 100644
+> --- a/repair/prefetch.c
+> +++ b/repair/prefetch.c
+> @@ -878,7 +878,7 @@ init_prefetch(
+>  	xfs_mount_t		*pmp)
+>  {
+>  	mp = pmp;
+> -	mp_fd = mp->m_ddev_targp->bt_bdev_fd;;
+> +	mp_fd = mp->m_ddev_targp->bt_fd;;
+>  	pf_max_bytes = sysconf(_SC_PAGE_SIZE) << 7;
+>  	pf_max_bbs = pf_max_bytes >> BBSHIFT;
+>  	pf_max_fsbs = pf_max_bytes >> mp->m_sb.sb_blocklog;
+> diff --git a/repair/zoned.c b/repair/zoned.c
+> index 6ab91371d95a..1e949f549583 100644
+> --- a/repair/zoned.c
+> +++ b/repair/zoned.c
+> @@ -50,7 +50,7 @@ void
+>  check_zones(
+>  	struct xfs_mount	*mp)
+>  {
+> -	int			fd = mp->m_rtdev_targp->bt_bdev_fd;
+> +	int			fd = mp->m_rtdev_targp->bt_fd;
+>  	uint64_t		sector = XFS_FSB_TO_BB(mp, mp->m_sb.sb_rtstart);
+>  	unsigned int		zone_size, zone_capacity;
+>  	uint64_t		device_size;
 > -- 
 > 2.53.0
 > 
