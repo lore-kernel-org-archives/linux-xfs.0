@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38220224AF2
-	for <linux-xfs@vger.kernel.org>; Fri, 25 Sep 2026 04:12:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5B6418D62A
+	for <linux-xfs@vger.kernel.org>; Fri, 25 Sep 2026 04:12:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790309526; cv=none; b=uaQX0U9+7uivWDZr0lcvpbCjDyceNCCyLplfblR3sBJMnm1IzfgiDwJ3nhwIOMaY6chbvecI/DjukN+KAf9UtcbB2RXk3vQd7lvPuDmryXxJyrjFIvdvup5M+T6zLQwW69cQlKpBVEQmkOBgM/86MmFxeoTsLFq/qcf2FL8OYWI=
+	t=1790309541; cv=none; b=LFxXLS38RtByUf1RbYJJhOtZSMyeGPAsj+SRGeZ8NrytYBcYra/n5AkQB6/jgsPMf3z2Gnct2ARyvMhaV/V18MBcEoog2RdkiZAhUtt9XWw0y9THGYzkOCKT7ivA258YFLtVKV2cmf+PFdwa0Iu+UX2YXHWlfUS3g4/m+wxutNw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790309526; c=relaxed/simple;
-	bh=GuRJiGZfF06ud0kfB8L9vZsCztYygstcgVIXYr8O2Cw=;
+	s=arc-20240116; t=1790309541; c=relaxed/simple;
+	bh=gWYKACqcH7LOlZt+R7pyvDHCAHdMdFai8PD54A7vdvU=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=HDZ8OO1Feu9k8DFEvU7YfjYvjfZn+qkyW109cwwYBHeiuG/b04f1NS1h085vPzlnTHTJ+tgFWjJM6PiqafLAWD1gKrtBUEc4HZNW4TblxymavLJRI24k3A6OKK5rhBPKGqK8tZEk9MQPHGyOkS6+bNYydvSc9boixto1vnvPuD4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SCXhmtqF; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=n5xd4x9es0VJ7RF7ysiFqQtcaRwfwA69+V8xwyUpkcC9t51YXmtxUOu4cfYx4zDoJFVS7i8bKSYDklCHbjsSnZKU3+vJ3R+EzsaPZJta1gZvdaSAwZ+jSfoGilCIzG63W0sZ3Ohl6rtx1duX/dCUnHpuDM5hcV18xhSMJVrl8fo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ba/kT3i0; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SCXhmtqF"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id B900B1F000FF;
-	Fri, 25 Sep 2026 04:12:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ba/kT3i0"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 5D2691F000FF;
+	Fri, 25 Sep 2026 04:12:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790309524;
-	bh=HrMKU+YuDqGnwlsjktliXSMc5O/g7aUiZJVuTwB1nVk=;
+	s=k20260515; t=1790309540;
+	bh=LBdJ87v/30RTybx/MyNrjFZt9BadvQUY7xOGy7aQ3E4=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=SCXhmtqF2eDt1ExfzFxDSz2TuLByBKFf2MwFRzPL2bnVs5KMNFcOBjZsZg1SDlt2C
-	 zl2t98j1r8Zr/Q9ZPOGSJ/Ug9gxXbb93HkWSKSRnljlfZdqECp/lHK/RaxgXdOiVdc
-	 RxNTYP/zxypS1Tk/e2W7fbWp5wyeob742X7tfMQ3yvjMHFoltD5fj3vHe7N3bwBiCz
-	 SW7nXIHuwzgZgrXS4ucFeYOVpCLSTNbyA1D+/YJP5ohfJjw9peUFM+rJaeiGXGWBZo
-	 c2u+rPlUCHc8EqKLX2D0JkOZT7xU3iEqhnS/Ag66nJkVxDCvZChZ4y2tUHBjjyHV1A
-	 BFgg5g9163YZg==
-Date: Thu, 24 Sep 2026 21:12:04 -0700
-Subject: [PATCH 06/12] xfs: read rt superblock from disk during scrub
+	b=ba/kT3i0WLad2BfOeD2ruL+e+Z4xwCuKLxlo7/TI2Fyrq+DlHmAQHoLzWPdO1dfOC
+	 EnIlbN0+XY0kNGrAWykj0OC1ixx5vOJA0aoSRFJ6NZRGQixKLyMWI+FeaZTUVlsdls
+	 Hc/nsP2VgmxCPYXiZ14xPeDAN5a1DFiZE3GNcion8z8469iVycG1jXRu0s3YyBOrIb
+	 en8LAR9bACdmcCpxm3uenAG1GppZIy/4bcHiYp6fABhuaCCi3d1O51Oitnvj5Hhsak
+	 gKPBTpSQPUcj5lZUYW2R7pVhnuX/Yj4tV712R4q5gbdcNoTA/o58iRzwP/mcTTgnsa
+	 ZLjGHXLXJpc4A==
+Date: Thu, 24 Sep 2026 21:12:19 -0700
+Subject: [PATCH 07/12] xfs: write the primary super immediately during repair
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <179030932176.3344850.5822434207780341943.stgit@frogsfrogsfrogs>
+Message-ID: <179030932197.3344850.10179874390293040672.stgit@frogsfrogsfrogs>
 In-Reply-To: <179030931976.3344850.17488605741516845262.stgit@frogsfrogsfrogs>
 References: <179030931976.3344850.17488605741516845262.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,47 +45,74 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-The rtgroup superblock scrubber isn't that useful right now because the
-disk contents could have been corrupted after mount time.  Perform an
-uncached re-read of the rtsuper buffer to perform a fresh verification,
-and schedule a repair if it doesn't pass muster.
+xrep_superblock has an unfortunate flaw -- it won't even try to repair
+the primary super block, even though we have a live copy in memory that
+we could log and write to disk right now.  We should do this, because a
+crash will render the filesystem unmountable on recovery.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/scrub/rgsuper.c |   13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
+ fs/xfs/scrub/agheader.c        |    3 +--
+ fs/xfs/scrub/agheader_repair.c |   31 +++++++++++++++++++++++++++----
+ 2 files changed, 28 insertions(+), 6 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/rgsuper.c b/fs/xfs/scrub/rgsuper.c
-index 2db92cb89cc614..102bd92e9003db 100644
---- a/fs/xfs/scrub/rgsuper.c
-+++ b/fs/xfs/scrub/rgsuper.c
-@@ -46,6 +46,7 @@ int
- xchk_rgsuperblock(
- 	struct xfs_scrub	*sc)
- {
-+	struct xfs_buf		*bp = NULL;
- 	xfs_rgnumber_t		rgno = sc->sm->sm_agno;
- 	unsigned int		flags;
- 	int			error;
-@@ -78,9 +79,17 @@ xchk_rgsuperblock(
- 		return error;
- 
- 	/*
--	 * Since we already validated the rt superblock at mount time, we don't
--	 * need to check its contents again.  All we need is to cross-reference.
-+	 * Read the rt super from disk in case it's been corrupted since mount
-+	 * time.  Crashing with a bad rt super may prevent remount, so we want
-+	 * to fix these things ASAP.
- 	 */
-+	error = xfs_buf_read_uncached(sc->mp->m_rtdev_targp, XFS_RTSB_DADDR,
-+			sc->mp->m_sb.sb_blocksize >> BBSHIFT, &bp,
-+			&xfs_rtsb_buf_ops);
-+	if (!xchk_process_rt_error(sc, 0, 0, &error))
-+		return error;
-+	xfs_buf_relse(bp);
-+
- 	xchk_rgsuperblock_xref(sc);
- 	return 0;
+diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
+index 1dff6cb1b93628..43f3c3a5060b51 100644
+--- a/fs/xfs/scrub/agheader.c
++++ b/fs/xfs/scrub/agheader.c
+@@ -56,8 +56,7 @@ xchk_superblock_xref(
+ 	xchk_xref_is_only_owned_by(sc, agbno, 1, &XFS_RMAP_OINFO_FS);
+ 	xchk_xref_is_not_shared(sc, agbno, 1);
+ 	xchk_xref_is_not_cow_staging(sc, agbno, 1);
+-
+-	/* scrub teardown will take care of sc->sa for us */
++	xchk_ag_free(sc, &sc->sa);
  }
+ 
+ /*
+diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
+index a66b611588c47f..3c1947326d4448 100644
+--- a/fs/xfs/scrub/agheader_repair.c
++++ b/fs/xfs/scrub/agheader_repair.c
+@@ -44,12 +44,35 @@ xrep_superblock(
+ 	struct xfs_mount	*mp = sc->mp;
+ 	struct xfs_buf		*bp;
+ 	xfs_agnumber_t		agno;
+-	int			error;
++	int			error = 0;
+ 
+-	/* Don't try to repair AG 0's sb; let xfs_repair deal with it. */
+ 	agno = sc->sm->sm_agno;
+-	if (agno == 0)
+-		return -EOPNOTSUPP;
++	if (agno == 0) {
++		/* Last chance to abort before we start committing fixes. */
++		if (xchk_should_terminate(sc, &error))
++			return error;
++
++		bp = xfs_trans_getsb(sc->tp);
++
++		/* Format the incore superblock into the primary sb buffer */
++		xfs_buf_zero(bp, 0, BBTOB(bp->b_length));
++		xfs_sb_to_disk(bp->b_addr, &mp->m_sb);
++
++		xfs_log_sb(sc->tp);
++
++		/* synchronous transaction to flush/release the buffer log item */
++		xfs_trans_set_sync(sc->tp);
++		error = xrep_trans_commit(sc);
++		if (error)
++			return error;
++
++		/* write the super out immediately */
++		xfs_buf_lock(bp);
++		xfs_buf_hold(bp);
++		error = xfs_bwrite(bp);
++		xfs_buf_relse(bp);
++		return error;
++	}
+ 
+ 	error = xfs_sb_get_secondary(mp, sc->tp, agno, &bp);
+ 	if (error)
 
