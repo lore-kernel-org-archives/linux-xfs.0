@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 233CD2DBF75;
-	Fri, 25 Sep 2026 04:12:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86E3B2D8385;
+	Fri, 25 Sep 2026 04:13:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790309573; cv=none; b=EPJWtuQEfEW9jt1cbzmhShppYEX8geluCxSiNVKM5fQQTaB8JpRp58RohDnkDmQPFqTctPKYZKfBe6zYF9Yt1JN18+bG/5rZAND1Syq1febmt2jYEMNqVqffsWWTyhulOkbUXipnVT6LgXiGsbV821u/9Y6y5JWFX/s1XQcw+Qg=
+	t=1790309588; cv=none; b=OvxS3o1WzjWxsXXw78Calby6Ns4GIWddpdRmPKbgPy1eg7N+GWxn4zVs+aHx3I3ucaULNOXeBGp+JGSZZh9M9opknyboNs4JzL0R6uQtOWwWJ08qhytEVAGOraLFzkqEaYa6KVj3X93Ybx+/sK35Aa4Vu5+CUKK199MnnMtID80=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790309573; c=relaxed/simple;
-	bh=tKVTyoxydjZtPVY84TWriy9jGcmv0bDwCWJOH4VQvCQ=;
+	s=arc-20240116; t=1790309588; c=relaxed/simple;
+	bh=B8TgmeQr/27UK5TazgtgMS7stMt327Ap83i77sjW2Vk=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=mNT8bOWESFVf52vt5akkpXrQnPJ0nZktZTiqxBBVcC+aSWZx3AibxoAmeJx6Uy6W9BuyunqCjHowbCkACRBNxifAdG95n2kIPVnUZ8sDrTAl4D5F+xhYX+HJ/hokG+KUJ5CMM/WPs8J93T7rp2fnW0946vu5KVtrAk+fGMsXQKM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GxfuEvZk; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=oSUEfjFRkEo55xmm2LiMctZGoRSXIUkbkY09dYCEgSlecjkJ3khSKHiSGA0pV0P5YffIqlOM1ZdCt8fXt0WW/c1IAuiFk8t7XhfP2G3hJPAjtITku9pnZG4TRC9TCn7d4TwsF2482TlrmKnDtVSfp483vR36KNhczE6FQfWID7g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jZxxl1I8; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GxfuEvZk"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id AD2DC1F00893;
-	Fri, 25 Sep 2026 04:12:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jZxxl1I8"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 5BE9D1F000FF;
+	Fri, 25 Sep 2026 04:13:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790309571;
-	bh=JmH7YODakEYTSw92WIGl37SzA87EbS0FJGWKFK1VH/M=;
+	s=k20260515; t=1790309587;
+	bh=Q1vbrRXXHcC+gOJfac+DZt0CK4AQKh4AVeDwKjQpVW8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=GxfuEvZkBic9KizPYkLn/5qMS7InWZlOf4M3qbeJbaOc51nS70gL1CvWR4yF3Ey6G
-	 Frw7NQN6yX36Put+sfdsLhSrFmwjU22oCZP8pf0QX5HqmXS3w70eoK32eWfnokRBal
-	 7kV49l7TpQeKy21CRpwCf7nVzLN4r05Nya/PnIq4wdsYIt78D+pEEQ7YYmGb6etFHW
-	 /mdtSy3gMWjky2h7gVIYYDgfey9b2mPf0f/XeVq0Dj+jotqIoBqXYBZXdZ9Sblh718
-	 pV1zFYnX08DQW6q59PE5DLl78jwr+kpBoFV668gOshjtX8kNEm4q6G0xuOdKDuRA5X
-	 vHWsHO1/CnfIQ==
-Date: Thu, 24 Sep 2026 21:12:51 -0700
-Subject: [PATCH 09/12] xfs: break out of zoned reservation loop if signals are
- pending
+	b=jZxxl1I8h5aCXjhA1WLrKGlL1mYSwNvQuPTS9bUCP9YmphAcM6Q756s3JyotPBXMv
+	 bbZpImTZN2t4+wPoGwhBMtz4m+uSlHfqJSDaq2ayiA23evW6NTxIbJGtewvRGM8v6A
+	 xu03XNCtj595D+tLNgEcvYTZyQCL0DsJ+Th0SvxXa3vh4sPu0ONdzFStRFScEZ/GJD
+	 lztKrZmC6DgvWekrqXL3lhTqycVCrs8k/c+KHcaA0gZjRXBPrSs4pQElpVyd+hcaBL
+	 wrkG5TQBO0yCEGgfWRdEoQXTe1SY4ZxfkLs7VcLwna330SpraB9dnCU59NH3dl2Pln
+	 RWOA8J84aIemQ==
+Date: Thu, 24 Sep 2026 21:13:06 -0700
+Subject: [PATCH 10/12] xfs: jump out of xchk_bmap_check_rmap if fatal signals
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
-Cc: hch@lst.de, stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <179030932240.3344850.15431918414180548991.stgit@frogsfrogsfrogs>
+Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
+Message-ID: <179030932261.3344850.16757175231565950517.stgit@frogsfrogsfrogs>
 In-Reply-To: <179030931976.3344850.17488605741516845262.stgit@frogsfrogsfrogs>
 References: <179030931976.3344850.17488605741516845262.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,40 +45,42 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-I noticed that if you run generic/476 for long enough on a zoned
-filesystem that it runs out of space in the zoned section, fsstress gets
-stuck in this loop trying to reserve space, failing, and kicking off the
-gc.  The garbage collector in turn is continuously running (so we don't
-break out of the loop) but the process is no longer responsive to
-signals and can't be killed.
+LOLLM observes that we never check for fatal signals inside the loop
+that checks file fork mappings against the rmapbt.  This can lead to
+lengthy delays in responding to a ^C, so add some bailout checks.
 
-Fix this by backing out to userspace for any pending signal.  This
-should be safe because space reservation is usually the first step in
-any modification to a zoned file.
-
-Cc: <hch@lst.de>
-Cc: <stable@vger.kernel.org> # v6.15
-Fixes: 0bb2193056b596 ("xfs: add support for zoned space reservations")
+Cc: <stable@vger.kernel.org> # v4.17
+Fixes: 5e777b62b0bcb6 ("xfs: bmap scrubber should do rmap xref with bmap for sparse files")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+Assisted-by: LOLLM # finding obvious bugs
 ---
- fs/xfs/xfs_zone_space_resv.c |    5 +++++
- 1 file changed, 5 insertions(+)
+ fs/xfs/scrub/bmap.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
 
-diff --git a/fs/xfs/xfs_zone_space_resv.c b/fs/xfs/xfs_zone_space_resv.c
-index 7aa3c74fb2e01a..8edc82025abbd5 100644
---- a/fs/xfs/xfs_zone_space_resv.c
-+++ b/fs/xfs/xfs_zone_space_resv.c
-@@ -157,6 +157,11 @@ xfs_zoned_reserve_available(
- 		if (error != -ENOSPC)
- 			break;
- 
-+		if (signal_pending(current)) {
-+			error = -ERESTARTSYS;
-+			break;
-+		}
+diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
+index 4f3c7f681bd921..428be9ecdcd4d4 100644
+--- a/fs/xfs/scrub/bmap.c
++++ b/fs/xfs/scrub/bmap.c
+@@ -626,6 +626,10 @@ xchk_bmap_check_rmap(
+ 	struct xfs_ifork		*ifp;
+ 	struct xfs_scrub		*sc = sbcri->sc;
+ 	bool				have_map;
++	int				error = 0;
 +
- 		/*
- 		 * Make sure to start GC if it is not running already. As we
- 		 * check the rtavailable count when filling up zones, GC is
++	if (xchk_should_terminate(sc, &error))
++		return error;
+ 
+ 	/* Is this even the right fork? */
+ 	if (rec->rm_owner != I_INO(sc->ip))
+@@ -657,6 +661,9 @@ xchk_bmap_check_rmap(
+ 	 */
+ 	check_rec = *rec;
+ 	while (have_map) {
++		if (xchk_should_terminate(sc, &error))
++			return error;
++
+ 		if (irec.br_startoff != check_rec.rm_offset)
+ 			xchk_fblock_set_corrupt(sc, sbcri->whichfork,
+ 					check_rec.rm_offset);
 
