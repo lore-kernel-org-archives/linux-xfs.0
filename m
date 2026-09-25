@@ -1,72 +1,167 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D78C400E15
-	for <linux-xfs@vger.kernel.org>; Fri, 25 Sep 2026 05:14:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 055044052C4;
+	Fri, 25 Sep 2026 05:14:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790313252; cv=none; b=RKNMuLLKipG8pjtOOGy7qS9cau/PRWY0UurIzVBhjijptRgI2awGRYn+OZduFTRvLnvcG0Jslv0ZRxovbY/Ts4Zfn0Dcgtg6XlAXYpGeoEDs5aV+ov2Svcw5+rXcJFQUQavUDFtND5X5YqklZq/s9HThobqlqgdkk5Ok5aiO/0A=
+	t=1790313274; cv=none; b=CHS/WgbUSnvN4ORtBxMa0kLPeyupwiOVkcMw0aolsuWUnIljmmeqMPoMC5X2ka6LtSTYyFbHxjcQb7rYcFeKlBrB9KA1FpxOb+YIKO/nlO87PV4mY6Wzdv+hnBZ07sK3SdzUg5mmwuUK2rjn2/4h4I+89D+ITk6FFpgnLn97yuc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790313252; c=relaxed/simple;
-	bh=T9ACBLkg5Qb7+kVrzd8FBiOvUjmNqd7NSsTePxcQBpg=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ZkeT9ptBBQghq+3zauQxdLNY3lP+0iy3sfed1ZSmvCOO8uP3pb6ixtKegszSUJPidjmEpAdEVzHHzQVLntKW5Niy4WsYQ8KlQOmCjSJNAS5k23n0ozNAXRw6169ARy7M8zd477aWoTHllZPZxIURvGW0gvdxhLEU+XkpzJuK/aU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=F9jsL6wF; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1790313274; c=relaxed/simple;
+	bh=inyUqdWmMk6Xi5GTH3gtRSrWebEOsK++2vbEVN9R9H0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Dtm0q8kU8hXAbG0noH7J0Q6kSstg4WZetQg0abne86QbKaBsHV/3KjwHj/rTAYB0CyqBj18ZP6dg0xJJ+dqqcK0cNWzk1TtBNxJYvQofN0P8DcvlugLTgUr9NTQ3GXTTPlzm5VmNukDkWUb0U8ufAbsRO/g2ex9uFTpCUnrFPPc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=c+s5PtC7; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=ofPAGOVL; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=PNMDKD9Z; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=GuDcHeEd; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="F9jsL6wF"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=+l8m+aWBrl/0Lr+AI3xsBHdx0rB2Y12L+Cf9DIElFmk=; b=F9jsL6wFJSLd3qlgDpMRA1Vq5Y
-	FEVR/xZ5TjRylyLoKf99FVRhsk2lGRP45Q8UBVFPu9zQvgyleoC0LQM1E4M8qsoXfcJlPOzLK4lKP
-	K6zTRTLyKK6AqlfkcZP+Bwlgxp3AwGlMIIUhS7/PX/6TAE+nNC1qpKzISKBJrAQgxX4XytbItp8Ge
-	M/4kbqwyCzTUybOt0DJWoPakWt6cyXERW1sEWL4swSZFj4lw6OQGvrqxSanNGuv1OeMB0saopfFq5
-	gwIjq4wMJGpg4U0TYO1i4QrdJoMdKDg+szASjG9cVoa+Msyg1f1xUCmGns6fopibT1/CtRofeHVgQ
-	VAUKG0BQ==;
-Received: from 2a02-8389-2301-9f00-b711-947d-6c5b-1af5.cable.dynamic.v6.surfer.at ([2a02:8389:2301:9f00:b711:947d:6c5b:1af5] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1x9yG7-0000000CgdR-3x2k;
-	Fri, 25 Sep 2026 05:14:08 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Andrey Albershteyn <aalbersh@kernel.org>
-Cc: "Darrick J . Wong" <djwong@kernel.org>,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH 10/10] xfs_db: remove a double-whitespace in rdump_regfile_data
-Date: Fri, 25 Sep 2026 07:12:56 +0200
-Message-ID: <20260925051336.2997014-11-hch@lst.de>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260925051336.2997014-1-hch@lst.de>
-References: <20260925051336.2997014-1-hch@lst.de>
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="c+s5PtC7";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="ofPAGOVL";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="PNMDKD9Z";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="GuDcHeEd"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 462BF21CFE;
+	Fri, 25 Sep 2026 05:14:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1790313264; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=qOpvbDL1MnlsGJleBCqgU9n75lUBDxUlMNPY0qUqrGo=;
+	b=c+s5PtC758CtUvBblec7bKLdFrQXQ2M/xNNZ37j+IT3/IhkXN7Q51TAAjhabjL+sTnldgz
+	GfsO5bpIxPmTUwaPe97J55plpVJMp3JX4ZBrSNMOlQmCfODiMUQ/jd3xkPY6c2e2d+paDh
+	PGOoEIYX/sbJ4x/jVStF4dq+8t22FY4=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1790313264;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=qOpvbDL1MnlsGJleBCqgU9n75lUBDxUlMNPY0qUqrGo=;
+	b=ofPAGOVLRf+W2qaB33NUZEDtmQznygaW9gpVYGa0eSDlvJ6Krj/ysvigntN7dqHW6CyHGr
+	0Isllbuj2j+Id6AA==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1790313260; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=qOpvbDL1MnlsGJleBCqgU9n75lUBDxUlMNPY0qUqrGo=;
+	b=PNMDKD9ZdJyWuHvxa7/nG8UBN6o80V1arvnG22z0duAegY6s3aB0/qsA8LbauH9jv7EZ7C
+	azk2QjWwn10tsHQRYGnZLCpCtPA+kFUpX60eVXWYtu8pe1av0eXT3hP0C7WnMgZ0c9SkxM
+	29dtdzXBMraa0aUVT121ontDSUrtUgc=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1790313260;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=qOpvbDL1MnlsGJleBCqgU9n75lUBDxUlMNPY0qUqrGo=;
+	b=GuDcHeEdRDBsH5JoGxNNVENTWS8qUbity0nbjhQEE2YHqBK+D51ZKtY1sBcvvd7zINGllD
+	5xgOFtKUCYkNC4BA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 9C9C5136F7;
+	Fri, 25 Sep 2026 05:14:19 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id pSfkFysDtmq9AwAAD6G6ig
+	(envelope-from <hare@suse.de>); Fri, 25 Sep 2026 05:14:19 +0000
+Message-ID: <f8464d20-0cca-4816-bfb5-d19839a1bc4d@suse.de>
+Date: Fri, 25 Sep 2026 07:14:19 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 5/9] block: fail a short atomic pin in
+ bio_iov_iter_get_pages()
+To: Tal Zussman <tz2294@columbia.edu>, Jens Axboe <axboe@kernel.dk>,
+ Christoph Hellwig <hch@lst.de>,
+ Johannes Thumshirn <johannes.thumshirn@wdc.com>,
+ Luis Chamberlain <mcgrof@kernel.org>, Hannes Reinecke <hare@kernel.org>,
+ "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+ John Garry <john.garry@linux.dev>, Christian Brauner <brauner@kernel.org>,
+ "Darrick J. Wong" <djwong@kernel.org>, Keith Busch <kbusch@kernel.org>,
+ "Martin K. Petersen" <mkp@kernel.org>
+Cc: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+ linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+ Sashiko <sashiko-bot@kernel.org>
+References: <20260923-blkdev-fixes-v5-0-89e60d66eb38@columbia.edu>
+ <20260923-blkdev-fixes-v5-5-89e60d66eb38@columbia.edu>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20260923-blkdev-fixes-v5-5-89e60d66eb38@columbia.edu>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+X-Spam-Score: -4.30
+X-Spam-Level: 
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-0.993];
+	MIME_GOOD(-0.10)[text/plain];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[18];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:mid,suse.de:email,imap1.dmz-prg2.suse.org:helo]
+X-Spam-Flag: NO
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- db/rdump.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On 9/24/26 1:56 AM, Tal Zussman wrote:
+> On a partial page pin, __blkdev_direct_IO_simple() and
+> __blkdev_direct_IO_async() submit what was pinned with REQ_ATOMIC set
+> and leave the rest to the buffered fallback, tearing an IOCB_ATOMIC
+> write.
+> 
+> This can be triggered deterministically. A 16K pwritev2(RWF_ATOMIC)
+> whose last page is PROT_NONE, on a scsi_debug device with atomic_wr=1,
+> completes short with only three of the four pages written, violating
+> RWF_ATOMIC semantics.
+> 
+> Make bio_iov_iter_get_pages() release the pins and return -EINVAL when
+> a REQ_ATOMIC bio doesn't cover the whole iterator, since an atomic
+> write is submitted as a single bio and a short one would be torn. That
+> covers iomap as well, where a partially unmapped buffer could trip the
+> WARN_ON_ONCE() in iomap_dio_bio_iter_one(). The async block device path
+> currently sets REQ_ATOMIC after pinning, so set it before, and move
+> REQ_NOWAIT along with it.
+> 
+> Fixes: caf336f81b3a ("block: Add fops atomic write support")
+> Reported-by: Sashiko <sashiko-bot@kernel.org>
+> Link: https://sashiko.dev/#/patchset/20260802-blkdev-fixes-v1-0-a82fc549fd74%40columbia.edu?part=2
+> Assisted-by: Claude:claude-fable-5
+> Reviewed-by: John Garry <john.garry@linux.dev>
+> Signed-off-by: Tal Zussman <tz2294@columbia.edu>
+> ---
+>   block/bio.c  | 46 ++++++++++++++++++++++++++++++----------------
+>   block/fops.c | 12 ++++++------
+>   2 files changed, 36 insertions(+), 22 deletions(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@kernel.org>
 
-diff --git a/db/rdump.c b/db/rdump.c
-index 7fd171a9d53f..a0177e5bd007 100644
---- a/db/rdump.c
-+++ b/db/rdump.c
-@@ -643,7 +643,7 @@ rdump_regfile_data(
- 
- 		fd_pos = XFS_FSB_TO_B(mp, irec.br_startoff);
- 		if (XFS_IS_REALTIME_INODE(ip))
--			daddr =  xfs_rtb_to_daddr(mp, irec.br_startblock);
-+			daddr = xfs_rtb_to_daddr(mp, irec.br_startblock);
- 		else
- 			daddr = XFS_FSB_TO_DADDR(mp, irec.br_startblock);
- 
+Cheers,
+
+Hannes
 -- 
-2.53.0
-
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
