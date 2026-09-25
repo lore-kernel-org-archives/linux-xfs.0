@@ -1,42 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C03F446066;
-	Thu, 24 Sep 2026 22:53:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A2C522083;
+	Fri, 25 Sep 2026 00:04:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790290391; cv=none; b=tmnEVdVs+J8fVH104tDyjK/RDw4cL5TU7cLe+4Ir033FFWP1lV/CCqfI9qNS84vtDgYnXdfGmD1it1xcgwiiBcTEOPmB8xsAqjTjzjJYI1mojHZ1ERlEOYwYEviJePxUq4Z59xdHjTPaKEuuedYIQhLPuPxRMneWhR4pItMG7o4=
+	t=1790294683; cv=none; b=AQahv4xLj+zxBq8zqef5hlqLMBBCOXDBNrp+moDxVLGsppkWoICzgFMKko+g7n3IX2i0NVywluqS9C6L/zg8OcByUANC/9EQHFrQtufSbmay4niqHh5wNoae/RDHdZ1T1UpcBpc7ZnPkyDlhbvt3fTlowwbVKSeNF61DdsKL28o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790290391; c=relaxed/simple;
-	bh=U9tMMTuTepdpCJjPqgTa/dmc9MtzQNdsSJeusuThhh8=;
+	s=arc-20240116; t=1790294683; c=relaxed/simple;
+	bh=I+ZQcAQ7XWpphXSFQ7RdvwDBO+zyWb4Rh4Hs14sriQM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PnvqKoWLqjHluGtPPz/dYb/LocXIXACghUXM94Z+bDiAWJfYbJrprzbRMiWO/xIlmNfZTJK9qnSwZ31i5r9coX9PidkC3cerU8f+nsWm1A2xh0bLq3U5MhJ06fMTKi+PBG7L+Lu9jPJ3asP67WM/36YbMcPGYMpiPYNSr5qGHnA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FRSLaJHz; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=DSQaDDHwZIOPICeuEMZvUgRRcQM0Hnnrx8kpP+vLmj4Oqm8hFpaRIt9WiAJMft7IUpAoa7JZEdLv/ec8gZL9uAx7SH/GneGyDozbhtRcj+CygWpVmLGDGtwR3m0fVntXCvX1qX4XnSgi3tgIrVIVEYeg8JhoVmL0gYhWJ4ORl8U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=inFLBRqE; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FRSLaJHz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 03C661F000FF;
-	Thu, 24 Sep 2026 22:53:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="inFLBRqE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B79AE1F000FF;
+	Fri, 25 Sep 2026 00:04:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790290387;
-	bh=ZxfoMV2m5K5jA7hcjiGUODyyQvQWv/XLQ5pi39fAkEE=;
+	s=k20260515; t=1790294682;
+	bh=0M1k0NUyTq+ikzJ3p6YuOB6AxC7bY+mvgKtRPD78rks=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=FRSLaJHzS1hZhrAaCpDGJ+LWVHfR/70CT5yKPgEd5ZY+Bo9VBfcVJIRuqarWkbpe9
-	 vSGAJ2LhDvlMlUk35YZeD2YMDdRv0THGgi2fMXJxKCKUDx6eTNQJxXDy8BW4805SZV
-	 tKHAMxx2Mun7Nbvi448mFHeC6BDnHc5KnrlgOZ6vaLqd8ncO1awJZyNKIRYnni6R9h
-	 5OvfZYnFtSTWOMbb/GAox2HZ3Yhij7FkuEgcIuAcSztsqmPYZIvPDDgBeEi+9ewKz2
-	 zPYVDwMXqTHhTH78u58TTHhelGpS2wQODA5YqXyot+kQD23kVPFYDqhq7kI7G8Zn5H
-	 SUcmv4SEZlzVQ==
-Date: Fri, 25 Sep 2026 08:52:58 +1000
-From: Dave Chinner <dgc@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>,
-	"Darrick J . Wong" <djwong@kernel.org>,
+	b=inFLBRqEvR9yghWwURf4VcOQv+/Vv1weSAMPRs6qeNJn8PB3gIffg07miO4VoYRaB
+	 8p1jAgRKwEjX4A0keQ0tNwAOcrpCXt8Cta++HIdyfeuLY0uTSETuPv1vbZewtpc+cO
+	 sFwk5O80x00gfvvtl4rvGCXIJ/gg7C8DgtwN3jM21ZMQD9jrrSByFiGv+q9dMAoRcy
+	 6R922fsslAsK6c6cFyFAVjDJEsejwXTAzNzOcg5iYofpWoMHJHx++RNmLyZKiQCD9q
+	 lAUQwsGCW97EHiT2BUVHCjOCgzHMtSkKjllToW2ZX5ocrqBbU4Ezr/n7C+2atUHg6W
+	 70gRB3izej+ZQ==
+Date: Fri, 25 Sep 2026 00:04:40 +0000
+From: Eric Biggers <ebiggers@kernel.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
 	Jens Axboe <axboe@kernel.dk>,
 	Christian Brauner <brauner@kernel.org>, linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org
-Subject: Re: support for RT data checksums
-Message-ID: <arWpyhFyV3ouYAEx@dread>
+Subject: Re: [PATCH 08/21] xfs: define the RT data checksum on-disk format
+Message-ID: <20260925000440.GA3191386@google.com>
 References: <20260924100032.2733101-1-hch@lst.de>
+ <20260924100032.2733101-9-hch@lst.de>
+ <20260924221359.GI2705364@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,86 +46,48 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260924100032.2733101-1-hch@lst.de>
+In-Reply-To: <20260924221359.GI2705364@frogsfrogsfrogs>
 
-On Thu, Sep 24, 2026 at 11:59:32AM +0200, Christoph Hellwig wrote:
-> Hi all,
+On Thu, Sep 24, 2026 at 03:13:59PM -0700, Darrick J. Wong wrote:
+> On Thu, Sep 24, 2026 at 11:59:40AM +0200, Christoph Hellwig wrote:
+> > Add the on-disk format for the new RT data checksum format.
+> > 
+> > Keyed off a new read-only compat feature flag, this adds new fields to
+> > the superblock to indicate the checksum algorithm used and the size of
+> > the blocks containing the checksums.  These new fields reuse the
+> > previously reserved padding to make efficient use of the space in the
+> > on-disk superblock.
+> > 
+> > Data checksums are only supported on zoned RT devices, because they
+> > require out of places writes to safely update the checksums for file
+> > overwrites and a data/metadata split to be able to store the checksums
+> > for a group in a file without causing recursion.  This means they can't
+> > be supported directly on the data device at all, and only when using
+> > the always_cow mode on regular RT devices, but that has no benefit
+> > over the zoned allocator which is designed for out of place writes.
+> > 
+> > The initially supported data checksum algorithms are crc32c and crc64 as
+> > specified by NVMe.  Both have extremely fast kernel implementations and
+> > the strong data protection guarantees offered by CRC-style algorithms.
+> > Both also happen to be support by NVMe for protection information so that
+> > the userspace PI passthrough support (once extended to files on file
+> > systems) can be reused to expose the checksums to applications and thus
+> > provide true end-to-end data integrity.
 > 
-> data checksums provide an additional safeguard against silent data loss.
-> 
-> In classic XFS they were hard to support because they need to be
-> atomically updated with the written data.  The zoned allocator solves
-> that problem because it always writes out of place, and the checksums
-> can be committed at the same as the metadata linking the newly written
-> file data into place.  In theory, a conventional allocator could be used
-> in combination with the always_cow option, but there are few upsides of
-> this compared to using the zoned allocator.
-> 
-> Data checksums are stored in per-realtime group files in the metadir,
-> similar to other modern RT metadata.  Unlike the checksum design in btrfs
-> or some other file system, the checksums are associated with the
-> physical blocks, and not with logical data in files.  This reduces the
-> mapping overhead, and significantly reduces the write amplification,
-> and also avoids duplicate checksums for reflinked files (although those
-> are not yet supported with the zoned allocator anyway).
-> 
-> The initial version provides two checksums algorithms: crc32c and crc64.
-> Both of those are cyclic redundancy check algorithms which provide known
-> good detection of bit flips that is better than general purpose hash
-> functions.  Both are not cryptographic hashes and thus do not provide any
-> kind of protection against intentional tampering with the data.
-> The crc32c parameters exactly match those use for xfs metadata checksums,
-> and also those used by the default btrfs checksum, and the NVMe PI
-> formats using crc32c.  The crc64 parameters exactly match those using
-> the NVMe PI formats using crc64.  crc32c provides reasonable assurance
-> for today's hardware, but might prove limiting for extremely large data
-> sets, crc64 fills that void, but probably warrants using > 4k file system
-> block sizes to amortize the overhead.
+> And just to play the peanut gallery here, xxhash? <duck>
 
-Ok, so this really needs a design doc to explain how it all works,
-what the new on-disk format is, scope, constraints, etc, as the
-first patch in the series (i.e. in
-Documentation/filesystems/xfs/data_checksum_design.rst) so that we
-have high level descriptions of the functionality being implemented.
-Stuff like why certain crc alrgorithms are supported, how we can add
-new ones in the future, constraints of doing so, how different sized
-checksums are cleanly supported, etc will make doing such things
-much easier.
+lib/xxhash.c is kind of outdated and just supports XXH32 and XXH64 with
+generic C code.  CRCs of the same width would generally be better.
 
-There's new buffer and inode locking in transactions, and there's a
-whole new buffer cache interface to "read a buffer", and that is
-used to open code reading checksum buffers and joining them to a
-transaction rather than using the existing xfs_trans_read_buf...()
-interfaces.  That in itself needs careful consideration, and clear
-justification for why it must be duplicated to stand outside all the
-existing BLI/transaction APIs, especially given all the "use the new
-async buf read interface to do sync buffer reads" behaviour across
-the patchset that could just use the existing interfaces.
+(CRCs used to be kind of slow.  But with carryless multiplication
+instructions, which the kernel uses on most architectures, they're super
+fast.  They also have "unlimited" parallelism, unlike XXH32 and XXH64,
+which have a data dependency after each 4 words processed.) 
 
-I'd also like to have the format of the new on disk log item format
-structures clearly documented (because we're going to have to
-validate them) at recovery time, and also have a clear explaination
-of the data vs metadata ordering algorithms that ensures that
-checksums are always valid in crash+recovery situations, especially
-w.r.t. data integrity operations like fsync.
+XXH3 could be more competitive and would also offer 128-bit hashes.  But
+it seems it would be quite a bit of work to add XXH3 to the kernel.
 
-These are the sorts of details that we need to get right, and it's
-really hard to extract the actual design intent from the code that
-implements it to determine if the algorithms, ordering and recovery
-strategies are solid.
+Unless someone really wants 128-bit checksums for this feature, I think
+the two options proposed here (CRC-32C and CRC64-NVME) sound good.
 
-Hence I'd like to see the actual design documented first, then we
-can understand and review algorithms, etc, and then verify the code
-matches the described algorithms, behaviours, etc. checksums are all
-about data integrity, so I'd really like to be able to understand
-how it is supposed to work and where it doesn't work. Being forced
-to understand design and implementation descisions and constraints
-by reverse engineering disjoint chunks of code is not an efficient
-use of reviewer time...
-
-Cheers,
-
--Dave.
--- 
-Dave Chinner
-dgc@kernel.org
+- Eric
