@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86E3B2D8385;
-	Fri, 25 Sep 2026 04:13:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F27F284880;
+	Fri, 25 Sep 2026 04:13:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790309588; cv=none; b=OvxS3o1WzjWxsXXw78Calby6Ns4GIWddpdRmPKbgPy1eg7N+GWxn4zVs+aHx3I3ucaULNOXeBGp+JGSZZh9M9opknyboNs4JzL0R6uQtOWwWJ08qhytEVAGOraLFzkqEaYa6KVj3X93Ybx+/sK35Aa4Vu5+CUKK199MnnMtID80=
+	t=1790309604; cv=none; b=iRdab+RAhgEfXEowqyRN68u+Fs2NdV+NxGPfLprtjg25sC9h83FuHSnxkNuFAmmoJrFn7mpjq/KmiQpaSaLcEEGVp4CP3VJ+82JFTOpXmyLB/vc/CE7bhavrB3lPD8X0K87a2yVtqzAPtYnpGc0zBnV0yEIt36NoJdZ23g74Uro=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790309588; c=relaxed/simple;
-	bh=B8TgmeQr/27UK5TazgtgMS7stMt327Ap83i77sjW2Vk=;
+	s=arc-20240116; t=1790309604; c=relaxed/simple;
+	bh=e1IS1fnxWTq/eMZWiCv9FDDt1v3qz7prCzgirYb+gSE=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=oSUEfjFRkEo55xmm2LiMctZGoRSXIUkbkY09dYCEgSlecjkJ3khSKHiSGA0pV0P5YffIqlOM1ZdCt8fXt0WW/c1IAuiFk8t7XhfP2G3hJPAjtITku9pnZG4TRC9TCn7d4TwsF2482TlrmKnDtVSfp483vR36KNhczE6FQfWID7g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jZxxl1I8; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=OtbOkl+L3lkwMC82gL5xJuvTvrqL+g0eN6Yp4h5f8mAOAeUd5rQKyTuBduyIyKegCgeWSDW6ci5WvgA12tSkeIyKhFLuC7GyYL1jKasccaNhIu6jQABXLAligj6a+m0G8bM5zFbij2r+gd9XVGUhcsGLqadtvA82G6cwqGQDkes=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XVT0Q/x3; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jZxxl1I8"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 5BE9D1F000FF;
-	Fri, 25 Sep 2026 04:13:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XVT0Q/x3"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 089391F000FF;
+	Fri, 25 Sep 2026 04:13:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790309587;
-	bh=Q1vbrRXXHcC+gOJfac+DZt0CK4AQKh4AVeDwKjQpVW8=;
+	s=k20260515; t=1790309603;
+	bh=oL1DSWkhakaFURSuCPfjGY2TUPFAVmVFszVC3rhy8wY=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=jZxxl1I8h5aCXjhA1WLrKGlL1mYSwNvQuPTS9bUCP9YmphAcM6Q756s3JyotPBXMv
-	 bbZpImTZN2t4+wPoGwhBMtz4m+uSlHfqJSDaq2ayiA23evW6NTxIbJGtewvRGM8v6A
-	 xu03XNCtj595D+tLNgEcvYTZyQCL0DsJ+Th0SvxXa3vh4sPu0ONdzFStRFScEZ/GJD
-	 lztKrZmC6DgvWekrqXL3lhTqycVCrs8k/c+KHcaA0gZjRXBPrSs4pQElpVyd+hcaBL
-	 wrkG5TQBO0yCEGgfWRdEoQXTe1SY4ZxfkLs7VcLwna330SpraB9dnCU59NH3dl2Pln
-	 RWOA8J84aIemQ==
-Date: Thu, 24 Sep 2026 21:13:06 -0700
-Subject: [PATCH 10/12] xfs: jump out of xchk_bmap_check_rmap if fatal signals
+	b=XVT0Q/x3uCGQaGW+DxfMCbGaE022ILMpo4qQ7EseQzj3tvviMd8ACQvEqtUfEOQMZ
+	 vNNG+T7h2VLa99G2F3jUchS7Waqoj+Th+ITg4Czf0NA3uPRGUVEkkMw4mWK+tYnNsW
+	 79De+057jNNQPzdFN2WqIiTDTyuO5uQF2kwJwZrcXz//4yQpvzd5v+4GUfZc9A1lCg
+	 ya7d4QfClJRgV099jh8g8C1Qiz3/Fdc3+52TupQaBDXt7Ih0C6xeiKQExeaQp8RsML
+	 /e8TntPDEe9Gz9nvh8XKHkTZTEepEjLbcb5v4xy0jExQgr1EPQmlkgvwSe1/shenah
+	 2StinQVoM+i8g==
+Date: Thu, 24 Sep 2026 21:13:22 -0700
+Subject: [PATCH 11/12] xfs: mark overfull dabtree node blocks as corrupt
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <179030932261.3344850.16757175231565950517.stgit@frogsfrogsfrogs>
+Message-ID: <179030932282.3344850.1828907677637994070.stgit@frogsfrogsfrogs>
 In-Reply-To: <179030931976.3344850.17488605741516845262.stgit@frogsfrogsfrogs>
 References: <179030931976.3344850.17488605741516845262.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,42 +45,31 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-LOLLM observes that we never check for fatal signals inside the loop
-that checks file fork mappings against the rmapbt.  This can lead to
-lengthy delays in responding to a ^C, so add some bailout checks.
+LOLLM observes that we need to range-check the dabtree node record count
+before using it to index an array.  Fix that.
 
-Cc: <stable@vger.kernel.org> # v4.17
-Fixes: 5e777b62b0bcb6 ("xfs: bmap scrubber should do rmap xref with bmap for sparse files")
+Cc: <stable@vger.kernel.org> # v4.15
+Fixes: 7c4a07a424c18d ("xfs: scrub directory/attribute btrees")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Assisted-by: LOLLM # finding obvious bugs
 ---
- fs/xfs/scrub/bmap.c |    7 +++++++
- 1 file changed, 7 insertions(+)
+ fs/xfs/scrub/dabtree.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
 
-diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-index 4f3c7f681bd921..428be9ecdcd4d4 100644
---- a/fs/xfs/scrub/bmap.c
-+++ b/fs/xfs/scrub/bmap.c
-@@ -626,6 +626,10 @@ xchk_bmap_check_rmap(
- 	struct xfs_ifork		*ifp;
- 	struct xfs_scrub		*sc = sbcri->sc;
- 	bool				have_map;
-+	int				error = 0;
-+
-+	if (xchk_should_terminate(sc, &error))
-+		return error;
- 
- 	/* Is this even the right fork? */
- 	if (rec->rm_owner != I_INO(sc->ip))
-@@ -657,6 +661,9 @@ xchk_bmap_check_rmap(
- 	 */
- 	check_rec = *rec;
- 	while (have_map) {
-+		if (xchk_should_terminate(sc, &error))
-+			return error;
-+
- 		if (irec.br_startoff != check_rec.rm_offset)
- 			xchk_fblock_set_corrupt(sc, sbcri->whichfork,
- 					check_rec.rm_offset);
+diff --git a/fs/xfs/scrub/dabtree.c b/fs/xfs/scrub/dabtree.c
+index d4e5afbde85613..72cd880a5745e7 100644
+--- a/fs/xfs/scrub/dabtree.c
++++ b/fs/xfs/scrub/dabtree.c
+@@ -439,6 +439,10 @@ xchk_da_btree_block(
+ 		node = blk->bp->b_addr;
+ 		xfs_da3_node_hdr_from_disk(ip->i_mount, &nodehdr, node);
+ 		btree = nodehdr.btree;
++		if (nodehdr.count > dargs->geo->node_ents) {
++			xchk_da_set_corrupt(ds, level);
++			goto out_freebp;
++		}
+ 		*pmaxrecs = nodehdr.count;
+ 		blk->hashval = be32_to_cpu(btree[*pmaxrecs - 1].hashval);
+ 		if (level == 0) {
 
