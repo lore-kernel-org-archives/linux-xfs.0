@@ -1,106 +1,162 @@
-Received: from fout-b7-smtp.messagingengine.com (fout-b7-smtp.messagingengine.com [202.12.124.150])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBF094F55BA
-	for <linux-xfs@vger.kernel.org>; Fri, 25 Sep 2026 20:53:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.150
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B10747884F
+	for <linux-xfs@vger.kernel.org>; Fri, 25 Sep 2026 22:32:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790369634; cv=none; b=Vv3tokdkOhl0kYYaoLk0w3LMO7sVD3ty1VZbuH26yWCnChWfXD2k27DVuZkQcX7ycXGElH3ixwm/E243YC4T5m8BbKdHAKdE7zhnRJN0rr6ulko2wqUU5mx81iZG74XzP3dp/s3zUd1ct4fXS1XSEUwWk+UbG/ZQNqz3b2L8KzU=
+	t=1790375526; cv=none; b=diI29Oqofb3af5dMPTOwqga0D0HCEfGX7iBuiVn3nXGu3PbtjynQADrsCWYTtDr6HAx/VblXSTiFtSJ0hX1kx/ky0Uh2sIn2CbNT73HB/Bie6j/11R21I2ij2YCUM1F41m0FEupNPeVuy08i5QV9QHyRfGIk3ej+kVTTWvQLXwg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790369634; c=relaxed/simple;
-	bh=ibpzpetqVLvd4uUW6fe3pnDrwVfb6gnY3Ra4TAMnmcc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=V7kRQwRvy7YkhctWsGMqGTcIsQxcdKtMOhZJXv/vj8iAcL6LluW5IkWSc+OIqye5ubjV1StMRS2nAsMUxuCtWLDO6Ql+L/w2TdTLihNEEsP4XGv7n4PLUGvnslOqlPWXFbi7sVOvqT7cOJ9/4DIr7I0GUODZfKi82JNrJSOTHeQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net; spf=pass smtp.mailfrom=sandeen.net; dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b=I16mkd9G; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=RCe2ysxD; arc=none smtp.client-ip=202.12.124.150
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandeen.net
+	s=arc-20240116; t=1790375526; c=relaxed/simple;
+	bh=knKyGkf90/6B4KMXUv7A5RzXAN99AEE2wPF406iW0kE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Arg3KKRzW8E8ZkfFnmfg9WnRACb8Ue3MzbzlyY5vVq/FrYd1FNqUw8v9a21dV0jE2SBedNd04kSwkRWiQVEav1Tr3EpJVmS2EfAX7cHm/x56zz4I+kWDS11aIpxqpXjwc/xherZF+J4w5Gwo2ylO5PkIdg+2UYg9ksZUqBFuZnc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=W6j7jCnt; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b="I16mkd9G";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="RCe2ysxD"
-Received: from phl-compute-05.internal (phl-compute-05.internal [10.202.2.45])
-	by mailfout.stl.internal (Postfix) with ESMTP id 7E9471D00066;
-	Fri, 25 Sep 2026 16:53:51 -0400 (EDT)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-05.internal (MEProxy); Fri, 25 Sep 2026 16:53:51 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm1; t=1790369631;
-	 x=1790456031; bh=ibpzpetqVLvd4uUW6fe3pnDrwVfb6gnY3Ra4TAMnmcc=; b=
-	I16mkd9GPulCxopt2MhL3H4ngmM8gXMuQdMjvKHMJ3566j3oOUBcySY/YBDU02Br
-	aqloFDlIWksXimuxAZRks+Mc1LBudf64GnxLtJ6/lgOXfxdmueO4OHOn6F0tE9Sy
-	U+ons6H3T2UFuwNplymxuU+tknfWlzTRhaK6g5+fJkpi1I14O4L09dYc84fl2Nn3
-	MCOrYVSFfu5tO+MFQ9rCm+1z4J4LIx3Fv3XvYckOCLNCtQX6S9szwVVQjblsQQuC
-	o7IQDN8ZPL12MB0QkVA3uhkUyelDswRseIwCz8rHiBLucRw94bW34yQTtRnBlX0t
-	aLICH+LQrz29r4/0t8Sk5w==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1790369631; x=
-	1790456031; bh=ibpzpetqVLvd4uUW6fe3pnDrwVfb6gnY3Ra4TAMnmcc=; b=R
-	Ce2ysxD2iSGjlElDs5n7DTG1v3NOoB6gOq/DHOvkwS3aCqQyDnFuhWhkA6rSK7aW
-	UDaP8Ptg/ADkNI+otadRh+vhA0fwMYEaqcR5AQkZzv2iprFW3UGhlN4IO+xIy1qz
-	cl3xI3D8emtAMS1JgyxbQHT+cvht+sVFPB/CLYW1dSeWG830bcqawsV2EneP0rZE
-	l7HyBwiRTnVlE6CflYf5qfVn8QTHR11MPu6f+UiDtl+A7YL4LMrRMZ94firqe/dq
-	LgMx92n4C5yx6W56SKjSpvuLWVqbl1WJ/qg70R1PW4sfYnRTCwVT7/zPKOzTmPwx
-	P7Y6MFBWZoN6cVlwnlNDw==
-X-ME-Sender: <xms:Xt-2anEqf3rUSWz-Rh62nMFa4_mS7GMyfVgno9GVZHNuWwpOibD80Q>
-    <xme:Xt-2aryPRDgqK3IIL99Q9g4cn09izSDEJbrz476jyp8PeD07YErZWi2xDYJk6dQ9q
-    MO1Xc1uzd27W2LbZDXwTS6Kgudf5H1fpwFXdWC0GokBvesTvVpujweT>
-X-ME-Received: <xmr:Xt-2amgjIkzjZsaAGYIQKuPx0Z3DNXEFxPoGvV1zYCpbEMlmsLKrRMvSFWSp7oAtaH7go_blD427Uc8t8P_TJINhFuwJ2w>
-X-ME-Proxy-Cause: dmFkZTGyYeHxwa15ZDiVYeV1E+MVBBSsQuP5dZg6tdxkXuPMU73Xs4u6bLNGs7Osa0ihYi
-    XEG62tTa5MI2v49Fd0E7zwXzBKFp1lZe0Mfb9vl8lNAJqwcWq2bRg38Id1HP/x0KY6tUWb
-    YXKaCAInj+oXXCN+8yDjuobxXgLeStp7NtH3Usvbq0oj0wO8tkaG+SZYS0Y2z8Xvc572fC
-    OFVoaEHTK/MP5POpgCTQf06GTEwSUHQw0+Drxv4g6Op+lhQII0aAXQJg4dBMAtbOLvaAaM
-    lHRsnSDTuchkusoM1GoaIZbm6gArQNcJ7fmt3GG7eT+gkIixVfFhcc8kuJoh2x0+wpaRgv
-    EaeQVV8d2lRrEyM+mOYkijVtdNXbcLkSAgnReZk2rt0J7dvt03FRQ3cmo3cmdja6hGl9+N
-    Tgfn+Hs//WswpRGXxFnDzhdf/3FaZDYgNLEXAt1ZVFTWNYjINU4bmAD/pkX5qD+7w42pAk
-    0Ml7TZJOTaL91Rv+errHZEhzpFK3Ntiz45bKZ5g1+BFEk7MWGys5s7QvzO1V5xb4vSoVkG
-    MchKg7fgdbgdxrpi4Uv3XvquYzBis+BCQnSMlOibjg9UnbPa0ynZg4rTYyYdoVOf5YMEJh
-    xPWCih7Tn1FJCFM9CQlymVqAyB/+PjmG/Oh7X4j8uZftNQ6+4QPnEu8EZOjw
-X-ME-Proxy: <xmx:Xt-2auwGA9NXZnJhdqKnbL38UGg78M3yXd-2FY5uZq_yr00jSvNhVg>
-    <xmx:Xt-2ahJ2cwRDNOaq3-3KPaZHFGGeVkZyr7PgOmKQV-FAuAn9odSWJQ>
-    <xmx:Xt-2atTyZiAPg6JakG_ZutXrV8THDfc9nF5Ckr8D8KACE20Ui_BIqg>
-    <xmx:Xt-2ahrmQmtqoId-Wthnhb0AYhXKoMlDq9ZwyXKXRID0SfA1mvlfVg>
-    <xmx:X9-2amDILSwTq60T3gbil70KR8C6qNVGr5w50178PF92zE3zFKix-VEw>
-Feedback-ID: i2b59495a:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
- 25 Sep 2026 16:53:50 -0400 (EDT)
-Message-ID: <3dc56354-728b-451f-9d70-8c135e0b1962@sandeen.net>
-Date: Fri, 25 Sep 2026 15:53:50 -0500
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="W6j7jCnt"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 892651F00893;
+	Fri, 25 Sep 2026 22:32:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790375522;
+	bh=1bI3/UpobmFOqx+KBeJKkQ80b+IAhUkuvBUBJ4Q//44=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=W6j7jCntS+zpWk4ysVn5E5/7m11s0PL+ufOpAkQttA2Rh+yHyow2/H0Bf+KlWNKyP
+	 BAR7HLyGnNFgI4IQMNMJD3pb8dgOiP237+VoHpOui2g/giX4m6+Lj6p/jyppKQXPHx
+	 AK7qgP8Bf+G1NAKlwrydTa43F1UNdkKU8hWHlxxrMTy71m6Dhq8jwq/Er78zrSjqle
+	 TO2rtwO5wHsBazJpxkXj+DcA/TClnHxSboGTVsZFhlEkiCMbZd3d+VIyNal2cW7ePe
+	 1lWAHyKyGpXqVGA/97Mqr58Q8sn53QVEh8PmedV3qEeRPm9Z+KqoFjZrqNBJjXHNMh
+	 H59DHYI59jmFw==
+Date: Fri, 25 Sep 2026 15:32:02 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Andrey Albershteyn <aalbersh@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 01/10] libxfs: refactor the reinit case in
+ libxfs_buftarg_init
+Message-ID: <20260925223202.GQ2705364@frogsfrogsfrogs>
+References: <20260925051336.2997014-1-hch@lst.de>
+ <20260925051336.2997014-2-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 12/13] libxfs: use xfs_trans.h from the kernel source
-To: Christoph Hellwig <hch@lst.de>, Andrey Albershteyn <aalbersh@kernel.org>
-Cc: linux-xfs@vger.kernel.org
-References: <20260925152107.3386097-1-hch@lst.de>
- <20260925152107.3386097-13-hch@lst.de>
-Content-Language: en-US
-From: Eric Sandeen <sandeen@sandeen.net>
-In-Reply-To: <20260925152107.3386097-13-hch@lst.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260925051336.2997014-2-hch@lst.de>
 
-On 9/25/26 10:20 AM, Christoph Hellwig wrote:
-> Replace the the existing xfs_trans.h with a copy of the kernel versions.
+On Fri, Sep 25, 2026 at 07:12:47AM +0200, Christoph Hellwig wrote:
+> I had to wade through this to understand what is going on here.  Factor
+> the reinit code into a well-name helper and dump the rationale for it
+> into a comment to make it easier for the next person to understand the
+> logic.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-after this, inode.c, init.c, and logitem.c all #include "xfs_trans.h" twice?
+Straightforward hoist, so
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
-and trans.c includes xfs_buf_item.h twice.
+--D
 
-(perhaps the existing #includes just needed to be moved up?)
-
-
-Also after this I think we have both libxfs/xfs_trans.h and libxfs/stubs/xfs_trans.h
-with the same guard, did you mean to remove the one in stubs/ ?
-
-(ugh, why do I sound like Sashiko LOL)
-
--Eric
+> ---
+>  libxfs/init.c | 75 ++++++++++++++++++++++++++++++---------------------
+>  1 file changed, 45 insertions(+), 30 deletions(-)
+> 
+> diff --git a/libxfs/init.c b/libxfs/init.c
+> index b89c9fe360d4..63015badc24e 100644
+> --- a/libxfs/init.c
+> +++ b/libxfs/init.c
+> @@ -487,6 +487,43 @@ static char *wf_opts[] = {
+>  	[WF_MAX_OPTS]		= NULL,
+>  };
+>  
+> +static void
+> +libxfs_buftarg_reinit(
+> +	struct xfs_mount	*mp,
+> +	struct libxfs_init	*xi)
+> +{
+> +	if (mp->m_ddev_targp->bt_bdev != xi->data.dev ||
+> +	    mp->m_ddev_targp->bt_mount != mp) {
+> +		fprintf(stderr,
+> +			_("%s: bad buftarg reinit, ddev\n"),
+> +			progname);
+> +		exit(1);
+> +	}
+> +
+> +	if (!xi->log.dev || xi->log.dev == xi->data.dev) {
+> +		if (mp->m_logdev_targp != mp->m_ddev_targp) {
+> +			fprintf(stderr,
+> +			_("%s: bad buftarg reinit, ldev mismatch\n"),
+> +				progname);
+> +			exit(1);
+> +		}
+> +	} else if (mp->m_logdev_targp->bt_bdev != xi->log.dev ||
+> +		   mp->m_logdev_targp->bt_mount != mp) {
+> +		fprintf(stderr,
+> +			_("%s: bad buftarg reinit, logdev\n"),
+> +			progname);
+> +		exit(1);
+> +	}
+> +	if ((xi->rt.dev || xi->rt.dev == xi->data.dev) &&
+> +	    (mp->m_rtdev_targp->bt_bdev != xi->rt.dev ||
+> +	     mp->m_rtdev_targp->bt_mount != mp)) {
+> +		fprintf(stderr,
+> +			_("%s: bad buftarg reinit, rtdev\n"),
+> +			progname);
+> +		exit(1);
+> +	}
+> +}
+> +
+>  void
+>  libxfs_buftarg_init(
+>  	struct xfs_mount	*mp,
+> @@ -532,37 +569,15 @@ libxfs_buftarg_init(
+>  		}
+>  	}
+>  
+> +	/*
+> +	 * This can happen if the utility called libxfs_buftarg_init manually
+> +	 * before libxfs_mount, which calls us again.
+> +	 *
+> +	 * In this case all buftargs should be initialized already, and we just
+> +	 * ensure the values are sane and match the current mount.
+> +	 */
+>  	if (mp->m_ddev_targp) {
+> -		/* should already have all buftargs initialised */
+> -		if (mp->m_ddev_targp->bt_bdev != xi->data.dev ||
+> -		    mp->m_ddev_targp->bt_mount != mp) {
+> -			fprintf(stderr,
+> -				_("%s: bad buftarg reinit, ddev\n"),
+> -				progname);
+> -			exit(1);
+> -		}
+> -		if (!xi->log.dev || xi->log.dev == xi->data.dev) {
+> -			if (mp->m_logdev_targp != mp->m_ddev_targp) {
+> -				fprintf(stderr,
+> -				_("%s: bad buftarg reinit, ldev mismatch\n"),
+> -					progname);
+> -				exit(1);
+> -			}
+> -		} else if (mp->m_logdev_targp->bt_bdev != xi->log.dev ||
+> -			   mp->m_logdev_targp->bt_mount != mp) {
+> -			fprintf(stderr,
+> -				_("%s: bad buftarg reinit, logdev\n"),
+> -				progname);
+> -			exit(1);
+> -		}
+> -		if ((xi->rt.dev || xi->rt.dev == xi->data.dev) &&
+> -		    (mp->m_rtdev_targp->bt_bdev != xi->rt.dev ||
+> -		     mp->m_rtdev_targp->bt_mount != mp)) {
+> -			fprintf(stderr,
+> -				_("%s: bad buftarg reinit, rtdev\n"),
+> -				progname);
+> -			exit(1);
+> -		}
+> +		libxfs_buftarg_reinit(mp, xi);
+>  		return;
+>  	}
+>  
+> -- 
+> 2.53.0
+> 
+> 
