@@ -1,29 +1,41 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A710936167F
-	for <linux-xfs@vger.kernel.org>; Sat, 26 Sep 2026 06:06:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A5C221A459;
+	Sat, 26 Sep 2026 06:07:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790402777; cv=none; b=eLzzRQsrmColHsO/4vg0WL2NdOHHftFBCPBUxfOlIez0SeBIZ/nTmJb4pwcKdXvGFa4h+B5yZHyPuM0weCpfZs1hMBG/oxTYhkbeB08kzfvQUfZLOjmRCCqXokNirhfVHGvNy3SeDJvdUK2tmjehx7jTx0UucGvIugthg+ao5kA=
+	t=1790402832; cv=none; b=TTVP5/dRjarSeKJpCnueWgb7F7eQlmRN2IEz6OLCcHHTVGe5HuXr0OyfhDctWuxCuu6zOVrZ9bZsrQEFceL4qF+FWCN4z9UDhId6LrB9gHaCQO2tUIiVFHtrObAJ/lmEWM28F1/kT89+RjSBkBXzmKn7YZamT9bZA1zLK2KqBpg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790402777; c=relaxed/simple;
-	bh=HztnUrvwOA8PTEwQ+vwgtieQH6mafkwqRV9WSxOCg3o=;
+	s=arc-20240116; t=1790402832; c=relaxed/simple;
+	bh=hEjaODduVcrYR0vvx9th7plRKPnx1VIiv4lKUID7QW0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=BOTU/gOlsc0UdcSVH5SCi2W1+mNOeyA4LP0cUpouHmVvggzJyjVObfx146sTPUg01SkKqv527BYvmMkkzma5taD8aYgVoE4opmMeHi7FLeMlkGJG57xsN585x9g6gdMMVn//kB6ZUhbMsDGmKWBiezt5mYgYrHKd59wUtYJ46Kk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 93D0C68C4E; Sat, 26 Sep 2026 08:06:11 +0200 (CEST)
-Date: Sat, 26 Sep 2026 08:06:11 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
-	linux-xfs@vger.kernel.org
-Subject: Re: small cleanups to help code sharing with xfsprogs
-Message-ID: <20260926060611.GC20636@lst.de>
-References: <20260925151841.3385994-1-hch@lst.de> <20260925225233.GZ2705364@frogsfrogsfrogs>
+	 Content-Type:Content-Disposition:In-Reply-To; b=r6bXOFPmxM8hGEqhG4Os082mgO7eYX8i+PCzTA9XqzqtiJO4sNOg8AAaQKoYxIwlf0UwI0v2swC36lxDFFgTjmmxTqEhqt4W+/iCFNnBuHDwHdY19Uds1bLhz/pdDpWbrn72vzw7Ih64oTh87XzjFHC7bAXgZF2Ks7jKaLZrL1I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=ZfXxoQV0; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ZfXxoQV0"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=0fOD7pQjECabMbDxifPoG81v62o+BaP3qLyt/KM1OH8=; b=ZfXxoQV0TFkF9tHD3stGfCPJc2
+	0Vl7A1fHL9HPr7nvAbpTavuP5aCxWAWMzg7+I10wf8PfuDPYy2Vmdz/DOPRldbOWd5yQNqIcbYLVv
+	A7eiq7ty12xdvBB4r6ijcJJtVRUXeuoWYmF6PkFjrEaTu8c/CInJ//UNUCFoUbnikaGYTpCpthWPw
+	0OdtPxiZBdFpHWHuf32wmDBVMnYuE5yt7R15roNJwX7Zf4pamt7ENkYFZiIBd8VxvwBpcnuEn7ddj
+	YIMMxKRHPMc0yvvQIX/Tvel3lkp8EplAJQETGoFDSRiwbpTt2/3/AOBXpiTZcmNl5l/0cZqd0OJ90
+	oVY+pgUg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1xALYy-0000000F3pE-1YFS;
+	Sat, 26 Sep 2026 06:07:08 +0000
+Date: Fri, 25 Sep 2026 23:07:08 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Steve Shoecraft <spshoecraft@gmail.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [RFC] MXFS: a shared-disk clustered filesystem derived from XFS
+Message-ID: <ardhDI-Ko7b5RccH@infradead.org>
+References: <56847E8D-EA83-4984-82F3-9BC93E4C02FF@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -32,28 +44,10 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260925225233.GZ2705364@frogsfrogsfrogs>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <56847E8D-EA83-4984-82F3-9BC93E4C02FF@gmail.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Fri, Sep 25, 2026 at 03:52:33PM -0700, Darrick J. Wong wrote:
-> On Fri, Sep 25, 2026 at 05:18:25PM +0200, Christoph Hellwig wrote:
-> > Hi all,
-> > 
-> > this series has a few trivial cleanups and code moves that help
-> > sharing more code with xfsprogs.
-> 
-> Hrmm.  This is a somewhat different approach than what Chris Wedgwood
-> did for his log port to userspace.
+I don't think too many people are going to care about your LLM dump,
+or even review it.  But please make sure you use different magic numbers
+so that a mxfs image left in the wild is not mistaken for an xfs one.
 
-Well, that seems to have been an AI slop dump without any further
-engagement from the LLM-herder, so I'm not sure it matters.
-
-But it also is a bit of a different thing.  This series tries to reduce
-the kernel/user libxfs differences, and reusing whatever we can from
-the kernel helps with that.  What we do about the log becomes relevant
-if/when we want to update that or share more.  My previously stated
-opinion is that splitting a single kernel code base into two libraries,
-which then generally are linked into the same programs again is not
-helpful.  But someone comes up with a design that actually makes it
-work painlessly I would not complain.  In the meantime I'd improve
-the maintainability of libxfs without touching the logging code at all.
