@@ -1,29 +1,31 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0DAF2367B72
-	for <linux-xfs@vger.kernel.org>; Sat, 26 Sep 2026 06:11:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F4CC329E5A;
+	Sat, 26 Sep 2026 06:13:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790403121; cv=none; b=qkYI7ekUv1AFSOtBMdgHhkSS5ZXr1BH4DRqVd4rJrIVnfwVoPrdFymcwsu5WAIwupr0B91iEfUOgmzRZh7UCDNV+HHfYyLd/jPo8cp4O3Ub2RbtC7IZAzNLpi7jbjo0bEBYIWTsjLbSj5ggRcfbra7AVhbVIxFbXqwTcap8xRGw=
+	t=1790403207; cv=none; b=PZx7Sk4/1qg30rX5cVJkUmXsxZke76DfV3+FPMTp2ZFVOd0oL0UjM8l7TpK10tadu1XPckW63LxZnpJYIzvhy8aB2ZTdft6aPKmkqNesBvRFPTcXfuF9hbkyyxrZ1XrhLfX2mdrKIzPvYEiw0lMwfDkWA3uiBircazA4FI0JkKc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790403121; c=relaxed/simple;
-	bh=IGAe94L6HTuACoRIZyJ3YjKldqrqeKMD8LesjxjAN3g=;
+	s=arc-20240116; t=1790403207; c=relaxed/simple;
+	bh=09deJmOdiIhecIF4gCGg9CbomMPJGpR/OeqFf2lI1NQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sA806ny21aVnLs7BWTeXOVbM7I2WuLtVC1TqPgjbzB4+aUV4pv4E0vBWgI8s1CWbQ4coMXoXzVnGLZtkA0gKuXYXzODWW/w4fykjqNBqW3fqzR9zmTM8D03II9cow6OxwzhHwoNTxLypZqZd+xyUDkyftbqutadYVSDxWbcVhaM=
+	 Content-Type:Content-Disposition:In-Reply-To; b=rWptnBsh1WJV05uY2b/qnNXOxCrowQrjm0viH5XIw8XHY9O6Pxt18ZPUFMoE+THsqyt9HO+HAYolpzfNVg2fxLgkHvqNqvwXOf3lzEIVRIwi1FyLMDsA0Kq+UZvbjPESLhLqG+mNifOjC+93UbUiOZErMzwLvfZvwGsEtOxgKy0=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 8E24968C4E; Sat, 26 Sep 2026 08:11:54 +0200 (CEST)
-Date: Sat, 26 Sep 2026 08:11:54 +0200
+	id EFCB968C4E; Sat, 26 Sep 2026 08:13:21 +0200 (CEST)
+Date: Sat, 26 Sep 2026 08:13:21 +0200
 From: Christoph Hellwig <hch@lst.de>
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Christoph Hellwig <hch@lst.de>,
-	Andrey Albershteyn <aalbersh@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 12/13] libxfs: use xfs_trans.h from the kernel source
-Message-ID: <20260926061154.GD20636@lst.de>
-References: <20260925152107.3386097-1-hch@lst.de> <20260925152107.3386097-13-hch@lst.de> <3dc56354-728b-451f-9d70-8c135e0b1962@sandeen.net>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
+	Jens Axboe <axboe@kernel.dk>,
+	Christian Brauner <brauner@kernel.org>, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 11/21] xfs: core RT data checksum support
+Message-ID: <20260926061321.GE20636@lst.de>
+References: <20260924100032.2733101-1-hch@lst.de> <20260924100032.2733101-12-hch@lst.de> <20260925232020.GF2705364@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -32,29 +34,25 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <3dc56354-728b-451f-9d70-8c135e0b1962@sandeen.net>
+In-Reply-To: <20260925232020.GF2705364@frogsfrogsfrogs>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Fri, Sep 25, 2026 at 03:53:50PM -0500, Eric Sandeen wrote:
-> On 9/25/26 10:20 AM, Christoph Hellwig wrote:
-> > Replace the the existing xfs_trans.h with a copy of the kernel versions.
+On Fri, Sep 25, 2026 at 04:20:20PM -0700, Darrick J. Wong wrote:
+> > +/*
+> > + * Read the checksum buffer for @rtg/@csum_off and return it unlocked.
 > 
-> after this, inode.c, init.c, and logitem.c all #include "xfs_trans.h" twice?
+>       Read the checksum buffer for @fsbno?
+
+Yeah.  This went forth and back a few times during development, and it
+looks like the comment didn't keep up..
+
+> > +out_error:
+> > +	while (--i >= 0)
+> > +		xfs_buf_rele(oz->oz_csum_bufs[i]);
 > 
-> and trans.c includes xfs_buf_item.h twice.
-> 
-> (perhaps the existing #includes just needed to be moved up?)
+> /me wonders if this should null out oz_csum_bufs to avoid the
+> possibility of dangling pointers?  Though I think the only caller will
+> free the oz if this function returns error so it might not matter much.
 
-Some need to be moved up, some are just duplicate.  I made a bit of
-a mess splitting up my original bigger patch which resulted in this.
-
-> Also after this I think we have both libxfs/xfs_trans.h and libxfs/stubs/xfs_trans.h
-> with the same guard, did you mean to remove the one in stubs/ ?
-
-The same mess as above left the old xfs_trans.h around in the patch as I
-only removed it locally after fixing up the split..
-> 
-> (ugh, why do I sound like Sashiko LOL)
-
-You sound way more human!
+Sure, that sounds like an easy enough safe guard.
 
