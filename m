@@ -1,73 +1,77 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta-101a.earthlink-vadesecure.net (mta-101a.earthlink-vadesecure.net [51.81.61.60])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC24737A83B
-	for <linux-xfs@vger.kernel.org>; Sat, 26 Sep 2026 06:23:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65D3532D7F8;
+	Sat, 26 Sep 2026 12:32:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=51.81.61.60
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790403800; cv=none; b=TeB3hEf6jBao6iLAJbEFQiD9uRxvuRnOJ2YPFoxaxWqjHSGiDYU27Wm4rmdlayC8hFKbC8s4SXTHUdk7EywWBTRZopknNF79FJr3CsTUvKFjILXjU0K1aTrgIChpuQCXNSlF53Z12uEJPfn9FDPF1DODUnOiWX41Z3bOP0E3xYY=
+	t=1790425976; cv=none; b=O9Y/kdInemXSrcddAb2PYCGqXL0JMZ2w7+eKSylpWvw4VyhVl2IQFE23foswrXBHeq5P1kOyMVYoI327UZQSqAxztSYrSznONbJVI1X1/f3M5YLfTIa2amtjW1DixHRDfIfCwLtQBokHxind/QU1vv93sR9YTi/4/m4hYZQdqAc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790403800; c=relaxed/simple;
-	bh=fTBfF+xiUAkz2et5oCOlB32KwhCPgXm7sL48kGgj8To=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uz+prwVtdBeRO5GYR9MYFQhs6xrmgTuyrGxxDoTwPSRQhhJNckpUq/79BoDdNV2wEgsY0T+rKBiM6wQAL6Wr9SRE2MLFBdf1TLoy/tvcxmqGm429sv2iW1RlXGZan9QtjwGG0fPKE8dXxYTv7vFaSqBcboRwiGBzBFSN/o0s5SY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 453E268C7B; Sat, 26 Sep 2026 08:23:14 +0200 (CEST)
-Date: Sat, 26 Sep 2026 08:23:13 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>,
-	Andrey Albershteyn <aalbersh@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 31/32] repair: support RT data checksums
-Message-ID: <20260926062313.GM20636@lst.de>
-References: <20260924100512.2733748-1-hch@lst.de> <20260924100512.2733748-32-hch@lst.de> <20260925235435.GR2705364@frogsfrogsfrogs>
+	s=arc-20240116; t=1790425976; c=relaxed/simple;
+	bh=Jkgm6++32y8guAgrTQyIPhxA76pbsD7tvMNLXOb8sjQ=;
+	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
+	 Message-Id:References:To; b=D+xmkyQV6ZlxHpijBnRsAnpOtf8qNNygya50pZqoSAWCvXekOLtxLKCCp7t17aSaRrq1zzxl18aMJBvajOky75Rf0Wcd97gJrgoQQaPjbVDbpluKhTZE+CIX8YLNCT7lurMLtBOpzsDA4qmjCsAJxIjOeKlfVQgGTAFdWw/EA6s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com; spf=fail smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=earthlink.net header.i=@earthlink.net header.b=lZSDuB4u; arc=none smtp.client-ip=51.81.61.60
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=earthlink.net header.i=@earthlink.net header.b="lZSDuB4u"
+DKIM-Signature: v=1; a=rsa-sha256; bh=abnD/nWWrhCc16pyr19HDQyIxYjMrMKv5SwEpK
+ vl/HY=; c=relaxed/relaxed; d=earthlink.net; h=from:reply-to:subject:
+ date:to:cc:resent-date:resent-from:resent-to:resent-cc:in-reply-to:
+ references:list-id:list-help:list-unsubscribe:list-unsubscribe-post:
+ list-subscribe:list-post:list-owner:list-archive; q=dns/txt;
+ s=dk12062016; t=1790425962; x=1791030762; b=lZSDuB4uFRksu035QgxY1D1WRBI
+ nSZsAldxVr+DlQs0MjBk6GF9URAbhyPzjFCgqd6sp/wCA3aY1++Oy+r+OKmJFk0ELGMXTLG
+ aKjh5gv7CUpWjmvBu0yj/6s4bV75MSMD5McKMz/O8ZAsD3O+bma+dWMYheIWWbmSGAWII+x
+ 2B9HTjEnVbyWLEJBttVxHs7uBY8iHrRVWDk0aXVZchUnnVIkHxA778FTYpMWVfjd+wWvb90
+ i0CLEE2FyHG6VCXztC9JDZ6JSjJvP1blnWQn2+kim70TeAvEhx6A2dAeMfroJ4w4tHiUIEX
+ I8jxCu6obVFV/SszQMkCGuf83gqw7bg==
+Received: from smtpclient.apple ([47.219.251.75])
+ by vsel1nmtao01p.internal.vadesecure.com with ngmta
+ id 8e78e419-18d8deec423399e2; Sat, 26 Sep 2026 12:32:42 +0000
+Content-Type: text/plain;
+	charset=utf-8
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260925235435.GR2705364@frogsfrogsfrogs>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3864.700.51.1.1\))
+Subject: Re: [RFC] MXFS: a shared-disk clustered filesystem derived from XFS
+From: Steve Shoecraft <spshoecraft@gmail.com>
+In-Reply-To: <ardhDI-Ko7b5RccH@infradead.org>
+Date: Sat, 26 Sep 2026 07:32:27 -0500
+Cc: linux-fsdevel@vger.kernel.org,
+ linux-xfs@vger.kernel.org
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <BC228018-42A4-4715-B186-057AFDE8A4D0@gmail.com>
+References: <56847E8D-EA83-4984-82F3-9BC93E4C02FF@gmail.com>
+ <ardhDI-Ko7b5RccH@infradead.org>
+To: Christoph Hellwig <hch@infradead.org>
+X-Mailer: Apple Mail (2.3864.700.51.1.1)
 
-On Fri, Sep 25, 2026 at 04:54:35PM -0700, Darrick J. Wong wrote:
-> > +		}
-> > +		ip = rtg->rtg_inodes[XFS_RTGI_CSUM];
-> > +		error = -xfs_rtcsum_alloc_blocks(rtg);
-> 
-> Does this need the usual -libxfsification macros?
 
-Probably.  Or I should go for another attempt to kill them everywhere...
+Good catch on the magic - I had it changed in previous attempts and =
+forgot on this one - release 0.90.0 has MXFS unique magic.
 
-> > +		xfs_csum_seed(mp, &csum);
-> > +		xfs_csum_gen(mp, data_buf + XFS_FSB_TO_B(mp, i),
-> > +				 mp->m_sb.sb_blocksize, &csum);
-> > +		if (i == 0)
-> > +			printf("calculated checksum 0x%x\n", csum.crc32c);
-> 
-> Debug code?
+I=E2=80=99ve been writing device drivers since the 90s on FreeBSD.  This =
+was a research project to see if an LLM could do it with the right =
+harness.
 
-Yes.
+Release conditions of course included 100% data integrity and 100% =
+stability.   XFS was the right choice for the base.
 
-> > +
-> > +		nr_blocks = min(DATA_BLOCKS_PER_BUF, rtg_blocks(rtg) - rgbno);
-> > +		error = read_data(mp->m_rtdev_targp,
-> > +				xfs_gbno_to_daddr(rtg_group(rtg), rgbno),
-> > +				XFS_FSB_TO_BB(mp, nr_blocks),
-> > +				data_buf);
-> > +		if (error) {
-> > +			do_warn(
-> > +_("Reading data at RG %u/%u failed, error %d"),
-> > +				rtg_rgno(rtg), rgbno, error);
-> > +			continue;
-> 
-> Er... so a read failure means we just leave broken checksums?
+Intent is a good clustered FS for Proxmox to compete with vSphere and =
+VMFS.  Yes, I=E2=80=99m aware of the differences in implementations.
 
-A zero-initialized one to be exact, yes.  I don't think there is
-much more we can do here?
+
+> On Sep 26, 2026, at 1:07=E2=80=AFAM, Christoph Hellwig =
+<hch@infradead.org> wrote:
+>=20
+> I don't think too many people are going to care about your LLM dump,
+> or even review it.  But please make sure you use different magic =
+numbers
+> so that a mxfs image left in the wild is not mistaken for an xfs one.
+>=20
 
