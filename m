@@ -1,181 +1,217 @@
-Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C20CD3E49CD
-	for <linux-xfs@vger.kernel.org>; Sun, 27 Sep 2026 12:49:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.153.141
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 361B4379EF5;
+	Sun, 27 Sep 2026 15:06:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790513349; cv=none; b=cORrBQDM0WwlTNOfkRQQptGcfLf0K319iFK0AR3q+P9kCq2S8xo5ys7NoyGnfg6KXTrtHlparv7WKh9rNbqbSZPDypMbKfe23td46lSkW5DQHIsCXg4p3sc3jdNKaQp3lj8gi7BlQHJnxDqhc0flVWlJu0cvlkpOTAVrXxzNeqk=
+	t=1790521580; cv=none; b=jrrz2ZxKCtOuDva/lusdBiPYb/tQBelEgZNwuKjBc9ewhbZ0O4gGD1lQsQvjc/BS8v7hbtY8lbBTncgYkZqwBIyvu//wF1HkdUF1EigRwJQYyubRzKrVGnki/2GQ+ikF5Y/BMocT4kYlvv2tnXnlwz9gpMoZnjvy1H3VIVQhjEg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790513349; c=relaxed/simple;
-	bh=wyIpiiOXFv1Em1NdZMHqYmCOoFZ+Xv6bl+o4MtQMHNk=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=k24kgHLAr8SmsXx3OlXp4ogL3Wes8/ODyoLb4p/htLqMQX5HBmTc/u+SoyjvbdLRCQyCUDsBkVDlq8O/4z1IGqmitAyowGyd8TPNZ0se1DqWzVsHnH1hNgTVLsb8ej+jtPG1wuQOqJwwOgFBWxS7HCeaLodtoCXt0smRFiyD3y4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=TfiueacP; arc=none smtp.client-ip=216.71.153.141
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+	s=arc-20240116; t=1790521580; c=relaxed/simple;
+	bh=cehWBRom1egDZ/wQmrT68b2iHHIuhGD42Fxp6GPLbak=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=t5iu7Ml43A14aqS6WtXQZfZ+Istft+R54OH8XEVQvDXApSArHv3wT7KKNVMLezpHqOytLkne4gnW+sWc3WaM0EJ2drj5nqHHu2z8n0WXk5bmIFulZQQhqWob+/zbKUFspRg1y1asoldGPGz3Ok2FVvEwkZp9bSNK8KUedR+6Av0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ma1cAF5H; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="TfiueacP"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1790513348; x=1822049348;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=wyIpiiOXFv1Em1NdZMHqYmCOoFZ+Xv6bl+o4MtQMHNk=;
-  b=TfiueacPA+b4jXkzQjcvAD8EjimbY9HDo6nXX8J0fCZggpc+UFtyeIQl
-   TvzqtFC/QpmTsbitYSRuGpdm62ZMpc5pCUQ/z9+nw0ziahfYBpbi/ekuV
-   FA7x/HZdJYj2e5mXwJPPZjkcERFsHuCxm8VhPY9Mlbn7kA8T4Yr2SfXQF
-   Ni6Sb5rvDBFPuna3nQVuEDg/G+Iw001XCFje7lXNXUahTBjx16pl2zeHu
-   IjOp0zxw8kb1d3qCSjavDIFd2ITuoHCFkIw24LQQ29Flwp65n2Pms1mJ9
-   YSBsqkqph00k4wlu3rGvO8P5I5UpLBHxVecAKPs3aBWHRy3pmG18uFLFD
-   Q==;
-X-CSE-ConnectionGUID: GZXWAymLSuCHUzNtCeMLOw==
-X-CSE-MsgGUID: cEKpmqGwRAqeZrkrxV+9Aw==
-X-IronPort-AV: E=Sophos;i="6.27,126,1786982400"; 
-   d="scan'208";a="156674581"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-esad3-o.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 27 Sep 2026 20:49:01 +0800
-X-CSE-ConnectionGUID: Pu5opZ9ORISMlDbmZzSRhA==
-X-CSE-MsgGUID: Tx1KFNAiQ6ea7DBlwsZFaw==
-IronPort-SDR: 6ab910bc_uu0T9MwuCkfxbSE+Y/0OJqt/YhExDNgosWmM81UlizbXV8a
- pADVpjQiWNIyXgC01C8Fr0y7dhZK8zpvF3e9ATw==
-Received: from uls-op-esai1-o.wdc.com ([10.248.3.45])
-  by uls-op-esad3-o.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 27 Sep 2026 05:49:00 -0700
-X-CSE-ConnectionGUID: Hwak0QwZRHyaGCBkI5WMvw==
-X-CSE-MsgGUID: NK+X7XwlRrykoh1yapTHmA==
-WDCIronportException: Internal
-Received: from c02g55gsml85.ad.shared (HELO gcv.wdc.com) ([10.224.5.130])
-  by uls-op-esai1-o.wdc.com with ESMTP; 27 Sep 2026 05:48:58 -0700
-From: Hans Holmberg <hans.holmberg@wdc.com>
-To: Carlos Maiolino <cem@kernel.org>,
-	"Darrick J . Wong" <djwong@kernel.org>
-Cc: Dave Chinner <david@fromorbit.com>,
-	Christoph Hellwig <hch@lst.de>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	linux-xfs@vger.kernel.org,
-	Hans Holmberg <hans.holmberg@wdc.com>
-Subject: [PATCH] xfs: don't let racing writers consume the free zones reserved for GC
-Date: Sun, 27 Sep 2026 14:48:41 +0200
-Message-ID: <20260927124841.31314-1-hans.holmberg@wdc.com>
-X-Mailer: git-send-email 2.55.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ma1cAF5H"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 01F201F000FF;
+	Sun, 27 Sep 2026 15:06:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790521579;
+	bh=hRe0FLP4Z/GQs9oxTcORN2hCNFjQ7djxlHIhDcwiwKA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=ma1cAF5HNGtcWmhf6z1+cEN3WONC9jYnw2/c46P6f3McV5+RPy+sI7zQ0pOkco8iy
+	 QcUOWdKmBgcEnKBNdPjDP5k/iVEPhdPKwReKmwlx32PDdpaCM9CGVUdiF7bwhrB+uf
+	 +804YkhJhf9NPEkvtlPSPLk909iUPr+Jlseq/RYF7frwr/WL8uLmmqnYbaymb2B7o5
+	 SHL37NA71QxgIy/RSkB/sgfOso9KbEZ+JRkJRnFiVAGiTGZBO6u/39ZFalLDABtNuH
+	 0pII3eFMT2yx2vZ+LbKVPG0xyNHEhGGK/TYfbZfSPZehdOrBOH6SOMlwyl1LG/Capr
+	 fiSW1zS/+0BSw==
+Date: Sun, 27 Sep 2026 08:06:18 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Anand Suveer Jain <asj@kernel.org>
+Cc: Zorro Lang <zlang@kernel.org>, fstests@vger.kernel.org,
+	linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+	linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v8 13/13] fstests: test UUID consistency for clones with
+ metadata_uuid
+Message-ID: <20260927150618.GZ6253@frogsfrogsfrogs>
+References: <cover.1784949154.git.asj@kernel.org>
+ <905a961a3bb2ec345285f056053e3016ad3bef6e.1784949155.git.asj@kernel.org>
+ <apc5PMJFYtrUyG8U@zlang-mailbox>
+ <ea5b61d4-0cba-4afc-b5e0-8720d4717872@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ea5b61d4-0cba-4afc-b5e0-8720d4717872@kernel.org>
 
-xfs_try_open_zone() checks the free zone count to avoid grabbing zones
-required for GC forward progress, but does so without decreasing the
-counter, letting multiple user writers through to call xfs_open_zone()
-and collectivly gobble up all free zones, stalling gc and eventually
-leading to user threads getting stuck waiting for free space.
+On Sun, Sep 27, 2026 at 12:41:46PM +0800, Anand Suveer Jain wrote:
+> On 2/9/26 04:51, Zorro Lang wrote:
+> > On Sat, Jul 25, 2026 at 03:39:10PM +0800, Anand Jain wrote:
+> >> Btrfs and xfs uses the metadata_uuid superblock feature to change the
+> >> on-disk UUID without rewriting every block header. This patch adds a
+> >> sanity check to ensure UUID consistency when a filesystem with
+> >> metadata_uuid enabled is cloned.
+> >>
+> >> Signed-off-by: Anand Jain <asj@kernel.org>
+> >> ---
+> >>  tests/generic/806     | 74 +++++++++++++++++++++++++++++++++++++++++++
+> >>  tests/generic/806.out |  6 ++++
+> >>  2 files changed, 80 insertions(+)
+> >>  create mode 100644 tests/generic/806
+> >>  create mode 100644 tests/generic/806.out
+> >>
+> >> diff --git a/tests/generic/806 b/tests/generic/806
+> >> new file mode 100644
+> >> index 000000000000..6d3166491006
+> >> --- /dev/null
+> >> +++ b/tests/generic/806
+> >> @@ -0,0 +1,74 @@
+> >> +#! /bin/bash
+> >> +# SPDX-License-Identifier: GPL-2.0
+> >> +# Copyright (c) 2026 Anand Jain <asj@kernel.org>.  All Rights Reserved.
+> >> +#
+> >> +# FS QA Test 806
+> >> +#
+> >> +# Verify that the cloned filesystem UUID remains consistent, even when the
+> >> +# `metadata_uuid` feature is enabled.
+> >> +#
+> >> +
+> >> +. ./common/preamble
+> >> +. ./common/filter
+> >> +
+> >> +_begin_fstest auto quick mount clone
+> >> +
+> >> +_require_test
+> >> +_require_block_device $TEST_DEV
+> >> +_require_loop
+> >> +
+> >> +_cleanup()
+> >> +{
+> >> +	cd /
+> >> +	rm -r -f $tmp.*
+> >> +	umount $mnt1 $mnt2 2>/dev/null
+> >> +	_loop_image_destroy "${devs[@]}" 2> /dev/null
+> >> +}
+> >> +
+> >> +filter_pool()
+> >> +{
+> >> +	sed -e "s|${devs[0]}|DEV1|g" -e "s|${mnt1}|MNT1|g" \
+> >> +	    -e "s|${devs[1]}|DEV2|g" -e "s|${mnt2}|MNT2|g" | _filter_spaces
+> >> +}
+> >> +
+> 
+> 
+> >> +# Create base loop device and its clone, applying the metadata_uuid tuning
+> >> +# callback to the base filesystem before the copy occurs.
+> >> +devs=()
+> >> +_loop_image_create_clone devs _change_metadata_uuid
+> > 
+> > Should we have and run a _require_metadata_uuid before changing it?
+> > As I know, btrfs can do `_require_btrfs_fs_feature metadata_uuid`.
+> > 
+> 
+> _require_metadata_uuid() is better than doing the same thing within
+> _change_metadata_uuid(). Now _change_metadata_uuid() calls
+> _require_metadata_uuid(), as shown below.
+> 
+> 
+> _require_metdata_uuid()
+> {
+>         case $FSTYP in
+>         xfs)
+>                 _require_command "$XFS_ADMIN_PROG" "xfs_admin"
 
-Fold the check and the accounting into a single atomic claim in
-xfs_open_zone() instead.  The free zone count is decremented before the
-zone is looked up and given back if none could be grabbed, so the reserve
-can no longer be raced away.  User allocations only claim a zone if that
-leaves the reserve behind, while GC just needs one free zone and thus can
-still use the zones that are kept for it.
+The presence of xfs_admin doesn't guarantee metauuid support on xfs;
+the script predates the creation of that feature flag + cli args.
 
-Fixes: 4e4d52075577 ("xfs: add the zoned space allocator")
-Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
----
+--D
 
-Darrick: Maybe this is the bug you saw [1] when writers got stuck
-waitig for gc? (generic/476)
-
-[1] https://lore.kernel.org/linux-xfs/20260925193722.GP2705364@frogsfrogsfrogs/
-
-I have only been able to reproduce this issue in combination with other
-patches, but the issue has been there since the start.
-
- fs/xfs/libxfs/xfs_zones.h |  6 ++++++
- fs/xfs/xfs_zone_alloc.c   | 29 +++++++++++++++++++++++++----
- 2 files changed, 31 insertions(+), 4 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_zones.h b/fs/xfs/libxfs/xfs_zones.h
-index c16089c9a652..1391d99b31de 100644
---- a/fs/xfs/libxfs/xfs_zones.h
-+++ b/fs/xfs/libxfs/xfs_zones.h
-@@ -30,6 +30,12 @@ struct blk_zone;
- #define XFS_OPEN_GC_ZONES	1U
- #define XFS_MIN_OPEN_ZONES	(XFS_OPEN_GC_ZONES + 1U)
- 
-+/*
-+ * Never open a zone for user data unless this many zones are free, so that GC
-+ * can always open the target zone it needs to make forward progress.
-+ */
-+#define XFS_MIN_FREE_GC_ZONES	(XFS_GC_ZONES - XFS_OPEN_GC_ZONES)
-+
- /*
-  * For zoned devices that do not have a limit on the number of open zones, and
-  * for regular devices using the zoned allocator, use the most common SMR disks
-diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
-index 28c1e48909fa..45bc77b1677b 100644
---- a/fs/xfs/xfs_zone_alloc.c
-+++ b/fs/xfs/xfs_zone_alloc.c
-@@ -437,6 +437,26 @@ xfs_init_open_zone(
- 	return oz;
- }
- 
-+/*
-+ * Claim one of the free zones. User allocations may not dip into the pool
-+ * reserved for guaranteeing GC forward progress.
-+ */
-+static bool
-+xfs_claim_free_zone(
-+	struct xfs_zone_info	*zi,
-+	bool			is_gc)
-+{
-+	int			min_free = is_gc ? 1 : XFS_MIN_FREE_GC_ZONES;
-+	int			free = atomic_read(&zi->zi_nr_free_zones);
-+
-+	do {
-+		if (free < min_free)
-+			return false;
-+	} while (!atomic_try_cmpxchg(&zi->zi_nr_free_zones, &free, free - 1));
-+
-+	return true;
-+}
-+
- /*
-  * Find a completely free zone, open it, and return a reference.
-  */
-@@ -450,6 +470,9 @@ xfs_open_zone(
- 	XA_STATE		(xas, &mp->m_groups[XG_TYPE_RTG].xa, 0);
- 	struct xfs_group	*xg;
- 
-+	if (!xfs_claim_free_zone(zi, is_gc))
-+		return NULL;
-+
- 	/*
- 	 * Pick the free zone with lowest index. Zones in the beginning of the
- 	 * address space typically provides higher bandwidth than those at the
-@@ -460,11 +483,12 @@ xfs_open_zone(
- 		if (atomic_inc_not_zero(&xg->xg_active_ref))
- 			goto found;
- 	xas_unlock(&xas);
-+
-+	atomic_inc(&zi->zi_nr_free_zones);
- 	return NULL;
- 
- found:
- 	xas_clear_mark(&xas, XFS_RTG_FREE);
--	atomic_dec(&zi->zi_nr_free_zones);
- 	xas_unlock(&xas);
- 
- 	set_current_state(TASK_RUNNING);
-@@ -483,9 +507,6 @@ xfs_try_open_zone(
- 
- 	if (zi->zi_nr_open_zones >= mp->m_max_open_zones - XFS_OPEN_GC_ZONES)
- 		return NULL;
--	if (atomic_read(&zi->zi_nr_free_zones) <
--	    XFS_GC_ZONES - XFS_OPEN_GC_ZONES)
--		return NULL;
- 
- 	/*
- 	 * Increment the open zone count to reserve our slot before dropping
--- 
-2.43.0
-
+>                 ;;
+>         btrfs)
+>                 _require_btrfs_fs_feature "metadata_uuid"
+>                 _require_command "$BTRFS_TUNE_PROG" "btrfstune"
+>                 ;;
+>         *)
+>                 _notrun "Require filesystem with metadata_uuid feature"
+>                 ;;
+>         esac
+> }
+> 
+> 
+> _change_metadata_uuid()
+> {
+>         local dev=$1
+> 
+>         _require_metdata_uuid
+> 
+>         case $FSTYP in
+>         xfs)
+>                 $XFS_ADMIN_PROG -U generate $dev >> $seqres.full
+>                 ;;
+>         btrfs)
+>                 $BTRFS_TUNE_PROG -m $dev
+>                 ;;
+>         esac
+> }
+> 
+> 
+> 
+> >> +mkdir -p $TEST_DIR/$seq
+> >> +mnt1=$TEST_DIR/$seq/mnt1
+> >> +mnt2=$TEST_DIR/$seq/mnt2
+> >> +mkdir -p $mnt1
+> >> +mkdir -p $mnt2
+> >> +
+> >> +# Get the uuid from the source device
+> >> +fsuuid=$(blkid -s UUID -o value ${devs[0]})
+> >> +
+> >> +# Mount both clone and baseline
+> >> +_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[0]} $mnt1 || \
+> >> +						_fail "Failed to mount dev1"
+> >> +_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[1]} $mnt2 || \
+> >> +						_fail "Failed to mount dev2"
+> >> +
+> >> +findmnt -o SOURCE,TARGET,UUID "${devs[0]}" | tail -n +2 | \
+> >> +				sed -e "s/${fsuuid}/FSUUID/g" | filter_pool
+> >> +findmnt -o SOURCE,TARGET,UUID "${devs[1]}" | tail -n +2 | \
+> >> +				sed -e "s/${fsuuid}/FSUUID/g" | filter_pool
+> >> +
+> >> +# Cycle mounts and reverse the initialization order to ensure UUID tracking
+> >> +# doesn't mismatch or flip when metadata_uuid optimization is active.
+> >> +echo "**** mount cycle ****"
+> >> +_unmount $mnt1
+> >> +_unmount $mnt2
+> >> +_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[1]} $mnt2 || \
+> >> +						_fail "Failed to mount dev2"
+> >> +_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[0]} $mnt1 || \
+> >> +						_fail "Failed to mount dev1"
+> >> +
+> >> +findmnt -o SOURCE,TARGET,UUID "${devs[0]}" | tail -n +2 | \
+> >> +				sed -e "s/${fsuuid}/FSUUID/g" | filter_pool
+> >> +findmnt -o SOURCE,TARGET,UUID "${devs[1]}" | tail -n +2 | \
+> >> +				sed -e "s/${fsuuid}/FSUUID/g" | filter_pool
+> >> +
+> >> +status=0
+> >> +exit
+> >> diff --git a/tests/generic/806.out b/tests/generic/806.out
+> >> new file mode 100644
+> >> index 000000000000..918f422ecddf
+> >> --- /dev/null
+> >> +++ b/tests/generic/806.out
+> >> @@ -0,0 +1,6 @@
+> >> +QA output created by 806
+> >> +DEV1 MNT1 FSUUID
+> >> +DEV2 MNT2 FSUUID
+> >> +**** mount cycle ****
+> >> +DEV1 MNT1 FSUUID
+> >> +DEV2 MNT2 FSUUID
+> >> -- 
+> >> 2.43.0
+> >>
+> 
+> 
