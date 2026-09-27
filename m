@@ -1,41 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70DD535F5ED
-	for <linux-xfs@vger.kernel.org>; Sat, 26 Sep 2026 18:20:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D91F632
+	for <linux-xfs@vger.kernel.org>; Sun, 27 Sep 2026 00:01:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790446811; cv=none; b=YcHd+QuUWEO8HqLC8mTc40/Y3hlCvkfnvZWGRLsd7mxNM4uDDrPe7dBmLcBYpqE2fSQMWZUy0Oy2klsFVlC3Y4GF7pau7zeWgjWPnqFgoBD8EgpBjnFP4076PBjwK/1A+XpRxhFhNcygyaq2zaiiTlFKFDTc+mGQQjofYzkHgtk=
+	t=1790467308; cv=none; b=QCs4K52ZtYTI8/z+x9msvaf/fYslrmlkKyPU2doIdJG/nV3ojrHg/3wsDC5ZzscQlRQQm+KHfgN2aH0c/MG5zXx8X7eHqaUNsAYSAfNqTr+FXwdJQnNAxysJOOWEuHhp2xp58NyjuBAl8FusSSFGChF96SRoGr33/FG4uQow9us=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790446811; c=relaxed/simple;
-	bh=QFDpj8V9u8qPHhE2OOCjRdy/Gppm7xRyy4WXAzam+K0=;
+	s=arc-20240116; t=1790467308; c=relaxed/simple;
+	bh=ihEbRmXmWUrIBR5WQPN6fWmOUgG5VvxbGzxWy7q1Ivw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=l/ofMkljaauSkuS0ZBjAgxYLBowE90y2DG2b0Qb6OX9HCm3OcCIpSa9ODxrBFktqGCBcnDa4mCv9YPARx9DTc6+ZWUuXJxwzQVhIVWyVfoqhM3IJwGBdpAYuBwBfYtCPxrYWbuPY88ojea2s/fh6k1Wrz2lGy+YYjibOxzBepA8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=S1sWtbTn; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=Hyz6qvvr4olKctiPK2B2863WoErOPIVNx0Iqw4ICxUJzp43TkwZy///cMSuDE8+XJBcKBRGXjCXsgLBJJY9iqAlZ12hP0hruNgl9XLPcdcv3bopK3Fk31mi9VpGt9ijEJvM6lGI4d5BiN83D4GHjmP1UWNmz/cdZ+BCMTe16HDM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Yd8qFS/5; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="S1sWtbTn"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 5356F1F000FF;
-	Sat, 26 Sep 2026 18:20:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Yd8qFS/5"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 10EF81F000FF;
+	Sun, 27 Sep 2026 00:01:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790446809;
-	bh=OwJ9AQn64nMpFG2mh/QRsVBYcKGq57BPKQHok1DGdDk=;
+	s=k20260515; t=1790467307;
+	bh=sB79F/cdv6nh6VXxboKTR2m3GWUy/YrJv8QZxlyzVY8=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=S1sWtbTngpIlReNziatG+gr6C3/ie1pvQi8PkpsP9spBOBXhITG26z/QMb17bSFJK
-	 krvnQZPC/2FaAlYr7LAMQ+bnN+hvE8q+1J3txQjdXWuNjWgNytPgAxjSpIljvAnrfS
-	 2NYOndJOyDueG3/qyq4Oa18TTHK4YoFNImgLB1Vo7BK5QluuW8/mbu8pnVMCvkSnbz
-	 ZQHLIXvYr8oe47HfPqAqgL/jyXQVCFDXeLBmEVfXdrLxZQ9QbkCuc3p5ZsUi40rQRg
-	 xavISn7LEmwrKU2K++Hct2owjHa4DywpwHqQsWWF/iEu+7QPdrk0b4iZhpbu9QsrE+
-	 +yts3E2fUFt2w==
-Date: Sat, 26 Sep 2026 11:20:08 -0700
+	b=Yd8qFS/5YECz1FT8rVP2hL3XDmBRhQhmHtL02ICpu+L1zJQbkiyos4UicuhkBEJXj
+	 /WOmy4MiqVx5ScK0yJ8ewgaaN63bYc2eRKy8Rpcfx5b7npfPMrnVUcLs93XisBwspy
+	 04o9y1OsgYsmrpkePz39AFIiemiNwJ0ORZc7muF/bbJJruoYIz93stxk1sYoKCWOMS
+	 QWUpfUbt9zfzs4yP3GGcNH9JTLcJYgdDD8w9eZNyhbbdQ/fKxoLrvmqd9vxmqBQ/PY
+	 prR+Wr8chWjRbuQUbPmKy/gDrVyQafV4k+DhuXX/Qx18jVqjyLRN2cwde03R5jkFP4
+	 wBY3wohUbbVVg==
+Date: Sat, 26 Sep 2026 17:01:46 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Andrey Albershteyn <aalbersh@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 30/32] xfs_db: support RT data checksum
-Message-ID: <20260926182008.GK6283@frogsfrogsfrogs>
+Subject: Re: [PATCH 31/32] repair: support RT data checksums
+Message-ID: <20260927000146.GS2705364@frogsfrogsfrogs>
 References: <20260924100512.2733748-1-hch@lst.de>
- <20260924100512.2733748-31-hch@lst.de>
- <20260925234358.GP2705364@frogsfrogsfrogs>
- <20260926062115.GL20636@lst.de>
+ <20260924100512.2733748-32-hch@lst.de>
+ <20260925235435.GR2705364@frogsfrogsfrogs>
+ <20260926062313.GM20636@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,62 +44,46 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260926062115.GL20636@lst.de>
+In-Reply-To: <20260926062313.GM20636@lst.de>
 
-On Sat, Sep 26, 2026 at 08:21:15AM +0200, Christoph Hellwig wrote:
-> On Fri, Sep 25, 2026 at 04:43:58PM -0700, Darrick J. Wong wrote:
-> > > +	{ "csums", FLDT_SUMINFO, OI(bitize(sizeof(struct xfs_rtbuf_blkinfo))),
+On Sat, Sep 26, 2026 at 08:23:13AM +0200, Christoph Hellwig wrote:
+> On Fri, Sep 25, 2026 at 04:54:35PM -0700, Darrick J. Wong wrote:
+> > > +		}
+> > > +		ip = rtg->rtg_inodes[XFS_RTGI_CSUM];
+> > > +		error = -xfs_rtcsum_alloc_blocks(rtg);
 > > 
-> > FLDT_SUMINFO is 4 bytes, this won't work for crc64.
+> > Does this need the usual -libxfsification macros?
 > 
-> Ouch, yes.
+> Probably.  Or I should go for another attempt to kill them everywhere...
 > 
-> > You might want to add a FLDT_CRC32C and FLDT_CRC64 so that the sizes can
-> > be correct, db can convert them from big-endian to host for display, and
-> > the display can be '0x%x' instead of decimal.
+> > > +		xfs_csum_seed(mp, &csum);
+> > > +		xfs_csum_gen(mp, data_buf + XFS_FSB_TO_B(mp, i),
+> > > +				 mp->m_sb.sb_blocksize, &csum);
+> > > +		if (i == 0)
+> > > +			printf("calculated checksum 0x%x\n", csum.crc32c);
+> > 
+> > Debug code?
 > 
-> The values are little endian, just like the xfs metadata csum.
+> Yes.
+> 
+> > > +
+> > > +		nr_blocks = min(DATA_BLOCKS_PER_BUF, rtg_blocks(rtg) - rgbno);
+> > > +		error = read_data(mp->m_rtdev_targp,
+> > > +				xfs_gbno_to_daddr(rtg_group(rtg), rgbno),
+> > > +				XFS_FSB_TO_BB(mp, nr_blocks),
+> > > +				data_buf);
+> > > +		if (error) {
+> > > +			do_warn(
+> > > +_("Reading data at RG %u/%u failed, error %d"),
+> > > +				rtg_rgno(rtg), rgbno, error);
+> > > +			continue;
+> > 
+> > Er... so a read failure means we just leave broken checksums?
+> 
+> A zero-initialized one to be exact, yes.  I don't think there is
+> much more we can do here?
 
-Oh, right, I forgot that :)
-
-> Do you remember how to dynamically switch between different
-> interpretations of a field in xfs_db code?
-
-The stupid way is to declare both FLDT types and counting functions
-that return nonzero if that checksum type is enabled, and 0 otherwise:
-
-static int
-rtcrc32c_count(
-       void                    *obj,
-       int                     startoff)
-{
-	if (mp->m_sb.sb_rtcsum_type != XFS_CSUM_TYPE_CRC32C)
-		return 0;
-	return xfs_rtcsum_payload_size(mp) >> mp->m_rtcsum_shift;
-}
-
-static int
-rtcrc64_count(
-       void                    *obj,
-       int                     startoff)
-{
-	if (mp->m_sb.sb_rtcsum_type != XFS_CSUM_TYPE_CRC64)
-		return 0;
-	return xfs_rtcsum_payload_size(mp) >> mp->m_rtcsum_shift;
-}
-
-
-       { "crc", FLDT_CRC, OI(bitize(sizeof(struct xfs_rtbuf_blkinfo))),
-	rtcrc32c_count, FLD_ARRAY | FLD_COUNT, TYP_DATA },
-       { "crc64", FLDT_CRC64, OI(bitize(sizeof(struct xfs_rtbuf_blkinfo))),
-	rtcrc64_count, FLD_ARRAY | FLD_COUNT, TYP_DATA },
-
-FLDT_CRC already exists, so I guess you just have to copy-pasta
-FLDT_CRC64 into field.c:
-
-	{ FLDT_CRC64, "crc64", fp_crc, "%#x (%s)", SI(bitsz(uint64_t)),
-	  0, NULL, NULL },
-
-Though the iocur_crc_valid() call in fp_crc might cause problems here.
+I can't see anything that we can do about it either, but xfs_repair
+ought to warn the user that they're going to get read errors.
 
 --D
