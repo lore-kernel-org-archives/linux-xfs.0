@@ -1,179 +1,69 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D08B3845A7
-	for <linux-xfs@vger.kernel.org>; Sun, 27 Sep 2026 21:30:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C83AD38398D;
+	Sun, 27 Sep 2026 22:48:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790544634; cv=none; b=fC9m9XpG+yv62WehYatINqaHFGk3BrBBpY0t7QKs5JpsKBa4WyZ8ewSl4epKi8o6UgxxmMrLTHlhUWIyuFNepem5fNc7VTtfTsfGYOpTcgNCixhrWQE/ca4HF1SxIrodpqU7VI1jPLe3nfhQSB7gdBSo20SnfgLQRgRfzrMnFOc=
+	t=1790549336; cv=none; b=ELU787qAiNROeSngsF5xxQzrbQHWxzAvPj8ZYlKGPe3FPsIQnr70QjcNQ3hWK3F0l6wMCqLPGIWoR+KUw3hKsDJcGZLElJ76BpkeK18f2TMFcr0JXAxmGH2ocbuzK/EvLV05nRIR0DVkxI/2eRRgC6oNtHQKvWpo5crO5UuIUQs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790544634; c=relaxed/simple;
-	bh=ilTjbBjJKTykdwnZgYF2F7MD9aN82r6fZY6GS/xspko=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=j5ZeetjsCkC4GlbAFryYFJzOXy+M19HYc9AxqRNGT6MxtynpkRb+Ige2lbZWa7+KEqUK+KZ9vILrlk4HZ1CqF7cIGw2wBaXkf0QAr1hxx5GkMIjACxBdT+tVBAZKNtre71uR9N+RnpN5ZEkCTVPgGZ3CvBpa2MdIR8BJMM96w6w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d7CBZqGx; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790549336; c=relaxed/simple;
+	bh=3ho1h+KM/VyELl2jCEVMjv2jb6/E2EmXIdmB/NvnTic=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=E1B4P+3YDHAXIfFs228gK6eFUfiRcBWz07vSqOKxOcKzmDcWKisArHF1obS4y9RPhRMgmNf6MxZtmjnhrM7dg0cw95naTIUZPybtvsN4hyKZnY6IFEmgKLfRlRcCL/JZVWWdtV3PbPEwJ5hOXfmxnErrss67lM2nM3foc+2i318=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=B0oarYu8; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d7CBZqGx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B375C1F000FF;
-	Sun, 27 Sep 2026 21:30:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="B0oarYu8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 64A5D1F000FF;
+	Sun, 27 Sep 2026 22:48:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790544632;
-	bh=l9y3k8cojKrCsVq+4Bf/+w2KKqqAOzgsgMx8a4Qe8lg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=d7CBZqGxRS6fgoTOFdbIF8e2pkkzlRIyRhJrAtiTy13bTPK9XDpxfTUjoInMzpfjY
-	 xKDQ+QchjtGW/+r1b843VmvCslDC38kTS9HdrGR3r5Vu+K8rCB1AMTEEULC9yl885A
-	 DZIiaSXq6J4q4oRjDKoirEBT4E2GivHvqbWj9lsy5+vO+2KXAqL3JrtK510+2PrXMj
-	 tEdjry4SifPvM0NGgISYlTDHK38y0bn/fHwI8yK9r+0C8soDacvow+TiZzD0Vao47m
-	 xuZAmSJZVYHFp6aBlK2y+aU/l8I83v1yW7rCuX48tC6YXCVUVgrSevCDHnW6bVuQkd
-	 AkIVUapgeOi7A==
-Date: Mon, 28 Sep 2026 07:30:24 +1000
-From: Dave Chinner <dgc@kernel.org>
-To: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	John Garry <john.garry@linux.dev>
-Subject: Re: [bug report] fstests generic/774 hang again
-Message-ID: <armK8JoOOzKMfbHZ@dread>
-References: <aqkP9CTUvlC2YCIb@shinmob>
- <aqsN4GOXthkF8rOI@dread>
- <aquJIL3Ztk3KBdHV@shinmob>
- <aqvER2bZyAO6H-4v@shinmob>
- <aqxag3TcgpYYVwTk@dread>
- <aq51WDjHLW3XyPR0@shinmob>
- <arGqH7adMMyhM1pi@dread>
- <arXOOv-OCEUs8xgQ@shinmob>
+	s=k20260515; t=1790549335;
+	bh=py3FWWgh37ZtpQZJsiyyfNmzFNQ/4HLrvvHaB+jkBw4=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=B0oarYu8vL5xt/zkiLN47f7mk3rRJujql71dB1G/3R/ppmZPZpEtphbaK4Xwsv3ax
+	 b2OFT9+OePf4DiBRD8kkO1MNJNkMz1iTYOfuqhQAxJzC9hlwkEa/N5dXHpzvOziwFe
+	 73bt0NsuZRGw3m4FLLHsx9HskLGvWifui4XAISS7eeUcQAxbFalgmrxiHtWIzT5Otd
+	 fPxJA2P9woXkroDvXmqdJvSAh+adg1p9aZGVTadeMIfbvsKD1ufCiHmpTmvpQncgDw
+	 lzE2v7owD+5i6UIfco/2l2kU9Ws15MracNV1w7gkmmAD/aNTdn80XiSKVuiCHs24mF
+	 RciQwcqGYjLkg==
+Message-ID: <da2b1dd1-bb24-4d05-8705-3b5bf7443a5a@kernel.org>
+Date: Mon, 28 Sep 2026 06:48:51 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <arXOOv-OCEUs8xgQ@shinmob>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v8 13/13] fstests: test UUID consistency for clones with
+ metadata_uuid
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Zorro Lang <zlang@kernel.org>, fstests@vger.kernel.org,
+ linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+ linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org
+References: <cover.1784949154.git.asj@kernel.org>
+ <905a961a3bb2ec345285f056053e3016ad3bef6e.1784949155.git.asj@kernel.org>
+ <apc5PMJFYtrUyG8U@zlang-mailbox>
+ <ea5b61d4-0cba-4afc-b5e0-8720d4717872@kernel.org>
+ <20260927150618.GZ6253@frogsfrogsfrogs>
+Content-Language: en-US
+From: Anand Suveer Jain <asj@kernel.org>
+In-Reply-To: <20260927150618.GZ6253@frogsfrogsfrogs>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Fri, Sep 25, 2026 at 10:32:44AM +0900, Shin'ichiro Kawasaki wrote:
-> On Sep 22, 2026 / 08:05, Dave Chinner wrote:
-> > On Sat, Sep 19, 2026 at 08:53:39PM +0900, Shin'ichiro Kawasaki wrote:
-> [...]
-> > > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> > > index 426a67b813a..8d10ae22884 100644
-> > > --- a/fs/xfs/xfs_file.c
-> > > +++ b/fs/xfs/xfs_file.c
-> > > @@ -829,7 +829,7 @@ xfs_file_dio_write_atomic(
-> > >  	struct kiocb		*iocb,
-> > >  	struct iov_iter		*from)
-> > >  {
-> > > -	unsigned int		iolock = XFS_IOLOCK_SHARED;
-> > > +	unsigned int		iolock;
-> > >  	ssize_t			ret, ocount = iov_iter_count(from);
-> > >  	unsigned int		dio_flags = 0;
-> > >  	const struct iomap_ops	*dops;
-> > > @@ -844,6 +844,17 @@ xfs_file_dio_write_atomic(
-> > >  		dops = &xfs_direct_write_iomap_ops;
-> > >  
-> > >  retry:
-> > > +	/*
-> > > +	 * Concurrent atomic write COW submissions under ILOCK can run out
-> > > +	 * journal reservation resource and can deadlock with the IO
-> > > +	 * completions. To avoid the deadlock, serialize submissions of
-> > > +	 * atomic write COW by taking IOLOCK exclusively.
-> > > +	 */
-> > > +	if (dops == &xfs_atomic_write_cow_iomap_ops)
-> > > +		iolock = XFS_IOLOCK_EXCL;
-> > > +	else
-> > > +		iolock = XFS_IOLOCK_SHARED;
-> > > +
-> > >  	ret = xfs_ilock_iocb_for_write(iocb, &iolock);
-> > >  	if (ret)
-> > >  		return ret;
-> > 
-> > Urk, that's pretty nasty.
-> > 
-> > > @@ -853,7 +864,8 @@ xfs_file_dio_write_atomic(
-> > >  		goto out_unlock;
-> > >  
-> > >  	/* Demote similar to xfs_file_dio_write_aligned() */
-> > > -	if (iolock == XFS_IOLOCK_EXCL) {
-> > > +	if (iolock == XFS_IOLOCK_EXCL &&
-> > > +	    dops != &xfs_atomic_write_cow_iomap_ops) {
-> > >  		xfs_ilock_demote(ip, XFS_IOLOCK_EXCL);
-> > >  		iolock = XFS_IOLOCK_SHARED;
-> > >  	}
-> > 
-> > And at this point, we now have several atomic write cow ops specific
-> > operations in this function (locking, the retry loop, etc).
-> > 
-> > This feels much more like there should be a separate function for
-> > the software cow path, and the fast path simply calls it on
-> > ENOPROTOOPT from the dio submission. That gets rid of all the
-> > conditionals and looping from the fast path. i.e
-> > 
-> > 	if (ocount > xfs_inode_buftarg(ip)->bt_awu_maxocount)
-> > 		return xfs_file_dio_write_atomic_cow();
-> > 
-> > 	/* do normal DIO write */
-> > 
-> > 	if (error == -ENOPROTOOPT)
-> > 		return xfs_file_dio_write_atomic_cow();
-> > 	return error;
-> > 
-> > 
-> > That essentially makes xfs_file_dio_write_atomic() and
-> > xfs_file_dio_write_aligned() the same code, except for the above two
-> > checks, hence they could easily be collapsed back into a common
-> > implementation is:
-> > 
-> > 	if ((iocb->ki_flags & IOCB_ATOMIC) &&
-> > 	    ocount > xfs_inode_buftarg(ip)->bt_awu_maxocount)
-> > 		return xfs_file_dio_write_atomic_cow();
-> > 
-> > 	/* do normal DIO write */
-> > 
-> > 	if (error == -ENOPROTOOPT)
-> > 		return xfs_file_dio_write_atomic_cow();
-> > 	return error;
-> > 
-> > That seems like a much more natural breakdown that the current
-> > duplication of the DIO write submission code...
+
+>> _require_metdata_uuid()
+>> {
+>>         case $FSTYP in
+>>         xfs)
+>>                 _require_command "$XFS_ADMIN_PROG" "xfs_admin"
 > 
-> Thanks for the comment. I'll try to factor out the duplication based
-> on your idea.
+> The presence of xfs_admin doesn't guarantee metauuid support on xfs;
+> the script predates the creation of that feature flag + cli args.
 > 
-> On the other hand, Darrick suggested antoher solution approach to allocate
-> enough space before taking ILOCK by increasing tr_logcount.
+> --D
+Do we need to check and guarantee metadata_uuid support on XFS?
 
-No, that doesn't fix anything. tr_logcount is an optimisation to
-minimise the number of blocking regrants a -typical- rolling
-transaction will take. It trades off an increase in initial write
-grant reservation space (i.e. they use more log space) to enable
-more transaction rolls without needing to refresh the write grant
-for the next operation in the transaction.
-
-IOWs, it will reduce the number of concurrent transactions that can
-be running at any given time, but if the deferops intent processing
-can still run out of pre-reservation space and block waiting for a
-write grant.
-
-Hence increasing tr_logcount just kicks the can down
-the road, making it slightly harder to trigger the deadlock at the
-cost of lowering modification concurrency in the filesystem.
-
-
-> I wonder which
-> way is the better: "allocate enough space" or "take exclusive IOLOCK". I'll
-> do some experiment for the "allocate enough space" approach before working
-> on the dupliaction clean up.
-
-"allocate enough space" if not a fix - it's a bandaid. "take
-exclusive IOLOCK" reflects the fact that COW operations are
-inherently single threaded due to their reliance on holding the
-ILOCK_EXCL for long periods of time on both IO submission and IO
-completion.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-dgc@kernel.org
+Taking hints from xfs/077, which lacks a check for metadata_uuid
+support, leading to _notrun()).
