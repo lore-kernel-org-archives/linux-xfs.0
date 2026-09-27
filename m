@@ -1,142 +1,181 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A13F2384CEE;
-	Sun, 27 Sep 2026 12:20:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C20CD3E49CD
+	for <linux-xfs@vger.kernel.org>; Sun, 27 Sep 2026 12:49:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.153.141
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790511633; cv=none; b=l0rqL52dOIzXJ/dUTOG4ILzloYP7XzL/3X6Qb9RYAjEpq2orTfj6Qs2seBKQ5YHRQZZdD0ZlO1sVM/1JTYrqdJCjy1ybQSgQlNf/gBMiD8JARUEA1OPnGpSTEDbhpE1eav5AOCFZbIToDrtUhvKWC9odD17AoJvB15D8dh79anI=
+	t=1790513349; cv=none; b=cORrBQDM0WwlTNOfkRQQptGcfLf0K319iFK0AR3q+P9kCq2S8xo5ys7NoyGnfg6KXTrtHlparv7WKh9rNbqbSZPDypMbKfe23td46lSkW5DQHIsCXg4p3sc3jdNKaQp3lj8gi7BlQHJnxDqhc0flVWlJu0cvlkpOTAVrXxzNeqk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790511633; c=relaxed/simple;
-	bh=G/0V/tVdB+1vy6LhPLO5n/2OrJBu9NFwhz9OHan2Hrw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sFl2usUtKy8ZdL/E7tEPgphGa1q1ey8biTkEA4chzOlZi0ffSvljL0/cPegcZ22wLR9TCefu1NIPhrW7AeQT0CL5tO7niH7d9zMXcnZYor6/dNl/0In8Q8JEhwtIfqOHkWShm5w34E2WHmwcYcPJ2cv8s7/aKAbCxlsCotGTN3k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=caztystI; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790513349; c=relaxed/simple;
+	bh=wyIpiiOXFv1Em1NdZMHqYmCOoFZ+Xv6bl+o4MtQMHNk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=k24kgHLAr8SmsXx3OlXp4ogL3Wes8/ODyoLb4p/htLqMQX5HBmTc/u+SoyjvbdLRCQyCUDsBkVDlq8O/4z1IGqmitAyowGyd8TPNZ0se1DqWzVsHnH1hNgTVLsb8ej+jtPG1wuQOqJwwOgFBWxS7HCeaLodtoCXt0smRFiyD3y4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=TfiueacP; arc=none smtp.client-ip=216.71.153.141
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="caztystI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DA3301F000FF;
-	Sun, 27 Sep 2026 12:20:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790511618;
-	bh=27VfbBYrgETQGkFdL79NZbtbr3yqew4IO/tOyRnGkes=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=caztystILC3QgadFTMF9F17i4htyxDj/tcf3mMDLf1bA7+l2/8HKvahjv01DL9Wge
-	 gmPAtcFzHi3t4pwUHT1ffXPfn5B9M6zFvcq4xDObjKpuOvbfqRRNmFkx+lYa1ln+Gr
-	 5D0JoaqKAUw0W6LnN2n1AZEBvXeK820F179vSYyme1hiK2uCsP/xFkVtz2EhsaD8lb
-	 e6UcAK1bvJGbbR7sim2JvgxOgkIXg2+1vNJDD+oDgnm6HdqV7aWaILoDYhOyjG4Cul
-	 ZEtteKuAKVTub/+yJq6qfHXjMp8nZhHiLKezXtAOnWQM0Vd0+4nCz4WirbtSy/Nc/s
-	 K/ZQNgaOICnCQ==
-Date: Sun, 27 Sep 2026 20:20:12 +0800
-From: Zorro Lang <zlang@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: djwong@kernel.org, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: test libxfs handling of missing RT devices
-Message-ID: <arkF56Qtd-kQS9jH@zlang-mailbox>
-Mail-Followup-To: Christoph Hellwig <hch@lst.de>, djwong@kernel.org, 
-	fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-References: <20260925051519.3002168-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="TfiueacP"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1790513348; x=1822049348;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=wyIpiiOXFv1Em1NdZMHqYmCOoFZ+Xv6bl+o4MtQMHNk=;
+  b=TfiueacPA+b4jXkzQjcvAD8EjimbY9HDo6nXX8J0fCZggpc+UFtyeIQl
+   TvzqtFC/QpmTsbitYSRuGpdm62ZMpc5pCUQ/z9+nw0ziahfYBpbi/ekuV
+   FA7x/HZdJYj2e5mXwJPPZjkcERFsHuCxm8VhPY9Mlbn7kA8T4Yr2SfXQF
+   Ni6Sb5rvDBFPuna3nQVuEDg/G+Iw001XCFje7lXNXUahTBjx16pl2zeHu
+   IjOp0zxw8kb1d3qCSjavDIFd2ITuoHCFkIw24LQQ29Flwp65n2Pms1mJ9
+   YSBsqkqph00k4wlu3rGvO8P5I5UpLBHxVecAKPs3aBWHRy3pmG18uFLFD
+   Q==;
+X-CSE-ConnectionGUID: GZXWAymLSuCHUzNtCeMLOw==
+X-CSE-MsgGUID: cEKpmqGwRAqeZrkrxV+9Aw==
+X-IronPort-AV: E=Sophos;i="6.27,126,1786982400"; 
+   d="scan'208";a="156674581"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-esad3-o.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 27 Sep 2026 20:49:01 +0800
+X-CSE-ConnectionGUID: Pu5opZ9ORISMlDbmZzSRhA==
+X-CSE-MsgGUID: Tx1KFNAiQ6ea7DBlwsZFaw==
+IronPort-SDR: 6ab910bc_uu0T9MwuCkfxbSE+Y/0OJqt/YhExDNgosWmM81UlizbXV8a
+ pADVpjQiWNIyXgC01C8Fr0y7dhZK8zpvF3e9ATw==
+Received: from uls-op-esai1-o.wdc.com ([10.248.3.45])
+  by uls-op-esad3-o.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 27 Sep 2026 05:49:00 -0700
+X-CSE-ConnectionGUID: Hwak0QwZRHyaGCBkI5WMvw==
+X-CSE-MsgGUID: NK+X7XwlRrykoh1yapTHmA==
+WDCIronportException: Internal
+Received: from c02g55gsml85.ad.shared (HELO gcv.wdc.com) ([10.224.5.130])
+  by uls-op-esai1-o.wdc.com with ESMTP; 27 Sep 2026 05:48:58 -0700
+From: Hans Holmberg <hans.holmberg@wdc.com>
+To: Carlos Maiolino <cem@kernel.org>,
+	"Darrick J . Wong" <djwong@kernel.org>
+Cc: Dave Chinner <david@fromorbit.com>,
+	Christoph Hellwig <hch@lst.de>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	linux-xfs@vger.kernel.org,
+	Hans Holmberg <hans.holmberg@wdc.com>
+Subject: [PATCH] xfs: don't let racing writers consume the free zones reserved for GC
+Date: Sun, 27 Sep 2026 14:48:41 +0200
+Message-ID: <20260927124841.31314-1-hans.holmberg@wdc.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260925051519.3002168-1-hch@lst.de>
+Content-Transfer-Encoding: 8bit
 
-On Fri, Sep 25, 2026 at 07:15:15AM +0200, Christoph Hellwig wrote:
-> Test that libxfs rejects initializing a file systems unless in debugger
-> mode by running xfs_repair and xfs_db with missing arguments.  For
-> db additionally test that command that require a RT device still do not
-> work even after libxfs can be initialized using a missing RT device.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  tests/xfs/2300     | 39 +++++++++++++++++++++++++++++++++++++++
->  tests/xfs/2300.out | 14 ++++++++++++++
->  2 files changed, 53 insertions(+)
->  create mode 100755 tests/xfs/2300
->  create mode 100644 tests/xfs/2300.out
-> 
-> diff --git a/tests/xfs/2300 b/tests/xfs/2300
-> new file mode 100755
-> index 000000000000..9d8bd9c6ae44
-> --- /dev/null
-> +++ b/tests/xfs/2300
-> @@ -0,0 +1,39 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0-or-later
-> +# Copyright (c) 2026 Christoph Hellwig.
-> +#
-> +# FS QA Test No. 2300
-> +#
-> +# Tests that repair refuses to work without -r argument, and xfs_db works fine
-> +# even without it to check libxfs initialization behavior with missing RT
-> +# devices.
-> +#
-> +. ./common/preamble
-> +_begin_fstest auto quick repair db
-> +
-> +. ./common/filter
-> +
-> +_require_scratch_nocheck
-> +_require_realtime
-> +
-> +if [ -z "$SCRATCH_RTDEV" ]; then
-> +	_notrun "external RT device required"
-> +fi
+xfs_try_open_zone() checks the free zone count to avoid grabbing zones
+required for GC forward progress, but does so without decreasing the
+counter, letting multiple user writers through to call xfs_open_zone()
+and collectivly gobble up all free zones, stalling gc and eventually
+leading to user threads getting stuck waiting for free space.
 
-I think "_require_realtime -> _require_external_realtime_device" already covers
-the "_notrun" above. I'll help to remove above redundant code when merging.
+Fold the check and the accounting into a single atomic claim in
+xfs_open_zone() instead.  The free zone count is decremented before the
+zone is looked up and given back if none could be grabbed, so the reserve
+can no longer be raced away.  User allocations only claim a zone if that
+leaves the reserve behind, while GC just needs one free zone and thus can
+still use the zones that are kept for it.
 
-> +
-> +_scratch_mkfs >> $seqres.full 2>&1
-> +
-> +echo "Dumping superblock using xfs_db without rtdev"
-> +$XFS_DB_PROG $SCRATCH_DEV -c 'sb 0' -c 'p' >> $seqres.full
-> +
-> +echo "Loading RT superblock using xfs_db without rtdev, should fail"
-> +$XFS_DB_PROG $SCRATCH_DEV -c 'rtsb'
-> +
-> +echo "Running xfs_repair -n without rt device, should fail"
-> +$XFS_REPAIR_PROG -n $SCRATCH_DEV
-> +
-> +echo "Running xfs_repair without rt device, should fail"
-> +$XFS_REPAIR_PROG $SCRATCH_DEV
-> +
-> +
-> +status=0
-> +exit
+Fixes: 4e4d52075577 ("xfs: add the zoned space allocator")
+Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
+---
 
-_exit 0
+Darrick: Maybe this is the bug you saw [1] when writers got stuck
+waitig for gc? (generic/476)
 
-I'll remove the extra blank line above.
+[1] https://lore.kernel.org/linux-xfs/20260925193722.GP2705364@frogsfrogsfrogs/
 
-Others look good to me, thanks!
+I have only been able to reproduce this issue in combination with other
+patches, but the issue has been there since the start.
 
-Reviewed-by: Zorro Lang <zlang@kernel.org>
+ fs/xfs/libxfs/xfs_zones.h |  6 ++++++
+ fs/xfs/xfs_zone_alloc.c   | 29 +++++++++++++++++++++++++----
+ 2 files changed, 31 insertions(+), 4 deletions(-)
 
-> diff --git a/tests/xfs/2300.out b/tests/xfs/2300.out
-> new file mode 100644
-> index 000000000000..50aab2b83ec9
-> --- /dev/null
-> +++ b/tests/xfs/2300.out
-> @@ -0,0 +1,14 @@
-> +QA output created by 2300
-> +Dumping superblock using xfs_db without rtdev
-> +Loading RT superblock using xfs_db without rtdev, should fail
-> +realtime device not loaded, use -R.
-> +Running xfs_repair -n without rt device, should fail
-> +Phase 1 - find and verify superblock...
-> +xfs_repair: filesystem has a realtime subvolume
-> +xfs_repair: realtime device init failed
-> +xfs_repair: cannot repair this filesystem.  Sorry.
-> +Running xfs_repair without rt device, should fail
-> +Phase 1 - find and verify superblock...
-> +xfs_repair: filesystem has a realtime subvolume
-> +xfs_repair: realtime device init failed
-> +xfs_repair: cannot repair this filesystem.  Sorry.
-> -- 
-> 2.53.0
-> 
+diff --git a/fs/xfs/libxfs/xfs_zones.h b/fs/xfs/libxfs/xfs_zones.h
+index c16089c9a652..1391d99b31de 100644
+--- a/fs/xfs/libxfs/xfs_zones.h
++++ b/fs/xfs/libxfs/xfs_zones.h
+@@ -30,6 +30,12 @@ struct blk_zone;
+ #define XFS_OPEN_GC_ZONES	1U
+ #define XFS_MIN_OPEN_ZONES	(XFS_OPEN_GC_ZONES + 1U)
+ 
++/*
++ * Never open a zone for user data unless this many zones are free, so that GC
++ * can always open the target zone it needs to make forward progress.
++ */
++#define XFS_MIN_FREE_GC_ZONES	(XFS_GC_ZONES - XFS_OPEN_GC_ZONES)
++
+ /*
+  * For zoned devices that do not have a limit on the number of open zones, and
+  * for regular devices using the zoned allocator, use the most common SMR disks
+diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
+index 28c1e48909fa..45bc77b1677b 100644
+--- a/fs/xfs/xfs_zone_alloc.c
++++ b/fs/xfs/xfs_zone_alloc.c
+@@ -437,6 +437,26 @@ xfs_init_open_zone(
+ 	return oz;
+ }
+ 
++/*
++ * Claim one of the free zones. User allocations may not dip into the pool
++ * reserved for guaranteeing GC forward progress.
++ */
++static bool
++xfs_claim_free_zone(
++	struct xfs_zone_info	*zi,
++	bool			is_gc)
++{
++	int			min_free = is_gc ? 1 : XFS_MIN_FREE_GC_ZONES;
++	int			free = atomic_read(&zi->zi_nr_free_zones);
++
++	do {
++		if (free < min_free)
++			return false;
++	} while (!atomic_try_cmpxchg(&zi->zi_nr_free_zones, &free, free - 1));
++
++	return true;
++}
++
+ /*
+  * Find a completely free zone, open it, and return a reference.
+  */
+@@ -450,6 +470,9 @@ xfs_open_zone(
+ 	XA_STATE		(xas, &mp->m_groups[XG_TYPE_RTG].xa, 0);
+ 	struct xfs_group	*xg;
+ 
++	if (!xfs_claim_free_zone(zi, is_gc))
++		return NULL;
++
+ 	/*
+ 	 * Pick the free zone with lowest index. Zones in the beginning of the
+ 	 * address space typically provides higher bandwidth than those at the
+@@ -460,11 +483,12 @@ xfs_open_zone(
+ 		if (atomic_inc_not_zero(&xg->xg_active_ref))
+ 			goto found;
+ 	xas_unlock(&xas);
++
++	atomic_inc(&zi->zi_nr_free_zones);
+ 	return NULL;
+ 
+ found:
+ 	xas_clear_mark(&xas, XFS_RTG_FREE);
+-	atomic_dec(&zi->zi_nr_free_zones);
+ 	xas_unlock(&xas);
+ 
+ 	set_current_state(TASK_RUNNING);
+@@ -483,9 +507,6 @@ xfs_try_open_zone(
+ 
+ 	if (zi->zi_nr_open_zones >= mp->m_max_open_zones - XFS_OPEN_GC_ZONES)
+ 		return NULL;
+-	if (atomic_read(&zi->zi_nr_free_zones) <
+-	    XFS_GC_ZONES - XFS_OPEN_GC_ZONES)
+-		return NULL;
+ 
+ 	/*
+ 	 * Increment the open zone count to reserve our slot before dropping
+-- 
+2.43.0
+
