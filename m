@@ -1,210 +1,71 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34D4035C190;
-	Sun, 27 Sep 2026 04:41:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 106B42FD7D3;
+	Sun, 27 Sep 2026 11:03:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790484112; cv=none; b=gVXcyec0gLozsU1b1j5ExthVxbmwbuVSZ1W59j9peznJ0rLFUtiOatie5ATBtZJ9NnT+1VJPCRHNpmGJPSce2QUeMde1nC//WXxohap3mmPOgtFn/5qRznu+OuVcrp36pyZQBFOeFBaiGeGnRHRNUfsYolLl3mF+xFLrWiQQTmE=
+	t=1790506987; cv=none; b=DjjRfbpPN/U4py31CnpK6dojnw3fodw7E6hE8YCfTpkxB4hT8LcYy02jElTuJghv6od2iOWsKg4/IpJ6/3weWlsILrg17R7YBoK7d5GB6h2ylBmtGWASXVXcao7D2zXOaM4Uiz5ymkoTRN0pgd8A0d82zssk8nR5E4Im+0KX82Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790484112; c=relaxed/simple;
-	bh=BCmvmIPycufiDbqYRFd7agbH7SezLZIUFfJ6aBXnTe0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:Cc:From:
-	 In-Reply-To:Content-Type; b=gvzqT5GMMxXqhn+v+Dr2Vktyz3N+x+i4EhBquqCZ9Hyc4VE7sVXntcoyAj4YHGxw49CojFJ8rxx/RY1oRuiLSi7EEyCgS9HCHm4FJFD0ns18Io0ZshZV6NQQPPKi5lOxuY75hjfBzZVpiGLRr8BLZHTDMHHQ9BTEPInoo/Aj1vQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FmEWgzZu; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790506987; c=relaxed/simple;
+	bh=yR6n1rtmCVsNSEYovvqX/gTKIPaDXMTzJlWwWAhQ48E=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=LFoPabI+PUH1wAw82oJV3rns6GPsaV0j1zHjPuzHW+a54S/7WfSBsODrAnKdWDT4XZyR59zme7y2gZMZnO08JwngbhFt4M9s7cSicetccptDOgzHHb37jbxkcMEjxGNRzeap1jTCBTqr+Om2tqc1hkmR0lnRfuNUpCcMCfJHlug=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h9o64bRl; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FmEWgzZu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 09BAE1F000FF;
-	Sun, 27 Sep 2026 04:41:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h9o64bRl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 428E81F000FF;
+	Sun, 27 Sep 2026 11:03:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790484110;
-	bh=CwYGQ6//XvmoC9XXOlg9N3vwNJXULVBDjUKZ/NR5Jik=;
-	h=Date:Subject:To:References:Cc:From:In-Reply-To;
-	b=FmEWgzZu2iIqHudbnY7s4EIyHISO/RClDFhQxQNZXtJ4pl/jt2aDYBEGk4FK9GM3L
-	 ErcYKpXKJIIFSVE/7kLMOlXNhU2TRD+39u2uZ1qWtTzRyYgxOhQFIUcTVm8rKDlu4/
-	 mNpkOz/jakDzEH+WbC782JF0UrZzFPy42s472izsL9WAqBGbvuBt/JKC9+MlrziDCR
-	 jkpzzrofJI2seTLjHBZ0rJtKvQiDAzAZ8BZuEuk9KT0jq3fYM+0bSv47u1KHh08XsS
-	 M+PJx2hviLaPjYf8e7CTnrPIPi7zDEOiRFuuqbRnBTDfW9zkfOclwASFFtE+II8Rwj
-	 QME1smLnzWHAg==
-Message-ID: <ea5b61d4-0cba-4afc-b5e0-8720d4717872@kernel.org>
-Date: Sun, 27 Sep 2026 12:41:46 +0800
+	s=k20260515; t=1790506985;
+	bh=amqyLQk1B1QGBvWptDjINWsc/NXTL74WFOVLzATlfCc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=h9o64bRlO5nmiS0e5xu1xEpV2hVy7usOHWe2OT12Fdn6o9VNvfajlqxW78k1u4lkZ
+	 w/R17cs2+DW7wOLxIlotLlR3TrlIclLT0kEFT9oCmVpoEPafYLle2vSjrkG3DRm0cK
+	 D8/6ibWPILdVNI18UrB//lmaPYN7ygYZpT/MHODXVtovWcqrDpHqBCH8ewlWhyWRyq
+	 ROBQ0YQX9fFQ8M0HGGN/BckTaRbqPZIpLNcGOZ8s47/nTbhlCAbpG2k34w1910Gj3o
+	 y/F767uLt9UPhqXERJsbDKy1SsgxYf0V8NGuw5z1yTDnD2jik+7oUL7xf5ijhtscnp
+	 WM81G0XHIpHIw==
+Date: Sun, 27 Sep 2026 13:03:00 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: Steve Shoecraft <spshoecraft@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, 
+	linux-xfs@vger.kernel.org
+Subject: Re: [RFC] MXFS: a shared-disk clustered filesystem derived from XFS
+Message-ID: <arj3Mp6Cq2_qwaIb@cronus.toxiclabs.cc>
+References: <56847E8D-EA83-4984-82F3-9BC93E4C02FF@gmail.com>
+ <ardhDI-Ko7b5RccH@infradead.org>
+ <BC228018-42A4-4715-B186-057AFDE8A4D0@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v8 13/13] fstests: test UUID consistency for clones with
- metadata_uuid
-To: Zorro Lang <zlang@kernel.org>
-References: <cover.1784949154.git.asj@kernel.org>
- <905a961a3bb2ec345285f056053e3016ad3bef6e.1784949155.git.asj@kernel.org>
- <apc5PMJFYtrUyG8U@zlang-mailbox>
-Content-Language: en-US
-Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org,
- linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
- linux-xfs@vger.kernel.org, djwong@kernel.org
-From: Anand Suveer Jain <asj@kernel.org>
-In-Reply-To: <apc5PMJFYtrUyG8U@zlang-mailbox>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <BC228018-42A4-4715-B186-057AFDE8A4D0@gmail.com>
 
-On 2/9/26 04:51, Zorro Lang wrote:
-> On Sat, Jul 25, 2026 at 03:39:10PM +0800, Anand Jain wrote:
->> Btrfs and xfs uses the metadata_uuid superblock feature to change the
->> on-disk UUID without rewriting every block header. This patch adds a
->> sanity check to ensure UUID consistency when a filesystem with
->> metadata_uuid enabled is cloned.
->>
->> Signed-off-by: Anand Jain <asj@kernel.org>
->> ---
->>  tests/generic/806     | 74 +++++++++++++++++++++++++++++++++++++++++++
->>  tests/generic/806.out |  6 ++++
->>  2 files changed, 80 insertions(+)
->>  create mode 100644 tests/generic/806
->>  create mode 100644 tests/generic/806.out
->>
->> diff --git a/tests/generic/806 b/tests/generic/806
->> new file mode 100644
->> index 000000000000..6d3166491006
->> --- /dev/null
->> +++ b/tests/generic/806
->> @@ -0,0 +1,74 @@
->> +#! /bin/bash
->> +# SPDX-License-Identifier: GPL-2.0
->> +# Copyright (c) 2026 Anand Jain <asj@kernel.org>.  All Rights Reserved.
->> +#
->> +# FS QA Test 806
->> +#
->> +# Verify that the cloned filesystem UUID remains consistent, even when the
->> +# `metadata_uuid` feature is enabled.
->> +#
->> +
->> +. ./common/preamble
->> +. ./common/filter
->> +
->> +_begin_fstest auto quick mount clone
->> +
->> +_require_test
->> +_require_block_device $TEST_DEV
->> +_require_loop
->> +
->> +_cleanup()
->> +{
->> +	cd /
->> +	rm -r -f $tmp.*
->> +	umount $mnt1 $mnt2 2>/dev/null
->> +	_loop_image_destroy "${devs[@]}" 2> /dev/null
->> +}
->> +
->> +filter_pool()
->> +{
->> +	sed -e "s|${devs[0]}|DEV1|g" -e "s|${mnt1}|MNT1|g" \
->> +	    -e "s|${devs[1]}|DEV2|g" -e "s|${mnt2}|MNT2|g" | _filter_spaces
->> +}
->> +
-
-
->> +# Create base loop device and its clone, applying the metadata_uuid tuning
->> +# callback to the base filesystem before the copy occurs.
->> +devs=()
->> +_loop_image_create_clone devs _change_metadata_uuid
+On Sat, Sep 26, 2026 at 07:32:27AM -0500, Steve Shoecraft wrote:
 > 
-> Should we have and run a _require_metadata_uuid before changing it?
-> As I know, btrfs can do `_require_btrfs_fs_feature metadata_uuid`.
+> Good catch on the magic - I had it changed in previous attempts and forgot on this one - release 0.90.0 has MXFS unique magic.
 > 
+> I’ve been writing device drivers since the 90s on FreeBSD.  This was a research project to see if an LLM could do it with the right harness.
+> 
+> Release conditions of course included 100% data integrity and 100% stability.   XFS was the right choice for the base.
+> 
+> Intent is a good clustered FS for Proxmox to compete with vSphere and VMFS.  Yes, I’m aware of the differences in implementations.
 
-_require_metadata_uuid() is better than doing the same thing within
-_change_metadata_uuid(). Now _change_metadata_uuid() calls
-_require_metadata_uuid(), as shown below.
-
-
-_require_metdata_uuid()
-{
-        case $FSTYP in
-        xfs)
-                _require_command "$XFS_ADMIN_PROG" "xfs_admin"
-                ;;
-        btrfs)
-                _require_btrfs_fs_feature "metadata_uuid"
-                _require_command "$BTRFS_TUNE_PROG" "btrfstune"
-                ;;
-        *)
-                _notrun "Require filesystem with metadata_uuid feature"
-                ;;
-        esac
-}
+If you are not even bothering reviewing your own project source code as
+you stated, don't expect anybody else to spend their time or have
+interest on it.
 
 
-_change_metadata_uuid()
-{
-        local dev=$1
-
-        _require_metdata_uuid
-
-        case $FSTYP in
-        xfs)
-                $XFS_ADMIN_PROG -U generate $dev >> $seqres.full
-                ;;
-        btrfs)
-                $BTRFS_TUNE_PROG -m $dev
-                ;;
-        esac
-}
-
-
-
->> +mkdir -p $TEST_DIR/$seq
->> +mnt1=$TEST_DIR/$seq/mnt1
->> +mnt2=$TEST_DIR/$seq/mnt2
->> +mkdir -p $mnt1
->> +mkdir -p $mnt2
->> +
->> +# Get the uuid from the source device
->> +fsuuid=$(blkid -s UUID -o value ${devs[0]})
->> +
->> +# Mount both clone and baseline
->> +_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[0]} $mnt1 || \
->> +						_fail "Failed to mount dev1"
->> +_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[1]} $mnt2 || \
->> +						_fail "Failed to mount dev2"
->> +
->> +findmnt -o SOURCE,TARGET,UUID "${devs[0]}" | tail -n +2 | \
->> +				sed -e "s/${fsuuid}/FSUUID/g" | filter_pool
->> +findmnt -o SOURCE,TARGET,UUID "${devs[1]}" | tail -n +2 | \
->> +				sed -e "s/${fsuuid}/FSUUID/g" | filter_pool
->> +
->> +# Cycle mounts and reverse the initialization order to ensure UUID tracking
->> +# doesn't mismatch or flip when metadata_uuid optimization is active.
->> +echo "**** mount cycle ****"
->> +_unmount $mnt1
->> +_unmount $mnt2
->> +_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[1]} $mnt2 || \
->> +						_fail "Failed to mount dev2"
->> +_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[0]} $mnt1 || \
->> +						_fail "Failed to mount dev1"
->> +
->> +findmnt -o SOURCE,TARGET,UUID "${devs[0]}" | tail -n +2 | \
->> +				sed -e "s/${fsuuid}/FSUUID/g" | filter_pool
->> +findmnt -o SOURCE,TARGET,UUID "${devs[1]}" | tail -n +2 | \
->> +				sed -e "s/${fsuuid}/FSUUID/g" | filter_pool
->> +
->> +status=0
->> +exit
->> diff --git a/tests/generic/806.out b/tests/generic/806.out
->> new file mode 100644
->> index 000000000000..918f422ecddf
->> --- /dev/null
->> +++ b/tests/generic/806.out
->> @@ -0,0 +1,6 @@
->> +QA output created by 806
->> +DEV1 MNT1 FSUUID
->> +DEV2 MNT2 FSUUID
->> +**** mount cycle ****
->> +DEV1 MNT1 FSUUID
->> +DEV2 MNT2 FSUUID
->> -- 
->> 2.43.0
->>
-
+> 
+> 
+> > On Sep 26, 2026, at 1:07 AM, Christoph Hellwig <hch@infradead.org> wrote:
+> > 
+> > I don't think too many people are going to care about your LLM dump,
+> > or even review it.  But please make sure you use different magic numbers
+> > so that a mxfs image left in the wild is not mistaken for an xfs one.
