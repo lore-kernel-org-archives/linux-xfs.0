@@ -1,89 +1,210 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D91F632
-	for <linux-xfs@vger.kernel.org>; Sun, 27 Sep 2026 00:01:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34D4035C190;
+	Sun, 27 Sep 2026 04:41:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790467308; cv=none; b=QCs4K52ZtYTI8/z+x9msvaf/fYslrmlkKyPU2doIdJG/nV3ojrHg/3wsDC5ZzscQlRQQm+KHfgN2aH0c/MG5zXx8X7eHqaUNsAYSAfNqTr+FXwdJQnNAxysJOOWEuHhp2xp58NyjuBAl8FusSSFGChF96SRoGr33/FG4uQow9us=
+	t=1790484112; cv=none; b=gVXcyec0gLozsU1b1j5ExthVxbmwbuVSZ1W59j9peznJ0rLFUtiOatie5ATBtZJ9NnT+1VJPCRHNpmGJPSce2QUeMde1nC//WXxohap3mmPOgtFn/5qRznu+OuVcrp36pyZQBFOeFBaiGeGnRHRNUfsYolLl3mF+xFLrWiQQTmE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790467308; c=relaxed/simple;
-	bh=ihEbRmXmWUrIBR5WQPN6fWmOUgG5VvxbGzxWy7q1Ivw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Hyz6qvvr4olKctiPK2B2863WoErOPIVNx0Iqw4ICxUJzp43TkwZy///cMSuDE8+XJBcKBRGXjCXsgLBJJY9iqAlZ12hP0hruNgl9XLPcdcv3bopK3Fk31mi9VpGt9ijEJvM6lGI4d5BiN83D4GHjmP1UWNmz/cdZ+BCMTe16HDM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Yd8qFS/5; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790484112; c=relaxed/simple;
+	bh=BCmvmIPycufiDbqYRFd7agbH7SezLZIUFfJ6aBXnTe0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:Cc:From:
+	 In-Reply-To:Content-Type; b=gvzqT5GMMxXqhn+v+Dr2Vktyz3N+x+i4EhBquqCZ9Hyc4VE7sVXntcoyAj4YHGxw49CojFJ8rxx/RY1oRuiLSi7EEyCgS9HCHm4FJFD0ns18Io0ZshZV6NQQPPKi5lOxuY75hjfBzZVpiGLRr8BLZHTDMHHQ9BTEPInoo/Aj1vQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FmEWgzZu; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Yd8qFS/5"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 10EF81F000FF;
-	Sun, 27 Sep 2026 00:01:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FmEWgzZu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 09BAE1F000FF;
+	Sun, 27 Sep 2026 04:41:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790467307;
-	bh=sB79F/cdv6nh6VXxboKTR2m3GWUy/YrJv8QZxlyzVY8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Yd8qFS/5YECz1FT8rVP2hL3XDmBRhQhmHtL02ICpu+L1zJQbkiyos4UicuhkBEJXj
-	 /WOmy4MiqVx5ScK0yJ8ewgaaN63bYc2eRKy8Rpcfx5b7npfPMrnVUcLs93XisBwspy
-	 04o9y1OsgYsmrpkePz39AFIiemiNwJ0ORZc7muF/bbJJruoYIz93stxk1sYoKCWOMS
-	 QWUpfUbt9zfzs4yP3GGcNH9JTLcJYgdDD8w9eZNyhbbdQ/fKxoLrvmqd9vxmqBQ/PY
-	 prR+Wr8chWjRbuQUbPmKy/gDrVyQafV4k+DhuXX/Qx18jVqjyLRN2cwde03R5jkFP4
-	 wBY3wohUbbVVg==
-Date: Sat, 26 Sep 2026 17:01:46 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Andrey Albershteyn <aalbersh@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 31/32] repair: support RT data checksums
-Message-ID: <20260927000146.GS2705364@frogsfrogsfrogs>
-References: <20260924100512.2733748-1-hch@lst.de>
- <20260924100512.2733748-32-hch@lst.de>
- <20260925235435.GR2705364@frogsfrogsfrogs>
- <20260926062313.GM20636@lst.de>
+	s=k20260515; t=1790484110;
+	bh=CwYGQ6//XvmoC9XXOlg9N3vwNJXULVBDjUKZ/NR5Jik=;
+	h=Date:Subject:To:References:Cc:From:In-Reply-To;
+	b=FmEWgzZu2iIqHudbnY7s4EIyHISO/RClDFhQxQNZXtJ4pl/jt2aDYBEGk4FK9GM3L
+	 ErcYKpXKJIIFSVE/7kLMOlXNhU2TRD+39u2uZ1qWtTzRyYgxOhQFIUcTVm8rKDlu4/
+	 mNpkOz/jakDzEH+WbC782JF0UrZzFPy42s472izsL9WAqBGbvuBt/JKC9+MlrziDCR
+	 jkpzzrofJI2seTLjHBZ0rJtKvQiDAzAZ8BZuEuk9KT0jq3fYM+0bSv47u1KHh08XsS
+	 M+PJx2hviLaPjYf8e7CTnrPIPi7zDEOiRFuuqbRnBTDfW9zkfOclwASFFtE+II8Rwj
+	 QME1smLnzWHAg==
+Message-ID: <ea5b61d4-0cba-4afc-b5e0-8720d4717872@kernel.org>
+Date: Sun, 27 Sep 2026 12:41:46 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260926062313.GM20636@lst.de>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v8 13/13] fstests: test UUID consistency for clones with
+ metadata_uuid
+To: Zorro Lang <zlang@kernel.org>
+References: <cover.1784949154.git.asj@kernel.org>
+ <905a961a3bb2ec345285f056053e3016ad3bef6e.1784949155.git.asj@kernel.org>
+ <apc5PMJFYtrUyG8U@zlang-mailbox>
+Content-Language: en-US
+Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org,
+ linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+ linux-xfs@vger.kernel.org, djwong@kernel.org
+From: Anand Suveer Jain <asj@kernel.org>
+In-Reply-To: <apc5PMJFYtrUyG8U@zlang-mailbox>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Sat, Sep 26, 2026 at 08:23:13AM +0200, Christoph Hellwig wrote:
-> On Fri, Sep 25, 2026 at 04:54:35PM -0700, Darrick J. Wong wrote:
-> > > +		}
-> > > +		ip = rtg->rtg_inodes[XFS_RTGI_CSUM];
-> > > +		error = -xfs_rtcsum_alloc_blocks(rtg);
-> > 
-> > Does this need the usual -libxfsification macros?
-> 
-> Probably.  Or I should go for another attempt to kill them everywhere...
-> 
-> > > +		xfs_csum_seed(mp, &csum);
-> > > +		xfs_csum_gen(mp, data_buf + XFS_FSB_TO_B(mp, i),
-> > > +				 mp->m_sb.sb_blocksize, &csum);
-> > > +		if (i == 0)
-> > > +			printf("calculated checksum 0x%x\n", csum.crc32c);
-> > 
-> > Debug code?
-> 
-> Yes.
-> 
-> > > +
-> > > +		nr_blocks = min(DATA_BLOCKS_PER_BUF, rtg_blocks(rtg) - rgbno);
-> > > +		error = read_data(mp->m_rtdev_targp,
-> > > +				xfs_gbno_to_daddr(rtg_group(rtg), rgbno),
-> > > +				XFS_FSB_TO_BB(mp, nr_blocks),
-> > > +				data_buf);
-> > > +		if (error) {
-> > > +			do_warn(
-> > > +_("Reading data at RG %u/%u failed, error %d"),
-> > > +				rtg_rgno(rtg), rgbno, error);
-> > > +			continue;
-> > 
-> > Er... so a read failure means we just leave broken checksums?
-> 
-> A zero-initialized one to be exact, yes.  I don't think there is
-> much more we can do here?
+On 2/9/26 04:51, Zorro Lang wrote:
+> On Sat, Jul 25, 2026 at 03:39:10PM +0800, Anand Jain wrote:
+>> Btrfs and xfs uses the metadata_uuid superblock feature to change the
+>> on-disk UUID without rewriting every block header. This patch adds a
+>> sanity check to ensure UUID consistency when a filesystem with
+>> metadata_uuid enabled is cloned.
+>>
+>> Signed-off-by: Anand Jain <asj@kernel.org>
+>> ---
+>>  tests/generic/806     | 74 +++++++++++++++++++++++++++++++++++++++++++
+>>  tests/generic/806.out |  6 ++++
+>>  2 files changed, 80 insertions(+)
+>>  create mode 100644 tests/generic/806
+>>  create mode 100644 tests/generic/806.out
+>>
+>> diff --git a/tests/generic/806 b/tests/generic/806
+>> new file mode 100644
+>> index 000000000000..6d3166491006
+>> --- /dev/null
+>> +++ b/tests/generic/806
+>> @@ -0,0 +1,74 @@
+>> +#! /bin/bash
+>> +# SPDX-License-Identifier: GPL-2.0
+>> +# Copyright (c) 2026 Anand Jain <asj@kernel.org>.  All Rights Reserved.
+>> +#
+>> +# FS QA Test 806
+>> +#
+>> +# Verify that the cloned filesystem UUID remains consistent, even when the
+>> +# `metadata_uuid` feature is enabled.
+>> +#
+>> +
+>> +. ./common/preamble
+>> +. ./common/filter
+>> +
+>> +_begin_fstest auto quick mount clone
+>> +
+>> +_require_test
+>> +_require_block_device $TEST_DEV
+>> +_require_loop
+>> +
+>> +_cleanup()
+>> +{
+>> +	cd /
+>> +	rm -r -f $tmp.*
+>> +	umount $mnt1 $mnt2 2>/dev/null
+>> +	_loop_image_destroy "${devs[@]}" 2> /dev/null
+>> +}
+>> +
+>> +filter_pool()
+>> +{
+>> +	sed -e "s|${devs[0]}|DEV1|g" -e "s|${mnt1}|MNT1|g" \
+>> +	    -e "s|${devs[1]}|DEV2|g" -e "s|${mnt2}|MNT2|g" | _filter_spaces
+>> +}
+>> +
 
-I can't see anything that we can do about it either, but xfs_repair
-ought to warn the user that they're going to get read errors.
 
---D
+>> +# Create base loop device and its clone, applying the metadata_uuid tuning
+>> +# callback to the base filesystem before the copy occurs.
+>> +devs=()
+>> +_loop_image_create_clone devs _change_metadata_uuid
+> 
+> Should we have and run a _require_metadata_uuid before changing it?
+> As I know, btrfs can do `_require_btrfs_fs_feature metadata_uuid`.
+> 
+
+_require_metadata_uuid() is better than doing the same thing within
+_change_metadata_uuid(). Now _change_metadata_uuid() calls
+_require_metadata_uuid(), as shown below.
+
+
+_require_metdata_uuid()
+{
+        case $FSTYP in
+        xfs)
+                _require_command "$XFS_ADMIN_PROG" "xfs_admin"
+                ;;
+        btrfs)
+                _require_btrfs_fs_feature "metadata_uuid"
+                _require_command "$BTRFS_TUNE_PROG" "btrfstune"
+                ;;
+        *)
+                _notrun "Require filesystem with metadata_uuid feature"
+                ;;
+        esac
+}
+
+
+_change_metadata_uuid()
+{
+        local dev=$1
+
+        _require_metdata_uuid
+
+        case $FSTYP in
+        xfs)
+                $XFS_ADMIN_PROG -U generate $dev >> $seqres.full
+                ;;
+        btrfs)
+                $BTRFS_TUNE_PROG -m $dev
+                ;;
+        esac
+}
+
+
+
+>> +mkdir -p $TEST_DIR/$seq
+>> +mnt1=$TEST_DIR/$seq/mnt1
+>> +mnt2=$TEST_DIR/$seq/mnt2
+>> +mkdir -p $mnt1
+>> +mkdir -p $mnt2
+>> +
+>> +# Get the uuid from the source device
+>> +fsuuid=$(blkid -s UUID -o value ${devs[0]})
+>> +
+>> +# Mount both clone and baseline
+>> +_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[0]} $mnt1 || \
+>> +						_fail "Failed to mount dev1"
+>> +_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[1]} $mnt2 || \
+>> +						_fail "Failed to mount dev2"
+>> +
+>> +findmnt -o SOURCE,TARGET,UUID "${devs[0]}" | tail -n +2 | \
+>> +				sed -e "s/${fsuuid}/FSUUID/g" | filter_pool
+>> +findmnt -o SOURCE,TARGET,UUID "${devs[1]}" | tail -n +2 | \
+>> +				sed -e "s/${fsuuid}/FSUUID/g" | filter_pool
+>> +
+>> +# Cycle mounts and reverse the initialization order to ensure UUID tracking
+>> +# doesn't mismatch or flip when metadata_uuid optimization is active.
+>> +echo "**** mount cycle ****"
+>> +_unmount $mnt1
+>> +_unmount $mnt2
+>> +_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[1]} $mnt2 || \
+>> +						_fail "Failed to mount dev2"
+>> +_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[0]} $mnt1 || \
+>> +						_fail "Failed to mount dev1"
+>> +
+>> +findmnt -o SOURCE,TARGET,UUID "${devs[0]}" | tail -n +2 | \
+>> +				sed -e "s/${fsuuid}/FSUUID/g" | filter_pool
+>> +findmnt -o SOURCE,TARGET,UUID "${devs[1]}" | tail -n +2 | \
+>> +				sed -e "s/${fsuuid}/FSUUID/g" | filter_pool
+>> +
+>> +status=0
+>> +exit
+>> diff --git a/tests/generic/806.out b/tests/generic/806.out
+>> new file mode 100644
+>> index 000000000000..918f422ecddf
+>> --- /dev/null
+>> +++ b/tests/generic/806.out
+>> @@ -0,0 +1,6 @@
+>> +QA output created by 806
+>> +DEV1 MNT1 FSUUID
+>> +DEV2 MNT2 FSUUID
+>> +**** mount cycle ****
+>> +DEV1 MNT1 FSUUID
+>> +DEV2 MNT2 FSUUID
+>> -- 
+>> 2.43.0
+>>
+
