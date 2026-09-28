@@ -1,56 +1,85 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EDAB3AB279
-	for <linux-xfs@vger.kernel.org>; Mon, 28 Sep 2026 05:44:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 305F1409103;
+	Mon, 28 Sep 2026 06:16:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790574264; cv=none; b=pP5vqslqxgyCnie/opcADOFbBb+/ydgO2OmX/rSzWgJudobszD00MJENwqQ4zPxPs+bpnXxeRuFXyaCSNfjG3czksfh2cX+enFjji4KPzNqtMPOAd5uUpTdriAy9UQbkIKoskS4RBC0eEQG0bVxZ2GE8ywjpLyKi/VXtEBpt5FI=
+	t=1790576166; cv=none; b=hGjGAZJHSchfAign7sjOLzJlLKdyE9rEL+dlyJynKvxv1hTUhbHhslMvCrPRnHKXeJ1P42az94d5s6ItKosA3hoFqYIgmAXAkvqwVls6aOswhCkWcKkh91RMWTJZYr34bwW/f6KNzJDYTHPi0EmyC565LPChy2KhE1qWiTWP7R8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790574264; c=relaxed/simple;
-	bh=ZeSIKYmYNA7X0LJismKJqfYY1ffRz+WwjW9ET/2t3sE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HRVJYLfeDfGVzXfAGKfYXQl1lK1K0z1thsB5jf1RapMgausgGPOBExJGAS0fbmMIt372RB/ih5pwW6y9ko5uOZRpzoIuOrLOmolj73nNXKbJSf6LRTW5XvQL/k2Ja9iw5h2Nd43fDZwu8Bs317sj0c+cqm4eFf4ZB5CzIbyGYPY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Z8eP22Q4; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1790576166; c=relaxed/simple;
+	bh=7jEIXfKCh8DMThWH0t4rVQfIaXKLpwQ8yIjmdbwEzt8=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=UPIvC0e+sT+6piMkXR6p91yFluEp1NOklKTV6PFwjDladYDtBvqHyQYJcDWfv21L47DuSgsJlJFBuJrmebl1UGmx4bRPslFZ8qK8yxf3/8Yzt/HATqL6RFXWJ4pPFgdvbF4hmgkS0YAVoLVIk6yjFO9tdyCzsEMLYQfrKnh0eqU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hzZ9iwCb; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Z8eP22Q4"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=4X2wtSJn2o5W4vyclWjFUZa87z8v0iLsGvwrUtztPRs=; b=Z8eP22Q4x4vEsagcKLhRuoAtwr
-	zZSmDC5fTiL74zr5gOYYF8mEgR2rJvmD4jt925rjjelVsZIdhTO8zoa7GM0gSxlwreTNl3GkIHqjx
-	ZHYLWIRIzonOFjkLia5dzR52/Bvd0Mb8xgQyQJlyPitcaK0MycmFsG+b8+FnAMbINxSfQk5TzJwj3
-	tgfxshQrBlojGCXAtew8QYKurHPzEGJz0WTjHRkFiYseVphlZHXA8QXaD4NwWhDEDTgPkANKepjk0
-	38BuHCLVdtpRAii0xlTiqHSIEoDEF2h8tRNRbRi4xpFS/r7gsS0jQWwNOXqKIOeU7hkuwFenoBe0S
-	SMM6BmHg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1xB49y-0000000HOCs-2ew7;
-	Mon, 28 Sep 2026 05:44:18 +0000
-Date: Sun, 27 Sep 2026 22:44:18 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Theodore Tso <tytso@mit.edu>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: running "make clean" in xfsprogs doesn't wipe mkfs/*.o files
-Message-ID: <arn-smyk5m2gCkYT@infradead.org>
-References: <arnTiMxkxgR7oRYb@mit.edu>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hzZ9iwCb"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 737A61F00893;
+	Mon, 28 Sep 2026 06:15:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790576159;
+	bh=oyldUKsHRI1gR3yAZchEjgk7Uwx2KY9ZJC7r2zTFG2Y=;
+	h=Date:Subject:From:To:Cc;
+	b=hzZ9iwCbNenjE0S0ndfZVJTV+73oeTE2KCrZu+w643TKmoMSNGzH9B+ceXwogaExg
+	 fhlRmBqVi+Whfl3elU15PUUbM8KOhqZWMsCxKHre/KDhQkaYOvZTdB5Ba2uJKhDzr0
+	 qtva8NDwqIimngnVxBE5hG/3GphtaD54SIx2VJ2J9ZJGSUDGkURZIC74UYRsjye3+8
+	 UajCOKjAW1xHh+45MZrndRoHDbSarIPH5ArOWzxppGaF85lGnRebfhUpdPOd3z6cl/
+	 u+q/jmQhZqejPA/DqihT1yGd+8BXHjjLvgHsJptjf58rw0zwwIb0HfJz0IjVxmwBWJ
+	 QaI0bP3b9OMEw==
+Date: Sun, 27 Sep 2026 23:15:58 -0700
+Subject: [PATCHSET] xfs: LLM-inspired bug fixes, part 19
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: djwong@kernel.org, cem@kernel.org
+Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
+Message-ID: <179057612523.479634.11102922479483109602.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <arnTiMxkxgR7oRYb@mit.edu>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 
-I don't have an answer either, and haven't seen this one in particular,
-but the xfsprogs build system is special at best or broken if you want
-to be frank.  A while ago I started on a ninja + meson port as that
-seems to be build system of choice for many low-level tools.  I didn't
-really have time to do more than a minimal demo, buf if someone wants
-to move to a less broken build system I'd be 100% supportive.
+Hi all,
+
+Here's a nineteenth batch of xfs fixes resulting from a LLaMma.  Mwa
+mwa mwa...
+
+If you're going to start using this code, I strongly recommend pulling
+from my git trees, which are linked below.
+
+With a bit of luck, this should all go splendidly.
+Comments and questions are, as always, welcome.
+
+--D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=llm-fixes-19
+---
+Commits in this patchset:
+ * xfs: be extra careful about replacement directory construction
+ * xfs: improve dirent bounds checking in scrub and repair
+ * xfs: abort dirtree repair if the live update hook dies
+ * xfs: bail out of directory tree repairs on error
+ * xfs: fix revalidation of xchk_dquot_iter cached mappings
+ * xfs: don't repair fs summary counters with garbage
+ * xfs: allow softlimit with no hardlimit in quota scrub
+ * xfs: assign an owner to scrub_stats_fops
+ * xfs: fix lost errno returned from xfarray_foliosort
+ * xfs: fix skipped inode mask handling in iscan
+ * xfs: don't proceed with xattr repair if the live update fails
+ * xfs: don't fix the directory tree if live update fails
+---
+ fs/xfs/scrub/attr_repair.c    |    3 ++
+ fs/xfs/scrub/dir.c            |   56 +++++++++++++++++++++++++++++++---
+ fs/xfs/scrub/dir_repair.c     |   38 ++++++++++++++++++-----
+ fs/xfs/scrub/dirtree_repair.c |   67 ++++++++++++++++++++++++++++-------------
+ fs/xfs/scrub/dqiterate.c      |    1 +
+ fs/xfs/scrub/fscounters.c     |    4 ++
+ fs/xfs/scrub/iscan.c          |    2 +
+ fs/xfs/scrub/quota.c          |    8 ++---
+ fs/xfs/scrub/quota_repair.c   |    6 ++--
+ fs/xfs/scrub/stats.c          |    2 +
+ fs/xfs/scrub/xfarray.c        |    4 ++
+ 11 files changed, 147 insertions(+), 44 deletions(-)
 
