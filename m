@@ -1,116 +1,135 @@
-Received: from mail-wr2-f35.google.com (mail-wr2-f35.google.com [74.125.225.99])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from fout-b3-smtp.messagingengine.com (fout-b3-smtp.messagingengine.com [202.12.124.146])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A15D04DA9A7
-	for <linux-xfs@vger.kernel.org>; Mon, 28 Sep 2026 14:15:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.99
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3D694E36D1
+	for <linux-xfs@vger.kernel.org>; Mon, 28 Sep 2026 15:05:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.146
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790604950; cv=none; b=Te8hPnQFGa4et47quULHlNAIJv7zTblNSimxdlc4iBpk2cWxqX+WTCPlJ3sXHSfZK7PfgqpaER0BdKNnkpzBgh5YhXmwe2JFr1nmVSETNirVAvFOg4hnkmfJrLF2ORQPzti2zQX2X7SNOtPz47/Cx0/z3dR2Hduiu+1x7ir7suQ=
+	t=1790607929; cv=none; b=oFy+LpSYsXkTOk/+kzvO658t4xaAjTd7BKKczplVDenDdQuaCldZ/MmbcKrGuovUaxS7kA1/qU1pMXjxKpj2eQV+X2drPIuFWJKTV9jV0zCMLT0bqhyQgem1sXvS+RKsXk4JmF45r6hB57LQRYRP559nJnXi53dc6DhH1+I1yoQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790604950; c=relaxed/simple;
-	bh=SDOM9kMfdcmwCPeN+pHLr+dW12M81fI6fl8eqzTVO/0=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=DkLNaZQMkQuh5LzbdR7dsZVOfYmo97zwrWaAOhrGlAEuDAIEmslc0zqYlofGcaTVMhXIqm7Cbueq0WbT0zLBgqMo82r8r80Ks1K7GoCI9l9pSnZUlGXHCaoybRAzuv9Te4v5gAlK8ZZNpLpiT8xMmpoAqqqc5x5OxWLp/gj5gO8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lpZoxLEZ; arc=none smtp.client-ip=74.125.225.99
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1790607929; c=relaxed/simple;
+	bh=7yMsLmsC12+LlWPS3+wd+uajBSI3FhxyFW2GmkB3TWo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=eH6eW27XU2HYRh19RqU25dDBAzKJNoAkqt/C+VrA23Yo/mQfGPM3OyEvJ43m63gqG1CQrmq3uYBOIAd/+oOZWCRzrVJ42TDp+32GcGjZUSAW6s59wbXc812A8zQT7oxKy8xDGHFoNpNSpq964C5n51qhyDFGjhA6jhIOX990tZg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net; spf=pass smtp.mailfrom=sandeen.net; dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b=XWX3xBpd; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=CGq7uLyn; arc=none smtp.client-ip=202.12.124.146
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandeen.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lpZoxLEZ"
-Received: by mail-wr2-f35.google.com with SMTP id ffacd0b85a97d-4885d4825adso1878252f8f.0
-        for <linux-xfs@vger.kernel.org>; Mon, 28 Sep 2026 07:15:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790604947; x=1791209747; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=Ga/sVQ04GQ2R3OqGQaJ74GV8dl/HvsodvK0bDD2oMMU=;
-        b=lpZoxLEZgijM3Dtdt6sZPsKwcvjvNUiGW3ixZ52HFcTUlVZHEHRkfW9PGcBe8O6PNr
-         xMgNsy+dBSIpb4zSCe1YXR+R0Ik2+HavnyjZHW7bVoq1VjaZNTxoxttVB2UQyZU/eJDT
-         PJffnrepZkZMWoSSL4itni+xwtN7bSauknMRDfm6PgcBRZo6D1CnHoi/QqwrSsVYZyNJ
-         7AWOPBd675+k5XSbLMKjsCo4/iU7agUgDHFRGw8D94mZnwueSj7uDGTo6PW7RJt/vYxh
-         50SstseRhV1CEdI4rUxFkUNxPJvSnZwhVFxNpOGvB6qqWK1SC/CPx4iy+e6/eFW0LO4r
-         AOoA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790604947; x=1791209747;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=Ga/sVQ04GQ2R3OqGQaJ74GV8dl/HvsodvK0bDD2oMMU=;
-        b=YYXZIV/NCBzIW6sF588opwQfoelavbOXevw0dI2I7rIcGZycXiF56zz7n4oN8KRe7x
-         qJXd/L/pu3vl/coHcqCjlpcPXP+BmwtVkuJALMQZL2r+yA+8602E7V5IfspIakjm1+B0
-         S6rw69cPjv9HDooZ+SWMh/PA+jeWScibqy5VDibm47fm0gzMFAk+8lgX7kBafCgjVb94
-         ClCboyUgDfXRA7GwCBHn479CUQJSJFK4Rfkfuz0+cJUgbsAj649hbQAbbM4G7/vZ/2aS
-         rbJ1ybC3CYuq12myX2yMGW8V9nfd0XravRQl8VLnnPJmqlCf9aJgXBxyPREREpdCDdgy
-         6enA==
-X-Forwarded-Encrypted: i=1; AKwUvByWAI3X5Lf89gNQ+xvGDeyhpKFPGvqbqCYWAswpAY1ZI8bOqi6J7Hx7YmShvLkhm8AkDMzBpAnoJFA=@vger.kernel.org
-X-Gm-Message-State: AFq9FYKdlqTX+AfrdYLFk/D93W0dpC4Gq4DczEVIFeXt2zbhuE/VSo45
-	+3k7bxirpG952NkuT9yO7Ir6q8qr5RYA/njzZkeZ30uqQwSD7ahrvJQs
-X-Gm-Gg: AYBFou0Rh3USi6BxJa8WS+c9oQ0fJHrtDRL7iXW9bMgnBvCKikVxbKPNNlhOYOq1ljI
-	SwjS1zuRJfnj/mNyk0jeq87+gZ9Fe+qtuYneDZY5+JJLTudmX9+1Gqjz7qi6d5ZSkC5LbVQ0Zhe
-	r9jYzaV7WThzp47pAiRW58Oc0hBiJkTTDpYicd5ZpZRb+zGwChoSHoOg16eg5ZI6W9p2WnGSUIM
-	Ohi3Cg6ke4yaJ5HrQV6yUWT3A3olXtfdwaVrsVP9yhfggT3XRihoEcinn3o9x9vXZ/c2b7JOzo8
-	azbml299huOCl5EO9MtzxFPAxDsJGY2Bli9OLLaxfQxdgEc/EKKXzYhSgBRDVyFfdceDFJLXYWB
-	2gFclJiXTAEnAy7YL3qbORqMuQ5xR4ragJGsLWJnH44pp04PuTzSe8X4E0q6fIGgwYnmQ4uI4Qm
-	x0dSX0lMnp82tMGCDfspHHAMKTup5FVqxjVJpmXNyI3V6aOGzjcFDHO8/5msqm53KC4Hq75Bag/
-	PUVeW7vSneSGA29bJfZv74FLt3L7SRmfDkpDiejNga7Lrg2sTqzt1+6tRHnfUBZWz7MLRUKs1Gs
-	SgQS
-X-Received: by 2002:a05:6000:2504:b0:487:1256:ab80 with SMTP id ffacd0b85a97d-48871878daemr24468120f8f.57.1790604946641;
-        Mon, 28 Sep 2026 07:15:46 -0700 (PDT)
-Received: from andreayoga.localdomain (93-42-14-189.ip84.fastwebnet.it. [93.42.14.189])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4887a6470b7sm28317186f8f.27.2026.09.28.07.15.43
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 28 Sep 2026 07:15:44 -0700 (PDT)
-From: Andrea Parri <parri.andrea@gmail.com>
-To: Zorro Lang <zlang@kernel.org>
-Cc: fstests@vger.kernel.org,
-	"Darrick J . Wong" <djwong@kernel.org>,
-	Christoph Hellwig <hch@infradead.org>,
-	linux-xfs@vger.kernel.org,
-	Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v2] xfs: exercise a failed CoW conversion during writeback
-Date: Mon, 28 Sep 2026 16:15:35 +0200
-Message-ID: <20260928141541.305360-1-parri.andrea@gmail.com>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <arprh9oyZEXs25CQ@zlang-mailbox>
-References: <20260928085047.7250-1-parri.andrea@gmail.com> <arprh9oyZEXs25CQ@zlang-mailbox>
+	dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b="XWX3xBpd";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="CGq7uLyn"
+Received: from phl-compute-08.internal (phl-compute-08.internal [10.202.2.48])
+	by mailfout.stl.internal (Postfix) with ESMTP id F0CE91D000D2;
+	Mon, 28 Sep 2026 11:05:26 -0400 (EDT)
+Received: from phl-frontend-04 ([10.202.2.163])
+  by phl-compute-08.internal (MEProxy); Mon, 28 Sep 2026 11:05:27 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm1; t=1790607926;
+	 x=1790694326; bh=rtIZhUdXj1U7yCpknGYWk83Jq4+tkdm8JEK4TgD8MSI=; b=
+	XWX3xBpdTzUdDNRq0Q8MOdJShKrduXP9cSD4q64kXpgCZnRHXgiQh6HdIXuz04Um
+	uq5psUW4czndrj0JWYGy89cZCC7EFOFWXxzaTL3AFuqQewlPVjquWA9TZk3v3A09
+	c5DzKLiNfPD8q5+J/3fIq3+wx0QEA/xdahyhonG7YwnOjokRP5uSItLcFpy0Vxla
+	ocKIcD32lKg5SKaQULEbH5BTN4CmEs4P4XctX4n4DbIleU6Xlvq+G5XUWYRDIWw7
+	lH/3CrzRrnfR6bHV5X5MaL5CbOeZhGPi5G7PDST4mrpjdKqYi7qvHcu4iWZfSXCn
+	SE+Q9ebFfBUnMdX+EVMKKQ==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1790607926; x=
+	1790694326; bh=rtIZhUdXj1U7yCpknGYWk83Jq4+tkdm8JEK4TgD8MSI=; b=C
+	Gq7uLyn98t0wwAVUv1/s5wgQ3ymQ34bb4Kn9+vQdNhOi2cZ7Q5fpjrpsRcTuBVI2
+	isqg8lct6/17SD9bTkNZdOifhpTAw8YTvO0Fs/r0amPVrI3ewM2Bzw0IcHTwMLlz
+	X9wRvyhV+WO7yK0nkpSfprH2Rw6Y8C1Wq7J4eWatcdrBfrc+u3UmiPcga86Z9T4Y
+	J7BO9Obd+o6pE1hzHpv5EN/E7+FfAfIh+hmGk7DkrPJs5lOD9AWeHiTmUNIVOPRU
+	w6NjVsuSBj5JvMu0DvM960UJBJlYX8c5Lqoy4CN7NvS+3l8LKMEcz7OVFp8kC+0C
+	o325FsusC4g6ZQm1aGJ5A==
+X-ME-Sender: <xms:NoK6akePC9ANz_QfSm5M_zu5VuqTwHSd3-4SUhqQ-6yXwFsWryLbNA>
+    <xme:NoK6atGxRrpHDqOg-SwavFogsDpzq1xjzGuBH7oVWm9zEZ3dIF_SQ0B-BGJ56loU4
+    iDTRvIJnKciesIZCW3KOVT6WqlXOUNNy9aczrdx1Nvd1CwJXnS3No-f>
+X-ME-Received: <xmr:NoK6at0OmqFbNbHHBPtVzfX2__rnyo6hsd8wluKEcpnE-wisZz8303JbPvvXEtYiUV3pcFoGlkbySKxNw9qfTDNplasa5Q>
+X-ME-Proxy-Cause: dmFkZTFhwObGEbQSwwe4s4508/8/XHWRLT/VRSjzlXJlIN61NXjKu4Q9gK/JQAsX57BDH4
+    AjVOwRhnkWHQDxWpVv0BGT+FlUf5Td8QRnkQ5Lriyls7QzxizlN7PS/Ox6ZfYfm5YSHRdj
+    CKpcvVyJ66jwh/kTK9nznWRu3LfPtMO5uUo0vAqWuStPq+owLKci1is5XUNwY/rr87Pm6H
+    fFEc6vga8KEZLHRJTIDDg/i2FYU8M0w9dHCUQP+4l3EHsdCAbVJg0g9czRhIWQZ1V/fshF
+    OUnj6SfdPHMgv8CYkAPyJnNnyFbcE/De4ii4FRMhn2WWWTp0BkXfZ2JUhm5EiqTyQ5l0Zx
+    80etqsWwmzp7B6upMjxKgd0ZOM9jH8Xu/pVvpuhCJ+ywg+uBJHXrgcro7D2TXtJXg2irRS
+    soUfGmGnQxnENs+5MQadR3aWmJcRs3s3jZsjDqHm7flMkEfhxHGu+sAjN8Ac/02ZSzf1sa
+    GExTRRKQdAnOMrUh9WbGiSnKHkXN73kMPMZsZ3D48CIDOv5/sTD2Qz/q0Ol4zLag2hXD6n
+    6EfGCXzC2T692XpYs/C9lp4JCl1CvaJELX2/Cl+Sbz34iWB5UoVeU88DTe0dihQZlpuu2e
+    lgTQJm9azv6f6TYV65qksi4SVXizTlBawkJJokrKfX7TdxjswWwjg1n48n+Q
+X-ME-Proxy: <xmx:NoK6alkMUBc7C_j9eMZtmxu-bSUSHfuf8OeSYaSdZwZ2IZSo5ziqXQ>
+    <xmx:NoK6at_0Tp0et_4Z-3AKCXuX2XVQSxFui79psA_fk80VCGfa0hF7Vg>
+    <xmx:NoK6aqr2Lg4eU8ZkUI5cr5BmmN14lzZWXQXd6CgvktmAhQaJM7Af8A>
+    <xmx:NoK6amkKjWK3WIQu6Cqw-_AjIO_OxK3KIP6AtKqz0Y7z77nTIygLwA>
+    <xmx:NoK6amq17HUoO0v7QxP3pxQTOqYQnkba-Co4iHEWpdmIHJQn51L5x2rY>
+Feedback-ID: i2b59495a:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
+ 28 Sep 2026 11:05:26 -0400 (EDT)
+Message-ID: <fdc58c69-3a64-4638-a415-9140b98f5d7b@sandeen.net>
+Date: Mon, 28 Sep 2026 10:05:25 -0500
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 0/3 V3] libxfs: better cache allocation error handling
+To: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs@vger.kernel.org, djwong@kernel.org, aalbersh@kernel.org
+References: <20260925194535.397036-1-sandeen@redhat.com>
+ <aroiYIl-CQ34_qee@infradead.org>
+Content-Language: en-US
+From: Eric Sandeen <sandeen@sandeen.net>
+In-Reply-To: <aroiYIl-CQ34_qee@infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Mon, Sep 28, 2026 at 09:53:29PM +0800, Zorro Lang wrote:
-> > +seq=0
+On 9/28/26 3:16 AM, Christoph Hellwig wrote:
+> On Fri, Sep 25, 2026 at 02:41:42PM -0500, Eric Sandeen wrote:
+>> OK, 3rd try.
+>>
+>> This is to handle an underlying problem that an actual ENOMEM cache
+>> node allocation failure is indistinguishable from "current cache full"
+>> and so ENOMEM may send us into a pointless cache-expansion loop which
+>> ultimately overflows the cache size variable, rather than just reporting
+>> the bad news up the chain to callers.
+>>
+>> Darrick suggested "I think I'd almost rather we change cache_node_allocate
+>> to return int and the cache node as an outparam since we do that elsewhere"
+>>
+>> on the last review cycle, and so I've done that here, I agree that it
+>> is cleaner.
 > 
-> In fstests, $seq is a core global variable representing the test sequence
-> number. Overwriting it here might lead to unexpected side effects with
-> framework helpers or cleanup logic. Could we rename this loop variable to
-> something else to avoid trouble? If you need, I can help that when I merge
-> it.
+> Sorry for chiming in so late, but wouldn't it make more sense to keep
+> returning the node, and have a bool for what to if it is NULL?
+> The 0/1/-errno pattern already requires a lot of attention in the kernel,
+> but in userland where we have errno and -1 returns that are usually not
+> specifically checked it feels like even more trouble waiting to happen.
 
-Good catch, thanks.  Yes, please fold it in when you merge, if that's
-fine with you; the rename I had in mind is just:
+Well, "[PATCH 1/2] xfs_repair: distinguish true ENOMEM from "not found" in 
+ache_node_get" did this, which is what I think you're describing?
 
-@@ -48,11 +48,11 @@ _cp_reflink $SCRATCH_MNT/file1 $SCRATCH_MNT/file2
- 
- # Dirty several widely separated ranges of file2's CoW extents so that a
- # single writepages() call has to submit more than one ioend.
--seq=0
--while [ $seq -lt $nr ]; do
--	off=$((seq * blksz * 2))
-+i=0
-+while [ $i -lt $nr ]; do
-+	off=$((i * blksz * 2))
- 	_pwrite_byte 0x59 $off $blksz $SCRATCH_MNT/file2 >> $seqres.full
--	seq=$((seq + 1))
-+	i=$((i + 1))
- done
- 
- echo "Inject wb_cow_convert_error"
+ static struct cache_node *
+ cache_node_allocate(
+ 	struct cache *		cache,
+-	cache_key_t		key)
++	cache_key_t		key,
++	bool			*enomem)
 
-I'm happy to send a v3 instead if you'd prefer.
+*shrug* I really don't care at this point, both versions are on the list.
 
-Thanks!
-  Andrea
+We can merge either one, or none of them. I don't think this is worth any
+more effort. :)
+
+> That being said, the changes themselves do look correct, so this should
+> not be a strong objection.
+
+Fair enough :)
+
+Thanks,
+-Eric
+
