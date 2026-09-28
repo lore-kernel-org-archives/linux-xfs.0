@@ -1,42 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DC854D37B5;
-	Mon, 28 Sep 2026 13:53:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B0514D37C4;
+	Mon, 28 Sep 2026 13:55:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790603629; cv=none; b=hbnM+0ujaQk8uoy5Xcq3QwYEfdYWYOyX9Gc99g3z6lb9v+PKvG+eleh1Jge7w5ZA3ozAZ/uKjzRHpSlv4gHCsJPaFgrNA4V4SjtfkhC6H71aVGZ9HRVEp425U3RgCuABkbUixMJ3TVTwG1KuYK2GxQkjhdSdZeOqW7hzJUl204Q=
+	t=1790603741; cv=none; b=XPITpZ+ge7mIQqzzocaE+VZore9tOk35gZhtZ8UeWsOYS2xclJW2W4fdC+Y02YFe1nJG6kksMXiGeMU7cwxEmdwSyPgSE8uxHc5vmoioYxp/w7NJjXIrylWTY4VY7yu1GeEaKCrEQvmuqwmVDHUP4TGMzLLYfW+RIKw4YvP83WY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790603629; c=relaxed/simple;
-	bh=iKxBe1abwDcogBxsA5Ywr3KXVpnGLhorNC0hBKf0kK4=;
+	s=arc-20240116; t=1790603741; c=relaxed/simple;
+	bh=fwFJzBURfmcrsNGHaZD6gRZTu4XO0mvAEW+his6TZso=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Rl8CKTGItiQb5xgAyIopdt2Mphj103M4u+f7EiRF2Pr/R/jmFdQdBSxHkWIXPy1bWey7izUiTNwC7iGHodp6sU75+oxn/k/X/ZjPxG/8/DrJ2o6MwiB/TwRwBM0YGUyy1V1T8nkEuNk6JYtDVkYinN8ozWaypBTOQk4yGkpWwUc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DrFUUeDF; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=l0tan+uq/wzwqK1Kp9pFoVDxUoWaDkKchPkFXSRSpgZUFoYQveZKtixuzyB3B7G9uZx2eC3s++4Wk4wQgj7IVY188hTi/Q8LfQzP0AeAE9Es4DVzhDM5U+jgYaNgSLfBh+6TsLjzXrtlEgq7ir46dHe9y+cg+b8HvnnMnAKNdWE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=S030UGys; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DrFUUeDF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1491B1F000FF;
-	Mon, 28 Sep 2026 13:53:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="S030UGys"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D97A91F000FF;
+	Mon, 28 Sep 2026 13:55:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790603627;
-	bh=Kg1/P7EDfAHpFX8AsTX1B3/orU2a8z9cOBPfxx0YT0s=;
+	s=k20260515; t=1790603739;
+	bh=9kN1HsHr/CzvxpqA9DLj1E6OGajT1EkYC1y2wlqle/I=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=DrFUUeDFp7uX0s+bkJCEVA/5piDe0gWjtCnt7iB4eyx/0jBzOQynKNRGdNVgEGlzb
-	 Eo4tiwAQfS2zVJMo6XAP1F6TqbLf8Pi+0M0X8+p/1pzoNpbvnO+D6umqALJEATeRY3
-	 6vZmygRHtv6AC9RYsozAdRuRobhv1bZv1xap7/xcIL5rJYRSL6qjtBA1PmXdkdqHBt
-	 Ee+N2ipjq+eO7nb9ujjebJE66Lss7qfDv8Qal4ul6EZXCnL9YlMItdHScE1AQIyarF
-	 khsJnX0sMnzA0B372IevRDiNyGsBqKBBd2y4ikRteHyUghVbtzfA+9npFnH7vla8XH
-	 O4a0rGY5W9sFw==
-Date: Mon, 28 Sep 2026 21:53:29 +0800
+	b=S030UGysVsWcJlHMM3SqhKi69SsekzpHbPSWQEPxrkaQGawFJDmHIzinqbRbPAyQp
+	 8H+2kZebXsTssj7OauMJDnGN0xFOAmiD4IHJwr08gFNTOp6gPKITBMe6xkoH5z0dEW
+	 Tk3s8USY3h3InHxpjzxVNWTnOuuoRoCeppiKJ4JCEuVGsG2HN0cSzSNG0hYsbCPh/q
+	 YKrCdbUEtsFaKRizBeBob42NXbwRTdRJZNKnXyXyxDk/D6U38RRn/O0WGnrcpRzXh7
+	 XGCP/c4LPTWM/Gf8yelk02P4yfjfVlZZdc5gmLedSp3lG7K/ZESc29gvnRQfs2BV7Y
+	 aTEgDlsZktRFA==
+Date: Mon, 28 Sep 2026 21:55:34 +0800
 From: Zorro Lang <zlang@kernel.org>
-To: Andrea Parri <parri.andrea@gmail.com>
-Cc: fstests@vger.kernel.org, "Darrick J . Wong" <djwong@kernel.org>, 
-	Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v2] xfs: exercise a failed CoW conversion during writeback
-Message-ID: <arprh9oyZEXs25CQ@zlang-mailbox>
-Mail-Followup-To: Andrea Parri <parri.andrea@gmail.com>, 
-	fstests@vger.kernel.org, "Darrick J . Wong" <djwong@kernel.org>, 
-	Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
-References: <20260928085047.7250-1-parri.andrea@gmail.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: fstests <fstests@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] generic/{349,350,351}: fix scsi_debug parameter quoting
+ issues
+Message-ID: <arpxqgQRdO-PGhXe@zlang-mailbox>
+Mail-Followup-To: "Darrick J. Wong" <djwong@kernel.org>, 
+	fstests <fstests@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
+References: <20260924060315.GF6253@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,153 +44,96 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260928085047.7250-1-parri.andrea@gmail.com>
+In-Reply-To: <20260924060315.GF6253@frogsfrogsfrogs>
 
-On Mon, Sep 28, 2026 at 10:50:46AM +0200, Andrea Parri wrote:
-> iomap_add_to_ioend() submits the pending ioend through
-> ->writeback_submit() before allocating a new one for the current
-> range.  For XFS, xfs_writeback_submit() converts the ioend's CoW
-> extents via xfs_reflink_convert_cow() before submitting the bio; if
-> that conversion fails, ->writeback_submit() completes the ioend with
-> an error and returns it.  A kernel bug left the stale ioend behind in
-> wpc->wb_ctx, which iomap_writepages() then submitted a second time,
-> corrupting XFS's ip->i_ioend_list.
+On Wed, Sep 23, 2026 at 11:03:15PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Exercise this path with the wb_cow_convert_error error tag: reflink a
-> file, dirty several widely separated ranges of the shared extent so
-> that a single writepages() call has to build and submit more than one
-> ioend, inject the error, and let writeback run.  On a kernel without
-> the fix this reliably hits a "list_add double add" WARN from
-> xfs_end_bio(); on a fixed kernel writeback just fails cleanly.
+> Commit a90ba59dca447d reworked the argument handling code inside
+> _get_scsi_debug_dev to put all the remaining arguments (after we extract
+> the first four arguments) inside an array that gets passed to modprobe:
 > 
-> This requires the wb_cow_convert_error XFS error tag; the test cleanly
-> not-runs on kernels without it.
+> 	opts+=("$@")
 > 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Andrea Parri <parri.andrea@gmail.com>
+> This code takes every command line argument and copies them into the
+> array verbatim.  Contrast this to what it did before (excerpted):
+> 
+> 	opts="...dev_size_mb=$size $@"
+> 	echo "scsi_debug options $opts" >> $seqres.full
+> 	modprobe scsi_debug $opts
+> 
+> The old code put all the arguments into a string, then passed the string
+> unquoted to modprobe, which means that any spaces in the parameters
+> given to _get_scsi_debug_dev become argument separators in the modprobe
+> call.  Put more simply, passing "foo=1 bar=1" to _get_scsi_debug_dev
+> results in "foo=1" "bar=1" being passed to modprobe.
+> 
+> Now we no longer do that, which causes these three tests to fail with:
+> 
+> 	scsi_debug: `1 lbpws10=1' invalid for parameter `lbpws'
+> 
+> because we're effectively passing lbpws="1 lbpws10=1" to scsi_debug.
+> Fix this by removing the quoting from the three tests.
+> 
+> Cc: <fstests@vger.kernel.org> # v2026.09.22
+> Fixes: a90ba59dca447d ("common/scsi_debug: don't slow down I/O")
+> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 > ---
-> The kernel fix and the wb_cow_convert_error error tag this test relies
-> on are part of the series at:
-> 
->   https://lore.kernel.org/all/cover.1790342457.git.parri.andrea@gmail.com/
-> 
-> Changes since v1:
->  - Cite the kernel fix with _fixed_by_kernel_commit (Darrick).
->  - Don't reset the error tag before the remount; the unmount clears it
->    anyway (Darrick).
->  - Picked up Christoph's Reviewed-by.
-> 
-> v1: https://lore.kernel.org/all/20260924091338.198407-1-parri.andrea@gmail.com/
 
-Overall the patch looks good to me, but I have one minor comment below ...
+Thanks for finding and fixing it.
 
+Reviewed-by: Zorro Lang <zlang@kernel.org>
+
+>  tests/generic/349 |    2 +-
+>  tests/generic/350 |    2 +-
+>  tests/generic/351 |    4 ++--
+>  3 files changed, 4 insertions(+), 4 deletions(-)
 > 
->  tests/xfs/842     | 71 +++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/842.out |  7 +++++
->  2 files changed, 78 insertions(+)
->  create mode 100755 tests/xfs/842
->  create mode 100644 tests/xfs/842.out
-> 
-> diff --git a/tests/xfs/842 b/tests/xfs/842
-> new file mode 100755
-> index 0000000000000..4495e9bdfa530
-> --- /dev/null
-> +++ b/tests/xfs/842
-> @@ -0,0 +1,71 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2026 Andrea Parri.  All Rights Reserved.
-> +#
-> +# FS QA Test No. 842
-> +#
-> +# Regression test for a failed ->writeback_submit() call leaving a stale
-> +# wpc->wb_ctx behind.  iomap_writepages() then resubmits whatever
-> +# wpc->wb_ctx points to, i.e. the ioend that ->writeback_submit() already
-> +# completed with an error.  For XFS the second bio_endio() lands back in
-> +# xfs_end_bio(), which list_add_tail()s the already-linked ioend into
-> +# ip->i_ioend_list a second time, corrupting the list.
-> +#
-> +# The only in-tree way for XFS's ->writeback_submit() to fail is a
-> +# failing xfs_reflink_convert_cow(), so this uses the
-> +# wb_cow_convert_error error tag to force that on a reflinked file whose
-> +# CoW extents are dirtied in several widely separated ranges, so that a
-> +# single writepages() call has to submit more than one ioend.
-> +#
-> +. ./common/preamble
-> +_begin_fstest auto quick clone
-> +
-> +# Import common functions.
-> +. ./common/filter
-> +. ./common/reflink
-> +. ./common/inject
-> +
-> +_fixed_by_kernel_commit XXXXXXXXXXXX \
-> +	"iomap: don't resubmit an ioend after ->writeback_submit() failed"
-> +
-> +_require_cp_reflink
-> +_require_scratch_reflink
-> +_require_xfs_io_error_injection "wb_cow_convert_error"
-> +_require_kernel_config CONFIG_LIST_HARDENED
-> +
-> +blksz=65536
-> +nr=8
-> +sz=$((blksz * nr * 2))
-> +
-> +echo "Format and mount"
-> +_scratch_mkfs >> $seqres.full 2>&1
-> +_scratch_mount
-> +
-> +echo "Create reflinked file with several CoW extents"
-> +_pwrite_byte 0x58 0 $sz $SCRATCH_MNT/file1 >> $seqres.full
-> +_scratch_sync
-> +_cp_reflink $SCRATCH_MNT/file1 $SCRATCH_MNT/file2
-> +
-> +# Dirty several widely separated ranges of file2's CoW extents so that a
-> +# single writepages() call has to submit more than one ioend.
-> +seq=0
-
-In fstests, $seq is a core global variable representing the test sequence
-number. Overwriting it here might lead to unexpected side effects with
-framework helpers or cleanup logic. Could we rename this loop variable to
-something else to avoid trouble? If you need, I can help that when I merge
-it.
-
-Thanks,
-Zorro
-
-> +while [ $seq -lt $nr ]; do
-> +	off=$((seq * blksz * 2))
-> +	_pwrite_byte 0x59 $off $blksz $SCRATCH_MNT/file2 >> $seqres.full
-> +	seq=$((seq + 1))
-> +done
-> +
-> +echo "Inject wb_cow_convert_error"
-> +_scratch_inject_error "wb_cow_convert_error"
-> +
-> +echo "Trigger writeback with CoW conversion forced to fail"
-> +_scratch_sync
-> +
-> +echo "Remount"
-> +_scratch_cycle_mount
-> +
-> +echo "Silence is golden"
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/xfs/842.out b/tests/xfs/842.out
-> new file mode 100644
-> index 0000000000000..72c9c67e7d5fb
-> --- /dev/null
-> +++ b/tests/xfs/842.out
-> @@ -0,0 +1,7 @@
-> +QA output created by 842
-> +Format and mount
-> +Create reflinked file with several CoW extents
-> +Inject wb_cow_convert_error
-> +Trigger writeback with CoW conversion forced to fail
-> +Remount
-> +Silence is golden
-> -- 
-> 2.53.0
-> 
+> diff --git a/tests/generic/349 b/tests/generic/349
+> index 72fbda412ea41c..0d019d4ab46170 100755
+> --- a/tests/generic/349
+> +++ b/tests/generic/349
+> @@ -20,7 +20,7 @@ _require_scsi_debug
+>  _require_xfs_io_command "fzero"
+>  
+>  echo "Create and format"
+> -dev=$(_get_scsi_debug_dev 512 512 0 4 "lbpws=1 lbpws10=1")
+> +dev=$(_get_scsi_debug_dev 512 512 0 4 lbpws=1 lbpws10=1)
+>  _pwrite_byte 0x62 0 4m $dev >> $seqres.full
+>  
+>  echo "Zero range"
+> diff --git a/tests/generic/350 b/tests/generic/350
+> index 6079a8d5032303..7dcdda03a613ff 100755
+> --- a/tests/generic/350
+> +++ b/tests/generic/350
+> @@ -20,7 +20,7 @@ _require_scsi_debug
+>  _require_xfs_io_command "fpunch"
+>  
+>  echo "Create and format"
+> -dev=$(_get_scsi_debug_dev 512 512 0 4 "lbpws=1 lbpws10=1")
+> +dev=$(_get_scsi_debug_dev 512 512 0 4 lbpws=1 lbpws10=1)
+>  _pwrite_byte 0x62 0 4m $dev >> $seqres.full
+>  
+>  echo "Zero punch"
+> diff --git a/tests/generic/351 b/tests/generic/351
+> index e73b70e4d7957e..374ea1afe46d76 100755
+> --- a/tests/generic/351
+> +++ b/tests/generic/351
+> @@ -27,7 +27,7 @@ _require_xfs_io_command "fzero"
+>  _require_xfs_io_command "fpunch"
+>  
+>  echo "Create and format"
+> -dev=$(_get_scsi_debug_dev 4096 4096 0 4 "lbpws=1 lbpws10=1")
+> +dev=$(_get_scsi_debug_dev 4096 4096 0 4 lbpws=1 lbpws10=1)
+>  _pwrite_byte 0x62 0 4m $dev >> $seqres.full
+>  $XFS_IO_PROG -c "fsync" $dev
+>  
+> @@ -70,7 +70,7 @@ echo "Destroy device"
+>  _put_scsi_debug_dev
+>  
+>  echo "Create w/o unmap or writesame and format"
+> -dev=$(_get_scsi_debug_dev 512 512 0 4 "lbpws=0 lbpws10=0 lbpu=0 write_same_length=0 unmap_max_blocks=0")
+> +dev=$(_get_scsi_debug_dev 512 512 0 4 lbpws=0 lbpws10=0 lbpu=0 write_same_length=0 unmap_max_blocks=0)
+>  _pwrite_byte 0x62 0 4m $dev >> $seqres.full
+>  $XFS_IO_PROG -c "fsync" $dev
+>  
