@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 647613A5435;
-	Mon, 28 Sep 2026 06:17:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEC1E407CCC;
+	Mon, 28 Sep 2026 06:18:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790576276; cv=none; b=cxITXQicgu5atONKqe5dhk/FmrRmpF4LN+BR/pddVtDHCXpOq1r3MhoonPqhkp4Pudz829Y53g8Sok8T2Du5SM33UShOJ7QiwGV2Bmar73aNa10AMZbxm6U/ToF9bR8bg4FgqMvxlORTX82aCl0m6v6j4q6yd15gSJkko3s7nGY=
+	t=1790576291; cv=none; b=ULZU2txR2m6Zj5HHwqh4ROg4q/zt8PG098dtKCptS0tRBZf/KCCUWKAuzSdqjhc65rnaZ6LXT6e6hTdGy7Hdq/HwcH1ULPlpwHY6UKinx8+jjCBvMDmExsHHOmMX7eKRgWUBjLX4z5LcLa8LE+DjVjiApnuD7T73hxo5cmmjCQg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790576276; c=relaxed/simple;
-	bh=tHgbq9vkMFzyV7+ijn8Lzn6XeAmcLeAGtcpbomZ6HyU=;
+	s=arc-20240116; t=1790576291; c=relaxed/simple;
+	bh=gLL4rnyhVH9d2uB1zQINuM2BTl2pLgknrwlwulNJnsQ=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=fXYYb73O8oSc5jU1Ri65scCxxr0C41BtHuvWPbl/zpbiw8n3wLSwVmD749UXToFlFReptxkmpQlTJ9+un5yg28WG+oPAvxFFw4i0H47fe0kPcfpzMJ3ijAM+Z2sMTrnwoHHau5rZjOoJahR1p4M9uD8Gta5C2DZ5OHwryntISnI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hSw2NgnU; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=Ud31RVcZb0UULVzrtpb2GUrz2ew5drBc+SBWZns7bZ9u74YpuHZyS4IRvylkAXRRIMT33VObLIX4R+ZdAFFvBrS9Rz+nDXX0sVxomsqeRgi2GAlxh7mQDXvIckTdpjtayfBkGYnIgdJAxH+D9isNxoCv389PoCobHPGrbHYKmwM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YTniAont; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hSw2NgnU"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id EBDAF1F000FF;
-	Mon, 28 Sep 2026 06:17:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YTniAont"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 847071F000FF;
+	Mon, 28 Sep 2026 06:18:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790576275;
-	bh=rq6BP9XBEWW+Um1RkppYNupHV8Hj1Ij33UOWHpQ7Hrc=;
+	s=k20260515; t=1790576290;
+	bh=JlrLcThlgKJTdgC4FqtKrlHpTzG/pH2Zl7xrF8lV+tI=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=hSw2NgnUEgPRHWTGaSldDOfz5aejhK40ChU9u+j0wVfhR0eCZBn6yRx2jEmYSEOua
-	 /9HbdMr0C5Ue8Fvc9zFYt8v7SJ6VikVWxldJY8PjmciwfOWIJHwoA/whHdK5S5wXO9
-	 qTjKHg9xqgWkzzKwxPTfIwi12QJBT+2NfsZ7reM98Ufi1K5L9uv4BrNwV+40w1bJJ1
-	 dKC/CZHxbPPStOLzeuMM3NXqwdEub40BPSdDOUEE8g11XSREuP7SgrF38af5QHO4yc
-	 7KXjd9UcbR2JUKKa336pLXztNvzq3kX6TvKLN8E4vm6E3dMtLS8lAV/tb7QZLLaeCZ
-	 SOqys/kZV+USw==
-Date: Sun, 27 Sep 2026 23:17:54 -0700
-Subject: [PATCH 08/12] xfs: assign an owner to scrub_stats_fops
+	b=YTniAontlItJr0jVv9bU1AeYYzmC0KIp9FxlbwehJOLrgTRSkT5FXcTke6brrazdz
+	 W3SKM7MmM6qQbUOZJ5ylVZIqA/3OptIMwvRMNAKnnEo3ZJQl8YnboOqDZjnDEb8Jw2
+	 PkerAvG5E2GulEHeJ2gUOfSs7kK9XjElRvIWR8zYuWjLfcuwYtem3Nzkraj88LiVzh
+	 U+uKGwzvr01CvLCRFF6eQu5LaixYMZyDlisplouUIJMtlj9JFGvNOM5FYWTqPSGo5x
+	 BGdVDLnBt17qReRLFGUGR6LxFsEo/8g/VBvsSe8xGouVqKwjH6U77Dq0TepKpMzeIL
+	 op2iko8aymoiw==
+Date: Sun, 27 Sep 2026 23:18:10 -0700
+Subject: [PATCH 09/12] xfs: fix lost errno returned from xfarray_foliosort
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <179057612767.479634.10381622374817940867.stgit@frogsfrogsfrogs>
+Message-ID: <179057612788.479634.1850482672854043572.stgit@frogsfrogsfrogs>
 In-Reply-To: <179057612523.479634.11102922479483109602.stgit@frogsfrogsfrogs>
 References: <179057612523.479634.11102922479483109602.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,37 +45,33 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-LOLLM complains that file_operations structs for debugfs files are
-supposed to have an owner set so that the module can't get unloaded if
-someone's sitting on a debugfs file long after unmount/rmmod.  Fix that.
+LOLLM noticed that we stop the sort early but don't actually pass along
+the error code, which could enable repair code to continue running with
+an unsorted array.  Fix that.
 
-Cc: <stable@vger.kernel.org> # v6.6
-Fixes: d7a74cad8f4513 ("xfs: track usage statistics of online fsck")
+Cc: <stable@vger.kernel.org> # v6.9
+Fixes: ee13fc67205b98 ("xfs: convert xfarray_pagesort to deal with large folios")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Assisted-by: LOLLM # finding obvious bugs
 ---
- fs/xfs/scrub/stats.c |    2 ++
- 1 file changed, 2 insertions(+)
+ fs/xfs/scrub/xfarray.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/scrub/stats.c b/fs/xfs/scrub/stats.c
-index da2a40a91156f4..6934d76cfd156b 100644
---- a/fs/xfs/scrub/stats.c
-+++ b/fs/xfs/scrub/stats.c
-@@ -301,6 +301,7 @@ xchk_scrub_stats_read(
- }
- 
- static const struct file_operations scrub_stats_fops = {
-+	.owner			= THIS_MODULE,
- 	.open			= simple_open,
- 	.read			= xchk_scrub_stats_read,
- };
-@@ -328,6 +329,7 @@ xchk_clear_scrub_stats_write(
- }
- 
- static const struct file_operations clear_scrub_stats_fops = {
-+	.owner			= THIS_MODULE,
- 	.open			= simple_open,
- 	.write			= xchk_clear_scrub_stats_write,
- };
+diff --git a/fs/xfs/scrub/xfarray.c b/fs/xfs/scrub/xfarray.c
+index c94f355607790e..310262c0aa9219 100644
+--- a/fs/xfs/scrub/xfarray.c
++++ b/fs/xfs/scrub/xfarray.c
+@@ -905,8 +905,10 @@ xfarray_sort(
+ 		 * problems, we're done.
+ 		 */
+ 		ret = xfarray_foliosort(si, lo, hi);
+-		if (ret < 0)
++		if (ret < 0) {
++			error = ret;
+ 			goto out_free;
++		}
+ 		if (ret == 1) {
+ 			si->stack_depth--;
+ 			continue;
 
