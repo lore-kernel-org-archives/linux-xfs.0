@@ -1,200 +1,307 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD539344031;
-	Sun, 27 Sep 2026 22:59:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8EE33246788;
+	Mon, 28 Sep 2026 00:17:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790549982; cv=none; b=VKukMAGsnwd0AaQDj4dp9ED6b34PENzigMyRfp/CUXsiyhnKN0ByIl1z+YeLi3a6nEslAjkNqImJpDh3d5yPOl2c4aYsWq2zIxJfyK7lC/bjnrudp3H3x5cIqYD7Ebdej55dS63jDSW8sFOJtmexq8Cw3ENziz1SOE1doSLMbgM=
+	t=1790554680; cv=none; b=GE0/DKeKPOmaA7v36+aYLKSlF/N36GSBSpjVLsVxkdNpQxq2CAw5hSrQ+W/nLbqnfX5B/8CbtMsPYp+v1NZ4MgP/NsYoL+WGTYb1yiYFShedfYsOQWO+iu3F+yPeRekFaF+raOVx5NuF40WgzNwBQ1COTywe5ywuKQNwuCHrLPQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790549982; c=relaxed/simple;
-	bh=DSPKCCvXWwkhuO2V9MElUWg4NwtFtUeJ3ScX9mLmsfc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UEAHDCm0S0/ZFESBzcdvMFt9SpvJSra23Nt3Znb90OBxQM9ZA4N2PmA3uKA8DegBmKYAaMxx9iHzx/OK4lWpkmQPR9qmb9gibPhZ5xHNSaK2myRxl4K0v0cbEt40fe5hvjjOXFYCBtT6y3/gxWsCmduBhHsayW4cT57wQjipCqA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AzJnptY2; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790554680; c=relaxed/simple;
+	bh=SQrhgKaTPMx1AI8+vN/pA3pIoyGE2f9oz8iUxF25JU8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:Cc:From:
+	 In-Reply-To:Content-Type; b=FG8/QwOInL3r8uR/R9q3aUyAo6/CZsBr9JNyuywL04xr4JfIvgEIxTsnl4d+O5B+EiuH901GSJKhMIRvnT9qvOQFd0Ybm0MPM5dCAhSc8Ua2gIYh1avAo/R3eNf+vEVN5zHCe2DUR5rHYpQRRwvotfyJv0MgnBZiJT9X/Z7YhO0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SiOeEEbe; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AzJnptY2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B02651F000FF;
-	Sun, 27 Sep 2026 22:59:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SiOeEEbe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 780701F00899;
+	Mon, 28 Sep 2026 00:17:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790549980;
-	bh=Hq1LKObVOhK5OwpylNLhHyrxziCSH7fNn6E55vubs6M=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=AzJnptY2Q8e+TSLDWCylLGqQvJ2P4JtQ00HbHk2vsDRsxuLlXueL1/rIVvTUQzMDa
-	 ALDuPnTXFcBI54byv58HaHVid0yZRJh7t8J5EhS5+wGbIy7OhzRd746lbibXokyKBg
-	 472DTOjWgNGYPehCXF1nAR7bEbNwP5xDTM+n11Obi4H84gOreafXn9tImkTzPsgJkZ
-	 iN+t4T+74RS15ZPaMv1HsFA3BEFyfSCm9FfA46k37ryi4QjQF0tv0yjBLTUk/McF4G
-	 ZvzDkFz1bB9gM0ZAelk8IUgUx337u/i5M48k4mb8wHV9EBDvNCTc10Z11TsJr6Huvm
-	 YuLVLI/51swSg==
-Date: Mon, 28 Sep 2026 08:59:31 +1000
-From: Dave Chinner <dgc@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>,
-	"Darrick J . Wong" <djwong@kernel.org>,
-	Jens Axboe <axboe@kernel.dk>,
-	Christian Brauner <brauner@kernel.org>, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org
-Subject: Re: support for RT data checksums
-Message-ID: <armf05yfzhSBUsUh@dread>
-References: <20260924100032.2733101-1-hch@lst.de>
- <arWpyhFyV3ouYAEx@dread>
- <20260925062710.GA3798@lst.de>
+	s=k20260515; t=1790554679;
+	bh=BrvjgngQVWWsLu8FybQ5949ekW2GT1BmcozWeYv5iBo=;
+	h=Date:Subject:To:References:Cc:From:In-Reply-To;
+	b=SiOeEEbe8GD/H8hvlMJPAymuwbvZGf4VKIRo+AnDu92s5DARo7VpUXKQINbb9P4qv
+	 c/SBdEGZG2vHvhuU1fYYEY/JeSb1j3e5ULeX6zME3kIXY0O1JJ7nZ71C1Wwx/nzf/v
+	 YYqRqAYwkkpmkDf+UCmAK69f7uFlJ0Dvtk0rjnHLNJzx3Kh5u97XH0iZiX/IguYe5Z
+	 9X9Cp9Y9GSwLkq69sx1m3Dy21tPolE8owVQtH2u1a6yxbgkCTvf7zrUQdeM/NDVIoZ
+	 QOVK0H9bUGug2hkS59JnxK67ItlNJec2PR0fzdj47dvbxBG31v9PSkG8peOOqcCiSX
+	 vPVTw0QRCeKdA==
+Message-ID: <944e99e2-c927-43cc-b4d5-f810a31cce96@kernel.org>
+Date: Mon, 28 Sep 2026 08:17:55 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260925062710.GA3798@lst.de>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v8 10/13] fstests: verify IMA isolation on cloned
+ filesystems
+To: Zorro Lang <zlang@kernel.org>
+References: <cover.1784949154.git.asj@kernel.org>
+ <e2ba3b5cf7e17bf87e7e832222d72bcbf8b904f8.1784949155.git.asj@kernel.org>
+ <apcmEu9jmi3wljdW@zlang-mailbox>
+Content-Language: en-US
+Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org,
+ linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+ linux-xfs@vger.kernel.org, djwong@kernel.org
+From: Anand Suveer Jain <asj@kernel.org>
+In-Reply-To: <apcmEu9jmi3wljdW@zlang-mailbox>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Fri, Sep 25, 2026 at 08:27:10AM +0200, Christoph Hellwig wrote:
-> On Fri, Sep 25, 2026 at 08:52:58AM +1000, Dave Chinner wrote:
-> > There's new buffer and inode locking in transactions,
+On 2/9/26 03:58, Zorro Lang wrote:
+> On Sat, Jul 25, 2026 at 03:39:07PM +0800, Anand Jain wrote:
+>> Add testcase to verify IMA measurement isolation when multiple devices
+>> share the same FSUUID.
+>>
+>> Signed-off-by: Anand Jain <asj@kernel.org>
+>> ---
+>>  tests/generic/804     | 108 ++++++++++++++++++++++++++++++++++++++++++
+>>  tests/generic/804.out |  10 ++++
+>>  2 files changed, 118 insertions(+)
+>>  create mode 100644 tests/generic/804
+>>  create mode 100644 tests/generic/804.out
+>>
+>> diff --git a/tests/generic/804 b/tests/generic/804
+>> new file mode 100644
+>> index 000000000000..ced32e6d79dd
+>> --- /dev/null
+>> +++ b/tests/generic/804
+>> @@ -0,0 +1,108 @@
+>> +#! /bin/bash
+>> +# SPDX-License-Identifier: GPL-2.0
+>> +# Copyright (c) 2026 Anand Jain <asj@kernel.org>.  All Rights Reserved.
+>> +#
+>> +# FS QA Test 804
+>> +# Verify IMA isolation on cloned filesystems:
+>> +# . Mount two devices sharing the same FSUUID (cloned).
+>> +# . Apply an IMA policy to measure files based on that FSUUID.
+>> +# . Create unique files on each mount point to trigger measurements.
+>> +# . Confirm the IMA log correctly attributes events to the respective mounts.
+>> +
+>> +. ./common/preamble
+>> +. ./common/filter
+>> +
+>> +_begin_fstest auto quick clone
+>> +
+>> +_require_test
+>> +_require_block_device $TEST_DEV
+>> +_require_loop
+>> +
+>> +_fixed_by_fs_commit btrfs xxxxxxxxxxxx \
+>> +	"btrfs: use on-disk uuid for s_uuid in temp_fsid mounts"
+>> +_fixed_by_fs_commit btrfs xxxxxxxxxxxx \
+>> +	"btrfs: derive f_fsid from on-disk fsuuid and dev_t"
+>> +
+>> +_cleanup()
+>> +{
+>> +	cd /
+>> +	rm -r -f $tmp.*
+>> +	_unmount $mnt1 2>/dev/null
+>> +	_unmount $mnt2 2>/dev/null
+>> +	_loop_image_destroy "${devs[@]}" 2> /dev/null
+>> +}
+>> +
+>> +# Normalize device names and mount points
+>> +filter_pool()
+>> +{
+>> +	sed -e "s|${devs[0]}|DEV1|g" -e "s|$mnt1|MNT1|g" \
+>> +	    -e "s|${devs[1]}|DEV2|g" -e "s|$mnt2|MNT2|g" | _filter_spaces
+>> +}
+>> +
+>> +# Core helper to set IMA policy and check measurement logs
+>> +do_ima()
+>> +{
+>> +	local ima_policy="/sys/kernel/security/ima/policy"
+>> +	local ima_log="/sys/kernel/security/ima/ascii_runtime_measurements"
+>> +	local fsuuid
+>> +	local mnt=$1
+>> +	local enable=$2
+>> +
+>> +	# Since the in-memory IMA audit log is only cleared upon reboot,
+>> +	# use unique random filenames to avoid log collisions.
+>> +	local foofile=$(mktemp --dry-run foobar_XXXXX)
+>> +
+>> +	echo $mnt $enable | filter_pool
+>> +
+>> +	[ -w "$ima_policy" ] || _notrun "IMA policy not writable"
 > 
-> Not sure what is new about that.  Tere is a single new transaction,
-> which logs a single buffer per transaction.  Not exactly new and
-> dancy.
-
-You haven't answered any of my concerns - you're just handwaving
-them away and....
-
-> > and there's a
-> > whole new buffer cache interface to "read a buffer", and that is
-> > used to open code reading checksum buffers and joining them to a
-> > transaction rather than using the existing xfs_trans_read_buf...()
-> > interfaces.  That in itself needs careful consideration, and clear
-> > justification for why it must be duplicated to stand outside all the
-> > existing BLI/transaction APIs, especially given all the "use the new
-> > async buf read interface to do sync buffer reads" behaviour across
-> > the patchset that could just use the existing interfaces.
+> How about a _require_security_ima to make sure there's securityfs
+> and IMA supporting in current kernel.
 > 
-> I'm not sure what to make of this.  The paragraph almost reads like
-> AI slop to me.
 
-... calling the concerns of an experienced engineer "AI slop".
+sure. added.
 
-I'm so disappointed right now.
+_require_security_ima()
+{
+        [ -d /sys/kernel/security ] || _notrun "kernel doesn't support
+securityfs"
 
-You're better than this, Christoph. You know better than to attack
-the person instead of addressing the technical concerns they've
-raised. Calling the concerns of an experienced engineer "AI Slop" is
-also pretty insulting.
+        # securityfs may not be mounted yet on the host; mount it
+        # in a scratch location just to probe for IMA support.
+        local se_mnt="${TEST_MNT}/${seq}/se_mnt"
+        local has_ima=1
 
-You also know this has a chilling effect - how many people are going
-to be willing to say anything negative about your code, if all they
-get from it is a bunch of insults in return?
+        mkdir -p "${se_mnt}"
+        _mount -t securityfs securityfs "${se_mnt}" 2>/dev/null ||
+_notrun "cannot mount securityfs"
 
-I don't tolerate people who behave like this towards me or other
-team members anymore. "But I write lots of code" is just not good
-enough anymore, Christoph. You need to do better.
+        [ -d "${se_mnt}/ima" ] || has_ima=0
+        [ -w "${se_mnt}/ima/policy" ] || _notrun "IMA policy not writable"
 
-FWIW, let's address the "AI Slop" aspect. I don't need to us an LLM
-to review code - I know the XFS code base as well as you do,
-Christoph.
+        _unmount "${se_mnt}"
 
-I hadn't even considered passing your code to a LLM yet to see how
-many holes I can poke in it. Everything I wrote document concerns my
-own brain raised  when doing an initial high level scan of the
-patchset. I always do that first so I don't waste time (or tokens!)
-doing detailed review on something that needs deeper rework before
-it is anywhere near ready for merge.
+        [ $has_ima -eq 1 ] || _notrun "kernel doesn't support IMA"
+}
 
-That scan raised lots of questions in my head about the change, and
-so I documented some of my concerns and asked for more detail about
-how all this new functionality is supposed to work to be documented.
-Not just for me right now, but so there is a permanent record of the
-design for future reference.
 
-Performing critical analysis and asking for more detail to be
-documented is not "AI Slop". A LLM would just plow on through with
-whatever misunderstanding it started with and produce slop. It is
-very much a human behaviour to stop and ask for more context,
-detail, documentation, etc to address missing knoweldge before going
-any further.
-
-If you don't want meaningful review of this code, then just say so -
-don't insult the people who spend their own time tryng to understand
-the new functionality well enough to review it...
-
-> The rationale is pretty clear and documented: it
-> turns two dependent reads into two reads that work in parallel.
-
-Maybe that is clear to you, but it certainly isn't from my initial
-reading of the patches.
-
-I don't have all the unwritten knowledge that is in your head that
-you didn't document. I've never discussed this code with you, I have
-no background on how it is supposed to work, etc. I am coming in
--cold-.
-
-I have not been able to find clear, logical descriptions of
-the algorithms for reading and writing checksums, the data
-intregrity protocols, the crash recovery protocols, etc. At this
-point, the only way for me to to understand details like this is to
--reverse engineer the design from implementation-.
-
-That's the problem - you've presented an implementation without an
-overall design being documented, and then asking people to review
-the implementation without any other context. I need to understand
-the design before I review the implementation, as that is the only
-way I can perform a decent -implementation- review.
-
-Indeed, people often complain that it is too hard to adequately
-review complex changes, and this is one of the reasons: we are
-presented with an implementation, and -zero- design/architecture
-context from which to understand the implementation that has been
-presented. We need to fix that.
-
-> > I'd also like to have the format of the new on disk log item format
-> > structures clearly documented (because we're going to have to
+>> +
+>> +	fsuuid=$(blkid -s UUID -o value ${devs[0]})
+>> +
+>> +	# Load IMA policy to measure file access specifically for this
+>> +	# filesystem UUID.
+>> +	if [[ $enable -eq 1 ]]; then
+>> +		echo "measure func=FILE_CHECK fsuuid=$fsuuid" > "$ima_policy" || \
 > 
-> There is no new log item format, it uses the standard buffer log format.
-> The buffer payload is somewhat new.  It is is the standard rt format,
-> a xfs_rtbuf_blkinfo followed by the real payload, which is an array
-> of checksums.
-
-Yes, the buffer payload is new, and it uses a new BLF flag that
-indicates it contains regions with some new on-disk format. And
-there are interactions with fsync and data integrity requirements.
-Document them!
-
-> > validate them) at recovery time, and also have a clear explaination
-> > of the data vs metadata ordering algorithms that ensures that
-> > checksums are always valid in crash+recovery situations, especially
-> > w.r.t. data integrity operations like fsync.
+> I'm not sure if we should have this test, especially add it into
+> auto and quick group. Once an IMA policy is loaded, there is no way to
+> clear or roll it back, and I am concerned it might potentially interfere
+> with subsequent tests.
 > 
-> I think I explained it pretty well,
 
-You didn't, and that's the problem I am asking you to address.
+Removed quick and auto. Looks like we need to gate it behind an opt-in
+group or restrict it to disposable/reboot-per-run environments. New
+group? I'm concerned it's getting too complicated and I see no other choice.
 
-> but happy to repeat it again:
-> The zoned write path writes data first, and then records bmap, rmap
-> and used space tacking in the zone from the I/O completion handler.
-> The rtcsum code builds on that and only logs that csum from that
-> same I/O completion handler.  I.e. that data must have reached the
-> device for the code to log it to be even called, and for devices
-> with volatile write caches the generic cache flushing must work
-> (it did not until recently, but the verification of this code found
-> that bug and it is now fixed upstream).
 
-So document the design in the first patch in the series! In detail,
-in the tree alongside the code. That gives all reviewers the
-necessary context to understand what comes next in the patchset.
+> Hmm... how about use `unshare` command to rewrite the do_ima as do_ima_in_ns?
+> For example:
+> do_ima_in_ns()
+> {
+> 	...
+> 
+>     unshare -U -m -p --fork --map-root-user bash <<EOF
+> 		mount -t securityfs securityfs /sys/kernel/security
+>         ima_policy="/sys/kernel/security/ima/policy"
+>         ima_log="/sys/kernel/security/ima/ascii_runtime_measurements"
+>         echo "measure func=FILE_CHECK fsuuid=$uuid" > "\$ima_policy" || exit 1
+>         ...
+> EOF
+>     ret=$?
+> }
 
-Indeed, I ask this not just for reviewiers, but for anyone coming
-along in the future that needs to understand how data checksums work
-because they need to triage a bug, add new functionality, need to
-optimise for performance, etc. Just because you understand how it
-works and what you wrote in the commit messages, it doesn't mean how
-it is supposed to work, why it works, or why it was implemented in
-the way it was is obvious to anyone else.
 
-Documenting the design helps -everyone-, not just now, but well into
-the future as well.
+A new namespace doesn't help undo the loaded IMA policy; I don't see the
+point of using unshare.
 
--Dave.
--- 
-Dave Chinner
-dgc@kernel.org
+I have the following code using unshare, which works fine. I dropped -U
+and --map-root-user (since fstests needs to run as root). I'm okay with
+including unshare, but I still don't see why.
+
+
+--------
+        unshare -m -p --fork bash <<-EOF | filter_pool | sed
+"s/$foofile/FOOBAR_FILE/"
+                ima_policy="/sys/kernel/security/ima/policy"
+
+ima_log="/sys/kernel/security/ima/ascii_runtime_measurements"
+
+                mount -t securityfs securityfs /sys/kernel/security ||
+exit 1
+
+                # Load IMA policy to measure file access specifically
+for this
+                # filesystem UUID.
+                if [ $enable -eq 1 ]; then
+                        echo "measure func=FILE_CHECK fsuuid=$fsuuid" >
+"\$ima_policy" || exit 1
+                fi
+
+                # Create a file to trigger measurement and verify its
+entry in
+                # the IMA log.
+                echo "test_data" > $mnt/$foofile
+
+                # IMA log extract
+                grep $foofile "\$ima_log" | awk '{ print \$5 }'
+
+                echo "dbg: $mnt $fsuuid $foofile" >> $seqres.full
+                tail -1 "\$ima_log" >> $seqres.full
+                echo >> $seqres.full
+        EOF
+--------
+
+
+
+Thanks.
+
+
+> 
+> Thanks,
+> Zorro
+> 
+>> +			_notrun "Policy rejected"
+>> +	fi
+>> +
+>> +	# Create a file to trigger measurement and verify its entry in
+>> +	# the IMA log.
+>> +	echo "test_data" > $mnt/$foofile
+>> +
+>> +	# IMA log extract
+>> +	grep $foofile "$ima_log" | awk '{ print $5 }' | filter_pool | \
+>> +						sed "s/$foofile/FOOBAR_FILE/"
+>> +
+>> +	echo "dbg: $mnt $fsuuid $foofile" >> $seqres.full
+>> +	cat $ima_log | tail -1 >> $seqres.full
+>> +	echo >> $seqres.full
+>> +}
+>> +
+>> +# Initialize loop base and cloned instances
+>> +devs=()
+>> +_loop_image_create_clone devs
+>> +mnt1=$TEST_DIR/$seq/mnt1
+>> +mnt2=$TEST_DIR/$seq/mnt2
+>> +mkdir -p $mnt1
+>> +mkdir -p $mnt2
+>> +
+>> +# Concurrently mount both clones
+>> +_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[0]} $mnt1 || \
+>> +						_fail "Failed to mount dev1"
+>> +_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[1]} $mnt2 || \
+>> +						_fail "Failed to mount dev2"
+>> +
+>> +#  IMA response on baseline and clone configuration
+>> +do_ima $mnt1 1
+>> +do_ima $mnt2 0
+>> +
+>> +# Cycle mount on the second device.
+>> +echo mount cycle
+>> +_unmount $mnt2
+>> +_mount $mount_opts ${devs[1]} $mnt2 || _fail "Failed to mount dev2"
+>> +
+>> +do_ima $mnt1 0
+>> +do_ima $mnt2 0
+>> +
+>> +status=0
+>> +exit
+>> diff --git a/tests/generic/804.out b/tests/generic/804.out
+>> new file mode 100644
+>> index 000000000000..9804181d6c17
+>> --- /dev/null
+>> +++ b/tests/generic/804.out
+>> @@ -0,0 +1,10 @@
+>> +QA output created by 804
+>> +MNT1 1
+>> +MNT1/FOOBAR_FILE
+>> +MNT2 0
+>> +MNT2/FOOBAR_FILE
+>> +mount cycle
+>> +MNT1 0
+>> +MNT1/FOOBAR_FILE
+>> +MNT2 0
+>> +MNT2/FOOBAR_FILE
+>> -- 
+>> 2.43.0
+>>
+
