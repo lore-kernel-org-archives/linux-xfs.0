@@ -1,43 +1,32 @@
-Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6F0C35836E
-	for <linux-xfs@vger.kernel.org>; Mon, 28 Sep 2026 02:53:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=18.9.28.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EB9C37DEA3
+	for <linux-xfs@vger.kernel.org>; Mon, 28 Sep 2026 05:15:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790564037; cv=none; b=pwEttLvlyzfggFnLu1T88+u4SA9KnAEhP9tA1bg4jFDPe47mBjzWUI/JV3yfJ4KPh6HoUuofExJRvgyTM7WNyVtoPNTkjJPUG1uppzQboBNgLZBEM8NvZv+wUAfrDMhPb1Zq07BKYv61LaD8sRG7hoctZfqzXPkMgYeBon41z9w=
+	t=1790572538; cv=none; b=HPQPMQs1R4wYvERmD10HXaJNszJGWgjhA7F+u/NxuDmfSMunu5I1VlnGsundT7KbjLN1Z4m+R9Sa0a6Ka3SD5uLVY9sDF5L3IJo8DWS7FWswtYazFD3cKxz66n2RCdDxv2PW4UYdAiQZP47Z5bME5bfSLSV2XvbAUnVS9sQG9Rg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790564037; c=relaxed/simple;
-	bh=ByL3qFHrV4IyE62TuSmAG7D0QAHurhQksLht8ZCHZGs=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=OFw3F/YSRW5nH4KIiQaLMwCD7Al4c6dKaogI4kC6P4PCjyad1AzMwKDelQMcxAo+eA+C6moYKxwZKP47ZzyAZ8H2lCjy63yqRR64jitCOJdzwv64nPahQXfFXU4BWSwrmTF+J+aTDxLtDmvKCdGSNPP1wiJ60KySotqshWydT3U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mit.edu; spf=pass smtp.mailfrom=mit.edu; dkim=pass (2048-bit key) header.d=mit.edu header.i=@mit.edu header.b=mVqQgmpx; arc=none smtp.client-ip=18.9.28.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mit.edu
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mit.edu
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mit.edu header.i=@mit.edu header.b="mVqQgmpx"
-Received: from macsyma.thunk.org (pool-108-26-156-127.bstnma.fios.verizon.net [108.26.156.127])
-	(authenticated bits=0)
-        (User authenticated as tytso@ATHENA.MIT.EDU)
-	by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 68S2rkoe002730
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sun, 27 Sep 2026 22:53:47 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mit.edu; s=outgoing;
-	t=1790564028; bh=QZumIsGaKYKZZqP+QjbcWePDP3lb/suttY++K2JmhO0=;
-	h=Date:From:Subject:Message-ID:MIME-Version:Content-Type;
-	b=mVqQgmpxM63EEjv5rN3vGToT4qAlnh+0PRMWIX7+Lrx02Dy7S0IPKUqEqnpfw6nPb
-	 RUbL76YkZm0XN9XlhH+WRYmXdWyFZ3SOGdjoa2ZMlcRsZa2iVGS3rtHziuFNg3zG8x
-	 542MhV72T1EKAqjElSsMxgxiTPwWif/yJMJSL24f8D/bZhufAJKUKCMfdYHDNrqS1O
-	 I3Rf2RxgOLkbWuM2zNe+NF6wZ2wQfxZMcpOhz6Kkkzb3ERjhoMFfMilnqpuTzdjX+B
-	 T/te6hY5C5096AxxENCr9jb50C90g7wg0xnO1tYbzfwy28XFakWGe3AYTnNOLFfaTe
-	 Ih7y5cDB8eIsQ==
-Received: by macsyma.thunk.org (Postfix, from userid 15806)
-	id 2B1081D5FA21; Sun, 27 Sep 2026 22:52:46 -0400 (EDT)
-Date: Sun, 27 Sep 2026 22:52:46 -0400
-From: "Theodore Tso" <tytso@mit.edu>
-To: linux-xfs@vger.kernel.org
-Subject: running "make clean" in xfsprogs doesn't wipe mkfs/*.o files
-Message-ID: <arnTiMxkxgR7oRYb@mit.edu>
+	s=arc-20240116; t=1790572538; c=relaxed/simple;
+	bh=PMtSsiTxPK+YxJNYik9MSdJZmnF6eC0AW1VpuK6hl64=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=EPkOCMDmQXtDx+/q//6nLFMez2Sfx235xs9/IL387l4vXImQUKjmgiJriQ+i+4aEQL9eOFXN+Rl9GN1hihOqgXvGRlXR1aywZRPStRvLNCM5YqNvSo3ESDRUVJfrRW7sherifcEE5Y6NdduZuVS+JZrBUsNpm1sXxY+308Sixxk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id EC07868BFE; Mon, 28 Sep 2026 07:15:30 +0200 (CEST)
+Date: Mon, 28 Sep 2026 07:15:30 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Hans Holmberg <hans.holmberg@wdc.com>
+Cc: Carlos Maiolino <cem@kernel.org>,
+	"Darrick J . Wong" <djwong@kernel.org>,
+	Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>,
+	Damien Le Moal <dlemoal@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: don't let racing writers consume the free zones
+ reserved for GC
+Message-ID: <20260928051530.GA18833@lst.de>
+References: <20260927124841.31314-1-hans.holmberg@wdc.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,27 +35,36 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20260927124841.31314-1-hans.holmberg@wdc.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-I recently ran into an issue where "make clean" (or "make realclean")
-in the xfsprogs sources isn't deleting the *.o files in the mkfs
-directory.
+On Sun, Sep 27, 2026 at 02:48:41PM +0200, Hans Holmberg wrote:
+> xfs_try_open_zone() checks the free zone count to avoid grabbing zones
+> required for GC forward progress, but does so without decreasing the
+> counter, letting multiple user writers through to call xfs_open_zone()
+> and collectivly gobble up all free zones, stalling gc and eventually
+> leading to user threads getting stuck waiting for free space.
+> 
+> Fold the check and the accounting into a single atomic claim in
+> xfs_open_zone() instead.  The free zone count is decremented before the
+> zone is looked up and given back if none could be grabbed, so the reserve
+> can no longer be raced away.  User allocations only claim a zone if that
+> leaves the reserve behind, while GC just needs one free zone and thus can
+> still use the zones that are kept for it.
 
-This is causing a problem because I first build xfsprogs for arm64,
-and then I build it for x86_64, with a "make realclean" between.  The
-fact that object files in the mkfs directory aren't getting cleaned
-results in build failures.  This wasn't happening before when I was
-building on a different build machime, but it's pretty clear the
-problem is for soem reasone "make clean" isn't deleting the object
-files in mkfs.
+Ouch.   Yes, this looks good.  One nit:
 
-I tried to debug xfsprogs's makefiles, but it wasn't immediately
-obvious, so I thought I would just file a report and hope someone can
-take a look at it.
+> @@ -460,11 +483,12 @@ xfs_open_zone(
+>  		if (atomic_inc_not_zero(&xg->xg_active_ref))
+>  			goto found;
+>  	xas_unlock(&xas);
+> +
+> +	atomic_inc(&zi->zi_nr_free_zones);
+>  	return NULL;
 
-In the meantime, I'll work around it by adding a "find . -type f -name
-\*.o -print0 | xargs -0 rm" to my test appiance build script.  Which
-should work, but it seems really unfortunate that it's necessary.
+This NULL return case now is a bug as the earlier atomic decrement
+of zi_nr_free_zones should protect against it ever happening.
 
-Thanks,
+So this should have a comment and some kind of warning (WARN_ON maybe,
+the usual XFS_IS_CORRUPT doesn't really fit for a pure in-core issue).
 
-					- Ted
