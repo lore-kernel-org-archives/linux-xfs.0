@@ -1,57 +1,57 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65BEF4B8260;
-	Mon, 28 Sep 2026 12:04:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23B194B95C3;
+	Mon, 28 Sep 2026 12:04:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790597079; cv=none; b=ZFeG7aAWrjtArSzsXBamEDmPNa93mU7ED7bqIJqlXx18eiXpMhhgM97qVtGyD3DfY9gKKnQ2wG8/hXQRCK6PO9yUv/3NLUGsWH161JoWfMve+ZrRMs0Qr1s07J413LyZG4/TIS8BIBZ9z87hoq0OJU4YnC/+fagIGXa5X9jhNEQ=
+	t=1790597084; cv=none; b=XYPXYEglCN0e/PP1K76uhY8rEkCT1dSAB/ywyP3SRPK6lOIGWB6Eq+YGZGMnpLnvVjhhHFgDNaFEx9JX1APqyjQAf97mDUrocZN6FxUzJu7sw1P7irMXg+v3m0xw/Lc3gcY8klZvT2/Tpu7jOXeFsRAQXLP+i0de8QHNfHUNI6U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790597079; c=relaxed/simple;
-	bh=Zla4oCAGDQaqfMVT7kiy3MG+Uq6I4kilrGZYsHB26hA=;
+	s=arc-20240116; t=1790597084; c=relaxed/simple;
+	bh=2sH0kPavUkzuh30VAvqOfGI+6PtQgKxPzaex5Hio6cQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=daquaZr74t2BqzoFWUp1gkm6erF9GoAPV3S5v0tMAalSJvGbVrPzOzKZxX7bLaFiVKuQ+bGMMjvEkuCCBiimjX3jw+trrCoDasPxyDGDSQc0GfHXrdJOIMRC5uMaQ93o0wPc/QniZq2PmqlmltxTrDc45QnIxiezH9NKx3l8GP8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=JyIXxxMK; arc=none smtp.client-ip=148.163.158.5
+	 MIME-Version; b=PvbYiy7qmW1609RNV11Bh8AIjHwrhu0VZUMHrIOeo+Xa2YRq1ysvnNg3Qgly7qGaOUNV1iLSjdCOWjNnUo7xNdEHlzsrh+f9RgMGNJbLQa7FskPteVa+9OgbEFrz0qiksim2XhvPIlkw7l8VzlPLXdRUicd9G3veq6xrGkE0+1k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=PfFRrpcR; arc=none smtp.client-ip=148.163.156.1
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="JyIXxxMK"
-Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68SBZi8J3971380;
-	Mon, 28 Sep 2026 12:04:03 GMT
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="PfFRrpcR"
+Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68SBZUuj3374968;
+	Mon, 28 Sep 2026 12:04:09 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
 	:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=pp1; bh=q4jCTLZ6VfPkrLngc
-	36gISvPdgc2ww479ZZDxZWHsTE=; b=JyIXxxMKKpaq76cLqxCvzedrxFMQjsDOl
-	9maWDObSmKqi1OkiEfZWRiYqLTOQBrZgGtXSLKJGfvDgTr30gFVkg/9JdqY4zKPL
-	8GY2AU2BQ4WaOeN0oUVM8fUi/PE8sKb5+HdVtw0q4Yz//+OxqPJsqEpAGGwN7nDG
-	VUJxlJ+D0bAZK+y4aWuGmed2AdqtRRuFkQ43CS6qGDd5ALHdGpgpdHsMso3x5g/p
-	EebjpZjkpdIlYIp7voGIGeCPl5IVwXB7oxFO6+LS32g8vCKFSuH0hKpXJN5CexJB
-	cicMQfNCOLIuLfQjMsgffSoBWAtIo05pUHRQJOs1+2PZ8Tt4eA0sw==
-Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4gx4fe0v5p-1
+	:mime-version:references:subject:to; s=pp1; bh=F0UMG1PQ3wjUrEKVL
+	k9UXUjrFunwbDAz80oLKcLuXa0=; b=PfFRrpcRNYG6N0t1Gs8Wf6uD1BhErri0G
+	FISkPLlUlAV3+fL7EaU/QBZW673Ur0MKFsQAodOcaEF907PifMnboGzaMwY5mezV
+	geLQP+W1qchsRqkz58ZZuLQC/WksxEk3YaE9op5HIeANlWLpPDM2HDpS9mcXXvpU
+	i+jrmor160IMHk6kqkmaE6uTLfJFnyziRZQ5IY5WXGdzy8k+WVGAwNMgjxsSGzRP
+	JVnvxBuPYjrvUTZ/VHZXcl4nhVgsy6uhpig41S+dxR3eL7ygxH8hbHQ3mqH6wR+a
+	WTW7xrScjEsLwvewnaA9P08cGoAaQI7coQ57Dl/NfrLQEEWkVe59g==
+Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4gx5qr13p6-1
 	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Mon, 28 Sep 2026 12:04:02 +0000 (GMT)
-Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma11.dal12v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 68SBHVms057236;
-	Mon, 28 Sep 2026 12:04:01 GMT
-Received: from smtprelay04.fra02v.mail.ibm.com ([9.218.2.228])
-	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 4gxu2y4ugw-1
+	Mon, 28 Sep 2026 12:04:09 +0000 (GMT)
+Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma21.wdc07v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 68SBHWAk017606;
+	Mon, 28 Sep 2026 12:04:08 GMT
+Received: from smtprelay07.fra02v.mail.ibm.com ([9.218.2.229])
+	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4gxsck53aw-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 28 Sep 2026 12:04:01 +0000 (GMT)
+	Mon, 28 Sep 2026 12:04:07 +0000 (GMT)
 Received: from smtpav01.fra02v.mail.ibm.com (smtpav01.fra02v.mail.ibm.com [10.20.54.100])
-	by smtprelay04.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 68SC402025428676
+	by smtprelay07.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 68SC45Z346661958
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 28 Sep 2026 12:04:00 GMT
+	Mon, 28 Sep 2026 12:04:05 GMT
 Received: from smtpav01.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id E268B20040;
-	Mon, 28 Sep 2026 12:03:59 +0000 (GMT)
+	by IMSVA (Postfix) with ESMTP id BDC6F2004D;
+	Mon, 28 Sep 2026 12:04:05 +0000 (GMT)
 Received: from smtpav01.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 0392820043;
-	Mon, 28 Sep 2026 12:03:55 +0000 (GMT)
+	by IMSVA (Postfix) with ESMTP id 6DB3F20040;
+	Mon, 28 Sep 2026 12:04:00 +0000 (GMT)
 Received: from li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com (unknown [9.39.20.95])
 	by smtpav01.fra02v.mail.ibm.com (Postfix) with ESMTP;
-	Mon, 28 Sep 2026 12:03:54 +0000 (GMT)
+	Mon, 28 Sep 2026 12:04:00 +0000 (GMT)
 From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
 To: Christian Brauner <brauner@kernel.org>, linux-fsdevel@vger.kernel.org
 Cc: "Darrick J . Wong" <djwong@kernel.org>, Carlos Maiolino <cem@kernel.org>,
@@ -63,10 +63,11 @@ Cc: "Darrick J . Wong" <djwong@kernel.org>, Carlos Maiolino <cem@kernel.org>,
         Daniel Gomez <da.gomez@kernel.org>,
         Pankaj Raghav <pankaj.raghav@linux.dev>, Theodore Tso <tytso@mit.edu>,
         linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-mm@kvack.org, Andres Freund <andres@anarazel.de>
-Subject: [RFC PATCH v4 07/12] iomap: Add aio support to RWF_WRITETHROUGH
-Date: Mon, 28 Sep 2026 17:33:08 +0530
-Message-ID: <d0779ef35a8666bf096f083e0174453f0aea4685.1790596383.git.ojaswin@linux.ibm.com>
+        linux-mm@kvack.org, Andres Freund <andres@anarazel.de>,
+        Dave Chinner <dgc@kernel.org>
+Subject: [RFC PATCH v4 08/12] iomap: Add DSYNC support to RWF_WRITETHROUGH
+Date: Mon, 28 Sep 2026 17:33:09 +0530
+Message-ID: <ced8ea2c2bc9109837723ff3938a0359ffae834e.1790596383.git.ojaswin@linux.ibm.com>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <cover.1790596383.git.ojaswin@linux.ibm.com>
 References: <cover.1790596383.git.ojaswin@linux.ibm.com>
@@ -79,181 +80,134 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
 X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Authority-Analysis: v=2.4 cv=FYWiV5+6 c=1 sm=1 tr=0 ts=6aba57b3 cx=c_pps
- a=aDMHemPKRhS1OARIsFnwRA==:117 a=aDMHemPKRhS1OARIsFnwRA==:17
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTI4MDA0NiBTYWx0ZWRfX9c9fx1B8GUbt
+ u/DWHqXni+0pjptK/FBm1AXyvx3j814nAdP35B/ob262//lZ419cn3HVO8dGhcNe4a3qBhzMA4h
+ MsTOd34ick62pMLsjhSDRZUNVdOHlMtRnX3uQ6opkyh+mxP3/fWunR0s+JDAbbPLQy2hzfe3qiP
+ NMycB3zpDZr7EGn8o1ZTzDaEbSV5rcdzcQsdIzlkTnO2cyBoW1XVE9NmPPuz7/hjOMhqNTPm4jI
+ I0/yGG2NN522Akw9kdXKLICw4kMnKpkDb8hZVzWYt9cltrFC/n/NNegyvYklT63C7Wf1/SaouMi
+ BnmPXTQCeZfuQs3R6M8H3TBtxiEkYVovar0H0h69dmP+fuR8zZ0y4ONjXK660VJPojYGvLqXhUP
+ /mY0VXdoOPYEnLWMOyGeXdM5z3vwyMx2EgGbtnJaL0jjFd7YQtZxBgsKK1ugoYAqucM1Y1mmcrF
+ mempcEJn6MD/3uyFBAg==
+X-Authority-Analysis: v=2.4 cv=SPbXx+vH c=1 sm=1 tr=0 ts=6aba57b9 cx=c_pps
+ a=GFwsV6G8L6GxiO2Y/PsHdQ==:117 a=GFwsV6G8L6GxiO2Y/PsHdQ==:17
  a=VdqzKS8jKosA:10 a=VkNPw1HP01LnGYTKEx00:22 a=RnoormkPH1_aCDwRdu11:22
- a=V8glGbnc2Ofi9Qvn3v5h:22 a=pGLkceISAAAA:8 a=VnNF1IyMAAAA:8
- a=NGqb3fQY2RvKY4TqIeQA:9
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTI4MDA0NiBTYWx0ZWRfX7pASHr2MH61s
- 0L7BBaMqqUNdn2jFC4u4UQRli78c+wgKiL6y7IaDgmpvYECS/UNmgm/ARhxO/bx+YT/SKDSouon
- 0+ofzmytI7eWSwO16Xwm9C//ljXHM9g=
-X-Proofpoint-ORIG-GUID: 5Gw7g037G9i6OhuCnAFY0oZkzSFI6_V0
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTI4MDA0NiBTYWx0ZWRfX2BLV2bypH0PB
- N9l4o9SxjBUg+EJ30Vb1i1hwSvVhoO8tSPIYSm0SpLyqz2Iyj9DRr0DsIJbQdnqGDZN8A52xMrI
- RGLgcy1I4GTEJGVfvHjVw29PFgJR1/x3u+2qRh5S9hXr6BqIB3EZa9+JtgKsTWpgH0N0ss0Z4P6
- bXtFZzD6bNefdQfoyzTH/jBcX+TxSkTnLffd2jINMTDOdTqaYAOEyyLRWlRxDLl28uHR0BN4uYi
- X5W+WPTfpGdtWj/1PorMEWM5/ZqDN5fxG4YFsRHWyjZg9CZ9bzl/8gjDMqpm4J/QZTNdop4In28
- VJ+TJxz/Htv5kpwi2Kum+5eYo1/H7DcOOaVE2iwuWc9ILfbcDQTYYxUylDWanT7LNgXkDHSuJxE
- LmxRlHbkXgAfWTRNVRVMETtTCqtkbUNkISU/GA7+0GtdSK//2YjktmoFpVVjbaSoGJrEoOFfwUZ
- gkWwL5/dELiSp8eX8Zw==
-X-Proofpoint-GUID: ECExiIgtMJPxJhkdJhJSTZPLd0TOKuSu
+ a=uAbxVGIbfxUO_5tXvNgY:22 a=VwQbUJbxAAAA:8 a=pGLkceISAAAA:8 a=VnNF1IyMAAAA:8
+ a=nOap7FSNCsi5F2RPnIcA:9
+X-Proofpoint-ORIG-GUID: BmQwRke5PYynaDMPZup2Jfz3l7Vbwz8S
+X-Proofpoint-Spam-Info: AW1haW4tMjYwOTI4MDA0NiBTYWx0ZWRfX9SxHBtZGPtuT
+ XoXseZclEBxEl8o4qO8kdnvri0wZU7dm2t9OTZ0sgsOQZkc3eFlx8C50sQatxj2iS9b1oe0kC+C
+ aaX6hnXRRB0CkDXrtG0mO/w4KBJKzEU=
+X-Proofpoint-GUID: 95YSuNK76ub_zn3gsK-hZbGYX4WUj9cq
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-09-28_03,2026-09-21_02,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- adultscore=0 clxscore=1015 impostorscore=0 spamscore=0 phishscore=0
- priorityscore=1501 malwarescore=0 bulkscore=0 lowpriorityscore=0
- suspectscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ priorityscore=1501 suspectscore=0 clxscore=1015 spamscore=0
+ lowpriorityscore=0 malwarescore=0 adultscore=0 bulkscore=0 impostorscore=0
+ phishscore=0 classifier=typeunknown authscore=0 authtc= authcc=
  route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2609040000
  definitions=main-2609280046
 
-With aio the only thing we need to be careful off is that writethrough
-can be in progress even after dropping inode and folio lock. Due to
-this, we need a way to synchronise with other paths where stable write
-is not enough, example:
+Add DSYNC support to writethrough buffered writes. Unlike the usual
+buffered writes where we call generic_write_sync() inline during the
+syscall path, for writethrough we instead sync the data during IO
+completion path, just like dio.
 
-1. Truncate to 0 in xfs sets i_size = 0 before waiting for writeback to
-   complete. In case of writethrough, the end io completion can again
-   push the i_size to a non-zero value.
-2. Dio reads might race with aio writethrough ->end_io() and read 0s if
-   unwritten conversion is yet to happen.
+This allows aio writethrough to be truly async where the syscall can
+return after IO submission and the sync can then be done asynchronously
+during IO completion time.
 
-Hence use the dio begin/end as it gives us the required guarantees.
+Further, just like dio, we utilize the FUA optimization, if available,
+to avoid syncing the data for DSYNC operations.
 
+Suggested-by: Dave Chinner <dgc@kernel.org>
 Co-developed-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
 Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
 Signed-off-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
 ---
- fs/iomap/buffered-io.c | 57 ++++++++++++++++++++++++++++++++++++------
- include/linux/iomap.h  | 11 ++++++--
- 2 files changed, 59 insertions(+), 9 deletions(-)
+ fs/iomap/buffered-io.c | 35 ++++++++++++++++++++++++++++++++++-
+ include/linux/iomap.h  |  1 +
+ 2 files changed, 35 insertions(+), 1 deletion(-)
 
 diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 68b93d96faa3..2ea45ab67bd9 100644
+index 2ea45ab67bd9..91dad3550398 100644
 --- a/fs/iomap/buffered-io.c
 +++ b/fs/iomap/buffered-io.c
-@@ -1202,6 +1202,9 @@ static ssize_t iomap_writethrough_complete(struct iomap_writethrough_ctx *wt_ctx
- 
- 	mapping_dec_inflight_stable_writes(inode->i_mapping);
- 
-+	if (wt_ctx->is_aio)
-+		inode_dio_end(inode);
-+
+@@ -1208,7 +1208,17 @@ static ssize_t iomap_writethrough_complete(struct iomap_writethrough_ctx *wt_ctx
  	if (!ret) {
  		ret = wt_ctx->written;
  		iocb->ki_pos += ret;
-@@ -1212,12 +1215,27 @@ static ssize_t iomap_writethrough_complete(struct iomap_writethrough_ctx *wt_ctx
- 	return ret;
- }
- 
-+static void iomap_writethrough_complete_work(struct work_struct *work)
-+{
-+	struct iomap_writethrough_ctx *wt_ctx =
-+		container_of(work, struct iomap_writethrough_ctx, aio_work);
-+	struct kiocb *iocb = wt_ctx->iocb;
+-	} else
 +
-+	iocb->ki_complete(iocb, iomap_writethrough_complete(wt_ctx));
-+}
-+
- static void iomap_writethrough_done(struct iomap_writethrough_ctx *wt_ctx)
- {
--	struct task_struct *waiter = wt_ctx->waiter;
-+	if (!wt_ctx->is_aio) {
-+		struct task_struct *waiter = wt_ctx->waiter;
- 
--	WRITE_ONCE(wt_ctx->waiter, NULL);
--	blk_wake_io_task(waiter);
-+		WRITE_ONCE(wt_ctx->waiter, NULL);
-+		blk_wake_io_task(waiter);
-+		return;
-+	}
-+
-+	INIT_WORK(&wt_ctx->aio_work, iomap_writethrough_complete_work);
-+	queue_work(wt_ctx->inode->i_sb->s_dio_done_wq, &wt_ctx->aio_work);
- }
- 
- static void iomap_writethrough_bio_end_io(struct bio *bio)
-@@ -1783,9 +1801,9 @@ ssize_t iomap_file_writethrough_write(struct kiocb *iocb, struct iov_iter *i,
- 	if (iocb_is_dsync(iocb))
- 		/* D_SYNC support not implemented yet */
- 		return -EOPNOTSUPP;
--	if (!is_sync_kiocb(iocb))
--		/* aio support not implemented yet */
--		return -EOPNOTSUPP;
-+
-+	if (iocb->ki_flags & IOCB_NOWAIT)
-+		iter.flags |= IOMAP_NOWAIT;
- 
- 	/*
- 	 * +1 to max bvecs to account for unaligned write spanning multiple
-@@ -1804,11 +1822,33 @@ ssize_t iomap_file_writethrough_write(struct kiocb *iocb, struct iov_iter *i,
- 	wt_ctx->end_io = wt_ops->end_io;
- 	wt_ctx->old_i_size = i_size_read(inode);
- 	wt_ctx->max_bvecs = max_bvecs;
-+	wt_ctx->is_aio = !is_sync_kiocb(iocb);
- 	atomic_set(&wt_ctx->ref, 1);
--	wt_ctx->waiter = current;
-+
-+	if (!wt_ctx->is_aio)
-+		wt_ctx->waiter = current;
-+	else
 +		/*
-+		 * With aio, writethrough can be in progress even after dropping
-+		 * inode and folio lock. Due to this, we need a way to
-+		 * synchronise with other paths where stable write is not enough
-+		 * (example truncate). Hence use the dio begin/end as it gives
-+		 * us the required guarantees.
++		 * If this is a DSYNC write and we couldn't optimize it, make
++		 * sure we push it to stable storage now that we've written
++		 * data.
 +		 */
-+		inode_dio_begin(inode);
- 
- 	mapping_inc_inflight_stable_writes(inode->i_mapping);
- 
-+	if (wt_ctx->is_aio && !inode->i_sb->s_dio_done_wq) {
-+		ret = sb_init_dio_done_wq(inode->i_sb);
-+		if (ret < 0) {
-+			mapping_dec_inflight_stable_writes(inode->i_mapping);
-+			inode_dio_end(inode);
-+			kfree(wt_ctx);
-+			return ret;
-+		}
++		if (iocb_is_dsync(wt_ctx->iocb) && !wt_ctx->use_fua)
++			ret = generic_write_sync(iocb, ret);
 +	}
 +
- 	blk_start_plug(&plug);
++	if (ret < 0)
+ 		mapping_set_error(inode->i_mapping, ret);
  
- 	while ((ret = iomap_iter(&iter, wt_ops->ops)) > 0) {
-@@ -1820,6 +1860,9 @@ ssize_t iomap_file_writethrough_write(struct kiocb *iocb, struct iov_iter *i,
- 	blk_finish_plug(&plug);
+ 	kfree(wt_ctx);
+@@ -1270,6 +1280,9 @@ iomap_writethrough_submit_bio(struct iomap_writethrough_ctx *wt_ctx,
+ 	for (i = 0; i < wt_ctx->nr_bvecs; i++)
+ 		len += wt_ctx->bvec[i].bv_len;
  
- 	if (!atomic_dec_and_test(&wt_ctx->ref)) {
-+		if (wt_ctx->is_aio)
-+			return -EIOCBQUEUED;
++	if (wt_ctx->use_fua)
++		opf |= REQ_FUA;
 +
- 		for (;;) {
- 			set_current_state(TASK_UNINTERRUPTIBLE);
- 			if (!READ_ONCE(wt_ctx->waiter))
+ 	bio = bio_alloc(iomap->bdev, wt_ctx->nr_bvecs, opf, GFP_NOFS);
+ 	bio->bi_iter.bi_sector	= iomap_sector(iomap, wt_ctx->bio_pos);
+ 	bio->bi_end_io		= iomap_writethrough_bio_end_io;
+@@ -1406,6 +1419,19 @@ static int iomap_writethrough_iter(struct iomap_writethrough_ctx *wt_ctx,
+ 	if (iter->iomap.type == IOMAP_INLINE)
+ 		return -EINVAL;
+ 
++	/*
++	 * If we realise that cache flush is necessary (eg FUA is not present
++	 * or we need metadata updates) then we turn off the optimization.
++	 */
++	if (wt_ctx->use_fua) {
++		if (iter->iomap.type != IOMAP_MAPPED ||
++		    (iter->iomap.flags &
++		     (IOMAP_F_NEW | IOMAP_F_SHARED | IOMAP_F_DIRTY)) ||
++		    (bdev_write_cache(iter->iomap.bdev) &&
++		     !bdev_fua(iter->iomap.bdev)))
++			wt_ctx->use_fua = false;
++	}
++
+ 	do {
+ 		struct folio *folio;
+ 		size_t offset;		/* Offset into folio */
+@@ -1825,6 +1851,13 @@ ssize_t iomap_file_writethrough_write(struct kiocb *iocb, struct iov_iter *i,
+ 	wt_ctx->is_aio = !is_sync_kiocb(iocb);
+ 	atomic_set(&wt_ctx->ref, 1);
+ 
++	/*
++	 * Similar to dio, we optimistically set use_fua=true to avoid explicit
++	 * sync. In case we later realise cache flush is needed we set it back
++	 * to false.
++	 */
++	wt_ctx->use_fua = iocb_is_dsync(iocb) && !(iocb->ki_flags & IOCB_SYNC);
++
+ 	if (!wt_ctx->is_aio)
+ 		wt_ctx->waiter = current;
+ 	else
 diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 5a9223856015..691f48bc8afa 100644
+index 691f48bc8afa..b1c6707c25a4 100644
 --- a/include/linux/iomap.h
 +++ b/include/linux/iomap.h
-@@ -569,9 +569,16 @@ struct iomap_writethrough_ctx {
- 	atomic_t		ref;
+@@ -570,6 +570,7 @@ struct iomap_writethrough_ctx {
  	unsigned int		flags;
  	int			error;
-+	bool			is_aio;
-+
-+	union {
-+		/* used during submission and for non-aio completion */
-+		struct task_struct	*waiter;
-+
-+		/* used during aio completion */
-+		struct work_struct	aio_work;
-+	};
+ 	bool			is_aio;
++	bool			use_fua;
  
--	/* used during submission and for non-aio completion */
--	struct task_struct	*waiter;
- 	int (*end_io)(struct iomap_writethrough_ctx *wt_ctx, ssize_t size,
- 		      int error, unsigned int flags);
- 
+ 	union {
+ 		/* used during submission and for non-aio completion */
 -- 
 2.55.0
 
