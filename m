@@ -1,237 +1,204 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C24E4E0B85;
-	Mon, 28 Sep 2026 15:36:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB0451A681B;
+	Mon, 28 Sep 2026 15:41:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790609820; cv=none; b=cuLvjiI3LXpCbzkNxe+AEPHkcitMSQNVPtseSQdSKKeycKA32Ee61HaAM6IS7PxlNsIOLF1N8R6XKyYRfwUjWfLL85ZhRNF/+CppgeBI1bJteWyQf21ZZ9/0QvzP50cM68DsAOyRUHWI/1C4vH9N6IT9npCWi38re8oqYTTT3Lg=
+	t=1790610115; cv=none; b=juSde3oNOMW4PotQZIwyckblIA5kS+jt1sfdXwO0+QYfBsnAcDElWc8phkfEIFZSGrgt0r9zTS5zF6pMBxg87QMFXmrVlIheWU9Vn3+Uf60h2rKV/qhD0Hfss9wN6EJTetAzo3ZqufigE7YKNY5a7NAeUK9Sy/Y0cHJ3Zv4Rpuo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790609820; c=relaxed/simple;
-	bh=EsU3WRHt1wdZv+BwIFbc3y3LpZOjRjv7/PWAbPVQws4=;
-	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=h73mEw2mw21BpL5cvvK8ziIcXG2XCHTeg7tsXDenejBaSALma4gg8XWAGIR/frKSwXCEh3q2sK7nTxLpDcdHMGTK8isOHytAJgHNEqvlVgjzAx6YSAdGOfx/cY3iNNSuBS96bBA37tiGh2FQL8b3+pEk2p2fKRCMYpWB10sgKxo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bn7USj0D; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790610115; c=relaxed/simple;
+	bh=zO/3yLTnLzkBu/KWZjdtcM9XW56Nbq+sBRS6f3G/tFo=;
+	h=Date:From:To:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=K3+scoFTR+LOte2U+w3hOKPV7r/iTNoMI+muAytXU//Ji3mnKr7b4WNmz6NL5+igMsXWJhEBH50yfNLhrMQibklKYxwMqqFxk8ru8XiPGXQBgeuooTY1TdSGDWjuTLkNW3EVdUWxio5p8hahjBPbgqkHkHdUT0o2Tdvjhs9a8pE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mxTQOGGd; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bn7USj0D"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 1D9BE1F000FF;
-	Mon, 28 Sep 2026 15:36:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mxTQOGGd"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 9D68D1F0089A;
+	Mon, 28 Sep 2026 15:41:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790609819;
-	bh=CZbxZ7DWQ1Q0VwWJN3byyXMuG0CA//4TJyP4rflhgns=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=bn7USj0D+WVYhf2QdPpTPogZyGNcutvM/VdQT50+GeIh41ERrxxMn0O/ikTQCJhKD
-	 uM6MelWYOT8e8nt1IruZGMTKqgsysgTd0yjJQ/ujrRC5LRWna/57CNqFW0kZ5XB052
-	 71EQACmHds0GUXcKz2YCodFQLHvyX1JoSPHx+alWg46o5T1ukMWnUHSajIr/YPPdrp
-	 FawtCht3ARxG3w5FvLKT2MX7X/wkd+j8AFbbDZykYsohiStAciio7yL1pe/WHBqTSW
-	 LQTldEvDQF277iMBi7RKjnt3MEcEb609+RKBfge4jQjFgu0cJ5co6gf9FBVHHdwKr3
-	 cTW2m1Uw4xZfw==
-Date: Mon, 28 Sep 2026 08:36:58 -0700
-Subject: [PATCH 4/4] xfs: test mkfs.xfs config file generation
+	s=k20260515; t=1790610109;
+	bh=406ll8SYjoCP+g9GH9MAvoT4p+fYrC9aNAp2zzfkMEc=;
+	h=Date:From:To:Subject:References:In-Reply-To;
+	b=mxTQOGGd9btmaEdWfE8hZltDxr0qvF/MisRfw0tKU2uCq55BXwpisQSDgptzYWkye
+	 5Ge+hy7tmk+N/yNtMD7BYm6ayzKLYxNf6/PpKTv8hCBrQVjRUtgOcAW/RMfHFYvCOe
+	 5IjlGX+u54wN6A4lsmMN+kz3IBMCBvqp8JxzgFtOUXQ1bhEU1vqaallwhL13IclIql
+	 UvEu+Iw4XnsbUDT8I6IQgnRwnXyBU2ZQltiJNJxrKlKU+ZtQy975q6T+vrtT3grMKp
+	 XX4q6jokGwLl6xpQg1okKBdV/MIDK0NkxHA/vs/7iQJksuB8gaR04jmIc7ScZWTnxC
+	 G+u/vNO3C6BNw==
+Date: Mon, 28 Sep 2026 08:41:49 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: zlang@kernel.org, djwong@kernel.org
-Cc: aalbersh@kernel.org, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Message-ID: <179060965842.790984.12733992584365422088.stgit@frogsfrogsfrogs>
-In-Reply-To: <179060965752.790984.3511820348115861306.stgit@frogsfrogsfrogs>
-References: <179060965752.790984.3511820348115861306.stgit@frogsfrogsfrogs>
+To: Andrea Parri <parri.andrea@gmail.com>, fstests@vger.kernel.org,
+	Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
+	Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v2] xfs: exercise a failed CoW conversion during writeback
+Message-ID: <20260928154149.GA6253@frogsfrogsfrogs>
+References: <20260928085047.7250-1-parri.andrea@gmail.com>
+ <arprh9oyZEXs25CQ@zlang-mailbox>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <arprh9oyZEXs25CQ@zlang-mailbox>
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Mon, Sep 28, 2026 at 09:53:29PM +0800, Zorro Lang wrote:
+> On Mon, Sep 28, 2026 at 10:50:46AM +0200, Andrea Parri wrote:
+> > iomap_add_to_ioend() submits the pending ioend through
+> > ->writeback_submit() before allocating a new one for the current
+> > range.  For XFS, xfs_writeback_submit() converts the ioend's CoW
+> > extents via xfs_reflink_convert_cow() before submitting the bio; if
+> > that conversion fails, ->writeback_submit() completes the ioend with
+> > an error and returns it.  A kernel bug left the stale ioend behind in
+> > wpc->wb_ctx, which iomap_writepages() then submitted a second time,
+> > corrupting XFS's ip->i_ioend_list.
+> > 
+> > Exercise this path with the wb_cow_convert_error error tag: reflink a
+> > file, dirty several widely separated ranges of the shared extent so
+> > that a single writepages() call has to build and submit more than one
+> > ioend, inject the error, and let writeback run.  On a kernel without
+> > the fix this reliably hits a "list_add double add" WARN from
+> > xfs_end_bio(); on a fixed kernel writeback just fails cleanly.
+> > 
+> > This requires the wb_cow_convert_error XFS error tag; the test cleanly
+> > not-runs on kernels without it.
+> > 
+> > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > Signed-off-by: Andrea Parri <parri.andrea@gmail.com>
+> > ---
+> > The kernel fix and the wb_cow_convert_error error tag this test relies
+> > on are part of the series at:
+> > 
+> >   https://lore.kernel.org/all/cover.1790342457.git.parri.andrea@gmail.com/
+> > 
+> > Changes since v1:
+> >  - Cite the kernel fix with _fixed_by_kernel_commit (Darrick).
+> >  - Don't reset the error tag before the remount; the unmount clears it
+> >    anyway (Darrick).
+> >  - Picked up Christoph's Reviewed-by.
+> > 
+> > v1: https://lore.kernel.org/all/20260924091338.198407-1-parri.andrea@gmail.com/
+> 
+> Overall the patch looks good to me, but I have one minor comment below ...
+> 
+> > 
+> >  tests/xfs/842     | 71 +++++++++++++++++++++++++++++++++++++++++++++++
+> >  tests/xfs/842.out |  7 +++++
+> >  2 files changed, 78 insertions(+)
+> >  create mode 100755 tests/xfs/842
+> >  create mode 100644 tests/xfs/842.out
+> > 
+> > diff --git a/tests/xfs/842 b/tests/xfs/842
+> > new file mode 100755
+> > index 0000000000000..4495e9bdfa530
+> > --- /dev/null
+> > +++ b/tests/xfs/842
+> > @@ -0,0 +1,71 @@
+> > +#! /bin/bash
+> > +# SPDX-License-Identifier: GPL-2.0
+> > +# Copyright (c) 2026 Andrea Parri.  All Rights Reserved.
+> > +#
+> > +# FS QA Test No. 842
+> > +#
+> > +# Regression test for a failed ->writeback_submit() call leaving a stale
+> > +# wpc->wb_ctx behind.  iomap_writepages() then resubmits whatever
+> > +# wpc->wb_ctx points to, i.e. the ioend that ->writeback_submit() already
+> > +# completed with an error.  For XFS the second bio_endio() lands back in
+> > +# xfs_end_bio(), which list_add_tail()s the already-linked ioend into
+> > +# ip->i_ioend_list a second time, corrupting the list.
+> > +#
+> > +# The only in-tree way for XFS's ->writeback_submit() to fail is a
+> > +# failing xfs_reflink_convert_cow(), so this uses the
+> > +# wb_cow_convert_error error tag to force that on a reflinked file whose
+> > +# CoW extents are dirtied in several widely separated ranges, so that a
+> > +# single writepages() call has to submit more than one ioend.
+> > +#
+> > +. ./common/preamble
+> > +_begin_fstest auto quick clone
+> > +
+> > +# Import common functions.
+> > +. ./common/filter
+> > +. ./common/reflink
+> > +. ./common/inject
+> > +
+> > +_fixed_by_kernel_commit XXXXXXXXXXXX \
+> > +	"iomap: don't resubmit an ioend after ->writeback_submit() failed"
+> > +
+> > +_require_cp_reflink
+> > +_require_scratch_reflink
+> > +_require_xfs_io_error_injection "wb_cow_convert_error"
+> > +_require_kernel_config CONFIG_LIST_HARDENED
+> > +
+> > +blksz=65536
+> > +nr=8
+> > +sz=$((blksz * nr * 2))
+> > +
+> > +echo "Format and mount"
+> > +_scratch_mkfs >> $seqres.full 2>&1
+> > +_scratch_mount
+> > +
+> > +echo "Create reflinked file with several CoW extents"
+> > +_pwrite_byte 0x58 0 $sz $SCRATCH_MNT/file1 >> $seqres.full
+> > +_scratch_sync
+> > +_cp_reflink $SCRATCH_MNT/file1 $SCRATCH_MNT/file2
+> > +
+> > +# Dirty several widely separated ranges of file2's CoW extents so that a
+> > +# single writepages() call has to submit more than one ioend.
+> > +seq=0
+> 
+> In fstests, $seq is a core global variable representing the test sequence
+> number. Overwriting it here might lead to unexpected side effects with
+> framework helpers or cleanup logic. Could we rename this loop variable to
+> something else to avoid trouble? If you need, I can help that when I merge
+> it.
+> 
+> Thanks,
+> Zorro
+> 
+> > +while [ $seq -lt $nr ]; do
+> > +	off=$((seq * blksz * 2))
+> > +	_pwrite_byte 0x59 $off $blksz $SCRATCH_MNT/file2 >> $seqres.full
+> > +	seq=$((seq + 1))
+> > +done
 
-Test configuration file generation via mkfs, xfs_db, and xfs_spaceman.
+for ((off = 0; off < (blksz * nr * 2); off += (blksz * 2))); do
+	_pwrite_byte 0x59 $off $blksz $SCRATCH_MNT/file2 >> $seqres.full
+done
 
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-Reviewed-by: Andrey Albershteyn <aalbersh@kernel.org>
----
- tests/xfs/1909     |  163 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1909.out |    2 +
- 2 files changed, 165 insertions(+)
- create mode 100755 tests/xfs/1909
- create mode 100644 tests/xfs/1909.out
+--D
 
-
-diff --git a/tests/xfs/1909 b/tests/xfs/1909
-new file mode 100755
-index 00000000000000..d60d552f5b4863
---- /dev/null
-+++ b/tests/xfs/1909
-@@ -0,0 +1,163 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2026 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test 1909
-+#
-+# Functional testing for mkfs.xfs config file generation.
-+#
-+. ./common/preamble
-+_begin_fstest auto mkfs
-+
-+# . ./common/filter
-+
-+_require_scratch
-+_require_xfs_mkfs_cfgfile
-+_require_xfs_spaceman_command "makecfg"
-+_require_xfs_db_command "makecfg"
-+_require_command "$XFS_ADMIN_PROG" "xfs_admin"
-+
-+# t1: Make sure all three tools generate the same config file
-+_scratch_mkfs >> $seqres.full
-+_scratch_mount
-+$XFS_SPACEMAN_PROG -c "makecfg $tmp.spaceman1" $SCRATCH_MNT
-+$XFS_ADMIN_PROG -C $tmp.onadmin1 $SCRATCH_MNT
-+_scratch_unmount
-+
-+_scratch_mkfs -c makecfg=$tmp.mkfs1 >> $seqres.full
-+_scratch_xfs_db -c "makecfg $tmp.db1"
-+_scratch_xfs_admin -C $tmp.offadmin1
-+
-+cmp -s $tmp.mkfs1 $tmp.spaceman1 || \
-+	echo "mkfs config1 does not match spaceman?"
-+cmp -s $tmp.db1 $tmp.spaceman1 || \
-+	echo "db config1 does not match spaceman?"
-+cmp -s $tmp.db1 $tmp.mkfs1 || \
-+	echo "db config1 does not match mkfs?"
-+cmp -s $tmp.onadmin1 $tmp.mkfs1 || \
-+	echo "online admin config1 does not match mkfs?"
-+cmp -s $tmp.offadmin1 $tmp.mkfs1 || \
-+	echo "offline admin config1 does not match mkfs?"
-+
-+echo "*** spaceman config1" >> $seqres.full
-+cat $tmp.spaceman1 >> $seqres.full
-+echo "*** mkfs config1" >> $seqres.full
-+cat $tmp.mkfs1 >> $seqres.full
-+echo "*** db config1" >> $seqres.full
-+cat $tmp.db1 >> $seqres.full
-+echo "*** online admin config1" >> $seqres.full
-+cat $tmp.onadmin1 >> $seqres.full
-+echo "*** offline admin config1" >> $seqres.full
-+cat $tmp.offadmin1 >> $seqres.full
-+
-+# t2: Make sure the output changes if we set a new rootdir inherit option
-+_scratch_mount
-+$XFS_IO_PROG -c 'chattr +P' -c 'chproj 33' $SCRATCH_MNT
-+$XFS_SPACEMAN_PROG -c "makecfg $tmp.spaceman2" $SCRATCH_MNT
-+_scratch_unmount
-+_scratch_xfs_db -c "makecfg $tmp.db2"
-+
-+cmp -s $tmp.db2 $tmp.spaceman2 || \
-+	echo "db config2 does not match spaceman?"
-+cmp -s $tmp.db1 $tmp.db2 && \
-+	echo "db config1 should be different from db config2"
-+
-+echo "*** spaceman config2" >> $seqres.full
-+cat $tmp.spaceman2 >> $seqres.full
-+echo "*** db config2" >> $seqres.full
-+cat $tmp.db2 >> $seqres.full
-+
-+# t3: Format with t2 config file, make sure the results match t2 and not t1
-+_scratch_mkfs -c options=$tmp.db2 >> $seqres.full
-+_scratch_mount
-+$XFS_SPACEMAN_PROG -c "makecfg $tmp.spaceman3" $SCRATCH_MNT
-+_scratch_unmount
-+_scratch_xfs_db -c "makecfg $tmp.db3"
-+
-+cmp -s $tmp.db3 $tmp.spaceman3 || \
-+	echo "db config3 does not match spaceman?"
-+cmp -s $tmp.db3 $tmp.db1 && \
-+	echo "db config3 should be different from db config1"
-+cmp -s $tmp.db3 $tmp.db2 || \
-+	echo "db config3 does not match db config2?"
-+
-+echo "*** spaceman config3" >> $seqres.full
-+cat $tmp.spaceman3 >> $seqres.full
-+echo "*** db config3" >> $seqres.full
-+cat $tmp.db3 >> $seqres.full
-+
-+# t4: Set autofsck filesystem property, make sure that gets reflected
-+autofsck="$(grep 'autofsck=' $tmp.spaceman3 | sed -e 's/^.*autofsck=//g')"
-+case "$autofsck" in
-+"")
-+	if grep -q 'crc=1' $tmp.spaceman3; then
-+		new_autofsck=check
-+	fi
-+	;;
-+repair) new_autofsck=check;;
-+*)	new_autofsck=repair;;
-+esac
-+if [ -n "$new_autofsck" ]; then
-+	$XFS_PROPERTY_PROG $SCRATCH_DEV set "autofsck=$new_autofsck" >> $seqres.full
-+	_scratch_mount
-+	$XFS_SPACEMAN_PROG -c "makecfg $tmp.spaceman4" $SCRATCH_MNT
-+	_scratch_unmount
-+	_scratch_xfs_db -c "makecfg $tmp.db4"
-+
-+	cmp -s $tmp.db4 $tmp.spaceman4 || \
-+	echo "db config4 does not match spaceman?"
-+	cmp -s $tmp.db4 $tmp.db3 && \
-+		echo "db config4 should be different from db config3"
-+
-+	echo "*** spaceman config4" >> $seqres.full
-+	cat $tmp.spaceman4 >> $seqres.full
-+	echo "*** db config4" >> $seqres.full
-+	cat $tmp.db4 >> $seqres.full
-+
-+	_scratch_mkfs -c options=$tmp.db4 >> $seqres.full
-+	_scratch_mount
-+	$XFS_SPACEMAN_PROG -c "makecfg $tmp.spaceman4a" $SCRATCH_MNT
-+	_scratch_unmount
-+	_scratch_xfs_db -c "makecfg $tmp.db4a"
-+
-+	cmp -s $tmp.db4a $tmp.spaceman4a || \
-+	echo "db config4a does not match spaceman?"
-+	cmp -s $tmp.db4a $tmp.db3 && \
-+		echo "db config4a should be different from db config3"
-+	cmp -s $tmp.db4a $tmp.db4 || \
-+	echo "db config4a does not match db config4?"
-+
-+	echo "*** spaceman config4a" >> $seqres.full
-+	cat $tmp.spaceman4a >> $seqres.full
-+	echo "*** db config4a" >> $seqres.full
-+	cat $tmp.db4a >> $seqres.full
-+
-+fi
-+
-+if grep -q 'reflink=1' "$tmp.db3"; then
-+	# t5a: make sure that cli can override defaults
-+	_scratch_mkfs -c defaults=$tmp.db3 -m reflink=0 >> $seqres.full
-+	_scratch_xfs_db -c "makecfg $tmp.db5a"
-+	grep -q 'reflink=0' "$tmp.db5a" || \
-+		echo "db config5a should not have reflink"
-+
-+	echo "*** db config5a" >> $seqres.full
-+	cat $tmp.db5a >> $seqres.full
-+
-+	# t5b: make sure that cli cannot override config file
-+	_scratch_mkfs -c options=$tmp.db3 -m reflink=0 >> $seqres.full 2>> $tmp.fail
-+	grep -q 'reflink option respecified' $tmp.fail || \
-+		echo "mkfs should have failed on config5b"
-+
-+	# t5c: make sure that config file can override defaults
-+	_scratch_mkfs -c options=$tmp.db3,defaults=$tmp.db3 >> $seqres.full
-+	_scratch_xfs_db -c "makecfg $tmp.db5c"
-+	grep -q 'reflink=1' "$tmp.db5c" || \
-+		echo "db config5c should have reflink"
-+
-+	echo "*** db config5c" >> $seqres.full
-+	cat $tmp.db5c >> $seqres.full
-+fi
-+
-+echo Silence is golden
-+_exit 0
-diff --git a/tests/xfs/1909.out b/tests/xfs/1909.out
-new file mode 100644
-index 00000000000000..c17c5522d48db4
---- /dev/null
-+++ b/tests/xfs/1909.out
-@@ -0,0 +1,2 @@
-+QA output created by 1909
-+Silence is golden
-
+> > +
+> > +echo "Inject wb_cow_convert_error"
+> > +_scratch_inject_error "wb_cow_convert_error"
+> > +
+> > +echo "Trigger writeback with CoW conversion forced to fail"
+> > +_scratch_sync
+> > +
+> > +echo "Remount"
+> > +_scratch_cycle_mount
+> > +
+> > +echo "Silence is golden"
+> > +
+> > +# success, all done
+> > +status=0
+> > +exit
+> > diff --git a/tests/xfs/842.out b/tests/xfs/842.out
+> > new file mode 100644
+> > index 0000000000000..72c9c67e7d5fb
+> > --- /dev/null
+> > +++ b/tests/xfs/842.out
+> > @@ -0,0 +1,7 @@
+> > +QA output created by 842
+> > +Format and mount
+> > +Create reflinked file with several CoW extents
+> > +Inject wb_cow_convert_error
+> > +Trigger writeback with CoW conversion forced to fail
+> > +Remount
+> > +Silence is golden
+> > -- 
+> > 2.53.0
+> > 
+> 
