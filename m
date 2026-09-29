@@ -1,42 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EF662848BE;
-	Tue, 29 Sep 2026 01:19:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E6F3189F43;
+	Tue, 29 Sep 2026 01:25:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790644778; cv=none; b=r5Wjr/wji5sWiUGQ09S1QDNSUbxF9r4V92lnzr930xeMHzFb8IoP/4gNoiGV+NAcibgP4COYi6O1xQIVfNrCX8eMYu1CenxF/RTD9l7piOAJ/o3NkD4m8cmEye1zSmMJqeP2l3n3iBe3ZroWnYBmizx3f1tce1BRVEdW4LPJa/I=
+	t=1790645157; cv=none; b=Qolb/o9xxDQ+Dpu6Sj+2BSOCrlE9gRRDPtrr7T/uBGcBe+j3HlOrmENcJionx6woTspjlyWS3ezVHVgOWG3pMDcNJiMMt0VKdyUCq4u4IdWevvhIC6BknxtbQuDg0B9qpTu10wZdTjYsovlASScsWovebMcn7kwVd0ltkGcIpSg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790644778; c=relaxed/simple;
-	bh=NcIK8eDUgBiiHeHkUwrVDBJPwT+sahnN9L6M2Na/nAE=;
+	s=arc-20240116; t=1790645157; c=relaxed/simple;
+	bh=sW3QNzzdbnPMMKgATAO/kalo4mbexoulTzA6rHvxEp8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DRBJjdRDhvJQnfRwEZKLDu9FmB4DepnJd4rS+rBX+q+uwD969QC+2+lOt6rMiy0NE4eNHUdVuK7g2N5OwzQJRHsVbtatw/d0xVCZ8kLdGREmsSoWR1aFuYYdf2N3ySd5pRERaGQkXA1e0w8whL6LSjKAh4hxHctxnNx64hs1XI4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ElpAskgV; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=kZVyPSqeOOk74EEAq09sJYcL8iUCFn3HfnyqBKbq64VgBKFFdkoT1RlOXMWyFx3k+LL7nc9dvlytpBaccn4m0XN6dpevsW31VCuTV62h49MdrADqozczahLs/SqDFQKr7yakvmjs3jx56Boc2iCv9mAfGziXgRkAyn/SP4Zh60E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OAEnhoWE; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ElpAskgV"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 26C0A1F000FF;
-	Tue, 29 Sep 2026 01:19:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OAEnhoWE"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 614011F000FF;
+	Tue, 29 Sep 2026 01:25:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790644777;
-	bh=v8AQHcuJlIdJ2XobFF5jUXw8iM4gqEW3E9Lh4xH8DAM=;
+	s=k20260515; t=1790645156;
+	bh=hz6FO8DD2hUU7CyjfxcRchmgLOV1RFtSDd6sSwXNWRU=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=ElpAskgVGcC/ITPLz9HvE6eD5ifis3kbTWWacpvsXLh0eTzz/49MIlvuGyv8hxss3
-	 FOaT4MVHvuFyrU8uvjcYkSFWXKXcnvZ0H3rQTksRUk2PH3Gq+4LrVGTRRuxmKOt360
-	 6qZ/0vCm9sv2iCY4L6upywVGIAb0XHBkYgh5JjIncUShu6ZPqQJ1jmPDIVvRM+EMHQ
-	 aisD5jmmZA/6RS0s2g9TYwb04WnFLFd9NpobA8m/qJcdg8ESys3CDH9GP+0r+mKgLa
-	 Lxcx212FZV/G+fqWsQulfC+w1D1ES92xjR9+RMLBOFz5lexI4w7PSNPjxkJRbjlqHj
-	 Za0pwNMOmL+TA==
-Date: Mon, 28 Sep 2026 18:19:36 -0700
+	b=OAEnhoWE8h7WuU1bTunoCu471ooFcUH46qUNJjXLLVhaZWxLglkw2esDE/Zc0Jv+K
+	 1yp92P4LcRJe3S9f4LIF2wGrJBMjLbee8a1j5ZbgNQRTn30zSvNg2tZZV2I24805Ss
+	 AI6YLW5z4C1JTj4cewvzrBcuOpO3DIRwlnb1dxckeF1uzygf8Vxesh1VU4QhU8QfXv
+	 6GkmDQ9vCDHp3g05ZkcOp3rTHoaBGLW4Kbhe0uG0wCUMHsuD56TiSHKgFPzMFjWzVa
+	 IHM9cXG8giJq4MAlAJLC32Kg7QX4NMkXE9twCdbgmXRKy3Ll0CO9B+cV+bCBF04pZA
+	 2k+04VoaRAIXA==
+Date: Mon, 28 Sep 2026 18:25:55 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Carlos Maiolino <cem@kernel.org>, Jens Axboe <axboe@kernel.dk>,
 	Christian Brauner <brauner@kernel.org>, linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 17/21] xfs: verify data checksums during media
- verification
-Message-ID: <20260929011936.GY2705364@frogsfrogsfrogs>
+Subject: Re: [PATCH 18/21] xfs: don't try to verify checksums on empty zones
+Message-ID: <20260929012555.GZ2705364@frogsfrogsfrogs>
 References: <20260924100032.2733101-1-hch@lst.de>
- <20260924100032.2733101-18-hch@lst.de>
+ <20260924100032.2733101-19-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,207 +44,107 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260924100032.2733101-18-hch@lst.de>
+In-Reply-To: <20260924100032.2733101-19-hch@lst.de>
 
-On Thu, Sep 24, 2026 at 11:59:49AM +0200, Christoph Hellwig wrote:
-> Wire up reading and verifying data checksums during media verification.
-> This is very similar to the file read path in that it kicks of an async
-> read for the checksum buffer before reading the data, and then validating
-> once both are read in.
-> 
-> To support this, split the per-read logic in xfs_verify_media into a
-> separate helpers for the data checksums vs no checksum cases.
+On Thu, Sep 24, 2026 at 11:59:50AM +0200, Christoph Hellwig wrote:
+> xfs_scrub can sometimes send XFS_IOC_VERIFY_MEDIA ioctls for ranges
+> that have never been written since the last zone reset, which will
+> lead to checksum verification failures.
+
+...and pointless work. :)
+
+> Protect against this by checking that the range is valid.  If the report
+> flag is set, a verification failure could lead to health reports and
+> the file system being marked corrupt, so lock out zone racing reset
+> completions for this case as well.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/xfs/xfs_verify_media.c | 131 +++++++++++++++++++++++++++++++-------
->  1 file changed, 107 insertions(+), 24 deletions(-)
+>  fs/xfs/xfs_verify_media.c | 44 ++++++++++++++++++++++++++++++++++++---
+>  1 file changed, 41 insertions(+), 3 deletions(-)
 > 
 > diff --git a/fs/xfs/xfs_verify_media.c b/fs/xfs/xfs_verify_media.c
-> index 71f4d6c832a9..46a19405c9e5 100644
+> index 46a19405c9e5..fc739f7ffa4e 100644
 > --- a/fs/xfs/xfs_verify_media.c
 > +++ b/fs/xfs/xfs_verify_media.c
-> @@ -22,6 +22,7 @@
->  #include "xfs_rtrmap_btree.h"
->  #include "xfs_health.h"
->  #include "xfs_healthmon.h"
-> +#include "xfs_rtcsum.h"
+> @@ -25,6 +25,8 @@
+>  #include "xfs_rtcsum.h"
 >  #include "xfs_trace.h"
 >  #include "xfs_verify_media.h"
+> +#include "xfs_zone_alloc.h"
+> +#include "xfs_zone_priv.h"
 >  
-> @@ -261,6 +262,95 @@ xfs_verify_media_error(
->  	}
+>  #include <linux/fserror.h>
+>  
+> @@ -288,6 +290,43 @@ xfs_submit_verify_bio(
+>  	return 0;
 >  }
 >  
 > +static int
-> +xfs_submit_verify_bio(
+> +xfs_csum_verify_metafile(
 > +	struct xfs_mount	*mp,
-> +	struct xfs_verify_media	*me,
-> +	struct xfs_buftarg	*btp,
-> +	struct folio		*folio,
-> +	xfs_daddr_t		*daddr,
-> +	uint64_t		*bbcount)
+> +	struct bio		*bio,
+> +	struct bvec_iter	*saved_iter,
+> +	void			*csum_buf,
+> +	xfs_fsblock_t		bno)
 > +{
-> +	unsigned int		bio_bbcount;
-> +	int			error;
+> +	struct xfs_rtgroup	*rtg;
+> +	int			error = 0;
 > +
-> +	bio_bbcount = min(*bbcount, folio_size(folio) >> SECTOR_SHIFT);
-> +	error = bdev_rw_virt(btp->bt_bdev, *daddr, folio_address(folio),
-> +			bio_bbcount << SECTOR_SHIFT,
-> +			REQ_OP_READ);
-> +	if (error) {
-> +		xfs_verify_media_error(mp, me, btp, *daddr, bio_bbcount, error);
-> +		return 1;
-> +	}
+> +	rtg = xfs_rtgroup_get(mp, xfs_rtb_to_rgno(mp, bno));
+> +	if (!rtg)
+> +		return -EFSCORRUPTED;
 > +
-> +	*daddr += bio_bbcount;
-> +	*bbcount -= bio_bbcount;
-> +	return 0;
-> +}
-> +
-> +static int
-> +xfs_submit_verify_bio_csum(
+> +	/*
+> +	 * Only validate the checksums for valid data, as data never written
+> +	 * will not have valid checksums.  We need to hold the ilock on the rmap
+> +	 * inode to prevent freeing of blocks and thus a zone reset to happen
+> +	 * underneath us.
+> +	 *
+> +	 * Note that this still relies on cooperating userspace, as there also
+> +	 * can be blocks that were written but never recorded after an unclean
+> +	 * shutdown, which this check does not catch.  It purely tries to deal
+> +	 * with races vs the previous FSMAP output used by xfs_scrub.
 
-What's the return value convention here?  1 for media error, 0 for
-success, or negative errno if we failed to issue the read?
+Just a general note -- if the csum update never makes it to disk, then
+the remap cannot have been written to disk either.  Therefore, fsmap
+will report that as unowned space, and xfs_scrub won't try to
+read-verify it, given the xfs_scrub patch you post later to only read rt
+blocks for which there are rmap records.
 
-> +	struct xfs_mount	*mp,
-> +	struct xfs_verify_media	*me,
-> +	struct xfs_buftarg	*btp,
-> +	struct folio		*folio,
-> +	xfs_daddr_t		*daddr,
-> +	uint64_t		*bbcount)
-> +{
-> +	struct xfs_buf		*csum_bp = NULL;
-> +	unsigned int		bio_bbcount;
-> +	struct bvec_iter	saved_iter;
-> +	xfs_fsblock_t		bno, end;
-> +	xfs_filblks_t		len;
-> +	struct bio		bio;
-> +	struct bio_vec		bv;
-> +	int			error;
-> +
-> +	bno = xfs_daddr_to_rtb(mp, *daddr);
-> +	end = xfs_daddr_to_rtb(mp, *daddr + *bbcount);
+So I think this is only a theoretical concern, right?
 
-It occurs to me that xfs_daddr_to_rtb rounds its argument down.  So if
-you pass in daddr==0 and bbcount==2, you'll get bno==end==0 and do no
-verification.  I would hope that callers won't pass in parameters like
-that, but who knows?
-
-So I think this should be:
-
-	end = xfs_daddr_to_rtb(mp,
-			*daddr + *bbcount + XFS_FSB_TO_BB(mp, 1) - 1);
-
-Which I admit is a bit gross.
+The code looks fine to me, so
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
-> +	len = min(end - bno, XFS_B_TO_FSBT(mp, folio_size(folio)));
-> +	len = min(len, xfs_rtcsum_max_len(mp, bno));
-> +
-> +	error = xfs_rtcsum_read_async(mp, bno, &csum_bp);
-> +	if (error)
-> +		return error;
-> +
-> +	*daddr = xfs_rtb_to_daddr(mp, bno);
-> +	bio_bbcount = XFS_FSB_TO_BB(mp, len);
-> +
-> +	bio_init(&bio, btp->bt_bdev, &bv, 1, REQ_OP_READ);
-> +	bio.bi_iter.bi_sector = *daddr;
-> +	bio_add_folio_nofail(&bio, folio,
-> +			min(bio_bbcount << SECTOR_SHIFT, folio_size(folio)), 0);
-> +	saved_iter = bio.bi_iter;
-> +
-> +	error = submit_bio_wait(&bio);
-> +	if (error)
-> +		goto out_media_error;
-> +
-> +	error = xfs_buf_read_async_wait(csum_bp);
-> +	if (error)
-> +		goto out_buf_rele;
-> +
-> +	error = xfs_csum_verify(mp, &bio, &saved_iter,
-> +			csum_bp->b_addr + xfs_rtb_to_rtcsumoff(mp, bno), bno,
-> +			false);
-> +	if (error)
-> +		goto out_media_error;
-> +
-> +	*daddr += bio_bbcount;
-> +	*bbcount -= bio_bbcount;
-> +
-> +out_buf_rele:
-> +	xfs_buf_rele(csum_bp);
-> +	bio_uninit(&bio);
+> +	 */
+> +	xfs_ilock(rtg_rmap(rtg), XFS_ILOCK_SHARED);
+> +	if (!xa_get_mark(&mp->m_groups[XG_TYPE_RTG].xa, rtg_rgno(rtg),
+> +			XFS_RTG_FREE)) {
+> +		error = xfs_csum_verify(mp, bio, saved_iter, csum_buf, bno,
+> +				false);
+> +	}
+> +	xfs_iunlock(rtg_rmap(rtg), XFS_ILOCK_SHARED);
+> +	xfs_rtgroup_put(rtg);
 > +	return error;
-> +out_media_error:
-> +	xfs_verify_media_error(mp, me, btp, *daddr, bio_bbcount, error);
-> +	error = 1;
-> +	goto out_buf_rele;
 > +}
 > +
->  /* Verify the media of an xfs device by submitting read requests to the disk. */
 >  static int
->  xfs_verify_media(
-> @@ -310,18 +400,13 @@ xfs_verify_media(
->  		return 0;
+>  xfs_submit_verify_bio_csum(
+>  	struct xfs_mount	*mp,
+> @@ -332,9 +371,8 @@ xfs_submit_verify_bio_csum(
+>  	if (error)
+>  		goto out_buf_rele;
 >  
->  	/*
-> -	 * There are three ranges involved here:
-> -	 *
-> -	 *  - [me->me_start_daddr, me->me_end_daddr) is the range that the
-> -	 *    user wants to verify.  end_daddr can be beyond the end of the
-> -	 *    disk; we'll constrain it to the end if necessary.
-> +	 * [me->me_start_daddr, me->me_end_daddr) is the range that the user
-> +	 * wants to verify.  end_daddr can be beyond the end of the disk; we'll
-> +	 * constrain it to the end if necessary.
->  	 *
-> -	 *  - [daddr, me->me_end_daddr) is the range that we have not yet
-> -	 *    verified.  We update daddr after each successful read.
-> -	 *    me->me_start_daddr is set to daddr before returning.
-> -	 *
-> -	 *  - [daddr, daddr + bio_bbcount) is the range that we're currently
-> -	 *    verifying.
-> +	 * [daddr, me->me_end_daddr) is the range that we have not yet verified.
-> +	 * We update daddr after each successful read.  me->me_start_daddr is
-> +	 * set to daddr before returning.
->  	 */
->  	daddr = me->me_start_daddr;
->  	bbcount = min_t(sector_t, me->me_end_daddr, btp->bt_nr_sectors) -
-> @@ -334,22 +419,20 @@ xfs_verify_media(
->  	trace_xfs_verify_media(mp, me, btp->bt_dev, daddr, bbcount, folio);
->  
->  	for (;;) {
-> -		unsigned int	bio_bbcount;
-> -
-> -		bio_bbcount = min(bbcount, folio_size(folio) >> SECTOR_SHIFT);
-> -		error = bdev_rw_virt(btp->bt_bdev, daddr, folio_address(folio),
-> -				bio_bbcount << SECTOR_SHIFT,
-> -				REQ_OP_READ);
-> +		if (IS_ENABLED(CONFIG_XFS_RT) &&
-> +		    me->me_dev == XFS_DEV_RT &&
-> +		    xfs_has_rtcsum(mp)) {
-> +			error = xfs_submit_verify_bio_csum(mp, me, btp, folio,
-> +					&daddr, &bbcount);
-> +		} else {
-> +			error = xfs_submit_verify_bio(mp, me, btp, folio,
-> +					&daddr, &bbcount);
-> +		}
->  		if (error) {
-> -			xfs_verify_media_error(mp, me, btp, daddr, bio_bbcount,
-> -					error);
-> -			error = 0;
-> +			if (error == 1)
-> +				error = 0;
->  			break;
->  		}
-> -
-> -		daddr += bio_bbcount;
-> -		bbcount -= bio_bbcount;
-> -
->  		if (bbcount == 0)
->  			break;
+> -	error = xfs_csum_verify(mp, &bio, &saved_iter,
+> -			csum_bp->b_addr + xfs_rtb_to_rtcsumoff(mp, bno), bno,
+> -			false);
+> +	error = xfs_csum_verify_metafile(mp, &bio, &saved_iter,
+> +			csum_bp->b_addr + xfs_rtb_to_rtcsumoff(mp, bno), bno);
+>  	if (error)
+>  		goto out_media_error;
 >  
 > -- 
 > 2.53.0
