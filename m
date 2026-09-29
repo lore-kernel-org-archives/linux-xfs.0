@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A71D429BDB5;
-	Tue, 29 Sep 2026 01:32:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 252752BEFEB;
+	Tue, 29 Sep 2026 01:34:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790645560; cv=none; b=Du9Uhrarnkl2OxBKR5/oBLs7AeNUtPgC1nk3CP8YpGKr8lwyTNpH4M1m4k9sOIPdtVPpCa7pW0uyTcDNjUIxvUv8wFWriS9SKe2gl2wHgnNyVQ8f9x5blAtUMmAa1XBwWOgd6ku0M+Ky2+oNJDJPaBnUOVU6DUkPZJUijrvV/0M=
+	t=1790645663; cv=none; b=FcOdKBqTSxP9iwwzYz/DaJs5o9C/SC0RvG5hsNiO92vtPpkcIgE669p2if3j6bfek1jICSWOIi7W+steAuIjT90hntKk3gpmy/GMGyKEJfLzeb3dBbUZrO5dcz5YSG42tl0sEjer2y71rNsTYrXVu0nRwiCIwrlhOFJHA+xc/FA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790645560; c=relaxed/simple;
-	bh=N4BnDq9LyfG2Iw2iCUVVeHXe2q9y6LnNtAzqjtjb/xg=;
+	s=arc-20240116; t=1790645663; c=relaxed/simple;
+	bh=mpYQ48TAYxLSGmY7bqb5KNDS9lKUKrkeowffIUNkdUg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=mJH+IwN97nW8wC7vdFL2Rm1eKCUYwJ8XSn7G2HFYMByATVc3lijckWxL0HM9EWWnhZEy77SZ1cfivszWpNZTmZwznM/K2mi0ggYz4GURZ+ExX0OCvYwZ9A4v+8WLa3CT9wdN5QOlNBfwutL7/YxNcOE2scWtKoVUWwkZlpRxH8M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ibr4JFay; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=qDzEMubSCG3aMFwK4cgAjhpDSv4y7R1MnZe6ax/gI7Wxy9INAGMvPiBjGgtyLYHPj8D6TrpKGj6gNLckViFenv68KJgq7LT5whSn06jrUbnwVzdhLLq/GlCf7/YqXHJeS2oq5m8SAs5OHic6vcVx6eAANfVLtfLcqraPiycFBts=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gUnybuSJ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ibr4JFay"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 3B7941F000FF;
-	Tue, 29 Sep 2026 01:32:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gUnybuSJ"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 9D6FE1F000FF;
+	Tue, 29 Sep 2026 01:34:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790645559;
-	bh=51PryqVQmuQDE0P3Ma8YEPU91aIGt7VX2fQ7IiAn5qM=;
+	s=k20260515; t=1790645661;
+	bh=kRnK76W51H6N94gTBFtBnGKnMJ5QZdh9RaRMs6u3Baw=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Ibr4JFayw/YpsYj+goTi8JeFtx2hPYuhdhFwKaR9GlpSs4jMmKTD+aW+GPgP+JtbI
-	 e+ZN2feW0HdApN702RMG1axjBd8mYHT7T10Yl4GbGh9vb00D6gj8ddsYKr7qLyc1tK
-	 MpDKz3WGickOi4OqJouH5U4YwPYFuV+KKpWkQcmCbQHKNo5t5wiFewYxiudQ4SIp3I
-	 A59dJcXV8JBbfMZSOxka2VK6YQz8dW/gK31riqIUIrMgE9pNjUtXtow+dXJfDWCTys
-	 +zGdbNa1sXyQGVXzR8I4rsBrhQd1F2xr9ZgWkkJOmdWhF81XZaA3f8Mon07SRdEdsT
-	 JAIxaetj3STbw==
-Date: Mon, 28 Sep 2026 18:32:38 -0700
+	b=gUnybuSJ/aJ43Sk/qti9pmXJdxVXtHIN8M4kr8MpcvWd+tVn+pbLMdauW+HccM1tS
+	 1mGTMuIgH1KjUVuQsqMV/2n5FlhXVRtTNBZKV+V/oB/JZDkErPfqoTP6hO/4Gte+NG
+	 j2YVGI1A0nk+beb/wHtP4qedb6zdim2indogjIHzqiQvW6ORRYc+v8e6IHdw6ZeEe7
+	 ZTtodPCXNzdgZRr8+hWzEk7HVeWGikQFRcPgTGXyAUzi05dpdPsqqAlAcXzuWruPUl
+	 bSAYQFB1iOvoHMbCUkr6a2s2Eo+442xRpEUVAvPTwCJ8inSmlMzX4aLjnPhgJVT/7Z
+	 whc30C2wmUDRQ==
+Date: Mon, 28 Sep 2026 18:34:21 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Zorro Lang <zlang@kernel.org>, fstests@vger.kernel.org,
 	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 02/13] common: add a SCRATCH_MKFS_OPTIONS variable
-Message-ID: <20260929013238.GE2705364@frogsfrogsfrogs>
+Subject: Re: [PATCH 03/13] xfs: add a XFS_VERIFY_FILE_DATA variable
+Message-ID: <20260929013421.GF2705364@frogsfrogsfrogs>
 References: <20260924100855.2734089-1-hch@lst.de>
- <20260924100855.2734089-3-hch@lst.de>
+ <20260924100855.2734089-4-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,62 +43,70 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260924100855.2734089-3-hch@lst.de>
+In-Reply-To: <20260924100855.2734089-4-hch@lst.de>
 
-On Thu, Sep 24, 2026 at 12:07:43PM +0200, Christoph Hellwig wrote:
-> Add a new SCRATCH_MKFS_OPTIONS variable, which contains options that are
-> only applied to the actualy scratch device, but not to various other
-> devices like scsi_debug or loop devices created by various test.
+On Thu, Sep 24, 2026 at 12:07:44PM +0200, Christoph Hellwig wrote:
+> Add an option to run the end of testt xfs_scrub call using the -x
+
+                                  test
+
+> option to also check file data validity.
 > 
-> This is important to support mkfs options that do not work on arbitrary
-> devices, like the extended LBA based data checksum support.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  README     | 3 +++
+>  common/xfs | 8 +++++++-
+>  2 files changed, 10 insertions(+), 1 deletion(-)
+> 
+> diff --git a/README b/README
+> index cc03f51e1ad3..0ce7d4463354 100644
+> --- a/README
+> +++ b/README
+> @@ -326,6 +326,9 @@ Extra XFS specification:
+>   - xfs_scrub, if present, will always check the test and scratch
+>     filesystems if they are still online at the end of the test. It is no
+>     longer necessary to set TEST_XFS_SCRUB.
+> + - Set XFS_VERIFY_FILE_DATA option to also check file data integrity using the
+> +   -x option to xfs_scrub.  This makes the xfs_scrub based checks a lot slower,
+> +   but verifies the data checksum support in XFS.
+>  
+>  Tools specification:
+>   - dump:
+> diff --git a/common/xfs b/common/xfs
+> index 98981e624dda..8254e48603af 100644
+> --- a/common/xfs
+> +++ b/common/xfs
+> @@ -875,6 +875,12 @@ _check_xfs_filesystem()
+>  	# Run online scrub if we can.
+>  	mntpt="$(_is_dev_mounted $device)"
+>  	if [ -n "$mntpt" ] && _supports_xfs_scrub "$mntpt" "$device"; then
+> +		local xfs_scrub_opts="-v -d -n"
+> +
+> +		if [ -n "$XFS_VERIFY_FILE_DATA" ]; then
+> +			xfs_scrub_opts="$xfs_scrub_opts -x"
+> +		fi
 
-Er... what is "extended LBA based data checskum support"?  T10PI?
+/me wonders if you should use bash arrays here but seeing as we just got
+burned by that I'll defer to Zorro if he prefers that or not.
 
-The addition itself seems reasonable, so
+With the typo fixed, this looks ok to me.
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  README    | 2 ++
->  common/rc | 4 +++-
->  2 files changed, 5 insertions(+), 1 deletion(-)
-> 
-> diff --git a/README b/README
-> index 8644f163b1ab..cc03f51e1ad3 100644
-> --- a/README
-> +++ b/README
-> @@ -303,6 +303,8 @@ Extra SCRATCH device specifications:
->   - Set SCRATCH_LOGDEV to "device for scratch-fs external log"
->   - Set SCRATCH_RTDEV to "device for scratch-fs realtime data"
->   - If SCRATCH_LOGDEV and/or SCRATCH_RTDEV, the USE_EXTERNAL environment
-> + - Set SCRARCH_MKFS_OPTIONS if you want to specify additional mkfs options
-> +   to be used when creating file system on SCRATCH_DEV.
+> +
+>  		can_scrub=1
 >  
->  Tape device specification for xfsdump testing:
->   - Set TAPE_DEV to "tape device for testing xfsdump".
-> diff --git a/common/rc b/common/rc
-> index 3958ac934980..7fc5ff956959 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -805,12 +805,14 @@ _scratch_do_mkfs()
->  	local mkfs_filter=$2
->  	shift 2
->  	local extra_mkfs_options=$*
-> +	local mkfs_options
->  	local mkfs_status
->  	local tmp=`mktemp -u`
+>  		# Tests can create a scenario in which a call to syncfs() issued
+> @@ -888,7 +894,7 @@ _check_xfs_filesystem()
+>  		# before executing a scrub operation.
+>  		$XFS_IO_PROG -c syncfs $mntpt >> $seqres.full 2>&1
 >  
->  	# save mkfs output in case conflict means we need to run again.
->  	# only the output for the mkfs that applies should be shown
-> -	eval "$mkfs_cmd $MKFS_OPTIONS $extra_mkfs_options $SCRATCH_DEV" \
-> +	mkfs_options="$MKFS_OPTIONS $SCRATCH_MKFS_OPTIONS $extra_mkfs_options"
-> +	eval "$mkfs_cmd $mkfs_options $SCRATCH_DEV" \
->  		2>$tmp.mkfserr 1>$tmp.mkfsstd
->  	mkfs_status=$?
->  
+> -		"$XFS_SCRUB_PROG" -v -d -n $mntpt > $tmp.scrub 2>&1
+> +		"$XFS_SCRUB_PROG" $xfs_scrub_opts $mntpt > $tmp.scrub 2>&1
+>  		if [ $? -ne 0 ]; then
+>  			_log_err "_check_xfs_filesystem: filesystem on $device failed scrub"
+>  			echo "*** xfs_scrub -v -d -n output ***" >> $seqres.full
 > -- 
 > 2.53.0
 > 
