@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35C3C528425;
-	Tue, 29 Sep 2026 13:03:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A42F3525A8C;
+	Tue, 29 Sep 2026 13:03:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790686994; cv=none; b=YkWgWWFHnRq8bFY6pDd9xSIOpsJ5CA8swOaw2LwbCs0RDtXe2IGtsxCGqpmuFUVOOibN6AVFWBv9m1GpXt3TmNiKSAqH7lmO33aZh0VK0MLqIsnn1g19JXQYYix2ZGtvSTXtVT/dSZv+NV+TSCbfiFGxY2pQVPXPEXF2wUk1asw=
+	t=1790686996; cv=none; b=uG1gpRfKp6Vh+kep+w3PoU3w79KK3FdI+ww48848wxEYTy/ODz8+A/XQfQYoYR/xYHZKxItz/vbjNzoPHhR/aLNkH/4x8g7x2onereRVmd+Xr0j8cCqHmn3Z2RJTiF5n8XWteBqhWKrP7J8CQc+7LY3oKq2xC5ll/40hT5qC+44=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790686994; c=relaxed/simple;
-	bh=SWgR6cLd3TMMCzLvlRvkoP4TAgZfFpCMZJ2b75vLmDs=;
+	s=arc-20240116; t=1790686996; c=relaxed/simple;
+	bh=oh9escWT2Ml6SMrHcKlnYWGnlyGHBRpaRkTdW44k0So=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=kn3WUvUomPF6AJuVqjMsY9fo7vJvrRXEYFH86k3XVtmWjBYHHAqpJaqBreluVzj3TIAV/WTYXRB/SMn1ENLDgMWHbS7ERi8GZMJeo9G23lZYeOW4/alS+zkK/rKRrqF3YTYQ8atrzu1/mFjyZLU3OzQMo+cVEief7U6Wa/5lmDI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ts4qQ3k4; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=aC5ou0GD1afMYuutZUJmaNuNFFCHr6Yirdg3eaONFCvJWcQtrVkwfzseNvJ8smpxhnpLA0AGjC59EE1bO/cBlftlvHgOP1YNGBxiPS5rDP4m37MjNPeISFyJP9R84MFkWUHgA3jbCTIBJJreykj+1Aa9ljXEYdShxsTt1p3HJm4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SKeB3Kqc; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ts4qQ3k4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4233A1F000FF;
-	Tue, 29 Sep 2026 13:03:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SKeB3Kqc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 907B11F00893;
+	Tue, 29 Sep 2026 13:03:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790686993;
-	bh=gnH/VFo22Z/bZEE+QdH6LtbrPt86V5OrSFl8q4GTPbM=;
+	s=k20260515; t=1790686995;
+	bh=ax6pfWAI5PeWYzSSMLzWnxZ9aR7qY8aLr0uqVOIlNTQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=Ts4qQ3k4FTMBr36SjUHjCj3AlmL749+EkdZGT1qhDkdunKRzF3VpHjfZtvFz1rs4S
-	 J0jcAiE/CZ/K/xssvXKxfOVsunY2kwuf+0k8DibOzyGzq5rsYs98czZXtkT3oi2bm+
-	 pXc94IOl1gWcBi+JZ0MaUMY5EnQsEpnmM4LUZ8KzLWUD0JDe+rdEdTKkjfrhJtyRjv
-	 FL06f/z+Bv6RWaMWBv1LPumKLAjMdBWoHXrNP5HdkHx8ClwE3nnAJL15FR9BkHfdZp
-	 Y0xBkbZ5IsRAwgWCA/ILSxpFNC69B7pdBUZo0yngBg/pPize3EkXJwndooaPC0awe0
-	 pp6DH8GbZzCfQ==
+	b=SKeB3KqcCHnmbbQoi66DiEFHMwh+Nk3H7U2rN+2IxvofJxNO+xnpDnp2sGaV7zYO1
+	 gJC1I3r+/pi6PHe56OvrC5Fa/I1wmtluKnhUCYSOmiejXnyszHcdeAw/CdlCWjX1BC
+	 LKkErhWxrYDoZT698cMyAaP6I4+NcvbCCQGOUGRGP1v3sfnSCPVfl51/j4jacqaPnx
+	 FHFaXiBu4UcsQDOzjuqikhA6X+FUtNZyfL08H+v9tEJwJ1bNyBgpkRmVcZhHOAkmlM
+	 +dHXZoAG4DPEOlmCDZzkLYV6C3eewvawaVFljDFt+MF5ADT5bmKjYXN7Ghm3mkwhiW
+	 JK9QrwHRoKrYA==
 From: Andrey Albershteyn <aalbersh@kernel.org>
 To: Alejandro Colomar <alx@kernel.org>,
 	linux-man@vger.kernel.org
@@ -35,9 +35,9 @@ Cc: Andrey Albershteyn <aalbersh@kernel.org>,
 	linux-fsdevel@vger.kernel.org,
 	Christoph Hellwig <hch@lst.de>,
 	djwong@kernel.org
-Subject: [PATCH v5 2/3] man/man2: introduce man page for file_getattr(2) syscall
-Date: Tue, 29 Sep 2026 15:02:31 +0200
-Message-ID: <20260929130234.3547891-3-aalbersh@kernel.org>
+Subject: [PATCH v5 3/3] man/man2: introduce man page for file_setattr(2) syscall
+Date: Tue, 29 Sep 2026 15:02:32 +0200
+Message-ID: <20260929130234.3547891-4-aalbersh@kernel.org>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20260916115141.3500780-1-aalbersh@kernel.org>
 References: <20260916115141.3500780-1-aalbersh@kernel.org>
@@ -49,106 +49,63 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add manual page for file_getattr().
+Add manual pages for file_setattr() syscall.
 
 Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
 Link: https://lore.kernel.org/all/20250630-xattrat-syscall-v6-0-c4e3bc35227b@kernel.org/
 ---
- man/man2/file_getattr.2 | 262 ++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 262 insertions(+)
- create mode 100644 man/man2/file_getattr.2
+ man/man2/file_setattr.2 | 183 ++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 183 insertions(+)
+ create mode 100644 man/man2/file_setattr.2
 
-diff --git a/man/man2/file_getattr.2 b/man/man2/file_getattr.2
+diff --git a/man/man2/file_setattr.2 b/man/man2/file_setattr.2
 new file mode 100644
-index 000000000000..e3c86fc45711
+index 000000000000..b11c9ff9277f
 --- /dev/null
-+++ b/man/man2/file_getattr.2
-@@ -0,0 +1,262 @@
++++ b/man/man2/file_setattr.2
+@@ -0,0 +1,183 @@
 +.\" Copyright, the authors of the Linux man-pages project
 +.\"
 +.\" SPDX-License-Identifier: Linux-man-pages-copyleft
 +.\"
-+.TH file_getattr 2 (date) "Linux man-pages (unreleased)"
++.TH file_setattr 2 (date) "Linux man-pages (unreleased)"
 +.SH NAME
-+file_getattr \- get filesystem file attributes
++file_setattr \- set filesystem file attributes
 +.SH SYNOPSIS
 +.nf
-+.BR "#include <linux/fcntl.h>" "      /* " AT_* " constants */"
-+.BR "#include <linux/fs.h>" "         /* " FS_XFLAG_* " constants */"
-+.BR "#include <sys/syscall.h>" "      /* " SYS_* " constants */"
++.BR "#include <linux/fcntl.h>" "      /* Definition of " AT_* " constants */"
++.BR "#include <linux/fs.h>" "         /* Definition of " FS_XFLAG_* " constants */"
++.BR "#include <sys/syscall.h>" "      /* Definition of " SYS_* " constants */"
 +.B #include <unistd.h>
 +.P
-+.B long syscall(SYS_file_getattr,
++.B long syscall(SYS_file_setattr,
 +.BI "               int " dirfd ", const char *" path ,
-+.BI "               struct file_attr *" fattr ", size_t " size ,
++.BI "               const struct file_attr *" fattr ", size_t " size ,
 +.BI "               unsigned int " flags );
 +.fi
 +.SH DESCRIPTION
 +The
-+.BR file_getattr ()
-+system call retrieves filesystem file attributes
-+of the file
-+specified by path.
-+.P
-+As with
-+.BR openat (2),
-+if
-+.I path
-+is relative,
-+then it is interpreted relative to the directory
-+referred to by the file descriptor
-+.IR dirfd .
-+The special
-+.I dirfd
-+value
-+.B AT_FDCWD
-+can be used to refer to the current working directory of the calling process.
-+If
-+.I path
-+is absolute,
-+then
-+.I dirfd
-+is ignored.
++.BR file_setattr ()
++system call sets filesystem file attributes
++on the file specified by path.
 +.P
 +The
-+.I fattr
-+argument is a pointer to a
-+.I file_attr
-+structure.
-+This structure will be filled with file attributes.
-+This structure is described in
-+.BR file_attr (2type).
-+.P
-+The
-+.I size
-+argument specifies the size of the structure pointed to by
-+.IR fattr .
-+The size indicates the version of the structure in use,
-+and should always be specified as
-+.IR sizeof(struct file_attr) .
-+.P
-+The
++.IR dirfd ,
++.IR path ,
++.IR size ,
++and
 +.I flags
-+argument contains a bitwise OR of zero or more of the following constants:
-+.TP
-+.B AT_EMPTY_PATH
-+If
-+.I path
-+is an empty string,
-+operate on the file referred to by
-+.IR dirfd .
-+In this case,
-+.I dirfd
-+can refer to any type of file,
-+not just a directory.
-+.TP
-+.B AT_SYMLINK_NOFOLLOW
-+If
-+.I path
-+is a symbolic link,
-+do not dereference it;
-+instead,
-+get attributes of the symbolic link inode itself.
++arguments behave in the same way as in
++.BR file_getattr (2).
++The
++.IR fattr ,
++is read-only argument with
++file attributes to set.
++User-space applications should use
++.BR file_getattr (2)
++to initialize
++.I fattr
++argument beforehand.
 +.SH RETURN VALUE
 +On success,
 +zero is returned.
@@ -158,87 +115,27 @@ index 000000000000..e3c86fc45711
 +.I errno
 +is set to indicate the error.
 +.SH ERRORS
++The errors are the same as returned by
++.BR file_getattr (2)
++with the addition of following ones:
 +.TP
 +.B E2BIG
 +.I size
-+is too big (larger than
-+.BR PAGE_SIZE ).
++indicates a version which the kernel doesn't support
++(the size is larger than the kernel expects)
++and new fields are non-zero.
 +.TP
-+.B EACCES
-+Search permission is denied for one of the directories
-+in the path prefix of
-+.IR path .
-+.TP
-+.B EBADF
-+.I path
-+is relative but
-+.I dirfd
-+is neither
-+.B AT_FDCWD
-+nor a valid file descriptor.
-+.TP
-+.B EBADF
-+.I path
-+is an empty string,
-+.B AT_EMPTY_PATH
-+was specified,
-+but
-+.I dirfd
-+is neither
-+.B AT_FDCWD
-+nor a valid file descriptor.
-+.TP
-+.B EFAULT
-+.I path
-+or
++.B EINVAL
++Invalid combination of parameters provided in
 +.I fattr
-+is an invalid pointer.
++for this type of file or filesystem.
 +.TP
-+.B EINVAL
-+Unknown flags specified in
-+.IR flags .
++.B EPERM
++The caller does not have the necessary permissions
++to change the file attributes.
 +.TP
-+.B EINVAL
-+.I size
-+is smaller than
-+.BR FILE_ATTR_SIZE_VER0 .
-+.TP
-+.B ELOOP
-+Too many symbolic links encountered while resolving
-+.IR path .
-+.TP
-+.B ENAMETOOLONG
-+.I path
-+is too long.
-+.TP
-+.B ENOENT
-+A component of
-+.I path
-+does not exist.
-+.TP
-+.B ENOENT
-+.I path
-+is an empty string and
-+.B AT_EMPTY_PATH
-+was not specified in
-+.IR flags .
-+.TP
-+.B ENOMEM
-+Insufficient kernel memory was available.
-+.TP
-+.B ENOTDIR
-+A component of the path prefix of
-+.I path
-+is not a directory.
-+.TP
-+.B ENOTDIR
-+.I path
-+is relative and
-+.I dirfd
-+is a file descriptor referring to a file other than a directory.
-+.TP
-+.B EOPNOTSUPP
-+The filesystem does not support getting attributes on this type of inode.
++.B EROFS
++The file is on a read-only filesystem.
 +.SH HISTORY
 +Linux 6.17
 +.SH NOTES
@@ -255,26 +152,31 @@ index 000000000000..e3c86fc45711
 +If
 +.I size
 +is smaller than the structure size the kernel expects,
-+only the fields that fit within
-+.I size
-+will be filled in.
++the kernel treats the missing fields as having zero values
++(which is a no-op).
 +If
 +.I size
-+is larger than the kernel's structure size,
-+the extra bytes are zeroed.
++is larger than expected,
++the kernel checks that all unknown (to the kernel) fields are zero;
++if not,
++the call fails with
++.BR E2BIG .
 +.SH EXAMPLES
 +The program below demonstrates the use of
-+.BR file_getattr ()
-+to retrieve and display file attributes.
++.BR file_setattr ()
++to set the
++.B FS_XFLAG_NODUMP
++flag on a file.
 +.P
 +.in +4n
-+.\" SRC BEGIN (file_getattr.c)
++.\" SRC BEGIN (file_setattr.c)
 +.EX
 +#define _GNU_SOURCE
 +#include <fcntl.h>
 +#include <linux/fs.h>
 +#include <stdio.h>
 +#include <stdlib.h>
++#include <string.h>
 +#include <sys/syscall.h>
 +#include <unistd.h>
 +\&
@@ -282,10 +184,15 @@ index 000000000000..e3c86fc45711
 +#define SYS_file_getattr 467
 +#endif
 +\&
++#ifndef SYS_file_setattr
++#define SYS_file_setattr 468
++#endif
++\&
 +int
 +main(int argc, char *argv[])
 +{
 +    struct file_attr fa;
++    int dfd;
 +    long ret;
 +\&
 +    if (argc != 2) {
@@ -293,26 +200,39 @@ index 000000000000..e3c86fc45711
 +        exit(EXIT_FAILURE);
 +    }
 +\&
-+    ret = syscall(SYS_file_getattr, AT_FDCWD, argv[1], &fa,
-+                  sizeof(fa), 0);
++    dfd = open(argv[1], O_RDONLY);
++    if (dfd == \-1) {
++        perror("open");
++        exit(EXIT_FAILURE);
++    }
++\&
++    ret = syscall(SYS_file_getattr, dfd, "", &fa, sizeof(fa),
++                  AT_EMPTY_PATH);
 +    if (ret == \-1) {
 +        perror("file_getattr");
 +        exit(EXIT_FAILURE);
 +    }
 +\&
-+    printf("File attributes:\[rs]n");
-+    printf("  xflags:     0x%w64x\[rs]n", fa.fa_xflags);
-+    printf("  extsize:    %w32u\[rs]n", fa.fa_extsize);
-+    printf("  nextents:   %w32u\[rs]n", fa.fa_nextents);
-+    printf("  projid:     %w32u\[rs]n", fa.fa_projid);
-+    printf("  cowextsize: %w32u\[rs]n", fa.fa_cowextsize);
++    printf("Current flags: 0x%w64x\[rs]n", fa.fa_xflags);
 +\&
-+    /*
-+     * Try setting NODUMP flag with chattr +d ./foo to see
-+     * the difference.
-+     */
++    fa.fa_xflags |= FS_XFLAG_NODUMP;
++\&
++    ret = syscall(SYS_file_setattr, dfd, "", &fa, sizeof(fa),
++                  AT_EMPTY_PATH);
++    if (ret == \-1) {
++        perror("file_setattr");
++        exit(EXIT_FAILURE);
++    }
++\&
++    ret = syscall(SYS_file_getattr, dfd, "", &fa, sizeof(fa),
++                  AT_EMPTY_PATH);
++    if (ret == \-1) {
++        perror("file_getattr");
++        exit(EXIT_FAILURE);
++    }
++\&
 +    if (fa.fa_xflags & FS_XFLAG_NODUMP)
-+        printf("  NODUMP flag is set\[rs]n");
++        printf("flags 0x%w64x (NODUMP flag is set)\[rs]n", fa.fa_xflags);
 +\&
 +    exit(EXIT_SUCCESS);
 +}
@@ -320,11 +240,12 @@ index 000000000000..e3c86fc45711
 +.\" SRC END
 +.in
 +.SH SEE ALSO
-+.BR file_setattr (2),
-+.BR file_attr (2type),
++.BR file_getattr (2),
 +.BR ioctl (2),
 +.BR ioctl_fs (2),
 +.BR openat (2),
++.BR file_attr (2type),
++.BR path_resolution (7),
 +.BR ioctl_xfs_fssetxattr (2)
 -- 
 2.55.0
