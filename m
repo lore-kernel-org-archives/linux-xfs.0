@@ -1,213 +1,151 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from fout-b6-smtp.messagingengine.com (fout-b6-smtp.messagingengine.com [202.12.124.149])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E24C347FC0
-	for <linux-xfs@vger.kernel.org>; Tue, 29 Sep 2026 20:42:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C4F6280A56;
+	Tue, 29 Sep 2026 22:34:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.149
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790714551; cv=none; b=bi8+B4MLdsKW8Bbz01ifenR6ulJGXcRt2XizuXLHCFl8ASrmHQV+tVlYGU3BjyEHNkEA+BJwSyeh0RSt8qFUmz4HLHm5TpzEby3DhPkK/1d/9fyyi76NgoybFHh7oTX7w2DDA5hT2yj4MiWDY+19PDSCWm8/6sqtYtzGyYZ/OLI=
+	t=1790721285; cv=none; b=BgXV5WEpF0qzJzP7N9CDe3fCZNlJ+BBK1e6SHRYrVZNXWpiYdfnnLNw4sM5DHsgnp1DcznOQYLDJTfDf0Ub7PYBcjPCds5dDVZVEKEezs2cPMH3BQbW3DZupIa2izgW1Zf2ZX65ZWBksIZPNs+apa//X1SeGwiFf6fQUyaTT6N4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790714551; c=relaxed/simple;
-	bh=W+BOURyeOdUWXOcPIkdiEwofu/5PKwricI50+8vovPM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bsmITYj1CwLo6mSTo2uKu/KO51B9ntZMG5xsEFm606KRW77gNSkW6i/ycgkMLwB0xcjgRPa81CFwL3CA80ka1n3jZOGDHKj0q1MdkWS4eLdpnmhhDo/xfftxP0fBBu6OC6DwkZlDDSpHzssVx4m5JQgZXbDCtdbfr5yN6sFu8Uk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Mq3hrIQz; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790721285; c=relaxed/simple;
+	bh=hjiyCzqQvSUxQc6HxHqYpELnZBmj+6fiYQGh3i6wxHI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=FYWP7XInuoLLjv1gszrKXyfk9ERYtXws/Sm88RraRuF9J4EHkZkNLW7T6mwV8xzY+/al1IyplIh2HvpRBfMcl6ILUsiIMcpqVYPnV7K7Z6NeEqlI1/JwgI3O88io9YynR13lmWYgBDa1VLWfuE3W+Iz/e9Bqz3mF9JsIhUkZpl8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net; spf=pass smtp.mailfrom=sandeen.net; dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b=bN6FyHVh; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=vq4IaGJ6; arc=none smtp.client-ip=202.12.124.149
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandeen.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Mq3hrIQz"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 793241F000FF;
-	Tue, 29 Sep 2026 20:42:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790714549;
-	bh=W1JL/YdiU+W1ibu3y4DywbuNoGsPlxhUG6OKDeYAwj4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Mq3hrIQz09pHBnywnQFY5bJ2tbbKAIk6nYZCmEgbGoRpmRMWnFrLKmJ83fqbg1JGv
-	 uKARO0HWnD1snAAbeUjsEfNeHJuwbMHdJSuCVWF6bKGBRhybzMi0lO796USP5TtUTi
-	 xcd3NGimrUCmElJgpYuWtNiteA40XtVTIW9ZpdpSROQCeSCTgDnfoaJncLGk5FGJj0
-	 tdLRB8NS98GY4CCTyFqv6MRJTScncoBO6XlhikJTXflC0L/FecxnF9hEA247C9OXEx
-	 rui6mtMLb8DdRX3Hh5Yf+uW5CsS4Ce08GQCL9NQiUTeHZyKrF4Sv5/AYjK3nU3cRU6
-	 St3MPccZYPNUw==
-Date: Tue, 29 Sep 2026 13:42:28 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Pankaj Raghav <pankaj.raghav@linux.dev>
-Cc: John Garry <john.garry@linux.dev>, Pankaj Raghav <p.raghav@samsung.com>,
-	cem@kernel.org, linux-xfs@vger.kernel.org,
-	John Garry <john.g.garry@oracle.com>, gost.dev@samsung.com
-Subject: Re: [PATCH] xfs: don't limit software atomic writes by the group
- alignment
-Message-ID: <20260929204228.GT2705364@frogsfrogsfrogs>
-References: <20260925103640.932735-1-p.raghav@samsung.com>
- <41749fa7-dcfa-46f0-af0f-ed3fa5f39f15@linux.dev>
- <ffd48d49-c4f6-4fc3-88a5-0adb11d0d6b9@linux.dev>
- <20260929164010.GS2705364@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b="bN6FyHVh";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="vq4IaGJ6"
+Received: from phl-compute-06.internal (phl-compute-06.internal [10.202.2.46])
+	by mailfout.stl.internal (Postfix) with ESMTP id 47C791D00713;
+	Tue, 29 Sep 2026 18:34:43 -0400 (EDT)
+Received: from phl-frontend-03 ([10.202.2.162])
+  by phl-compute-06.internal (MEProxy); Tue, 29 Sep 2026 18:34:43 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm1; t=1790721283;
+	 x=1790807683; bh=tQAdlWKXz5EQMHwvsvgdi9y+wBZ+lxzMIjOPtdt65Po=; b=
+	bN6FyHVh9gMvmDQVOn+mhDd1hU1zVCuU4Y1OiD0XdDEvA2WZ175JbooIaGE2A/NV
+	/hGYNNK6mluLocBCfI/kb0j8zJk0u7MM/mTkNCXDAa9J6F3Fy9eMUxis753oPVrP
+	RH28VEd6TkFVGFXHhU5wd4clNFyyZJ8zqLc1L+4yNwenAoalfZoCLbupi29ofTwo
+	i8SC6POy91T//NRJXNUNV0Gt06Zc7FkQsuXsFXCanTKRbrf+Rvai/dxGGplC3aYq
+	2BAb63a2n5d/FELCDYhgQv0gEVZePBCDPqIA+7unKqb+TABtZlz1efGZ0KDgRbYK
+	bVeb7InqLlQiTB0P7LwhTQ==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1790721283; x=
+	1790807683; bh=tQAdlWKXz5EQMHwvsvgdi9y+wBZ+lxzMIjOPtdt65Po=; b=v
+	q4IaGJ6GNAK5+guJj9FevcyWd8oSPfrItT/76Lfo4hYIYI7iaeTMmieKzpNh7RiD
+	V87ptlxhrom25NPLhwzFOVAoIYOn2VSKrDwaQnMYFWSikkQGInPn1FRXjHrTI6P1
+	GbFzlzMZcIazpnD78YXgEc4PnW1nRaCYDaUUAnxBKeeCMSePEdRRgz2HQWOFSzgE
+	JOvodTxiMjsVhlUERm6/SHQNjS/vqzTpxg9MCvgR98iUtNNS8qU3TsUunFB0OfuP
+	I+IP+F95CuK9ZAbodtwapc9q7Pxk4WDFzOHy7hZt5bGyEocXZFRv2PO7Z4ffi/Ez
+	+BJEkDM6y2Dmk8lLYjSaA==
+X-ME-Sender: <xms:Aj28avryL6aAfOcSIrNcut_hdSAS8gmafm2DjayNN-wPlrouR-Fe_Q>
+    <xme:Aj28arI60Cbou1qqDaVJ89r9oT5zF_j2ttji_A2g-BcYUTKrWSdUY9gpx5wi_4Zna
+    iIefZll1b3fz4hR1L9nQr494KY8RPJD3ZFJrRHrqGSYff63irlhY2Dt>
+X-ME-Received: <xmr:Aj28asSmkkiQS2uTMF0mD3PHd_xdJYSer19MSLzmRk1-szPQKayPdyUsNp76J-vHEpzhtprMVhtt0kEFpsic2UMZawEKvA>
+X-ME-Proxy-Cause: dmFkZTFdD0qsqzxhN/w3zhKEVysFSuExtFBanCI989UljJcKvuZMzeOTX4qkkEgiLaELeg
+    IbtTUi8R/xvtJ9oPMVy4zfNuOJdkLzuHn1t1RHpW6uoRYnj/F46R9M+/QnHm4S/H/4sG+m
+    uDSjB+IAL4+CGpnBFeKvhldOBkOeXgUZLRioFT01gJ+DqNkFupJMlM8Pzlz7XRdwkeee1W
+    EGi1EEsK3ZuPr/R7xGW6C5vFSy0fsolnZPPTPNiaoQkSbVvbPhT+fiaz41Pb3TCH3ATfYO
+    PoEm74CaGru64WuZQ8WhKZ19MIN88wJ8ROML9GzlBVvxXeW/6Df5aiby0BQE7fIgoSgtjG
+    2bKvNQ8qDw/EpJ4FiRPnSeDsZAmvfEzfozHNfFfssBDaIQkMndDi6s+ntLziBasd8+lH5P
+    rsvWvBubfPSgBCvmdmQUHLs1MvBuwOjplqoOwfTYeL4wg+3RcHXaA35Ingmk6/bUGk7fUu
+    8WGRnBx2ol48EkTQeZ7SWRrPr3IyTpAbbKHk/4a+ONSW/iG0jj3sF25q5Pq26vGzrKT/DD
+    2c/tCE6Q332dlMCVsp8bgI3uoRkKTKEvO/LpWTi7Q7E4Etc5vvFK3VVhxYvepkTn4D4c+r
+    mRYB6Ip/D5hH5mFU3JFnhETazgDn37Rb2xFXXkQPwrj4fXogDN7qrhcZzWwA
+X-ME-Proxy: <xmx:Aj28aitz8WB6Tfi_WogOoP3ANoCd3qMxizdbaZTmhnI2EMBQ6sX7kw>
+    <xmx:Aj28albzIwDDel2AW8Ze4UJlIkE9cIUvmVuUh_W2_mzRGKV4BPYyuw>
+    <xmx:Aj28agEhpzrpuLfD8JE9--GmPDVI7f1e5Bcc6CojZftaM0nj0RxTrA>
+    <xmx:Aj28ahxOf7QD9btGjijP9aNNjPu3-WP3xOMSN-Eqpb4eNy8qavfM2Q>
+    <xmx:Az28apjQRUDy2mCWuBOzmYf7N7IExbO_nLUkLL6v6q2zWtVBJ2I_nZGz>
+Feedback-ID: i2b59495a:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
+ 29 Sep 2026 18:34:42 -0400 (EDT)
+Message-ID: <21ce40af-eb29-4c78-a5e2-1021c3de075e@sandeen.net>
+Date: Tue, 29 Sep 2026 17:34:39 -0500
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
+User-Agent: Mozilla Thunderbird
+Subject: Re: [RFC] MXFS: a shared-disk clustered filesystem derived from XFS
+To: Steve Shoecraft <spshoecraft@gmail.com>, Carlos Maiolino <cem@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org,
+ linux-xfs@vger.kernel.org
+References: <56847E8D-EA83-4984-82F3-9BC93E4C02FF@gmail.com>
+ <ardhDI-Ko7b5RccH@infradead.org>
+ <BC228018-42A4-4715-B186-057AFDE8A4D0@gmail.com>
+ <arj3Mp6Cq2_qwaIb@cronus.toxiclabs.cc>
+ <1B01BE22-06A8-412D-B141-CD94026E0A39@gmail.com>
+Content-Language: en-US
+From: Eric Sandeen <sandeen@sandeen.net>
+In-Reply-To: <1B01BE22-06A8-412D-B141-CD94026E0A39@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260929164010.GS2705364@frogsfrogsfrogs>
 
-On Tue, Sep 29, 2026 at 09:40:10AM -0700, Darrick J. Wong wrote:
-> On Tue, Sep 29, 2026 at 09:17:32AM +0200, Pankaj Raghav wrote:
-> > 
-> > 
-> > On 9/25/2026 1:44 PM, John Garry wrote:
-> > > On 9/25/26 11:36, Pankaj Raghav wrote:
-> > >  > xfs_calc_group_awu_max() clamps the atomic write unit maximum to the
-> > >  > greatest power-of-two factor of the group size when the device advertises
-> > >  > atomic writes, so that allocations can be made naturally aligned for
-> > >  > REQ_ATOMIC. But that value is the software limit: it is only used when
-> > >  > reflink is enabled, and out of place writes through the COW fork have no
-> > >  > alignment requirement.
-> > > 
-> > > We have mkfs atomic write options for selecting atomic write limits -
-> > > you have tried that, right?
-> > > 
-> > 
-> > Hmm, I did not try that but I restricted the agsize to a power of 2 value to
-> > workaround the limitation.
-> > 
-> > Are you talking about this option: max_atomic_write?
-> > 
-> > In any case, with default options the atomic values we are exposing is not
-> > correct at the moment.
-> > 
-> > > > 
-> > > > A filesystem on a > 4TB device that advertises 16k atomic writes then reports
-> > > > an atomic write unit maximum of a single fsblock and an optimal maximum of 0,
-> > > > and rejects any larger RWF_ATOMIC write. That is worse than the same filesystem
-> > > > on a device with no atomic write support at all.
-> > > > 
-> > > > Compute the software limit from the group size alone, and apply the
-> > > > alignment constraint in xfs_get_atomic_write_max_opt() instead, which is
-> > > > what reports the size that can be offloaded to the hardware.
-> > > > 
-> > > > Results on a 8TB device with 16k hardware atomic support with 4k
-> > > > blocksize:
-> > > > 
-> > > > Before patches:
-> > > > /media/test/hello.txt:
-> > > >    stx_atomic_write_unit_min:            4096
-> > > >    stx_atomic_write_unit_max:            4096
-> > > >    stx_atomic_write_unit_max_opt:        0
-> > > >    stx_atomic_write_segments_max:        1
-> > > > 
-> > > > After patches:
-> > > > /media/test/hello.txt:
-> > > >    stx_atomic_write_unit_min:            4096
-> > > >    stx_atomic_write_unit_max:            2097152
-> > > 
-> > > Here the AG size may not be a multiple of 2097152B, right? If so, when
-> > > we try to naturally align the allocation for a CoW write, even if the AG
-> > > blocks are naturally aligned (per AG), the disk blocks may not be
-> > > naturnally aligned - is this correct? For HW-based atomic writes, we
-> > > want naturally aligned disk blocks.
-> > > 
-> > 
-> > Correct.
-> > 
-> > Just to give more context:
-> > 
-> > Trace of calc_atomic_write_unit_max:
-> > 
-> >  mount-696   [010]   449.230543: xfs_calc_atomic_write_unit_max: dev 259:0
-> > ag max_write 262144 max_ioend 512 max_gsize 134217728 awu_max 512
-> > 
-> > 2097152 comes from awumax being 512 fsblocks.
-> > 
-> > root@debian:~# xfs_info /dev/nvme0n1
-> > meta-data=/dev/nvme0n1           isize=512    agcount=8, agsize=268435455 blks
-> 
-> 268435455?  That's not aligned to the atomic write size, but that is the
-> max AG size.  I thought mkfs would round it down for us automatically:
-> 
->         /*
->          * We've already validated (or discarded) the hardware atomic write
->          * geometry.  Try to align the agsize to the maximum atomic write unit
->          * to give users maximum flexibility in choosing atomic write sizes.
->          */
->         if (ft->data.awu_max > 0)
->                 dsunit = max(DTOBT(ft->data.awu_max, cfg->blocklog),
->                                 dsunit);
-> 
-> But I guess I'll play around with it for a while and see if I get
-> anywhere.  Assuming you're running a recent mkfs that knows about
-> the atomic write options and whatnot?
+On 9/29/26 8:19 AM, Steve Shoecraft wrote:
+> Iâ€™m disappointed in your responses. I would have thought that youâ€™d at least be interested in how well the AI did.
+Not trying to pile on here, but still echoing the other "disappointing"
+responses:
 
-FWIW I tried this with scsi-debug and got the following:
+This developer community, like many others, is already oversubscribed.
+This was true before the LLM onslaught, it is /far/ worse after it.
 
-# umount /dev/sdg
-# rmmod scsi-debug
-# modprobe scsi-debug dev_size_mb=1000 virtual_gb=4096 atomic_wr=1 atomic_wr_max_length=32
-# xfs_io -c 'statx -r -m all ' /dev/sdg | grep atomic
-stat.atomic_write_unit_min = 1024
-stat.atomic_write_unit_max = 16384
-stat.atomic_write_segments_max = 1
-stat.atomic_write_unit_max_opt = 0
-# mkfs.xfs -f /dev/sdg
-meta-data=/dev/sdg               isize=512    agcount=4, agsize=268435452 blks
-         =                       sectsz=512   attr=2, projid32bit=1
-         =                       crc=1        finobt=1, sparse=1, rmapbt=1
-         =                       reflink=1    bigtime=1 inobtcount=1 nrext64=1
-         =                       exchange=1   metadir=0
-data     =                       bsize=4096   blocks=1073741808, imaxpct=5
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0, ftype=1, parent=1
-log      =internal log           bsize=4096   blocks=521728, version=2
-         =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-         =                       rgcount=0    rgsize=0 extents
-         =                       zoned=0      start=0 reserved=0
-# mount /dev/sdg /mnt
-# touch /mnt/fubar
-# xfs_io -c 'statx -r -m all' /mnt/fubar | grep atomic
-stat.atomic_write_unit_min = 4096
-stat.atomic_write_unit_max = 16384
-stat.atomic_write_segments_max = 1
-stat.atomic_write_unit_max_opt = 16384
+Review has been a community bottleneck here for /years/ - for the actual,
+shipping XFS project code.
 
-Note the agsize=268435452, which means that it rounded the AG size down
-to something congruent with the 16k hardware atomic write max.
+We've been victims of turn-the-crank work generation for a long time, whether
+it's running xfstests and throwing un-triaged failures over the wall, or
+fsfuzzer,  husyzkaller, now AI-found flaws and exploits, etc. Generating work
+for humans is getting easier and easier, and the human workforce is not growing.
 
-(Are you sure you're using mkfs.xfs from xfsprogs 6.16 or newer?)
+(FWIW, many of us do use LLMs as a force multiplier, both for coding and for
+code review. It's still a struggle.)
 
-> --D
-> 
-> >          =                       sectsz=4096  attr=2, projid32bit=1
-> >          =                       crc=1        finobt=1, sparse=1, rmapbt=0
-> >          =                       reflink=1    bigtime=1 inobtcount=1 nrext64=0
-> > data     =                       bsize=4096   blocks=2147483640, imaxpct=5
-> >          =                       sunit=0      swidth=0 blks
-> > naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-> > log      =internal log           bsize=4096   blocks=521728, version=2
-> >          =                       sectsz=4096  sunit=1 blks, lazy-count=1
-> > realtime =none                   extsz=4096   blocks=0, rtextents=0
-> > 
-> > 
-> > > >    stx_atomic_write_unit_max_opt:        4096
-> > > >    stx_atomic_write_segments_max:        1
-> > > > 
-> > > > Results on a 8TB device with 16k hardware atomic support with 16k
-> > > > blocksize:
-> > > > 
-> > > > Before patches:
-> > > > /media/test/hello.txt:
-> > > >    stx_atomic_write_unit_min:            16384
-> > > >    stx_atomic_write_unit_max:            16384
-> > > >    stx_atomic_write_unit_max_opt:        0
-> > > >    stx_atomic_write_segments_max:        1
-> > > > 
-> > > > After patches:
-> > > > /media/test/hello.txt:
-> > > >    stx_atomic_write_unit_min:            16384
-> > > >    stx_atomic_write_unit_max:            33554432
-> > > >    stx_atomic_write_unit_max_opt:        16384
-> > > >    stx_atomic_write_segments_max:        1
-> > > > 
-> > --
-> > Pankaj
-> > 
-> 
+I ran cloc on your repo:
+
+github.com/AlDanial/cloc v 2.10  T=1.87 s (1565.8 files/s, 466746.3 lines/s)
+--------------------------------------------------------------------------------
+Language                      files          blank        comment           code
+--------------------------------------------------------------------------------
+C                               306          39193         121404         284212
+Markdown                       1195          22872            715         143738
+Bourne Shell                   1046           6436          42299          82939
+C/C++ Header                    222           5834          23461          37391
+JSON                             34              0              0          32925
+Python                          103           2306           3392          15533
+Text                              6             85              0           6819
+make                              9            102             45            424
+Perl                              1             53             20            190
+Bourne Again Shell                3             16             84            152
+JavaScript                        1             10             13             72
+Expect                            1              4              7             30
+Snakemake                         1              0              5              1
+--------------------------------------------------------------------------------
+SUM:                           2928          76911         191445         604426
+--------------------------------------------------------------------------------
+
+a quarter million lines of C, never mind the rest.
+
+Your project sounds interesting, but the humans here are not going to be a
+review workforce for it.
+
+I'd suggest that maybe you continue your AI-only approach, and continue using
+AI to design a comprehensive test suite as well, and let any potential users know
+that it's AI-turtles all the way down. If they trust it enough to use it, and
+it works without eating anyone's data, then your AI-only experiment might just
+be a success.
+
+And if it's not a success, thank you for changing the magic number. ;)
+
+-Eric
+
