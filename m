@@ -1,86 +1,173 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F54C52D2A9
-	for <linux-xfs@vger.kernel.org>; Tue, 29 Sep 2026 15:28:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B50C3E5EEA
+	for <linux-xfs@vger.kernel.org>; Tue, 29 Sep 2026 16:40:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790695721; cv=none; b=emW5m4j35p/64TUK7DBBy9dYjApV0fhPONRNzjOySC3duAHb2zRm10Ha8MRAJKdGvA2pfey0PqnKA5WI8Vu/r/dKnCw/2XgfVrY1KhO0RghfC9Im6CU+JAlQZ83gyfGbQLM9bjUwi5xNsb1iYL+zjCqKJdgC1TIj9/oFun2bkJA=
+	t=1790700012; cv=none; b=Gh8gQ+hGsnEayYOa1V8Q75ACZc+d6i0I2jyq4+j5KMcGNV6ZxYd0X4a/3Otmiz67M2fpv5b0v5/vFQyJMPEXreQa85uiwq8XQHSebS7lg2cjhqcXF8II6hSuCILPG9YDUOn9N8W8QI9VQwawo3T+ODig4a7mpLiOXEYADV2fa/k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790695721; c=relaxed/simple;
-	bh=lT5DNkiqZFXmm9BCnKZFROKBIhbUv9FoH8dPHMItaG8=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=o7+xqZC46vZJJSqSU9PjA9O3PHUrzVMejqlLTOzZx2psi7/V0Tm8L9HYf5fv8jEJXgo5b9lqlLKr+c+vbM1+OW2hKGEwT3LRdtbwbqEWslRWMonmeQgh3+3Ek0vHJJTY2zyspWi0yPb9LPQf0lwpKO7tSPtGTEBH/Udh4Rp+62g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gf8AJQdk; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790700012; c=relaxed/simple;
+	bh=zk2Ou+Fld/FkdKT7DsTBPEE11pj7H1hIHzxAqW433LA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=tbOgJZRisUKwnSDVewXv8XFMbjIun7Zus1wHl1rbwHfpTiYuiYs6esXGR2OqTwwQFODFu/LVFXgXY4wkFiaPI7WZElxDiUAC+Svw6GyUWW7Evvmedc/4En+EYlJBgOhLoxsFNIFQ1TT6PWH+PWrvIK2GJoPmVYZm+Lv80eCR/ZA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=O6bB9tcZ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gf8AJQdk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DD13B1F000FF;
-	Tue, 29 Sep 2026 15:28:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="O6bB9tcZ"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 9D3DC1F000FF;
+	Tue, 29 Sep 2026 16:40:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790695714;
-	bh=60+0tr0PpftSPAHCNEzPRJDVHogDK+M33OXHKy/Ed00=;
-	h=Date:From:To:Cc:Subject;
-	b=gf8AJQdkchKVAhPYO2xlI4Kvr4UZ2VH6fAdJ4RJFf+HA1anQpC/+lNbRcUay0z4ng
-	 +ViRQ+jDKs9erOlXLRVsPVJEdBiogtu8sWUjkkjsKus/Lgl+r5NJ4TAUlBgSV5w5TW
-	 iqAGgymg4kgMBmZ3OEGuFO6xxnTQAN14ljQOC+ZVsNr+AZAFlWBLZ1uMVJW6tjWsRj
-	 qAwqAzV613TSFggOGKL9XW2pwnjG3/SAhxNecE66l0JtrkCJHWh+3Yui3XIL2eEII5
-	 Xm84+FDtO70KZLy8dPm9sUVP6lNSyJidp+NC20A7LaE5L+S/Y4qs0d/kQuD5/eOcuU
-	 lht9NfyPfNByg==
-Date: Tue, 29 Sep 2026 17:28:30 +0200
-From: Andrey Albershteyn <aalbersh@kernel.org>
-To: linux-xfs@vger.kernel.org
-Cc: aalbersh@kernel.org, djwong@kernel.org, hch@lst.de, 
-	linux-xfs@vger.kernel.org, wilfred.mallawa@wdc.com
-Subject: [ANNOUNCE] xfsprogs: for-next updated to d67bdf8007b6
-Message-ID: <arvZFF2QZmFey-wH@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+	s=k20260515; t=1790700010;
+	bh=T2oBDRTQBfGA5356jUq9UXdHKSh/sNjatQZOtRUCKH4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=O6bB9tcZtZM03teQ6VCUjDMpXn7x1Q0Kt+yqA/NS31/LaWMigbqvtpG2rNVmF0W8j
+	 GQ39q92ypMPaekcvsQp9+1xdhf8YVl1HVSO5WXMk4vwtb0MxFU82pVG07XtiKiB6s9
+	 1HatHRG0O3Wha5f+Jpsqor+0tYg++y8CAMTqc3Xq5f3e1Lhboi68Z7iGFdBn13Swd8
+	 XcJUxb4VtsNyTRMiXJ7Yd9W7nzCb6ZhUStQy4UEpwRmOtgWXzLt9GtcyUmyaW/RrSc
+	 wPFun9M9PwQETP4V361zPSvGdt3LS2KZtEgOhCcbmmAOlGd61rCWkncruJmKprQe7d
+	 EWYhNtqZng61Q==
+Date: Tue, 29 Sep 2026 09:40:10 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Pankaj Raghav <pankaj.raghav@linux.dev>
+Cc: John Garry <john.garry@linux.dev>, Pankaj Raghav <p.raghav@samsung.com>,
+	cem@kernel.org, linux-xfs@vger.kernel.org,
+	John Garry <john.g.garry@oracle.com>, gost.dev@samsung.com
+Subject: Re: [PATCH] xfs: don't limit software atomic writes by the group
+ alignment
+Message-ID: <20260929164010.GS2705364@frogsfrogsfrogs>
+References: <20260925103640.932735-1-p.raghav@samsung.com>
+ <41749fa7-dcfa-46f0-af0f-ed3fa5f39f15@linux.dev>
+ <ffd48d49-c4f6-4fc3-88a5-0adb11d0d6b9@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <ffd48d49-c4f6-4fc3-88a5-0adb11d0d6b9@linux.dev>
 
-Hi folks,
+On Tue, Sep 29, 2026 at 09:17:32AM +0200, Pankaj Raghav wrote:
+> 
+> 
+> On 9/25/2026 1:44 PM, John Garry wrote:
+> > On 9/25/26 11:36, Pankaj Raghav wrote:
+> >  > xfs_calc_group_awu_max() clamps the atomic write unit maximum to the
+> >  > greatest power-of-two factor of the group size when the device advertises
+> >  > atomic writes, so that allocations can be made naturally aligned for
+> >  > REQ_ATOMIC. But that value is the software limit: it is only used when
+> >  > reflink is enabled, and out of place writes through the COW fork have no
+> >  > alignment requirement.
+> > 
+> > We have mkfs atomic write options for selecting atomic write limits -
+> > you have tried that, right?
+> > 
+> 
+> Hmm, I did not try that but I restricted the agsize to a power of 2 value to
+> workaround the limitation.
+> 
+> Are you talking about this option: max_atomic_write?
+> 
+> In any case, with default options the atomic values we are exposing is not
+> correct at the moment.
+> 
+> > > 
+> > > A filesystem on a > 4TB device that advertises 16k atomic writes then reports
+> > > an atomic write unit maximum of a single fsblock and an optimal maximum of 0,
+> > > and rejects any larger RWF_ATOMIC write. That is worse than the same filesystem
+> > > on a device with no atomic write support at all.
+> > > 
+> > > Compute the software limit from the group size alone, and apply the
+> > > alignment constraint in xfs_get_atomic_write_max_opt() instead, which is
+> > > what reports the size that can be offloaded to the hardware.
+> > > 
+> > > Results on a 8TB device with 16k hardware atomic support with 4k
+> > > blocksize:
+> > > 
+> > > Before patches:
+> > > /media/test/hello.txt:
+> > >    stx_atomic_write_unit_min:            4096
+> > >    stx_atomic_write_unit_max:            4096
+> > >    stx_atomic_write_unit_max_opt:        0
+> > >    stx_atomic_write_segments_max:        1
+> > > 
+> > > After patches:
+> > > /media/test/hello.txt:
+> > >    stx_atomic_write_unit_min:            4096
+> > >    stx_atomic_write_unit_max:            2097152
+> > 
+> > Here the AG size may not be a multiple of 2097152B, right? If so, when
+> > we try to naturally align the allocation for a CoW write, even if the AG
+> > blocks are naturally aligned (per AG), the disk blocks may not be
+> > naturnally aligned - is this correct? For HW-based atomic writes, we
+> > want naturally aligned disk blocks.
+> > 
+> 
+> Correct.
+> 
+> Just to give more context:
+> 
+> Trace of calc_atomic_write_unit_max:
+> 
+>  mount-696   [010]   449.230543: xfs_calc_atomic_write_unit_max: dev 259:0
+> ag max_write 262144 max_ioend 512 max_gsize 134217728 awu_max 512
+> 
+> 2097152 comes from awumax being 512 fsblocks.
+> 
+> root@debian:~# xfs_info /dev/nvme0n1
+> meta-data=/dev/nvme0n1           isize=512    agcount=8, agsize=268435455 blks
 
-The xfsprogs for-next branch in repository at:
+268435455?  That's not aligned to the atomic write size, but that is the
+max AG size.  I thought mkfs would round it down for us automatically:
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+        /*
+         * We've already validated (or discarded) the hardware atomic write
+         * geometry.  Try to align the agsize to the maximum atomic write unit
+         * to give users maximum flexibility in choosing atomic write sizes.
+         */
+        if (ft->data.awu_max > 0)
+                dsunit = max(DTOBT(ft->data.awu_max, cfg->blocklog),
+                                dsunit);
 
-has just been updated.
+But I guess I'll play around with it for a while and see if I get
+anywhere.  Assuming you're running a recent mkfs that knows about
+the atomic write options and whatnot?
 
-Patches often get missed, so if your outstanding patches are properly reviewed
-on the list and not included in this update, please let me know.
+--D
 
-The new head of the for-next branch is commit:
-
-d67bdf8007b6049f2e88a3ebc5de2c3209bae237
-
-New commits:
-
-Christoph Hellwig (1):
-      [d67bdf8007b6] man: fix alignment of the rtstart field in ioctl_xfs_fsgeometry.2
-
-Darrick J. Wong (3):
-      [a594f085447f] xfs_scrub: terminate systemd services if the sysadmin unmounts
-      [73662a3e91d4] mkfs: allow disabling quota flags
-      [f2e443ce2107] xfs_quota: fix XFS_GETQSTAT parameter pointer
-
-Wilfred Mallawa (2):
-      [bc84c74ae73d] xfs_io: report rg_writepointer in report rg_info()
-      [bf0ec1d8a2b6] man/xfs_rtgroup_geometry: add rg_writepointer field description
-
-Code Diffstat:
-
- io/aginfo.c                           |  3 +++
- man/man2/ioctl_xfs_fsgeometry.2       |  2 +-
- man/man2/ioctl_xfs_rtgroup_geometry.2 |  8 ++++++-
- mkfs/xfs_mkfs.c                       | 42 +++++++++++++++++++++++++----------
- quota/state.c                         |  2 +-
- scrub/xfs_scrub@.service.in           |  3 +++
- scrub/xfs_scrub_media@.service.in     |  3 +++
- 7 files changed, 48 insertions(+), 15 deletions(-)
-
--- 
-- Andrey
+>          =                       sectsz=4096  attr=2, projid32bit=1
+>          =                       crc=1        finobt=1, sparse=1, rmapbt=0
+>          =                       reflink=1    bigtime=1 inobtcount=1 nrext64=0
+> data     =                       bsize=4096   blocks=2147483640, imaxpct=5
+>          =                       sunit=0      swidth=0 blks
+> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+> log      =internal log           bsize=4096   blocks=521728, version=2
+>          =                       sectsz=4096  sunit=1 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> 
+> 
+> > >    stx_atomic_write_unit_max_opt:        4096
+> > >    stx_atomic_write_segments_max:        1
+> > > 
+> > > Results on a 8TB device with 16k hardware atomic support with 16k
+> > > blocksize:
+> > > 
+> > > Before patches:
+> > > /media/test/hello.txt:
+> > >    stx_atomic_write_unit_min:            16384
+> > >    stx_atomic_write_unit_max:            16384
+> > >    stx_atomic_write_unit_max_opt:        0
+> > >    stx_atomic_write_segments_max:        1
+> > > 
+> > > After patches:
+> > > /media/test/hello.txt:
+> > >    stx_atomic_write_unit_min:            16384
+> > >    stx_atomic_write_unit_max:            33554432
+> > >    stx_atomic_write_unit_max_opt:        16384
+> > >    stx_atomic_write_segments_max:        1
+> > > 
+> --
+> Pankaj
+> 
