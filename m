@@ -1,88 +1,154 @@
-Received: from zeniv.linux.org.uk (zeniv.linux.org.uk [62.89.141.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta0.migadu.com (out-58.mta0.migadu.com [91.218.175.58])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FD8B383984;
-	Tue, 29 Sep 2026 05:07:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.89.141.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2C6A38DC45
+	for <linux-xfs@vger.kernel.org>; Tue, 29 Sep 2026 07:17:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.58
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790658479; cv=none; b=pKOWwEG1jRtYXkz7OSiKFFwlTm5gCUxbbUgkN1OaRqxJYZrJ+kHov2xZgf1M+znNjjDDlFYg8v/YLnS8m7pnhf6yL5VK9q9GaLyOB/7JlxnS/JK/KSSJyAZB4BBS5RE0GPFiDp7888gQRTLjuU+rLCKbS0dHyoU1+BmlemQwKwA=
+	t=1790666261; cv=none; b=nlOPeumsWq2z7RO6kC2ignUvMOYPDc2ZTXnRNqh1HtvVPYb4ta5FJtn3i9NInlgYHwnsYMGaqs6shgv9Ap3Bp3Se6QWp/qSTiNn5lJ+/6k+CwdhPRf/GqGEcBP4Qqqe3i2tyvBPcg/Ql0GK+1kNJClPsBpoK0HHgLgZAzAqpOCo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790658479; c=relaxed/simple;
-	bh=zVdfo8ZneJrRJ94k14YIO1Y9VXCvy8Lfs7ITB4fmUcs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HZ8B9IGRQWtXgrN/vuWVGoO0nrV+6Ybyx27OY4oxs1opuCBTfmEOrj649CwEJfTyj+kzVcsl1ZyzG8XLdqymgB9Z/NTzry2STdJdmsPfjylnq2UEYtk5VxKqURuCcDJ0NWAd95EDWcHf0JayJe3x84+EQRGNCkQKIiEI7+eCkns=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zeniv.linux.org.uk; spf=none smtp.mailfrom=ftp.linux.org.uk; dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b=Vt8Wl6v9; arc=none smtp.client-ip=62.89.141.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zeniv.linux.org.uk
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=ftp.linux.org.uk
+	s=arc-20240116; t=1790666261; c=relaxed/simple;
+	bh=F43SJ/hRmKBuB09hYlmNNhc+N5fCr0JFlySK3S90oMY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=eC0H/lG91ktA5wBcmQK06ASg+ex5cqyQ9FPN5gQmILt9TImwyzJaOy9CdnJdXTYqU63e7vBdvmHsGNzM5r+ItY6IGR6Oa1lSHiUICWUWCzmD3lrAXkyuaOGKHt0lHtOwx7/r/ElXXSzp/HvvIQv3jKIr+j+UoBU+kPrCg/tvH7c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=mhTZL8Jx; arc=none smtp.client-ip=91.218.175.58
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b="Vt8Wl6v9"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=linux.org.uk; s=zeniv-20220401; h=Sender:In-Reply-To:Content-Type:
-	MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=Ql48WTI1DDC42vkQ5aONYMMkjcdFwpalboLPZ35vz1E=; b=Vt8Wl6v9GXqlPdcfnYCxm8QiYp
-	IjYDbFvkRSA9EwCbUBHheJvuYZdpImQ8ElWTyxGfzBNWSOW2pO6W+4J4Y1tks26kT+/1ZOyOUbTV2
-	LxknNqO7/ieWoGqNfhU/6OiIm+u03J7GX8QRDAzb//I2WHU4oI0/7on5fhJYoFcx/TY3YdWmGFgOj
-	4/WzgK4OYYFLnJJZ1H6/D8CD8OvFCYz5m/CT5EO8CcQq6t3LkWaAWZ3HXS+H7Eiz8dY3BcMEfr7b2
-	xJxllWNFBc/BuTHZelPBr7MOyE8q5XDulXQDCXIxkADODbw48afqLDdAfkvjLTsbKv4uPDjyQv6ee
-	sAjeP0QA==;
-Received: from viro by zeniv.linux.org.uk with local (Exim 4.99.5 #2 (Red Hat Linux))
-	id 1xBQ43-00000002j2z-3GyS;
-	Tue, 29 Sep 2026 05:07:40 +0000
-Date: Tue, 29 Sep 2026 06:07:39 +0100
-From: Al Viro <viro@zeniv.linux.org.uk>
-To: NeilBrown <neil@brown.name>
-Cc: Miklos Szeredi <miklos@szeredi.hu>, Amir Goldstein <amir73il@gmail.com>,
-	Kees Cook <kees@kernel.org>,
-	Joel Granados <joel.granados@kernel.org>,
-	Richard Weinberger <richard@nod.at>,
-	Anton Ivanov <anton.ivanov@cambridgegreys.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Breno Leitao <leitao@debian.org>,
-	Andreas Hindborg <a.hindborg@kernel.org>,
-	Jan Harkes <jaharkes@cs.cmu.edu>, Hugh Dickins <hughd@google.com>,
-	Baolin Wang <baolin.wang@linux.alibaba.com>,
-	Namjae Jeon <linkinjeon@kernel.org>,
-	Hyunchul Lee <hyc.lee@gmail.com>, Carlos Maiolino <cem@kernel.org>,
-	Christian Brauner <brauner@kernel.org>,
-	Jeff Layton <jlayton@kernel.org>, Jan Kara <jack@suse.cz>,
-	linux-fsdevel@vger.kernel.org, fuse-devel@lists.linux.dev,
-	linux-kernel@vger.kernel.org, linux-unionfs@vger.kernel.org,
-	linux-um@lists.infradead.org, codalist@coda.cs.cmu.edu,
-	coda@cs.cmu.edu, linux-mm@kvack.org, ntfs@lists.linux.dev,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/7] configfs: remove d_add() calls before
- configfs_attach_group()
-Message-ID: <20260929050739.GB3909609@ZenIV>
-References: <20260929034158.1455429-1-neilb@ownmail.net>
- <20260929034158.1455429-5-neilb@ownmail.net>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="mhTZL8Jx"
+X-Envelope-To: linux-xfs@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=F43SJ/hRmKBuB09hYlmNNhc+N5fCr0JFlySK3S90oMY=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1790666255; v=1; x=1791271055;
+ b=mhTZL8Jxzxt7cGID8b//FGSrYaoQMW6ZRjV/0RfbTayvjJbCoe9OlC/Es7rUlnpgNBuN9MwB
+ UJH6yIFot0PDpkWzyacEblbakgzpf12TwyPQXmjDJr0B/7+oZWDGClrSKGLYr/oVpiSoo1EE4OI
+ bw2HtHaO5AyHlpg6KWyfRZ4E=
+X-Envelope-To: linux-xfs@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 2a17566585df841e;
+	Tue, 29 Sep 2026 07:17:34 +0000
+X-Mizu-Trace-ID: 2a17566585df841e
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <ffd48d49-c4f6-4fc3-88a5-0adb11d0d6b9@linux.dev>
+Date: Tue, 29 Sep 2026 09:17:32 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260929034158.1455429-5-neilb@ownmail.net>
-Sender: Al Viro <viro@ftp.linux.org.uk>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] xfs: don't limit software atomic writes by the group
+ alignment
+To: John Garry <john.garry@linux.dev>, Pankaj Raghav <p.raghav@samsung.com>,
+ cem@kernel.org, linux-xfs@vger.kernel.org
+Cc: John Garry <john.g.garry@oracle.com>, "Darrick J . Wong"
+ <djwong@kernel.org>, gost.dev@samsung.com
+References: <20260925103640.932735-1-p.raghav@samsung.com>
+ <41749fa7-dcfa-46f0-af0f-ed3fa5f39f15@linux.dev>
+Content-Language: en-US
+From: Pankaj Raghav <pankaj.raghav@linux.dev>
+In-Reply-To: <41749fa7-dcfa-46f0-af0f-ed3fa5f39f15@linux.dev>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-On Tue, Sep 29, 2026 at 01:36:04PM +1000, NeilBrown wrote:
-> From: NeilBrown <neil@brown.name>
+
+
+On 9/25/2026 1:44 PM, John Garry wrote:
+> On 9/25/26 11:36, Pankaj Raghav wrote:
+>  > xfs_calc_group_awu_max() clamps the atomic write unit maximum to the
+>  > greatest power-of-two factor of the group size when the device advertises
+>  > atomic writes, so that allocations can be made naturally aligned for
+>  > REQ_ATOMIC. But that value is the software limit: it is only used when
+>  > reflink is enabled, and out of place writes through the COW fork have no
+>  > alignment requirement.
 > 
-> These d_add() calls cannot be necessary.  The inode given is NULL so all
-> they do is attach the dentry to the hash table.
+> We have mkfs atomic write options for selecting atomic write limits - you have 
+> tried that, right?
 > 
-> If configfs_attach_group() fails, then d_drop() is called so the dentry
-> will be detached.
-> If configfs_attach_group() succeeds, then
->  configfs_attach_group -> configfs_attach_item ->configfs_create_dir
-> must have succeeded, so d_instantiate() will have been called and the
-> dentry hashed there.
 
-Neither in mainline, nor in -next...
+Hmm, I did not try that but I restricted the agsize to a power of 2 value to
+workaround the limitation.
 
-d_add() _is_ wrong there, but this is not the right solution.  What
-we really ought to do is build the subtree first, then either dissolve
-it (without any pathname resolution having ever seen it) or move it
-in place once we are sure that everything worked.
+Are you talking about this option: max_atomic_write?
+
+In any case, with default options the atomic values we are exposing is not 
+correct at the moment.
+
+>>
+>> A filesystem on a > 4TB device that advertises 16k atomic writes then reports
+>> an atomic write unit maximum of a single fsblock and an optimal maximum of 0,
+>> and rejects any larger RWF_ATOMIC write. That is worse than the same filesystem
+>> on a device with no atomic write support at all.
+>>
+>> Compute the software limit from the group size alone, and apply the
+>> alignment constraint in xfs_get_atomic_write_max_opt() instead, which is
+>> what reports the size that can be offloaded to the hardware.
+>>
+>> Results on a 8TB device with 16k hardware atomic support with 4k
+>> blocksize:
+>>
+>> Before patches:
+>> /media/test/hello.txt:
+>>    stx_atomic_write_unit_min:            4096
+>>    stx_atomic_write_unit_max:            4096
+>>    stx_atomic_write_unit_max_opt:        0
+>>    stx_atomic_write_segments_max:        1
+>>
+>> After patches:
+>> /media/test/hello.txt:
+>>    stx_atomic_write_unit_min:            4096
+>>    stx_atomic_write_unit_max:            2097152
+> 
+> Here the AG size may not be a multiple of 2097152B, right? If so, when we try to 
+> naturally align the allocation for a CoW write, even if the AG blocks are 
+> naturally aligned (per AG), the disk blocks may not be naturnally aligned - is 
+> this correct? For HW-based atomic writes, we want naturally aligned disk blocks.
+> 
+
+Correct.
+
+Just to give more context:
+
+Trace of calc_atomic_write_unit_max:
+
+  mount-696   [010]   449.230543: xfs_calc_atomic_write_unit_max: dev 259:0 ag 
+max_write 262144 max_ioend 512 max_gsize 134217728 awu_max 512
+
+2097152 comes from awumax being 512 fsblocks.
+
+root@debian:~# xfs_info /dev/nvme0n1
+meta-data=/dev/nvme0n1           isize=512    agcount=8, agsize=268435455 blks
+          =                       sectsz=4096  attr=2, projid32bit=1
+          =                       crc=1        finobt=1, sparse=1, rmapbt=0
+          =                       reflink=1    bigtime=1 inobtcount=1 nrext64=0
+data     =                       bsize=4096   blocks=2147483640, imaxpct=5
+          =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+log      =internal log           bsize=4096   blocks=521728, version=2
+          =                       sectsz=4096  sunit=1 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+
+>>    stx_atomic_write_unit_max_opt:        4096
+>>    stx_atomic_write_segments_max:        1
+>>
+>> Results on a 8TB device with 16k hardware atomic support with 16k
+>> blocksize:
+>>
+>> Before patches:
+>> /media/test/hello.txt:
+>>    stx_atomic_write_unit_min:            16384
+>>    stx_atomic_write_unit_max:            16384
+>>    stx_atomic_write_unit_max_opt:        0
+>>    stx_atomic_write_segments_max:        1
+>>
+>> After patches:
+>> /media/test/hello.txt:
+>>    stx_atomic_write_unit_min:            16384
+>>    stx_atomic_write_unit_max:            33554432
+>>    stx_atomic_write_unit_max_opt:        16384
+>>    stx_atomic_write_segments_max:        1
+>>
+--
+Pankaj
