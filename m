@@ -1,42 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CEB0351C17;
-	Tue, 29 Sep 2026 01:06:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EF662848BE;
+	Tue, 29 Sep 2026 01:19:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790644001; cv=none; b=cfxMAdPoxrdd+NaJzj4QZ7JVCx/NZwJkvdSxut5gseMC9YrdMsoimCbQt5dCArlUsfMlNo/WM2tPcq9fBXQythnBO6YFuxEu2YIhW/yIuz8fbJsEtq8waAuiZkw3B/Nkj1HOcrduqTRaz1SlgdE70sWgr7E21m1JYZhkshuYvA4=
+	t=1790644778; cv=none; b=r5Wjr/wji5sWiUGQ09S1QDNSUbxF9r4V92lnzr930xeMHzFb8IoP/4gNoiGV+NAcibgP4COYi6O1xQIVfNrCX8eMYu1CenxF/RTD9l7piOAJ/o3NkD4m8cmEye1zSmMJqeP2l3n3iBe3ZroWnYBmizx3f1tce1BRVEdW4LPJa/I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790644001; c=relaxed/simple;
-	bh=mDPM37/KsmOSBDsKAf1fSB83Lad8d8Yospq5A6p1X2Q=;
+	s=arc-20240116; t=1790644778; c=relaxed/simple;
+	bh=NcIK8eDUgBiiHeHkUwrVDBJPwT+sahnN9L6M2Na/nAE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=W0dGSE+zQ6O75O7Oq6LIXMgmqDKRF0hdpKQBItEudf41+dPoWJJJsaHmRQO7RphUGT/Zo4dUIbiKO2CjdnnzQzkD054g2I7NrgFaUNme06TAhHa3QAH9YZaLdp5TURrR2zwdgQnhmwASpCeRBk7HKCZVfHnRn6KHsHa7wtIM/ZU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MG4iJBNX; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=DRBJjdRDhvJQnfRwEZKLDu9FmB4DepnJd4rS+rBX+q+uwD969QC+2+lOt6rMiy0NE4eNHUdVuK7g2N5OwzQJRHsVbtatw/d0xVCZ8kLdGREmsSoWR1aFuYYdf2N3ySd5pRERaGQkXA1e0w8whL6LSjKAh4hxHctxnNx64hs1XI4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ElpAskgV; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MG4iJBNX"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id A65031F000FF;
-	Tue, 29 Sep 2026 01:06:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ElpAskgV"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 26C0A1F000FF;
+	Tue, 29 Sep 2026 01:19:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790643999;
-	bh=eSqX1y5jf0iJm9aQ/Uwsh+dRyv2y2JByVpu9ugM0DME=;
+	s=k20260515; t=1790644777;
+	bh=v8AQHcuJlIdJ2XobFF5jUXw8iM4gqEW3E9Lh4xH8DAM=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=MG4iJBNX9hMVLe2Bu1PqioSkob6lmilRW0hudK+SWfmDlbEAdVvljpjYkGMmf9Hw9
-	 kcLQEOUMbvQ4rG3+93ZzKWvAq0IEs8bkIPj+kdKN3mrbxukYj6pPr+h8CF8GLgANP+
-	 cWapnw4J5/4wv6X89MrLnPZffRBEI8SO52dwE9p/N7bd1VW3fKUHIP5rGi0vnihZ4G
-	 fhWw8lV1fH4ockjix4pFYPUuRC4CzqwnrY8xwgPewOwQIjVdug8PNhbBxhJiXBGUmv
-	 z5OJfnYk9UvZrJiXf1YCHl+hSm+XGHPSXHnu6KCk3GqhZFZEUuEJil2QJUI67TvANR
-	 F0QdWFUIBA1gw==
-Date: Mon, 28 Sep 2026 18:06:39 -0700
+	b=ElpAskgVGcC/ITPLz9HvE6eD5ifis3kbTWWacpvsXLh0eTzz/49MIlvuGyv8hxss3
+	 FOaT4MVHvuFyrU8uvjcYkSFWXKXcnvZ0H3rQTksRUk2PH3Gq+4LrVGTRRuxmKOt360
+	 6qZ/0vCm9sv2iCY4L6upywVGIAb0XHBkYgh5JjIncUShu6ZPqQJ1jmPDIVvRM+EMHQ
+	 aisD5jmmZA/6RS0s2g9TYwb04WnFLFd9NpobA8m/qJcdg8ESys3CDH9GP+0r+mKgLa
+	 Lxcx212FZV/G+fqWsQulfC+w1D1ES92xjR9+RMLBOFz5lexI4w7PSNPjxkJRbjlqHj
+	 Za0pwNMOmL+TA==
+Date: Mon, 28 Sep 2026 18:19:36 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Carlos Maiolino <cem@kernel.org>, Jens Axboe <axboe@kernel.dk>,
 	Christian Brauner <brauner@kernel.org>, linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 16/21] xfs: add data checksum support to zoned garbage
- collection
-Message-ID: <20260929010639.GX2705364@frogsfrogsfrogs>
+Subject: Re: [PATCH 17/21] xfs: verify data checksums during media
+ verification
+Message-ID: <20260929011936.GY2705364@frogsfrogsfrogs>
 References: <20260924100032.2733101-1-hch@lst.de>
- <20260924100032.2733101-17-hch@lst.de>
+ <20260924100032.2733101-18-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,162 +45,208 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260924100032.2733101-17-hch@lst.de>
+In-Reply-To: <20260924100032.2733101-18-hch@lst.de>
 
-On Thu, Sep 24, 2026 at 11:59:48AM +0200, Christoph Hellwig wrote:
-> Transfer the checksum from the old location to the new one.  The
-> implementation mirrors that of user data reads and writes.
+On Thu, Sep 24, 2026 at 11:59:49AM +0200, Christoph Hellwig wrote:
+> Wire up reading and verifying data checksums during media verification.
+> This is very similar to the file read path in that it kicks of an async
+> read for the checksum buffer before reading the data, and then validating
+> once both are read in.
+> 
+> To support this, split the per-read logic in xfs_verify_media into a
+> separate helpers for the data checksums vs no checksum cases.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/xfs/xfs_zone_gc.c | 65 ++++++++++++++++++++++++++++++++++++--------
->  1 file changed, 53 insertions(+), 12 deletions(-)
+>  fs/xfs/xfs_verify_media.c | 131 +++++++++++++++++++++++++++++++-------
+>  1 file changed, 107 insertions(+), 24 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_zone_gc.c b/fs/xfs/xfs_zone_gc.c
-> index 5fdcf98a2133..1cebd2ee2136 100644
-> --- a/fs/xfs/xfs_zone_gc.c
-> +++ b/fs/xfs/xfs_zone_gc.c
-> @@ -21,6 +21,7 @@
->  #include "xfs_zone_alloc.h"
->  #include "xfs_zone_priv.h"
->  #include "xfs_zones.h"
+> diff --git a/fs/xfs/xfs_verify_media.c b/fs/xfs/xfs_verify_media.c
+> index 71f4d6c832a9..46a19405c9e5 100644
+> --- a/fs/xfs/xfs_verify_media.c
+> +++ b/fs/xfs/xfs_verify_media.c
+> @@ -22,6 +22,7 @@
+>  #include "xfs_rtrmap_btree.h"
+>  #include "xfs_health.h"
+>  #include "xfs_healthmon.h"
 > +#include "xfs_rtcsum.h"
 >  #include "xfs_trace.h"
+>  #include "xfs_verify_media.h"
 >  
->  /*
-> @@ -106,6 +107,10 @@ struct xfs_gc_bio {
->  	/* Realtime group currently being reclaimed */
->  	struct xfs_rtgroup		*victim_rtg;
->  
-> +	/* Buffer for data checksums */
-> +	struct xfs_buf			*csum_bp;
-> +	void				*csum_buf;
-
-Where is csum_buf used?
-
-> +
->  	/* Bio used for reads and writes, including the bvec used by it */
->  	struct bio			bio;	/* must be last */
->  };
-> @@ -660,6 +665,20 @@ xfs_zone_gc_alloc_blocks(
->  	return true;
+> @@ -261,6 +262,95 @@ xfs_verify_media_error(
+>  	}
 >  }
 >  
-> +static void
-> +xfs_zone_gc_free_chunk(
-> +	struct xfs_gc_bio	*chunk)
+> +static int
+> +xfs_submit_verify_bio(
+> +	struct xfs_mount	*mp,
+> +	struct xfs_verify_media	*me,
+> +	struct xfs_buftarg	*btp,
+> +	struct folio		*folio,
+> +	xfs_daddr_t		*daddr,
+> +	uint64_t		*bbcount)
 > +{
-> +	atomic_dec(&chunk->victim_rtg->rtg_gccount);
-> +	xfs_rtgroup_rele(chunk->victim_rtg);
-> +	list_del(&chunk->entry);
-> +	xfs_open_zone_put(chunk->oz);
-> +	if (chunk->csum_bp)
-> +		xfs_buf_rele(chunk->csum_bp);
-> +	xfs_irele(chunk->ip);
-> +	bio_put(&chunk->bio);
+> +	unsigned int		bio_bbcount;
+> +	int			error;
+> +
+> +	bio_bbcount = min(*bbcount, folio_size(folio) >> SECTOR_SHIFT);
+> +	error = bdev_rw_virt(btp->bt_bdev, *daddr, folio_address(folio),
+> +			bio_bbcount << SECTOR_SHIFT,
+> +			REQ_OP_READ);
+> +	if (error) {
+> +		xfs_verify_media_error(mp, me, btp, *daddr, bio_bbcount, error);
+> +		return 1;
+> +	}
+> +
+> +	*daddr += bio_bbcount;
+> +	*bbcount -= bio_bbcount;
+> +	return 0;
 > +}
 > +
->  static void
->  xfs_zone_gc_add_data(
->  	struct xfs_gc_bio	*chunk)
-> @@ -725,6 +744,11 @@ xfs_zone_gc_start_chunk(
->  	if (!xfs_zone_gc_iter_irec(mp, iter, &irec, &ip))
->  		return false;
->  
-> +	if (xfs_has_rtcsum(mp)) {
-> +		irec.rm_blockcount = min(irec.rm_blockcount,
-> +			xfs_rtcsum_max_len(mp, irec.rm_startblock));
-> +	}
-> +
->  	if (!xfs_zone_gc_alloc_blocks(data, &irec.rm_blockcount, &daddr,
->  			&is_seq)) {
->  		xfs_irele(ip);
-> @@ -748,6 +772,7 @@ xfs_zone_gc_start_chunk(
->  	chunk->data = data;
->  	chunk->oz = data->oz;
->  	chunk->victim_rtg = iter->victim_rtg;
-> +	chunk->csum_bp = NULL;
->  	atomic_inc(&rtg_group(chunk->victim_rtg)->xg_active_ref);
->  	atomic_inc(&chunk->victim_rtg->rtg_gccount);
->  
-> @@ -764,22 +789,22 @@ xfs_zone_gc_start_chunk(
->  	list_add_tail(&chunk->entry, &data->reading);
->  	xfs_zone_gc_iter_advance(iter, irec.rm_blockcount);
->  
-> +	if (xfs_is_rtcsum_inode(ip)) {
-> +		int error;
-> +
-> +		error = xfs_rtcsum_read_async(mp, chunk->old_startblock,
-> +				&chunk->csum_bp);
-> +		if (error) {
-> +			xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
-> +			xfs_zone_gc_free_chunk(chunk);
-> +			return false;
-> +		}
+> +static int
+> +xfs_submit_verify_bio_csum(
 
-Ok so this starts the csum block read asynchronously, and then submits
-the read bio.  chunk->csum_bp is the checksum buffer of the rtcsum file
-of the zone we're cleaning out, right?
+What's the return value convention here?  1 for media error, 0 for
+success, or negative errno if we failed to issue the read?
 
-> +	}
+> +	struct xfs_mount	*mp,
+> +	struct xfs_verify_media	*me,
+> +	struct xfs_buftarg	*btp,
+> +	struct folio		*folio,
+> +	xfs_daddr_t		*daddr,
+> +	uint64_t		*bbcount)
+> +{
+> +	struct xfs_buf		*csum_bp = NULL;
+> +	unsigned int		bio_bbcount;
+> +	struct bvec_iter	saved_iter;
+> +	xfs_fsblock_t		bno, end;
+> +	xfs_filblks_t		len;
+> +	struct bio		bio;
+> +	struct bio_vec		bv;
+> +	int			error;
 > +
->  	submit_bio(bio);
->  	return true;
->  }
->  
-> -static void
-> -xfs_zone_gc_free_chunk(
-> -	struct xfs_gc_bio	*chunk)
-> -{
-> -	atomic_dec(&chunk->victim_rtg->rtg_gccount);
-> -	xfs_rtgroup_rele(chunk->victim_rtg);
-> -	list_del(&chunk->entry);
-> -	xfs_open_zone_put(chunk->oz);
-> -	xfs_irele(chunk->ip);
-> -	bio_put(&chunk->bio);
-> -}
-> -
->  static void
->  xfs_zone_gc_submit_write(
->  	struct xfs_zone_gc_data	*data,
-> @@ -832,6 +857,9 @@ xfs_zone_gc_split_write(
->  	split_chunk->old_startblock = chunk->old_startblock;
->  	split_chunk->new_daddr = chunk->new_daddr;
->  	split_chunk->oz = chunk->oz;
-> +	split_chunk->csum_bp = chunk->csum_bp;
-> +	if (split_chunk->csum_bp)
-> +		xfs_buf_hold(split_chunk->csum_bp);
->  	atomic_inc(&chunk->oz->oz_ref);
->  
->  	split_chunk->victim_rtg = chunk->victim_rtg;
-> @@ -919,6 +947,19 @@ xfs_zone_gc_finish_chunk(
->  
->  	if (chunk->is_seq)
->  		chunk->new_daddr = chunk->bio.bi_iter.bi_sector;
-> +
-> +	if (xfs_is_rtcsum_inode(ip)) {
-> +		unsigned int	boff;
-> +
-> +		error = xfs_buf_read_async_wait(chunk->csum_bp);
-> +		if (error)
-> +			goto free;
-> +
-> +		boff = xfs_rtb_to_rtcsumoff(mp, chunk->old_startblock);
-> +		error = xfs_rtcsum_log(chunk->oz, chunk->new_daddr, chunk->len,
-> +				chunk->csum_bp->b_addr + boff);
+> +	bno = xfs_daddr_to_rtb(mp, *daddr);
+> +	end = xfs_daddr_to_rtb(mp, *daddr + *bbcount);
 
-...and then write the same checksum to the new daddr using the old
-checksum.  There's no explicit validation of the checksum in the garbage
-collector itself, but I gather the read ioend did this for us already,
-right?
+It occurs to me that xfs_daddr_to_rtb rounds its argument down.  So if
+you pass in daddr==0 and bbcount==2, you'll get bno==end==0 and do no
+verification.  I would hope that callers won't pass in parameters like
+that, but who knows?
+
+So I think this should be:
+
+	end = xfs_daddr_to_rtb(mp,
+			*daddr + *bbcount + XFS_FSB_TO_BB(mp, 1) - 1);
+
+Which I admit is a bit gross.
 
 --D
 
-> +	}
+> +	len = min(end - bno, XFS_B_TO_FSBT(mp, folio_size(folio)));
+> +	len = min(len, xfs_rtcsum_max_len(mp, bno));
 > +
->  	error = xfs_zoned_end_io(ip, chunk->offset, chunk->len,
->  			chunk->new_daddr, chunk->oz, chunk->old_startblock);
->  free:
+> +	error = xfs_rtcsum_read_async(mp, bno, &csum_bp);
+> +	if (error)
+> +		return error;
+> +
+> +	*daddr = xfs_rtb_to_daddr(mp, bno);
+> +	bio_bbcount = XFS_FSB_TO_BB(mp, len);
+> +
+> +	bio_init(&bio, btp->bt_bdev, &bv, 1, REQ_OP_READ);
+> +	bio.bi_iter.bi_sector = *daddr;
+> +	bio_add_folio_nofail(&bio, folio,
+> +			min(bio_bbcount << SECTOR_SHIFT, folio_size(folio)), 0);
+> +	saved_iter = bio.bi_iter;
+> +
+> +	error = submit_bio_wait(&bio);
+> +	if (error)
+> +		goto out_media_error;
+> +
+> +	error = xfs_buf_read_async_wait(csum_bp);
+> +	if (error)
+> +		goto out_buf_rele;
+> +
+> +	error = xfs_csum_verify(mp, &bio, &saved_iter,
+> +			csum_bp->b_addr + xfs_rtb_to_rtcsumoff(mp, bno), bno,
+> +			false);
+> +	if (error)
+> +		goto out_media_error;
+> +
+> +	*daddr += bio_bbcount;
+> +	*bbcount -= bio_bbcount;
+> +
+> +out_buf_rele:
+> +	xfs_buf_rele(csum_bp);
+> +	bio_uninit(&bio);
+> +	return error;
+> +out_media_error:
+> +	xfs_verify_media_error(mp, me, btp, *daddr, bio_bbcount, error);
+> +	error = 1;
+> +	goto out_buf_rele;
+> +}
+> +
+>  /* Verify the media of an xfs device by submitting read requests to the disk. */
+>  static int
+>  xfs_verify_media(
+> @@ -310,18 +400,13 @@ xfs_verify_media(
+>  		return 0;
+>  
+>  	/*
+> -	 * There are three ranges involved here:
+> -	 *
+> -	 *  - [me->me_start_daddr, me->me_end_daddr) is the range that the
+> -	 *    user wants to verify.  end_daddr can be beyond the end of the
+> -	 *    disk; we'll constrain it to the end if necessary.
+> +	 * [me->me_start_daddr, me->me_end_daddr) is the range that the user
+> +	 * wants to verify.  end_daddr can be beyond the end of the disk; we'll
+> +	 * constrain it to the end if necessary.
+>  	 *
+> -	 *  - [daddr, me->me_end_daddr) is the range that we have not yet
+> -	 *    verified.  We update daddr after each successful read.
+> -	 *    me->me_start_daddr is set to daddr before returning.
+> -	 *
+> -	 *  - [daddr, daddr + bio_bbcount) is the range that we're currently
+> -	 *    verifying.
+> +	 * [daddr, me->me_end_daddr) is the range that we have not yet verified.
+> +	 * We update daddr after each successful read.  me->me_start_daddr is
+> +	 * set to daddr before returning.
+>  	 */
+>  	daddr = me->me_start_daddr;
+>  	bbcount = min_t(sector_t, me->me_end_daddr, btp->bt_nr_sectors) -
+> @@ -334,22 +419,20 @@ xfs_verify_media(
+>  	trace_xfs_verify_media(mp, me, btp->bt_dev, daddr, bbcount, folio);
+>  
+>  	for (;;) {
+> -		unsigned int	bio_bbcount;
+> -
+> -		bio_bbcount = min(bbcount, folio_size(folio) >> SECTOR_SHIFT);
+> -		error = bdev_rw_virt(btp->bt_bdev, daddr, folio_address(folio),
+> -				bio_bbcount << SECTOR_SHIFT,
+> -				REQ_OP_READ);
+> +		if (IS_ENABLED(CONFIG_XFS_RT) &&
+> +		    me->me_dev == XFS_DEV_RT &&
+> +		    xfs_has_rtcsum(mp)) {
+> +			error = xfs_submit_verify_bio_csum(mp, me, btp, folio,
+> +					&daddr, &bbcount);
+> +		} else {
+> +			error = xfs_submit_verify_bio(mp, me, btp, folio,
+> +					&daddr, &bbcount);
+> +		}
+>  		if (error) {
+> -			xfs_verify_media_error(mp, me, btp, daddr, bio_bbcount,
+> -					error);
+> -			error = 0;
+> +			if (error == 1)
+> +				error = 0;
+>  			break;
+>  		}
+> -
+> -		daddr += bio_bbcount;
+> -		bbcount -= bio_bbcount;
+> -
+>  		if (bbcount == 0)
+>  			break;
+>  
 > -- 
 > 2.53.0
 > 
