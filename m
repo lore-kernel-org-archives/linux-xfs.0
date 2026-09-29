@@ -1,73 +1,73 @@
 Received: from flow-b2-smtp.messagingengine.com (flow-b2-smtp.messagingengine.com [202.12.124.137])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 146363A9D95;
-	Tue, 29 Sep 2026 03:42:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AC533A1689;
+	Tue, 29 Sep 2026 03:42:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.137
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790653367; cv=none; b=PTOlvgkV/kIw6UEPn8oUMZHV6glhZBwiFFHcigHQ0LRFNMN6By/WMLdP7bX1/8YvrdsnYglh5v9wZj9QVYZRZJ2lUNekeFiXiyF04RLg5iwGzEYpGHyVzIp0282CfV/KtjL+8MPvOnUCfMYCyBDudNfV/z067axGMwdk+yCymM8=
+	t=1790653378; cv=none; b=pGOIoPkwzXhZhaCP3YxUAg+oXaGZGMN1D6JpturciFMotmFDTpCs2tb8rO164TNv2qYdc8oKNwW6jZNlMP0ItnlVnLgbF6elj5IBKYT5PS1/TlawuygDRH586RQ1vRHiZm9e2uM+lTXVTaY2aLHlpX2C9SP88oqoNNjSYlQqSxM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790653367; c=relaxed/simple;
-	bh=YHrMII0EF+C4y/KoYrUqqLPHLV7rF/rb01KG4ozZt2U=;
+	s=arc-20240116; t=1790653378; c=relaxed/simple;
+	bh=Qd14xP5VlLyXFKx+ORoztcHxVFAgERVgaqTkeiMmfv4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=bwKCbELjZYtRbZc5kXQWSSzsufkGNVKMILr1hg6po9U/pY2r0VOvOuHGwPdoHukuUb6kjBCDGf/YGr1erF6utFHBYY0pSYupNoUTHUeQFNypmmOiCld4fE9U1d0hdRzE4MACSPOwX6CtyALjFog/VPyHwkDcufvQVyxI8i+qYrE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ownmail.net; spf=pass smtp.mailfrom=ownmail.net; dkim=pass (2048-bit key) header.d=ownmail.net header.i=@ownmail.net header.b=LzlYWz/x; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=STfuHBhZ; arc=none smtp.client-ip=202.12.124.137
+	 MIME-Version; b=YJH7400qckQjf+2FzRnhgrbS7eXXkqWVLTvJ8HaIutVVZTxzSqCsuLugz3LtXiYBPKS+vXJNdrmHqkmYNwJwZKr3CovQoBO8ATYmivMYCkdVfoTwgSnNwHox8JEMshxvQc6u+d8MAcYIaOSVdJo4fH8sL9mdVgJruqdda4QbsxU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ownmail.net; spf=pass smtp.mailfrom=ownmail.net; dkim=pass (2048-bit key) header.d=ownmail.net header.i=@ownmail.net header.b=IO9CGq0n; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=BUefSLyP; arc=none smtp.client-ip=202.12.124.137
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ownmail.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ownmail.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ownmail.net header.i=@ownmail.net header.b="LzlYWz/x";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="STfuHBhZ"
-Received: from phl-compute-03.internal (phl-compute-03.internal [10.202.2.43])
-	by mailflow.stl.internal (Postfix) with ESMTP id B185D130192D;
-	Mon, 28 Sep 2026 23:42:44 -0400 (EDT)
-Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-03.internal (MEProxy); Mon, 28 Sep 2026 23:42:45 -0400
+	dkim=pass (2048-bit key) header.d=ownmail.net header.i=@ownmail.net header.b="IO9CGq0n";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="BUefSLyP"
+Received: from phl-compute-06.internal (phl-compute-06.internal [10.202.2.46])
+	by mailflow.stl.internal (Postfix) with ESMTP id 06FC41301935;
+	Mon, 28 Sep 2026 23:42:56 -0400 (EDT)
+Received: from phl-frontend-04 ([10.202.2.163])
+  by phl-compute-06.internal (MEProxy); Mon, 28 Sep 2026 23:42:56 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ownmail.net; h=
 	cc:cc:content-transfer-encoding:content-type:date:date:from:from
 	:in-reply-to:in-reply-to:message-id:mime-version:references
-	:reply-to:reply-to:subject:subject:to:to; s=fm1; t=1790653364;
-	 x=1790660564; bh=EWrP5nNb8I3PjLtNlYNMtYoGZpi6j9B8G1WFvVNpccA=; b=
-	LzlYWz/xaQPHRAjmi2sc4x429GQsZ9jl9kghm5nuoZC3ftOXUrYzqMv6b6xSKENw
-	9FpQOKBm7+FdakkdECDpmP50KW9Y8RXVXdZx+wMxaDF3rjlTpBHLCLgP4YJqBFBl
-	EoZM+bpg/LJ7+dqED9WxZzFWO7fNrvE0BRhPa+zffFRrr/gRpnTzpTwCW30F6rz+
-	ZoWmIiWVF0jH1LIrmZndKBKwha8ma/K7HHXjEkqxFhJtEEiy+NXoxuYV1hgC9syW
-	AMCm2z4sq0HsOWqv4vgaVwenf+BbwZl/fj+rY9OEC5cpQKXRLworzhoDFEW9wHTp
-	KyyoXOOr2qbUPM6hoiTA9g==
+	:reply-to:reply-to:subject:subject:to:to; s=fm1; t=1790653375;
+	 x=1790660575; bh=2O/60FCivWhWCVVOfomZmHHuRxTPAq2UvXz2LKlNcDs=; b=
+	IO9CGq0nVjFm8570ZyKM27IXYcKPj24uoV5oacziNQ3brhdDmFbxyT0nT2TVWOjV
+	9U0LCv7x960dMNNFT2ZwoTfLJEtsb1b7WYfmjuny8+MJX3nhvfNZ5XAZrPPa7bjM
+	cEmgOjmTYfjLoSTVWSROU1ABqE0dAu5U+eBwOt25CdVk0JsXX/MEHWa80YYGJydK
+	Zlyxd4ROsv7AuTCMTefhDLOvS2kMIb/yw5Zkf0L13qd+X9MNrm5qrwlQZYwo/SED
+	FegfyydBZa1ZriG9IpSMVPUehQop+SbMYFjR9q/UMK3bRec4tBNnpzx0VZQ1jtQY
+	Z7A+zY5fpKZ6+eCJxaeTDg==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
 	messagingengine.com; h=cc:cc:content-transfer-encoding
 	:content-type:date:date:feedback-id:feedback-id:from:from
 	:in-reply-to:in-reply-to:message-id:mime-version:references
 	:reply-to:reply-to:subject:subject:to:to:x-me-proxy:x-me-sender
-	:x-me-sender:x-sasl-enc; s=fm1; t=1790653364; x=1790660564; bh=E
-	WrP5nNb8I3PjLtNlYNMtYoGZpi6j9B8G1WFvVNpccA=; b=STfuHBhZIx2BJm7GO
-	ufMkWZnPLmACNhxBlxxxA75f6CKA6nOuzG3LDX/TRS7CPQQdJfvs1zmNw5uZkrzA
-	LMdaL94HgrlBOUIZbwhcVGP5fs9UPS0Ezsn83Mwnq4szOpSku3X4ABYPEeyE6UoF
-	c/ea070aNr284RJnL0KAQn5YHS8F8AyYJDbEnEPDHVj82F4+iwUNGtKXPvsdF+FJ
-	0TUyKXY5gLpTY3wSUSS3gnmKEvyAyG6w+CsUjpVklXQMx0AU90S1LK1otBptk78X
-	XsPNxYT2kyfyL1HBdHRwZ5EXiSf7+NCV1TqHGyKTj6zEHrPzQWAVljMwWuwRs7cR
-	gQ4hg==
-X-ME-Sender: <xms:tDO7asQA2cQWsRp8ZT3D9HQqbqwlrk_XY7f84goV87Wr39FRRXMrLw>
-    <xme:tDO7asuJxoMrZMEwS_r9d1WET4JhwZYCrv4IDpeSr3bOYaqr3wr5bz34NW-jdZZjG
-    wjjzGmp0OvOhBp21ZciZZ_eSVpRnpddHiFosKnpyGjmBsmjTgZt>
-X-ME-Received: <xmr:tDO7aiBiQelNcjPHqEEPc5kynT_ZlqvpqsovlQTa6GCSHuDgATpelJ_vzQeXO_cb2kjeLZIKVBn1irynuYAJyb2ZDuSjW0U>
+	:x-me-sender:x-sasl-enc; s=fm1; t=1790653375; x=1790660575; bh=2
+	O/60FCivWhWCVVOfomZmHHuRxTPAq2UvXz2LKlNcDs=; b=BUefSLyP/rkSO/ut2
+	7b2if0LHKCGOmNT2Xrqx1RQrDE0UrwT6mWotfuWdE371Vs6k/5eTJlVORtjUlRl4
+	vDen87HLen3IwDO9NWQhNqwuHPiWhKMvaf2Tms+/BFR49++jjfQ+tzdM07JJjfL/
+	6oT3tCkzAmtZ6ZWnEHYXPPQEaMsDOlwjC6Ts9pUn1fSUrVTdah5aMI1Wgws/dKKk
+	zTG5Fkn4lfcVp02IwhDdvy0x/99xU7QSWd9sgavNtpkQ2A39TP9Lldy6MhZJCfWD
+	VG3kl0qc75kSEK8T0gEQiz8KV9SkL8SD3ZHTEeODVFecUaXNMXR0SSdRn52rKyc3
+	bqBqw==
+X-ME-Sender: <xms:vzO7apxeKOwB8960HYdX2wEZWf8hG0-b0MbfQJ0aurUbwjvyI0HzFA>
+    <xme:vzO7asOOAWJcXkwvlKVQXpREg9_qmIKZzWHOIvgEjnwXoG7B1i31JKALzdI4yj5Oo
+    1bbCdGocJhKM-AcU6pYzkAKXcLqLliFiCc7zRfmjVJeLeUVrGHD>
+X-ME-Received: <xmr:vzO7arhPeTMucOaOkGJaNMh7xWd1QqaIqlSfiSJZLYmqsVNY5ZHy6VIrkdBhPOm0xbLK6cTecsAUGGrmVT4Rvqux0QyHwfI>
 X-ME-Proxy-Cause: dmFkZTGoJB+17Zq7ThrEPjmxn4ZGYu519RzWwVi/88aejzKjstMboztaed73ef7D6avpE+
     +4ud1a3y7i3orjwLfnXoctNyz4isc8MlqqkCj9w/LgYTxltRiENCW6GCIqrBIGfd6BoOtn
     3U4T9DnMQq0t334tHmkLT0tBGbfhvTaaBwaOBKtxwtl6WpY46qwankbHLMumQlIvXZxJZX
     MK4M+NdZABlSsm1lFGpu8Zoavf0+po6/QQ3FmqOSdXOPNwreWLw4U6EONlQdAFPuoTNGlS
-    rFYPmLdcGE1rV4M0fAMpJKofG+st3+8PfQ+b7I9sMwGW86B3jq8HWH1QNmIbUmtd6GqsXK
-    DC+GUtJHnyMmRkH4wFwirqcbuesm1+52cfp5olHBjWV3n8bdv8DMYag9MTP6cVmvbNKQsK
-    bZmhQ+ixvel2oXc+5Pg3sPF6La15pWjbBX7y1xmjwy7R1ukYFOszkEG5j0Ke11PX5NOrwt
-    v4BghLxi6SSbePPiPRav+EFRd3kGsE35BUZjCtg+fwu4e/KQOU5naQYTqVkpNkEi29Dlxh
-    uPtQvGYB/mVqCYLfWgTv8ifIuRqPAI33Ue7gbl6QvWbBOj05uJueTVVCmnK0w6ZMeIfMXt
-    nBtLmUS80WEftzMFv1h16932uEklpiV9CtNQaXniLVOLg3xA+FQJa1A55yXQ
-X-ME-Proxy: <xmx:tDO7au0reeHtz0UH5rjn6MKQbrIpxtwfGYwZaEPqjAgkYwyBYeggpw>
-    <xmx:tDO7akT_Xf9FblU-ZqQamsdNdZgAV6Cv2FbkrZrP3-sbpuNEqD_bUg>
-    <xmx:tDO7atvdOfJMqooKYF8pI2Cuzq-jEtq5uSGz8PcNF-CY1v3gMA_whA>
-    <xmx:tDO7ak5Vay2Se88fmS8TgJRDVPOdsvQKaGWZ1kAXTPiymvJ-_CrUBw>
-    <xmx:tDO7asUzuJ8w5gku2jyQjTmAI5iEuEPWiZtoa6GPsX0a1qYBTXS34xVq>
+    rFYPmLdcGE1rV4M0fAMpJKofG+st3+8PfQ+b7I9sMwGW86B3jq8HWH1QNmIbUmtd6GqsIx
+    3DVTTK3c2J4I5ksQ7YyAt2ucbNF9r0AlsngiXh1ZkIv7thtpYXLNnTUIfCDQfndn444S46
+    l1dh51qZhsKVnaNR6bMarDeu5tNsrUujIGjUBidPSanYSk6e7/kUoJs+bjRxMxsvdwHgj6
+    HKnMlgAbD24F8kSuVHwT2UZSNIiB+cS4WDZI9tUzhwFoGRd2lPAtPEJSXm1Pe2LV9JNLFp
+    GZDEgrMbCuznyjBU1tR9RO271343XCEitk5ltMl9yuFi2TNY/8BLoMaBLR3qdeiu/TBDeh
+    6iPoZ0/BmrQucexrf8RUmMuStwUqtHfY0fumNrXcrDExj9+GXZGQyED/sRAQ
+X-ME-Proxy: <xmx:vzO7aqXl35KyDtNVZqU_B_sQXFLoZTfUk79lE_WKdImBnUegDQoaFQ>
+    <xmx:vzO7apxilpgaIJQYhGoMG4yYHtVRxYaJH9kAPyhtX_q4bwPNHp2G6g>
+    <xmx:vzO7alM6nb3XkoPNmncM9IB5zYXVqe-DMzfNyLu93kgkQQBmjM6Low>
+    <xmx:vzO7amaEbVoai8n90Tg8O8x-BOqC1HBtSTvCGT1QDh-AkxtgxloLIg>
+    <xmx:vzO7aqpmPFgEKPq0kHh564-Ucrq4-XCv4BztJZdZfouHRpbhNK6oprBI>
 Feedback-ID: i9d664b8f:Fastmail
 Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
- 28 Sep 2026 23:42:36 -0400 (EDT)
+ 28 Sep 2026 23:42:47 -0400 (EDT)
 From: NeilBrown <neilb@ownmail.net>
 To: Miklos Szeredi <miklos@szeredi.hu>,
 	Amir Goldstein <amir73il@gmail.com>,
@@ -98,9 +98,9 @@ Cc: Jeff Layton <jlayton@kernel.org>,
 	linux-mm@kvack.org,
 	ntfs@lists.linux.dev,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 2/7] shmem: use d_duplicate()
-Date: Tue, 29 Sep 2026 13:36:02 +1000
-Message-ID: <20260929034158.1455429-3-neilb@ownmail.net>
+Subject: [PATCH 3/7] coda: don't d_drop() early.
+Date: Tue, 29 Sep 2026 13:36:03 +1000
+Message-ID: <20260929034158.1455429-4-neilb@ownmail.net>
 X-Mailer: git-send-email 2.50.0.107.gf914562f5916.dirty
 In-Reply-To: <20260929034158.1455429-1-neilb@ownmail.net>
 References: <20260929034158.1455429-1-neilb@ownmail.net>
@@ -115,33 +115,39 @@ Content-Transfer-Encoding: 8bit
 
 From: NeilBrown <neil@brown.name>
 
-To prepare for d_alloc_parallel() being permitted without a directory
-lock, use d_duplicate() when duplicating a dentry in order to create a
-whiteout.
+Proposed locking changes will mean that calling d_drop() could
+effectively unlock the name allowing a parallel lookup to proceed.
+For this reason it could only be called *after* the attempt to create a
+symlink (in this case) has completed (whether successfully or not).
+
+So move the d_drop() to after the venus_symlink() call.
 
 Signed-off-by: NeilBrown <neil@brown.name>
 ---
- mm/shmem.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ fs/coda/dir.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/mm/shmem.c b/mm/shmem.c
-index 897fa2b61346..8fbab956466c 100644
---- a/mm/shmem.c
-+++ b/mm/shmem.c
-@@ -3976,11 +3976,12 @@ static int shmem_whiteout(struct mnt_idmap *idmap,
- 	struct dentry *whiteout;
- 	int error;
+diff --git a/fs/coda/dir.c b/fs/coda/dir.c
+index 67148edfadee..bcbc9d058303 100644
+--- a/fs/coda/dir.c
++++ b/fs/coda/dir.c
+@@ -249,13 +249,13 @@ static int coda_symlink(struct mnt_idmap *idmap,
+ 	if (symlen > CODA_MAXPATHLEN)
+ 		return -ENAMETOOLONG;
  
--	whiteout = d_alloc(old_dentry->d_parent, &old_dentry->d_name);
-+	whiteout = d_duplicate(old_dentry);
- 	if (!whiteout)
- 		return -ENOMEM;
- 	error = shmem_mknod(idmap, old_dir, whiteout,
- 			    S_IFCHR | WHITEOUT_MODE, WHITEOUT_DEV);
-+	d_lookup_done(whiteout);
- 	dput(whiteout);
- 	return error;
- }
++	error = venus_symlink(dir_inode->i_sb, coda_i2f(dir_inode), name, len,
++			      symname, symlen);
+ 	/*
+-	 * This entry is now negative. Since we do not create
++	 * This entry is still negative. Since we did not create
+ 	 * an inode for the entry we have to drop it.
+ 	 */
+ 	d_drop(de);
+-	error = venus_symlink(dir_inode->i_sb, coda_i2f(dir_inode), name, len,
+-			      symname, symlen);
+ 
+ 	/* mtime is no good anymore */
+ 	if (!error)
 -- 
 2.50.0.107.gf914562f5916.dirty
 
