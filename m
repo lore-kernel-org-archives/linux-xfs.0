@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BC013D45D5
-	for <linux-xfs@vger.kernel.org>; Wed, 30 Sep 2026 19:07:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB6A03CF039
+	for <linux-xfs@vger.kernel.org>; Wed, 30 Sep 2026 19:13:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790795260; cv=none; b=A8QvcfSUOtGvYMdLXLSke6ozw5uy2aQDhgxfXVsFERINb8bXmXB0iwhrxufdpkTH7uvYL2oajT6VBUtFa0xbUmwWw9/ekfGoGTKOgXFgTv9eIDfcY8E2kUpomraYePzi6l4ckRldjxTHTR+Z+HQsv7T6mtrOtLdZCsVrdd82f6M=
+	t=1790795599; cv=none; b=SplQvEYgCpZeL52TQSuALnv+FgT/peDSQpVFxacQeFT443V1X3S/GtO1AmI5RpmqNwZuDwy+hXJJNGqZkBAstttw4KiGfvjJa7TFFACpRe63c8GYy96tgUbQjyj8kdVGSO++H2NHqGkbuQI5EJ2SQ/wYkGruudItnD22pzl7uqU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790795260; c=relaxed/simple;
-	bh=ms3DLon+5jtZGHtEzWFVBbmBiLcFUtqnGMT6NkU7fno=;
+	s=arc-20240116; t=1790795599; c=relaxed/simple;
+	bh=DIoflC5K/0u0FJ/k38VNxJ+nrPoW6N9HhM2KaEa4w04=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=sLsAEwmdM8YHT7mtVcKYT/qxIW1wPyaQMA8/gZMmvrY7pFdMHIphV7G69vtjeefmN94/TwIkWoVPCO86UKvfmy5Zqbwjl69jCEwumZftA0n6zBfqX3sphpMMHBw+CeAtVFmKH/8iqH5GEUNPU9boxs0npt3zh61fpoHyF9OMLW4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PDJ3cVpl; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:MIME-Version; b=CDVk+uvwySZ2OxsQ21EGdzv/1OFlsXRSP8RrbFHTaFsOiCrQJGyrHPasLMRdMbFL2IzLIErLA0cjCIgUF0L0SUsOJzW0kDp03BWAs+gx4CA4tFdk106C2k+JER5L23F4nxKqM159IVDFY75M5YIZzFbt8RMgbgHHYEkDdCKqLIM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Jc3lu7d7; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PDJ3cVpl"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 1310FC4AF12
-	for <linux-xfs@vger.kernel.org>; Wed, 30 Sep 2026 19:07:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Jc3lu7d7"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 8348EC4AF12
+	for <linux-xfs@vger.kernel.org>; Wed, 30 Sep 2026 19:13:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1790795260;
-	bh=ms3DLon+5jtZGHtEzWFVBbmBiLcFUtqnGMT6NkU7fno=;
+	s=k20201202; t=1790795599;
+	bh=DIoflC5K/0u0FJ/k38VNxJ+nrPoW6N9HhM2KaEa4w04=;
 	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=PDJ3cVpleO71yVaH6lMyKEms/RD/Ig1kwZJc7pQcls7fgAWfmTzBHr2AFifjWEbph
-	 aXqO6s9LTnoG76NpK7qt57H9shG1a8N8JeKJQGyMYdfSJb1M5NYrNCjL8UyPG751Dt
-	 Dz/easUVClPGWQy+L+4DvDcLhGrV9A8FXt8EdnQSWLDz8TDfNRyLS0W/FzJ+f3CSOW
-	 Vr/0Ho2lvQn4Czy74XJRvBlwsZ+G73Tin/i3XDdl73J70+yeAV/YHHXrnsNeuq9yXv
-	 aSvWVM7aRJgbN9Fy2iFDuMGikOTPHx6osybtnx5j4BmvgYGSMzR6akDCylik1IhS1m
-	 9KzljM9U8kAxw==
+	b=Jc3lu7d7VvUxNsEtjKxaAJlIds8fqZTJe0s2KWxYgByOVR24EO0OxfFlwab0A+l1+
+	 Tn9wa48T+2b7SGn4F15KFSTFz1aIaEFHrnXaVmG5xjPyHv8WuzZL52J++bc1dtWowj
+	 1k5PZCvshFv/bJTKU3ff4WWNEzI092GClD+Lf1AEX5dpBsreFjOXbppPr5/iMZ6k/y
+	 Pq+80Brd4EbeGCVY4Rf7UpR4QRrGia9ZZfOZcO/O5fk00gnJvoaGN7/sOk04PVTZxX
+	 8jYh8RlyjJNQEr2y/HjbJTUtEl0G89XNcBJCWWSG6RkTrz7nqV5xEevhRc1dxxc+mq
+	 BcWANVUht8TAQ==
 Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id 03847C53BC5; Wed, 30 Sep 2026 19:07:40 +0000 (UTC)
+	id 6B7BFC41614; Wed, 30 Sep 2026 19:13:19 +0000 (UTC)
 From: bugzilla-daemon@kernel.org
 To: linux-xfs@vger.kernel.org
 Subject: [Bug 222081] xfs stops if link count is to high
-Date: Wed, 30 Sep 2026 19:07:39 +0000
+Date: Wed, 30 Sep 2026 19:13:19 +0000
 X-Bugzilla-Reason: None
 X-Bugzilla-Type: changed
 X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
@@ -47,7 +47,7 @@ X-Bugzilla-Priority: P3
 X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
 X-Bugzilla-Flags: 
 X-Bugzilla-Changed-Fields: attachments.created
-Message-ID: <bug-222081-201763-3O7BB6dBVv@https.bugzilla.kernel.org/>
+Message-ID: <bug-222081-201763-qIhp41rPwk@https.bugzilla.kernel.org/>
 In-Reply-To: <bug-222081-201763@https.bugzilla.kernel.org/>
 References: <bug-222081-201763@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
@@ -63,10 +63,10 @@ MIME-Version: 1.0
 
 https://bugzilla.kernel.org/show_bug.cgi?id=3D222081
 
---- Comment #1 from sachse@gmx.net ---
-Created attachment 310978
-  --> https://bugzilla.kernel.org/attachment.cgi?id=3D310978&action=3Dedit
-Output of xfs_info
+--- Comment #2 from sachse@gmx.net ---
+Created attachment 310979
+  --> https://bugzilla.kernel.org/attachment.cgi?id=3D310979&action=3Dedit
+Output of find with link count
 
 --=20
 You may reply to this email to add a comment.
