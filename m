@@ -1,157 +1,103 @@
-Received: from mta0.migadu.com (out-179.mta0.migadu.com [91.218.175.179])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDE31310645
-	for <linux-xfs@vger.kernel.org>; Wed, 30 Sep 2026 08:49:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0E98472068;
+	Wed, 30 Sep 2026 09:01:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790758146; cv=none; b=Zt/C2EvK3q450UbBMKY432+9ShsY15SVqCr9NgotJVR7iw5MScrWO4yekPI8qTOJbLJAPaYkY4NKLfKn/4iDz3ssrDFJq4BQa0rZEQXXXD7Ol90/f4+Y2m0VAqu4XHdgyIDzWTqsAvou5mlCQTqwhteSNMt5Gc108S8jhGR1SHM=
+	t=1790758895; cv=none; b=ENWCjSmnH1EYyU/bUYCxZnOffDjmzl7/XzAoCMnOh/hzU0cJUJjNPoZxDbyPUow5YxRgBTJpHCy/EBMuy0pGWa75HvBI3bSbL8d97pH6QYv8p1+cauAa/A+O0Qm2T0nLBCNUchuBh9q1IP2CDAjMYnDf+Xw0WBSCe6a+FcyLa6o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790758146; c=relaxed/simple;
-	bh=Xep1o9gANQ4iQFQBRobJtQWntsKvFEOabUmZCGy2GVo=;
+	s=arc-20240116; t=1790758895; c=relaxed/simple;
+	bh=NFXmMbDu6fLF7FvzuqyNMK8WMZXRuTUOckFrmWlZez0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MZtLGt2GFf5r4X0EyPEi35f5gpM8X6IRrYM7di58laouq92FhwQ89acB9zDiDSQWqxPOJ286sKURs0u4hL5AU6nlzRhDhJxQNRW4jZUka+i587nIknPa6Bd0CjNf8wHNjdMkYhUGMI9J0UBi2aZ00ydOuMu2tzP3x3E5OEYUxO4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=jRgzWQ8q; arc=none smtp.client-ip=91.218.175.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	 Content-Type:Content-Disposition:In-Reply-To; b=gjfobtrlOANyV2YDD7sWAx0eZf2SB+lMMPfelT5pBQif+uJl+s/nb2iQvVv0QNJSai8fwIu+cZ81gxX8/DJmTQwieldoZQt8g9HI6ORprV+vjyZFzd/38Hv8WSLc14VMorT+Y6zXxFgcQnE7B/ptENGwmt+LbH+cMrInr1EgAVI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lQSkbE55; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="jRgzWQ8q"
-X-Envelope-To: linux-xfs@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=Xep1o9gANQ4iQFQBRobJtQWntsKvFEOabUmZCGy2GVo=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1790758142; v=1; x=1791362942;
- b=jRgzWQ8qK4TnxKgO8/SkB6UYUfCzkMu1gO7hEwaF8Tk6g+tbHHmRaPGJhSIRJM5Dl/+RRR91
- EuLuxxeSR5l6/jMmhRSnEa1T9eYS8/Z3CrVnaghpy2uq3hxzuyn7Pk+u2yfZVLMdSyuCfPsokc+
- J124Kck4nUvk6BPGfs341TQA=
-X-Envelope-To: linux-xfs@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id b7d4f57801047587;
-	Wed, 30 Sep 2026 08:49:02 +0000
-X-Mizu-Trace-ID: b7d4f57801047587
-X-Migadu-Flow: FLOW_OUT
-Date: Wed, 30 Sep 2026 08:48:56 +0000
-From: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>
-To: "Darrick J. Wong" <djwong@kernel.org>, john.garry@linux.dev
-Cc: Pankaj Raghav <p.raghav@samsung.com>, cem@kernel.org, 
-	linux-xfs@vger.kernel.org, John Garry <john.g.garry@oracle.com>, gost.dev@samsung.com
-Subject: Re: [PATCH] xfs: don't limit software atomic writes by the group
- alignment
-Message-ID: <m72iphraf7d3hoziw55inrymk6ynsgl3zio7nyiysm4w2fkac4@jtcaqpvg7g4a>
-References: <20260925103640.932735-1-p.raghav@samsung.com>
- <41749fa7-dcfa-46f0-af0f-ed3fa5f39f15@linux.dev>
- <ffd48d49-c4f6-4fc3-88a5-0adb11d0d6b9@linux.dev>
- <20260929164010.GS2705364@frogsfrogsfrogs>
- <20260929204228.GT2705364@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lQSkbE55"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B19A01F00898;
+	Wed, 30 Sep 2026 09:01:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790758893;
+	bh=Zf6eMLjYKuzeiP6lZQwHwghJA/LU8V6bqrmvEI01344=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=lQSkbE55GUe+ub+5+fiWnVseCz9XkzdUo5XG12hMhqmoGcUa76Vi1komRrZVfGd/S
+	 K9iIw2KdfH0oUYd56j4FIJDiMuPYyorRnFwF8kmqiljDIh4etvU3DGrkGkq47h09ml
+	 58BLptGsHMKSFpaXhKM/L1eXmlwUNWdaCwb/Q2qusouzFMwep2rjRXugAB9C6H8e0K
+	 JgVlCNBNUgZcNH4uO/ad6l2yQXiNgiE2xL4mhVsMgIXn8wYxrEk7ZMlPnnv4zpU54C
+	 zA6Yg3wvcpCIWB3R4HApZcgJI8SdWD40vOAp9Ckqe315wT7RSn5DBl36wcSKXWrHRl
+	 B6qi8y/rA10PQ==
+Date: Wed, 30 Sep 2026 11:01:28 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: Steve Shoecraft <spshoecraft@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, 
+	linux-xfs@vger.kernel.org
+Subject: Re: [RFC] MXFS: a shared-disk clustered filesystem derived from XFS
+Message-ID: <arzPGSQWTot6vmU0@cronus.toxiclabs.cc>
+References: <56847E8D-EA83-4984-82F3-9BC93E4C02FF@gmail.com>
+ <ardhDI-Ko7b5RccH@infradead.org>
+ <BC228018-42A4-4715-B186-057AFDE8A4D0@gmail.com>
+ <arj3Mp6Cq2_qwaIb@cronus.toxiclabs.cc>
+ <1B01BE22-06A8-412D-B141-CD94026E0A39@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260929204228.GT2705364@frogsfrogsfrogs>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <1B01BE22-06A8-412D-B141-CD94026E0A39@gmail.com>
 
-> > But I guess I'll play around with it for a while and see if I get
-> > anywhere.  Assuming you're running a recent mkfs that knows about
-> > the atomic write options and whatnot?
+On Tue, Sep 29, 2026 at 09:19:39AM -0400, Steve Shoecraft wrote:
+> I’m disappointed in your responses. I would have thought that you’d at least be interested in how well the AI did.
+
+And I'm disappointed how you didn't get the point you should not demand
+others to validate code you didn't bother reading yourself.
+
 > 
-> FWIW I tried this with scsi-debug and got the following:
+> It’s going to get better — not worse.
 > 
-> # umount /dev/sdg
-> # rmmod scsi-debug
-> # modprobe scsi-debug dev_size_mb=1000 virtual_gb=4096 atomic_wr=1 atomic_wr_max_length=32
-> # xfs_io -c 'statx -r -m all ' /dev/sdg | grep atomic
-> stat.atomic_write_unit_min = 1024
-> stat.atomic_write_unit_max = 16384
-> stat.atomic_write_segments_max = 1
-> stat.atomic_write_unit_max_opt = 0
-> # mkfs.xfs -f /dev/sdg
-> meta-data=/dev/sdg               isize=512    agcount=4, agsize=268435452 blks
->          =                       sectsz=512   attr=2, projid32bit=1
->          =                       crc=1        finobt=1, sparse=1, rmapbt=1
->          =                       reflink=1    bigtime=1 inobtcount=1 nrext64=1
->          =                       exchange=1   metadir=0
-> data     =                       bsize=4096   blocks=1073741808, imaxpct=5
->          =                       sunit=0      swidth=0 blks
-> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1, parent=1
-> log      =internal log           bsize=4096   blocks=521728, version=2
->          =                       sectsz=512   sunit=0 blks, lazy-count=1
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
->          =                       rgcount=0    rgsize=0 extents
->          =                       zoned=0      start=0 reserved=0
-> # mount /dev/sdg /mnt
-> # touch /mnt/fubar
-> # xfs_io -c 'statx -r -m all' /mnt/fubar | grep atomic
-> stat.atomic_write_unit_min = 4096
-> stat.atomic_write_unit_max = 16384
-> stat.atomic_write_segments_max = 1
-> stat.atomic_write_unit_max_opt = 16384
+> Since the initial 2-node TCP/DLM release (0.89.77 on September 23), Fable and Astra have completed 2-node CAW (0.90.7 on September 26), and 4-node TCP and CAW (0.90.24) have now been released on:
+> • Proxmox VE 9 (kernels 6.17 and 7.0)
+> • RHEL / AlmaLinux / Rocky 9.8
+> • Ubuntu 24.04 LTS (GA kernel 6.8)
+> • Debian 13 (kernel 6.12)
 > 
-> Note the agsize=268435452, which means that it rounded the AG size down
-> to something congruent with the 16k hardware atomic write max.
+> All are distributed as native DEB/RPM packages, with the kernel module built against the target kernel via DKMS.
 > 
-> (Are you sure you're using mkfs.xfs from xfsprogs 6.16 or newer?)
-
-I noticed the issue when I was running a test on a bare metal server
-with xfsprog 7.1.1. But I tried to recreate the issue in a VM where I
-was running an old xfsprog. So the values I have posted here are wrong.
-Sorry for that.
-
-> # xfs_io -c 'statx -r -m all' /mnt/fubar | grep atomic
-> stat.atomic_write_unit_min = 4096
-> stat.atomic_write_unit_max = 16384
-> stat.atomic_write_segments_max = 1
-> stat.atomic_write_unit_max_opt = 16384
-
-However, I still do not understand why do we have to restrict
-atomic_write_unit_max (SW based atomics) to 16k here?
-
-Let me take a step back and give a history on why I started to look into
-this.
-
-I am running 7.2-rc6 with 7.1.1 xfsprogs on a bare metal server with a
-NVMe device that supports atomics.
-
-I am formatting XFS with 16k blocksize.
-
-panky@blixen:~$ df -h /dev/nvme1n1
-Filesystem      Size  Used Avail Use% Mounted on
-/dev/nvme1n1     14T  179G   14T   2% /mnt/atomssd
-
-panky@blixen:~$ cat /sys/block/nvme1n1/queue/atomic_write_unit_max_bytes
-16384
-
-panky@blixen:~$ xfs_info /mnt/atomssd/
-meta-data=/dev/nvme1n1           isize=512    agcount=14, agsize=67108863 blks
-         =                       sectsz=4096  attr=2, projid32bit=1
-         =                       crc=1        finobt=1, sparse=1, rmapbt=1
-         =                       reflink=1    bigtime=1 inobtcount=1 nrext64=1
-         =                       exchange=1   metadir=0
-data     =                       bsize=16384  blocks=937558016, imaxpct=5
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=16384  ascii-ci=0, ftype=1, parent=1
-log      =internal log           bsize=16384  blocks=130432, version=2
-         =                       sectsz=4096  sunit=1 blks, lazy-count=1
-realtime =none                   extsz=16384  blocks=0, rtextents=0
-         =                       rgcount=0    rgsize=0 extents
-         =                       zoned=0      start=0 reserved=0
-
-panky@blixen:~/tools$ sudo ./statx /mnt/atomssd/hello.txt
-[sudo: authenticate] Password:
-/mnt/atomssd/hello.txt:
-  stx_atomic_write_unit_min:            16384
-  stx_atomic_write_unit_max:            16384
-  stx_atomic_write_unit_max_opt:        0
-  stx_atomic_write_segments_max:        1
-
-We expose max_opt to be 0, which means the application can assume
-max_opt to be the same as atomic_write_unit_max. But why are we not
-exposing bigger atomic_write_unit_max (SW atomics) here and make max_opt
-to HW based atomics value (16k) in this case?
-
-Could you format your scsi-debug device with 16k fsblock size and see
-what values you are getting here?
-
--- 
-Pankaj
+> The 0.90.24 release passed the complete release criteria: 4-node TCP 31/31, 4-node CAW 30/30, 2-node TCP 31/31, and 2-node CAW 30/30. All four platforms passed their packaged installation and validation runs.
+> 
+> The goal is full 32-node support for both TCP and CAW DLM.
+> 
+> 
+> 
+> The next project is OSN — a fully AI-written OS from scratch.
+> 
+> 
+> > On Sep 27, 2026, at 7:03 AM, Carlos Maiolino <cem@kernel.org> wrote:
+> > 
+> > On Sat, Sep 26, 2026 at 07:32:27AM -0500, Steve Shoecraft wrote:
+> >> 
+> >> Good catch on the magic - I had it changed in previous attempts and forgot on this one - release 0.90.0 has MXFS unique magic.
+> >> 
+> >> I’ve been writing device drivers since the 90s on FreeBSD.  This was a research project to see if an LLM could do it with the right harness.
+> >> 
+> >> Release conditions of course included 100% data integrity and 100% stability.   XFS was the right choice for the base.
+> >> 
+> >> Intent is a good clustered FS for Proxmox to compete with vSphere and VMFS.  Yes, I’m aware of the differences in implementations.
+> > 
+> > If you are not even bothering reviewing your own project source code as
+> > you stated, don't expect anybody else to spend their time or have
+> > interest on it.
+> > 
+> > 
+> >> 
+> >> 
+> >>> On Sep 26, 2026, at 1:07 AM, Christoph Hellwig <hch@infradead.org> wrote:
+> >>> 
+> >>> I don't think too many people are going to care about your LLM dump,
+> >>> or even review it.  But please make sure you use different magic numbers
+> >>> so that a mxfs image left in the wild is not mistaken for an xfs one.
+> 
+> 
