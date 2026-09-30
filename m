@@ -1,38 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73EAC408028
-	for <linux-xfs@vger.kernel.org>; Wed, 30 Sep 2026 19:06:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BC013D45D5
+	for <linux-xfs@vger.kernel.org>; Wed, 30 Sep 2026 19:07:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790795193; cv=none; b=JmsrmKraKQgDXSelASDIMr3KRgVtN4LcFTXGE9p/1dx7TmuQMOxOGlyauTkSF5dO9zoudbxMrKaoCP73cvshBcBLkIxZyN8D2IKZKx1xBTGzECRpM0bUrgV0s/Nw++Ty8+cr7zgRjnWv7b8YFwvbARUxG1WGJS8IGhugdnb9ixg=
+	t=1790795260; cv=none; b=A8QvcfSUOtGvYMdLXLSke6ozw5uy2aQDhgxfXVsFERINb8bXmXB0iwhrxufdpkTH7uvYL2oajT6VBUtFa0xbUmwWw9/ekfGoGTKOgXFgTv9eIDfcY8E2kUpomraYePzi6l4ckRldjxTHTR+Z+HQsv7T6mtrOtLdZCsVrdd82f6M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790795193; c=relaxed/simple;
-	bh=m2GOhaykBp0qlH6zEwQn91M5hGh0L9KErQWd9AFdXCY=;
-	h=From:To:Subject:Date:Message-ID:Content-Type:MIME-Version; b=nhhTabc9i0dyBLPxuMfsG2sXDGUGtlzLzLbD/SKMO7Zkx04qJ+DCjVm51GtixcTS4rgvPIHInskqaisupVlYRhRowUJ4r5qoBduuQ+O5HB6eU21YoD+HMWVhPqPtJSAoufuNdvC4/Fvl/N8ZcV15l6AvA3W6GT/O5C25tVX7pCA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hS1wNtyz; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1790795260; c=relaxed/simple;
+	bh=ms3DLon+5jtZGHtEzWFVBbmBiLcFUtqnGMT6NkU7fno=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=sLsAEwmdM8YHT7mtVcKYT/qxIW1wPyaQMA8/gZMmvrY7pFdMHIphV7G69vtjeefmN94/TwIkWoVPCO86UKvfmy5Zqbwjl69jCEwumZftA0n6zBfqX3sphpMMHBw+CeAtVFmKH/8iqH5GEUNPU9boxs0npt3zh61fpoHyF9OMLW4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PDJ3cVpl; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hS1wNtyz"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 027B2C4AF17
-	for <linux-xfs@vger.kernel.org>; Wed, 30 Sep 2026 19:06:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PDJ3cVpl"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 1310FC4AF12
+	for <linux-xfs@vger.kernel.org>; Wed, 30 Sep 2026 19:07:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1790795193;
-	bh=m2GOhaykBp0qlH6zEwQn91M5hGh0L9KErQWd9AFdXCY=;
-	h=From:To:Subject:Date:From;
-	b=hS1wNtyzfFMxMPg1pzrG1QJC0Hr0rmRISR7sovPlrRSfMhGQ1PDUsuUOGgYo5mk77
-	 IlftKPsbqUQdTBgBa9VchDlALwjEGsxz1GlSM8SCFke4E5ieHUHTOBp41+lE3e6ZBM
-	 xUy6EI0ybaIb2uzVAUxHpdw96lRzJ6TOeS+lRv38r2D55BNYeYPf8B6axUrK5qux0E
-	 KF8b8L29s2sEs7gYf8emPFbjZV77qMipnvJmgaA0dCusF6HeoXdlAWKvBExGn0pRWi
-	 fSqsdLZBl/pDdFPg7DknxJCYaGosx/0OGh/RfupSaFig1qC/H1+HmhpMwPZQ/BGPsK
-	 C4J0uQzLgruhg==
+	s=k20201202; t=1790795260;
+	bh=ms3DLon+5jtZGHtEzWFVBbmBiLcFUtqnGMT6NkU7fno=;
+	h=From:To:Subject:Date:In-Reply-To:References:From;
+	b=PDJ3cVpleO71yVaH6lMyKEms/RD/Ig1kwZJc7pQcls7fgAWfmTzBHr2AFifjWEbph
+	 aXqO6s9LTnoG76NpK7qt57H9shG1a8N8JeKJQGyMYdfSJb1M5NYrNCjL8UyPG751Dt
+	 Dz/easUVClPGWQy+L+4DvDcLhGrV9A8FXt8EdnQSWLDz8TDfNRyLS0W/FzJ+f3CSOW
+	 Vr/0Ho2lvQn4Czy74XJRvBlwsZ+G73Tin/i3XDdl73J70+yeAV/YHHXrnsNeuq9yXv
+	 aSvWVM7aRJgbN9Fy2iFDuMGikOTPHx6osybtnx5j4BmvgYGSMzR6akDCylik1IhS1m
+	 9KzljM9U8kAxw==
 Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id DD5BDC53BC5; Wed, 30 Sep 2026 19:06:32 +0000 (UTC)
+	id 03847C53BC5; Wed, 30 Sep 2026 19:07:40 +0000 (UTC)
 From: bugzilla-daemon@kernel.org
 To: linux-xfs@vger.kernel.org
-Subject: [Bug 222081] New: xfs stops if link count is to high
-Date: Wed, 30 Sep 2026 19:06:32 +0000
+Subject: [Bug 222081] xfs stops if link count is to high
+Date: Wed, 30 Sep 2026 19:07:39 +0000
 X-Bugzilla-Reason: None
-X-Bugzilla-Type: new
+X-Bugzilla-Type: changed
 X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
 X-Bugzilla-Product: File System
 X-Bugzilla-Component: XFS
@@ -45,10 +46,10 @@ X-Bugzilla-Resolution:
 X-Bugzilla-Priority: P3
 X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
 X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: bug_id short_desc product version rep_platform
- op_sys bug_status bug_severity priority component assigned_to reporter
- cf_regression attachments.created
-Message-ID: <bug-222081-201763@https.bugzilla.kernel.org/>
+X-Bugzilla-Changed-Fields: attachments.created
+Message-ID: <bug-222081-201763-3O7BB6dBVv@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-222081-201763@https.bugzilla.kernel.org/>
+References: <bug-222081-201763@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 X-Bugzilla-URL: https://bugzilla.kernel.org/
@@ -62,31 +63,10 @@ MIME-Version: 1.0
 
 https://bugzilla.kernel.org/show_bug.cgi?id=3D222081
 
-            Bug ID: 222081
-           Summary: xfs stops if link count is to high
-           Product: File System
-           Version: 2.5
-          Hardware: All
-                OS: Linux
-            Status: NEW
-          Severity: high
-          Priority: P3
-         Component: XFS
-          Assignee: filesystem_xfs@kernel-bugs.kernel.org
-          Reporter: sachse@gmx.net
-        Regression: No
-
-Created attachment 310977
-  --> https://bugzilla.kernel.org/attachment.cgi?id=3D310977&action=3Dedit
-Kernel trace
-
-Environment is an docker on a xfs with overlay.
-Inside the docker a bitbake/yocto build is running.
-
-Is link count reaches 552 an allocation error occours and the filesystem is
-stopped.
-
-Kernels: 6.18.28 and 6.18.48
+--- Comment #1 from sachse@gmx.net ---
+Created attachment 310978
+  --> https://bugzilla.kernel.org/attachment.cgi?id=3D310978&action=3Dedit
+Output of xfs_info
 
 --=20
 You may reply to this email to add a comment.
