@@ -1,157 +1,145 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mailly.debian.org (mailly.debian.org [82.195.75.114])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25ABD37E5DB;
-	Wed, 30 Sep 2026 15:35:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82ACF51120F
+	for <linux-xfs@vger.kernel.org>; Wed, 30 Sep 2026 15:36:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=82.195.75.114
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790782515; cv=none; b=Ytve7DpLYNKv6gAJNhURZu8vn8f2g2WNs+auKiuO2F9iKmBmd8jqvOoPGsQIGsm1kCRb05MmNax+L5ehAYTtUr7RsIRL7oJjF2n0go4cXlGjuRPwr3rfbdpzaZBjdzZjQbVLvSxdwCTzmPTQoBMHs1D9kEec0OG/FEUFivS7b58=
+	t=1790782607; cv=none; b=Nircq3Zm1uNPwc5e01eKJxUSJT0SuIpxwBc9iT8jmf2tgBSH4OLBJiHPlW/18DT/ekv9+asJMHnP21BJoH91jvczvyvXvKqlmuaB7vIjF5/180snIXXOIfoGkrFSSCqFNdFS42l0kI2JGjCrpz3ut4Q4YibhbKPjkIon7REkNz4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790782515; c=relaxed/simple;
-	bh=glDR9rPiqLtJKlnXuD51/1q4bP/bHKkj/e9OpZD7bVs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=k0UHCxFVx4+RfDONQPOPe7SS3An55CrEEE2yCwFwLJiVz+mPuyTkqmnKkSyPd/WP7z76H8W1x0TCn0dNTiJf7IqkwflSkZugFnnUGGeb+Arlwq6mx5pVl6d12TB9ZEZdeiocMtdrmRtEO8JjEpkiZddcS+e4g5L65iLtNV4uN9Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RdWcc94T; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790782607; c=relaxed/simple;
+	bh=epU9CgPs/xYvIgZZaUYhQFzV6qzgIA685M9E+ETEL7U=;
+	h=From:To:MIME-Version:Subject:Content-Type:Message-Id:Date; b=HxtvIW+mEVtqj5Zl2hn8dRvnIK+J7ZvOShU3kwNnSnlIh+XLewal5FOBpAJviByzGwpWynfM7p2ohrAitERX39kup2GF+D973sw1GDHsg4JKnYAMTl8TO2BhpWK6+r1Rz0SiuVhLNge0q6qZQCJa3MpRZ9laMFg0RDLe2qaoiYo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ftp-master.debian.org; spf=pass smtp.mailfrom=ftp-master.debian.org; dkim=pass (2048-bit key) header.d=ftp-master.debian.org header.i=@ftp-master.debian.org header.b=m87s21Pu; arc=none smtp.client-ip=82.195.75.114
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ftp-master.debian.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ftp-master.debian.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RdWcc94T"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 14C891F00899;
-	Wed, 30 Sep 2026 15:35:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790782507;
-	bh=e8MML2gJrDDcMRCJ5PIStiD2beqwx3+yQN2TtHaQYhY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=RdWcc94THfMHwFSUABgjmg41Bq1G2/l2cJVK+SE2JZxJ7LVRoTvm70gZfQIgoPqFS
-	 fcAFHKxWUE5cOMF7E/+ldTvOV52jVo42dqn0iHEfjkM8v8e6yeih1BIm6cH2A2rC2z
-	 aogf5nyS48lpoFvwuMr3c8ivTcLl8ZHPP92kyEcBukiYtjVcj8XyIi2oirit0VF8Ok
-	 4p6DcrVx0m3JVyJ/tF9DC8RxykLQWfGAzmcLqGBvnUDpx6zl0NT04c11maqGRz0FsY
-	 1sN0qciiRS0nNWbi4ykx849AqCcYN7hX3ozmP5H//jwqm5Y38Zfu1G5qpzTcbRDNW0
-	 XBJDiDjzA5obg==
-Date: Wed, 30 Sep 2026 08:35:06 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Miklos Szeredi <miklos@szeredi.hu>
-Cc: Vishal Verma <vishal.l.verma@intel.com>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Alison Schofield <alison.schofield@intel.com>,
-	nvdimm@lists.linux.dev, linux-cxl@vger.kernel.org,
-	fuse-devel <fuse-devel@lists.linux.dev>,
-	Carlos Maiolino <cem@kernel.org>,
-	linux-xfs <linux-xfs@vger.kernel.org>, linux-kernel@vger.kernel.org,
-	John Groves <John@groves.net>
-Subject: Re: fs_put_dax() vs. dax_holder_notify_failure() race
-Message-ID: <20260930153506.GR6253@frogsfrogsfrogs>
-References: <CAJfpeguyOXGQO4Q8rSAc8GxExTJU0G2o19fxRnh_93GvAoNcRg@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=ftp-master.debian.org header.i=@ftp-master.debian.org header.b="m87s21Pu"
+Received: via submission
+	from C=NA,ST=NA,L=Ankh Morpork,O=Debian SMTP,OU=Debian SMTP CA,CN=fasolo.debian.org,EMAIL=hostmaster@fasolo.debian.org (verified)
+	by mailly.debian.org with esmtps (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.96)
+	(envelope-from <envelope@ftp-master.debian.org>)
+	id 1xBwMA-00CPx2-0y
+	for linux-xfs@vger.kernel.org;
+	Wed, 30 Sep 2026 15:36:30 +0000
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=ftp-master.debian.org; s=smtpauto.fasolo; h=Date:Message-Id:Content-Type:
+	Subject:MIME-Version:To:From:Reply-To:Cc:Content-Transfer-Encoding:Content-ID
+	:Content-Description:In-Reply-To:References;
+	bh=/Jxc690/tNvv3hsOIcB9Nfipw0H7jnBsjJ2in1dBApU=; b=m87s21Pu3Sd9rGZXv2aYm5YRhs
+	MMM7CWTpWqiNqBuni86FTlPOw8YZ6sy5RxZSSOznVRpsaUR3nIyjGu5AfveW/11VX09pw1T2FEZjr
+	DjWicVLU2WtsVchwpA2Jhv0WpqmVcOqUZKvyPSM5UHvr1T16mLl2pQM3N3D0p3TUzJ23+XClhFO0y
+	vkDbSuTDOCXCRApcGDqohIZoR6iV1VlVtd3Hc+vD50uQfTkcIuRbYgIwot3YtQWQKjn7La8fQb72C
+	KJ3GWaZAKF+EOXUcXAvhylc0H2LIwJIwzsYsfNoYHdpymfJwT3+QuFRrQCPEXn807cHVAm2rog5Nd
+	eypBTFwA==;
+Received: from dak by fasolo.debian.org with local (Exim 4.98.2)
+	(envelope-from <envelope@ftp-master.debian.org>)
+	id 1xBwM6-0000000D3l3-2Gf6;
+	Wed, 30 Sep 2026 15:36:26 +0000
+From: Debian FTP Masters <ftpmaster@ftp-master.debian.org>
+To: <bage@debian.org>, Nathan Scott <nathans@debian.org>,
+ XFS Development Team <linux-xfs@vger.kernel.org>
+X-DAK: dak process-upload
+X-Debian: DAK
+X-Debian-Package: xfsprogs
+Debian: DAK
+Debian-Changes: xfsprogs_7.2.0-1_source.changes
+Debian-Source: xfsprogs
+Debian-Version: 7.2.0-1
+Debian-Architecture: source
+Debian-Suite: unstable
+Debian-Archive-Action: accept
+Precedence: bulk
+Auto-Submitted: auto-generated
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAJfpeguyOXGQO4Q8rSAc8GxExTJU0G2o19fxRnh_93GvAoNcRg@mail.gmail.com>
+Subject: xfsprogs_7.2.0-1_source.changes ACCEPTED into unstable
+Content-Type: multipart/signed; micalg="pgp-sha256";
+ protocol="application/pgp-signature";
+ boundary="===============0280979636866161193=="
+Message-Id: <E1xBwM6-0000000D3l3-2Gf6@fasolo.debian.org>
+Date: Wed, 30 Sep 2026 15:36:26 +0000
 
-On Wed, Sep 30, 2026 at 04:29:33PM +0200, Miklos Szeredi wrote:
-> During ->notify_failure() callback will dereference holder.  It may be
-> NULL at this point, resulting in an Oops, or it may be non-NULL but be
-> freed during that call, resulting in UAF.
-> 
-> This affects xfs at this point, but the fuse extent map patchset[1]
-> also adds dax failure handling and is affected by this issue.
-> 
-> I think this should be fixed in drivers/dax/super.c, since this will
-> be a problem in each user.
+--===============0280979636866161193==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 
-Yes, I would have thought that the notification code would grab a
-refcount on the dax device so that it can't go away.  Though it does
-seem a little wild that there's no means to pause fs_dax_put until
-all the notifications have cleared....?
+Thank you for your contribution to Debian.
 
---D
 
-> Thanks,
-> Miklos
-> 
-> [1] Report from sashiko (select Patch 8):
-> 
-> https://sashiko.dev/#/patchset/20260922061019.3320196-1-mszeredi%40redhat.com
-> 
-> Or here it is inline:
-> 
-> commit 1580a2f8ad3f103a20b6280aa39a01f8b0be2d3f
-> Author: Miklos Szeredi <mszeredi@redhat.com>
-> 
-> fuse: add support for opening dax device as backing
-> 
-> Add FUSE_BACKING_IS_DEV flag that allows opening a character device
-> (dax device) as a backing, in addition to regular files. Mark the
-> inode with S_DAX if FUSE_LOOKUP returns with FUSE_ATTR_DAX set.
-> 
-> > diff --git a/fs/fuse/backing.c b/fs/fuse/backing.c
-> > index 58dbdd17c1ef4..aa558a0c2e647 100644
-> > --- a/fs/fuse/backing.c
-> > +++ b/fs/fuse/backing.c
-> [ ... ]
-> > @@ -22,9 +23,16 @@ static void fuse_backing_free(struct fuse_backing *fb)
-> >  {
-> >   pr_debug("%s: fb=0x%p\n", __func__, fb);
-> >
-> > - if (fb->file)
-> > - fput(fb->file);
-> > - put_cred(fb->cred);
-> > + switch (fb->type) {
-> > + case FUSE_BACKING_PATH:
-> > + path_put(&fb->path);
-> > + put_cred(fb->cred);
-> > + break;
-> > +
-> > + case FUSE_BACKING_DAXDEV:
-> > + fs_put_dax(fb->dax_dev, fb);
-> > + break;
-> > + }
-> >   kfree_rcu(fb, rcu);
-> 
-> Does this code introduce a use-after-free race with a concurrent hardware
-> memory failure?
-> 
-> When a DAX-backed FUSE backing file is closed, fuse_backing_free() drops the
-> DAX device holder by calling fs_put_dax() and frees the backing object using
-> normal RCU via kfree_rcu().
-> 
-> Concurrently, a hardware memory failure can trigger dax_holder_notify_failure(),
-> which protects its read-side critical section with SRCU using dax_read_lock().
-> 
-> If dax_holder_notify_failure() reads dax_dev->holder_ops and checks for NULL,
-> and is preempted here, fs_put_dax() can run to completion. This would set
-> dax_dev->holder_ops and dax_dev->holder_data to NULL, and eventually free fb
-> after a normal RCU grace period.
-> 
-> Because kfree_rcu() does not wait for SRCU readers, the memory could be freed
-> while dax_holder_notify_failure() is still running.
-> 
-> [ ... ]
-> > @@ -79,23 +87,88 @@ static struct fuse_backing *fuse_backing_id_remove(struct fuse_conn *fc, u64 id,
-> >   return fb;
-> >  }
-> >
-> > +static int fuse_dax_notify_failure(struct dax_device *daxdev, u64 offset, u64 len, int mf_flags)
-> > +{
-> > + struct fuse_backing *fb = dax_holder(daxdev);
-> > +
-> > + fb->dax_error = true;
-> 
-> Can this code cause a NULL pointer dereference or use-after-free when racing
-> with fuse_backing_free()?
-> 
-> When dax_holder_notify_failure() resumes after the race described in
-> fuse_backing_free(), it blindly calls ops->notify_failure() which is this
-> function.
-> 
-> Because fs_put_dax() may have already cleared dax_dev->holder_data,
-> dax_holder() might return NULL causing a NULL pointer dereference here.
-> Depending on the timing, it could also return a stale pointer to the freed
-> fb object, resulting in a use-after-free.
-> 
-> > +
-> > + return 0;
-> > +}
-> 
+
+Accepted:
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Format: 1.8
+Date: Wed, 16 Sep 2026 13:11:30 +0200
+Source: xfsprogs
+Architecture: source
+Version: 7.2.0-1
+Distribution: unstable
+Urgency: low
+Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
+Changed-By: Nathan Scott <nathans@debian.org>
+Changes:
+ xfsprogs (7.2.0-1) unstable; urgency=3Dlow
+ .
+   * New upstream release
+Checksums-Sha1:
+ 63f8e2c8059222a517698b4072e8195361869ded 2148 xfsprogs_7.2.0-1.dsc
+ 13fc430318d41e8dec218ba8f9637e9adb54fba9 1599484 xfsprogs_7.2.0.orig.tar.xz
+ 54a0ace3e9ce13b17f2291e3dec90ac58b0d1b44 12304 xfsprogs_7.2.0-1.debian.tar.xz
+ 3830cdb161d57d63c8dd4f3f1a041251a402a048 5140 xfsprogs_7.2.0-1_source.buildi=
+nfo
+Checksums-Sha256:
+ f8b4a00f6dc130285baecdf79cf48fa4fb247f54d0ec28c285c6e952e42597ca 2148 xfspro=
+gs_7.2.0-1.dsc
+ 501dfa363cd8e19997a4a1a71f70ded88241b45e9db233e8875c23b80520cc83 1599484 xfs=
+progs_7.2.0.orig.tar.xz
+ 691b183783d5b1f8ad82e246316295a6e1f1472190d3ba402b7a60cf0d39c6bb 12304 xfspr=
+ogs_7.2.0-1.debian.tar.xz
+ b84529a90b8e4c53e6e35789dc8e7a6bc66a56cc160d0c301cd0415df9443db9 5140 xfspro=
+gs_7.2.0-1_source.buildinfo
+Files:
+ fb848a8eb24f71a08d91c16afb7b4d2d 2148 admin optional xfsprogs_7.2.0-1.dsc
+ 6837d20d00079e6cee40b663c9bf50d7 1599484 admin optional xfsprogs_7.2.0.orig.=
+tar.xz
+ 9b788011df7fca94721360d240fe2c18 12304 admin optional xfsprogs_7.2.0-1.debia=
+n.tar.xz
+ 6f369da074620e05a67502ab64601b38 5140 admin optional xfsprogs_7.2.0-1_source=
+.buildinfo
+
+-----BEGIN PGP SIGNATURE-----
+
+iQHEBAEBCgAuFiEEQGIgyLhVKAI3jM5BH1x6i0VWQxQFAmq9JlUQHGJhZ2VAZGVi
+aWFuLm9yZwAKCRAfXHqLRVZDFJZODADE2QVozWzGHDygL6l2lLh8roRnBnshmQ5B
+nb8++zwDh5B2O/zxQtlblOcf31vaP8jakFXRwQZvhDhCY4uQjzBRPhbE3e7RwQnq
+yHIJXcgTF95xIEje/VBB97EB903FXezJTXKDuNqwg7yce4joKgIOIJm139C+YoUQ
+AXuS2ZJpcTZfo9wKCS9Axl7GAjVwRAHFhurvoctfdnRfV/TL88US1A1yh4qEPABH
+4vFkfASIFcfKjABfnjyNhS3buWc7BZYlKd57eHJvmsfLllnxq7LdZV/q8+PiWelx
+wmhGo3JU21e5kbp5YvuBjPOSpdIk11kV5spIQ5EuBOV4du/mpxXIUkK3z4mFGnz2
+mefWKehx77qIkHVOkoNtdygH7bGlSVBeeBJ91CRAJwc8kmMw4Bk/jCGDPYXyj9GB
+blXE67wgwG8iwbB7ZwVFM6DtZH4DCpoVSvJdwLiRNKOAwF4WmM8bCUPevgDcHsmR
+q/t0W9VIRYVUHk3TAnd+43nxH8gY/hw=3D
+=3DTkRZ
+-----END PGP SIGNATURE-----
+
+
+--===============0280979636866161193==
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYIAB0WIQTziqJOuF8J+ZI8pJSb9qggYcy5IQUCar0segAKCRCb9qggYcy5
+ITSXAP0a0+RoBVqe3vXq3dRX866R4cmkWEeHQUPIFmbv3rWtMAEA6hq/FCyjEfnd
+8Q+OQxdhED4SEKJoLuycypQkRUb+agA=
+=NtMW
+-----END PGP SIGNATURE-----
+
+--===============0280979636866161193==--
