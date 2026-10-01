@@ -1,60 +1,79 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from phd-imap.ethz.ch (phd-imap.ethz.ch [129.132.80.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1563651AEFC;
-	Thu,  1 Oct 2026 12:44:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86588518133
+	for <linux-xfs@vger.kernel.org>; Thu,  1 Oct 2026 13:55:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=129.132.80.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790858699; cv=none; b=RSa2igrW6TjeGcR7Tk5C5Az5jUfRR8D3HSaDMJoGb1A49aDC3GOprV42HEFvD+8BeLao6jhaLzfgZOZLadY8dWwwG+ilqLUKvYQH0GnFcGCaeRrbQe/3Q3PMvIyC/Is0Haek9Tz+nrsIboxlXVo7PiM1LnCLl/lyhWHchIKds3Q=
+	t=1790862952; cv=none; b=RE+TCh3hN2kN0cZ/MyIPBmDhRx466CXdIpqKkyPYoW78PVD7EE/WPfUAJMrM1XOE+/JsvfBbf0/Q7udpHD6sR2LWrl2VPL5mjcAdcyq78k7oLo7jT7+U8EDGhXCaHQhT26yPvX7+P+/yxrM10wtjNyKo3c28FWMslKJ8B+9qxGk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790858699; c=relaxed/simple;
-	bh=bthn7RFeziiN9QE573KrOBfytvKpyTRLM7xwE0a/dFM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PC6rqJFF5ZKLA5f48NraUiYNMRDCCXSmzlOFKPRhfQxNcKNN683yJ3Ll75WfXaB+1pYo7IwXMUovax4VinjaeGvux3Z40WrZg8N20ftvjAyAC45J57Csnr9pYL44Yv2btK3GtRf3HIlSqtOo/3YjlP0g4OGVSqHGzm9KTxNKcR4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XNe8HoGH; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790862952; c=relaxed/simple;
+	bh=lJ6zo1c2K/SEzYRNlfSifxreyHuqnpxPzWNnWLI6W3o=;
+	h=MIME-Version:Date:From:To:Subject:Message-ID:Content-Type; b=K8CACGABkVS/7S255su9XPYoWFJbPBz6obJvGmlkMHefL+NA/Gir8UW4DAiXVNhwJq+L9Yfi/DCJGdNNnAFG4NPDW30ZS6PihDP4UQTCPmZQJmfTsOIuy8i2Nn2KpuwmEpuLy22g+biTV6IgKGw7m7/XMtBwUom9A9E0IsJgfBw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=phys.ethz.ch; spf=pass smtp.mailfrom=phys.ethz.ch; dkim=pass (2048-bit key) header.d=phys.ethz.ch header.i=@phys.ethz.ch header.b=IVPkuOS3; arc=none smtp.client-ip=129.132.80.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=phys.ethz.ch
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=phys.ethz.ch
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XNe8HoGH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9E5511F00898;
-	Thu,  1 Oct 2026 12:44:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790858697;
-	bh=Sm0xq/fjQv6PDpZzT72qBpzu0mj42KLlaFjsJsfIW0c=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=XNe8HoGHfQSGhG9EWZKg0UDNTRs0LhJK5qQ6g236b3YzOB5Mz1AprQDcIyy6kR26Y
-	 k9BylszCKHYY4h1ReTGBd8ZOyAnm+BJmX0vzAm6p68mPliCIErh9JYk69HVipKmTup
-	 ErJPAEeGdruxS5vvVhqhAs7I5gGmBHNakOBoV45tyI0MzPl5gWtltO3E0qXzHJT0ek
-	 chAsC0S2l1AtQZDrX90YsaHP3cgtsN400qQ+ug4kKPF7lJJAvneCaOZNAkshzFu67m
-	 VfxKOaJwlE/+M/NQtQPXWE18Klqy1PwLiaziHr0cVmpHsFS5N2hLa3wqy1Tv//R0Ib
-	 p1MiG0OdhvKag==
-Date: Thu, 1 Oct 2026 14:44:52 +0200
-From: Andrey Albershteyn <aalbersh@kernel.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: zlang@kernel.org, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 3/4] xfs: basic functional testing of media verification
- command
-Message-ID: <ar5VttNjTWJV_Pxu@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
-References: <179060965752.790984.3511820348115861306.stgit@frogsfrogsfrogs>
- <179060965824.790984.9346083899208929049.stgit@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=phys.ethz.ch header.i=@phys.ethz.ch header.b="IVPkuOS3"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=phys.ethz.ch;
+	s=2023; t=1790862358;
+	bh=9eikwA34cYlRauXJcgtN5qyDwaW8+mpP+Z8x39JlMgc=;
+	h=Date:From:To:Subject:From;
+	b=IVPkuOS3XHUpYfiu+OE/kTeG9bL31d6xKWHSP/cLpTimcQpLxXyHjelWNjgTUt8qg
+	 xPjMQ3QvAqNKhUECwyvfO49vLYWkaphM8OHl/NSywFXmNyMsre6G+qHkbsKzWixVAc
+	 vN9q7kG9QMiUlVyx/5KxQqGmf3NZe9plXwuOIr0pIjSw6BVkQOavmJMvCJ3quglhkj
+	 zmv5L/XlhSFfcIpqmUl7lQ5nSh6FC3x1yL3aHcQcKkLQUWSQ/BIghNVHrMh/spwocA
+	 oRcoFJTtVFABMYwM8sosS9dSJgqmJQRPMxNgA8zdXTiHgD7Qr6SnNqldzrobgM3hqb
+	 NCgYt2Ga9bRag==
+Received: from localhost (192-168-127-49.net4.ethz.ch [192.168.127.49])
+	by phd-imap.ethz.ch (Postfix) with ESMTP id 4hwY8k3lfWzCX
+	for <linux-xfs@vger.kernel.org>; Thu,  1 Oct 2026 15:45:58 +0200 (CEST)
+X-Virus-Scanned: Debian amavis at phys.ethz.ch
+Received: from phd-mxin.ethz.ch ([192.168.127.53])
+ by localhost (phd-mailscan.ethz.ch [192.168.127.49]) (amavis, port 10024)
+ with LMTP id R5QHbs7BrxhX for <linux-xfs@vger.kernel.org>;
+ Thu,  1 Oct 2026 15:45:58 +0200 (CEST)
+Received: from webmail.phys.ethz.ch (192-168-127-51.net4.ethz.ch [192.168.127.51])
+	by phd-mxin.ethz.ch (Postfix) with ESMTP id 4hwY8k2jY6zM1
+	for <linux-xfs@vger.kernel.org>; Thu,  1 Oct 2026 15:45:58 +0200 (CEST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <179060965824.790984.9346083899208929049.stgit@frogsfrogsfrogs>
+Date: Thu, 01 Oct 2026 15:45:58 +0200
+From: Stephan Mueller <stepmueller@phys.ethz.ch>
+To: linux-xfs@vger.kernel.org
+Subject: rw stat clarification
+Message-ID: <4103a3f702be0ccf0e6eeb34981b3d65@phys.ethz.ch>
+X-Sender: stepmueller@phys.ethz.ch
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
 
-On 2026-09-28 08:36:42, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> Implement a simple testcase to check that media verification works on
-> however the scratch filesystem is configured.
-> 
-> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+Hi there
 
-Looks good to me
-Reviewed-by: Andrey Albershteyn <aalbersh@kernel.org>
+/sys/fs/xfs/$FS/stats/stats has a counter "rw" showing read and write 
+call counters. The output is actually
 
--- 
-- Andrey
+rw #writes #reads  // eg first writes, than reads
+
+This is quite confusing (at least for me), when the metric is called 
+"rw" suggesting first reads, then writes. Also the docs [1] call it "rw 
+- Read/Write Stats" but then list the fields in the correct order
+
+   - xs_write_calls
+   - xs_read_calls
+
+May I go ahead and make it
+
+rw #reads #writes
+
+or better not break people's scripts and just add a clarification to 
+docs?
+
+   Have a nice day
+   stephan
+
+[1] https://xfs.org/index.php/Runtime_Stats#rw_-_Read/Write_Stats
