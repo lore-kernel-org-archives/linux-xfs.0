@@ -1,236 +1,135 @@
-Received: from buxtehude.debian.org (buxtehude.debian.org [209.87.16.39])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A73BB3D47A0
-	for <linux-xfs@vger.kernel.org>; Thu,  1 Oct 2026 16:33:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.87.16.39
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790872386; cv=none; b=HhOrTs4z8ED8kBDOqvM7dpxQzT4zHYdaNMki71Oy/IxX8yDYX6m4wOTeD01w87pv2e/lbMlWcZSpc45YXHJenPvOzl/YSL496Ax/BHyiCx/CrICCKRZsVVV623QxBJNERKJS70vj3YskBzBRgXtVrV6Qte6Yb10l81IxZ8SYW4g=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790872386; c=relaxed/simple;
-	bh=W0wBQYV+n5v4Eq/Co9uR4LVavPwZZkEbmIq3ZsXoP0g=;
-	h=Subject:References:Message-ID:Date:MIME-Version:To:Cc:From:
-	 In-Reply-To:Content-Type; b=IXyXhHdC61Bl2SvAaNzaxaTyUHO0UeNKChRDV1X4Ml1Nq3OqyGDePl/i/bNTejhMCJCNMSkCiqM3hnDS2Cq7ZKDYnQCmeayNo01BfHie2j5O761nG1ZjvNzc5Fo3UuyBgojc3N54XRYjWcxLhNE6uoCpVxZItdViGoJ73eSL4nA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=debian.org; spf=pass smtp.mailfrom=buxtehude.debian.org; dkim=fail (2048-bit key) header.d=debian.org header.i=@debian.org header.b=MgJOEKlT reason="signature verification failed"; arc=none smtp.client-ip=209.87.16.39
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=debian.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=buxtehude.debian.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5658053A399
+	for <linux-xfs@vger.kernel.org>; Thu,  1 Oct 2026 22:39:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=170.10.133.124
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1790894367; cv=pass; b=PUaKry6r4XwbnNmqZnobjL+muCpWCIHN019clvWs3TQwscjXOgCtxcqJvjuodi08IjPUt9zktMqVlBut91R/1f0e+SjTI2zAQ+gbxG2Upt96+8SRWwSdA6CquLMB6/IeUBXfTAI5XJOhuhl3QWhmeayKEwZJWrj6v4woXWG9Ln4=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1790894367; c=relaxed/simple;
+	bh=ZQ8wMb3N5qPzoasGoPBrl9zXBlTwR04VTtQc11bY390=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=DiNllul2+FPMuNe9JYj+OJ+LCBc5Nd39Dy2l/gFzyalth/HSh/g+1aIAblW1geyhp5UdShL0s3Wz9E7wUkuFQ6ZsnCpTAIJhrdN19agh43OTPaPsm6bG31eZMBq3VEeabK9oBLDNbIg2Nx4R8hCQcEetzIn69fwhuUvOBpwbQ/M=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=eEt/Gxmc; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=Jv6JyoUr; arc=pass smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=debian.org header.i=@debian.org header.b="MgJOEKlT"
-Received: from debbugs by buxtehude.debian.org with local (Exim 4.96)
-	(envelope-from <debbugs@buxtehude.debian.org>)
-	id 1xCJiP-000SEb-2t;
-	Thu, 01 Oct 2026 16:33:01 +0000
-X-Loop: owner@bugs.debian.org
-Subject: Bug#1149571: [PATCH] xfs_healer: fail earlier on non-xfs filesystems
-Reply-To: Michael Biebl <biebl@debian.org>, 1149571@bugs.debian.org
-Resent-From: Michael Biebl <biebl@debian.org>
-Resent-To: debian-bugs-dist@lists.debian.org
-Resent-CC: linux-xfs@vger.kernel.org
-X-Loop: owner@bugs.debian.org
-Resent-Date: Thu, 01 Oct 2026 16:33:01 +0000
-Resent-Message-ID: <handler.1149571.B1149571.1790872227107646@bugs.debian.org>
-X-Debian-PR-Message: followup 1149571
-X-Debian-PR-Package: xfsprogs
-X-Debian-PR-Keywords: 
-References: <20261001062338.GV2705364@frogsfrogsfrogs> <179080491253.7201.8697529754428195540.reportbug@mars>
-X-Debian-PR-Source: xfsprogs
-Received: via spool by 1149571-submit@bugs.debian.org id=B1149571.1790872227107646
-          (code B ref 1149571); Thu, 01 Oct 2026 16:33:01 +0000
-Received: (at 1149571) by bugs.debian.org; 1 Oct 2026 16:30:27 +0000
-X-Spam-Level: 
-X-Spam-Bayes: score:0.0000 Tokens: new, 15; hammy, 150; neutral, 49; spammy,
-	0. spammytokens:
-	hammytokens:0.000-+--Hx-spam-relays-external:sk:stravin,
-	0.000-+--H*RT:sk:stravin, 0.000-+--Hx-spam-relays-external:311,
-	0.000-+--H*RT:311, 0.000-+--H*RT:108
-Received: from stravinsky.debian.org ([2001:41b8:202:deb::311:108]:50518)
-	by buxtehude.debian.org with esmtps (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.96)
-	(envelope-from <biebl@debian.org>)
-	id 1xCJft-000Rzz-37
-	for 1149571@bugs.debian.org;
-	Thu, 01 Oct 2026 16:30:27 +0000
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=debian.org;
-	s=smtpauto.stravinsky; h=X-Debian-User:Content-Type:In-Reply-To:From:
-	References:Cc:To:Subject:MIME-Version:Date:Message-ID:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=W0wBQYV+n5v4Eq/Co9uR4LVavPwZZkEbmIq3ZsXoP0g=; b=MgJOEKlTvCkM5REHUix2OciqP3
-	JysTT1xzQS2Faxf4JFFC49+90b3U0eQ/7KyV7fTgwWCG53PXCt0gWK7NNvLAMAZAOb02jj/F0VrVd
-	1sQI8Tsp6YzCOW9yFH+L3ETFSAnxYy0E2UCGS05ITcIxxuTWnLilypFhslN5mRy1NrFQFN8/5BP96
-	WkBVc0HeHCkk4KTrqZVkLLiQZXHwhSp9qPIVmE1Lq3RzPw6xi6QKUXwhUcMoJHuP16vljKQFmIOzr
-	zzyD1+YvZTrSMTaAEYElEQCvsI+8RvC/ExFCCtyYUAVf+vsTG5PMjggWxtVZzcwg9HlzS4mhwLzkk
-	jYImXT4g==;
-Received: from authenticated-user
-	by stravinsky.debian.org with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_128_GCM:128)
-	(Exim 4.96)
-	(envelope-from <biebl@debian.org>)
-	id 1xCJfr-000Dov-2Z;
-	Thu, 01 Oct 2026 16:30:23 +0000
-Message-ID: <e2331da5-fbc4-4f59-8806-2474bd1e0044@debian.org>
-Date: Thu, 1 Oct 2026 18:30:17 +0200
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="eEt/Gxmc";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="Jv6JyoUr"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1790894364;
+	h=from:from:reply-to:reply-to:subject:subject:date:date:
+	 message-id:message-id:to:to:cc:cc:mime-version:mime-version:
+	 content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=9XLPokg9EX+WAcQb6+nB+7dHGgTkFwiCmfGp/17eeEE=;
+	b=eEt/Gxmchi3doz2NSL66TeZAcwfErLPmWUItGblBzfvquQ0KxjzpAOqvUzu3oLgU9ZMqlt
+	6VTy4WOzQ/N4S67OCJVf3F14y1B95Ab7COdwzEHnLcW0zVcc//nbximG/yQrbEymf1kNrv
+	086YXFHgfSRhCn9ZQ1xQYxRc8ZiG/pY=
+Received: from mail-oa1-f71.google.com (mail-oa1-f71.google.com
+ [209.85.160.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-696-sj5KQcA2NZqyYz_yQLc9Gg-1; Thu, 01 Oct 2026 18:39:22 -0400
+X-MC-Unique: sj5KQcA2NZqyYz_yQLc9Gg-1
+X-Mimecast-MFC-AGG-ID: sj5KQcA2NZqyYz_yQLc9Gg_1790894362
+Received: by mail-oa1-f71.google.com with SMTP id 586e51a60fabf-482966c4f4fso2869609fac.1
+        for <linux-xfs@vger.kernel.org>; Thu, 01 Oct 2026 15:39:22 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1790894362; cv=none;
+        d=google.com; s=arc-20260327;
+        b=iWC239g79yYND6C45p1DDVMvuruvVDCU8Ju18IHeDMvgh4EMAo+eATFvQNaR2egvqZ
+         gpbGAwjK39agXFmfK2kWoOs2Zjsxf90qLVXjl3tIhL8njZPa7B1ti4FI/pfEL/62cOYq
+         cKHI6sQr5aiJwWwlLUNkXDIcJEAkJT4zHmVdMRxMyq+PjYkJzr9w4UiDHCSXSrs5dOwV
+         H+hUBTZVoZUoqElkZrjpN9M/h6swzhg/idH47Ef9AjFs5onhohwBEk1BWopsaeP/GKYF
+         PxlPNc76t7NDgTKN/pW8O7CBwXIT2kDGqtDHsvtqs9p1HahkmzIOq49YmDyQxguj3U6J
+         AXRw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :reply-to:in-reply-to:references:mime-version:dkim-signature;
+        bh=9XLPokg9EX+WAcQb6+nB+7dHGgTkFwiCmfGp/17eeEE=;
+        fh=MJ7PDith3ezTiccg8GZ+51sNYWhTwnC7hmulN3fFrSk=;
+        b=V4qhyDq3ZLNRZSikc542XtjDptV9X7F5TKftXbRb+kYXifWBczOTr5cHevgDGszmhB
+         c3I6GG5kCsfCZMvIaod1SbxOWhXJYhsBxS+CRCddeMIlcynOMjLZVEYlDdMleafp/1s7
+         9RBNqLic5Cex07wUaDGyp9YSCpsZiFqh5CB2HPoaJazi5BCoEHqWuE1N00v40wcuL2a4
+         //Ko2KsJsIIAliMdQuXWR8tfFp8rjFlH6iFdZuTyfGFAMVsLarPPyP/sE1YhcdcCixum
+         u88/sMmoqTiehMq7sNdOr7I3D4Iu5c8axp5k9EKofiH4txLFaA+7a2YY71fqLDEyKwrW
+         3abw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1790894362; x=1791499162; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:reply-to:in-reply-to:references:mime-version:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=9XLPokg9EX+WAcQb6+nB+7dHGgTkFwiCmfGp/17eeEE=;
+        b=Jv6JyoUrSfm7iNvOPA9c3YmVFT8kaxvLmK9KIrNIsPW23RIiMnwWKcOAr0r/8gIN1V
+         RtOB10HfMms9kcdTl+4BL02YVKY37z5pEaPCPY+/y2wB5Ftnl04qfCgZRFS4EnZtksOe
+         foy8V2IepJA2qS3Vq8QNBNL2XPRCHqFwEENhnkiIof3juv1YB2GlUyjNJ6UFaJEJ3GuT
+         f6gM6CECuRVDfg95ylwR0Lag8ElGYKe6LEQ86T5zzmayv9sMZs2Pb3eIRwggq7V0UPgx
+         KhZ6g16aimdRux4N0qq9NBQdAVaBswmyB4lI8In291r5GgcQqV8UsuoZ85PAGHKFFHgt
+         bO2A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790894362; x=1791499162;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:reply-to:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=9XLPokg9EX+WAcQb6+nB+7dHGgTkFwiCmfGp/17eeEE=;
+        b=cqCtOYnGTWTzM+RWs7GArt+wdF9oXE75Wg9sTFamn28hhJIXeJ11xgHpD0HSydfE22
+         YQQU2tJdknZtUwRqNjXiUyEH5/R2wKyVpcfc3PHS+GAyHw2SQEwzbWfdI8ElNSMkD/Y0
+         0jjy7r4SiCw2fuk5kGPl/WGkFcmyVDRCNBg49k6mngiIa/gX77YTr7ooN04N3R2BY/3U
+         DKFOeTIZtuonxV3a8xhhsbrpDUNLbOcwVgJo2KtDil6kqxq98NkY9Oc7N3bRQAMA+3cE
+         1ZNenuCFSfs4tN/yZZ5deyibzyukn+57FlOWCT+fywmqwB5UBeeQSYOVPqGWAtbZJJIY
+         v4aw==
+X-Gm-Message-State: AFuF++nMDG8mut1n1bdmlGPzWRqir+uH/JAW7WwjK5ICdyIpBbdokPch
+	NOn3uqhWrNMElj0GnJcZbZ+4g1jWfmz5y+UBTVOwD0vvbj5rclB1adM6+p1cKaJXFqzuhgvivpk
+	homUu6v81ZMmOfW6Y/H06Kq7sePi1QFcPydGPMz8d5zBpY4tDJ0ugvvSDD5kWsSjVQAz2oqoZtf
+	WAzA1xesyx+BcoIC8PumdaviCnkpNWXg8evsv+
+X-Gm-Gg: AYBFou37M0pQzqYhbPrw7akYmMGBX5spGYTl/lgJV+Ea8PlRPQ4BC6eTZ/FfSU9s8B3
+	g3iJGQ8SPryYNMlk0UzvHvZhTzabkbGtf2/ceVo27QArdWWAccFYU7woEUZjzz93W4PEqy/Rqyr
+	/jpRuC762UgJ/fHgLMu4H16dxj/RQnzSyn/dyb5bu/QYv6dII5JGYfoN4uHYX1Q2nCCKOp6GZA6
+	k1fJwOUcX6dfP0uQvXTRrVwLPoq5Mj8tNG/ar79Gk3xdQ==
+X-Received: by 2002:a05:6808:2203:b0:4b2:8d83:436e with SMTP id 5614622812f47-4f3080f416cmr3486081b6e.8.1790894362103;
+        Thu, 01 Oct 2026 15:39:22 -0700 (PDT)
+X-Received: by 2002:a05:6808:2203:b0:4b2:8d83:436e with SMTP id
+ 5614622812f47-4f3080f416cmr3486071b6e.8.1790894361666; Thu, 01 Oct 2026
+ 15:39:21 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: "Darrick J. Wong" <djwong@kernel.org>,
- Andrey Albershteyn <aalbersh@redhat.com>
-Cc: 1149571@bugs.debian.org, Christoph Hellwig <hch@infradead.org>,
- xfs <linux-xfs@vger.kernel.org>
-Content-Language: en-US
-From: Michael Biebl <biebl@debian.org>
-Autocrypt: addr=biebl@debian.org; keydata=
- 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
-In-Reply-To: <20261001062338.GV2705364@frogsfrogsfrogs>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="------------m8jfOLowfC1lmh0kF39tNpe7"
-X-Debian-User: biebl
-Message-ID: <20261001163017.Ww85MMflZ5VCxe-JjqrNU4NFP5IwEO4wxhmOsJX5fNU@z>
+References: <4103a3f702be0ccf0e6eeb34981b3d65@phys.ethz.ch>
+In-Reply-To: <4103a3f702be0ccf0e6eeb34981b3d65@phys.ethz.ch>
+Reply-To: nathans@redhat.com
+From: Nathan Scott <nathans@redhat.com>
+Date: Fri, 2 Oct 2026 08:39:08 +1000
+X-Gm-Features: AclHuK90XvC9EmJpMFBc5u1cggrrrpVOAELR5lKi5nnmyhQEv2vpg_y19R1-C6w
+Message-ID: <CAFMei7MchKT5CfDPOafJGjzxZ6L=Kr3vDSRHvYXDWK9THmuqcQ@mail.gmail.com>
+Subject: Re: rw stat clarification
+To: Stephan Mueller <stepmueller@phys.ethz.ch>
+Cc: linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---------------m8jfOLowfC1lmh0kF39tNpe7
-Content-Type: multipart/mixed; boundary="------------0QIQ0wSMfOiXB6yOELdcfO0m";
- protected-headers="v1"; hp="clear"
-Message-ID: <e2331da5-fbc4-4f59-8806-2474bd1e0044@debian.org>
-Date: Thu, 1 Oct 2026 18:30:17 +0200
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] xfs_healer: fail earlier on non-xfs filesystems
-To: "Darrick J. Wong" <djwong@kernel.org>,
- Andrey Albershteyn <aalbersh@redhat.com>
-Cc: 1149571@bugs.debian.org, Christoph Hellwig <hch@infradead.org>,
- xfs <linux-xfs@vger.kernel.org>
-References: <20261001062338.GV2705364@frogsfrogsfrogs>
-Content-Language: en-US
-From: Michael Biebl <biebl@debian.org>
-Autocrypt: addr=biebl@debian.org; keydata=
- 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
-In-Reply-To: <20261001062338.GV2705364@frogsfrogsfrogs>
+Hi Stephan,
 
---------------0QIQ0wSMfOiXB6yOELdcfO0m
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: base64
+On Fri, Oct 2, 2026 at 12:08=E2=80=AFAM Stephan Mueller
+<stepmueller@phys.ethz.ch> wrote:
+>
+> ...
+> May I go ahead and make it
+>
+> rw #reads #writes
+>
 
-QW0gMDEuMTAuMjYgdW0gMDg6MjMgc2NocmllYiBEYXJyaWNrIEouIFdvbmc6DQo+IEZyb206
-IERhcnJpY2sgSi4gV29uZyA8ZGp3b25nQGtlcm5lbC5vcmc+DQo+IA0KPiBBIERlYmlhbiB1
-c2VyIHJlcG9ydGVkIHRoYXQgdGhlIHJvb3QgZmlsZXN5c3RlbSBzZXJ2aWNlIGZhaWxzIHdp
-dGg6DQo+IA0KPiAgIHN5c3RlbWRbMV06IFN0YXJ0aW5nIHhmc19oZWFsZXJALS5zZXJ2aWNl
-IC0gU2VsZiBIZWFsaW5nIG9mIFhGUyBNZXRhZGF0YSBmb3IgLy4uLg0KPiAgIHhmc19oZWFs
-ZXJALVs5NzZdOiAvOiBJbmFwcHJvcHJpYXRlIGlvY3RsIGZvciBkZXZpY2UNCj4gICBzeXN0
-ZW1kWzFdOiB4ZnNfaGVhbGVyQC0uc2VydmljZTogQ29uZGl0aW9uIGNoZWNrIHByb2Nlc3Mg
-ZXhpdGVkLCBjb2RlPWV4aXRlZCwgc3RhdHVzPTI1NS9FWENFUFRJT04NCj4gICBzeXN0ZW1k
-WzFdOiB4ZnNfaGVhbGVyQC0uc2VydmljZTogRmFpbGVkIHdpdGggcmVzdWx0ICdleGl0LWNv
-ZGUnLg0KPiAgIHN5c3RlbWRbMV06IEZhaWxlZCB0byBzdGFydCB4ZnNfaGVhbGVyQC0uc2Vy
-dmljZSAtIFNlbGYgSGVhbGluZyBvZiBYRlMgTWV0YWRhdGEgZm9yIC8uDQo+IA0KPiB3aGVu
-IHRoZSByb290IGZpbGVzeXN0ZW0gaXMgbm90IFhGUy4gIEl0J3MgbW9zdCBsaWtlbHkgZXh0
-NCBnaXZlbg0KPiBEZWJpYW4ncyBkZWZhdWx0cy4gIA0KDQpGd2l3LCB0aGlzIGFzc3VtcHRp
-b24gaXMgY29ycmVjdC4gTXkgLyBpcyB1c2luZyBleHQ0Lg0KDQpSZWdhcmRzLA0KTWljaGFl
-bA0KDQo=
+Nope, this is an ABI.  Userspace code has been written to this
+interface for >20 years.
 
---------------0QIQ0wSMfOiXB6yOELdcfO0m--
+cheers.
 
---------------m8jfOLowfC1lmh0kF39tNpe7
-Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="OpenPGP_signature.asc"
+--
+Nathan
 
------BEGIN PGP SIGNATURE-----
-
-wsF5BAABCAAjFiEECbOsLssWnJBDRcxUauHfDWCPItwFAmq+ipkFAwAAAAAACgkQauHfDWCPItyb
-FQ//bthKXDvPSnyT7xvMiAQPL2iuKSxAVPObP44Q6uu1M7s83Dnqg8rB1FaU5HkocsF21WzD9jX8
-p9C2YJLlNXid/pHjdLMMAkP6dAGMt/LTktJoprtdPXpnh2MXYlcHn1jbhGCIE3QEHZinu8kEyJi2
-uogdhAu7b4XKC2HJ7I8M9HtP5EDNbPoNyNyfbQzAAGBMCY+ag6pbqsP4Rm30mRAbA27RstakVf3N
-5Ex+V6Ajk4vsGVm7w7U42dYn3nxYFFt9+FtlU2yS5+Ipod4pd5TLCmNHCq8iDykoHCHAs2OncXEk
-/SN//mixpknqfQwf927si8JKSSGQ2weZLWT5ke/5PXksadR5FCzC5rdmf1I0zej6FGnJHLYidV9h
-qudNVzntm+5bZdeazkF1+TEeZ3K5KXN54YL27Uw0hlrZ6X+dzsHjaNNaDCeIutk7dAfl1TcPanzU
-ONdlWY5Xg8XRwge8mmJnI4kL7VbNuD/r3bU44yefRokGSXGrmsVxRCB90fzrznU7RDq5lztDVgfi
-6odcSPy8abzNTv4ktuReLWis+XZyg0TG/oBRfcckIrqLBjTd/140leh5H+4vy9KzE4GxyqIJuuO/
-sJjqXPGIrjkkKffVjwAeO/tLcSLfb0OXz3m2shNIVHJqxR8vR99mKPsCRufNDEeFY/RRWSTUiccf
-RCg=
-=YE+0
------END PGP SIGNATURE-----
-
---------------m8jfOLowfC1lmh0kF39tNpe7--
