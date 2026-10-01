@@ -1,19 +1,57 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from buxtehude.debian.org (buxtehude.debian.org [209.87.16.39])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C98093A2574
-	for <linux-xfs@vger.kernel.org>; Thu,  1 Oct 2026 14:37:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A702E51AECC
+	for <linux-xfs@vger.kernel.org>; Thu,  1 Oct 2026 14:39:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.87.16.39
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790865426; cv=none; b=ZIyZl8HtNqLY8vpiauL5WdmSeDJxIGym9719fJvufsqLWKP3ooNBbS33P69hoH1EGffWw7X9hxVqZfuUTkDkkZ5jIReKDBNXhzFW1w4VbXGMj+oOBm3USW7MwYQ3yhIa26HcYCyvhjBT5x+2hsqe9DNi30EDFn5NNXvmZa71RgY=
+	t=1790865554; cv=none; b=DfxKcW1P1jmLdJsVhDOUeCHfK+UxhoM8vFCK1myWR3OI2UlqMoyFCf/yJlehtFHP1Drrhf6zRHRBdzZwlVmRtxaNrrpD3LEnWegTGoT1RHNtymC3xVcoVQW8uXxVoeqROLx25CGU78Pv9tSTCraIWA2dlePmZFOamuBjVIPtFp8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790865426; c=relaxed/simple;
+	s=arc-20240116; t=1790865554; c=relaxed/simple;
 	bh=MrUtcE6TRkAtvWpszNm984U1G937jMknviCaZr2h1kM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DgRrhtgUMlemxWwNKRIEog3e810ux/s41NR+iDgrSOcEnCRajZaU/Jgemdwh50w5UvgZRJnnrhxjrtCg3aqd20+G8RqK19rO96KJu4zLt1BmeuCn7dcIrAQ7ry9bqEBa5E0Nxvxe4kVjyW1KSOG9hM9qJ6NBa4vhmQ4zLrV1P/c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EE6J2bNU; arc=none smtp.client-ip=100.103.45.18
+	h=Subject:References:Date:From:To:Cc:Message-ID:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=mgPKb6nYxK43FPJHdPhtWW2d8AqjFrslacijh2212rYwSh+Aziq8mkiVe9E5FSp3J4/OmbuNJHLnfCQZQIJ4efYlktDoTRDbPamfNazJG3rXcHe039lUbwOYljeCFlduCPnR5BMLFZ9SEb+xCLcf7ruVV/aIl7dEIUfCiwYkkJQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org; spf=pass smtp.mailfrom=buxtehude.debian.org; dkim=fail (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EE6J2bNU reason="signature verification failed"; arc=none smtp.client-ip=209.87.16.39
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=buxtehude.debian.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EE6J2bNU"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EE6J2bNU"
+Received: from debbugs by buxtehude.debian.org with local (Exim 4.96)
+	(envelope-from <debbugs@buxtehude.debian.org>)
+	id 1xCHw5-000AYA-1A;
+	Thu, 01 Oct 2026 14:39:01 +0000
+X-Loop: owner@bugs.debian.org
+Subject: Bug#1149571: [PATCH] xfs_healer: fail earlier on non-xfs filesystems
+Reply-To: "Darrick J. Wong" <djwong@kernel.org>, 1149571@bugs.debian.org
+Resent-From: "Darrick J. Wong" <djwong@kernel.org>
+Resent-To: debian-bugs-dist@lists.debian.org
+Resent-CC: linux-xfs@vger.kernel.org
+X-Loop: owner@bugs.debian.org
+Resent-Date: Thu, 01 Oct 2026 14:39:01 +0000
+Resent-Message-ID: <handler.1149571.B1149571.179086542438920@bugs.debian.org>
+X-Debian-PR-Message: followup 1149571
+X-Debian-PR-Package: xfsprogs
+X-Debian-PR-Keywords: 
+References: <179080491253.7201.8697529754428195540.reportbug@mars> <20261001062338.GV2705364@frogsfrogsfrogs> <ar4v_IGzBRbIYp_B@aalbersh-thinkpadx1carbongen13.rmtcz.csb> <179080491253.7201.8697529754428195540.reportbug@mars>
+X-Debian-PR-Source: xfsprogs
+Received: via spool by 1149571-submit@bugs.debian.org id=B1149571.179086542438920
+          (code B ref 1149571); Thu, 01 Oct 2026 14:39:01 +0000
+Received: (at 1149571) by bugs.debian.org; 1 Oct 2026 14:37:04 +0000
+X-Spam-Level: 
+X-Spam-Bayes: score:0.0000 Tokens: new, 10; hammy, 150; neutral, 203; spammy,
+	0. spammytokens: hammytokens:0.000-+--Signed-off-by,
+	0.000-+--Signedoffby, 0.000-+--libexec, 0.000-+--exitcode,
+	0.000-+--0x100
+Received: from tor.source.kernel.org ([2600:3c04:e001:324:0:1991:8:25]:37878)
+	by buxtehude.debian.org with utf8esmtps (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.96)
+	(envelope-from <djwong@kernel.org>)
+	id 1xCHuB-000A7O-0U
+	for 1149571@bugs.debian.org;
+	Thu, 01 Oct 2026 14:37:04 +0000
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	by tor.source.kernel.org (Postfix) with UTF8SMTP id BE81C602C8;
+	Thu,  1 Oct 2026 14:37:01 +0000 (UTC)
 Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 66FAA1F00898;
 	Thu,  1 Oct 2026 14:37:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
@@ -32,12 +70,7 @@ To: Andrey Albershteyn <aalbersh@kernel.org>
 Cc: 1149571@bugs.debian.org, Andrey Albershteyn <aalbersh@redhat.com>,
 	biebl@debian.org, Christoph Hellwig <hch@infradead.org>,
 	xfs <linux-xfs@vger.kernel.org>
-Subject: Re: Bug#1149571: [PATCH] xfs_healer: fail earlier on non-xfs
- filesystems
 Message-ID: <20261001143700.GW2705364@frogsfrogsfrogs>
-References: <179080491253.7201.8697529754428195540.reportbug@mars>
- <20261001062338.GV2705364@frogsfrogsfrogs>
- <ar4v_IGzBRbIYp_B@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,6 +80,7 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <ar4v_IGzBRbIYp_B@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+Message-ID: <20261001143700.AwF1SKifLTwLixnioJIH5YBuLUlkYxAvTOMMpeIfcPA@z>
 
 On Thu, Oct 01, 2026 at 12:07:28PM +0200, Andrey Albershteyn wrote:
 > On 2026-09-30 23:23:38, Darrick J. Wong wrote:
