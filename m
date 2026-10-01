@@ -1,19 +1,57 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from buxtehude.debian.org (buxtehude.debian.org [209.87.16.39])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59AB04E0B68
-	for <linux-xfs@vger.kernel.org>; Thu,  1 Oct 2026 10:07:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77C6C4E0B68
+	for <linux-xfs@vger.kernel.org>; Thu,  1 Oct 2026 10:09:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.87.16.39
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790849266; cv=none; b=dByWgVyYYBo63yI7ME76UUOHN7dHZo+p5jcXMixxuWbK/59CU9ntszmR/9brjsVFfz0urIsTK+5GsGOUGWn0Wyazs/YkvQtUpgbK94oxXPOiNXW9CpMCncpSynBPanV8cuON5ORztV7Owob+VXtrvbLQScnAa6mVT0dbiU/MGKc=
+	t=1790849352; cv=none; b=ZXeTl/EjUBJ7uQtnazEhzs0CBHy1TF/ZAO45n1THAx2s6+gYIEyP4QgZiMqHmivAkJCHEWNo6I7PUO87RrJDJ9+DPPP1dlaQq711/su/EIw4mp8pTs/gmA2Mt/l8DOGT6lmXjmrcaFGTlfa3jEHJ3ul+kKIybywOtLGAuJf7NmU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790849266; c=relaxed/simple;
+	s=arc-20240116; t=1790849352; c=relaxed/simple;
 	bh=5J18B8CZGWnWJnA6DXSTVBivTKe1I3Nr3Sj7hzy2kqw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=mtcGZSKPHYVmXXjjUYqMbPNmso9afqeQsAcfya54ZWdlFQ27r29+YqEK6IsbNl9U4ThjCIuonLeM0z7Z+zPkxl4JHCyG0pJCG7WB1W5XKp5auPvfnv9BeW/lisg5RDQa877YnQWw3kbSz5NxsNWqONv5HbU1+zDLH9Rh1elOBlY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kEfyijMw; arc=none smtp.client-ip=100.103.45.18
+	h=Subject:References:Date:From:To:Cc:Message-ID:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=CCgXbwFWtOufdR95VDcrr6n4Gc3WiqRooT8tpZQqtTAQPx2jpXZtSM1W1EZ/0eioc08Cfv3G3ZN//ZfCg3+/dKKvLyv8xP2001+Bgwje71FVjGFAmVhMXiDamrQH3hl18XNNxgGAXuF9c3SaZC91p6wJNZXGpc9mN33ePFFBib0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org; spf=pass smtp.mailfrom=buxtehude.debian.org; dkim=fail (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kEfyijMw reason="signature verification failed"; arc=none smtp.client-ip=209.87.16.39
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=buxtehude.debian.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kEfyijMw"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kEfyijMw"
+Received: from debbugs by buxtehude.debian.org with local (Exim 4.96)
+	(envelope-from <debbugs@buxtehude.debian.org>)
+	id 1xCDin-000GPo-29;
+	Thu, 01 Oct 2026 10:09:01 +0000
+X-Loop: owner@bugs.debian.org
+Subject: Bug#1149571: [PATCH] xfs_healer: fail earlier on non-xfs filesystems
+Reply-To: Andrey Albershteyn <aalbersh@kernel.org>, 1149571@bugs.debian.org
+Resent-From: Andrey Albershteyn <aalbersh@kernel.org>
+Resent-To: debian-bugs-dist@lists.debian.org
+Resent-CC: linux-xfs@vger.kernel.org
+X-Loop: owner@bugs.debian.org
+Resent-Date: Thu, 01 Oct 2026 10:09:01 +0000
+Resent-Message-ID: <handler.1149571.B1149571.179084925661633@bugs.debian.org>
+X-Debian-PR-Message: followup 1149571
+X-Debian-PR-Package: xfsprogs
+X-Debian-PR-Keywords: 
+References: <179080491253.7201.8697529754428195540.reportbug@mars> <20261001062338.GV2705364@frogsfrogsfrogs> <179080491253.7201.8697529754428195540.reportbug@mars>
+X-Debian-PR-Source: xfsprogs
+Received: via spool by 1149571-submit@bugs.debian.org id=B1149571.179084925661633
+          (code B ref 1149571); Thu, 01 Oct 2026 10:09:01 +0000
+Received: (at 1149571) by bugs.debian.org; 1 Oct 2026 10:07:36 +0000
+X-Spam-Level: 
+X-Spam-Bayes: score:0.0000 Tokens: new, 25; hammy, 150; neutral, 168; spammy,
+	0. spammytokens: hammytokens:0.000-+--Signedoffby,
+	0.000-+--Signed-off-by, 0.000-+--libexec, 0.000-+--exitcode,
+	0.000-+--0x100
+Received: from sea.source.kernel.org ([2600:3c0a:e001:78e:0:1991:8:25]:43618)
+	by buxtehude.debian.org with esmtps (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.96)
+	(envelope-from <aalbersh@kernel.org>)
+	id 1xCDhP-000G1p-2y
+	for 1149571@bugs.debian.org;
+	Thu, 01 Oct 2026 10:07:35 +0000
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	by sea.source.kernel.org (Postfix) with ESMTP id EFEF543D92;
+	Thu,  1 Oct 2026 10:07:32 +0000 (UTC)
 Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5E0BC1F000FF;
 	Thu,  1 Oct 2026 10:07:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
@@ -31,11 +69,7 @@ From: Andrey Albershteyn <aalbersh@kernel.org>
 To: "Darrick J. Wong" <djwong@kernel.org>, 1149571@bugs.debian.org
 Cc: Andrey Albershteyn <aalbersh@redhat.com>, biebl@debian.org, 
 	Christoph Hellwig <hch@infradead.org>, xfs <linux-xfs@vger.kernel.org>
-Subject: Re: Bug#1149571: [PATCH] xfs_healer: fail earlier on non-xfs
- filesystems
 Message-ID: <ar4v_IGzBRbIYp_B@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
-References: <179080491253.7201.8697529754428195540.reportbug@mars>
- <20261001062338.GV2705364@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,6 +79,7 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <20261001062338.GV2705364@frogsfrogsfrogs>
+Message-ID: <20261001100728.IZqlaNhPku3TOBE0eavuB5-IyyAEFvwGqlaFQ-a_tSQ@z>
 
 On 2026-09-30 23:23:38, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
