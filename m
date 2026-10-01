@@ -1,36 +1,73 @@
-Received: from mta0.migadu.com (out-61.mta0.migadu.com [91.218.175.61])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from buxtehude.debian.org (buxtehude.debian.org [209.87.16.39])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1748F466B01
-	for <linux-xfs@vger.kernel.org>; Thu,  1 Oct 2026 16:30:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.61
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A73BB3D47A0
+	for <linux-xfs@vger.kernel.org>; Thu,  1 Oct 2026 16:33:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.87.16.39
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790872258; cv=none; b=YMB5zKfNxXRkc/hjIsnT4tIPdsyj0IFQUflb4ZIWzYBkd2ikpsPO1UtIWBkPhW83liwB1Vdg41NPgDntZg2TFQV889R/lf4Er/D0S2CjMkx/Cy4eui9jmscA8YaTzvpmt/42nDVotphYqPhpbWr2EQl/bGFSPymIgND1ftrnyMA=
+	t=1790872386; cv=none; b=HhOrTs4z8ED8kBDOqvM7dpxQzT4zHYdaNMki71Oy/IxX8yDYX6m4wOTeD01w87pv2e/lbMlWcZSpc45YXHJenPvOzl/YSL496Ax/BHyiCx/CrICCKRZsVVV623QxBJNERKJS70vj3YskBzBRgXtVrV6Qte6Yb10l81IxZ8SYW4g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790872258; c=relaxed/simple;
-	bh=EiAP0sI6i61OUgTbiiVKdgPwrsDl0Dkp9qow22KLPfw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=SXIt2+dWX6OE1PnyqYVXF2faINscKb3L8XPFOv8Yc9kJ0r54c+vOcuMAVnbr1GXTNv4VlgKNHHioWWOV4EDIlPJbeTJAOvRxx2cq3zDOm9aNO1qhIpn9/0cZ6Ot2TFJVdFDME6LvO85UCl1ygVnEJZmI5mLVVLPhEG0UCZ/4uMA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=qpZSJu7r; arc=none smtp.client-ip=91.218.175.61
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1790872386; c=relaxed/simple;
+	bh=W0wBQYV+n5v4Eq/Co9uR4LVavPwZZkEbmIq3ZsXoP0g=;
+	h=Subject:References:Message-ID:Date:MIME-Version:To:Cc:From:
+	 In-Reply-To:Content-Type; b=IXyXhHdC61Bl2SvAaNzaxaTyUHO0UeNKChRDV1X4Ml1Nq3OqyGDePl/i/bNTejhMCJCNMSkCiqM3hnDS2Cq7ZKDYnQCmeayNo01BfHie2j5O761nG1ZjvNzc5Fo3UuyBgojc3N54XRYjWcxLhNE6uoCpVxZItdViGoJ73eSL4nA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=debian.org; spf=pass smtp.mailfrom=buxtehude.debian.org; dkim=fail (2048-bit key) header.d=debian.org header.i=@debian.org header.b=MgJOEKlT reason="signature verification failed"; arc=none smtp.client-ip=209.87.16.39
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=debian.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=buxtehude.debian.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="qpZSJu7r"
-X-Envelope-To: linux-xfs@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=EiAP0sI6i61OUgTbiiVKdgPwrsDl0Dkp9qow22KLPfw=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1790872253; v=1; x=1791477053;
- b=qpZSJu7revSDu/8eEQN6nGMkkhjh+UbgCKuAqNK5Twflar1cfCc4J2XDVqq2D4K1Uv2e5jnp
- x81+4j3QggTLr2F5bq98u3hFeimaMt4PGf75wphg/9hjm5Q8TjBs/Abe4ZooOVqm5WPU0FXDSLO
- b1/KTz3JGP5S6ERDu/5kih78=
-X-Envelope-To: linux-xfs@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 964a809f92cbc2f8;
-	Thu, 01 Oct 2026 16:30:28 +0000
-X-Mizu-Trace-ID: 964a809f92cbc2f8
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <9723ca61-faed-412e-bef4-e6841393b8a8@linux.dev>
-Date: Thu, 1 Oct 2026 18:30:26 +0200
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=debian.org header.i=@debian.org header.b="MgJOEKlT"
+Received: from debbugs by buxtehude.debian.org with local (Exim 4.96)
+	(envelope-from <debbugs@buxtehude.debian.org>)
+	id 1xCJiP-000SEb-2t;
+	Thu, 01 Oct 2026 16:33:01 +0000
+X-Loop: owner@bugs.debian.org
+Subject: Bug#1149571: [PATCH] xfs_healer: fail earlier on non-xfs filesystems
+Reply-To: Michael Biebl <biebl@debian.org>, 1149571@bugs.debian.org
+Resent-From: Michael Biebl <biebl@debian.org>
+Resent-To: debian-bugs-dist@lists.debian.org
+Resent-CC: linux-xfs@vger.kernel.org
+X-Loop: owner@bugs.debian.org
+Resent-Date: Thu, 01 Oct 2026 16:33:01 +0000
+Resent-Message-ID: <handler.1149571.B1149571.1790872227107646@bugs.debian.org>
+X-Debian-PR-Message: followup 1149571
+X-Debian-PR-Package: xfsprogs
+X-Debian-PR-Keywords: 
+References: <20261001062338.GV2705364@frogsfrogsfrogs> <179080491253.7201.8697529754428195540.reportbug@mars>
+X-Debian-PR-Source: xfsprogs
+Received: via spool by 1149571-submit@bugs.debian.org id=B1149571.1790872227107646
+          (code B ref 1149571); Thu, 01 Oct 2026 16:33:01 +0000
+Received: (at 1149571) by bugs.debian.org; 1 Oct 2026 16:30:27 +0000
+X-Spam-Level: 
+X-Spam-Bayes: score:0.0000 Tokens: new, 15; hammy, 150; neutral, 49; spammy,
+	0. spammytokens:
+	hammytokens:0.000-+--Hx-spam-relays-external:sk:stravin,
+	0.000-+--H*RT:sk:stravin, 0.000-+--Hx-spam-relays-external:311,
+	0.000-+--H*RT:311, 0.000-+--H*RT:108
+Received: from stravinsky.debian.org ([2001:41b8:202:deb::311:108]:50518)
+	by buxtehude.debian.org with esmtps (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.96)
+	(envelope-from <biebl@debian.org>)
+	id 1xCJft-000Rzz-37
+	for 1149571@bugs.debian.org;
+	Thu, 01 Oct 2026 16:30:27 +0000
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=debian.org;
+	s=smtpauto.stravinsky; h=X-Debian-User:Content-Type:In-Reply-To:From:
+	References:Cc:To:Subject:MIME-Version:Date:Message-ID:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=W0wBQYV+n5v4Eq/Co9uR4LVavPwZZkEbmIq3ZsXoP0g=; b=MgJOEKlTvCkM5REHUix2OciqP3
+	JysTT1xzQS2Faxf4JFFC49+90b3U0eQ/7KyV7fTgwWCG53PXCt0gWK7NNvLAMAZAOb02jj/F0VrVd
+	1sQI8Tsp6YzCOW9yFH+L3ETFSAnxYy0E2UCGS05ITcIxxuTWnLilypFhslN5mRy1NrFQFN8/5BP96
+	WkBVc0HeHCkk4KTrqZVkLLiQZXHwhSp9qPIVmE1Lq3RzPw6xi6QKUXwhUcMoJHuP16vljKQFmIOzr
+	zzyD1+YvZTrSMTaAEYElEQCvsI+8RvC/ExFCCtyYUAVf+vsTG5PMjggWxtVZzcwg9HlzS4mhwLzkk
+	jYImXT4g==;
+Received: from authenticated-user
+	by stravinsky.debian.org with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_128_GCM:128)
+	(Exim 4.96)
+	(envelope-from <biebl@debian.org>)
+	id 1xCJfr-000Dov-2Z;
+	Thu, 01 Oct 2026 16:30:23 +0000
+Message-ID: <e2331da5-fbc4-4f59-8806-2474bd1e0044@debian.org>
+Date: Thu, 1 Oct 2026 18:30:17 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -38,82 +75,162 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] xfs: don't limit software atomic writes by the group
- alignment
-To: John Garry <john.garry@linux.dev>, "Darrick J . Wong" <djwong@kernel.org>
-Cc: Pankaj Raghav <p.raghav@samsung.com>, cem@kernel.org,
- linux-xfs@vger.kernel.org, John Garry <john.g.garry@oracle.com>,
- gost.dev@samsung.com
-References: <20260925103640.932735-1-p.raghav@samsung.com>
- <41749fa7-dcfa-46f0-af0f-ed3fa5f39f15@linux.dev>
- <ffd48d49-c4f6-4fc3-88a5-0adb11d0d6b9@linux.dev>
- <050f7a77-9c0e-4cab-8ddb-6932b885e12f@linux.dev>
- <jwtdhhbo7ukt5cynhdfrxu3xjwyk3wwg66uxhtnkokvabbokge@b6b4pk3yja24>
- <29380cd8-19f5-4ae7-bdb7-b7908decb474@linux.dev>
- <e96b6411-3392-480e-8cef-bdc94b8041e7@linux.dev>
- <3e6c32cc-64cd-4460-a587-b3bc04d31d9f@linux.dev>
+To: "Darrick J. Wong" <djwong@kernel.org>,
+ Andrey Albershteyn <aalbersh@redhat.com>
+Cc: 1149571@bugs.debian.org, Christoph Hellwig <hch@infradead.org>,
+ xfs <linux-xfs@vger.kernel.org>
 Content-Language: en-US
-From: Pankaj Raghav <pankaj.raghav@linux.dev>
-In-Reply-To: <3e6c32cc-64cd-4460-a587-b3bc04d31d9f@linux.dev>
+From: Michael Biebl <biebl@debian.org>
+Autocrypt: addr=biebl@debian.org; keydata=
+ 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
+In-Reply-To: <20261001062338.GV2705364@frogsfrogsfrogs>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="------------m8jfOLowfC1lmh0kF39tNpe7"
+X-Debian-User: biebl
+Message-ID: <20261001163017.Ww85MMflZ5VCxe-JjqrNU4NFP5IwEO4wxhmOsJX5fNU@z>
+
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--------------m8jfOLowfC1lmh0kF39tNpe7
+Content-Type: multipart/mixed; boundary="------------0QIQ0wSMfOiXB6yOELdcfO0m";
+ protected-headers="v1"; hp="clear"
+Message-ID: <e2331da5-fbc4-4f59-8806-2474bd1e0044@debian.org>
+Date: Thu, 1 Oct 2026 18:30:17 +0200
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] xfs_healer: fail earlier on non-xfs filesystems
+To: "Darrick J. Wong" <djwong@kernel.org>,
+ Andrey Albershteyn <aalbersh@redhat.com>
+Cc: 1149571@bugs.debian.org, Christoph Hellwig <hch@infradead.org>,
+ xfs <linux-xfs@vger.kernel.org>
+References: <20261001062338.GV2705364@frogsfrogsfrogs>
+Content-Language: en-US
+From: Michael Biebl <biebl@debian.org>
+Autocrypt: addr=biebl@debian.org; keydata=
+ xsFNBEsA+IABEACfFA3gFej3NPRVrZxQfkI+O4S86osi4y0xhj8quvzv+PV68Q4CN/Bt7WWd
+ Oq0rtRSaTL3HEGfvEkiRFB6RfaeEL7YejjBK+TsxnjPPuUs30Tr1W/E7n4/zPdMW65R8bq28
+ hQvf7gDMgRV3PrV5bx1tY7OF6f9uSoG3c9zLWjVZOjZFu+9XQYMGI3FpcGk9I/fD9XwKXd/u
+ aP+8xXB8DAo9bduIlWyepZkRhJG1GERjHscvHvITN9GqvpwqWFOapRdWZetNLliBqGvmUDT7
+ PNH8XTyHzsXRUB38gPrIYAU2mufdDLdeFdJT1OMeenolgfhc4J6ZY0VprRI1HCZ/5N12XYZY
+ +3Bt7hWU26m8hRnyjGR5BFP50nIikuQrDeBoft0qElcWMZ9QGIMxlqARMZZQbc79nDlyQUSq
+ BP3b03ljbJhMrE7uiIXVEyIWZZyECRAlHGHkdCFpcVOkraSTANjIApd9RBUYNZxZbyyuAN/R
+ 8QXyOVysrtQ2wPVKAIXWpuQ2xQtbOjun3gkvqNiXgVl5g9blyKOHVmvRDOQfb1+Pr/QSNJW0
+ +WQ1D+s4uY7y7TI7l7iiSFjLUMvgEJfYkauXaSIhDEEecYyldqbaCQ4UXrZbKwrzB1gT3NYI
+ CLh9vy/Evx5l9xDSA5BTke2obWo7zOmCV0GqtwJPLwQ7BN1T4wARAQABzSBNaWNoYWVsIEJp
+ ZWJsIDxiaWVibEBkZWJpYW4ub3JnPsLBdwQTAQgAIQUCSwD9HQIbAwULCQgHAwUVCgkICwUW
+ AgMBAAIeAQIXgAAKCRBq4d8NYI8i3JiSEACOXwvwURzAKGp6cZwICwYGOZbWwcVg+DweP/ur
+ rGIKAvspfRb3Yn5yWqOm9smAbXPJgZQihdtqKEq3uB4Sy4lAYNE2BfLOFAD9DsH38qYEUuEe
+ mqS6iAu/2n8vSic9A+nvg/ZiWWK+GoOpPk0ayxnRrB6HNgW07cPUKS9jW3coujp9STz4hUlU
+ EKyhxFB22KIDBdC8A2MuLo6EPnspM0aPIYGc55CqhIeRKHHS0TLjQpOu9GW0JA1dbrWZSqdg
+ s4ja1VjR4ors8n7DNUxNl4DHbskXbQQUZ0PyYVFAXn5i6NTD7+vkS4Ol5jIHRqsuREHPtCim
+ +2J4XooArE9KfGMuixjTVV6wqCh9K0Mcg941MeJgBCvt8ehw/le+00zGJPxhkHOV1oDQWwCn
+ DQr5Wdm+bqPsCWmb34Uz/jY2CxdH1KHnmAUPxnnq95MWpZxF3/z9k83U2B5J8/tvp/Ir5w4X
+ xZDAfoRYX0FExXrmRZcqrqAXCuWJF97AVlrGnvSpUOskFT8I0KkCNTFtbieQ1DJbIxTlbVML
+ zB01APfpjw4SxLH6zXcL0mivOdiNIG0NBOqYMZmyQ8wUFvB9UwEg1ypa2CNT4j3im5OVNsv2
+ ERKFjdjOjedT0ul9FbXsi5xu7USGZaEn25fFDdUSR3hFj8IhgE0NGSRUjTiOuuSdGH3Hw87B
+ TQRLAPiAARAAoU7siZ7PHGZWRNMwblJFRb9EVT0snNNiUEMQi5UoIWLM6VXutpStqCp2DWkM
+ 5GZUbQPvzI1A5CaeA3ZXgE00OyRUHAC9edhUIoXu48n9f7SI/o8tPE85RTGWm3lpIavQpZqA
+ bYbRJAgZl8kmyzLWlXV7h4PWJw2Scwej93VaZ2ZccJcEMP4y75UqP/zC8uM9U8aez6jqj94Z
+ v/SIbr2KPjozFGiP+/NcV3bd9eUC58lesCUqkQ2GzbEzHOR7opIPvIWZLYayOsdZQzS2h3O7
+ BcfIvQL9oFBec6pkLhK+a/fLUZZDyrM9OnFBz+rT6OH0nT5TpALAum20q8jcVrvWDbGs6Xuw
+ NQpVEfGUlNXiDDlzfyTfHcQUudHjQPIxdczkMSrMPRGt5pJM0SbvV3nhCO/+vcsMaStOIYOl
+ 1lH88aOWbPFagZH+FgXjM7IRxNHzOxeyVpL5PGiI8/Y4j8GXsKqtw29G28yi0ozy59po6nyv
+ qn+H07KOASZwuxjpnNDDLy3Y7xfAM8MacWvcIfl2AN/iI8pZtyuOVDKb9fboQMKjeVgckYDE
+ hTObT7z2N26xfDZy0V7Bp9ey/Kyg48tmn0qE/C2Y7iqNFjCWN9hmn6Lx7DSJB9mVmP97T6Ot
+ np8ZBFr/HPnnmLx4O1G/1X+iThBc9QVxvJtEjtN46qzSMoUAEQEAAcLBXwQYAQgACQUCSwD4
+ gAIbDAAKCRBq4d8NYI8i3Ez3D/9+d9MrNvCsz1sPii4EfbOxz0ZXUpCSCKUSuT+e2GzGnyzP
+ w6TBWS4YrSBTCD2nDb3vKWVUhyHDpFDWw9LofPVo/BM+RLoDkmElzvoWnKGyKElB7bHmXqBm
+ v6vATL5W0Efqz2xf8qwRDsrTrrVWpGuLXlQWYFM28OrGCmh7CraiLhjqNqoErx2ZOl4LPtL1
+ dQ60EPB33in9o2RdZTZYzpHbnPBNEHQWev1+W3Jau8NZlMyV9+HD6G48pIyLhKsaeHroqpwI
+ n4ZUdM3oAdnXWkMKYjIsGH6A7iGJ7T/T40A12T56/fhh5ifhXMQFTzkRAGYg3/59nrzN8VB7
+ RZa7jfQKdDwvqVUQLlf8lz6qRFZlQb77rilXTSDPyArfLsFv7ZswPYLEh70foOnPXXxiqSDq
+ 1Jd5vHK52Kfjfl9q1Dq7bxpt1P73Ic4c3kA2igEHdofdmxJ0JSkqrM75hVmJ+pnmKuCQ7VQE
+ O3wDGd3vglbpu4x9kHwtmfxDSC5fNFHINZNJRSa3v/hfWwvCjoGdqlxQKjWsfegabvy9YGtU
+ S6V0ntt3UJ787E1FgiLvuo4mDAyW02V6xfBcE8cGjN1FzAU6MzUjpwqTXYqY4GtCOhA6+ZeI
+ Rb5bzbPbz6dBg+LEkC6mLCYy2oE2ORS5zI5dlCZxOQLwwJ4IL/doZFzaKCAljQ==
+In-Reply-To: <20261001062338.GV2705364@frogsfrogsfrogs>
+
+--------------0QIQ0wSMfOiXB6yOELdcfO0m
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: base64
 
+QW0gMDEuMTAuMjYgdW0gMDg6MjMgc2NocmllYiBEYXJyaWNrIEouIFdvbmc6DQo+IEZyb206
+IERhcnJpY2sgSi4gV29uZyA8ZGp3b25nQGtlcm5lbC5vcmc+DQo+IA0KPiBBIERlYmlhbiB1
+c2VyIHJlcG9ydGVkIHRoYXQgdGhlIHJvb3QgZmlsZXN5c3RlbSBzZXJ2aWNlIGZhaWxzIHdp
+dGg6DQo+IA0KPiAgIHN5c3RlbWRbMV06IFN0YXJ0aW5nIHhmc19oZWFsZXJALS5zZXJ2aWNl
+IC0gU2VsZiBIZWFsaW5nIG9mIFhGUyBNZXRhZGF0YSBmb3IgLy4uLg0KPiAgIHhmc19oZWFs
+ZXJALVs5NzZdOiAvOiBJbmFwcHJvcHJpYXRlIGlvY3RsIGZvciBkZXZpY2UNCj4gICBzeXN0
+ZW1kWzFdOiB4ZnNfaGVhbGVyQC0uc2VydmljZTogQ29uZGl0aW9uIGNoZWNrIHByb2Nlc3Mg
+ZXhpdGVkLCBjb2RlPWV4aXRlZCwgc3RhdHVzPTI1NS9FWENFUFRJT04NCj4gICBzeXN0ZW1k
+WzFdOiB4ZnNfaGVhbGVyQC0uc2VydmljZTogRmFpbGVkIHdpdGggcmVzdWx0ICdleGl0LWNv
+ZGUnLg0KPiAgIHN5c3RlbWRbMV06IEZhaWxlZCB0byBzdGFydCB4ZnNfaGVhbGVyQC0uc2Vy
+dmljZSAtIFNlbGYgSGVhbGluZyBvZiBYRlMgTWV0YWRhdGEgZm9yIC8uDQo+IA0KPiB3aGVu
+IHRoZSByb290IGZpbGVzeXN0ZW0gaXMgbm90IFhGUy4gIEl0J3MgbW9zdCBsaWtlbHkgZXh0
+NCBnaXZlbg0KPiBEZWJpYW4ncyBkZWZhdWx0cy4gIA0KDQpGd2l3LCB0aGlzIGFzc3VtcHRp
+b24gaXMgY29ycmVjdC4gTXkgLyBpcyB1c2luZyBleHQ0Lg0KDQpSZWdhcmRzLA0KTWljaGFl
+bA0KDQo=
 
+--------------0QIQ0wSMfOiXB6yOELdcfO0m--
 
-On 9/30/2026 2:48 PM, John Garry wrote:
-> On 9/30/26 13:27, Pankaj Raghav wrote:
->>>
->>> Maybe in this case we don't need to restrict CoW-based atomics to 1 fsblock. 
->>> But why care? I mean, you have HW support, which is so much better to use 
->>> than CoW- based atomics, so better to config your FS to avail of them.
->>
->> That is true but it is a bit strange we expose a smaller CoW based atomics 
->> when we have HW based atomic support.
->>
->> For me the main issue is this function:
->> static xfs_extlen_t
->> xfs_calc_group_awu_max(
->>      struct xfs_mount    *mp,
->>      enum xfs_group_type    type)
->> {
->>      struct xfs_groups    *g = &mp->m_groups[type];
->>      struct xfs_buftarg    *btp = xfs_group_type_buftarg(mp, type);
->>
->>      if (g->blocks == 0)
->>          return 0;
->>      if (btp && btp->bt_awu_min > 0)
->>          return max_pow_of_two_factor(g->blocks);
->>      return rounddown_pow_of_two(g->blocks);
->> }
-> 
-> 
-> ----->8-----
-> 
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -694,7 +694,7 @@ xfs_calc_group_awu_max(
-> 
->          if (g->blocks == 0)
->                  return 0;
-> -       if (btp && btp->bt_awu_min > 0)
-> +       if (btp && btp->bt_awu_max > mp->m_sb.sb_blocksize)
->                  return max_pow_of_two_factor(g->blocks);
->          return rounddown_pow_of_two(g->blocks);
-> }
-> 
-> -----8<-----
-> 
-> 
-> You are advocating something like this (to solve the issue below), right?
-> 
+--------------m8jfOLowfC1lmh0kF39tNpe7
+Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="OpenPGP_signature.asc"
 
-Hmm, this might fix the issue but I still don't understand why we have hardware 
-atomics check while determining SW atomics limit. Am I missing something?
+-----BEGIN PGP SIGNATURE-----
 
-> note: that we still need to ensure that bt_awu_min <= sb_blocksize to get HW 
-> atomics at all (so should keep a check for bt_awu_min in 
-> xfs_calc_group_awu_max() or similar)
-> 
->>
---
-Pankaj
+wsF5BAABCAAjFiEECbOsLssWnJBDRcxUauHfDWCPItwFAmq+ipkFAwAAAAAACgkQauHfDWCPItyb
+FQ//bthKXDvPSnyT7xvMiAQPL2iuKSxAVPObP44Q6uu1M7s83Dnqg8rB1FaU5HkocsF21WzD9jX8
+p9C2YJLlNXid/pHjdLMMAkP6dAGMt/LTktJoprtdPXpnh2MXYlcHn1jbhGCIE3QEHZinu8kEyJi2
+uogdhAu7b4XKC2HJ7I8M9HtP5EDNbPoNyNyfbQzAAGBMCY+ag6pbqsP4Rm30mRAbA27RstakVf3N
+5Ex+V6Ajk4vsGVm7w7U42dYn3nxYFFt9+FtlU2yS5+Ipod4pd5TLCmNHCq8iDykoHCHAs2OncXEk
+/SN//mixpknqfQwf927si8JKSSGQ2weZLWT5ke/5PXksadR5FCzC5rdmf1I0zej6FGnJHLYidV9h
+qudNVzntm+5bZdeazkF1+TEeZ3K5KXN54YL27Uw0hlrZ6X+dzsHjaNNaDCeIutk7dAfl1TcPanzU
+ONdlWY5Xg8XRwge8mmJnI4kL7VbNuD/r3bU44yefRokGSXGrmsVxRCB90fzrznU7RDq5lztDVgfi
+6odcSPy8abzNTv4ktuReLWis+XZyg0TG/oBRfcckIrqLBjTd/140leh5H+4vy9KzE4GxyqIJuuO/
+sJjqXPGIrjkkKffVjwAeO/tLcSLfb0OXz3m2shNIVHJqxR8vR99mKPsCRufNDEeFY/RRWSTUiccf
+RCg=
+=YE+0
+-----END PGP SIGNATURE-----
+
+--------------m8jfOLowfC1lmh0kF39tNpe7--
