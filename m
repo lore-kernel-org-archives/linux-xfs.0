@@ -1,128 +1,132 @@
-Received: from buxtehude.debian.org (buxtehude.debian.org [209.87.16.39])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta1.migadu.com (out-251.mta1.migadu.com [95.215.58.251])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B0A3471244
-	for <linux-xfs@vger.kernel.org>; Fri,  2 Oct 2026 08:59:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.87.16.39
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D11EA472F8A
+	for <linux-xfs@vger.kernel.org>; Fri,  2 Oct 2026 11:25:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.251
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790931544; cv=none; b=tTsrwEmzopAcVEthIWbXZy58ncTGkKmAjdyMnTrtI7U25Zw4qvRKGgr6Tk8z184Do0Z/FYVmo3mLd3UuJikAXK4Y6/sOp5VwGDgYtyagzocbvwtHh8qjezYC22HmSuvLdh/f2rADzTLEfR/0NE+m0AvgfBPyRmZbAQ18QmU6LIk=
+	t=1790940304; cv=none; b=sGaF7mJ2jKQ5KltITT3/yHeWBPch4DW3xaaUHcxqsfgNMdMa2T7/Ud52hXxH/s6otPZuKSmThzIYtDJr453RARHlsSZykdy8iSaJ/8CnmZ6zabqQU1tw9ZGqllRTzkvh00XxrHjusbU4YGE4pHy3nRIp2MTVBWE734Q5q6vMpdM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790931544; c=relaxed/simple;
-	bh=PeL1TmLSUdfIe+x09VtCaJZgJhUemFenN7aPXWyzeh8=;
-	h=Subject:References:Date:From:To:Cc:Message-ID:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Qa4Vk6qQD7LZJQYnYzYLgxN8nIWMEcf+D9emgzbIVpKOcqSaSRhYe7wiT/BQiu68vS6Jf18qfEbT7OvUObdLUtmds5ZetSaBu7KEXzCTMvnJb+Rsh663q0IocaQ2eCd3lhiPhWmfXsQ0Zzktq96ZK0DFA+M0EaZjGpaiWhrM54s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org; spf=pass smtp.mailfrom=buxtehude.debian.org; dkim=fail (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R5RgaH8P reason="signature verification failed"; arc=none smtp.client-ip=209.87.16.39
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=buxtehude.debian.org
+	s=arc-20240116; t=1790940304; c=relaxed/simple;
+	bh=GZWQhbuT6QP+0cEQ0hh34H7ZgJtczjiEcd6MpxA5l6Q=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Nw79ZU3MRwNjJxzOJlcyHJ03zRAvknBzpyMjsPNqVF/sXWqkLJ9jYt55sCvsUfKAcEcohu3AfCEYv/xwyL0jxYM+ZH2Xg37TBlIbjagG+uMFGNp+Z7OkQsJrDZX0J5Wt4lN9RK9VnJZQQhZfL/k7wuIHew7jNw7zKF/hPMjUdIo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=fA6rF4gy; arc=none smtp.client-ip=95.215.58.251
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R5RgaH8P"
-Received: from debbugs by buxtehude.debian.org with local (Exim 4.96)
-	(envelope-from <debbugs@buxtehude.debian.org>)
-	id 1xCZ6b-002npx-1b;
-	Fri, 02 Oct 2026 08:59:01 +0000
-X-Loop: owner@bugs.debian.org
-Subject: Bug#1149571: [PATCH 2/2] xfs_healer: fail earlier on non-xfs filesystems
-Reply-To: Andrey Albershteyn <aalbersh@kernel.org>, 1149571@bugs.debian.org
-Resent-From: Andrey Albershteyn <aalbersh@kernel.org>
-Resent-To: debian-bugs-dist@lists.debian.org
-Resent-CC: linux-xfs@vger.kernel.org
-X-Loop: owner@bugs.debian.org
-Resent-Date: Fri, 02 Oct 2026 08:59:01 +0000
-Resent-Message-ID: <handler.1149571.B1149571.1790931424666618@bugs.debian.org>
-X-Debian-PR-Message: followup 1149571
-X-Debian-PR-Package: xfsprogs
-X-Debian-PR-Keywords: 
-References: <179086618105.2606256.7314766956448729435.stgit@frogsfrogsfrogs> <179080491253.7201.8697529754428195540.reportbug@mars> <179086618149.2606256.17998546326648396992.stgit@frogsfrogsfrogs> <179080491253.7201.8697529754428195540.reportbug@mars>
-X-Debian-PR-Source: xfsprogs
-Received: via spool by 1149571-submit@bugs.debian.org id=B1149571.1790931424666618
-          (code B ref 1149571); Fri, 02 Oct 2026 08:59:01 +0000
-Received: (at 1149571) by bugs.debian.org; 2 Oct 2026 08:57:04 +0000
-X-Spam-Level: 
-X-Spam-Bayes: score:0.0000 Tokens: new, 6; hammy, 150; neutral, 140; spammy,
-	0. spammytokens: hammytokens:0.000-+--Signed-off-by,
-	0.000-+--Signedoffby, 0.000-+--libexec, 0.000-+--exitcode,
-	0.000-+--0x100
-Received: from tor.source.kernel.org ([172.105.4.254]:59850)
-	by buxtehude.debian.org with esmtps (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.96)
-	(envelope-from <aalbersh@kernel.org>)
-	id 1xCZ4h-002nPO-0W
-	for 1149571@bugs.debian.org;
-	Fri, 02 Oct 2026 08:57:04 +0000
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	by tor.source.kernel.org (Postfix) with ESMTP id EAA9A60A70;
-	Fri,  2 Oct 2026 08:57:01 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 54F631F000FF;
-	Fri,  2 Oct 2026 08:57:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790931421;
-	bh=n0FzpBYT7qAL3kwwQ/rUXxP5vhbajEpmwidDE6uFWX0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=R5RgaH8PiXPiGr0Efa/P8b2SzPxs1wn4LkPFYjMIn6y8E3jKBAXb3ssH6FkrTXLCr
-	 IK23SHSK2EP78XnhNsATx5XvUkgTBrm96f6KBKwk+GSuJ+ru9mg2oNCsH8z7dSuNJT
-	 lFoPADd7Bjhpp23ivEK21gN93orAyyU11kyHrHZJmnR5M4CObW0ikvDjzPSaaPUUHS
-	 iQkFuC3neEiS6+294swBM0DhtNeZxSh3j0CzWEE/r8M5jOuXFCnTbh5cj/553WZs6m
-	 /XsJQzZlgMXcy4Y8GPNhedvMteLVCCpHwwF80l0AzpEhNj8xPF/GN3rLmxnVb6XB8d
-	 oJcincVrWhdMg==
-Date: Fri, 2 Oct 2026 10:56:58 +0200
-From: Andrey Albershteyn <aalbersh@kernel.org>
-To: "Darrick J. Wong" <djwong@kernel.org>, 1149571@bugs.debian.org
-Cc: biebl@debian.org, linux-xfs@vger.kernel.org, hch@infradead.org
-Message-ID: <ar9xxaIlBMqu3jjV@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="fA6rF4gy"
+X-Envelope-To: linux-xfs@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=GZWQhbuT6QP+0cEQ0hh34H7ZgJtczjiEcd6MpxA5l6Q=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1790940299; v=1; x=1791545099;
+ b=fA6rF4gySbv8vvj5DUh5PdGL8SGP/pPrBq3TYiOv+SoJNdpxWFXvlDAfufo1nRTT+QLMssfy
+ eK4kByu0IZS3C3rBOXZU3ZMD+eaSeboB4U4P4XeBmcoGAQta/ina6XOQLYb53A43kia98DcV8fa
+ hFKj8AvY7bTxJBRXrUWei6Us=
+X-Envelope-To: linux-xfs@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 702e018ff385379b;
+	Fri, 02 Oct 2026 11:24:59 +0000
+X-Mizu-Trace-ID: 702e018ff385379b
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <750c7d6d-c4f2-47ed-8f09-5a35236a3458@linux.dev>
+Date: Fri, 2 Oct 2026 13:24:57 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <179086618149.2606256.17998546326648396992.stgit@frogsfrogsfrogs>
-Message-ID: <20261002085658.HQpTlzIS8qjhI6AiUrjvBfC9l1wqf9PuyMxvw2WVw_4@z>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] xfs: don't limit software atomic writes by the group
+ alignment
+To: John Garry <john.garry@linux.dev>, "Darrick J . Wong" <djwong@kernel.org>
+Cc: Pankaj Raghav <p.raghav@samsung.com>, cem@kernel.org,
+ linux-xfs@vger.kernel.org, John Garry <john.g.garry@oracle.com>,
+ gost.dev@samsung.com
+References: <20260925103640.932735-1-p.raghav@samsung.com>
+ <41749fa7-dcfa-46f0-af0f-ed3fa5f39f15@linux.dev>
+ <ffd48d49-c4f6-4fc3-88a5-0adb11d0d6b9@linux.dev>
+ <050f7a77-9c0e-4cab-8ddb-6932b885e12f@linux.dev>
+ <jwtdhhbo7ukt5cynhdfrxu3xjwyk3wwg66uxhtnkokvabbokge@b6b4pk3yja24>
+ <29380cd8-19f5-4ae7-bdb7-b7908decb474@linux.dev>
+ <e96b6411-3392-480e-8cef-bdc94b8041e7@linux.dev>
+ <3e6c32cc-64cd-4460-a587-b3bc04d31d9f@linux.dev>
+ <9723ca61-faed-412e-bef4-e6841393b8a8@linux.dev>
+ <ecdac500-12ea-4a27-a8ef-b85fbfaef469@linux.dev>
+Content-Language: en-US
+From: Pankaj Raghav <pankaj.raghav@linux.dev>
+In-Reply-To: <ecdac500-12ea-4a27-a8ef-b85fbfaef469@linux.dev>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-On 2026-10-01 07:51:03, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> A Debian user reported that the root filesystem service fails with:
-> 
->  systemd[1]: Starting xfs_healer@-.service - Self Healing of XFS Metadata for /...
->  xfs_healer@-[976]: /: Inappropriate ioctl for device
->  systemd[1]: xfs_healer@-.service: Condition check process exited, code=exited, status=255/EXCEPTION
->  systemd[1]: xfs_healer@-.service: Failed with result 'exit-code'.
->  systemd[1]: Failed to start xfs_healer@-.service - Self Healing of XFS Metadata for /.
-> 
-> when the root filesystem is not XFS.  It's most likely ext4 given
-> Debian's defaults.  However, the actual service failure here is a result
-> of the ExecCondition program exiting with 255 instead of EXIT_FAILURE.
-> EXIT_FAILURE is what we're supposed to return to mean "do not run
-> service".
-> 
-> Note that xfs_healer@- is always started by systemd (and not
-> xfs_healer_start) because the root filesystem is usually mounted before
-> systemd starts.
-> 
-> stracing this program a litle further reveals this:
-> 
->  # strace -e ioctl /usr/libexec/xfsprogs/xfs_healer --supported /
->  ioctl(3, _IOC(_IOC_READ, 0x58, 0x7e, 0x100), 0x7fffb2c5e6a8) = -1 ENOTTY (Inappropriate ioctl for device)
->  ioctl(3, _IOC(_IOC_READ, 0x58, 0x7c, 0x70), 0x7fffb2c5e6a8) = -1 ENOTTY (Inappropriate ioctl for device)
->  ioctl(3, _IOC(_IOC_READ, 0x58, 0x64, 0x70), 0x7fffb2c5e6a8) = -1 ENOTTY (Inappropriate ioctl for device)
->  /: Inappropriate ioctl for device
-> 
-> All three ioctls are XFS_IOC_FSGEOMETRY calls, and they all fail with
-> ENOTTY because this is an ext4 filesystem.  The fsgeometry call occurs
-> under xfd_open(), so fix this error by special-casing the error return
-> handling.
-> 
-> Link: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1149571
-> Reported-by: Michael Biebl <biebl@debian.org>
-> Cc: <linux-xfs@vger.kernel.org> # v7.0.0
-> Cc: 1149571@bugs.debian.org
-> Fixes: bf8b99270c6be1 ("xfs_healer: use the autofsck fsproperty to select mode")
-> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 
-Looks good to me
-Reviewed-by: Andrey Albershteyn <aalbersh@kernel.org>
 
--- 
-- Andrey
+On 10/2/2026 10:45 AM, John Garry wrote:
+> On 10/1/26 17:30, Pankaj Raghav wrote:
+>>>
+>>> ----->8-----
+>>>
+>>> --- a/fs/xfs/xfs_mount.c
+>>> +++ b/fs/xfs/xfs_mount.c
+>>> @@ -694,7 +694,7 @@ xfs_calc_group_awu_max(
+>>>
+>>>          if (g->blocks == 0)
+>>>                  return 0;
+>>> -       if (btp && btp->bt_awu_min > 0)
+>>> +       if (btp && btp->bt_awu_max > mp->m_sb.sb_blocksize)
+>>>                  return max_pow_of_two_factor(g->blocks);
+>>>          return rounddown_pow_of_two(g->blocks);
+>>> }
+>>>
+>>> -----8<-----
+>>>
+>>>
+>>> You are advocating something like this (to solve the issue below), right?
+>>>
+>>
+>> Hmm, this might fix the issue but I still don't understand why we have 
+>> hardware atomics check while determining SW atomics limit. Am I missing 
+>> something?
+> 
+> ok, I suppose that it (i.e. whether bt_awu_max > sb_blocksize) should not 
+> determine CoW-based atomics limits, but it should determine HW limits (in opt max).
+> 
+
+Could you take a look the patches again and see if it makes sense? We already 
+take into account the HW limits while calculating opt. So the new function 
+xfs_calc_group_awu_align_max() checks for alignment constraints because of agsize.
+
+Without patches:
+[nix-shell:~]# trace-cmd report
+cpus=16
+mount-617   [009]  1184.719159: xfs_calc_atomic_write_unit_max: dev 259:2 ag 
+max_write 131072 max_ioend 4096 max_gsize 2 awu_max 2
+
+
+[nix-shell:~]# ./statx /media/test/hello.txt
+/media/test/hello.txt:
+   stx_atomic_write_unit_min:            16384
+   stx_atomic_write_unit_max:            32768
+   stx_atomic_write_unit_max_opt:        16384
+   stx_atomic_write_segments_max:        1
+
+With patches:
+
+[nix-shell:~]# trace-cmd report
+cpus=16
+mount-598   [005]   319.692000: xfs_calc_atomic_write_unit_max: dev 259:2 ag 
+max_write 131072 max_ioend 4096 max_gsize 33554432 awu_max 4096
+
+[nix-shell:~]# ./statx /media/test/hello.txt
+/media/test/hello.txt:
+   stx_atomic_write_unit_min:            16384
+   stx_atomic_write_unit_max:            67108864
+   stx_atomic_write_unit_max_opt:        16384
+   stx_atomic_write_segments_max:        1
+>>
+>>> note: that we still need to ensure that bt_awu_min <= sb_blocksize to get HW 
+>>> atomics at all (so should keep a check for bt_awu_min in 
+>>> xfs_calc_group_awu_max() or similar) 
+> 
+
