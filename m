@@ -1,50 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3402047F3B5;
-	Fri,  2 Oct 2026 22:38:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8373F468C39;
+	Fri,  2 Oct 2026 23:26:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790980708; cv=none; b=KyMbKo40QcDDqYLIyZkgC/lwJc76BFazC4Rd3SIHZsYrRBtcmmpsxyrpC8SHyKWb1ShAakpoLy/Ha77qlr1oTpMfloEm4RtidtgUp6RCaq5dDJ5ViPJWxVvy1p+0keMVRlJkltab1HMqYO/QUwzHKDOc1PhiAktDHfCzTF0ukq0=
+	t=1790983565; cv=none; b=OBRnt2iYps0yqIe7eEpkZ8olPGbBystMXxsSWbxoXgV3RVVW42AxPnqNF8puE6VFAQvzqUiviQxQS2aLN/sV3RSXG2JaCOWsqmCv1EvqEfaFDT9KE5GIcDdQux7bvvJyH70+y4Gy+9mp7y/bwxMN07w2qqmGhLW7spU6+nLpqfI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790980708; c=relaxed/simple;
-	bh=zD3fqdriNeyS4psrX9dNSbGJrsTYYoWrAlK7wvQAbGQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Oxpcs8rSg3deG8VG7UrL7a3J4HZugpk0jtx7iM1Y2kXzLfEQs6C0nLXz+qIiTZ+1/Il5JPUeoVHZupJJVtljhL9+1OkN6aJ7TzLz5zEUfQyDZQSCBo5V36UT8+gmPN1D1BL7BH2oKTVZ6t9ApaJAAqHtEgbZG/A/XfW+JPit4GQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CoJCQSqA; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790983565; c=relaxed/simple;
+	bh=l1/FScIK/9rZdsqCKvI7Q95vwLWnixcQW4L2Xs6R/RQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=R8XodvMAqrJVA1woR48KvF+nSNIltxtCP/YT7mvW1XKQlOXr9C79swllyQrXg2hyBhSVWMdknf41MRPBgTsEbPDM9QAYvdy8905qFp8Yy8/9kk2fveUDXx10wYKAs3NUcBEwNnIaBmMmE/MBim4ytCTvJ5Io+MSUY24O6eJEvII=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RnE8nbDX; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CoJCQSqA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C2E791F00893;
-	Fri,  2 Oct 2026 22:38:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RnE8nbDX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69D121F000FF;
+	Fri,  2 Oct 2026 23:25:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790980706;
-	bh=9UsWTPXNPtGAnC/NXDW+DJPQrI7L9qVnDZTXWpl6xCI=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=CoJCQSqArVqS0yKPYrOGWg4qTKQn2ygVJn+7hmo/BCrCkxzJv5atgfDpFT8avQm/g
-	 DGNvxqqoAJIbU//Wy5j4qch4BUgGKmtRXU0VNSgOUaIV4SRlbYIUYkMZNbahH/jERW
-	 e+psjlv8/NZecBW5zWx8NndLCuoWlqGOLZYGxzt25FxphFT4uGvU6xx6eEmXbP99L3
-	 XYoFYFyPq42CpODG66a+MpnH0r2b1o85XXMEOUNG8strfFwdWMYibG5/4Y/SZoUn8i
-	 Xdz+3SXxSBQP0AnOw9jtq/I+0tVUH60SqmQUcUCoKEryplFze0e9wd1LSDkWWJ5W5J
-	 81YnHyO6PHvcA==
-From: Andrey Albershteyn <aalbersh@kernel.org>
-To: djwong@kernel.org,
-	ebiggers@kernel.org,
-	hch@lst.de,
-	Carlos Maiolino <cem@kernel.org>
-Cc: Andrey Albershteyn <aalbersh@kernel.org>,
-	fsverity@lists.linux.dev,
-	linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	linux-unionfs@vger.kernel.org,
-	linux-ext4@vger.kernel.org,
-	linux-f2fs-devel@lists.sourceforge.net,
-	linux-btrfs@vger.kernel.org,
-	david@fromorbit.com
-Subject: [PATCH v17 21/21] xfs: enable ro-compat fs-verity flag
-Date: Sat,  3 Oct 2026 00:37:02 +0200
-Message-ID: <20261002223705.2175542-22-aalbersh@kernel.org>
-X-Mailer: git-send-email 2.54.0
-In-Reply-To: <20261002223705.2175542-1-aalbersh@kernel.org>
+	s=k20260515; t=1790983564;
+	bh=dX8mjLok4UtQXnDkgexJ+xhshtPu80jfh72aVt20z/k=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=RnE8nbDXaHLywz+cDXAfB6ZsQGwhyS440PA8yoFOF3QYRE5zAVHnXZOmhfUeCep3u
+	 a4wMpj9lCDH0ZrxcsQPIxE0o41ZkBkpkKwpM1mEQXH4IX8ybRNV71uD7PHiZm/NeOQ
+	 w3BG7/4gB1mOS3sKLbIYVRO7GvON4tUQ1YF6IHpozPPMnv3osR6gslxP/ykpHPw7/I
+	 TnFD7QONTnTEuozu6MuXDf4SKbQFytR/64idEu+bZ4Ts/kmQPDx5knPcSWSOGFq80t
+	 2QIyXFqkkUc72IbxBIxqhkws/q2qCT8DtxyVoFh6iNeG7vlZN5Ap4EJ7hwQoUvRZ3T
+	 IllQEwHSChcnQ==
+Date: Fri, 2 Oct 2026 16:25:42 -0700
+From: Eric Biggers <ebiggers@kernel.org>
+To: Andrey Albershteyn <aalbersh@kernel.org>
+Cc: djwong@kernel.org, hch@lst.de, Carlos Maiolino <cem@kernel.org>,
+	fsverity@lists.linux.dev, linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-unionfs@vger.kernel.org,
+	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+	linux-btrfs@vger.kernel.org, david@fromorbit.com
+Subject: Re: [PATCH v17 00/21] fs-verity support for XFS with post EOF merkle
+ tree
+Message-ID: <20261002232542.GA15366@quark>
 References: <20261002223705.2175542-1-aalbersh@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -52,36 +44,21 @@ List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261002223705.2175542-1-aalbersh@kernel.org>
 
-Finalize fs-verity integration in XFS by making kernel fs-verity
-aware with ro-compat flag.
+On Sat, Oct 03, 2026 at 12:36:41AM +0200, Andrey Albershteyn wrote:
+> Andrey Albershteyn (19):
+>   fsverity: report validation errors through fserror to fsnotify
+>   fsverity: expose ensure_fsverity_info()
+>   fsverity: pass digest size and hash of the all-zeroes block to ->write
+>   fsverity: hoist pagecache_read from f2fs/ext4 to fsverity
+>   fsverity: don't allow setting DAX file attribute on fsverity files
+>   fsverity: hoist statx reporting of fs-verity flag
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-[djwong: add spaces]
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
----
- fs/xfs/libxfs/xfs_format.h | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+Would it be helpful if I applied these six patches to fsverity/for-next
+for 7.4, or do you want to wait for the full series to go in at once
+(presumably through the XFS tree)?
 
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index fc196d9e12dd..8be1b101b196 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -378,8 +378,9 @@ xfs_sb_has_compat_feature(
- #define XFS_SB_FEAT_RO_COMPAT_ALL \
- 		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
- 		 XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
--		 XFS_SB_FEAT_RO_COMPAT_REFLINK| \
--		 XFS_SB_FEAT_RO_COMPAT_INOBTCNT)
-+		 XFS_SB_FEAT_RO_COMPAT_REFLINK | \
-+		 XFS_SB_FEAT_RO_COMPAT_INOBTCNT | \
-+		 XFS_SB_FEAT_RO_COMPAT_VERITY)
- #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
- static inline bool
- xfs_sb_has_ro_compat_feature(
--- 
-2.54.0
-
+- Eric
