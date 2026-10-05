@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31DE8231839;
-	Mon,  5 Oct 2026 05:56:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84F90231839;
+	Mon,  5 Oct 2026 05:57:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791179813; cv=none; b=lgeIaiOsxH+ksulkKIkBJfjmQX85Co7KRGR7Ec5DEN/hshBq4X7rSO7fVrcrfWR4w4r44lE4yJd5NhIw6vQyXriE0r0YLtPC3KB0oAAbzgIINtnC1CIDVOzZhM7m0K2yxeZEy3LimpC8JgdUQta8kLyIb+/og9tip18cGHW4Kc4=
+	t=1791179828; cv=none; b=H/Q2MgwNVSyljVJOIVEI0imsnArLXA9o7Wl5WOwBj7o36MrWTYJwCjAn8e0vLRpofcpKlqr+aeal+KHCLsUCvuHUA26w/ohNNGoTtKVDzLZby0hePfMwIMAOuteC8lL3Qs9PIpPKA+NtS2GuHJvGMXqRa4MEFJRZalWZM9+GPQs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791179813; c=relaxed/simple;
-	bh=F1x2lrj5pkFC7A9FMtZNsu/PJ5zOItAnOejpRZjfYig=;
+	s=arc-20240116; t=1791179828; c=relaxed/simple;
+	bh=0OrLoXk/s8nslcXtB+kR389pZBLKTkkMMiGnBWBTi0M=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=fhnvuhnYRR981aLqGaGWcWtPkYcryeKuHY5A01Ql/jYWJR3/hj9u29XYC/HVT9T4UQlap8qMdjuUA1Jv1w6g6Vy58unwi+HoRLJ73iox5e1ccsG5iGHaWHo55HEtFLrIM0WqwVosa/vpD6fuxOBN1w7x7Up9FRf5OVuH9PjfmRA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mR97mELk; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=iv6k1hFfu6qAfAjbjtG330DfKjLwff+mS4orPzAHGCyDYQv6lCqFJcNokmXaPBp7u5ICRfGLo8JcLWmyRnBWVgATE2nImVXTvCHhZZnYPYagCbEDV2he8z1ec69N6IqcXE7E7/FJMal5KE2Onfr/dChHR4V9vxYToan6XgnnZko=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XgYWYjob; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mR97mELk"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id B891E1F000FF;
-	Mon,  5 Oct 2026 05:56:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XgYWYjob"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 5CA0C1F000FF;
+	Mon,  5 Oct 2026 05:57:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791179811;
-	bh=xGLYb2IjENAk2+1ZwrjzJtfNMUrxqjFNuUI9wqTnOGE=;
+	s=k20260515; t=1791179827;
+	bh=xvvnPL/AQ2yLXkb2uDyszJn5dvikVKw4y5Io2DmX770=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=mR97mELkjXGF/IOiYFtYx7g1a3jgkhvI+qiipwdPGWoY9dvPId+jAHf7H0fnnf4FO
-	 b6zas6EqTRvNXXsViYTJ8kEqMRwbHaM5yn91Xn3hiqk0IsWuNVN9nmZeL4/4zLaAi/
-	 wlIRM/VImLTYa0aQmdzmwzj2l0ImFGeIYcZ97G7cM1B/T+gr6bw3ClcEslzf82JZeR
-	 zh06PtDNU+yq/vwJ4E63woFmNkNnO+DEJIcB3XPCmry41TSAM30vV0nr003UrympHb
-	 Ho0e6/PgBWyn7XF1bSbEaXLZILLk+qQ506u2s7B8fFLO8irr3RhujV9LLyNNXK2css
-	 fgdk4M86qyL3g==
-Date: Sun, 04 Oct 2026 22:56:51 -0700
-Subject: [PATCH 06/12] xfs: propagate errors while checking null siblings
+	b=XgYWYjob8/RMQfDZP7Etf4bJiBjIPGQyr8mNW7sP4uUQQeo8UM/uQJfvM4W4YetEk
+	 QjbtsvXai/KwnI3ZODjWuxxR6d1Iw2EyFnP4lqfi9exozzWs3fxtUuyaYbiq4dAGwN
+	 nQc1NhWcHiiaAe3N5YcV5yp+dB2oISR5EXYC3Eveuanx68ZplmyVbdI0D//FiDbKq0
+	 qtUzgE4kpf5dnoPUjEr1/mtyYgtYKDTqP6PdB+6QG3O9IrSHc9+UobTtVsJywplDsY
+	 XjcVdoy1lxNXBngdbX2ff2LlE71+g8eLMkNg+hS6rZVNgtivdO1zNPcscxJEHIhKmR
+	 LXCmq38kq10gA==
+Date: Sun, 04 Oct 2026 22:57:07 -0700
+Subject: [PATCH 07/12] xfs: don't try to scrub self-referential dirent in
+ metapath checker
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <179117965138.614350.7315633319922629881.stgit@frogsfrogsfrogs>
+Message-ID: <179117965159.614350.4466564726537723655.stgit@frogsfrogsfrogs>
 In-Reply-To: <179117964931.614350.8529263328378685172.stgit@frogsfrogsfrogs>
 References: <179117964931.614350.8529263328378685172.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,36 +46,37 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-LOLLM observes that if xfs_da3_path_shift returns an error here, scrub
-doesn't handle it the way that it handles most runtime errors.  Instead,
-it drops the error and keeps going, even though that's not how that's
-supposed to work.  Fix that by calling xchk_da_process_error to set
-corruption flags and then jump out of the flow of execution.
+LOLLM observes that the _ilock_both helper will loop forever trying to
+double-lock the same inode if mpath->dp == sc->ip.  Callers are not
+supposed to call us with parent == child because that makes no sense.
+Trigger an assertion, mark the scan incomplete, and return IO error
+so that this fails noisily.
 
-Cc: <stable@vger.kernel.org> # v4.15
-Fixes: 7c4a07a424c18d ("xfs: scrub directory/attribute btrees")
+Cc: <stable@vger.kernel.org> # v6.13
+Fixes: b3c03efa5972f0 ("xfs: check metadata directory file path connectivity")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Assisted-by: LOLLM # finding obvious bugs
 ---
- fs/xfs/scrub/dabtree.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ fs/xfs/scrub/metapath.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
 
-diff --git a/fs/xfs/scrub/dabtree.c b/fs/xfs/scrub/dabtree.c
-index 639228601cc6bc..bbf6ece58828ca 100644
---- a/fs/xfs/scrub/dabtree.c
-+++ b/fs/xfs/scrub/dabtree.c
-@@ -253,9 +253,10 @@ xchk_da_btree_block_check_sibling(
- 	if (sibling == 0) {
- 		error = xfs_da3_path_shift(ds->state, altpath, direction,
- 				false, &retval);
--		if (error == 0 && retval == 0)
-+		if (!xchk_da_process_error(ds, level, &error))
-+			goto out;
-+		if (retval == 0)
- 			xchk_da_set_corrupt(ds, level);
--		error = 0;
- 		goto out;
+diff --git a/fs/xfs/scrub/metapath.c b/fs/xfs/scrub/metapath.c
+index e0ee7d9b903ff0..4cc0d37b529f97 100644
+--- a/fs/xfs/scrub/metapath.c
++++ b/fs/xfs/scrub/metapath.c
+@@ -319,6 +319,13 @@ xchk_metapath(
+ 		return 0;
  	}
  
++	/* Callers should not set the parent to the child. */
++	if (mpath->dp == sc->ip) {
++		ASSERT(mpath->dp != sc->ip);
++		xchk_set_incomplete(sc);
++		return -EIO;
++	}
++
+ 	xchk_trans_alloc_empty(sc);
+ 
+ 	error = xchk_metapath_ilock_both(mpath);
 
