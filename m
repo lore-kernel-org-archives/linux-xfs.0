@@ -1,84 +1,184 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48169477E20;
-	Mon,  5 Oct 2026 11:26:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0D3D47F2F8
+	for <linux-xfs@vger.kernel.org>; Mon,  5 Oct 2026 12:00:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.141.245
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791199585; cv=none; b=Vq5un9MZE2FyhIzS86PL4ul7v+ZgyR88Im8Uu4FzXcQ6aTTc4ketZDk1GDGdL2bBQT2qr6hLqrChs+RkvEiGSTtS8DoyqzHkF/xFJmq9aW05VZ8Wf2Y9ZIpzhGz3yzslZs2ZS8gTLXNQrreAr1XRja1B4Tbcr6Cu1TiwG01JTJc=
+	t=1791201632; cv=none; b=QWSz8dPCwMi90YTV+yHdsl6FNsLJlotjAAktaWfV1SnbX3y5leTKBeHnBxlanLKiuBv8HBO9nIP+jgd1LEWseNGPuzKg8Hz6VxtycQbjuFlCYV47Si+kyvmUgrNx3eNDdjtvgA12F4K/zfmlyzLkZNLAtjvwo+nrDwJVOcx8mLQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791199585; c=relaxed/simple;
-	bh=uuS+4VNJNVGqobXQ9R2K3Iau9vnH4lmRz07PVfqR+EE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jxZbDVLbjNXnVCH3lk5YHqrZd5ybO/SOCKB+gDJRbzIOoLRE5OqoxlZj9B7PcMrqI+/Y+bhjZ+kvq85SebacNJkp4o+aUg3YY67vTx/VW8RmrHCN8oqpPQP0O3Om4+Nhm2HX5nIcG+IGEnD6OKE2+edW8PyiPs283ziVCveiXbU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dnxfPnlE; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791201632; c=relaxed/simple;
+	bh=I5vvkYFbbOnfIa14ePcepb+UyqhN//IYBgBKQ56qHjA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=UdLVsrV5SrhROYiouycYrHgH8g5GuFFnNTHasZ7pQjWwFWTNukPafZ8gl1bNE2cIuqRWzYQ2I9EQmZ02E9byB/pJ2UxmI6BDh0Pg0slmeBVj25XMZnoMAfCK+x0NBhKgGF5Gd8v7YYq5EYAGR/h/XNr1wNKBG2D8yQxmxHEukPA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=rOrpwn4g; arc=none smtp.client-ip=68.232.141.245
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dnxfPnlE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 215401F000FF;
-	Mon,  5 Oct 2026 11:26:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791199583;
-	bh=m/RFPJLbxCCsKLCIEVyjoB1hnKSFrK8qIznZiVq7CJE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=dnxfPnlE+42vQT4C95ek8OLdUjS7Wr+HWYBSC+aAPDlopzSF1LVHjdHGQG+pdYac3
-	 po8ww2oKHe78fL5qpW5UgPRkJjcCevWbsJyTl80sK/nzOMDpJJOcA+qzWRK19Uh8dc
-	 VGzIQY6FnyMegIqHrQDOthh2MkzdPhG6+aoyQn40ZPvbeivJyaVq/YtCcPqziPclrp
-	 qb8kUAMutvVmCzMUHS9/wPHMC/RgDuF9/HkMRX9jFbG9Jjcxusl3UHKwyumbzuEsPB
-	 SjLOML9rTeRWBawSXYy2FE0+7y/Gy6y9srnpvqZ4R1UUZeExPVrT+VfS+1vGmHH/dY
-	 gwYR82EHOcl6w==
-Date: Mon, 5 Oct 2026 13:26:18 +0200
-From: Andrey Albershteyn <aalbersh@kernel.org>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: Eric Biggers <ebiggers@kernel.org>, djwong@kernel.org, hch@lst.de, 
-	fsverity@lists.linux.dev, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	linux-unionfs@vger.kernel.org, linux-ext4@vger.kernel.org, 
-	linux-f2fs-devel@lists.sourceforge.net, linux-btrfs@vger.kernel.org, david@fromorbit.com
-Subject: Re: [PATCH v17 00/21] fs-verity support for XFS with post EOF merkle
- tree
-Message-ID: <asN8lCPmZpA0tp5S@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
-References: <20261002223705.2175542-1-aalbersh@kernel.org>
- <20261002232542.GA15366@quark>
- <asDvqctUgrxflcCa@nidhogg.toxiclabs.cc>
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="rOrpwn4g"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1791201630; x=1822737630;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=I5vvkYFbbOnfIa14ePcepb+UyqhN//IYBgBKQ56qHjA=;
+  b=rOrpwn4g3xLFu51woH2qeyuVN/2ue99QdCxpiYBkgxESNUZlLft923Jb
+   f3MlFElEPrxL+V9seqhlQYVCpuyZEjNEAaTxGqB5lHbl6/Gq9zpyk2HGN
+   hu6ymucMk7VM6Sp/HFmFoZE42aifdk2qVsfUEmB7AMdy1nqxOleTqON53
+   5ey8rp6HLnNDGEmaR9QTYHiB3FCN2eo9cLsyMHeUO5EBP3ojz5YIwrRTb
+   s+vDp7R+CP2HHR+rNulRrZO9ZoITfObal1lCU0saOIML5a4yuMDq8IUel
+   ty+U05eCfXetKKhFOXxZp6/ZmYDMZ9Hi1e3Js2mB2JopPaIANfp/ky9V+
+   g==;
+X-CSE-ConnectionGUID: uWYyvE8aSji2qZfVvUSJOg==
+X-CSE-MsgGUID: goo/vwOKQPi71H7FeqklWA==
+X-IronPort-AV: E=Sophos;i="6.27,141,1786982400"; 
+   d="scan'208";a="157174134"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-esad3-o.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 05 Oct 2026 19:59:21 +0800
+X-CSE-ConnectionGUID: ZtWViXlNRXa54HUmYJJpqw==
+X-CSE-MsgGUID: aGmVfOrzTRSo7sxgLXf37Q==
+IronPort-SDR: 6ac39119_R4gjLKvYzDibbScQ5SfU8RBOS8uvaNj8Vlc7YmG70sdu3qL
+ 4ME12lVXwxkznKvGSx2XpyNfZjU+dYPU2bWBFcQ==
+Received: from uls-op-esai2-o.wdc.com ([10.248.3.38])
+  by uls-op-esad3-o.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 05 Oct 2026 04:59:21 -0700
+X-CSE-ConnectionGUID: biK2vFJdSlmCfkD2AYRbyA==
+X-CSE-MsgGUID: tWMk7PIPTOO2kszScnI9IQ==
+WDCIronportException: Internal
+Received: from 5cg21742s3.ad.shared (HELO gcv.wireless.wdc) ([10.224.5.153])
+  by uls-op-esai2-o.wdc.com with ESMTP; 05 Oct 2026 04:59:19 -0700
+From: Hans Holmberg <hans.holmberg@wdc.com>
+To: Carlos Maiolino <cem@kernel.org>,
+	"Darrick J . Wong" <djwong@kernel.org>
+Cc: Dave Chinner <david@fromorbit.com>,
+	Christoph Hellwig <hch@lst.de>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	linux-xfs@vger.kernel.org,
+	Hans Holmberg <hans.holmberg@wdc.com>
+Subject: [PATCH v2] xfs: don't let racing writers consume the free zones reserved for GC
+Date: Mon,  5 Oct 2026 13:59:17 +0200
+Message-ID: <20261005115917.36378-1-hans.holmberg@wdc.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <asDvqctUgrxflcCa@nidhogg.toxiclabs.cc>
+Content-Transfer-Encoding: 8bit
 
-On 2026-10-03 14:07:23, Carlos Maiolino wrote:
-> On Fri, Oct 02, 2026 at 04:25:42PM -0700, Eric Biggers wrote:
-> > On Sat, Oct 03, 2026 at 12:36:41AM +0200, Andrey Albershteyn wrote:
-> > > Andrey Albershteyn (19):
-> > >   fsverity: report validation errors through fserror to fsnotify
-> > >   fsverity: expose ensure_fsverity_info()
-> > >   fsverity: pass digest size and hash of the all-zeroes block to ->write
-> > >   fsverity: hoist pagecache_read from f2fs/ext4 to fsverity
-> > >   fsverity: don't allow setting DAX file attribute on fsverity files
-> > >   fsverity: hoist statx reporting of fs-verity flag
-> > 
-> > Would it be helpful if I applied these six patches to fsverity/for-next
-> > for 7.4, or do you want to wait for the full series to go in at once
-> > (presumably through the XFS tree)?
-> > 
-> > - Eric
-> > 
-> 
-> It's your call, I *think*, this is too late for xfs 7.4, so I want to
-> queue it as soon as possible for 7.5.
-> 
-> If you want to take the fsverity patches into 7.4, go for it, then the
-> xfs ones I'll pull in once yours are merged.
-> 
-> Sounds reasonable?
-> 
-> Carlos
-> 
+xfs_try_open_zone() checks the free zone count to avoid grabbing zones
+required for GC forward progress, but does so without decreasing the
+counter, letting multiple user writers through to call xfs_open_zone()
+and collectively gobble up all free zones, stalling gc and eventually
+leading to user threads getting stuck waiting for free space.
 
-Fine with me too
+Fold the check and the accounting into a single atomic claim in
+xfs_open_zone() instead.  The free zone count is decremented before the
+zone is looked up and given back if none could be grabbed, so the reserve
+can no longer be raced away.  User allocations only claim a zone if that
+leaves the reserve behind, while GC just needs one free zone and thus can
+still use the zones that are kept for it. Also add a warning if we end
+up not finding a free zone in the xarray, as this should never happen.
 
+Fixes: 4e4d52075577 ("xfs: add the zoned space allocator")
+Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
+---
+
+Changes since v1:
+- Add a WARN_ON_ONCE when no free zone is found despite a successful claim
+
+ fs/xfs/libxfs/xfs_zones.h |  6 ++++++
+ fs/xfs/xfs_zone_alloc.c   | 36 ++++++++++++++++++++++++++++++++----
+ 2 files changed, 38 insertions(+), 4 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_zones.h b/fs/xfs/libxfs/xfs_zones.h
+index c16089c9a652..1391d99b31de 100644
+--- a/fs/xfs/libxfs/xfs_zones.h
++++ b/fs/xfs/libxfs/xfs_zones.h
+@@ -30,6 +30,12 @@ struct blk_zone;
+ #define XFS_OPEN_GC_ZONES	1U
+ #define XFS_MIN_OPEN_ZONES	(XFS_OPEN_GC_ZONES + 1U)
+ 
++/*
++ * Never open a zone for user data unless this many zones are free, so that GC
++ * can always open the target zone it needs to make forward progress.
++ */
++#define XFS_MIN_FREE_GC_ZONES	(XFS_GC_ZONES - XFS_OPEN_GC_ZONES)
++
+ /*
+  * For zoned devices that do not have a limit on the number of open zones, and
+  * for regular devices using the zoned allocator, use the most common SMR disks
+diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
+index 28c1e48909fa..be434eeccab2 100644
+--- a/fs/xfs/xfs_zone_alloc.c
++++ b/fs/xfs/xfs_zone_alloc.c
+@@ -437,6 +437,26 @@ xfs_init_open_zone(
+ 	return oz;
+ }
+ 
++/*
++ * Claim one of the free zones. User allocations may not dip into the pool
++ * reserved for guaranteeing GC forward progress.
++ */
++static bool
++xfs_claim_free_zone(
++	struct xfs_zone_info	*zi,
++	bool			is_gc)
++{
++	int			min_free = is_gc ? 1 : XFS_MIN_FREE_GC_ZONES;
++	int			free = atomic_read(&zi->zi_nr_free_zones);
++
++	do {
++		if (free < min_free)
++			return false;
++	} while (!atomic_try_cmpxchg(&zi->zi_nr_free_zones, &free, free - 1));
++
++	return true;
++}
++
+ /*
+  * Find a completely free zone, open it, and return a reference.
+  */
+@@ -450,6 +470,9 @@ xfs_open_zone(
+ 	XA_STATE		(xas, &mp->m_groups[XG_TYPE_RTG].xa, 0);
+ 	struct xfs_group	*xg;
+ 
++	if (!xfs_claim_free_zone(zi, is_gc))
++		return NULL;
++
+ 	/*
+ 	 * Pick the free zone with lowest index. Zones in the beginning of the
+ 	 * address space typically provides higher bandwidth than those at the
+@@ -460,11 +483,19 @@ xfs_open_zone(
+ 		if (atomic_inc_not_zero(&xg->xg_active_ref))
+ 			goto found;
+ 	xas_unlock(&xas);
++
++	/*
++	 * We should not end up here as we claimed a free zone before looking
++	 * through the free zone list. The free zone counter and the number
++	 * of zones marked as free must be out of sync.
++	 */
++	WARN_ON_ONCE(1);
++
++	atomic_inc(&zi->zi_nr_free_zones);
+ 	return NULL;
+ 
+ found:
+ 	xas_clear_mark(&xas, XFS_RTG_FREE);
+-	atomic_dec(&zi->zi_nr_free_zones);
+ 	xas_unlock(&xas);
+ 
+ 	set_current_state(TASK_RUNNING);
+@@ -483,9 +514,6 @@ xfs_try_open_zone(
+ 
+ 	if (zi->zi_nr_open_zones >= mp->m_max_open_zones - XFS_OPEN_GC_ZONES)
+ 		return NULL;
+-	if (atomic_read(&zi->zi_nr_free_zones) <
+-	    XFS_GC_ZONES - XFS_OPEN_GC_ZONES)
+-		return NULL;
+ 
+ 	/*
+ 	 * Increment the open zone count to reserve our slot before dropping
 -- 
-- Andrey
+2.43.0
+
