@@ -1,184 +1,114 @@
-Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0D3D47F2F8
-	for <linux-xfs@vger.kernel.org>; Mon,  5 Oct 2026 12:00:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.141.245
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 476FE3DAAB9
+	for <linux-xfs@vger.kernel.org>; Mon,  5 Oct 2026 12:01:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791201632; cv=none; b=QWSz8dPCwMi90YTV+yHdsl6FNsLJlotjAAktaWfV1SnbX3y5leTKBeHnBxlanLKiuBv8HBO9nIP+jgd1LEWseNGPuzKg8Hz6VxtycQbjuFlCYV47Si+kyvmUgrNx3eNDdjtvgA12F4K/zfmlyzLkZNLAtjvwo+nrDwJVOcx8mLQ=
+	t=1791201684; cv=none; b=dZ/THYDAAnB/KSmnAJ+Z9XC0ios8ZnWlxFvbl5MiQqN/FVKvhrCeh/taPQ5vaKu+GnDQfw7xSdRYqLKwcwmMtYhsJP3paXuhK7kAzgqBsM0uDrSshe+KJqj2Ctj2OoLyJbb+VdwrQR/GLKpX947JD/axZ7KTOD8ArwU+ITmHQLw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791201632; c=relaxed/simple;
-	bh=I5vvkYFbbOnfIa14ePcepb+UyqhN//IYBgBKQ56qHjA=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=UdLVsrV5SrhROYiouycYrHgH8g5GuFFnNTHasZ7pQjWwFWTNukPafZ8gl1bNE2cIuqRWzYQ2I9EQmZ02E9byB/pJ2UxmI6BDh0Pg0slmeBVj25XMZnoMAfCK+x0NBhKgGF5Gd8v7YYq5EYAGR/h/XNr1wNKBG2D8yQxmxHEukPA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=rOrpwn4g; arc=none smtp.client-ip=68.232.141.245
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+	s=arc-20240116; t=1791201684; c=relaxed/simple;
+	bh=XvSn54vFXe23J8v1BlwDYbMVMXB1WCOacM/D93b4lzc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=ehVi3WflENUym+TAz/Dvw7nhyyNpWIIOgAp1RLQ2czP9sKzvTUoQskkK+DUoievxbmeNQMgLPN8VzY6kdALpGj9bcoAvNthEYXtHVbVfy3cZpa5/8r5LkdYw4+Z1Xsz42lBtJ3mCCWORfwfOq23GASi+BmotXF+kMMvrKni0DWY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=hYZETNAM; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="rOrpwn4g"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1791201630; x=1822737630;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=I5vvkYFbbOnfIa14ePcepb+UyqhN//IYBgBKQ56qHjA=;
-  b=rOrpwn4g3xLFu51woH2qeyuVN/2ue99QdCxpiYBkgxESNUZlLft923Jb
-   f3MlFElEPrxL+V9seqhlQYVCpuyZEjNEAaTxGqB5lHbl6/Gq9zpyk2HGN
-   hu6ymucMk7VM6Sp/HFmFoZE42aifdk2qVsfUEmB7AMdy1nqxOleTqON53
-   5ey8rp6HLnNDGEmaR9QTYHiB3FCN2eo9cLsyMHeUO5EBP3ojz5YIwrRTb
-   s+vDp7R+CP2HHR+rNulRrZO9ZoITfObal1lCU0saOIML5a4yuMDq8IUel
-   ty+U05eCfXetKKhFOXxZp6/ZmYDMZ9Hi1e3Js2mB2JopPaIANfp/ky9V+
-   g==;
-X-CSE-ConnectionGUID: uWYyvE8aSji2qZfVvUSJOg==
-X-CSE-MsgGUID: goo/vwOKQPi71H7FeqklWA==
-X-IronPort-AV: E=Sophos;i="6.27,141,1786982400"; 
-   d="scan'208";a="157174134"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-esad3-o.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 05 Oct 2026 19:59:21 +0800
-X-CSE-ConnectionGUID: ZtWViXlNRXa54HUmYJJpqw==
-X-CSE-MsgGUID: aGmVfOrzTRSo7sxgLXf37Q==
-IronPort-SDR: 6ac39119_R4gjLKvYzDibbScQ5SfU8RBOS8uvaNj8Vlc7YmG70sdu3qL
- 4ME12lVXwxkznKvGSx2XpyNfZjU+dYPU2bWBFcQ==
-Received: from uls-op-esai2-o.wdc.com ([10.248.3.38])
-  by uls-op-esad3-o.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 05 Oct 2026 04:59:21 -0700
-X-CSE-ConnectionGUID: biK2vFJdSlmCfkD2AYRbyA==
-X-CSE-MsgGUID: tWMk7PIPTOO2kszScnI9IQ==
-WDCIronportException: Internal
-Received: from 5cg21742s3.ad.shared (HELO gcv.wireless.wdc) ([10.224.5.153])
-  by uls-op-esai2-o.wdc.com with ESMTP; 05 Oct 2026 04:59:19 -0700
-From: Hans Holmberg <hans.holmberg@wdc.com>
-To: Carlos Maiolino <cem@kernel.org>,
-	"Darrick J . Wong" <djwong@kernel.org>
-Cc: Dave Chinner <david@fromorbit.com>,
-	Christoph Hellwig <hch@lst.de>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	linux-xfs@vger.kernel.org,
-	Hans Holmberg <hans.holmberg@wdc.com>
-Subject: [PATCH v2] xfs: don't let racing writers consume the free zones reserved for GC
-Date: Mon,  5 Oct 2026 13:59:17 +0200
-Message-ID: <20261005115917.36378-1-hans.holmberg@wdc.com>
-X-Mailer: git-send-email 2.55.0
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hYZETNAM"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1791201682;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=eBdMsqNur2akkLPlKimidF0hkUFYpXEHfcVykCMNLmY=;
+	b=hYZETNAMJo6LtzDnQDJsBK8vzJjiejCSzl63mHPlwUNETx/cUFcPNrQ3P1ArGZ7DSeaUSf
+	7raKL02JT6NakTjfSv6LNuKedu2wLvEvLYbpz286uC9KUhPLkZf/RBABD8ze2XDX9TCoUb
+	+/3WUc/JuqXxwGANO/32EYhoCPPr7dE=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-608-MCAmik8zM7CLLs0gsPMueQ-1; Mon,
+ 05 Oct 2026 08:01:20 -0400
+X-MC-Unique: MCAmik8zM7CLLs0gsPMueQ-1
+X-Mimecast-MFC-AGG-ID: MCAmik8zM7CLLs0gsPMueQ_1791201679
+Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id C1BA31800EFA;
+	Mon,  5 Oct 2026 12:01:19 +0000 (UTC)
+Received: from bfoster.redhat.corp (headnet03.pony-001.prod.iad2.dc.redhat.com [10.2.32.114])
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 45B971956047;
+	Mon,  5 Oct 2026 12:01:19 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+To: linux-xfs@vger.kernel.org
+Cc: Carlos Maiolino <cem@kernel.org>
+Subject: [PATCH v5 0/4] xfs: fix a couple sparse chunk alloc problems
+Date: Mon,  5 Oct 2026 08:01:14 -0400
+Message-ID: <20261005120118.229086-1-bfoster@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain
 Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-xfs_try_open_zone() checks the free zone count to avoid grabbing zones
-required for GC forward progress, but does so without decreasing the
-counter, letting multiple user writers through to call xfs_open_zone()
-and collectively gobble up all free zones, stalling gc and eventually
-leading to user threads getting stuck waiting for free space.
+Hi all,
 
-Fold the check and the accounting into a single atomic claim in
-xfs_open_zone() instead.  The free zone count is decremented before the
-zone is looked up and given back if none could be grabbed, so the reserve
-can no longer be raced away.  User allocations only claim a zone if that
-leaves the reserve behind, while GC just needs one free zone and thus can
-still use the zones that are kept for it. Also add a warning if we end
-up not finding a free zone in the xarray, as this should never happen.
+Here's v5 of the series to fix the sparse chunk alloc shutdown. The
+original report is available here[1].
 
-Fixes: 4e4d52075577 ("xfs: add the zoned space allocator")
-Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
----
+This is mostly a convenience repost of v4 with a variable rename in
+patch 4.
 
-Changes since v1:
-- Add a WARN_ON_ONCE when no free zone is found despite a successful claim
+As a brief overview, the idea here is to rework the freelist calculation
+helper to calculate a min and a max. The min is the historical min AGFL
+requirement for the current allocation. The max is an optional value for
+minleft allocations that perform at least one more allocation in the
+same transaction and thus are susceptible to seeing the min AGFL
+requirement increase due to level increases in the first allocation. The
+specific fix is to carry the delta between the max and min into minleft
+for such allocations so they are either guaranteed for a given AG or
+fail gracefully before dirtying the transaction.
 
- fs/xfs/libxfs/xfs_zones.h |  6 ++++++
- fs/xfs/xfs_zone_alloc.c   | 36 ++++++++++++++++++++++++++++++++----
- 2 files changed, 38 insertions(+), 4 deletions(-)
+Thoughts, reviews, flames appreciated.
 
-diff --git a/fs/xfs/libxfs/xfs_zones.h b/fs/xfs/libxfs/xfs_zones.h
-index c16089c9a652..1391d99b31de 100644
---- a/fs/xfs/libxfs/xfs_zones.h
-+++ b/fs/xfs/libxfs/xfs_zones.h
-@@ -30,6 +30,12 @@ struct blk_zone;
- #define XFS_OPEN_GC_ZONES	1U
- #define XFS_MIN_OPEN_ZONES	(XFS_OPEN_GC_ZONES + 1U)
- 
-+/*
-+ * Never open a zone for user data unless this many zones are free, so that GC
-+ * can always open the target zone it needs to make forward progress.
-+ */
-+#define XFS_MIN_FREE_GC_ZONES	(XFS_GC_ZONES - XFS_OPEN_GC_ZONES)
-+
- /*
-  * For zoned devices that do not have a limit on the number of open zones, and
-  * for regular devices using the zoned allocator, use the most common SMR disks
-diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
-index 28c1e48909fa..be434eeccab2 100644
---- a/fs/xfs/xfs_zone_alloc.c
-+++ b/fs/xfs/xfs_zone_alloc.c
-@@ -437,6 +437,26 @@ xfs_init_open_zone(
- 	return oz;
- }
- 
-+/*
-+ * Claim one of the free zones. User allocations may not dip into the pool
-+ * reserved for guaranteeing GC forward progress.
-+ */
-+static bool
-+xfs_claim_free_zone(
-+	struct xfs_zone_info	*zi,
-+	bool			is_gc)
-+{
-+	int			min_free = is_gc ? 1 : XFS_MIN_FREE_GC_ZONES;
-+	int			free = atomic_read(&zi->zi_nr_free_zones);
-+
-+	do {
-+		if (free < min_free)
-+			return false;
-+	} while (!atomic_try_cmpxchg(&zi->zi_nr_free_zones, &free, free - 1));
-+
-+	return true;
-+}
-+
- /*
-  * Find a completely free zone, open it, and return a reference.
-  */
-@@ -450,6 +470,9 @@ xfs_open_zone(
- 	XA_STATE		(xas, &mp->m_groups[XG_TYPE_RTG].xa, 0);
- 	struct xfs_group	*xg;
- 
-+	if (!xfs_claim_free_zone(zi, is_gc))
-+		return NULL;
-+
- 	/*
- 	 * Pick the free zone with lowest index. Zones in the beginning of the
- 	 * address space typically provides higher bandwidth than those at the
-@@ -460,11 +483,19 @@ xfs_open_zone(
- 		if (atomic_inc_not_zero(&xg->xg_active_ref))
- 			goto found;
- 	xas_unlock(&xas);
-+
-+	/*
-+	 * We should not end up here as we claimed a free zone before looking
-+	 * through the free zone list. The free zone counter and the number
-+	 * of zones marked as free must be out of sync.
-+	 */
-+	WARN_ON_ONCE(1);
-+
-+	atomic_inc(&zi->zi_nr_free_zones);
- 	return NULL;
- 
- found:
- 	xas_clear_mark(&xas, XFS_RTG_FREE);
--	atomic_dec(&zi->zi_nr_free_zones);
- 	xas_unlock(&xas);
- 
- 	set_current_state(TASK_RUNNING);
-@@ -483,9 +514,6 @@ xfs_try_open_zone(
- 
- 	if (zi->zi_nr_open_zones >= mp->m_max_open_zones - XFS_OPEN_GC_ZONES)
- 		return NULL;
--	if (atomic_read(&zi->zi_nr_free_zones) <
--	    XFS_GC_ZONES - XFS_OPEN_GC_ZONES)
--		return NULL;
- 
- 	/*
- 	 * Increment the open zone count to reserve our slot before dropping
+Brian
+
+v5:
+- Renamed params to xfs_alloc_longest_free_extent().
+v4: https://lore.kernel.org/linux-xfs/20260923161524.416059-1-bfoster@redhat.com/
+- Rebased to for-next and collected review tags.
+v3: https://lore.kernel.org/linux-xfs/20260902174025.284387-1-bfoster@redhat.com/
+- Added patch 3 to refactor xfs_alloc_min_freelist() and calculate
+  min/max.
+- Updated patch 4 to use the max value for space available and longest
+  extent checks.
+v2: https://lore.kernel.org/linux-xfs/20260814132239.271492-1-bfoster@redhat.com/
+- Reworked fix logic into allocator instead of sparse inode alloc
+  specific.
+- Dropped Fixes: tag since this is no longer directly correlated to
+  sparse inodes.
+v1: https://lore.kernel.org/linux-xfs/20260731163337.152522-1-bfoster@redhat.com/
+
+[1] https://lore.kernel.org/linux-xfs/20260717130429.1838767-1-matt@readmodwrite.com/
+
+
+Brian Foster (4):
+  xfs: set minleft correctly for sparse chunk errortag allocation
+  xfs: support additional levels in the agfl minimum calculation
+  xfs: calculate AGFL max to support multiple-alloc transactions
+  xfs: incorporate increased AGFL min requirement for minleft allocs
+
+ fs/xfs/libxfs/xfs_alloc.c  | 106 +++++++++++++++++++++++++++----------
+ fs/xfs/libxfs/xfs_alloc.h  |   7 +--
+ fs/xfs/libxfs/xfs_bmap.c   |   7 ++-
+ fs/xfs/libxfs/xfs_ialloc.c |  14 ++---
+ 4 files changed, 93 insertions(+), 41 deletions(-)
+
 -- 
-2.43.0
+2.55.0
 
