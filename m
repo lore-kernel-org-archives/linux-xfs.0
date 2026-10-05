@@ -1,42 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B20784749E1;
-	Mon,  5 Oct 2026 10:05:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D776B44F563;
+	Mon,  5 Oct 2026 10:23:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791194725; cv=none; b=K1m0gBRQaIaXmAB43IvpbHyK0L6nbcoDIXEEpeg/Glj2el0SWujhA38b73Pyjwruyq00bsej3YVdIDi9+9mpufNB0lfQ2gHof4KmaRYUGHV3pekaZh39TQexJxyjMF2ZxY6m3fpSHXe3po9RoS88JnOdpitpH2tdu2dSWT/NEAM=
+	t=1791195831; cv=none; b=k5e0mzp8y5S/nH1JpnXXA3QdQsulrCyeVt9ZuUmLrjzAg0+4wuE0P72Vwh27JFXFHO5dKM02bYxfk9EedkLhdjutcRynWAcumUjb7VFxsMNYyYkG4cqfrF3A/eA3s56KRyOsFhXTLhwZdf12DLfAokjMjlZDwlAwVnNLZHHVz+o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791194725; c=relaxed/simple;
-	bh=eCzku8Xgob0rqJpOfTeJcQj8pvA4FUbvRh+ie8JhzTM=;
+	s=arc-20240116; t=1791195831; c=relaxed/simple;
+	bh=wWuZBQ6qtT2DXHC72wp9taQfK8641jTkSxPhQ70MMJg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lhBG57ygcw/oiPYU5xLIiZPu+szMzYwYXl9wzpYPTixjwOAOxM7suomosi0/JYJe5ViPIl6KVDRw9gkxsiGy2JplZfOCfq+sVMFNYNu0B8XpOSTOFxK1K5MQjYEIsFuHzCE+WS5A0r0MaQXCQVMNJT99KIfEHZ3XM/DLP1IbtjI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YJGz84Tx; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=F7rdpxvycR+s679IjFkv2jOx3y0fWO4ImfKkDkZmW+AcRQjmGDHZsYymvjiHase998vqlXvGSqjNgL3hSs8jtV42mIN+zqr0wO+6ANq9VQ3eEMblt50R0ZfDFQL8iGvkSqFq2CGEbZHZh33o7hzctAnA8RTbZZW1quuNRnY6FAA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=obdMAmQr; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YJGz84Tx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D84C81F00898;
-	Mon,  5 Oct 2026 10:05:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="obdMAmQr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3D27D1F000FF;
+	Mon,  5 Oct 2026 10:23:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791194720;
-	bh=zz2X9PCYvg5uDGN9RaX/IF3VF/CV1ZBEUczhWSZCYHY=;
+	s=k20260515; t=1791195830;
+	bh=dq6yaDqLRNjhJJ6qmZRm7vO0/CBkMwmhcXQHVBEQaXM=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=YJGz84Tx4sGhjye8XvYE1CeELO6XONAqomE8hJnkYIvXVfokXzWe3YT0W7eqiPjR+
-	 6bj6JIQMi92eJCxDiEnank82y0eUQPCBxfCclmW9QV0UFJSZsU1f1tPG/5wKtebJMK
-	 aWvpT6VjwcSuiNkTMxglrSqQpnzAGT59HjVnV3snyRaObb/BwVxo+yyNTQrgqpcWFO
-	 UEBrTBwzxZ3vkTxeOI5WDxfdI1qnGZxJKOgnNsF8qYWpARmU4+jjypFmQyCK+DJi6Z
-	 PqAejq0Pf0iVOUNR4MNEkLT4Z2gsncISa6IImrugCCTuV1ttpYnxwzg5L0JAHrAnfk
-	 hMof79UvlxzwA==
-Date: Mon, 5 Oct 2026 12:05:16 +0200
+	b=obdMAmQraLlk/FFfKvCwFp+Werj5eq5SANLo0BYdMhBDLjsI86zBGKtEykBzotnlD
+	 BjNWU0+EtBiS2mTOeG3/2AXxMmq+s/6BerkbWJ3EGnSiYGRoEZqSolHXNrmHup9CuD
+	 uYAbM5JUKeIbIhePCXr/W44SJh/ZFLgNl7nS2bbp6aLASDHEaRJTZjRg8vtDqeyaMS
+	 Dh3TMiOR6qYQ2uXkzy0qd737bWJUWxyVoeW6LeQDxYGCTNoI0wbO+nTDobJ8mJGdKH
+	 UUg45bWUfyKdbkvZAzmwgNV1gEeitKURoe0YbLCDQLhEQ6gW5Rd0VFXsOOE93Msf1y
+	 eVjwGk5imADXg==
+Date: Mon, 5 Oct 2026 12:23:46 +0200
 From: Carlos Maiolino <cem@kernel.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, stable@vger.kernel.org, 
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 12/12] xfs: avoid cross-rtgroup reaping after a repair
-Message-ID: <asN2P4KND2F0cy6b@nidhogg.toxiclabs.cc>
-References: <179014159469.1875436.5857342164999236687.stgit@frogsfrogsfrogs>
- <179014159798.1875436.7915121855965899039.stgit@frogsfrogsfrogs>
- <arS7tTCQGhyHjoou@infradead.org>
- <20260924193431.GR2705364@frogsfrogsfrogs>
+To: Eric Peterson <linuxinstalled@gmail.com>
+Cc: linux-xfs@vger.kernel.org, Dave Chinner <dgc@kernel.org>, 
+	Eric Sandeen <sandeen@sandeen.net>, linux-kernel@vger.kernel.org, eric.peterson@hpe.com
+Subject: Re: [PATCH v2] xfs: add per-mount read/write I/O completion counters
+Message-ID: <asN6bTMKQvBAVOtj@nidhogg.toxiclabs.cc>
+References: <20260828033429.4070267-1-linuxinstalled@gmail.com>
+ <20260902042539.4073566-1-linuxinstalled@gmail.com>
+ <20260930224032.1413-1-linuxinstalled@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,38 +44,21 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260924193431.GR2705364@frogsfrogsfrogs>
+In-Reply-To: <20260930224032.1413-1-linuxinstalled@gmail.com>
 
-On Thu, Sep 24, 2026 at 12:34:31PM -0700, Darrick J. Wong wrote:
-> On Wed, Sep 23, 2026 at 10:57:09PM -0700, Christoph Hellwig wrote:
-> > On Tue, Sep 22, 2026 at 11:03:52PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <djwong@kernel.org>
-> > > 
-> > > LOLLM notices that the extents stored in a xrtb_bitmap (aka xfs_rtblock
-> > > bitmap) can span multiple rtgroups due to two circumstances.  The first
-> > > is that the size of an rtgroup is an exact power of two, which means
-> > > that rtgroups are adjacent in the segmented xfs_rtblock_t address space.
-> > > This is fairly common to reduce the amount of multiplication and
-> > > division needed to handle space on the rt volume.
-> > > 
-> > > The second is that (unlike in the original rtgroups design), rtgroups do
-> > > not have fixed-location metadata like AGs do, which means that there's
-> > > nothing to force a break between rtgroups.
-> > > 
-> > > Therefore, we must loop through the rtgroups in xreap_rtmeta_extent to
-> > > avoid running off the end of an rtgroup while reaping.
-> > 
-> > This fix looks good.
-> > 
-> > Sashiko complains this could use some additional input sanitization,
-> > though.
+On Wed, Sep 30, 2026 at 04:40:32PM -0600, Eric Peterson wrote:
+> Hi Carlos,
 > 
-> Oh yeah.  If rgbno points into the gap between rtgroups, we should
-> advance *done to the start of the next rtgroup.
+> I wanted to check in since it has been a few weeks since any response
+> has been posted.
+> Is there anything else that you'd like to explore before the changes are
+> considered for approval or denial?
 
-I think we can go with this series now and add that later, no need to
-re-send the series just for this case IMHO.
+Sorry, I (well, we all) have been busy with some higher priority things,
+conferences, etc during the past few weeks. I haven't had time to look
+into this yet, it's still on my todo list but didn't get there yet.
 
 > 
-> --D
+> Thanks,
+> Eric
 > 
