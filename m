@@ -1,39 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E9844D5980
-	for <linux-xfs@vger.kernel.org>; Mon,  5 Oct 2026 18:06:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81F2F79CD;
+	Mon,  5 Oct 2026 18:06:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791223597; cv=none; b=b1LRU1ECCz7kxfqQoo2Ckjnpa/6f6oXlKc5xcchGH4UxNpCLL/Ernz2Jyhmk/hi8JiwSEb7VanlSCm3b6c1QhaBzFOARqUeIH5+ujoDrbLICHyWh+we9ZU6iVKQUbaahD+E2nDltPjsHEATxjTCwau6KA35BCGXX7FttETdHcmE=
+	t=1791223598; cv=none; b=nqSHrNxql/fpzfHzPzvqws39TMIRQKKrcFmGGjb3fFRc+9sgl5ewQJ27aOBYK+Q8x2D41EOYfWE6kr3lUTFJHMXzaUZVvhibqmgZE4q7mpkQ7+scEsBDm898zoW7gOB2Z78Ofbg3Y+k6Bbrfn+7uoK971axgJvxtBunbLk8zbJ8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791223597; c=relaxed/simple;
-	bh=RW4Gw9QGGEJZxb+dfQV1cpfUbA/vDlqqAROybFjHnWU=;
+	s=arc-20240116; t=1791223598; c=relaxed/simple;
+	bh=NHC7UPdSv21B+xczMv8ax/94E1S5+wHW0SiRyFbLp3Y=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=tFqkTw+7wgzHDKFIRqwQr1W7oCsUBTOttnj4AKgNpR8jfmZvc+onoalY30SwJMUzdM81NN5wXVd/vhXwUqHrGGuQwyJqsDkMdl4D5Y+jQ4UmygD99xKM5YKfacvKvI6NOSjZJ0oXw3opV8zd/fA3PN4V/Ab2QFv8s+fRVmHBex8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cnfLzTry; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=X7KXMX0fyi6uKqkFSd+aGYAmpRNb991mO8iUn3zVgnB5R5KYoil4N0azpD3GFSr+MDvyPr3geYnYR7pjvittKElyJECIjmcaNGYyEfgtoU/9G7e/2GBx+6T179FB7TnnPvuY2lEllMdUmp7MWZ+vzTpwsNzW5fvH/iFL3f6l+Zk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OrDZQi+G; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cnfLzTry"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D33091F000FF;
-	Mon,  5 Oct 2026 18:06:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OrDZQi+G"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 585151F00893;
+	Mon,  5 Oct 2026 18:06:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791223595;
-	bh=sn+BCnP4KLlH14jKgfJeD/eaez85RqgXkqqZsav4GdE=;
+	s=k20260515; t=1791223597;
+	bh=NaUv/XuPYFWxQcwoZYq++jlTHd+q2e4+QQ5BadkgTmk=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=cnfLzTryj/I65aLe3cQ9WS1L5pyl2Sl231iQ+tiXo8QSUhFM8WrDZp/5k+TyZkJGf
-	 p4+hmRp2MLQO+B5jFWuL+acXi3USMX9XFm7q/zTS6oLqpPCAIGgtzs9etbVmthqw8g
-	 OPgNS7t5JDy/JrIIHOmPebDAoB71w8WHaXlrzlSJCak+x6o3CrYKm4bOE9HPG8Ahxy
-	 447puIFUh7aLkV4OAp0BIEo1wFuSj0ouziIgWcfsSkCWSztbwJ4Qqgkeps9iQSZoPI
-	 JQny7UXLyLyu8mpEOa69Dc32Qx1ufFYDVfZM0VsdOTL8GyYaL/YMfctyk32xu6ilWV
-	 yurOshHLG9KWg==
+	b=OrDZQi+GLNMQXBkd5xa0dPSqjB5oGLJB2zNB437Lp0LZuoL5uPNgo7zuJKob0PAmd
+	 ISWFCd5IGNuKhqEKbNhq5LWDv1epsc3nwusGb3Aoj3vBJrrR35QS9jRvSdyOGrYxH/
+	 wm6LjZm8CD41dh9mcNve3rcPQRXyUzOVISAp0pkG1J+Cxr50OlSPI58TPIk6XQunoR
+	 GB1mZJ0ode8iVKEio1i5XiEutIHaAdac1SxsR/01etlL+J042hp29CrR9qHsJu3FQV
+	 Q2/vOJQJTtqMx+NTDam1tRxD3/1IiiLynIKFOQhu8F8vvMs+OrjiqzaO3qVqAv0pAn
+	 443kTPyYoYqBw==
 From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>
-Cc: hch@infradead.org, djwong@kernel.org
-In-Reply-To: <20260922231845.3266784-1-sandeen@redhat.com>
-References: <20260922231845.3266784-1-sandeen@redhat.com>
-Subject: Re: [PATCH 0/2] xfs: share rmap & refcount btree ops
-Message-Id: <179122359455.102066.16946334354898343076.b4-ty@kernel.org>
-Date: Mon, 05 Oct 2026 20:06:34 +0200
+To: Yun Zhou <yun.zhou@windriver.com>
+Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <20260916004335.228753-1-yun.zhou@windriver.com>
+References: <20260916004335.228753-1-yun.zhou@windriver.com>
+Subject: Re: [PATCH] xfs: move xfs_sync_sb_buf() out of libxfs into
+ xfs_ioctl.c
+Message-Id: <179122359604.102066.989822171795256366.b4-ty@kernel.org>
+Date: Mon, 05 Oct 2026 20:06:36 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,23 +45,20 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.3
 
-On Tue, 22 Sep 2026 18:17:07 -0500, Eric Sandeen wrote:
-> The first patch should be what I sent before, just combinediff'd.
+On Wed, 16 Sep 2026 08:43:35 +0800, Yun Zhou wrote:
+> xfs_sync_sb_buf() dereferences mp->m_sb_bp and mp->m_rtsb_bp, which
+> only exist in the kernel's struct xfs_mount, not in xfsprogs' libxfs.
+> Keeping it in libxfs is a porting hazard.
 > 
-> The second patch does the same for the refcount btrees as suggested.
-> 
-> I didn't keep prior RVBs since it's not the same patch any more...
-> 
-> This elimiates almost 250 LOC.
+> Its only caller, xfs_ioc_setlabel(), is kernel-only, so move it there
+> and make it static.
 > 
 > [...]
 
 Applied to for-next, thanks!
 
-[1/2] xfs: share the AG rmap btree with the rt rmap btree
-      commit: 81caec1321282a29b40742c76188df9f31a00f7f
-[2/2] xfs: share the AG refcount btree with the rt refcount btree
-      commit: 8439f269aae2b37830b2a6af45f9b111a7856b17
+[1/1] xfs: move xfs_sync_sb_buf() out of libxfs into xfs_ioctl.c
+      commit: 6654fca702b28b87cd365242498262080b1c223f
 
 Best regards,
 -- 
