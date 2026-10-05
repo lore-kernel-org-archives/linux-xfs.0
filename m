@@ -1,176 +1,130 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7B3747CA6D
-	for <linux-xfs@vger.kernel.org>; Mon,  5 Oct 2026 12:14:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E054375ACB;
+	Mon,  5 Oct 2026 12:55:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791202477; cv=none; b=JlZTGNTaTbWOMtDoH25xSVG2vJjet4QOIEPS1NddadydAyaRbttrROxBLJUsiR80LkyYOTMhWHVlbvdpg86u6aejLh2VWMJglPUtClI5LD4//MtaPdmGT+Es73eH4AYnhedxx3oM4uJRjRov0jTL0qFhkXMuHd4PpFO/gzn3vZw=
+	t=1791204956; cv=none; b=Hjew5wL2igtW/uUOFh6/tlaFy5I+Xplc+UB0xX/NcLSBwB9WHiavoSuZtHeYe26IwsrZ6RPu1Km6VyzhQ+xeq31B0mrxecUIQXY6cuLF+wrJexDJHzIkEDb27mxLJV50oKWNyOFfGKSw9Hr6V1Q8eYfBch1rXztTBCdGJMO5j+g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791202477; c=relaxed/simple;
-	bh=ZewqurpNKm1/I2xxts31i8QkdmU+iCf0GPJwmWx3bCU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TXkyQEjh7RiN5Mj97TW4bidwkXqlNIwOHDzDK98RqKn3UZU47LPqgnxvTyYBcY3g4iO+O98KVOGE0+kRjHeNh78lRqlP038Cvb3BorfUknmGOaEqfgJWGRJ6MMOYK8OfHXQGFTzgkKFjSDj3mufV4TvQTpvdNMvZ+6gqqZYVfps=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MgfS35fI; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791204956; c=relaxed/simple;
+	bh=euyWVYqSbfbD9IHt9T378UkzNt0EqG0/4Cp070vHPRo=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ll/OgD+tmwTI0xJVZs0Qyc5mtfoNldpDaWxJWXDf7DxgYt+jYfhlg4E55SIV7c3Xfa809fkd/vXOMXHI1XOqN7qnool23nDusS8fi6udVHyYT/BAlSlQaCii3mSg8vCpjAf5lYEmsOuo/tgw612dobfzicBsDW6sm9JXjth9pw0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=xM9QY7uC; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MgfS35fI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A14661F000FF;
-	Mon,  5 Oct 2026 12:14:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791202475;
-	bh=aRrXArbWNCKob05LumCOLODHvIEjWeop0PYfcXgHXKg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=MgfS35fId07zpwUj4TcbyzHVv3YRQScOG4rHL8ktYyGpSyv+4VEJRpUJLRqRdk0Xt
-	 7vh0FWQ/UG8HM4jC7zlksalRqoNkKzOXL6OR0l0Wy56x5mpHiDFE43CDQYFRUNQj39
-	 dcdsuwkNkqlIadBuMs2GeDjw2hXDoVJSKQrBU+irq71GZK9ww0NVI9QhYWDdI4FWX4
-	 TziFJl90+gnQRs4CDz15kFnU2dKN6AblMrGWmYjlsitXvQrOylX8+yphOO1Nf8yj7l
-	 K7y3/E0fYl+bqr+o431Bojuz8daOAsuLdMEiYbJwCUlumBAP/balDvTOFnuIiM27NU
-	 ysclRAu0fgXJQ==
-Date: Mon, 5 Oct 2026 14:14:31 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs@vger.kernel.org, djwong@kernel.org
-Subject: Re: [PATCH 1/3] xfs: factor out xfs_dir2_sf_copy_entries helper
-Message-ID: <asOUn3CDkcVWdCek@nidhogg.toxiclabs.cc>
-References: <20261002211038.2139655-1-sandeen@redhat.com>
- <20261002211038.2139655-2-sandeen@redhat.com>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="xM9QY7uC"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=gpscfjADe8p6HUawEANdMO+qpnpDsdfBE9e4KR/uWOg=; b=xM9QY7uCw0wr55gEkM/ijZAuie
+	6XtbOy6iakkq+w3w4XF7IhppfNNcasMQ5b2kNtBLEZNq+RrmySmZ2LAyaMMGj9Ea3Rn3wd3TRrFg+
+	2uKbptGlUdWSp5NwPHqHBkHAJDvP6uN2hLr7sQvW2NTWOEY/65886ELZnR8ZJ/DSMvQWn4AARkqEz
+	TXVvkpIsTOxMX9rcNQBgqk1rH/2pp0ncYudAYXpsbyBS9A7VKn8whfBv7bJ2/PvWJ8JZr7zi5NUNg
+	PVDYIF99PlGaMzscAaB0Ez1b23b/7nLR3KbkD1aKS9Ci586z/UEVhS0icBCAjaI0HgxWlOi3G/f5m
+	Em1WZFuw==;
+Received: from 2a02-8389-2301-9f00-88fd-fcdd-06aa-821c.cable.dynamic.v6.surfer.at ([2a02:8389:2301:9f00:88fd:fcdd:6aa:821c] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1xDiES-0000000GR2P-0MWI;
+	Mon, 05 Oct 2026 12:55:52 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: zlang@kernel.org
+Cc: djwong@kernel.org,
+	fstests@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: [PATCH v3] xfs: test libxfs handling of missing RT devices
+Date: Mon,  5 Oct 2026 14:55:43 +0200
+Message-ID: <20261005125548.1340322-1-hch@lst.de>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261002211038.2139655-2-sandeen@redhat.com>
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Fri, Oct 02, 2026 at 04:08:09PM -0500, Eric Sandeen wrote:
-> xfs_dir2_sf_toino8 and xfs_dir2_sf_toino64 share a dozen or so lines
-> of copied code used to move short form directory entries; factor that
-> out to eliminate cut and paste.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
+Test that libxfs rejects initializing a file systems unless in debugger
+mode by running xfs_repair and xfs_db with missing arguments.  For
+db additionally test that command that require a RT device still do not
+work even after libxfs can be initialized using a missing RT device.
 
-Looks good.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ tests/xfs/2300     | 39 +++++++++++++++++++++++++++++++++++++++
+ tests/xfs/2300.out | 14 ++++++++++++++
+ 2 files changed, 53 insertions(+)
+ create mode 100755 tests/xfs/2300
+ create mode 100644 tests/xfs/2300.out
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+diff --git a/tests/xfs/2300 b/tests/xfs/2300
+new file mode 100755
+index 000000000000..9c96e802241f
+--- /dev/null
++++ b/tests/xfs/2300
+@@ -0,0 +1,39 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0-or-later
++# Copyright (c) 2026 Christoph Hellwig.
++#
++# FS QA Test No. 2300
++#
++# Tests that repair refuses to work without -r argument, and xfs_db works fine
++# even without it to check libxfs initialization behavior with missing RT
++# devices.
++#
++. ./common/preamble
++_begin_fstest auto quick repair db
++
++. ./common/filter
++
++_require_scratch_nocheck
++_require_external_realtime_device
++
++# require metadir for the rtsb command
++$MKFS_XFS_PROG -f \
++	-m metadir=1 \
++	-r rtdev=$SCRATCH_RTDEV \
++	$SCRATCH_DEV >> $seqres.full 2>&1
++
++echo "Dumping superblock using xfs_db without rtdev"
++$XFS_DB_PROG $SCRATCH_DEV -c 'sb 0' -c 'p' >> $seqres.full
++
++echo "Loading RT superblock using xfs_db without rtdev, should fail"
++$XFS_DB_PROG $SCRATCH_DEV -c 'rtsb'
++
++echo "Running xfs_repair -n without rt device, should fail"
++$XFS_REPAIR_PROG -n $SCRATCH_DEV
++
++echo "Running xfs_repair without rt device, should fail"
++$XFS_REPAIR_PROG $SCRATCH_DEV
++
++
++status=0
++exit
+diff --git a/tests/xfs/2300.out b/tests/xfs/2300.out
+new file mode 100644
+index 000000000000..50aab2b83ec9
+--- /dev/null
++++ b/tests/xfs/2300.out
+@@ -0,0 +1,14 @@
++QA output created by 2300
++Dumping superblock using xfs_db without rtdev
++Loading RT superblock using xfs_db without rtdev, should fail
++realtime device not loaded, use -R.
++Running xfs_repair -n without rt device, should fail
++Phase 1 - find and verify superblock...
++xfs_repair: filesystem has a realtime subvolume
++xfs_repair: realtime device init failed
++xfs_repair: cannot repair this filesystem.  Sorry.
++Running xfs_repair without rt device, should fail
++Phase 1 - find and verify superblock...
++xfs_repair: filesystem has a realtime subvolume
++xfs_repair: realtime device init failed
++xfs_repair: cannot repair this filesystem.  Sorry.
+-- 
+2.53.0
 
->  fs/xfs/libxfs/xfs_dir2_sf.c | 68 ++++++++++++++++---------------------
->  1 file changed, 30 insertions(+), 38 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
-> index 0567cf8b9c1b..a8675a0d574e 100644
-> --- a/fs/xfs/libxfs/xfs_dir2_sf.c
-> +++ b/fs/xfs/libxfs/xfs_dir2_sf.c
-> @@ -1124,6 +1124,34 @@ xfs_dir2_sf_replace(
->  	return 0;
->  }
->  
-> +static inline void
-> +xfs_dir2_sf_copy_entries(
-> +	struct xfs_mount	*mp,
-> +	struct xfs_dir2_sf_hdr	*sfp,
-> +	struct xfs_dir2_sf_hdr	*oldsfp)
-> +{
-> +	int			i;
-> +	struct xfs_dir2_sf_entry *sfep;		/* new sf entry */
-> +	struct xfs_dir2_sf_entry *oldsfep;	/* old sf entry */
-> +
-> +	/*
-> +	 * Copy the entries field by field.
-> +	 */
-> +	for (i = 0, sfep = xfs_dir2_sf_firstentry(sfp),
-> +		    oldsfep = xfs_dir2_sf_firstentry(oldsfp);
-> +	     i < sfp->count;
-> +	     i++, sfep = xfs_dir2_sf_nextentry(mp, sfp, sfep),
-> +		  oldsfep = xfs_dir2_sf_nextentry(mp, oldsfp, oldsfep)) {
-> +		sfep->namelen = oldsfep->namelen;
-> +		memcpy(sfep->offset, oldsfep->offset, sizeof(sfep->offset));
-> +		memcpy(sfep->name, oldsfep->name, sfep->namelen);
-> +		xfs_dir2_sf_put_ino(mp, sfp, sfep,
-> +				xfs_dir2_sf_get_ino(mp, oldsfp, oldsfep));
-> +		xfs_dir2_sf_put_ftype(mp, sfep,
-> +				xfs_dir2_sf_get_ftype(mp, oldsfep));
-> +	}
-> +}
-> +
->  /*
->   * Convert from 8-byte inode numbers to 4-byte inode numbers.
->   * The last 8-byte inode number is gone, but the count is still 1.
-> @@ -1136,11 +1164,8 @@ xfs_dir2_sf_toino4(
->  	struct xfs_mount	*mp = dp->i_mount;
->  	struct xfs_dir2_sf_hdr	*oldsfp = dp->i_df.if_data;
->  	char			*buf;		/* old dir's buffer */
-> -	int			i;		/* entry index */
->  	int			newsize;	/* new inode size */
-> -	xfs_dir2_sf_entry_t	*oldsfep;	/* old sf entry */
->  	int			oldsize;	/* old inode size */
-> -	xfs_dir2_sf_entry_t	*sfep;		/* new sf entry */
->  	xfs_dir2_sf_hdr_t	*sfp;		/* new sf directory */
->  
->  	trace_xfs_dir2_sf_toino4(args);
-> @@ -1171,22 +1196,7 @@ xfs_dir2_sf_toino4(
->  	sfp->count = oldsfp->count;
->  	sfp->i8count = 0;
->  	xfs_dir2_sf_put_parent_ino(sfp, xfs_dir2_sf_get_parent_ino(oldsfp));
-> -	/*
-> -	 * Copy the entries field by field.
-> -	 */
-> -	for (i = 0, sfep = xfs_dir2_sf_firstentry(sfp),
-> -		    oldsfep = xfs_dir2_sf_firstentry(oldsfp);
-> -	     i < sfp->count;
-> -	     i++, sfep = xfs_dir2_sf_nextentry(mp, sfp, sfep),
-> -		  oldsfep = xfs_dir2_sf_nextentry(mp, oldsfp, oldsfep)) {
-> -		sfep->namelen = oldsfep->namelen;
-> -		memcpy(sfep->offset, oldsfep->offset, sizeof(sfep->offset));
-> -		memcpy(sfep->name, oldsfep->name, sfep->namelen);
-> -		xfs_dir2_sf_put_ino(mp, sfp, sfep,
-> -				xfs_dir2_sf_get_ino(mp, oldsfp, oldsfep));
-> -		xfs_dir2_sf_put_ftype(mp, sfep,
-> -				xfs_dir2_sf_get_ftype(mp, oldsfep));
-> -	}
-> +	xfs_dir2_sf_copy_entries(mp, sfp, oldsfp);
->  	/*
->  	 * Clean up the inode.
->  	 */
-> @@ -1208,11 +1218,8 @@ xfs_dir2_sf_toino8(
->  	struct xfs_mount	*mp = dp->i_mount;
->  	struct xfs_dir2_sf_hdr	*oldsfp = dp->i_df.if_data;
->  	char			*buf;		/* old dir's buffer */
-> -	int			i;		/* entry index */
->  	int			newsize;	/* new inode size */
-> -	xfs_dir2_sf_entry_t	*oldsfep;	/* old sf entry */
->  	int			oldsize;	/* old inode size */
-> -	xfs_dir2_sf_entry_t	*sfep;		/* new sf entry */
->  	xfs_dir2_sf_hdr_t	*sfp;		/* new sf directory */
->  
->  	trace_xfs_dir2_sf_toino8(args);
-> @@ -1243,22 +1250,7 @@ xfs_dir2_sf_toino8(
->  	sfp->count = oldsfp->count;
->  	sfp->i8count = 1;
->  	xfs_dir2_sf_put_parent_ino(sfp, xfs_dir2_sf_get_parent_ino(oldsfp));
-> -	/*
-> -	 * Copy the entries field by field.
-> -	 */
-> -	for (i = 0, sfep = xfs_dir2_sf_firstentry(sfp),
-> -		    oldsfep = xfs_dir2_sf_firstentry(oldsfp);
-> -	     i < sfp->count;
-> -	     i++, sfep = xfs_dir2_sf_nextentry(mp, sfp, sfep),
-> -		  oldsfep = xfs_dir2_sf_nextentry(mp, oldsfp, oldsfep)) {
-> -		sfep->namelen = oldsfep->namelen;
-> -		memcpy(sfep->offset, oldsfep->offset, sizeof(sfep->offset));
-> -		memcpy(sfep->name, oldsfep->name, sfep->namelen);
-> -		xfs_dir2_sf_put_ino(mp, sfp, sfep,
-> -				xfs_dir2_sf_get_ino(mp, oldsfp, oldsfep));
-> -		xfs_dir2_sf_put_ftype(mp, sfep,
-> -				xfs_dir2_sf_get_ftype(mp, oldsfep));
-> -	}
-> +	xfs_dir2_sf_copy_entries(mp, sfp, oldsfp);
->  	/*
->  	 * Clean up the inode.
->  	 */
-> -- 
-> 2.55.0
-> 
-> 
