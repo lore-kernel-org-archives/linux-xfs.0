@@ -1,36 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4122930EF91;
-	Mon,  5 Oct 2026 05:55:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDC9E30F7EA;
+	Mon,  5 Oct 2026 05:55:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791179729; cv=none; b=KXyZT5LYbqLK5Y2mtBvM1/XmbW2R8+KTLdXAGKXwgvl11Y8swhFT+BtupkCLd2zcEa1xdiybQJhIvMWpNGD7qxrxQxrL3CLeh36B/RFsLhmpJmlKXknV90kcw7Sd7VzkZHD67Vqesqr6CwDhN+rs8RXKxcn6wntiiQP7V+EXajY=
+	t=1791179734; cv=none; b=HFNG+GMOJbYn8a479Si0hHBihgtBRETVG22bGK+caq7eLFdMYMHIZYxQ9xDB5DMhBOyZX9mT/pYiw9F3sZcDKtxakDkfNI/XAQbDp1K448ElvbfC7jLhxcNN2NRqR7TRyweOthZITO0jSc0gp1whgyj1oNlCODtmzUrYWfoLphI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791179729; c=relaxed/simple;
-	bh=zsnTRmW5dYu3GlFXKQEheAry2CIK15srHWuJVnDa0bw=;
-	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=B1Iy2Q39iaCyehRvnKVVAaQEuNQJHqQj0k0D233RLMF9BfOKRihXto/El846jRXE99cnjeT6h0CVPhO8Am4QTRt3xA6n9nORil5p1Q6banFd6sZsFTBgJrb2815cKiqocNFyPpjehZWAn4O+XG7OOE15qg4pGadYY80KlWiMYNM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bTS4AMUj; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791179734; c=relaxed/simple;
+	bh=My+SZZrKRIJIDZX7RrAs3Nf09F83WIjNdiTBl23CrUA=;
+	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Y8Eqg7SCxaP1RBamolrHhbYZ78YPuug3px2A03ZK2jBe+nFIEpg1PehEA4ZO+uEb3Om4Ozp7QmNE1e4by1V7oHfB1bX42U/Xc0GHSztM/hLowEapzz9gsD4CR6roruF+lQ6gJ3T/NVTAjoczQMIVzJ5a1aVubxZ0tGNh33lUCr0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WkcjEOtJ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bTS4AMUj"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id C58EC1F000FF;
-	Mon,  5 Oct 2026 05:55:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WkcjEOtJ"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 8EC2F1F000FF;
+	Mon,  5 Oct 2026 05:55:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791179727;
-	bh=0VYZACEIiGaDW5VLg3DYeX7rkbniigUVDdPFcgdnxG4=;
-	h=Date:Subject:From:To:Cc;
-	b=bTS4AMUjFnWKZ+RenWrbpYMt3z5voQyvQ0ruqyNaQPYdiHTv4khitdMBe7PFw0dvm
-	 ViJd1GQSTFymn7FZAtCDmI0jZCbcMyjQ0gIH2tSiefY5REs3SXCMHmXDuZbT0tq3SP
-	 TQUg69Qt7vJB64u/Z8TYy4hsUeAlDyFvfM/EU/PhFRRUU1A13BPnpaq/wOstXsvSxG
-	 rtRB1PA5gmjYNdNmGVW9isjMLFyU29lbw5NJsxVrNWOuQRvVA3zl4xHuzTwA5IGH6B
-	 Ud4CB2NaZuMWHiomDz9kcSmmxcy+Rs8dniEeW2jnplu6EeNCkb5DgqNm1WduG1+EH4
-	 jxT29XtLhKsdQ==
-Date: Sun, 04 Oct 2026 22:55:27 -0700
-Subject: [PATCHSET] xfs: LLM-inspired bug fixes, part 20
+	s=k20260515; t=1791179733;
+	bh=zG4enRpM84K6HFCqqM33X5vU8ExYI+Ioj0GTbqvo57k=;
+	h=Date:Subject:From:To:Cc:In-Reply-To:References;
+	b=WkcjEOtJRRsB1v5puh0X+zjhMjqrlESM94e7d0kfm4vkyrKCon4oTiAT1w1HQ99cO
+	 PBKL7PTzAJnzrmp6kzp80NU2Z5mPXSiAS49Ftahb95Aze/YuL+hDyqWXinwxm0R8z4
+	 tVrz0CUtU+PBMQQRSyf7OpmIMs0+FTmZ0dKlfFCWGsEIhRvze/PDvnHbDHVjE7ADf+
+	 r46TO0gqHFWvSbuTWVC8Tauuv4ZtALkfjyIbvyUrVEm46mbvl/kB59dn/g/T/BVG63
+	 hIoS665nTvmzNIe+kH5XXpnPEyW0dyeIJ7loDQOEY90+YuaC9sgw0CG+3Td/aMH755
+	 OrELwoDgDOA4w==
+Date: Sun, 04 Oct 2026 22:55:33 -0700
+Subject: [PATCH 01/12] xfs: flag excessive delalloc rt extents as corruption
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <179117964931.614350.8529263328378685172.stgit@frogsfrogsfrogs>
+Message-ID: <179117965030.614350.6588199428729564800.stgit@frogsfrogsfrogs>
+In-Reply-To: <179117964931.614350.8529263328378685172.stgit@frogsfrogsfrogs>
+References: <179117964931.614350.8529263328378685172.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -40,42 +43,39 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-Here's a twentieth batch of xfs fixes resulting from a LLaMma.  Mwa
-mwa mwa...
+LOLLM observed that we should not allow repairs to proceed if the count
+of delayed-allocation realtime extents exceeds the number of free rt
+extents because we can't install negative numbers into the superblock.
+It's unclear how we could end up in that state in real life, but let's
+at least complain loudly about it if we ever encounter it.
 
-If you're going to start using this code, I strongly recommend pulling
-from my git trees, which are linked below.
-
-With a bit of luck, this should all go splendidly.
-Comments and questions are, as always, welcome.
-
---D
-
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=llm-fixes-20
+Cc: <stable@vger.kernel.org> # v6.2
+Fixes: e74331d6fa2c21 ("xfs: online checking of the free rt extent count")
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+Assisted-by: LOLLM # finding obvious bugs
 ---
-Commits in this patchset:
- * xfs: flag excessive delalloc rt extents as corruption
- * xfs: zero out di_metatype when removing the metadir file iflag
- * xfs: forcibly reset quota timers when upgrading to bigtime during repair
- * xfs: don't pass iget failures up when marking ondisk inodes
- * xfs: always reset incore attr fork buffer when resetting fork
- * xfs: propagate errors while checking null siblings
- * xfs: don't try to scrub self-referential dirent in metapath checker
- * xfs: don't allow sm_agno for non-group metadir path checking
- * xfs: init inode number for tracepoint
- * xfs: release ip after unlinked list store failure
- * xfs: always zero the whole shortform header when zeroing attr fork
- * xfs: always forget cached ACLs if the attr fork swap succeeds
----
- fs/xfs/scrub/agheader_repair.c |   13 +++++++------
- fs/xfs/scrub/attr_repair.c     |   12 ++++++------
- fs/xfs/scrub/dabtree.c         |    5 +++--
- fs/xfs/scrub/fscounters.c      |    7 +++++++
- fs/xfs/scrub/inode_repair.c    |    4 +++-
- fs/xfs/scrub/metapath.c        |   17 +++++++++++++++--
- fs/xfs/scrub/quota_repair.c    |   17 ++++++++++++++++-
- 7 files changed, 57 insertions(+), 18 deletions(-)
+ fs/xfs/scrub/fscounters.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
+
+
+diff --git a/fs/xfs/scrub/fscounters.c b/fs/xfs/scrub/fscounters.c
+index b3fb1b4227659d..eb1a095a0fa9b9 100644
+--- a/fs/xfs/scrub/fscounters.c
++++ b/fs/xfs/scrub/fscounters.c
+@@ -609,6 +609,13 @@ xchk_fscounters(
+ 			try_again = true;
+ 	}
+ 
++	if (!xfs_has_zoned(mp) && fsc->frextents < fsc->frextents_delayed) {
++		if (fsc->frozen)
++			xchk_set_incomplete(sc);
++		else
++			try_again = true;
++	}
++
+ 	if (!xfs_has_zoned(mp) &&
+ 	    !xchk_fscount_within_range(sc, frextents,
+ 			&mp->m_free[XC_FREE_RTEXTENTS].count,
 
