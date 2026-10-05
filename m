@@ -1,36 +1,36 @@
-Received: from mta0.migadu.com (out-182.mta0.migadu.com [91.218.175.182])
+Received: from mta0.migadu.com (out-189.mta0.migadu.com [91.218.175.189])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B9E747ACFD
-	for <linux-xfs@vger.kernel.org>; Mon,  5 Oct 2026 11:02:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84C4C47ACCA
+	for <linux-xfs@vger.kernel.org>; Mon,  5 Oct 2026 11:02:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.189
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791198172; cv=none; b=WooQJwNycUmZdlTMTPSxlWWuccERQls5f806m/jc7aIfm0CYiJZ+t1KqafY9tgCRlqdozbI9eAggJ+5ga1SBXg+gtINoMdZd1jq1TeUd/pRbUIDD6IcjUYMam0GAtkdgK6djkjCv7dyuBQE8ZkkgvPM0ddjoMDHGYKWwnFNRMow=
+	t=1791198178; cv=none; b=j9mOkuT3L4vpDR6+1isWy+qowwGcRY7mIrEN1E/KjMQobUk8t5Wpn11pAhq8HNcc6uuFMyxU9peZbwBK3OxYiF4N5kDQb/EIthmMcgRFY9FBAOLxIp1Vfq4AllFBCBmdGX9CQGZWP1Kyjru2KTHhRFJQ+0ywtIJp81jbc/K93JM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791198172; c=relaxed/simple;
+	s=arc-20240116; t=1791198178; c=relaxed/simple;
 	bh=4lPQ3Q7lJy3p2Yv5TmRiFx1X5SP5x6JkOGd82nNzSQ4=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=CMpdu5xCCf51eGONyG/K5ytgGMWwHcgMiZeRQZptoHkU91qQG/JwrZPoN4eJcLxfjMFLYdMj+SHiM0rPaE436S6tCuWMI5FXAb74Trv70lueDG9h/uJ4E0pT5Wy4ayrRrfr3960hLACNofcKJaRFvARcptqXDH7jsU08mU98hA0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=v5U6Tysu; arc=none smtp.client-ip=91.218.175.182
+	 In-Reply-To:Content-Type; b=VUUv+LWbLnd+m8I6iT09YMaf/B5BN9a9jtCTQWeRpbki4zPohk+iAagzO11dT7LshwvREPvSHLL5BODCrM1nrkGa/SufQIjiTTf/gtmWLl8n/0Uo9Uslt2WwfgmlPUsuVYlkLMz3iXYAsm8jlbUqxjIH9pRh1Ual/Xjj7IUQgqY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=saJU+O4I; arc=none smtp.client-ip=91.218.175.189
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="v5U6Tysu"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="saJU+O4I"
 X-Envelope-To: linux-xfs@vger.kernel.org
 DKIM-Signature: a=rsa-sha256; bh=4lPQ3Q7lJy3p2Yv5TmRiFx1X5SP5x6JkOGd82nNzSQ4=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1791198167; v=1; x=1791802967;
- b=v5U6TysugP9FePh+DXdaUzbp9idvmOkZ+yFWlzYH8pfydXG/QKFPR6ugor80d6F/dItClh4M
- d8idkZuL9AQv4nh6kCQqxPwmjuJOoL7MVXievjJI3rp22fvQz4rE0ZxyWZmkFRf+wEtuGUuZUr/
- ioX/xwOqOCLLIKC0eUR+UdQM=
+ t=1791198174; v=1; x=1791802974;
+ b=saJU+O4I/z1p2ghctNGYgIrBODWtFu4s0mvnRVMuKeg3d2w2LBD5a5lR8beKaOpTMjjXfMJ2
+ elqVHjuSYZuR0FeEOs9TKAUgu6SVtq5LmdetVszuw2eknPpUpEXC3KP8YjgHsOG6VX+0eNtQ0lf
+ ZLiX0FoTNrICdvcwXq/wFtMU=
 X-Envelope-To: linux-xfs@vger.kernel.org
-Received: by mta11.migadu.com with ESMTPS id a4130d712a0253ee;
-	Mon, 05 Oct 2026 11:02:47 +0000
-X-Mizu-Trace-ID: a4130d712a0253ee
+Received: by mta11.migadu.com with ESMTPS id 1725c5c189ce122b;
+	Mon, 05 Oct 2026 11:02:43 +0000
+X-Mizu-Trace-ID: 1725c5c189ce122b
 X-Migadu-Flow: FLOW_OUT
-Message-ID: <8d9babb0-5d36-427d-b4a2-5a3e9664a796@linux.dev>
-Date: Mon, 5 Oct 2026 12:02:46 +0100
+Message-ID: <00ac6666-685f-4f00-986e-0bbb7f3920e9@linux.dev>
+Date: Mon, 5 Oct 2026 12:02:39 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,8 +42,8 @@ Subject: Re: [PATCH] xfs: don't limit software atomic writes by the group
  alignment
 To: Pankaj Raghav <p.raghav@samsung.com>, cem@kernel.org,
  linux-xfs@vger.kernel.org
-Cc: "Darrick J . Wong" <djwong@kernel.org>, gost.dev@samsung.com,
- pankaj.raghav@linux.dev
+Cc: John Garry <john.g.garry@oracle.com>, "Darrick J . Wong"
+ <djwong@kernel.org>, gost.dev@samsung.com, pankaj.raghav@linux.dev
 References: <20260925103640.932735-1-p.raghav@samsung.com>
 Content-Language: en-US
 From: John Garry <john.garry@linux.dev>
