@@ -1,64 +1,267 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta0.migadu.com (out-182.mta0.migadu.com [91.218.175.182])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D776B44F563;
-	Mon,  5 Oct 2026 10:23:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B9E747ACFD
+	for <linux-xfs@vger.kernel.org>; Mon,  5 Oct 2026 11:02:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791195831; cv=none; b=k5e0mzp8y5S/nH1JpnXXA3QdQsulrCyeVt9ZuUmLrjzAg0+4wuE0P72Vwh27JFXFHO5dKM02bYxfk9EedkLhdjutcRynWAcumUjb7VFxsMNYyYkG4cqfrF3A/eA3s56KRyOsFhXTLhwZdf12DLfAokjMjlZDwlAwVnNLZHHVz+o=
+	t=1791198172; cv=none; b=WooQJwNycUmZdlTMTPSxlWWuccERQls5f806m/jc7aIfm0CYiJZ+t1KqafY9tgCRlqdozbI9eAggJ+5ga1SBXg+gtINoMdZd1jq1TeUd/pRbUIDD6IcjUYMam0GAtkdgK6djkjCv7dyuBQE8ZkkgvPM0ddjoMDHGYKWwnFNRMow=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791195831; c=relaxed/simple;
-	bh=wWuZBQ6qtT2DXHC72wp9taQfK8641jTkSxPhQ70MMJg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=F7rdpxvycR+s679IjFkv2jOx3y0fWO4ImfKkDkZmW+AcRQjmGDHZsYymvjiHase998vqlXvGSqjNgL3hSs8jtV42mIN+zqr0wO+6ANq9VQ3eEMblt50R0ZfDFQL8iGvkSqFq2CGEbZHZh33o7hzctAnA8RTbZZW1quuNRnY6FAA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=obdMAmQr; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791198172; c=relaxed/simple;
+	bh=4lPQ3Q7lJy3p2Yv5TmRiFx1X5SP5x6JkOGd82nNzSQ4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=CMpdu5xCCf51eGONyG/K5ytgGMWwHcgMiZeRQZptoHkU91qQG/JwrZPoN4eJcLxfjMFLYdMj+SHiM0rPaE436S6tCuWMI5FXAb74Trv70lueDG9h/uJ4E0pT5Wy4ayrRrfr3960hLACNofcKJaRFvARcptqXDH7jsU08mU98hA0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=v5U6Tysu; arc=none smtp.client-ip=91.218.175.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="obdMAmQr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3D27D1F000FF;
-	Mon,  5 Oct 2026 10:23:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791195830;
-	bh=dq6yaDqLRNjhJJ6qmZRm7vO0/CBkMwmhcXQHVBEQaXM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=obdMAmQraLlk/FFfKvCwFp+Werj5eq5SANLo0BYdMhBDLjsI86zBGKtEykBzotnlD
-	 BjNWU0+EtBiS2mTOeG3/2AXxMmq+s/6BerkbWJ3EGnSiYGRoEZqSolHXNrmHup9CuD
-	 uYAbM5JUKeIbIhePCXr/W44SJh/ZFLgNl7nS2bbp6aLASDHEaRJTZjRg8vtDqeyaMS
-	 Dh3TMiOR6qYQ2uXkzy0qd737bWJUWxyVoeW6LeQDxYGCTNoI0wbO+nTDobJ8mJGdKH
-	 UUg45bWUfyKdbkvZAzmwgNV1gEeitKURoe0YbLCDQLhEQ6gW5Rd0VFXsOOE93Msf1y
-	 eVjwGk5imADXg==
-Date: Mon, 5 Oct 2026 12:23:46 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: Eric Peterson <linuxinstalled@gmail.com>
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <dgc@kernel.org>, 
-	Eric Sandeen <sandeen@sandeen.net>, linux-kernel@vger.kernel.org, eric.peterson@hpe.com
-Subject: Re: [PATCH v2] xfs: add per-mount read/write I/O completion counters
-Message-ID: <asN6bTMKQvBAVOtj@nidhogg.toxiclabs.cc>
-References: <20260828033429.4070267-1-linuxinstalled@gmail.com>
- <20260902042539.4073566-1-linuxinstalled@gmail.com>
- <20260930224032.1413-1-linuxinstalled@gmail.com>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="v5U6Tysu"
+X-Envelope-To: linux-xfs@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=4lPQ3Q7lJy3p2Yv5TmRiFx1X5SP5x6JkOGd82nNzSQ4=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1791198167; v=1; x=1791802967;
+ b=v5U6TysugP9FePh+DXdaUzbp9idvmOkZ+yFWlzYH8pfydXG/QKFPR6ugor80d6F/dItClh4M
+ d8idkZuL9AQv4nh6kCQqxPwmjuJOoL7MVXievjJI3rp22fvQz4rE0ZxyWZmkFRf+wEtuGUuZUr/
+ ioX/xwOqOCLLIKC0eUR+UdQM=
+X-Envelope-To: linux-xfs@vger.kernel.org
+Received: by mta11.migadu.com with ESMTPS id a4130d712a0253ee;
+	Mon, 05 Oct 2026 11:02:47 +0000
+X-Mizu-Trace-ID: a4130d712a0253ee
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <8d9babb0-5d36-427d-b4a2-5a3e9664a796@linux.dev>
+Date: Mon, 5 Oct 2026 12:02:46 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260930224032.1413-1-linuxinstalled@gmail.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] xfs: don't limit software atomic writes by the group
+ alignment
+To: Pankaj Raghav <p.raghav@samsung.com>, cem@kernel.org,
+ linux-xfs@vger.kernel.org
+Cc: "Darrick J . Wong" <djwong@kernel.org>, gost.dev@samsung.com,
+ pankaj.raghav@linux.dev
+References: <20260925103640.932735-1-p.raghav@samsung.com>
+Content-Language: en-US
+From: John Garry <john.garry@linux.dev>
+In-Reply-To: <20260925103640.932735-1-p.raghav@samsung.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Wed, Sep 30, 2026 at 04:40:32PM -0600, Eric Peterson wrote:
-> Hi Carlos,
+On 9/25/26 11:36, Pankaj Raghav wrote:
+> xfs_calc_group_awu_max() clamps the atomic write unit maximum to the
+> greatest power-of-two factor of the group size when the device advertises
+> atomic writes, so that allocations can be made naturally aligned for
+> REQ_ATOMIC. But that value is the software limit: it is only used when
+> reflink is enabled, and out of place writes through the COW fork have no
+> alignment requirement.
 > 
-> I wanted to check in since it has been a few weeks since any response
-> has been posted.
-> Is there anything else that you'd like to explore before the changes are
-> considered for approval or denial?
+> mkfs caps agsize one block below 1T, so any filesystem with maximum sized
+> AGs has an odd agsize. max_pow_of_two_factor() will return 1 for odd
+> agsize.
+> 
+> A filesystem on a > 4TB device that advertises 16k atomic writes then reports
+> an atomic write unit maximum of a single fsblock and an optimal maximum of 0,
+> and rejects any larger RWF_ATOMIC write. That is worse than the same filesystem
+> on a device with no atomic write support at all.
+> 
+> Compute the software limit from the group size alone, and apply the
+> alignment constraint in xfs_get_atomic_write_max_opt() instead, which is
+> what reports the size that can be offloaded to the hardware.
+> 
+> Results on a 8TB device with 16k hardware atomic support with 4k
+> blocksize:
+> 
+> Before patches:
+> /media/test/hello.txt:
+>    stx_atomic_write_unit_min:            4096
+>    stx_atomic_write_unit_max:            4096
+>    stx_atomic_write_unit_max_opt:        0
+>    stx_atomic_write_segments_max:        1
+> 
+> After patches:
+> /media/test/hello.txt:
+>    stx_atomic_write_unit_min:            4096
+>    stx_atomic_write_unit_max:            2097152
+>    stx_atomic_write_unit_max_opt:        4096
+>    stx_atomic_write_segments_max:        1
+> 
+> Results on a 8TB device with 16k hardware atomic support with 16k
+> blocksize:
+> 
+> Before patches:
+> /media/test/hello.txt:
+>    stx_atomic_write_unit_min:            16384
+>    stx_atomic_write_unit_max:            16384
+>    stx_atomic_write_unit_max_opt:        0
+>    stx_atomic_write_segments_max:        1
+> 
+> After patches:
+> /media/test/hello.txt:
+>    stx_atomic_write_unit_min:            16384
+>    stx_atomic_write_unit_max:            33554432
+>    stx_atomic_write_unit_max_opt:        16384
+>    stx_atomic_write_segments_max:        1
+> 
+> Fixes: 0c438dcc3150 ("xfs: add xfs_calc_atomic_write_unit_max()")
+> Assisted-by: LLM
+> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+> ---
+>   fs/xfs/xfs_iops.c  | 27 ++++++++++++++++++++++-----
+>   fs/xfs/xfs_mount.c | 35 ++++++++++++++++++++++++-----------
+>   fs/xfs/xfs_mount.h |  2 ++
+>   3 files changed, 48 insertions(+), 16 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index d1306e723899..8c8b14f94ede 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -620,6 +620,12 @@ xfs_get_atomic_write_min(
+>   	return 0;
+>   }
+>   
+> +static inline enum xfs_group_type
+> +xfs_inode_group_type(struct xfs_inode *ip)
+> +{
+> +	return XFS_IS_REALTIME_INODE(ip) ? XG_TYPE_RTG : XG_TYPE_AG;
+> +}
 
-Sorry, I (well, we all) have been busy with some higher priority things,
-conferences, etc during the past few weeks. I haven't had time to look
-into this yet, it's still on my todo list but didn't get there yet.
+would this be better is a common location (so that it could be reused)?
 
+> +
+>   unsigned int
+>   xfs_get_atomic_write_max(
+>   	struct xfs_inode	*ip)
+> @@ -642,19 +648,20 @@ xfs_get_atomic_write_max(
+>   	 * then advertise a maximum size of whatever we can complete through
+>   	 * that means.  Hardware support is reported via max_opt, not here.
+>   	 */
+> -	if (XFS_IS_REALTIME_INODE(ip))
+> -		return XFS_FSB_TO_B(mp, mp->m_groups[XG_TYPE_RTG].awu_max);
+> -	return XFS_FSB_TO_B(mp, mp->m_groups[XG_TYPE_AG].awu_max);
+> +	return XFS_FSB_TO_B(mp, mp->m_groups[xfs_inode_group_type(ip)].awu_max);
+>   }
+>   
+>   unsigned int
+>   xfs_get_atomic_write_max_opt(
+>   	struct xfs_inode	*ip)
+>   {
+> +	struct xfs_mount	*mp = ip->i_mount;
+>   	unsigned int		awu_max = xfs_get_atomic_write_max(ip);
+
+xfs_get_atomic_write_max() value is calculated based on HW atomic 
+support. I am wondering if we should add a function to just give the max 
+CoW-based atomic, and have it called here and from 
+xfs_get_atomic_write_max(). Not a big deal, though.
+
+> +	xfs_extlen_t		align_max_fsb;
+> +	unsigned int		opt;
+>   
+>   	/* if the max is 1x block, then just keep behaviour that opt is 0 */
+> -	if (awu_max <= ip->i_mount->m_sb.sb_blocksize)
+> +	if (awu_max <= mp->m_sb.sb_blocksize)
+>   		return 0;
+>   
+>   	/*
+> @@ -663,7 +670,17 @@ xfs_get_atomic_write_max_opt(
+>   	 * less than our out of place write limit, but we don't want to exceed
+>   	 * the awu_max.
+>   	 */
+> -	return min(awu_max, xfs_inode_buftarg(ip)->bt_awu_max);
+> +	opt = min(awu_max, xfs_inode_buftarg(ip)->bt_awu_max);
+> +
+> +	/*
+> +	 * REQ_ATOMIC writes also have to be naturally aligned on disk, so we
+> +	 * cannot promise more than the largest extent that the allocator is
+> +	 * able to align within a group.
+> +	 */
+> +	align_max_fsb = xfs_calc_group_awu_align_max(mp,
+> +						xfs_inode_group_type(ip));
+> +
+> +	return min_t(xfs_fsize_t, opt, XFS_FSB_TO_B(mp, align_max_fsb));
+
+unsigned int? But is there a possibility that the value in 
+XFS_FSB_TO_B(mp, align_max_fsb) can exceed an unsigned int?
+
+>   }
+>   
+>   static void
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index be90c7b03994..b7110b3d023b 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -674,15 +674,13 @@ static inline xfs_extlen_t xfs_calc_atomic_write_max(struct xfs_mount *mp)
+>   }
+>   
+>   /*
+> - * If the underlying device advertises atomic write support, limit the size of
+> - * atomic writes to the greatest power-of-two factor of the group size so
+> - * that every atomic write unit aligns with the start of every group.  This is
+> - * required so that the allocations for an atomic write will always be
+> - * aligned compatibly with the alignment requirements of the storage.
+> + * The largest out of place write is the number of blocks that user files can
+> + * allocate from any group.
+>    *
+> - * If the device doesn't advertise atomic writes, then there are no alignment
+> - * restrictions and the largest out-of-place write we can do ourselves is the
+> - * number of blocks that user files can allocate from any group.
+> + * This is a software limit, so it deliberately does not take the alignment
+> + * requirements of the storage into account. An atomic write that cannot be
+> + * handed to the device as a single naturally aligned REQ_ATOMIC bio is
+> + * completed through the COW fork instead, which has no such requirement.
+>    */
+>   static xfs_extlen_t
+>   xfs_calc_group_awu_max(
+> @@ -690,15 +688,30 @@ xfs_calc_group_awu_max(
+>   	enum xfs_group_type	type)
+>   {
+>   	struct xfs_groups	*g = &mp->m_groups[type];
+> -	struct xfs_buftarg	*btp = xfs_group_type_buftarg(mp, type);
+>   
+>   	if (g->blocks == 0)
+>   		return 0;
+> -	if (btp && btp->bt_awu_min > 0)
+> -		return max_pow_of_two_factor(g->blocks);
+>   	return rounddown_pow_of_two(g->blocks);
+>   }
+>   
+> +/*
+> + * Compute the largest atomic write unit for which the allocator can guarantee
+> + * naturally aligned extents in this group type.
+> + *
+> + * Hardware atomic writes have to be naturally aligned on disk.
+> + */
+> +xfs_extlen_t
+> +xfs_calc_group_awu_align_max(
+> +	struct xfs_mount	*mp,
+> +	enum xfs_group_type	type)
+> +{
+> +	struct xfs_groups	*g = &mp->m_groups[type];
+> +
+> +	if (g->blocks == 0)
+> +		return 0;
+> +	return max_pow_of_two_factor(g->blocks);
+> +}
+> +
+>   /* Compute the maximum atomic write unit size for each section. */
+>   static inline void
+>   xfs_calc_atomic_write_unit_max(
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index 216a38a354e7..a2894c18e3c1 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -812,6 +812,8 @@ static inline void xfs_mod_sb_delalloc(struct xfs_mount *mp, int64_t delta)
+>   
+>   int xfs_set_max_atomic_write_opt(struct xfs_mount *mp,
+>   		unsigned long long new_max_bytes);
+> +xfs_extlen_t xfs_calc_group_awu_align_max(struct xfs_mount *mp,
+> +		enum xfs_group_type type);
+>   
+>   static inline struct xfs_buftarg *
+>   xfs_group_type_buftarg(
 > 
-> Thanks,
-> Eric
-> 
+> base-commit: 1282269a5ddb044481e7f8fd43b3195e211d5475
+
