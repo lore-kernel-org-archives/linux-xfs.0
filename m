@@ -1,41 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1ABBF4A3F1C
-	for <linux-xfs@vger.kernel.org>; Mon,  5 Oct 2026 15:05:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 990C74C0420;
+	Mon,  5 Oct 2026 15:20:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791212731; cv=none; b=LxhYAJzuJLmt5yA4fS+ZkUxR9BnCufFHh7j6m+fImMn0cEZ9veWv8zg3vSOrHzEIZIFRnil4cZkgD3hQWXQi5rzYXrvgb9cNQm5tnxmx1YVozTzIDJEXPyoFNDIQ/xKPbW3p3qqaZXleMg7QfygfTC6+o7DM5vwGvRdlgtN08NM=
+	t=1791213659; cv=none; b=TCh0ttBPVtkSc9RIYqyhIgx3nvCr0kkCJQn7rAw1wBmmMvFNte3NKyPJJTyXJtddpJ93sMDBuv5u0nrzUm5HGeMepLV8AhWffKap07vqCAQ/kEJESprF64xhonqRbvZSwItWwEo6dGcxIhx1FsSUNnt6tF2PXF5OKuUVgVBs9qY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791212731; c=relaxed/simple;
-	bh=LQhs+2eYwWkmtX2TKcwvAToDI2ZC0NalwrQrCng0Mxc=;
+	s=arc-20240116; t=1791213659; c=relaxed/simple;
+	bh=eYogfqbCFjpN3nb4+0jvS9G9bRa7bCK98tyzGW0sITk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=BeS8PKG3yREFUskmZNZnFr3kfb1TEea/JTJqX/i6tX/MZ/UhYQAzwimJgCTLIs64LdHK9P8B3hDrnQ6Hhfbul5efnRJC3lclRZ5XKvEi2XYwyKgznjiCbDwBJl2sNyZTLxaYPNeFhj5A+LiPprK+zdA2WH7ThNYVeiphABKtMGM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=C+ykDhXI; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=adeS/wE4/qwq++OfdqJHEXxko6G27qZQ0tAUc7oF9AQ8swnwwDWPGJpwR3nBD5fJv1nihueTF00YaER/6MU6tqvn6b0rLMqfXmEmymKZ3qe1xQC85S2w1RsRxzgWIdzXAOSFKqvTLHXdfUzOeLKojwCm1NgU2Ld8/9kARp5qqgs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Q7or3/kk; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="C+ykDhXI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 04A371F00898;
-	Mon,  5 Oct 2026 15:05:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Q7or3/kk"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id D2B4B1F000FF;
+	Mon,  5 Oct 2026 15:20:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791212729;
-	bh=Vv1LN3S77sDxl0e/Sl7kkOKG5FyvuFPKy5/K0rFxBYs=;
+	s=k20260515; t=1791213657;
+	bh=MZ8jWH01nNtxeW8Q3dRgNwgB1z9TT0AKTtsyR9tFoII=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=C+ykDhXI4PtSVDsk+wH/HSNRvIc1neM5tiA7xl5TLUN5D/jlfcsnuideSwTyUaE8j
-	 pcAeCg7Gb8rP9R4/JgqQA9dEPHTY1BqR8TyH0FmfX5qpOW8I7gYno55gKBbPxUltfW
-	 t4f7XUgMgb52uBiXXs5X3MN1O+pEeI2S74q6wsPk7T+Rn9SceGZOs0ThxltvV0A7ij
-	 9GSA3c3BirGaKUVndB75fgj1L+lzFUQ0+PjsqlO/nYYLwmF2kcPQveppfPZfzefcBA
-	 Mwko4xsBS1U5zyRm0Qcxxcm4hzrj7geSlv2sKgv+QlfALgm2nV86XuUfPOu1LnMhIM
-	 XXY7aKc1oBm5A==
-Date: Mon, 5 Oct 2026 17:05:22 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: Hans Holmberg <hans.holmberg@wdc.com>
-Cc: "Darrick J . Wong" <djwong@kernel.org>, 
-	Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, 
-	Damien Le Moal <dlemoal@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2] xfs: don't let racing writers consume the free zones
- reserved for GC
-Message-ID: <asO6DwuXVv1DqqKa@nidhogg.toxiclabs.cc>
-References: <20261005115917.36378-1-hans.holmberg@wdc.com>
+	b=Q7or3/kk93LSD8sJc1XkbQ69kmT0gIUumyC1KrH/TOzPJs8tfIhVyTmfmOzu/KqdT
+	 bdMrqzfqoXcbN4sdqNr96onykXPQQDtx5Z736812SSpbOC9CZL7pHFh3Zfg5Gv66m3
+	 mOiBnSCZSCH+GRjy+d4p30rFdOJEBVETXiVlj4rT+qqs7wAyn9jmVGUWokPTgJVYCp
+	 0G0HI7lH7DQ7rSz4ovxB+trpD9Uvq4aH7JkWCOR8cAA77bxGyEmkzX9UehC2QjFNNz
+	 FOYk7CTC2ox2OEnaxuHmI98rCM6JtkszygLLUJPqdJ8fB+KCt7GCa+P1pt1q7rGeJx
+	 9kA9r1KCyg3+w==
+Date: Mon, 5 Oct 2026 08:20:57 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Zorro Lang <zlang@kernel.org>, fstests@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 09/13] xfs/2304: version of generic/388 that run
+ xfs_scrub -x for each iteration
+Message-ID: <20261005152057.GC2705364@frogsfrogsfrogs>
+References: <20260924100855.2734089-1-hch@lst.de>
+ <20260924100855.2734089-10-hch@lst.de>
+ <20260929015645.GL2705364@frogsfrogsfrogs>
+ <20261005132522.GN26805@lst.de>
+ <20261005145123.GB2705364@frogsfrogsfrogs>
+ <20261005145615.GB2082@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,129 +48,27 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261005115917.36378-1-hans.holmberg@wdc.com>
+In-Reply-To: <20261005145615.GB2082@lst.de>
 
-On Mon, Oct 05, 2026 at 01:59:17PM +0200, Hans Holmberg wrote:
-> xfs_try_open_zone() checks the free zone count to avoid grabbing zones
-> required for GC forward progress, but does so without decreasing the
-> counter, letting multiple user writers through to call xfs_open_zone()
-> and collectively gobble up all free zones, stalling gc and eventually
-> leading to user threads getting stuck waiting for free space.
+On Mon, Oct 05, 2026 at 04:56:15PM +0200, Christoph Hellwig wrote:
+> On Mon, Oct 05, 2026 at 07:51:23AM -0700, Darrick J. Wong wrote:
+> > I'm ok with g388 running more slowly if it'll catch data checksum bugs
+> > and whatnot.  I'm a little surprised that it doesn't already run
+> > _check_filesystems every loop iteration.
 > 
-> Fold the check and the accounting into a single atomic claim in
-> xfs_open_zone() instead.  The free zone count is decremented before the
-> zone is looked up and given back if none could be grabbed, so the reserve
-> can no longer be raced away.  User allocations only claim a zone if that
-> leaves the reserve behind, while GC just needs one free zone and thus can
-> still use the zones that are kept for it. Also add a warning if we end
-> up not finding a free zone in the xarray, as this should never happen.
-> 
-> Fixes: 4e4d52075577 ("xfs: add the zoned space allocator")
-> Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
+> Maybe we should patch that in first, and then XFS_VERIFY_FILE_DATA
+> magically does the right thing?
 
-Looks fine to me:
+I was about to repy "Sounds like a good idea for g388 and probably g475
+as well" but then I remembered something from my notes.  The two tests
+run without _check_filesystems on the assumption that accidental
+corruptions will multiply until either (a) the cycle_mount will fail or
+(b) the post-test _check_filesystems will have a lot to complain about.
+Doing the check every loop cycle reduces the number of log recoveries
+that we can do in a given SOAK_DURATION by a significant amount.
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+What if we ran $XFS_IO_PROG -c verifymedia once per loop if
+XFS_VERIFY_FILE_DATA?  That would avoid a full xfs_{repair,scrub} run
+(+ extra mount cycle) but catch problems earlier.
 
-> ---
-> 
-> Changes since v1:
-> - Add a WARN_ON_ONCE when no free zone is found despite a successful claim
-> 
->  fs/xfs/libxfs/xfs_zones.h |  6 ++++++
->  fs/xfs/xfs_zone_alloc.c   | 36 ++++++++++++++++++++++++++++++++----
->  2 files changed, 38 insertions(+), 4 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_zones.h b/fs/xfs/libxfs/xfs_zones.h
-> index c16089c9a652..1391d99b31de 100644
-> --- a/fs/xfs/libxfs/xfs_zones.h
-> +++ b/fs/xfs/libxfs/xfs_zones.h
-> @@ -30,6 +30,12 @@ struct blk_zone;
->  #define XFS_OPEN_GC_ZONES	1U
->  #define XFS_MIN_OPEN_ZONES	(XFS_OPEN_GC_ZONES + 1U)
->  
-> +/*
-> + * Never open a zone for user data unless this many zones are free, so that GC
-> + * can always open the target zone it needs to make forward progress.
-> + */
-> +#define XFS_MIN_FREE_GC_ZONES	(XFS_GC_ZONES - XFS_OPEN_GC_ZONES)
-> +
->  /*
->   * For zoned devices that do not have a limit on the number of open zones, and
->   * for regular devices using the zoned allocator, use the most common SMR disks
-> diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
-> index 28c1e48909fa..be434eeccab2 100644
-> --- a/fs/xfs/xfs_zone_alloc.c
-> +++ b/fs/xfs/xfs_zone_alloc.c
-> @@ -437,6 +437,26 @@ xfs_init_open_zone(
->  	return oz;
->  }
->  
-> +/*
-> + * Claim one of the free zones. User allocations may not dip into the pool
-> + * reserved for guaranteeing GC forward progress.
-> + */
-> +static bool
-> +xfs_claim_free_zone(
-> +	struct xfs_zone_info	*zi,
-> +	bool			is_gc)
-> +{
-> +	int			min_free = is_gc ? 1 : XFS_MIN_FREE_GC_ZONES;
-> +	int			free = atomic_read(&zi->zi_nr_free_zones);
-> +
-> +	do {
-> +		if (free < min_free)
-> +			return false;
-> +	} while (!atomic_try_cmpxchg(&zi->zi_nr_free_zones, &free, free - 1));
-> +
-> +	return true;
-> +}
-> +
->  /*
->   * Find a completely free zone, open it, and return a reference.
->   */
-> @@ -450,6 +470,9 @@ xfs_open_zone(
->  	XA_STATE		(xas, &mp->m_groups[XG_TYPE_RTG].xa, 0);
->  	struct xfs_group	*xg;
->  
-> +	if (!xfs_claim_free_zone(zi, is_gc))
-> +		return NULL;
-> +
->  	/*
->  	 * Pick the free zone with lowest index. Zones in the beginning of the
->  	 * address space typically provides higher bandwidth than those at the
-> @@ -460,11 +483,19 @@ xfs_open_zone(
->  		if (atomic_inc_not_zero(&xg->xg_active_ref))
->  			goto found;
->  	xas_unlock(&xas);
-> +
-> +	/*
-> +	 * We should not end up here as we claimed a free zone before looking
-> +	 * through the free zone list. The free zone counter and the number
-> +	 * of zones marked as free must be out of sync.
-> +	 */
-> +	WARN_ON_ONCE(1);
-> +
-> +	atomic_inc(&zi->zi_nr_free_zones);
->  	return NULL;
->  
->  found:
->  	xas_clear_mark(&xas, XFS_RTG_FREE);
-> -	atomic_dec(&zi->zi_nr_free_zones);
->  	xas_unlock(&xas);
->  
->  	set_current_state(TASK_RUNNING);
-> @@ -483,9 +514,6 @@ xfs_try_open_zone(
->  
->  	if (zi->zi_nr_open_zones >= mp->m_max_open_zones - XFS_OPEN_GC_ZONES)
->  		return NULL;
-> -	if (atomic_read(&zi->zi_nr_free_zones) <
-> -	    XFS_GC_ZONES - XFS_OPEN_GC_ZONES)
-> -		return NULL;
->  
->  	/*
->  	 * Increment the open zone count to reserve our slot before dropping
-> -- 
-> 2.43.0
-> 
-> 
+--D
