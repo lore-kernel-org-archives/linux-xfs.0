@@ -1,73 +1,92 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from buxtehude.debian.org (buxtehude.debian.org [209.87.16.39])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D83184D9F78
-	for <linux-xfs@vger.kernel.org>; Mon,  5 Oct 2026 17:22:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 779814D179B
+	for <linux-xfs@vger.kernel.org>; Mon,  5 Oct 2026 17:25:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.87.16.39
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791220942; cv=none; b=m6yGJ7eD37ybs88yk6vnBUJ7RQdXty/wLiK8oW13hJ1DiMH9f6/C/w1/YbVcFjWcqst004JrKpXQHXRW08QSd1FtVOezHC2an7b0ijNk6cDNk8IbM2dk8+T1XF40FAJHWvE9KlsHuiMcGO012SmAqflTNpZNleMq4TIQSanEK1g=
+	t=1791221112; cv=none; b=l/65ByY332cVC3mRStXqaRW5WcB+NZW0vvjQ0vf1nNCPelvJkmse3uuky/cnYJSB2rXwzgnNCIdKqy0WoFP4YNaEVAqy/p5w0O03a6eNQB5LTeOTjGMm+6ojO2EvVccLjlYBSAzd9d5TD3iAH/hHKBb9cvgtjABOEJLL5LezlSU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791220942; c=relaxed/simple;
+	s=arc-20240116; t=1791221112; c=relaxed/simple;
 	bh=HPQFx2is0ieEJVe20uGM4PhbiKW1+p2gDf94Lw0VAsA=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=PNhzCHXfsmUtHYvvZTZ6Z2uYBOzOhu4j1epor/xboQc5nUh62mKIFNeBQSmAq3RUBMo+s6in7kbxItxpdyC8kUDP7XCmJFs9kbGsag5ejKqKYmRQV/WbYybTqgWK0dZbWE20qTiZ1rjvvwN7+X+ZuFHgYf3pjqyQRvWZwmAgRn4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=NjqGYALq; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=TATaom2Q; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	h=Subject:References:Date:From:To:Cc:Message-ID:MIME-Version:
+	 Content-Type:Content-Disposition; b=fIJu8XcXsuFZesAjin5yHs91zmxOqIjmKIp27gosxGvMziMW9vJvP70DbSvsl7RG0nTJ0ePwrIJz4YpyjAEtCjrwrako4YYTDGgKGszTLvPjk56Iu1zpuBg4te+YvV0WqMskl1woN1Nw1JBb9QeTO3x5Nxmg+LYXFdKPbxpgJsQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=buxtehude.debian.org; dkim=fail (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=BxhrKwzR reason="signature verification failed"; arc=none smtp.client-ip=209.87.16.39
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=buxtehude.debian.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="NjqGYALq";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="TATaom2Q"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BxhrKwzR"
+Received: from debbugs by buxtehude.debian.org with local (Exim 4.96)
+	(envelope-from <debbugs@buxtehude.debian.org>)
+	id 1xDmQw-00Eegw-0I;
+	Mon, 05 Oct 2026 17:25:02 +0000
+X-Loop: owner@bugs.debian.org
+Subject: Bug#1149571: [ANNOUNCE] xfsprogs: for-next updated to caca7f14b449
+Reply-To: Andrey Albershteyn <aalbersh@redhat.com>, 1149571@bugs.debian.org
+Resent-From: Andrey Albershteyn <aalbersh@redhat.com>
+Resent-To: debian-bugs-dist@lists.debian.org
+Resent-CC: linux-xfs@vger.kernel.org
+X-Loop: owner@bugs.debian.org
+Resent-Date: Mon, 05 Oct 2026 17:25:01 +0000
+Resent-Message-ID: <handler.1149571.B1149571.17912210033491538@bugs.debian.org>
+X-Debian-PR-Message: followup 1149571
+X-Debian-PR-Package: xfsprogs
+X-Debian-PR-Keywords: 
+References: <179080491253.7201.8697529754428195540.reportbug@mars>
+X-Debian-PR-Source: xfsprogs
+Received: via spool by 1149571-submit@bugs.debian.org id=B1149571.17912210033491538
+          (code B ref 1149571); Mon, 05 Oct 2026 17:25:01 +0000
+Received: (at 1149571) by bugs.debian.org; 5 Oct 2026 17:23:23 +0000
+X-Spam-Level: 
+X-Spam-Bayes: score:0.0000 Tokens: new, 125; hammy, 150; neutral, 78; spammy,
+	0. spammytokens: hammytokens:0.000-+--UD:kernel.org, 0.000-+--diffstat,
+	 0.000-+--UD:git.kernel.org, 0.000-+--gitkernelorg,
+	0.000-+--git.kernel.org
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:51637)
+	by buxtehude.debian.org with esmtps (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.96)
+	(envelope-from <aalbersh@redhat.com>)
+	id 1xDmPK-00EeIv-2l
+	for 1149571@bugs.debian.org;
+	Mon, 05 Oct 2026 17:23:22 +0000
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1791220939;
+	s=mimecast20190719; t=1791221001;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type;
 	bh=G/Fp1l+4O2G/kdbq36fNWAo+kb/ppuNf3q/OqZtqd4s=;
-	b=NjqGYALqyOcHGL0hd8Im+Fp6wGy5yhkLPR18htQgulFddp5Obm7KS2zgU5NiR4wDBQja0e
-	zv8cy6GyZIKulVTpSPtNch/PHni3s3BJFH0K0Ju1iCKuuX0Ys/kG4/By1ZqHOCe57f8pY/
-	vMLIKFHlvtkDBpxfbyonrPt4xs+S4iM=
+	b=BxhrKwzRFaqPIDM/y1ngeveNqRPqC1vVzA0wrU7JTII8OjCb+RZgtVErU+Sa0VxmpRl53E
+	6caCOmw2CtTHolnL4RqatRwQBhDGoi5OrbpANiVqiQdHNwWSYr41sIS+/05IgJjGoRBdnY
+	xBQR2aikKZzpd0tula1XHav399QbXjw=
 Received: from mail-wm1-f69.google.com (mail-wm1-f69.google.com
  [209.85.128.69]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-662-2vRFh9ZAMaCFAJL0l_U2lQ-1; Mon, 05 Oct 2026 13:22:15 -0400
-X-MC-Unique: 2vRFh9ZAMaCFAJL0l_U2lQ-1
-X-Mimecast-MFC-AGG-ID: 2vRFh9ZAMaCFAJL0l_U2lQ_1791220935
-Received: by mail-wm1-f69.google.com with SMTP id 5b1f17b1804b1-4a027f2e364so15909635e9.3
-        for <linux-xfs@vger.kernel.org>; Mon, 05 Oct 2026 10:22:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1791220934; x=1791825734; darn=vger.kernel.org;
-        h=content-disposition:content-type:mime-version:message-id:subject:cc
-         :to:from:date:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=G/Fp1l+4O2G/kdbq36fNWAo+kb/ppuNf3q/OqZtqd4s=;
-        b=TATaom2Q/y8VuQC6aMzvpGuRmZS4gdl1yMy17N7pWgkdDg1Twdea0pER7H4vtZRX/m
-         NVNKz/Cg7v6KjYyoMSlenD2iy6rVXbKnArKeeRsOZfkLfR2TNUZiwo9+rwujLMljMWZr
-         ey3zI96AkO7OB8xCuPlSG3ZftMkSAYfXtALbN/Ro0Wr/HDisZMnWsKdcyxvjGcdkJzx9
-         c9v2d8Kz7/cywB948tATBLUUflBTk3YzpjkO0bG0zcYPpvlc2/YwCClQe0+m3HXBTnho
-         yXjtbTvKVhCMFjfM2kMtRzhdFLnsBalV748cXlkByvvuWaNRQVuiHWcyFJze9L7E6izK
-         k8QQ==
+ us-mta-683-EEfZiNj4NXqWEh3ZHVSWfQ-1; Mon, 05 Oct 2026 13:22:15 -0400
+X-MC-Unique: EEfZiNj4NXqWEh3ZHVSWfQ-1
+X-Mimecast-MFC-AGG-ID: EEfZiNj4NXqWEh3ZHVSWfQ_1791220935
+Received: by mail-wm1-f69.google.com with SMTP id 5b1f17b1804b1-4a028616bebso17402395e9.1
+        for <1149571@bugs.debian.org>; Mon, 05 Oct 2026 10:22:15 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20260707; t=1791220934; x=1791825734;
         h=content-disposition:content-type:mime-version:message-id:subject:cc
          :to:from:date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
         bh=G/Fp1l+4O2G/kdbq36fNWAo+kb/ppuNf3q/OqZtqd4s=;
-        b=aGzupeJ3Lg1d9yzh4GbHH27OCMeRzyiO0+XLbVRR+vNjuFV0OAWnGGABHebGNU/8bv
-         6YxKQDrr81WrvrsIGLtgWcYBjvoIf43brHQgnBv4fe+gOV8LQNnRk0FIgoMYpYqQmbjo
-         okBEA6Pm4nBvOFapRop8QpRs2HZYlOKy4PY9VAK7lRQtQZiVelZ4/MsAbe/N7zJVWfYN
-         VLYAvYz5E3e8p6t7p0q/bGr/FpE+qlM16ZlOedZkV/6lioYnix/J759qHdRXLupD2KaJ
-         9X+x0wSjROIiAn9S0Tu54iTh0XU/xrI7OCOpXPpFquVqI28FGXABDrPlZFq2dgYNRF1w
-         4U/Q==
-X-Gm-Message-State: AFuF++ny8Xdr/syNABxfTAjbNOlHK1E2d3CTOHSx9SH61FsGUjoqLx5J
-	NmOkyXgB12NlIFat5t8hSKVd31RdptmnNBJ8JzmmdGUEykXLvHcwPuSN/0ldAojpJcmKNRK1Wt6
-	z3wyC8vEOvRwIBAhdZlxdZeV3AEUdxaXom8t4y0XRlirqjIaPeu4DdKzkWtDi/ZbgNik2hn9m4y
-	1+QsvuLKHqbTL7kSXtNTLP/CUdnR4KpItrFgp0CYupgXCP
-X-Gm-Gg: AYBFou36R71kbVprp2cjCgjio8qnN0PW74hesRWOgmi3taDCWCt6sRrvAioEAYVS5hq
-	3Zuf8LYbicrcLo4fyvAZqIPk9zMYP6LHUhJpEfzaLE6a0lccLI4W7ktQmjZjHqBf36DDKKFl7tf
-	iA8TLuuCyTNBAPHa/jUSFQK21hCmzFaa29dt1eLHhmUpSU8McJPMkzLYmvvyMCYU6HRWaura7Zp
-	yH/0QElFJjfY5TiJ+jY6Oxgp6/H3H4KtdLc0KBzTd7CoCd+oTQkoiz70AH+g6aRSnfi+2XtG8wd
-	LIOWNQ+QSt1kfUORlPKmlx8+93ZQUj49akxIZZM6f6cwgqdYO5Fi0ShoZ81OtbJ+o04xMjotkXK
-	YLz0yQZ8f5Jq3z0OjL15UBCdIB/M6pfBzkA==
-X-Received: by 2002:a05:600c:4fc1:b0:49f:f099:6fb1 with SMTP id 5b1f17b1804b1-4a02756f148mr192739875e9.15.1791220934563;
+        b=vHz6osPdrr9h+jiIaw1vNjbrlgdlZErdo73AG6DN/kBpHMt+Voa+wS6rsBFelU+K0j
+         ky62ZDaMYlhTHnlBos6G41IcxxksRkKhfEpIdg8m2uUD3EhpmRriJshrSQszc1LDN23I
+         XxczYy5gpXolffa84+GMsxKz23DuqPkgnoEV9AolCLdv/15xKU6SyDbmgEvLbtUA6222
+         6w4io6sWrss2QGDouPkHn4E5PIv18IZp28dYkLtYimpdRKhKaksxGqj5Dd90TMeA+OWb
+         en3EZxixDExjUzPWeyEsDzwa0hOMCr3yj7kxufP2veHWXIph8rTWG6N0bSEI0KHJp6Bf
+         mYFQ==
+X-Gm-Message-State: AFuF++nAuU/uYNoJFc0bjL0IEZTiNSRgaChPnaVrikmdmgaA6nn6CpdC
+	PzcWb2n2ezBXBaFXakLxm8fPD1jYQ3t2aBXxUYV+nzCHi0PC+ij9rctxn5gJAO9f4R12NtZum6x
+	3GNgLnxyW7AgkF4MQgVcBcYoh3LKCOO45AQHRl0CMKzJhLvogJ6cEJNiWlw==
+X-Gm-Gg: AYBFou0tPdjWc9kqz1wmjsxkhiC3kSFy1/qHzJDTVzJS80z++F6145to3TDaCsSUgMn
+	lUzSEYwaLPkAQWg9AfXjgpeKMk0vkZ3l8cvt8i0aprJwTlxeeOvclPH4623rBCuwLH1EOu55bSq
+	TfOUQJ52i+SWlNzfhcQ6yZVmkhU9Zt4zf1upa/NEOjyqeYM+e4ZLwedru3EHgw0fQ6m85ZOsKy6
+	r5g7eKUR/cwzjNR7eZcLsCSXxGPvoLtnhALnldOLrRQuY6Er5QXrWxQFzpl0NuyA8MN1rKTIhBm
+	jUxm3XIJGSa1gYI/WYEro3345QrQbqrvzlzkRsKENE2BqdnFGH9XtrVndpYyn5OXVe8gU2N2y5I
+	u0ieBNM9uiovveKCJxMwA6ncfp+X1zf+WpA==
+X-Received: by 2002:a05:600c:4fc1:b0:49f:f099:6fb1 with SMTP id 5b1f17b1804b1-4a02756f148mr192739755e9.15.1791220934501;
         Mon, 05 Oct 2026 10:22:14 -0700 (PDT)
 X-Received: by 2002:a05:600c:4fc1:b0:49f:f099:6fb1 with SMTP id 5b1f17b1804b1-4a02756f148mr192739335e9.15.1791220933961;
         Mon, 05 Oct 2026 10:22:13 -0700 (PDT)
@@ -80,7 +99,6 @@ From: Andrey Albershteyn <aalbersh@redhat.com>
 To: linux-xfs@vger.kernel.org
 Cc: 1149571@bugs.debian.org, aalbersh@kernel.org, biebl@debian.org, 
 	djwong@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org, sandeen@redhat.com
-Subject: [ANNOUNCE] xfsprogs: for-next updated to caca7f14b449
 Message-ID: <asPcwLl90eFEnfB6@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -88,8 +106,12 @@ List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+X-Mimecast-Spam-Score: 0
+X-Mimecast-MFC-PROC-ID: PzhaTeX2IQohS79-WBVdXRLLQy-44K5CgFWXZzp_7VI_1791220935
+X-Mimecast-Originator: redhat.com
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+Message-ID: <20261005172213.cO9b8hzCpGD1V2VN-57JFPspjLCvDduU6_zrCs44EV8@z>
 
 Hi folks,
 
@@ -162,4 +184,3 @@ Code Diffstat:
 
 -- 
 - Andrey
-
