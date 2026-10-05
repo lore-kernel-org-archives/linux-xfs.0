@@ -1,46 +1,32 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42954493620;
-	Mon,  5 Oct 2026 13:31:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A2E148593B;
+	Mon,  5 Oct 2026 13:53:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791207065; cv=none; b=AtDgfeoIknQECXp2FGiw3tBFNgbJyVtmR8GstZxQ23Qf2B4T02+WYqRQDM95Qz+0Vc/wMAtljJMWCXO6Waf3cCVDygIt+y7Qu6ayh/titfY85mQc4+vVzy5VadehHQP83GGqnkt7XyvIw7PiRjZNolAIpYiiD7aE+pQFVNaj8Io=
+	t=1791208408; cv=none; b=GUYjAxdJox8ESt1YxGRsDoMp2DSWWyV18OO2eQYE6TzPfu8qVN4vcyqfrJ6xCS1WoHAca8ZZR9xXGI4zPEGNtk/B+ZUG1ZLZYE5T/1JpFhAxSC1QUIpqHl8ra4mGzDp682GV6iTfLvIdAhbVr4CAkCYYFZJDO0Obl051BREuw1s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791207065; c=relaxed/simple;
-	bh=sEB6SwsEKw/juxXaWiNtskiEqoJzpjPGaf36uDKKgFw=;
+	s=arc-20240116; t=1791208408; c=relaxed/simple;
+	bh=jRbURmQeTvcvXzAeTy4qw0UvL1FfD0q+E/ejxMgIpRI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=B873Tyt78eAxIiZfv+JvEsqK1jor+Yz3w5JbxiFvVav1mb0BFnwIoe5fkBaRjrw0JYHlLNQAfgSttxruRawPlFqtaveXumATFeS4cffXpG95ZFmebaqLTQ7+sbM0fzc5kiAScNmH7rrJfs1sVKcRSXtXTT/JMoK8O+6/Iz10CJU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NZ6Jfn/X; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NZ6Jfn/X"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 13F051F000FF;
-	Mon,  5 Oct 2026 13:31:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791207063;
-	bh=YJVFrcH51dcWxKvIvBoz5wPALOazHMgdkbmMui1YFvM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=NZ6Jfn/XZvbHZ9XZWUeKBjHSx8Gwxg6v9+i6QIGrWRSYK6B+BD325E+wAPloxoe/i
-	 Fs0cNZt9HTSfTT2fIuyt6SYI1V09qLZotsQ26++U92UybnNUaDw0daQxMq6OXEmHz0
-	 i0PFp2xlI5bN8hSzGOBBRCH3JWS+H70cQojexrMqnWd03bd2zyUxgPDLGWsM8ic8Ku
-	 QnX5ZkA4xjMnqmwLM1PpJtDCy+KyfG/1LhrPesOPoEB6lMAvHhPjgubeCTHc9m14iL
-	 +eol8QKhP1q2npvOdrJ21JxbWpF29PQuDSXup+Vj4YervpvvbsjXI7A0l5yidd80/U
-	 VY/SQv9Bzlw+w==
-Date: Mon, 5 Oct 2026 15:30:58 +0200
-From: Eric Biggers <ebiggers@kernel.org>
-To: Andrey Albershteyn <aalbersh@kernel.org>
-Cc: Carlos Maiolino <cem@kernel.org>, djwong@kernel.org, hch@lst.de,
-	fsverity@lists.linux.dev, linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-unionfs@vger.kernel.org,
-	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-	linux-btrfs@vger.kernel.org, david@fromorbit.com
-Subject: Re: [PATCH v17 00/21] fs-verity support for XFS with post EOF merkle
- tree
-Message-ID: <20261005133058.GA3436@quark>
-References: <20261002223705.2175542-1-aalbersh@kernel.org>
- <20261002232542.GA15366@quark>
- <asDvqctUgrxflcCa@nidhogg.toxiclabs.cc>
- <asN8lCPmZpA0tp5S@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+	 Content-Type:Content-Disposition:In-Reply-To; b=MdIuJCtkXN8wzJCtv4bVTW3LiW3KPA9gQsJH4G52QqrA+PDLwW5zkBUzM90el+J7k1EHUZBGgmR1H5dNZumuasD4EJgWJaMTBhw+Is3OP2ivCYUyVgnIZusAqtwpDxXlIv8Hfg2btMC17avn0J++X2hAMmZiwFP/jlfFZG2pOAM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 335F868AFE; Mon,  5 Oct 2026 15:53:21 +0200 (CEST)
+Date: Mon, 5 Oct 2026 15:53:20 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Dave Chinner <dgc@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
+	"Darrick J . Wong" <djwong@kernel.org>,
+	Jens Axboe <axboe@kernel.dk>,
+	Christian Brauner <brauner@kernel.org>, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org
+Subject: Re: support for RT data checksums
+Message-ID: <20261005135320.GA29829@lst.de>
+References: <20260924100032.2733101-1-hch@lst.de> <arWpyhFyV3ouYAEx@dread> <20260925062710.GA3798@lst.de> <armf05yfzhSBUsUh@dread> <20260928052436.GA18925@lst.de> <arvHFOjF-CD5Vd3g@dread> <ary2PpSp1xTgrd3k@dread>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -49,41 +35,81 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <asN8lCPmZpA0tp5S@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+In-Reply-To: <ary2PpSp1xTgrd3k@dread>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Mon, Oct 05, 2026 at 01:26:18PM +0200, Andrey Albershteyn wrote:
-> On 2026-10-03 14:07:23, Carlos Maiolino wrote:
-> > On Fri, Oct 02, 2026 at 04:25:42PM -0700, Eric Biggers wrote:
-> > > On Sat, Oct 03, 2026 at 12:36:41AM +0200, Andrey Albershteyn wrote:
-> > > > Andrey Albershteyn (19):
-> > > >   fsverity: report validation errors through fserror to fsnotify
-> > > >   fsverity: expose ensure_fsverity_info()
-> > > >   fsverity: pass digest size and hash of the all-zeroes block to ->write
-> > > >   fsverity: hoist pagecache_read from f2fs/ext4 to fsverity
-> > > >   fsverity: don't allow setting DAX file attribute on fsverity files
-> > > >   fsverity: hoist statx reporting of fs-verity flag
-> > > 
-> > > Would it be helpful if I applied these six patches to fsverity/for-next
-> > > for 7.4, or do you want to wait for the full series to go in at once
-> > > (presumably through the XFS tree)?
-> > > 
-> > > - Eric
-> > > 
-> > 
-> > It's your call, I *think*, this is too late for xfs 7.4, so I want to
-> > queue it as soon as possible for 7.5.
-> > 
-> > If you want to take the fsverity patches into 7.4, go for it, then the
-> > xfs ones I'll pull in once yours are merged.
-> > 
-> > Sounds reasonable?
-> > 
-> > Carlos
-> > 
+On Wed, Sep 30, 2026 at 05:11:58PM +1000, Dave Chinner wrote:
+> My initial thought was that on disk format structures shouldn't be
+> defined by the limitations of the OS memory allocation, but <shrug>.
+> It kept nagging at me, though.
+
+Well, it would be nice to be able to design without all the real-life
+constraints around us, wouldn't it?  I'm trying to strike a balance
+between what would be useful (go big) and what is feasible.  If we
+want other values, we can always increase the support range for
+newer kernels and tools.
+
+> I looked more closely at what XFS_BLI_PREALLOC did to try to
+> understand why it existed.  It triggers a max-sized CIL logvec
+> structure for the buffer object. For a 32kB buffer logged as a
+> single contiguous range, this ends up being about 32kB + a logvec
+> header, plus a log iovec, plus a BLF, plus a couple of ophdrs. So
+> it's about 32kB + 200-250 bytes.
 > 
-> Fine with me too
+> That means the shadow buffer for a csum buffer is always considered
+> a costly allocation by the MM subsystem.
 
-Applied patches 1-6 to
-https://git.kernel.org/pub/scm/fs/fsverity/linux.git/log/?h=for-next
+It ends up using vmalloc exclusively based on tracing for me,
+but that might be different on different systems.
 
-- Eric
+> Hence for csum BLI, if a CIL flush happens on a partially filled
+> buffer, a good amount of that shadow buffer will go unused. Then we
+> allocate another (costly) shadow buffer on the next update. If CIL
+> flushes happen frequently enough then we will be repeatedly doing
+> costly allocations for shadow buffers that we don't actually use.
+
+Yes.  But if we don't do this we realloc for every few blocks
+written, which is a lot more costly.
+
+> Not ideal - I think that means the original "sized for mm fast path"
+> intent is really only valid for the read side of the csum
+> algorithms as implemented by the patchset.
+
+It is valid for the xfs_buf backing where we actually hit the folio
+allocator.  Which is used both for read and write, but obviously
+most workloads tend to hit reads a lot harder than writes.
+
+> Ok, we have a solution to this problem. I created ordered buffers
+> and one-shot log items to avoid the journalling overhead of static
+> inode buffer initialisation back in 2013. The ICREATE log item is
+> the one-shot log item that records a buffer should be initialised,
+> and the ordered buffer allows the modified buffer to be passed
+> through the journal to metadta writeback without it's contents being
+> logged.
+> 
+> Given that csum updates are a small, known size, non-overlapping
+> one-shot update to a buffer, they fit the same model that
+> ICREAT+ordered implements. Adding a new CSUM log item made up of a
+> format header and varible size csum payload region provides the
+> equivalent of the ICREAT item for journalled inode buffer
+> initialisation.
+
+I initially looked into intent/done based csums, but we still end
+with an allocation per log operation, and a memcpy both into that
+and into the buffer, while adding a lot of new log items.
+
+One thing I played with for a while until I realized that the simple
+buf item actually provides good enough performance is special
+xfs_log_vec that is not included in the main log vec / shadow allocation
+but points to external memory.  This obviously only works for fixed
+size non-overlapping regions, but then isn't too bad.  This is the
+prep work for it, which I recently refreshed:
+
+https://git.infradead.org/?p=users/hch/xfs.git;a=shortlog;h=refs/heads/xlog-ophdr
+
+These can work with the buf_item on-disk format, so I'd rather not
+prematurely optimize it, as the prototype shows that I can go to that
+any time I want.  And eventually I think I'd want to go there, as it
+drastically reduces the memory usage if only the format header and
+two ophrs need to be allocated ontop of the backing buffer.  But there's
+plenty more important things on the plate for now.
