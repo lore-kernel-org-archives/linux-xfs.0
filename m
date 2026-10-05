@@ -1,44 +1,44 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69EEE375ACB
-	for <linux-xfs@vger.kernel.org>; Mon,  5 Oct 2026 12:56:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EB6C480357
+	for <linux-xfs@vger.kernel.org>; Mon,  5 Oct 2026 12:56:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791205018; cv=none; b=Lv8o/XJqqykMdmnedrPir48jAOIAl3etIda7/1y2ZjKTocKww93ywEW+j1YqbKSqyzYo70ja3NZwbGaQoVqaqmSVOoz0lWT4c1/OQXqnyJaLmGThFhuGp8ViMoJ5eoEfZXTaIz+3c+Q4bEMDzsxDbzv4Ib53/GnWyAu2e7rBgi4=
+	t=1791205021; cv=none; b=N4ztKMJ3oVjHtv21tUlSOumSM479HNOJN1M5Qt7Lwb+/oRJIrdWSCOUpmS1B4Bm5zCIot/574VmpDYvYZk4vYPBQI1/vOvRHL/kHi+5dTlSXjmiAn/yjb/SKppPsbbW1/DEI38HMXryk7rXGGiA8ZJOSqCARvhSV+Th8yhFnp6o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791205018; c=relaxed/simple;
-	bh=H646JbF2dUU2qpbclz6uCOnzDcQ3d/8pyzFpx0GSzOw=;
+	s=arc-20240116; t=1791205021; c=relaxed/simple;
+	bh=H6GPgPKns9O/v848dXOJyPekJxp3GAGZA5Fw+Wmw3ug=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=sGgI5q0oAtoLyaCJwhbjZ0OshrSQzq6gmWxovIGTEXESMdYb9JuKfi4TZ4JicRygx+XXgAlQ926KI9l5gtx1QVZPHmGw4qOXvVJWrI/r4b5iL+rLsCfTujhMnqb3WUGRREpVTcEbiAKv6Ve+xZ426u6jiXmjeocq62LEJ8Mi85Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=xYZdj1j3; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=Aa5wsnP4mqwIh9aQrYB7M0YnJm/G9MpixRvhRE640hfw/160VrX0kXt+J98CW4QWg0/uc2Dhd754WPObhq89rTcv8OGpnHcl7skvTW/CkrQ+nwJnmXKe7qjCY22iDRjfjLSRV35TImghRUq9quhX4lWDeanQzwY0Qu7slTWSMkg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=zm6TLHOH; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="xYZdj1j3"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="zm6TLHOH"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=SZ+mDC7mBqC7zK0BxCfXVfxRtvkju1EDXe4yFZlGzAQ=; b=xYZdj1j3ZZhrTc1VFKpR7gPcSk
-	Fnqn4Ar4B9RJRBmzr1bUDomdLCo683Jvs6zyGWkuXBqL4KTD5Yj5uVKHZpBbLlArU8Ii3gJ6Ak56T
-	yzKRzEj04uZesaAqQZ9Z4ge7nOUa5uHKdAQugmZPTPBkxje5kfWM62dg7jzHEoChE1Jaq1lySwlFl
-	3C8dj/bL3KOqP1+/CyijSCAdMqVCyILz5xeAUQ61rj653hkjn/AmDRC06oCspatKtAKxH3s2qroWx
-	XLxs5WiEfOq2I2Xc+PLp/kXFQAZS/RaQm8MiKwFvjim5yS40GtnngKElsSieaHx7kGxN4Lb4qc0Yp
-	EWXoeFag==;
+	bh=cGkghryYJCjAQEQ/ahfrCdX+PpPsvxx+24uvIwWrXZ4=; b=zm6TLHOH/zByUVOenn8ysDDyNb
+	a1iajhPFlOU7IuoKn8F8oC/Sx39dSh3OBcHVBHdifWZaPWVdupkMVssyY4WX+sX3pe6rw/0ZLChXs
+	uiVX95Cce06OGNQhjekn9UN6Np6PYFU83UgGuQCwy3pMCIauO4e7P3Stg/0rAB4uFyZeTAS1AwhFG
+	7jrJtL8DQSHM4SQkg/nrzJEAaNBwMLpsqL6Hip8QIrXka4BVO/rfiFWkurbzr8TFuhsIMgyyzF5XM
+	JsqM4X92924jAIzLyPJiwEE/elKztX397OS0PDoN66c1l6LRNFd744b1LyDSbXaOQGerKcxVPAlc4
+	77RR+A9w==;
 Received: from 2a02-8389-2301-9f00-88fd-fcdd-06aa-821c.cable.dynamic.v6.surfer.at ([2a02:8389:2301:9f00:88fd:fcdd:6aa:821c] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1xDiFT-0000000GR59-34L0;
-	Mon, 05 Oct 2026 12:56:56 +0000
+	id 1xDiFW-0000000GR5w-3I6F;
+	Mon, 05 Oct 2026 12:56:59 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Andrey Albershteyn <aalbersh@kernel.org>
 Cc: "Darrick J . Wong " <djwong@kernel.org>,
 	Eric Sandeen <sandeen@redhat.com>,
 	Carlos Maiolino <cem@kernel.org>,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 05/13] libxfs: remove the unused xfs_log_item.li_mountp field
-Date: Mon,  5 Oct 2026 14:56:15 +0200
-Message-ID: <20261005125637.1340355-6-hch@lst.de>
+Subject: [PATCH 06/13] libxfs: remove the unused xfs_inode_log_item.ili_fsync_fields field
+Date: Mon,  5 Oct 2026 14:56:16 +0200
+Message-ID: <20261005125637.1340355-7-hch@lst.de>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261005125637.1340355-1-hch@lst.de>
 References: <20261005125637.1340355-1-hch@lst.de>
@@ -55,46 +55,33 @@ To prepare for reusing the kernel version of the struct.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
+ libxfs/logitem.c         | 1 -
  libxfs/stubs/xfs_trans.h | 1 -
- libxfs/trans.c           | 1 -
- libxfs/util.c            | 1 -
- 3 files changed, 3 deletions(-)
+ 2 files changed, 2 deletions(-)
 
+diff --git a/libxfs/logitem.c b/libxfs/logitem.c
+index 6e56e476d1ea..d09ff75e9ce2 100644
+--- a/libxfs/logitem.c
++++ b/libxfs/logitem.c
+@@ -231,7 +231,6 @@ xfs_inode_item_precommit(
+ 	 * (ili_fields) correctly tracks that the version has changed.
+ 	 */
+ 	spin_lock(&iip->ili_lock);
+-	iip->ili_fsync_fields |= (flags & ~XFS_ILOG_IVERSION);
+ 	if (flags & XFS_ILOG_IVERSION)
+ 		flags = ((flags & ~XFS_ILOG_IVERSION) | XFS_ILOG_CORE);
+ 
 diff --git a/libxfs/stubs/xfs_trans.h b/libxfs/stubs/xfs_trans.h
-index 9102bc6f5b27..9b6a47988147 100644
+index 9b6a47988147..fcd58930cc85 100644
 --- a/libxfs/stubs/xfs_trans.h
 +++ b/libxfs/stubs/xfs_trans.h
-@@ -24,7 +24,6 @@ struct xfs_item_ops {
- typedef struct xfs_log_item {
- 	struct list_head		li_trans;	/* transaction list */
- 	xfs_lsn_t			li_lsn;		/* last on-disk lsn */
--	struct xfs_mount		*li_mountp;	/* ptr to fs mount */
- 	uint				li_type;	/* item type */
- 	unsigned long			li_flags;	/* misc flags */
- 	struct xfs_buf			*li_buf;	/* real buffer pointer */
-diff --git a/libxfs/trans.c b/libxfs/trans.c
-index c89b035ffeaf..9dd2e244a812 100644
---- a/libxfs/trans.c
-+++ b/libxfs/trans.c
-@@ -52,7 +52,6 @@ libxfs_trans_add_item(
- 	struct xfs_trans	*tp,
- 	struct xfs_log_item	*lip)
- {
--	ASSERT(lip->li_mountp == tp->t_mountp);
- 	ASSERT(lip->li_ailp == tp->t_mountp->m_ail);
- 	ASSERT(list_empty(&lip->li_trans));
- 	ASSERT(!test_bit(XFS_LI_DIRTY, &lip->li_flags));
-diff --git a/libxfs/util.c b/libxfs/util.c
-index 6cbbe9056eba..2d8f57abd585 100644
---- a/libxfs/util.c
-+++ b/libxfs/util.c
-@@ -408,7 +408,6 @@ xfs_log_item_init(
- 	int			type,
- 	const struct xfs_item_ops *ops)
- {
--	item->li_mountp = mp; 
- 	item->li_type = type;
- 	item->li_ops = ops;
+@@ -40,7 +40,6 @@ struct xfs_inode_log_item {
+ 	unsigned int		ili_dirty_flags;	/* dirty in current tx */
+ 	unsigned int		ili_last_fields;	/* fields when flushed*/
+ 	unsigned int		ili_fields;		/* fields to be logged */
+-	unsigned int		ili_fsync_fields;	/* ignored by userspace */
+ 	spinlock_t		ili_lock;
+ };
  
 -- 
 2.53.0
