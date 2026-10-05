@@ -1,40 +1,32 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8673847D93E
-	for <linux-xfs@vger.kernel.org>; Mon,  5 Oct 2026 13:07:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2D9E481A97;
+	Mon,  5 Oct 2026 13:11:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791205651; cv=none; b=qEI+kHDE01Lj2sUCQmzvu5jF2TWogRBw0HsC6hBIVjoMMvIdevBtmxwM1AMVyAyECG/LlEGalml6aEvMo1X9a56JOdNgEeh5As5onvzr1qcfNdd71tY6UV+AT1QFHkBvF1YeCKBBu9O18k1rorhjWY87li7e9Eu80fSElPsvXeQ=
+	t=1791205892; cv=none; b=Kk9Ebj0sxzKLaFwLXDRdm2p/G90f4Z5hKvM3M/1uagYFbxXMpgDpfwmxXLx4FzkjzjcDdwAgkp+Tp/WvYnhLkLYpyelMkYfgoS97ivd5UedhG2AtJRYt/3sM4xSZTLJZhrLlqsZVZ9K+nJvA3WPq/ZhKyP2HqNpl9rFyAKAPgjc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791205651; c=relaxed/simple;
-	bh=4Lp1j6orAHfywn/ATO4oqOYs8Y3mz51ktIEIhx5Wh04=;
+	s=arc-20240116; t=1791205892; c=relaxed/simple;
+	bh=rwI9RR9EAYt6j2DBEfQTDUQVbWv3+cWmgFveBfny9mQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Golq2pHZM5Fnnb+Oa+rluzDvGto7zJsFrut9/blyUFgNNvtiNH36RqCccDHZfZdy9p90RamqqoCWsLX3jEVYI55jy5HrsdpvE0nybQmsoiuNEKfLiwdZ73CCYedYE8+VOyGZK+Tw+AlIq+BkSx8KRT1ww5k79Q4b2xmIncEF6Xg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ol+XHaD9; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ol+XHaD9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 218771F000FF;
-	Mon,  5 Oct 2026 13:07:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791205650;
-	bh=gGreXu40Y0yTNJL5kwCo1yqrMj1a5WCVqt06ImCR1M4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=ol+XHaD9INPbOUmP97+RwJmEa1rMj5pFKlfiZ4stzFov0NqVJvhdqCOEMdjcAiJgO
-	 C+y+Q7MjBdTEuBy03uamLAoG4kE3g9KYFUm1VjByxNkUySzb+joXXH2RvOnYCQ+4Pw
-	 PUHK3zMfeEvRbrC/yTXb/lqRCfkVfUBOt6TNtgnggu0UMRSYkqrd1d1QyyjB1UlMv1
-	 NeO3G6VbzHJ/3eIuSWk3lVbcQJj4YxozmEWmlLBRgwJbK+1XQknFY6dWHMyavkTzg6
-	 hWaDuK+X07C9v3+coaOPxMDL3kLVVZHSx3rr8HaAf5e9tNtz/I0iU2ZcojCpa7veZk
-	 fCzyK1OgQpZ4g==
-Date: Mon, 5 Oct 2026 15:07:24 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs@vger.kernel.org, djwong@kernel.org
-Subject: Re: [PATCH 2/3] xfs: factor out xrep_reset_fork_to_extents helper
- for scrub/repair
-Message-ID: <asOXG8ePgukShDRq@nidhogg.toxiclabs.cc>
-References: <20261002211038.2139655-1-sandeen@redhat.com>
- <20261002211038.2139655-3-sandeen@redhat.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=aH7sq8QdXYGY1XzLEq6SHFsWwFP8btIceHXgLEGoeZ95jvOJ3Mmdp5CC0TB9L9/zxWKSazzzv992CWEfP+ZNeTU3236/5wS57Vc7l7AsguByX+FBsWV8un8eMmIJmHS1V/2u1/Xu3QTK0mMutLEHMywbmHHou+p+NuxeZklLhuk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 2F34768AFE; Mon,  5 Oct 2026 15:11:27 +0200 (CEST)
+Date: Mon, 5 Oct 2026 15:11:26 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
+	Jens Axboe <axboe@kernel.dk>,
+	Christian Brauner <brauner@kernel.org>, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 16/21] xfs: add data checksum support to zoned garbage
+ collection
+Message-ID: <20261005131126.GD26805@lst.de>
+References: <20260924100032.2733101-1-hch@lst.de> <20260924100032.2733101-17-hch@lst.de> <20260929010639.GX2705364@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,74 +35,40 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261002211038.2139655-3-sandeen@redhat.com>
+In-Reply-To: <20260929010639.GX2705364@frogsfrogsfrogs>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Fri, Oct 02, 2026 at 04:08:10PM -0500, Eric Sandeen wrote:
-> The open-coded 8-line series of steps to reset a fork to empty extents
-> format is repeated 3 times; factor this out into a helper to eliminate
-> cut and paste.
+On Mon, Sep 28, 2026 at 06:06:39PM -0700, Darrick J. Wong wrote:
+> > +	/* Buffer for data checksums */
+> > +	struct xfs_buf			*csum_bp;
+> > +	void				*csum_buf;
 > 
-> +/* Discard the contents of this fork and initialize as empty extent-format. */
-> +void
-> +xrep_reset_fork_to_extents(
-> +	struct xfs_scrub	*sc,
-> +	int			whichfork)
-> +{
-> +	struct xfs_ifork	*ifp = xfs_ifork_ptr(sc->ip, whichfork);
-> +
-> +	xfs_idestroy_fork(ifp);
-> +	ifp->if_format = XFS_DINODE_FMT_EXTENTS;
-> +	ifp->if_nextents = 0;
-> +	ifp->if_bytes = 0;
-> +	ifp->if_data = NULL;
-> +	ifp->if_height = 0;
-> +}
+> Where is csum_buf used?
 
-Why not also move xfs_trans_log_inode() here?
-Sure it will need to use a different flag depending on the fork type,
-but then the whole reset and log will be contained within there.
+Nowhere, left from an earlier version.
 
-
-
-> +
->  /*
->   * Initialize all the btree cursors for an AG repair except for the btree that
->   * we're rebuilding.
-> diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
-> index 2bb125c4f9bf..c1ba462e4426 100644
-> --- a/fs/xfs/scrub/repair.h
-> +++ b/fs/xfs/scrub/repair.h
-> @@ -81,6 +81,7 @@ int xrep_setup_xfbtree(struct xfs_scrub *sc, const char *descr);
->  int xrep_ino_ensure_extent_count(struct xfs_scrub *sc, int whichfork,
->  		xfs_extnum_t nextents);
->  int xrep_reset_perag_resv(struct xfs_scrub *sc);
-> +void xrep_reset_fork_to_extents(struct xfs_scrub *sc, int whichfork);
->  int xrep_bmap(struct xfs_scrub *sc, int whichfork, bool allow_unwritten);
->  int xrep_metadata_inode_forks(struct xfs_scrub *sc);
->  int xrep_setup_ag_rmapbt(struct xfs_scrub *sc);
-> diff --git a/fs/xfs/scrub/symlink_repair.c b/fs/xfs/scrub/symlink_repair.c
-> index 181961364233..5f5bc5211600 100644
-> --- a/fs/xfs/scrub/symlink_repair.c
-> +++ b/fs/xfs/scrub/symlink_repair.c
-> @@ -304,16 +304,7 @@ xrep_symlink_swap_prep(
->  	 * exchange.
->  	 */
->  	if (ip_local) {
-> -		struct xfs_ifork	*ifp;
-> -
-> -		ifp = xfs_ifork_ptr(sc->ip, XFS_DATA_FORK);
-> -		xfs_idestroy_fork(ifp);
-> -		ifp->if_format = XFS_DINODE_FMT_EXTENTS;
-> -		ifp->if_nextents = 0;
-> -		ifp->if_bytes = 0;
-> -		ifp->if_data = NULL;
-> -		ifp->if_height = 0;
-> -
-> +		xrep_reset_fork_to_extents(sc, XFS_DATA_FORK);
->  		xfs_trans_log_inode(sc->tp, sc->ip,
->  				XFS_ILOG_CORE | XFS_ILOG_DDATA);
->  	}
-> -- 
-> 2.55.0
+> > +		error = xfs_rtcsum_read_async(mp, chunk->old_startblock,
+> > +				&chunk->csum_bp);
+> > +		if (error) {
+> > +			xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
+> > +			xfs_zone_gc_free_chunk(chunk);
+> > +			return false;
+> > +		}
 > 
+> Ok so this starts the csum block read asynchronously, and then submits
+> the read bio.  chunk->csum_bp is the checksum buffer of the rtcsum file
+> of the zone we're cleaning out, right?
+
+Yes.
+
+> > +		boff = xfs_rtb_to_rtcsumoff(mp, chunk->old_startblock);
+> > +		error = xfs_rtcsum_log(chunk->oz, chunk->new_daddr, chunk->len,
+> > +				chunk->csum_bp->b_addr + boff);
 > 
+> ...and then write the same checksum to the new daddr using the old
+> checksum.  There's no explicit validation of the checksum in the garbage
+> collector itself, but I gather the read ioend did this for us already,
+> right?
+
+Exactly.
+
