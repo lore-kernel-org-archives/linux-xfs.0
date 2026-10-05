@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84F90231839;
-	Mon,  5 Oct 2026 05:57:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 792DB30FC26;
+	Mon,  5 Oct 2026 05:57:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791179828; cv=none; b=H/Q2MgwNVSyljVJOIVEI0imsnArLXA9o7Wl5WOwBj7o36MrWTYJwCjAn8e0vLRpofcpKlqr+aeal+KHCLsUCvuHUA26w/ohNNGoTtKVDzLZby0hePfMwIMAOuteC8lL3Qs9PIpPKA+NtS2GuHJvGMXqRa4MEFJRZalWZM9+GPQs=
+	t=1791179844; cv=none; b=ISECIPMmKe9uv0LjYFPdD7Ahu5aQto+yR+kngcr6u16qW7kERGSz3ApI71WgBhAaqZQsJgOefRVD2ti12n2gnQWyyS3vbmdJ8LoQB2z31cxRGJYZUDyPBZz7grSMMh1J0dKqymtJjQTLTb1WmBCsDa1NnHHIugQqO+ODxMKA4FI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791179828; c=relaxed/simple;
-	bh=0OrLoXk/s8nslcXtB+kR389pZBLKTkkMMiGnBWBTi0M=;
+	s=arc-20240116; t=1791179844; c=relaxed/simple;
+	bh=5MnEOgrWb/6+JKXPzcdUS6oEqULhQ9PWQXpZv35JgKE=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=iv6k1hFfu6qAfAjbjtG330DfKjLwff+mS4orPzAHGCyDYQv6lCqFJcNokmXaPBp7u5ICRfGLo8JcLWmyRnBWVgATE2nImVXTvCHhZZnYPYagCbEDV2he8z1ec69N6IqcXE7E7/FJMal5KE2Onfr/dChHR4V9vxYToan6XgnnZko=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XgYWYjob; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=Tpe0PlGsm1kiVWMDsceAoXDCHl0JuHbqOKQBQvpE7vfLZeY4wsCwmCzFbThxqwmkudAiiaVnlS9HAnRWrRaXjgRCbVn/N81GQdpAR945idHOeJ7uEhMpJi40sOr3cwPctGPkvtBbOxE2BJjmcpg7CrgvPDQYMu9I12Y/z/sviQ8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HPs1FyOD; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XgYWYjob"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 5CA0C1F000FF;
-	Mon,  5 Oct 2026 05:57:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HPs1FyOD"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 115A31F00893;
+	Mon,  5 Oct 2026 05:57:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791179827;
-	bh=xvvnPL/AQ2yLXkb2uDyszJn5dvikVKw4y5Io2DmX770=;
+	s=k20260515; t=1791179843;
+	bh=A2VDZWNGYt/Q7lfqk4pQfzuSIGHv98LP4WcrUS9GEds=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=XgYWYjob8/RMQfDZP7Etf4bJiBjIPGQyr8mNW7sP4uUQQeo8UM/uQJfvM4W4YetEk
-	 QjbtsvXai/KwnI3ZODjWuxxR6d1Iw2EyFnP4lqfi9exozzWs3fxtUuyaYbiq4dAGwN
-	 nQc1NhWcHiiaAe3N5YcV5yp+dB2oISR5EXYC3Eveuanx68ZplmyVbdI0D//FiDbKq0
-	 qtUzgE4kpf5dnoPUjEr1/mtyYgtYKDTqP6PdB+6QG3O9IrSHc9+UobTtVsJywplDsY
-	 XjcVdoy1lxNXBngdbX2ff2LlE71+g8eLMkNg+hS6rZVNgtivdO1zNPcscxJEHIhKmR
-	 LXCmq38kq10gA==
-Date: Sun, 04 Oct 2026 22:57:07 -0700
-Subject: [PATCH 07/12] xfs: don't try to scrub self-referential dirent in
- metapath checker
+	b=HPs1FyODtXrWilXJepT+ynnZpp+G68mO0LTPShzh2U2BGPcJy8lpEnNfROO1qsOyp
+	 X5hPSV5tEeWnQQ9IMhFS0RzZbgm311Y4PhURF6kMGEONH+myLbdC0wnwyqT3xjf2DJ
+	 4agsHMsiHT68TmJaRqKgzhXINHgURDJCJjuPiNRarP7hEyBDwhV74m7g5iurFXahKj
+	 SrnsqGD1ePLHJxkc6GCCnxoAlPpNWyuYDhl5Hf9b8me45r4atq5X41YsN8kQ2jvlEm
+	 ZKh8CHae9QtEecZyuVltS/KihtrLhZAxVwgd7lbqoyDW59trdEUvsZY8ejUAgZftAv
+	 yKtpidwC0XjzA==
+Date: Sun, 04 Oct 2026 22:57:22 -0700
+Subject: [PATCH 08/12] xfs: don't allow sm_agno for non-group metadir path
+ checking
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <179117965159.614350.4466564726537723655.stgit@frogsfrogsfrogs>
+Message-ID: <179117965180.614350.15051352556483286821.stgit@frogsfrogsfrogs>
 In-Reply-To: <179117964931.614350.8529263328378685172.stgit@frogsfrogsfrogs>
 References: <179117964931.614350.8529263328378685172.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,37 +46,48 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-LOLLM observes that the _ilock_both helper will loop forever trying to
-double-lock the same inode if mpath->dp == sc->ip.  Callers are not
-supposed to call us with parent == child because that makes no sense.
-Trigger an assertion, mark the scan incomplete, and return IO error
-so that this fails noisily.
+LOLLM noticed that the metadata directory tree path checker accepts
+non-zero values in the sm_agno field for non-group metadata.  Make that
+case return -EINVAL.
 
 Cc: <stable@vger.kernel.org> # v6.13
-Fixes: b3c03efa5972f0 ("xfs: check metadata directory file path connectivity")
+Fixes: a74923333d9c3b ("xfs: scrub metadir paths for rtgroup metadata")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Assisted-by: LOLLM # finding obvious bugs
 ---
- fs/xfs/scrub/metapath.c |    7 +++++++
- 1 file changed, 7 insertions(+)
+ fs/xfs/scrub/metapath.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
 
 
 diff --git a/fs/xfs/scrub/metapath.c b/fs/xfs/scrub/metapath.c
-index e0ee7d9b903ff0..4cc0d37b529f97 100644
+index 4cc0d37b529f97..1488c8bcb52490 100644
 --- a/fs/xfs/scrub/metapath.c
 +++ b/fs/xfs/scrub/metapath.c
-@@ -319,6 +319,13 @@ xchk_metapath(
- 		return 0;
- 	}
+@@ -129,6 +129,8 @@ static int
+ xchk_setup_metapath_rtdir(
+ 	struct xfs_scrub	*sc)
+ {
++	if (sc->sm->sm_agno)
++		return -EINVAL;
+ 	if (!sc->mp->m_rtdirip)
+ 		return -ENOENT;
  
-+	/* Callers should not set the parent to the child. */
-+	if (mpath->dp == sc->ip) {
-+		ASSERT(mpath->dp != sc->ip);
-+		xchk_set_incomplete(sc);
-+		return -EIO;
-+	}
-+
- 	xchk_trans_alloc_empty(sc);
+@@ -176,6 +178,8 @@ xchk_setup_metapath_quotadir(
+ {
+ 	struct xfs_quotainfo	*qi = sc->mp->m_quotainfo;
  
- 	error = xchk_metapath_ilock_both(mpath);
++	if (sc->sm->sm_agno)
++		return -EINVAL;
+ 	if (!qi || !qi->qi_dirip)
+ 		return -ENOENT;
+ 
+@@ -192,6 +196,8 @@ xchk_setup_metapath_dqinode(
+ 	struct xfs_quotainfo	*qi = sc->mp->m_quotainfo;
+ 	struct xfs_inode	*ip = NULL;
+ 
++	if (sc->sm->sm_agno)
++		return -EINVAL;
+ 	if (!qi)
+ 		return -ENOENT;
+ 
 
