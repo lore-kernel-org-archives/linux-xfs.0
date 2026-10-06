@@ -1,39 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CF6D374A0C
-	for <linux-xfs@vger.kernel.org>; Tue,  6 Oct 2026 08:25:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4AE8C3B6C15
+	for <linux-xfs@vger.kernel.org>; Tue,  6 Oct 2026 08:32:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791275120; cv=none; b=tHAvgdAcBuWNNYfwqZexLUkR3OFv+oRcysgFt0dUalKv1JB5zk1+rKHk8foqoEoqCamqUFHEe7NBHT51wuaEM1CWhKCSFoZN2mWq7Rz5XLtYeVXhjBt1M4qKhzRU489FHgyHiDPgmNLYMmpRwE1nXkA2n5+lSx+acc44FkGghqQ=
+	t=1791275570; cv=none; b=Vo5STI2NNjLizcGD76uv+wP2KzttMCM5dm/6BAwTVQgeKQfqrDQkDOFxXCEtvW7VouoWj5lCbSK4GniSVn95kmGZnmPbRl+aH1VRVP1bQxCeHcAm2YVRWbh3ll0aZY2hp+26G63DTzTrfrW/09C81w3fbrybBrYPtsgKwFhJr7o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791275120; c=relaxed/simple;
-	bh=WoI8AHL3s4NZsqnpZNef1vdsyHgty4p21/QG7Yolb9I=;
+	s=arc-20240116; t=1791275570; c=relaxed/simple;
+	bh=p2gVAZ3QQpixdG4p/MoiuW1rjGdVJU7VBpgVUNXaIDI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=You9OkchOKwQvklFhOP3M0qr7qBaZUKubAikesrdFtWGrvz4Fc0sCexfcj1a2mtqFXpySsbCrTBXGBEw+Eh6hsEkoNdmlnwCeaxeCjLwM7lQApYmN/d8c0b1rUXYeNI7QSKGw05hwkVJc7jm/T8bVwBchoapB6umC3xLbZsDNZY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TU3x6AFj; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=qOAkMFQVHbj6Jt7AiCtzL+Tf7oXyywrPFRd3FPLL+AttbUvYlCmPW2enDxgdgrhCaqDbMcYUtKtACqsuiF4SOQAogQWI2AILKTyhnFQcTp7PTHxvcpLhOC8IonOiFoYK13IeagnivWhux63WqU/hUImqpIf6BsfYAakGKb34P1E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RgY9/2EY; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TU3x6AFj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C98E1F000FF;
-	Tue,  6 Oct 2026 08:25:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RgY9/2EY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A81931F000FF;
+	Tue,  6 Oct 2026 08:32:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791275118;
-	bh=GPR9df6RX3VULy90xu2I7ANzfBz8F2xzTr7ShqexqP0=;
+	s=k20260515; t=1791275569;
+	bh=l2JDpJk5XjEsgb8lu6NPuMMEvP/VaOw1Rx5Jh0FBWXA=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=TU3x6AFjBAPhCwnC4NLtx3rl5XZJo3sOaCvXxjrCgd4ayDv9WupJDU61xrU2jwepn
-	 tUfOLL4qyNxw/Oz3uMrFAcdVrlYdkGS8xrFEoG7nm1iLKlVMarGs8q2rO9+MCejfYo
-	 ysHVUXb/6Fv/Kfvsy991RAUdYhCqwXxS/WWz1z2pRCXnzdN6i4BfouoWJbTC0lsWns
-	 79/emTDFr/YfbhOMXp0kcyZH8ivzFWylkwSZ/xJIuh4K/ozeGjUWbIixUisP6FkTSV
-	 Hx0QCzJzpnHncOS+Ui0HK8yJO7IjfAXznCqpRSOCi8JXKLN7PMS0xbZkHChdwEejTr
-	 +bdHtM4I+LTnQ==
-Date: Tue, 6 Oct 2026 10:25:14 +0200
+	b=RgY9/2EYDuFZDcfysy9nBPC5qpe2cw+TRloMVXWQCmRd6EHA7sV0pI87w71Glrvr6
+	 5rC+/NtyAipdZeqWpsZcKIlTrbkmsfO9M88FQ1hZlXavwKhaz2sgbcGCyjDCtg0P/D
+	 k4yrAM1rKWCTzcGoO763ktYMMEPaxNFnIP7uXUtBPA7t2MRVgbWv0YTEWrUF5/vOqx
+	 SYSLX8/vlpgHAtlMtcS/i2PTHU5sWjOq7LqVYmR+Z5/x5JpazBoyDptbxS4r9hAhRa
+	 Uyd+ldQa+bDbYq5jxYr12eQOMKfHR2alYqd5pmzifqCX2wlNphSmLPAbtHJ+ixiXDP
+	 oEUGJr2R1hnmQ==
+Date: Tue, 6 Oct 2026 10:32:44 +0200
 From: Carlos Maiolino <cem@kernel.org>
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs@vger.kernel.org, djwong@kernel.org
-Subject: Re: [PATCH 3/3] xfs: re-use refcount scrub/repair code for rtrefcount
-Message-ID: <asSwX1bncQRIE3hn@cronus.toxiclabs.cc>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Eric Sandeen <sandeen@redhat.com>, Eric Sandeen <sandeen@sandeen.net>, 
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH V2 2/3] xfs: factor out xrep_reset_fork_to_extents helper
+ for scrub/repair
+Message-ID: <asSwijU34G7m5RiQ@cronus.toxiclabs.cc>
 References: <20261002211038.2139655-1-sandeen@redhat.com>
- <20261002211038.2139655-4-sandeen@redhat.com>
+ <20261002211038.2139655-3-sandeen@redhat.com>
+ <5a8c7689-492f-4119-a75f-5d5bb442786d@sandeen.net>
+ <20261005202059.GD2705364@frogsfrogsfrogs>
+ <d68afc86-6510-45c4-a225-784e7f629a33@redhat.com>
+ <20261005211741.GF1615495@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,572 +48,140 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261002211038.2139655-4-sandeen@redhat.com>
+In-Reply-To: <20261005211741.GF1615495@frogsfrogsfrogs>
 
-On Fri, Oct 02, 2026 at 04:08:11PM -0500, Eric Sandeen wrote:
-> Some code in scrub/rtrefcount.c is copied from scrub/refcount.c; it
-> differs only in function & structure names and a couple types and
-> macros, which share the same underlying types and values.
-> 
-> Similarly for code in fs/xfs/scrub/[rt]refcount_repair.c
-> 
-> Export the refcount versions, use them for rtrefcount scrubbing,
-> eliminate the copies, and add build-time asserts so that the type/value
-> matches mentioned above do not drift.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
+On Mon, Oct 05, 2026 at 02:17:41PM -0700, Darrick J. Wong wrote:
+> On Mon, Oct 05, 2026 at 03:43:08PM -0500, Eric Sandeen wrote:
+> > On 10/5/26 3:20 PM, Darrick J. Wong wrote:
+> > > On Mon, Oct 05, 2026 at 02:11:37PM -0500, Eric Sandeen wrote:
+> > >> The open-coded ~10 line series of steps to reset a fork to empty extents
+> > >> format is repeated 3 times; factor this out into a helper to eliminate
+> > >> cut and paste.
+> > 
+> > ...
+> > 
+> > >> diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+> > >> index c2a437416227..8385308c852f 100644
+> > >> --- a/fs/xfs/scrub/repair.c
+> > >> +++ b/fs/xfs/scrub/repair.c
+> > >> @@ -882,6 +882,32 @@ xrep_ino_ensure_extent_count(
+> > >>  	return 0;
+> > >>  }
+> > >>  
+> > >> +/* Discard the contents of this fork and initialize as empty extent-format. */
+> > >> +void
+> > >> +xrep_reset_fork_to_extents(
+> > >> +	struct xfs_scrub	*sc,
+> > >> +	int			whichfork)
+> > >> +{
+> > >> +	struct xfs_ifork	*ifp = xfs_ifork_ptr(sc->ip, whichfork);
+> > >> +	uint			ilog_flags = XFS_ILOG_CORE;
+> > >> +
+> > >> +	ASSERT(whichfork == XFS_DATA_FORK || whichfork == XFS_ATTR_FORK);
+> > >> +
+> > >> +	if (whichfork == XFS_DATA_FORK)
+> > >> +		ilog_flags |= XFS_ILOG_DDATA;
+> > >> +	else
+> > >> +		ilog_flags |= XFS_ILOG_ADATA;
+> > > 
+> > > Nit pick:
+> > 
+> > I thought about a case switch but it seemed excessive for 2 choices.
+> > My ASSERT does make sure we have one or the other valid value... *shrug*
+> > 
+> > > 	switch (whichfork) {
+> > > 	case XFS_DATA_FORK:
+> > > 		ilog_flags |= XFS_ILOG_DDATA;
+> > > 		break;
+> > > 	case XFS_ATTR_FORK:
+> > > 		ilog_flags |= XFS_ILOG_ADATA;
+> > > 		break;
+> > > 	default:
+> > > 		ASSERT(0);
+> > > 		return;
+> > 
 
-Looks good,
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+> > I guess this has the advantage of kinda handling an unknown whichfork or
+> > XFS_COW_FORK, though who knows what happens to callers that get a do-nothing
+> > return at that point?
+> > > 	}
+> 
+> There shouldn't be any, I just thought it looks cleaner. :)
 
->  fs/xfs/scrub/refcount.c          |  27 +---
->  fs/xfs/scrub/refcount.h          |  56 +++++++
->  fs/xfs/scrub/refcount_repair.c   |   3 +-
->  fs/xfs/scrub/rtrefcount.c        | 263 +------------------------------
->  fs/xfs/scrub/rtrefcount_repair.c |  39 +----
->  5 files changed, 72 insertions(+), 316 deletions(-)
->  create mode 100644 fs/xfs/scrub/refcount.h
+Perhaps...
+
+ilog_flags |= (whichfork == XFS_DATA_FORK ? XFS_ILOG_DDATA : XFS_ILOG_ADATA)
+
+?
+
+But the switch indeed looks nicer.
+
 > 
-> diff --git a/fs/xfs/scrub/refcount.c b/fs/xfs/scrub/refcount.c
-> index f8c51d8fbb3d..c18bb89325a5 100644
-> --- a/fs/xfs/scrub/refcount.c
-> +++ b/fs/xfs/scrub/refcount.c
-> @@ -20,6 +20,7 @@
->  #include "scrub/btree.h"
->  #include "scrub/trace.h"
->  #include "scrub/repair.h"
-> +#include "scrub/refcount.h"
->  
->  /*
->   * Set us up to scrub reference count btrees.
-> @@ -80,24 +81,6 @@ xchk_setup_ag_refcountbt(
->   * If the refcount is correct, all the check conditions in the algorithm
->   * should always hold true.  If not, the refcount is incorrect.
->   */
-> -struct xchk_refcnt_frag {
-> -	struct list_head	list;
-> -	struct xfs_rmap_irec	rm;
-> -};
-> -
-> -struct xchk_refcnt_check {
-> -	struct xfs_scrub	*sc;
-> -	struct list_head	fragments;
-> -
-> -	/* refcount extent we're examining */
-> -	xfs_agblock_t		bno;
-> -	xfs_extlen_t		len;
-> -	xfs_nlink_t		refcount;
-> -
-> -	/* number of owners seen */
-> -	xfs_nlink_t		seen;
-> -};
-> -
->  /*
->   * Decide if the given rmap is large enough that we can redeem it
->   * towards refcount verification now, or if it's a fragment, in
-> @@ -105,7 +88,7 @@ struct xchk_refcnt_check {
->   * discover that we've collected exactly the correct number of
->   * fragments as the refcountbt says we should have.
->   */
-> -STATIC int
-> +int
->  xchk_refcountbt_rmap_check(
->  	struct xfs_btree_cur		*cur,
->  	const struct xfs_rmap_irec	*rec,
-> @@ -159,7 +142,7 @@ xchk_refcountbt_rmap_check(
->   * number of extents that totally covered the refcountbt extent),
->   * we have a refcountbt error.
->   */
-> -STATIC void
-> +void
->  xchk_refcountbt_process_rmap_fragments(
->  	struct xchk_refcnt_check	*refchk)
->  {
-> @@ -290,7 +273,7 @@ xchk_refcountbt_xref_rmap(
->  		.bno			= irec->rc_startblock,
->  		.len			= irec->rc_blockcount,
->  		.refcount		= irec->rc_refcount,
-> -		.seen = 0,
-> +		.seen			= 0,
->  	};
->  	struct xfs_rmap_irec		low;
->  	struct xfs_rmap_irec		high;
-> @@ -355,7 +338,7 @@ struct xchk_refcbt_records {
->  	enum xfs_refc_domain	prev_domain;
->  };
->  
-> -STATIC int
-> +int
->  xchk_refcountbt_rmap_check_gap(
->  	struct xfs_btree_cur		*cur,
->  	const struct xfs_rmap_irec	*rec,
-> diff --git a/fs/xfs/scrub/refcount.h b/fs/xfs/scrub/refcount.h
-> new file mode 100644
-> index 000000000000..0706afd9f80b
-> --- /dev/null
-> +++ b/fs/xfs/scrub/refcount.h
-> @@ -0,0 +1,56 @@
-> +// SPDX-License-Identifier: GPL-2.0-or-later
-> +/*
-> + * Copyright (C) 2017-2023 Oracle.  All Rights Reserved.
-> + * Author: Darrick J. Wong <djwong@kernel.org>
-> + */
-> +#ifndef __XFS_SCRUB_REFCOUNT_H__
-> +#define __XFS_SCRUB_REFCOUNT_H__
-> +
-> +/*
-> + * Ensure that types and macros match across rt and non-rt variants,
-> + * as this code is shared for both.
-> + */
-> +static_assert(__same_type(xfs_agblock_t, xfs_rgblock_t));
-> +static_assert(NULLAGBLOCK == NULLRGBLOCK);
-> +
-> +/*
-> + * Confirming reference counts via reverse mappings.
-> + *
-> + * These helpers are shared by the AG (refcount.c) and realtime
-> + * (rtrefcount.c) refcount scrubbers.  Both the rmap and refcount incore
-> + * records use xfs_agblock_t for their start block regardless of whether the
-> + * data lives in an allocation group or a realtime group, so the fragment
-> + * bookkeeping here uses xfs_agblock_t for group-relative block numbers.
-> + */
-> +struct xchk_refcnt_frag {
-> +	struct list_head	list;
-> +	struct xfs_rmap_irec	rm;
-> +};
-> +
-> +struct xchk_refcnt_check {
-> +	struct xfs_scrub	*sc;
-> +	struct list_head	fragments;
-> +
-> +	/* refcount extent we're examining */
-> +	xfs_agblock_t		bno;
-> +	xfs_extlen_t		len;
-> +	xfs_nlink_t		refcount;
-> +
-> +	/* number of owners seen */
-> +	xfs_nlink_t		seen;
-> +};
-> +
-> +int xchk_refcountbt_rmap_check(struct xfs_btree_cur *cur,
-> +		const struct xfs_rmap_irec *rec, void *priv);
-> +void xchk_refcountbt_process_rmap_fragments(struct xchk_refcnt_check *refchk);
-> +int xchk_refcountbt_rmap_check_gap(struct xfs_btree_cur *cur,
-> +		const struct xfs_rmap_irec *rec, void *priv);
-> +
-> +/*
-> + * Compare two refcount records so that both the AG (refcount_repair.c) and
-> + * realtime (rtrefcount_repair.c) rebuilders sort staged records into the same
-> + * order as the ondisk records.
-> + */
-> +int xrep_refc_extent_cmp(const void *a, const void *b);
-> +
-> +#endif /* __XFS_SCRUB_REFCOUNT_H__ */
-> diff --git a/fs/xfs/scrub/refcount_repair.c b/fs/xfs/scrub/refcount_repair.c
-> index ca9c382005ff..72de263117a7 100644
-> --- a/fs/xfs/scrub/refcount_repair.c
-> +++ b/fs/xfs/scrub/refcount_repair.c
-> @@ -39,6 +39,7 @@
->  #include "scrub/newbt.h"
->  #include "scrub/reap.h"
->  #include "scrub/rcbag.h"
-> +#include "scrub/refcount.h"
->  
->  /*
->   * Rebuilding the Reference Count Btree
-> @@ -295,7 +296,7 @@ xrep_refc_encode_startblock(
->  }
->  
->  /* Sort in the same order as the ondisk records. */
-> -static int
-> +int
->  xrep_refc_extent_cmp(
->  	const void			*a,
->  	const void			*b)
-> diff --git a/fs/xfs/scrub/rtrefcount.c b/fs/xfs/scrub/rtrefcount.c
-> index 460e3f094adf..b78784051308 100644
-> --- a/fs/xfs/scrub/rtrefcount.c
-> +++ b/fs/xfs/scrub/rtrefcount.c
-> @@ -25,6 +25,7 @@
->  #include "scrub/common.h"
->  #include "scrub/btree.h"
->  #include "scrub/repair.h"
-> +#include "scrub/refcount.h"
->  
->  /* Set us up with the realtime refcount metadata locked. */
->  int
-> @@ -59,248 +60,13 @@ xchk_setup_rtrefcountbt(
->  
->  /* Realtime Reference count btree scrubber. */
->  
-> -/*
-> - * Confirming Reference Counts via Reverse Mappings
-> - *
-> - * We want to count the reverse mappings overlapping a refcount record
-> - * (bno, len, refcount), allowing for the possibility that some of the
-> - * overlap may come from smaller adjoining reverse mappings, while some
-> - * comes from single extents which overlap the range entirely.  The
-> - * outer loop is as follows:
-> - *
-> - * 1. For all reverse mappings overlapping the refcount extent,
-> - *    a. If a given rmap completely overlaps, mark it as seen.
-> - *    b. Otherwise, record the fragment (in agbno order) for later
-> - *       processing.
-> - *
-> - * Once we've seen all the rmaps, we know that for all blocks in the
-> - * refcount record we want to find $refcount owners and we've already
-> - * visited $seen extents that overlap all the blocks.  Therefore, we
-> - * need to find ($refcount - $seen) owners for every block in the
-> - * extent; call that quantity $target_nr.  Proceed as follows:
-> - *
-> - * 2. Pull the first $target_nr fragments from the list; all of them
-> - *    should start at or before the start of the extent.
-> - *    Call this subset of fragments the working set.
-> - * 3. Until there are no more unprocessed fragments,
-> - *    a. Find the shortest fragments in the set and remove them.
-> - *    b. Note the block number of the end of these fragments.
-> - *    c. Pull the same number of fragments from the list.  All of these
-> - *       fragments should start at the block number recorded in the
-> - *       previous step.
-> - *    d. Put those fragments in the set.
-> - * 4. Check that there are $target_nr fragments remaining in the list,
-> - *    and that they all end at or beyond the end of the refcount extent.
-> - *
-> - * If the refcount is correct, all the check conditions in the algorithm
-> - * should always hold true.  If not, the refcount is incorrect.
-> - */
-> -struct xchk_rtrefcnt_frag {
-> -	struct list_head	list;
-> -	struct xfs_rmap_irec	rm;
-> -};
-> -
-> -struct xchk_rtrefcnt_check {
-> -	struct xfs_scrub	*sc;
-> -	struct list_head	fragments;
-> -
-> -	/* refcount extent we're examining */
-> -	xfs_rgblock_t		bno;
-> -	xfs_extlen_t		len;
-> -	xfs_nlink_t		refcount;
-> -
-> -	/* number of owners seen */
-> -	xfs_nlink_t		seen;
-> -};
-> -
-> -/*
-> - * Decide if the given rmap is large enough that we can redeem it
-> - * towards refcount verification now, or if it's a fragment, in
-> - * which case we'll hang onto it in the hopes that we'll later
-> - * discover that we've collected exactly the correct number of
-> - * fragments as the rtrefcountbt says we should have.
-> - */
-> -STATIC int
-> -xchk_rtrefcountbt_rmap_check(
-> -	struct xfs_btree_cur		*cur,
-> -	const struct xfs_rmap_irec	*rec,
-> -	void				*priv)
-> -{
-> -	struct xchk_rtrefcnt_check	*refchk = priv;
-> -	struct xchk_rtrefcnt_frag	*frag;
-> -	xfs_rgblock_t			rm_last;
-> -	xfs_rgblock_t			rc_last;
-> -	int				error = 0;
-> -
-> -	if (xchk_should_terminate(refchk->sc, &error))
-> -		return error;
-> -
-> -	rm_last = rec->rm_startblock + rec->rm_blockcount - 1;
-> -	rc_last = refchk->bno + refchk->len - 1;
-> -
-> -	/* Confirm that a single-owner refc extent is a CoW stage. */
-> -	if (refchk->refcount == 1 && rec->rm_owner != XFS_RMAP_OWN_COW) {
-> -		xchk_btree_xref_set_corrupt(refchk->sc, cur, 0);
-> -		return 0;
-> -	}
-> -
-> -	if (rec->rm_startblock <= refchk->bno && rm_last >= rc_last) {
-> -		/*
-> -		 * The rmap overlaps the refcount record, so we can confirm
-> -		 * one refcount owner seen.
-> -		 */
-> -		refchk->seen++;
-> -	} else {
-> -		/*
-> -		 * This rmap covers only part of the refcount record, so
-> -		 * save the fragment for later processing.  If the rmapbt
-> -		 * is healthy each rmap_irec we see will be in agbno order
-> -		 * so we don't need insertion sort here.
-> -		 */
-> -		frag = kmalloc_obj(struct xchk_rtrefcnt_frag, XCHK_GFP_FLAGS);
-> -		if (!frag)
-> -			return -ENOMEM;
-> -		memcpy(&frag->rm, rec, sizeof(frag->rm));
-> -		list_add_tail(&frag->list, &refchk->fragments);
-> -	}
-> -
-> -	return 0;
-> -}
-> -
-> -/*
-> - * Given a bunch of rmap fragments, iterate through them, keeping
-> - * a running tally of the refcount.  If this ever deviates from
-> - * what we expect (which is the rtrefcountbt's refcount minus the
-> - * number of extents that totally covered the rtrefcountbt extent),
-> - * we have a rtrefcountbt error.
-> - */
-> -STATIC void
-> -xchk_rtrefcountbt_process_rmap_fragments(
-> -	struct xchk_rtrefcnt_check	*refchk)
-> -{
-> -	struct list_head		worklist;
-> -	struct xchk_rtrefcnt_frag	*frag;
-> -	struct xchk_rtrefcnt_frag	*n;
-> -	xfs_rgblock_t			bno;
-> -	xfs_rgblock_t			rbno;
-> -	xfs_rgblock_t			next_rbno;
-> -	xfs_nlink_t			nr;
-> -	xfs_nlink_t			target_nr;
-> -
-> -	target_nr = refchk->refcount - refchk->seen;
-> -	if (target_nr == 0)
-> -		return;
-> -
-> -	/*
-> -	 * There are (refchk->rc.rc_refcount - refchk->nr refcount)
-> -	 * references we haven't found yet.  Pull that many off the
-> -	 * fragment list and figure out where the smallest rmap ends
-> -	 * (and therefore the next rmap should start).  All the rmaps
-> -	 * we pull off should start at or before the beginning of the
-> -	 * refcount record's range.
-> -	 */
-> -	INIT_LIST_HEAD(&worklist);
-> -	rbno = NULLRGBLOCK;
-> -
-> -	/* Make sure the fragments actually /are/ in bno order. */
-> -	bno = 0;
-> -	list_for_each_entry(frag, &refchk->fragments, list) {
-> -		if (frag->rm.rm_startblock < bno)
-> -			goto done;
-> -		bno = frag->rm.rm_startblock;
-> -	}
-> -
-> -	/*
-> -	 * Find all the rmaps that start at or before the refc extent,
-> -	 * and put them on the worklist.
-> -	 */
-> -	nr = 0;
-> -	list_for_each_entry_safe(frag, n, &refchk->fragments, list) {
-> -		if (frag->rm.rm_startblock > refchk->bno || nr > target_nr)
-> -			break;
-> -		bno = frag->rm.rm_startblock + frag->rm.rm_blockcount;
-> -		if (bno < rbno)
-> -			rbno = bno;
-> -		list_move_tail(&frag->list, &worklist);
-> -		nr++;
-> -	}
-> -
-> -	/*
-> -	 * We should have found exactly $target_nr rmap fragments starting
-> -	 * at or before the refcount extent.
-> -	 */
-> -	if (nr != target_nr)
-> -		goto done;
-> -
-> -	while (!list_empty(&refchk->fragments)) {
-> -		/* Discard any fragments ending at rbno from the worklist. */
-> -		nr = 0;
-> -		next_rbno = NULLRGBLOCK;
-> -		list_for_each_entry_safe(frag, n, &worklist, list) {
-> -			bno = frag->rm.rm_startblock + frag->rm.rm_blockcount;
-> -			if (bno != rbno) {
-> -				if (bno < next_rbno)
-> -					next_rbno = bno;
-> -				continue;
-> -			}
-> -			list_del(&frag->list);
-> -			kfree(frag);
-> -			nr++;
-> -		}
-> -
-> -		/* Try to add nr rmaps starting at rbno to the worklist. */
-> -		list_for_each_entry_safe(frag, n, &refchk->fragments, list) {
-> -			bno = frag->rm.rm_startblock + frag->rm.rm_blockcount;
-> -			if (frag->rm.rm_startblock != rbno)
-> -				goto done;
-> -			list_move_tail(&frag->list, &worklist);
-> -			if (next_rbno > bno)
-> -				next_rbno = bno;
-> -			nr--;
-> -			if (nr == 0)
-> -				break;
-> -		}
-> -
-> -		/*
-> -		 * If we get here and nr > 0, this means that we added fewer
-> -		 * items to the worklist than we discarded because the fragment
-> -		 * list ran out of items.  Therefore, we cannot maintain the
-> -		 * required refcount.  Something is wrong, so we're done.
-> -		 */
-> -		if (nr)
-> -			goto done;
-> -
-> -		rbno = next_rbno;
-> -	}
-> -
-> -	/*
-> -	 * Make sure the last extent we processed ends at or beyond
-> -	 * the end of the refcount extent.
-> -	 */
-> -	if (rbno < refchk->bno + refchk->len)
-> -		goto done;
-> -
-> -	/* Actually record us having seen the remaining refcount. */
-> -	refchk->seen = refchk->refcount;
-> -done:
-> -	/* Delete fragments and work list. */
-> -	list_for_each_entry_safe(frag, n, &worklist, list) {
-> -		list_del(&frag->list);
-> -		kfree(frag);
-> -	}
-> -	list_for_each_entry_safe(frag, n, &refchk->fragments, list) {
-> -		list_del(&frag->list);
-> -		kfree(frag);
-> -	}
-> -}
-> -
->  /* Use the rmap entries covering this extent to verify the refcount. */
->  STATIC void
->  xchk_rtrefcountbt_xref_rmap(
->  	struct xfs_scrub		*sc,
->  	const struct xfs_refcount_irec	*irec)
->  {
-> -	struct xchk_rtrefcnt_check	refchk = {
-> +	struct xchk_refcnt_check	refchk = {
->  		.sc			= sc,
->  		.bno			= irec->rc_startblock,
->  		.len			= irec->rc_blockcount,
-> @@ -309,8 +75,8 @@ xchk_rtrefcountbt_xref_rmap(
->  	};
->  	struct xfs_rmap_irec		low;
->  	struct xfs_rmap_irec		high;
-> -	struct xchk_rtrefcnt_frag	*frag;
-> -	struct xchk_rtrefcnt_frag	*n;
-> +	struct xchk_refcnt_frag		*frag;
-> +	struct xchk_refcnt_frag		*n;
->  	int				error;
->  
->  	if (!sc->sr.rmap_cur || xchk_skip_xref(sc->sm))
-> @@ -324,11 +90,11 @@ xchk_rtrefcountbt_xref_rmap(
->  
->  	INIT_LIST_HEAD(&refchk.fragments);
->  	error = xfs_rmap_query_range(sc->sr.rmap_cur, &low, &high,
-> -			xchk_rtrefcountbt_rmap_check, &refchk);
-> +			xchk_refcountbt_rmap_check, &refchk);
->  	if (!xchk_should_check_xref(sc, &error, &sc->sr.rmap_cur))
->  		goto out_free;
->  
-> -	xchk_rtrefcountbt_process_rmap_fragments(&refchk);
-> +	xchk_refcountbt_process_rmap_fragments(&refchk);
->  	if (irec->rc_refcount != refchk.seen)
->  		xchk_btree_xref_set_corrupt(sc, sc->sr.rmap_cur, 0);
->  
-> @@ -408,21 +174,6 @@ xchk_rtrefcountbt_check_mergeable(
->  	memcpy(&rrc->prev_rec, irec, sizeof(struct xfs_refcount_irec));
->  }
->  
-> -STATIC int
-> -xchk_rtrefcountbt_rmap_check_gap(
-> -	struct xfs_btree_cur		*cur,
-> -	const struct xfs_rmap_irec	*rec,
-> -	void				*priv)
-> -{
-> -	xfs_rgblock_t			*next_bno = priv;
-> -
-> -	if (*next_bno != NULLRGBLOCK && rec->rm_startblock < *next_bno)
-> -		return -ECANCELED;
-> -
-> -	*next_bno = rec->rm_startblock + rec->rm_blockcount;
-> -	return 0;
-> -}
-> -
->  /*
->   * Make sure that a gap in the reference count records does not correspond to
->   * overlapping records (i.e. shared extents) in the reverse mappings.
-> @@ -448,7 +199,7 @@ xchk_rtrefcountbt_xref_gaps(
->  	high.rm_startblock = bno - 1;
->  
->  	error = xfs_rmap_query_range(sc->sr.rmap_cur, &low, &high,
-> -			xchk_rtrefcountbt_rmap_check_gap, &next_bno);
-> +			xchk_refcountbt_rmap_check_gap, &next_bno);
->  	if (error == -ECANCELED)
->  		xchk_btree_xref_set_corrupt(sc, sc->sr.rmap_cur, 0);
->  	else
-> diff --git a/fs/xfs/scrub/rtrefcount_repair.c b/fs/xfs/scrub/rtrefcount_repair.c
-> index c78a6d2990c5..5ca9959dfacc 100644
-> --- a/fs/xfs/scrub/rtrefcount_repair.c
-> +++ b/fs/xfs/scrub/rtrefcount_repair.c
-> @@ -44,6 +44,7 @@
->  #include "scrub/newbt.h"
->  #include "scrub/reap.h"
->  #include "scrub/rcbag.h"
-> +#include "scrub/refcount.h"
->  
->  /*
->   * Rebuilding the Reference Count Btree
-> @@ -266,42 +267,6 @@ xrep_rtrefc_walk_rmaps(
->  	return 0;
->  }
->  
-> -static inline uint32_t
-> -xrep_rtrefc_encode_startblock(
-> -	const struct xfs_refcount_irec	*irec)
-> -{
-> -	uint32_t			start;
-> -
-> -	start = irec->rc_startblock & ~XFS_REFC_COWFLAG;
-> -	if (irec->rc_domain == XFS_REFC_DOMAIN_COW)
-> -		start |= XFS_REFC_COWFLAG;
-> -
-> -	return start;
-> -}
-> -
-> -/*
-> - * Compare two refcount records.  We want to sort in order of increasing block
-> - * number.
-> - */
-> -static int
-> -xrep_rtrefc_extent_cmp(
-> -	const void			*a,
-> -	const void			*b)
-> -{
-> -	const struct xfs_refcount_irec	*ap = a;
-> -	const struct xfs_refcount_irec	*bp = b;
-> -	uint32_t			sa, sb;
-> -
-> -	sa = xrep_rtrefc_encode_startblock(ap);
-> -	sb = xrep_rtrefc_encode_startblock(bp);
-> -
-> -	if (sa > sb)
-> -		return 1;
-> -	if (sa < sb)
-> -		return -1;
-> -	return 0;
-> -}
-> -
->  /*
->   * Sort the refcount extents by startblock or else the btree records will be in
->   * the wrong order.  Make sure the records do not overlap in physical space.
-> @@ -316,7 +281,7 @@ xrep_rtrefc_sort_records(
->  	xfs_rgblock_t			next_rgbno = 0;
->  	int				error;
->  
-> -	error = xfarray_sort(rr->refcount_records, xrep_rtrefc_extent_cmp,
-> +	error = xfarray_sort(rr->refcount_records, xrep_refc_extent_cmp,
->  			XFARRAY_SORT_KILLABLE);
->  	if (error)
->  		return error;
-> -- 
-> 2.55.0
+> --D
 > 
+> > > 
+> > > Either way this looks like a good hoist to me, so
+> > > Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+> > > 
+> > > --D
+> > > 
+> > >> +
+> > >> +	xfs_idestroy_fork(ifp);
+> > >> +	ifp->if_format = XFS_DINODE_FMT_EXTENTS;
+> > >> +	ifp->if_nextents = 0;
+> > >> +	ifp->if_bytes = 0;
+> > >> +	ifp->if_data = NULL;
+> > >> +	ifp->if_height = 0;
+> > >> +
+> > >> +	xfs_trans_log_inode(sc->tp, sc->ip, ilog_flags);
+> > >> +}
+> > >> +
+> > >>  /*
+> > >>   * Initialize all the btree cursors for an AG repair except for the btree that
+> > >>   * we're rebuilding.
+> > >> diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
+> > >> index 2bb125c4f9bf..c1ba462e4426 100644
+> > >> --- a/fs/xfs/scrub/repair.h
+> > >> +++ b/fs/xfs/scrub/repair.h
+> > >> @@ -81,6 +81,7 @@ int xrep_setup_xfbtree(struct xfs_scrub *sc, const char *descr);
+> > >>  int xrep_ino_ensure_extent_count(struct xfs_scrub *sc, int whichfork,
+> > >>  		xfs_extnum_t nextents);
+> > >>  int xrep_reset_perag_resv(struct xfs_scrub *sc);
+> > >> +void xrep_reset_fork_to_extents(struct xfs_scrub *sc, int whichfork);
+> > >>  int xrep_bmap(struct xfs_scrub *sc, int whichfork, bool allow_unwritten);
+> > >>  int xrep_metadata_inode_forks(struct xfs_scrub *sc);
+> > >>  int xrep_setup_ag_rmapbt(struct xfs_scrub *sc);
+> > >> diff --git a/fs/xfs/scrub/symlink_repair.c b/fs/xfs/scrub/symlink_repair.c
+> > >> index 181961364233..9f6901905bfd 100644
+> > >> --- a/fs/xfs/scrub/symlink_repair.c
+> > >> +++ b/fs/xfs/scrub/symlink_repair.c
+> > >> @@ -303,20 +303,8 @@ xrep_symlink_swap_prep(
+> > >>  	 * to an empty extent list in preparation for the atomic mapping
+> > >>  	 * exchange.
+> > >>  	 */
+> > >> -	if (ip_local) {
+> > >> -		struct xfs_ifork	*ifp;
+> > >> -
+> > >> -		ifp = xfs_ifork_ptr(sc->ip, XFS_DATA_FORK);
+> > >> -		xfs_idestroy_fork(ifp);
+> > >> -		ifp->if_format = XFS_DINODE_FMT_EXTENTS;
+> > >> -		ifp->if_nextents = 0;
+> > >> -		ifp->if_bytes = 0;
+> > >> -		ifp->if_data = NULL;
+> > >> -		ifp->if_height = 0;
+> > >> -
+> > >> -		xfs_trans_log_inode(sc->tp, sc->ip,
+> > >> -				XFS_ILOG_CORE | XFS_ILOG_DDATA);
+> > >> -	}
+> > >> +	if (ip_local)
+> > >> +		xrep_reset_fork_to_extents(sc, XFS_DATA_FORK);
+> > >>  
+> > >>  	return 0;
+> > >>  }
+> > >> -- 
+> > >> 2.55.0
+> > >>
+> > >>
+> > > 
+> > 
 > 
