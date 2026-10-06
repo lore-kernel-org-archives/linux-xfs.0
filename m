@@ -1,123 +1,109 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mx0.herbolt.com (mx0.herbolt.com [5.59.97.199])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50340217723
-	for <linux-xfs@vger.kernel.org>; Tue,  6 Oct 2026 13:16:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE81445C715;
+	Tue,  6 Oct 2026 13:52:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.59.97.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791292611; cv=none; b=JVavzEq3e0RjLBOaQKCiSYGlViXyjzUeyGAHwNJNC/e4QBPk3DlJQW4slXyNpnMfgDLxmomchFrPZrr+fOrHIAaEoXnSmoZxCQV6bqSruLHB0VABp+yXEC4ica16+EF/Tc9ljejQWwJ63hFzfRp/M/WTlxTB2AT10+HH0nYdMYE=
+	t=1791294745; cv=none; b=BMlsCFmkiVkI+4cucwdXYNnbdUGBh//jwRYYANGkt8/cp1+qE6Yk7afU/JRraA5cDasaSqfbWI9qgNzdySN76JqlKcWEjuMiWNeVfWeq5uMY+GbfBX1Cn2dvUMIXb2i5ExEE6/zpI/Zc+ODNh80Kdb+umZX5tfJ/ykSbtSekpFI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791292611; c=relaxed/simple;
-	bh=sffSBePy9qj2Ms5qX4sfEkBvq91TtPhM5AV2Xiqimws=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=R0vlNQYM3+eONzBkWMj9rpdra1J33E0jWunXuUYVkYbH+t74ghYnDyit+XzYeFgWK3tDNGc3wjh2NPUqhjfr6dUw8kAVcKHAjdE0bDQD+CZsOKbiT3EPaUVrslN2zl9L5OO9GLQuTiyt2+NbJTFUs7VshJShsomyolloXVtoUmA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TtlRSQ0m; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TtlRSQ0m"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1E951F000FF
-	for <linux-xfs@vger.kernel.org>; Tue,  6 Oct 2026 13:16:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791292609;
-	bh=Qb5WMa/rpyOlqcCd9NvNwPSBwxn/YBzbfOH3Iftdef4=;
-	h=Date:From:To:Subject;
-	b=TtlRSQ0mqOF1fTbzGfVLFl6RKN1INohmTziv3yyrsDFLiL4viXTZIjjQBdhuqgO61
-	 nPPxPvE5j+/QFoYzO7ArXQPHNp7zEKdqmeZaz/kTmm+4jKgi7Add/qSj+767rmyzcQ
-	 73871bJCwF1Yckl0+XV9aDhfsMl8nApnyIUCUgOIY/ccssRG8wdFrbwYl0AeUkjVp5
-	 jzmsE3FZl0ExptviCSGDfF+S9YGGZ2tHhmoB8tOEVQwF/zmxmVkJqzJk6ptVVnKNtO
-	 2UCRV6GGLh2erwlycwWwN9ATTsBuJO/HUMX/PbkwSBxQ+1aSg9MtsOY6WEsZbAEa/N
-	 e4yYIaT6bfaeA==
-Date: Tue, 6 Oct 2026 15:16:44 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfs-linux: for-next updated to 197f678cccba
-Message-ID: <asT0o_5zxX24V1-b@cronus.toxiclabs.cc>
+	s=arc-20240116; t=1791294745; c=relaxed/simple;
+	bh=maVJ9R67KGtDdwu3uAK9yCxmJdv9ore2N3ygNFhv8ug=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=bAI/1KCKhc5C+tmtdAoFtZUsYF0PIim38ZBpHDgLOfwiNZX5NRvRlzD9HyZuNjG0s/jEwOyqoXxW1xVqNHErtz74pP6AZyQvTc897VIPHt7kM6ELAt03odGhsaz0IRNtVThikJ8OiGd0nM9j+QmssW7iOM8+H60kzBTMvqfvqGY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com; spf=pass smtp.mailfrom=herbolt.com; arc=none smtp.client-ip=5.59.97.199
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=herbolt.com
+Received: from mx0.herbolt.com (localhost [127.0.0.1])
+	by mx0.herbolt.com (Postfix) with ESMTP id 06F91180F2C1;
+	Tue, 06 Oct 2026 15:52:14 +0200 (CEST)
+Received: from trufa.intra.herbolt.com ([172.16.31.30])
+	by mx0.herbolt.com with ESMTPSA
+	id NqUZMw79xGqI/wEAKEJqOA
+	(envelope-from <lukas@herbolt.com>); Tue, 06 Oct 2026 15:52:14 +0200
+From: Lukas Herbolt <lukas@herbolt.com>
+To: zlang@kernel.org
+Cc: fstests@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	linux-ext4@vger.kernel.org,
+	Lukas Herbolt <lukas@herbolt.com>
+Subject: [PATCH 0/1] Fix random.c UB on int overflow
+Date: Tue,  6 Oct 2026 15:51:51 +0200
+Message-ID: <20261006135205.400485-1-lukas@herbolt.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 
+While building xfstests with default rpm CFLAGS/LDFLAGS, I noticed
+the generic/007 fails with:
 
-Hi folks,
+    --- /opt/xfstests-dev/tests/generic/007.out	2026-10-06 14:08:02.556220624 +0200
+    +++ /opt/xfstests-dev/results//generic/007.out.bad	2026-10-06 14:40:01.667593670 +0200
+    @@ -14,9 +14,9 @@
+     .........................................................................
+     .........................................................................
+     ....................................................
+    -creates:  18736 OK,  18802 EEXIST  ( 37538 total, 50% EEXIST)
+    -removes:  18675 OK,  19927 ENOENT  ( 38602 total, 51% ENOENT)
+    -lookups:  12000 OK,  11860 ENOENT  ( 23860 total, 49% ENOENT)
+    -total  :  49411 OK,  50589 w/error (100000 total, 50% w/error)
+    +creates:  18745 OK,  19086 EEXIST  ( 37831 total, 50% EEXIST)
+    +removes:  18685 OK,  19864 ENOENT  ( 38549 total, 51% ENOENT)
+    +lookups:  12065 OK,  11555 ENOENT  ( 23620 total, 48% ENOENT)
+    +total  :  49495 OK,  50505 w/error (100000 total, 50% w/error)
+     
+    -cleanup:     61 removes
+    +cleanup:     60 removes
 
-The for-next branch of the xfs-linux repository at:
+This happens because because the lib/random.c has optimized out the negative
+branch check as overflow on signed int is undefined behavior.
 
-	gitolite.kernel.org:/pub/scm/fs/xfs/xfs-linux.git
+    if (it <= 0)	
+        it = (it + it) ^ MASK;
+    else
+        it = it + it;
 
-has just been updated.
+Changing the if-else to single if based on the original `it` value prevents the
+compiler from optimizing out the code.
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
+    int apply_mask = (it <= 0);
+    it = (unsigned)it << 1;
+    if (apply_mask)
+        it ^= MASK;
 
-The new head of the for-next branch is commit:
+Steps to reproduce: 
+    dnf install redhat-rpm-config -y
+    ./configure CFLAGS="$(rpm --eval '%{optflags}')" \
+        LDFLAGS="$(rpm --eval '%{__global_ldflags}')"
+    ./check generic/007
 
-197f678cccba xfs: don't let racing writers consume the free zones reserved for GC
+The random.c is used in:
 
-27 new commits:
+    ext4/052
+    generic/007
+    generic/010
+    generic/011
+    generic/014
+    generic/094
+    generic/225
+    generic/311
+    generic/676
+    xfs/008
+    xfs/188
 
-Brian Foster (4):
-      [a9a984a1e6ea] xfs: set minleft correctly for sparse chunk errortag allocation
-      [ad4c2c4630b7] xfs: support additional levels in the agfl minimum calculation
-      [831f4c28b5dc] xfs: calculate AGFL max to support multiple-alloc transactions
-      [a644af916cf1] xfs: incorporate increased AGFL min requirement for minleft allocs
+and I did not noticed any regression with this change and the only one
+failing with the original implementation is the generic/007. 
 
-Darrick J. Wong (21):
-      [4c6668ecebc6] xfs: adjust checks for cross-AG reaping issues
-      [436ae68743a6] xfs: actually check XFS_DIFLAG2_METADATA for metadata btree data forks
-      [6b8d60784b61] xfs: fix xchk_stats_estimate_bufsize to allow for the trailing null
-      [0c61016006ab] xfs: cross-reference the primary superblock
-      [33dfad5a7bbf] xfs: write the rt super immediately during repair
-      [cd16b947cac1] xfs: read rt superblock from disk during scrub
-      [02722664508c] xfs: write the primary super immediately during repair
-      [612d2e7506c3] xfs: read primary superblock from disk during scrub
-      [49d300a51442] xfs: jump out of xchk_bmap_check_rmap if fatal signals
-      [f61c91a2e599] xfs: mark overfull dabtree node blocks as corrupt
-      [43030b72a11a] xfs: check fork type against dabtree block magic number
-      [07732dea4f5d] xfs: abort dirtree repair if the live update hook dies
-      [d83ca4e7cc65] xfs: bail out of directory tree repairs on error
-      [6c64d650460b] xfs: fix revalidation of xchk_dquot_iter cached mappings
-      [22a8a7501c01] xfs: don't repair fs summary counters with garbage
-      [342c2e00b3a9] xfs: allow softlimit with no hardlimit in quota scrub
-      [fe67a493c7a7] xfs: assign an owner to scrub_stats_fops
-      [8c4f172c2467] xfs: fix lost errno returned from xfarray_foliosort
-      [63341d4af16f] xfs: fix skipped inode mask handling in iscan
-      [833f98b3be45] xfs: don't proceed with xattr repair if the live update fails
-      [c8226f3d1a7e] xfs: don't fix the directory tree if live update fails
+Lukas Herbolt (1):
+  lib/random.c fix undefined behavior on signed integer overflow.
 
-Eric Sandeen (1):
-      [f04361fb8694] xfs: validate rc_domain in xchk_rtrefcount_mergeable
+ lib/random.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
-Hans Holmberg (1):
-      [197f678cccba] xfs: don't let racing writers consume the free zones reserved for GC
+-- 
+2.55.0
 
-Code Diffstat:
-
- fs/xfs/libxfs/xfs_alloc.c      | 106 ++++++++++++++++++++++++++++++-----------
- fs/xfs/libxfs/xfs_alloc.h      |   7 +--
- fs/xfs/libxfs/xfs_bmap.c       |   7 ++-
- fs/xfs/libxfs/xfs_ialloc.c     |  14 +++---
- fs/xfs/libxfs/xfs_zones.h      |   6 +++
- fs/xfs/scrub/agheader.c        |  50 +++++++++++++++----
- fs/xfs/scrub/agheader_repair.c |  31 ++++++++++--
- fs/xfs/scrub/attr_repair.c     |   3 ++
- fs/xfs/scrub/bmap.c            |   7 +++
- fs/xfs/scrub/dabtree.c         |  16 +++++++
- fs/xfs/scrub/dirtree_repair.c  |  67 ++++++++++++++++++--------
- fs/xfs/scrub/dqiterate.c       |   1 +
- fs/xfs/scrub/fscounters.c      |   4 +-
- fs/xfs/scrub/inode_repair.c    |   5 ++
- fs/xfs/scrub/iscan.c           |   2 +-
- fs/xfs/scrub/quota.c           |   8 ++--
- fs/xfs/scrub/quota_repair.c    |   6 +--
- fs/xfs/scrub/reap.c            |   2 +-
- fs/xfs/scrub/rgsuper.c         |  33 +++++++++++--
- fs/xfs/scrub/rtrefcount.c      |   2 +
- fs/xfs/scrub/stats.c           |   5 +-
- fs/xfs/scrub/xfarray.c         |   4 +-
- fs/xfs/xfs_zone_alloc.c        |  36 ++++++++++++--
- 23 files changed, 326 insertions(+), 96 deletions(-)
