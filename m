@@ -1,152 +1,138 @@
-Received: from mta0.migadu.com (out-128.mta0.migadu.com [91.218.175.128])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EEA9F3612F1
-	for <linux-xfs@vger.kernel.org>; Tue,  6 Oct 2026 07:06:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.128
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 141EE26AC3
+	for <linux-xfs@vger.kernel.org>; Tue,  6 Oct 2026 07:25:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791270397; cv=none; b=OYTKuVWJ2Z0P8ynbdUUE+8pg+lFWcP9jaVLCQJUteZUoPXrU6A0Rza66392DDHzukmG342Y3kcYDI3oIwY+BcSlXZeXvKeFYnMGPqohhKk1ZQ/E9mkoHqPLHU0+Yqfsitr1o3RtTpUFbJe24IQfmxaSAElBb5aS2CMuoRg2b0Yg=
+	t=1791271527; cv=none; b=YVPWmk9LWltNsl+FzNWcRdfqWbNVGUyJVEVA+g4/xCbRqQaMpvNkp3ic1hvqutHQCk4xswqQuZyohNXLSxzFnuQhdy0TGvT6ks+h/1GgtWljqHsCM95t2XZgbdLmcFii7suWzwZLjB8JSQ6lGzYWF1BILB7kU9BZgBSnjkntrCc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791270397; c=relaxed/simple;
-	bh=H35pPDVM8dak/wygsek+wfCl091PWWl4eQYh/SVmYRE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=YemPG0DEuXO9Y+FJY9dJIyIVbUmiKz5N24BNaGPr5oqRtarYHCp/mqiwdLQUSnIpDLTKe4hHuoggMNNsyJf8kZw4WEAC5/EmqF/xl30QawYJAuhJoj45bq7nWJe7hvI6luJU7ETAcLdTJuQ7M4Rd4Xb79BjvEpv9xv2jaD2N6Vs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=iqsN7XvU; arc=none smtp.client-ip=91.218.175.128
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1791271527; c=relaxed/simple;
+	bh=+3PCfl1V+z/dtJr0gXLl4zFK5pNBpH0jJN8CkSm6b2Y=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=NMVZY46EjLjscF8HgjZzux0vwB6t7fRLN+s53sQ2g+IhsoDf+qUY1OuWOSF9TvfZ26Cc4u6p6pttlUzmYOLxIduSrQCVVyYdEBUfhroF4YSs5wi4uCXpASqdHru1WWTI8fiNyTUlKCXZ6dCTr2oC6lqJ5/A2jQlTinCG/TqHcSU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HdjvymHq; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="iqsN7XvU"
-X-Envelope-To: linux-xfs@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=H35pPDVM8dak/wygsek+wfCl091PWWl4eQYh/SVmYRE=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1791270392; v=1; x=1791875192;
- b=iqsN7XvUoaao9BfXaAJ5+cK3VsRsa/WQoIvPtIyVvOlWCga3KF6lIy+eb5+ergPanUQZeWY/
- XVMiayb7ogULGP2tTt3X2ZS3zRrnjzRp4X5TdDmR9M5+NY3fpMiPOt+Snll0ofENeixP676s9mn
- /xvuokjvZjIGLAO6HzFht5dU=
-X-Envelope-To: linux-xfs@vger.kernel.org
-Received: by mta11.migadu.com with ESMTPS id e358d5ed63516766;
-	Tue, 06 Oct 2026 07:06:32 +0000
-X-Mizu-Trace-ID: e358d5ed63516766
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <ad7d42d3-114e-4506-89c3-9d60d1bdf659@linux.dev>
-Date: Tue, 6 Oct 2026 08:06:31 +0100
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HdjvymHq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 568A81F000FF;
+	Tue,  6 Oct 2026 07:25:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1791271525;
+	bh=BEIWa+R4/MCKg5XoYNjHz1jbYVPyqbRDzBJDdgvaNvk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=HdjvymHqZp3zM/w7BY7V12geSb+TR/a9krrPthsemynpLKkx+tVV3LfbZyHjHoanT
+	 +Nt0o4rnSl0nhFjfb/hqIyI2lviTwk7Xn0xU1W0WNZ9xGeA01HR/sYqy3ZgkveO4IL
+	 Gt66OUXfByKfJrdb+UbXnKb3cyyY5LoXzTGD56dbQ7J/XWiMkf8tn96saMQ2e7lb/S
+	 6W3jUEhZXxJDCViFC33GU+DCPh0ESfUOrsiwYT4sPP6P8Dtqgm/yw6PqJYUwZ0jXlv
+	 RjL1xb2ri5Rj/lbFn29jIBRE49CccJvY3M34ws1fy/dYvgWe8bmcpYGgn4fzNFeQim
+	 p+DJNJ21wl+3w==
+Date: Tue, 6 Oct 2026 18:25:17 +1100
+From: Dave Chinner <dgc@kernel.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Carlos Maiolino <cem@kernel.org>, Norbert Szetei <norbert@doyensec.com>,
+	linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfs: fix exchange-range-to-eof file size exchange
+Message-ID: <asSiXW4XxBl8Kivw@dread>
+References: <20261006050914.GU2705364@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] xfs: don't limit software atomic writes by the group
- alignment
-To: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>
-Cc: Pankaj Raghav <p.raghav@samsung.com>, cem@kernel.org,
- linux-xfs@vger.kernel.org, "Darrick J . Wong" <djwong@kernel.org>,
- gost.dev@samsung.com
-References: <20260925103640.932735-1-p.raghav@samsung.com>
- <8d9babb0-5d36-427d-b4a2-5a3e9664a796@linux.dev> <asOpaPuHF072GJwt@quentin>
-Content-Language: en-US
-From: John Garry <john.garry@linux.dev>
-In-Reply-To: <asOpaPuHF072GJwt@quentin>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261006050914.GU2705364@frogsfrogsfrogs>
 
-On 10/5/26 17:24, Pankaj Raghav (Samsung) wrote:
->>> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
->>> index d1306e723899..8c8b14f94ede 100644
->>> --- a/fs/xfs/xfs_iops.c
->>> +++ b/fs/xfs/xfs_iops.c
->>> @@ -620,6 +620,12 @@ xfs_get_atomic_write_min(
->>>    	return 0;
->>>    }
->>> +static inline enum xfs_group_type
->>> +xfs_inode_group_type(struct xfs_inode *ip)
->>> +{
->>> +	return XFS_IS_REALTIME_INODE(ip) ? XG_TYPE_RTG : XG_TYPE_AG;
->>> +}
->>
->> would this be better is a common location (so that it could be reused)?
->>
+On Mon, Oct 05, 2026 at 10:09:14PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Probably to xfs_mount.h?
+> Norbert Szetei posted a patch containing an incomplete description of a
+> bug in XFS_IOC_EXCHANGE_RANGE's TO_EOF flag.  The bug tricks
+> exchange-range into modifying a file so that it has shared blocks
+> starting beyond EOF, which is never allowed because files never have
+> written data beyond EOF, and you can only share written data blocks.
+> This is key to all the incorrect behavior that follows.
+....
 > 
+> Having confused the file sizes, the PoC uses a second exchange-range
+> call on what looks like a non-reflinked single-block file.  Because the
+> file size is set incorrectly, exchange-range thinks it's exchanging the
+> full contents of two files and clears the reflink flag on the broken
+> file.
 
-I'm not sure. Darrick may be able to give a good suggestion.
+Hmmm, another "exchrange reflink flag coherency" bug.
 
->>> +
->>>    unsigned int
->>>    xfs_get_atomic_write_max(
->>>    	struct xfs_inode	*ip)
->>> @@ -642,19 +648,20 @@ xfs_get_atomic_write_max(
->>>    	 * then advertise a maximum size of whatever we can complete through
->>>    	 * that means.  Hardware support is reported via max_opt, not here.
->>>    	 */
->>> -	if (XFS_IS_REALTIME_INODE(ip))
->>> -		return XFS_FSB_TO_B(mp, mp->m_groups[XG_TYPE_RTG].awu_max);
->>> -	return XFS_FSB_TO_B(mp, mp->m_groups[XG_TYPE_AG].awu_max);
->>> +	return XFS_FSB_TO_B(mp, mp->m_groups[xfs_inode_group_type(ip)].awu_max);
->>>    }
->>>    unsigned int
->>>    xfs_get_atomic_write_max_opt(
->>>    	struct xfs_inode	*ip)
->>>    {
->>> +	struct xfs_mount	*mp = ip->i_mount;
->>>    	unsigned int		awu_max = xfs_get_atomic_write_max(ip);
->>
->> xfs_get_atomic_write_max() value is calculated based on HW atomic support. I
->> am wondering if we should add a function to just give the max CoW-based
->> atomic, and have it called here and from xfs_get_atomic_write_max(). Not a
->> big deal, though.
+Aside from fixing this specific issue, how can we prevent
+other/future logic bugs from failing to set the reflink flag
+appropriately and so never expose such a bug to userspace again?
+
+I'm thinking that we should not try to swap the reflink flag along
+with the extents. Instead, if one of the files had the reflink flag
+set before the swap, then we scan scan the extents of both files
+after the swap for shared extents and set the reflink flags for each
+file appropriately.  EXCHRANGE isn't really performance sensitive,
+so the cost of the refcount scans shouldn't be an issue.
+
+Setting the flags this way means it doesn't matter what file shared
+extent(s) ends up in, the inode(s) that owns it(them) will always
+have the reflink flag set correctly. Hence there is no way to use
+EXCHRANGE creatively to expose this "didn't COW when it should have'
+class of corruption bugs ever again...
+
+> That enables an extending write of the broken file to rewrite the
+> shared block that's just past EOF.  This has become known colloquially
+> as refluxfs.
 > 
-> Could you elaborate this comment?
+> Once the file sizes are set correctly, the second exchange-range no
+> longer thinks that it's doing a full-contents swap, so it won't clear
+> the reflink flag on either of its file arguments.
 > 
-> I do remove any HW dependency in xfs_get_atomic_write_max() calculation
-> as a part of this patch.
-
-xfs_get_atomic_write_max() does still have a 
-xfs_inode_can_hw_atomic_write() call.
-
-It just seems a bit awkward that xfs_get_atomic_write_max_opt() calls 
-xfs_get_atomic_write_max(), when it should be able to do the full 
-calculation itself.
-
-This is not a deal deal which I am mentioning.
-
+> Link: https://lore.kernel.org/linux-xfs/1E196589-DEBE-40AC-AFEA-D420DAAB067F@doyensec.com/
+> Reported-by: Norbert Szetei <norbert@doyensec.com>
+> Cc: <stable@vger.kernel.org> # v6.10
+> Fixes: 966ceafc7a4371 ("xfs: create deferred log items for file mapping exchanges")
+> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> ---
+>  fs/xfs/libxfs/xfs_exchmaps.c |    8 ++++++--
+>  fs/xfs/xfs_exchrange.c       |   10 ++++++----
+>  2 files changed, 12 insertions(+), 6 deletions(-)
 > 
->>
->>> +	xfs_extlen_t		align_max_fsb;
->>> +	unsigned int		opt;
->>>    	/* if the max is 1x block, then just keep behaviour that opt is 0 */
->>> -	if (awu_max <= ip->i_mount->m_sb.sb_blocksize)
->>> +	if (awu_max <= mp->m_sb.sb_blocksize)
->>>    		return 0;
->>>    	/*
->>> @@ -663,7 +670,17 @@ xfs_get_atomic_write_max_opt(
->>>    	 * less than our out of place write limit, but we don't want to exceed
->>>    	 * the awu_max.
->>>    	 */
->>> -	return min(awu_max, xfs_inode_buftarg(ip)->bt_awu_max);
->>> +	opt = min(awu_max, xfs_inode_buftarg(ip)->bt_awu_max);
->>> +
->>> +	/*
->>> +	 * REQ_ATOMIC writes also have to be naturally aligned on disk, so we
->>> +	 * cannot promise more than the largest extent that the allocator is
->>> +	 * able to align within a group.
->>> +	 */
->>> +	align_max_fsb = xfs_calc_group_awu_align_max(mp,
->>> +						xfs_inode_group_type(ip));
->>> +
->>> +	return min_t(xfs_fsize_t, opt, XFS_FSB_TO_B(mp, align_max_fsb));
->>
->> unsigned int? But is there a possibility that the value in XFS_FSB_TO_B(mp,
->> align_max_fsb) can exceed an unsigned int?
-> 
-> We are limited by `opt` length which is an unsigned int. I do use
-> min_t(xfs_fsize_t, ..) for calculation to avoid any truncation error.
-> 
+> diff --git a/fs/xfs/libxfs/xfs_exchmaps.c b/fs/xfs/libxfs/xfs_exchmaps.c
+> index 6a66b6075e0af4..c9d9464e9d39f5 100644
+> --- a/fs/xfs/libxfs/xfs_exchmaps.c
+> +++ b/fs/xfs/libxfs/xfs_exchmaps.c
+> @@ -987,6 +987,7 @@ xfs_exchmaps_init_intent(
+>  	const struct xfs_exchmaps_req	*req)
+>  {
+>  	struct xfs_exchmaps_intent	*xmi;
+> +	struct xfs_mount		*mp = req->ip1->i_mount;
+>  	unsigned int			rs = 0;
+>  
+>  	xmi = kmem_cache_zalloc(xfs_exchmaps_intent_cache,
+> @@ -1006,9 +1007,12 @@ xfs_exchmaps_init_intent(
+>  	}
+>  
+>  	if (req->flags & XFS_EXCHMAPS_SET_SIZES) {
+> +		loff_t	off1 = XFS_FSB_TO_B(mp, xmi->xmi_startoff1);
+> +		loff_t	off2 = XFS_FSB_TO_B(mp, xmi->xmi_startoff2);
+> +
+>  		xmi->xmi_flags |= XFS_EXCHMAPS_SET_SIZES;
+> -		xmi->xmi_isize1 = req->ip2->i_disk_size;
+> -		xmi->xmi_isize2 = req->ip1->i_disk_size;
+> +		xmi->xmi_isize1 = off1 + (req->ip2->i_disk_size - off2);
+> +		xmi->xmi_isize2 = off2 + (req->ip1->i_disk_size - off1);
+>  	}
 
-ok, fine
+I think this really needs a comment to explain why the calculation
+is structured this way. I think it is trying to set the file sizes
+to the "destination offset" + "swap length from other file" because
+the ranges in each file might be different lengths, but I could be
+wrong...
 
-BTW, maybe call the variable max_opt, and not just opt.
+Cheers,
 
+Dave.
+-- 
+Dave Chinner
+dgc@kernel.org
