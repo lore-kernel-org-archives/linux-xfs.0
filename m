@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92E7D3F1040;
-	Tue,  6 Oct 2026 08:56:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0F9F3E4C94;
+	Tue,  6 Oct 2026 08:56:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791277007; cv=none; b=hbxWZz3BqAoC6reC+ZvwFH3LozCn8y3jeTLz76oQ2VchexWsOYAplLVg58TA8HreLvaPbjoFqSSHtyex1WUelzYpGAfnLnQkCpzVZW8bLxGispvPi710z2awomsNzmx/APn8XrfYXE3EN9NMj6Jmp3x6ravugtlso8WmDkahMts=
+	t=1791277009; cv=none; b=QL2Hwv9xsPdr7nblAjFedbq3jL9OqWyD4mrAA2MNTDPq6/pAt1z3smcWjPZ3Q8g/KsipxkpCJHL9r4W3g3xqSmMmEv8mRW9vP3BjrX6hfWHKnNULkEqd6AMHiIcB8GtHMLB90TDE14aWJNCKRWhJPyji+cVPnEIFqdGRV/7wQso=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791277007; c=relaxed/simple;
-	bh=Jy0alT68znEJv/BOXPlYbiFmMAnCn6jWlYRcAddDnuM=;
+	s=arc-20240116; t=1791277009; c=relaxed/simple;
+	bh=5uosXh6uxYUIG49Gb9ouYcwYTZJ/4+MXXmVZwNtg+cA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Y6nRYDlgsHXB+mm1VQiox4PcfAsvmvLUNbDA5VBunZXV9saOozazh6ykNbbg+rv05MEUSJrjLu3fBv1DulXmBh7DCw7Mx9kn3QzgN9kDuHy4W7Y7QV+fce9nXBNB5Ggjiqmn1Dxe/w19TrJWho6V0swgILLGz2Jd1Dijwl/HBcI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=O+G+FRX5; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=U/7g0ZNQX15QKnePqNOhWLlTSsAYJHyQHGw1EAV8SAvDLgrVh8vR8ezfH3Swd23eIzeswLJcorLqG9aKNYT63jjnS4A/g18Jlob5v8XTpLi/IGwFzHNYAvDBL6sUkcYAtbZjVkf2qrY3+hFZZiK5SKX8Yh/z6if/fmRMqNyo+B4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VIyJTUM5; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="O+G+FRX5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EAC541F000FF;
-	Tue,  6 Oct 2026 08:56:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VIyJTUM5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F16341F00893;
+	Tue,  6 Oct 2026 08:56:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791277006;
-	bh=g3NivwYtKychBBE/sjOAVqN6lB06fYWUGYDB0w33HwU=;
+	s=k20260515; t=1791277008;
+	bh=yTPg7WgNbGqn4E0eJg50IlBitUMXBRXH6jwA/Ev1yYc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=O+G+FRX5Sv0gykhSgkc8ayhUjpBkjBQeuz/3F4oupNm6H+8k3EZQSulQupdV2nqyS
-	 EU3qzWciagLGbbTYuVUJ/oe8dljDus0Pf/9VeBzrydMgGJ29aY78Xm6MNE443y5rXj
-	 ObtrElfMzN+ZtE2+v3wh9FNn2/ZwuIrjhgDJe9OTeveGwp59xKx/NP0mYXEb96D57E
-	 WdqKmeRH/+LIikAvTPaV6xkz6ui1sDUJtKngQIHAuoKJQSWKU6HGtlrwD/+f1/Dsbw
-	 TGhrtvjzZbhq4rA37tUC1zb7TOD20ZqVJKPW6z7pACN35nxX7cHHjiWeP6aV1vJasL
-	 R8cdjwju37lvQ==
+	b=VIyJTUM5V6A2hzrluI06O2pv8CMghQkGaLA4/m/bkadkBdjQ5IQPOca6zasX2hjUB
+	 OeFF9xSwFHM00CFx0rX5NVsEvyoVOxoOwwHsh1B6tx5JoxIXNNv3iqaDQ3fxoY+Kxf
+	 wQT53h0NwCBpUZ5FQAr3CNryW3C6L0hDWGjG3pjq1Su1XErfffrRuC/RlgIxPlOrPA
+	 IqCotloCa93t96LQj+3su8eopYkorHlyPd6ZBEMdxg1D4WlPGV1P26TLbz2RBBWuVE
+	 pNMshtn6Ltbm+Zg4kmtMgavo22KGohl9KWGnLyY1SyXY6rYJliES9SUNppz/uDLVzC
+	 vdlJL0fItfjqw==
 From: Anand Jain <asj@kernel.org>
 To: fstests@vger.kernel.org
 Cc: zlang@kernel.org,
@@ -33,9 +33,9 @@ Cc: zlang@kernel.org,
 	linux-ext4@vger.kernel.org,
 	linux-xfs@vger.kernel.org,
 	linux-f2fs-devel@lists.sourceforge.net
-Subject: [PATCH 16/21] fstests: introduce _require_metadata_uuid() helper
-Date: Tue,  6 Oct 2026 16:55:42 +0800
-Message-ID: <2d4f4228bd376e234425fd2b23692820593486a4.1791272793.git.asj@kernel.org>
+Subject: [PATCH 17/21] fstests: add _change_metadata_uuid helper
+Date: Tue,  6 Oct 2026 16:55:43 +0800
+Message-ID: <8aebfe6024e971c967497284c702862f16cbe570.1791272793.git.asj@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <cover.1791272793.git.asj@kernel.org>
 References: <cover.1791272793.git.asj@kernel.org>
@@ -47,45 +47,42 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add _require_metadata_uuid() to common/rc to check for the required
-userspace tools (xfs_admin and btrfstune) on XFS and Btrfs, and verify
-kernel metadata_uuid feature support on Btrfs before testing filesystem
-UUID changes.
+_change_metadata_uuid changes the UUID of the golden filesystem before it
+is cloned.
 
 Signed-off-by: Anand Jain <asj@kernel.org>
 ---
- common/rc | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+ common/rc | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
 diff --git a/common/rc b/common/rc
-index 4ae3c74a52cf..bc0522dbcdd3 100644
+index bc0522dbcdd3..7feeec04a500 100644
 --- a/common/rc
 +++ b/common/rc
-@@ -6527,6 +6527,24 @@ _require_unique_f_fsid()
+@@ -1577,6 +1577,23 @@ _scratch_resvblks()
  	esac
  }
  
-+_require_metadata_uuid()
++# Change the metadata UUID of the given device to a newly generated one.
++# Args:
++#   $1: Block device path to modify.
++_change_metadata_uuid()
 +{
++	local dev=$1
++
 +	case $FSTYP in
 +	xfs)
-+		# The xfs_admin utility is required to modify the filesystem UUID.
-+		# Kernel support for metadata_uuid has been present since 4.16, so
-+		# it is assumed to be available.
-+		_require_command "$XFS_ADMIN_PROG" "xfs_admin"
++		$XFS_ADMIN_PROG -U generate $dev >> $seqres.full
 +		;;
 +	btrfs)
-+		_require_btrfs_fs_feature "metadata_uuid"
-+		_require_command "$BTRFS_TUNE_PROG" "btrfstune"
-+		;;
-+	*)
-+		_notrun "Require filesystem with metadata_uuid feature"
++		$BTRFS_TUNE_PROG -m $dev
 +		;;
 +	esac
 +}
- 
- # Computes a percentage of the available space in a filesystem and
- # returns that quantity in MB. The percentage must not contain a percent
++
+ # Create a small loop image, run an optional tuning function ($2) on it,
+ # clone it, and attach both to loop devices, returned in ($1).
+ # Args:
 -- 
 2.43.0
 
