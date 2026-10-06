@@ -1,234 +1,228 @@
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC27B21CC71
-	for <linux-xfs@vger.kernel.org>; Tue,  6 Oct 2026 00:34:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.24
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 192CB362130;
+	Tue,  6 Oct 2026 04:19:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791246872; cv=none; b=h+IBe9oHOFE8t5s/CJpD1ifhBkKeZYo/2OwUAv6cCx8/QU1Si6H/mIlcSHGaeLnVrJQofChrF/RCkHFUo/dEFYzu2Okp9PQ2bEVfVb7RbEAWLZ1CxCInaOO6FHRcPgHyHcPk0nA715GuIUagGmQj+pQRXD5zgxvgh8bls2quHYg=
+	t=1791260392; cv=none; b=gHpYxI9IgHbnqDjO2u/PcCw+tjVIVrD24pvGScaW9aG6MKAGrf0ES27POR3qiM6upLF5N1g06AjZ+PZ2XIZN6hG8wqnptvI2aj5ribU/L0J/cNjcS7QwbCZ9BTjxxuQB6cJgs0bd3vefojM00b4I11yC+3bJNx6zgZnFu3+aoXo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791246872; c=relaxed/simple;
-	bh=X2IHjnJSr2H2NwlXpMdGtVOGUMazL7fCYtntG3QGmUc=;
-	h=Mime-Version:Subject:From:To:CC:Message-ID:Date:Content-Type:
-	 References; b=eSV8VNrmX7wR1CsLvjDrRPqv4CrP4WYhwyAhLof30w2DhD288B2HHPWHCSKoAvcbnci5aRz7PdY2y5o84U56+J9e1K8zYT+dO4QjlJGTBGzwVkuOAIP7j+GD5sBca+pdHqsLm+claTP1BKkdxzjG03nBTYrsTDpWkISgDY9mssU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=aAFp96+3; arc=none smtp.client-ip=203.254.224.24
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1791260392; c=relaxed/simple;
+	bh=DBgULKQJRxSISWiQkZsLSXKXrSoFjjW8kTUeon4KlS0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=oKTvtlIqObzJK9JOglSQu/FHKf57AOLhp+JhWXn6TpITS5BPkaPnfwJNcGZlwjkMgIaD14T3XlEWoYSw5RiWQfYw2dseVaf0t4Msfqs4H8ovSvC4q8pPhCVVoC46XA3/jQsXVQIg7K8FT6KBNlE2GnaaHCPKQNmuESGLYxJ0U28=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bINWofTo; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="aAFp96+3"
-Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
-	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20261006003427epoutp0169089df7ba05991fe0249ce798bb9739~byYkP1ALd3129131291epoutp01I
-	for <linux-xfs@vger.kernel.org>; Tue,  6 Oct 2026 00:34:27 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20261006003427epoutp0169089df7ba05991fe0249ce798bb9739~byYkP1ALd3129131291epoutp01I
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1791246867;
-	bh=4hjWuoVtjy3VTTdcWwhptVFZzqM8EAvwPY2jhU7T6YY=;
-	h=Subject:Reply-To:From:To:CC:Date:References:From;
-	b=aAFp96+3Ifh59YMJ8QRcaQnDpOi9gJu+ovfd1hPYwbvnrMRSISkiVsQ4W/k0u70rf
-	 IYULVOjM1jGq9Ki+b/WOoOVQbotf2peBmqe9IJtS2SR/arP74j/igUEj/fgSpxtb8p
-	 jaejAIDWxX998Xjm4I+tHjiGL3gh7SlFZqwZMarc=
-Received: from epsnrtp01.localdomain (unknown [182.195.42.153]) by
-	epcas2p3.samsung.com (KnoxPortal) with ESMTPS id
-	20261006003426epcas2p3add840c9553986bf28e953d99e2922ea~byYjwo9VJ2593125931epcas2p3J;
-	Tue,  6 Oct 2026 00:34:26 +0000 (GMT)
-Received: from epcas2p1.samsung.com (unknown [182.195.38.200]) by
-	epsnrtp01.localdomain (Postfix) with ESMTP id 4hzHM636snz6B9m4; Tue,  6 Oct
-	2026 00:34:26 +0000 (GMT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bINWofTo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 931321F000FF;
+	Tue,  6 Oct 2026 04:19:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1791260390;
+	bh=wyQ5nTXXeJyN1ADu2l0tdNd+THbSAN4zI6DtA9zLwKM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=bINWofTolj4c6Wcl4yYtrzA4UuVSNSS6oEstWOcYeWEebbLQ+VK8+WyY10Gkyo5NS
+	 EDGJQo0NVjyyvbXDY3KHIMhi9X2JNQmER3QSfSyym+HLTBCKsplq/bFUV8kkcQZdFH
+	 nk4jHtDS51Hq3V1/XTKDqHyDeB3qlrnQD3CtsLyptjFUW2mxmbvsYRDj/Si/keLIxk
+	 D4UIWKyyhGIfpzQTh01uHTWxZpus2sOI/F6FWeAWn01bRXylGwIakHluX8406jiPzx
+	 pAW+OSGl8QwY/+tooKKbzL+z5cIgu6JgKdYBnPamIVf6jGgSLe6OlVblrCJu8ackQZ
+	 WaqJaFi5v4xYQ==
+Date: Tue, 6 Oct 2026 15:19:41 +1100
+From: Dave Chinner <dgc@kernel.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: MingTao Huang <1037827920@qq.com>, Carlos Maiolino <cem@kernel.org>,
+	Dave Chinner <dchinner@redhat.com>,
+	"Darrick J . Wong" <djwong@kernel.org>,
+	Chandan Babu R <chandanbabu@kernel.org>, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	MingTao Huang <mintaohuang@tencent.com>
+Subject: Re: [PATCH] xfs: fix skipped flushing items not counted in
+ xfsaild_push()
+Message-ID: <asR23Qk3uXtTSTKr@dread>
+References: <tencent_F801A9436DFB447AAFEC63D3E615B8052405@qq.com>
+ <arL9Xrmf5Q7wd3T4@dread>
+ <arPXwKnDMVMj-oMK@bfoster>
+ <arRv-SRK0nHHGBxM@dread>
+ <arq3MsiNwf1R1QCL@bfoster>
+ <arse0L6mA00ybLvf@dread>
+ <ar0VBbwULCzAQW2u@bfoster>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Subject: [PATCH] xfs: map pNFS layouts to the end of the extent again
-Reply-To: daejun7.park@samsung.com
-Sender: Daejun Park <daejun7.park@samsung.com>
-From: Daejun Park <daejun7.park@samsung.com>
-To: "cem@kernel.org" <cem@kernel.org>, "linux-xfs@vger.kernel.org"
-	<linux-xfs@vger.kernel.org>
-CC: "dai.ngo@oracle.com" <dai.ngo@oracle.com>, "hch@lst.de" <hch@lst.de>,
-	"djwong@kernel.org" <djwong@kernel.org>, "dgc@kernel.org" <dgc@kernel.org>,
-	"sergeybashirov@gmail.com" <sergeybashirov@gmail.com>, "cel@kernel.org"
-	<cel@kernel.org>, "jlayton@kernel.org" <jlayton@kernel.org>,
-	"linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Daejun Park
-	<daejun7.park@samsung.com>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <20261006003425epcms2p586728e55ff5f9bbabc506b672fc4a421@epcms2p5>
-Date: Tue, 06 Oct 2026 09:34:25 +0900
-X-CMS-MailID: 20261006003425epcms2p586728e55ff5f9bbabc506b672fc4a421
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-cpgsPolicy: CPGSC10-223,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20261006003425epcms2p586728e55ff5f9bbabc506b672fc4a421
-References: <CGME20261006003425epcms2p586728e55ff5f9bbabc506b672fc4a421@epcms2p5>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ar0VBbwULCzAQW2u@bfoster>
 
-Since commit 36ca6f11424a ("xfs: fix overlapping extents returned for
-pNFS LAYOUTGET"), xfs_fs_map_blocks() maps only the range that nfsd asks
-for.  For O_DIRECT, the Linux block layout client asks for the range of
-the I/O at hand, so it now needs a LAYOUTGET for every O_DIRECT read or
-write to a part of a file it has no layout for yet, where the first
-LAYOUTGET used to return the whole extent.  Each LAYOUTGET is a round
-trip, and xfs_fs_map_blocks() takes the iolock exclusively and writes
-back and invalidates the page cache of the file for it.
+On Wed, Sep 30, 2026 at 09:56:21AM -0400, Brian Foster wrote:
+> On Tue, Sep 29, 2026 at 12:13:36PM +1000, Dave Chinner wrote:
+> > > > Hence, from the POV of the AIL control loop, this latter
+> > > > ITEM_FLUSHING metric is pure noise. We did not queue new IO, we did
+> > > > not update a buffer already queued for IO, and we do not know if the
+> > > > item has been recently modified, yet we still accounted it as
+> > > > "flushing".
+> > > 
+> > > This all makes sense, but I wonder if it would be simpler to just let
+> > > the case of "new inode flushed to pre-queued cluster buffer" return
+> > > ITEM_SUCCESS instead of ITEM_FLUSHING.
+> > 
+> > That means we lose the 'this inode cluster is being actively
+> > modified' signal from the feedback loop. That makes it behave
+> > differently to buffer items, and so now we have confused and
+> > unbalanced signals being fed to the backoff control decision again.
+> 
+> What do we do (or not do) with this signal?
 
-On three QEMU VMs (an NVMe/TCP target, the server with nfsd and XFS, and
-a client) running the same kernel without KASAN or lock debugging, a
-client doing O_DIRECT I/O over the block layout of NFSv4.2 for 30
-seconds to a 1 GiB file of one written extent, in order unless noted and
-with an fsync every 16 MiB written, gets this many I/Os done (and
-LAYOUTGETs counted at the server), one run each:
+That triggers a larger backoff - the "flushing" part of the
+"if (stuck + flushing > count * 0.9)" of the check. If we get lots
+of newly dirtied inodes pushed to already queued inode buffers,
+then we backoff for 20ms because it implies we are reaching the
+active head of the AIL where journal commits are inserting newly
+committed dirty items.
 
-                       unpatched   ENTIRE, no trim      this patch
-  4 KiB reads      41207 (41207)        334931 (1)      343749 (1)
-  4 KiB random     36670 (34148)        259527 (1)     263829 (15)
-  4 KiB overwrite  38556 (38556)        325533 (1)      307105 (1)
-  64 KiB reads     70241 (16384)         80829 (1)       91196 (1)
-  1 MiB reads       6857 (1024)           6759 (1)        6706 (1)
+This is very similar to when LOCKED starts to show up - the only
+difference between FLUSHING and LOCKED in this situation is that
+FLUSHING means the inode buffer is still queued for IO, whilst
+LOCKED means one of two things:
 
-"ENTIRE, no trim" is a test kernel that maps with XFS_BMAPI_ENTIRE and
-does not trim.  The random reads need a LAYOUTGET each time they go
-before the lowest offset read so far, as the part of the extent before
-the offset asked for is not mapped.  1 MiB overwrites and writes to an
-unwritten extent also go from 1024 LAYOUTGETs to 1, with no clear change
-in I/Os done.  Appending to a new file needs a LAYOUTGET per 1 MiB
-appended either way, as XFS allocates only the range asked for on a
-filesystem without a stripe unit or an extent size hint.
+1. It is being actively accessed and maybe modified (i.e. locked in
+a transaction), and so it is about to be relogged and pinned, in
+which case we can't flush it. It is likely "stuck" until some time
+passes.
 
-The overlap fixed by that commit comes from XFS_BMAPI_ENTIRE reaching
-back.  nfsd4_block_proc_layoutget() calls ->map_blocks once per extent
-of a LAYOUTGET, each time for the range left after the previous extent.
-An allocation in one call can merge the extent that the next call starts
-in with the extents before it, and the whole extent then starts before
-the offset of that call and overlaps extents already in the layout.  The
-Linux client rejects such a layout (verify_extent() returns -EIO), and
-the I/O that needed it fails.
+2. it is locked and under writeback IO. In this case, it was likely
+pushed on the previous AIL push iteration. i.e. we are iterating
+recently pushed items that are still under IO. If we get lots of
+locked items, then we are likely 'stuck' needing them to complete IO
+for progress to be made. Hence we need to back off.
 
-In the thread of that commit, Christoph Hellwig asked for
-XFS_BMAPI_ENTIRE to be dropped to stop the overlap, Darrick J. Wong
-agreed, and it was said that the flag makes no difference on the first
-call, which is for the whole range the client asked for.  The difference
-is past that range: the Linux client asks for the range of each O_DIRECT
-I/O and uses the rest of a longer layout for the I/Os that follow, which
-RFC 8881 allows (Table 22 sets only a minimum length).  A client could
-ask for more for a read layout, but for a write layout
-xfs_fs_map_blocks() allocates any hole in the range asked for.
+PINNED is very similar LOCKED case 1, only it has been relogged and
+is dirty in the CIL.
 
-Dave Chinner suggested keeping the flag for the first call and trimming
-the mappings of the calls that follow.  ->map_blocks cannot tell the
-first call from the others, and Christoph preferred to keep such a
-choice out of that interface, so trim every mapping to start at the
-offset asked for instead.  No mapping can then overlap the one before
-it, since each call starts where the previous extent ended.  Unlike
-Dave's suggestion, the first mapping loses the part of the extent before
-the offset, and the last mapping keeps the part past the end of the
-range, which the loop in nfsd4_block_proc_layoutget() already handles.
-Trimming in that loop instead would keep his suggestion exactly, but
-would change nfsd as well, while trimming in XFS keeps every mapping it
-returns free of overlap whatever the caller does.
+Hence there is a simlar relationship between pinned, locked and
+flushing - the only difference between them is where in the
+'recently modified and/or submitted for IO' cycle the objects are
+in.
 
-Unlike before that commit, don't let the mapping reach past EOF beyond
-the range asked for.  On an inode without XFS_DIFLAG_PREALLOC or
-XFS_DIFLAG_APPEND, xfs_free_eofblocks() can free blocks past EOF, such
-as speculative preallocation, without breaking the layout, so a client
-that did not ask for them should not get them.  What a client gets for a
-range past EOF that it asks for does not change.
+These all indicate we have push vs access/modification contention on
+the log items, and we give the active modifications processing
+preference by backing off. i.e. we prioritise relogging over
+pushing because it avoids unnecessary writeback IO, and to do that
+we need pushing to back off when contention signals are detected.
 
-The aio group, the fsx tests and generic/013 (fsstress) of fstests over
-the block layout, and the fsx tests and generic/013 over the SCSI
-layout, give the same results with and without this patch.  generic/091
-and 263 fail with the ENTIRE, no trim kernel and pass with this patch,
-and so does the pynfs test BLOCK5, which checks a write layout over a
-hole between two allocated blocks against three rules of RFC 5663
-section 2.3.1.
+> ITEM_* implies state of the log item, so I don't see that as
+> inconsistent. They behave differently because they are different items.
+> What's the expectation for the push interface? If we flush an ili/dquot
+> and the buffer is already queued, did we push the item "successfully" or
+> was the item "flushing?"
 
-Fixes: 36ca6f11424a ("xfs: fix overlapping extents returned for pNFS LAYOUTGET")
-Cc: stable@vger.kernel.org
-Suggested-by: Dave Chinner <dgc@kernel.org>
-Link: https://lore.kernel.org/r/ageSguSyf2kBY33a@dread
-Link: https://lore.kernel.org/r/agwDhixPAAA0-cTa@infradead.org
-Link: https://lore.kernel.org/r/agqfBPRWXQDR2ImG@infradead.org
-Signed-off-by: Daejun Park <daejun7.park@samsung.com>
----
-This is meant as the small fix for stable.  It does not stand in the
-way of letting ->map_blocks return several mappings per call, which
-was raised in the thread of that commit.
+It's an indication that there is active modification occurring on
+the inodes/dquots on the cluster buffer, and so we have to make a
+decision to push immediately or back off to allow further
+aggregation.
 
-Tested on nfsd-testing 32eb1a60b456 (7.3-rc4), on the three VMs above.
-Its fs/xfs/xfs_pnfs.c and xfs_bmap_util.c are the same as in this base;
-its xfs_iomap.c and libxfs/xfs_bmap.c differ only in the error path of
-xfs_iomap_write_direct(), zoned writes and two unused arguments.  For
-the SCSI layout, the target ran 7.3-rc1 with two fixes to
-nvmet_pr_preempt(), which fencing a client through a reservation preempt
-relies on:
+push immediately (i.e ignore flushing signal) means the inode
+cluster gets submitted for IO, and the next inode we modify on that
+cluster blocks waiting for cluster IO to finish. If we get the
+timing wrong, we end up doing lots of individual inode pushes and
+repeated cluster buffer IO, instead of aggregating them all into a
+single IO. the "flushing" signal is a sign of the push algorithm to
+back off to allow  modification to continue unhindered and hance
+allow the next push of a item on that cluster buffer to sweep all
+the modifications in one go.
 
-- With KASAN, lockdep and CONFIG_XFS_DEBUG, 20 of the 31 tests of the
-  aio group, the fsx tests and generic/013 run over the block layout
-  (FSX_AVOID=-E), and the same ones fail with and without this patch:
-  generic/075, 112 and 127 with an fsx "Size error" within 390
-  operations, and 551 with the client out of memory.  Over the SCSI
-  layout, generic/013, 075, 091, 112, 127 and 263 run, and 075, 112 and
-  127 fail the same way.
-- Without KASAN or lock debugging, generic/551 passes with and without
-  this patch with 16 GiB of client memory.  With the ENTIRE, no trim
-  kernel, generic/075, 091 and 263 fail with a zero-length O_DIRECT
-  write or an msync() EIO, and bl_alloc_lseg() on the client returns
-  -EIO three times.  On the unpatched kernel and with this patch only
-  075 fails, with the "Size error", and bl_alloc_lseg() returns no
-  error.
-- The pynfs test BLOCK5 fails in five runs out of five with the ENTIRE,
-  no trim kernel, and passes in five out of five on the unpatched
-  kernel and with this patch.  It is at
-  https://lore.kernel.org/r/20261006002622epcms2p38e492aef17fdf79e48b05c9aada2918d@epcms2p3
+i.e. the decision is "push immediately and repeatedly" or "backoff
+on modification contention and push once". Doing it once is more CPU
+and IO efficient, push immediately causes modification latency
+issues in xfs_inode_item_precommit() locking the cluster
+buffer...
 
- fs/xfs/xfs_pnfs.c | 19 +++++++++++++++++--
- 1 file changed, 17 insertions(+), 2 deletions(-)
+> > That is, we can have tens of thousands of inodes on the same LSN in
+> > the AIL. A CIL checkpoint on a large log is closed off at ~32MB in
+> > size, and an inode core takes up about 300 bytes in the journal. If
+> > we are logging nothing but inode cores (e.g. 'chown -R <somedir>'
+> > over millions of files) then a single checkpoint can contain up to
+> > ~100,000 inode log items. These are all inserted into the AIL at the
+> > same LSN.  Hence it is very common for there to be tens of thousands
+> > of inode in the FLUSHING state on the same LSN in the AIL.
+> > 
+> 
+> So in the current code what prevents from adding that many cluster
+> buffers to the delwri queue? The current count > 1000 logic only breaks
+> across an LSN change, so ISTM queue length is subject to the level of
+> cluster overlap in the dataset.
 
-diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
-index f8535ecde..ab3856170 100644
---- a/fs/xfs/xfs_pnfs.c
-+++ b/fs/xfs/xfs_pnfs.c
-@@ -183,13 +183,28 @@ xfs_fs_map_blocks(
- 	offset_fsb = XFS_B_TO_FSBT(mp, offset);
- 
- 	lock_flags = xfs_ilock_data_map_shared(ip);
--	/* request mappings for the specified range only */
-+	/*
-+	 * Map to the end of the extent that covers the start of the range,
-+	 * so that a client doing I/O in pieces gets a layout it can use for
-+	 * the pieces that follow.  Never map anything before the start of
-+	 * the range: nfsd calls in here once per extent of a LAYOUTGET, for
-+	 * the range that is left after the previous extent, and the mapping
-+	 * can change in between, so a mapping that reaches back can overlap
-+	 * one already in the layout.  Don't extend the mapping past EOF
-+	 * beyond the range either: xfs_free_eofblocks() can free blocks past
-+	 * EOF without breaking the layout.
-+	 */
- 	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
--				&imap, &nimaps, 0);
-+				&imap, &nimaps, XFS_BMAPI_ENTIRE);
- 	if (error) {
- 		xfs_iunlock(ip, lock_flags);
- 		goto out_unlock;
- 	}
-+	if (nimaps)
-+		xfs_trim_extent(&imap, offset_fsb,
-+				max_t(xfs_fileoff_t, end_fsb,
-+				      XFS_B_TO_FSB(mp, XFS_ISIZE(ip))) -
-+				offset_fsb);
- 	seq = xfs_iomap_inode_sequence(ip, 0);
- 
- 	ASSERT(!nimaps || imap.br_startblock != DELAYSTARTBLOCK);
+<looks closer>
 
-base-commit: b942c6919ac39870f8327d3123a2912d96e7e617
+Ok, that's probably a real bug. I think it should be an || not an
+&&. i.e. I'd intended it to submit the buffer list when we completed
+flushing a checkpoint (i.e. the LSN changes) or if we'd gathered
+enough items on the buffer list for submission (count > 1000).
+
+This points out the difference between "knowing the intent" and
+"reading the code". One cannot tell the difference between bug and
+intended behaviour from reading the code....
+
+As it is, this could result in longer buffer submission lists, but
+that makes it even less likely to trigger a hangcheck timer. i.e.
+submission to the request queue is typically faster than hardware IO
+completion, hence the more we have to submit, the more likely we are
+to block on a full request queue.
+
+> > inodes doesn't actually move the LSN for the next loop forwards.
+> > We start the next loop at the same LSN in this case, and the only
+> > reason we didn't tend to process the same flushing items a second
+> > time is the backoff allows IO completion to remove the items from
+> > the AIL.
+> > 
+> 
+> I get that the LSN bookmark is not granular, but the old algorithm only
+> broke the loop if we were stuck or hit the target. It resets the
+> bookmark if the 90% stuck+flushing threshold is met or we hit the
+> target. So the example described above sounds like one where we'd reset
+> the LSN pushed bookmark anyways, or otherwise we are stuck and intend to
+> repush locked/pinned items.
+> 
+> That said, I can see how accounting the flushing state for cluster
+> flushed inodes in the same push cycle inflates this metric into backing
+> off/restarting, which seems like a flaw/inefficiency in the old code.
+
+It's not just the backoff, it's all the extra code that has to be
+executed to get to the point of realising the inode has already been
+flushed to the cluster buffer. THis change made it a single bit
+check in the outer loop, vs going into ->iop_push and taking a cache
+miss to pull the buffer from the ILI, then another to pull the inode
+and i_flags from the ILI, then another to pull the pincount from the
+inode, then another to pull the pin count from the buffer,
+
+IOWs, the LI_FLUSHING check runs hot in cache, whilst iop_push()
+takes multiple dependent cacheline misses for every inode it checks
+for STALE/pinned/flushing....
+
+<snip>
+
+> > Besides, if the problem really is "we are walking too many
+> > LI_FLUSHING items repeatedly because the LSN is not changing", then
+> > I'm pretty sure there's a relatively straight forward fix for that.
+> > i.e. we need fine grained tracking of the item we are up to across
+> > loop iterations where the AIL lock is not held and the AIL can
+> > change. We already do this within the processing loop itself...
+> 
+> I'm curious what you're referring to here, if not the last lsn thing..
+> a cursor enhancement perhaps?
+
+Yeah, get rid of last_pushed_lsn, and keep the cursor active across
+push iterations. The only reason for last_pushed_lsn existing is to
+re-seed the cursor on the next iteration. It's a bit of a wart, and
+it's quite inefficient because we have to walk the entire list from
+the head or tail to find the LSN we need to start at.
+
+To replace last_push_lsn, we can store a lsn in the cursor on item
+deletion to act as a reseed value for the next iteration instead of
+starting from the [still valid] item in the cursor...
+
+-Dave.
+-- 
+Dave Chinner
+dgc@kernel.org
