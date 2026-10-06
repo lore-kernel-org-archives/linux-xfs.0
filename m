@@ -1,102 +1,151 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7404C46DFE4
-	for <linux-xfs@vger.kernel.org>; Tue,  6 Oct 2026 14:48:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0AD048E0DB
+	for <linux-xfs@vger.kernel.org>; Tue,  6 Oct 2026 15:00:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791298133; cv=none; b=aXru/jBWd18+Tn0vocfyNBQSCosUxoQIGYgHER1Wskoi8hWLu6Lc8wgd8OKHFrtLfTQmNoMX6Qml4rPwT5CPsAPl28TyuAQx9Uv55G1SS18oifwusz7BcQT8FnOLldzhEFn99Dgv8aO/uQLwUXWf2cRbWxkI2Tb+p6qXKDjYZR4=
+	t=1791298805; cv=none; b=ueyLMH4yN6sWAoMkU/eAaWLFCjMx8Vlfw2ANt/gepVG3EMDa6RR0nnv0OnqayvGPHUNH+eSTNq0BqaAGps/LWRWKSQKARdIxd3CgtKRlj8Rr3TGm6yiTIurlTG1o1/Wx1OBafqNthiOOTL5RWAaL+PtG6jk1ERElrkugVE3yPoc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791298133; c=relaxed/simple;
-	bh=vSlF5tkv+EgIepvcBEvlShyk3HHFJglscC4Sc1njBDY=;
+	s=arc-20240116; t=1791298805; c=relaxed/simple;
+	bh=gXEdxuYT68TqrwB0a5CowI3vd37eR93fJ/sZxPM9C1U=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=S6uQf+59kknwZc4Mp2XP1PhgB6t2iLaeUbee0kCpECQ64ShglcS/FiMZCjH2zecDpPqstq/NspFKTDVVN6EVAE4rjLZhRifs3ZYngDORZjdH1DFtvZnb6aHlQyZ6HiFDYpRNw+km33f/ZbZ6pl+x4OXTE2tw8C2XO8TBiFdIL48=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hEUsvGgn; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=iOdurWs6vFrMyfrhvRPqt5JvYAQ96NmXhkFYp6Z1X+u2YQva2HFsJdgLo/ugjxUQ3cR4wPSpR6QFUP++NjxPBLcx7xQ0oiWeleH5p6MZI4Cc0UQh9BnysdY2MXHkmJ38xvRzHeIXYQAG86fZ8xYz2Ox2THZHWYEoYAuUrLtJniE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cnlJBDlc; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hEUsvGgn"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 0C58A1F0089C;
-	Tue,  6 Oct 2026 14:48:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cnlJBDlc"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 498D01F0089B;
+	Tue,  6 Oct 2026 15:00:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791298132;
-	bh=FM3WdXdb+/N1utt/lS+W8u9n92N2EBAvUgQBuCl++ig=;
+	s=k20260515; t=1791298803;
+	bh=FdOIVGp17xn3bs6WTTYmiXBUv6uHOz2amcV2CTcvgOM=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=hEUsvGgnHA9DBOHlqFqGTqbIU6STyOHFXbzm6LoyYBryvL0MfqcjsMXk04AvZt4ox
-	 kh6gRfOz1jfUa0dL30Df3m+Qcw3y8BP8KPTnSiH/Rdpdlm4EU5ks+RWB9a/Hv39ms2
-	 M7g6nNInnFGnKRaSg0XRMjWYifAhDyeMiEEzmTGS6k0fqaI9xqZBdMl0BlmQg3mcnr
-	 QgLVsXcCRmwwdqI/mMaP1qvB4QaGVttJ0vcZh73pkjZnkIoSuOVuzTA4QzcmkAZTYQ
-	 uaa3FFGbcT/cz7ZOCh4WiMuZt3w+6hNmQR8t2ciEzeshZQnmcuOBic3cjJ05yNcXC2
-	 ptJuJrGsm3Q1Q==
-Date: Tue, 6 Oct 2026 07:48:51 -0700
+	b=cnlJBDlcZHNyU0bvd+PiY4hyL6hAirKE5kAzRO/EA9Sk+/ecZwfcGEJPGIA2/+7eR
+	 JDqEtSFVXxrXUdZUUQGWn/Lv6w18ZJ9g2syDyCAucymIeVJu72Lih2Yq3HTtLB/M4L
+	 zK3WEIy7D1y1vFffjNC55xKiFIEQoFK6LReK+QzY1yUhOm1zXDqKv+DOwv4nQegPgF
+	 nGuZYl7pTlmhN56OaDCpCo/1/J2VCxkPpxwlByJO89VcYX6Xo/a0LZtyfjy5DtgSjp
+	 dZeaxb+lFamZciA+4dlx8SerDqDdpUq6vQX9Qk+wlSSC9ElgI+XrwTIKxmdHf1K98V
+	 Np7VtB4bjz9eA==
+Date: Tue, 6 Oct 2026 08:00:01 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Wilfred Mallawa <wilfred.mallawa@wdc.com>
-Cc: "cem@kernel.org" <cem@kernel.org>,
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: [xfsprogs] mkfs: fixup memory leak on exit
-Message-ID: <20261006144851.GX2705364@frogsfrogsfrogs>
-References: <20261006101232.357124-2-wilfred.opensource@gmail.com>
- <asTQdEMkpzc7_tSd@cronus.toxiclabs.cc>
- <75bc883c4d45a514aaad949dfe301c3f2a79112a.camel@wdc.com>
+To: Dave Chinner <dgc@kernel.org>
+Cc: Carlos Maiolino <cem@kernel.org>, Norbert Szetei <norbert@doyensec.com>,
+	linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfs: fix exchange-range-to-eof file size exchange
+Message-ID: <20261006150001.GY2705364@frogsfrogsfrogs>
+References: <20261006050914.GU2705364@frogsfrogsfrogs>
+ <asSiXW4XxBl8Kivw@dread>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <75bc883c4d45a514aaad949dfe301c3f2a79112a.camel@wdc.com>
+In-Reply-To: <asSiXW4XxBl8Kivw@dread>
 
-On Tue, Oct 06, 2026 at 01:52:18PM +0000, Wilfred Mallawa wrote:
-> On Tue, 2026-10-06 at 12:51 +0200, Carlos Maiolino wrote:
-> > >  mkfs/xfs_mkfs.c | 3 +++
-> > >  1 file changed, 3 insertions(+)
-> > > 
-> > > diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> > > index 334367b8..fec43987 100644
-> > > --- a/mkfs/xfs_mkfs.c
-> > > +++ b/mkfs/xfs_mkfs.c
-> > > @@ -6503,5 +6503,8 @@ main(
-> > >  		exit(1);
-> > >  
-> > >  	libxfs_destroy(&xi);
-> > > +	free(cli.xi->data.name);
-> > > +	free(cli.xi->log.name);
-> > > +	free(cli.xi->rt.name);
-> > >  	return 0;
-> > >  }
+On Tue, Oct 06, 2026 at 06:25:17PM +1100, Dave Chinner wrote:
+> On Mon, Oct 05, 2026 at 10:09:14PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > Hm, wouldn't perhaps be better to hook this into libxfs_destroy?
-> > Although this would likely need some other extra surgery on
-> > xfs_copy.c.
+> > Norbert Szetei posted a patch containing an incomplete description of a
+> > bug in XFS_IOC_EXCHANGE_RANGE's TO_EOF flag.  The bug tricks
+> > exchange-range into modifying a file so that it has shared blocks
+> > starting beyond EOF, which is never allowed because files never have
+> > written data beyond EOF, and you can only share written data blocks.
+> > This is key to all the incorrect behavior that follows.
+> ....
 > > 
-> > It just sounds weird to me to free the memory here 'after' we already
-> > called
-> > libxfs_destroy() here. 
+> > Having confused the file sizes, the PoC uses a second exchange-range
+> > call on what looks like a non-reflinked single-block file.  Because the
+> > file size is set incorrectly, exchange-range thinks it's exchanging the
+> > full contents of two files and clears the reflink flag on the broken
+> > file.
 > 
-> Ah yeah.... I back-ported this off the xraid tree, where we have a bit
-> more cleanup after libxfs_destroy() and I think it makes sense to do
-> there but maybe not here...
+> Hmmm, another "exchrange reflink flag coherency" bug.
 > 
-> > IIUC: cli.xi == &xi in this place, so freeing up
-> > memory after destroying the struct using it sounds like a time bomb.
+> Aside from fixing this specific issue, how can we prevent
+> other/future logic bugs from failing to set the reflink flag
+> appropriately and so never expose such a bug to userspace again?
 > 
-> I can plumb this into libxfs_destroy() but as you mentioned, it will
-> need changes in xfs_copy, xfs_db and xfs_repair because they track the
-> argv pointers, but we can just strdup(). Does that seem okay?
+> I'm thinking that we should not try to swap the reflink flag along
+> with the extents. Instead, if one of the files had the reflink flag
+> set before the swap, then we scan scan the extents of both files
+> after the swap for shared extents and set the reflink flags for each
+> file appropriately.  EXCHRANGE isn't really performance sensitive,
+> so the cost of the refcount scans shouldn't be an issue.
+> 
+> Setting the flags this way means it doesn't matter what file shared
+> extent(s) ends up in, the inode(s) that owns it(them) will always
+> have the reflink flag set correctly. Hence there is no way to use
+> EXCHRANGE creatively to expose this "didn't COW when it should have'
+> class of corruption bugs ever again...
 
-I don't think this is better.  libxfs' init functions do not create or
-assign the libxfs_init.{data,log,rt}.name fields, they merely reuse
-whatever pointer the calling program set.  Only the caller knows where
-that pointed to memory came from (stack, optarg, dynamic allocation) so
-only the caller knows how to drop the pointer.
+That is what Norbert's patch actually does.  If you think removing
+xfs_exchmaps_clear_reflink and all the stuff that calls it is a good
+idea (and it probably is!) then let's move that discussion and review to
+that patch's thread.
 
-The original patch is more appropriate IMO but seeing as we're about to
-return from main and terminate the process, why do we care?  And if we
-do, shouldn't mkfs also free the other getstr() strings attached to the
-cli struct?  And shouldn't the exit(1) paths do likewise?
+> > That enables an extending write of the broken file to rewrite the
+> > shared block that's just past EOF.  This has become known colloquially
+> > as refluxfs.
+> > 
+> > Once the file sizes are set correctly, the second exchange-range no
+> > longer thinks that it's doing a full-contents swap, so it won't clear
+> > the reflink flag on either of its file arguments.
+> > 
+> > Link: https://lore.kernel.org/linux-xfs/1E196589-DEBE-40AC-AFEA-D420DAAB067F@doyensec.com/
+> > Reported-by: Norbert Szetei <norbert@doyensec.com>
+> > Cc: <stable@vger.kernel.org> # v6.10
+> > Fixes: 966ceafc7a4371 ("xfs: create deferred log items for file mapping exchanges")
+> > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> > ---
+> >  fs/xfs/libxfs/xfs_exchmaps.c |    8 ++++++--
+> >  fs/xfs/xfs_exchrange.c       |   10 ++++++----
+> >  2 files changed, 12 insertions(+), 6 deletions(-)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_exchmaps.c b/fs/xfs/libxfs/xfs_exchmaps.c
+> > index 6a66b6075e0af4..c9d9464e9d39f5 100644
+> > --- a/fs/xfs/libxfs/xfs_exchmaps.c
+> > +++ b/fs/xfs/libxfs/xfs_exchmaps.c
+> > @@ -987,6 +987,7 @@ xfs_exchmaps_init_intent(
+> >  	const struct xfs_exchmaps_req	*req)
+> >  {
+> >  	struct xfs_exchmaps_intent	*xmi;
+> > +	struct xfs_mount		*mp = req->ip1->i_mount;
+> >  	unsigned int			rs = 0;
+> >  
+> >  	xmi = kmem_cache_zalloc(xfs_exchmaps_intent_cache,
+> > @@ -1006,9 +1007,12 @@ xfs_exchmaps_init_intent(
+> >  	}
+> >  
+> >  	if (req->flags & XFS_EXCHMAPS_SET_SIZES) {
+> > +		loff_t	off1 = XFS_FSB_TO_B(mp, xmi->xmi_startoff1);
+> > +		loff_t	off2 = XFS_FSB_TO_B(mp, xmi->xmi_startoff2);
+> > +
+> >  		xmi->xmi_flags |= XFS_EXCHMAPS_SET_SIZES;
+> > -		xmi->xmi_isize1 = req->ip2->i_disk_size;
+> > -		xmi->xmi_isize2 = req->ip1->i_disk_size;
+> > +		xmi->xmi_isize1 = off1 + (req->ip2->i_disk_size - off2);
+> > +		xmi->xmi_isize2 = off2 + (req->ip1->i_disk_size - off1);
+> >  	}
+> 
+> I think this really needs a comment to explain why the calculation
+> is structured this way. I think it is trying to set the file sizes
+> to the "destination offset" + "swap length from other file" because
+> the ranges in each file might be different lengths, but I could be
+> wrong...
 
-(To be clear, my answers are "I don't", "no", and "no" but I could be
-convinced.)
+That's correct.  I'll add that as a code comment.
 
 --D
+
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> dgc@kernel.org
+> 
