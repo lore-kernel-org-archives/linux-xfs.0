@@ -1,32 +1,42 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2C103B6364;
-	Wed,  7 Oct 2026 13:47:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6B254B0CAA
+	for <linux-xfs@vger.kernel.org>; Wed,  7 Oct 2026 13:50:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791380830; cv=none; b=RmuJ9BEbaf5xYSY/9FtE030/1MfETnc21ylevTsTb1EYnBlWiogob9nBtOYBDFnXaFJ0UVqZYbuFd5DpKiIwKn3MLkDMWqo7cgnrWHXijnTrWB+ZnR/LTEyH1lAcayZwib+ggW8RPYz5NPjx6Kh6mLJmXmOYYwxYdt+RCITJ+UI=
+	t=1791381018; cv=none; b=dhTZrMBg8BfECEeojhnVty/O8SHnlAwebNpgl/pFVPajy/9grpyvhFegPcwNNPjHUlZewUPzgg9GoqQeTH1ne+/OdCAJtJdNUIPKcFU/ULCt9iT16YxAr8xrtKfdLBIXjH+cl975Sm6/6foxhJ4Ye0Mk3XNHJWEOIeFFdsUZqkU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791380830; c=relaxed/simple;
-	bh=MqPVpnw8xY7tOXjDu7aM8kDKWoucXBCrQSh6s0fiBG0=;
+	s=arc-20240116; t=1791381018; c=relaxed/simple;
+	bh=/QYFCq5qnT/HrzLt9bREbPeTSO+Hhd/r6/0XDfNcFGw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=e/gkL2+RFWkzNDumGUhbgQ+C5R1A7zvn73JtYlqCjocXRgkPGO36n21h6k/mkTuASEBCT0Pi7e447NUhnX0C7G/UbRc849+IV4chtWe8/X8pBoh2H+efzcGt1rJ0D+9MdRxevrcKSdTKxydUa9mwFMJrmy6y31EJmP5XggTZ14w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 11112227A8E; Wed,  7 Oct 2026 15:46:58 +0200 (CEST)
-Date: Wed, 7 Oct 2026 15:46:57 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Dave Chinner <dgc@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
-	"Darrick J . Wong" <djwong@kernel.org>,
-	Jens Axboe <axboe@kernel.dk>,
-	Christian Brauner <brauner@kernel.org>, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org
-Subject: Re: support for RT data checksums
-Message-ID: <20261007134657.GA682@lst.de>
-References: <20260924100032.2733101-1-hch@lst.de> <arWpyhFyV3ouYAEx@dread> <20260925062710.GA3798@lst.de> <armf05yfzhSBUsUh@dread> <20260928052436.GA18925@lst.de> <arvHFOjF-CD5Vd3g@dread> <ary2PpSp1xTgrd3k@dread> <20261005135320.GA29829@lst.de> <asSHsVAYevL_VzdF@dread>
+	 Content-Type:Content-Disposition:In-Reply-To; b=j0dOYtAl0KdMhLC3vtehkC0ZZylyheuabnSovUoYkAVEczVc+zFE8Qfe2Div80L0KRIgKSqP6vok7Qw+llI/iqy7CD9mpykMiKdSBEPtM/eA2HeHgDK53dqBI9MNzZMdqzOxcM829c1N5TmIYRNuL8Jo06mbgfkkxHE1gm3MQHw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=HcHrs45b; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="HcHrs45b"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=/QYFCq5qnT/HrzLt9bREbPeTSO+Hhd/r6/0XDfNcFGw=; b=HcHrs45bnGs8wigQ7DayIGdYEJ
+	KKBF1rRvoH3JZyWtOLQrHZzwcmsSjGUkIqu0Vw1QBIWXtDnZhHaROqnyBGCNKk2Kdk64KvNDl4N7a
+	yTPnxMUXeF8ComEK2zHtO9RFwFD2ePqGa8Aw6PWJqewO+tNOWsIyYnoZtPsjSUyT48ZDO4aE9uV4s
+	WEIUoAgt1+yJuCUq1dPSFBsNE28xHtK6Px/am8T0OiaUN26yb0VixqjKOqzvpxHL8Awi/YkY24xif
+	O5AS18JgJNIw2AZEbW2DsliHh+XYQ1RjQJ5JWoHbpzd1k5Wa0N1acLDiG1kP0FJ8otuKY3tVkYhe/
+	G3a3yH0g==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1xES22-00000002Yrz-15nN;
+	Wed, 07 Oct 2026 13:50:06 +0000
+Date: Wed, 7 Oct 2026 06:50:06 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs@vger.kernel.org, cem@kernel.org, djwong@kernel.org
+Subject: Re: [PATCH 1/3] xfs: factor out xfs_dir2_sf_copy_entries helper
+Message-ID: <asZODrYQ7gix9p9z@infradead.org>
+References: <20261002211038.2139655-1-sandeen@redhat.com>
+ <20261002211038.2139655-2-sandeen@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -35,49 +45,14 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <asSHsVAYevL_VzdF@dread>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20261002211038.2139655-2-sandeen@redhat.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, Oct 06, 2026 at 04:31:29PM +1100, Dave Chinner wrote:
-> I'm not sure I understand what you are refering to there. I'm not
-> talking aobut the 'realloc because logged size grows', I'm talking
-> aoubt 'realloc because CIL pushes steal the shadow buffer'.
+On Fri, Oct 02, 2026 at 04:08:09PM -0500, Eric Sandeen wrote:
+> xfs_dir2_sf_toino8 and xfs_dir2_sf_toino64 share a dozen or so lines
+> of copied code used to move short form directory entries; factor that
+> out to eliminate cut and paste.
 
-So you mean alloc again, not realloc, ok.
+Looks good:
 
-> > with an allocation per log operation, and a memcpy both into that
-> > and into the buffer, while adding a lot of new log items.
-> 
-> I'm not talking about an intent/done based setup - that requires an
-> intent transaction, then a buffer + done transaction. That's very
-> different to what I suggested (and what ICREATE implements).
-> 
-> I'm talking about a single one-shot transaction that logs the csums
-> and that only. The buffer is ordered, so not logged. Single
-> transaction, generally small in size, never gets relogged, can be
-> committed asynchronously as long as it is replayed before the file
-> offset relocation BMBT update in recovery.
-
-We'd still need memory for the csum values both in the icreate
-item and the ordered buffer.
-
-> > One thing I played with for a while until I realized that the
-> > simple buf item actually provides good enough performance is
-> > special xfs_log_vec that is not included in the main log vec /
-> > shadow allocation but points to external memory.
-> 
-> That's problematic. The reason delayed logging works is that it
-> broke the dependency between external memory that log items pointed
-> at needing to be locked and stable until the external memory was
-> copied into the iclogs. The disconnection of the objects passed to
-> xfs_trans_commit() vs xlog_write() whilst keeping the logged data
-> stable is what allows the CIL to work
-
-Yes, and for all the current buffers and similar items that's very
-important because the data can actually change, and we must not
-pick up that change.  It does however not matter much when we know
-each bit of the buffer payload is only ever updated once, and thus
-the is no need to double buffer or lock the backing memory.
-The only important thing left with that is that the buffer as the
-backing memory must not be freed.
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
