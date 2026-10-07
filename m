@@ -1,31 +1,30 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1A6F46D566
-	for <linux-xfs@vger.kernel.org>; Wed,  7 Oct 2026 13:41:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FE87490BE9;
+	Wed,  7 Oct 2026 13:42:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791380482; cv=none; b=UNk4xY4voX5XX6S4YlRx79eYkjIsnXBCftuuFW1Ta5DNrtBIbcROvqCZ8LmkBUm9YrNLQwhYfXWSQsK2vXtHj8Vl8+vEY1nZxbf7CSeidqpNn2/RDcRTHUwsgBQFYsdvArXUk5q+Kv3jT2v+JQWQ/ifQDjOECWQD+EroZMLVKQE=
+	t=1791380535; cv=none; b=mjsbaju9NlS9TjeqB3MJIwxniixXB0rfwWTOVl4RxhWTyNxGPjrZaGzNdYSEv26ebgSRe9E2mxEIThyo93dsRrqtokkcBqVEp5DFSfgScpVHkvira+lNHByLQWaPxKejdmLwZo1lk0D4FGlonk4qYGa7UYKRsmaACxDXoNdiMTQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791380482; c=relaxed/simple;
-	bh=LM4J3rjcG+JOMt8cLKDNk9lgWNR2h4ikUaylqa7CjG4=;
+	s=arc-20240116; t=1791380535; c=relaxed/simple;
+	bh=+kE/bHWxmG0ZEnF5QUmTM0obtEU3GWL1lM+7dx6o9kQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=s0oHJD1kHEYIo/+6g8USkEz1WCSRXuB7UsXMKC0S21g9GbBXfvJh5Duu8PBZZFg5AjNkv0VzKl4Dr7Lm/fProMVXuKzGe9TL/ddGlXI1AMzfI22PkLou0ixUlaYQIEEDk5qwBCBR9JNH7ASLwDu5CPxEo6xOaiQNCHhvJRFnjRU=
+	 Content-Type:Content-Disposition:In-Reply-To; b=B0hSRjqr0oX7lp34G7BOzFomtKDxnCx4qdZyiOcVu3/2NxBWA/TatsDrITdysz9aEWZ7wALUD40hhtunz8rSTvZH2uz17auwwzdESTDRmDH17fqGLqYjOI07fae/urIJAEeucEAi1NWpkTGPX1FyDdePA8AGhN7vJ8p/mp4zMZw=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 563B5227A88; Wed,  7 Oct 2026 15:41:05 +0200 (CEST)
-Date: Wed, 7 Oct 2026 15:41:05 +0200
+	id 15E24227A8E; Wed,  7 Oct 2026 15:42:03 +0200 (CEST)
+Date: Wed, 7 Oct 2026 15:42:02 +0200
 From: Christoph Hellwig <hch@lst.de>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>,
-	Andrey Albershteyn <aalbersh@kernel.org>,
-	Eric Sandeen <sandeen@redhat.com>, Carlos Maiolino <cem@kernel.org>,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 12/13] libxfs: use xfs_trans.h from the kernel source
-Message-ID: <20261007134105.GA507@lst.de>
-References: <20261005125637.1340355-1-hch@lst.de> <20261005125637.1340355-13-hch@lst.de> <20261005214939.GR2705364@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@lst.de>, Zorro Lang <zlang@kernel.org>,
+	fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 09/13] xfs/2304: version of generic/388 that run
+ xfs_scrub -x for each iteration
+Message-ID: <20261007134202.GB507@lst.de>
+References: <20260924100855.2734089-1-hch@lst.de> <20260924100855.2734089-10-hch@lst.de> <20260929015645.GL2705364@frogsfrogsfrogs> <20261005132522.GN26805@lst.de> <20261005145123.GB2705364@frogsfrogsfrogs> <20261005145615.GB2082@lst.de> <20261005152057.GC2705364@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -34,22 +33,24 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261005214939.GR2705364@frogsfrogsfrogs>
+In-Reply-To: <20261005152057.GC2705364@frogsfrogsfrogs>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Mon, Oct 05, 2026 at 02:49:39PM -0700, Darrick J. Wong wrote:
-> On Mon, Oct 05, 2026 at 02:56:22PM +0200, Christoph Hellwig wrote:
-> > Replace the the existing xfs_trans.h with a copy of the kernel versions.
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Mon, Oct 05, 2026 at 08:20:57AM -0700, Darrick J. Wong wrote:
+> I was about to repy "Sounds like a good idea for g388 and probably g475
+> as well" but then I remembered something from my notes.  The two tests
+> run without _check_filesystems on the assumption that accidental
+> corruptions will multiply until either (a) the cycle_mount will fail or
+> (b) the post-test _check_filesystems will have a lot to complain about.
+> Doing the check every loop cycle reduces the number of log recoveries
+> that we can do in a given SOAK_DURATION by a significant amount.
 > 
-> Much nicer to have the same header, though I wonder if we ought some day
-> to move the kernel xfs_trans.h into libxfs/ ?
+> What if we ran $XFS_IO_PROG -c verifymedia once per loop if
+> XFS_VERIFY_FILE_DATA?  That would avoid a full xfs_{repair,scrub} run
+> (+ extra mount cycle) but catch problems earlier.
 
-That's what the:
-
-    small cleanups to help code sharing with xfsprogs
-
-kernel series sent on Sep 25th does.  It got your reviews, so maybe it's
-time to just merge it.
+$XFS_IO_PROG -c verifymedia would also verify potentially unwritten
+areas.  We'd still need the full xfs_scrub space map scan at least,
+but I can look into an option to only do media verification in
+scrub, which also sounds useful outside of just xfstests.
 
