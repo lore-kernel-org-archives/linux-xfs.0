@@ -1,77 +1,176 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta1.migadu.com (out-45.mta1.migadu.com [95.215.58.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87B3441379A
-	for <linux-xfs@vger.kernel.org>; Wed,  7 Oct 2026 07:50:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD08341D638
+	for <linux-xfs@vger.kernel.org>; Wed,  7 Oct 2026 09:32:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791359438; cv=none; b=NLdXHXoXxxB7BT8r/EZDqqGKNRGYF3pBmqF0TRvZl4WQ4Y2G80hd9ZDU40abi1DsxcBKCVtCu8Ab3mk5TU8y2mqRXUK3sWIHYh7E4VwtYme4cox+oqaCvAogBvdRjNjGah71ZuHqTCHNMOti9aaqtAPUjBwZ6lQbPSciQ4rVpUY=
+	t=1791365586; cv=none; b=lbXCjF00uAtFa4m3WIh+h+ySoAQbl1ZDHoTujjja+pPDydOzVM/uVgsrx7n31cwwpRC1bXhIKB/1yNpCIJZP8CBaIke4ZuDgIKmyan3XwDP8CbqOGdHJXb/aoHV8XVEJdGLQMkY2GIjQnnl+df7gAHPYMHx9LxVEEdBSpSuI9l4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791359438; c=relaxed/simple;
-	bh=SaDCvpGJSTi3JimzSI4JZmUL380CIiLgUIYiiem6wEM=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=koTHHVq9kNm4J6FFPXrrAltZnNFbeaRWzvRTyXQQma7qJTNV8FoW1uOAV3tZ1Stj3qgAnCBsMN4FmOfnZS7ZoC2Z4TeVAmVec1lgAQhwvka/osivWvMLpCtBO1AkkM1wKqQUxkq6eNIksmAcadvo6Nr5lL2Xdqe9P+8btXEQOOs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Vp9H3Z4L; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1791365586; c=relaxed/simple;
+	bh=Rp4xtoKq14kvi6mCZhjkc+uj21SFRhqayBCWLQcZ6pw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=a/PZyCvrD8RzPRp2qPPSTZGOEW2LuRpCZSwSr4V9HZdngACVjkFh4Nrk2PamWuRZMTvs1kwKYiWHqjQKJL6PbtFF1m7RTttApjgZB7XgqAfDXPJqCGlSDyXtVthZZ2hFMScyvI/OmSZaq802kUytHgfdQxcFzJC9k9NuSUC+Fn0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=JhLCfMNa; arc=none smtp.client-ip=95.215.58.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Vp9H3Z4L"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id EE68CC4AF0B
-	for <linux-xfs@vger.kernel.org>; Wed,  7 Oct 2026 07:50:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1791359438;
-	bh=SaDCvpGJSTi3JimzSI4JZmUL380CIiLgUIYiiem6wEM=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=Vp9H3Z4Lh4AuxcqjtwBXo1fTkHy+sIx54UUTlorVtmLE/N43jx5QMX2hlieJK/+wr
-	 CfTU6Mzhx3l3MAFaWHnXO+XfW+VDdFIMrEcnEY4gqeAq60BA3Mr9EPXsDD14aMxYip
-	 OkgUkw3ujCcdefbF6vgjNGKXhmJovGSFgViK/UTvwBXXTZODmHsv7NMJzH6kgs9oWs
-	 44bjI4jWo2yheoQIyhx2DgB+VQVr4BvaKIbqFOQ00x3TXidcnwr2BJgqrg23+AVoKu
-	 BKBz2aZmeyniEyzsGrFTrMkqDOCwX88pNrl/VqEuSabzKRIGLdhjOwdbutWipDgBav
-	 0XRwtwBoujJUw==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id D7644C41614; Wed,  7 Oct 2026 07:50:37 +0000 (UTC)
-From: bugzilla-daemon@kernel.org
-To: linux-xfs@vger.kernel.org
-Subject: [Bug 222081] xfs stops if link count is to high
-Date: Wed, 07 Oct 2026 07:50:37 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: high
-X-Bugzilla-Who: sachse@gmx.net
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-222081-201763-nJXHm42U34@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-222081-201763@https.bugzilla.kernel.org/>
-References: <bug-222081-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="JhLCfMNa"
+X-Envelope-To: linux-xfs@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=Rp4xtoKq14kvi6mCZhjkc+uj21SFRhqayBCWLQcZ6pw=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1791365567; v=1; x=1791970367;
+ b=JhLCfMNapF4DoBIkAE4LhDJXI5yPnuHFADOEN9QFY7BoONhlUq620V4LkVAQ16vgHYCnka2P
+ cn8K6bzV0W/BL9Gpl46pi1xE5t+pIFrxt8wDReyOZ2C2h3PGefO6jrwOyDlmdWYMDsQsxFiY004
+ 4ovm1JQvoTm366DEAXwA58y0=
+X-Envelope-To: linux-xfs@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id f254123b51092fc3;
+	Wed, 07 Oct 2026 09:32:47 +0000
+X-Mizu-Trace-ID: f254123b51092fc3
+X-Migadu-Flow: FLOW_OUT
+Date: Wed, 7 Oct 2026 11:32:36 +0200
+From: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>
+To: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+Cc: Christian Brauner <brauner@kernel.org>, linux-fsdevel@vger.kernel.org, 
+	"Darrick J . Wong" <djwong@kernel.org>, Carlos Maiolino <cem@kernel.org>, 
+	Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>, Matthew Wilcox <willy@infradead.org>, 
+	Andrew Morton <akpm@linux-foundation.org>, Ritesh Harjani <ritesh.list@gmail.com>, 
+	Zhang Yi <yi.zhang@huawei.com>, Christoph Hellwig <hch@lst.de>, 
+	Dave Chinner <dchinner@redhat.com>, Daniel Gomez <da.gomez@kernel.org>, Theodore Tso <tytso@mit.edu>, 
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, 
+	Andres Freund <andres@anarazel.de>, Dave Chinner <dgc@kernel.org>
+Subject: Re: [RFC PATCH v4 05/12] iomap: Add initial support for buffered
+ RWF_WRITETHROUGH
+Message-ID: <asYOJs4PYv326KNe@quentin>
+References: <cover.1790596383.git.ojaswin@linux.ibm.com>
+ <c76f9babf1b00f4574e37db156621edc6c078969.1790596383.git.ojaswin@linux.ibm.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <c76f9babf1b00f4574e37db156621edc6c078969.1790596383.git.ojaswin@linux.ibm.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D222081
+One general comment, all your commit headers are starting with
+uppercase.
 
---- Comment #6 from sachse@gmx.net ---
-The crashed filesystem no longer exists because its a productive system whi=
-ch
-must be fixed fast.
-From the current running filesystem I can create it if you provide me the
-commands.
+iomap: Add initial support for buffered RWF_WRITETHROUGH
 
---=20
-You may reply to this email to add a comment.
+s/Add/add
 
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+Overall this looks good to me. I will run some tests via fio. Do you
+have a branch with WRITETHROUGH by any chance?
+
+On Mon, Sep 28, 2026 at 05:33:06PM +0530, Ojaswin Mujoo wrote:
+> +static int iomap_writethrough_iter(struct iomap_writethrough_ctx *wt_ctx,
+> +				   struct iomap_iter *iter, struct iov_iter *i,
+> +				   const struct iomap_writethrough_ops *wt_ops)
+> +
+> +{
+> +	ssize_t total_written = 0, pending = 0;
+> +	loff_t submit_start_pos;
+> +	int status = 0;
+> +	struct address_space *mapping = iter->inode->i_mapping;
+> +	size_t chunk = mapping_max_folio_size(mapping);
+> +	unsigned int bdp_flags = (iter->flags & IOMAP_NOWAIT) ? BDP_ASYNC : 0;
+> +	unsigned int bs = i_blocksize(iter->inode);
+> +
+> +	/* copied over based on how DIO handles these flags */
+> +	if (iter->iomap.type == IOMAP_UNWRITTEN)
+> +		wt_ctx->flags |= IOMAP_DIO_UNWRITTEN;
+> +	if (iter->iomap.flags & IOMAP_F_SHARED)
+> +		wt_ctx->flags |= IOMAP_DIO_COW;
+> +
+> +	if (!(iter->flags & IOMAP_WRITETHROUGH))
+> +		return -EINVAL;
+> +
+> +	/*
+> +	 * IOMAP_INLINE mappings have NULL bdev and would cause
+> +	 * iomap_sector() to dereference invalid memory. Reject them.
+> +	 */
+
+Nit:
+I noticed that gfs2 sets the bdev even for IOMAP_INLINE. A better
+filesystem agnostic comment might be something like this?
+
+/*
+ * Inline data lives in the inode's metadata buffer, so it cannot be
+ * written via a bio built from the folio.
+ */
+
+> +	if (iter->iomap.type == IOMAP_INLINE)
+> +		return -EINVAL;
+> +
+> +	do {
+> +		 * blocks in the bvec again.
+> +		 */
+> +		if (wt_ctx->nr_bvecs && prev_pos + prev_len > pos_aligned) {
+> +			size_t delta = prev_pos + prev_len - pos_aligned;
+> +
+> +			/* Everything already added to bvec, nothing to do */
+> +			if (delta >= len_aligned)
+> +				goto put_folio;
+> +
+> +			pos_aligned += delta;
+> +			off_aligned += delta;
+> +			len_aligned -= delta;
+> +		}
+> +
+> +		prev_pos = off_aligned;
+
+I think this is a mistake?
+prev_pos = pos_aligned; ?
+
+> +		prev_len = len_aligned;
+> +
+> +		iomap_folio_prepare_writethrough(folio, off_aligned,
+> +						 len_aligned);
+> +
+> +		if (!wt_ctx->nr_bvecs) {
+> +			wt_ctx->bio_pos = round_down(pos, bs);
+
+We could reuse pos_aligned variable here instead of recalculating?
+
+> +			submit_start_pos = pos;
+> +ssize_t iomap_file_writethrough_write(struct kiocb *iocb, struct iov_iter *i,
+> +				      const struct iomap_writethrough_ops *wt_ops,
+> +				      void *private)
+> +{
+> +	struct inode *inode = iocb->ki_filp->f_mapping->host;
+> +	struct iomap_iter iter = {
+> +		.inode		= inode,
+> +		.pos		= iocb->ki_pos,
+> +		.len		= iov_iter_count(i),
+> +		.flags		= IOMAP_WRITE | IOMAP_WRITETHROUGH,
+> +		.private	= private,
+> +	};
+> +	struct iomap_writethrough_ctx *wt_ctx;
+> +	unsigned int max_bvecs;
+> +	ssize_t ret;
+> +	struct blk_plug plug;
+> +	size_t min_folio_bytes = PAGE_SIZE
+> +				 << mapping_min_folio_order(inode->i_mapping);
+
+min_folio_nr_bytes could be used here.
+> +
+> +	/*
+> +	 * For now we don't support any other flag with WRITETHROUGH
+> +	 */
+> +	if (!(iocb->ki_flags & IOCB_WRITETHROUGH))
+> +		return -EINVAL;
+> +	if (iocb->ki_flags & (IOCB_DONTCACHE))
+> +		return -EINVAL;
+> +	if (iocb_is_dsync(iocb))
+> +		/* D_SYNC support not implemented yet */
+> +		return -EOPNOTSUPP;
+> +	if (!is_sync_kiocb(iocb))
+> +		/* aio support not implemented yet */
+> +		return -EOPNOTSUPP;
+> +
+
+-- 
+Pankaj
