@@ -1,222 +1,245 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mout-p-103.mailbox.org (mout-p-103.mailbox.org [80.241.56.161])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10D69395AF2;
-	Wed,  7 Oct 2026 09:47:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7CFF4734CF
+	for <linux-xfs@vger.kernel.org>; Wed,  7 Oct 2026 10:14:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.161
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791366455; cv=none; b=iCIDHicquUs99RUO9C0JXwRgA9OVwCTY8696IsoS6j50Z/hhJkWKM0QzpuBDsHIYW19ylEHABJiUus8mDVeun3YMmLZVmZT31rqF8poT00QsTLFg2WD6AWiHZXGujLO5CnyrxQ/p3seGB4V2p0eYYtw/sQhsJFvT8Ob0SgFncBk=
+	t=1791368092; cv=none; b=NCAhG67shoJ1p8cVebjSCbA+heE+8ndsixot3UQwsdxvUWyHXhGPHDmc3m2J31vYwZm2fYziZ99hDzvHB9kufQ3kTGWYrJNjDz1MsPzdwQpCkDk8+HOhoLmT4QVBYC1u+r8bbCVnfMwJ9wJSvFcw2VleehhSPQ+D3HvRNYCNdrY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791366455; c=relaxed/simple;
-	bh=MI7nzD7itjW5CD3PEi3m4rfppLLIWuVo4w29NRTu5Ps=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=A18ab7BdFaOa564DGv291VEFXPODLEO2EM2b9m9r9OPoKKAsl3f1jRZ2FBZy9LwKKPhgXjGLAZoWB/8XaenK9piJYVVxQCmD5bqG8f6H7CPAgFtfcPxWXshxi9bYE5C6NQkpLk1aOlstuJv73dbZQ6VSmw559UxagRVRstsof7Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fai2JdxQ; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fai2JdxQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AEB331F0089B;
-	Wed,  7 Oct 2026 09:47:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791366444;
-	bh=WKfTrq8VHIA+znChlNb3NuZ60B46dqCeKbF4f81115I=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=fai2JdxQg2GTZDr/VvQZVCO9hLiWsjmsp3kCspc8fuKK4Idhvb8afxieuvkYwQyYm
-	 EROdJ2PNOewRKi2TlzftYwYAKyOzWDZOqcN/uIKMcnbgV4RmoSWKvkrrjXqOH103u4
-	 pkW/zLZZoKah5esAFQs3D/dVu6u2y5mvWBDTVdUYX8sUlAMw/6TGZqWNoZl9+0sMb5
-	 XRIYEsb8pFZMI07mxgwGXu32WJ+4ExSOAeE3Q6diCbSoyE+fYRs6OFJ8RwEG+2QP6M
-	 t5VGgOEOdwhnOdt+AfIzlhYUJpGyLhxBjp3rfpsYz8tJfVVrUI3imhuR0jMSWv7pUP
-	 MBSrx6oIQcWWw==
-Date: Wed, 7 Oct 2026 11:47:09 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: NeilBrown <neil@brown.name>
-Cc: Miklos Szeredi <miklos@szeredi.hu>, 
-	Amir Goldstein <amir73il@gmail.com>, Kees Cook <kees@kernel.org>, 
-	Joel Granados <joel.granados@kernel.org>, Richard Weinberger <richard@nod.at>, 
-	Anton Ivanov <anton.ivanov@cambridgegreys.com>, Johannes Berg <johannes@sipsolutions.net>, 
-	Breno Leitao <leitao@debian.org>, Andreas Hindborg <a.hindborg@kernel.org>, 
-	Jan Harkes <jaharkes@cs.cmu.edu>, Hugh Dickins <hughd@google.com>, 
-	Baolin Wang <baolin.wang@linux.alibaba.com>, Namjae Jeon <linkinjeon@kernel.org>, 
-	Hyunchul Lee <hyc.lee@gmail.com>, Alexander Viro <viro@zeniv.linux.org.uk>, 
-	Christian Brauner <brauner@kernel.org>, Jeff Layton <jlayton@kernel.org>, Jan Kara <jack@suse.cz>, 
-	linux-fsdevel@vger.kernel.org, fuse-devel@lists.linux.dev, linux-kernel@vger.kernel.org, 
-	linux-unionfs@vger.kernel.org, linux-um@lists.infradead.org, codalist@coda.cs.cmu.edu, 
-	coda@cs.cmu.edu, linux-mm@kvack.org, ntfs@lists.linux.dev, 
+	s=arc-20240116; t=1791368092; c=relaxed/simple;
+	bh=tebKim9JaLkNw548/CccRDBoYLBI51uOmrmdBu1YhPk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=EifZ9mYQ5F/QAbUsM8lg1QnptA3PhYalbmU6OV5gxSf8p2p4yi03EZb867ktKcd8YUoILwq/n6VMJCRi48Uip3VfZIhQ95AvWXmmuwJkfAQ13N7bnPJL4nueTEKukJ3HRgwfCLBT+mZrN6oECuxCRkW0tWEopraWOrz01IcinoE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=pankajraghav.com; arc=none smtp.client-ip=80.241.56.161
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
+Received: from smtp102.mailbox.org (smtp102.mailbox.org [IPv6:2001:67c:2050:b231:465::102])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519MLKEM768 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-103.mailbox.org (Postfix) with ESMTPS id 4j089z5sFQzKnV5;
+	Wed, 07 Oct 2026 12:14:31 +0200 (CEST)
+Authentication-Results: outgoing_mbo_mout;
+	dkim=none;
+	spf=pass (outgoing_mbo_mout: domain of kernel@pankajraghav.com designates 2001:67c:2050:b231:465::102 as permitted sender) smtp.mailfrom=kernel@pankajraghav.com
+From: Pankaj Raghav <p.raghav@samsung.com>
+To: cem@kernel.org,
 	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/7] VFS/xfs/ntfs: drop parent lock across
- d_alloc_parallel() in d_add_ci()
-Message-ID: <asYVApB1jdBYj9tN@cronus.toxiclabs.cc>
-References: <20260929034158.1455429-1-neilb@ownmail.net>
- <20260929034158.1455429-2-neilb@ownmail.net>
+Cc: pankaj.raghav@linux.dev,
+	John Garry <john.g.garry@oracle.com>,
+	"Darrick J . Wong" <djwong@kernel.org>,
+	p.raghav@samsung.com,
+	gost.dev@samsung.com
+Subject: [PATCH v2] xfs: don't limit software atomic writes by the group alignment
+Date: Wed,  7 Oct 2026 12:14:25 +0200
+Message-ID: <20261007101425.3741087-1-p.raghav@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260929034158.1455429-2-neilb@ownmail.net>
+Content-Transfer-Encoding: 8bit
+X-Rspamd-Queue-Id: 4j089z5sFQzKnV5
 
-On Tue, Sep 29, 2026 at 01:36:01PM +1000, NeilBrown wrote:
-> From: NeilBrown <neil@brown.name>
-> 
-> A proposed change will invert the lock ordering between
-> d_alloc_parallel() and inode_lock() on the parent.
-> When that happens it will not be safe to call d_alloc_parallel() while
-> holding the parent lock - even shared.
-> 
-> We don't need to keep the parent lock held when d_add_ci() is run - the
-> VFS doesn't need it as dentry is exclusively held due to
-> DCACHE_PAR_LOOKUP and the filesystem has finished its work.
-> 
-> So drop and reclaim the lock (shared or exclusive as determined by
-> LOOKUP_SHARED) to avoid future deadlock.
-> 
-> Signed-off-by: NeilBrown <neil@brown.name>
-> ---
+xfs_calc_group_awu_max() clamps the atomic write unit maximum to the
+greatest power-of-two factor of the group size when the device advertises
+atomic writes, so that allocations can be made naturally aligned for
+REQ_ATOMIC. But that value is the software limit: it is only used when
+reflink is enabled, and out of place writes through the COW fork have no
+alignment requirement.
 
-XFS bits are really small, but anyway, if needed, feel free to add:
+Compute the software limit from the group size alone, and apply the
+alignment constraint in xfs_get_atomic_write_max_opt() instead, which is
+what reports the size that can be offloaded to the hardware.
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Results on a 14TB device with 16k hardware atomic support with 16k
+blocksize:
 
->  Documentation/filesystems/porting.rst |  7 ++++++
->  fs/dcache.c                           | 32 +++++++++++++++++++++++----
->  fs/ntfs/namei.c                       |  2 +-
->  fs/xfs/xfs_iops.c                     |  2 +-
->  include/linux/dcache.h                |  3 ++-
->  5 files changed, 39 insertions(+), 7 deletions(-)
-> 
-> diff --git a/Documentation/filesystems/porting.rst b/Documentation/filesystems/porting.rst
-> index 4e015f1bf1f8..f6a38bd9c68e 100644
-> --- a/Documentation/filesystems/porting.rst
-> +++ b/Documentation/filesystems/porting.rst
-> @@ -1409,3 +1409,10 @@ use only if you have no alternative.
->  The .create inode_operation no longer receives the 'excl' arg.  It must
->  always assume the file does not already exist.  If the filesystem needs
->  to be involved in non-exclusive create, it should provide atomic_open.
-> +
-> +---
-> +
-> +**mandatory**
-> +
-> +d_add_ci() must now be passed the flags arguemnt that was given to ->lookup
-> +
-> diff --git a/fs/dcache.c b/fs/dcache.c
-> index 83790c7a4dee..61e0896dc077 100644
-> --- a/fs/dcache.c
-> +++ b/fs/dcache.c
-> @@ -2383,6 +2383,7 @@ EXPORT_SYMBOL(d_obtain_root);
->   * @dentry: the negative dentry that was passed to the parent's lookup func
->   * @inode:  the inode case-insensitive lookup has found
->   * @name:   the case-exact name to be associated with the returned dentry
-> + * @lookup_flags: flags passed to ->lookup
->   *
->   * This is to avoid filling the dcache with case-insensitive names to the
->   * same inode, only the actual correct case is stored in the dcache for
-> @@ -2395,9 +2396,10 @@ EXPORT_SYMBOL(d_obtain_root);
->   * the exact case, and return the spliced entry.
->   */
->  struct dentry *d_add_ci(struct dentry *dentry, struct inode *inode,
-> -			struct qstr *name)
-> +			struct qstr *name, unsigned int lookup_flags)
->  {
->  	struct dentry *found, *res;
-> +	bool must_unlock = false;
->  
->  	/*
->  	 * First check if a dentry matching the name already exists,
-> @@ -2409,24 +2411,46 @@ struct dentry *d_add_ci(struct dentry *dentry, struct inode *inode,
->  		return found;
->  	}
->  	if (d_in_lookup(dentry)) {
-> +		/*
-> +		 * We are holding parent lock and so don't want to wait
-> +		 * for a d_in_lookup() dentry.  We can safely drop the
-> +		 * parent lock and reclaim it as we have exclusive
-> +		 * access to dentry as it is d_in_lookup() (so
-> +		 * ->d_parent is stable) and we are near the end
-> +		 * ->lookup() and will shortly drop the lock anyway.
-> +		 * We cannot retake the lock while the new dentry is in-lookup
-> +		 */
-> +		if (lookup_flags & LOOKUP_SHARED)
-> +			inode_unlock_shared(d_inode(dentry->d_parent));
-> +		else
-> +			inode_unlock(d_inode(dentry->d_parent));
-> +		must_unlock = true;
->  		found = d_alloc_parallel(dentry->d_parent, name);
->  		if (IS_ERR(found) || !d_in_lookup(found)) {
->  			iput(inode);
-> -			return found;
-> +			goto out_unlock;
->  		}
->  	} else {
->  		found = d_alloc(dentry->d_parent, name);
->  		if (!found) {
->  			iput(inode);
->  			return ERR_PTR(-ENOMEM);
-> -		} 
-> +		}
->  	}
->  	res = d_splice_alias(inode, found);
->  	if (res) {
->  		d_lookup_done(found);
->  		dput(found);
-> -		return res;
-> +		found = res;
->  	}
-> +	if (!must_unlock)
-> +		return found;
-> +out_unlock:
-> +	d_lookup_done(dentry);
-> +	if (lookup_flags & LOOKUP_SHARED)
-> +		inode_lock_shared(d_inode(dentry->d_parent));
-> +	else
-> +		inode_lock_nested(d_inode(dentry->d_parent), I_MUTEX_PARENT);
->  	return found;
->  }
->  EXPORT_SYMBOL(d_add_ci);
-> diff --git a/fs/ntfs/namei.c b/fs/ntfs/namei.c
-> index 7091b2496fac..61cfa4e16586 100644
-> --- a/fs/ntfs/namei.c
-> +++ b/fs/ntfs/namei.c
-> @@ -309,7 +309,7 @@ static struct dentry *ntfs_lookup(struct inode *dir_ino, struct dentry *dent,
->  		}
->  		nls_name.hash = full_name_hash(dent, nls_name.name, nls_name.len);
->  
-> -		dent = d_add_ci(dent, dent_inode, &nls_name);
-> +		dent = d_add_ci(dent, dent_inode, &nls_name, flags);
->  		kfree(nls_name.name);
->  		return dent;
->  
-> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> index 4a3299abf774..fd480c0e4147 100644
-> --- a/fs/xfs/xfs_iops.c
-> +++ b/fs/xfs/xfs_iops.c
-> @@ -368,7 +368,7 @@ xfs_vn_ci_lookup(
->  	/* else case-insensitive match... */
->  	dname.name = ci_name.name;
->  	dname.len = ci_name.len;
-> -	dentry = d_add_ci(dentry, VFS_I(ip), &dname);
-> +	dentry = d_add_ci(dentry, VFS_I(ip), &dname, flags);
->  	kfree(ci_name.name);
->  	return dentry;
->  }
-> diff --git a/include/linux/dcache.h b/include/linux/dcache.h
-> index adf239f8205f..97d11f5e6a7b 100644
-> --- a/include/linux/dcache.h
-> +++ b/include/linux/dcache.h
-> @@ -267,7 +267,8 @@ struct dentry *d_duplicate(struct dentry *dentry);
->  /* weird procfs mess; *NOT* exported */
->  extern struct dentry * d_splice_alias_ops(struct inode *, struct dentry *,
->  					  const struct dentry_operations *);
-> -extern struct dentry * d_add_ci(struct dentry *, struct inode *, struct qstr *);
-> +extern struct dentry * d_add_ci(struct dentry *, struct inode *, struct qstr *,
-> +				unsigned int);
->  extern bool d_same_name(const struct dentry *dentry, const struct dentry *parent,
->  			const struct qstr *name);
->  extern struct dentry *d_find_any_alias(struct inode *inode);
-> 
-> base-commit: 3879f51857325da9bf3cfb073280257cd16ae067
-> -- 
-> 2.50.0.107.gf914562f5916.dirty
-> 
+Without patches:
+[nix-shell:~]# trace-cmd report
+cpus=16
+mount-617   [009]  1184.719159: xfs_calc_atomic_write_unit_max: dev 259:2 ag
+max_write 131072 max_ioend 4096 max_gsize 2 awu_max 2
+
+[nix-shell:~]# ./statx /media/test/hello.txt
+/media/test/hello.txt:
+   stx_atomic_write_unit_min:            16384
+   stx_atomic_write_unit_max:            32768
+   stx_atomic_write_unit_max_opt:        16384
+   stx_atomic_write_segments_max:        1
+
+With patches:
+[nix-shell:~]# trace-cmd report
+cpus=16
+mount-598   [005]   319.692000: xfs_calc_atomic_write_unit_max: dev 259:2 ag
+max_write 131072 max_ioend 4096 max_gsize 33554432 awu_max 4096
+
+[nix-shell:~]# ./statx /media/test/hello.txt
+/media/test/hello.txt:
+   stx_atomic_write_unit_min:            16384
+   stx_atomic_write_unit_max:            67108864
+   stx_atomic_write_unit_max_opt:        16384
+   stx_atomic_write_segments_max:        1
+
+Fixes: 0c438dcc3150 ("xfs: add xfs_calc_atomic_write_unit_max()")
+Assisted-by: LLM
+Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+---
+Changes since v1:
+- Change opt to max_opt
+- Move xfs_inode_group_type helper to xfs_inode.h
+- Change commit message with the latest xfsprogs
+
+ fs/xfs/xfs_inode.h |  9 +++++++++
+ fs/xfs/xfs_iops.c  | 21 ++++++++++++++++-----
+ fs/xfs/xfs_mount.c | 35 ++++++++++++++++++++++++-----------
+ fs/xfs/xfs_mount.h |  2 ++
+ 4 files changed, 51 insertions(+), 16 deletions(-)
+
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index ca96ba096359..64b47fa17b1a 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -353,6 +353,15 @@ static inline bool xfs_inode_has_bigrtalloc(const struct xfs_inode *ip)
+ 	return XFS_IS_REALTIME_INODE(ip) && ip->i_mount->m_sb.sb_rextsize > 1;
+ }
+ 
++/*
++ * Return the type of the group that data for a given inode is allocated from.
++ */
++static inline enum xfs_group_type
++xfs_inode_group_type(const struct xfs_inode *ip)
++{
++	return XFS_IS_REALTIME_INODE(ip) ? XG_TYPE_RTG : XG_TYPE_AG;
++}
++
+ /*
+  * Return the buftarg used for data allocations on a given inode.
+  */
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index f67a541ef35a..6b28b9c7de84 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -642,19 +642,20 @@ xfs_get_atomic_write_max(
+ 	 * then advertise a maximum size of whatever we can complete through
+ 	 * that means.  Hardware support is reported via max_opt, not here.
+ 	 */
+-	if (XFS_IS_REALTIME_INODE(ip))
+-		return XFS_FSB_TO_B(mp, mp->m_groups[XG_TYPE_RTG].awu_max);
+-	return XFS_FSB_TO_B(mp, mp->m_groups[XG_TYPE_AG].awu_max);
++	return XFS_FSB_TO_B(mp, mp->m_groups[xfs_inode_group_type(ip)].awu_max);
+ }
+ 
+ unsigned int
+ xfs_get_atomic_write_max_opt(
+ 	struct xfs_inode	*ip)
+ {
++	struct xfs_mount	*mp = ip->i_mount;
+ 	unsigned int		awu_max = xfs_get_atomic_write_max(ip);
++	xfs_extlen_t		align_max_fsb;
++	unsigned int		max_opt;
+ 
+ 	/* if the max is 1x block, then just keep behaviour that opt is 0 */
+-	if (awu_max <= ip->i_mount->m_sb.sb_blocksize)
++	if (awu_max <= mp->m_sb.sb_blocksize)
+ 		return 0;
+ 
+ 	/*
+@@ -663,7 +664,17 @@ xfs_get_atomic_write_max_opt(
+ 	 * less than our out of place write limit, but we don't want to exceed
+ 	 * the awu_max.
+ 	 */
+-	return min(awu_max, xfs_inode_buftarg(ip)->bt_awu_max);
++	max_opt = min(awu_max, xfs_inode_buftarg(ip)->bt_awu_max);
++
++	/*
++	 * REQ_ATOMIC writes also have to be naturally aligned on disk, so we
++	 * cannot promise more than the largest extent that the allocator is
++	 * able to align within a group.
++	 */
++	align_max_fsb = xfs_calc_group_awu_align_max(mp,
++						xfs_inode_group_type(ip));
++
++	return min_t(xfs_fsize_t, max_opt, XFS_FSB_TO_B(mp, align_max_fsb));
+ }
+ 
+ static void
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index be90c7b03994..b7110b3d023b 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -674,15 +674,13 @@ static inline xfs_extlen_t xfs_calc_atomic_write_max(struct xfs_mount *mp)
+ }
+ 
+ /*
+- * If the underlying device advertises atomic write support, limit the size of
+- * atomic writes to the greatest power-of-two factor of the group size so
+- * that every atomic write unit aligns with the start of every group.  This is
+- * required so that the allocations for an atomic write will always be
+- * aligned compatibly with the alignment requirements of the storage.
++ * The largest out of place write is the number of blocks that user files can
++ * allocate from any group.
+  *
+- * If the device doesn't advertise atomic writes, then there are no alignment
+- * restrictions and the largest out-of-place write we can do ourselves is the
+- * number of blocks that user files can allocate from any group.
++ * This is a software limit, so it deliberately does not take the alignment
++ * requirements of the storage into account. An atomic write that cannot be
++ * handed to the device as a single naturally aligned REQ_ATOMIC bio is
++ * completed through the COW fork instead, which has no such requirement.
+  */
+ static xfs_extlen_t
+ xfs_calc_group_awu_max(
+@@ -690,15 +688,30 @@ xfs_calc_group_awu_max(
+ 	enum xfs_group_type	type)
+ {
+ 	struct xfs_groups	*g = &mp->m_groups[type];
+-	struct xfs_buftarg	*btp = xfs_group_type_buftarg(mp, type);
+ 
+ 	if (g->blocks == 0)
+ 		return 0;
+-	if (btp && btp->bt_awu_min > 0)
+-		return max_pow_of_two_factor(g->blocks);
+ 	return rounddown_pow_of_two(g->blocks);
+ }
+ 
++/*
++ * Compute the largest atomic write unit for which the allocator can guarantee
++ * naturally aligned extents in this group type.
++ *
++ * Hardware atomic writes have to be naturally aligned on disk.
++ */
++xfs_extlen_t
++xfs_calc_group_awu_align_max(
++	struct xfs_mount	*mp,
++	enum xfs_group_type	type)
++{
++	struct xfs_groups	*g = &mp->m_groups[type];
++
++	if (g->blocks == 0)
++		return 0;
++	return max_pow_of_two_factor(g->blocks);
++}
++
+ /* Compute the maximum atomic write unit size for each section. */
+ static inline void
+ xfs_calc_atomic_write_unit_max(
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 894ff2f4ecbd..cbcfb89c67a4 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -820,6 +820,8 @@ static inline void xfs_mod_sb_delalloc(struct xfs_mount *mp, int64_t delta)
+ 
+ int xfs_set_max_atomic_write_opt(struct xfs_mount *mp,
+ 		unsigned long long new_max_bytes);
++xfs_extlen_t xfs_calc_group_awu_align_max(struct xfs_mount *mp,
++		enum xfs_group_type type);
+ 
+ static inline struct xfs_buftarg *
+ xfs_group_type_buftarg(
+
+base-commit: d10270a8e5fde59eb68921fddfe40c6c2a31a954
+-- 
+2.51.2
+
