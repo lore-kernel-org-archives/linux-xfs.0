@@ -1,43 +1,47 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80FF03B0583
-	for <linux-xfs@vger.kernel.org>; Wed,  7 Oct 2026 15:37:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE3853769E7;
+	Wed,  7 Oct 2026 16:51:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791387484; cv=none; b=VOCndyVCjtLhnEsMcW7Qb5SXe/ERaSr3fR6Pknim9GjcYfWw7ApY35ft+zwRFVOAi2H7Bnpo2BiSP8Q2ov0sBcITzT0IJ3dIfSI0si2BLMe3BPiVe6epcVSIkxDF3eIRDZn7w0F64WgqwQpe3JKOKL6Z8Zz9Vo0Cp4fJDin7EKw=
+	t=1791391863; cv=none; b=iw0W3RkXmko6IBh0BMHOE3ZBLuui0QsIEINB1jTc5fnDwamyLnbwuNuJ+vl8lfXDTvgrLy/nKTI+41X82rxQzydMGLbe0NCjeeXVhKtXXX4yRDyxED3mzqGA/I8j/s+eG4pQWDK5O3VDB1bERvGQPbByIfhKw/qkhUe8TeBGCC4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791387484; c=relaxed/simple;
-	bh=aNAd8KSDKDunFWIGwhBhlgZ1WpmnDHOl1VB/6/hIlAc=;
+	s=arc-20240116; t=1791391863; c=relaxed/simple;
+	bh=vgdQRSfOKjIXpOP7qitamJPmUTP88vCCFffUW9laRnc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PmmQVHjUhT48sTyT8AAY4utPQrdQjvkjz5zQ0y6V0kw7JEXmOA++1w07M+CDw8pl65AWf7mzRCmDU9JZJ78o2ynHfg3wKfak5C6VS71Nzb9kPxrRvhWPF946BBZIon7JyaRjOC6pXDeHGT/sUj2Y0kBrHY3esy67zKU+BekBEEk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=THHF/KX0; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=dhYcEXucG+KSNyyfQPYEpyNEwglsgxvfc6kf7SVh026Knm2AnRwE61QrYqpi/LuQinJfWSRNJ4mWKlVK50B5feRBAHUmt539Kjm4PNH6InNSGXRBiAFwQaiR3kI30txvqCURKutbUdV7lqSDzg9dm7ivtjwV3b2jpfHPE+SNVds=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dYeOB6MF; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="THHF/KX0"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 994911F000FF;
-	Wed,  7 Oct 2026 15:37:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dYeOB6MF"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id BC2711F000FF;
+	Wed,  7 Oct 2026 16:51:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791387477;
-	bh=FKNloAfeJWjof4J4K6LoUNzNLhxxsuF+LiSzbRQ515g=;
+	s=k20260515; t=1791391861;
+	bh=g3GDj44pZqpTbY7CEy8FMAe3ZTGytx1Q4Wcn40+jykg=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=THHF/KX03WM2i2uB0Ayoq4RqIZ+ihCie2Er8Ol7T6zpINAfgxxBSghfQpFsM2HGuD
-	 Nfy8efOYCauuKv4SZGrkhi2EDB+gP8qKFEtFxYx3pdPGQBcmctc13Vu0MqwvlE0zjD
-	 Ia6eQLEQw9jIErSZfHPt7TY6wz2EdYQT+7Z97y+uI6/CLFTXsEX+XFdgXh8qdo0Dwy
-	 UGEUYw5/myPBvF8LqEUvnoJKEHcW5Habzja70c06aN5j35AV5RE6NtiJ6eSiQ17LFd
-	 OQsiv9ekUZUtVb6QasCgHCcRfMBxvhvVXWNUYjB88A5fYUyRXwavBiGvliEDVVpcxR
-	 AjgwW1CZfd/2A==
-Date: Wed, 7 Oct 2026 08:37:57 -0700
+	b=dYeOB6MFIZDmDJ4D7drffywsyAV4q3h4VWMYOas/3fdThIQhkXninnXewsNUHT5cl
+	 YngYjs2s4Iiz//tT75QAcG4n2lbvA1wZcXXGFq2EZ0X3NGjpddiXTf9Kg+8ZzG7CU6
+	 hFY2rlii8UtjVkj6LZ8ASxbWsHX6Lqrq9DmtruE4tNkKT6/mrzMmBrUtzZkxfK/PH5
+	 2UA92dARQLtsi9Wy69QVwXW9jtP4sV4FzrS2tPhoDjbtZeWq2eCqV/q/fGO9N8iAsf
+	 n3hS+ndy5vy3ip8kL5MCdALrMhdSGCcQ38JLJYTo035y8ILGdf/MtqGafJr6fyzSMZ
+	 EOr3XdPNMWffQ==
+Date: Wed, 7 Oct 2026 09:51:01 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Eric Sandeen <sandeen@redhat.com>, linux-xfs@vger.kernel.org,
-	cem@kernel.org
-Subject: Re: [PATCH 3/3] xfs: re-use refcount scrub/repair code for rtrefcount
-Message-ID: <20261007153757.GC2705364@frogsfrogsfrogs>
-References: <20261002211038.2139655-1-sandeen@redhat.com>
- <20261002211038.2139655-4-sandeen@redhat.com>
- <asZOVQfQU3TpEBgv@infradead.org>
- <7206d033-2082-4591-81e7-43a5c5bd631a@sandeen.net>
+To: daejun7.park@samsung.com
+Cc: Chuck Lever <cel@kernel.org>, Jeff Layton <jlayton@kernel.org>,
+	NeilBrown <neil@brown.name>,
+	Olga Kornievskaia <okorniev@redhat.com>,
+	Dai Ngo <Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>,
+	Christoph Hellwig <hch@lst.de>,
+	Sergey Bashirov <sergeybashirov@gmail.com>,
+	Carlos Maiolino <cem@kernel.org>,
+	Amir Goldstein <amir73il@gmail.com>, linux-nfs@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] nfsd: do not return overlapping extents in a block layout
+Message-ID: <20261007165101.GD2705364@frogsfrogsfrogs>
+References: <20261007-nfsd-block-trim-v1-1-53370f97047a@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,46 +50,174 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <7206d033-2082-4591-81e7-43a5c5bd631a@sandeen.net>
+In-Reply-To: <20261007-nfsd-block-trim-v1-1-53370f97047a@samsung.com>
 
-On Wed, Oct 07, 2026 at 10:32:20AM -0500, Eric Sandeen wrote:
-> On 10/7/26 8:51 AM, Christoph Hellwig wrote:
-> > On Fri, Oct 02, 2026 at 04:08:11PM -0500, Eric Sandeen wrote:
-> >> Some code in scrub/rtrefcount.c is copied from scrub/refcount.c; it
-> >> differs only in function & structure names and a couple types and
-> >> macros, which share the same underlying types and values.
-> >>
-> >> Similarly for code in fs/xfs/scrub/[rt]refcount_repair.c
-> >>
-> >> Export the refcount versions, use them for rtrefcount scrubbing,
-> > 
-> > Not really an export fortunately :)
+On Wed, Oct 07, 2026 at 11:03:01AM +0900, Daejun Park via B4 Relay wrote:
+> From: Daejun Park <daejun7.park@samsung.com>
 > 
-> Oh, uh, yeah. I didn't mean like EXPORT_SYMBOL just un-STATIC. :( 
+> Since commit cc6c40e09d7b ("NFSD/blocklayout: Support multiple extents
+> per LAYOUTGET"), nfsd4_block_proc_layoutget() calls ->map_blocks once
+> per extent of a LAYOUTGET, each time for the range left after the
+> previous extent. nfsd4_block_map_extent() takes a mapping that starts at
+> the offset asked for or below it, but only the first extent may start
+> below it. A later extent that starts below its offset overlaps the
+> extents before it, which RFC 5663 section 2.3.1 does not allow. The
+> Linux client rejects such a layout (verify_extent() returns -EIO), and
+> the I/O that needed it fails. The block and SCSI layouts share this
+> code.
 > 
-> Maybe Carlos fix it to:
+> XFS, the only ->map_blocks implementation, used to map the whole extent
+> that contains the offset. Together with one call per extent, that gave
+> overlapping layouts in v6.19 and v7.0: allocating the blocks for one
+> extent of a write layout could merge the extent that the next call
+> starts in with the unwritten extents before it. Since commit
+> 36ca6f11424a ("xfs: fix overlapping extents returned for pNFS
+> LAYOUTGET"), XFS does not map below the offset, so this patch changes
+> nothing with current XFS. It only stops nfsd from relying on that: trim
+> each extent after the first so that it starts at the offset asked for,
+> and move its volume offset by the same amount unless it is a NONE_DATA
+> extent, which has none.
 > 
-> Make the refcount versions non-static and use them for rtrefcount scrubbing.
+> nfsd leaves the end of a mapping alone, as only the filesystem knows
+> where it should end. It does need a mapping that contains the offset
+> asked for, which RFC 5663 section 2.3.1 also requires of the first
+> extent. A mapping that does not would leave a gap in the layout or make
+> the length computed from it wrap around, so warn and return
+> NFS4ERR_LAYOUTUNAVAILABLE; the client then does the I/O through the
+> metadata server. iomap_iter_done() has the same check, as a
+> WARN_ON_ONCE(), for ->iomap_begin(), and nfsd4_block_map_extent()
+> already warns and fails this way for a mapping of an unexpected type.
+> Document in exportfs_block.h that the mapping must contain the offset.
 > 
-> on commit, or I can send another version if needed.
+> On a test kernel whose xfs_fs_map_blocks() maps with XFS_BMAPI_ENTIRE
+> and does not trim, as XFS did before that commit, a write layout over a
+> hole between two unwritten blocks comes back as 0+4096, 4096+4096 and
+> 0+12288, and the pynfs test BLOCK5 fails in five runs out of five.
+> fstests generic/075, 091 and 263 over the block layout fail with an EIO
+> or a zero-length O_DIRECT write, and bl_alloc_lseg() on the client
+> returns -EIO three times. With this patch on top, the third extent is
+> 8192+4096, BLOCK5 passes in five runs out of five, generic/091 and 263
+> pass, generic/075 fails with the fsx "Size error" that it also fails
+> with on nfsd-testing, and bl_alloc_lseg() returns no error.
+> 
+> Suggested-by: Darrick J. Wong <djwong@kernel.org>
+> Link: https://lore.kernel.org/r/20261006051324.GV2705364@frogsfrogsfrogs
+> Link: https://lore.kernel.org/r/20261006152333.GO1615495@frogsfrogsfrogs
+> Signed-off-by: Daejun Park <daejun7.park@samsung.com>
+> ---
+> Darrick asked whether nfsd should trim the lower end of a mapping that
+> starts below the offset asked for, or warn and fail. This patch trims
+> such a mapping for every extent but the first, and warns only when a
+> mapping does not contain the offset at all. The XFS patch his question
+> was about also trims, in xfs_fs_map_blocks(). The two patches do not
+> depend on each other:
+> https://lore.kernel.org/r/20261006003425epcms2p586728e55ff5f9bbabc506b672fc4a421@epcms2p5
+> 
+> No stable backport is needed, which is also why there is no Fixes: tag
+> for cc6c40e09d7b. Overlapping extents need both the per-extent calls of
+> cc6c40e09d7b (v6.19) and XFS_BMAPI_ENTIRE in xfs_fs_map_blocks(), which
+> 36ca6f11424a removed in v7.1. Only 6.19.y and 7.0.y have both, and
+> neither is maintained any more; 6.18.y and older call ->map_blocks once
+> per LAYOUTGET.
+> 
+> Tested on nfsd-testing 56589cdb5881 with three QEMU VMs (an NVMe/TCP
+> target, the server with nfsd and XFS, and a client), over the block
+> layout only. With only this patch, nfsd-testing gives the same BLOCK5
+> and fstests results as without it. With KASAN and lockdep, the test
+> kernel with this patch on top gives the same BLOCK5 and fstests results
+> as above, with no warning. Trimming was seen only for the INVALID_DATA
+> extents of BLOCK5; nothing counted trims during the fstests runs. The
+> pynfs test BLOCK5 is at
+> https://lore.kernel.org/r/20261006002622epcms2p38e492aef17fdf79e48b05c9aada2918d@epcms2p3
+> ---
+>  fs/nfsd/blocklayout.c          | 28 ++++++++++++++++++++++++++--
+>  include/linux/exportfs_block.h |  2 ++
+>  2 files changed, 28 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/nfsd/blocklayout.c b/fs/nfsd/blocklayout.c
+> index df02cf746..1aabae003 100644
+> --- a/fs/nfsd/blocklayout.c
+> +++ b/fs/nfsd/blocklayout.c
+> @@ -20,8 +20,8 @@
+>  
+>  
+>  /*
+> - * Get an extent from the file system that starts at offset or below
+> - * and may be shorter than the requested length.
+> + * Get an extent from the file system that contains offset. It may start
+> + * below offset and may be shorter than the requested length.
 
-s/Export/Share/ ?
+Nitpicking here, but the extent could extend beyond than the requested
+@offset/@length range too, right?  Shouldn't the comment say that, since
+the header comment allows for both cases, right?
+
+With that fixed,
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
-> > 
-> >> eliminate the copies, and add build-time asserts so that the type/value
-> >> matches mentioned above do not drift.
-> > 
-> >>  5 files changed, 72 insertions(+), 316 deletions(-)
-> > 
-> > Nice code savings!
-> > 
-> > Looks good modulo the commit log nitpick:
-> > 
-> > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > 
+>   */
+>  static __be32
+>  nfsd4_block_map_extent(struct inode *inode, const struct svc_fh *fhp,
+> @@ -41,6 +41,13 @@ nfsd4_block_map_extent(struct inode *inode, const struct svc_fh *fhp,
+>  		return nfserrno(error);
+>  	}
+>  
+> +	if (WARN_ONCE(iomap.offset > offset ||
+> +		      offset - iomap.offset >= iomap.length,
+> +		      "pnfsd: %s ino %llu: filesystem returned extent %lld+%llu for offset %llu\n",
+> +		      sb->s_id, inode->i_ino, iomap.offset, iomap.length,
+> +		      offset))
+> +		return nfserr_layoutunavailable;
+> +
+>  	switch (iomap.type) {
+>  	case IOMAP_MAPPED:
+>  		if (iomode == IOMODE_READ)
+> @@ -147,6 +154,23 @@ nfsd4_block_proc_layoutget(struct svc_rqst *rqstp, struct inode *inode,
+>  		if (nfserr != nfs_ok)
+>  			goto out_error;
+>  
+> +		/*
+> +		 * Each extent after the first was mapped for the range that
+> +		 * starts where the previous extent ends, but the filesystem
+> +		 * may return a mapping that starts below that point. Trim
+> +		 * it, as RFC 5663 section 2.3.1 does not allow extents to
+> +		 * overlap. nfsd4_block_map_extent() made sure the mapping
+> +		 * contains offset. NONE_DATA extents have no volume offset.
+> +		 */
+> +		if (i > 0 && bex->foff < offset) {
+> +			u64 skip = offset - bex->foff;
+> +
+> +			bex->foff = offset;
+> +			bex->len -= skip;
+> +			if (bex->es != PNFS_BLOCK_NONE_DATA)
+> +				bex->soff += skip;
+> +		}
+> +
+>  		bex_length = bex->len - (offset - bex->foff);
+>  		if (bex_length >= length) {
+>  			bl->nr_extents = i + 1;
+> diff --git a/include/linux/exportfs_block.h b/include/linux/exportfs_block.h
+> index de519b7b5..21e61fc01 100644
+> --- a/include/linux/exportfs_block.h
+> +++ b/include/linux/exportfs_block.h
+> @@ -44,6 +44,8 @@ struct exportfs_block_ops {
+>  	/*
+>  	 * Map blocks for direct block access.
+>  	 * If @write is %true, also allocate the blocks for the range if needed.
+> +	 * The mapping returned must contain @offset. It may start before
+> +	 * @offset and may end before or after @offset + @len.
+>  	 */
+>  	int (*map_blocks)(struct inode *inode, loff_t offset, u64 len,
+>  			struct iomap *iomap, bool write,
 > 
-> Thanks,
-> -Eric
+> ---
+> base-commit: 56589cdb58819ce54decedbbfddf231d94b5ce41
+> change-id: 20261007-nfsd-block-trim-81a6a8b066c9
+> 
+> Best regards,
+> -- 
+> Daejun Park <daejun7.park@samsung.com>
+> 
+> 
 > 
