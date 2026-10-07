@@ -1,46 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6ADA53783CC
-	for <linux-xfs@vger.kernel.org>; Wed,  7 Oct 2026 17:43:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C99F3DB33F
+	for <linux-xfs@vger.kernel.org>; Wed,  7 Oct 2026 18:40:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791395012; cv=none; b=qGKUo/9NHmyTyPH7L7CG3mt4Dj7XgFBBNdf54QT1es+zPlXMhEig4LUlAa0vov8umwjpCTjXzkUUIHCnAtjFoRuPedwz5+kMtObVyU1mLN8GKC+f1c9dzkoUUZOdwhPzFad8xkzozae+fh2cW6f8MKcBNNgnbyfHAXbX5vzGy98=
+	t=1791398452; cv=none; b=h3J/K5r6j2TrQeQcihAOF3KS8mmwnVrdj3hwpVcFehd7T2SeF+wzgUvhRmrwB/QInSXBX+LpT9UaTSsoHwgXVFZlxC3yJWMMx7gJWdbemcmqMQICiQ8IqK8Mx9JOOqpO09yFnfQNlmUlZlbvlIOw9cQfSycNMU63AFEE0gP9e74=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791395012; c=relaxed/simple;
-	bh=TimQYC97NWsUqjJB/l6Z8ZiaaAbdTs/a/hu7T8f/Ckk=;
+	s=arc-20240116; t=1791398452; c=relaxed/simple;
+	bh=3kZI3eQoRHFs46/BRSB5gNIZXOoi82kvNfLKMq08Xt4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TwFRat3Z7uYZU5XLpjMPUJMCAKp8RaYXVZ77CB48wSnHlahTvZjNabGDbPbP1FpqFrPvEFjZ/fMJM3VTvuEsB8M2WHoYCAG2uks2nSz21P3gXo0Ii0oINQ+V/52nLoIaFDuY9dSZEhWMfrBRd4kMIubJ4EsG2rbyVHMTn7bLJE0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Hz4a/f3L; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=ERA2cWSh2zFrNos2j7dC419XJvM59YrnGy3EJWZxba44ck5zAhVeDIDnrcbAqvfcmC9i3DkGjSPkAtrQzWb9FWZt7BHhb4ymlOXFcmLf3VpE+ON0X/8NPR//Stm2WD+Zy11QfHXf+mopYF5AMeyG28riEIncRks9xGb47c3YVK0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Yyy93VTh; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Hz4a/f3L"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id ECB681F000FF;
-	Wed,  7 Oct 2026 17:43:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Yyy93VTh"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 145591F000FF;
+	Wed,  7 Oct 2026 18:40:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791395011;
-	bh=etzqpuKTD65fI2kXayPxE5KILMKT3Xocnu6Ej/qgvLU=;
+	s=k20260515; t=1791398451;
+	bh=W8HEI0mRk+Mp/cTxohNN+xhgkRxn1jlTalaTgfZ8RDc=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Hz4a/f3LrfXXQAAOAEPo+sC31kcLKmdW+4lVrnY9ddG4xRjBx16hMiRgCpT8UUPn8
-	 0DHBTgbuoPWDJILOCL0cermyT0A4KAnA2O5L7CjxoGQJxd6tVdufY95NIJfWpG7QxJ
-	 w8yRkwKQEqclpAoz+S8znTOPa21JPH7myG2dVuWIVEDRT9gJ0hTn5Cvn8IuF2IHT3l
-	 dJagOc2SxDFqdlboHVZOzSJt16MUF+0PFj4oKVPMC4V6+EcQENYylyi5Br+LQt0rGb
-	 1Q8c9McnFSKyrTNgAo8LVLJjyzb4eWx6ynkCc9vPADy5IP8x4vL/B9AudNf2N0RbeZ
-	 /H9fPsuwALV8w==
-Date: Wed, 7 Oct 2026 10:43:30 -0700
+	b=Yyy93VThsT1+KsjmfNKJNDPzIvNliIbxGaXp26WSCqdHQJ10GcQw8vSndRW6EeYRh
+	 c9E7zP31tUBUpIBJHVjO5GiRQlI0olKepsznarfRDypXc79WyiSeZS3TYoTfBmIzmO
+	 0/JRSBII1B3fhsV0KhZzU73OS9fridJuWM1+uOeTKP+By6wS6wrjEcAe7ZzlD7JLqS
+	 Y0FxAl1RlLOsWGIPnzkKaEjMw18bzHRqhgFW4hbSAOGA4jO083kJP7qSLYbvc0FibF
+	 cMaPdzIo28s0HfU1PWzMFPb9tS0J8TMKLCMjdnFntHCtuKlqvFrzyIouROkyQj09j0
+	 Uy/i6NsuZkSLw==
+Date: Wed, 7 Oct 2026 11:40:50 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>
-Cc: john.garry@linux.dev, Pankaj Raghav <p.raghav@samsung.com>,
-	cem@kernel.org, linux-xfs@vger.kernel.org,
+To: Pankaj Raghav <p.raghav@samsung.com>
+Cc: cem@kernel.org, linux-xfs@vger.kernel.org, pankaj.raghav@linux.dev,
 	John Garry <john.g.garry@oracle.com>, gost.dev@samsung.com
-Subject: Re: [PATCH] xfs: don't limit software atomic writes by the group
+Subject: Re: [PATCH v2] xfs: don't limit software atomic writes by the group
  alignment
-Message-ID: <20261007174330.GK2705364@frogsfrogsfrogs>
-References: <20260925103640.932735-1-p.raghav@samsung.com>
- <41749fa7-dcfa-46f0-af0f-ed3fa5f39f15@linux.dev>
- <ffd48d49-c4f6-4fc3-88a5-0adb11d0d6b9@linux.dev>
- <20260929164010.GS2705364@frogsfrogsfrogs>
- <20260929204228.GT2705364@frogsfrogsfrogs>
- <m72iphraf7d3hoziw55inrymk6ynsgl3zio7nyiysm4w2fkac4@jtcaqpvg7g4a>
+Message-ID: <20261007184050.GL2705364@frogsfrogsfrogs>
+References: <20261007101425.3741087-1-p.raghav@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -49,254 +43,251 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <m72iphraf7d3hoziw55inrymk6ynsgl3zio7nyiysm4w2fkac4@jtcaqpvg7g4a>
+In-Reply-To: <20261007101425.3741087-1-p.raghav@samsung.com>
 
-On Wed, Sep 30, 2026 at 08:48:56AM +0000, Pankaj Raghav (Samsung) wrote:
-> > > But I guess I'll play around with it for a while and see if I get
-> > > anywhere.  Assuming you're running a recent mkfs that knows about
-> > > the atomic write options and whatnot?
-> > 
-> > FWIW I tried this with scsi-debug and got the following:
-> > 
-> > # umount /dev/sdg
-> > # rmmod scsi-debug
-> > # modprobe scsi-debug dev_size_mb=1000 virtual_gb=4096 atomic_wr=1 atomic_wr_max_length=32
-> > # xfs_io -c 'statx -r -m all ' /dev/sdg | grep atomic
-> > stat.atomic_write_unit_min = 1024
-> > stat.atomic_write_unit_max = 16384
-> > stat.atomic_write_segments_max = 1
-> > stat.atomic_write_unit_max_opt = 0
-> > # mkfs.xfs -f /dev/sdg
-> > meta-data=/dev/sdg               isize=512    agcount=4, agsize=268435452 blks
-> >          =                       sectsz=512   attr=2, projid32bit=1
-> >          =                       crc=1        finobt=1, sparse=1, rmapbt=1
-> >          =                       reflink=1    bigtime=1 inobtcount=1 nrext64=1
-> >          =                       exchange=1   metadir=0
-> > data     =                       bsize=4096   blocks=1073741808, imaxpct=5
-> >          =                       sunit=0      swidth=0 blks
-> > naming   =version 2              bsize=4096   ascii-ci=0, ftype=1, parent=1
-> > log      =internal log           bsize=4096   blocks=521728, version=2
-> >          =                       sectsz=512   sunit=0 blks, lazy-count=1
-> > realtime =none                   extsz=4096   blocks=0, rtextents=0
-> >          =                       rgcount=0    rgsize=0 extents
-> >          =                       zoned=0      start=0 reserved=0
-> > # mount /dev/sdg /mnt
-> > # touch /mnt/fubar
-> > # xfs_io -c 'statx -r -m all' /mnt/fubar | grep atomic
-> > stat.atomic_write_unit_min = 4096
-> > stat.atomic_write_unit_max = 16384
-> > stat.atomic_write_segments_max = 1
-> > stat.atomic_write_unit_max_opt = 16384
-> > 
-> > Note the agsize=268435452, which means that it rounded the AG size down
-> > to something congruent with the 16k hardware atomic write max.
-> > 
-> > (Are you sure you're using mkfs.xfs from xfsprogs 6.16 or newer?)
+On Wed, Oct 07, 2026 at 12:14:25PM +0200, Pankaj Raghav wrote:
+> xfs_calc_group_awu_max() clamps the atomic write unit maximum to the
+> greatest power-of-two factor of the group size when the device advertises
+> atomic writes, so that allocations can be made naturally aligned for
+> REQ_ATOMIC. But that value is the software limit: it is only used when
+> reflink is enabled, and out of place writes through the COW fork have no
+> alignment requirement.
 > 
-> I noticed the issue when I was running a test on a bare metal server
-> with xfsprog 7.1.1. But I tried to recreate the issue in a VM where I
-> was running an old xfsprog. So the values I have posted here are wrong.
-> Sorry for that.
+> Compute the software limit from the group size alone, and apply the
+> alignment constraint in xfs_get_atomic_write_max_opt() instead, which is
+> what reports the size that can be offloaded to the hardware.
 > 
-> > # xfs_io -c 'statx -r -m all' /mnt/fubar | grep atomic
-> > stat.atomic_write_unit_min = 4096
-> > stat.atomic_write_unit_max = 16384
-> > stat.atomic_write_segments_max = 1
-> > stat.atomic_write_unit_max_opt = 16384
+> Results on a 14TB device with 16k hardware atomic support with 16k
+> blocksize:
 > 
-> However, I still do not understand why do we have to restrict
-> atomic_write_unit_max (SW based atomics) to 16k here?
+> Without patches:
+> [nix-shell:~]# trace-cmd report
+> cpus=16
+> mount-617   [009]  1184.719159: xfs_calc_atomic_write_unit_max: dev 259:2 ag
+> max_write 131072 max_ioend 4096 max_gsize 2 awu_max 2
 > 
-> Let me take a step back and give a history on why I started to look into
-> this.
+> [nix-shell:~]# ./statx /media/test/hello.txt
+> /media/test/hello.txt:
+>    stx_atomic_write_unit_min:            16384
+>    stx_atomic_write_unit_max:            32768
+>    stx_atomic_write_unit_max_opt:        16384
+>    stx_atomic_write_segments_max:        1
 > 
-> I am running 7.2-rc6 with 7.1.1 xfsprogs on a bare metal server with a
-> NVMe device that supports atomics.
+> With patches:
+> [nix-shell:~]# trace-cmd report
+> cpus=16
+> mount-598   [005]   319.692000: xfs_calc_atomic_write_unit_max: dev 259:2 ag
+> max_write 131072 max_ioend 4096 max_gsize 33554432 awu_max 4096
 > 
-> I am formatting XFS with 16k blocksize.
+> [nix-shell:~]# ./statx /media/test/hello.txt
+> /media/test/hello.txt:
+>    stx_atomic_write_unit_min:            16384
+>    stx_atomic_write_unit_max:            67108864
+>    stx_atomic_write_unit_max_opt:        16384
+>    stx_atomic_write_segments_max:        1
 > 
-> panky@blixen:~$ df -h /dev/nvme1n1
-> Filesystem      Size  Used Avail Use% Mounted on
-> /dev/nvme1n1     14T  179G   14T   2% /mnt/atomssd
+> Fixes: 0c438dcc3150 ("xfs: add xfs_calc_atomic_write_unit_max()")
+> Assisted-by: LLM
+> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+> ---
+> Changes since v1:
+> - Change opt to max_opt
+> - Move xfs_inode_group_type helper to xfs_inode.h
+> - Change commit message with the latest xfsprogs
 > 
-> panky@blixen:~$ cat /sys/block/nvme1n1/queue/atomic_write_unit_max_bytes
-> 16384
+>  fs/xfs/xfs_inode.h |  9 +++++++++
+>  fs/xfs/xfs_iops.c  | 21 ++++++++++++++++-----
+>  fs/xfs/xfs_mount.c | 35 ++++++++++++++++++++++++-----------
+>  fs/xfs/xfs_mount.h |  2 ++
+>  4 files changed, 51 insertions(+), 16 deletions(-)
 > 
-> panky@blixen:~$ xfs_info /mnt/atomssd/
-> meta-data=/dev/nvme1n1           isize=512    agcount=14, agsize=67108863 blks
->          =                       sectsz=4096  attr=2, projid32bit=1
->          =                       crc=1        finobt=1, sparse=1, rmapbt=1
->          =                       reflink=1    bigtime=1 inobtcount=1 nrext64=1
->          =                       exchange=1   metadir=0
-> data     =                       bsize=16384  blocks=937558016, imaxpct=5
->          =                       sunit=0      swidth=0 blks
-> naming   =version 2              bsize=16384  ascii-ci=0, ftype=1, parent=1
-> log      =internal log           bsize=16384  blocks=130432, version=2
->          =                       sectsz=4096  sunit=1 blks, lazy-count=1
-> realtime =none                   extsz=16384  blocks=0, rtextents=0
->          =                       rgcount=0    rgsize=0 extents
->          =                       zoned=0      start=0 reserved=0
-> 
-> panky@blixen:~/tools$ sudo ./statx /mnt/atomssd/hello.txt
-> [sudo: authenticate] Password:
-> /mnt/atomssd/hello.txt:
->   stx_atomic_write_unit_min:            16384
->   stx_atomic_write_unit_max:            16384
->   stx_atomic_write_unit_max_opt:        0
->   stx_atomic_write_segments_max:        1
-> 
-> We expose max_opt to be 0, which means the application can assume
-> max_opt to be the same as atomic_write_unit_max. But why are we not
-> exposing bigger atomic_write_unit_max (SW atomics) here and make max_opt
-> to HW based atomics value (16k) in this case?
-> 
-> Could you format your scsi-debug device with 16k fsblock size and see
-> what values you are getting here?
+> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+> index ca96ba096359..64b47fa17b1a 100644
+> --- a/fs/xfs/xfs_inode.h
+> +++ b/fs/xfs/xfs_inode.h
+> @@ -353,6 +353,15 @@ static inline bool xfs_inode_has_bigrtalloc(const struct xfs_inode *ip)
+>  	return XFS_IS_REALTIME_INODE(ip) && ip->i_mount->m_sb.sb_rextsize > 1;
+>  }
+>  
+> +/*
+> + * Return the type of the group that data for a given inode is allocated from.
+> + */
+> +static inline enum xfs_group_type
+> +xfs_inode_group_type(const struct xfs_inode *ip)
+> +{
+> +	return XFS_IS_REALTIME_INODE(ip) ? XG_TYPE_RTG : XG_TYPE_AG;
+> +}
+> +
+>  /*
+>   * Return the buftarg used for data allocations on a given inode.
+>   */
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index f67a541ef35a..6b28b9c7de84 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -642,19 +642,20 @@ xfs_get_atomic_write_max(
+>  	 * then advertise a maximum size of whatever we can complete through
+>  	 * that means.  Hardware support is reported via max_opt, not here.
+>  	 */
+> -	if (XFS_IS_REALTIME_INODE(ip))
+> -		return XFS_FSB_TO_B(mp, mp->m_groups[XG_TYPE_RTG].awu_max);
+> -	return XFS_FSB_TO_B(mp, mp->m_groups[XG_TYPE_AG].awu_max);
+> +	return XFS_FSB_TO_B(mp, mp->m_groups[xfs_inode_group_type(ip)].awu_max);
+>  }
+>  
+>  unsigned int
+>  xfs_get_atomic_write_max_opt(
+>  	struct xfs_inode	*ip)
+>  {
+> +	struct xfs_mount	*mp = ip->i_mount;
+>  	unsigned int		awu_max = xfs_get_atomic_write_max(ip);
+> +	xfs_extlen_t		align_max_fsb;
+> +	unsigned int		max_opt;
+>  
+>  	/* if the max is 1x block, then just keep behaviour that opt is 0 */
+> -	if (awu_max <= ip->i_mount->m_sb.sb_blocksize)
+> +	if (awu_max <= mp->m_sb.sb_blocksize)
+>  		return 0;
+>  
+>  	/*
+> @@ -663,7 +664,17 @@ xfs_get_atomic_write_max_opt(
+>  	 * less than our out of place write limit, but we don't want to exceed
+>  	 * the awu_max.
+>  	 */
+> -	return min(awu_max, xfs_inode_buftarg(ip)->bt_awu_max);
+> +	max_opt = min(awu_max, xfs_inode_buftarg(ip)->bt_awu_max);
+> +
+> +	/*
+> +	 * REQ_ATOMIC writes also have to be naturally aligned on disk, so we
+> +	 * cannot promise more than the largest extent that the allocator is
+> +	 * able to align within a group.
+> +	 */
+> +	align_max_fsb = xfs_calc_group_awu_align_max(mp,
+> +						xfs_inode_group_type(ip));
+> +
+> +	return min_t(xfs_fsize_t, max_opt, XFS_FSB_TO_B(mp, align_max_fsb));
+>  }
+>  
+>  static void
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index be90c7b03994..b7110b3d023b 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -674,15 +674,13 @@ static inline xfs_extlen_t xfs_calc_atomic_write_max(struct xfs_mount *mp)
+>  }
+>  
+>  /*
+> - * If the underlying device advertises atomic write support, limit the size of
+> - * atomic writes to the greatest power-of-two factor of the group size so
+> - * that every atomic write unit aligns with the start of every group.  This is
+> - * required so that the allocations for an atomic write will always be
+> - * aligned compatibly with the alignment requirements of the storage.
+> + * The largest out of place write is the number of blocks that user files can
+> + * allocate from any group.
+>   *
+> - * If the device doesn't advertise atomic writes, then there are no alignment
+> - * restrictions and the largest out-of-place write we can do ourselves is the
+> - * number of blocks that user files can allocate from any group.
+> + * This is a software limit, so it deliberately does not take the alignment
+> + * requirements of the storage into account. An atomic write that cannot be
+> + * handed to the device as a single naturally aligned REQ_ATOMIC bio is
+> + * completed through the COW fork instead, which has no such requirement.
+>   */
+>  static xfs_extlen_t
+>  xfs_calc_group_awu_max(
+> @@ -690,15 +688,30 @@ xfs_calc_group_awu_max(
+>  	enum xfs_group_type	type)
+>  {
+>  	struct xfs_groups	*g = &mp->m_groups[type];
+> -	struct xfs_buftarg	*btp = xfs_group_type_buftarg(mp, type);
+>  
+>  	if (g->blocks == 0)
+>  		return 0;
+> -	if (btp && btp->bt_awu_min > 0)
+> -		return max_pow_of_two_factor(g->blocks);
+>  	return rounddown_pow_of_two(g->blocks);
+>  }
+>  
+> +/*
+> + * Compute the largest atomic write unit for which the allocator can guarantee
+> + * naturally aligned extents in this group type.
+> + *
+> + * Hardware atomic writes have to be naturally aligned on disk.
+> + */
+> +xfs_extlen_t
+> +xfs_calc_group_awu_align_max(
+> +	struct xfs_mount	*mp,
+> +	enum xfs_group_type	type)
+> +{
+> +	struct xfs_groups	*g = &mp->m_groups[type];
+> +
+> +	if (g->blocks == 0)
+> +		return 0;
+> +	return max_pow_of_two_factor(g->blocks);
 
-(Apologies, this one slipped into the cracks)
+Don't we need to retain the btp && btp->bt_awu_min > 0 test here?
 
-I can't get the scsi-debug device to format with 16k lbas for whatever
-reason, but I can simulate the xfs parts with my dumb script:
+Hmm.  I guess the caller effectively does this:
 
-#!/bin/bash -x
+	const unsigned int	sw_awu_max =
+		xfs_get_atomic_write_max(ip);
 
-# fiddle with scsi-debug and xfs atomics
+	/* if the max is 1x block, then just keep behaviour that opt is 0 */
+	if (sw_awu_max <= ip->i_mount->m_sb.sb_blocksize)
+		return 0;
 
-dev="$(lsscsi | grep scsi_debug | awk '{print $6}')"
-mnt="${1:-/mnt/s}"
-hw_awu="${2:-16834}"
-sectsz="${3:-512}"
-align="$4"
+	const unsigned int	hw_awu_max =
+		xfs_inode_buftarg(ip)->bt_awu_max);
+	const unsigned int	hw_align_max =
+		xfs_calc_group_awu_align_max(mp,
+					xfs_inode_group_type(ip));
 
-umount "${mnt}" ${dev}
-rmmod scsi-debug
+	/*
+	 * The optimal atomic write size is the minimum of the software
+	 * fallback, the hardware capability, and the biggest aligned
+	 * extent that the per-AG allocator can give us.
+	 */
+	return min3(sw_awu_max, hw_awu_max, XFS_FSB_TO_B(hw_align_max));
 
-scsi_debug_args=(dev_size_mb=1000 virtual_gb=4096)
-if [ "${hw_awu}" -ge 512 ]; then
-	scsi_debug_args+=(atomic_wr=1 atomic_wr_max_length=$((hw_awu / 512)))
-fi
-modprobe scsi-debug "${scsi_debug_args[@]}"
-dev="$(lsscsi | grep scsi_debug | awk '{print $6}')"
-xfs_io -c 'statx -r -m all' $dev | grep atomic
+So no, we really don't need to check bt_awu_min?
 
-if [ "${sectsz}" -le 4096 ]; then
-	blksz=4096
-else
-	blksz="${sectsz}"
-fi
+I also sorta wish that third assignment had its own helper:
 
-mkfs_args=(-f "${dev}" -s size="${sectsz}" -b size="${blksz}")
-if [ -n "${align}" ]; then
-	max_agsize=$((1 << 40))		# bytes
-	agsize=$(((max_agsize / blksz) - 1))	# blocks
-	align=$((align / blksz))	# convert to blocks
+static inline unsigned int
+xfs_get_atomic_hw_write_align(
+	const struct xfs_inode	*ip)
+{
+	struct xfs_mount	*mp = ip->i_mount;
 
-	mkfs_args+=(-d agsize="$(( agsize & ~(align - 1) ))b")
-fi
-mkfs.xfs "${mkfs_args[@]}"
-mount "${dev}" "${mnt}"
+	return XFS_FSB_TO_B(mp, xfs_calc_group_awu_align_max(mp,
+					xfs_inode_group_type(ip)));
+}
 
-touch "${mnt}/fubar"
-xfs_io -c 'statx -r -m all' "${mnt}/fubar" | grep atomic
-
-So, with an XFS sector size of 16k and an atomic write max of 32k, we
-get:
-
-# /code/t/atomicswap/align.sh '' 32768 16384
-umount: /dev/sdg: not mounted.
-stat.atomic_write_unit_min = 1024
-stat.atomic_write_unit_max = 32768
-stat.atomic_write_segments_max = 1
-stat.atomic_write_unit_max_opt = 0
-meta-data=/dev/sdg               isize=512    agcount=4, agsize=67108862 blks
-         =                       sectsz=16384 attr=2, projid32bit=1
-         =                       crc=1        finobt=1, sparse=1, rmapbt=1
-         =                       reflink=1    bigtime=1 inobtcount=1 nrext64=1
-         =                       exchange=1   metadir=1
-data     =                       bsize=16384  blocks=268435448, imaxpct=5
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=16384  ascii-ci=0, ftype=1, parent=1
-log      =internal log           bsize=16384  blocks=130432, version=2
-         =                       sectsz=16384 sunit=1 blks, lazy-count=1
-realtime =none                   extsz=16384  blocks=0, rtextents=0
-         =                       rgcount=0    rgsize=67108864 extents
-         =                       zoned=0      start=0 reserved=0
-stat.atomic_write_unit_min = 16384
-stat.atomic_write_unit_max = 32768
-stat.atomic_write_segments_max = 1
-stat.atomic_write_unit_max_opt = 32768
-
-Note that the AG size is aligned to the hardware max (32k) and both the
-hardware and software awu are set to 32k.  Now let's try it again but
-forcing the AG size to be aligned to a megabyte:
-
-# /code/t/atomicswap/align.sh '' 32768 16384 1048576
-umount: /dev/sdg: not mounted.
-stat.atomic_write_unit_min = 1024
-stat.atomic_write_unit_max = 32768
-stat.atomic_write_segments_max = 1
-stat.atomic_write_unit_max_opt = 0
-meta-data=/dev/sdg               isize=512    agcount=4, agsize=67108800 blks
-         =                       sectsz=16384 attr=2, projid32bit=1
-         =                       crc=1        finobt=1, sparse=1, rmapbt=1
-         =                       reflink=1    bigtime=1 inobtcount=1 nrext64=1
-         =                       exchange=1   metadir=1
-data     =                       bsize=16384  blocks=268435200, imaxpct=5
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=16384  ascii-ci=0, ftype=1, parent=1
-log      =internal log           bsize=16384  blocks=130432, version=2
-         =                       sectsz=16384 sunit=1 blks, lazy-count=1
-realtime =none                   extsz=16384  blocks=0, rtextents=0
-         =                       rgcount=0    rgsize=67108864 extents
-         =                       zoned=0      start=0 reserved=0
-stat.atomic_write_unit_min = 16384
-stat.atomic_write_unit_max = 1048576
-stat.atomic_write_segments_max = 1
-stat.atomic_write_unit_max_opt = 32768
-
-Now the software atomic write max jumps to 1MB.
-
-So I think I finally (re)understand what's going on here.  In the first
-case, mkfs detects the 32k hw awu_max and automatically aligns the AGs
-to 32k.  This is done so that when we feed "align=32k" into the per-AG
-allocator, it will (maybe) give us new space that's aligned to 32k
-within the AG, which when combined with the AG alignment of 32k means
-that the allocation is aligned to 32k on the device.  Excellent!
-
-But what you're saying is that you want the *software* awu_max to be
-whatever the log will support:
-
-# /code/t/atomicswap/align.sh '' 0 16384
-umount: /dev/sdg: not mounted.
-stat.atomic_write_unit_min = 0
-stat.atomic_write_unit_max = 0
-stat.atomic_write_segments_max = 0
-stat.atomic_write_unit_max_opt = 0
-meta-data=/dev/sdg               isize=512    agcount=4, agsize=67108863 blks
-         =                       sectsz=16384 attr=2, projid32bit=1
-         =                       crc=1        finobt=1, sparse=1, rmapbt=1
-         =                       reflink=1    bigtime=1 inobtcount=1 nrext64=1
-         =                       exchange=1   metadir=1
-data     =                       bsize=16384  blocks=268435452, imaxpct=5
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=16384  ascii-ci=0, ftype=1, parent=1
-log      =internal log           bsize=16384  blocks=130432, version=2
-         =                       sectsz=16384 sunit=1 blks, lazy-count=1
-realtime =none                   extsz=16384  blocks=0, rtextents=0
-         =                       rgcount=0    rgsize=67108864 extents
-         =                       zoned=0      start=0 reserved=0
-stat.atomic_write_unit_min = 16384
-stat.atomic_write_unit_max = 67108864
-stat.atomic_write_segments_max = 1
-stat.atomic_write_unit_max_opt = 0
-
-Which is 64MB.  The software fallback doesn't care about allocation
-alignment, and advertising the smaller atomic_write_unit_max is a quirk
-from the days when we didn't have atomic_write_unit_max_opt, so
-constraining it was the only way to prohibit programs from sending
-atomic writes that most likely wouldn't turn into hardware atomic
-writes.
-
-Ok now that I grasp what you're getting at, I'll go read your v2 patch.
+But now I'm really just nitpicking. :P
 
 --D
+
+> +}
+> +
+>  /* Compute the maximum atomic write unit size for each section. */
+>  static inline void
+>  xfs_calc_atomic_write_unit_max(
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index 894ff2f4ecbd..cbcfb89c67a4 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -820,6 +820,8 @@ static inline void xfs_mod_sb_delalloc(struct xfs_mount *mp, int64_t delta)
+>  
+>  int xfs_set_max_atomic_write_opt(struct xfs_mount *mp,
+>  		unsigned long long new_max_bytes);
+> +xfs_extlen_t xfs_calc_group_awu_align_max(struct xfs_mount *mp,
+> +		enum xfs_group_type type);
+>  
+>  static inline struct xfs_buftarg *
+>  xfs_group_type_buftarg(
+> 
+> base-commit: d10270a8e5fde59eb68921fddfe40c6c2a31a954
+> -- 
+> 2.51.2
+> 
+> 
