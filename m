@@ -1,47 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE3853769E7;
-	Wed,  7 Oct 2026 16:51:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F33DE443313
+	for <linux-xfs@vger.kernel.org>; Wed,  7 Oct 2026 16:54:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791391863; cv=none; b=iw0W3RkXmko6IBh0BMHOE3ZBLuui0QsIEINB1jTc5fnDwamyLnbwuNuJ+vl8lfXDTvgrLy/nKTI+41X82rxQzydMGLbe0NCjeeXVhKtXXX4yRDyxED3mzqGA/I8j/s+eG4pQWDK5O3VDB1bERvGQPbByIfhKw/qkhUe8TeBGCC4=
+	t=1791392070; cv=none; b=qmlrb66RFLV2PvMQAsQeynQmuVfuX244b0/iNnScfjSteNwqdOyGl0ggSWMsThujUCxUMx5O3IGbDpZHylJai8xG/kyrr98P1sZe3juiDa/syepcKQdajZm10yrWmFpKZ5D1sgj2XPaM1xKVPdvzsP/1ifqhGJqCdCjs+L/spQU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791391863; c=relaxed/simple;
-	bh=vgdQRSfOKjIXpOP7qitamJPmUTP88vCCFffUW9laRnc=;
+	s=arc-20240116; t=1791392070; c=relaxed/simple;
+	bh=GhTbdu42+OyO8J5Jed57LP9CHWf+MQneiEWHh2E0QKY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dhYcEXucG+KSNyyfQPYEpyNEwglsgxvfc6kf7SVh026Knm2AnRwE61QrYqpi/LuQinJfWSRNJ4mWKlVK50B5feRBAHUmt539Kjm4PNH6InNSGXRBiAFwQaiR3kI30txvqCURKutbUdV7lqSDzg9dm7ivtjwV3b2jpfHPE+SNVds=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dYeOB6MF; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=ANqqKIE43NHFOSfpnQOy/gmumHOkY5uuLCl3F0N5+7V3CYkGOqf+ZFlX18XfjoZKckHAOwx2+6v4Ii+cdEj7GSjqqL1v19LX8uwDAO5bkyHVrHkG1ih1YGIKzsiXTD5Y0znWeNt3l3ioMifcAwypevjVWRWYEhEOtJLmy6Z/sUg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TEZ/bw8/; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dYeOB6MF"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id BC2711F000FF;
-	Wed,  7 Oct 2026 16:51:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TEZ/bw8/"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 6051E1F000FF;
+	Wed,  7 Oct 2026 16:54:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791391861;
-	bh=g3GDj44pZqpTbY7CEy8FMAe3ZTGytx1Q4Wcn40+jykg=;
+	s=k20260515; t=1791392068;
+	bh=aPsc9cuieYGP1kvKfZIYDqx682feGb41fTO5ZPnfMnM=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=dYeOB6MFIZDmDJ4D7drffywsyAV4q3h4VWMYOas/3fdThIQhkXninnXewsNUHT5cl
-	 YngYjs2s4Iiz//tT75QAcG4n2lbvA1wZcXXGFq2EZ0X3NGjpddiXTf9Kg+8ZzG7CU6
-	 hFY2rlii8UtjVkj6LZ8ASxbWsHX6Lqrq9DmtruE4tNkKT6/mrzMmBrUtzZkxfK/PH5
-	 2UA92dARQLtsi9Wy69QVwXW9jtP4sV4FzrS2tPhoDjbtZeWq2eCqV/q/fGO9N8iAsf
-	 n3hS+ndy5vy3ip8kL5MCdALrMhdSGCcQ38JLJYTo035y8ILGdf/MtqGafJr6fyzSMZ
-	 EOr3XdPNMWffQ==
-Date: Wed, 7 Oct 2026 09:51:01 -0700
+	b=TEZ/bw8/NN/0vD8atpEF5+kajmjll4jYWg9OxwmB4DPQmJFeAeocdRQx37XLl65h/
+	 JxQISYTw6xIX48xMuDeI1jHYHCPJ9zIrOu6+rockjY77QNTQDzL/nahtEV/Tq7aQoB
+	 V2/ZN7Q7UUi0Vayeq2Ip31i7Kx4pzZuNvERUxQV7m5txRZT6gFROHEzOhqb2j4Bxp3
+	 xxuZEz1vNMZoqfX8tJM5Va41MOscFusJTp7lcO8u5zlmGIlTvAFJq5RczRJ173LADS
+	 IevjyCYxc8PcsTW59TZuEAAk9Ja82UwKfIhj06ePYibkAmjGeIJS/cohZ24KL6h0iB
+	 VAmeX7yhuPhTg==
+Date: Wed, 7 Oct 2026 09:54:27 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: daejun7.park@samsung.com
-Cc: Chuck Lever <cel@kernel.org>, Jeff Layton <jlayton@kernel.org>,
-	NeilBrown <neil@brown.name>,
-	Olga Kornievskaia <okorniev@redhat.com>,
-	Dai Ngo <Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>,
-	Christoph Hellwig <hch@lst.de>,
-	Sergey Bashirov <sergeybashirov@gmail.com>,
-	Carlos Maiolino <cem@kernel.org>,
-	Amir Goldstein <amir73il@gmail.com>, linux-nfs@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] nfsd: do not return overlapping extents in a block layout
-Message-ID: <20261007165101.GD2705364@frogsfrogsfrogs>
-References: <20261007-nfsd-block-trim-v1-1-53370f97047a@samsung.com>
+To: Norbert Szetei <norbert@doyensec.com>
+Cc: Dave Chinner <dgc@kernel.org>, Carlos Maiolino <cem@kernel.org>,
+	linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2] xfs: stop exchanging reflink flags when exchanging
+ mappings
+Message-ID: <20261007165427.GE2705364@frogsfrogsfrogs>
+References: <EFFDC5C8-D154-419E-BC3E-050AD53F55F8@doyensec.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -50,174 +43,243 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261007-nfsd-block-trim-v1-1-53370f97047a@samsung.com>
+In-Reply-To: <EFFDC5C8-D154-419E-BC3E-050AD53F55F8@doyensec.com>
 
-On Wed, Oct 07, 2026 at 11:03:01AM +0900, Daejun Park via B4 Relay wrote:
-> From: Daejun Park <daejun7.park@samsung.com>
+On Wed, Oct 07, 2026 at 04:43:22PM +0200, Norbert Szetei wrote:
+> When an exchange covers both files from offset 0 to i_disk_size,
+> xmi_can_exchange_reflink_flags() assumes every mapping moved and hands
+> the reflink flag over to the other file.
 > 
-> Since commit cc6c40e09d7b ("NFSD/blocklayout: Support multiple extents
-> per LAYOUTGET"), nfsd4_block_proc_layoutget() calls ->map_blocks once
-> per extent of a LAYOUTGET, each time for the range left after the
-> previous extent. nfsd4_block_map_extent() takes a mapping that starts at
-> the offset asked for or below it, but only the first extent may start
-> below it. A later extent that starts below its offset overlaps the
-> extents before it, which RFC 5663 section 2.3.1 does not allow. The
-> Linux client rejects such a layout (verify_extent() returns -EIO), and
-> the I/O that needed it fails. The block and SCSI layouts share this
-> code.
+> That assumption is wrong.  A file can still own shared blocks past
+> i_disk_size, e.g. after EXCHANGE_RANGE_TO_EOF sets a smaller size
+> without unmapping anything.  The flag is cleared anyway, and the next
+> write to such a block happens in place instead of CoW, corrupting the
+> other file that shares it.
 > 
-> XFS, the only ->map_blocks implementation, used to map the whole extent
-> that contains the offset. Together with one call per extent, that gave
-> overlapping layouts in v6.19 and v7.0: allocating the blocks for one
-> extent of a write layout could merge the extent that the next call
-> starts in with the unwritten extents before it. Since commit
-> 36ca6f11424a ("xfs: fix overlapping extents returned for pNFS
-> LAYOUTGET"), XFS does not map below the offset, so this patch changes
-> nothing with current XFS. It only stops nfsd from relying on that: trim
-> each extent after the first so that it starts at the offset asked for,
-> and move its volume offset by the same amount unless it is a NONE_DATA
-> extent, which has none.
+> Commit a23eca88448e ("xfs: fix exchange-range reflink flag clearing
+> issue with INO1_WRITTEN") fixed one instance of this.  Rather than add
+> another special case, stop moving the flags.
+> xfs_exchmaps_ensure_reflink() already sets the flag on both inodes
+> before the exchange, so both just keep it.
 > 
-> nfsd leaves the end of a mapping alone, as only the filesystem knows
-> where it should end. It does need a mapping that contains the offset
-> asked for, which RFC 5663 section 2.3.1 also requires of the first
-> extent. A mapping that does not would leave a gap in the layout or make
-> the length computed from it wrap around, so warn and return
-> NFS4ERR_LAYOUTUNAVAILABLE; the client then does the I/O through the
-> metadata server. iomap_iter_done() has the same check, as a
-> WARN_ON_ONCE(), for ->iomap_begin(), and nfsd4_block_map_extent()
-> already warns and fails this way for a mapping of an unexpected type.
-> Document in exportfs_block.h that the mapping must contain the offset.
+> Nothing sets CLEAR_INO{1,2}_REFLINK anymore.  Intents logged by older
+> kernels may still carry them; recovery already masks them off, so they
+> stay in the log format mask and are ignored.
 > 
-> On a test kernel whose xfs_fs_map_blocks() maps with XFS_BMAPI_ENTIRE
-> and does not trim, as XFS did before that commit, a write layout over a
-> hole between two unwritten blocks comes back as 0+4096, 4096+4096 and
-> 0+12288, and the pynfs test BLOCK5 fails in five runs out of five.
-> fstests generic/075, 091 and 263 over the block layout fail with an EIO
-> or a zero-length O_DIRECT write, and bl_alloc_lseg() on the client
-> returns -EIO three times. With this patch on top, the third extent is
-> 8192+4096, BLOCK5 passes in five runs out of five, generic/091 and 263
-> pass, generic/075 fails with the fsx "Size error" that it also fails
-> with on nfsd-testing, and bl_alloc_lseg() returns no error.
+> XFS_IOC_SWAPEXT has the same problem: it moves the reflink flag from
+> one inode to the other along with the extents.  Just removing that is
+> not enough here: the exchange path flags both inodes up front in
+> xfs_exchmaps_ensure_reflink(), but swapext has no such step, so the
+> inode receiving the shared extents would be left without the flag.
+> Set it on both inodes instead, and make sure both have a CoW fork,
+> since an inode with the reflink flag is expected to have one.
 > 
-> Suggested-by: Darrick J. Wong <djwong@kernel.org>
-> Link: https://lore.kernel.org/r/20261006051324.GV2705364@frogsfrogsfrogs
-> Link: https://lore.kernel.org/r/20261006152333.GO1615495@frogsfrogsfrogs
-> Signed-off-by: Daejun Park <daejun7.park@samsung.com>
-> ---
-> Darrick asked whether nfsd should trim the lower end of a mapping that
-> starts below the offset asked for, or warn and fail. This patch trims
-> such a mapping for every extent but the first, and warns only when a
-> mapping does not contain the offset at all. The XFS patch his question
-> was about also trims, in xfs_fs_map_blocks(). The two patches do not
-> depend on each other:
-> https://lore.kernel.org/r/20261006003425epcms2p586728e55ff5f9bbabc506b672fc4a421@epcms2p5
+> The flag now stays until FALLOC_FL_UNSHARE_RANGE, xfs_scrub, or a
+> truncate to zero removes it.
 > 
-> No stable backport is needed, which is also why there is no Fixes: tag
-> for cc6c40e09d7b. Overlapping extents need both the per-extent calls of
-> cc6c40e09d7b (v6.19) and XFS_BMAPI_ENTIRE in xfs_fs_map_blocks(), which
-> 36ca6f11424a removed in v7.1. Only 6.19.y and 7.0.y have both, and
-> neither is maintained any more; 6.18.y and older call ->map_blocks once
-> per LAYOUTGET.
-> 
-> Tested on nfsd-testing 56589cdb5881 with three QEMU VMs (an NVMe/TCP
-> target, the server with nfsd and XFS, and a client), over the block
-> layout only. With only this patch, nfsd-testing gives the same BLOCK5
-> and fstests results as without it. With KASAN and lockdep, the test
-> kernel with this patch on top gives the same BLOCK5 and fstests results
-> as above, with no warning. Trimming was seen only for the INVALID_DATA
-> extents of BLOCK5; nothing counted trims during the fstests runs. The
-> pynfs test BLOCK5 is at
-> https://lore.kernel.org/r/20261006002622epcms2p38e492aef17fdf79e48b05c9aada2918d@epcms2p3
-> ---
->  fs/nfsd/blocklayout.c          | 28 ++++++++++++++++++++++++++--
->  include/linux/exportfs_block.h |  2 ++
->  2 files changed, 28 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/nfsd/blocklayout.c b/fs/nfsd/blocklayout.c
-> index df02cf746..1aabae003 100644
-> --- a/fs/nfsd/blocklayout.c
-> +++ b/fs/nfsd/blocklayout.c
-> @@ -20,8 +20,8 @@
->  
->  
->  /*
-> - * Get an extent from the file system that starts at offset or below
-> - * and may be shorter than the requested length.
-> + * Get an extent from the file system that contains offset. It may start
-> + * below offset and may be shorter than the requested length.
+> Fixes: 966ceafc7a43 ("xfs: create deferred log items for file mapping exchanges")
+> Fixes: f0bc4d134b46 ("xfs: swap inode reflink flags when swapping inode extents")
+> Cc: stable@vger.kernel.org # v6.10
+> Assisted-by: LLM
+> Signed-off-by: Norbert Szetei <norbert@doyensec.com>
 
-Nitpicking here, but the extent could extend beyond than the requested
-@offset/@length range too, right?  Shouldn't the comment say that, since
-the header comment allows for both cases, right?
-
-With that fixed,
+Yeah, let's shut off this whole class of attacks...
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
->   */
->  static __be32
->  nfsd4_block_map_extent(struct inode *inode, const struct svc_fh *fhp,
-> @@ -41,6 +41,13 @@ nfsd4_block_map_extent(struct inode *inode, const struct svc_fh *fhp,
->  		return nfserrno(error);
+> ---
+> v2: also handle XFS_IOC_SWAPEXT
+> v1: https://lore.kernel.org/linux-xfs/1E196589-DEBE-40AC-AFEA-D420DAAB067F@doyensec.com/
+> Discussion: https://lore.kernel.org/linux-xfs/20261006050914.GU2705364@frogsfrogsfrogs/
+> 
+>  fs/xfs/libxfs/xfs_exchmaps.c   | 80 ++--------------------------------
+>  fs/xfs/libxfs/xfs_log_format.h |  4 +-
+>  fs/xfs/xfs_bmap_util.c         | 15 +++----
+>  3 files changed, 10 insertions(+), 89 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_exchmaps.c b/fs/xfs/libxfs/xfs_exchmaps.c
+> index 6a66b6075e0a..7af8ee35c89d 100644
+> --- a/fs/xfs/libxfs/xfs_exchmaps.c
+> +++ b/fs/xfs/libxfs/xfs_exchmaps.c
+> @@ -49,7 +49,7 @@ struct xfs_exchmaps_adjacent {
+>  	.right2 = { .br_startblock = HOLESTARTBLOCK }, \
+>  }
+>  
+> -/* Information to reset reflink flag / CoW fork state after an exchange. */
+> +/* Information to reset CoW fork state after an exchange. */
+>  
+>  /*
+>   * If the reflink flag is set on either inode, make sure it has an incore CoW
+> @@ -127,9 +127,7 @@ xmi_has_more_exchange_work(const struct xfs_exchmaps_intent *xmi)
+>  static inline bool
+>  xmi_has_postop_work(const struct xfs_exchmaps_intent *xmi)
+>  {
+> -	return xmi->xmi_flags & (XFS_EXCHMAPS_CLEAR_INO1_REFLINK |
+> -				 XFS_EXCHMAPS_CLEAR_INO2_REFLINK |
+> -				 __XFS_EXCHMAPS_INO2_SHORTFORM);
+> +	return xmi->xmi_flags & __XFS_EXCHMAPS_INO2_SHORTFORM;
+>  }
+>  
+>  /* Check all mappings to make sure we can actually exchange them. */
+> @@ -525,18 +523,6 @@ xfs_exchmaps_link_to_sf(
+>  	return error;
+>  }
+>  
+> -/* Clear the reflink flag after an exchange. */
+> -static inline void
+> -xfs_exchmaps_clear_reflink(
+> -	struct xfs_trans	*tp,
+> -	struct xfs_inode	*ip)
+> -{
+> -	trace_xfs_reflink_unset_inode_flag(ip);
+> -
+> -	ip->i_diflags2 &= ~XFS_DIFLAG2_REFLINK;
+> -	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+> -}
+> -
+>  /* Finish whatever work might come after an exchange operation. */
+>  static int
+>  xfs_exchmaps_do_postop_work(
+> @@ -557,16 +543,6 @@ xfs_exchmaps_do_postop_work(
+>  			return error;
 >  	}
 >  
-> +	if (WARN_ONCE(iomap.offset > offset ||
-> +		      offset - iomap.offset >= iomap.length,
-> +		      "pnfsd: %s ino %llu: filesystem returned extent %lld+%llu for offset %llu\n",
-> +		      sb->s_id, inode->i_ino, iomap.offset, iomap.length,
-> +		      offset))
-> +		return nfserr_layoutunavailable;
-> +
->  	switch (iomap.type) {
->  	case IOMAP_MAPPED:
->  		if (iomode == IOMODE_READ)
-> @@ -147,6 +154,23 @@ nfsd4_block_proc_layoutget(struct svc_rqst *rqstp, struct inode *inode,
->  		if (nfserr != nfs_ok)
->  			goto out_error;
+> -	if (xmi->xmi_flags & XFS_EXCHMAPS_CLEAR_INO1_REFLINK) {
+> -		xfs_exchmaps_clear_reflink(tp, xmi->xmi_ip1);
+> -		xmi->xmi_flags &= ~XFS_EXCHMAPS_CLEAR_INO1_REFLINK;
+> -	}
+> -
+> -	if (xmi->xmi_flags & XFS_EXCHMAPS_CLEAR_INO2_REFLINK) {
+> -		xfs_exchmaps_clear_reflink(tp, xmi->xmi_ip2);
+> -		xmi->xmi_flags &= ~XFS_EXCHMAPS_CLEAR_INO2_REFLINK;
+> -	}
+> -
+>  	return 0;
+>  }
 >  
-> +		/*
-> +		 * Each extent after the first was mapped for the range that
-> +		 * starts where the previous extent ends, but the filesystem
-> +		 * may return a mapping that starts below that point. Trim
-> +		 * it, as RFC 5663 section 2.3.1 does not allow extents to
-> +		 * overlap. nfsd4_block_map_extent() made sure the mapping
-> +		 * contains offset. NONE_DATA extents have no volume offset.
-> +		 */
-> +		if (i > 0 && bex->foff < offset) {
-> +			u64 skip = offset - bex->foff;
-> +
-> +			bex->foff = offset;
-> +			bex->len -= skip;
-> +			if (bex->es != PNFS_BLOCK_NONE_DATA)
-> +				bex->soff += skip;
-> +		}
-> +
->  		bex_length = bex->len - (offset - bex->foff);
->  		if (bex_length >= length) {
->  			bl->nr_extents = i + 1;
-> diff --git a/include/linux/exportfs_block.h b/include/linux/exportfs_block.h
-> index de519b7b5..21e61fc01 100644
-> --- a/include/linux/exportfs_block.h
-> +++ b/include/linux/exportfs_block.h
-> @@ -44,6 +44,8 @@ struct exportfs_block_ops {
->  	/*
->  	 * Map blocks for direct block access.
->  	 * If @write is %true, also allocate the blocks for the range if needed.
-> +	 * The mapping returned must contain @offset. It may start before
-> +	 * @offset and may end before or after @offset + @len.
->  	 */
->  	int (*map_blocks)(struct inode *inode, loff_t offset, u64 len,
->  			struct iomap *iomap, bool write,
-> 
-> ---
-> base-commit: 56589cdb58819ce54decedbbfddf231d94b5ce41
-> change-id: 20261007-nfsd-block-trim-81a6a8b066c9
-> 
-> Best regards,
+> @@ -948,46 +924,13 @@ xfs_exchmaps_intent_destroy_cache(void)
+>  }
+>  
+>  /*
+> - * Decide if we will exchange the reflink flags between the two files after the
+> - * exchange.  The only time we want to do this is if we're exchanging all
+> - * mappings under EOF and the inode reflink flags have different states.
+> + * Allocate and initialize a new incore intent item from a request.
+>   */
+> -static inline bool
+> -xmi_can_exchange_reflink_flags(
+> -	const struct xfs_exchmaps_req	*req,
+> -	unsigned int			reflink_state)
+> -{
+> -	struct xfs_mount		*mp = req->ip1->i_mount;
+> -
+> -	/*
+> -	 * The INO1_WRITTEN optimization can skip exchanging hole and
+> -	 * unwritten mappings, which means we cannot guarantee that all
+> -	 * shared extents actually moved to the other file.  Clearing the
+> -	 * reflink flag of an inode that still holds shared extents breaks
+> -	 * the CoW write path, so refuse to exchange the flags in that case.
+> -	 */
+> -	if (req->flags & XFS_EXCHMAPS_INO1_WRITTEN)
+> -		return false;
+> -
+> -	if (hweight32(reflink_state) != 1)
+> -		return false;
+> -	if (req->startoff1 != 0 || req->startoff2 != 0)
+> -		return false;
+> -	if (req->blockcount != XFS_B_TO_FSB(mp, req->ip1->i_disk_size))
+> -		return false;
+> -	if (req->blockcount != XFS_B_TO_FSB(mp, req->ip2->i_disk_size))
+> -		return false;
+> -	return true;
+> -}
+> -
+> -
+> -/* Allocate and initialize a new incore intent item from a request. */
+>  struct xfs_exchmaps_intent *
+>  xfs_exchmaps_init_intent(
+>  	const struct xfs_exchmaps_req	*req)
+>  {
+>  	struct xfs_exchmaps_intent	*xmi;
+> -	unsigned int			rs = 0;
+>  
+>  	xmi = kmem_cache_zalloc(xfs_exchmaps_intent_cache,
+>  			GFP_NOFS | __GFP_NOFAIL);
+> @@ -1011,23 +954,6 @@ xfs_exchmaps_init_intent(
+>  		xmi->xmi_isize2 = req->ip1->i_disk_size;
+>  	}
+>  
+> -	/* Record the state of each inode's reflink flag before the op. */
+> -	if (xfs_is_reflink_inode(req->ip1))
+> -		rs |= 1;
+> -	if (xfs_is_reflink_inode(req->ip2))
+> -		rs |= 2;
+> -
+> -	/*
+> -	 * Figure out if we're clearing the reflink flags (which effectively
+> -	 * exchanges them) after the operation.
+> -	 */
+> -	if (xmi_can_exchange_reflink_flags(req, rs)) {
+> -		if (rs & 1)
+> -			xmi->xmi_flags |= XFS_EXCHMAPS_CLEAR_INO1_REFLINK;
+> -		if (rs & 2)
+> -			xmi->xmi_flags |= XFS_EXCHMAPS_CLEAR_INO2_REFLINK;
+> -	}
+> -
+>  	if (S_ISDIR(VFS_I(xmi->xmi_ip2)->i_mode) ||
+>  	    S_ISLNK(VFS_I(xmi->xmi_ip2)->i_mode))
+>  		xmi->xmi_flags |= __XFS_EXCHMAPS_INO2_SHORTFORM;
+> diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
+> index a4e1b3eb425c..6e620380d5dc 100644
+> --- a/fs/xfs/libxfs/xfs_log_format.h
+> +++ b/fs/xfs/libxfs/xfs_log_format.h
+> @@ -927,10 +927,8 @@ struct xfs_xmi_log_format {
+>   */
+>  #define XFS_EXCHMAPS_INO1_WRITTEN	(1ULL << 2)
+>  
+> -/* Clear the reflink flag from inode1 after the operation. */
+> +/* No longer set, but older intents may carry them; keep them valid. */
+>  #define XFS_EXCHMAPS_CLEAR_INO1_REFLINK	(1ULL << 3)
+> -
+> -/* Clear the reflink flag from inode2 after the operation. */
+>  #define XFS_EXCHMAPS_CLEAR_INO2_REFLINK	(1ULL << 4)
+>  
+>  #define XFS_EXCHMAPS_LOGGED_FLAGS	(XFS_EXCHMAPS_ATTR_FORK | \
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index 268d159339d0..865aec3ae5ab 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -1544,7 +1544,6 @@ xfs_swap_extents(
+>  	struct xfs_bstat	*sbp = &sxp->sx_stat;
+>  	int			src_log_flags, target_log_flags;
+>  	int			error = 0;
+> -	uint64_t		f;
+>  	int			resblks = 0;
+>  	unsigned int		flags = 0;
+>  	struct timespec64	ctime, mtime;
+> @@ -1700,14 +1699,12 @@ xfs_swap_extents(
+>  	if (error)
+>  		goto out_trans_cancel;
+>  
+> -	/* Do we have to swap reflink flags? */
+> -	if ((ip->i_diflags2 & XFS_DIFLAG2_REFLINK) ^
+> -	    (tip->i_diflags2 & XFS_DIFLAG2_REFLINK)) {
+> -		f = ip->i_diflags2 & XFS_DIFLAG2_REFLINK;
+> -		ip->i_diflags2 &= ~XFS_DIFLAG2_REFLINK;
+> -		ip->i_diflags2 |= tip->i_diflags2 & XFS_DIFLAG2_REFLINK;
+> -		tip->i_diflags2 &= ~XFS_DIFLAG2_REFLINK;
+> -		tip->i_diflags2 |= f & XFS_DIFLAG2_REFLINK;
+> +	/* Either inode may now own shared blocks; flag both, with CoW forks. */
+> +	if ((ip->i_diflags2 | tip->i_diflags2) & XFS_DIFLAG2_REFLINK) {
+> +		ip->i_diflags2 |= XFS_DIFLAG2_REFLINK;
+> +		tip->i_diflags2 |= XFS_DIFLAG2_REFLINK;
+> +		xfs_ifork_init_cow(ip);
+> +		xfs_ifork_init_cow(tip);
+>  	}
+>  
+>  	/* Swap the cow forks. */
 > -- 
-> Daejun Park <daejun7.park@samsung.com>
-> 
+> 2.55.0
 > 
 > 
