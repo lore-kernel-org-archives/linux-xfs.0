@@ -1,77 +1,97 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from mx0.herbolt.com (mx0.herbolt.com [5.59.97.199])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C176938734E
-	for <linux-xfs@vger.kernel.org>; Thu,  8 Oct 2026 07:17:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A18C2448B8E;
+	Thu,  8 Oct 2026 08:24:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.59.97.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791443862; cv=none; b=elWJ6wLQsOK5DoKQRPqtdvOwGmwaBBBYJVRhNAtoqY82Xp1YB8UcyqzfT4niCGDF8Du6+LjGrUeo7BavOsOlxsW0Afcankz6a8kd7g8y3Z7XxqkouwiFZtLE5QRshNQQZ2VXqhjT+VLJuU1c9bbfz3gMY/jHvHIXBEkGsagzQhc=
+	t=1791447850; cv=none; b=Qi9iSNu2zhR/p5End+MG8tGBFBovrxMXPyXLZPJMcXE27b6IBVJRohZY9YIewaCyvcraC/bIBgZtbYahWhAQ3y3G1dHRqEBr0OfAToC/1PLyFfCvXvto5Seo5dbtYlSFmw1Dj4tq2VLmVDLYOAIK6vublDnnr31kdx4qQUR+EZM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791443862; c=relaxed/simple;
-	bh=HVSmKFEfEkLceeHvrpvGiH7TEw/6XiBgWzojREthZqg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=eXGZ44lbP2pJcdzc1ZoxJsms3qB9eIuVdItsfnod4+FSEjcKoZWzeM9MxfTVU9Cf0UwxPn16OtrIkZ+j0/ddjRLrL3s6iSpGdGZ7NsDGqkKL7lP1wKQBrzLGEo4pYw/ynmJ8FerAqXs0K4w2FAS4uY7u7iUpi0J4Dm+8e8iyj+8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=k7xm0xgT; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="k7xm0xgT"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=oJXwLLykdtmNnYwASRhWCbNOjOSyy4orz5BVriATGOA=; b=k7xm0xgT82H1h7a51iVAtUf6w4
-	RFvsH7edjKkoK0XH4ZstMLnhN8A+7rN72fnwB3oEIWbRI6dYYyAmXu4xiIs2ko4MgywFF8eILaGaJ
-	GySPTBQMRHrkkEB/AER89kGe+udE1uW/unLBS/tKGxAITOVT0mm3eIAon8IQkS9Y+ndTLb/IZX721
-	lgM4aA1EhLp3v221JEtbJjgsSxhmFRwrPOe3TTcZhVU1MA/3tUD0oBlLYVqq5rwXGasd77ncBcETj
-	MKMMzjawPaAg8UzT1bslVjGuPluSIswJC5zhpD1/W3Nz9DYXv8khg7+Pr8eFWozmv2RlaEbOMORbZ
-	o/dIMRvQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1xEiNk-00000003j2c-2iRC;
-	Thu, 08 Oct 2026 07:17:36 +0000
-Date: Thu, 8 Oct 2026 00:17:36 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Wilfred Mallawa <wilfred.mallawa@wdc.com>,
-	"cem@kernel.org" <cem@kernel.org>,
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: [xfsprogs] mkfs: fixup memory leak on exit
-Message-ID: <asdDkOgueZHx0UVz@infradead.org>
-References: <20261006101232.357124-2-wilfred.opensource@gmail.com>
- <asTQdEMkpzc7_tSd@cronus.toxiclabs.cc>
- <75bc883c4d45a514aaad949dfe301c3f2a79112a.camel@wdc.com>
- <20261006144851.GX2705364@frogsfrogsfrogs>
+	s=arc-20240116; t=1791447850; c=relaxed/simple;
+	bh=3KVjqPfNdvKqT82rfogBtYTs+jN0HvXqg3ghXsZ7m+E=;
+	h=MIME-Version:Date:From:To:Cc:Subject:In-Reply-To:References:
+	 Message-ID:Content-Type; b=o8akSgGW1gR5/5E1LXA9pbAIXPoFwlTzlROVAHf95U9CGQO0l5kwlCj00myDSrUnEXFa4tjut6zfUqvF6Qa7yW5SghTTLSKdzcNwbAk2DiQ0a3P8PSfDx0l2S27Hsm6wmoX8pCgguwisGYZHdN8gUO8+yvqoCywDaHvkGv9Kx40=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com; spf=pass smtp.mailfrom=herbolt.com; arc=none smtp.client-ip=5.59.97.199
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=herbolt.com
+Received: from mx0.herbolt.com (localhost [127.0.0.1])
+	by mx0.herbolt.com (Postfix) with ESMTP id BA3A2180F2D2;
+	Thu, 08 Oct 2026 10:23:59 +0200 (CEST)
+Received: from mail.herbolt.com ([172.16.31.10])
+	by mx0.herbolt.com with ESMTPSA
+	id NF/GKB9Tx2omegMAKEJqOA
+	(envelope-from <lukas@herbolt.com>); Thu, 08 Oct 2026 10:23:59 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261006144851.GX2705364@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Date: Thu, 08 Oct 2026 10:23:59 +0200
+From: Lukas Herbolt <lukas@herbolt.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: zlang@kernel.org, fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
+ linux-ext4@vger.kernel.org
+Subject: Re: [PATCH 1/1] lib/random.c fix undefined behavior on signed integer
+ overflow.
+In-Reply-To: <20261007170058.GG2705364@frogsfrogsfrogs>
+References: <20261006135205.400485-1-lukas@herbolt.com>
+ <20261006135205.400485-2-lukas@herbolt.com>
+ <20261007170058.GG2705364@frogsfrogsfrogs>
+Message-ID: <d000ae8abba884b0a58be93e6e63f486@herbolt.com>
+X-Sender: lukas@herbolt.com
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Content-Transfer-Encoding: 8bit
 
-On Tue, Oct 06, 2026 at 07:48:51AM -0700, Darrick J. Wong wrote:
+On 2026-10-07 19:00, Darrick J. Wong wrote:
+> On Tue, Oct 06, 2026 at 03:51:52PM +0200, Lukas Herbolt wrote:
+>> The random.c now expects that signed integer to overflow and
+>> triggers the  ^MASK branch. But signed int overflow is undefined
+>> behavior and GCC can optimize this branch out with certain
+>> CFLAGS/LDFLAGS.
+>> 
+>> Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
+>> ---
+>>  lib/random.c | 13 +++++++------
+>>  1 file changed, 7 insertions(+), 6 deletions(-)
+>> 
+>> diff --git a/lib/random.c b/lib/random.c
+>> index d5c81be817c8..f767ed1d1337 100644
+>> --- a/lib/random.c
+>> +++ b/lib/random.c
+>> @@ -186,14 +186,15 @@ _random (int32_t is [2])
+>>  int32_t
+>>  _irandm (int32_t is [2])
+>>  {
+>> -	int32_t it, leh, nit;
+>> -
+>> +	int32_t it, leh, nit, apply_mask;
+>>  	it = is [0];
+>>  	leh = is [1];
+>> -	if (it <= 0)
+>> -		it = (it + it) ^ MASK;
+>> -	else
+>> -		it = it + it;
+>> +
+>> +/* 	evaluate on original value — no UB here */
+>> +	apply_mask = (it <= 0);
+>> +/*	double via unsigned shift — well-defined */
+>> +	it = (unsigned)it << 1;
+>> +	if (apply_mask) it ^= MASK;
 > 
-> I don't think this is better.  libxfs' init functions do not create or
-> assign the libxfs_init.{data,log,rt}.name fields, they merely reuse
-> whatever pointer the calling program set.  Only the caller knows where
-> that pointed to memory came from (stack, optarg, dynamic allocation) so
-> only the caller knows how to drop the pointer.
+> Doesn't _random suffer the same flaw?
+> 
+> Oh.  It's dead code, maybe it should go away?
+Good point.
+> 
+> Also, what about converting all the variables to unsigned?
 
-Exactly.
+It would break two signed checks: `it <= 0` (LFSR feedback -
+only fires at zero instead of when MSB set) and `leh < 0`
+(output folding — never fires). The `it` register degenerates
+to 33 repeating values after 64 calls. Reducing the pool of
+random numbers.
 
-> The original patch is more appropriate IMO but seeing as we're about to
-> return from main and terminate the process, why do we care?  And if we
-> do, shouldn't mkfs also free the other getstr() strings attached to the
-> cli struct?
-
-We probably want that, as having a clean xfstests run with addrsan is
-actually really nice to have, as without that the addrsan support is
-only if limited use.
-
-> And shouldn't the exit(1) paths do likewise?
-
-Maybe.  Although it doesn't really matter all that much.
-
+-- 
+-lhe
