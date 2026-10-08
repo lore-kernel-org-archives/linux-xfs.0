@@ -1,58 +1,41 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 391CD49B446
-	for <linux-xfs@vger.kernel.org>; Thu,  8 Oct 2026 12:34:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8371B49504A;
+	Thu,  8 Oct 2026 12:41:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791462849; cv=none; b=YK4brs6aTgqISOekJOJ1o6TV0NOGT2HmVcnpsiZYewDUbu1t4de67ZO7uMrLarZjLwoKwuiiZNWlzO4BRdXVdCXlT/29U9uuEN3SmgRuFu/yS3o/a/I1f9Ki7lol7c2PJci+8tY0Ue6HPezxd54zXtV3gtrZA7xsrYPSk1rlIr0=
+	t=1791463273; cv=none; b=IYUMMdU1Yn2k8DS3TJO99ieUm2N2uVOQgC2eZb93+TN/7GW4oDMxeA4APK5dEDHsWmSyu6ILWO1b0st77w7FPTXC99Hiu93UcS6TfkVyY2EZUE4LRJA9TdHlb1xNGlcZpqY7ku4il0TqclTOnW1/O+oJYr6EjtUYljxNz+rg7tE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791462849; c=relaxed/simple;
-	bh=AGszSjoCjaIDSHO0H56sQ2h/hYs0oq7dn3O2LJuCupU=;
+	s=arc-20240116; t=1791463273; c=relaxed/simple;
+	bh=2DSsoUAB+i4BDe0Q4DRP60iH6Bc8KmYvoi9oys3Nin4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=q+43gJ9XrD1z8cEwDSp0kmvt4GJK5jvskz8cfcAZpPBWsIKP4HduSmB+iDAaxdwt8T+5KbvgHgx7NS2wGSLPTUoQC1dR69/FUtefFFabHufXrT0tXClRDJM4sYDtqKxyPITwV627BTuax79t0E3gwiiBk66mFogi4cvK4gbhBIU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=MSewVXus; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=H1XVEUyCRwH7xaHAHwuTEecC2iJxAuKJat9WYPV6YUmQMBsnVYisHMUFwiMBlmYEP8bhkDkYAMIpi1Jf9HMhGAXWl6WnhIFXqls1uEUCUFMU+IhqSFnelIVTttwskITWoTyUfBFV6y4ObzfRtRAhxkSass6klotkKOCrXmxsApM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lS9Ux+HY; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="MSewVXus"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1791462846;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=sl228m5pfmzrEf0xxmHM+2u5vzx7rVcCe/qp2YvfpqY=;
-	b=MSewVXusTDbct4iNjYuJCrzBDkLu5wgj0WH/fDl+AJ2qp1u5pqGZRQ5ZVAWkj5a5OrHY07
-	pXRiardmkWiOgI7lOVG7uBPsKcXcc516u05u3fMITzh4DTaQMueUohKUIwcvto7QpNTQ7H
-	azNDHFMeG61nC2iXxwIYzA0GyvBjAxU=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-311-o3xzxnnBPeWG7ZXrb76iTQ-1; Thu,
- 08 Oct 2026 08:34:03 -0400
-X-MC-Unique: o3xzxnnBPeWG7ZXrb76iTQ-1
-X-Mimecast-MFC-AGG-ID: o3xzxnnBPeWG7ZXrb76iTQ_1791462842
-Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id F37CA180ABEF;
-	Thu,  8 Oct 2026 12:34:01 +0000 (UTC)
-Received: from bfoster (headnet03.pony-001.prod.iad2.dc.redhat.com [10.2.32.114])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 59BB219560AB;
-	Thu,  8 Oct 2026 12:34:00 +0000 (UTC)
-Date: Thu, 8 Oct 2026 08:33:58 -0400
-From: Brian Foster <bfoster@redhat.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lS9Ux+HY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 355CF1F000FF;
+	Thu,  8 Oct 2026 12:41:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1791463272;
+	bh=bbnkX1qqI3tnp58Cu8/addIxuLeN2oBr2Kk/I0f/ly0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=lS9Ux+HYnT/sBg8zOtkxt89clu4LsTdooUy54b5zr3KBD7NQlvCCIluVO7K39zeH5
+	 4wvf0MB3PfwZXS9BZi0E3CpUf+C7hJoUjI7AeYVueEVx3XqXtkeSaeBpLm3XBx2Dkm
+	 fAxo317vLmaOgmXcB7nqCirfqitTJTFaOKkBrm9fs2yWBNQ5JUHpeCFVEbwgIzLwiZ
+	 0sAkLOg+WngyQco4hRPd4GgVUBJEoxeF4S+D+bqWu+l8q/5aKmLJG7iO8tGFZ5g+Ep
+	 TGG6Yj1pv1zWrZLmhWrQmrvVfvaP+Ak0IgIFYFwQMeA+fn6ej1XBQULLyDokA2THYx
+	 GymuaI7PFFWyw==
+Date: Thu, 8 Oct 2026 14:41:06 +0200
+From: Carlos Maiolino <cem@kernel.org>
 To: Dave Chinner <dgc@kernel.org>
-Cc: MingTao Huang <1037827920@qq.com>, Carlos Maiolino <cem@kernel.org>,
-	Dave Chinner <dchinner@redhat.com>,
-	"Darrick J . Wong" <djwong@kernel.org>,
-	Chandan Babu R <chandanbabu@kernel.org>, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
+Cc: Brian Foster <bfoster@redhat.com>, MingTao Huang <1037827920@qq.com>, 
+	Dave Chinner <dchinner@redhat.com>, "Darrick J . Wong" <djwong@kernel.org>, 
+	Chandan Babu R <chandanbabu@kernel.org>, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
 	MingTao Huang <mintaohuang@tencent.com>
 Subject: Re: [PATCH] xfs: fix skipped flushing items not counted in
  xfsaild_push()
-Message-ID: <aseNtqNcruhTeOEd@bfoster>
+Message-ID: <aseO1Kjlo-9jxqpM@cronus.toxiclabs.cc>
 References: <tencent_F801A9436DFB447AAFEC63D3E615B8052405@qq.com>
  <arL9Xrmf5Q7wd3T4@dread>
  <arPXwKnDMVMj-oMK@bfoster>
@@ -70,7 +53,6 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <asR23Qk3uXtTSTKr@dread>
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
 On Tue, Oct 06, 2026 at 03:19:41PM +1100, Dave Chinner wrote:
 > On Wed, Sep 30, 2026 at 09:56:21AM -0400, Brian Foster wrote:
@@ -129,19 +111,6 @@ On Tue, Oct 06, 2026 at 03:19:41PM +1100, Dave Chinner wrote:
 > pushing because it avoids unnecessary writeback IO, and to do that
 > we need pushing to back off when contention signals are detected.
 > 
-
-Ok. I get this in principle. Does this reflect a realistic workload for
-inodes?
-
-According to the current code, flushing inodes are those that have
-landed in the AIL since or were otherwise not flushed (i.e. pinned,
-locked) during a previous cluster flush, where the cluster was delwri
-queued but has not yet submitted.
-
-The only use of this value is as input to the 90% stuck heuristic. For
-inodes, this strikes me as rare enough to wonder why we track this at
-all..?
-
 > > ITEM_* implies state of the log item, so I don't see that as
 > > inconsistent. They behave differently because they are different items.
 > > What's the expectation for the push interface? If we flush an ili/dquot
@@ -191,44 +160,16 @@ all..?
 > flushing a checkpoint (i.e. the LSN changes) or if we'd gathered
 > enough items on the buffer list for submission (count > 1000).
 > 
-
-Wouldn't that mean we'd only process 1k items per pass, rather than
-creating a delwri queue limit? It also seems to me this could lead to
-situations we've already discussed like spinning around on the same
-subset of items if they happen to land in the same LSN (unless we do the
-cursor thing).
-
 > This points out the difference between "knowing the intent" and
 > "reading the code". One cannot tell the difference between bug and
 > intended behaviour from reading the code....
 > 
-
-I'd have expected intent to be documented in the commit log.
-
 > As it is, this could result in longer buffer submission lists, but
 > that makes it even less likely to trigger a hangcheck timer. i.e.
 > submission to the request queue is typically faster than hardware IO
 > completion, hence the more we have to submit, the more likely we are
 > to block on a full request queue.
 > 
-
-Hm.. not sure about that. I played around with this a bit last week. I
-couldn't exactly reproduce what is reported here, but if I run this sort
-of workload on a slightly older kernel with preempt=none, I could
-definitely reproduce observable multi-second (~3-5s) stalls where the
-target system would appear locked up completely. Tracing shows that the
-delwri queue can easily grow to ~250k+ buffers and the xfsaild task can
-spin in short intervals.
-
-I could corroborate this by reducing the watchdog threshold to a few
-seconds and trigger softlockup warnings/stack traces that way, but
-obviously this is a little different from a 20+ second lockup using
-system defaults.
-
-IIRC this behavior went away with the lazy preempt mode, so perhaps that
-is a mitigating factor here. It would be good to know whether these
-settings are relevant to the original reproducer or not.
-
 > > > inodes doesn't actually move the LSN for the next loop forwards.
 > > > We start the next loop at the same LSN in this case, and the only
 > > > reason we didn't tend to process the same flushing items a second
@@ -255,10 +196,6 @@ settings are relevant to the original reproducer or not.
 > and i_flags from the ILI, then another to pull the pincount from the
 > inode, then another to pull the pin count from the buffer,
 > 
-
-I get that, but we can easily separate iop_push() overhead from the
-question of flushing inode accounting.
-
 > IOWs, the LI_FLUSHING check runs hot in cache, whilst iop_push()
 > takes multiple dependent cacheline misses for every inode it checks
 > for STALE/pinned/flushing....
@@ -286,39 +223,13 @@ question of flushing inode accounting.
 > starting from the [still valid] item in the cursor...
 > 
 
-That sounds reasonable, but perhaps non-trivial due to locking.
-
-So all in all we have a situation where there's an unknown soft lockup
-issue, a potential bug in iteration logic, an unclear requirement for
-more complicated cursor management, and from my perspective a lack of
-documentation on design intent (so we're reverse engineering it
-piecemeal).
-
-I still think the right approach here may be to rework the original
-optimization in a way that retains prior iteration behavior, and then
-revisit whatever algorithmic changes that were intended here in followon
-patches with more clear documentation. I don't need to know what the
-precise issue being reported here is to reason that there's probably
-more complexity to this change than originally anticipated. All this is
-saying is that it can't hurt to take a more careful approach. 
-
-I also think this makes life easier for stable kernels where it might
-take longer for more conservative users to run into the sort of problems
-reported here (particularly with older preemption behavior).
-
-This is just my .02. I cooked up a patch for reference:
-
-https://lore.kernel.org/linux-xfs/20261008123141.358649-1-bfoster@redhat.com/
-
-I forgot to label it RFC, but this is mainly for posterity. I'm
-operating under the assumption this is NAK'd, so it is untested unless
-there's indication we want to do something with it.
-
-Brian
+FWIW, I have a few patches getting rid of the ail cursor (which IIRC
+makes last_pushed_lsn pointless), if you have any plans to do something
+with the ail cursor or change last_pushed_lsn behavior, please please
+please let me know.
 
 > -Dave.
 > -- 
 > Dave Chinner
 > dgc@kernel.org
 > 
-
