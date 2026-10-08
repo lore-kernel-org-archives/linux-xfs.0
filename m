@@ -1,106 +1,87 @@
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74CCC368D50
-	for <linux-xfs@vger.kernel.org>; Thu,  8 Oct 2026 01:47:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.24
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2926336F916;
+	Thu,  8 Oct 2026 05:55:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791424033; cv=none; b=cwkzVVezDt9I38t9kP/roO9BgrAcj5JFnm782r2qoUfv7orCfCb6ZVkWSQqKPBXSmiTTw//YuZ6y4gVi9uiGNyfqbIdk57BWYwbw32Xb1gGb06isrKEzcaSG9n4CJzeUT9dOUANylonMlGpGuM6ynXllSzgl4Hn0zCqhPSwAj9s=
+	t=1791438902; cv=none; b=IUWZRiz55UEtdVRm1MqDK2jQUPLqcIz9UgEn5lyWXzzcx/i19IjZyoPiC8ij38SGxsmMMku+Gx8N1xoutAVHUuyv6fW/o9UGjulQBeJXVIb8gfHYXrAE4Xa2Ihgt5cy319QQYnJj/a3VJqk9JRmZw0/HpuU8pNkQyWz9clgbIxM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791424033; c=relaxed/simple;
-	bh=I3nosz+vmDV5FfbRzKE8hbg8kzT9hOZFPeJmQrm7NR0=;
-	h=Mime-Version:Subject:From:To:CC:In-Reply-To:Message-ID:Date:
-	 Content-Type:References; b=VuliVlGAPAB/v5thDg7NLKeTh8bAkC86Vsbs/Ft6AqEBGqPCMLWAv97N4APY/HSO40Jv90snyS0Q4jQc4NEGT4Vsw3M5+ck89jQNDSRxNPeXlOBFkOWfl1gvSc5KLS8UpLGcLyWL9ubE/c/iQfU0hgbeZYEsn9k4E0ennM2BPGo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=G0PH321m; arc=none smtp.client-ip=203.254.224.24
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1791438902; c=relaxed/simple;
+	bh=oUJlgfJhqnotq/4lKvnrH5YzoPzTlAMTjY0fubNboT8=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=AfRzSOwzKhHqiePjENzbkx5ZP31buh66frc90GxC1Tr8SDjlsHnvvY8KLM2jk3BR0qMxpTJNFn7u2hQX6CxFRUiAhY0Zx/fN6DUB/ilqsrHxYtVaSYciZXqlxsBcdYXT2yhTOooRVJR5HVqNvQOCnEF8ZokZq776rUKHs2zXhUs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bbasw7fm; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="G0PH321m"
-Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
-	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20261008014707epoutp0145901ac0c9f22844eef11d68cf2db023~caql3b0fr1692616926epoutp01r
-	for <linux-xfs@vger.kernel.org>; Thu,  8 Oct 2026 01:47:07 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20261008014707epoutp0145901ac0c9f22844eef11d68cf2db023~caql3b0fr1692616926epoutp01r
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1791424027;
-	bh=Cuh+q5LKXzLv2R0KI9enLSIgormXsfisByY542JUI0E=;
-	h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-	b=G0PH321mbWT1ZgCxqgPgD2z3aQiRa0r+Y+GZEYkVIXIVcWpdFD3q0Vk3tEpe7gYWQ
-	 8AD9B3OnLg7zNrJJaLPcJrK36uE3GF9/BUkf3YR7XrT38InHeLTkdYZ8aPDJnMLngv
-	 bs6sNxdlWlU2SdWxkoZJUCk9xUcymqmhBoQe3k6E=
-Received: from epsnrtp03.localdomain (unknown [182.195.42.155]) by
-	epcas2p3.samsung.com (KnoxPortal) with ESMTPS id
-	20261008014707epcas2p3463766a3d57abbe67dbf1161c4ce43c2~caqlbVyyq3083430834epcas2p3e;
-	Thu,  8 Oct 2026 01:47:07 +0000 (GMT)
-Received: from epcas2p2.samsung.com (unknown [182.195.38.212]) by
-	epsnrtp03.localdomain (Postfix) with ESMTP id 4j0Xt31Jcnz3hhTC; Thu,  8 Oct
-	2026 01:47:07 +0000 (GMT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bbasw7fm"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 97C9D1F000FF;
+	Thu,  8 Oct 2026 05:55:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1791438900;
+	bh=5aKq+fQ5EJ9Mz8enJFGIV5w/5ma7gN3o8XmJQiIMfjI=;
+	h=Date:Subject:From:To:Cc;
+	b=bbasw7fm483LTMg0zyj6SMe8GG31MacQIO8MUA0vlDfMtOcFeXaK9JBHHAKAfgPfx
+	 fDqVUv3WBsOHDT9ToPsUk8EGdstoqvDNUghwJJ29MLJxPHbW9gRiVDIYdTaWfmzqd3
+	 iE6n8vzfL99qlgPnOJHIFQ5fZwEnR/d5aTvgHLvBzE1oLWDvQv07vSil7pOXoXUdIH
+	 ry75q/HrOjvsIU9KW81FVRsrZD595EaBZZxEkR67i9DIScRQ0loyeUNBCfN4iSHxOt
+	 dDY2wVHsL56ZvMKqyZpGNBAbjavqTnY5XtJ9pNVCmwcTp4edAXrY+oWCDF1jdrxKLf
+	 tMckxUv5ans+w==
+Date: Wed, 07 Oct 2026 22:55:00 -0700
+Subject: [PATCHSET] xfs: LLM-inspired bug fixes, part 21
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: djwong@kernel.org, cem@kernel.org
+Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
+Message-ID: <179141521177.2728617.11116041790027402666.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Subject: RE:(2) [PATCH] nfsd: do not return overlapping extents in a block
- layout
-Reply-To: daejun7.park@samsung.com
-Sender: Daejun Park <daejun7.park@samsung.com>
-From: Daejun Park <daejun7.park@samsung.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-CC: Chuck Lever <cel@kernel.org>, Jeff Layton <jlayton@kernel.org>,
-	NeilBrown <neil@brown.name>, Olga Kornievskaia <okorniev@redhat.com>, Dai
-	Ngo <Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>, Christoph Hellwig
-	<hch@lst.de>, Sergey Bashirov <sergeybashirov@gmail.com>, Carlos Maiolino
-	<cem@kernel.org>, Amir Goldstein <amir73il@gmail.com>,
-	"linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>,
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-	"linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Daejun Park
-	<daejun7.park@samsung.com>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-In-Reply-To: <20261007165101.GD2705364@frogsfrogsfrogs>
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <20261008014706epcms2p7f60dc9a1db6ca16a6fff03de67688c2e@epcms2p7>
-Date: Thu, 08 Oct 2026 10:47:06 +0900
-X-CMS-MailID: 20261008014706epcms2p7f60dc9a1db6ca16a6fff03de67688c2e
-Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-cpgsPolicy: CPGSC10-223,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20261007165105epcas2p264fc1fd07bab1fb877a6695062f48322
-References: <20261007165101.GD2705364@frogsfrogsfrogs>
-	<20261007-nfsd-block-trim-v1-1-53370f97047a@samsung.com>
-	<CGME20261007165105epcas2p264fc1fd07bab1fb877a6695062f48322@epcms2p7>
+Content-Transfer-Encoding: 7bit
 
-On Wed, Oct 07, 2026 at 09:51:01AM -0700, Darrick J. Wong wrote:
-> Nitpicking here, but the extent could extend beyond than the requested
-> @offset/@length range too, right?  Shouldn't the comment say that, since
-> the header comment allows for both cases, right?
+Hi all,
 
-Yes, it can end past offset + length. Chuck had already applied the
-patch to nfsd-testing (214e388464bf) when your reply came, so the
-comment there still says "may be shorter than the requested length".
+Here's a twenty-first batch of xfs fixes resulting from a LLaMma.  Mwa
+mwa mwa...
 
-The ->map_blocks series that Christoph asked for removes that comment:
+If you're going to start using this code, I strongly recommend pulling
+from my git trees, which are linked below.
 
-https://lore.kernel.org/r/20261008-xfs-nfsd-map-blocks-v1-0-560026cdccb6@samsung.com
+With a bit of luck, this should all go splendidly.
+Comments and questions are, as always, welcome.
 
-nfsd4_block_map_extent() becomes nfsd4_block_iomap_to_extent(), which
-only converts a mapping, and the ->map_blocks comment says that the
-last mapping may end before or after @offset + @len.
+--D
 
-If Chuck would rather fix it in nfsd-testing in the meantime, the
-comment would read:
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=llm-fixes-21
+---
+Commits in this patchset:
+ * xfs: check for termination during rmap btree walk
+ * xfs: don't subtract excess usage twice when computing agf_btreeblks
+ * xfs: abort directory tree repair whenever dl->aborted is set
+ * xfs: reattach dquots after changing inode ids
+ * xfs: never reset the default quota timer
+ * xfs: fix correction of unwritten extents in quota file data fork
+ * xfs: always report inode repair setup failures
+ * xfs: range-check bc_levels array access in scrub tracepoints
+ * xfs: reject absurdly large xattr value lengths in xchk_xattr_actor
+ * xfs: check for buffer overruns when examining local/remote xattr entries
+ * xfs: clarify various parts of the bitmap API
+ * xfs: complain loudly when dirtree checker finds broken links
+---
+ fs/xfs/scrub/repair.h         |    2 +-
+ fs/xfs/scrub/trace.h          |   10 +++++-----
+ fs/xfs/scrub/alloc_repair.c   |   11 +++++------
+ fs/xfs/scrub/attr.c           |   18 ++++++++++++++++++
+ fs/xfs/scrub/attr_repair.c    |   16 ++++++++++++++--
+ fs/xfs/scrub/bitmap.c         |   20 ++++++++++++++++++++
+ fs/xfs/scrub/dirtree.c        |    3 ++-
+ fs/xfs/scrub/dirtree_repair.c |    9 +++++++++
+ fs/xfs/scrub/inode.c          |    2 +-
+ fs/xfs/scrub/inode_repair.c   |   36 +++++++++++++++++++++++++++++++++---
+ fs/xfs/scrub/parent_repair.c  |    4 ++++
+ fs/xfs/scrub/quota_repair.c   |   21 ++++++++++++++++++++-
+ fs/xfs/scrub/trace.c          |   10 ++++++++++
+ 13 files changed, 142 insertions(+), 20 deletions(-)
 
-/*
- * Get an extent from the file system that contains offset. It may start
- * below offset and may end before or after offset + length.
- */
