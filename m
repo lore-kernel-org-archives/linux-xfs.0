@@ -1,107 +1,114 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E70B638B12A;
-	Thu,  8 Oct 2026 16:17:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7AA939E9AC
+	for <linux-xfs@vger.kernel.org>; Thu,  8 Oct 2026 16:38:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791476270; cv=none; b=uWmbRDCT4J3GBSDPNxEZVtQS4354t74Usm1A3pI1+qp+n1rEWapZCEqewlUeI3QMiHqWyITXBeUhirRDvvVGgoxSJAnxATztexNhPIMAjK4sBN65ZFvHCA6gflrEmB7M6suD4nx22/HOvtTQDoFWEX1NeHw+AaYWlNkYoP1K11c=
+	t=1791477488; cv=none; b=t3rYYqplLWzNizLrqSxG/vI/FGR2pjll6eHDbLa5SwMEpxHaZ0OYgXaWIF4mZ4hQp/utVU/UStJ7Ke5OjOFnYf4XCSoTxPtrxFLoKUDOTcMA1g4zun3ygVHzoksbUukxhvsUwcfUbyBBKZB2Svjufc7CF6QyhibmvH5QaiDviCo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791476270; c=relaxed/simple;
-	bh=EPIBoQhpTYhrMFg/y0UiMgc+AptK6Kkz2JFxWe9PGiI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KZLF6rlOZwIOrJ0LTYcAOi6Z7ykY2W6zWhi4XAO3zaHyhAyoJ4r32OPATF5KclEDYxWLNXWR1i7T9tt1BfWxQofcWCgdfUMqQ8iFUowI0+OHgOwewJk/K1EJw5Hyw4JGbiQRKVK3Gc6VFhnRrtLb5XHPLonKVJe0/LShhsLjb1M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f2x/Xlhh; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791477488; c=relaxed/simple;
+	bh=fG+OW0+Rc79UROgONMqJ3MjzgYnuVC6qrQ8HSpnhLFY=;
+	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
+	 Subject:Content-Type; b=qR08RC2vYmb5WDaPOVNx5uBWIdM1TvhpvLEUiEYjBQnIj6bZjoTEysOamyo6rem5TVLlNua7eehYf0fJSeQwDVHgaTMG19bSSwbTenmj9XS5GMRgvhkqsPwNp/Cn10/SAah8s1NbBZzHubEuxspAaJUS6koUEVnj/SJwiHg4oto=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YV68JSC4; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f2x/Xlhh"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 807871F000FF;
-	Thu,  8 Oct 2026 16:17:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YV68JSC4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B5351F00893;
+	Thu,  8 Oct 2026 16:38:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791476267;
-	bh=KO67nrhviXgUSQTFZMnA6Z+1mSsykgUbuv+p2dnL4Sg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=f2x/Xlhhv8FyOLymx1cVzKn8l7boQMC/aoJ7WGbhgIxcHWdBM2c0TbhJsRuXZ743K
-	 1sZu+z9RRsuBiGjVwZ4fnZ6+3XpKzw2fnCgwL6Ii4K0rnyiIVplswNyU0IkqHmsZy5
-	 aySfTyzLJm3ri4xZ9msKOX/1N8tLFdtlNwZg9njme+ZUb5CrBx89Uxei48KiI6FEKe
-	 Ji3haPD82nLQpL3UwsQXFqUdKusr5QBZ2IidtlYwDVnq5rGB2TulCzf/eXiHPRH3sw
-	 hG8MjHtXoewzLkF8IGEr4yvnQTLB+wQY9T/TNSwlouz6VI/t4XCuqW9BukKTkbuhef
-	 HA+L3SdBqfDag==
-Date: Thu, 8 Oct 2026 09:17:46 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: cem@kernel.org, stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 10/12] xfs: check for buffer overruns when examining
- local/remote xattr entries
-Message-ID: <20261008161746.GS2705364@frogsfrogsfrogs>
-References: <179141521177.2728617.11116041790027402666.stgit@frogsfrogsfrogs>
- <179141521472.2728617.17391389777619283843.stgit@frogsfrogsfrogs>
- <aseGmj8np-ovaiuh@infradead.org>
+	s=k20260515; t=1791477487;
+	bh=NayZRmRBMpCIYxMfMRzYi5Xi/arHIBWyBRHJXVRTNzs=;
+	h=Date:From:To:Cc:In-Reply-To:References:Subject;
+	b=YV68JSC4rl2/8QL14sSMAS7O2Xi/REMzHgsN0kBrbUB/GvF6uX0uVPHgjCWv85NVC
+	 OjakXHwvyei6F1HUhbuXVVmQCIi8ybfVYbQ80Oc23fWZMcQbST3i7ch1D/sn1ZmnD0
+	 RfkFE9RJyZZtMhZO9FSR11wuunGFYi30PA8Aqp0Std3KSLbvW8Nk8ypoOCU2qXznSy
+	 gj7gCDzPjud/9xtGwZ5oMqAl5BGjDrapZduk30VZL1Gf5iSlGePiCVDL0Um1UdslxT
+	 otB3UKiVTUUWabifQaOoVTKyyBPgjEWme+h9Kek799SSvOsPWBVAUNgtpHICaUjhSR
+	 gGqE1/t/rUnaQ==
+Received: from phl-compute-10.internal (phl-compute-10.internal [10.202.2.50])
+	by mailfauth.phl.internal (Postfix) with ESMTP id 7CB51F40066;
+	Thu,  8 Oct 2026 12:38:06 -0400 (EDT)
+Received: from phl-imap-15 ([10.202.2.104])
+  by phl-compute-10.internal (MEProxy); Thu, 08 Oct 2026 12:38:06 -0400
+X-ME-Sender: <xms:7sbHauhr3BCZEZ_g93kO8-31VOY0CQBz8gU_2gsHnQfEsZSJ8XA6pw>
+    <xme:7sbHap01O7x0LOfie7dsS5MYhT57J_6fY0P8OAqOotNF0KPmiLNIMCv8hUF_aKa9h
+    lLQh2WleA7_rGeXGlH2jfOw_G_OtkerLHn2ih6rcIMVUWkoQSzOnGCY>
+X-ME-Proxy-Cause: dmFkZTEGUMQdW2KWbEUtbc89N/qCyyJWW8nH8rVuuCYGTMA6vcJ4Yjmx7wtmUI6eKj1dct
+    WT5y4BG4lZvYL+zvhTZDCEXzl5Psc3RZfQfEiNKb9R0ZoQn4y+wdNfYm7Y3iYIGSnC92Hf
+    YSHY9XtbpuEcEPzXLFGZpnKVzj8A1dcevRwHMMzpRzKgHgk5qzHCngrZbbL1b0+w18dOrD
+    +IE29P9Wa1wu7ed/YV/ZNVvNutMPDH0BuwWi4VPF+XksjfON3Bqi2WDVVapyx4eTd0flL8
+    sWOeRlABwkfEmxlcxBT5DpGPajY8CvFK5OvNDJ9wFNovd1d6Kw2/mQsgbnoKrOYw9nPzpM
+    e9+6fkJlejdCKDUmrROk4Zs7lZu+soG9LdnX2DQN07/wr+nh+WBHg0D1UIS+HFulX1ti/j
+    JwiLUsvezD1ZAV07zeeWzeT2AY5z6R1kE2lvE9LadN2NRhJIsnpqV3FHyhHJB18vmz9tV1
+    i9E9lSD4mVXBLzEXsOKJ/xW/c9qn2eIbulOFKo3uxYvgeiT+6Z9FROun0Unb4nzj8jBvbb
+    Y3yjJp+V+diqhY2v625xwVEYnAzYVw4ONwxACmrP1xeUB6LiJJ3Djb0WIf5D0wLpcMlvbW
+    mrqDPV697rM6JlbiOT+zRgBiANUNAD22T6TZxvn454PGavJPhJ8rS+X7UWfw
+X-ME-Proxy: <xmx:7sbHaiuPi_rvPTGLnXdvL0YH8HCN-l6hs1ja4uAps6czavISee365A>
+    <xmx:7sbHajZW9Z7zG936vyrxGe8gqYPwxDZzug7xpfGswJzsfsbDhVzpSw>
+    <xmx:7sbHaj7VkyogBemmaCNKjO4GbadDwbcH0Qg4kIaqnUePBFoC_mwQCg>
+    <xmx:7sbHajlYVW41EdDeYZgkLnss2bwE7HzCzghbVQpbbyYADrK70Jl0bw>
+    <xmx:7sbHahF55XaUOIyK01_Fk9R83RBMoxUBRvxT4P7Ml_mxiegEa7fiFTw4>
+Feedback-ID: ifa6e4810:Fastmail
+Received: by mailuser.phl.internal (Postfix, from userid 501)
+	id 5CA43780070; Thu,  8 Oct 2026 12:38:06 -0400 (EDT)
+X-Mailer: MessagingEngine.com Webmail Interface
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aseGmj8np-ovaiuh@infradead.org>
+X-ThreadId: ACJwmNvOgsp7
+Date: Thu, 08 Oct 2026 12:37:46 -0400
+From: "Chuck Lever" <cel@kernel.org>
+To: daejun7.park@samsung.com
+Cc: "Jeff Layton" <jlayton@kernel.org>, NeilBrown <neil@brown.name>,
+ "Olga Kornievskaia" <okorniev@redhat.com>, "Dai Ngo" <Dai.Ngo@oracle.com>,
+ "Tom Talpey" <tom@talpey.com>, "Christoph Hellwig" <hch@lst.de>,
+ "Carlos Maiolino" <cem@kernel.org>, "Amir Goldstein" <amir73il@gmail.com>,
+ "Darrick J. Wong" <djwong@kernel.org>, "Dave Chinner" <dgc@kernel.org>,
+ "Sergey Bashirov" <sergeybashirov@gmail.com>,
+ "Christian Brauner" <brauner@kernel.org>, linux-nfs@vger.kernel.org,
+ linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Message-Id: <4de5356f-bc4d-4f1a-9c81-fce09b1b46fd@slotpi15m67>
+In-Reply-To: <20261008-xfs-nfsd-map-blocks-v1-7-560026cdccb6@samsung.com>
+References: <20261008-xfs-nfsd-map-blocks-v1-0-560026cdccb6@samsung.com>
+ <20261008-xfs-nfsd-map-blocks-v1-7-560026cdccb6@samsung.com>
+Subject: Re: [PATCH 7/8] xfs: map the whole range of a pNFS layout in one ->map_blocks
+ call
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 
-On Thu, Oct 08, 2026 at 05:03:38AM -0700, Christoph Hellwig wrote:
-> On Wed, Oct 07, 2026 at 10:57:26PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > LOLLM noticed that the xattr scrub and repair code can walk off the end
-> > of the buffer if the xattr entry record starts so close to the end of
-> > the buffer that there's not even space for the entry structure itself.
-> > Strengthen the bounds checking here.
-> > 
-> > Cc: <stable@vger.kernel.org> # v4.15
-> > Fixes: 13791d3b833428 ("xfs: scrub extended attribute leaf space")
-> > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-> > Assisted-by: LOLLM # finding obvious bugs
-> > ---
-> >  fs/xfs/scrub/attr.c        |   12 ++++++++++++
-> >  fs/xfs/scrub/attr_repair.c |   16 ++++++++++++++--
-> >  2 files changed, 26 insertions(+), 2 deletions(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
-> > index 842d65834afbc9..4ce7299060fbba 100644
-> > --- a/fs/xfs/scrub/attr.c
-> > +++ b/fs/xfs/scrub/attr.c
-> > @@ -335,6 +335,12 @@ xchk_xattr_entry(
-> >  	/* Check the name information. */
-> >  	if (ent->flags & XFS_ATTR_LOCAL) {
-> >  		lentry = xfs_attr3_leaf_name_local(leaf, idx);
-> > +		name_end = (char *)lentry +
-> > +				offsetof(struct xfs_attr_leaf_name_local, nameval[0]);
-> 
-> Overly long line.
-> 
-> > +		if (name_end > buf_end) {
-> > +			xchk_da_set_corrupt(ds, level);
-> > +			return;
-> > +		}
-> >  		namesize = xfs_attr_leaf_entsize_local(lentry->namelen,
-> >  				be16_to_cpu(lentry->valuelen));
-> >  		name_end = (char *)lentry + namesize;
-> > @@ -342,6 +348,12 @@ xchk_xattr_entry(
-> >  			xchk_da_set_corrupt(ds, level);
-> >  	} else {
-> >  		rentry = xfs_attr3_leaf_name_remote(leaf, idx);
-> > +		name_end = (char *)rentry +
-> > +				offsetof(struct xfs_attr_leaf_name_remote, name[0]);
-> 
-> Same here.
-> 
-> Can you split the local vs remote code into separate helpers as
-> that would really help with readability here?
+Daejun Park <daejun7.park@samsung.com> wrote:
+> If an allocation fails after others in the same call, the error is
+> returned without the inode update and the log force. nfsd then fails the
+> LAYOUTGET, so none of the blocks allocated is handed out; they stay
+> unwritten, and blocks past EOF can be freed again unless the inode
+> already has XFS_DIFLAG_PREALLOC or the file is empty.
 
-Will do, as a prep patch that comes before this one.
+The same freeing can happen to blocks a client holds a write layout
+for, AFAICS. But that is not new. Commit 527851124d10 handed out the
+same blocks.
 
-> Also for this long type names just using typeof might be nicer than
-> spelling out the type.
+This is however the patch where a fix could go.
 
-Ooh, that works.  I'll fix that too.
 
---D
+> +	while (nr < *nr_iomaps && offset_fsb < end_fsb) {
+> +		struct xfs_bmbt_irec	imap;
+> +		u64			seq;
+> +
+> +		error = xfs_fs_map_extent(ip, offset_fsb, offset + length,
+> +				write, &imap, &seq, &allocated);
+> +		if (error)
+> +			goto out_unlock;
+> +		error = xfs_bmbt_to_iomap(ip, &iomaps[nr++], &imap, 0, 0, seq);
+> +		if (error)
+> +			goto out_unlock;
+> +		offset_fsb = imap.br_startoff + imap.br_blockcount;
+> +	}
+
+
+-- 
+Chuck Lever (Come to NFS bake-a-thon! https://nfsv4bat.org)
