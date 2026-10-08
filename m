@@ -1,134 +1,67 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE6643AE1BC;
-	Thu,  8 Oct 2026 16:44:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39A943B19B6;
+	Thu,  8 Oct 2026 17:20:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791477897; cv=none; b=WrQVt+iF3REsw/8WOoWO7gGpQThtJyNQua8LIqXoEf0E/dK9AFnS3k0t08psQolUnDx1b9gLVl6/Bz9JkrTupS+KvMAS20PyX48tb7Pc+nASKg1Iri6DYQprmeaqjp60lHMAffhUY1KkltzM3fACkbJTTl/PHhS+6Eb6IaL1Sow=
+	t=1791480007; cv=none; b=k3seV6fYJLZWrcwPQJjCsTJVJDl+/uzCrHaAKzxwY6sTYtse+s9h4pHQ9MhBuuB5bYR3UV+pIKRz8L+IJvWmoeo1ty5CuxYrq2ngzPTmke9RGN+AyN5zb/k8FqxHmOSapNgnWVpKmI54dmwQCknFZs552RpxoFa5uwrK/1G0nVA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791477897; c=relaxed/simple;
-	bh=7tV8BRMZdSjjQ+wFsZrltGhnIcC3NrF9Zo7u9Nf6AX4=;
-	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
-	 Subject:Content-Type; b=WFOwG0HCrKKU2fntDxawnOR5r8lk+IBBK2MQnpaaYdftQ2HQIeq+arkrLPb7NhuOKFjudQQcMPyJNwL13kdJdc3HrZoCcR6gcSCBHqchC1CVvbnnVxwwKw5K+yxbz0O9Hw4Ead88TFYU7Yay/s2Y1ZSzBP1zPqnBnq2Uxxwbf2s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LwvZOWrK; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791480007; c=relaxed/simple;
+	bh=0c4tRmzrQcnILYxO08Bqq+eZvQYP3k2m8RKpHZdRrcU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Tbq8Ah5iVFoSf283W94Df0nWxfM5aD8yk9+o3e+/zTh3zbhRuHudICc9l+6H2EiVq3acZcJ0zTbB2u5cPz7kyppT5gBZdKENIpCltHc09D4iNAV9yLSjRMWH9BTXzBGS8mohxpS/2oS/Iq2OuXscFoad457AJvC05fxKrKBw6To=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L56qRQ5P; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LwvZOWrK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1A3EA1F00899;
-	Thu,  8 Oct 2026 16:44:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L56qRQ5P"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 357111F000FF;
+	Thu,  8 Oct 2026 17:20:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791477895;
-	bh=EOLWPkdhYi4qVwglYx9ZNkz+Ir/6UM4RLdYhyJK61e8=;
-	h=Date:From:To:Cc:In-Reply-To:References:Subject;
-	b=LwvZOWrKkGHhS2pwGXL1qw6GzOTlDBVh3AGxxnLso8vWwUKGN9nt2y/9cLMoxXKOS
-	 ookn8FRQrHa/BL9IDx+URtnxXV+lraBPS/Rc/JAIAXVKiM7dEvZcHHuRUJa4/6qeCR
-	 VLUE+U1xZA3Sj/hdA8tsX3jcOamJo7G6CrrbQOouxUzdAEp+No2FrMSVxdvFbXcYoI
-	 xHxP3Ix4XBBcAus8d/2RxoXRadYVSKmM/Uw7aW42rdA9ZxNvoMSN03o5NPTInOMxzt
-	 BqxXNzW/3KXJinv3nD/z8fszir3xA5gjiPK3aUe2YWmMsv8SXpabJgTHkDkjTDOcWE
-	 vbm//FqHmSD8g==
-Received: from phl-compute-10.internal (phl-compute-10.internal [10.202.2.50])
-	by mailfauth.phl.internal (Postfix) with ESMTP id 27D91F40066;
-	Thu,  8 Oct 2026 12:44:54 -0400 (EDT)
-Received: from phl-imap-15 ([10.202.2.104])
-  by phl-compute-10.internal (MEProxy); Thu, 08 Oct 2026 12:44:54 -0400
-X-ME-Sender: <xms:hsjHapdwBb1JALUbXsHPYxLK7WcYz3Ux6hyj8D7ZYi4FQV1l2ehZGg>
-    <xme:hsjHaiBuO_fW6FZVnxnom3A8OJVUuxNNMpC6_hIqEvQTWXF89OiGElUpaAqIKhNsO
-    GTknRLM55z51CBePQuXjSLm3PkTLKgEDtQqS50IBtp__fNp81mnF80G>
-X-ME-Proxy-Cause: dmFkZTGZKaxtIBuY+yj1fQkVEluS1rV9uwLMyU57JUlv6pkSFkT7nyLgauo3S8Imh9UDyg
-    3FWL9SEuXDFtDIyqQlADThGRnqD/32GZSBNgrnlLbb0ThypE1eOYN05l2ISkNPCMyIucVR
-    hU/WhxBfdG84BD/KZiAfx00WXHwL8ctB5qd0w3sxQXKPW7N0HLOlIHjFpRnOzhKvj85fmj
-    1iFN+sdis6Ub8Ox1xGzChegCjUGiwQDK5sn5lBmp3kVDdDDAlrfcUi31TGsvg/nWt1dko6
-    ERPhTbUzGSrEI8YBN3q2Bet1VVSYnatZpF+tGXF+txhl9W6m0zIRYem1VNF8/Wbl/PDJJk
-    kv3m8fHK6Kv3+H92c3xOV6MM+GE84tBJjzLYEEWJIsEkvgtm/KIaoW4EO+wCEeDxci9gwz
-    85IrZmbJd9iBRM4ajExsmHZjGm6dPTLGkqbHxTZBrkFShaNcpur7uuC4yj3++LJUBCgfN7
-    CiibBPopWhQAVVf4uzIUiwhHUFIEAzYVeFvbDkYBYSjuLQGBxoj31QPlWZ34pd74nV2PeA
-    qcjIMls3coxyImy+WFf4I+JgYHMGN6i/CoPp5i4ecAxLimNHnyl6ZopAocFg8W/uRsQ1DG
-    5F/OUeEkBft7aKyIsFd5HPj1Mp13j25V4JhrL20ewBt6RgSCBbrUItxYPirg
-X-ME-Proxy: <xmx:hsjHahoIU3yvzCFHdp6ffFYMlQx-9nZFlt8nO1_cPyQ1E4T011yy8w>
-    <xmx:hsjHavmN3tUMTu2JlHo2OlgVu2fB6Viu-G0RgCXpo9oPcRUl96hnvg>
-    <xmx:hsjHakXFvZXXRXTKgCuvHpENpk3yyCwCI-FPbp7KqKPiH3gxsDufiA>
-    <xmx:hsjHajTVShXEE8VbBss11eugx0DPRuBK5EEAEfkoLrIz3lYtlwvP-A>
-    <xmx:hsjHavAxGf2vTjVSrPliw1d6EQqu42Y_f7lucL1JkZYzrmVRxqkYOBsY>
-Feedback-ID: ifa6e4810:Fastmail
-Received: by mailuser.phl.internal (Postfix, from userid 501)
-	id 0243B780070; Thu,  8 Oct 2026 12:44:54 -0400 (EDT)
-X-Mailer: MessagingEngine.com Webmail Interface
+	s=k20260515; t=1791480005;
+	bh=4/+xMOENnVRhEAEZuBanU7rdPV2PMrCIt5k0j3QWQmU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=L56qRQ5P4EBTJWX7rY6Dl5QOcdxTNY7BgM4FkJY2fOZ9FyVcXcT6Bi38mzCLn6/Rk
+	 SAdlpd7kzxQNlN4ARMmS2SAqu2nCpJO1yOM/3czB5BztTo0ZnAbsxOYH3U75fvsc6g
+	 5XD7XnLt36KQeCmJWRWTevHgOpEtQ/UaMmz+B+Xz4u1zYnPhbPtZUyQgxEuu4h6yee
+	 AU8VgHAXW6ot0NdqzCmGxldp1sqJrUioClJsscA0vr2ZhYBpzV7vRAnMBKgC4wMIe6
+	 v9CHgLRjbDFXvWq/dLZxwwHdtypLt/Da0M0gVFVlLvis+IXu6DgpU1YljHF9q7PESM
+	 1yEhyzefOYgAQ==
+Date: Thu, 8 Oct 2026 10:20:04 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: cem@kernel.org, stable@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 04/12] xfs: reattach dquots after changing inode ids
+Message-ID: <20261008172004.GT2705364@frogsfrogsfrogs>
+References: <179141521177.2728617.11116041790027402666.stgit@frogsfrogsfrogs>
+ <179141521342.2728617.2833089550706486434.stgit@frogsfrogsfrogs>
+ <aseFDykX3OaCKSC1@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-ThreadId: ANi-fZsmwLLZ
-Date: Thu, 08 Oct 2026 12:44:33 -0400
-From: "Chuck Lever" <cel@kernel.org>
-To: daejun7.park@samsung.com
-Cc: "Jeff Layton" <jlayton@kernel.org>, NeilBrown <neil@brown.name>,
- "Olga Kornievskaia" <okorniev@redhat.com>, "Dai Ngo" <Dai.Ngo@oracle.com>,
- "Tom Talpey" <tom@talpey.com>, "Christoph Hellwig" <hch@lst.de>,
- "Carlos Maiolino" <cem@kernel.org>, "Amir Goldstein" <amir73il@gmail.com>,
- "Darrick J. Wong" <djwong@kernel.org>, "Dave Chinner" <dgc@kernel.org>,
- "Sergey Bashirov" <sergeybashirov@gmail.com>,
- "Christian Brauner" <brauner@kernel.org>, linux-nfs@vger.kernel.org,
- linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
- linux-kernel@vger.kernel.org
-Message-Id: <235ae19b-fd63-4d01-9fe0-d047a33b55ed@slotpi15m67>
-In-Reply-To: <20261008-xfs-nfsd-map-blocks-v1-8-560026cdccb6@samsung.com>
-References: <20261008-xfs-nfsd-map-blocks-v1-0-560026cdccb6@samsung.com>
- <20261008-xfs-nfsd-map-blocks-v1-8-560026cdccb6@samsung.com>
-Subject: Re: [PATCH 8/8] nfsd: get all extents of a block layout in one ->map_blocks
- call
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aseFDykX3OaCKSC1@infradead.org>
 
-Daejun Park <daejun7.park@samsung.com> wrote:
-> @@ -146,42 +124,67 @@ nfsd4_block_proc_layoutget(struct svc_rqst *rqstp, struct inode *inode,
->  		goto out_error;
->  	bl->nr_extents = nr_extents_max;
->  	args->lg_content = bl;
-> +	iomaps = kmalloc_array(nr_extents_max, sizeof(*iomaps), GFP_KERNEL);
-> +	if (!iomaps)
-> +		goto out_error;
+On Thu, Oct 08, 2026 at 04:57:03AM -0700, Christoph Hellwig wrote:
+> On Wed, Oct 07, 2026 at 10:55:52PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > LOLLM noticed that xrep_inode_ids can change the user, group, or project
+> > id of any given file.  When this happens, we need to detach any existing
+> > incore dquot and attach the correct ones.
+> 
+> Sashiko complains about changing the dquot while attached to the
+> inode and I think it is right, or rather the issue goes even deeper.
+> We should not have the dquot attached while changing these identifier
+> as otherwise things will get really nasty.  I'm not really sure how
+> to do better here, though.
 
-nr_extents_max is bounded by PAGE_SIZE so that the per-request buffer
-stays small. But a struct iomap is nearly twice the size of an encoded
-extent, so this array is nearly twice the layout buffer it sits next
-to. On 64 KiB pages that is well over 100 KiB of physically contiguous
-memory per LAYOUTGET. A failure here turns into NFS4ERR_DELAY for
-every request under fragmentation.
+Yeah.... as Sashiko points out, the dquots might be attached to the
+transaction, so dqdetaching them with a transaction held is baaaad.
+The dquot detach and reattach have to get done at the end, after we've
+committed all the inode updates.  Will update this patch and resend it.
 
-Using kvmalloc_array() would cover the large case, or you could cap
-nr_extents_max independently of PAGE_SIZE.
-
-
-> +	/*
-> +	 * Get all extents in one call, so that the filesystem maps them
-> +	 * together and they fit.
-> +	 */
-> +	nr_iomaps = nr_extents_max;
-> +	error = sb->s_export_op->block_ops->map_blocks(inode, offset, length,
-> +			iomaps, &nr_iomaps, seg->iomode != IOMODE_READ,
-> +			&device_generation);
-
-An RW LAYOUTGET with loga_minlength of 0 is refused by
-nfsd4_block_iomap_to_extent() on the first unwritten extent, so
-currently no write mapping is ever handed out for it. Yet this call
-still passes write, so XFS allocates every hole in the range, updates
-the inode and forces the log before the result is thrown away. With
-one call per request this looks like up to nr_extents_max allocation
-transactions instead of one.
-
-Passing write only when loga_minlength is non-zero, and having
-nfsd4_block_iomap_to_extent() refuse IOMAP_HOLE for IOMODE_RW the way
-it already refuses IOMAP_UNWRITTEN, gives the client the same answer
-without allocating anything. Admittedly this is a pre-existing
-issue -- perhaps a pre-requisite fix for this series is best, so
-that the fix can be backported to LTS.
-
-A note about process: the series touches XFS and exportfs. It will
-need to go through the VFS tree, I think, and might conflict with
-what's already in nfsd-testing.
-
-
--- 
-Chuck Lever (Come to NFS bake-a-thon! https://nfsv4bat.org)
+--D
