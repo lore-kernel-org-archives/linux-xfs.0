@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F15EB438034
-	for <linux-xfs@vger.kernel.org>; Thu,  8 Oct 2026 13:32:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2852446053
+	for <linux-xfs@vger.kernel.org>; Thu,  8 Oct 2026 13:32:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791466370; cv=none; b=L6VNb+qOCa4fYxcX4p71/t0hyC8upKu1PhEhrOFNlS0Yiw1BSiOIx3FgUIBpViPcF3dU8mlxP+j2kVn7DQiFmzGpmNWJvRb/NJy6K8N2+J64IRVADP8BuxYwgBLVME7NNpZVGFVHLAyEiTonXAnR8cyHwSCRApyXMyXhqJWtKVY=
+	t=1791466372; cv=none; b=YTMf/ict56JVtmdozX5eDH+r8+JZTL2/nJdEB3XtVkPEc6L8IDHlgt8TpZjq5nWbQoXvIOG+4CRnRsTrrZcVeyA87483InZF5PPx0xFvOjICQGTho1TRMGL15pEutPdBd/3CWf299UVvezfbnDTN1wbOaAXYpb1HHukPTCGO0OE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791466370; c=relaxed/simple;
-	bh=0wt4swKDq1AciQW+208OO7oyv3b1CgoIpeDrpFH1XcE=;
+	s=arc-20240116; t=1791466372; c=relaxed/simple;
+	bh=N5glzPg3ZtbRmoKYtdRAb8wffxB40XSjR0P5OgSwrLw=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=gxAkzqzZjW5aqPaN5MjvAT0BxWZioPa9WKYSb5p4zj4ctnrqhtFFBod87LVGmut6hpvn1a9c8rKvzzjG7LIMQndG1BzbQTZRYR9h0kqpcw/AfF1V2WnhQNAqVtZzS++gdMR+aA9S7dpuNXA/oRzgKK0QXooCHKeCEmPnkZ++oC8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b66JsnUD; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=XpBksKRvZEZ/F1XkESEhs8zPAnogDv2ZupN+lapE44CV1zu1SDSaLa3rLjiALjsbUgiF6AGaTKlmyE8hynamnBXQHURk3JQaTlut0FJ2tUa2Yh4Ir3QfZ+bgNx7qdJPkNllnOKoI0PsnwaYvyOMPrjRURHm0B1Nu/YFRqFnRIHw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oKcXtKsU; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b66JsnUD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7F2061F00893;
-	Thu,  8 Oct 2026 13:32:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oKcXtKsU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 579F61F000FF;
+	Thu,  8 Oct 2026 13:32:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791466369;
-	bh=9z/6glnARVAyVLIKh/TZpBXs3uGrcwOByBp/hUeeKQ4=;
+	s=k20260515; t=1791466371;
+	bh=6xDYswg1nbwDfePk03v8tBhb0xFFEEgi2criwvSHk58=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=b66JsnUDTBALqRwRrE+k/kv6mVTS0i1MwIBjIkabUKiaSOYdZ8SL22E7iZ4yBE/mT
-	 7UNk+i3kzdf2Ao43aNxXwIWa7uto7MQyNLTsreru6H6bZG9LLK4LhC+uPcRoUlz30g
-	 XD9oAh+JO5dlwm0BvsL0FcHxFmCV9lcCYKenXsfV4ILBkBWUi5rH0ByyP75sRT/9lw
-	 VtN7rD8RwbfRwot1955k2KPvNOqWPg8d76j4RGMP7APH5x0OWRuGJeQM63T7DhJdgG
-	 MAF1y6dlp1SoSDyo/TO95/IymRuREnoTr9LssH4YU6dImLqH8QyP63voXn1/moEqGQ
-	 uChxz4rKUe62g==
+	b=oKcXtKsUP6JoFdUKu71ecUUeEwuReRpeMboYuu1tXBT1d7V/nRUse3V7meESIXzec
+	 G3ril++Xy27MQ6HkGLuT0cRrk65zsT+EQY1p4WDPFASgrVXlEKPKEoDQdZCFOXbm+2
+	 PJV6ZH1rWNpVJhdsk8H7Tqn+/wZaCn8W35joRVUTJrAauE4YyXGgMD4APQn+p7vEru
+	 GptzyBlwkb9xBY3BcdZ2mTXsjOF1wgSHMYG8VmW38vI/Yr4ioqD/e2DfgiVUwe/DCZ
+	 hsXxG34Ia7GcHIDaFKPSKedVgY50cJ8vfJOEjU8OFD0Ro8nLPyK3Q6OTF8v2VGWpx0
+	 ZsmtLVZU4pA2A==
 From: Carlos Maiolino <cem@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
-In-Reply-To: <20260925151841.3385994-1-hch@lst.de>
-References: <20260925151841.3385994-1-hch@lst.de>
-Subject: Re: small cleanups to help code sharing with xfsprogs
-Message-Id: <179146636820.378461.3177122289571282177.b4-ty@kernel.org>
-Date: Thu, 08 Oct 2026 15:32:48 +0200
+To: linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>
+Cc: djwong@kernel.org
+In-Reply-To: <20261002211038.2139655-1-sandeen@redhat.com>
+References: <20261002211038.2139655-1-sandeen@redhat.com>
+Subject: Re: [PATCH 0/3] xfs: more misc code deduplication
+Message-Id: <179146636994.378461.12349981702908687550.b4-ty@kernel.org>
+Date: Thu, 08 Oct 2026 15:32:49 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,43 +44,35 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.3
 
-On Fri, 25 Sep 2026 17:18:25 +0200, Christoph Hellwig wrote:
-> this series has a few trivial cleanups and code moves that help
-> sharing more code with xfsprogs.
+On Fri, 02 Oct 2026 16:08:08 -0500, Eric Sandeen wrote:
+> Reduce more cut and paste.
 > 
-> Diffstat:
->  libxfs/xfs_attr_item.h     |    2 --
->  libxfs/xfs_bmap_item.h     |    2 --
->  libxfs/xfs_buf_item.h      |    2 --
->  libxfs/xfs_defer.c         |    1 -
->  libxfs/xfs_exchmaps_item.h |    2 --
->  libxfs/xfs_extfree_item.h  |    2 --
->  libxfs/xfs_inode_buf.c     |    3 ---
->  libxfs/xfs_inode_item.h    |    2 --
->  libxfs/xfs_inode_util.c    |    1 -
->  libxfs/xfs_refcount.c      |    1 -
->  libxfs/xfs_refcount_item.h |    2 --
->  libxfs/xfs_rmap_item.h     |    2 --
->  libxfs/xfs_rtbitmap.c      |    1 -
->  libxfs/xfs_rtgroup.c       |    1 -
->  libxfs/xfs_sb.c            |    1 -
->  libxfs/xfs_trans.h         |    2 --
->  libxfs/xfs_trans_inode.c   |    2 --
->  xfs_platform.h             |    1 +
->  18 files changed, 1 insertion(+), 29 deletions(-)
+> These 3 are independent IIRC, so if anything gives anyone heartburn we
+> can just drop the patch(es).
+> 
+>  libxfs/xfs_dir2_sf.c      |   68 +++++------
+>  scrub/attr_repair.c       |   12 --
+>  scrub/dir_repair.c        |   11 -
+>  scrub/refcount.c          |   27 ----
+>  scrub/refcount.h          |   56 +++++++++
+>  scrub/refcount_repair.c   |    3
+>  scrub/repair.c            |   16 ++
+>  scrub/repair.h            |    1
+>  scrub/rtrefcount.c        |  263 +-------------------------------------------
+>  scrub/rtrefcount_repair.c |   39 ------
+>  scrub/symlink_repair.c    |   11 -
+>  11 files changed, 122 insertions(+), 385 deletions(-)
 > 
 > [...]
 
 Applied to for-next, thanks!
 
-[1/4] xfs: remove various unused includes in libxfs/
-      commit: 6fe0d151eaada4f3ea4947b19ac048b8894b9e88
-[2/4] xfs: include <linux/iversion.h> in xfs_platform.h
-      commit: 5e68008e9c0d5ec602582dd659d4d1c6f910ef4a
-[3/4] xfs: move xfs_*_item.h to libxfs
-      commit: 834a6a1e9633722df3bfde5f4fa830432faa360a
-[4/4] xfs: move xfs_trans.h to libxfs
-      commit: ce47e8aab95d6bd4f70b9cbc7308ca13b9d57660
+[1/3] xfs: factor out xfs_dir2_sf_copy_entries helper
+      commit: e029aeece84b0fe4f0aa6b1dd64c0c1c49281cde
+[2/3] xfs: factor out xrep_reset_fork_to_extents helper for scrub/repair
+      commit: 1e3f1adf6d533b503bc2356129bd7e27c199ad5b
+[3/3] xfs: re-use refcount scrub/repair code for rtrefcount
+      commit: 1d55a10278054fbebb9f571c99c32dac42327361
 
 Best regards,
 -- 
