@@ -1,78 +1,77 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D18713BE179;
-	Thu,  8 Oct 2026 05:57:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C176938734E
+	for <linux-xfs@vger.kernel.org>; Thu,  8 Oct 2026 07:17:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791439079; cv=none; b=rKQT5bP3wWEQii8yVnqaDmkGmFUWbGF2V8d6H7fg8l0lCpnXKEv8lD7CR+LFzep5gOjnZYheoHIHFJvTy+WImaFgVtTskACLlWzD8Fdkjg9d2F1Qic2roaareqNZqLr1gKyxI6eJDlNVC8tn2n2iA8g3P3SLqXP2GGnobiOKaC8=
+	t=1791443862; cv=none; b=elWJ6wLQsOK5DoKQRPqtdvOwGmwaBBBYJVRhNAtoqY82Xp1YB8UcyqzfT4niCGDF8Du6+LjGrUeo7BavOsOlxsW0Afcankz6a8kd7g8y3Z7XxqkouwiFZtLE5QRshNQQZ2VXqhjT+VLJuU1c9bbfz3gMY/jHvHIXBEkGsagzQhc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791439079; c=relaxed/simple;
-	bh=69ZMOhBnZmI2OUbpYutBFH8c9FYDCdcY+Qt++8ih8Ic=;
-	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=e09BsSpCwCePBswIDfqK+VfqkxdBN/ksmnqshQNsCN6aL+7xcJimQu3+ewtrzI0tW4ZKZ9O0A0cMSd9ikR7gJ073rXMM0TnXHDhozhDy/2s/3Tt3cn53SI77MkKGY7cpV8djFT3YUNSSty4Jj9bTYoqlfvWijjSoePbLXVvCZMQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bI4OlvsZ; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791443862; c=relaxed/simple;
+	bh=HVSmKFEfEkLceeHvrpvGiH7TEw/6XiBgWzojREthZqg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=eXGZ44lbP2pJcdzc1ZoxJsms3qB9eIuVdItsfnod4+FSEjcKoZWzeM9MxfTVU9Cf0UwxPn16OtrIkZ+j0/ddjRLrL3s6iSpGdGZ7NsDGqkKL7lP1wKQBrzLGEo4pYw/ynmJ8FerAqXs0K4w2FAS4uY7u7iUpi0J4Dm+8e8iyj+8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=k7xm0xgT; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bI4OlvsZ"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 627371F000FF;
-	Thu,  8 Oct 2026 05:57:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791439078;
-	bh=pmEu2/8qkzUvICPZDY68npXfqr5QeU5R+4L2EBaIEv8=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=bI4OlvsZpp0qia5atpPthEQTLA7uBdJqHx9mDRqODiGSmXDONvimPr0diYExMoLh7
-	 7FapNo0CORKu+NcVZJQtOIDJg5MarHKpJ3cwKbnXSAWWzjE4zj4dtyXntzmLVStJ45
-	 /8wDhpZxSZzypAaFPtPFfVf0QWjyUge8HgY94ksHyDm5uxCEslLf0EiLLjwMtyAK60
-	 2Q42i/c3vbsHG2Rt3RcPnQEkf3i0rd/7JB8JAkgOsPqRHmczGttj34AUjtpF2zt+G9
-	 xj41UV1TUQFKqbZhPx9JgBh2E8EePRlmEQ5lcigYOpTMcvf1Gz4/W8DN3vrLsC+2mH
-	 VhlFjuvspi8aQ==
-Date: Wed, 07 Oct 2026 22:57:57 -0700
-Subject: [PATCH 12/12] xfs: complain loudly when dirtree checker finds broken
- links
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: djwong@kernel.org, cem@kernel.org
-Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <179141521516.2728617.8852126870323780870.stgit@frogsfrogsfrogs>
-In-Reply-To: <179141521177.2728617.11116041790027402666.stgit@frogsfrogsfrogs>
-References: <179141521177.2728617.11116041790027402666.stgit@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="k7xm0xgT"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=oJXwLLykdtmNnYwASRhWCbNOjOSyy4orz5BVriATGOA=; b=k7xm0xgT82H1h7a51iVAtUf6w4
+	RFvsH7edjKkoK0XH4ZstMLnhN8A+7rN72fnwB3oEIWbRI6dYYyAmXu4xiIs2ko4MgywFF8eILaGaJ
+	GySPTBQMRHrkkEB/AER89kGe+udE1uW/unLBS/tKGxAITOVT0mm3eIAon8IQkS9Y+ndTLb/IZX721
+	lgM4aA1EhLp3v221JEtbJjgsSxhmFRwrPOe3TTcZhVU1MA/3tUD0oBlLYVqq5rwXGasd77ncBcETj
+	MKMMzjawPaAg8UzT1bslVjGuPluSIswJC5zhpD1/W3Nz9DYXv8khg7+Pr8eFWozmv2RlaEbOMORbZ
+	o/dIMRvQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1xEiNk-00000003j2c-2iRC;
+	Thu, 08 Oct 2026 07:17:36 +0000
+Date: Thu, 8 Oct 2026 00:17:36 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Wilfred Mallawa <wilfred.mallawa@wdc.com>,
+	"cem@kernel.org" <cem@kernel.org>,
+	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: [xfsprogs] mkfs: fixup memory leak on exit
+Message-ID: <asdDkOgueZHx0UVz@infradead.org>
+References: <20261006101232.357124-2-wilfred.opensource@gmail.com>
+ <asTQdEMkpzc7_tSd@cronus.toxiclabs.cc>
+ <75bc883c4d45a514aaad949dfe301c3f2a79112a.camel@wdc.com>
+ <20261006144851.GX2705364@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261006144851.GX2705364@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Tue, Oct 06, 2026 at 07:48:51AM -0700, Darrick J. Wong wrote:
+> 
+> I don't think this is better.  libxfs' init functions do not create or
+> assign the libxfs_init.{data,log,rt}.name fields, they merely reuse
+> whatever pointer the calling program set.  Only the caller knows where
+> that pointed to memory came from (stack, optarg, dynamic allocation) so
+> only the caller knows how to drop the pointer.
 
-LOLLM observed that the directory tree walk code bails out if it finds
-broken parent pointers along the way.  However, it flattens the return
-code to zero, which means that we can end up in the repair code having
-not completed the scan.  We should never proceed with a repair in this
-state, so let's mark the scrub incomplete and exit.
+Exactly.
 
-Cc: <stable@vger.kernel.org> # v6.10
-Fixes: 928b721a11789a ("xfs: teach online scrub to find directory tree structure problems")
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-Assisted-by: LOLLM # finding obvious bugs
----
- fs/xfs/scrub/dirtree.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+> The original patch is more appropriate IMO but seeing as we're about to
+> return from main and terminate the process, why do we care?  And if we
+> do, shouldn't mkfs also free the other getstr() strings attached to the
+> cli struct?
 
+We probably want that, as having a clean xfstests run with addrsan is
+actually really nice to have, as without that the addrsan support is
+only if limited use.
 
-diff --git a/fs/xfs/scrub/dirtree.c b/fs/xfs/scrub/dirtree.c
-index 887383d2e94104..5d2fee2138439b 100644
---- a/fs/xfs/scrub/dirtree.c
-+++ b/fs/xfs/scrub/dirtree.c
-@@ -860,7 +860,8 @@ xchk_dirtree_find_paths_to_root(
- 				 * A parent pointer of @sc->ip is bad, don't
- 				 * bother continuing.
- 				 */
--				break;
-+				xchk_set_incomplete(sc);
-+				return error;
- 			}
- 			if (error == -ESTALE) {
- 				/* This had better be an invalidation. */
+> And shouldn't the exit(1) paths do likewise?
+
+Maybe.  Although it doesn't really matter all that much.
 
