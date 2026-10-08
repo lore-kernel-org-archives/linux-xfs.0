@@ -1,106 +1,104 @@
-Received: from mail-ej1-f50.google.com (mail-ej1-f50.google.com [209.85.218.50])
+Received: from mail-ed1-f51.google.com (mail-ed1-f51.google.com [209.85.208.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9FD44718DC
-	for <linux-xfs@vger.kernel.org>; Thu,  8 Oct 2026 11:44:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 272AC449B3E
+	for <linux-xfs@vger.kernel.org>; Thu,  8 Oct 2026 11:47:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.51
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791459858; cv=pass; b=gaw2cio2WvDgbw26lZ34pBaguj/ChitGpesgW2G71bPXQzXbAmsBeSH47eNWl3F5Ji9nBTj6fVyDf7dG7fTUJjw3JDV7iMZuOS8UwCOi9JqRhytzbZTQiRCF1IkifrFXzr69seDEqzO3g7Hiu/EjWlUxtRQjI03JXbFhLBU+8wo=
+	t=1791460023; cv=pass; b=JrI3Vmr3ePL28WQ99OnNwOd88qyzWIef4KPpNVddJiGu02sZK49w9oxA0UjKF36INB4O6dJaCeHu+bqU7Pzz19iHZGxn6M3XfXpLSi0bxNPNOAdgwgYvvpRhOsH5MOhWJKHoBjtPo2NVMR9KPrVuX8eajL/uf7zpH4lfMjMlvEM=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791459858; c=relaxed/simple;
-	bh=F2zqmRM3iI8PS9kUAZsutdB8oUyV5WrW6uLyCJ4oLY4=;
+	s=arc-20240116; t=1791460023; c=relaxed/simple;
+	bh=CO8G9SZWedbhi+5xtVQ96NniUgT/5lP/6mxDhdyYfZY=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=oUNNzgpRLGlhFpLlkYqZ6qOC18/rd197EKN1cAwINB0i9idraGO66I10aRcU4dk/AR29XwdlGN2+djGOBlO2YPo0AbhccykGxxy9SJcbYSW9369/LKB4Jy3Hhnz7MtHIRGwmDf0GXLQ40wvzN4NSQjeGdDFrryMHl1LMG6N0xA0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=VV/LqYgr; arc=pass smtp.client-ip=209.85.218.50
+	 To:Cc:Content-Type; b=S6inFBiJtr5XNWoTRBue8x5qJdOD4uPvb69dPpIu13Vw9r+cWQ5FRVAXjmuzGsSBDpjRkao3PvguXf9uG6oloE855fAboChxft6RnL6pR0Bt76BU0I+JxkehnEB0eNwsU71X4A7jOwnK4Zb1XDrFgo4O7Ro65AUNZlzYLP85mdk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jJ+xJyCe; arc=pass smtp.client-ip=209.85.208.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VV/LqYgr"
-Received: by mail-ej1-f50.google.com with SMTP id a640c23a62f3a-c2e69aa07c3so710723966b.1
-        for <linux-xfs@vger.kernel.org>; Thu, 08 Oct 2026 04:44:16 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1791459855; cv=none;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jJ+xJyCe"
+Received: by mail-ed1-f51.google.com with SMTP id 4fb4d7f45d1cf-6b167ffd132so630531a12.1
+        for <linux-xfs@vger.kernel.org>; Thu, 08 Oct 2026 04:47:01 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1791460020; cv=none;
         d=google.com; s=arc-20260327;
-        b=L6oKWJmEs0FyAmPxtF6TyzX/pd81rOM7uUqDyTHRID6EviXyO5EMlAwkD29z+8nnce
-         htwpz8u2pmAWfAZ5scOMWQ5ccOBBVNoFNTHFHzpANqSyN1N1cF0smeRBg9GlTsnT8MuE
-         DdEG30r9una7ll5jejhmSEJyKoPLJCerftrPxtCv0ExYVVye5v+6hPcpDw15nx7y35Ry
-         y7Ewp+EEEk/dxDvcIFhd/F7Z1c/oN1Gk53AyxKE3xtOAszo6CXOYAsgNzVkAbW0Lsy2j
-         JCwqC5hbjsHg7kwMWFWqSSmq1ZCIZ99vx5pJD138yqDJ2aYw1VklUdJLOKSEJtV7naok
-         wJcw==
+        b=U3xtzYQAwzwGzNuq/ZRbHdPfm9a7I3S9lHCOlvNSf0H8FYPXUm7Pk4MwMB2LwvVm9l
+         krruIKDzbVODzuAGd0E9ZwK/DvhA8b3r5RcIVKkHOiwdpAxPmwXUbIH+HcCdoDBFMZUR
+         kt6I395j+AMm3LDWUJPI4+hz9mua26mgBevbfRv8/t4DTpJagn8/42EqmOWhZ5hxE167
+         59EHINdkYyjS94PKzD5cZt2kwJtbqB1j9O7VtHL4LFkh+4cYJtSpPINhk9RAr9m5hXT6
+         gSTtOxNJuv87RLCt2e77XOOw979KuDYwkLo7DVyvFfn0WL6lPoz0491W4/Cy5CGuztN3
+         NhNA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:dkim-signature;
-        bh=KgCzrz5MTmEOiMmZEKQzXUh1jqi6chxJJkO653u8cQM=;
-        fh=K6CO8PUYjw04sco3/ZrR9Z+jze2w80ihy0nqD4/VIAQ=;
-        b=D2WSTcrLRg1hliUZWPriTkBQI+8KdLxp/TuiM4v3jBR1QYgpCclDnq/dxEvIPAMa4i
-         jhHWR3XQwi+4eRZwzTbJwecdcry1qSdD/HRabPDRa26fIgpAnuHKWCXgH0FMZvQODIYR
-         xGGrRiatpByKq76hWKLaypmvvhaA/LS9HvSLy4fuR2K1NGkEq5OCYbCIVrvBjfHDT1lP
-         A4hI4ryYO126qWQPF9LKLBOLlxubjjWq339u/VcchzQjMuXRLrcfNYFNU47QudK9ufSU
-         J7mb/mERxjFx/gm932q0YXHur4B8gWO+B0uE1xvcXrag6pFialHtGdSRD20fN8IaqVeG
-         y0Tw==;
+        bh=HscJ85yNflaCGUtE9aXyJSmi4cngI9gxLp0qRPoZO+s=;
+        fh=RoBGjlzbunbxYiYHeOlGRsnLinqmccxwXMgn1Dk3MVo=;
+        b=fVSAMxL8xtzVbdrHHCKQF/ftYRzc7W8Nz0vn7/CKpf/mX/q64U41kCu20NrZ996iY+
+         ajhGiSK6wENFAUW+gPDv69Jc7BjnW5NF9pppYt2pmhFwKuBTB+mRRLEYBufs0sYrax3C
+         Tku4zoYjB5TKD9Fx5y+FBrWDrJe8WHD5dKfN1I2WJbZmhMa+H1MPjGCxVA+B9ZV3Kp9l
+         LNFcELYyC8rmFaQP4Kc8xCH/AFTt+Hky1h3hCxyBwiTXgWsdHUKtz1576N03VS46t/HM
+         VwLNP5rRRDvtI7nAGXv87agRtE7dC2TXwnBdxOOULFX56Lh0YwtaEQIEtcRQzF0yNJx9
+         Zgzg==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791459855; x=1792064655; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1791460020; x=1792064820; darn=vger.kernel.org;
         h=content-type:cc:to:subject:message-id:date:from:in-reply-to
          :references:mime-version:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=KgCzrz5MTmEOiMmZEKQzXUh1jqi6chxJJkO653u8cQM=;
-        b=VV/LqYgrRW9eEl12HGYoRR+wMChxl2LrM2nwtyU0xEbl1cukRqaYwZJ7oCPH12F62s
-         fqfVvji06WvNhJZDcwUCXqBTbk6B6RehQHk2E7bHDQRkfGr2QlWeR/+1L1bR9Tt02WNH
-         KqMSK5YBUyWVLWEZ+xn8bTPelsBxK5qu0yJUM8J20GfrogldibkSuB6lHFlpctmVLiHw
-         /JN+MuXX6sxIHFgo6ABcPkLlxQH7/KTMmOQdtnwjFhSaPmI6tUyF7xHG3P/X3O4HqcZL
-         xZzf6AigYpZoKrCsyngOzcMPAwMH9eFoeP3+SF/bZ2fjDa04Rv9V+M+v160az0sghyZt
-         gGYA==
+        bh=HscJ85yNflaCGUtE9aXyJSmi4cngI9gxLp0qRPoZO+s=;
+        b=jJ+xJyCe4sdFEFE87hvDAcuIjvOOICouw0tpcoas3kR3xM74p1X5mt3F++VUrSowg2
+         u6IXFVU5R/d+CxETV9jhxc+ss+XU6Csp0lv0WGciLm/+0DcgYR56hBii8uUF77eOWKkZ
+         wpy5Fy27mC3i5BfIdra7036TEXjquXlfLf6FIywDTnMRwMnKDazdbRhDSzRvcH6ppPpu
+         2F8KXccxE+j0E9fOikO7mzt3eV4VKOhfRoEx1Vhhty/AN9OTcxlZW/uLl9V1pGikUUCN
+         EcYTJZRFMrM0Y/bFru8LcnDABV1zrAn87yc7O2NJQEcchfPdEQyVGa3B0IOqiJ7dknCV
+         fGpA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791459855; x=1792064655;
+        d=1e100.net; s=20260707; t=1791460020; x=1792064820;
         h=content-type:cc:to:subject:message-id:date:from:in-reply-to
          :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to:content-type;
-        bh=KgCzrz5MTmEOiMmZEKQzXUh1jqi6chxJJkO653u8cQM=;
-        b=tGXD4s18/N32ehI7NTlKv7VKlrd12top0nlTNiRBIgNP3h8kLrRFsIK6Zlm/Bhmhi0
-         8eO08Mz8iUj2ie1xzmGedKyj76xgOyB6HJnIO9E3L26Ueh7Zo0MvkyC+N1a04pYOpOqJ
-         LyVjpsHJjYVFfTxfWtdHQpbtIvIjK3p2SaEowox3YfmK+5BBo287Uifo2yW3Ovf8bzcB
-         pZ0AawLWGk43Zezyi+USnAl4sO8UTl1BA8V/jpfpO2bBhqc3svvO0yA31VIqusCIdlid
-         JAOPRM3dqchQcwbRbWxJ7Lr4hX1Shu1cfTBTKz+rAXbdX/CCa4GqAue7Mv862siL9Dz6
-         Cdtg==
-X-Forwarded-Encrypted: i=1; AKwUvBxvBSXTw0E0oYZw+2bq7geRaScbeIqvgTDfQIRaCYmvfb0Z5aMEbj7SkMR3gFnyTjAlsGDFQjWLnsM=@vger.kernel.org
-X-Gm-Message-State: AFq9FYIR9+cHZuKUfHCm0cBetEl0TgY4aLstAYbsQ3JvXrxZEvOQBt4w
-	ZAjr92w3KZUrTqg4wTGSFsymJ4GBP/OP5/tWMHVxRl/9JbmvrzJud6hp3KnS9pOyJ5A7dbQ8QB4
-	Yv91a3Ggx2iuQTLjwMa8/L7OUCuv49g==
-X-Gm-Gg: AYBFou22zE9vrDo7xV68uarxM7Aq5qRC5WR2UKGLBJmGN0/MP6IbtXGsMZ1EdHoci9p
-	wHiGc436WOYvMGI3aWuXGdJ8O0YbW0ExIl6nWJkibx65VX9+GW2Wiik7lOH+EjERLAcbuJkfulN
-	RCTi4qvGdkNh5o0DhDZts50KzG1RnmrshhfMoPa4BXZYRojvmfldqSN5gLXBis1dwfMoKFYjwoK
-	wHn6VvkTIaM3GeXfO4S3zc2AwLbfVJq+6ck/qB4vzxRRVxpD+1kXzoysP0NyHOgpItjvNX5vdSD
-	Fyxch/dD0ybo9P09EJgxFQ6gtECqW4/OnQoN8Fdq2r9SzxnSRuhVjI0c9bT7XduJ47fjnvVWEbs
-	jJ1bCFTchGvqrvUvUoNbRMNqSqGlXrGkDod6s8iVJKE7bsDnhto3A
-X-Received: by 2002:a17:907:1c94:b0:c2e:32d3:1b5 with SMTP id
- a640c23a62f3a-c317c0ad02fmr523121266b.32.1791459854813; Thu, 08 Oct 2026
- 04:44:14 -0700 (PDT)
+        bh=HscJ85yNflaCGUtE9aXyJSmi4cngI9gxLp0qRPoZO+s=;
+        b=2YTZvkpKTktJgwpAIU4ZBVG+15NAu6C2PjZgjnBLcWq/4R3ZMROcHJs2UUwtmndvEe
+         FL6AK8jkLgB42eEmARnrfC6OSYZvpejs+yOoDHAt6dM5ak4DzxYf0oGd7dQZx+yTpk3I
+         OCtGZNmV2LoY/QLPhIbSJ3NEgRgRe2ocl1Dt5GNwsaLg2MavDriXkpPJNgxB8me/RGfQ
+         7EUcKsQeWFRUFtg1lRzj+mvzVy9kQCOgPXm4U+cJUZaEH/qhVOfYYw+7uYZtj7a3jYPQ
+         7/zEddk+pYGncIDrjrCWf3/xqkjciDgNCZVtYoy6Osa9299+dlGdGRbWpqbvaVNDQsKG
+         9O4Q==
+X-Forwarded-Encrypted: i=1; AKwUvBx+VJe68h/IaAkXOS2eSyCpEMQECUTYZwr2qDJPRlPKQ5A2FR55E8AeSHN4pTkBWNTdSsL7Z+td0G4=@vger.kernel.org
+X-Gm-Message-State: AFq9FYJ+szOer0PQq6RBRR6GOEq915NjZFexFeyO2s211BESFsMEQSVS
+	E6UNjYjElVV3jSsNbjMk5wmuG1MRJZqEo3Cn7pwvhhH8+A3hCu5tV1EVuFnP7na1/FYu4a6ZwJn
+	4XHmvi4vYMKx+lD9CDChPIX0gLcowWg==
+X-Gm-Gg: AYBFou17/1ejkjIuBS3BXHLv2Pkcj5gcVqHEEjhLNRRuk78HybCbAghsO7rFEsAhIar
+	S03BGTrRsjTSm9ALItVmF9hlfpYk0X84dtH4arD2cIBKDoONYyyJgAdRo9bb212GtGn/ENkYP66
+	cc6vTIpEqxe2jXnbB4goTDmjKfiryYxNvYm6wGPHmfSjazWvOQqI8LVaw6yQQc4rWp9YsMRRkmR
+	m1jY7YJzrGr1/frUYyEAGnDod3BtqA9yCk+OmAsxkw5awL2eTPvN/XiMzDh8do48VTJ5wEt2mV9
+	8Rq13jYWlSpYnG9HELXny1RRIKZ2enHWG/PfDybxFrjENy1PIDVikGArBoql6ENqE+S0/hFUFrf
+	0c7k3maDOsuxOvOXp+yhTjjD5TfU+wQR5amQkpG2PnopLD/JR0cis3g+pJX+kXDg=
+X-Received: by 2002:a05:6402:a0c6:b0:6ac:980f:315b with SMTP id
+ 4fb4d7f45d1cf-6aff4591ffbmr4517486a12.22.1791460020083; Thu, 08 Oct 2026
+ 04:47:00 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260924100032.2733101-1-hch@lst.de> <20260924100032.2733101-19-hch@lst.de>
-In-Reply-To: <20260924100032.2733101-19-hch@lst.de>
+References: <20260924100032.2733101-1-hch@lst.de> <20260924100032.2733101-6-hch@lst.de>
+In-Reply-To: <20260924100032.2733101-6-hch@lst.de>
 From: Anuj gupta <anuj1072538@gmail.com>
-Date: Thu, 8 Oct 2026 17:13:35 +0530
-X-Gm-Features: AclHuK9ii9nY2tZvVAGfNbbhZVmNqFIbUD29KvWXyt6MDnjdmu7KJpQUpIenNsM
-Message-ID: <CACzX3At0e+qWoNrvrPuryGrOxpGcH1fr=Ymq1spmG0qqiJ+d-w@mail.gmail.com>
-Subject: Re: [PATCH 18/21] xfs: don't try to verify checksums on empty zones
-To: Christoph Hellwig <hch@lst.de>
+Date: Thu, 8 Oct 2026 17:16:22 +0530
+X-Gm-Features: AclHuK8vcwC-F7HYofed39vmarIL9j-KUcWwNdTgImZwbLqxh0Xib30p2nmAgMs
+Message-ID: <CACzX3AuHPCbqDPV3hMxkE+wZfcPpaydDO1UVnC5Y9WeA7ym-DQ@mail.gmail.com>
+Subject: Re: [PATCH 05/21] xfs: introduce XFS_BLI_PREALLOC
+To: Christoph Hellwig <hch@lst.de>, Anuj Gupta <anuj20.g@samsung.com>
 Cc: Carlos Maiolino <cem@kernel.org>, "Darrick J . Wong" <djwong@kernel.org>, Jens Axboe <axboe@kernel.dk>, 
 	Christian Brauner <brauner@kernel.org>, linux-xfs@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org, Anuj Gupta <anuj20.g@samsung.com>
+	linux-fsdevel@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 
-> +               error = xfs_csum_verify(mp, bio, saved_iter, csum_buf, bno,
-> +                               false);
+> +       if (bip->bli_flags & XFS_BLI_PREALLOC)
+> +               *nbytes = xfs_calc_buf_res(bip->bli_format_count, bp->b_length);
+> +
 
-Could an open zone be verified past oz_allocated here? XFS_RTG_FREE is
-cleared on opening, but the verification range is not bounded by
-oz_allocated. xfs_zone_rgbno_is_valid() treats only the prefix below
-oz_allocated as valid; should this trim the verification range at that
-boundary? Otherwise a whole-rtdev XFS_IOC_VERIFY_MEDIA request returns
-a spurious userspace error.
+The *nbytes assignment here is immediately overwritten by the
+unconditional round_up(bytes, 512) below, so the PREALLOC pre-sizing
+never takes effect. Move the PREALLOC block after the round_up line.
