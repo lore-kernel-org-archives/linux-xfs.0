@@ -1,613 +1,254 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mout-p-103.mailbox.org (mout-p-103.mailbox.org [80.241.56.161])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6851E38AC88
-	for <linux-xfs@vger.kernel.org>; Thu,  8 Oct 2026 11:09:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A460D331EA6
+	for <linux-xfs@vger.kernel.org>; Thu,  8 Oct 2026 11:12:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.161
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791457754; cv=none; b=ZXInzhCxj2Sr/5JmBpEAas8UORvsQDlFveluykLS3OKXiRWib4b23noR5ruEyGb6PNm95RfbWvFhUfCpWDC6FtLTHvjwjUhuQvVNBcNpEXsjmBQtT4MZfdwkGSj247A8rlMI38D2SyA0yWTn5QdtesS5JeCw3/K1URP1hgaNLcA=
+	t=1791457927; cv=none; b=iAGUGd6kVV/uGW/nvqChd3qK/X72WJbTC3fp+oiErKSvI6mkdmC1yJd2ngsHdkGjgJTvtprF4jsR6eV/1XN4E07TD7xXLJnwMkcjFqkfA7iw9hCW4Sa7VLSaTRAzzWVnkNqzr2radajUcWfei+83zy+gsoIh7afSTYKX3RvyX6w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791457754; c=relaxed/simple;
-	bh=SY2gYVYWj36/VkWGiCPEIRSCIF+Wi5QW81xM0cqalag=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=oBd8TcR951bJbUy37ttB87CN+yTBJGbA1U7TAXXu6d3Kp8i6Ua1BjqXzeHzag4cKwUWc5WSRd301Dcr3GZXhGWnWr+kYGyg3YufBqARJOHK/ygBwh2dd0V2YobSPi2Gf5DlLhVYqZYub4glkU+nZ5rNcnXOQCXxDYLnLHphJeyM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nQiJQGxC; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nQiJQGxC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 100A51F00893;
-	Thu,  8 Oct 2026 11:09:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791457752;
-	bh=jLNkuHH7UsvJk7pCLyLYTu/cfSBuwZP2reNHlo4GGU4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=nQiJQGxCq7SUHMhnL+BcMSoPtGE/cMo8wuOX3frSrpkVqD9XotxTIloVidb/oEvhy
-	 fU9osrN3fwGofZikv45foeBAMirU634XdoFqSAmfLT55PdmJb/txPqGH3V9v+ZyhT7
-	 3Xv6fjB+/Wo7G3XlhW9n2CrlA8YW6PXxfIuiUA2POibQ2qk7guD0h+K3b0xZkmRA+J
-	 LQ9flsBQlB1vVK2wN4dqe/tQHV0CuaAVrvwFFePWvT5fhh3Qp3GDN6H8MgQODulx28
-	 irnMO2aS8ZlwFniWVwG/BZGhhWgK+3QhOj0P1Ryya9CpGfD+dy5jaCJTZ4b2vfjzsx
-	 zhomJDAKjx1mg==
-Date: Thu, 8 Oct 2026 13:09:08 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs@vger.kernel.org, djwong@kernel.org
-Subject: Re: [PATCH 3/3] xfs: re-use refcount scrub/repair code for rtrefcount
-Message-ID: <asd5voNqRGsrVtaW@cronus.toxiclabs.cc>
-References: <20261002211038.2139655-1-sandeen@redhat.com>
- <20261002211038.2139655-4-sandeen@redhat.com>
+	s=arc-20240116; t=1791457927; c=relaxed/simple;
+	bh=uYtuNsreu04wbdBma8Hifib1AWIqtf85a+kpyMXOpsI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Z4qIm1Pv0CPOvnjDPM2Q+MTLVaFg/otVLAaCy2HrNi2gnSu/x2BQAXyhPC+ogFAaJF3ivhGLe+ShDU/4fWh433iuiLU+ghpm5swTePUYvY7NXWt5zb5Tx6RoXMaiicCg/8qVaSvfo/aGOxmQjFZE2ROONPFwhPSgmx/CyNEf9zY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=pankajraghav.com; arc=none smtp.client-ip=80.241.56.161
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
+Received: from smtp2.mailbox.org (smtp2.mailbox.org [IPv6:2001:67c:2050:b231:465::2])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519MLKEM768 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-103.mailbox.org (Postfix) with ESMTPS id 4j0nPl0ygFzKnhf;
+	Thu, 08 Oct 2026 13:11:55 +0200 (CEST)
+Authentication-Results: outgoing_mbo_mout;
+	dkim=none;
+	spf=pass (outgoing_mbo_mout: domain of kernel@pankajraghav.com designates 2001:67c:2050:b231:465::2 as permitted sender) smtp.mailfrom=kernel@pankajraghav.com
+From: Pankaj Raghav <p.raghav@samsung.com>
+To: cem@kernel.org,
+	linux-xfs@vger.kernel.org
+Cc: pankaj.raghav@linux.dev,
+	John Garry <john.g.garry@oracle.com>,
+	"Darrick J . Wong" <djwong@kernel.org>,
+	p.raghav@samsung.com,
+	gost.dev@samsung.com
+Subject: [PATCH v3] xfs: don't limit software atomic writes by the group alignment
+Date: Thu,  8 Oct 2026 13:11:47 +0200
+Message-ID: <20261008111147.3906817-1-p.raghav@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261002211038.2139655-4-sandeen@redhat.com>
+Content-Transfer-Encoding: 8bit
+X-Rspamd-Queue-Id: 4j0nPl0ygFzKnhf
 
-On Fri, Oct 02, 2026 at 04:08:11PM -0500, Eric Sandeen wrote:
-> Some code in scrub/rtrefcount.c is copied from scrub/refcount.c; it
-> differs only in function & structure names and a couple types and
-> macros, which share the same underlying types and values.
-> 
-> Similarly for code in fs/xfs/scrub/[rt]refcount_repair.c
-> 
-> Export the refcount versions, use them for rtrefcount scrubbing,
-> eliminate the copies, and add build-time asserts so that the type/value
-> matches mentioned above do not drift.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+xfs_calc_group_awu_max() clamps the atomic write unit maximum to the
+greatest power-of-two factor of the group size when the device advertises
+atomic writes, so that allocations can be made naturally aligned for
+REQ_ATOMIC. But that value is the software limit: it is only used when
+reflink is enabled, and out of place writes through the COW fork have no
+alignment requirement.
 
-With the description nitpick fixed:
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Compute the software limit from the group size alone, and apply the
+alignment constraint in xfs_get_atomic_write_max_opt() instead, which is
+what reports the size that can be offloaded to the hardware.
 
-> ---
->  fs/xfs/scrub/refcount.c          |  27 +---
->  fs/xfs/scrub/refcount.h          |  56 +++++++
->  fs/xfs/scrub/refcount_repair.c   |   3 +-
->  fs/xfs/scrub/rtrefcount.c        | 263 +------------------------------
->  fs/xfs/scrub/rtrefcount_repair.c |  39 +----
->  5 files changed, 72 insertions(+), 316 deletions(-)
->  create mode 100644 fs/xfs/scrub/refcount.h
-> 
-> diff --git a/fs/xfs/scrub/refcount.c b/fs/xfs/scrub/refcount.c
-> index f8c51d8fbb3d..c18bb89325a5 100644
-> --- a/fs/xfs/scrub/refcount.c
-> +++ b/fs/xfs/scrub/refcount.c
-> @@ -20,6 +20,7 @@
->  #include "scrub/btree.h"
->  #include "scrub/trace.h"
->  #include "scrub/repair.h"
-> +#include "scrub/refcount.h"
->  
->  /*
->   * Set us up to scrub reference count btrees.
-> @@ -80,24 +81,6 @@ xchk_setup_ag_refcountbt(
->   * If the refcount is correct, all the check conditions in the algorithm
->   * should always hold true.  If not, the refcount is incorrect.
->   */
-> -struct xchk_refcnt_frag {
-> -	struct list_head	list;
-> -	struct xfs_rmap_irec	rm;
-> -};
-> -
-> -struct xchk_refcnt_check {
-> -	struct xfs_scrub	*sc;
-> -	struct list_head	fragments;
-> -
-> -	/* refcount extent we're examining */
-> -	xfs_agblock_t		bno;
-> -	xfs_extlen_t		len;
-> -	xfs_nlink_t		refcount;
-> -
-> -	/* number of owners seen */
-> -	xfs_nlink_t		seen;
-> -};
-> -
->  /*
->   * Decide if the given rmap is large enough that we can redeem it
->   * towards refcount verification now, or if it's a fragment, in
-> @@ -105,7 +88,7 @@ struct xchk_refcnt_check {
->   * discover that we've collected exactly the correct number of
->   * fragments as the refcountbt says we should have.
->   */
-> -STATIC int
-> +int
->  xchk_refcountbt_rmap_check(
->  	struct xfs_btree_cur		*cur,
->  	const struct xfs_rmap_irec	*rec,
-> @@ -159,7 +142,7 @@ xchk_refcountbt_rmap_check(
->   * number of extents that totally covered the refcountbt extent),
->   * we have a refcountbt error.
->   */
-> -STATIC void
-> +void
->  xchk_refcountbt_process_rmap_fragments(
->  	struct xchk_refcnt_check	*refchk)
->  {
-> @@ -290,7 +273,7 @@ xchk_refcountbt_xref_rmap(
->  		.bno			= irec->rc_startblock,
->  		.len			= irec->rc_blockcount,
->  		.refcount		= irec->rc_refcount,
-> -		.seen = 0,
-> +		.seen			= 0,
->  	};
->  	struct xfs_rmap_irec		low;
->  	struct xfs_rmap_irec		high;
-> @@ -355,7 +338,7 @@ struct xchk_refcbt_records {
->  	enum xfs_refc_domain	prev_domain;
->  };
->  
-> -STATIC int
-> +int
->  xchk_refcountbt_rmap_check_gap(
->  	struct xfs_btree_cur		*cur,
->  	const struct xfs_rmap_irec	*rec,
-> diff --git a/fs/xfs/scrub/refcount.h b/fs/xfs/scrub/refcount.h
-> new file mode 100644
-> index 000000000000..0706afd9f80b
-> --- /dev/null
-> +++ b/fs/xfs/scrub/refcount.h
-> @@ -0,0 +1,56 @@
-> +// SPDX-License-Identifier: GPL-2.0-or-later
-> +/*
-> + * Copyright (C) 2017-2023 Oracle.  All Rights Reserved.
-> + * Author: Darrick J. Wong <djwong@kernel.org>
-> + */
-> +#ifndef __XFS_SCRUB_REFCOUNT_H__
-> +#define __XFS_SCRUB_REFCOUNT_H__
-> +
-> +/*
-> + * Ensure that types and macros match across rt and non-rt variants,
-> + * as this code is shared for both.
-> + */
-> +static_assert(__same_type(xfs_agblock_t, xfs_rgblock_t));
-> +static_assert(NULLAGBLOCK == NULLRGBLOCK);
-> +
-> +/*
-> + * Confirming reference counts via reverse mappings.
-> + *
-> + * These helpers are shared by the AG (refcount.c) and realtime
-> + * (rtrefcount.c) refcount scrubbers.  Both the rmap and refcount incore
-> + * records use xfs_agblock_t for their start block regardless of whether the
-> + * data lives in an allocation group or a realtime group, so the fragment
-> + * bookkeeping here uses xfs_agblock_t for group-relative block numbers.
-> + */
-> +struct xchk_refcnt_frag {
-> +	struct list_head	list;
-> +	struct xfs_rmap_irec	rm;
-> +};
-> +
-> +struct xchk_refcnt_check {
-> +	struct xfs_scrub	*sc;
-> +	struct list_head	fragments;
-> +
-> +	/* refcount extent we're examining */
-> +	xfs_agblock_t		bno;
-> +	xfs_extlen_t		len;
-> +	xfs_nlink_t		refcount;
-> +
-> +	/* number of owners seen */
-> +	xfs_nlink_t		seen;
-> +};
-> +
-> +int xchk_refcountbt_rmap_check(struct xfs_btree_cur *cur,
-> +		const struct xfs_rmap_irec *rec, void *priv);
-> +void xchk_refcountbt_process_rmap_fragments(struct xchk_refcnt_check *refchk);
-> +int xchk_refcountbt_rmap_check_gap(struct xfs_btree_cur *cur,
-> +		const struct xfs_rmap_irec *rec, void *priv);
-> +
-> +/*
-> + * Compare two refcount records so that both the AG (refcount_repair.c) and
-> + * realtime (rtrefcount_repair.c) rebuilders sort staged records into the same
-> + * order as the ondisk records.
-> + */
-> +int xrep_refc_extent_cmp(const void *a, const void *b);
-> +
-> +#endif /* __XFS_SCRUB_REFCOUNT_H__ */
-> diff --git a/fs/xfs/scrub/refcount_repair.c b/fs/xfs/scrub/refcount_repair.c
-> index ca9c382005ff..72de263117a7 100644
-> --- a/fs/xfs/scrub/refcount_repair.c
-> +++ b/fs/xfs/scrub/refcount_repair.c
-> @@ -39,6 +39,7 @@
->  #include "scrub/newbt.h"
->  #include "scrub/reap.h"
->  #include "scrub/rcbag.h"
-> +#include "scrub/refcount.h"
->  
->  /*
->   * Rebuilding the Reference Count Btree
-> @@ -295,7 +296,7 @@ xrep_refc_encode_startblock(
->  }
->  
->  /* Sort in the same order as the ondisk records. */
-> -static int
-> +int
->  xrep_refc_extent_cmp(
->  	const void			*a,
->  	const void			*b)
-> diff --git a/fs/xfs/scrub/rtrefcount.c b/fs/xfs/scrub/rtrefcount.c
-> index 460e3f094adf..b78784051308 100644
-> --- a/fs/xfs/scrub/rtrefcount.c
-> +++ b/fs/xfs/scrub/rtrefcount.c
-> @@ -25,6 +25,7 @@
->  #include "scrub/common.h"
->  #include "scrub/btree.h"
->  #include "scrub/repair.h"
-> +#include "scrub/refcount.h"
->  
->  /* Set us up with the realtime refcount metadata locked. */
->  int
-> @@ -59,248 +60,13 @@ xchk_setup_rtrefcountbt(
->  
->  /* Realtime Reference count btree scrubber. */
->  
-> -/*
-> - * Confirming Reference Counts via Reverse Mappings
-> - *
-> - * We want to count the reverse mappings overlapping a refcount record
-> - * (bno, len, refcount), allowing for the possibility that some of the
-> - * overlap may come from smaller adjoining reverse mappings, while some
-> - * comes from single extents which overlap the range entirely.  The
-> - * outer loop is as follows:
-> - *
-> - * 1. For all reverse mappings overlapping the refcount extent,
-> - *    a. If a given rmap completely overlaps, mark it as seen.
-> - *    b. Otherwise, record the fragment (in agbno order) for later
-> - *       processing.
-> - *
-> - * Once we've seen all the rmaps, we know that for all blocks in the
-> - * refcount record we want to find $refcount owners and we've already
-> - * visited $seen extents that overlap all the blocks.  Therefore, we
-> - * need to find ($refcount - $seen) owners for every block in the
-> - * extent; call that quantity $target_nr.  Proceed as follows:
-> - *
-> - * 2. Pull the first $target_nr fragments from the list; all of them
-> - *    should start at or before the start of the extent.
-> - *    Call this subset of fragments the working set.
-> - * 3. Until there are no more unprocessed fragments,
-> - *    a. Find the shortest fragments in the set and remove them.
-> - *    b. Note the block number of the end of these fragments.
-> - *    c. Pull the same number of fragments from the list.  All of these
-> - *       fragments should start at the block number recorded in the
-> - *       previous step.
-> - *    d. Put those fragments in the set.
-> - * 4. Check that there are $target_nr fragments remaining in the list,
-> - *    and that they all end at or beyond the end of the refcount extent.
-> - *
-> - * If the refcount is correct, all the check conditions in the algorithm
-> - * should always hold true.  If not, the refcount is incorrect.
-> - */
-> -struct xchk_rtrefcnt_frag {
-> -	struct list_head	list;
-> -	struct xfs_rmap_irec	rm;
-> -};
-> -
-> -struct xchk_rtrefcnt_check {
-> -	struct xfs_scrub	*sc;
-> -	struct list_head	fragments;
-> -
-> -	/* refcount extent we're examining */
-> -	xfs_rgblock_t		bno;
-> -	xfs_extlen_t		len;
-> -	xfs_nlink_t		refcount;
-> -
-> -	/* number of owners seen */
-> -	xfs_nlink_t		seen;
-> -};
-> -
-> -/*
-> - * Decide if the given rmap is large enough that we can redeem it
-> - * towards refcount verification now, or if it's a fragment, in
-> - * which case we'll hang onto it in the hopes that we'll later
-> - * discover that we've collected exactly the correct number of
-> - * fragments as the rtrefcountbt says we should have.
-> - */
-> -STATIC int
-> -xchk_rtrefcountbt_rmap_check(
-> -	struct xfs_btree_cur		*cur,
-> -	const struct xfs_rmap_irec	*rec,
-> -	void				*priv)
-> -{
-> -	struct xchk_rtrefcnt_check	*refchk = priv;
-> -	struct xchk_rtrefcnt_frag	*frag;
-> -	xfs_rgblock_t			rm_last;
-> -	xfs_rgblock_t			rc_last;
-> -	int				error = 0;
-> -
-> -	if (xchk_should_terminate(refchk->sc, &error))
-> -		return error;
-> -
-> -	rm_last = rec->rm_startblock + rec->rm_blockcount - 1;
-> -	rc_last = refchk->bno + refchk->len - 1;
-> -
-> -	/* Confirm that a single-owner refc extent is a CoW stage. */
-> -	if (refchk->refcount == 1 && rec->rm_owner != XFS_RMAP_OWN_COW) {
-> -		xchk_btree_xref_set_corrupt(refchk->sc, cur, 0);
-> -		return 0;
-> -	}
-> -
-> -	if (rec->rm_startblock <= refchk->bno && rm_last >= rc_last) {
-> -		/*
-> -		 * The rmap overlaps the refcount record, so we can confirm
-> -		 * one refcount owner seen.
-> -		 */
-> -		refchk->seen++;
-> -	} else {
-> -		/*
-> -		 * This rmap covers only part of the refcount record, so
-> -		 * save the fragment for later processing.  If the rmapbt
-> -		 * is healthy each rmap_irec we see will be in agbno order
-> -		 * so we don't need insertion sort here.
-> -		 */
-> -		frag = kmalloc_obj(struct xchk_rtrefcnt_frag, XCHK_GFP_FLAGS);
-> -		if (!frag)
-> -			return -ENOMEM;
-> -		memcpy(&frag->rm, rec, sizeof(frag->rm));
-> -		list_add_tail(&frag->list, &refchk->fragments);
-> -	}
-> -
-> -	return 0;
-> -}
-> -
-> -/*
-> - * Given a bunch of rmap fragments, iterate through them, keeping
-> - * a running tally of the refcount.  If this ever deviates from
-> - * what we expect (which is the rtrefcountbt's refcount minus the
-> - * number of extents that totally covered the rtrefcountbt extent),
-> - * we have a rtrefcountbt error.
-> - */
-> -STATIC void
-> -xchk_rtrefcountbt_process_rmap_fragments(
-> -	struct xchk_rtrefcnt_check	*refchk)
-> -{
-> -	struct list_head		worklist;
-> -	struct xchk_rtrefcnt_frag	*frag;
-> -	struct xchk_rtrefcnt_frag	*n;
-> -	xfs_rgblock_t			bno;
-> -	xfs_rgblock_t			rbno;
-> -	xfs_rgblock_t			next_rbno;
-> -	xfs_nlink_t			nr;
-> -	xfs_nlink_t			target_nr;
-> -
-> -	target_nr = refchk->refcount - refchk->seen;
-> -	if (target_nr == 0)
-> -		return;
-> -
-> -	/*
-> -	 * There are (refchk->rc.rc_refcount - refchk->nr refcount)
-> -	 * references we haven't found yet.  Pull that many off the
-> -	 * fragment list and figure out where the smallest rmap ends
-> -	 * (and therefore the next rmap should start).  All the rmaps
-> -	 * we pull off should start at or before the beginning of the
-> -	 * refcount record's range.
-> -	 */
-> -	INIT_LIST_HEAD(&worklist);
-> -	rbno = NULLRGBLOCK;
-> -
-> -	/* Make sure the fragments actually /are/ in bno order. */
-> -	bno = 0;
-> -	list_for_each_entry(frag, &refchk->fragments, list) {
-> -		if (frag->rm.rm_startblock < bno)
-> -			goto done;
-> -		bno = frag->rm.rm_startblock;
-> -	}
-> -
-> -	/*
-> -	 * Find all the rmaps that start at or before the refc extent,
-> -	 * and put them on the worklist.
-> -	 */
-> -	nr = 0;
-> -	list_for_each_entry_safe(frag, n, &refchk->fragments, list) {
-> -		if (frag->rm.rm_startblock > refchk->bno || nr > target_nr)
-> -			break;
-> -		bno = frag->rm.rm_startblock + frag->rm.rm_blockcount;
-> -		if (bno < rbno)
-> -			rbno = bno;
-> -		list_move_tail(&frag->list, &worklist);
-> -		nr++;
-> -	}
-> -
-> -	/*
-> -	 * We should have found exactly $target_nr rmap fragments starting
-> -	 * at or before the refcount extent.
-> -	 */
-> -	if (nr != target_nr)
-> -		goto done;
-> -
-> -	while (!list_empty(&refchk->fragments)) {
-> -		/* Discard any fragments ending at rbno from the worklist. */
-> -		nr = 0;
-> -		next_rbno = NULLRGBLOCK;
-> -		list_for_each_entry_safe(frag, n, &worklist, list) {
-> -			bno = frag->rm.rm_startblock + frag->rm.rm_blockcount;
-> -			if (bno != rbno) {
-> -				if (bno < next_rbno)
-> -					next_rbno = bno;
-> -				continue;
-> -			}
-> -			list_del(&frag->list);
-> -			kfree(frag);
-> -			nr++;
-> -		}
-> -
-> -		/* Try to add nr rmaps starting at rbno to the worklist. */
-> -		list_for_each_entry_safe(frag, n, &refchk->fragments, list) {
-> -			bno = frag->rm.rm_startblock + frag->rm.rm_blockcount;
-> -			if (frag->rm.rm_startblock != rbno)
-> -				goto done;
-> -			list_move_tail(&frag->list, &worklist);
-> -			if (next_rbno > bno)
-> -				next_rbno = bno;
-> -			nr--;
-> -			if (nr == 0)
-> -				break;
-> -		}
-> -
-> -		/*
-> -		 * If we get here and nr > 0, this means that we added fewer
-> -		 * items to the worklist than we discarded because the fragment
-> -		 * list ran out of items.  Therefore, we cannot maintain the
-> -		 * required refcount.  Something is wrong, so we're done.
-> -		 */
-> -		if (nr)
-> -			goto done;
-> -
-> -		rbno = next_rbno;
-> -	}
-> -
-> -	/*
-> -	 * Make sure the last extent we processed ends at or beyond
-> -	 * the end of the refcount extent.
-> -	 */
-> -	if (rbno < refchk->bno + refchk->len)
-> -		goto done;
-> -
-> -	/* Actually record us having seen the remaining refcount. */
-> -	refchk->seen = refchk->refcount;
-> -done:
-> -	/* Delete fragments and work list. */
-> -	list_for_each_entry_safe(frag, n, &worklist, list) {
-> -		list_del(&frag->list);
-> -		kfree(frag);
-> -	}
-> -	list_for_each_entry_safe(frag, n, &refchk->fragments, list) {
-> -		list_del(&frag->list);
-> -		kfree(frag);
-> -	}
-> -}
-> -
->  /* Use the rmap entries covering this extent to verify the refcount. */
->  STATIC void
->  xchk_rtrefcountbt_xref_rmap(
->  	struct xfs_scrub		*sc,
->  	const struct xfs_refcount_irec	*irec)
->  {
-> -	struct xchk_rtrefcnt_check	refchk = {
-> +	struct xchk_refcnt_check	refchk = {
->  		.sc			= sc,
->  		.bno			= irec->rc_startblock,
->  		.len			= irec->rc_blockcount,
-> @@ -309,8 +75,8 @@ xchk_rtrefcountbt_xref_rmap(
->  	};
->  	struct xfs_rmap_irec		low;
->  	struct xfs_rmap_irec		high;
-> -	struct xchk_rtrefcnt_frag	*frag;
-> -	struct xchk_rtrefcnt_frag	*n;
-> +	struct xchk_refcnt_frag		*frag;
-> +	struct xchk_refcnt_frag		*n;
->  	int				error;
->  
->  	if (!sc->sr.rmap_cur || xchk_skip_xref(sc->sm))
-> @@ -324,11 +90,11 @@ xchk_rtrefcountbt_xref_rmap(
->  
->  	INIT_LIST_HEAD(&refchk.fragments);
->  	error = xfs_rmap_query_range(sc->sr.rmap_cur, &low, &high,
-> -			xchk_rtrefcountbt_rmap_check, &refchk);
-> +			xchk_refcountbt_rmap_check, &refchk);
->  	if (!xchk_should_check_xref(sc, &error, &sc->sr.rmap_cur))
->  		goto out_free;
->  
-> -	xchk_rtrefcountbt_process_rmap_fragments(&refchk);
-> +	xchk_refcountbt_process_rmap_fragments(&refchk);
->  	if (irec->rc_refcount != refchk.seen)
->  		xchk_btree_xref_set_corrupt(sc, sc->sr.rmap_cur, 0);
->  
-> @@ -408,21 +174,6 @@ xchk_rtrefcountbt_check_mergeable(
->  	memcpy(&rrc->prev_rec, irec, sizeof(struct xfs_refcount_irec));
->  }
->  
-> -STATIC int
-> -xchk_rtrefcountbt_rmap_check_gap(
-> -	struct xfs_btree_cur		*cur,
-> -	const struct xfs_rmap_irec	*rec,
-> -	void				*priv)
-> -{
-> -	xfs_rgblock_t			*next_bno = priv;
-> -
-> -	if (*next_bno != NULLRGBLOCK && rec->rm_startblock < *next_bno)
-> -		return -ECANCELED;
-> -
-> -	*next_bno = rec->rm_startblock + rec->rm_blockcount;
-> -	return 0;
-> -}
-> -
->  /*
->   * Make sure that a gap in the reference count records does not correspond to
->   * overlapping records (i.e. shared extents) in the reverse mappings.
-> @@ -448,7 +199,7 @@ xchk_rtrefcountbt_xref_gaps(
->  	high.rm_startblock = bno - 1;
->  
->  	error = xfs_rmap_query_range(sc->sr.rmap_cur, &low, &high,
-> -			xchk_rtrefcountbt_rmap_check_gap, &next_bno);
-> +			xchk_refcountbt_rmap_check_gap, &next_bno);
->  	if (error == -ECANCELED)
->  		xchk_btree_xref_set_corrupt(sc, sc->sr.rmap_cur, 0);
->  	else
-> diff --git a/fs/xfs/scrub/rtrefcount_repair.c b/fs/xfs/scrub/rtrefcount_repair.c
-> index c78a6d2990c5..5ca9959dfacc 100644
-> --- a/fs/xfs/scrub/rtrefcount_repair.c
-> +++ b/fs/xfs/scrub/rtrefcount_repair.c
-> @@ -44,6 +44,7 @@
->  #include "scrub/newbt.h"
->  #include "scrub/reap.h"
->  #include "scrub/rcbag.h"
-> +#include "scrub/refcount.h"
->  
->  /*
->   * Rebuilding the Reference Count Btree
-> @@ -266,42 +267,6 @@ xrep_rtrefc_walk_rmaps(
->  	return 0;
->  }
->  
-> -static inline uint32_t
-> -xrep_rtrefc_encode_startblock(
-> -	const struct xfs_refcount_irec	*irec)
-> -{
-> -	uint32_t			start;
-> -
-> -	start = irec->rc_startblock & ~XFS_REFC_COWFLAG;
-> -	if (irec->rc_domain == XFS_REFC_DOMAIN_COW)
-> -		start |= XFS_REFC_COWFLAG;
-> -
-> -	return start;
-> -}
-> -
-> -/*
-> - * Compare two refcount records.  We want to sort in order of increasing block
-> - * number.
-> - */
-> -static int
-> -xrep_rtrefc_extent_cmp(
-> -	const void			*a,
-> -	const void			*b)
-> -{
-> -	const struct xfs_refcount_irec	*ap = a;
-> -	const struct xfs_refcount_irec	*bp = b;
-> -	uint32_t			sa, sb;
-> -
-> -	sa = xrep_rtrefc_encode_startblock(ap);
-> -	sb = xrep_rtrefc_encode_startblock(bp);
-> -
-> -	if (sa > sb)
-> -		return 1;
-> -	if (sa < sb)
-> -		return -1;
-> -	return 0;
-> -}
-> -
->  /*
->   * Sort the refcount extents by startblock or else the btree records will be in
->   * the wrong order.  Make sure the records do not overlap in physical space.
-> @@ -316,7 +281,7 @@ xrep_rtrefc_sort_records(
->  	xfs_rgblock_t			next_rgbno = 0;
->  	int				error;
->  
-> -	error = xfarray_sort(rr->refcount_records, xrep_rtrefc_extent_cmp,
-> +	error = xfarray_sort(rr->refcount_records, xrep_refc_extent_cmp,
->  			XFARRAY_SORT_KILLABLE);
->  	if (error)
->  		return error;
-> -- 
-> 2.55.0
-> 
-> 
+Results on a 14TB device with 16k hardware atomic support with 16k
+blocksize:
+
+Without patches:
+[nix-shell:~]# trace-cmd report
+cpus=16
+mount-617   [009]  1184.719159: xfs_calc_atomic_write_unit_max: dev 259:2 ag
+max_write 131072 max_ioend 4096 max_gsize 2 awu_max 2
+
+[nix-shell:~]# ./statx /media/test/hello.txt
+/media/test/hello.txt:
+   stx_atomic_write_unit_min:            16384
+   stx_atomic_write_unit_max:            32768
+   stx_atomic_write_unit_max_opt:        16384
+   stx_atomic_write_segments_max:        1
+
+With patches:
+[nix-shell:~]# trace-cmd report
+cpus=16
+mount-598   [005]   319.692000: xfs_calc_atomic_write_unit_max: dev 259:2 ag
+max_write 131072 max_ioend 4096 max_gsize 33554432 awu_max 4096
+
+[nix-shell:~]# ./statx /media/test/hello.txt
+/media/test/hello.txt:
+   stx_atomic_write_unit_min:            16384
+   stx_atomic_write_unit_max:            67108864
+   stx_atomic_write_unit_max_opt:        16384
+   stx_atomic_write_segments_max:        1
+
+Fixes: 0c438dcc3150 ("xfs: add xfs_calc_atomic_write_unit_max()")
+Assisted-by: LLM
+Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+---
+Note: I cannot use min3 in xfs_get_atomic_write_max_opt because
+xfs_get_atomic_hw_write_align returns xfs_fsize_t.
+
+Changes since v3:
+- Add xfs_get_atomic_hw_write_align wrapper.
+
+ fs/xfs/xfs_inode.h |  9 +++++++++
+ fs/xfs/xfs_iops.c  | 30 ++++++++++++++++++++++++------
+ fs/xfs/xfs_mount.c | 35 ++++++++++++++++++++++++-----------
+ fs/xfs/xfs_mount.h |  2 ++
+ 4 files changed, 59 insertions(+), 17 deletions(-)
+
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index ca96ba096359..64b47fa17b1a 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -353,6 +353,15 @@ static inline bool xfs_inode_has_bigrtalloc(const struct xfs_inode *ip)
+ 	return XFS_IS_REALTIME_INODE(ip) && ip->i_mount->m_sb.sb_rextsize > 1;
+ }
+ 
++/*
++ * Return the type of the group that data for a given inode is allocated from.
++ */
++static inline enum xfs_group_type
++xfs_inode_group_type(const struct xfs_inode *ip)
++{
++	return XFS_IS_REALTIME_INODE(ip) ? XG_TYPE_RTG : XG_TYPE_AG;
++}
++
+ /*
+  * Return the buftarg used for data allocations on a given inode.
+  */
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index f67a541ef35a..d307ec97fac8 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -642,19 +642,30 @@ xfs_get_atomic_write_max(
+ 	 * then advertise a maximum size of whatever we can complete through
+ 	 * that means.  Hardware support is reported via max_opt, not here.
+ 	 */
+-	if (XFS_IS_REALTIME_INODE(ip))
+-		return XFS_FSB_TO_B(mp, mp->m_groups[XG_TYPE_RTG].awu_max);
+-	return XFS_FSB_TO_B(mp, mp->m_groups[XG_TYPE_AG].awu_max);
++	return XFS_FSB_TO_B(mp, mp->m_groups[xfs_inode_group_type(ip)].awu_max);
++}
++
++static inline  xfs_fsize_t xfs_get_atomic_hw_write_align(
++		const struct xfs_inode *ip)
++{
++	struct xfs_mount *mp = ip->i_mount;
++
++	return XFS_FSB_TO_B(
++		mp, xfs_calc_group_awu_align_max(mp, xfs_inode_group_type(ip)));
+ }
+ 
+ unsigned int
+ xfs_get_atomic_write_max_opt(
+ 	struct xfs_inode	*ip)
+ {
+-	unsigned int		awu_max = xfs_get_atomic_write_max(ip);
++	struct xfs_mount	*mp = ip->i_mount;
++	unsigned int		max_opt;
++	const unsigned int	sw_awu_max = xfs_get_atomic_write_max(ip);
++	const unsigned int	hw_awu_max = xfs_inode_buftarg(ip)->bt_awu_max;
++	const xfs_fsize_t	hw_align_max = xfs_get_atomic_hw_write_align(ip);
+ 
+ 	/* if the max is 1x block, then just keep behaviour that opt is 0 */
+-	if (awu_max <= ip->i_mount->m_sb.sb_blocksize)
++	if (sw_awu_max <= mp->m_sb.sb_blocksize)
+ 		return 0;
+ 
+ 	/*
+@@ -663,7 +674,14 @@ xfs_get_atomic_write_max_opt(
+ 	 * less than our out of place write limit, but we don't want to exceed
+ 	 * the awu_max.
+ 	 */
+-	return min(awu_max, xfs_inode_buftarg(ip)->bt_awu_max);
++	max_opt = min(sw_awu_max, hw_awu_max);
++
++	/*
++	 * HW atomic writes also have to be naturally aligned on disk, so we
++	 * cannot promise more than the largest extent that the allocator is
++	 * able to align within a group.
++	 */
++	return min_t(xfs_fsize_t, max_opt, hw_align_max);
+ }
+ 
+ static void
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index be90c7b03994..b7110b3d023b 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -674,15 +674,13 @@ static inline xfs_extlen_t xfs_calc_atomic_write_max(struct xfs_mount *mp)
+ }
+ 
+ /*
+- * If the underlying device advertises atomic write support, limit the size of
+- * atomic writes to the greatest power-of-two factor of the group size so
+- * that every atomic write unit aligns with the start of every group.  This is
+- * required so that the allocations for an atomic write will always be
+- * aligned compatibly with the alignment requirements of the storage.
++ * The largest out of place write is the number of blocks that user files can
++ * allocate from any group.
+  *
+- * If the device doesn't advertise atomic writes, then there are no alignment
+- * restrictions and the largest out-of-place write we can do ourselves is the
+- * number of blocks that user files can allocate from any group.
++ * This is a software limit, so it deliberately does not take the alignment
++ * requirements of the storage into account. An atomic write that cannot be
++ * handed to the device as a single naturally aligned REQ_ATOMIC bio is
++ * completed through the COW fork instead, which has no such requirement.
+  */
+ static xfs_extlen_t
+ xfs_calc_group_awu_max(
+@@ -690,15 +688,30 @@ xfs_calc_group_awu_max(
+ 	enum xfs_group_type	type)
+ {
+ 	struct xfs_groups	*g = &mp->m_groups[type];
+-	struct xfs_buftarg	*btp = xfs_group_type_buftarg(mp, type);
+ 
+ 	if (g->blocks == 0)
+ 		return 0;
+-	if (btp && btp->bt_awu_min > 0)
+-		return max_pow_of_two_factor(g->blocks);
+ 	return rounddown_pow_of_two(g->blocks);
+ }
+ 
++/*
++ * Compute the largest atomic write unit for which the allocator can guarantee
++ * naturally aligned extents in this group type.
++ *
++ * Hardware atomic writes have to be naturally aligned on disk.
++ */
++xfs_extlen_t
++xfs_calc_group_awu_align_max(
++	struct xfs_mount	*mp,
++	enum xfs_group_type	type)
++{
++	struct xfs_groups	*g = &mp->m_groups[type];
++
++	if (g->blocks == 0)
++		return 0;
++	return max_pow_of_two_factor(g->blocks);
++}
++
+ /* Compute the maximum atomic write unit size for each section. */
+ static inline void
+ xfs_calc_atomic_write_unit_max(
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 894ff2f4ecbd..cbcfb89c67a4 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -820,6 +820,8 @@ static inline void xfs_mod_sb_delalloc(struct xfs_mount *mp, int64_t delta)
+ 
+ int xfs_set_max_atomic_write_opt(struct xfs_mount *mp,
+ 		unsigned long long new_max_bytes);
++xfs_extlen_t xfs_calc_group_awu_align_max(struct xfs_mount *mp,
++		enum xfs_group_type type);
+ 
+ static inline struct xfs_buftarg *
+ xfs_group_type_buftarg(
+
+base-commit: d10270a8e5fde59eb68921fddfe40c6c2a31a954
+-- 
+2.51.2
+
