@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2845499F3A;
-	Thu,  8 Oct 2026 13:32:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABCD74A4980;
+	Thu,  8 Oct 2026 13:32:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791466356; cv=none; b=b9WOLsyBu9UqoA9P22flxT2QJuA5q9PllNdvw2rK93suhhdm4cb4z8fA6YQ9m9z40CFpl4nmWd/hW3bkpRYgGBXA/kmu4wjSJ/b1UpLxpFRL8m8N3vHpGUQArpwoHjy4+mHIPxklygoORYjuR+e9QxDMlIfTiCMOqqaIE0DtDFo=
+	t=1791466358; cv=none; b=ntL+cf8wSkYsTQyJ4GZDQfeHplQmSVtm4OGh73LKvGpYtgGOgOzh73piW4r/6jOLdrdwrTc5jiaCWIIYqTPaaDGPkn5hlaG5FMz1nRzLTixqatG1N8LGNXOLQsb4nsICbZdDFrJ2LJoa87e9Onw6hECjjiJW+6/FOo1+J7s3NsU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791466356; c=relaxed/simple;
-	bh=cDXWTzYY6awLYY7kQN2NFmtSwK67+MppsMl4OkFsepc=;
+	s=arc-20240116; t=1791466358; c=relaxed/simple;
+	bh=bnDSHNcew5tL35tbZLVcXnRvc9OlVjjYMr72G8puEVg=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=aFsk3eN+AIrsq/S8IDqvVSLbVZYA//N4/2dxbkGfvAgVWNHiHcpjVN37eJLE61sbS9nLiWcJ3a+rs59HL54o9XAI7C/KpTQdZLjhHETCTeiZ4GUvZsZ0YrPKzLddhQzv7gV/8COeNEB9M2U2zjbx/DC4OenW1O+ImnAgSNijH4A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AcCRK6D4; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=T9BqprHMoAy51ytt2bWBNGsyIizxiJvYFKNKeq3WRkck+Q9RsF9KszmfYiVsXOjplMpbL0cLSxmHg3P9KzGGPvYQqjlkcTy1FURdWrIqxfsK5Z2qErq0JCpTZk+DNgYWEfTAeYA488QbxIkDykWcQ9VTB1tqp5BKqqNrQWL4r34=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f5ZTyfdb; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AcCRK6D4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D5D31F00893;
-	Thu,  8 Oct 2026 13:32:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f5ZTyfdb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 213131F00898;
+	Thu,  8 Oct 2026 13:32:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791466355;
-	bh=GR2DeNm85IMGtjRrZsC/dxaCkM20HrIGGOruUYwlZ+0=;
+	s=k20260515; t=1791466357;
+	bh=8+i8inJM+y2RHK3Rwrs6Z4UPYI5MVZQwvCmHqWA/+50=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=AcCRK6D4aIhPO11kC4kfJKQw8gm420ecBbOThBkJG4fG4cDWW9mEqe3rjuFocGMBi
-	 iKsCb8OeqjpzFkK+HeB0Zv+eviZnhFAPP8gAWThulQRMjpLS7xFCwtur5bE6vuLui3
-	 d/C27Dj7Mg9WV99YNzuHbEDt25VAytFnhRlzlsTzQ8aM7CxOn9N0QZw0NhpK6aMR/r
-	 LvrTXt683Jdr9mnIjqZwbJ0P0YsN3M6oU20NsXKGeg6u/gM0Ap3YhPtLdKpftA6+3S
-	 uO37aPymzuZNXiVlb6iBRKZ07Qhav8lwuvlaLBlfu6grJx0z1IMnMQxS5c8gbD2Tg5
-	 z4aieftiyk8Gw==
+	b=f5ZTyfdbLIeklI0/JuJiC2nOAbEGgYikV4kUX9YT6L5ysmaYcS5qY9ElKkIaIIAqJ
+	 R+5dCkzwmiXgDWDiyxFIVNM8CLDNi9BcLhZ0NCRxgqtdH8twdNBZcRUi2Dhky2x7K0
+	 C6DeCrBGP5018qulWHG5TJhaVR8ZlvLha8XyOnFWJ+7ilNvUgLBxtVupRPXuVwjjHN
+	 StnaJheYIgjCU8FIxlEe9m/+UWnd9yON8LRWlT5GA98pAgkWm3lGAAzFscfk+WjG18
+	 nvQI4STrW79/4ftd2dwvsDchFvu3ms+YFZvP9q/hz0LRLwowA0VeEAIWXcTttG7A3j
+	 uVCVLRJSnJztg==
 From: Carlos Maiolino <cem@kernel.org>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: hch@lst.de, stable@vger.kernel.org, linux-xfs@vger.kernel.org
-In-Reply-To: <179030931976.3344850.17488605741516845262.stgit@frogsfrogsfrogs>
-References: <179030931976.3344850.17488605741516845262.stgit@frogsfrogsfrogs>
-Subject: Re: [PATCHSET] xfs: LLM-inspired bug fixes, part 18
-Message-Id: <179146635431.378461.16105492411517321923.b4-ty@kernel.org>
-Date: Thu, 08 Oct 2026 15:32:34 +0200
+Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
+In-Reply-To: <179057612523.479634.11102922479483109602.stgit@frogsfrogsfrogs>
+References: <179057612523.479634.11102922479483109602.stgit@frogsfrogsfrogs>
+Subject: Re: [PATCHSET] xfs: LLM-inspired bug fixes, part 19
+Message-Id: <179146635581.378461.13705675093577134310.b4-ty@kernel.org>
+Date: Thu, 08 Oct 2026 15:32:35 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,8 +44,8 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.3
 
-On Thu, 24 Sep 2026 21:10:40 -0700, Darrick J. Wong wrote:
-> Here's a eighteenth batch of xfs fixes resulting from a LLaMma.  Mwa
+On Sun, 27 Sep 2026 23:15:58 -0700, Darrick J. Wong wrote:
+> Here's a nineteenth batch of xfs fixes resulting from a LLaMma.  Mwa
 > mwa mwa...
 > 
 > If you're going to start using this code, I strongly recommend pulling
@@ -58,30 +58,30 @@ On Thu, 24 Sep 2026 21:10:40 -0700, Darrick J. Wong wrote:
 
 Applied to for-next, thanks!
 
-[01/12] xfs: adjust checks for cross-AG reaping issues
-        commit: 4c6668ecebc61bb0a53d4c6e95509bc960cf6bbc
-[02/12] xfs: actually check XFS_DIFLAG2_METADATA for metadata btree data forks
-        commit: 436ae68743a6974021fefa21fd3093d9bf8e66e4
-[03/12] xfs: fix xchk_stats_estimate_bufsize to allow for the trailing null
-        commit: 6b8d60784b61a17bd591cb4c6e8aa9ed29c24f5c
-[04/12] xfs: cross-reference the primary superblock
-        commit: 0c61016006ab08f8346f9e7b1e38559bd4ea499e
-[05/12] xfs: write the rt super immediately during repair
-        commit: 33dfad5a7bbf5c7a4626404eaf3dcdaf94fed0e9
-[06/12] xfs: read rt superblock from disk during scrub
-        commit: cd16b947cac1463d6f3eeab17247a9db7aa10c38
-[07/12] xfs: write the primary super immediately during repair
-        commit: 02722664508c1f7368663db6fc2410541c75379d
-[08/12] xfs: read primary superblock from disk during scrub
-        commit: 612d2e7506c3553b1deedc694846d1c0364ae446
-[09/12] xfs: break out of zoned reservation loop if signals are pending
+[01/12] xfs: be extra careful about replacement directory construction
         (no commit info)
-[10/12] xfs: jump out of xchk_bmap_check_rmap if fatal signals
-        commit: 49d300a51442bd64b627645b7b0b1cd66e492905
-[11/12] xfs: mark overfull dabtree node blocks as corrupt
-        commit: f61c91a2e5994fa81141d6c06dadae1fed206018
-[12/12] xfs: check fork type against dabtree block magic number
-        commit: 43030b72a11a532e7e3c21ac84a8625425b4201b
+[02/12] xfs: improve dirent bounds checking in scrub and repair
+        (no commit info)
+[03/12] xfs: abort dirtree repair if the live update hook dies
+        commit: 07732dea4f5d0410e1566b81a58a1154bf9dcb29
+[04/12] xfs: bail out of directory tree repairs on error
+        commit: d83ca4e7cc65dce6a02fd3427cefd174517657a3
+[05/12] xfs: fix revalidation of xchk_dquot_iter cached mappings
+        commit: 6c64d650460b455980a6023d43bc6c8859c1cfd2
+[06/12] xfs: don't repair fs summary counters with garbage
+        commit: 22a8a7501c0146dba4ce99b8256975ffe945125d
+[07/12] xfs: allow softlimit with no hardlimit in quota scrub
+        commit: 342c2e00b3a99099a7088f7b8c8f075670c603a9
+[08/12] xfs: assign an owner to scrub_stats_fops
+        commit: fe67a493c7a76cf75556152af24285a114f69d34
+[09/12] xfs: fix lost errno returned from xfarray_foliosort
+        commit: 8c4f172c246717b1420f138a159ed15c315a58bd
+[10/12] xfs: fix skipped inode mask handling in iscan
+        commit: 63341d4af16fe850716b454fcd18990590d07d97
+[11/12] xfs: don't proceed with xattr repair if the live update fails
+        commit: 833f98b3be45bc7c6ce4c87bdc4892f546ab72ee
+[12/12] xfs: don't fix the directory tree if live update fails
+        commit: c8226f3d1a7eafe472addc232689e9c9a0c36a1c
 
 Best regards,
 -- 
