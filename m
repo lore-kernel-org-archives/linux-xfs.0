@@ -1,44 +1,42 @@
-Received: from mta1.migadu.com (out-180.mta1.migadu.com [95.215.58.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF98D4908A7
-	for <linux-xfs@vger.kernel.org>; Thu,  8 Oct 2026 10:22:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49B55440638
+	for <linux-xfs@vger.kernel.org>; Thu,  8 Oct 2026 10:59:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791454932; cv=none; b=lUxBg6ACZBiSRcUmtE2KoWPXFf71TMqzh7VDkxbd1PtEGNl74KGF4lBJ8qV+r8hfrwBZ/NmPSHFHQOsWJscYaMoEqYfIDVm2sJPVXl+cH3oHbOkdCrP93OUAuoA7zGYyynwZvBfAM/U3mfGvbteVh3/yQwjUEwcmoJSA3zdPU2I=
+	t=1791457175; cv=none; b=H78EMm60xnohIETDfL1McJQbkn91T5XHu3LOACHoKKHf5woqGRs8TZ4PJUpFxG+I8HTP2c89M1sq61JUkw6+sNbz6ujinHi684dam+aJoUIUmiLmWYshEFPbulLMsSFxEl+6Z1v8z3rsP+j8aGFjEyYbtNmhKzLEGdVpji+87I8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791454932; c=relaxed/simple;
-	bh=NnFhpGGhwKsDqd90QEZdd2mC8ziwmifhoxhpik0HUHc=;
+	s=arc-20240116; t=1791457175; c=relaxed/simple;
+	bh=eJT3/Tj/XzLxyIaV3d/hT5S8YthHX1l5uJXgL4DiQa4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=c7G1rXgtrBQTTzYnJwC2QjRB5/uQupU2IaDHqFFVQi99wqPX3HQAViOfgmrzbkAaf11yYLiRHkIGvgcwHWZlKs/rTH4kE+qSaP5inR9lBQIEnU8n/9abho1WunYH4BV36yeyyuo8ZPgeSp1+EHLQOmJcvNL6JfNQXAPixRe9+wA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=X1uzpjFF; arc=none smtp.client-ip=95.215.58.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	 Content-Type:Content-Disposition:In-Reply-To; b=Wm/G0Am/Fc4OjDJ6dpDSq2nt6TEFW4SEf1zjQrbBX7Z+Nfq0wi9d+JrQx6V9jzfiuPUXxIG20QIF9VVscoaGLf3Iv4kvmUsaHc8aebUk0C2BU7OrA12J3RIWMCvFkhH5PoMHXSAx3rhc25DjLdzl2zYwOi9ykXDcyFwlcs1ePJw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jiTZuUtu; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="X1uzpjFF"
-X-Envelope-To: linux-xfs@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=NnFhpGGhwKsDqd90QEZdd2mC8ziwmifhoxhpik0HUHc=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1791454927; v=1; x=1792059727;
- b=X1uzpjFFSxbnCQJuw8etSHm/4SnP97Ke1AEYeTaVJOTJU290kr27bsffmWP4FxDdyv72C2wE
- ks7S7RzlgxSy8a4eFKZJdJZxzFFiH4psI7Oa7AJcS/2cVwVy+6jsLcvEZvBl2BebehcK9UyVBDe
- GZNGUl1KR3n8KsUT0JzUZm2k=
-X-Envelope-To: linux-xfs@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 2f0541ac974b7176;
-	Thu, 08 Oct 2026 10:22:07 +0000
-X-Mizu-Trace-ID: 2f0541ac974b7176
-X-Migadu-Flow: FLOW_OUT
-Date: Thu, 8 Oct 2026 10:21:59 +0000
-From: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Pankaj Raghav <p.raghav@samsung.com>, cem@kernel.org, 
-	linux-xfs@vger.kernel.org, John Garry <john.g.garry@oracle.com>, gost.dev@samsung.com
-Subject: Re: [PATCH v2] xfs: don't limit software atomic writes by the group
- alignment
-Message-ID: <ffuis77pmcaqivjcpy2audxaakqwrbdvrz2enu3tqphjg3ppm6@ynj2mto22zgu>
-References: <20261007101425.3741087-1-p.raghav@samsung.com>
- <20261007184050.GL2705364@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jiTZuUtu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AA3741F000FF;
+	Thu,  8 Oct 2026 10:59:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1791457174;
+	bh=FTxe8+CSm4TnO3Qv0IktfvLpQRNzBa9kpsz2CpcZ4J0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=jiTZuUtu0z/hobLT5APm18HqR4FXyRVpQMejmWitD3z/4gJBDCNCS/IL3G7ukWzqq
+	 lSP9+qDpgQrOv5KKwvxnk+W1ry1YlybOKTbaCmUlviGuEEsBYu1NRDbtYvNseAMl/Z
+	 NV3nyEA+31xkPsWQoH0iuqfmGbIwKQJzdQbCYrs5EPrng4Pm2UucB4RdSp4JHW3Hde
+	 isssrjr/CWutSDFb0bgpVoJWsQoPNvdavn0hU0Tbb31GDYz9pZ9ZaBGSJkYeLnA8AD
+	 KDtRXuL2i2ZhNCtWRbAeSMzxQh0Dn+iXRi6+W/CeV9Qb/oxw0RCKnZy/ZxvJLokT++
+	 /Mi0PVLtEVhyA==
+Date: Thu, 8 Oct 2026 12:59:29 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, 
+	Andrey Albershteyn <aalbersh@kernel.org>, Eric Sandeen <sandeen@redhat.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 12/13] libxfs: use xfs_trans.h from the kernel source
+Message-ID: <asd3cl5ih8lshJOx@cronus.toxiclabs.cc>
+References: <20261005125637.1340355-1-hch@lst.de>
+ <20261005125637.1340355-13-hch@lst.de>
+ <20261005214939.GR2705364@frogsfrogsfrogs>
+ <20261007134105.GA507@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,58 +45,26 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261007184050.GL2705364@frogsfrogsfrogs>
+In-Reply-To: <20261007134105.GA507@lst.de>
 
-> > +	if (g->blocks == 0)
-> > +		return 0;
-> > +	return max_pow_of_two_factor(g->blocks);
+On Wed, Oct 07, 2026 at 03:41:05PM +0200, Christoph Hellwig wrote:
+> On Mon, Oct 05, 2026 at 02:49:39PM -0700, Darrick J. Wong wrote:
+> > On Mon, Oct 05, 2026 at 02:56:22PM +0200, Christoph Hellwig wrote:
+> > > Replace the the existing xfs_trans.h with a copy of the kernel versions.
+> > > 
+> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > 
+> > Much nicer to have the same header, though I wonder if we ought some day
+> > to move the kernel xfs_trans.h into libxfs/ ?
 > 
-> Don't we need to retain the btp && btp->bt_awu_min > 0 test here?
+> That's what the:
 > 
-> Hmm.  I guess the caller effectively does this:
+>     small cleanups to help code sharing with xfsprogs
 > 
-> 	const unsigned int	sw_awu_max =
-> 		xfs_get_atomic_write_max(ip);
+> kernel series sent on Sep 25th does.  It got your reviews, so maybe it's
+> time to just merge it.
 > 
-> 	/* if the max is 1x block, then just keep behaviour that opt is 0 */
-> 	if (sw_awu_max <= ip->i_mount->m_sb.sb_blocksize)
-> 		return 0;
-> 
-> 	const unsigned int	hw_awu_max =
-> 		xfs_inode_buftarg(ip)->bt_awu_max);
-> 	const unsigned int	hw_align_max =
-> 		xfs_calc_group_awu_align_max(mp,
-> 					xfs_inode_group_type(ip));
-> 
-> 	/*
-> 	 * The optimal atomic write size is the minimum of the software
-> 	 * fallback, the hardware capability, and the biggest aligned
-> 	 * extent that the per-AG allocator can give us.
-> 	 */
-> 	return min3(sw_awu_max, hw_awu_max, XFS_FSB_TO_B(hw_align_max));
-> 
-> So no, we really don't need to check bt_awu_min?
-
-Yeah, I don't think so. I think the above checks should take care of all
-corner cases.
-
-> 
-> I also sorta wish that third assignment had its own helper:
-> 
-> static inline unsigned int
-> xfs_get_atomic_hw_write_align(
-> 	const struct xfs_inode	*ip)
-> {
-> 	struct xfs_mount	*mp = ip->i_mount;
-> 
-> 	return XFS_FSB_TO_B(mp, xfs_calc_group_awu_align_max(mp,
-> 					xfs_inode_group_type(ip)));
-> }
-> 
-> But now I'm really just nitpicking. :P
 > 
 
-Thanks a lot for the review. I will send a new version.
-
--- 
-Pankaj
+It's going on the next batch, now I'm finally back home I can get back
+to my backlog :)
