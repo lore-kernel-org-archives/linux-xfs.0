@@ -1,97 +1,104 @@
-Received: from mx0.herbolt.com (mx0.herbolt.com [5.59.97.199])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta1.migadu.com (out-180.mta1.migadu.com [95.215.58.180])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A18C2448B8E;
-	Thu,  8 Oct 2026 08:24:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.59.97.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF98D4908A7
+	for <linux-xfs@vger.kernel.org>; Thu,  8 Oct 2026 10:22:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791447850; cv=none; b=Qi9iSNu2zhR/p5End+MG8tGBFBovrxMXPyXLZPJMcXE27b6IBVJRohZY9YIewaCyvcraC/bIBgZtbYahWhAQ3y3G1dHRqEBr0OfAToC/1PLyFfCvXvto5Seo5dbtYlSFmw1Dj4tq2VLmVDLYOAIK6vublDnnr31kdx4qQUR+EZM=
+	t=1791454932; cv=none; b=lUxBg6ACZBiSRcUmtE2KoWPXFf71TMqzh7VDkxbd1PtEGNl74KGF4lBJ8qV+r8hfrwBZ/NmPSHFHQOsWJscYaMoEqYfIDVm2sJPVXl+cH3oHbOkdCrP93OUAuoA7zGYyynwZvBfAM/U3mfGvbteVh3/yQwjUEwcmoJSA3zdPU2I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791447850; c=relaxed/simple;
-	bh=3KVjqPfNdvKqT82rfogBtYTs+jN0HvXqg3ghXsZ7m+E=;
-	h=MIME-Version:Date:From:To:Cc:Subject:In-Reply-To:References:
-	 Message-ID:Content-Type; b=o8akSgGW1gR5/5E1LXA9pbAIXPoFwlTzlROVAHf95U9CGQO0l5kwlCj00myDSrUnEXFa4tjut6zfUqvF6Qa7yW5SghTTLSKdzcNwbAk2DiQ0a3P8PSfDx0l2S27Hsm6wmoX8pCgguwisGYZHdN8gUO8+yvqoCywDaHvkGv9Kx40=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com; spf=pass smtp.mailfrom=herbolt.com; arc=none smtp.client-ip=5.59.97.199
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=herbolt.com
-Received: from mx0.herbolt.com (localhost [127.0.0.1])
-	by mx0.herbolt.com (Postfix) with ESMTP id BA3A2180F2D2;
-	Thu, 08 Oct 2026 10:23:59 +0200 (CEST)
-Received: from mail.herbolt.com ([172.16.31.10])
-	by mx0.herbolt.com with ESMTPSA
-	id NF/GKB9Tx2omegMAKEJqOA
-	(envelope-from <lukas@herbolt.com>); Thu, 08 Oct 2026 10:23:59 +0200
+	s=arc-20240116; t=1791454932; c=relaxed/simple;
+	bh=NnFhpGGhwKsDqd90QEZdd2mC8ziwmifhoxhpik0HUHc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=c7G1rXgtrBQTTzYnJwC2QjRB5/uQupU2IaDHqFFVQi99wqPX3HQAViOfgmrzbkAaf11yYLiRHkIGvgcwHWZlKs/rTH4kE+qSaP5inR9lBQIEnU8n/9abho1WunYH4BV36yeyyuo8ZPgeSp1+EHLQOmJcvNL6JfNQXAPixRe9+wA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=X1uzpjFF; arc=none smtp.client-ip=95.215.58.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="X1uzpjFF"
+X-Envelope-To: linux-xfs@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=NnFhpGGhwKsDqd90QEZdd2mC8ziwmifhoxhpik0HUHc=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1791454927; v=1; x=1792059727;
+ b=X1uzpjFFSxbnCQJuw8etSHm/4SnP97Ke1AEYeTaVJOTJU290kr27bsffmWP4FxDdyv72C2wE
+ ks7S7RzlgxSy8a4eFKZJdJZxzFFiH4psI7Oa7AJcS/2cVwVy+6jsLcvEZvBl2BebehcK9UyVBDe
+ GZNGUl1KR3n8KsUT0JzUZm2k=
+X-Envelope-To: linux-xfs@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 2f0541ac974b7176;
+	Thu, 08 Oct 2026 10:22:07 +0000
+X-Mizu-Trace-ID: 2f0541ac974b7176
+X-Migadu-Flow: FLOW_OUT
+Date: Thu, 8 Oct 2026 10:21:59 +0000
+From: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Pankaj Raghav <p.raghav@samsung.com>, cem@kernel.org, 
+	linux-xfs@vger.kernel.org, John Garry <john.g.garry@oracle.com>, gost.dev@samsung.com
+Subject: Re: [PATCH v2] xfs: don't limit software atomic writes by the group
+ alignment
+Message-ID: <ffuis77pmcaqivjcpy2audxaakqwrbdvrz2enu3tqphjg3ppm6@ynj2mto22zgu>
+References: <20261007101425.3741087-1-p.raghav@samsung.com>
+ <20261007184050.GL2705364@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Date: Thu, 08 Oct 2026 10:23:59 +0200
-From: Lukas Herbolt <lukas@herbolt.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: zlang@kernel.org, fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
- linux-ext4@vger.kernel.org
-Subject: Re: [PATCH 1/1] lib/random.c fix undefined behavior on signed integer
- overflow.
-In-Reply-To: <20261007170058.GG2705364@frogsfrogsfrogs>
-References: <20261006135205.400485-1-lukas@herbolt.com>
- <20261006135205.400485-2-lukas@herbolt.com>
- <20261007170058.GG2705364@frogsfrogsfrogs>
-Message-ID: <d000ae8abba884b0a58be93e6e63f486@herbolt.com>
-X-Sender: lukas@herbolt.com
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261007184050.GL2705364@frogsfrogsfrogs>
 
-On 2026-10-07 19:00, Darrick J. Wong wrote:
-> On Tue, Oct 06, 2026 at 03:51:52PM +0200, Lukas Herbolt wrote:
->> The random.c now expects that signed integer to overflow and
->> triggers the  ^MASK branch. But signed int overflow is undefined
->> behavior and GCC can optimize this branch out with certain
->> CFLAGS/LDFLAGS.
->> 
->> Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
->> ---
->>  lib/random.c | 13 +++++++------
->>  1 file changed, 7 insertions(+), 6 deletions(-)
->> 
->> diff --git a/lib/random.c b/lib/random.c
->> index d5c81be817c8..f767ed1d1337 100644
->> --- a/lib/random.c
->> +++ b/lib/random.c
->> @@ -186,14 +186,15 @@ _random (int32_t is [2])
->>  int32_t
->>  _irandm (int32_t is [2])
->>  {
->> -	int32_t it, leh, nit;
->> -
->> +	int32_t it, leh, nit, apply_mask;
->>  	it = is [0];
->>  	leh = is [1];
->> -	if (it <= 0)
->> -		it = (it + it) ^ MASK;
->> -	else
->> -		it = it + it;
->> +
->> +/* 	evaluate on original value — no UB here */
->> +	apply_mask = (it <= 0);
->> +/*	double via unsigned shift — well-defined */
->> +	it = (unsigned)it << 1;
->> +	if (apply_mask) it ^= MASK;
+> > +	if (g->blocks == 0)
+> > +		return 0;
+> > +	return max_pow_of_two_factor(g->blocks);
 > 
-> Doesn't _random suffer the same flaw?
+> Don't we need to retain the btp && btp->bt_awu_min > 0 test here?
 > 
-> Oh.  It's dead code, maybe it should go away?
-Good point.
+> Hmm.  I guess the caller effectively does this:
 > 
-> Also, what about converting all the variables to unsigned?
+> 	const unsigned int	sw_awu_max =
+> 		xfs_get_atomic_write_max(ip);
+> 
+> 	/* if the max is 1x block, then just keep behaviour that opt is 0 */
+> 	if (sw_awu_max <= ip->i_mount->m_sb.sb_blocksize)
+> 		return 0;
+> 
+> 	const unsigned int	hw_awu_max =
+> 		xfs_inode_buftarg(ip)->bt_awu_max);
+> 	const unsigned int	hw_align_max =
+> 		xfs_calc_group_awu_align_max(mp,
+> 					xfs_inode_group_type(ip));
+> 
+> 	/*
+> 	 * The optimal atomic write size is the minimum of the software
+> 	 * fallback, the hardware capability, and the biggest aligned
+> 	 * extent that the per-AG allocator can give us.
+> 	 */
+> 	return min3(sw_awu_max, hw_awu_max, XFS_FSB_TO_B(hw_align_max));
+> 
+> So no, we really don't need to check bt_awu_min?
 
-It would break two signed checks: `it <= 0` (LFSR feedback -
-only fires at zero instead of when MSB set) and `leh < 0`
-(output folding — never fires). The `it` register degenerates
-to 33 repeating values after 64 calls. Reducing the pool of
-random numbers.
+Yeah, I don't think so. I think the above checks should take care of all
+corner cases.
+
+> 
+> I also sorta wish that third assignment had its own helper:
+> 
+> static inline unsigned int
+> xfs_get_atomic_hw_write_align(
+> 	const struct xfs_inode	*ip)
+> {
+> 	struct xfs_mount	*mp = ip->i_mount;
+> 
+> 	return XFS_FSB_TO_B(mp, xfs_calc_group_awu_align_max(mp,
+> 					xfs_inode_group_type(ip)));
+> }
+> 
+> But now I'm really just nitpicking. :P
+> 
+
+Thanks a lot for the review. I will send a new version.
 
 -- 
--lhe
+Pankaj
