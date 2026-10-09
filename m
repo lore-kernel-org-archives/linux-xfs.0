@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 884B135C6B8
-	for <linux-xfs@vger.kernel.org>; Fri,  9 Oct 2026 23:50:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1842635C6B8
+	for <linux-xfs@vger.kernel.org>; Fri,  9 Oct 2026 23:50:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791589805; cv=none; b=YS4Ns4ygb/uNfU8xktnt/RBGjTj/PfaXDvSpm7sFm8kWLG7SdXzHXmKOF4pLF/9BVOBK3nm4gnK4ti09f/l379qXIVcfzZs6Q2IDJCvE3RVdBViDPfzy5eCBAZTCthCfT12ZJk5FGy2WYBOlIXzzPJQw41Gde/hNWjCt1nOakLg=
+	t=1791589821; cv=none; b=RA8xNym2LdXRzEZLm+bDg2qGoZ2lMZrcWyvtQl0whXEfeTyJzn88Unq2AvM0HsFb+QiPX2tO2ReWDa508OnG3d9zJxvY9hLF3J/CyFZsMt1Yaj6FSeGJqatMQgkxkB2bQDXb8RmMzURCSswxeGlGf/Mrk/Vehj4AsM6BBIbJH0Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791589805; c=relaxed/simple;
-	bh=SNNtsbXgUiiYJILuN1yyZl3F5YKb++1oN7x8IgnOw7Y=;
+	s=arc-20240116; t=1791589821; c=relaxed/simple;
+	bh=LsNzLE9BFk/fyJAhvPE+FTaIBXI6jBZbTLvymiY125M=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=OqpQtFWZJPutgRMiehdkBk4obhzJVIP5enByxq7ow1dkXyEuMosAC8SGI/x/o8iFMowA2Wmc+IjARaiZOca0JW2I1vvFtpzSZ4OpLj5SWLY2CMX+m7xrdDjyXTeQuQDODeU/z7k58B7tqJSBhFTXgDvsOpkNDI1pArpeoL+xXuo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aA4fFVkv; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=g0tIfcyf5uMfLGi3rE4FUZfvhUZKIaKwTFpCEoXChks1614Ymo3wim7e32gcXp/hpWzH7fO0sqhqrtHaZABSWdRWJ06OynlRa2YLcUWCYoYvyGFODLYBLHJY7Ck8BWsTNQ1BjG1Jvxh7bWHzT9o4BvZ9TUalc2tdGznbRRZqWOk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BobmYwNz; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aA4fFVkv"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 0213E1F000FF;
-	Fri,  9 Oct 2026 23:50:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BobmYwNz"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 9B3221F000FF;
+	Fri,  9 Oct 2026 23:50:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791589804;
-	bh=d5bSATcutBA07X6U3GaXQQPbzLBOAwAj9jrqZNtlQcI=;
+	s=k20260515; t=1791589819;
+	bh=rw29Uwsl+u0sDZUSUBTM1voGVDunCHk/vBS0rkkHj+E=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=aA4fFVkvdUYe+2aL83NzI2+lnJLsEaxVO3NokkQJbBitL77lnzT3gYuFTqNprufRa
-	 5qx2kcorfh0cJfxv0Vnvs6DOijCgNpCAtRS551RgJKsA9+B7UkdyORpbO5FiLx8RFs
-	 Kuxxed/Zv7Iv52m/opjXmVTDMKneUHLvB3CQzCD6pn1nAKG2CmtoA+uj6xrXtUKrgn
-	 7Ssjc48J1B8c/QjA4vBr2MkwrBx1lFxrIjZlrPgbJdGK1czJ2dBe5PXsNLlQvA44Bh
-	 JBpFp/QTs4+vgObfCLS+Z69ezB6m6UCHq9nktkRK9xlLDr3/hOY8ZuFbOgSq9k8q5h
-	 Sh7DecyzFneyw==
-Date: Fri, 09 Oct 2026 16:50:03 -0700
-Subject: [PATCH 17/26] xfs: assert the reservation covers each da fork growth
+	b=BobmYwNzdSBrw+RibxMeyp4jhzcyTKXrqEbV5GMxNt+557Tgkek9INxRQoOcB21db
+	 oPp4DVdTzpt5lNZ2JVKfUZU+jLPPyKPNhw2FKa3f45visOLEkNGHaqxeLc3LMVPwsI
+	 szrLOf4z+9nWGMf+1jv5aumyvjZ/1sBTiHPCNhq8qciDorb2YYEVBmpQv/zC9qRfl9
+	 FZQofLTYBlUS3mW4CX/KVnxNqzNaEWAvSNWL7/5AqgO1XMRTguqO6cQ7Y5QEFiLu2r
+	 zADkJaXIm46ke2HbWqGJoRVE/TrWY+KlROSlx6XcvEvPibzxLSIsT9qJxeDRrE68U4
+	 0xwptsx9eo1bA==
+Date: Fri, 09 Oct 2026 16:50:19 -0700
+Subject: [PATCH 18/26] xfs: fix the rtrmap and rtrefcount _maxlevels_ondisk
+ functions
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
-Cc: cem@kernel.org, floss@jetm.me, linux-xfs@vger.kernel.org
-Message-ID: <179158947679.3719791.10707703323646118155.stgit@frogsfrogsfrogs>
+Cc: cem@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <179158947697.3719791.8200674327985067459.stgit@frogsfrogsfrogs>
 In-Reply-To: <179158947238.3719791.8405495844046466765.stgit@frogsfrogsfrogs>
 References: <179158947238.3719791.8405495844046466765.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -43,37 +44,62 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Javier Tia <javier@peridio.com>
+From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 0fe77e57588b989450d668f7c978bb0264c5c340
+Source kernel commit: aa301322f72f82f26e4ba0826018d41388ab9896
 
-xfs_da_grow_inode_int() subtracts the blocks it just allocated from
-args->total, the caller's remaining block reservation.  The subtraction
-is unsigned, so a caller that reaches it with too small a total wraps
-the field instead of failing, and every allocation afterwards runs with
-a bogus reservation.  Assert the remaining reservation still covers the
-step, so an under-reserved or uninitialised total trips in debug builds
-instead of silently wrapping.
+The _maxlevels_ondisk functions are used to compute the size of
+in-memory btree cursors for each btree type.  Unfortunately, LOLLM
+noticed that the rtrmap and rtrefcount versions of these functions
+forget to account for the inode root, which means that we could access
+beyond the end of the cursor given a sufficiently large btree.  Fix
+this.
 
-Suggested-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Javier Tia <floss@jetm.me>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Fixes: 9abe03a0e4f978 ("xfs: introduce realtime refcount btree ondisk definitions")
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Assisted-by: LOLLM # finding obvious bugs
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Carlos Maiolino <cem@kernel.org>
 ---
- libxfs/xfs_da_btree.c |    1 +
- 1 file changed, 1 insertion(+)
+ libxfs/xfs_rtrefcount_btree.c |    7 +++++--
+ libxfs/xfs_rtrmap_btree.c     |    4 +++-
+ 2 files changed, 8 insertions(+), 3 deletions(-)
 
 
-diff --git a/libxfs/xfs_da_btree.c b/libxfs/xfs_da_btree.c
-index 50eb44f486ed8a..bd13879f29ca1e 100644
---- a/libxfs/xfs_da_btree.c
-+++ b/libxfs/xfs_da_btree.c
-@@ -2382,6 +2382,7 @@ xfs_da_grow_inode_int(
- 	}
+diff --git a/libxfs/xfs_rtrefcount_btree.c b/libxfs/xfs_rtrefcount_btree.c
+index 22acc1411aacd8..e2950dbe20681b 100644
+--- a/libxfs/xfs_rtrefcount_btree.c
++++ b/libxfs/xfs_rtrefcount_btree.c
+@@ -489,8 +489,11 @@ xfs_rtrefcountbt_maxlevels_ondisk(void)
+ 	minrecs[0] = xfs_rtrefcountbt_block_maxrecs(blocklen, true) / 2;
+ 	minrecs[1] = xfs_rtrefcountbt_block_maxrecs(blocklen, false) / 2;
  
- 	/* account for newly allocated blocks in reserved blocks total */
-+	ASSERT(args->total >= dp->i_nblocks - nblks);
- 	args->total -= dp->i_nblocks - nblks;
+-	/* We need at most one record for every block in an rt group. */
+-	return xfs_btree_compute_maxlevels(minrecs, XFS_MAX_RGBLOCKS);
++	/*
++	 * We need at most one record for every block in an rt group, and
++	 * one extra level for the inode root.
++	 */
++	return xfs_btree_compute_maxlevels(minrecs, XFS_MAX_RGBLOCKS) + 1;
+ }
  
- out_free_map:
+ int __init
+diff --git a/libxfs/xfs_rtrmap_btree.c b/libxfs/xfs_rtrmap_btree.c
+index c264bc5651c0a6..0cb2113d5b4045 100644
+--- a/libxfs/xfs_rtrmap_btree.c
++++ b/libxfs/xfs_rtrmap_btree.c
+@@ -716,10 +716,12 @@ xfs_rtrmapbt_maxlevels_ondisk(void)
+ 	 * happens, which means that we must compute the max height based on
+ 	 * what the btree will look like if it consumes almost all the blocks
+ 	 * in the data device due to maximal sharing factor.
++	 *
++	 * Add one extra level for the inode root.
+ 	 */
+ 	max_dblocks = -1U; /* max ag count */
+ 	max_dblocks *= XFS_MAX_CRC_AG_BLOCKS;
+-	return xfs_btree_space_to_height(minrecs, max_dblocks);
++	return xfs_btree_space_to_height(minrecs, max_dblocks) + 1;
+ }
+ 
+ int __init
 
