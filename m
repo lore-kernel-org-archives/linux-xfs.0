@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBD64446C00;
-	Fri,  9 Oct 2026 06:15:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E97B42AF86;
+	Fri,  9 Oct 2026 06:15:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791526523; cv=none; b=eW/Vycbm2/Yc8NtlIqsgPdtbCYrxcYp0oi4zGYk1dDGTyBWf7w9lKQAdn/svqOHdN7IUbNzMZFsfCJV3k6QXQF1XS8KKrlQ/dxKDWvHvYmkq+nHs4/6Kfm5kKH2JBcWSj5atoJ7y2liD6p2+PiDqLyejsJ8107Ep1WQW+FBJjL8=
+	t=1791526538; cv=none; b=LOMVIr6ehuUs8A6g4TQEfUrEOwrLRVDX4lG6X3ECz84xA3+lpvOVm4NqfM8G/HY00hojZND+y24Vui2p7lEMZVo7uEeULQJ/Au8WBvrcwVcNAJoI8bqp7qy7KI4u4Qb2q7vZJurnvcJshm8+ZnM8Nf1mdCetrNWJgrul8JGEMqc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791526523; c=relaxed/simple;
-	bh=ikcEDHi2gk9oHA3M6DxlwRZqqKo5ycrwXLbPCPqpL4M=;
+	s=arc-20240116; t=1791526538; c=relaxed/simple;
+	bh=sHujBVnl8LruPkMduLImqHfZXqz+ciTJpYwMZFBrnLo=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=XGA8k0FnBrp7/Gvv/h76anGDQTqVMSgG7VGZVv/2CzQn5rHk3oGEjfrBvkBB4k0FT+Mma/GW2r2bq88ElcXutZNejKO2BTISffqsFeXbuERzMS9iCLtDa3AXNvlO9USUA1pZEtvXaFRXHwN+ujS6mx6GX1IsZ4BIEJrfjyrgZqI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Fri5bCV6; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=YrfnYIg43GTWhGC7JzCuo4Cs5NdxGDTiwETJ1PW6AuwASbbMYcARYQQ1MdGSb4W8TbTWCcrLDJtNkMqrNXuGlUNypdLyrDIdK2dYwar1L4E3Nof85ogsLninBU5R1i066R+J5CCrBxxYBJ+o5rnlJ7V3uwkTkdp1BtsXfpGfcOM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=B4VOIIlw; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Fri5bCV6"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 6AA221F000FF;
-	Fri,  9 Oct 2026 06:15:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="B4VOIIlw"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 1B0871F000FF;
+	Fri,  9 Oct 2026 06:15:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791526521;
-	bh=+eJN+aXI1qEMmcjCt86gwxvt0awGywZS9SbYstN6JzU=;
+	s=k20260515; t=1791526537;
+	bh=XzALPZZFNI+jW+uLfo8a5c/+ldvofRhwFnAFkbeL8As=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=Fri5bCV6QEWJz14MkovrF0+E4MdLt0QiuZaYMh5W/2NK/jGV/Z8dsMggN+RN36wuQ
-	 luvdF+ujdjWLWljZcxPcYkyuaqXMvnTsNAdMnJUBZRR5oEB1xMrQtwwe/PXzv3sb23
-	 W9xIQVDKXzT3BKc09lF8lBLUajSAD0/8S1rS7na6jdFDggMe5upRPXmlrEF6kXhzjA
-	 YpTRFGyx42shuYO0a1isVcknq+715W9tJ48e1k8zIsjfkLd/TCGPKe6Uu5IFwmywKx
-	 noaclUGstKWVwAhiGfyvQqB07jfVHim9qLHqDPF1+zdUFZBE/FeOdqpCRjgu96q8DU
-	 bl4JAdJXuYMyg==
-Date: Thu, 08 Oct 2026 23:15:21 -0700
-Subject: [PATCH 02/13] xfs: don't subtract excess usage twice when computing
- agf_btreeblks
+	b=B4VOIIlwjA6fZi0T30fpxwW0mTXY8UMqYEcOQ3EbrXQhP4wWdTRAz+4QSLxfT+GTV
+	 A2e0FlSZ+ennHoZdRWDQVWYliN3G63vcAencdAgnYY6dtfoPkpUCA7Fpcd3pjzJoqh
+	 3G9dkiZNZOA9CgRm71SBmFzESgcam3qzegfVov7NXhw/bBEJMS2tFjr5eSWUOZB1Rw
+	 +rlxDnqRmTyQ/+v5NKa/oW0avaghMMXvRk7sMe7pGvDFtgk+RWc2yj84uv8VvktQlV
+	 3vsX+XGchr4qKbhQpufvCV8MkJSeneXHuxEoaMDAbJiCCrIeAUpWOGPsxZN5RvAaLu
+	 Z+TQf+u44LTMQ==
+Date: Thu, 08 Oct 2026 23:15:36 -0700
+Subject: [PATCH 03/13] xfs: abort directory tree repair whenever dl->aborted
+ is set
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
-Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <179151614663.3163896.1335957242495736456.stgit@frogsfrogsfrogs>
+Cc: hch@lst.de, stable@vger.kernel.org, linux-xfs@vger.kernel.org
+Message-ID: <179151614685.3163896.1260817276380598497.stgit@frogsfrogsfrogs>
 In-Reply-To: <179151614535.3163896.2744921556354655977.stgit@frogsfrogsfrogs>
 References: <179151614535.3163896.2744921556354655977.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,74 +46,53 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-LOLLM noticed that the free space btree repair code calculates
-agf_btreeblks from the number of blocks we wrote to rebuild the free
-space btrees (minus the roots).  That's correct.  However, it observes
-that we subtract the "excess" reservation, which is not correct.  Fix
-this accounting problem.
+LOLLM observed that if the live update hooks for the directory tree
+repair code ever fail, they'll set dl->aborted, but then the main repair
+code path won't check it to exit early.  This can cause incorrect
+repairs, so let's check for hook errors and abort the repair.
 
-Cc: <stable@vger.kernel.org> # v6.8
-Fixes: 4bdfd7d15747b1 ("xfs: repair free space btrees")
+Cc: <stable@vger.kernel.org> # v6.10
+Fixes: 3f31406aef493b ("xfs: fix corruptions in the directory tree")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Assisted-by: LOLLM # finding obvious bugs
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/scrub/newbt.h        |    1 -
- fs/xfs/scrub/alloc_repair.c |    6 +-----
- fs/xfs/scrub/newbt.c        |   13 -------------
- 3 files changed, 1 insertion(+), 19 deletions(-)
+ fs/xfs/scrub/dirtree_repair.c |    9 +++++++++
+ 1 file changed, 9 insertions(+)
 
 
-diff --git a/fs/xfs/scrub/newbt.h b/fs/xfs/scrub/newbt.h
-index 5ce785599287be..e5ebd3200c1849 100644
---- a/fs/xfs/scrub/newbt.h
-+++ b/fs/xfs/scrub/newbt.h
-@@ -71,6 +71,5 @@ void xrep_newbt_cancel(struct xrep_newbt *xnr);
- int xrep_newbt_commit(struct xrep_newbt *xnr);
- int xrep_newbt_claim_block(struct xfs_btree_cur *cur, struct xrep_newbt *xnr,
- 		union xfs_btree_ptr *ptr);
--unsigned int xrep_newbt_unused_blocks(struct xrep_newbt *xnr);
+diff --git a/fs/xfs/scrub/dirtree_repair.c b/fs/xfs/scrub/dirtree_repair.c
+index 717ebbe4f91916..1de4d9f1b61657 100644
+--- a/fs/xfs/scrub/dirtree_repair.c
++++ b/fs/xfs/scrub/dirtree_repair.c
+@@ -575,6 +575,8 @@ xrep_dirtree_delete_path(
  
- #endif /* __XFS_SCRUB_NEWBT_H__ */
-diff --git a/fs/xfs/scrub/alloc_repair.c b/fs/xfs/scrub/alloc_repair.c
-index 9a09a9ea9c3089..05f27c927adfb9 100644
---- a/fs/xfs/scrub/alloc_repair.c
-+++ b/fs/xfs/scrub/alloc_repair.c
-@@ -660,15 +660,11 @@ xrep_abt_reset_counters(
- 
- 	/*
- 	 * Compute the contribution to agf_btreeblks for the new free space
--	 * btrees.  This is the computed btree size minus anything we didn't
--	 * use.
-+	 * btrees.  This is the computed btree size minus the root block.
- 	 */
- 	freesp_btreeblks += ra->new_bnobt.bload.nr_blocks - 1;
- 	freesp_btreeblks += ra->new_cntbt.bload.nr_blocks - 1;
- 
--	freesp_btreeblks -= xrep_newbt_unused_blocks(&ra->new_bnobt);
--	freesp_btreeblks -= xrep_newbt_unused_blocks(&ra->new_cntbt);
--
- 	/*
- 	 * The AGF header contains extra information related to the free space
- 	 * btrees, so we must update those fields here.
-diff --git a/fs/xfs/scrub/newbt.c b/fs/xfs/scrub/newbt.c
-index 584076b2a6eed9..a7554f925b7440 100644
---- a/fs/xfs/scrub/newbt.c
-+++ b/fs/xfs/scrub/newbt.c
-@@ -598,16 +598,3 @@ xrep_newbt_claim_block(
- 	/* Relog all the EFIs. */
- 	return xrep_defer_finish(xnr->sc);
+ 	if (!error && dl->stale)
+ 		error = -ESTALE;
++	if (!error && dl->aborted)
++		error = -EIO;
+ 	return error;
  }
--
--/* How many reserved blocks are unused? */
--unsigned int
--xrep_newbt_unused_blocks(
--	struct xrep_newbt	*xnr)
--{
--	struct xrep_newbt_resv	*resv;
--	unsigned int		unused = 0;
--
--	list_for_each_entry(resv, &xnr->resv_list, list)
--		unused += resv->len - resv->used;
--	return unused;
--}
+ 
+@@ -720,6 +722,11 @@ xrep_dirtree_adopt(
+ 		error = -ESTALE;
+ 		goto out_trans;
+ 	}
++	if (dl->aborted) {
++		mutex_unlock(&dl->lock);
++		error = -EIO;
++		goto out_trans;
++	}
+ 	error = xrep_dirtree_create_adoption_path(dl);
+ 	mutex_unlock(&dl->lock);
+ 	if (error)
+@@ -780,6 +787,8 @@ xrep_dirtree_move_to_orphanage(
+ 
+ 	if (!error && dl->stale)
+ 		error = -ESTALE;
++	if (!error && dl->aborted)
++		error = -EIO;
+ 	return error;
+ }
+ 
 
