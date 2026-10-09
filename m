@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED0893ADB9B;
-	Fri,  9 Oct 2026 06:16:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3E9837A822;
+	Fri,  9 Oct 2026 06:16:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791526600; cv=none; b=bxV8CXQjW6tzs/ZjWkEVJfXNfKtaB90JdH1gUaoSPReFrhJwvm5KY4qYKFnQewjwJ/hP0T418Ish7ShvRfoDq1VTHZ7zYYp20sWVCI+ne/I2GE90gdaG2sBAo176KGSMMTh9vFp2q/0XqbpedjVZE+ijX0wtJo3aPBz6uL3hF+0=
+	t=1791526616; cv=none; b=JPHLFhVYj/0/w3QZb1WR4xedVyzbWPw+l3vVYglsc36WIMXje6WgqyzSxA/fJyHPqJrAMau5rSXsMsDe2XtEJtyJT9JWy3DcIvVVbM/zqa9Q3XimjjK2OSzI/kiEHm8jBHWDX2zAIiC3vyNBfn4/AilkrvXamQUO38mVF/Y3BOs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791526600; c=relaxed/simple;
-	bh=HKneKNq+sr386WH7+ba5KyRqmeDa4/eYacVm7GQJpEI=;
+	s=arc-20240116; t=1791526616; c=relaxed/simple;
+	bh=HT7IxYUi3zGTA8FOAaPbajatjzMw22Fbn5XRehifbL0=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Ut9nSCS1hFcxMFSirVyByy6J+4KwBJoNBebVYAgsuq+nQ1rDlOuQeDa4kvPcbXKa7o1anUI0qGxKocLWZjtnXkWMY//yZqLSgZ6OrrC1gQz256B7F1e4LD7YyvhIp+NmnCuamgNFUf+CAOD2a0345uCzwvYG9joQDceoN43ltTQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ODToZbrS; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=p5R1pU8u+B3wKlRnXIvPBrx7FmiQWVtoIubPdCBB9jA5thZGdBbTrHjcz3aRY1AMoEzB/vyRctk0/bUZymGqX81k23sCv8oPQmoYjKXU0rA3RfKv0Q2bPrBi2fyB/zpgQVxm5sKWhxvvcivBVjOGY3T9JAzeYDgTbRKGt5pXFHU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MAAyoXFO; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ODToZbrS"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 8D07E1F000FF;
-	Fri,  9 Oct 2026 06:16:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MAAyoXFO"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 329421F000FF;
+	Fri,  9 Oct 2026 06:16:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791526599;
-	bh=OAC6DIXMqE7iQplqSaIwLBZR/jZ5IXPttswxOzIUo2k=;
+	s=k20260515; t=1791526615;
+	bh=t73XSYnuU/zGE15MC1Gk/YkpGAWaCgHM6ACpaStLWSQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=ODToZbrSR1qC5z5p6yyTOxPkuGIcjwFBrW3xLQS/7RUr6LN1WZlg8jcXXL1IgZx8O
-	 4wR37jSTUGIxkf71y9d3LaOYgHNsea89tW6RT2vAPG66ed0Ba+Ste/0PKrOmibPrA2
-	 fbZYZ31nsDh/KX+gG7BTvS6EnLkHM2/RF+2Zz2QdLCKuZ3XBrO0rN6B7bi48O+bNtJ
-	 fHQGjHh7ATyD1WNOIZwk5PZBF/p9sE2LDitzWu0oZpTOrisxFW2v9zc0H2pQTWvaSI
-	 ssysMJEl/ZFqEecgraiPF0qehrhMr46ctNrAAJwqBgkYuglG4SgyQ5fFnGSwKiQbnw
-	 ifVD0HGOgwa2Q==
-Date: Thu, 08 Oct 2026 23:16:39 -0700
-Subject: [PATCH 07/13] xfs: always report inode repair setup failures
+	b=MAAyoXFOVogc/zjcBJlAQc383VYswff+obzklAlijmnz+oDgR0OMj4CG8d+TrVTVf
+	 xfbz19AutniIrxvYLfVJAnyUZGV/jlqKJ8Hhwr5ul9ryaq9c98h2zFaPADl6jgimMH
+	 3JlEk1Nhz1c9acYBeBUasV3VVR32iHNqdB4o6Xbl+MBs+RHci0VA+dPKVridPjKQJu
+	 LdLURLOY3PDf6kWY+vbPCVM7Qvi0VDZsu69829teX4s6zYGgkz0OCt5i6Y0a3CbORH
+	 pGZw3dfqGM25p9gZ+Bp0Jq5QjrdK9vbI57Yf34nJNEVMLvA0WeTvS3jEfwwuZenA8H
+	 JVsFjC2ihZZkw==
+Date: Thu, 08 Oct 2026 23:16:54 -0700
+Subject: [PATCH 08/13] xfs: range-check bc_levels array access in scrub
+ tracepoints
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <179151614771.3163896.11886739421197857328.stgit@frogsfrogsfrogs>
+Message-ID: <179151614793.3163896.17851091791534417053.stgit@frogsfrogsfrogs>
 In-Reply-To: <179151614535.3163896.2744921556354655977.stgit@frogsfrogsfrogs>
 References: <179151614535.3163896.2744921556354655977.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,45 +46,104 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-LOLLM noticed that xchk_setup_inode silently discards errors being
-returned by xrep_setup_inode.  Fix that, and fix the stub macro so that
-it actually "returns" a value.
+LOLLM noticed xchk_btree()'s odd habit of passing cur->bc_nlevels to
+xchk_btree_ptr_ok when we're checking the pointer to the root block at
+the start of the btree scan.  This enables us to skip checking the
+pointer for an inode btree's root (since it doesn't have one) but
+doesn't handle per-AG btrees quite correctly.  There isn't a problem for
+__xfs_btree_check_ptr itself, but the corruption tracepoint naively
+walks off the end of bc_level[].  Fix that by adding a helper to do an
+implicit range check.
 
-Cc: <stable@vger.kernel.org> # v6.8
-Fixes: 2d295fe65776d1 ("xfs: repair inode records")
+Cc: <stable@vger.kernel.org> # v5.16
+Fixes: 6ca444cfd66354 ("xfs: prepare xfs_btree_cur for dynamic cursor heights")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Assisted-by: LOLLM # finding obvious bugs
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/scrub/repair.h |    2 +-
- fs/xfs/scrub/inode.c  |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ fs/xfs/scrub/trace.h |   10 +++++-----
+ fs/xfs/scrub/trace.c |   13 +++++++++++++
+ 2 files changed, 18 insertions(+), 5 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
-index 2bb125c4f9bf2b..1af568651e20a1 100644
---- a/fs/xfs/scrub/repair.h
-+++ b/fs/xfs/scrub/repair.h
-@@ -239,7 +239,7 @@ xrep_setup_nothing(
- #define xrep_setup_rtrmapbt		xrep_setup_nothing
- #define xrep_setup_rtrefcountbt		xrep_setup_nothing
- 
--#define xrep_setup_inode(sc, imap)	((void)0)
-+#define xrep_setup_inode(sc, imap)	(0)
- 
- static inline int xrep_setup_symlink(struct xfs_scrub *sc, unsigned int *x)
+diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
+index cb85f75ce10180..6b14b149b6000f 100644
+--- a/fs/xfs/scrub/trace.h
++++ b/fs/xfs/scrub/trace.h
+@@ -577,7 +577,7 @@ TRACE_EVENT(xchk_btree_op_error,
+ 		__entry->level = level;
+ 		__entry->agno = XFS_FSB_TO_AGNO(cur->bc_mp, fsbno);
+ 		__entry->bno = XFS_FSB_TO_AGBNO(cur->bc_mp, fsbno);
+-		__entry->ptr = cur->bc_levels[level].ptr;
++		__entry->ptr = xchk_btree_cur_ptr(cur, level);
+ 		__entry->error = error;
+ 		__entry->ret_ip = ret_ip;
+ 	),
+@@ -618,7 +618,7 @@ TRACE_EVENT(xchk_ifork_btree_op_error,
+ 		__entry->type = sc->sm->sm_type;
+ 		__assign_str(name);
+ 		__entry->level = level;
+-		__entry->ptr = cur->bc_levels[level].ptr;
++		__entry->ptr = xchk_btree_cur_ptr(cur, level);
+ 		__entry->agno = XFS_FSB_TO_AGNO(cur->bc_mp, fsbno);
+ 		__entry->bno = XFS_FSB_TO_AGBNO(cur->bc_mp, fsbno);
+ 		__entry->error = error;
+@@ -660,7 +660,7 @@ TRACE_EVENT(xchk_btree_error,
+ 		__entry->level = level;
+ 		__entry->agno = XFS_FSB_TO_AGNO(cur->bc_mp, fsbno);
+ 		__entry->bno = XFS_FSB_TO_AGBNO(cur->bc_mp, fsbno);
+-		__entry->ptr = cur->bc_levels[level].ptr;
++		__entry->ptr = xchk_btree_cur_ptr(cur, level);
+ 		__entry->ret_ip = ret_ip;
+ 	),
+ 	TP_printk("dev %d:%d type %s %sbt level %d ptr %d agno 0x%x agbno 0x%x ret_ip %pS",
+@@ -700,7 +700,7 @@ TRACE_EVENT(xchk_ifork_btree_error,
+ 		__entry->level = level;
+ 		__entry->agno = XFS_FSB_TO_AGNO(cur->bc_mp, fsbno);
+ 		__entry->bno = XFS_FSB_TO_AGBNO(cur->bc_mp, fsbno);
+-		__entry->ptr = cur->bc_levels[level].ptr;
++		__entry->ptr = xchk_btree_cur_ptr(cur, level);
+ 		__entry->ret_ip = ret_ip;
+ 	),
+ 	TP_printk("dev %d:%d ino 0x%llx fork %s type %s %sbt level %d ptr %d agno 0x%x agbno 0x%x ret_ip %pS",
+@@ -740,7 +740,7 @@ DECLARE_EVENT_CLASS(xchk_sbtree_class,
+ 		__entry->bno = XFS_FSB_TO_AGBNO(cur->bc_mp, fsbno);
+ 		__entry->level = level;
+ 		__entry->nlevels = cur->bc_nlevels;
+-		__entry->ptr = cur->bc_levels[level].ptr;
++		__entry->ptr = xchk_btree_cur_ptr(cur, level);
+ 	),
+ 	TP_printk("dev %d:%d type %s %sbt agno 0x%x agbno 0x%x level %d nlevels %d ptr %d",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+diff --git a/fs/xfs/scrub/trace.c b/fs/xfs/scrub/trace.c
+index e5efc680651fce..92a70e4b19d99a 100644
+--- a/fs/xfs/scrub/trace.c
++++ b/fs/xfs/scrub/trace.c
+@@ -42,6 +42,9 @@ xchk_btree_cur_fsbno(
+ 	struct xfs_btree_cur	*cur,
+ 	int			level)
  {
-diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
-index 46e9bf4a43179e..ac42867acbc4c9 100644
---- a/fs/xfs/scrub/inode.c
-+++ b/fs/xfs/scrub/inode.c
-@@ -212,7 +212,7 @@ xchk_setup_inode(
- 	 * make repairs to the ondisk inode buffer.
- 	 */
- 	if (xchk_could_repair(sc))
--		xrep_setup_inode(sc, &imap);
-+		return xrep_setup_inode(sc, &imap);
- 	return 0;
++	if (level < 0)
++		return NULLFSBLOCK;
++
+ 	if (level < cur->bc_nlevels && cur->bc_levels[level].bp)
+ 		return XFS_DADDR_TO_FSB(cur->bc_mp,
+ 				xfs_buf_daddr(cur->bc_levels[level].bp));
+@@ -53,6 +56,16 @@ xchk_btree_cur_fsbno(
+ 	return NULLFSBLOCK;
+ }
  
- out_cancel:
++static inline int
++xchk_btree_cur_ptr(
++	const struct xfs_btree_cur	*cur,
++	int				level)
++{
++	if (level >= 0 && level < cur->bc_nlevels)
++		return cur->bc_levels[level].ptr;
++	return -1;
++}
++
+ /*
+  * We include this last to have the helpers above available for the trace
+  * event implementations.
 
