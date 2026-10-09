@@ -1,36 +1,36 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50A5F3655EE
-	for <linux-xfs@vger.kernel.org>; Fri,  9 Oct 2026 23:45:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E61E82F549F
+	for <linux-xfs@vger.kernel.org>; Fri,  9 Oct 2026 23:45:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791589544; cv=none; b=pojYfoUf0fzVzjT1gvnfYzPiTxg3LEhjt2y5BlBIGSpAsBJIdVLvCg09oCu2kVvyCqB6+n3YDZFvJdgTtf31aDyS7ysP1bA23mCdmY6LwMMwKwsASpmZvaHfX+V4MNU1BnHkH9k0TJTCY7u0nWZM7DnfwH/nuXQZoFv6q2/KlwE=
+	t=1791589549; cv=none; b=oZTjimm/Z/7MW1QDMDbMdiipMOOK73Tff+jOY9ryES38Wcy7fQehxoJQxG9XxvuSG7jXJVWjvgERDNh4b71XBJBRkunnKccnO6t+AgxquUOb1osCSYuyDtZR1OSDu8TpNg0d4VPwq/pCk1cTV2PwRm1mkzAW5q8srBTemg/aHk0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791589544; c=relaxed/simple;
-	bh=g+xRZrwzM2+T5kqSMpo+GLQHas3Eg5n8d81/QLaUtMs=;
-	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=pXRidWUgA/2xYdwcN3KLO3aGc0zWiFRHBO/4ofVNv3Lt0vPRXsn8+8SYUKja44nRD2nNIW1C0xGnhixk6Xkd0lflrbPufrExi5/aQUvG2VT+WTLmu7el6EZUrSyjZfaeHzg+qps21LQO1u1BoU/chqonhJfeJzcMcct8Fqm+3AI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bQ3d2Pfd; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791589549; c=relaxed/simple;
+	bh=TB5ezH+CeGHmq/vfl1cVFGy7jcJscWOb18Uf7mQzzCk=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=rSojz95D0XorJRrjX1MAvJ/YUTki4LIuUKhr9V2YNmCxnRZapR5Uey1M0Q+nNOziZ6dB3Fudwdcl7fzZsYVvl+K1Q2SiLXc2yjTAIQY8OcVXIZRbyhumNe7GFL874m8VAvpAwsxkjcVC/3r3dc8wPeEqrZYEakKrwMZgr5lJwxM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bKe9Ma6d; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bQ3d2Pfd"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id CE12A1F000FF;
-	Fri,  9 Oct 2026 23:45:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bKe9Ma6d"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 767741F000FF;
+	Fri,  9 Oct 2026 23:45:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791589542;
-	bh=lpxGwLhkGtDneVl5lWK81kLijAo3rTSKcyWJqULQPgE=;
+	s=k20260515; t=1791589548;
+	bh=PUCf4LDslaY6jvmCp8Axv86M+anSN7W+sN0Tk1wWzAQ=;
 	h=Date:Subject:From:To:Cc;
-	b=bQ3d2PfdnIqIYe1yQz61pykxwt3VCGXQip1tAlvzgDxJNyvgBqz/+/4PxDQEYH1q6
-	 a0vl1KyK4RMY7lWb/Fo1bWBrBvHJQ49NdR40R9mDTWOoj3ZcfjivnNJBSkkO3wtlxT
-	 877winxkTcUqVkhzGPXXkPMEd4W5jscxMslkNkxf7x1hWznJfC3LDhpKTLO5z/RncW
-	 hhT3MXBUrh+x5uxdC18YY+D5Liyz078Trd3OSvdfc/As8WZgqys7Hu3aaPS1hD/WnO
-	 GWVnHceTwKxSN4oLDT6aLpef3Km9RwYWQ4P4UjFVnInWCqiMiU8nmepA4/GWI67S8U
-	 UgnueW39BrU5Q==
-Date: Fri, 09 Oct 2026 16:45:42 -0700
-Subject: [PATCHSET 2/3] libfrog: clean up quotactl some more
+	b=bKe9Ma6dgEyxMw2rpGuKPz4CYDK0x5L6NtN19v5yqFKwxhiWiJOusVkQ+v5AZghAj
+	 orJZF0SVZglcmT4ixecHjoARzMmAn6W+5oV9lkdIF0DGUDZJMI8Ls70vUIP23wMe4k
+	 OiwZ8N8EoemIfcxOjoKHEGh0fhQKu99++LTqSh+q2O3h4HmXmC7jHt7rrySqhfJAJx
+	 zjhs/bEIEK7yttfL9jrTd/lVHk0mHpiuW86rEvjqp6WggkWPcqlPD+SuiAsLKaKOMP
+	 i5//yEQTRyaaDwPjIGIQo+TVO/ExcCkutKDDrM4mxHkJWACj0QkZtkk+Q2l10eHOiV
+	 OcTRBcjRxZHxw==
+Date: Fri, 09 Oct 2026 16:45:48 -0700
+Subject: [PATCHSET 3/3] xfsprogs: enable metadir by default
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <179158948034.3720791.6624320009127284341.stgit@frogsfrogsfrogs>
+Message-ID: <179158948269.3720929.14224184767079938461.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,8 +42,10 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-Clean up the internal quotactl calls some more by adding type-checked
-wrappers to prevent future screwups.
+Metadata directory trees were added to the codebase two years ago, and
+we dropped the EXPERIMENTAL tag almost a year ago.  We haven't gotten
+any serious complaints about it in that year, so let's turn it on by
+default.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -54,19 +56,19 @@ Comments and questions are, as always, welcome.
 --D
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=quotactl-cleanups
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=enable-metadir
 ---
 Commits in this patchset:
- * misc: convert as many xfsquotactl callsites to xfrog_quotactl as possible
- * quotactl: deploy typechecked helpers
+ * tools: add a new script to generate fixes tags
+ * mkfs: add config file for the 2026 LTS kernel
+ * mkfs: enable metadata directory trees by default
 ---
- libfrog/quotactl.h |   60 +++++++++++++++++++++++++++++++++++++
- quota/edit.c       |   84 ++++++++++++++++++++++++++--------------------------
- quota/free.c       |    6 ++--
- quota/path.c       |    2 +
- quota/quota.c      |    4 +-
- quota/report.c     |   22 +++++---------
- quota/state.c      |   12 ++++---
- spaceman/info.c    |   15 ++++++---
- 8 files changed, 132 insertions(+), 73 deletions(-)
+ man/man8/mkfs.xfs.8.in |    6 ++++-
+ mkfs/Makefile          |    3 ++
+ mkfs/lts_7.3.conf      |   29 +++++++++++++++++++++++
+ mkfs/xfs_mkfs.c        |    1 +
+ tools/git-fixes        |   61 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 98 insertions(+), 2 deletions(-)
+ create mode 100644 mkfs/lts_7.3.conf
+ create mode 100755 tools/git-fixes
 
