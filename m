@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8256847607C
-	for <linux-xfs@vger.kernel.org>; Fri,  9 Oct 2026 23:53:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FE553C819C
+	for <linux-xfs@vger.kernel.org>; Fri,  9 Oct 2026 23:53:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791589992; cv=none; b=Wiifnz6pO3lmfDAdfFnFDyuxjIFoevTrqnUMGFiOt9xH77+9jSXLOLuLsfd86dZ4sRFTL4DwQoBQYpYUcsq3NQceUNGUx/sq1LxgpVi6j3iotR/baC2QgkgUHuWZ+3+wCncvX9B3/8tP3ruWyXjJR9Wi2zsn3MnCkKEXk4xPGsE=
+	t=1791590008; cv=none; b=OKv+3I+Ih6gjUiRCjNlkYH1CKkSaMACvR3GAVvYSPzQ/9GYy/Z9+Z1PhbOJnfi9AxK4OL6cED0NVFeWIvU7JfQDw4Je0hv5Aigm0QMouBUzdR5IaPgPsdIFewPkCz97z+ihAB25qBXBEkJUH+G3liTrPyiclxJWERyiwFSKxnoQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791589992; c=relaxed/simple;
-	bh=Sa3happOIvVbmDT+E9SBiVBf0SbuyEpmrkqUqYhqqoA=;
+	s=arc-20240116; t=1791590008; c=relaxed/simple;
+	bh=bvrlGLzj7ykiWZqDO4F49CeMBiz4ksPzUzK6NhZTnG8=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=VuCKy8cY6JBL5k7G3vPukpjbaMpO29XJxBECY4OXfAIfbAy9rRj3TcYZOeu3Wu6L86eMwuSEsYIDpAZXjOOXvMzJ+u1zBenYS/6/rupJ6+vOAaAALFsDL6geVPDOrtRgIZkFx5Uqnr/jTGgtA1qus4wwL6PG8xWrAlYkig39MNM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ne28aDVa; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=IeYm3dJ1ZFlJhREY2jM9v65CntRUH5eSH95+kOPjdhl9fYCZkG0rrZqjgUi4HQS4HibbFqhACq+d+4DULlSozUmuj+QlW5hzd3XpEf2aSWKx/HBGqd6+PLq00iKq5TwF4LnrMP6lD/fAlyEsXp7O7A8tfCTFcgqUWdKwczXyoTg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YmWiw9J5; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ne28aDVa"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 598CD1F000FF;
-	Fri,  9 Oct 2026 23:53:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YmWiw9J5"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 095D31F000FF;
+	Fri,  9 Oct 2026 23:53:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791589991;
-	bh=hzfWk8qLHTbo8eIU/vAnFoLFXGgpsWsXQUzFW+B2rKs=;
+	s=k20260515; t=1791590007;
+	bh=PyY+nHH4hm5+FNc0ctBgdgE9x20Fgdob8xI1aR4yDTA=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=ne28aDVa0w3UjVfXaiabmG+fmCQK0nYbq7NVcTruD2CWG9UL5DNJyRjTeeYT2j6vj
-	 H5FCbupXnjtieHDzUsjzfCJkWx4syQZUyiNsOXzAhW41kcHvzn0Q0M2L5rxsc9gXcg
-	 fvfjuhNcIAqo+Ma+KLQEDyWPDnsC2Hh/24Gdo/iVLRInEW96bxfRikQ1nHSDpQHgsr
-	 VZ6ytsv0rOavMMiDZoqCbXddgShNiTJhsT5R18W4+VjtKE3VZB5Vf10jMpZxq2RIC1
-	 6aqKLuvj/Db7Y1ZkZNPj6II29AfI7uNiTDLyGy3hQRDZuKndcY1gvlgTcjzi6aXW2f
-	 +EoofUJI+mpPQ==
-Date: Fri, 09 Oct 2026 16:53:10 -0700
-Subject: [PATCH 1/3] tools: add a new script to generate fixes tags
+	b=YmWiw9J5k1Eaaxj65Oh0tU7vri68sYUez4nRREQuX6rx23hrArs+bfX9GfT7ZLWaz
+	 ihbV2tK8KRhYSnBwSaqD8oywJZvoG/EujqGA7CKynKTHgXfaZD1s60TQ4UCxSG82Az
+	 +Ftoiu55a+6pr84BFYBS5x6ECd1yxYkD4y1+jay5Ci2z6Pm+KU0DcVCCiOyRlLl4xc
+	 DyQIHVZVL9EHX5vKlp1EVRxyOBrvvUTGmUse056uVwnNGue9G4wVmjLx3vwYOHBn9L
+	 hk7bu+Zu3RZI0oKP2lDO+Cy5wKWqAWk0yDNc6MXEF3qda/MJgcp3j9ymb66cqbuT6/
+	 5U9YNY+Xj2ADg==
+Date: Fri, 09 Oct 2026 16:53:26 -0700
+Subject: [PATCH 2/3] mkfs: add config file for the 2026 LTS kernel
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <179158948300.3720929.2141793283079787803.stgit@frogsfrogsfrogs>
+Message-ID: <179158948318.3720929.17786050362980005785.stgit@frogsfrogsfrogs>
 In-Reply-To: <179158948269.3720929.14224184767079938461.stgit@frogsfrogsfrogs>
 References: <179158948269.3720929.14224184767079938461.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,81 +45,63 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add a program that can generate Fixes: tags for a new bugfix commit to
-cite an older buggy commit.
+Add a config file for 7.3 since it'll be the LTS.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- tools/git-fixes |   61 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 61 insertions(+)
- create mode 100755 tools/git-fixes
+ mkfs/Makefile     |    3 ++-
+ mkfs/lts_7.3.conf |   29 +++++++++++++++++++++++++++++
+ 2 files changed, 31 insertions(+), 1 deletion(-)
+ create mode 100644 mkfs/lts_7.3.conf
 
 
-diff --git a/tools/git-fixes b/tools/git-fixes
-new file mode 100755
-index 00000000000000..5729de462e7183
+diff --git a/mkfs/Makefile b/mkfs/Makefile
+index 16793bdb1e03e3..b2d99e620c78c4 100644
+--- a/mkfs/Makefile
++++ b/mkfs/Makefile
+@@ -19,7 +19,8 @@ CFGFILES = \
+ 	lts_6.1.conf \
+ 	lts_6.6.conf \
+ 	lts_6.12.conf \
+-	lts_6.18.conf
++	lts_6.18.conf \
++	lts_7.3.conf
+ 
+ LLDLIBS += $(LIBXFS) $(LIBXCMD) $(LIBFROG) $(LIBRT) $(LIBBLKID) \
+ 	$(LIBUUID) $(LIBINIH) $(LIBURCU) $(LIBPTHREAD)
+diff --git a/mkfs/lts_7.3.conf b/mkfs/lts_7.3.conf
+new file mode 100644
+index 00000000000000..16d1c40e8f8a88
 --- /dev/null
-+++ b/tools/git-fixes
-@@ -0,0 +1,61 @@
-+#!/bin/bash
++++ b/mkfs/lts_7.3.conf
+@@ -0,0 +1,29 @@
++# V5 features that were the mkfs defaults when the upstream Linux 7.3 LTS
++# kernel was released at the end of 2026.
++[block]
 +
-+# SPDX-License-Identifier: GPL-2.0-or-later
++[metadata]
++crc=1
++finobt=1
++rmapbt=1
++reflink=1
++inobtcount=1
++bigtime=1
++metadir=0
++autofsck=repair
 +
-+# Copyright (c) 2026 Oracle.  All Rights Reserved.
-+# Author: Darrick J. Wong <djwong@kernel.org>
++[data]
 +
-+# Cite a list of git hashes in Fixes: tag format.
++[inode]
++sparse=1
++nrext64=1
++exchange=1
 +
-+if [ -z "$1" ] || [ "$1" = "--help" ]; then
-+	echo "Usage: $0 commit [commits...]"
-+	exit 1
-+fi
++[log]
 +
-+stable_email="$(git config user.stableSubmissionTarget)"
++[naming]
++parent=1
++ftype=1
++version=2
 +
-+# Find the most recent version tag for this commit.  Assumes that version tags
-+# start with v and a digit.
-+tag_for_commit() {
-+	local arg="$1"
-+	local tag
-+	local release_tag
-+	local rc_suffix
-+	local version_prefix
-+
-+	# Find the first tag created after this commit.
-+	version_prefix="$(git config versionsort.prefix)"
-+	test -z "${version_prefix}" && version_prefix="v"
-+	tag="$(git tag -l --contains "${arg}" --sort version:refname | \
-+		grep "^${version_prefix}[0-9]" | \
-+		head -n 1)"
-+	test -z "${tag}" && return 1
-+
-+	# Strip off any version suffix (presumably "-rcX") to construct what
-+	# ought to be the tag name for the final release.
-+	rc_suffix="$(git config versionsort.suffix)"
-+	# shellcheck disable=SC2001
-+	release_tag="$(echo "${tag}" | sed -e "s/${rc_suffix}.*//g")"
-+
-+	# If the release tag actually exists, print that instead of the first
-+	# tag.  Otherwise, print that first tag.  We'd rather print "v5.4" than
-+	# the more accurate "v5.4-rc1" because stable backports target
-+	# releases, not -rcX.
-+	if [ -n "$(git tag -l "${release_tag}" 2>/dev/null)" ]; then
-+		echo "${release_tag}"
-+	else
-+		echo "${tag}"
-+	fi
-+	return 0
-+}
-+
-+gitcc=(git log --format='Cc: <%aE>')
-+gitfixes=(git log --format='Fixes: %h ("%s")')
-+for arg in "$@"; do
-+	"${gitcc[@]}" "${arg}^1..${arg}"
-+	if [ -n "${stable_email}" ]; then
-+		fixed_in="$(tag_for_commit "${arg}")" && \
-+			echo "Cc: <${stable_email}> # ${fixed_in}"
-+	fi
-+	"${gitfixes[@]}" "${arg}^1..${arg}"
-+done
++[realtime]
 
