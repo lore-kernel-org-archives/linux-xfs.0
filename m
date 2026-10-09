@@ -1,39 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69BF72F549F
-	for <linux-xfs@vger.kernel.org>; Fri,  9 Oct 2026 23:48:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6983B369D71
+	for <linux-xfs@vger.kernel.org>; Fri,  9 Oct 2026 23:48:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791589711; cv=none; b=HjaFfz/L3BW1xDYqW6U0facljWIgAtVx8zMGyVZD8/aMR+CmMpV/xqRuAkZTCbnOsh7PJoaFlMDw8Lm+X5BPlOhIEJrCbsTv/fLXElKXA+t1wU5eqTgH4w0YGcFiRKao+iulCYznyTN/YlLbBHP7wYK/bXY6+LtAAASvmpB/oUI=
+	t=1791589727; cv=none; b=bx+MjW6LO/HsJSpjYWkXMg8rH4LOwXF9AH/qX2JjAdAZNFT2TBAjs+5pncJQeTcJzL2U2xSlsS5DA3o1TuOyDgwmv8wmQs9JnJZwlO3DIIF80com8Rc8sz+wwOXtBzPFO56xvQ+q2UDoYX568ECi9fEvcviqiXC3iYE46ZhFofE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791589711; c=relaxed/simple;
-	bh=Tj5c+8tZNb1Ot41kz4U88mhOlZED7QMRvWuLerwe2xE=;
+	s=arc-20240116; t=1791589727; c=relaxed/simple;
+	bh=YqDPPNmnRgdeYP7gXuCwYyR5JwTOwXOhXbJzKWXIfb0=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Jvoy5kfdRRCOznCX35i83NmWdBYHX0K2fwgHA9FcVZDWKY7NhM+CpOuF53F1b5X3cEGTC71ueYt/Hxl65a8HmXR038S+K416Lf8Okj35hQYBwx8maxU+BZe2WMTK4heup5l9AudiUDbU9HurxIYaUNsrs87cHWYog/byzw3pQ8A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FSVlfX+k; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=R8OFjtbV47BeMl4KqKdfDVpOseO2Jy5WTAYePDspyozqffw9QntrXxGDmgClY4yaZEPTReN8IRWwqP+/p8ETQjkrFpk6sTzG0MwVQlnOb1z0YwVqLvUt8rsK8G0pbGIzkuyntArikQHHv/O5cjKlN//+bXow0PKJNJPNxRfHChI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TRsZI8Qs; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FSVlfX+k"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 40B3E1F000FF;
-	Fri,  9 Oct 2026 23:48:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TRsZI8Qs"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id E3C0D1F000FF;
+	Fri,  9 Oct 2026 23:48:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791589710;
-	bh=RJrPAKxPcQmZ7WTINyAb1enZvw8+EAehEj6QFaJB+44=;
+	s=k20260515; t=1791589726;
+	bh=SP9VZVCc6oxZox56dWFJY8slUbUOJtsWY/w18uDWij8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=FSVlfX+kRhFxAHvP3Iq8nBGdoHgMW86rdYwuFDeR92rogGovD8IKZMMphD9P1zEpt
-	 jdzN/CXW0YR9QlKWz7/6ENQvCs53Zo8OHP8bjoWo37eEDLHXFNAexvDunlWQwNw27G
-	 efeB42NNSAzC/UsUaMMUoLPwpjqkELbxUtOGJFNXJMyljZrPbBhDID9kS1x7Gdt9mN
-	 p3yM9Zsrvfgpt7aUZF5CeBQ/h4XsFsH2O29tV5IIYR6Ml5qvSealY4c4bYhT0mumDd
-	 bUJzPB39MLVesQMuGkrDmIQP43qiCpMYZZTOOsxb/OcLQgDTYNKS/tth68czgDD0ad
-	 ogm2phJojDPyQ==
-Date: Fri, 09 Oct 2026 16:48:29 -0700
-Subject: [PATCH 11/26] xfs: fix exchange-range reflink flag clearing issue
- with INO1_WRITTEN
+	b=TRsZI8Qs/FzvS7mrZpz7k5scLBvE+SgWmRgIjGHsVQTrM8kwXKAGeU2HU69PfUlxy
+	 ildIqMYpvOdnbXHEDKtaEzkYsILbX692yR1qLA7mYe3zUUkQsH9NW2+eNiiZe+n2yn
+	 YRyHqjFoUGAluMtMY62DlcDJGd8bkCYnguHZ5WEqYcuyxtgo4O8RrJSLP+mNN7Z8yd
+	 fUuaEowH2KJnKworL3oIclmeUFBUtq1ltN60oSkBxbRxHrmShP7FPLa4SOfkNlPIOm
+	 Ob6HAMYu6+7ftC+S7uqlr5uYJQEDGCU9VV1go4biOIBA9JQy7vtdRLnI5LqTVxRQRH
+	 MRxNDbIln4HgQ==
+Date: Fri, 09 Oct 2026 16:48:45 -0700
+Subject: [PATCH 12/26] xfs: initialise error in xfs_defer_finish_one()
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
-Cc: cem@kernel.org, hch@lst.de, jiapenglin@tencent.com,
- linux-xfs@vger.kernel.org
-Message-ID: <179158947567.3719791.4521272773575903605.stgit@frogsfrogsfrogs>
+Cc: cem@kernel.org, floss@jetm.me, linux-xfs@vger.kernel.org
+Message-ID: <179158947586.3719791.10727146725354625862.stgit@frogsfrogsfrogs>
 In-Reply-To: <179158947238.3719791.8405495844046466765.stgit@frogsfrogsfrogs>
 References: <179158947238.3719791.8405495844046466765.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,61 +43,43 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Lin Jiapeng <ljp1205831794@gmail.com>
+From: Javier Tia <javier@peridio.com>
 
-Source kernel commit: a23eca88448e52eb1a81549862df7adce794fafb
+Source kernel commit: 6176d21d7bd609632c5b7e87a3adb9be29ec1e72
 
-When exchanging two full-file ranges, xmi_can_exchange_reflink_flags()
-can move the reflink inode flag from the file that currently has it to
-the other file, as long as exactly one side is marked.  This assumes
-that the file contents, and therefore all shared extents, are exchanged.
+xfs_defer_finish_one() declares error without an initialiser and only
+assigns it inside the loop over dfp->dfp_work.  When that list is empty
+the loop body never runs, control falls through to the "Done with the
+dfp, free it" path, and the function returns an indeterminate value.
 
-That assumption is not true when XFS_EXCHMAPS_INO1_WRITTEN is set.
-xfs_exchmaps_can_skip_mapping() can skip hole and unwritten mappings
-from file1, so an exchange can complete without moving every mapping
-that the earlier flag-swap decision accounted for.  In that case the
-post-operation cleanup can clear the reflink flag from an inode that
-still owns shared written extents.  Later writes then take the
-non-reflink write path and may update blocks that should still have
-been protected by CoW, which shows up as data corruption between
-reflink-related files.
+An item-less pending item reaches this through xfs_defer_add_barrier(),
+which xfs_reap_ag_blocks() uses on any CONFIG_XFS_ONLINE_REPAIR kernel.
+xfs_defer_finish_noroll() treats any non-EAGAIN return as fatal, so a
+non-zero stack value turns a successful barrier into a
+SHUTDOWN_CORRUPT_INCORE in the middle of a repair.  Zero is the correct
+result: reaching the free path means the item loop drained without a
+non-zero error.
 
-Fix this by disabling the reflink flag exchange whenever
-XFS_EXCHMAPS_INO1_WRITTEN is requested.  The contents exchange can still
-proceed; the conservative outcome is that both inodes keep the reflink
-flag.  The regular reflink flag cleanup path can drop the extra flag
-later once the inode no longer has shared extents.
-
-Reported-by: Lin Jiapeng (TencentOS Red Team) <jiapenglin@tencent.com>
-Fixes: 966ceafc7a43 ("xfs: create deferred log items for file mapping exchanges")
+Fixes: 3f3cec031099 ("xfs: force small EFIs for reaping btree extents")
+Signed-off-by: Javier Tia <floss@jetm.me>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Lin Jiapeng <jiapenglin@tencent.com>
 Signed-off-by: Carlos Maiolino <cem@kernel.org>
 ---
- libxfs/xfs_exchmaps.c |   10 ++++++++++
- 1 file changed, 10 insertions(+)
+ libxfs/xfs_defer.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 
-diff --git a/libxfs/xfs_exchmaps.c b/libxfs/xfs_exchmaps.c
-index 7d6f949aa1f3b3..21b64aa953a2f5 100644
---- a/libxfs/xfs_exchmaps.c
-+++ b/libxfs/xfs_exchmaps.c
-@@ -958,6 +958,16 @@ xmi_can_exchange_reflink_flags(
- {
- 	struct xfs_mount		*mp = req->ip1->i_mount;
+diff --git a/libxfs/xfs_defer.c b/libxfs/xfs_defer.c
+index eae2397fbff86a..d6e3e05f7a4960 100644
+--- a/libxfs/xfs_defer.c
++++ b/libxfs/xfs_defer.c
+@@ -576,7 +576,7 @@ xfs_defer_finish_one(
+ 	const struct xfs_defer_op_type	*ops = dfp->dfp_ops;
+ 	struct xfs_btree_cur		*state = NULL;
+ 	struct list_head		*li, *n;
+-	int				error;
++	int				error = 0;
  
-+	/*
-+	 * The INO1_WRITTEN optimization can skip exchanging hole and
-+	 * unwritten mappings, which means we cannot guarantee that all
-+	 * shared extents actually moved to the other file.  Clearing the
-+	 * reflink flag of an inode that still holds shared extents breaks
-+	 * the CoW write path, so refuse to exchange the flags in that case.
-+	 */
-+	if (req->flags & XFS_EXCHMAPS_INO1_WRITTEN)
-+		return false;
-+
- 	/*
- 	 * The INO1_WRITTEN optimization can skip exchanging hole and
- 	 * unwritten mappings, which means we cannot guarantee that all
+ 	trace_xfs_defer_pending_finish(tp->t_mountp, dfp);
+ 
 
