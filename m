@@ -1,37 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDCD93655EE
-	for <linux-xfs@vger.kernel.org>; Fri,  9 Oct 2026 23:48:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69BF72F549F
+	for <linux-xfs@vger.kernel.org>; Fri,  9 Oct 2026 23:48:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791589695; cv=none; b=pfxqr/7zuBBNM4cya47XgTt1ua1C3VJxcF1KOQxSwPQuzHFxN1SvhTjnbLUPRVaNnawriR6aQJju0mRH67eA174TykcAQYE/dMx7HEVKTjcpd5kLs0uGoA7UV9MYdVnkCoNpQmiuYZ4hqoAex1VjRzsQ31gm103n4KEHyPgmfsw=
+	t=1791589711; cv=none; b=HjaFfz/L3BW1xDYqW6U0facljWIgAtVx8zMGyVZD8/aMR+CmMpV/xqRuAkZTCbnOsh7PJoaFlMDw8Lm+X5BPlOhIEJrCbsTv/fLXElKXA+t1wU5eqTgH4w0YGcFiRKao+iulCYznyTN/YlLbBHP7wYK/bXY6+LtAAASvmpB/oUI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791589695; c=relaxed/simple;
-	bh=E1l2wJPy9VwhchTBYrc+JJYoactPYjcWkeU6K2Sd26M=;
+	s=arc-20240116; t=1791589711; c=relaxed/simple;
+	bh=Tj5c+8tZNb1Ot41kz4U88mhOlZED7QMRvWuLerwe2xE=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=CapeSxCaSsI+bApOMrHHenI7vgYv82LrzxmyJ+YFgHzqAre4xFZUtGtfHskzaoeKpDGYFbRX+fGZD9Q8e2OBT/W4qrE9K/tHbKp3BS1c9zfJCPvaDwt4XK1xcdq/oNNwEX7bVy/M4jdGQo7adZYZ3GApRYBP2l/2y2Ru193wrXU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BDy21lSu; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=Jvoy5kfdRRCOznCX35i83NmWdBYHX0K2fwgHA9FcVZDWKY7NhM+CpOuF53F1b5X3cEGTC71ueYt/Hxl65a8HmXR038S+K416Lf8Okj35hQYBwx8maxU+BZe2WMTK4heup5l9AudiUDbU9HurxIYaUNsrs87cHWYog/byzw3pQ8A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FSVlfX+k; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BDy21lSu"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id A4F231F000FF;
-	Fri,  9 Oct 2026 23:48:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FSVlfX+k"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 40B3E1F000FF;
+	Fri,  9 Oct 2026 23:48:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791589694;
-	bh=mvBVEfMNm/uqrPQ9QVXi4NG0Wt5gB1K8hnQrg/neX2M=;
+	s=k20260515; t=1791589710;
+	bh=RJrPAKxPcQmZ7WTINyAb1enZvw8+EAehEj6QFaJB+44=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=BDy21lSuXytNXam5SwRZj8WdOHNm0UqX1tpssKHhWhePhS2P80IN58MVlJttrOmHb
-	 XHfcXhDSnUWdLKFQ02XhcrpbvSNny31dJS64iiaziYgvyBzqxxHjxMYxKwSj6qyujB
-	 qaI1Z7j22Lvj+1aBUCF613MmGZFp2+crxJmttTJk3V3+R5hqERzCp8lm5Jerybovk6
-	 zXrroYWa8H5YgPVX9REQlRSRZABT/w5lZP+kV+ueMYFNqOzivWIDNnyR97MITwK5++
-	 R6bLfex+ptJ/OKGoeZBuNxqXkk9dGj6i0opaD0c68RYOhDaNEswv4bF9rCfWV5JdI9
-	 RX0R3q+WLFk2w==
-Date: Fri, 09 Oct 2026 16:48:14 -0700
-Subject: [PATCH 10/26] treewide: refresh kmalloc_obj() conversions
+	b=FSVlfX+kRhFxAHvP3Iq8nBGdoHgMW86rdYwuFDeR92rogGovD8IKZMMphD9P1zEpt
+	 jdzN/CXW0YR9QlKWz7/6ENQvCs53Zo8OHP8bjoWo37eEDLHXFNAexvDunlWQwNw27G
+	 efeB42NNSAzC/UsUaMMUoLPwpjqkELbxUtOGJFNXJMyljZrPbBhDID9kS1x7Gdt9mN
+	 p3yM9Zsrvfgpt7aUZF5CeBQ/h4XsFsH2O29tV5IIYR6Ml5qvSealY4c4bYhT0mumDd
+	 bUJzPB39MLVesQMuGkrDmIQP43qiCpMYZZTOOsxb/OcLQgDTYNKS/tth68czgDD0ad
+	 ogm2phJojDPyQ==
+Date: Fri, 09 Oct 2026 16:48:29 -0700
+Subject: [PATCH 11/26] xfs: fix exchange-range reflink flag clearing issue
+ with INO1_WRITTEN
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
-Cc: kees+treewide@kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <179158947549.3719791.14375885689814422600.stgit@frogsfrogsfrogs>
+Cc: cem@kernel.org, hch@lst.de, jiapenglin@tencent.com,
+ linux-xfs@vger.kernel.org
+Message-ID: <179158947567.3719791.4521272773575903605.stgit@frogsfrogsfrogs>
 In-Reply-To: <179158947238.3719791.8405495844046466765.stgit@frogsfrogsfrogs>
 References: <179158947238.3719791.8405495844046466765.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -43,60 +45,61 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Kees Cook <kees+treewide@kernel.org>
+From: Lin Jiapeng <ljp1205831794@gmail.com>
 
-Source kernel commit: 3a2c4d55e32ad65efebdb6de44eef3bfa08bb49d
+Source kernel commit: a23eca88448e52eb1a81549862df7adce794fafb
 
-This is another run of the Coccinelle script for converting kmalloc()
-family of allocations to kmalloc_obj() via the existing rules in
-scripts/coccinelle/api/kmalloc_objs.cocci
+When exchanging two full-file ranges, xmi_can_exchange_reflink_flags()
+can move the reflink inode flag from the file that currently has it to
+the other file, as long as exactly one side is marked.  This assumes
+that the file contents, and therefore all shared extents, are exchanged.
 
-This catches both the set of kmalloc() uses added since the first
-kmalloc_obj() conversions in v7.0 and adds a large group missed in the
-first pass due to Coccinelle not interacting well with the cleanup.h
-scoped_...() family of macros[1]. I worked around this with spatch's
-"--macro-file" argument to a file with all the scoped_...() macros mapped
-to Coccinelle's YACFE_ITERATOR[2] as that was the closest viable control
-flow indicator I could find.
+That assumption is not true when XFS_EXCHMAPS_INO1_WRITTEN is set.
+xfs_exchmaps_can_skip_mapping() can skip hole and unwritten mappings
+from file1, so an exchange can complete without moving every mapping
+that the earlier flag-swap decision accounted for.  In that case the
+post-operation cleanup can clear the reflink flag from an inode that
+still owns shared written extents.  Later writes then take the
+non-reflink write path and may update blocks that should still have
+been protected by CoW, which shows up as data corruption between
+reflink-related files.
 
-Build tested allmodconfig on x86, arm64, arm, loongarch, mips, powerpc,
-riscv, and s390 with no new warnings.
+Fix this by disabling the reflink flag exchange whenever
+XFS_EXCHMAPS_INO1_WRITTEN is requested.  The contents exchange can still
+proceed; the conservative outcome is that both inodes keep the reflink
+flag.  The regular reflink flag cleanup path can drop the extra flag
+later once the inode no longer has shared extents.
 
-Link: https://lore.kernel.org/lkml/202609021314.8A9C0B8@keescook/ [1]
-Link: https://github.com/coccinelle/coccinelle/blob/master/standard.h [2]
-Signed-off-by: Kees Cook <kees+treewide@kernel.org>
+Reported-by: Lin Jiapeng (TencentOS Red Team) <jiapenglin@tencent.com>
+Fixes: 966ceafc7a43 ("xfs: create deferred log items for file mapping exchanges")
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Lin Jiapeng <jiapenglin@tencent.com>
+Signed-off-by: Carlos Maiolino <cem@kernel.org>
 ---
- include/kmem.h        |    2 ++
- libxfs/xfs_da_btree.c |    4 ++--
- 2 files changed, 4 insertions(+), 2 deletions(-)
+ libxfs/xfs_exchmaps.c |   10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
 
-diff --git a/include/kmem.h b/include/kmem.h
-index 4363601ff6820f..c6c7b7ed37d1a2 100644
---- a/include/kmem.h
-+++ b/include/kmem.h
-@@ -108,6 +108,8 @@ static inline size_t __must_check size_mul(size_t factor1, size_t factor2)
+diff --git a/libxfs/xfs_exchmaps.c b/libxfs/xfs_exchmaps.c
+index 7d6f949aa1f3b3..21b64aa953a2f5 100644
+--- a/libxfs/xfs_exchmaps.c
++++ b/libxfs/xfs_exchmaps.c
+@@ -958,6 +958,16 @@ xmi_can_exchange_reflink_flags(
+ {
+ 	struct xfs_mount		*mp = req->ip1->i_mount;
  
- #define kzalloc_obj(P, ...) \
- 	__alloc_objs(kzalloc, default_gfp(__VA_ARGS__), typeof(P), 1)
-+#define kzalloc_objs(P, COUNT, ...) \
-+	__alloc_objs(kzalloc, default_gfp(__VA_ARGS__), typeof(P), COUNT)
- #define kmalloc_obj(VAR_OR_TYPE, ...) \
- 	__alloc_objs(kmalloc, default_gfp(__VA_ARGS__), typeof(VAR_OR_TYPE), 1)
- 
-diff --git a/libxfs/xfs_da_btree.c b/libxfs/xfs_da_btree.c
-index b1cdb0ebece92c..50eb44f486ed8a 100644
---- a/libxfs/xfs_da_btree.c
-+++ b/libxfs/xfs_da_btree.c
-@@ -2744,8 +2744,8 @@ xfs_dabuf_map(
- 	 * larger one that needs to be free by the caller.
- 	 */
- 	if (nirecs > 1) {
--		map = kcalloc(nirecs, sizeof(struct xfs_buf_map),
--			      GFP_KERNEL | __GFP_NOLOCKDEP | __GFP_NOFAIL);
-+		map = kzalloc_objs(struct xfs_buf_map, nirecs,
-+				   GFP_KERNEL | __GFP_NOLOCKDEP | __GFP_NOFAIL);
- 		*mapp = map;
- 	}
- 
++	/*
++	 * The INO1_WRITTEN optimization can skip exchanging hole and
++	 * unwritten mappings, which means we cannot guarantee that all
++	 * shared extents actually moved to the other file.  Clearing the
++	 * reflink flag of an inode that still holds shared extents breaks
++	 * the CoW write path, so refuse to exchange the flags in that case.
++	 */
++	if (req->flags & XFS_EXCHMAPS_INO1_WRITTEN)
++		return false;
++
+ 	/*
+ 	 * The INO1_WRITTEN optimization can skip exchanging hole and
+ 	 * unwritten mappings, which means we cannot guarantee that all
 
