@@ -1,162 +1,101 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CF6A3B47F6
-	for <linux-xfs@vger.kernel.org>; Thu,  8 Oct 2026 18:12:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 853DE4334BC;
+	Fri,  9 Oct 2026 06:15:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791483175; cv=none; b=cS+wtHqFJO00KpAEnSvHK8IHLNxYNEao5KCiSNQbkBsfKX901I8F9JqQPVBzzVnYTgaVSWCe/WF0a0OOd8tEKDD5o1bzRbsT4kiWoVJNX7H34/wsQzkwAf+nx1zjs45pi40nTnbIwkAV7MmlVxYtZ6+YseGHUIYHaU7iRGiULRc=
+	t=1791526501; cv=none; b=kSlOXtznCMKP0+oWrsYS1sq5NtxWW9PwTMlLDqKg6673iT9SBG8mibWmBGRHdlwmRrM5FlDgWD3x84kNvET0zkf5uzypKa8XiF6ZoPXoVMfWxTsnp125gIwjehiN+ioehyLquaE5FnwY9BalIqkTVaU+IKdjp0kkl2sA6/rU19M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791483175; c=relaxed/simple;
-	bh=pwPyjjmh7XCRnWUj8uuzrMbjGoxSeWmRiRpjsT6/NAU=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=P2jVCysfEnEHaMaMVfn05BtZUZUoCgiqwtIUSkpPbpH/gyYSYA3JlseY+cpZwI5tKfwOBnyOkbJUmwM93pk4dVHT8ISjMlOXEisl1ggq1B8vm736xCDOuqcV33bjjHudpa4kPglLWyALYBJLT4zu1PhFndj41rsL6n+wquTXZ8w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jtrLWIH5; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791526501; c=relaxed/simple;
+	bh=NHqkr47ZkZFB+ISVSLnwJZsTAUMqVXXlawndXDTFamI=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=XRCpECIGkkyDCTEdm/U1CpXbgfUGfT6m+B9baheRjIbrF3pzK1CUt8G6zuWei+LDTBDEEzkCLydx0ZpBgdYo3BZvl99gLeVTOTmwvDKF1V7HRJsOFkQQ0jKrcm1r3HRXogM02/75ltb+74krrdCKxRAepMtY6LrbiOZbEkqu/EU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i1I2gCZG; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jtrLWIH5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 04B0E1F000FF
-	for <linux-xfs@vger.kernel.org>; Thu,  8 Oct 2026 18:12:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i1I2gCZG"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 1001E1F000FF;
+	Fri,  9 Oct 2026 06:14:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791483173;
-	bh=pskmcGkPrmtlnLR2eG0MuaUywT+QxVUT5e0OXfYP3Fw=;
-	h=Date:From:To:Subject;
-	b=jtrLWIH5q6d+xBvDFQF6LflHhwmP7AWxRDY/Z3dvBZ2fSD8xvCiwxJ/Mr47KOcxvF
-	 EigX5OirskMGkFWyIpYd8JgRjwcYA3tg3b0GCeAwoVD/iqDYfkL1V5UHjq7IOMXUs/
-	 ZHwJ5xNs3qeO6IYqw7K0tr6IMwd2EM41UmMupy5YMRyxJtGupBLCi7Fbnp+jZsGe5a
-	 f5BNXL8B/WP+saUAmwjWrmwUK8W/G1C4FOqMvrAVtvRk7V+zJB0WjpIntYCKkDuC9q
-	 eERH/KMSuPXdNtDp19PhzX6LG+oJVFthyi6P/qgzWV0qxbw5GTyB2ha84XPSLnKAxg
-	 3Mh8e+zybfgkg==
-Date: Thu, 8 Oct 2026 20:12:49 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfs-linux: for-next updated to 0be6da616ab5
-Message-ID: <asfdBFm6IxCd4_cE@cronus.toxiclabs.cc>
+	s=k20260515; t=1791526500;
+	bh=CJBbIT90J7czdFuCWTD/YOZU5dDcQZ2W1ylAmd4ZyPE=;
+	h=Date:Subject:From:To:Cc;
+	b=i1I2gCZGxdjUS7rhf6Ib5bLDZScWSeZBLE0xYsus9MXyHZK6qpEKmq3Za7R/aHSOC
+	 X6k8/Ga23CSxP9hR3qWyDFOFrchzoKjOxIsHBNTuicvC0XQyEMp1I0us/pXjK5wJfM
+	 /SEzvCOnwF5qVqPlQHvFmHZWdwF7Q450tB74hDAhzYqqAGxN9BjN0Z+xaQWkB3Yo2F
+	 DpParrg+S8TJyTqD8tJr0hRjG6IGeCezD7kkwqihR91Q54euXcmrxs6oncgbmo7fX9
+	 hIJysNCNofAEYj1/W3URgAdRI9SDMYt2wNzRLC6WF3oC20gjU9e+qMZ4DyoaippXA5
+	 sRXpTByazeX8g==
+Date: Thu, 08 Oct 2026 23:14:59 -0700
+Subject: [PATCHSET v2] xfs: LLM-inspired bug fixes, part 21
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: cem@kernel.org, djwong@kernel.org
+Cc: stable@vger.kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <179151614535.3163896.2744921556354655977.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 
+Hi all,
 
-Hi folks,
+Here's a twenty-first batch of xfs fixes resulting from a LLaMma.  Mwa
+mwa mwa...
 
-The for-next branch of the xfs-linux repository at:
+v2: fix various problems noted by reviewers and other lollms and
+    refactor some attr scrub functions
 
-	gitolite.kernel.org:/pub/scm/fs/xfs/xfs-linux.git
+If you're going to start using this code, I strongly recommend pulling
+from my git trees, which are linked below.
 
-has just been updated.
+With a bit of luck, this should all go splendidly.
+Comments and questions are, as always, welcome.
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
+--D
 
-The new head of the for-next branch is commit:
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=llm-fixes-21
+---
+Commits in this patchset:
+ * xfs: check for termination during rmap btree walk
+ * xfs: don't subtract excess usage twice when computing agf_btreeblks
+ * xfs: abort directory tree repair whenever dl->aborted is set
+ * xfs: reattach dquots after changing inode ids
+ * xfs: never reset the default quota timer
+ * xfs: fix correction of unwritten extents in quota file data fork
+ * xfs: always report inode repair setup failures
+ * xfs: range-check bc_levels array access in scrub tracepoints
+ * xfs: reject absurdly large xattr value lengths in xchk_xattr_actor
+ * xfs: break out xattr entry checks into separate functions
+ * xfs: check for buffer overruns when examining local/remote xattr entries
+ * xfs: clarify various parts of the bitmap API
+ * xfs: complain loudly when dirtree checker finds broken links
+---
+ fs/xfs/scrub/newbt.h          |    1 
+ fs/xfs/scrub/repair.h         |    2 -
+ fs/xfs/scrub/trace.h          |   10 ++-
+ fs/xfs/scrub/alloc_repair.c   |   11 ++-
+ fs/xfs/scrub/attr.c           |  108 ++++++++++++++++++++++++++-------
+ fs/xfs/scrub/attr_repair.c    |   14 ++++
+ fs/xfs/scrub/bitmap.c         |   20 ++++++
+ fs/xfs/scrub/dirtree.c        |    4 +
+ fs/xfs/scrub/dirtree_repair.c |    9 +++
+ fs/xfs/scrub/inode.c          |    2 -
+ fs/xfs/scrub/inode_repair.c   |  136 +++++++++++++++++++++++++++++++++++++++--
+ fs/xfs/scrub/newbt.c          |   13 ----
+ fs/xfs/scrub/parent_repair.c  |    4 +
+ fs/xfs/scrub/quota_repair.c   |   28 ++++++++
+ fs/xfs/scrub/trace.c          |   13 ++++
+ 15 files changed, 313 insertions(+), 62 deletions(-)
 
-0be6da616ab5 xfs: fix exchange-range-to-eof file size exchange
+Unreviewed patches:
 
-26 new commits:
-
-Aldo Ariel Panzardo (4):
-      [9232301894a0] xfs: bound inode fork length against the fork size during log recovery
-      [3df5e5aaa3bc] xfs: bound da-node entry count against the correct geometry
-      [0643549ffeca] xfs: reject out-of-range attribute value lengths in xfs_attr_copy_value
-      [15ccd92a782a] xfs: reject remote xattr entries with an out-of-range value length
-
-Christoph Hellwig (4):
-      [6fe0d151eaad] xfs: remove various unused includes in libxfs/
-      [5e68008e9c0d] xfs: include <linux/iversion.h> in xfs_platform.h
-      [834a6a1e9633] xfs: move xfs_*_item.h to libxfs
-      [ce47e8aab95d] xfs: move xfs_trans.h to libxfs
-
-Daejun Park (1):
-      [e3c682dd1130] xfs: map pNFS layouts to the end of the extent again
-
-Darrick J. Wong (13):
-      [2b47be015a5e] xfs: flag excessive delalloc rt extents as corruption
-      [f5b4d8c8ce16] xfs: zero out di_metatype when removing the metadir file iflag
-      [780212c8d810] xfs: forcibly reset quota timers when upgrading to bigtime during repair
-      [7f5e8bf335e5] xfs: don't pass iget failures up when marking ondisk inodes
-      [71cb13685e72] xfs: always reset incore attr fork buffer when resetting fork
-      [e5bde75a816b] xfs: propagate errors while checking null siblings
-      [1e7337a3eceb] xfs: don't try to scrub self-referential dirent in metapath checker
-      [20c5a56bc4f2] xfs: don't allow sm_agno for non-group metadir path checking
-      [e98643f794d0] xfs: init inode number for tracepoint
-      [9a263723d7c9] xfs: release ip after unlinked list store failure
-      [52aa50cea408] xfs: always zero the whole shortform header when zeroing attr fork
-      [41ee987f5378] xfs: always forget cached ACLs if the attr fork swap succeeds
-      [0be6da616ab5] xfs: fix exchange-range-to-eof file size exchange
-
-Eric Sandeen (3):
-      [e029aeece84b] xfs: factor out xfs_dir2_sf_copy_entries helper
-      [1e3f1adf6d53] xfs: factor out xrep_reset_fork_to_extents helper for scrub/repair
-      [1d55a1027805] xfs: re-use refcount scrub/repair code for rtrefcount
-
-Norbert Szetei (1):
-      [80f76f654535] xfs: stop exchanging reflink flags when exchanging mappings
-
-Code Diffstat:
-
- fs/xfs/{ => libxfs}/xfs_attr_item.h     |   2 -
- fs/xfs/libxfs/xfs_attr_leaf.c           |  13 ++
- fs/xfs/{ => libxfs}/xfs_bmap_item.h     |   2 -
- fs/xfs/{ => libxfs}/xfs_buf_item.h      |   2 -
- fs/xfs/libxfs/xfs_da_btree.c            |  14 ++
- fs/xfs/libxfs/xfs_defer.c               |   1 -
- fs/xfs/libxfs/xfs_dir2_sf.c             |  68 ++++-----
- fs/xfs/{ => libxfs}/xfs_dquot_item.h    |   0
- fs/xfs/libxfs/xfs_exchmaps.c            |  93 ++---------
- fs/xfs/{ => libxfs}/xfs_exchmaps_item.h |   2 -
- fs/xfs/{ => libxfs}/xfs_extfree_item.h  |   2 -
- fs/xfs/{ => libxfs}/xfs_icreate_item.h  |   0
- fs/xfs/libxfs/xfs_inode_buf.c           |   3 -
- fs/xfs/{ => libxfs}/xfs_inode_item.h    |   2 -
- fs/xfs/libxfs/xfs_inode_util.c          |   1 -
- fs/xfs/{ => libxfs}/xfs_iunlink_item.h  |   0
- fs/xfs/libxfs/xfs_log_format.h          |   4 +-
- fs/xfs/libxfs/xfs_refcount.c            |   1 -
- fs/xfs/{ => libxfs}/xfs_refcount_item.h |   2 -
- fs/xfs/{ => libxfs}/xfs_rmap_item.h     |   2 -
- fs/xfs/libxfs/xfs_rtbitmap.c            |   1 -
- fs/xfs/libxfs/xfs_rtgroup.c             |   1 -
- fs/xfs/libxfs/xfs_sb.c                  |   1 -
- fs/xfs/{ => libxfs}/xfs_trans.h         |   2 -
- fs/xfs/libxfs/xfs_trans_inode.c         |   2 -
- fs/xfs/scrub/agheader_repair.c          |  13 +-
- fs/xfs/scrub/attr_repair.c              |  29 +---
- fs/xfs/scrub/dabtree.c                  |   5 +-
- fs/xfs/scrub/dir_repair.c               |  16 +-
- fs/xfs/scrub/fscounters.c               |   7 +
- fs/xfs/scrub/inode_repair.c             |   4 +-
- fs/xfs/scrub/metapath.c                 |  17 ++-
- fs/xfs/scrub/quota_repair.c             |  17 ++-
- fs/xfs/scrub/refcount.c                 |  27 +---
- fs/xfs/scrub/refcount.h                 |  56 +++++++
- fs/xfs/scrub/refcount_repair.c          |   3 +-
- fs/xfs/scrub/repair.c                   |  31 ++++
- fs/xfs/scrub/repair.h                   |   1 +
- fs/xfs/scrub/rtrefcount.c               | 263 +-------------------------------
- fs/xfs/scrub/rtrefcount_repair.c        |  39 +----
- fs/xfs/scrub/symlink_repair.c           |  16 +-
- fs/xfs/xfs_bmap_util.c                  |  15 +-
- fs/xfs/xfs_exchrange.c                  |  51 +++++--
- fs/xfs/xfs_inode_item_recover.c         |  20 ++-
- fs/xfs/xfs_platform.h                   |   1 +
- fs/xfs/xfs_pnfs.c                       |  19 ++-
- 46 files changed, 319 insertions(+), 552 deletions(-)
- rename fs/xfs/{ => libxfs}/xfs_attr_item.h (97%)
- rename fs/xfs/{ => libxfs}/xfs_bmap_item.h (98%)
- rename fs/xfs/{ => libxfs}/xfs_buf_item.h (98%)
- rename fs/xfs/{ => libxfs}/xfs_dquot_item.h (100%)
- rename fs/xfs/{ => libxfs}/xfs_exchmaps_item.h (98%)
- rename fs/xfs/{ => libxfs}/xfs_extfree_item.h (98%)
- rename fs/xfs/{ => libxfs}/xfs_icreate_item.h (100%)
- rename fs/xfs/{ => libxfs}/xfs_inode_item.h (98%)
- rename fs/xfs/{ => libxfs}/xfs_iunlink_item.h (100%)
- rename fs/xfs/{ => libxfs}/xfs_refcount_item.h (98%)
- rename fs/xfs/{ => libxfs}/xfs_rmap_item.h (98%)
- rename fs/xfs/{ => libxfs}/xfs_trans.h (99%)
- create mode 100644 fs/xfs/scrub/refcount.h
+[PATCHSET v2] xfs: LLM-inspired bug fixes, part 21
+  [PATCH 02/13] xfs: don't subtract excess usage twice when computing
+  [PATCH 04/13] xfs: reattach dquots after changing inode ids
+  [PATCH 06/13] xfs: fix correction of unwritten extents in quota file
+  [PATCH 10/13] xfs: break out xattr entry checks into separate
+  [PATCH 11/13] xfs: check for buffer overruns when examining
