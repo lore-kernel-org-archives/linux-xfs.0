@@ -1,87 +1,124 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oi2-f9.google.com (mail-oi2-f9.google.com [74.125.231.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90B3634404B;
-	Fri,  9 Oct 2026 06:18:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A33D4D98EB
+	for <linux-xfs@vger.kernel.org>; Fri,  9 Oct 2026 11:45:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.231.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791526694; cv=none; b=lyUyuiT2RfW5byg5ns7gBJLg8WOWFU1RtsKOvyIUqEJCPc94nzZ+F6SsurF34QvXqTx6dB9Kqajhrjyaqp9hgSI9oucCG3Cv9MxOmSjRLYK361pi3HWRuhMTu80Buy4NrsAQIWIu6kkUUNEKhNYKDGtpnLZiVSLe6E+wYqZFDHI=
+	t=1791546321; cv=none; b=LZfOYp+xZ0cnaSTvBdKadVfHnH1JvoYgi7nBrx5clE3BB+qKyCh9gw6NQh99Qi5sIc6bU88Na2+w4CYbInPDU5VWtqY/fNkBQTY8gK75Xh1SbqTBdLk/YXnlBHt/2FJdFBqJOg2WYtXOTlyLXV9PAnYDuTGqCET1uV0iEZXjLFk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791526694; c=relaxed/simple;
-	bh=GAiff/gy9VVn+86aZv4W2D7W8C2gELB3oO/IVajcuBU=;
-	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=km8PVhcrpAtx8GlRUiyhaT9AE4Kcd3Fvo8R3mL42fRH3uhSqSth1KVsgh/teWhC3SowUb4HU+MdPcStfTRAo6rGdjzKvQ3eHgEA9Ab/qaJzjJPU+OMYYO6r1oxIxM3Pte0VlnonDnhCpMoSVx3e9ZRwV2ue/OJdVhBwKR87Hl+E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RxIM6R0W; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791546321; c=relaxed/simple;
+	bh=E1XMyad7VnkVzB7/p/Kp/l/hcMQbzp3Rdwh357Rvu5A=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ESqg7HH/z+tY28UGxjC2q+sV87qphhQm+0zOU9q1smAnFui0htMH7YsRQlCFYkXtm+VQRVAQwyFpBAbSLP9lllghteIpwSOtKUx8T+/VJzM7dt49HYf/hOrK6IENkhYOu1nLyMc1CaR0aknKy0qv8/IuihV+Wyl4melMXTOanDc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=dzEDyHU2; arc=none smtp.client-ip=74.125.231.201
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RxIM6R0W"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 5EE091F00898;
-	Fri,  9 Oct 2026 06:18:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791526693;
-	bh=1983ktvh6/z1NTrpEceZ1PKR0rKCPieBDURZu04yUQc=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=RxIM6R0WxLw3bodzQzUO8ynYvh8WiylzAtxkJOlevvNuG/eSIBeumoPbVPkweW237
-	 ESF/7Vlkd1EOVD8P/9qgyzJfXSLD22EvACm7lZM2lhthfhjEp6aDM92FMV1U1EjiC9
-	 66LIt9hSfobrKMf77ak7XxNGH9kHeEOaj3qNGUhBflXMC80SipglkESmHdEc2ZlVOl
-	 cAhm75/zDRZlwxHikqZg8fgL424GrtLYK44ivIPnkBzm5rWG0Ws6zkVqBL3UKAzP0N
-	 iw9FJGG6S3iYpv68u1F0Gf/vsLxZc4k9V7Bi4ZfnLcshir8UdszvcHbH+gTlagjvA2
-	 uPBCEKJhIcuiA==
-Date: Thu, 08 Oct 2026 23:18:12 -0700
-Subject: [PATCH 13/13] xfs: complain loudly when dirtree checker finds broken
- links
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: cem@kernel.org, djwong@kernel.org
-Cc: hch@lst.de, stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <179151614902.3163896.7168931003277489322.stgit@frogsfrogsfrogs>
-In-Reply-To: <179151614535.3163896.2744921556354655977.stgit@frogsfrogsfrogs>
-References: <179151614535.3163896.2744921556354655977.stgit@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dzEDyHU2"
+Received: by mail-oi2-f9.google.com with SMTP id 5614622812f47-4f2a0576df3so480205b6e.0
+        for <linux-xfs@vger.kernel.org>; Fri, 09 Oct 2026 04:45:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1791546313; x=1792151113; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=aQv3jnCfnGYGyZdLu9hITrZVCdW0zrEfT+n6BY05h+8=;
+        b=dzEDyHU2wxFXFDt6Me4PEeRfJQtoK8Ay4yAywJ+GG3mHldb40IqHL9e9Xeqci+WqOZ
+         9OrSo3kvRB5s290L6damegaOlBHav0N2mBxyCJD9W7F7kxE1IrlebyAYkdGEfdT3ahUD
+         dhXTvsJg6PJY7INY+mi9QVxXPYrUKiRRQD0887OcU9Kwx3/QTKYEwRpCeuDlK/RovHd2
+         M2N4/KQvyIEDTCsjA7hdpejlcH3kGS2zqbli5IokLOI7bPNl4NaDV6QI5apjTH3jgC1a
+         v5Htt7iRmyE7+1C0gA+fgrGw/Qo0LXamSlDCZOHgqavnmwNFoyPWVMdM7diisDRSHv0x
+         18kA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791546313; x=1792151113;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=aQv3jnCfnGYGyZdLu9hITrZVCdW0zrEfT+n6BY05h+8=;
+        b=n/BeW7XPurXjOVK6vieURsnMWexNqGykL2tsWE3qfvxfn/QCIqniUMaw0G4UzuBo/t
+         hHUw5ayUSstGxpeXuYoMnTsGaPLQmjxh1me7uwnlm/2mNr+bob8hPnsGLUuISkouUAXy
+         UqUitXiO4zNmKudhUetqrAnlO0Ae513Jp+9OhxfKp/H+dSz9k+lO0JEX/2vw/kxJnek3
+         LiHcd/HDhDsIWy+zgbn8T4/YcwgwfAh2Fanby0G2nsbatxp7BzaKo+9IB+gLuFbz+qaF
+         Nkd50YyTW28ynOrkPbQD9gKxz0gQ4mpdeoHCRzC69RPRh3/SphiX/Tn0a/JhLkZLw6uP
+         9MLQ==
+X-Gm-Message-State: AFuF++n+15TZm3Ux1PtqubrmbQ36Q9/rMFa6A7DMruDH/wpfaQJfpKUL
+	SVK+joR5OCo/0Qw01eDbuFAZhQdIn6FTKYHAm5DFWvtEaSILdyZlTMKf
+X-Gm-Gg: AYBFou3VQy1y2fOLrM5kZzh9XEaVtZcGFV2ASMiywmn3gLIJlRESaVKMZKBA0Mqxq7i
+	GwXI2qkGrxCPe2aa65beD6MgkmvLPkgQKRWkpn9JSs9K3Da2Fv/oOlAMnCAeuVDLzW6/XG7NwHa
+	xFzdgYeiQMKR8EPYiI8TnUc/a9o+dmM2co45vRGfAhX2pqYHsyJR1wUAiG5XLdY2/BJVUgjrRtj
+	ggYRzlwryTwwRYZlVKGNRbUt2XhqVIG0GlE6FqBHLKSJinjMj84V5EcT7pRQO8rYegBFGSBEijL
+	E9kcaGr+IhMkXqbgk9y/9baP3p7IYUb685ROvqZUstKmk8QaMu400Jf8WFymYiKAMgvL5NiULYq
+	TstcsG5M0NX4uQ04x//dp98mu5R9m64C5q2pQhSi7Ly6BhBgAp1DfDcsXy8Z+GNOWDj3PgM75fs
+	ujIPQmpFVhk3+pf+dZvLn8oBvo5KYklTzDdSbd5onQydcTDVuo5Lo0PBarGhOzX+UNwDCETBWsb
+	wiZR00/4crqokiuwMspnfDWFiCJLsRE0GTX
+X-Received: by 2002:a05:6808:1907:b0:4c3:cec9:fd18 with SMTP id 5614622812f47-50c4e681ad4mr1048459b6e.11.1791546312802;
+        Fri, 09 Oct 2026 04:45:12 -0700 (PDT)
+Received: from localhost.localdomain ([14.22.11.165])
+        by smtp.gmail.com with ESMTPSA id 5614622812f47-50c1a325a38sm1682405b6e.12.2026.10.09.04.45.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 09 Oct 2026 04:45:11 -0700 (PDT)
+From: Henry Martin <bsdhenrymartin@gmail.com>
+To: "Darrick J . Wong" <djwong@kernel.org>,
+	Carlos Maiolino <cem@kernel.org>
+Cc: linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Henry Martin <bsdhenrymartin@gmail.com>,
+	stable@vger.kernel.org
+Subject: [PATCH] xfs: fix out-of-bounds cursor access from rtrmap level off-by-one
+Date: Fri,  9 Oct 2026 19:45:03 +0800
+Message-ID: <20261009114503.3669142-1-bsdhenrymartin@gmail.com>
+X-Mailer: git-send-email 2.43.7
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-From: Darrick J. Wong <djwong@kernel.org>
+m_rtrmap_maxlevels includes the inode root level, so a valid on-disk
+bb_level is strictly less than m_rtrmap_maxlevels.  Both
+xfs_rtrmapbt_verify() and xfs_iformat_rtrmap() compare with ">"
+instead of ">=", letting a forged block with level == maxlevels pass
+validation.  The cursor is then sized for maxlevels entries while
+bc_nlevels is set to level + 1, so the generic btree code indexes one
+element past bc_levels[] - an out-of-bounds read/write on the cursor
+allocation.
 
-LOLLM observed that the directory tree walk code bails out if it finds
-broken parent pointers along the way.  However, it flattens the return
-code to zero, which means that we can end up in the repair code having
-not completed the scan.  We should never proceed with a repair in this
-state, so let's mark the scrub incomplete and exit.
+xfs_rtrmapbt_mem_verify() in the same file (from commit
+4a61f12eb1195 "xfs: create a shadow rmap btree during realtime rmap
+repair") already uses ">=".
 
-Cc: <stable@vger.kernel.org> # v6.10
-Fixes: 928b721a11789a ("xfs: teach online scrub to find directory tree structure problems")
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-Assisted-by: LOLLM # finding obvious bugs
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+This vulnerability was discovered by Tencent CodeBuddy Security.
+
+Cc: stable@vger.kernel.org
+Fixes: fc6856c6ff086 ("xfs: introduce realtime rmap btree ondisk definitions")
+Signed-off-by: Henry Martin <bsdhenrymartin@gmail.com>
 ---
- fs/xfs/scrub/dirtree.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_rtrmap_btree.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
+diff --git a/fs/xfs/libxfs/xfs_rtrmap_btree.c b/fs/xfs/libxfs/xfs_rtrmap_btree.c
+index a15e460a1ec7..6833c924a383 100644
+--- a/fs/xfs/libxfs/xfs_rtrmap_btree.c
++++ b/fs/xfs/libxfs/xfs_rtrmap_btree.c
+@@ -256,7 +256,7 @@ xfs_rtrmapbt_verify(
+ 	if (fa)
+ 		return fa;
+ 	level = be16_to_cpu(block->bb_level);
+-	if (level > mp->m_rtrmap_maxlevels)
++	if (level >= mp->m_rtrmap_maxlevels)
+ 		return __this_address;
 
-diff --git a/fs/xfs/scrub/dirtree.c b/fs/xfs/scrub/dirtree.c
-index 887383d2e94104..11a9dea03d87ea 100644
---- a/fs/xfs/scrub/dirtree.c
-+++ b/fs/xfs/scrub/dirtree.c
-@@ -860,7 +860,8 @@ xchk_dirtree_find_paths_to_root(
- 				 * A parent pointer of @sc->ip is bad, don't
- 				 * bother continuing.
- 				 */
--				break;
-+				xchk_set_incomplete(sc);
-+				return error;
- 			}
- 			if (error == -ESTALE) {
- 				/* This had better be an invalidation. */
-@@ -981,6 +982,7 @@ xchk_dirtree(
- 		 * parent pointers are corrupt; this scan cannot be completed
- 		 * without full information.
- 		 */
-+		xchk_set_incomplete(sc);
- 		xchk_ip_xref_set_corrupt(sc, sc->ip);
- 		error = 0;
- 		goto out_scanlock;
+ 	return xfs_btree_fsblock_verify(bp, mp->m_rtrmap_mxr[level != 0]);
+@@ -888,7 +888,7 @@ xfs_iformat_rtrmap(
+ 	numrecs = be16_to_cpu(dfp->bb_numrecs);
+ 	level = be16_to_cpu(dfp->bb_level);
+
+-	if (level > mp->m_rtrmap_maxlevels ||
++	if (level >= mp->m_rtrmap_maxlevels ||
+ 	    xfs_rtrmap_droot_space_calc(level, numrecs) > dsize) {
+ 		xfs_inode_mark_sick(ip, XFS_SICK_INO_CORE);
+ 		return -EFSCORRUPTED;
+--
+2.43.7
 
