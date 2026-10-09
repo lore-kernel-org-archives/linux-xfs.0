@@ -1,37 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E552C35B14E
-	for <linux-xfs@vger.kernel.org>; Fri,  9 Oct 2026 23:47:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE2573655EE
+	for <linux-xfs@vger.kernel.org>; Fri,  9 Oct 2026 23:47:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791589664; cv=none; b=HWrVPfxNjwqUzFGHRoj2iwt8gsx25+6kYLTlZSh9KvDhQFYLYGd9t29WmJVd8qfaQ/iZXOq6heDqGuugBrCdvStF81n2QV+69dWOwjK+UzlhRM2626rRaKX4AoiZfdMQ6Aq1lMgtcGcUtU6rSrlnGySsF99GeMw4GnfD8yKVvj0=
+	t=1791589680; cv=none; b=RqRU2GHUF+5YS9rG2yCE5EFEeHuluLX7XqMhJdLKur720+LVnWqcj88WUj3cDzJtNKwtpcBgzXHr2RIIwEL3ruJ69NCoSJ6qkTzmyKAut2/fctEup0Sbde3X3kebOu5VUzBVnF2xC98ezQFW1Ddc9EG7Kp83yPQ3btZ6CYqWoXI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791589664; c=relaxed/simple;
-	bh=VnyJM6AkiNuAgGBmQ/t73moEhVvJcTof811aIokZtTw=;
+	s=arc-20240116; t=1791589680; c=relaxed/simple;
+	bh=SxZrlo+iel71GFD+nwnlJoQ3yxmWvpN2dRxR62EBuH0=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=a2bxvVn1RWSZZVRNZyrWuXtnIjV8je6arnKjwUOEdZpCQ6Uo4RUPxnv+r6I/7BF4z6dttHvEKBHBNsae+1gR861GX4oQfpdNsbvfpkOKhl4LBfhqg5qgK91rynEdz/jrexz5/LEqPV7iC1YZxUHG4j3fEAB/0LtRYnVFGmCkzF8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ka7LKGrA; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=P5W2zPLRbzoOZzsys+jarn3FgzupkAZbtL2f3KFeOT8nCeq9BQjOZ89K2vHmrEmVO+DAEsdHn0Y2T071JFAvwDVQSs1u/8wcCnR8DcFlaEK9uH6XbIZKBkYnUX5rM+GgF/FHvaJSPVYtP5JJvRhtibKkZz91tvoxx6RgB2gKsDs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Rk6RN/nC; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ka7LKGrA"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 691FF1F000FF;
-	Fri,  9 Oct 2026 23:47:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Rk6RN/nC"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 09B141F000FF;
+	Fri,  9 Oct 2026 23:47:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791589663;
-	bh=Cm0iQR0kAjzE8aet+plBn4OFzsBJO67Btm7vCBTLV7I=;
+	s=k20260515; t=1791589679;
+	bh=v1RwOBSkLBC08fCoB116LMvLj+Z/8efdhDrJ7vzqU5E=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=Ka7LKGrALk+u/+YWhNOiTQfywlNOSOH0+xm4GTUxtsXGUxLQVM9jolryISLOngGru
-	 M0nDqhaCgHxMrcwC4Nb5eDqnzbDW9R1uw2OA8mJo53Gki+g0249WCKg7leFClnsYDi
-	 UkqmXcYejjgMMWV7o0Jl5nXWCDxPMnAAQqCDEw8nBbquSfSZgWlUEAOrQphVoSM61c
-	 d4GPsitm4hy7rBUr1rgbH5AQLUE3flobdwUO8cJFaKNhUO8p9EYV0Z6e+VxUusoGpa
-	 TdauycM1RzWF9+Jkb3ukt6L4xWaH6CqM7EnHmmNgLVZdKEwCEt9gHh3jWNb9bT3JkP
-	 vEALqVoEcXdHg==
-Date: Fri, 09 Oct 2026 16:47:43 -0700
-Subject: [PATCH 08/26] xfs: validate attr entry pointer before field access
+	b=Rk6RN/nCeV3Q13iDUgVYAEdn2b4dj12OF7auVkKFvK3InsCnaqwxV3PWRuqGedVl8
+	 GdlansRxmJJAJWuPh8UnhAL4CWhAwV7tLWezz7C4EQYDZblVXKtPe3M3ARi+l8nIMa
+	 nxSHimdnMMHLwqFszA1KkCVLWzleSyJMBvwY3pvas1ZJ1FlulyMGsEMXrIIkprNYyt
+	 F0Yur0IGZyyIlFMM7TcJ5SxcuNtI/XKz7petWREOcPXndSzH8ylo0ojReXQ8D+mMKG
+	 jzDB1d5FNsuzZ91yTSucdJ6+eriLLB2J87TMsfMNNa5T4JQVOS8UDQhlFMjv3dT9Bs
+	 Sep0glrF6XeAg==
+Date: Fri, 09 Oct 2026 16:47:58 -0700
+Subject: [PATCH 09/26] xfs: don't hold buffer locks across sync transaction
+ commit in xfs_sync_sb_buf
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
-Cc: cem@kernel.org, zenghongling@kylinos.cn, linux-xfs@vger.kernel.org
-Message-ID: <179158947512.3719791.14512605594019500342.stgit@frogsfrogsfrogs>
+Cc: cem@kernel.org, hch@lst.de,
+ syzbot+837bcd54843dd6262f2f@syzkaller.appspotmail.com,
+ yun.zhou@windriver.com, linux-xfs@vger.kernel.org
+Message-ID: <179158947530.3719791.2785151427381835148.stgit@frogsfrogsfrogs>
 In-Reply-To: <179158947238.3719791.8405495844046466765.stgit@frogsfrogsfrogs>
 References: <179158947238.3719791.8405495844046466765.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -43,60 +46,122 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Hongling Zeng <zenghongling@kylinos.cn>
+From: Yun Zhou <yun.zhou@windriver.com>
 
-Source kernel commit: b7eea80be25f3334f131d52982b3131aba77b97d
+Source kernel commit: 41a28c865d1d5843f8cb9e0af17a8f4d9e2961ff
 
-xfs_attr3_leaf_verify_entry() accesses lentry/rentry fields (namelen,
-valuelen) before checking if the entry pointer itself is within bounds.
-If nameidx is crafted to point near the end of the buffer, these field
-accesses can read out-of-bounds before the bounds check at
-name_end > buf_end is performed.
+xfs_sync_sb_buf() holds sb/rtsb buffer locks across a synchronous
+xfs_trans_commit(), which flushes the CIL push workqueue internally.
+If shutdown occurs during the CIL push, xfs_buf_item_unpin() needs to
+lock these buffers to fail them, causing a deadlock:
 
-Add explicit bounds checks for entry pointers before accessing their
-fields. Use offsetof() to check that the start of the flexible array
-member (nameval/name) is within bounds, which ensures all preceding
-fields are safe to access.
+setlabel:          holds buf lock -> flush_workqueue(xfs-cil)
+CIL push worker:   xfs_buf_item_unpin -> xfs_buf_lock(same buf)
 
-Fixes: c84760659dcf2 ("xfs: check attribute leaf block structure")
-Signed-off-by: Hongling Zeng <zenghongling@kylinos.cn>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Remove the xfs_trans_bhold() calls so that commit releases the buffer
+locks normally.  After the sync commit, re-acquire the buffers via
+mp->m_sb_bp / mp->m_rtsb_bp for the on-disk writeback.
+
+Fixes: f7664b31975b ("xfs: implement online get/set fs label")
+Reported-by: syzbot+837bcd54843dd6262f2f@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=837bcd54843dd6262f2f
+Signed-off-by: Yun Zhou <yun.zhou@windriver.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Carlos Maiolino <cem@kernel.org>
 ---
- libxfs/xfs_attr_leaf.c |   14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+ libxfs/stubs/xfs_mount.h |    3 +++
+ libxfs/xfs_rtgroup.h     |    6 +++++-
+ libxfs/xfs_sb.c          |   37 +++++++++++++++++--------------------
+ 3 files changed, 25 insertions(+), 21 deletions(-)
 
 
-diff --git a/libxfs/xfs_attr_leaf.c b/libxfs/xfs_attr_leaf.c
-index 0ac2ae28efa610..a7c4c0bbcf5278 100644
---- a/libxfs/xfs_attr_leaf.c
-+++ b/libxfs/xfs_attr_leaf.c
-@@ -323,6 +323,13 @@ xfs_attr3_leaf_verify_entry(
- 	 */
- 	if (ent->flags & XFS_ATTR_LOCAL) {
- 		lentry = xfs_attr3_leaf_name_local(leaf, idx);
+diff --git a/libxfs/stubs/xfs_mount.h b/libxfs/stubs/xfs_mount.h
+index 0dea578ee3a550..26f7b8c7f30127 100644
+--- a/libxfs/stubs/xfs_mount.h
++++ b/libxfs/stubs/xfs_mount.h
+@@ -181,6 +181,9 @@ typedef struct xfs_mount {
+ 	uint64_t		m_metafile_resv_target;
+ 	uint64_t		m_metafile_resv_used;
+ 	uint64_t		m_metafile_resv_avail;
 +
-+		/* Validate lentry pointer is within bounds before field access */
-+		if ((char *)lentry >= buf_end)
-+			return __this_address;
-+		if ((char *)lentry + offsetof(struct xfs_attr_leaf_name_local, nameval) > buf_end)
-+			return __this_address;
++	/* Always NULL, do not call xfs_sync_sb_buf! */
++	struct xfs_buf		*m_sb_bp, *m_rtsb_bp;
+ } xfs_mount_t;
+ 
+ #define M_IGEO(mp)		(&(mp)->m_ino_geo)
+diff --git a/libxfs/xfs_rtgroup.h b/libxfs/xfs_rtgroup.h
+index c0b9f9f2c4131b..fca2eb74908caf 100644
+--- a/libxfs/xfs_rtgroup.h
++++ b/libxfs/xfs_rtgroup.h
+@@ -359,7 +359,11 @@ static inline int xfs_initialize_rtgroups(struct xfs_mount *mp,
+ # define xfs_rtgroup_unlock(rtg, gf)		((void)0)
+ # define xfs_rtgroup_trans_join(tp, rtg, gf)	((void)0)
+ # define xfs_update_rtsb(bp, sb_bp)	((void)0)
+-# define xfs_log_rtsb(tp, sb_bp)	(NULL)
++static inline struct xfs_buf *xfs_log_rtsb(struct xfs_trans *tp,
++		const struct xfs_buf *sb_bp)
++{
++	return NULL;
++}
+ # define xfs_rtgroup_get_geometry(rtg, rgeo)	(-EOPNOTSUPP)
+ #endif /* CONFIG_XFS_RT */
+ 
+diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
+index ea99f8b5eee55a..ff4498662e693f 100644
+--- a/libxfs/xfs_sb.c
++++ b/libxfs/xfs_sb.c
+@@ -1468,36 +1468,33 @@ xfs_sync_sb_buf(
+ 	bool			update_rtsb)
+ {
+ 	struct xfs_trans	*tp;
+-	struct xfs_buf		*bp;
+-	struct xfs_buf		*rtsb_bp = NULL;
+ 	int			error;
+ 
+ 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_sb, 0, 0, 0, &tp);
+ 	if (error)
+ 		return error;
+ 
+-	bp = xfs_trans_getsb(tp);
+ 	xfs_log_sb(tp);
+-	xfs_trans_bhold(tp, bp);
+-	if (update_rtsb) {
+-		rtsb_bp = xfs_log_rtsb(tp, bp);
+-		if (rtsb_bp)
+-			xfs_trans_bhold(tp, rtsb_bp);
+-	}
++	if (update_rtsb)
++		xfs_log_rtsb(tp, xfs_trans_getsb(tp));
+ 	xfs_trans_set_sync(tp);
+ 	error = xfs_trans_commit(tp);
+ 	if (error)
+-		goto out;
+-	/*
+-	 * write out the sb buffer to get the changes to disk
+-	 */
+-	error = xfs_bwrite(bp);
+-	if (!error && rtsb_bp)
+-		error = xfs_bwrite(rtsb_bp);
+-out:
+-	if (rtsb_bp)
+-		xfs_buf_relse(rtsb_bp);
+-	xfs_buf_relse(bp);
++		return error;
 +
- 		namesize = xfs_attr_leaf_entsize_local(lentry->namelen,
- 				be16_to_cpu(lentry->valuelen));
- 		name_end = (char *)lentry + namesize;
-@@ -330,6 +337,13 @@ xfs_attr3_leaf_verify_entry(
- 			return __this_address;
- 	} else {
- 		rentry = xfs_attr3_leaf_name_remote(leaf, idx);
++	/* Re-acquire and write the sb and rtsb to disk. */
++	xfs_buf_lock(mp->m_sb_bp);
++	error = xfs_bwrite(mp->m_sb_bp);
++	xfs_buf_unlock(mp->m_sb_bp);
++	if (error)
++		return error;
 +
-+		/* Validate rentry pointer is within bounds before field access */
-+		if ((char *)rentry >= buf_end)
-+			return __this_address;
-+		if ((char *)rentry + offsetof(struct xfs_attr_leaf_name_remote, name) > buf_end)
-+			return __this_address;
++	if (update_rtsb && mp->m_rtsb_bp) {
++		xfs_buf_lock(mp->m_rtsb_bp);
++		error = xfs_bwrite(mp->m_rtsb_bp);
++		xfs_buf_unlock(mp->m_rtsb_bp);
++	}
 +
- 		namesize = xfs_attr_leaf_entsize_remote(rentry->namelen);
- 		name_end = (char *)rentry + namesize;
- 		if (rentry->namelen == 0)
+ 	return error;
+ }
+ 
 
