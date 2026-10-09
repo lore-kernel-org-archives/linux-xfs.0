@@ -1,38 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20A8035B14E
-	for <linux-xfs@vger.kernel.org>; Fri,  9 Oct 2026 23:46:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADC1D2C027B
+	for <linux-xfs@vger.kernel.org>; Fri,  9 Oct 2026 23:46:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791589602; cv=none; b=P2vUqHJvRT0JXDY3eI1VtFR1UudFlP7SVVFdJWRI7z01DUmIKpT+eOp63pLSvJ0JplQi7zKZyxHKCFwM72CTdOcBzCYoTyLAzO612FAgqje2F+sh/WCe+GoLAbJxMHj41wO0tEjtNLwBsWd3ps+sl1Ad3ohMrYLQzctVCAY/XMo=
+	t=1791589617; cv=none; b=oeF25th5Wr3kDXsqWzBT5uM/da5zuY/n8E+5vh+9cfjgWGLqEVbfxV/zhaC5x/TEns3Bg2Pw/fe7tVA1Hf1hcgsQa4j1dMMonVcLA6nQXCqzGrlzq1+QlqqKzAmWNDtPilfjeU7hKZwwrYK2V5AOmJr50rEq0HaWQaSwq7xky14=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791589602; c=relaxed/simple;
-	bh=hhUOG7S83Oqzhu5TwDY1GD9SEdBgD3dZKOdQRwRrDxY=;
+	s=arc-20240116; t=1791589617; c=relaxed/simple;
+	bh=7dG0PlGM2bjY9tVZzx6KFxbXasdVr50vTbkxynhiTNY=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=fAm0BU5s8wClzPWiP0KSQxnTMJ2tFIoGLmQ/ByhELEf7GQaoRqQlhl1hUhXzRoTe6y1/VJM5rn2ONH86tw6htxpCLKoJgFgzCCL9LNwzFDdkLErfcw9cJcpFtzfjXgmuTVSrm+x3ULAnUyN9UZjKUnh1ecKtrvZDtUlQ8Aa9l2I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IDK1MolI; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=fjV8y5fdKKyzxyMKYOz7Tw+eo/v/KyVq1BbVPp+mp8msih8wAZVipfMBKIu+pnHQZEiyVphzN4Hz4XUevRVaGFbP9gPXa+64Qcenob6exSEqjsa5MC9lFxw+3758xCyA8tVglYVw5BnHII6PCxtPEoldyDo4fmetoZ8zCMCT2a8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=E3oabB5D; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IDK1MolI"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id E4B7A1F000FF;
-	Fri,  9 Oct 2026 23:46:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="E3oabB5D"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 850D81F000FF;
+	Fri,  9 Oct 2026 23:46:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791589601;
-	bh=oMNXjLCY9bawc/wzZ6OxEOh740GT6MDVIdGDRmmswUE=;
+	s=k20260515; t=1791589616;
+	bh=DVSsptezMWZW5O0Dq4eh3M3+Nc+pMV1YzNCOnX4V6jA=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=IDK1MolIfFAV330bL4nYndYhGm60qFHbbJXTgk5oZniF44TP0qTq7X74KRNEeQPKt
-	 E0P+HSKcmsso3menIg97RpB/UZBSgjCYTJWTf/SelLm9eP6CmId0o20Pil+10xaKUJ
-	 C0fwAC/WCO766TSlPV0dUF0kxCQfgnVPjCX7l2CqY5HkQ+MPyjuryMS0lz5YT+AMHn
-	 5ph+QohgXp9/TXnr/din1/00FdSO4geUwYyex1APqXFBtWziMJowDNBchESruiHAQb
-	 1gPwwmofUraApNj2uOK1YWDhyeUALzkl5NiS3zHOOii291DMM2WOanITGaXUPUn8ra
-	 glQe7aUJ8BaUQ==
-Date: Fri, 09 Oct 2026 16:46:40 -0700
-Subject: [PATCH 04/26] xfs: mark internal metadir file creation helpers static
+	b=E3oabB5D/mLS2jWin2VbD+Z2dM33knqo2omWTBY7qZjDJSYDf5ZzWrELUvxgbvLcv
+	 gM9ylxgXpf3GDRqybur9P97JiRM3Vlg551YNgrUlxXB7teCNFKj+S9lPnD5eMIhYj8
+	 K1dmsVfHLPm/DnnmL513H9qIOtya5t+JuGLfmC/tzt9BywaLBdSL98DuVia77Od4pz
+	 mGDp4EI2bkxAMJWPABL6rCDejR8e65NhJJIUuVWLEqFHp7Ppn77hb+ZrtF3MhhPrZA
+	 xd7XOCJLGp/gE+VS4vAVy1O+rHbiJZ67QncW1ZnNzHuQDBGsba9a9ArNdcoBpCIj6J
+	 ohFJai+/rhz8g==
+Date: Fri, 09 Oct 2026 16:46:56 -0700
+Subject: [PATCH 05/26] xfs: use kmalloc_objs() instead of kmalloc() in
+ xfs_da_grow_inode_int
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
-Cc: cem@kernel.org, hch@lst.de, johannes.thumshirn@wdc.com,
+Cc: cem@kernel.org, cihan.cihan@gmail.com, cmaiolino@redhat.com,
  linux-xfs@vger.kernel.org
-Message-ID: <179158947441.3719791.9905096580050714951.stgit@frogsfrogsfrogs>
+Message-ID: <179158947460.3719791.2607446027583829528.stgit@frogsfrogsfrogs>
 In-Reply-To: <179158947238.3719791.8405495844046466765.stgit@frogsfrogsfrogs>
 References: <179158947238.3719791.8405495844046466765.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -44,75 +45,59 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+From: Cihan Karadag <cihan.cihan@gmail.com>
 
-Source kernel commit: c6c54d05b129c4e29f2fdc6d356b5be10765231d
+Source kernel commit: 56aa9ef3c413cb13a373226f91a19358cd9f1266
 
-Now that there is xfs_metadir_create_file() mark
-xfs_metadir_start_create(), xfs_metadir_create() and xfs_metadir_cancel()
-as static and remove them from xfs_metadir.h.
+Convert open-coded kmalloc() multiplication to the modern kmalloc_objs()
+interface to improve type safety and prevent potential integer
+overflows.
 
-Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+No functional changes are intended.
+
+Signed-off-by: Cihan Karadag <cihan.cihan@gmail.com>
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Carlos Maiolino <cem@kernel.org>
 ---
- libxfs/xfs_metadir.h |    4 ----
- libxfs/xfs_metadir.c |    6 +++---
- 2 files changed, 3 insertions(+), 7 deletions(-)
+ include/kmem.h        |   12 ++++++++++++
+ libxfs/xfs_da_btree.c |    3 +--
+ 2 files changed, 13 insertions(+), 2 deletions(-)
 
 
-diff --git a/libxfs/xfs_metadir.h b/libxfs/xfs_metadir.h
-index a795a2d0e3fe5b..e434b9d1c93200 100644
---- a/libxfs/xfs_metadir.h
-+++ b/libxfs/xfs_metadir.h
-@@ -32,9 +32,6 @@ int xfs_metadir_load(struct xfs_trans *tp, struct xfs_inode *dp,
- 		const char *path, enum xfs_metafile_type metafile_type,
- 		struct xfs_inode **ipp);
- 
--int xfs_metadir_start_create(struct xfs_metadir_update *upd);
--int xfs_metadir_create(struct xfs_metadir_update *upd, umode_t mode);
--
- typedef int (*xfs_metadir_createfn)(struct xfs_metadir_update *upd, void *priv);
- 
- int xfs_metadir_create_file(struct xfs_metadir_update *upd, umode_t mode,
-@@ -45,7 +42,6 @@ int xfs_metadir_start_link(struct xfs_metadir_update *upd);
- int xfs_metadir_link(struct xfs_metadir_update *upd);
- 
- int xfs_metadir_commit(struct xfs_metadir_update *upd);
--void xfs_metadir_cancel(struct xfs_metadir_update *upd, int error);
- 
- int xfs_metadir_mkdir(struct xfs_inode *dp, const char *path,
- 		struct xfs_inode **ipp);
-diff --git a/libxfs/xfs_metadir.c b/libxfs/xfs_metadir.c
-index 0d6a153bc9e995..7c6b086b73db61 100644
---- a/libxfs/xfs_metadir.c
-+++ b/libxfs/xfs_metadir.c
-@@ -182,7 +182,7 @@ xfs_metadir_teardown(
-  * Begin the process of creating a metadata file by allocating transactions
-  * and taking whatever resources we're going to need.
-  */
--int
-+static int
- xfs_metadir_start_create(
- 	struct xfs_metadir_update	*upd)
- {
-@@ -236,7 +236,7 @@ xfs_metadir_start_create(
-  * a negative error code.  If an inode is passed back, the caller must finish
-  * setting up the inode before releasing it.
-  */
--int
-+static int
- xfs_metadir_create(
- 	struct xfs_metadir_update	*upd,
- 	umode_t				mode)
-@@ -425,7 +425,7 @@ xfs_metadir_commit(
+diff --git a/include/kmem.h b/include/kmem.h
+index 2c276e929c4808..4363601ff6820f 100644
+--- a/include/kmem.h
++++ b/include/kmem.h
+@@ -138,4 +138,16 @@ static inline void *kmemdup(const void *src, size_t len, gfp_t gfp)
+ 	return p;
  }
  
- /* Cancel a metadir update and unlock/drop all resources. */
--void
-+static void
- xfs_metadir_cancel(
- 	struct xfs_metadir_update	*upd,
- 	int				error)
++/**
++ * kmalloc_objs - Allocate an array of the given type
++ * @VAR_OR_TYPE: Variable or type to allocate an array of.
++ * @COUNT: How many elements in the array.
++ * @...: optional GFP flags for the allocation (GFP_KERNEL when not specified).
++ *
++ * Returns: newly allocated pointer to array of @VAR_OR_TYPE on success,
++ * or NULL on failure.
++ */
++#define kmalloc_objs(VAR_OR_TYPE, COUNT, ...) \
++	__alloc_objs(kmalloc, default_gfp(__VA_ARGS__), typeof(VAR_OR_TYPE), COUNT)
++
+ #endif
+diff --git a/libxfs/xfs_da_btree.c b/libxfs/xfs_da_btree.c
+index 9f25f1658b07d7..b1cdb0ebece92c 100644
+--- a/libxfs/xfs_da_btree.c
++++ b/libxfs/xfs_da_btree.c
+@@ -2352,8 +2352,7 @@ xfs_da_grow_inode_int(
+ 		 * If we didn't get it and the block might work if fragmented,
+ 		 * try without the CONTIG flag.  Loop until we get it all.
+ 		 */
+-		mapp = kmalloc(sizeof(*mapp) * count,
+-				GFP_KERNEL | __GFP_NOFAIL);
++		mapp = kmalloc_objs(*mapp, count, GFP_KERNEL | __GFP_NOFAIL);
+ 		for (b = *bno, mapi = 0; b < *bno + count; ) {
+ 			c = (int)(*bno + count - b);
+ 			nmap = min(XFS_BMAP_MAX_NMAP, c);
 
