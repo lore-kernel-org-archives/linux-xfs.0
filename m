@@ -1,91 +1,82 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 187091C75F9
-	for <linux-xfs@vger.kernel.org>; Sun, 11 Oct 2026 07:05:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3FFB54705C
+	for <linux-xfs@vger.kernel.org>; Sun, 11 Oct 2026 07:09:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791702336; cv=none; b=gya6qdwjIWgTQWU95icREH8cwmah+xRNXtOEOMwj4DM2E6ziux21FaBSdyxE5WKmIsPMxlkGn9xC+4GvtBDqUK7JLY94PvnqNjkN4k3bE9KpHRJTd1QjDM+dr/ix6vVXsGiEZ0d5MT+XXNrSsT5OA8DcC1rCpbxBRNJam0Q4o8U=
+	t=1791702583; cv=none; b=kSQneEJeQB6gtbhT6I7vL0rGHLPsLXWY2VNpcZOHUXGX7p9g6Xi1KkElR+RG9hLiVw8xph247kDNsgX3BHp/G7yJwHDsoCR7KSJXlw+y3hexx26hpf9xrmVtOQ9ZaBmYNxxB2K2flMkWmLkWA+wuJGYEGnW8C/WhMwCwpja0iVQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791702336; c=relaxed/simple;
-	bh=rNbsw+Wquds4rdX+B+dFMQ7x9EKk1Z2hesWEqOofwbs=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=cMonFQl+z382nzYpWq529cRSoRHU77SMoaa7wPVPriiDM5/uqPT8aBYVAKEGphJFY01/kx70JJX7ho/S+hhWfmyDdaKfIh/C0VY0Vl0Cak2Ih0G0YWQoyexKjRObvnwSVTQtQhvGxp78wHpoKoWp2KfHRPJEW2u5LpIIKgAAeP8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ae561yGk; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791702583; c=relaxed/simple;
+	bh=q5da4aGeaoWB6jxMq1r9rrKJfudeiXLUYo0GlWygxTY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=MvT9WUcs12Jid9Q6C/2lFmugMDPNP2f0rv3A0YqajPYvV1gwZpSnQTCzJ1gn9KMgdApIc/ThLVIlxiZmlykOIecjYlsTeIFvbQqIZVLRpRE2z307Ic1mqmRUnWvj/pIvx2d843SF46c73Vd7syvj7Es3ecPmTlTNq1vHzRKiI8w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jm1rDuZs; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ae561yGk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E4A0D1F0089B;
-	Sun, 11 Oct 2026 07:05:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jm1rDuZs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9CAB91F0089B;
+	Sun, 11 Oct 2026 07:09:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791702334;
-	bh=Y9LfFf5kas+Nlo00QssILp8wBQcoZjr6DGRnDrz5Kdk=;
-	h=Date:From:To:Cc:Subject;
-	b=ae561yGk3JKOWwZHX82yScm6I2dut9KqBiJmowqpR+cDqUjtBp2h0O9QaKnUHTlDL
-	 4qE4v1sKTQkUORdrOaMOYCJ1D2SHE9ri1DTlr561nyda0brPua/NglMaB3GmYkdO1G
-	 TrTRC2Y2pjcPbdjbrzwOpHjbNbEUeaDNQ08puHcxB9FtyQynbHLCN/BWr1hIMzdHQ7
-	 3UKSF/AxCGbO3MYa/FmCPtiSMwmm1nk04f7tHHcMbUP81rJCeaDbL12Q4qU1znSxcA
-	 FfvH7CT2SnSIJLlnJbQw70H8vTswMc6yqzeddEgAftl5oEkQwu3QYYEmX7ECTI5xyE
-	 gudapvWKwAFsw==
-Date: Sun, 11 Oct 2026 09:05:30 +0200
+	s=k20260515; t=1791702582;
+	bh=pGc0TCl5Q4N8L/qpvL4UR+CKheDsLMCcmkHIeTyy4HY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=jm1rDuZsMEZBE1b+U2BNm1DO/nRgnBXXBzpgNywenTpETy1q98jEsstIwfQweufUg
+	 gbyzwj+rfsM6flZeDZVzRb27tAy60IULSO/heoD0TRKUwnSG9BNAi4hwdlqgLBt/DH
+	 XSwXdse23QqOEHws/jjwoi65J16uDhojKSU4btzLNBHaOYPxTj18lEPk9aCcSkgE0j
+	 JP4nCWufzKq3jENh1ct32byPaOSJ6PpuQ3MZtvI9yS8m589XzJkclZQMBydHw4SCQK
+	 S22jMKlW4p4sC3BrKHqK7AILPmtw6+qa+bPsp9Qvei1cD84OaUm9rIBCdyEd++fCiN
+	 y9Q4W+SS5ZJ+Q==
+Date: Sun, 11 Oct 2026 09:09:38 +0200
 From: Carlos Maiolino <cem@kernel.org>
-To: torvalds@linux-foundation.org
-Cc: linux-xfs@vger.kernel.org
-Subject: [GIT PULL] XFS: Fixes for v7.3-rc7
-Message-ID: <asssVCAhqkG4d54b@cronus.toxiclabs.cc>
+To: Wilfred Mallawa <wilfred.mallawa@wdc.com>
+Cc: "djwong@kernel.org" <djwong@kernel.org>, 
+	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: [xfsprogs] mkfs: fixup memory leak on exit
+Message-ID: <ass13wWEOO9woOOw@cronus.toxiclabs.cc>
+References: <20261006101232.357124-2-wilfred.opensource@gmail.com>
+ <asTQdEMkpzc7_tSd@cronus.toxiclabs.cc>
+ <75bc883c4d45a514aaad949dfe301c3f2a79112a.camel@wdc.com>
+ <20261006144851.GX2705364@frogsfrogsfrogs>
+ <asd7554UisFwlOsc@cronus.toxiclabs.cc>
+ <e042c937a34eb92afdc0208a2f6571076f096ba6.camel@wdc.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <e042c937a34eb92afdc0208a2f6571076f096ba6.camel@wdc.com>
 
-Hello Linus,
+On Sun, Oct 11, 2026 at 01:32:58AM +0000, Wilfred Mallawa wrote:
+> [snip]
+> 
+> > > 
+> > > The original patch is more appropriate IMO but seeing as we're
+> > > about to
+> > > return from main and terminate the process, why do we care?  And if
+> > > we
+> > > do, shouldn't mkfs also free the other getstr() strings attached to
+> > > the
+> > > cli struct?  And shouldn't the exit(1) paths do likewise?
+> > > 
+> > > (To be clear, my answers are "I don't", "no", and "no" but I could
+> > > be
+> > > convinced.)
+> > 
+> > Leaving them as-is is fine for now, might not be fine in the future,
+> > I'd
+> > say if we are leaking them, we should fix it, even if it's falling to
+> > the end of the program.
+> > 
+> 
+> Just to clarify, should I can spin up a V2 that frees all of the
+> getstr() allocations in xfs_mkfs? or shall we drop this for now?
 
-Could you please pull patches included in the tag below?
+I'm happy getting rid of leaks even if they are just before we exit().
+Final decision is from the maintainer thought. Andrey has been OOO past
+few days, so perhaps wait for him to come back and decide?!
 
-An attempt merge against your current TOT has been successful.
-
-The couple patches in this pull request fixes a data corruption vector
-where an user could trick the exchange-range feature to add shared
-blocks beyond the file's EOF, which may then be used to modify data on
-another file.
-
-I wasn't planning to send anything else before the merge window, so this
-pull-request is a bit different from my regular workflow and the patches
-are not in linux-next. But those patches are important enough to have
-them in 7.3 if possible, without spending time on linux-next.
-
-Thanks,
-Carlos
-
-"The following changes since commit a5ebb76233b79db01e82e061173cb73c6d2b5c6b:
-
-  Merge tag 'edac_urgent_for_v7.3_rc7' of git://git.kernel.org/pub/scm/linux/kernel/git/ras/ras (2026-10-10 16:57:30 -0700)
-
-are available in the Git repository at:
-
-  gitolite.kernel.org:/pub/scm/fs/xfs/xfs-linux.git tags/xfs-fixes-7.3-rc7
-
-for you to fetch changes up to 7dfb218c829c1acb626e0fe92c5fddb9a26a03e9:
-
-  xfs: fix exchange-range-to-eof file size exchange (2026-10-11 08:23:43 +0200)
-
-----------------------------------------------------------------
-xfs: fixes for 7.3-rc7
-
-Signed-off-by: Carlos Maiolino <cem@kernel.org>
-
-----------------------------------------------------------------
-Darrick J. Wong (1):
-      xfs: fix exchange-range-to-eof file size exchange
-
-Norbert Szetei (1):
-      xfs: stop exchanging reflink flags when exchanging mappings
-
- fs/xfs/libxfs/xfs_exchmaps.c   | 93 +++++++-----------------------------------
- fs/xfs/libxfs/xfs_log_format.h |  4 +-
- fs/xfs/xfs_bmap_util.c         | 15 +++----
- fs/xfs/xfs_exchrange.c         | 51 ++++++++++++++++-------
- 4 files changed, 58 insertions(+), 105 deletions(-)"
+Cheers.
