@@ -1,30 +1,30 @@
-Received: from out30-130.freemail.mail.aliyun.com (out30-130.freemail.mail.aliyun.com [115.124.30.130])
+Received: from out30-97.freemail.mail.aliyun.com (out30-97.freemail.mail.aliyun.com [115.124.30.97])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6D7B1799F;
-	Sun, 11 Oct 2026 17:10:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57F6C23ED6A;
+	Sun, 11 Oct 2026 17:10:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.97
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791738651; cv=none; b=EzQWFJ7GNYJOV1Lh+7FXH0aDjaTgAH/Eb5bNG/Ny4eW17BboMq0sQGpCk+J1HUUuqF8OUIKg6anzoJkaFdLgJHoLcyAGvpr0fs7dW5Gc3hBZSvpfuwLUwcMFqwROesPzTlvNRy/pegSSu9EODbPUDtJv3Jrim+bJasIG/9JMis8=
+	t=1791738651; cv=none; b=hScRG/dE4ZNNNggmTTkgjRA30l3hqHR0dl+MZVTsQBaYtJAo1AwBYc8cE5Ec0J8dlawGscvYHuAt/5ANY7Dx9vSENTWYsheeJpFtl0Gmu0c3D4mOGccH6HkO3QjSRn8EbSIoaLP3JqRzJ8rcg5JcSsWFGq84HUdaeiOh0ZQqAv0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1791738651; c=relaxed/simple;
-	bh=tMh17T2lfSfDB4jySMADL4BHLYBllXZmqDk1Sh5gLKM=;
+	bh=CmHtzqHpJ/G+vywjHIX4oJlR+kjMPmeCCV3pEjGSrNk=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ObmgqgjZK4b5ndURbTyXFYR2hixawf5zV0ehI0tytxPYRH2BfZ2Jq7LuAtgStRCmvyUW9UfEE2OJmlFYyvUM9bX1Uc/ew8ETWvddiEuxPpub0tsyXjnPof6Jr8NWtAFUpbxINDOqVc9Fri11itgaZoIPKV1edMpYqExKLWvhmbs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=tCmR19rh; arc=none smtp.client-ip=115.124.30.130
+	 MIME-Version; b=rb/ZkkNZpr2rfRQxezCcmZq4lqHkFtTGRi1fg30fLorWb21aJN7+hCxhO/Nfoma96/ZobRQahvAhIGRG+hvDWup3tBd38gcdaVsIauyKM/VR3ECDA7wzSPscy1hrjEHWW3P9qVYuHeT14Lm8c9TO/1zfk24bLXRLikbh5mZoUxk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=mr+uLZj0; arc=none smtp.client-ip=115.124.30.97
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="tCmR19rh"
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="mr+uLZj0"
 DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
 	d=linux.alibaba.com; s=default;
-	t=1791738644; h=From:To:Subject:Date:Message-ID:MIME-Version;
-	bh=MNHvpV3essq4tUhV6VcEgoNvT0qhWCnVrQakDvUXdEY=;
-	b=tCmR19rhf8xzltI1GfL6ZDrnF4N3mXKagyBHgcLpWk9tWrKZX8CgqRZsHFfILRP4wEs6kWy5EBo+EOyoO08LOmckAsJznUkMySsPLnPGaOAuE01fER6uo5p8AIw7uA7bDmbqIPsEKMdkQ20CCQ8MBb9KzX5cfEi9ST46tx3qmyI=
-X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R201e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033037026112;MF=libaokun@linux.alibaba.com;NM=1;PH=DS;RN=20;SR=0;TI=SMTPD_---0XCYQXYB_1791738641;
-Received: from x31h02109.sqa.na131.tbsite.net(mailfrom:libaokun@linux.alibaba.com fp:SMTPD_---0XCYQXYB_1791738641 cluster:ay36)
+	t=1791738640; h=From:To:Subject:Date:Message-ID:MIME-Version;
+	bh=rWk0sRuAc4jP1qwUY4YXovDt1TGYXm/b0nVb2UKQGJ8=;
+	b=mr+uLZj0nXQeXDWVasRuoYry0pww0SvAyKUT5KZg6tNT1H3asfzOlrZzwiGFEVsToOTnRK/WYywpPJrdsSUPU9nrkRnuCDh//FuOI2tTy239Y+HhInaPwQZtZobsk7c2cnxh0JW/MOCCF04o0QETjDXpC/g7AtlZXfNWZWsndeo=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R241e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033037026112;MF=libaokun@linux.alibaba.com;NM=1;PH=DS;RN=19;SR=0;TI=SMTPD_---0XCYQXXC_1791738637;
+Received: from x31h02109.sqa.na131.tbsite.net(mailfrom:libaokun@linux.alibaba.com fp:SMTPD_---0XCYQXXC_1791738637 cluster:ay36)
           by smtp.aliyun-inc.com;
-          Mon, 12 Oct 2026 01:10:42 +0800
+          Mon, 12 Oct 2026 01:10:38 +0800
 From: Baokun Li <libaokun@linux.alibaba.com>
 To: linux-ext4@vger.kernel.org
 Cc: linux-fscrypt@vger.kernel.org,
@@ -43,11 +43,10 @@ Cc: linux-fscrypt@vger.kernel.org,
 	jack@suse.cz,
 	yi.zhang@huawei.com,
 	ojaswin@linux.ibm.com,
-	ritesh.list@gmail.com,
-	stable@vger.kernel.org
-Subject: [PATCH 12/13] ext4: send folios that cover a wraparound to the buffer_head path
-Date: Mon, 12 Oct 2026 01:09:57 +0800
-Message-ID: <20261011170958.1759230-13-libaokun@linux.alibaba.com>
+	ritesh.list@gmail.com
+Subject: [PATCH 09/13] block: warn about bios that can't be split
+Date: Mon, 12 Oct 2026 01:09:54 +0800
+Message-ID: <20261011170958.1759230-10-libaokun@linux.alibaba.com>
 X-Mailer: git-send-email 2.43.7
 In-Reply-To: <20261011170958.1759230-1-libaokun@linux.alibaba.com>
 References: <20261011170958.1759230-1-libaokun@linux.alibaba.com>
@@ -59,67 +58,62 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-ext4_mpage_readpages() puts a whole folio into a bio with a single
-crypt context, taken from the position of the folio, and blk-crypto
-increments the data unit number for each data unit that follows in
-the bio.
+bio_split_io_at() fails a bio that it can't split into a valid request
+with -EINVAL: a bio may have too many discontiguous segments for the
+queue, may have virtual boundary gaps that leave it without a block
+sized split, and now that the split size is rounded down to the data
+unit size of an encryption context, it may have a data unit that does
+not fit in the room that the queue limits leave for the split.
 
-By contrast, fscrypt truncates the data unit numbers to 32 bits for
-IV_INO_LBLK_32, the only supported IV generation method whose data
-unit numbers wrap around within a file.
+Nothing else says which queue limit caused the failure, and a limit that
+is smaller than the data unit size, e.g. a max_sectors_kb that was
+lowered below it, is accepted by the block layer, so warn about it, with
+the bytes that fit and the alignment involved.
 
-The blocks after a wraparound inside a folio are then en/decrypted
-with IVs of 2^32 + i instead of i.  fscrypt_mergeable_bio() only runs
-between folios, so nothing catches this.
-
-This is reachable even without a block size larger than the page
-size: when a filesystem is mounted without the encrypt feature,
-ext4_set_max_mapping_order() does not cap its folio order, and
-enabling the feature on the mounted filesystem does not change that.
-
-The encrypted files of a policy that is set up afterwards then get
-large folios, which can cover the data unit number wraparound of the
-file.
-
-Fix this by sending folios that cover a wraparound to the buffer_head
-based path in ext4_mpage_readpages(), which creates one bio per block:
-fscrypt_limit_io_blocks() tells whether the wraparound falls inside
-the folio's blocks, and only the folio covering it takes the slower
-path.
-
-At most one folio per file is affected: the extra cost is a
-buffer_head and a bio per block for that folio, and the block layer
-merges those bios back together.
-
-Fixes: 709f0f1f1bf5 ("ext4: add checks for large folio incompatibilities when BS > PS")
-Cc: stable@vger.kernel.org # v6.19+
 Signed-off-by: Baokun Li <libaokun@linux.alibaba.com>
 ---
- fs/ext4/readpage.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ block/blk-merge.c | 19 +++++++++++++------
+ 1 file changed, 13 insertions(+), 6 deletions(-)
 
-diff --git a/fs/ext4/readpage.c b/fs/ext4/readpage.c
-index c7b6cdb2e124..0c0dfaac6ded 100644
---- a/fs/ext4/readpage.c
-+++ b/fs/ext4/readpage.c
-@@ -264,6 +264,17 @@ static int ext4_mpage_readpages(struct inode *inode, struct fsverity_info *vi,
- 			folio_set_mappedtodisk(folio);
- 		}
+diff --git a/block/blk-merge.c b/block/blk-merge.c
+index f92460c283e7..9bcc9c52eea1 100644
+--- a/block/blk-merge.c
++++ b/block/blk-merge.c
+@@ -349,6 +349,7 @@ int bio_split_io_at(struct bio *bio, const struct queue_limits *lim,
+ 	struct bio_crypt_ctx *bc = bio_crypt_ctx(bio);
+ 	struct bio_vec bv, bvprv, *bvprvp = NULL;
+ 	unsigned nsegs = 0, bytes = 0, gaps = 0;
++	unsigned int align, split_bytes;
+ 	struct bvec_iter iter;
+ 	unsigned start_align_mask = lim->dma_alignment;
  
-+		/*
-+		 * A bio's data unit numbers are derived from its first data
-+		 * unit, so a folio that covers a data unit number wraparound
-+		 * would be encrypted with the wrong IVs.  Only IV_INO_LBLK_32
-+		 * can wrap; route such folios to the buffer_head based path,
-+		 * which creates a bio per block.
-+		 */
-+		if (fscrypt_limit_io_blocks(inode, pos >> blkbits,
-+					    first_hole) < first_hole)
-+			goto confused;
-+
- 		/*
- 		 * This folio will go to BIO.  Do we need to send this
- 		 * BIO off first?
+@@ -409,14 +410,20 @@ int bio_split_io_at(struct bio *bio, const struct queue_limits *lim,
+ 	 * we do not use the full hardware limits.
+ 	 *
+ 	 * It is possible to submit a bio that can't be split into a valid io:
+-	 * there may either be too many discontiguous vectors for the max
+-	 * segments limit, or contain virtual boundary gaps without having a
+-	 * valid block sized split. A zero byte result means one of those
+-	 * conditions occured.
++	 * it may have too many discontiguous vectors for the max segments
++	 * limit, contain virtual boundary gaps without having a valid block
++	 * sized split, or have a crypto context whose data units are larger
++	 * than the number of bytes that fit. A zero byte result means one of
++	 * those conditions occurred.
+ 	 */
+-	bytes = ALIGN_DOWN(bytes, bio_split_alignment(bio, lim));
+-	if (!bytes)
++	align = bio_split_alignment(bio, lim);
++	split_bytes = ALIGN_DOWN(bytes, align);
++	if (!split_bytes) {
++		pr_warn_ratelimited("%pg: split needs %u align, %u bytes fit\n",
++				    bio->bi_bdev, align, bytes);
+ 		return -EINVAL;
++	}
++	bytes = split_bytes;
+ 
+ 	/*
+ 	 * Bio splitting may cause subtle trouble such as hang when doing sync
 -- 
 2.43.7
 
