@@ -1,30 +1,30 @@
-Received: from out30-130.freemail.mail.aliyun.com (out30-130.freemail.mail.aliyun.com [115.124.30.130])
+Received: from out30-132.freemail.mail.aliyun.com (out30-132.freemail.mail.aliyun.com [115.124.30.132])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 589FA305680;
-	Sun, 11 Oct 2026 17:10:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFCD333688F;
+	Sun, 11 Oct 2026 17:10:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.132
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791738645; cv=none; b=aW3bGsI+egdbhcIoAyvAcZj5qvoVa8/Kko8M0d/gFdiJxKSr2/t3+Ogug2Dihw0i6e3n2jRC/MkrLcOBsRRWGAtIeld+Y2BMMIXyFxXNKUaYHhqo2XwSKw+S05z3GL8CGxRzxd+X+3dytrsbOvStA56G+N44/XAG81cJcP4aI04=
+	t=1791738645; cv=none; b=MNpGd5jHXaHhHTGBAwLTxdnoa24GiSBT4NErr7b/UH7DEkkKQaU5um2Lg3qnTF6CC6v39J3pNYZNI+6aVJTEIuVOVoiOqADIWOWMEwCFW+DGPnfQUEB2dcP/YL3vqMe4bfM824ORdYj2B6znui4s9T2DGH9hGYOHmEu5ctqP7ys=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1791738645; c=relaxed/simple;
-	bh=Gl4qcZj74+yFeU312om5kGSDMcxXnbwXLJmK6uidkaE=;
+	bh=NrqZK7rqvAw56MQDdSJueOqwdJPJ/xxZ6bahGqeUuu0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=PrLViQOEpHNGhBGlxjhCW6Z1uNOc7uI+WB8R4CKMCnBen9p6aP/C4uDXqyZ7+kCodPoUBLH1CiQocQcsaHVQB8+T65UocZderpwLNbqiesd8/4MCEaJTd6/a5iSouMslkGF1OveWVsR7e+/OTaczlvu2ONhr/AEq5PCr72layVI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=bhPDVXlJ; arc=none smtp.client-ip=115.124.30.130
+	 MIME-Version; b=YoLIIIwKINEbnkxSbQEu3WK0KeqaZVBJcAAOQGX4WZEOg+WiBnp0lOzdWCPTBjLO+5tr5X2QYnTFpwPjr546hHNgMURWUelAuvMyttojs8dFJU9cYaJ/5aRpl+Kv3BPj/gr8RjeX2eHJAQYSMQfpYxMH/thtTnc8qicTtUefUrY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=lK8/1QlG; arc=none smtp.client-ip=115.124.30.132
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="bhPDVXlJ"
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="lK8/1QlG"
 DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
 	d=linux.alibaba.com; s=default;
-	t=1791738633; h=From:To:Subject:Date:Message-ID:MIME-Version;
-	bh=BTWEGMXHj1amQ/3nQyk8faPm4MoQgDFZhbUBeHLQEh4=;
-	b=bhPDVXlJX3Vs2y8QDb2LFTitmA85V7FquJs8VLAwu/QTq0w6ke4JFHKISFyoiGEpXn2PDz170LaXB+miLlbGastdk3X6vnrGIe2ype/uQ8f700w1qfdYOOteSP+eF/cNhssuUhC8PzsPwgkCJ1Gq49Y+DDsHjlmmycxVyxppAK0=
-X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R111e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam011083073210;MF=libaokun@linux.alibaba.com;NM=1;PH=DS;RN=19;SR=0;TI=SMTPD_---0XCYQXV1_1791738631;
-Received: from x31h02109.sqa.na131.tbsite.net(mailfrom:libaokun@linux.alibaba.com fp:SMTPD_---0XCYQXV1_1791738631 cluster:ay36)
+	t=1791738635; h=From:To:Subject:Date:Message-ID:MIME-Version;
+	bh=gqmSL4sWYoDT4Bqy2HkgacUL7Fkiqz8D3Y0xgLtRABs=;
+	b=lK8/1QlGKfT74Uf2e04IP/O5Ysyt7+IfneEpgcMNirWHAgVM0AuKpdEIb+wpyPYpecEK/ekjtP2QCp0UwlTHWqSxzDWjZP3rI80ccMqM57CT+OXO7n4enhxVOsWM9a1++MKWno9uROPmbq9xCUzRRuvQ9h3r24hDYmS8ViYAlTY=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R101e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033037009110;MF=libaokun@linux.alibaba.com;NM=1;PH=DS;RN=19;SR=0;TI=SMTPD_---0XCYQXVO_1791738632;
+Received: from x31h02109.sqa.na131.tbsite.net(mailfrom:libaokun@linux.alibaba.com fp:SMTPD_---0XCYQXVO_1791738632 cluster:ay36)
           by smtp.aliyun-inc.com;
-          Mon, 12 Oct 2026 01:10:31 +0800
+          Mon, 12 Oct 2026 01:10:33 +0800
 From: Baokun Li <libaokun@linux.alibaba.com>
 To: linux-ext4@vger.kernel.org
 Cc: linux-fscrypt@vger.kernel.org,
@@ -44,9 +44,9 @@ Cc: linux-fscrypt@vger.kernel.org,
 	yi.zhang@huawei.com,
 	ojaswin@linux.ibm.com,
 	ritesh.list@gmail.com
-Subject: [PATCH 04/13] blk-crypto: decrypt one data unit per crypto request
-Date: Mon, 12 Oct 2026 01:09:49 +0800
-Message-ID: <20261011170958.1759230-5-libaokun@linux.alibaba.com>
+Subject: [PATCH 05/13] blk-crypto: encrypt one data unit per crypto request
+Date: Mon, 12 Oct 2026 01:09:50 +0800
+Message-ID: <20261011170958.1759230-6-libaokun@linux.alibaba.com>
 X-Mailer: git-send-email 2.43.7
 In-Reply-To: <20261011170958.1759230-1-libaokun@linux.alibaba.com>
 References: <20261011170958.1759230-1-libaokun@linux.alibaba.com>
@@ -58,225 +58,217 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-__blk_crypto_fallback_decrypt_bio() decrypts the bio one bio_vec at a
-time: it walks the bio_vecs with __bio_for_each_segment(), requires each
-bio_vec to be data unit aligned and a multiple of the data unit size, and
-decrypts every data unit in it with a scatterlist that covers the whole
-bio_vec.
+__blk_crypto_fallback_encrypt_bio() encrypts the source bio one bio_vec
+at a time: it walks the bio with bio_iter_iovec(), which clamps each
+bio_vec to a single page, encrypts all the data units of that bio_vec
+into its bounce page with one crypto request per data unit, and starts a
+new encrypted bio when all of its pages are in use.
 
-That requires a data unit to be contiguous in memory, and cannot express
-a data unit that spans more than a page.  In preparation for supporting
-such data units, collect the bio_vecs that make up one data unit in the
-new blk_crypto_du_bvecs(), and decrypt the data unit with a single crypto
-request whose scatterlist spans those bio_vecs.
+That structure cannot express a data unit that spans more than a page.
+In preparation for supporting such data units, restructure the loop
+around the data unit, the same way as the decryption path: collect the
+bio_vecs that make up one data unit in blk_crypto_du_bvecs(), encrypt it
+with a single crypto request whose scatterlist covers exactly those
+bio_vecs, and advance the source bio by one data unit.
 
-Add a struct blk_crypto_du_ctx to describe one data unit, with
-blk_crypto_du_ctx_init() to initialize it and blk_crypto_du_bvecs() to
-fill in its bio_vecs.  The array that holds them is sized for one
-bio_vec and lives on the stack, so a data unit that needs more than
-one bio_vec is rejected with BLK_STS_INVAL for now.
+Unlike the decryption path, which decrypts in place using one
+scatterlist for both sides, the encryption path writes the ciphertext
+to the bounce pages, so it fills the scatterlist for each side of the
+crypto request, and calls the same blk_crypto_crypt_du() helper, with
+the encryption direction and the bounce page scatterlist as the
+destination.
 
-Also add a blk_crypto_crypt_du() helper that en/decrypts one data unit.
-Only the decryption path uses it in this patch; the encryption path will
-be restructured the same way in a follow-up patch, with the bounce page
-scatterlist as the destination.
+A data unit is now encrypted as soon as it is complete instead of when
+all the data units of its bio_vec are, and the first bio_vec of a data
+unit is added to the encrypted bio with the whole length of the source
+bio_vec it starts in, as the data units that follow it in that bio_vec
+share its bounce page.
 
 No functional change intended.
 
 Signed-off-by: Baokun Li <libaokun@linux.alibaba.com>
 ---
- block/blk-crypto-fallback.c | 162 ++++++++++++++++++++++++++++++------
- 1 file changed, 135 insertions(+), 27 deletions(-)
+ block/blk-crypto-fallback.c | 131 +++++++++++++++++++++++-------------
+ 1 file changed, 85 insertions(+), 46 deletions(-)
 
 diff --git a/block/blk-crypto-fallback.c b/block/blk-crypto-fallback.c
-index a75daadba4c8..e383444686fc 100644
+index e383444686fc..12b3ca95db26 100644
 --- a/block/blk-crypto-fallback.c
 +++ b/block/blk-crypto-fallback.c
-@@ -242,6 +242,116 @@ static void blk_crypto_dun_to_iv(const u64 dun[BLK_CRYPTO_DUN_ARRAY_SIZE],
- 		iv->dun[i] = cpu_to_le64(dun[i]);
- }
- 
-+/*
-+ * Describes one data unit: the bio_vecs that cover it and the
-+ * scatterlists to en/decrypt it with.
-+ */
-+struct blk_crypto_du_ctx {
-+	/* Backing store for bvecs, for the one-bio_vec case. */
-+	struct bio_vec		stack_bvec;
-+	/* Backing store for src_sg and dst_sg, one entry each. */
-+	struct scatterlist	stack_sgs[2];
-+
-+	/* The data unit size in bytes. */
-+	unsigned int		du_size;
-+	/* Number of entries available in bvecs. */
-+	unsigned int		max_bvecs;
-+
-+	/* The bio_vecs that cover the data unit. */
-+	struct bio_vec		*bvecs;
-+	/* The scatterlist for each side of the crypto request. */
-+	struct scatterlist	*src_sg;
-+	struct scatterlist	*dst_sg;
-+
-+	/* The crypto request to en/decrypt the data unit with. */
-+	struct skcipher_request	*ciph_req;
-+	/* The data unit's DUN, advanced on each successful crypt. */
-+	u64			curr_dun[BLK_CRYPTO_DUN_ARRAY_SIZE];
-+};
-+
-+static void blk_crypto_du_ctx_init(struct blk_crypto_du_ctx *du_ctx,
-+				   struct skcipher_request *ciph_req,
-+				   const struct bio_crypt_ctx *bc)
-+{
-+	du_ctx->ciph_req = ciph_req;
-+	du_ctx->du_size = bc->bc_key->crypto_cfg.data_unit_size;
-+	memcpy(du_ctx->curr_dun, bc->bc_dun, sizeof(bc->bc_dun));
-+
-+	du_ctx->max_bvecs = 1;
-+	du_ctx->bvecs = &du_ctx->stack_bvec;
-+	du_ctx->src_sg = &du_ctx->stack_sgs[0];
-+	du_ctx->dst_sg = &du_ctx->stack_sgs[1];
-+}
-+
-+/*
-+ * En/decrypt one data unit: run the request over the data unit's
-+ * scatterlists with its DUN as the IV, and advance the DUN on success.
-+ */
-+static int blk_crypto_crypt_du(struct blk_crypto_du_ctx *du_ctx, bool encrypt)
-+{
-+	union blk_crypto_iv iv;
-+	int err;
-+
-+	blk_crypto_dun_to_iv(du_ctx->curr_dun, &iv);
-+	skcipher_request_set_crypt(du_ctx->ciph_req,
-+				   du_ctx->src_sg, du_ctx->dst_sg,
-+				   du_ctx->du_size, iv.bytes);
-+
-+	if (encrypt)
-+		err = crypto_skcipher_encrypt(du_ctx->ciph_req);
-+	else
-+		err = crypto_skcipher_decrypt(du_ctx->ciph_req);
-+	if (err)
-+		return -EIO;
-+
-+	bio_crypt_dun_increment(du_ctx->curr_dun, 1);
-+	return 0;
-+}
-+
-+/**
-+ * blk_crypto_du_bvecs() - collect the bio_vecs that make up one data unit
-+ * @bio: the bio to collect from
-+ * @iter: the position in @bio to collect at.  Not modified.
-+ * @du_ctx: the context to collect the data unit into.  Uses
-+ *	    @du_ctx->du_size and @du_ctx->max_bvecs, and stores the
-+ *	    bio_vecs in @du_ctx->bvecs
-+ *
-+ * Collect the bio_vecs that cover one data unit starting at @iter.  Each
-+ * bio_vec is clamped to its page, so a data unit spans several bio_vecs if it
-+ * covers several pages or if a bio_vec boundary splits it.
-+ *
-+ * Return: the number of bio_vecs collected, or 0 if @bio doesn't have a whole
-+ *	   data unit at @iter, the data unit doesn't start at a
-+ *	   min(@du_ctx->du_size, PAGE_SIZE) boundary, or the data unit
-+ *	   needs more than @du_ctx->max_bvecs bio_vecs.
-+ */
-+static unsigned int blk_crypto_du_bvecs(struct bio *bio,
-+					const struct bvec_iter *iter,
-+					struct blk_crypto_du_ctx *du_ctx)
-+{
-+	const unsigned int align = min(du_ctx->du_size, PAGE_SIZE);
-+	struct bvec_iter du_iter = *iter;
-+	struct bio_vec bv;
-+	unsigned int n = 0;
-+
-+	if (du_iter.bi_size < du_ctx->du_size)
-+		return 0;
-+
-+	/* Walk a copy of the iterator that ends after one data unit. */
-+	du_iter.bi_size = du_ctx->du_size;
-+
-+	__bio_for_each_segment(bv, bio, du_iter, du_iter) {
-+		if (n == du_ctx->max_bvecs)
-+			return 0;
-+		if (!n && !IS_ALIGNED(bv.bv_offset, align))
-+			return 0;
-+
-+		du_ctx->bvecs[n++] = bv;
-+	}
-+
-+	return n;
-+}
-+
- static void __blk_crypto_fallback_encrypt_bio(struct bio *src_bio,
+@@ -356,81 +356,66 @@ static void __blk_crypto_fallback_encrypt_bio(struct bio *src_bio,
  		struct crypto_sync_skcipher *tfm)
  {
-@@ -378,42 +488,40 @@ static blk_status_t __blk_crypto_fallback_decrypt_bio(struct bio *bio,
- 		struct crypto_sync_skcipher *tfm)
- {
+ 	struct bio_crypt_ctx *bc = src_bio->bi_crypt_context;
+-	int data_unit_size = bc->bc_key->crypto_cfg.data_unit_size;
  	SYNC_SKCIPHER_REQUEST_ON_STACK(ciph_req, tfm);
 -	u64 curr_dun[BLK_CRYPTO_DUN_ARRAY_SIZE];
+-	struct scatterlist src, dst;
 -	union blk_crypto_iv iv;
--	struct scatterlist sg;
--	struct bio_vec bv;
--	const int data_unit_size = bc->bc_key->crypto_cfg.data_unit_size;
--	unsigned int i;
+-	unsigned int nr_enc_pages, enc_idx;
 +	struct blk_crypto_du_ctx du_ctx;
-+	blk_status_t status = BLK_STS_OK;
++	unsigned int nr_enc_pages, enc_idx, nr_new_pages;
+ 	struct page **enc_pages;
++	struct page *cur_enc_page = NULL;
+ 	struct bio *enc_bio;
+-	unsigned int i;
++	bool reuse_enc_page;
 +	unsigned int i, n;
  
  	skcipher_request_set_callback(ciph_req,
  			CRYPTO_TFM_REQ_MAY_BACKLOG | CRYPTO_TFM_REQ_MAY_SLEEP,
  			NULL, NULL);
-+	blk_crypto_du_ctx_init(&du_ctx, ciph_req, bc);
-+	/* Decrypt in place, so both sides use the same scatterlist. */
-+	du_ctx.dst_sg = du_ctx.src_sg;
-+
-+	/* Decrypt each data unit in the bio, in place */
-+	while (iter.bi_size) {
-+		n = blk_crypto_du_bvecs(bio, &iter, &du_ctx);
-+		if (!n) {
-+			status = BLK_STS_INVAL;
-+			break;
-+		}
- 
+-
 -	memcpy(curr_dun, bc->bc_dun, sizeof(curr_dun));
--	sg_init_table(&sg, 1);
--	skcipher_request_set_crypt(ciph_req, &sg, &sg, data_unit_size,
+-	sg_init_table(&src, 1);
+-	sg_init_table(&dst, 1);
+-
+-	skcipher_request_set_crypt(ciph_req, &src, &dst, data_unit_size,
 -				   iv.bytes);
++	blk_crypto_du_ctx_init(&du_ctx, ciph_req, bc);
+ 
+ 	/*
+-	 * Encrypt each page in the source bio.  Because the source bio could
+-	 * have bio_vecs that span more than a single page, but the encrypted
+-	 * bios are limited to a single page per bio_vec, this can generate
+-	 * more than a single encrypted bio per source bio.
++	 * Encrypt each data unit in the source bio.  A data unit is described by
++	 * one bio_vec per page.  Because the encrypted bios are limited to a
++	 * single page per bio_vec, this can generate more than a single
++	 * encrypted bio per source bio.
+ 	 */
+ new_bio:
+ 	nr_enc_pages = min(bio_segments(src_bio), BIO_MAX_VECS);
+ 	enc_bio = blk_crypto_alloc_enc_bio(src_bio, nr_enc_pages, &enc_pages);
+ 	enc_idx = 0;
++	reuse_enc_page = false;
+ 	for (;;) {
+ 		struct bio_vec src_bv =
+ 			bio_iter_iovec(src_bio, src_bio->bi_iter);
+-		struct page *enc_page = enc_pages[enc_idx];
+ 
+-		if (!IS_ALIGNED(src_bv.bv_len | src_bv.bv_offset,
+-				data_unit_size)) {
++		n = blk_crypto_du_bvecs(src_bio, &src_bio->bi_iter, &du_ctx);
++		if (!n) {
+ 			enc_bio->bi_status = BLK_STS_INVAL;
+ 			goto out_free_enc_bio;
+ 		}
+ 
+-		__bio_add_page(enc_bio, enc_page, src_bv.bv_len,
+-				src_bv.bv_offset);
 -
--	/* Decrypt each segment in the bio */
--	__bio_for_each_segment(bv, bio, iter, iter) {
--		struct page *page = bv.bv_page;
+-		sg_set_page(&src, src_bv.bv_page, data_unit_size,
+-			    src_bv.bv_offset);
+-		sg_set_page(&dst, enc_page, data_unit_size, src_bv.bv_offset);
 -
--		if (!IS_ALIGNED(bv.bv_len | bv.bv_offset, data_unit_size))
--			return BLK_STS_INVAL;
+ 		/*
+-		 * Increment the index now that the encrypted page is added to
+-		 * the bio.  This is important for the error unwind path.
++		 * The first bio_vec of the data unit reuses the bounce page
++		 * that the previous data unit added for the bio_vec it ended
++		 * in, if any; every other bio_vec needs a bounce page of its
++		 * own.
++		 *
++		 * reuse_enc_page implies nr_new_pages == 0: a data unit that
++		 * reuses a bounce page fits in a single bio_vec, as max_bvecs
++		 * is 1 for data units up to a page (see
++		 * blk_crypto_du_ctx_init()).  A submit therefore only happens
++		 * at a segment boundary and the encrypted bio never extends
++		 * past the encrypted data.
+ 		 */
+-		enc_idx++;
++		nr_new_pages = n - reuse_enc_page;
++		WARN_ON_ONCE(reuse_enc_page && nr_new_pages);
+ 
+ 		/*
+-		 * Encrypt each data unit in this page.
++		 * Is there room for this data unit in the current encrypted bio?
++		 * (There always is in a newly allocated one.)
+ 		 */
+-		for (i = 0; i < src_bv.bv_len; i += data_unit_size) {
+-			blk_crypto_dun_to_iv(curr_dun, &iv);
+-			if (crypto_skcipher_encrypt(ciph_req)) {
+-				enc_bio->bi_status = BLK_STS_IOERR;
++		if (enc_idx + nr_new_pages > nr_enc_pages) {
++			if (WARN_ON_ONCE(!enc_idx)) {
++				enc_bio->bi_status = BLK_STS_INVAL;
+ 				goto out_free_enc_bio;
+ 			}
+-			bio_crypt_dun_increment(curr_dun, 1);
+-			src.offset += data_unit_size;
+-			dst.offset += data_unit_size;
+-		}
 -
--		sg_set_page(&sg, page, data_unit_size, bv.bv_offset);
+-		bio_advance_iter_single(src_bio, &src_bio->bi_iter,
+-				src_bv.bv_len);
+-		if (!src_bio->bi_iter.bi_size)
+-			break;
+-
+-		if (enc_idx == nr_enc_pages) {
+ 			/*
+ 			 * For each additional encrypted bio submitted,
+ 			 * increment the source bio's remaining count.  Each
+@@ -442,6 +427,60 @@ static void __blk_crypto_fallback_encrypt_bio(struct bio *src_bio,
+ 			submit_bio(enc_bio);
+ 			goto new_bio;
+ 		}
++
++		/*
++		 * Encrypt the data unit, scattering the ciphertext into the
++		 * bounce pages.  The bounce pages mirror the data layout of the
++		 * source bio, so that the encrypted bio can be submitted for the
++		 * same disk location as the source bio.
++		 */
 +		sg_init_table(du_ctx.src_sg, n);
-+		for (i = 0; i < n; i++)
++		sg_init_table(du_ctx.dst_sg, n);
++		for (i = 0; i < n; i++) {
++			struct page *enc_page;
++
++			if (!i && reuse_enc_page) {
++				/* Covered by the previous bounce page. */
++				enc_page = cur_enc_page;
++			} else {
++				/*
++				 * A bio_vec that holds more than one data unit
++				 * is added with its whole length; the data
++				 * units that follow it fill in the same bounce
++				 * page before the encrypted bio is submitted.
++				 */
++				enc_page = enc_pages[enc_idx++];
++				__bio_add_page(enc_bio, enc_page, src_bv.bv_len,
++					       src_bv.bv_offset);
++				cur_enc_page = enc_page;
++			}
++
 +			sg_set_page(&du_ctx.src_sg[i], du_ctx.bvecs[i].bv_page,
 +				    du_ctx.bvecs[i].bv_len,
 +				    du_ctx.bvecs[i].bv_offset);
- 
--		/* Decrypt each data unit in the segment */
--		for (i = 0; i < bv.bv_len; i += data_unit_size) {
--			blk_crypto_dun_to_iv(curr_dun, &iv);
--			if (crypto_skcipher_decrypt(ciph_req))
--				return BLK_STS_IOERR;
--			bio_crypt_dun_increment(curr_dun, 1);
--			sg.offset += data_unit_size;
-+		if (blk_crypto_crypt_du(&du_ctx, false)) {
-+			status = BLK_STS_IOERR;
-+			break;
- 		}
++			sg_set_page(&du_ctx.dst_sg[i], enc_page,
++				    du_ctx.bvecs[i].bv_len,
++				    du_ctx.bvecs[i].bv_offset);
++		}
 +
-+		bio_advance_iter_single(bio, &iter, du_ctx.du_size);
++		/*
++		 * The next data unit starts in the same bio_vec, and thus
++		 * shares the bounce page added above, unless this data unit
++		 * reaches the end of the bio_vec it is in.  A page can be
++		 * covered by several bio_vecs, so the sharing is per bio_vec,
++		 * not per page.
++		 */
++		reuse_enc_page = n == 1 && src_bv.bv_len > du_ctx.du_size;
++
++		if (blk_crypto_crypt_du(&du_ctx, true)) {
++			enc_bio->bi_status = BLK_STS_IOERR;
++			goto out_free_enc_bio;
++		}
++
++		bio_advance_iter_single(src_bio, &src_bio->bi_iter,
++					du_ctx.du_size);
++		if (!src_bio->bi_iter.bi_size)
++			break;
  	}
  
--	return BLK_STS_OK;
-+	return status;
- }
- 
- /*
+ 	submit_bio(enc_bio);
 -- 
 2.43.7
 
