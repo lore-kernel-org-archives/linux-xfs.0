@@ -1,82 +1,92 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3FFB54705C
-	for <linux-xfs@vger.kernel.org>; Sun, 11 Oct 2026 07:09:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 127BA2F1FD0
+	for <linux-xfs@vger.kernel.org>; Sun, 11 Oct 2026 07:24:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791702583; cv=none; b=kSQneEJeQB6gtbhT6I7vL0rGHLPsLXWY2VNpcZOHUXGX7p9g6Xi1KkElR+RG9hLiVw8xph247kDNsgX3BHp/G7yJwHDsoCR7KSJXlw+y3hexx26hpf9xrmVtOQ9ZaBmYNxxB2K2flMkWmLkWA+wuJGYEGnW8C/WhMwCwpja0iVQ=
+	t=1791703447; cv=none; b=FIPVAHBE/WmVoYztbOQL1dx03zQdqUiV6MFwhBKS7sjRoXkZBQAAtUWX2A5mi/Uiw6IeCD3RbYnWkwzzfaJyBMFsw7tKm6yF1QZBIthHAWJSW/pBQRCN/itJJDXxcH+3JQ8W0grthYFOMiGBviDSfputgeViAm7Mw+fHL5BXPyw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791702583; c=relaxed/simple;
-	bh=q5da4aGeaoWB6jxMq1r9rrKJfudeiXLUYo0GlWygxTY=;
+	s=arc-20240116; t=1791703447; c=relaxed/simple;
+	bh=Ot1eBJjiJRsFCdR6VhFedLgKlNle0Y/IF4tyoLEVWhQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MvT9WUcs12Jid9Q6C/2lFmugMDPNP2f0rv3A0YqajPYvV1gwZpSnQTCzJ1gn9KMgdApIc/ThLVIlxiZmlykOIecjYlsTeIFvbQqIZVLRpRE2z307Ic1mqmRUnWvj/pIvx2d843SF46c73Vd7syvj7Es3ecPmTlTNq1vHzRKiI8w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jm1rDuZs; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=SGpSy2UEjuBq4zAkNq9LizUKSCU1zdDkB7lBYTK4oDlaZHnpNYgwXT8Q1oF9ecPv1mFF0We+kp/gTN7g7FE/pn3FfrlE9fHWeNuQm0YGGO7Nxp7tOGgl9VsmP/WXAHBktCzH0hpYgtJpPK1KrBORamhf2T2l4DTxk9fLF2hGXYU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BbOFApIu; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jm1rDuZs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9CAB91F0089B;
-	Sun, 11 Oct 2026 07:09:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BbOFApIu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F6A91F0089B;
+	Sun, 11 Oct 2026 07:24:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791702582;
-	bh=pGc0TCl5Q4N8L/qpvL4UR+CKheDsLMCcmkHIeTyy4HY=;
+	s=k20260515; t=1791703446;
+	bh=9oclz1XdUcqGRy0Iu0bEQYhqCct6U/5n0liTwgxCUC4=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=jm1rDuZsMEZBE1b+U2BNm1DO/nRgnBXXBzpgNywenTpETy1q98jEsstIwfQweufUg
-	 gbyzwj+rfsM6flZeDZVzRb27tAy60IULSO/heoD0TRKUwnSG9BNAi4hwdlqgLBt/DH
-	 XSwXdse23QqOEHws/jjwoi65J16uDhojKSU4btzLNBHaOYPxTj18lEPk9aCcSkgE0j
-	 JP4nCWufzKq3jENh1ct32byPaOSJ6PpuQ3MZtvI9yS8m589XzJkclZQMBydHw4SCQK
-	 S22jMKlW4p4sC3BrKHqK7AILPmtw6+qa+bPsp9Qvei1cD84OaUm9rIBCdyEd++fCiN
-	 y9Q4W+SS5ZJ+Q==
-Date: Sun, 11 Oct 2026 09:09:38 +0200
+	b=BbOFApIuvOFgXfOa0SYYVszFj/EkWEvUaXz9wbQ+pQfktxRLTwYpHhGnHf65hLZ03
+	 wbcpSFC4xhgxK9/zv5GJWtiuiBSgBq81LgQrPhABXc70SeH9ZcEY8dwb3rEId5iOVR
+	 pvV+9HUqbY/3QlYgslIi+L8aCtInyNmhREGumv9C+dk7mQGf522KLVvs6DqFs3DtzR
+	 jcNoH0W8XqJoRQIvuFi0CEIZddqN/5lgUdi+MATklM7AIfAyVHFLkBWaUeAtHJiatf
+	 m88tG/61uOcVHyFr53DQ2U5VvPcV2y/4VRdYjROeBl0rgLoYL49JmQkoDtZlmJvfBQ
+	 rVCxjXvopdzEw==
+Date: Sun, 11 Oct 2026 09:24:00 +0200
 From: Carlos Maiolino <cem@kernel.org>
-To: Wilfred Mallawa <wilfred.mallawa@wdc.com>
-Cc: "djwong@kernel.org" <djwong@kernel.org>, 
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: [xfsprogs] mkfs: fixup memory leak on exit
-Message-ID: <ass13wWEOO9woOOw@cronus.toxiclabs.cc>
-References: <20261006101232.357124-2-wilfred.opensource@gmail.com>
- <asTQdEMkpzc7_tSd@cronus.toxiclabs.cc>
- <75bc883c4d45a514aaad949dfe301c3f2a79112a.camel@wdc.com>
- <20261006144851.GX2705364@frogsfrogsfrogs>
- <asd7554UisFwlOsc@cronus.toxiclabs.cc>
- <e042c937a34eb92afdc0208a2f6571076f096ba6.camel@wdc.com>
+To: Kefeng Wang <wangkefeng.wang@huawei.com>
+Cc: linux-xfs@vger.kernel.org, "Darrick J . Wong" <djwong@kernel.org>, 
+	Shakeel Butt <shakeel.butt@linux.dev>, Dave Chinner <dchinner@redhat.com>, 
+	Christoph Hellwig <hch@lst.de>, Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH for-next v3] xfs: fix NOFS state corruption in btree
+ split worker
+Message-ID: <ass3LRLEFJDlFIoh@cronus.toxiclabs.cc>
+References: <20260921071030.3214538-1-wangkefeng.wang@huawei.com>
+ <179122359071.102066.15509293508787425638.b4-ty@kernel.org>
+ <f15d804d-f3d8-433f-97d1-5dfcabcc381c@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <e042c937a34eb92afdc0208a2f6571076f096ba6.camel@wdc.com>
+In-Reply-To: <f15d804d-f3d8-433f-97d1-5dfcabcc381c@huawei.com>
 
-On Sun, Oct 11, 2026 at 01:32:58AM +0000, Wilfred Mallawa wrote:
-> [snip]
+On Sat, Oct 10, 2026 at 06:46:42PM +0800, Kefeng Wang wrote:
 > 
-> > > 
-> > > The original patch is more appropriate IMO but seeing as we're
-> > > about to
-> > > return from main and terminate the process, why do we care?  And if
-> > > we
-> > > do, shouldn't mkfs also free the other getstr() strings attached to
-> > > the
-> > > cli struct?  And shouldn't the exit(1) paths do likewise?
-> > > 
-> > > (To be clear, my answers are "I don't", "no", and "no" but I could
-> > > be
-> > > convinced.)
-> > 
-> > Leaving them as-is is fine for now, might not be fine in the future,
-> > I'd
-> > say if we are leaking them, we should fix it, even if it's falling to
-> > the end of the program.
-> > 
 > 
-> Just to clarify, should I can spin up a V2 that frees all of the
-> getstr() allocations in xfs_mkfs? or shall we drop this for now?
+> On 10/6/2026 2:06 AM, Carlos Maiolino wrote:
+> > On Mon, 21 Sep 2026 15:10:30 +0800, Kefeng Wang wrote:
+> > > xfs_btree_split_worker() calls xfs_trans_set_context() and
+> > > xfs_trans_clear_context() on the caller's transaction, overwriting
+> > > tp->t_pflags with the worker's NOFS state. When the caller already has
+> > > PF_MEMALLOC_NOFS set (e.g. xfs_end_ioend_write, xfs_dio_write_end_io),
+> > > the corrupted tp->t_pflags causes xfs_trans_free() to erroneously clear
+> > > the caller's NOFS protection.
+> > > 
+> > > [...]
+> > 
+> > Applied to for-next, thanks!
+> 
+> Thankï¼ŒI checked linux-next's next-20261009, and there was a commit
+> 23f91a51425e, but the code was incorrect during the conflict resolution.
+> I don't know if this is the correct state for linux-next, just a reminder.
 
-I'm happy getting rid of leaks even if they are just before we exit().
-Final decision is from the maintainer thought. Andrey has been OOO past
-few days, so perhaps wait for him to come back and decide?!
+Linux-next appears to have removed all changes from this patch. I don't
+know why it happened honestly, I'll need to dig into it later. IIRC
+there was a conflict with -mm patches.
 
-Cheers.
+Patches staged for xfs are in xfs-linux/xfs-7.4-merge. Code there is
+correct.
+I always attempt a merge against Linus's tree before sending him the
+patches and at the time if I see any conflict, I'll give him a heads up.
+
+Thanks for letting me know though. I don't keep comparing xfs-linux
+state against linux-next.
+
+> 
+> 
+> > 
+> > [1/1] xfs: fix NOFS state corruption in btree split worker
+> >        commit: 23f91a51425ed3d4a5c42978fc25f1087611e4ba
+> > 
+> > Best regards,
+> 
+> 
