@@ -1,29 +1,30 @@
-Received: from out30-133.freemail.mail.aliyun.com (out30-133.freemail.mail.aliyun.com [115.124.30.133])
+Received: from out30-124.freemail.mail.aliyun.com (out30-124.freemail.mail.aliyun.com [115.124.30.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D443433688F;
-	Sun, 11 Oct 2026 17:10:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02AB323ED6A;
+	Sun, 11 Oct 2026 17:10:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791738639; cv=none; b=OXPwmdVMKO33oEBUa06RTX1qwHxw4yRBO1Pr1wH0AKc9vOu9Hcvi816ef/IAW8DaRp8gVROVygYEYYkYW75Zkc9qy0ibjGVuEB9HPe8xMMp/dhLC4busdtRFP5QKaWGulbFin/RWLNi9+7beqGL67aXvHG9jEiJBFQts6QEO9ds=
+	t=1791738641; cv=none; b=dmcl78HIX1fVGdG4IU8sH84EXMjiVbMZmR996xoFCkVy1V/7gdXQpwFaYd5NoK421hNmImidWUZGmjCIw8Q4MjfcEN8eOrUWSWacl0T7kAnewKPhulOPpLEdceGyPe4RU5Fytic+5EAPcN9JEb+fgvoD8gCKtwyTcbUGiCzxknU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791738639; c=relaxed/simple;
-	bh=i1AKA9Rbieg0uq+Ol4Zm6DAICaaxNtdS2B4Gz69OAZg=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=FZwVJunGmKSE2sl/+DrTQ3WI2sfNqqY8/cg85XALXLoa+CPt6eZr61vNcg7juZa2weXwMiMIyKLm5acNkZZpCPDdbAXr32paxRK5abrU5Ltfh3A7sIqXcq6Ny2a2VCjuyPkjcUpUEVdHJ60A5Ff9u1yj+vk63i6itenIu7eRaJk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=qJAb2LEv; arc=none smtp.client-ip=115.124.30.133
+	s=arc-20240116; t=1791738641; c=relaxed/simple;
+	bh=mWgpJiSaZBn8LrONE9dJ4B6yQjVBUZLG5mkaJnICzvQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=lAQPm0Ue/4chx2/Xz/Nl5GVnHSlr2gRzGuD1REw99rUUSAbx3LD6NodUSb4VcKSCfbzM8lnVpxN78SxO6xL2/GE7ngJRxKD0chmPUq3T51LBNPXSi8Z6CcK3NbK+Lqjdbi3/mnLwq/2y+MbdA3HBlhAUYNELTS2wOqhdIXqiWU8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=aqSaOYb9; arc=none smtp.client-ip=115.124.30.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="qJAb2LEv"
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="aqSaOYb9"
 DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
 	d=linux.alibaba.com; s=default;
-	t=1791738628; h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type;
-	bh=e2xfrCux33PommZlTWIe34vU/fAdJcdkEYByLUe3jDQ=;
-	b=qJAb2LEv5/SIghgW5wj/lMO20zljUjdV0XR9Cvxx3lOWbjidyHGPystInRj2qwo9mxoMAVjyPeDfq4M2FK2t6co1oUf6RiNRu8ZxJuIPbqoqTwCV/Noz+I72/uIR8XFhkJMCeLSlh7OwQQg9lpYDJd5SuuFhha+0PItrlfM+PR4=
-X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R171e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033037026112;MF=libaokun@linux.alibaba.com;NM=1;PH=DS;RN=19;SR=0;TI=SMTPD_---0XCYQXKg_1791738598;
-Received: from x31h02109.sqa.na131.tbsite.net(mailfrom:libaokun@linux.alibaba.com fp:SMTPD_---0XCYQXKg_1791738598 cluster:ay36)
+	t=1791738629; h=From:To:Subject:Date:Message-ID:MIME-Version;
+	bh=pP/654PDHhmtWqPouuapJaaInSP5pLa6Kxj7C8ScfwI=;
+	b=aqSaOYb9lE4kCTC9/puWScNeLaBsA7nn/dsTjL9T5oYwPPinIB3DRTM4CD0EKpHYZCkYRz1aXPYQ3tXqSBjbkRMa17MNHcVBZIJlYhnoH2Z6ySVi5CaWbodsheIDieAb7bA3fOXgFLxjXJUa8P0Ea4YoVivMrf4vOap/czhl6rM=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R141e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033037033178;MF=libaokun@linux.alibaba.com;NM=1;PH=DS;RN=20;SR=0;TI=SMTPD_---0XCYQXUC_1791738626;
+Received: from x31h02109.sqa.na131.tbsite.net(mailfrom:libaokun@linux.alibaba.com fp:SMTPD_---0XCYQXUC_1791738626 cluster:ay36)
           by smtp.aliyun-inc.com;
-          Mon, 12 Oct 2026 01:10:26 +0800
+          Mon, 12 Oct 2026 01:10:27 +0800
 From: Baokun Li <libaokun@linux.alibaba.com>
 To: linux-ext4@vger.kernel.org
 Cc: linux-fscrypt@vger.kernel.org,
@@ -42,170 +43,67 @@ Cc: linux-fscrypt@vger.kernel.org,
 	jack@suse.cz,
 	yi.zhang@huawei.com,
 	ojaswin@linux.ibm.com,
-	ritesh.list@gmail.com
-Subject: [PATCH 00/13] block, ext4: allow encryption with a block size larger than the page size
-Date: Mon, 12 Oct 2026 01:09:45 +0800
-Message-ID: <20261011170958.1759230-1-libaokun@linux.alibaba.com>
+	ritesh.list@gmail.com,
+	stable@vger.kernel.org
+Subject: [PATCH 01/13] ext4: refuse encryption when block size > page size
+Date: Mon, 12 Oct 2026 01:09:46 +0800
+Message-ID: <20261011170958.1759230-2-libaokun@linux.alibaba.com>
 X-Mailer: git-send-email 2.43.7
+In-Reply-To: <20261011170958.1759230-1-libaokun@linux.alibaba.com>
+References: <20261011170958.1759230-1-libaokun@linux.alibaba.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Motivation
-==========
+From: Alberto Garcia <berto@igalia.com>
 
-ext4 supports a block size larger than the page size (LBS), e.g. a 32k
-block size on a machine with 4k pages [1].  Encryption, however, is
-still refused on such a filesystem: file contents used to be encrypted
-page by page in the fs-layer path, which cannot handle a folio that
-covers several data units, so the checks that refuse encryption with
-such a block size stayed in place.
+Encryption is not supported when a filesystem's block size is larger
+than the page size, and commit 709f0f1f1bf5 ("ext4: add checks for
+large folio incompatibilities when BS > PS") added a check to refuse
+mounting such a filesystem.
 
-Since commit 5acc6f649a68 ("fscrypt: Always use blk-crypto for
-contents on block-based filesystems") file contents are always
-encrypted through blk-crypto.  Inline encryption hardware can already
-en/decrypt a data unit that spans several pages, but the fallback and
-the block layer cannot carry such a data unit:
+However, it is also possible to enable the "encrypt" feature on a
+filesystem that is already mounted (with tune2fs -O encrypt). Once
+that happens it won't be possible to mount the filesystem again in
+the future, but there is nothing preventing the user from setting an
+encryption policy while the filesystem is still mounted.
 
-  1. blk-crypto-fallback en/decrypts a data unit with the bio_vecs of
-     a single page-clamped segment, so a larger data unit fails with
-     BLK_STS_INVAL;
-  2. the block layer requires every bio_vec of an encrypted bio to be
-     data unit aligned, and splits such a bio without rounding the
-     split size down to the data unit size;
-  3. iomap cuts the direct I/O bios of an encrypted file only at the
-     logical block size of the device, so a bio can end in the middle
-     of a data unit.
+Fix this by refusing to set an fscrypt context in ext4_set_context()
+when the block size is larger than the page size.
 
-This series adds the missing pieces on all three layers, removes the
-refusals, and enables large folios for encrypted files on the way.
+Fixes: 709f0f1f1bf5 ("ext4: add checks for large folio incompatibilities when BS > PS")
+Cc: stable@vger.kernel.org # v6.19+
+Signed-off-by: Alberto Garcia <berto@igalia.com>
+Reviewed-by: Baokun Li <libaokun@linux.alibaba.com>
+Reviewed-by: Eric Biggers <ebiggers@kernel.org>
+---
+ fs/ext4/crypto.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-[1]: https://lore.kernel.org/all/20251121090654.631996-1-libaokun@huaweicloud.com
-
-Patch Overview
-==============
-
-  * Patches 1-2 (ext4, from Alberto Garcia) [2]: Refuse to set an
-    encryption policy when the block size is larger than the page size,
-    and reject encrypted inodes of such a filesystem.  They are the
-    fix for the stable branches; patch 11 removes the refusals again
-    for mainline.  They are carried along unchanged so that the series
-    applies cleanly on its own and avoids adaptation conflicts with
-    the stable fix.
-
-  * Patch 3 (blk-crypto): Reject the data unit sizes that
-    blk-crypto-fallback can't handle when the key is set up, instead of
-    failing every I/O with BLK_STS_INVAL.
-
-  * Patches 4-6 (blk-crypto-fallback): En/decrypt one data unit per
-    crypto request, so that a data unit can span several bio_vecs, and
-    support the data units that are larger than a page, whose bio_vecs
-    and scatterlists come from a mempool.
-
-  * Patch 7 (iomap): Cut the direct I/O bios of encrypted files at the
-    block size, so that they cover whole data units.
-
-  * Patches 8-10 (block): Round the split size of an encrypted bio
-    down to the data unit size, warn when a bio that must be split
-    cannot be split into a valid request, and drop the per-bio_vec data
-    unit alignment requirement, which a data unit larger than a page
-    cannot satisfy.  The contract is documented: an encrypted bio
-    starts at a data unit boundary and covers whole data units.
-
-  * Patches 11-13 (ext4): Remove the refusals, route the folios that
-    cover a data unit number wraparound to the buffer_head read path,
-    and enable large folios for encrypted files.
-
-[2]: https://lore.kernel.org/r/cover.1790343958.git.berto@igalia.com
-
-Benchmark
-=========
-
-Hardware: 96-core machine, 3.84T NVMe, 512G memory
-Filesystem: ext4, encryption on the fallback path
-
-Buffered sequential 1M writes and reads (1G, fsync) in MiB/s; medians
-of 3 runs.
-
-Base tree, 4k-block filesystem:
-
-  job         4k plain    4k enc
-  --------    --------    ------
-  seqwrite        1966      1134
-  seqread         1878       996
-
-With LBS enabled, encrypted 4k-block vs 32k-block filesystem:
-
-  job         4k enc    32k enc    32k plain    4k->32k
-  --------    ------    -------    ---------    -------
-  seqwrite      1044       1399         2062       +34%
-  seqread        931       1793         1791       +93%
-
-Buffered sequential writes (1G, fsync) of the encrypted 4k-block
-filesystem across request sizes, base tree vs this series:
-
-  bs      Before    After    gain
-  ----    ------    -----    ----
-  4k        1118     1162     +4%
-  16k       1260     1756    +39%
-  64k       1272     1977    +55%
-  256k      1308     2081    +59%
-  1M        1260     1455    +15%
-
-Testing
-=======
-
-  * kvm-xfstests -c ext4/all -g encrypt (which includes ext4/32k) has
-    been executed with no new failures.
-
-  * Manually verified read/write, fallocate -z and punch hole on 4k,
-    8k, 16k and 32k block sizes, and direct I/O with a properly
-    aligned user buffer on 4k, 8k and 32k block sizes.
-
-  * Manually verified fsx and fsstress on a 64k block size, and direct
-    I/O to an encrypted file on a 64k block size with a user buffer
-    backed by large folios.
-
-Comments and questions are, as always, welcome.
-
-Thanks,
-Baokun
-
-Alberto Garcia (2):
-  ext4: refuse encryption when block size > page size
-  ext4: reject encrypted inodes when block size > page size
-
-Baokun Li (11):
-  blk-crypto: reject fallback data unit sizes it can't handle
-  blk-crypto: decrypt one data unit per crypto request
-  blk-crypto: encrypt one data unit per crypto request
-  blk-crypto: support data units larger than a page
-  iomap: align the direct I/O bios of encrypted files to the block size
-  block: split encrypted bios at data unit boundaries
-  block: warn about bios that can't be split
-  block: don't require data unit aligned bio_vecs for encrypted bios
-  ext4: allow encryption with a block size larger than the page size
-  ext4: send folios that cover a wraparound to the buffer_head path
-  ext4: allow large folios for encrypted files
-
- Documentation/block/inline-encryption.rst |  13 +
- block/blk-crypto-fallback.c               | 446 +++++++++++++++++-----
- block/blk-crypto-internal.h               |   4 +-
- block/blk-crypto.c                        |  40 +-
- block/blk-merge.c                         |  48 ++-
- fs/crypto/block.c                         |   3 +
- fs/ext4/readpage.c                        |  11 +
- fs/ext4/super.c                           |  22 +-
- fs/iomap/direct-io.c                      |  10 +
- 9 files changed, 462 insertions(+), 135 deletions(-)
-
-
-base-commit: fd73f4a6659897191fa0d40695fe370925dd3780
+diff --git a/fs/ext4/crypto.c b/fs/ext4/crypto.c
+index 1a0fccb084ef..318b2eaea741 100644
+--- a/fs/ext4/crypto.c
++++ b/fs/ext4/crypto.c
+@@ -156,6 +156,15 @@ static int ext4_set_context(struct inode *inode, const void *ctx, size_t len,
+ 	if (ext4_test_inode_flag(inode, EXT4_INODE_DAX))
+ 		return -EOPNOTSUPP;
+ 
++	/*
++	 * Encryption is not supported when the block size is larger
++	 * than the page size.  This is rejected at mount time by
++	 * ext4_check_large_folio(), and this check here is for the case
++	 * when the 'encrypt' feature is enabled on a mounted filesystem.
++	 */
++	if (inode->i_sb->s_blocksize > PAGE_SIZE)
++		return -EOPNOTSUPP;
++
+ 	res = ext4_convert_inline_data(inode);
+ 	if (res)
+ 		return res;
 -- 
 2.43.7
 
