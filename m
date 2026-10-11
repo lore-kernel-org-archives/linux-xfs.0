@@ -1,30 +1,30 @@
-Received: from out30-118.freemail.mail.aliyun.com (out30-118.freemail.mail.aliyun.com [115.124.30.118])
+Received: from out30-130.freemail.mail.aliyun.com (out30-130.freemail.mail.aliyun.com [115.124.30.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B34E8367294;
-	Sun, 11 Oct 2026 17:10:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.118
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 589FA305680;
+	Sun, 11 Oct 2026 17:10:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791738644; cv=none; b=UYPYg0ATVwehRy+0F6exljFxQegr2I9w3amTfTVU5ahCwF8cPiqyAlmIwnsJfkN57ivteTFVIBwRdMdinvlwQvvegIO5z78lWu7yj7/HwE5LwFGYYblRvxcGXUZVL1Z/I7nW+fytuOeSKxf9uHpjji/mM+xRNuemOzGF3SAzAjo=
+	t=1791738645; cv=none; b=aW3bGsI+egdbhcIoAyvAcZj5qvoVa8/Kko8M0d/gFdiJxKSr2/t3+Ogug2Dihw0i6e3n2jRC/MkrLcOBsRRWGAtIeld+Y2BMMIXyFxXNKUaYHhqo2XwSKw+S05z3GL8CGxRzxd+X+3dytrsbOvStA56G+N44/XAG81cJcP4aI04=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791738644; c=relaxed/simple;
-	bh=x3Dgq4X0PM2YmnXfH0y8DwMX3irJOrJ9HYMIT6Ay8T0=;
+	s=arc-20240116; t=1791738645; c=relaxed/simple;
+	bh=Gl4qcZj74+yFeU312om5kGSDMcxXnbwXLJmK6uidkaE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=cMy9DiHqOxDWCVyNwigV0f4A/GbrefybARtBwJ9dDMDNAxHwMqAWCSqOSP2+95E3bgZuQbkjXccihVlTDm+teHS8o0GsfO4jMYGJSOlqgQr5JlxxvNcZYPIGk7LQlk7F8XTtmwp1XQHIMa5yuN0hdjGGaWOm+E5UX6RYe19TnFs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=Wuz9ZXjm; arc=none smtp.client-ip=115.124.30.118
+	 MIME-Version; b=PrLViQOEpHNGhBGlxjhCW6Z1uNOc7uI+WB8R4CKMCnBen9p6aP/C4uDXqyZ7+kCodPoUBLH1CiQocQcsaHVQB8+T65UocZderpwLNbqiesd8/4MCEaJTd6/a5iSouMslkGF1OveWVsR7e+/OTaczlvu2ONhr/AEq5PCr72layVI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=bhPDVXlJ; arc=none smtp.client-ip=115.124.30.130
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="Wuz9ZXjm"
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="bhPDVXlJ"
 DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
 	d=linux.alibaba.com; s=default;
-	t=1791738632; h=From:To:Subject:Date:Message-ID:MIME-Version;
-	bh=nBhanbOxipeWhOLIUcLgBKRwVJqd42j4Hhe68hi0EXA=;
-	b=Wuz9ZXjmv/Bwl/FpoMFYWAM561GrxvHvSzpciCzRl+vVi+ktUMnNn9sz6bYZGO/RPKMxJ9ZeZi72NBs8IjQh7BrnS4mDv6VyiHxOFZB7+U0D6JROkahzy6UTz9pjvdEqjVanKFysyTie0LrpJJqOgfFdM+EQupfkBgjBenSDi80=
-X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R881e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033037009110;MF=libaokun@linux.alibaba.com;NM=1;PH=DS;RN=20;SR=0;TI=SMTPD_---0XCYQXUq_1791738629;
-Received: from x31h02109.sqa.na131.tbsite.net(mailfrom:libaokun@linux.alibaba.com fp:SMTPD_---0XCYQXUq_1791738629 cluster:ay36)
+	t=1791738633; h=From:To:Subject:Date:Message-ID:MIME-Version;
+	bh=BTWEGMXHj1amQ/3nQyk8faPm4MoQgDFZhbUBeHLQEh4=;
+	b=bhPDVXlJX3Vs2y8QDb2LFTitmA85V7FquJs8VLAwu/QTq0w6ke4JFHKISFyoiGEpXn2PDz170LaXB+miLlbGastdk3X6vnrGIe2ype/uQ8f700w1qfdYOOteSP+eF/cNhssuUhC8PzsPwgkCJ1Gq49Y+DDsHjlmmycxVyxppAK0=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R111e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam011083073210;MF=libaokun@linux.alibaba.com;NM=1;PH=DS;RN=19;SR=0;TI=SMTPD_---0XCYQXV1_1791738631;
+Received: from x31h02109.sqa.na131.tbsite.net(mailfrom:libaokun@linux.alibaba.com fp:SMTPD_---0XCYQXV1_1791738631 cluster:ay36)
           by smtp.aliyun-inc.com;
-          Mon, 12 Oct 2026 01:10:30 +0800
+          Mon, 12 Oct 2026 01:10:31 +0800
 From: Baokun Li <libaokun@linux.alibaba.com>
 To: linux-ext4@vger.kernel.org
 Cc: linux-fscrypt@vger.kernel.org,
@@ -43,11 +43,10 @@ Cc: linux-fscrypt@vger.kernel.org,
 	jack@suse.cz,
 	yi.zhang@huawei.com,
 	ojaswin@linux.ibm.com,
-	ritesh.list@gmail.com,
-	stable@vger.kernel.org
-Subject: [PATCH 03/13] blk-crypto: reject fallback data unit sizes it can't handle
-Date: Mon, 12 Oct 2026 01:09:48 +0800
-Message-ID: <20261011170958.1759230-4-libaokun@linux.alibaba.com>
+	ritesh.list@gmail.com
+Subject: [PATCH 04/13] blk-crypto: decrypt one data unit per crypto request
+Date: Mon, 12 Oct 2026 01:09:49 +0800
+Message-ID: <20261011170958.1759230-5-libaokun@linux.alibaba.com>
 X-Mailer: git-send-email 2.43.7
 In-Reply-To: <20261011170958.1759230-1-libaokun@linux.alibaba.com>
 References: <20261011170958.1759230-1-libaokun@linux.alibaba.com>
@@ -59,144 +58,225 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-blk-crypto-fallback en/decrypts a data unit that fits in one page:
-the encryption and the decryption path both require the data unit
-to be contained in a single page-clamped bio_vec.
+__blk_crypto_fallback_decrypt_bio() decrypts the bio one bio_vec at a
+time: it walks the bio_vecs with __bio_for_each_segment(), requires each
+bio_vec to be data unit aligned and a multiple of the data unit size, and
+decrypts every data unit in it with a scatterlist that covers the whole
+bio_vec.
 
-However, the fallback advertises support for all data unit sizes
-(modes_supported[] is 0xFFFFFFFF), and blk_crypto_start_using_key()
-never checks the fallback's capabilities, so a key with a larger data
-unit size is accepted, and fails with BLK_STS_INVAL on the first I/O:
+That requires a data unit to be contiguous in memory, and cannot express
+a data unit that spans more than a page.  In preparation for supporting
+such data units, collect the bio_vecs that make up one data unit in the
+new blk_crypto_du_bvecs(), and decrypt the data unit with a single crypto
+request whose scatterlist spans those bio_vecs.
 
-  EXT4-fs warning (device vdc): ext4_end_bio:360:
-	I/O error 19 writing to inode 15 starting block 70136)
-  EXT4-fs (vdc): failed to convert unwritten extents to written extents
-	-- potential data loss!  (inode 15, error -5)
+Add a struct blk_crypto_du_ctx to describe one data unit, with
+blk_crypto_du_ctx_init() to initialize it and blk_crypto_du_bvecs() to
+fill in its bio_vecs.  The array that holds them is sized for one
+bio_vec and lives on the stack, so a data unit that needs more than
+one bio_vec is rejected with BLK_STS_INVAL for now.
 
-where error 19 is BLK_STS_INVAL.  Such keys exist on filesystems whose
-block size is larger than the page size, because fscrypt uses the block
-size as its data unit size by default.
+Also add a blk_crypto_crypt_du() helper that en/decrypts one data unit.
+Only the decryption path uses it in this patch; the encryption path will
+be restructured the same way in a follow-up patch, with the bounce page
+scatterlist as the destination.
 
-Fix this by advertising only the data unit sizes that the fallback
-really supports, and by rejecting keys that the fallback can't handle in
-blk_crypto_fallback_start_using_key(), so that the failure happens when
-the key is set up instead of during I/O, and before any data is written.
+No functional change intended.
 
-Fixes: 488f6682c832 ("block: blk-crypto-fallback for Inline Encryption")
-Cc: stable@vger.kernel.org
 Signed-off-by: Baokun Li <libaokun@linux.alibaba.com>
 ---
- block/blk-crypto-fallback.c | 20 ++++++++++++++++----
- block/blk-crypto-internal.h |  4 ++--
- block/blk-crypto.c          | 14 +++++++-------
- 3 files changed, 25 insertions(+), 13 deletions(-)
+ block/blk-crypto-fallback.c | 162 ++++++++++++++++++++++++++++++------
+ 1 file changed, 135 insertions(+), 27 deletions(-)
 
 diff --git a/block/blk-crypto-fallback.c b/block/blk-crypto-fallback.c
-index 2a8f40a65158..a75daadba4c8 100644
+index a75daadba4c8..e383444686fc 100644
 --- a/block/blk-crypto-fallback.c
 +++ b/block/blk-crypto-fallback.c
-@@ -83,6 +83,9 @@ static struct workqueue_struct *blk_crypto_wq;
- static mempool_t *blk_crypto_bounce_page_pool;
- static struct bio_set enc_bio_set;
- 
-+/* Data unit sizes blk-crypto-fallback can en/decrypt. */
-+#define BLK_CRYPTO_FALLBACK_DU_MASK	GENMASK(PAGE_SHIFT, SECTOR_SHIFT)
-+
- /*
-  * This is the key we set when evicting a keyslot. This *should* be the all 0's
-  * key, but AES-XTS rejects that key, so we use some random bytes instead.
-@@ -561,7 +564,8 @@ static int blk_crypto_fallback_init(void)
- 
- 	/* All blk-crypto modes have a crypto API fallback. */
- 	for (i = 0; i < BLK_ENCRYPTION_MODE_MAX; i++)
--		blk_crypto_fallback_profile->modes_supported[i] = 0xFFFFFFFF;
-+		blk_crypto_fallback_profile->modes_supported[i] =
-+			BLK_CRYPTO_FALLBACK_DU_MASK;
- 	blk_crypto_fallback_profile->modes_supported[BLK_ENCRYPTION_MODE_INVALID] = 0;
- 
- 	blk_crypto_wq = alloc_workqueue("blk_crypto_wq",
-@@ -612,16 +616,24 @@ static int blk_crypto_fallback_init(void)
+@@ -242,6 +242,116 @@ static void blk_crypto_dun_to_iv(const u64 dun[BLK_CRYPTO_DUN_ARRAY_SIZE],
+ 		iv->dun[i] = cpu_to_le64(dun[i]);
  }
  
- /*
-- * Prepare blk-crypto-fallback for the specified crypto mode.
-- * Returns -ENOPKG if the needed crypto API support is missing.
-+ * Prepare blk-crypto-fallback for the specified crypto configuration.
-+ * Returns -EOPNOTSUPP if the fallback can't handle the data unit size of the
-+ * configuration, or -ENOPKG if the needed crypto API support is missing.
-  */
--int blk_crypto_fallback_start_using_mode(enum blk_crypto_mode_num mode_num)
-+int blk_crypto_fallback_start_using_key(const struct blk_crypto_config *cfg)
- {
-+	enum blk_crypto_mode_num mode_num = cfg->crypto_mode;
- 	const char *cipher_str = blk_crypto_modes[mode_num].cipher_str;
- 	struct blk_crypto_fallback_keyslot *slotp;
- 	unsigned int i;
- 	int err = 0;
- 
-+	if (!(BLK_CRYPTO_FALLBACK_DU_MASK & cfg->data_unit_size)) {
-+		pr_warn_ratelimited("can't handle data unit size %u\n",
-+				    cfg->data_unit_size);
-+		return -EOPNOTSUPP;
++/*
++ * Describes one data unit: the bio_vecs that cover it and the
++ * scatterlists to en/decrypt it with.
++ */
++struct blk_crypto_du_ctx {
++	/* Backing store for bvecs, for the one-bio_vec case. */
++	struct bio_vec		stack_bvec;
++	/* Backing store for src_sg and dst_sg, one entry each. */
++	struct scatterlist	stack_sgs[2];
++
++	/* The data unit size in bytes. */
++	unsigned int		du_size;
++	/* Number of entries available in bvecs. */
++	unsigned int		max_bvecs;
++
++	/* The bio_vecs that cover the data unit. */
++	struct bio_vec		*bvecs;
++	/* The scatterlist for each side of the crypto request. */
++	struct scatterlist	*src_sg;
++	struct scatterlist	*dst_sg;
++
++	/* The crypto request to en/decrypt the data unit with. */
++	struct skcipher_request	*ciph_req;
++	/* The data unit's DUN, advanced on each successful crypt. */
++	u64			curr_dun[BLK_CRYPTO_DUN_ARRAY_SIZE];
++};
++
++static void blk_crypto_du_ctx_init(struct blk_crypto_du_ctx *du_ctx,
++				   struct skcipher_request *ciph_req,
++				   const struct bio_crypt_ctx *bc)
++{
++	du_ctx->ciph_req = ciph_req;
++	du_ctx->du_size = bc->bc_key->crypto_cfg.data_unit_size;
++	memcpy(du_ctx->curr_dun, bc->bc_dun, sizeof(bc->bc_dun));
++
++	du_ctx->max_bvecs = 1;
++	du_ctx->bvecs = &du_ctx->stack_bvec;
++	du_ctx->src_sg = &du_ctx->stack_sgs[0];
++	du_ctx->dst_sg = &du_ctx->stack_sgs[1];
++}
++
++/*
++ * En/decrypt one data unit: run the request over the data unit's
++ * scatterlists with its DUN as the IV, and advance the DUN on success.
++ */
++static int blk_crypto_crypt_du(struct blk_crypto_du_ctx *du_ctx, bool encrypt)
++{
++	union blk_crypto_iv iv;
++	int err;
++
++	blk_crypto_dun_to_iv(du_ctx->curr_dun, &iv);
++	skcipher_request_set_crypt(du_ctx->ciph_req,
++				   du_ctx->src_sg, du_ctx->dst_sg,
++				   du_ctx->du_size, iv.bytes);
++
++	if (encrypt)
++		err = crypto_skcipher_encrypt(du_ctx->ciph_req);
++	else
++		err = crypto_skcipher_decrypt(du_ctx->ciph_req);
++	if (err)
++		return -EIO;
++
++	bio_crypt_dun_increment(du_ctx->curr_dun, 1);
++	return 0;
++}
++
++/**
++ * blk_crypto_du_bvecs() - collect the bio_vecs that make up one data unit
++ * @bio: the bio to collect from
++ * @iter: the position in @bio to collect at.  Not modified.
++ * @du_ctx: the context to collect the data unit into.  Uses
++ *	    @du_ctx->du_size and @du_ctx->max_bvecs, and stores the
++ *	    bio_vecs in @du_ctx->bvecs
++ *
++ * Collect the bio_vecs that cover one data unit starting at @iter.  Each
++ * bio_vec is clamped to its page, so a data unit spans several bio_vecs if it
++ * covers several pages or if a bio_vec boundary splits it.
++ *
++ * Return: the number of bio_vecs collected, or 0 if @bio doesn't have a whole
++ *	   data unit at @iter, the data unit doesn't start at a
++ *	   min(@du_ctx->du_size, PAGE_SIZE) boundary, or the data unit
++ *	   needs more than @du_ctx->max_bvecs bio_vecs.
++ */
++static unsigned int blk_crypto_du_bvecs(struct bio *bio,
++					const struct bvec_iter *iter,
++					struct blk_crypto_du_ctx *du_ctx)
++{
++	const unsigned int align = min(du_ctx->du_size, PAGE_SIZE);
++	struct bvec_iter du_iter = *iter;
++	struct bio_vec bv;
++	unsigned int n = 0;
++
++	if (du_iter.bi_size < du_ctx->du_size)
++		return 0;
++
++	/* Walk a copy of the iterator that ends after one data unit. */
++	du_iter.bi_size = du_ctx->du_size;
++
++	__bio_for_each_segment(bv, bio, du_iter, du_iter) {
++		if (n == du_ctx->max_bvecs)
++			return 0;
++		if (!n && !IS_ALIGNED(bv.bv_offset, align))
++			return 0;
++
++		du_ctx->bvecs[n++] = bv;
 +	}
 +
- 	/*
- 	 * Fast path
- 	 * Ensure that updates to blk_crypto_keyslots[i].tfms[mode_num]
-diff --git a/block/blk-crypto-internal.h b/block/blk-crypto-internal.h
-index 2c7a0446572a..640527ed05eb 100644
---- a/block/blk-crypto-internal.h
-+++ b/block/blk-crypto-internal.h
-@@ -219,14 +219,14 @@ bool blk_crypto_fallback_bio_prep(struct bio *bio);
- 
- #ifdef CONFIG_BLK_INLINE_ENCRYPTION_FALLBACK
- 
--int blk_crypto_fallback_start_using_mode(enum blk_crypto_mode_num mode_num);
-+int blk_crypto_fallback_start_using_key(const struct blk_crypto_config *cfg);
- 
- int blk_crypto_fallback_evict_key(const struct blk_crypto_key *key);
- 
- #else /* CONFIG_BLK_INLINE_ENCRYPTION_FALLBACK */
- 
- static inline int
--blk_crypto_fallback_start_using_mode(enum blk_crypto_mode_num mode_num)
-+blk_crypto_fallback_start_using_key(const struct blk_crypto_config *cfg)
++	return n;
++}
++
+ static void __blk_crypto_fallback_encrypt_bio(struct bio *src_bio,
+ 		struct crypto_sync_skcipher *tfm)
  {
- 	pr_warn_once("crypto API fallback is disabled\n");
- 	return -ENOPKG;
-diff --git a/block/blk-crypto.c b/block/blk-crypto.c
-index bc3a9f59574b..5c670c3e65c5 100644
---- a/block/blk-crypto.c
-+++ b/block/blk-crypto.c
-@@ -392,13 +392,13 @@ bool blk_crypto_config_supported_natively(struct block_device *bdev,
-  * @key: A key to use on the device
-  *
-  * Upper layers must call this function to ensure that either the hardware
-- * supports the key's crypto settings, or the crypto API fallback has transforms
-- * for the needed mode allocated and ready to go. This function may allocate
-- * an skcipher, and *should not* be called from the data path, since that might
-- * cause a deadlock
-+ * supports the key's crypto settings, or that the crypto API fallback is ready
-+ * to handle them. This function may allocate an skcipher, and *should not* be
-+ * called from the data path, since that might cause a deadlock
-  *
-- * Return: 0 on success; -EOPNOTSUPP if the key is wrapped but the hardware does
-- *	   not support wrapped keys; -ENOPKG if the key is a raw key but the
-+ * Return: 0 on success; -EOPNOTSUPP if the key can't be used on @bdev, e.g. a
-+ *	   wrapped key without hardware support or a data unit size that the
-+ *	   fallback can't handle; -ENOPKG if the key is a raw key but the
-  *	   hardware does not support raw keys and blk-crypto-fallback is either
-  *	   disabled or the needed algorithm is disabled in the crypto API; or
-  *	   another -errno code if something else went wrong.
-@@ -412,7 +412,7 @@ int blk_crypto_start_using_key(struct block_device *bdev,
- 		pr_warn_ratelimited("%pg: no support for wrapped keys\n", bdev);
- 		return -EOPNOTSUPP;
- 	}
--	return blk_crypto_fallback_start_using_mode(key->crypto_cfg.crypto_mode);
-+	return blk_crypto_fallback_start_using_key(&key->crypto_cfg);
- }
- EXPORT_SYMBOL_GPL(blk_crypto_start_using_key);
+@@ -378,42 +488,40 @@ static blk_status_t __blk_crypto_fallback_decrypt_bio(struct bio *bio,
+ 		struct crypto_sync_skcipher *tfm)
+ {
+ 	SYNC_SKCIPHER_REQUEST_ON_STACK(ciph_req, tfm);
+-	u64 curr_dun[BLK_CRYPTO_DUN_ARRAY_SIZE];
+-	union blk_crypto_iv iv;
+-	struct scatterlist sg;
+-	struct bio_vec bv;
+-	const int data_unit_size = bc->bc_key->crypto_cfg.data_unit_size;
+-	unsigned int i;
++	struct blk_crypto_du_ctx du_ctx;
++	blk_status_t status = BLK_STS_OK;
++	unsigned int i, n;
  
+ 	skcipher_request_set_callback(ciph_req,
+ 			CRYPTO_TFM_REQ_MAY_BACKLOG | CRYPTO_TFM_REQ_MAY_SLEEP,
+ 			NULL, NULL);
++	blk_crypto_du_ctx_init(&du_ctx, ciph_req, bc);
++	/* Decrypt in place, so both sides use the same scatterlist. */
++	du_ctx.dst_sg = du_ctx.src_sg;
++
++	/* Decrypt each data unit in the bio, in place */
++	while (iter.bi_size) {
++		n = blk_crypto_du_bvecs(bio, &iter, &du_ctx);
++		if (!n) {
++			status = BLK_STS_INVAL;
++			break;
++		}
+ 
+-	memcpy(curr_dun, bc->bc_dun, sizeof(curr_dun));
+-	sg_init_table(&sg, 1);
+-	skcipher_request_set_crypt(ciph_req, &sg, &sg, data_unit_size,
+-				   iv.bytes);
+-
+-	/* Decrypt each segment in the bio */
+-	__bio_for_each_segment(bv, bio, iter, iter) {
+-		struct page *page = bv.bv_page;
+-
+-		if (!IS_ALIGNED(bv.bv_len | bv.bv_offset, data_unit_size))
+-			return BLK_STS_INVAL;
+-
+-		sg_set_page(&sg, page, data_unit_size, bv.bv_offset);
++		sg_init_table(du_ctx.src_sg, n);
++		for (i = 0; i < n; i++)
++			sg_set_page(&du_ctx.src_sg[i], du_ctx.bvecs[i].bv_page,
++				    du_ctx.bvecs[i].bv_len,
++				    du_ctx.bvecs[i].bv_offset);
+ 
+-		/* Decrypt each data unit in the segment */
+-		for (i = 0; i < bv.bv_len; i += data_unit_size) {
+-			blk_crypto_dun_to_iv(curr_dun, &iv);
+-			if (crypto_skcipher_decrypt(ciph_req))
+-				return BLK_STS_IOERR;
+-			bio_crypt_dun_increment(curr_dun, 1);
+-			sg.offset += data_unit_size;
++		if (blk_crypto_crypt_du(&du_ctx, false)) {
++			status = BLK_STS_IOERR;
++			break;
+ 		}
++
++		bio_advance_iter_single(bio, &iter, du_ctx.du_size);
+ 	}
+ 
+-	return BLK_STS_OK;
++	return status;
+ }
+ 
+ /*
 -- 
 2.43.7
 
