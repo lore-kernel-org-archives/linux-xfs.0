@@ -1,30 +1,30 @@
 Received: from out30-119.freemail.mail.aliyun.com (out30-119.freemail.mail.aliyun.com [115.124.30.119])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E39823164D8;
-	Sun, 11 Oct 2026 17:10:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5FE03090D7;
+	Sun, 11 Oct 2026 17:10:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.119
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791738653; cv=none; b=lZTghIYaNiaNZt0/8K3soZun3xzSgRAeQJDjGdhphBWduYAFlpASD8w70pYTv4rm8930ecwpb5CDb5KMw5X7j5Dkfi1P16kxUVhe+tFKsxjsW/2h8iCjXZ0nIEMVSFZRUIGY6n7ZdhvyvVb3SSWDhILDXUBA+Eb3Wc2/WCF9GYA=
+	t=1791738653; cv=none; b=l0/MY7zXlpvPPp+H7IlCyW+qKIwdLucrkA2H5uijkAtxRELjAuP3H9bX+WqXYVPQYWFgVc4NtoEA0vOffU3VjCWkFgXrCKS9dtUQTGTFyyFEdF5pydl3fQtZP6CccBlzP2RSdJfWqdaxUYEU14XS0gegz9DvSc7/VWM6gTv5Gy8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1791738653; c=relaxed/simple;
-	bh=Hxwpr6O7yWQFg2+FAyKpRZBzxXboPVzgVQZLKYx4Ejs=;
+	bh=vmp7lnOX2kBIlrBqvmi7YrLeM72FkKdcUcbmCK2nHCE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=tkk0sGiugOw/yPjF5TbBUJCmiipl34AKEajoEUqkUzDp9QnWVSjtMlM+kuMVVvO+9P1l3XyJAXdUpkCrAKZ5CfD/7mgRyEOuedAXj4A+Rhh/PoDkz6/6q3JNuUJ4WHfw+ooHAQPry6Ck1g1BkvXQkkI18JgLvDF6o/BnUlQLtmM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=iYImev23; arc=none smtp.client-ip=115.124.30.119
+	 MIME-Version; b=Rk4oXKgc+S7EpZZAxDbRP7BDeAuZ8VSbP72eDYPj0fIv1rzJd4E+rVIjCwuDUjBD/M760hlhdTLn+bWpJTT8niI+CGwwwiIkSYsVF3ALtZz+vAP1TjTbq5MuGu03Agu+nRbdKNJ8mutiOI4sXwPLo4d2mxSY7x03xbFmi1cN2PU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=ys3J+1/a; arc=none smtp.client-ip=115.124.30.119
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="iYImev23"
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="ys3J+1/a"
 DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
 	d=linux.alibaba.com; s=default;
-	t=1791738638; h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type;
-	bh=8D6vNHBJx0z0SwSxmvei23QITZ6qKM8C48rXwPbvD6I=;
-	b=iYImev23FchwjrtfAR1Azy2CjoTwfec09/07T8lZDYOmOw36RYSWk2Pft2bSzpNBbdGy/i0kWFdmTcHsDs1yU7OFaDixBNnny0UZ/vMbVjEShriphQY5+e8Srgsa/m3bAZgnszezkMHaNzLIBe3f5a1HRhVdQx160Qz+OIuigQg=
-X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R131e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam011083073210;MF=libaokun@linux.alibaba.com;NM=1;PH=DS;RN=20;SR=0;TI=SMTPD_---0XCYQXWt_1791738636;
-Received: from x31h02109.sqa.na131.tbsite.net(mailfrom:libaokun@linux.alibaba.com fp:SMTPD_---0XCYQXWt_1791738636 cluster:ay36)
+	t=1791738641; h=From:To:Subject:Date:Message-ID:MIME-Version;
+	bh=KutoU9XVTdk5iv/Xws5091PS1Ju3oeC2KwLLjHP07Hw=;
+	b=ys3J+1/a74DY5fEagsxz0GG+WcKVUfcQKwVUpXrrdqHCu0CpHD1jpmGIYxFdHXsgVykJvd8p3IyCp801BXeUMuGg5QxFuVqaWpLzRVafi7ETywdMoHMfb95iDd1zo03On/KeoPpgFrQ5j0Hkn2Ak71BfYfp1a1TmDcesdcg9utI=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R111e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033045133197;MF=libaokun@linux.alibaba.com;NM=1;PH=DS;RN=19;SR=0;TI=SMTPD_---0XCYQXXS_1791738639;
+Received: from x31h02109.sqa.na131.tbsite.net(mailfrom:libaokun@linux.alibaba.com fp:SMTPD_---0XCYQXXS_1791738639 cluster:ay36)
           by smtp.aliyun-inc.com;
-          Mon, 12 Oct 2026 01:10:37 +0800
+          Mon, 12 Oct 2026 01:10:39 +0800
 From: Baokun Li <libaokun@linux.alibaba.com>
 To: linux-ext4@vger.kernel.org
 Cc: linux-fscrypt@vger.kernel.org,
@@ -43,11 +43,10 @@ Cc: linux-fscrypt@vger.kernel.org,
 	jack@suse.cz,
 	yi.zhang@huawei.com,
 	ojaswin@linux.ibm.com,
-	ritesh.list@gmail.com,
-	stable@vger.kernel.org
-Subject: [PATCH 08/13] block: split encrypted bios at data unit boundaries
-Date: Mon, 12 Oct 2026 01:09:53 +0800
-Message-ID: <20261011170958.1759230-9-libaokun@linux.alibaba.com>
+	ritesh.list@gmail.com
+Subject: [PATCH 10/13] block: don't require data unit aligned bio_vecs for encrypted bios
+Date: Mon, 12 Oct 2026 01:09:55 +0800
+Message-ID: <20261011170958.1759230-11-libaokun@linux.alibaba.com>
 X-Mailer: git-send-email 2.43.7
 In-Reply-To: <20261011170958.1759230-1-libaokun@linux.alibaba.com>
 References: <20261011170958.1759230-1-libaokun@linux.alibaba.com>
@@ -57,70 +56,155 @@ List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Splitting a bio advances the remaining bio's data unit number by the
-number of whole data units that were split off:
+bio_split_io_at() rejects an encrypted bio unless every bio_vec is data
+unit aligned and a multiple of the data unit size, so that every split
+lands on a data unit boundary.  That is stricter than needed:
+bio_split_alignment() already rounds the split size down to the data
+unit size, which is all a split needs.
 
-  bio_split()
-   └─ bio_advance()
-      └─ bio_crypt_advance()
-         └─ bio_crypt_dun_increment(dun, bytes >> data_unit_size_bits)
+The requirement can't be met by all submitters either: a direct I/O
+read or write adds the pages of the user buffer as they are extracted,
+and fscrypt_zeroout_range() always adds one page per bio_vec, so a data
+unit larger than a page is described by bio_vecs that are smaller than
+it.
 
-The shift truncates, so splitting inside a data unit leaves the
-remainder with the wrong data unit number and silently corrupts data.
+Drop the requirement: the split size rounding keeps the data unit
+numbers of the remainder correct.  A bio whose first data unit doesn't
+fit in the split still fails with -EINVAL, as the rounded down size is
+zero then.
 
-The split size is already rounded down to the logical block size, so
-this is only possible when the data unit size is larger than it, e.g.
-a fscrypt filesystem with a 4K block size on a device with a 512-byte
-logical block size.
+The dropped requirement was only ever a proxy for the invariant that
+the submitter has to keep: the bio must start at a data unit boundary
+and cover a whole number of data units.  Document that in
+bio_crypt_set_ctx() and in the block API documentation.
 
-Fix this by rounding the split size down to a data unit boundary.  The
-split alignment becomes the maximum of the logical block size, the
-data unit size, and the zone write granularity, so a zoned write still
-meets all three requirements.
+For safety, warn about a misaligned start in fscrypt_set_bio_crypt_ctx()
+and reject bios whose size is not a whole number of data units in
+blk_crypto_submit_bio().
 
-Split bios can be up to one data unit smaller than the queue limits
-allow, so a bio can be split a little more often.  The number of
-segments for the split bio is still counted up to the size before the
-rounding, so it can be larger than needed; it is only used for
-accounting.
-
-Fixes: a892c8d52c02 ("block: Inline encryption support for blk-mq")
-Cc: stable@vger.kernel.org
 Signed-off-by: Baokun Li <libaokun@linux.alibaba.com>
 ---
- block/blk-merge.c | 15 +++++++++++++--
- 1 file changed, 13 insertions(+), 2 deletions(-)
+ Documentation/block/inline-encryption.rst | 13 ++++++++++++
+ block/blk-crypto.c                        | 26 +++++++++++++++++++++++
+ block/blk-merge.c                         | 14 ++++++------
+ fs/crypto/block.c                         |  3 +++
+ 4 files changed, 48 insertions(+), 8 deletions(-)
 
+diff --git a/Documentation/block/inline-encryption.rst b/Documentation/block/inline-encryption.rst
+index 0df964507f76..b2d6598ddfb6 100644
+--- a/Documentation/block/inline-encryption.rst
++++ b/Documentation/block/inline-encryption.rst
+@@ -198,6 +198,19 @@ it to a bio, given the blk_crypto_key and the data unit number that will be used
+ for en/decryption.  Users don't need to worry about freeing the bio_crypt_ctx
+ later, as that happens automatically when the bio is freed or reset.
+ 
++Users must keep such a bio aligned to the data unit size: the bio must start at
++a data unit boundary and be a whole number of data units long, since the data
++unit number of a bio describes its first data unit.  ``blk_crypto_submit_bio()``
++rejects a bio whose size is not a whole number of data units, and the block layer
++splits and merges encrypted bios only at data unit boundaries, but a layer that
++splits bios itself, e.g. device-mapper, must keep the alignment itself.
++
++Splitting a bio needs at least one whole data unit of room, so a queue limit
++that leaves less than a data unit for a split, e.g. when ``max_sectors_kb`` is
++lowered below the data unit size used on the device, fails the bio with
++``BLK_STS_INVAL``.  Devices that advertise a data unit size must therefore be
++able to issue requests of at least that size.
++
+ To submit a bio that uses inline encryption, users must call
+ ``blk_crypto_submit_bio()`` instead of the usual ``submit_bio()``.  This will
+ submit the bio to the underlying driver if it supports inline crypto, or else
+diff --git a/block/blk-crypto.c b/block/blk-crypto.c
+index 5c670c3e65c5..d79c9042ec52 100644
+--- a/block/blk-crypto.c
++++ b/block/blk-crypto.c
+@@ -98,6 +98,25 @@ static int __init bio_crypt_ctx_init(void)
+ }
+ subsys_initcall(bio_crypt_ctx_init);
+ 
++/**
++ * bio_crypt_set_ctx() - attach an encryption context to a bio
++ * @bio: the bio to attach the context to
++ * @key: the key that the bio will be en/decrypted with
++ * @dun: the data unit number of the bio's first data unit
++ * @gfp_mask: memory allocation flags
++ *
++ * The caller must keep the bio aligned to the data unit size of @key: it must
++ * start at a data unit boundary and be a whole number of data units long,
++ * since the data unit number of a bio describes its first data unit.
++ *
++ * blk_crypto_submit_bio() rejects a bio whose size is not a whole number
++ * of data units, and the block layer splits and merges encrypted bios
++ * only at data unit boundaries; a layer that splits bios itself, e.g.
++ * device-mapper, must keep the alignment itself.
++ *
++ * The bio must be submitted with blk_crypto_submit_bio(), after
++ * blk_crypto_start_using_key() was called for @key on the block device.
++ */
+ void bio_crypt_set_ctx(struct bio *bio, const struct blk_crypto_key *key,
+ 		       const u64 dun[BLK_CRYPTO_DUN_ARRAY_SIZE], gfp_t gfp_mask)
+ {
+@@ -260,6 +279,13 @@ bool __blk_crypto_submit_bio(struct bio *bio)
+ 		return false;
+ 	}
+ 
++	/* Error if the bio doesn't cover a whole number of data units. */
++	if (WARN_ON_ONCE(!IS_ALIGNED(bio->bi_iter.bi_size,
++				     bc_key->crypto_cfg.data_unit_size))) {
++		bio_endio_status(bio, BLK_STS_INVAL);
++		return false;
++	}
++
+ 	/*
+ 	 * If the device does not natively support the encryption context, try to use
+ 	 * the fallback if available.
 diff --git a/block/blk-merge.c b/block/blk-merge.c
-index 258a726071d1..f92460c283e7 100644
+index 9bcc9c52eea1..dd9be4c04041 100644
 --- a/block/blk-merge.c
 +++ b/block/blk-merge.c
-@@ -308,9 +308,20 @@ static bool bvec_split_segs(const struct queue_limits *lim,
- static unsigned int bio_split_alignment(struct bio *bio,
- 		const struct queue_limits *lim)
+@@ -346,20 +346,18 @@ static inline unsigned int bvec_seg_gap(struct bio_vec *bvprv,
+ int bio_split_io_at(struct bio *bio, const struct queue_limits *lim,
+ 		unsigned *segs, unsigned max_bytes, unsigned len_align_mask)
  {
-+	const struct bio_crypt_ctx *bc = bio_crypt_ctx(bio);
-+	unsigned int align = lim->logical_block_size;
-+
-+	/*
-+	 * A split advances the remaining bio's data unit number by whole
-+	 * data units only (see bio_crypt_advance()), so a split inside a
-+	 * data unit would make it use the wrong data unit numbers.
-+	 */
-+	if (bc)
-+		align = max(align, bc->bc_key->crypto_cfg.data_unit_size);
- 	if (op_is_write(bio_op(bio)) && lim->zone_write_granularity)
--		return lim->zone_write_granularity;
--	return lim->logical_block_size;
-+		align = max(align, lim->zone_write_granularity);
-+
-+	return align;
- }
+-	struct bio_crypt_ctx *bc = bio_crypt_ctx(bio);
+ 	struct bio_vec bv, bvprv, *bvprvp = NULL;
+ 	unsigned nsegs = 0, bytes = 0, gaps = 0;
+ 	unsigned int align, split_bytes;
+ 	struct bvec_iter iter;
+-	unsigned start_align_mask = lim->dma_alignment;
+-
+-	if (bc) {
+-		start_align_mask |= (bc->bc_key->crypto_cfg.data_unit_size - 1);
+-		len_align_mask |= (bc->bc_key->crypto_cfg.data_unit_size - 1);
+-	}
  
- static inline unsigned int bvec_seg_gap(struct bio_vec *bvprv,
+ 	bio_for_each_bvec(bv, bio, iter) {
+-		if (bv.bv_offset & start_align_mask ||
++		/*
++		 * The bio_vecs of a bio with a crypto context don't have to
++		 * be data unit aligned, only the bio as a whole does; see
++		 * bio_crypt_set_ctx() and bio_split_alignment().
++		 */
++		if (bv.bv_offset & lim->dma_alignment ||
+ 		    bv.bv_len & len_align_mask)
+ 			return -EINVAL;
+ 
+diff --git a/fs/crypto/block.c b/fs/crypto/block.c
+index 5193f8ba3ee0..2040f63eb9a1 100644
+--- a/fs/crypto/block.c
++++ b/fs/crypto/block.c
+@@ -234,6 +234,9 @@ void fscrypt_set_bio_crypt_ctx(struct bio *bio, const struct inode *inode,
+ 		return;
+ 	ci = fscrypt_get_inode_info_raw(inode);
+ 
++	/* The data unit number of a bio describes its first data unit. */
++	WARN_ON_ONCE(!IS_ALIGNED(pos, 1U << ci->ci_data_unit_bits));
++
+ 	fscrypt_generate_dun(ci, pos, dun);
+ 	bio_crypt_set_ctx(bio, ci->ci_enc_key.blk_key, dun, gfp_mask);
+ }
 -- 
 2.43.7
 
