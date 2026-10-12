@@ -1,41 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E87B849891F;
-	Mon, 12 Oct 2026 15:47:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4C17336883;
+	Mon, 12 Oct 2026 15:52:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791820070; cv=none; b=n1i+9V8NUc487e806GVSugHEH4/Fu7lRF6rUjmnVrFQDVmIYN+ja3ujAoV2F/liOKMk/Gg1g7/lixtlgQx8PkGIYnI83UZuGeoZIKHIpjog5AWtqsE8vRvuNx8L5BE65PBXYXQfSd7xdkiWJGJzx/ydNcCqEIn2G8fITAZFXpLE=
+	t=1791820376; cv=none; b=fD8AFpb40EPa97t+zcgBTZlHzoQ/8U7H/kV1/xl8zu3ahxOE+Gs/UYfmLmoEpey3U7Vl6O/Rtn2S/LknKuGRCcNPDQAXHpYlS6fV0AXZJvHscOY/4cHdzBEU7eT0Y6RMpEj3/r33/pOUoYczDYZkPpVxISxuN3NXlOXidrH/Lk0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791820070; c=relaxed/simple;
-	bh=aMs92VW4xEsQaDa34gb5tkTfSiDKqGcrkBdi+GwjQXc=;
+	s=arc-20240116; t=1791820376; c=relaxed/simple;
+	bh=yGZQMHIurMBdTBsG9bK6lKhru/bp0GbKU+QZjJv+eOs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZELLU5bm/y+SlfQWQ6fnYFyndWlNVppEkMziNpGFOCqT9jy7+lNnyBmx+QuqTw4lU2n/QIN8bIptRKsllWNJ3TliguoB06H7rmLuqVfLAIP3QNMUROJTWONAu4X19drayLkQqzjDvWqbUM05Izm6Hu+SZhE5CkmOB7vJLTRXRI8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bU/1vGGO; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=tQtIEGz7rhX4oXDAGt13ce+SGciWOJhiqo9hk+d4eif4NHgWV/plIYZChhfJ0Mu0f2IKpYHml3ZYlIElE32gLgenpJbXsCJ5k/OXEE3+mW0nDrRaQkS3DenyJRAD+3mrj729rF2cxrY95knixsZa2eXudRfxjbvS4A2xbPN2fcI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VBKap8my; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bU/1vGGO"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 795EE1F0089C;
-	Mon, 12 Oct 2026 15:47:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VBKap8my"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 5BD0A1F0089B;
+	Mon, 12 Oct 2026 15:52:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791820069;
-	bh=cxatueqfO47A8zw0ntZhDxOu2QAe6UvpcuALPYe7gR8=;
+	s=k20260515; t=1791820375;
+	bh=r1YRHReaoh2NrqFcs0RmaycnTHahxss9fwmfRXIULng=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=bU/1vGGOzSXkVlD2pmV34AmngM2sq4DynBp51JikIOSAQcbdBhEAm9RoUHQ8wSgcI
-	 q+Lth4VXhNNyt99R7Q2hgxAx2aeyU9Lrf/GdSutoIJN6FK1bHTURnGT6XtomTDXkRH
-	 sCBVost+HGKIhFHFKk0iUaZuME32NTh6lKkU5sWl3F84H2fHUBKwuSmpkgbH7Hrxmp
-	 oBOGz7d/u2rhCaXe+3CAczen6C2ByA7GXMlgCsVWGpTA+1fZMsdF9p6dkScVO+vKCp
-	 ON8TxEH6rKl9t3qGbWHoQ5H1gGYNgtO7X4LalZRE3bLgF1aQxaFDUV8pH7UxCB4Loq
-	 FT9lBCQ7o2lAw==
-Date: Mon, 12 Oct 2026 08:47:49 -0700
+	b=VBKap8mytzXBu1UukTyjZHoE80lpMoHn7wOcpiWIWgOi2jnzPKFPZxokADnQwCs7Z
+	 0ruY8xbv4Qo6B4w85nIB6uq/2W9PcW8Ewd/D/XBhoAGA32Nmsu2mAhL+yj/d3k8SU0
+	 wpFD3rWtjoWEQGV8LsHCkXWgmvH5L8/UnR7r0rMvH8UiwagS9kVe6THEFB8QIQCpbV
+	 XdUwwfhbggVsJfb2gU/sSecJxYxcx1s811d6M1yizxfPKeqFOsZHkkhzYmBNHgKFk1
+	 VMgCHRrVbXvm4BRDUN/g89OvzL4pnZ+N04NoZAUMg8Et6gz64sq2Xz6ldJQ39n6QmI
+	 t3Q1fMoJwlMZw==
+Date: Mon, 12 Oct 2026 08:52:54 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@infradead.org>
 Cc: cem@kernel.org, stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 04/12] xfs: reduce new btree slack factor if free space
- is negative
-Message-ID: <20261012154749.GA2705364@frogsfrogsfrogs>
+Subject: Re: [PATCH 06/12] xfs: only written file data blocks can be shared
+Message-ID: <20261012155254.GB2705364@frogsfrogsfrogs>
 References: <179178065114.1058326.9639488899319330972.stgit@frogsfrogsfrogs>
- <179178065281.1058326.11344648618549479599.stgit@frogsfrogsfrogs>
- <aszbuYSyUzTIrlJi@infradead.org>
+ <179178065324.1058326.3356948076285838276.stgit@frogsfrogsfrogs>
+ <aszb_INSp9qbSTf-@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,26 +43,40 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aszbuYSyUzTIrlJi@infradead.org>
+In-Reply-To: <aszb_INSp9qbSTf-@infradead.org>
 
-On Mon, Oct 12, 2026 at 06:08:09AM -0700, Christoph Hellwig wrote:
-> On Sun, Oct 11, 2026 at 10:56:46PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > LOLLM points out that if the incore fdblocks counter is negative, the
-> > assignment to uint64_t will mask this possibly low space situation and
-> > we don't pack the btree blocks as tightly as we probably ought to.  If
-> > it's the case that there's some free space and fdblocks is too low due
-> > to an error in the superblock field, then we can end up failing btree
-> > rebuilds due to ENOSPC unnecessarily.  This is a corner case, but let's
-> > fix it anyway.
+On Mon, Oct 12, 2026 at 06:09:16AM -0700, Christoph Hellwig wrote:
+> On Sun, Oct 11, 2026 at 10:57:18PM -0700, Darrick J. Wong wrote:
+> > +	/*
+> > +	 * The refcount btree should only have records for written file data
+> > +	 * blocks or for COW staging blocks.
+> > +	 */
+> > +	if ((XFS_RMAP_NON_INODE_OWNER(rec->rm_owner) &&
+> > +	     rec->rm_owner != XFS_RMAP_OWN_COW) ||
+> > +	    (rec->rm_flags & (XFS_RMAP_ATTR_FORK | XFS_RMAP_BMBT_BLOCK |
+> > +			      XFS_RMAP_UNWRITTEN))) {
+> > +		xchk_btree_xref_set_corrupt(refchk->sc, cur, 0);
+> > +		return 0;
+> > +	}
 > 
-> Should thi simply use xfs_sum_freecounter instead of
-> xfs_sum_freecounter_raw as the former takes care of the issue
-> in the more "normal" way?
+> > +	/*
+> > +	 * The refcount btree should only have records for written file data
+> > +	 * blocks or for COW staging blocks.
+> > +	 */
+> > +	if ((XFS_RMAP_NON_INODE_OWNER(rec->rm_owner) &&
+> > +	     rec->rm_owner != XFS_RMAP_OWN_COW) ||
+> > +	    (rec->rm_flags & (XFS_RMAP_ATTR_FORK | XFS_RMAP_BMBT_BLOCK |
+> > +			      XFS_RMAP_UNWRITTEN))) {
+> > +		xchk_btree_xref_set_corrupt(refchk->sc, cur, 0);
+> > +		return 0;
+> > +	}
+> 
+> Can we have a shared helper for this conditional?
+> 
+> Otherwise this looks good.
 
-Heh, yes.  I forgot that existed :(
-
-Fixed, thanks!
+rtrefcount.c goes away entirely with sandeen's series in 7.4-next to
+combine the two scrubbers, so in the end there won't be this
+duplication.
 
 --D
