@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 608BB3AFCE6;
-	Mon, 12 Oct 2026 05:58:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED5AF31E82E;
+	Mon, 12 Oct 2026 05:58:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791784686; cv=none; b=auimUKR5DoYEhm5SltjBWltWvM7HvG+lH5bHhCoDt1crrKE2EPutaC+OyNsaqaeZBFACkyXeugns59kvY+DOPwoaJ8bwVF2jnYYYeLPb5x3QlqhtMLxT8yqHEEUhXN7LL+QO9NAsPuqPfdOMzmNwvXBI/rGZyZSrXJVf6OPLL5E=
+	t=1791784701; cv=none; b=ioxDuR85Te+7bgt72BnKALKxBypPDNpu+3JAJXAXwcaRPcadJQx/z/U/eFE1RnHRyijp9S84wyUsiS0ja9B8DvVQVEqTDCXio91w7atZZFj/V2263UGHf8+9mQFzzKPIAwRCrqqkw+/XlFGTZ1/92mZzFaZXsiF82I5PrLWmuOM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791784686; c=relaxed/simple;
-	bh=8KMMNSDFzS626+f8lX9vaEgMFhLSkdhqb4ChBbJIjqE=;
+	s=arc-20240116; t=1791784701; c=relaxed/simple;
+	bh=zUoEoiVo8nKEmCCgzsTo22VPS8CFhuIkXccXyZvp2qo=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=hswSoB/W5OUtKnpj8MK9qRdZRONww/Fgxp/ya4sN9REDf7bUCruRlUwR6pqOi/jf24LNS2rg+5FbwF7wvQQ21YepQ5kOQRH9uu4EcOpkVfOhbVlQq2wiRXxWMHkNR66Px2gLqydPti7xCHKxR2hfrWyLnRRRykWhZf6xPY0a38w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PbM6M+os; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=rAeXMTqI5NkcLbQ6jXQraty5Y1dvVDJ15rlq6LJLwqmZ5rt1GYJPHpA6NxthPlwXIIW3EMa+YAv1xqL0ZKTr+gYc3KiH9FpRVxVXQttnTo0ZOJMlximI5DDK6x6KieAEBapbXarcLVQJ9AgDvlKVZ/+7cG9Z9YAUu4p9P8oSW70=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OqcAC32T; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PbM6M+os"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 288141F0089B;
-	Mon, 12 Oct 2026 05:58:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OqcAC32T"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id C614F1F0089B;
+	Mon, 12 Oct 2026 05:58:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791784685;
-	bh=2C/DBpnq4Jn2D9xHhN6MiL/ZmhQ8Opq5HbD3EeO2AR8=;
+	s=k20260515; t=1791784700;
+	bh=CCbACEfTRu2dlr+UmG68f4lahNWaA1G3MoX/D7Quik0=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=PbM6M+osHUHLAjNleucv4rth0+q64RMoNFLag7hTRbpgseaVfqJ/idjReIWsVF0Ch
-	 my85YYTUtKwvw/qqoHAtYOwrnQQHQOarpiY1iXnWe/X4d6bhouCxNDSawl3W4IkUgI
-	 rQOiGp/8ksNvYJnHZ9ckYdcuX728BgY7UFoDTVTOpLzaYZYodwPbdjRpsQj38kLm6Q
-	 ePKoKl+edzftqHpet7nqYehj/3vmIyHcD8SR0VR0KqVuRSn7EydevUB3dian5TT65s
-	 LU5UNbIyn5OYeaz559vkZMnUYYkkEK4CDB/VNnXuVJypFA57ODiemkH1H9Z5yPXErX
-	 XFWWkxHbxJsyw==
-Date: Sun, 11 Oct 2026 22:58:04 -0700
-Subject: [PATCH 09/12] xfs: clear set[ug]id mode bits when zapping attr fork
+	b=OqcAC32TJYmTXB+7RuH+0JuIMCK/4etIEqJMHFiZlWOFl2X/UOYPQAjUEVQeLq55n
+	 c3rQchMP2OCXJhlPtAkry/c/KgPxBJpzj+NJNM8Yb59dYBoO18r5C5rLHhYRyldK+l
+	 OAOA6/dKTKPOM4zmWFsDgJKwMaM4Y2nhLjbqSRqYZDokmgnupruSmvJU4ENhVcmx8X
+	 gOlEuZCFTTx9GyMULPcAzGsvZOYr/QH2G4MC1lkAyi2rgwGS3niCiWiM3HzTZGW6tw
+	 Cso5WEbD8gRcM1Qdvf+vYviL4xG1dvUU3/sP/jAVY0K8hDeFgYvPWjID+8p7mtk5aw
+	 maxu1qHCvz8lg==
+Date: Sun, 11 Oct 2026 22:58:20 -0700
+Subject: [PATCH 10/12] xfs: opportunistically skip btree block checks
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <179178065389.1058326.15301245615537747127.stgit@frogsfrogsfrogs>
+Message-ID: <179178065411.1058326.8664681046018160120.stgit@frogsfrogsfrogs>
 In-Reply-To: <179178065114.1058326.9639488899319330972.stgit@frogsfrogsfrogs>
 References: <179178065114.1058326.9639488899319330972.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,36 +45,31 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-LOLLM observes that zapping a file's attr fork could result in ACLs
-being removed from the file.  Because we have no idea what we're
-deleting, we should clear the setuid and setgid bits in addition to the
-access mode bits so that nobody can access the file.
+LOLLM notices that both callers of xchk_btree_get_block will return
+early if *pblock is NULL after a successful return.  However,
+xchk_btree_get_block itself can return 0 after flagging a corruption.
+There's no point in continuing after we've found a corruption, so null
+the pointer out.
 
-Cc: <stable@vger.kernel.org> # v6.8
-Fixes: e744cef2060559 ("xfs: zap broken inode forks")
+Cc: <stable@vger.kernel.org> # v4.15
+Fixes: cc3e0948d2686f ("xfs: scrub the shape of a metadata btree")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Assisted-by: LOLLM # finding obvious bugs
 ---
- fs/xfs/scrub/inode_repair.c |    7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ fs/xfs/scrub/btree.c |    1 +
+ 1 file changed, 1 insertion(+)
 
 
-diff --git a/fs/xfs/scrub/inode_repair.c b/fs/xfs/scrub/inode_repair.c
-index 4b719ad64ace8c..25e71e7d472f36 100644
---- a/fs/xfs/scrub/inode_repair.c
-+++ b/fs/xfs/scrub/inode_repair.c
-@@ -1313,7 +1313,12 @@ xrep_dinode_zap_afork(
- 	 */
- 	if (dip->di_format != XFS_DINODE_FMT_BTREE)
- 		dip->di_forkoff = 0;
--	dip->di_mode = cpu_to_be16(mode & ~0777);
-+
-+	/*
-+	 * Zapping the attr fork could remove ACLs, so we clear suid/sgid and
-+	 * all access mode bits.
-+	 */
-+	dip->di_mode = cpu_to_be16(mode & ~(S_ISUID | S_ISGID | 0777));
- 	dip->di_uid = 0;
- 	dip->di_gid = 0;
- }
+diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
+index 786b1e7c4dc37f..43b81432640777 100644
+--- a/fs/xfs/scrub/btree.c
++++ b/fs/xfs/scrub/btree.c
+@@ -602,6 +602,7 @@ xchk_btree_get_block(
+ 	xfs_btree_get_block(bs->cur, level, pbp);
+ 	if (__xfs_btree_check_block(bs->cur, *pblock, level, *pbp)) {
+ 		xchk_btree_set_corrupt(bs->sc, bs->cur, level);
++		*pblock = NULL;
+ 		return 0;
+ 	}
+ 	if (*pbp)
 
