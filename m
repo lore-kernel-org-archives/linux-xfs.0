@@ -1,40 +1,35 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07BB4449B3F;
-	Mon, 12 Oct 2026 09:29:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EC033F4DCA;
+	Mon, 12 Oct 2026 10:21:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791797343; cv=none; b=KzrTl+rJ5cfcCVduYuMc0qESXk+A4kuvMNhnn9tG51PZAOJaidYavuimWxrdxVQlwanC3co3s0k1JlR13xK6tcd65Kj+oo3wR4HGnvkmP/5Fryol1bK9T8MoWPYoOSZGfryFx2Y0oZUA/SrmWVstH9FK+1xx07Dxb/fSzogA838=
+	t=1791800490; cv=none; b=f7KkYBjx8q0DcXkqWMk4PFaTL0MjKlxN9xlLaG6QyJ6KXIkZlb2Hm//ELJYFLX+qNrtx6FrrhvWcMDGqdYcLGfggzPnsCTZkjYUqp3o/L7nU64oRTE2AyLddJd3SivGUkE8N5a/GIcxxDO9p4WhEt8qsIp7UrJ8qzwQqpQQoT5k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791797343; c=relaxed/simple;
-	bh=IfPOvdjBpe2mttPHiD5atsh2QNUtoUtFWviMSt3pahg=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=XWFyCAMbX9tappaYMZfscd7GtR4QXrRk+YrMcJRoN3KGGgCZsAXEPzI+qKuqNCcsx2JwnhElEPgq4BxpiIsQsSPQi7+oWucOIeu8GBHRrrh4lKJPGFGipEfWxwRaJEh2jW8723gqYApME+oiWAAyNBX4cefvvfbMHdy7VTg97LM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YB4phc9u; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791800490; c=relaxed/simple;
+	bh=FHwfq/OCDsnntrfJYkKn8tLOjs4Tv7YHZV8JitYQDQ0=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=llHmXC+YlFhxReQ+rBpOwfXrUggAXxiutyzHwER/gdhdOZULL9JInaAX+tBU0WNtkK+y/kuXR4AKWIl8bwRcC8mqj8RmXRJen71R5nn89q49m2v1txB5bxEBlCdTCE7mEC0G7dOGAeoRpIHHbRcWfn/e0xGpvYmQyx/l2oIl9Bo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=daD9kmOa; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YB4phc9u"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 488931F0089B;
-	Mon, 12 Oct 2026 09:29:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="daD9kmOa"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 07DB31F0089C;
+	Mon, 12 Oct 2026 10:21:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791797341;
-	bh=fLg8mAoX+4wLmmOsxr2bmqLF4yf1/+DGyIDf2PU151E=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=YB4phc9uXGFi8fiKIrVqmgvnOSKBohjP59sKrOImxYoD4myN99mvPQJb391DThm4s
-	 rZto/tzxw42YXq6VWSH4A+AS01u/Xf/H+ftcsirO0Iuw3dxMKAYqzouBtIcFw/XYhR
-	 ygKO2YZXr97pSR9LsAdohyMwhuWTWF1srbrX6xHrhtPy5lQQhWVU1YWV3lg0KlfByH
-	 D/E+I0DsqcNSLN2CR6IZZo4XE/XlSyGVBfNk0RGBp+0JLKp5IZBWWsit/Gk0rbYOX2
-	 PdEoJx8YN86rsPuM7V3mx4Xrw2vg4bJdLB+smTPYIOq0CvFvCJgGi9NxJrt9mjw3RC
-	 DW73nhHAzSJYg==
+	s=k20260515; t=1791800478;
+	bh=jSaTeXy5zEI39kgqqTi6yfSkP3Kgm5wm6RfoGXruvqg=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc;
+	b=daD9kmOaoDrecEZ+GKWXxyW9H20UJr48DcxIiw0e65dcl8QTST3JZXcj61YvqNTyb
+	 c5d34ADQW1FTC40OtFvDZ/r1oWnvdCTDB2nBPiUWZpsdvr64rU3yyTUZCbQmtT/WHN
+	 M4L3IE8ZFu/uZjDyHAoHWVVDuNF/pppyPWohHYEa4Yvx8fprF5PUJYsVDI169f9kxo
+	 jBe+V1vSuEX9xF71FfYPmOVHGKSg4cEB3pIABRCDPA7K95hBDggmzUqYSJbpYomakn
+	 PXM0tJDgLdWEhvw5L8NTowb8aNFn6hJrwa/MlDBOPgqwCRarNEsyBQ1YwBmx0RfVjr
+	 WbnHd24KBBfVA==
 From: Christian Brauner <brauner@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org, 
- linux-fsdevel@vger.kernel.org
-In-Reply-To: <20260928091111.3986811-1-hch@lst.de>
-References: <20260928091111.3986811-1-hch@lst.de>
-Subject: Re: use bio_complete_in_task for iomap error reporting
-Message-Id: <20261012-geklungen-geist-ramponiert-114676e3a35c@brauner>
-Date: Mon, 12 Oct 2026 11:28:58 +0200
+Date: Mon, 12 Oct 2026 12:20:46 +0200
+Subject: [PATCH RFC 01/28] ecryptfs: don't leak the inode when a lookup
+ can't open the lower file
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,40 +38,77 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
+Message-Id: <20261012-work-fs-sb_rdonly-v1-1-60743a3dc326@kernel.org>
+References: <20261012-work-fs-sb_rdonly-v1-0-60743a3dc326@kernel.org>
+In-Reply-To: <20261012-work-fs-sb_rdonly-v1-0-60743a3dc326@kernel.org>
+To: Jan Kara <jack@suse.com>
+Cc: Al Viro <viro@zeniv.linux.org.uk>, ecryptfs@vger.kernel.org, 
+ linux-ext4@vger.kernel.org, jfs-discussion@lists.sourceforge.net, 
+ linux-nilfs@vger.kernel.org, exfat@lists.linux.dev, 
+ linux-fsdevel@vger.kernel.org, ntfs@lists.linux.dev, 
+ ocfs2-devel@lists.linux.dev, linux-btrfs@vger.kernel.org, 
+ gfs2@lists.linux.dev, linux-efi@vger.kernel.org, 
+ linux-mtd@lists.infradead.org, linux-xfs@vger.kernel.org, 
+ "Christian Brauner (Amutable)" <brauner@kernel.org>, stable@vger.kernel.org
 X-Mailer: b4 0.17-dev-3d1b8
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1919; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=FHwfq/OCDsnntrfJYkKn8tLOjs4Tv7YHZV8JitYQDQ0=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWSd2TJJmlVX9PaCsIn+FsHZwuxHGEpPFCj+mriqsDrpf
+ qGIfFJFRykLgxgXg6yYIotDu0m43HKeis1GmRowc1iZQIYwcHEKwETcDjD8sz1q8vHQt6fh7p09
+ uT08PmKLO9tkzFMehF2fYnDC/qOTC8P/xLgFX20+PbiQ+CC39cSDhwe1Dlq6qHKtT7/euMmvwfE
+ UHwA=
+X-Developer-Key: i=brauner@kernel.org; a=openpgp;
+ fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-On Mon, 28 Sep 2026 11:11:06 +0200, Christoph Hellwig wrote:
-> this series replaces three pieces of code to queue up I/O completions
-> in user context for error reporting with the relatively new block layer
-> bio_complete_in_task() mechanism.
-> 
-> Diffstat:
->  bio.c       |   46 ++--------------------------------------------
->  direct-io.c |   19 +------------------
->  ioend.c     |   48 ++----------------------------------------------
->  3 files changed, 5 insertions(+), 108 deletions(-)
-> 
-> [...]
+ecryptfs_lookup_interpose() opens the lower file of a regular file to
+read the size from the header. If that fails it calls make_bad_inode()
+and returns the error. A new inode is still I_NEW at that point and
+nothing ever unlocks or puts it, so it leaks together with the reference
+it holds on the lower inode. And an inode that was already in the cache
+gets marked bad for all its other users instead of just losing the
+reference this lookup took.
 
-Applied to the vfs-7.3.iomap.final branch of the vfs/vfs.git tree.
-Patches in the vfs-7.3.iomap.final branch should appear in linux-next soon.
+umount then complains:
 
-Please report any outstanding bugs that were missed during review in a
-new review to the original patch series allowing us to drop it.
+  VFS: Busy inodes after unmount of ecryptfs (ecryptfs)
 
-It's encouraged to provide Acked-bys and Reviewed-bys even though the
-patch has now been applied. If possible patch trailers will be updated.
+That's a WARN, or a BUG with CONFIG_BUG_ON_DATA_CORRUPTION. The lower
+filesystem reports the same when it is unmounted. Use iget_failed() for
+a new inode and iput() for one from the cache.
 
-Note that commit hashes shown below are subject to change due to rebase,
-trailer updates or similar. If in doubt, please check the listed branch.
+Reproducer, opening the lower file read-write fails on a read-only bind
+mount:
 
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
-branch: vfs-7.3.iomap.final
+  sig=$(printf x | ecryptfs-add-passphrase - | sed -n 's/.*\[\(.*\)\].*/\1/p')
+  mount --bind -o ro /lower /lower
+  mount -i -t ecryptfs -o ecryptfs_sig=$sig,ecryptfs_cipher=aes,ecryptfs_key_bytes=16,ecryptfs_passthrough /lower /upper
+  cat /upper/f      # EROFS
+  umount /upper     # VFS: Busy inodes after unmount of ecryptfs
 
-[1/3] iomap: use bio_complete_in_task for buffered read failures
-      https://git.kernel.org/vfs/vfs/c/062de5a4ef9d
-[2/3] iomap: use bio_complete_in_task for buffered write failures
-      https://git.kernel.org/vfs/vfs/c/9d098dfc5522
-[3/3] iomap: use bio_complete_in_task for buffered simple dio read failures
-      https://git.kernel.org/vfs/vfs/c/26db1836053f
+Fixes: 3b06b3ebf441 ("eCryptfs: Fix new inode race condition")
+Cc: stable@vger.kernel.org
+Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
+---
+ fs/ecryptfs/inode.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/fs/ecryptfs/inode.c b/fs/ecryptfs/inode.c
+index 525297c7ebd8..0d8452558a98 100644
+--- a/fs/ecryptfs/inode.c
++++ b/fs/ecryptfs/inode.c
+@@ -362,7 +362,10 @@ static struct dentry *ecryptfs_lookup_interpose(struct dentry *dentry,
+ 	if (S_ISREG(inode->i_mode)) {
+ 		rc = ecryptfs_i_size_read(dentry, inode);
+ 		if (rc) {
+-			make_bad_inode(inode);
++			if (inode_state_read_once(inode) & I_NEW)
++				iget_failed(inode);
++			else
++				iput(inode);
+ 			return ERR_PTR(rc);
+ 		}
+ 	}
+
+-- 
+2.53.0
 
