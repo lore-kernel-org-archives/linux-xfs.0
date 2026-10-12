@@ -1,35 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DBB53EEAE5;
-	Mon, 12 Oct 2026 10:21:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A241412269;
+	Mon, 12 Oct 2026 10:21:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791800509; cv=none; b=uA/wJz6Rep5Qp97mH5jWQznCd1qvxPAiEQ0S2sLJ2qaQcKD6Lcf+0ox8lXRDfsnNggSftZzWC4Vu7KOIgzfi9XLXOXN67WR3iW0noBqFwKb7mKcVEPGI4dq+59tfgNPC4NYyu128ufhKuhlrbEmFpRf9KdzU4ywIXRECUaIA/Sk=
+	t=1791800514; cv=none; b=OIPvOyZiFPcag09oMLbkAbjaNj8JBP7OhXGHwJ4WHISWYNY8cQ75PDtmpEVX8wp2FsXnRqyG2w3LhEjcXbvD/jeGfCgq2J3TaRqQmkVhrxixdxDhcyL81Bq+tcT8HtofkEwBObly1lO85t0nt1ErwWBqKVAE5fQgzUCxb63sWRI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791800509; c=relaxed/simple;
-	bh=/QgNABNKFzI5BqiYYHeDq4XWuR2eeF0uHcBhOU2qIYo=;
+	s=arc-20240116; t=1791800514; c=relaxed/simple;
+	bh=KuJEEFuAYfLbCKHgQghNWOlxgH9KI0vKPiB8pe0ymQM=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=Sa7JYBF9ZvVXTv8XTfe/KTQFLRdFXYC7YVIb7sD48N+AIcRvKp8CjYxiW8J8XKn6NvFOo6rOhHlGQbvsjMm2jhEUWlINtW9oyU10vsilgFBhQFdB1x+nSPMi9MSZQP46qZysU8JAtozhMVTz459O/Vtjw76wvPAcc7kgLW5m6Do=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GO6WXF5a; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:To:Cc; b=VTx032CLgqvsYpt9ZjZf8jQvz6kePwrZLHoYMl3nQZQ9qtFnpNz0OTxD4Z2EY3sKalWVo6vdEJ+H/2PgtO81tPsly3h/dlOIhp5gPkBn+311Q9K0PypwTHpzG7JcClMGH6q/C1ht1VTqhN8FMzMA1pTE9J1j6eGFPG1CNpDXSj8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NanhayQO; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GO6WXF5a"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5406B1F0089C;
-	Mon, 12 Oct 2026 10:21:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NanhayQO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71E6A1F0089B;
+	Mon, 12 Oct 2026 10:21:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791800495;
-	bh=fB4wonqg/6FYI6FCX3biZXNURAZGn3ZOc8QTfenvMKU=;
+	s=k20260515; t=1791800499;
+	bh=q6waVOCyO2gR6GFI/cCkHVbkmOjqTA7TjVCuAr4GVPU=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=GO6WXF5atc77rYr0YYF59cZEdjDUeUMCmm2k7EITq4umzIf17da81ibIWp1MN/H9f
-	 MbMF73GPXkfu1RB37u7Ws4qUaYwbu2jRlKlpOkQ+4CBmIRpd8/B5WJ/hD3njQ2Bdfg
-	 WCyXOai6xEOyIapzfeLKyLxSY09iN1K8sDcfy+6UsIe705fVfMoGRdsO9F3q9EJ5eN
-	 QqaVINVGhdbvzWtk0dwMnDqPv3li+vMNAvPC7tf/sok9nnRnvG6HM1J/fCy5/LP3ZD
-	 tjZqfy7NI2Y4pXM1O21aRP/l050tbJ53VZmel5jJWJtCmqLdaRfrZ2m5ubx/q8dM86
-	 FmEckanzxQAoA==
+	b=NanhayQO7fKCpXAvOHVCc/+ipt0ogA6orLuENoRyKF9svLTBIrGiBgrCAhxHa8p5j
+	 cv0OCXInnB5lbUS7H/u8kmS4DcDmKRcNvLeDAXG+tCj+egY+ttLTKV6S7/Hy18/NZ6
+	 eIoi04NxxhXGfuMem0THMkWaoFKzmOeQFTZSA6Melyqh94tfxyREaHq8+GaLMZdnOk
+	 eMNsW319FUhDNnSJ8BOiE/Kw3dNoxFC6jU4M4By3f64Ikb34Y7P1PggtoFui3BsKf/
+	 4ZiZ32adjM6hcrpW9WDQnu+rNk+0gWVc5BgVWk2ZJQ2OEpv3Y6oKaFzA4+vLAZh9Vs
+	 cpMJSnzq6LZlA==
 From: Christian Brauner <brauner@kernel.org>
-Date: Mon, 12 Oct 2026 12:20:50 +0200
-Subject: [PATCH RFC 05/28] nilfs2: don't set SB_RDONLY after filesystem
- errors
+Date: Mon, 12 Oct 2026 12:20:51 +0200
+Subject: [PATCH RFC 06/28] fat: don't set SB_RDONLY after filesystem errors
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -38,7 +37,7 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261012-work-fs-sb_rdonly-v1-5-60743a3dc326@kernel.org>
+Message-Id: <20261012-work-fs-sb_rdonly-v1-6-60743a3dc326@kernel.org>
 References: <20261012-work-fs-sb_rdonly-v1-0-60743a3dc326@kernel.org>
 In-Reply-To: <20261012-work-fs-sb_rdonly-v1-0-60743a3dc326@kernel.org>
 To: Jan Kara <jack@suse.com>
@@ -49,542 +48,499 @@ Cc: Al Viro <viro@zeniv.linux.org.uk>, ecryptfs@vger.kernel.org,
  ocfs2-devel@lists.linux.dev, linux-btrfs@vger.kernel.org, 
  gfs2@lists.linux.dev, linux-efi@vger.kernel.org, 
  linux-mtd@lists.infradead.org, linux-xfs@vger.kernel.org, 
- "Christian Brauner (Amutable)" <brauner@kernel.org>, 
- Karl Mehltretter <kmehltretter@gmail.com>
+ "Christian Brauner (Amutable)" <brauner@kernel.org>
 X-Mailer: b4 0.17-dev-3d1b8
-X-Developer-Signature: v=1; a=openpgp-sha256; l=19251; i=brauner@kernel.org;
- h=from:subject:message-id; bh=/QgNABNKFzI5BqiYYHeDq4XWuR2eeF0uHcBhOU2qIYo=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWSd2TLJrGaZtP0f65vtJ/7GBDHeCZ575GdG06Ttu1ss8
- 31UFGe96ChlYRDjYpAVU2RxaDcJl1vOU7HZKFMDZg4rE8gQBi5OAZiIqxUjw+3WzKfPX0rs9Yg/
- 75xRdnd3U9VqhzWcP4tyciS3fosT38vIMP3ApOhPtw/rGASmLpC9Pf9tmfefyLmXyhtX1/YvyY9
- NYQUA
+X-Developer-Signature: v=1; a=openpgp-sha256; l=18315; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=KuJEEFuAYfLbCKHgQghNWOlxgH9KI0vKPiB8pe0ymQM=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWSd2TJp7uu/E/9nxZ877RHf6rzo75rSnusOq5ecPzUlL
+ /LX9IZvuzpKWRjEuBhkxRRZHNpNwuWW81RsNsrUgJnDygQyhIGLUwAmclSCkWFzGcM1ZU9OyWud
+ S9Y+fRaxaf2+6JVaNuWrHzP94pb/zfmDkeHFUr/87XcWsm8zdfldckfjwY81Sz2fH6vxqlVMXHi
+ bNZMDAA==
 X-Developer-Key: i=brauner@kernel.org; a=openpgp;
  fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-__nilfs_error() sets SB_RDONLY with errors=remount-ro, the nilfs2
-default. That happens without holding sb->s_umount and from any context,
-also while the filesystem is frozen. FIFREEZE doesn't block reads and a
-lookup in a corrupted directory gets there:
-
-  NILFS error (device vda): nilfs_check_folio: bad entry in directory #11: rec_len is smaller than minimal - offset=32, inode=17, rec_len=0, name_len=16
-  Remounting filesystem read-only
+With errors=remount-ro, which is the default, __fat_fs_error() sets
+SB_RDONLY. It does that without holding sb->s_umount and from whatever
+context found the error.
 
 freeze_super() and thaw_super() both look at sb_rdonly() to figure out
-whether the s_writers rwsems need to be taken or released. So the thaw
-after such an error skips ->unfreeze_fs() and sb_freeze_unlock() and
-leaves all three rwsems write-locked on a superblock that is marked
-unfrozen. Writers hang in sb_start_write() and umount warns when the
-rwsems are freed:
+whether the s_writers rwsems need to be taken or released. So if the
+error happens while the filesystem is frozen thaw_super() takes the
+read-only shortcut, skips sb_freeze_unlock() and the rwsems stay
+write-locked. Every writer after that blocks forever in sb_start_write()
+and umount warns in rcu_sync_dtor().
 
-  WARNING: kernel/rcu/sync.c:177 at rcu_sync_dtor+0x143/0x190, CPU#3: kworker/3:1/54
-  WARNING: kernel/rcu/sync.c:180 at rcu_sync_dtor+0x14c/0x190
-  WARNING: kernel/rcu/sync.c:188 at rcu_sync_dtor+0x13d/0x190
+FAT has no ->freeze_fs() so FIFREEZE refuses it. But bdev_freeze() still
+freezes it, e.g. when device mapper suspends the device with lockfs.
+That also holds new I/O so the error has to come from cached metadata.
+A file whose directory entry has an invalid start cluster does the job.
+stat() instantiates the inode without reading any data and reading the
+file after the suspend fails in fat_get_cluster() before a bio is ever
+submitted:
 
-nilfs2 already treats a runtime SB_RDONLY as "degraded to read-only
-because of corruption" in a lot of places. nilfs_writepages() and
-nilfs_mdt_write_folio() discard dirty pages, nilfs_evict_inode() skips
-the deletion, the segment constructor returns -EROFS and a few
-WARN_ONCE()s accept it. That can all stay as it is. Only what triggers
-it changes. Like ext4 did in commit d3476f3dad4a ("ext4: don't set
-SB_RDONLY after filesystem errors") record the error in a new
-THE_NILFS_EMERGENCY_RO bit and add nilfs_sb_rdonly() which is true for
-a read-only mount and for the emergency state. Then use that for every
-sb_rdonly() check that guards a write.
+  FAT-fs (dm-0): error, fat_get_cluster: invalid start cluster (i_pos 4161, start 00000001)
+  FAT-fs (dm-0): Filesystem has been set read-only
 
-The VFS won't refuse anything for us anymore so nilfs2 has to do that
-itself. nilfs_permission() returns -EROFS for MAY_WRITE in that state,
-the same way sb_permission() does for a read-only superblock and the
-same way nilfs2 already handles snapshots. That takes care of most
-operations. setattr, write_iter and fileattr_set check the bit as well.
-Symlinks didn't have a ->setattr so far and get nilfs_setattr() for
-that. page_mkwrite fails with VM_FAULT_SIGBUS, the modifying ioctls go
-through a new nilfs_mnt_want_write_file() and FITRIM is refused.
-nilfs_sync_fs() writes neither a segment nor the superblock anymore.
+After the resume a create hangs:
 
-A remount to read-write fails with -EROFS. Note that nilfs2 explicitly
-supported "mount -o remount,rw" after __nilfs_error() so far.
-nilfs_attach_log_writer() reuses the existing log writer for exactly
-that case. Now the state lasts until umount like on ext4 and the comment
-there is updated. A remount to read-only still sets SB_RDONLY but skips
-nilfs_cleanup_super() so the superblock isn't written.
+  percpu_rwsem_wait+0x203/0x500
+  mnt_want_write+0x28f/0x2f0
+  lookup_open+0x135/0x1b20
+  INFO: task s3_fsop:134 blocked for more than 30 seconds.
 
-Like ext4 we show "emergency_ro" in the mount options. The mount stays
-"rw". Writes through file descriptors opened before the error now fail
-with -EROFS instead of being accepted and silently dropped by
-nilfs_writepages(). Stores through shared mappings set up before the
-error get SIGBUS once they fault. Stores to pages that were already
-dirty don't fault until nilfs_writepages() discarded the page so those
-are still dropped.
+and umount warns:
 
-While the current tree is mounted a second mount of the device has to
-match the read-only state of the superblock. So a read-only mount now
-fails with -EBUSY and a read-write mount shares the superblock. If only
-snapshot mounts keep the superblock alive a new mount reconfigures it
-instead. Then a read-only mount makes it read-only and a read-write
-mount after that fails with -EROFS. And a non-forced remount to
-read-only fails with -EBUSY while files are still open for writing.
+  WARNING: kernel/rcu/sync.c:177 at rcu_sync_dtor+0x143/0x190, CPU#0: kworker/0:1/11
+  Workqueue: events destroy_super_work
+   percpu_free_rwsem+0x38/0xa0
+   destroy_super_work+0x133/0x2f0
 
-Reproducer (the sb_rdonly selftest at the end of this series covers it
-as well):
+Follow what ext4 did in commit d3476f3dad4a ("ext4: don't set SB_RDONLY
+after filesystem errors") and record the error in a new
+FAT_FLAGS_EMERGENCY_RO bit instead. The bit is never cleared and FAT
+refuses modifications with -EROFS itself while it is set. Directory
+entries are added in fat_add_entries() and every FAT entry write and
+cluster allocation goes through fatent.c so that's where most of the
+checks live. unlink, rmdir and rename are refused before they touch any
+directory entry, and setattr, opening for write, write_begin, O_DIRECT
+writes and timestamp updates check the bit as well.
 
-  truncate -s 512M img; mkfs.nilfs2 -q img
-  mount -o loop img /mnt           # errors=remount-ro is the default
-  mkdir /mnt/d; touch /mnt/d/marker0123456789; sync
-  touch /mnt/z; sync               # keep d's block out of the last log, the
-  umount /mnt                      # only one checksummed at mount
-  off=$(grep -obUa marker0123456789 img | head -1 | cut -d: -f1)
-  printf '\0\0' | dd of=img bs=1 seek=$((off - 4)) conv=notrunc   # rec_len := 0
-  mount -o loop img /mnt
-  fsfreeze -f /mnt; ls /mnt/d; fsfreeze -u /mnt
-  touch /mnt/x     # blocks forever in sb_start_write()
-  # or umount instead: rcu_sync_dtor() warns three times
+fat_set_state() and mark_fsinfo_dirty() now skip their writes in that
+state just like they do for a read-only superblock. So the volume stays
+marked dirty on disk.
 
-Reported-by: Karl Mehltretter <kmehltretter@gmail.com>
-Link: https://lore.kernel.org/r/20260903060855.4610-1-kmehltretter@gmail.com
+fat_write_inode() refuses to write inodes back too. Note that writeback
+clears the dirty state of an inode before it calls ->write_inode() and
+doesn't redirty it when that fails. So fat_file_fsync() would happily
+report success for an inode that never made it to disk. Let fsync() fail
+with -EROFS instead. Like on ext4 an operation that completed shortly
+before the error can end up half-applied on disk and needs fsck.fat.
+FITRIM is refused as well. And eviction doesn't try to free fallocated
+clusters past the end of a file anymore. That can't work in that state
+and only logs a warning that asks to run fsck.
+
+With the flush mount option msdos writes the inodes back through
+fat_flush_inodes() after every create, unlink, rmdir and rename. If an
+error hits after such an operation got past its check, from another
+task or from msdos_rmdir() itself finding a bad link count on the
+parent, that fails with -EROFS although the directory entries were
+already changed. The VFS then keeps e.g. an unlinked name in the
+dcache. So treat -EROFS as success there once the bit is set, like
+ext2 does for dirsync.
+
+A remount to read-write fails with -EROFS until umount. A remount to
+read-only is allowed and doesn't mark the volume clean. Otherwise
+emergency remount (sysrq u) would WARN in reconfigure_super(). The
+comment above __fat_fs_error() promised that a filesystem made
+read-only by an error can be made writable again by remounting it.
+That's no longer true for errors after the mount.
+
+Errors reported while the filesystem is still being mounted keep
+setting SB_RDONLY. Until SB_BORN the mounter holds s_umount and nothing
+can freeze the superblock, so that's fine. Such a mount still comes up
+read-only and can be remounted read-write. Right now every
+fat_fs_error() that fat_fill_super() can reach fails the mount anyway.
+
+Like ext4 we show "emergency_ro" in the mount options. The mount itself
+stays "rw" and writes through file descriptors opened before the error
+now fail with -EROFS. Data pages dirtied before the error and stores
+through shared mappings still reach blocks that are already allocated,
+just like they did with SB_RDONLY. That includes mappings set up after
+the error through a file descriptor that was opened for writing before
+it.
+
+Reproducer. FAT can only be frozen through a device mapper suspend,
+which also holds I/O, so the error has to come from cached metadata:
+
+  mkfs.vfat /dev/vdb
+  dmsetup create f0 --table "0 $(blockdev --getsz /dev/vdb) linear /dev/vdb 0"
+  mount /dev/mapper/f0 /mnt; echo hello > /mnt/BAD.TXT; umount /mnt
+  # set BAD.TXT's start cluster (dir entry bytes 20 and 26) to 1
+  mount /dev/mapper/f0 /mnt
+  stat /mnt/BAD.TXT        # instantiates the inode, reads no data
+  dmsetup suspend f0       # freeze_super(), takes the s_writers rwsems
+  cat /mnt/BAD.TXT         # fat_get_cluster(): invalid start cluster -> SB_RDONLY
+  dmsetup resume f0        # thaw_super() sees SB_RDONLY, skips sb_freeze_unlock()
+  touch /mnt/x             # hangs in sb_start_write()
+  # or umount: WARNING at kernel/rcu/sync.c:177 rcu_sync_dtor()
+
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- fs/nilfs2/file.c      | 15 ++++++++++++++-
- fs/nilfs2/inode.c     | 13 +++++++++++--
- fs/nilfs2/ioctl.c     | 36 ++++++++++++++++++++++++++++++------
- fs/nilfs2/mdt.c       |  2 +-
- fs/nilfs2/namei.c     |  1 +
- fs/nilfs2/page.c      |  2 +-
- fs/nilfs2/segment.c   | 13 ++++++-------
- fs/nilfs2/sufile.h    |  2 +-
- fs/nilfs2/super.c     | 35 ++++++++++++++++++++++++++++-------
- fs/nilfs2/the_nilfs.h |  8 ++++++++
- 10 files changed, 101 insertions(+), 26 deletions(-)
+ fs/fat/dir.c         |  3 +++
+ fs/fat/fat.h         | 13 +++++++++++++
+ fs/fat/fatent.c      | 11 ++++++++++-
+ fs/fat/file.c        | 19 +++++++++++++++++++
+ fs/fat/inode.c       | 26 ++++++++++++++++++++++++--
+ fs/fat/misc.c        | 29 ++++++++++++++++++++++-------
+ fs/fat/namei_msdos.c |  9 +++++++++
+ fs/fat/namei_vfat.c  |  9 +++++++++
+ 8 files changed, 109 insertions(+), 10 deletions(-)
 
-diff --git a/fs/nilfs2/file.c b/fs/nilfs2/file.c
-index f93b68c4877c..17d5e932dba5 100644
---- a/fs/nilfs2/file.c
-+++ b/fs/nilfs2/file.c
-@@ -54,6 +54,8 @@ static vm_fault_t nilfs_page_mkwrite(struct vm_fault *vmf)
+diff --git a/fs/fat/dir.c b/fs/fat/dir.c
+index 35bdb62944a2..a6a870a2d471 100644
+--- a/fs/fat/dir.c
++++ b/fs/fat/dir.c
+@@ -1329,6 +1329,9 @@ int fat_add_entries(struct inode *dir, void *slots, int nr_slots,
+ 	loff_t pos;
+ 	bool saw_eod;
  
- 	if (unlikely(nilfs_near_disk_full(inode->i_sb->s_fs_info)))
- 		return VM_FAULT_SIGBUS; /* -ENOSPC */
-+	if (unlikely(nilfs_emergency_ro(inode->i_sb->s_fs_info)))
-+		return VM_FAULT_SIGBUS; /* -EROFS */
- 
- 	sb_start_pagefault(inode->i_sb);
- 	folio_lock(folio);
-@@ -133,6 +135,17 @@ static int nilfs_file_mmap_prepare(struct vm_area_desc *desc)
- 	return 0;
- }
- 
-+static ssize_t nilfs_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
-+{
-+	struct inode *inode = file_inode(iocb->ki_filp);
-+
-+	/* refuse before file_update_time() touches the inode */
-+	if (unlikely(nilfs_emergency_ro(inode->i_sb->s_fs_info)))
++	if (unlikely(fat_emergency_ro(sb)))
 +		return -EROFS;
 +
-+	return generic_file_write_iter(iocb, from);
-+}
+ 	sinfo->nr_slots = nr_slots;
+ 
+ 	/* First stage: search free directory entries */
+diff --git a/fs/fat/fat.h b/fs/fat/fat.h
+index 61338413d9f3..b43cf9d8449f 100644
+--- a/fs/fat/fat.h
++++ b/fs/fat/fat.h
+@@ -28,6 +28,9 @@ struct file_kattr;
+ #define FAT_NFS_STALE_RW	1      /* NFS RW support, can cause ESTALE */
+ #define FAT_NFS_NOSTALE_RO	2      /* NFS RO support, no ESTALE issue */
+ 
++/* bits in msdos_sb_info->flags */
++#define FAT_FLAGS_EMERGENCY_RO	0      /* read-only after an error */
 +
- /*
-  * We have mostly NULL's here: the current defaults are ok for
-  * the nilfs filesystem.
-@@ -140,7 +153,7 @@ static int nilfs_file_mmap_prepare(struct vm_area_desc *desc)
- const struct file_operations nilfs_file_operations = {
- 	.llseek		= generic_file_llseek,
- 	.read_iter	= generic_file_read_iter,
--	.write_iter	= generic_file_write_iter,
-+	.write_iter	= nilfs_file_write_iter,
- 	.unlocked_ioctl	= nilfs_ioctl,
- #ifdef CONFIG_COMPAT
- 	.compat_ioctl	= nilfs_compat_ioctl,
-diff --git a/fs/nilfs2/inode.c b/fs/nilfs2/inode.c
-index 34e6096069ad..7dab8cfaad45 100644
---- a/fs/nilfs2/inode.c
-+++ b/fs/nilfs2/inode.c
-@@ -162,7 +162,7 @@ static int nilfs_writepages(struct address_space *mapping,
- 	struct inode *inode = mapping->host;
- 	int err = 0;
+ struct fat_mount_options {
+ 	kuid_t fs_uid;
+ 	kgid_t fs_gid;
+@@ -106,6 +109,7 @@ struct msdos_sb_info {
+ 	struct hlist_head dir_hashtable[FAT_HASH_SIZE];
  
--	if (sb_rdonly(inode->i_sb)) {
-+	if (nilfs_sb_rdonly(inode->i_sb)) {
- 		nilfs_clear_dirty_pages(mapping);
- 		return -EROFS;
- 	}
-@@ -868,7 +868,7 @@ void nilfs_evict_inode(struct inode *inode)
- 	truncate_inode_pages_final(&inode->i_data);
+ 	unsigned int dirty;           /* fs state before mount */
++	unsigned long flags;	      /* FAT_FLAGS_* */
+ 	struct rcu_head rcu;
+ };
  
- 	nilfs = sb->s_fs_info;
--	if (unlikely(sb_rdonly(sb) || !nilfs->ns_writer)) {
-+	if (unlikely(nilfs_sb_rdonly(sb) || !nilfs->ns_writer)) {
- 		/*
- 		 * If this inode is about to be disposed after the file system
- 		 * has been degraded to read-only due to file system corruption
-@@ -912,6 +912,9 @@ int nilfs_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
- 	struct super_block *sb = inode->i_sb;
- 	int err;
- 
-+	if (nilfs_emergency_ro(sb->s_fs_info))
-+		return -EROFS;
-+
- 	err = setattr_prepare(&nop_mnt_idmap, dentry, iattr);
- 	if (err)
- 		return err;
-@@ -952,6 +955,12 @@ int nilfs_permission(struct mnt_idmap *idmap, struct inode *inode,
- 	    root->cno != NILFS_CPTREE_CURRENT_CNO)
- 		return -EROFS; /* snapshot is not writable */
- 
-+	/* After an error made us read-only, like sb_permission() would */
-+	if ((mask & MAY_WRITE) && nilfs_emergency_ro(inode->i_sb->s_fs_info) &&
-+	    (S_ISREG(inode->i_mode) || S_ISDIR(inode->i_mode) ||
-+	     S_ISLNK(inode->i_mode)))
-+		return -EROFS;
-+
- 	return generic_permission(&nop_mnt_idmap, inode, mask);
- }
- 
-diff --git a/fs/nilfs2/ioctl.c b/fs/nilfs2/ioctl.c
-index 01a04080ef70..ac3e1a770162 100644
---- a/fs/nilfs2/ioctl.c
-+++ b/fs/nilfs2/ioctl.c
-@@ -143,6 +143,9 @@ int nilfs_fileattr_set(struct mnt_idmap *idmap,
- 	unsigned int flags, oldflags;
- 	int ret;
- 
-+	if (nilfs_emergency_ro(inode->i_sb->s_fs_info))
-+		return -EROFS;
-+
- 	if (fileattr_has_fsx(fa))
- 		return -EOPNOTSUPP;
- 
-@@ -176,6 +179,23 @@ static int nilfs_ioctl_getversion(struct inode *inode, void __user *argp)
- 	return put_user(inode->i_generation, (int __user *)argp);
+@@ -149,6 +153,15 @@ static inline struct msdos_sb_info *MSDOS_SB(struct super_block *sb)
+ 	return sb->s_fs_info;
  }
  
 +/*
-+ * Like mnt_want_write_file(), but also refuse writers once an error made the
-+ * filesystem read-only, the VFS doesn't know about that.
++ * An error with errors=remount-ro stopped all modifications until unmount.
++ * SB_RDONLY isn't used for that because it must not change without s_umount.
 + */
-+static int nilfs_mnt_want_write_file(struct file *filp)
++static inline bool fat_emergency_ro(struct super_block *sb)
 +{
-+	struct the_nilfs *nilfs = file_inode(filp)->i_sb->s_fs_info;
-+	int ret;
-+
-+	ret = mnt_want_write_file(filp);
-+	if (!ret && nilfs_emergency_ro(nilfs)) {
-+		mnt_drop_write_file(filp);
-+		ret = -EROFS;
-+	}
-+	return ret;
++	return test_bit(FAT_FLAGS_EMERGENCY_RO, &MSDOS_SB(sb)->flags);
 +}
 +
- /**
-  * nilfs_ioctl_change_cpmode - change checkpoint mode (checkpoint/snapshot)
-  * @inode: inode object
-@@ -203,7 +223,7 @@ static int nilfs_ioctl_change_cpmode(struct inode *inode, struct file *filp,
- 	if (!capable(CAP_SYS_ADMIN))
- 		return -EPERM;
+ /*
+  * Functions that determine the variant of the FAT file system (i.e.,
+  * whether this is FAT12, FAT16 or FAT32.
+diff --git a/fs/fat/fatent.c b/fs/fat/fatent.c
+index f0801d99dd62..cad045772b48 100644
+--- a/fs/fat/fatent.c
++++ b/fs/fat/fatent.c
+@@ -314,7 +314,7 @@ static void mark_fsinfo_dirty(struct super_block *sb)
+ {
+ 	struct msdos_sb_info *sbi = MSDOS_SB(sb);
  
--	ret = mnt_want_write_file(filp);
-+	ret = nilfs_mnt_want_write_file(filp);
- 	if (ret)
- 		return ret;
- 
-@@ -255,7 +275,7 @@ nilfs_ioctl_delete_checkpoint(struct inode *inode, struct file *filp,
- 	if (!capable(CAP_SYS_ADMIN))
- 		return -EPERM;
- 
--	ret = mnt_want_write_file(filp);
-+	ret = nilfs_mnt_want_write_file(filp);
- 	if (ret)
- 		return ret;
- 
-@@ -866,7 +886,7 @@ static int nilfs_ioctl_clean_segments(struct inode *inode, struct file *filp,
- 	if (!capable(CAP_SYS_ADMIN))
- 		return -EPERM;
- 
--	ret = mnt_want_write_file(filp);
-+	ret = nilfs_mnt_want_write_file(filp);
- 	if (ret)
- 		return ret;
- 
-@@ -1014,7 +1034,7 @@ static int nilfs_ioctl_resize(struct inode *inode, struct file *filp,
- 	if (!capable(CAP_SYS_ADMIN))
- 		goto out;
- 
--	ret = mnt_want_write_file(filp);
-+	ret = nilfs_mnt_want_write_file(filp);
- 	if (ret)
- 		goto out;
- 
-@@ -1050,6 +1070,10 @@ static int nilfs_ioctl_trim_fs(struct inode *inode, void __user *argp)
- 	if (!capable(CAP_SYS_ADMIN))
- 		return -EPERM;
- 
-+	/* Don't trust the segment usage after an error. */
-+	if (nilfs_emergency_ro(nilfs))
-+		return -EROFS;
-+
- 	if (!bdev_max_discard_sectors(nilfs->ns_bdev))
- 		return -EOPNOTSUPP;
- 
-@@ -1202,7 +1226,7 @@ static int nilfs_ioctl_set_suinfo(struct inode *inode, struct file *filp,
- 	if (!capable(CAP_SYS_ADMIN))
- 		return -EPERM;
- 
--	ret = mnt_want_write_file(filp);
-+	ret = nilfs_mnt_want_write_file(filp);
- 	if (ret)
- 		return ret;
- 
-@@ -1295,7 +1319,7 @@ static int nilfs_ioctl_set_fslabel(struct super_block *sb, struct file *filp,
- 	if (!capable(CAP_SYS_ADMIN))
- 		return -EPERM;
- 
--	ret = mnt_want_write_file(filp);
-+	ret = nilfs_mnt_want_write_file(filp);
- 	if (ret)
- 		return ret;
- 
-diff --git a/fs/nilfs2/mdt.c b/fs/nilfs2/mdt.c
-index 2a435349fd21..7863fbc559a2 100644
---- a/fs/nilfs2/mdt.c
-+++ b/fs/nilfs2/mdt.c
-@@ -398,7 +398,7 @@ static int nilfs_mdt_write_folio(struct folio *folio,
- 	struct super_block *sb;
- 	int err = 0;
- 
--	if (inode && sb_rdonly(inode->i_sb)) {
-+	if (inode && nilfs_sb_rdonly(inode->i_sb)) {
- 		/*
- 		 * It means that filesystem was remounted in read-only
- 		 * mode because of error or metadata corruption. But we
-diff --git a/fs/nilfs2/namei.c b/fs/nilfs2/namei.c
-index e037e0c6e31a..06b928387212 100644
---- a/fs/nilfs2/namei.c
-+++ b/fs/nilfs2/namei.c
-@@ -583,6 +583,7 @@ const struct inode_operations nilfs_special_inode_operations = {
- 
- const struct inode_operations nilfs_symlink_inode_operations = {
- 	.get_link	= page_get_link,
-+	.setattr	= nilfs_setattr,
- 	.permission     = nilfs_permission,
- };
- 
-diff --git a/fs/nilfs2/page.c b/fs/nilfs2/page.c
-index cf4f1c6798f5..01c80ed12138 100644
---- a/fs/nilfs2/page.c
-+++ b/fs/nilfs2/page.c
-@@ -259,7 +259,7 @@ int nilfs_copy_dirty_pages(struct address_space *dmap,
- 
- 		folio_lock(folio);
- 		if (unlikely(!folio_test_dirty(folio))) {
--			if (WARN_ONCE(!sb_rdonly(smap_inode->i_sb),
-+			if (WARN_ONCE(!nilfs_sb_rdonly(smap_inode->i_sb),
- 					"inconsistent dirty state\n"))
- 				goto unlock_folio;
- 
-diff --git a/fs/nilfs2/segment.c b/fs/nilfs2/segment.c
-index 829573cb6131..eb79245de60d 100644
---- a/fs/nilfs2/segment.c
-+++ b/fs/nilfs2/segment.c
-@@ -317,7 +317,7 @@ void nilfs_relax_pressure_in_lock(struct super_block *sb)
- 	struct the_nilfs *nilfs = sb->s_fs_info;
- 	struct nilfs_sc_info *sci = nilfs->ns_writer;
- 
--	if (sb_rdonly(sb) || unlikely(!sci) || !sci->sc_flush_request)
-+	if (nilfs_sb_rdonly(sb) || unlikely(!sci) || !sci->sc_flush_request)
+-	if (sb_rdonly(sb) || !is_fat32(sbi))
++	if (sb_rdonly(sb) || fat_emergency_ro(sb) || !is_fat32(sbi))
  		return;
  
- 	set_bit(NILFS_SC_PRIOR_FLUSH, &sci->sc_flags);
-@@ -2097,7 +2097,7 @@ static int nilfs_segctor_do_construct(struct nilfs_sc_info *sci, int mode)
- 	struct the_nilfs *nilfs = sci->sc_super->s_fs_info;
+ 	__mark_inode_dirty(sbi->fsinfo_inode, I_DIRTY_SYNC);
+@@ -419,6 +419,9 @@ int fat_ent_write(struct inode *inode, struct fat_entry *fatent,
+ 	const struct fatent_operations *ops = MSDOS_SB(sb)->fatent_ops;
  	int err;
  
--	if (sb_rdonly(sci->sc_super))
-+	if (nilfs_sb_rdonly(sci->sc_super))
- 		return -EROFS;
- 
- 	nilfs_sc_cstage_set(sci, NILFS_ST_INIT);
-@@ -2321,7 +2321,7 @@ int nilfs_construct_segment(struct super_block *sb)
- 	struct nilfs_sc_info *sci = nilfs->ns_writer;
- 	struct nilfs_transaction_info *ti;
- 
--	if (sb_rdonly(sb) || unlikely(!sci))
-+	if (nilfs_sb_rdonly(sb) || unlikely(!sci))
- 		return -EROFS;
- 
- 	/* A call inside transactions causes a deadlock. */
-@@ -2354,7 +2354,7 @@ int nilfs_construct_dsync_segment(struct super_block *sb, struct inode *inode,
- 	struct nilfs_transaction_info ti;
- 	int err = 0;
- 
--	if (sb_rdonly(sb) || unlikely(!sci))
-+	if (nilfs_sb_rdonly(sb) || unlikely(!sci))
- 		return -EROFS;
- 
- 	nilfs_transaction_lock(sb, &ti, 0);
-@@ -2868,9 +2868,8 @@ int nilfs_attach_log_writer(struct super_block *sb, struct nilfs_root *root)
- 
- 	if (nilfs->ns_writer) {
- 		/*
--		 * This happens if the filesystem is made read-only by
--		 * __nilfs_error or nilfs_remount and then remounted
--		 * read/write.  In these cases, reuse the existing
-+		 * This happens if the filesystem is remounted read-only and
-+		 * then read/write again.  In this case, reuse the existing
- 		 * writer.
- 		 */
- 		return 0;
-diff --git a/fs/nilfs2/sufile.h b/fs/nilfs2/sufile.h
-index 5888ed479c8b..d5e7598e36b3 100644
---- a/fs/nilfs2/sufile.h
-+++ b/fs/nilfs2/sufile.h
-@@ -76,7 +76,7 @@ int nilfs_sufile_trim_fs(struct inode *sufile, struct fstrim_range *range);
- 		int _err = (err);					\
- 									\
- 		if (unlikely(_err))					\
--			_err = WARN_ONCE(!sb_rdonly((sufile)->i_sb),	\
-+			_err = WARN_ONCE(!nilfs_sb_rdonly((sufile)->i_sb), \
- 				"unexpected sufile error %d\n", _err) ? \
- 				-EIO : -EROFS;				\
- 		_err;							\
-diff --git a/fs/nilfs2/super.c b/fs/nilfs2/super.c
-index 893a504cb80c..22ae5b51d4ee 100644
---- a/fs/nilfs2/super.c
-+++ b/fs/nilfs2/super.c
-@@ -137,12 +137,17 @@ void __nilfs_error(struct super_block *sb, const char *function,
- 
- 	va_end(args);
- 
--	if (!sb_rdonly(sb)) {
-+	if (!nilfs_sb_rdonly(sb)) {
- 		nilfs_set_error(sb);
- 
- 		if (nilfs_test_opt(nilfs, ERRORS_RO)) {
- 			printk(KERN_CRIT "Remounting filesystem read-only\n");
--			sb->s_flags |= SB_RDONLY;
-+			/*
-+			 * Don't set SB_RDONLY, that needs sb->s_umount and a
-+			 * remount. Flipping it on a frozen filesystem makes
-+			 * thaw leave s_writers locked forever.
-+			 */
-+			set_nilfs_emergency_ro(nilfs);
- 		}
- 	}
- 
-@@ -508,7 +513,7 @@ static void nilfs_put_super(struct super_block *sb)
- 
- 	nilfs_detach_log_writer(sb);
- 
--	if (!sb_rdonly(sb)) {
-+	if (!nilfs_sb_rdonly(sb)) {
- 		down_write(&nilfs->ns_sem);
- 		nilfs_cleanup_super(sb);
- 		up_write(&nilfs->ns_sem);
-@@ -529,6 +534,10 @@ static int nilfs_sync_fs(struct super_block *sb, int wait)
- 	struct nilfs_super_block **sbp;
- 	int err = 0;
- 
-+	/* Nothing may be written after an error made us read-only. */
-+	if (nilfs_emergency_ro(nilfs))
-+		return 0;
++	if (unlikely(fat_emergency_ro(sb)))
++		return -EROFS;
 +
- 	/* This function is called when super block should be written back */
- 	if (wait)
- 		err = nilfs_construct_segment(sb);
-@@ -588,7 +597,7 @@ static int nilfs_freeze(struct super_block *sb)
- 	struct the_nilfs *nilfs = sb->s_fs_info;
+ 	ops->ent_put(fatent, new);
+ 	if (wait) {
+ 		err = fat_sync_bhs(fatent->bhs, fatent->nr_bhs);
+@@ -479,6 +482,9 @@ int fat_alloc_clusters(struct inode *inode, int *cluster, int nr_cluster)
+ 
+ 	BUG_ON(nr_cluster > (MAX_BUF_PER_PAGE / 2));	/* fixed limit */
+ 
++	if (unlikely(fat_emergency_ro(sb)))
++		return -EROFS;
++
+ 	lock_fat(sbi);
+ 	if (sbi->free_clusters != -1 && sbi->free_clus_valid &&
+ 	    sbi->free_clusters < nr_cluster) {
+@@ -566,6 +572,9 @@ int fat_free_clusters(struct inode *inode, int cluster)
+ 	int i, err, nr_bhs;
+ 	int first_cl = cluster, dirty_fsinfo = 0;
+ 
++	if (unlikely(fat_emergency_ro(sb)))
++		return -EROFS;
++
+ 	nr_bhs = 0;
+ 	fatent_init(&fatent);
+ 	lock_fat(sbi);
+diff --git a/fs/fat/file.c b/fs/fat/file.c
+index 1c835ca5f21a..320f018961e3 100644
+--- a/fs/fat/file.c
++++ b/fs/fat/file.c
+@@ -135,6 +135,10 @@ static int fat_ioctl_fitrim(struct inode *inode, unsigned long arg)
+ 	if (!capable(CAP_SYS_ADMIN))
+ 		return -EPERM;
+ 
++	/* Don't trust the FAT after an error. */
++	if (unlikely(fat_emergency_ro(sb)))
++		return -EROFS;
++
+ 	if (!bdev_max_discard_sectors(sb->s_bdev))
+ 		return -EOPNOTSUPP;
+ 
+@@ -173,6 +177,13 @@ long fat_generic_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
+ 	}
+ }
+ 
++static int fat_file_open(struct inode *inode, struct file *filp)
++{
++	if ((filp->f_mode & FMODE_WRITE) && fat_emergency_ro(inode->i_sb))
++		return -EROFS;
++	return 0;
++}
++
+ static int fat_file_release(struct inode *inode, struct file *filp)
+ {
+ 	if ((filp->f_mode & FMODE_WRITE) &&
+@@ -190,6 +201,10 @@ int fat_file_fsync(struct file *filp, loff_t start, loff_t end, int datasync)
+ 	struct inode *fat_inode = MSDOS_SB(inode->i_sb)->fat_inode;
  	int err;
  
--	if (sb_rdonly(sb))
-+	if (nilfs_sb_rdonly(sb))
- 		return 0;
++	/* Inodes aren't written back after an error. */
++	if (unlikely(fat_emergency_ro(inode->i_sb)))
++		return -EROFS;
++
+ 	err = simple_fsync_noflush(filp, start, end, datasync);
+ 	if (err)
+ 		return err;
+@@ -207,6 +222,7 @@ const struct file_operations fat_file_operations = {
+ 	.read_iter	= generic_file_read_iter,
+ 	.write_iter	= generic_file_write_iter,
+ 	.mmap_prepare	= generic_file_mmap_prepare,
++	.open		= fat_file_open,
+ 	.release	= fat_file_release,
+ 	.unlocked_ioctl	= fat_generic_ioctl,
+ 	.compat_ioctl	= compat_ptr_ioctl,
+@@ -522,6 +538,9 @@ int fat_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
+ 	unsigned int ia_valid;
+ 	int error;
  
- 	/* Mark super block clean */
-@@ -602,7 +611,7 @@ static int nilfs_unfreeze(struct super_block *sb)
++	if (unlikely(fat_emergency_ro(inode->i_sb)))
++		return -EROFS;
++
+ 	/* Check for setting the inode time. */
+ 	ia_valid = attr->ia_valid;
+ 	if (ia_valid & TIMES_SET_FLAGS) {
+diff --git a/fs/fat/inode.c b/fs/fat/inode.c
+index f775a004cae1..1751983fd8c3 100644
+--- a/fs/fat/inode.c
++++ b/fs/fat/inode.c
+@@ -227,6 +227,9 @@ static int fat_write_begin(const struct kiocb *iocb,
  {
- 	struct the_nilfs *nilfs = sb->s_fs_info;
+ 	int err;
  
--	if (sb_rdonly(sb))
-+	if (nilfs_sb_rdonly(sb))
- 		return 0;
++	if (unlikely(fat_emergency_ro(mapping->host->i_sb)))
++		return -EROFS;
++
+ 	err = cont_write_begin(iocb, mapping, pos, len,
+ 				foliop, fsdata, fat_get_block,
+ 				&MSDOS_I(mapping->host)->mmu_private);
+@@ -263,6 +266,8 @@ static ssize_t fat_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
+ 	ssize_t ret;
  
- 	down_write(&nilfs->ns_sem);
-@@ -698,6 +707,8 @@ static int nilfs_show_options(struct seq_file *seq, struct dentry *dentry)
- 		seq_puts(seq, ",norecovery");
- 	if (nilfs_test_opt(nilfs, DISCARD))
- 		seq_puts(seq, ",discard");
-+	if (nilfs_emergency_ro(nilfs))
-+		seq_puts(seq, ",emergency_ro");
+ 	if (iov_iter_rw(iter) == WRITE) {
++		if (unlikely(fat_emergency_ro(inode->i_sb)))
++			return -EROFS;
+ 		/*
+ 		 * FIXME: blockdev_direct_IO() doesn't use ->write_begin(),
+ 		 * so we need to update the ->mmu_private to block boundary.
+@@ -661,6 +666,10 @@ static int fat_sync_inode_metadata(struct inode *inode,
+ 
+ static void fat_free_eofblocks(struct inode *inode)
+ {
++	/* Nothing can be freed after an error. */
++	if (fat_emergency_ro(inode->i_sb))
++		return;
++
+ 	/* Release unwritten fallocated blocks on inode eviction. */
+ 	if ((inode->i_blocks << 9) >
+ 			round_up(MSDOS_I(inode)->mmu_private,
+@@ -709,8 +718,11 @@ static void fat_set_state(struct super_block *sb,
+ 	struct fat_boot_sector *b;
+ 	struct msdos_sb_info *sbi = MSDOS_SB(sb);
+ 
+-	/* do not change any thing if mounted read only */
+-	if (sb_rdonly(sb) && !force)
++	/*
++	 * do not change any thing if mounted read only, or after an error
++	 * stopped modifications: the volume stays marked dirty then
++	 */
++	if ((sb_rdonly(sb) && !force) || fat_emergency_ro(sb))
+ 		return;
+ 
+ 	/* do not change state if fs was dirty */
+@@ -856,6 +868,8 @@ int fat_reconfigure(struct fs_context *fc)
+ 	if (new_rdonly != sb_rdonly(sb)) {
+ 		if (new_rdonly)
+ 			fat_set_state(sb, 0, 0);
++		else if (fat_emergency_ro(sb))
++			return -EROFS;
+ 		else
+ 			fat_set_state(sb, 1, 1);
+ 	}
+@@ -953,6 +967,9 @@ static int fat_write_inode(struct inode *inode, struct writeback_control *wbc)
+ {
+ 	int err;
+ 
++	if (unlikely(fat_emergency_ro(inode->i_sb)))
++		return -EROFS;
++
+ 	if (inode->i_ino == MSDOS_FSINFO_INO) {
+ 		struct super_block *sb = inode->i_sb;
+ 
+@@ -1065,6 +1082,8 @@ static int fat_show_options(struct seq_file *m, struct dentry *root)
+ 		seq_puts(m, ",discard");
+ 	if (opts->dos1xfloppy)
+ 		seq_puts(m, ",dos1xfloppy");
++	if (fat_emergency_ro(root->d_sb))
++		seq_puts(m, ",emergency_ro");
  
  	return 0;
  }
-@@ -1087,7 +1098,7 @@ nilfs_fill_super(struct super_block *sb, struct fs_context *fc)
- 		goto failed_unload;
+@@ -1938,6 +1957,9 @@ int fat_flush_inodes(struct super_block *sb, struct inode *i1, struct inode *i2)
+ 		ret = writeback_inode(i2);
+ 	if (!ret)
+ 		ret = sync_blockdev_nowait(sb->s_bdev);
++	/* The change is done, an error made us read-only in the meantime. */
++	if (ret == -EROFS && fat_emergency_ro(sb))
++		ret = 0;
+ 	return ret;
+ }
+ EXPORT_SYMBOL_GPL(fat_flush_inodes);
+diff --git a/fs/fat/misc.c b/fs/fat/misc.c
+index e79762cf1975..ecba57df83ca 100644
+--- a/fs/fat/misc.c
++++ b/fs/fat/misc.c
+@@ -14,13 +14,14 @@
+  * fat_fs_error reports a file system problem that might indicate fa data
+  * corruption/inconsistency. Depending on 'errors' mount option the
+  * panic() is called, or error message is printed FAT and nothing is done,
+- * or filesystem is remounted read-only (default behavior).
+- * In case the file system is remounted read-only, it can be made writable
+- * again by remounting it.
++ * or the filesystem is made read-only (default behavior): a mount in
++ * progress comes up read-only, a mounted filesystem refuses all further
++ * modifications until it is unmounted.
+  */
+ void __fat_fs_error(struct super_block *sb, int report, const char *fmt, ...)
+ {
+-	struct fat_mount_options *opts = &MSDOS_SB(sb)->options;
++	struct msdos_sb_info *sbi = MSDOS_SB(sb);
++	struct fat_mount_options *opts = &sbi->options;
+ 	va_list args;
+ 	struct va_format vaf;
+ 
+@@ -32,10 +33,22 @@ void __fat_fs_error(struct super_block *sb, int report, const char *fmt, ...)
+ 		va_end(args);
  	}
  
--	if (!sb_rdonly(sb)) {
-+	if (!nilfs_sb_rdonly(sb)) {
- 		err = nilfs_attach_log_writer(sb, fsroot);
- 		if (err)
- 			goto failed_checkpoint;
-@@ -1099,7 +1110,7 @@ nilfs_fill_super(struct super_block *sb, struct fs_context *fc)
+-	if (opts->errors == FAT_ERRORS_PANIC)
++	if (opts->errors == FAT_ERRORS_PANIC) {
+ 		panic("FAT-fs (%s): fs panic from previous error\n", sb->s_id);
+-	else if (opts->errors == FAT_ERRORS_RO && !sb_rdonly(sb)) {
+-		sb->s_flags |= SB_RDONLY;
++	} else if (opts->errors == FAT_ERRORS_RO && !sb_rdonly(sb)) {
++		/*
++		 * Only a mount in progress may still set SB_RDONLY: the
++		 * mounter holds s_umount and nothing can freeze the superblock
++		 * before SB_BORN. Later, setting it without s_umount on a
++		 * frozen superblock makes thaw_super() mark it unfrozen but
++		 * skip sb_freeze_unlock(), so the s_writers rwsems stay
++		 * write-locked and every writer hangs. Refuse modifications
++		 * until umount instead.
++		 */
++		if (!(sb->s_flags & SB_BORN))
++			sb->s_flags |= SB_RDONLY;
++		else if (test_and_set_bit(FAT_FLAGS_EMERGENCY_RO, &sbi->flags))
++			return;
+ 		fat_msg(sb, KERN_ERR, "Filesystem has been set read-only");
+ 	}
+ }
+@@ -342,6 +355,8 @@ EXPORT_SYMBOL_GPL(fat_truncate_time);
+ int fat_update_time(struct inode *inode, enum fs_update_time type,
+ 		unsigned int flags)
+ {
++	if (unlikely(fat_emergency_ro(inode->i_sb)))
++		return -EROFS;
+ 	if (inode->i_ino != MSDOS_ROOT_INO) {
+ 		fat_truncate_time(inode, NULL, type == FS_UPD_ATIME ?
+ 				FAT_UPDATE_ATIME : FAT_UPDATE_CMTIME);
+diff --git a/fs/fat/namei_msdos.c b/fs/fat/namei_msdos.c
+index d46d1a3851f2..459fc4c8f3f2 100644
+--- a/fs/fat/namei_msdos.c
++++ b/fs/fat/namei_msdos.c
+@@ -316,6 +316,9 @@ static int msdos_rmdir(struct inode *dir, struct dentry *dentry)
+ 	struct fat_slot_info sinfo;
+ 	int err;
  
- 	nilfs_put_root(fsroot);
- 
--	if (!sb_rdonly(sb)) {
-+	if (!nilfs_sb_rdonly(sb)) {
- 		down_write(&nilfs->ns_sem);
- 		nilfs_setup_super(sb, true);
- 		up_write(&nilfs->ns_sem);
-@@ -1145,6 +1156,10 @@ static int nilfs_reconfigure(struct fs_context *fc)
- 	if (fc->sb_flags & SB_RDONLY) {
- 		sb->s_flags |= SB_RDONLY;
- 
-+		/* After an error nothing may be written, just go read-only. */
-+		if (nilfs_emergency_ro(nilfs))
-+			goto out;
++	if (unlikely(fat_emergency_ro(sb)))
++		return -EROFS;
 +
- 		/*
- 		 * Remounting a valid RW partition RDONLY, so set
- 		 * the RDONLY flag and then mark the partition as valid again.
-@@ -1156,6 +1171,12 @@ static int nilfs_reconfigure(struct fs_context *fc)
- 		__u64 features;
- 		struct nilfs_root *root;
+ 	mutex_lock(&MSDOS_SB(sb)->s_lock);
+ 	err = fat_dir_empty(inode);
+ 	if (err)
+@@ -412,6 +415,9 @@ static int msdos_unlink(struct inode *dir, struct dentry *dentry)
+ 	struct fat_slot_info sinfo;
+ 	int err;
  
-+		/* An error made the filesystem read-only until umount. */
-+		if (nilfs_emergency_ro(nilfs)) {
-+			err = -EROFS;
-+			goto ignore_opts;
-+		}
++	if (unlikely(fat_emergency_ro(sb)))
++		return -EROFS;
 +
- 		/*
- 		 * Mounting a RDONLY partition read-write, so reread and
- 		 * store the current valid flag.  (It may have been changed
-diff --git a/fs/nilfs2/the_nilfs.h b/fs/nilfs2/the_nilfs.h
-index 4776a70f01ae..0b300d08898e 100644
---- a/fs/nilfs2/the_nilfs.h
-+++ b/fs/nilfs2/the_nilfs.h
-@@ -30,6 +30,7 @@ enum {
- 	THE_NILFS_GC_RUNNING,	/* gc process is running */
- 	THE_NILFS_SB_DIRTY,	/* super block is dirty */
- 	THE_NILFS_PURGING,	/* disposing dirty files for cleanup */
-+	THE_NILFS_EMERGENCY_RO,	/* read-only after an error */
- };
+ 	mutex_lock(&MSDOS_SB(sb)->s_lock);
+ 	err = msdos_find(dir, dentry->d_name.name, dentry->d_name.len, &sinfo);
+ 	if (err)
+@@ -612,6 +618,9 @@ static int msdos_rename(struct mnt_idmap *idmap,
+ 	if (flags & ~RENAME_NOREPLACE)
+ 		return -EINVAL;
  
- /**
-@@ -204,6 +205,13 @@ THE_NILFS_FNS(DISCONTINUED, discontinued)
- THE_NILFS_FNS(GC_RUNNING, gc_running)
- THE_NILFS_FNS(SB_DIRTY, sb_dirty)
- THE_NILFS_FNS(PURGING, purging)
-+THE_NILFS_FNS(EMERGENCY_RO, emergency_ro)
++	if (unlikely(fat_emergency_ro(sb)))
++		return -EROFS;
 +
-+/* Mounted read-only or read-only after an error: nothing may be written. */
-+static inline bool nilfs_sb_rdonly(struct super_block *sb)
-+{
-+	return sb_rdonly(sb) || nilfs_emergency_ro(sb->s_fs_info);
-+}
+ 	mutex_lock(&MSDOS_SB(sb)->s_lock);
  
- /*
-  * Mount option operations
+ 	err = msdos_format_name(old_dentry->d_name.name,
+diff --git a/fs/fat/namei_vfat.c b/fs/fat/namei_vfat.c
+index da3e89c0b16a..73f7f11b0590 100644
+--- a/fs/fat/namei_vfat.c
++++ b/fs/fat/namei_vfat.c
+@@ -791,6 +791,9 @@ static int vfat_rmdir(struct inode *dir, struct dentry *dentry)
+ 	struct fat_slot_info sinfo;
+ 	int err;
+ 
++	if (unlikely(fat_emergency_ro(sb)))
++		return -EROFS;
++
+ 	mutex_lock(&MSDOS_SB(sb)->s_lock);
+ 
+ 	err = fat_dir_empty(inode);
+@@ -827,6 +830,9 @@ static int vfat_unlink(struct inode *dir, struct dentry *dentry)
+ 	struct fat_slot_info sinfo;
+ 	int err;
+ 
++	if (unlikely(fat_emergency_ro(sb)))
++		return -EROFS;
++
+ 	mutex_lock(&MSDOS_SB(sb)->s_lock);
+ 
+ 	err = vfat_find(dir, &dentry->d_name, &sinfo);
+@@ -1167,6 +1173,9 @@ static int vfat_rename2(struct mnt_idmap *idmap, struct inode *old_dir,
+ 	if (flags & ~(RENAME_NOREPLACE | RENAME_EXCHANGE))
+ 		return -EINVAL;
+ 
++	if (unlikely(fat_emergency_ro(old_dir->i_sb)))
++		return -EROFS;
++
+ 	if (flags & RENAME_EXCHANGE) {
+ 		return vfat_rename_exchange(old_dir, old_dentry,
+ 					    new_dir, new_dentry);
 
 -- 
 2.53.0
