@@ -1,87 +1,77 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 600B83F326A;
-	Mon, 12 Oct 2026 15:23:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78E8B418373
+	for <linux-xfs@vger.kernel.org>; Mon, 12 Oct 2026 15:35:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791818625; cv=none; b=UgTvbhIY2t9VNuTMMMls7Xc2gxZwHrYx0RotnctZq+DD5ygNdJn1JwDUjIVUMwZNhJTEA7uNYafNU9xpZGHDAja92i7/YJG92DkwohLpfng3Efi+wYORwfyU3hNT0whZLurhBv7Bn6lTfP5vSElecIPEEuzrfh0VIObKKg+PKUA=
+	t=1791819305; cv=none; b=d6cQk+lm4nVBs7MJsbSU2rGR5YDlXnhMmwR/CcpHByJ7kAcSexTrBmXEsG62pGqnh7bZ/qnE1Kq3SWwvIs76dZuBoHsQ6cAqL3qiX7CLMKgdroVvQXcbDm91mux5tt2ZAU+Ln8qHg3K66XAf5nndCb3Ts7Njmi7sMlMd3TNCZss=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791818625; c=relaxed/simple;
-	bh=GAiff/gy9VVn+86aZv4W2D7W8C2gELB3oO/IVajcuBU=;
-	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=lznzxE2xZlE8Byj5FPwMguPLLTOJPuEKldgGK6+80lkuOHpaBdULw3UYqveOopA4DUSVRKnNkFGb4FF+7UWJtbP6dUS7DGd5oOrbUZ7ppCwC4AkveyNl+GQfT8Q38bSXw6/0sNueJr7vGSaFZu3h9DrDGwoSRauzd/KFAUYVDaE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=isIiI9l0; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791819305; c=relaxed/simple;
+	bh=J6/n6DbK0wS0AOF1bxyvKII5qhZaT7Xx19BbfI99+r4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=fiJkGDyuivugwoevi+1+ETAL5XI192HPEK3nFc20ax1MvSyoeaedi/X0ELAW/e+ScRJVKs913ORc1MeN/H0w5v6tVnl1a8nEsjf8jEtOpq3YDPWbgnnpdsvm9wdj69y48odQyhJzodjLeu+5RXGWDEG69OVZDQKZtckoqth8JQs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bFDlJ9pd; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="isIiI9l0"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id E0FD31F0089D;
-	Mon, 12 Oct 2026 15:23:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bFDlJ9pd"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id E76D81F0089B;
+	Mon, 12 Oct 2026 15:35:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791818624;
-	bh=1983ktvh6/z1NTrpEceZ1PKR0rKCPieBDURZu04yUQc=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=isIiI9l04wfMBqhJEaJZVktTGAnPRLV3Ehf9WQsqWWm8VcGyBqL/fd9w9NM1iVnhg
-	 df9lMu8BmLa32sD4U7rGGJwGlPK2aUkoWtNWn+lJ5pvECUiASMsCGPAqFczVJOtf+S
-	 5Sgz/AN56P/k69k4JENzt6IsnbIrdDZ8vm1+XAsm7hwKLossMpJLfMXl1akvnD0LlJ
-	 /v7R8VXtwjk9L2iozPpu/dzB97ik1seE2C3p1P8RyBpFeFMUc0TsmsZGoQiC25b9MN
-	 lJiI7pq/xWpGEm3BGx1+lCs+WcFTXirbs3BsdPynRKoz8q3sN2OPPJ0Y63TJw33qQ2
-	 ajrJKXT8YhT2g==
-Date: Mon, 12 Oct 2026 08:23:43 -0700
-Subject: [PATCH 13/13] xfs: complain loudly when dirtree checker finds broken
- links
+	s=k20260515; t=1791819304;
+	bh=QYggyRJmekueGhdKquk6XSWjJ9hZs5S3eLT1YBJ4E3c=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=bFDlJ9pd38lSRS7dFKAWJvpuHpvkt4w2BA4qvc9DxW4fnvdDfmDSaoXWaIV/vXGmy
+	 8gMJUERvV00KF5djudJu7bMhJMID6ZBjujpo/R39UcZaJbqG3jqxDL3QOqg8odKvJD
+	 9hBqQ/X8vlflM0hxA2vhVusGH5EPEljQfKzdi/3AJvje9SIhzdMKXGLcefiGPEBmej
+	 tvjAdAWAdYxaSmGiWqgjYjkJ0JrZcb34UP6KR2BISovxCZ64wZmQutO4/TZfOSG6kk
+	 n+ZRmqf4c/HO0UM96gmyeLhy6NEoBTGdrWBpJIZ/Ock/d1FvBKHRauz3SDL2U7XYHJ
+	 TNu9Cr+7ke3og==
+Date: Mon, 12 Oct 2026 08:35:03 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: djwong@kernel.org, cem@kernel.org
-Cc: hch@lst.de, stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <179181839527.1417179.10140588765078921402.stgit@frogsfrogsfrogs>
-In-Reply-To: <179181839163.1417179.9019753534701755931.stgit@frogsfrogsfrogs>
-References: <179181839163.1417179.9019753534701755931.stgit@frogsfrogsfrogs>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: aalbersh@kernel.org, cem@kernel.org, hch@lst.de,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 07/26] xfs: hide b_flags manipulation from code outside
+ of xfs_buf.c
+Message-ID: <20261012153503.GY2705364@frogsfrogsfrogs>
+References: <179158947238.3719791.8405495844046466765.stgit@frogsfrogsfrogs>
+ <179158947495.3719791.6891995032675051951.stgit@frogsfrogsfrogs>
+ <asze5x4ZrCI-Clss@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <asze5x4ZrCI-Clss@infradead.org>
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Mon, Oct 12, 2026 at 06:21:43AM -0700, Christoph Hellwig wrote:
+> On Fri, Oct 09, 2026 at 04:47:27PM -0700, Darrick J. Wong wrote:
+> > +static inline void xfs_buf_set_uptodate(struct xfs_buf *bp)
+> > +{
+> > +	bp->b_flags |= LIBXFS_B_UPTODATE;
+> > +}
+> 
+> propagating the kernel flag to the libxfs one might be a good idea.
+> But please don't hide it in the resync, but make it an explicitly
+> documented separate patch so that it is properly described and
+> easily bisectable.
 
-LOLLM observed that the directory tree walk code bails out if it finds
-broken parent pointers along the way.  However, it flattens the return
-code to zero, which means that we can end up in the repair code having
-not completed the scan.  We should never proceed with a repair in this
-state, so let's mark the scrub incomplete and exit.
+Hrmm.  Looking at the existing XBF_DONE usage in libxfs:
 
-Cc: <stable@vger.kernel.org> # v6.10
-Fixes: 928b721a11789a ("xfs: teach online scrub to find directory tree structure problems")
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-Assisted-by: LOLLM # finding obvious bugs
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/scrub/dirtree.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+libxfs/rdwr.c:1428: * The buffer must be XBF_DONE prior to the call.  Afterwards, the buffer will
+libxfs/rdwr.c:1437:     ASSERT(bp->b_flags & XBF_DONE);
+libxfs/xfs_platform.h:323:#define XBF_DONE                      0
 
+I'm gonna guess that if I replace the helper with:
 
-diff --git a/fs/xfs/scrub/dirtree.c b/fs/xfs/scrub/dirtree.c
-index 887383d2e94104..11a9dea03d87ea 100644
---- a/fs/xfs/scrub/dirtree.c
-+++ b/fs/xfs/scrub/dirtree.c
-@@ -860,7 +860,8 @@ xchk_dirtree_find_paths_to_root(
- 				 * A parent pointer of @sc->ip is bad, don't
- 				 * bother continuing.
- 				 */
--				break;
-+				xchk_set_incomplete(sc);
-+				return error;
- 			}
- 			if (error == -ESTALE) {
- 				/* This had better be an invalidation. */
-@@ -981,6 +982,7 @@ xchk_dirtree(
- 		 * parent pointers are corrupt; this scan cannot be completed
- 		 * without full information.
- 		 */
-+		xchk_set_incomplete(sc);
- 		xchk_ip_xref_set_corrupt(sc, sc->ip);
- 		error = 0;
- 		goto out_scanlock;
+static inline void xfs_buf_set_uptodate(struct xfs_buf *bp)
+{
+	/* does nothing, XBF_DONE is not LIBXFS_B_UPTODATE */
+}
 
+Everything will be all right.  How's that sound?
+
+--D
