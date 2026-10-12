@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26AFF49B45D;
-	Mon, 12 Oct 2026 15:21:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E30F49B457;
+	Mon, 12 Oct 2026 15:21:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791818500; cv=none; b=DYVw64AGUAvBKnGhurJw6jMfEOb+ehN32SVnQk4uUUbrAy14+1bi9ipqiK3a14mkGPC+J50nMgsPbcszwA/Ui53+dia7aKwHU79q4h+udB74Yv+JNwX9yOFbrxUUEAR/u8tS8QC/UP9YY33Jdi1VZnAgPT0+nsQbJmDmYqnHqI4=
+	t=1791818516; cv=none; b=dw0B1sc3kgd5k+9nkHhlyNpaXuJ5nAtB3PFT55sqOeArvXbgJV1to7M7cKQ2kRsw9P0h8J5euoIuUaeKr6vnbMOH6pl5OKOMAkUu0DsL98tz00Tc84O6JhpQkrQotDMLBCRIYTzeqp9p+CwOcQCwUaAzjWRmaiSb5fpYdgnGxOs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791818500; c=relaxed/simple;
-	bh=wVF/KkvOmn24aNuuvGCcx4rpdhhaARzE6Uvl9Dnip7s=;
+	s=arc-20240116; t=1791818516; c=relaxed/simple;
+	bh=eZjeMwwGfUl9y3FPYvSXeM7XG4L1Fgpo99tR2JlEkYI=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=cuNy39bD509b8+40C6/QuKZib2iEiphX/P/NKjmbaeAqNGAHAIrU3yrXCVj0EB78ZIQLJqGfUH17q5YkDMGuRAmBcALsmr7W6CapGnpTVidTAHKZx3LtJ5CpgNBlnfXvaScaRra0XURg9KRrnbAV7KmICevjogP+ZltEyLHt8NI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SN1WSX/R; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=oIUFwpMvONnpAC2Ms15aN+DG2DMZlcJCN9rM8naLnfIls9jfrjx6Cs9l2XieOa1SWbZ+qsBeFcyI8s276mq6txLfAzaBc4d3ItxpM6Hhd++z9Ue7zCOTSaor8F7mheXoaZN46h2BhfR7c1ktbVtrONe9gE0mPOhJEA9LArV0LKg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VYUIJpmy; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SN1WSX/R"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id E9E381F0089C;
-	Mon, 12 Oct 2026 15:21:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VYUIJpmy"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 99B6D1F0089B;
+	Mon, 12 Oct 2026 15:21:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791818499;
-	bh=IHPAe+EK3SR6m688M0HXlXDeX2DGa15tDj2sxHZuB/8=;
+	s=k20260515; t=1791818514;
+	bh=UX/ZouFRFX5alVgKT96TaOyAr+7KGnHZZ+4PJ7qjpbg=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=SN1WSX/RvRv/cR+Fh1JluJnG6dTuWEVYI78SpyU39uiN6X0RDgSTiuTw4Q2dw7uEV
-	 tM34QFPYNP6C3TiJLThOxapzzDfBRIEG++oesk1/7/cfZ9Zx7XCykrtJpTJcKkjHF8
-	 flA4/ULY66XkqiJhQbBCpsEs6xLG1SdDEWe/jYNY3WF3sYOHCDlDV3GueoClM9gVJC
-	 jgIVBPX79Cje3lbmSG5cbD633JdlNM0UGt60BQd05SWXjpWALZEbI+IIbAkLx7rtMg
-	 HY5RKh6hNEa2rhixxsJf5LsQkKm7qEIR3sSSKp7sy79t7GAtqGU6JVjcskaZtu9AI3
-	 4Wwx9bQBV0Wog==
-Date: Mon, 12 Oct 2026 08:21:38 -0700
-Subject: [PATCH 05/13] xfs: never reset the default quota timer
+	b=VYUIJpmyTaimuMWLbkwmeODNskUnbRtdeMYXKYjtuKxx3B99dQ2Y5p7OWPi7cr0st
+	 WugIfhtiYTvg9sXhmY++T+e6hjPcJ9UnKsLi+U+KEol3tVtK/xC1v6VNklqWSOmrW2
+	 sgA5OHRa3/k+AT3uwfxioE8y5hEGV1e+mkM4jH19pqItrdNA1nDJHqndlzVLbUrgRk
+	 afAX19hfA3mSjNJKzDCqwps2Ryki3Wod9id5lKwz33XrOYNCMA/hMA9We6lgPWuREh
+	 Ey/ODxQk/pPbf/H7bXYUrLzTlZnDCZyYR0Nf6tbW+5koJ5n4hmZuzz+k9wQpU2KVj/
+	 2NG8ZLzWlR1IQ==
+Date: Mon, 12 Oct 2026 08:21:54 -0700
+Subject: [PATCH 06/13] xfs: fix correction of unwritten extents in quota file
+ data fork
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: hch@lst.de, stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <179181839354.1417179.16275228766052568621.stgit@frogsfrogsfrogs>
+Message-ID: <179181839376.1417179.13075489753807986079.stgit@frogsfrogsfrogs>
 In-Reply-To: <179181839163.1417179.9019753534701755931.stgit@frogsfrogsfrogs>
 References: <179181839163.1417179.9019753534701755931.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,10 +46,14 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-LOLLM notices that xrep_quota_fix_timer doesn't check the dquot id,
-which means that it can inadvertently reset the default quota timer when
-we really meant to ensure that a (non-root) quota overage timeout has a
-sane timestamp.  Fix that.
+LOLLM noticed a couple of problems with the code that fixes unwritten
+mappings in the quota file's data fork: first, we should zero the ondisk
+contents as part of converting them to "unwritten" just in case we crash
+shortly after the conversion.  Second, and more importantly, it noticed
+that we fail to resynchronize the iext tree cursor after modifying the
+iext tree.  If the tree shape changes, we could be in a world of hurt.
+Third, we should force a quotacheck if we reset an ondisk dquot.  Fix
+all issues.
 
 Cc: <stable@vger.kernel.org> # v6.8
 Fixes: a5b91555403e3a ("xfs: repair quotas")
@@ -56,22 +61,60 @@ Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Assisted-by: LOLLM # finding obvious bugs
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/scrub/quota_repair.c |    3 +++
- 1 file changed, 3 insertions(+)
+ fs/xfs/scrub/quota_repair.c |   25 +++++++++++++++++++++++--
+ 1 file changed, 23 insertions(+), 2 deletions(-)
 
 
 diff --git a/fs/xfs/scrub/quota_repair.c b/fs/xfs/scrub/quota_repair.c
-index a37fcd3fb6629b..2b695e5b34177c 100644
+index 2b695e5b34177c..3be56d73dd665f 100644
 --- a/fs/xfs/scrub/quota_repair.c
 +++ b/fs/xfs/scrub/quota_repair.c
-@@ -272,6 +272,9 @@ xrep_quota_fix_timer(
- 	time64_t		new_timer;
- 	uint32_t		t;
+@@ -440,7 +440,9 @@ xrep_quota_data_fork(
+ 	/* Check for data fork problems that apply only to quota files. */
+ 	max_dqid_off = XFS_DQ_ID_MAX / qi->qi_dqperchunk;
+ 	ifp = xfs_ifork_ptr(sc->ip, XFS_DATA_FORK);
+-	for_each_xfs_iext(ifp, &icur, &irec) {
++	xfs_iext_first(ifp, &icur);
++
++	while (xfs_iext_get_extent(ifp, &icur, &irec)) {
+ 		if (isnullstartblock(irec.br_startblock)) {
+ 			error = -EFSCORRUPTED;
+ 			goto out;
+@@ -464,16 +466,35 @@ xrep_quota_data_fork(
  
-+	/* never reset the default quota timer */
-+	if (ddq->d_id == 0)
-+		return;
- 	if (!soft || count <= soft || *timer != 0)
- 		return;
+ 			error = xfs_bmapi_write(sc->tp, sc->ip,
+ 					irec.br_startoff, irec.br_blockcount,
+-					XFS_BMAPI_CONVERT, 0, &nrec, &nmap);
++					XFS_BMAPI_CONVERT | XFS_BMAPI_ZERO, 0,
++					&nrec, &nmap);
+ 			if (error)
+ 				goto out;
+ 			ASSERT(nrec.br_startoff == irec.br_startoff);
+ 			ASSERT(nrec.br_blockcount == irec.br_blockcount);
  
++			/*
++			 * We just zeroed the ondisk dquot, so counts could be
++			 * wrong.  Schedule a quotacheck to fix that.
++			 */
++			xrep_force_quotacheck(sc, dqtype);
+ 			error = xfs_defer_finish(&sc->tp);
+ 			if (error)
+ 				goto out;
++
++			/*
++			 * Set cursor to the next block past the extent we just
++			 * converted because bmapi write could have merged
++			 * records.
++			 */
++			if (!xfs_iext_lookup_extent(sc->ip, ifp,
++					irec.br_startoff + irec.br_blockcount,
++					&icur, &irec))
++				break;
++			continue;
+ 		}
++
++		xfs_iext_next(ifp, &icur);
+ 	}
+ 
+ 	if (!joined) {
 
