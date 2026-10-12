@@ -1,72 +1,71 @@
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8ECAA31D362
-	for <linux-xfs@vger.kernel.org>; Mon, 12 Oct 2026 02:47:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A094D371D02
+	for <linux-xfs@vger.kernel.org>; Mon, 12 Oct 2026 02:48:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791773277; cv=none; b=fxTNSg5p2XcHpzd7IJch9+XAnf4gTxPJg45a5aiOFKJbHBq7LXHxGpfsRwHAcPId7/W6HoEsLqCLZi01tTLKfRMwo+WmEIsdsghQRe9N/rwE02hfvJWTPIXq0gdIlaxnNsXaUE0RzBwWTmKUSf22PoosfuV8TI6Y5TwAAEQml8E=
+	t=1791773337; cv=none; b=AegT2w/XW9RoDUAvwh0/IORpYERByXqb0I7BeVVtnkDdIbprOu9b0wYbfROC5xH2zMStHKZEdUclwkrY7K++5lNuyfmNq3006Po9fGeA+ndVmYq4hYAP2NwSWN51mnpqTwnGJH+nVhAGwni8JZvCIlRSB4Q51BJkRT5GxURjvHI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791773277; c=relaxed/simple;
-	bh=WCphX4URgUH6Nmp4Rpz5K5t99v/wRhzMwEP/lZd5amc=;
+	s=arc-20240116; t=1791773337; c=relaxed/simple;
+	bh=bOclPLGaOOy4NIFoGZ28vUWSYwjULpaTmSRmMTf+/6M=;
 	h=Mime-Version:Subject:From:To:CC:In-Reply-To:Message-ID:Date:
-	 Content-Type:References; b=BMX7lSu6yxiUKhqWDAtoY9etZEMUgzXjbLcx+frWhXl2cx5rub3w5kNSjumNjGphG3662E+fitlGCcN0GzUEGQ3gF4cMrpfuQqSFwJ3v+lxMelhAcB/OmMjiMcjoVQdcYvVpjT+Gj3EHQhAZXmcqoSGyVUiYA7NojaWNrxVPeZg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=TT8ilfaZ; arc=none smtp.client-ip=203.254.224.33
+	 Content-Type:References; b=b1xyMYAv+UR61iGX6JuxTx0Q0CgSgGboSfZ8K+DyyrRr1WRbGuw4UWKj6wrjl2o3WM0oJ4j84Y3LYgmiCyLMV9LG+oD8348CocpGB4gTug1dWcsnM9wWZFyG0WyhHOdshxxTBvH6WYSDXItU8Y8XGfajlb62WBj4ZzyGHwt+0nE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=nqL98ZJe; arc=none smtp.client-ip=203.254.224.34
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="TT8ilfaZ"
-Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
-	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20261012024747epoutp03e54fab3356498c2a13e51664134365a6~dqEsiiD6_1228312283epoutp03h
-	for <linux-xfs@vger.kernel.org>; Mon, 12 Oct 2026 02:47:47 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20261012024747epoutp03e54fab3356498c2a13e51664134365a6~dqEsiiD6_1228312283epoutp03h
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="nqL98ZJe"
+Received: from epcas2p4.samsung.com (unknown [182.195.41.56])
+	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20261012024847epoutp04a95154678cc67ad01dae887d029cc8ed~dqFkuTB8y0882908829epoutp04p
+	for <linux-xfs@vger.kernel.org>; Mon, 12 Oct 2026 02:48:47 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20261012024847epoutp04a95154678cc67ad01dae887d029cc8ed~dqFkuTB8y0882908829epoutp04p
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1791773267;
-	bh=WCphX4URgUH6Nmp4Rpz5K5t99v/wRhzMwEP/lZd5amc=;
+	s=mail20170921; t=1791773327;
+	bh=bOclPLGaOOy4NIFoGZ28vUWSYwjULpaTmSRmMTf+/6M=;
 	h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-	b=TT8ilfaZdk98uAXq2mDogTumHPr9esemcPmc1WFgkdnqwK22+BDTVKN0mdOFq+8qu
-	 ncFD4VivdgwIxyGzFH/nbJKKQSYszjP3ImAOCMkSsmuEeDZc96JMC84Qvj0adfpXrR
-	 PkEivm1bT1syfQZf6+tSyHxBymE5+wXNXjUwMUAg=
+	b=nqL98ZJeNpbmxd/FBzuI6UbBy+OsMN6v6YAGPEoJ2lE76kV5sGcbAR0rydsBgY83v
+	 WblSVIFqPPRy66KWHlZLl4W7xDwdkOTGseG6Gpsq8bde67C0h1eADEPKt99+U2x6zG
+	 YI/lKRWwHy4eDq0cVqGtVQhMrSdMfXvNDv4Cl5nY=
 Received: from epsnrtp03.localdomain (unknown [182.195.42.155]) by
 	epcas2p1.samsung.com (KnoxPortal) with ESMTPS id
-	20261012024746epcas2p1b6c036d7b6eb460753e2a6c0928d5429~dqEr2hiFE0332403324epcas2p1A;
-	Mon, 12 Oct 2026 02:47:46 +0000 (GMT)
-Received: from epcas2p2.samsung.com (unknown [182.195.38.199]) by
-	epsnrtp03.localdomain (Postfix) with ESMTP id 4j322B2S5Lz3hhT7; Mon, 12 Oct
-	2026 02:47:46 +0000 (GMT)
+	20261012024847epcas2p1b8090a0d968e8a44b247403a68ede00a~dqFkNl7IY2927229272epcas2p1R;
+	Mon, 12 Oct 2026 02:48:47 +0000 (GMT)
+Received: from epcas2p1.samsung.com (unknown [182.195.38.211]) by
+	epsnrtp03.localdomain (Postfix) with ESMTP id 4j323L6757z3hhT8; Mon, 12 Oct
+	2026 02:48:46 +0000 (GMT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-Subject: RE:(2) [PATCH 2/8] xfs: refuse a direct allocation whose block
- reservation would wrap
+Subject: RE:(2) [PATCH 7/8] xfs: map the whole range of a pNFS layout in one
+ ->map_blocks call
 Reply-To: daejun7.park@samsung.com
 Sender: Daejun Park <daejun7.park@samsung.com>
 From: Daejun Park <daejun7.park@samsung.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-CC: Chuck Lever <cel@kernel.org>, Jeff Layton <jlayton@kernel.org>,
-	NeilBrown <neil@brown.name>, Olga Kornievskaia <okorniev@redhat.com>, Dai
-	Ngo <Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>, Christoph Hellwig
-	<hch@lst.de>, Carlos Maiolino <cem@kernel.org>, Amir Goldstein
-	<amir73il@gmail.com>, Dave Chinner <dgc@kernel.org>, Sergey Bashirov
+To: Chuck Lever <cel@kernel.org>
+CC: Jeff Layton <jlayton@kernel.org>, NeilBrown <neil@brown.name>, Olga
+	Kornievskaia <okorniev@redhat.com>, Dai Ngo <Dai.Ngo@oracle.com>, Tom Talpey
+	<tom@talpey.com>, Christoph Hellwig <hch@lst.de>, Carlos Maiolino
+	<cem@kernel.org>, Amir Goldstein <amir73il@gmail.com>, "Darrick J. Wong"
+	<djwong@kernel.org>, Dave Chinner <dgc@kernel.org>, Sergey Bashirov
 	<sergeybashirov@gmail.com>, Christian Brauner <brauner@kernel.org>,
 	"linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>,
 	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
 	"linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>, Daejun Park
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Daejun Park
 	<daejun7.park@samsung.com>
 X-Priority: 3
 X-Content-Kind-Code: NORMAL
-In-Reply-To: <20261008154017.GO2705364@frogsfrogsfrogs>
+In-Reply-To: <4de5356f-bc4d-4f1a-9c81-fce09b1b46fd@slotpi15m67>
 X-CPGS-Detection: blocking_info_exchange
 X-Drm-Type: N,general
 X-Msg-Generator: Mail
 X-Msg-Type: PERSONAL
 X-Reply-Demand: N
-Message-ID: <20261012024745epcms2p18c4fad2aa953cd80338e2e614198a6ea@epcms2p1>
-Date: Mon, 12 Oct 2026 11:47:45 +0900
-X-CMS-MailID: 20261012024745epcms2p18c4fad2aa953cd80338e2e614198a6ea
+Message-ID: <20261012024846epcms2p7cccc5c988b2553b3f831070eb17e0455@epcms2p7>
+Date: Mon, 12 Oct 2026 11:48:46 +0900
+X-CMS-MailID: 20261012024846epcms2p7cccc5c988b2553b3f831070eb17e0455
 Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: AUTO_CONFIDENTIAL
@@ -75,32 +74,41 @@ X-CPGSPASS: Y
 X-CPGSPASS: Y
 cpgsPolicy: CPGSC10-223,Y
 X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20261008154023epcas2p487b78abba35fdc6d75f9dd8d62a39837
-References: <20261008154017.GO2705364@frogsfrogsfrogs>
+X-CMS-RootMailID: 20261008163812epcas2p120bb86754876aa75cd744bd63258c465
+References: <4de5356f-bc4d-4f1a-9c81-fce09b1b46fd@slotpi15m67>
 	<20261008-xfs-nfsd-map-blocks-v1-0-560026cdccb6@samsung.com>
-	<20261008-xfs-nfsd-map-blocks-v1-2-560026cdccb6@samsung.com>
-	<CGME20261008154023epcas2p487b78abba35fdc6d75f9dd8d62a39837@epcms2p1>
+	<20261008-xfs-nfsd-map-blocks-v1-7-560026cdccb6@samsung.com>
+	<CGME20261008163812epcas2p120bb86754876aa75cd744bd63258c465@epcms2p7>
 
-On Thu, Oct 08, 2026 at 08:40:17AM -0700, Darrick J. Wong wrote:
-> Uh... seeing as extent records can only map 2^21 blocks maximum and
-> iomap/pnfs can handle xfs returning a mapping of whatever length we
-> want, why don't we constrain count_fsb to XFS_BMBT_MAX_EXTLEN?
+On Thu, Oct 08, 2026 at 12:37:46PM -0400, Chuck Lever wrote:
+> The same freeing can happen to blocks a client holds a write layout
+> for, AFAICS. But that is not new. Commit 527851124d10 handed out the
+> same blocks.
+>
+> This is however the patch where a fix could go.
 
-I tried that first. It stops the wrap, but it changes what an RW
-LAYOUTGET for a range longer than the free space does. Today
-xfs_iomap_write_direct() reserves the whole count, so such a request
-fails with -ENOSPC before anything is allocated. With the count capped,
-each ->map_blocks call allocates up to 2^21 blocks, and nfsd calls it
-once per extent, so the request allocates until the filesystem is full
-and then fails.
+Yes. xfs_fs_map_blocks() marks the inode XFS_DIFLAG_PREALLOC only when
+it allocates, so a write layout past EOF over blocks that buffered
+writes preallocated leaves the inode unmarked, and blockgc frees those
+blocks while the client holds them.
 
-On a 32 GiB XFS with nfsd-testing at the time, an RW LAYOUTGET at offset
-0 of an empty file for 16 TiB, or to the end of the file, got
-NFS4ERR_NOSPC with the cap, and df showed 25 GiB in use afterwards
-instead of 663 MiB. The blocks stay past EOF, as each call that
-allocated marked the inode XFS_DIFLAG_PREALLOC. One for 100 GiB gets
-NFS4ERR_NOSPC with nothing allocated, both without this patch and with
-it.
+With pynfs as the client on nfsd-testing: a file grown to 1 MiB by two
+buffered writes on the server had 960 KiB preallocated past EOF, and an
+RW LAYOUTGET for that range got it as one INVALID_DATA extent, without
+the inode being marked. About 300 seconds later, with the default
+speculative_prealloc_lifetime, blockgc freed the 960 KiB while the
+layout was still held. Small files written on the server after that, and
+after a sync so that the freed extents were no longer busy, got those
+blocks, and the client's write through the layout replaced 978944 bytes
+of their data. The LAYOUTCOMMIT then got NFS4ERR_IO, as
+xfs_iomap_write_unwritten() allocated for the hole with no blocks
+reserved, and XFS shut down with "Corruption of in-memory data (0x8)
+detected at xfs_trans_mod_sb", in six runs out of six. Committing 30
+seconds after the LAYOUTGET, before blockgc, works.
 
-The check in this patch only refuses a count whose reservation does not
-fit in an unsigned int, so a count that fits is handled as before.
+I would rather fix it on its own, before the series, so that it can go
+to stable: mark the inode as preallocated also when a write mapping
+ends past EOF and nothing was allocated. With that, the same test keeps
+the blocks and the LAYOUTCOMMIT succeeds. I will send it to the XFS
+list, and patch 7 of v2 will keep the check for the mappings of the
+whole call.
