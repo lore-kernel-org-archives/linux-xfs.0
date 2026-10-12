@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7627449BD7A;
-	Mon, 12 Oct 2026 15:23:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 600B83F326A;
+	Mon, 12 Oct 2026 15:23:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791818609; cv=none; b=Rwxj9tsR9bC2urKjhlA3K+enNUoynvvjeCJplNhEUKdxBMSyvHBdGo7CsrL4gr5Bcxqhy5mhozrvqSS1BUpL48pAIuhdYcdBOT97sVmyYzETVE0drDcb+vUbjrDn+d9+Dp2XpGag4M2xiXDCtE9fgjHKqEVmOiU24HdOMO/KEP0=
+	t=1791818625; cv=none; b=UgTvbhIY2t9VNuTMMMls7Xc2gxZwHrYx0RotnctZq+DD5ygNdJn1JwDUjIVUMwZNhJTEA7uNYafNU9xpZGHDAja92i7/YJG92DkwohLpfng3Efi+wYORwfyU3hNT0whZLurhBv7Bn6lTfP5vSElecIPEEuzrfh0VIObKKg+PKUA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791818609; c=relaxed/simple;
-	bh=9vmMB8KEpx6BufuLEZkNGJk4oJngwAOPd21ZQcZVXkk=;
+	s=arc-20240116; t=1791818625; c=relaxed/simple;
+	bh=GAiff/gy9VVn+86aZv4W2D7W8C2gELB3oO/IVajcuBU=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=JqTkiRaw5DF/zUBuOxab6KqAvDts2kYOF70bQitcmSx7ZRiHo7/j++AOnPzX87TdbJJlbn7OsJw0yBkELOc7EXegIbUaeqNCWtiQ2+UoMuvPmoVB+7qO75WdCArJHrbjWv3Ot/LIA6YArMBWl+tJXJPJugQph86zg17TAcNm+Zk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AippUYM9; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=lznzxE2xZlE8Byj5FPwMguPLLTOJPuEKldgGK6+80lkuOHpaBdULw3UYqveOopA4DUSVRKnNkFGb4FF+7UWJtbP6dUS7DGd5oOrbUZ7ppCwC4AkveyNl+GQfT8Q38bSXw6/0sNueJr7vGSaFZu3h9DrDGwoSRauzd/KFAUYVDaE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=isIiI9l0; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AippUYM9"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 421D81F0089B;
-	Mon, 12 Oct 2026 15:23:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="isIiI9l0"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id E0FD31F0089D;
+	Mon, 12 Oct 2026 15:23:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791818608;
-	bh=0UGB9/AOAb7cl1N4cYudfaAB8LU9tpPhuQC6M1QqfKg=;
+	s=k20260515; t=1791818624;
+	bh=1983ktvh6/z1NTrpEceZ1PKR0rKCPieBDURZu04yUQc=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=AippUYM9/VTKRAqouzbXw6ppjhvQfwuxc2R2+/L2a4m3cgNrAxKwEEHO1w8mOTnjh
-	 pKVYsF/AWFdkKzIHgy/3tyGz6lJqdNnbWhh8uT8E6Mf3KKhSBRQhkDH0dzf39hxrkw
-	 IAgfVI6Px+ZPJNV/fS2bZIn6rnlXT2fxUPpiOCED5jkU5qQ5vdRWBvn9Bj1MCatY+D
-	 MmExaWCKPMMVyI4rP0kVYEJIfn4YitfnQ4dgr5GC+ffpE23YDF/88bMF0YCZX6++sL
-	 uwoKz2bMsFjiLbl9YqnTIR92CfWWxXOsVH8DtWI5JIX2Fzi4azEE8W/3DrA8beobZ1
-	 anwfCaiVBrSSg==
-Date: Mon, 12 Oct 2026 08:23:27 -0700
-Subject: [PATCH 12/13] xfs: clarify various parts of the bitmap API
+	b=isIiI9l04wfMBqhJEaJZVktTGAnPRLV3Ehf9WQsqWWm8VcGyBqL/fd9w9NM1iVnhg
+	 df9lMu8BmLa32sD4U7rGGJwGlPK2aUkoWtNWn+lJ5pvECUiASMsCGPAqFczVJOtf+S
+	 5Sgz/AN56P/k69k4JENzt6IsnbIrdDZ8vm1+XAsm7hwKLossMpJLfMXl1akvnD0LlJ
+	 /v7R8VXtwjk9L2iozPpu/dzB97ik1seE2C3p1P8RyBpFeFMUc0TsmsZGoQiC25b9MN
+	 lJiI7pq/xWpGEm3BGx1+lCs+WcFTXirbs3BsdPynRKoz8q3sN2OPPJ0Y63TJw33qQ2
+	 ajrJKXT8YhT2g==
+Date: Mon, 12 Oct 2026 08:23:43 -0700
+Subject: [PATCH 13/13] xfs: complain loudly when dirtree checker finds broken
+ links
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: hch@lst.de, stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <179181839506.1417179.7620993844006216106.stgit@frogsfrogsfrogs>
+Message-ID: <179181839527.1417179.10140588765078921402.stgit@frogsfrogsfrogs>
 In-Reply-To: <179181839163.1417179.9019753534701755931.stgit@frogsfrogsfrogs>
 References: <179181839163.1417179.9019753534701755931.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,101 +46,42 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-LOLLM pointed out some underspecified parts of the xbitmap{32,64} API.
-Specifically, the behavior of set/clear/test functions when the length
-parameter is zero is not well defined, nor is what happens when someone
-tries to disunion a bitmap with itself.  None of these situations are
-expected, but we'll define zero-length set and clear to be nops, and the
-rest to be checked by assertions.
+LOLLM observed that the directory tree walk code bails out if it finds
+broken parent pointers along the way.  However, it flattens the return
+code to zero, which means that we can end up in the repair code having
+not completed the scan.  We should never proceed with a repair in this
+state, so let's mark the scrub incomplete and exit.
 
-Cc: <stable@vger.kernel.org> # v6.8
-Fixes: 6ece924b952262 ("xfs: create separate structures and code for u32 bitmaps")
+Cc: <stable@vger.kernel.org> # v6.10
+Fixes: 928b721a11789a ("xfs: teach online scrub to find directory tree structure problems")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Assisted-by: LOLLM # finding obvious bugs
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/scrub/bitmap.c |   20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+ fs/xfs/scrub/dirtree.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/scrub/bitmap.c b/fs/xfs/scrub/bitmap.c
-index 08f216d26ec632..1da99e179baa42 100644
---- a/fs/xfs/scrub/bitmap.c
-+++ b/fs/xfs/scrub/bitmap.c
-@@ -77,6 +77,9 @@ xbitmap64_clear(
- 	struct xbitmap64_node	*new_bn;
- 	uint64_t		last = start + len - 1;
- 
-+	if (!len)
-+		return 0;
-+
- 	while ((bn = xbitmap64_tree_iter_first(&bitmap->xb_root, start, last))) {
- 		if (bn->bn_start < start && bn->bn_last > last) {
- 			uint64_t	old_last = bn->bn_last;
-@@ -127,6 +130,9 @@ xbitmap64_set(
- 	uint64_t		last = start + len - 1;
- 	int			error;
- 
-+	if (!len)
-+		return 0;
-+
- 	/* Is this whole range already set? */
- 	left = xbitmap64_tree_iter_first(&bitmap->xb_root, start, last);
- 	if (left && left->bn_start <= start && left->bn_last >= last)
-@@ -223,6 +229,8 @@ xbitmap64_disunion(
- 	struct xbitmap64_node	*bn;
- 	int			error;
- 
-+	ASSERT(bitmap != sub);
-+
- 	if (xbitmap64_empty(bitmap) || xbitmap64_empty(sub))
- 		return 0;
- 
-@@ -287,6 +295,8 @@ xbitmap64_test(
- 	struct xbitmap64_node	*bn;
- 	uint64_t		last = start + *len - 1;
- 
-+	ASSERT(*len > 0);
-+
- 	bn = xbitmap64_tree_iter_first(&bitmap->xb_root, start, last);
- 	if (!bn)
- 		return false;
-@@ -357,6 +367,9 @@ xbitmap32_clear(
- 	struct xbitmap32_node	*new_bn;
- 	uint32_t		last = start + len - 1;
- 
-+	if (!len)
-+		return 0;
-+
- 	while ((bn = xbitmap32_tree_iter_first(&bitmap->xb_root, start, last))) {
- 		if (bn->bn_start < start && bn->bn_last > last) {
- 			uint32_t	old_last = bn->bn_last;
-@@ -407,6 +420,9 @@ xbitmap32_set(
- 	uint32_t		last = start + len - 1;
- 	int			error;
- 
-+	if (!len)
-+		return 0;
-+
- 	/* Is this whole range already set? */
- 	left = xbitmap32_tree_iter_first(&bitmap->xb_root, start, last);
- 	if (left && left->bn_start <= start && left->bn_last >= last)
-@@ -503,6 +519,8 @@ xbitmap32_disunion(
- 	struct xbitmap32_node	*bn;
- 	int			error;
- 
-+	ASSERT(bitmap != sub);
-+
- 	if (xbitmap32_empty(bitmap) || xbitmap32_empty(sub))
- 		return 0;
- 
-@@ -567,6 +585,8 @@ xbitmap32_test(
- 	struct xbitmap32_node	*bn;
- 	uint32_t		last = start + *len - 1;
- 
-+	ASSERT(*len > 0);
-+
- 	bn = xbitmap32_tree_iter_first(&bitmap->xb_root, start, last);
- 	if (!bn)
- 		return false;
+diff --git a/fs/xfs/scrub/dirtree.c b/fs/xfs/scrub/dirtree.c
+index 887383d2e94104..11a9dea03d87ea 100644
+--- a/fs/xfs/scrub/dirtree.c
++++ b/fs/xfs/scrub/dirtree.c
+@@ -860,7 +860,8 @@ xchk_dirtree_find_paths_to_root(
+ 				 * A parent pointer of @sc->ip is bad, don't
+ 				 * bother continuing.
+ 				 */
+-				break;
++				xchk_set_incomplete(sc);
++				return error;
+ 			}
+ 			if (error == -ESTALE) {
+ 				/* This had better be an invalidation. */
+@@ -981,6 +982,7 @@ xchk_dirtree(
+ 		 * parent pointers are corrupt; this scan cannot be completed
+ 		 * without full information.
+ 		 */
++		xchk_set_incomplete(sc);
+ 		xchk_ip_xref_set_corrupt(sc, sc->ip);
+ 		error = 0;
+ 		goto out_scanlock;
 
