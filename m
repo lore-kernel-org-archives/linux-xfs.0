@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5486345CCE
-	for <linux-xfs@vger.kernel.org>; Mon, 12 Oct 2026 05:56:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 948EB3AE1AF;
+	Mon, 12 Oct 2026 05:56:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791784592; cv=none; b=VtCArOaUO6q9mz2h9IZFjcPk2MmZKSuUGl993TS+f1awelG5nalkV7iHvf9My9EU7cemjCpIXal4FM05JNnpVP3T+K09gHV2tewmoQE33r10mXxNCVDvIQKkqlxCTEWxekdi7zTbp5DuRRum/5zlyyCzSmSJcUHRnE08rHY9x00=
+	t=1791784608; cv=none; b=dnjySZkxQYsgZLA5VY1/eK2qOg/sRrzixpd3u8c9LCvTwQmwvxsbadFekltK1jyj7u5v+xowrCcRwKMiq+jDg6rvfeA7DIHdf3KUv89krnig2vYQUV2WK7wYSiT2KV+PlnVb50D8Hc/sM6LBW5zf0Of+Ld/LHpyJ8eajdTEcatg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791784592; c=relaxed/simple;
-	bh=3TqeDCL3qzkCK3a+GVmcMXSx9zTx3W/Oi8+fDRjw/6I=;
+	s=arc-20240116; t=1791784608; c=relaxed/simple;
+	bh=3FNZNM/4CQoLGkQENXtVApXwymLC7717ezOTaQRBENw=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=qpjDGmx9J2nudOMSLO+JRPUDpcbPEvS9maQ+i+r+YQCvbG4JDrKk0iWtEwemQOokJAAb8N9t3ViP8wUPqJ/HgKc6EjYrIK5PuCx07+N5LXwzeDy6+vVO+ZZgFBaGksS458I4eNCR55o0NdHzkO3R7pOy+Q2j1E7BgqhI69Pw9P0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T63AyFcx; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=H3WZE7h9t3W3gk4RJxDXvSadX1P4uC/0Z3qRckozNE+yi7DzuA6ciUw9lPVrbB99tNsLsFZmyQxX7tClF55dqW+bk5KGb6zIOrix7jQ0BzNxnvPdhiEYZn4ThXpv07MBLlhSpv/DustHLfXo71KOLLKgtraBtIdwRKt5KNUrKrE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YKr2kfjL; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T63AyFcx"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 83AC41F0089B;
-	Mon, 12 Oct 2026 05:56:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YKr2kfjL"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 232291F0089C;
+	Mon, 12 Oct 2026 05:56:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791784591;
-	bh=xxxF51BizTWq9F8577k72AneopEq/UdEEeJ4rHU5jcU=;
+	s=k20260515; t=1791784607;
+	bh=eEISoCRlCB2HYLQsMcRKXY1XNxcr6vMHF7FB16lvtE0=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=T63AyFcxuRLZmZ7xLhUSlhVh8zWpjXdpoQwc65rRoqlNWikKmCpiClbtro2UfNdtI
-	 pii8hX1Fs4CZrGuZHdsG4b1GlMAsCcmqdPCDGeYQ1kiCk0WGrPG2tKjTq1Q2X7nWZG
-	 ZUY4qkMGvd0x8NirdHbGP0miy8xkRy8aCcuki6DpkQgmPKWhhMEBJK2DpSbEs4Y0CB
-	 3CRECqQiGryGGvPtI9MKJ1UbmIaVLmedZOu9FxCDaASj3QLO4wcFVzoIGzcq6zbO/k
-	 z3Kekrww/9Wmi6FnjuVMjTxIiUS2kf+i60aOghQjQtSzuqchcegNrugLR+qT1JZl8M
-	 vpgiaQN5lwoCQ==
-Date: Sun, 11 Oct 2026 22:56:31 -0700
-Subject: [PATCH 03/12] xfs: avoid oversized space allocations when
- regenerating metadata
+	b=YKr2kfjLDHvnlC8XddyEGU3iTPcAl89+kqQarX9XXjJqROPWwmWMNutUY9tEu5/qY
+	 cqd6rpENR/QoB81rwdrlEeOq0nkskur8XILX9DLn4/6818eCj610vXNlnOYA4fj/5w
+	 NLu9sE321rrQ+HroVW6tjBWYoutaI17YpP8S6QlhSepFONO/ormfhazXO4Et6n1wVP
+	 J/FgACh7iZaDEM9YGtX7YmTcaMdkj2lVw6+uvozye5bEdzlFohzgUvN1diJfJA6yg7
+	 Dc5U+LaKSZf5CN1s43EEj0+tVm4n9Vq/cuMpkxIQbsAFDk2bqH5ZOqZQzSzxGone2I
+	 tnzCXk/+LI89Q==
+Date: Sun, 11 Oct 2026 22:56:46 -0700
+Subject: [PATCH 04/12] xfs: reduce new btree slack factor if free space is
+ negative
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
-Cc: linux-xfs@vger.kernel.org
-Message-ID: <179178065259.1058326.14882859370057319539.stgit@frogsfrogsfrogs>
+Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
+Message-ID: <179178065281.1058326.11344648618549479599.stgit@frogsfrogsfrogs>
 In-Reply-To: <179178065114.1058326.9639488899319330972.stgit@frogsfrogsfrogs>
 References: <179178065114.1058326.9639488899319330972.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,44 +46,43 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-LOLLM notices that the btree block preallocation code can be asked to
-allocate more than XFS_MAX_BMBT_EXTLEN blocks.  If the allocation
-succeeds, the reservation will be stored in a single autoreap record.
-Unfortunately, the autoreap code uses deferred frees to get rid of
-unused space and that code complains if it's given too much space to get
-rid of all once.  Fix this theoretical problem by constraining the
-allocation size since it's unlikely that we're going to need that much
-space for a btree.  We don't fix the core code because the runtime users
-of deferred frees are freeing file space or single btree blocks and we
-want to catch problems there.
+LOLLM points out that if the incore fdblocks counter is negative, the
+assignment to uint64_t will mask this possibly low space situation and
+we don't pack the btree blocks as tightly as we probably ought to.  If
+it's the case that there's some free space and fdblocks is too low due
+to an error in the superblock field, then we can end up failing btree
+rebuilds due to ENOSPC unnecessarily.  This is a corner case, but let's
+fix it anyway.
 
+Cc: <stable@vger.kernel.org> # v6.8
+Fixes: be408417630427 ("xfs: implement block reservation accounting for btrees we're staging")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Assisted-by: LOLLM # finding obvious bugs
 ---
- fs/xfs/scrub/newbt.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ fs/xfs/scrub/newbt.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
 
 diff --git a/fs/xfs/scrub/newbt.c b/fs/xfs/scrub/newbt.c
-index a7554f925b7440..1f28ca1647f8d3 100644
+index 1f28ca1647f8d3..2336fe97415120 100644
 --- a/fs/xfs/scrub/newbt.c
 +++ b/fs/xfs/scrub/newbt.c
-@@ -280,7 +280,7 @@ xrep_newbt_alloc_ag_blocks(
- 			.mp		= mp,
- 			.oinfo		= xnr->oinfo,
- 			.minlen		= 1,
--			.maxlen		= nr_blocks,
-+			.maxlen		= min(XFS_MAX_BMBT_EXTLEN, nr_blocks),
- 			.prod		= 1,
- 			.resv		= xnr->resv,
- 		};
-@@ -354,7 +354,7 @@ xrep_newbt_alloc_file_blocks(
- 			.mp		= mp,
- 			.oinfo		= xnr->oinfo,
- 			.minlen		= 1,
--			.maxlen		= nr_blocks,
-+			.maxlen		= min(XFS_MAX_BMBT_EXTLEN, nr_blocks),
- 			.prod		= 1,
- 			.resv		= xnr->resv,
- 		};
+@@ -56,7 +56,7 @@ xrep_newbt_estimate_slack(
+ {
+ 	struct xfs_scrub	*sc = xnr->sc;
+ 	struct xfs_btree_bload	*bload = &xnr->bload;
+-	uint64_t		free;
++	int64_t			free;
+ 	uint64_t		sz;
+ 
+ 	/*
+@@ -72,6 +72,8 @@ xrep_newbt_estimate_slack(
+ 		sz = xfs_ag_block_count(sc->mp, pag_agno(sc->sa.pag));
+ 	} else {
+ 		free = xfs_sum_freecounter_raw(sc->mp, XC_FREE_BLOCKS);
++		if (free < 0)
++			free = 0;
+ 		sz = sc->mp->m_sb.sb_dblocks;
+ 	}
+ 
 
