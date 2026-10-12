@@ -1,35 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE6F14119F7;
-	Mon, 12 Oct 2026 10:22:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8214447D45A;
+	Mon, 12 Oct 2026 10:22:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791800580; cv=none; b=qEsCqW12vR31Y4yR3WmxXLxgJHLKb4Oc9+w2vBpLndytxSBO9iV3hVFGlfjZmctllFpbxlbuZSAQ7Fq7G7Qn00D3pi492q0E9rSSngeJUzoGHSCzHxSvmnISkGiTA/BQpzRGi//4U3a0TdWsUE3l6b/hkpVy8Gy6hbxw2GcgqOo=
+	t=1791800584; cv=none; b=Swxhcs6X5Plib764pnQ0LFDOXiwc86ocD9dHiONyEveREKQWjV8z8UwAEbaFh5Suux4hVQwvdYyg9qSNMGOvznuQc+5m4PWkdhL/xEL0idpg/R+YMyaH4tBsA5UII1rgwyDMCfM7VvWe9I4P1RvHpm3GBkCwqVdSQ2tZBGIYdk8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791800580; c=relaxed/simple;
-	bh=K7BxUtHzcGy2IpDNps7btvz8womQYnC4QIpoXEvLpxo=;
+	s=arc-20240116; t=1791800584; c=relaxed/simple;
+	bh=NsovZOdvlFs8owkMYtEseNRnXFAJ/0Ec36qCfykAhe4=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=BIIi9KKkd4akBTRTAyn3CUyZKlSl0c02JeGKkoTubj1+ol/S+JwiY3i8Ndni1H8qvoH/BELDMemxo4BpLnBExBfZqhzltkaeWTE9aDxBTWEQo9vtT0vQpTZ6ZP0LFFmz8kd9wANLnTGX23C/gbzeZymX6RwFjO0IdAtaVSO9sdY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MVMZnRqD; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:To:Cc; b=IzS2TE/4l7cXrkKI/liCzt1XSuVX0oaEyTa1werecdsL4D4zTsI8JgzdXcNWvwEkkFPeSFrWoGDEvjjjg3qdanNujMcCSMYpSPbKOUKCzeSog4pwKnGZo1pxBiejTd/QKrRn8Wr+RT46EQ8L1D0zUChOOj+8s7+QhnFGIywjqSY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MN1XQBaZ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MVMZnRqD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 067761F0089D;
-	Mon, 12 Oct 2026 10:22:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MN1XQBaZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 358671F0089C;
+	Mon, 12 Oct 2026 10:22:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791800564;
-	bh=gqfvF8a36bR5GKh2wCGHdgbO3Y2aAKCzNA8Zyg1bWY0=;
+	s=k20260515; t=1791800568;
+	bh=KVYkaLLUhiMDzrS2BxLbzlY1DTidnIauylG8rzJQMmQ=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=MVMZnRqDc8Fm7sraL5WrRvDqPSOovrtN5JGegbQ+CbaMLgatMADR5C6pISj7faf4O
-	 OjVeOIAHYweNfVIbTYOiW46FtkDfNml3S0xc1pJu/mbPOWClkNIMdWFK9ThoyUpbfM
-	 StI2vfqVHM8Oo8mbmkMUuUpihCSKLuyVVjk9IlO9N2f9ZhtsfBsgOR70FLEip1TYF+
-	 3Lq3cXozFdb5QOodrpxOX/LugyiiwihMee3wftoF0g8zx5Gp5O3re6sTbDJ08AC69C
-	 pMF7mV5pubJRt2sFS3fAyjLK0XF7+8bH1F6gh0kGGM13YgSeu31DeQH2V33aMudxx3
-	 TPhlFDjPd10lA==
+	b=MN1XQBaZvMtQfMIA+dEBWMZ85hjFS0nIw4nf+sgcKkzhsqhjVTnKJbwBv02AjZ8Tt
+	 3nmKYQIZrDl1Zo1bcv5FtqK8cHHUkbBZk9dV6zKuy5uZzg6fapUDFImJ8HgyR03sMp
+	 ZTI9k/HpbatOPH6t0AFSjyslRTlZBGTveenjCPH8rJian3TjYNRW+QaHiChnVl5pMp
+	 cWvEdGNQ+duf6kXwWZZ/cH3hVHL7qbPbZgI2N8ez/TfuADpTRBccQPeP8/efGPq7gg
+	 sWzcSszCydeTfPiQNL1f618FwAWDs5ITWDs8nWDnSfwxf3LWPfJdQEYCLONXoc/0Ti
+	 Br6+o5+kIHaiQ==
 From: Christian Brauner <brauner@kernel.org>
-Date: Mon, 12 Oct 2026 12:21:07 +0200
-Subject: [PATCH RFC 22/28] efivarfs: stop using SB_RDONLY for read-only
- efivar ops
+Date: Mon, 12 Oct 2026 12:21:08 +0200
+Subject: [PATCH RFC 23/28] ubifs: don't set SB_RDONLY after errors
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -38,7 +37,7 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261012-work-fs-sb_rdonly-v1-22-60743a3dc326@kernel.org>
+Message-Id: <20261012-work-fs-sb_rdonly-v1-23-60743a3dc326@kernel.org>
 References: <20261012-work-fs-sb_rdonly-v1-0-60743a3dc326@kernel.org>
 In-Reply-To: <20261012-work-fs-sb_rdonly-v1-0-60743a3dc326@kernel.org>
 To: Jan Kara <jack@suse.com>
@@ -49,310 +48,260 @@ Cc: Al Viro <viro@zeniv.linux.org.uk>, ecryptfs@vger.kernel.org,
  ocfs2-devel@lists.linux.dev, linux-btrfs@vger.kernel.org, 
  gfs2@lists.linux.dev, linux-efi@vger.kernel.org, 
  linux-mtd@lists.infradead.org, linux-xfs@vger.kernel.org, 
- "Christian Brauner (Amutable)" <brauner@kernel.org>, stable@vger.kernel.org
+ "Christian Brauner (Amutable)" <brauner@kernel.org>
 X-Mailer: b4 0.17-dev-3d1b8
-X-Developer-Signature: v=1; a=openpgp-sha256; l=11355; i=brauner@kernel.org;
- h=from:subject:message-id; bh=K7BxUtHzcGy2IpDNps7btvz8womQYnC4QIpoXEvLpxo=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWSd2TIlNcY4kG9uudiLz2F3Je73LxaX2cTDHCPuwMo/k
- eFKxD/zjlIWBjEuBlkxRRaHdpNwueU8FZuNMjVg5rAygQxh4OIUgIlsLGBkON+w7prdRjXFXym6
- DF0ici2ilusvnH1x+oWCcfIP+74v7YwMqxecjgyWKGM2r84Mn1+tffvq3sUvGeo/b5h6u+KMA+9
- 7XgA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=9209; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=NsovZOdvlFs8owkMYtEseNRnXFAJ/0Ec36qCfykAhe4=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWSd2TJFX2672fIHBqGKx6yWMNzo+bu/W+u6hGNd0C3WW
+ TPdj66u7ihlYRDjYpAVU2RxaDcJl1vOU7HZKFMDZg4rE8gQBi5OAZjIzIcM/2znOGw45Jfvtm+J
+ iuiSFzyVW5gezDPJ+HB+8e9NHx/sXneckeHjizinP0tVpqc5z7psE6yoYbVVZ8LkfxL2PrWrOA3
+ mbWMFAA==
 X-Developer-Key: i=brauner@kernel.org; a=openpgp;
  fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-Since commit 94f7f6182c72 ("efivarfs: automatically update super block
-flag") efivarfs_ops_notifier() sets or clears SB_RDONLY whenever the
-efivar ops switch between ops that can and ops that can't set variables,
-e.g. when tee_stmm_efi is probed or removed. The notifier runs from
-efivars_register() under efivars_lock at any time and without holding
-sb->s_umount.
+When UBIFS hits an error ubifs_ro_mode() switches it to read-only mode
+by setting c->ro_error and SB_RDONLY. It does that from whatever context
+found the error, e.g. a failing write to the media, and without holding
+sb->s_umount. So it races with everyone else who writes sb->s_flags,
+reconfigure_super() included. UBIFS can't be frozen so it doesn't leave
+writers hanging after a thaw like the other filesystems did. But it's
+still a filesystem changing SB_RDONLY behind the VFS' back.
 
-freeze_super() and thaw_super() both look at sb_rdonly() to figure out
-whether the s_writers rwsems need to be taken or released. efivarfs has
-->freeze_fs() and ->unfreeze_fs() and is FS_POWER_FREEZE. So a backend
-that loads or unloads around suspend and resume hits this without
-anybody calling FIFREEZE. If the ops turn read-only while the filesystem
-is frozen thaw_super() skips ->unfreeze_fs(), i.e. the variable resync,
-and sb_freeze_unlock(). The rwsems stay write-locked, writers hang and
-umount warns:
+UBIFS doesn't need it either. c->ro_error already makes every write to
+the media fail with -EROFS. So only set SB_RDONLY while the filesystem
+is still being mounted, where the mounter holds s_umount, and let UBIFS
+refuse what the VFS refused for us so far. A new ubifs_permission() does
+what sb_permission() did for the read-only superblock and refuses
+MAY_WRITE on regular files, directories and symlinks. That takes care
+of the namespace operations, opening for write and truncate(2).
+setattr, fileattr_set, timestamp updates and the xattr setters check
+c->ro_error as well because they change the inode in memory before
+anything is written.
 
-  efivars: Unregistered efivars operations
-  efivars: Registered efivars operations
-  WARNING: kernel/rcu/sync.c:177 at rcu_sync_dtor+0x143/0x190
+So far a remount to read-only after an error was refused with -EROFS.
+That didn't matter because the superblock was read-only already. And a
+remount to read-write went through and cleared SB_RDONLY again because
+c->ro_mount was never set. Now the remount to read-only is what makes
+the superblock read-only so let it through. The writes
+ubifs_remount_ro() does fail with -EROFS before doing any I/O. After
+that the existing check refuses going back to read-write.
 
-  [<0>] percpu_rwsem_wait+0x203/0x500
-  [<0>] mnt_want_write+0x28f/0x2f0
-  [<0>] filename_unlinkat+0x19f/0x600
+ubifs_fsync() returns 0 right away on a read-only mount. With the
+remount to read-only going through after an error that would make
+fsync() report success for data that writeback dropped. And
+ubifs_write_inode() drops the dirty state of an inode when writing it
+fails so fsync() could already report success for an inode update that
+never made it to the media. Let fsync() fail with -EROFS after an error
+like ext4 does.
 
-In the other direction a filesystem mounted with read-only ops is frozen
-without the rwsems. If the ops turn read-write before the thaw
-sb_freeze_unlock() releases rwsems nobody holds:
+Like ext4 we show "emergency_ro" in the mount options while c->ro_error
+is set. The mount stays "rw" until a remount to read-only so statfs()
+doesn't report ST_RDONLY anymore and syncfs(2) now fails with -EROFS.
 
-  efivarfs: resyncing variable state
-  WARNING: kernel/rcu/sync.c:154 at rcu_sync_exit+0x147/0x1a0, CPU#0: fsfreeze/171
-  WARNING: kernel/rcu/sync.c:157 at rcu_sync_exit+0x150/0x1a0, CPU#0: fsfreeze/171
+Reproducer, with UBI on mtdram:
 
-And the unlocked read-modify-write of sb->s_flags also races with every
-other writer of it.
+  modprobe mtdram total_size=32768 erase_size=128
+  ubiattach -m 0; ubimkvol /dev/ubi0 -N test -m
+  mount -t ubifs ubi0:test /mnt
+  echo 1 > /sys/kernel/debug/ubifs/ubi0_0/tst_recovery   # emulate a power cut
+  while echo x >> /mnt/f; do sync; done   # until the power cut hits
+  grep /mnt /proc/mounts       # before: ro, after: rw,...,emergency_ro
+  mount -o remount,ro /mnt     # before: EROFS, after: works
+  mount -o remount,rw /mnt     # before: works, after: EROFS
 
-So keep the state to efivarfs. efivarfs_fs_info gets a flags word with
-EFIVARFS_OPS_RDONLY which the notifier sets and clears instead of
-touching SB_RDONLY. efivarfs_fill_super() initializes it from
-efivar_supports_writes() and doesn't set SB_RDONLY anymore either, which
-it did since commit f88814cc2578 ("efi/efivars: Expose RT service
-availability via efivars abstraction"). It samples the ops and registers
-the notifier under efivar_lock() so a switch can't slip in between and
-leave the flag stale until umount. create, unlink, setattr,
-fileattr_set, write and opening for write are refused with -EROFS while
-the flag is set. That includes setattr on the root directory.
-
-That means everything is derived from the private state now, mount time
-included. The notifier exists so that a mount made while the ops were
-read-only becomes writable once tee_stmm_efi loads later. That's the
-normal boot order because systemd mounts efivarfs before modules are
-loaded. Setting SB_RDONLY in fill_super would leave such mounts
-read-only until somebody remounts them. And all SB_RDONLY ever did here
-was keep writes away from a NULL ->set_variable (cf.
-commit 0e8d2444168d ("efivarfs: force RO when remounting if SetVariable
-is not supported")). The private checks do that too, also for writes
-through files opened before the ops turned read-only which SB_RDONLY
-never stopped. Note that they run without efivars_lock just like the
-SB_RDONLY check did. So a write that races with a switch to read-only
-ops isn't stopped. That's not new.
-
-efivarfs_reconfigure() now only refuses to remount a read-only mount
-read-write while the flag is set, and with -EROFS instead of -EINVAL. It
-used to refuse every remount without "ro" while the ops couldn't write.
-That would refuse option-only remounts of the now read-write superblock
-as well. The check uses the same condition as the VFS' own remount_rw
-test so an fspick() reconfigure that doesn't touch the read-only flag
-isn't mistaken for one.
-
-We show "ro_ops" in the mount options while the flag is set. IOW, with
-read-only ops efivarfs is now mounted "rw,...,ro_ops" instead of "ro".
-statfs() doesn't report ST_RDONLY and access(W_OK) doesn't fail with
--EROFS anymore. Variables that efivarfs marks immutable fail with -EPERM
-first when opened for write, unlinked or chmod'ed because the
-IS_IMMUTABLE() check in the VFS comes before ->open() and ->unlink().
-And mkdir and rename, which efivarfs doesn't support, fail with -EPERM
-and setxattr with -EOPNOTSUPP instead of -EROFS.
-
-Reproducer. This needs tee_stmm_efi, the only driver that switches
-efivar ops while efivarfs can be mounted, or a module that does what it
-does: efivars_generic_ops_unregister() and efivars_register() of ops
-without ->set_variable, and back:
-
-  mount -t efivarfs efivarfs /sys/firmware/efi/efivars    # read-write ops
-  fsfreeze -f /sys/firmware/efi/efivars
-  <switch to read-only ops>
-  fsfreeze -u /sys/firmware/efi/efivars
-  <switch back to read-write ops>
-  rm /sys/firmware/efi/efivars/<var>    # before: hangs in percpu_rwsem_wait()
-  umount /sys/firmware/efi/efivars      # before: WARNING at rcu_sync_dtor()
-
-The other direction, mounted with read-only ops, frozen, switched to
-read-write ops and thawed, warns in rcu_sync_exit() from the thaw.
-
-Fixes: 94f7f6182c72 ("efivarfs: automatically update super block flag")
-Cc: stable@vger.kernel.org
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- fs/efivarfs/file.c     |  6 ++++++
- fs/efivarfs/inode.c    | 15 +++++++++++++++
- fs/efivarfs/internal.h | 14 +++++++++++++-
- fs/efivarfs/super.c    | 31 +++++++++++++++++++++++--------
- 4 files changed, 57 insertions(+), 9 deletions(-)
+ fs/ubifs/dir.c   |  1 +
+ fs/ubifs/file.c  | 24 ++++++++++++++++++++++++
+ fs/ubifs/io.c    |  7 ++++++-
+ fs/ubifs/ioctl.c |  4 ++++
+ fs/ubifs/super.c |  8 ++++----
+ fs/ubifs/ubifs.h |  1 +
+ fs/ubifs/xattr.c |  6 ++++++
+ 7 files changed, 46 insertions(+), 5 deletions(-)
 
-diff --git a/fs/efivarfs/file.c b/fs/efivarfs/file.c
-index cb1b6d0c3454..a074145fa57e 100644
---- a/fs/efivarfs/file.c
-+++ b/fs/efivarfs/file.c
-@@ -23,6 +23,9 @@ static ssize_t efivarfs_file_write(struct file *file,
- 	ssize_t bytes;
- 	bool set = false;
+diff --git a/fs/ubifs/dir.c b/fs/ubifs/dir.c
+index 23ec924162d6..af01e674eb1b 100644
+--- a/fs/ubifs/dir.c
++++ b/fs/ubifs/dir.c
+@@ -1749,6 +1749,7 @@ const struct inode_operations ubifs_dir_inode_operations = {
+ 	.rmdir       = ubifs_rmdir,
+ 	.mknod       = ubifs_mknod,
+ 	.rename      = ubifs_rename,
++	.permission  = ubifs_permission,
+ 	.setattr     = ubifs_setattr,
+ 	.getattr     = ubifs_getattr,
+ 	.listxattr   = ubifs_listxattr,
+diff --git a/fs/ubifs/file.c b/fs/ubifs/file.c
+index e73c28b12f97..20ff354185b7 100644
+--- a/fs/ubifs/file.c
++++ b/fs/ubifs/file.c
+@@ -1251,6 +1251,18 @@ static int do_setattr(struct ubifs_info *c, struct inode *inode,
+ 	return err;
+ }
  
-+	if (efivarfs_ops_rdonly(inode->i_sb))
-+		return -EROFS;
++/* Like sb_permission() for a read-only superblock, see ubifs_ro_mode(). */
++int ubifs_permission(struct mnt_idmap *idmap, struct inode *inode, int mask)
++{
++	struct ubifs_info *c = inode->i_sb->s_fs_info;
 +
- 	if (count < sizeof(attributes))
- 		return -EINVAL;
- 
-@@ -137,6 +140,9 @@ static int efivarfs_file_open(struct inode *inode, struct file *file)
++	if ((mask & MAY_WRITE) && c->ro_error &&
++	    (S_ISREG(inode->i_mode) || S_ISDIR(inode->i_mode) ||
++	     S_ISLNK(inode->i_mode)))
++		return -EROFS;
++	return generic_permission(idmap, inode, mask);
++}
++
+ int ubifs_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
+ 		  struct iattr *attr)
  {
- 	struct efivar_entry *entry = inode->i_private;
+@@ -1260,6 +1272,9 @@ int ubifs_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
  
-+	if ((file->f_mode & FMODE_WRITE) && efivarfs_ops_rdonly(inode->i_sb))
+ 	dbg_gen("ino %llu, mode %#x, ia_valid %#x",
+ 		inode->i_ino, inode->i_mode, attr->ia_valid);
++	if (c->ro_error)
 +		return -EROFS;
 +
- 	file->private_data = entry;
+ 	err = setattr_prepare(&nop_mnt_idmap, dentry, attr);
+ 	if (err)
+ 		return err;
+@@ -1310,6 +1325,10 @@ int ubifs_fsync(struct file *file, loff_t start, loff_t end, int datasync)
  
- 	inode_lock(inode);
-diff --git a/fs/efivarfs/inode.c b/fs/efivarfs/inode.c
-index f0d009555fc6..6b0540139798 100644
---- a/fs/efivarfs/inode.c
-+++ b/fs/efivarfs/inode.c
-@@ -15,6 +15,8 @@
- #include "internal.h"
+ 	dbg_gen("syncing inode %llu", inode->i_ino);
  
- static const struct inode_operations efivarfs_file_inode_operations;
-+static int efivarfs_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
-+			    struct iattr *iattr);
- 
- struct inode *efivarfs_get_inode(struct super_block *sb,
- 				const struct inode *dir, int mode,
-@@ -83,6 +85,9 @@ static int efivarfs_create(struct mnt_idmap *idmap, struct inode *dir,
- 	bool is_removable = false;
- 	efi_guid_t vendor;
- 
-+	if (efivarfs_ops_rdonly(dir->i_sb))
++	/* Writeback drops what it can't write after an error. */
++	if (c->ro_error)
 +		return -EROFS;
 +
- 	if (!efivarfs_valid_name(dentry->d_name.name, dentry->d_name.len))
- 		return -EINVAL;
+ 	if (c->ro_mount)
+ 		/*
+ 		 * For some really strange reasons VFS does not filter out
+@@ -1374,6 +1393,9 @@ int ubifs_update_time(struct inode *inode, enum fs_update_time type,
+ 	if (WARN_ON_ONCE(type != FS_UPD_ATIME))
+ 		return -EIO;
  
-@@ -122,6 +127,9 @@ static int efivarfs_unlink(struct inode *dir, struct dentry *dentry)
- {
- 	struct efivar_entry *var = d_inode(dentry)->i_private;
- 
-+	if (efivarfs_ops_rdonly(dir->i_sb))
++	if (c->ro_error)
 +		return -EROFS;
 +
- 	if (efivar_entry_delete(var))
- 		return -EINVAL;
+ 	if (!IS_ENABLED(CONFIG_UBIFS_ATIME_SUPPORT))
+ 		return generic_update_time(inode, type, flags);
  
-@@ -132,6 +140,7 @@ const struct inode_operations efivarfs_dir_inode_operations = {
- 	.lookup = simple_lookup,
- 	.unlink = efivarfs_unlink,
- 	.create = efivarfs_create,
-+	.setattr = efivarfs_setattr,
+@@ -1634,6 +1656,7 @@ const struct address_space_operations ubifs_file_address_operations = {
  };
  
- static int
-@@ -155,6 +164,9 @@ efivarfs_fileattr_set(struct mnt_idmap *idmap,
- {
- 	unsigned int i_flags = 0;
+ const struct inode_operations ubifs_file_inode_operations = {
++	.permission  = ubifs_permission,
+ 	.setattr     = ubifs_setattr,
+ 	.getattr     = ubifs_getattr,
+ 	.listxattr   = ubifs_listxattr,
+@@ -1644,6 +1667,7 @@ const struct inode_operations ubifs_file_inode_operations = {
  
-+	if (efivarfs_ops_rdonly(dentry->d_sb))
+ const struct inode_operations ubifs_symlink_inode_operations = {
+ 	.get_link    = ubifs_get_link,
++	.permission  = ubifs_permission,
+ 	.setattr     = ubifs_setattr,
+ 	.getattr     = ubifs_symlink_getattr,
+ 	.listxattr   = ubifs_listxattr,
+diff --git a/fs/ubifs/io.c b/fs/ubifs/io.c
+index 6c6d68242779..3d01529a0754 100644
+--- a/fs/ubifs/io.c
++++ b/fs/ubifs/io.c
+@@ -72,7 +72,12 @@ void ubifs_ro_mode(struct ubifs_info *c, int err)
+ 	if (!c->ro_error) {
+ 		c->ro_error = 1;
+ 		c->no_chk_data_crc = 0;
+-		c->vfs_sb->s_flags |= SB_RDONLY;
++		/*
++		 * Only a mount in progress may set SB_RDONLY, later that needs
++		 * s_umount. UBIFS refuses modifications itself afterwards.
++		 */
++		if (!(c->vfs_sb->s_flags & SB_BORN))
++			c->vfs_sb->s_flags |= SB_RDONLY;
+ 		ubifs_warn(c, "switched to read-only mode, error %d", err);
+ 		dump_stack();
+ 	}
+diff --git a/fs/ubifs/ioctl.c b/fs/ubifs/ioctl.c
+index 79536b2e3d7a..79cba6750b20 100644
+--- a/fs/ubifs/ioctl.c
++++ b/fs/ubifs/ioctl.c
+@@ -148,11 +148,15 @@ int ubifs_fileattr_set(struct mnt_idmap *idmap,
+ 		       struct dentry *dentry, struct file_kattr *fa)
+ {
+ 	struct inode *inode = d_inode(dentry);
++	struct ubifs_info *c = inode->i_sb->s_fs_info;
+ 	int flags = fa->flags;
+ 
+ 	if (d_is_special(dentry))
+ 		return -ENOTTY;
+ 
++	if (c->ro_error)
 +		return -EROFS;
 +
  	if (fileattr_has_fsx(fa))
  		return -EOPNOTSUPP;
  
-@@ -176,6 +188,9 @@ static int efivarfs_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
- 	struct inode *inode = d_inode(dentry);
- 	int error;
- 
-+	if (efivarfs_ops_rdonly(inode->i_sb))
-+		return -EROFS;
-+
- 	error = setattr_prepare(idmap, dentry, iattr);
- 	if (error)
- 		return error;
-diff --git a/fs/efivarfs/internal.h b/fs/efivarfs/internal.h
-index f913b6824289..c2ca7a073b5d 100644
---- a/fs/efivarfs/internal.h
-+++ b/fs/efivarfs/internal.h
-@@ -15,10 +15,22 @@ struct efivarfs_mount_opts {
- 
- struct efivarfs_fs_info {
- 	struct efivarfs_mount_opts mount_opts;
--	struct super_block *sb;
- 	struct notifier_block nb;
-+	unsigned long flags;
- };
- 
-+/* efivarfs_fs_info->flags */
-+enum {
-+	EFIVARFS_OPS_RDONLY,	/* the registered efivar ops can't set variables */
-+};
-+
-+static inline bool efivarfs_ops_rdonly(const struct super_block *sb)
-+{
-+	const struct efivarfs_fs_info *sfi = sb->s_fs_info;
-+
-+	return test_bit(EFIVARFS_OPS_RDONLY, &sfi->flags);
-+}
-+
- struct efi_variable {
- 	efi_char16_t  VariableName[EFI_VAR_NAME_LEN/sizeof(efi_char16_t)];
- 	efi_guid_t    VendorGuid;
-diff --git a/fs/efivarfs/super.c b/fs/efivarfs/super.c
-index 8d33f11db2a1..d1ee6abb639f 100644
---- a/fs/efivarfs/super.c
-+++ b/fs/efivarfs/super.c
-@@ -28,12 +28,18 @@ static int efivarfs_ops_notifier(struct notifier_block *nb, unsigned long event,
- {
- 	struct efivarfs_fs_info *sfi = container_of(nb, struct efivarfs_fs_info, nb);
- 
-+	/*
-+	 * This runs at any time without sb->s_umount, so don't touch
-+	 * SB_RDONLY. Changing it under freeze_super() and thaw_super() leaves
-+	 * the freeze protection unbalanced. The modifying operations check
-+	 * EFIVARFS_OPS_RDONLY instead.
-+	 */
- 	switch (event) {
- 	case EFIVAR_OPS_RDONLY:
--		sfi->sb->s_flags |= SB_RDONLY;
-+		set_bit(EFIVARFS_OPS_RDONLY, &sfi->flags);
- 		break;
- 	case EFIVAR_OPS_RDWR:
--		sfi->sb->s_flags &= ~SB_RDONLY;
-+		clear_bit(EFIVARFS_OPS_RDONLY, &sfi->flags);
- 		break;
- 	default:
- 		return NOTIFY_DONE;
-@@ -74,6 +80,8 @@ static int efivarfs_show_options(struct seq_file *m, struct dentry *root)
- 	if (!gid_eq(opts->gid, GLOBAL_ROOT_GID))
- 		seq_printf(m, ",gid=%u",
- 				from_kgid_munged(&init_user_ns, opts->gid));
-+	if (efivarfs_ops_rdonly(sb))
-+		seq_puts(m, ",ro_ops");
- 	return 0;
- }
- 
-@@ -373,9 +381,6 @@ static int efivarfs_fill_super(struct super_block *sb, struct fs_context *fc)
- 	sb->s_d_flags |= DCACHE_DONTCACHE;
- 	sb->s_time_gran         = 1;
- 
--	if (!efivar_supports_writes())
--		sb->s_flags |= SB_RDONLY;
--
- 	inode = efivarfs_get_inode(sb, NULL, S_IFDIR | 0755, 0, true);
- 	if (!inode)
- 		return -ENOMEM;
-@@ -386,9 +391,15 @@ static int efivarfs_fill_super(struct super_block *sb, struct fs_context *fc)
- 	if (!root)
- 		return -ENOMEM;
- 
--	sfi->sb = sb;
-+	/* The ops can't switch between sampling them and registering. */
-+	err = efivar_lock();
-+	if (err)
-+		return err;
-+	if (!efivar_supports_writes())
-+		set_bit(EFIVARFS_OPS_RDONLY, &sfi->flags);
- 	sfi->nb.notifier_call = efivarfs_ops_notifier;
- 	err = blocking_notifier_chain_register(&efivar_ops_nh, &sfi->nb);
-+	efivar_unlock();
- 	if (err)
- 		return err;
- 
-@@ -402,9 +413,13 @@ static int efivarfs_get_tree(struct fs_context *fc)
- 
- static int efivarfs_reconfigure(struct fs_context *fc)
- {
--	if (!efivar_supports_writes() && !(fc->sb_flags & SB_RDONLY)) {
-+	struct super_block *sb = fc->root->d_sb;
-+
-+	/* Only refuse remounting a read-only mount read-write. */
-+	if ((fc->sb_flags_mask & SB_RDONLY) && !(fc->sb_flags & SB_RDONLY) &&
-+	    sb_rdonly(sb) && efivarfs_ops_rdonly(sb)) {
- 		pr_err("Firmware does not support SetVariableRT. Can not remount with rw\n");
--		return -EINVAL;
-+		return -EROFS;
+diff --git a/fs/ubifs/super.c b/fs/ubifs/super.c
+index 38972786817e..aaaab72e3678 100644
+--- a/fs/ubifs/super.c
++++ b/fs/ubifs/super.c
+@@ -454,6 +454,9 @@ static int ubifs_show_options(struct seq_file *s, struct dentry *root)
+ 			   ubifs_compr_name(c, c->mount_opts.compr_type));
  	}
  
- 	return 0;
++	if (c->ro_error)
++		seq_puts(s, ",emergency_ro");
++
+ 	seq_printf(s, ",assert=%s", ubifs_assert_action_name(c));
+ 	seq_printf(s, ",ubi=%d,vol=%d", c->vi.ubi_num, c->vi.vol_id);
+ 
+@@ -1977,10 +1980,7 @@ static int ubifs_reconfigure(struct fs_context *fc)
+ 		if (err)
+ 			return err;
+ 	} else if (!c->ro_mount && (fc->sb_flags & SB_RDONLY)) {
+-		if (c->ro_error) {
+-			ubifs_msg(c, "cannot re-mount R/O due to prior errors");
+-			return -EROFS;
+-		}
++		/* After an error ubifs_remount_ro() can't write but still works. */
+ 		ubifs_remount_ro(c);
+ 	}
+ 
+diff --git a/fs/ubifs/ubifs.h b/fs/ubifs/ubifs.h
+index 00db0d19a85e..687352c16932 100644
+--- a/fs/ubifs/ubifs.h
++++ b/fs/ubifs/ubifs.h
+@@ -2020,6 +2020,7 @@ int ubifs_calc_dark(const struct ubifs_info *c, int spc);
+ 
+ /* file.c */
+ int ubifs_fsync(struct file *file, loff_t start, loff_t end, int datasync);
++int ubifs_permission(struct mnt_idmap *idmap, struct inode *inode, int mask);
+ int ubifs_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
+ 		  struct iattr *attr);
+ int ubifs_update_time(struct inode *inode, enum fs_update_time type,
+diff --git a/fs/ubifs/xattr.c b/fs/ubifs/xattr.c
+index b5a9ab9d8a10..8516aab4d005 100644
+--- a/fs/ubifs/xattr.c
++++ b/fs/ubifs/xattr.c
+@@ -260,6 +260,9 @@ int ubifs_xattr_set(struct inode *host, const char *name, const void *value,
+ 	if (check_lock)
+ 		ubifs_assert(c, inode_is_locked(host));
+ 
++	if (c->ro_error)
++		return -EROFS;
++
+ 	if (size > UBIFS_MAX_INO_DATA)
+ 		return -ERANGE;
+ 
+@@ -564,6 +567,9 @@ static int ubifs_xattr_remove(struct inode *host, const char *name)
+ 
+ 	ubifs_assert(c, inode_is_locked(host));
+ 
++	if (c->ro_error)
++		return -EROFS;
++
+ 	if (fname_len(&nm) > UBIFS_MAX_NLEN)
+ 		return -ENAMETOOLONG;
+ 
 
 -- 
 2.53.0
