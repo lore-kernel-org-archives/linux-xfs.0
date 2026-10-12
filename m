@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C36BF1B3925
-	for <linux-xfs@vger.kernel.org>; Mon, 12 Oct 2026 06:01:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1ACC027A47F
+	for <linux-xfs@vger.kernel.org>; Mon, 12 Oct 2026 06:01:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791784890; cv=none; b=FXuq+AUSDPYWZEE2a0LuKZk2/r2eue+i1LTp123sUT99m7k10Y6/dZYQqFv4s+jmUG4wCbQO+2nWhKiSDa70AKjnfxuaeQms+tyPsduD3CWXmuGByzDql3F0XrKtOESK1hqQu/MNjIfANtCqBFmiFYUZuopG3+NXLRFjQr2PIos=
+	t=1791784905; cv=none; b=sdb2zLX039rQP8rjdg0IMBlGKdiwlSnQrRCbTIuftN8X06Pvo+QeRku0q7nrPrYPVbKmdmyopKvRn/EnzLiW7MT0xyavPFA9kyJQ+j3+mwAYLF1Jr05l7vmexd0KhjBsfV+vDzsU95kQ2f86H6h11FZ7rgJQW1YveOaRSaW2Y6A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791784890; c=relaxed/simple;
-	bh=3Nvz4KKsRgv1RSomjM9TTMp+M9up22M0TTzpMOMzFKQ=;
+	s=arc-20240116; t=1791784905; c=relaxed/simple;
+	bh=I24MKcX/SJS6zTKTkFVJlW5l4HbYWG2eiDi2/IoqV78=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=tlqzIinztuQgMLZB4C8z937oeT5Guoao7BWRVU4+TInrUxyeW8gE7VoP7leTeVt9lnt93IwNuTHV/dk2joy2isT0jBIILkEDZulalFP5pgHirdiwwNu7MMseabCnen9DZjSx5VnY/Oww9Fmi0iUpied3VfTtFzCRPWzvHEKsJfs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mmLLl4JT; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=EA6wFBC8O2p2t2odzf7uH4cm+RcugItPv0X5+tmFRjZsUyo0Nbs4YY88Tbw0dibN0yBtHLIyaepg0jjpaQmqIdNComhrNMNq4CXfwTfT3NaWskE7Qp0ViVRQqOo4hVYkCK77oizCZHBrH8gsW56oFA03QGcaiaI/0MOiO7UWvtc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K1czao72; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mmLLl4JT"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 4DBAC1F0089B;
-	Mon, 12 Oct 2026 06:01:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K1czao72"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id E39101F0089B;
+	Mon, 12 Oct 2026 06:01:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791784888;
-	bh=7tfW2ffBSXQ+714ww6K3g3qbqJdax2qxNU+MqusJrjA=;
+	s=k20260515; t=1791784904;
+	bh=KNix9l4o93L5lhJXEcdTAiFW8+iBMDGtmjP7A61giMM=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=mmLLl4JT/VAANol8CC/MrOXyJELvUuNBLHjCTHT26JEsBgrTHDCf08D9wxng2+LXY
-	 upeXYAu73qJaRxK5SvEbuQJqJF183Q0V7bAH6v1stAuQyDCGDTpw89nF6uxGBtQBCp
-	 ji2RXPaEa06pBvRkXZiRCwUIzfV32Qr0BSZKPs5apVPioB75vwtidDg8Ka4DnKpNsC
-	 S4L/cY1HFV5MX6PqE1HaGqtgUgpl0o3wDyXRWQSsvN/SSALxWERkIIa22NgllWshiE
-	 zXlYL1g0Ld9tQaYR1m/XojhQlYtwjJWo9LJAgTQf9tnrODgFmipCmyC8i+4jQ8wC5b
-	 nMxUlCmwvgrMA==
-Date: Sun, 11 Oct 2026 23:01:27 -0700
-Subject: [PATCH 10/12] xfs: drop unnecessary sa parameter from xchk_ag init
- functions
+	b=K1czao72OT6CVc7hvvRg2CjW8XN/ZxQqvKO4y5lxAlRe8g9wPIS3YTWZakJDfniwU
+	 fhsZuY9PhkatlQotrLscUqCMNtrfCyK5f3jckVl9pqhYSsDr8/NvG2sQWlpy+dkq7z
+	 ZkmPKoxF4IoalxzQWS8S5zhfTZRpB7AGhbUN1rFABVKH2U0FybjK8+4OfSPS9E/cjg
+	 AxYo0zrxxq8Dbt9VOyxL8b3EYg56BOJUQwLnxmnXTstKsyWw5v+iQj1Qk1ROZgj1cZ
+	 BayzdX07DZQS93TH3ZRm1zwv/igv/UFSjdA0nrYh5TRGW86okhezdqcepFZmY4l1Ll
+	 C6pMEKbQ4NWxQ==
+Date: Sun, 11 Oct 2026 23:01:43 -0700
+Subject: [PATCH 11/12] xfs: drop unnecessary sr parameter from xchk_rtgroup
+ init functions
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <179178066014.1058822.8802191247645588099.stgit@frogsfrogsfrogs>
+Message-ID: <179178066038.1058822.6794706800607037709.stgit@frogsfrogsfrogs>
 In-Reply-To: <179178065713.1058822.6886680430162106741.stgit@frogsfrogsfrogs>
 References: <179178065713.1058822.6886680430162106741.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,483 +46,426 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Drop the sa parameter because it's always the same value.
+Drop the sr parameter from the scrub rtgroup functions because the value
+is always the same.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/scrub/common.h            |   17 +++++++----------
- fs/xfs/scrub/agheader.c          |   16 ++++++++--------
- fs/xfs/scrub/alloc_repair.c      |    2 +-
- fs/xfs/scrub/bmap.c              |    4 ++--
- fs/xfs/scrub/bmap_repair.c       |    2 +-
- fs/xfs/scrub/btree.c             |    4 ++--
- fs/xfs/scrub/common.c            |   28 +++++++++++++++-------------
- fs/xfs/scrub/cow_repair.c        |    2 +-
- fs/xfs/scrub/fscounters.c        |    4 ++--
- fs/xfs/scrub/ialloc_repair.c     |    2 +-
- fs/xfs/scrub/inode.c             |    4 ++--
- fs/xfs/scrub/refcount_repair.c   |    2 +-
+ fs/xfs/scrub/common.h            |   29 +++++++++++++----------------
+ fs/xfs/scrub/bmap.c              |    9 ++++-----
+ fs/xfs/scrub/bmap_repair.c       |    4 ++--
+ fs/xfs/scrub/common.c            |   22 ++++++++++++++--------
+ fs/xfs/scrub/cow_repair.c        |    4 ++--
+ fs/xfs/scrub/inode_repair.c      |    4 ++--
  fs/xfs/scrub/repair.c            |    2 +-
- fs/xfs/scrub/rmap_repair.c       |    4 ++--
+ fs/xfs/scrub/rgsuper.c           |    4 ++--
+ fs/xfs/scrub/rtbitmap.c          |    4 ++--
+ fs/xfs/scrub/rtbitmap_repair.c   |    2 +-
  fs/xfs/scrub/rtrefcount.c        |    4 ++--
  fs/xfs/scrub/rtrefcount_repair.c |    2 +-
- fs/xfs/scrub/rtrmap_repair.c     |    2 +-
- fs/xfs/scrub/scrub.c             |    2 +-
- 18 files changed, 51 insertions(+), 52 deletions(-)
+ fs/xfs/scrub/rtrmap.c            |    4 ++--
+ fs/xfs/scrub/rtrmap_repair.c     |    6 +++---
+ fs/xfs/scrub/rtsummary.c         |    4 ++--
+ fs/xfs/scrub/scrub.c             |    4 ++--
+ 16 files changed, 55 insertions(+), 53 deletions(-)
 
 
 diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index f0f073a9341337..8478f3a9bed33d 100644
+index 8478f3a9bed33d..181028f0c65526 100644
 --- a/fs/xfs/scrub/common.h
 +++ b/fs/xfs/scrub/common.h
-@@ -109,9 +109,8 @@ xchk_ino_dqattach(struct xfs_scrub *sc)
- int xchk_setup_fscounters(struct xfs_scrub *sc);
- int xchk_setup_nlinks(struct xfs_scrub *sc);
+@@ -135,32 +135,29 @@ xchk_ag_init_existing(
+ 				 XFS_RTGLOCK_RMAP | \
+ 				 XFS_RTGLOCK_REFCOUNT)
  
--void xchk_ag_free(struct xfs_scrub *sc, struct xchk_ag *sa);
--int xchk_ag_init(struct xfs_scrub *sc, xfs_agnumber_t agno,
--		struct xchk_ag *sa);
-+void xchk_ag_free(struct xfs_scrub *sc);
-+int xchk_ag_init(struct xfs_scrub *sc, xfs_agnumber_t agno);
- int xchk_perag_drain_and_lock(struct xfs_scrub *sc);
+-int xchk_rtgroup_init(struct xfs_scrub *sc, xfs_rgnumber_t rgno,
+-		struct xchk_rt *sr);
++int xchk_rtgroup_init(struct xfs_scrub *sc, xfs_rgnumber_t rgno);
  
- /*
-@@ -122,10 +121,9 @@ int xchk_perag_drain_and_lock(struct xfs_scrub *sc);
  static inline int
- xchk_ag_init_existing(
+ xchk_rtgroup_init_existing(
  	struct xfs_scrub	*sc,
--	xfs_agnumber_t		agno,
--	struct xchk_ag		*sa)
-+	xfs_agnumber_t		agno)
+-	xfs_rgnumber_t		rgno,
+-	struct xchk_rt		*sr)
++	xfs_rgnumber_t		rgno)
  {
--	int			error = xchk_ag_init(sc, agno, sa);
-+	int			error = xchk_ag_init(sc, agno);
+-	int			error = xchk_rtgroup_init(sc, rgno, sr);
++	int			error = xchk_rtgroup_init(sc, rgno);
  
  	return error == -ENOENT ? -EFSCORRUPTED : error;
  }
-@@ -165,10 +163,9 @@ void xchk_rtgroup_free(struct xfs_scrub *sc, struct xchk_rt *sr);
- # define xchk_rtgroup_free(sc, sr)			do { } while (0)
+ 
+-int xchk_rtgroup_lock(struct xfs_scrub *sc, struct xchk_rt *sr,
+-		unsigned int rtglock_flags);
+-void xchk_rtgroup_unlock(struct xchk_rt *sr);
+-void xchk_rtgroup_btcur_free(struct xchk_rt *sr);
+-void xchk_rtgroup_free(struct xfs_scrub *sc, struct xchk_rt *sr);
++int xchk_rtgroup_lock(struct xfs_scrub *sc, unsigned int rtglock_flags);
++void xchk_rtgroup_unlock(struct xfs_scrub *sc);
++void xchk_rtgroup_btcur_free(struct xfs_scrub *sc);
++void xchk_rtgroup_free(struct xfs_scrub *sc);
+ #else
+-# define xchk_rtgroup_init(sc, rgno, sr)		(-EFSCORRUPTED)
+-# define xchk_rtgroup_init_existing(sc, rgno, sr)	(-EFSCORRUPTED)
+-# define xchk_rtgroup_lock(sc, sr, lockflags)		(-EFSCORRUPTED)
+-# define xchk_rtgroup_unlock(sr)			do { } while (0)
+-# define xchk_rtgroup_btcur_free(sr)			do { } while (0)
+-# define xchk_rtgroup_free(sc, sr)			do { } while (0)
++# define xchk_rtgroup_init(sc, rgno)			(-EFSCORRUPTED)
++# define xchk_rtgroup_init_existing(sc, rgno)		(-EFSCORRUPTED)
++# define xchk_rtgroup_lock(sc, lockflags)		(-EFSCORRUPTED)
++# define xchk_rtgroup_unlock(sc)			do { } while (0)
++# define xchk_rtgroup_btcur_free(sc)			do { } while (0)
++# define xchk_rtgroup_free(sc)				do { } while (0)
  #endif /* CONFIG_XFS_RT */
  
--int xchk_ag_read_headers(struct xfs_scrub *sc, xfs_agnumber_t agno,
--		struct xchk_ag *sa);
--void xchk_ag_btcur_free(struct xchk_ag *sa);
--void xchk_ag_btcur_init(struct xfs_scrub *sc, struct xchk_ag *sa);
-+int xchk_ag_read_headers(struct xfs_scrub *sc, xfs_agnumber_t agno);
-+void xchk_ag_btcur_free(struct xfs_scrub *sc);
-+void xchk_ag_btcur_init(struct xfs_scrub *sc);
- int xchk_count_rmap_ownedby_ag(struct xfs_scrub *sc, struct xfs_btree_cur *cur,
- 		const struct xfs_owner_info *oinfo, xfs_filblks_t *blocks);
- 
-diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
-index a765d3e5e0686b..be59b0b495472f 100644
---- a/fs/xfs/scrub/agheader.c
-+++ b/fs/xfs/scrub/agheader.c
-@@ -47,7 +47,7 @@ xchk_superblock_xref(
- 
- 	agbno = XFS_SB_BLOCK(mp);
- 
--	error = xchk_ag_init_existing(sc, agno, &sc->sa);
-+	error = xchk_ag_init_existing(sc, agno);
- 	if (!xchk_xref_process_error(sc, agno, agbno, &error))
- 		return;
- 
-@@ -56,7 +56,7 @@ xchk_superblock_xref(
- 	xchk_xref_is_only_owned_by(sc, agbno, 1, &XFS_RMAP_OINFO_FS);
- 	xchk_xref_is_not_shared(sc, agbno, 1);
- 	xchk_xref_is_not_cow_staging(sc, agbno, 1);
--	xchk_ag_free(sc, &sc->sa);
-+	xchk_ag_free(sc);
- }
- 
- /*
-@@ -615,7 +615,7 @@ xchk_agf_xref(
- 
- 	agbno = XFS_AGF_BLOCK(mp);
- 
--	xchk_ag_btcur_init(sc, &sc->sa);
-+	xchk_ag_btcur_init(sc);
- 
- 	xchk_xref_is_used_space(sc, agbno, 1);
- 	xchk_agf_xref_freeblks(sc);
-@@ -648,7 +648,7 @@ xchk_agf(
- 	int			level;
- 	int			error = 0;
- 
--	error = xchk_ag_read_headers(sc, agno, &sc->sa);
-+	error = xchk_ag_read_headers(sc, agno);
- 	if (!xchk_process_error(sc, agno, XFS_AGF_BLOCK(sc->mp), &error))
- 		goto out;
- 	xchk_buffer_recheck(sc, sc->sa.agf_bp);
-@@ -803,7 +803,7 @@ xchk_agfl_xref(
- 
- 	agbno = XFS_AGFL_BLOCK(mp);
- 
--	xchk_ag_btcur_init(sc, &sc->sa);
-+	xchk_ag_btcur_init(sc);
- 
- 	xchk_xref_is_used_space(sc, agbno, 1);
- 	xchk_xref_is_not_inode_chunk(sc, agbno, 1);
-@@ -831,7 +831,7 @@ xchk_agfl(
- 	int			error;
- 
- 	/* Lock the AGF and AGI so that nobody can touch this AG. */
--	error = xchk_ag_read_headers(sc, agno, &sc->sa);
-+	error = xchk_ag_read_headers(sc, agno);
- 	if (!xchk_process_error(sc, agno, XFS_AGFL_BLOCK(sc->mp), &error))
- 		return error;
- 	if (!sc->sa.agf_bp)
-@@ -958,7 +958,7 @@ xchk_agi_xref(
- 
- 	agbno = XFS_AGI_BLOCK(mp);
- 
--	xchk_ag_btcur_init(sc, &sc->sa);
-+	xchk_ag_btcur_init(sc);
- 
- 	xchk_xref_is_used_space(sc, agbno, 1);
- 	xchk_xref_is_not_inode_chunk(sc, agbno, 1);
-@@ -1072,7 +1072,7 @@ xchk_agi(
- 	int			level;
- 	int			error = 0;
- 
--	error = xchk_ag_read_headers(sc, agno, &sc->sa);
-+	error = xchk_ag_read_headers(sc, agno);
- 	if (!xchk_process_error(sc, agno, XFS_AGI_BLOCK(sc->mp), &error))
- 		goto out;
- 	xchk_buffer_recheck(sc, sc->sa.agi_bp);
-diff --git a/fs/xfs/scrub/alloc_repair.c b/fs/xfs/scrub/alloc_repair.c
-index 854cfbbd9ecf4f..2f60e4b517596e 100644
---- a/fs/xfs/scrub/alloc_repair.c
-+++ b/fs/xfs/scrub/alloc_repair.c
-@@ -406,7 +406,7 @@ xrep_abt_find_freespace(
- err_agfl:
- 	xfs_trans_brelse(sc->tp, agfl_bp);
- err:
--	xchk_ag_btcur_free(&sc->sa);
-+	xchk_ag_btcur_free(sc);
- 	xagb_bitmap_destroy(&ra->not_allocbt_blocks);
- 	return error;
- }
+ int xchk_ag_read_headers(struct xfs_scrub *sc, xfs_agnumber_t agno);
 diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-index 428be9ecdcd4d4..8447f711ca2c51 100644
+index 8447f711ca2c51..3c543f77cf6de5 100644
 --- a/fs/xfs/scrub/bmap.c
 +++ b/fs/xfs/scrub/bmap.c
-@@ -396,7 +396,7 @@ xchk_bmap_iextent_xref(
- 	agbno = XFS_FSB_TO_AGBNO(mp, irec->br_startblock);
- 	len = irec->br_blockcount;
+@@ -329,13 +329,12 @@ xchk_bmap_rt_iextent_xref(
+ 	int			error;
  
--	error = xchk_ag_init_existing(info->sc, agno, &info->sc->sa);
-+	error = xchk_ag_init_existing(info->sc, agno);
+ 	error = xchk_rtgroup_init_existing(info->sc,
+-			xfs_rtb_to_rgno(ip->i_mount, irec->br_startblock),
+-			&info->sc->sr);
++			xfs_rtb_to_rgno(ip->i_mount, irec->br_startblock));
+ 	if (!xchk_fblock_process_error(info->sc, info->whichfork,
+ 			irec->br_startoff, &error))
+ 		return;
+ 
+-	error = xchk_rtgroup_lock(info->sc, &info->sc->sr, XCHK_RTGLOCK_ALL);
++	error = xchk_rtgroup_lock(info->sc, XCHK_RTGLOCK_ALL);
  	if (!xchk_fblock_process_error(info->sc, info->whichfork,
  			irec->br_startoff, &error))
  		goto out_free;
-@@ -440,7 +440,7 @@ xchk_bmap_iextent_xref(
+@@ -373,9 +372,9 @@ xchk_bmap_rt_iextent_xref(
+ 		break;
  	}
- 
+ out_cur:
+-	xchk_rtgroup_btcur_free(&info->sc->sr);
++	xchk_rtgroup_btcur_free(info->sc);
  out_free:
--	xchk_ag_free(info->sc, &info->sc->sa);
-+	xchk_ag_free(info->sc);
+-	xchk_rtgroup_free(info->sc, &info->sc->sr);
++	xchk_rtgroup_free(info->sc);
  }
  
- /*
+ /* Cross-reference a single datadev extent record. */
 diff --git a/fs/xfs/scrub/bmap_repair.c b/fs/xfs/scrub/bmap_repair.c
-index 5b422f5e13c21c..4d9ac54d5dfc11 100644
+index 4d9ac54d5dfc11..85e677d8a77674 100644
 --- a/fs/xfs/scrub/bmap_repair.c
 +++ b/fs/xfs/scrub/bmap_repair.c
-@@ -364,7 +364,7 @@ xrep_bmap_scan_ag(
+@@ -463,8 +463,8 @@ xrep_bmap_scan_rtgroup(
  		return error;
  
- 	error = xfs_rmap_query_all(sc->sa.rmap_cur, xrep_bmap_walk_rmap, rb);
--	xchk_ag_free(sc, &sc->sa);
-+	xchk_ag_free(sc);
+ 	error = xfs_rmap_query_all(sc->sr.rmap_cur, xrep_bmap_walk_rtrmap, rb);
+-	xchk_rtgroup_btcur_free(&sc->sr);
+-	xchk_rtgroup_free(sc, &sc->sr);
++	xchk_rtgroup_btcur_free(sc);
++	xchk_rtgroup_free(sc);
  	return error;
  }
- 
-diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
-index ce8c9c1aaa3102..42769514118eda 100644
---- a/fs/xfs/scrub/btree.c
-+++ b/fs/xfs/scrub/btree.c
-@@ -397,7 +397,7 @@ xchk_btree_check_block_owner(
- 	 */
- 	init_sa = bs->cur->bc_ops->type != XFS_BTREE_TYPE_AG;
- 	if (init_sa) {
--		error = xchk_ag_init_existing(bs->sc, agno, &bs->sc->sa);
-+		error = xchk_ag_init_existing(bs->sc, agno);
- 		if (!xchk_btree_xref_process_error(bs->sc, bs->cur,
- 				level, &error))
- 			goto out_free;
-@@ -418,7 +418,7 @@ xchk_btree_check_block_owner(
- 
- out_free:
- 	if (init_sa)
--		xchk_ag_free(bs->sc, &bs->sc->sa);
-+		xchk_ag_free(bs->sc);
- 
- 	return error;
- }
+ #else
 diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index a61895872072d1..82cda70e4169ae 100644
+index 82cda70e4169ae..cbfe5e6f779dfc 100644
 --- a/fs/xfs/scrub/common.c
 +++ b/fs/xfs/scrub/common.c
-@@ -578,10 +578,10 @@ xchk_perag_drain_and_lock(
+@@ -730,9 +730,10 @@ xchk_ag_init(
  int
- xchk_ag_read_headers(
+ xchk_rtgroup_init(
  	struct xfs_scrub	*sc,
--	xfs_agnumber_t		agno,
--	struct xchk_ag		*sa)
-+	xfs_agnumber_t		agno)
+-	xfs_rgnumber_t		rgno,
+-	struct xchk_rt		*sr)
++	xfs_rgnumber_t		rgno)
  {
- 	struct xfs_mount	*mp = sc->mp;
-+	struct xchk_ag		*sa = &sc->sa;
- 
- 	ASSERT(!sa->pag);
- 	sa->pag = xfs_perag_get(mp, agno);
-@@ -594,8 +594,10 @@ xchk_ag_read_headers(
- /* Release all the AG btree cursors. */
- void
- xchk_ag_btcur_free(
--	struct xchk_ag		*sa)
-+	struct xfs_scrub	*sc)
- {
-+	struct xchk_ag		*sa = &sc->sa;
++	struct xchk_rt		*sr = &sc->sr;
 +
- 	if (sa->refc_cur)
- 		xfs_btree_del_cursor(sa->refc_cur, XFS_BTREE_ERROR);
- 	if (sa->rmap_cur)
-@@ -620,10 +622,10 @@ xchk_ag_btcur_free(
- /* Initialize all the btree cursors for an AG. */
- void
- xchk_ag_btcur_init(
--	struct xfs_scrub	*sc,
--	struct xchk_ag		*sa)
-+	struct xfs_scrub	*sc)
- {
- 	struct xfs_mount	*mp = sc->mp;
-+	struct xchk_ag		*sa = &sc->sa;
+ 	ASSERT(sr->rtg == NULL);
+ 	ASSERT(sr->rtlock_flags == 0);
  
- 	if (sa->agf_bp) {
- 		/* Set up a bnobt cursor for cross-referencing. */
-@@ -675,10 +677,11 @@ xchk_ag_btcur_init(
- /* Release the AG header context and btree cursors. */
- void
- xchk_ag_free(
--	struct xfs_scrub	*sc,
--	struct xchk_ag		*sa)
-+	struct xfs_scrub	*sc)
- {
--	xchk_ag_btcur_free(sa);
-+	struct xchk_ag		*sa = &sc->sa;
-+
-+	xchk_ag_btcur_free(sc);
- 	xrep_reset_perag_resv(sc);
- 	if (sa->agf_bp) {
- 		xfs_trans_brelse(sc->tp, sa->agf_bp);
-@@ -704,16 +707,15 @@ xchk_ag_free(
+@@ -746,9 +747,9 @@ xchk_rtgroup_init(
  int
- xchk_ag_init(
+ xchk_rtgroup_lock(
  	struct xfs_scrub	*sc,
--	xfs_agnumber_t		agno,
--	struct xchk_ag		*sa)
-+	xfs_agnumber_t		agno)
+-	struct xchk_rt		*sr,
+ 	unsigned int		rtglock_flags)
  {
- 	int			error;
++	struct xchk_rt		*sr = &sc->sr;
+ 	int			error = 0;
  
--	error = xchk_ag_read_headers(sc, agno, sa);
-+	error = xchk_ag_read_headers(sc, agno);
- 	if (error)
- 		return error;
+ 	ASSERT(sr->rtg != NULL);
+@@ -831,8 +832,10 @@ xchk_rtgroup_lock(
+  */
+ void
+ xchk_rtgroup_btcur_free(
+-	struct xchk_rt		*sr)
++	struct xfs_scrub	*sc)
+ {
++	struct xchk_rt		*sr = &sc->sr;
++
+ 	if (sr->rmap_cur)
+ 		xfs_btree_del_cursor(sr->rmap_cur, XFS_BTREE_ERROR);
+ 	if (sr->refc_cur)
+@@ -848,8 +851,10 @@ xchk_rtgroup_btcur_free(
+  */
+ void
+ xchk_rtgroup_unlock(
+-	struct xchk_rt		*sr)
++	struct xfs_scrub	*sc)
+ {
++	struct xchk_rt		*sr = &sc->sr;
++
+ 	ASSERT(sr->rtg != NULL);
  
--	xchk_ag_btcur_init(sc, sa);
-+	xchk_ag_btcur_init(sc);
- 	return 0;
- }
+ 	if (sr->rtlock_flags) {
+@@ -864,12 +869,13 @@ xchk_rtgroup_unlock(
+  */
+ void
+ xchk_rtgroup_free(
+-	struct xfs_scrub	*sc,
+-	struct xchk_rt		*sr)
++	struct xfs_scrub	*sc)
+ {
++	struct xchk_rt		*sr = &sc->sr;
++
+ 	ASSERT(sr->rtg != NULL);
  
-@@ -958,7 +960,7 @@ xchk_setup_ag_btree(
- 	if (error)
- 		return error;
+-	xchk_rtgroup_unlock(sr);
++	xchk_rtgroup_unlock(sc);
  
--	return xchk_ag_init(sc, sc->sm->sm_agno, &sc->sa);
-+	return xchk_ag_init(sc, sc->sm->sm_agno);
- }
- 
- /* Push everything out of the log onto disk. */
+ 	xfs_rtgroup_put(sr->rtg);
+ 	sr->rtg = NULL;
 diff --git a/fs/xfs/scrub/cow_repair.c b/fs/xfs/scrub/cow_repair.c
-index f2e650c6f7afdf..5a209194ba97eb 100644
+index 5a209194ba97eb..2b1d1701cb539f 100644
 --- a/fs/xfs/scrub/cow_repair.c
 +++ b/fs/xfs/scrub/cow_repair.c
-@@ -340,7 +340,7 @@ xrep_cow_find_bad(
+@@ -433,8 +433,8 @@ xrep_cow_find_bad_rt(
  				xc->irec.br_blockcount);
  
- out_sa:
--	xchk_ag_free(sc, &sc->sa);
-+	xchk_ag_free(sc);
- out_pag:
- 	xfs_perag_put(pag);
+ out_sr:
+-	xchk_rtgroup_btcur_free(&sc->sr);
+-	xchk_rtgroup_free(sc, &sc->sr);
++	xchk_rtgroup_btcur_free(sc);
++	xchk_rtgroup_free(sc);
+ out_rtg:
+ 	xfs_rtgroup_put(rtg);
  	return error;
-diff --git a/fs/xfs/scrub/fscounters.c b/fs/xfs/scrub/fscounters.c
-index c055b73d268058..b9d0c3559d28f6 100644
---- a/fs/xfs/scrub/fscounters.c
-+++ b/fs/xfs/scrub/fscounters.c
-@@ -265,7 +265,7 @@ xchk_fscount_btreeblks(
- 	xfs_filblks_t		blocks;
- 	int			error;
+diff --git a/fs/xfs/scrub/inode_repair.c b/fs/xfs/scrub/inode_repair.c
+index 599f0f527e1a96..a42ce1d014dfb3 100644
+--- a/fs/xfs/scrub/inode_repair.c
++++ b/fs/xfs/scrub/inode_repair.c
+@@ -822,8 +822,8 @@ xrep_dinode_count_rtgroup_rmaps(
  
--	error = xchk_ag_init_existing(sc, agno, &sc->sa);
-+	error = xchk_ag_init_existing(sc, agno);
- 	if (error)
- 		goto out_free;
- 
-@@ -280,7 +280,7 @@ xchk_fscount_btreeblks(
- 	fsc->fdblocks += blocks - 1;
- 
- out_free:
--	xchk_ag_free(sc, &sc->sa);
-+	xchk_ag_free(sc);
- 	return error;
- }
- 
-diff --git a/fs/xfs/scrub/ialloc_repair.c b/fs/xfs/scrub/ialloc_repair.c
-index f0f2232a9686d8..146b3fec6d347c 100644
---- a/fs/xfs/scrub/ialloc_repair.c
-+++ b/fs/xfs/scrub/ialloc_repair.c
-@@ -475,7 +475,7 @@ xrep_ibt_find_inodes(
- 	/* Collect all reverse mappings for inode blocks. */
- 	xrep_ag_btcur_init(sc);
- 	error = xfs_rmap_query_all(sc->sa.rmap_cur, xrep_ibt_walk_rmap, ri);
--	xchk_ag_btcur_free(&sc->sa);
-+	xchk_ag_btcur_free(sc);
- 	if (error)
- 		return error;
- 
-diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
-index ac42867acbc4c9..6cded1eb6c2b6f 100644
---- a/fs/xfs/scrub/inode.c
-+++ b/fs/xfs/scrub/inode.c
-@@ -740,7 +740,7 @@ xchk_inode_xref(
- 	agno = XFS_INO_TO_AGNO(sc->mp, ino);
- 	agbno = XFS_INO_TO_AGBNO(sc->mp, ino);
- 
--	error = xchk_ag_init_existing(sc, agno, &sc->sa);
-+	error = xchk_ag_init_existing(sc, agno);
- 	if (!xchk_xref_process_error(sc, agno, agbno, &error))
- 		goto out_free;
- 
-@@ -752,7 +752,7 @@ xchk_inode_xref(
- 	xchk_inode_xref_bmap(sc, dip);
- 
- out_free:
--	xchk_ag_free(sc, &sc->sa);
-+	xchk_ag_free(sc);
- }
- 
- /*
-diff --git a/fs/xfs/scrub/refcount_repair.c b/fs/xfs/scrub/refcount_repair.c
-index aa29d7a27abaa8..36b5e2a92cfdae 100644
---- a/fs/xfs/scrub/refcount_repair.c
-+++ b/fs/xfs/scrub/refcount_repair.c
-@@ -503,7 +503,7 @@ xrep_refc_find_refcounts(
- out_bag:
- 	rcbag_free(&rcstack);
- out_cur:
--	xchk_ag_btcur_free(&sc->sa);
-+	xchk_ag_btcur_free(sc);
+ 	error = xfs_rmap_query_all(sc->sr.rmap_cur, xrep_dinode_walk_rtrmap,
+ 			ri);
+-	xchk_rtgroup_btcur_free(&sc->sr);
+-	xchk_rtgroup_free(sc, &sc->sr);
++	xchk_rtgroup_btcur_free(sc);
++	xchk_rtgroup_free(sc);
  	return error;
  }
  
 diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-index 88494e79340ef8..32bd8259cedb65 100644
+index 32bd8259cedb65..5827717f0d460f 100644
 --- a/fs/xfs/scrub/repair.c
 +++ b/fs/xfs/scrub/repair.c
-@@ -68,7 +68,7 @@ xrep_attempt(
- 
+@@ -69,7 +69,7 @@ xrep_attempt(
  	trace_xrep_attempt(XFS_I(file_inode(sc->file)), sc->sm, error);
  
--	xchk_ag_btcur_free(&sc->sa);
-+	xchk_ag_btcur_free(sc);
- 	xchk_rtgroup_btcur_free(&sc->sr);
+ 	xchk_ag_btcur_free(sc);
+-	xchk_rtgroup_btcur_free(&sc->sr);
++	xchk_rtgroup_btcur_free(sc);
  
  	/* Repair whatever's broken. */
-diff --git a/fs/xfs/scrub/rmap_repair.c b/fs/xfs/scrub/rmap_repair.c
-index aac9e534df798f..f88d7b62098b2b 100644
---- a/fs/xfs/scrub/rmap_repair.c
-+++ b/fs/xfs/scrub/rmap_repair.c
-@@ -926,7 +926,7 @@ xrep_rmap_find_rmaps(
+ 	ASSERT(sc->ops->repair);
+diff --git a/fs/xfs/scrub/rgsuper.c b/fs/xfs/scrub/rgsuper.c
+index 102bd92e9003db..591c5767208e6e 100644
+--- a/fs/xfs/scrub/rgsuper.c
++++ b/fs/xfs/scrub/rgsuper.c
+@@ -65,7 +65,7 @@ xchk_rgsuperblock(
+ 	 * signal that the group no longer exists.  Take the rtbitmap in shared
+ 	 * mode so that the group can't change while we're doing things.
+ 	 */
+-	error = xchk_rtgroup_init_existing(sc, rgno, &sc->sr);
++	error = xchk_rtgroup_init_existing(sc, rgno);
+ 	if (!xchk_xref_process_error(sc, 0, 0, &error))
+ 		return error;
  
- 	error = xrep_rmap_find_log_rmaps(rr);
- end_agscan:
--	xchk_ag_btcur_free(&sc->sa);
-+	xchk_ag_btcur_free(sc);
+@@ -74,7 +74,7 @@ xchk_rgsuperblock(
+ 	else
+ 		flags = XFS_RTGLOCK_BITMAP_SHARED;
+ 
+-	error = xchk_rtgroup_lock(sc, &sc->sr, flags);
++	error = xchk_rtgroup_lock(sc, flags);
  	if (error)
  		return error;
  
-@@ -1169,7 +1169,7 @@ xrep_rmap_reserve_space(
- 	/* Emit rmaps for everything in the free space bitmap. */
- 	xrep_ag_btcur_init(rr->sc);
- 	error = xrep_rmap_stash_bitmap(rr, &freesp_blocks, &XFS_RMAP_OINFO_AG);
--	xchk_ag_btcur_free(&rr->sc->sa);
-+	xchk_ag_btcur_free(rr->sc);
+diff --git a/fs/xfs/scrub/rtbitmap.c b/fs/xfs/scrub/rtbitmap.c
+index 52c24d3d4be6ce..88a53c6ed6c531 100644
+--- a/fs/xfs/scrub/rtbitmap.c
++++ b/fs/xfs/scrub/rtbitmap.c
+@@ -48,7 +48,7 @@ xchk_setup_rtbitmap(
+ 	sc->buf = rtb;
+ 	rtb->sc = sc;
  
- out_bitmap:
- 	xagb_bitmap_destroy(&freesp_blocks);
+-	error = xchk_rtgroup_init(sc, sc->sm->sm_agno, &sc->sr);
++	error = xchk_rtgroup_init(sc, sc->sm->sm_agno);
+ 	if (error)
+ 		return error;
+ 
+@@ -70,7 +70,7 @@ xchk_setup_rtbitmap(
+ 	if (error)
+ 		return error;
+ 
+-	error = xchk_rtgroup_lock(sc, &sc->sr, XCHK_RTGLOCK_ALL);
++	error = xchk_rtgroup_lock(sc, XCHK_RTGLOCK_ALL);
+ 	if (error)
+ 		return error;
+ 
+diff --git a/fs/xfs/scrub/rtbitmap_repair.c b/fs/xfs/scrub/rtbitmap_repair.c
+index 3f918da62d4ced..f8a86596d4bab8 100644
+--- a/fs/xfs/scrub/rtbitmap_repair.c
++++ b/fs/xfs/scrub/rtbitmap_repair.c
+@@ -357,7 +357,7 @@ xrep_rtbitmap_find_freespace(
+ 	}
+ 
+ out:
+-	xchk_rtgroup_btcur_free(&sc->sr);
++	xchk_rtgroup_btcur_free(sc);
+ 	return error;
+ }
+ 
 diff --git a/fs/xfs/scrub/rtrefcount.c b/fs/xfs/scrub/rtrefcount.c
-index c312096e410561..824783e4f0e193 100644
+index 824783e4f0e193..b8f5a5f9fd01d2 100644
 --- a/fs/xfs/scrub/rtrefcount.c
 +++ b/fs/xfs/scrub/rtrefcount.c
-@@ -531,7 +531,7 @@ xchk_rtrefcount_count_agblocks(
- 	xfs_filblks_t		agblocks = 0;
- 	int			error;
+@@ -42,7 +42,7 @@ xchk_setup_rtrefcountbt(
+ 			return error;
+ 	}
  
--	error = xchk_ag_init_existing(sc, agno, &sc->sa);
-+	error = xchk_ag_init_existing(sc, agno);
+-	error = xchk_rtgroup_init(sc, sc->sm->sm_agno, &sc->sr);
++	error = xchk_rtgroup_init(sc, sc->sm->sm_agno);
  	if (error)
- 		goto out_free;
+ 		return error;
  
-@@ -552,7 +552,7 @@ xchk_rtrefcount_count_agblocks(
+@@ -54,7 +54,7 @@ xchk_setup_rtrefcountbt(
+ 	if (error)
+ 		return error;
  
- 	*blocks += agblocks;
- out_free:
--	xchk_ag_free(sc, &sc->sa);
-+	xchk_ag_free(sc);
- 	return error;
+-	return xchk_rtgroup_lock(sc, &sc->sr, XCHK_RTGLOCK_ALL);
++	return xchk_rtgroup_lock(sc, XCHK_RTGLOCK_ALL);
  }
  
+ /* Realtime Reference count btree scrubber. */
 diff --git a/fs/xfs/scrub/rtrefcount_repair.c b/fs/xfs/scrub/rtrefcount_repair.c
-index e7f6d71695fd68..2e773febffd78e 100644
+index 2e773febffd78e..817c2b8f49ab6c 100644
 --- a/fs/xfs/scrub/rtrefcount_repair.c
 +++ b/fs/xfs/scrub/rtrefcount_repair.c
-@@ -425,7 +425,7 @@ xrep_rtrefc_scan_ag(
- 		return error;
- 
- 	error = xfs_rmap_query_all(sc->sa.rmap_cur, xrep_rtrefc_walk_rmap, rr);
--	xchk_ag_free(sc, &sc->sa);
-+	xchk_ag_free(sc);
+@@ -545,7 +545,7 @@ xrep_rtrefc_find_refcounts(
+ out_bag:
+ 	rcbag_free(&rcstack);
+ out_cur:
+-	xchk_rtgroup_btcur_free(&sc->sr);
++	xchk_rtgroup_btcur_free(sc);
  	return error;
  }
  
+diff --git a/fs/xfs/scrub/rtrmap.c b/fs/xfs/scrub/rtrmap.c
+index 564d19a97a2f8f..85cc0513d688c9 100644
+--- a/fs/xfs/scrub/rtrmap.c
++++ b/fs/xfs/scrub/rtrmap.c
+@@ -46,7 +46,7 @@ xchk_setup_rtrmapbt(
+ 			return error;
+ 	}
+ 
+-	error = xchk_rtgroup_init(sc, sc->sm->sm_agno, &sc->sr);
++	error = xchk_rtgroup_init(sc, sc->sm->sm_agno);
+ 	if (error)
+ 		return error;
+ 
+@@ -58,7 +58,7 @@ xchk_setup_rtrmapbt(
+ 	if (error)
+ 		return error;
+ 
+-	return xchk_rtgroup_lock(sc, &sc->sr, XCHK_RTGLOCK_ALL);
++	return xchk_rtgroup_lock(sc, XCHK_RTGLOCK_ALL);
+ }
+ 
+ /* Realtime reverse mapping. */
 diff --git a/fs/xfs/scrub/rtrmap_repair.c b/fs/xfs/scrub/rtrmap_repair.c
-index 755675460cb8a4..726ef89ab2f10b 100644
+index 726ef89ab2f10b..6a10463de20021 100644
 --- a/fs/xfs/scrub/rtrmap_repair.c
 +++ b/fs/xfs/scrub/rtrmap_repair.c
-@@ -418,7 +418,7 @@ xrep_rtrmap_scan_ag(
+@@ -556,7 +556,7 @@ xrep_rtrmap_find_rmaps(
+ 	/* Find CoW staging extents. */
+ 	xrep_rtgroup_btcur_init(sc);
+ 	error = xrep_rtrmap_find_refcount_rmaps(rr);
+-	xchk_rtgroup_btcur_free(&sc->sr);
++	xchk_rtgroup_btcur_free(sc);
+ 	if (error)
  		return error;
  
- 	error = xfs_rmap_query_all(sc->sa.rmap_cur, xrep_rtrmap_walk_rmap, rr);
--	xchk_ag_free(sc, &sc->sa);
-+	xchk_ag_free(sc);
- 	return error;
- }
+@@ -576,7 +576,7 @@ xrep_rtrmap_find_rmaps(
+ 	 * do not take sb_internal.
+ 	 */
+ 	xchk_trans_cancel(sc);
+-	xchk_rtgroup_unlock(&sc->sr);
++	xchk_rtgroup_unlock(sc);
+ 	xchk_trans_alloc_empty(sc);
+ 
+ 	while ((error = xchk_iscan_iter(&rr->iscan, &ip)) == 1) {
+@@ -600,7 +600,7 @@ xrep_rtrmap_find_rmaps(
+ 	error = xchk_setup_rt(sc);
+ 	if (error)
+ 		return error;
+-	error = xchk_rtgroup_lock(sc, &sc->sr, XCHK_RTGLOCK_ALL);
++	error = xchk_rtgroup_lock(sc, XCHK_RTGLOCK_ALL);
+ 	if (error)
+ 		return error;
+ 
+diff --git a/fs/xfs/scrub/rtsummary.c b/fs/xfs/scrub/rtsummary.c
+index fa358746beaf5c..b72c27ef45acbb 100644
+--- a/fs/xfs/scrub/rtsummary.c
++++ b/fs/xfs/scrub/rtsummary.c
+@@ -54,7 +54,7 @@ xchk_setup_rtsummary(
+ 		return -ENOMEM;
+ 	sc->buf = rts;
+ 
+-	error = xchk_rtgroup_init(sc, sc->sm->sm_agno, &sc->sr);
++	error = xchk_rtgroup_init(sc, sc->sm->sm_agno);
+ 	if (error)
+ 		return error;
+ 
+@@ -85,7 +85,7 @@ xchk_setup_rtsummary(
+ 	if (error)
+ 		return error;
+ 
+-	error = xchk_rtgroup_lock(sc, &sc->sr, XFS_RTGLOCK_BITMAP);
++	error = xchk_rtgroup_lock(sc, XFS_RTGLOCK_BITMAP);
+ 	if (error)
+ 		return error;
  
 diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 12c228b7f4770d..9dbd16546e8c8b 100644
+index 9dbd16546e8c8b..4a2d9bdc087b5f 100644
 --- a/fs/xfs/scrub/scrub.c
 +++ b/fs/xfs/scrub/scrub.c
-@@ -229,7 +229,7 @@ xchk_teardown(
- 	struct xfs_scrub	*sc,
+@@ -230,7 +230,7 @@ xchk_teardown(
  	int			error)
  {
--	xchk_ag_free(sc, &sc->sa);
-+	xchk_ag_free(sc);
- 	xchk_rtgroup_btcur_free(&sc->sr);
+ 	xchk_ag_free(sc);
+-	xchk_rtgroup_btcur_free(&sc->sr);
++	xchk_rtgroup_btcur_free(sc);
  
  	if (sc->tp) {
+ 		if (error == 0 && (sc->sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR))
+@@ -240,7 +240,7 @@ xchk_teardown(
+ 		sc->tp = NULL;
+ 	}
+ 	if (sc->sr.rtg)
+-		xchk_rtgroup_free(sc, &sc->sr);
++		xchk_rtgroup_free(sc);
+ 	if (sc->ip) {
+ 		if (sc->ilock_flags)
+ 			xchk_iunlock(sc, sc->ilock_flags);
 
