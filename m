@@ -1,35 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2465C424664;
-	Mon, 12 Oct 2026 10:22:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B5F1418368;
+	Mon, 12 Oct 2026 10:22:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791800535; cv=none; b=BC78QAEdXq7pSUu3CAFJBVMwAkuc6zgMwDvw4AQdah0xu9CqeXpoo8Sry9thzL8t9zq0t2R0d5VWGLmJssJzyIw/3spDlOvjPIFVkksCunCc6hEOWzYHqgMVarxf4wHXvkHMF4z9UmPplHRpvoLGpGUiN8SXPQ5o6va3U0tzaoE=
+	t=1791800539; cv=none; b=TrO9n32WTCXCyg7iofnZHnYTF02NBU2IK3SLE7CMJ27lWHfVb8/JnEsFa3C8gJsCdybCLYnMZgFczjPYNO9ZGo2ATpXorxu8FB2vAuN+dwr0APQXOSuZy0+qVWFLr/96EOnWtsUCZZNX8E+1XboorFuqsOGtYSiz8IB5NDhZhTg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791800535; c=relaxed/simple;
-	bh=6anLCPpwN73VxuPpEMeUkbDbEGbtdtAByt0MCWOz6uo=;
+	s=arc-20240116; t=1791800539; c=relaxed/simple;
+	bh=7F30BdnFg2n+QREpjRLrVSAQwS+P/nkRsprz6DuTciQ=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=OaKHO0PL4DrHN6P8ZJnvT56/eP/uvn3nyJDJnKaxDsFonsmS5sEZj/FgPJ/YW+956B9vxKe0tnNYNq87rgeSfhZFjHTz0OS1SyMCAzRGlvu9iDF3NIm17TLZ2IiSsR0R/c7fk5pHccbeBCwJkUxuDEtv3GUmneHw44ozFKmiroQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SBygnPpW; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:To:Cc; b=SmoJ9izu4zeedhm3QWQa/KYsaEG40Fxsrw7NTmmu3GABRg3yoyPWnRI4sNuteO3QeF9ndkQnB7XgOWYnj/Ir9/sQn6PDkFwGgGl98pbfI5uo4vD//xujxNDmxY8WrdBKEVvYrdFElzho0SMwEgf57ecUNKSz5j2eljPp9qzrjFc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MlmhlCfg; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SBygnPpW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 36AC71F0089D;
-	Mon, 12 Oct 2026 10:21:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MlmhlCfg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6C67E1F008A3;
+	Mon, 12 Oct 2026 10:22:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791800519;
-	bh=IJigOaOilzYVKcuivesHJ4xgfHrsueOec/ivWLVEycM=;
+	s=k20260515; t=1791800523;
+	bh=O2aGyAbmrrElaF7oKe9fP8zJgSX7Wv1MDggwAQBW2SA=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=SBygnPpWTnxHw3t7Qqkehnfr7os8oPi2tibjRBO6pqLqsH5XM7mYcr0HIjk8VH13i
-	 4xDtP/zuPo4Wa5HaAed77efDVgGbNF4gwOxLll7F/LkbdsQ66KEv8dqonvHsoHdoP9
-	 ooVRvWrzfSAj5jjYXEMxmnr9uRzxOglDWOHXRwONFFO1J8V8JP3oF5HxTRBjni9hOM
-	 WVPhhOxIBBovRO4r9Snly9V1fknrRHGApHgOypBuWm4w4CCAtbD2/uzWWIfHZ7/7h+
-	 Yq2MsUUSNE00KOfgcqMdlr4Bi7hEEx6LBYxyYnP74bsshAjznFUXDANcABiZjAefEQ
-	 QV77o9W1mlyxg==
+	b=MlmhlCfg50PPkHeBCVsiqT2i9OXwhvhWY5Xn8COSJLkjgvWyLuYQo2nX+BL862R2H
+	 02mk51lgOxL1hsl25TldiNktSy7AyH8Puxqrp68f7x0HnFbYB0D1/4DoXyqn6BiI4E
+	 nC0YKdGbzqETB9nhynmV5JPFVZxxisiYCXgBA+UoiqO1UGDwppk/w+LJy9ztpbQVF6
+	 9gogdu5cYH/XPwnHdn/UsRR4gUCgLV83NwZAjhjT8BbqTUvNgizHGssDJJ3BT5Wqqn
+	 k115sLemF2pXk1x8JwHk8OHBus+j+aQV/n9ucuM9q+SpCyoS8TrcxvhqWX2d31bEgW
+	 oawbJlWhBMV+A==
 From: Christian Brauner <brauner@kernel.org>
-Date: Mon, 12 Oct 2026 12:20:56 +0200
-Subject: [PATCH RFC 11/28] affs: don't set SB_RDONLY after filesystem
- errors
+Date: Mon, 12 Oct 2026 12:20:57 +0200
+Subject: [PATCH RFC 12/28] ufs: don't set SB_RDONLY after filesystem errors
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -38,7 +37,7 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261012-work-fs-sb_rdonly-v1-11-60743a3dc326@kernel.org>
+Message-Id: <20261012-work-fs-sb_rdonly-v1-12-60743a3dc326@kernel.org>
 References: <20261012-work-fs-sb_rdonly-v1-0-60743a3dc326@kernel.org>
 In-Reply-To: <20261012-work-fs-sb_rdonly-v1-0-60743a3dc326@kernel.org>
 To: Jan Kara <jack@suse.com>
@@ -51,361 +50,553 @@ Cc: Al Viro <viro@zeniv.linux.org.uk>, ecryptfs@vger.kernel.org,
  linux-mtd@lists.infradead.org, linux-xfs@vger.kernel.org, 
  "Christian Brauner (Amutable)" <brauner@kernel.org>
 X-Mailer: b4 0.17-dev-3d1b8
-X-Developer-Signature: v=1; a=openpgp-sha256; l=12830; i=brauner@kernel.org;
- h=from:subject:message-id; bh=6anLCPpwN73VxuPpEMeUkbDbEGbtdtAByt0MCWOz6uo=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWSd2TKZV29biHBz2MQ50ntkU3j0m/3ZjR8oTmC7sHtRG
- F+0yMTsjlIWBjEuBlkxRRaHdpNwueU8FZuNMjVg5rAygQxh4OIUgInsVWP47ztBWSz75G318pgf
- PTt5u3Wk0pYL7HRad8jZ9eKWzA6Heoa/8i4vgjJC3UzZNmSrp8tHx/M+EGS8e0b5/13xd7xmLwv
- 4AA==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=19763; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=7F30BdnFg2n+QREpjRLrVSAQwS+P/nkRsprz6DuTciQ=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWSd2TK55/y7RXvFDbeppkl533n4O1Rd/dqarmMzdwt3d
+ T923nL0dEcpC4MYF4OsmCKLQ7tJuNxynorNRpkaMHNYmUCGMHBxCsBEauIY/srsbe5zm6/37Frk
+ dzOmz/P3XVS4Ev1vcmRv3Aru+Qq7y48y/OF8r3GQhWdTuPvl5erHmep9f/B4XkrPcJj2aX2+1fF
+ +M0YA
 X-Developer-Key: i=brauner@kernel.org; a=openpgp;
  fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-affs_error() sets SB_RDONLY without holding sb->s_umount and it can be
-called at any time, including while the filesystem is frozen.
+ufs_error() sets SB_RDONLY on every error, whatever onerror= says, and
+ufs_panic() sets it as well. Both do that without holding
+sb->s_umount.
 
 freeze_super() and thaw_super() both look at sb_rdonly() to figure out
-whether the s_writers rwsems need to be taken or released. So if
-affs_error() flips SB_RDONLY while the filesystem is frozen
-thaw_super() skips sb_freeze_unlock() and the rwsems stay write-locked.
-Every writer after that hangs in sb_start_write() and umount warns in
-rcu_sync_dtor().
+whether the s_writers rwsems need to be taken or released. So an error
+while the filesystem is frozen makes thaw_super() skip ->unfreeze_fs()
+and sb_freeze_unlock() and leaves all three rwsems write-locked on a
+superblock that is marked unfrozen. Writers hang in sb_start_write()
+forever and umount warns in rcu_sync_dtor().
 
-affs has no ->freeze_fs() but bdev_freeze() still freezes it, e.g. when
-device mapper suspends the device with lockfs. That holds new I/O but
-affs_bread() refuses blocks outside the partition without doing any
-I/O. So a cached directory with a bogus block in its hash table is
-enough:
+ufs has no ->freeze_fs() and can only be frozen through bdev_freeze(),
+e.g. by a device mapper suspend with lockfs which holds new I/O as well.
+But a directory folio that was read without being checked, by readahead
+or fadvise, is checked by ufs_check_folio() on the next readdir or
+lookup and that works fine while the device is suspended:
 
-  affs: error (device dm-0): readdir(): Cannot read block 1048576
-  affs: Remounting filesystem read-only
-
-After the resume umount warns:
-
-  WARNING: kernel/rcu/sync.c:177 at rcu_sync_dtor+0x143/0x190, CPU#1: kworker/1:0/25
-    percpu_free_rwsem+0x38/0xa0
-    destroy_super_work+0x133/0x2f0
+  ufs: error (device dm-0): ufs_check_folio: bad entry in directory #3: inode out of bounds - offset=24, rec_len=488, name_len=6
+  ufs: error (device dm-0): ufs_readdir: bad page in #3
+  WARNING: kernel/rcu/sync.c:177 at rcu_sync_dtor+0x143/0x190, CPU#3: kworker/3:1/54
   WARNING: kernel/rcu/sync.c:180 at rcu_sync_dtor+0x14c/0x190
   WARNING: kernel/rcu/sync.c:188 at rcu_sync_dtor+0x13d/0x190
 
-and a create instead of the umount blocks forever:
+and with a create instead of the umount:
 
   [<0>] percpu_rwsem_wait+0x203/0x500
   [<0>] mnt_want_write+0x28f/0x2f0
-  [<0>] lookup_open+0x135/0x1b20
-  INFO: task s5_dm:119 blocked for more than 30 seconds.
+  INFO: task touch:122 blocked for more than 30 seconds.
 
-So do what ext4 did in commit d3476f3dad4a ("ext4: don't set SB_RDONLY
-after filesystem errors"). Record the error in a new
-AFFS_STATE_EMERGENCY_RO bit and let affs refuse modifications with
--EROFS itself. The bit lives in a new s_state word because sbi->s_flags
-holds the mount options and affs_reconfigure() rewrites it on every
-remount. affs_commit_super(), which ->sync_fs() and the superblock work
-call, just returns early now so the root block isn't updated anymore
-either.
+The flip also leaked memory. ufs_put_super() skips
+ufs_put_super_internal() for a read-only superblock so after an error
+the in-core cylinder group info was never freed and its buffer heads
+were never released. And a remount to read-write after the flip read it
+in again over the old copy.
 
-Note that writeback clears the dirty state of an inode before it calls
-->write_inode() and doesn't redirty it when that fails. So fsync() would
-happily report success for an inode that never made it to disk. Let
-fsync() fail with -EROFS instead. Like on ext4 an operation that
-completed shortly before the error can end up half-applied on disk and
-needs fsck.
+Follow what ext4 did in commit d3476f3dad4a ("ext4: don't set SB_RDONLY
+after filesystem errors") and record the error in a new
+UFS_STATE_EMERGENCY_RO bit instead. ufs_error() and ufs_panic() still
+mark the superblock UFS_FSBAD and dirty its buffer which goes out with
+the block device. Their ufs_mark_sb_dirty() calls are gone because all
+they did was queue ufs_sync_fs() which returns early now.
 
-Going back to read-write fails with -EROFS until umount. So far
-"mount -o remount,rw" made the filesystem writable again after an
-error. Going read-only is still allowed. Otherwise emergency remount
-(sysrq u) would WARN for every affs that hit an error. The bitmap stays
-around in that case because evict and the last close still hand
-preallocated blocks back. affs_kill_sb() frees it once all inodes are
-gone.
+ufs then refuses modifications with -EROFS itself, in the namespace
+operations, setattr and a new ufs_file_write_iter(). Directories get
+ufs_setattr() so attribute changes on them are refused too. For
+directories it does what simple_setattr() did for them before. Symlinks
+and device, fifo and socket inodes still use simple_setattr(). Changing
+their attributes succeeds in memory but nothing writes it out anymore.
+The superblock is left alone and ufs_put_cylinder() doesn't store the
+allocation rotors.
+
+ufs_write_inode() refuses as well. Note that writeback clears the dirty
+state of an inode before it calls ->write_inode() and doesn't redirty it
+when that fails. So fsync() would happily report success for an inode
+that never made it to disk. Let fsync() fail with -EROFS instead. Like
+on ext4 an operation that completed shortly before the error can end up
+half-applied on disk and needs fsck.
+
+Every directory change ends in ufs_handle_dirsync() which writes the
+directory inode. If another task hits an error after an operation got
+past its check that write fails with -EROFS although the directory entry
+was already changed. So treat -EROFS as success there once the bit is
+set, like ext2 does.
+
+A remount to read-write fails with -EROFS until umount while so far
+"mount -o remount,rw" made the filesystem writable again after an error.
+A remount to read-only is allowed and leaves the superblock alone.
+Otherwise emergency remount (sysrq u) would WARN. onerror= can still be
+changed.
+
+The remount to read-only keeps the cylinder group info in that state
+though. Evicting an inode that was unlinked while it was still open goes
+through ufs_free_inode() and ufs_free_blocks() which load cylinder
+groups. And a forced remount to read-only, i.e. sysrq u, goes through
+while such inodes exist and now reaches errored filesystems as well. So
+freeing the info there would be a use-after-free. Note that a healthy
+ufs already has that problem with sysrq u. Instead umount frees the info
+without writing the summary and the cylinder group totals back.
 
 Like ext4 we show "emergency_ro" in the mount options. The mount stays
-"rw". Opening a file for writing still fails with -EROFS. It's just
-affs that refuses it now instead of sb_permission(). And a new
-affs_file_write_iter() takes care of file descriptors that were opened
-before the error. Writes through those used to succeed.
+"rw" so statfs() doesn't report ST_RDONLY anymore and access(W_OK)
+succeeds. Writes through file descriptors that were opened before the
+error now fail with -EROFS where they used to succeed. A second
+read-only mount of the device fails with -EBUSY and a non-forced remount
+to read-only fails with -EBUSY while files are still open for writing.
 
-Reproducer. There's no mkfs for affs in Linux userspace. affs.img is a
-1 MiB FFS image with a directory "d" whose hash table has a slot
-pointing at block 0x100000, outside the partition, with valid checksums:
+Reproducer:
 
-  dev=$(losetup -f --show affs.img)
-  dmsetup create affs --table "0 $(blockdev --getsz $dev) linear $dev 0"
-  mount -t affs /dev/mapper/affs /mnt
-  stat /mnt/d             # caches the header block of "d"
-  dmsetup suspend affs    # lock_fs() -> bdev_freeze() -> freeze_super()
-  ls /mnt/d               # affs_error() -> SB_RDONLY while frozen
-  dmsetup resume affs     # thaw sees SB_RDONLY, s_writers stay locked
-  touch /mnt/x            # hangs in sb_start_write() forever
+  # UFS1 image (NetBSD makefs), "victim"'s directory entry gets an
+  # out-of-range inode number (d_ino is 8 bytes before the name)
+  mkdir -p t/d && echo x > t/d/victim && makefs -t ffs -s 8m ufs.img t
+  off=$(grep -obUa victim ufs.img | cut -d: -f1)
+  printf '\377\377\377\177' | dd of=ufs.img bs=1 seek=$((off - 8)) conv=notrunc
+  dev=$(losetup -f --show ufs.img)
+  dmsetup create ufs --table "0 $(blockdev --getsz $dev) linear $dev 0"
+  mount -t ufs -o ufstype=44bsd /dev/mapper/ufs /mnt
+  # read the directory page without ufs_check_folio()
+  python3 -c 'import os; fd = os.open("/mnt/d", os.O_RDONLY); os.posix_fadvise(fd, 0, 0, os.POSIX_FADV_WILLNEED)'
+  dmsetup suspend ufs
+  ls /mnt/d               # ufs_check_folio(): inode out of bounds -> ufs_error()
+  dmsetup resume ufs
+  touch /mnt/x            # hangs
   # instead of touch: umount /mnt -> WARNING in rcu_sync_dtor()
 
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- fs/affs/affs.h     |  9 +++++++++
- fs/affs/amigaffs.c | 10 ++++++++--
- fs/affs/file.c     | 16 +++++++++++++++-
- fs/affs/inode.c    |  5 +++++
- fs/affs/namei.c    | 18 ++++++++++++++++++
- fs/affs/super.c    | 24 ++++++++++++++++++++----
- 6 files changed, 75 insertions(+), 7 deletions(-)
+ fs/ufs/cylinder.c | 12 +++++----
+ fs/ufs/dir.c      |  5 +++-
+ fs/ufs/file.c     | 28 ++++++++++++++++++---
+ fs/ufs/inode.c    |  5 ++++
+ fs/ufs/namei.c    | 22 +++++++++++++++++
+ fs/ufs/super.c    | 74 ++++++++++++++++++++++++++++++++++++++++++-------------
+ fs/ufs/ufs.h      | 10 ++++++++
+ 7 files changed, 130 insertions(+), 26 deletions(-)
 
-diff --git a/fs/affs/affs.h b/fs/affs/affs.h
-index d1c506c1f310..3a914fb4c6e1 100644
---- a/fs/affs/affs.h
-+++ b/fs/affs/affs.h
-@@ -86,6 +86,7 @@ struct affs_sb_info {
- 	u32 s_root_block;		/* FFS root block number. */
- 	int s_hashsize;			/* Size of hash table. */
- 	unsigned long s_flags;		/* See below. */
-+	unsigned long s_state;		/* AFFS_STATE_* bits. */
- 	kuid_t s_uid;			/* uid to override */
- 	kgid_t s_gid;			/* gid to override */
- 	umode_t s_mode;			/* mode to override */
-@@ -119,6 +120,9 @@ struct affs_sb_info {
- #define AFFS_MOUNT_SF_VERBOSE		0x0800 /* Talk about fs when mounting */
- #define AFFS_MOUNT_SF_NO_TRUNCATE	0x1000 /* Don't truncate filenames */
- 
-+/* Bits in affs_sb_info->s_state. */
-+#define AFFS_STATE_EMERGENCY_RO	0	/* Refuse modifications after an error */
-+
- #define affs_clear_opt(o, opt)    (o &= ~AFFS_MOUNT_##opt)
- #define affs_set_opt(o, opt)      (o |= AFFS_MOUNT_##opt)
- #define affs_test_opt(o, opt)     ((o) & AFFS_MOUNT_##opt)
-@@ -129,6 +133,11 @@ static inline struct affs_sb_info *AFFS_SB(struct super_block *sb)
- 	return sb->s_fs_info;
+diff --git a/fs/ufs/cylinder.c b/fs/ufs/cylinder.c
+index b930ee1cf853..12ffd67fd206 100644
+--- a/fs/ufs/cylinder.c
++++ b/fs/ufs/cylinder.c
+@@ -117,12 +117,14 @@ void ufs_put_cylinder (struct super_block * sb, unsigned bitmap_nr)
+ 	}
+ 	/*
+ 	 * rotor is not so important data, so we put it to disk 
+-	 * at the end of working with cylinder
++	 * at the end of working with cylinder, but not after an error
+ 	 */
+-	ucg->cg_rotor = cpu_to_fs32(sb, ucpi->c_rotor);
+-	ucg->cg_frotor = cpu_to_fs32(sb, ucpi->c_frotor);
+-	ucg->cg_irotor = cpu_to_fs32(sb, ucpi->c_irotor);
+-	ubh_mark_buffer_dirty (UCPI_UBH(ucpi));
++	if (!ufs_emergency_ro(sb)) {
++		ucg->cg_rotor = cpu_to_fs32(sb, ucpi->c_rotor);
++		ucg->cg_frotor = cpu_to_fs32(sb, ucpi->c_frotor);
++		ucg->cg_irotor = cpu_to_fs32(sb, ucpi->c_irotor);
++		ubh_mark_buffer_dirty (UCPI_UBH(ucpi));
++	}
+ 	for (i = 1; i < UCPI_UBH(ucpi)->count; i++) {
+ 		brelse (UCPI_UBH(ucpi)->bh[i]);
+ 	}
+diff --git a/fs/ufs/dir.c b/fs/ufs/dir.c
+index ce43cf20b07c..a8bc96f1d364 100644
+--- a/fs/ufs/dir.c
++++ b/fs/ufs/dir.c
+@@ -64,6 +64,9 @@ static int ufs_handle_dirsync(struct inode *dir)
+ 	err = filemap_write_and_wait(dir->i_mapping);
+ 	if (!err)
+ 		err = sync_inode_metadata(dir, 1);
++	/* The change is done, an error made us read-only in the meantime. */
++	if (err == -EROFS && ufs_emergency_ro(dir->i_sb))
++		err = 0;
+ 	return err;
  }
  
-+static inline bool affs_emergency_ro(struct super_block *sb)
+@@ -652,7 +655,7 @@ const struct file_operations ufs_dir_operations = {
+ 	.release	= ufs_dir_release,
+ 	.read		= generic_read_dir,
+ 	.iterate_shared	= ufs_readdir,
+-	.fsync		= simple_fsync,
++	.fsync		= ufs_fsync,
+ 	.llseek		= ufs_dir_llseek,
+ 	.setlease	= generic_setlease,
+ };
+diff --git a/fs/ufs/file.c b/fs/ufs/file.c
+index 85c509ced7f9..f60f9dafe477 100644
+--- a/fs/ufs/file.c
++++ b/fs/ufs/file.c
+@@ -30,6 +30,28 @@
+ #include "ufs_fs.h"
+ #include "ufs.h"
+ 
++static ssize_t ufs_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
 +{
-+	return test_bit(AFFS_STATE_EMERGENCY_RO, &AFFS_SB(sb)->s_state);
++	if (ufs_emergency_ro(file_inode(iocb->ki_filp)->i_sb))
++		return -EROFS;
++	return generic_file_write_iter(iocb, from);
 +}
 +
- void affs_mark_sb_dirty(struct super_block *sb);
++/* Inodes aren't written back after an error, don't claim they're on disk. */
++int ufs_fsync(struct file *file, loff_t start, loff_t end, int datasync)
++{
++	if (ufs_emergency_ro(file_inode(file)->i_sb))
++		return -EROFS;
++	return simple_fsync(file, start, end, datasync);
++}
++
++static int ufs_file_open(struct inode *inode, struct file *filp)
++{
++	if ((filp->f_mode & FMODE_WRITE) && ufs_emergency_ro(inode->i_sb))
++		return -EROFS;
++	return generic_file_open(inode, filp);
++}
++
+ /*
+  * We have mostly NULL's here: the current defaults are ok for
+  * the ufs filesystem.
+@@ -38,10 +60,10 @@
+ const struct file_operations ufs_file_operations = {
+ 	.llseek		= generic_file_llseek,
+ 	.read_iter	= generic_file_read_iter,
+-	.write_iter	= generic_file_write_iter,
++	.write_iter	= ufs_file_write_iter,
+ 	.mmap_prepare	= generic_file_mmap_prepare,
+-	.open           = generic_file_open,
+-	.fsync		= simple_fsync,
++	.open           = ufs_file_open,
++	.fsync		= ufs_fsync,
+ 	.splice_read	= filemap_splice_read,
+ 	.splice_write	= iter_file_splice_write,
+ 	.setlease	= generic_setlease,
+diff --git a/fs/ufs/inode.c b/fs/ufs/inode.c
+index 440d014cc5ed..9ecf2f95644b 100644
+--- a/fs/ufs/inode.c
++++ b/fs/ufs/inode.c
+@@ -828,6 +828,8 @@ static int ufs_update_inode(struct inode * inode, int do_sync)
  
- /* amigaffs.c */
-diff --git a/fs/affs/amigaffs.c b/fs/affs/amigaffs.c
-index 6cc0fc9a4cbf..813e55bf1121 100644
---- a/fs/affs/amigaffs.c
-+++ b/fs/affs/amigaffs.c
-@@ -479,9 +479,15 @@ affs_error(struct super_block *sb, const char *function, const char *fmt, ...)
- 	vaf.fmt = fmt;
- 	vaf.va = &args;
- 	pr_crit("error (device %s): %s(): %pV\n", sb->s_id, function, &vaf);
--	if (!sb_rdonly(sb))
+ int ufs_write_inode(struct inode *inode, struct writeback_control *wbc)
+ {
++	if (ufs_emergency_ro(inode->i_sb))
++		return -EROFS;
+ 	return ufs_update_inode(inode, wbc->sync_mode == WB_SYNC_ALL);
+ }
+ 
+@@ -1202,6 +1204,9 @@ int ufs_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
+ 	unsigned int ia_valid = attr->ia_valid;
+ 	int error;
+ 
++	if (ufs_emergency_ro(inode->i_sb))
++		return -EROFS;
++
+ 	error = setattr_prepare(&nop_mnt_idmap, dentry, attr);
+ 	if (error)
+ 		return error;
+diff --git a/fs/ufs/namei.c b/fs/ufs/namei.c
+index 6703f3bcf76f..70241893b21c 100644
+--- a/fs/ufs/namei.c
++++ b/fs/ufs/namei.c
+@@ -74,6 +74,9 @@ static int ufs_create (struct mnt_idmap * idmap,
+ {
+ 	struct inode *inode;
+ 
++	if (ufs_emergency_ro(dir->i_sb))
++		return -EROFS;
++
+ 	inode = ufs_new_inode(dir, mode);
+ 	if (IS_ERR(inode))
+ 		return PTR_ERR(inode);
+@@ -91,6 +94,8 @@ static int ufs_mknod(struct mnt_idmap *idmap, struct inode *dir,
+ 	struct inode *inode;
+ 	int err;
+ 
++	if (ufs_emergency_ro(dir->i_sb))
++		return -EROFS;
+ 	if (!old_valid_dev(rdev))
+ 		return -EINVAL;
+ 
+@@ -113,6 +118,8 @@ static int ufs_symlink (struct mnt_idmap * idmap, struct inode * dir,
+ 	unsigned l = strlen(symname)+1;
+ 	struct inode * inode;
+ 
++	if (ufs_emergency_ro(sb))
++		return -EROFS;
+ 	if (l > sb->s_blocksize)
+ 		return -ENAMETOOLONG;
+ 
+@@ -152,6 +159,9 @@ static int ufs_link (struct dentry * old_dentry, struct inode * dir,
+ 	struct inode *inode = d_inode(old_dentry);
+ 	int error;
+ 
++	if (ufs_emergency_ro(dir->i_sb))
++		return -EROFS;
++
+ 	inode_set_ctime_current(inode);
+ 	inode_inc_link_count(inode);
+ 	ihold(inode);
+@@ -171,6 +181,9 @@ static struct dentry *ufs_mkdir(struct mnt_idmap * idmap, struct inode * dir,
+ 	struct inode * inode;
+ 	int err;
+ 
++	if (ufs_emergency_ro(dir->i_sb))
++		return ERR_PTR(-EROFS);
++
+ 	inode_inc_link_count(dir);
+ 
+ 	inode = ufs_new_inode(dir, mode);
+@@ -211,6 +224,9 @@ static int ufs_unlink(struct inode *dir, struct dentry *dentry)
+ 	struct folio *folio;
+ 	int err;
+ 
++	if (ufs_emergency_ro(dir->i_sb))
++		return -EROFS;
++
+ 	de = ufs_find_entry(dir, &dentry->d_name, &folio);
+ 	if (!de)
+ 		return -ENOENT;
+@@ -229,6 +245,8 @@ static int ufs_rmdir (struct inode * dir, struct dentry *dentry)
+ 	struct inode * inode = d_inode(dentry);
+ 	int err= -ENOTEMPTY;
+ 
++	if (ufs_emergency_ro(dir->i_sb))
++		return -EROFS;
+ 	if (ufs_empty_dir (inode)) {
+ 		err = ufs_unlink(dir, dentry);
+ 		if (!err) {
+@@ -255,6 +273,9 @@ static int ufs_rename(struct mnt_idmap *idmap, struct inode *old_dir,
+ 	if (flags & ~RENAME_NOREPLACE)
+ 		return -EINVAL;
+ 
++	if (ufs_emergency_ro(old_dir->i_sb))
++		return -EROFS;
++
+ 	old_de = ufs_find_entry(old_dir, &old_dentry->d_name, &old_folio);
+ 	if (!old_de)
+ 		return -ENOENT;
+@@ -326,4 +347,5 @@ const struct inode_operations ufs_dir_inode_operations = {
+ 	.rmdir		= ufs_rmdir,
+ 	.mknod		= ufs_mknod,
+ 	.rename		= ufs_rename,
++	.setattr	= ufs_setattr,
+ };
+diff --git a/fs/ufs/super.c b/fs/ufs/super.c
+index 3569ac92b065..ba2dd4502869 100644
+--- a/fs/ufs/super.c
++++ b/fs/ufs/super.c
+@@ -280,11 +280,17 @@ void ufs_error (struct super_block * sb, const char * function,
+ 	uspi = UFS_SB(sb)->s_uspi;
+ 	usb1 = ubh_get_usb_first(uspi);
+ 	
+-	if (!sb_rdonly(sb)) {
 +	/*
 +	 * Don't set SB_RDONLY: that requires sb->s_umount and a proper
 +	 * remount. Set while the superblock is frozen it makes thaw_super()
 +	 * skip releasing s_writers and every later writer hangs. Refuse
 +	 * modifications until umount instead.
++	 * The superblock buffer marked bad goes out with the block device.
 +	 */
 +	if (!sb_rdonly(sb) &&
-+	    !test_and_set_bit(AFFS_STATE_EMERGENCY_RO, &AFFS_SB(sb)->s_state))
- 		pr_warn("Remounting filesystem read-only\n");
++	    !test_and_set_bit(UFS_STATE_EMERGENCY_RO, &UFS_SB(sb)->s_state)) {
+ 		usb1->fs_clean = UFS_FSBAD;
+ 		ubh_mark_buffer_dirty(USPI_UBH(uspi));
+-		ufs_mark_sb_dirty(sb);
+-		sb->s_flags |= SB_RDONLY;
+ 	}
+ 	va_start(args, fmt);
+ 	vaf.fmt = fmt;
+@@ -314,15 +320,15 @@ void ufs_panic (struct super_block * sb, const char * function,
+ 	uspi = UFS_SB(sb)->s_uspi;
+ 	usb1 = ubh_get_usb_first(uspi);
+ 	
+-	if (!sb_rdonly(sb)) {
++	/* See ufs_error(). */
++	if (!sb_rdonly(sb) &&
++	    !test_and_set_bit(UFS_STATE_EMERGENCY_RO, &UFS_SB(sb)->s_state)) {
+ 		usb1->fs_clean = UFS_FSBAD;
+ 		ubh_mark_buffer_dirty(USPI_UBH(uspi));
+-		ufs_mark_sb_dirty(sb);
+ 	}
+ 	va_start(args, fmt);
+ 	vaf.fmt = fmt;
+ 	vaf.va = &args;
 -	sb->s_flags |= SB_RDONLY;
+ 	pr_crit("panic (device %s): %s: %pV\n",
+ 		sb->s_id, function, &vaf);
  	va_end(args);
- }
+@@ -512,11 +518,13 @@ static int ufs_read_cylinder_structures(struct super_block *sb)
  
-diff --git a/fs/affs/file.c b/fs/affs/file.c
-index 23e088a7ed4f..9e048de21234 100644
---- a/fs/affs/file.c
-+++ b/fs/affs/file.c
-@@ -26,6 +26,8 @@ affs_file_open(struct inode *inode, struct file *filp)
+ failed:
+ 	kfree (base);
++	sbi->s_csp = NULL;
+ 	if (sbi->s_ucg) {
+ 		for (i = 0; i < uspi->s_ncg; i++)
+ 			if (sbi->s_ucg[i])
+ 				brelse (sbi->s_ucg[i]);
+ 		kfree (sbi->s_ucg);
++		sbi->s_ucg = NULL;
+ 		for (i = 0; i < UFS_MAX_GROUP_LOADED; i++)
+ 			kfree (sbi->s_ucpi[i]);
+ 	}
+@@ -579,7 +587,8 @@ static void ufs_put_cstotal(struct super_block *sb)
+  * ufs_put_super_internal() - put on-disk intrenal structures
+  * @sb: pointer to super_block structure
+  * Put on-disk structures associated with cylinder groups
+- * and write them back to disk, also update cs_total on disk
++ * and write them back to disk, also update cs_total on disk.
++ * Nothing is written back after an error.
+  */
+ static void ufs_put_super_internal(struct super_block *sb)
  {
- 	pr_debug("open(%llu,%d)\n",
- 		 inode->i_ino, atomic_read(&AFFS_I(inode)->i_opencnt));
-+	if ((filp->f_mode & FMODE_WRITE) && affs_emergency_ro(inode->i_sb))
+@@ -591,10 +600,14 @@ static void ufs_put_super_internal(struct super_block *sb)
+ 	
+ 	UFSD("ENTER\n");
+ 
++	base = space = (char*) sbi->s_csp;
++	/* Don't write anything back after an error, see ufs_error(). */
++	if (ufs_emergency_ro(sb))
++		goto release;
++
+ 	ufs_put_cstotal(sb);
+ 	size = uspi->s_cssize;
+ 	blks = (size + uspi->s_fsize - 1) >> uspi->s_fshift;
+-	base = space = (char*) sbi->s_csp;
+ 	for (i = 0; i < blks; i++, space += uspi->s_fsize) {
+ 		struct buffer_head *bh = sb_bread(sb, uspi->s_csaddr + i);
+ 
+@@ -607,6 +620,7 @@ static void ufs_put_super_internal(struct super_block *sb)
+ 		mark_buffer_dirty(bh);
+ 		brelse(bh);
+ 	}
++release:
+ 	for (i = 0; i < sbi->s_cg_loaded; i++) {
+ 		ufs_put_cylinder (sb, i);
+ 		kfree (sbi->s_ucpi[i]);
+@@ -616,7 +630,9 @@ static void ufs_put_super_internal(struct super_block *sb)
+ 	for (i = 0; i < uspi->s_ncg; i++) 
+ 		brelse (sbi->s_ucg[i]);
+ 	kfree (sbi->s_ucg);
++	sbi->s_ucg = NULL;
+ 	kfree (base);
++	sbi->s_csp = NULL;
+ 
+ 	UFSD("EXIT\n");
+ }
+@@ -628,6 +644,10 @@ static int ufs_sync_fs(struct super_block *sb, int wait)
+ 	struct ufs_super_block_third * usb3;
+ 	unsigned flags;
+ 
++	/* Leave the superblock alone after an error, see ufs_error(). */
++	if (ufs_emergency_ro(sb))
++		return 0;
++
+ 	mutex_lock(&UFS_SB(sb)->s_lock);
+ 
+ 	UFSD("ENTER\n");
+@@ -684,7 +704,12 @@ static void ufs_put_super(struct super_block *sb)
+ 
+ 	UFSD("ENTER\n");
+ 
+-	if (!sb_rdonly(sb))
++	/*
++	 * Read-write mounts load the cylinder groups. A remount to read-only
++	 * frees them unless it happened in the emergency state. The bit can
++	 * also get set after such a remount freed them.
++	 */
++	if (sbi->s_ucg)
+ 		ufs_put_super_internal(sb);
+ 	cancel_delayed_work_sync(&sbi->sync_work);
+ 
+@@ -1260,19 +1285,31 @@ static int ufs_reconfigure(struct fs_context *fc)
+ 		mutex_unlock(&UFS_SB(sb)->s_lock);
+ 		return 0;
+ 	}
++
++	/* After an error, refuse going back to read-write until umount. */
++	if (ufs_emergency_ro(sb) && !(fc->sb_flags & SB_RDONLY)) {
++		mutex_unlock(&UFS_SB(sb)->s_lock);
 +		return -EROFS;
- 	atomic_inc(&AFFS_I(inode)->i_opencnt);
++	}
+ 	
+ 	/*
+ 	 * fs was mouted as rw, remounting ro
+ 	 */
+ 	if (fc->sb_flags & SB_RDONLY) {
+-		ufs_put_super_internal(sb);
+-		usb1->fs_time = ufs_get_seconds(sb);
+-		if ((flags & UFS_ST_MASK) == UFS_ST_SUN
+-		  || (flags & UFS_ST_MASK) == UFS_ST_SUNOS
+-		  || (flags & UFS_ST_MASK) == UFS_ST_SUNx86) 
+-			ufs_set_fs_state(sb, usb1, usb3,
+-				UFS_FSOK - fs32_to_cpu(sb, usb1->fs_time));
+-		ubh_mark_buffer_dirty (USPI_UBH(uspi));
++		/*
++		 * After an error leave the superblock alone, see ufs_error(),
++		 * and keep the cylinder groups: evict still uses them.
++		 */
++		if (!ufs_emergency_ro(sb)) {
++			ufs_put_super_internal(sb);
++			usb1->fs_time = ufs_get_seconds(sb);
++			if ((flags & UFS_ST_MASK) == UFS_ST_SUN
++			  || (flags & UFS_ST_MASK) == UFS_ST_SUNOS
++			  || (flags & UFS_ST_MASK) == UFS_ST_SUNx86)
++				ufs_set_fs_state(sb, usb1, usb3,
++					UFS_FSOK - fs32_to_cpu(sb, usb1->fs_time));
++			ubh_mark_buffer_dirty (USPI_UBH(uspi));
++		}
+ 		sb->s_flags |= SB_RDONLY;
+ 	} else {
+ 	/*
+@@ -1322,6 +1359,9 @@ static int ufs_show_options(struct seq_file *seq, struct dentry *root)
+ 		++tp;
+ 	seq_printf(seq, ",onerror=%s", tp->name);
+ 
++	if (ufs_emergency_ro(root->d_sb))
++		seq_puts(seq, ",emergency_ro");
++
  	return 0;
  }
-@@ -988,6 +990,10 @@ int affs_file_fsync(struct file *filp, loff_t start, loff_t end, int datasync)
- 	struct inode *inode = filp->f_mapping->host;
- 	int ret, err;
  
-+	/* Inodes aren't written back after an error. */
-+	if (affs_emergency_ro(inode->i_sb))
-+		return -EROFS;
+diff --git a/fs/ufs/ufs.h b/fs/ufs/ufs.h
+index 788e025056b2..012e26de1417 100644
+--- a/fs/ufs/ufs.h
++++ b/fs/ufs/ufs.h
+@@ -26,6 +26,7 @@ struct ufs_sb_info {
+ 	unsigned short s_cg_loaded;
+ 	unsigned s_flavour;
+ 	unsigned s_on_err;
++	unsigned long s_state;	/* UFS_STATE_* bits */
+ 	struct super_block *sb;
+ 	int work_queued; /* non-zero if the delayed work is queued */
+ 	struct delayed_work sync_work; /* FS sync delayed work */
+@@ -52,6 +53,9 @@ struct ufs_inode_info {
+ 	struct inode vfs_inode;
+ };
+ 
++/* bits in ufs_sb_info->s_state */
++#define UFS_STATE_EMERGENCY_RO	0	/* refuse modifications after an error */
 +
- 	err = file_write_and_wait_range(filp, start, end);
- 	if (err)
- 		return err;
-@@ -1000,10 +1006,18 @@ int affs_file_fsync(struct file *filp, loff_t start, loff_t end, int datasync)
- 	inode_unlock(inode);
- 	return ret;
+ /* mount options */
+ #define UFS_MOUNT_ONERROR_PANIC		0x00000001
+ #define UFS_MOUNT_ONERROR_LOCK		0x00000002
+@@ -109,6 +113,7 @@ int ufs_set_link(struct inode *dir, struct ufs_dir_entry *de,
+ /* file.c */
+ extern const struct inode_operations ufs_file_inode_operations;
+ extern const struct file_operations ufs_file_operations;
++extern int ufs_fsync(struct file *file, loff_t start, loff_t end, int datasync);
+ extern const struct address_space_operations ufs_aops;
+ 
+ /* ialloc.c */
+@@ -140,6 +145,11 @@ static inline struct ufs_sb_info *UFS_SB(struct super_block *sb)
+ 	return sb->s_fs_info;
  }
-+
-+static ssize_t affs_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
+ 
++static inline bool ufs_emergency_ro(struct super_block *sb)
 +{
-+	if (affs_emergency_ro(file_inode(iocb->ki_filp)->i_sb))
-+		return -EROFS;
-+	return generic_file_write_iter(iocb, from);
++	return test_bit(UFS_STATE_EMERGENCY_RO, &UFS_SB(sb)->s_state);
 +}
 +
- const struct file_operations affs_file_operations = {
- 	.llseek		= generic_file_llseek,
- 	.read_iter	= generic_file_read_iter,
--	.write_iter	= generic_file_write_iter,
-+	.write_iter	= affs_file_write_iter,
- 	.mmap_prepare	= generic_file_mmap_prepare,
- 	.open		= affs_file_open,
- 	.release	= affs_file_release,
-diff --git a/fs/affs/inode.c b/fs/affs/inode.c
-index d4a3f381c4bc..61a80d42297b 100644
---- a/fs/affs/inode.c
-+++ b/fs/affs/inode.c
-@@ -173,6 +173,8 @@ affs_write_inode(struct inode *inode, struct writeback_control *wbc)
- 
- 	pr_debug("write_inode(%llu)\n", inode->i_ino);
- 
-+	if (affs_emergency_ro(sb))
-+		return -EROFS;
- 	if (!inode->i_nlink)
- 		// possibly free block
- 		return 0;
-@@ -220,6 +222,9 @@ affs_setattr(struct mnt_idmap *idmap, struct dentry *dentry, struct iattr *attr)
- 
- 	pr_debug("setattr(%llu,0x%x)\n", inode->i_ino, attr->ia_valid);
- 
-+	if (affs_emergency_ro(inode->i_sb))
-+		return -EROFS;
-+
- 	error = setattr_prepare(&nop_mnt_idmap, dentry, attr);
- 	if (error)
- 		goto out;
-diff --git a/fs/affs/namei.c b/fs/affs/namei.c
-index 6cb52efafe5f..00f02ca25dbe 100644
---- a/fs/affs/namei.c
-+++ b/fs/affs/namei.c
-@@ -238,6 +238,8 @@ affs_unlink(struct inode *dir, struct dentry *dentry)
- 	pr_debug("%s(dir=%llu, %llu \"%pd\")\n", __func__, dir->i_ino,
- 		 d_inode(dentry)->i_ino, dentry);
- 
-+	if (affs_emergency_ro(dir->i_sb))
-+		return -EROFS;
- 	return affs_remove_header(dentry);
- }
- 
-@@ -252,6 +254,9 @@ affs_create(struct mnt_idmap *idmap, struct inode *dir,
- 	pr_debug("%s(%llu,\"%pd\",0%ho)\n",
- 		 __func__, dir->i_ino, dentry, mode);
- 
-+	if (affs_emergency_ro(sb))
-+		return -EROFS;
-+
- 	inode = affs_new_inode(dir);
- 	if (!inode)
- 		return -ENOSPC;
-@@ -283,6 +288,9 @@ affs_mkdir(struct mnt_idmap *idmap, struct inode *dir,
- 	pr_debug("%s(%llu,\"%pd\",0%ho)\n",
- 		 __func__, dir->i_ino, dentry, mode);
- 
-+	if (affs_emergency_ro(dir->i_sb))
-+		return ERR_PTR(-EROFS);
-+
- 	inode = affs_new_inode(dir);
- 	if (!inode)
- 		return ERR_PTR(-ENOSPC);
-@@ -309,6 +317,8 @@ affs_rmdir(struct inode *dir, struct dentry *dentry)
- 	pr_debug("%s(dir=%llu, %llu \"%pd\")\n", __func__, dir->i_ino,
- 		 d_inode(dentry)->i_ino, dentry);
- 
-+	if (affs_emergency_ro(dir->i_sb))
-+		return -EROFS;
- 	return affs_remove_header(dentry);
- }
- 
-@@ -326,6 +336,9 @@ affs_symlink(struct mnt_idmap *idmap, struct inode *dir,
- 	pr_debug("%s(%llu,\"%pd\" -> \"%s\")\n",
- 		 __func__, dir->i_ino, dentry, symname);
- 
-+	if (affs_emergency_ro(sb))
-+		return -EROFS;
-+
- 	maxlen = AFFS_SB(sb)->s_hashsize * sizeof(u32) - 1;
- 	inode  = affs_new_inode(dir);
- 	if (!inode)
-@@ -398,6 +411,8 @@ affs_link(struct dentry *old_dentry, struct inode *dir, struct dentry *dentry)
- 	pr_debug("%s(%llu, %llu, \"%pd\")\n", __func__, inode->i_ino, dir->i_ino,
- 		 dentry);
- 
-+	if (affs_emergency_ro(dir->i_sb))
-+		return -EROFS;
- 	return affs_add_entry(dir, inode, dentry, ST_LINKFILE);
- }
- 
-@@ -514,6 +529,9 @@ int affs_rename2(struct mnt_idmap *idmap, struct inode *old_dir,
- 	pr_debug("%s(old=%llu,\"%pd\" to new=%llu,\"%pd\")\n", __func__,
- 		 old_dir->i_ino, old_dentry, new_dir->i_ino, new_dentry);
- 
-+	if (affs_emergency_ro(old_dir->i_sb))
-+		return -EROFS;
-+
- 	if (flags & RENAME_EXCHANGE)
- 		return affs_xrename(old_dir, old_dentry, new_dir, new_dentry);
- 
-diff --git a/fs/affs/super.c b/fs/affs/super.c
-index ed8225b3c93d..7b5fa2c092f7 100644
---- a/fs/affs/super.c
-+++ b/fs/affs/super.c
-@@ -36,6 +36,9 @@ affs_commit_super(struct super_block *sb, int wait)
- 	struct buffer_head *bh = sbi->s_root_bh;
- 	struct affs_root_tail *tail = AFFS_ROOT_TAIL(sb, bh);
- 
-+	if (affs_emergency_ro(sb))
-+		return;
-+
- 	lock_buffer(bh);
- 	affs_secs_to_datestamp(ktime_get_real_seconds(), &tail->disk_change);
- 	affs_fix_checksum(sb, bh);
-@@ -82,7 +85,7 @@ void affs_mark_sb_dirty(struct super_block *sb)
- 	struct affs_sb_info *sbi = AFFS_SB(sb);
- 	unsigned long delay;
- 
--	if (sb_rdonly(sb))
-+	if (sb_rdonly(sb) || affs_emergency_ro(sb))
- 	       return;
- 
- 	spin_lock(&sbi->work_lock);
-@@ -296,6 +299,8 @@ static int affs_show_options(struct seq_file *m, struct dentry *root)
- 		seq_puts(m, ",verbose");
- 	if (sbi->s_volume[0])
- 		seq_printf(m, ",volume=%s", sbi->s_volume);
-+	if (affs_emergency_ro(sb))
-+		seq_puts(m, ",emergency_ro");
- 	return 0;
- }
- 
-@@ -524,6 +529,11 @@ static int affs_reconfigure(struct fs_context *fc)
- 	struct affs_sb_info	*sbi = AFFS_SB(sb);
- 	int			 res = 0;
- 
-+	/* After an error, refuse going back to read-write until umount. */
-+	if (affs_emergency_ro(sb) && sb_rdonly(sb) &&
-+	    !(fc->sb_flags & SB_RDONLY))
-+		return -EROFS;
-+
- 	sync_filesystem(sb);
- 	fc->sb_flags |= SB_NODIRATIME;
- 
-@@ -550,10 +560,16 @@ static int affs_reconfigure(struct fs_context *fc)
- 	if ((bool)(fc->sb_flags & SB_RDONLY) == sb_rdonly(sb))
- 		return 0;
- 
--	if (fc->sb_flags & SB_RDONLY)
--		affs_free_bitmap(sb);
--	else
-+	if (fc->sb_flags & SB_RDONLY) {
-+		/*
-+		 * After an error evict and release still hand preallocated
-+		 * and truncated blocks back, keep the bitmap until umount.
-+		 */
-+		if (!affs_emergency_ro(sb))
-+			affs_free_bitmap(sb);
-+	} else {
- 		res = affs_init_bitmap(sb, &fc->sb_flags);
-+	}
- 
- 	return res;
- }
+ static inline struct ufs_inode_info *UFS_I(struct inode *inode)
+ {
+ 	return container_of(inode, struct ufs_inode_info, vfs_inode);
 
 -- 
 2.53.0
