@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7CBBE56A;
-	Mon, 12 Oct 2026 15:23:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7627449BD7A;
+	Mon, 12 Oct 2026 15:23:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791818593; cv=none; b=RYH4qwANduJY8rDXq8ZV72mPr6Hxekj8wqqvXRcaXrhWeIUeOa32n5RWU/J6k4pIPUOpJGZEQPdn3LbaKSDNdnNro5kc+eHnJGmeGkjGxl8jfzek68vVBBme+Uad1Rdk1AuBiKMlX8/STOp14hTtXbr6GVAP/Yw1swHG6jigEmk=
+	t=1791818609; cv=none; b=Rwxj9tsR9bC2urKjhlA3K+enNUoynvvjeCJplNhEUKdxBMSyvHBdGo7CsrL4gr5Bcxqhy5mhozrvqSS1BUpL48pAIuhdYcdBOT97sVmyYzETVE0drDcb+vUbjrDn+d9+Dp2XpGag4M2xiXDCtE9fgjHKqEVmOiU24HdOMO/KEP0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791818593; c=relaxed/simple;
-	bh=awG3y3l+rqgzqiDwkeoUyCUEzw90gSPyuuXC3CdSVzg=;
+	s=arc-20240116; t=1791818609; c=relaxed/simple;
+	bh=9vmMB8KEpx6BufuLEZkNGJk4oJngwAOPd21ZQcZVXkk=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=GcFnQu6fpyRihfMBYzyXblqXzzimBBlwl868bdpXvSQUimmobyzO4ggxL1D/MY2wVsjmzkdmfVhTgKRM3iQSHW+1alP8qT7HK47EjjYQc9dc0NxtLFktMpyCVHRldejepsejqP+q3tQKWGC/tVcftUFV33oU2hgAya5tTdhvCkw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JfOvJ9oK; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=JqTkiRaw5DF/zUBuOxab6KqAvDts2kYOF70bQitcmSx7ZRiHo7/j++AOnPzX87TdbJJlbn7OsJw0yBkELOc7EXegIbUaeqNCWtiQ2+UoMuvPmoVB+7qO75WdCArJHrbjWv3Ot/LIA6YArMBWl+tJXJPJugQph86zg17TAcNm+Zk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AippUYM9; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JfOvJ9oK"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 98B5C1F0089B;
-	Mon, 12 Oct 2026 15:23:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AippUYM9"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 421D81F0089B;
+	Mon, 12 Oct 2026 15:23:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791818592;
-	bh=dxzvHMpPT2ADvg4MAmFTohbUWswlx+J+u1SUviZay0A=;
+	s=k20260515; t=1791818608;
+	bh=0UGB9/AOAb7cl1N4cYudfaAB8LU9tpPhuQC6M1QqfKg=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=JfOvJ9oKdwO2SF/WsmiMeoMuTOfO+CJkvGvpFImQcCLbtM9q90XsZab4HUwyQo0dG
-	 k7N1YQ5C6KylG3XxO/9QfGUOuAkNpLbgVEsbDpWtZMsOVHqaPHHTs8L5nhT5IVYA1Y
-	 9yGoqvuoFJB+TLd/fo7yIvgUytA1iea5Gel80l1fbEasTCgcb4YvQy7rImn1QHmhYC
-	 xBrGrFFspHa2lmnE7QDor+qkNsrqgblI9tDRsJddSqu5l64D5IQZ9zff6SA0EN4eu8
-	 Cqfya4UmpNpwJCP0rEOt1P4ywebl0D7iNd6wOy5aH+qsM8JgryKzvwF4Q/jF0wWLWZ
-	 C3GJq2leyEbHQ==
-Date: Mon, 12 Oct 2026 08:23:12 -0700
-Subject: [PATCH 11/13] xfs: check for buffer overruns when examining
- local/remote xattr entries
+	b=AippUYM9/VTKRAqouzbXw6ppjhvQfwuxc2R2+/L2a4m3cgNrAxKwEEHO1w8mOTnjh
+	 pKVYsF/AWFdkKzIHgy/3tyGz6lJqdNnbWhh8uT8E6Mf3KKhSBRQhkDH0dzf39hxrkw
+	 IAgfVI6Px+ZPJNV/fS2bZIn6rnlXT2fxUPpiOCED5jkU5qQ5vdRWBvn9Bj1MCatY+D
+	 MmExaWCKPMMVyI4rP0kVYEJIfn4YitfnQ4dgr5GC+ffpE23YDF/88bMF0YCZX6++sL
+	 uwoKz2bMsFjiLbl9YqnTIR92CfWWxXOsVH8DtWI5JIX2Fzi4azEE8W/3DrA8beobZ1
+	 anwfCaiVBrSSg==
+Date: Mon, 12 Oct 2026 08:23:27 -0700
+Subject: [PATCH 12/13] xfs: clarify various parts of the bitmap API
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: hch@lst.de, stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <179181839484.1417179.5938971808818958531.stgit@frogsfrogsfrogs>
+Message-ID: <179181839506.1417179.7620993844006216106.stgit@frogsfrogsfrogs>
 In-Reply-To: <179181839163.1417179.9019753534701755931.stgit@frogsfrogsfrogs>
 References: <179181839163.1417179.9019753534701755931.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,104 +45,101 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-LOLLM noticed that the xattr scrub and repair code can walk off the end
-of the buffer if the xattr entry record starts so close to the end of
-the buffer that there's not even space for the entry structure itself.
-Strengthen the bounds checking here.
+LOLLM pointed out some underspecified parts of the xbitmap{32,64} API.
+Specifically, the behavior of set/clear/test functions when the length
+parameter is zero is not well defined, nor is what happens when someone
+tries to disunion a bitmap with itself.  None of these situations are
+expected, but we'll define zero-length set and clear to be nops, and the
+rest to be checked by assertions.
 
-Cc: <stable@vger.kernel.org> # v4.15
-Fixes: 13791d3b833428 ("xfs: scrub extended attribute leaf space")
+Cc: <stable@vger.kernel.org> # v6.8
+Fixes: 6ece924b952262 ("xfs: create separate structures and code for u32 bitmaps")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Assisted-by: LOLLM # finding obvious bugs
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/scrub/attr.c        |   12 ++++++++++++
- fs/xfs/scrub/attr_repair.c |   16 +++++++++++++---
- 2 files changed, 25 insertions(+), 3 deletions(-)
+ fs/xfs/scrub/bitmap.c |   20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
 
-diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
-index f7c00ea1af5d31..f909e2b25158a8 100644
---- a/fs/xfs/scrub/attr.c
-+++ b/fs/xfs/scrub/attr.c
-@@ -306,6 +306,12 @@ xchk_xattr_local_entry(
- 	char				*name_end;
- 	unsigned int			namesize;
+diff --git a/fs/xfs/scrub/bitmap.c b/fs/xfs/scrub/bitmap.c
+index 08f216d26ec632..1da99e179baa42 100644
+--- a/fs/xfs/scrub/bitmap.c
++++ b/fs/xfs/scrub/bitmap.c
+@@ -77,6 +77,9 @@ xbitmap64_clear(
+ 	struct xbitmap64_node	*new_bn;
+ 	uint64_t		last = start + len - 1;
  
-+	name_end = (char *)lentry + offsetof(typeof(*lentry), nameval[0]);
-+	if (name_end > buf_end) {
-+		xchk_da_set_corrupt(ds, level);
++	if (!len)
 +		return 0;
-+	}
 +
- 	namesize = xfs_attr_leaf_entsize_local(lentry->namelen,
- 			be16_to_cpu(lentry->valuelen));
- 	name_end = (char *)lentry + namesize;
-@@ -335,6 +341,12 @@ xchk_xattr_remote_entry(
- 	char				*name_end;
- 	unsigned int			namesize;
+ 	while ((bn = xbitmap64_tree_iter_first(&bitmap->xb_root, start, last))) {
+ 		if (bn->bn_start < start && bn->bn_last > last) {
+ 			uint64_t	old_last = bn->bn_last;
+@@ -127,6 +130,9 @@ xbitmap64_set(
+ 	uint64_t		last = start + len - 1;
+ 	int			error;
  
-+	name_end = (char *)rentry + offsetof(typeof(*rentry), name[0]);
-+	if (name_end > buf_end) {
-+		xchk_da_set_corrupt(ds, level);
++	if (!len)
 +		return 0;
-+	}
 +
- 	namesize = xfs_attr_leaf_entsize_remote(rentry->namelen);
- 	name_end = (char *)rentry + namesize;
- 	if (rentry->namelen == 0) {
-diff --git a/fs/xfs/scrub/attr_repair.c b/fs/xfs/scrub/attr_repair.c
-index c7695d4cc8e7cc..ad688f9f7ce940 100644
---- a/fs/xfs/scrub/attr_repair.c
-+++ b/fs/xfs/scrub/attr_repair.c
-@@ -285,6 +285,7 @@ xrep_xattr_salvage_local_attr(
- 	struct xfs_attr_leaf_name_local	*lentry)
- {
- 	struct xchk_xattr_buf		*ab = rx->sc->buf;
-+	char				*name_end;
- 	unsigned char			*value;
- 	unsigned int			valuelen;
- 	unsigned int			namesize;
-@@ -293,10 +294,14 @@ xrep_xattr_salvage_local_attr(
- 	 * Decode the leaf local entry format.  If something seems wrong, we
- 	 * junk the attribute.
- 	 */
-+	name_end = (char *)lentry + offsetof(typeof(*lentry), nameval[0]);
-+	if (name_end > buf_end)
-+		return 0;
- 	value = &lentry->nameval[lentry->namelen];
- 	valuelen = be16_to_cpu(lentry->valuelen);
- 	namesize = xfs_attr_leaf_entsize_local(lentry->namelen, valuelen);
--	if ((char *)lentry + namesize > buf_end)
-+	name_end = (char *)lentry + namesize;
-+	if (name_end > buf_end)
- 		return 0;
- 	if (!xrep_xattr_want_salvage(rx, ent->flags, lentry->nameval,
- 			lentry->namelen, value, valuelen))
-@@ -333,8 +338,8 @@ xrep_xattr_salvage_remote_attr(
- 		.attr_filter		= ent->flags & XFS_ATTR_NSP_ONDISK_MASK,
- 		.namelen		= rentry->namelen,
- 		.name			= rentry->name,
--		.valuelen		= be32_to_cpu(rentry->valuelen),
- 	};
-+	char				*name_end;
- 	unsigned int			namesize;
- 	int				error;
+ 	/* Is this whole range already set? */
+ 	left = xbitmap64_tree_iter_first(&bitmap->xb_root, start, last);
+ 	if (left && left->bn_start <= start && left->bn_last >= last)
+@@ -223,6 +229,8 @@ xbitmap64_disunion(
+ 	struct xbitmap64_node	*bn;
+ 	int			error;
  
-@@ -343,9 +348,14 @@ xrep_xattr_salvage_remote_attr(
- 	 * junk the attribute.  Note that we should never find a zero-length
- 	 * remote attribute value.
- 	 */
-+	name_end = (char *)rentry + offsetof(typeof(*rentry), name[0]);
-+	if (name_end > buf_end)
-+		return 0;
- 	namesize = xfs_attr_leaf_entsize_remote(rentry->namelen);
--	if ((char *)rentry + namesize > buf_end)
-+	name_end = (char *)rentry + namesize;
-+	if (name_end > buf_end)
++	ASSERT(bitmap != sub);
++
+ 	if (xbitmap64_empty(bitmap) || xbitmap64_empty(sub))
  		return 0;
-+	args.valuelen = be32_to_cpu(rentry->valuelen);
- 	if (args.valuelen == 0 ||
- 	    !xrep_xattr_want_salvage(rx, ent->flags, rentry->name,
- 			rentry->namelen, NULL, args.valuelen))
+ 
+@@ -287,6 +295,8 @@ xbitmap64_test(
+ 	struct xbitmap64_node	*bn;
+ 	uint64_t		last = start + *len - 1;
+ 
++	ASSERT(*len > 0);
++
+ 	bn = xbitmap64_tree_iter_first(&bitmap->xb_root, start, last);
+ 	if (!bn)
+ 		return false;
+@@ -357,6 +367,9 @@ xbitmap32_clear(
+ 	struct xbitmap32_node	*new_bn;
+ 	uint32_t		last = start + len - 1;
+ 
++	if (!len)
++		return 0;
++
+ 	while ((bn = xbitmap32_tree_iter_first(&bitmap->xb_root, start, last))) {
+ 		if (bn->bn_start < start && bn->bn_last > last) {
+ 			uint32_t	old_last = bn->bn_last;
+@@ -407,6 +420,9 @@ xbitmap32_set(
+ 	uint32_t		last = start + len - 1;
+ 	int			error;
+ 
++	if (!len)
++		return 0;
++
+ 	/* Is this whole range already set? */
+ 	left = xbitmap32_tree_iter_first(&bitmap->xb_root, start, last);
+ 	if (left && left->bn_start <= start && left->bn_last >= last)
+@@ -503,6 +519,8 @@ xbitmap32_disunion(
+ 	struct xbitmap32_node	*bn;
+ 	int			error;
+ 
++	ASSERT(bitmap != sub);
++
+ 	if (xbitmap32_empty(bitmap) || xbitmap32_empty(sub))
+ 		return 0;
+ 
+@@ -567,6 +585,8 @@ xbitmap32_test(
+ 	struct xbitmap32_node	*bn;
+ 	uint32_t		last = start + *len - 1;
+ 
++	ASSERT(*len > 0);
++
+ 	bn = xbitmap32_tree_iter_first(&bitmap->xb_root, start, last);
+ 	if (!bn)
+ 		return false;
 
