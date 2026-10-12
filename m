@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2B0E35A38C;
-	Mon, 12 Oct 2026 05:56:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58697345CCE;
+	Mon, 12 Oct 2026 05:56:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791784561; cv=none; b=BCyGcegJx8ebf2c6gtHz7nJilQj+7nCKn5JvM2SXmEzty9b6q1g8Qmq2a7f1Tmbtqfty+K5NR9J4Z//vG6P+1QDutevfUJq6aGmIXEUGFU4NkuZ96acfevs2GkyJdahaSPgranYtLzR3uCxBjt89KThvHmjkYid0EDTLVmhnI2w=
+	t=1791784577; cv=none; b=FvpMgWHwiNNh13YMwBykOPr0MOEE+41xvjF9qGfTru6cdtsaXqhCOXjE0sMu9PMXC67gUwudR+6ERO3R8hhitdbpvDxmomsyES/BCWIbDzbiFL5rcZxR1CibOdCKtOZjWsKM5Rw6bq5O3mW4oiLusNRwQhUh24mwFspjj01LX8c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791784561; c=relaxed/simple;
-	bh=KvVjtorY0BoV2ksfC7GuddVR56XWbVLCl4Ga7ZA5lmY=;
+	s=arc-20240116; t=1791784577; c=relaxed/simple;
+	bh=ik6Wplp/miRsN5iEc7OJN2vQ1GAPYJGj4ZaT72zbBEI=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=qnwco6LYJ90v2kbuVc2FQedbkWjruGOUbJToswuLNm3PbxAFMT6+vdB+vwTTKoXcD0AxN8uHKCRPE/zk9fxoQ5b5CnzvnEgMcnYP0x1yUL3Y2+f159Luewloj7ZkVqnqS+SamaFGHEVNNAqKk6zKw66cTTzR8HYzJd/pIl323Zs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mW+S+6B4; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=G4NGgH9hCKijVSA5WYgOV6wZRSmff+jrE0x+l+7wRnaWCb1K0EmL+NFR/AJKhf9IwxufpOe6xoXYPHAHwlfAlc7SXHZL/LnxvAymOMOzXrWJoODkF8RYV15UQgINl70c9XLODEgmY+wXy05J0oY3iDvp0v5XOl1rHFO172rHzDY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mvj3N4np; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mW+S+6B4"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 543671F0089B;
-	Mon, 12 Oct 2026 05:56:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mvj3N4np"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id EAE681F0089B;
+	Mon, 12 Oct 2026 05:56:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791784560;
-	bh=SXopcfPN86LsjhcbvxKqfC/gn+QEp4wvLXJFbbMSHA0=;
+	s=k20260515; t=1791784576;
+	bh=EPIN9fgZnFIk0yJYGUwNkKbXvu3mp5CyMhlBpPA0ugg=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=mW+S+6B4dpko2/THH89k1uZgJvbJie0PdaItI5D9Zps4Vc0UzeAR9fVfsnqSOOycD
-	 wziPQDTYoJN7TJ/YeG0WLOMBpZKUfHVNcnF5q3hGhetpcEkW+uPkLH5tj3xuZL7CNS
-	 s+M7TrsIv+Ms1SldMvIysHImLK85zOMj1pGR3tVZM+dM2mlPlEsM3BNpJpu99qCmwZ
-	 IdL2t2kSiCMCJjD/gSfOO77pfS/A7q08oXjqH2u9k+OQdy3UXL0am0WIh7ztmWS2L6
-	 cwgYASP7xsuG7kY4v6mCbP4Zo/1I1cZ07LgGVcJyHg1CiN7BsGlTz+O2GoXtTpb5xG
-	 wiWz3H63/svvQ==
-Date: Sun, 11 Oct 2026 22:55:59 -0700
-Subject: [PATCH 01/12] xfs: don't overrun incore inode when cleaning attr
- forks
+	b=mvj3N4npEM6sq6LBryFpF6iEMkWqLELwP/UjLRse0lqMHLB1GcNeVu8+RagG555j2
+	 IO3ti97HwjLKfakvMNrRDA68RiSo0rGfO4FWhOUItAwc/2wH+hJjq5aolp1VbERE67
+	 ZhfTFnKdYaKr00yYl9R9rWkzOEp5b+T+0axLJsNWTtVA+c4STNkXkiiaFUFOgt3rn7
+	 UJ2ZksSSJsZZE6yT5wqT/IXfC2/Wmz2V+c6URHj1qCAEvz6poyBm/odochMkSuTdSH
+	 TpnOcCXFMVMHed0YSCPkeVdPGnXH+y3/wa+L/2wZWgj02/F4zJCof4pIlkh1rqjpGY
+	 zm0KUHvQ+TzsQ==
+Date: Sun, 11 Oct 2026 22:56:15 -0700
+Subject: [PATCH 02/12] xfs: fix data fork block count check in
+ xrep_inode_blockcounts
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <179178065216.1058326.11136246616445475827.stgit@frogsfrogsfrogs>
+Message-ID: <179178065237.1058326.4317771576749891941.stgit@frogsfrogsfrogs>
 In-Reply-To: <179178065114.1058326.9639488899319330972.stgit@frogsfrogsfrogs>
 References: <179178065114.1058326.9639488899319330972.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,31 +46,31 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-LOLLM noticed that xrep_dinode_check_afork doesn't check for a
-di_forkoff value that is so large that the attr fork would begin after
-the end of the inode space.  This causes afork_{ptr,size} to be
-nonsense.  What we really ought to do here is zap the attr fork.
+LOLLM notices that for non-reflink realtime files, the @count output of
+xchk_inode_count_blocks includes both the file blocks on the realtime
+volume and the bmap btree blocks on the data volume.  Therefore, we must
+compare this value to rblocks + dblocks to avoid unnecessary failure.
 
 Cc: <stable@vger.kernel.org> # v6.8
-Fixes: e744cef2060559 ("xfs: zap broken inode forks")
+Fixes: 2d295fe65776d1 ("xfs: repair inode records")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Assisted-by: LOLLM # finding obvious bugs
 ---
- fs/xfs/scrub/inode_repair.c |    2 ++
- 1 file changed, 2 insertions(+)
+ fs/xfs/scrub/inode_repair.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 
 diff --git a/fs/xfs/scrub/inode_repair.c b/fs/xfs/scrub/inode_repair.c
-index 5b5116adcbf5e4..de3c915984290b 100644
+index de3c915984290b..89cbf599795b2f 100644
 --- a/fs/xfs/scrub/inode_repair.c
 +++ b/fs/xfs/scrub/inode_repair.c
-@@ -1243,6 +1243,8 @@ xrep_dinode_check_afork(
- 	if (XFS_DFORK_BOFF(dip) == 0)
- 		return dip->di_aformat != XFS_DINODE_FMT_EXTENTS ||
- 		       xfs_dfork_attr_extents(dip) != 0;
-+	if (XFS_DFORK_BOFF(dip) >= XFS_LITINO(sc->mp))
-+		return true;
- 
- 	afork_size = XFS_DFORK_SIZE(dip, sc->mp, XFS_ATTR_FORK);
- 	afork_ptr = XFS_DFORK_PTR(dip, XFS_ATTR_FORK);
+@@ -1719,7 +1719,7 @@ xrep_inode_blockcounts(
+ 		 */
+ 		;
+ 	} else if (XFS_IS_REALTIME_INODE(sc->ip)) {
+-		if (count >= sc->mp->m_sb.sb_rblocks)
++		if (count >= sc->mp->m_sb.sb_rblocks + sc->mp->m_sb.sb_dblocks)
+ 			return -EFSCORRUPTED;
+ 	} else {
+ 		if (count >= sc->mp->m_sb.sb_dblocks)
 
