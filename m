@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4065C391E4B;
-	Mon, 12 Oct 2026 03:04:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 771DB375F88;
+	Mon, 12 Oct 2026 04:40:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791774283; cv=none; b=lRnxSoty/ruH06nMzsGp3zjrMqyLbdkJ17/0QCw+0C4uYZTFkBRTGmhi3pRcz12hf5DC6TOLPZ0vosSZ0oy7oBlj0R8+8Vyjc9TuTGTPpze+fua8CVLtM7Pbx7p/idOfMKTVJ1Ojk2wiYvK29kBP7uPKfx0knSZ7a32JwBNWq/c=
+	t=1791780037; cv=none; b=LOVwIGMOs1As4iEp6YOTgEgSHBSedrzRGrhzc5haNAQvn7Ty+7jAYFCyM3qr9xDNIQDChOHtpagfCNif21O56LdOPaK1BcFEeroI/J/Rmhs3gihMJ7Zusvkk8MnqgaMX4G8AjFg5Oc7AmHH2i8y8nagPDmaOJl8gcCGqBSKJUWA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791774283; c=relaxed/simple;
-	bh=/wEt6HRoQiKP+419k9g/6hmFe2Um5pCGtcLpdiC8VSc=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=JlZcKFliTfaXc8tKwL9nre6dlW2FY0kytvNX7Y6IwYuY3dnRSrX6y7rIPGIosrk+Tkgb5Ib5X1BOm9tk7ErhIzDkUni6vdq2qal4kvCiilDDatfy8gO9OOHXAdLtAXIWNz/f62bNOYQ+eCxrqXoLUAf11Fqj5Re5PXFMiIxOwFU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cH0r7OTM; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1791780037; c=relaxed/simple;
+	bh=Q7xqMHBE3qRDY8WLUpX6N6k/bx+I6Uzw86/GrjVBSrA=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=GqECrx41PT0klqY9RI9Adh2h97NxZp9v2iEEr/VWIO7gGxTowyw6oqzO16aSp1y41G+09EGLuEl3mshCgLL+c039WX4lRrD6VkQFYDcfePbWv/+KSSWU7l9OtM/jZj9ZU2uKP3WHeAyNxP6TnEn6EnX1AEJY8Q3gg9g1NnEUgD8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tmEA/5pP; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cH0r7OTM"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id B33DDC2BCF5;
-	Mon, 12 Oct 2026 03:04:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tmEA/5pP"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 009AEC2BCC7;
+	Mon, 12 Oct 2026 04:40:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1791774282;
-	bh=/wEt6HRoQiKP+419k9g/6hmFe2Um5pCGtcLpdiC8VSc=;
+	s=k20201202; t=1791780037;
+	bh=Q7xqMHBE3qRDY8WLUpX6N6k/bx+I6Uzw86/GrjVBSrA=;
 	h=From:Date:Subject:To:Cc:Reply-To:From;
-	b=cH0r7OTMbRQgnRIP8q0GI6+BJSy3OHiF9XzkyU0hbdhewRobPFYmcNKV+yurGpwns
-	 wcIoSLpWcBmByQpn9c5uv4Kl9e3sTNLuV0GMRwOdZunXRBd2eCZxGv85ZjKXqOx/tk
-	 XsjL3sTcur+uoP5uqdFbOoZlhN4hjRcYRLTpofnBLNlwGQO1Wyi1KX5KVdY3WcPCUc
-	 witcDKX7Xoih1W+XQuDQSD+oghnF2JuHBgqiCrB80q3PsHhbrlqIfji5ykZnIzJ2hY
-	 pJ3NDZkGWpX6Swa+YTG7S4qlZ3/vexrWCYJKjgQ1qH7CClkhFaehEMQKAaT4AZhvoa
-	 1xSlAGSKHR2Qw==
+	b=tmEA/5pPHG1e+edBPk/3v+cH5GUAXdDJSQT4ATgz0GJprUnKfKKsx/xM2UxwpX1Gk
+	 /mgFYuq21gMT03hCj48/ztIRPGsMt+0t7/Z0aOI26cs14cBuRfol0DVC+P6w/RYUbR
+	 DhtrFPn1xVcfeuTeu1g/2gmOyj60+GEgCqB6zKj5owPMkqPuU6fdMSERLPFjHTZxcR
+	 XNSC0m8q76reW6ZPokV3q0pGOknzKFrC3NTCEOvsKZZ+SSd7+Ls9vRSLYh5TuvNTKQ
+	 MNr2563EKh2y+R2w1e0rlFCl8i2kTYQMI97lRGnh1tjBc9Lj/gKreYE7RR42Xr7Euy
+	 SraMjjXmiCekQ==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EED5CA9ECF;
-	Mon, 12 Oct 2026 03:04:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0E8DCA9ED1;
+	Mon, 12 Oct 2026 04:40:36 +0000 (UTC)
 From: Daejun Park via B4 Relay <devnull+daejun7.park.samsung.com@kernel.org>
-Date: Mon, 12 Oct 2026 12:04:42 +0900
-Subject: [PATCH] xfs: mark the inode preallocated for pNFS write layouts
- past EOF
+Date: Mon, 12 Oct 2026 13:40:37 +0900
+Subject: [PATCH] nfsd: do not allocate blocks for an RW layout with a
+ minlength of zero
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -40,23 +40,24 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261012-xfs-pnfs-eof-prealloc-v1-1-e4864d917a00@samsung.com>
-X-B4-Tracking: v=1; b=H4sIAElOzGoC/x2MQQqAMAwEvyI5G2iKKPUr4kFqqgFpSwsiSP9u8
- DIwDLsvVC7CFebuhcK3VElRhfoO/LnFg1F2dbDGjmSMwydUzFHBKWAuvF1X8jhM7Mh7shMR6FZ
- DkOf/XdbWPqUBh+BnAAAA
-To: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <djwong@kernel.org>, 
- Dave Chinner <dgc@kernel.org>, Chuck Lever <cel@kernel.org>, 
- Jeff Layton <jlayton@kernel.org>, Dai Ngo <Dai.Ngo@oracle.com>, 
+Message-Id: <20261012-nfsd-block-minlength0-v1-1-4b8a9445619e@samsung.com>
+X-B4-Tracking: v=1; b=H4sIAMRkzGoC/x3MQQqEMAxA0atI1hNIq6jjVQYXtUYNOlFaEUG8u
+ 8XlW/x/QeQgHKHJLgh8SJRVE8wnAz85HRmlTwZLtjREX9Qh9tgtq5/xL7qwjvtESLkpXFVb37k
+ cUrsFHuR8v7/2vh9tiqlJZwAAAA==
+To: Chuck Lever <cel@kernel.org>, Jeff Layton <jlayton@kernel.org>, 
+ NeilBrown <neil@brown.name>, Olga Kornievskaia <okorniev@redhat.com>, 
+ Dai Ngo <Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>, 
+ Christoph Hellwig <hch@lst.de>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, Carlos Maiolino <cem@kernel.org>, 
  Sergey Bashirov <sergeybashirov@gmail.com>, linux-nfs@vger.kernel.org, 
- linux-kernel@vger.kernel.org, stable@vger.kernel.org, 
+ linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
  Daejun Park <daejun7.park@samsung.com>
 X-Mailer: b4 0.13.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1791774281; l=4661;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1791780036; l=4421;
  i=daejun7.park@samsung.com; s=20261006; h=from:subject:message-id;
- bh=1lCj4zYdx22+I/KvHEXa0Zxtv7fnnOm5ANdbR1aQw+E=;
- b=JMBEp4xga/9DfvtwfSE7Wqrt674xIinITXKqKMbBNxEqTXYLyPDctpqnqxqg0tsEQTbJX/edS
- n75S27DmGj+BZcr+9uueMSekz7x+s3KC1QcGussU9BMKodPWCLHEZkm
+ bh=AxJFt7SCKtciklmWlX18k37cLIKLzkvlN3bezyFY75M=;
+ b=JPvVt57XgPOQF7oJ2fkeDOaSRtqoO15Q8YjjiWrqKL5ZEoNK/XStSskkOGFy1g0xfiGaWYs4C
+ EzmQz8n+vN0AQ66FZKqlWtOlv0hJm56DBQWZ21g+FgkwIa6OdDxiXAi
 X-Developer-Key: i=daejun7.park@samsung.com; a=ed25519;
  pk=4yUfDqGRZTIj0Ik43z1GoMZRWCNm/rgX6uJuM9dtNIg=
 X-Endpoint-Received: by B4 Relay for daejun7.park@samsung.com/20261006 with
@@ -66,109 +67,99 @@ Reply-To: daejun7.park@samsung.com
 
 From: Daejun Park <daejun7.park@samsung.com>
 
-xfs_fs_map_blocks() marks the inode XFS_DIFLAG_PREALLOC after it
-allocates blocks for a write layout, so that xfs_free_eofblocks() does
-not free blocks past EOF that a client may write to. But a write layout
-for a range past EOF where blocks are already allocated, such as the
-speculative preallocation of buffered writes, gets those blocks without
-an allocation, and the inode is not marked. blockgc, or the release of
-the file, then frees them without breaking the layout. The client still
-writes to them, and they may belong to another file by then.
+RFC 5663 section 2.3.1 says that for a LAYOUTGET with a loga_minlength
+of zero, a writable layout is readily available only if its extents can
+be returned in the READ_WRITE_DATA state. nfsd4_block_map_extent()
+follows it by refusing an RW layout with a minlength of zero on an
+unwritten extent, with NFS4ERR_LAYOUTUNAVAILABLE.
 
-With pynfs as the client, a file grown to 1 MiB by two buffered writes
-on the server had 960 KiB preallocated past EOF, and an RW LAYOUTGET for
-that range got it as one INVALID_DATA extent, without the inode being
-marked. About 300 seconds later, with the default
-speculative_prealloc_lifetime, blockgc freed those blocks while the
-layout was still held. When the client then wrote through the layout and
-sent LAYOUTCOMMIT, xfs_fs_commit_blocks() found a hole where the
-unwritten extent had been, and xfs_iomap_write_unwritten() allocated for
-it with no blocks reserved:
+But it asks ->map_blocks for a write mapping before it looks at the
+minlength. For a hole, XFS allocates blocks, updates the inode and forces
+the log, and the mapping it returns is unwritten, so the layout is
+refused. The client gets no layout, and the blocks stay allocated: XFS
+marks the inode XFS_DIFLAG_PREALLOC for them, so xfs_free_eofblocks()
+does not free them past EOF either. This is possible since commit
+8c3ad9cb7343 ("nfsd/blocklayout: accept any minlength"), which removed
+the check that refused a minlength below the block size before
+->map_blocks was called.
 
-  XFS (nvme0n1): Corruption of in-memory data (0x8) detected at
-    xfs_trans_mod_sb+0x817/0x960 (fs/xfs/xfs_trans.c:351).
-    Shutting down filesystem.
-  ...
-   xfs_trans_mod_sb+0x817/0x960
-   xfs_alloc_vextent_finish+0x2e7/0x990
-   xfs_alloc_vextent_start_ag+0x25d/0x720
-   xfs_bmap_btalloc+0xdd2/0x1720
-   xfs_bmapi_allocate+0x197/0xf90
-   xfs_bmapi_write+0x4d0/0xb60
-   xfs_iomap_write_unwritten+0x307/0x7e0
-   xfs_fs_commit_blocks+0x1d9/0x630
-   nfsd4_block_proc_layoutcommit+0x5c2/0x7d0
-   nfsd4_layoutcommit+0x4b5/0xa20
+Ask for a write mapping only when the minlength is not zero, and refuse
+a hole in an RW layout with a minlength of zero, as an unwritten extent
+is refused. The client gets the same answer, and nothing is allocated.
+Written extents are still granted as READ_WRITE_DATA.
 
-The client got NFS4ERR_IO, in six runs out of six. When small files were
-written on the server after blockgc, with a sync first so that the freed
-extents were no longer busy, they got those blocks, and the client's
-write through the layout replaced 978944 bytes of their data before the
-LAYOUTCOMMIT. A LAYOUTGET and LAYOUTCOMMIT 30 seconds apart, before
-blockgc runs, leave the client's data in place.
+With pynfs as the client, an RW LAYOUTGET for 0+1 MiB with a minlength
+of zero got NFS4ERR_LAYOUTUNAVAILABLE and left 1 MiB allocated on an
+empty file, and 960 KiB allocated past the first 64 KiB on a file whose
+first 64 KiB were written. With this patch both get the same error and
+nothing is allocated. An RW LAYOUTGET with a minlength of zero for the
+64 KiB that were written, and one with a minlength of 4 KiB on an empty
+file, are granted as before.
 
-Mark the inode also when a write mapping ends past EOF and nothing was
-allocated, the same way as for an allocation, before the blocks are
-handed out. With this, the same test keeps the blocks past blockgc, and
-the LAYOUTCOMMIT after 360 seconds succeeds with the data in place.
+The Linux client does not send an RW LAYOUTGET with a minlength of zero
+(pnfs_alloc_init_layoutget_args()), so it is not affected.
 
-Fixes: 527851124d10 ("xfs: implement pNFS export operations")
-Cc: stable@vger.kernel.org
-Reported-by: Chuck Lever <cel@kernel.org>
-Link: https://lore.kernel.org/r/4de5356f-bc4d-4f1a-9c81-fce09b1b46fd@slotpi15m67
+Fixes: 8c3ad9cb7343 ("nfsd/blocklayout: accept any minlength")
+Suggested-by: Chuck Lever <cel@kernel.org>
+Link: https://lore.kernel.org/r/235ae19b-fd63-4d01-9fe0-d047a33b55ed@slotpi15m67
 Signed-off-by: Daejun Park <daejun7.park@samsung.com>
 ---
-Tested with this patch on nfsd-testing (3af417ce0f30), where xfs_pnfs.c
-differs from xfs for-next only by commit e3c682dd1130 ("xfs: map pNFS
-layouts to the end of the extent again"), with KASAN and lockdep, XFS on
-an NVMe/TCP namespace shared by the server and the client:
+Tested on nfsd-testing (d918c664efd5) with KASAN and lockdep, XFS on an
+NVMe/TCP namespace shared by the server and the client:
 
-- the reproducer above (a local pynfs test, not posted);
-- pynfs block, blockextent and a local multi-extent test, 2 runs: 15
-  pass, BLOCK3 fails with NFS4ERR_BADXDR for its empty layoutupdate, as
-  without this patch;
+- pynfs block and blockextent tests, and the LAYOUTGETs above (a local
+  test, not posted), 1 run without and 2 with this patch: the same
+  results apart from the allocations above. BLOCK3 fails with
+  NFS4ERR_BADXDR for its empty layoutupdate with and without this patch.
+  The same on the earlier heads f27ad2d54411 and 3af417ce0f30, which
+  differ only in fs/nfsd/nfsctl.c and net/sunrpc/svcsock.c.
 - fstests generic/075, 091 and 263 with the Linux client over the block
-  layout: only 075 fails, as without this patch.
+  layout, on 3af417ce0f30: only 075 fails, as without this patch.
 
-Chuck pointed this out in the review of the ->map_blocks series, whose
-patch 7 will carry the same check for all mappings of a call:
-https://lore.kernel.org/r/4de5356f-bc4d-4f1a-9c81-fce09b1b46fd@slotpi15m67
+This is meant to go in before the ->map_blocks series, which will take
+the same change into nfsd4_block_proc_layoutget():
+https://lore.kernel.org/r/235ae19b-fd63-4d01-9fe0-d047a33b55ed@slotpi15m67
 ---
- fs/xfs/xfs_pnfs.c | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+ fs/nfsd/blocklayout.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
-index ab38561700..490b48e2ce 100644
---- a/fs/xfs/xfs_pnfs.c
-+++ b/fs/xfs/xfs_pnfs.c
-@@ -235,6 +235,23 @@ xfs_fs_map_blocks(
+diff --git a/fs/nfsd/blocklayout.c b/fs/nfsd/blocklayout.c
+index 6fefcb2072..b3bb2831cf 100644
+--- a/fs/nfsd/blocklayout.c
++++ b/fs/nfsd/blocklayout.c
+@@ -31,10 +31,17 @@ nfsd4_block_map_extent(struct inode *inode, const struct svc_fh *fhp,
+ 	struct super_block *sb = inode->i_sb;
+ 	struct iomap iomap;
+ 	u32 device_generation = 0;
++	bool write;
+ 	int error;
  
- 	} else {
- 		xfs_iunlock(ip, lock_flags);
-+
-+		/*
-+		 * Blocks past EOF that were allocated for buffered writes, such
-+		 * as speculative preallocation, can be freed by
-+		 * xfs_free_eofblocks() without breaking the layout unless the
-+		 * inode is marked as preallocated. Mark it before handing them
-+		 * out for writing, as for blocks allocated above.
-+		 */
-+		if (write && !(ip->i_diflags & XFS_DIFLAG_PREALLOC) &&
-+		    imap.br_startoff + imap.br_blockcount >
-+		    XFS_B_TO_FSB(mp, XFS_ISIZE(ip))) {
-+			error = xfs_fs_map_update_inode(ip);
-+			if (!error)
-+				error = xfs_log_force_inode(ip);
-+			if (error)
-+				goto out_unlock;
-+		}
- 	}
- 	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
- 
++	/*
++	 * An RW layout with a minlength of zero only gets extents that can
++	 * be returned as READ_WRITE_DATA (RFC 5663, section 2.3.1), so do
++	 * not have the filesystem allocate blocks that would be refused.
++	 */
++	write = iomode != IOMODE_READ && minlength != 0;
+ 	error = sb->s_export_op->block_ops->map_blocks(inode, offset, length,
+-			&iomap, iomode != IOMODE_READ, &device_generation);
++			&iomap, write, &device_generation);
+ 	if (error) {
+ 		if (error == -ENXIO)
+ 			return nfserr_layoutunavailable;
+@@ -76,6 +83,9 @@ nfsd4_block_map_extent(struct inode *inode, const struct svc_fh *fhp,
+ 			bex->es = PNFS_BLOCK_NONE_DATA;
+ 			break;
+ 		}
++		/* Not allocated for a minlength of zero, see above. */
++		if (minlength == 0)
++			return nfserr_layoutunavailable;
+ 		fallthrough;
+ 	case IOMAP_DELALLOC:
+ 	default:
 
 ---
-base-commit: 0be6da616ab5031ea6419dc4fe0bf0e378fb6757
-change-id: 20261009-xfs-pnfs-eof-prealloc-47e91cc12711
+base-commit: d918c664efd5ec6a7309e98f567fb018bcde0e11
+change-id: 20261009-nfsd-block-minlength0-0314a782cba3
 
 Best regards,
 -- 
