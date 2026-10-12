@@ -1,46 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 369AF32824B;
-	Mon, 12 Oct 2026 14:25:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB63C34F24E;
+	Mon, 12 Oct 2026 14:25:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791815132; cv=none; b=dc3ax3gIxsRxlq86WJErdpM3JfgYTv5/ds3g9HKvpJT6LwzLhdrGI6Nodl8KX0JWtfkUtLXjhFMohv/fa0NpIcFU3KhKyC5J+5zb/UKmdZXUWFkR47ufwKibVRfmlzNKUaMjRlbGkoNDXjr3ccc6jL/uhbQVrRSGTxdvljtAG8w=
+	t=1791815133; cv=none; b=f80uG/3wjVbtIAJ0yTFKvfes9e7yDWVgqAd3pj5ze5lIzVBxBUQiPhk6A5IPDnQN2gC/Xc6+GJQsARy7TmMc59c1K8UiEXC+Wk9YQOc0K3Xi2z8DYmYBRvbWguNXhH/0EM6+3OqoMCfFYFAFNmNxi6M740qtqzw5SZT2O3AjZ7I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791815132; c=relaxed/simple;
-	bh=rSb27zLdpu0dYHiznSvxveaV1ziAQuwRQHdiQPEcrPg=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=leHLBLb+vXCL4vi6CZNqtDlkhS1HZd8oq6csHU/MdRi1yN88KUL3lYaInBBpTRI8dRZogR8h27hwmJAnZglTYwyW3aBa94siAA2yq28x2WcIWS8QAzRVIgdeYdoAs/c3Ux6o3UEPotEGn9lHpldw1Rzl1bTVQ6ELQbC9GuX1tj4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HsEHvGOL; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791815133; c=relaxed/simple;
+	bh=CB5K1aNtrorexA/JdeWaL5lEgFC4gzph3QWPwtcKpcg=;
+	h=From:To:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=QSuwscav/8WQekLZxoZiCuMfl6JwSy//V3MauOmgwxSN2IOUV6SZZ5RwW4M+WKTyfrfqlnfUfIqCP2DZJMAeDeiMN1Lv4Yl3vfUBQp693JMpfasoMJMtv5iXwa2kIFDIYALzKIOxHc2B3D9g5QQQZhguaAy2Qzaxh5l3FaQjR7A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KtuCoNhP; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HsEHvGOL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C76201F0089B;
-	Mon, 12 Oct 2026 14:25:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KtuCoNhP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71D351F0089C;
+	Mon, 12 Oct 2026 14:25:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791815130;
-	bh=mjEQR7BUyCacDd88k8LcDx+pGeS9YyLHTLECabn56ew=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=HsEHvGOLdNLNMk2ekkqfnbimIZtTFazE3X2Si695B0muhw/PzGvKqP3A5J6ZuAzNF
-	 LAjghAXJhElYFUuAdhUCTbo4Qjag0MpvECSP92lMxOABK5smPyGLKfVkl36zIRbIyd
-	 AyXIr+tcFX2N/thWxGZWc7H6kL7xTu7C6/RIb5fXsw4ILJxcwJiFNZ2B/XdoBES3UU
-	 B0Ps5MlRbBXkKKzZqblXBe2f8hJsmW/p62EJPJNQPy+c4Xvxu/TtGOui01Fi4DNQDo
-	 GqJWzJWVAKzzHcktQSPCkr/8e961uSm5F+sxJO2SAOEGwi/juK2vymTbAW7fTTw4IE
-	 fyYVyTxzonySw==
+	s=k20260515; t=1791815132;
+	bh=wPVH+ldGDfqUbS8gIISm626Z1jh5SZOobA1gnB3ErGQ=;
+	h=From:To:In-Reply-To:References:Subject:Date;
+	b=KtuCoNhPkqT8F5evTqux2DuKCpAAdrbX5fuohGhzxZBMxcCtZHQjn5CYXymL3Z3l3
+	 5kEbXThVP6tzGqFFg7Y3mmlrypT6f46DH6EGMo9ALKmDWo2MtJPiTkPct/lHrw4Cij
+	 Y01QoLOU2UkLEPyTmJcoU2CCMZdVkldegol1+8hyON9LAd8krKg+RzNwN0RBSfHeKn
+	 wX/ifhYZA/KNlo2jEdB0k3x2yBbNlCLQcZAGWYMJ+X864aX3OVif5fhSamifTysBcx
+	 Djq6xfFiAmtdGL9bs1TsW9dWHpwshAMYTjNhO0DzIwjVzw6MXAP5V/iLZzytQZTayI
+	 RTon45nHTn1kA==
 From: Christian Brauner <brauner@kernel.org>
-To: Carlos Maiolino <cem@kernel.org>, 
- "Darrick J . Wong" <djwong@kernel.org>, 
- Joanne Koong <joannelkoong@gmail.com>, Brian Foster <bfoster@redhat.com>, 
- Christoph Hellwig <hch@infradead.org>, Damien Le Moal <dlemoal@kernel.org>, 
- Hannes Reinecke <hare@suse.de>, Daniel Gomez <da.gomez@samsung.com>, 
- Pankaj Raghav <p.raghav@samsung.com>, Dave Chinner <dchinner@redhat.com>, 
- Andrea Parri <parri.andrea@gmail.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
- linux-kernel@vger.kernel.org, stable@vger.kernel.org
-In-Reply-To: <cover.1790342457.git.parri.andrea@gmail.com>
-References: <cover.1790342457.git.parri.andrea@gmail.com>
-Subject: Re: [PATCH v3 0/4] iomap: fix error handling regressions
-Message-Id: <20261012-puschen-bibliothek-normung-535ea9605a95@brauner>
-Date: Mon, 12 Oct 2026 16:25:25 +0200
+To: linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
+ linux-xfs@vger.kernel.org, Qu Wenruo <wqu@suse.com>
+In-Reply-To: <73bd4d9b39e821453028ca8e567eaad2ebe0fc18.1785880740.git.wqu@suse.com>
+References: <73bd4d9b39e821453028ca8e567eaad2ebe0fc18.1785880740.git.wqu@suse.com>
+Subject: Re: [PATCH v4] iomap: follow the alignment requirement for
+ iomap_dio_hole_iter()
+Message-Id: <20261012-wallung-heizanlage-begangen-5ebbb33cb59d@brauner>
+Date: Mon, 12 Oct 2026 16:25:31 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -51,15 +45,20 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.17-dev-3d1b8
 
-On Mon, 28 Sep 2026 10:48:05 +0200, Andrea Parri wrote:
-> Fix three independent error handling regressions in iomap:
+On Wed, 05 Aug 2026 07:29:51 +0930, Qu Wenruo wrote:
+> [BUG]
+> On the latest development branch, btrfs with 8K block size on 4K page
+> sized systems will fail all test cases that run fsstress.
 > 
->  - clear the writeback context after a failed ->writeback_submit() call,
->    preventing an already completed ioend from being submitted again;
->  - preserve an iomap iteration error when iomap_fiemap() has a pending
->    extent to emit; and
->  - preserve a direct I/O data path error when sub-block tail zeroing
->    succeeds.
+> One very short example would be:
+> 
+>  # $fsstress -n 4 -d $mnt -s 1785675805 -v
+>  0/0: dwrite - no filename
+>  0/1: creat f0 x:0 0 0
+>  0/1: creat add id=0,parent=-1
+>  0/2: write dontcache f0[259 1 0 0 0 0] [816411,3620] 0
+>  0/3: dread - xfsctl(XFS_IOC_DIOINFO) f0[259 1 0 0 32 820031] return 25, fallback to stat()
+>  0/3: dread f0[259 1 0 0 32 820031] [483328,81920] 0
 > 
 > [...]
 
@@ -78,12 +77,6 @@ trailer updates or similar. If in doubt, please check the listed branch.
 tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
 branch: vfs-7.4.iomap
 
-[1/4] iomap: don't resubmit an ioend after ->writeback_submit() failed
-      https://git.kernel.org/vfs/vfs/c/9646682717e6
-[2/4] xfs: add an error tag to inject a ->writeback_submit() failure
-      https://git.kernel.org/vfs/vfs/c/e50b5a3028d0
-[3/4] iomap: don't lose a fiemap iteration error when emitting the last extent
-      https://git.kernel.org/vfs/vfs/c/ec2874845c99
-[4/4] iomap: don't lose a failed direct I/O bio's error when zeroing the tail
-      https://git.kernel.org/vfs/vfs/c/750148e10873
+[1/1] iomap: follow the alignment requirement for iomap_dio_hole_iter()
+      https://git.kernel.org/vfs/vfs/c/c156c9afe59b
 
