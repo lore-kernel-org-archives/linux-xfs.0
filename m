@@ -1,34 +1,35 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC32B47F2C8;
-	Mon, 12 Oct 2026 10:22:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE6F14119F7;
+	Mon, 12 Oct 2026 10:22:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791800576; cv=none; b=piCl8t9M5timpV6SIsKwZ3jgZBcrTQQX1fADLBR0YFau3NuNCzdjHRs697zAPvaCmsWi3Q5CN/5G9NYT2wos7m5wsZoMgS8pCuOX3fCHq+iC5da7H7MarKuWhENOz/GNAAsO2MI6bQ02fH5hoNs4d1aJfwVIPr73y1k1ENbyNZE=
+	t=1791800580; cv=none; b=qEsCqW12vR31Y4yR3WmxXLxgJHLKb4Oc9+w2vBpLndytxSBO9iV3hVFGlfjZmctllFpbxlbuZSAQ7Fq7G7Qn00D3pi492q0E9rSSngeJUzoGHSCzHxSvmnISkGiTA/BQpzRGi//4U3a0TdWsUE3l6b/hkpVy8Gy6hbxw2GcgqOo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791800576; c=relaxed/simple;
-	bh=DGaZ8J+rm6cKBJ/paFb5aFTsl1acSQ3r+Pna/SPIiMU=;
+	s=arc-20240116; t=1791800580; c=relaxed/simple;
+	bh=K7BxUtHzcGy2IpDNps7btvz8womQYnC4QIpoXEvLpxo=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=r/TSU3kZ7wro36LJQfg6d1IhjwPUZKWTpDcO4SL9O58TIbotFcV32ctnt+rYyyNZv4rXirYitvXVeSXdkJaLVsLG6lWxWMDE32U3REfKVqJVmIlKqYUtreg4NXP58iygdzV8R8J7qe8SrfDiwcgRP3kQFlOBXIKJltp7/iINRmg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Nd+BoRoS; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:To:Cc; b=BIIi9KKkd4akBTRTAyn3CUyZKlSl0c02JeGKkoTubj1+ol/S+JwiY3i8Ndni1H8qvoH/BELDMemxo4BpLnBExBfZqhzltkaeWTE9aDxBTWEQo9vtT0vQpTZ6ZP0LFFmz8kd9wANLnTGX23C/gbzeZymX6RwFjO0IdAtaVSO9sdY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MVMZnRqD; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Nd+BoRoS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BB28B1F0089E;
-	Mon, 12 Oct 2026 10:22:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MVMZnRqD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 067761F0089D;
+	Mon, 12 Oct 2026 10:22:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791800560;
-	bh=TiQ6u27QVqRkaYucgQwXLnnqNfUXeSgXf9CAfvKz9d0=;
+	s=k20260515; t=1791800564;
+	bh=gqfvF8a36bR5GKh2wCGHdgbO3Y2aAKCzNA8Zyg1bWY0=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=Nd+BoRoSXunxeXD6pel8QorGHvXnCfizTCXiWBDFQC5CusUwMaocFpZF0TJtyN5E4
-	 rj0V6OdhelT0qVqwygoRkTBIXYtkOrC8wJWckiEREToDA5WE9E6CwBuZaSBIB8uHet
-	 HvJ1ZsVo3cxm+wGPLta4nnLQZm/aOYOie6B8bAW3n6pf36Z9daWLchB9g4mG1OrFjL
-	 6YJBOYyN3YOwkBtE6+VTvD9/DZ1BEfZqxWux8hUpRxmswnJSF0dR4ov9sVGv/Edghc
-	 H1yzpKvJNcBkrCYhC7RH5gqbudf9o/D7PXODkqpPGborEGs6o10H4P35Rg0zWl2A71
-	 j3gVLyGEceS4g==
+	b=MVMZnRqDc8Fm7sraL5WrRvDqPSOovrtN5JGegbQ+CbaMLgatMADR5C6pISj7faf4O
+	 OjVeOIAHYweNfVIbTYOiW46FtkDfNml3S0xc1pJu/mbPOWClkNIMdWFK9ThoyUpbfM
+	 StI2vfqVHM8Oo8mbmkMUuUpihCSKLuyVVjk9IlO9N2f9ZhtsfBsgOR70FLEip1TYF+
+	 3Lq3cXozFdb5QOodrpxOX/LugyiiwihMee3wftoF0g8zx5Gp5O3re6sTbDJ08AC69C
+	 pMF7mV5pubJRt2sFS3fAyjLK0XF7+8bH1F6gh0kGGM13YgSeu31DeQH2V33aMudxx3
+	 TPhlFDjPd10lA==
 From: Christian Brauner <brauner@kernel.org>
-Date: Mon, 12 Oct 2026 12:21:06 +0200
-Subject: [PATCH RFC 21/28] gfs2: don't set SB_RDONLY on withdraw
+Date: Mon, 12 Oct 2026 12:21:07 +0200
+Subject: [PATCH RFC 22/28] efivarfs: stop using SB_RDONLY for read-only
+ efivar ops
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -37,7 +38,7 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261012-work-fs-sb_rdonly-v1-21-60743a3dc326@kernel.org>
+Message-Id: <20261012-work-fs-sb_rdonly-v1-22-60743a3dc326@kernel.org>
 References: <20261012-work-fs-sb_rdonly-v1-0-60743a3dc326@kernel.org>
 In-Reply-To: <20261012-work-fs-sb_rdonly-v1-0-60743a3dc326@kernel.org>
 To: Jan Kara <jack@suse.com>
@@ -50,237 +51,308 @@ Cc: Al Viro <viro@zeniv.linux.org.uk>, ecryptfs@vger.kernel.org,
  linux-mtd@lists.infradead.org, linux-xfs@vger.kernel.org, 
  "Christian Brauner (Amutable)" <brauner@kernel.org>, stable@vger.kernel.org
 X-Mailer: b4 0.17-dev-3d1b8
-X-Developer-Signature: v=1; a=openpgp-sha256; l=9758; i=brauner@kernel.org;
- h=from:subject:message-id; bh=DGaZ8J+rm6cKBJ/paFb5aFTsl1acSQ3r+Pna/SPIiMU=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWSd2TLZ4s6NQ1diecLundrMUrljofGkxPUl7txPj8+o8
- r8qKDH/QEcpC4MYF4OsmCKLQ7tJuNxynorNRpkaMHNYmUCGMHBxCsBEwo0ZGVb9aly3J/D1gcr4
- /vokvQXK/kZCMbWb3WI4f1zWFQzYuJ/hD+8uj7wJc8Q1eswCmfbfaV69UCDbL34ql7PDuYTfR91
- 42AA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=11355; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=K7BxUtHzcGy2IpDNps7btvz8womQYnC4QIpoXEvLpxo=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWSd2TIlNcY4kG9uudiLz2F3Je73LxaX2cTDHCPuwMo/k
+ eFKxD/zjlIWBjEuBlkxRRaHdpNwueU8FZuNMjVg5rAygQxh4OIUgIlsLGBkON+w7prdRjXFXym6
+ DF0ici2ilusvnH1x+oWCcfIP+74v7YwMqxecjgyWKGM2r84Mn1+tffvq3sUvGeo/b5h6u+KMA+9
+ 7XgA=
 X-Developer-Key: i=brauner@kernel.org; a=openpgp;
  fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-do_withdraw() sets SB_RDONLY from the withdraw work item without holding
-sb->s_umount. gfs2_withdraw() sets SDF_WITHDRAWN right away and queues
-gfs2_withdraw_func() which runs do_withdraw(). That also happens on a
-frozen filesystem. SDF_JOURNAL_LIVE is still set then because the
-freeze log flush doesn't clear it.
+Since commit 94f7f6182c72 ("efivarfs: automatically update super block
+flag") efivarfs_ops_notifier() sets or clears SB_RDONLY whenever the
+efivar ops switch between ops that can and ops that can't set variables,
+e.g. when tee_stmm_efi is probed or removed. The notifier runs from
+efivars_register() under efivars_lock at any time and without holding
+sb->s_umount.
 
 freeze_super() and thaw_super() both look at sb_rdonly() to figure out
-whether the s_writers rwsems need to be taken or released. gfs2 doesn't
-even get that far. FITHAW goes through gfs2_thaw_super() to
-gfs2_do_thaw() whose gfs2_freeze_lock_shared() fails with -EIO for a
-withdrawn filesystem. So FITHAW never gets to thaw_super() and the
-filesystem stays frozen. The only ways out are emergency thaw, which
-calls thaw_super_locked() directly, and writing 0 to the gfs2 "freeze"
-sysfs file, which calls thaw_super() directly. Both see SB_RDONLY and
-skip sb_freeze_unlock(). The rwsems stay write-locked, writes through
-file descriptors opened before the withdraw hang and umount warns:
+whether the s_writers rwsems need to be taken or released. efivarfs has
+->freeze_fs() and ->unfreeze_fs() and is FS_POWER_FREEZE. So a backend
+that loads or unloads around suspend and resume hits this without
+anybody calling FIFREEZE. If the ops turn read-only while the filesystem
+is frozen thaw_super() skips ->unfreeze_fs(), i.e. the variable resync,
+and sb_freeze_unlock(). The rwsems stay write-locked, writers hang and
+umount warns:
 
-  gfs2: fsid=s2test:s2fs.0: can't lock the freeze glock: -5
-  gfs2: fsid=s2test:s2fs.0: GFS2: couldn't thaw filesystem: -5
-  sysrq: Emergency Thaw of all frozen filesystems
+  efivars: Unregistered efivars operations
+  efivars: Registered efivars operations
   WARNING: kernel/rcu/sync.c:177 at rcu_sync_dtor+0x143/0x190
 
   [<0>] percpu_rwsem_wait+0x203/0x500
-  [<0>] vfs_write+0xb57/0xfa0
+  [<0>] mnt_want_write+0x28f/0x2f0
+  [<0>] filename_unlinkat+0x19f/0x600
 
-Withdrawing first and freezing afterwards isn't any better.
-freeze_super() freezes the read-only superblock without the rwsems,
-gfs2_lock_fs_check_clean() fails with -EIO and gfs2_do_thaw() can't get
-the freeze glock. FIFREEZE fails with -EIO and the superblock stays
-frozen and pinned for good.
+In the other direction a filesystem mounted with read-only ops is frozen
+without the rwsems. If the ops turn read-write before the thaw
+sb_freeze_unlock() releases rwsems nobody holds:
 
-SDF_WITHDRAWN already stops all modifications. Glocks fail with -EIO,
-gfs2_trans_begin() with -EROFS and log flushes and metadata reads are
-refused. So stop setting SB_RDONLY in do_withdraw() like ext4 did in
-commit d3476f3dad4a ("ext4: don't set SB_RDONLY after filesystem
-errors"). A few things have to come with that:
+  efivarfs: resyncing variable state
+  WARNING: kernel/rcu/sync.c:154 at rcu_sync_exit+0x147/0x1a0, CPU#0: fsfreeze/171
+  WARNING: kernel/rcu/sync.c:157 at rcu_sync_exit+0x150/0x1a0, CPU#0: fsfreeze/171
 
-(1) gfs2_evict_inode() and gfs2_quota_sync() check gfs2_withdrawn() next
-    to sb_rdonly(). Eviction writes the inode glock's metadata in place
-    and umount evicts everything.
+And the unlocked read-modify-write of sb->s_flags also races with every
+other writer of it.
 
-(2) gfs2_write_inode() returns -EIO once withdrawn. sync(2), syncfs(2),
-    freeze and umount skipped writeback for the read-only superblock.
-    Now they reach ->write_inode() which writes the glock address space
-    in place without a withdrawn check, and gfs2_ail_drain() leaves
-    committed buffers dirty. Data writeback needs no check because the
-    block mapping goes through gfs2_meta_read() which fails once
-    withdrawn.
+So keep the state to efivarfs. efivarfs_fs_info gets a flags word with
+EFIVARFS_OPS_RDONLY which the notifier sets and clears instead of
+touching SB_RDONLY. efivarfs_fill_super() initializes it from
+efivar_supports_writes() and doesn't set SB_RDONLY anymore either, which
+it did since commit f88814cc2578 ("efi/efivars: Expose RT service
+availability via efivars abstraction"). It samples the ops and registers
+the notifier under efivar_lock() so a switch can't slip in between and
+leave the flag stale until umount. create, unlink, setattr,
+fileattr_set, write and opening for write are refused with -EROFS while
+the flag is set. That includes setattr on the root directory.
 
-(3) gfs2_do_thaw() thaws even if the freeze glock can't be taken again
-    because the filesystem withdrew. A withdrawn filesystem can't write
-    anything and its lockspace is gone anyway.
+That means everything is derived from the private state now, mount time
+included. The notifier exists so that a mount made while the ops were
+read-only becomes writable once tee_stmm_efi loads later. That's the
+normal boot order because systemd mounts efivarfs before modules are
+loaded. Setting SB_RDONLY in fill_super would leave such mounts
+read-only until somebody remounts them. And all SB_RDONLY ever did here
+was keep writes away from a NULL ->set_variable (cf.
+commit 0e8d2444168d ("efivarfs: force RO when remounting if SetVariable
+is not supported")). The private checks do that too, also for writes
+through files opened before the ops turned read-only which SB_RDONLY
+never stopped. Note that they run without efivars_lock just like the
+SB_RDONLY check did. So a write that races with a switch to read-only
+ops isn't stopped. That's not new.
 
-(4) gfs2_freeze_super() refuses a withdrawn filesystem with -EIO before
-    calling freeze_super(). It can't take the freeze glock anymore and
-    freeze_super() would now take the rwsems of the read-write
-    superblock before gfs2_lock_fs_check_clean() fails.
+efivarfs_reconfigure() now only refuses to remount a read-only mount
+read-write while the flag is set, and with -EROFS instead of -EINVAL. It
+used to refuse every remount without "ro" while the ops couldn't write.
+That would refuse option-only remounts of the now read-write superblock
+as well. The check uses the same condition as the VFS' own remount_rw
+test so an fspick() reconfigure that doesn't touch the read-only flag
+isn't mistaken for one.
 
-Note that the SB_RDONLY change and (3) have to go in together and the
-rest has to be in place by then. With only the SB_RDONLY change a freeze
-after a withdraw takes the rwsems of the now read-write superblock and
-stays frozen for good with writers blocked. With only (3) FITHAW reaches
-thaw_super() on the read-only superblock and leaks the rwsems. And
-without (4) a freeze after a withdraw goes through the error path of
-gfs2_freeze_super() which re-locks sd_freeze_gh while
-gfs2_lock_fs_check_clean() still holds it. The umount that is now
-possible then hangs in gfs2_wait_glocks().
+We show "ro_ops" in the mount options while the flag is set. IOW, with
+read-only ops efivarfs is now mounted "rw,...,ro_ops" instead of "ro".
+statfs() doesn't report ST_RDONLY and access(W_OK) doesn't fail with
+-EROFS anymore. Variables that efivarfs marks immutable fail with -EPERM
+first when opened for write, unlinked or chmod'ed because the
+IS_IMMUTABLE() check in the VFS comes before ->open() and ->unlink().
+And mkdir and rename, which efivarfs doesn't support, fail with -EPERM
+and setxattr with -EOPNOTSUPP instead of -EROFS.
 
-While withdrawn a remount to read-write fails with -EROFS instead of the
--EIO from gfs2_make_fs_rw(). A remount to read-only goes through
-gfs2_make_fs_ro() which writes nothing once do_withdraw() has run, and
-since the previous patch gfs2_make_fs_ro() waits for that. So emergency
-remount (sysrq u), which now forces every withdrawn gfs2 read-only,
-works without a WARN.
+Reproducer. This needs tee_stmm_efi, the only driver that switches
+efivar ops while efivarfs can be mounted, or a module that does what it
+does: efivars_generic_ops_unregister() and efivars_register() of ops
+without ->set_variable, and back:
 
-We show "withdrawn" in the mount options next to the existing
-"demote_interface_used". A withdrawn filesystem stays "rw" so statfs()
-doesn't report ST_RDONLY anymore, and the "Mounted RO" line in the sysfs
-status file and the RDONLY= uevent field read 0 too. A second mount of
-the device and a gfs2meta mount have to be read-write now. And like with
-"emergency_ro" on ext4, remount helpers that pass the shown options back
-fail. busybox mount for example now gets "Unknown parameter
-'withdrawn'".
+  mount -t efivarfs efivarfs /sys/firmware/efi/efivars    # read-write ops
+  fsfreeze -f /sys/firmware/efi/efivars
+  <switch to read-only ops>
+  fsfreeze -u /sys/firmware/efi/efivars
+  <switch back to read-write ops>
+  rm /sys/firmware/efi/efivars/<var>    # before: hangs in percpu_rwsem_wait()
+  umount /sys/firmware/efi/efivars      # before: WARNING at rcu_sync_dtor()
 
-Path based operations fail with -EIO as before. The mount root is the
-exception because it isn't looked up. So operations on it now fail with
--EIO from the glocks instead of -EROFS from mnt_want_write(), and the
-same goes for fd based chmod, chown, utimes, setxattr and fileattr
-changes. syncfs(2) on a withdrawn filesystem returns gfs2_sync_fs()'s
-sd_log_error, e.g. -EIO, instead of 0. FITHAW of a filesystem that
-withdrew while frozen works now and FIFREEZE of a withdrawn filesystem
-fails with -EIO without freezing it.
+The other direction, mounted with read-only ops, frozen, switched to
+read-write ops and thawed, warns in rcu_sync_exit() from the thaw.
 
-Reproducer (the sb_rdonly selftest at the end of this series covers it
-as well):
-
-  mkfs.gfs2 -O -p lock_nolock -j 1 -t test:fs img; mount -o loop img /mnt
-  exec 3>>/mnt/a 4</mnt          # paths stop working after the withdraw
-  fsfreeze -f /mnt
-  echo 1 > /sys/fs/gfs2/test:fs/withdraw; sleep 8
-  <FITHAW on fd 4>               # before: EIO, stays frozen; after: thawed
-  echo j > /proc/sysrq-trigger   # before: the only way out, leaks the rwsems
-  echo x >&3                     # before: hangs in percpu_rwsem_wait(); after: EIO
-  umount /mnt                    # before: WARNING at rcu_sync_dtor()
-
-Fixes: 601ef0d52e96 ("gfs2: Force withdraw to replay journals and wait for it to finish")
-Fixes: b77b4a4815a9 ("gfs2: Rework freeze / thaw logic")
+Fixes: 94f7f6182c72 ("efivarfs: automatically update super block flag")
 Cc: stable@vger.kernel.org
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- fs/gfs2/ops_fstype.c |  6 +++++-
- fs/gfs2/quota.c      |  2 +-
- fs/gfs2/super.c      | 19 +++++++++++++++++--
- fs/gfs2/util.c       |  6 ++++--
- 4 files changed, 27 insertions(+), 6 deletions(-)
+ fs/efivarfs/file.c     |  6 ++++++
+ fs/efivarfs/inode.c    | 15 +++++++++++++++
+ fs/efivarfs/internal.h | 14 +++++++++++++-
+ fs/efivarfs/super.c    | 31 +++++++++++++++++++++++--------
+ 4 files changed, 57 insertions(+), 9 deletions(-)
 
-diff --git a/fs/gfs2/ops_fstype.c b/fs/gfs2/ops_fstype.c
-index 718e0da7dfce..d7f7e8b75971 100644
---- a/fs/gfs2/ops_fstype.c
-+++ b/fs/gfs2/ops_fstype.c
-@@ -1594,7 +1594,11 @@ static int gfs2_reconfigure(struct fs_context *fc)
- 		if (fc->sb_flags & SB_RDONLY) {
- 			gfs2_make_fs_ro(sdp);
- 		} else {
--			error = gfs2_make_fs_rw(sdp);
-+			/* A withdrawn filesystem can't go back to read-write. */
-+			if (gfs2_withdrawn(sdp))
-+				error = -EROFS;
-+			else
-+				error = gfs2_make_fs_rw(sdp);
- 			if (error)
- 				errorfc(fc, "unable to remount read-write");
- 		}
-diff --git a/fs/gfs2/quota.c b/fs/gfs2/quota.c
-index 001c8b39ca55..7fac70bae129 100644
---- a/fs/gfs2/quota.c
-+++ b/fs/gfs2/quota.c
-@@ -1329,7 +1329,7 @@ int gfs2_quota_sync(struct super_block *sb, int type)
- 	u64 sync_gen;
- 	int error = 0;
+diff --git a/fs/efivarfs/file.c b/fs/efivarfs/file.c
+index cb1b6d0c3454..a074145fa57e 100644
+--- a/fs/efivarfs/file.c
++++ b/fs/efivarfs/file.c
+@@ -23,6 +23,9 @@ static ssize_t efivarfs_file_write(struct file *file,
+ 	ssize_t bytes;
+ 	bool set = false;
  
--	if (sb_rdonly(sdp->sd_vfs))
-+	if (sb_rdonly(sdp->sd_vfs) || gfs2_withdrawn(sdp))
- 		return 0;
- 
- 	qda = kzalloc_objs(struct gfs2_quota_data *, max_qd);
-diff --git a/fs/gfs2/super.c b/fs/gfs2/super.c
-index 1d7b39354d65..ec7bce124376 100644
---- a/fs/gfs2/super.c
-+++ b/fs/gfs2/super.c
-@@ -456,6 +456,9 @@ static int gfs2_write_inode(struct inode *inode, struct writeback_control *wbc)
- 	int ret = 0;
- 	bool flush_all = (wbc->sync_mode == WB_SYNC_ALL || gfs2_is_jdata(ip));
- 
-+	if (gfs2_withdrawn(sdp))
-+		return -EIO;
++	if (efivarfs_ops_rdonly(inode->i_sb))
++		return -EROFS;
 +
- 	if (flush_all)
- 		gfs2_log_flush(GFS2_SB(inode), ip->i_gl,
- 			       GFS2_LOG_HEAD_FLUSH_NORMAL |
-@@ -686,7 +689,12 @@ static int gfs2_do_thaw(struct gfs2_sbd *sdp, enum freeze_holder who, const void
+ 	if (count < sizeof(attributes))
+ 		return -EINVAL;
+ 
+@@ -137,6 +140,9 @@ static int efivarfs_file_open(struct inode *inode, struct file *file)
+ {
+ 	struct efivar_entry *entry = inode->i_private;
+ 
++	if ((file->f_mode & FMODE_WRITE) && efivarfs_ops_rdonly(inode->i_sb))
++		return -EROFS;
++
+ 	file->private_data = entry;
+ 
+ 	inode_lock(inode);
+diff --git a/fs/efivarfs/inode.c b/fs/efivarfs/inode.c
+index f0d009555fc6..6b0540139798 100644
+--- a/fs/efivarfs/inode.c
++++ b/fs/efivarfs/inode.c
+@@ -15,6 +15,8 @@
+ #include "internal.h"
+ 
+ static const struct inode_operations efivarfs_file_inode_operations;
++static int efivarfs_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
++			    struct iattr *iattr);
+ 
+ struct inode *efivarfs_get_inode(struct super_block *sb,
+ 				const struct inode *dir, int mode,
+@@ -83,6 +85,9 @@ static int efivarfs_create(struct mnt_idmap *idmap, struct inode *dir,
+ 	bool is_removable = false;
+ 	efi_guid_t vendor;
+ 
++	if (efivarfs_ops_rdonly(dir->i_sb))
++		return -EROFS;
++
+ 	if (!efivarfs_valid_name(dentry->d_name.name, dentry->d_name.len))
+ 		return -EINVAL;
+ 
+@@ -122,6 +127,9 @@ static int efivarfs_unlink(struct inode *dir, struct dentry *dentry)
+ {
+ 	struct efivar_entry *var = d_inode(dentry)->i_private;
+ 
++	if (efivarfs_ops_rdonly(dir->i_sb))
++		return -EROFS;
++
+ 	if (efivar_entry_delete(var))
+ 		return -EINVAL;
+ 
+@@ -132,6 +140,7 @@ const struct inode_operations efivarfs_dir_inode_operations = {
+ 	.lookup = simple_lookup,
+ 	.unlink = efivarfs_unlink,
+ 	.create = efivarfs_create,
++	.setattr = efivarfs_setattr,
+ };
+ 
+ static int
+@@ -155,6 +164,9 @@ efivarfs_fileattr_set(struct mnt_idmap *idmap,
+ {
+ 	unsigned int i_flags = 0;
+ 
++	if (efivarfs_ops_rdonly(dentry->d_sb))
++		return -EROFS;
++
+ 	if (fileattr_has_fsx(fa))
+ 		return -EOPNOTSUPP;
+ 
+@@ -176,6 +188,9 @@ static int efivarfs_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
+ 	struct inode *inode = d_inode(dentry);
  	int error;
  
- 	error = gfs2_freeze_lock_shared(sdp);
--	if (error)
++	if (efivarfs_ops_rdonly(inode->i_sb))
++		return -EROFS;
++
+ 	error = setattr_prepare(idmap, dentry, iattr);
+ 	if (error)
+ 		return error;
+diff --git a/fs/efivarfs/internal.h b/fs/efivarfs/internal.h
+index f913b6824289..c2ca7a073b5d 100644
+--- a/fs/efivarfs/internal.h
++++ b/fs/efivarfs/internal.h
+@@ -15,10 +15,22 @@ struct efivarfs_mount_opts {
+ 
+ struct efivarfs_fs_info {
+ 	struct efivarfs_mount_opts mount_opts;
+-	struct super_block *sb;
+ 	struct notifier_block nb;
++	unsigned long flags;
+ };
+ 
++/* efivarfs_fs_info->flags */
++enum {
++	EFIVARFS_OPS_RDONLY,	/* the registered efivar ops can't set variables */
++};
++
++static inline bool efivarfs_ops_rdonly(const struct super_block *sb)
++{
++	const struct efivarfs_fs_info *sfi = sb->s_fs_info;
++
++	return test_bit(EFIVARFS_OPS_RDONLY, &sfi->flags);
++}
++
+ struct efi_variable {
+ 	efi_char16_t  VariableName[EFI_VAR_NAME_LEN/sizeof(efi_char16_t)];
+ 	efi_guid_t    VendorGuid;
+diff --git a/fs/efivarfs/super.c b/fs/efivarfs/super.c
+index 8d33f11db2a1..d1ee6abb639f 100644
+--- a/fs/efivarfs/super.c
++++ b/fs/efivarfs/super.c
+@@ -28,12 +28,18 @@ static int efivarfs_ops_notifier(struct notifier_block *nb, unsigned long event,
+ {
+ 	struct efivarfs_fs_info *sfi = container_of(nb, struct efivarfs_fs_info, nb);
+ 
 +	/*
-+	 * A withdrawn filesystem can't get the freeze glock back, but it won't
-+	 * write anything either. Thaw it anyway instead of leaving it frozen
-+	 * for good.
++	 * This runs at any time without sb->s_umount, so don't touch
++	 * SB_RDONLY. Changing it under freeze_super() and thaw_super() leaves
++	 * the freeze protection unbalanced. The modifying operations check
++	 * EFIVARFS_OPS_RDONLY instead.
 +	 */
-+	if (error && !gfs2_withdrawn(sdp))
- 		goto fail;
- 	error = thaw_super(sb, who, freeze_owner);
- 	if (!error)
-@@ -751,6 +759,11 @@ static int gfs2_freeze_super(struct super_block *sb, enum freeze_holder who,
- 		mutex_unlock(&sdp->sd_freeze_mutex);
- 		return -EBUSY;
- 	}
-+	/* A withdrawn filesystem can't take the freeze glock anymore. */
-+	if (gfs2_withdrawn(sdp)) {
-+		mutex_unlock(&sdp->sd_freeze_mutex);
-+		return -EIO;
-+	}
+ 	switch (event) {
+ 	case EFIVAR_OPS_RDONLY:
+-		sfi->sb->s_flags |= SB_RDONLY;
++		set_bit(EFIVARFS_OPS_RDONLY, &sfi->flags);
+ 		break;
+ 	case EFIVAR_OPS_RDWR:
+-		sfi->sb->s_flags &= ~SB_RDONLY;
++		clear_bit(EFIVARFS_OPS_RDONLY, &sfi->flags);
+ 		break;
+ 	default:
+ 		return NOTIFY_DONE;
+@@ -74,6 +80,8 @@ static int efivarfs_show_options(struct seq_file *m, struct dentry *root)
+ 	if (!gid_eq(opts->gid, GLOBAL_ROOT_GID))
+ 		seq_printf(m, ",gid=%u",
+ 				from_kgid_munged(&init_user_ns, opts->gid));
++	if (efivarfs_ops_rdonly(sb))
++		seq_puts(m, ",ro_ops");
+ 	return 0;
+ }
  
- 	for (;;) {
- 		error = freeze_super(sb, who, freeze_owner);
-@@ -1165,6 +1178,8 @@ static int gfs2_show_options(struct seq_file *s, struct dentry *root)
- 		seq_puts(s, ",nobarrier");
- 	if (test_bit(SDF_DEMOTE, &sdp->sd_flags))
- 		seq_puts(s, ",demote_interface_used");
-+	if (gfs2_withdrawn(sdp))
-+		seq_puts(s, ",withdrawn");
- 	if (args->ar_rgrplvb)
- 		seq_puts(s, ",rgrplvb");
- 	if (args->ar_loccookie)
-@@ -1466,7 +1481,7 @@ static void gfs2_evict_inode(struct inode *inode)
- 	int ret;
+@@ -373,9 +381,6 @@ static int efivarfs_fill_super(struct super_block *sb, struct fs_context *fc)
+ 	sb->s_d_flags |= DCACHE_DONTCACHE;
+ 	sb->s_time_gran         = 1;
  
- 	gfs2_holder_mark_uninitialized(&gh);
--	if (sb_rdonly(sb) || !ip->i_no_addr || !ip->i_gl)
-+	if (sb_rdonly(sb) || gfs2_withdrawn(sdp) || !ip->i_no_addr || !ip->i_gl)
- 		goto out;
- 
- 	/*
-diff --git a/fs/gfs2/util.c b/fs/gfs2/util.c
-index 1535ce2b7aa8..990552f42a0b 100644
---- a/fs/gfs2/util.c
-+++ b/fs/gfs2/util.c
-@@ -133,9 +133,11 @@ static void do_withdraw(struct gfs2_sbd *sdp)
- 			   gfs2_log_is_empty(sdp),
- 			   HZ * 5);
- 
--	sdp->sd_vfs->s_flags |= SB_RDONLY;
+-	if (!efivar_supports_writes())
+-		sb->s_flags |= SB_RDONLY;
 -
- 	/*
-+	 * We don't set SB_RDONLY. That requires sb->s_umount, and changing it
-+	 * under freeze_super() and thaw_super() leaves the freeze protection
-+	 * unbalanced. SDF_WITHDRAWN already stops all modifications.
-+	 *
- 	 * Dequeue any pending non-system glock holders that can no
- 	 * longer be granted because the file system is withdrawn.
- 	 */
+ 	inode = efivarfs_get_inode(sb, NULL, S_IFDIR | 0755, 0, true);
+ 	if (!inode)
+ 		return -ENOMEM;
+@@ -386,9 +391,15 @@ static int efivarfs_fill_super(struct super_block *sb, struct fs_context *fc)
+ 	if (!root)
+ 		return -ENOMEM;
+ 
+-	sfi->sb = sb;
++	/* The ops can't switch between sampling them and registering. */
++	err = efivar_lock();
++	if (err)
++		return err;
++	if (!efivar_supports_writes())
++		set_bit(EFIVARFS_OPS_RDONLY, &sfi->flags);
+ 	sfi->nb.notifier_call = efivarfs_ops_notifier;
+ 	err = blocking_notifier_chain_register(&efivar_ops_nh, &sfi->nb);
++	efivar_unlock();
+ 	if (err)
+ 		return err;
+ 
+@@ -402,9 +413,13 @@ static int efivarfs_get_tree(struct fs_context *fc)
+ 
+ static int efivarfs_reconfigure(struct fs_context *fc)
+ {
+-	if (!efivar_supports_writes() && !(fc->sb_flags & SB_RDONLY)) {
++	struct super_block *sb = fc->root->d_sb;
++
++	/* Only refuse remounting a read-only mount read-write. */
++	if ((fc->sb_flags_mask & SB_RDONLY) && !(fc->sb_flags & SB_RDONLY) &&
++	    sb_rdonly(sb) && efivarfs_ops_rdonly(sb)) {
+ 		pr_err("Firmware does not support SetVariableRT. Can not remount with rw\n");
+-		return -EINVAL;
++		return -EROFS;
+ 	}
+ 
+ 	return 0;
 
 -- 
 2.53.0
