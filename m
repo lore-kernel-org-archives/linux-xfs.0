@@ -1,54 +1,110 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B8FF367281
-	for <linux-xfs@vger.kernel.org>; Mon, 12 Oct 2026 13:24:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 340E5367B74;
+	Mon, 12 Oct 2026 13:33:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791811453; cv=none; b=NJng2tZ3P3aJpJAkCKmONpbjnBoVAZSwi0r3hvHUnZCH6UcSmV8h02g1WlZZF6CrJzAsPcWa8f72WlfBkSpgdkLTv0mIEKLC7r3gcbSCVUQ3fNYmD5HTQbH8wos/4CBo4KkbtOKZTfdZe8lAJ3IdeGslSinIMaPcr82rBAt16zs=
+	t=1791812014; cv=none; b=QvDwBJpzqDTsXibjjXf9/rhzgbd/9cJhrtgy1wz+fHqoLLyVXhlNC8ErDDShdwyiXUjiyP6DPb6jH27IkfvMzTuAJMxrhsQ+jFF+OLg9TnCbzUiwy+eSXaAyazzquuHT9edDn1R4zgOzNZuBXeTVz+18L1CjXxK23jIPwMthR6U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791811453; c=relaxed/simple;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
+	s=arc-20240116; t=1791812014; c=relaxed/simple;
+	bh=oXpJJmU8Anjiy26i2WZNuQR7aGU9DdaxZCT+al9Dn5Q=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hUt/J/wYLFsF+Cdhhtd2l73qGuKT0p784kyPtDOM9OC3P01Qq9yFt4ThKZlU7NZVWnA53B9micg6+52XOvTpWNkngH49k5g/4N3j3tWqZDuBEi0T5LlokJj87E60rF4IqvwTc+JASOa1t5riDy8DAm5VEO0gzZz8zWZeawXZavg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=LB/d+QjG; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=geE49uBcRoABfAawCliW8SxWA1BHYhWalaoA5WXljDV5Of4OGTu9aOOcw7zlr6Hj7fa+DmF3cs5Y8xrrP+w4ldtAM/7qYGrFF9MqMZHuvXJxVZef6xCWWc3oB4TNtnAXXF5XGee2wjyTQ/o5GRPTpPoEVbE01TwRGo3NU5BWrJ0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gRaCDE7U; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="LB/d+QjG"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=LB/d+QjGCUpL6mRckEjtSRyWZa
-	0zO5yff2s4wLSMKMJCZ/Z7wAXaTwo3uRLjXAfd20AdWrnv419+8GWRQ9hbAk/FFipZCvTr1yzcDyK
-	n9zMBqCSxSVAHQ+8BarrXP/0VC7f8v2vAgdXR3uoSF6Fga0Xo7/XK88AbFv/vjGNaFK9glL5PNMF7
-	0Y9ERbiEqkU91H1Tnea+BHdhahX6XnPtJoEQ0t9PNqi0ehlCG44LRxH3722/vv1IDLxY+XASDcirP
-	PIqTeM8b63ah8WWlgD84BIrLcpBRCFFtHE8wxnAv2IXQZTtUDzlStQhQaaORYmnxmvV/WcA3JUK5Q
-	nltHI4tQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1xGG0h-0000000AYkI-2XtR;
-	Mon, 12 Oct 2026 13:24:11 +0000
-Date: Mon, 12 Oct 2026 06:24:11 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: aalbersh@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] quotactl: deploy typechecked helpers
-Message-ID: <aszfe7-oRmCYZUEU@infradead.org>
-References: <179158948034.3720791.6624320009127284341.stgit@frogsfrogsfrogs>
- <179158948078.3720791.2234654108960438102.stgit@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gRaCDE7U"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D84451F0089B;
+	Mon, 12 Oct 2026 13:33:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1791812012;
+	bh=Jk2ATHm1+7IqzHKNOh4AeA3ysPCL06HNzU14JeuVcR8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=gRaCDE7U/awcfYEVienAoxa/9eTTQRTBlBYpsawt15BWLYvoVWH+0KHrLLGYloRxL
+	 BrAho/k3tF8CXLNQ2kNWhLXIUBXlQDHKxEAZVYqWvn9F8b+9xwog1oidU2XAAICDRy
+	 QiR6WsgW+0n/MF5qknYkaXT31bwrlZtk1NjAPYk2HLCjypWnh1e9Wig1A9HBzUDY7l
+	 VWkhEYKTAZ2sn3MagsGaFaYY1Ak5AhSsIzvccV3me1jO/0wGo6hsgk3zF2xKx3o3cE
+	 R11RAI/aoV6aT/mHhLsaM2bwjvMehDGseRrH3KOpiXNhe973nW8/h4GF2ihOk4i08J
+	 PcwksjDDRS9QQ==
+Date: Mon, 12 Oct 2026 21:33:24 +0800
+From: Zorro Lang <zlang@kernel.org>
+To: Lukas Herbolt <lukas@herbolt.com>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, fstests@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org
+Subject: Re: [PATCH 1/1] lib/random.c fix undefined behavior on signed
+ integer overflow.
+Message-ID: <aszhaYx_x1LrEKmc@zlang-mailbox>
+Mail-Followup-To: Lukas Herbolt <lukas@herbolt.com>, 
+	"Darrick J. Wong" <djwong@kernel.org>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	linux-ext4@vger.kernel.org
+References: <20261006135205.400485-1-lukas@herbolt.com>
+ <20261006135205.400485-2-lukas@herbolt.com>
+ <20261007170058.GG2705364@frogsfrogsfrogs>
+ <d000ae8abba884b0a58be93e6e63f486@herbolt.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <179158948078.3720791.2234654108960438102.stgit@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <d000ae8abba884b0a58be93e6e63f486@herbolt.com>
 
-Looks good:
+On Thu, Oct 08, 2026 at 10:23:59AM +0200, Lukas Herbolt wrote:
+> On 2026-10-07 19:00, Darrick J. Wong wrote:
+> > On Tue, Oct 06, 2026 at 03:51:52PM +0200, Lukas Herbolt wrote:
+> > > The random.c now expects that signed integer to overflow and
+> > > triggers the  ^MASK branch. But signed int overflow is undefined
+> > > behavior and GCC can optimize this branch out with certain
+> > > CFLAGS/LDFLAGS.
+> > > 
+> > > Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
+> > > ---
+> > >  lib/random.c | 13 +++++++------
+> > >  1 file changed, 7 insertions(+), 6 deletions(-)
+> > > 
+> > > diff --git a/lib/random.c b/lib/random.c
+> > > index d5c81be817c8..f767ed1d1337 100644
+> > > --- a/lib/random.c
+> > > +++ b/lib/random.c
+> > > @@ -186,14 +186,15 @@ _random (int32_t is [2])
+> > >  int32_t
+> > >  _irandm (int32_t is [2])
+> > >  {
+> > > -	int32_t it, leh, nit;
+> > > -
+> > > +	int32_t it, leh, nit, apply_mask;
+> > >  	it = is [0];
+> > >  	leh = is [1];
+> > > -	if (it <= 0)
+> > > -		it = (it + it) ^ MASK;
+> > > -	else
+> > > -		it = it + it;
+> > > +
+> > > +/* 	evaluate on original value — no UB here */
+> > > +	apply_mask = (it <= 0);
+> > > +/*	double via unsigned shift — well-defined */
+> > > +	it = (unsigned)it << 1;
+> > > +	if (apply_mask) it ^= MASK;
+> > 
+> > Doesn't _random suffer the same flaw?
+> > 
+> > Oh.  It's dead code, maybe it should go away?
+> Good point.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+If you'd like to do this in another patch, I'll merge this one at first (or
+I'll wait your V2).
 
+> > 
+> > Also, what about converting all the variables to unsigned?
+> 
+> It would break two signed checks: `it <= 0` (LFSR feedback -
+> only fires at zero instead of when MSB set) and `leh < 0`
+> (output folding — never fires). The `it` register degenerates
+> to 33 repeating values after 64 calls. Reducing the pool of
+> random numbers.
+> 
+> -- 
+> -lhe
