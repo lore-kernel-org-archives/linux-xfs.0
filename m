@@ -1,40 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB63C34F24E;
-	Mon, 12 Oct 2026 14:25:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79DE248F02A;
+	Mon, 12 Oct 2026 14:25:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791815133; cv=none; b=f80uG/3wjVbtIAJ0yTFKvfes9e7yDWVgqAd3pj5ze5lIzVBxBUQiPhk6A5IPDnQN2gC/Xc6+GJQsARy7TmMc59c1K8UiEXC+Wk9YQOc0K3Xi2z8DYmYBRvbWguNXhH/0EM6+3OqoMCfFYFAFNmNxi6M740qtqzw5SZT2O3AjZ7I=
+	t=1791815135; cv=none; b=cJPlpVUKCCjZU5nq0y6L/gaCFCHCs0qrbO9rPJ8rusH7PgaHFNZ0mO7vMlP1c4p/OSj5SX+eMJCWdSuyvEFCWMv7vwSQSnc0yEDMLZ++ei5DZ5QlgBVQdDXgB4HCurUFBYAL144hlTGNSMR5C7EMSPZPaemaFxqNZ+16mMjxIcU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791815133; c=relaxed/simple;
-	bh=CB5K1aNtrorexA/JdeWaL5lEgFC4gzph3QWPwtcKpcg=;
-	h=From:To:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=QSuwscav/8WQekLZxoZiCuMfl6JwSy//V3MauOmgwxSN2IOUV6SZZ5RwW4M+WKTyfrfqlnfUfIqCP2DZJMAeDeiMN1Lv4Yl3vfUBQp693JMpfasoMJMtv5iXwa2kIFDIYALzKIOxHc2B3D9g5QQQZhguaAy2Qzaxh5l3FaQjR7A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KtuCoNhP; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791815135; c=relaxed/simple;
+	bh=UDRC4k6jtpTAzdj3jNapRGpGuYwQR6PtAri6UYSXh4k=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=TQhZk7+SMiSaIPfxIj54DiGz3/mSMx/QKt+QltcVxlvtCgqdSqN28aeyuCh59lB3pa/cd2UjoLhPdExJe/LVx9VsinGGot0f3ON2P5Xz68pqqEEmjM8FRCfFscTnvenRycO+NYN0MzXvfjs+bwQkz8iPKeRZ4fOM3m+6i2BMIeI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Pefmkigp; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KtuCoNhP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71D351F0089C;
-	Mon, 12 Oct 2026 14:25:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Pefmkigp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DCC871F0089D;
+	Mon, 12 Oct 2026 14:25:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791815132;
-	bh=wPVH+ldGDfqUbS8gIISm626Z1jh5SZOobA1gnB3ErGQ=;
-	h=From:To:In-Reply-To:References:Subject:Date;
-	b=KtuCoNhPkqT8F5evTqux2DuKCpAAdrbX5fuohGhzxZBMxcCtZHQjn5CYXymL3Z3l3
-	 5kEbXThVP6tzGqFFg7Y3mmlrypT6f46DH6EGMo9ALKmDWo2MtJPiTkPct/lHrw4Cij
-	 Y01QoLOU2UkLEPyTmJcoU2CCMZdVkldegol1+8hyON9LAd8krKg+RzNwN0RBSfHeKn
-	 wX/ifhYZA/KNlo2jEdB0k3x2yBbNlCLQcZAGWYMJ+X864aX3OVif5fhSamifTysBcx
-	 Djq6xfFiAmtdGL9bs1TsW9dWHpwshAMYTjNhO0DzIwjVzw6MXAP5V/iLZzytQZTayI
-	 RTon45nHTn1kA==
+	s=k20260515; t=1791815134;
+	bh=GymSLpD5tWybWbzvODs1GBKhiva8NA/oeqm8YClEZCE=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date;
+	b=Pefmkigp0UcoEhgTPopHOuP1kSQn/b1bhb3XGJfOXGeEnYZtybBD9kTP29WrXxfvy
+	 BiNJxEJ1yAYk+rb9/B6V9iNi520It04Iz4S0hEXooi4jkbKIsXmvk6oBh5Tl/5v8fX
+	 VRpYZ7hP/PKkJGa/yYoO6fzSgGenLqLGIWKDCKkiSyDc0M+lxtJqAdihySalpFQDQP
+	 h8RJ6/tRgDEQU26UlLiEjy53BWh6CIaNypMD0i9TrEJ3ZJU1tw/qYfUVkdhfpcXEF1
+	 kCfBCOh64ASVUZBhQ5D92ssEMTCnuH1d/awEO5TwBoUv4RCUBBJPhWGPx9CtzWQjUu
+	 1IRmHvbUi4zsw==
 From: Christian Brauner <brauner@kernel.org>
-To: linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
- linux-xfs@vger.kernel.org, Qu Wenruo <wqu@suse.com>
-In-Reply-To: <73bd4d9b39e821453028ca8e567eaad2ebe0fc18.1785880740.git.wqu@suse.com>
-References: <73bd4d9b39e821453028ca8e567eaad2ebe0fc18.1785880740.git.wqu@suse.com>
-Subject: Re: [PATCH v4] iomap: follow the alignment requirement for
- iomap_dio_hole_iter()
-Message-Id: <20261012-wallung-heizanlage-begangen-5ebbb33cb59d@brauner>
-Date: Mon, 12 Oct 2026 16:25:31 +0200
+To: Muhammad Mahdi Amirpour <ampr.mhd@gmail.com>
+Cc: "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org, 
+ linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <20261006154005.232338-1-ampr.mhd@gmail.com>
+References: <20261006154005.232338-1-ampr.mhd@gmail.com>
+Subject: Re: [PATCH] fs/iomap: document ret parameter of
+ iomap_iter_continue
+Message-Id: <20261012-semmel-mineral-nudelsalat-81f8544c3e8b@brauner>
+Date: Mon, 12 Oct 2026 16:25:32 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,22 +46,9 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.17-dev-3d1b8
 
-On Wed, 05 Aug 2026 07:29:51 +0930, Qu Wenruo wrote:
-> [BUG]
-> On the latest development branch, btrfs with 8K block size on 4K page
-> sized systems will fail all test cases that run fsstress.
-> 
-> One very short example would be:
-> 
->  # $fsstress -n 4 -d $mnt -s 1785675805 -v
->  0/0: dwrite - no filename
->  0/1: creat f0 x:0 0 0
->  0/1: creat add id=0,parent=-1
->  0/2: write dontcache f0[259 1 0 0 0 0] [816411,3620] 0
->  0/3: dread - xfsctl(XFS_IOC_DIOINFO) f0[259 1 0 0 32 820031] return 25, fallback to stat()
->  0/3: dread f0[259 1 0 0 32 820031] [483328,81920] 0
-> 
-> [...]
+On Tue, 06 Oct 2026 19:10:05 +0330, Muhammad Mahdi Amirpour wrote:
+> Document the ret parameter of iomap_iter_continue to avoid a
+> kernel-doc warning.
 
 Applied to the vfs-7.4.iomap branch of the vfs/vfs.git tree.
 Patches in the vfs-7.4.iomap branch should appear in linux-next soon.
@@ -77,6 +65,6 @@ trailer updates or similar. If in doubt, please check the listed branch.
 tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
 branch: vfs-7.4.iomap
 
-[1/1] iomap: follow the alignment requirement for iomap_dio_hole_iter()
-      https://git.kernel.org/vfs/vfs/c/c156c9afe59b
+[1/1] fs/iomap: document ret parameter of iomap_iter_continue
+      https://git.kernel.org/vfs/vfs/c/92e2f4295403
 
