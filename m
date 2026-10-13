@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA5693988E3
-	for <linux-xfs@vger.kernel.org>; Tue, 13 Oct 2026 06:03:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58A4D3988E3
+	for <linux-xfs@vger.kernel.org>; Tue, 13 Oct 2026 06:03:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791871383; cv=none; b=Nir7FUb8HbgYH69ICsrqCpmvBdwFKUBn7fqiPOj/WXkynClH1axZyKmCYPsNppal76pXpt/2PiaBSbV3S8MWGTOI88dJWpmKxsredJT2cTFj2YLK+AVi0aiNlq6MC+byf7brjRQyJiCZdZzvKdw8+CnuhyEqG5Uyzy7vb+V7P7Y=
+	t=1791871385; cv=none; b=pfRVSVFtQLi2jDU6U66++lRY6pwPm3k+JGHJyA+E9rWpln8qQRRhXq/7aWr2e/0W1zEUAy45lSg3zaIfjm8XaWjAFh9CaGRxxe4dj4gUfjYF7YUlgyuz9JK4TndJmwJOZex6YLJbar2BxkDq6tue1gnxPQAkz2EB+CAFA/agS1E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791871383; c=relaxed/simple;
-	bh=b+s/Tgq2K4rlOwIgDVYnaZ6Cr1phxgpMo5ABDl6K+nY=;
+	s=arc-20240116; t=1791871385; c=relaxed/simple;
+	bh=q4/4883hm4V5Dswfnm/HBtrrfrXmNPa3f8gIRoXFON4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=l7z3uW/6vyziRwSlp0OifXyFPXsXIJ1xBGRnayYrfWHjzcujCdYgpkorNJoT43+5fKn1hBfHwfNHHC/MxFImsu85p8UgJJUz5gPUV8+2wsjGX7hA3bNCXz1G7Jgpx9oy/+ZEfBgilaMjdehcAGNyJ8OOBTc4nNKyOlGj3V5zmNQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JMFZpnrW; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=L07ktW11ue8JZ4w41zLDVep8Q9i8Wmy6rNR7vCV7i8sGxxwVAv8++yBuFXar3GGF99VPSYFlLnUOtgoKGs6jGmBBdQil2n9cndCVuUa9pH/4RlmkBsBO4ykAQvTwax3/oSEprJ4ue1xXUAxe8UVEBvLX6H9R3YOPZTtcNoNHVeM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ki1NL1YZ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JMFZpnrW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 070571F000FF;
-	Tue, 13 Oct 2026 06:03:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ki1NL1YZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 406031F00893;
+	Tue, 13 Oct 2026 06:03:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791871382;
-	bh=XGBj+t7oyBUARQha2uxq7yPCbL/BoPNadP/HFQTBqKQ=;
+	s=k20260515; t=1791871384;
+	bh=S/pGFd5RbKoUAzM0VkEuf4O1gdZHOcJ7EnRHT8+v2sY=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=JMFZpnrWxVObNwpBEOYBzonk7oVBmAwsI+P5hGSB58Uzs4JkZAaxhWVMP+uJwf/W6
-	 SzyiXT80URLfwZmPjQhuzgqHgBsKECBOBoQWaRF6Wqaux3R8F47iz8avDIxEm20vqQ
-	 VMCz5TUD/YDUxUlIkM8yxuCF5KSPdPMAcNGjIRK6TEuwJBk6hCKhSGHzTAfOQZ56cK
-	 iWXIpeRQgMJocCNPTzFCWm48ksJ3NdibtjdmvW39r4iJtEaCYFHJBSkz3kS4RXE/aS
-	 Kk8Fsx7ZNjnSHSLF4OfeNHnZahc+Gw+cE6+gIbchPMwy+mTjWnDe9mgwqSKJs/Rfr4
-	 5rniuBa3DnjvQ==
+	b=Ki1NL1YZNBn9qloJHNGR0bidwYKGXAl4W5WPHiy5fSGFkHMF/FP73zrRf/Xw/7//2
+	 BVm+WzYsYBCUIZHfSJC5+6f3udhN5vo2dN83FJ5RxeRhMCqXvw4mn5+Yhp758Jcew2
+	 AW8eZNk8ZhTyOhSKVkUsApeNDWBogLduI9yNqvGttxPDNp1ku9pVn/psrkYe7bbBXL
+	 iEm/ZlPS/gue9/3dORbkO+OvHcNEpDJZiX9P51aWf0KEFwg5TasiVccm+iudMc8gNm
+	 6RCUKmZkVj7NcC0reGxZNxgifPxjYm1RVVauVDg4qURAPmHfQHs1Y2Rq0G8anSLFE2
+	 oFNL3iICf8FMg==
 From: Dave Chinner <dgc@kernel.org>
 To: linux-xfs@vger.kernel.org
 Cc: cem@kernel.org
-Subject: [PATCH 43/48] xfs: validate buffer item region count during recovery
-Date: Tue, 13 Oct 2026 17:01:33 +1100
-Message-ID: <20261013060204.3138690-44-dgc@kernel.org>
+Subject: [PATCH 44/48] xfs: validate buffer item regions during recovery
+Date: Tue, 13 Oct 2026 17:01:34 +1100
+Message-ID: <20261013060204.3138690-45-dgc@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20261013060204.3138690-1-dgc@kernel.org>
 References: <20261013060204.3138690-1-dgc@kernel.org>
@@ -43,43 +43,77 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Validate the number of regions in a buffer log item as it is decoded from the
-journal. A cancelled buffer logs only its format header, so the valid range
-spans the whole range a log item can hold.
+Validate each region of a buffer log item as it is decoded from the journal.
+The format header must hold a dirty bitmap that fits within the region, and each
+dirty range region must cover whole chunks of the buffer.
+
+The fixed prefix of the format header is checked through min_hdr_len, so the
+region check only has to bound the used part of the dirty bitmap against the
+region.
 
 Assisted-by: LLM
 Signed-off-by: Dave Chinner <dgc@kernel.org>
 ---
- fs/xfs/xfs_buf_item_recover.c | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+ fs/xfs/xfs_buf_item_recover.c | 46 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 46 insertions(+)
 
 diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
-index 57929f115055..52253b426166 100644
+index 52253b426166..8cae5287e4fb 100644
 --- a/fs/xfs/xfs_buf_item_recover.c
 +++ b/fs/xfs/xfs_buf_item_recover.c
-@@ -1173,8 +1173,25 @@ xlog_recover_buf_commit_pass2(
- 	return 0;
+@@ -1189,9 +1189,55 @@ xlog_recover_buf_nregions(
+ 	return nregions;
  }
  
 +/*
-+ * A buffer item is a format header region followed by a region for each dirty
-+ * range of the buffer. However, a cancelled buffer only logs a format header,
-+ * hence the valid region count range spans the entire range a log item can
-+ * legally have.
++ * Region 0 is the format header. The fixed prefix is already checked by
++ * min_hdr_len, so check that the used part of the dirty bitmap does not exceed
++ * the bitmap and fits within the region. Later regions are the dirty ranges of
++ * the buffer, each covering whole chunks of it. The region length has already
++ * been bounds checked against XLOG_MAX_REGION_SIZE during assembly, so only the
++ * lower bound and chunk alignment are checked here.
 + */
 +static int
-+xlog_recover_buf_nregions(
++xlog_recover_buf_validate_region(
 +	struct xlog			*log,
-+	uint16_t			nregions)
++	struct xlog_recover_item	*item,
++	int				region_index)
 +{
-+	if (nregions < 1 || nregions > XLOG_MAX_REGIONS_IN_ITEM)
++	size_t				len = item->ri_buf[region_index].iov_len;
++
++	if (region_index == 0) {
++		struct xfs_buf_log_format *blf = item->ri_buf[0].iov_base;
++
++		if (blf->blf_map_size > XFS_BLF_DATAMAP_SIZE) {
++			xfs_warn(log->l_mp,
++				"BUF: bad dirty bitmap size %u recovered.",
++				blf->blf_map_size);
++			return -EFSCORRUPTED;
++		}
++		if (!xfs_buf_log_check_iovec(&item->ri_buf[0])) {
++			xfs_warn(log->l_mp,
++				"BUF: bad format region length %zu recovered.",
++				len);
++			return -EFSCORRUPTED;
++		}
++		return 0;
++	}
++
++	if (len == 0 || (len % XFS_BLF_CHUNK)) {
++		xfs_warn(log->l_mp,
++			"BUF: bad region %d length %zu recovered.",
++			region_index, len);
 +		return -EFSCORRUPTED;
-+	return nregions;
++	}
++
++	return 0;
 +}
 +
  const struct xlog_recover_item_ops xlog_buf_item_ops = {
  	.item_type		= XFS_LI_BUF,
-+	.validate_nregions	= xlog_recover_buf_nregions,
++	.min_hdr_len		= offsetof(struct xfs_buf_log_format, blf_data_map),
+ 	.validate_nregions	= xlog_recover_buf_nregions,
++	.validate_region	= xlog_recover_buf_validate_region,
  	.reorder		= xlog_recover_buf_reorder,
  	.ra_pass2		= xlog_recover_buf_ra_pass2,
  	.commit_pass1		= xlog_recover_buf_commit_pass1,
