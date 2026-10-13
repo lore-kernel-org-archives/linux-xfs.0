@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E53F3C09F8
-	for <linux-xfs@vger.kernel.org>; Tue, 13 Oct 2026 06:02:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 735DB3BCD2B
+	for <linux-xfs@vger.kernel.org>; Tue, 13 Oct 2026 06:02:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791871361; cv=none; b=BTxooHK+KZ0dezK6wekDNgRc08k0WZM+V36pvrLLJe+/I/uUquGo74Eq0zVgSr5R7veQDMQoClMw1Pl5eZNRa+YlZ7+px8RYId6nZrOBggs5s2ocoNlR8IC+z6oWc4dkdTWDhuF9B0h9HRrUxzsJRO2Xvg/cqtiOrTnS5f+AE5E=
+	t=1791871362; cv=none; b=COkWzvocxY2ebnFThNwsjLb49J1w9bIADqdFeSp1NCvTlOJ8PvItppf3PEccvtXh00/RbFWZkuiYAc4kjHfFKhGzuEQisWl4NxVKEw6Jh+jlHqNGD+Y7VhM+T7Sqg850Wygq6p1sw4wiZP4MlfBJLnpwG1urYAD+Gh36vvvQTU4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791871361; c=relaxed/simple;
-	bh=ZeS29bcJMEhV0b2fUrxYijtr6fw/+JtldRBqYhYcCeY=;
+	s=arc-20240116; t=1791871362; c=relaxed/simple;
+	bh=o+M50sKMIe/bxTJxcNrBAYYpmIBp4sPX0uf689dDDmc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=CJFw+gxopc2GTV5VvE1tHW2LjXp2kdGTI5fWK6aJWmNY1JFTni1lIok9jaLRUbS+GD7lHyGpozGabZ+8KVDyDVN6vdO2BpPx9Jb17wOORInSS8UzBuOLkRsVDmHiCM39/07PdOTAkAoK7CG1UtHCv74oXwBtBhgWo0BP7AWwcpo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YUr9rLkI; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=mjRKXgz5qMSojfBw1mWvwfwmgzjQRT5i/3fsBCZh5+RoC4ZpCi1HifRNCyswFPJYZogbUfVUCAWCOspz/zNYPp04Mili2QnW2oQaGja2JP4XT4kAr3BICnaC3E5brtvJ7TRONZWhGusK9B1Vcl+5NAOds0wYHjsI8/SfT9yrUaE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ngTYYQGT; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YUr9rLkI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 723871F00893;
-	Tue, 13 Oct 2026 06:02:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ngTYYQGT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9E3391F000FF;
+	Tue, 13 Oct 2026 06:02:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791871360;
-	bh=AOa5md2eTt4r4BHhm2rD84IRR7Y9vT7AZ1LJdNtk+X8=;
+	s=k20260515; t=1791871361;
+	bh=BBCPGPxXESJxWvB1nDl7pCGzgPHxnBMapj2XFrR6dys=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=YUr9rLkIoVm2GeETKS6aNRGoKZ8hxFmZrpkj799YqHjiQ+QYRaIRD0KHzcHTlOlNL
-	 e4F4owuY+Eyr6wM1PJ5M1j0cZC3zo2hJxMsqSAzL2FtCrY6EWXCjiHMtJZimBQ/2Va
-	 zDXEgdM+T8OewZ1nNHpzTBJJC4zp86aqU+zN9A9sU2c/bOAIeRKwFFg7Z9vqh6hLJd
-	 D2E+QXwfl0mfNwu38mXGNZTdrqe/7dWn6wfnbYr3nqkDTbhnGfQoWONZevbv4wTsbF
-	 4WPrD95fMT/joXsL4ViGgQbutVMtrdfDOP2NojGO5pN1su+2nGnd4qVQjAksz+nl1r
-	 3BjunKHjfcIew==
+	b=ngTYYQGTBYZQd/TxE+tYWB0m6F8mfQUbMiEihLCMDRQDSVIo60GATJWKP64zRzMv0
+	 siOs8fEu7KiSVKqD+4USdN8Kn/7NY9eWSd7SgSkumNU51bDkMcW45igFsB+xGsnta/
+	 G7x5qul+NWfb7JbMcyZ7fYSxMjjj1LzlSx0Vtj97YFPrbfsWnKNPVNOC+GYedHMz6V
+	 3Jyh+yy34D7felM7dvhBn3mqNa5bCRXHUOFtaIqB+1/XGB1qsPJlc9fBkyuANiRXug
+	 TyDCerKGC1Z9CuzF1cr9FX8GKAWvfaZ8ExlXXrhWtzrIq2jLV4ZHsEX9utMTblntTY
+	 fxkCuezIEY+DQ==
 From: Dave Chinner <dgc@kernel.org>
 To: linux-xfs@vger.kernel.org
 Cc: cem@kernel.org
-Subject: [PATCH 25/48] xfs: validate refcount update done items during recovery
-Date: Tue, 13 Oct 2026 17:01:15 +1100
-Message-ID: <20261013060204.3138690-26-dgc@kernel.org>
+Subject: [PATCH 26/48] xfs: validate bmap update intents during recovery
+Date: Tue, 13 Oct 2026 17:01:16 +1100
+Message-ID: <20261013060204.3138690-27-dgc@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20261013060204.3138690-1-dgc@kernel.org>
 References: <20261013060204.3138690-1-dgc@kernel.org>
@@ -43,96 +43,148 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-A refcount update done item is a single fixed size region, but recovery only
-checked its length in the commit handler and never checked its padding.
+A bmap update intent is a single region item carrying one mapping operation
+whose fork, owner and extent recovery must trust. These were only checked
+during intent replay, after the item had been decoded and queued.
 
-Validate the region length and require the padding to be zero as the item is
-decoded. The commit handlers can then trust the item, so the length check is
-removed from them. This is shared by the data and realtime refcount update done
-items.
+Validate the region length as it is decoded, and validate the mapping in
+->validate_item(). xfs_bui_validate() now takes the format structure so it can
+run against the decoded region. The commit handler and intent replay can then
+trust the item, so the redundant checks are removed from them.
 
 Assisted-by: LLM
 Signed-off-by: Dave Chinner <dgc@kernel.org>
 ---
- fs/xfs/xfs_refcount_item.c | 44 +++++++++++++++++++++++++++++---------
- 1 file changed, 34 insertions(+), 10 deletions(-)
+ fs/xfs/xfs_bmap_item.c | 77 +++++++++++++++++++++++++++++-------------
+ 1 file changed, 53 insertions(+), 24 deletions(-)
 
-diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
-index 1a5a4c3fb913..f94ad3f557ed 100644
---- a/fs/xfs/xfs_refcount_item.c
-+++ b/fs/xfs/xfs_refcount_item.c
-@@ -855,18 +855,45 @@ xlog_recover_cud_commit_pass2(
- 	struct xfs_cud_log_format	*cud_formatp;
+diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+index 62be62342fea..37ada25109c9 100644
+--- a/fs/xfs/xfs_bmap_item.c
++++ b/fs/xfs/xfs_bmap_item.c
+@@ -418,15 +418,15 @@ xfs_bmap_update_abort_intent(
+ static inline bool
+ xfs_bui_validate(
+ 	struct xfs_mount		*mp,
+-	struct xfs_bui_log_item		*buip)
++	struct xfs_bui_log_format	*bui_formatp)
+ {
+ 	struct xfs_map_extent		*map;
  
- 	cud_formatp = item->ri_buf[0].iov_base;
--	if (item->ri_buf[0].iov_len != sizeof(struct xfs_cud_log_format)) {
--		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, log->l_mp,
+ 	/* Only one mapping operation per BUI... */
+-	if (buip->bui_format.bui_nextents != XFS_BUI_MAX_FAST_EXTENTS)
++	if (bui_formatp->bui_nextents != XFS_BUI_MAX_FAST_EXTENTS)
+ 		return false;
+ 
+-	map = &buip->bui_format.bui_extents[0];
++	map = &bui_formatp->bui_extents[0];
+ 
+ 	if (map->me_flags & ~XFS_BMAP_EXTENT_FLAGS)
+ 		return false;
+@@ -505,12 +505,7 @@ xfs_bmap_recover_work(
+ 	int				iext_delta;
+ 	int				error = 0;
+ 
+-	if (!xfs_bui_validate(mp, buip)) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
+-				&buip->bui_format, sizeof(buip->bui_format));
+-		return -EFSCORRUPTED;
+-	}
+-
++	/* The bui was validated when it was recovered. */
+ 	map = &buip->bui_format.bui_extents[0];
+ 	work = xfs_bui_recover_work(mp, dfp, &ip, map);
+ 	if (IS_ERR(work))
+@@ -650,40 +645,74 @@ xlog_recover_bui_commit_pass2(
+ 	struct xfs_mount		*mp = log->l_mp;
+ 	struct xfs_bui_log_item		*buip;
+ 	struct xfs_bui_log_format	*bui_formatp;
+-	size_t				len;
+ 
+ 	bui_formatp = item->ri_buf[0].iov_base;
+ 
+-	if (item->ri_buf[0].iov_len < xfs_bui_log_format_sizeof(0)) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
 -				item->ri_buf[0].iov_base, item->ri_buf[0].iov_len);
-+	xlog_recover_release_intent(log, XFS_LI_CUI, cud_formatp->cud_cui_id);
++	buip = xfs_bui_init(mp);
++	xfs_bui_copy_format(&buip->bui_format, bui_formatp);
++	atomic_set(&buip->bui_next_extent, bui_formatp->bui_nextents);
++
++	xlog_recover_intent_item(log, &buip->bui_item, lsn,
++			&xfs_bmap_update_defer_type);
 +	return 0;
 +}
 +
 +/*
-+ * The cud is a single fixed size region. This is shared by the data and
-+ * realtime cud items, which have identical formats.
++ * The bui is a single region with exactly one mapping operation, so its length
++ * must match a single extent.
 + */
 +static int
-+xlog_recover_cud_validate_region(
++xlog_recover_bui_validate_region(
 +	struct xlog			*log,
 +	struct xlog_recover_item	*item,
 +	int				region_index)
 +{
-+	struct xfs_cud_log_format	*cud_formatp =
++	struct xfs_bui_log_format	*bui_formatp =
 +		item->ri_buf[region_index].iov_base;
++	size_t				len = item->ri_buf[region_index].iov_len;
 +
-+	if (item->ri_buf[region_index].iov_len !=
-+			sizeof(struct xfs_cud_log_format)) {
-+		xfs_warn(log->l_mp, "CUD: bad item region length %zu recovered.",
-+				item->ri_buf[region_index].iov_len);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	/* The padding is always written as zero. */
-+	if (cud_formatp->__pad != 0) {
-+		xfs_warn(log->l_mp, "CUD: bad padding 0x%x recovered.",
-+				cud_formatp->__pad);
++	if (len < xfs_bui_log_format_sizeof(0)) {
++		xfs_warn(log->l_mp, "BUI: bad item region length %zu recovered.",
++				len);
  		return -EFSCORRUPTED;
  	}
  
--	xlog_recover_release_intent(log, XFS_LI_CUI, cud_formatp->cud_cui_id);
+ 	if (bui_formatp->bui_nextents != XFS_BUI_MAX_FAST_EXTENTS) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
+-				item->ri_buf[0].iov_base, item->ri_buf[0].iov_len);
++		xfs_warn(log->l_mp, "BUI: bad extent count %u recovered.",
++				bui_formatp->bui_nextents);
+ 		return -EFSCORRUPTED;
+ 	}
+ 
+-	len = xfs_bui_log_format_sizeof(bui_formatp->bui_nextents);
+-	if (item->ri_buf[0].iov_len != len) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
+-				item->ri_buf[0].iov_base, item->ri_buf[0].iov_len);
++	if (len != xfs_bui_log_format_sizeof(bui_formatp->bui_nextents)) {
++		xfs_warn(log->l_mp,
++			"BUI: item region length %zu does not match %u extents recovered.",
++			len, bui_formatp->bui_nextents);
+ 		return -EFSCORRUPTED;
+ 	}
+ 
+-	buip = xfs_bui_init(mp);
+-	xfs_bui_copy_format(&buip->bui_format, bui_formatp);
+-	atomic_set(&buip->bui_next_extent, bui_formatp->bui_nextents);
++	return 0;
++}
++
++/* Validate the bmap update mapping in the bui. */
++static int
++xlog_recover_bui_validate_item(
++	struct xlog			*log,
++	struct xlog_recover_item	*item)
++{
++	if (!xfs_bui_validate(log->l_mp, item->ri_buf[0].iov_base)) {
++		xfs_warn(log->l_mp, "BUI: bad mapping recovered.");
++		return -EFSCORRUPTED;
++	}
+ 
+-	xlog_recover_intent_item(log, &buip->bui_item, lsn,
+-			&xfs_bmap_update_defer_type);
  	return 0;
  }
  
- const struct xlog_recover_item_ops xlog_cud_item_ops = {
- 	.item_type		= XFS_LI_CUD,
-+	.min_hdr_len		= sizeof(struct xfs_cud_log_format),
+ const struct xlog_recover_item_ops xlog_bui_item_ops = {
+ 	.item_type		= XFS_LI_BUI,
++	.min_hdr_len		= sizeof(struct xfs_bui_log_format),
 +	.validate_nregions	= xlog_recover_single_region,
-+	.validate_region	= xlog_recover_cud_validate_region,
- 	.commit_pass2		= xlog_recover_cud_commit_pass2,
++	.validate_region	= xlog_recover_bui_validate_region,
++	.validate_item		= xlog_recover_bui_validate_item,
+ 	.commit_pass2		= xlog_recover_bui_commit_pass2,
  };
  
-@@ -881,12 +908,6 @@ xlog_recover_rtcud_commit_pass2(
- 	struct xfs_cud_log_format	*cud_formatp;
- 
- 	cud_formatp = item->ri_buf[0].iov_base;
--	if (item->ri_buf[0].iov_len != sizeof(struct xfs_cud_log_format)) {
--		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, log->l_mp,
--				item->ri_buf[0].iov_base, item->ri_buf[0].iov_len);
--		return -EFSCORRUPTED;
--	}
--
- 	xlog_recover_release_intent(log, XFS_LI_CUI_RT,
- 			cud_formatp->cud_cui_id);
- 	return 0;
-@@ -897,5 +918,8 @@ xlog_recover_rtcud_commit_pass2(
- 
- const struct xlog_recover_item_ops xlog_rtcud_item_ops = {
- 	.item_type		= XFS_LI_CUD_RT,
-+	.min_hdr_len		= sizeof(struct xfs_cud_log_format),
-+	.validate_nregions	= xlog_recover_single_region,
-+	.validate_region	= xlog_recover_cud_validate_region,
- 	.commit_pass2		= xlog_recover_rtcud_commit_pass2,
- };
 -- 
 2.55.0
 
