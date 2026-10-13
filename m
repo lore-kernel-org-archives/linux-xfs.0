@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7462472094
-	for <linux-xfs@vger.kernel.org>; Tue, 13 Oct 2026 06:03:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2916F4766AB
+	for <linux-xfs@vger.kernel.org>; Tue, 13 Oct 2026 06:03:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791871387; cv=none; b=LOy4efs4ywaerTfV94DoseatTI9Q8CeiqgRE0UBoSTsV8scrsovj0e0W7SAJcGG6ZzDE6SolRqiF3d5yS63ZAE6kmki51ztgeEqaWAgoz1nml+y5g6w94Qyz78Y5R+uUaAcTMxv/RklphMhMRFlYkICBE6q6GnYoq2cM2RerfJ8=
+	t=1791871389; cv=none; b=dJas4sF5CuMQv0o5j3qL0xDdocbgt1OzbrBMlu+4aGm6lkcVaxLp/3oTLTMlkNJBga4j30ZDLMoT76400lfRYgV1GeALYCZIlr3CfOW0CNmMhF/00ukshQnp/V91IyxpBEp4443v+rVEtFOvQECa91b73o6Wjoci87YEaYHsuH0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791871387; c=relaxed/simple;
-	bh=PgwvrzLwip0OAxzSGyfM0NlRuj1R2cs1r+IXT4B79H0=;
+	s=arc-20240116; t=1791871389; c=relaxed/simple;
+	bh=51Kt4qFWgO+KssLcNU2ro8mok9NlICO9TqrY0qUWTZ4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ZjKU6eClgJZHrg+hum66jc7VtDU1eyuIWj0B8YAnOt1O+fiAWkjTL0/6Er+tXfUU2mFRXwvG06SAA1qPQ2QZUTzfVa09Rifp3gd0ybZfn8y33JQj9dJsp3/BVPxxWD9GfaZAVeQdzmXBhRYScDJsVH8KbPXW4og9YNKb40XuGDo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QPS3Ps7E; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=S9ivODJF8ILh5FwiVqPzwasscbUcRgMES0hLkQ913OA+KjKAzi3c/bjkynppIt/Pu5RsWg2aD+i85wnAJLGBBevHxp6crAT7wjGWJh8jiVqQogeatZBjvzOLnnaFfdqEPwwd/j3i8dl5WweWeA6x6cjJjtIJC84YfeU4NkyPnBw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HpQ6laqO; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QPS3Ps7E"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B2A391F00893;
-	Tue, 13 Oct 2026 06:03:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HpQ6laqO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 077101F000FF;
+	Tue, 13 Oct 2026 06:03:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791871386;
-	bh=ypHbFOrA9Nzx7vVhe/6Ss0AmKWbsHIxbn7mjZNBGoh4=;
+	s=k20260515; t=1791871387;
+	bh=PHj8zYGK5skEm2JrZrYNRe222Fxd2IqLEbT6Tw0mNOE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=QPS3Ps7EW4PYeVA2W4VQ90hvau6qe5ga7cDT038MkfZhXrY6w+e0JQ+aVA+c0Ztwi
-	 F/CgHTmrYZJxSEY8eoJt2YPQ3ggZtXgjO/gqVhFrmigRAV8LRR7ASROYJglUtWdaF6
-	 m6kliVV738Jft0hMMLN+GHEAAlOwtVVPw8IBdzqOME884AFzZXiZ4etHjQi8fvRhdR
-	 w3qXTpX1uFIBZz8KWKLAQANFyvn7pEWmk/7jx9Xk7fuyx9vgk7XmoEm6dmXQLYlDv6
-	 dMJ3xXBUCbVUbs4wYnZWRLD/EnmwnaPhq1K/qG4HNLpbTH5bj3t3IELqmq6IXEoT6L
-	 XsD2SSqg+F5FQ==
+	b=HpQ6laqOSto3jZIm0W2nRsXLdmyoqpLwO7IXiYTO4JkVgI8oQE9ja0UptPKC31DW5
+	 I9RxBV0uvonIkJoYhN7q/PCV2sJAVuuP/8unCWnT4P5IzZFne01vQLmnUQJw4X3K+P
+	 nYwQ6F2Q8oJ9AWVKzUm9JNXrzCS0mAU+Q1hWf/a+dowjxbynDcg1GH+bqq7v7s73pF
+	 r6hoH5q2XJ1fF9CndD+ayA1pRAK7LNxcFhDOI0YwRcnvkSwCwmmPcTJ0jgEKNMGyOj
+	 FJDEBfbUuT7xbf4DTbMqXcKKGPsJA58HlJfq0d4EfHbz/sFRaGkZTyaoZUEtRDIIWa
+	 M+QP7V87TtcGA==
 From: Dave Chinner <dgc@kernel.org>
 To: linux-xfs@vger.kernel.org
 Cc: cem@kernel.org
-Subject: [PATCH 46/48] xfs: remove redundant buffer checks from recovery replay
-Date: Tue, 13 Oct 2026 17:01:36 +1100
-Message-ID: <20261013060204.3138690-47-dgc@kernel.org>
+Subject: [PATCH 47/48] xfs: fail recovery on a buffer type mismatch
+Date: Tue, 13 Oct 2026 17:01:37 +1100
+Message-ID: <20261013060204.3138690-48-dgc@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20261013060204.3138690-1-dgc@kernel.org>
 References: <20261013060204.3138690-1-dgc@kernel.org>
@@ -43,92 +43,94 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The buffer item is now fully validated as it is decoded from the journal, so the
-replay paths can trust its regions and dirty bitmap. The bitmap and region
-consistency checks scattered through the buffer and inode buffer replay loops
-are now redundant.
+When recovering a buffer, xlog_recover_validate_buf_type() checks that the
+buffer type recorded in the log item agrees with the magic number of the
+buffer being replayed into. A mismatch left bp->b_ops unset and was only
+reported with a warning and an ASSERT. On a production kernel recovery then
+queued the buffer with no verifier attached, so xfs_buf_verify_write() warned
+about the missing operations but still wrote the mismatched recovery data to
+disk.
 
-Remove the region and bitmap checks from the replay loops. The checks on buffer
-contents, which cannot be validated from the log item alone, remain.
+Return an error from xlog_recover_validate_buf_type() on a type mismatch
+instead of asserting. The replay path propagates the error so recovery fails
+rather than writing out an unverifiable buffer. The skip path, where the
+buffer on disk is newer than the log item being recovered, ignores the result:
+later changes to that buffer are still to be replayed and may change its type,
+so a mismatch against the current log item is expected there and must not warn.
 
 Assisted-by: LLM
 Signed-off-by: Dave Chinner <dgc@kernel.org>
 ---
- fs/xfs/xfs_buf_item_recover.c | 40 -----------------------------------
- 1 file changed, 40 deletions(-)
+ fs/xfs/xfs_buf_item_recover.c | 23 ++++++++++++++++-------
+ 1 file changed, 16 insertions(+), 7 deletions(-)
 
 diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
-index 309260e65889..a3acefcea13a 100644
+index a3acefcea13a..27cab5afc8ba 100644
 --- a/fs/xfs/xfs_buf_item_recover.c
 +++ b/fs/xfs/xfs_buf_item_recover.c
-@@ -485,38 +485,6 @@ xlog_recover_do_reg_buffer(
- 			break;
- 		nbits = xfs_contig_bits(buf_f->blf_data_map,
- 					buf_f->blf_map_size, bit);
--		ASSERT(nbits > 0);
--		ASSERT(item->ri_buf[i].iov_base != NULL);
--		ASSERT(item->ri_buf[i].iov_len % XFS_BLF_CHUNK == 0);
--		/*
--		 * The bitmap is only trustworthy to the extent that it
--		 * describes a region that actually fits inside the buffer we
--		 * read in based on the (attacker-controlled) blf_len.  Do not
--		 * rely on an ASSERT() for this -- it compiles away entirely on
--		 * non-DEBUG kernels, which is exactly where this matters, so
--		 * validate it for real and abort recovery of this buffer rather
--		 * than copying past the end of it.
--		 */
--		if (XFS_IS_CORRUPT(mp, BBTOB(bp->b_length) <
--				((uint)bit << XFS_BLF_SHIFT) +
--				(nbits << XFS_BLF_SHIFT))) {
--			xfs_alert(mp,
--	"Bad buffer log item dirty bitmap (bit %d, nbits %d) for %d-byte buffer at daddr 0x%llx.",
--				bit, nbits, BBTOB(bp->b_length),
--				xfs_buf_daddr(bp));
--			return -EFSCORRUPTED;
--		}
--
--		/*
--		 * The dirty regions logged in the buffer, even though
--		 * contiguous, may span multiple chunks. This is because the
--		 * dirty region may span a physical page boundary in a buffer
--		 * and hence be split into two separate vectors for writing into
--		 * the log. Hence we need to trim nbits back to the length of
--		 * the current region being copied out of the log.
--		 */
--		if (item->ri_buf[i].iov_len < (nbits << XFS_BLF_SHIFT))
--			nbits = item->ri_buf[i].iov_len >> XFS_BLF_SHIFT;
+@@ -212,7 +212,7 @@ xlog_recover_buf_commit_pass1(
+  *	the first 32 bits of the buffer (most blocks),
+  *	inside a struct xfs_da_blkinfo at the start of the buffer.
+  */
+-static void
++static int
+ xlog_recover_validate_buf_type(
+ 	struct xfs_mount		*mp,
+ 	struct xfs_buf			*bp,
+@@ -234,7 +234,7 @@ xlog_recover_validate_buf_type(
+ 	 * just avoid the verification stage for non-crc filesystems
+ 	 */
+ 	if (!xfs_has_crc(mp))
+-		return;
++		return 0;
  
- 		/*
- 		 * Do a sanity check if this is a dquot buffer. Just checking
-@@ -555,9 +523,6 @@ xlog_recover_do_reg_buffer(
+ 	magic32 = be32_to_cpu(*(__be32 *)bp->b_addr);
+ 	magic16 = be16_to_cpu(*(__be16*)bp->b_addr);
+@@ -424,14 +424,22 @@ xlog_recover_validate_buf_type(
+ 	/*
+ 	 * Nothing else to do in the case of a NULL current LSN as this means
+ 	 * the buffer is more recent than the change in the log and will be
+-	 * skipped.
++	 * skipped. The buffer contents are newer than this format, so later
++	 * changes to this buffer still to be replayed may change its type. A
++	 * mismatch against this format is therefore expected and not a corruption.
+ 	 */
+ 	if (current_lsn == NULLCOMMITLSN)
+-		return;
++		return 0;
+ 
++	/*
++	 * The buffer type does not match the magic number in the buffer we are
++	 * about to replay into. The write verifier keyed off the type would
++	 * reject it, so fail recovery rather than submit a buffer that cannot be
++	 * verified.
++	 */
+ 	if (warnmsg) {
+ 		xfs_warn(mp, warnmsg);
+-		ASSERT(0);
++		return -EFSCORRUPTED;
+ 	}
+ 
+ 	/*
+@@ -452,6 +460,8 @@ xlog_recover_validate_buf_type(
+ 		bip = bp->b_log_item;
+ 		bip->bli_item.li_lsn = current_lsn;
+ 	}
++
++	return 0;
+ }
+ 
+ /*
+@@ -523,8 +533,7 @@ xlog_recover_do_reg_buffer(
  		bit += nbits;
  	}
  
--	/* Shouldn't be any more regions */
--	ASSERT(i == item->ri_total);
--
- 	xlog_recover_validate_buf_type(mp, bp, buf_f, current_lsn);
- 	return 0;
+-	xlog_recover_validate_buf_type(mp, bp, buf_f, current_lsn);
+-	return 0;
++	return xlog_recover_validate_buf_type(mp, bp, buf_f, current_lsn);
  }
-@@ -674,7 +639,6 @@ xlog_recover_do_inode_buffer(
  
- 			nbits = xfs_contig_bits(buf_f->blf_data_map,
- 						buf_f->blf_map_size, bit);
--			ASSERT(nbits > 0);
- 			reg_buf_offset = bit << XFS_BLF_SHIFT;
- 			reg_buf_bytes = nbits << XFS_BLF_SHIFT;
- 			item_index++;
-@@ -688,10 +652,6 @@ xlog_recover_do_inode_buffer(
- 		if (next_unlinked_offset < reg_buf_offset)
- 			continue;
- 
--		ASSERT(item->ri_buf[item_index].iov_base != NULL);
--		ASSERT((item->ri_buf[item_index].iov_len % XFS_BLF_CHUNK) == 0);
--		ASSERT((reg_buf_offset + reg_buf_bytes) <= BBTOB(bp->b_length));
--
- 		/*
- 		 * The current logged region contains a copy of the
- 		 * current di_next_unlinked field.  Extract its value
+ /*
 -- 
 2.55.0
 
