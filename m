@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91FC430ACE6
-	for <linux-xfs@vger.kernel.org>; Tue, 13 Oct 2026 06:02:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC1E73E1729
+	for <linux-xfs@vger.kernel.org>; Tue, 13 Oct 2026 06:02:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791871350; cv=none; b=jn5FS1A8+//2kJWjvQ3SZvto3B7WwrErk8ASmI3LqQmSoR3dUhcp7rqJr/T9I91g31zTcjuQJHSiwI3gWfya2QHg+45k5MmzqKRi+M5EMvOYpL88uxkq99EBwgHp7xicLLGqmNVm7bg2vLToMCNKeEB1tIJx5i3QFkMmkYp4KuI=
+	t=1791871351; cv=none; b=g0w1MqCzfWefSa+Y3AUY0lKY2kFc08eqmny7skSvNtcGxw7UB7xbaC1SAogxWiPeEOqDwvSm9F5bCdBm+NLkwVYpgd7v459h8vNnVXB7Yi2Hm3j1dF+tYwDEKRftIamnS4LEXdyd5r8I3Fb+S+m2kXJg6GLi+jgsUhENv2uflLM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791871350; c=relaxed/simple;
-	bh=PIFmVOhvS87sF/l9lEEwAJDgpUi4rgDYUAWDvVNIcuI=;
+	s=arc-20240116; t=1791871351; c=relaxed/simple;
+	bh=qeXNGn9pWwLARsjZ1PXdPnkwomamJaTxxftC4iA6USY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=OPJoWOdagPIG3IYZ95jL8oS3tkdR3Rmqhy6e8VychoqhT5ZFkcfGrgVvZTlluJEq9VJpBAeGLo1+gGugmZ1uqh/UB0Drtr/FzXgHOmJ/EqlVH4MFmG30J7SD5UaEJQeBj4uA/yaEaW7AWYlBj0QYri9fFNm+t0TLvO4fDhpjC9U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=guTzjA8Y; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=e576QfvpxBTdd8PXyuR3PriPXyVQUiGUCcQkYPa7MdAC7kpMYkfOZ1HILc8/pl4N4a6TgSUK9g0K2xU3nIYtlebYGs/dEhhiLV83zOyQzYz9UPf4EHkS0AAzJOfee1DStyGITgJ5EuzgjgYhF3iWugigihnGPy3THsk+eA8TDEU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RnXzL4VD; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="guTzjA8Y"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BD7921F000FF;
-	Tue, 13 Oct 2026 06:02:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RnXzL4VD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E85791F00893;
+	Tue, 13 Oct 2026 06:02:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791871349;
-	bh=/6bt6jE9lbmv9GMxzdSn7Jff0qfW6V/7bS/NjXTp0FE=;
+	s=k20260515; t=1791871350;
+	bh=hbhv5ssn/mt/w3HbXrsi/lxwCfbrqpz35fvB4Z8STXM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=guTzjA8YnJ8uZZRVozCa+cSJCyehEdSKKkXFpp+4B69RreheUeO/n9bsOEjOJY6iw
-	 s3eCfeROZXmcDAKI4bepRwwEj+sp0cB258lWXiF6zhFDvkwPyQKf7PmUl3RwNN+WqN
-	 WmAv/JCSygC4NdirfnCYkHOCO5w2TMLmnL5tI+NocMA402ReFEmf7JMsvtq+BVMmoq
-	 HVjeukl6cWaaLzFpTPUNPi2tp5aBqWUuckITWiNy/wlx6gPnY4NE7aVhcEPTSk8RQn
-	 w1w0ScInGrHXO+kwdBpYL23hfLCH5wLvAU9xQsDzrp7HroQrdry+Da1L0QLKlvEd5K
-	 igtAEU/hcr1eg==
+	b=RnXzL4VDODRyVF1Imn7hcJrH7twhrseBJ7gwr/s4eW453GQW5oT4sfnkhfH4dvxKU
+	 EAcvLwdQQq880Cyvgm5TCh+P031GTxC169W55LmOsQuugM269v9mIhteK9lL9ytIj8
+	 8EVFZ0WBCfHs6AgU6C+8zddnBl4pk5Wp7313/3KCKMadgSS0ERzi0xlfgr82fBZeua
+	 KoZyZ8kXh/i72B+rD9HrKOVzJZ3PgCsi4pVU4goL0BHFyI+X7igSu+am0MMcFONvBW
+	 iij4qShGj/fkXrDVA/xq8IzVlpKMrNvHRW9bAXppCST2fTWLPyZASg1GpnQzujh415
+	 MO81DtjRo/pUQ==
 From: Dave Chinner <dgc@kernel.org>
 To: linux-xfs@vger.kernel.org
 Cc: cem@kernel.org
-Subject: [PATCH 16/48] xfs: bound the assembled region size during recovery
-Date: Tue, 13 Oct 2026 17:01:06 +1100
-Message-ID: <20261013060204.3138690-17-dgc@kernel.org>
+Subject: [PATCH 17/48] xfs: dump the corrupt region when log item validation fails
+Date: Tue, 13 Oct 2026 17:01:07 +1100
+Message-ID: <20261013060204.3138690-18-dgc@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20261013060204.3138690-1-dgc@kernel.org>
 References: <20261013060204.3138690-1-dgc@kernel.org>
@@ -43,80 +43,72 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-A region split across continuation op headers is grown one fragment at a time
-with no limit on the total size, so a corrupt continuation stream can drive an
-unbounded allocation during recovery.
+Log item validation reports failures with a type specific warning, but that
+warning does not include the region contents. The existing recovery code
+dumped the offending buffer via XFS_CORRUPTION_ERROR for diagnostics, and that
+is being removed as per-type validation replaces it.
 
-Add XLOG_MAX_REGION_SIZE - the largest object logged in a single region - as a
-format level bound usable by both the log write and recovery paths, and reject
-a continuation once the assembled region would exceed it. Use the same constant
-for the existing per-op-header length check.
+Emit XFS_CORRUPTION_ERROR from the region completion path when validation
+fails, so the type specific warning is accompanied by a hex dump of the
+relevant buffer. A per-region failure dumps that region; a whole-item failure
+dumps the format header. This is added before the per-type validation so those
+patches can drop their own corruption dumps.
 
 Assisted-by: LLM
 Signed-off-by: Dave Chinner <dgc@kernel.org>
 ---
- fs/xfs/libxfs/xfs_log_format.h |  8 ++++++++
- fs/xfs/xfs_log_recover.c       | 21 ++++++++++++---------
- 2 files changed, 20 insertions(+), 9 deletions(-)
+ fs/xfs/xfs_log_recover.c | 23 +++++++++++++++++------
+ 1 file changed, 17 insertions(+), 6 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
-index 6e620380d5dc..6d49cb831d73 100644
---- a/fs/xfs/libxfs/xfs_log_format.h
-+++ b/fs/xfs/libxfs/xfs_log_format.h
-@@ -38,6 +38,14 @@ typedef uint32_t xlog_tid_t;
- 
- #define XLOG_HEADER_SIZE	512
- 
-+/*
-+ * The largest object that is logged in a single region: a whole buffer in a
-+ * buffer log item, or a remote attribute value. This bounds the size of any
-+ * single log region both when writing the log and when reassembling regions
-+ * during recovery.
-+ */
-+#define XLOG_MAX_REGION_SIZE	max(XFS_MAX_BLOCKSIZE, XFS_XATTR_SIZE_MAX)
-+
- /* Minimum number of transactions that must fit in the log (defined by mkfs) */
- #define XFS_MIN_LOG_FACTOR	3
- 
 diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 90f841bf0aa5..c35bb0fb3249 100644
+index c35bb0fb3249..b353362587cb 100644
 --- a/fs/xfs/xfs_log_recover.c
 +++ b/fs/xfs/xfs_log_recover.c
-@@ -2408,6 +2408,16 @@ xlog_recover_add_to_cont_trans(
- 	old_ptr = item->ri_buf[item->ri_cnt-1].iov_base;
- 	old_len = item->ri_buf[item->ri_cnt-1].iov_len;
+@@ -2353,7 +2353,8 @@ xlog_recover_complete_region(
+ 	struct xlog_recover	*trans)
+ {
+ 	struct xlog_recover_item *item = trans->r_cur_item;
+-	int			error;
++	int			region_to_dump = 0;
++	int			error = 0;
  
-+	/*
-+	 * Bound the assembled region size before growing the buffer so a corrupt
-+	 * continuation stream cannot drive an unbounded allocation.
-+	 */
-+	if (old_len + len > XLOG_MAX_REGION_SIZE) {
-+		xfs_warn(log->l_mp, "%s: region too large (0x%x)",
-+			__func__, old_len + len);
-+		return -EFSCORRUPTED;
-+	}
+ 	/*
+ 	 * The format header (region 0) must be at least the minimum size for
+@@ -2366,19 +2367,29 @@ xlog_recover_complete_region(
+ 	"log item type 0x%x header too short (%zu < %u)",
+ 			item->ri_ops->item_type, item->ri_buf[0].iov_len,
+ 			item->ri_ops->min_hdr_len);
+-		return -EFSCORRUPTED;
++		error = -EFSCORRUPTED;
++		goto out_error;
+ 	}
+ 
+ 	if (item->ri_ops->validate_region) {
+ 		error = item->ri_ops->validate_region(log, item,
+ 						      item->ri_cnt - 1);
+-		if (error)
+-			return error;
++		if (error) {
++			/* dump the bad region rather than the log format header */
++			region_to_dump = item->ri_cnt - 1;
++			goto out_error;
++		}
+ 	}
+ 
+ 	if (item->ri_cnt == item->ri_total)
+-		return xlog_recover_complete_item(log, trans);
+-	return 0;
++		error = xlog_recover_complete_item(log, trans);
 +
- 	ptr = kvrealloc(old_ptr, len + old_len, GFP_KERNEL);
- 	if (!ptr)
- 		return -ENOMEM;
-@@ -2781,15 +2791,8 @@ xlog_recover_validate_ophdr(
- 		return ERR_PTR(-EFSCORRUPTED);
- 	}
++out_error:
++	if (error == -EFSCORRUPTED)
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, log->l_mp,
++				item->ri_buf[region_to_dump].iov_base,
++				item->ri_buf[region_to_dump].iov_len);
++	return error;
+ }
  
--	/*
--	 * A single region cannot be larger than the largest object we log in
--	 * one region. That is a whole buffer in a buffer log item (up to
--	 * XFS_MAX_BLOCKSIZE, e.g. a 64k directory block on a 4k block size
--	 * filesystem) or a remote attribute value (up to XFS_XATTR_SIZE_MAX,
--	 * logged in its own region); both are 64k.
--	 */
--	BUILD_BUG_ON(XFS_XATTR_SIZE_MAX > XFS_MAX_BLOCKSIZE);
--	if (len > XFS_MAX_BLOCKSIZE) {
-+	/* A single region cannot be larger than the largest object we log. */
-+	if (len > XLOG_MAX_REGION_SIZE) {
- 		xfs_warn(log->l_mp, "%s: length 0x%x too large", __func__, len);
- 		return ERR_PTR(-EFSCORRUPTED);
- 	}
+ STATIC int
 -- 
 2.55.0
 
