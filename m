@@ -1,39 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 321764F052A
-	for <linux-xfs@vger.kernel.org>; Tue, 13 Oct 2026 13:22:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3D8A3FA5C4;
+	Tue, 13 Oct 2026 14:31:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791897770; cv=none; b=LhDnJxnokWq0MKR+jKrd9ns9KMX7jEiJZ61p7WF2z/oX3jCCuOUlDigwSBUzZrDZ8YDXEYWWssohUfmWIIH/7DOF57pW2xes3kjS7Twirh9odoZA6PNiVMRNIUrAoaTM8fQIwe8bnue23WqVNwL2sXkcax1m+2ON2EAf3T8AXAc=
+	t=1791901870; cv=none; b=NBQXF/yZQtMxw61dM/BDvxUg0o10NNRgKM5W4BjbKKbZeCiWL3Nuo1SVKz/z7nxkjkxjieZ90i2V2FgC4oKuPAUoWyYDi2el6VwTGFo2LAmxmrDvp2YXCSPm0D2TXtUtbwieaLNTQ77tbvEU6yKf413+kM5TRReGuN9ZWtAOHWk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791897770; c=relaxed/simple;
-	bh=J+rJmCrGdNs6v7pN4eygkI1vND6BvnnP32hEknujnZk=;
+	s=arc-20240116; t=1791901870; c=relaxed/simple;
+	bh=XezWxoxr52QgNTOigpQOkPZ/6USeVoHCDDfBlsURRzo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cFDeDK8fB4b1Xg4rUfWaPa2cm2yEDhSGP+7oSv28XO/oV4Zce33rEVhse9hQpSUBZ4Es013Mhll8D0Xw+eUAihGTq0o2H4HQbLcbs1tJ/qb+23IRkJs+puIvFgTJc2ZfQYdt7D61s5+2P7HlyklGICgWXEU2yCgX7ILEvhNk66I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ds1XrWP/; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=RtXhCMYs85t3z5gxgEULBy+SKzJEY4FO8dZ2ex6zqMQ/YjTc6pQlw/mri6ogkS0fUMIT5b03GrQk7JVlfMW6qViyZX8qEiVZf2mJQ9KF0RquTV8NdNDdaE/JhjLCiLB68WnlUXt7306DpEeilZdRviX6DEJppGOHmZ19dO7So78=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kjO7jhTy; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ds1XrWP/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AFAB51F00893;
-	Tue, 13 Oct 2026 13:22:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kjO7jhTy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E819C1F000FF;
+	Tue, 13 Oct 2026 14:31:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791897768;
-	bh=E8foNkdcoetWoCFJfILPf+OOD2Yfhhgqg6/rxIRmuiU=;
+	s=k20260515; t=1791901869;
+	bh=2QEPzDdVqnC451L8dwbXZr7mHrBs04BcKxy5XlIs9Ww=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Ds1XrWP/c5WOShV4lfwTebuafTzXfi5HSh+af4gjsxmwFKyw6227CirbT4Wx7ZyCY
-	 z/pnrJQyEP+Ji79kPgxvVrLGzhnsy/9Xc7UXr4UcPhLJ2Z22247ucQIorz/9NHU+J+
-	 AFSL3uPKo8J1IcqgEvGdB7MA6qpQ+8eD0Gwiu7Wwyj1VqTo62j50g1cR1Bv0PZV1Pv
-	 qpLtC5FOKG7N65Iav7d6EIPlMSn12eKXszE80o61NMQaMcwTl05FZi429f073tjED/
-	 /RoMy3jg1u1qvKMusyMChGt/xTKXA37KQfmmoW7+krEeOWGwWj+ltvnqkknQXm/0oQ
-	 xAC9/5I1CCN/g==
-Date: Tue, 13 Oct 2026 15:22:44 +0200
+	b=kjO7jhTyvJge8n//nrwmgDlyfWiG6n00z+ytkheLV73Lm/eiUYYiwXbSNhSIvF4aa
+	 +m7lWYk6NdnzfHGSXQhd4F+LLntekIjfVOCQ4G4uOfN1RVZ9rYgddrygaqNZlVeI18
+	 dUKBJ4CULZv69nuFVl2KifTak2gcVzRcvk51/ZwzrIOOTa6tayinZv+noL9Ek31b+e
+	 DruEtsTfoVzRHgymDuWdEPrcBw030n1wJ+y3SFGltOQZ3pA8vexwhljHgYlkB9Ft1Y
+	 ArikOzSasbqY5WvfmpbDjy1OBs/DBGuHMttesOyByZYxJl4BTimUBkTm5oS8tUpvV3
+	 l7YHl5IWyqUGw==
+Date: Tue, 13 Oct 2026 16:31:04 +0200
 From: Carlos Maiolino <cem@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: hans.holmberg@wdc.com, djwong@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: handle NULL open_zone for merged ioends in
- xfs_end_ioend_write_zoned
-Message-ID: <as4wVDBSbwcYNyHf@nidhogg.toxiclabs.cc>
-References: <20261013115755.1473496-1-hch@lst.de>
+To: Siddh Raman Pant <siddh.raman.pant@oracle.com>
+Cc: "Darrick J . Wong" <djwong@kernel.org>, 
+	Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	stable@vger.kernel.org
+Subject: Re: [PATCH] xfs: Fix duplicate assignment in xfs_alloc_read_agf.
+Message-ID: <as5AloTkTT3bZkyq@nidhogg.toxiclabs.cc>
+References: <20261001145153.308087-1-siddh.raman.pant@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,51 +43,35 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261013115755.1473496-1-hch@lst.de>
+In-Reply-To: <20261001145153.308087-1-siddh.raman.pant@oracle.com>
 
-On Tue, Oct 13, 2026 at 01:57:55PM +0200, Christoph Hellwig wrote:
-> The NULL checks on the merged ioends added in commit ae285611891f ("xfs:
-> handle NULL open_zone for merged ioends in xfs_ioend_put_open_zones") got
-> lost when the code was moved to a new file.  Reinstate the check, and
-> also update the comments to be a little more coherent.
+On Thu, Oct 01, 2026 at 08:21:53PM +0530, Siddh Raman Pant wrote:
+> Probably an (harmless) error in copy-paste.
 > 
-> Fixes: 6b855256eb9e ("xfs: split ioend handling into a separate source file")
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Fixes: db6a2274162d ("xfs: catch stale AGF/AGF metadata")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Siddh Raman Pant <siddh.raman.pant@oracle.com>
 > ---
->  fs/xfs/xfs_ioend.c | 16 ++++++++--------
->  1 file changed, 8 insertions(+), 8 deletions(-)
+> Put in stables <= 6.12 after the backport series lands.
+
+Fix the tags accordingly to Darrick's review and re-send please.
+
 > 
-> diff --git a/fs/xfs/xfs_ioend.c b/fs/xfs/xfs_ioend.c
-> index f0e01ac34de8..26b996a52d8b 100644
-> --- a/fs/xfs/xfs_ioend.c
-> +++ b/fs/xfs/xfs_ioend.c
-> @@ -182,15 +182,15 @@ xfs_end_ioend_write_zoned(
->  		error = xfs_setfilesize(ip, ioend->io_offset, ioend->io_size);
->  done:
->  	/*
-> -	 * Put the open zone for all ioends merged into this one (if any).
-> -	 */
-> -	list_for_each_entry(tmp, &ioend->io_list, io_list)
-> -		xfs_open_zone_put(tmp->io_private);
-> -
-> -	/*
-> -	 * The main ioend might not have an open zone if the submission failed
-> -	 * before xfs_zone_alloc_and_submit got called.
-> +	 * Put the open zone references for all ioends merged into this one in
-> +	 * addition to the main one they were merged into.  If the submission
-> +	 * failed before xfs_zone_alloc_and_submit got called, there is open
-> +	 * zone and at least in theory that could also happen for merged ioends.
->  	 */
-> +	list_for_each_entry(tmp, &ioend->io_list, io_list) {
-> +		if (tmp->io_private)
-> +			xfs_open_zone_put(tmp->io_private);
-> +	}
->  	if (oz)
->  		xfs_open_zone_put(oz);
->  	iomap_finish_ioends(ioend, error);
-
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-
+>  fs/xfs/libxfs/xfs_alloc.c | 1 -
+>  1 file changed, 1 deletion(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index f762dcce8d13..0ffa82400007 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+> @@ -3461,7 +3461,6 @@ xfs_alloc_read_agf(
+>  	if (!xfs_is_shutdown(pag_mount(pag))) {
+>  		bool	ok = true;
+>  
+> -		ok &= pag->pagf_freeblks == be32_to_cpu(agf->agf_freeblks);
+>  		ok &= pag->pagf_freeblks == be32_to_cpu(agf->agf_freeblks);
+>  		ok &= pag->pagf_btreeblks == be32_to_cpu(agf->agf_btreeblks);
+>  		ok &= pag->pagf_flcount == be32_to_cpu(agf->agf_flcount);
 > -- 
 > 2.53.0
 > 
