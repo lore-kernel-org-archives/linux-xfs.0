@@ -1,88 +1,87 @@
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A219486430;
-	Tue, 13 Oct 2026 08:16:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E60B3BED35;
+	Tue, 13 Oct 2026 08:16:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791879366; cv=fail; b=E9q36cE/Y8TOPWyWwcgf8K2eeWt2+0gz0OAirY8ia4YVncbWkZ3keTNWoqtkHnVqFhJSydgyav5KDHNTFUEAfAGma9c1qSwCqj/kvZJz992PPtoHcVx4W2Gc0qQHAYNHVhcRmx0TYEBdwThpBEO21R1Tflg2ua+uIH6PpQJRKNc=
+	t=1791879374; cv=fail; b=Dd3hyF46Kqi7DJRIPy7Sh/29CSqePL6BKZz6PHYOxuwi3iJQstssnbCTQPfuKC94P/5qYfb8TdGN4xSsAd8UiON57GVMEqvvltntpoJCQ6GAIzJXmiSRsO3MXjF/1VMsE/Jbmls7DDKwJhc5ZbRBgNiMOKBQ7AX3kmodrvznx6k=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791879366; c=relaxed/simple;
-	bh=0W/1AyRffqF1mbiq9Om8nOTdMoyQB4FGR2Ljkcmoeng=;
+	s=arc-20240116; t=1791879374; c=relaxed/simple;
+	bh=SppN22fDh0kPZgpBHiDaDUp90wDhO9cno1gesPR9zWU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=NUMZVw9dX0bh3dETUpr71Z9FQOeTbx7Dp5uTiLVoeH4wG3g14gJRccLAYy1AdyUw+Q3NxDWzIr7nHzgI+qMmXbC9o2dzhtq/gXudY3coze/MKFS8XQZgqCgltEs+pjG0PTrw0rKblbnlHCbggtTwyTL+eh6eHQeK3b0pDQ8IyAI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=bVIJdKO+; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=nDTYrFGM; arc=fail smtp.client-ip=205.220.165.32
+	 Content-Type:MIME-Version; b=JJU03maeZrgz+6dqNYPApBE9O5gLyp0u3rn5QRNJeiAPU7yppwK90kS705zUjcJ2MSLUNOSGjzH6WAMDs3b9MDfSoIWh4WrG2iiRo5Ci7XSB4xpsmgLXz7lpgyrCkOOZDkWq1t2rYZUxGKE43Bcdz9Bf1C2lqQ/LJz2Yh1LUAYQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=MdN+aKKf; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=cq8XhaDj; arc=fail smtp.client-ip=205.220.165.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="bVIJdKO+";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="nDTYrFGM"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="MdN+aKKf";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="cq8XhaDj"
 Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69D2C4HA1440146;
-	Tue, 13 Oct 2026 08:16:00 GMT
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69D2BtvB1439901;
+	Tue, 13 Oct 2026 08:16:09 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=vKLJeps4qMf2q/pSXjE+5feu7orCUCQOHCCesGf4RTc=; b=
-	bVIJdKO+gaGhLgnpRnuw7C10sLX7ye3ruUKfs9Aeu9C3eQ8Geknb/wGiGm7C/yoJ
-	Zp4wtm3Zt4JdCLD4ibRUVx/+WXViSDRj8MebmAI44wEsafjW7psp9MMFQbNxzQHn
-	7ZWZpzlEmYTqVIBA14i2d9ZgrjiNA6pMDj9l5c9d3OYClyQaQTtC8HRL88qRsl08
-	eL4wVoJp3Us+nIdH2sLjmPA2u9ROq1za9PBIGS1S3HkaCIMX5XP/z4QtClqri0O7
-	CXIAD7ww43ZRjdlRTv1ZL1SRAP0J1wrY6aqHa7yxlYUpVFsQauJ0bdHK4dOYq95Y
-	lCojimLd5Ik1urF03mNSsg==
-Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4h7df7uk91-1
+	corp-2025-04-25; bh=0/tXizU+1Y2jeTo7M87SSS+bAdXFfjUhRoctztKVTks=; b=
+	MdN+aKKfF4iLsOU8dv8SZ6FkhTbyJbHeN/c1fCguGOQ70xGLUTOXmVrZnAbm2FYo
+	0JvujBg6BXjnKlnI5adx+c7C/pNiyGMS72XICA3b/b0OdQKqYF1weNjFj0IJXFLd
+	feCyD3+QDDdt7epQveyYVq0JuL6uyE+fqzDZVLooGT7D2/aDIq+1R9rqQXTegV7L
+	ALr/yQtGQ/ozOXwTzZBKXC/Ewc2eLdEirsZbuQDh/uYGRhJT8KR47hZRIhkvHlCx
+	Jey2PgMDLXc1VVCTk4+2GQb1MH54Lptl1hFBHinH1zjm5d0vqLT5SyPKr+jvd+Ib
+	q+LZb6sGxOh+1aghdoHEWQ==
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4h7df7uk9b-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 13 Oct 2026 08:16:00 +0000 (GMT)
-Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.7/8.18.1.7) with ESMTP id 69D86gve033459;
-	Tue, 13 Oct 2026 08:15:59 GMT
-Received: from ph8pr06cu001.outbound.protection.outlook.com (mail-westus3azon11012024.outbound.protection.outlook.com [40.107.209.24])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4h7btnxsme-1
+	Tue, 13 Oct 2026 08:16:08 +0000 (GMT)
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.7/8.18.1.7) with ESMTP id 69D86mnY035078;
+	Tue, 13 Oct 2026 08:16:07 GMT
+Received: from sn4pr2101cu001.outbound.protection.outlook.com (mail-southcentralusazon11012052.outbound.protection.outlook.com [40.93.195.52])
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4h7btp7e40-2
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Tue, 13 Oct 2026 08:15:59 +0000 (GMT)
+	Tue, 13 Oct 2026 08:16:07 +0000 (GMT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=xBHAMlk9yvNuYua5EeYk0zLoQlz3jU7zb23sA+9JcQsJe9qWL3sRyCJ8HAh/TqNQyFfETXzimUkJlGazXXbSYLHcEOqBtRMKFLFgwFo372GsNzq06gEX2JWM3RYcNaqVLeMaxKnzbbkW07PAp0U24f0MM/3e8ajlw6XOnhbo7lh/t4lRJr4eFG3oxA+l4+qilMx9ZTx352dsuon8A/gCOH1BbTL3NvNVcWafTrIvq6M7vVTxnFX8pf174TsfL5Fz9wNlN8xjYSvrFoVnXa9qL4fqWdBMgDM7bv/HfxyzfhSd1531elGDe1u+ZdV0Q/94sdoZPI+rOtuR76U5KYffKA==
+ b=dF67nkfTRb1hsHe/9Kerdhtwvt6tmPEL1h8OYHH7lczEZ0QUMLkuuw8rsllcKuxnLxBYRjU/HQ3ch5KtYkMFh4Dpn+kNdUZmMVH60eqoMVYBAKOHAQvdwUyLvOOhDTxNwyUylcJsJcesIV14nhYBHVrVFXf9V17vNOtWh469+yHpW+2PU7De0n1EZZO2xIbuXyzYowatQ90LjY4YvXcjpD9DGxXm8s3pUcjPtFkjjoj5rvYK/HuRZRODdV+NfnA3bPnJYhL7scjT6cIi3VTspy/UGNBKhOTJX8maBRAVGjFXQANIsCgFjIO9HXWlSTi0ugNEYTCUQ1VTUUSAuv+4PQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=vKLJeps4qMf2q/pSXjE+5feu7orCUCQOHCCesGf4RTc=;
- b=K8lFbepvopqEw/faeKRREebHNoUhO4YyDJynC+oZ2fobaKKEJ1feT9zfuM3VKUNcSEkAoker+PyD3+z6yb1GM5mYm2a3j4OciZj4azXMDxL/6yP5ZkN3x8m3dBF2Oc50QSNQpcuvy1f9ntPhBEwExpNT/poUM3s9PN3SYlzhRenDUIc7Qi/0lD2suKgZJp5VzEZHruZP4MjM3pTQSw6WzhvdsEdhiZG0V1gXBcqYxDFkTnIXxvxTYQkJ58kuzs/jSGPPrQb4ELdvbROnGe7XquiQ3WQ7RN93a/YuAfcBo4OPwbN5PxAPzGiVwMCjV+8TBGkfk//A3ZEfFe407H3cLg==
+ bh=0/tXizU+1Y2jeTo7M87SSS+bAdXFfjUhRoctztKVTks=;
+ b=jbcjzCd8OKbmnk+/TrY17BQMCfO9FyB3KFzVQsRcgTEpylfvcH/cwPukxD82HRh55zJt4dzP/gAZNp6f/4s7HjbRhbdlwoZqiSPnfbXWWHXlh/W9LJnljbJe3Zhlkhf+9g4xyqBXLxmhLsf6sys5bIahPaEdvMPz8MiFzpyUijwVOIZmKUpfHp/ZchLQ7Fso6iryUZWn2Mz/pKBgdLPStIggQBveJaod2qKzGkOdEE8VeVf5DXr56DiYAKxhLI0tsEk+3Y3M/cpS/hMbQ86tsbzoGAFtkBBdn2MRzihCp9mN/0IpuIk7TcNKaYLqaNmoEPvL+3rYaPLr2SDYP4G/FQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=vKLJeps4qMf2q/pSXjE+5feu7orCUCQOHCCesGf4RTc=;
- b=nDTYrFGMduqE6rvGC9lRbgYeMadFoyY8VjwJ2BGoa5Kmfu4GcWQ+QYxFqnTm4dlraJ2RCG27DIyzTKHWdnk+2MpRcv+wenSgp4uoJ8RyKerZoTZbQURbfOq7qWo3y4UN7G7/ADibpH5R7N+pWSg4SpInsuq6oI9hpxDIgEq8Qak=
+ bh=0/tXizU+1Y2jeTo7M87SSS+bAdXFfjUhRoctztKVTks=;
+ b=cq8XhaDj4xqmHSzkFdE63QYXTz3UFQZyxOtvCiwn3Exc06dXYyFcVEU8xN/+2cl2T/wB+ep/prA8u4xxEZLWszVbNvt0M3rGuNBh1+41Vd5GrEuhYyHZ2FQ7Z2lE/7g3ebTcvG4IQxpF/n8dFV8kbikT0lF6C4su8PhWl58ubEw=
 Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=oracle.com;
 Received: from DM4PR10MB7505.namprd10.prod.outlook.com (2603:10b6:8:18a::7) by
  LV8PR10MB7992.namprd10.prod.outlook.com (2603:10b6:408:1fd::13) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.522.7; Tue, 13 Oct
- 2026 08:15:55 +0000
+ 2026 08:16:05 +0000
 Received: from DM4PR10MB7505.namprd10.prod.outlook.com
  ([fe80::f14:5389:d117:967c]) by DM4PR10MB7505.namprd10.prod.outlook.com
  ([fe80::f14:5389:d117:967c%4]) with mapi id 15.21.0522.011; Tue, 13 Oct 2026
- 08:15:55 +0000
+ 08:16:05 +0000
 From: Siddh Raman Pant <siddh.raman.pant@oracle.com>
 To: "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
         stable@vger.kernel.org
 Cc: Dave Chinner <dchinner@redhat.com>, linux-kernel@vger.kernel.org,
         Sasha Levin <sashal@kernel.org>
-Subject: [PATCH 5.10 v2 10/19] xfs: aborting inodes on shutdown may need buffer lock
-Date: Tue, 13 Oct 2026 13:44:54 +0530
-Message-ID: <a647f889e727d10b2a71c3ba89f1ac7d286151bc.1791877866.git.siddh.raman.pant@oracle.com>
+Subject: [PATCH 5.10 v2 12/19] xfs: fix super block buf log item UAF during force shutdown
+Date: Tue, 13 Oct 2026 13:44:56 +0530
+Message-ID: <ec10ce6303ce6b38d2a1615de600f16bf8e5f8aa.1791877866.git.siddh.raman.pant@oracle.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <cover.1791877866.git.siddh.raman.pant@oracle.com>
 References: <2026-10-01-1-daily-reply-0012-re-xfs-umount-hang-backports@kernel.org> <cover.1791877866.git.siddh.raman.pant@oracle.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: JH0PR03CA0020.apcprd03.prod.outlook.com
- (2603:1096:990:74::22) To DM4PR10MB7505.namprd10.prod.outlook.com
- (2603:10b6:8:18a::7)
+X-ClientProxiedBy: SG2P153CA0029.APCP153.PROD.OUTLOOK.COM (2603:1096:4:c7::16)
+ To DM4PR10MB7505.namprd10.prod.outlook.com (2603:10b6:8:18a::7)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -91,360 +90,238 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: DM4PR10MB7505:EE_|LV8PR10MB7992:EE_
-X-MS-Office365-Filtering-Correlation-Id: 5a458286-409a-4703-997c-08df29023457
+X-MS-Office365-Filtering-Correlation-Id: 34d5f051-19e7-4b79-4a66-08df29023a09
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|1800799024|10070799003|366016|376014|56012099006|5023799004|4143699003|261009223027099003|10067099003|22082099003|18002099003|6133799003;
+	BCL:0;ARA:13230040|23010399003|1800799024|10070799003|366016|376014|56012099006|4143699003|261009223027099003|260925021311599003|260925022911599003|260925021911599003|10067099003|22082099003|18002099003|6133799003;
 X-Microsoft-Antispam-Message-Info:
-	vXa3SYZoV7h5I6mbakExK/0IuOVfnu5/+kRXahFKqqF3JnmOkjjoNFirszArCix8dr+EcuCRHNcGGBbrz1C9rv5rlysc77bQc+NluTfqYl5V0FH32jQVX8wSU32OT68mBtCyjRCtzxJ2tage2bybD989sZBYT+SePy+B4lgqWT/7aNb30vR7Yy5uZO6bZHJKpNMv+KI9N9lJbyZ6+UrGZuvWIx6S02WBL/Kzyv9Y9wcHS1dTHbkz+USmTRfRg1wsOheOR3ZRktJKYtPcOso+sTPCWZsvlqkz7Np3Xg8HWawY7YidmF5ALehBXUB3fvE2uLHVyDiScoL53HG3gvhAzah0Qmc4f6DrAz8UfD2UCO9+g/FnlSQqKf9Nu8BirxjQt6hy4W8AHG/J44vsjs0nGCpt4DIPLXN2DUDyGnhICWZv5+OvKsi8JhNC36xQ83JRc2TB87ovqUWPvBuCOxg5VEY7P4Ols0JTX8JW+TzAcvqN/1YRqnQBAuia75y5vJOMIhpZTNVZIBMp7NMqsnhXMB6y8SV/yrhq0+SiOud4DEivPycUgCLDwib1xk2oTSZslMAc2nM2NH824PqhQr0/CISD3pgcsShnji0IVZZuioFEejJmTnHqr85bcT3ZGPHn5oIhAn8bcZvSuPvoKr8Dn7OyQksmh1F0l0Pqa0cZOPo=
+	FgtD8fb76tMt1ViC4fxtpyfr/dd8wO7lKzk5sgJLXomJ1mpHm99OEt8L3/EqLeaVTlWNRNGFE1TJ8Dy0Ru0rsBIVNTBkcmgRq0akXH3BlaMLKwsP/Y1VdSSXG6QEUPnVt5yK77uuLvv/wX0hFjuKZMdegixP11PMSIQ9fSYNzNdb9s0p3fddjktQ9l2TVlbhtNC5KHLt8aYlqwWUyoqjiLAr3fg/44jy0NJt0PiT3Uh5yxK7cjnHcudOB4J8tdr9d7fzKfTQSXKin0ETFQSH3GOV77C1DomCuBgCth8/Nr8nY5wgfsBXuWdKde0/cru857NlbvLJ35dBpfbWlVacSDURtFbGGfm5R5CIJ33/guK8WuWdnBd8o3YC2EI3wgsUAm0qC4Rd0Vkm40A8tYx356n/DyhjWCoIxAGQu8Im9h0MERWa9HueGpEONZW44Dn9ga4s5GlQ35GkUu43cu+bUjilQcPD2nc+AeUrd3H47DrLd1Mgi9U5bzwDCRH/oSIUv/7BC7qm+TVhiZFdoGh8LeVRfjhEVozFxj1IiIT5XBNaLsNqmy2RYia/x9meWgutOlUAWgBg3CbZ3A9eCwLR3fgGiv6ByFQfasCOyS+UEcL/hAssjzcbVIl2si90rpEkVyY6xXvrkHBKfoHHcx08wnMe+xMuXfmZ/7aD6szJxwQ=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM4PR10MB7505.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(1800799024)(10070799003)(366016)(376014)(56012099006)(5023799004)(4143699003)(261009223027099003)(10067099003)(22082099003)(18002099003)(6133799003);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM4PR10MB7505.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(1800799024)(10070799003)(366016)(376014)(56012099006)(4143699003)(261009223027099003)(260925021311599003)(260925022911599003)(260925021911599003)(10067099003)(22082099003)(18002099003)(6133799003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?aOO2iLoXGL0Q0NjyviQAfxyzBUIqOud4fbCKvnupjxBAqgELmqeaU4zi9ljI?=
- =?us-ascii?Q?3SuyPy2vEtBVA6Gf8Ei57a7nif2BlWIMBukk34lmGlHLq+QeHcBAtcvRMMJO?=
- =?us-ascii?Q?tPcmHxrqVzA2h0QFTCICeHO+jSPFOKZqWHJlExTYfh01PKYTHNFwIolYF9RY?=
- =?us-ascii?Q?c7aBM67qobzfGB2Tx3wEcJ7s//CZJR3rH1T8Y1HF54H0tlMOao4cbxuL3haT?=
- =?us-ascii?Q?8+OtxXem70NuD5DHq5xSxsRna5k9za59Th8genohYD1l0jIgz4TVF8Z+UiLE?=
- =?us-ascii?Q?wCNnLM/qzMSgjxfl2uUwjNSJYutzniWpOUVZT6VXeX786KWDfxYqzwev9Gvk?=
- =?us-ascii?Q?jPMLN5rSE0PdW4cbQFhgw0ORfb+arzCdkf9FqDFXbxnJoRxJPE5yhlSDj9mO?=
- =?us-ascii?Q?hh4ZFkUCm3xLlMtfGPEQBi5Pg2ISdg1hrpIqhhofj7aYJSTyfFr4SlvisPCq?=
- =?us-ascii?Q?is8pBPJkarXi3WrpQY8No6Uj/ey00YQm+j1j0utgf+j8NwZtipGKdxJ1q+Nl?=
- =?us-ascii?Q?I4CR/hy0EJpI1XFTRSASC7S3a+KjSs4ozbCxlwzTMZUayxdJaZezSuAVqWeh?=
- =?us-ascii?Q?DQ69j1mzaPnHJzeRyXacjWhZk2Pw2m9puRweW+zeeTv9PH+5fdh9dX4pWQA/?=
- =?us-ascii?Q?wMMROmaEE8IZWVqdQc2AwJz9/RMpLL7ynlTjReYKplQ7rW7eikOh7UyvuMQP?=
- =?us-ascii?Q?23E+/NqsouuAcydwA43uqg8o2kRcHetIHT8dXp4pQvgj9miCB7ezo3IVed/J?=
- =?us-ascii?Q?Inz3sbdeW8aOXPgG9zE8dewZjRF3BsRejvMjMrM9gYfBX6x5nS8/JD5yOQnS?=
- =?us-ascii?Q?w1WR6lUYkLn1Qe1rSr3QX6Cy9X2mjsTJJU0tXMPFoiVV5o7gtPHWjDsQrPFi?=
- =?us-ascii?Q?I9GCOxIK0baoIL3w/u74xE6qTpwf5sR23ZfMSSJ/5+43Mdsf/9gia2PG+BwC?=
- =?us-ascii?Q?173xZCoeYhoXSzQ2DEOXDm9bKBAPSpV3HXSlMjpM5D9zMMSodp+OowJslfVD?=
- =?us-ascii?Q?CPbjum5tSK9Kir+aDey97HemBRrp/MVVL/+RVps5wk1IQ/5TEBZP1R6nnTqN?=
- =?us-ascii?Q?DBo0oiq1B2qE2PUEyTSWa2OyTkZxRPpTZxPFTFJkkwZALvJqiE/QnsnPp1Mk?=
- =?us-ascii?Q?P7SGkOwVD5jiitQHsvdcSByKSY63nT97mzJKUrXgNzhfB/87R66VsEe/5ELn?=
- =?us-ascii?Q?8KJ9G5R86ykmCEpLNsvw1FLg8tSamSxwJYJw8eQszUqpfxpWSpEtCK4ouxaK?=
- =?us-ascii?Q?zrTdLliQlRS9nucjWemK7YVBTgxXLlsT24o07LL8vmOsNGw0KWNNOD+XTvEs?=
- =?us-ascii?Q?eYTer+CdluE1CVRTnb5Fg4v3pU1V7AO3aB9sbN5ug8NyGAOMJob4jrWDsWXS?=
- =?us-ascii?Q?jdLufWFUbSkCZoSljxBQr8R23GKtzFsw0Ukuvttke35/O6J7CpSe11lnDWG+?=
- =?us-ascii?Q?i9P8d/04Ko5Hva4YgCS+ZuDkDZ1NLSZI8UpBE0dfrwJ8O4dhD9yQZrHjMDWE?=
- =?us-ascii?Q?v7WIpKC3+HdgKp2Yo3J1u07DhjAl47TdU+uKUyb/ZwVNAAx75d5QC2DbyuPZ?=
- =?us-ascii?Q?qskgc7DruiajQ1oT2BZSOw1NxNZuAv0y9kRTLbnIME7+sTlwPSsSVmRlUGxb?=
- =?us-ascii?Q?Hw75p6zN36NzappjfGzYWCUlp60aNGPPzI8v6Mja2rsKJcWRrQfgiYI1dmV8?=
- =?us-ascii?Q?sDX2fnaaYbVbLpn6HcULlbn3+eZBvKbd82zqdBFSztrorKczqeAyGMx3+Zju?=
- =?us-ascii?Q?cphSH0Z1x4cfGMdJDMYQkZ0rM6QGENgsUEX7zHC4Xasrs0UJgEQVqI/r9kvL?=
-X-MS-Exchange-AntiSpam-MessageData-1: +RDMX65W38tsednmvd08sj8e6Uyu7ObC0hI=
+	=?us-ascii?Q?Vj0MLdejUsEZOJceFSQGxbYxq/9NZfwC7AZMAXDRvUQCjiv/Ts6e1R8SD+yf?=
+ =?us-ascii?Q?F0cfBamBrMzu6+1OiB9JpTMX42EpCURLjzs7iqbbQTw4TwxIn/QTPOtPFmYq?=
+ =?us-ascii?Q?NmtUdO7e2/x2AJ9owSoYtIIdUHjnjN/rdAv8DbbH9HQcMhk+xTTZ2wb3Vr9h?=
+ =?us-ascii?Q?FNJ+Z5Z9aNaLrNNhXzOSjl1iY+aXITMr755NBylGpJpWfroyTZOJZlMSwwfQ?=
+ =?us-ascii?Q?RTwZDd82dx8I/T0cwsBzAIX+bqy4VOW71hqYzwzyS+rUoznYBKcxWmoiqnl7?=
+ =?us-ascii?Q?JbNSzG/VToTc7+34hCsychsQ2KIBw0bL7+SHVFiyUJ64PS7uJeF9mfDOiVat?=
+ =?us-ascii?Q?6MS6QP/N/LAcmFAFg+3Ip1omt43S6hQ0+dCIAE6yopzerOoIV0NGUiweAYhb?=
+ =?us-ascii?Q?Cdkl3H6spdD72IItlGRCH9vILbAIyEjPYtZQq6k6RN8HVubseKP8Jn+hGalH?=
+ =?us-ascii?Q?D3E70hEN7UfvIFKJJCtZEIen6z3j+4/Dhnh06I0ebCUSWjJl8px55XZGF6HQ?=
+ =?us-ascii?Q?E5bw/6358ilvQeFPbSqnqWHTwWipdtbgvDyH7XAVBhFruxTKbWc0GbuNRdzI?=
+ =?us-ascii?Q?cBrXdRoVbyejLkVfE+uCvv9M8p13dCvKLUEw3D1zgV9PJW15bIsWxgYnBRQJ?=
+ =?us-ascii?Q?R1y5kcDjv7xAGj7y5ewAyIWsMA/OJBfamtHIsY6r1hhbwLH9slCO/k95cBaC?=
+ =?us-ascii?Q?Ehav0L+Mq85GemZhcH5o8me5Q9myeYSQ3OBPCZdWQLJJ79hthOHmxFIqWMGf?=
+ =?us-ascii?Q?B/zt3pQTK/QNWTJxLpSiNNAmPWZClCPi5MRqhSIJ2nCzBx/sL4V1vvfVIDXB?=
+ =?us-ascii?Q?pR3FVGdvMgYnEkjm65iH0FiUsEjEuJhr8RMFoGXEuQqQC1jQVJz/17BC/JR8?=
+ =?us-ascii?Q?P6tumokCUkKi7oePak6YYRkkfcF8+o5qXxoY+hRvOup0TjHy+uf6dOxMVk2x?=
+ =?us-ascii?Q?RXVOMreqgB+BEuGo5M3nF+c6p2+q/tlm1xWXrSBzfeZppNw3ctvSx5OiaKIN?=
+ =?us-ascii?Q?0qNcGtNq+y97xujJVXMpSyet9Ue6wYmy0xi7GcBjVz45tqyNburIe2IA2IFc?=
+ =?us-ascii?Q?o8nWzbUo2RrHI8ZS0WaKVX+r7Fgc5w2CKnLI7MOtY11m5/jaPjFNqtR2ZYSv?=
+ =?us-ascii?Q?ZqdrfXeyTC7YvsFtENjBsP20H800PV0K1OxmVR2j4CplkACfcOlB2asHqMyR?=
+ =?us-ascii?Q?CeUOWhRwogxXYPUXpFfI7zXWOT/HJjNcEyFaIRNodRTqvjzS68EweR4Ygxa9?=
+ =?us-ascii?Q?MtlLhNIoNHGmSJvR1n1mKQevylJjHk6NkbiuzppXLZfi0O00MArsWlti26Mb?=
+ =?us-ascii?Q?wmvV474rdKATNmKq+lGbzHjbt7E4O9zK954shpWoN70x5rnJcOTLUT9aCTpe?=
+ =?us-ascii?Q?hpKUVhpLD/nbNYyMw3OEKwCo9R3lL0HD4pU6lqPTG6Mc1pl8G9jzfUVghqBE?=
+ =?us-ascii?Q?cT/Lzatn3UuKIBQ4TAJ9vCzW/PJG41OOfyaoyt3vjFqX6BjGQbeF49n4/HXT?=
+ =?us-ascii?Q?PA5U/dybQjI3wuw3rLYrAKc6G90oos9YMHiq/t6V9LAJPsaAZ9AO+2ukmRyi?=
+ =?us-ascii?Q?eEnYxkbyGKppgUX+qhRtIdP/AIzlPcn5DjrnjHix/xRefBd/MhF+vhqEp9so?=
+ =?us-ascii?Q?n3hj+zd4h3yNxTKPH+bG5fzuXG67YaCWuHKSp6e73FzhdK1FQJ/DWLD0DQqX?=
+ =?us-ascii?Q?Mij8YRtmq7rNJOD34xniVA6hnpvMqisKIsxv1hRCbQg2pr2VlX599VUrIpWe?=
+ =?us-ascii?Q?DrPQCOBqdScJv0+hSu9m7WHTariZs/W+TbrrqX3x2/Xion2X3sgaWl7BqCkB?=
+X-MS-Exchange-AntiSpam-MessageData-1: YW2a5uNTHmVp4OoTlC/bGYhbjFicyUfxsFU=
 X-Exchange-RoutingPolicyChecked:
-	OlVSQVkT9omiJyDIosS/WYmOVIjr1QdNPySAcU350yh1qg03WY2ycmOtIB0jqHRip0KM2uPLmq7fr1g0NK2zwhKosOxMS7ynqUCrAfZKgfLn8BhvfSl5Oj0NDN3h0rfgHMqptWd6DlgXNeMJi8y/h27dfFYcj8TOE/BMlgL4yKWoZWOCYetVOmh6WNiFNLrcMZOx/y/FFIBIrxTtTDXVX19b6TxUdYXZ82JQUy8fb3gi8dB7zC1N3RYPf8p6BbcP8ZOftMizZkM6fl+ohUiJWd7SPNb0trgc545MnBcM5KVKDd41rM8JQkMWVLs5yKMaJaon5rTWX81xtU1mZJ2Z/g==
+	rPR9NKJhC7MAPaIJBBVKpSOWo31ptwPVWrHp4RUHa4ZAq9S1DfW+ZzRdf1sIcGYyrhFe+xI60Mzq+ybh4sMv33DGVNDhjm/PNVfj2ClXpK68PbLLUwteC/zNRr/L2/9BFQWp/DOSR57jKvvKYowN63QZ/RdWPxanSFG/lrf8ZFPrVp8GcKIAY7qisbKuAfGXEQ33hjXt6U5dGe3TRtFElG1nWgQjjbKVbbMgA6awx5z6l3CB3Xo5gpo3Ba/hpZOASQwYFU9ePXWSzrSCobkPyb/mz1ul6gT04Oa3HAywCkbgAvowMx1l+fRw9qtoWZ0e69iwH5DlIZ8zXABO8xq8WQ==
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	VLa572jxC9YQZebsTOwLx290vK8DPD2LvgWTGFmnfxfhyRxFheltgKUQ+uy1mUglNaRdqaoIm7UskZWArUW/kksTzwjkWeUfZRW4+ddvrnTZLqyQpyPTbGIGor8GFtmuj7K/oLWkrSb7KnkdpVOp/qnKgUpVZijb/unMH3wfG2bYs1hWX5SSNEhLvVzyBYMQnSKr+2Yy9BehqOoV7yls7dZcwqWMTcrt0ruH9SSly4crcRmhLqPebMiQdGpYjorkp0B/Ozz/u4FXuDkUie12ZSlK9UHB4HchKtE/uMq1e6Xy8URtgMnYOHVqCir3wAaDLjwKcJ+CeGQfz3w2QIVi2dF7WfBcg78sZtr6Bq1jf7ZI0jDtWScb06jj4QupX+6tel7kMtgEUBxCGhfSQ3uzraM5ZuiCp9r5LLnbNJ8Am1zEb++9QX5bZL1QWtHGSr7BFRNCzU6yv6t7QQLAVnpJsp9P7CxbSh9UbZBXAo0s5z3amvbgFZSaLNSZlE6I1uQSnheJEqsbh8+E6ZIJmtvdyaQOAzKqtWcj/J26j6VkPBJjMuViJ3wWzKjJQP2xvp7lTNGufnOFjYtDzskIatrurjRRQH7qGr2ryRJ42PvBItI=
+	4b7+A1CTAEJ6OyKwbGatPzFoOykYWGBohkmXH+DI03CTZRc9WPu0sE/Rj2vM99+FiU/NJlOYee5IQ6Je0EwxntxsR3xjawNfciWP4PCeF2P9eQPioHJO67DoyuQakI6HCJ5/L0xmwpmqor7ZGSxaNUWROY0Q9F4NNIU51VwwlLz+yUx0irBZxy6h+j7hHYways0QBlqMME5UGfzv5goUeJCkTzgm+loMaKTzTPf3j0k3/d0p5PkQcxjvkF6SI2tfoy2Ydio2dO9kvQGjzrgFehtzRSvVYryfWKEn71tMVVBhm98Y4DlGSC1jzN7JCPAWNK17hhJSvWX1Tg1ZvdZuFQ3bwjmU0yXbiSG5yrUzieFYuC3Ku09GYhUC4njmy9Pru0vJv4DbP8H9U9ZQa6wmgg4c0jEuetUswot7KXqvR1iokCh7+Fqkocjuf1mWovNedYJiaDPUUifTGEUM5lUxGp8mxO1PlbiWX1UDbPzGQnFSedJ+1KJU2Vi4oMdVzslEjmxvEBTAyzSQvt9FvetW/9IutUQw3GjKgyHHSQkOP2CtF7aEfC4novpnh6G/E4tz72fa29LWrPYBp62Tt1zAghQ1TDLkgWJvqLxrYkpRJW0=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5a458286-409a-4703-997c-08df29023457
+X-MS-Exchange-CrossTenant-Network-Message-Id: 34d5f051-19e7-4b79-4a66-08df29023a09
 X-MS-Exchange-CrossTenant-AuthSource: DM4PR10MB7505.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Oct 2026 08:15:55.7763
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Oct 2026 08:16:05.1345
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: S1ueQJVmVGHPPWrkion0rI65k1tMeP+UlpwOpVlvIHrg+HNNdjb/CyCNixLQFXKYw2/XFWcoyk39HxT8b1le/2vO3NLW3Rch4ZU6xt1pDDA=
+X-MS-Exchange-CrossTenant-UserPrincipalName: ZWSepQkQ9u3m/H1mlfgiXu+jIr05I7Fei1ElI/KK1sA4ZcuQu5xChYA/KgVEkyLedNG3W4iapWZF6VTqZz9/p8qvaU8jORWyBQ+IS6re1cA=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV8PR10MB7992
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-10-13_01,2026-10-09_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999
- lowpriorityscore=0 adultscore=0 bulkscore=0 malwarescore=0 mlxscore=0
- phishscore=0 spamscore=0 suspectscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.19.0-2610020000 definitions=main-2610130032
-X-Authority-Analysis: v=2.4 cv=N+a8hG9B c=1 sm=1 tr=0 ts=6acde8c0 b=1 cx=c_pps
- a=e1sVV491RgrpLwSTMOnk8w==:117 a=e1sVV491RgrpLwSTMOnk8w==:17
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0
+ spamscore=0 adultscore=0 bulkscore=0 malwarescore=0 mlxscore=0
+ lowpriorityscore=0 suspectscore=0 mlxlogscore=999 classifier=spam adjust=0
+ reason=mlx scancount=1 engine=8.19.0-2610020000 definitions=main-2610130032
+X-Authority-Analysis: v=2.4 cv=N+a8hG9B c=1 sm=1 tr=0 ts=6acde8c8 b=1 cx=c_pps
+ a=zPCbziy225d3KhSqZt3L1A==:117 a=zPCbziy225d3KhSqZt3L1A==:17
  a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19
  a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=xqWC_Br6kY4A:10 a=660iZSQnnn4A:10
  a=GoEa3M9JfhUA:10 a=VkNPw1HP01LnGYTKEx00:22 a=jiCTI4zE5U7BLdzWsZGv:22
- a=RD47p0oAkeU5bO7t-o6f:22 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8 a=yPCof4ZbAAAA:8
- a=45b4cX4q9fnkLCOmiR8A:9 a=5yU3S35YU4bGjq-dph-N:22 a=Bho9c0fBagfJEIQBS7DQ:22
- cc=ntf awl=host:13537
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDEzMDAzMiBTYWx0ZWRfX6LShAlZ2ZGSf
- lP99oUDy52atgx2mrTVEOiQATG5gmPYRs1fcBLbz1JVsSu08FFEbODwHDU83V/Kjf5Eaf7m4r/3
- Fqrj8MUD7gRiBH40f/PTgDIWF/OMt9f61jQKRddyIur0HJD+yHGe7nk/ugG7O1Wvh9LWRXfnubo
- TW2QCjr9LyRtaxcDjC0w7peC/jO75cDscGlvFyCynng7Lr9A0oEvfkWtN9Py2yXZKyJuIcFjJel
- nOfJBvxK1ie5XkYokmZBOCCI+R8U4Qr1QP3H9jfw2qeQchTBERNnOR1Jr58sI7giQl2cjVtKaJl
- x6NrvdYoJMTt9XQOjpwp2XoXh0Xb9CfbkHpz9Wl6f3ACEzTZpH7AxX+Ym8cHlmFAFSDA96GUc/Q
- jFpnknVCgmsTsAsteRcXibPv/BxL8V30tTb58X04lFG32VtdEXB1/gmuscSpLoPtpf8UdU9nJFT
- Gh+Znp3jEHQOylfemmbjvRoK2OlJKaIALR/bl9Oo=
-X-Proofpoint-ORIG-GUID: LcPJbjALIy2gczSnSFW3jCUEHOKzvJTN
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDEzMDAzMiBTYWx0ZWRfX2x/oiZxc8+yW
- iankoaUdbUTPKXi9hv6TqRRnbvhNFhTSvcYAzdMXY6Q7ZmjdS4Q16xmNB26NCgw5eZSJx9gbKe9
- YWYBROxAoSb/ItPZPvkTaZ+JaJPn9r7/yigfLIa+M0v2uR3pvFuh
-X-Proofpoint-GUID: LcPJbjALIy2gczSnSFW3jCUEHOKzvJTN
+ a=RD47p0oAkeU5bO7t-o6f:22 a=i0EeH86SAAAA:8 a=VwQbUJbxAAAA:8 a=pGLkceISAAAA:8
+ a=ag1SF4gXAAAA:8 a=yPCof4ZbAAAA:8 a=X1hi7w48wxXEZvHpCekA:9
+ a=Yupwre4RP9_Eg_Bd0iYG:22 a=5yU3S35YU4bGjq-dph-N:22 a=Bho9c0fBagfJEIQBS7DQ:22
+ cc=ntf awl=host:12107
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDEzMDAzMiBTYWx0ZWRfX71RIg/8dHx7c
+ NNQX4W2ewZJQ2oCXon5//YUNN/ry47C8t8h4B8crk0r/9vja5vmzAkch6AlwY7LH0oJmJOvLm4i
+ /7uKOykApVDPu1iapYtBotSTOfl6YVx1+5HQuNwogB+l9GcJxlw7Fd7NIsIb8/Ll1BgbOyrAnW2
+ h7FW17kGpB9rtNwnh1lcRZN5Qkpb+zmqRcrhVAv7qVt/ZcEd1zkU8eSBK4gfawJW5c4QvsAi42P
+ 39Z+fDHXHhOtr9PiHdfDXvLOTS9GjsWyvmu1Wi5iTV1Nfs3ssb9pQACilZn3X7xjtNcTWhJKMh+
+ yTijlOcTTmAz7eBgHvgJPRApSnZXSoSm+06+vIvBOmP96ENz9vV4w6Nj40C6tk9rpkfN+z6CA6P
+ Tz2vhW0ru8B2KgtTr6uqxb0Z07KC0BHYoa96DM6APYoY7rJfadrP5nE4zozuJS/hysfmbLqpTqI
+ B0VoetHkF3BPC4Xox7L+UWnijIk5jjneHrRMffI8=
+X-Proofpoint-ORIG-GUID: R-pJVsvl3QgppZ2I4Dfx0PGdXqjDjMf9
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDEzMDAzMiBTYWx0ZWRfX/bzlt36C/Rdw
+ KyZn91Il/e4K4v3sbbB3ZJnYp5EySlsr/5qEk0ZE4R+W2+qfuBQ3gSgFZgLQMhN+zakSc/o3OGj
+ zyYJFMfP+p5UBHkgwD0bHEdzV8QpYvhbkzgqlF62hYNKE5D9zaJ7
+X-Proofpoint-GUID: R-pJVsvl3QgppZ2I4Dfx0PGdXqjDjMf9
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Guo Xuenan <guoxuenan@huawei.com>
 
-Most buffer io list operations are run with the bp->b_lock held, but
-xfs_iflush_abort() can be called without the buffer lock being held
-resulting in inodes being removed from the buffer list while other
-list operations are occurring. This causes problems with corrupted
-bp->b_io_list inode lists during filesystem shutdown, leading to
-traversals that never end, double removals from the AIL, etc.
+[ Upstream commit 575689fc0ffa6c4bb4e72fd18e31a6525a6124e0 ]
 
-Fix this by passing the buffer to xfs_iflush_abort() if we have
-it locked. If the inode is attached to the buffer, we're going to
-have to remove it from the buffer list and we'd have to get the
-buffer off the inode log item to do that anyway.
+xfs log io error will trigger xlog shut down, and end_io worker call
+xlog_state_shutdown_callbacks to unpin and release the buf log item.
+The race condition is that when there are some thread doing transaction
+commit and happened not to be intercepted by xlog_is_shutdown, then,
+these log item will be insert into CIL, when unpin and release these
+buf log item, UAF will occur. BTW, add delay before `xlog_cil_commit`
+can increase recurrence probability.
 
-If we don't have a buffer passed in (e.g. from xfs_reclaim_inode())
-then we can determine if the inode has a log item and if it is
-attached to a buffer before we do anything else. If it does have an
-attached buffer, we can lock it safely (because the inode has a
-reference to it) and then perform the inode abort.
+The following call graph actually encountered this bad situation.
+fsstress                    io end worker kworker/0:1H-216
+                            xlog_ioend_work
+                              ->xlog_force_shutdown
+                                ->xlog_state_shutdown_callbacks
+                                  ->xlog_cil_process_committed
+                                    ->xlog_cil_committed
+                                      ->xfs_trans_committed_bulk
+->xfs_trans_apply_sb_deltas             ->li_ops->iop_unpin(lip, 1);
+  ->xfs_trans_getsb
+    ->_xfs_trans_bjoin
+      ->xfs_buf_item_init
+        ->if (bip) { return 0;} //relog
+->xlog_cil_commit
+  ->xlog_cil_insert_items //insert into CIL
+                                           ->xfs_buf_ioend_fail(bp);
+                                             ->xfs_buf_ioend
+                                               ->xfs_buf_item_done
+                                                 ->xfs_buf_item_relse
+                                                   ->xfs_buf_item_free
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+when cil push worker gather percpu cil and insert super block buf log item
+into ctx->log_items then uaf occurs.
+
+==================================================================
+BUG: KASAN: use-after-free in xlog_cil_push_work+0x1c8f/0x22f0
+Write of size 8 at addr ffff88801800f3f0 by task kworker/u4:4/105
+
+CPU: 0 PID: 105 Comm: kworker/u4:4 Tainted: G W
+6.1.0-rc1-00001-g274115149b42 #136
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS
+1.13.0-1ubuntu1.1 04/01/2014
+Workqueue: xfs-cil/sda xlog_cil_push_work
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0x4d/0x66
+ print_report+0x171/0x4a6
+ kasan_report+0xb3/0x130
+ xlog_cil_push_work+0x1c8f/0x22f0
+ process_one_work+0x6f9/0xf70
+ worker_thread+0x578/0xf30
+ kthread+0x28c/0x330
+ ret_from_fork+0x1f/0x30
+ </TASK>
+
+Allocated by task 2145:
+ kasan_save_stack+0x1e/0x40
+ kasan_set_track+0x21/0x30
+ __kasan_slab_alloc+0x54/0x60
+ kmem_cache_alloc+0x14a/0x510
+ xfs_buf_item_init+0x160/0x6d0
+ _xfs_trans_bjoin+0x7f/0x2e0
+ xfs_trans_getsb+0xb6/0x3f0
+ xfs_trans_apply_sb_deltas+0x1f/0x8c0
+ __xfs_trans_commit+0xa25/0xe10
+ xfs_symlink+0xe23/0x1660
+ xfs_vn_symlink+0x157/0x280
+ vfs_symlink+0x491/0x790
+ do_symlinkat+0x128/0x220
+ __x64_sys_symlink+0x7a/0x90
+ do_syscall_64+0x35/0x80
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+Freed by task 216:
+ kasan_save_stack+0x1e/0x40
+ kasan_set_track+0x21/0x30
+ kasan_save_free_info+0x2a/0x40
+ __kasan_slab_free+0x105/0x1a0
+ kmem_cache_free+0xb6/0x460
+ xfs_buf_ioend+0x1e9/0x11f0
+ xfs_buf_item_unpin+0x3d6/0x840
+ xfs_trans_committed_bulk+0x4c2/0x7c0
+ xlog_cil_committed+0xab6/0xfb0
+ xlog_cil_process_committed+0x117/0x1e0
+ xlog_state_shutdown_callbacks+0x208/0x440
+ xlog_force_shutdown+0x1b3/0x3a0
+ xlog_ioend_work+0xef/0x1d0
+ process_one_work+0x6f9/0xf70
+ worker_thread+0x578/0xf30
+ kthread+0x28c/0x330
+ ret_from_fork+0x1f/0x30
+
+The buggy address belongs to the object at ffff88801800f388
+ which belongs to the cache xfs_buf_item of size 272
+The buggy address is located 104 bytes inside of
+ 272-byte region [ffff88801800f388, ffff88801800f498)
+
+The buggy address belongs to the physical page:
+page:ffffea0000600380 refcount:1 mapcount:0 mapping:0000000000000000
+index:0xffff88801800f208 pfn:0x1800e
+head:ffffea0000600380 order:1 compound_mapcount:0 compound_pincount:0
+flags: 0x1fffff80010200(slab|head|node=0|zone=1|lastcpupid=0x1fffff)
+raw: 001fffff80010200 ffffea0000699788 ffff88801319db50 ffff88800fb50640
+raw: ffff88801800f208 000000000015000a 00000001ffffffff 0000000000000000
+page dumped because: kasan: bad access detected
+
+Memory state around the buggy address:
+ ffff88801800f280: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+ ffff88801800f300: fb fb fb fc fc fc fc fc fc fc fc fc fc fc fc fc
+>ffff88801800f380: fc fa fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+                                                             ^
+ ffff88801800f400: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+ ffff88801800f480: fb fb fb fc fc fc fc fc fc fc fc fc fc fc fc fc
+==================================================================
+Disabling lock debugging due to kernel taint
+
+Signed-off-by: Guo Xuenan <guoxuenan@huawei.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-(cherry picked from commit d2d7c0473586d2f22e85d615275f34cf19f94447)
-Stable-dep-of: 09234a632be4 ("xfs: xfs_ifree_cluster vs xfs_iflush_shutdown_abort deadlock")
+Signed-off-by: Leah Rumancik <leah.rumancik@gmail.com>
+Acked-by: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+(cherry picked from commit 0d889ae85fcf0cf9bc6e998fca2ec760e08e0b46)
+Stable-dep-of: d2fe5c4c8d25 ("xfs: rearrange code in xfs_buf_item.c")
 Signed-off-by: Siddh Raman Pant <siddh.raman.pant@oracle.com>
 ---
- fs/xfs/xfs_icache.c     |   2 +-
- fs/xfs/xfs_inode.c      |   2 +-
- fs/xfs/xfs_inode_item.c | 164 ++++++++++++++++++++++++++++++++--------
- fs/xfs/xfs_inode_item.h |   1 +
- 4 files changed, 137 insertions(+), 32 deletions(-)
+ fs/xfs/xfs_buf_item.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index e69a08ed7de4..d973eca1a881 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1040,7 +1040,7 @@ xfs_reclaim_inode(
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index 7794bd956861..73c548d5b593 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -938,6 +938,8 @@ xfs_buf_item_relse(
+ 	trace_xfs_buf_item_relse(bp, _RET_IP_);
+ 	ASSERT(!test_bit(XFS_LI_IN_AIL, &bip->bli_item.li_flags));
  
- 	if (XFS_FORCED_SHUTDOWN(ip->i_mount)) {
- 		xfs_iunpin_wait(ip);
--		xfs_iflush_abort(ip);
-+		xfs_iflush_shutdown_abort(ip);
- 		goto reclaim;
- 	}
- 	if (xfs_ipincount(ip))
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 19008838df76..2de204f46216 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -3613,7 +3613,7 @@ xfs_iflush_cluster(
- 
- 	/*
- 	 * We must use the safe variant here as on shutdown xfs_iflush_abort()
--	 * can remove itself from the list.
-+	 * will remove itself from the list.
- 	 */
- 	list_for_each_entry_safe(lip, n, &bp->b_li_list, li_bio_list) {
- 		iip = (struct xfs_inode_log_item *)lip;
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index 38b59e8070ac..c9ef341d4ee3 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -518,10 +518,17 @@ xfs_inode_item_push(
- 	uint			rval = XFS_ITEM_SUCCESS;
- 	int			error;
- 
--	ASSERT(iip->ili_item.li_buf);
-+	if (!bp || (ip->i_flags & XFS_ISTALE)) {
-+		/*
-+		 * Inode item/buffer is being being aborted due to cluster
-+		 * buffer deletion. Trigger a log force to have that operation
-+		 * completed and items removed from the AIL before the next push
-+		 * attempt.
-+		 */
-+		return XFS_ITEM_PINNED;
-+	}
- 
--	if (xfs_ipincount(ip) > 0 || xfs_buf_ispinned(bp) ||
--	    (ip->i_flags & XFS_ISTALE))
-+	if (xfs_ipincount(ip) > 0 || xfs_buf_ispinned(bp))
- 		return XFS_ITEM_PINNED;
- 
- 	if (xfs_iflags_test(ip, XFS_IFLUSHING))
-@@ -801,46 +808,143 @@ xfs_buf_inode_io_fail(
- }
- 
- /*
-- * This is the inode flushing abort routine.  It is called when
-- * the filesystem is shutting down to clean up the inode state.  It is
-- * responsible for removing the inode item from the AIL if it has not been
-- * re-logged and clearing the inode's flush state.
-+ * Clear the inode logging fields so no more flushes are attempted.  If we are
-+ * on a buffer list, it is now safe to remove it because the buffer is
-+ * guaranteed to be locked. The caller will drop the reference to the buffer
-+ * the log item held.
-+ */
-+static void
-+xfs_iflush_abort_clean(
-+	struct xfs_inode_log_item *iip)
-+{
-+	iip->ili_last_fields = 0;
-+	iip->ili_fields = 0;
-+	iip->ili_fsync_fields = 0;
-+	iip->ili_flush_lsn = 0;
-+	iip->ili_item.li_buf = NULL;
-+	list_del_init(&iip->ili_item.li_bio_list);
-+}
-+
-+/*
-+ * Abort flushing the inode from a context holding the cluster buffer locked.
-+ *
-+ * This is the normal runtime method of aborting writeback of an inode that is
-+ * attached to a cluster buffer. It occurs when the inode and the backing
-+ * cluster buffer have been freed (i.e. inode is XFS_ISTALE), or when cluster
-+ * flushing or buffer IO completion encounters a log shutdown situation.
-+ *
-+ * If we need to abort inode writeback and we don't already hold the buffer
-+ * locked, call xfs_iflush_shutdown_abort() instead as this should only ever be
-+ * necessary in a shutdown situation.
-  */
- void
- xfs_iflush_abort(
- 	struct xfs_inode	*ip)
- {
- 	struct xfs_inode_log_item *iip = ip->i_itemp;
--	struct xfs_buf		*bp = NULL;
-+	struct xfs_buf		*bp;
- 
--	if (iip) {
--		/*
--		 * Clear the failed bit before removing the item from the AIL so
--		 * xfs_trans_ail_delete() doesn't try to clear and release the
--		 * buffer attached to the log item before we are done with it.
--		 */
--		clear_bit(XFS_LI_FAILED, &iip->ili_item.li_flags);
--		xfs_trans_ail_delete(&iip->ili_item, 0);
--
--		/*
--		 * Clear the inode logging fields so no more flushes are
--		 * attempted.
--		 */
--		spin_lock(&iip->ili_lock);
--		iip->ili_last_fields = 0;
--		iip->ili_fields = 0;
--		iip->ili_fsync_fields = 0;
--		iip->ili_flush_lsn = 0;
--		bp = iip->ili_item.li_buf;
--		iip->ili_item.li_buf = NULL;
--		list_del_init(&iip->ili_item.li_bio_list);
--		spin_unlock(&iip->ili_lock);
-+	if (!iip) {
-+		/* clean inode, nothing to do */
-+		xfs_iflags_clear(ip, XFS_IFLUSHING);
++	if (atomic_read(&bip->bli_refcount))
 +		return;
- 	}
-+
-+	/*
-+	 * Remove the inode item from the AIL before we clear its internal
-+	 * state. Whilst the inode is in the AIL, it should have a valid buffer
-+	 * pointer for push operations to access - it is only safe to remove the
-+	 * inode from the buffer once it has been removed from the AIL.
-+	 *
-+	 * We also clear the failed bit before removing the item from the AIL
-+	 * as xfs_trans_ail_delete()->xfs_clear_li_failed() will release buffer
-+	 * references the inode item owns and needs to hold until we've fully
-+	 * aborted the inode log item and detached it from the buffer.
-+	 */
-+	clear_bit(XFS_LI_FAILED, &iip->ili_item.li_flags);
-+	xfs_trans_ail_delete(&iip->ili_item, 0);
-+
-+	/*
-+	 * Grab the inode buffer so can we release the reference the inode log
-+	 * item holds on it.
-+	 */
-+	spin_lock(&iip->ili_lock);
-+	bp = iip->ili_item.li_buf;
-+	xfs_iflush_abort_clean(iip);
-+	spin_unlock(&iip->ili_lock);
-+
- 	xfs_iflags_clear(ip, XFS_IFLUSHING);
- 	if (bp)
- 		xfs_buf_rele(bp);
- }
- 
-+/*
-+ * Abort an inode flush in the case of a shutdown filesystem. This can be called
-+ * from anywhere with just an inode reference and does not require holding the
-+ * inode cluster buffer locked. If the inode is attached to a cluster buffer,
-+ * it will grab and lock it safely, then abort the inode flush.
-+ */
-+void
-+xfs_iflush_shutdown_abort(
-+	struct xfs_inode	*ip)
-+{
-+	struct xfs_inode_log_item *iip = ip->i_itemp;
-+	struct xfs_buf		*bp;
-+
-+	if (!iip) {
-+		/* clean inode, nothing to do */
-+		xfs_iflags_clear(ip, XFS_IFLUSHING);
-+		return;
-+	}
-+
-+	spin_lock(&iip->ili_lock);
-+	bp = iip->ili_item.li_buf;
-+	if (!bp) {
-+		spin_unlock(&iip->ili_lock);
-+		xfs_iflush_abort(ip);
-+		return;
-+	}
-+
-+	/*
-+	 * We have to take a reference to the buffer so that it doesn't get
-+	 * freed when we drop the ili_lock and then wait to lock the buffer.
-+	 * We'll clean up the extra reference after we pick up the ili_lock
-+	 * again.
-+	 */
-+	xfs_buf_hold(bp);
-+	spin_unlock(&iip->ili_lock);
-+	xfs_buf_lock(bp);
-+
-+	spin_lock(&iip->ili_lock);
-+	if (!iip->ili_item.li_buf) {
-+		/*
-+		 * Raced with another removal, hold the only reference
-+		 * to bp now. Inode should not be in the AIL now, so just clean
-+		 * up and return;
-+		 */
-+		ASSERT(list_empty(&iip->ili_item.li_bio_list));
-+		ASSERT(!test_bit(XFS_LI_IN_AIL, &iip->ili_item.li_flags));
-+		xfs_iflush_abort_clean(iip);
-+		spin_unlock(&iip->ili_lock);
-+		xfs_iflags_clear(ip, XFS_IFLUSHING);
-+		xfs_buf_relse(bp);
-+		return;
-+	}
-+
-+	/*
-+	 * Got two references to bp. The first will get dropped by
-+	 * xfs_iflush_abort() when the item is removed from the buffer list, but
-+	 * we can't drop our reference until _abort() returns because we have to
-+	 * unlock the buffer as well. Hence we abort and then unlock and release
-+	 * our reference to the buffer.
-+	 */
-+	ASSERT(iip->ili_item.li_buf == bp);
-+	spin_unlock(&iip->ili_lock);
-+	xfs_iflush_abort(ip);
-+	xfs_buf_relse(bp);
-+}
-+
-+
- /*
-  * convert an xfs_inode_log_format struct from the old 32 bit version
-  * (which can have different field alignments) to the native 64 bit version
-diff --git a/fs/xfs/xfs_inode_item.h b/fs/xfs/xfs_inode_item.h
-index 403b45ab9aa2..9c829cf5c839 100644
---- a/fs/xfs/xfs_inode_item.h
-+++ b/fs/xfs/xfs_inode_item.h
-@@ -44,6 +44,7 @@ static inline int xfs_inode_clean(struct xfs_inode *ip)
- extern void xfs_inode_item_init(struct xfs_inode *, struct xfs_mount *);
- extern void xfs_inode_item_destroy(struct xfs_inode *);
- extern void xfs_iflush_abort(struct xfs_inode *);
-+extern void xfs_iflush_shutdown_abort(struct xfs_inode *);
- extern int xfs_inode_item_format_convert(xfs_log_iovec_t *,
- 					 struct xfs_inode_log_format *);
- 
+ 	bp->b_log_item = NULL;
+ 	xfs_buf_rele(bp);
+ 	xfs_buf_item_free(bip);
 -- 
 2.53.0
 
