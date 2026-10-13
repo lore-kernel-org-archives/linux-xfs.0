@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 869B849C4A4;
-	Tue, 13 Oct 2026 06:09:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BB9E49AA34;
+	Tue, 13 Oct 2026 06:09:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791871754; cv=none; b=gqIWdlu1s5Fg+FJ6xGeWaLTMvPNfF5a3fEoDuL/IqEdpUCHAQkh2Dw8/MDsauW3JLTl+e9guKDAY5nbvbWOqbGwwACN6QObvQug6IO6F5+o/g08GmDW+1S4wNwv2o/dLrVOGkWWLcFyQmUJ596BbpG+FRe9PS0kbKxARl48hFZo=
+	t=1791871771; cv=none; b=jqm96vEGCo6YbJuExDU2UtoJj6ei6ffonpVMP3AJtyoXf0UjsD8cf2h3tbJMCNY5i1jXuUVFsF4zlNdk8+wyJVBpW98owqDvyk1Q4EDLnr+tLdBHlB5CxeFp9BtmveEnE4QqalxBK4tftMhTitWNugrondP4BMmGYkiuxTtplPc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791871754; c=relaxed/simple;
-	bh=J4EzPIbZXN75VUJubuRsR67pHnmKnq3IrtGAyxNW0ac=;
+	s=arc-20240116; t=1791871771; c=relaxed/simple;
+	bh=v1rOVrPY/N8ZbMbW3fzsdNiXfdBSex3pUwAjVY/4fJY=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=mujlJIGVKhjrrFjA6+lFBoYqd8GUIoTJcRtng4y53wpd0Vmc62SyVPuUE8rmzpapBNAWJKEgRdWOU4yqw+wqdoOMsIkXOkfVSAuHObjjKIbTk6sDnIMpjuKnYNyNMDI5Znqra/DR980xt1sDSbE/vQub/zgiie5P0hp8HvnpCDM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IcS+C0rO; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=Iv+v7kek4coMNOYd+I39jji5CApq+F0XNid3Ia7Auv8RE788t3qCpxzZoBSnh3L5Oty6S0CuQZAwsFR6C0Vu4FwjWqf8N1KoU9oP1+XaNwJLku+AR/rsWgv82OWm1jrHvIqKx6pLq1WKsGVjkaW/gRGcEwnmMyaYlek4t686Tqk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=M4JKGBbZ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IcS+C0rO"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 9940D1F000FF;
-	Tue, 13 Oct 2026 06:09:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="M4JKGBbZ"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 3C8441F000FF;
+	Tue, 13 Oct 2026 06:09:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791871747;
-	bh=S7AFqnM79n7jBgXBaS0LY3Ifb5fdJEq2HXQZV5VxLrE=;
+	s=k20260515; t=1791871763;
+	bh=iP4yiHEFrQX75zyn+yXQUQ/0V6/QXOXjqMtiJhf9MlA=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=IcS+C0rOnaj4GGGy3JqK3YkD+73hiBLPTYzNSYEyBje02anpLooN9QuNSt1hpbxwq
-	 4K1gjm2kL3VkDfzeT9jL0I7kLsnR6cSUDbZs+IfJmpQdOdRgOOumGMmNnFxhevbFio
-	 iZLkHOOhvl7EkCWELLVcdT8gUHeW5wGTnsBn8pEjyElKHkzqbcktOj5JLnskrq0TrT
-	 IdtDtf1yPctXIBfnUXVKH+MUmp1tptZLOdSc4zY/aSMiPagIhc40QseJeglNpwxVRr
-	 Eg3r1FY+A8wDzOXOMGfDlCr+wL5jZdBkkuvSUAQQTIJYknrJKQjYKi8Xma09h0orcV
-	 fioxTseD73Viw==
-Date: Mon, 12 Oct 2026 23:09:07 -0700
-Subject: [PATCH 03/12] xfs: rescan the AGs if incore delalloc counter is
- negative
+	b=M4JKGBbZzyrcSuDONJqwVJ87+IhqzbOvb+XiWJWPEawb+5fVS42OCyuLy6EJvDcph
+	 14qgUlYQKh10A8gPkr7oviDLa2gasI8VsJ52bHa9S0sqQw2K+yR0UgrXHTc4zJuy15
+	 l2FnoChAXc4fY8037bAxlqmjdDPk5qdTcL7/o2OcUH5v4R55pAfOHKXxMIxPktmcZT
+	 FGn4n2CWRjayXhfgO79nfJVUqoYi7+f5FzCdTWJCaEuDbYZobiBocr66ilhv86kv4V
+	 WtfAzJdLPDESjb+knjNjBDR4Y3TLYMS8glntL3IOC/1uFycEUfpkMeQacHa2oRGTjq
+	 +cK7EJTsh6sZQ==
+Date: Mon, 12 Oct 2026 23:09:22 -0700
+Subject: [PATCH 04/12] xfs: don't try to repair rtsummary if the summary file
+ isn't computed
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
-Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <179186107906.1898896.10797643225456623847.stgit@frogsfrogsfrogs>
+Cc: hch@lst.de, stable@vger.kernel.org, linux-xfs@vger.kernel.org
+Message-ID: <179186107927.1898896.4105859314616542318.stgit@frogsfrogsfrogs>
 In-Reply-To: <179186107760.1898896.12318125940367230627.stgit@frogsfrogsfrogs>
 References: <179186107760.1898896.12318125940367230627.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,69 +46,72 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-LOLLM complains that percpu_counter_sum can return a negative number but
-we instead misinterpret that into a huge unsigned value and do bad
-things to fdblocks.  It shouldn't do that, so let's add a retry loop and
-an attempt to freeze the filesystem to (hopefully) zero out the incore
-delalloc counter.  It probably won't work, but at least failing the
-repair beats doing the wrong thing.
+LOLLM observed that we can erroneously try to repair the rtsummary file
+if we've not yet computed its contents.  That results in a corrupt
+summary file, so let's add a flag to track whether or not the incore
+data is complete.
 
-Cc: <stable@vger.kernel.org> # v5.2
-Fixes: 75efa57d0bf5fc ("xfs: add online scrub for superblock counters")
+Cc: <stable@vger.kernel.org> # v6.10
+Fixes: abf039e2e4afde ("xfs: online repair of realtime summaries")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Assisted-by: LOLLM # finding obvious bugs
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/scrub/fscounters.c |   17 +++++++++++++++--
- 1 file changed, 15 insertions(+), 2 deletions(-)
+ fs/xfs/scrub/rtsummary.h        |    1 +
+ fs/xfs/scrub/rtsummary.c        |    9 ++++++++-
+ fs/xfs/scrub/rtsummary_repair.c |    2 +-
+ 3 files changed, 10 insertions(+), 2 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/fscounters.c b/fs/xfs/scrub/fscounters.c
-index 5984fe13a973b8..67e159f39951ac 100644
---- a/fs/xfs/scrub/fscounters.c
-+++ b/fs/xfs/scrub/fscounters.c
-@@ -297,7 +297,7 @@ xchk_fscount_aggregate_agcounts(
+diff --git a/fs/xfs/scrub/rtsummary.h b/fs/xfs/scrub/rtsummary.h
+index e44b04cb6e2d5e..af1ab64c3f2125 100644
+--- a/fs/xfs/scrub/rtsummary.h
++++ b/fs/xfs/scrub/rtsummary.h
+@@ -17,6 +17,7 @@ struct xchk_rtsummary {
+ 	xfs_filblks_t		rsumblocks;
+ 	unsigned int		rsumlevels;
+ 	unsigned int		resblks;
++	bool			summary_computed;
+ 
+ 	/* suminfo position of xfile as we write buffers to disk. */
+ 	xfs_rtsumoff_t		prep_wordoff;
+diff --git a/fs/xfs/scrub/rtsummary.c b/fs/xfs/scrub/rtsummary.c
+index 546b335ade1354..fa358746beaf5c 100644
+--- a/fs/xfs/scrub/rtsummary.c
++++ b/fs/xfs/scrub/rtsummary.c
+@@ -212,13 +212,20 @@ xchk_rtsum_compute(
  {
  	struct xfs_mount	*mp = sc->mp;
- 	struct xfs_perag	*pag = NULL;
--	uint64_t		delayed;
-+	int64_t			delayed;
- 	int			tries = 8;
- 	int			error = 0;
+ 	struct xfs_rtgroup	*rtg = sc->sr.rtg;
++	struct xchk_rtsummary	*rts = sc->buf;
++	int			error;
  
-@@ -359,6 +359,11 @@ xchk_fscount_aggregate_agcounts(
- 	 * of the computation.
- 	 */
- 	delayed = percpu_counter_sum(&mp->m_delalloc_blks);
-+	if (delayed < 0) {
-+		ASSERT(delayed >= 0);
-+		xchk_set_incomplete(sc);
-+		return -EFSCORRUPTED;
-+	}
- 	fsc->fdblocks -= delayed;
+ 	/* If the bitmap size doesn't match the computed size, bail. */
+ 	if (XFS_FSB_TO_B(mp, xfs_rtbitmap_blockcount(mp)) !=
+ 	    rtg_bitmap(rtg)->i_disk_size)
+ 		return -EFSCORRUPTED;
  
- 	trace_xchk_fscounters_calc(mp, fsc->icount, fsc->ifree, fsc->fdblocks,
-@@ -417,6 +422,7 @@ xchk_fscount_count_frextents(
- {
- 	struct xfs_mount	*mp = sc->mp;
- 	struct xfs_rtgroup	*rtg = NULL;
-+	int64_t			delayed;
- 	int			error;
- 
- 	fsc->frextents = 0;
-@@ -442,7 +448,14 @@ xchk_fscount_count_frextents(
- 		}
- 	}
- 
--	fsc->frextents_delayed = percpu_counter_sum(&mp->m_delalloc_rtextents);
-+	delayed = percpu_counter_sum(&mp->m_delalloc_rtextents);
-+	if (delayed < 0) {
-+		ASSERT(delayed >= 0);
-+		xchk_set_incomplete(sc);
-+		return -EFSCORRUPTED;
-+	}
-+	fsc->frextents_delayed = delayed;
+-	return xfs_rtalloc_query_all(rtg, sc->tp, xchk_rtsum_record_free, sc);
++	error = xfs_rtalloc_query_all(rtg, sc->tp, xchk_rtsum_record_free, sc);
++	if (error)
++		return error;
 +
- 	return 0;
++	rts->summary_computed = true;
++	return 0;
  }
- #else
+ 
+ /* Compare the rtsummary file against the one we computed. */
+diff --git a/fs/xfs/scrub/rtsummary_repair.c b/fs/xfs/scrub/rtsummary_repair.c
+index ed763290aec1e5..45bdefaeab013e 100644
+--- a/fs/xfs/scrub/rtsummary_repair.c
++++ b/fs/xfs/scrub/rtsummary_repair.c
+@@ -122,7 +122,7 @@ xrep_rtsummary(
+ 		return -EOPNOTSUPP;
+ 
+ 	/* Walk away if we disagree on the size of the rt bitmap. */
+-	if (rts->rbmblocks != mp->m_sb.sb_rbmblocks)
++	if (rts->rbmblocks != mp->m_sb.sb_rbmblocks || !rts->summary_computed)
+ 		return 0;
+ 
+ 	/* Make sure any problems with the fork are fixed. */
 
