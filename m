@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 183E63EAC76
-	for <linux-xfs@vger.kernel.org>; Tue, 13 Oct 2026 06:02:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AC95417BD2
+	for <linux-xfs@vger.kernel.org>; Tue, 13 Oct 2026 06:02:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791871371; cv=none; b=TDUob8lTNjTUs5HhuVS1Dc6lMy9kkGP+c9RL+jl+2Ox3mIGla6Q7wUzA/YEdSr9PV0nnyDa9e97KJ6995xD5j+mCQ+s6+CjMCoM79BUJzyHCbTYgtVVgowrU0rKvBZL37n5MmOVd+jcRJ1czN7ub37z49nGKAfdy97FcaY1Uvlg=
+	t=1791871372; cv=none; b=sa5GYwCn6kcn13gOh2ROTYwI9m7t6aIHsDwzkWFmtxyou3Ko6Sup1qmLH+phXsHNbjujJxrWC1y8gtLz3gsE0th3ZO0UZayAKio7qLtJ2l+AIvIby+PscSsNTspbqnQJDgeYwhW4WYNPgtmo/E6CdaW/8nxHW7qaWmb8uJWbvuU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791871371; c=relaxed/simple;
-	bh=Mddx4af3zgZjcSlaZUmKVC6ZPwitpP6uyWux7xegjBI=;
+	s=arc-20240116; t=1791871372; c=relaxed/simple;
+	bh=R20iPKjRsDGhqMdkY7P3BRr5yRuQZX5jrEOeFiTPrPw=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=AfvpEql9agdROgOXhY1OlxlNHhP8xH2LVtK1GPV5P5BrraOsEL783IH93wb77VeTgkAyfOwW27OXbM9p3kas7TtBRMYK0B6+psO7jJz1uNo5PMUV1vWuRxCZhQ8MErmf0C+RVp4oigdoH/Qbqw3vD9/ov0Hn9MkQnS27Tt/cb9Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mjoSkZrD; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=EbhYt+o16+QiNBnZrdewGiBaio8Ivh6s+KIappmzFQ5+xQc5l1S9xvstqtXrYIDwHJnQDHAAnqlHaseTKhNwuK2lCAvapkoBOFZLXfpL+dygLQWQQmipIqJP30wGXR1SjC9Fl0fuqJohapIllqk/fjZj5ulqM0wwEEGvympvMd4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NR60TWrN; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mjoSkZrD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 368CF1F000FF;
-	Tue, 13 Oct 2026 06:02:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NR60TWrN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 730F51F00893;
+	Tue, 13 Oct 2026 06:02:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791871370;
-	bh=9E0t1ooD5nslJovIqNUePHct+aLIy5HysrpW/mjFJzU=;
+	s=k20260515; t=1791871371;
+	bh=TdiRFNeG6QESc+ffr8DkzdDJ1VcUgxH5Jd2xAKrbWtA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=mjoSkZrDF16Tx1Cv88kTskNNfCgEBd01j9cKdy0cqxgXl5ryk4RIGOHiHiaGLKFnE
-	 WxiyZqpCiF20afiTxM+PPicMZ+7xPIJFo3gw0B/gRh39D+0CHn2hS4GhYg0ceXMqNA
-	 kKr4Uap44MYUROGDjVILGKeP/j2miQzsnXNG81Bk2Jg4ZdbHQZh9xReL4U8JRDS837
-	 E25Ur7lR8pIJR706BxLDbJWecu9OM2uHJ5ZJK0uuapTYZi9svfkezgtTMsQgLnaNzs
-	 F3UrMDfyKjpYrdVuSJMWjplKFiE1Z2XRdib4NJmUbcvBDFezyI6xEU1XiqyOhOmDM8
-	 qCyUhBYWNkY9A==
+	b=NR60TWrN76lJ7EHf7MLKzem/UjREkkDiI2i5UzGZ8TTDuGC7KFlXonimfqE7Wgzld
+	 dYUfoyR4DbFqxHobvcLDTW/IPS45jZhn2X5srbsepPIugnUFcqaW03rGfDXQsI14kO
+	 HDHqWjNcXJEx7ZnbikgvMShQWxYgqSGAlXg9RnPDeitGYcGOPEuI93eKUtJU7+4Iaz
+	 H555qPct+67P+zzLo4qn+CuLmg/TI9SflCSp6CClXFEKvkG/bGLfB0fb39DmOFdCOW
+	 oMlzrWTa0eGUQ1P8jwjONZKYqshLnp9hmdqynzPoOBsADYc3fLR7pvljhvnq12jfFL
+	 76cJGwUBVsI0Q==
 From: Dave Chinner <dgc@kernel.org>
 To: linux-xfs@vger.kernel.org
 Cc: cem@kernel.org
-Subject: [PATCH 33/48] xfs: convert inode items to host format during recovery
-Date: Tue, 13 Oct 2026 17:01:23 +1100
-Message-ID: <20261013060204.3138690-34-dgc@kernel.org>
+Subject: [PATCH 34/48] xfs: allow xfs_imap() to map without an inode btree lookup
+Date: Tue, 13 Oct 2026 17:01:24 +1100
+Message-ID: <20261013060204.3138690-35-dgc@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20261013060204.3138690-1-dgc@kernel.org>
 References: <20261013060204.3138690-1-dgc@kernel.org>
@@ -43,188 +43,65 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The inode item format header is logged in either the host format or the older
-32 bit on-disk format. Recovery converted between them in the commit handler
-and carried a separately allocated copy through the rest of the function.
+xfs_imap() maps an inode number to its cluster buffer location. For the common
+inode cluster geometries it does this by arithmetic, but for the general case it
+falls back to an inode btree lookup that reads the AGI and walks the inode
+btree.
 
-Convert the format header to host format in ->validate_item() as the item is
-decoded, so the rest of recovery treats region 0 as a host format header
-without regard for the on-disk format. The commit handler and readahead now use
-the header directly. The separate allocation and its cleanup are removed.
+Some callers cannot allow that lookup. Log recovery in particular wants to
+cross-check a logged inode buffer location against the one derived from the
+inode number, but it runs before the filesystem is fully available and must not
+issue btree lookups.
+
+Add an XFS_IMAP_NO_LOOKUP flag. When it is set, xfs_imap() maps the inode by
+arithmetic alone and returns -EAGAIN instead of performing the btree lookup, so
+the caller can tell that arithmetic mapping was not possible for this geometry.
 
 Assisted-by: LLM
 Signed-off-by: Dave Chinner <dgc@kernel.org>
 ---
- fs/xfs/xfs_inode_item_recover.c | 108 +++++++++++++++++++++++---------
- 1 file changed, 79 insertions(+), 29 deletions(-)
+ fs/xfs/libxfs/xfs_ialloc.c | 7 +++++++
+ fs/xfs/xfs_icache.h        | 2 ++
+ 2 files changed, 9 insertions(+)
 
-diff --git a/fs/xfs/xfs_inode_item_recover.c b/fs/xfs/xfs_inode_item_recover.c
-index 8da95131ab55..48acb0aa3b6c 100644
---- a/fs/xfs/xfs_inode_item_recover.c
-+++ b/fs/xfs/xfs_inode_item_recover.c
-@@ -30,17 +30,10 @@ xlog_recover_inode_ra_pass2(
- 	struct xlog                     *log,
- 	struct xlog_recover_item        *item)
- {
--	if (item->ri_buf[0].iov_len == sizeof(struct xfs_inode_log_format)) {
--		struct xfs_inode_log_format	*ilfp = item->ri_buf[0].iov_base;
-+	struct xfs_inode_log_format	*ilfp = item->ri_buf[0].iov_base;
- 
--		xlog_buf_readahead(log, ilfp->ilf_blkno, ilfp->ilf_len,
--				   &xfs_inode_buf_ra_ops);
--	} else {
--		struct xfs_inode_log_format_32	*ilfp = item->ri_buf[0].iov_base;
--
--		xlog_buf_readahead(log, ilfp->ilf_blkno, ilfp->ilf_len,
--				   &xfs_inode_buf_ra_ops);
--	}
-+	xlog_buf_readahead(log, ilfp->ilf_blkno, ilfp->ilf_len,
-+			   &xfs_inode_buf_ra_ops);
- }
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index e705f681ed44..3664d5fff9bf 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -2449,6 +2449,10 @@ xfs_imap_lookup(
  
  /*
-@@ -304,6 +297,75 @@ xlog_recover_inode_dbroot(
- 	return 0;
- }
- 
-+/*
-+ * An inode item is a format header region, the log dinode core, and up to two
-+ * fork regions, so it has two to four regions. The exact count depends on the
-+ * fields logged and is checked once the format header is decoded.
-+ */
-+static int
-+xlog_recover_inode_nregions(
-+	struct xlog			*log,
-+	uint16_t			nregions)
-+{
-+	if (nregions < 2 || nregions > 4)
-+		return -EFSCORRUPTED;
-+	return nregions;
-+}
-+
-+/*
-+ * The format header (region 0) is logged in either the host format or the 32
-+ * bit on-disk format, so it must match one of those two sizes.
-+ */
-+static int
-+xlog_recover_inode_validate_region(
-+	struct xlog			*log,
-+	struct xlog_recover_item	*item,
-+	int				region_index)
-+{
-+	size_t				len = item->ri_buf[region_index].iov_len;
-+
-+	if (region_index > 0)
-+		return 0;
-+
-+	if (len != sizeof(struct xfs_inode_log_format) &&
-+	    len != sizeof(struct xfs_inode_log_format_32)) {
-+		xfs_warn(log->l_mp,
-+			"INODE: bad format region length %zu recovered.", len);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	return 0;
-+}
-+
-+/*
-+ * Convert the format header to host format so the rest of recovery can treat
-+ * region 0 as a struct xfs_inode_log_format without regard for the on-disk
-+ * format. A header already in host format is left in place.
-+ */
-+static int
-+xlog_recover_inode_validate_item(
-+	struct xlog			*log,
-+	struct xlog_recover_item	*item)
-+{
-+	struct xfs_inode_log_format	*in_f;
-+	int				error;
-+
-+	if (item->ri_buf[0].iov_len == sizeof(struct xfs_inode_log_format))
-+		return 0;
-+
-+	in_f = kmalloc_obj(struct xfs_inode_log_format, GFP_KERNEL | __GFP_NOFAIL);
-+	error = xfs_inode_item_format_convert(&item->ri_buf[0], in_f);
-+	if (error) {
-+		kfree(in_f);
-+		return error;
-+	}
-+
-+	kvfree(item->ri_buf[0].iov_base);
-+	item->ri_buf[0].iov_base = in_f;
-+	item->ri_buf[0].iov_len = sizeof(struct xfs_inode_log_format);
-+	return 0;
-+}
-+
- STATIC int
- xlog_recover_inode_commit_pass2(
- 	struct xlog			*log,
-@@ -311,7 +373,7 @@ xlog_recover_inode_commit_pass2(
- 	struct xlog_recover_item	*item,
- 	xfs_lsn_t			current_lsn)
- {
--	struct xfs_inode_log_format	*in_f;
-+	struct xfs_inode_log_format	*in_f = item->ri_buf[0].iov_base;
- 	struct xfs_mount		*mp = log->l_mp;
- 	struct xfs_buf			*bp;
- 	struct xfs_dinode		*dip;
-@@ -323,35 +385,22 @@ xlog_recover_inode_commit_pass2(
- 	uint				fields;
- 	struct xfs_log_dinode		*ldip;
- 	uint				isize;
--	int				need_free = 0;
- 	xfs_failaddr_t			fa;
- 
--	if (item->ri_buf[0].iov_len == sizeof(struct xfs_inode_log_format)) {
--		in_f = item->ri_buf[0].iov_base;
--	} else {
--		in_f = kmalloc_obj(struct xfs_inode_log_format,
--				   GFP_KERNEL | __GFP_NOFAIL);
--		need_free = 1;
--		error = xfs_inode_item_format_convert(&item->ri_buf[0], in_f);
--		if (error)
--			goto error;
--	}
--
- 	/*
- 	 * Inode buffers can be freed, look out for it,
- 	 * and do not replay the inode.
- 	 */
- 	if (xlog_is_buffer_cancelled(log, in_f->ilf_blkno, in_f->ilf_len)) {
--		error = 0;
- 		trace_xfs_log_recover_inode_cancel(log, in_f);
--		goto error;
-+		return 0;
+  * Return the location of the inode in imap, for mapping it into a buffer.
++ *
++ * If the caller cannot allow a btree lookup to be performed, then it should set
++ * XFS_IMAP_NO_LOOKUP. If arithmetic mapping cannot be performed, we return
++ * -EAGAIN to inform the caller mapping failed due to a lookup being required.
+  */
+ int
+ xfs_imap(
+@@ -2536,6 +2540,9 @@ xfs_imap(
+ 		 */
  	}
- 	trace_xfs_log_recover_inode_recover(log, in_f);
  
- 	error = xfs_buf_read(mp->m_ddev_targp, in_f->ilf_blkno, in_f->ilf_len,
- 			0, &bp, &xfs_inode_buf_ops);
++	if (flags & XFS_IMAP_NO_LOOKUP)
++		return -EAGAIN;
++
+ 	error = xfs_imap_lookup(pag, tp, agino, agbno, &chunk_agbno,
+ 			&offset_agbno, flags);
  	if (error)
--		goto error;
-+		return error;
- 	ASSERT(in_f->ilf_fields & XFS_ILOG_CORE);
- 	dip = xfs_buf_offset(bp, in_f->ilf_boffset);
+diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
+index 905944dafbe5..a1386b16edcd 100644
+--- a/fs/xfs/xfs_icache.h
++++ b/fs/xfs/xfs_icache.h
+@@ -41,6 +41,8 @@ struct xfs_icwalk {
+ #define XFS_IGET_INCORE		(1U << 3)
+ /* Return -EAGAIN immediately if the inode is unavailable. */
+ #define XFS_IGET_NORETRY	(1U << 4)
++/* Map the inode by arithmetic only, never by an inode btree lookup. */
++#define XFS_IMAP_NO_LOOKUP	(1U << 5)
  
-@@ -608,14 +657,15 @@ xlog_recover_inode_commit_pass2(
- 
- out_release:
- 	xfs_buf_relse(bp);
--error:
--	if (need_free)
--		kfree(in_f);
- 	return error;
- }
- 
- const struct xlog_recover_item_ops xlog_inode_item_ops = {
- 	.item_type		= XFS_LI_INODE,
-+	.min_hdr_len		= sizeof(struct xfs_inode_log_format_32),
-+	.validate_nregions	= xlog_recover_inode_nregions,
-+	.validate_region	= xlog_recover_inode_validate_region,
-+	.validate_item		= xlog_recover_inode_validate_item,
- 	.ra_pass2		= xlog_recover_inode_ra_pass2,
- 	.commit_pass2		= xlog_recover_inode_commit_pass2,
- };
+ int xfs_iget(struct xfs_mount *mp, struct xfs_trans *tp, xfs_ino_t ino,
+ 	     uint flags, uint lock_flags, xfs_inode_t **ipp);
 -- 
 2.55.0
 
