@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E44E7495AE5
-	for <linux-xfs@vger.kernel.org>; Tue, 13 Oct 2026 06:11:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED4914A13AD
+	for <linux-xfs@vger.kernel.org>; Tue, 13 Oct 2026 06:11:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791871877; cv=none; b=JSyYEW5agcAH+3ODOObrehKzRqKHIxfTQPM7zdHccMjiUkwrcqwd6lyIy2b/GoJ9T4UXpNepaGSYAmTcmz26kfxkhhytfGTouRhIior3J5OreAkqpY87Uz0Q5M9RoRHaLJ7vjYqs7qdeH2rwUxfBo0z7w0rRR6OiIsavMGTQtHw=
+	t=1791871899; cv=none; b=nLLLMMqi3cxXSB6dmaCht85gal3+glpvwRuUFQZaj9/F1IXPlyQsawKsIIt2KDqyQ+/EGZMMbQYM9rwMcyxpFnky6uCr9AVSNvbktREBU0yAesIeYOj8fM7XT7vJp51mwHZgEbL4IDVkdmIxbGjj83uOY0EJy/Wh8qKlZRbFZMQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791871877; c=relaxed/simple;
-	bh=AAOaQsGdnuTp9npB94/ETtx41OsAvW1bhDVNhrwa8Cg=;
+	s=arc-20240116; t=1791871899; c=relaxed/simple;
+	bh=VgFwi9lLax2gQGL1l4Z9LrQN96tNN7flwJQsDcRTsFU=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=JOkCYC2m8vmTJjK40RzXt4mVf2dOanElOCNkl+JEPT534i6tc2Onmqr/9INSz5woZa3YWkT3Ijh5JpycVaHkfKdq+qdGUnYH+eQb4Vd9kRex7me26onR1FW/cQHIZ2rOOyp3PdLYmKLUrfl/Lo3vYabnPVnFTCVTioGG/Y2L0RA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AxlHYjJA; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=Vs2n3+QGVoZsT17l8FsW9OuJ+65OBXze7CJ0Qd47gBhkcX5jNwbN6uPYuEPS+6vuIL0A8tBfwQvyD2IWkzxnKscCfY8T2MixLlII2I/TFgyLgu5XIaC6W3o0QkV63mBeX3QOoY2cdQdFOzB8hC8GMkSWrGwDKv5jMbMuQEiZlhc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BAY7FqMl; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AxlHYjJA"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id AFC131F00893;
-	Tue, 13 Oct 2026 06:11:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BAY7FqMl"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 5E1251F00893;
+	Tue, 13 Oct 2026 06:11:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791871872;
-	bh=lup636Z2xi5vTxbSLNcHTm9lHcwxsEZ3SYBNOyYpK0g=;
+	s=k20260515; t=1791871888;
+	bh=t43j+gx2AiuNBnCDCXncJTHFdsd4Cl2yLUgjAy80V/Y=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=AxlHYjJAhPVUY47bNiLf+38kMRoqPTZhVwV3WjoWcPWrpOnLE0t9b8+6imuAyDAsy
-	 JQ6UMY0nmmm4ncq86E2FJ2W5JNg7oG4CfKZ5aLPewnkMr0pi3ExV3sw9cqPiieAuGn
-	 WgHwqmNpC4a2P2queuy0QCt5HbpzQ2Yuvz8A2zUXJrDhqDQNjMtpz/j8pEezTurh14
-	 hgQ87NVs9QphJW5oPxOyyNMBpX4DCTG8AsK24uIfqAPrHS4TvLD+WEVkI9izJlVH6q
-	 4g2BXzmRvv9jJItPXQETnVYqKWloTBgQH7FCIm+Ub+0qoMgt8Ea9jjmN4+LUAVvq3U
-	 q6So5cy1WkqNg==
-Date: Mon, 12 Oct 2026 23:11:12 -0700
-Subject: [PATCH 11/12] xfs: drop unnecessary sr parameter from xchk_rtgroup
- init functions
+	b=BAY7FqMlcn5Ukq6sDu+94yRGwLlWgdSlDkrm5DIQY/zRttYRfqoiav3f2R32XcL3/
+	 mp67L/KvXXEwH9SXMrt5JxzxHdflrGofifbM2HhyBgi2a6yDPEw5Eo/Whvk3YzSyJh
+	 ntUfKJeHQnYWW/fPcVYnHnkEbJ7pOazWO3KVPhaCQ/2QZEEhf5Rb/BdnMHFncRKJKq
+	 p9G54U1xTpkazR2Ev1munJ0bD8XqqxR6hpon6upN4Wh7S2kyL6+ACYiTNcJijDcCKD
+	 JPuCSbWEOzd4XUn1OExoRI55ZQuDdiajn+5YOuW4jycOxOCmf+fB3ecJ/C8Qt8ymNv
+	 D8ExVrJsLcX1w==
+Date: Mon, 12 Oct 2026 23:11:27 -0700
+Subject: [PATCH 12/12] xfs: refactor inode forkoff to byte conversions
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <179186108084.1898896.11891990362054361084.stgit@frogsfrogsfrogs>
+Message-ID: <179186108108.1898896.16447874565212812355.stgit@frogsfrogsfrogs>
 In-Reply-To: <179186107760.1898896.12318125940367230627.stgit@frogsfrogsfrogs>
 References: <179186107760.1898896.12318125940367230627.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,427 +45,199 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Drop the sr parameter from the scrub rtgroup functions because the value
-is always the same.
+A reviewer suggested that I formalize the conversion between the inode
+forkoff field and actual byte count, so let's add a few conversion
+macros and a helper function to compute the default forkoff; and then
+adjust the codebase to use them.
+
+No functional changes intended.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/scrub/common.h            |   29 +++++++++++++----------------
- fs/xfs/scrub/bmap.c              |    9 ++++-----
- fs/xfs/scrub/bmap_repair.c       |    4 ++--
- fs/xfs/scrub/common.c            |   22 ++++++++++++++--------
- fs/xfs/scrub/cow_repair.c        |    4 ++--
- fs/xfs/scrub/inode_repair.c      |    4 ++--
- fs/xfs/scrub/repair.c            |    2 +-
- fs/xfs/scrub/rgsuper.c           |    4 ++--
- fs/xfs/scrub/rtbitmap.c          |    4 ++--
- fs/xfs/scrub/rtbitmap_repair.c   |    2 +-
- fs/xfs/scrub/rtrefcount.c        |    4 ++--
- fs/xfs/scrub/rtrefcount_repair.c |    2 +-
- fs/xfs/scrub/rtrmap.c            |    4 ++--
- fs/xfs/scrub/rtrmap_repair.c     |    6 +++---
- fs/xfs/scrub/rtsummary.c         |    4 ++--
- fs/xfs/scrub/scrub.c             |    4 ++--
- 16 files changed, 55 insertions(+), 53 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.h       |    6 ++++++
+ fs/xfs/libxfs/xfs_format.h     |    6 +++++-
+ fs/xfs/xfs_inode.h             |    2 +-
+ fs/xfs/libxfs/xfs_attr_leaf.c  |   12 ++++++------
+ fs/xfs/libxfs/xfs_bmap.c       |    4 ++--
+ fs/xfs/libxfs/xfs_inode_buf.c  |    4 ++--
+ fs/xfs/libxfs/xfs_inode_util.c |    2 +-
+ fs/xfs/scrub/inode.c           |    2 +-
+ fs/xfs/scrub/inode_repair.c    |    4 ++--
+ 9 files changed, 26 insertions(+), 16 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index 8478f3a9bed33d..181028f0c65526 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -135,32 +135,29 @@ xchk_ag_init_existing(
- 				 XFS_RTGLOCK_RMAP | \
- 				 XFS_RTGLOCK_REFCOUNT)
+diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+index d5f2729305fada..d3c7641e36f5e2 100644
+--- a/fs/xfs/libxfs/xfs_bmap.h
++++ b/fs/xfs/libxfs/xfs_bmap.h
+@@ -213,6 +213,12 @@ void	xfs_bmap_del_extent_cow(struct xfs_inode *ip,
+ 		struct xfs_iext_cursor *cur, struct xfs_bmbt_irec *got,
+ 		struct xfs_bmbt_irec *del);
+ uint	xfs_default_attroffset(struct xfs_inode *ip);
++
++static inline uint xfs_inode_default_forkoff(struct xfs_inode *ip)
++{
++	return XFS_B_TO_FORKOFFT(xfs_default_attroffset(ip));
++}
++
+ int	xfs_bmap_collapse_extents(struct xfs_trans *tp, struct xfs_inode *ip,
+ 		xfs_fileoff_t *next_fsb, xfs_fileoff_t offset_shift_fsb,
+ 		bool *done);
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 1a7a7e60a170c4..469e879149ac21 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -1096,7 +1096,11 @@ enum xfs_dinode_fmt {
+ /*
+  * Inode data & attribute fork sizes, per inode.
+  */
+-#define XFS_DFORK_BOFF(dip)		((int)((dip)->di_forkoff << 3))
++#define XFS_B_TO_FORKOFFT(b)		((b) >> 3)
++#define XFS_B_TO_FORKOFF(b)		XFS_B_TO_FORKOFFT((b) + 7)
++#define XFS_FORKOFF_TO_B(f)		((int)(f) << 3)
++
++#define XFS_DFORK_BOFF(dip)		XFS_FORKOFF_TO_B((dip)->di_forkoff)
  
--int xchk_rtgroup_init(struct xfs_scrub *sc, xfs_rgnumber_t rgno,
--		struct xchk_rt *sr);
-+int xchk_rtgroup_init(struct xfs_scrub *sc, xfs_rgnumber_t rgno);
+ #define XFS_DFORK_DSIZE(dip,mp) \
+ 	((dip)->di_forkoff ? XFS_DFORK_BOFF(dip) : XFS_LITINO(mp))
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 1602027cd0aa5d..53a1997b98660b 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -132,7 +132,7 @@ xfs_ifork_ptr(
  
- static inline int
- xchk_rtgroup_init_existing(
- 	struct xfs_scrub	*sc,
--	xfs_rgnumber_t		rgno,
--	struct xchk_rt		*sr)
-+	xfs_rgnumber_t		rgno)
+ static inline unsigned int xfs_inode_fork_boff(struct xfs_inode *ip)
  {
--	int			error = xchk_rtgroup_init(sc, rgno, sr);
-+	int			error = xchk_rtgroup_init(sc, rgno);
- 
- 	return error == -ENOENT ? -EFSCORRUPTED : error;
+-	return ip->i_forkoff << 3;
++	return XFS_FORKOFF_TO_B(ip->i_forkoff);
  }
  
--int xchk_rtgroup_lock(struct xfs_scrub *sc, struct xchk_rt *sr,
--		unsigned int rtglock_flags);
--void xchk_rtgroup_unlock(struct xchk_rt *sr);
--void xchk_rtgroup_btcur_free(struct xchk_rt *sr);
--void xchk_rtgroup_free(struct xfs_scrub *sc, struct xchk_rt *sr);
-+int xchk_rtgroup_lock(struct xfs_scrub *sc, unsigned int rtglock_flags);
-+void xchk_rtgroup_unlock(struct xfs_scrub *sc);
-+void xchk_rtgroup_btcur_free(struct xfs_scrub *sc);
-+void xchk_rtgroup_free(struct xfs_scrub *sc);
- #else
--# define xchk_rtgroup_init(sc, rgno, sr)		(-EFSCORRUPTED)
--# define xchk_rtgroup_init_existing(sc, rgno, sr)	(-EFSCORRUPTED)
--# define xchk_rtgroup_lock(sc, sr, lockflags)		(-EFSCORRUPTED)
--# define xchk_rtgroup_unlock(sr)			do { } while (0)
--# define xchk_rtgroup_btcur_free(sr)			do { } while (0)
--# define xchk_rtgroup_free(sc, sr)			do { } while (0)
-+# define xchk_rtgroup_init(sc, rgno)			(-EFSCORRUPTED)
-+# define xchk_rtgroup_init_existing(sc, rgno)		(-EFSCORRUPTED)
-+# define xchk_rtgroup_lock(sc, lockflags)		(-EFSCORRUPTED)
-+# define xchk_rtgroup_unlock(sc)			do { } while (0)
-+# define xchk_rtgroup_btcur_free(sc)			do { } while (0)
-+# define xchk_rtgroup_free(sc)				do { } while (0)
- #endif /* CONFIG_XFS_RT */
+ static inline unsigned int xfs_inode_data_fork_size(struct xfs_inode *ip)
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index 2c80f4fd0b78de..1cefd41a2f9e01 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -720,10 +720,10 @@ xfs_attr_shortform_bytesfit(
+ 		return 0;
  
- int xchk_ag_read_headers(struct xfs_scrub *sc, xfs_agnumber_t agno);
-diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-index 8447f711ca2c51..3c543f77cf6de5 100644
---- a/fs/xfs/scrub/bmap.c
-+++ b/fs/xfs/scrub/bmap.c
-@@ -329,13 +329,12 @@ xchk_bmap_rt_iextent_xref(
- 	int			error;
+ 	/* rounded down */
+-	offset = (XFS_LITINO(mp) - bytes) >> 3;
++	offset = XFS_B_TO_FORKOFFT(XFS_LITINO(mp) - bytes);
  
- 	error = xchk_rtgroup_init_existing(info->sc,
--			xfs_rtb_to_rgno(ip->i_mount, irec->br_startblock),
--			&info->sc->sr);
-+			xfs_rtb_to_rgno(ip->i_mount, irec->br_startblock));
- 	if (!xchk_fblock_process_error(info->sc, info->whichfork,
- 			irec->br_startoff, &error))
- 		return;
- 
--	error = xchk_rtgroup_lock(info->sc, &info->sc->sr, XCHK_RTGLOCK_ALL);
-+	error = xchk_rtgroup_lock(info->sc, XCHK_RTGLOCK_ALL);
- 	if (!xchk_fblock_process_error(info->sc, info->whichfork,
- 			irec->br_startoff, &error))
- 		goto out_free;
-@@ -373,9 +372,9 @@ xchk_bmap_rt_iextent_xref(
- 		break;
+ 	if (dp->i_df.if_format == XFS_DINODE_FMT_DEV) {
+-		minforkoff = roundup(sizeof(xfs_dev_t), 8) >> 3;
++		minforkoff = XFS_B_TO_FORKOFF(sizeof(xfs_dev_t));
+ 		return (offset >= minforkoff) ? minforkoff : 0;
  	}
- out_cur:
--	xchk_rtgroup_btcur_free(&info->sc->sr);
-+	xchk_rtgroup_btcur_free(info->sc);
- out_free:
--	xchk_rtgroup_free(info->sc, &info->sc->sr);
-+	xchk_rtgroup_free(info->sc);
- }
  
- /* Cross-reference a single datadev extent record. */
-diff --git a/fs/xfs/scrub/bmap_repair.c b/fs/xfs/scrub/bmap_repair.c
-index 4d9ac54d5dfc11..85e677d8a77674 100644
---- a/fs/xfs/scrub/bmap_repair.c
-+++ b/fs/xfs/scrub/bmap_repair.c
-@@ -463,8 +463,8 @@ xrep_bmap_scan_rtgroup(
- 		return error;
+@@ -779,12 +779,12 @@ xfs_attr_shortform_bytesfit(
+ 	 * A data fork btree root must have space for at least
+ 	 * MINDBTPTRS key/ptr pairs if the data fork is small or empty.
+ 	 */
+-	minforkoff = max_t(int64_t, dsize, xfs_bmdr_space_calc(MINDBTPTRS));
+-	minforkoff = roundup(minforkoff, 8) >> 3;
++	minforkoff = XFS_B_TO_FORKOFF(
++			max_t(int64_t, dsize, xfs_bmdr_space_calc(MINDBTPTRS)));
  
- 	error = xfs_rmap_query_all(sc->sr.rmap_cur, xrep_bmap_walk_rtrmap, rb);
--	xchk_rtgroup_btcur_free(&sc->sr);
--	xchk_rtgroup_free(sc, &sc->sr);
-+	xchk_rtgroup_btcur_free(sc);
-+	xchk_rtgroup_free(sc);
- 	return error;
- }
- #else
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index 82cda70e4169ae..cbfe5e6f779dfc 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -730,9 +730,10 @@ xchk_ag_init(
- int
- xchk_rtgroup_init(
- 	struct xfs_scrub	*sc,
--	xfs_rgnumber_t		rgno,
--	struct xchk_rt		*sr)
-+	xfs_rgnumber_t		rgno)
+ 	/* attr fork btree root can have at least this many key/ptr pairs */
+-	maxforkoff = XFS_LITINO(mp) - xfs_bmdr_space_calc(MINABTPTRS);
+-	maxforkoff = maxforkoff >> 3;	/* rounded down */
++	maxforkoff = XFS_B_TO_FORKOFFT(
++			XFS_LITINO(mp) - xfs_bmdr_space_calc(MINABTPTRS));
+ 
+ 	if (offset >= maxforkoff)
+ 		return maxforkoff;
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index d64defeda645ed..7e463314af4dcc 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -221,7 +221,7 @@ xfs_bmap_forkoff_reset(
+ 	if (whichfork == XFS_ATTR_FORK &&
+ 	    ip->i_df.if_format != XFS_DINODE_FMT_DEV &&
+ 	    ip->i_df.if_format != XFS_DINODE_FMT_BTREE) {
+-		uint	dfl_forkoff = xfs_default_attroffset(ip) >> 3;
++		uint	dfl_forkoff = xfs_inode_default_forkoff(ip);
+ 
+ 		if (dfl_forkoff > ip->i_forkoff)
+ 			ip->i_forkoff = dfl_forkoff;
+@@ -997,7 +997,7 @@ xfs_bmap_set_attrforkoff(
+ 	struct xfs_inode	*ip,
+ 	int			size)
  {
-+	struct xchk_rt		*sr = &sc->sr;
-+
- 	ASSERT(sr->rtg == NULL);
- 	ASSERT(sr->rtlock_flags == 0);
+-	int			default_size = xfs_default_attroffset(ip) >> 3;
++	int			default_size = xfs_inode_default_forkoff(ip);
  
-@@ -746,9 +747,9 @@ xchk_rtgroup_init(
- int
- xchk_rtgroup_lock(
- 	struct xfs_scrub	*sc,
--	struct xchk_rt		*sr,
- 	unsigned int		rtglock_flags)
- {
-+	struct xchk_rt		*sr = &sc->sr;
- 	int			error = 0;
+ 	switch (ip->i_df.if_format) {
+ 	case XFS_DINODE_FMT_DEV:
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index 0340e2189921db..df77dd5c97611c 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -490,7 +490,7 @@ xfs_dinode_verify_forkoff(
  
- 	ASSERT(sr->rtg != NULL);
-@@ -831,8 +832,10 @@ xchk_rtgroup_lock(
-  */
- void
- xchk_rtgroup_btcur_free(
--	struct xchk_rt		*sr)
-+	struct xfs_scrub	*sc)
- {
-+	struct xchk_rt		*sr = &sc->sr;
-+
- 	if (sr->rmap_cur)
- 		xfs_btree_del_cursor(sr->rmap_cur, XFS_BTREE_ERROR);
- 	if (sr->refc_cur)
-@@ -848,8 +851,10 @@ xchk_rtgroup_btcur_free(
-  */
- void
- xchk_rtgroup_unlock(
--	struct xchk_rt		*sr)
-+	struct xfs_scrub	*sc)
- {
-+	struct xchk_rt		*sr = &sc->sr;
-+
- 	ASSERT(sr->rtg != NULL);
+ 	switch (dip->di_format)  {
+ 	case XFS_DINODE_FMT_DEV:
+-		if (dip->di_forkoff != (roundup(sizeof(xfs_dev_t), 8) >> 3))
++		if (dip->di_forkoff != XFS_B_TO_FORKOFF(sizeof(xfs_dev_t)))
+ 			return __this_address;
+ 		break;
+ 	case XFS_DINODE_FMT_META_BTREE:
+@@ -500,7 +500,7 @@ xfs_dinode_verify_forkoff(
+ 	case XFS_DINODE_FMT_LOCAL:	/* fall through ... */
+ 	case XFS_DINODE_FMT_EXTENTS:    /* fall through ... */
+ 	case XFS_DINODE_FMT_BTREE:
+-		if (dip->di_forkoff >= (XFS_LITINO(mp) >> 3))
++		if (dip->di_forkoff >= XFS_B_TO_FORKOFFT(XFS_LITINO(mp)))
+ 			return __this_address;
+ 		break;
+ 	default:
+diff --git a/fs/xfs/libxfs/xfs_inode_util.c b/fs/xfs/libxfs/xfs_inode_util.c
+index 258ac3d0d486e6..e63bb1fad9c014 100644
+--- a/fs/xfs/libxfs/xfs_inode_util.c
++++ b/fs/xfs/libxfs/xfs_inode_util.c
+@@ -346,7 +346,7 @@ xfs_inode_init(
+ 	}
  
- 	if (sr->rtlock_flags) {
-@@ -864,12 +869,13 @@ xchk_rtgroup_unlock(
-  */
- void
- xchk_rtgroup_free(
--	struct xfs_scrub	*sc,
--	struct xchk_rt		*sr)
-+	struct xfs_scrub	*sc)
- {
-+	struct xchk_rt		*sr = &sc->sr;
-+
- 	ASSERT(sr->rtg != NULL);
+ 	if (xfs_icreate_want_attrfork(mp, args)) {
+-		ip->i_forkoff = xfs_default_attroffset(ip) >> 3;
++		ip->i_forkoff = xfs_inode_default_forkoff(ip);
+ 		xfs_ifork_init_attr(ip, XFS_DINODE_FMT_EXTENTS, 0);
  
--	xchk_rtgroup_unlock(sr);
-+	xchk_rtgroup_unlock(sc);
+ 		if (!xfs_has_attr(mp)) {
+diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
+index 6cded1eb6c2b6f..bb8d2bc008e019 100644
+--- a/fs/xfs/scrub/inode.c
++++ b/fs/xfs/scrub/inode.c
+@@ -607,7 +607,7 @@ xchk_dinode(
+ 	}
  
- 	xfs_rtgroup_put(sr->rtg);
- 	sr->rtg = NULL;
-diff --git a/fs/xfs/scrub/cow_repair.c b/fs/xfs/scrub/cow_repair.c
-index 5a209194ba97eb..2b1d1701cb539f 100644
---- a/fs/xfs/scrub/cow_repair.c
-+++ b/fs/xfs/scrub/cow_repair.c
-@@ -433,8 +433,8 @@ xrep_cow_find_bad_rt(
- 				xc->irec.br_blockcount);
- 
- out_sr:
--	xchk_rtgroup_btcur_free(&sc->sr);
--	xchk_rtgroup_free(sc, &sc->sr);
-+	xchk_rtgroup_btcur_free(sc);
-+	xchk_rtgroup_free(sc);
- out_rtg:
- 	xfs_rtgroup_put(rtg);
- 	return error;
+ 	/* di_forkoff */
+-	if (dip->di_forkoff >= (XFS_LITINO(mp) >> 3))
++	if (dip->di_forkoff >= XFS_B_TO_FORKOFFT(XFS_LITINO(mp)))
+ 		xchk_ino_set_corrupt(sc, ino);
+ 	if (naextents != 0 && dip->di_forkoff == 0)
+ 		xchk_ino_set_corrupt(sc, ino);
 diff --git a/fs/xfs/scrub/inode_repair.c b/fs/xfs/scrub/inode_repair.c
-index 599f0f527e1a96..a42ce1d014dfb3 100644
+index a42ce1d014dfb3..c6f221254f0bb0 100644
 --- a/fs/xfs/scrub/inode_repair.c
 +++ b/fs/xfs/scrub/inode_repair.c
-@@ -822,8 +822,8 @@ xrep_dinode_count_rtgroup_rmaps(
+@@ -1490,7 +1490,7 @@ xrep_dinode_ensure_forkoff(
  
- 	error = xfs_rmap_query_all(sc->sr.rmap_cur, xrep_dinode_walk_rtrmap,
- 			ri);
--	xchk_rtgroup_btcur_free(&sc->sr);
--	xchk_rtgroup_free(sc, &sc->sr);
-+	xchk_rtgroup_btcur_free(sc);
-+	xchk_rtgroup_free(sc);
- 	return error;
- }
- 
-diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-index 32bd8259cedb65..5827717f0d460f 100644
---- a/fs/xfs/scrub/repair.c
-+++ b/fs/xfs/scrub/repair.c
-@@ -69,7 +69,7 @@ xrep_attempt(
- 	trace_xrep_attempt(XFS_I(file_inode(sc->file)), sc->sm, error);
- 
- 	xchk_ag_btcur_free(sc);
--	xchk_rtgroup_btcur_free(&sc->sr);
-+	xchk_rtgroup_btcur_free(sc);
- 
- 	/* Repair whatever's broken. */
- 	ASSERT(sc->ops->repair);
-diff --git a/fs/xfs/scrub/rgsuper.c b/fs/xfs/scrub/rgsuper.c
-index 102bd92e9003db..591c5767208e6e 100644
---- a/fs/xfs/scrub/rgsuper.c
-+++ b/fs/xfs/scrub/rgsuper.c
-@@ -65,7 +65,7 @@ xchk_rgsuperblock(
- 	 * signal that the group no longer exists.  Take the rtbitmap in shared
- 	 * mode so that the group can't change while we're doing things.
- 	 */
--	error = xchk_rtgroup_init_existing(sc, rgno, &sc->sr);
-+	error = xchk_rtgroup_init_existing(sc, rgno);
- 	if (!xchk_xref_process_error(sc, 0, 0, &error))
- 		return error;
- 
-@@ -74,7 +74,7 @@ xchk_rgsuperblock(
- 	else
- 		flags = XFS_RTGLOCK_BITMAP_SHARED;
- 
--	error = xchk_rtgroup_lock(sc, &sc->sr, flags);
-+	error = xchk_rtgroup_lock(sc, flags);
- 	if (error)
- 		return error;
- 
-diff --git a/fs/xfs/scrub/rtbitmap.c b/fs/xfs/scrub/rtbitmap.c
-index 52c24d3d4be6ce..88a53c6ed6c531 100644
---- a/fs/xfs/scrub/rtbitmap.c
-+++ b/fs/xfs/scrub/rtbitmap.c
-@@ -48,7 +48,7 @@ xchk_setup_rtbitmap(
- 	sc->buf = rtb;
- 	rtb->sc = sc;
- 
--	error = xchk_rtgroup_init(sc, sc->sm->sm_agno, &sc->sr);
-+	error = xchk_rtgroup_init(sc, sc->sm->sm_agno);
- 	if (error)
- 		return error;
- 
-@@ -70,7 +70,7 @@ xchk_setup_rtbitmap(
- 	if (error)
- 		return error;
- 
--	error = xchk_rtgroup_lock(sc, &sc->sr, XCHK_RTGLOCK_ALL);
-+	error = xchk_rtgroup_lock(sc, XCHK_RTGLOCK_ALL);
- 	if (error)
- 		return error;
- 
-diff --git a/fs/xfs/scrub/rtbitmap_repair.c b/fs/xfs/scrub/rtbitmap_repair.c
-index 3f918da62d4ced..f8a86596d4bab8 100644
---- a/fs/xfs/scrub/rtbitmap_repair.c
-+++ b/fs/xfs/scrub/rtbitmap_repair.c
-@@ -357,7 +357,7 @@ xrep_rtbitmap_find_freespace(
+ 			/* Otherwise, just slide the attr fork up. */
+ 			before = XFS_DFORK_APTR(dip);
+-			dip->di_forkoff = bmdr_minsz >> 3;
++			dip->di_forkoff = XFS_B_TO_FORKOFFT(bmdr_minsz);
+ 			after = XFS_DFORK_APTR(dip);
+ 			memmove(after, before, XFS_DFORK_ASIZE(dip, sc->mp));
+ 		}
+@@ -1522,7 +1522,7 @@ xrep_dinode_ensure_forkoff(
+ 			 * fork is empty, so we don't have any old contents to
+ 			 * move here.
+ 			 */
+-			dip->di_forkoff = (lit_sz - bmdr_minsz) >> 3;
++			dip->di_forkoff = XFS_B_TO_FORKOFFT(lit_sz - bmdr_minsz);
+ 		}
  	}
- 
- out:
--	xchk_rtgroup_btcur_free(&sc->sr);
-+	xchk_rtgroup_btcur_free(sc);
- 	return error;
  }
- 
-diff --git a/fs/xfs/scrub/rtrefcount.c b/fs/xfs/scrub/rtrefcount.c
-index 824783e4f0e193..b8f5a5f9fd01d2 100644
---- a/fs/xfs/scrub/rtrefcount.c
-+++ b/fs/xfs/scrub/rtrefcount.c
-@@ -42,7 +42,7 @@ xchk_setup_rtrefcountbt(
- 			return error;
- 	}
- 
--	error = xchk_rtgroup_init(sc, sc->sm->sm_agno, &sc->sr);
-+	error = xchk_rtgroup_init(sc, sc->sm->sm_agno);
- 	if (error)
- 		return error;
- 
-@@ -54,7 +54,7 @@ xchk_setup_rtrefcountbt(
- 	if (error)
- 		return error;
- 
--	return xchk_rtgroup_lock(sc, &sc->sr, XCHK_RTGLOCK_ALL);
-+	return xchk_rtgroup_lock(sc, XCHK_RTGLOCK_ALL);
- }
- 
- /* Realtime Reference count btree scrubber. */
-diff --git a/fs/xfs/scrub/rtrefcount_repair.c b/fs/xfs/scrub/rtrefcount_repair.c
-index 2e773febffd78e..817c2b8f49ab6c 100644
---- a/fs/xfs/scrub/rtrefcount_repair.c
-+++ b/fs/xfs/scrub/rtrefcount_repair.c
-@@ -545,7 +545,7 @@ xrep_rtrefc_find_refcounts(
- out_bag:
- 	rcbag_free(&rcstack);
- out_cur:
--	xchk_rtgroup_btcur_free(&sc->sr);
-+	xchk_rtgroup_btcur_free(sc);
- 	return error;
- }
- 
-diff --git a/fs/xfs/scrub/rtrmap.c b/fs/xfs/scrub/rtrmap.c
-index 564d19a97a2f8f..85cc0513d688c9 100644
---- a/fs/xfs/scrub/rtrmap.c
-+++ b/fs/xfs/scrub/rtrmap.c
-@@ -46,7 +46,7 @@ xchk_setup_rtrmapbt(
- 			return error;
- 	}
- 
--	error = xchk_rtgroup_init(sc, sc->sm->sm_agno, &sc->sr);
-+	error = xchk_rtgroup_init(sc, sc->sm->sm_agno);
- 	if (error)
- 		return error;
- 
-@@ -58,7 +58,7 @@ xchk_setup_rtrmapbt(
- 	if (error)
- 		return error;
- 
--	return xchk_rtgroup_lock(sc, &sc->sr, XCHK_RTGLOCK_ALL);
-+	return xchk_rtgroup_lock(sc, XCHK_RTGLOCK_ALL);
- }
- 
- /* Realtime reverse mapping. */
-diff --git a/fs/xfs/scrub/rtrmap_repair.c b/fs/xfs/scrub/rtrmap_repair.c
-index 726ef89ab2f10b..6a10463de20021 100644
---- a/fs/xfs/scrub/rtrmap_repair.c
-+++ b/fs/xfs/scrub/rtrmap_repair.c
-@@ -556,7 +556,7 @@ xrep_rtrmap_find_rmaps(
- 	/* Find CoW staging extents. */
- 	xrep_rtgroup_btcur_init(sc);
- 	error = xrep_rtrmap_find_refcount_rmaps(rr);
--	xchk_rtgroup_btcur_free(&sc->sr);
-+	xchk_rtgroup_btcur_free(sc);
- 	if (error)
- 		return error;
- 
-@@ -576,7 +576,7 @@ xrep_rtrmap_find_rmaps(
- 	 * do not take sb_internal.
- 	 */
- 	xchk_trans_cancel(sc);
--	xchk_rtgroup_unlock(&sc->sr);
-+	xchk_rtgroup_unlock(sc);
- 	xchk_trans_alloc_empty(sc);
- 
- 	while ((error = xchk_iscan_iter(&rr->iscan, &ip)) == 1) {
-@@ -600,7 +600,7 @@ xrep_rtrmap_find_rmaps(
- 	error = xchk_setup_rt(sc);
- 	if (error)
- 		return error;
--	error = xchk_rtgroup_lock(sc, &sc->sr, XCHK_RTGLOCK_ALL);
-+	error = xchk_rtgroup_lock(sc, XCHK_RTGLOCK_ALL);
- 	if (error)
- 		return error;
- 
-diff --git a/fs/xfs/scrub/rtsummary.c b/fs/xfs/scrub/rtsummary.c
-index fa358746beaf5c..b72c27ef45acbb 100644
---- a/fs/xfs/scrub/rtsummary.c
-+++ b/fs/xfs/scrub/rtsummary.c
-@@ -54,7 +54,7 @@ xchk_setup_rtsummary(
- 		return -ENOMEM;
- 	sc->buf = rts;
- 
--	error = xchk_rtgroup_init(sc, sc->sm->sm_agno, &sc->sr);
-+	error = xchk_rtgroup_init(sc, sc->sm->sm_agno);
- 	if (error)
- 		return error;
- 
-@@ -85,7 +85,7 @@ xchk_setup_rtsummary(
- 	if (error)
- 		return error;
- 
--	error = xchk_rtgroup_lock(sc, &sc->sr, XFS_RTGLOCK_BITMAP);
-+	error = xchk_rtgroup_lock(sc, XFS_RTGLOCK_BITMAP);
- 	if (error)
- 		return error;
- 
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 9dbd16546e8c8b..4a2d9bdc087b5f 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -230,7 +230,7 @@ xchk_teardown(
- 	int			error)
- {
- 	xchk_ag_free(sc);
--	xchk_rtgroup_btcur_free(&sc->sr);
-+	xchk_rtgroup_btcur_free(sc);
- 
- 	if (sc->tp) {
- 		if (error == 0 && (sc->sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR))
-@@ -240,7 +240,7 @@ xchk_teardown(
- 		sc->tp = NULL;
- 	}
- 	if (sc->sr.rtg)
--		xchk_rtgroup_free(sc, &sc->sr);
-+		xchk_rtgroup_free(sc);
- 	if (sc->ip) {
- 		if (sc->ilock_flags)
- 			xchk_iunlock(sc, sc->ilock_flags);
 
