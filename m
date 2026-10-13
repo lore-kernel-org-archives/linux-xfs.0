@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3874661FCE;
-	Tue, 13 Oct 2026 00:09:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D06FD45039;
+	Tue, 13 Oct 2026 00:09:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791850163; cv=none; b=ZJEHVf/yQEDG25kykL9mKfJf1gKWp6Sp2qy000TBOWLCBqDa5dd6HsZXo+uRt4yg8f73OtsC4UY07JVQ2ylrzf1EzlKW83QBkYVNVcB/tkxGaM2I6gzg1/dGpj25r2Iq/Fi02XPwjEgLKN1a/KCSPSciDIZSmZLz+eq/zJpqwAI=
+	t=1791850178; cv=none; b=AlE3neUMwO5IhVUFYn9u85k885Fi1xkE0E5/zuYCeqnEh5btY2vXVDRFXFIzJ41UlhPea67/yGb0z+vtSl4Q7+dTpEJVFC0pfRVjKBfN6iBexxG0DcPQNGbcO4NEam4Q1FQdP8Vdisd00uqcN8Pv2fd2Hj7WGUBL1252iCGQsQg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791850163; c=relaxed/simple;
-	bh=CjPUp4OiCpJ7f78ReZh64kFcsK3ScSQHPT7pAGwOaTI=;
+	s=arc-20240116; t=1791850178; c=relaxed/simple;
+	bh=EsU3WRHt1wdZv+BwIFbc3y3LpZOjRjv7/PWAbPVQws4=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=o8ouUWWd55Ji1Z58zGGJFsqU2RnFNfZ5PhYavudwSOZa4W2wCNB7ZWFwljPzd7rx/q6hq+4Y4mfHWkMZZ4F4NZ3FhtVc8lhKVKJFNmoKzKXA6z4QL067umyAuiz21uJ8cMgG9cD53gat3Vtl2mBlLvxZNH//qAtfBQiwChXj160=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CnHDLrQA; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=SWN+AATpG2k096zqrazBk/de2FOQuqQOVuplxmJ/ecyW1DoxF67Bku70MPJqHWpEZNklGy4IEY6yOgC+ORz5aX4wjDPRkbNAzMgONKQJOd/3NZBZai8rkBfbUoZkSTs87wY5bIFIbEXuhXL+xekyMdgO7P5Bn8yB1PLzwkbR+Fk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WbzVOuSZ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CnHDLrQA"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 10E001F0089B;
-	Tue, 13 Oct 2026 00:09:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WbzVOuSZ"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id A86291F0089B;
+	Tue, 13 Oct 2026 00:09:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791850162;
-	bh=im4YLrUdMNpERFEnk6mQ3VR0QmThPAWjfnCyEVWhhO4=;
+	s=k20260515; t=1791850177;
+	bh=CZbxZ7DWQ1Q0VwWJN3byyXMuG0CA//4TJyP4rflhgns=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=CnHDLrQAl3LYSDFpWwPRi4tNPbeepaGUQEUwkxuKPom5a7BPdoB7clDSMIYFqgFAf
-	 Prqglcw8i3mv49HeO12cJxDOiIgHRXCqnFMzRs/6ZdNwXZrWar91zgV/v5O+/shpEg
-	 AoLebl+c/Zs8st1GsVGGOwmt0lDzYuuzHjQ5jkOCmwZQ/8vIHY8HCFeURQDCqZLCao
-	 S3UQLPzlNyGnI1b8G6Cj/RpHCO3cLjdEp34/Lg2ZMRg3aRZyP3xL6vgsWkhJbrcRJO
-	 L4Ivte59KY58wOBGDdK8TfJbJDV2F4qXS/YA1VfdQea6SAA7fW2bsDxN7NEG3CsEnP
-	 ZFvbAwEp+yKsQ==
-Date: Mon, 12 Oct 2026 17:09:21 -0700
-Subject: [PATCH 3/6] xfs: basic functional testing of media verification
- command
+	b=WbzVOuSZcV6OXbfvp0pMGs8nmCbJsZqyLnt0oINtuuWnsrh8FM48dcxVVKaShqgp+
+	 +3bBzk3hB+JDY6AHa58PgOeRZJZdhNLVADBV2gOWF4SCZDxEBQm1Ijslv3y4+wJ/KR
+	 peNV+k5/+UlSk+OcJIb4Z8bt1KOPhygyjgIRdooVwfMiNzO0sD+4cvqXYgUtZX8JCh
+	 OmGasTebUmINZSPxe51B+lrbp60fjnNLaW2j+yWNuxzT2peJEFJ3Kn/2X1UTXCkLKM
+	 QImeCUXdZk2n7lH/p5a87rBWOhc/8tZCOL9GHKB8sSQxWoQriYVWg787dzAcD5+ZPf
+	 fxM6fKXV+1IMw==
+Date: Mon, 12 Oct 2026 17:09:37 -0700
+Subject: [PATCH 4/6] xfs: test mkfs.xfs config file generation
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@kernel.org
-Cc: hch@lst.de, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <179185007510.1732194.305700337269281222.stgit@frogsfrogsfrogs>
+Cc: aalbersh@kernel.org, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Message-ID: <179185007529.1732194.17549882346733262970.stgit@frogsfrogsfrogs>
 In-Reply-To: <179185007428.1732194.3790285770700324388.stgit@frogsfrogsfrogs>
 References: <179185007428.1732194.3790285770700324388.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,180 +45,193 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Implement a simple testcase to check that media verification works on
-however the scratch filesystem is configured.
+Test configuration file generation via mkfs, xfs_db, and xfs_spaceman.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Andrey Albershteyn <aalbersh@kernel.org>
 ---
- tests/xfs/1908     |  123 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1908.out |   28 ++++++++++++
- 2 files changed, 151 insertions(+)
- create mode 100755 tests/xfs/1908
- create mode 100644 tests/xfs/1908.out
+ tests/xfs/1909     |  163 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1909.out |    2 +
+ 2 files changed, 165 insertions(+)
+ create mode 100755 tests/xfs/1909
+ create mode 100644 tests/xfs/1909.out
 
 
-diff --git a/tests/xfs/1908 b/tests/xfs/1908
+diff --git a/tests/xfs/1909 b/tests/xfs/1909
 new file mode 100755
-index 00000000000000..93a87293adbcef
+index 00000000000000..d60d552f5b4863
 --- /dev/null
-+++ b/tests/xfs/1908
-@@ -0,0 +1,123 @@
++++ b/tests/xfs/1909
+@@ -0,0 +1,163 @@
 +#! /bin/bash
 +# SPDX-License-Identifier: GPL-2.0
 +# Copyright (c) 2026 Oracle.  All Rights Reserved.
 +#
-+# FS QA Test 1908
++# FS QA Test 1909
 +#
-+# Basic functional testing of the verifymedia command.
++# Functional testing for mkfs.xfs config file generation.
 +#
 +. ./common/preamble
-+_begin_fstest auto quick scrub selfhealing
++_begin_fstest auto mkfs
 +
-+. ./common/filter
++# . ./common/filter
 +
-+_require_xfs_io_command verifymedia
 +_require_scratch
++_require_xfs_mkfs_cfgfile
++_require_xfs_spaceman_command "makecfg"
++_require_xfs_db_command "makecfg"
++_require_command "$XFS_ADMIN_PROG" "xfs_admin"
 +
-+# Make the data and rt volumes small enough that this won't take forever
-+# on large slow devices.
-+_scratch_mkfs_sized $((600 * 1024 * 1024)) | \
-+	_filter_mkfs 2>$tmp.mkfs >> $seqres.full
++# t1: Make sure all three tools generate the same config file
++_scratch_mkfs >> $seqres.full
 +_scratch_mount
++$XFS_SPACEMAN_PROG -c "makecfg $tmp.spaceman1" $SCRATCH_MNT
++$XFS_ADMIN_PROG -C $tmp.onadmin1 $SCRATCH_MNT
++_scratch_unmount
 +
-+. $tmp.mkfs
++_scratch_mkfs -c makecfg=$tmp.mkfs1 >> $seqres.full
++_scratch_xfs_db -c "makecfg $tmp.db1"
++_scratch_xfs_admin -C $tmp.offadmin1
 +
-+filter_verifymedia() {
-+	grep '^verified' | \
-+		tr '/' ' ' | \
-+		awk '{printf("VERIFIED=%s WANTED=%s OFFSET=%s\n", $2, $3, $7);}'
-+}
++cmp -s $tmp.mkfs1 $tmp.spaceman1 || \
++	echo "mkfs config1 does not match spaceman?"
++cmp -s $tmp.db1 $tmp.spaceman1 || \
++	echo "db config1 does not match spaceman?"
++cmp -s $tmp.db1 $tmp.mkfs1 || \
++	echo "db config1 does not match mkfs?"
++cmp -s $tmp.onadmin1 $tmp.mkfs1 || \
++	echo "online admin config1 does not match mkfs?"
++cmp -s $tmp.offadmin1 $tmp.mkfs1 || \
++	echo "offline admin config1 does not match mkfs?"
 +
-+testme() {
-+	unset VERIFIED
-+	unset WANTED
-+	unset OFFSET
++echo "*** spaceman config1" >> $seqres.full
++cat $tmp.spaceman1 >> $seqres.full
++echo "*** mkfs config1" >> $seqres.full
++cat $tmp.mkfs1 >> $seqres.full
++echo "*** db config1" >> $seqres.full
++cat $tmp.db1 >> $seqres.full
++echo "*** online admin config1" >> $seqres.full
++cat $tmp.onadmin1 >> $seqres.full
++echo "*** offline admin config1" >> $seqres.full
++cat $tmp.offadmin1 >> $seqres.full
 +
-+	local x
-+	x=$($XFS_IO_PROG -c "verifymedia $*" $SCRATCH_MNT | filter_verifymedia)
-+	eval "$x"
-+}
++# t2: Make sure the output changes if we set a new rootdir inherit option
++_scratch_mount
++$XFS_IO_PROG -c 'chattr +P' -c 'chproj 33' $SCRATCH_MNT
++$XFS_SPACEMAN_PROG -c "makecfg $tmp.spaceman2" $SCRATCH_MNT
++_scratch_unmount
++_scratch_xfs_db -c "makecfg $tmp.db2"
 +
-+cat $tmp.mkfs >> $seqres.full
++cmp -s $tmp.db2 $tmp.spaceman2 || \
++	echo "db config2 does not match spaceman?"
++cmp -s $tmp.db1 $tmp.db2 && \
++	echo "db config1 should be different from db config2"
 +
-+DDEV_EOD=$((dblocks * dbsize)) # bytes
++echo "*** spaceman config2" >> $seqres.full
++cat $tmp.spaceman2 >> $seqres.full
++echo "*** db config2" >> $seqres.full
++cat $tmp.db2 >> $seqres.full
 +
-+# t0: no parameters, which means the whole data device
-+testme
-+_within_tolerance "t0 wanted range" $WANTED $DDEV_EOD 2% -v
-+_within_tolerance "t0 verified range" $VERIFIED $WANTED 2% -v
-+_within_tolerance "t0 offset" $OFFSET 0 0 -v
++# t3: Format with t2 config file, make sure the results match t2 and not t1
++_scratch_mkfs -c options=$tmp.db2 >> $seqres.full
++_scratch_mount
++$XFS_SPACEMAN_PROG -c "makecfg $tmp.spaceman3" $SCRATCH_MNT
++_scratch_unmount
++_scratch_xfs_db -c "makecfg $tmp.db3"
 +
-+# t1: data device
-+testme -d
-+_within_tolerance "t1 wanted range" $WANTED $DDEV_EOD 2% -v
-+_within_tolerance "t1 verified range" $VERIFIED $WANTED 2% -v
-+_within_tolerance "t1 offset" $OFFSET 0 0 -v
++cmp -s $tmp.db3 $tmp.spaceman3 || \
++	echo "db config3 does not match spaceman?"
++cmp -s $tmp.db3 $tmp.db1 && \
++	echo "db config3 should be different from db config1"
++cmp -s $tmp.db3 $tmp.db2 || \
++	echo "db config3 does not match db config2?"
 +
-+# t2: realtime volume
-+if [ $rtblocks -gt 0 ]; then
-+	testme -r
-+	if [ -n "$rtstart" ]; then
-+		rtend=$((rtstart + rtblocks))
-+	else
-+		rtend=$rtblocks
++echo "*** spaceman config3" >> $seqres.full
++cat $tmp.spaceman3 >> $seqres.full
++echo "*** db config3" >> $seqres.full
++cat $tmp.db3 >> $seqres.full
++
++# t4: Set autofsck filesystem property, make sure that gets reflected
++autofsck="$(grep 'autofsck=' $tmp.spaceman3 | sed -e 's/^.*autofsck=//g')"
++case "$autofsck" in
++"")
++	if grep -q 'crc=1' $tmp.spaceman3; then
++		new_autofsck=check
 +	fi
-+	_within_tolerance "t2 wanted range" $WANTED $((rtend * dbsize)) 2% -v
-+	_within_tolerance "t2 verified range" $VERIFIED $WANTED 2% -v
-+	_within_tolerance "t2 offset" $OFFSET 0 0 -v
-+else
-+	cat << ENDL
-+t2 wanted range is in range
-+t2 verified range is in range
-+t2 offset is in range
-+ENDL
++	;;
++repair) new_autofsck=check;;
++*)	new_autofsck=repair;;
++esac
++if [ -n "$new_autofsck" ]; then
++	$XFS_PROPERTY_PROG $SCRATCH_DEV set "autofsck=$new_autofsck" >> $seqres.full
++	_scratch_mount
++	$XFS_SPACEMAN_PROG -c "makecfg $tmp.spaceman4" $SCRATCH_MNT
++	_scratch_unmount
++	_scratch_xfs_db -c "makecfg $tmp.db4"
++
++	cmp -s $tmp.db4 $tmp.spaceman4 || \
++	echo "db config4 does not match spaceman?"
++	cmp -s $tmp.db4 $tmp.db3 && \
++		echo "db config4 should be different from db config3"
++
++	echo "*** spaceman config4" >> $seqres.full
++	cat $tmp.spaceman4 >> $seqres.full
++	echo "*** db config4" >> $seqres.full
++	cat $tmp.db4 >> $seqres.full
++
++	_scratch_mkfs -c options=$tmp.db4 >> $seqres.full
++	_scratch_mount
++	$XFS_SPACEMAN_PROG -c "makecfg $tmp.spaceman4a" $SCRATCH_MNT
++	_scratch_unmount
++	_scratch_xfs_db -c "makecfg $tmp.db4a"
++
++	cmp -s $tmp.db4a $tmp.spaceman4a || \
++	echo "db config4a does not match spaceman?"
++	cmp -s $tmp.db4a $tmp.db3 && \
++		echo "db config4a should be different from db config3"
++	cmp -s $tmp.db4a $tmp.db4 || \
++	echo "db config4a does not match db config4?"
++
++	echo "*** spaceman config4a" >> $seqres.full
++	cat $tmp.spaceman4a >> $seqres.full
++	echo "*** db config4a" >> $seqres.full
++	cat $tmp.db4a >> $seqres.full
++
 +fi
 +
-+# t3: external log volume
-+if [ "$ldev" != "internal log" ]; then
-+	testme -l
-+	_within_tolerance "t3 wanted range" $WANTED $((lblocks * dbsize)) 2% -v
-+	_within_tolerance "t3 verified range" $VERIFIED $WANTED 2% -v
-+	_within_tolerance "t3 offset" $OFFSET 0 0 -v
-+else
-+	cat << ENDL
-+t3 wanted range is in range
-+t3 verified range is in range
-+t3 offset is in range
-+ENDL
++if grep -q 'reflink=1' "$tmp.db3"; then
++	# t5a: make sure that cli can override defaults
++	_scratch_mkfs -c defaults=$tmp.db3 -m reflink=0 >> $seqres.full
++	_scratch_xfs_db -c "makecfg $tmp.db5a"
++	grep -q 'reflink=0' "$tmp.db5a" || \
++		echo "db config5a should not have reflink"
++
++	echo "*** db config5a" >> $seqres.full
++	cat $tmp.db5a >> $seqres.full
++
++	# t5b: make sure that cli cannot override config file
++	_scratch_mkfs -c options=$tmp.db3 -m reflink=0 >> $seqres.full 2>> $tmp.fail
++	grep -q 'reflink option respecified' $tmp.fail || \
++		echo "mkfs should have failed on config5b"
++
++	# t5c: make sure that config file can override defaults
++	_scratch_mkfs -c options=$tmp.db3,defaults=$tmp.db3 >> $seqres.full
++	_scratch_xfs_db -c "makecfg $tmp.db5c"
++	grep -q 'reflink=1' "$tmp.db5c" || \
++		echo "db config5c should have reflink"
++
++	echo "*** db config5c" >> $seqres.full
++	cat $tmp.db5c >> $seqres.full
 +fi
 +
-+# t4: start of data device
-+testme -d 0m 10m
-+_within_tolerance "t4 wanted range" $WANTED $((10 * 1024 * 1024)) 2% -v
-+_within_tolerance "t4 verified range" $VERIFIED $WANTED 2% -v
-+_within_tolerance "t4 offset" $OFFSET 0 0 -v
-+
-+# t5: middle of data device
-+testme -d 257m 281m
-+_within_tolerance "t5 wanted range" $WANTED $((24 * 1024 * 1024)) 2% -v
-+_within_tolerance "t5 verified range" $VERIFIED $WANTED 2% -v
-+_within_tolerance "t5 offset" $OFFSET $((257 * 1024 * 1024)) 2% -v
-+
-+# t6: end of data device
-+t6_offset=$((DDEV_EOD - (11 * 1024 * 1024)))
-+testme -d $t6_offset $DDEV_EOD
-+_within_tolerance "t6 wanted range" $WANTED $((11 * 1024 * 1024)) 2% -v
-+_within_tolerance "t6 verified range" $VERIFIED $WANTED 2% -v
-+_within_tolerance "t6 offset" $OFFSET $t6_offset 2% -v
-+
-+# t7: start after end
-+testme -d 241m 217m
-+_within_tolerance "t7 wanted range" $WANTED 0 0 -v
-+_within_tolerance "t7 verified range" $VERIFIED $WANTED 2% -v
-+_within_tolerance "t7 offset" $OFFSET $((241 * 1024 * 1024)) 2% -v
-+
-+# t8: range crosses eod
-+t8_offset=$((DDEV_EOD - (3 * 1024 * 1024)))
-+t8_end=$((DDEV_EOD + (70 * 1024 * 1024)))
-+testme -d $t8_offset $t8_end
-+_within_tolerance "t8 wanted range" $WANTED $((3 * 1024 * 1024)) 2% -v
-+_within_tolerance "t8 verified range" $VERIFIED $WANTED 2% -v
-+_within_tolerance "t8 offset" $OFFSET $t8_offset 2% -v
-+
++echo Silence is golden
 +_exit 0
-diff --git a/tests/xfs/1908.out b/tests/xfs/1908.out
+diff --git a/tests/xfs/1909.out b/tests/xfs/1909.out
 new file mode 100644
-index 00000000000000..bbc55ef31a13a0
+index 00000000000000..c17c5522d48db4
 --- /dev/null
-+++ b/tests/xfs/1908.out
-@@ -0,0 +1,28 @@
-+QA output created by 1908
-+t0 wanted range is in range
-+t0 verified range is in range
-+t0 offset is in range
-+t1 wanted range is in range
-+t1 verified range is in range
-+t1 offset is in range
-+t2 wanted range is in range
-+t2 verified range is in range
-+t2 offset is in range
-+t3 wanted range is in range
-+t3 verified range is in range
-+t3 offset is in range
-+t4 wanted range is in range
-+t4 verified range is in range
-+t4 offset is in range
-+t5 wanted range is in range
-+t5 verified range is in range
-+t5 offset is in range
-+t6 wanted range is in range
-+t6 verified range is in range
-+t6 offset is in range
-+t7 wanted range is in range
-+t7 verified range is in range
-+t7 offset is in range
-+t8 wanted range is in range
-+t8 verified range is in range
-+t8 offset is in range
++++ b/tests/xfs/1909.out
+@@ -0,0 +1,2 @@
++QA output created by 1909
++Silence is golden
 
