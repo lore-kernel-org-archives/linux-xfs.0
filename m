@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 306363988E3
-	for <linux-xfs@vger.kernel.org>; Tue, 13 Oct 2026 06:02:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6839B417BD2
+	for <linux-xfs@vger.kernel.org>; Tue, 13 Oct 2026 06:03:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791871380; cv=none; b=ndF40ag/VcBw3xUhhYNNKKBrdhCGUb8lP3QB2N5iR6ov6wINmaRSAIqkeW+qACvRH1oPZgGHd8jngIZA+XepCkw+6Yfar3zVjDcZQGQpxCeE6BXBXr/HTcCJip6fwAhaoIUahHdZXaXkheHhR7vJ2KvywJERpCeyYrH0O48lPLY=
+	t=1791871381; cv=none; b=EM67sw9CxirKZEW0HVsoPp5h+JAK0vmrKGQTf+b4VLSBSoPBi8qZvOTAdyuL4zpzWUOYJH4221ph3g3wrXAa+nvgA/B5Akfl9KtMsH33WeS6lwKWTsNFlciqld8mXTHvuxWMCUaC+UfElWBfEONIATKeK5L0117mxWLPm70rMkk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791871380; c=relaxed/simple;
-	bh=szhQYpU6Sxedm0bqz+JVo0w+PCATwt5505ZWJQaAGqk=;
+	s=arc-20240116; t=1791871381; c=relaxed/simple;
+	bh=qSl0t6AWyYJXq2FK+9orTeXdR/eMyihsiyJQledSRMc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=kT5ZLwDmFS7rgPSKcLA1NTPe0TxhejGI4wFhUaBizIJ+X4RLJHRcn/miDCEphNqMB2JjQpgXEXjOn7+4Sq+6J/FDP070/yLJXduNxtlWciSC4d45I5MfCYuDIBMj/3ef+xbwEuNhv93IcQpGNnck1Yr88GkgNRY3ps5UH0RSHi8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fnva5x9S; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=qW1HaflTu0Ps40Rn1YKcaQfWNz9KaLn8iSIzPhh/gkbWzV6gZ9behPzh/i1p987fGZJ/VrG2FFA/7VTlwZi0oc9lIc1W0pUg7H2m+ityyVO1Wz8+LoZJyimq90snOY75u8puqyB6SBCnvxVkjVj3lfre4NhmgT3SFKx3IVAHC+4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RMeB3dbo; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fnva5x9S"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 514361F00893;
-	Tue, 13 Oct 2026 06:02:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RMeB3dbo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 88FE91F00898;
+	Tue, 13 Oct 2026 06:02:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791871379;
-	bh=HLFuXKBssovNf9W9GQXc8euIGSCSYgVrV6ogD1UilTI=;
+	s=k20260515; t=1791871380;
+	bh=Rq4JsUsgskaUN/fmNf85iFBKK5uPk7RLvabcd3i2Sv4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=fnva5x9STcxU9EFG78rKvhiQhEHWEgI7Aik/38b4h7l5pf8hsGiHM5xYCLrdt95gQ
-	 0TOynHyb3x94WRecjX6yzUH3+lUO5wg+rf//vYizKQwcFwer8KsE3pmTjKYf7ljYd4
-	 MyJge0fCU220QVaajL6PfCy6yKrOWRNGJ9TFfosPUcaNCTpxhZeN5yKZMN4S4TyN4F
-	 PcFPKNcJt+xrEgC12VIU647ItWykSTXJz54V6G1MMyxun+ghqMiYvqVbmX1tAuMfJL
-	 Hhh1CuLGqH0VPAJcqdSSHZY0gCa+ah6tOA/M+XLVoPd07yKJiZLgf2G7DrHdYB3/ft
-	 A3KifhUuZrUfw==
+	b=RMeB3dbojVWg08pXSmLhDCSl+rDZljvSxy7+RSIsLns1xmguaRsfe9MuNUqh1XnY3
+	 CKpPppUwrAVIdTf7Crv46bF6m6q3fHmwg+9/TwLqKlyBoXfw7fEbmkSzi7pWLFc2rM
+	 S+eBV3REyF+gy+s9JCeF8D/yT5cQNfQvNBP5MCtv+zU435mk9rRccF6guu2Ekos6p3
+	 ZEU6qyOVI8z0E2Ufgs5M+pyX9eOr5eM6oLcEqtmOh0uuwwdi308xU8sB6sLKc5ReLl
+	 i25UePJy6njC/2oL2vaNwIYDJSyvjQa4FLcp1mOIN1/Zu0ffvScWZehK2tbQug7lnJ
+	 9IDnGp+tquQmg==
 From: Dave Chinner <dgc@kernel.org>
 To: linux-xfs@vger.kernel.org
 Cc: cem@kernel.org
-Subject: [PATCH 40/48] xfs: allow a long format btree root to be checked without a cursor
-Date: Tue, 13 Oct 2026 17:01:30 +1100
-Message-ID: <20261013060204.3138690-41-dgc@kernel.org>
+Subject: [PATCH 41/48] xfs: validate logged btree fork roots during recovery
+Date: Tue, 13 Oct 2026 17:01:31 +1100
+Message-ID: <20261013060204.3138690-42-dgc@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20261013060204.3138690-1-dgc@kernel.org>
 References: <20261013060204.3138690-1-dgc@kernel.org>
@@ -43,155 +43,117 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The long format btree block header check derives the block magic and the
-maximum record count from a btree cursor. An inode rooted btree logged to the
-journal has no cursor available during recovery, so this check cannot be used to
-validate a logged btree root.
+A btree format fork is logged as the expanded in-core bmap btree root, which is
+a normal btree root block whose length is only as long as the fork region that
+holds it. Recovery copied this root into the inode without inspecting it, so a
+corrupt root was replayed as it stood.
 
-Rework the header check to take the magic and maximum records as arguments
-rather than reading them from a cursor. The cursor based callers derive both
-from the cursor and pass them in, so their behaviour is unchanged.
-
-Add xfs_btree_check_fsblock_root_hdr() for callers that hold a long format btree
-root but no cursor. It checks the root against the supplied magic, maximum
-records and level range, and confirms the root has no siblings.
+Validate the logged bmap btree root once the fork has been verified against the
+core. The root is checked as a short btree root block whose record count fills
+the fork region exactly, and its keys and pointers are checked to be in range.
+The metadata btree roots are a distinct form and remain validated by a following
+patch.
 
 Assisted-by: LLM
 Signed-off-by: Dave Chinner <dgc@kernel.org>
 ---
- fs/xfs/libxfs/xfs_btree.c | 50 ++++++++++++++++++++++++++++++---------
- fs/xfs/libxfs/xfs_btree.h |  4 ++++
- 2 files changed, 43 insertions(+), 11 deletions(-)
+ fs/xfs/xfs_inode_item_recover.c | 62 ++++++++++++++++++++++++++++++++-
+ 1 file changed, 61 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index 7effebe297ea..8e56c948ae6d 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -123,13 +123,13 @@ xfs_btree_check_agblock_siblings(
+diff --git a/fs/xfs/xfs_inode_item_recover.c b/fs/xfs/xfs_inode_item_recover.c
+index 3e0109833d21..b979e922e5e9 100644
+--- a/fs/xfs/xfs_inode_item_recover.c
++++ b/fs/xfs/xfs_inode_item_recover.c
+@@ -29,6 +29,7 @@
+ #include "xfs_metafile.h"
+ #include "xfs_bmap.h"
+ #include "xfs_bmap_btree.h"
++#include "xfs_btree.h"
+ #include "xfs_rtrmap_btree.h"
+ #include "xfs_rtrefcount_btree.h"
  
- static xfs_failaddr_t
- __xfs_btree_check_lblock_hdr(
--	struct xfs_btree_cur	*cur,
-+	struct xfs_mount	*mp,
-+	uint32_t		magic,
-+	unsigned int		maxrecs,
- 	struct xfs_btree_block	*block,
- 	int			level,
- 	struct xfs_buf		*bp)
- {
--	struct xfs_mount	*mp = cur->bc_mp;
--
- 	if (xfs_has_crc(mp)) {
- 		if (!uuid_equal(&block->bb_u.l.bb_uuid, &mp->m_sb.sb_meta_uuid))
- 			return __this_address;
-@@ -140,12 +140,11 @@ __xfs_btree_check_lblock_hdr(
- 			return __this_address;
- 	}
- 
--	if (be32_to_cpu(block->bb_magic) != xfs_btree_magic(mp, cur->bc_ops))
-+	if (be32_to_cpu(block->bb_magic) != magic)
- 		return __this_address;
- 	if (be16_to_cpu(block->bb_level) != level)
- 		return __this_address;
--	if (be16_to_cpu(block->bb_numrecs) >
--	    cur->bc_ops->get_maxrecs(cur, level))
-+	if (be16_to_cpu(block->bb_numrecs) > maxrecs)
- 		return __this_address;
- 
- 	return NULL;
-@@ -157,16 +156,17 @@ __xfs_btree_check_lblock_hdr(
-  */
- static xfs_failaddr_t
- __xfs_btree_check_fsblock(
--	struct xfs_btree_cur	*cur,
-+	struct xfs_mount	*mp,
-+	uint32_t		magic,
-+	unsigned int		maxrecs,
- 	struct xfs_btree_block	*block,
- 	int			level,
- 	struct xfs_buf		*bp)
- {
--	struct xfs_mount	*mp = cur->bc_mp;
- 	xfs_failaddr_t		fa;
- 	xfs_fsblock_t		fsb;
- 
--	fa = __xfs_btree_check_lblock_hdr(cur, block, level, bp);
-+	fa = __xfs_btree_check_lblock_hdr(mp, magic, maxrecs, block, level, bp);
- 	if (fa)
- 		return fa;
- 
-@@ -191,6 +191,29 @@ __xfs_btree_check_fsblock(
- 	return fa;
+@@ -469,6 +470,60 @@ xlog_dinode_verify_extents(
+ 			src, size / sizeof(struct xfs_bmbt_rec));
  }
  
 +/*
-+ * Check the header of a long format btree root that sits in an inode fork,
-+ * without needing a btree cursor. The block is a root, so it has no siblings.
-+ * The caller supplies the block magic, the maximum records for the block, and
-+ * the valid level range for the btree.
++ * Verify a logged bmap btree root. The logged root is the expanded in-core
++ * block form, not the compact on-disk root, so it is a normal btree root block
++ * whose length is only as long as the fork region that holds it. The block
++ * length is fixed by the record count, so the region size fixes how many
++ * records the root can hold.
++ *
++ * The region size has already been bounds checked against the inode fork size,
++ * so it is known to fit within the fork and does not need rechecking here.
 + */
-+xfs_failaddr_t
-+xfs_btree_check_fsblock_root_hdr(
-+	struct xfs_mount	*mp,
-+	uint32_t		magic,
-+	unsigned int		maxrecs,
-+	struct xfs_btree_block	*block,
-+	unsigned int		minlevel,
-+	unsigned int		maxlevel)
++static xfs_failaddr_t
++xlog_dinode_verify_bmbt_root(
++	struct xfs_mount		*mp,
++	struct xfs_log_dinode		*ldip,
++	int				whichfork,
++	void				*src,
++	unsigned int			size)
 +{
-+	unsigned int		level = be16_to_cpu(block->bb_level);
++	struct xfs_btree_block		*block = src;
++	xfs_failaddr_t			fa;
++	uint32_t			magic;
++	unsigned int			numrecs;
++	unsigned int			i;
 +
-+	if (level < minlevel || level > maxlevel)
++	if (size < xfs_bmbt_block_len(mp))
 +		return __this_address;
 +
-+	return __xfs_btree_check_fsblock(mp, magic, maxrecs, block, level, NULL);
++	/* The root block is never a leaf, so it always has keys and pointers. */
++	magic = xfs_has_crc(mp) ? XFS_BMAP_CRC_MAGIC : XFS_BMAP_MAGIC;
++	fa = xfs_btree_check_fsblock_root_hdr(mp, magic,
++			xfs_bmbt_maxrecs(mp, size, false), block, 1,
++			mp->m_bm_maxlevels[whichfork]);
++	if (fa)
++		return fa;
++
++	/* The record count must be non-zero and exactly fill the region. */
++	numrecs = be16_to_cpu(block->bb_numrecs);
++	if (numrecs == 0 || size != xfs_bmap_broot_space_calc(mp, numrecs))
++		return __this_address;
++
++	for (i = 1; i <= numrecs; i++) {
++		struct xfs_bmbt_key	*key = xfs_bmbt_key_addr(mp, block, i);
++		xfs_bmbt_ptr_t		*ptr = xfs_bmap_broot_ptr_addr(mp, block,
++						i, size);
++
++		if (!xfs_verify_fileoff(be64_to_cpu(key->br_startoff)))
++			return __this_address;
++		if (!xfs_verify_fsbno(mp, be64_to_cpu(*ptr)))
++			return __this_address;
++	}
++
++	return NULL;
 +}
 +
  /*
-  * Check an in-memory btree block header.  Return the address of the failing
-  * check, or NULL if everything is ok.
-@@ -202,11 +225,13 @@ __xfs_btree_check_memblock(
- 	int			level,
- 	struct xfs_buf		*bp)
- {
-+	struct xfs_mount	*mp = cur->bc_mp;
- 	struct xfs_buftarg	*btp = cur->bc_mem.xfbtree->target;
- 	xfs_failaddr_t		fa;
- 	xfbno_t			bno;
+  * Verify a logged shortform symlink target. The logged target is the on-disk
+  * form, which is not null terminated, so this cannot use
+@@ -567,6 +622,10 @@ xlog_dinode_verify_dfork(
+ 		return xlog_dinode_verify_extents(mp, ldip, XFS_DATA_FORK,
+ 				item->ri_buf[2].iov_base, ilfp->ilf_dsize);
+ 	case XFS_DINODE_FMT_BTREE:
++		if (field != XFS_ILOG_DBROOT)
++			return __this_address;
++		return xlog_dinode_verify_bmbt_root(mp, ldip, XFS_DATA_FORK,
++				item->ri_buf[2].iov_base, ilfp->ilf_dsize);
+ 	case XFS_DINODE_FMT_META_BTREE:
+ 		if (field != XFS_ILOG_DBROOT)
+ 			return __this_address;
+@@ -628,7 +687,8 @@ xlog_dinode_verify_afork(
+ 	case XFS_DINODE_FMT_BTREE:
+ 		if (field != XFS_ILOG_ABROOT)
+ 			return __this_address;
+-		break;
++		return xlog_dinode_verify_bmbt_root(mp, ldip, XFS_ATTR_FORK,
++				item->ri_buf[region].iov_base, ilfp->ilf_asize);
+ 	}
  
--	fa = __xfs_btree_check_lblock_hdr(cur, block, level, bp);
-+	fa = __xfs_btree_check_lblock_hdr(mp, xfs_btree_magic(mp, cur->bc_ops),
-+			cur->bc_ops->get_maxrecs(cur, level), block, level, bp);
- 	if (fa)
- 		return fa;
- 
-@@ -277,7 +302,10 @@ __xfs_btree_check_block(
- 	case XFS_BTREE_TYPE_AG:
- 		return __xfs_btree_check_agblock(cur, block, level, bp);
- 	case XFS_BTREE_TYPE_INODE:
--		return __xfs_btree_check_fsblock(cur, block, level, bp);
-+		return __xfs_btree_check_fsblock(cur->bc_mp,
-+				xfs_btree_magic(cur->bc_mp, cur->bc_ops),
-+				cur->bc_ops->get_maxrecs(cur, level),
-+				block, level, bp);
- 	default:
- 		ASSERT(0);
- 		return __this_address;
-diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-index 60e78572e725..c9ae26454372 100644
---- a/fs/xfs/libxfs/xfs_btree.h
-+++ b/fs/xfs/libxfs/xfs_btree.h
-@@ -345,6 +345,10 @@ xfs_btree_cur_sizeof(unsigned int nlevels)
- 
- xfs_failaddr_t __xfs_btree_check_block(struct xfs_btree_cur *cur,
- 		struct xfs_btree_block *block, int level, struct xfs_buf *bp);
-+xfs_failaddr_t xfs_btree_check_fsblock_root_hdr(struct xfs_mount *mp,
-+		uint32_t magic, unsigned int maxrecs,
-+		struct xfs_btree_block *block, unsigned int minlevel,
-+		unsigned int maxlevel);
- int __xfs_btree_check_ptr(struct xfs_btree_cur *cur,
- 		const union xfs_btree_ptr *ptr, int index, int level);
- 
+ 	return NULL;
 -- 
 2.55.0
 
