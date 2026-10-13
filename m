@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 943AA4915AE;
-	Tue, 13 Oct 2026 06:07:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C792C4A68B0;
+	Tue, 13 Oct 2026 06:07:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791871639; cv=none; b=UeiyP+jWYQbrmwYEfGv3HCYQxl1si1FOm+oZ0ikKnf+okapFAB4V7Tm028n1GXodxrDWtXXJbeu/KVlFsFxY/uAfiTHzhXfQyfAQ525alasswJm1bT/YDGEcrKNDFpFM2V3Ue80/kh4XFTQpAkKCkE5W2A2xXPgdapIP5FIk2os=
+	t=1791871656; cv=none; b=qbYBvMSrDVxKcXPUTJ2ZIgZQsFeG2RSVXGssajGyAW8yd85NAL/FpuTikZbecupywfM42kqngcd6528PsY8PfdZrFtb2gWHOTW9lzsoJrJOZoYfoxnZY8Fe9kebuEptzXfkcMg9xptA3NO5IVJChBYGPjZT4iXKxEbNSSdZgf0w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791871639; c=relaxed/simple;
-	bh=plS8QoIrmTiTkdtIzojdlXWFxVdh4XCwZwPOrihbxj8=;
+	s=arc-20240116; t=1791871656; c=relaxed/simple;
+	bh=NmvLkxaVGX6DHBr31r62ZbeQ8Lpd+xa4sX6Zm6d/o5E=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=D6UzxI0j1ZSrmhAMr8PUMSXS1lZvGZNL8+t2V4JmIJAAEkJSDcKM7rPlM/cmuqGgXWGDLPuUuEjUouldaICBeXi76klePXOuSdddtBh979HSQk7smsg+4zpgOJzuCe0wlKeStWcKh6YW5n4E+bEWaIsPUzMtA6pl/hRfapFE+lQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XsUsSfdv; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=K6ZS6laYYnBKxXQgObtON08JhLAwGYRze/x8Yr0xTpp+OMZEPZpoo0WTXrOZPVlqY7rPCceV4H/uQoIHkz7yq3daHT3Y5lAGP22NePsUNHv4jRcnwAj8W8WUDRdySt82DV9eVrj0qQhdxx+U/zlkHTeQUwW5l2D6qyLcJ57NaNI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Uk8L5/Du; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XsUsSfdv"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 174131F008A5;
-	Tue, 13 Oct 2026 06:07:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Uk8L5/Du"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id B2DB91F000FF;
+	Tue, 13 Oct 2026 06:07:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791871638;
-	bh=X+WdAgSHx39rJODPGvnPEN+8iQ9pyPVKoo8BCHLTZrc=;
+	s=k20260515; t=1791871653;
+	bh=LyNLLZhgZIW7lanugMW3bZunIcg+s43aA8pHZELbLqQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=XsUsSfdvHWCoLcupZWq+oCakD0ZBvUi/iKWXdhiwGoR+EONNRuaVkE1bv6/4fy3Eo
-	 oydCvjvBsJ2X++Rmi2jzpLzqgy7jPG9cMNghtWBJl80NsVl7PppWL7kRXDqEroTb/g
-	 BduxJkRtK3ajh8WW0f0NaJNbZlmtPFEE9H9zfOjtgJQiu5ua3FeCBJ+uUjK35QjViz
-	 Mx2edG/VlF/GLKU4mpEFpi6XmWhBHvSlQCcb0l+Zm+r1e7v520eib6FkAiZvw/e5rK
-	 +M706CHUEh/Gofu8RGXO25oiR2cL8CygKkicIFMtAEcEH4vnfXmlxMBeVS+LXXO28X
-	 RJKGCCi/JvKSA==
-Date: Mon, 12 Oct 2026 23:07:17 -0700
-Subject: [PATCH 08/12] xfs: don't clear COWEXTSIZE on directories on reflink
- filesystems
+	b=Uk8L5/DuIqpRGYeaaFhiRfGQW2L4/SZqYOdH9X21Yzwwzw4CJmfL2A+/p/bPVtZzs
+	 8nyZGgx8/ydHVoYO4BnHdPpH0/AtciaRlvYq0+Sh9Ard0noPBdmWdpTCbl1jOEj6lz
+	 37ka41CVGA6Jre0H9FrTovdk0HNXd/TTNNPgwcGXUp63/WLondRYzAYysS7gDIP95l
+	 cSPheApumvza/FlRRSJbWe5+BWO2xVW/sRiQ6CG7TzObyAHNQzEo+5MkVMh9JkPoQ6
+	 tYU9+OuCgrAX4zMQwp2Y336rSKHmmR7FXqMbvh+qc4IMADjV2hpiJliGubce2FHq8w
+	 vJ4nZf3U/lt6Q==
+Date: Mon, 12 Oct 2026 23:07:33 -0700
+Subject: [PATCH 09/12] xfs: clear set[ug]id mode bits when zapping attr fork
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: hch@lst.de, stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <179186107311.1898400.13638917082115866545.stgit@frogsfrogsfrogs>
+Message-ID: <179186107333.1898400.13944973882659448309.stgit@frogsfrogsfrogs>
 In-Reply-To: <179186107061.1898400.3978552773417541744.stgit@frogsfrogsfrogs>
 References: <179186107061.1898400.3978552773417541744.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,32 +45,37 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-LOLLM noticed that xrep_dinode_flags clears the COWEXTSIZE flag
-unnecessarily on directories on reflink filesystems.  Directories just
-pass the hint along to new children, so it's valid to leave the flag
-set.
+LOLLM observes that zapping a file's attr fork could result in ACLs
+being removed from the file.  Because we have no idea what we're
+deleting, we should clear the setuid and setgid bits in addition to the
+access mode bits so that nobody can access the file.
 
 Cc: <stable@vger.kernel.org> # v6.8
-Fixes: 2d295fe65776d1 ("xfs: repair inode records")
+Fixes: e744cef2060559 ("xfs: zap broken inode forks")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Assisted-by: LOLLM # finding obvious bugs
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/scrub/inode_repair.c |    2 ++
- 1 file changed, 2 insertions(+)
+ fs/xfs/scrub/inode_repair.c |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
 
 diff --git a/fs/xfs/scrub/inode_repair.c b/fs/xfs/scrub/inode_repair.c
-index 89cbf599795b2f..4b719ad64ace8c 100644
+index 4b719ad64ace8c..25e71e7d472f36 100644
 --- a/fs/xfs/scrub/inode_repair.c
 +++ b/fs/xfs/scrub/inode_repair.c
-@@ -565,6 +565,8 @@ xrep_dinode_flags(
+@@ -1313,7 +1313,12 @@ xrep_dinode_zap_afork(
  	 */
- 	if (xfs_has_reflink(mp) && S_ISREG(mode))
- 		flags2 |= XFS_DIFLAG2_REFLINK;
-+	else if (xfs_has_reflink(mp) && S_ISDIR(mode))
-+		flags2 &= ~XFS_DIFLAG2_REFLINK;
- 	else
- 		flags2 &= ~(XFS_DIFLAG2_REFLINK | XFS_DIFLAG2_COWEXTSIZE);
- 	if (!xfs_has_bigtime(mp))
+ 	if (dip->di_format != XFS_DINODE_FMT_BTREE)
+ 		dip->di_forkoff = 0;
+-	dip->di_mode = cpu_to_be16(mode & ~0777);
++
++	/*
++	 * Zapping the attr fork could remove ACLs, so we clear suid/sgid and
++	 * all access mode bits.
++	 */
++	dip->di_mode = cpu_to_be16(mode & ~(S_ISUID | S_ISGID | 0777));
+ 	dip->di_uid = 0;
+ 	dip->di_gid = 0;
+ }
 
