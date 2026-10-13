@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FA89417BD2
-	for <linux-xfs@vger.kernel.org>; Tue, 13 Oct 2026 06:02:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACF85480345
+	for <linux-xfs@vger.kernel.org>; Tue, 13 Oct 2026 06:02:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791871356; cv=none; b=IiMx+v4rmJ6tHlQUcU6x+9d7bPnPfF7xd8HEbaHZ2NjPzBgXGqwpMxNW+uh5yVQv+Ui4CZqsiX+AluDvB/A74IV00AdCizibxQOHP+Y6jlzERnXom1EBmXghp+klEuyccAOo4ui4W5n1BMjfdwe3hKGS4OYvB+xAQ9R0q1PXQW8=
+	t=1791871358; cv=none; b=WmWUXAs37kBtbyUNrvSSStTULGuUR4nj8KLo2178YaxITORnq2/Gd2BYTEjUIjEN3hKkyyoSjJKnrxSJiaQ4RxQPuX58DTMAteTN390e0FPCMminHL0vzVoX4pW4XTDuAdYg07ndXFXrJ7TPw0Gusnx2/kTwSKx8Ka1jBbrMEE8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791871356; c=relaxed/simple;
-	bh=NQx8niGX+V5wH6TEXJWUXLxzpok9hoCRIpttj0oGm4M=;
+	s=arc-20240116; t=1791871358; c=relaxed/simple;
+	bh=EUeuVFsTcewBRkU5Tcq0/AbLwfP3FvRFmHoptFXkFwI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=LYr4/qZRUmTe2Xl3/yt1TN4EbhjIdS9WCi5EZGgW5mUgsfdeSQq4yFtH4Q8BWAIT57a1nOj0GAz31zz0kCTxCwjnJ7sCPJAnPUcRIg1dxZQg/eRzG6hrAZXDkq26Ujk3ZJy3HDZRtoIhfQ6DASjEUs0BCUunKcWXnCeb0GTRSw4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QVHqvAi9; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=oqPH0c77QLO7j9V2xsqSLvBRlfCJePX7VXH6lzyO46+7J6KIy1f8kUxea8HL+YJf7WWcJFAjLz/lplvPUdZt/XNAdIYdmebu03WWsWg0hL5Gk37GGT6tN34fTnl/ZDFnbvkrld8/4pzkOHRWHhTTzZSF4rXCxVmSCnyvzNF1IlU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Lxai3Wyd; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QVHqvAi9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AAEE01F00893;
-	Tue, 13 Oct 2026 06:02:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Lxai3Wyd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D9B441F000FF;
+	Tue, 13 Oct 2026 06:02:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791871355;
-	bh=SfXrTUrRnKMOpAw5Jih0KJN5v9jwGrSQPIGqTbtz700=;
+	s=k20260515; t=1791871356;
+	bh=4mAq5OZN11mZUR6qHfTd9EaGN+BAnyyyJ3xohLee2qI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=QVHqvAi9XvwAA7aBtpWAbBGAJMmlsv70LZzQJMdkDIIRXiCFnrqgZLmQfxj5Zd7xT
-	 wh/lNowH0apxBcq0Me7gVlcg4cZXlSBpa8MLGBliGBPO0JQF1TLZqIQuCD71Pjp6Tf
-	 XimXtMKZsjarblxoPk0FqbBaIGgo5X7hR1Wd1q2jDo02LJIs18dswtu8TDkc4UogSq
-	 qnk8hBLAr3N1INLwWR2im9jt4ym8xcZMB8i10ARUICFF+fNZIqm4lHLcqqUB9HYOl+
-	 kvVzAUyUoQP37Q/EnBKXLBDynn8euFURUTfZnq65B3LkMUYSPLEAI+GNBEVficvmTg
-	 MJLP9dl8aS2ZQ==
+	b=Lxai3WydJaaSQpqFhpE4EJsCqzs5rxm4XrSsY1OK0+4FKl9APzMa/6XxS4/D1wHi4
+	 WOgcv6OFJ2TQuTsinw1Y16XWbOVPPHAsfhLB/Mzx/S8bPB1bSJsgqKMTPV5VS55a30
+	 Oeuvs9aaMXY0pdOeusUXWyA/4jHqL3zWhoM1fMpQRAv6iTzaIjWBW/ptqj9blIdCI6
+	 ld/WuqFzsnF8bED/gd57/QNVgvQPJ3BN9GQPx2KMwY5/8PjBwLCFlh+u2f4poQa7Hi
+	 aYzurUxtxITJV6yiCVZ25UIQgRcwpo7dH4oZ4Ilq+0fkYNH8TkOuLIbef+hvgvvb2o
+	 RQ8LKykLGV97g==
 From: Dave Chinner <dgc@kernel.org>
 To: linux-xfs@vger.kernel.org
 Cc: cem@kernel.org
-Subject: [PATCH 21/48] xfs: validate and convert extent free done items during recovery
-Date: Tue, 13 Oct 2026 17:01:11 +1100
-Message-ID: <20261013060204.3138690-22-dgc@kernel.org>
+Subject: [PATCH 22/48] xfs: validate rmap update intents during recovery
+Date: Tue, 13 Oct 2026 17:01:12 +1100
+Message-ID: <20261013060204.3138690-23-dgc@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20261013060204.3138690-1-dgc@kernel.org>
 References: <20261013060204.3138690-1-dgc@kernel.org>
@@ -43,140 +43,194 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-An extent free done item carries the same extents as the intent it completes,
-but recovery never converted it to host format or checked those extents. The
-on-disk format was left in place and its contents trusted.
+An rmap update intent is a single region item whose length depends on its
+extent count, and whose extents carry rmap owner, offset and state that
+recovery must trust. These were only checked during intent replay, after the
+item had been decoded and queued.
 
-Convert the item to host format and validate its extents in ->validate_item(),
-mirroring the extent free intent item. The conversion allocates a new buffer
-only when the on-disk format differs in size from the host format. This is
-shared by the data and realtime extent free done items.
-
-This conversion and validation is being done now so that, in future, the EFD
-extents can be checked against the extents in the matched EFI. This will ensure
-a corruption of the efd_efi_id does not result in completion of an incorrect
-EFI.
+Validate the region length as it is decoded, and validate the rmap extents in
+->validate_item(). The rmap map extent has fixed width fields, so there is a
+single on-disk format and no conversion is required. The commit handlers and
+intent replay can then trust the item, so the redundant checks are removed from
+them. This is shared by the data and realtime rmap update items.
 
 Assisted-by: LLM
 Signed-off-by: Dave Chinner <dgc@kernel.org>
 ---
- fs/xfs/xfs_extfree_item.c | 85 +++++++++++++++++++++++++++++++++++++++
- 1 file changed, 85 insertions(+)
+ fs/xfs/xfs_rmap_item.c | 119 ++++++++++++++++++++++++++---------------
+ 1 file changed, 77 insertions(+), 42 deletions(-)
 
-diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-index b38e1f2089d4..53da797182d4 100644
---- a/fs/xfs/xfs_extfree_item.c
-+++ b/fs/xfs/xfs_extfree_item.c
-@@ -219,6 +219,52 @@ xfs_efi_to_host_format(
- 	}
- }
+diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
+index be2d5d6fe863..def068cef09d 100644
+--- a/fs/xfs/xfs_rmap_item.c
++++ b/fs/xfs/xfs_rmap_item.c
+@@ -578,23 +578,10 @@ xfs_rmap_recover_work(
+ 	int				i;
+ 	int				error = 0;
  
-+/*
-+ * Convert an on-disk EFD format buffer into the given host format structure.
-+ * The buffer is in 32 bit or 64 bit on-disk form (which have different padding);
-+ * a buffer already in host format does not need conversion and is not passed
-+ * here. The buffer has already been validated as one of these two formats.
-+ */
-+STATIC void
-+xfs_efd_to_host_format(
-+	struct kvec			*buf,
-+	struct xfs_efd_log_format	*dst_efd_fmt)
-+{
-+	struct xfs_efd_log_format	*src_efd_fmt = buf->iov_base;
-+	struct xfs_efd_log_format_32	*src_efd_fmt_32;
-+	struct xfs_efd_log_format_64	*src_efd_fmt_64;
-+	uint				nextents = src_efd_fmt->efd_nextents;
-+	uint				i;
+-	/*
+-	 * First check the validity of the extents described by the
+-	 * RUI.  If any are bad, then assume that all are bad and
+-	 * just toss the RUI.
+-	 */
+-	for (i = 0; i < ruip->rui_format.rui_nextents; i++) {
+-		if (!xfs_rui_validate_map(mp, isrt,
+-					&ruip->rui_format.rui_extents[i])) {
+-			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
+-					&ruip->rui_format,
+-					sizeof(ruip->rui_format));
+-			return -EFSCORRUPTED;
+-		}
+-
++	/* The extents were validated when the rui was recovered. */
++	for (i = 0; i < ruip->rui_format.rui_nextents; i++)
+ 		xfs_rui_recover_work(mp, dfp, isrt,
+ 				&ruip->rui_format.rui_extents[i]);
+-	}
+ 
+ 	resv = xlog_recover_resv(&M_RES(mp)->tr_itruncate);
+ 	if (isrt)
+@@ -746,34 +733,92 @@ xlog_recover_rui_commit_pass2(
+ 	struct xfs_mount		*mp = log->l_mp;
+ 	struct xfs_rui_log_item		*ruip;
+ 	struct xfs_rui_log_format	*rui_formatp;
+-	size_t				len;
+ 
+ 	rui_formatp = item->ri_buf[0].iov_base;
+ 
+-	if (item->ri_buf[0].iov_len < xfs_rui_log_format_sizeof(0)) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
+-				item->ri_buf[0].iov_base, item->ri_buf[0].iov_len);
++	ruip = xfs_rui_init(mp, ITEM_TYPE(item), rui_formatp->rui_nextents);
++	xfs_rui_copy_format(&ruip->rui_format, rui_formatp);
++	atomic_set(&ruip->rui_next_extent, rui_formatp->rui_nextents);
 +
-+	if (buf->iov_len == xfs_efd_log_format32_sizeof(nextents)) {
-+		src_efd_fmt_32 = buf->iov_base;
-+		dst_efd_fmt->efd_type     = src_efd_fmt_32->efd_type;
-+		dst_efd_fmt->efd_size     = src_efd_fmt_32->efd_size;
-+		dst_efd_fmt->efd_nextents = src_efd_fmt_32->efd_nextents;
-+		dst_efd_fmt->efd_efi_id   = src_efd_fmt_32->efd_efi_id;
-+		for (i = 0; i < nextents; i++) {
-+			dst_efd_fmt->efd_extents[i].ext_start =
-+				src_efd_fmt_32->efd_extents[i].ext_start;
-+			dst_efd_fmt->efd_extents[i].ext_len =
-+				src_efd_fmt_32->efd_extents[i].ext_len;
-+		}
-+		return;
-+	}
-+
-+	ASSERT(buf->iov_len == xfs_efd_log_format64_sizeof(nextents));
-+	src_efd_fmt_64 = buf->iov_base;
-+	dst_efd_fmt->efd_type     = src_efd_fmt_64->efd_type;
-+	dst_efd_fmt->efd_size     = src_efd_fmt_64->efd_size;
-+	dst_efd_fmt->efd_nextents = src_efd_fmt_64->efd_nextents;
-+	dst_efd_fmt->efd_efi_id   = src_efd_fmt_64->efd_efi_id;
-+	for (i = 0; i < nextents; i++) {
-+		dst_efd_fmt->efd_extents[i].ext_start =
-+			src_efd_fmt_64->efd_extents[i].ext_start;
-+		dst_efd_fmt->efd_extents[i].ext_len =
-+			src_efd_fmt_64->efd_extents[i].ext_len;
-+	}
++	xlog_recover_intent_item(log, &ruip->rui_item, lsn,
++			&xfs_rmap_update_defer_type);
++	return 0;
 +}
 +
- static inline struct xfs_efd_log_item *EFD_ITEM(struct xfs_log_item *lip)
- {
- 	return container_of(lip, struct xfs_efd_log_item, efd_item);
-@@ -1061,11 +1107,49 @@ xlog_recover_efd_validate_region(
- 	return 0;
- }
- 
 +/*
-+ * Convert the efd to host format and validate its contents, as for the efi.
-+ * The efd extents mirror those of the efi it completes.
++ * The rui is a single region whose length must match its extent count. The
++ * rmap map extent has fixed width fields, so there is a single on-disk format.
++ * This is shared by the data and realtime rui items, which have identical
++ * formats.
 + */
 +static int
-+xlog_recover_efd_validate_item(
++xlog_recover_rui_validate_region(
 +	struct xlog			*log,
-+	struct xlog_recover_item	*item)
++	struct xlog_recover_item	*item,
++	int				region_index)
 +{
-+	struct xfs_efd_log_format	*efd_formatp = item->ri_buf[0].iov_base;
-+	uint32_t			nextents = efd_formatp->efd_nextents;
-+	size_t				host_len = xfs_efd_log_format_sizeof(nextents);
-+	bool				isrt = ITEM_TYPE(item) == XFS_LI_EFD_RT;
-+	uint32_t			i;
++	struct xfs_rui_log_format	*rui_formatp =
++		item->ri_buf[region_index].iov_base;
++	size_t				len = item->ri_buf[region_index].iov_len;
++	uint32_t			nextents;
 +
-+	if (item->ri_buf[0].iov_len != host_len) {
-+		efd_formatp = xlog_kvmalloc(host_len);
-+		xfs_efd_to_host_format(&item->ri_buf[0], efd_formatp);
-+		kvfree(item->ri_buf[0].iov_base);
-+		item->ri_buf[0].iov_base = efd_formatp;
-+		item->ri_buf[0].iov_len = host_len;
-+	}
-+
-+	for (i = 0; i < nextents; i++) {
-+		struct xfs_extent	*extp = &efd_formatp->efd_extents[i];
-+
-+		if (!xfs_efi_validate_ext(log->l_mp, isrt, extp)) {
-+			xfs_warn(log->l_mp,
-+	"EFD: bad extent %u (start 0x%llx, len 0x%x) recovered.",
-+				i, extp->ext_start, extp->ext_len);
-+			return -EFSCORRUPTED;
-+		}
++	if (len < xfs_rui_log_format_sizeof(0)) {
++		xfs_warn(log->l_mp, "RUI: bad item region length %zu recovered.",
++				len);
+ 		return -EFSCORRUPTED;
+ 	}
+ 
+-	len = xfs_rui_log_format_sizeof(rui_formatp->rui_nextents);
+-	if (item->ri_buf[0].iov_len != len) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
+-				item->ri_buf[0].iov_base, item->ri_buf[0].iov_len);
++	/*
++	 * Bound the extent count before the exact size check below so a corrupt
++	 * count cannot overflow the size calculation. This limit is a fuzzy
++	 * upper bound to prevent overflow; the size check that follows enforces
++	 * the precise length.
++	 */
++	nextents = rui_formatp->rui_nextents;
++	if (nextents == 0 ||
++	    nextents > XLOG_MAX_REGION_SIZE / sizeof(struct xfs_map_extent)) {
++		xfs_warn(log->l_mp, "RUI: bad extent count %u recovered.",
++				nextents);
+ 		return -EFSCORRUPTED;
+ 	}
+ 
+-	ruip = xfs_rui_init(mp, ITEM_TYPE(item), rui_formatp->rui_nextents);
+-	xfs_rui_copy_format(&ruip->rui_format, rui_formatp);
+-	atomic_set(&ruip->rui_next_extent, rui_formatp->rui_nextents);
++	if (len != xfs_rui_log_format_sizeof(nextents)) {
++		xfs_warn(log->l_mp,
++			"RUI: item region length %zu does not match %u extents recovered.",
++			len, nextents);
++		return -EFSCORRUPTED;
 +	}
 +
 +	return 0;
 +}
 +
- const struct xlog_recover_item_ops xlog_efd_item_ops = {
- 	.item_type		= XFS_LI_EFD,
- 	.min_hdr_len		= sizeof(struct xfs_efd_log_format),
- 	.validate_nregions	= xlog_recover_single_region,
- 	.validate_region	= xlog_recover_efd_validate_region,
-+	.validate_item		= xlog_recover_efd_validate_item,
- 	.commit_pass2		= xlog_recover_efd_commit_pass2,
++/* Validate the rmap update extents in the rui. */
++static int
++xlog_recover_rui_validate_item(
++	struct xlog			*log,
++	struct xlog_recover_item	*item)
++{
++	struct xfs_rui_log_format	*rui_formatp = item->ri_buf[0].iov_base;
++	bool				isrt = ITEM_TYPE(item) == XFS_LI_RUI_RT;
++	uint32_t			i;
++
++	for (i = 0; i < rui_formatp->rui_nextents; i++) {
++		if (!xfs_rui_validate_map(log->l_mp, isrt,
++					&rui_formatp->rui_extents[i])) {
++			xfs_warn(log->l_mp, "RUI: bad extent %u recovered.", i);
++			return -EFSCORRUPTED;
++		}
++	}
+ 
+-	xlog_recover_intent_item(log, &ruip->rui_item, lsn,
+-			&xfs_rmap_update_defer_type);
+ 	return 0;
+ }
+ 
+ const struct xlog_recover_item_ops xlog_rui_item_ops = {
+ 	.item_type		= XFS_LI_RUI,
++	.min_hdr_len		= sizeof(struct xfs_rui_log_format),
++	.validate_nregions	= xlog_recover_single_region,
++	.validate_region	= xlog_recover_rui_validate_region,
++	.validate_item		= xlog_recover_rui_validate_item,
+ 	.commit_pass2		= xlog_recover_rui_commit_pass2,
  };
  
-@@ -1094,5 +1178,6 @@ const struct xlog_recover_item_ops xlog_rtefd_item_ops = {
- 	.min_hdr_len		= sizeof(struct xfs_efd_log_format),
- 	.validate_nregions	= xlog_recover_single_region,
- 	.validate_region	= xlog_recover_efd_validate_region,
-+	.validate_item		= xlog_recover_efd_validate_item,
- 	.commit_pass2		= xlog_recover_rtefd_commit_pass2,
+@@ -788,23 +833,9 @@ xlog_recover_rtrui_commit_pass2(
+ 	struct xfs_mount		*mp = log->l_mp;
+ 	struct xfs_rui_log_item		*ruip;
+ 	struct xfs_rui_log_format	*rui_formatp;
+-	size_t				len;
+ 
+ 	rui_formatp = item->ri_buf[0].iov_base;
+ 
+-	if (item->ri_buf[0].iov_len < xfs_rui_log_format_sizeof(0)) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
+-				item->ri_buf[0].iov_base, item->ri_buf[0].iov_len);
+-		return -EFSCORRUPTED;
+-	}
+-
+-	len = xfs_rui_log_format_sizeof(rui_formatp->rui_nextents);
+-	if (item->ri_buf[0].iov_len != len) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
+-				item->ri_buf[0].iov_base, item->ri_buf[0].iov_len);
+-		return -EFSCORRUPTED;
+-	}
+-
+ 	ruip = xfs_rui_init(mp, ITEM_TYPE(item), rui_formatp->rui_nextents);
+ 	xfs_rui_copy_format(&ruip->rui_format, rui_formatp);
+ 	atomic_set(&ruip->rui_next_extent, rui_formatp->rui_nextents);
+@@ -829,6 +860,10 @@ xlog_recover_rtrui_commit_pass2(
+ 
+ const struct xlog_recover_item_ops xlog_rtrui_item_ops = {
+ 	.item_type		= XFS_LI_RUI_RT,
++	.min_hdr_len		= sizeof(struct xfs_rui_log_format),
++	.validate_nregions	= xlog_recover_single_region,
++	.validate_region	= xlog_recover_rui_validate_region,
++	.validate_item		= xlog_recover_rui_validate_item,
+ 	.commit_pass2		= xlog_recover_rtrui_commit_pass2,
  };
+ 
 -- 
 2.55.0
 
