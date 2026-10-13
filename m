@@ -1,278 +1,264 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 363FE417BD2;
-	Tue, 13 Oct 2026 06:00:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29E513ABD88
+	for <linux-xfs@vger.kernel.org>; Tue, 13 Oct 2026 06:02:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791871252; cv=none; b=ufj0c90Vq3lYa2iooeNOYKZYyg5gX8v7LkCkzxmLol9wSDWhsC4myhso4jhEdSg823UHCBJSzXo5iPTmwHoT5JGlIr+upmg7YlCXEMj9w3Ufs7gSkbx3Xh/9QyTOaaAPmoaQooVf5uzWKdOSn2mPMD8BHQIdfhAIoP9foXWTJL8=
+	t=1791871331; cv=none; b=R5HfVET6uom0dMjgnYUr+e2SkCpP0LAW/nHas6JwlI9FWoR7TaaEghXPcDin9ltfCwABddtJH7SZSiK0ah/cTCSYsxrGoUS+lR1CMREuV4251tGI1dCct1ewhxouIAZuMYLNzW1xxi3j6Se15Hd+AQtC+9fAFY3bVjESx/vzYhE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791871252; c=relaxed/simple;
-	bh=Yt008CfEfxBHGf9w9KSlikBfgqk+enAZ8EMPBqjDBFo=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=FED4eoiyaM1e9WSV4PARrfkzXjaqKbqY221xoJWUalzxEGnbascd4e04BWYfiYXnrymWaNTdStpkDQ8/vy8ujJKi9nfuHYQtj+zzhdtSEWrW+KuyGesQ31gUqoWFDXFWvvXoy7s0ULm97bjTvAy5nCjQIFp0xE+nTlKbPI9XVXQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uQR3X7tt; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1791871331; c=relaxed/simple;
+	bh=LnyHsrYON9+CrjiigGSjJ/OkYwCnheP0gxQPSBPTXBA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=bvumnO7JLViWCfIyL4O/9Yg+DCVjOB4XdAKNGEVk+wkemIqmLwW+xoaxEdUyfUc+EFAJ4TkHCchB2GOM4GGJKH77BgDC0t8RmBPq23eifud/YxkUwFTBsNllRIz7u06/p92ThvVyKicLBIGDTOn8HrVhFu+IGXudtAsnIm65eZg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XFHlY9zE; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uQR3X7tt"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id AC9C4C2BCFA;
-	Tue, 13 Oct 2026 06:00:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1791871251;
-	bh=Yt008CfEfxBHGf9w9KSlikBfgqk+enAZ8EMPBqjDBFo=;
-	h=From:Date:Subject:To:Cc:Reply-To:From;
-	b=uQR3X7ttolbaJUo+oExrkCcdRXepNxq/rzcASUiSlj1c4ZVFQugRwhIfYcrlE+TTT
-	 4Mr6TxREseJc9pmysptMpEH/R7rnkQbaQkc3/YraPwpP8VPRFi/NXy3ij1tBkHqLsZ
-	 Evh/QjsBDxW1aAPA5HrhiBzfmL6qxmSoIqN6RYbAzV826e7SQ+2RNXelFWuZiqwpJQ
-	 DXPF8sFtnaKFzetCs0onh7OKMew1hPzHatNAXDJoW3JY2PbhEDbLBp7Olx/mEQnb/e
-	 BMKKaC3Z00jb5npceYonNPqk7maI7shZmIlT8FZLgA+IHu5LIDJNtS1GuK/vkN1UVf
-	 T28c05Mu3c4FA==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97657CA9ECF;
-	Tue, 13 Oct 2026 06:00:51 +0000 (UTC)
-From: Daejun Park via B4 Relay <devnull+daejun7.park.samsung.com@kernel.org>
-Date: Tue, 13 Oct 2026 15:00:51 +0900
-Subject: [PATCH] xfs: refuse a pNFS LAYOUTCOMMIT of a range without blocks
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XFHlY9zE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 051991F000FF;
+	Tue, 13 Oct 2026 06:02:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1791871329;
+	bh=NbxUxu1cKSRxfxIra9gTapvdZAGTFtXPnsBKPzEyCH4=;
+	h=From:To:Cc:Subject:Date;
+	b=XFHlY9zELAeNbyuAXaa/Ucl5FMvS6p0JC1YNoAyKVOelJf4+JdA3Gakb/l9yqLonN
+	 +SRd65XjZt2gC0InpyNbVT9MP9WoHG+J09aF7hPBktolDPHCJO03+RBADqmyWNRl4J
+	 vPm2gcUMaC74NuMlMBeLireI3t91avisOeUsn2sM5rJkh2UcbOwqp9csLi4c/1KT79
+	 2bjBAmjEUWPICIyrMqMAAbJ+CUTdVaRlFSD2NhoWw6zf43w0SlFt2jf7GSAW1EjaPs
+	 lfO2u5R/X2KvWAUE4Jq6nkSd0R+HVQK2aaDsedgDxUTdTsPpdRye8TLWXN1Z8OQRxu
+	 jz14r7CLQKRJA==
+From: Dave Chinner <dgc@kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: cem@kernel.org
+Subject: [RFC] [PATCH 00/48] Validate journal log items during log recovery.
+Date: Tue, 13 Oct 2026 17:00:50 +1100
+Message-ID: <20261013060204.3138690-1-dgc@kernel.org>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20261013-xfs-pnfs-commit-hole-v1-1-740912db9102@samsung.com>
-X-B4-Tracking: v=1; b=H4sIABLJzWoC/x2MywqAIBAAfyX23IIP6PUr0UFszYXS0IhA+veky
- 8AcZgpkSkwZpqZAopszx1BFtg1Yb8JGyGt1UEJ1UkiFj8t4hgobj4Mv9HEntFoYGo0aeqehpmc
- ix8+/nZf3/QDDdNEmZgAAAA==
-To: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <djwong@kernel.org>, 
- Dave Chinner <dgc@kernel.org>, Chuck Lever <cel@kernel.org>, 
- Jeff Layton <jlayton@kernel.org>, Dai Ngo <Dai.Ngo@oracle.com>, 
- Sergey Bashirov <sergeybashirov@gmail.com>, linux-nfs@vger.kernel.org, 
- linux-kernel@vger.kernel.org, stable@vger.kernel.org, 
- Daejun Park <daejun7.park@samsung.com>
-X-Mailer: b4 0.13.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1791871250; l=9109;
- i=daejun7.park@samsung.com; s=20261006; h=from:subject:message-id;
- bh=Bi4Nh3asVtu3vWZjxDBfgpyfYTuGljO1+XtVfwgnRxg=;
- b=GJqo7QNKAmRq/d9iJKVk3On4jj+V5vkQ+9TS4l7MnfsXzSyF+O8KdRohMmv2I/kKXd7LoHWCA
- Oe2Go/UzGOUDmEBGh8aEPEUs9/OQAC5FynZst6240gEZUDE3YejQomQ
-X-Developer-Key: i=daejun7.park@samsung.com; a=ed25519;
- pk=4yUfDqGRZTIj0Ik43z1GoMZRWCNm/rgX6uJuM9dtNIg=
-X-Endpoint-Received: by B4 Relay for daejun7.park@samsung.com/20261006 with
- auth_id=1122
-X-Original-From: Daejun Park <daejun7.park@samsung.com>
-Reply-To: daejun7.park@samsung.com
+Content-Transfer-Encoding: 8bit
 
-From: Daejun Park <daejun7.park@samsung.com>
+Log recovery reads log items straight from the journal and acts on
+them with very little checking. Validation of each item type is
+scattered and much of it runs only as the item is being applied to
+the filesystem. Corrupt or malicious log contents can therefore be
+partially acted on before anything notices they are wrong, and the
+checks that do exist are inconsistent from one item type to the
+next.
 
-xfs_fs_commit_blocks() passes every range that a pNFS client commits to
-xfs_iomap_write_unwritten(), whatever is mapped there, and the range can
-be a hole. nfsd does not check the extents of a block or SCSI layout
-LAYOUTCOMMIT against the layouts it handed out, and for a reclaim during
-the grace period it has no layouts to check against, so a client can
-commit a range that it never had a layout for. Blocks under a layout can
-also be freed: blockgc frees blocks past EOF that were already allocated
-when a write layout handed them out, and a check in nfsd would not
-notice that.
+This series makes log item validation a first-class, up-front step.
+As each item is decoded from the journal it is fully validated
+before any recovery code acts on it, so downstream recovery can
+trust the item's structure and contents. The validation is driven by
+per-item-type callbacks on the recovery item operations, so every
+item type is checked the same way: the region count is checked
+against what the item type and its logged fields require, each
+region is bounds checked, and the whole item is checked for internal
+consistency. Existing validation that was scattered through the
+commit handlers is brought forward into these callbacks, and the
+now-redundant checks are removed so the commit handlers are left to
+do only replay.
 
-For a hole, xfs_bmapi_write() with XFS_BMAPI_CONVERT allocates new
-blocks as written extents, while the transaction only reserved blocks
-for bmbt splits. A hole larger than that reservation shuts XFS down:
+The operation header decode and the transaction header are validated
+the same way, so the record framing is checked before the items
+within it are assembled.
 
-  XFS (nvme0n1): Corruption of in-memory data (0x8) detected at
-    xfs_trans_mod_sb+0x817/0x960 (fs/xfs/xfs_trans.c:351).
-    Shutting down filesystem.
+The scope is the on-disk log format and the in-core structures
+recovery builds from it. Every log item type is covered. The
+validation is what can be checked from the log item alone together
+with stable mount and superblock geometry.
 
-A smaller hole gets blocks that nobody wrote mapped into the file as
-data, so readers see whatever those blocks held, and the LAYOUTCOMMIT
-succeeds.
+Some checks cannot be made at decode time and are deliberately left
+to the first runtime access after recovery. Realtime group bounds
+are not available because the realtime inodes are not set up until
+after recovery. Filesystem block number bounds cannot be trusted at
+decode time because a growfs superblock update is not replayed into
+the in-core superblock until pass two. Hence extent and pointer block
+range validation will need to be reworked before it can be relied
+on. More detail is below under known issues.
 
-With pynfs as the client and an RW layout for the first 64 KiB of a
-2 MiB sparse file, a LAYOUTCOMMIT of 64 KiB at offset 1 MiB, which no
-layout covered, got NFS4ERR_IO and shut XFS down. A LAYOUTCOMMIT of
-4 KiB at 1 MiB got NFS4_OK, and the file got a written block there. The
-client wrote nothing to the device in either case.
+The known issues will take a little time to be addressed, so I'd
+prefer to get feedback on the rest of the patchset before I spend
+time reworking that aspect of it.  Early(-ish) feedback on the
+structure and implementation as it currently stands is more
+important right now.
 
-A client may only write to blocks that a layout handed out, and
-xfs_fs_map_blocks() allocates blocks for any hole in a write layout, so
-a committed range without blocks holds nothing that can be committed.
-Check all the ranges before converting any of them, and fail the commit
-with -EIO if one has a hole or a delalloc extent, as
-xfs_pnfs_validate_isize() does when the new size falls into one. A
-commit refused this way converts nothing: LAYOUTCOMMIT has a single
-status, and after a partial conversion the client could not tell which
-of its extents were committed. The iolock, held across the check and
-the conversion, keeps blocks from being removed in between.
+The patchset passes all of fstests on 1k and 4k block sizes (except
+for the couple of growfs/recovery stress tests) without regressions,
+so it largely works for known good journals.  Anyone who has been
+fuzzing journal structures with LLMs and/or modified syzbots are
+welcome to try it and see what holes they can find in it.
 
-With this, both LAYOUTCOMMITs get NFS4ERR_IO, XFS keeps running and no
-block is allocated. A LAYOUTCOMMIT of the laid-out range together with
-the 64 KiB hole also gets NFS4ERR_IO and converts nothing, so the
-laid-out range stays unwritten.
+The entire series can be pulled from here:
 
-Also clamp the client's length to what is left below the size before
-adding it to the offset, instead of clamping the sum. The sum can wrap
-around. A wrapped range would skip the new check, and the conversion
-loop already passes the client's length, unclamped, to
-xfs_iomap_write_unwritten(). xfs_bmapi_write() then fails an assertion
-on XFS_DEBUG kernels, which is a BUG with XFS_ASSERT_FATAL, and
-otherwise returns -ENOSR, which nfsd warns about as a non-standard
-errno. With the clamp, an extent of 2^64 - 4 KiB at 4 KiB in the same
-file is checked only up to the size. It gets NFS4ERR_IO for the hole
-after the laid-out range, without a warning or an assertion.
+https://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git log-verification-1
 
-Fixes: 527851124d10 ("xfs: implement pNFS export operations")
-Cc: stable@vger.kernel.org
-Signed-off-by: Daejun Park <daejun7.park@samsung.com>
----
-Tested on nfsd-testing d918c664efd5 with the same change on top, all in
-QEMU guests with KASAN and lockdep. The block layout was on an NVMe/TCP
-namespace exported by nvmet. The client was pynfs, except for fstests,
-which ran on the Linux NFSv4.2 client. XFS_DEBUG kernels were used for
-one run of the pynfs tests with the patch and for the wrap case without
-it. XFS for-next also has commit e3c682dd1130 ("xfs: map pNFS layouts to
-the end of the extent again") in xfs_fs_map_blocks(), which nfsd-testing
-does not have. xfs_fs_commit_blocks() and xfs_iomap_write_unwritten()
-are the same in both trees. The pynfs tests for this are local; I can
-post them if they are wanted.
+Known issues:
 
- - A LAYOUTCOMMIT of a 64 KiB hole: NFS4ERR_IO and shutdown without the
-   patch. With it, NFS4ERR_IO, no shutdown and nothing allocated, in 5
-   runs.
- - A LAYOUTCOMMIT of a 4 KiB hole: NFS4_OK and a written block in the
-   file without the patch. With it, NFS4ERR_IO and nothing allocated.
- - The laid-out range and the 64 KiB hole in one LAYOUTCOMMIT: shutdown
-   without the patch. With it, NFS4ERR_IO, and fiemap on the server
-   shows the laid-out range still unwritten.
- - An extent at 4 KiB with a length of 2^64 - 4 KiB: NFS4ERR_IO and
-   "nfsd: non-standard errno: -63" without the patch, and with
-   XFS_DEBUG "Assertion failed: bma.nallocs >= *nmap" in
-   xfs_bmapi_write(). With it, NFS4ERR_IO and no warning, also with
-   XFS_DEBUG.
- - Blocks past EOF freed by blockgc under a layout, without "xfs: mark
-   the inode preallocated for pNFS write layouts past EOF" [1]: the
-   LAYOUTCOMMIT after the client's write shut XFS down without this
-   patch and got NFS4ERR_IO with it. The client's data is still lost
-   there; [1] keeps those blocks.
- - pynfs block and blockextent: same as without the patch (BLOCK3 fails
-   either way, on a bug in the test).
- - fstests generic/075, 091 and 263 over the block layout, with and
-   without the patch: 075 fails with an fsx size error either way, and
-   XFS refused none of the 10331 LAYOUTCOMMITs with the patch.
- - W=1 builds of fs/xfs/xfs_pnfs.o with the patch on XFS for-next
-   0be6da616ab5 and on nfsd-testing d918c664efd5: no warnings.
+1. Validation runs repeatedly on every recovery pass
 
--EIO follows xfs_pnfs_validate_isize() and reaches the client as
-NFS4ERR_IO. No errno maps to NFS4ERR_BADLAYOUT, and the Linux client
-treats NFS4ERR_BADLAYOUT on a LAYOUTCOMMIT as success. For a reclaim,
-RFC 8881 section 18.42.3 requires NFS4ERR_RECLAIM_BAD, which nfsd would
-have to map.
+Except for the CRC validation pass.
 
-An nfsd check of the extents against the layouts would be a separate
-change, and for the reasons above would not make this one unnecessary.
-The shutdown came up in the review of the ->map_blocks series [2].
+Pass 1 needs to validate all the transaction/checkpoint structures
+as we walk the entire active journal to find cancellation items. We
+also need to validate buffer and quotaoff items as tehy are recorded
+in cancelation tables.
 
-xfs_pnfs_validate_isize() reads the extents under XFS_ILOCK_SHARED,
-which xfs_iread_extents() does not allow when they are not loaded yet.
-That needs a separate fix.
+Pass 2 readahead needs items that are read ahead to be validated
+sufficiently to ensure the location being read from disk is likely
+to be OK.
 
-[1] https://lore.kernel.org/r/20261012-xfs-pnfs-eof-prealloc-v1-1-e4864d917a00@samsung.com
-[2] https://lore.kernel.org/r/20261012024846epcms2p7cccc5c988b2553b3f831070eb17e0455@epcms2p7
----
- fs/xfs/xfs_pnfs.c | 60 ++++++++++++++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 57 insertions(+), 3 deletions(-)
+Pass 2 needs to fully validate all the items being recovered, before
+they are recovered.
 
-diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
-index ab38561700..da60154198 100644
---- a/fs/xfs/xfs_pnfs.c
-+++ b/fs/xfs/xfs_pnfs.c
-@@ -272,6 +272,46 @@ xfs_pnfs_validate_isize(
- 	return 0;
- }
- 
-+/*
-+ * Ensure the committed range is backed by allocated blocks. A client may only
-+ * write to blocks that a layout handed out, xfs_fs_map_blocks() allocates
-+ * blocks for any hole in a write layout, and no layout hands out a delalloc
-+ * extent. A hole or a delalloc extent in the range was either never laid out
-+ * or lost its blocks after the layout was handed out, so nothing the client
-+ * wrote can be committed there. Converting a hole would also allocate blocks
-+ * that the transaction did not reserve.
-+ */
-+static int
-+xfs_pnfs_validate_commit(
-+	struct xfs_inode	*ip,
-+	xfs_off_t		start,
-+	xfs_off_t		end)
-+{
-+	struct xfs_mount	*mp = ip->i_mount;
-+	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, start);
-+	xfs_fileoff_t		end_fsb = XFS_B_TO_FSB(mp, end);
-+	struct xfs_bmbt_irec	imap;
-+	uint			lock_flags;
-+	int			nimaps;
-+	int			error = 0;
-+
-+	lock_flags = xfs_ilock_data_map_shared(ip);
-+	while (offset_fsb < end_fsb) {
-+		nimaps = 1;
-+		error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
-+				&imap, &nimaps, 0);
-+		if (error)
-+			break;
-+		if (!nimaps || !xfs_bmap_is_real_extent(&imap)) {
-+			error = -EIO;
-+			break;
-+		}
-+		offset_fsb = imap.br_startoff + imap.br_blockcount;
-+	}
-+	xfs_iunlock(ip, lock_flags);
-+	return error;
-+}
-+
- /*
-  * Make sure the blocks described by maps are stable on disk.  This includes
-  * converting any unwritten extents, flushing the disk cache and updating the
-@@ -305,6 +345,22 @@ xfs_fs_commit_blocks(
- 		size = new_size;
- 	}
- 
-+	/*
-+	 * Check all of the maps before converting any of them, so that a commit
-+	 * refused for a hole or a delalloc extent converts nothing.
-+	 */
-+	for (i = 0; i < nr_maps; i++) {
-+		u64 start = maps[i].offset;
-+		u64 end;
-+
-+		if (start >= size)
-+			continue;
-+		end = start + min_t(u64, maps[i].length, size - start);
-+		error = xfs_pnfs_validate_commit(ip, start, end);
-+		if (error)
-+			goto out_drop_iolock;
-+	}
-+
- 	for (i = 0; i < nr_maps; i++) {
- 		u64 start, length, end;
- 
-@@ -312,9 +368,7 @@ xfs_fs_commit_blocks(
- 		if (start > size)
- 			continue;
- 
--		end = start + maps[i].length;
--		if (end > size)
--			end = size;
-+		end = start + min_t(u64, maps[i].length, size - start);
- 
- 		length = end - start;
- 		if (!length)
+Some of the item recovery also reformats the items being recovered;
+things like 32bit vs 64bit incore structure differences are being
+resolved at item validation time so they don't need to be handled
+differently by validation or recovery code. This means that
+validation needs to run on those items on every pass that they will
+have something run against them. This needs more thought; inodes are
+the main issue here, and largely they are only parsed in pass 2.
 
----
-base-commit: 0be6da616ab5031ea6419dc4fe0bf0e378fb6757
-change-id: 20261012-xfs-pnfs-commit-hole-c30ae9a287f3
-
-Best regards,
--- 
-Daejun Park <daejun7.park@samsung.com>
+Hence we might be able to split up validation into pass-1 + pass-2
+variants. pass-1 needs to validate the number and size of regions
+matches the format header to ensure checkpoint decoding is always
+valid. pass-2 can then do the full item validation.
 
 
+2. Geometry validation versus growfs and shrink
+
+This is an extension of issue 1, in that validation occurs before
+replay.  The geometry items validate against is the geometry in
+effect at the start of recovery. A geometry change only takes effect
+when the primary superblock buffer is replayed, which happens during
+transaction recovery in the second pass, not during checkpoint
+region decoding.
+
+A growfs operation logs the superblock geometry change ahead of any
+metadata that uses the new geometry. A shrink also logs the
+superblock geometry change after relevant internal metadata has been
+updated and/or invalidated. Hence if the superblock geometry changes
+during recovery, item validation at region decode time will fail to
+validate geometry-based fields correctly.
+
+This affects any item that carries a type that encodes geometry
+information, such as inode numbers, disk addresses, and extents,
+including the realtime variants.  Structural validation that does
+not depend on geometry is unaffected.
+
+As the geometry change only takes effect during transaction
+recovery, any validation that depends on it must run after the
+superblock buffer has been replayed.
+
+This causes issues for readahead validation, which decodes
+addresses and submits IO, potentially for addresses outside the
+range of the initial superblock geometry. Readahead silently
+discards reads beyond the end of the filesystem, but we shouldn't
+issue them in the first place.
+
+Even in pass 2, the checkpoint where the geometry change is
+recorded cannot be validated until recovery even though items in the
+checkpoint are correctly ordered either side of the change.
+
+Hence it is likely that we need two layers of item validation for
+pass 2 - the decode time validation of everything except disk
+addresses, and recovery time validation of addresses. This will
+order all disk address based validation correctly against
+grow/shrink operations.
+
+3. fold ->complete() into ->validate_item()
+
+The xlog_recover_item_ops ->complete() callback was added early on,
+when it was not entirely clear how item validation would end u
+plooking. In the end, it is used by only one special item type:
+the transaction header.
+
+->validate_item() already runs on every item at that same point, so
+->complete() probably should be folded into it. ->validate_item()
+would perform the header copy and signal that the item is consumed,
+removing the need for ->complete() altogether.
+
+Commits:
+28f113a   xfs: set the unmount record operation header length
+a61b098   xfs: add log recovery item validation design document
+06c7593   xfs: lift transaction header parsing out of the region assembly
+a68100c   xfs: track transaction header decode state explicitly
+24e21ca   xfs: track the log item being rebuilt with an explicit pointer
+d91765d   xfs: complete log items explicitly during recovery
+1927333   xfs: add log item validation infrastructure to log recovery
+cacb405   xfs: recover the transaction header as a validated item type
+0703ad7   xfs: factor out xlog_recover_validate_ophdr()
+fc50f95   xfs: validate operation header length and alignment during recovery
+3d16b7b   xfs: validate the operation header padding during recovery
+fe25cc9   xfs: validate the operation header flags during recovery
+c2268a5   xfs: enforce zero length control records during recovery
+7ea3fb8   xfs: validate the unmount record during recovery
+dfd687d   xfs: handle zero length continuation op headers during recovery
+74f2613   xfs: bound the assembled region size during recovery
+1de7ba8   xfs: dump the corrupt region when log item validation fails
+3c87e627   xfs: validate fixed size log items during recovery
+8a79bbf   xfs: validate extent free log items during recovery
+1bb8381   xfs: validate and convert extent free intents during recovery
+426c695   xfs: validate and convert extent free done items during recovery
+425e959   xfs: validate rmap update intents during recovery
+2549fef   xfs: validate rmap update done items during recovery
+80bb17f   xfs: validate refcount update intents during recovery
+d10d3f8   xfs: validate refcount update done items during recovery
+6061b3b   xfs: validate bmap update intents during recovery
+aa3c496   xfs: validate bmap update done items during recovery
+27521ef   xfs: validate mapping exchange intents during recovery
+3773819   xfs: validate mapping exchange done items during recovery
+e3b1f31   xfs: validate dquot items during recovery
+96008da   xfs: validate attr done items during recovery
+b21e835   xfs: validate attr intents during recovery
+e91bfa9   xfs: convert inode items to host format during recovery
+2a6df3a   xfs: allow xfs_imap() to map without an inode btree lookup
+c661e55   xfs: validate the inode item format header during recovery
+71dd594   xfs: validate the logged inode core during recovery
+0a30aae   xfs: validate the logged inode forks during recovery
+e1d4af6   xfs: validate logged local fork contents during recovery
+88362e8   xfs: validate logged extent fork contents during recovery
+1f1bb06   xfs: allow a long format btree root to be checked without a cursor
+7e1242f   xfs: validate logged btree fork roots during recovery
+34f073c   xfs: validate logged metadata btree fork roots during recovery
+4a383f7   xfs: validate buffer item region count during recovery
+9503237   xfs: validate buffer item regions during recovery
+cc5eed7   xfs: validate the whole buffer item during recovery
+f5855c0   xfs: remove redundant buffer checks from recovery replay
+e0a8bd9   xfs: fail recovery on a buffer type mismatch
+44cad35   xfs: validate logged dquot buffers during recovery
+
+Diffstat:
+ Documentation/filesystems/xfs/index.rst                              |   1 +-
+ Documentation/filesystems/xfs/xfs-log-recovery-validation-design.rst | 514 ++++-
+ fs/xfs/libxfs/xfs_bmap.c                                             |  48 +-
+ fs/xfs/libxfs/xfs_bmap.h                                             |   8 +-
+ fs/xfs/libxfs/xfs_btree.c                                            |  50 +-
+ fs/xfs/libxfs/xfs_btree.h                                            |   4 +-
+ fs/xfs/libxfs/xfs_dquot_buf.c                                        |  64 +-
+ fs/xfs/libxfs/xfs_format.h                                           |   8 +-
+ fs/xfs/libxfs/xfs_ialloc.c                                           |   7 +-
+ fs/xfs/libxfs/xfs_inode_buf.c                                        |  19 +-
+ fs/xfs/libxfs/xfs_inode_buf.h                                        |   2 +-
+ fs/xfs/libxfs/xfs_inode_fork.c                                       |  25 +-
+ fs/xfs/libxfs/xfs_log_format.h                                       |   8 +-
+ fs/xfs/libxfs/xfs_log_recover.h                                      |  64 +-
+ fs/xfs/libxfs/xfs_quota_defs.h                                       |   2 +-
+ fs/xfs/scrub/inode_repair.c                                          |  14 +-
+ fs/xfs/xfs_attr_item.c                                               | 283 +-
+ fs/xfs/xfs_bmap_item.c                                               | 109 +-
+ fs/xfs/xfs_buf_item_recover.c                                        | 349 +-
+ fs/xfs/xfs_dquot_item_recover.c                                      | 118 +-
+ fs/xfs/xfs_exchmaps_item.c                                           |  46 +-
+ fs/xfs/xfs_extfree_item.c                                            | 368 ++-
+ fs/xfs/xfs_icache.h                                                  |   2 +-
+ fs/xfs/xfs_icreate_item.c                                            |  18 +-
+ fs/xfs/xfs_inode.h                                                   |  43 +-
+ fs/xfs/xfs_inode_item_recover.c                                      | 979 +++++--
+ fs/xfs/xfs_log.c                                                     |  16 +-
+ fs/xfs/xfs_log_recover.c                                             | 764 ++++-
+ fs/xfs/xfs_refcount_item.c                                           | 163 +-
+ fs/xfs/xfs_rmap_item.c                                               | 163 +-
+ 30 files changed, 3410 insertions(+), 849 deletions(-)
