@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E8EC3C09F8
-	for <linux-xfs@vger.kernel.org>; Tue, 13 Oct 2026 06:02:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FA89417BD2
+	for <linux-xfs@vger.kernel.org>; Tue, 13 Oct 2026 06:02:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791871355; cv=none; b=UeKqyzeWsg/LvCDxYtR9B+7R/DCa1qrXpMrAWyr9hxlkCBa098CqajVVUVS0qQli4h1OenULFJAqC2YLe8HMNZEaMj3mfb3iXjjzqs6zi7He4GjPeA9ZjVMqJGspzYi5dyAFa/ydgsIZ1kuoboVV1hDouIzD2hWsWVggmAJDYrw=
+	t=1791871356; cv=none; b=IiMx+v4rmJ6tHlQUcU6x+9d7bPnPfF7xd8HEbaHZ2NjPzBgXGqwpMxNW+uh5yVQv+Ui4CZqsiX+AluDvB/A74IV00AdCizibxQOHP+Y6jlzERnXom1EBmXghp+klEuyccAOo4ui4W5n1BMjfdwe3hKGS4OYvB+xAQ9R0q1PXQW8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791871355; c=relaxed/simple;
-	bh=rplfqn1JJEUavCxDTc7wLf4iJmAXM73Qqndm0KVCMZ0=;
+	s=arc-20240116; t=1791871356; c=relaxed/simple;
+	bh=NQx8niGX+V5wH6TEXJWUXLxzpok9hoCRIpttj0oGm4M=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ly/5mCCnThrjvhmY9C9/96DHZu7r2cXqqSO/ZVPiujzLNdvVVuJK5w5pMql+k6j9DIm4FzNNzl1ooS4lBPmloGDibuZKglSkkUKd9OzIcTBTYXe1jxlApNlp5jcfx7tPeEodf2d3DtN0JHV6Z5I1pvqe8maA6EuFmiX9xoR9BK8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LAq2YnN8; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=LYr4/qZRUmTe2Xl3/yt1TN4EbhjIdS9WCi5EZGgW5mUgsfdeSQq4yFtH4Q8BWAIT57a1nOj0GAz31zz0kCTxCwjnJ7sCPJAnPUcRIg1dxZQg/eRzG6hrAZXDkq26Ujk3ZJy3HDZRtoIhfQ6DASjEUs0BCUunKcWXnCeb0GTRSw4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QVHqvAi9; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LAq2YnN8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7E0B71F000FF;
-	Tue, 13 Oct 2026 06:02:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QVHqvAi9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AAEE01F00893;
+	Tue, 13 Oct 2026 06:02:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791871354;
-	bh=QGeIJNPUR7wWMfFC56tfAUYiNlNI39UkgUek8yuPUos=;
+	s=k20260515; t=1791871355;
+	bh=SfXrTUrRnKMOpAw5Jih0KJN5v9jwGrSQPIGqTbtz700=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=LAq2YnN8h1IDk1TwQ2jPhXns4ogtvwQrLYxoowDviJ+bqEjeRlg8idubaLdkqWc+P
-	 Sos8+8Uu/CCa+jmtTvUe1i1u+Q3guHVxMFegtOvDyXma5cmWUNUc4v/xGxxmHxNnnS
-	 X1VCB7jvCT88DRIXmuJFJrmEVdmW0TenLrlLYYtzE5JlyiSluDIEEvrb0vCMgP0Iqo
-	 AsIUXZwCw2w1cgJwIwFpUprAh2v6jx/82zBneXDQADOPbS9jLPyWZZZX9sqSZYj65h
-	 vaQCdvoSiSsbldu/9VhivX19vt/JrCixveuKtYqwwg7PC+We51K7o8g1md4o3sV9XS
-	 a2OkMyb0+F8ZQ==
+	b=QVHqvAi9XvwAA7aBtpWAbBGAJMmlsv70LZzQJMdkDIIRXiCFnrqgZLmQfxj5Zd7xT
+	 wh/lNowH0apxBcq0Me7gVlcg4cZXlSBpa8MLGBliGBPO0JQF1TLZqIQuCD71Pjp6Tf
+	 XimXtMKZsjarblxoPk0FqbBaIGgo5X7hR1Wd1q2jDo02LJIs18dswtu8TDkc4UogSq
+	 qnk8hBLAr3N1INLwWR2im9jt4ym8xcZMB8i10ARUICFF+fNZIqm4lHLcqqUB9HYOl+
+	 kvVzAUyUoQP37Q/EnBKXLBDynn8euFURUTfZnq65B3LkMUYSPLEAI+GNBEVficvmTg
+	 MJLP9dl8aS2ZQ==
 From: Dave Chinner <dgc@kernel.org>
 To: linux-xfs@vger.kernel.org
 Cc: cem@kernel.org
-Subject: [PATCH 20/48] xfs: validate and convert extent free intents during recovery
-Date: Tue, 13 Oct 2026 17:01:10 +1100
-Message-ID: <20261013060204.3138690-21-dgc@kernel.org>
+Subject: [PATCH 21/48] xfs: validate and convert extent free done items during recovery
+Date: Tue, 13 Oct 2026 17:01:11 +1100
+Message-ID: <20261013060204.3138690-22-dgc@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20261013060204.3138690-1-dgc@kernel.org>
 References: <20261013060204.3138690-1-dgc@kernel.org>
@@ -43,143 +43,116 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The extents in a recovered extent free intent were only checked for validity
-during intent replay, after the item had been decoded, copied to host format
-and queued. A corrupt extent was therefore carried a long way into recovery
-before being rejected.
+An extent free done item carries the same extents as the intent it completes,
+but recovery never converted it to host format or checked those extents. The
+on-disk format was left in place and its contents trusted.
 
-Validate the extents up front and convert the item to host format in
-->validate_item(), so the rest of recovery iterates the item as a host
-structure without regard for the on-disk format. The conversion allocates a
-new buffer only when the on-disk format differs in size from the host format.
+Convert the item to host format and validate its extents in ->validate_item(),
+mirroring the extent free intent item. The conversion allocates a new buffer
+only when the on-disk format differs in size from the host format. This is
+shared by the data and realtime extent free done items.
 
-The commit handlers then copy the already host format item directly, and the
-extent validity check is dropped from intent replay. The format conversion no
-longer needs its host format input case and is renamed accordingly. This is
-shared by the data and realtime extent free items.
+This conversion and validation is being done now so that, in future, the EFD
+extents can be checked against the extents in the matched EFI. This will ensure
+a corruption of the efd_efi_id does not result in completion of an incorrect
+EFI.
 
 Assisted-by: LLM
 Signed-off-by: Dave Chinner <dgc@kernel.org>
 ---
- fs/xfs/xfs_extfree_item.c | 88 +++++++++++++++++++++++----------------
- 1 file changed, 51 insertions(+), 37 deletions(-)
+ fs/xfs/xfs_extfree_item.c | 85 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 85 insertions(+)
 
 diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-index c8d15de582f5..b38e1f2089d4 100644
+index b38e1f2089d4..53da797182d4 100644
 --- a/fs/xfs/xfs_extfree_item.c
 +++ b/fs/xfs/xfs_extfree_item.c
-@@ -174,14 +174,13 @@ xfs_efi_init(
+@@ -219,6 +219,52 @@ xfs_efi_to_host_format(
+ 	}
  }
  
- /*
-- * Copy an EFI format buffer from the given buf, and into the destination
-- * EFI format structure.
-- * The given buffer can be in 32 bit or 64 bit form (which has different padding),
-- * one of which will be the native format for this kernel.
-- * It will handle the conversion of formats if necessary.
-+ * Convert an on-disk EFI format buffer into the given host format structure.
++/*
++ * Convert an on-disk EFD format buffer into the given host format structure.
 + * The buffer is in 32 bit or 64 bit on-disk form (which have different padding);
 + * a buffer already in host format does not need conversion and is not passed
 + * here. The buffer has already been validated as one of these two formats.
-  */
- STATIC void
--xfs_efi_copy_format(
-+xfs_efi_to_host_format(
- 	struct kvec			*buf,
- 	struct xfs_efi_log_format	*dst_efi_fmt)
++ */
++STATIC void
++xfs_efd_to_host_format(
++	struct kvec			*buf,
++	struct xfs_efd_log_format	*dst_efd_fmt)
++{
++	struct xfs_efd_log_format	*src_efd_fmt = buf->iov_base;
++	struct xfs_efd_log_format_32	*src_efd_fmt_32;
++	struct xfs_efd_log_format_64	*src_efd_fmt_64;
++	uint				nextents = src_efd_fmt->efd_nextents;
++	uint				i;
++
++	if (buf->iov_len == xfs_efd_log_format32_sizeof(nextents)) {
++		src_efd_fmt_32 = buf->iov_base;
++		dst_efd_fmt->efd_type     = src_efd_fmt_32->efd_type;
++		dst_efd_fmt->efd_size     = src_efd_fmt_32->efd_size;
++		dst_efd_fmt->efd_nextents = src_efd_fmt_32->efd_nextents;
++		dst_efd_fmt->efd_efi_id   = src_efd_fmt_32->efd_efi_id;
++		for (i = 0; i < nextents; i++) {
++			dst_efd_fmt->efd_extents[i].ext_start =
++				src_efd_fmt_32->efd_extents[i].ext_start;
++			dst_efd_fmt->efd_extents[i].ext_len =
++				src_efd_fmt_32->efd_extents[i].ext_len;
++		}
++		return;
++	}
++
++	ASSERT(buf->iov_len == xfs_efd_log_format64_sizeof(nextents));
++	src_efd_fmt_64 = buf->iov_base;
++	dst_efd_fmt->efd_type     = src_efd_fmt_64->efd_type;
++	dst_efd_fmt->efd_size     = src_efd_fmt_64->efd_size;
++	dst_efd_fmt->efd_nextents = src_efd_fmt_64->efd_nextents;
++	dst_efd_fmt->efd_efi_id   = src_efd_fmt_64->efd_efi_id;
++	for (i = 0; i < nextents; i++) {
++		dst_efd_fmt->efd_extents[i].ext_start =
++			src_efd_fmt_64->efd_extents[i].ext_start;
++		dst_efd_fmt->efd_extents[i].ext_len =
++			src_efd_fmt_64->efd_extents[i].ext_len;
++	}
++}
++
+ static inline struct xfs_efd_log_item *EFD_ITEM(struct xfs_log_item *lip)
  {
-@@ -191,20 +190,6 @@ xfs_efi_copy_format(
- 	uint				nextents = src_efi_fmt->efi_nextents;
- 	uint				i;
- 
--	/*
--	 * The buffer has already been validated as one of the three formats, so
--	 * pick which one it is by its length and copy it into the native form.
--	 */
--	if (buf->iov_len == xfs_efi_log_format_sizeof(nextents)) {
--		memcpy(dst_efi_fmt, src_efi_fmt,
--		       offsetof(struct xfs_efi_log_format, efi_extents));
--		for (i = 0; i < nextents; i++)
--			memcpy(&dst_efi_fmt->efi_extents[i],
--			       &src_efi_fmt->efi_extents[i],
--			       sizeof(struct xfs_extent));
--		return;
--	}
--
- 	if (buf->iov_len == xfs_efi_log_format32_sizeof(nextents)) {
- 		src_efi_fmt_32 = buf->iov_base;
- 		dst_efi_fmt->efi_type     = src_efi_fmt_32->efi_type;
-@@ -660,23 +645,10 @@ xfs_extent_free_recover_work(
- 	int				error = 0;
- 	bool				isrt = xfs_efi_item_isrt(lip);
- 
--	/*
--	 * First check the validity of the extents described by the EFI.  If
--	 * any are bad, then assume that all are bad and just toss the EFI.
--	 * Mixing RT and non-RT extents in the same EFI item is not allowed.
--	 */
--	for (i = 0; i < efip->efi_format.efi_nextents; i++) {
--		if (!xfs_efi_validate_ext(mp, isrt,
--					&efip->efi_format.efi_extents[i])) {
--			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
--					&efip->efi_format,
--					sizeof(efip->efi_format));
--			return -EFSCORRUPTED;
--		}
--
-+	/* The extents were validated when the efi was recovered. */
-+	for (i = 0; i < efip->efi_format.efi_nextents; i++)
- 		xfs_efi_recover_work(mp, dfp, isrt,
- 				&efip->efi_format.efi_extents[i]);
--	}
- 
- 	resv = xlog_recover_resv(&M_RES(mp)->tr_itruncate);
- 	error = xfs_trans_alloc(mp, &resv, 0, 0, 0, &tp);
-@@ -868,7 +840,7 @@ xlog_recover_efi_commit_pass2(
- 	efi_formatp = item->ri_buf[0].iov_base;
- 
- 	efip = xfs_efi_init(mp, ITEM_TYPE(item), efi_formatp->efi_nextents);
--	xfs_efi_copy_format(&item->ri_buf[0], &efip->efi_format);
-+	memcpy(&efip->efi_format, efi_formatp, item->ri_buf[0].iov_len);
- 	atomic_set(&efip->efi_next_extent, efi_formatp->efi_nextents);
- 
- 	xlog_recover_intent_item(log, &efip->efi_item, lsn,
-@@ -925,11 +897,52 @@ xlog_recover_efi_validate_region(
+ 	return container_of(lip, struct xfs_efd_log_item, efd_item);
+@@ -1061,11 +1107,49 @@ xlog_recover_efd_validate_region(
  	return 0;
  }
  
 +/*
-+ * Convert the efi to host format and validate its contents. Later recovery then
-+ * iterates ri_buf[0] as a host struct xfs_efi_log_format without caring about
-+ * the on-disk format. The conversion only needs to allocate a new buffer when
-+ * the on-disk format differs in size from the host format; a buffer already in
-+ * host format is validated in place.
++ * Convert the efd to host format and validate its contents, as for the efi.
++ * The efd extents mirror those of the efi it completes.
 + */
 +static int
-+xlog_recover_efi_validate_item(
++xlog_recover_efd_validate_item(
 +	struct xlog			*log,
 +	struct xlog_recover_item	*item)
 +{
-+	struct xfs_efi_log_format	*efi_formatp = item->ri_buf[0].iov_base;
-+	uint32_t			nextents = efi_formatp->efi_nextents;
-+	size_t				host_len = xfs_efi_log_format_sizeof(nextents);
-+	bool				isrt = ITEM_TYPE(item) == XFS_LI_EFI_RT;
++	struct xfs_efd_log_format	*efd_formatp = item->ri_buf[0].iov_base;
++	uint32_t			nextents = efd_formatp->efd_nextents;
++	size_t				host_len = xfs_efd_log_format_sizeof(nextents);
++	bool				isrt = ITEM_TYPE(item) == XFS_LI_EFD_RT;
 +	uint32_t			i;
 +
 +	if (item->ri_buf[0].iov_len != host_len) {
-+		efi_formatp = xlog_kvmalloc(host_len);
-+		xfs_efi_to_host_format(&item->ri_buf[0], efi_formatp);
++		efd_formatp = xlog_kvmalloc(host_len);
++		xfs_efd_to_host_format(&item->ri_buf[0], efd_formatp);
 +		kvfree(item->ri_buf[0].iov_base);
-+		item->ri_buf[0].iov_base = efi_formatp;
++		item->ri_buf[0].iov_base = efd_formatp;
 +		item->ri_buf[0].iov_len = host_len;
 +	}
 +
 +	for (i = 0; i < nextents; i++) {
-+		struct xfs_extent	*extp = &efi_formatp->efi_extents[i];
++		struct xfs_extent	*extp = &efd_formatp->efd_extents[i];
 +
 +		if (!xfs_efi_validate_ext(log->l_mp, isrt, extp)) {
 +			xfs_warn(log->l_mp,
-+	"EFI: bad extent %u (start 0x%llx, len 0x%x) recovered.",
++	"EFD: bad extent %u (start 0x%llx, len 0x%x) recovered.",
 +				i, extp->ext_start, extp->ext_len);
 +			return -EFSCORRUPTED;
 +		}
@@ -188,32 +161,22 @@ index c8d15de582f5..b38e1f2089d4 100644
 +	return 0;
 +}
 +
- const struct xlog_recover_item_ops xlog_efi_item_ops = {
- 	.item_type		= XFS_LI_EFI,
- 	.min_hdr_len		= sizeof(struct xfs_efi_log_format),
+ const struct xlog_recover_item_ops xlog_efd_item_ops = {
+ 	.item_type		= XFS_LI_EFD,
+ 	.min_hdr_len		= sizeof(struct xfs_efd_log_format),
  	.validate_nregions	= xlog_recover_single_region,
- 	.validate_region	= xlog_recover_efi_validate_region,
-+	.validate_item		= xlog_recover_efi_validate_item,
- 	.commit_pass2		= xlog_recover_efi_commit_pass2,
+ 	.validate_region	= xlog_recover_efd_validate_region,
++	.validate_item		= xlog_recover_efd_validate_item,
+ 	.commit_pass2		= xlog_recover_efd_commit_pass2,
  };
  
-@@ -948,7 +961,7 @@ xlog_recover_rtefi_commit_pass2(
- 	efi_formatp = item->ri_buf[0].iov_base;
- 
- 	efip = xfs_efi_init(mp, ITEM_TYPE(item), efi_formatp->efi_nextents);
--	xfs_efi_copy_format(&item->ri_buf[0], &efip->efi_format);
-+	memcpy(&efip->efi_format, efi_formatp, item->ri_buf[0].iov_len);
- 	atomic_set(&efip->efi_next_extent, efi_formatp->efi_nextents);
- 
- 	xlog_recover_intent_item(log, &efip->efi_item, lsn,
-@@ -974,6 +987,7 @@ const struct xlog_recover_item_ops xlog_rtefi_item_ops = {
- 	.min_hdr_len		= sizeof(struct xfs_efi_log_format),
+@@ -1094,5 +1178,6 @@ const struct xlog_recover_item_ops xlog_rtefd_item_ops = {
+ 	.min_hdr_len		= sizeof(struct xfs_efd_log_format),
  	.validate_nregions	= xlog_recover_single_region,
- 	.validate_region	= xlog_recover_efi_validate_region,
-+	.validate_item		= xlog_recover_efi_validate_item,
- 	.commit_pass2		= xlog_recover_rtefi_commit_pass2,
+ 	.validate_region	= xlog_recover_efd_validate_region,
++	.validate_item		= xlog_recover_efd_validate_item,
+ 	.commit_pass2		= xlog_recover_rtefd_commit_pass2,
  };
- 
 -- 
 2.55.0
 
