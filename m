@@ -1,88 +1,88 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA58749B5DE;
-	Tue, 13 Oct 2026 09:38:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65E4C410D3D;
+	Tue, 13 Oct 2026 09:38:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791884331; cv=fail; b=UeFWHMqkHpY84fAaP4W+v/CwK9LrzFYAGJIDOmOijh8grqazg63YzM4//IDFrdWMOQNZ3vn3MV9OOR95OHQZYx5CBCnodEyVK+2+19CJieqZE39RUO5ZfSbUvl/Yc3ma+RV68Yq4mTb4E0LmWWfX/qodXXINs7GCkrgPChe1Mbo=
+	t=1791884335; cv=fail; b=mPbiUtRI396+L3U4RdPiMLzVqjNpxfMeQjwVE/I13xkiuE70bkhrtGwGkXgqaYUHZ4AoLdsczL/b2cVQUoJEPIize2ajk+Z1GIMoLcTVb4nIN/nRD8qI2cciGr060vx5sGu+FmLDltYufudkTmPvmpm/5PdB+jSIqB1HvSMLmLI=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791884331; c=relaxed/simple;
-	bh=T8cO4hypA02piRj3GENJuXzYbRbj2Vc9MN5QefU/4H8=;
+	s=arc-20240116; t=1791884335; c=relaxed/simple;
+	bh=dU3I1frWa6GdSKQZ2FLb/qnGYWs0epBH8+83LEIgbW0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=tBt+oMJngod6t2G4Q8H3Nn5vbF9g1mjxtDj0ZfCRWOMzn3ME7uAopjROrnMCbAufks5ETYclH5mzYcx+3qoifZajGHTr8cgjtD+C7dhfbNjBHb06SuatYqscEKY6F1E7M4Jz/wS3SgUxiE2mzPmgYOGTTSdpeFQwVFD7mTMsZRs=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=Ou3ZidrG; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=Tyn4fRF5; arc=fail smtp.client-ip=205.220.177.32
+	 Content-Type:MIME-Version; b=DWokCMUtSTlw3sPEfdvblXoB+sfJzStpo30luMCJWfJ2vghsWTIMtupRuOvkG6hHG9ChTsnRfzkvSmoLasLLYYJ8SJdD7SKKLD7R6x+tXUcCormO/ov3td52Ng5f8bmRXRnbHKLCQsRKyQ2yekuqBCwSYIY8n7JQ0eyP2Jrd1O8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=jKvI/C/+; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=B/IHNCpa; arc=fail smtp.client-ip=205.220.165.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Ou3ZidrG";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="Tyn4fRF5"
-Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69D2BtYw678283;
-	Tue, 13 Oct 2026 09:38:46 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="jKvI/C/+";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="B/IHNCpa"
+Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69D2urFZ4134675;
+	Tue, 13 Oct 2026 09:38:50 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=yKSU+vFm57ly7jqu8dfGvrvf0W7RpnMapLxfJ0eN20U=; b=
-	Ou3ZidrG/Bt1Zl5adP3ZvS5ERca8BFtjkYsR6t+B8/U0HjrxauuUu+1P3I4RhOIm
-	nil5XyXLJH1carkbEZtT6SOceVZXRWApqCQf26T9a2JIe6vUo1Su+s4JQ+Jhl58h
-	nve13JODIoHh3EkosUDs+bGAfAJp3JK7i6YlypPQO4+INkFBhEzsAD2HX72dnRnA
-	IVGV4NJ1xQUFfwTlFRPM50YBB4ZSTdzdiOaYE5hZLPcsyYJRz7COApywK64UYEYQ
-	bROsxiFa7cb2RCmr70OjWBp/sGIoKzDht4sXdhQD1OsPwtiOvI8S/b3lj85KUjG/
-	u/83tNKeVK092xDe669drQ==
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4h7dddusaj-1
+	corp-2025-04-25; bh=JpZVTqKMj3ulw2FM9NomKk4QUnLYr81GF2q/OvqnsS8=; b=
+	jKvI/C/+Ehxx98WZnDtvwdswlkZASs6kE7p0gOnpfV/zwdgPncM3ZV5FJI+8TNHB
+	9yVRZ9XetdfS3xh2Cj80nhsGQKdDJ5vROGVs3h1NguBkyHwmUTd16OLcew8NMnr8
+	0QvSeW2EB+JDEnUfbTTuPF5f7eTJdLKEh9do6gtGBK69YpZZ108Po/UZrj6h7xlF
+	FvR0hCESWMPb+NiKvWsVawLnDJ+JVhtp2ZEf8W1eqOwf0vBNqbJznC2FU3goB/N0
+	Nt/2SFPF4Wy8VzWRL5N6wEpuwyKQLJrM/8uyve/tsJnSv2zYkrzOZ8Zhr9eZQ5cq
+	VkeI//AeEWXj1WByTizmTg==
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4h7dbkkq6m-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 13 Oct 2026 09:38:45 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.7/8.18.1.7) with ESMTP id 69D9aTSe010906;
-	Tue, 13 Oct 2026 09:38:45 GMT
-Received: from mw6pr02cu001.outbound.protection.outlook.com (mail-westus2azon11012023.outbound.protection.outlook.com [52.101.48.23])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4h7bt9d45y-1
+	Tue, 13 Oct 2026 09:38:50 +0000 (GMT)
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.7/8.18.1.7) with ESMTP id 69D9ajxN018245;
+	Tue, 13 Oct 2026 09:38:49 GMT
+Received: from ch5pr02cu005.outbound.protection.outlook.com (mail-northcentralusazon11012047.outbound.protection.outlook.com [40.107.200.47])
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4h7btp9tjt-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Tue, 13 Oct 2026 09:38:44 +0000 (GMT)
+	Tue, 13 Oct 2026 09:38:49 +0000 (GMT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=NpmPrClhNy82jn1ajI3ew1Cj+44eGHLeBjeVUrHsR6tvIS/heFh9cqHvgsgw9cRhKPH1j0FUDzVhIwsiyb7EBqBtRfNO3jEeVjVqoBAfFDKHW2egjqQlr8IeLryuyBq2UJj3vQsfX2WWYccycZBe583vBV4rPw5/tgmlBZcxjbm3SNcsWCgWlQ5E4dZBf9rAuFLTebkO8l0fPQfe64NfiFD9uRZMsgyjiKJB8YI/0y2NjDRv0uI8gtSP4kt9jbmPqqthiwU2Ty6sCQkyQeTNHZjBVUipmAp+/hKrafp2H6r1JtiVZp+F/j5UGXcrnrGIlJYqBGkKN8jufi92AyueCQ==
+ b=dpLdVUyAaIzoSaEBbC1kS6tYzR9S9OSTnzqauMhsw9VrC7aJWXU4eHeSZrdXr2+UBrxz5BwiCn6un7ZP1J6oabLeSNIelp2/NlTrFW2kM+98a8OfjomI6HygVQn4OxjrZ9J5MeBKDjrL0oufshK7HfY9NZiytRKO5NyFXRRQG/VnF3USRCoP7HqBRLfl7HYimhYrVRO1IE6ggR5Zi7jXALUtqP+rBHEsaADcx0n3oX7anWaM8rr7gw6jHQE7BeToM56W6ois6AUSpEN1AV7RyZf3GUL2pN+m8SHjXthdD6qyM1YuiZcNknWfF0FZVNSncldci09URR/em4OPPIN4FQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=yKSU+vFm57ly7jqu8dfGvrvf0W7RpnMapLxfJ0eN20U=;
- b=vzXxgGBT84zEfEvhm8PsdnlQI9yo5lJYeBSOm7QtCXj2MdfeHV34ZCgdLt+MP3Xq5ahrzDX3T4eDG7qg3BN+e/J2pnlvDqmZiTURoC2QhLQtPdmXkE4RdzmtuBUoHrWwq4qi3pQeK6YBzvhUUS+YRfb4DCa/f0RSte0ZGSOsVjTf/3oYh4l69c3Ow9Xi14EKs8zyOF7oZKwJMmx0+l4OnfOgZ0sQ8Cxo8hoP2CN9rwXYaBqltPaJ4t7NOFYHyRAyKjiujb8DuNwOAMAfOSi9JUXSTXHovUqT74dRyw3RTyJa7bs8Cj4Za9UnBj9FVJOPt6LGX35oj9t5ehl48LYcqQ==
+ bh=JpZVTqKMj3ulw2FM9NomKk4QUnLYr81GF2q/OvqnsS8=;
+ b=dWAs//Ffknh/1+EQHhixNm5474s8Nd5OuL2SS8pF493rSMO4My0f6nvyiNL2qEzazVUvMqv4fblWirKSMIutUGxZ+KBxlfFC7w8kdntPFGVI38Juq1HbpTMzGcA0p3/EVBRoKel2Dm8fcZcWoRSp95kw64Kx976VXx7A+/tgIr8/wMBbCLxesSgiI0CsmPNgzXku7SA1fqh0RKGzaCiwIdMO3+8hOW0k6mBxAu0yp7prPZpLzkS5h24kxwKxnv9dNCQ0U/jd3LgjRly+8Cdd74i27/5K1j58zn5NBj8n6F4Qo82XWEPI3Slunx2U75Vr1Jq7RdS7s0t+1vZ7+ZDUJw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=yKSU+vFm57ly7jqu8dfGvrvf0W7RpnMapLxfJ0eN20U=;
- b=Tyn4fRF5oVgUIwWkKvL8yX16A3BckXmvQm3SsOu8E0nYo2S5rvd/EmeXHWU2g68fMxxaeh71WBBLaNYUajtg/E3YDBiBDfV/uBRP7LIGYUabjZ6/fxTsBiwuRwo/+iF4Snp8CD9RDnh59uDaQUiq4HSSkrz/J+IW8oVtIdIoWQs=
+ bh=JpZVTqKMj3ulw2FM9NomKk4QUnLYr81GF2q/OvqnsS8=;
+ b=B/IHNCpa9IEcSbujypXnfA7nshYuAhD0dZ+chcxBbwshjFiAhdoju5BCl0kYOpRjM4v5wgqCquKWoghW+09zyEe0eEnA0f83g//O6eqGq8gSc+o7OQkkbGvwgH/c6nd7FxGiGKM9VMVF12HaqtEeoqDNpfmy62er0G/p8NO95wo=
 Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=oracle.com;
 Received: from DM4PR10MB7505.namprd10.prod.outlook.com (2603:10b6:8:18a::7) by
  DS4PR10MB075839.namprd10.prod.outlook.com (2603:10b6:8:3ec::15) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.522.12; Tue, 13 Oct
- 2026 09:38:41 +0000
+ 2026 09:38:45 +0000
 Received: from DM4PR10MB7505.namprd10.prod.outlook.com
  ([fe80::f14:5389:d117:967c]) by DM4PR10MB7505.namprd10.prod.outlook.com
  ([fe80::f14:5389:d117:967c%4]) with mapi id 15.21.0522.011; Tue, 13 Oct 2026
- 09:38:41 +0000
+ 09:38:45 +0000
 From: Siddh Raman Pant <siddh.raman.pant@oracle.com>
 To: "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
         stable@vger.kernel.org
 Cc: Dave Chinner <dchinner@redhat.com>, linux-kernel@vger.kernel.org,
         Sasha Levin <sashal@kernel.org>,
         Mark Tinguely <mark.tinguely@oracle.com>
-Subject: [PATCH RESEND 6.1 v2 1/5] xfs: xfs_ifree_cluster vs xfs_iflush_shutdown_abort deadlock
-Date: Tue, 13 Oct 2026 15:08:28 +0530
-Message-ID: <b114923a5caa85f20a82659bde200d0dad39350f.1791883290.git.siddh.raman.pant@oracle.com>
+Subject: [PATCH RESEND 6.1 v2 2/5] xfs: catch stale AGF/AGF metadata
+Date: Tue, 13 Oct 2026 15:08:29 +0530
+Message-ID: <3331ac43922dc7462b6ec7fc56d7b8d1b0caa12c.1791883290.git.siddh.raman.pant@oracle.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <cover.1791883290.git.siddh.raman.pant@oracle.com>
 References: <cover.1791883290.git.siddh.raman.pant@oracle.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: SI2PR06CA0002.apcprd06.prod.outlook.com
- (2603:1096:4:186::10) To DM4PR10MB7505.namprd10.prod.outlook.com
+X-ClientProxiedBy: SI2PR01CA0016.apcprd01.prod.exchangelabs.com
+ (2603:1096:4:191::20) To DM4PR10MB7505.namprd10.prod.outlook.com
  (2603:10b6:8:18a::7)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -92,242 +92,342 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: DM4PR10MB7505:EE_|DS4PR10MB075839:EE_
-X-MS-Office365-Filtering-Correlation-Id: 4ae87c56-6048-4641-f5be-08df290dc3f3
+X-MS-Office365-Filtering-Correlation-Id: c5a35504-502f-4bef-4bc4-08df290dc6bb
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|10070799003|23010399003|376014|366016|10067099003|261009223027099003|3023799007|6133799003|18002099003|56012099006|22082099003;
+	BCL:0;ARA:13230040|1800799024|10070799003|23010399003|376014|366016|10067099003|261009223027099003|5023799004|6133799003|18002099003|56012099006|22082099003;
 X-Microsoft-Antispam-Message-Info:
-	D3HYWOmEt0s6AcEuFddY7JYU7/XGnNHndB41DVLxW6ob3sum85H6C3KTEJpDyiyEYyubjIo6tDRqwdP29SRLrQa9tyEbgMQ8l4l85SleSdz+pQOdUbI7RcW13y0PgGAxKnHGJmpsBgC+XYYClipSCZxKXZbGyLkJUDBt4bwQllhAbhyhULf25aahk93VSjCxTR+ePJfIAraCmpkEz/pWMSPE5sMej1hmgYzBc9EgO/9GiXOJBnepFI797Bne/MnUIpZ+PpY6/zObrfR57adA5fysk5a5vh/1H3RuXlF2ok6jFxGrHONlxFo3632J3ESLvGWSa4n22h5FrrCtdMe1mYbCeB+aaJ9F9Y8wL1LGTp8MfszhXlJxP56DQ8AipWloAekObQDvm/sqBD9RMcgrbgXII9yALcjXGn+Zs4E2/YIGsvimMC/yaMth/2r+nGZhbkV0769CFy+rrI8NZZCSsQ0yhgjMuWCWtyPJEC0NQZbvk7DAifvarvKbtry6oJSyst/pZixaWWbYVeR1vwObZ6YRut6eHRPc54bU+vVuFES72cK/rC6zKeJZtsyB19kgmX4YVcckoE258kmZxLslLP7u6z9G3+6UxqybXO3i7QoAGWKZDRw3NYc391CcUQpyRAgN7D2YS2JhYxOrLLJKAmLPlsZW0UhQNj2mAXTyvDw=
+	A9i3hNNVLrxnxr7W+siMfWE6auPjFz4QgSgQ4I10cF1tuzfpQE8ecGkLMfrUohLqsYkM6++a3F8fnfJmFfbUlP8H6Zn5BYpxachArxC+mUvnSkYcszZ2B86C3858kGzZIsiLWY7gWmSeI/Sjpfq82ZqZdRLKOpZrplozhmy8/fC6Ftw8oa0ODMjvT3jXFKF6FEXpgb3yvbfzHM9/JcctCqieImG6QRtYw1XOi9RilnlPz/6o7Rt4Is2U7gDuEuvau41WwJ/2JPIJLLzc4a3BRX4HScv/fn9xSg/4yLHHIGAQtSq7wZpVS4hp8Q7PAKPYYrT6p9BOIT02nYcZArTO3Hrf8d5qA5EYT41736MmoW7MH80oviYyGUwSvQc7sJKuFfkf+Kb2mcPFPc3NMXeInsKdE8bEdd3jVaGKZMQwIOXglGJAiaNk2diQ2MIcMKlLd7hDqc9Rzbmh3cpvfYv7qE5R6DVY+jTgHGm72pHtHjqXzZDhkDtPK2JllHzO5XltznSs7sxLN8A4PYifqihv9Xvug2Tkk6UfjvbqVRSpLZ5bkQJOt0BRUnNiy/7mhDpuz2qVz45mtHJymC1+/B/6DY/5XFZjvUO8yeeoLMyAnh67tgRHvpmL/S8QDJ/0no0MHE1JUO8dCioxnqgmwMD8JEuwjG04a5dRda4uKNtHt6E=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM4PR10MB7505.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(10070799003)(23010399003)(376014)(366016)(10067099003)(261009223027099003)(3023799007)(6133799003)(18002099003)(56012099006)(22082099003);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM4PR10MB7505.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(10070799003)(23010399003)(376014)(366016)(10067099003)(261009223027099003)(5023799004)(6133799003)(18002099003)(56012099006)(22082099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?Ksp8q5lp8eERV/zVTXZSIxPuJy+tcX0oDr0XtP+qPdkNr6U4/Jz1cFIv67fy?=
- =?us-ascii?Q?fQOigF74KDdN0fB0LeYP208K1XQ4quSfHUeQbIG06F2NLis4EkE4NRtF74Zt?=
- =?us-ascii?Q?m01pmeSLTKIRM5goJopp1p4rd8oRAwc27ijndD5M0xEeVBqo3MLxpOzf/gD+?=
- =?us-ascii?Q?Hi+6PHZa6VCG+s2S/mGCtpPSOb9zFQz7+qzGhmiiLklNqJdTuKGZj1FD9Fk6?=
- =?us-ascii?Q?NNBbm15cul9+vwUC9MTNkfy1hr9shQFY4dThyrHnWy7SNHJ6bDyJmJOqeHsQ?=
- =?us-ascii?Q?dR2JFXPFsCEh0Cn5UYWUqYgFOAey458HUs8qjiSDfT42gPsj5HQgrztQqAm0?=
- =?us-ascii?Q?nULqdGzr/fHOb8J+pIV5arEZ/00uNOSyQpHmuwYMVzXj1B+7XE6MPDx78Uks?=
- =?us-ascii?Q?wgKaXhJdwbXGcxmvoXBNAijzgIg/PBQEwTaRKm+TobYEgPLcGb+CJw5b3gZH?=
- =?us-ascii?Q?NbqV54XTMbh6uf84PrNo6IKWz/G0ONp7rVdgKHOi8xyiw03pMR57kZ8CAo6v?=
- =?us-ascii?Q?YV2ivcxfZJwDqXG2qqC5rzz+QKUysPQComvfVF0N4ahgecVgZOVktj3LiJLB?=
- =?us-ascii?Q?2fMIr6gvLb84HaV5PFlOAlfaDFw5hgUvfSzUDUOhWllKJuuV9iDVFkNCdgZq?=
- =?us-ascii?Q?qpIZEEP0hwfHstdZ19rKDY4rkbuxtaXaN1V06zXhsYaMrLyJJHfhVZE4oidU?=
- =?us-ascii?Q?62piWR4Ff10wnRLhqFzpvUrpfu8nfrkIt3TatqzZE2/bKmo15L+kVMc3S7iX?=
- =?us-ascii?Q?yTsrIeOyiKtMSYxwt0IY4TaEbo8Ova8AlUm1T/6doVX1SzslnSFQ/KvhiLsA?=
- =?us-ascii?Q?rnEc1rfdavfojSw4n0fbyjSZhY18TGl9TLuB7gcxKHy7QPydvD2jbrvlo2pY?=
- =?us-ascii?Q?9Gy4hCaNpUmC/0JZnKAwLkKCDr2lOg6BMQJBriJX1uYleqIml95hVI32Gxin?=
- =?us-ascii?Q?1RLEy4B8LHB9dSUxdKZkXOUIATUG4684SxFxdEV61ePEvAYG9w/tT9qsrIE9?=
- =?us-ascii?Q?m8dI2BiXlFX1CGfUGiRRRIUZdHi21bwVa32OnYAz9u0yGgrCSs/j54/3g8iw?=
- =?us-ascii?Q?FBouwQileWDGgnz6RGGCJMsZjQlm8sKqICw0O637TPgDkc9KI6vyZ/ZMFkvs?=
- =?us-ascii?Q?Gv5gv4AHFEmRBCB4R8ZIBdpDqEq1jX0dl8fFiWioAtazlx99TPo88eatQ8ft?=
- =?us-ascii?Q?3d4MaIYbSNkfM1rG/q71/ECiNDJRiYlg/ZRGEJRXBf7lDuPVl6ITD5PUSafq?=
- =?us-ascii?Q?K7in28cXA/5lSqJ/hUGJ3vOYxXsufjoQpRTM1m9L08MMRcZmM3gEFmAgcJOq?=
- =?us-ascii?Q?CwNEsbFMfMymAfevXNQXe8c0IC9vy+2zJ9Qt5j9NttSaeZdyTrpsb4KA7Fjo?=
- =?us-ascii?Q?hASItjZLP9RBihO45RihacLTUAA3rNTQKqx2CtP23ZOs7hj3Ys9/lPVrPsR6?=
- =?us-ascii?Q?xCJBac1PlAyez39WD/5WQo1Pm4UCUM//Mm2qspmIRwzhhksxVPM2hgn12rdu?=
- =?us-ascii?Q?QOwlyaQ1vkv+cbscNduX6A7ZFckARGS9p8q9OR4Hk82UK3EWleJjgfUnA+NP?=
- =?us-ascii?Q?2C5/WWyuRLF3D7WlOLzRYaMgR2zJJVdcA0aNxVK7uR5yKf5gfOemQ3MnVnaf?=
- =?us-ascii?Q?q3iw2JTQTE6XkO/KeNNM0CMEnbz8a819OgZX1/+DxShNUEZPd7MifcKkpZnW?=
- =?us-ascii?Q?4BljbDpVrUiZYB9M+XFju+ylm222u9BuQv2db4GRFHB1eDsOj0wBOfRQGATC?=
- =?us-ascii?Q?gZvQQciEgklPgPnZ5lTinetzsyX1P9sVPK18bpzu3XtnLjq8eKUQyHZ4Y2sz?=
-X-MS-Exchange-AntiSpam-MessageData-1: Azi9kbmEsosgYCoQy3fqpnJMmE78LE13xGM=
+	=?us-ascii?Q?3rkal5+0WuTv0GJhG1OQhoq8RWDUeFdjY49JztfDJXGuU4EoBpWQGAFC6SN0?=
+ =?us-ascii?Q?VfY8QJRM8juTualvJoF8l2VtO0joUZXMVf9SICh4drdEEfasXBpAfL5MWXZb?=
+ =?us-ascii?Q?5kWqE6pH65zssfqkrkOugLkY/gq08MkUl4yU22JIZL0dZTH008AXudVVWSB1?=
+ =?us-ascii?Q?EqRWg51HfiSnumhjV3Nyi9Pb1rMP74j1QC7ZxiPd8sjtVMQVT6BC5OX9gczs?=
+ =?us-ascii?Q?L3Mx58PuVVKjgJthAvkgWp6KS0QXNk432YNfXKVUo3Lm1UbbBBJPSKJsKQ+i?=
+ =?us-ascii?Q?Mk8ciUPfrUGWFaA79BDEFEMgIo426GyO4Z/fymd4G7J4HU/ug/9Z3WmFTmWg?=
+ =?us-ascii?Q?2gX+qkdLETLmTpsbzekplCus+8P6cHaIwFyHCQDq6aXL0MtjIVx//U+tzJra?=
+ =?us-ascii?Q?5Mu0b1UbJo7mulml/oJeTfJdIZ1c05hbdASNdUse6dnNcI9GliSJP0s08iRM?=
+ =?us-ascii?Q?1BQBoMdFmeUBFBDB/dRe90MMFq9fm0dp813vdZ55ZDsCWAIY4Iq5S+ExOkWe?=
+ =?us-ascii?Q?/CtQwN4dLiCsgJxzZikjCFnvpz1UC6VVJ+STlvBFSJiRjujqHtPqEEpFMERB?=
+ =?us-ascii?Q?f0M4JQOw+plEwbRNwNC4lGZARJ/hL2f+RE+xwcyajCheIyRR9iB2IYSGTsFZ?=
+ =?us-ascii?Q?YkTpxOOCbL96mSameGVk02lD8F5eQPdRF5+UzMVcUn5IxMsvgJtEAovQrqHG?=
+ =?us-ascii?Q?NZr/enfmzClMcEirllBIMGT+4ztYJi2e6oYD4SH+GCDz0w1fZqUs+otDhDFK?=
+ =?us-ascii?Q?FzJSyE8CVyDCEYe6L3hS2NHjFOehF0OkfWvaCm7uP6B9dLyti65YX19+BYrg?=
+ =?us-ascii?Q?LrriFIOrqklkc2YU2gv52wNN7s3AO4BwZM84fIt2x0Nnefk5zQ6qpGOgfKzo?=
+ =?us-ascii?Q?I67od1pHehyD2azGT7DOpvE9C0j5PN0O1AgcaNhjsdTcXQvvkCrSpNbn18vE?=
+ =?us-ascii?Q?GJ+ji8PdsgmY1ce4NxHklks6sW5MKFtE8CPH3EcbtmOS/TB/tmAeRCon4NM3?=
+ =?us-ascii?Q?mJjF9P22Zta+AecrEHSOhwLBrdd44qX6rWuQ3xL10NhTLMWNIsrGt/tgawv1?=
+ =?us-ascii?Q?ML8J0DbdPy5DvbaGwyaOwkg7nfyk9LjuJvWNFvFpEPN5sgxB3QqcPnULRPHf?=
+ =?us-ascii?Q?tVlQZyYsV9Pg4j9gRRxEeg8IpmfssVw7384lxZ8IqPIjRbvDu61ajMGXIL/E?=
+ =?us-ascii?Q?g4CRJ+a4oX7q6sc7Em+HzY75WdA0szmiu7wQpU+wmfhtJqGKEvWDX3Z9bYeS?=
+ =?us-ascii?Q?hCYRwzHFMBAGh6X3QA+IWiUJAif2pAc60y5jn/lotm+/huyGJIhm/6Ja6N1X?=
+ =?us-ascii?Q?He9rvIaA7KpkiX7TlreBaN9MtSqIBrR7rKt95jMJ0cb0IAStwONMSLDTz9a1?=
+ =?us-ascii?Q?dmmiBAumZarIM4nXV/r6JNNSH/Tjvxux8XYkYcx+MrL83rGQ0Iuys4zvATW6?=
+ =?us-ascii?Q?TOMbxwMfGso3rKu211QuH7J510kZeXTnUNfl6LJ/GPG56NxmHOTIQzcInviy?=
+ =?us-ascii?Q?t4maoeAufMyWkWli4fiiN0QG8oQP3lzroXeAxo+2OoG4UFldywoY1u9cve5A?=
+ =?us-ascii?Q?FItZWUt14e3BWscsaK9wPB2JKm6gcpEHb1QZjeeq7K//Msjt7EXyIoMyBmZV?=
+ =?us-ascii?Q?iTa01mLPCTBizsd5rTe9dQsOEDxPw5hX/qGv9vb5I3u9708vTNmONw9wpP21?=
+ =?us-ascii?Q?Zomx5Av63I7o+Lmvt53Ro+fk9W9NFxJw7gTdkfcOae9sANKxDBbtbgmdhmfn?=
+ =?us-ascii?Q?iG+tbUrKIkXjRkmQRwVtNky0cz6+S4pVYhSeP4jhE0YkhhggnNbfi6fd9q7D?=
+X-MS-Exchange-AntiSpam-MessageData-1: ZJSHh2lxbu3DKPAqt/862MuEwdXn02CIBuc=
 X-Exchange-RoutingPolicyChecked:
-	MLFv5y7MsgQ8y3yMgquuKDDEvedO6J19Os5TQyc/CjizI+6D2sHgqjT10L4lDsfCjT3SGQbkD816weL4qD/j6noWzUQHKDN/MoCVAIcBKZIhSN192X9AsbuZ1itiNL/t/G712bt4Z1UVju/gUeR4KE0XWd/+lngmzdC971Txgq0KMMmGjCJ4MWWDe/YK3A8p/jUXA7/uAVjqMjmeZdbiSc5sKwntTWatCGKFhb3ueOX7o641oggd3jSD6zAzj0/PDjBrXG4Qh2brVCXirOX2KQNPzeDTCu5iq1SWvfA9k/bb09TxTt3L3gIgUHDewewbjT1vCvsQ2an/NnicXSsSyg==
+	gFcWHMhcN3l35zsgbYKg+0VOPgm1tzGNyq66mK1BNMGqTiX4/u9cplZGsg9GKh2LxId2O5PCnUbqm2lnEiUMfWvQ3AJ1HfqUhnH+tAArwy3eH74TtMbuzIyLAmrmdh2XAuGlsmgewezYKvC1Jr8m7pNNONST1Vbmn2R9dyp8lUhhPblt6THnh8QZN7yorGsSFN2485FI0lmf+WfzBwHrtBdQM1Q4lUSLh2fs9qgLqgDuGN5BH3mzyj2aRHDtc97SaFhgs/oe+rAw9OGua9hGpQlwMl5zAUKwUW/nnTTyc6hwdMfA756TkyeLIFJdEyqtZsL+Kse2WWftS6QPOK4pqg==
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	1sY30a/6/5Nm5Q6B6DwkiMcbD8Gv767lJWAILYwzjMzn+tBKYF4OTPRm4Z3VGxJ20+pX70SjcAnQ0hhnmEtm8V5y6vZCh9eBiZzPoGkJ/WBRxnZszhm/TMJRDNwqhTsJ9iE3f5B9B0pBDRhlqcK7t4H3dLty7reAE/nIwc3MqHpY4QgQ7q0tU75Pt75A7miQUNjS3YwbjG5/kCCGMJe8M6xKEbS4do0PGEWwpNIYLrVGpvRbUz1bswPwe/ChxVcQ5ImrNR+O+PFxyreQwVTXVzRfmBY5y4dPij6eaEWZ6NZ5Ob0bXt40IVmAsvHMc77NXBBesIeNRTl5tZb7r0DPyulmSPvO51G3x6qXzUzxCvcisvrGRL0zLroHTXX2xy+IPyvkZht65j4HCEOl9LiPK0jkpqsQhBIY2oEOgGuT/WwxhR0zBaT5+sukFi/j/XDAORKdPj++hfviJVGnh3vutXBPganfK+nSZ8vOOXPchoiJqduKZnAI8P8om30uasTsP+YcpHBJgbTyDQAI4s6EoTapHF3PZM5kE0n5UGU1Etvo6EcNYOkQuA1OLmpTTSHzBPnp0U9m0IJ45w+9ZmqBIz6RIQKhy/6zw6MgAMguh0w=
+	6Cd8AW5qWHXNvLcs2+dNTfhSFnH4TU6P4ei/4nC3+XqbwtDv93iNvYHybIW5n/aJNzVP2JfNpfT5gEDzOM2cByxTfdfNIRbaZ5pfjveqk7/xzYU9rD3YrSqD9TXBeG7Mu58f6Rvx2gKG5lOd2lelj7tbGbbJ5hCW5tniW2b06IeVnT/3aj2/0rXAM5umsTUjPXILXay14Nd4bc7e2Wq4KOIB+CkEjm9BbJuyqvjZcV9yd2fzH4xIOdUNv3O++Rk6oLsPZ1ubtHPGhtPllcDsDjy7y3Mb7jzU7jBJ15HmDTSRpTKeceIOmbxC6KkkKbx80C6SZuTJKEVxo2YMLMFhOiGWZWAqFNOejul/dv8RrGPJQxRT96pQL7Bii9BftlJhbJJ0duH2rHYbXjpvwv051awFZJ8yyeevGPUrW5d3M4IoP7Sk26HqRiiWfBZYD5Md32r/bENfjzHBEYA83t1ZNBmqt0MQXvddZCT5PfG+s8Nhec1lpTK8lEDJJAZPt10Dlu7RtSixrDE0Kv/XpJHJBopEZKeah1ErygAuDeqqPuDMKRqDj3yhoqqusSvVdxLmWKJbd1Px2jpg3jUY4Aos1dsdP/ZPpJugDEZtPSqP5b0=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4ae87c56-6048-4641-f5be-08df290dc3f3
+X-MS-Exchange-CrossTenant-Network-Message-Id: c5a35504-502f-4bef-4bc4-08df290dc6bb
 X-MS-Exchange-CrossTenant-AuthSource: DM4PR10MB7505.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Oct 2026 09:38:41.1943
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Oct 2026 09:38:45.8392
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 5BYf8g8Dk+4SGa3SreFlMd2LJIAsmnqfqIRxmbPscHUV+6WFMrvLvnjZyNNpkBxkrbfqQwKxKa8bDYYZmGxXEjQvRT/bi3X5fcvLjHJ6BQQ=
+X-MS-Exchange-CrossTenant-UserPrincipalName: D9nnHByDoaLIEgdMoE7UYSbb9E3JJYz6JrdyeiK/4F2W0BECJxABqwuyzsVxO4BA1uvchaI33SNvZEutYeJw9L+4KBR8Vt+Bp99w++GeQ48=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS4PR10MB075839
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-10-13_01,2026-10-09_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0
- spamscore=0 lowpriorityscore=0 mlxlogscore=999 mlxscore=0 adultscore=0
- phishscore=0 suspectscore=0 bulkscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.19.0-2610020000 definitions=main-2610130038
-X-Proofpoint-GUID: crRLuFAQKpmYWPD0I2gGkmFJQjtVDKI8
-X-Proofpoint-ORIG-GUID: crRLuFAQKpmYWPD0I2gGkmFJQjtVDKI8
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDEzMDAzOCBTYWx0ZWRfX0kWKAgyetLbk
- APRB2OCRrq95xejIOcZnxT/1QN9OflJyZjZ77FLvczEzotznWqJQuI19Je5A/MdgbZ87Dib9oVf
- DU6TYHpVs/19PmpOguwZCibrFK+jyWg8VHNspbbRTi33aqxLXq2u
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDEzMDAzOCBTYWx0ZWRfX8Dyml2aW5OvP
- Txx0/PuGGgbAwAFCkFqnU9IyUqs6SB/G6kVZ2DSKsuhEzmNGQaGkrAl77widpYNGxxUzucim/bq
- xT4S5gNi+qxMKFvFrDGusqA1TInxWHAVQf/kGykifVWMeOPunP4eu/awvNQM6hmHapCWkOEBeAT
- yMwIqgOcq+p0f6NHb+pORrcpf81FlnFPDsZhXnKUdyTQpvqzM5uT/PS4qydck+vHwknTPZPKPkz
- cep5JygprLSGeeiL4K+PQ92IAmSiYwh2NCDT4iwUDfgWFpN4Jd2J+fuzLNm0gyqZqBhgaYNUs9j
- R3dPwwWdW0jCRIhsaSsi6rtWx1dJBlAkfPSz7+dgH3+Kq5IE+vOIaOy52PPz7T/EeMVy6KjGFwP
- o4qOnf7AP1S4QsPlHwFQeLpy9Lxr6u+fC6PxgY22Bz7zoYlguFCdLkIGtZGcunFUa7z9wVATkO7
- M9qsIPYqr2Ixq0VZ6fQ==
-X-Authority-Analysis: v=2.4 cv=J/8/fwnS c=1 sm=1 tr=0 ts=6acdfc26 b=1 cx=c_pps
- a=WeWmnZmh0fydH62SvGsd2A==:117 a=WeWmnZmh0fydH62SvGsd2A==:17
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0
+ spamscore=0 adultscore=0 bulkscore=0 malwarescore=0 mlxscore=0
+ lowpriorityscore=0 suspectscore=0 mlxlogscore=999 classifier=spam adjust=0
+ reason=mlx scancount=1 engine=8.19.0-2610020000 definitions=main-2610130038
+X-Authority-Analysis: v=2.4 cv=Ra0FmFtv c=1 sm=1 tr=0 ts=6acdfc2a b=1 cx=c_pps
+ a=zPCbziy225d3KhSqZt3L1A==:117 a=zPCbziy225d3KhSqZt3L1A==:17
  a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19
  a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=xqWC_Br6kY4A:10 a=660iZSQnnn4A:10
  a=GoEa3M9JfhUA:10 a=VkNPw1HP01LnGYTKEx00:22 a=jiCTI4zE5U7BLdzWsZGv:22
- a=BqU2WV_vvsyTyxaotp0D:22 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8 a=yPCof4ZbAAAA:8
- a=-BFCJ2bJgao7vN__fc8A:9 a=WmVTiCyuxqgg3mnwYu6p:22
+ a=x0eKOSpe3m1H3M0S9YoZ:22 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8 a=yPCof4ZbAAAA:8
+ a=2l8DqRWQ2dbnbHYYE4MA:9 a=5yU3S35YU4bGjq-dph-N:22 a=Bho9c0fBagfJEIQBS7DQ:22
+ cc=ntf awl=host:12107
+X-Proofpoint-GUID: 3awqsWN87gQaRSKC9T0ojwsil0qwjTJs
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDEzMDAzOCBTYWx0ZWRfX7Bj9ps6rI5Rd
+ 4lKmr8Z0BMN6b5AyPAsgTUSpbcej0kE2Qp5iaSDUqX7eg0WY5jRSVGDZ0ER55Vf+isZFSViE5Jk
+ LqudzDNmAH3aDcayq6YQN2rJTfpp/zhiUeFERMRmug/3sOxrT4glfxCNRGMauBWeiaZD8sox4k3
+ U2hcoC/tnZmYndSKb0RxdQpD+3z+YFHpipHgMkCfhWDsjLmGQvcUv86n1Fr2+g+B5oZZ8rfRozZ
+ ko9RDyExc74KHkhKDzsPzG2VgBq6nYrGewRi86gF0cvmYdM+iT+Eiyotf+OrmGI1kvJq9qD5cUi
+ CgT9Bmu7ZJPRfU7bM7M0jJ22T4qD8NQX4IunWrtmYl33GIh7v2kvBvZBFTjF2nU9Uc9y9trOsXW
+ 24awZRc7gb9sUfL/fS9R9p8BcouEiFcfe6O3/Iedaw6jY+zPgTBZ6PXjfM1f4OxcmFcf4QfQitz
+ ILqmA1rX4fssXConXLeX13vBnAkiXs7HeP+NI/xc=
+X-Proofpoint-ORIG-GUID: 3awqsWN87gQaRSKC9T0ojwsil0qwjTJs
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDEzMDAzOCBTYWx0ZWRfX6WVhQWCi8Hiz
+ e5PxLoNPbWLe47h/3u+emuWyyZ187KfdKymyRXKGVL1V3g7CoLQpr/4vrnnq6QWr971YIEyPgL/
+ W+L2qcHRsk2q0tERIwNbV4h2+3Leh8TfcdTZQX7fyNiJ5NM9r1Li
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Lock order of xfs_ifree_cluster() is cluster buffer -> try ILOCK
--> IFLUSHING, except for the last inode in the cluster that is
-triggering the free. In that case, the lock order is ILOCK ->
-cluster buffer -> IFLUSHING.
+There is a race condition that can trigger in dmflakey fstests that
+can result in asserts in xfs_ialloc_read_agi() and
+xfs_alloc_read_agf() firing. The asserts look like this:
 
-xfs_iflush_cluster() uses cluster buffer -> try ILOCK -> IFLUSHING,
-so this can safely run concurrently with xfs_ifree_cluster().
+ XFS: Assertion failed: pag->pagf_freeblks == be32_to_cpu(agf->agf_freeblks), file: fs/xfs/libxfs/xfs_alloc.c, line: 3440
+.....
+ Call Trace:
+  <TASK>
+  xfs_alloc_read_agf+0x2ad/0x3a0
+  xfs_alloc_fix_freelist+0x280/0x720
+  xfs_alloc_vextent_prepare_ag+0x42/0x120
+  xfs_alloc_vextent_iterate_ags+0x67/0x260
+  xfs_alloc_vextent_start_ag+0xe4/0x1c0
+  xfs_bmapi_allocate+0x6fe/0xc90
+  xfs_bmapi_convert_delalloc+0x338/0x560
+  xfs_map_blocks+0x354/0x580
+  iomap_writepages+0x52b/0xa70
+  xfs_vm_writepages+0xd7/0x100
+  do_writepages+0xe1/0x2c0
+  __writeback_single_inode+0x44/0x340
+  writeback_sb_inodes+0x2d0/0x570
+  __writeback_inodes_wb+0x9c/0xf0
+  wb_writeback+0x139/0x2d0
+  wb_workfn+0x23e/0x4c0
+  process_scheduled_works+0x1d4/0x400
+  worker_thread+0x234/0x2e0
+  kthread+0x147/0x170
+  ret_from_fork+0x3e/0x50
+  ret_from_fork_asm+0x1a/0x30
 
-xfs_inode_item_precommit() uses ILOCK -> cluster buffer, but this
-cannot race with xfs_ifree_cluster() so being in a different order
-will not trigger a deadlock.
+I've seen the AGI variant from scrub running on the filesysetm
+after unmount failed due to systemd interference:
 
-xfs_reclaim_inode() during a filesystem shutdown uses ILOCK ->
-IFLUSHING -> cluster buffer via xfs_iflush_shutdown_abort(), and
-this deadlocks against xfs_ifree_cluster() like so:
+ XFS: Assertion failed: pag->pagi_freecount == be32_to_cpu(agi->agi_freecount) || xfs_is_shutdown(pag->pag_mount), file: fs/xfs/libxfs/xfs_ialloc.c, line: 2804
+.....
+ Call Trace:
+  <TASK>
+  xfs_ialloc_read_agi+0xee/0x150
+  xchk_perag_drain_and_lock+0x7d/0x240
+  xchk_ag_init+0x34/0x90
+  xchk_inode_xref+0x7b/0x220
+  xchk_inode+0x14d/0x180
+  xfs_scrub_metadata+0x2e2/0x510
+  xfs_ioc_scrub_metadata+0x62/0xb0
+  xfs_file_ioctl+0x446/0xbf0
+  __se_sys_ioctl+0x6f/0xc0
+  __x64_sys_ioctl+0x1d/0x30
+  x64_sys_call+0x1879/0x2ee0
+  do_syscall_64+0x68/0x130
+  ? exc_page_fault+0x62/0xc0
+  entry_SYSCALL_64_after_hwframe+0x76/0x7e
 
- sysrq: Show Blocked State
- task:kworker/10:37   state:D stack:12560 pid:276182 tgid:276182 ppid:2      flags:0x00004000
- Workqueue: xfs-inodegc/dm-3 xfs_inodegc_worker
+Essentially, it is the same problem. When _flakey_drop_and_remount()
+loads the drop-writes table, it makes all writes silently fail. Writes
+are reported to the fs as completed successfully, but they are not
+issued to the backing store. The filesystem sees the successful
+write completion and marks the metadata buffer clean and removes it
+from the AIL.
+
+If this happens at the same time as memory pressure is occuring,
+the now-clean AGF and/or AGI buffers can be reclaimed from memory.
+
+Shortly afterwards, but before _flakey_drop_and_remount() runs
+unmount, background writeback is kicked and it tries to allocate
+blocks for the dirty pages in memory. This then tries to access the
+AGF buffer we just turfed out of memory. It's not found, so it gets
+read in from disk.
+
+This is all fine, except for the fact that the last writeback of the
+AGF did not actually reach disk. The AGF on disk is stale compared
+to the in-memory state held by the perag, and so they don't match
+and the assert fires.
+
+Then other operations on that inode hang because the task was killed
+whilst holding inode locks. e.g:
+
+ Workqueue: xfs-conv/dm-12 xfs_end_io
  Call Trace:
   <TASK>
   __schedule+0x650/0xb10
   schedule+0x6d/0xf0
-  schedule_timeout+0x8b/0x180
-  schedule_timeout_uninterruptible+0x1e/0x30
-  xfs_ifree+0x326/0x730
-  xfs_inactive_ifree+0xcb/0x230
-  xfs_inactive+0x2c8/0x380
-  xfs_inodegc_worker+0xaa/0x180
+  schedule_preempt_disabled+0x15/0x30
+  rwsem_down_write_slowpath+0x31a/0x5f0
+  down_write+0x43/0x60
+  xfs_ilock+0x1a8/0x210
+  xfs_trans_alloc_inode+0x9c/0x240
+  xfs_iomap_write_unwritten+0xe3/0x300
+  xfs_end_ioend+0x90/0x130
+  xfs_end_io+0xce/0x100
   process_scheduled_works+0x1d4/0x400
   worker_thread+0x234/0x2e0
   kthread+0x147/0x170
   ret_from_fork+0x3e/0x50
   ret_from_fork_asm+0x1a/0x30
   </TASK>
- task:fsync-tester    state:D stack:12160 pid:2255943 tgid:2255943 ppid:3988702 flags:0x00004006
- Call Trace:
-  <TASK>
-  __schedule+0x650/0xb10
-  schedule+0x6d/0xf0
-  schedule_timeout+0x31/0x180
-  __down_common+0xbe/0x1f0
-  __down+0x1d/0x30
-  down+0x48/0x50
-  xfs_buf_lock+0x3d/0xe0
-  xfs_iflush_shutdown_abort+0x51/0x1e0
-  xfs_icwalk_ag+0x386/0x690
-  xfs_reclaim_inodes_nr+0x114/0x160
-  xfs_fs_free_cached_objects+0x19/0x20
-  super_cache_scan+0x17b/0x1a0
-  do_shrink_slab+0x180/0x350
-  shrink_slab+0xf8/0x430
-  drop_slab+0x97/0xf0
-  drop_caches_sysctl_handler+0x59/0xc0
-  proc_sys_call_handler+0x189/0x280
-  proc_sys_write+0x13/0x20
-  vfs_write+0x33d/0x3f0
-  ksys_write+0x7c/0xf0
-  __x64_sys_write+0x1b/0x30
-  x64_sys_call+0x271d/0x2ee0
-  do_syscall_64+0x68/0x130
-  entry_SYSCALL_64_after_hwframe+0x76/0x7e
 
-We can't change the lock order of xfs_ifree_cluster() - XFS_ISTALE
-and XFS_IFLUSHING are serialised through to journal IO completion
-by the cluster buffer lock being held.
+and it's all down hill from there.
 
-There's quite a few asserts in the code that check that XFS_ISTALE
-does not occur out of sync with buffer locking (e.g. in
-xfs_iflush_cluster). There's also a dependency on the inode log item
-being removed from the buffer before XFS_IFLUSHING is cleared, also
-with asserts that trigger on this.
+Memory pressure is one way to trigger this, another is to run "echo
+3 > /proc/sys/vm/drop_caches" randomly while tests are running.
 
-Further, we don't have a requirement for the inode to be locked when
-completing or aborting inode flushing because all the inode state
-updates are serialised by holding the cluster buffer lock across the
-IO to completion.
+Regardless of how it is triggered, this effectively takes down the
+system once umount hangs because it's holding a sb->s_umount lock
+exclusive and now every sync(1) call gets stuck on it.
 
-We can't check for XFS_IRECLAIM in xfs_ifree_mark_inode_stale() and
-skip the inode, because there is no guarantee that the inode will be
-reclaimed. Hence it *must* be marked XFS_ISTALE regardless of
-whether reclaim is preparing to free that inode. Similarly, we can't
-check for IFLUSHING before locking the inode because that would
-result in dirty inodes not being marked with ISTALE in the event of
-racing with XFS_IRECLAIM.
-
-Hence we have to address this issue from the xfs_reclaim_inode()
-side. It is clear that we cannot hold the inode locked here when
-calling xfs_iflush_shutdown_abort() because it is the inode->buffer
-lock order that causes the deadlock against xfs_ifree_cluster().
-
-Hence we need to drop the ILOCK before aborting the inode in the
-shutdown case. Once we've aborted the inode, we can grab the ILOCK
-again and then immediately reclaim it as it is now guaranteed to be
-clean.
-
-Note that dropping the ILOCK in xfs_reclaim_inode() means that it
-can now be locked by xfs_ifree_mark_inode_stale() and seen whilst in
-this state. This is safe because we have left the XFS_IFLUSHING flag
-on the inode and so xfs_ifree_mark_inode_stale() will simply set
-XFS_ISTALE and move to the next inode. An ASSERT check in this path
-needs to be tweaked to take into account this new shutdown
-interaction.
+Fix this by replacing the asserts with a corruption detection check
+and a shutdown.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 Signed-off-by: Carlos Maiolino <cem@kernel.org>
-(cherry picked from commit 09234a632be42573d9743ac5ff6773622d233ad0)
+(cherry picked from commit db6a2274162de615ff74b927d38942fe3134d298)
+
+6.12:
+
+Fixed conflict due to the following missing commit:
+	e9c4d8bfb26c ("xfs: factor out a generic xfs_group structure")
+
+6.6:
+
+Fixed conflict due to the following missing commit:
+	e45ea3645178 ("xfs: split the agf_roots and agf_levels arrays")
+
 Signed-off-by: Siddh Raman Pant <siddh.raman.pant@oracle.com>
 ---
- fs/xfs/xfs_icache.c | 8 ++++++++
- fs/xfs/xfs_inode.c  | 2 +-
- 2 files changed, 9 insertions(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_alloc.c  | 46 +++++++++++++++++++++++++++++---------
+ fs/xfs/libxfs/xfs_ialloc.c | 32 ++++++++++++++++++++++----
+ 2 files changed, 64 insertions(+), 14 deletions(-)
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 5f6c2a1f3299..d4eb83e7934d 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -916,7 +916,15 @@ xfs_reclaim_inode(
- 	 */
- 	if (xlog_is_shutdown(ip->i_mount->m_log)) {
- 		xfs_iunpin_wait(ip);
-+		/*
-+		 * Avoid a ABBA deadlock on the inode cluster buffer vs
-+		 * concurrent xfs_ifree_cluster() trying to mark the inode
-+		 * stale. We don't need the inode locked to run the flush abort
-+		 * code, but the flush abort needs to lock the cluster buffer.
-+		 */
-+		xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 		xfs_iflush_shutdown_abort(ip);
-+		xfs_ilock(ip, XFS_ILOCK_EXCL);
- 		goto reclaim;
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index cd5b197d7046..5bc37f984b00 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -26,6 +26,7 @@
+ #include "xfs_ag.h"
+ #include "xfs_ag_resv.h"
+ #include "xfs_bmap.h"
++#include "xfs_health.h"
+ 
+ struct kmem_cache	*xfs_extfree_item_cache;
+ 
+@@ -3167,18 +3168,43 @@ xfs_alloc_read_agf(
+ 			atomic64_add(allocbt_blks,
+ 					&pag->pag_mount->m_allocbt_blks);
  	}
- 	if (xfs_ipincount(ip))
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 3ccbc31767b3..3139363d892b 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2225,7 +2225,7 @@ xfs_ifree_mark_inode_stale(
- 	iip = ip->i_itemp;
- 	if (__xfs_iflags_test(ip, XFS_IFLUSHING)) {
- 		ASSERT(!list_empty(&iip->ili_item.li_bio_list));
--		ASSERT(iip->ili_last_fields);
-+		ASSERT(iip->ili_last_fields || xlog_is_shutdown(mp->m_log));
- 		goto out_iunlock;
++
+ #ifdef DEBUG
+-	else if (!xfs_is_shutdown(pag->pag_mount)) {
+-		ASSERT(pag->pagf_freeblks == be32_to_cpu(agf->agf_freeblks));
+-		ASSERT(pag->pagf_btreeblks == be32_to_cpu(agf->agf_btreeblks));
+-		ASSERT(pag->pagf_flcount == be32_to_cpu(agf->agf_flcount));
+-		ASSERT(pag->pagf_longest == be32_to_cpu(agf->agf_longest));
+-		ASSERT(pag->pagf_levels[XFS_BTNUM_BNOi] ==
+-		       be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNOi]));
+-		ASSERT(pag->pagf_levels[XFS_BTNUM_CNTi] ==
+-		       be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNTi]));
++	/*
++	 * It's possible for the AGF to be out of sync if the block device is
++	 * silently dropping writes. This can happen in fstests with dmflakey
++	 * enabled, which allows the buffer to be cleaned and reclaimed by
++	 * memory pressure and then re-read from disk here. We will get a
++	 * stale version of the AGF from disk, and nothing good can happen from
++	 * here. Hence if we detect this situation, immediately shut down the
++	 * filesystem.
++	 *
++	 * This can also happen if we are already in the middle of a forced
++	 * shutdown, so don't bother checking if we are already shut down.
++	 */
++	if (!xfs_is_shutdown(pag->pag_mount)) {
++		bool	ok = true;
++
++		ok &= pag->pagf_freeblks == be32_to_cpu(agf->agf_freeblks);
++		ok &= pag->pagf_freeblks == be32_to_cpu(agf->agf_freeblks);
++		ok &= pag->pagf_btreeblks == be32_to_cpu(agf->agf_btreeblks);
++		ok &= pag->pagf_flcount == be32_to_cpu(agf->agf_flcount);
++		ok &= pag->pagf_longest == be32_to_cpu(agf->agf_longest);
++		ok &= pag->pagf_levels[XFS_BTNUM_BNOi] ==
++		       be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNOi]);
++		ok &= pag->pagf_levels[XFS_BTNUM_CNTi] ==
++		       be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNTi]);
++
++		if (XFS_IS_CORRUPT(pag->pag_mount, !ok)) {
++			xfs_ag_mark_sick(pag, XFS_SICK_AG_AGF);
++			xfs_trans_brelse(tp, agfbp);
++			xfs_force_shutdown(pag->pag_mount,
++					SHUTDOWN_CORRUPT_ONDISK);
++			return -EFSCORRUPTED;
++		}
+ 	}
+-#endif
++#endif /* DEBUG */
++
+ 	if (agfbpp)
+ 		*agfbpp = agfbp;
+ 	else
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index 4b2894c85cea..1d3c07506c59 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -27,6 +27,7 @@
+ #include "xfs_log.h"
+ #include "xfs_rmap.h"
+ #include "xfs_ag.h"
++#include "xfs_health.h"
+ 
+ /*
+  * Lookup a record by ino in the btree given by cur.
+@@ -2645,12 +2646,35 @@ xfs_ialloc_read_agi(
+ 		pag->pagi_init = 1;
  	}
  
++#ifdef DEBUG
+ 	/*
+-	 * It's possible for these to be out of sync if
+-	 * we are in the middle of a forced shutdown.
++	 * It's possible for the AGF to be out of sync if the block device is
++	 * silently dropping writes. This can happen in fstests with dmflakey
++	 * enabled, which allows the buffer to be cleaned and reclaimed by
++	 * memory pressure and then re-read from disk here. We will get a
++	 * stale version of the AGF from disk, and nothing good can happen from
++	 * here. Hence if we detect this situation, immediately shut down the
++	 * filesystem.
++	 *
++	 * This can also happen if we are already in the middle of a forced
++	 * shutdown, so don't bother checking if we are already shut down.
+ 	 */
+-	ASSERT(pag->pagi_freecount == be32_to_cpu(agi->agi_freecount) ||
+-		xfs_is_shutdown(pag->pag_mount));
++	if (!xfs_is_shutdown(pag->pag_mount)) {
++		bool	ok = true;
++
++		ok &= pag->pagi_freecount == be32_to_cpu(agi->agi_freecount);
++		ok &= pag->pagi_count == be32_to_cpu(agi->agi_count);
++
++		if (XFS_IS_CORRUPT(pag->pag_mount, !ok)) {
++			xfs_ag_mark_sick(pag, XFS_SICK_AG_AGI);
++			xfs_trans_brelse(tp, agibp);
++			xfs_force_shutdown(pag->pag_mount,
++					SHUTDOWN_CORRUPT_ONDISK);
++			return -EFSCORRUPTED;
++		}
++	}
++#endif /* DEBUG */
++
+ 	if (agibpp)
+ 		*agibpp = agibp;
+ 	else
 -- 
 2.53.0
 
