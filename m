@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F304D3AFCE4;
-	Wed, 14 Oct 2026 03:42:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2447937CD45;
+	Wed, 14 Oct 2026 03:43:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791949379; cv=none; b=Ky8dbbGeHV+wWS/COSL5kWf4YbEVWohyxClq01cNqcm81A6KKZf78vpitF9LyNgtvgGIkKKx8xJrO2x8RL4UkqDi/uYCARnBgDKHoSQFFcfCUfUpJiAXpE7tOuqwimIdqnBsq5zwuDQzyj7q+0sPLQkLXpWEnXgNHs43cKHxnAM=
+	t=1791949391; cv=none; b=bxG1AE9O6ywji2qWdAl1o+AVaNiLwhMxr19Kmlw7Xr0jKRKF0ybAtNACXeh0LwBCZp+MFaAyPHrNiX93HK8ZRMufAoQzF25UfSO0qa64q5XACysY1l5CFrAmiZiGMm+i2xoXNnoOrmUwoQdx7TcSokU7GlAvBxeTlOgxOzgHpi4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791949379; c=relaxed/simple;
-	bh=3Fp8Ei6VojV44/pSRZfsQGhht1MTyXMC/gGtZif9IxQ=;
+	s=arc-20240116; t=1791949391; c=relaxed/simple;
+	bh=oejmsSNmcWcJ8ZpZWR7eHFQQBP+qBVLgu+f87ikeFKA=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=P9UJ4ANYHp6ClVymvBx+PRhpcZVQkmVgakaXxbJ6jkYgO3OkqVabZQ+xiC+LNLbmWA8upet41+DJ+qAIEylvdddHncN7PaiH6Z+UrJ6s107cbDsS2SVz4u6mN2HtzKLWoyQYnovC1vERKfBmr70Rwus3jlK7DqccIxdXyluPnDc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IRr/qUX1; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=jDXrI3B1vx7LfxaDldpEqg92KJQUmJNdNJEkpqwbgwX9UG6x/De7OM6/BaiMJDk+2kTFTOvXnnrF5q8myOR/BB0LlD2qz/NzuJBeVyTk8H4nJCMu+Ei4gR4ZqpyUPcuTSOag1i0HnIP6vScx7EatgrUn4vXfOMcmVh10+3LipM8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dnEyunVc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IRr/qUX1"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 72ED5C2BCF5;
-	Wed, 14 Oct 2026 03:42:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dnEyunVc"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id B5898C2BCC7;
+	Wed, 14 Oct 2026 03:43:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1791949378;
-	bh=3Fp8Ei6VojV44/pSRZfsQGhht1MTyXMC/gGtZif9IxQ=;
+	s=k20201202; t=1791949390;
+	bh=oejmsSNmcWcJ8ZpZWR7eHFQQBP+qBVLgu+f87ikeFKA=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=IRr/qUX1M4fI1p+OM7tHVV6VaUlGy9+n9B0wONZ2tVg+bqBphmRXjmoX0qTK7ORkJ
-	 ouK7KMGqgkeXthKv7oWFbvsqkMTewmrvqI/mo4krCt3yTlgItcnhKiRNay8Sxzh1KI
-	 rPzlOPhvJgw3oF8Zx9ykPThWcDC8JQixHSr5M4q7qMbkduX/k05alFyqURtq27Zt0M
-	 PrSc3V0IYe+jc5esf2N2uOxiI7SknyrDctgNUh6cinAMiSDq1PSNgJxfyZ3N1xkOAw
-	 /vEtuRZdq0+P3dI1tlIFvEKSbDA0QmP3hfoYAhCmkhX21C+uZRKfsTOQQuXci9bqmD
-	 Qhi1z0Cd8iykQ==
+	b=dnEyunVcSKi95wNksDT97VwpZo5YIBVoVUv4ZOpcld8sAsaSR8sqRcUoZYOarBcDe
+	 0Mg2sIn3SX3NtLt+27oxkymrLV+56I5ZTLFz8jGUyTluJ6zx4qf8oy5s5KrQWKzTOr
+	 DmXDhajhv1qb1EbREKqmURxnOVBL0KPYQLTeeX54vGx7hekGysk8icn5u9yed7npTW
+	 tJwpg9J8VCdhx4WNz5Gf2CAJ55dCqk4QMqUFgyWm0dsTmTlmZwel20YP+dsQJaHiwA
+	 dfS3dYqKcX/Mkx+yj3REzO99xeSk8vm1yHwofdHQBEDpZJXanIZ+QSi5uZdD793S9d
+	 uxuY86DanwGRQ==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5467ECC6B1A;
-	Wed, 14 Oct 2026 03:42:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3B1FCC6B1A;
+	Wed, 14 Oct 2026 03:43:10 +0000 (UTC)
 From: Daejun Park via B4 Relay <devnull+daejun7.park.samsung.com@kernel.org>
-Date: Wed, 14 Oct 2026 12:42:58 +0900
-Subject: [PATCH v2 1/2] xfs: refuse a pNFS LAYOUTCOMMIT of a range without
- blocks
+Date: Wed, 14 Oct 2026 12:43:10 +0900
+Subject: [PATCH v2 1/2] xfs: move xfs_fsync_flush_log() next to
+ xfs_log_force_inode()
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -41,22 +41,21 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261014-xfs-pnfs-commit-hole-v2-1-d3a02a79ab6c@samsung.com>
-References: <20261014-xfs-pnfs-commit-hole-v2-0-d3a02a79ab6c@samsung.com>
-In-Reply-To: <20261014-xfs-pnfs-commit-hole-v2-0-d3a02a79ab6c@samsung.com>
+Message-Id: <20261014-xfs-pnfs-commit-datasync-v2-1-c11341a189b5@samsung.com>
+References: <20261014-xfs-pnfs-commit-datasync-v2-0-c11341a189b5@samsung.com>
+In-Reply-To: <20261014-xfs-pnfs-commit-datasync-v2-0-c11341a189b5@samsung.com>
 To: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <djwong@kernel.org>, 
  Dave Chinner <dgc@kernel.org>, Chuck Lever <cel@kernel.org>, 
  Jeff Layton <jlayton@kernel.org>, Dai Ngo <Dai.Ngo@oracle.com>, 
  Sergey Bashirov <sergeybashirov@gmail.com>, linux-nfs@vger.kernel.org, 
- Andrey Albershteyn <aalbersh@kernel.org>, linux-kernel@vger.kernel.org, 
- stable@vger.kernel.org, Daejun Park <daejun7.park@samsung.com>
+ linux-kernel@vger.kernel.org, Daejun Park <daejun7.park@samsung.com>
 X-Mailer: b4 0.13.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1791949377; l=7960;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1791949389; l=6051;
  i=daejun7.park@samsung.com; s=20261006; h=from:subject:message-id;
- bh=9+k4mUpONSU1WRs5BKsYgMVyLgF0YzOV4HCFJgDRn10=;
- b=wgIFWh1ej7RXGPbyYHWL7amSGM9Sm5dz+TYamOfLmbzKTHAmu+2BnxcArzCkAbHijABPnOobm
- y2JiseDkbnrAirHTnjfz+BUkAvXv4gTXdQc2nUniuk/gcn8IvR5Slgd
+ bh=EEoN4C2mu5rEVtPAeTzFbTEBWfQzNvqL4/43qXNXEiM=;
+ b=kamuJ+OxoGn4R3BXrCGn56Rt/8eo4jCytbF22Ss6aSqjlW6e7Mv5mAiTS6o/E89ytlYqHU/dl
+ tOD21gnxfR+BMlaI0OaQ1N424OVGM2BTXiAmtaZGxk3BfNQxcmHu35v
 X-Developer-Key: i=daejun7.park@samsung.com; a=ed25519;
  pk=4yUfDqGRZTIj0Ik43z1GoMZRWCNm/rgX6uJuM9dtNIg=
 X-Endpoint-Received: by B4 Relay for daejun7.park@samsung.com/20261006 with
@@ -66,209 +65,167 @@ Reply-To: daejun7.park@samsung.com
 
 From: Daejun Park <daejun7.park@samsung.com>
 
-xfs_fs_commit_blocks() passes every range that a pNFS client commits to
-xfs_iomap_write_unwritten(), whatever is mapped there, and the range can
-be a hole. nfsd does not check the extents of a block or SCSI layout
-LAYOUTCOMMIT against the layouts it handed out, and for a reclaim during
-the grace period it has no layouts to check against, so a client can
-commit a range that it never had a layout for.
+xfs_log_force_inode() is xfs_fsync_flush_log() without a datasync
+variant and without the log_flushed result, plus a check for an inode
+without a log item. Move xfs_fsync_flush_log() to xfs_inode.c as
+__xfs_log_force_inode(), with that check, and make
+xfs_log_force_inode() a wrapper around it, so that code outside
+xfs_file.c can force the log for a datasync. The next patch uses it in
+the pNFS LAYOUTCOMMIT path.
 
-For a hole, xfs_bmapi_write() with XFS_BMAPI_CONVERT allocates new
-blocks as written extents, while the transaction only reserved blocks
-for bmbt splits. A hole larger than that reservation shuts XFS down:
-
-  XFS (nvme0n1): Corruption of in-memory data (0x8) detected at
-    xfs_trans_mod_sb+0x817/0x960 (fs/xfs/xfs_trans.c:351).
-    Shutting down filesystem.
-
-A smaller hole gets blocks that nobody wrote mapped into the file as
-data, so readers see whatever those blocks held, and the LAYOUTCOMMIT
-succeeds.
-
-With pynfs as the client and an RW layout for the first 64 KiB of a
-2 MiB sparse file, a LAYOUTCOMMIT of 64 KiB at offset 1 MiB, which no
-layout covered, got NFS4ERR_IO and shut XFS down. A LAYOUTCOMMIT of
-4 KiB at 1 MiB got NFS4_OK, and the file got a written block there. The
-client wrote nothing to the device in either case.
-
-A client may only write to blocks that a layout handed out, and
-xfs_fs_map_blocks() allocates blocks for any hole in a write layout, so
-a committed range without blocks holds nothing that can be committed.
-Add XFS_BMAPI_CONVERT_ONLY, which makes xfs_bmapi_write() fail with -EIO
-instead of allocating blocks for a hole or a delalloc extent, and pass
-it from xfs_fs_commit_blocks() through xfs_iomap_write_unwritten(). Each
-xfs_bmapi_write() call finds the extent and converts it in one
-transaction under the ILOCK, so nothing can change it between the check
-and the conversion. -EIO is what xfs_pnfs_validate_isize() returns when
-the new size falls into a hole.
-
-Ranges before the hole have been converted by the time the commit
-fails, as they would have been had the client committed them in a
-LAYOUTCOMMIT of their own. Later ranges are left alone, and the
-timestamps and the size are not updated.
-
-With this, both LAYOUTCOMMITs get NFS4ERR_IO, XFS keeps running and no
-block is allocated.
+No functional change: xfs_file_fsync() only calls it for an inode with
+a log item, and xfs_log_force_inode() passes no datasync and no
+log_flushed, as before.
 
 Suggested-by: Christoph Hellwig <hch@lst.de>
-Fixes: 527851124d10 ("xfs: implement pNFS export operations")
-Cc: stable@vger.kernel.org
 Signed-off-by: Daejun Park <daejun7.park@samsung.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 14 ++++++++++++++
- fs/xfs/libxfs/xfs_bmap.h | 10 +++++++++-
- fs/xfs/xfs_file.c        |  2 +-
- fs/xfs/xfs_ioend.c       |  2 +-
- fs/xfs/xfs_iomap.c       |  7 ++++---
- fs/xfs/xfs_iomap.h       |  3 ++-
- fs/xfs/xfs_pnfs.c        |  9 ++++++++-
- 7 files changed, 39 insertions(+), 8 deletions(-)
+ fs/xfs/xfs_file.c  | 44 +-------------------------------------------
+ fs/xfs/xfs_inode.c | 42 +++++++++++++++++++++++++++++++++++++-----
+ fs/xfs/xfs_inode.h |  2 ++
+ 3 files changed, 40 insertions(+), 48 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 9bffde1484..fbfbfaf2b3 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -4130,6 +4130,8 @@ xfs_bmapi_finish(
-  * Returns a negative error code on failure, including -ENOSPC when it could not
-  * allocate any blocks and -ENOSR when it did allocate blocks to convert a
-  * delalloc range, but those blocks were before the passed in range.
-+ * With XFS_BMAPI_CONVERT_ONLY, returns -EIO instead of allocating blocks when
-+ * the range starts with a hole or a delalloc extent.
-  */
- int
- xfs_bmapi_write(
-@@ -4237,6 +4239,18 @@ xfs_bmapi_write(
- 		 * that we found, if any.
- 		 */
- 		if (need_alloc || wasdelay) {
-+			if (flags & XFS_BMAPI_CONVERT_ONLY) {
-+				/*
-+				 * Earlier mappings may have dirtied the
-+				 * transaction, so return them and fail on the
-+				 * next call.
-+				 */
-+				if (n)
-+					break;
-+				error = -EIO;
-+				goto error0;
-+			}
-+
- 			bma.eof = eof;
- 			bma.conv = !!(flags & XFS_BMAPI_CONVERT);
- 			bma.wasdel = wasdelay;
-diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-index 60f6df4ce0..a0bc9cd412 100644
---- a/fs/xfs/libxfs/xfs_bmap.h
-+++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -90,6 +90,13 @@ struct xfs_bmalloca {
- /* Try to align allocations to the extent size hint */
- #define XFS_BMAPI_EXTSZALIGN	(1u << 11)
- 
-+/*
-+ * Use with XFS_BMAPI_CONVERT to convert unwritten extents without allocating
-+ * blocks. Stop at a hole or a delalloc extent: return the mappings found so
-+ * far, or fail with -EIO if there are none.
-+ */
-+#define XFS_BMAPI_CONVERT_ONLY	(1u << 12)
-+
- #define XFS_BMAPI_FLAGS \
- 	{ XFS_BMAPI_ENTIRE,	"ENTIRE" }, \
- 	{ XFS_BMAPI_METADATA,	"METADATA" }, \
-@@ -102,7 +109,8 @@ struct xfs_bmalloca {
- 	{ XFS_BMAPI_COWFORK,	"COWFORK" }, \
- 	{ XFS_BMAPI_NODISCARD,	"NODISCARD" }, \
- 	{ XFS_BMAPI_NORMAP,	"NORMAP" },\
--	{ XFS_BMAPI_EXTSZALIGN,	"EXTSZALIGN" }
-+	{ XFS_BMAPI_EXTSZALIGN,	"EXTSZALIGN" }, \
-+	{ XFS_BMAPI_CONVERT_ONLY,	"CONVERT_ONLY" }
- 
- 
- static inline int xfs_bmapi_aflag(int w)
 diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 7d0c8a1975..720f4a9b40 100644
+index 7d0c8a1975..2c70e8ca7f 100644
 --- a/fs/xfs/xfs_file.c
 +++ b/fs/xfs/xfs_file.c
-@@ -666,7 +666,7 @@ xfs_dio_write_end_io(
- 	 * they are converted.
+@@ -79,48 +79,6 @@ xfs_dir_fsync(
+ 	return xfs_log_force_inode(ip);
+ }
+ 
+-/*
+- * All metadata updates are logged, which means that we just have to push the
+- * journal to the required sequence number than holds the updates. We track
+- * datasync commits separately to full sync commits, and hence only need to
+- * select the correct sequence number for the log force here.
+- *
+- * We don't have to serialise against concurrent modifications, as we do not
+- * have to wait for modifications that have not yet completed. We define a
+- * transaction commit as completing when the commit sequence number is updated,
+- * hence if the sequence number has not updated, the sync operation has been
+- * run before the commit completed and we don't have to wait for it.
+- *
+- * If we have concurrent fsync/fdatasync() calls, the sequence numbers remain
+- * set on the log item until - at least - the journal flush completes. In
+- * reality, they are only cleared when the inode is fully unpinned (i.e.
+- * persistent in the journal and not dirty in the CIL), and so we rely on
+- * xfs_log_force_seq() either skipping sequences that have been persisted or
+- * waiting on sequences that are still in flight to correctly order concurrent
+- * sync operations.
+- */
+-static int
+-xfs_fsync_flush_log(
+-	struct xfs_inode	*ip,
+-	bool			datasync,
+-	int			*log_flushed)
+-{
+-	struct xfs_inode_log_item *iip = ip->i_itemp;
+-	xfs_csn_t		seq = 0;
+-
+-	spin_lock(&iip->ili_lock);
+-	if (datasync)
+-		seq = iip->ili_datasync_seq;
+-	else
+-		seq = iip->ili_commit_seq;
+-	spin_unlock(&iip->ili_lock);
+-
+-	if (!seq)
+-		return 0;
+-
+-	return xfs_log_force_seq(ip->i_mount, seq, XFS_LOG_SYNC, log_flushed);
+-}
+-
+ STATIC int
+ xfs_file_fsync(
+ 	struct file		*file,
+@@ -151,7 +109,7 @@ xfs_file_fsync(
+ 	 * no modifications to this inode that need to be pushed out.
  	 */
- 	if (flags & IOMAP_DIO_UNWRITTEN) {
--		error = xfs_iomap_write_unwritten(ip, offset, size, true);
-+		error = xfs_iomap_write_unwritten(ip, offset, size, true, 0);
- 		goto out;
+ 	if (ip->i_itemp) {
+-		error = xfs_fsync_flush_log(ip, datasync, &log_flushed);
++		error = __xfs_log_force_inode(ip, datasync, &log_flushed);
+ 		if (error)
+ 			return error;
  	}
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 15b62574b8..d9ba9260e8 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -2669,11 +2669,30 @@ xfs_irele(
+ }
  
-diff --git a/fs/xfs/xfs_ioend.c b/fs/xfs/xfs_ioend.c
-index f0e01ac34d..6d4d084c71 100644
---- a/fs/xfs/xfs_ioend.c
-+++ b/fs/xfs/xfs_ioend.c
-@@ -237,7 +237,7 @@ xfs_end_ioend_write(
- 	if (ioend->io_flags & IOMAP_IOEND_SHARED)
- 		error = xfs_reflink_end_cow(ip, offset, size);
- 	else if (ioend->io_flags & IOMAP_IOEND_UNWRITTEN)
--		error = xfs_iomap_write_unwritten(ip, offset, size, false);
-+		error = xfs_iomap_write_unwritten(ip, offset, size, false, 0);
- 
- 	if (!error &&
- 	    !(ioend->io_flags & IOMAP_IOEND_DIRECT) &&
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 329c745e31..7c3630be65 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -614,7 +614,8 @@ xfs_iomap_write_unwritten(
- 	xfs_inode_t	*ip,
- 	xfs_off_t	offset,
- 	xfs_off_t	count,
--	bool		update_isize)
-+	bool		update_isize,
-+	uint32_t	bmapi_flags)
+ /*
+- * Ensure all committed transactions touching the inode are written to the log.
++ * All metadata updates are logged, which means that we just have to push the
++ * journal to the required sequence number than holds the updates. We track
++ * datasync commits separately to full sync commits, and hence only need to
++ * select the correct sequence number for the log force here.
++ *
++ * We don't have to serialise against concurrent modifications, as we do not
++ * have to wait for modifications that have not yet completed. We define a
++ * transaction commit as completing when the commit sequence number is updated,
++ * hence if the sequence number has not updated, the sync operation has been
++ * run before the commit completed and we don't have to wait for it.
++ *
++ * If we have concurrent fsync/fdatasync() calls, the sequence numbers remain
++ * set on the log item until - at least - the journal flush completes. In
++ * reality, they are only cleared when the inode is fully unpinned (i.e.
++ * persistent in the journal and not dirty in the CIL), and so we rely on
++ * xfs_log_force_seq() either skipping sequences that have been persisted or
++ * waiting on sequences that are still in flight to correctly order concurrent
++ * sync operations.
+  */
+ int
+-xfs_log_force_inode(
+-	struct xfs_inode	*ip)
++__xfs_log_force_inode(
++	struct xfs_inode	*ip,
++	bool			datasync,
++	int			*log_flushed)
  {
- 	xfs_mount_t	*mp = ip->i_mount;
- 	xfs_fileoff_t	offset_fsb;
-@@ -676,8 +677,8 @@ xfs_iomap_write_unwritten(
- 		 */
- 		nimaps = 1;
- 		error = xfs_bmapi_write(tp, ip, offset_fsb, count_fsb,
--					XFS_BMAPI_CONVERT, resblks, &imap,
--					&nimaps);
-+					XFS_BMAPI_CONVERT | bmapi_flags,
-+					resblks, &imap, &nimaps);
- 		if (error)
- 			goto error_on_bmapi_transaction;
+ 	struct xfs_inode_log_item *iip = ip->i_itemp;
+ 	xfs_csn_t		seq = 0;
+@@ -2682,12 +2701,25 @@ xfs_log_force_inode(
+ 		return 0;
  
-diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
-index f2520a9b3a..8fc0c6fc8b 100644
---- a/fs/xfs/xfs_iomap.h
-+++ b/fs/xfs/xfs_iomap.h
-@@ -15,7 +15,8 @@ struct xfs_zone_alloc_ctx;
- int xfs_iomap_write_direct(struct xfs_inode *ip, xfs_fileoff_t offset_fsb,
- 		xfs_fileoff_t count_fsb, unsigned int flags,
- 		struct xfs_bmbt_irec *imap, u64 *sequence);
--int xfs_iomap_write_unwritten(struct xfs_inode *, xfs_off_t, xfs_off_t, bool);
-+int xfs_iomap_write_unwritten(struct xfs_inode *ip, xfs_off_t offset,
-+		xfs_off_t count, bool update_isize, uint32_t bmapi_flags);
- xfs_fileoff_t xfs_iomap_eof_align_last_fsb(struct xfs_inode *ip,
- 		xfs_fileoff_t end_fsb);
+ 	spin_lock(&iip->ili_lock);
+-	seq = iip->ili_commit_seq;
++	if (datasync)
++		seq = iip->ili_datasync_seq;
++	else
++		seq = iip->ili_commit_seq;
+ 	spin_unlock(&iip->ili_lock);
  
-diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
-index ab38561700..05c9660aea 100644
---- a/fs/xfs/xfs_pnfs.c
-+++ b/fs/xfs/xfs_pnfs.c
-@@ -328,7 +328,14 @@ xfs_fs_commit_blocks(
- 					(end - 1) >> PAGE_SHIFT);
- 		WARN_ON_ONCE(error);
+ 	if (!seq)
+ 		return 0;
+-	return xfs_log_force_seq(ip->i_mount, seq, XFS_LOG_SYNC, NULL);
++	return xfs_log_force_seq(ip->i_mount, seq, XFS_LOG_SYNC, log_flushed);
++}
++
++/*
++ * Ensure all committed transactions touching the inode are written to the log.
++ */
++int
++xfs_log_force_inode(
++	struct xfs_inode	*ip)
++{
++	return __xfs_log_force_inode(ip, false, NULL);
+ }
  
--		error = xfs_iomap_write_unwritten(ip, start, length, false);
-+		/*
-+		 * A client may only write to blocks that a layout handed out,
-+		 * and xfs_fs_map_blocks() allocates blocks for any hole in a
-+		 * write layout, so refuse to allocate blocks for a hole or a
-+		 * delalloc extent in the committed range.
-+		 */
-+		error = xfs_iomap_write_unwritten(ip, start, length, false,
-+				XFS_BMAPI_CONVERT_ONLY);
- 		if (error)
- 			goto out_drop_iolock;
- 	}
+ /*
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 1602027cd0..a3dc5f55d6 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -586,6 +586,8 @@ int		xfs_ifree(struct xfs_trans *, struct xfs_inode *);
+ int		xfs_itruncate_extents_flags(struct xfs_trans **,
+ 				struct xfs_inode *, int, xfs_fsize_t, int);
+ 
++int		__xfs_log_force_inode(struct xfs_inode *ip, bool datasync,
++				int *log_flushed);
+ int		xfs_log_force_inode(struct xfs_inode *ip);
+ void		xfs_iunpin_wait(xfs_inode_t *);
+ #define xfs_ipincount(ip)	((unsigned int) atomic_read(&ip->i_pincount))
 
 -- 
 2.43.0
