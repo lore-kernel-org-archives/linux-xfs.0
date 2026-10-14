@@ -1,179 +1,121 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 243C5368D5E;
-	Wed, 14 Oct 2026 03:43:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CA8A1DDF0
+	for <linux-xfs@vger.kernel.org>; Wed, 14 Oct 2026 03:51:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791949391; cv=none; b=W8w6rXDWzEdl55LhV+cv2kp4ch5LopqDnV9CyIq+9gs+IarlWTD0r9ovNvxY4BfIGzlUfp1S52Lu5KwwBNVZpZ3EdrCsTLXpFznbM88WBI3ha7AooRSjzJC2tsMiWnRK2GXH/FPasvlI7sFcxtC9y+pWEKZEYESI2sN82Qbm3MQ=
+	t=1791949862; cv=none; b=gncGg37L6b+/vfLqI0A3tKGb1HfGazje1wYKnwWiOE/HVKQFgB93iIOW/ZHNE9i8+TQD/KjsYVxQ/O38pD3t4MMv6/qT5KQ1pkb56hpIY55KNt5kNsBt68ZgFZTjqcFKvftKiqZGnsB4wGS45Lw2biVdS5cA+V+/wCTf0FB/FPY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791949391; c=relaxed/simple;
-	bh=0B+r5e1Ahudgwc91ntRX2146KFCA9BxB4ko3wQtAaU8=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=iDk4s+Dwc/gmo5tEQl9KsjnB6BA4XGAfdIvx1MpywlVqksntpZ/9JImL8VdkArG276ejroNjYgx82XECt5BvYBYt+SqrkvR+ncbxkSbf40KFvGXMFT4wx3MBQxA9Z1WDtibHIOoEaq007AYu9b1mkJrQArexa9iNKH6iFVHTyN4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cG6+PVVi; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1791949862; c=relaxed/simple;
+	bh=IeGWdaRCgygqBy0CDRrhmJPh9HV+GCslxsG8OMz/gmY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=iZ6pCrY5LxKwCPY/3Kn9yUQKXN42vZNEULQQdiywFaO6FM/q3HQNrMzcjy/8PbNjTWf+3TmYn701zNe/LtblzYsXsWBt+nqAUP0RPYy6ihr5MahC5NJF4QyUUks5bQuAc0EkM22psvFjqyBkZMyqUrF+5A8Bp1W8+4caCmZDOc8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=PrJusu8A; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=rEQd1KUD; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cG6+PVVi"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id C838FC2BD00;
-	Wed, 14 Oct 2026 03:43:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1791949390;
-	bh=0B+r5e1Ahudgwc91ntRX2146KFCA9BxB4ko3wQtAaU8=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=cG6+PVVieOr1pIpU/kWYzA31GsAKP98mMczVqGZIKNPY3Qu3K14ghhTll9B4xbY7x
-	 Dft2ooU7YDC2dDF/MtdfSE2Aqm0OW8yaYXzNBklAkWAr2BRgWIwiI9bkx0pu7Ls8wC
-	 muTxA2gzju4MlOYWMZvNXeua8KxXTBRBNKnzMHz4eSFJkv6lm4mSKDCL54RWbPrb6/
-	 JAAz2flmAAoFsXdoGO9g05zqhopVJp+/XAPHzFAZyPSqdsLmU+yj0RUnO/JaZFmbYZ
-	 O4uyfVqm2c5RMDyZkceBJ4Jmhsz2c6Nt57agoA+TP6uHFZDFHS/ffKbq3l5OF2uej7
-	 3b0LU7CDzwe7g==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3E42CC6B20;
-	Wed, 14 Oct 2026 03:43:10 +0000 (UTC)
-From: Daejun Park via B4 Relay <devnull+daejun7.park.samsung.com@kernel.org>
-Date: Wed, 14 Oct 2026 12:43:11 +0900
-Subject: [PATCH v2 2/2] xfs: make pNFS LAYOUTCOMMIT stable the way
- fdatasync does
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="PrJusu8A";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="rEQd1KUD"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1791949860;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=8o1J6sMA+sP+PCrClhwlF71A5SeIYOyiK52tT8L7wuA=;
+	b=PrJusu8AUzoZJ0Ch76LGlcuyIHyxRK1GwF/kunDSOQ5qS0vBccjpWGbhQU/tMUogDQKhl3
+	eg27U+FWf60k8FrWomBpsFq3ZjqCgcNdT27YU97EYxSyMjzw3XOMa/7MoA6khZuBr93pbH
+	DycQhx7k8yA+470JtqHcG/mMNCQz2qk=
+Received: from mail-qk1-f199.google.com (mail-qk1-f199.google.com
+ [209.85.222.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-522-F6dGJlmAOKq3eeF_MXIV1g-1; Wed, 14 Oct 2026 03:50:59 +0000
+X-MC-Unique: F6dGJlmAOKq3eeF_MXIV1g-1
+X-Mimecast-MFC-AGG-ID: F6dGJlmAOKq3eeF_MXIV1g_1791949858
+Received: by mail-qk1-f199.google.com with SMTP id af79cd13be357-93ae8e7e546so778935685a.1
+        for <linux-xfs@vger.kernel.org>; Tue, 13 Oct 2026 20:50:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1791949858; x=1792554658; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=8o1J6sMA+sP+PCrClhwlF71A5SeIYOyiK52tT8L7wuA=;
+        b=rEQd1KUD97boPPPFPZHoiMZZtsJU+Lfqs4kcLg0ZYhsde/t/0uhVNbd76JXr48WaQY
+         0G+jRIIgZJVNCbGxLUBAKNZkoN1vsrdqjIkOcDrVyB46Jvk84OYVpVcUnebwvUcJgiXu
+         P1kTkljRQeT60kwygy2fQmdGo2XL4LtlG+YUUprnWMOLpaGVzYlxKkgcHxjQhWDKC+ct
+         rvvm5BQRZbeRhnEkXtF4TBqJ/DkeCpp1xtUU1RIfyokSrJcY9OoXxadX8/Uyi61JXi8V
+         2XXvfxgoxI4CPgXx7IRQgLkP60cs+7x02HI9Up1yLyzfsdnTEPvlVxgoDM2XVeNQWGuc
+         Twvg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791949858; x=1792554658;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=8o1J6sMA+sP+PCrClhwlF71A5SeIYOyiK52tT8L7wuA=;
+        b=Z8odQDh9M4Mk5kQy+d7EfIp/Zrvpmyh6Ys6IRLpB2mV0fa0KZ/InqDHTZB+i370C7i
+         vD6Pw57Vthzue6XYt8avZ9kBDntaT8uZhXfsUhGxwdS2J2k8OoWIHi+y+5mY0QQ0Wn5n
+         8Vp+uhtgz6mmAI8y5tbB0ojvUQhx7FPbUEDdiHZfwVYghwiD9l3YgvcZrfAj5RXPALk1
+         0CMgRAisDLYESzLJT/3HuyyWCrcuugrxKJFiyq08GXr6tU5nhrfoFZxTLNW5e+jCIYSd
+         8yowtsEmxBhGvO2gA9qVslSl9ajuUdgA6G5+soNQBhkRMwew7la2Uhurja91+CZggMtL
+         LRBQ==
+X-Gm-Message-State: AFq9FYLZxOYW9Xh2TxOCcr/hI5Chg6TDX8FiZDU/fttJkU8httGqJLCL
+	CRRh5hyU9UFUga+1PEdWcw/ESXXpB0n4AeVEdxCQusT0d43MQA2lol+yWMV7iII/RNsc2v2dAgt
+	+PmlcZicgTATexsFWl9pgDcBdrC7NcH1FdjEChzYmUSwPZ0rb+q6Vw2PykH9L94Zhh6NYeU8B+U
+	nHIVtUGlLr0cxg6vjURQKD6uElc7Z6NSzksCA/mNysS6Zx
+X-Gm-Gg: AYBFou3Hf/yeyeFFmFOH83bk7BQYumJA5nkU6aE87tC3d93V45PmH+HAFY346PBRklM
+	1z49+TGp/G0B1njMCFwJQoeHsOmQnqJQ/HI0KwPF6XZwUrz5vOo6JtEPPNiRVIzCtUWNcByYk6W
+	P4wnHQqvHNQSQ8j5GU3HyaFDQEFcjXf5AhCRBpnPI91ukZN/vdpTnLEtCK4uPGEbULIzgzlza9y
+	6OsG2q9j/HrRGKYyt/3XR8EfIdTAEQnJJQwJSsmcznhSiO7kZXvGZGo0NT1ZfH49Ga1fezDWOyK
+	a62Ef21ilXBKmb4PseVLOnEu5s03gB5So1UxoBgvyq7Kk7svJvl+NzvGiVl6gpPj5nD8YOMcuee
+	gInGxqONRvf7W1cv7HCogZ6nwhY47HqJVW08kCA==
+X-Received: by 2002:a05:620a:7106:b0:93c:7e9c:3bba with SMTP id af79cd13be357-93ebd24c5c9mr2399914885a.41.1791949858424;
+        Tue, 13 Oct 2026 20:50:58 -0700 (PDT)
+X-Received: by 2002:a05:620a:7106:b0:93c:7e9c:3bba with SMTP id af79cd13be357-93ebd24c5c9mr2399912685a.41.1791949857885;
+        Tue, 13 Oct 2026 20:50:57 -0700 (PDT)
+Received: from big24.sandeen.net (97-116-156-223.mpls.qwest.net. [97.116.156.223])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-93ef50b6c4fsm393907285a.47.2026.10.13.20.50.57
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 13 Oct 2026 20:50:57 -0700 (PDT)
+From: Eric Sandeen <sandeen@redhat.com>
+To: linux-xfs@vger.kernel.org
+Cc: cem@kernel.org,
+	djwong@kernel.org,
+	hch@lst.de
+Subject: [PATCH RFC 0/5] xfs: Remove redundant btree insert code
+Date: Tue, 13 Oct 2026 20:29:58 -0500
+Message-ID: <20261014013505.759089-1-sandeen@redhat.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20261014-xfs-pnfs-commit-datasync-v2-2-c11341a189b5@samsung.com>
-References: <20261014-xfs-pnfs-commit-datasync-v2-0-c11341a189b5@samsung.com>
-In-Reply-To: <20261014-xfs-pnfs-commit-datasync-v2-0-c11341a189b5@samsung.com>
-To: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <djwong@kernel.org>, 
- Dave Chinner <dgc@kernel.org>, Chuck Lever <cel@kernel.org>, 
- Jeff Layton <jlayton@kernel.org>, Dai Ngo <Dai.Ngo@oracle.com>, 
- Sergey Bashirov <sergeybashirov@gmail.com>, linux-nfs@vger.kernel.org, 
- linux-kernel@vger.kernel.org, Daejun Park <daejun7.park@samsung.com>
-X-Mailer: b4 0.13.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1791949389; l=5180;
- i=daejun7.park@samsung.com; s=20261006; h=from:subject:message-id;
- bh=+Nf7BaYQlUDhogslv80flcYXpwmoAl7COff2XfPORsg=;
- b=iiYPenJRJsS2ostEIWbc45t0jiwk+S3oE5i38QLGADK1Jp9/MDn2Dg8/BpBP+tQkcgySRlVHa
- hKuFSvg7pNgCigICosiKpawef2E7wHLKeYiACegwisyDzz7T5qI0zxD
-X-Developer-Key: i=daejun7.park@samsung.com; a=ed25519;
- pk=4yUfDqGRZTIj0Ik43z1GoMZRWCNm/rgX6uJuM9dtNIg=
-X-Endpoint-Received: by B4 Relay for daejun7.park@samsung.com/20261006 with
- auth_id=1122
-X-Original-From: Daejun Park <daejun7.park@samsung.com>
-Reply-To: daejun7.park@samsung.com
+Content-Transfer-Encoding: 8bit
 
-From: Daejun Park <daejun7.park@samsung.com>
+This depends on the prior changes
+([PATCH 0/2] xfs: add missing cursor status check after btree ops)
 
-xfs_fs_commit_blocks() commits the timestamp update of every
-LAYOUTCOMMIT as a synchronous transaction, so every LAYOUTCOMMIT forces
-the log. When the client only overwrote blocks that were already written
-on disk and the size does not change, the only metadata that this log
-force makes stable for the file is the new timestamps. fdatasync after
-the same overwrite does not force the log: a timestamp-only change does
-not set ili_datasync_seq, and without it xfs_file_fsync() only flushes
-the cache of the device that holds the file data. The comment above
-xfs_fs_commit_blocks() says that it relies on always committing a
-transaction, and that it would otherwise have to flush the cache the way
-fsync does for a datasync.
+The btree insert code returns both an error and a status var, but
+they are redundant as described in the first patch here.
 
-Do it the way fdatasync does: log the timestamps as XFS_ILOG_TIMESTAMP
-when the size does not change, commit the transaction without
-XFS_TRANS_SYNC, force the log up to ili_datasync_seq, and flush the
-cache of the device that holds the file data unless that log force wrote
-an iclog. The unwritten extent conversions and a new size set
-ili_datasync_seq, so a LAYOUTCOMMIT that converts extents or changes the
-size still forces the log. So does a conversion that was done earlier,
-for example by a direct write on the server: ili_datasync_seq stays set
-until that conversion is on disk, so the log force covers it.
+Every caller handles the error first, and never gets to the status
+check, so all that can be removed.
 
-With the block layout on an NVMe/TCP namespace in QEMU, backed by a
-partition of an NVMe SSD with a volatile write cache, one client process
-overwriting a 16 MiB file in 64 KiB writes, each followed by fsync, took
-473 ms instead of 800 ms (median of 5 runs). On average a LAYOUTCOMMIT
-spent 1.1 ms in xfs_fs_commit_blocks() instead of 2.4 ms, and none wrote
-an iclog. With 4 KiB writes to a 4 MiB file it took 1841 ms instead of
-3101 ms. A LAYOUTCOMMIT now issues an empty cache flush instead of a log
-write with REQ_PREFLUSH and REQ_FUA. The guest that ran nvmet reached
-the SSD through virtio-blk, which has no FUA, so there the FUA cost a
-second cache flush. The gain should be smaller with native FUA and on a
-device without a volatile write cache. It is also smaller with several
-writers: 4 threads overwriting 16 MiB files in 64 KiB writes took
-1011 ms instead of 1083 ms. LAYOUTCOMMITs of new files force the log as
-before.
+RFC to see if this direction and the patch splitup/granularity seems
+ok.
 
-As with fdatasync, the timestamps of a LAYOUTCOMMIT that converts
-nothing and keeps the size, and the change attribute that nfsd derives
-from the ctime, reach the disk with a later log write instead of before
-the reply, at the latest the one that the log worker issues every 30 s
-by default. The Linux client sends LAYOUTCOMMIT from both fsync() and
-fdatasync() (pnfs_generic_sync() ignores datasync), so fsync() on a
-block layout client now gets the timestamp guarantee of fdatasync().
-RFC 8881 section 12.5.4 says that LAYOUTCOMMIT may require committing
-the block list to stable storage, which this keeps, and section 12.5.4.1
-only asks that the updated attributes be visible when it completes.
+If so the opportunity exists on the btree delete side as well.
 
-Signed-off-by: Daejun Park <daejun7.park@samsung.com>
----
- fs/xfs/xfs_pnfs.c | 21 +++++++++++++++------
- 1 file changed, 15 insertions(+), 6 deletions(-)
-
-diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
-index ab38561700..45ac98e7c0 100644
---- a/fs/xfs/xfs_pnfs.c
-+++ b/fs/xfs/xfs_pnfs.c
-@@ -277,10 +277,12 @@ xfs_pnfs_validate_isize(
-  * converting any unwritten extents, flushing the disk cache and updating the
-  * time stamps.
-  *
-- * Note that we rely on the caller to always send us a timestamp update so that
-- * we always commit a transaction here.  If that stops being true we will have
-- * to manually flush the cache here similar to what the fsync code path does
-- * for datasyncs on files that have no dirty metadata.
-+ * Like fdatasync, a commit that only updates the timestamps does not force the
-+ * log: they are logged as XFS_ILOG_TIMESTAMP and reach the disk with a later
-+ * log write. The log is forced up to the last change that a datasync needs,
-+ * such as the unwritten extent conversions or a new size, and the cache of the
-+ * device holding the file data is flushed if that log force did not write an
-+ * iclog itself.
-  */
- static int
- xfs_fs_commit_blocks(
-@@ -294,6 +296,7 @@ xfs_fs_commit_blocks(
- 	struct xfs_trans	*tp;
- 	struct timespec64	now;
- 	bool			update_isize = false;
-+	int			log_flushed = 0;
- 	int			error, i;
- 	loff_t			size;
- 
-@@ -345,7 +348,8 @@ xfs_fs_commit_blocks(
- 
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
--	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+	xfs_trans_log_inode(tp, ip,
-+			update_isize ? XFS_ILOG_CORE : XFS_ILOG_TIMESTAMP);
- 
- 	now = inode_set_ctime_current(inode);
- 	inode_set_atime_to_ts(inode, now);
-@@ -356,8 +360,13 @@ xfs_fs_commit_blocks(
- 		ip->i_disk_size = new_size;
- 	}
- 
--	xfs_trans_set_sync(tp);
- 	error = xfs_trans_commit(tp);
-+	if (error)
-+		goto out_drop_iolock;
-+
-+	error = __xfs_log_force_inode(ip, true, &log_flushed);
-+	if (!error && !log_flushed)
-+		error = blkdev_issue_flush(xfs_inode_buftarg(ip)->bt_bdev);
- 
- out_drop_iolock:
- 	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
-
--- 
-2.43.0
-
+ libxfs/xfs_alloc.c    |   32 +++------------------
+ libxfs/xfs_bmap.c     |   76 +++++++-----------------------------------------
+ libxfs/xfs_btree.c    |    4 --
+ libxfs/xfs_btree.h    |    2 -
+ libxfs/xfs_ialloc.c   |   28 +++---------------
+ libxfs/xfs_ialloc.h   |    3 -
+ libxfs/xfs_refcount.c |   45 +++++------------------------
+ libxfs/xfs_refcount.h |    2 -
+ libxfs/xfs_rmap.c     |   46 ++++--------------------------
+ scrub/rcbag.c         |    6 ---
+ scrub/rcbag_btree.c   |    5 +--
+ scrub/rcbag_btree.h   |    3 -
+ 12 files changed, 46 insertions(+), 206 deletions(-)
 
