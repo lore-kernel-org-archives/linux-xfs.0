@@ -1,40 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE17D49BD7F
-	for <linux-xfs@vger.kernel.org>; Wed, 14 Oct 2026 08:28:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87E1E47668C
+	for <linux-xfs@vger.kernel.org>; Wed, 14 Oct 2026 08:28:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791966517; cv=none; b=mCmNBfc3Bkm1UGpzhsqMIGg/dJykARJgL+u6nqGME8blW6+pRa1qcdwpqgwS4e6Nazw0oCRNrmua3DEtWT03EOrsehyz99Tza98b2/3DROvuvhk3aMYc0PqJjdPsl0zUv11RGPXn9m2XpuU76YRaDXNCahVzCLQF0JFhYLFQmFE=
+	t=1791966519; cv=none; b=DfpISHfQYFEPBLk6xkA6eGRYTFZrj9ZuFJZDTawVbhyOtd638YnoFQljykpaJuyPTtCcmCmGXXY1KvNmpSUR52qb/+JXRNTAOI2v7QJe6KRh8rk+yWf+Lj7XuXGkda7cL/+5FjijfN5OnCeZgpPcZXFJCR9vW5VmfaMfkws/7C8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791966517; c=relaxed/simple;
-	bh=xlu4L8ZgVLSnByi1Dylpqk6czKqWMzlm7KKoWpbDebU=;
+	s=arc-20240116; t=1791966519; c=relaxed/simple;
+	bh=OVTMecY4u85d3B7wsAXm3TPD6qeZqPYulgDWYnsh2X8=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=B5EaJUro4tCjwqv9JANVa8jqPiwIgxqYEIwEI3XxPlvYVRLCBh472pXjTT0/UuC+grnAhUEsnZhRmZAsd6xU9HFGqgZpfuplyuUBvuudtLXCATsQM4AUyFTGg3e+r+6Oji/gySUc4NUUYNLiArdojxXgZNUUf1lF4pVP+cEHY84=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RSXYFmq6; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=R+SXmYtAx/nEvdwvTwNiSqZDUcIwlijS6tuokf1BdpgY7UufgPzsoc37uAqcTyds8VY+6P3MUVqkdF2p5mTAK1UlvnRjw+K8RCrMykpGH14EOffZvWLXo0A02i6yv7h1LBvP+2t334oAnYvzykhSgpiSP8WZICRYuK+krZDTNoY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z9i99yBg; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RSXYFmq6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67A431F000FF;
-	Wed, 14 Oct 2026 08:28:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z9i99yBg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CDCE51F00893;
+	Wed, 14 Oct 2026 08:28:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791966516;
-	bh=0/Ud3VHajz22+/a34tJTTrfbgoXstmAwFJu0y5JHcIw=;
+	s=k20260515; t=1791966518;
+	bh=oADJ5lWxIOFUthRExK7qbjwVdydyxv1SrjyafQjAkqI=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=RSXYFmq6ICrPNYtvBnl+ChY7hJIZJp8EqP+eu1aXs0i00CcK7mb4+VuyXvvS/fBKD
-	 VIGKV5ZfjQgQ2BMX0ImQjaFAZ5KYm1fPg4uvKOZja69dmjguhc1rfImAIkaASbP1Jl
-	 vyWlMNalhAaOOSGexP5Bi94OCOINtSW8phSEz90IqRl6KCgf80JLAaoX/7g+pkCD8T
-	 Mt/wRzRrsYeNmu/OK7Y/EvXpOPHRY4Itl93QKmxAGpzVOhCwmwFNdrCOM5h+LeE5b4
-	 5LFnjwwZxgmrCwglHpnFXmbT8W9N8SzqhtI1WIfjas7dBXjGuWOTEd89Kel7Tky8zQ
-	 cH+qM/epFy2cg==
+	b=Z9i99yBg5yZ12sU5NcaiEV441A9JHYsIiaxX+P+TY4HmTTO7GpAG97fqoeXppS9Jd
+	 /QPijeqibeVDmGCLg89o8KbZrtqxCKA7hFuh4XDbvNYGYNKv5C06K2nSdilUTYVht5
+	 X2DpR6VT13Rw+dRFQ1oYkcR39MiN2Ni24EmfUHbk06ks6JAf2PklIDhxZtCBYRH4/J
+	 N3fm6n1DD4zhTvOnQjObm6Y0fEC07ih2Pe7yooIFGT37hhzXq6Q9Cfk/hipxLp2iAu
+	 vJ+7uxfyzMF9hAxjLbcvBEb07KdfuLE5bdG2H638SKwqhMO8bSGrpthlKcE7HEW4ZE
+	 FBO+JAbWpuinQ==
 From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>
-Cc: djwong@kernel.org, hch@lst.de
-In-Reply-To: <20261013211851.641256-1-sandeen@redhat.com>
-References: <20261013211851.641256-1-sandeen@redhat.com>
-Subject: Re: [PATCH 0/2] xfs: add missing cursor status check after btree
- ops
-Message-Id: <179196651512.20513.11743215029861321737.b4-ty@kernel.org>
-Date: Wed, 14 Oct 2026 10:28:35 +0200
+To: linux-xfs@vger.kernel.org, Pankaj Raghav <p.raghav@samsung.com>
+Cc: pankaj.raghav@linux.dev, John Garry <john.g.garry@oracle.com>, 
+ "Darrick J . Wong" <djwong@kernel.org>, gost.dev@samsung.com
+In-Reply-To: <20261008111147.3906817-1-p.raghav@samsung.com>
+References: <20261008111147.3906817-1-p.raghav@samsung.com>
+Subject: Re: [PATCH v3] xfs: don't limit software atomic writes by the
+ group alignment
+Message-Id: <179196651654.20513.6379916199777037805.b4-ty@kernel.org>
+Date: Wed, 14 Oct 2026 10:28:36 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,22 +46,20 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.3
 
-On Tue, 13 Oct 2026 16:07:45 -0500, Eric Sandeen wrote:
-> I've been looking at ways to reduce/eliminate the frequency of the:
-> 
-> 	if (XFS_IS_CORRUPT(mp, i != 1)) {
-> 		xfs_btree_mark_sick(cnt_cur);
-> 		return -EFSCORRUPTED;
-> 	}
+On Thu, 08 Oct 2026 13:11:47 +0200, Pankaj Raghav wrote:
+> xfs_calc_group_awu_max() clamps the atomic write unit maximum to the
+> greatest power-of-two factor of the group size when the device advertises
+> atomic writes, so that allocations can be made naturally aligned for
+> REQ_ATOMIC. But that value is the software limit: it is only used when
+> reflink is enabled, and out of place writes through the COW fork have no
+> alignment requirement.
 > 
 > [...]
 
 Applied to for-next, thanks!
 
-[1/2] xfs: add missing cursor status check after xfs_inobt_get_rec
-      commit: 5beb41df46f20d8ab5591c5c1f27e79e8a761616
-[2/2] xfs: add missing cursor stat checks after xfs_btree_delete
-      commit: b47fb1ed0221fd21e696b468ed9eb40dd3c21f4d
+[1/1] xfs: don't limit software atomic writes by the group alignment
+      commit: ec8f62cc109a3f596b3c65dc0f1011c209239051
 
 Best regards,
 -- 
