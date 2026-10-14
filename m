@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 766284AE8B1;
-	Wed, 14 Oct 2026 08:28:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C55DB4A5EC6;
+	Wed, 14 Oct 2026 08:28:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791966513; cv=none; b=jFmAgrLIKW0E/ndFXUALTpEXSwsB/IBzyQJ6QvGnHzAA/oeHpyIE1i5MU8TCUI1bSakUX5CXM8cWmpDy8hZ40GRLG0ti4pDO2ykb0aDkyGGvFGP/LzYFDNR/cCHbwY3YoP0RWeSB1HstV7hfF05YCEUkx7cQrgOXmlFpdouyNZg=
+	t=1791966514; cv=none; b=kNDvLum5efpMzyF01rvVWSpXv4VPZG5tQPQiMKY1zo34Guk/DuPAfXIZ1L/2gpNrRpeJ6NEiCKT4BLgZtXN8NH8fWJoZ56f7dcmeRJ/3VofXIeYhypl8luIihYgQ4dnJB6t8XYf9Id0dYd7gkuQyIdctWGfmIVRMLYAxf7JiWAo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791966513; c=relaxed/simple;
-	bh=kD1m3CEBLTbDBbikyRJ/CpGli05UsaY6HM3LA7bsndY=;
+	s=arc-20240116; t=1791966514; c=relaxed/simple;
+	bh=5B+s5XAtpLrp7aNBPuebaYjuzZX+7wRPOvmNro33yDg=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=Rh3JE92mAesXuYTr9gZSCkwoSjr7+Wzm0v6en18CcAlmhel4fFk9yt9C6LbgSSyDo+ed1rVXejYRez3eh1ZK4N9lpK43tWVUGXvz8omMzeu9SPBAZ+6EcKjzSSHJRFh9w6SG6Z3/ktoliDMXC36BgBkylqfxTzMwiNQb6BTC3xs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KGruZqd1; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=stoZ6sWY0ov4ray4M2aN+UEjVSYhHhRi6faY3ijiCeeEROy52WEDge7WLDe98VqXg0aWvAjEO1+moozcVGIA9c8UDIdcUV3YzZ3LFnglle8gzkriLLHUKFed3VLOIZFtmHP5jQ50lBaoCmd93XBg9efT+qs/slIiMfDDxXt1M/Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eaOsd4oW; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KGruZqd1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2D4771F00893;
-	Wed, 14 Oct 2026 08:28:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eaOsd4oW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9129E1F000FF;
+	Wed, 14 Oct 2026 08:28:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791966512;
-	bh=DeYFnjBMGkP3StKI3ec6bGS4eZr12RphlbspejgmOiI=;
+	s=k20260515; t=1791966513;
+	bh=0tgLJL4LD7zCdRELlMuMmXIhlo6JFZcu3GAiv5XGnAY=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=KGruZqd1nGeMIJGjBsO/GqEzJVk1P2j5yy+54vdLpKceTvVRGO6bXYibdYNpEU1X0
-	 1PUDmo9kKAmZsmeSxxPtuOQ1Q5iqxWx9iKdU+4hXkprSID/c9UxRrIeD7L2WnQNPMq
-	 9StF8u/EWckggtakcZebK2vdnL+lb19S2kOrmC22Vr54pxpmI56VZdZWail6CNuO6D
-	 TzNe6RBnZZcXlKgR9t2oYxQNI/UEBE81ldU5crDFWrnajExVWUytqr1eOA3veSDyuM
-	 P1NLCxGBYXkoHykQo5tOyZMHQvc/dzLJfu73KAgP9GIy0kP7I8XRvsoTLOueHupmgA
-	 54roJHNB76pXg==
+	b=eaOsd4oW1RANCyUPUEy13GaFMiQ+zrn6BKrUqAJTHZjiuoM3t8pPugaenzjj9U4QR
+	 Y+CDh5+vNOdkqgyPqPegoPMkMAUaSHnY7Pl4cFuN5T/G8OSFxJIYp8DOLS/yNMHFWs
+	 y+Npqc0sVRj5P5s+AZii49MbWQj3rF8um08etY49z6zKCG7AcPWK/Uh+G26CyVNpIQ
+	 PtiLCF6EKY9zNVyhnXiTubKFG9GdpCzPt1P/fO40To7rvoG2gzBU/6Ozzs7tM4RNiU
+	 gTEiPPXtIExIcyT+CGAPQvOsWsOkWv0PLwSWmBoiIHgcQWj70qygGH6nJDOnVT24vy
+	 LfiZwLJRcFcWw==
 From: Carlos Maiolino <cem@kernel.org>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: hch@lst.de, stable@vger.kernel.org, linux-xfs@vger.kernel.org
-In-Reply-To: <179186107061.1898400.3978552773417541744.stgit@frogsfrogsfrogs>
-References: <179186107061.1898400.3978552773417541744.stgit@frogsfrogsfrogs>
-Subject: Re: [PATCHSET v2 1/2] xfs: LLM-inspired bug fixes, part 22
-Message-Id: <179196651088.20513.6716892509876117666.b4-ty@kernel.org>
-Date: Wed, 14 Oct 2026 10:28:30 +0200
+Cc: stable@vger.kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
+In-Reply-To: <179186107760.1898896.12318125940367230627.stgit@frogsfrogsfrogs>
+References: <179186107760.1898896.12318125940367230627.stgit@frogsfrogsfrogs>
+Subject: Re: [PATCHSET v2 2/2] xfs: LLM-inspired bug fixes, part 23
+Message-Id: <179196651229.20513.10034700131514474421.b4-ty@kernel.org>
+Date: Wed, 14 Oct 2026 10:28:32 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,9 +44,9 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.3
 
-On Mon, 12 Oct 2026 23:05:16 -0700, Darrick J. Wong wrote:
-> Here's a twenty-second batch of xfs fixes resulting from a LLaMma.  Mwa
-> mwa mwa...
+On Mon, 12 Oct 2026 23:05:22 -0700, Darrick J. Wong wrote:
+> Here's a twenty-third batch of xfs fixes resulting from a LLaMma.  Mwa
+> mwa mwa... this is the final batch of fixes from me.
 > 
 > v2: fix issues pointed out by reviewers.
 > 
@@ -57,30 +57,30 @@ On Mon, 12 Oct 2026 23:05:16 -0700, Darrick J. Wong wrote:
 
 Applied to for-next, thanks!
 
-[01/12] xfs: don't overrun incore inode when cleaning attr forks
-        commit: c28b4b48deac17749ed1ebe4289a4ba73541ddc6
-[02/12] xfs: fix data fork block count check in xrep_inode_blockcounts
-        commit: 147f9f8300cb284923e08bb8a7b32ba9681c45ed
-[03/12] xfs: avoid oversized space allocations when regenerating metadata
-        commit: ca12256b7f9820aafb361ac496f048d2d4a71c23
-[04/12] xfs: reduce new btree slack factor if free space is negative
-        commit: 80f13dc7225eec318da7499c7a562d7a34d25e6a
-[05/12] xfs: don't queue rmap update twice when reaping a fork
-        commit: 219ff8a734d8438e24eb346a847c9b1ad9b7ab5d
-[06/12] xfs: only written file data blocks can be shared
-        commit: 634b63baf05062988456a0bd5df2696c14ea2949
-[07/12] xfs: check for fragments when full-extent sharing matches
-        commit: 95e213c1ddb40dfb0a8178ed35c9f29992a320e1
-[08/12] xfs: don't clear COWEXTSIZE on directories on reflink filesystems
-        commit: 3978b1f3109dfd5c648442bb040f9abd58608226
-[09/12] xfs: clear set[ug]id mode bits when zapping attr fork
-        commit: eb20a959760c21e3547cd811d0d9b0b29df98959
-[10/12] xfs: opportunistically skip btree block checks
-        commit: 4ce244b234c251963fca6dff9de6edf26a209d08
-[11/12] xfs: always report scrub errors in tracepoints
-        commit: 1ccc8f553d885d49c1bfe141ea1f331511940b3a
-[12/12] xfs: don't scan across metadata/regular directory trees for dirents
-        commit: 03ce4ca43c00394364493865f417d646e252bac2
+[01/12] xfs: don't set a metadata directory's parent to sb_rootino
+        commit: c9f98b0f4f70c8cfd617dc2886bf2fc0a36ab9da
+[02/12] xfs: don't rescan ifree and icount when frozen
+        commit: 18028768415e3c05ab7edb22d740e2f4dc52836a
+[03/12] xfs: rescan the AGs if incore delalloc counter is negative
+        commit: 47b1e941bb55f735d82ba2649412260da78b98f8
+[04/12] xfs: don't try to repair rtsummary if the summary file isn't computed
+        commit: 6e82b7641889ad0198f3bf17a5e4c6fe7aab0850
+[05/12] xfs: update quota flags on secondary supers when metadir enabled
+        commit: 9d9ea6e6cbc4cb1a36fb79f873d97e1ac2fe1a64
+[06/12] xfs: refactor directory data block walking loops in scrub
+        commit: 19b5653cc870788df71e7fcf2dd7b6131d8868dc
+[07/12] xfs: improve dirent bounds checking in scrub and repair
+        commit: 5d470234d04dae6fe2ca2cf4b9ef277b78c7e05a
+[08/12] xfs: drop unnecessary sa parameter from the xrep_ag init functions
+        commit: a55686b2f50500d0a453b43d45677c9824fb4437
+[09/12] xfs: drop unnecessary sr parameter from xrep_rtgroup init functions
+        commit: ec72fccbc852fdc30bebb31146374fc99ae0b87d
+[10/12] xfs: drop unnecessary sa parameter from xchk_ag init functions
+        commit: 49869d5d0356c9468621de24d49bac43b7893782
+[11/12] xfs: drop unnecessary sr parameter from xchk_rtgroup init functions
+        commit: 02c8e8d78792164df615a8c54411501e91fc7b64
+[12/12] xfs: refactor inode forkoff to byte conversions
+        commit: ce58cff1077dfb9ec3d0e6f5da1b06a85be035bb
 
 Best regards,
 -- 
