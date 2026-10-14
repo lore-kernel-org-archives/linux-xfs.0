@@ -1,143 +1,115 @@
-Received: from fhigh-a4-smtp.messagingengine.com (fhigh-a4-smtp.messagingengine.com [103.168.172.155])
+Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9429B2EC0A2
-	for <linux-xfs@vger.kernel.org>; Wed, 14 Oct 2026 00:16:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.155
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C69682F6918
+	for <linux-xfs@vger.kernel.org>; Wed, 14 Oct 2026 01:40:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.25
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791937003; cv=none; b=FMPVpAS52XF4LiU++5EDMuxw0PK8wbxbk6yOYMxTwAjHd1adwdSzmdDpb83es7uHgxJUw0q3Rt57n8oyw2fqmVGnMQ0d8Q7ock/+tW4KpTF04lCaQo8m9GIQfA0RvO+5d9PR56hEkpWKsplZvChBaQ0Oa/BZflCZe2Z7hn22Kzc=
+	t=1791942022; cv=none; b=n0+FPFLkPvwcfZ6MZTCac5qzQv05dWP7AZctszVHRVi1hJ+4AXxAB5J7vbUes7lGaD77IfNfdxjgIamotm+gHYGZ171pr+UCwByWyosegJ3xdS1L7JTqkfnevmcDID/NfGa+HoWHYzIevZMBGDZwyYkpmSl6tIYwQo7DG5YU71M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791937003; c=relaxed/simple;
-	bh=4k7aWAA8C3yrTnHJQh+m7eBp90UFyCHi0FG2/fLWTW0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=nJMiPD/fr8E1c4inion6eO+PtQJjLqdItwvuTwGhPu055TCrjhLvad5zzmSLQo3brqBWKuLerupRXtq1WGItsTZehGK08rJLICyD/OLIuO0CzhhL3HkczackRCc0WCoINqOQhHtFcfWLP86puG8UtTHLHXSGg4lOEtnQt6jeyzQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net; spf=pass smtp.mailfrom=sandeen.net; dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b=vPZWGhHf; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=x8DGcoAM; arc=none smtp.client-ip=103.168.172.155
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandeen.net
+	s=arc-20240116; t=1791942022; c=relaxed/simple;
+	bh=YoN78TWBlmpx0A6DZIRcttrESlXSOSTvIOjKF9tTnoE=;
+	h=Mime-Version:Subject:From:To:CC:In-Reply-To:Message-ID:Date:
+	 Content-Type:References; b=h2l2FMsWYv8U2EiYcE/b/RxkUQGs2Q3oOeeIohy3k6pSyjO5nNO0U16X+gr8r7Q7oCB6i5FPDdd/eNi+/a7mwBmbggfg93oJ4E/2RBebTgx/TdLXOaWdF6Mn8MDzYuFf8OemGAe/KGa0PHTZJwcMRaQi2DwKN6xWuCr2gqd9af4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=iBiXfFju; arc=none smtp.client-ip=203.254.224.25
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b="vPZWGhHf";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="x8DGcoAM"
-Received: from phl-compute-10.internal (phl-compute-10.internal [10.202.2.50])
-	by mailfhigh.phl.internal (Postfix) with ESMTP id B0F6C1400178
-	for <linux-xfs@vger.kernel.org>; Tue, 13 Oct 2026 20:16:40 -0400 (EDT)
-Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-10.internal (MEProxy); Tue, 13 Oct 2026 20:16:40 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm2; t=1791937000;
-	 x=1792023400; bh=TgaraTKYy1EhNVxtlFvlQLdtFK0H8j3SfiXmwA2Xm4M=; b=
-	vPZWGhHflV+mveY0Q2cZ8k51QoRFbw7fhUhSrt+DBFGzW83YgcMgNXkpAPJEQ3oq
-	InMQ9k2Dwk+t3/3QqdyWBSBc5F6e26vD0V1/ruD3xhMgR3sO8j9wqD/bjrsopwYx
-	bNOR6T1CiX0y2ny6eVKovQ4TyfTfmTEW9B3xvp0pECw74W4zEgusLAZOBCbqONQN
-	GzIbuwkW1wxLCqdUZHT3DrP3n+MGq/Uer705ub7iMf+PdzdUzQk+AeAk1VbWETtf
-	m6RjcN2Iuhmin5sAwnUy2yaGyPJkDZsYxbSHcq9Rsjn3MaklGxYRRagd9BbekEg1
-	ojMyftogHZleUm25CrSgpw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=1791937000; x=
-	1792023400; bh=TgaraTKYy1EhNVxtlFvlQLdtFK0H8j3SfiXmwA2Xm4M=; b=x
-	8DGcoAMC/QCzFcbcZpDKvshRC7irLUUSbs08YilmeRfpS2cwhlWf/ld7A5QRGTeg
-	qM3iJPrZ1DG5oxWOi21mR8/73lodnhIL3VezXg1+oHcGW/IQNinjGmApPNHN0mdj
-	capTr53V2icLmc50CDyVHMeQ4B5YTpFWOyS/b/cRFzMkygZ0eD13YfzIV4Dd6rxN
-	O7Ph3txeik4IlqCM/QIMj+GvC9BwhbOdpZ938rog4whUHBZ+D1e8XhLhIyCtNRum
-	p4/vTpwZFOFTDsZY/egLjuLEIy/VeXYZTSxbu9x4LJRvWflkU4YrBH/Q9YdUQSW7
-	Q96D4FpRR+MgDBeg4Cj2g==
-X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-06;
-	repo=github.com/dkim2wg/interop; date=2026-10-04; sw=lmtpprox;
-	action=sign d=sandeen.net a=rsa-sha256;
-DKIM2-Signature: i=1; m=1; t=1791937000; d=sandeen.net;
-	mf=PHNhbmRlZW5Ac2FuZGVlbi5uZXQ+;
-	rt=PGxpbnV4LXhmc0B2Z2VyLmtlcm5lbC5vcmc+;
-	s=fm2:rsa-sha256:sRVsqWUO/kJNi+ZAp18UHlbPA+C705n2cvbIsmp9cuxxXwf
-	JKzOmDU7CN7L/N3zMK3EeYp4X6pxspiMzEP+OKM/gQUm8Tx48tdVUDazJeXdVamW
-	5rsbOs7zbBAzRdL7eYMo6B7KEtb08Ee6GRF2mhUON5SyEx/85DYbn+AV/Ez/sbE3
-	LF+vEMmmIWOudli2LAklG055z/tSluvVPyzLTYjjIWj9iyba9yzn2aUs459t7QsQ
-	8CkqFKrIeCAz1UpX+S1n9QmhZpz9YRWquym0HyzMFJ8ff3PoJUtH3DQvU5Xavr7G
-	UY6CXJmRK6xmbFb42tA86GpQeAeTLx9OoJopp6A==;
-X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-06;
-	repo=github.com/dkim2wg/interop; date=2026-10-04; sw=lmtpprox;
-	action=mi-m=1; hc=14;
-	hn=cc,content-language,content-transfer-encoding,content-type,
-	date,feedback-id,from,in-reply-to,message-id,mime-version,
-	references,subject,to,user-agent;
-Message-Instance: m=1; h=sha256:54rU4t5VQ5CCWbVQ2qVtBPPdcZOJoWUrcU1unnZN7YA=:4k7aWAA8C3yrTnHJQh+m7eBp90UFyCHi0FG2/fLWTW0=;
-X-ME-Sender: <xms:6MnOajrG8dkFacp-TEUvbN13sZlnnlH6F-QOTfXOj9imYtV96EokPQ>
-    <xme:6MnOakhprigEzB8ahRhidzwZ7-L3p8OA2T9sUlugjQXcX9VKZfuhuU1x_F1DdKIUm
-    3TCS1TbjbnahU4cXobEEsFmgCgvyidAfxvdoRps5m0ZukNJBU_IDlFQ>
-X-ME-Received: <xmr:6MnOaogWTCYZ8REnrELFtO21HTGERn1-OW-O9n3QeVz3J7jqj4ZvN5LT7fd5CZwnXNarIsUqkX1K_3uJZ_PDnnhsYsB2lQ>
-X-ME-Proxy-Cause: dmFkZTE9i8/UUgFoZnsQzAxv4prq+fflq/Egn5q8Wgh2V8hL/iCTiu9mJ8aC4dTIbO3xe1
-    4WV06TfmJK+9yXjfbureDtPDqAre2Nu2H/vETubpvTNwkl1MgZS5VltxdqmBJxDEBVSJWW
-    O0SaiuXWkWXrlY6kLTHnrJ8+J3VP1w1ruUOFgNaEbNpf/EaMtV+WTFBACo78QCGY/Ma7y7
-    wRte+MFc4ML7QA+TovlHTHk/PwD8cPi5zlwq6P9BjhuHMoBvPOVwAR7w7wzDp5kxfrYiHP
-    jN6FCp0cm8AvE9wXKu/VTWdS7tsMCmuyAUgNSu+G08sQyfcY+tgJr0+x8zIFrsaE2V9pPo
-    G6Ny/5h2Vx2KrevnEU544Bo0DYN4TWdg8xGGAhJX5jmtwhhkHAhIaptsI8ovw45fMiBaMi
-    8UujLITNI+hovSAcxBzdO86I75jcWZD4BgNPSFsOqIvwS7hEKjhvn0GU+qDGNuKZCvy8Ia
-    oA70/bhNUfmPiZVp3a6cC68Y0J76jo2MOGyk25zSuRwdKMtIZwOmknGErtko6t516IyVHh
-    CrCMdLdcOPO2UdKANGgrmiDcOmwAumQ6NkQpVUCHlbICrHeu4Cxj2uTNj3qC4Qtz264mNX
-    pgcj85Or7r9yKvDRvvBL04h2ncII0Jh728plyd9N/+jT1kCPqOcw3FIY6uzA
-X-ME-Proxy: <xmx:6MnOaijypOU6twK9m4dz2RTh1aDjHVDW6YxDQ3RoaOzfKdPnnLBN_w>
-    <xmx:6MnOagLIwBoTKjwHonOrQgf6cd_z6xM4bOeYsR846S9n4qCSylt5ZA>
-    <xmx:6MnOapFOm7kZL3N9FJFbKurToAWRwk-Uia2N06-Unc6YEOlj4ut2FA>
-    <xmx:6MnOasQBnBGMkz9q6MB8cSUPLOJ8g_kREBlb6VEQEqxuaguERkToCQ>
-    <xmx:6MnOaiX54dOQSVxonWkmeOW0ZpQWY3BpfzMkW-_JrtF2kroXT7METmwq>
-Feedback-ID: i2b59495a:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
- 13 Oct 2026 20:16:39 -0400 (EDT)
-Message-ID: <551761b8-51c9-42fb-8992-980a72999135@sandeen.net>
-Date: Tue, 13 Oct 2026 19:16:39 -0500
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="iBiXfFju"
+Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
+	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20261014014018epoutp0254d3770565d6164b007c25362e819e45~eQcWas2Br1347013470epoutp026
+	for <linux-xfs@vger.kernel.org>; Wed, 14 Oct 2026 01:40:18 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20261014014018epoutp0254d3770565d6164b007c25362e819e45~eQcWas2Br1347013470epoutp026
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1791942018;
+	bh=1d+d0jVHgB0EadQMkTGvrSCW+JV5YjB/dJMefH+YkxU=;
+	h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
+	b=iBiXfFjuvp/91UceZp/C0Ow1sIBAEGzLqydF9emm/GvnYF2JeNMEywCjIomPbgqE8
+	 kc3gZ8THLPH17D/01CW1kccTR5PFyF7pGBWSTdk88Uy8DzpxAyrGw7ncCXySaFKLK8
+	 BCKlUdb4DUSqhknqrg5/2+GQ2hLKmHwA8AmiMIGQ=
+Received: from epsnrtp03.localdomain (unknown [182.195.42.155]) by
+	epcas2p2.samsung.com (KnoxPortal) with ESMTPS id
+	20261014014017epcas2p24aaeaae47c415e988a530ec528956580~eQcVs79Zi3261832618epcas2p2D;
+	Wed, 14 Oct 2026 01:40:17 +0000 (GMT)
+Received: from epcas2p4.samsung.com (unknown [182.195.38.211]) by
+	epsnrtp03.localdomain (Postfix) with ESMTP id 4j4DRP4mnxz3hhT4; Wed, 14 Oct
+	2026 01:40:17 +0000 (GMT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: [PATCH 1/2 V2] xfs: add missing cursor status check after
- xfs_inobt_get_rec
-To: Eric Sandeen <sandeen@redhat.com>, linux-xfs@vger.kernel.org
-Cc: cem@kernel.org, djwong@kernel.org, hch@lst.de
-References: <20261013211851.641256-1-sandeen@redhat.com>
- <20261013211851.641256-2-sandeen@redhat.com>
-Content-Language: en-US
-From: Eric Sandeen <sandeen@sandeen.net>
-In-Reply-To: <20261013211851.641256-2-sandeen@redhat.com>
-Content-Type: text/plain; charset=UTF-8
+Mime-Version: 1.0
+Subject: RE:(2) [PATCH] xfs: refuse a pNFS LAYOUTCOMMIT of a range without
+ blocks
+Reply-To: daejun7.park@samsung.com
+Sender: Daejun Park <daejun7.park@samsung.com>
+From: Daejun Park <daejun7.park@samsung.com>
+To: Christoph Hellwig <hch@lst.de>
+CC: Carlos Maiolino <cem@kernel.org>, "linux-xfs@vger.kernel.org"
+	<linux-xfs@vger.kernel.org>, "Darrick J. Wong" <djwong@kernel.org>, Dave
+	Chinner <dgc@kernel.org>, Chuck Lever <cel@kernel.org>, Jeff Layton
+	<jlayton@kernel.org>, Dai Ngo <Dai.Ngo@oracle.com>, Sergey Bashirov
+	<sergeybashirov@gmail.com>, "linux-nfs@vger.kernel.org"
+	<linux-nfs@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "stable@vger.kernel.org"
+	<stable@vger.kernel.org>, Daejun Park <daejun7.park@samsung.com>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+In-Reply-To: <20261013120359.GB2944@lst.de>
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <20261014014017epcms2p7ab0ff4f1356d695c55514bd7ccaebadf@epcms2p7>
+Date: Wed, 14 Oct 2026 10:40:17 +0900
+X-CMS-MailID: 20261014014017epcms2p7ab0ff4f1356d695c55514bd7ccaebadf
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+cpgsPolicy: CPGSC10-223,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20261013120408epcas2p19974f8ffd4afa0b0cc5a4f19e9218004
+References: <20261013120359.GB2944@lst.de>
+	<20261013-xfs-pnfs-commit-hole-v1-1-740912db9102@samsung.com>
+	<CGME20261013120408epcas2p19974f8ffd4afa0b0cc5a4f19e9218004@epcms2p7>
 
-The xfs_inobt_get_rec() call in xfs_ialloc_count_ondisk fails to check
-the &has_record return - if the record is not found, the next
-conditional will read an uninitialized  or stale irec. Fix that.
+On Tue, Oct 13, 2026 at 02:03:59PM +0200, Christoph Hellwig wrote:
+> blockgc really should not free them due to the prealloc inode flag.
+> Do you still see that with your prefix flag setting fix?  If so we
+> have a deeper problem.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
----
+I don't see it with "xfs: mark the inode preallocated for pNFS write
+layouts past EOF" applied: in the same test, blockgc keeps the blocks
+and the LAYOUTCOMMIT succeeds with the client's data in place. The
+sentence was about trees without that patch, so I'll drop it in v2 and
+keep the reclaim case and the range that was never laid out.
 
-V2: oops, fix function name in subject!
+> It would be great to get these included in pynfs.
+>
+> Also a little doc on your setup to run pynfs in client mode against
+> nfsd with block/scsilayout would probably useful.
 
- fs/xfs/libxfs/xfs_ialloc.c | 5 +++++
- 1 file changed, 5 insertions(+)
+Sure, I'll send them to pynfs with a short README section on the setup,
+on top of the block layout test I posted earlier:
+https://lore.kernel.org/r/20261006002622epcms2p38e492aef17fdf79e48b05c9aada2918d@epcms2p3
 
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index e705f681ed44..17699f7c009f 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -2843,6 +2843,11 @@ xfs_ialloc_count_ondisk(
- 		error = xfs_inobt_get_rec(cur, &irec, &has_record);
- 		if (error)
- 			return error;
-+		if (XFS_IS_CORRUPT(cur->bc_mp, has_record != 1)) {
-+			xfs_btree_mark_sick(cur);
-+			return -EFSCORRUPTED;
-+		}
-+
- 		if (irec.ir_startino > high)
- 			break;
- 
--- 
-2.55.0
+> As soon as we drop the lock, the result might be stale.  So I suspect
+> we want a CONVERT_ONLY flag to xfs_bmapi_write that makes it refuse
+> to allocate blocks instead in one atomic operation.
 
+The IOLOCK held across both keeps truncate, fallocate and blockgc out
+today, but the flag doesn't depend on that, so v2 does it that way:
+xfs_bmapi_write() takes a new XFS_BMAPI_CONVERT_ONLY flag that fails for
+a hole or a delalloc extent instead of allocating, and
+xfs_fs_commit_blocks() passes it through xfs_iomap_write_unwritten().
 
+One difference from v1: a LAYOUTCOMMIT with a laid-out range followed by
+a hole now converts the laid-out range before it fails.
+xfs_fs_commit_blocks() already left earlier extents converted when a
+later one failed, and the Linux client resends all of its extents after
+a failed LAYOUTCOMMIT, so I don't think that matters.
