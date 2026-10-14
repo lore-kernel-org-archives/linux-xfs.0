@@ -1,155 +1,291 @@
-Received: from mx0b-00364e01.pphosted.com (mx0b-00364e01.pphosted.com [148.163.139.74])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 983D1562617
-	for <linux-xfs@vger.kernel.org>; Wed, 14 Oct 2026 19:00:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.139.74
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792004411; cv=none; b=l8XW8U5QyKrszaFxtQeJsI5eRMvq0wk7yoSI2HJ+AKNA5HZ7hpJOJS2muKz4MqskoYJH/ymH9WzGC8ojVIdl0lSSM2oy6KeIeq8j0yAfpwOwuNuq1ZnMmXOe1OozcvXu2Tdvhv+sOm5+8Z7v9ybnOf+Qm5EBiG/0g25xKRvHi7I=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792004411; c=relaxed/simple;
-	bh=Rb8XZmmvT8cxn74MXNUCeOuPGauZxlvtGCiTJh0eb40=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=E260am8G87EldETTvynH4vE40/Sp9/W3D9znFtIiIpyBMzws6jTRdQ8WryexClpmMxguu+HZSSoYXpO5ggU19m9mZ+zE6b+5C6wNVsPsuUHgeWI9/PMVnbPB2WMM0YXTlt/4Q6vT++3AThACCfkiT3v6zHHBblCUzaHYG/9K5KY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=columbia.edu; spf=pass smtp.mailfrom=columbia.edu; dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b=mWWj+UUG; dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b=GmnEUgmb; arc=none smtp.client-ip=148.163.139.74
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=columbia.edu
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=columbia.edu
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8A253B9D8C
+	for <linux-xfs@vger.kernel.org>; Wed, 14 Oct 2026 23:10:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.214.169
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1792019444; cv=pass; b=ewrCM5QstgWwWV/id/zOcTgJmAnQR2EXAh48ZsC7uNZILxhR9EV7CxH0+dkKgSw/FjG/vTUpcbA0BEJEkyMqwWhMm6i8s9quSB+fvVxmfQxxMKHEzGD5GpIYQNVWSW+aInDIYM/00Ti1ItO6npNHLr+nMKxBglZvYOzxzYHZBGE=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1792019444; c=relaxed/simple;
+	bh=5sBlQyUblg8X5f6D7cEzH1eaWzUmXoq4kLDUuAgeuWU=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=AEkv3vxAuzfVp8/0yP/MMdqPCv4Y4Wbfv9Dg0AE/gDxxP+9hICk1LE6Fosxkvt9RrZgshe5BbNT7QfDwZ4tvXEsCdcqq6I9hp5YAGY9nHllo1FEW3JcD7AfJhagttQT9lMkxwdClbn9OTbk9b6g5RyEnMUeBN3XoTAyd1kkDUGo=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=EEAAYyii; arc=pass smtp.client-ip=209.85.214.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b="mWWj+UUG";
-	dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b="GmnEUgmb"
-Received: from pps.filterd (m0167076.ppops.net [127.0.0.1])
-	by mx0b-00364e01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69EInsh22643648
-	for <linux-xfs@vger.kernel.org>; Wed, 14 Oct 2026 15:00:09 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=columbia.edu; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pps01; bh=SHv5
-	vB/tk7sll8Kkk+NHhBijfzgb1pYQHOyGwy6N4aU=; b=mWWj+UUGvdXSLYjqGKBk
-	qRjyZAFUBqKDFrBsJRjkInUs3ju9ynsaD1j6tJXOE3D0QkYUleR2qkiM6AT/S4pI
-	vyObvXKzpUi43jFMC6RmvfwI/sftJiI+Hw4rC/jRdrGpIQEIu2NtmXyndK6GA255
-	bd1juLQfEt+qjg448awRfj7cNjD53xF9l7L663bj54t/tGEbjs/hllrUIfkkgnbe
-	BIUvzpNKtqm8z3t+iPKuTj9dC/dPMoTDtxhMJvHK7TRZqVaOLjqkSpyqJWILv2w8
-	1B2EwMv2fuKSjN86b6U1uEvcoH3PsxtASiWjbYjlsZ+dOFtthToPQ0JdCQVlHupv
-	rQ==
-Received: from mail-qv1-f70.google.com (mail-qv1-f70.google.com [209.85.219.70])
-	by mx0b-00364e01.pphosted.com (PPS) with ESMTPS id 4ha7n8vf2a-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-xfs@vger.kernel.org>; Wed, 14 Oct 2026 15:00:09 -0400 (EDT)
-Received: by mail-qv1-f70.google.com with SMTP id 6a1803df08f44-91064f6e75bso156356286d6.3
-        for <linux-xfs@vger.kernel.org>; Wed, 14 Oct 2026 12:00:09 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EEAAYyii"
+Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-2e60f9af6e6so12278095ad.3
+        for <linux-xfs@vger.kernel.org>; Wed, 14 Oct 2026 16:10:42 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1792019442; cv=none;
+        d=google.com; s=arc-20260327;
+        b=g7dMJu62uD/VyImaFuIHAT4fANT/v90LEIPdg74qEhBHO6YYo7wfzTB+Av1ZGCDOyc
+         693399DTWOCeaFGV0cVqYkNav1SeVmTuXslhywzZhbOAeSYmzBmfhlFN3VUZHMaqzhbe
+         zTzuQH0Qx05x+shkco/kclB5ouZGVsXfxQf0Pe2qv5ES8LGpn+q0P1g1ySbSG0+Hu4GY
+         0tLYYL/7o0SdqwWDTz5YCO7EhqruvbpLqtX2rcu10YcYdk5o23h+7wUefPx5UGhc2iFk
+         NQcAApkIkfoIyEGNP5xtNLXzVb9MOrNv6izWo4Lo7BXchr6AC3cNS9qhSPwPainRpGfb
+         huZg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=vsiElFiNwdF835oqh77xnoP/PMUdjlzJFDGjjGhfV7I=;
+        fh=Ubq8TFiXC7KjvK4hOzQAhEVmIR5KxnbNmU0i16shvwk=;
+        b=lmoVRi8usNW58KY5iuz1orfwbRrSm41GrfNHjBq9o3+SvR3Yb1I5INX6yWL1WbB2VN
+         Hd7Y0SkkK1HQkE1UbkRTolt9wypxdyPeHq1qX0dtfRweOpaisJOKA0wlpFYzpi+ZnwCF
+         Bzry5PGgiiH2a2Mub0zbZRLkSG+eDHACCho5EDl1pn83ASWowdjFXissm/Uc3yjhWQNq
+         xScsNEyZEMdY6YztcmTXQ2V2Uci9Jm683Pfc3oLOyxA12N6KYqEKTU0MvCZbrd79uHJ8
+         e81lQFYgU8ykv3NFByj2iQKs9fasZBygv0GbTzjhBLbWYrUVup0/bEuQw4xRraYcpGW4
+         VfZw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=columbia.edu; s=lionmail; t=1792004409; x=1792609209; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=SHv5vB/tk7sll8Kkk+NHhBijfzgb1pYQHOyGwy6N4aU=;
-        b=GmnEUgmbO1jtfbHlikfGcgb5g3LkhhxceJKzyzKkzdxNSUzkgIVRUVUYWO1+FzBET/
-         px3EqZ2EY93UitUZh5JKkjc4Miq4tkxnRM3y9T5JHdZmsunVzdq88pJmvFKxEXGa0Bpt
-         xdALZ7ADYu3QnsOGZVqEdNUY6nG/Z8AZPIA4hKEbv7VDk/KR3kP25izq0p/ebfMhbBgH
-         KLnJJIjIxClFY2stKB5SL84sRpMG1hUSBcjKrTg/Z9divyzTZ88f0sDt3Wu2uPEvSnax
-         zzYszrRbhFQrXy76uK5YxdL6jlLDuXB86geUlhtwYQQK4hXA0OA+1S1NFuM4QFfNMcSr
-         skbg==
+        d=gmail.com; s=20251104; t=1792019442; x=1792624242; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=vsiElFiNwdF835oqh77xnoP/PMUdjlzJFDGjjGhfV7I=;
+        b=EEAAYyii4Mo5zS88SgvMREwAcoHXSXxT8UoH9d2J2h7uU6jLkBsMjUV22cB0ZhOrIo
+         vAjRk6uIlf8k1bOAGFGcdja2kHzBDIwQVLZUyrV4h0lCXaE7UP3gnUCIQdD8Wrqvzl1j
+         HfL15T93Nc+ecEpFLpaohGWbR4WyR2y1658nXn3gRYEvjxLyE/4gFQcMBAANr9NPwikv
+         soUEwQLBTeAJBR6XnGxlkvoA4UXU/jnRGVWamgPsdg1nYbER7AgKGu/FUio/T7/4DFdv
+         6DF3HiA2dmyNYhf3KkZwmVGVAMwUb1OC0lq4qsdHe8zNXvvOk+dhNYtgChnkjnWr6xK5
+         0Ukg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792004409; x=1792609209;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=SHv5vB/tk7sll8Kkk+NHhBijfzgb1pYQHOyGwy6N4aU=;
-        b=f24MUUtdzXgh69PuccpZYP2z2KhyHwtdA67a7bkJt4khbs8GsNXF011aehyVH7WczU
-         n1jR6nD0zGXfXMNyqOQm+Dwpcp+r72H2QvtegCbwW8SMgKoPCAGHTbwgRPf9lLLzK0jo
-         +ya8mwVKugIpfKptMtcZEEm9sza9Zpin8JWlxaJjBgvvgfdYIpH5HlwGw7sPltXT5lkN
-         dVAgsmKNrs4Hm4dL9JJOqHcza5pOqJhUiwhX7pAtjCx/h8J719P7p0xZWUNpt/etagLc
-         vlPacBZ1OJ2G7SxsC2YG3KYSO1ePek/6nZbt1+PZxJFX93WMymb6mz5pQPXMP1+ctHaz
-         +pJw==
-X-Forwarded-Encrypted: i=1; AKwUvBy/BNq8nY8akbvpvgB2h2JBtIF2Q9HmzCAQWo3lA9lsSgLkJVFOz+IJc90UQpz7WZSRWBNJEQTxrcc=@vger.kernel.org
-X-Gm-Message-State: AFq9FYJs+D/nuD9gpzNk1b24EQAV7Yq3z1szNSXFAhHsVDmds30Kf+cl
-	jq3grqedT6wCBXdkJvbnntG+1oIQLDPQlJELWKVRtINUS7Is/mbepZrdjLwD4reE+Abg4ks8PY9
-	r3+bxNRVwkrDyHyaj7zy7AiNzo1uA8E+B3slI4zfqUdfuUbNaqySA67UKQg==
-X-Gm-Gg: AYBFou0yFN/dqBgfJdQ3bztkNOwM9+RDDD4VJnY/xR3LVMXCS23EXFqu+JGbiTLu9h9
-	2iecnGptCH5RC+IjbDOhDSqo9czmztYVslcUBXP3qmh9EtfjijyrQG+hirY6ol4T0bYMc8oqMJD
-	U7hnZAXa3IqxZVK4gpA2IPSvgI6SAKTL1WP0kHMyTJf1rHP4bRwjVDt492TwnI5cdDiHhqoDCQq
-	Bqar5A2mA1GqICHmA87kllzKrkxlJCIFWV2vPH/bQ3Ky7IpZ4c0U2aWU9S2RaYL/iDBaqM97l/m
-	ZgAEaFPnnWCfqa8M7i0a6Wquq6qmT789HH8KuBB7uRspf9wj2QvzUldnrsgOLT0cifvaPzG5Zkd
-	cLSeyCXPPefnei0EZPUSvGdM9fSQM6ut/X61KM4xk8qxP21h3
-X-Received: by 2002:ad4:5c85:0:b0:91b:5d39:e12b with SMTP id 6a1803df08f44-91b5d39e8fcmr282066366d6.52.1792004403626;
-        Wed, 14 Oct 2026 12:00:03 -0700 (PDT)
-X-Received: by 2002:ad4:5c85:0:b0:91b:5d39:e12b with SMTP id 6a1803df08f44-91b5d39e8fcmr282065896d6.52.1792004403051;
-        Wed, 14 Oct 2026 12:00:03 -0700 (PDT)
-Received: from [10.207.9.0] (nat-128-59-176-148.net.columbia.edu. [128.59.176.148])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-91b97b3864dsm59747086d6.14.2026.10.14.12.00.02
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 14 Oct 2026 12:00:02 -0700 (PDT)
-Message-ID: <54a2b38f-f863-48dc-be26-b18949be337d@columbia.edu>
-Date: Wed, 14 Oct 2026 15:00:01 -0400
+        d=1e100.net; s=20260707; t=1792019442; x=1792624242;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=vsiElFiNwdF835oqh77xnoP/PMUdjlzJFDGjjGhfV7I=;
+        b=SbKeQ6+KZviy0mPPA1foTafpjUqTxD3/QI++RegV9pib8Raw9sx1xtDXw3gd6biBD2
+         CZdXnJh8gg1ItC+2AtKaTwQmWRPX66mmW0BmYAxT79BUcljhhO4fZxsgp3F08G5oota2
+         AY6w5/4PHODOD4S31jMl6QLAes7vquyenhOKHMOOd3uKi1dwDe512sFAfxiJzkniQJfB
+         k4xwtXQZf2Bb/kzmrp0C2ANF0zDWCyAp+7ObGsUAfx/UiELhT3j0OB1OAJ8otXQ/xOgL
+         bIyzzwKQIyHAFGz93BOCLqIiXsP1WV5u4nOl7qiYv+Zmqk9iyWU08qqw8PVWiyC/idCK
+         jKtA==
+X-Gm-Message-State: AFq9FYKtp559YsQNXW7hJMwel5dT4ef0LmeyfWnjPGWw7PPhctOAsOKr
+	F6wwv9K0Ch0k5Q5uJDXWHfOlyAJiHm4YNg15bWFcqKulrqC9JpSUDNMg/sBLFhB6lW2+/vspY8y
+	EiSyQ+lYGqcqv2iNFOxc/m52oLeDIuRo=
+X-Gm-Gg: AYBFou1YVRupBvFCuAyqPaPDsGHqJwqSJM2qtpol3OC/MJQLpkJkT1RbuxNuqcYMlNx
+	vXCAjuccpjMEqixY4haAhWNviSrQza3vuR5MsyzGNjmVMmfpc7zd/HnSvJOfK9busR1DMVy9rnh
+	weJHvQAGqI63s3HaowpVBiDjRhJ5tydi+PBA4Xn9NCGlQ+JmVd8K2hsqPY9e2p/IVkSe4ooCo0t
+	++18PW+dfGLHP0ZYMWLTARys8i4LfFiQRFC3T99Fn3tIPvUHy4m7pRWumx/UN9k8LE4RlGej+1y
+	eVExOlr0cWv8NydbcHiwIDxPmj/mZpOwdAkKDty5RyegWDepDrdrsuWaEMkJIIxFJAroBzueQMJ
+	eNRm93AgTa4em
+X-Received: by 2002:a17:902:ef46:b0:2e6:24da:a4b8 with SMTP id
+ d9443c01a7336-2e842e135c5mr136978685ad.38.1792019441937; Wed, 14 Oct 2026
+ 16:10:41 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 5/9] block: fail a short atomic pin in
- bio_iov_iter_get_pages()
-To: John Garry <john.garry@linux.dev>, Jens Axboe <axboe@kernel.dk>,
-        Christoph Hellwig <hch@lst.de>,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        Luis Chamberlain <mcgrof@kernel.org>,
-        Hannes Reinecke <hare@kernel.org>,
-        "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        Christian Brauner <brauner@kernel.org>,
-        "Darrick J. Wong"
- <djwong@kernel.org>,
-        Keith Busch <kbusch@kernel.org>, "Martin K. Petersen" <mkp@kernel.org>
-Cc: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Sashiko <sashiko-bot@kernel.org>
-References: <20261009-blkdev-fixes-v6-0-307939c387df@columbia.edu>
- <20261009-blkdev-fixes-v6-5-307939c387df@columbia.edu>
- <82978d5c-3e08-48e9-bf0a-7913e1cd0507@linux.dev>
-Content-Language: en-US
-From: Tal Zussman <tz2294@columbia.edu>
-In-Reply-To: <82978d5c-3e08-48e9-bf0a-7913e1cd0507@linux.dev>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-GUID: p5esj0Skvv0n2EXRbsq7x87zH9M5PEPf
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDE0MDA3NSBTYWx0ZWRfX6d2BhTqf7ilv
- En7J0rIFH+qx+PFvOnm7eP9JeMRqj/fY84WRFlObJzYdV4hCLc+x9FemZ5zKjhUX/5BpOvSHoj7
- cw0//MVITrwvfLay2bdElHGK9W/kkNT7c8KcOdX2HbGtmCjqzsPac0tiK+GBNEuvTxuDo3yh2eV
- ulA9OsBRAM1OQWaZyuLocqR+vDimV9+GHHresdZIl5Td9naDnmkB5RXHRNNnOb2vI/NOhbiH7t/
- +ef9I+U92DvhOHdYTNEgQFWGtYgJ9LeAf9rKHD4wtXTEZ2Va5u6Ou5kOQuc2hYOi4dUEsYARJBx
- dzZy3RRdih7q/zYTYbez9mzdrR08ezgAVJh7aooFAYI5zAlvqmv3u9YNdTaHSmtGZAJnlx1trL8
- dVLZXph26AFqOdPZX+YdsodWVXhVnMhlUbUgtBCUHuCRerzpDyIEpF4vg0PDVsywWGD63J2XtqJ
- JPWvgXH4M9KJ/LCAA4A==
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDE0MDA3NSBTYWx0ZWRfX5ema5q7Hvqwy
- Qmi0SRISdFxK408iKJ/LgCOitZJA/0sFsqW3fCOCkcqVMFBEsa1DZn65o/39DZGad407gwhh33a
- SKAvgilW63xdSAZJuE8qERuDTZ2jcRwtMmrwXJHiT6KTQ4jIWZKe
-X-Proofpoint-ORIG-GUID: p5esj0Skvv0n2EXRbsq7x87zH9M5PEPf
-X-Authority-Analysis: v=2.4 cv=G8iJgNk5 c=1 sm=1 tr=0 ts=6acfd139 cx=c_pps
- a=oc9J++0uMp73DTRD5QyR2A==:117 a=dxtdfZqDOO0kCslK4e47hQ==:17
- a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=x7bEGLp0ZPQA:10 a=A0y_DWxS2BwA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=Da8U98TiO7q1upZEImrf:22 a=Qm0qsxP7aFY2tkT6R2MF:22
- a=p2SREvNk3m13K0H494MA:9 a=QEXdDO2ut3YA:10 a=iYH6xdkBrDN1Jqds4HTS:22
-X-Proofpoint-Virus-Version: vendor=nai engine=6900 definitions=11935
- signatures=596817
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 spamscore=0 adultscore=0 lowpriorityscore=10 phishscore=0
- priorityscore=1501 impostorscore=10 suspectscore=0 malwarescore=0
- bulkscore=10 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2610080000
- definitions=main-2610140075
+References: <CAF8PYMjkpEkoop-Wbk=2oBMdqer-pWh1osPvhSv90D2fwLSv0w@mail.gmail.com>
+ <as1HVVUXdMlpXQGT@dread> <CAF8PYMiMZ5uFGsLnms4pNtMHc=TKgzcKvoLtydGXEFS7KM_r5g@mail.gmail.com>
+ <as7wb-bdykxSKenP@dread>
+In-Reply-To: <as7wb-bdykxSKenP@dread>
+From: Vitali Lovich <vlovich@gmail.com>
+Date: Wed, 14 Oct 2026 16:10:30 -0700
+X-Gm-Features: AclHuK8CHnnbNn1YoMQP4R3nSGJch3Oq3jQEWsIZP9CeMX4HMUQlkyeLfEhI6Xc
+Message-ID: <CAF8PYMhk202oMMNAdT0yPDD=J8rG5kgKVRSRnf5ix+x6_SJmYQ@mail.gmail.com>
+Subject: Re: Really bad I/O lock contention between non-overlapping reader and writer
+To: Dave Chinner <dgc@kernel.org>
+Cc: linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 10/13/26 4:40 AM, John Garry wrote:
-> I think that you can now remove the REQ_ATOMIC check after the
-> iomap_dio_bio_iter_one() -> bio_iov_iter_get_pages() call also; however,
-> considering the trees, it's better to wait until 7.4-rc1 is released.
-> 
-> Thanks,
-> John
-> 
+Ok. I have a patch series I'm happy to share. It has no meaningful
+performance degradation / scaling problems and largely fixes the
+head-of-line blocking problem without the challenges of range
+tracking. Before I post it, some stylistic questions for you:
 
-Sounds good, I'll queue that up for post-merge window.
+* Do you prefer it as a new RFC e-mail chain or continue here
+* Are there specific benchmarks / workloads you'd like me to gather numbers=
+?
+* Is a VM with RAM XFS filesystem sufficient or is raw metal w/ an
+NVMe drive required?
 
-Thanks,
-Tal
+Cheers,
+Vitali
+
+On Tue, Oct 13, 2026 at 8:01=E2=80=AFPM Dave Chinner <dgc@kernel.org> wrote=
+:
+>
+> On Tue, Oct 13, 2026 at 04:49:53PM -0700, Vitali Lovich wrote:
+> > On Mon, Oct 12, 2026 at 1:47=E2=80=AFPM Dave Chinner <dgc@kernel.org> w=
+rote:
+> > >
+> > > On Mon, Oct 12, 2026 at 10:47:56AM -0700, Vitali Lovich wrote:
+> > > > I think I encountered suboptimal locking behavior with concurrent
+> > > > readers and writers on a file, which resulted in huge latency spike=
+s
+> > > > for the reader even though the writers and readers are touching
+> > > > unrelated ranges within the file. The writer/hole puncher hold an
+> > > > exclusive lock on the inode while forcing a flush of outstanding
+> > > > writes to disk which creates huge latency spikes for reads.
+> > > >
+> > > > I've observed read's taking >> 500ms even though none of the writes
+> > > > could be overlapping and traces seem to indicate it's the shared in=
+ode
+> > > > lock contending with the exclusive inode lock that writes / hole
+> > > > punching is holding. In my real-world test case traces indicated th=
+at
+> > > > the cause might be inode_dio_wait while holding the exclusive inode
+> > > > lock.
+> > > >
+> > > > I've observed this behavior on XFS, EXT4 and BTRFS so it seems like=
+ a
+> > > > general VFS challenge. Generally, Btrfs seems to have less read
+> > > > latencies created than Ext4 (~2.5x more at the 0-1ms read than EXT4=
+),
+> > > > which in turn has smaller and fewer tail latencies than XFS  (~2x m=
+ore
+> > > > at 0-1ms and extreme is smaller) although all filesystems exhibit t=
+he
+> > > > issue. Starting with the XFS list in case I'm way off base that thi=
+s
+> > > > is a problem.
+> > > >
+> > > > Attaching a simplified reproduction of what I'm doing with one writ=
+er
+> > > > appending data to the file,
+> > >
+> > > The repro is using DIO writes. Speaking for XFS, these need needs
+> > > exclusive locking to serialise extending the file without causing
+> > > data corruption or stale data exposure. Once extended, the locking
+> > > demotes to shared, so the IO itself runs concurrently with reads.
+> > >
+> > > Appending DIO writes are basically a fast combined 'truncate up,
+> > > write' operation, and so has the same initial serialisation
+> > > constraints as 'truncate up' (i.e. exclusive locking).
+> > I think that's true if the write continues at the last byte of the
+> > previous one. If the write leaves a gap for whatever reason (e.g.
+> > writes are 4kib aligned but we only had 3.5kib of data before the file
+> > end) the fast-path isn't taken and you do have to wait for a full
+> > flush because XFS doesn't realize there's nothing overlapping. This
+> > scenario isn't present in the test case I published but I think it
+> > acts very similarly to hole punching.
+>
+> What happens when there are blocked beyond EOF that the file
+> extension exposes?
+>
+> > > > a separate writer punching holes in
+> > > > unrelated ranges,
+> > >
+> > > fallocate() is like truncate - it also needs exclusive locking and
+> > > no IO in flight to avoid a UAF of the data extent being punched out.
+> > It needs exclusive locking and draining around the range in flight,
+> > not necessarily the entire i_node.
+>
+> You don't need to explain how range locking works to me. If you
+> think that you need to explain basic stuff like this to me, then you
+> likely haven't understood what I've said.
+>
+> > > > and an O_DIRECT reader that's reading data.
+> > >
+> > > Shared locking only.
+> > If I wasn't clear, the problem is that the shared lock has a head of
+> > line blocking behind the exclusive lock that's draining the I/O even
+> > though userspace knows it's never touching that range.
+>
+> As I said above: competing shared vs exclusive locking implies head
+> of line blocking that causes latency issues. You don't need to
+> explain basic stuff to me.
+>
+> > > > Reads
+> > > > are doing random 4kib I/O in [0, 64MiB), hole punching is punching
+> > > > 4kib holes in [64MiB, 576Mib] and writing is always appending after
+> > > > 577MiB of the file.
+> > >
+> > > Educate me: what application workload has this IO pattern? Is this a
+> > > real world problem. i.e. why should we care about this contrived
+> > > scenario?
+> > I'm trying to implement an LSM database that stores everything in one
+> > file instead of taking the RocksDB approach of 1 file per SST. One
+> > file per SST has scaling problems of its own in other ways, but for
+> > concurrent reads and writes they acquire locks on different inodes
+> > (file and directory, respectively), which is why RocksDB doesn't have
+> > the problem highlighted in this test-case - it always reads and writes
+> > to separate i_nodes with the downside being that it ends up having to
+> > open an insane amount of files on startup and juggle them if there's
+> > more than the kernel limit allows.
+>
+> XFS can handle access to millions of files iat a time efficiently.
+> It's designed to work with massive data sets and lots of files.
+> You're having problems because you're trying to optimise everything
+> into a single file, hence hitting largely unfixable single file
+> scalability issues.
+>
+> > > Also, have you tried to implement highly concurrent range locks that
+> > > don't have far worse contention on the range lock tracking
+> > > structures themselves than a simple rwsem? Some of us here have
+> > > actually tried to do this, and the fact that we still use rwsems
+> > > should tell you a lot...
+> >
+> > I'm not pretending it's an easy problem to solve. I've come up with a
+> > few approaches and would love your feedback on what's the best path:
+> >
+> > 1. DIO tracking so that the inode keeps track of all outstanding
+> > DIO's. Rather than the barrier, we scan the list to find if there's
+> > any conflicts.
+>
+> Yup, that's a range lock.
+>
+> > I've prototyped this and it clearly solves the false
+> > synchronization barrier from this in my database (unrelated writes
+> > prolonging reads). This has a negative impact on normal workloads so I
+> > imagine this would be hidden behind an explicit ioctl if acceptable.
+>
+> No, "optional" locking models are a non-starter. It either works for
+> everything or it is a non-starter.
+>
+> > 2. Introduce generational barriers where hole punching / writing past
+> > the end of the file still waits for DIOs but outside the exclusive
+> > lock.
+>
+> The exclusive lock forms an IO submission barrier allowing in-flight
+> DIOs to drain and hence the extending write/fallocate operation to
+> start.
+>
+> Without that submission barrier, how do you prevent incoming DIOs
+> (read and write within EOF) from preventing the in flight counter
+> from ever reaching zero?
+>
+> i.e. a submission barrier is needed to avoid moving unbound
+> latencies to the extending write/fallocate operations...
+>
+> > Inside the exclusive lock all it does is register that the range
+> > that it's doing the operation on and the wait happens outside the
+> > exclusive lock. Operations that overlap will either wait for all
+>
+> Now we're back to range tracking....
+>
+> > outstanding DIO or perhaps satisfy if they can (e.g. a read of an
+> > fallocate technically could just supply the 0s without waiting for
+> > DIO).
+>
+> No, we can't return zeros to userspace until after the fallocate
+> operation completes successfully. If the operation has not started,
+> we have to return the data as it currently exists on disk - that is
+> a fundamental data integrity requirement.
+>
+> > Is either or both of these a non-starter idea in terms of acceptance
+> > (assuming I can actually make it safe)?
+>
+> If you come up with something that works in the general case, and it
+> scales out to millions of concurrent random 4kB DIO read/write IOPS
+> on a single file across dozens of processes submitting IO, then I'll
+> take what you are proposing seriously.
+>
+> But until I see code that is provably correct with benchmarks that
+> show IO similar performance to rwsem shared locking, I'll remain
+> skeptical that this can be done.
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> dgc@kernel.org
