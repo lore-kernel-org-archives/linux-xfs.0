@@ -1,215 +1,113 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A527314B63
-	for <linux-xfs@vger.kernel.org>; Wed, 14 Oct 2026 03:01:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCF4837CD45;
+	Wed, 14 Oct 2026 03:42:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791946872; cv=none; b=N5yU+Nt/FU+hTXuygTRhrna1DIJfvWBFUif4cF3F6UgjMTukfonSkFZqkbfwTMldnrhDpIuCuEfqBd5mtSsQTOaZtOPgMvN8RkvHAsFS3N+mdt6cD6UiZP4yr4NscqXL9Cj1sb1vCSHRHRUYkSbHd/EF+c8YXvzjsiwSVd4MO4k=
+	t=1791949378; cv=none; b=edQDKAfpVXkaIdj4tFYqnhrutuiRahh0iRARNQnU3z25rapK7X6ih2BuMYF7hvY/Y0e7UKs77WAl7aBxWdZml/10oSyO4D8koXvSx3JDvnhqFhCNM7NE7dvpebxXnkUHDxVe77FbvncpqhmDuE56mWD3r5AMwzc7SeUpTGo8XhU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791946872; c=relaxed/simple;
-	bh=nyDQjOQWBhlbhg2qgTUMe2Lc8SXFVY7Z02epNjmL1vk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OGzh+aljxCivaVE2jrV6r1Pu1B1aDVSqUvB5eeJfkqd7CHnpv4qEeEuzWvwExkZjddP1tHQko/81tgAKlF1Jn+7j1jCMWObjM81ycTTwRqbke6rhrKQhvLCtQPp08A6u8s1l9JfnuLxFDKhZLEdGU6UciWa9Y6C9Cu8y6PEm0vE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LVCvA5Nf; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791949378; c=relaxed/simple;
+	bh=cVp2/NRNZhanr+zLEEEc9y/DdiLBdc1o4KpjxW1Nsc4=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=DKPnj/NXehr/3OMezpZLmruriiKQM79BGBU5OyJW2OFBh+opVxmxMMtWadwUgvaBpqhjknJbG5/PBGCEcJY+gJVJ00TAJ6Del1AjEIZY95mJzYOAF6VXljxkBoDeSf/UqdQzokoayRjQur3mfQDNRXXxiqy45P3rt+BAhEXx2W4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fydhNg1d; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LVCvA5Nf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6766D1F000FF;
-	Wed, 14 Oct 2026 03:01:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791946871;
-	bh=Wnk8nDXe4VsP56xgplRnwj7JpZtFN6zFSTbC6bLpYEY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=LVCvA5Nf4+7d3E+gFZrh3KLj6Dc3FpNelaKJCAiiKs9iP9F4vTohEVLN4KfWMzZ/l
-	 RDfaZkjsc+DJOE8SOg4Oh5uGobae1chvQq/NoJUnsXoKkBR3rbtbjYpHhqc36OGb7h
-	 mbb1kHjpik3Y4B9/1rsZQsYB/ycDthee/nmnusPI9VHziIefbnmYuBU3UCLk3xAa9k
-	 lu81bQkxPoF7K2kEWnsp7KbO45Q4fLxOichlBSgdO1wf9LEuK5ROzcXDhOavsuLuc+
-	 Sp/qV1KZMZnKUX69QlRQu6CHrY867DDgWnQTpRqmyd+LlZn+C8cOcZIssSx/m2AEqw
-	 4T19L3oV86CPw==
-Date: Wed, 14 Oct 2026 14:01:03 +1100
-From: Dave Chinner <dgc@kernel.org>
-To: Vitali Lovich <vlovich@gmail.com>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: Really bad I/O lock contention between non-overlapping reader
- and writer
-Message-ID: <as7wb-bdykxSKenP@dread>
-References: <CAF8PYMjkpEkoop-Wbk=2oBMdqer-pWh1osPvhSv90D2fwLSv0w@mail.gmail.com>
- <as1HVVUXdMlpXQGT@dread>
- <CAF8PYMiMZ5uFGsLnms4pNtMHc=TKgzcKvoLtydGXEFS7KM_r5g@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fydhNg1d"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 85FF5C2BCFC;
+	Wed, 14 Oct 2026 03:42:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1791949378;
+	bh=cVp2/NRNZhanr+zLEEEc9y/DdiLBdc1o4KpjxW1Nsc4=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=fydhNg1dwAaPVjKy1vQgvZY/3pVbv7O4gH+ZeD3QvHKglrLVFZx3MUzdgsBf3QZtB
+	 4EQSxKDi2zFmtZ/PtYM0zkYed5TFH9tscVWyEEA30TyvIZ/14NrqqbXYHpEHt90gsn
+	 NHT9q6sMlm6Jgl0xd6xGkmxKggq4+CohlVx7rDWQCyWsOVUu/N09bBSpNDK3YiAIJW
+	 u+ab2AnrKjuEPM9Vij7dV4L06V5z2ZKco1wfHduqnTtwz+QLqDTvLQVrNhG7FeuL2p
+	 iZQ/F5Q1Kpkjt8UieMN5Dp90ywdM5qibNfeW2mGI/2bCIKCL2SNVUlnIB9rMieEDGC
+	 mOipwE1oG+joQ==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65556CC6B19;
+	Wed, 14 Oct 2026 03:42:58 +0000 (UTC)
+From: Daejun Park via B4 Relay <devnull+daejun7.park.samsung.com@kernel.org>
+Date: Wed, 14 Oct 2026 12:42:59 +0900
+Subject: [PATCH v2 2/2] xfs: clamp a pNFS LAYOUTCOMMIT extent before
+ computing its end
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAF8PYMiMZ5uFGsLnms4pNtMHc=TKgzcKvoLtydGXEFS7KM_r5g@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20261014-xfs-pnfs-commit-hole-v2-2-d3a02a79ab6c@samsung.com>
+References: <20261014-xfs-pnfs-commit-hole-v2-0-d3a02a79ab6c@samsung.com>
+In-Reply-To: <20261014-xfs-pnfs-commit-hole-v2-0-d3a02a79ab6c@samsung.com>
+To: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
+Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <djwong@kernel.org>, 
+ Dave Chinner <dgc@kernel.org>, Chuck Lever <cel@kernel.org>, 
+ Jeff Layton <jlayton@kernel.org>, Dai Ngo <Dai.Ngo@oracle.com>, 
+ Sergey Bashirov <sergeybashirov@gmail.com>, linux-nfs@vger.kernel.org, 
+ Andrey Albershteyn <aalbersh@kernel.org>, linux-kernel@vger.kernel.org, 
+ stable@vger.kernel.org, Daejun Park <daejun7.park@samsung.com>
+X-Mailer: b4 0.13.0
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1791949377; l=1616;
+ i=daejun7.park@samsung.com; s=20261006; h=from:subject:message-id;
+ bh=fJwzYVZW1+G2yLF8tU13obG/LBvLEpaUVnDAw9h7wvA=;
+ b=SeU3v3o9rANgHAnMjeGdIaXxNPrX7bqdy2VntgqZ32evza50GTKnhaJ0vW02SDchvukSMSpu/
+ yVn0dDKgiW8DJpD0e2qqnptFkdhE7S5nUQr3JhL+3OQflJXPjTTur+b
+X-Developer-Key: i=daejun7.park@samsung.com; a=ed25519;
+ pk=4yUfDqGRZTIj0Ik43z1GoMZRWCNm/rgX6uJuM9dtNIg=
+X-Endpoint-Received: by B4 Relay for daejun7.park@samsung.com/20261006 with
+ auth_id=1122
+X-Original-From: Daejun Park <daejun7.park@samsung.com>
+Reply-To: daejun7.park@samsung.com
 
-On Tue, Oct 13, 2026 at 04:49:53PM -0700, Vitali Lovich wrote:
-> On Mon, Oct 12, 2026 at 1:47 PM Dave Chinner <dgc@kernel.org> wrote:
-> >
-> > On Mon, Oct 12, 2026 at 10:47:56AM -0700, Vitali Lovich wrote:
-> > > I think I encountered suboptimal locking behavior with concurrent
-> > > readers and writers on a file, which resulted in huge latency spikes
-> > > for the reader even though the writers and readers are touching
-> > > unrelated ranges within the file. The writer/hole puncher hold an
-> > > exclusive lock on the inode while forcing a flush of outstanding
-> > > writes to disk which creates huge latency spikes for reads.
-> > >
-> > > I've observed read's taking >> 500ms even though none of the writes
-> > > could be overlapping and traces seem to indicate it's the shared inode
-> > > lock contending with the exclusive inode lock that writes / hole
-> > > punching is holding. In my real-world test case traces indicated that
-> > > the cause might be inode_dio_wait while holding the exclusive inode
-> > > lock.
-> > >
-> > > I've observed this behavior on XFS, EXT4 and BTRFS so it seems like a
-> > > general VFS challenge. Generally, Btrfs seems to have less read
-> > > latencies created than Ext4 (~2.5x more at the 0-1ms read than EXT4),
-> > > which in turn has smaller and fewer tail latencies than XFS  (~2x more
-> > > at 0-1ms and extreme is smaller) although all filesystems exhibit the
-> > > issue. Starting with the XFS list in case I'm way off base that this
-> > > is a problem.
-> > >
-> > > Attaching a simplified reproduction of what I'm doing with one writer
-> > > appending data to the file,
-> >
-> > The repro is using DIO writes. Speaking for XFS, these need needs
-> > exclusive locking to serialise extending the file without causing
-> > data corruption or stale data exposure. Once extended, the locking
-> > demotes to shared, so the IO itself runs concurrently with reads.
-> >
-> > Appending DIO writes are basically a fast combined 'truncate up,
-> > write' operation, and so has the same initial serialisation
-> > constraints as 'truncate up' (i.e. exclusive locking).
-> I think that's true if the write continues at the last byte of the
-> previous one. If the write leaves a gap for whatever reason (e.g.
-> writes are 4kib aligned but we only had 3.5kib of data before the file
-> end) the fast-path isn't taken and you do have to wait for a full
-> flush because XFS doesn't realize there's nothing overlapping. This
-> scenario isn't present in the test case I published but I think it
-> acts very similarly to hole punching.
+From: Daejun Park <daejun7.park@samsung.com>
 
-What happens when there are blocked beyond EOF that the file
-extension exposes?
+xfs_fs_commit_blocks() clamps the end of each committed extent to the
+file size, but computes the end as offset + length first. A length
+from the client can make that sum wrap around, and the loop then
+passes the client's length, unclamped, to xfs_iomap_write_unwritten().
+xfs_bmapi_write() then fails an assertion on XFS_DEBUG kernels, which
+is a BUG with XFS_ASSERT_FATAL, and otherwise returns -ENOSR, which
+nfsd warns about as a non-standard errno.
 
-> > > a separate writer punching holes in
-> > > unrelated ranges,
-> >
-> > fallocate() is like truncate - it also needs exclusive locking and
-> > no IO in flight to avoid a UAF of the data extent being punched out.
-> It needs exclusive locking and draining around the range in flight,
-> not necessarily the entire i_node.
+With pynfs as the client and an RW layout for the first 64 KiB of a
+2 MiB sparse file, a LAYOUTCOMMIT of 2^64 - 4 KiB at 4 KiB got
+NFS4ERR_IO, "nfsd: non-standard errno: -63" and a WARNING, or the
+assertion on XFS_DEBUG.
 
-You don't need to explain how range locking works to me. If you
-think that you need to explain basic stuff like this to me, then you
-likely haven't understood what I've said.
+Clamp the length to what is left below the size before adding it to
+the offset. With this and "xfs: refuse a pNFS LAYOUTCOMMIT of a range
+without blocks", the extent ends at the size and gets NFS4ERR_IO at the
+hole after the laid-out range, without a warning or an assertion.
 
-> > > and an O_DIRECT reader that's reading data.
-> >
-> > Shared locking only.
-> If I wasn't clear, the problem is that the shared lock has a head of
-> line blocking behind the exclusive lock that's draining the I/O even
-> though userspace knows it's never touching that range.
+Fixes: 527851124d10 ("xfs: implement pNFS export operations")
+Cc: stable@vger.kernel.org
+Signed-off-by: Daejun Park <daejun7.park@samsung.com>
+---
+ fs/xfs/xfs_pnfs.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-As I said above: competing shared vs exclusive locking implies head
-of line blocking that causes latency issues. You don't need to
-explain basic stuff to me.
+diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
+index 05c9660aea..d76873115c 100644
+--- a/fs/xfs/xfs_pnfs.c
++++ b/fs/xfs/xfs_pnfs.c
+@@ -312,9 +312,7 @@ xfs_fs_commit_blocks(
+ 		if (start > size)
+ 			continue;
+ 
+-		end = start + maps[i].length;
+-		if (end > size)
+-			end = size;
++		end = start + min_t(u64, maps[i].length, size - start);
+ 
+ 		length = end - start;
+ 		if (!length)
 
-> > > Reads
-> > > are doing random 4kib I/O in [0, 64MiB), hole punching is punching
-> > > 4kib holes in [64MiB, 576Mib] and writing is always appending after
-> > > 577MiB of the file.
-> >
-> > Educate me: what application workload has this IO pattern? Is this a
-> > real world problem. i.e. why should we care about this contrived
-> > scenario?
-> I'm trying to implement an LSM database that stores everything in one
-> file instead of taking the RocksDB approach of 1 file per SST. One
-> file per SST has scaling problems of its own in other ways, but for
-> concurrent reads and writes they acquire locks on different inodes
-> (file and directory, respectively), which is why RocksDB doesn't have
-> the problem highlighted in this test-case - it always reads and writes
-> to separate i_nodes with the downside being that it ends up having to
-> open an insane amount of files on startup and juggle them if there's
-> more than the kernel limit allows.
-
-XFS can handle access to millions of files iat a time efficiently.
-It's designed to work with massive data sets and lots of files.
-You're having problems because you're trying to optimise everything
-into a single file, hence hitting largely unfixable single file
-scalability issues.
-
-> > Also, have you tried to implement highly concurrent range locks that
-> > don't have far worse contention on the range lock tracking
-> > structures themselves than a simple rwsem? Some of us here have
-> > actually tried to do this, and the fact that we still use rwsems
-> > should tell you a lot...
-> 
-> I'm not pretending it's an easy problem to solve. I've come up with a
-> few approaches and would love your feedback on what's the best path:
-> 
-> 1. DIO tracking so that the inode keeps track of all outstanding
-> DIO's. Rather than the barrier, we scan the list to find if there's
-> any conflicts.
-
-Yup, that's a range lock.
-
-> I've prototyped this and it clearly solves the false
-> synchronization barrier from this in my database (unrelated writes
-> prolonging reads). This has a negative impact on normal workloads so I
-> imagine this would be hidden behind an explicit ioctl if acceptable.
-
-No, "optional" locking models are a non-starter. It either works for
-everything or it is a non-starter.
-
-> 2. Introduce generational barriers where hole punching / writing past
-> the end of the file still waits for DIOs but outside the exclusive
-> lock.
-
-The exclusive lock forms an IO submission barrier allowing in-flight
-DIOs to drain and hence the extending write/fallocate operation to
-start.
-
-Without that submission barrier, how do you prevent incoming DIOs
-(read and write within EOF) from preventing the in flight counter
-from ever reaching zero?
-
-i.e. a submission barrier is needed to avoid moving unbound
-latencies to the extending write/fallocate operations...
-
-> Inside the exclusive lock all it does is register that the range
-> that it's doing the operation on and the wait happens outside the
-> exclusive lock. Operations that overlap will either wait for all
-
-Now we're back to range tracking....
-
-> outstanding DIO or perhaps satisfy if they can (e.g. a read of an
-> fallocate technically could just supply the 0s without waiting for
-> DIO).
-
-No, we can't return zeros to userspace until after the fallocate
-operation completes successfully. If the operation has not started,
-we have to return the data as it currently exists on disk - that is
-a fundamental data integrity requirement.
-
-> Is either or both of these a non-starter idea in terms of acceptance
-> (assuming I can actually make it safe)?
-
-If you come up with something that works in the general case, and it
-scales out to millions of concurrent random 4kB DIO read/write IOPS
-on a single file across dozens of processes submitting IO, then I'll
-take what you are proposing seriously.
-
-But until I see code that is provably correct with benchmarks that
-show IO similar performance to rwsem shared locking, I'll remain
-skeptical that this can be done.
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-dgc@kernel.org
+2.43.0
+
+
