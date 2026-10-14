@@ -1,217 +1,143 @@
-Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from fhigh-a4-smtp.messagingengine.com (fhigh-a4-smtp.messagingengine.com [103.168.172.155])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2861C3CA4B6
-	for <linux-xfs@vger.kernel.org>; Tue, 13 Oct 2026 23:50:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.216.48
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791935407; cv=pass; b=mByfEsEqUeqxsKPp6cHPxGoJh9WjxpQNiCfYlHejvMNflycT1byPTkbBJPPTWK5PU2HJx39vf27Kr+aSwTdfHt5xe4cWBAAWD3aPLzscpNjiZNNs8B8LlZvimDkWnAw+0h9uDyk5dkdr6yL18C7AHibMjoQKNlS0HIoeY2auDqM=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791935407; c=relaxed/simple;
-	bh=2QMBu1yL0X7hLnuOffeiXXAvxgZZMCjmZRTMz43Ksmw=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=mAapHV2mqgeHFZ8RHL7Pyh8SV2oBKyDJ2Tqa3VXJSJsKqBsb/aCAdqAcJ91ggSVNct2+KWOejbGo9/4caRzMGIlCjhGCda0ObJ7p/5YAazmEtBwLRyNiEct3gOkUMLu9U3Ch193r3usjntS3uq8Q9WpnlTSdhIbXa+lKNvgcAec=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=cUx7QHMe; arc=pass smtp.client-ip=209.85.216.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9429B2EC0A2
+	for <linux-xfs@vger.kernel.org>; Wed, 14 Oct 2026 00:16:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.155
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791937003; cv=none; b=FMPVpAS52XF4LiU++5EDMuxw0PK8wbxbk6yOYMxTwAjHd1adwdSzmdDpb83es7uHgxJUw0q3Rt57n8oyw2fqmVGnMQ0d8Q7ock/+tW4KpTF04lCaQo8m9GIQfA0RvO+5d9PR56hEkpWKsplZvChBaQ0Oa/BZflCZe2Z7hn22Kzc=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791937003; c=relaxed/simple;
+	bh=4k7aWAA8C3yrTnHJQh+m7eBp90UFyCHi0FG2/fLWTW0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=nJMiPD/fr8E1c4inion6eO+PtQJjLqdItwvuTwGhPu055TCrjhLvad5zzmSLQo3brqBWKuLerupRXtq1WGItsTZehGK08rJLICyD/OLIuO0CzhhL3HkczackRCc0WCoINqOQhHtFcfWLP86puG8UtTHLHXSGg4lOEtnQt6jeyzQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net; spf=pass smtp.mailfrom=sandeen.net; dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b=vPZWGhHf; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=x8DGcoAM; arc=none smtp.client-ip=103.168.172.155
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandeen.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cUx7QHMe"
-Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-3a80d1c98f5so254076a91.0
-        for <linux-xfs@vger.kernel.org>; Tue, 13 Oct 2026 16:50:05 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1791935405; cv=none;
-        d=google.com; s=arc-20260327;
-        b=JyigSxqfGXDenbR9nCSvk0zxLrR/dRyS2IpW2vMGY0bmNd/hJtwKp8QIh5cGs0DFJn
-         t1vtfElSNFS87QOkYaPKZvJeLhJOJCihwbk2eBY61+uTt/f0etOJNRH8tyWUJYDK/lta
-         E514f8uOs7k91NSfuJbSg4Z8rXEo661d6HasiNvUgQCOYRGICV9Hkb7zcftgh2QmorWx
-         4os4FgJccpzIeUJde3RALJ3dw3+XqcIlaWMDhC5Ht9I607Bw4rF16mqmN2eGweWLV+it
-         oU0CICyTvsqgYhB/9+ipqFCZMolSAEc7G8gU5bOv5VYbKhE70/n7folcgHHKy/82GirW
-         h5zQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=lfT86B9wMdHDFwo1g5jeSr6xn3v3BEg43SCPBXBLZ8E=;
-        fh=Ubq8TFiXC7KjvK4hOzQAhEVmIR5KxnbNmU0i16shvwk=;
-        b=SyuUAcDEoINjmmltSTjmbD/HN////e6k3VVEj0ELjDjMNSVtH/UTKQIzXsQxQnWgfu
-         2MBRy0xzrVh8o+sf+8NHwhVoDV/0bf883nJybUCvMACVM+GFAjk8DLtPXo6f8rfXV/bb
-         pDcbpsD+g4G+SEIoaRb/czxzldJ31sxB/iU/oh3AA/DhfS0F8Tju8FrdO59utyVvS1a8
-         Z0eT4IQMM5gQalxfUWTzCgLBWwnzH6ihikXuXbUBuRq9JvCmlFcXft22Y1E5OeRetiKp
-         BU4qu8WAwFN2PiYvaHz3dWIgaYKwjgBgVp0FfVLiAs6ejz5XBNYU9XuNps0uKWDWlM2y
-         XLog==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791935405; x=1792540205; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=lfT86B9wMdHDFwo1g5jeSr6xn3v3BEg43SCPBXBLZ8E=;
-        b=cUx7QHMewAPvhtxuz7zUtgcVbQTJ/htpp8BAqUG6d2ZHF4Imrd6415ilkjjn+8wGLw
-         wMYBYM2t6OWnRaxs70TO9TbWzkL8s9VlTKGWfhQ999tHjcdc6FupJj5ZK+prvfk3JMIi
-         yLy1BJFRJXJJXl0vWk9ibQnOk1gTBjSdxflmnyGYwI27RtZ1rIRji9mNYSOkSXhpJS2Z
-         55rGWS9YgzOQrIHMSrdmJ7GMtCpuqbtdl6e8WHNi99LDfeUPClYe+dHRY5lQM+6M+vyk
-         DrF9hVGPPQ1l4M8x35LOrzPKO1tv2YsyYUt83T+WWyXPnqt7AGuy8dNyza5W7SqpH756
-         dGkQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791935405; x=1792540205;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=lfT86B9wMdHDFwo1g5jeSr6xn3v3BEg43SCPBXBLZ8E=;
-        b=jjO6/E5Xz2mnhM43knEcoRy96ew4SuO58kmKL+aM60dRbOJUh2aLwpmttAAMeXQSvD
-         eJhHX2iZXI4XlNy2mA40NXiUHQA7ghKtL5Pib8U4gmToAk7/C5g4L97SSrqjJJzRsrWG
-         oruXouEylvsJEqnNA6OaSaaGJWHL9cfVi63R7QtaJB/KYHTmEiN8hiC58e3SImBfUOif
-         3Wa9FOFFGjzie2lCYNNHYJszC93xA4lP12PcrrkgJggl8dKqLT7+noMbC8MByEYxF66m
-         kqDgrycmsZJyK2Tfae0PhhsrT8UUNx/WvzFVl2085cTXdVofhwdaCDvS8q0bGnVZUbZ/
-         wk/g==
-X-Gm-Message-State: AFq9FYLQSmK49rLt26b18fjq+tocwmSH+h9NAJRjmGV7dBfC/1i+r5Iq
-	2Z7Rx/ohol5wsKUpkJbCe3eiNvihJ8o4uMoZPnJ/lMmdOB5brYJWw9nDR6NSL54tidlgWAvppzl
-	6H4Zx+8nwIxIH6Po/stnUXbpffmwxpgbHOlbd
-X-Gm-Gg: AYBFou39urpfLt0/7Bi0LKFrQr1zqdd4PlJNxOYpMCv2RyTPQVQxLmTgIEPqYTWS4oL
-	BVWFO3rsW0+xQCjY9g1mhExo3+0vD91FTLlzv7kIGaY0BzNxOlriHVFHkEy+di/zoDlQTnFXIGg
-	pq0om1GtX945ac/TtUxZQjNDNlAFGI2JUwmZlxqgCjkC8KS5aX2u505r8Bf59of2Cys9OvDuK0I
-	mrBGZDxJZ75PQQKe6AHFb0150L9x+PV5iZ8juRmGSSDRiFVdk96XwXw619FH6m+5xT+EDSIEp11
-	Mk7TN9WJxQY06+wud+LT7FzsRVr1rb8qvJDgVslQoaC2uKrGijS1gu3kxKfbA1pbyvnahmYncoF
-	Fdr5uJMjmfxYtCA==
-X-Received: by 2002:a17:90b:3912:b0:3a7:f64f:6473 with SMTP id
- 98e67ed59e1d1-3ab3ac6e6camr11677967a91.50.1791935405221; Tue, 13 Oct 2026
- 16:50:05 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b="vPZWGhHf";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="x8DGcoAM"
+Received: from phl-compute-10.internal (phl-compute-10.internal [10.202.2.50])
+	by mailfhigh.phl.internal (Postfix) with ESMTP id B0F6C1400178
+	for <linux-xfs@vger.kernel.org>; Tue, 13 Oct 2026 20:16:40 -0400 (EDT)
+Received: from phl-frontend-03 ([10.202.2.162])
+  by phl-compute-10.internal (MEProxy); Tue, 13 Oct 2026 20:16:40 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm2; t=1791937000;
+	 x=1792023400; bh=TgaraTKYy1EhNVxtlFvlQLdtFK0H8j3SfiXmwA2Xm4M=; b=
+	vPZWGhHflV+mveY0Q2cZ8k51QoRFbw7fhUhSrt+DBFGzW83YgcMgNXkpAPJEQ3oq
+	InMQ9k2Dwk+t3/3QqdyWBSBc5F6e26vD0V1/ruD3xhMgR3sO8j9wqD/bjrsopwYx
+	bNOR6T1CiX0y2ny6eVKovQ4TyfTfmTEW9B3xvp0pECw74W4zEgusLAZOBCbqONQN
+	GzIbuwkW1wxLCqdUZHT3DrP3n+MGq/Uer705ub7iMf+PdzdUzQk+AeAk1VbWETtf
+	m6RjcN2Iuhmin5sAwnUy2yaGyPJkDZsYxbSHcq9Rsjn3MaklGxYRRagd9BbekEg1
+	ojMyftogHZleUm25CrSgpw==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=1791937000; x=
+	1792023400; bh=TgaraTKYy1EhNVxtlFvlQLdtFK0H8j3SfiXmwA2Xm4M=; b=x
+	8DGcoAMC/QCzFcbcZpDKvshRC7irLUUSbs08YilmeRfpS2cwhlWf/ld7A5QRGTeg
+	qM3iJPrZ1DG5oxWOi21mR8/73lodnhIL3VezXg1+oHcGW/IQNinjGmApPNHN0mdj
+	capTr53V2icLmc50CDyVHMeQ4B5YTpFWOyS/b/cRFzMkygZ0eD13YfzIV4Dd6rxN
+	O7Ph3txeik4IlqCM/QIMj+GvC9BwhbOdpZ938rog4whUHBZ+D1e8XhLhIyCtNRum
+	p4/vTpwZFOFTDsZY/egLjuLEIy/VeXYZTSxbu9x4LJRvWflkU4YrBH/Q9YdUQSW7
+	Q96D4FpRR+MgDBeg4Cj2g==
+X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-06;
+	repo=github.com/dkim2wg/interop; date=2026-10-04; sw=lmtpprox;
+	action=sign d=sandeen.net a=rsa-sha256;
+DKIM2-Signature: i=1; m=1; t=1791937000; d=sandeen.net;
+	mf=PHNhbmRlZW5Ac2FuZGVlbi5uZXQ+;
+	rt=PGxpbnV4LXhmc0B2Z2VyLmtlcm5lbC5vcmc+;
+	s=fm2:rsa-sha256:sRVsqWUO/kJNi+ZAp18UHlbPA+C705n2cvbIsmp9cuxxXwf
+	JKzOmDU7CN7L/N3zMK3EeYp4X6pxspiMzEP+OKM/gQUm8Tx48tdVUDazJeXdVamW
+	5rsbOs7zbBAzRdL7eYMo6B7KEtb08Ee6GRF2mhUON5SyEx/85DYbn+AV/Ez/sbE3
+	LF+vEMmmIWOudli2LAklG055z/tSluvVPyzLTYjjIWj9iyba9yzn2aUs459t7QsQ
+	8CkqFKrIeCAz1UpX+S1n9QmhZpz9YRWquym0HyzMFJ8ff3PoJUtH3DQvU5Xavr7G
+	UY6CXJmRK6xmbFb42tA86GpQeAeTLx9OoJopp6A==;
+X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-06;
+	repo=github.com/dkim2wg/interop; date=2026-10-04; sw=lmtpprox;
+	action=mi-m=1; hc=14;
+	hn=cc,content-language,content-transfer-encoding,content-type,
+	date,feedback-id,from,in-reply-to,message-id,mime-version,
+	references,subject,to,user-agent;
+Message-Instance: m=1; h=sha256:54rU4t5VQ5CCWbVQ2qVtBPPdcZOJoWUrcU1unnZN7YA=:4k7aWAA8C3yrTnHJQh+m7eBp90UFyCHi0FG2/fLWTW0=;
+X-ME-Sender: <xms:6MnOajrG8dkFacp-TEUvbN13sZlnnlH6F-QOTfXOj9imYtV96EokPQ>
+    <xme:6MnOakhprigEzB8ahRhidzwZ7-L3p8OA2T9sUlugjQXcX9VKZfuhuU1x_F1DdKIUm
+    3TCS1TbjbnahU4cXobEEsFmgCgvyidAfxvdoRps5m0ZukNJBU_IDlFQ>
+X-ME-Received: <xmr:6MnOaogWTCYZ8REnrELFtO21HTGERn1-OW-O9n3QeVz3J7jqj4ZvN5LT7fd5CZwnXNarIsUqkX1K_3uJZ_PDnnhsYsB2lQ>
+X-ME-Proxy-Cause: dmFkZTE9i8/UUgFoZnsQzAxv4prq+fflq/Egn5q8Wgh2V8hL/iCTiu9mJ8aC4dTIbO3xe1
+    4WV06TfmJK+9yXjfbureDtPDqAre2Nu2H/vETubpvTNwkl1MgZS5VltxdqmBJxDEBVSJWW
+    O0SaiuXWkWXrlY6kLTHnrJ8+J3VP1w1ruUOFgNaEbNpf/EaMtV+WTFBACo78QCGY/Ma7y7
+    wRte+MFc4ML7QA+TovlHTHk/PwD8cPi5zlwq6P9BjhuHMoBvPOVwAR7w7wzDp5kxfrYiHP
+    jN6FCp0cm8AvE9wXKu/VTWdS7tsMCmuyAUgNSu+G08sQyfcY+tgJr0+x8zIFrsaE2V9pPo
+    G6Ny/5h2Vx2KrevnEU544Bo0DYN4TWdg8xGGAhJX5jmtwhhkHAhIaptsI8ovw45fMiBaMi
+    8UujLITNI+hovSAcxBzdO86I75jcWZD4BgNPSFsOqIvwS7hEKjhvn0GU+qDGNuKZCvy8Ia
+    oA70/bhNUfmPiZVp3a6cC68Y0J76jo2MOGyk25zSuRwdKMtIZwOmknGErtko6t516IyVHh
+    CrCMdLdcOPO2UdKANGgrmiDcOmwAumQ6NkQpVUCHlbICrHeu4Cxj2uTNj3qC4Qtz264mNX
+    pgcj85Or7r9yKvDRvvBL04h2ncII0Jh728plyd9N/+jT1kCPqOcw3FIY6uzA
+X-ME-Proxy: <xmx:6MnOaijypOU6twK9m4dz2RTh1aDjHVDW6YxDQ3RoaOzfKdPnnLBN_w>
+    <xmx:6MnOagLIwBoTKjwHonOrQgf6cd_z6xM4bOeYsR846S9n4qCSylt5ZA>
+    <xmx:6MnOapFOm7kZL3N9FJFbKurToAWRwk-Uia2N06-Unc6YEOlj4ut2FA>
+    <xmx:6MnOasQBnBGMkz9q6MB8cSUPLOJ8g_kREBlb6VEQEqxuaguERkToCQ>
+    <xmx:6MnOaiX54dOQSVxonWkmeOW0ZpQWY3BpfzMkW-_JrtF2kroXT7METmwq>
+Feedback-ID: i2b59495a:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
+ 13 Oct 2026 20:16:39 -0400 (EDT)
+Message-ID: <551761b8-51c9-42fb-8992-980a72999135@sandeen.net>
+Date: Tue, 13 Oct 2026 19:16:39 -0500
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAF8PYMjkpEkoop-Wbk=2oBMdqer-pWh1osPvhSv90D2fwLSv0w@mail.gmail.com>
- <as1HVVUXdMlpXQGT@dread>
-In-Reply-To: <as1HVVUXdMlpXQGT@dread>
-From: Vitali Lovich <vlovich@gmail.com>
-Date: Tue, 13 Oct 2026 16:49:53 -0700
-X-Gm-Features: AclHuK-pMKE0sPv6k6sqE7vM10vt9Ih01bvHuDxZh9s1rUD3RJtQoEYGd7GY1AI
-Message-ID: <CAF8PYMiMZ5uFGsLnms4pNtMHc=TKgzcKvoLtydGXEFS7KM_r5g@mail.gmail.com>
-Subject: Re: Really bad I/O lock contention between non-overlapping reader and writer
-To: Dave Chinner <dgc@kernel.org>
-Cc: linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: [PATCH 1/2 V2] xfs: add missing cursor status check after
+ xfs_inobt_get_rec
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs@vger.kernel.org
+Cc: cem@kernel.org, djwong@kernel.org, hch@lst.de
+References: <20261013211851.641256-1-sandeen@redhat.com>
+ <20261013211851.641256-2-sandeen@redhat.com>
+Content-Language: en-US
+From: Eric Sandeen <sandeen@sandeen.net>
+In-Reply-To: <20261013211851.641256-2-sandeen@redhat.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Mon, Oct 12, 2026 at 1:47=E2=80=AFPM Dave Chinner <dgc@kernel.org> wrote=
-:
->
-> On Mon, Oct 12, 2026 at 10:47:56AM -0700, Vitali Lovich wrote:
-> > I think I encountered suboptimal locking behavior with concurrent
-> > readers and writers on a file, which resulted in huge latency spikes
-> > for the reader even though the writers and readers are touching
-> > unrelated ranges within the file. The writer/hole puncher hold an
-> > exclusive lock on the inode while forcing a flush of outstanding
-> > writes to disk which creates huge latency spikes for reads.
-> >
-> > I've observed read's taking >> 500ms even though none of the writes
-> > could be overlapping and traces seem to indicate it's the shared inode
-> > lock contending with the exclusive inode lock that writes / hole
-> > punching is holding. In my real-world test case traces indicated that
-> > the cause might be inode_dio_wait while holding the exclusive inode
-> > lock.
-> >
-> > I've observed this behavior on XFS, EXT4 and BTRFS so it seems like a
-> > general VFS challenge. Generally, Btrfs seems to have less read
-> > latencies created than Ext4 (~2.5x more at the 0-1ms read than EXT4),
-> > which in turn has smaller and fewer tail latencies than XFS  (~2x more
-> > at 0-1ms and extreme is smaller) although all filesystems exhibit the
-> > issue. Starting with the XFS list in case I'm way off base that this
-> > is a problem.
-> >
-> > Attaching a simplified reproduction of what I'm doing with one writer
-> > appending data to the file,
->
-> The repro is using DIO writes. Speaking for XFS, these need needs
-> exclusive locking to serialise extending the file without causing
-> data corruption or stale data exposure. Once extended, the locking
-> demotes to shared, so the IO itself runs concurrently with reads.
->
-> Appending DIO writes are basically a fast combined 'truncate up,
-> write' operation, and so has the same initial serialisation
-> constraints as 'truncate up' (i.e. exclusive locking).
-I think that's true if the write continues at the last byte of the
-previous one. If the write leaves a gap for whatever reason (e.g.
-writes are 4kib aligned but we only had 3.5kib of data before the file
-end) the fast-path isn't taken and you do have to wait for a full
-flush because XFS doesn't realize there's nothing overlapping. This
-scenario isn't present in the test case I published but I think it
-acts very similarly to hole punching.
+The xfs_inobt_get_rec() call in xfs_ialloc_count_ondisk fails to check
+the &has_record return - if the record is not found, the next
+conditional will read an uninitialized  or stale irec. Fix that.
 
->
-> > a separate writer punching holes in
-> > unrelated ranges,
->
-> fallocate() is like truncate - it also needs exclusive locking and
-> no IO in flight to avoid a UAF of the data extent being punched out.
-It needs exclusive locking and draining around the range in flight,
-not necessarily the entire i_node.
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+---
+
+V2: oops, fix function name in subject!
+
+ fs/xfs/libxfs/xfs_ialloc.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index e705f681ed44..17699f7c009f 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -2843,6 +2843,11 @@ xfs_ialloc_count_ondisk(
+ 		error = xfs_inobt_get_rec(cur, &irec, &has_record);
+ 		if (error)
+ 			return error;
++		if (XFS_IS_CORRUPT(cur->bc_mp, has_record != 1)) {
++			xfs_btree_mark_sick(cur);
++			return -EFSCORRUPTED;
++		}
++
+ 		if (irec.ir_startino > high)
+ 			break;
+ 
+-- 
+2.55.0
 
 
-> > and an O_DIRECT reader that's reading data.
->
-> Shared locking only.
-If I wasn't clear, the problem is that the shared lock has a head of
-line blocking behind the exclusive lock that's draining the I/O even
-though userspace knows it's never touching that range.
-
-> > Reads
-> > are doing random 4kib I/O in [0, 64MiB), hole punching is punching
-> > 4kib holes in [64MiB, 576Mib] and writing is always appending after
-> > 577MiB of the file.
->
-> Educate me: what application workload has this IO pattern? Is this a
-> real world problem. i.e. why should we care about this contrived
-> scenario?
-I'm trying to implement an LSM database that stores everything in one
-file instead of taking the RocksDB approach of 1 file per SST. One
-file per SST has scaling problems of its own in other ways, but for
-concurrent reads and writes they acquire locks on different inodes
-(file and directory, respectively), which is why RocksDB doesn't have
-the problem highlighted in this test-case - it always reads and writes
-to separate i_nodes with the downside being that it ends up having to
-open an insane amount of files on startup and juggle them if there's
-more than the kernel limit allows.
-
->
-> Also, have you tried to implement highly concurrent range locks that
-> don't have far worse contention on the range lock tracking
-> structures themselves than a simple rwsem? Some of us here have
-> actually tried to do this, and the fact that we still use rwsems
-> should tell you a lot...
-
-I'm not pretending it's an easy problem to solve. I've come up with a
-few approaches and would love your feedback on what's the best path:
-
-1. DIO tracking so that the inode keeps track of all outstanding
-DIO's. Rather than the barrier, we scan the list to find if there's
-any conflicts. I've prototyped this and it clearly solves the false
-synchronization barrier from this in my database (unrelated writes
-prolonging reads). This has a negative impact on normal workloads so I
-imagine this would be hidden behind an explicit ioctl if acceptable.
-2. Introduce generational barriers where hole punching / writing past
-the end of the file still waits for DIOs but outside the exclusive
-lock. Inside the exclusive lock all it does is register that the range
-that it's doing the operation on and the wait happens outside the
-exclusive lock. Operations that overlap will either wait for all
-outstanding DIO or perhaps satisfy if they can (e.g. a read of an
-fallocate technically could just supply the 0s without waiting for
-DIO).
-
-Option 1 is the "safest" in that it introduces no new concepts but it
-does carry overhead both in terms of memory and performance. Option 2
-is probably the highest performance option and might even be safe as
-an always-on default.
-
-Is either or both of these a non-starter idea in terms of acceptance
-(assuming I can actually make it safe)?
-
-
-
->
-> -Dave.
-> --
-> Dave Chinner
-> dgc@kernel.org
