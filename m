@@ -1,40 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2700569F3B;
-	Wed, 14 Oct 2026 17:40:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2C4C568FCE;
+	Wed, 14 Oct 2026 17:40:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791999615; cv=none; b=nzwsQlwczHk+1nODzdcAcTdOg8C7vmxT8ZgAzaNr7V2tezfYgR9YckgGF7fR7pJr/wdgFhicaFWg3CpP2uLMlrtJRsniEXMzgi4wopzzoq6N+GLcGWOCPk3K6jdvO6tJoafQn24HqYB9QOVbDRhj+j21eA+vENAmxxqixtl+z/Y=
+	t=1791999638; cv=none; b=gVmx7gjuSLsbJkUJHwUgJ55ylO04VlTbAm7lJIfMeB2MIFvksZYbSn4MPv8J5/7BjBZfS38QUhHQyGMiZRtj14w8Fbv8PCu8EU4KnvPkQvQl3fbI6XywLN4C52Y/q4GMFu+EfvcuCUKr5zHtUronK1eyb65O31w1voielXlchQA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791999615; c=relaxed/simple;
-	bh=V1NgZBucpVKmjdcbReDBb0wzYyMz3EML6NvTRCMnGOQ=;
+	s=arc-20240116; t=1791999638; c=relaxed/simple;
+	bh=EFN5fhYtFv8eQ1nv3gRF+eJxkrWQ2A0xJ8uZ3ubwk7g=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qGxfJ9of9Jx5/4GV/vUibn7lb3LYXkjQZLinuce4KamxZt5FcH93KTtz0czAMmaZGV8riO9wYKIddldQXzhiNn4N/p0RBOTEdjeE1Az5aHIY15Gceif4qopiwLsenU8bQzOp0fRKGR9C9oGkOO+ZjN//0sBqXtw2DVjjSK7KZqc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XqK83tFw; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=tL8K1fTMRAjBwtTydAjYm0eRGYvfqMSk8H0gg6gevVCD8JhJOyHPHYQkCX++zHWUVAokBbPnC0HmhD+3nZs1i2++GHdNjNTCWiH7VhdQbcJRE73Ey2EEcX3+rbqQ+pOPWywQA680NrQDyTYLPDf5BehGjfmAIl+gO1ZWQp0+FG8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YbwK78QB; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XqK83tFw"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 11C221F000C4;
-	Wed, 14 Oct 2026 17:40:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YbwK78QB"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 439531F000C4;
+	Wed, 14 Oct 2026 17:40:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791999604;
-	bh=1M9V8qpwDA85gZ0Gd+KoH2lUopyXrJ73ugZU+Dk+X44=;
+	s=k20260515; t=1791999628;
+	bh=4hD9uxZy9k0TlRrognYe0f6R0iLeWW7byAQClzTTp5c=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=XqK83tFw9hmFrWqfds4xQIUJxHgUrC1KTS0m3cR/nbvUhbAYbXvsKZ9s5+JPrtDJs
-	 VcLTy0bwNi6dXesJcA7mlpY79INtbzScdRQB59w39ZJv9jMLPI/FLOYP99PAF+bhW9
-	 5nwTyhaentFocFwkeDz0cVQY3zN+Z7PHdetQg1MeuBv41pfoNUHLBhYofSR/Be0XWI
-	 X8AFOj2WFoVgbjhyqwP7IqfVj3hQKIBTH1HxgY4DSyUDGk6MM5ELRS79/Br1Op8xFK
-	 TanbMFshhzJNnN6kRxyjEB3qbDBGiT/iOnayl3FkqySzgDMwJTNRSg++3LOVXwDv6s
-	 kfm+oO7d9oCTA==
-Date: Wed, 14 Oct 2026 10:40:03 -0700
+	b=YbwK78QBipzkZa+FpwXSV3337+QHsLz2Szfq1BclGYggYtlxWD667RrVxMcEdICj1
+	 a2lM52rd/uIW/dn9JLRL0w5StL7WDHKYZYNwql8hY569XC44QOcVc6c/BR0plv6xZM
+	 FGNFbE1u37RiJae0mMju9MjDNPnkcdQMXgtc+FJ6PM+NRBAUsrEpsFj+6K9JdyJPy0
+	 QzeSr3RTpFCuaCP63j/EvHKbxluNVnG4+N6IQnMrShAJVAamUvNyxTI037zS8twe+F
+	 EHQ07+y7ZRrwanUPsL0u8DPr7a5F3ILod4Q1Ds9sWrlD8zg9bQESN8UZlEt/4h6rQb
+	 EZ8NVZlSawgUw==
+Date: Wed, 14 Oct 2026 10:40:27 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Carlos Maiolino <cem@kernel.org>
-Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 06/12] xfs: only written file data blocks can be shared
-Message-ID: <20261014174003.GI2705364@frogsfrogsfrogs>
+Cc: hch@lst.de, stable@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 07/12] xfs: check for fragments when full-extent sharing
+ matches
+Message-ID: <20261014174027.GJ2705364@frogsfrogsfrogs>
 References: <179186107061.1898400.3978552773417541744.stgit@frogsfrogsfrogs>
- <179186107268.1898400.2017479521256451856.stgit@frogsfrogsfrogs>
- <as83KAiPFgW0ZCSF@nidhogg.toxiclabs.cc>
+ <179186107290.1898400.11595388650663319200.stgit@frogsfrogsfrogs>
+ <as84RR9BrH82CPMG@nidhogg.toxiclabs.cc>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,94 +44,76 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <as83KAiPFgW0ZCSF@nidhogg.toxiclabs.cc>
+In-Reply-To: <as84RR9BrH82CPMG@nidhogg.toxiclabs.cc>
 
-On Wed, Oct 14, 2026 at 10:25:53AM +0200, Carlos Maiolino wrote:
-> On Mon, Oct 12, 2026 at 11:06:46PM -0700, Darrick J. Wong wrote:
+On Wed, Oct 14, 2026 at 10:26:04AM +0200, Carlos Maiolino wrote:
+> On Mon, Oct 12, 2026 at 11:07:01PM -0700, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > LOLLM noticed that xchk_refcountbt_rmap_check (and its rt equivalent)
-> > will count any rmap owner towards the shared count.  However, the only
-> > blocks that can be shared between xfs files are written file data
-> > blocks; and the only blocks that can have single-refcount entries are
-> > COW staging extents.  Fix the checking code.
+> > LOLLM noticed that xchk_refcountbt_process_rmap_fragments returns early
+> > if there are enough rmap records that overlap the space referenced by a
+> > refcountbt record to match the refcount in that refcountbt record.
+> > Unfortunately, it never checks the fragment list in this case, so it
+> > won't find the discrepancy between the rmap and refcount btrees.
 > > 
 > > Cc: <stable@vger.kernel.org> # v4.16
 > > Fixes: dbde19da963706 ("xfs: cross-reference the rmapbt data with the refcountbt")
 > > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 > > Assisted-by: LOLLM # finding obvious bugs
+> > Reviewed-by: Christoph Hellwig <hch@lst.de>
 > 
-> This patch conflicts with Eric's:
+> Same thing for this patch... Final patch is:
 > 
-> 1d55a102780 xfs: re-use refcount scrub/repair code for rtrefcount
-> 
-> I'm just stripping off the rtrefcountbt part of this, the final result
-> is here:
-> 
-> commit 634b63baf05062988456a0bd5df2696c14ea2949
+> commit 95e213c1ddb40dfb0a8178ed35c9f29992a320e1
 > Author: Darrick J. Wong <djwong@kernel.org>
-> Date:   Mon Oct 12 23:06:46 2026 -0700
+> Date:   Mon Oct 12 23:07:01 2026 -0700
 > 
->     xfs: only written file data blocks can be shared
+>     xfs: check for fragments when full-extent sharing matches
 
-Yep, that looks good to me!
+Also looks good.
 
 --D
 
 > 
-> 
 > > ---
-> >  fs/xfs/scrub/refcount.c   |   12 ++++++++++++
-> >  fs/xfs/scrub/rtrefcount.c |   12 ++++++++++++
-> >  2 files changed, 24 insertions(+)
+> >  fs/xfs/scrub/refcount.c   |    5 ++++-
+> >  fs/xfs/scrub/rtrefcount.c |    5 ++++-
+> >  2 files changed, 8 insertions(+), 2 deletions(-)
 > > 
 > > 
 > > diff --git a/fs/xfs/scrub/refcount.c b/fs/xfs/scrub/refcount.c
-> > index f8c51d8fbb3da5..a900d13c9e27c0 100644
+> > index a900d13c9e27c0..883c273cb9883f 100644
 > > --- a/fs/xfs/scrub/refcount.c
 > > +++ b/fs/xfs/scrub/refcount.c
-> > @@ -129,6 +129,18 @@ xchk_refcountbt_rmap_check(
-> >  		return 0;
-> >  	}
+> > @@ -185,8 +185,11 @@ xchk_refcountbt_process_rmap_fragments(
+> >  	xfs_nlink_t			target_nr;
 > >  
-> > +	/*
-> > +	 * The refcount btree should only have records for written file data
-> > +	 * blocks or for COW staging blocks.
-> > +	 */
-> > +	if ((XFS_RMAP_NON_INODE_OWNER(rec->rm_owner) &&
-> > +	     rec->rm_owner != XFS_RMAP_OWN_COW) ||
-> > +	    (rec->rm_flags & (XFS_RMAP_ATTR_FORK | XFS_RMAP_BMBT_BLOCK |
-> > +			      XFS_RMAP_UNWRITTEN))) {
-> > +		xchk_btree_xref_set_corrupt(refchk->sc, cur, 0);
-> > +		return 0;
+> >  	target_nr = refchk->refcount - refchk->seen;
+> > -	if (target_nr == 0)
+> > +	if (target_nr == 0) {
+> > +		if (!list_empty(&refchk->fragments))
+> > +			refchk->seen = 0;
+> >  		return;
 > > +	}
-> > +
-> >  	if (rec->rm_startblock <= refchk->bno && rm_last >= rc_last) {
-> >  		/*
-> >  		 * The rmap overlaps the refcount record, so we can confirm
+> >  
+> >  	/*
+> >  	 * There are (refchk->rc.rc_refcount - refchk->nr refcount)
 > > diff --git a/fs/xfs/scrub/rtrefcount.c b/fs/xfs/scrub/rtrefcount.c
-> > index 3d916d71a135dc..00da8e98506d63 100644
+> > index 00da8e98506d63..c312096e410561 100644
 > > --- a/fs/xfs/scrub/rtrefcount.c
 > > +++ b/fs/xfs/scrub/rtrefcount.c
-> > @@ -144,6 +144,18 @@ xchk_rtrefcountbt_rmap_check(
-> >  		return 0;
-> >  	}
+> > @@ -200,8 +200,11 @@ xchk_rtrefcountbt_process_rmap_fragments(
+> >  	xfs_nlink_t			target_nr;
 > >  
-> > +	/*
-> > +	 * The refcount btree should only have records for written file data
-> > +	 * blocks or for COW staging blocks.
-> > +	 */
-> > +	if ((XFS_RMAP_NON_INODE_OWNER(rec->rm_owner) &&
-> > +	     rec->rm_owner != XFS_RMAP_OWN_COW) ||
-> > +	    (rec->rm_flags & (XFS_RMAP_ATTR_FORK | XFS_RMAP_BMBT_BLOCK |
-> > +			      XFS_RMAP_UNWRITTEN))) {
-> > +		xchk_btree_xref_set_corrupt(refchk->sc, cur, 0);
-> > +		return 0;
+> >  	target_nr = refchk->refcount - refchk->seen;
+> > -	if (target_nr == 0)
+> > +	if (target_nr == 0) {
+> > +		if (!list_empty(&refchk->fragments))
+> > +			refchk->seen = 0;
+> >  		return;
 > > +	}
-> > +
-> >  	if (rec->rm_startblock <= refchk->bno && rm_last >= rc_last) {
-> >  		/*
-> >  		 * The rmap overlaps the refcount record, so we can confirm
-> > 
+> >  
+> >  	/*
+> >  	 * There are (refchk->rc.rc_refcount - refchk->nr refcount)
 > > 
 > 
