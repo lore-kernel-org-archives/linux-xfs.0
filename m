@@ -1,255 +1,176 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from fhigh-b6-smtp.messagingengine.com (fhigh-b6-smtp.messagingengine.com [202.12.124.157])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EAA533B966;
-	Wed, 14 Oct 2026 04:32:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D86741442D
+	for <linux-xfs@vger.kernel.org>; Wed, 14 Oct 2026 04:40:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.157
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791952334; cv=none; b=QmCwsiGU0xukyJasMSEU1h8EshHRXwkBJmD5oQE7NVViQIXuqzM0LZMI2B9qcqVD4HhDi7J31l6k91ekcoDkQyEW2rk0omYdiXOg02kn6KyCROUx1+RzxVQdZvOgNQLIbKxhgKJPOp7QKcsHHOpYyPRMeo4uBn+sbYWahdTz7wM=
+	t=1791952843; cv=none; b=SI5TYjwiopGMwPyTpHdbljbf5zWaRfb+708XJ10uLy8ner16ckJK5rZC1i4nvYl5gsFQQBg6+1j+sSby9Iv7fOky0JV8MqYThJsbEus7TvbVCj9uzSnC05xwKWX778oZoNmvCfRcMcZYNgnurK7dfGJwz+KLEaJz/Adx55fAPtU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791952334; c=relaxed/simple;
-	bh=ur7+FHtQRlJi/lD/zSd9JpoAMj+T59oSQksHdn4+HwY=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=g2bJ9vJC6fTHd/w9wJ8LPStWMyw7B43crOLpHlDw/nh/w6OI6ktbMQwvW1QACI/SI+J2lxI4GL1aY8VufCwowQD0fcYFzguXvFQOKvBg+44Dh+M5Ojjh6Uom/t5kMN8Minc8s6Vx+HswAW51czeRTrUavnzwfkaZC2nMkw0Q6/k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cLOFQvTX; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1791952843; c=relaxed/simple;
+	bh=n0Hs5KVddvSkBLEzXlL+zhClUBSiGyvm5QaOrNgUFDY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=OcvL5qRDbeK32OLQXO1NTYZ7ExS7eLQXiK9cGDm3ietISlRbK0rkJVcHgxJW8sFAIuYMIepREdiUucaAkZ+fc9TN/imd26rDB4gKi9eVq+3W6fS3HlzK15JRkBm/VtWWCWrp+g/hy98F2+sG1tAI35QekM5bbL0ceE5+5BfUt5A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tyhicks.com; spf=pass smtp.mailfrom=tyhicks.com; dkim=pass (2048-bit key) header.d=tyhicks.com header.i=@tyhicks.com header.b=ncQOfXsY; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=K0VjHOtO; arc=none smtp.client-ip=202.12.124.157
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tyhicks.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tyhicks.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cLOFQvTX"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 859B8C2BCC7;
-	Wed, 14 Oct 2026 04:32:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1791952333;
-	bh=ur7+FHtQRlJi/lD/zSd9JpoAMj+T59oSQksHdn4+HwY=;
-	h=From:Date:Subject:To:Cc:Reply-To:From;
-	b=cLOFQvTXHvf8J4WmVyb8wn9wuD7GrFtLZs+lXYdjIy7jgJ3I4bbHHabkb1nGXlQhT
-	 jfqQxCG4UNa+CUXW3Ybin4+R1oaBw/o3uHAhq2kJZf8bIqREXHgmgW73UpW9yOfgZ+
-	 2bcFa7LOM1JGGAbVNW5AbHkjqjF/yqkntiGEs7jsQhvVLJqMjk175Qc7+7Aa2OAi7w
-	 LUe9zbkak4hSIpGompMhQBxjHid8naJgNoKDaa+/Mz0ljC9SBZ8ghT8DfrB5chQICp
-	 FewY0zM0YSM3cTW+RSTAsCccl/X+n2dhcdik6IgUVaCw90Vbm8fk9FwKu4wcq9idmd
-	 EBrS2/qBSCALw==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A4B2CC6B19;
-	Wed, 14 Oct 2026 04:32:13 +0000 (UTC)
-From: Daejun Park via B4 Relay <devnull+daejun7.park.samsung.com@kernel.org>
-Date: Wed, 14 Oct 2026 13:32:13 +0900
-Subject: [PATCH v2] xfs: mark the inode preallocated for pNFS write layouts
- past EOF
+	dkim=pass (2048-bit key) header.d=tyhicks.com header.i=@tyhicks.com header.b="ncQOfXsY";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="K0VjHOtO"
+Received: from phl-compute-05.internal (phl-compute-05.internal [10.202.2.45])
+	by mailfhigh.stl.internal (Postfix) with ESMTP id AB2C87A00E4
+	for <linux-xfs@vger.kernel.org>; Wed, 14 Oct 2026 00:40:40 -0400 (EDT)
+Received: from phl-frontend-04 ([10.202.2.163])
+  by phl-compute-05.internal (MEProxy); Wed, 14 Oct 2026 00:40:40 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=tyhicks.com; h=
+	cc:cc:content-type:content-type:date:date:from:from:in-reply-to
+	:in-reply-to:message-id:mime-version:references:reply-to:subject
+	:subject:to:to; s=fm1; t=1791952838; x=1792039238; bh=mAFiYhtbFe
+	mwvvnCWTEeExr0pkWB7IZg7tNJUrlWDeo=; b=ncQOfXsYux6xUE5Yfpf1YgaBFT
+	cTHfw7QjzH5wusg7wxu/N7/hm73X28PpKquXZc5xiYwPW4+lAfqJxibqXR+UvLz+
+	2ZTUnxRz7HtcfNGFgS1MJkd0Tuv5h/GpjcWCaiSGJ1TZ1UdFlpedEaseFuzvowv/
+	TqQSSl8IG9OCVkOhNBJP95SN5RDQQl8GiR1aqF1Dp02uVWnRjvaljmZODDWOuAYc
+	RQbBArRhfe9jWPm3Oy560onwObhrAOQw70BBPuWWCXlWiSD0St3KNWW1JAL9kmbP
+	bNzF5pEbPDujqawxsBVKwUfbzwYVRc65jY+AqtX1732BeF90Rc9hAafKJ/NA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-type:content-type:date:date
+	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
+	:message-id:mime-version:references:reply-to:subject:subject:to
+	:to:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=
+	1791952838; x=1792039238; bh=mAFiYhtbFemwvvnCWTEeExr0pkWB7IZg7tN
+	JUrlWDeo=; b=K0VjHOtOjP8x4OK/qLK5hjnzj3UEK+pOwByQK/diLCthYYtuRak
+	4w+UCUKGCK7JFq5rpq992TQ414sGpeXwoQll/jApp5jSvjv1N0AQ/vV6o8TAQSoj
+	0jIdCgbmVEwbpWc/GDIYhV7iGxhVnAVGyxOucONqfd+Qut3pa8xlZu9eupkPHb7a
+	O19RfpWHCKap1Ii2AG4C4Rgf9FKDqPAESBzjmyuI8I+/7v/rcZf87XvPdXRhxOVR
+	PHI64FJJSdJiopZc5fM/F+oblU4aUcPwF93Yc0oXuLowDYOwPy7A3lW/OBTdMI+P
+	X7xVR3mFNXlN4nZtsbMmUuaI/XZPAGqxlHA==
+X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-06;
+	repo=github.com/dkim2wg/interop; date=2026-10-04; sw=lmtpprox;
+	action=sign d=tyhicks.com a=rsa-sha256;
+DKIM2-Signature: i=1; m=1; t=1791952838; d=tyhicks.com;
+	mf=PGNvZGVAdHloaWNrcy5jb20+;
+	rt=PGxpbnV4LXhmc0B2Z2VyLmtlcm5lbC5vcmc+;
+	s=fm1:rsa-sha256:gy7Tn5byw2w65b2xn1XhU0XN7jUwqLutu0bwZarJxI2JNnA
+	0NmTEYgFI8sVOkAcE9FUHi8F///r+aAEVfu9C1cUYnuXS5bg7AiIORtnaAdjArXT
+	CbqEC4p6KUWBEmcoQJs7A2GelFopNi9VyL8uGj4JaypfoPxBqUoyQtomNy9O+W6i
+	0l13ULIZ3jGufGsoNpxlwippHfa7IHVPKwjQb0Q3njklKFtxlSyUcnbsUz2z9rUs
+	IWxKR7tLvnmnvLY+fi4IOiTAu60J2qUeRlUyzhwbWRlJmBeJhmRTa9l4CosKYGLi
+	ADG7MvDQ5mbVBWx9OS6Z7igAkeOpIYHrMfna9HQ==;
+X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-06;
+	repo=github.com/dkim2wg/interop; date=2026-10-04; sw=lmtpprox;
+	action=mi-m=1; hc=12;
+	hn=cc,content-disposition,content-type,date,feedback-id,from,
+	in-reply-to,message-id,mime-version,references,subject,to;
+Message-Instance: m=1; h=sha256:qUmERcW4JyBitZMe5zuk9ywp5LRlIgLiVnlpfK0/pBM=:n0Hs5KVddvSkBLEzXlL+zhClUBSiGyvm5QaOrNgUFDY=;
+X-ME-Sender: <xms:xgfPaiirqaGth-_QIS8OAsoYy7Sf2rYbZwFhAfjJ0MuAWKxQ7THxuQ>
+    <xme:xgfPajaE8ofnGot4Pky4vdm_HNaxz3sV7tnqENiHW1NZcFJGvD6DD5wX-ruqy_MSt
+    qzisuah0SMwdW1miO5q3pRD4Y4a5JhX9iIk39cqEEXme_YFFqwv3Rg>
+X-ME-Received: <xmr:xgfParPcjPkYn4vlK0LMTgxNr5Ysji4BSj-bUDmcojpTmB7UhXNDHw>
+X-ME-Proxy-Cause: dmFkZTFKd7b9t+rYxj8fdFEGtNMVuNQ5jOwC8SdIlUTY97d1oNKv/jurn5DUraLtoIX+2E
+    I3bIdfkpsGhUi+/tt/Szji6YvW2+vzMoDGWv9xPK+lO1Sb1zC3bVSP3NLZ3IFInykWKEaP
+    PH93NfwO6+b7/crRfH4wX5WXalVIiTPCeErxbBQz6CcsOBGB7Z36o5CAXL7bOQ0KwYB3u2
+    Tt7S2s6M3ONy1Jf6lLNDRHUve8aF4/8yXcvszXWYbXHvQvvmoncKrISq6v28AJ11qBn/sv
+    qp0QBdjQ9qmGRZKU7BnZTWgAAxoRXCyTV5hWG4Si3B29+0DMJIgEbol0t/XKYLu9NNjraX
+    0smkOXWfrc/IBFYy/pyNxGx9kfhI0WiCxuDyZdzXI9f2NIYsJkUDkDUeJG4zUPuBWtaBvE
+    Mwi2vLMuBjIiVqP446bbIM7nhubKyyD0dXHP2HMFxaXSbWZp3G1UIOBjW6FPA7HQKr1TcP
+    BPwGPZdrFFh4a5r7M1kmZLbWcfqQp/zQcXFYEYi5bg9fYkAJaxBna2FbAXCGRPGb4Oc6Gh
+    1r+gceQWpvlFBkLAjH/mFrxDSXQUT5CImV6pag4feAxFZbphAWhHyasICJGejFWDtY2NaB
+    BCVdHpJu62iJDBfhFB3EF7k3EeYcm32d9i47bHoDPeSCp+YbyXeBn+EXahFQ
+X-ME-Proxy: <xmx:xgfPanR7GBzeumdsdancLyUun9rpWy2_-9xodM1WQNRR_NGP-MwpZg>
+    <xmx:xgfPau7MdffZ0A3QPGcRatiLqM8PYL5uRriXSWH_CfIWpuOpVlPScw>
+    <xmx:xgfPaia9aS220tTKgJDOpqj2xLlBZI6Y-T6J6zgubPIDKeXL060mVQ>
+    <xmx:xgfPaqZKI-8EgzC6LYS3JQGrtcebVT9OxULUA-QFxdCybqbmiymnFA>
+    <xmx:xgfPan3Lpy4_ahjI4bwYfGxNbwKEt-4H9IVwxWRAdOc68A38BkASVj37>
+Feedback-ID: i78e14604:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
+ 14 Oct 2026 00:40:36 -0400 (EDT)
+Date: Tue, 13 Oct 2026 23:40:28 -0500
+From: Tyler Hicks <code@tyhicks.com>
+To: Christian Brauner <brauner@kernel.org>
+Cc: Jan Kara <jack@suse.com>, Al Viro <viro@zeniv.linux.org.uk>,
+	ecryptfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+	jfs-discussion@lists.sourceforge.net, linux-nilfs@vger.kernel.org,
+	exfat@lists.linux.dev, linux-fsdevel@vger.kernel.org,
+	ntfs@lists.linux.dev, ocfs2-devel@lists.linux.dev,
+	linux-btrfs@vger.kernel.org, gfs2@lists.linux.dev,
+	linux-efi@vger.kernel.org, linux-mtd@lists.infradead.org,
+	linux-xfs@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH RFC 01/28] ecryptfs: don't leak the inode when a lookup
+ can't open the lower file
+Message-ID: <as8HvJJq-JP5-UCp@elm>
+References: <20261012-work-fs-sb_rdonly-v1-0-60743a3dc326@kernel.org>
+ <20261012-work-fs-sb_rdonly-v1-1-60743a3dc326@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20261014-xfs-pnfs-eof-prealloc-v2-1-f303fd5e9dfb@samsung.com>
-X-B4-Tracking: v=1; b=H4sIAMwFz2oC/3WNQQqDMBBFryKz7pRMEK1d9R7FRYijBjSRjBWL5
- O5NpdtuBt7//DcHCEfHAvfigMibExd8Bn0pwI7GD4yuywxa6YqUanDvBRefD4cel8hmmoLFsua
- GrCVdE0He5qJ3++l9tplHJ2uI7/PNRt/0ZyT9x7gREnJ5q8quodoo9RAzy8sPVxtmaFNKH0snH
- QK8AAAA
-To: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <djwong@kernel.org>, 
- Dave Chinner <dgc@kernel.org>, Chuck Lever <cel@kernel.org>, 
- Jeff Layton <jlayton@kernel.org>, Dai Ngo <Dai.Ngo@oracle.com>, 
- Sergey Bashirov <sergeybashirov@gmail.com>, linux-nfs@vger.kernel.org, 
- linux-kernel@vger.kernel.org, stable@vger.kernel.org, 
- Daejun Park <daejun7.park@samsung.com>
-X-Mailer: b4 0.13.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1791952332; l=8033;
- i=daejun7.park@samsung.com; s=20261006; h=from:subject:message-id;
- bh=bEReiYttB04ZTw2Z9VcNZ7acbQRp6SzbI6ILhHZiYoQ=;
- b=XOvAOBRrjjf0HyNi+fXmNnga99W+wZ7il+21cOBEHZbVHPzc4yBqkcgUPAgh8FX1alLXfaCjF
- gn4WsV73lOJBJZnVfJ9Ev5VWxP5wUhHvFr2mFkm86bvmEY1J1hjics7
-X-Developer-Key: i=daejun7.park@samsung.com; a=ed25519;
- pk=4yUfDqGRZTIj0Ik43z1GoMZRWCNm/rgX6uJuM9dtNIg=
-X-Endpoint-Received: by B4 Relay for daejun7.park@samsung.com/20261006 with
- auth_id=1122
-X-Original-From: Daejun Park <daejun7.park@samsung.com>
-Reply-To: daejun7.park@samsung.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261012-work-fs-sb_rdonly-v1-1-60743a3dc326@kernel.org>
 
-From: Daejun Park <daejun7.park@samsung.com>
+On 2026-10-12 12:20:46, Christian Brauner wrote:
+> ecryptfs_lookup_interpose() opens the lower file of a regular file to
+> read the size from the header. If that fails it calls make_bad_inode()
+> and returns the error. A new inode is still I_NEW at that point and
+> nothing ever unlocks or puts it, so it leaks together with the reference
+> it holds on the lower inode. And an inode that was already in the cache
+> gets marked bad for all its other users instead of just losing the
+> reference this lookup took.
+> 
+> umount then complains:
+> 
+>   VFS: Busy inodes after unmount of ecryptfs (ecryptfs)
+> 
+> That's a WARN, or a BUG with CONFIG_BUG_ON_DATA_CORRUPTION. The lower
+> filesystem reports the same when it is unmounted. Use iget_failed() for
+> a new inode and iput() for one from the cache.
+> 
+> Reproducer, opening the lower file read-write fails on a read-only bind
+> mount:
+> 
+>   sig=$(printf x | ecryptfs-add-passphrase - | sed -n 's/.*\[\(.*\)\].*/\1/p')
+>   mount --bind -o ro /lower /lower
+>   mount -i -t ecryptfs -o ecryptfs_sig=$sig,ecryptfs_cipher=aes,ecryptfs_key_bytes=16,ecryptfs_passthrough /lower /upper
+>   cat /upper/f      # EROFS
+>   umount /upper     # VFS: Busy inodes after unmount of ecryptfs
+> 
+> Fixes: 3b06b3ebf441 ("eCryptfs: Fix new inode race condition")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 
-xfs_fs_map_blocks() marks the inode XFS_DIFLAG_PREALLOC after it
-allocates blocks for a write layout, so that xfs_free_eofblocks() does
-not free blocks past EOF that a client may write to. But a write layout
-for a range past EOF where blocks are already allocated, such as the
-speculative preallocation of buffered writes, gets those blocks without
-an allocation, and the inode is not marked. blockgc, or the release of
-the file, then frees them without breaking the layout. The client still
-writes to them, and they may belong to another file by then.
+Thanks, Christian! I ran this through the regression tests in the
+ecryptfs-utils project and everything passed. I also followed the steps
+in your reproducer, with and without this change, and verified that it
+fixes the intended issue.
 
-With pynfs as the client, a file grown to 1 MiB by two buffered writes
-on the server had 960 KiB preallocated past EOF, and an RW LAYOUTGET for
-that range got it as one INVALID_DATA extent, without the inode being
-marked. About 300 seconds later, with the default
-speculative_prealloc_lifetime, blockgc freed those blocks while the
-layout was still held. When the client then wrote through the layout and
-sent LAYOUTCOMMIT, xfs_fs_commit_blocks() found a hole where the
-unwritten extent had been, and xfs_iomap_write_unwritten() allocated for
-it with no blocks reserved:
+  Acked-by: Tyler Hicks <code@tyhicks.com>
 
-  XFS (nvme0n1): Corruption of in-memory data (0x8) detected at
-    xfs_trans_mod_sb+0x817/0x960 (fs/xfs/xfs_trans.c:351).
-    Shutting down filesystem.
-  ...
-   xfs_trans_mod_sb+0x817/0x960
-   xfs_alloc_vextent_finish+0x2e7/0x990
-   xfs_alloc_vextent_start_ag+0x25d/0x720
-   xfs_bmap_btalloc+0xdd2/0x1720
-   xfs_bmapi_allocate+0x197/0xf90
-   xfs_bmapi_write+0x4d0/0xb60
-   xfs_iomap_write_unwritten+0x307/0x7e0
-   xfs_fs_commit_blocks+0x1d9/0x630
-   nfsd4_block_proc_layoutcommit+0x5c2/0x7d0
-   nfsd4_layoutcommit+0x4b5/0xa20
+Tyler
 
-The client got NFS4ERR_IO, in six runs out of six. When small files were
-written on the server after blockgc, with a sync first so that the freed
-extents were no longer busy, they got those blocks, and the client's
-write through the layout replaced 978944 bytes of their data before the
-LAYOUTCOMMIT. A LAYOUTGET and LAYOUTCOMMIT 30 seconds apart, before
-blockgc runs, leave the client's data in place.
-
-Mark the inode also when a write mapping ends past EOF and nothing was
-allocated, the same way as for an allocation, before the blocks are
-handed out. With this, the same test keeps the blocks past blockgc, and
-the LAYOUTCOMMIT after 360 seconds succeeds with the data in place.
-
-To share the update with the allocation case, set a local update_inode
-flag in both cases, call xfs_fs_map_update_inode() in one place below
-them, and move the log force into xfs_fs_map_update_inode().
-
-Fixes: 527851124d10 ("xfs: implement pNFS export operations")
-Cc: stable@vger.kernel.org
-Reported-by: Chuck Lever <cel@kernel.org>
-Link: https://lore.kernel.org/r/4de5356f-bc4d-4f1a-9c81-fce09b1b46fd@slotpi15m67
-Signed-off-by: Daejun Park <daejun7.park@samsung.com>
----
-Changes in v2:
-- Set a local update_inode flag in both cases and update the inode in
-  one place, and move xfs_log_force_inode() into
-  xfs_fs_map_update_inode(), as Christoph suggested:
-  https://lore.kernel.org/r/20261012124118.GB32488@lst.de
-- Link to v1: https://lore.kernel.org/r/20261012-xfs-pnfs-eof-prealloc-v1-1-e4864d917a00@samsung.com
-
-Tested on nfsd-testing d918c664efd5 with the same change on top, all in
-QEMU guests with KASAN and lockdep, XFS on an NVMe/TCP namespace shared
-by the server and the client. In fs/xfs/xfs_pnfs.c, XFS for-next
-differs from that tree only by commit e3c682dd1130 ("xfs: map pNFS
-layouts to the end of the extent again"), which does not change the
-outcome of the new check.
-
-- the reproducer above (local pynfs tests, not posted), with the layout
-  held for 360 seconds, and with small files written on the server after
-  blockgc, with and without a sync first: with the patch the inode is
-  marked preallocated at LAYOUTGET, blockgc keeps the 960 KiB, and the
-  LAYOUTCOMMIT succeeds with the client's data in place and the small
-  files untouched. Without it, on the same base, both small-file
-  variants had blockgc free the blocks and the LAYOUTCOMMIT shut XFS
-  down;
-- pynfs block, with BLOCK5 from patch 1/3 of the pynfs series at
-  https://lore.kernel.org/r/20261014-pynfs-block-commit-v1-0-1723979f495f@samsung.com
-  (its BLOCK6 to BLOCK10 need the LAYOUTCOMMIT series below) and four
-  local layout extent tests, with and without XFS_DEBUG:
-  13 pass, BLOCK3 fails with NFS4ERR_BADXDR for its empty layoutupdate,
-  as without this patch;
-- fstests generic/075, 091 and 263 with the Linux client over the block
-  layout: only 075 fails, with an fsx size error, as without this patch,
-  and xfs_fs_commit_blocks() returned 0 for all 10324 LAYOUTCOMMITs;
-- W=1 builds of fs/xfs/xfs_pnfs.o on XFS for-next 0be6da616ab5 and on
-  nfsd-testing d918c664efd5: no warnings.
-
-This patch and v2 of "xfs: refuse pNFS LAYOUTCOMMITs of ranges without
-blocks" and of "xfs: make pNFS LAYOUTCOMMIT stable the way fdatasync
-does", sent earlier today, all change fs/xfs/xfs_pnfs.c. They apply to
-XFS for-next in any order, with the same result:
-https://lore.kernel.org/r/20261014-xfs-pnfs-commit-hole-v2-0-d3a02a79ab6c@samsung.com
-https://lore.kernel.org/r/20261014-xfs-pnfs-commit-datasync-v2-0-c11341a189b5@samsung.com
-
-Dave's "XFS: Atomic multi-extent operations via rolling transactions"
-V2 rewrites this code in 37/38: the inode update moves into the
-allocation transaction, and the path that allocates nothing returns
-early. A write mapping that ends past EOF without an allocation would
-still need the flag set there:
-https://lore.kernel.org/r/20260819001442.1451892-38-dgc@kernel.org
-
-Chuck pointed this out in the review of the ->map_blocks series, whose
-patch 7 will carry the same check for all mappings of a call:
-https://lore.kernel.org/r/4de5356f-bc4d-4f1a-9c81-fce09b1b46fd@slotpi15m67
----
- fs/xfs/xfs_pnfs.c | 34 +++++++++++++++++++++++++---------
- 1 file changed, 25 insertions(+), 9 deletions(-)
-
-diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
-index ab38561700..a9f0b472f3 100644
---- a/fs/xfs/xfs_pnfs.c
-+++ b/fs/xfs/xfs_pnfs.c
-@@ -110,7 +110,15 @@ xfs_fs_map_update_inode(
- 	ip->i_diflags |= XFS_DIFLAG_PREALLOC;
- 
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
--	return xfs_trans_commit(tp);
-+	error = xfs_trans_commit(tp);
-+	if (error)
-+		return error;
-+
-+	/*
-+	 * Force the log so that the blocks handed out to the client are
-+	 * guaranteed to be present even after a server crash.
-+	 */
-+	return xfs_log_force_inode(ip);
- }
- 
- /*
-@@ -134,6 +142,7 @@ xfs_fs_map_blocks(
- 	uint			lock_flags;
- 	int			error = 0;
- 	u64			seq;
-+	bool			update_inode = false;
- 
- 	if (xfs_is_shutdown(mp))
- 		return -EIO;
-@@ -221,20 +230,27 @@ xfs_fs_map_blocks(
- 				end_fsb - offset_fsb, 0, &imap, &seq);
- 		if (error)
- 			goto out_unlock;
-+		update_inode = true;
-+	} else {
-+		xfs_iunlock(ip, lock_flags);
- 
- 		/*
--		 * Ensure the next transaction is committed synchronously so
--		 * that the blocks allocated and handed out to the client are
--		 * guaranteed to be present even after a server crash.
-+		 * Blocks past EOF that were allocated for buffered writes, such
-+		 * as speculative preallocation, can be freed by
-+		 * xfs_free_eofblocks() without breaking the layout unless the
-+		 * inode is marked as preallocated. Mark it before handing them
-+		 * out for writing, as for blocks allocated above.
- 		 */
-+		if (write && !(ip->i_diflags & XFS_DIFLAG_PREALLOC) &&
-+		    imap.br_startoff + imap.br_blockcount >
-+		    XFS_B_TO_FSB(mp, XFS_ISIZE(ip)))
-+			update_inode = true;
-+	}
-+
-+	if (update_inode) {
- 		error = xfs_fs_map_update_inode(ip);
--		if (!error)
--			error = xfs_log_force_inode(ip);
- 		if (error)
- 			goto out_unlock;
--
--	} else {
--		xfs_iunlock(ip, lock_flags);
- 	}
- 	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
- 
-
----
-base-commit: 0be6da616ab5031ea6419dc4fe0bf0e378fb6757
-change-id: 20261009-xfs-pnfs-eof-prealloc-47e91cc12711
-
-Best regards,
--- 
-Daejun Park <daejun7.park@samsung.com>
-
-
+> ---
+>  fs/ecryptfs/inode.c | 5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/ecryptfs/inode.c b/fs/ecryptfs/inode.c
+> index 525297c7ebd8..0d8452558a98 100644
+> --- a/fs/ecryptfs/inode.c
+> +++ b/fs/ecryptfs/inode.c
+> @@ -362,7 +362,10 @@ static struct dentry *ecryptfs_lookup_interpose(struct dentry *dentry,
+>  	if (S_ISREG(inode->i_mode)) {
+>  		rc = ecryptfs_i_size_read(dentry, inode);
+>  		if (rc) {
+> -			make_bad_inode(inode);
+> +			if (inode_state_read_once(inode) & I_NEW)
+> +				iget_failed(inode);
+> +			else
+> +				iput(inode);
+>  			return ERR_PTR(rc);
+>  		}
+>  	}
+> 
+> -- 
+> 2.53.0
+> 
+> 
