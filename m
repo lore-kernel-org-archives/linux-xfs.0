@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCF4837CD45;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2FCB39FCD7;
 	Wed, 14 Oct 2026 03:42:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791949378; cv=none; b=edQDKAfpVXkaIdj4tFYqnhrutuiRahh0iRARNQnU3z25rapK7X6ih2BuMYF7hvY/Y0e7UKs77WAl7aBxWdZml/10oSyO4D8koXvSx3JDvnhqFhCNM7NE7dvpebxXnkUHDxVe77FbvncpqhmDuE56mWD3r5AMwzc7SeUpTGo8XhU=
+	t=1791949379; cv=none; b=qFt0AZH3EdOPYXdzu0X2mCfYSQbhUR9skUEztHngbXhXfH0l5YGwM2yMDG3Q1f2pAjUrFHrH6gJvmh4JnE17lIZGRZATNuxr/4rUxwefyOfUgvsBfjbR/70WYId8/eP5MkqriESZUIG96xfTCZ2G4tR2v0GCVt3PjzdeB7+mZ/s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791949378; c=relaxed/simple;
-	bh=cVp2/NRNZhanr+zLEEEc9y/DdiLBdc1o4KpjxW1Nsc4=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=DKPnj/NXehr/3OMezpZLmruriiKQM79BGBU5OyJW2OFBh+opVxmxMMtWadwUgvaBpqhjknJbG5/PBGCEcJY+gJVJ00TAJ6Del1AjEIZY95mJzYOAF6VXljxkBoDeSf/UqdQzokoayRjQur3mfQDNRXXxiqy45P3rt+BAhEXx2W4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fydhNg1d; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1791949379; c=relaxed/simple;
+	bh=LHzFOmq/a+lyPtSBjNoJEO3MjrbmhrHhyDkpiPxXg7g=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=IpgvNYzlMoFmQ+ff2bnu5TQuur15/g/uuR76HQVj7KgSj5fEupcYwVQji36yO1rWcvKgqxsHk/s0IKR5fRCCIhl7yEwU09DI++BLlHxerQDXXqAfiwYCmZrfLr5BY866WqzHwU5Gi5tbwrXvAqpEEZ5ZUb4lWoEKJ++21hn2y1g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Byrmib9M; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fydhNg1d"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 85FF5C2BCFC;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Byrmib9M"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 6EC1CC2BCC7;
 	Wed, 14 Oct 2026 03:42:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1791949378;
-	bh=cVp2/NRNZhanr+zLEEEc9y/DdiLBdc1o4KpjxW1Nsc4=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=fydhNg1dwAaPVjKy1vQgvZY/3pVbv7O4gH+ZeD3QvHKglrLVFZx3MUzdgsBf3QZtB
-	 4EQSxKDi2zFmtZ/PtYM0zkYed5TFH9tscVWyEEA30TyvIZ/14NrqqbXYHpEHt90gsn
-	 NHT9q6sMlm6Jgl0xd6xGkmxKggq4+CohlVx7rDWQCyWsOVUu/N09bBSpNDK3YiAIJW
-	 u+ab2AnrKjuEPM9Vij7dV4L06V5z2ZKco1wfHduqnTtwz+QLqDTvLQVrNhG7FeuL2p
-	 iZQ/F5Q1Kpkjt8UieMN5Dp90ywdM5qibNfeW2mGI/2bCIKCL2SNVUlnIB9rMieEDGC
-	 mOipwE1oG+joQ==
+	bh=LHzFOmq/a+lyPtSBjNoJEO3MjrbmhrHhyDkpiPxXg7g=;
+	h=From:Subject:Date:To:Cc:Reply-To:From;
+	b=Byrmib9Mvu5RWINk66OKA1ZB5+j3n5GcHPuemywGgN4CoL2f0sZLAaQPePINY6lE9
+	 8rhlu7b+0fouuDn5HF2FU+o48SJPew7Ve/Yw98p6V9TVtCVcLpL2b5NHqdeV2pCxMr
+	 hIsqC+OP4sJ5l6EAev+MVPedZPx3YR0GioIepLCr95Pe/INLjL+cU4nCYzkyDRXl98
+	 YOWY48zTJKUaM+Z7sh1LMh+CKRK7pO0zZoRAE2LC1GUAhpfJV8KbMZ151HevZWNU/h
+	 Anweh2FxEeXuwKG+PKIV9zEmGMtp9RlljQ/AmTRCmA/lyTyz9MonUrOrhMLJ9eF5rK
+	 xaI+qsoK3Uk9g==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65556CC6B19;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42814CC6B1C;
 	Wed, 14 Oct 2026 03:42:58 +0000 (UTC)
 From: Daejun Park via B4 Relay <devnull+daejun7.park.samsung.com@kernel.org>
-Date: Wed, 14 Oct 2026 12:42:59 +0900
-Subject: [PATCH v2 2/2] xfs: clamp a pNFS LAYOUTCOMMIT extent before
- computing its end
+Subject: [PATCH v2 0/2] xfs: refuse pNFS LAYOUTCOMMITs of ranges without
+ blocks
+Date: Wed, 14 Oct 2026 12:42:57 +0900
+Message-Id: <20261014-xfs-pnfs-commit-hole-v2-0-d3a02a79ab6c@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -41,9 +41,10 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261014-xfs-pnfs-commit-hole-v2-2-d3a02a79ab6c@samsung.com>
-References: <20261014-xfs-pnfs-commit-hole-v2-0-d3a02a79ab6c@samsung.com>
-In-Reply-To: <20261014-xfs-pnfs-commit-hole-v2-0-d3a02a79ab6c@samsung.com>
+X-B4-Tracking: v=1; b=H4sIAEH6zmoC/22NQQ6CQAxFr0K6tmZajIgr72FYjDBAE5khUyQYw
+ t0dSdy5afJ+/n9dQV0Up3DNVohuFpXgE/Ahg7q3vnMoTWJgw2cyxLi0iqNPpw7DIBP24emwzo1
+ 1peVL0eaQpmN0rSy79l4l7kWnEN/7l5m+6U+Y/xfOhITFyZTEzaMkwze1g758d0wtqLZt+wCbc
+ jrRugAAAA==
 To: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <djwong@kernel.org>, 
  Dave Chinner <dgc@kernel.org>, Chuck Lever <cel@kernel.org>, 
@@ -52,11 +53,11 @@ Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <djwong@kernel.org>,
  Andrey Albershteyn <aalbersh@kernel.org>, linux-kernel@vger.kernel.org, 
  stable@vger.kernel.org, Daejun Park <daejun7.park@samsung.com>
 X-Mailer: b4 0.13.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1791949377; l=1616;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1791949377; l=5569;
  i=daejun7.park@samsung.com; s=20261006; h=from:subject:message-id;
- bh=fJwzYVZW1+G2yLF8tU13obG/LBvLEpaUVnDAw9h7wvA=;
- b=SeU3v3o9rANgHAnMjeGdIaXxNPrX7bqdy2VntgqZ32evza50GTKnhaJ0vW02SDchvukSMSpu/
- yVn0dDKgiW8DJpD0e2qqnptFkdhE7S5nUQr3JhL+3OQflJXPjTTur+b
+ bh=LHzFOmq/a+lyPtSBjNoJEO3MjrbmhrHhyDkpiPxXg7g=;
+ b=XoR+j2rGgjPTJF4tYYjhWR9C16Nr/Wxic59Lt1AhbYan1sa81jBgNUtwC6ySyHQbR0bfFFpZ1
+ w/vkPNtccwDAIeFP6FGKaMkzHq4C+NRDPGiJ+zWXQS4QKe5ZQHEL7pn
 X-Developer-Key: i=daejun7.park@samsung.com; a=ed25519;
  pk=4yUfDqGRZTIj0Ik43z1GoMZRWCNm/rgX6uJuM9dtNIg=
 X-Endpoint-Received: by B4 Relay for daejun7.park@samsung.com/20261006 with
@@ -64,50 +65,113 @@ X-Endpoint-Received: by B4 Relay for daejun7.park@samsung.com/20261006 with
 X-Original-From: Daejun Park <daejun7.park@samsung.com>
 Reply-To: daejun7.park@samsung.com
 
-From: Daejun Park <daejun7.park@samsung.com>
+xfs_fs_commit_blocks() converts whatever range a pNFS client commits.
+For a range without blocks, the conversion allocates blocks that the
+transaction did not reserve and shuts XFS down, or maps blocks that
+nobody wrote into the file. Patch 1 refuses such a commit with a new
+XFS_BMAPI_CONVERT_ONLY flag for xfs_bmapi_write(). Patch 2 clamps the
+committed length before adding it to the offset, as the sum can wrap.
 
-xfs_fs_commit_blocks() clamps the end of each committed extent to the
-file size, but computes the end as offset + length first. A length
-from the client can make that sum wrap around, and the loop then
-passes the client's length, unclamped, to xfs_iomap_write_unwritten().
-xfs_bmapi_write() then fails an assertion on XFS_DEBUG kernels, which
-is a BUG with XFS_ASSERT_FATAL, and otherwise returns -ENOSR, which
-nfsd warns about as a non-standard errno.
+Changes in v2:
+- Refuse the hole in xfs_bmapi_write() with a new
+  XFS_BMAPI_CONVERT_ONLY flag, as Christoph suggested, instead of
+  checking all the ranges first. A range before the hole is now
+  converted before the commit fails; v1 converted nothing.
+- Drop the blockgc case from the message: with "xfs: mark the inode
+  preallocated for pNFS write layouts past EOF" [1], blockgc keeps
+  those blocks.
+- Split the length clamp into patch 2. It fixes a separate bug.
+- Link to v1: https://lore.kernel.org/r/20261013-xfs-pnfs-commit-hole-v1-1-740912db9102@samsung.com
 
-With pynfs as the client and an RW layout for the first 64 KiB of a
-2 MiB sparse file, a LAYOUTCOMMIT of 2^64 - 4 KiB at 4 KiB got
-NFS4ERR_IO, "nfsd: non-standard errno: -63" and a WARNING, or the
-assertion on XFS_DEBUG.
+XFS_BMAPI_CONVERT_ONLY takes bit 12 of the bmapi flags, which "xfs: add
+XFS_BMAPI_UNWRITTEN to unmap unwritten extents in __xfs_bunmapi()" in
+the fs-verity series [2] also uses. Whichever goes in second needs to
+move to bit 13. The name was used before, by a flag that commit
+26b91c728b2d ("xfs: make COW fork unwritten extent conversions more
+robust") removed. That flag only skipped the allocation and went on to
+map the hole; this one stops before it.
 
-Clamp the length to what is left below the size before adding it to
-the offset. With this and "xfs: refuse a pNFS LAYOUTCOMMIT of a range
-without blocks", the extent ends at the size and gets NFS4ERR_IO at the
-hole after the laid-out range, without a warning or an assertion.
+This series and v2 of "xfs: make pNFS LAYOUTCOMMIT stable the way
+fdatasync does", sent at the same time, both change
+xfs_fs_commit_blocks(). They apply in either order.
 
-Fixes: 527851124d10 ("xfs: implement pNFS export operations")
-Cc: stable@vger.kernel.org
-Signed-off-by: Daejun Park <daejun7.park@samsung.com>
+Tested on nfsd-testing d918c664efd5 with the same two patches on top,
+in QEMU guests with KASAN and lockdep. The block layout was on an
+NVMe/TCP namespace exported by nvmet. The client was pynfs, except for
+fstests, which ran on the Linux NFSv4.2 client. XFS for-next also has
+commit e3c682dd1130 ("xfs: map pNFS layouts to the end of the extent
+again"), which nfsd-testing does not have. xfs_bmapi_write(),
+xfs_iomap_write_unwritten(), xfs_fs_commit_blocks() and
+xfs_dio_write_end_io() are the same in both trees, and so is the
+changed line in xfs_end_ioend_write().
+
+ - A LAYOUTCOMMIT of a 64 KiB hole: NFS4ERR_IO and shutdown without the
+   series. With it, NFS4ERR_IO, no shutdown and nothing allocated, in 5
+   runs.
+ - A LAYOUTCOMMIT of a 4 KiB hole: NFS4_OK and a written block in the
+   file without the series. With it, NFS4ERR_IO and nothing allocated.
+ - The laid-out range and the 64 KiB hole in one LAYOUTCOMMIT: shutdown
+   without the series. With it, NFS4ERR_IO, and fiemap on the server
+   shows the laid-out range written and nothing allocated in the hole.
+ - An extent at 4 KiB with a length of 2^64 - 4 KiB: NFS4ERR_IO and
+   "nfsd: non-standard errno: -63" without the series, and with
+   XFS_DEBUG "Assertion failed: bma.nallocs >= *nmap" in
+   xfs_bmapi_write(). With patch 1 alone, the same nfsd warning. With
+   both, NFS4ERR_IO and no warning, also with XFS_DEBUG.
+ - Blocks past EOF freed by blockgc under a layout, without [1]: the
+   LAYOUTCOMMIT after the client's write shut XFS down without the
+   series and got NFS4ERR_IO with it.
+ - pynfs block and blockextent, also with XFS_DEBUG: same as without
+   the series (BLOCK3 fails either way, on a bug in the test).
+ - fstests generic/075, 091 and 263 over the block layout: 075 fails
+   with an fsx size error with and without the series, and XFS refused
+   none of the 10384 LAYOUTCOMMITs with it.
+ - O_DIRECT and buffered writes into preallocated space on the
+   server's own XFS, the other callers of xfs_iomap_write_unwritten():
+   converted as before, on the XFS_DEBUG kernel.
+ - fstests -g quick on a local XFS (mkfs.xfs defaults from xfsprogs
+   6.6.0, 10 GiB TEST and SCRATCH devices, KASAN and lockdep off),
+   with and without the series: 1017 tests ran, and the same 5 failed
+   either way (generic/453, 454, 563, 794 and xfs/261). Also the same
+   with both series applied.
+ - W=1 builds of the changed files after each patch, on XFS for-next
+   0be6da616ab5 and on nfsd-testing: no warnings.
+
+No test reaches the delalloc case of the new flag. It takes the same
+branch as a hole.
+
+For stable, patch 2 applies to every LTS tree, but should not go in
+without patch 1: on its own, the clamped extent reaches the hole and
+shuts XFS down, as a LAYOUTCOMMIT of a hole already does there. Patch 1
+needs a backport for 7.2 and older, which do not have
+fs/xfs/xfs_ioend.c.
+
+xfs_pnfs_validate_isize() reads the extents under XFS_ILOCK_SHARED,
+which xfs_iread_extents() does not allow when they are not loaded yet.
+That needs a separate fix.
+
+[1] https://lore.kernel.org/r/20261012-xfs-pnfs-eof-prealloc-v1-1-e4864d917a00@samsung.com
+[2] https://lore.kernel.org/r/20261002223705.2175542-14-aalbersh@kernel.org
+
 ---
- fs/xfs/xfs_pnfs.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+Daejun Park (2):
+      xfs: refuse a pNFS LAYOUTCOMMIT of a range without blocks
+      xfs: clamp a pNFS LAYOUTCOMMIT extent before computing its end
 
-diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
-index 05c9660aea..d76873115c 100644
---- a/fs/xfs/xfs_pnfs.c
-+++ b/fs/xfs/xfs_pnfs.c
-@@ -312,9 +312,7 @@ xfs_fs_commit_blocks(
- 		if (start > size)
- 			continue;
- 
--		end = start + maps[i].length;
--		if (end > size)
--			end = size;
-+		end = start + min_t(u64, maps[i].length, size - start);
- 
- 		length = end - start;
- 		if (!length)
+ fs/xfs/libxfs/xfs_bmap.c | 14 ++++++++++++++
+ fs/xfs/libxfs/xfs_bmap.h | 10 +++++++++-
+ fs/xfs/xfs_file.c        |  2 +-
+ fs/xfs/xfs_ioend.c       |  2 +-
+ fs/xfs/xfs_iomap.c       |  7 ++++---
+ fs/xfs/xfs_iomap.h       |  3 ++-
+ fs/xfs/xfs_pnfs.c        | 13 +++++++++----
+ 7 files changed, 40 insertions(+), 11 deletions(-)
+---
+base-commit: 0be6da616ab5031ea6419dc4fe0bf0e378fb6757
+change-id: 20261012-xfs-pnfs-commit-hole-c30ae9a287f3
 
+Best regards,
 -- 
-2.43.0
+Daejun Park <daejun7.park@samsung.com>
 
 
