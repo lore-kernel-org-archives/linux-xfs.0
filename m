@@ -1,84 +1,83 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B6D54ED1AA
-	for <linux-xfs@vger.kernel.org>; Wed, 14 Oct 2026 17:44:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DECBC40756E
+	for <linux-xfs@vger.kernel.org>; Wed, 14 Oct 2026 18:24:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791999886; cv=none; b=M+7yO6FMAbvcpTuQy6qFXXLUZFo+dUUN0gxtG5rIoTZgJFF3Ip9sFGdJvv40J6Be9kWUgwazZDVhyCVRF65gYqJLoIapsAaZD0CjD1U1NYjDZszXmqSi0776jxcxvKq+IKlTh2AGDtjASftuPrTF1OOfKTcUhDfGX/QRcjHFcnY=
+	t=1792002255; cv=none; b=fyFAxf478zKswKw8a4fEWiC2OryMXnff/wXzd5I95aZJRjQRDgFGqG1LiAn1kU6+te4uZ7lWZt1Oya5g+kV5BDsoz+l/DQ6RJw9DqnvdF0/Y/T4elRXhkTn2R2O5TktZuHuLZKNLDmTNCy4gZWBDPS0VrUUzUpRr7nDQ0O+zK6E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791999886; c=relaxed/simple;
-	bh=pimHXPM7OSmkDIqg+vO53lmjmsefflZE2J1J28FNX4I=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=oQA4Svi20Y5wq5FX+Ei/yzmo5vcOaBfPr6qFhNQKB2hus3ONI1ckPxWIdRxM8Gs5IkXffnzV3CQkh8s5Z7bAvVFzCVS8EefevZdvDgFd5cKR/8eaKsSlKJul67UcHomakRN6iSgKwyfqcIgY4XnW/1O7SmHUcenQpGBW05btJk0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HiRAEICz; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1792002255; c=relaxed/simple;
+	bh=hwP1rhDGa25hz5qv5vocsMB5oWJNVeX5Xr0QzK+nwNI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=XTnrshcGbN1NpKIKPtyS2I0shwojxyyllOxm9s/g9tJV/A/DgSKetVnGSoIeLmyWl4vHOfOVzTT/QoxaXT8n5KlQEaTIeZWfiyqbIaLTq4k5puHb7rJPfiomD3B5xWduRwI21nKa3PQJ2a0SUxBoh5AupmHx4c0Zngq59lGKo4U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=xZKNFKX4; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HiRAEICz"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 43E071F000C4;
-	Wed, 14 Oct 2026 17:44:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791999883;
-	bh=jIKyto3KYfDavBw0lGOEoPWlTo9UaPScrOEDTcXxyys=;
-	h=Date:From:To:Cc:Subject;
-	b=HiRAEICzktMMhLbZ9Eg8GUpONO1N0c3D+veFQUXwUnklDForkm8QEKfmqM11Byveq
-	 i33iz+HsrElmKe2kzuPmG8HKl2D4SoI30olASeb+dxmSyIyjcIkhhk94gddU0T4ACH
-	 +BxHkbwx9YcjQcHyqfI9xIkNUMq0PeYRPMmofIMdRchkMEhV1rfhnph4+7FiDMz/2q
-	 tGa53F9sQqXxBwfKViTr4B1QRprg4Lm3428kicMOVaYHcdurU8ZDGzykfgVlcyU5+W
-	 s+trt742geF1jVauqVM2BRvmzo6oLCho9M9ytuMnj8KnQBpPPlgilxW1fnJkpj5Abs
-	 A3ucvLPprg5eQ==
-Date: Wed, 14 Oct 2026 10:44:42 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Andrey Albershteyn <aalbersh@kernel.org>
-Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH] libxfs: fix compilation errors
-Message-ID: <20261014174442.GK2705364@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="xZKNFKX4"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Transfer-Encoding
+	:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
+	Sender:Reply-To:Content-ID:Content-Description;
+	bh=RAZymBeAp5xBcgTfI0ZqWm/SagmSABIGB9k07jz6fmw=; b=xZKNFKX4DPHAYUvXPY/0hfrao6
+	lPbLjUebPUfc6H3/gEWHk1lRdAQh0s93uDrE1LG4AxUYwfXH+/S7JTLr8RnqPEUI8jK31CZI7sRZE
+	k5v0G7SEujOSlgvWQYL1ZPhVWQg7aW7yW1IX0V7wAaeH6bgLx3ZF3S9tz1OoMWWjACdPCCLmwlS+G
+	YlTvTzj6eeJS9OuCUiTKVCsOGfYP4sBk+VZ8D0C+IR1gNsPjNs7ousxro0SH9SsArEPGUxVKUz9rE
+	vOp4sHtvLNn3NjsGIF4xWmtHMbCbO+2qUYWlG5n6wb6Gg/6fl0196UhaxVtu3ZwG7w3e4GOteeVuS
+	QGp8G0Bw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1xH3e5-0000000G9AN-1jeW;
+	Wed, 14 Oct 2026 18:24:09 +0000
+Date: Wed, 14 Oct 2026 11:24:09 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Andrey Albershteyn <aalbersh@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] libxfs: fix compilation errors
+Message-ID: <as_IydSHaWCYgnLJ@infradead.org>
+References: <20261014174442.GK2705364@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20261014174442.GK2705364@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Wed, Oct 14, 2026 at 10:44:42AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> Add includes to eliminate warnings from -Werror=missing-prototypes.
+> It's not a good idea to let the compiler apply the default function
+> declaration.
 
-Add includes to eliminate warnings from -Werror=missing-prototypes.
-It's not a good idea to let the compiler apply the default function
-declaration.
+What do I need to do to see these warnings?  I'm getting a few warnings
+at the moment (and plan to look into them), but they are entirely
+different:
 
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
----
- libxfs/defer_item.c |    6 ++++++
- libxfs/trans.c      |    1 +
- 2 files changed, 7 insertions(+)
+xfs_alloc.c: In function '__xfs_free_extent':
+xfs_alloc.c:4017:41: warning: variable 'busy_flags' set but not used [-Wunused-but-set-variable=]
+ 4017 |         unsigned int                    busy_flags = 0;
+      |                                         ^~~~~~~~~~
+xfs_bmap.c: In function 'xfs_bmapi_convert_one_delalloc':
+xfs_bmap.c:4360:33: warning: variable 'flags' set but not used [-Wunused-but-set-variable=]
+ 4360 |         uint16_t                flags = 0;
+      |                                 ^~~~~
+xfs_log_rlimit.c: In function 'libxfs_log_get_max_trans_res':
+xfs_log_rlimit.c:162:33: warning: variable 'i' set but not used [-Wunused-but-set-variable=]
+  162 |         unsigned int            i;
+      |                                 ^
+2345 translated messages.
+3139 translated messages.
+prefetch.c: In function ‘do_inode_prefetch’:
+prefetch.c:1027:33: warning: variable ‘queues_started’ set but not used [-Wunused-but-set-variable=]
+ 1027 |         int                     queues_started = 0;
+      |                                 ^~~~~~~~~~~~~~
+btheight.c: In function ‘construct_records_per_block’:
+btheight.c:158:11: warning: assignment discards ‘const’ qualifier from pointer target type [-Wdiscarded-qualifiers]
+  158 |         p = strchr(tag, ':');
 
-diff --git a/libxfs/defer_item.c b/libxfs/defer_item.c
-index 72d79b10d82064..c6ea292d3d6940 100644
---- a/libxfs/defer_item.c
-+++ b/libxfs/defer_item.c
-@@ -30,6 +30,12 @@
- #include "xfs_group.h"
- #include "xfs_rtgroup.h"
- #include "xfs_attr_item.h"
-+#include "xfs_extfree_item.h"
-+#include "xfs_bmap_item.h"
-+#include "xfs_rmap_item.h"
-+#include "xfs_refcount_item.h"
-+#include "xfs_exchmaps_item.h"
-+#include "xfs_icreate_item.h"
- 
- /* Dummy defer item ops, since we don't do logging. */
- 
-diff --git a/libxfs/trans.c b/libxfs/trans.c
-index 128e9f4431dc7c..c509ca1131116d 100644
---- a/libxfs/trans.c
-+++ b/libxfs/trans.c
-@@ -22,6 +22,7 @@
- #include "xfs_defer.h"
- #include "xfs_trace.h"
- #include "xfs_rtbitmap.h"
-+#include "xfs_icreate_item.h"
- 
- static void xfs_trans_free_items(struct xfs_trans *tp);
- STATIC struct xfs_trans *xfs_trans_dup(struct xfs_trans *tp);
