@@ -1,38 +1,45 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 910973BB122
-	for <linux-xfs@vger.kernel.org>; Thu, 15 Oct 2026 14:51:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D03F4FD260;
+	Thu, 15 Oct 2026 14:54:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792075876; cv=none; b=Ra8J6wwvAaLSmxmiKUrvQEfWmLDIWoU/ZcQTarQquL5OoKdtrkpipSQPLdqB4j2K6D4ihxl3UuEPdlbAlYpO0102DncyYDyYLOT5nE4xcak6YU0DcMS1ehYmKIJAC2qKFsLu7fJpTzW58bvaAzROZKEyyJHNgSoBi9a/FfuCRhA=
+	t=1792076074; cv=none; b=abhNNV81VO1gJFHhFFAtEr10oPbwjKS/jhh3Fr6WiXh7TSheGdq0s43UPcISE5cax7wOSrQjA7Mr11mRZKkfnD03ozxDJPzHjonbvuMBdYp9JfeB6aheXLhuAZwI6duSVS7Yuyuvhn5m1Aj1F4xe3aGe8RovFEKmwtXkE2WGFoM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792075876; c=relaxed/simple;
-	bh=2HL+bjRZCpUniNlqGecPVnJkhY0AvHrXXqrvbHYtfuU=;
+	s=arc-20240116; t=1792076074; c=relaxed/simple;
+	bh=J4o8SIkPXGdJVwImhbAGW5mNPE3/x5jZBZqcQc7txYI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=k0YeUBb92AkW8WUVD44fmG/3D/1lJ3Nzjxhe3Iabxw3usJsLRfi+w4Nln83bMlGyREJ2zd7a+LLDFpTC/cgUIHGNlZ+x0kSHXH/LZSQza50cdUnTSgdCYv7Pcimj6PexaPLKvqF6PGqkcHzro/9QUAvNIWnh6J6vdeZqR9fueJY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ii1Nb2aw; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=EmHxm/Irfa7UbGvA82QUcQ2lN7y+x01HmGFDlKAprsVGXvZ5MxY7xCqJC2Am/T8HFAbimHtNKbmpfN5H+zlqN+AAU97yjs61GXGzSvmi2J0Eo+ogXnXcYSfpL1nVlCL0ARFRiPxJdaSWcfCjHQTLEi2LYp8pitQ1/jPf4j9B3B8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=eWnu7Goe; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ii1Nb2aw"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id D77831F000C4;
-	Thu, 15 Oct 2026 14:51:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792075874;
-	bh=spygr3LX98bnGBt5J4v2G6ZX/WJMM4sCBuxvxe6+xDA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=ii1Nb2aw8O8QH/fy/rvvojgxyS4jjeYzKmq0nutMvM2fXO8bsfSH+ZwANbWhvKmyM
-	 HN1gqCsOlJvN6hgacpYSOCTesX0tWTPNWlUXBVrdzHhleyoOpBlmZFz8JqYaNYGkZd
-	 Ydvk8vGBi8F7CpWuCRxwPn+ecENaIywSG7e2aQtKaBT7oHcB6TGkDvBXuoi3tbaLAT
-	 lE4jng5GIw+lSoAzu56380/RMh00NTXr3kcEJXnSHtbLnmfRNWgcxjXSNiV4bu3rQW
-	 +ymfjIL6S0OKK1DSq7i1ayqW8ooKXYFTmnp3tIGI0PEAOEO/vsn7+EbsPlJekRo+7r
-	 DW0VkAZp32Jxg==
-Date: Thu, 15 Oct 2026 07:51:14 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Andrey Albershteyn <aalbersh@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
-Subject: [PATCH 2/2] xfsprogs: even more debug whining
-Message-ID: <20261015145114.GS2705364@frogsfrogsfrogs>
-References: <20261015144610.GP2705364@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="eWnu7Goe"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=FPf/s8IL87O3vyjbpjAmgK3FzSxMbHOjYI/DnvuSQIw=; b=eWnu7GoeVZaaHX6GYSjroB4r2T
+	YKQHod4C5wf531EOYVZPbScPyM/49A7bh7qMA4Kck46c8WCBMme+CSD+94rDs6Yqq4UgZnXshZq2v
+	en0pIUaoCyLISg51djiJlhnW8evGB2PUE21ZZLnCnU56cTih5o0Y8Gu/MY8rWByjq/O/GWEbSqFXv
+	KgebwdNac0Z36MVnSE+V4GNCnOlJHAXA2H/plYFIhVS5o+/vna81wMsxd54Zz4PfzL+Sy562zxKSU
+	swqiunySJqjQ55UWVAOsTDCec/Q7hspfKK6E4Iq5VeRbrPI5yjccG/b9OzUgrqa9b+oaETJEAjVpg
+	Es/p1MYA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1xHMqg-00000000SBe-1l2O;
+	Thu, 15 Oct 2026 14:54:26 +0000
+Date: Thu, 15 Oct 2026 07:54:26 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Zorro Lang <zlang@kernel.org>,
+	fstests <fstests@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>,
+	Andrey Albershteyn <aalbersh@kernel.org>
+Subject: Re: [PATCH] generic/805: mask unmount failures on cleanup
+Message-ID: <atDpInBpIksOo_cj@infradead.org>
+References: <20261015033236.GV6253@frogsfrogsfrogs>
+ <atBr0ViKkOt0wZ12@infradead.org>
+ <20261015143649.GM2705364@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -41,110 +48,25 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261015144610.GP2705364@frogsfrogsfrogs>
+In-Reply-To: <20261015143649.GM2705364@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Thu, Oct 15, 2026 at 07:36:49AM -0700, Darrick J. Wong wrote:
+> The test vm boots off NFS to test XFS, so / and /mnt are NFS.
+> SCRATCH_DEV is XFS, so when SCRATCH_MNT is mounted, /mnt/s will be XFS.
+> After unmounting SCRATCH_MNT, /mnt/s will look like it's NFS, so that's
+> why umount does what it does:
+> 
+> # mkfs.xfs -f /dev/sda
+> # mount /dev/sda /mnt/s
+> # umount /mnt/s
+> # umount /mnt/s
+> umount.nfs: remote share not in 'host:dir' format
+> umount.nfs: /mnt/s: not mounted
+> 
+> (I'm not fstesting NFS, I left that to Chuck and Anna.)
 
-Yeah these should be consolidated
+Ah.  The patch looks good then:
 
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
----
- configure.ac            |    2 ++
- include/builddefs.in    |   48 +++++++++++++++++++++++++++++++++++++++++++++++
- m4/package_sanitizer.m4 |   14 ++++++++++++++
- 3 files changed, 64 insertions(+)
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-diff --git a/configure.ac b/configure.ac
-index a4e491895e020d..3628f53dbb4a96 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -38,6 +38,8 @@ fi
- AC_PROG_CXX
- # no C++ build tools yet
- 
-+AC_HAVE_X86_CFLAGS
-+
- AC_ARG_ENABLE(shared,
- [  --enable-shared=[yes/no]  Enable use of shared libraries [default=yes]],,
- 	enable_shared=yes)
-diff --git a/include/builddefs.in b/include/builddefs.in
-index 41076ddf389f82..81678113815330 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -94,6 +94,54 @@ WARNINGS += -Wno-dangling-pointer		# gcc 12.2 bug
- WARNINGS += -Wno-error=type-limits		# rtgroups patchset
- WARNINGS += -Wno-error=array-bounds		# rtgroups patchset
- 
-+# OpenSSF recommendations March 2025
-+# https://best.openssf.org/Compiler-Hardening-Guides/Compiler-Options-Hardening-Guide-for-C-and-C++.html
-+#WARNINGS += -O2				# already set elsewhere
-+#WARNINGS += -Wall
-+WARNINGS += -Wformat
-+WARNINGS += -Wformat=2
-+WARNINGS += -Wno-format-nonliteral		# xfs_db and friends fail this everywhere
-+#WARNINGS += -Wconversion
-+WARNINGS += -Wimplicit-fallthrough
-+WARNINGS += -Werror=format-security
-+WARNINGS += -U_FORTIFY_SOURCE
-+WARNINGS += -D_FORTIFY_SOURCE=2			# debian defaults to 2
-+WARNINGS += -D_GLIBCXX_ASSERTIONS
-+#WARNINGS += -fstrict-flex-arrays=3		# not in gcc 12?
-+WARNINGS += -fstack-clash-protection
-+WARNINGS += -fstack-protector-strong
-+WARNINGS += -Wl,-z,nodlopen
-+WARNINGS += -Wl,-z,noexecstack
-+WARNINGS += -Wl,-z,relro
-+WARNINGS += -Wl,-z,now
-+WARNINGS += -Wl,--as-needed
-+WARNINGS += -Wl,--no-copy-dt-needed-entries
-+
-+# OpenSSF gcc recommendations
-+WARNINGS += -Wtrampolines
-+
-+# OpenSSF per-arch recommendations + extra assertions
-+WARNINGS += @arch_cflags@ -D_LIBCXX_ENABLE_ASSERTIONS
-+
-+# OpenSSF for production code
-+WARNINGS += -fno-delete-null-pointer-checks
-+WARNINGS += -fno-strict-overflow
-+#WARNINGS += -fno-strict-aliasing		# elsewhere
-+#WARNINGS += -ftrivial-auto-var-init=zero	# elsewhere
-+
-+# OpenSSF for obsolete C constructs
-+WARNINGS += -Werror=implicit
-+WARNINGS += -Werror=incompatible-pointer-types
-+WARNINGS += -Werror=int-conversion
-+
-+# OpenSSF for multithreaded code
-+WARNINGS += -fexceptions
-+
-+# chainguard.dev recommendations
-+WARNINGS += -fno-omit-frame-pointer
-+WARNINGS += -mno-omit-leaf-frame-pointer
-+#WARNINGS += -fhardened				# not on gcc 12
-+
- # Comment out for release builds
- CFLAGS += $(WARNINGS)
- BUILD_CFLAGS += $(WARNINGS)
-diff --git a/m4/package_sanitizer.m4 b/m4/package_sanitizer.m4
-index 6488f7ebce2f50..c20e5156907ab2 100644
---- a/m4/package_sanitizer.m4
-+++ b/m4/package_sanitizer.m4
-@@ -71,3 +71,17 @@ AC_DEFUN([AC_HAVE_TRIVIAL_AUTO_VAR_INIT],
-     CFLAGS="${OLD_CFLAGS}"
-     AC_SUBST(autovar_init_cflags)
-   ])
-+
-+# Add arch-specific gcc flags if they exist
-+AC_DEFUN([AC_HAVE_X86_CFLAGS],
-+  [ AC_MSG_CHECKING([if C compiler supports various x86 CFLAGS])
-+    OLD_CFLAGS="$CFLAGS"
-+    TEST_CFLAGS="-fcf-protection=full -mshstk"
-+    CFLAGS="$CFLAGS $TEST_CFLAGS"
-+    AC_LINK_IFELSE([AC_LANG_PROGRAM([])],
-+        [AC_MSG_RESULT([yes])]
-+        [arch_cflags="$TEST_CFLAGS $arch_cflags"],
-+        [AC_MSG_RESULT([no])])
-+    CFLAGS="${OLD_CFLAGS}"
-+    AC_SUBST(arch_cflags)
-+  ])
