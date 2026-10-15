@@ -1,41 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43EAB3A9631;
-	Thu, 15 Oct 2026 14:36:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3B2130274D;
+	Thu, 15 Oct 2026 14:38:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792075011; cv=none; b=OgFEKAejOOXTQXJZyWp7AzVWM13GobcwRcOqIcl7V7uWsLUfVaSTl0LJCCxQDG8Jh/asH4fUBr11NEJZ8Y8dwSajhF+Y3hR5lH7K6HeAmnITZmvPR5UK5ceLeW030RTKWuxaskvAB/MiMi2PKs18cO2nS7i0j/AOwM2OyKYuuco=
+	t=1792075089; cv=none; b=M4GGDgrP6XvZxSG8ekre+1NJmYMvKddTMLk6QD+RyRVHopyQlvb6OckDoP+4Gy6nVlY290mZeWHdhGWrOlkA7U+UdKbN3TiNvMgvW/9dpvF80+7iRN6ZCbuFL0skTRLQzgDFNWxddDZqD7uJWpaE6ZC1xZj/57HCIn9EZv8o5VQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792075011; c=relaxed/simple;
-	bh=2UAJMPuaoR/SdnUnli9rY9zzyo0/bLUAQnyDPmb6qX8=;
+	s=arc-20240116; t=1792075089; c=relaxed/simple;
+	bh=RHMdOPbRXNN/vnIf1OyuOt1EVeisCNeiyQ97BSqvj1I=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=czhQERZa5tPpqq7tRIFrnclFdAYN4fnnMZR2DDnv/9d6l63FNowYw+Pl8X+6JdTKyNRBDw1UTNLd1kdHNQCY+I0GjUQTBg2ZG3HkOGUuBA5XEOxkQlfJgqZe4nXmTHJzkRbQVD6Q1eF/mXIH2B84EOj1pq9q9PvC6FQMp43xz1s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K21sz84g; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=PY/B6xCbDpRDQd74hTfjKkXFv0ldE1BQ9lekCk4h+n6Fk95awoySr9c1kipZ/ZBFKJm8sxymzKwvwu8NhRPc7rS/s9uQk8NlsyTF2q/1JdGs0ViNjItdDWvq4/AOaq9uRRQxuKEHh06mO5sFsPu+LZL+ylJ9ihu8+HVudYMggnY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RJ8aEj8Y; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K21sz84g"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 7CAAC1F000C4;
-	Thu, 15 Oct 2026 14:36:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RJ8aEj8Y"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 850281F000C4;
+	Thu, 15 Oct 2026 14:38:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792075009;
-	bh=LIiy8t5/bfXGieZxKBp/2PX8numSxsFYmYUd6dm2bZM=;
+	s=k20260515; t=1792075087;
+	bh=tNDJWGJTpeF7yeDPvV10PQ4IQPwZQsBesVCOPEnYuxU=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=K21sz84gK98pmzWXiRJNCvASwUjyPakO4jljI9kjFtmiYDVsFlkxuMRcCEH6IWjgF
-	 J5bfXYS/YTDFyW7PMI52BgnYkbKbWbfLbLQHOX6v6+nlG7d1Xpy8KpxS4XBInpj5AQ
-	 BOHsj3/la/Gp2CEkOh2/tg8smQD+qaFRDUa3pGrBrjWlFSFw/QXIV0Nm97xt1qyfoR
-	 UvLt7JuCDMZ+Dqy/goKLq2OYWBNLmgu+/qXaGwqK1lcTbSN4MTm4TfV8gIFDEspxP8
-	 a04SxG5DFnGS59ZJbYfd0UZ30hp9QO1evrSuzQX0DsrN2GaKs5qg74+S2YU3/61tQI
-	 tuTmyTTFDCgPw==
-Date: Thu, 15 Oct 2026 07:36:49 -0700
+	b=RJ8aEj8Yejha5/g5/reSgJ1SmNWZSTQsYcGlcn9e2sZGFvlpowmk56YbvjiCgNb9k
+	 W9a3OJtNOgNv6ppz9P/lF0fUteicwmaX36CSQZ9TKcGEyQmUvjpJXgaBjV7VVdW11f
+	 75JwUBCsnC7/31JLmHAYk3tEp8rHuq/J1V4Hvf7F6oDt/cFJYcWwQ4v/64PpqgsxF7
+	 586SoDfuXRA8E0VaYLHeSM+BpLOs0h+T8ncls5bFs7y6hQgGvoFeQ7MSwZEYTTzjXQ
+	 vvnW9HFK/HtuCHMZX0H2uljRFchsBnxjHzyr3OFPeUrUZG7dDhnT1b5+m7JkHWZeKU
+	 pOv+5X5AJajDg==
+Date: Thu, 15 Oct 2026 07:38:07 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Zorro Lang <zlang@kernel.org>, fstests <fstests@vger.kernel.org>,
-	xfs <linux-xfs@vger.kernel.org>,
-	Andrey Albershteyn <aalbersh@kernel.org>
-Subject: Re: [PATCH] generic/805: mask unmount failures on cleanup
-Message-ID: <20261015143649.GM2705364@frogsfrogsfrogs>
-References: <20261015033236.GV6253@frogsfrogsfrogs>
- <atBr0ViKkOt0wZ12@infradead.org>
+To: Binbin Deng <18983559317@163.com>
+Cc: cem@kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: Re: [PATCH v1] xfs: set healthmon mount cookie before publishing it
+Message-ID: <20261015143807.GN2705364@frogsfrogsfrogs>
+References: <20261015080225.45215-1-18983559317@163.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,54 +42,57 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <atBr0ViKkOt0wZ12@infradead.org>
+In-Reply-To: <20261015080225.45215-1-18983559317@163.com>
 
-On Wed, Oct 14, 2026 at 10:59:45PM -0700, Christoph Hellwig wrote:
-> On Wed, Oct 14, 2026 at 08:32:36PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > On (what's left of) my NFS-booted QA fleet I get test "failures" like
-> > this:
-> > 
-> >  --- a/generic/805.out	2026-09-22 13:33:18.326820071 -0700
-> >  +++ b/generic/805.out.bad	2026-10-14 18:58:34.438866321 -0700
-> >  @@ -1,2 +1,4 @@
-> >   QA output created by 805
-> >   Silence is golden
-> >  +umount.nfs: remote share not in 'host:dir' format
-> >  +umount.nfs: /mnt/s: not mounted
-> > 
-> > This is caused by the _unmount call in _cleanup getting cranky about the
-> > scratch mount not being mounted despite the -q flag.  I think this is
-> > because umount(8) detects the underlying fs as NFS and delegates
-> > entirely to umount.nfs, and that program whines.
-> > 
-> > So fix the test by redirecting the output.  We've already decided if the
-> > test passes or not before we get to cleanup.
+On Thu, Oct 15, 2026 at 04:02:25PM +0800, Binbin Deng wrote:
+> xfs_ioc_health_monitor() allocates the healthmon object with kzalloc(), so
+> mount_cookie starts as zero.  zero is also DETACHED_MOUNT_COOKIE, but
+> xfs_healthmon_attach() publishes hm through mp->m_healthmon before storing
+> the mount cookie.  A concurrent reporter can therefore acquire hm from
+> xfs_healthmon_get(), see the detached cookie in xfs_healthmon_push(), and
+> drop the event even though the monitor is being attached.
 > 
-> We really should not end up here with NFS.
+> This is reachable by racing XFS_IOC_HEALTH_MONITOR with an operation
+> that reports a health event, such as a filesystem shutdown.  Initialize
+> the mount cookie before making hm visible through the RCU pointer so
+> reporters always observe an attached monitor.
 > 
-> Oh, this test is missing a
+> Found during a static-analysis-assisted audit: candidate sites were
+> surfaced by a Coccinelle rule, and the reader/writer paths were
+> confirmed by LLM-assisted (GLM-5.3) code inspection.  The issue was
+> not observed at runtime; it is identified by code inspection only.
 > 
-> _require_block_device $SCRATCH_DEV
-> 
-> so that all the dm magic is skipped when on a non-bdev fs.
+> Fixes: a48373e7d35a ("xfs: start creating infrastructure for health monitoring")
+> Cc: stable@vger.kernel.org
 
-_require_dm_target already checks that scratch-dev is a bdev, but I
-think you've misunderstood me.
+Cc: <stable@vger.kernel.org> # v7.0
 
-The test vm boots off NFS to test XFS, so / and /mnt are NFS.
-SCRATCH_DEV is XFS, so when SCRATCH_MNT is mounted, /mnt/s will be XFS.
-After unmounting SCRATCH_MNT, /mnt/s will look like it's NFS, so that's
-why umount does what it does:
+> Signed-off-by: Binbin Deng <18983559317@163.com>
 
-# mkfs.xfs -f /dev/sda
-# mount /dev/sda /mnt/s
-# umount /mnt/s
-# umount /mnt/s
-umount.nfs: remote share not in 'host:dir' format
-umount.nfs: /mnt/s: not mounted
-
-(I'm not fstesting NFS, I left that to Chuck and Anna.)
+Yes, we should set the mount cookie before exposing hm to the world.
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
+
+> ---
+>  fs/xfs/xfs_healthmon.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_healthmon.c b/fs/xfs/xfs_healthmon.c
+> index 2bdd747f1ead..05d6f0494139 100644
+> --- a/fs/xfs/xfs_healthmon.c
+> +++ b/fs/xfs/xfs_healthmon.c
+> @@ -114,8 +114,8 @@ xfs_healthmon_attach(
+>  	}
+>  
+>  	refcount_inc(&hm->ref);
+> -	rcu_assign_pointer(mp->m_healthmon, hm);
+>  	hm->mount_cookie = (uintptr_t)mp->m_super;
+> +	rcu_assign_pointer(mp->m_healthmon, hm);
+>  	spin_unlock(&xfs_healthmon_lock);
+>  
+>  	return 0;
+> -- 
+> 2.43.0
+> 
+> 
