@@ -1,46 +1,46 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEB4F3F4DF3
-	for <linux-xfs@vger.kernel.org>; Thu, 15 Oct 2026 15:53:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F27447206E;
+	Thu, 15 Oct 2026 18:45:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792079598; cv=none; b=Qq8kSU3RYUSX9rsfw6RKs4swL/D1FlzryMSDjr6b0oqTZdU+U0G0/n5oTh5DHiJeEnNR2vatjXzo+udiMRjqzaUfsRkpxwcFYCuDHY+/+syWruhASW8FKKfAA3Y8iP0rCz817RAc7Um05CuV7Ffep2z1FJFI9FB+8NJ+DedR5Wg=
+	t=1792089931; cv=none; b=JJxuY3tYF/KW3yXY2COrS7sqqX3Kvg9cmDSCNmkWUlzWSRDH0n2weSfaxuVtTB6w86zld22J7zZZGsUOOH8sY5fKxJGP7u3422VAVMOrCFSDBIbMMSF+gWy77R136EuruRq2XnsP2vFTee66PHQjIGnW3k2xpY2xm3BGlCse1xc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792079598; c=relaxed/simple;
-	bh=aTr0HLSxbsMgRFnIlSeHWUOzJIOXgE9OVHXMYWGX7Sg=;
+	s=arc-20240116; t=1792089931; c=relaxed/simple;
+	bh=I3tZdMdmCIOWHEnGl7YfWCGmIzALv0Koq+Ihui0HSpE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gjoimxkSoTZ1+eqQy1vshpdXsyIpAExFGB8yPElecaQEydB33tM5XjclH5IACN/UPqyfUt7iuY4nCh35wt2JCYkAFl2dxqgvddCFkCKqY90oxOGfkc90JOl/DoF4dML8I0uPgO9SnI55bLaDvxqm2NPFW0D7EQkEZPdWbF+j7gg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=hOhIJ3sR; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=qdTPFQAZGTeOWWvPVQKs3qbIeOWBUjWvN/wSj5EwqHdHcWvO4d9Dn1syeTX2iFMk7BVBUHiWngRZ2t2pbepXGsWm8DYroFWtY+ks6LZvzDV4S/C0pR8etDCUo66phd3PdJ13gjjuGv+1rLURRhkwPT/HDP7Eqg0t8oXRw27KJRw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R5rKYFZh; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="hOhIJ3sR"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=aTr0HLSxbsMgRFnIlSeHWUOzJIOXgE9OVHXMYWGX7Sg=; b=hOhIJ3sRtY52UnYEhifPnwmUjl
-	Sba4voETwbKg5TX+Q5g/vT8JX+AZ9hF6B+u6UPZJ4bde/2Ltfq4xiGxRo3MFFm+mruERJx1O28SnB
-	9Bih7CrvdYwYp5Qj8H4OfENatKQVqH1UbjWWqzdksapkNdrPysZz5IF2dcrHAuNCAUH4Oa9cr6tBU
-	QIoB8fNflGtiAgIy5rSEfoWZO5tGDqE3dP3a6YqzcNnUNKY6wdSXBKtyy2324GIdxWtkwaYpl5bgj
-	UaupsNgH/PMFq//7rb4e1lmivVfklPbu6uXMCXPdsN3SaL/6YsuV6Rhg/jANFr9YJty3z0BVG4MbV
-	HyB5Nq5Q==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1xHMqA-00000000S69-0LNj;
-	Thu, 15 Oct 2026 14:53:54 +0000
-Date: Thu, 15 Oct 2026 07:53:54 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Andrey Albershteyn <aalbersh@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] libxfs: fix compilation errors
-Message-ID: <atDpAkYMtqKPQlb0@infradead.org>
-References: <20261014174442.GK2705364@frogsfrogsfrogs>
- <as_IydSHaWCYgnLJ@infradead.org>
- <20261014184212.GE1615495@frogsfrogsfrogs>
- <atBrJO9owC7yXsRb@infradead.org>
- <20261015144302.GO2705364@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R5rKYFZh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1A9451F000C4;
+	Thu, 15 Oct 2026 18:45:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792089921;
+	bh=FEcWZLTNpOdYCiy8ICkVMEhy7qL2+iG3Q/NPD6O3NxQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=R5rKYFZhRXZWfuTnYXY/AYUnin7tCz5ny4vGO7V25Wof3xtB6rS2SeaOmUWkjdaMp
+	 C+l55ixgDWTiyniul0IUb6382kPGVIhE0vcmzvc+NisiUafwVsXNGqKleO8P9neoSr
+	 8JFOQTLWlbusFRBGAZh0rvLmTpI8kASrHTtuNu2xD31fr3ZRcYsZmeAsY512QorkLH
+	 R7miFL0y0o2O71qhHrKe80HlYEXtkGcwKHANU8vrWnYrJ3CkIeNPE1nmFrzXQLRR4O
+	 MHj8Ks5HObqeHlJYU46OUqvx7nq1VFWG1iWNfubUN5fcHzhMwvN3D9HZrzxUvqPxiZ
+	 mcYmDj+J4JkHg==
+Date: Thu, 15 Oct 2026 18:45:19 +0000
+From: Eric Biggers <ebiggers@kernel.org>
+To: Baokun Li <libaokun@linux.alibaba.com>
+Cc: linux-ext4@vger.kernel.org, linux-fscrypt@vger.kernel.org,
+	linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, jaegeuk@kernel.org, axboe@kernel.dk,
+	hch@lst.de, djwong@kernel.org, brauner@kernel.org, tytso@mit.edu,
+	berto@igalia.com, adilger.kernel@dilger.ca, jack@suse.cz,
+	yi.zhang@huawei.com, ojaswin@linux.ibm.com, ritesh.list@gmail.com,
+	stable@vger.kernel.org
+Subject: Re: [PATCH 03/13] blk-crypto: reject fallback data unit sizes it
+ can't handle
+Message-ID: <20261015184519.GF2170687@google.com>
+References: <20261011170958.1759230-1-libaokun@linux.alibaba.com>
+ <20261011170958.1759230-4-libaokun@linux.alibaba.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -49,12 +49,25 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261015144302.GO2705364@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20261011170958.1759230-4-libaokun@linux.alibaba.com>
 
-On Thu, Oct 15, 2026 at 07:43:02AM -0700, Darrick J. Wong wrote:
-> Well if you really want I'll share my old debug patch that tries to
-> enable as much of the kernel's W=3e as one can do sanely.
+On Mon, Oct 12, 2026 at 01:09:48AM +0800, Baokun Li wrote:
+> Such keys exist on filesystems whose
+> block size is larger than the page size, because fscrypt uses the block
+> size as its data unit size by default.
+> 
+> Fix this by advertising only the data unit sizes that the fallback
+> really supports, and by rejecting keys that the fallback can't handle in
+> blk_crypto_fallback_start_using_key(), so that the failure happens when
+> the key is set up instead of during I/O, and before any data is written.
+> 
+> Fixes: 488f6682c832 ("block: blk-crypto-fallback for Inline Encryption")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Baokun Li <libaokun@linux.alibaba.com>
 
-I'd rather go for roughly the same level as a normal kernel build :)
+Several patches in this series are marked as fixes, but they seem to
+only be needed for encryption with data_unit_size > PAGE_SIZE which is a
+new feature in this series.  I don't think these should be marked as
+fixes, as they will cause unnecessary backports, CVEs, etc.
 
+- Eric
