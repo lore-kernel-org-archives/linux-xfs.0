@@ -1,41 +1,43 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2CD53C345D
-	for <linux-xfs@vger.kernel.org>; Thu, 15 Oct 2026 05:57:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F85A31283E;
+	Thu, 15 Oct 2026 05:59:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792043849; cv=none; b=V7768SzKrnEa/PNW5v8MHkRHNLFzYm7zuUsd4goGllmA124TpPTCXCOajpG9XPpS9dhVEzbDhwzaNgHgXufmoVou1z5S39kSFccsl5sfRHs3R4ds/wOx2KztNnQOFxVopPtoC4ML/DrwElYi5iO/nCRfU7toIuRBXaRQEH3f/io=
+	t=1792043988; cv=none; b=uaIyIDAH9wHb22UPYFWPNN9mz7aMy01S3v1B6XsxobDUQghNc93/Xubrs8f5dgqb25VQovXqEFRetv6UlDOn1TMztWoA02Ie5LB2NkHUh+Av/KVTuhHpBEvHs6iPrcWMtX8JSaksN/vw/87kCekdU2o3CdcIUMO8cRBT1bQNTvA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792043849; c=relaxed/simple;
-	bh=V7vFuxeyVWzTt+HGiuWcyCXHmB8QST4cDqcAk1nO6dw=;
+	s=arc-20240116; t=1792043988; c=relaxed/simple;
+	bh=pswwWAOfJVxbZxBwVkLl3KJc9+9yJMC4XFbQ3p3MHxI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=McooPfprGo6Pc+uGFJM/bF/Hz4Rjf/TNxCNSTxmYrFOlBOPgpPIisSqYHiO8sjf6xcGvZPy8r+V7mjkbHBlmEtfZIlxI+JW1BpRG2mU2EyHwvXQ0F/iLi/4INDDC/dxmBiSC2ypwGg78ghvMfHB4NYLLj+2m4mG4+OXG2gEHi5o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=S+oAxwq1; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=B0CjH8T9dFHHE/ZWZpZLkz/8Q1470Vc9feXziMBHuq5RjCL/G8C1Uazd5+VVa6GBCX9lyqiENsErvhWoiNNWH19gCSceEnpWAbUYRgdKRWXQ9V3TbwcAQGN50lT3hX4SBuRzsaqUZ5Bl5gKDdFFqOWXjSG72JLkHMlzq1KoOf2o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=AEHWiRIf; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="S+oAxwq1"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="AEHWiRIf"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=J/rxbr+Sc6h8ii2R24dmm29GoJwDfYC3Jzk3EP31GmY=; b=S+oAxwq11F3PqMEU0lnfk8Aqkc
-	7xi0dmqEbhn9CiVJ4xkk99TPQwBVQJuvCJHy5z/64kuwd4DCbOkedIJOwne1KU0IHkvmdxyi44RMj
-	rxP6KrbSvS9JXbBXhbbTeIwcCJvvROG7TG5xrUiN/yOTCB3pvGYfkgz//PDF9vAwsSNtCnWoFSw6V
-	AfOtv/2f5zBgVW3LT1ALHV1JWzdijXWEjqGsF1kmq8yXmh50Mc7nfDFpzHGwTnchajYkqGfk+eUOk
-	ceO7gep48R7D7mzqRLAVtLfsdgwb2yKof2CVgGkpRNfq2y4T8H0ZcbtQooy0Q8Hwi8Fdi8ddZjLmZ
-	m1duPzhQ==;
+	bh=5uRQO4lXlNJFyFGRPNVqsl1LoiVcgsHwx6iiiaN/izQ=; b=AEHWiRIf2WJvW+UqePgNAK3Rak
+	YiPnr6TaznJM5iQ9C6B9fxuh9lonAeKcOpYkyheEsMBRlM4Dn7kp+LryTUc/8nbgNVK6aWyZHWAD9
+	4RytAs3akDy+7Xx0BZgAC2ODYyk6XcOkdWSqovNbxffBuOjZ2sTFrwyHXUdCJwCUR+AeqsDBQHg3H
+	34f9DCLtamxxCUBEE+uE9CIs5i27mmZus7UpE1zFlGh+G/0i9SMi1OH0UuQuxCdVeTtUG6UqR4rLB
+	jjcQGTsnMivus9hnuXASZmIiCoreImdZgi3tEzQruj6MrReN5UW81u3B4SJl11Hkq7zkXMjYDm1Fk
+	0amCS9uw==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1xHET0-0000000GuUH-0Oh5;
-	Thu, 15 Oct 2026 05:57:26 +0000
-Date: Wed, 14 Oct 2026 22:57:26 -0700
+	id 1xHEVF-0000000Guac-383O;
+	Thu, 15 Oct 2026 05:59:45 +0000
+Date: Wed, 14 Oct 2026 22:59:45 -0700
 From: Christoph Hellwig <hch@infradead.org>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Andrey Albershteyn <aalbersh@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] libxfs: fix compilation errors
-Message-ID: <atBrRijDavx07ekv@infradead.org>
-References: <20261014174442.GK2705364@frogsfrogsfrogs>
+Cc: Zorro Lang <zlang@kernel.org>, fstests <fstests@vger.kernel.org>,
+	xfs <linux-xfs@vger.kernel.org>,
+	Andrey Albershteyn <aalbersh@kernel.org>
+Subject: Re: [PATCH] generic/805: mask unmount failures on cleanup
+Message-ID: <atBr0ViKkOt0wZ12@infradead.org>
+References: <20261015033236.GV6253@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,17 +46,36 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261014174442.GK2705364@frogsfrogsfrogs>
+In-Reply-To: <20261015033236.GV6253@frogsfrogsfrogs>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Wed, Oct 14, 2026 at 10:44:42AM -0700, Darrick J. Wong wrote:
+On Wed, Oct 14, 2026 at 08:32:36PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Add includes to eliminate warnings from -Werror=missing-prototypes.
-> It's not a good idea to let the compiler apply the default function
-> declaration.
+> On (what's left of) my NFS-booted QA fleet I get test "failures" like
+> this:
+> 
+>  --- a/generic/805.out	2026-09-22 13:33:18.326820071 -0700
+>  +++ b/generic/805.out.bad	2026-10-14 18:58:34.438866321 -0700
+>  @@ -1,2 +1,4 @@
+>   QA output created by 805
+>   Silence is golden
+>  +umount.nfs: remote share not in 'host:dir' format
+>  +umount.nfs: /mnt/s: not mounted
+> 
+> This is caused by the _unmount call in _cleanup getting cranky about the
+> scratch mount not being mounted despite the -q flag.  I think this is
+> because umount(8) detects the underlying fs as NFS and delegates
+> entirely to umount.nfs, and that program whines.
+> 
+> So fix the test by redirecting the output.  We've already decided if the
+> test passes or not before we get to cleanup.
 
-Looks good:
+We really should not end up here with NFS.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Oh, this test is missing a
+
+_require_block_device $SCRATCH_DEV
+
+so that all the dm magic is skipped when on a non-bdev fs.
 
