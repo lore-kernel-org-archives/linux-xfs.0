@@ -1,92 +1,71 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D17064AD7FB;
-	Thu, 15 Oct 2026 08:02:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 358394E0211
+	for <linux-xfs@vger.kernel.org>; Thu, 15 Oct 2026 08:50:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792051369; cv=none; b=j4y8iw2e8EsgALcaBNh25GaLmUz2U6gWLPFJK6NJCJBzY+trdfWQsy4gsQW6V8OmRH2F0/dMl6ubC9mmHx1PcYsPRphwXsD3PKtzZkX5y+c28/BLIOGPYsG08iIZIC8dCUvjaJARFvEb92/b9f1rZFiq7wblE1vQEwUDNEofspE=
+	t=1792054269; cv=none; b=EDNv1SBZaCSQ47BzGZuyRk5JKlquuP6sV0nsIBZrQr0ZIU4j+NHaGjZ9dnV3EDqgp3F3tQAKgGeG0oYZEbzvMTY7S1waJRiUHq/sBrSHsa2zto+lGN3mQfH6ZJXvNRVs9cYOb7YKMagug7mJaOZ3dBkSU+H1Y6+IIMLhNyKfWXM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792051369; c=relaxed/simple;
-	bh=TbYg1VTiD1UEEO/d4dClCaNPHQwEu329pFow9Nnf4Uw=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=sVfXEnpoGEcTXqVbc5OBor9ExbohlqavYqe3Ug0Fr1v4CngsCjcIUu9vNSdPEFaXTn8fGQVCjooyDXZtNRxOIYWOFfIcC4fFTIYHU0F6iIfXMEB0o8y3I6kdu0H86EFA4MIXQDU1w+KVJYnnLWhonJRboXV5oKRC8k1yCB/lb9I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=XoBL5jbx; arc=none smtp.client-ip=117.135.210.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1792054269; c=relaxed/simple;
+	bh=DPBaxJmggg1VcDPXD9MVmjRwk5ZTK7tIOyUYAOoBcpo=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=F7GmUuSdsPjSGP9bwG8lp3poch5kqZzWbPgg3ybzJnFp9CukB7LWlyyvL9NhDYcinij5Bt/eDaQJC2UgAGTr8MpFseZMDwgRk4EX6T+65Xr49vFiz8sOOS4QMla9oKhI5piM4107ZKJ48tjTQEcmfNINr8EV/dXQBXjkLfqAX0E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RGjZpUVf; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="XoBL5jbx"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=cq
-	/MdyqyAlLfkajn/GEbXJjDzR7rtOrjoZXmiCtnRaQ=; b=XoBL5jbxC2BXbzCUkG
-	Hj/BQr70JEe7QRYZvbttGMBMNc90iLawCeXIExFFzDvr/nK/hNpogRMs8HkI/Swb
-	hlVWwK6EXCj18RRGTHoIp5lTKL5h8j3yKm0msxnRcTYTuNWzzynRT4v7R6C+sQrd
-	hHTVSAR7y4Z8C0LX2bePFPZdM=
-Received: from colol4bi5.localdomain (unknown [])
-	by gzga-smtp-mtada-g0-3 (Coremail) with SMTP id _____wD3VxqSiNBqbM7YAA--.26764S2;
-	Thu, 15 Oct 2026 16:02:27 +0800 (CST)
-From: Binbin Deng <18983559317@163.com>
-To: cem@kernel.org,
-	djwong@kernel.org
-Cc: linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org,
-	Binbin Deng <18983559317@163.com>
-Subject: [PATCH v1] xfs: set healthmon mount cookie before publishing it
-Date: Thu, 15 Oct 2026 16:02:25 +0800
-Message-ID: <20261015080225.45215-1-18983559317@163.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RGjZpUVf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7D7611F000C4;
+	Thu, 15 Oct 2026 08:50:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792054254;
+	bh=VC7Fc3/uaPLooY6V8HIeYXFFh3PGA7wF6IlUv7NMurk=;
+	h=Date:From:To:Cc:Subject;
+	b=RGjZpUVfAONARDKtfR/8qmpw6PxLJuUmc8mSDI6cfNKFJ1drUm+f62LTtYQI5uvGu
+	 +zyo93Z/RggUmdxzwSPhHYSlbxPcOVToKaTigBJJxPD0EIwEdPUDx0WmwuhQgMR2RD
+	 6k7qc9p//vk/gIJOg+qNjIl/cjOyZ2RmcHFv2uRwhp+/caMZcSsypgJNvjU2i2gvku
+	 +4EycYPWZW2SNhCOLI6uCC6uhEkwW0ENUfnN58alSLpRCOdCpqavDsD/Bwq8Reh8T0
+	 oNtQxlSuxw5KNEwk+URr6BMXB9H8u5+Hp3yF3gygrGAlxxT9KfsjeA4KWazinCfoE9
+	 1bhIRZB2DVP4Q==
+Date: Thu, 15 Oct 2026 10:50:51 +0200
+From: Andrey Albershteyn <aalbersh@kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: djwong@kernel.org, hch@lst.de
+Subject: [ANNOUNCE] xfsprogs: for-next updated to cf40b63a4480
+Message-ID: <atCT03xI__bB_i3u@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wD3VxqSiNBqbM7YAA--.26764S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7CF47urW5Zr1fZr45JFWDJwb_yoW8Ar18pF
-	ZxZ3s0kryvyry0vFsrJ3Wvyay7Jw4rCr1UKrn8Ww1fZw45JwnYvF9rKw4ag3W5ArZ2gF18
-	ZrWaqwn2qa98AaUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07UwF4iUUUUU=
-X-CM-SenderInfo: jprymmytvvmjmrxbiqqrwthudrp/xtbC4BMV+GrQiJP7bQAA3p
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-xfs_ioc_health_monitor() allocates the healthmon object with kzalloc(), so
-mount_cookie starts as zero.  zero is also DETACHED_MOUNT_COOKIE, but
-xfs_healthmon_attach() publishes hm through mp->m_healthmon before storing
-the mount cookie.  A concurrent reporter can therefore acquire hm from
-xfs_healthmon_get(), see the detached cookie in xfs_healthmon_push(), and
-drop the event even though the monitor is being attached.
+Hi folks,
 
-This is reachable by racing XFS_IOC_HEALTH_MONITOR with an operation
-that reports a health event, such as a filesystem shutdown.  Initialize
-the mount cookie before making hm visible through the RCU pointer so
-reporters always observe an attached monitor.
+The xfsprogs for-next branch in repository at:
 
-Found during a static-analysis-assisted audit: candidate sites were
-surfaced by a Coccinelle rule, and the reader/writer paths were
-confirmed by LLM-assisted (GLM-5.3) code inspection.  The issue was
-not observed at runtime; it is identified by code inspection only.
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
 
-Fixes: a48373e7d35a ("xfs: start creating infrastructure for health monitoring")
-Cc: stable@vger.kernel.org
-Signed-off-by: Binbin Deng <18983559317@163.com>
----
- fs/xfs/xfs_healthmon.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+has just been updated.
 
-diff --git a/fs/xfs/xfs_healthmon.c b/fs/xfs/xfs_healthmon.c
-index 2bdd747f1ead..05d6f0494139 100644
---- a/fs/xfs/xfs_healthmon.c
-+++ b/fs/xfs/xfs_healthmon.c
-@@ -114,8 +114,8 @@ xfs_healthmon_attach(
- 	}
- 
- 	refcount_inc(&hm->ref);
--	rcu_assign_pointer(mp->m_healthmon, hm);
- 	hm->mount_cookie = (uintptr_t)mp->m_super;
-+	rcu_assign_pointer(mp->m_healthmon, hm);
- 	spin_unlock(&xfs_healthmon_lock);
- 
- 	return 0;
+Patches often get missed, so if your outstanding patches are properly reviewed
+on the list and not included in this update, please let me know.
+
+The new head of the for-next branch is commit:
+
+cf40b63a448065b212f0959e40316b335d675ee9
+
+New commits:
+
+Darrick J. Wong (1):
+      [cf40b63a4480] libxfs: fix compilation errors
+
+Code Diffstat:
+
+ libxfs/defer_item.c | 6 ++++++
+ libxfs/trans.c      | 1 +
+ 2 files changed, 7 insertions(+)
+
 -- 
-2.43.0
-
+- Andrey
