@@ -1,156 +1,206 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE0642BDC0B
-	for <linux-xfs@vger.kernel.org>; Wed, 14 Oct 2026 23:31:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4ACAF35893;
+	Thu, 15 Oct 2026 00:51:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792020680; cv=none; b=kWf3hr+x7mNQgzxG+g0UhbZEpZo28RgXyz0Z5CO0zNby7onYofT8ktBosGixVD+HvtI+WGc5LyXn4r4kumD2+Ahi+0VzBzRu2pbBHDYA6dRDnGkjC3qGxOt+0jQSeh18oFkiyjHSWCPudVgSscClCq10oBH6nXc+oJL2z4CYADc=
+	t=1792025482; cv=none; b=dwAKUdznQCkR6hHqt2BLOgaDt53BAKyTf9Gq+dT31I9uen48FZApFNXc095YhJu70JcPV4d1a1qful0Nw8BFxKm81KsREkoNcZX4KK3xwR3Wrz85aGApn3HiGBcM5p5058MgU72u3+B9WrjvtEFJ6MDiEWhmgCO55mtSmkvmPf8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792020680; c=relaxed/simple;
-	bh=YOQm6hPGRkKfr5izqyntGoLNoqzkw1zeJ/8RDjhIJXs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=S3Cu0dvhph5m1B+RsM93Wq/HlQqsXU7zImyNfmeitn2zwmG9XunA+cXGA0ZqBGFc/5/K62uJXXJvgBz4fwqV0UuUjcOMGCkB0GcWjLIQzb8Q2pzoDCjekVKvhg3nytjgiTt0gdKyH8ejgwJPe9lSGHghRNMNKCy8cUxKv76c8Kw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZfQKEGnH; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1792025482; c=relaxed/simple;
+	bh=EiF6VbUi4j8fMUP5YkQ1XcGDuTH2eCmdrX3gHuEC/vw=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=ZYLIhhMakLbXTXLoN3kqSGBGMLxF12K2kRPeVN/8G3wbIl0QFSyq18BfNRUTXVpJRaD0VO9cIfhRFmnio1RzjXoIHvCIKZbLwXk5uiUU6HjFD7DSKZC0GnDpo5v4idLNodujQG/aahlg5D/vmK4u46RbABQRLdibY29bbARNvWs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mCvDdnI6; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZfQKEGnH"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 589D91F000C4;
-	Wed, 14 Oct 2026 23:31:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mCvDdnI6"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id C7ED91F000C4;
+	Thu, 15 Oct 2026 00:51:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792020678;
-	bh=sxhlqcyC59HNE2wOdrIqvv27d//J65EWB36tAHTiETs=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=ZfQKEGnHg6ZNQFLBlsrYGlfdjZy438XodtUWlCmJWHZ2WkKdUCr2aNSorFOEnqt3O
-	 bXGvJIeMrEeYO777hOPryD68t9XYuPOXzzQi9jZsHysUiLe0+c3pkp68Fi+n6rQx0R
-	 +e7XPfjujGJuKGzqJJBgzRDZ0P0ZFb28h05U16LjNFIJ4YDOmfzNUN5935/VFxaPT8
-	 x+GpiAL4F7WR1zNgGd86zdGhqgO4JLgUxlQrwdF8LINB+qZC9VnSiwJuuPdJvK62m8
-	 wIbjOcNVWkd/1mu2ymEQQK77Dfj09QZMXkAvhbnuWkcGwnOdNzoVyF3jIU0MheYrI/
-	 4wrJr9YogX9pA==
-Date: Wed, 14 Oct 2026 16:31:17 -0700
+	s=k20260515; t=1792025480;
+	bh=Uvy7E0KnOC1veaHCtVtk0brQ0eN7WxviEoFnYi4unz4=;
+	h=Date:Subject:From:To:Cc;
+	b=mCvDdnI6LLNaAM2Xd5ZCGRW5ZwZB+KVXEiIqan5Om5ddZ4keNE1S0cNcAzjaf0Tex
+	 va63KCKnNpfZs26u/gds/d5essR7kMDzPx96nO4lnPncRa7040BG6GKSJt6Q8xwwxw
+	 Pf9bs1HlLDspHD0+//OOkIt+u9Z+gqztPa2UEb4lqzUfbOYvYak4c2j5Lwug2U2xFe
+	 4bNbE5N2x+kDijhzAHBYUxcttN4M/Y5pow96SPCRZDWv2WhwbMrZbBeGHogtE+jnym
+	 8v6Jfce1ylP0Wt7EGsAIOx8d4GvP5cqzjZnrwQLf/QgOrecJls/BRedIFMaks8Kpqr
+	 Zcmoy1FfeGIvg==
+Date: Wed, 14 Oct 2026 17:51:20 -0700
+Subject: [PATCHSET] fstests: collect test results in a web dashboard
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Dave Chinner <dgc@kernel.org>
-Cc: linux-xfs@vger.kernel.org, cem@kernel.org
-Subject: Re: [PATCH 02/48] xfs: add log recovery item validation design
- document
-Message-ID: <20261014233117.GL2705364@frogsfrogsfrogs>
-References: <20261013060204.3138690-1-dgc@kernel.org>
- <20261013060204.3138690-3-dgc@kernel.org>
+To: zlang@kernel.org, djwong@kernel.org
+Cc: linux-xfs@vger.kernel.org, tytso@mit.edu, fstests@vger.kernel.org
+Message-ID: <179202481155.3448668.10918297235750961947.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261013060204.3138690-3-dgc@kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 
-On Tue, Oct 13, 2026 at 05:00:52PM +1100, Dave Chinner wrote:
-> Add a design document describing a systematic approach to validating log
-> items during journal recovery. Log item data read from the journal cannot
-> be fully trusted - corruption from torn writes, hardware errors or
-> software bugs can produce invalid type codes, wrong region counts,
-> truncated regions or internally inconsistent format structures that the
-> current recovery code largely uses unchecked.
-> 
-> The document describes a three-layer validation scheme (generic region
-> header decode, per-region type-specific validation, and full cross-region
-> item validation), the treatment of the transaction header as a validated
-> region type, and a set of additional safety fixes for the generic region
-> assembly code. It also lays out a phased implementation plan.
-> 
-> Changes:
-> - Add Documentation/filesystems/xfs/xfs-log-recovery-validation-design.rst
-> - Add the new document to the XFS documentation index
-> 
-> Created-by-AI: Claude Opus 4.8 (1M context)
->
-> Prompt: Let's start by converting the existing verification doc to kernel
-> .rst format and moving it to Documentation/filesystems/xfs/ and adding it
-> to the relevant doc index file. The file should be tracked in a new patch.
+Hi all,
 
-Eheheh.
+This series presents a mechanism to collect in a database the fstests
+xunit results generated by a fleet of VMs each testing different
+configurations.  The database can then be used to generate a web
+dashboard and an rss file of results as they come in.
 
-> Refinements:
-> - Reordered the Phase 1 implementation plan so the ops-struct validation
->   infrastructure (min_regions/max_regions/min_hdr_len fields and the
->   validate_region callback) is added first (Patch 1), followed by the
->   transaction header ops entry that uses it (Patch 2). Downstream patches
->   renumbered accordingly so each patch builds cleanly on its own.
-> ---
->  Documentation/filesystems/xfs/index.rst       |   1 +
->  .../xfs-log-recovery-validation-design.rst    | 477 ++++++++++++++++++
->  2 files changed, 478 insertions(+)
->  create mode 100644 Documentation/filesystems/xfs/xfs-log-recovery-validation-design.rst
-> 
-> diff --git a/Documentation/filesystems/xfs/index.rst b/Documentation/filesystems/xfs/index.rst
-> index ab66c57a5d18..231c1382b27a 100644
-> --- a/Documentation/filesystems/xfs/index.rst
-> +++ b/Documentation/filesystems/xfs/index.rst
-> @@ -9,6 +9,7 @@ XFS Filesystem Documentation
->     :numbered:
->  
->     xfs-delayed-logging-design
-> +   xfs-log-recovery-validation-design
->     xfs-maintainer-entry-profile
->     xfs-self-describing-metadata
->     xfs-online-fsck-design
-> diff --git a/Documentation/filesystems/xfs/xfs-log-recovery-validation-design.rst b/Documentation/filesystems/xfs/xfs-log-recovery-validation-design.rst
-> new file mode 100644
-> index 000000000000..188b1bebf171
-> --- /dev/null
-> +++ b/Documentation/filesystems/xfs/xfs-log-recovery-validation-design.rst
+If you're going to start using this code, I strongly recommend pulling
+from my git trees, which are linked below.
 
-The document sounds pretty reasonable for a first pass at hardening the
-log recovery code.  This is a good start.
-
-<snip>
-
-> +Layer 3: Full item validation (type-specific, cross-region)
-> +-----------------------------------------------------------
-
-<snip>
-
-> +Other intent/done items
-> +    similar field-level validation
-
-But please be more specific.
-
-> +ICREATE
-> +    - Already has validation in
-> +      ``xlog_recover_icreate_commit_pass2()``, move the checks to
-> +      ``validate_item``
-> +
-> +QUOTAOFF
-> +    - Verify ``qf_flags`` contains only valid quota flags
-> +
-
-<snip>
-
-> +Phase 3: Full item validation
-> +-----------------------------
-> +
-> +Patch M: Add validate_item callback infrastructure
-> +    - Add the callback to the ops struct
-> +    - Call it from ``xlog_recover_reorder_trans()`` after ops verification
-> +    - Return ``-EFSCORRUPTED`` on failure, aborting recovery
-> +
-> +Patches M+1 to M+N: Implement validate_item for each item type
-> +    - Move existing validation out of ``commit_pass2`` into
-> +      ``validate_item`` where possible (e.g. ICREATE field checks)
-> +    - Add new cross-region validation
-> +    - Order: simple types first, complex types last
-> +    - INODE validation is the most complex (fork format vs region size)
-> +
-> +Phase 4: Cleanup
-> +----------------
-> +
-> +- Remove redundant validation from ``commit_pass1``/``commit_pass2`` that
-> +  is now covered by ``validate_region``/``validate_item``
-> +- Add ``ASSERT()``\ s in commit handlers to verify validation has run
-> +- Review and update error messages for consistency
-
-Why is the plan for splitting scope across M+N patches relevant for a
-design document that will live in the kernel?
+With a bit of luck, this should all go splendidly.
+Comments and questions are, as always, welcome.
 
 --D
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=matrix
+---
+Commits in this patchset:
+ * matrix: add test result database code
+ * matrix: add per-VM test result reporter code
+ * matrix: add test results collector code
+ * matrix: add web dashboard for collected test results
+ * matrix: create build system for all software
+ * matrix: debian packaging
+---
+ matrix/Makefile                                 |  214 ++++
+ matrix/README                                   |   11 
+ matrix/collector/create-fstests-collector.8     |   16 
+ matrix/collector/create-fstests-collector.in    |   23 
+ matrix/collector/create_collector.in            |   50 +
+ matrix/collector/fstmatrix-receive.service.in   |   17 
+ matrix/collector/fstmatrix-receive.socket.in    |   18 
+ matrix/collector/fstmatrix-stow.service.in      |   16 
+ matrix/collector/fstmatrix-stow.timer           |   16 
+ matrix/collector/fstmatrix.conf.in              |    1 
+ matrix/collector/receive_tarball.c              |  241 +++++
+ matrix/collector/uploader.php.in                |  115 ++
+ matrix/dashboard/all.html                       |   31 +
+ matrix/dashboard/config-fstests-dashboard.8     |   20 
+ matrix/dashboard/config-fstests-dashboard.in    |   38 +
+ matrix/dashboard/create_dashboard.in            |   77 ++
+ matrix/dashboard/fstests.css.in                 |  183 ++++
+ matrix/dashboard/fstests.js                     |  670 +++++++++++++
+ matrix/dashboard/fstmatrix-dashboard.service.in |   17 
+ matrix/dashboard/index.html                     |   31 +
+ matrix/dashboard/stow_dashboard.in              |   56 +
+ matrix/dashboard/x.big.png                      |  Bin
+ matrix/dashboard/x.png                          |  Bin
+ matrix/database/archive.in                      |   86 ++
+ matrix/database/create_db.in                    |   28 +
+ matrix/database/create_views.in                 |   26 +
+ matrix/database/database.sql                    |  123 ++
+ matrix/database/db.in                           |   27 +
+ matrix/database/find_new_tarballs               |   47 +
+ matrix/database/fstestdb.py                     | 1147 +++++++++++++++++++++++
+ matrix/database/index.sql                       |   27 +
+ matrix/database/query_all_test_runs.in          |  334 +++++++
+ matrix/database/query_checktime                 |   31 +
+ matrix/database/query_machines.in               |   41 +
+ matrix/database/query_test_run.in               |   38 +
+ matrix/database/stow_tarball                    |  169 +++
+ matrix/database/stow_tarballs                   |   34 +
+ matrix/database/test_runtime                    |    9 
+ matrix/database/upsert_test_run.in              |  448 +++++++++
+ matrix/database/views.sql                       |   89 ++
+ matrix/debian/changelog                         |    5 
+ matrix/debian/control                           |   39 +
+ matrix/debian/copyright                         |   22 
+ matrix/debian/docs                              |    0 
+ matrix/debian/fstests-collector.install         |   10 
+ matrix/debian/fstests-collector.postinst.in     |   22 
+ matrix/debian/fstests-dashboard.install         |   13 
+ matrix/debian/fstests-dashboard.postinst.in     |   10 
+ matrix/debian/fstests-matrix.install            |   18 
+ matrix/debian/fstests-reporter.install          |   16 
+ matrix/debian/rules                             |   15 
+ matrix/debian/source/format                     |    1 
+ matrix/reporter/collect-all-results             |   30 +
+ matrix/reporter/collect-results.in              |  142 +++
+ matrix/reporter/config                          |    5 
+ matrix/reporter/copy-failure-info.in            |  374 +++++++
+ matrix/reporter/fingerprint-machine             |   19 
+ matrix/reporter/fingerprint-tests               |   58 +
+ matrix/reporter/fstests-reporter.1              |   30 +
+ matrix/reporter/fstests-reporter.in             |   71 +
+ matrix/reporter/fstmatrix-reporter              |   19 
+ matrix/reporter/fstmatrix-reporter.service.in   |   20 
+ matrix/reporter/fstmatrix-reporter.timer        |   17 
+ matrix/reporter/fstmatrix-want-reporter         |   22 
+ matrix/reporter/starttime                       |   36 +
+ matrix/reporter/upload-all-results.in           |   52 +
+ matrix/reporter/xunit_failed.awk                |   14 
+ matrix/reporter/xunit_rollup.awk                |   22 
+ 68 files changed, 5667 insertions(+)
+ create mode 100644 matrix/Makefile
+ create mode 100644 matrix/README
+ create mode 100644 matrix/collector/create-fstests-collector.8
+ create mode 100644 matrix/collector/create-fstests-collector.in
+ create mode 100644 matrix/collector/create_collector.in
+ create mode 100644 matrix/collector/fstmatrix-receive.service.in
+ create mode 100644 matrix/collector/fstmatrix-receive.socket.in
+ create mode 100644 matrix/collector/fstmatrix-stow.service.in
+ create mode 100644 matrix/collector/fstmatrix-stow.timer
+ create mode 100644 matrix/collector/fstmatrix.conf.in
+ create mode 100644 matrix/collector/receive_tarball.c
+ create mode 100644 matrix/collector/uploader.php.in
+ create mode 100644 matrix/dashboard/all.html
+ create mode 100644 matrix/dashboard/config-fstests-dashboard.8
+ create mode 100644 matrix/dashboard/config-fstests-dashboard.in
+ create mode 100644 matrix/dashboard/create_dashboard.in
+ create mode 100644 matrix/dashboard/fstests.css.in
+ create mode 100644 matrix/dashboard/fstests.js
+ create mode 100644 matrix/dashboard/fstmatrix-dashboard.service.in
+ create mode 100644 matrix/dashboard/index.html
+ create mode 100644 matrix/dashboard/stow_dashboard.in
+ create mode 100644 matrix/dashboard/x.big.png
+ create mode 100644 matrix/dashboard/x.png
+ create mode 100755 matrix/database/archive.in
+ create mode 100755 matrix/database/create_db.in
+ create mode 100755 matrix/database/create_views.in
+ create mode 100644 matrix/database/database.sql
+ create mode 100755 matrix/database/db.in
+ create mode 100755 matrix/database/find_new_tarballs
+ create mode 100644 matrix/database/fstestdb.py
+ create mode 100644 matrix/database/index.sql
+ create mode 100755 matrix/database/query_all_test_runs.in
+ create mode 100755 matrix/database/query_checktime
+ create mode 100755 matrix/database/query_machines.in
+ create mode 100755 matrix/database/query_test_run.in
+ create mode 100755 matrix/database/stow_tarball
+ create mode 100755 matrix/database/stow_tarballs
+ create mode 100755 matrix/database/test_runtime
+ create mode 100755 matrix/database/upsert_test_run.in
+ create mode 100644 matrix/database/views.sql
+ create mode 100644 matrix/debian/changelog
+ create mode 100644 matrix/debian/control
+ create mode 100644 matrix/debian/copyright
+ create mode 100644 matrix/debian/docs
+ create mode 100644 matrix/debian/fstests-collector.install
+ create mode 100644 matrix/debian/fstests-collector.postinst.in
+ create mode 100644 matrix/debian/fstests-dashboard.install
+ create mode 100644 matrix/debian/fstests-dashboard.postinst.in
+ create mode 100644 matrix/debian/fstests-matrix.install
+ create mode 100644 matrix/debian/fstests-reporter.install
+ create mode 100755 matrix/debian/rules
+ create mode 100644 matrix/debian/source/format
+ create mode 100755 matrix/reporter/collect-all-results
+ create mode 100755 matrix/reporter/collect-results.in
+ create mode 100644 matrix/reporter/config
+ create mode 100755 matrix/reporter/copy-failure-info.in
+ create mode 100755 matrix/reporter/fingerprint-machine
+ create mode 100755 matrix/reporter/fingerprint-tests
+ create mode 100644 matrix/reporter/fstests-reporter.1
+ create mode 100755 matrix/reporter/fstests-reporter.in
+ create mode 100755 matrix/reporter/fstmatrix-reporter
+ create mode 100644 matrix/reporter/fstmatrix-reporter.service.in
+ create mode 100644 matrix/reporter/fstmatrix-reporter.timer
+ create mode 100644 matrix/reporter/fstmatrix-want-reporter
+ create mode 100644 matrix/reporter/starttime
+ create mode 100755 matrix/reporter/upload-all-results.in
+ create mode 100644 matrix/reporter/xunit_failed.awk
+ create mode 100644 matrix/reporter/xunit_rollup.awk
+
