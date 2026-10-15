@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33F7E43BDC2;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B01F41A4FD;
 	Thu, 15 Oct 2026 04:08:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792037282; cv=none; b=fP7K7aZsLpwyjUvfI6OvO4IRcZ/Hy+eJ/ODxWs923vaFEm2M1Iz/0/5xuZeE0v51yPjcpuK2+ND0DATUvMySln6nqigm6a150gVs8BOFUswS+6/WhzQ9PME4QqRL5sDcL53oqIvVymPTEaoCjCUYzO6WGqBeyHiW5uSBZhrK+bg=
+	t=1792037282; cv=none; b=Ux/9VymE/yqI7dWP+ysYQAu9CO41xnJzUH1bmdNqwIWUgH2LASmqTuO9kBP/9VlFQQ5pPVCCUyov5lJnQf7tem866OoAsniOPaz2VlZAdposujedRAJUsu5xlR8Bx/BApHPbIaDe24gSuyH1KPeZoAZNYBxD3d2JI1+kYBuBf3k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1792037282; c=relaxed/simple;
-	bh=5YMcUgmHuwZ09iRYdxUe+lH9zpyUBdXx1A6AMXut68I=;
+	bh=G1AgiC6ssC+96LciGvxlgTGzsp01896k0HS8aPfcYGo=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=j/gMp55MRdtrHWFwGksM+ic8vC2Cis/Q1vQtEW3F43dvk1/Dh1SfJ1/XS1p9/tctzA29NCzpr6Jkt/mfeQTkL+PDeuHZsH00Ue72ez9W7rRnpddfGT1w162bO/j+AgarIIGUFIGPDtAYzMPW9tAhEO1idGrAjV88Lgkw0AfUm+s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Jys4+AdL; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=ZL+iCfCH8HkNyWENjnmVQAiA1ffFnHorY6wUxV6eWKqi1UA/jCBvNNeRbH3OcW+Ny0ps6B5//+hMJR3dyw7KBoaAErRO+dMIGr90jcaMsr4hF2iEeTLb8EILudRXCTVxbxEIsoPHqQnEygLWIL0rWSxZgvSRTbtVK4iaNlpYDus=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gmcndNcR; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Jys4+AdL"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 03858C4AF11;
-	Thu, 15 Oct 2026 04:08:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gmcndNcR"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id C9A90C2BD04;
+	Thu, 15 Oct 2026 04:08:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1792037282;
-	bh=5YMcUgmHuwZ09iRYdxUe+lH9zpyUBdXx1A6AMXut68I=;
+	s=k20201202; t=1792037281;
+	bh=G1AgiC6ssC+96LciGvxlgTGzsp01896k0HS8aPfcYGo=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=Jys4+AdLgNli27mEwyal1Nqz6zEfrqoCA0N0HckAEDJsyIbXUROK1IeNEW8cRZKoc
-	 mFaacnbNNk4MS/KxKWwNQwkgsBTBctZceRXgFimEpOOo7DCQ50AyfC3GnJuVvm+tEi
-	 fvMg+CZXB8nTXzkEisV28/PBI1fX7jygLrcwvtKwIWWq//Kb0G60ZAJh7F5Nq5GMgS
-	 WvYQktJgSfyMRFE8ERlil8Uk08BQf1NF0wWihsuMlXKlW+GSL8nK7rwRfFRDMq1Emq
-	 PyyNOm9Wr6rkNo0N719Ijbd0UUGjWVt+GT8JRYqpNw26uqBsVT+5PizIYsFh8wnmwl
-	 kGusDvPpNu2vw==
+	b=gmcndNcRavWy0+Gp9WTCfOfKPoiQBmEqcbT3a+ne6vKywae3PUS4VlLKlFvWZWQTz
+	 0Dy2BNXkOpW6Fi6V4gw5y5hy8N9ST/wyiAulPWYjrn/jx5EVoJ4CLlcRaGGDiXgqvI
+	 R5XkFGe5XSUPLJ4FWxPPZitQ5m3MiZGIsxGe3AHr5mPVWnopx+7OPKERtETJ6gnkQD
+	 vIRppvcHnWo0NNo3s1oNmZHUHv3ewr+mB9H8NXNRI9VDemas+ttBjHi5GlARVl+jBl
+	 mg8JtRVrAjoCP2LpcswSlcDGzHm0lnt7OifvBmPoYm+IXd0rWVpcQ6+Ygla321fJ9f
+	 grdo026VkNy9g==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DDB2CCC6B35;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8745CC6B34;
 	Thu, 15 Oct 2026 04:08:01 +0000 (UTC)
 From: Daejun Park via B4 Relay <devnull+daejun7.park.samsung.com@kernel.org>
-Date: Thu, 15 Oct 2026 13:08:03 +0900
-Subject: [PATCH v3 4/9] xfs: clamp a pNFS LAYOUTCOMMIT extent before
- computing its end
+Date: Thu, 15 Oct 2026 13:08:01 +0900
+Subject: [PATCH v3 2/9] xfs: add a flag to convert unwritten extents
+ without allocating blocks
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -41,7 +41,7 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261015-xfs-pnfs-batch-v3-4-54fc7b2e467d@samsung.com>
+Message-Id: <20261015-xfs-pnfs-batch-v3-2-54fc7b2e467d@samsung.com>
 References: <20261015-xfs-pnfs-batch-v3-0-54fc7b2e467d@samsung.com>
 In-Reply-To: <20261015-xfs-pnfs-batch-v3-0-54fc7b2e467d@samsung.com>
 To: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
@@ -53,11 +53,11 @@ Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <djwong@kernel.org>,
  linux-kernel@vger.kernel.org, stable@vger.kernel.org, 
  Daejun Park <daejun7.park@samsung.com>
 X-Mailer: b4 0.13.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1792037279; l=1903;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1792037279; l=4236;
  i=daejun7.park@samsung.com; s=20261006; h=from:subject:message-id;
- bh=nP9RMvT+2/zi+VUBuU+Zdw9BhC8rbBfOGbPtZzbzLCE=;
- b=La7YdO6HQ29YYGK2deefgEYqYjXWO93FBIe/kNxCnQaF3rPsrAYUHGCejz6CPD7zRsQgWtmQG
- g08sI+bXZ5DB4lbDCflXjIj1Xnrwp6Ui5w9uG4HhltMncWKnZ+yz8Rr
+ bh=AuzPO8vBKqIzgJXVHYMjsGez3dbaifa9CQeRToZS1Oo=;
+ b=r1BGx82a8OjGFTPDPzsx40Su2GgsMQuxQgTQnwe/pIYdQccdpp75JTVgI7+AED/+Ied3gkj5z
+ QBMPPW3pK8ZCHzCtgg3/FVSIo6+PnhFegw3xavazUDI9R1VAR1qEx5b
 X-Developer-Key: i=daejun7.park@samsung.com; a=ed25519;
  pk=4yUfDqGRZTIj0Ik43z1GoMZRWCNm/rgX6uJuM9dtNIg=
 X-Endpoint-Received: by B4 Relay for daejun7.park@samsung.com/20261006 with
@@ -67,50 +67,111 @@ Reply-To: daejun7.park@samsung.com
 
 From: Daejun Park <daejun7.park@samsung.com>
 
-xfs_fs_commit_blocks() clamps the end of each committed extent to the
-file size, but computes the end as offset + length first. A length
-from the client can make that sum wrap around, and the loop then
-passes the client's length, unclamped, to xfs_iomap_write_unwritten().
-The range wraps there as well, and xfs_bmapi_write() maps nothing.
-Before the previous two patches, that failed an assertion on XFS_DEBUG
-kernels, which is a BUG with XFS_ASSERT_FATAL, and otherwise returned
--ENOSR, which nfsd warns about as a non-standard errno. With
-XFS_BMAPI_CONVERT_ONLY, the LAYOUTCOMMIT fails with -EIO and converts
-nothing, even when every block up to the size is allocated.
+xfs_bmapi_write() with XFS_BMAPI_CONVERT converts unwritten extents to
+written ones, and allocates blocks for any hole or delalloc extent it
+finds in the range. A caller that may only convert blocks that are
+already allocated has to look at the mapping first, and the mapping can
+change once the ILOCK is dropped.
 
-With pynfs as the client and an RW layout for the first 64 KiB of a
-2 MiB sparse file, a LAYOUTCOMMIT of 2^64 - 4 KiB at 4 KiB got
-NFS4ERR_IO, "nfsd: non-standard errno: -63" and a WARNING, or the
-assertion on XFS_DEBUG. With the previous two patches, it gets
-NFS4ERR_IO and the laid-out range stays unwritten.
+Add XFS_BMAPI_CONVERT_ONLY. With it, xfs_bmapi_write() stops at a hole
+or a delalloc extent instead of allocating blocks and returns the
+mappings that it converted before it. If the range starts with a hole or
+a delalloc extent, it returns -ENOSR, as it does when a delalloc
+conversion maps nothing in the range. Nothing has been changed then, and
+the caller decides what to do with its transaction.
 
-Clamp the length to what is left below the size before adding it to
-the offset. The extent then ends at the size, its allocated part is
-converted, and the LAYOUTCOMMIT gets NFS4ERR_IO at the hole after it.
+A flag of this name was removed by commit 26b91c728b2d ("xfs: make COW
+fork unwritten extent conversions more robust"). That one skipped the
+allocation and still mapped the hole; this one stops before it.
 
-Fixes: 527851124d10 ("xfs: implement pNFS export operations")
+"xfs: refuse a pNFS LAYOUTCOMMIT of a range without blocks" uses it,
+which is why this is marked for stable.
+
+Suggested-by: Christoph Hellwig <hch@lst.de>
+Link: https://lore.kernel.org/r/20261013120359.GB2944@lst.de
 Cc: stable@vger.kernel.org
 Signed-off-by: Daejun Park <daejun7.park@samsung.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_pnfs.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c | 14 ++++++++++++--
+ fs/xfs/libxfs/xfs_bmap.h | 10 +++++++++-
+ 2 files changed, 21 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
-index 7ff83274a5..19eb18e129 100644
---- a/fs/xfs/xfs_pnfs.c
-+++ b/fs/xfs/xfs_pnfs.c
-@@ -328,9 +328,7 @@ xfs_fs_commit_blocks(
- 		if (start > size)
- 			continue;
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index ca49bf4a50..95c0178b44 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -4130,6 +4130,8 @@ xfs_bmapi_finish(
+  * Returns a negative error code on failure, including -ENOSPC when it could not
+  * allocate any blocks and -ENOSR when it did allocate blocks to convert a
+  * delalloc range, but those blocks were before the passed in range.
++ * With XFS_BMAPI_CONVERT_ONLY, it stops at a hole or a delalloc extent instead
++ * of allocating blocks, and returns -ENOSR if it stops before mapping anything.
+  */
+ int
+ xfs_bmapi_write(
+@@ -4189,6 +4191,8 @@ xfs_bmapi_write(
+ 	 */
+ 	ASSERT((flags & (XFS_BMAPI_PREALLOC | XFS_BMAPI_ZERO)) !=
+ 			(XFS_BMAPI_PREALLOC | XFS_BMAPI_ZERO));
++	ASSERT(!(flags & XFS_BMAPI_CONVERT_ONLY) ||
++	       (flags & XFS_BMAPI_CONVERT));
  
--		end = start + maps[i].length;
--		if (end > size)
--			end = size;
-+		end = start + min_t(u64, maps[i].length, size - start);
+ 	if (XFS_IS_CORRUPT(mp, !xfs_ifork_has_extents(ifp)) ||
+ 	    XFS_TEST_ERROR(mp, XFS_ERRTAG_BMAPIFORMAT)) {
+@@ -4237,6 +4241,9 @@ xfs_bmapi_write(
+ 		 * that we found, if any.
+ 		 */
+ 		if (need_alloc || wasdelay) {
++			if (flags & XFS_BMAPI_CONVERT_ONLY)
++				break;
++
+ 			bma.eof = eof;
+ 			bma.conv = !!(flags & XFS_BMAPI_CONVERT);
+ 			bma.wasdel = wasdelay;
+@@ -4332,10 +4339,13 @@ xfs_bmapi_write(
+ 	 *
+ 	 * To avoid a successful return with *nmap set to 0, return the magic
+ 	 * -ENOSR error code for this particular case so that the caller can
+-	 * handle it.
++	 * handle it. The same goes for XFS_BMAPI_CONVERT_ONLY stopping at a
++	 * hole or a delalloc extent at the start of the range, in which case
++	 * nothing has been changed.
+ 	 */
+ 	if (!n) {
+-		ASSERT(bma.nallocs >= *nmap);
++		ASSERT(bma.nallocs >= *nmap ||
++		       (flags & XFS_BMAPI_CONVERT_ONLY));
+ 		return -ENOSR;
+ 	}
+ 	*nmap = n;
+diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+index e9f5416e4c..fb7481e819 100644
+--- a/fs/xfs/libxfs/xfs_bmap.h
++++ b/fs/xfs/libxfs/xfs_bmap.h
+@@ -90,6 +90,13 @@ struct xfs_bmalloca {
+ /* Try to align allocations to the extent size hint */
+ #define XFS_BMAPI_EXTSZALIGN	(1u << 11)
  
- 		length = end - start;
- 		if (!length)
++/*
++ * Use with XFS_BMAPI_CONVERT to convert unwritten extents without allocating
++ * blocks. Stop at a hole or a delalloc extent: return the mappings found so
++ * far, or -ENOSR if there are none.
++ */
++#define XFS_BMAPI_CONVERT_ONLY	(1u << 12)
++
+ #define XFS_BMAPI_FLAGS \
+ 	{ XFS_BMAPI_ENTIRE,	"ENTIRE" }, \
+ 	{ XFS_BMAPI_METADATA,	"METADATA" }, \
+@@ -102,7 +109,8 @@ struct xfs_bmalloca {
+ 	{ XFS_BMAPI_COWFORK,	"COWFORK" }, \
+ 	{ XFS_BMAPI_NODISCARD,	"NODISCARD" }, \
+ 	{ XFS_BMAPI_NORMAP,	"NORMAP" },\
+-	{ XFS_BMAPI_EXTSZALIGN,	"EXTSZALIGN" }
++	{ XFS_BMAPI_EXTSZALIGN,	"EXTSZALIGN" }, \
++	{ XFS_BMAPI_CONVERT_ONLY,	"CONVERT_ONLY" }
+ 
+ 
+ static inline int xfs_bmapi_aflag(int w)
 
 -- 
 2.43.0
