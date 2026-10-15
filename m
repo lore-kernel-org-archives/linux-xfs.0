@@ -1,50 +1,41 @@
-Received: from mta0.migadu.com (out-108.mta0.migadu.com [91.218.175.108])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E98952BE5F
-	for <linux-xfs@vger.kernel.org>; Thu, 15 Oct 2026 14:10:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.108
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43EAB3A9631;
+	Thu, 15 Oct 2026 14:36:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792073403; cv=none; b=Vdo3RKF+M8Ru5L5O+/neioIkqKKW9ZeqgwZoJFefBC0EQX2r08sOO582eaXhLxEwGU7UnPWkmF6hCem3eGhqvZee5jxyQTgjtGROJm1pEUJfXknebsbxrmS+keMah2bZqHckyhIEX9ybMk82C1i73RsXdsBtWNjypXzemAHvNPQ=
+	t=1792075011; cv=none; b=OgFEKAejOOXTQXJZyWp7AzVWM13GobcwRcOqIcl7V7uWsLUfVaSTl0LJCCxQDG8Jh/asH4fUBr11NEJZ8Y8dwSajhF+Y3hR5lH7K6HeAmnITZmvPR5UK5ceLeW030RTKWuxaskvAB/MiMi2PKs18cO2nS7i0j/AOwM2OyKYuuco=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792073403; c=relaxed/simple;
-	bh=IoHF48dbE7mSf4cxc6kAiqoGLhZGegSeGkb8H4uroPU=;
+	s=arc-20240116; t=1792075011; c=relaxed/simple;
+	bh=2UAJMPuaoR/SdnUnli9rY9zzyo0/bLUAQnyDPmb6qX8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ENddGG5h9icB7gIKqYpA9im6B4MqmPANED8aULwlQXGrOE/uhXmxWIVGEodbCR/3GgLJ2Kvq6pZ1sg9JxX/H306W2tei5JFqQyPw+J0hKDpFI3Wz4fEkloIFBtVSt7tPKzRPYCmfUazgrgFeqT3w2Iym5+S6hQGjeEX7NVjxq/c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=rz+Utc8b; arc=none smtp.client-ip=91.218.175.108
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	 Content-Type:Content-Disposition:In-Reply-To; b=czhQERZa5tPpqq7tRIFrnclFdAYN4fnnMZR2DDnv/9d6l63FNowYw+Pl8X+6JdTKyNRBDw1UTNLd1kdHNQCY+I0GjUQTBg2ZG3HkOGUuBA5XEOxkQlfJgqZe4nXmTHJzkRbQVD6Q1eF/mXIH2B84EOj1pq9q9PvC6FQMp43xz1s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K21sz84g; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="rz+Utc8b"
-X-Envelope-To: linux-xfs@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=IoHF48dbE7mSf4cxc6kAiqoGLhZGegSeGkb8H4uroPU=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1792073399; v=1; x=1792678199;
- b=rz+Utc8bAGijsFCr/QEl8LzFZmlaXbdU+3KQ3TSCpCvY0NCBAVrqDDFHlDy9pKg1g4YOoEAy
- Q2F0H1awh18TQ2zYMDsIv97QFBbg+/gXwf1gB4N5daxMpDk/kLiOdTYOTiJlAyJHTJGL1nVvL5q
- M4Hjn4R55sL1v33sffhObyDs=
-X-Envelope-To: linux-xfs@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id a2a20668fccf1d9d;
-	Thu, 15 Oct 2026 14:09:59 +0000
-X-Mizu-Trace-ID: a2a20668fccf1d9d
-X-Migadu-Flow: FLOW_OUT
-Date: Thu, 15 Oct 2026 16:09:50 +0200
-From: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>
-To: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-Cc: Christian Brauner <brauner@kernel.org>, linux-fsdevel@vger.kernel.org, 
-	"Darrick J . Wong" <djwong@kernel.org>, Carlos Maiolino <cem@kernel.org>, 
-	Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>, Matthew Wilcox <willy@infradead.org>, 
-	Andrew Morton <akpm@linux-foundation.org>, Ritesh Harjani <ritesh.list@gmail.com>, 
-	Zhang Yi <yi.zhang@huawei.com>, Christoph Hellwig <hch@lst.de>, 
-	Dave Chinner <dchinner@redhat.com>, Daniel Gomez <da.gomez@kernel.org>, Theodore Tso <tytso@mit.edu>, 
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, 
-	Andres Freund <andres@anarazel.de>, Dave Chinner <dgc@kernel.org>
-Subject: Re: [RFC PATCH v4 05/12] iomap: Add initial support for buffered
- RWF_WRITETHROUGH
-Message-ID: <as-BQAbk7U43vkqs@quentin>
-References: <cover.1790596383.git.ojaswin@linux.ibm.com>
- <c76f9babf1b00f4574e37db156621edc6c078969.1790596383.git.ojaswin@linux.ibm.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K21sz84g"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 7CAAC1F000C4;
+	Thu, 15 Oct 2026 14:36:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792075009;
+	bh=LIiy8t5/bfXGieZxKBp/2PX8numSxsFYmYUd6dm2bZM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=K21sz84gK98pmzWXiRJNCvASwUjyPakO4jljI9kjFtmiYDVsFlkxuMRcCEH6IWjgF
+	 J5bfXYS/YTDFyW7PMI52BgnYkbKbWbfLbLQHOX6v6+nlG7d1Xpy8KpxS4XBInpj5AQ
+	 BOHsj3/la/Gp2CEkOh2/tg8smQD+qaFRDUa3pGrBrjWlFSFw/QXIV0Nm97xt1qyfoR
+	 UvLt7JuCDMZ+Dqy/goKLq2OYWBNLmgu+/qXaGwqK1lcTbSN4MTm4TfV8gIFDEspxP8
+	 a04SxG5DFnGS59ZJbYfd0UZ30hp9QO1evrSuzQX0DsrN2GaKs5qg74+S2YU3/61tQI
+	 tuTmyTTFDCgPw==
+Date: Thu, 15 Oct 2026 07:36:49 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Zorro Lang <zlang@kernel.org>, fstests <fstests@vger.kernel.org>,
+	xfs <linux-xfs@vger.kernel.org>,
+	Andrey Albershteyn <aalbersh@kernel.org>
+Subject: Re: [PATCH] generic/805: mask unmount failures on cleanup
+Message-ID: <20261015143649.GM2705364@frogsfrogsfrogs>
+References: <20261015033236.GV6253@frogsfrogsfrogs>
+ <atBr0ViKkOt0wZ12@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -53,102 +44,54 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <c76f9babf1b00f4574e37db156621edc6c078969.1790596383.git.ojaswin@linux.ibm.com>
+In-Reply-To: <atBr0ViKkOt0wZ12@infradead.org>
 
-Hi Ojaswin,
+On Wed, Oct 14, 2026 at 10:59:45PM -0700, Christoph Hellwig wrote:
+> On Wed, Oct 14, 2026 at 08:32:36PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > On (what's left of) my NFS-booted QA fleet I get test "failures" like
+> > this:
+> > 
+> >  --- a/generic/805.out	2026-09-22 13:33:18.326820071 -0700
+> >  +++ b/generic/805.out.bad	2026-10-14 18:58:34.438866321 -0700
+> >  @@ -1,2 +1,4 @@
+> >   QA output created by 805
+> >   Silence is golden
+> >  +umount.nfs: remote share not in 'host:dir' format
+> >  +umount.nfs: /mnt/s: not mounted
+> > 
+> > This is caused by the _unmount call in _cleanup getting cranky about the
+> > scratch mount not being mounted despite the -q flag.  I think this is
+> > because umount(8) detects the underlying fs as NFS and delegates
+> > entirely to umount.nfs, and that program whines.
+> > 
+> > So fix the test by redirecting the output.  We've already decided if the
+> > test passes or not before we get to cleanup.
+> 
+> We really should not end up here with NFS.
+> 
+> Oh, this test is missing a
+> 
+> _require_block_device $SCRATCH_DEV
+> 
+> so that all the dm magic is skipped when on a non-bdev fs.
 
-I was comparing normal buffered IO scenario and writethrough.
+_require_dm_target already checks that scratch-dev is a bdev, but I
+think you've misunderstood me.
 
-In a normal buffered IO scenario, for unwritten extents or CoW extents,
-we first convert them before ending the writeback on the folio.
-xfs_end_io calls xfs_end_ioend_write().
+The test vm boots off NFS to test XFS, so / and /mnt are NFS.
+SCRATCH_DEV is XFS, so when SCRATCH_MNT is mounted, /mnt/s will be XFS.
+After unmounting SCRATCH_MNT, /mnt/s will look like it's NFS, so that's
+why umount does what it does:
 
-static void
-xfs_end_ioend_write(
-        struct iomap_ioend      *ioend)
-{
-<snip>
-       /*
-         * Success: commit the COW or unwritten blocks if needed.
-         */
-        if (is_zoned)
-                error = xfs_zoned_end_io(ip, offset, size, ioend->io_sector,
-                                ioend->io_private, NULLFSBLOCK);
-        else if (ioend->io_flags & IOMAP_IOEND_SHARED)
-                error = xfs_reflink_end_cow(ip, offset, size);
-        else if (ioend->io_flags & IOMAP_IOEND_UNWRITTEN)
-                error = xfs_iomap_write_unwritten(ip, offset, size, false);
+# mkfs.xfs -f /dev/sda
+# mount /dev/sda /mnt/s
+# umount /mnt/s
+# umount /mnt/s
+umount.nfs: remote share not in 'host:dir' format
+umount.nfs: /mnt/s: not mounted
 
-        if (!error &&
-            !(ioend->io_flags & IOMAP_IOEND_DIRECT) &&
-            xfs_ioend_is_append(ioend))
-                error = xfs_setfilesize(ip, offset, size);
-done:
-        if (is_zoned)
-                xfs_ioend_put_open_zones(ioend);
-        iomap_finish_ioends(ioend, error); // #1
-        memalloc_nofs_restore(nofs_flag);
-}
+(I'm not fstesting NFS, I left that to Chuck and Anna.)
 
-#1
-iomap_finish_ioends()
-  iomap_finish_ioend_buffered_write()
-    iomap_finish_folio_write()
-      folio_end_writeback()
-
-
-On Mon, Sep 28, 2026 at 05:33:06PM +0530, Ojaswin Mujoo wrote:
-> @@ -1185,6 +1186,384 @@ static bool iomap_write_end(struct iomap_iter *iter, size_t len, size_t copied,
->  	return __iomap_write_end(iter->inode, pos, len, copied, folio);
->  }
->  
-> +static ssize_t iomap_writethrough_complete(struct iomap_writethrough_ctx *wt_ctx)
-> +{
-> +	struct kiocb *iocb	= wt_ctx->iocb;
-> +	struct inode *inode	= wt_ctx->inode;
-> +	ssize_t ret		= wt_ctx->error;
-> +
-> +	if (wt_ctx->end_io) {
-> +		int err = wt_ctx->end_io(wt_ctx, wt_ctx->written,
-> +					 wt_ctx->error,
-> +					 wt_ctx->flags);
-> +		if (err)
-> +			ret = err;
-> +	}
-> +
-
-<snip>
-
-> +static void iomap_writethrough_bio_end_io(struct bio *bio)
-> +{
-> +	struct iomap_writethrough_ctx *wt_ctx = bio->bi_private;
-> +	struct folio_iter fi;
-> +
-> +	if (bio->bi_status)
-> +		cmpxchg(&wt_ctx->error, 0,
-> +			blk_status_to_errno(bio->bi_status));
-> +	bio_for_each_folio_all(fi, bio)
-> +		folio_end_writeback(fi.folio);
-> +
-> +	bio_put(bio);
-> +	if (atomic_dec_and_test(&wt_ctx->ref))
-> +		iomap_writethrough_done(wt_ctx);
-> +}
-> +
-
-But in the writethrough patches, we first end the writeback on the folio
-and then call xfs_dio_write_end_io(), which converts unwritten or CoW
-extents.
-
-Is there a race possible as we are doing the other way? What if folios
-are reclaimed between ending the writeback and conversion? A new read in
-that area will return zero filled folios as XFS still sees IOMAP_UNWRITTEN?
-
-I don't have a reproducer, but my hunch says we can run into this if we
-have a lot of AIO as the end_io will be run via a workqueue?
-
-Do we do something similar to buffered IO where we do
-folio_end_writeback after extents conversion?
-
---
-Pankaj
+--D
