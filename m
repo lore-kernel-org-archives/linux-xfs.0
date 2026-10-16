@@ -1,115 +1,143 @@
-Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D5BA4DD3CA
-	for <linux-xfs@vger.kernel.org>; Fri, 16 Oct 2026 14:16:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C24E335675E
+	for <linux-xfs@vger.kernel.org>; Fri, 16 Oct 2026 14:26:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792160188; cv=none; b=Z00hdUoE2+932wj0wRAEqMkOdjy/Qt8af40I4I1P1iCJxu46iVsDlrZ34FFGLOa9onCjjcTgUuf9xzaqoX4Dleq88HzufoluRY13T+VZBh8dq67mkKSSvkm61YubAOKJanngYmoaDmCI7oegCNCmC9RgX+fWCWAfuXbo+iL0D5M=
+	t=1792160785; cv=none; b=BrYEw7v9Tt4fV4FXCDXDBlMP0bJf2PNwhJ8VVth4fWcWKnFyJA16ZL4zw8nccNJKfHpXDqzTOpnz4yRyA1mtKhJrPrWjTcGmpqm81EYf+X0CdjalcsPfcTz6oQh8qt8T6vA4N6C/aWaDd6A9FShpaI2QDlcdCKZrQIJ/M6eIBEI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792160188; c=relaxed/simple;
-	bh=u+fkloLOEBfCZ7XVJCKiDAjDI+S6TUXHUiE+ew62bSY=;
-	h=Message-ID:From:To:Cc:Subject:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=Ut9Flltzfaq3vFlu5bZItjw4udHae+ZMpLS+3jb5rgt6NVHQYFLNVquRFkwLVDSLLaQneGzOinZvI6gff9toBxl+eMe9iL/UJ0Mi64c4fPVZgGslfjW6LKHhqdaoxqlnnpzThWmL9JtxPRQyszvQSm9x5D4eVC16grDC9AiCC0U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=rGJmYFxD; arc=none smtp.client-ip=209.85.214.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1792160785; c=relaxed/simple;
+	bh=lXVHjPCAYcLXVIhcGLWvijxrbTsyM32zfBe8H9DOsBs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=n1leLH+ea8iIBA5mLmE7OvFUo22DDk0NJtzJNBACEPYY2YPDa1e23OmSk4EteffT6teY7y21BZX7RL/Pap/PJJR7mqdU+Gn8TxWHbulXmt0MjDCK06+Hi11ODqnS5ot902btr/zzH4Zz/xD83JO5UBkSrkdlj2TKDR6CZe3gw0c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=jFXyWep4; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=Ni4EBfi6; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rGJmYFxD"
-Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-2e8fe8e343fso28116995ad.2
-        for <linux-xfs@vger.kernel.org>; Fri, 16 Oct 2026 07:16:22 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="jFXyWep4";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="Ni4EBfi6"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1792160782;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=uv7dkC3MPmwvohP9wCGMJdv25KGLHW3gqkljVo/xMA8=;
+	b=jFXyWep4jQ9IhOUvCtqHyBUzA2JseW7eZxo1MAsdXuOfEdlbavHs8Y0ZHx2oGo/tl/q/MV
+	Roj15ClFG0HPipXmuaj+8/WP5RpgXW+0PLEryoE+TT24HOmJb1CMyPDE/r42Tpqh77spAt
+	w0FNccXwyBiajnhn7d6HQEXwLYVB8JE=
+Received: from mail-qv1-f72.google.com (mail-qv1-f72.google.com
+ [209.85.219.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-94--rIYcROcMiWzooGdnaiw7Q-1; Fri, 16 Oct 2026 14:26:21 +0000
+X-MC-Unique: -rIYcROcMiWzooGdnaiw7Q-1
+X-Mimecast-MFC-AGG-ID: -rIYcROcMiWzooGdnaiw7Q_1792160781
+Received: by mail-qv1-f72.google.com with SMTP id 6a1803df08f44-917a510b22fso709776d6.1
+        for <linux-xfs@vger.kernel.org>; Fri, 16 Oct 2026 07:26:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792160182; x=1792764982; darn=vger.kernel.org;
-        h=mime-version:content-transfer-encoding:content-type:references
-         :in-reply-to:date:subject:cc:to:from:message-id:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=jZ+mTiIAxhmwhKCyjV/xAz+dOI1Ti4dVU+974wnLdYQ=;
-        b=rGJmYFxDrkf5xsdfC8cDPbrm/FYYMNsH7xVvbsXFHUilUakaHARLRwDtaXnthEkJju
-         Kn40s4sQeeYqwo3DY8MUG2h3Gf9Dr8/Nub13Ai5SJtCNHlCd5U99M1qJiMElHjU5EGxz
-         fHK89k4E9WPpJyCGtwzVl8C7L36f68pPxIPpFLblGSzjARjM6xWy9XhV6brrRqSGt10s
-         mLnEAe8MITUSI/RVPELjwVNXnT6Bdr1wX2Q5DeFCKM9NJTJq0WJ8xRWd0lYni0Ivdmhe
-         bei3hBQvKnoS1h1FP2suvct3slav/YvIARdtkDdAFdvzG/sylu/9fowwYK+klsYFdwtZ
-         LuLQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792160182; x=1792764982;
-        h=mime-version:content-transfer-encoding:content-type:references
-         :in-reply-to:date:subject:cc:to:from:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+        d=redhat.com; s=google; t=1792160781; x=1792765581; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=jZ+mTiIAxhmwhKCyjV/xAz+dOI1Ti4dVU+974wnLdYQ=;
-        b=RB3We6oOF+CdvvH/Xquo7x45nCI7SXjy/CYiSdODqRennSf3vKFqlveOPiUB3jO0Ry
-         L11NX6wI0decSPOkXyNRKxeXev+uUa86xAOF73IhdcRhjybcv2d+PVD1vOkKxOj5jltq
-         0Lb3KRiGD8RBWIXBP0z0g7qY387m/MOEfevLc18Qp15iOkj1P4B/b4/Fbg+l3goVLcKA
-         dYLAJWcajKFDRD2Kj7UVOnZ9RbBxYltrR6vq32Q24S25VkbO7zq/dax7ybU0zE6EzgL9
-         dPyw6jaMkB7u/2FqID8mXUUWLrDbBseXEZ6+XPuFkAoOExnnkxcmp6m3kf5n1ZH/9paj
-         UuMA==
-X-Gm-Message-State: AFq9FYLBW8c18FGocoI5oz3hpTd9jnWunRKwSLGDAqVIKKKzi26O1bjx
-	EiAGLzyQmvomc/OL/S4+xLGsLsad/egDe58QQXwraZzouhxsWCxc9hpU
-X-Gm-Gg: AYBFou3G+Pq/pZXZ5TSzo1BLPVK6p6KTOHa4LBZUCPAhzMsUq4k3AycjqhH6klNpFUZ
-	UwAR4WiFFH6sxVndWwXkPw9V1LeFuaD5lCmRcfuoIhTMTyF3xgvXJSIEUQCm5JlAUYCWzwHHwKJ
-	L7h2INJn6nXqQlYThoUwCxcDFgqhru3oROodRamN7JktvVGGdQDnyem3k/jZ7kP/eYuKYE2yhEG
-	5ib2jPLMBV53wffhnG74Spfoix9y8qec0srwWs2OxVBvAsEMA+t+w+VBFX5cbqwBXOHl3hg/YZo
-	OCoKGlJwJZsiPM4wuzcbEO/vwJVHmQWvjK8kKU6/50BvH02pdJf8iiMjieNyzJrST/W5LCPv41R
-	th3PdLNVtqxDgzGIaoxenfLQBnrSgASCQh2VgnYaH6inBRoJIqNLgn1BvCI5sbbPP+cOgMTfDSK
-	A937eXxMgbzw6HZlPIpyNdB/ICITkdf9YE0hqZayHIPqEfBf2n8Ql1Xcdk0qw7Tda9OgUzIDTTg
-	Q3EoPRg8I6Qu7v4jhKtQw==
-X-Received: by 2002:a17:903:2f86:b0:2e2:ffcb:87a9 with SMTP id d9443c01a7336-2e9a68d9693mr992475ad.24.1792160182121;
-        Fri, 16 Oct 2026 07:16:22 -0700 (PDT)
-Received: from DESKTOP-UCPRL76.localdomain ([113.200.174.30])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2e97e87994bsm10854635ad.60.2026.10.16.07.16.20
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 16 Oct 2026 07:16:21 -0700 (PDT)
-Message-ID: <6ad231b5.6655ddc8.1e37bf.a74a@mx.google.com>
-From: Zheng Shuhao <viennaoffh@gmail.com>
-To: "Carlos Maiolino" <cem@kernel.org>
-Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
- stable@vger.kernel.org, syzbot+e7f24354da9f7915bc54@syzkaller.appspotmail.com
-Subject: Re: [PATCH] xfs: fix slab-use-after-free in xrep_newbt_free()
-Date: Fri, 16 Oct 2026 22:16:18 +0800
-In-Reply-To: <atIj2DeA3TOMJQ2-@cronus.toxiclabs.cc>
-References: <20261016085536.591-1-viennaoffh@gmail.com>
- <atIj2DeA3TOMJQ2-@cronus.toxiclabs.cc>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+        bh=uv7dkC3MPmwvohP9wCGMJdv25KGLHW3gqkljVo/xMA8=;
+        b=Ni4EBfi69q+B0SyAboV+FVQYpGxIb53KdwAp2fbvj/pq9o+9HemyaBDEGrBCTN8Cv7
+         ErgTC6uMyTUw+/Fn16eloajf+LMTgc74QBV5OY2zi5Rk7SmcaB8S5xFU10zusg4wJy16
+         PAc7FMUVH6R2y34sel6XkP0aVjJyNMGIOFs3ppczqPEM7OvANuK1sYueehvyahEGD37I
+         Cw4olk3XbRblFxexpsRzaFCATFEnD1d1rFrs+1XvVEzqVYwmAuw1Gf04YLwCCpYXESQD
+         KLCwxGowgy5IriiZxK8Dp8IOjZsz9kP6PFfi9e+MxR9mH/c7PjTDrr/2Ln3ijUr63G+P
+         4bRw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792160781; x=1792765581;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=uv7dkC3MPmwvohP9wCGMJdv25KGLHW3gqkljVo/xMA8=;
+        b=wUbQxJHuUxKAFc1qy73Gyn6uAqiA1vf2jOAr0SxK8HS606DDk8cbUu5yzpgNRW6zgP
+         6siwM4QHGTPit4fEdo7/T7bUg7aEGX+ya38cs03WzVsOPOOuWvKD6/5+zvhSURUoWNvC
+         CDhcQHX8cbtS53X9z8fQ7YXmP2cS3Regnn8UoWl9Enj5EBQ0WERTMLTeOx4Oc+wI0WI4
+         of38DMfvWvimUyYLK5N8imtLL+hbEaTyLOgsDg6mOrSRC/bMvxHBXUNIlO1v5ki3Vqxq
+         mTNddNxS2TsWTnR4PORZlA2h5ch/3o6rSF6z/WSWFye1u8aVvz4fkxesxdnVmcN5ce9w
+         dNxg==
+X-Forwarded-Encrypted: i=1; AKwUvBwAu6duaeqDzdmLQG8DZTEPTu4m4zmrXiQBAt+y2uPpSOTVdO91qR/AglkU43BHAkqVtXml0pRGkwI=@vger.kernel.org
+X-Gm-Message-State: AFq9FYI7A+SbvVYOx6dqvC4c0v6WlZPMzQqfeFtXVGgaIp9ZPMvME+dw
+	xxfbuym7HYTWupNqv8hFHqVuKeKL2MtVEgAbjIk4KSWujL/8680jgQUrr0DhkqMVyFdZQyKN/DH
+	sUDW4JHnW8KNa46mjY1JfaNAdYiHjw+4vi8MLy3M5Izg+O3oQ7jpVt5zjcrAgxA==
+X-Gm-Gg: AYBFou2QTWNdrJm1RywA50eH2cPstwEc6T+8KEaLRuvprXQMwD787selmUtogsrFl0K
+	tHJH0zaZFeoFpIVk137OpIDlV2w76TS/rMFchtfM0Bsay7K4SM/1EMfZnTI2QaerDovBKqSIs88
+	5ssiyLKaiuh80CKyRHLWri5mynPFk9iaQ9mXQjCiS+jYdb77kjpK4W112oM3Jdpc+TnpljtHl1u
+	/1yVzMU2qnQSZXXmC8pkknLwhsH3c94Nt21NefDgrYVYww2ERHbfxumu3gcNyXCvmyqOTwm+L3f
+	/zEiGsSuUCBsXPSHPZlWvIuqZVLX/iZ2dKBaBopDS5lxosL/g38+HSzuXLKWpV9cF70ysTrgUKn
+	HHxbL3uQCLp6GLlx3+T7fOC3kJVn/EbFAFebWkFmNXKzJdQ==
+X-Received: by 2002:ad4:5f4a:0:b0:915:e85d:882c with SMTP id 6a1803df08f44-91bde91a642mr3866576d6.0.1792160779756;
+        Fri, 16 Oct 2026 07:26:19 -0700 (PDT)
+X-Received: by 2002:ad4:5f4a:0:b0:915:e85d:882c with SMTP id 6a1803df08f44-91bde91a642mr3865886d6.0.1792160779143;
+        Fri, 16 Oct 2026 07:26:19 -0700 (PDT)
+Received: from [192.168.29.231] (97-116-156-223.mpls.qwest.net. [97.116.156.223])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-91bcbae22d0sm24249606d6.28.2026.10.16.07.26.17
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 16 Oct 2026 07:26:18 -0700 (PDT)
+Message-ID: <a785481f-74a4-468a-b164-0b7a55c04246@redhat.com>
+Date: Fri, 16 Oct 2026 10:26:16 -0400
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] xfs: fix bs_xflags copied from wrong compat field
+To: "Darrick J. Wong" <djwong@kernel.org>, Reid D <skibletz@gmail.com>
+Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org,
+ linux-kernel@vger.kernel.org, sandeen@sandeen.net
+References: <CAGNJ+_2p_qyY2xx0b7wgHg+PJWLSQzYmfRqk3UCpue2f6GchVQ@mail.gmail.com>
+ <20261016050847.GT2705364@frogsfrogsfrogs>
+Content-Language: en-US
+From: Eric Sandeen <sandeen@redhat.com>
+In-Reply-To: <20261016050847.GT2705364@frogsfrogsfrogs>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Hi Carlos,
+On 10/16/26 1:08 AM, Darrick J. Wong wrote:
+> On Thu, Oct 15, 2026 at 10:11:57PM -0400, Reid D wrote:
+>> From: Reid Downing (b1nv0id) <skibletz@gmail.com>
+>> Subject: [PATCH] xfs: fix bs_xflags copied from wrong compat field
+>>
+>> Read bs_xflags from the correct compat field in
+>> xfs_ioctl32_bstat_copyin().
+>>
+>> Signed-off-by: Reid Downing (b1nv0id) <skibletz@gmail.com>
+> 
+> Yikes.  Good thing we don't actually /use/ bs_xflags in swapext.
 
-Thank you for the pointer, and my apologies for the confusion. This is
-my first patch submission to the Linux kernel, and I was not aware of the
-known-identity requirement for patch authorship and Signed-off-by.
-Understood now; I will use my real name for all future submissions:
+Oh good grief!
 
-    Zheng Shuhao <viennaoffh@gmail.com>
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Brown-paper-bag-on: Eric Sandeen <sandeen@redhat.com>
 
-(vienna-0FFH was my GitHub handle only.)
+> Cc: <stable@vger.kernel.org> # v2.6.29
+> Fixes: e94fc4a43e5c39 ("[XFS] Add compat handlers for swapext ioctl")
+> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+> 
+> --D
+> 
+>> ---
+>>  fs/xfs/xfs_ioctl32.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> --- a/fs/xfs/xfs_ioctl32.c
+>> +++ b/fs/xfs/xfs_ioctl32.c
+>> @@ -124,7 +124,7 @@
+>>             xfs_ioctl32_bstime_copyin(&bstat->bs_mtime, &bstat32->bs_mtime) ||
+>>             xfs_ioctl32_bstime_copyin(&bstat->bs_ctime, &bstat32->bs_ctime) ||
+>>             get_user(bstat->bs_blocks,  &bstat32->bs_size)      ||
+>> -           get_user(bstat->bs_xflags,  &bstat32->bs_size)      ||
+>> +           get_user(bstat->bs_xflags,  &bstat32->bs_xflags)    ||
+>>             get_user(bstat->bs_extsize, &bstat32->bs_extsize)   ||
+>>             get_user(bstat->bs_extents, &bstat32->bs_extents)   ||
+>>             get_user(bstat->bs_gen,     &bstat32->bs_gen)       ||
+>>
+> 
 
-For reference, this is the testing I did on the patch before posting:
-
- * Built the patched tree with KASAN + XFS_DEBUG enabled; checkpatch.pl
-   --strict reports 0 errors and 0 warnings.
- * Reproduced the use-after-free deterministically in QEMU on an
-   unpatched kernel; the KASAN splat matches the syzbot report exactly
-   (xfs_defer_item_unpause <- xrep_newbt_free <- xrep_bmap_build_new_fork,
-   and the xfs_defer_pending object is freed by xfs_defer_finish_noroll).
- * With the patch applied, the same trigger produces no KASAN report: the
-   scrub ioctl just returns -EIO and the shutdown path unwinds cleanly.
- * Regression runs on the patched kernel: all metadata scrub types,
-   invalid scrub inputs (bad flags/generation/agno/type), and forced bmap
-   btree rebuilds from 5 up to 1500 extents (covering both extents- and
-   btree-format forks), with read-back verification of the files. No
-   regressions; normal scrub/repair paths still succeed.
-
-I can share the reproducer and test scripts if that is useful.
-
-Would you prefer that I resend this as v2 with the correct
-From:/Signed-off-by: lines, or can you fix up the authorship when
-applying? Either way works for me.
-
-Thanks,
-Zheng Shuhao
