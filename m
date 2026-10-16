@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1AC81F78E6
-	for <linux-xfs@vger.kernel.org>; Fri, 16 Oct 2026 19:45:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90B2C1F78E6
+	for <linux-xfs@vger.kernel.org>; Fri, 16 Oct 2026 19:45:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792179946; cv=none; b=r7mi39F4+pE5N2Y56T2jen3sy4ItLSJrT/ViXxNvcUN1l68/+hPXKVDmWM4099ZaIZohxiaBUqE0NwEqW/05FvjN+SbF3Y55MzHbTzryLDsM3ORO/BxjKJKdHub83R5vFgmKPePxWDbfxvL6HUR5ZtfHfwRfsYqIfXnNb/steoQ=
+	t=1792179960; cv=none; b=WFBIaR3wp4mgKS1VTdIoV/RwS0570qg70mkptGYYRjFWglbZCRJU5c8ephLtfusNfkwhBUoFh1+7YSy8EKrPzG4ZoKIpuXlT+lQCr5VrAcEgwnKfHjGJ5kpECVsnqu3+HX35yj2wUBPP2shrfVLoRnKnXz1SLcJKp5vbuS8TPHI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792179946; c=relaxed/simple;
-	bh=Y1cLcdEKMFsZVPsM0SrZBMrRcTtCoK5nuOXWObP+rAM=;
+	s=arc-20240116; t=1792179960; c=relaxed/simple;
+	bh=d+RRB/BWew7ET+I/VASl+Xkva1cOSXX8pv5dPgbghmo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ab0NR6VRfx31Ld5NcjxTGFuMxFGxpE9aL3m6E+OET3erF+/vdQSDp1lT+bOk1LJFKyuD0Wp+nBC7otiL4EqgIZwgqHbia2ItImXASrqcTfKVRm/tsti9oqUEObRf4th+kZRE0D02AookioY1urhkqaJr7FZCisKs4Vg/iRai2FA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IvxvNjpI; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=GJ9W0Z8zYCcKOu6+HrRlJ2ktwKrn7coTFT6yY5O3uK+L6U5hB7gwB3KGOw8/MfJyyUfG5thE8iyBlRCuMD43v0xZPJArrqL6ZaCXzogLn1OXr4daUGBKQUIQg8bU1xHKwjV9CRxR050DdEjVVEm6jhPs27fx6muHvlIVnvV4L5o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ny9ZVKF9; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IvxvNjpI"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 43ECF1F000C4;
-	Fri, 16 Oct 2026 19:45:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ny9ZVKF9"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 631121F000C4;
+	Fri, 16 Oct 2026 19:45:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792179945;
-	bh=hFvTDxqOkpyHVeZnosza19VfO5iHgrte91msmCWnrjM=;
+	s=k20260515; t=1792179959;
+	bh=Vh6wvIuvrYOdyFgCbFRcvVPHxD/6sgIrRZkLfACdfvU=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=IvxvNjpIb8kdy8qoBnzK9yOYxjxxZ6IlFk8i1f4muOxGNZvzA5+NAevNbZ0K7lbQO
-	 Jtl/lBWgHRVoubbIzI+s9HNcLSC+zibcJnXCPnabjoq+wIyC3B0Dip+7hM6shSUioA
-	 uxTk4o6ZVU/sYxrz1HYzQOaRIV/ZLqxHuu8f1FT5By4YnpWeXzY38edwSYqLgBg4H3
-	 AmXGDtESDg3iCiVSvhgnDOh60ACmm5/tNSgZJRw10R+X24fdiuFdwJqQZrXDs1w4RX
-	 v70wc6NqKwZr2qlobZWrpAHBbOMZcHagYv5DQNxxwh8qYnBU1XwdiJfsarMehf+DGs
-	 ENZBhoeTBJ5MA==
-Date: Fri, 16 Oct 2026 12:45:44 -0700
+	b=ny9ZVKF9bbq3J2AlH7iv5siOs4y0VkCzMM0Yi97nnRQbXwECXI2Voj9yv6gvYP3Uk
+	 xh/SItqepYU5LqwwVhIWBX7s6wXFaCv4VMS2iHFrtaxi9TUHwbDsOtgygiqYewqjUx
+	 BL6LIzzvr7eEGQkocqi7w/FHR4KXaRThuzs69Ok27fbcLAGxSkMmxRjUIrCEFTwPYz
+	 1IwfmEVVupw7E7cV/CRmAhxNrmoGZw5/Y6y9akRTfY5sb59towM0Wnk8hJziPZrUSi
+	 l9R7MIcFKDoAF+sFjpYZuIvzbP5t8RX6FWmuTHQWFSiDVWuUJNVisaOgTq9kX+n0E1
+	 cWPGFGvwiat5w==
+Date: Fri, 16 Oct 2026 12:45:58 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Eric Sandeen <sandeen@redhat.com>
 Cc: linux-xfs@vger.kernel.org, cem@kernel.org, hch@lst.de, dgc@kernel.org
-Subject: Re: [PATCH 3/8] xfs: remove redundant stat checks after
- xfs_inobt_insert_rec()
-Message-ID: <20261016194544.GE107986@frogsfrogsfrogs>
+Subject: Re: [PATCH 4/8] xfs: remove redundant stat check after
+ rcbagbt_insert()
+Message-ID: <20261016194558.GF107986@frogsfrogsfrogs>
 References: <20261016193422.1630907-1-sandeen@redhat.com>
- <20261016193422.1630907-4-sandeen@redhat.com>
+ <20261016193422.1630907-5-sandeen@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,89 +43,50 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261016193422.1630907-4-sandeen@redhat.com>
+In-Reply-To: <20261016193422.1630907-5-sandeen@redhat.com>
 
-On Fri, Oct 16, 2026 at 02:29:03PM -0500, Eric Sandeen wrote:
-> xfs_inobt_insert_rec() simply returns the error and status from
-> xfs_btree_insert, which has already validated the insert or returned
-> an error.
+On Fri, Oct 16, 2026 at 02:29:04PM -0500, Eric Sandeen wrote:
+> rcbagbt_insert() simply returns the error and status from
+> xfs_btree_insert, which has already validated the insert
+> or returned an error.
 > 
-> This makes every instance of the 2nd test in this idiom:
+> This makes this instance of this idiom:
 > 
->         if ((error = xfs_inobt_insert_rec(cnt_cur, &i)))
->                 return error;
->         if (XFS_IS_CORRUPT(mp, i != 1)) {
->                 xfs_btree_mark_sick(cnt_cur);
->                 return -EFSCORRUPTED;
->         }
+> 	error = rcbagbt_insert(cur, &bagrec, &has);
+> 	if (error)
+> 		goto out_cur;
+> 	if (!has) {
+> 		error = -EFSCORRUPTED;
+> 		goto out_cur;
+> 	}
 > 
-> unnecessary/unreachable code. Remove them.
+> unnecessary/unreachable code. Remove it.
 > 
 > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Looks good!
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
 > ---
->  fs/xfs/libxfs/xfs_ialloc.c | 15 ---------------
->  1 file changed, 15 deletions(-)
+>  fs/xfs/scrub/rcbag.c | 4 ----
+>  1 file changed, 4 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-> index bb6e684f5467..fd916a2a005b 100644
-> --- a/fs/xfs/libxfs/xfs_ialloc.c
-> +++ b/fs/xfs/libxfs/xfs_ialloc.c
-> @@ -236,7 +236,6 @@ xfs_inobt_insert(
->  			xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
->  			return error;
->  		}
-> -		ASSERT(i == 1);
->  	}
->  
->  	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-> @@ -572,12 +571,6 @@ xfs_inobt_insert_sprec(
->  					     nrec->ir_free, &i);
+> diff --git a/fs/xfs/scrub/rcbag.c b/fs/xfs/scrub/rcbag.c
+> index 8f3a10f7c908..fd9ccb205725 100644
+> --- a/fs/xfs/scrub/rcbag.c
+> +++ b/fs/xfs/scrub/rcbag.c
+> @@ -105,10 +105,6 @@ rcbag_add(
+>  		error = rcbagbt_insert(cur, &bagrec, &has);
 >  		if (error)
->  			goto error;
-> -		if (XFS_IS_CORRUPT(mp, i != 1)) {
-> -			xfs_btree_mark_sick(cur);
+>  			goto out_cur;
+> -		if (!has) {
 > -			error = -EFSCORRUPTED;
-> -			goto error;
+> -			goto out_cur;
 > -		}
-> -
->  		goto out;
 >  	}
 >  
-> @@ -647,7 +640,6 @@ xfs_finobt_insert_sprec(
->  	struct xfs_buf			*agbp,
->  	struct xfs_inobt_rec_incore	*nrec)	/* in/out: new rec. */
->  {
-> -	struct xfs_mount		*mp = pag_mount(pag);
->  	struct xfs_btree_cur		*cur;
->  	int				error;
->  	int				i;
-> @@ -665,11 +657,6 @@ xfs_finobt_insert_sprec(
->  					     nrec->ir_free, &i);
->  		if (error)
->  			goto error;
-> -		if (XFS_IS_CORRUPT(mp, i != 1)) {
-> -			xfs_btree_mark_sick(cur);
-> -			error = -EFSCORRUPTED;
-> -			goto error;
-> -		}
->  	} else {
->  		error = xfs_inobt_update(cur, nrec);
->  		if (error)
-> @@ -2254,8 +2241,6 @@ xfs_difree_finobt(
->  					     ibtrec->ir_free, &i);
->  		if (error)
->  			goto error;
-> -		ASSERT(i == 1);
-> -
->  		goto out;
->  	}
->  
+>  	xfs_btree_del_cursor(cur, 0);
 > -- 
 > 2.55.0
 > 
