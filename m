@@ -1,62 +1,119 @@
-Received: from ms.lwn.net (ms.lwn.net [45.79.88.28])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE8FF47FB19;
-	Fri, 16 Oct 2026 20:21:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.79.88.28
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42B683FCB1C;
+	Fri, 16 Oct 2026 20:26:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792182080; cv=none; b=LOoEAnXtf28R7WZXOFETevl81PBFxWPEkynPYFmc8xpgpmnqsgvi8gGGCQTCkKjOrALhZysNgoRRWu/RRofykOli/cZ6WC+tYs5pKOvYnuOhIUkybS97HZT0Tc0ZuWIKWn25iShDmhCc/AsZ0LWKw/r9xfyTH+HnxxznaRtd88w=
+	t=1792182397; cv=none; b=mq0V0a+LbaxN4VgU/zSZi1hNrHsk/o2UJwd7hVmI6gtcbV77Sv32g4mxmHPaAMmAMQjV2yH9qVeuZ4c2K6kafdHRlS2aw2WIxybq9A3yQwfcm7PW78HwquPcBvwsiVbzoj78X1irvrBOCBgK/ldw8+YeqouelzDH0ukjaUOH7gA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792182080; c=relaxed/simple;
-	bh=skN67QCXS84+xQRyX9AQfKbOS/qSOiIPR4g1Hr9c9wY=;
-	h=From:To:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=p6hn9fohBwEbbH/q+MTMUM2lDQfcMKlVjSpeM1Av/BCDMWfBtxntAkleC1Nvi2ZCBVZNlMXj3hTYgRgGKxsXaXiFD+yHMYAVXJVKkvPThxJsrMp35zxIFEKwxQ+oAwbpRwe8ZBwnJ45htJJyirv75Ht3GvGyyVSoXSwRLKHdytc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lwn.net; spf=pass smtp.mailfrom=lwn.net; dkim=pass (2048-bit key) header.d=lwn.net header.i=@lwn.net header.b=VqZ9ONVn; arc=none smtp.client-ip=45.79.88.28
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lwn.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lwn.net
+	s=arc-20240116; t=1792182397; c=relaxed/simple;
+	bh=YdPMipidByITQ1l4lHkkLO1ayK8wNcYCVpL4gJcYRhk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=I8WdTE1MdCRhBmptgPfoDmT0zrAPZPZbjUz3/cDY1/yq94+0+Kv2mSd0WLSxQLZ+HL8EXmoOex4yiwjUP609tNo1D5fmlkc7QnxdOBqkxU4EIFYMHqsoM4WZz9nb27gCJH4DPrk5bw0okWuT/iAhSDc49yF2whB3ogkaaEWjUHs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R7Kxco08; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=lwn.net header.i=@lwn.net header.b="VqZ9ONVn"
-DKIM-Filter: OpenDKIM Filter v2.11.0 ms.lwn.net C056B40A48
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=lwn.net; s=20201203;
-	t=1792182076; bh=fPrejg45z9y8A3ljxgLP55bOX4u1h+H9Nvby0eN/4PY=;
-	h=From:To:Subject:In-Reply-To:References:Date:From;
-	b=VqZ9ONVnwUYNSl0pgYFwpbK6FRLz0zxJarKaff/GPQ4iMTQhrBKXmoPg+axPCuomz
-	 D/TsFjFHCErVjqXrZyjVeN3xPhYvWJw/U10ouP3b9HRQ4YsUxcePQ+VIljbk6pY5A9
-	 Y1IHIGZ1y1A8sAjmoZH7lrpb8J8PmycwLnkzlhQiz2I06M1TpW/sUfUJn8iyPKsLeS
-	 84HNK+6kG+e7H5U3LxaAmEB8XB/g7z6rhK2IhdLfi7yPKWHfcxs1/QXjBpMs929b4R
-	 +ajujzAZAWM18jnFtTqBee24uCPMS5yYUcjrJTaqaHj0h749d6te7s6xIoIpomPLK/
-	 cHOnp3Hl0Pa8w==
-Received: from localhost (unknown [IPv6:2601:280:4600:814::1fe])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
-	(No client certificate requested)
-	by ms.lwn.net (Postfix) with ESMTPSA id C056B40A48;
-	Fri, 16 Oct 2026 20:21:15 +0000 (UTC)
-From: Jonathan Corbet <corbet@lwn.net>
-To: "Darrick J. Wong" <djwong@kernel.org>, xfs <linux-xfs@vger.kernel.org>,
- linux-ext4 <linux-ext4@vger.kernel.org>, linux-fsdevel
- <linux-fsdevel@vger.kernel.org>, fuse-devel <fuse-devel@lists.linux.dev>,
- fstests <fstests@vger.kernel.org>
-Subject: Re: Farewell!
-In-Reply-To: <20261016160037.GA107919@frogsfrogsfrogs>
-References: <20261016160037.GA107919@frogsfrogsfrogs>
-Date: Fri, 16 Oct 2026 14:21:15 -0600
-Message-ID: <87se25mm6c.fsf@trenco.lwn.net>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R7Kxco08"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id C8DC11F000C4;
+	Fri, 16 Oct 2026 20:26:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792182395;
+	bh=RtM7QZ40GAUC8iNV3TvPo6m3j0fEG8GRiol+edvRkUw=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=R7Kxco08dzkXRsAYxQuOHHvS+7lptjjWPHYV9E8Cn/ZOAH+zIJrxgOSrCHtCteMZN
+	 nZgRso//YLFtXbN0Amb1iK3YUkeL/AfbaLDBxPACEH/WXcu55wwosh8fX/TJBYlduv
+	 9c4GKpWjoYZ1tQ9RoIzs6hy0WtU2U2pO03mJuclOWWf+7KMJs6+g3Qgnil8f+8tRFL
+	 0ydj145WxRFtzVEJ2IvYXSR5PD6wk9D2cA9XiRs8ZqQPxhX1LPoGa8hyQiiBu2ZgL6
+	 lmnEEKisEaxfPrXU0Og7fm+Pski2PyQdBg2VL98+Wnqw4nmIk8IPZ8IvWPlv+iaABB
+	 +Qm/gIfHnmcTA==
+Date: Fri, 16 Oct 2026 13:26:35 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Kanchan Joshi <joshi.k@samsung.com>
+Cc: brauner@kernel.org, hch@lst.de, dgc@kernel.org, cem@kernel.org,
+	jack@suse.cz, axboe@kernel.dk, kbusch@kernel.org,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	gost.dev@samsung.com, Anuj Gupta <anuj20.g@samsung.com>
+Subject: Re: [PATCH v6 3/8] fs: add i_write_stream, exclusive with the write
+ life time hint
+Message-ID: <20261016202635.GK107986@frogsfrogsfrogs>
+References: <20261015063246.103433-1-joshi.k@samsung.com>
+ <CGME20261015063432epcas5p2a31bc0518d759cefee79673fd27dd0ce@epcas5p2.samsung.com>
+ <20261015063246.103433-4-joshi.k@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261015063246.103433-4-joshi.k@samsung.com>
 
-"Darrick J. Wong" <djwong@kernel.org> writes:
+On Thu, Oct 15, 2026 at 12:02:41PM +0530, Kanchan Joshi wrote:
+> Keep the attached stream id in the VFS inode rather than the
+> filesystem's own, so that fcntl_set_rw_hint() can see it. It is a u16 in
+> the 32-bit hole after i_state, so struct inode does not grow on 64-bit.
+> 
+> Suggested-by: Christoph Hellwig <hch@lst.de>
+> Suggested-by: Darrick J. Wong <djwong@kernel.org>
+> Signed-off-by: Kanchan Joshi <joshi.k@samsung.com>
+> Signed-off-by: Anuj Gupta <anuj20.g@samsung.com>
+> ---
+>  fs/fcntl.c         | 7 +++++++
+>  fs/inode.c         | 1 +
+>  include/linux/fs.h | 2 +-
+>  3 files changed, 9 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/fcntl.c b/fs/fcntl.c
+> index 9b71bc9d71d1..271ff8f61354 100644
+> --- a/fs/fcntl.c
+> +++ b/fs/fcntl.c
+> @@ -383,7 +383,14 @@ static long fcntl_set_rw_hint(struct file *file, unsigned long arg)
+>  	if (!rw_hint_valid(hint))
+>  		return -EINVAL;
+>  
+> +	/* keep write stream and write life time hint mutually exclusive */
+> +	spin_lock(&inode->i_lock);
+> +	if (hint != WRITE_LIFE_NOT_SET && READ_ONCE(inode->i_write_stream)) {
+> +		spin_unlock(&inode->i_lock);
+> +		return -EBUSY;
+> +	}
+>  	WRITE_ONCE(inode->i_write_hint, hint);
+> +	spin_unlock(&inode->i_lock);
+>  
+>  	/*
+>  	 * file->f_mapping->host may differ from inode. As an example,
+> diff --git a/fs/inode.c b/fs/inode.c
+> index a9d37be390a1..3bc0251230c0 100644
+> --- a/fs/inode.c
+> +++ b/fs/inode.c
+> @@ -246,6 +246,7 @@ int inode_init_always_gfp(struct super_block *sb, struct inode *inode, gfp_t gfp
+>  	atomic_set(&inode->i_writecount, 0);
+>  	inode->i_size = 0;
+>  	inode->i_write_hint = WRITE_LIFE_NOT_SET;
+> +	inode->i_write_stream = 0;
 
-> Hi everyone,
->
-> After 14 years at Oracle and 23 years working on Linux, I've decided to
-> take an extended break.  Today, October 16th, 2026, is my last day.
+/me wonders if this should be WRITE_STREAM_NOT_SET...
 
-You'll be missed.  I hope the break is refreshing and restorative!
+--D
 
-jon
+>  	inode->i_blocks = 0;
+>  	inode->i_bytes = 0;
+>  	inode->i_generation = 0;
+> diff --git a/include/linux/fs.h b/include/linux/fs.h
+> index deb411e86661..ae91cb93eab6 100644
+> --- a/include/linux/fs.h
+> +++ b/include/linux/fs.h
+> @@ -812,7 +812,7 @@ struct inode {
+>  
+>  	/* Misc */
+>  	struct inode_state_flags i_state;
+> -	/* 32-bit hole */
+> +	u16			i_write_stream;
+>  	struct rw_semaphore	i_rwsem;
+>  
+>  	unsigned long		dirtied_when;	/* jiffies of first dirtying */
+> -- 
+> 2.25.1
+> 
+> 
