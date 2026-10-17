@@ -1,49 +1,49 @@
 Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 515F13BB133
-	for <linux-xfs@vger.kernel.org>; Sat, 17 Oct 2026 18:20:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E3023C4165
+	for <linux-xfs@vger.kernel.org>; Sat, 17 Oct 2026 19:21:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792261214; cv=none; b=EJl16FnwmWfIzRMtCQNqPrcTZlQfv3qyWt9gWBsCJA4Hk92dCo6jtwu43U75z6Kt6b6XDF3zRytxf/6EzcYXo57ZYvUpXYJF/wT3yxTZSwNiVIfPP9OgcxW1V+T3YJXWcIKjWpxGDKdchAvAwgRwTBo7rB7AobW4/mSliSC8wR8=
+	t=1792264922; cv=none; b=fuADvTiaF0qZseAUCMZAXHNA4ZR8TbmbY6nV/bBrVdJONXh1h5c6FKsloK3WtPAHG55YQpeW9qal+6FbV1+bhpi5GdFBbcXp7LksPBjSUkS/U4VPSJye7nQ8xKoxt/RiK3GeluM10M+9ri+whmLoBIAo85kWN7GpKSGENuwUpIg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792261214; c=relaxed/simple;
-	bh=P/0GDTwGHDXDyhmHHPUipLMi0vx+OEjqfSvuOQYC05w=;
+	s=arc-20240116; t=1792264922; c=relaxed/simple;
+	bh=pUJ4t6fYR66T5Chk1hsszLOax4EyulaPaTgUdunIi44=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:From:In-Reply-To:
-	 Content-Type:References; b=E08XVh7ErHRrX5KmV81tG1mqwW1YjonSrl4PydaeY/1geBPmtc9BJWtEoOjULpYiDt5vU0a75D2jykUrOg/ev2db3vXIBiLnnjZn47mZyx+EdyR+MP3YHSALBMCCcFh2IQHnOOO0aTFcAb22lWbepuMEB/o2OqvH4R6NjI4t2ZI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=uB0c7mbS; arc=none smtp.client-ip=203.254.224.33
+	 Content-Type:References; b=oXJQopX+O4BmFgL+EL+dZ6p6EMD2eYiASzrDf9xp5lTGory28Zo3+H26wyUsR33BvioeZ+DFkaXkDLgDwx0bPupO9ubdalNLQ/TnrJGEiGT8tbjDPgU4bQaAJbZKY9GhRPvAqaMrbwQ/Jvh2huRSCMDcGNUW2G/vDREfxf0ZScg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=Zt4EsW5z; arc=none smtp.client-ip=203.254.224.33
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="uB0c7mbS"
-Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
-	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20261017182003epoutp033dd732ad03f26ed188ed3af1d411d033~fZBGuLaKb1004210042epoutp03s
-	for <linux-xfs@vger.kernel.org>; Sat, 17 Oct 2026 18:20:03 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20261017182003epoutp033dd732ad03f26ed188ed3af1d411d033~fZBGuLaKb1004210042epoutp03s
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="Zt4EsW5z"
+Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
+	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20261017192157epoutp033995d0e151b77f66a248eb375970cc92~fZ3JVfJ2W1811518115epoutp034
+	for <linux-xfs@vger.kernel.org>; Sat, 17 Oct 2026 19:21:57 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20261017192157epoutp033995d0e151b77f66a248eb375970cc92~fZ3JVfJ2W1811518115epoutp034
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1792261203;
-	bh=HjR+8NvUm6JM6yYCmt/8o++n6s3zeG703SYTQZCLsiw=;
+	s=mail20170921; t=1792264917;
+	bh=xD9a7NYCcup25z9n2LZtGalPFX/FDsci29c5QBnpFK8=;
 	h=Date:Subject:To:Cc:From:In-Reply-To:References:From;
-	b=uB0c7mbSE5zuZ91SEC5b+SaBNLmtLKxjBPgtgLq9muKi54om24g6KPPHvy04zdQlZ
-	 3vqXbU9+Lfpi22u5I1P4hkBmtWnNs8y34oRGv1N5bprjUo9x5wP8/PFpwSftZgKTXk
-	 ZjEqMByJlhYvJ+1J0sXJo+HXkwtR7qiYri4pUF6c=
+	b=Zt4EsW5zUnVLcQK4HfKmcrRTQSw4l/MQLTDlVlaxv91K6KNeK51vTLPMPUUf94JrW
+	 SVJUxZ5HN1fuILCxQ2nauLvZezldx6Wdti8bKb2yjwT/AoWl0dj7CKDi8gvqQKIga/
+	 Qu1y7EwWjcYUpjwtm2OkEAGXPGp6F03Apni2Kweg=
 Received: from epsnrtp02.localdomain (unknown [182.195.42.154]) by
-	epcas5p2.samsung.com (KnoxPortal) with ESMTPS id
-	20261017182003epcas5p2147c753d1906967f022b7072cc93f7e0~fZBGKXhn50708707087epcas5p2t;
-	Sat, 17 Oct 2026 18:20:03 +0000 (GMT)
-Received: from epcas5p1.samsung.com (unknown [182.195.38.90]) by
-	epsnrtp02.localdomain (Postfix) with ESMTP id 4j6VTZ3410z2SSKZ; Sat, 17 Oct
-	2026 18:20:02 +0000 (GMT)
+	epcas5p1.samsung.com (KnoxPortal) with ESMTPS id
+	20261017192156epcas5p13d48c930f366ce79c27e31d461d2116c~fZ3Ii0ae40315903159epcas5p1r;
+	Sat, 17 Oct 2026 19:21:56 +0000 (GMT)
+Received: from epcas5p2.samsung.com (unknown [182.195.38.91]) by
+	epsnrtp02.localdomain (Postfix) with ESMTP id 4j6Wrz6fbkz2SSKY; Sat, 17 Oct
+	2026 19:21:55 +0000 (GMT)
 Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
-	epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
-	20261017182001epcas5p158e075372faf28dc20485f7f6041558f~fZBEMfriM0307403074epcas5p1p;
-	Sat, 17 Oct 2026 18:20:01 +0000 (GMT)
+	epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
+	20261017192155epcas5p4ff4047dbc7a3d0f719fd0e5e3df983b7~fZ3HE24RB1137011370epcas5p4L;
+	Sat, 17 Oct 2026 19:21:55 +0000 (GMT)
 Received: from [107.122.11.51] (unknown [107.122.11.51]) by
 	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-	20261017181959epsmtip2a9f1b7ef813dc28bfceebbca68562c39~fZBCopLIp3079030790epsmtip2o;
-	Sat, 17 Oct 2026 18:19:59 +0000 (GMT)
-Message-ID: <bce9928f-8370-4dad-a269-5fdb2c5315b6@samsung.com>
-Date: Sat, 17 Oct 2026 23:49:58 +0530
+	20261017192153epsmtip2c88ae0eebde1a6ed6a5223b78b45fd98~fZ3FOFagN2000820008epsmtip2I;
+	Sat, 17 Oct 2026 19:21:52 +0000 (GMT)
+Message-ID: <a6be7644-f04c-4af9-a49b-97d8997f90aa@samsung.com>
+Date: Sun, 18 Oct 2026 00:51:52 +0530
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -51,49 +51,60 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC 4/4] xfs: support dma-buf registered buffers for direct
- I/O
-To: Christoph Hellwig <hch@lst.de>, Anuj Gupta <anuj1072538@gmail.com>
-Cc: asml.silence@gmail.com, djwong@kernel.org, cem@kernel.org,
-	brauner@kernel.org, axboe@kernel.dk, linux-block@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	anuj20.g@samsung.com, nj.shetty@samsung.com
+Subject: Re: [PATCH v6 0/8] xfs write streams
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: brauner@kernel.org, hch@lst.de, dgc@kernel.org, cem@kernel.org,
+	jack@suse.cz, axboe@kernel.dk, kbusch@kernel.org, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, gost.dev@samsung.com, Anuj Gupta
+	<anuj20.g@samsung.com>
 Content-Language: en-US
 From: Kanchan Joshi <joshi.k@samsung.com>
-In-Reply-To: <20261016092855.GD23141@lst.de>
+In-Reply-To: <20261016204321.GN107986@frogsfrogsfrogs>
 Content-Transfer-Encoding: 7bit
-X-CMS-MailID: 20261017182001epcas5p158e075372faf28dc20485f7f6041558f
+X-CMS-MailID: 20261017192155epcas5p4ff4047dbc7a3d0f719fd0e5e3df983b7
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
 CMS-TYPE: 105P
 cpgsPolicy: CPGSC10-542,Y
 X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20261016093612epcas5p20700b269c0a75415f05d52a8e7a2838f
-References: <20261016091919.971295-1-anuj1072538@gmail.com>
-	<20261016091919.971295-5-anuj1072538@gmail.com>
-	<CGME20261016093612epcas5p20700b269c0a75415f05d52a8e7a2838f@epcas5p2.samsung.com>
-	<20261016092855.GD23141@lst.de>
+X-CMS-RootMailID: 20261015063425epcas5p23fd76d70af639f4bb138332ca3a575b0
+References: <CGME20261015063425epcas5p23fd76d70af639f4bb138332ca3a575b0@epcas5p2.samsung.com>
+	<20261015063246.103433-1-joshi.k@samsung.com>
+	<bf0505d2-115d-43e9-95e8-2ed6a3404799@samsung.com>
+	<20261016204321.GN107986@frogsfrogsfrogs>
 
-On 10/16/2026 2:58 PM, Christoph Hellwig wrote:
->> +/*
->> + * A realtime file's data lives on the realtime device, anything else on the
->> + * data device. If a file is switched between them after registration, the
->> + * block layer cross-device check refuses the I/O.
->> + */
->> +static int
->> +xfs_file_init_dma_buf_io_ctx(
->> +	struct file		*file,
->> +	struct dma_buf_io_ctx	*ctx)
->> +{
->> +	struct xfs_inode	*ip = XFS_I(file_inode(file));
->> +
->> +	return iomap_file_init_dma_buf_io_ctx(file,
->> +			xfs_inode_buftarg(ip)->bt_bdev, ctx);
->> +}
-> Ah, this is where the previous cross check comes from.  What about
-> simply disallowing toggling the RT flag with outstanding reservations
-> instead?
+On 10/17/2026 2:13 AM, Darrick J. Wong wrote:
+> On Fri, Oct 16, 2026 at 11:20:41AM +0530, Kanchan Joshi wrote:
+>> Christoph, Darrick
+>>
+>> The shape of the series is aligned with your feedback on v4 [1].
+>> Possible to take a look and tell if anything should be changed?
+> I sent a few comments
 
-So, instead of patch 2, this is about setting a new in-core inode flag 
-here iff the registration was successful. And checking this new flag to 
-refuse toggling RT?
+Thanks.
+
+>, but the big thing missing here is a design
+> document -- what problem are you trying to solve by adding the ability
+> to group files in flocks?  How mandatory vs. opportunistic is the stream
+> id? etc.  
+
+I guess you are not asking for answers here (given the cover letter, 
+commit description, past discussions etc). But under a new file in 
+'Documentation/filesystems".
+
+> What about Dave's comments about hard constraining files to
+> particular AGs?
+
+I had replied here:
+https://lore.kernel.org/linux-xfs/ef9844a0-3a9f-48e4-8092-2de2e03db1c8@samsung.com/#t
+
+In short, hard placement into a specific AG/RG (returning ENOSPC when 
+full) is a distinct XFS-specific contract and is better served by an XFS 
+ioctl rather than a generic interface. And, nothing in this series 
+prevents adding such an ioctl later, and perhaps some of the code can be 
+reused.
+
+Write-stream remains a layout-agnostic information, about file 
+relationship/lifecycle, provided by the application. This equips the 
+allocator (of device or FS) to do better spatial isolation than it could 
+otherwise.
