@@ -1,178 +1,145 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lf1-f49.google.com (mail-lf1-f49.google.com [209.85.167.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3A833A453B;
-	Sun, 18 Oct 2026 15:48:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C35D367F5E
+	for <linux-xfs@vger.kernel.org>; Sun, 18 Oct 2026 17:11:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792338522; cv=none; b=mQPBS+o84ndHvbu/QcdVOn1C4GVAz3KkMHOy+po/FHyJ1hA0VwMxGc05BP51inAKwA5NIHPzUfWko9D/iGKa3lou/NNSk+cymGWKFk0m/8bvXZvegGuC4+cljbBj3f9VF5uU83y7IV7IhFFaHC3rjBxnxchZ8u6V6AgcoytMMRs=
+	t=1792343466; cv=none; b=mKIbcOc45wjvi/ifH5ckHpeGV8JknR735GeIJzdZGF4ya9e/BfX9O0OHw2I/Ee/h3CARvlTzO4fbg2a4OiQyKdxQb5/mbbFRin9tFOFRn/Y3wvPJ7UAWxQAYyflt2T3O9P5Dtd8l+0kI8shjYFqwbI+obs6J+8Ju6F/UPivhNlI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792338522; c=relaxed/simple;
-	bh=FaRcLEUs6l15qig9t/5mUVXsio7boF41UEEgpQSRb4g=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=T55XSCI5Bv56z3Hz7iH+q3uCuqzavW/LdzfnBbLbQ+2F21ozj5E0tkJXj1ZPmVDvzuYoL1scaALTOtQ80iK+KwKQZK/ru7MWmriw/gq+yiB8Y9M/K3gqORZouwhMktbG+8pd2rix8Jejv23kJ6tLwNybtIYZvoT83l5E3tSmtZY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WVyI2KX3; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1792343466; c=relaxed/simple;
+	bh=RngPiRoKRo1SDWTQaUoVzqDNzzjh+lwILzwjsOjipso=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=VUqKd7ModrRKSYMnoYmwcYOXc2HAdZvnbe+dlWh5H+E54PIzpIAuCUiJvo7iSHCtQg/1a5ILEz5txSb7ckQxlhuCydNz9qACYGEC5DHWq320fRXMGm0uUR+zM7bV2t8bPcj6QYYCY67DgjIgvO5ifF47kGfb/EZP41drJx7qPbk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nDfOE8vG; arc=none smtp.client-ip=209.85.167.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WVyI2KX3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2F62E1F000C8;
-	Sun, 18 Oct 2026 15:48:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792338520;
-	bh=qHr+ZYKSpAzCi10EtcwRrDzJJq6BBKkyzbps+RPUef0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=WVyI2KX3sfSFb7oZBIkg5vyFZX7+LpvwVP7fn4Cty10Z+Y1LmZOfywyVqCXWWjkZk
-	 w0HsKNxrIpDN+fTkwgMX01zxZ9pMY6N/P1LtrU17V8ZUMVAxbiAmgrPDGg7W+Rjs6i
-	 cOUCAgudB6PnoTQaLURK0fj6/ZYFFSlnOyU9KKE/6KmvZiNJKMOPTK8W4Rny4GZZn5
-	 dnzO8E7iP9hzjx0W6bJF+lnhorAfjoibm0p1V0l9L9VW6uVghDWolJvqlzthVu28XZ
-	 /BYjpM8dC6pSBrEBdq8Xis70LV4n4Q0dBgk6Rq7VtYXCr+VagK8d6QqHe7hk60/2QA
-	 1AcOlXaFgMXKQ==
-Date: Sun, 18 Oct 2026 17:48:34 +0200
-From: Christian Brauner <brauner@kernel.org>
-To: Andreas Gruenbacher <agruenba@redhat.com>
-Cc: Jan Kara <jack@suse.com>, Al Viro <viro@zeniv.linux.org.uk>, 
-	ecryptfs@vger.kernel.org, linux-ext4@vger.kernel.org, jfs-discussion@lists.sourceforge.net, 
-	linux-nilfs@vger.kernel.org, exfat@lists.linux.dev, linux-fsdevel@vger.kernel.org, 
-	ntfs@lists.linux.dev, ocfs2-devel@lists.linux.dev, linux-btrfs@vger.kernel.org, 
-	gfs2@lists.linux.dev, linux-efi@vger.kernel.org, linux-mtd@lists.infradead.org, 
-	linux-xfs@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH RFC 20/28] gfs2: wait for a pending withdraw before
- remounting read-only
-Message-ID: <20261018-ungemacht-sodbrennen-hausordnung-42d33a4f7098@brauner>
-References: <20261012-work-fs-sb_rdonly-v1-0-60743a3dc326@kernel.org>
- <20261012-work-fs-sb_rdonly-v1-20-60743a3dc326@kernel.org>
- <CAHc6FU5bdAjABRm=bnH68b2f66TZTDZ8sPdatLB2fS7-55U=yw@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nDfOE8vG"
+Received: by mail-lf1-f49.google.com with SMTP id 2adb3069b0e04-5ba35c0df4fso1398249e87.0
+        for <linux-xfs@vger.kernel.org>; Sun, 18 Oct 2026 10:11:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1792343461; x=1792948261; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=gJdJrirRvF3k3Jt5AvgoO9jwhCR5BlxhBGLKGtRhtBw=;
+        b=nDfOE8vG7D+x9qVwgY680MWFj1/vNe67kKtun81Zst27hIGnRV1f+7jcHHcxKxGxy/
+         rf4v2/gmlYgbeCaR1W94xVQJjrw8CFFbrrj8OnGVfn2AY2963hkH0FS1NNdP0Bt7kMBp
+         uy0s1SO0XziEfv3AFAMziBH8Walj9d5Bi90q3sY7jIIdcXS8z7b672IplVYRx9Sqt6hL
+         euI9P1H0WowQqtpaO9GtpnoIpJb1O+wRfbbPruclYGOEVmEQmMN9AqikQZPnnMleW/5T
+         CQhIhIsD+WCGwg4Y5AZsoz2a+AIobXbzzCfcLJwLoUdav4CLeECIbC4uTErfbAQ+0hgF
+         iGpQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792343461; x=1792948261;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=gJdJrirRvF3k3Jt5AvgoO9jwhCR5BlxhBGLKGtRhtBw=;
+        b=rV2ZZohIb3ldfiSiSK9XDsiMp7JMrlQwasi36e9USKyFkOumCj3MKQTI6Gsbcnl1sC
+         kIkYWu/4Ytf6U1nAbdYRmS51UHbxl6zFDS1owz4VVJfL+GsaI3Ybm9kSNSbUUem/43ZE
+         RLa2boipBG9D5HcNPAjKi7Bmh/J4BIPS24MJ5zJR/hZqXVYHKhkSRUVo/q9jaIkwPwXB
+         ea7hV3F9HZHqRhiV5cRCcA7+uEnzo6tL+htzBsqjcaxN6b9NgINRJ0WOdI9MFWaPPCqX
+         1Pj8GBwaqQIw9/J5dz0NektJh/x32DpMGQJTS4l/24JLPTo7gemGCqC5KX5UTRq5490s
+         Do1w==
+X-Forwarded-Encrypted: i=1; AKwUvBxzP0fNMwOY+Q/ZAP2Y/rmIhMeny/GUfFIiUkRudEPlRCno2MYfEzLmBVyudxXZWxmaVKzgyE1hiD0=@vger.kernel.org
+X-Gm-Message-State: AFq9FYLlj9ml1mJKFYaLdvJdsSWdm0+yyCufKmsXYcy+PELSc8pvKCu3
+	V3dSNhv2cmgiEgJiS9xHaYfDbCsplApkOmHHz0FPKVExxZ0qRxv6rE2j
+X-Gm-Gg: AYBFou1drdtiJBeSMmUeV2zOkmstOHxDPqQeBW1+38wzsCUVDZaueLQJ0JSF1NKSddZ
+	IBxY3k6m5r1He43J2qQ4dgfP2xbL1cyLyefxiydGOjPvQAF5TrzFLvbiZoB3RZCRFgGiZRSJ8gv
+	5hs1BnVwxrUCxFgB1lBFYojWqN02NX/JN1p8P8pHmAgzsxt9ghYTREJrhtgpTLnPmFGpa4e+aKc
+	HE+8RMa1TnqCfkGIATO5I/JLgp1CVfCmdmb0kIO5ZfW2BR7B+XiYlcBmX9YHvKqQ1luuHQn2KCm
+	pG0k/aEAewhWF/0qgRSFkF81fpG0KKgjEW3NJ6wlXHCl4B2YMI+G+4QlG7pauGXQ5hJiQuLCpzx
+	Mv0BwK/f5uYNk2udnF8CNn3vMW+QsBENOAuzXDj0VJn2szUY4WT9Tvlnt/96B5DJSFpYkdtUiTd
+	dX50t8SqD4ChdxcnO9xy9OJUlkh2hihfPQcA5ihG/QlM0bTWwIGADIxa6yOWRpt4x2pPu5IR0Ln
+	6YptyKefZ/09NuzqnXtKBK6MrGtFJL0x5BsjbJbUWSrLor010QJfXfcyfUuIj6ahK9d7X1XovwN
+	27KK
+X-Received: by 2002:a05:6512:39c6:b0:5b8:e99c:cfa1 with SMTP id 2adb3069b0e04-5be50a595a4mr1746114e87.31.1792343461073;
+        Sun, 18 Oct 2026 10:11:01 -0700 (PDT)
+Received: from x870steellegend.lan (95-25-165-213.broadband.corbina.ru. [95.25.165.213])
+        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5be4a63dcf0sm1499694e87.76.2026.10.18.10.11.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 18 Oct 2026 10:11:00 -0700 (PDT)
+From: Igor Putko <igorpetindev@gmail.com>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: Dave Chinner <dchinner@redhat.com>,
+	linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Igor Putko <igorpetindev@gmail.com>,
+	syzbot+c32fff62cf4913d345d0c@syzkaller.appspotmail.com
+Subject: [PATCH] xfs: do not release buf log item prematurely in xfs_buf_item_done
+Date: Sun, 18 Oct 2026 20:09:13 +0300
+Message-ID: <20261018170913.3104-1-igorpetindev@gmail.com>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAHc6FU5bdAjABRm=bnH68b2f66TZTDZ8sPdatLB2fS7-55U=yw@mail.gmail.com>
 
-On Fri, Oct 16, 2026 at 02:32:01AM +0200, Andreas Gruenbacher wrote:
-> Christian,
-> 
-> On Mon, Oct 12, 2026 at 1:27 PM Christian Brauner <brauner@kernel.org> wrote:
-> > Since commit 9c4a3de6cd5b ("gfs2: Asynchronous withdraw") most of a
-> > withdraw happens in do_withdraw() from a work item and SDF_JOURNAL_LIVE
-> > stays set until it ran. A remount to read-only in that window goes
-> > through gfs2_make_fs_ro(). Its log flushes bail out early on the
-> > withdrawn filesystem before FLUSH_SHUTDOWN can clear SDF_JOURNAL_LIVE
-> > and then gfs2_quota_cleanup() hits its BUG_ON():
-> >
-> >   kernel BUG at fs/gfs2/quota.c:1532!
-> >   RIP: 0010:gfs2_quota_cleanup+0x562/0x6b0
-> >    gfs2_make_fs_ro+0xf3/0x2e0
-> >    gfs2_reconfigure+0x42e/0xfd0
-> >    reconfigure_super+0x437/0xb20
-> >
-> > Just flushing the withdraw work before the remount isn't enough.
-> > gfs2_withdraw() sets SDF_WITHDRAWN, calls dump_stack() and only then
-> > queues the work. So a remount can see a withdrawn filesystem while
-> > there's nothing to flush yet. And a withdraw can also start in the
-> > middle of gfs2_make_fs_ro().
-> >
-> > So let do_withdraw() wake up waiters when it clears SDF_JOURNAL_LIVE and
-> > let gfs2_make_fs_ro() wait for the bit after its log flushes, right
-> > before gfs2_quota_cleanup(). On a healthy filesystem the shutdown flush
-> > already cleared it. umount doesn't need to wait. gfs2_put_super() sets
-> > SDF_NORECOVERY first and gfs2_quota_cleanup() only BUGs without it. Once
-> > the bit is clear the journal isn't live anymore and gfs2_make_fs_ro()
-> > doesn't write anything.
-> >
-> > gfs2_make_fs_rw() can leave the bit set on a withdrawn filesystem as
-> > well. It checks for a withdraw and then sets SDF_JOURNAL_LIVE. If
-> > do_withdraw() runs in between it finds the journal not live yet and
-> > returns. Nothing clears the bit then and the next remount to read-only
-> > waits for it forever. So check for the withdraw and set the bit under
-> > sd_log_flush_lock, which do_withdraw() holds while it tests the bit.
-> > Then either the remount sees the withdraw or do_withdraw() sees the live
-> > journal.
-> >
-> > Reproducer, lock_nolock: a SCHED_FIFO task writes 1 to the withdraw
-> > sysfs knob from cpu 1 and keeps cpu 1 busy (RT throttling and cpu 1's
-> > fair server disabled) so do_withdraw() can't run, then from cpu 2:
-> >
-> >   mount -o remount,ro /mnt
-> >
-> > On lock_dlm the window lasts as long as the withdraw helper runs. The
-> > window before the work is queued can be widened with a kprobe on
-> > dump_stack_lvl() that delays the task writing to the withdraw knob by a
-> > few seconds. A remount to read-only or sysrq u in that window hits the
-> > same BUG_ON().
-> >
-> > Fixes: 9c4a3de6cd5b ("gfs2: Asynchronous withdraw")
-> > Cc: stable@vger.kernel.org
-> > Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
-> > ---
-> >  fs/gfs2/super.c | 22 ++++++++++++++++++----
-> >  fs/gfs2/util.c  |  2 +-
-> >  2 files changed, 19 insertions(+), 5 deletions(-)
-> >
-> > diff --git a/fs/gfs2/super.c b/fs/gfs2/super.c
-> > index 06302c29340f..1d7b39354d65 100644
-> > --- a/fs/gfs2/super.c
-> > +++ b/fs/gfs2/super.c
-> > @@ -147,12 +147,23 @@ int gfs2_make_fs_rw(struct gfs2_sbd *sdp)
-> >         }
-> >
-> >         error = gfs2_quota_init(sdp);
-> > -       if (!error && gfs2_withdrawn(sdp)) {
-> > -               gfs2_quota_cleanup(sdp);
-> > +       if (error)
-> > +               return error;
-> > +
-> > +       /*
-> > +        * do_withdraw() only takes a live journal down. Check for a withdraw
-> > +        * under the lock it holds for that so that either we see the withdraw
-> > +        * or it sees the journal live. Otherwise gfs2_make_fs_ro() waits for
-> > +        * the bit forever.
-> > +        */
-> > +       down_write(&sdp->sd_log_flush_lock);
-> > +       if (gfs2_withdrawn(sdp))
-> >                 error = -EIO;
-> > -       }
-> > -       if (!error)
-> > +       else
-> >                 set_bit(SDF_JOURNAL_LIVE, &sdp->sd_flags);
-> > +       up_write(&sdp->sd_log_flush_lock);
-> > +       if (error)
-> > +               gfs2_quota_cleanup(sdp);
-> >         return error;
-> >  }
-> >
-> > @@ -565,6 +576,9 @@ void gfs2_make_fs_ro(struct gfs2_sbd *sdp)
-> >                                    HZ * 5);
-> >                 gfs2_assert_warn(sdp, gfs2_log_is_empty(sdp));
-> >         }
-> > +       /* A withdraw that do_withdraw() didn't finish yet leaves it live. */
-> > +       if (!test_bit(SDF_NORECOVERY, &sdp->sd_flags))
-> > +               wait_on_bit(&sdp->sd_flags, SDF_JOURNAL_LIVE, TASK_UNINTERRUPTIBLE);
-> >         gfs2_quota_cleanup(sdp);
-> >  }
-> >
-> > diff --git a/fs/gfs2/util.c b/fs/gfs2/util.c
-> > index 83b8bb6446e5..1535ce2b7aa8 100644
-> > --- a/fs/gfs2/util.c
-> > +++ b/fs/gfs2/util.c
-> > @@ -122,7 +122,7 @@ static void do_withdraw(struct gfs2_sbd *sdp)
-> >                 up_write(&sdp->sd_log_flush_lock);
-> >                 return;
-> >         }
-> > -       clear_bit(SDF_JOURNAL_LIVE, &sdp->sd_flags);
-> > +       clear_and_wake_up_bit(SDF_JOURNAL_LIVE, &sdp->sd_flags);
-> >         gfs2_ail_drain(sdp); /* frees all transactions */
-> >         up_write(&sdp->sd_log_flush_lock);
-> >
-> >
-> > --
-> > 2.53.0
-> >
-> 
-> this looks good all around, thank you very much. Can I add it to my gfs2 queue?
+When a buffer with an active log item is written synchronously to disk
+via xfs_bwrite() (for example, in xfs_sync_sb_buf() during
+FS_IOC_SETFSLABEL), I/O completion invokes xfs_buf_item_done().
 
-I was planning to just provide a stable branch for everyone to pull post
--rc1. Then you can just pull that in?
+Currently, xfs_buf_item_done() unconditionally calls
+xfs_buf_item_relse(), which frees the xfs_buf_log_item even if it still
+has active references (e.g. bli_refcount > 0 while the item is pinned in
+a CIL context and queued on cilpcp->log_items). When xlog_cil_push_work()
+subsequently runs on another CPU, xlog_cil_push_pcp_aggregate() accesses
+the freed log item while splicing cilpcp->log_items, triggering a
+slab-use-after-free:
+
+  BUG: KASAN: slab-use-after-free in xlog_cil_push_pcp_aggregate
+  Write of size 8 at addr ffff888036db9c40 by task kworker/u8:7/300
+  Call Trace:
+   <TASK>
+   __list_splice include/linux/list.h:577 [inline]
+   list_splice_init include/linux/list.h:619 [inline]
+   xlog_cil_push_pcp_aggregate fs/xfs/xfs_log_cil.c:137 [inline]
+   xlog_cil_push_work+0x986/0x2a90 fs/xfs/xfs_log_cil.c:1417
+
+Fix this by checking if the buf log item still has active references
+in xfs_buf_item_done(). If bli_refcount is elevated, the item is still
+owned by an ongoing transaction or the CIL and must not be torn down.
+
+Fixes: d2fe5c4c8d25 ("xfs: rearrange code in xfs_buf_item.c")
+Reported-by: syzbot+c32fff62cf4913d345d0c@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=c32ff62cf4913d345d0c
+Signed-off-by: Igor Putko <igorpetindev@gmail.com>
+---
+ fs/xfs/xfs_buf_item.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index 1a4ef34af8d5..6b32061bac53 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -1067,6 +1067,14 @@ xfs_buf_item_done(
+ 	struct xfs_buf		*bp)
+ {
+ 	struct xfs_buf_log_item	*bip = bp->b_log_item;
++	struct xfs_log_item	*lip = &bip->bli_item;
++
++	/*
++	 * If the log item still has active references (e.g. pinned by the CIL
++	 * or held by an ongoing transaction), we cannot tear it down here.
++	 */
++	if (atomic_read(&bip->bli_refcount) > 0)
++		return;
+ 
+ 	/*
+ 	 * If we are forcibly shutting down, this may well be off the AIL
+@@ -1080,8 +1088,8 @@ xfs_buf_item_done(
+ 	 * Note that log recovery writes might have buffer items that are not on
+ 	 * the AIL even when the file system is not shut down.
+ 	 */
+-	xfs_trans_ail_delete(&bip->bli_item,
+-			     xlog_in_recovery(bip->bli_item.li_log) ?
++	xfs_trans_ail_delete(lip,
++			     xlog_in_recovery(lip->li_log) ?
+ 			     0 : SHUTDOWN_CORRUPT_INCORE);
+ 	xfs_buf_item_relse(bip);
+ }
+-- 
+2.47.3
+
