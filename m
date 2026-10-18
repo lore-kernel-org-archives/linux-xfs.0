@@ -1,248 +1,178 @@
-Received: from mail-oi1-f200.google.com (mail-oi1-f200.google.com [209.85.167.200])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA8E249D58C
-	for <linux-xfs@vger.kernel.org>; Sun, 18 Oct 2026 12:52:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.200
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3A833A453B;
+	Sun, 18 Oct 2026 15:48:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792327949; cv=none; b=ICZMhb7r4WnXDLWRru7UDw2+ryjsNR3eNqZCy3j7Ttl1KQ4b5ikkeiLlrXduEjQ9jDBg+tTThQInssQ6KDkbxn5EtkLrOlU9H/Vha5M+fM59YmXBqLXsjbTgfba2aAJIz1pkZwaGSQHh51syDdsn9jOqItHQxLGYSl4dSgvH+pw=
+	t=1792338522; cv=none; b=mQPBS+o84ndHvbu/QcdVOn1C4GVAz3KkMHOy+po/FHyJ1hA0VwMxGc05BP51inAKwA5NIHPzUfWko9D/iGKa3lou/NNSk+cymGWKFk0m/8bvXZvegGuC4+cljbBj3f9VF5uU83y7IV7IhFFaHC3rjBxnxchZ8u6V6AgcoytMMRs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792327949; c=relaxed/simple;
-	bh=4e/cZlNHFugnl0GQlTF6D9lv8zDe84gkKeLcigX3E04=;
-	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
-	 Content-Type; b=Js0JYwN6rNV7U8MSwpb/TjcLx2HYWzvMTFVI1oRQl9BmJz4PdmdxiLwGrZvc7Wdno3Q05srxIEJLPOQx9Mg1Iy+o1ZU8s2pZFzBL6DgebVUaX79u5OR2yryWMzPOCn0YJ/EXUzb/4EdVi003YGaUUkuN/jer3AObyapRWtt8io4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.167.200
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-oi1-f200.google.com with SMTP id 5614622812f47-4e778acdbc6so2470081b6e.3
-        for <linux-xfs@vger.kernel.org>; Sun, 18 Oct 2026 05:52:27 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792327947; x=1792932747;
-        h=content-type:to:from:subject:message-id:in-reply-to:date
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=ynpU3sFABEIJ2y70VYaPsZuLbo5x2o5qkA8rVhUTAfM=;
-        b=ol0gN3iN/e4FMowxAJDfbVLs/P06IubGdg24KT9p0XWHz5AvNkSjqGw8KIF2aMGHzK
-         i3ko5hfal3/aWCgv2u5i/CAcoD+vjP4E/UpgkzIRTbwC+xoYSH2Rx8rOd/OM1nuBJ7py
-         qAwy77TaUC3ZtF2fKwwg6a4cscA3zj06W9N7hcACqR8DT4mW58wGtnFhxOt2xsbBtXvs
-         rQ4xyKrH5GSgJ7Y36RqR0i0n/fdxzlfEzC+t6evxZ1KA420PDJebraq6RMJA30qb02gI
-         xf2UFktK/Cefrp5T6EE/tPPcr6Wqaw4HG/MPfAYGxwVuFQUMp4F8aAWER/bkRF+xwFc4
-         HumQ==
-X-Forwarded-Encrypted: i=1; AKwUvBx2N2pY/bY88YUv8k75dGIg742DZqrF0j5CFgFjxz31DkoXIwIwiWGMTCvi+WVkzEeSWp67HsxQlyc=@vger.kernel.org
-X-Gm-Message-State: AFq9FYJxj7F313OMjyeIaS1V+aFfHrJb/iAMSTIt91auSmOTQR3iY9oR
-	e+4/2TrOpFCaxe5OHF0kbpqsQNdc9qLBkSQutHR1cDK+k60JNjeJfBePc7j63G/KvtltTBlr/+Y
-	tfBpJF1zYy4Obhyx21u/9+Gse3Z8gxmkH7vVeOd/DHFI3alTAOuXGp2ATFlg=
+	s=arc-20240116; t=1792338522; c=relaxed/simple;
+	bh=FaRcLEUs6l15qig9t/5mUVXsio7boF41UEEgpQSRb4g=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=T55XSCI5Bv56z3Hz7iH+q3uCuqzavW/LdzfnBbLbQ+2F21ozj5E0tkJXj1ZPmVDvzuYoL1scaALTOtQ80iK+KwKQZK/ru7MWmriw/gq+yiB8Y9M/K3gqORZouwhMktbG+8pd2rix8Jejv23kJ6tLwNybtIYZvoT83l5E3tSmtZY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WVyI2KX3; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WVyI2KX3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2F62E1F000C8;
+	Sun, 18 Oct 2026 15:48:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792338520;
+	bh=qHr+ZYKSpAzCi10EtcwRrDzJJq6BBKkyzbps+RPUef0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=WVyI2KX3sfSFb7oZBIkg5vyFZX7+LpvwVP7fn4Cty10Z+Y1LmZOfywyVqCXWWjkZk
+	 w0HsKNxrIpDN+fTkwgMX01zxZ9pMY6N/P1LtrU17V8ZUMVAxbiAmgrPDGg7W+Rjs6i
+	 cOUCAgudB6PnoTQaLURK0fj6/ZYFFSlnOyU9KKE/6KmvZiNJKMOPTK8W4Rny4GZZn5
+	 dnzO8E7iP9hzjx0W6bJF+lnhorAfjoibm0p1V0l9L9VW6uVghDWolJvqlzthVu28XZ
+	 /BYjpM8dC6pSBrEBdq8Xis70LV4n4Q0dBgk6Rq7VtYXCr+VagK8d6QqHe7hk60/2QA
+	 1AcOlXaFgMXKQ==
+Date: Sun, 18 Oct 2026 17:48:34 +0200
+From: Christian Brauner <brauner@kernel.org>
+To: Andreas Gruenbacher <agruenba@redhat.com>
+Cc: Jan Kara <jack@suse.com>, Al Viro <viro@zeniv.linux.org.uk>, 
+	ecryptfs@vger.kernel.org, linux-ext4@vger.kernel.org, jfs-discussion@lists.sourceforge.net, 
+	linux-nilfs@vger.kernel.org, exfat@lists.linux.dev, linux-fsdevel@vger.kernel.org, 
+	ntfs@lists.linux.dev, ocfs2-devel@lists.linux.dev, linux-btrfs@vger.kernel.org, 
+	gfs2@lists.linux.dev, linux-efi@vger.kernel.org, linux-mtd@lists.infradead.org, 
+	linux-xfs@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH RFC 20/28] gfs2: wait for a pending withdraw before
+ remounting read-only
+Message-ID: <20261018-ungemacht-sodbrennen-hausordnung-42d33a4f7098@brauner>
+References: <20261012-work-fs-sb_rdonly-v1-0-60743a3dc326@kernel.org>
+ <20261012-work-fs-sb_rdonly-v1-20-60743a3dc326@kernel.org>
+ <CAHc6FU5bdAjABRm=bnH68b2f66TZTDZ8sPdatLB2fS7-55U=yw@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6808:2384:b0:4f8:716d:793e with SMTP id
- 5614622812f47-53cd2a696camr3829902b6e.46.1792327946845; Sun, 18 Oct 2026
- 05:52:26 -0700 (PDT)
-Date: Sun, 18 Oct 2026 05:52:26 -0700
-In-Reply-To: <6a6c0d7d.b1a781d0.210f9.001a.GAE@google.com>
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <6ad4c10a.6814cce4.34c49f.00f2.GAE@google.com>
-Subject: Re: [syzbot] [xfs?] KASAN: slab-use-after-free Read in xfs_defer_item_unpause
-From: syzbot <syzbot+e7f24354da9f7915bc54@syzkaller.appspotmail.com>
-To: cem@kernel.org, djwong@kernel.org, linux-kernel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, stable@vger.kernel.org, 
-	syzkaller-bugs@googlegroups.com, viennaoffh@gmail.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAHc6FU5bdAjABRm=bnH68b2f66TZTDZ8sPdatLB2fS7-55U=yw@mail.gmail.com>
 
-syzbot has found a reproducer for the following issue on:
+On Fri, Oct 16, 2026 at 02:32:01AM +0200, Andreas Gruenbacher wrote:
+> Christian,
+> 
+> On Mon, Oct 12, 2026 at 1:27 PM Christian Brauner <brauner@kernel.org> wrote:
+> > Since commit 9c4a3de6cd5b ("gfs2: Asynchronous withdraw") most of a
+> > withdraw happens in do_withdraw() from a work item and SDF_JOURNAL_LIVE
+> > stays set until it ran. A remount to read-only in that window goes
+> > through gfs2_make_fs_ro(). Its log flushes bail out early on the
+> > withdrawn filesystem before FLUSH_SHUTDOWN can clear SDF_JOURNAL_LIVE
+> > and then gfs2_quota_cleanup() hits its BUG_ON():
+> >
+> >   kernel BUG at fs/gfs2/quota.c:1532!
+> >   RIP: 0010:gfs2_quota_cleanup+0x562/0x6b0
+> >    gfs2_make_fs_ro+0xf3/0x2e0
+> >    gfs2_reconfigure+0x42e/0xfd0
+> >    reconfigure_super+0x437/0xb20
+> >
+> > Just flushing the withdraw work before the remount isn't enough.
+> > gfs2_withdraw() sets SDF_WITHDRAWN, calls dump_stack() and only then
+> > queues the work. So a remount can see a withdrawn filesystem while
+> > there's nothing to flush yet. And a withdraw can also start in the
+> > middle of gfs2_make_fs_ro().
+> >
+> > So let do_withdraw() wake up waiters when it clears SDF_JOURNAL_LIVE and
+> > let gfs2_make_fs_ro() wait for the bit after its log flushes, right
+> > before gfs2_quota_cleanup(). On a healthy filesystem the shutdown flush
+> > already cleared it. umount doesn't need to wait. gfs2_put_super() sets
+> > SDF_NORECOVERY first and gfs2_quota_cleanup() only BUGs without it. Once
+> > the bit is clear the journal isn't live anymore and gfs2_make_fs_ro()
+> > doesn't write anything.
+> >
+> > gfs2_make_fs_rw() can leave the bit set on a withdrawn filesystem as
+> > well. It checks for a withdraw and then sets SDF_JOURNAL_LIVE. If
+> > do_withdraw() runs in between it finds the journal not live yet and
+> > returns. Nothing clears the bit then and the next remount to read-only
+> > waits for it forever. So check for the withdraw and set the bit under
+> > sd_log_flush_lock, which do_withdraw() holds while it tests the bit.
+> > Then either the remount sees the withdraw or do_withdraw() sees the live
+> > journal.
+> >
+> > Reproducer, lock_nolock: a SCHED_FIFO task writes 1 to the withdraw
+> > sysfs knob from cpu 1 and keeps cpu 1 busy (RT throttling and cpu 1's
+> > fair server disabled) so do_withdraw() can't run, then from cpu 2:
+> >
+> >   mount -o remount,ro /mnt
+> >
+> > On lock_dlm the window lasts as long as the withdraw helper runs. The
+> > window before the work is queued can be widened with a kprobe on
+> > dump_stack_lvl() that delays the task writing to the withdraw knob by a
+> > few seconds. A remount to read-only or sysrq u in that window hits the
+> > same BUG_ON().
+> >
+> > Fixes: 9c4a3de6cd5b ("gfs2: Asynchronous withdraw")
+> > Cc: stable@vger.kernel.org
+> > Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
+> > ---
+> >  fs/gfs2/super.c | 22 ++++++++++++++++++----
+> >  fs/gfs2/util.c  |  2 +-
+> >  2 files changed, 19 insertions(+), 5 deletions(-)
+> >
+> > diff --git a/fs/gfs2/super.c b/fs/gfs2/super.c
+> > index 06302c29340f..1d7b39354d65 100644
+> > --- a/fs/gfs2/super.c
+> > +++ b/fs/gfs2/super.c
+> > @@ -147,12 +147,23 @@ int gfs2_make_fs_rw(struct gfs2_sbd *sdp)
+> >         }
+> >
+> >         error = gfs2_quota_init(sdp);
+> > -       if (!error && gfs2_withdrawn(sdp)) {
+> > -               gfs2_quota_cleanup(sdp);
+> > +       if (error)
+> > +               return error;
+> > +
+> > +       /*
+> > +        * do_withdraw() only takes a live journal down. Check for a withdraw
+> > +        * under the lock it holds for that so that either we see the withdraw
+> > +        * or it sees the journal live. Otherwise gfs2_make_fs_ro() waits for
+> > +        * the bit forever.
+> > +        */
+> > +       down_write(&sdp->sd_log_flush_lock);
+> > +       if (gfs2_withdrawn(sdp))
+> >                 error = -EIO;
+> > -       }
+> > -       if (!error)
+> > +       else
+> >                 set_bit(SDF_JOURNAL_LIVE, &sdp->sd_flags);
+> > +       up_write(&sdp->sd_log_flush_lock);
+> > +       if (error)
+> > +               gfs2_quota_cleanup(sdp);
+> >         return error;
+> >  }
+> >
+> > @@ -565,6 +576,9 @@ void gfs2_make_fs_ro(struct gfs2_sbd *sdp)
+> >                                    HZ * 5);
+> >                 gfs2_assert_warn(sdp, gfs2_log_is_empty(sdp));
+> >         }
+> > +       /* A withdraw that do_withdraw() didn't finish yet leaves it live. */
+> > +       if (!test_bit(SDF_NORECOVERY, &sdp->sd_flags))
+> > +               wait_on_bit(&sdp->sd_flags, SDF_JOURNAL_LIVE, TASK_UNINTERRUPTIBLE);
+> >         gfs2_quota_cleanup(sdp);
+> >  }
+> >
+> > diff --git a/fs/gfs2/util.c b/fs/gfs2/util.c
+> > index 83b8bb6446e5..1535ce2b7aa8 100644
+> > --- a/fs/gfs2/util.c
+> > +++ b/fs/gfs2/util.c
+> > @@ -122,7 +122,7 @@ static void do_withdraw(struct gfs2_sbd *sdp)
+> >                 up_write(&sdp->sd_log_flush_lock);
+> >                 return;
+> >         }
+> > -       clear_bit(SDF_JOURNAL_LIVE, &sdp->sd_flags);
+> > +       clear_and_wake_up_bit(SDF_JOURNAL_LIVE, &sdp->sd_flags);
+> >         gfs2_ail_drain(sdp); /* frees all transactions */
+> >         up_write(&sdp->sd_log_flush_lock);
+> >
+> >
+> > --
+> > 2.53.0
+> >
+> 
+> this looks good all around, thank you very much. Can I add it to my gfs2 queue?
 
-HEAD commit:    32c52ec87d62 x86/insn-eval: Fix shadowed segment index in ..
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=13778bc9580000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=4ccb65e03706547e
-dashboard link: https://syzkaller.appspot.com/bug?extid=e7f24354da9f7915bc54
-compiler:       Debian clang version 22.1.8 (1~deb13u4), Debian LLD 22.1.8
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=13ca1e9c580000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=17ca1e9c580000
-
-Downloadable assets:
-disk image (non-bootable): https://storage.googleapis.com/syzbot-assets/d900f083ada3/non_bootable_disk-32c52ec8.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/e3667e150f2a/vmlinux-32c52ec8.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/603cc202ff6c/bzImage-32c52ec8.xz
-mounted in repro: https://storage.googleapis.com/syzbot-assets/97b1c323a9b6/mount_0.gz
-  fsck result: failed (log: https://syzkaller.appspot.com/x/fsck.log?x=15ca1e9c580000)
-
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+e7f24354da9f7915bc54@syzkaller.appspotmail.com
-
-==================================================================
-BUG: KASAN: slab-use-after-free in xfs_defer_item_unpause+0x116/0x250 fs/xfs/libxfs/xfs_defer.c:1256
-Read of size 4 at addr ffff88803b37d0fc by task syz.0.22/5598
-
-CPU: 0 UID: 0 PID: 5598 Comm: syz.0.22 Not tainted syzkaller #0 PREEMPT(full) 
-Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
-Call Trace:
- <TASK>
- dump_stack_lvl+0xe8/0x150 lib/dump_stack.c:120
- print_address_description+0x55/0x1e0 mm/kasan/report.c:378
- print_report+0x58/0x70 mm/kasan/report.c:482
- kasan_report+0x117/0x150 mm/kasan/report.c:595
- xfs_defer_item_unpause+0x116/0x250 fs/xfs/libxfs/xfs_defer.c:1256
- xrep_newbt_free+0x3fe/0x5f0 fs/xfs/scrub/newbt.c:522
- xrep_ibt_build_new_trees+0xafd/0xdc0 fs/xfs/scrub/ialloc_repair.c:752
- xrep_iallocbt+0x24e/0x340 fs/xfs/scrub/ialloc_repair.c:828
- xrep_attempt+0x184/0x7c0 fs/xfs/scrub/repair.c:78
- xfs_scrub_metadata+0xce4/0x1910 fs/xfs/scrub/scrub.c:747
- xfs_ioc_scrubv_metadata+0x7ac/0xb70 fs/xfs/scrub/scrub.c:980
- xfs_file_ioctl+0x916/0x1590 fs/xfs/xfs_ioctl.c:1308
- vfs_ioctl fs/ioctl.c:51 [inline]
- __do_sys_ioctl fs/ioctl.c:597 [inline]
- __se_sys_ioctl+0xfc/0x170 fs/ioctl.c:583
- do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
- do_syscall_64+0x166/0x520 arch/x86/entry/syscall_64.c:84
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
-RIP: 0033:0x7fc864b9e559
-Code: ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 e8 ff ff ff f7 d8 64 89 01 48
-RSP: 002b:00007fc865a8b028 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
-RAX: ffffffffffffffda RBX: 00007fc864e25fa0 RCX: 00007fc864b9e559
-RDX: 0000200000041d40 RSI: 00000000c0285840 RDI: 0000000000000005
-RBP: 00007fc864c35ab8 R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
-R13: 00007fc864e26038 R14: 00007fc864e25fa0 R15: 00007ffe67582028
- </TASK>
-
-Allocated by task 5598:
- kasan_save_stack mm/kasan/common.c:57 [inline]
- kasan_save_track+0x3e/0x80 mm/kasan/common.c:78
- unpoison_slab_object mm/kasan/common.c:351 [inline]
- __kasan_slab_alloc+0x6c/0x80 mm/kasan/common.c:377
- kasan_slab_alloc include/linux/kasan.h:253 [inline]
- slab_post_alloc_hook mm/slub.c:4683 [inline]
- slab_alloc_node mm/slub.c:4996 [inline]
- kmem_cache_alloc_noprof+0x2b9/0x600 mm/slub.c:5010
- xfs_defer_alloc fs/xfs/libxfs/xfs_defer.c:843 [inline]
- xfs_defer_add+0x143/0x480 fs/xfs/libxfs/xfs_defer.c:871
- xfs_extent_free_defer_add+0x1bf/0x3b0 fs/xfs/xfs_extfree_item.c:507
- xfs_defer_extent_free+0x2a8/0x400 fs/xfs/libxfs/xfs_alloc.c:2682
- xfs_alloc_schedule_autoreap+0xb0/0x170 fs/xfs/libxfs/xfs_alloc.c:2727
- xrep_newbt_add_blocks+0x22a/0x3f0 fs/xfs/scrub/newbt.c:211
- xrep_newbt_alloc_ag_blocks+0x81e/0xcc0 fs/xfs/scrub/newbt.c:311
- xrep_ibt_build_new_trees+0x75e/0xdc0 fs/xfs/scrub/ialloc_repair.c:696
- xrep_iallocbt+0x24e/0x340 fs/xfs/scrub/ialloc_repair.c:828
- xrep_attempt+0x184/0x7c0 fs/xfs/scrub/repair.c:78
- xfs_scrub_metadata+0xce4/0x1910 fs/xfs/scrub/scrub.c:747
- xfs_ioc_scrubv_metadata+0x7ac/0xb70 fs/xfs/scrub/scrub.c:980
- xfs_file_ioctl+0x916/0x1590 fs/xfs/xfs_ioctl.c:1308
- vfs_ioctl fs/ioctl.c:51 [inline]
- __do_sys_ioctl fs/ioctl.c:597 [inline]
- __se_sys_ioctl+0xfc/0x170 fs/ioctl.c:583
- do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
- do_syscall_64+0x166/0x520 arch/x86/entry/syscall_64.c:84
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
-
-Freed by task 5598:
- kasan_save_stack mm/kasan/common.c:57 [inline]
- kasan_save_track+0x3e/0x80 mm/kasan/common.c:78
- kasan_save_free_info+0x40/0x50 mm/kasan/generic.c:584
- poison_slab_object mm/kasan/common.c:264 [inline]
- __kasan_slab_free+0x5c/0x80 mm/kasan/common.c:296
- kasan_slab_free include/linux/kasan.h:235 [inline]
- slab_free_hook mm/slub.c:2748 [inline]
- slab_free mm/slub.c:6509 [inline]
- kmem_cache_free+0x182/0x650 mm/slub.c:6636
- xfs_defer_cancel_list fs/xfs/libxfs/xfs_defer.c:505 [inline]
- xfs_defer_finish_noroll+0xf8b/0x14e0 fs/xfs/libxfs/xfs_defer.c:737
- xfs_defer_finish+0x1c/0x180 fs/xfs/libxfs/xfs_defer.c:755
- xrep_defer_finish+0x16e/0x240 fs/xfs/scrub/repair.c:242
- xrep_newbt_alloc_ag_blocks+0x86c/0xcc0 fs/xfs/scrub/newbt.c:318
- xrep_ibt_build_new_trees+0x75e/0xdc0 fs/xfs/scrub/ialloc_repair.c:696
- xrep_iallocbt+0x24e/0x340 fs/xfs/scrub/ialloc_repair.c:828
- xrep_attempt+0x184/0x7c0 fs/xfs/scrub/repair.c:78
- xfs_scrub_metadata+0xce4/0x1910 fs/xfs/scrub/scrub.c:747
- xfs_ioc_scrubv_metadata+0x7ac/0xb70 fs/xfs/scrub/scrub.c:980
- xfs_file_ioctl+0x916/0x1590 fs/xfs/xfs_ioctl.c:1308
- vfs_ioctl fs/ioctl.c:51 [inline]
- __do_sys_ioctl fs/ioctl.c:597 [inline]
- __se_sys_ioctl+0xfc/0x170 fs/ioctl.c:583
- do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
- do_syscall_64+0x166/0x520 arch/x86/entry/syscall_64.c:84
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
-
-The buggy address belongs to the object at ffff88803b37d0c0
- which belongs to the cache xfs_defer_pending of size 64
-The buggy address is located 60 bytes inside of
- freed 64-byte region [ffff88803b37d0c0, ffff88803b37d100)
-
-The buggy address belongs to the physical page:
-page: refcount:0 mapcount:0 mapping:0000000000000000 index:0xffff88803b37d600 pfn:0x3b37d
-flags: 0x4fff00000000200(workingset|node=1|zone=1|lastcpupid=0x7ff)
-page_type: f5(slab)
-raw: 04fff00000000200 ffff888033947dc0 ffff888033c36588 ffff888033c36588
-raw: ffff88803b37d600 00000002002a0010 00000000f5000000 0000000000000000
-page dumped because: kasan: bad access detected
-page_owner tracks the page as allocated
-page last allocated via order 0, migratetype Unmovable, gfp_mask 0xd2c40(GFP_NOFS|__GFP_NOWARN|__GFP_NORETRY|__GFP_COMP|__GFP_NOMEMALLOC), pid 131, tgid 131 (kworker/u4:5), ts 153391648879
- set_page_owner include/linux/page_owner.h:33 [inline]
- post_alloc_hook+0x1f9/0x250 mm/page_alloc.c:1871
- prep_new_page mm/page_alloc.c:1879 [inline]
- get_page_from_freelist+0x2209/0x2280 mm/page_alloc.c:3943
- __alloc_frozen_pages_noprof+0x217/0x5a0 mm/page_alloc.c:5436
- alloc_slab_page mm/slub.c:3347 [inline]
- allocate_slab+0x7d/0x620 mm/slub.c:3462
- new_slab mm/slub.c:3513 [inline]
- refill_objects+0x2d5/0x350 mm/slub.c:7418
- refill_sheaf mm/slub.c:2885 [inline]
- __pcs_replace_empty_main+0x2c8/0x6c0 mm/slub.c:4774
- alloc_from_pcs mm/slub.c:4850 [inline]
- slab_alloc_node mm/slub.c:4984 [inline]
- kmem_cache_alloc_noprof+0x399/0x600 mm/slub.c:5010
- xfs_defer_alloc fs/xfs/libxfs/xfs_defer.c:843 [inline]
- xfs_defer_add+0x143/0x480 fs/xfs/libxfs/xfs_defer.c:871
- xfs_bmap_add_extent_hole_real+0xd61/0x1a40 fs/xfs/libxfs/xfs_bmap.c:2782
- xfs_bmapi_allocate+0x248c/0x2f20 fs/xfs/libxfs/xfs_bmap.c:3975
- xfs_bmapi_write+0x843/0x1330 fs/xfs/libxfs/xfs_bmap.c:4265
- xfs_dquot_disk_alloc+0x4af/0xae0 fs/xfs/xfs_dquot.c:385
- xfs_qm_dqread+0xfe/0x520 fs/xfs/xfs_dquot.c:724
- xfs_qm_dqget+0x18a/0x3d0 fs/xfs/xfs_dquot.c:927
- xfs_qm_quotacheck_dqadjust+0xdd/0x5a0 fs/xfs/xfs_qm.c:1260
- xfs_qm_dqusage_adjust+0x4ad/0x670 fs/xfs/xfs_qm.c:1389
-page last free pid 9 tgid 9 ts 153295791972 stack trace:
- reset_page_owner include/linux/page_owner.h:26 [inline]
- __free_pages_prepare mm/page_alloc.c:1418 [inline]
- __free_frozen_pages+0xc93/0xd90 mm/page_alloc.c:2962
- __slab_free+0x274/0x2c0 mm/slub.c:5823
- qlink_free mm/kasan/quarantine.c:163 [inline]
- qlist_free_all+0x99/0x100 mm/kasan/quarantine.c:179
- kasan_quarantine_reduce+0x148/0x160 mm/kasan/quarantine.c:286
- __kasan_slab_alloc+0x22/0x80 mm/kasan/common.c:361
- kasan_slab_alloc include/linux/kasan.h:253 [inline]
- slab_post_alloc_hook mm/slub.c:4683 [inline]
- slab_alloc_node mm/slub.c:4996 [inline]
- __kmalloc_cache_noprof+0x29f/0x600 mm/slub.c:5559
- _kmalloc_noprof include/linux/slab.h:991 [inline]
- _kzalloc_noprof include/linux/slab.h:1312 [inline]
- nsim_fib6_rt_create drivers/net/netdevsim/fib.c:547 [inline]
- nsim_fib6_rt_insert drivers/net/netdevsim/fib.c:752 [inline]
- nsim_fib6_event drivers/net/netdevsim/fib.c:856 [inline]
- nsim_fib_event+0xf37/0xa3a0 drivers/net/netdevsim/fib.c:889
- nsim_fib_event_work+0x244/0x3b0 drivers/net/netdevsim/fib.c:1493
- process_one_work kernel/workqueue.c:3396 [inline]
- process_scheduled_works+0xc3d/0x1630 kernel/workqueue.c:3479
- worker_thread+0xa47/0xfb0 kernel/workqueue.c:3560
- kthread+0x38b/0x480 kernel/kthread.c:436
- ret_from_fork+0x514/0xb70 arch/x86/kernel/process.c:158
- ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
-
-Memory state around the buggy address:
- ffff88803b37cf80: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
- ffff88803b37d000: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
->ffff88803b37d080: fc fc fc fc fc fc fc fc fa fb fb fb fb fb fb fb
-                                                                ^
- ffff88803b37d100: fc fc fc fc fa fb fb fb fb fb fb fb fc fc fc fc
- ffff88803b37d180: fa fb fb fb fb fb fb fb fc fc fc fc fa fb fb fb
-==================================================================
-
-
----
-If you want syzbot to run the reproducer, reply with:
-#syz test: git://repo/address.git branch-or-commit-hash
-If you attach or paste a git patch, syzbot will apply it before testing.
+I was planning to just provide a stable branch for everyone to pull post
+-rc1. Then you can just pull that in?
