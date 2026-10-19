@@ -1,157 +1,125 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+Received: from mail-ej1-f49.google.com (mail-ej1-f49.google.com [209.85.218.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F04133F383;
-	Mon, 19 Oct 2026 09:52:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792403554; cv=none; b=h3tQ1igpdIANRrMuAftjN9Mzbefc/n7blm9qjCwOYcMgJsz+98fsFFffkt0tHrarl8Y5bhk8ItiwWidbgv+fGNsPpYAYFFcn5vn0rFNCHCB0YhFlEexFy6PhP2ukMCTeTUT5Z2H1V7hekFt/IZ2Nr0R1KYOZPpmrCThjGJ8nJc4=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792403554; c=relaxed/simple;
-	bh=WvTtg8JCOogctn7ZSS15ZrjyvEQJ4j+2UdlxuxFQnTw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CfiBFQvZrR7GyJkM+yMTQuGzCdp0oNMqfmU0ZDeD2Nltxtddj27SaHHVhxlVDfBTA1oj0ZzVyh+la59qopzAdK2yzUk7yicXfN0TB1danUVUEvnAjuq3sMp1C27gQ+kIne9lli9mnBL8KNTbEq/24yr3Jy2qtuo8IYfvLxWSzIY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=DapX6O+I; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=HkvNOVKW; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=DapX6O+I; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=HkvNOVKW; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 647C6285CAE
+	for <linux-xfs@vger.kernel.org>; Mon, 19 Oct 2026 10:30:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.49
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1792405814; cv=pass; b=W0WZ/ZCJ9sWFrqdOxZzl+CSWTS3IdpFXzV39EXgX1KcaoXYZC+SSemQenOhVI6xfo5D0s6uzUMLiDbd5ixFwuJuAXIEn6aVzdR0p3fz3zfJpT3H/UY+BBGNUSoL+GAiaVrQUkJzPrmJ2gz67AkCT7fNTDAJEKsyuTeiJF1iRY4I=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1792405814; c=relaxed/simple;
+	bh=w+Qw1NJ7EznQQFGT9BDIAW98bhAEyfZHFMzc+72qucI=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=VftqxjsoUxDww6Sej60wmflhkjXt7gR4OgQWlgKN06arEcOBuJmOzRuinxQVItnmt+OQ3P0DYnPuQbaQdrSzUgjySnEoZjx/Rg3MggfskBKNMg/S2xtbBTjsogqIfo5v3XSAxdityVYpfRJuS21gHvHWDuNjZWhY1WL6hO8LpXM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=IaHVD2JF; arc=pass smtp.client-ip=209.85.218.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="DapX6O+I";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="HkvNOVKW";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="DapX6O+I";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="HkvNOVKW"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 6896E1F44E;
-	Mon, 19 Oct 2026 09:52:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1792403550; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Q/XjywU63jHK3zYfOZqk/GFYoCnttMlmfWvXQ5qlU98=;
-	b=DapX6O+Ip4pKRXdlJVwKoYbFSgZmnci+oTZVGWx9N//wk+3Co0A6Gy6VjLwyPbJnXuzAkL
-	nK/2Yk9eDEsEWraU+H6ro4FbaBRxl+xMkoYT76R16fauUCeKeP7bK2SBFwKH5znABsckFq
-	6f8cRPlmgFApKa7bh+P/Y4scW5VQEgI=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1792403550;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Q/XjywU63jHK3zYfOZqk/GFYoCnttMlmfWvXQ5qlU98=;
-	b=HkvNOVKWZPcLczlyzJhxbC7tMzVsoibO8LGhYXd0PSctA5J8hm3Rc9LMb4abX/F22nZPqn
-	qBMliAhGPtxMP+Ag==
-Authentication-Results: smtp-out2.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1792403550; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Q/XjywU63jHK3zYfOZqk/GFYoCnttMlmfWvXQ5qlU98=;
-	b=DapX6O+Ip4pKRXdlJVwKoYbFSgZmnci+oTZVGWx9N//wk+3Co0A6Gy6VjLwyPbJnXuzAkL
-	nK/2Yk9eDEsEWraU+H6ro4FbaBRxl+xMkoYT76R16fauUCeKeP7bK2SBFwKH5znABsckFq
-	6f8cRPlmgFApKa7bh+P/Y4scW5VQEgI=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1792403550;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Q/XjywU63jHK3zYfOZqk/GFYoCnttMlmfWvXQ5qlU98=;
-	b=HkvNOVKWZPcLczlyzJhxbC7tMzVsoibO8LGhYXd0PSctA5J8hm3Rc9LMb4abX/F22nZPqn
-	qBMliAhGPtxMP+Ag==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 3F3B4134B3;
-	Mon, 19 Oct 2026 09:52:30 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id emzKBV7o1WpYOgAAD6G6ig
-	(envelope-from <jack@suse.cz>); Mon, 19 Oct 2026 09:52:30 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id BB917A1413; Mon, 19 Oct 2026 11:52:25 +0200 (CEST)
-Date: Mon, 19 Oct 2026 11:52:25 +0200
-From: Jan Kara <jack@suse.cz>
-To: Christian Brauner <brauner@kernel.org>
-Cc: Andreas Gruenbacher <agruenba@redhat.com>, Jan Kara <jack@suse.com>, 
-	Al Viro <viro@zeniv.linux.org.uk>, ecryptfs@vger.kernel.org, linux-ext4@vger.kernel.org, 
-	jfs-discussion@lists.sourceforge.net, linux-nilfs@vger.kernel.org, exfat@lists.linux.dev, 
-	linux-fsdevel@vger.kernel.org, ntfs@lists.linux.dev, ocfs2-devel@lists.linux.dev, 
-	linux-btrfs@vger.kernel.org, gfs2@lists.linux.dev, linux-efi@vger.kernel.org, 
-	linux-mtd@lists.infradead.org, linux-xfs@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH RFC 20/28] gfs2: wait for a pending withdraw before
- remounting read-only
-Message-ID: <wauqpgtmmf2beg3pc2kqlbizrigd4ew26do4zqch5ilwdjy4cd@brolwbx25sem>
-References: <20261012-work-fs-sb_rdonly-v1-0-60743a3dc326@kernel.org>
- <20261012-work-fs-sb_rdonly-v1-20-60743a3dc326@kernel.org>
- <CAHc6FU5bdAjABRm=bnH68b2f66TZTDZ8sPdatLB2fS7-55U=yw@mail.gmail.com>
- <20261018-ungemacht-sodbrennen-hausordnung-42d33a4f7098@brauner>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IaHVD2JF"
+Received: by mail-ej1-f49.google.com with SMTP id a640c23a62f3a-c34bff61551so261880766b.2
+        for <linux-xfs@vger.kernel.org>; Mon, 19 Oct 2026 03:30:13 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1792405811; cv=none;
+        d=google.com; s=arc-20260327;
+        b=pqpOW4G3Hz6IhtxxBs2Di5dOduN2a1RXavzwijCEkl2m2/0FvfmJ0zmITpmpKvYvDD
+         nXWAW3JdT0VxeOnEFO0UqjELxQwhe8veem2+D5ncI6QC92tqJtEx9xmOS5gF3rmyyQzW
+         Cqn8twO39RMX3NpKnJlzY8IG6IzX+x16mvj7X+RXLd2s1GamM2GlT13g8LSUhKjWdoBd
+         5qv8vs+M3AK8Ix/sC8gy81wyNMFw9ppvsgzmZznlfq2NvPZUmdiU42uLuzjx3sTsoGQY
+         lcMoE/Aqi4pyrp33NB3gJhj+RsO7QT9aLY8cdShMAvUTYj4UxMzcChVxONkOAC4gu2Os
+         jrrQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=hDMlxvMSsYfLSEsRi+m3GMMa7nMDtPhzoMRARDxjIFo=;
+        fh=9Hqx+s4suZMdmQEwV2reTRlWEhMH7dKUHX91iJiFXl0=;
+        b=FAVFFwXRv660oZZk8MlvgIgCRTxN6ZHkyOQN5pML9MMNKcAOW6rIhOANky6EJRmSGJ
+         4+XsiRI0OhD7BqMz4DdWC8u1UtmqRfaC3YhRm2vY9q/+37mdSwKoJIZzCcmvEYMGNOR4
+         l7I2k7L6mJHstacJ/4PFXJzuxTvjsES7m00rV7riBUmtSXN56tn7qz1iSJHmlPTeeV62
+         l4scfzxfleweIWoP0ob/nXWnOjgw31bjlqi4wl8RM9U59MAQ/BI9cp5wT9PaZJtCIX+P
+         CZ0c44NlDylyi59s9urz4BATO5SZkN1usb2nQ37sckeBcXe1YwuI4Pzl6xeC7SQ/hyTi
+         lXiQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1792405811; x=1793010611; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=hDMlxvMSsYfLSEsRi+m3GMMa7nMDtPhzoMRARDxjIFo=;
+        b=IaHVD2JFW5QpQ94PKc3ONpS/3xBNTLZOJ4qerCzcPapnAEb/tpEJdg9vZ9WvitSU1C
+         A7/+QnoKHY4O2Gy5pvgBvsBLFcpJ548voTmEqsFvzodzvO6xF5ELKb3rCApsY/clRXnH
+         iLsL0/OmBy6G+GGy3hdlOm4swG5Wr0lo3USLGe/i4/EWLcBLhJlnRjMO5gGnf3G7OCGr
+         m4fs9qcviKiRBpmRf/xdI+M+9SXMlb+oQ4QBaxUr3KSeSrY91BRk97tY7Z/sVB/dRmBO
+         +clhV1BF5Okuk1RwjV+RoNJgpwZsLaznW4PBEqdpOyqDzmEnACG/RadDVHN6RJZm2lVq
+         /VXg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792405811; x=1793010611;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=hDMlxvMSsYfLSEsRi+m3GMMa7nMDtPhzoMRARDxjIFo=;
+        b=X4vsnhJvnyJSC6kaQYkYlymXQNu/GWdIjJMop2Ms75N2/56QHHnYVU2NJENTAVN68o
+         C+nTNIbI4QM7MzTwJ1YO2CvG+yvT1gl4vyVqN9O9QbhtNd1EIyQ/Kk+peF98KXNw1mct
+         q6omHGLU/lvSZ/sAGW+FeU8nhNmyl7b5bH2gsaGdUnZFVchUctwYBitEOGT4WV+uTveG
+         fUPVA3jPvw6sZpLfskgISala/g3K8yyj5ssHZACpiKDBve2Hlxj34745D8QePZxD9Aol
+         YTXGcDGNrmpjYkJLf1SJCS5A8wgJgy3idudioxSvpEi4pN+hpSp0QLMTEXxe2njHv9wt
+         WDqQ==
+X-Forwarded-Encrypted: i=1; AKwUvBwb7R/bIjWqlOV6OxvzV/Pp2Jw6jDiv1zomwIFFZNebQgoQzGTbOuuX9H20n+A3PmkulyWDhO8rGQI=@vger.kernel.org
+X-Gm-Message-State: AFq9FYIBYqvB+dq8Q8uVJ+dJFEup6cnteBGkfWVSrtJjmYpW17fM4K3k
+	6AOXk01aY5q5Zq35tDB2st5mNACysGawWRftyL4I+qBGNSkNGcptQsDlW46ptR4Uw681IcgH35e
+	pBxmLKt4tiI4a3s1nhZWPlmea83f3OQ==
+X-Gm-Gg: AYBFou0qAfkLl/BPNKbhCsIo1kb7IoNeq/QCcfd8SeD2Z+8rdkiRO4hYmI+cLRFCD/I
+	p592KcSx36/KYCFB4iNCdcyECHtZnwB2M077THC2cYM56qGJyZdcMDffJyZaRuaJMdOxS6MuUcC
+	2LnCftvZHzoUgrK8Eq+3ufGG5Cuq2UInZydAwvAbp+oMQT4v7uFgOtN81uZY/Q8S7IXxzP2bjtR
+	SRDiN+HL7DNE+iecPjvs8qCE3W0ObBybaWudK9tuZKfNaXHtfuctyfFK5sc/zWuUMUkFFcjKsiE
+	c3BwrTSKr3eCyrXuuJPCrLqAjaqF/5O5eo1j0mr4WKqRqC33k0qk02B6p/LOZcrjUITF8yxY2xN
+	3y98uga2VmXI/MOT5r9kRbg==
+X-Received: by 2002:a17:907:94cd:b0:c34:83c0:b92b with SMTP id
+ a640c23a62f3a-c419e0372e5mr550966966b.23.1792405811317; Mon, 19 Oct 2026
+ 03:30:11 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261018-ungemacht-sodbrennen-hausordnung-42d33a4f7098@brauner>
-X-Spam-Flag: NO
-X-Spam-Score: -3.80
-X-Spam-Level: 
-X-Spamd-Result: default: False [-3.80 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MISSING_XM_UA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	RCPT_COUNT_TWELVE(0.00)[18];
-	ARC_NA(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	TO_DN_SOME(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	RCVD_COUNT_THREE(0.00)[3];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	RCVD_TLS_LAST(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.com:email]
+References: <20261016091919.971295-1-anuj1072538@gmail.com>
+ <20261016091919.971295-5-anuj1072538@gmail.com> <20261016092855.GD23141@lst.de>
+In-Reply-To: <20261016092855.GD23141@lst.de>
+From: Anuj gupta <anuj1072538@gmail.com>
+Date: Mon, 19 Oct 2026 15:59:34 +0530
+X-Gm-Features: AclHuK8ULi6B2WLcwQV3l7PwlG0hY-H7b4F5ML9dbW7RnQW2ii_Z4DBtgA4I11o
+Message-ID: <CACzX3AsF4t_yLoWpN5t5jjhxb4noAXuyFdK_-F_FdLA1gmMYSw@mail.gmail.com>
+Subject: Re: [RFC 4/4] xfs: support dma-buf registered buffers for direct I/O
+To: Christoph Hellwig <hch@lst.de>
+Cc: asml.silence@gmail.com, djwong@kernel.org, cem@kernel.org, 
+	brauner@kernel.org, axboe@kernel.dk, linux-block@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, joshi.k@samsung.com, 
+	anuj20.g@samsung.com, nj.shetty@samsung.com
+Content-Type: text/plain; charset="UTF-8"
 
-On Sun 18-10-26 17:48:34, Christian Brauner wrote:
-...
-> On Fri, Oct 16, 2026 at 02:32:01AM +0200, Andreas Gruenbacher wrote:
-> > > diff --git a/fs/gfs2/util.c b/fs/gfs2/util.c
-> > > index 83b8bb6446e5..1535ce2b7aa8 100644
-> > > --- a/fs/gfs2/util.c
-> > > +++ b/fs/gfs2/util.c
-> > > @@ -122,7 +122,7 @@ static void do_withdraw(struct gfs2_sbd *sdp)
-> > >                 up_write(&sdp->sd_log_flush_lock);
-> > >                 return;
-> > >         }
-> > > -       clear_bit(SDF_JOURNAL_LIVE, &sdp->sd_flags);
-> > > +       clear_and_wake_up_bit(SDF_JOURNAL_LIVE, &sdp->sd_flags);
-> > >         gfs2_ail_drain(sdp); /* frees all transactions */
-> > >         up_write(&sdp->sd_log_flush_lock);
-> > >
-> > >
-> > > --
-> > > 2.53.0
-> > >
-> > 
-> > this looks good all around, thank you very much. Can I add it to my gfs2 queue?
-> 
-> I was planning to just provide a stable branch for everyone to pull post
-> -rc1. Then you can just pull that in?
+> > +/*
+> > + * A realtime file's data lives on the realtime device, anything else on the
+> > + * data device. If a file is switched between them after registration, the
+> > + * block layer cross-device check refuses the I/O.
+> > + */
+> > +static int
+> > +xfs_file_init_dma_buf_io_ctx(
+> > +     struct file             *file,
+> > +     struct dma_buf_io_ctx   *ctx)
+> > +{
+> > +     struct xfs_inode        *ip = XFS_I(file_inode(file));
+> > +
+> > +     return iomap_file_init_dma_buf_io_ctx(file,
+> > +                     xfs_inode_buftarg(ip)->bt_bdev, ctx);
+> > +}
+>
+> Ah, this is where the previous cross check comes from.  What about
+> simply disallowing toggling the RT flag with outstanding reservations
+> instead?
 
-On a related topic: I didn't find any branch with this work in vfs.git - I
-wanted to check how all the things come together after adding the generic
-emergency RO bit. So if you can push some inofficial branch for now it
-would help me... Thanks!
+That works for the current exact-file scheme, but not with Pavel's
+shared-context proposal[1], since other files can use the buffer without
+registering it. There we can validate the context tag against the
+inode's current backing device per I/O.
 
-								Honza
-
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+[1] https://lore.kernel.org/linux-xfs/4649a20f-aba9-418e-987f-66f21ab24410@gmail.com/
