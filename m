@@ -1,42 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AABC91A682B;
-	Mon, 19 Oct 2026 00:39:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 293ED22F388;
+	Mon, 19 Oct 2026 02:37:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792370342; cv=none; b=gKiu/AXk3UzEz5Di7f6Al4QSKxjo6DlFCL3RT43+E3BOErA0RQk8fsyHISUov798L8XH6AGFz+bTRGd27pS4YZGJiL1+tX9r7wVAZKKg2WU31djwoPiTItcTObV8E+yV4bH/OBT1/jEvDLA9j0owPRQmyUjVkJcnfm1gTx2p0kc=
+	t=1792377452; cv=none; b=YKz/LzKYbMUsOBnItOA3A9GPJSN8aNFeR/3bypDOEyMIG4YmhA9dblpmusSmJ6hy76fGiZ4Gmjf72hFVBBlLGJ8xzkCKrAFIsugy+hX1SGyJWvRogLNvG0UOHKFaSOwAE1mlzY82eSUk6hlVj5J4gq7pvbZF9PCkKCmi5aaEbDM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792370342; c=relaxed/simple;
-	bh=iTAU7Z/FVjQDXJ79nJbFiM64zT2NzjOrxU6Up1/777Q=;
-	h=Date:From:To:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Ve62OAcGq7RoFRnwk8YwXWzzzFDLLcG3fbSE6rH6u8h00wdW3Wt2/iPdnA/BasVYF0AzvVjNR/Ki53vPIl1qgyiCS0xJraYc7WeAaFJ9mO30g3kDU7LOloePNz/YVQjLCjWqBdrEwFla19cU3lN13XQ9KdP38TyJ9A/EW7Oi/BU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VHezdVGc; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1792377452; c=relaxed/simple;
+	bh=TkH8KN6LIiaJU4JnU3ChbfF2cTiFvm6nT2EnB88xD+U=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=E6feG/i24g7ZEXw6w+1KvI4lpRxtaY1M4b6yq6JBs2oljhO06fg23NzPtcVD3qz22nXK/GH7mb0eAAm/izscHOPBi/a4WxbiKHYbkoCmtqT5zqfUo+8YD92BWHMa7p3aPj5d+Fk5hnWkyx9+gFHstwlti+dgCtM+hQEcVlE2jOY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BGWqxTIk; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VHezdVGc"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 42E761F000C4;
-	Mon, 19 Oct 2026 00:39:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BGWqxTIk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 935B31F000C4;
+	Mon, 19 Oct 2026 02:37:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792370341;
-	bh=Gf/XssmHO0esWQvkBTP1Aq6T9AXyBuDYPkDHYkZgwlQ=;
-	h=Date:From:To:Subject:References:In-Reply-To;
-	b=VHezdVGcbMO+KmIjAq6ZNsISylCdOeeuk02cHrFABtlvjEfeGq3tKV2RmKNl4wT4T
-	 OcxfU5G/62tK44lXBw34+ojxuf51eFeOaBg79KdcvIMti0F2h9VLcOmsLaULIEX1hE
-	 KeIGTf/5lEtua+c8+WD38VUgr/1Wxlz+lBEqHCh6wG7TTy4wuvBL3VWNYfY2iBCNTV
-	 W4IWDJG3QW33V+iLE1orSam8gB87HzFHDYzOzQ8feSc1r++P8GNah2Lgh/VLAmXdXe
-	 /9kdX7bzv9K0d3S4B9/nA/5itlTliNVQ50uofQFwIxyXZ/9bZDIzWl/EdiBLj9Ak/f
-	 Ws0eAIoqaAirg==
-Date: Sun, 18 Oct 2026 17:39:00 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: xfs <linux-xfs@vger.kernel.org>,
-	linux-ext4 <linux-ext4@vger.kernel.org>,
-	linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-	fuse-devel <fuse-devel@lists.linux.dev>,
-	fstests <fstests@vger.kernel.org>
-Subject: Re: Farewell!
-Message-ID: <20261019003900.GU107868@frogsfrogsfrogs>
-References: <20261016160037.GA107919@frogsfrogsfrogs>
- <atN8YUvYy0VyvFBm@MacBookPro>
+	s=k20260515; t=1792377450;
+	bh=8OV6L8m+iCE0AL+70lzJ6KmZ3QSA0HDI4+I9OhsFUug=;
+	h=Date:From:To:Cc:Subject;
+	b=BGWqxTIk6KDipwu9T2WyauM1dVC9nMZwpZywVUXgun+y95C7XtA796qKX9NojANJa
+	 9RjdDAusSHH7Am1EvEVvUqpwNMEJupz9/Jpaq30hi6s3OfrXvZOj7HMI8ra0IcRIA7
+	 SDMU2r/qT942Y7W0Bcd2fw/nb8S05zGi4KUZ0H+DZ/9rOZN54RwoAIA+cbTr5IAnZ8
+	 wZTsoYkh0lB3Dw2kU6d5O03mwTM3QvwIuC/OdNnrOM4DqfpwQvYG0WtRcgn26l29d6
+	 TwXV1yXEXv0bTnZ7Yjzd1OrE9Bd326sx7AHSGqHDblHljQRO5cnYkR6Y+H2vuUdX7e
+	 gE87Olhqx75hg==
+Date: Sun, 18 Oct 2026 19:37:29 -0700
+From: Eric Biggers <ebiggers@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: fsverity@lists.linux.dev, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Theodore Ts'o <tytso@mit.edu>,
+	Andrey Albershteyn <aalbersh@kernel.org>
+Subject: [GIT PULL] fsverity updates for 7.4
+Message-ID: <20261019023729.GC3270@sol>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,40 +43,65 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <atN8YUvYy0VyvFBm@MacBookPro>
 
-On Sat, Oct 17, 2026 at 03:47:13PM +0200, Gao Xiang wrote:
-> On Fri, Oct 16, 2026 at 09:00:37AM -0700, Darrick J. Wong wrote:
-> > Hi everyone,
-> > 
-> > After 14 years at Oracle and 23 years working on Linux, I've decided to
-> > take an extended break.  Today, October 16th, 2026, is my last day.
-> > 
-> > I don't have any immediate plans to drop the djwong@kernel.org
-> > forwarding, though ultimately that's up to the sysadmins to decide.
-> > 
-> > I have very much enjoyed working with you all, and I'm proud of what
-> > we've accomplished together.  Good luck!
-> > 
-> > --Darrick
-> 
-> Hi Darrick,
-> 
-> It is still a bit of a surprise for me to hear this news, although
-> things seem to be changing so quickly these days.
+The following changes since commit fd73f4a6659897191fa0d40695fe370925dd3780:
 
-I know, right? :)
+  Linux 7.3-rc3 (2026-09-13 14:38:02 -0700)
 
-> Thank you for all the chats online over the years. I've always enjoyed
-> them. I wish we'd had a chance to meet in person.
+are available in the Git repository at:
 
-Me too.  I hope some day things will calm down across the Pacific. :/
+  https://git.kernel.org/pub/scm/fs/fsverity/linux.git tags/fsverity-for-linus
 
-> I hope you have a great and well-deserved break.
+for you to fetch changes up to f9e450420da2624c93ce9585deebfabb87932774:
 
-Thank you!  And I wish you the best in your Linux (or other!) endeavors!
+  fsverity: hoist statx reporting of fs-verity flag (2026-10-04 19:47:47 +0200)
 
---D
+----------------------------------------------------------------
 
-> Best Regards,
-> Gao Xiang
+Patches from Andrey Albershteyn to prepare for XFS fsverity support:
+
+- Report verification errors through fserror, instead of only through
+  an unstructured log message and generic I/O error return
+
+- Move the reporting of STATX_ATTR_VERITY into the VFS, so that each
+  fsverity-capable filesystem doesn't need to do it. This also fixes a
+  bug where btrfs didn't return STATX_ATTR_VERITY in attributes_mask
+
+- Make the VFS prevent enabling DAX on fsverity files, so that it will
+  be handled in a single place for ext4 and XFS
+
+- Move ext4 and f2fs's code to read verity metadata from the pagecache
+  into shared code, so that XFS will be able to use it too
+
+- Export fsverity_ensure_verity_info() for XFS scrub to use
+
+- Pass all-zeroes hash to ->write_merkle_tree_block() so that XFS will
+  be able to implement an optimization for sparse files
+
+----------------------------------------------------------------
+Andrey Albershteyn (6):
+      fsverity: report validation errors through fserror to fsnotify
+      fsverity: expose ensure_fsverity_info()
+      fsverity: pass digest size and hash of the all-zeroes block to ->write
+      fsverity: hoist pagecache_read from f2fs/ext4 to fsverity
+      fsverity: don't allow setting DAX file attribute on fsverity files
+      fsverity: hoist statx reporting of fs-verity flag
+
+Eric Biggers (1):
+      MAINTAINERS: List the fsverity branches
+
+ MAINTAINERS              |  3 ++-
+ fs/btrfs/inode.c         |  3 ---
+ fs/btrfs/verity.c        |  6 +++++-
+ fs/ext4/inode.c          |  5 +----
+ fs/ext4/verity.c         | 36 ++++++------------------------------
+ fs/f2fs/file.c           |  5 +----
+ fs/f2fs/verity.c         | 34 ++++------------------------------
+ fs/file_attr.c           | 11 ++++++++---
+ fs/stat.c                |  6 +++++-
+ fs/verity/enable.c       |  4 +++-
+ fs/verity/open.c         | 26 ++++++++++++++++++++++++--
+ fs/verity/pagecache.c    | 33 +++++++++++++++++++++++++++++++++
+ fs/verity/verify.c       |  4 ++++
+ include/linux/fsverity.h | 10 +++++++++-
+ 14 files changed, 105 insertions(+), 81 deletions(-)
