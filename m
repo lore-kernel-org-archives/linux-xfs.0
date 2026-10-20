@@ -1,61 +1,92 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.47
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792508036;
-	b=f5ZhU1Zby4A19J4+hUpXgyd73lLTBkwN8wlN1SuQEFKtxqmAb9bS5JU+ogGe4SEvzrc2
-	 Mvf7L01Iad55N1r9x5eZChZc9IkrxnedXE3xG/4sJ0BtLTXpa/8g7Xp2FRVF+J1FIIkGu
-	 Mvr+ddszbRUr+13nWVIhZrRooRwFFcfEZs8oY3lOd7RTo4UQ9iedP5zOwpuvDpMDBNg5a
-	 0Jx5uPOnYVf2tj4OpE4MxxyNbBnEX1aFER/CExmrkGNeebwiMBtFLJkIDoCkCvFysWEhT
-	 jWh6KC+0LItR3O1nuKGw+H5f8Qd8kL9AZb9gnqFSUqrx2/TstIsa5CxJrhpgtZocrmw==
+	t=1792526197;
+	b=tf1bdJZB2pt3tSP7amEj1ea+uJmFgRDm4ArFHnCBLna9I7xI1XfcqxXvB8E0/h67C3Ic
+	 pWWeBferI7ybAOdLLU+wYExcZz0tfVXbbLDMLVAeCM+6KBeGcgq5viHTVlIoCFieg4MZw
+	 hwkERndmpi/QkgvI+nLLeExWh8ueNMJFgnBuHhwsSSWGXLH6EUXGRTjXB7Vf22Jk8A5yK
+	 Gx13cxtyhP4AP4G8pR7vLWHmJ/QmmwVBknRR15EwM/a/ro49yLvlgfESC5FNtv3baUcwa
+	 P3zUpDBgToaS7zbAARM7IaZhVRlX2rOSeWHeYGKqgI5uteNGBD+TPBvISIM6EPeRIqw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792508036;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=/bwYNsuvdLOeGIvvyV7lXuTJEpgdy2xoAlb1KPVe2eU=;
-	b=kvGvn/yBRpq3pajMQq3GvJg6WTxWOpiWP+TIO49xEc2VKKZEV6ORne7hwamwk4JjIZiy
-	 /PDK7sGurlRcXU1l3fduhyn/FEdzKjDgME3CDeczbj6WzsT3xD/SEgGfWRioZPymQGw+s
-	 vi0LNy4menNgzDuRXO9O0pUAT8YQ8swM7ydHE18avHZ2g3EjBZ+X0EJgKcdLxQDQNfrKV
-	 gJXP+nAltnQiBJu7IUqC3S9sbnnGZRmI9jaaomBqLFd2NTkdnqkMAOEa/1zaQZQNgFUy5
-	 ybqtHiNo7+VZkZjwE3Vc3dvCx5Ob6XAdamaDzjR4CLNVG+r1/5ablyrTHfQySu5WilA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792526197;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-Id:X-Mailer:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=mpQ3RiWaLmkacBrX11wLWQ7ZHjfXoVlldjLf+y4vUcc=;
+	b=Z9iLThkofas/E81N480k1fiU9g+brdY80S9Dl616dddhMFBSpLMKwz00SZzRbK0UdX1l
+	 EzsFGHUFDxsSRxhvsS7el8yV/rt/Im6cr0ZJKQhwVq8JvghzDdDNRj5K/68nKKEIxIr8m
+	 FWYT7bXAi9NMtExPPu9OQpSjrHSFWojR8PVdzx3bq/r2a4QICbU9v6kBb6aLPM3tqvntG
+	 dBVq7xwHB91jBFQ9ubVXgR8Q+4y7p14XXfB2Kqc6FZ+5YVA4sWRDMV8urjmtFQIaWNL8N
+	 Mjg7p80pvP3ddcnqIEwrwjqZEWqI0yhj/9nzr9Hv7xKfFgYYckSyl9x0AHlW1sbCUnQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=j+nClr50;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=ZwpWDIKt;
+	arc=none smtp.remote-ip=209.85.128.47
+Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9377C606A324;
-	Tue, 20 Oct 2026 14:53:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0DED6606A319
+	for <linux-xfs@vger.kernel.org>; Tue, 20 Oct 2026 19:56:36 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0DED6606A319
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=j+nClr50
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7BC0B1F000C4;
-	Tue, 20 Oct 2026 14:53:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792508035;
-	bh=/bwYNsuvdLOeGIvvyV7lXuTJEpgdy2xoAlb1KPVe2eU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=j+nClr509Ip2YmEn7/caQLmG/4tBtyXZnslPC9cLou/c2WF5cUyD8vV0z4nB9Tev2
-	 plhyZAe/DFKunvOqX8v/oXRElPiP3zxk2HziYyB5Fx7bPGt0t29G9UDf+1rfbuTFys
-	 26EzMGskCjKKCcH4vAuqOv+1PYrBjiQnY9DVI9Dr4fSEZ8yAk0LnKIRmk7JwU0k+tW
-	 rl99vZagqlR6jXNFfVasyDMk1PxV7oE6nRO/s1kciIZkWvnPgB1U5HfkO6NzVlXd9L
-	 pR5YKf1B76wv3ukXrumON6Rbv57+rbThp5bo1tebJ6WrsH6Sye8PXipcbNZHIwrAzz
-	 YGHmJPYOdgplw==
-Date: Tue, 20 Oct 2026 16:53:45 +0200
-From: Christian Brauner <brauner@kernel.org>
-To: Jan Kara <jack@suse.cz>
-Cc: Andreas Gruenbacher <agruenba@redhat.com>, Jan Kara <jack@suse.com>, 
-	Al Viro <viro@zeniv.linux.org.uk>, ecryptfs@vger.kernel.org, linux-ext4@vger.kernel.org, 
-	jfs-discussion@lists.sourceforge.net, linux-nilfs@vger.kernel.org, exfat@lists.linux.dev, 
-	linux-fsdevel@vger.kernel.org, ntfs@lists.linux.dev, ocfs2-devel@lists.linux.dev, 
-	linux-btrfs@vger.kernel.org, gfs2@lists.linux.dev, linux-efi@vger.kernel.org, 
-	linux-mtd@lists.infradead.org, linux-xfs@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH RFC 20/28] gfs2: wait for a pending withdraw before
- remounting read-only
-Message-ID: <20261020-steinbock-sprachen-charmant-e4fd6d840395@brauner>
-References: <20261012-work-fs-sb_rdonly-v1-0-60743a3dc326@kernel.org>
- <20261012-work-fs-sb_rdonly-v1-20-60743a3dc326@kernel.org>
- <CAHc6FU5bdAjABRm=bnH68b2f66TZTDZ8sPdatLB2fS7-55U=yw@mail.gmail.com>
- <20261018-ungemacht-sodbrennen-hausordnung-42d33a4f7098@brauner>
- <wauqpgtmmf2beg3pc2kqlbizrigd4ew26do4zqch5ilwdjy4cd@brolwbx25sem>
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=ZwpWDIKt
+Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-4a1e3098ee2so31541425e9.3
+        for <linux-xfs@vger.kernel.org>; Tue, 20 Oct 2026 12:56:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1792526195; x=1793130995; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=mpQ3RiWaLmkacBrX11wLWQ7ZHjfXoVlldjLf+y4vUcc=;
+        b=ZwpWDIKtt08y2XY2XJbdbDMsdI3O3ojs/U6Qb5zbdYWZiPXpPE9gF89HadmJa1jcrM
+         8VeRguG42uIlGtJ93H16GwgPsu+R1sIK1VAUwBv8/9CfVvs/lP/7je7CL8uigPPekNo9
+         szIUhsIU6mG8dyUKvAl49igo8+SXGa8ov9PBEmlGFLkYGEDoNly3aHI3CLcLGGH8vgXG
+         XkMLBrXGCDWO7ZB5AhlXFvb+yI5r3kcK11X1HLs4podPeQxPDDbQmXqTasZ3nDU+jE2f
+         KVTa9IiMM5wcSh1WUePySQ/cdhLDaZ0t6oFnmhimDtrPE1W0KRivezpX7LFnXKp17sRt
+         b5zA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792526195; x=1793130995;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=mpQ3RiWaLmkacBrX11wLWQ7ZHjfXoVlldjLf+y4vUcc=;
+        b=2woKx7zqhvb8S4webmxwjE39mxx5ansuyzCYtqPdGAbyw0tqKbbDa4NbsGeOSqQoWW
+         fDE0Sd6GSUUz+DB6w6CUMf93bqEtKPzGFjyOClrv+VWcQmNT0iI1tkPlzny+NKcxUIkU
+         UwkcnODzOQr8x4mU56wrcX708EibTu10aeoAdqkEqEk32EZflcTJg+yMdkPF4GXIsgX6
+         X6E3QpjXIHlw+crQ0FlRGe7B1nwaV28wTzFDGuwXC+jMCcMxQ+sJmAu8fCbzlfQuQrlK
+         a/d8TqebOz/TMyzQLx0WMEJe2whK38q4cQBXXJMP+jfvO4JDIUDgcCkxHVuX4Y/YMUW4
+         f9kw==
+X-Forwarded-Encrypted: i=1; AKwUvBwZXeZ407ELK4dQRSGs2ZwK54oS48yrfDZTWiA7b7VaWf3OoMSPeF+TYO+L40uerajzq2litNzN7rw=@vger.kernel.org
+X-Gm-Message-State: AFq9FYLUQnKwxJaN6quMU11H3ZKnz7c7bm4vctuQROEHkA+6XzCP4Ce6
+	vN2kgeV2lvl9uLGk4cBpwEtRsVD2B4pAmPNsqcruD84xojsLd+Ko/zRt
+X-Gm-Gg: AYBFou2yzaO+Bz6MYUzeKD+5jcIK9sweCr8NhzD4u16rf9GC9CAcedZaaBqoYeB44mV
+	/4F1hG7PhEwMxtqxmmIXGKn6Vl+xwttXRYfch/h18gjkD7eNX3a3SGzQtD1jXNe7zKLGCT7g6e1
+	q99VtVh5hB/s0xrs8/EiFLFtAK2rBAb5nsKahdap3A41I0alufV0yhTB5XF6y6gh4Bioj4S5hRB
+	MOGrxzQ5oSQEg5FCbGAawvQIgf5U4bsUuEp+EEFIIRNcTfSv3o4AgpC56syx+04zI035i4Z2TrB
+	G1VMHSa8eg8Lg8r49CrOhlkKlU/xQ7R335RxpQFhNTaFQHjUcL4eaHwojJVzQTXdjTNPJ0IABo0
+	LerrCf3aTwqR0xr3kaA2UUk9wNpe/pTHd/gaVdBbwHJ3wwFvjSxaUNAiDHvbrB3kuc82TcYJDFT
+	aGcMmbaQ19BqEIIowgk/b4AvaAedz/0jmJdu9w8W66JFJ01gVYxWnK807bAmgCh7NZsFaNVEv/p
+	SniaBZ8AV0=
+X-Received: by 2002:a05:600c:190e:b0:4a1:90d7:88a8 with SMTP id 5b1f17b1804b1-4a1d76106c0mr259156705e9.25.1792526195325;
+        Tue, 20 Oct 2026 12:56:35 -0700 (PDT)
+Received: from ADRIAN-PC.lan ([171.22.87.31])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a1f2d699dasm103092035e9.12.2026.10.20.12.56.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 20 Oct 2026 12:56:34 -0700 (PDT)
+From: =?UTF-8?q?Adri=C3=A1n=20Garc=C3=ADa=20Casado?= <adriangarciacasado42@gmail.com>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: "Darrick J . Wong" <djwong@kernel.org>,
+	linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	=?UTF-8?q?Adri=C3=A1n=20Garc=C3=ADa=20Casado?= <adriangarciacasado42@gmail.com>
+Subject: [PATCH] xfs: add __printf attribute to xfs_buf_alert_ratelimited()
+Date: Tue, 20 Oct 2026 21:56:28 +0200
+Message-Id: <20261020195628.248878-1-adriangarciacasado42@gmail.com>
+X-Mailer: git-send-email 2.39.5
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -65,42 +96,38 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <wauqpgtmmf2beg3pc2kqlbizrigd4ew26do4zqch5ilwdjy4cd@brolwbx25sem>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Mon, Oct 19, 2026 at 11:52:25AM +0200, Jan Kara wrote:
-> On Sun 18-10-26 17:48:34, Christian Brauner wrote:
-> ...
-> > On Fri, Oct 16, 2026 at 02:32:01AM +0200, Andreas Gruenbacher wrote:
-> > > > diff --git a/fs/gfs2/util.c b/fs/gfs2/util.c
-> > > > index 83b8bb6446e5..1535ce2b7aa8 100644
-> > > > --- a/fs/gfs2/util.c
-> > > > +++ b/fs/gfs2/util.c
-> > > > @@ -122,7 +122,7 @@ static void do_withdraw(struct gfs2_sbd *sdp)
-> > > >                 up_write(&sdp->sd_log_flush_lock);
-> > > >                 return;
-> > > >         }
-> > > > -       clear_bit(SDF_JOURNAL_LIVE, &sdp->sd_flags);
-> > > > +       clear_and_wake_up_bit(SDF_JOURNAL_LIVE, &sdp->sd_flags);
-> > > >         gfs2_ail_drain(sdp); /* frees all transactions */
-> > > >         up_write(&sdp->sd_log_flush_lock);
-> > > >
-> > > >
-> > > > --
-> > > > 2.53.0
-> > > >
-> > > 
-> > > this looks good all around, thank you very much. Can I add it to my gfs2 queue?
-> > 
-> > I was planning to just provide a stable branch for everyone to pull post
-> > -rc1. Then you can just pull that in?
-> 
-> On a related topic: I didn't find any branch with this work in vfs.git - I
-> wanted to check how all the things come together after adding the generic
-> emergency RO bit. So if you can push some inofficial branch for now it
-> would help me... Thanks!
+xfs_printk_level() and _xfs_alert_tag() in fs/xfs/xfs_message.h are
+annotated with __printf(3, 4), but xfs_buf_alert_ratelimited() in the
+same header is missing the attribute.
 
-Absolutely:
+Because xfs_buf_alert_ratelimited() formats its variadic arguments via
+struct va_format and %pV, the compiler does not suggest the format
+attribute under -Wsuggest-attribute=format, and callers do not get
+compile-time format string checking.
 
-vfs-7.5.super.ro
+Add __printf(3, 4) to xfs_buf_alert_ratelimited() to match the other
+logging helpers in fs/xfs/xfs_message.h.
+
+Signed-off-by: Adrián García Casado <adriangarciacasado42@gmail.com>
+---
+ fs/xfs/xfs_message.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/fs/xfs/xfs_message.h b/fs/xfs/xfs_message.h
+index 811b885f41..bfae8dddc9 100644
+--- a/fs/xfs/xfs_message.h
++++ b/fs/xfs/xfs_message.h
+@@ -87,6 +87,7 @@ void asswarn(struct xfs_mount *mp, char *expr, char *f, int l);
+ 
+ extern void xfs_hex_dump(const void *p, int length);
+ 
++__printf(3, 4)
+ void xfs_buf_alert_ratelimited(struct xfs_buf *bp, const char *rlmsg,
+ 			       const char *fmt, ...);
+ 
+-- 
+2.39.5
+
