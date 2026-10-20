@@ -1,99 +1,79 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.214.176
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1792450474;
-	b=Mqnjb1ncuQpy2pALYmC2P4OeS6O4E6+4ufXtq60BXtXo+NXqFQqLTU4byaTciOUeRcyt
-	 JuTtvJ60qrG9LsFoDnVITTH7Sg+lWBTrCVFLhQ80yyfvG9IcFEywpWY5FoDX3u/z8kWMZ
-	 sSj4IO+VEdZKC88nLdso90i5Lpc+kQHbhQJloUDrkC9aN+b6ykghah0w3hWzI/XOxg4Eu
-	 Bx287SU7aTBNZMg1G+6nxIBwadah+HlnR+Tq/IetOmn4oOx7mZz4mGHsyLP0BF1Zs6vGc
-	 BUsdJl4XWECeBlgVUZwR1G9ISdgX8fd8YlVSLngYH0bWqdtibkZ5OW+cVfff+TVLdlQ==
+	t=1792465728;
+	b=MxomSiT/Nl1U3b2h9CbbkDUCjZRNVMSYUYS8lO1KI861jm+fbCUgmMtbSSeUJ9jY8khL
+	 IBfUI6W1z10aZoLcZlfAVBw7I5WfgpIx34BUC2ZyvOKgO8GJamCb4VMySjZprm8kOrvjr
+	 X4gbd6gbKxCsRM5Mwnk2BqsIK50qwxcHEP/mDlMtDNa4Wu28F4jZHLRt8Xp/ItPmseS/i
+	 qseDCyUlrvrH2klRkYg4ZIZBuodWXff7bZI67GevzO6ix71fW95qcR9eoYyg4zJct+GEZ
+	 URwTm+YDFM6HNdYNi+HMNEqPemi3MWBk66eIQb2m1FCiDSs2KMyBmRo9uRtqHdmzH9w==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792450474;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:MIME-Version:References:
-	 In-Reply-To:From:Date:X-Gm-Features:Message-ID:Subject:To:Cc:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=rCO/lZ2sP8Jz0naL1JPg9LjaGwFq/z1O7c7Gss5nt6o=;
-	b=oz8JOY183+k7CacuZohla7v4h6LQBSz+W5q/irx13F26z/pR8X0fHFI87Gwnz6kUW2ux
-	 uA5NaZanToywcsF/tYUm7OBH54YDGujFsdnlz4c2XMePuKjyI+kO0QZ2qZjmXPt6SVB82
-	 OfMwChuQaCu1fbDfLzpMjx3MsopcKs9hduHTv/rzp8NCSLP5giPaNnqgBggX0lozw4353
-	 cvXx0SMkW6QX917AjR7pSow5iRRd+Ea7R1BTqgvIQcI3KofJjjcWHXKh6cFF3S20Mhhyh
-	 aMdb+TP1geZtihaFeCHkLYvJFbqPutzMF2hCuc54QS35+bwe19LQNhb1xXvBwJ0SK0Q==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792465728;
+	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
+	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=X85kjBINdVfaDrnJk8BmLgtcQVuPyF+arFPTAr2kSiA=;
+	b=IjE8ZrM0zibWhFCGu5OhDK+VbkGpXTcaobBqZFmQPKNXddMCTlMOeDPhAoobfBn7A7cp
+	 zPMc61sy3UKc7o4pXbX8F/yxnNqqSCzhcN/okn3FQNwBIEvtV0VvJhCVzNefJ2nGp1Mon
+	 Rf7WnbYWmhXhJftp7EnP11vRvSSPzAp4PkNNCMbNR658uUyvvOag3K44UmrWondSVjfmw
+	 GB5IC6a0WkcvNsefKVTH87Ue7JKGEu9ffxqdSipnPBC9dnNrMC/NzurJBSmRYvfv3CSlF
+	 MpxlAI+qAIqJ+DboC1RE+jnk6gHYn7Xso8X8RtXfS4bhXfI5usE9GBZb/Fh+03EAY1g==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=UKVxmLJ7;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.214.176
-Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UKugfJKk;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CEA79606A330;
+	Tue, 20 Oct 2026 03:08:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UKugfJKk
+Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
+ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
+	t=1792465727;
+	b=01BAHbIRQjkTfxrofa+wG5FNmcfKQhKwnTwCWsLFdrpJTO2KAQfrpJJahYlvRtzEfdhA
+	 3UaBRqc4OCCvmWphSexTOn3VBPC5peeUGhJ3emW04HvWWcoI5a6Musg1ubEaqt/RZjrxy
+	 mDB/8Fd6D2EJlgH9EZmmvLwszzkDjigf/sYpa6NT85OI1C57hjVHostqpuRXcawdtJJPo
+	 aGxMvZzZ7rZkoMAtSSzOWbp5YzH8d5gK7K0BKb75jfPG90YiFmK4ozNl9OIZNt5i2Vj/X
+	 wmYpw2L5QFbB5HEtjcF4zITxLiOwrP/+3namI7yZTrbZgLcbljGrlfVhe0hLpJZVGvw==
+ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
+	c=relaxed/relaxed; t=1792465727;
+	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
+	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=X85kjBINdVfaDrnJk8BmLgtcQVuPyF+arFPTAr2kSiA=;
+	b=oU9ZLgkJzWxHT4njS3hb1Bvhe+liCzrpCEOhq6FWljvkZWQdklPe+I3D71rc/2D6tQqi
+	 AiR9GuEE2WvIpi4dGqeitmojEqLKoABnY+VWAR/uxlYiSs5k7ryaH2C1e+EXT4UryHs61
+	 6+YGUMpH5PnELgyok8/i0mUlqzhuGcVVdP8u5qhW/QE5Wl5ILHj4YQAfkzD4VVXYQWpUa
+	 eGZghf/O2bCe6FSL6OlK2MR47IbTQ74s4f1/sG1QKHTd2Uoi2GY7Rcsg28fL99SG2+Ndy
+	 +nvIhicdPWLBTRQGqO/l4wNp6oADDYrwoEgMdpji43K7lAqIPPk5yJ9QPvn3oH32OjA==
+ARC-Authentication-Results: i=1; smtp.kernel.org; 
+	arc=none smtp.remote-ip=100.80.115.77
+Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD146606A319
-	for <linux-xfs@vger.kernel.org>; Mon, 19 Oct 2026 22:54:33 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DD146606A319
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=UKVxmLJ7
-Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-2e60f9af6e6so20623185ad.3
-        for <linux-xfs@vger.kernel.org>; Mon, 19 Oct 2026 15:54:33 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1792450473; cv=none;
-        d=google.com; s=arc-20260327;
-        b=S0/Jh0sDYXu/dooNB5mxnspqJuLn03AZUpVzYPFAFc33RUwDDgC7TBusZgoAL92RLo
-         rCSPhnGYJhRFnCevG89pJQPObp0yg3i5EdooNSCVqJyAA/qJv4k9MB5TYwQb3C1kGEXT
-         xIFWOjmwqfaouLu0s/VDY9Dn+EQOlrhsskhvSLOA9HK662ysGuLr098+1uHoclRTov/F
-         0HjJz60trmeaXOjVX3GOX1QR/hkW1DOcR4XSZqOjawNK8Gw8+Asms8ozIaKq3oHsPYRX
-         BKU8xnn9rs7qXzdLp9GqZ/Nt8SwjQJAA9z6f5VmYxkgzgbXtTL57xBlkg6a/v2PbIpm7
-         lrPQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=rCO/lZ2sP8Jz0naL1JPg9LjaGwFq/z1O7c7Gss5nt6o=;
-        fh=Ubq8TFiXC7KjvK4hOzQAhEVmIR5KxnbNmU0i16shvwk=;
-        b=krrkl2Gesg3WRuftEebPDt2u36PwvDFcJokKhORPX8SOQ8aQ/htb54eP0zmVQfLmOn
-         NRxDKH+HscsqYaWn9B7sLrZtm6duqxenqgkQcrHlHKRMIfe/9Ti9s6/zqHElUbobLg3p
-         TXcYos/Q4NtuUikF67QJXFWYw0ZTfha2LjEqptRnCXd/7VeXargwELBhAbUd0+aE1JsI
-         ZBg/IhEOYgvbzNgTFkXiufhFlnOOJ5iq6GajBV/qu1KJxVKRS1SDZq2jtK+SxQ4Q1qNZ
-         WKhM7UU6Jp4OayIY8j8G+13Q939oslMumIthexnh6XBQRlLkqhkF4QmR/SxV/W18vsmH
-         Fxog==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792450473; x=1793055273; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=rCO/lZ2sP8Jz0naL1JPg9LjaGwFq/z1O7c7Gss5nt6o=;
-        b=UKVxmLJ7m/Yad97SI6U2AZsPWn9yk9XrDcHTVyFq406n0nhHc6l2Pq3/k9o1IGGj0x
-         tIrdCHQeHYsuNzK/zMSuQLkAnhOWv+0ibeBOzTzB8W/zM+1L7NnATADx2rcc5pXt+Xeo
-         UHG23y2KQbigZO0fHTRt5k9euS2wrlBii+lmXHiN/SSMz6bIq1I5dEsZvDVEjGAzh6J4
-         RHjM0VOOVmZZa9bTzzqus+CDPJAeJuI2OaHFv8gfHFXPGQ1Oog0N5dGm1et1JrdWnKdv
-         /3Jvn+vS7qFCSSOROsJ9+eJojML9zFQGXc5RL5yMIQ6uJuWnKGK04hDOypN8i2qKRak8
-         Ymig==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792450473; x=1793055273;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=rCO/lZ2sP8Jz0naL1JPg9LjaGwFq/z1O7c7Gss5nt6o=;
-        b=r7Ntt3Vsh1lcseo+F3lxRLeN+QTNaWl/MzKmrugY3RYiaiRyU7dvNHJ+m2pAK8m957
-         GE/GhcJ7jh3xTQnady16XWu+5XiW99cHPRvIvooN+3ev72ksDHRg/oPHUG/yUMHglPcS
-         DMjQe0eBnLyqmpv3C4w89vmWVKayw5XBDJne/HLuQxigXi/PVMP/XwiiaBIsnQbDvy38
-         y1/Ktmj9/dx5FFT86v/LOjlEsn/56WgCISboCHSgPes5IkOyycQtixyph9kJ3NCAh6pR
-         dnUwnA2EbfxJtv4cEclUaXwZ3Gddue10FUSZPe4Jy7xklXQs86mX0Q+rU9KlGthORDec
-         yADg==
-X-Gm-Message-State: AFq9FYKMeDF7Y9eOU5ZcCD6bfknK1/TjERzz00KGEC4lZYjOFQf6loKj
-	fnsPWN6qltAy5dGlXCRQRFdWRGEbjHboYdkueuRnwEVHP+Gt6dW0RQ6vf4rp11RbCSNScbBaFs8
-	CQLvWFWMchco+gi6udgMfCTd+JrN7cZIDVA1H
-X-Gm-Gg: AYBFou1LGaS2CxVTUKv7x4GKSL33+M9kZMRKEIpcgJURS5E1BjBVpCXfhPQwxTXXlOq
-	kMwAj+UuRAoSm2SdH27Hs8/5FyY1yFuWUcXh4Rop2pTb4RYSVSKsgQaP9GTNfWBsNrY3RelwpDt
-	Zc6uFRpiDSqwS3M8Qi7mBTJqj1mJoa9UzvW5VlScwXS4OiiU4/zMwvmnIBvjAuNu68VGi3Vhndf
-	Dj5MkS866SiF+v8jZaLvq15Q8nqdcRSux1/PenDugXgs0UdxVE65UO3QN3HeuWSH6NnzBKxHS/0
-	pz/g+5KzNjTUNwKCwnrMQS2707s4XvTa471m9FqEidx9h0mrrjtTAlmIv58VZOc5vpLgAZkFncp
-	1szzwvu+eZl9x/hczQJT7xisakGF+deWWU1gPjZqB4Dq+sh5vua1IyMM8Om3d9fAREtETzg==
-X-Received: by 2002:a17:903:1a45:b0:2e9:5714:6081 with SMTP id
- d9443c01a7336-2e9a670acd0mr79362205ad.0.1792450472997; Mon, 19 Oct 2026
- 15:54:32 -0700 (PDT)
+	by smtp.kernel.org (Postfix) with ESMTPS id B78FD1F000D2;
+	Tue, 20 Oct 2026 03:08:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792465727;
+	bh=X85kjBINdVfaDrnJk8BmLgtcQVuPyF+arFPTAr2kSiA=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
+	b=UKugfJKkCygObdhUzVIYqOiNhL/INB/Jw3M1kv0sEA/a/SkutNYQx70urkknExQuu
+	 6ENKj7kb439k/kLtxmEp8qf1VZj3Q6ro59QOSabf0KhQ2yMUtWeH9/S++mj9JDo5Ac
+	 q6YNWNhXuHD2WnCG7XFisJttOBFLcWDT4pstKsaCSw46vFxIlASF8V5JDSgVwaTFwc
+	 AtZ1FkQtJxdnsFLHVg2yulwT0FGlGc+YkH810tAIUcsUqRbHsrvONQ7xe1G85OoPwV
+	 ImIvTkRj6pzXYoThDQIachF8Rsf2Zto3easAJOumSuzQTyULfQD8xE5RCOJ2gmNWNm
+	 P3d+otNBYltGw==
+Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
+	by lkml.kernel.org (Postfix) with ESMTP id 04B754163C;
+	Tue, 20 Oct 2026 03:08:45 +0000 (UTC)
+From: Daejun Park via B4 Relay <devnull+daejun7.park.samsung.com@kernel.org>
+Date: Tue, 20 Oct 2026 12:08:49 +0900
+Subject: [PATCH v4 6/9] xfs: clamp the pNFS layout range to the maximum
+ file size
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -103,83 +83,105 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <CAF8PYMjkpEkoop-Wbk=2oBMdqer-pWh1osPvhSv90D2fwLSv0w@mail.gmail.com>
- <as1HVVUXdMlpXQGT@dread> <CAF8PYMiMZ5uFGsLnms4pNtMHc=TKgzcKvoLtydGXEFS7KM_r5g@mail.gmail.com>
- <as7wb-bdykxSKenP@dread> <CAF8PYMhk202oMMNAdT0yPDD=J8rG5kgKVRSRnf5ix+x6_SJmYQ@mail.gmail.com>
- <atF4rrzDigoX0Zyv@dread> <atF7xJlbck-xA1G3@dread>
-In-Reply-To: <atF7xJlbck-xA1G3@dread>
-From: Vitali Lovich <vlovich@gmail.com>
-Date: Mon, 19 Oct 2026 15:54:21 -0700
-X-Gm-Features: AclHuK9LDG4hTH05GTrRVF8QjD0yBFF2pA7ElF6QPHB66EL97x1m0V7aPFVPjrY
-Message-ID: <CAF8PYMhboMm+kQnngeZZsmje16qwtyWBzRoqx5J9eKN3NcUbKA@mail.gmail.com>
-Subject: Re: Really bad I/O lock contention between non-overlapping reader and writer
-To: Dave Chinner <dgc@kernel.org>
-Cc: linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Message-Id: <20261020-xfs-pnfs-batch-v4-6-9230fa2ca4a4@samsung.com>
+References: <20261020-xfs-pnfs-batch-v4-0-9230fa2ca4a4@samsung.com>
+In-Reply-To: <20261020-xfs-pnfs-batch-v4-0-9230fa2ca4a4@samsung.com>
+To: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
+Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <djwong@kernel.org>, 
+ Dave Chinner <dgc@kernel.org>, Chuck Lever <cel@kernel.org>, 
+ Jeff Layton <jlayton@kernel.org>, Dai Ngo <Dai.Ngo@oracle.com>, 
+ Sergey Bashirov <sergeybashirov@gmail.com>, 
+ Andrey Albershteyn <aalbersh@kernel.org>, linux-nfs@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, stable@vger.kernel.org, 
+ Daejun Park <daejun7.park@samsung.com>
+X-Mailer: b4 0.13.0
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1792465723; l=3202;
+ i=daejun7.park@samsung.com; s=20261006; h=from:subject:message-id;
+ bh=vQ4LiIt/NmuGWeXUIuUBhafpRniW8Y+jVNMB3njYRIg=;
+ b=WkjR1eO3nwiHnjf+AcrqF6WyicGfW4bFYQ8JFirI6W6xxUaW/dFBjRLXth+BIFfF35zmRfWax
+ 7chTQs8YL5VBnCR2ZjtnwxE8hB3Zk++BYqu4uv1RUMfqa7Em4gkZOpt
+X-Developer-Key: i=daejun7.park@samsung.com; a=ed25519;
+ pk=4yUfDqGRZTIj0Ik43z1GoMZRWCNm/rgX6uJuM9dtNIg=
+X-Endpoint-Received: by B4 Relay for daejun7.park@samsung.com/20261006 with
+ auth_id=1122
+X-Original-From: Daejun Park <daejun7.park@samsung.com>
+Reply-To: daejun7.park@samsung.com
+Content-Transfer-Encoding: 7bit
 
-I posted the patch set earlier today:
-https://lore.kernel.org/linux-xfs/20261019182620.1527591-1-vlovich@gmail.co=
-m/T/#md71c09676d5734c03f6af686c5463ad07d906424
+From: Daejun Park <daejun7.park@samsung.com>
 
-It doesn't achieve full performance in the contended scenario, but
-it's an important first step.
-It has no impact on uncontended reads. My entire patch series builds
-on this initial set has readers going at
-roughly the same IOPS and P99.9 latency with concurrent hole punches
-as the scenario without hole punches.
-The uncontended reader scenario even gets ~2-6% faster in some scenarios.
+xfs_fs_map_blocks() checks the range of a layout with
 
-Looking forward to your feedback. I posted this in XFS only for now
-for the initial feedback even though it does have some minor changes
-to the FS layer to allow the new synchronization mechanism to work.
+	if (offset > limit)
+		goto out_unlock;
+	if (offset > limit - length)
+		length = limit - offset;
+
+limit - length is computed in u64, so a length larger than the limit
+wraps and the length is not clamped. nfsd passes the LAYOUTGET range
+through, and RFC 8881 lets a client ask for NFS4_UINT64_MAX bytes, for
+the rest of the file. offset + length then wraps to offset - 1, end_fsb
+rounds back to offset_fsb, and xfs_bmapi_read() maps nothing. For a read
+layout, xfs_bmbt_to_iomap() then gets an uninitialized imap: with a
+zeroed stack it logs "Access to block zero", marks the data fork sick
+and fails with -EFSCORRUPTED, and otherwise the mapping is whatever was
+on the stack and can reach the client. For a write layout,
+xfs_iomap_write_direct() is called with a count of zero, which trips an
+ASSERT with XFS_DEBUG. An offset of 2^63 or more, which nfsd accepts
+too, becomes negative in the loff_t argument and passes the first check.
+
+Reject a negative offset and an offset at the limit, and compare the
+length with what is left up to the limit, which cannot wrap once the
+offset is below it.
+
+With pynfs as the client, a READ LAYOUTGET for NFS4_UINT64_MAX bytes at
+offset 0 got NFS4ERR_IO, as did an RW one on an empty file, which also
+made nfsd warn
+about the non-standard errno -63, and a READ LAYOUTGET at offset 2^63
+got NFS4ERR_IO as well. With this patch and the previous one, the one at
+2^63 gets NFS4ERR_INVAL, the RW one gets NFS4ERR_NOSPC after nfsd has
+allocated one extent after the other until fewer than
+XFS_MAX_BMBT_EXTLEN blocks were free, which left less than 8 GiB of the
+32 GiB free, and the server logs nothing. The READ one gets NFS4ERR_INVAL
+as well: nfsd, which maps a layout one extent at a time since
+commit cc6c40e09d7b ("NFSD/blocklayout: Support multiple extents per
+LAYOUTGET"), asks again from the maximum file size on. An RW one on a
+file whose first 64 KiB are allocated, with a loga_maxcount that has
+room for one extent, is granted 0+65536.
+
+This depends on the previous patch. Without it, an RW LAYOUTGET to the
+end of the file, whose length is now clamped instead of wrapping, asks
+xfs_iomap_write_direct() for every block up to the maximum file size,
+which wraps the block reservation and shuts the filesystem down where it
+got NFS4ERR_IO before.
+
+Fixes: 527851124d10 ("xfs: implement pNFS export operations")
+Cc: stable@vger.kernel.org
+Signed-off-by: Daejun Park <daejun7.park@samsung.com>
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+---
+ fs/xfs/xfs_pnfs.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
+index 401a790299..7b508f63d3 100644
+--- a/fs/xfs/xfs_pnfs.c
++++ b/fs/xfs/xfs_pnfs.c
+@@ -176,9 +176,9 @@ xfs_fs_map_blocks(
+ 	if (!write)
+ 		limit = max(limit, round_up(i_size_read(inode),
+ 				     inode->i_sb->s_blocksize));
+-	if (offset > limit)
++	if (offset < 0 || offset >= limit)
+ 		goto out_unlock;
+-	if (offset > limit - length)
++	if (length > limit - offset)
+ 		length = limit - offset;
+ 
+ 	error = filemap_write_and_wait(inode->i_mapping);
+
+-- 
+2.43.0
 
 
-On Thu, Oct 15, 2026 at 6:20=E2=80=AFPM Dave Chinner <dgc@kernel.org> wrote=
-:
->
-> On Fri, Oct 16, 2026 at 12:06:54PM +1100, Dave Chinner wrote:
-> > On Wed, Oct 14, 2026 at 04:10:30PM -0700, Vitali Lovich wrote:
-> > > Ok. I have a patch series I'm happy to share. It has no meaningful
-> > > performance degradation / scaling problems and largely fixes the
-> > > head-of-line blocking problem without the challenges of range
-> > > tracking. Before I post it, some stylistic questions for you:
-> > >
-> > > * Do you prefer it as a new RFC e-mail chain or continue here
-> >
-> > New patch series.
-> >
-> > > * Are there specific benchmarks / workloads you'd like me to gather n=
-umbers?
-> >
-> > FIO exercising random rw 4kB DIO at differing levels of concurrency
-> > is the minimum.
-> >
-> > > * Is a VM with RAM XFS filesystem sufficient or is raw metal w/ an
-> > > NVMe drive required?
-> >
-> > I'd typically test this on a machine with 32+ CPU cores and an IO
-> > subsystem that can sustain >2 million random 4kB writes
-> > indefinitely. I'd then use fio using pre-written files to hit it
-> > with increasing IO concurrency to the same file with either io_uring
-> > or AIO with direct IO to exercise shared access scalability.
->
-> Oh, I should have mentioned: RAM disks are -slow- compared to a
-> single high performance NVMe SSD, let alone a machine with a couple
-> of dozen of them.
->
-> THe problem is that RAM disks always do synchronous IO and they
-> consume CPU time copying the data to/from the RAM disk to/from user
-> buffers. Hence you can only have one IO per CPU in flight at a time,
-> instead of a few thousand IOs in flight per CPU when using
-> asynchronous IO on spread across many NVMe SSDs.
->
-> IOWs, never use ram disks for performance testing XFS filesystems -
-> the results never reflect real world performance on actual storage
-> hardware.
->
-> -Dave.
->
-> --
-> Dave Chinner
-> dgc@kernel.org
