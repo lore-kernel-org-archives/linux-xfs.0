@@ -1,79 +1,79 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1792465730;
-	b=aHedArncFWZxDjbH83PJvasRgrVqD34qzu6RC9VqpEFa6BSCE+97VYu5bTOGYl2n7g1t
-	 HByYLMM70Ca9YVMmZpzvUjK7ZbDFjpvsUfmQApk5kmr5w4Yx8XmoneA+QAe0hYC/aAOVH
-	 VJMbbeK6+1uCkAHJV7lK6FmSmfxCpX7HUVCt1yW+vz+c6aAfDqJcBRXt/ig9NVCy3CiMR
-	 xDl37Tgg4GBb1uk8TjGpUPuOP3bdTqTs5X0F0MmRQs4xB9CZHPzqRXXXEkA/TIjrsQ4RA
-	 ObZLsw5ghGI7cm5SlrGLiebYyP2NPSrAMoypQobuCxh1NlHbweHzr7Za3y/krRj16Iw==
+	t=1792465727;
+	b=z+7hxHAGyxkQu15HYCiv8rRJkKC5op0BHuwyjBy9Gb4METJGSlQkKVbuXYEyKH2tij2f
+	 aRWwQFMLTCYBq7qhmL3VtXvc3x5kQujjsbb79kRE2QVT054y+5JUDfC4oWGp5svAc7r45
+	 RNye26OEjHQF8Sg2RftPWn7/suYdmAL5q/+MJHNLkAOz7OqUZN360RbZkdV5yM8AVfq8K
+	 vLZswCDON+iZafH+y8G58VgU1DcAunmrac1iyFmuXkY7N0Orhls0+UY9WeOWHQELk6cVg
+	 2wXCHPRdIBt5L0E0+o57JrB3+Jj9fZ1gR0gpzCWxCuHdrAKWlykibEpwKy/vzxww0dQ==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792465730;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792465727;
 	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
 	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=qRKJN+EqJUWlZiKz0FevzKVVHVfCsJOlLUx9jyK0bGM=;
-	b=gIFwbulkQ7Pq8s2/F362C0m1UCMPFpW37bvDLfkRLVaaKlF1YiPzACooNDXlDOFDDuSH
-	 rekAEK1JylW6zIFhJ3oxizsLAsG/+wwY4T3iBP9mqVPbkDhCBIRi4HXKiu3C4RVr3eMcx
-	 PRZZ0oVfyhzBcPPZD1nHgNP4tmYJtV6CtkLP8Kdz9s0YbG4dKWHRhDTqZO6/MdbZLciKM
-	 81PURRgfirmRS0uxdqwoUda9MolsuWnvdhQsAcSTOZ5pL4uR9hrizK2CjOyh31WAnjy6c
-	 zcbSrbsZTYIVuN48E1HkRubRB9NnpqoEmLMXvaa3zxk5HNhTCTXia3GfJ7+3NzOuhig==
+	bh=xTAaZm8z237tbVsE73/vOrMvUznMWOKNs1DvgC/tVG0=;
+	b=vI78uFth/LJ4JoaWfxU5vVZq62zOQb0r/EWjXWnRo4NxEX9s2XuujmFPkq8OQgIlsXyL
+	 Q0Phn1MZK9WmhU+nMG1xYF3qs6XI39qrRbUrwc/ka/BQ97byBtSlIqPBIcdatZbLTdreo
+	 CfNNzFgHilE6MVoozPm8bfUO/SMb0YtJEC07vV2t/A52dawhnnT09ZZPtPDU5zMRwVxHV
+	 Awq0iaVPuz+qhiPx/U4desFJnsosYG6D04fHaZawcoWivwLqsdsDbwaJkZlSJdqI5uytj
+	 AKoAIM+HkYuUmZcqg0S70J/nGz/cSQM9jcPcrecgLSsS5bSzryc0OCYwE5Secny19FA==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DnxKBBAM;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="lvyq4R1/";
 	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EBBD560A261E;
-	Tue, 20 Oct 2026 03:08:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD00D606A319;
+	Tue, 20 Oct 2026 03:08:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DnxKBBAM
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lvyq4R1/
 Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
 ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1792465729;
-	b=g2OeFBBmu6JE/zaTT6pSjAPJr8YcR7yvGZTadHoeiCGIO+sDEA2F2v2EjizaiJqkEdDd
-	 eRRMt1wPcyKmtYd6CrRqRhEua80dyKLqwKTSJbmuOIvoV/LRZTg6gYSv/MQDCkC2tlUcT
-	 +4GfMrS26AmdCQBIt3gzESX9wyI1h6pAvSlS5/z8u1qICBfYexdgjpfwZsmP0K8JcT2mU
-	 hLR6ep4b78uXhEkzYJjofaR5HdTnyECljgA6NRgwYRRIJjYPXs0NWLnUmccDl1VH3CgA+
-	 KpBaBhLREOLqewtCBY2upqP/1ErTiCvvWKX3doySJPTgilBionSDyKvduC+IqpklCkg==
+	t=1792465726;
+	b=ppby/bNwph2PzzUIywEOFah2bRppfYId0sG0shMOzwTo9SZyrs5uyIsFdk06NiJrup8Q
+	 kB2jvNBiRqdsgGLnlNcV/70LOOgtEpQz+FoG/p+TEDTUt+jAx0MGPrg+jTrNvZs2h7pNP
+	 sQw499NpboUwv+NYZvFGbTi/Me/Q3nDq9m8jFnDU/dIlDMbVsZzjX63OM+f0z0PxevfrP
+	 NEcH/9buoL2CpWARlS71tPOYS8GmZ2Hv8PSGnftG+jGQ7KhIik2vws0t/5QSmJmeDtf22
+	 ecZ61wktzKNh+n2S9iqsoR9Pd56N7HmxbQdbIgPrpvHs/agBsMrx2EEYG9qylpiKBYg==
 ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1792465729;
+	c=relaxed/relaxed; t=1792465726;
 	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
 	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=qRKJN+EqJUWlZiKz0FevzKVVHVfCsJOlLUx9jyK0bGM=;
-	b=dI6/La1VPZRvjgTC3Hot2f6m7bELOHci4NPTpzB+Oou7ESFndPCkG+XTZ4l6AH1Xq5ND
-	 qtLhKdW68vwaiO/7jBypCPI3VzHFaVID8o16yIgSMjH/lcvqxIbWR6gC0bJSTFl11Tgkt
-	 53qcIX1DFMU30sU9yvk+DBNQ2t/yt53sg3xlOmi3kT29N/oeVTDH38ZjaX5WDVZeE0LkW
-	 6NxXFbD0dX7jeHejK8F1NglXXaa2p6XmpwjGCLQTatY6NwXMyzwrwWMWHJprZC8YIi/q+
-	 NCE7Vk7iJMI++rbknpqs3YmzBTs3se3Or/fko4zfhP908aJfXZsAcyQewhctIOFupQw==
+	bh=xTAaZm8z237tbVsE73/vOrMvUznMWOKNs1DvgC/tVG0=;
+	b=NIDwghuw7fiBhcTzqkajtdHojuZJrOJ44g8U27M4rHdgvDoQDr6RBz9ga6W1PdOWBQG+
+	 VSqRcOtvdqKlQxOfp6U2+audRxBtBs2RRbqYmOhfyM0hsSiUrVdY3r1GgzldEwaNu5SLT
+	 GZg4qUK8fU6xuioJYwu4iuO7ptkc/f0VahAZFpUrBHSaC/RlI4TV5VDW+Yg+3alzqpyEE
+	 0UuUdNaRK+7jETFzJoBz3Ub/d3IGTNSaOyb76Sesl6WwkNl6mSNiUhxTLT9ASwCG5OF23
+	 3vo0Em+9bbjaXBDiGcb7o15deC/qgDaF5Nr0JdMGEw2/hjuA3lNBya5FybBhO+xQctA==
 ARC-Authentication-Results: i=1; smtp.kernel.org; 
 	arc=none smtp.remote-ip=100.80.115.77
 Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id 352171F000CE;
-	Tue, 20 Oct 2026 03:08:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792465729;
-	bh=qRKJN+EqJUWlZiKz0FevzKVVHVfCsJOlLUx9jyK0bGM=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
-	b=DnxKBBAMVRBP5iK+5KFBv90f9Km2MsnNhqKPoUUrQQnGpVpLVRKEmIfc6YzZ39Rmd
-	 xRhKRmBhZWYVFiiVFybdGXS0BYw0mV47tHwMvm6nNX/Mcykaof0CyZvjrMM5vRi+bF
-	 t6J5VMvNt1eiY9VK5Zw1Xxp2OmeEn8RVmeHQNB0RUJOWq2yQJZOhX4hgjj1k4PrxNv
-	 UHnm854WliOFoTCkfyNPVN3EYeMbNvkpmu+yTB7Ou1U1pPZEjn1QzHgj3TOOSaPT/A
-	 wQEN25q1P81w3HZTbLJOAV0C7cYudviKpeZOKhnDJoMQABsCeqLnmaKtkIKA8VqMlW
-	 fQ4evYBoQT3Qg==
-Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id 1139B43058;
+	by smtp.kernel.org (Postfix) with ESMTPS id 7E60D1F000C5;
 	Tue, 20 Oct 2026 03:08:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792465726;
+	bh=xTAaZm8z237tbVsE73/vOrMvUznMWOKNs1DvgC/tVG0=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
+	b=lvyq4R1/uADh3u/2pcOiqxeguraKX3vzK6U9pEy6OYJFqWjqsqmvgU/NZtiCtoHbI
+	 +3JbdIloiUzblHt8cTk9jqPvCUv056p2tvv/xnLGXyG96l8lMP/EFqmbqitDCp80Jv
+	 1j2zVDMvf2ntjqhHwPjUHidiI2jAEd46NcONauz7kImkkKTx2YLcRzzKeaokFufPCL
+	 CEu3AAL7AgrsH5HNKxAkBV8msQNGelSKGgKVDlaLdWP1RDLTM/RlgXkkmHAShWK7Ns
+	 7nNsWUvXMNnkqA9J3Jrxd1DqH1l3WTdQJv03w63g8n9G6nBa8Ag0Xr+LHW32i3RCp7
+	 erxsv3+E4/BZw==
+Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
+	by lkml.kernel.org (Postfix) with ESMTP id D8D0F40724;
+	Tue, 20 Oct 2026 03:08:44 +0000 (UTC)
 From: Daejun Park via B4 Relay <devnull+daejun7.park.samsung.com@kernel.org>
-Date: Tue, 20 Oct 2026 12:08:51 +0900
-Subject: [PATCH v4 8/9] xfs: add datasync and log_flushed arguments to
- xfs_log_force_inode()
+Date: Tue, 20 Oct 2026 12:08:44 +0900
+Subject: [PATCH v4 1/9] xfs: mark the inode preallocated for pNFS write
+ layouts past EOF
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -84,7 +84,7 @@ List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Message-Id: <20261020-xfs-pnfs-batch-v4-8-9230fa2ca4a4@samsung.com>
+Message-Id: <20261020-xfs-pnfs-batch-v4-1-9230fa2ca4a4@samsung.com>
 References: <20261020-xfs-pnfs-batch-v4-0-9230fa2ca4a4@samsung.com>
 In-Reply-To: <20261020-xfs-pnfs-batch-v4-0-9230fa2ca4a4@samsung.com>
 To: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
@@ -93,13 +93,14 @@ Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <djwong@kernel.org>,
  Jeff Layton <jlayton@kernel.org>, Dai Ngo <Dai.Ngo@oracle.com>, 
  Sergey Bashirov <sergeybashirov@gmail.com>, 
  Andrey Albershteyn <aalbersh@kernel.org>, linux-nfs@vger.kernel.org, 
- linux-kernel@vger.kernel.org, Daejun Park <daejun7.park@samsung.com>
+ linux-kernel@vger.kernel.org, stable@vger.kernel.org, 
+ Daejun Park <daejun7.park@samsung.com>
 X-Mailer: b4 0.13.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1792465723; l=8218;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1792465723; l=4923;
  i=daejun7.park@samsung.com; s=20261006; h=from:subject:message-id;
- bh=EkakyQg5RkYzl1UE9lhzZFf/ZqyNAWOR0TGPsMkn4eE=;
- b=FAPLe36TI4wtGlUPc/tSrlnSZFnfMpjZaRjHCrlgmvesepP0cfiM7Th3G+g8+bkSPzFij1/SD
- zoUzrlGuDVhA/KT3pNSwGa2fzhrhX0mItyhliLLp+FiKpC/0wf/AS5C
+ bh=it5adWS9VVvPuY0ITgRqYR086T8ESLe2HmaMPU312mg=;
+ b=6/A0c+NxAsvLwkMk6jhP36UTYjdpBwysLDUm7rqRWDSOqTh5qjbCB7LGrrgDCGevd/GPefLSd
+ 058TR9Xc1+CBJOhKykfGapewtIMEMM7vYYvyhN5tlM7tIWKU5Z9do+j
 X-Developer-Key: i=daejun7.park@samsung.com; a=ed25519;
  pk=4yUfDqGRZTIj0Ik43z1GoMZRWCNm/rgX6uJuM9dtNIg=
 X-Endpoint-Received: by B4 Relay for daejun7.park@samsung.com/20261006 with
@@ -110,227 +111,131 @@ Content-Transfer-Encoding: 7bit
 
 From: Daejun Park <daejun7.park@samsung.com>
 
-xfs_log_force_inode() is xfs_fsync_flush_log() without a datasync
-variant and without the log_flushed result, plus a check for an inode
-without a log item. Add the datasync and log_flushed arguments to
-xfs_log_force_inode(), move the body and the comment of
-xfs_fsync_flush_log() into it, and call it from xfs_file_fsync(), so
-that code outside xfs_file.c can force the log for a datasync. The other
-callers pass false and NULL. The next patch uses it in the pNFS
-LAYOUTCOMMIT path.
+xfs_fs_map_blocks() marks the inode XFS_DIFLAG_PREALLOC after it
+allocates blocks for a write layout, so that xfs_free_eofblocks() does
+not free blocks past EOF that a client may write to. But a write layout
+for a range past EOF where blocks are already allocated, such as the
+speculative preallocation of buffered writes, gets those blocks without
+an allocation, and the inode is not marked. blockgc, or the release of
+the file, then frees them without breaking the layout. The client still
+writes to them, and they may belong to another file by then.
 
-No functional change: xfs_file_fsync() only calls it for an inode with a
-log item, and the other callers force the log as before.
+With pynfs as the client, a file grown to 1 MiB by two buffered writes
+on the server had 960 KiB preallocated past EOF, and an RW LAYOUTGET for
+that range got it as one INVALID_DATA extent, without the inode being
+marked. About 300 seconds later, with the default
+speculative_prealloc_lifetime, blockgc freed those blocks while the
+layout was still held. When the client then wrote through the layout and
+sent LAYOUTCOMMIT, xfs_fs_commit_blocks() found a hole where the
+unwritten extent had been, and xfs_iomap_write_unwritten() allocated for
+it with no blocks reserved:
 
-Suggested-by: Christoph Hellwig <hch@lst.de>
-Link: https://lore.kernel.org/r/20261014130124.GA15407@lst.de
+  XFS (nvme0n1): Corruption of in-memory data (0x8) detected at
+    xfs_trans_mod_sb+0x817/0x960 (fs/xfs/xfs_trans.c:351).
+    Shutting down filesystem.
+  ...
+   xfs_trans_mod_sb+0x817/0x960
+   xfs_alloc_vextent_finish+0x2e7/0x990
+   xfs_alloc_vextent_start_ag+0x25d/0x720
+   xfs_bmap_btalloc+0xdd2/0x1720
+   xfs_bmapi_allocate+0x197/0xf90
+   xfs_bmapi_write+0x4d0/0xb60
+   xfs_iomap_write_unwritten+0x307/0x7e0
+   xfs_fs_commit_blocks+0x1d9/0x630
+   nfsd4_block_proc_layoutcommit+0x5c2/0x7d0
+   nfsd4_layoutcommit+0x4b5/0xa20
+
+The client got NFS4ERR_IO, in six runs out of six. When small files were
+written on the server after blockgc, with a sync first so that the freed
+extents were no longer busy, they got those blocks, and the client's
+write through the layout replaced 978944 bytes of their data before the
+LAYOUTCOMMIT. A LAYOUTGET and LAYOUTCOMMIT 30 seconds apart, before
+blockgc runs, leave the client's data in place.
+
+Mark the inode also when a write mapping ends past EOF and nothing was
+allocated, the same way as for an allocation, before the blocks are
+handed out. With this, the same test keeps the blocks past blockgc, and
+the LAYOUTCOMMIT after 360 seconds succeeds with the data in place.
+
+To share the update with the allocation case, set a local update_inode
+flag in both cases, call xfs_fs_map_update_inode() in one place below
+them, and move the log force into xfs_fs_map_update_inode().
+
+Fixes: 527851124d10 ("xfs: implement pNFS export operations")
+Cc: stable@vger.kernel.org
+Reported-by: Chuck Lever <cel@kernel.org>
+Link: https://lore.kernel.org/r/4de5356f-bc4d-4f1a-9c81-fce09b1b46fd@slotpi15m67
 Signed-off-by: Daejun Park <daejun7.park@samsung.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_export.c  |  2 +-
- fs/xfs/xfs_file.c    | 50 ++++----------------------------------------------
- fs/xfs/xfs_inode.c   | 36 ++++++++++++++++++++++++++++++++----
- fs/xfs/xfs_inode.h   |  3 ++-
- fs/xfs/xfs_pnfs.c    |  2 +-
- fs/xfs/xfs_zone_gc.c |  2 +-
- 6 files changed, 41 insertions(+), 54 deletions(-)
+ fs/xfs/xfs_pnfs.c | 34 +++++++++++++++++++++++++---------
+ 1 file changed, 25 insertions(+), 9 deletions(-)
 
-diff --git a/fs/xfs/xfs_export.c b/fs/xfs/xfs_export.c
-index 9afda52ed1..9dd6dd8c27 100644
---- a/fs/xfs/xfs_export.c
-+++ b/fs/xfs/xfs_export.c
-@@ -234,7 +234,7 @@ STATIC int
- xfs_fs_nfs_commit_metadata(
- 	struct inode		*inode)
- {
--	return xfs_log_force_inode(XFS_I(inode));
-+	return xfs_log_force_inode(XFS_I(inode), false, NULL);
- }
- 
- const struct export_operations xfs_export_operations = {
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 720f4a9b40..27176a4808 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -76,49 +76,7 @@ xfs_dir_fsync(
- 	struct xfs_inode	*ip = XFS_I(file->f_mapping->host);
- 
- 	trace_xfs_dir_fsync(ip);
--	return xfs_log_force_inode(ip);
--}
--
--/*
-- * All metadata updates are logged, which means that we just have to push the
-- * journal to the required sequence number than holds the updates. We track
-- * datasync commits separately to full sync commits, and hence only need to
-- * select the correct sequence number for the log force here.
-- *
-- * We don't have to serialise against concurrent modifications, as we do not
-- * have to wait for modifications that have not yet completed. We define a
-- * transaction commit as completing when the commit sequence number is updated,
-- * hence if the sequence number has not updated, the sync operation has been
-- * run before the commit completed and we don't have to wait for it.
-- *
-- * If we have concurrent fsync/fdatasync() calls, the sequence numbers remain
-- * set on the log item until - at least - the journal flush completes. In
-- * reality, they are only cleared when the inode is fully unpinned (i.e.
-- * persistent in the journal and not dirty in the CIL), and so we rely on
-- * xfs_log_force_seq() either skipping sequences that have been persisted or
-- * waiting on sequences that are still in flight to correctly order concurrent
-- * sync operations.
-- */
--static int
--xfs_fsync_flush_log(
--	struct xfs_inode	*ip,
--	bool			datasync,
--	int			*log_flushed)
--{
--	struct xfs_inode_log_item *iip = ip->i_itemp;
--	xfs_csn_t		seq = 0;
--
--	spin_lock(&iip->ili_lock);
--	if (datasync)
--		seq = iip->ili_datasync_seq;
--	else
--		seq = iip->ili_commit_seq;
--	spin_unlock(&iip->ili_lock);
--
--	if (!seq)
--		return 0;
--
--	return xfs_log_force_seq(ip->i_mount, seq, XFS_LOG_SYNC, log_flushed);
-+	return xfs_log_force_inode(ip, false, NULL);
- }
- 
- STATIC int
-@@ -151,7 +109,7 @@ xfs_file_fsync(
- 	 * no modifications to this inode that need to be pushed out.
- 	 */
- 	if (ip->i_itemp) {
--		error = xfs_fsync_flush_log(ip, datasync, &log_flushed);
-+		error = xfs_log_force_inode(ip, datasync, &log_flushed);
- 		if (error)
- 			return error;
- 	}
-@@ -1599,7 +1557,7 @@ __xfs_file_fallocate(
- 	}
- 
- 	if (!error && xfs_file_sync_writes(file))
--		error = xfs_log_force_inode(ip);
-+		error = xfs_log_force_inode(ip, false, NULL);
- 
- out_unlock:
- 	xfs_iunlock(ip, iolock);
-@@ -1750,7 +1708,7 @@ xfs_file_remap_range(
- 		goto out_unlock;
- 
- 	if (xfs_file_sync_writes(file_in) || xfs_file_sync_writes(file_out))
--		xfs_log_force_inode(dest);
-+		xfs_log_force_inode(dest, false, NULL);
- out_unlock:
- 	xfs_iunlock2_remapping(src, dest);
- 	if (ret)
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 15b62574b8..0d1c9531cd 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2669,11 +2669,36 @@ xfs_irele(
- }
- 
- /*
-- * Ensure all committed transactions touching the inode are written to the log.
-+ * Ensure all committed transactions touching the inode are written to the log,
-+ * or with @datasync only those that fdatasync has to wait for.
-+ *
-+ * All metadata updates are logged, which means that we just have to push the
-+ * journal to the required sequence number that holds the updates. We track
-+ * datasync commits separately to full sync commits, and hence only need to
-+ * select the correct sequence number for the log force here.
-+ *
-+ * We don't have to serialise against concurrent modifications, as we do not
-+ * have to wait for modifications that have not yet completed. We define a
-+ * transaction commit as completing when the commit sequence number is updated,
-+ * hence if the sequence number has not updated, the sync operation has been
-+ * run before the commit completed and we don't have to wait for it.
-+ *
-+ * If we have concurrent fsync/fdatasync() calls, the sequence numbers remain
-+ * set on the log item until - at least - the journal flush completes. In
-+ * reality, they are only cleared when the inode is fully unpinned (i.e.
-+ * persistent in the journal and not dirty in the CIL), and so we rely on
-+ * xfs_log_force_seq() either skipping sequences that have been persisted or
-+ * waiting on sequences that are still in flight to correctly order concurrent
-+ * sync operations.
-+ *
-+ * If @log_flushed is not NULL, it is set when the log force wrote an iclog,
-+ * which flushes the device caches before the log write.
-  */
- int
- xfs_log_force_inode(
--	struct xfs_inode	*ip)
-+	struct xfs_inode	*ip,
-+	bool			datasync,
-+	int			*log_flushed)
- {
- 	struct xfs_inode_log_item *iip = ip->i_itemp;
- 	xfs_csn_t		seq = 0;
-@@ -2682,12 +2707,15 @@ xfs_log_force_inode(
- 		return 0;
- 
- 	spin_lock(&iip->ili_lock);
--	seq = iip->ili_commit_seq;
-+	if (datasync)
-+		seq = iip->ili_datasync_seq;
-+	else
-+		seq = iip->ili_commit_seq;
- 	spin_unlock(&iip->ili_lock);
- 
- 	if (!seq)
- 		return 0;
--	return xfs_log_force_seq(ip->i_mount, seq, XFS_LOG_SYNC, NULL);
-+	return xfs_log_force_seq(ip->i_mount, seq, XFS_LOG_SYNC, log_flushed);
- }
- 
- /*
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 1fa442b646..6dfd9271e6 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -595,7 +595,8 @@ int		xfs_ifree(struct xfs_trans *, struct xfs_inode *);
- int		xfs_itruncate_extents_flags(struct xfs_trans **,
- 				struct xfs_inode *, int, xfs_fsize_t, int);
- 
--int		xfs_log_force_inode(struct xfs_inode *ip);
-+int		xfs_log_force_inode(struct xfs_inode *ip, bool datasync,
-+				int *log_flushed);
- void		xfs_iunpin_wait(xfs_inode_t *);
- #define xfs_ipincount(ip)	((unsigned int) atomic_read(&ip->i_pincount))
- 
 diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
-index 8d7a71db5f..1e47d0aa6a 100644
+index ab38561700..a9f0b472f3 100644
 --- a/fs/xfs/xfs_pnfs.c
 +++ b/fs/xfs/xfs_pnfs.c
-@@ -118,7 +118,7 @@ xfs_fs_map_update_inode(
- 	 * Force the log so that the blocks handed out to the client are
- 	 * guaranteed to be present even after a server crash.
- 	 */
--	return xfs_log_force_inode(ip);
-+	return xfs_log_force_inode(ip, false, NULL);
+@@ -110,7 +110,15 @@ xfs_fs_map_update_inode(
+ 	ip->i_diflags |= XFS_DIFLAG_PREALLOC;
+ 
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+-	return xfs_trans_commit(tp);
++	error = xfs_trans_commit(tp);
++	if (error)
++		return error;
++
++	/*
++	 * Force the log so that the blocks handed out to the client are
++	 * guaranteed to be present even after a server crash.
++	 */
++	return xfs_log_force_inode(ip);
  }
  
  /*
-diff --git a/fs/xfs/xfs_zone_gc.c b/fs/xfs/xfs_zone_gc.c
-index 54b70ed292..cea5447a88 100644
---- a/fs/xfs/xfs_zone_gc.c
-+++ b/fs/xfs/xfs_zone_gc.c
-@@ -1018,7 +1018,7 @@ xfs_zone_gc_reset_zones(
- 		struct xfs_gc_bio	*chunk;
- 		struct bio		*bio;
+@@ -134,6 +142,7 @@ xfs_fs_map_blocks(
+ 	uint			lock_flags;
+ 	int			error = 0;
+ 	u64			seq;
++	bool			update_inode = false;
  
--		xfs_log_force_inode(rtg_rmap(rtg));
-+		xfs_log_force_inode(rtg_rmap(rtg), false, NULL);
+ 	if (xfs_is_shutdown(mp))
+ 		return -EIO;
+@@ -221,20 +230,27 @@ xfs_fs_map_blocks(
+ 				end_fsb - offset_fsb, 0, &imap, &seq);
+ 		if (error)
+ 			goto out_unlock;
++		update_inode = true;
++	} else {
++		xfs_iunlock(ip, lock_flags);
  
- 		next = rtg_group(rtg)->xg_next_reset;
- 		rtg_group(rtg)->xg_next_reset = NULL;
+ 		/*
+-		 * Ensure the next transaction is committed synchronously so
+-		 * that the blocks allocated and handed out to the client are
+-		 * guaranteed to be present even after a server crash.
++		 * Blocks past EOF that were allocated for buffered writes, such
++		 * as speculative preallocation, can be freed by
++		 * xfs_free_eofblocks() without breaking the layout unless the
++		 * inode is marked as preallocated. Mark it before handing them
++		 * out for writing, as for blocks allocated above.
+ 		 */
++		if (write && !(ip->i_diflags & XFS_DIFLAG_PREALLOC) &&
++		    imap.br_startoff + imap.br_blockcount >
++		    XFS_B_TO_FSB(mp, XFS_ISIZE(ip)))
++			update_inode = true;
++	}
++
++	if (update_inode) {
+ 		error = xfs_fs_map_update_inode(ip);
+-		if (!error)
+-			error = xfs_log_force_inode(ip);
+ 		if (error)
+ 			goto out_unlock;
+-
+-	} else {
+-		xfs_iunlock(ip, lock_flags);
+ 	}
+ 	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+ 
 
 -- 
 2.43.0
