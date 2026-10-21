@@ -1,89 +1,81 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.54
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792595538;
-	b=1qcePCjF3ZaXMLjuDWJd1oxM5PWTelI3zX3zc7PJk98ja5iTdrBia2E1AHERJNns8a/7
-	 9ZD8PtJ3a+hcNXv8LXpVDM4jM0+13j6ueR4tMMT7S7T4gqqOUhZe3Rh+hGaaZ/wNte0Eq
-	 BiK8/0jnlu1GLQ766ehsYVy+KdI0CRwCRmQxtKOxHIH+M814IeouQxb/aEdinblXVpiw3
-	 sKRnYwK2ZXW3o4J0AmHT/yLKlIKFp69iPS0fv7R50q0Tf/lVUSEfqnGRbRyPJ/hkZt0nn
-	 9L0AF5IaczbSZrz3DhcLBafEA/1TIPN5ObrmI1ldcqAB5yMscwbkoNZQfCRfUO8oSnQ==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792595538;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:References:
-	 Content-Language:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=FsHH6aozeXPThpXvJUYVLtQrnQwbfOChlZ8cfIqdctg=;
-	b=MAK1uz/025Ksm6Zjg3DavMJvJPgayJHIXT+xP4TOFC8uP+lBPl/inL26EKqCbE7wFXN3
-	 4Co/4EckgnvH23U+EYmNJ8LvWgRy0eQLCvQH98FQqlmZkCCDqO94VhlQQJc/OKwuKIRlQ
-	 aEuv/eBLayuh4Zpjyb/C52OPUu4hCitMsru+wahuZKM+tXELW4HB6TV4syHK0eXeYlz2u
-	 noZUAs1C3u3Ju8TouEgVa3U9nQ3yHHtNOj2eZebLCWKEgLx3d/xnQEvH8fqX6GCKe0S9L
-	 NfL71v58lVlzTUP5g9IBu5winGOJUmcWwSB2yoNWL2UYC9s9ktBBQE6M/UdljzbT99A==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.49
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1792604671;
+	b=IPmEZdBZsbGaTN6vC6ZPfksxipKCyQfj047iojn1g0QuJVE1g9iVONgsPfj8q0ukEB0+
+	 2/JiD6rh8+IO99ZZ9tVLEyPum1fig9IUfLBkk8M6g56FcNxn2Z4FkxO6NJahO5yiriehD
+	 rVmIGlB5AqeymWfZaarWD7r3BJi4eaOA7LBvkKk+IWTWKdBmOZIZ42LygIuulQPtXtdhS
+	 cgRUGdQdgYYBdYUBELUsiu6zoLHmZtJtNGlHAMBThxDzTzgdL0crh2mBCz9UEwBA6gqzI
+	 sog9QTbTJ2Zbmi1Fu4tVKmII0O0aEHb+b4fccWSXyUn4OiN5n3uQj/9GMJFJSSPlxWA==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792604671;
+	h=DMARC-Filter:Received:X-Google-DKIM-Signature:X-Gm-Message-State:
+	 X-Gm-Gg:X-Received:MIME-Version:From:Date:X-Gm-Features:Message-ID:
+	 Subject:To:Cc:Content-Type;
+	bh=7CaZ9JS2jRrzvTua4Ov4Nn+8wNqPkglApCwvgGA21AI=;
+	b=a793Ffk0b9LN2pm4vLUOP0isG/XwwwbQfgU+kOE3RYyANeWxH5FvnaQROw5w7sioFlkI
+	 CY737MZCRyYZWnK2BhNWm+Skz9+ena7a/Ri97J5+CVWLGKd+mVXBkcTbKgbs/aa69ANhz
+	 rpLegVrUHzZgPukTA+aQ8RLFHlwqCDfNSu1EEdwo0Nv76914BeSSSNRCC5LQTxxyTlanN
+	 cAvx5p1YwQYKtvdevwI6V0tI+zO+tlHdGfBZfGwOZGyF1ISGeFga4Y0CV2+DsVIRMvy/8
+	 OXPXS4a9EmXaV/5L7gSTOb4Wk2l5O7pvuPP1CqvohTuxy2mtzRF4tk69ybzwP9/O5Gw==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=none header.from=elrepo.org;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=fRtNArbA;
-	arc=none smtp.remote-ip=209.85.221.54
-Received: from mail-wr1-f54.google.com (mail-wr1-f54.google.com [209.85.221.54])
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.49
+Received: from mail-ej1-f49.google.com (mail-ej1-f49.google.com [209.85.218.49])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13DF1606A31E
-	for <linux-xfs@vger.kernel.org>; Wed, 21 Oct 2026 15:12:17 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 13DF1606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D203D606A31A
+	for <linux-xfs@vger.kernel.org>; Wed, 21 Oct 2026 17:44:29 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D203D606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=elrepo.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=fRtNArbA
-Received: by mail-wr1-f54.google.com with SMTP id ffacd0b85a97d-48e20ed3b9dso869889f8f.2
-        for <linux-xfs@vger.kernel.org>; Wed, 21 Oct 2026 08:12:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792595536; x=1793200336; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=FsHH6aozeXPThpXvJUYVLtQrnQwbfOChlZ8cfIqdctg=;
-        b=fRtNArbAsjB87bQ7Egtqi1qkoryq/3OpgC+NpIKVcrOe3+zlMXYMwOlAI8wBFiWNqz
-         /vwIrs8UcevppcI4bM3g8DBDAAPymD3sBjBVJZkceWgpJVAoP88Fri5Aq/xfZc77SNg3
-         heAxZ+4juOcdoVkAt/XGapWWe7ioX6XUStxAlzmwxpDhGFXB3ERcql5/GqsTfS0H/qYU
-         GbXxFn405gpDNlr5sBH6IWrq7iarI3go7WnfA0KVbRX/9NmUYIhzyNwuyUkllOfxIm1f
-         VKxKclYr9bO065thJe8DJ9E9Vckk3PDMFluqv9yYpZUIrjYUjQXqMqXt92ZWv6Np+iS9
-         u+Zg==
+Received: by mail-ej1-f49.google.com with SMTP id a640c23a62f3a-c34bff61551so122044466b.2
+        for <linux-xfs@vger.kernel.org>; Wed, 21 Oct 2026 10:44:29 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1792604668; cv=none;
+        d=google.com; s=arc-20260327;
+        b=YOonxeHOSXkwK44iFoSlvgJQXZ6KK5nHelG/sI5c5xvS6vEqxIOQ0/2AU8bQ0yz2hW
+         xt8rYU77tatbKNKlb9srqT2ni77v19K7vzKYHaCcCqRTt4ln3OZ0fyVZaxL2THwTmFxR
+         5VWvAPr8V+XgRq+Ow7TCunv5mvzaovUCLdEf/jj88gWYkWykNAYquIfUy2jyPf7l/mV6
+         K5zkZcxxjRoA0D6+cB4/TeV16S0ZtYaa7pKZG7D8cmEwIew27kfbCbLZ3QbIfPRkmksW
+         MmlAlEd1d2hJHE3W0v7nsvyLcHJYbrhVVb/KySgN7n6AcQ3DPmf7LAWgBT+ksrqhgutl
+         jGsA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:mime-version;
+        bh=7CaZ9JS2jRrzvTua4Ov4Nn+8wNqPkglApCwvgGA21AI=;
+        fh=+d03Zk7/hQ/hR3e1fIH9V+/bVQy14me8BM3SMeqezVw=;
+        b=My2txNvf3RwAyS1f836jDwdofm+8OnHM0sekHPS548I6cLqHT4jiiiTMVpkR2ykoaU
+         e2LUs/t3xfGbXYEDZkQe47R0lNUjHwqQebBMy7bdGQWq/xgF5a4jPOzwbFZnvEGQF8Wc
+         NBjvvfHzU/5mSDuoOERYX4xQaLc5kodMjNy2KcwwlBwB8DNuNRRNW3kb2fttN7w6rrD0
+         Q368TS7/TS2Cz6zMLl7ppweV+Jj1bQDryrMPAwEw/DY8tb9yv5HDs0LrB/qOK5mwqPgR
+         H4jPyK/tWtDk3ixsVieYU9gTGj8SQa1pST9QOabdJgntt5KyJ98y+6X1CI1HR4wBBUAs
+         ajvw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792595536; x=1793200336;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=FsHH6aozeXPThpXvJUYVLtQrnQwbfOChlZ8cfIqdctg=;
-        b=qxjitPNXFMggufvJBpVX956yIePX9kRTt1Y5nfmtER5KEUAxrc/wJ6BuqU7lqYEwSZ
-         qk1u0CvO0rLu89O5n9CuP7LrJEGbcxOmEzSg/QNuSyadgxej7wFv0ZFUl3GqWGgwX/I3
-         4GPuPjgM5pdWPKJ5MM4IFE44rUW9AcFD62Sxt4RWnvebT6bvIo0qYJBOA+3cMZUG5E3a
-         LHVjnwE9sjghGhmNmPHa1SfkFodCDl0WOQtq9FaU0ZJ0gz4PGAOoZznPgHdYGRzMkPH0
-         55enecBCvEU6RZVXmHfwhBnUTi/HcBsjqW+6WvAx5Ip0r6vYN1YXwnbP39RBkmD6UUhF
-         weEg==
-X-Forwarded-Encrypted: i=1; AKwUvBzusvqKyJjNV633u+D5RJIHL3+kc8vjTS7+RUhpW+dLX3NbB7vEeimGTODNtkSMc7VXzB/soiWFo9o=@vger.kernel.org
-X-Gm-Message-State: AFq9FYKPxU2jueh9iZx+l9Fba1UYDKRKAjIAp4fbQwVaqF4LsvRmaZlU
-	WDonFy1srdZ5DaR7RB6uokOMRsDSRp+nwH/KsQQI2kaUdmJum4rVFqIn
-X-Gm-Gg: AYBFou1Y8fg9pW+wEMRncJ8+t99AzyLIiXij9VsG3tvdY5s3wG3CYYnkI2GoWhBHzq6
-	5sYa6mjyRYt8yKdnv/0VNCr8rpYwW16RJ3n/0GYzPG4hRAYUvYKmvUvtkiSbdWtlg50jwZPXTs2
-	kZgmxLHQAFKTXcLhl9btW8O5yUyezhSyOFdt4h2iP5ikWEkiIl8rAPF5MJ2Z0F3r3TBWUWK7L1d
-	50VaXY6lx7W76RiOXgfySs7JGnmcBw135xZVSTlB+x9M1GPHgZ8BpF0taUcVyrL8oI0WeQq8rq6
-	5XwMqqUTm15dz1u4N1XcFzD0533xhAgzzM/Ni7f1wheYCiTM0114mjpGg7zE+z1DEof+E6yFwmH
-	f0qm7dcRILlgcEzIHnWeZeyLY/I9NrTxBghICNl6he6hWRsXpMZegkcZS+z01bDvnOxjXYzX6QK
-	lvOSQs/aOCZBPP668sxaFv7+zN9mNGABUfFuUtRW+N4hpc2u74GUZ2gyfZyrlXdsqXjBSU4LJCS
-	gXjyLtEEtv0NbwV4WmYrT6aq5dqOMHOUexQS//iM+efurkIEejxOmbKPFH6ZbfIELPyi16GPJY0
-	DK7UFD2s3HyW22aMvM0e5O6mKdaKdkQ/lJUjBzZHSDzuxa/qTEictCzEV2hENRLmgRPq9S9bZpI
-	klTa21VY=
-X-Received: by 2002:a05:6000:46d6:b0:48d:f831:2681 with SMTP id ffacd0b85a97d-48e264ce32cmr3497388f8f.38.1792595536092;
-        Wed, 21 Oct 2026 08:12:16 -0700 (PDT)
-Received: from [10.54.182.141] (82-132-213-19.dab.02.net. [82.132.213.19])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e254f02f1sm6396517f8f.3.2026.10.21.08.12.13
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 21 Oct 2026 08:12:15 -0700 (PDT)
-Message-ID: <5f542a8d-c6c1-4c5d-b0c6-f761af2e126a@gmail.com>
-Date: Wed, 21 Oct 2026 16:12:15 +0100
+        d=1e100.net; s=20260707; t=1792604668; x=1793209468;
+        h=content-type:cc:to:subject:message-id:date:from:mime-version
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=7CaZ9JS2jRrzvTua4Ov4Nn+8wNqPkglApCwvgGA21AI=;
+        b=cph2Ovj9N/pq/R54id/Eg43AfOvifhiJ1NtPYm5XbnNDSysQUCT1KT5JBvJ4yukeLO
+         ReN5A0Cfj12s1rBVMZL9r5MecpAY7OmEQGgkDL9KhhtBD8TKDPW6mta8RqHopQMMRXRs
+         5dnFY5NHu83fKWmZ0aS5tnaVE+56WwWTMsR8b3FFo6yKdOWqRpmyXpnoEuSNvqsopAxt
+         mycnU/fKdYlSahWR+mEj2JVlcF7Sns15Sgb+jeKR+VH5ug3jz2n8u1t3wAMMu0N9P3Hg
+         R4MRy3cufxajGCMNb1umLCT/MirGVmtbl82QcItdSCdneKENBFGzqf9/lPmUNlTnW57R
+         SEgw==
+X-Gm-Message-State: AFq9FYKVAw1vcN25mR2zebzQoFXAvBu0WqM9+E5Qdf/ThLIDjAPUO29W
+	5FYBFXFMA9JfEFiOd2ZrimYox5ivAYAmlOg5nyLWEJwdB5YcbL6dKDOJSgy2pjvZYrGopyf/dnN
+	8Istm3Fb2W9uUDIAcw8T7EikdavPqJSX6oQ==
+X-Gm-Gg: AYBFou1SebcgNZ0joaIn9CNQE4GNpHXEDcdPc4xsgnzSBAGniwYG3z+dI5h8oy4CNIB
+	A3PJPvtTZGyDRNffxLLBZNWXkZ0iUCIyN7MvXtp+LdXLdMrI7SFTe1t7hKRh2kp7fR6GPlg2lJR
+	W9/uLQ/Q9ynyxFXR7MEmilpUCl82THrh1nklDtVNDqBPDepBrgUS2yS13rK9H8tshR3wsoYqrvX
+	x2bAzkyHF7w7ydycRq3DONhZVFqUhz8tZ9q4rMKf62DvZf2fgMzRz3OMDWfTPN9wWF5rVBSaT5v
+	fREpqQq66osv7tIDvR9a8QzMRq2TfWwUaAY25oxuCSrAl20CwhNkZG+ZgJfbZqaKQAq5ErmDwJ+
+	gyM6AYlhl/XQ6xjbNhN2sHSfOI0z6iw6U8RN7LPOm8AZjPiy2mWz1
+X-Received: by 2002:a17:907:6d12:b0:c31:8984:7fad with SMTP id
+ a640c23a62f3a-c4679611ee4mr253058066b.15.1792604667944; Wed, 21 Oct 2026
+ 10:44:27 -0700 (PDT)
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -93,95 +85,25 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC 2/4] block: refuse a dma-buf bio for a disk the buffer was
- not registered on
-To: Anuj Gupta <anuj1072538@gmail.com>, hch@lst.de, djwong@kernel.org,
- cem@kernel.org, brauner@kernel.org, axboe@kernel.dk
-Cc: linux-block@vger.kernel.org, linux-xfs@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, joshi.k@samsung.com, anuj20.g@samsung.com,
- nj.shetty@samsung.com
-References: <20261016091919.971295-1-anuj1072538@gmail.com>
- <20261016091919.971295-3-anuj1072538@gmail.com>
-Content-Language: en-US
-From: Pavel Begunkov <asml.silence@gmail.com>
-In-Reply-To: <20261016091919.971295-3-anuj1072538@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Akemi Yagi <toracat@elrepo.org>
+Date: Wed, 21 Oct 2026 10:44:16 -0700
+X-Gm-Features: AclHuK8AWXDtrArvrMwlSBZkm2-Wg8hsG2N0kAq3IZPen8HGiocOc9Qu3GXpAYs
+Message-ID: <CABA31Dp=R3nnFpRGLhw0T80derEGq4eQbHE9FccOUPnLK9qerQ@mail.gmail.com>
+Subject: [BUG] XFS Assertion failed: lock_flags != 0 in xfs_file_dio_write_aligned
+ (kernel 7.2.6+)
+To: linux-xfs@vger.kernel.org
+Cc: Akemi Yagi <toracat@elrepo.org>, david@fromorbit.com, chandan.babu@oracle.com
+Content-Type: text/plain; charset="UTF-8"
 
-On 10/16/26 10:19, Anuj Gupta wrote:
-> From: Nitesh Shetty <nj.shetty@samsung.com>
-...> +static bool bio_dmabuf_map_valid(const struct bio *bio,
-> +				 const struct iov_iter *iter)
-> +{
-> +	return iter->dmabuf_map->ctx->registered_devt ==
-> +		disk_devt(bio->bi_bdev->bd_disk);
-> +}
-> +
->   /**
->    * bio_iov_iter_get_pages - add user or kernel pages to a bio
->    * @bio: bio to add pages to
-> @@ -1300,6 +1312,9 @@ int bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter,
->   	if (WARN_ON_ONCE(bio_flagged(bio, BIO_CLONED)))
->   		return -EIO;
->   
-> +	if (iov_iter_is_dmabuf_map(iter) && !bio_dmabuf_map_valid(bio, iter))
-> +		return -EXDEV;
-> +
->   	if (bio_iov_iter_set(bio, iter)) {
->   		if (iov_iter_is_bvec(iter) &&
->   		    !bio_iov_bvec_aligned(bio, mem_align_mask))
-> diff --git a/block/fops.c b/block/fops.c
-> index 18a755f6e0b0..b36dde10a4ac 100644
-> --- a/block/fops.c
-> +++ b/block/fops.c
-> @@ -19,6 +19,7 @@
->   #include <linux/iomap.h>
->   #include <linux/module.h>
->   #include <linux/io_uring/cmd.h>
-> +#include <linux/dma-buf-io.h>
->   #include "blk.h"
->   
->   static inline struct inode *bdev_file_inode(struct file *file)
-> @@ -938,6 +939,7 @@ int bdev_init_dma_buf_io_ctx(struct file *file, struct block_device *bdev,
->   			     struct dma_buf_io_ctx *ctx)
->   {
->   	struct gendisk *disk = bdev->bd_disk;
-> +	int ret;
->   
->   	if (!(file->f_flags & O_DIRECT))
->   		return -EINVAL;
-> @@ -945,7 +947,10 @@ int bdev_init_dma_buf_io_ctx(struct file *file, struct block_device *bdev,
->   		return -EOPNOTSUPP;
->   	if (bdev_has_integrity_csum(bdev))
->   		return -EOPNOTSUPP;
-> -	return disk->fops->init_dma_buf_io_ctx(bdev, ctx);
-> +	ret = disk->fops->init_dma_buf_io_ctx(bdev, ctx);
-> +	if (!ret)
-> +		ctx->registered_devt = disk_devt(disk);
-> +	return ret;
->   }
->   EXPORT_SYMBOL_GPL(bdev_init_dma_buf_io_ctx);
->   
-> diff --git a/include/linux/dma-buf-io.h b/include/linux/dma-buf-io.h
-> index b9bbeca1744f..d42a79f2ac9b 100644
-> --- a/include/linux/dma-buf-io.h
-> +++ b/include/linux/dma-buf-io.h
-> @@ -50,6 +50,8 @@ struct dma_buf_io_ctx {
->   
->   	void					*dev_priv;
->   	const struct dma_buf_io_ops		*dev_ops;
-> +
-> +	dev_t					registered_devt;
+Hi,
 
-That wouldn't work well with multiple devices. Maybe reject it in
-xfs / iomap for now?
+This bug happens on the vanilla, unmodified upstream kernel. It was
+reported to kernel.org Bugzilla (#222082) but mistakenly closed as a
+distro bug due to an ELRepo build tag.
 
-FWIW, a generic solution is for xfs to own the ctx passed on
-registration instead of forwarding it to block, allocate an array
-of new ctxs for each device and register them separately. This
-should even be able to support dynamic device registration.
+The details reported by the original submitter can be found in the
+link to the ELRepo bug tracker.
 
--- 
-Pavel Begunkov
+Thank you in advance for your help,
 
+Akemi
