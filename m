@@ -1,54 +1,55 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792575407;
-	b=pHF2bPikNZOeP06dWHXrjapMmX2vFtVbudp7pLtrenjxsTlIF5zJNyHPkgFH9+55mi1A
-	 AgluC792tFzSustlVdqM3geEsbKrvsD8PMy0KfWF+KPtUvpjjArgTztJiCpOnIRFG2Bsq
-	 Z6vIH2flHTdvl3D34hBiCieTDJIcIZoGK/Vfd+/iyporGC7NG/8BPstG5r0p2DU4tjZKc
-	 FLY/uloifOuWTntJboSDZvhLXN0RRgpTcQEiRKFKoL3w5tVSsNfSQcedu9xJQxsQ9Gguw
-	 /6WkOSo1MGFqF2WrhdyKUziNE1dH7guNLjaKsUXjMit42H8ADdJ3sHDEa55W6/m99EQ==
+	t=1792584680;
+	b=Sl10IIg6s/mExkIkYBAvRLMS5gTiLOw9CsbUQmmVdZ3o04lHKG64/XLQwwbBghfhkotz
+	 mbhhdLNRNyXDL38kJTCgtFd2LM54SbD4yyd8bavr/LCxTIiQAYB4AH/Xx5XrCGxvUK4+g
+	 WdnaDXFujRGhc4DNXxmZvXoUYdycihc8bCVir1/b1TkjTiwNi3f43pAs5lBTDk2LP9eY1
+	 FNOzIR9zbr5XiVOMxMDa65hmYbQLxekq0JjvolBeejzrq4NpqWUGizqzX8UmTdHi3uZAo
+	 p0IbOsv7ZIQU+hxuyHTkzeRuhPyEIfr/VRdOE2ER34B25Zi8YlFhdzmJc+RpBZI6sfw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792575407;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792584680;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:
-	 Content-Transfer-Encoding:In-Reply-To;
-	bh=myYPsnDIKAuucBhzxqZdnCPsSN9YAg5Y0A9mk125+Iw=;
-	b=1nOeJp77EaYA2ma1Mw60vg2cL+0EiAY4dPg/LvdvALX+ra0U7aoOJEe7JV3tDGrFLDBW
-	 hcRRd3OYlMIDp8jCDlJvNjju+pCWZaTmcFxf/NlM2x8LETvPznBEZmuSz79apAOHZpUhq
-	 kHvHu8f9BmCT+xvq2Xpck7vgOkTcSv/iDASlHEbig+S68X0tIA0qk2Fwy/nVgth7zSHqr
-	 35O2SR55gtRUbNIB91SH/5kG9btWL30zm1AJRvvat74u0v+Y+M2huC8TBMJquRbI05RkN
-	 vVhDNuc7w8Z46jnccRa3Az8ZpeXxq8GSDSUHOVV2j15cxxIGfx1owYSN+TbMbZGOn8g==
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=rC7i7oJQKZBAX00N3sMgtoFqTxIhdHPW9VTspHueJBg=;
+	b=iCrfii00/Aa7PLIFGPxd9wJfig11UOO6cPsxiVVgGOJDNY1SH9xnZvfVAuT3NaoE2bZv
+	 w69ADnvw8xWKtWFouQuRpYYGKfc4H2czk128+FL/18XLUMnR985c/s6YNRJjS7jfIvkYv
+	 Q0KoVOyQSSApAfJQhkLoCO9YPzJiQc76/Jf/Leid+3dRnCrgG0tSdQnv6Z7GVVb60t5Sj
+	 0pBcaa9bS57575H39dBi7mrZVh67hRP1jh8GCl/7Fw/qz1To5ZuvkeNsNw6lxzIk3bJ9F
+	 N2Z/S4A2GHFpRjdVjSQrqJyjjmiHhfIugKIHxccWbsuGfIQqrBLcGzmP0jF4RuzfQAQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=oaaCvUwE;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HSCORzJB;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13C05606A31A;
-	Wed, 21 Oct 2026 09:36:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F55C606A319;
+	Wed, 21 Oct 2026 12:11:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=oaaCvUwE
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5AA831F000CF;
-	Wed, 21 Oct 2026 09:36:45 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HSCORzJB
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A8711F000C4;
+	Wed, 21 Oct 2026 12:11:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792575406;
-	bh=myYPsnDIKAuucBhzxqZdnCPsSN9YAg5Y0A9mk125+Iw=;
+	s=k20260515; t=1792584680;
+	bh=rC7i7oJQKZBAX00N3sMgtoFqTxIhdHPW9VTspHueJBg=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=oaaCvUwEvhPO3748dAmOesQd/UtTmpRCmeI5pNh66/sOjI5iYYGO/ImkyTrBcbwSd
-	 wRsfRiiP+8ODs4A1hb6TrdftaBDCiGjwI0buzUU0P6njyyHu4IzuMiFCOfzmGDTAsC
-	 42QBtICuHECFJkaQsfwM8ndPS8YPWQJ8aG6pWuki5VGUJIwwUuuuS94HO6Qn+jbmd6
-	 03yIaQoWkxWbSu2i9yomv4VpVeS1qkmvQBF9D/KU5g+mdcTYa5uiRpRnhgJU2iU3yu
-	 pDj+lOkdLNCNSUCm67V+LGtouItZhJQV1ouhjx7jCPo0+C8iefHJbbh4XvrLvCdQkV
-	 A6OltY/OcoeqQ==
-Date: Wed, 21 Oct 2026 11:36:42 +0200
+	b=HSCORzJBo8wwnX3KQAW0iHdPLj7ZPHYPMaNtYNT+biNakjBUMKcrtCS8k00jU3LEw
+	 G9wwqTamsLg383QlyH9JCT/gw+L16iTHush1JuefEi9Qm07rZmWqCqTIj/ZCzO3xqq
+	 F0iPdNRHq77ps0EGxYTCUPP97u5OKcyRGP26QNjqrWPtvG5omQP/f2Yj3VIDivbywC
+	 6joLlGJy1UsckQ5WStBJPSv3vcnzxFtbjOarSA5hy7+SFaBAABQSlxpaOTyEviXg3i
+	 9ofuCg3uzZG0KZnOl15pIPl/2q5awAzNy7RWABbwoWalF2NWpmK14W7b/5z9hvu57u
+	 MtwbKG2kW5Aig==
+Date: Wed, 21 Oct 2026 14:11:15 +0200
 From: Carlos Maiolino <cem@kernel.org>
-To: =?utf-8?B?QWRyacOhbiBHYXJjw61h?= Casado <adriangarciacasado42@gmail.com>
-Cc: "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] xfs: add __printf attribute to
- xfs_buf_alert_ratelimited()
-Message-ID: <atiHnmKqL2TNNNVm@cronus.toxiclabs.cc>
-References: <20261020195628.248878-1-adriangarciacasado42@gmail.com>
+To: Siddh Raman Pant <siddh.raman.pant@oracle.com>
+Cc: "djwong@kernel.org" <djwong@kernel.org>, 
+	"dchinner@redhat.com" <dchinner@redhat.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>, 
+	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] xfs: Fix duplicate assignment in xfs_alloc_read_agf.
+Message-ID: <atirYb9qxRsaRYhs@cronus.toxiclabs.cc>
+References: <20261001145153.308087-1-siddh.raman.pant@oracle.com>
+ <as5AloTkTT3bZkyq@nidhogg.toxiclabs.cc>
+ <e7feec9bf096ed64f581536aa314a21723cccc63.camel@oracle.com>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -58,47 +59,33 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20261020195628.248878-1-adriangarciacasado42@gmail.com>
+In-Reply-To: <e7feec9bf096ed64f581536aa314a21723cccc63.camel@oracle.com>
 
-On Tue, Oct 20, 2026 at 09:56:28PM +0200, Adrián García Casado wrote:
-> xfs_printk_level() and _xfs_alert_tag() in fs/xfs/xfs_message.h are
-> annotated with __printf(3, 4), but xfs_buf_alert_ratelimited() in the
-> same header is missing the attribute.
+On Thu, Oct 15, 2026 at 12:56:43PM +0000, Siddh Raman Pant wrote:
+> On Tue, Oct 13 2026 at 20:01:04 +0530, Carlos Maiolino wrote:
+> > On Thu, Oct 01, 2026 at 08:21:53PM +0530, Siddh Raman Pant wrote:
+> > > Probably an (harmless) error in copy-paste.
+> > > 
+> > > Fixes: db6a2274162d ("xfs: catch stale AGF/AGF metadata")
+> > > Cc: stable@vger.kernel.org
+> > > Signed-off-by: Siddh Raman Pant <siddh.raman.pant@oracle.com>
+> > > ---
+> > > Put in stables <= 6.12 after the backport series lands.
+> > 
+> > Fix the tags accordingly to Darrick's review and re-send please.
+> > 
 > 
-> Because xfs_buf_alert_ratelimited() formats its variadic arguments via
-> struct va_format and %pV, the compiler does not suggest the format
-> attribute under -Wsuggest-attribute=format, and callers do not get
-> compile-time format string checking.
-> 
-> Add __printf(3, 4) to xfs_buf_alert_ratelimited() to match the other
-> logging helpers in fs/xfs/xfs_message.h.
-> 
-> Signed-off-by: Adrián García Casado <adriangarciacasado42@gmail.com>
-> ---
->  fs/xfs/xfs_message.h | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/fs/xfs/xfs_message.h b/fs/xfs/xfs_message.h
-> index 811b885f41..bfae8dddc9 100644
-> --- a/fs/xfs/xfs_message.h
-> +++ b/fs/xfs/xfs_message.h
-> @@ -87,6 +87,7 @@ void asswarn(struct xfs_mount *mp, char *expr, char *f, int l);
->  
->  extern void xfs_hex_dump(const void *p, int length);
->  
-> +__printf(3, 4)
->  void xfs_buf_alert_ratelimited(struct xfs_buf *bp, const char *rlmsg,
->  			       const char *fmt, ...);
->  
+> I have sent some backports for remaining kernels and I would like this
+> to go into them too once they land. Should I still do it?
 
-Seems reasonable.
+Probably. You've gotta tell stable this patch should land there in some
+way. I think they are looking into those tags to guide them what
+versions this should be backported to.
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+> 
+> Thanks,
+> Siddh
 
-> -- 
-> 2.39.5
-> 
-> 
+
