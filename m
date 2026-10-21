@@ -1,106 +1,58 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792585009;
-	b=cBO4meUijb63Qu+1TJcISBH0BijnHYqg632GGzvsyfs9xCC8DIDD+PLbjUP35j3LZ/VP
-	 BH61cJjDnb+8tZ1kgGyMpw4bKuhOSPKDmF46tFf5zb8JwQK/fyyyDK1QOWGOAC8NVhlQP
-	 08Wezilq95LjXW8tRA/jK+jQdHehZevPVjQdgfqpUmVxfGoWPClTkLLrH6Z+arpWEwY/c
-	 PxCYMln/gIItERUjic6xTlW7cRJJMsHMhIkSfyX0aSWH54tE5950k3mOLkzvhYjhN98TA
-	 EdRM+vhCWFuwFaioy1WB8UN/1CPraBuMXLYobWxZr9vvaPcw9dXlgv1JYO0mWgaisgw==
+	t=1792591853;
+	b=je+gdg7fq56Tmi2og0AbQvS5cJ6NaRTEHaNkd2NSmYpEkpjyiJAqXVHPDudPnkXpXph9
+	 oLAheU0OMl43yk9CyTGHLkpulU4xQwsBRC6LMWDote/8pMyj475yV7EjP1O9fS3+vtiWh
+	 fpcReF/DOZLCBRj023iTaSwX0rTG1Eln6nHC0oba8WxjywtJAZjdQ5C6uZoiTwg5oUUh1
+	 ibNXPcZBhj1nrc6XEMvS0lB2J6Mjyl7yp182AnqMIhkSaeXdaG8O8yzw6h7UWq7JEnAeJ
+	 P6IgkHURlYvKpJpZb3DQKFltm5LjL5XZjNGRzN/dyh28ivjDqUAAKFOJYU+UvPm0oWg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792585009;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 X-Received:Received:Message-ID:Date:MIME-Version:User-Agent:Subject:
-	 To:References:Content-Language:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=JPwqD2eIlMlxyWUMv/ZpOKyRK2YgBM6m8Hk+/yjZl10=;
-	b=f510efVoW/sl7nbOExXuWmOMCdT3bMKcyIsoHY+NMwUOkiVHOoDxfaq5vA2QyPyASQG5
-	 SUm3vJkmAH3Qs3q2qkKm2X16L2Vl17GgabGHaOXeDwBECBwJR/He59W1GNcgViKrI1Eq6
-	 6xYQbeEYzBRz0AOiiZiL4Tf6+aVuMloaQvGC3s+oxuSGo69O1nX25Fyf3ISazkWC///E5
-	 2j/d1nD8lmjP6cjClUm67aWHIgiv6XQ04h9GIa1w+83ASZ7iVYaJEhowJftclXZcDjrV3
-	 /f5PS2tzLsupTm/Bb0lGKeIqFbtiQJCnhsUxkiScZw4iwiUJhXfkVpaxB5PzTxby00w==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792591853;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
+	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
+	bh=TDeC0eRTKreZTLMWvR9LY3kDP8b0X3HPPOmaydNAyfU=;
+	b=mzMLitOVlKbK2Eya2Iii+oW1xi6DYVz/P1pisE9gHj8QzAno2Y4dX15/02Lx/c4gQvMR
+	 jbB2RWlq8nxQtwfV85iXaucxdqNZTr2xpltE4CWGuefMDOZQUU1G+TRSepirzNG/6FQBx
+	 HyD4dB5KatpcjkZ6sbWMXZKXHFr/5ruT45dG3Vhg0SdwCAzDNZHGrlmCgAFpKsggGvq3S
+	 9qXwjvu3w9jW8X55XvBgUpkoey1jHCspS++4bvPujGMYfXramGqZPVb2zswB83dralhQT
+	 3HEdWaBL3dnxNm9dlcby8tk6P78OHBsuTZJfKydgV2hO0S/+vPmoW32KV4gbFz55EUg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=SOpsIbgu;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=fpJRCOW4;
-	arc=none smtp.remote-ip=170.10.133.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=nGGjoLCq;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F37C606A32F
-	for <linux-xfs@vger.kernel.org>; Wed, 21 Oct 2026 12:16:47 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0F37C606A32F
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0137606A320;
+	Wed, 21 Oct 2026 14:10:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=SOpsIbgu;
-	dkim=pass (2048-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=fpJRCOW4
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1792585006;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=JPwqD2eIlMlxyWUMv/ZpOKyRK2YgBM6m8Hk+/yjZl10=;
-	b=SOpsIbguosRstswnCWoDx+9mp7dY1ql8609F0lCV6FAus3c7UaoTJnfRTnvRzMRFm3KdhF
-	LM8/rUFNWrIQ5GHT9BOk8LHA+NlihmxLFBNuPnLQLpCe0xaQFxY1rANPZQxjAKh9v9oiJl
-	WF8JjYTPufSvpPG2RA5n6yHHjLjesBg=
-Received: from mail-wr1-f71.google.com (mail-wr1-f71.google.com
- [209.85.221.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-452-gvEmyhMiMECdL6D0CvmynQ-1; Wed, 21 Oct 2026 12:16:42 +0000
-X-MC-Unique: gvEmyhMiMECdL6D0CvmynQ-1
-X-Mimecast-MFC-AGG-ID: gvEmyhMiMECdL6D0CvmynQ_1792585000
-Received: by mail-wr1-f71.google.com with SMTP id ffacd0b85a97d-48b01a74792so462539f8f.0
-        for <linux-xfs@vger.kernel.org>; Wed, 21 Oct 2026 05:16:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1792585000; x=1793189800; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:to:subject:user-agent:mime-version:date
-         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=JPwqD2eIlMlxyWUMv/ZpOKyRK2YgBM6m8Hk+/yjZl10=;
-        b=fpJRCOW4nUecgi1cZebwvVaFAsvbb/XG7Ud1uo4EYiDwJiRW43Gk3OQY+0gcnOh9jU
-         L8oPsZCOtD5op/pSa0DpBbJEysGfC/IUplTZgBnhydcYruQnkRT6anpMgAjuzp5ACj+f
-         Z+0mc1U7+60dRuVlYkHjNewvEx0hyAolbHa3GYnaqsYDAM5VMvdGJB2ZkOk5840pcXVp
-         F9JgEV0Jp5+y7N1oBcLUpINTBtQ1dLDMQHisoM1gYumpI7ZYHioA4VfY+EcmPGhz3RZM
-         6TXSvu14Mo4v/tR1p+18scWKvquP5jk6ysp2Vl11Yh7cvUQ3wY0XizkXpnthmhE/PgHK
-         C8Kw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792585000; x=1793189800;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:to:subject:user-agent:mime-version:date
-         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=JPwqD2eIlMlxyWUMv/ZpOKyRK2YgBM6m8Hk+/yjZl10=;
-        b=EHysX9lOE++ZRaQ1U8VeBlpxsJAaJYmOP40p9DUlNQDo36FwTaV6sBfiscoENFfhmd
-         S7PleEgul6uvzuzpb1gNC77Vpr95ujjYt6YRhsp6tKp9XXeoBNEq33yadBkKDMrvjN5v
-         g5IGoCBoV9oE3jF6GCjT9gq3ictkedZPGTaAbnpZtx73xpjdgOdmXrqfPYUwrmJF0C77
-         NX+qjzOhYkP8vSANPjqdjPJ8uQNbNf6+/pDAKAFgxMTHcBOP3HZVxK/JGfwwl73+9shg
-         mh0FQSTc6HGR4p2/zJVK2KAK5jpjTLKRrqbVksnTOLeXESuqRRvx+bzfxcWVOxfNCfBz
-         fgEQ==
-X-Forwarded-Encrypted: i=1; AKwUvBx0KL3bf5kIfId69D448Imd6FURD/w1r4DejdH150hRCJERiXHzfWNgJj6hEMFoFduFZev0PeY1aUE=@vger.kernel.org
-X-Gm-Message-State: AFq9FYKb+/uZUb8Tyy5Nc78GZAHPIIdHrExButBukU80v9V1fGTaQ/UX
-	9EEbpavtunfbeV765QZnpBhVYSOpTqQNBhXx/OPOqLTzP4KFFOTewKpzlbd+Bot4fwQN0jcZR/H
-	ZSbKdFm+mXQ9okvHF6aA7g9aDvF2pd5cJwbOh8aTCtxI+T/okk3enfJtBu2LGvcs21doA/w==
-X-Gm-Gg: AYBFou08Hfobp1guwQ2qcbjsq6FhzQRO6hjWTVSNiRQAWIvubMyJPQg0vb1AElw6tGS
-	Lr6MXZ+Uc5eEGJLIVD7J+sIB8BheSJQkPLkRm/TM/s5uS7OMN/Xs8WZ9tavQqX1MqiagW8OAep4
-	1q63QfqVA9ezo8QGJNzzmzyfhm4Gzf2XYEEzPBjKjr4Lp/3WK6kHRNbYu7wtoMvnyaMN+g7Cr1s
-	dCQ7nPS9Oa7lgjuU0+Yd+4S7srK2R5MVCzHlFqPCnP5R+0fqxoD24Kkl9/1HmCJ6CQuqJt2GNA7
-	6SCPweuxaSozNQLK/MdNOPu5TJtfAMMt21muFxD4xbyqy7m71Uo8e/fUYcGdvIJ1uNOCqaEBspo
-	a884TbgllBQDJEVEpq7vqdPfRWaDVUHRg98G0SQ==
-X-Received: by 2002:a5d:6f11:0:b0:48b:9d80:53a5 with SMTP id ffacd0b85a97d-48e2649399cmr3984207f8f.10.1792585000432;
-        Wed, 21 Oct 2026 05:16:40 -0700 (PDT)
-X-Received: by 2002:a5d:6f11:0:b0:48b:9d80:53a5 with SMTP id ffacd0b85a97d-48e2649399cmr3984131f8f.10.1792584999918;
-        Wed, 21 Oct 2026 05:16:39 -0700 (PDT)
-Received: from [192.168.100.149] (gw20-pha-stl-mmo-2.avonet.cz. [131.117.213.219])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e2583e25asm5358822f8f.46.2026.10.21.05.16.39
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 21 Oct 2026 05:16:39 -0700 (PDT)
-Message-ID: <a9a66879-daae-490b-bddb-3d1e785c6fc0@redhat.com>
-Date: Wed, 21 Oct 2026 14:16:37 +0200
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=nGGjoLCq
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1E291F000C6;
+	Wed, 21 Oct 2026 14:10:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792591852;
+	bh=TDeC0eRTKreZTLMWvR9LY3kDP8b0X3HPPOmaydNAyfU=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=nGGjoLCqxKuMsS/CGe/ZkckiZkmeRx2QWJ+9BxwGtX07YWzmpAt4TB2hXTfIdZ74p
+	 kj1Jqug1jSEjlP8kuZPTcxcDPv9MxKqoE0G92h35yBOln09XL5UiHMqNoEqK8gbVGN
+	 AXEMmJ3aqnR+zlO34Z3o8O10WHQvGAnM1y0E4LVMAdfWO+JsB1V5IY9Ln+l9c3gdFL
+	 1FQqs7vKXnwafKGqg8ZHsGxiGYaJoVprWl55qLg9GcubwSDLX4QfNyBvaAB+nk/xtS
+	 nZZDAoaa/JceE4xCNdjZ0WmnD3L8nmKLcL3uCKDP7Tc8hs/MENIo63/SwtbaZ9cms2
+	 2ZZ8z31FohmbQ==
+From: Andrey Albershteyn <aalbersh@kernel.org>
+To: Alejandro Colomar <alx@kernel.org>,
+	linux-man@vger.kernel.org
+Cc: Andrey Albershteyn <aalbersh@kernel.org>,
+	linux-api@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	Christoph Hellwig <hch@lst.de>
+Subject: [PATCH v6 2/2] man/man2: introduce man page for file_setattr(2) syscall
+Date: Wed, 21 Oct 2026 16:10:05 +0200
+Message-ID: <20261021141010.314835-3-aalbersh@kernel.org>
+X-Mailer: git-send-email 2.54.0
+In-Reply-To: <20261021141010.314835-1-aalbersh@kernel.org>
+References: <20261021141010.314835-1-aalbersh@kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -110,18 +62,206 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] libxfs: remove stale xfs_trans_mod_sb() declaration
-To: Andrey Albershteyn <aalbersh@kernel.org>, linux-xfs@vger.kernel.org
-References: <20261021085921.56883-2-aalbersh@kernel.org>
-Content-Language: en-US
-From: Pavel Reichl <preichl@redhat.com>
-In-Reply-To: <20261021085921.56883-2-aalbersh@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-Looks good to me and fixes the issue.
+Add manual pages for file_setattr() syscall.
 
-Thank you very much!
+Link: https://lore.kernel.org/all/20250630-xattrat-syscall-v6-0-c4e3bc35227b@kernel.org/
+Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
+---
+ man/man2/file_setattr.2 | 183 ++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 183 insertions(+)
+ create mode 100644 man/man2/file_setattr.2
 
+diff --git a/man/man2/file_setattr.2 b/man/man2/file_setattr.2
+new file mode 100644
+index 000000000000..b11c9ff9277f
+--- /dev/null
++++ b/man/man2/file_setattr.2
+@@ -0,0 +1,183 @@
++.\" Copyright, the authors of the Linux man-pages project
++.\"
++.\" SPDX-License-Identifier: Linux-man-pages-copyleft
++.\"
++.TH file_setattr 2 (date) "Linux man-pages (unreleased)"
++.SH NAME
++file_setattr \- set filesystem file attributes
++.SH SYNOPSIS
++.nf
++.BR "#include <linux/fcntl.h>" "      /* Definition of " AT_* " constants */"
++.BR "#include <linux/fs.h>" "         /* Definition of " FS_XFLAG_* " constants */"
++.BR "#include <sys/syscall.h>" "      /* Definition of " SYS_* " constants */"
++.B #include <unistd.h>
++.P
++.B long syscall(SYS_file_setattr,
++.BI "               int " dirfd ", const char *" path ,
++.BI "               const struct file_attr *" fattr ", size_t " size ,
++.BI "               unsigned int " flags );
++.fi
++.SH DESCRIPTION
++The
++.BR file_setattr ()
++system call sets filesystem file attributes
++on the file specified by path.
++.P
++The
++.IR dirfd ,
++.IR path ,
++.IR size ,
++and
++.I flags
++arguments behave in the same way as in
++.BR file_getattr (2).
++The
++.IR fattr ,
++is read-only argument with
++file attributes to set.
++User-space applications should use
++.BR file_getattr (2)
++to initialize
++.I fattr
++argument beforehand.
++.SH RETURN VALUE
++On success,
++zero is returned.
++On error,
++\-1 is returned,
++and
++.I errno
++is set to indicate the error.
++.SH ERRORS
++The errors are the same as returned by
++.BR file_getattr (2)
++with the addition of following ones:
++.TP
++.B E2BIG
++.I size
++indicates a version which the kernel doesn't support
++(the size is larger than the kernel expects)
++and new fields are non-zero.
++.TP
++.B EINVAL
++Invalid combination of parameters provided in
++.I fattr
++for this type of file or filesystem.
++.TP
++.B EPERM
++The caller does not have the necessary permissions
++to change the file attributes.
++.TP
++.B EROFS
++The file is on a read-only filesystem.
++.SH HISTORY
++Linux 6.17
++.SH NOTES
++This system call is designed to be extensible.
++The
++.I size
++argument allows user-space applications to indicate
++which version of the
++.I file_attr
++structure they are using,
++enabling the kernel to support both old and new versions
++of the structure simultaneously.
++.P
++If
++.I size
++is smaller than the structure size the kernel expects,
++the kernel treats the missing fields as having zero values
++(which is a no-op).
++If
++.I size
++is larger than expected,
++the kernel checks that all unknown (to the kernel) fields are zero;
++if not,
++the call fails with
++.BR E2BIG .
++.SH EXAMPLES
++The program below demonstrates the use of
++.BR file_setattr ()
++to set the
++.B FS_XFLAG_NODUMP
++flag on a file.
++.P
++.in +4n
++.\" SRC BEGIN (file_setattr.c)
++.EX
++#define _GNU_SOURCE
++#include <fcntl.h>
++#include <linux/fs.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <sys/syscall.h>
++#include <unistd.h>
++\&
++#ifndef SYS_file_getattr
++#define SYS_file_getattr 467
++#endif
++\&
++#ifndef SYS_file_setattr
++#define SYS_file_setattr 468
++#endif
++\&
++int
++main(int argc, char *argv[])
++{
++    struct file_attr fa;
++    int dfd;
++    long ret;
++\&
++    if (argc != 2) {
++        fprintf(stderr, "Usage: %s <filename>\[rs]n", argv[0]);
++        exit(EXIT_FAILURE);
++    }
++\&
++    dfd = open(argv[1], O_RDONLY);
++    if (dfd == \-1) {
++        perror("open");
++        exit(EXIT_FAILURE);
++    }
++\&
++    ret = syscall(SYS_file_getattr, dfd, "", &fa, sizeof(fa),
++                  AT_EMPTY_PATH);
++    if (ret == \-1) {
++        perror("file_getattr");
++        exit(EXIT_FAILURE);
++    }
++\&
++    printf("Current flags: 0x%w64x\[rs]n", fa.fa_xflags);
++\&
++    fa.fa_xflags |= FS_XFLAG_NODUMP;
++\&
++    ret = syscall(SYS_file_setattr, dfd, "", &fa, sizeof(fa),
++                  AT_EMPTY_PATH);
++    if (ret == \-1) {
++        perror("file_setattr");
++        exit(EXIT_FAILURE);
++    }
++\&
++    ret = syscall(SYS_file_getattr, dfd, "", &fa, sizeof(fa),
++                  AT_EMPTY_PATH);
++    if (ret == \-1) {
++        perror("file_getattr");
++        exit(EXIT_FAILURE);
++    }
++\&
++    if (fa.fa_xflags & FS_XFLAG_NODUMP)
++        printf("flags 0x%w64x (NODUMP flag is set)\[rs]n", fa.fa_xflags);
++\&
++    exit(EXIT_SUCCESS);
++}
++.EE
++.\" SRC END
++.in
++.SH SEE ALSO
++.BR file_getattr (2),
++.BR ioctl (2),
++.BR ioctl_fs (2),
++.BR openat (2),
++.BR file_attr (2type),
++.BR path_resolution (7),
++.BR ioctl_xfs_fssetxattr (2)
+-- 
+2.56.0
 
