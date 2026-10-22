@@ -1,73 +1,50 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=115.124.30.97
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792675583;
-	b=1S1Dp34k9Zz5tqKxBG0vSzIdHSNjqliM/dVee8OfIvDiMH6UpdyCX8jKv/SlVzk/s065
-	 sTROoPYfx+bJuPdXmVWKJZk+RgRkh3g8Xp86X9ENaT3pocJ+j0DphI9QcVQFWd4LOSipa
-	 MWZs0Zbzwpv+Y0CFjr7qSeqtEjOE8h4TMc7cwVsbAyYyW9iSik+/GIBaKoJpbob38qVDn
-	 N3nAbzE8FwgA8CCNO/RCwj2TxwLgbO4zAeXA1vYrEc8m9PzCBcJ2vmjQ+Ej5LxC2D+ehl
-	 SbZXOd3DAhdXDMQ/csTj4DxOaCNmmFRN48jD9E1xUdyZtZRztQ5ib4d6Af2CvrZJitw==
+	t=1792686655;
+	b=muWpyt5EVA28Ioh1VpT2XWKaehyDRsvzeozzdsvh1juDR1m0X1nGobTqBA+HKqNzIAlA
+	 esNYzG4hYUd9dDAzqIoL5srloCb6BB0VK7CjpCXIQxkGengQVg9ar0heblJhyCapRIC1q
+	 pLQFGSpDfZkBnrjsO6qTRtvP9yeCUFL5YtGFINbwEvEWH8S1b3GqbKSlCB8O24J4eJsU3
+	 qu1YZJFLC+HRvu+7siF8wMu3+9qyYa2mqMdNg5jeLNrY7/KAETMvwdzLPvj8ysw3PB0kT
+	 kUOBMxhAq5vIkFfokJdWP26HkF4iguWLzSBqlXqDNj+i/UMqVbbcUdG4CNpHtXhTCoQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792675583;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:Received:Date:From:To:Cc:Subject:
-	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
-	 In-Reply-To:X-Scanned-By;
-	bh=4/DGRkNQiV1KJWdtQ6rC+i/U0wKyT8NwFnLB9VWxUA0=;
-	b=odCnjfhcs+6b93twRhuavVg3QtE9fjL90jyzU5nMEPKFrksRW8M+APkrcppWQc868OR+
-	 BrM3EGYL4a9Xt/8+JXBCTFLSjZNoBgElp1+NLNCtZszA6+GIfZutwIegd8r8Sbtcok7Q5
-	 aUtB1BdlUUlooDZT9WWR8XkpFyLuzXzLPB0d2VdOjS976KWEXc9CLKNockBLxCxRFci61
-	 E+CJa85vlV0O2tsF7JJ3czzz6qfl0rq5qFyhKGf4T9uPKWiuBI40mN6kFzg73r4JYiVYo
-	 H3bn49tx4eCa/TcOGLZzL7FdUm5pWO6jcU+UDBjomUYUN5u6cy6k9tY8lC9Re6yQyUw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792686655;
+	h=DMARC-Filter:DKIM-Signature:X-Alimail-AntiSpam:Received:Message-ID:
+	 Date:MIME-Version:User-Agent:Subject:To:Cc:References:
+	 Content-Language:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=tc4RtQ+McDeq8l1s8m84usBk75s9ZYG6jo3YuZ+d7zc=;
+	b=QTW7cUeHnSTTZQDRAtGSdqaP4ncAId1WMVuExFpwe5ifd0+WGhRFuivzTmygOMwkKQmZ
+	 DfGzsK9pix5QCl883pYsXg3VSEYAi/NE6hVJp7GlcKBCW4Bs05bNSfOdnL4/ncNIEeJN5
+	 a+LMOrJgJUj1PakxreJGJp74n4IJl2UwRZnwEQOC+ONO+0KSVlnykVB41mbmRiJFkPfUE
+	 FGb6RWeZmUE94HEwF/MsJPtz6phX11cBzJkTggRXH7jmESIGp+nToTo8ovczPD3tPZW3w
+	 xNGEn55sV40RBE73eMAll042rirARV/j2DiGH5MABRGWEITUta9QrFdAFjzogmu8HZA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=a6a4KZOb;
-	arc=none smtp.remote-ip=170.10.129.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	dmarc=pass header.from=linux.alibaba.com;
+	spf=pass smtp.mailfrom=linux.alibaba.com;
+	dkim=pass header.d=linux.alibaba.com header.i=@linux.alibaba.com header.a=rsa-sha256 header.s=default header.b=cjeqLWZM;
+	arc=none smtp.remote-ip=115.124.30.97
+Received: from out30-97.freemail.mail.aliyun.com (out30-97.freemail.mail.aliyun.com [115.124.30.97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CCB4606A31E
-	for <linux-xfs@vger.kernel.org>; Thu, 22 Oct 2026 13:26:23 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4CCB4606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB43E606A31B;
+	Thu, 22 Oct 2026 16:30:51 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AB43E606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=a6a4KZOb
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1792675582;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=4/DGRkNQiV1KJWdtQ6rC+i/U0wKyT8NwFnLB9VWxUA0=;
-	b=a6a4KZObmpojIaNm6r+AfAlMLxfJtr4XYVq5fPmpzwmIASIMrWCY128X1HB6+yUHECcAVr
-	JLfN4hbq5l3kr9yhcXJD7OJ0x+9NyKPKWSMIsxMgEP+sIp6beTStPLgsmVnQaNvE6vXhSp
-	JbgiMzPW5MjHfumghfpln+kIXvzdBD8=
-Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-137-1-ZdFnIKOK2CuXx6ZuU4YQ-1; Thu,
- 22 Oct 2026 09:26:13 -0400
-X-MC-Unique: 1-ZdFnIKOK2CuXx6ZuU4YQ-1
-X-Mimecast-MFC-AGG-ID: 1-ZdFnIKOK2CuXx6ZuU4YQ_1792675572
-Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 053171955DC0;
-	Thu, 22 Oct 2026 13:26:12 +0000 (UTC)
-Received: from bfoster (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id DB1791956089;
-	Thu, 22 Oct 2026 13:26:10 +0000 (UTC)
-Date: Thu, 22 Oct 2026 09:26:08 -0400
-From: Brian Foster <bfoster@redhat.com>
-To: Lukas Herbolt <lherbolt@redhat.com>
-Cc: zlang@kernel.org, fstests@vger.kernel.org, hch@lst.de,
-	linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>
-Subject: Re: [PATCH 1/1] xfs: add test for ENOSR/ENOSPC on DIO into delalloc
- extents
-Message-ID: <atoO8FTTt97n5oXv@bfoster>
-References: <20261016091628.295119-1-lherbolt@redhat.com>
+	dkim=pass (1024-bit key, unprotected) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.a=rsa-sha256 header.s=default header.b=cjeqLWZM
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1792686643; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
+	bh=tc4RtQ+McDeq8l1s8m84usBk75s9ZYG6jo3YuZ+d7zc=;
+	b=cjeqLWZMtA9n3tPAe9DC01AJAWrdB/em+IUMc+LyPICucgcT9moGv+RkfJIAun0Ejqt3xrNb44Zk8BLiXyK4NZS0rL3BezLsgz3yqxx1TYfVh5SzCwjzikS4P+et78CTp88iMwBS1b0JpxUUtvAofrpqZ/YB7BZFuZdX+EuVtN8=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R251e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033045133197;MF=libaokun@linux.alibaba.com;NM=1;PH=DS;RN=18;SR=0;TI=SMTPD_---0XDJckJa_1792686640;
+Received: from 30.170.203.187(mailfrom:libaokun@linux.alibaba.com fp:SMTPD_---0XDJckJa_1792686640 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Fri, 23 Oct 2026 00:30:41 +0800
+Message-ID: <625e5190-d43e-4a2b-9296-da15c52d1a9a@linux.alibaba.com>
+Date: Fri, 23 Oct 2026 00:30:39 +0800
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -77,259 +54,107 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261016091628.295119-1-lherbolt@redhat.com>
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 00/13] block, ext4: allow encryption with a block size
+ larger than the page size
+To: Eric Biggers <ebiggers@kernel.org>
+Cc: linux-ext4@vger.kernel.org, linux-fscrypt@vger.kernel.org,
+ linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+ linux-xfs@vger.kernel.org, jaegeuk@kernel.org, axboe@kernel.dk, hch@lst.de,
+ djwong@kernel.org, brauner@kernel.org, tytso@mit.edu, berto@igalia.com,
+ adilger.kernel@dilger.ca, jack@suse.cz, yi.zhang@huawei.com,
+ ojaswin@linux.ibm.com, ritesh.list@gmail.com
+References: <20261011170958.1759230-1-libaokun@linux.alibaba.com>
+ <20261015185325.GG2170687@google.com>
+Content-Language: en-US
+From: Baokun Li <libaokun@linux.alibaba.com>
+In-Reply-To: <20261015185325.GG2170687@google.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Fri, Oct 16, 2026 at 11:16:25AM +0200, Lukas Herbolt wrote:
->   Test if a DIO extending write into a speculative delalloc region on a
->   fragmented XFS filesystem does not trigger a dirty transaction cancel
->   (-ENOSR) or return a spurious -ENOSPC.
-> 
->   With allocsize=128MB, a buffered write creates a large delalloc extent.
->   A subsequent DIO write at i_size lands in the speculative prealloc
->   region. On a fragmented filesystem, xfs_bmapi_write converts the
->   delalloc starting from offset 0 but the allocation is too short to
->   reach the DIO offset, causing either -ENOSR (dirty transaction cancel
->   and filesystem shutdown) or -ENOSPC (wrong error from xfs_bmapi_write).
-> 
->   Assisted by LLM.
-> 
->   Fixed by kernel commits:
->     2a9b99d45be0 xfs: pass the actual offset and len to xfs_bmapi_allocate
->     21255afdd729 xfs: do not allocate the entire delalloc extent
->     6773da870ab8 xfs: fix error returns from xfs_bmapi_write
-> 
-> Co-developed-by: Eric Sandeen <sandeen@redhat.com>
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> Signed-off-by: Lukas Herbolt <lherbolt@redhat.com>
-> ---
->  .gitignore                 |   2 +
->  src/Makefile               |   3 +-
->  src/buffer_direct_io.c     | 154 ++++++++++++++++++++++++++++++++
->  src/fragment_fs.c          | 101 +++++++++++++++++++++
->  src/mix_buffer_direct_io.c | 175 +++++++++++++++++++++++++++++++++++++
->  tests/xfs/842              |  63 +++++++++++++
->  tests/xfs/842.out          |   2 +
->  7 files changed, 499 insertions(+), 1 deletion(-)
->  create mode 100644 src/buffer_direct_io.c
->  create mode 100644 src/fragment_fs.c
->  create mode 100644 src/mix_buffer_direct_io.c
->  create mode 100755 tests/xfs/842
->  create mode 100644 tests/xfs/842.out
-> 
-...
+Hi Eric, Thank you for your feedback!
+On 2026/10/16 02:53, Eric Biggers wrote:
+> On Mon, Oct 12, 2026 at 01:09:45AM +0800, Baokun Li wrote:
+>> Motivation
+>> ==========
+>>
+>> ext4 supports a block size larger than the page size (LBS), e.g. a 32k
+>> block size on a machine with 4k pages [1].  Encryption, however, is
+>> still refused on such a filesystem: file contents used to be encrypted
+>> page by page in the fs-layer path, which cannot handle a folio that
+>> covers several data units, so the checks that refuse encryption with
+>> such a block size stayed in place.
+>>
+>> Since commit 5acc6f649a68 ("fscrypt: Always use blk-crypto for
+>> contents on block-based filesystems") file contents are always
+>> encrypted through blk-crypto.  Inline encryption hardware can already
+>> en/decrypt a data unit that spans several pages, but the fallback and
+>> the block layer cannot carry such a data unit:
+>>
+>>   1. blk-crypto-fallback en/decrypts a data unit with the bio_vecs of
+>>      a single page-clamped segment, so a larger data unit fails with
+>>      BLK_STS_INVAL;
+>>   2. the block layer requires every bio_vec of an encrypted bio to be
+>>      data unit aligned, and splits such a bio without rounding the
+>>      split size down to the data unit size;
+>>   3. iomap cuts the direct I/O bios of an encrypted file only at the
+>>      logical block size of the device, so a bio can end in the middle
+>>      of a data unit.
+>>
+>> This series adds the missing pieces on all three layers, removes the
+>> refusals, and enables large folios for encrypted files on the way.
+>>
+>> [1]: https://lore.kernel.org/all/20251121090654.631996-1-libaokun@huaweicloud.com
+> A high-level question: most of the complexity in this series is to
+> support crypto_data_unit_size > PAGE_SIZE, despite the actual goal being
+> to support fs_block_size > PAGE_SIZE.  It's left unstated that the
+> default of crypto_data_unit_size == fs_block_size is used.  However,
+> ext4 and f2fs already support crypto_data_unit_size < fs_block_size.
+>
+> Would leaving the crypto_data_unit_size at e.g. 4 KiB while increasing
+> fs_block_size be a simpler way to achieve the goal of this series?
 
-Just a few higher level comments..
+I initially followed the LBS approach of lifting the page-size
+restriction, keeping the existing default crypto_data_unit_size
+equal to fs_block_size. I had not considered using sub-block DUs.
 
-> diff --git a/src/buffer_direct_io.c b/src/buffer_direct_io.c
-> new file mode 100644
-> index 000000000000..01b19994a2e2
-> --- /dev/null
-> +++ b/src/buffer_direct_io.c
-...
-> diff --git a/src/fragment_fs.c b/src/fragment_fs.c
-> new file mode 100644
-> index 000000000000..cee4edef73ff
-> --- /dev/null
-> +++ b/src/fragment_fs.c
-> @@ -0,0 +1,101 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +/*
-> + * Copyright (c) 2026 Eric Sandeen, Lukas Herbolt
-> + */
-> +
-> +/*
-> + * Fragment filesystem by creating fixed-size files and then deleting
-> + * every n-th one.
-> + *
-> + * Usage:
-> + *	fragment_fs <directory> <prefix> <file size> <delete every n-th file>
-> + */
-> +
-> +#include <stdio.h>
-> +#include <stdlib.h>
-> +#include <unistd.h>
-> +#include <fcntl.h>
-> +#include <errno.h>
-> +#include <sys/statvfs.h>
-> +
-> +static int fragment_fs(const char *dir, const char *prefix,
-> +		       off_t size, int delete_nth)
-> +{
-> +	char path[4096];
-> +	int i, fd;
-> +	int created = 0;
-> +
-> +	fprintf(stderr, "Fragmenting filesystem (filling to ENOSPC)...\n");
-> +
-> +	for (i = 0; ; i++) {
-> +		snprintf(path, sizeof(path), "%s/%s_%06d", dir, prefix, i);
-> +		fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-> +		if (fd < 0) {
-> +			if (errno == ENOSPC)
-> +				break;
-> +			perror("open frag file");
-> +			return -1;
-> +		}
-> +		if (fallocate(fd, 0, 0, size) < 0) {
-> +			close(fd);
-> +			unlink(path);
-> +			if (errno == ENOSPC)
-> +				break;
-> +			perror("fallocate frag file");
-> +			return -1;
-> +		}
-> +		close(fd);
-> +		created++;
-> +	}
-> +	fprintf(stderr, "Created %d files\n", created);
-> +
-> +	fprintf(stderr, "Deleting every %d-th file...\n", delete_nth);
-> +	for (i = 0; i < created; i += delete_nth) {
-> +		snprintf(path, sizeof(path), "%s/%s_%06d", dir, prefix, i);
-> +		unlink(path);
-> +	}
-> +	sync();
-> +
-> +	{
-> +		struct statvfs st;
-> +		if (statvfs(dir, &st) == 0) {
-> +			unsigned long free_mb = (st.f_bfree * st.f_bsize)
-> +						/ (1024 * 1024);
-> +			fprintf(stderr,
-> +				"%d files remain, ~%lu MB free\n",
-> +				created - created / delete_nth, free_mb);
-> +		}
-> +	}
-> +
-> +	return 0;
-> +}
-> +
+After your reply, I implemented a variant using min(bs, PS) for
+new default v2 policies, recording a smaller DU explicitly on disk.
+This avoids patches 3-6 and the per-bvec alignment relaxation in
+patch 10, and is indeed much simpler.
 
-Any chance we can reuse existing code in fstests for this sort of free
-space fragmentation? For example, see the punch-alternating tool and/or
-something like generic/186 (if useful, maybe that code can be lifted
-into a common helper).
+Both variants retain large-folio support and showed similar gains,
+about twice their respective 4K-block controls. Although 32K DUs reduced
+decryption calls eightfold, I did not observe a consistent additional
+throughput benefit, or CPU savings at matched bandwidth, in the tested
+workloads.
 
-...
-> diff --git a/src/mix_buffer_direct_io.c b/src/mix_buffer_direct_io.c
-> new file mode 100644
-> index 000000000000..0af227a7c9f0
-> --- /dev/null
-> +++ b/src/mix_buffer_direct_io.c
-> diff --git a/tests/xfs/842 b/tests/xfs/842
-...
+> Or do you feel that would be incomplete, and you'd indeed like to
+> support crypto_data_unit_size = fs_block_size > PAGE_SIZE?
 
-It looks like we have two mix I/O helper programs here, where this one
-appears unused..?
+However, keeping DU = bs has a compatibility advantage for existing
+encrypted filesystems.
 
-Also both appear to have some minor whitespace damage in the form of
-trailing spaces at the end of some lines, so it might be worth fixing
-that up as well.
+For example, a 64K-block filesystem created with a default v2 policy
+on a 64K-page machine uses 64K DUs. Supporting DU > PAGE_SIZE would
+allow a 4K-page machine to use that format without re-encryption,
+assuming the other policy and backend requirements are met.
 
-> new file mode 100755
-> index 000000000000..b2b2f7c493e7
-> --- /dev/null
-> +++ b/tests/xfs/842
-> @@ -0,0 +1,63 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2026 Lukas Herbolt.  All Rights Reserved.
-> +#
-> +# FS QA Test 842
-> +#
-> +# Regression test for XFS -ENOSR dirty transaction cancel during DIO
-> +# write into a speculative delalloc region on a fragmented filesystem.
-> +# With allocsize=128MB, a buffered write creates a large delalloc extent.
-> +# A subsequent DIO extending write at i_size triggers xfs_bmapi_write to
-> +# convert the delalloc from offset 0; on a fragmented FS the allocation
-> +# is too short to reach the DIO offset, returning -ENOSR and cancelling
-> +# a dirty transaction, which shuts down the filesystem.
-> +#
-> +. ./common/preamble
-> +_begin_fstest auto enospc
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -r -f $tmp.*
-> +}
-> +
-> +_require_test
+This also covers otherwise-supported legacy v1 policies, which cannot
+encode smaller DUs.
 
-Looks like we don't use the test dev in this test.
+Explicit 4K v2 DUs can also be portable across page sizes, but
+choosing a smaller DU for new files does not make existing large-DU
+ciphertext readable on a smaller-page machine. I have not yet tested
+the cross-page-size migration.
 
-> +_require_scratch
-> +_require_test_program "fragment_fs"
-> +_require_test_program "buffer_direct_io"
-> +
-> +_scratch_mkfs_sized $((1<<30)) > "$seqres.full" 2>&1
-> +_scratch_mount -o allocsize=131072k >> "$seqres.full" 2>&1
-> +
-> +src/fragment_fs $SCRATCH_MNT frag 4096 2 >> "$seqres.full" 2>&1
-> +src/buffer_direct_io $SCRATCH_MNT >> "$seqres.full" 2>&1
-> +RET=$?
-> +
-> +_dmesg_since_test_start | grep -q "detected at xfs_trans_cancel"
-> +DMESG_CHECK=$?
-> +
-> +if [ $RET -eq 5 -a $DMESG_CHECK -eq 0 ]; then
-> +	_fixed_by_kernel_commit 2a9b99d45be0 \
-> +		"xfs: pass the actual offset and len to xfs_bmapi_allocate"
-> +	_fixed_by_kernel_commit 21255afdd729 \
-> +		"xfs: do not allocate the entire delalloc extent"
-> +	_fail "ENOSR dirty transaction cancel detected (ret=$RET)"
-> +
-> +elif [ $RET -eq 28 ]; then
-> +	_fixed_by_kernel_commit 2a9b99d45be0 \
-> +		"xfs: pass the actual offset and len to xfs_bmapi_allocate"
-> +	_fixed_by_kernel_commit 21255afdd729 \
-> +		"xfs: do not allocate the entire delalloc extent"
-> +	_fixed_by_kernel_commit 6773da870ab8 \
-> +		"xfs: fix error returns from xfs_bmapi_write"
-> +	_fail "ENOSPC returned from xfs_bmapi_write (ret=$RET)"
-> +
-> +elif [ $RET -eq 0 ]; then
-> +	echo "Silence is golden"
-> +else
-> +	_fail "Unknown error: src/buffer_direct_io error code $RET"
-> +fi
+If you think supporting DU = bs > PS makes this series too broad,
+I can use the simpler sub-block version in the next revision and
+develop larger-DU support separately.
 
-A brief comment above this might be helpful. I'm also curious if it can
-be simplified a little. For example, I'm not sure we need to explicitly
-_fail when we can rely on golden output and/or the dmesg checking that
-happens by default. Also it looks like the commit hints are duplicate
-except for the -ENOSPC specific one. So perhaps we could do something
-like the following?
+Looking forward to hearing your thoughts.
 
-echo "Silence is golden"
 
-# words about the error codes, i.e. EIO vs ENOSPC?
-if [ $RET -neq 0 ]; then
-	_fixed_by_kernel_commit <X>
-	_fixed_by_kernel_commit <Y>
-	[ $RET -eq 28 ] && _fixed_by_kernel_commit <Z>
-	echo "... error code $RET"
-fi
-
-Brian
-
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/xfs/842.out b/tests/xfs/842.out
-> new file mode 100644
-> index 000000000000..643d05289a33
-> --- /dev/null
-> +++ b/tests/xfs/842.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 842
-> +Silence is golden
-> -- 
-> 2.56.0
-> 
-> 
+Thanks,
+Baokun
 
