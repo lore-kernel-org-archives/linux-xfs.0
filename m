@@ -1,59 +1,58 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.110
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792654994;
-	b=46Rfg4+0Gmy244CLQ54SpIAZQOiYmq9gNTphcUTmnPiOnRtzMknNOYAWy1Mw2aJqdvCe
-	 f7AMB0SgEcA24AC0LyE3Jre8mCE/4W+Od975jJnbLJTHzfnATY61bUIEjZJKDAkufccM2
-	 mHFTdEuMII5kw9NrRNtvUHJHqX+RDMrTHYP6QAIHmbYSzQwUzWM5qXW5j9wFNJh64oL+s
-	 05W13QYJ5i7GTMHfkzgF62xsYzU+WPfQhizCT4+/ySj2D0LkMiQwomfJJkOFA0oPJ6Xlc
-	 x8T40Vnt97MjEd3CgV78iUZRaoTWTNDZWd5q42X+gyiA3YHP5i/O6be3IkXgts41duw==
+	t=1792658594;
+	b=cyiIAu3b8aVlT7Xr0gzRjykVW91LJ2qaSyl+XNokRQbiIUBxXXIqnu4CBmWkcuK6qq+7
+	 SMgiWS1eSuPudLcK8RZEhV84ZuxrXjuPj69R322fVE99BALeR7qWqswmsgx2ZVDQFjNii
+	 8Uordr29H2jiGNEsyxjRxO9SYktilSnFxaXKixQCrU+Qy5KTHFjZ6qwcERACm8ZFSEao3
+	 UsCAmDzDFtJj2XYlk1jflc+qVkhDstuXNNH6L3e/rcvD3X89aZc5qz/y59lk+PYhA2Jds
+	 vCzRZihZKa5GL1dZeCaDLqoMU13z+nOjiv/ZGfi93ZcD4RWCTeuWzJ5m8oRlajBBu9A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792654994;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Date:From:To:Cc:Subject:Message-ID:
+	a=rsa-sha256; c=relaxed/relaxed; t=1792658594;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=eQ6Drp5QsHhwVvQEfY15vaz+GeI+2Rvj+QWq36GulsA=;
-	b=mz3aBDXmjy/SzxXCt5jGVE2n8h4oMePKtC9D4Nmq2cDR7uZV2NR1rJ+saBU+jOhct5Fl
-	 aTaFpAQsKo2oBHjFK5hOcHma4oJ9z+/J2KCaEeEgELSIvRxu1XXMpEcn2v8On/8UQb+jK
-	 1oNjGavv7UHM27lGLvt40KzIrZt+uLCHBc4a8Myz+eEM7k3pTEzboo0Ub7bxpvOG8wjcC
-	 IgAIdPqUaiUWkn2A9qhY85YNTN0IochRnjwD+kFtGGbKfAR6JgP0T5E7kL3GrKz8v8Dfg
-	 QtS2S8BWqVZ5U6WlxDGbH/JtqiT9dkQrW7AWwBM3Y5iKJw3KzsMkUVCf62S/2VyTF+A==
+	bh=aDvUlbBjke1wchRXocub8eukRjOOzXl1LD0fW/2XnxA=;
+	b=TG3QthgHKa3ckaiSCj3mU7gzFaK2im6eJb/VncuKYLtmH8GZYOmSikfP3/LZouEU5YO1
+	 ByJqpNbVWBLJwyZ7eGe/6uOl7SPMDqKcY5zqRdQ9GqmX+gaSr9cpyQgrFoTMTigCX38sr
+	 oD0K+ABlrzD1u4G+xehtvjX859ErpFaIZi+ucIpU24vYgtOqEUxIMVrtiiQlnAr42RD7N
+	 iOviAU/oGqVUZ2oIp7C+xk4tooZNss74o3YIbWTp4ERXcT2J3kJU2qGJBjFL5KrCxUrwM
+	 pYVEm2zOzxSDobBNqCelJh04u0WoFYfqV6JRBtW/K+0kL9RU7DtSUyb4Gf0JyLv2YLQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=ZtcJKWH1;
-	arc=none smtp.remote-ip=95.215.58.110
-Received: from mta1.migadu.com (out-110.mta1.migadu.com [95.215.58.110])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cuNcsWro;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4A01606A31A
-	for <linux-xfs@vger.kernel.org>; Thu, 22 Oct 2026 07:43:12 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A4A01606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BADAF606A319;
+	Thu, 22 Oct 2026 08:43:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=ZtcJKWH1
-X-Envelope-To: linux-xfs@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=yXAjUDHjjJ9kbBxcNqyNIROEyV5rUPWDf2Nuozb3V/4=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1792654990; v=1; x=1793259790;
- b=ZtcJKWH1BYUsWxXRi3X5ZTAvNc/g2MupiUHDCYua7TmHGszq7HJZBbEXjmcxk3Sx/i18sI0u
- tNo8iCUoXsiSwPyFuXR56Nw3Haxxcay/irG56uu8OniDZzWpOrY3sycMkivyNY1BXwqfOssol7E
- 7WCEW0HtoRB7Vod9aDXYzX2w=
-X-Envelope-To: linux-xfs@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 5a31a46c7ae6e228;
-	Thu, 22 Oct 2026 07:43:10 +0000
-X-Mizu-Trace-ID: 5a31a46c7ae6e228
-X-Migadu-Flow: FLOW_OUT
-Date: Thu, 22 Oct 2026 09:42:57 +0200
-From: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>
-To: Anthony Iliopoulos <ailiop@suse.com>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: skip iunlock with empty iolock flags in
- xfs_file_dio_write_aligned
-Message-ID: <atm9R4iXS7vP-cBz@quentin>
-References: <20261021210032.14001-1-ailiop@suse.com>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cuNcsWro
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 89C4E1F000C1;
+	Thu, 22 Oct 2026 08:43:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792658593;
+	bh=aDvUlbBjke1wchRXocub8eukRjOOzXl1LD0fW/2XnxA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=cuNcsWroet8Ts9FgEkexP2G3NpUD47irnzrNnZFgs8Jg8cTNj1qmDRyEbUt9KOET1
+	 e95Q4Fsl4LCVNB3MnoFJgx2Q4ywPvB//kFDt+S7M9ez+StMxocCRtCPqIY+VAOm5f6
+	 K58i6i9xoz8/t2pOsvA+ZHV52ZkXVzIiUUvYng/mdjzBk87gtvFivvG42L00H+J5m3
+	 gYZeTnsprhRgfPerrp43oRaWQgF7gaPEchEcwWWcHJ+zntqrV/AlttY2LTjCrgcU/B
+	 NRwZXPK6smlOxeCRBD5il7BXFJHhnlIkH1la43N/xdEoFSBxvJh8GjBRkxxLUfcNvf
+	 TRiUXaly1tIQQ==
+Date: Thu, 22 Oct 2026 10:43:08 +0200
+From: Andrey Albershteyn <aalbersh@kernel.org>
+To: Alejandro Colomar <alx@kernel.org>
+Cc: linux-man@vger.kernel.org, linux-api@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, 
+	djwong@kernel.org
+Subject: Re: [PATCH v5 2/3] man/man2: introduce man page for file_getattr(2)
+ syscall
+Message-ID: <atnFn3-KSPD3qmJU@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+References: <20260916115141.3500780-1-aalbersh@kernel.org>
+ <20260929130234.3547891-3-aalbersh@kernel.org>
+ <asvBPbDfCIVm71jg@debian>
+ <as9EIPE2lLJs9ram@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+ <atj5s3WAmsjv9aq9@debian>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -65,45 +64,99 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261021210032.14001-1-ailiop@suse.com>
+In-Reply-To: <atj5s3WAmsjv9aq9@debian>
 
-On Wed, Oct 21, 2026 at 11:00:32PM +0200, Anthony Iliopoulos wrote:
-> When using RWF_NOWAIT, xfs_file_write_checks may fail to acquire an
-> exclusive lock upgrade and return -EAGAIN for aligned DIO, setting
-> iolock to 0.
+On 2026-10-21 19:49:29, Alejandro Colomar wrote:
+> Hi Andrey,
 > 
-> In XFS_DEBUG kernels, passing no lock flags to xfs_iunlock triggers an
-> assertion failure. Fix this by unlocking the iolock only when there are
-> any flags set.
+> > Date: 2026-10-14 11:14:07+0200
+> > From: Andrey Albershteyn <aalbersh@kernel.org>
+> >
+> > On 2026-10-11 19:06:32, Alejandro Colomar wrote:
+> > > Hi Andrey,
+> > > 
+> > > > +As with
+> > > > +.BR openat (2),
+> > > > +if
+> > > > +.I path
+> > > > +is relative,
+> > > > +then it is interpreted relative to the directory
+> > > > +referred to by the file descriptor
+> > > > +.IR dirfd .
+> > > > +The special
+> > > > +.I dirfd
+> > > > +value
+> > > > +.B AT_FDCWD
+> > > > +can be used to refer to the current working directory of the calling process.
+> > > > +If
+> > > > +.I path
+> > > > +is absolute,
+> > > > +then
+> > > > +.I dirfd
+> > > > +is ignored.
+> > > 
+> > > Is there any difference with openat(2) regarding the handling of 'path'
+> > > and 'dirfd'?  If not, we could say:
+> > > 
+> > > 	The
+> > > 	.I dirfd
+> > > 	and
+> > > 	.I path
+> > > 	arguments behave in the same way as in
+> > > 	.BR openat (2).
+> > > 
+> > > Is there any small difference, or is it exactly as in openat(2)?
+> > 
+> > The difference I found is that
+> > file_getattr(fd, NULL, ..., AT_EMPTY_PATH) succeeds but the
+> > openat(fd, NULL, O_EMPTYPATH) returns -EFAULT. openat() always wants
+> > an empty string while file_attr() can work with NULL.
+> > 
+> > 	The
+> > 	.I dirfd
+> > 	and
+> > 	.I path
+> > 	arguments behave in the same way as in
+> > 	.BR openat (2),
+> > 	with the divergence that
+> > 	.I path
+> > 	can be NULL meaning an empty string.
+> > 
+> > so maybe like this?
 > 
-> Fixes: 2e2383405824 ("xfs: implement direct writes to zoned RT devices")
-> Signed-off-by: Anthony Iliopoulos <ailiop@suse.com>
+> Sorry that I missed this email.  I had an attack from a nation-state,
+> and had to be very careful with my hardware and communications.  I will
+> probably say something more detailed on the mailing list, but I'll only
+> share some details encrypted with very few people to not give too much
+> information that might help them.  Anyway, when I got back to normal, I
+> missed this and some other emails.
 
-Looks good.
+oh, sorry to here that, hope you're safe now
 
-Reviewed-by: Pankaj Raghav <p.raghav@samsung.com>
+> 
+> And yes, this text seems good to me.  I see your new revision, so I'll
+> review that.  BTW, I wonder why there's this difference between
+> openat(2); was it on purpose?  
 
-> ---
->  fs/xfs/xfs_file.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 7d0c8a197575..1eab6dbb4c5f 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -766,7 +766,8 @@ xfs_file_dio_write_aligned(
->  	trace_xfs_file_direct_write(iocb, from);
->  	ret = iomap_dio_rw(iocb, from, ops, dops, dio_flags, ac, 0);
->  out_unlock:
-> -	xfs_iunlock(ip, iolock);
-> +	if (iolock)
-> +		xfs_iunlock(ip, iolock);
->  	return ret;
->  }
->  
-> -- 
-> 2.56.0
-> 
+Not on purpose, but because file_getattr() uses newer
+filename_maybe_null() interface which works with a NULL.
+
+> Should we maybe require that callers use
+> an empty string with file_getattr(2) too?
+
+I don't have opinion on that, this could be done by dropping the
+
+> > 	with the divergence that
+> > 	.I path
+> > 	can be NULL meaning an empty string.
+
+then.
+
+> Or perhaps allow NULL in
+> openat(2)?  (I prefer the former.)
+
+This, probably, would be not easy to change without any particular
+reason
 
 -- 
-Pankaj
+- Andrey
