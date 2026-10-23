@@ -1,75 +1,65 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=203.254.224.25
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.210
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792746862;
-	b=Y38PS7FvPrZBXgbdSNxBg3qsNbqBissXO789w1gki1B6IM8yiDdYkqnCxLKySp7sNAja
-	 UGbVrJ0pR8qK9qW7ncJxaWa9qFec+JQFF6ffqm5PZKTAEI5ATjDoZ57eRSQaQiDm+wgTb
-	 DEpO/2ptPaAs5qy2pE5mVzxlEqWgatYKoGFpCnGBhQ9WOekR22NBXGv2FvZ5cjjGKFnk4
-	 9fgTwgVnOTCttvAgQ9qmzdhDHlfCisr4Y2x6on2rsGgGbwVsuwkXy/+mYnFKqQSjvBrH4
-	 i10PZSl0vrXs869s+ENeK/ADznSteBtMTCyBZctimjDFjPHPFFN2THo8+Z8aArH6vuQ==
+	t=1792753851;
+	b=qPTz3wPV/1dxnJwLETiF1/QVhLuhveUH5aevjERC5I51pg4pGqvFSiw+6/2mreHQerLs
+	 ieBzPPULewjqvJN1oS2X2GFRFwoKVxgcCnGLyPHY4Nnq8MjOYxmHbEtZbofWKa5+ipMHA
+	 UzEHZf7Y4diRwcFy0LYWl4Vgm9cFfhjXkn6nLzbx8yAImodoYfhJqOXrSj8kY0pe/QTAO
+	 Vt0waMc7eyf8xjPp7qcJX/Ey1vYVYcvA8egkUpZodq/0DXwr6a37c/F1q2bQ7FFJ0AMGZ
+	 fyrNG6640hTAQ7UfuHRd5cP6tGRD9hHz1wEZkiJK0hxogdt1EIZmrQskcWBYBbD6sGg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792746862;
-	h=DMARC-Filter:Received:DKIM-Filter:DKIM-Signature:Received:Received:
-	 Received:Received:Date:From:To:Cc:Subject:Message-ID:MIME-Version:
-	 In-Reply-To:X-CMS-MailID:X-Msg-Generator:Content-Type:
-	 X-Sendblock-Type:CMS-TYPE:cpgsPolicy:X-CFilter-Loop:X-CMS-RootMailID:
-	 References;
-	bh=KxRBaCl6SIR11QatilRX983Sq8/llllRV78Ep6I15c8=;
-	b=GGmiucqPV4FuKEmiwP884jsk6Ls1Ohz4NauoSu3KfLOyu8IPy2h6P1wktXvDIKq7DQPB
-	 QWn72Qjxu4Ren5Tlx6QCb+j4Zw1YicB36uvDKH1ZVSwcdUeQ7IFoD3JabFQ8DlsDO1BEs
-	 Ucsg0eIJoWj567Lio/GptjP+wp7wFqyUgLr6dxJuxi9909aP0sghWmq66XJwS5D0atdIp
-	 NykJdO46CRh1UWwUJHfEqyl27RzbbrRp6/ZVd9RLSjigjE/VBQMi+dmnZo7OZ38fDim/v
-	 dwR7JrVltKZ33T3q+zYgOYDplGhZ+rEqyN1Aqx1ckVPkv5olok0GqpMiZfkanVmX/Wg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792753851;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=W7+3hjvD5m826P7DsODL2DpmAYEEQnglUyqR3Z6Iq18=;
+	b=sm8FmJ4yVnJ/Psbhtui1HeSP5956nAQjLRcyiHVvI8ZpdXkeOHJaNogmhj8kfn367f/z
+	 6zxJ/hqP1Web1dFEg52qxLv1GVSB2zOMn1rKoU4FnIe8xZiwGyRjwG+aWhuZuf8xLoscH
+	 0G8FsNzg8pzsbe0SiSEqyfHcEIXpdjzGJf8uFsNaRawds5R2FjuMyukiHhTvysQMW1vkw
+	 ujDyVAAS6Ts0o/PU/8/x29EkgjhBFXIztWZUZ211Z2/FfwSVb4ipitGeAHyIhOQWs4It4
+	 /3at/b66vg9D5pLcQJF8GRqk5QXY1KZaKzi58leJ+kg8hwMTXq1ghwKLQfTrqWezNqA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=samsung.com;
-	spf=pass smtp.mailfrom=samsung.com;
-	dkim=pass header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=NTww7lbG;
-	arc=none smtp.remote-ip=203.254.224.25
-Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=vKHR1znC;
+	arc=none smtp.remote-ip=91.218.175.210
+Received: from mta0.migadu.com (out-210.mta0.migadu.com [91.218.175.210])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5106606A320
-	for <linux-xfs@vger.kernel.org>; Fri, 23 Oct 2026 09:14:21 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B5106606A320
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76F2E606A31E
+	for <linux-xfs@vger.kernel.org>; Fri, 23 Oct 2026 11:10:49 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 76F2E606A31E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=NTww7lbG
-Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
-	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20261023091419epoutp020bc3bc8f6282cace2a63cae4bb6a47df~hHcU6xYym2339623396epoutp02i
-	for <linux-xfs@vger.kernel.org>; Fri, 23 Oct 2026 09:14:19 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20261023091419epoutp020bc3bc8f6282cace2a63cae4bb6a47df~hHcU6xYym2339623396epoutp02i
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1792746859;
-	bh=KxRBaCl6SIR11QatilRX983Sq8/llllRV78Ep6I15c8=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=NTww7lbG6DNGSbYdJpQKW/4oLc1S4ixnafP49IKas3mC9sCYy0mZ/RYQwM35xquxi
-	 3LlVeX720+DIt31tVagsJuQG/9lDc4C5+1vj2esuEppM3IMFRsLKmttZaLZL4iCkU/
-	 6CTfROQdjsSJVFnU33yGdRRmi+eM0haOrPov7MxI=
-Received: from epsnrtp02.localdomain (unknown [182.195.42.154]) by
-	epcas5p4.samsung.com (KnoxPortal) with ESMTPS id
-	20261023091419epcas5p471c3db4981fae6ad5fd9f843c319a218~hHcUhYtpu2146721467epcas5p4l;
-	Fri, 23 Oct 2026 09:14:19 +0000 (GMT)
-Received: from epcas5p2.samsung.com (unknown [182.195.38.93]) by
-	epsnrtp02.localdomain (Postfix) with ESMTP id 4j9y561PQ1z2SSKX; Fri, 23 Oct
-	2026 09:14:18 +0000 (GMT)
-Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
-	epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
-	20261022130134epcas5p23704ea4f10cd9d90762b89c3c9fdf254~g25c8K_br1950919509epcas5p2j;
-	Thu, 22 Oct 2026 13:01:34 +0000 (GMT)
-Received: from green245.gost (unknown [107.99.41.245]) by
-	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-	20261022130132epsmtip19a5b77749906115956858b506dddc7c3~g25bZmdxB1541915419epsmtip1I;
-	Thu, 22 Oct 2026 13:01:32 +0000 (GMT)
-Date: Thu, 22 Oct 2026 18:30:53 +0530
-From: Nitesh Shetty <nj.shetty@samsung.com>
-To: Pavel Begunkov <asml.silence@gmail.com>
-Cc: Anuj Gupta <anuj1072538@gmail.com>, hch@lst.de, djwong@kernel.org,
-	cem@kernel.org, brauner@kernel.org, axboe@kernel.dk,
-	linux-block@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, joshi.k@samsung.com, anuj20.g@samsung.com
-Subject: Re: [RFC 2/4] block: refuse a dma-buf bio for a disk the buffer was
- not registered on
-Message-ID: <20261022130053.vhphcch4swb5xxih@green245.gost>
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=vKHR1znC
+X-Envelope-To: linux-xfs@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=lTWrsqfwjl6Xh0ZSuBODjEwfl4/jYFcVJyZ7FckM1Ao=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1792753847; v=1; x=1793358647;
+ b=vKHR1znCiBjytHElULTzSiq05ekQOKvsYfdAyl8Vep2EwsNGCeulRmJgabXVKxdkHLZ+BKWv
+ OO1AYRSaNEsAeRbNGF3YI434B2VsdOXfStJoK38dpfCeW3Kn3EP+lp3pRDxD6EKdeb6xN376R+t
+ tQAcbIfmos6wg1DtQ5pZTPA8=
+X-Envelope-To: linux-xfs@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 9081e9ea27b95ccd;
+	Fri, 23 Oct 2026 11:10:47 +0000
+X-Mizu-Trace-ID: 9081e9ea27b95ccd
+X-Migadu-Flow: FLOW_OUT
+Date: Fri, 23 Oct 2026 13:10:34 +0200
+From: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>
+To: Daejun Park <daejun7.park@samsung.com>
+Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org, 
+	Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <djwong@kernel.org>, 
+	Dave Chinner <dgc@kernel.org>, Chuck Lever <cel@kernel.org>, Jeff Layton <jlayton@kernel.org>, 
+	Dai Ngo <Dai.Ngo@oracle.com>, Sergey Bashirov <sergeybashirov@gmail.com>, 
+	Andrey Albershteyn <aalbersh@kernel.org>, linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	stable@vger.kernel.org
+Subject: Re: [PATCH v4 6/9] xfs: clamp the pNFS layout range to the maximum
+ file size
+Message-ID: <attAFOxxELxAxoJo@quentin>
+References: <20261020-xfs-pnfs-batch-v4-0-9230fa2ca4a4@samsung.com>
+ <20261020-xfs-pnfs-batch-v4-6-9230fa2ca4a4@samsung.com>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -79,100 +69,63 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-In-Reply-To: <5f542a8d-c6c1-4c5d-b0c6-f761af2e126a@gmail.com>
-X-CMS-MailID: 20261022130134epcas5p23704ea4f10cd9d90762b89c3c9fdf254
-X-Msg-Generator: CA
-Content-Type: multipart/mixed;
-	boundary="----VZDtnczHWjdXYXkjw.jkIJrU2UH2.1dU.Tnm2W3-fiUacbuL=_9f5cc_"
-X-Sendblock-Type: REQ_APPROVE
-CMS-TYPE: 105P
-cpgsPolicy: CPGSC10-542,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20261022130134epcas5p23704ea4f10cd9d90762b89c3c9fdf254
-References: <20261016091919.971295-1-anuj1072538@gmail.com>
-	<20261016091919.971295-3-anuj1072538@gmail.com>
-	<5f542a8d-c6c1-4c5d-b0c6-f761af2e126a@gmail.com>
-	<CGME20261022130134epcas5p23704ea4f10cd9d90762b89c3c9fdf254@epcas5p2.samsung.com>
-
-------VZDtnczHWjdXYXkjw.jkIJrU2UH2.1dU.Tnm2W3-fiUacbuL=_9f5cc_
-Content-Type: text/plain; charset="utf-8"; format="flowed"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20261020-xfs-pnfs-batch-v4-6-9230fa2ca4a4@samsung.com>
 
-On 21/10/26 04:12PM, Pavel Begunkov wrote:
->On 10/16/26 10:19, Anuj Gupta wrote:
->>From: Nitesh Shetty <nj.shetty@samsung.com>
->...> +static bool bio_dmabuf_map_valid(const struct bio *bio,
->>+				 const struct iov_iter *iter)
->>+{
->>+	return iter->dmabuf_map->ctx->registered_devt ==
->>+		disk_devt(bio->bi_bdev->bd_disk);
->>+}
->>+
->>  /**
->>   * bio_iov_iter_get_pages - add user or kernel pages to a bio
->>   * @bio: bio to add pages to
->>@@ -1300,6 +1312,9 @@ int bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter,
->>  	if (WARN_ON_ONCE(bio_flagged(bio, BIO_CLONED)))
->>  		return -EIO;
->>+	if (iov_iter_is_dmabuf_map(iter) && !bio_dmabuf_map_valid(bio, iter))
->>+		return -EXDEV;
->>+
->>  	if (bio_iov_iter_set(bio, iter)) {
->>  		if (iov_iter_is_bvec(iter) &&
->>  		    !bio_iov_bvec_aligned(bio, mem_align_mask))
->>diff --git a/block/fops.c b/block/fops.c
->>index 18a755f6e0b0..b36dde10a4ac 100644
->>--- a/block/fops.c
->>+++ b/block/fops.c
->>@@ -19,6 +19,7 @@
->>  #include <linux/iomap.h>
->>  #include <linux/module.h>
->>  #include <linux/io_uring/cmd.h>
->>+#include <linux/dma-buf-io.h>
->>  #include "blk.h"
->>  static inline struct inode *bdev_file_inode(struct file *file)
->>@@ -938,6 +939,7 @@ int bdev_init_dma_buf_io_ctx(struct file *file, struct block_device *bdev,
->>  			     struct dma_buf_io_ctx *ctx)
->>  {
->>  	struct gendisk *disk = bdev->bd_disk;
->>+	int ret;
->>  	if (!(file->f_flags & O_DIRECT))
->>  		return -EINVAL;
->>@@ -945,7 +947,10 @@ int bdev_init_dma_buf_io_ctx(struct file *file, struct block_device *bdev,
->>  		return -EOPNOTSUPP;
->>  	if (bdev_has_integrity_csum(bdev))
->>  		return -EOPNOTSUPP;
->>-	return disk->fops->init_dma_buf_io_ctx(bdev, ctx);
->>+	ret = disk->fops->init_dma_buf_io_ctx(bdev, ctx);
->>+	if (!ret)
->>+		ctx->registered_devt = disk_devt(disk);
->>+	return ret;
->>  }
->>  EXPORT_SYMBOL_GPL(bdev_init_dma_buf_io_ctx);
->>diff --git a/include/linux/dma-buf-io.h b/include/linux/dma-buf-io.h
->>index b9bbeca1744f..d42a79f2ac9b 100644
->>--- a/include/linux/dma-buf-io.h
->>+++ b/include/linux/dma-buf-io.h
->>@@ -50,6 +50,8 @@ struct dma_buf_io_ctx {
->>  	void					*dev_priv;
->>  	const struct dma_buf_io_ops		*dev_ops;
->>+
->>+	dev_t					registered_devt;
->
->That wouldn't work well with multiple devices. Maybe reject it in
->xfs / iomap for now?
->
->FWIW, a generic solution is for xfs to own the ctx passed on
->registration instead of forwarding it to block, allocate an array
->of new ctxs for each device and register them separately. This
->should even be able to support dynamic device registration.
->
-Agree, that works, keeps block layer clean, will update in next version.
+On Tue, Oct 20, 2026 at 12:08:49PM +0900, Daejun Park wrote:
+> xfs_fs_map_blocks() checks the range of a layout with
+> 
+> 	if (offset > limit)
+> 		goto out_unlock;
+> 	if (offset > limit - length)
+> 		length = limit - offset;
+> 
+> limit - length is computed in u64, so a length larger than the limit
+> wraps and the length is not clamped. nfsd passes the LAYOUTGET range
+> through, and RFC 8881 lets a client ask for NFS4_UINT64_MAX bytes, for
+> the rest of the file. offset + length then wraps to offset - 1, end_fsb
+> rounds back to offset_fsb, and xfs_bmapi_read() maps nothing. For a read
+> layout, xfs_bmbt_to_iomap() then gets an uninitialized imap: with a
+> zeroed stack it logs "Access to block zero", marks the data fork sick
+> and fails with -EFSCORRUPTED, and otherwise the mapping is whatever was
+> on the stack and can reach the client. For a write layout,
+> xfs_iomap_write_direct() is called with a count of zero, which trips an
+> ASSERT with XFS_DEBUG. An offset of 2^63 or more, which nfsd accepts
+> too, becomes negative in the loff_t argument and passes the first check.
+> 
+> Reject a negative offset and an offset at the limit, and compare the
+> length with what is left up to the limit, which cannot wrap once the
+> offset is below it.
+> 
+> With pynfs as the client, a READ LAYOUTGET for NFS4_UINT64_MAX bytes at
+> offset 0 got NFS4ERR_IO, as did an RW one on an empty file, which also
+> made nfsd warn
+> about the non-standard errno -63, and a READ LAYOUTGET at offset 2^63
+> got NFS4ERR_IO as well. With this patch and the previous one, the one at
+> 2^63 gets NFS4ERR_INVAL, the RW one gets NFS4ERR_NOSPC after nfsd has
+> allocated one extent after the other until fewer than
+> XFS_MAX_BMBT_EXTLEN blocks were free, which left less than 8 GiB of the
+> 32 GiB free, and the server logs nothing. The READ one gets NFS4ERR_INVAL
+> as well: nfsd, which maps a layout one extent at a time since
+> commit cc6c40e09d7b ("NFSD/blocklayout: Support multiple extents per
+> LAYOUTGET"), asks again from the maximum file size on. An RW one on a
+> file whose first 64 KiB are allocated, with a loga_maxcount that has
+> room for one extent, is granted 0+65536.
+> 
+> This depends on the previous patch. Without it, an RW LAYOUTGET to the
+> end of the file, whose length is now clamped instead of wrapping, asks
+> xfs_iomap_write_direct() for every block up to the maximum file size,
+> which wraps the block reservation and shuts the filesystem down where it
+> got NFS4ERR_IO before.
+> 
+> Fixes: 527851124d10 ("xfs: implement pNFS export operations")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Daejun Park <daejun7.park@samsung.com>
+> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+> ---
 
---Nitesh
-
-------VZDtnczHWjdXYXkjw.jkIJrU2UH2.1dU.Tnm2W3-fiUacbuL=_9f5cc_
-Content-Type: text/plain; charset="utf-8"
-
-
-------VZDtnczHWjdXYXkjw.jkIJrU2UH2.1dU.Tnm2W3-fiUacbuL=_9f5cc_--
+Looks good,
+Reviewed-by: Pankaj Raghav <p.raghav@samsung.com>
+-- 
+Pankaj
