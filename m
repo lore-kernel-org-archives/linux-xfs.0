@@ -1,65 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.210
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792753851;
-	b=qPTz3wPV/1dxnJwLETiF1/QVhLuhveUH5aevjERC5I51pg4pGqvFSiw+6/2mreHQerLs
-	 ieBzPPULewjqvJN1oS2X2GFRFwoKVxgcCnGLyPHY4Nnq8MjOYxmHbEtZbofWKa5+ipMHA
-	 UzEHZf7Y4diRwcFy0LYWl4Vgm9cFfhjXkn6nLzbx8yAImodoYfhJqOXrSj8kY0pe/QTAO
-	 Vt0waMc7eyf8xjPp7qcJX/Ey1vYVYcvA8egkUpZodq/0DXwr6a37c/F1q2bQ7FFJ0AMGZ
-	 fyrNG6640hTAQ7UfuHRd5cP6tGRD9hHz1wEZkiJK0hxogdt1EIZmrQskcWBYBbD6sGg==
+	t=1792754901;
+	b=QUOmSSpN3rnJPzNa8ThF5KGkCRqT065D6ztKvedt/KSi0RdULZUThEJ0z+W4dgQEvBmk
+	 0dvD5qTTHt5dun7bh+7cMV9QcA92VOGn5zS2vsDmVFpttNAscSOoP6MDXNuyCcbtj3H4I
+	 EMkgCeMAglg8Ya+JuQWe/2iXmCpdldEjGPjr3xUlGWf68nJhYBuHu1qGP9OapavxE9x9S
+	 Dbc9gzarVh7G0LF/tZqTnSY7Uhv806TR1k9L6NzT1VodM1VGfkJQBETQ2/lCoxNnC5IYf
+	 wC0NCujkNwFf57eMJRQ91GONnsvEZcmrfeSKlggVsYxht1IzGGRXZF1VJD29A1pPByg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792753851;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Date:From:To:Cc:Subject:Message-ID:
+	a=rsa-sha256; c=relaxed/relaxed; t=1792754901;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=W7+3hjvD5m826P7DsODL2DpmAYEEQnglUyqR3Z6Iq18=;
-	b=sm8FmJ4yVnJ/Psbhtui1HeSP5956nAQjLRcyiHVvI8ZpdXkeOHJaNogmhj8kfn367f/z
-	 6zxJ/hqP1Web1dFEg52qxLv1GVSB2zOMn1rKoU4FnIe8xZiwGyRjwG+aWhuZuf8xLoscH
-	 0G8FsNzg8pzsbe0SiSEqyfHcEIXpdjzGJf8uFsNaRawds5R2FjuMyukiHhTvysQMW1vkw
-	 ujDyVAAS6Ts0o/PU/8/x29EkgjhBFXIztWZUZ211Z2/FfwSVb4ipitGeAHyIhOQWs4It4
-	 /3at/b66vg9D5pLcQJF8GRqk5QXY1KZaKzi58leJ+kg8hwMTXq1ghwKLQfTrqWezNqA==
+	bh=4KzbfWb4R5EF9vQndbPyhzkZkHPodQ4prV025x9/ldo=;
+	b=AijFimZOJWbQFW/T4tH3rSpJCDqyOT8GlVnEvL8dOvJrZPjkneM/h2qOPZU/W6MRIpc9
+	 JPecSgV1BwtuDTKLtXoAnpdK2e1p7g8I6ZkdctyJE6othLd9Yge0YAwo3pTThTg13dsW4
+	 y1c/YDcPohBz3o7XFesHQpnvBuYGS1V7481PsBKOB5zjxPPgxV6ps4bXycFdYFD9RZhj9
+	 pUKhoG++8sLJLEo+TJPWypRIaCyPwGHn/Y9CI34xy5lWQnrL7gRAgMSaFICFTonabaJDB
+	 VTz0IXaGOTUdqPdD9HdRChYpRUnzFXpzLIhWiuV4jmqeoq08Naf6604saf3/LDsbTgg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=vKHR1znC;
-	arc=none smtp.remote-ip=91.218.175.210
-Received: from mta0.migadu.com (out-210.mta0.migadu.com [91.218.175.210])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kKGPAaof;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76F2E606A31E
-	for <linux-xfs@vger.kernel.org>; Fri, 23 Oct 2026 11:10:49 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 76F2E606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFD9C606A31A;
+	Fri, 23 Oct 2026 11:28:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=vKHR1znC
-X-Envelope-To: linux-xfs@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=lTWrsqfwjl6Xh0ZSuBODjEwfl4/jYFcVJyZ7FckM1Ao=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1792753847; v=1; x=1793358647;
- b=vKHR1znCiBjytHElULTzSiq05ekQOKvsYfdAyl8Vep2EwsNGCeulRmJgabXVKxdkHLZ+BKWv
- OO1AYRSaNEsAeRbNGF3YI434B2VsdOXfStJoK38dpfCeW3Kn3EP+lp3pRDxD6EKdeb6xN376R+t
- tQAcbIfmos6wg1DtQ5pZTPA8=
-X-Envelope-To: linux-xfs@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 9081e9ea27b95ccd;
-	Fri, 23 Oct 2026 11:10:47 +0000
-X-Mizu-Trace-ID: 9081e9ea27b95ccd
-X-Migadu-Flow: FLOW_OUT
-Date: Fri, 23 Oct 2026 13:10:34 +0200
-From: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>
-To: Daejun Park <daejun7.park@samsung.com>
-Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org, 
-	Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <djwong@kernel.org>, 
-	Dave Chinner <dgc@kernel.org>, Chuck Lever <cel@kernel.org>, Jeff Layton <jlayton@kernel.org>, 
-	Dai Ngo <Dai.Ngo@oracle.com>, Sergey Bashirov <sergeybashirov@gmail.com>, 
-	Andrey Albershteyn <aalbersh@kernel.org>, linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	stable@vger.kernel.org
-Subject: Re: [PATCH v4 6/9] xfs: clamp the pNFS layout range to the maximum
- file size
-Message-ID: <attAFOxxELxAxoJo@quentin>
-References: <20261020-xfs-pnfs-batch-v4-0-9230fa2ca4a4@samsung.com>
- <20261020-xfs-pnfs-batch-v4-6-9230fa2ca4a4@samsung.com>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kKGPAaof
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F04ED1F01825;
+	Fri, 23 Oct 2026 11:28:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792754900;
+	bh=4KzbfWb4R5EF9vQndbPyhzkZkHPodQ4prV025x9/ldo=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=kKGPAaofBrEX7ssLlFpzdZw3es7F0Zv/mPcfDWbhJhFaUcg/SCeBw9GLn4abp+5hD
+	 nTWKoDrbvJqwjAQ0hMn62gCFhAmCiYRJSAsi+AtQgM2APlcILhrMbQMs1r7yQoiPAA
+	 rXHiFbZ36uObjTepfLoo74ryNPGF3+a+ukmv53FCOXrVd9AGdOs4QfE3Uehz1yJ6ck
+	 mYFivhGed/lsICkoBuikZJKTdw+ulAxxXvFER1mtALtgQN5DkqW15+QfOvZTaQdpmx
+	 9UMz7N0EtQ6S6KEpxShco6Fza1eEtmBFsjX+rAdcHaPawuLokt8AXmABDXDjtG+BmH
+	 MsDzshzGMrs+g==
+Date: Fri, 23 Oct 2026 13:28:11 +0200
+From: Alejandro Colomar <alx@kernel.org>
+To: Andrey Albershteyn <aalbersh@kernel.org>
+Cc: linux-man@vger.kernel.org, linux-api@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v6 1/2] man/man2: introduce man page for file_getattr(2)
+ syscall
+Message-ID: <attEnAMmcV2YuwtN@debian>
+References: <20261021141010.314835-1-aalbersh@kernel.org>
+ <20261021141010.314835-2-aalbersh@kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -69,63 +58,337 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="544li3fyfgezh5tt"
 Content-Disposition: inline
-In-Reply-To: <20261020-xfs-pnfs-batch-v4-6-9230fa2ca4a4@samsung.com>
+In-Reply-To: <20261021141010.314835-2-aalbersh@kernel.org>
 
-On Tue, Oct 20, 2026 at 12:08:49PM +0900, Daejun Park wrote:
-> xfs_fs_map_blocks() checks the range of a layout with
-> 
-> 	if (offset > limit)
-> 		goto out_unlock;
-> 	if (offset > limit - length)
-> 		length = limit - offset;
-> 
-> limit - length is computed in u64, so a length larger than the limit
-> wraps and the length is not clamped. nfsd passes the LAYOUTGET range
-> through, and RFC 8881 lets a client ask for NFS4_UINT64_MAX bytes, for
-> the rest of the file. offset + length then wraps to offset - 1, end_fsb
-> rounds back to offset_fsb, and xfs_bmapi_read() maps nothing. For a read
-> layout, xfs_bmbt_to_iomap() then gets an uninitialized imap: with a
-> zeroed stack it logs "Access to block zero", marks the data fork sick
-> and fails with -EFSCORRUPTED, and otherwise the mapping is whatever was
-> on the stack and can reach the client. For a write layout,
-> xfs_iomap_write_direct() is called with a count of zero, which trips an
-> ASSERT with XFS_DEBUG. An offset of 2^63 or more, which nfsd accepts
-> too, becomes negative in the loff_t argument and passes the first check.
-> 
-> Reject a negative offset and an offset at the limit, and compare the
-> length with what is left up to the limit, which cannot wrap once the
-> offset is below it.
-> 
-> With pynfs as the client, a READ LAYOUTGET for NFS4_UINT64_MAX bytes at
-> offset 0 got NFS4ERR_IO, as did an RW one on an empty file, which also
-> made nfsd warn
-> about the non-standard errno -63, and a READ LAYOUTGET at offset 2^63
-> got NFS4ERR_IO as well. With this patch and the previous one, the one at
-> 2^63 gets NFS4ERR_INVAL, the RW one gets NFS4ERR_NOSPC after nfsd has
-> allocated one extent after the other until fewer than
-> XFS_MAX_BMBT_EXTLEN blocks were free, which left less than 8 GiB of the
-> 32 GiB free, and the server logs nothing. The READ one gets NFS4ERR_INVAL
-> as well: nfsd, which maps a layout one extent at a time since
-> commit cc6c40e09d7b ("NFSD/blocklayout: Support multiple extents per
-> LAYOUTGET"), asks again from the maximum file size on. An RW one on a
-> file whose first 64 KiB are allocated, with a loga_maxcount that has
-> room for one extent, is granted 0+65536.
-> 
-> This depends on the previous patch. Without it, an RW LAYOUTGET to the
-> end of the file, whose length is now clamped instead of wrapping, asks
-> xfs_iomap_write_direct() for every block up to the maximum file size,
-> which wraps the block reservation and shuts the filesystem down where it
-> got NFS4ERR_IO before.
-> 
-> Fixes: 527851124d10 ("xfs: implement pNFS export operations")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Daejun Park <daejun7.park@samsung.com>
-> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+
+--544li3fyfgezh5tt
+Content-Type: text/plain; protected-headers=v1; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+From: Alejandro Colomar <alx@kernel.org>
+To: Andrey Albershteyn <aalbersh@kernel.org>
+Cc: linux-man@vger.kernel.org, linux-api@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v6 1/2] man/man2: introduce man page for file_getattr(2)
+ syscall
+Message-ID: <attEnAMmcV2YuwtN@debian>
+References: <20261021141010.314835-1-aalbersh@kernel.org>
+ <20261021141010.314835-2-aalbersh@kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <20261021141010.314835-2-aalbersh@kernel.org>
+
+Hi Andrey,
+
+> Date: 2026-10-21 16:10:04+0200
+> From: Andrey Albershteyn <aalbersh@kernel.org>
+>
+> Add manual page for file_getattr().
+>=20
+> Link: https://lore.kernel.org/all/20250630-xattrat-syscall-v6-0-c4e3bc352=
+27b@kernel.org/
+> Reviewed-by: Alejandro Colomar <alx@kernel.org>
+> Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
+
+Thanks!  I've applied the patch (with very minor tweaks in the commit
+message an the diff).
+
+
+Have a lovely day!
+Alex
+
 > ---
+>  man/man2/file_getattr.2 | 252 ++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 252 insertions(+)
+>  create mode 100644 man/man2/file_getattr.2
+>=20
+> diff --git a/man/man2/file_getattr.2 b/man/man2/file_getattr.2
+> new file mode 100644
+> index 000000000000..9963eeaa7caf
+> --- /dev/null
+> +++ b/man/man2/file_getattr.2
+> @@ -0,0 +1,252 @@
+> +.\" Copyright, the authors of the Linux man-pages project
+> +.\"
+> +.\" SPDX-License-Identifier: Linux-man-pages-copyleft
+> +.\"
+> +.TH file_getattr 2 (date) "Linux man-pages (unreleased)"
+> +.SH NAME
+> +file_getattr \- get filesystem file attributes
+> +.SH SYNOPSIS
+> +.nf
+> +.BR "#include <linux/fcntl.h>" "      /* " AT_* " constants */"
+> +.BR "#include <linux/fs.h>" "         /* " FS_XFLAG_* " constants */"
+> +.BR "#include <sys/syscall.h>" "      /* " SYS_* " constants */"
+> +.B #include <unistd.h>
+> +.P
+> +.B long syscall(SYS_file_getattr,
+> +.BI "               int " dirfd ", const char *" path ,
+> +.BI "               struct file_attr *" fattr ", size_t " size ,
+> +.BI "               unsigned int " flags );
+> +.fi
+> +.SH DESCRIPTION
+> +The
+> +.BR file_getattr ()
+> +system call retrieves filesystem file attributes
+> +of the file
+> +specified by path.
+> +.P
+> +The
+> +.I dirfd
+> +and
+> +.I path
+> +arguments behave in the same way as in
+> +.BR openat (2),
+> +with the difference that
+> +.I path
+> +can be NULL meaning an empty string.
+> +.P
+> +The
+> +.I fattr
+> +argument is a pointer to a
+> +.I file_attr
+> +structure.
+> +This structure will be filled with file attributes.
+> +This structure is described in
+> +.BR file_attr (2type).
+> +.P
+> +The
+> +.I size
+> +argument specifies the size of the structure pointed to by
+> +.IR fattr .
+> +The size indicates the version of the structure in use,
+> +and should always be specified as
+> +.IR sizeof(struct file_attr) .
+> +.P
+> +The
+> +.I flags
+> +argument contains a bitwise OR of zero or more of the following constant=
+s:
+> +.TP
+> +.B AT_EMPTY_PATH
+> +If
+> +.I path
+> +is an empty string,
+> +operate on the file referred to by
+> +.IR dirfd .
+> +In this case,
+> +.I dirfd
+> +can refer to any type of file,
+> +not just a directory.
+> +.TP
+> +.B AT_SYMLINK_NOFOLLOW
+> +If
+> +.I path
+> +is a symbolic link,
+> +do not dereference it;
+> +instead,
+> +get attributes of the symbolic link inode itself.
+> +.SH RETURN VALUE
+> +On success,
+> +zero is returned.
+> +On error,
+> +\-1 is returned,
+> +and
+> +.I errno
+> +is set to indicate the error.
+> +.SH ERRORS
+> +.TP
+> +.B E2BIG
+> +.I size
+> +is too big (larger than
+> +.BR PAGE_SIZE ).
+> +.TP
+> +.B EACCES
+> +Search permission is denied for one of the directories
+> +in the path prefix of
+> +.IR path .
+> +.TP
+> +.B EBADF
+> +.I path
+> +is relative but
+> +.I dirfd
+> +is neither
+> +.B AT_FDCWD
+> +nor a valid file descriptor.
+> +.TP
+> +.B EBADF
+> +.I path
+> +is an empty string,
+> +.B AT_EMPTY_PATH
+> +was specified,
+> +but
+> +.I dirfd
+> +is neither
+> +.B AT_FDCWD
+> +nor a valid file descriptor.
+> +.TP
+> +.B EFAULT
+> +.I path
+> +or
+> +.I fattr
+> +is an invalid pointer.
+> +.TP
+> +.B EINVAL
+> +Unknown flags specified in
+> +.IR flags .
+> +.TP
+> +.B EINVAL
+> +.I size
+> +is smaller than
+> +.BR FILE_ATTR_SIZE_VER0 .
+> +.TP
+> +.B ELOOP
+> +Too many symbolic links encountered while resolving
+> +.IR path .
+> +.TP
+> +.B ENAMETOOLONG
+> +.I path
+> +is too long.
+> +.TP
+> +.B ENOENT
+> +A component of
+> +.I path
+> +does not exist.
+> +.TP
+> +.B ENOENT
+> +.I path
+> +is an empty string and
+> +.B AT_EMPTY_PATH
+> +was not specified in
+> +.IR flags .
+> +.TP
+> +.B ENOMEM
+> +Insufficient kernel memory was available.
+> +.TP
+> +.B ENOTDIR
+> +A component of the path prefix of
+> +.I path
+> +is not a directory.
+> +.TP
+> +.B ENOTDIR
+> +.I path
+> +is relative and
+> +.I dirfd
+> +is a file descriptor referring to a file other than a directory.
+> +.TP
+> +.B EOPNOTSUPP
+> +The filesystem does not support getting attributes on this type of inode.
+> +.SH HISTORY
+> +Linux 6.17
+> +.SH NOTES
+> +This system call is designed to be extensible.
+> +The
+> +.I size
+> +argument allows user-space applications to indicate
+> +which version of the
+> +.I file_attr
+> +structure they are using,
+> +enabling the kernel to support both old and new versions
+> +of the structure simultaneously.
+> +.P
+> +If
+> +.I size
+> +is smaller than the structure size the kernel expects,
+> +only the fields that fit within
+> +.I size
+> +will be filled in.
+> +If
+> +.I size
+> +is larger than the kernel's structure size,
+> +the extra bytes are zeroed.
+> +.SH EXAMPLES
+> +The program below demonstrates the use of
+> +.BR file_getattr ()
+> +to retrieve and display file attributes.
+> +.P
+> +.in +4n
+> +.\" SRC BEGIN (file_getattr.c)
+> +.EX
+> +#define _GNU_SOURCE
+> +#include <fcntl.h>
+> +#include <linux/fs.h>
+> +#include <stdio.h>
+> +#include <stdlib.h>
+> +#include <sys/syscall.h>
+> +#include <unistd.h>
+> +\&
+> +#ifndef SYS_file_getattr
+> +#define SYS_file_getattr 467
+> +#endif
+> +\&
+> +int
+> +main(int argc, char *argv[])
+> +{
+> +    struct file_attr fa;
+> +    long ret;
+> +\&
+> +    if (argc !=3D 2) {
+> +        fprintf(stderr, "Usage: %s <filename>\[rs]n", argv[0]);
+> +        exit(EXIT_FAILURE);
+> +    }
+> +\&
+> +    ret =3D syscall(SYS_file_getattr, AT_FDCWD, argv[1], &fa,
+> +                  sizeof(fa), 0);
+> +    if (ret =3D=3D \-1) {
+> +        perror("file_getattr");
+> +        exit(EXIT_FAILURE);
+> +    }
+> +\&
+> +    printf("File attributes:\[rs]n");
+> +    printf("  xflags:     0x%w64x\[rs]n", fa.fa_xflags);
+> +    printf("  extsize:    %w32u\[rs]n", fa.fa_extsize);
+> +    printf("  nextents:   %w32u\[rs]n", fa.fa_nextents);
+> +    printf("  projid:     %w32u\[rs]n", fa.fa_projid);
+> +    printf("  cowextsize: %w32u\[rs]n", fa.fa_cowextsize);
+> +\&
+> +    /*
+> +     * Try setting NODUMP flag with chattr +d ./foo to see
+> +     * the difference.
+> +     */
+> +    if (fa.fa_xflags & FS_XFLAG_NODUMP)
+> +        printf("  NODUMP flag is set\[rs]n");
+> +\&
+> +    exit(EXIT_SUCCESS);
+> +}
+> +.EE
+> +.\" SRC END
+> +.in
+> +.SH SEE ALSO
+> +.BR file_setattr (2),
+> +.BR file_attr (2type),
+> +.BR ioctl (2),
+> +.BR ioctl_fs (2),
+> +.BR openat (2),
+> +.BR ioctl_xfs_fssetxattr (2)
+> --=20
+> 2.56.0
+>=20
+>=20
 
-Looks good,
-Reviewed-by: Pankaj Raghav <p.raghav@samsung.com>
--- 
-Pankaj
+--=20
+<https://www.alejandro-colomar.es>
+
+--544li3fyfgezh5tt
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEES7Jt9u9GbmlWADAi64mZXMKQwqkFAmrbRMsACgkQ64mZXMKQ
+wqnYSg/8C3uP8izC0yO8ulYgq2QII1Fx6GtDZM2RzUS5nbltbs3B6TQ+qygT2EII
+ziOHSjXT0ZWFNG8xqjTTOt2DUv3j+GlE39idwNwDuBSvA7xiCfF7u7rVqlEdg1HE
+GNh/MJjVS5Y7oEldxPHDBeeK6JJifXiJMfaLGbYawQFMJYHarXWv59vUjskbe8D7
+0Hr4sPBax6iAmAAGhBdcDsK47I4zlej+VRsOkOU1vqHoJjmhtMekPEanrKlXKhBZ
+QVfuX925iv7x/fDqonc7sCVbnoFu/CRTwV3J5nuyN9TeN3t2ISSlc38a3A1bzB05
+kkeSUg2IauZqgn5lN26lGaWePUCMToYKkDtmd8WCP/BYBXkKjJiQJv0buQxyv5Ed
+oVXe87WxwZT1ulzJYcnMH5gQPsRfr0YC8yowwFKCH5UTKdu1I3Hz4Ivtx3KBj1Mm
+52X4Kd4F30bMYM0HsE1coCQy48chzyVoCNh3YYFN9rUOzhTyDK4iDm3a+pFmsCAL
+br6EYUbmmxI3fSmuJ2YHILh4pK3CeV7r/gcIqyZSP/vaWLbE+85E/6xVgE5pHl6A
++qTqXaEDyiuL07Q0cPM9A11GwJOuvWXSJLKk9oOJbD2YSD/cdNkorGjqO36BX1j2
+ncQfr73e8VIszvaxfDMRZgRckmGXSSRjXzcK6ge4sYeUjlRwjUs=
+=BQwW
+-----END PGP SIGNATURE-----
+
+--544li3fyfgezh5tt--
