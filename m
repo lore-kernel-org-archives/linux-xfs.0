@@ -1,58 +1,57 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=117.135.210.3
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=220.197.31.2
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792932105;
-	b=lyT432mzMPR9pmJ4MARiwolm77Z+Nz/4/MUb+cMUkztPErrLA4qxDuEU1G5xG91LDn9x
-	 6YXWZihpDfgmhUZWImagzphogdhNFo9YyDnBRlu1cWrjNENfU7bbPbITxYSNcfTfk964g
-	 Pib87uvg5+H3j+ai3M//OwvwZ+aLi9VswK2olUjc8U3RqDg4kqep6XnKI4Qs3QDVexein
-	 fJH4yeKJ69y6axAd2IsA2XPgDdiqIwpKc98KKSSzANHJM6uMy2ZdRfMl4sEb5aDNPxk2f
-	 8CjQeXefsHaxyQvw2M2wLERz92d/Havaa6gg97Q8xxPQ/bvWoQs3H4DdMfXpmksrPpw==
+	t=1792932107;
+	b=B1UbnPPgXqkDpBepiV+4hSu8jgmq1OSxRnZLKzbz4r4zIbPbgvz728N5upt5AJxbb7nX
+	 bZf/6zT8pZpO/JK2zBOF3qvVcvQVSOPqqerhrx/bsvtGUFvhpB68nSVzhtB0EguVRnCaA
+	 9jb9FU5apfBSjBD4umFeuwcuofQ/kBI+1bTxYq0WsdqSaZzy4oxgkmf7qUJyxIDjwlbcg
+	 g8+ZV0tHlu+r1gpirY4nSpyl8O5OtxRQYKcpOnyH6LJiX70YkcDSP2Xe7bAd4P2VGhdPs
+	 Q8HlC5juhEQchScJteqD3tNW/iXKFn3cQOx5KpA2e3fWMgnUhhNyrFf82AMD96JOz5A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792932105;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792932107;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
 	 Message-Id:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding:X-CM-TRANSID:X-Coremail-Antispam:
 	 X-CM-SenderInfo;
-	bh=oTgiIkWj6wM6yrGhrFoHWnZG43Qe+XpDPOdbMsJDQpg=;
-	b=iGKNPnlPrWKL5T9p3WQQEX9asgzondWcW/2dJnsHnAn34UYpa9Xz83cJkxZKVhnh31Vr
-	 AQImmvKD34znmeBEX+gwfaiUC/MJs8kxHcn4b1xDqkXM52STWNwcbLELfAgGTG9auFMBj
-	 zY0jUBDXIgsw19zk8pM6tCB1L+KtNWytG+BR2416SWQywP5/v2drCug3pyh1qjrhhAZv1
-	 r8wWohSE0Qo0K72MzmfenPGT9cb0IHzHT5fR9IMbAmrdAOh9bfJdxkz30JbhMtbxFlQEk
-	 Q5x24VRkZIdmhnoE9nYycjCHSGay48qn3G8OlimLT+dgu0yVDhr5kqH4i+MqSOUsj1w==
+	bh=TTMfSnuvvxIs+38X9pj7jTo4dpEjpC8oCgiQEVSo0Xs=;
+	b=FMIOCLAKPuwowXQMnl3QTXktYnp6Z5mXGNPnhmVgds07NxXvYyylImCjeKC+zP7+eyMp
+	 0Xa1paR9rayoySJ2EIibahiiBxi1p0TIl2c+V6VgbsE4F2ZZN3+LF4GjfXrbsXeLxBTUG
+	 z5vpKX+w+zf8nca65wWyW8HLo4dV4fCuY6t/q1xssi8exy3Xmvf56/pFiHP+2u2ERUt+M
+	 +745cae6tYHZi4OaAhc1nw57o4hCcpghBC2KGZfutme4uib60nhA9su6B6If6ivmP6KH9
+	 lluh4F4AgDrskCpzAnLFTcbN2GXOCLnsicsksiOpayOizqsOfJ6AuX9AfagXr91GiFA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=163.com;
 	spf=pass smtp.mailfrom=163.com;
-	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=I2QEjzal;
-	arc=none smtp.remote-ip=117.135.210.3
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.3])
+	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b="aAJGW/1j";
+	arc=none smtp.remote-ip=220.197.31.2
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C863606A31B;
-	Sun, 25 Oct 2026 12:41:42 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8C863606A31B
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2B3C606A324;
+	Sun, 25 Oct 2026 12:41:44 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E2B3C606A324
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=I2QEjzal
+	dkim=pass (1024-bit key, unprotected) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=aAJGW/1j
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=oT
-	giIkWj6wM6yrGhrFoHWnZG43Qe+XpDPOdbMsJDQpg=; b=I2QEjzalWqpWYwPZn1
-	WacAN1RVKfzC4a/bQfpbGgHSMoIxAVs71T0eR2hoyHhCQ56v4ATxBG7RXQ9NxvGq
-	InyGHX3aildNjYX6KZwrR8al/xG0xJI67rGzcMQKrf09k5pVSBA6PU5dgpTn0Y4D
-	s2CJZ3tmz/fcuVwXdJTmtsTmg=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=TT
+	MfSnuvvxIs+38X9pj7jTo4dpEjpC8oCgiQEVSo0Xs=; b=aAJGW/1jJtDI1Frnoh
+	y2EVJgy/GJHKMI05TE35BgOdC9FiVuVd7ZT6vfkQekaApXk1w7Dd463TUGeYcX4T
+	vgIF2icbZCeFXyMwfjS7SKKupiaS1HDgPzLrjM04RSP9m3lJ2owesQEXPQzj2D7X
+	negtvlZdGaLCekkb+nOpnvPyo=
 Received: from pc.localdomain (unknown [])
-	by gzsmtp3 (Coremail) with SMTP id PigvCgDnvTzs+N1qxJALCA--.54355S5;
-	Sun, 25 Oct 2026 20:41:21 +0800 (CST)
+	by gzsmtp3 (Coremail) with SMTP id PigvCgDnvTzs+N1qxJALCA--.54355S6;
+	Sun, 25 Oct 2026 20:41:22 +0800 (CST)
 From: Jiale Yao <yaojiale02@163.com>
 To: Carlos Maiolino <cem@kernel.org>,
 	"Darrick J. Wong" <djwong@kernel.org>,
-	Dave Chinner <david@fromorbit.com>,
 	linux-xfs@vger.kernel.org,
 	linux-kernel@vger.kernel.org
 Cc: stable@vger.kernel.org
-Subject: [PATCH 3/5] xfs: drain in-flight DIO before buffered writes
-Date: Sun, 25 Oct 2026 20:41:12 +0800
-Message-Id: <20261025124115.3178287-4-yaojiale02@163.com>
+Subject: [PATCH 4/5] xfs: drain in-flight DIO before zoned buffered writes
+Date: Sun, 25 Oct 2026 20:41:13 +0800
+Message-Id: <20261025124115.3178287-5-yaojiale02@163.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20261025124115.3178287-1-yaojiale02@163.com>
 References: <20261025124115.3178287-1-yaojiale02@163.com>
@@ -66,65 +65,45 @@ List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:PigvCgDnvTzs+N1qxJALCA--.54355S5
-X-Coremail-Antispam: 1Uf129KBjvJXoW7uF4fKrW8ZF1fXF17WrW8Crg_yoW8XrWDpF
-	Z3Kay5Gr1kJrZ7Ar93GF1UW3W5KFWkZw17urW2gw1xZ3WUCwsI93Wjvr1avw45ArZxZr40
-	gF4kKFyDCryYyFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07j-cTPUUUUU=
-X-CM-SenderInfo: x1dryxhdohiji6rwjhhfrp/xtbCzhKMxmrd+PJ5JAAA32
+X-CM-TRANSID:PigvCgDnvTzs+N1qxJALCA--.54355S6
+X-Coremail-Antispam: 1Uf129KBjvdXoW7GFykJr18XFyfKFyUtr18Xwb_yoWkZFX_W3
+	yvvry8Xw45Ga17X3WxAF1FvrZ5Ja1fJFn3Z345tF4Skw18J3sakr9xJrnxKr17ua43Wrs8
+	Cw4kXr10qr9rujkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7IU05l1DUUUUU==
+X-CM-SenderInfo: x1dryxhdohiji6rwjhhfrp/xtbC8BKMxmrd+PIPYAAA36
 
-XFS_IOLOCK_EXCL prevents new direct I/O submissions, but asynchronous
-direct writes submitted while the lock was shared can remain active after
-their submitting threads release the lock. A buffered write can then dirty
-page cache before direct I/O completion performs post-write invalidation.
+Buffered writes to zoned realtime files hold XFS_IOLOCK_EXCL, but direct
+I/O submitted earlier while holding the lock shared can still be active.
+The buffered write can dirty page cache before the asynchronous direct
+write completes its post-I/O invalidation, causing an invalidation failure
+and a mapping error.
 
-Wait for active DIO after acquiring XFS_IOLOCK_EXCL and before buffered
-write checks can modify page cache. Return -EAGAIN instead of waiting for
-an IOCB_NOWAIT request.
+Use the buffered-write DIO drain after acquiring XFS_IOLOCK_EXCL and
+before the zoned write checks can touch page cache. Preserve NOWAIT
+semantics by returning -EAGAIN when a wait would be needed.
 
-Fixes: acdda3aae146 ("xfs: use iomap_dio_rw")
+Fixes: 2e2383405824 ("xfs: implement direct writes to zoned RT devices")
 Cc: stable@vger.kernel.org
 Signed-off-by: Jiale Yao <yaojiale02@163.com>
 ---
- fs/xfs/xfs_file.c | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+ fs/xfs/xfs_file.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
 diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 7d0c8a197575..aa7cf51b5843 100644
+index aa7cf51b5843..96a11af8e71a 100644
 --- a/fs/xfs/xfs_file.c
 +++ b/fs/xfs/xfs_file.c
-@@ -1018,6 +1018,20 @@ xfs_file_dax_write(
- 	return ret;
- }
- 
-+STATIC int
-+xfs_file_buffered_write_dio_wait(
-+	struct kiocb		*iocb)
-+{
-+	struct inode		*inode = file_inode(iocb->ki_filp);
-+
-+	if (!atomic_read(&inode->i_dio_count))
-+		return 0;
-+	if (iocb->ki_flags & IOCB_NOWAIT)
-+		return -EAGAIN;
-+	inode_dio_wait(inode);
-+	return 0;
-+}
-+
- STATIC ssize_t
- xfs_file_buffered_write(
- 	struct kiocb		*iocb,
-@@ -1035,6 +1049,10 @@ xfs_file_buffered_write(
+@@ -1121,6 +1121,10 @@ xfs_file_buffered_write_zoned(
  	if (ret)
- 		return ret;
+ 		goto out_unreserve;
  
 +	ret = xfs_file_buffered_write_dio_wait(iocb);
 +	if (ret)
-+		goto out;
++		goto out_unlock;
 +
- 	ret = xfs_file_write_checks(iocb, from, &iolock, NULL);
+ 	ret = xfs_file_write_checks(iocb, from, &iolock, &ac);
  	if (ret)
- 		goto out;
+ 		goto out_unlock;
 -- 
 2.34.1
 
