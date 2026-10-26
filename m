@@ -1,56 +1,108 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.237
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.130
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793024505;
-	b=UGNwF6zmcu9hZXAKLYqpGVMz/1qmy9r4+u/S0gProqDVUWZSKn3XR7PwxosNy4knwcWq
-	 lsrYnA5PBrkdXh0GaKPQPoWB7KdxISTMoOZZXvUnixdHEmtzvs6hhWjMHhQM3bzVPIsxG
-	 9gQjn5y2+6xIXdZarrD4vSpGGytzGPbyu644eI+l135c62Ej+fptA5HjeLhCYDX0Zbkab
-	 WIOr1ayyniuqd1lOfcIzu3z643gpNGbZ7JsT0F5WZ1RasxLi85xOyRNawTdkshuLKCE/6
-	 WVI2UNzDhX1d84eDH7MEzcltAk20bV6ZK08/cGVlYRS/WXqu6ub7javh8nf1SM5tqjQ==
+	t=1793029018;
+	b=f3YEb5lEn7JwcP/f9rtYZMQuHXudZnVUCAdKw3Zroz6mrCyzU39Tc10qvikjps7oPCIm
+	 m2XWxOsQoSxoJiG8zfKfioKfnfxImbcYG50nUmJNaAXfyTVdXVykwLP4Pv0h6xctJZ2zf
+	 bTH8XnHRJqG2jZok1nqU6eMc6tBYQCH5KNwVLCy2CWgvRVlAeTLSiNvkDdJe9L8YJroha
+	 tvcPSo3fPT1g7OYOqpBSy0VPsazSmIeMZz+JM6GGHxQXfqsoIG4QELcrHIt1mdmxkbgTo
+	 mR3f3gOfz7ABhT0X82WEMe39rLNYBSPU84RqledBemDU6QNGEl1d4TRDzH/vf5Wr4cw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793024505;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=YrojJ8RdT+pp1L7jagA79jqZnyIDXllAqHzZGpVUGl4=;
-	b=JqzjgEmENDxDk6w9bowhroRp5g8DE5+WRuwrW3FSZvHreV5Uv2hcTgA503ecOsWRJV3j
-	 lYGmWq550WjoFArcnXpYRJ8V06+pCU9Uo3wEKef8z0qhGAt6N1iBK5wEMsgVxb2ZaMvmv
-	 Ud6VLGKU687QkB5aDoumyDL4r38peS4jKIJrJ3iVNpqALphCGoMp2n3INzMx56LcgdZTR
-	 ebNPlRhZUj7TpzWGoefrmKmY2Euy5W4FypPNBZVOeTytkL7S5ysp94DD5qZa3YrINvMPH
-	 YRFstHTNyqsoAKUX571TjjmVwdZKDO4aow7BelzQx82bcnoOvebKg3gHUr3MFbz5mtQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793029018;
+	h=DMARC-Filter:Received:DKIM-Signature:DKIM-Signature:DKIM-Signature:
+	 DKIM-Signature:Received:Received:From:To:Cc:Subject:In-Reply-To:
+	 Organization:References:Date:Message-ID:MIME-Version:Content-Type:
+	 X-Spam-Flag:X-Spam-Level:X-Spamd-Result:X-Spam-Score;
+	bh=cF2LelxJ3MDx6ecMIAXwpCiisZ4MqO9Mbe0g8HDsS6s=;
+	b=k73SJMCfYVAxm899nETXLEYMjVpYhPg4tipfnrev+/pC4kMqf3hUhKoVa6CzQsBENRkP
+	 ubl1DZu3GaeNItx2Li5yRUc6a+EBd5ZRR0+tWcVlNdlFeP3I4JB6hOMCRnBUYGW5vmM+n
+	 gxI0oHuBkYv5Pkp84J8jmng3vc6iZqZG0Gti1aMEEayBDZdKBiA9Utlro50Ry9uyVMznB
+	 k64Z86+MsyIICvKsxRnGnAFatStjlJm7y88k5aVWYp0oUX9GqYufJVispjfutE2zoUiN0
+	 /AlK98IV2Ta67ijQhdk2YNYMIwZB0vZ6XeY/qOC8Wl6pHwvGze0LHwl9Kv/yy8V2azg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	arc=none smtp.remote-ip=91.218.175.237
-Received: from mta0.migadu.com (out-237.mta0.migadu.com [91.218.175.237])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=suse.de;
+	spf=pass smtp.mailfrom=suse.de;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b="iAXN/Nag";
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=JNbRYef1;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b="iAXN/Nag";
+	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=JNbRYef1;
+	arc=none smtp.remote-ip=195.135.223.130
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23770606A31F
-	for <linux-xfs@vger.kernel.org>; Mon, 26 Oct 2026 14:21:33 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 23770606A31F
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
-X-Envelope-To: linux-xfs@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=LU38JLPVoNiFrE9ir2aCoN20eLvHfG+XA+FLjWMCf10=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793024492; v=1; x=1793629292;
- b=Rr/nV/C58euHFChJjREzKK2GkRORfr2c6xAhMt3TLMROTR6l7RxwSM69VGF/bswbs2EJG3b0
- 41y7XHX064jD38T8XXjJFGMZXf7MQTLWx7Ze+7K+lCeqP0ReRuPYgBShiWdO9TvPhcsByNjeN8R
- sUdbSsvIeD3cUiNSysrO1sNs=
-X-Envelope-To: linux-xfs@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 79436808f9b03e13;
-	Mon, 26 Oct 2026 14:21:31 +0000
-X-Mizu-Trace-ID: 79436808f9b03e13
-X-Migadu-Flow: FLOW_OUT
-Date: Mon, 26 Oct 2026 15:21:24 +0100
-From: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>
-To: Qu Wenruo <wqu@suse.com>
-Cc: linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH] iomap: only follow dio alignment requirement if specified
-Message-ID: <at9hcoPC5NnKADX3@quentin>
-References: <9fae60fcce5ae356deef5e38931124b9634dba3b.1792997261.git.wqu@suse.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 831BD606A31A;
+	Mon, 26 Oct 2026 15:36:57 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 831BD606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key, unprotected) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=iAXN/Nag;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=JNbRYef1;
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=iAXN/Nag;
+	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=JNbRYef1
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id CB4C422006;
+	Mon, 26 Oct 2026 15:36:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1793029015; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=cF2LelxJ3MDx6ecMIAXwpCiisZ4MqO9Mbe0g8HDsS6s=;
+	b=iAXN/Nag4cQ5zMf3PtgdB40d+rYxX9JJN392R9AezuxUIItNEQ/LY77WUmZXGiI+Kau6jF
+	EUjwcW/0CsKEYhNOhVu/Klm1vydI+Krvw9KcB/8R3CZnxZjAewQxYpXaduCDyngii1qj+O
+	93ayObOHgbUgLno/tEFsOXWtAD5Y1dA=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1793029015;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=cF2LelxJ3MDx6ecMIAXwpCiisZ4MqO9Mbe0g8HDsS6s=;
+	b=JNbRYef1E6RPpmJFcMsn/WUm7pdSpJLIiRoVJ+/h1NgtY/IBx57KvXgX79gIHfUFPKx1ml
+	xZApWHb5f0C9gTCA==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1793029015; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=cF2LelxJ3MDx6ecMIAXwpCiisZ4MqO9Mbe0g8HDsS6s=;
+	b=iAXN/Nag4cQ5zMf3PtgdB40d+rYxX9JJN392R9AezuxUIItNEQ/LY77WUmZXGiI+Kau6jF
+	EUjwcW/0CsKEYhNOhVu/Klm1vydI+Krvw9KcB/8R3CZnxZjAewQxYpXaduCDyngii1qj+O
+	93ayObOHgbUgLno/tEFsOXWtAD5Y1dA=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1793029015;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=cF2LelxJ3MDx6ecMIAXwpCiisZ4MqO9Mbe0g8HDsS6s=;
+	b=JNbRYef1E6RPpmJFcMsn/WUm7pdSpJLIiRoVJ+/h1NgtY/IBx57KvXgX79gIHfUFPKx1ml
+	xZApWHb5f0C9gTCA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 56F0C13408;
+	Mon, 26 Oct 2026 15:36:55 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id E23TBZdz32pSfwAAD6G6ig
+	(envelope-from <krisman@suse.de>); Mon, 26 Oct 2026 15:36:55 +0000
+From: Gabriel Krisman Bertazi <krisman@suse.de>
+To: Christian Brauner <brauner@kernel.org>, linux-fsdevel@vger.kernel.org
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
+ linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+ linux-xfs@vger.kernel.org, "Christian Brauner (Amutable)"
+ <brauner@kernel.org>
+Subject: Re: [PATCH 0/2] dcache: don't leave negative dentries in casefolded
+ directories
+In-Reply-To: <20261023-work-dcache-casefold-v1-0-1b0bd5c73a69@kernel.org>
+Organization: SUSE
+References: <20261023-work-dcache-casefold-v1-0-1b0bd5c73a69@kernel.org>
+Date: Mon, 26 Oct 2026 11:36:53 -0400
+Message-ID: <87y0bkqxre.fsf@mailhost.krisman.be>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -60,49 +112,70 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <9fae60fcce5ae356deef5e38931124b9634dba3b.1792997261.git.wqu@suse.com>
+Content-Type: text/plain
+X-Spam-Flag: NO
+X-Spam-Level: 
+X-Spamd-Result: default: False [-13.30 / 50.00];
+	SUSE_INTERNAL_BYPASS(-9.00)[];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	ARC_NA(0.00)[];
+	HAS_ORG_HEADER(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	MISSING_XM_UA(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	RCPT_COUNT_SEVEN(0.00)[8];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_EQ_ENVFROM(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.de:email]
+X-Spam-Score: -13.30
 
-Hi Qu,
+Christian Brauner <brauner@kernel.org> writes:
 
-On Mon, Oct 26, 2026 at 05:18:13PM +1030, Qu Wenruo wrote:
-> [BUG]
-> After commit 4025185cf953 ("iomap: follow the alignment requirement for
-> iomap_dio_hole_iter()"), generic/091 fails on both xfs and ext4:
-> 
->  FSTYP         -- ext4
->  PLATFORM      -- Linux/x86_64 btrfs-vm 7.3.0-custom+ #6 SMP PREEMPT_DYNAMIC Mon Oct 26 16:04:56 ACDT 2026
->  MKFS_OPTIONS  -- -F /dev/mapper/test-scratch1
->  MOUNT_OPTIONS -- -o acl,user_xattr /dev/mapper/test-scratch1 /mnt/scratch
-> 
->  generic/091  6s ... [failed, exit status 1]- output mismatch (see /home/adam/xfstests/results//generic/091.out.bad)
->      --- /home/adam/xfstests/tests/generic/091.out	2022-05-11 11:25:30.766666664 +0930
->      +++ /home/adam/xfstests/results//generic/091.out.bad	2026-10-26 16:43:49.387401669 +1030
->      @@ -1,7 +1,25 @@
->       QA output created by 091
->       fsx -N 10000 -l 500000 -r PSIZE -t BSIZE -w BSIZE -Z -R -W
->      -fsx -N 10000 -o 8192 -l 500000 -r PSIZE -t BSIZE -w BSIZE -Z -R -W
->      -fsx -N 10000 -o 32768 -l 500000 -r PSIZE -t BSIZE -w BSIZE -Z -R -W
->      -fsx -N 10000 -o 8192 -l 500000 -r PSIZE -t BSIZE -w BSIZE -Z -R -W
->      -fsx -N 10000 -o 32768 -l 500000 -r PSIZE -t BSIZE -w BSIZE -Z -R -W
->      -fsx -N 10000 -o 128000 -l 500000 -r PSIZE -t BSIZE -w BSIZE -Z -W
->      ...
->      (Run 'diff -u /home/adam/xfstests/tests/generic/091.out /home/adam/xfstests/results//generic/091.out.bad'  to see the entire diff)
->  Ran: generic/091
->  Failures: generic/091
->  Failed 1 of 1 tests
-> 
+> ext4, f2fs and tmpfs keep negative dentries out of casefolded
+> directories. A negative dentry remembers one spelling of the name and
+> the next create() through it would write that spelling to disk.
+>
+> So their ->lookup() doesn't cache a miss and their ->unlink() and
+> ->rmdir() call d_invalidate() on the dentry so that d_delete() doesn't
+> turn it into a negative dentry.
+>
+> But d_invalidate() is the wrong primitive for that. It's for a name that
+> went stale. It walks the subtree, prunes it and detaches every mount it
+> finds, under namespace_sem, and here that runs from inside the
+> filesystem's own directory operation. ext4_rmdir() does it with the
+> journal handle still open and ext4_unlink() does it even when the
+> unlink failed. All anyone wanted is the unhash.
+>
+> So d_delete() now unhashes the dentry when the parent is casefolded,
+> next to the dentry-negative sysctl that does the same for every
+> directory. ext4, f2fs and tmpfs drop their d_invalidate() calls.
+>
+> xfs's ascii-ci doesn't set S_CASEFOLD and can't so it d_drop()s instead.
+> I did consider setting S_CASEFOLD on ascii-ci directories and didn't.
+> overlayfs warns when a layer's casefold flag disagrees with the
+> superblock having an encoding, and xfs has none.
+>
+> Nothing changes for userspace. A miss still isn't cached and a removed
+> name still leaves no negative dentry behind. Verified with the same
+> create, unlink, create, readdir and stat sequence in a plain and in a
+> casefolded directory on tmpfs and on ext4, before and after.
 
-I am trying to reproduce this error in fs-next with ext4/xfs but I am unable
-to.
+I think the change looks fine and it passed fstests.
 
-Do we need some specific disk setup or xfstests config to trigger this?
+Reviewed-by: Gabriel Krisman Bertazi <krisman@suse.de>
 
-> [CAUSE]
-> The failed command of fsx is COPY_RANGE:
-> 
->  copy range: 0x6800 to 0xa200 at 0x3f200
+Of course, the better approach would be to enable negative dentries
+but the last attempt went sideways, though not for any good reason.
+
+thanks!
 
 -- 
-Pankaj
+Gabriel Krisman Bertazi
