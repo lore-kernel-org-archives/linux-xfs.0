@@ -1,108 +1,101 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.130
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793029018;
-	b=f3YEb5lEn7JwcP/f9rtYZMQuHXudZnVUCAdKw3Zroz6mrCyzU39Tc10qvikjps7oPCIm
-	 m2XWxOsQoSxoJiG8zfKfioKfnfxImbcYG50nUmJNaAXfyTVdXVykwLP4Pv0h6xctJZ2zf
-	 bTH8XnHRJqG2jZok1nqU6eMc6tBYQCH5KNwVLCy2CWgvRVlAeTLSiNvkDdJe9L8YJroha
-	 tvcPSo3fPT1g7OYOqpBSy0VPsazSmIeMZz+JM6GGHxQXfqsoIG4QELcrHIt1mdmxkbgTo
-	 mR3f3gOfz7ABhT0X82WEMe39rLNYBSPU84RqledBemDU6QNGEl1d4TRDzH/vf5Wr4cw==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793029018;
-	h=DMARC-Filter:Received:DKIM-Signature:DKIM-Signature:DKIM-Signature:
-	 DKIM-Signature:Received:Received:From:To:Cc:Subject:In-Reply-To:
-	 Organization:References:Date:Message-ID:MIME-Version:Content-Type:
-	 X-Spam-Flag:X-Spam-Level:X-Spamd-Result:X-Spam-Score;
-	bh=cF2LelxJ3MDx6ecMIAXwpCiisZ4MqO9Mbe0g8HDsS6s=;
-	b=k73SJMCfYVAxm899nETXLEYMjVpYhPg4tipfnrev+/pC4kMqf3hUhKoVa6CzQsBENRkP
-	 ubl1DZu3GaeNItx2Li5yRUc6a+EBd5ZRR0+tWcVlNdlFeP3I4JB6hOMCRnBUYGW5vmM+n
-	 gxI0oHuBkYv5Pkp84J8jmng3vc6iZqZG0Gti1aMEEayBDZdKBiA9Utlro50Ry9uyVMznB
-	 k64Z86+MsyIICvKsxRnGnAFatStjlJm7y88k5aVWYp0oUX9GqYufJVispjfutE2zoUiN0
-	 /AlK98IV2Ta67ijQhdk2YNYMIwZB0vZ6XeY/qOC8Wl6pHwvGze0LHwl9Kv/yy8V2azg==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=suse.de;
-	spf=pass smtp.mailfrom=suse.de;
-	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b="iAXN/Nag";
-	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=JNbRYef1;
-	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b="iAXN/Nag";
-	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=JNbRYef1;
-	arc=none smtp.remote-ip=195.135.223.130
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.44
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793038780;
+	b=uXXTn4o22yj+KcNBz4kXobDDPg9WeJBk4IVeQZckm6P7caTAkfEqzVDYWKxVSwbBW2iU
+	 6dR5xYGbnJRvEPFduXrib5hy+n72yxWB+23gzZZ4aL9pq0HK6paISE8pyPdPhb7vZaCmN
+	 gY48qmbyF6BiARk7xgwf2eDG95L+IfTU9qHD7VZK2d/clIMH9vh6lqyy4nGSL04CW+VUa
+	 PBngXlV2Qa52w7B429boxN91Tn1n6wk+LIkhuivjkqMUQ9RVG+1O6VXM0fIK6pCSJTLkw
+	 VyGLaNUBK6zUedoaLG68t5pUfEzMpwQykaeQ7kmbdkzc/05QLFB458QsyQoar1bnOKw==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793038780;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:Received:From:
+	 MIME-Version:Date:X-Gm-Features:Message-ID:Subject:To:Cc:
+	 Content-Type;
+	bh=ArunF3JyHzPDJjIHJyEibRPONwhw56eILbBtpNH+onw=;
+	b=XEanPlfdwT0CNAhmKfzu1svbyY/N5P/66r7+t0W9CHEha/3+a0TCBK8FHpB10qSg+r9x
+	 jRsJqk1ADne4+IGedwBvFnmW5adSLj415FQIRfKvD6Taq732dSrtTsMcDocn/oQ474eft
+	 ZFXvbxbHVOBtxtNV3IIJFARF+gYQgXdVECvJh+jk/PB4rqm+it7CYRGfSKxVK4TzL5dMz
+	 7RTtx/K7LUQtHba4hhGj/LIMedBRBVOcnOrv0t0V6fwnmn316JnOT1Wc8LYuKd3jSho15
+	 Y2tBv9IEnJHDK/4+mUWpPwP3WH6IxmM0tGyvGq3wtgG7k/3HgLMmp/+K2o6J0ZjI3uA==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=YGjzFdL+;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.44
+Received: from mail-ed1-f44.google.com (mail-ed1-f44.google.com [209.85.208.44])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 831BD606A31A;
-	Mon, 26 Oct 2026 15:36:57 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 831BD606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 645E4606A31D
+	for <linux-xfs@vger.kernel.org>; Mon, 26 Oct 2026 18:19:40 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 645E4606A31D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=iAXN/Nag;
-	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=JNbRYef1;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=iAXN/Nag;
-	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=JNbRYef1
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id CB4C422006;
-	Mon, 26 Oct 2026 15:36:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1793029015; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=cF2LelxJ3MDx6ecMIAXwpCiisZ4MqO9Mbe0g8HDsS6s=;
-	b=iAXN/Nag4cQ5zMf3PtgdB40d+rYxX9JJN392R9AezuxUIItNEQ/LY77WUmZXGiI+Kau6jF
-	EUjwcW/0CsKEYhNOhVu/Klm1vydI+Krvw9KcB/8R3CZnxZjAewQxYpXaduCDyngii1qj+O
-	93ayObOHgbUgLno/tEFsOXWtAD5Y1dA=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1793029015;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=cF2LelxJ3MDx6ecMIAXwpCiisZ4MqO9Mbe0g8HDsS6s=;
-	b=JNbRYef1E6RPpmJFcMsn/WUm7pdSpJLIiRoVJ+/h1NgtY/IBx57KvXgX79gIHfUFPKx1ml
-	xZApWHb5f0C9gTCA==
-Authentication-Results: smtp-out1.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1793029015; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=cF2LelxJ3MDx6ecMIAXwpCiisZ4MqO9Mbe0g8HDsS6s=;
-	b=iAXN/Nag4cQ5zMf3PtgdB40d+rYxX9JJN392R9AezuxUIItNEQ/LY77WUmZXGiI+Kau6jF
-	EUjwcW/0CsKEYhNOhVu/Klm1vydI+Krvw9KcB/8R3CZnxZjAewQxYpXaduCDyngii1qj+O
-	93ayObOHgbUgLno/tEFsOXWtAD5Y1dA=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1793029015;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=cF2LelxJ3MDx6ecMIAXwpCiisZ4MqO9Mbe0g8HDsS6s=;
-	b=JNbRYef1E6RPpmJFcMsn/WUm7pdSpJLIiRoVJ+/h1NgtY/IBx57KvXgX79gIHfUFPKx1ml
-	xZApWHb5f0C9gTCA==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 56F0C13408;
-	Mon, 26 Oct 2026 15:36:55 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id E23TBZdz32pSfwAAD6G6ig
-	(envelope-from <krisman@suse.de>); Mon, 26 Oct 2026 15:36:55 +0000
-From: Gabriel Krisman Bertazi <krisman@suse.de>
-To: Christian Brauner <brauner@kernel.org>, linux-fsdevel@vger.kernel.org
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
- linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
- linux-xfs@vger.kernel.org, "Christian Brauner (Amutable)"
- <brauner@kernel.org>
-Subject: Re: [PATCH 0/2] dcache: don't leave negative dentries in casefolded
- directories
-In-Reply-To: <20261023-work-dcache-casefold-v1-0-1b0bd5c73a69@kernel.org>
-Organization: SUSE
-References: <20261023-work-dcache-casefold-v1-0-1b0bd5c73a69@kernel.org>
-Date: Mon, 26 Oct 2026 11:36:53 -0400
-Message-ID: <87y0bkqxre.fsf@mailhost.krisman.be>
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=YGjzFdL+
+Received: by mail-ed1-f44.google.com with SMTP id 4fb4d7f45d1cf-6b1ab2ad719so5267748a12.3
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Oct 2026 11:19:40 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1793038779; cv=none;
+        d=google.com; s=arc-20260327;
+        b=psG1gq2PKrJXxOSUgurXFb7Xr6CCPxOUw3v0+5uNxHJqnHSaoVMCQ0tPBBwxpfE5Gn
+         oatV+HGkH/o5HtCjasHphEBcgxj2Z1xvKAeRWVMWdg9k5xjAtX1CELnqF6EUSFrRZwpe
+         ZX5gR/1nJIcH/fuQ4My9hHDPGnYMu/6xx4sgqu51+H0l3CCA5jOdLDXsa17/bkg/kIL2
+         k3RYdWCybTZzCkyVpnapI/vrPYphoiyl9FMxp3R9kQRcgcB9920Wt73M7OmAD+msEyur
+         qUA9I9K0euLxtEh0nZsQ6+QxHCTkgtOVgMoxItcm+19sl5Sx0K+QDshvW+hkkc3Gd7kv
+         1r6g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:mime-version:from:dkim-signature;
+        bh=ArunF3JyHzPDJjIHJyEibRPONwhw56eILbBtpNH+onw=;
+        fh=IUFjyOxQ8OJIO78EyT94P+Aa3G0FBWUejX3+sZaLmq4=;
+        b=FtgIVYPbJc19FLFuP/l9ExgXUw2lYf6p5w7wzIK7BxKYttpiUYVhiOsI4OC2duVhpl
+         Ydcq1WV6kbaE656KpuQApVnl4D9vo4TEoejCgasg1+X6+KYe9Fu15pQcLm5ZLMf+r832
+         rn3+DEuEM9hLooxilHTMWb9SaJu6syPUYRYfg9Hx4WZGVpmNu6Wf8sp5Bifm91O4PXxr
+         bCLT3ei15lpyh42h29/3rLX2pH31LZo6R1kC0bj4rQD1zzpj5i7Y+Bbu/Jg4/t1yl1La
+         CfgUlKsmkNBbb2WlBw/xs1fAYIRXMOAZhZQurDcd0vtcy5GhvwvDKdygDNxp6gvLTv6K
+         t0PA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1793038779; x=1793643579; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:mime-version:from:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=ArunF3JyHzPDJjIHJyEibRPONwhw56eILbBtpNH+onw=;
+        b=YGjzFdL+jOpAqPYLKQLXeowDdiBFXp9xGOEftbffQ/DcSmk0zUxfGxF3o5ybWmoagY
+         BheMMIiwKYmjHf/yBW51rXPN+MfqwjhZnRahC9oSJyUtP2dK6t+Pl4CZPCcwLnhgVxgs
+         l5AMBUWqhpuZHnxt/YBxWKxMu+vBzz6+8LFyETrnvXZs2BHT9Re+QBsdLITP3lQWkJGh
+         XCNqxOQOlxZASsZmn5fGvvLpYcP/y49GXIX233Vz63YbY3Uy1gWkU7xgRZUcOLl5UbJJ
+         KAjD3anj6GrHleTFwHwIPUlKooN7xu6APIBOnXZKpA3dowFn1jYA3rWN4Eq3SPUR/6c1
+         O/Ig==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793038779; x=1793643579;
+        h=content-type:cc:to:subject:message-id:date:mime-version:from
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=ArunF3JyHzPDJjIHJyEibRPONwhw56eILbBtpNH+onw=;
+        b=IMjTcEVM+dxs4xe6OKG3u24RcRMGOFnLdgenH/qTSg4s6Q09uKEBsIQhHD+UA9aJyH
+         YcFciGtlhlqhpZ2yZAKAyYxBnWFUzEWkaFq5f9oGXB1Bzz4vxeGG61amwPm0jhZcaZ+8
+         FMF41ykJvK2NX96No+zJljjLPXpcE+TNVkHsDAVZTXEa2jY3rHOQtcgF99totf9Xi11y
+         pwfs1/w75XzsudXg6DgDGAQEpClzbJxC1Vn15fqc8fSr9Ixl7NQI1Y8neR0V3e/epccC
+         32qfn4VE6q10sdKd8IDFL2Zkqc0EmybL2+b6/IzIEpjpNdkUnPPw6He0pCT/LPFel0WA
+         PDeQ==
+X-Gm-Message-State: AFq9FYLUxbB+zExpRdiYw7W5EmwMx3FeRxNHXydNo/npcxhXsiuMM5tx
+	p7mRmQ1Tb2/G3Ra7ev1Y2pPlEuuO8LfPAzHj9BlkWpYZcaPqnWGAFRDoAS7gMJ57faVP0EWjkjl
+	9Nsfu9GkUBRNnbmu7t/RXOfc7joBrxHiATozB
+X-Gm-Gg: AYBFou2aGGR02ztUjSYjr+oyLxd8o7tNOGF4rFA45LrZYGuE81mYC/vYSVFETsgcBPZ
+	/qD9+LTaCV+5alyY7kXf+DSiaUoytty1uDs3NER197QIDJHqLsHQVyp++io+G70XdDTNq8OXGvx
+	YOUc7/Nh1GhNa7JAD+n1oreF7L5gaR44Kei5G7UF9MukAR5Zpj4GLdMqQnIRDsfGJrq0KuT5mWo
+	2xJYGpQ7A8osRHVTT21jBl5E1O4e/ZOx4ecFFkNJnOs4e4w+JRAZ0StDaVNcegtyX6SWob1Xy8N
+	+uotZOl5GZZaET3h2EZOgXGr06NEViL3OK5mInnd+xnSFkVGsarkotwWbsFpb6Kb3SsemarSAt1
+	PZKvR7av9Bf3/DQUnQLnngnpD/+2eVtIntA==
+X-Received: by 2002:a05:6402:404:b0:6b1:b5b8:b696 with SMTP id
+ 4fb4d7f45d1cf-6b442fe421amr6628563a12.23.1793038778619; Mon, 26 Oct 2026
+ 11:19:38 -0700 (PDT)
+Received: from 511566560828 named unknown by gmailapi.google.com with
+ HTTPREST; Mon, 26 Oct 2026 11:19:38 -0700
+Received: from 511566560828 named unknown by gmailapi.google.com with
+ HTTPREST; Mon, 26 Oct 2026 11:19:38 -0700
+From: Ivan <ivan.vin.ctf@gmail.com>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -112,70 +105,75 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Spam-Flag: NO
-X-Spam-Level: 
-X-Spamd-Result: default: False [-13.30 / 50.00];
-	SUSE_INTERNAL_BYPASS(-9.00)[];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	ARC_NA(0.00)[];
-	HAS_ORG_HEADER(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	MISSING_XM_UA(0.00)[];
-	TO_DN_SOME(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	RCPT_COUNT_SEVEN(0.00)[8];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FROM_EQ_ENVFROM(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.de:email]
-X-Spam-Score: -13.30
+Date: Mon, 26 Oct 2026 11:19:38 -0700
+X-Gm-Features: AclHuK8-VKJdch5JGSdLR7HiZAxRhyNLKRo4wOVMpFlALXVFs8xNG5yVrpTkgZA
+Message-ID: <CA+hZKYK7M9EB2HmVTQtccuztYeSSrygnN_20g07e7C+mQPRMnA@mail.gmail.com>
+Subject: Re: task hung in xlog_grant_head_check - still reproducible on
+ 7.2-rc7 (2018 report went dormant) - and on 5.15.216-stable, with a cascading
+ inodegc victim profile
+To: linux-xfs@vger.kernel.org
+Cc: djwong@kernel.org, yangguikun@tju.edu.cn, syzkaller@googlegroups.com, 
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-Christian Brauner <brauner@kernel.org> writes:
+Hi,
 
-> ext4, f2fs and tmpfs keep negative dentries out of casefolded
-> directories. A negative dentry remembers one spelling of the name and
-> the next create() through it would write that spelling to disk.
->
-> So their ->lookup() doesn't cache a miss and their ->unlink() and
-> ->rmdir() call d_invalidate() on the dentry so that d_delete() doesn't
-> turn it into a negative dentry.
->
-> But d_invalidate() is the wrong primitive for that. It's for a name that
-> went stale. It walks the subtree, prunes it and detaches every mount it
-> finds, under namespace_sem, and here that runs from inside the
-> filesystem's own directory operation. ext4_rmdir() does it with the
-> journal handle still open and ext4_unlink() does it even when the
-> unlink failed. All anyone wanted is the unhash.
->
-> So d_delete() now unhashes the dentry when the parent is casefolded,
-> next to the dentry-negative sysctl that does the same for every
-> directory. ext4, f2fs and tmpfs drop their d_invalidate() calls.
->
-> xfs's ascii-ci doesn't set S_CASEFOLD and can't so it d_drop()s instead.
-> I did consider setting S_CASEFOLD on ascii-ci directories and didn't.
-> overlayfs warns when a layer's casefold flag disagrees with the
-> superblock having an encoding, and xfs has none.
->
-> Nothing changes for userspace. A miss still isn't cached and a removed
-> name still leaves no negative dentry behind. Verified with the same
-> create, unlink, create, readdir and stat sequence in a plain and in a
-> casefolded directory on tmpfs and on ext4, before and after.
+Picking up Yang Guikun's August report [1] with independent evidence from
+our fuzzing fleet -- we agree with the analysis and would like to help get
+this unstuck, because the history of this bug now looks like the pre-history
+of CVE-2026-109618 (PHP2Shell): a known issue sitting on hard trade-offs
+until it becomes an emergency.
 
-I think the change looks fine and it passed fstests.
+INDEPENDENT CONFIRMATION (5.15.216, KASAN, syzkaller):
 
-Reviewed-by: Gabriel Krisman Bertazi <krisman@suse.de>
+Our focused XFS campaign reproduces the same hang with a different image
+generation and an extra victim profile:
 
-Of course, the better approach would be to enable negative dentries
-but the last attempt went sideways, though not for any good reason.
+  1. syz_mount_image$xfs -- crafted V4 image (small log)
+  2. one setxattr(...) with a large value
 
-thanks!
+  -> xfs_attr_set -> xfs_trans_alloc_inode -> xfs_log_reserve
+     -> xlog_grant_head_check -> xlog_grant_head_wait (xfs_log.c:256)
 
--- 
-Gabriel Krisman Bertazi
+Unlike the August report (V5 image, single victim), our logs show a CASCADE:
+the first task wedged is the xfs-inodegc kworker in xfs_inactive_truncate
+(D-state >122s), after which user tasks pile up in xfs_trans_alloc behind
+the grant wait. All victims are unkillable. So the blast radius is the
+whole filesystem, not one unlucky task.
+
+Same root cause as described in [1]: a transaction reservation larger than
+the usable log size can never be granted, so xlog_grant_head_wait() is an
+unbounded wait -- no amount of log tail pushing can satisfy it.
+
+THE RECORD (why we are pushing now):
+
+- syzbot's main tracker: first report 2018-05-21, open 3079 days,
+  1471 crashes, 0 of 29 patches merged, last crash within the last day.
+- Sister trackers all open with C repros: linux-4.14 (2450 days),
+  linux-4.19 (1412 days), linux-5.15 (1311 days), linux-6.1 (1302 days,
+  394 crashes), linux-6.6 (Dec 2025, corrupt-fs images).
+- August's report included a concrete, low-risk fix direction (sanity-check
+  the reservation against usable log size -> clean -ENOSPC instead of an
+  unkillable hang). Neighbor fixes over the years (integer overflow in
+  xlog_grant_head_check, the nowait case, ioend log exhaustion) never
+closed the unbounded-wait itself.
+
+WHAT WE ARE ASKING FOR:
+
+1. Either accept a reservation-size sanity check (we are happy to test
+   patches against our fleet and provide before/after traces), or
+2. record an explicit decision (even "won't fix, requires crafted image")
+   so that the dormancy becomes a documented choice rather than silence.
+
+We would rather spend our cycles testing your patch than re-reporting this
+for the 30th time in 2028.
+
+OFFER:
+- Full syzkaller reproducer package (image + prog + C + logs) from both
+  campaigns; can also provide a hand-minimized C repro on request.
+- Bisect/testing assistance on 5.15-stable and mainline.
+
+[1] https://lists.openwall.net/linux-kernel/2026/08/24/265
+    ("task hung in xlog_grant_head_check - still reproducible on 7.2-rc7")
+
+Reported-by: Ivan Vinichuk <ivan.vin.ctf@gmail.com>
