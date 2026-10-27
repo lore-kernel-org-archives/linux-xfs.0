@@ -1,58 +1,58 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.137.202.133
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793115764;
-	b=VFV0nHEunqFEKcZUCRNlykEMqih42SyZVy9Pw0cFVYaewNjVufJpPSFnsByuXWceyJbw
-	 xu4CzmpMD4Ss3ENJXL5KCMTZ3mrpCJIUwtbVM87AHchE7g4T0nqpK4NHwWdjQ2N9SfmXB
-	 D0wERk0sq+AOBbUWxDib7DXM186oJez2hR534M58KCrNJGTD6LFm6jW26C1/DAtcEPHa9
-	 1bR7LTMUfwDdfXusXobCkXlhhrvdvSuE/o+7fKHuTO6qqpRcoHD+XqatgkSAzQiLZimaf
-	 di9SyFiawNpAw2z1tLhnu20AM0fIMKCuJp3YpmmGrNEtPl3SvpKxhwgnhMp3WoxgEEw==
+	t=1793115767;
+	b=rC6erCuq3DLk134aweJ4pP+yn0QLHFQhnCzxgs3K5wOwRnulLdUeE3eak6vsmdRIGrgw
+	 CV0x/rNnZBDXvy74rRRqXbUsVGj2RAhhcT5s0koaVxJj9VntPvVkXyDy8eYjEips7ZXfI
+	 NHKfTqS4YWgJ0Lbccse3PJD3jQdLM2hfdD2R8deBSjPfOEgsCrZliTUHkGOZ9NhNOFD6V
+	 92cOLvVzW4CHVGvNfvOJE8bNasWAkUrhmLz3raNI0Z1uYj7rT1KHIvLkbWldDq5veoQqf
+	 hkStRyq97b7+MehnwWlqNsh7aQnFw9rJwOERcB4lROi8vISijoVk3CufnFtChuh0X5w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793115764;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793115767;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
 	 Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding:X-SRS-Rewrite;
-	bh=/QiXOIWAa1N6M3U6Smd4V4fqUFNZcziaYXSTFmrc0Uk=;
-	b=T/Gp7388XaP2jClVS0xx857UvTE73pst8Fa1GyhnraqIdgMP64lpqXi+EawA5HYB5gAG
-	 BLe55l1ZW77WREq0wcNk5rTirAKTi+6Y76MG2stN/aUlPhN00Th9EvrZgH8EE6JYZwwZZ
-	 e2D7Ide6gP6mfpjer8PrAblk4EN2kaBuY+T03YrPw7HszHWtqti1m21/cjHCY7I5/pp/e
-	 TCIZBhM1Iwf2z+qs+hjq0alWIDL6T/VT2CMRkPIH7RrYUe+LaZOh99Z3DeslAKmRlPbMq
-	 Xg9qhanIeYgRqAFZiiq1dz4mvMeGLTo1R7/iZa243iziNKsQ6tnvKx7iirXk1t8T8KQ==
+	bh=Oy+CE2RYYyn0oETTZTxS64aySK+Ap9wleRO+M9MAhTE=;
+	b=Hm+it2xu4OPkk7qumnhEdetUG3A+9osi1akAoAAWgweX4VPgi5XPY4830gIpRyLm5hS7
+	 adqrxR1lC2w01GQnTsGe8y6BvuOry5ZfR+rPhfQOZVq/JPWKpEgyCEeeZnaOfHf4H/IX/
+	 GNW7i4vFA/ILST5aIjUbeE1ZBlnAd8D2y7GgHVnVY2N2ebO5rpiICQfpBiyWxv/JQRs/0
+	 nuNgYm4xe8+zz/px1A5FiSQoVGouuZKikk8fNgCQqYV9CnSNhXAKk6UrMDFeek0Sm1A03
+	 n5uV1BE+GUO5j3JaDBnmmMkxinsu2BNmaRMOPd5rFjMDWnkECoheP+Nje00rEPEn/yA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=fail header.from=lst.de;
 	spf=none smtp.mailfrom=bombadil.srs.infradead.org;
-	dkim=pass header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=uuGUakhX;
+	dkim=pass header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b="AF4T/wAL";
 	arc=none smtp.remote-ip=198.137.202.133
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EB78606A31F
-	for <linux-xfs@vger.kernel.org>; Tue, 27 Oct 2026 15:42:44 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2EB78606A31F
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F39D1606A31D
+	for <linux-xfs@vger.kernel.org>; Tue, 27 Oct 2026 15:42:46 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org F39D1606A31D
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=uuGUakhX
+	dkim=pass (2048-bit key, unprotected) header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=AF4T/wAL
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=/QiXOIWAa1N6M3U6Smd4V4fqUFNZcziaYXSTFmrc0Uk=; b=uuGUakhXNh+vzyVE39yvX0WLtU
-	hCen9vKIyPKf0yc1N8UvEBU+gDm4ii8ucr1KqvqrPRtn0vcRd3N73pY1y9g4k4wshICxsSJHyr7WR
-	ZkwAh5PuUdtrz1lqo96STo7F9LzMJPOXixxzm2+CMkx3JfOJZD7BxnVGelDcZw9dgDaNVw87RVlt6
-	We9wg+w1MyDG4XWu5iduVCO7TjqCADTSsgf9mHyzukKAHWaZlQ5R7Kyse1h0H4h8mAA+CGDIOJaa2
-	XKQvW/lvHMhSnj0oFvE31EHV5TPk941DvxV75y0PYUkdD4BaCIXOD+8C31WN0FGYK4n3j21TGQf0/
-	+/6qjQSQ==;
+	bh=Oy+CE2RYYyn0oETTZTxS64aySK+Ap9wleRO+M9MAhTE=; b=AF4T/wALHl4WeP+OfB6Wjr/Pyg
+	0hHbLxhMACzjmRIZt5b+I1x/Z3Jn3dJJj9rwJLzmBlScvXgteGLySUEfrGkulZzzmEuoqNgFPXVM2
+	s03XRBnNCxxh7sxDH2IRjhRu3QftLGWM/mtF7mcWg+tkm+MjspGQHWDt4L95+BHQsETGMRNN3g2yB
+	SWCZ+idN6039DweTA9u05fUvxlAPRqcrKQwdRBYXPKhLnzTV7sl10C+wGUmyC29t0NUHegK2PUY0W
+	dXeYAoRO0s4JVidXHwPudWlrF079JwBb/hTSfzJ8UjO9FGB55+3DUaLRe6PRc6gIIQvCImOTzlX8Q
+	2axrKIdA==;
 Received: from 2a02-8389-2301-9f00-31e8-efb6-e973-61ca.cable.dynamic.v6.surfer.at ([2a02:8389:2301:9f00:31e8:efb6:e973:61ca] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.100.1 #2 (Red Hat Linux))
-	id 1xLjJz-00000005Fuv-1kci;
-	Tue, 27 Oct 2026 15:42:43 +0000
+	id 1xLjK2-00000005FvV-10Ql;
+	Tue, 27 Oct 2026 15:42:46 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Andrey Albershteyn <aalbersh@kernel.org>
 Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH 1/7] libfrog: constify getprnam
-Date: Tue, 27 Oct 2026 16:42:15 +0100
-Message-ID: <20261027154237.1997484-2-hch@lst.de>
+Subject: [PATCH 2/7] libfrog: constify cvt*
+Date: Tue, 27 Oct 2026 16:42:16 +0100
+Message-ID: <20261027154237.1997484-3-hch@lst.de>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261027154237.1997484-1-hch@lst.de>
 References: <20261027154237.1997484-1-hch@lst.de>
@@ -70,36 +70,142 @@ X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- libfrog/projects.c | 2 +-
- libfrog/projects.h | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ libfrog/convert.c | 20 ++++++++++----------
+ libfrog/convert.h | 24 ++++++++++++------------
+ 2 files changed, 22 insertions(+), 22 deletions(-)
 
-diff --git a/libfrog/projects.c b/libfrog/projects.c
-index dbde97021c63..4b2aec51b7bd 100644
---- a/libfrog/projects.c
-+++ b/libfrog/projects.c
-@@ -94,7 +94,7 @@ getprent(void)
- 
- fs_project_t *
- getprnam(
--	char		*name)
-+	const char	*name)
+diff --git a/libfrog/convert.c b/libfrog/convert.c
+index 65b9e47459e2..605f309f2ad9 100644
+--- a/libfrog/convert.c
++++ b/libfrog/convert.c
+@@ -29,7 +29,7 @@ numlen(
+  */
+ int64_t
+ cvt_s64(
+-	char		*s,
++	const char	*s,
+ 	int		base)
  {
- 	fs_project_t	*p = NULL;
+ 	long long	i;
+@@ -59,7 +59,7 @@ cvt_s64(
+  */
+ int32_t
+ cvt_s32(
+-	char		*s,
++	const char	*s,
+ 	int		base)
+ {
+ 	int64_t		i;
+@@ -82,7 +82,7 @@ cvt_s32(
+  */
+ int16_t
+ cvt_s16(
+-	char		*s,
++	const char	*s,
+ 	int		base)
+ {
+ 	int64_t		i;
+@@ -105,7 +105,7 @@ cvt_s16(
+  */
+ uint64_t
+ cvt_u64(
+-	char			*s,
++	const char		*s,
+ 	int			base)
+ {
+ 	unsigned long long	i;
+@@ -135,7 +135,7 @@ cvt_u64(
+  */
+ uint32_t
+ cvt_u32(
+-	char		*s,
++	const char	*s,
+ 	int		base)
+ {
+ 	uint64_t	i;
+@@ -158,7 +158,7 @@ cvt_u32(
+  */
+ uint16_t
+ cvt_u16(
+-	char		*s,
++	const char	*s,
+ 	int		base)
+ {
+ 	uint64_t	i;
+@@ -266,7 +266,7 @@ cvtstr(
  
-diff --git a/libfrog/projects.h b/libfrog/projects.h
-index 779194749edb..8355c0bbeb48 100644
---- a/libfrog/projects.h
-+++ b/libfrog/projects.h
-@@ -20,7 +20,7 @@ typedef struct fs_project {
- extern void setprent(void);
- extern void endprent(void);
- extern fs_project_t *getprent(void);
--extern fs_project_t *getprnam(char *__name);
-+extern fs_project_t *getprnam(const char *__name);
- extern fs_project_t *getprprid(prid_t __id);
+ time64_t
+ cvttime(
+-	char		*s)
++	const char	*s)
+ {
+ 	time64_t	i;
+ 	char		*sp;
+@@ -303,7 +303,7 @@ cvttime(
  
- typedef struct fs_project_path {
+ prid_t
+ prid_from_string(
+-	char		*project)
++	const char	*project)
+ {
+ 	fs_project_t	*prj;
+ 	unsigned long	prid_long;
+@@ -328,7 +328,7 @@ prid_from_string(
+ 
+ uid_t
+ uid_from_string(
+-	char		*user)
++	const char	*user)
+ {
+ 	struct passwd	*pwd;
+ 	unsigned long	uid_long;
+@@ -349,7 +349,7 @@ uid_from_string(
+ 
+ gid_t
+ gid_from_string(
+-	char		*group)
++	const char	*group)
+ {
+ 	struct group	*grp;
+ 	unsigned long	gid_long;
+diff --git a/libfrog/convert.h b/libfrog/convert.h
+index 223d3e73c942..2a91b5b5b6b6 100644
+--- a/libfrog/convert.h
++++ b/libfrog/convert.h
+@@ -6,21 +6,21 @@
+ #ifndef __LIBFROG_CONVERT_H__
+ #define __LIBFROG_CONVERT_H__
+ 
+-extern int64_t	cvt_s64(char *s, int base);
+-extern int32_t	cvt_s32(char *s, int base);
+-extern int16_t	cvt_s16(char *s, int base);
++int64_t	cvt_s64(const char *s, int base);
++int32_t	cvt_s32(const char *s, int base);
++int16_t	cvt_s16(const char *s, int base);
+ 
+-extern uint64_t	cvt_u64(char *s, int base);
+-extern uint32_t	cvt_u32(char *s, int base);
+-extern uint16_t	cvt_u16(char *s, int base);
++uint64_t cvt_u64(const char *s, int base);
++uint32_t cvt_u32(const char *s, int base);
++uint16_t cvt_u16(const char *s, int base);
+ 
+-extern long long cvtnum(size_t blocksize, size_t sectorsize, const char *s);
+-extern void cvtstr(double value, char *str, size_t sz);
+-extern time64_t cvttime(char *s);
++long long cvtnum(size_t blocksize, size_t sectorsize, const char *s);
++void cvtstr(double value, char *str, size_t sz);
++time64_t cvttime(const char *s);
+ 
+-extern uid_t	uid_from_string(char *user);
+-extern gid_t	gid_from_string(char *group);
+-extern prid_t	prid_from_string(char *project);
++uid_t uid_from_string(const char *user);
++gid_t gid_from_string(const char *group);
++prid_t prid_from_string(const char *project);
+ 
+ #define EXABYTES(x)	((unsigned long long)(x) << 60)
+ #define PETABYTES(x)	((unsigned long long)(x) << 50)
 -- 
 2.53.0
 
