@@ -1,120 +1,177 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.179
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793138327;
-	b=dZTIdnrT20qDvTGRu6qDC9vnmAx7lLHqR884gl77D/f0QnNRBEmbAGfhJFUC6fKNe+RL
-	 LtOGiIpfPPegusiOqzmfUhE5ip7oeMcG3LO2twrzH6RaAGaiZ/jH3lIvuEi5gvQIxEUKc
-	 ThIIzbE7WwWEnqaqXUPgCKRlJGka0Wah/ZH3Lc4njGeDM4ZwQoAY1ZAGyVofkOk1QPafy
-	 iwJsv8LuK1fEzD2ZGQQkoy7iQR7ScC4HaCMqO9XxCkU+5TQmvAG/a8/sCtKpfcR+1+83w
-	 NmDXUzc8cdL8Clv9eEd7BTwad3L+tzNYikiwxbL/kiL8HW8giaxqzsh5VA7Pjspi3kQ==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793138327;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=e12N8ZX0Lkx8DYQBw3EDvB2XZn5mBgH3gy7qGfPn8tk=;
-	b=BYN8Xd0XDBq+Kc7uEJkZX1bMcupUbz+3+yw/Mr31Hw6rfNtqoKAc6KjQbDZEyFFvatId
-	 eHj1JJW9/CGts4I1mSxoHwhIpCJjafBcHlznaRsTC+qaXgxLGUyJUA5bC9dQiFQ4kCNQU
-	 QU6MALLwbnFlJWV9JjBgt8C/QprfemJUqn3znNQFnL4g/Jh3caFgnaEGbKM+kQiu31H9y
-	 PcTV/Z/D5Y+UpXy9ZTnelWFKtuKI47KRk9mMU/5rjuvTUwwSkOs/XSI6Iu29qUbmlsqvj
-	 HdtmOXq0PCrCAxXv2T3bBKSCDaaKiQhUrU2NAFY/9o70u+XTvFkFyuqW5gNIEJiny6A==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=eQwHA+wR;
-	arc=none smtp.remote-ip=209.85.128.179
-Received: from mail-yw1-f179.google.com (mail-yw1-f179.google.com [209.85.128.179])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=68.232.143.124
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793140760;
+	b=2vHVWXFPCI5T/8G25q2DIP2utF9tlaJIpRfpseOGBPbVg96V2w2AI2wL/HRImh8uy9/o
+	 2DTR5hBNGM1obyHwmcl7bj92TzjdsJ4F4IIY0Xnkq+aoLYbdStPn7fD9epdvHAy4Ze/YY
+	 lKF663w9EZ99cgvwqc9wEIz3fwPzSny7r1KTgdw7h6PXPGiESDN5VTFWhxQDvyWilf0IR
+	 +CiN2w82yhNDnHrwI8Zo3F/BtX3873ApTnQ0C9U4GJcFi8IpH0WppNW7jXc0frza5AuKK
+	 K8kmA7aQFVHhWrfPJVt/q5R7XnUlXnmnswSp/U6zWbtZX4p24nIG4sQH9YCJimIWf4g==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793140760;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:Received:DKIM-Signature:Received:Received:From:To:CC:
+	 Subject:Thread-Topic:Thread-Index:Date:Message-ID:References:
+	 In-Reply-To:Accept-Language:Content-Language:X-MS-Has-Attach:
+	 X-MS-TNEF-Correlator:x-ms-publictraffictype:
+	 x-ms-traffictypediagnostic:x-ms-office365-filtering-correlation-id:
+	 wdcipoutbound:x-ms-exchange-senderadcheck:
+	 x-ms-exchange-antispam-relay:x-microsoft-antispam:
+	 x-microsoft-antispam-message-info:x-forefront-antispam-report:
+	 x-ms-exchange-antispam-messagedata-chunkcount:
+	 x-ms-exchange-antispam-messagedata-0:Content-Type:Content-ID:
+	 Content-Transfer-Encoding:MIME-Version:
+	 X-Exchange-RoutingPolicyChecked:
+	 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount:
+	 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:X-OriginatorOrg:
+	 X-MS-Exchange-CrossTenant-AuthAs:X-MS-Exchange-CrossTenant-AuthSource:
+	 X-MS-Exchange-CrossTenant-Network-Message-Id:
+	 X-MS-Exchange-CrossTenant-originalarrivaltime:
+	 X-MS-Exchange-CrossTenant-fromentityheader:
+	 X-MS-Exchange-CrossTenant-id:X-MS-Exchange-CrossTenant-mailboxtype:
+	 X-MS-Exchange-CrossTenant-userprincipalname:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
+	bh=9sIzKTxKWeK3eZyn9rmWBacM3Iyth5qApB7bc+Pqw7s=;
+	b=oi+DJET8mL0HX9qn1iK9Qt0NahCo9oPKDnECfdAiDtyERS+r+sS9nsGP8BtkTDo37wrQ
+	 1rYSAALDwGLaQrmLql5lTVkcPwAtVBjiibBhX0TvFBdIFM6lYp5HCfcHxjvzV0nFlbh8q
+	 nA70LcYbQbkg2sXxF3R3u0JiQpHak2F20Z8qEUD+/ePLvYORAuBfoT06AF9xFPN5/hlmp
+	 iXDdBVKmJuOqlwYc85frwL4V7wEtmGCWG8tntFwKtRaRBXLPJkUTEByhynjsGDcymUWW8
+	 gDNEfIjxYqTeV0sOMsW5GbyhK4zJyp/A3OBe5zNOBpQdjUSzVSJ32WeND1Ku5TgsNPQ==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=wdc.com;
+	spf=pass smtp.mailfrom=wdc.com;
+	dkim=pass header.d=wdc.com header.i=@wdc.com header.a=rsa-sha256 header.s=dkim.wdc.com header.b=e8UMNYq2;
+	dkim=pass header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.a=rsa-sha256 header.s=selector2-sharedspace-onmicrosoft-com header.b=JeC5ApGI;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=68.232.143.124
+Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06D1960A2600
-	for <linux-xfs@vger.kernel.org>; Tue, 27 Oct 2026 21:58:46 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 06D1960A2600
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0969606A324;
+	Tue, 27 Oct 2026 22:39:13 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E0969606A324
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=eQwHA+wR
-Received: by mail-yw1-f179.google.com with SMTP id 00721157ae682-8b05bf699easo3169317b3.2
-        for <linux-xfs@vger.kernel.org>; Tue, 27 Oct 2026 14:58:46 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=wdc.com header.i=@wdc.com header.a=rsa-sha256 header.s=dkim.wdc.com header.b=e8UMNYq2;
+	dkim=pass (1024-bit key, unprotected) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.a=rsa-sha256 header.s=selector2-sharedspace-onmicrosoft-com header.b=JeC5ApGI
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1793140753; x=1824676753;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-id:content-transfer-encoding:
+   mime-version;
+  bh=9sIzKTxKWeK3eZyn9rmWBacM3Iyth5qApB7bc+Pqw7s=;
+  b=e8UMNYq2WftYg21ZNQ/Bz6nZMqa56FONm1KVgqDb+cWpTPDs4yp/dgt1
+   OwJ2f++fKhbTNdWAE5r2oALl8+HHXaOT5B5w+w/AAYrbN7BA83CHjCAYr
+   6ksVqk+p+s+fjT5nKJ9opLdA4Wg7Saz/KNfaG4qhtIb8Jmr2Q6v+G3jFW
+   tqKL/725KnTT6vZEaZ0yP4YwQwK821YaqA2m0CVjU/8mZcZuPjU4V1/QO
+   /2Cpv6p1d1Hz+t3ZNrPF9mtZ/2LlWnX5+qM9iLpOfP242/JRbcFcqnHoT
+   wYc8dxeoj+zlk8LGZ9XhiHuj0q+9IVwuJ8GznUf5JVbwpFB8nujsdu3HK
+   w==;
+X-CSE-ConnectionGUID: kgKUFzUjRKCbrbRrj+pEpw==
+X-CSE-MsgGUID: RW+D9m62RPOCfDGf0AvMuw==
+X-IronPort-AV: E=Sophos;i="6.27,181,1786982400"; 
+   d="scan'208";a="160111147"
+Received: from mail-southcentralusazon11012064.outbound.protection.outlook.com (HELO SN4PR2101CU001.outbound.protection.outlook.com) ([40.93.195.64])
+  by ob1.hgst.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 28 Oct 2026 06:39:12 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=GHajXkAN+WqCv/q6WSa00XAeLU3v5+jzIzH5FYfXdaHTK+153HBmk6+IkXKsxNA87cU8m9yofQrdM6GWw3IZBJWBMg4Av50xHaTmgobXES9Pxej8I5232l6RFFsQIMgyE2AXGcrm38RG/cSBS/PBV+h3Jw3fyFtWHdGMCCvvFe4ax9wVihbhf821fXHHo5KMZiE3xUA0/wmia4Jad3r/2oAL9mpv0Nc8BFnfCTHIwp7Bm0Pp9fr97w0O/UvFMFa9Pc76s9s/0lVKzBCaaL1IbZBnHJVL3ZZVHZNKFfwhTzdPvWkmryyKloDeLDCAcySTnw7ycaR3rWei3skQBXEwDQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=9sIzKTxKWeK3eZyn9rmWBacM3Iyth5qApB7bc+Pqw7s=;
+ b=O4xYH8hd4KQEHTnDC+M/qA7DhM5wFEyFfmR9Echo1rDs0O7FuBgVR4ZCqoPTGnAlrQP2ZdNwYtQhPxlUJcxD5RARh6+Iq/1wzBYeDDkeEo2+DDHnvf8CrkQG8TUD12o98sxLdy7cmreS3mjgtI6SgfEJz0ApoHByepDb01hFd+KoAgwGVejv/g8XjODPG1mSiHKaEgr/l9jOxu/qgvYRRM/X7Vd02jgREAsz0/zwxfBjZLxtY4m/BbQLtYlwts19SCkCrnsVsbPiQaCcGoGDVQfYwErEBFUrXEwZqH+b392vrbyUoizkNDK9kX6GfqWlMiauIMyUCqxwPDAxoN5FqA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793138326; x=1793743126; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=e12N8ZX0Lkx8DYQBw3EDvB2XZn5mBgH3gy7qGfPn8tk=;
-        b=eQwHA+wR5NE+HXgiR5HUCOJFE1l47lvRHqLSfvJXUC00kKnsCg6MBczkGfRCKhmhKv
-         mQxMLpxbLQQUf5w+OBRIVVg4C3PoQGgAV05PHuFxRLLtRiTmQ0RIvUQ7vr6yI0qow3wB
-         ozNI97J60cqdBEsPyoRVEOqc8scQVHTRj67EO8Xk98ROXBxPQxiGY2Y3+OD2sZYqLo5g
-         JJr5Pvm9hVCsNsEzixlT0cYo7Z5PhjY7zrbBh8aJhF10zpHlcp20QxjIDfutJtdehGPA
-         M/vytdXpo04VEquIB4f2coa8t2K2ehuJkWb8sGcFThMUZ00CudWtZOEnLRXXaxdX993Q
-         sL2w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793138326; x=1793743126;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=e12N8ZX0Lkx8DYQBw3EDvB2XZn5mBgH3gy7qGfPn8tk=;
-        b=hk7Zwv5QeE3gK9d5CBE8YRRh/NTm/ZBi/33IvI9ccDJAMBEu3TeUdgutuWgeK2MNlT
-         cwC/eq2GCnbrEaOoWhgH/injT5oVyUG4H19r+ur1rt/++0hZj7b2Sk2sfdLL4PUhIcmU
-         KbaJZWPAr9XFSJcFoRwxwPxv8bwJxH7BWPe/mwo661ylalzsrZDKT7ai44Gp7XuaWw9P
-         hGvJqLFd5LEzsqNt9DXbmQH6M2fUykUM0uTtrNYN2eIlla1nQVG7fc3Ko8ChjzHWMIQM
-         aUqMUDSx7QnhermOIRyGUaIBf7RXbDckNda2u7SQXiVCqdpYxjVaftAKYY3t7ukt9vqZ
-         IeNg==
-X-Forwarded-Encrypted: i=1; AKwUvBze3K8N82emI8cYoIaZ1LR09JOy+dE/8XxxAADfcrX+ECQBgcCUnFF0uiXqlEdE1Y8q3tN6jFtVSVU=@vger.kernel.org
-X-Gm-Message-State: AFq9FYKWKasrbe8j8jA3Xr8wMTEsVo1WDarJCrbTsF4emeFtw4Fu4gg/
-	/Qot7o0fLqtCem9HIpyff+2IYgwezyCTd7D6ozz0jv6N747f5gaL7n+c
-X-Gm-Gg: AYBFou1JciFYJLJ8e7Zyf3OGQ2jvj/EUZF/LvZonfWqNDcZEDdErOYNDYUpVCkrFLcZ
-	rymflsGoOx5lhDUcxyGCJwNPEbmFMp2ieMUsGysV250sdLGeQgedZdVTg0cJemUFQa7XB0tn7pf
-	dlFyvwChFnfbZz1OreHPXwQZ3r4meKx5F28r5tfHzMkTFNqjC7uGzJVLovolbSvdMm0/hAfD2ZA
-	lRBfwbZ3zuug5XdusLa9UseLNEMKMzKCvd5D9ZLBvRTt5+K7BCSoHT77T1JGOWLOlXqZmNcO2ba
-	x7mYBlVdGDfrsdg6yFTTfUh869E4iYpKxT2+RitZZ3LRf6w/Y9s5tl9CrCOAfbrxjYhaZ3Sv2HL
-	jrXcX/ycKobCIX3CFQprlBwoGuCNpD2UFeVEMjhm7p6XWqwgT7ObluOEkQDXLydRkXZvmmokK59
-	aoYiZcFTOxSx3TVozNOD6VLt8jfgWsMFUjLcop9C4J9DNxMMSTFR7mV6xwdjcG5Xg0I3cNABlPp
-	R3FzebXaAclFHTM7zjUxqxWtwp7kC2AbBRqieiaGgYXyCAjAo6hFBGXEM5jZKgn/gqDK+LWXNnQ
-	5TpmEukG8ktFIt1sNne12YGGciEAPTM=
-X-Received: by 2002:a05:690c:3484:b0:873:5c6b:a305 with SMTP id 00721157ae682-8b1b5d1ab22mr1935707b3.51.1793138325796;
-        Tue, 27 Oct 2026 14:58:45 -0700 (PDT)
-Received: from localhost ([2a03:2880:ff:7::])
-        by smtp.gmail.com with ESMTPSA id 00721157ae682-8b19e5a30bfsm18804397b3.24.2026.10.27.14.58.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 27 Oct 2026 14:58:45 -0700 (PDT)
-From: Joanne Koong <joannelkoong@gmail.com>
-To: Christian Brauner <brauner@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org,
-	Christoph Hellwig <hch@lst.de>,
-	"Darrick J . Wong" <djwong@kernel.org>,
-	changfengnan@bytedance.com,
-	kbusch@kernel.org,
-	Matthew Wilcox <willy@infradead.org>,
-	Jan Kara <jack@suse.cz>,
-	Jonathan Corbet <corbet@lwn.net>,
-	David Sterba <dsterba@suse.com>,
-	Gao Xiang <xiang@kernel.org>,
-	Namjae Jeon <linkinjeon@kernel.org>,
-	Theodore Ts'o <tytso@mit.edu>,
-	Jaegeuk Kim <jaegeuk@kernel.org>,
-	Miklos Szeredi <miklos@szeredi.hu>,
-	Andreas Gruenbacher <agruenba@redhat.com>,
-	Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>,
-	Hyunchul Lee <hyc.lee@gmail.com>,
-	Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
-	Carlos Maiolino <cem@kernel.org>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	libaokun@linux.alibaba.com,
-	bfoster@redhat.com,
-	linux-ext4@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	Viacheslav Dubeyko <slava@dubeyko.com>,
-	Ryusuke Konishi <konishi.ryusuke@gmail.com>,
-	linux-nilfs@vger.kernel.org,
-	fuse-devel@lists.linux.dev,
-	Zhang Yi <yi.zhang@huawei.com>
-Subject: [PATCH 5/5] Documentation: iomap: update docs to reflect iomap_iter_next model
-Date: Tue, 27 Oct 2026 14:53:26 -0700
-Message-ID: <20261027215326.2693300-6-joannelkoong@gmail.com>
-X-Mailer: git-send-email 2.52.0
-In-Reply-To: <20261027215326.2693300-1-joannelkoong@gmail.com>
-References: <20261027215326.2693300-1-joannelkoong@gmail.com>
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=9sIzKTxKWeK3eZyn9rmWBacM3Iyth5qApB7bc+Pqw7s=;
+ b=JeC5ApGIeshYckXxzRVjvUraMUZJnw4AFZIjy3EupEU1R4mRsmQcugLwPI03Jg+Z9gBb4YDujwDGyEHSqgM18jtRZyfeJ3xgPBeoSN4V2r1SrmmDLc1/KRH1C4zPyQGEgK5AvDUxELFkzM7MOwDo3RSNmyugWueW5yJg8MyZTgg=
+Received: from IA3PR04MB9680.namprd04.prod.outlook.com (2603:10b6:208:510::12)
+ by SJ0PR04MB10303.namprd04.prod.outlook.com (2603:10b6:a03:407::12) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.546.22; Tue, 27 Oct
+ 2026 22:39:10 +0000
+Received: from IA3PR04MB9680.namprd04.prod.outlook.com
+ ([fe80::380:1453:ea86:e64f]) by IA3PR04MB9680.namprd04.prod.outlook.com
+ ([fe80::380:1453:ea86:e64f%7]) with mapi id 15.21.0546.021; Tue, 27 Oct 2026
+ 22:39:10 +0000
+From: Wilfred Mallawa <wilfred.mallawa@wdc.com>
+To: "cem@kernel.org" <cem@kernel.org>
+CC: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] xfs: fix unwind handling during xfs_mount_sysfs_init()
+Thread-Topic: [PATCH] xfs: fix unwind handling during xfs_mount_sysfs_init()
+Thread-Index: AQHdZQvFl7RksBKAkkawL9eCkaPqG7cRi8GAgAByHAA=
+Date: Tue, 27 Oct 2026 22:39:09 +0000
+Message-ID: <7aa0056fad8faa98a79b2df930fec1119797b51c.camel@wdc.com>
+References: <20261026053454.987673-2-wilfred.opensource@gmail.com>
+	 <auDFY4Lkxs76I_F5@cronus.toxiclabs.cc>
+In-Reply-To: <auDFY4Lkxs76I_F5@cronus.toxiclabs.cc>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=wdc.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: IA3PR04MB9680:EE_|SJ0PR04MB10303:EE_
+x-ms-office365-filtering-correlation-id: 3a0d77ca-a9d1-4514-59cd-08df347b1e16
+wdcipoutbound: EOP-TRUE
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|1800799024|366016|376014|19092799006|23010399003|261026140227099003|261021123027099003|38070700021|11063799006|4143699003|56012099006|261022105027099003|261021121427099003|10067099003|22082099003|261026121527099003|18002099003;
+x-microsoft-antispam-message-info:
+ ONtjhQZnSMElCIbBRGDVs3bU7G2wwOYT8Mh0dt6yL9jSi67H8JkEGvzIjkLMhuU2dPE7QPIxBEZuqD/d+21bQGb0FfUBg82mdT0/xGetAvaSInhwQGN0bw50d7RP+XBiDBATQ6NWSGZguo05G5GHzOR6iQ8Kd8p6XKFVw3iFe9L+SEN8QnWXZmY5VWAG3BESUU9St2CPK8LsD2ekjqcyrNq8dp0hwZwxqHwjuoAVgYTl6s+VKLDc+uwwp5ipYtz67j5Sz/NaQWCoTLdUQz6LnPoVj4eAIgzz6+5pAKidKspTZMstQgcFAq+/sGyJJxVLenIE27FIoZfx+BXFqrnTxvUdgllFuspnDOEnqyC+rKL9xyziL5udFHZi1QHDJyhUE3ACW/mbyXbnd/BaaF5XUNr9t7gfAR7uINQc5lkpy6aJ2eoyeUoZZaiitYMaSbnLfPOkWY4ZmFlqy8kiK5BOV5JArdpPXhlTaz4SyQaQJyzCTA2KWMz4cQUGT4ImesafMDb8b1uXZM6Hz4PSSu3gv53A5hmSomRKT8TBAV+ktGeVf7cHj4i1+lS2j8EgdYYyZ7ujkCmxtgyFeEgqiwncIL7tlls+KgFhxSkVclC+g2DzZj7FUdhutJ/BRW7R4dpkQ5FCZh+X22H9masY9rYkOQKCNJE45b12y3OqfneWXdFw2/BYG9W+iPHQRJirLuPJMz61Rfjoo6Ot38IP2dmwebkh6Hch4RnpA/y0H143xns=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:IA3PR04MB9680.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014)(19092799006)(23010399003)(261026140227099003)(261021123027099003)(38070700021)(11063799006)(4143699003)(56012099006)(261022105027099003)(261021121427099003)(10067099003)(22082099003)(261026121527099003)(18002099003);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?utf-8?B?MjdTZXZWWkFtT1N5Q3ZjT3RERDloQmNLMDNxQWVFM1h4QmpxNmVWc01Hc0NI?=
+ =?utf-8?B?bzNHVEE4TkdwWE1FUWlHR3dETDFKWDliSFIwRkc1RDVRdEd2SUhMZmwyQVFS?=
+ =?utf-8?B?TVF4M243Sk5sOHA2cHMrOUljU2xDSmpJRzFjdlljd3N5MGFRZDNXdGt6QlJz?=
+ =?utf-8?B?OEljeUU5UmhrR1hTSzlmTWV5MEFyVk9MRnZOaG5iS3BYT2g2SGdhQ0M4dTAw?=
+ =?utf-8?B?K0ZQbFFxbFd6dHFFZk5tVGVpMGtXOVdTRExicmJXd0xNai9rUmNSODdhL1ly?=
+ =?utf-8?B?WnVFOTFlWHF1aDc2bDl2TkNXaFRSOFE1ZUtZT0RTUjNmN2JqeUVGcWYxT1do?=
+ =?utf-8?B?aE9BY0d0SkhVanluMFcrT0JHd0p1MnRnRy9NN3ZWZ0U2cUs2Z3ZrRXhKcFNj?=
+ =?utf-8?B?eXc4TnY3cHZ4M3pnUVRRNyt6VHZDbENSUDMxVEtzWWRXK0xlY2J1VGtpZXBk?=
+ =?utf-8?B?c0M2enVxNFNyUVJVYi9qNVBMY2VndUZ5R2lnQVlzVXpGVmhqeVB0VlQrTjBO?=
+ =?utf-8?B?RE1NY3ZFNlVhem84QUVrMTBDdTAwT0tIODRTbmRxOFUyQXhickUvcElmUVBu?=
+ =?utf-8?B?Z09ubkhEak5kaStPZ2wxM0VCd21XdDJzbVlxL2tkQ29tOEFxdGxJeFlPWEhM?=
+ =?utf-8?B?eC9ZR1V3MU1UeVhNNllBcVFFNmgxempHYmpSY2U1TyszOHhKa1A4V2dXN2Vi?=
+ =?utf-8?B?UitmZENYMHlVTEJndkJENFMxdFA5VFhOMTZHRk5YNnhtM0JraUVCQVJCQkxy?=
+ =?utf-8?B?V3p3Z3lMNVhqVUpMTnN5QyttQjhPMFAycHF3VWkwMFI2dVRuUUx4WVh4d2FT?=
+ =?utf-8?B?anMwUDlBL216R1M5KzZtQ25jRzhibGFOQlRxY0hvNlYxNElQUFg0ZTV0S0Fx?=
+ =?utf-8?B?MGU3dXFGN2Z5VWpHcVNnZm4wT2dlUHpSRnlMUTdyRXEwWVBBd3lrK0xmaWM3?=
+ =?utf-8?B?TXVES3dJeld0L1B1U1RnU094SmhNSU1qWXMwa1ZkaDUveDBoUWNXYW1tdEcx?=
+ =?utf-8?B?Y2ZJa2Zwb0dHR2h2VWk4eW5UNXZCb0xZVU4yQktyTnY4NlBndk1od241UWEz?=
+ =?utf-8?B?RTczWFZHYjlqQmNyU2hEeWxIVjBLZTkwd1M2SUMwWmN0eWtDVGFrN3k2YXhI?=
+ =?utf-8?B?cy9KV2xadEp2R1FjdWNBeU41c050M2J1SGMxVEJnU2NpTzJYNzBaT2xFSmJp?=
+ =?utf-8?B?SVNYdlJ4QmhpOG9BMnl2Q3Z2SkhkMUxGNUY5ak1KYWJJSmFuT0ZWbWpCTGtx?=
+ =?utf-8?B?VEJRQnluSExhWS9IWXlZU1dqeEZIL0xZMkJMNitLekVnQjdjeEhONmhyc0F6?=
+ =?utf-8?B?RGR2Rk1vOThocll3TkV2dWRyZmt3QzJiY2dlK0Z6aEZ4N240b0I5b2J6NGt6?=
+ =?utf-8?B?bThyR3hINmdvYWVZSmhTUjNYVjJwWGJ0ZkhJQ2RyMTNYaVFuamplRmhNMGpW?=
+ =?utf-8?B?eSs5amlTVG5EZVNXNzJVZGduOWl4WG5hVDd6cGpvNGRXRnpmakxOQVBqdDNt?=
+ =?utf-8?B?SVRwVzdjQ3lpSDZqQnIxSUJuWkNnTnJ5QXQ0S1hoNUlCRTI0TEJUQ0dndFp5?=
+ =?utf-8?B?R1ltR2w2NjlMUFFpQ0tyTkhaa2krVlNuVEJXMUZmd1hJZTFCdjdUQXA5aktm?=
+ =?utf-8?B?dnV5ak82SXczVEJ3WlVuOStKYm5mNWQvc0VnRTVSZjJQZExOZVlRNVlCR0Fi?=
+ =?utf-8?B?YkZnc1Y1VXRDMkRKQXQ3Uml5NEhaZUVwMmVINWN5RHpGU2htWkY4NjlhOXhL?=
+ =?utf-8?B?dndGeGErVHcwSVp5cGN5MDRBNkNnSGF0M003am9FVTY1dzFlRS8wcUpPT0F4?=
+ =?utf-8?B?NTEyU3dqWi9VdmJzcDZmUFJtR0xLNEpZaHZVUnB0cGRUUnNtaW1zZEpHSWVz?=
+ =?utf-8?B?c29pczhuSlVMVGRSV0ZJb05CVGRhMWZSVjVQSHU2cTkyUWFtekpmaWpVckxH?=
+ =?utf-8?B?MFAwc0xBMDlRcm96MGo3Y0owZUUrTklSb3ZUMkJqYUE2blc1aHpRWmtQUHdO?=
+ =?utf-8?B?WHFBcjJXMmNUYXllbGNDS3dXTlBwUWZrNElGR015UStGWHhzS2lLcUNvTjhM?=
+ =?utf-8?B?a3djbklDWStURmMvOVJVV1NVbUVqNkxoK05pVXkyS1VrVXk4WENJT1AybS9v?=
+ =?utf-8?B?K0l6d0F2Zm1FKzhRaTFIWHVVTC9zME9zdFQyc3JhMVBFMFA0cHJXNEd2cmJR?=
+ =?utf-8?B?LzZqbExKRUJZWXJwMlVBMXU0MjExTnlmTW11QWRnMTMvbitwbVhCOVkvaXVR?=
+ =?utf-8?B?TXNGQUpHcGN4VjY2NFF2WGlnSnAxVFdQV1o2N2NSd05sNUJLVE1YR2RsYXJU?=
+ =?utf-8?B?MU5ZTzd1VkxLb09sa2xIZVZYMnpqbFZlK28wZXUzL1k3WnFMU2R5SEs2cVFz?=
+ =?utf-8?Q?HgBF9bDPbfweE6AA=3D?=
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <D1EE8E9F342E62468E2E3356D7621A0E@namprd04.prod.outlook.com>
+Content-Transfer-Encoding: base64
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -124,543 +181,47 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-Exchange-RoutingPolicyChecked:
+	sDRhC0x5sjKnolRf4zvr8Nu3ywTN5o2ICBj8hIU12cMK4FIG1LnsRuKmXSkolv7QnDPAWwV2qe1CaS+RfQ1A5ITVM+HRkTURbRTOHwyBho6tTWgtls/9O+MjX6HFxWbucoAablWFjz3EusHQYEHfutL9II9lrqVMQAoYy2YPcLKao3Ba2AmLNLgVS8ORy4I0zmpPKtcm4q2KxwdErffIIzqkmfDEVIzkpWW+6wxtZc/reWNu1hb73d+EH3f/+LbsGSNHRNLVULN7dfdkWW+XiZuf/0E63XqIu/5j754GDyrdd7o9ZsUCivJNjsxJgcKD/DJFrEiGFUPf3d0wjq135g==
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	lh13Gbf4e8jHuw/QfI8OvV8bRMNSpsR2My9PO+lRZ/AQ0CntPE4mTqUWsITHnk42LLvLZQvAhcPij3OWMWcyKKtr+nehSb8Hoyok1E6uFFnJ5ZelIHuSvt2vXKd5pqCydJd88q2EbqlqLZ90HwGJT7IE0eJxr10USCA04nxrOo6NXf8riOF5pqvA1u0/cPRYyAA2R7LNTNUurkrYB5I2vwO5Q24ih2g4Tmk5dPuHCGkYPKO17g4UTahJE2CzDi9Hgbz8T2coY+67vxBrsg3HlhN0UrRS/ih10AyAeyijxkcRYb12+/fw4Jjyz46UOEAzel2YJ4Wf/JQ1RMsDGbhMXlAkGi8+nNWZ3Ki+aYjcop9DzR6WIe6ehAKZQSJOPbxuSCnYZqi6IyOeVGP+rJe0ald32y7vCMhlGeGq5Nhx0arZk9liBtJIRFfzjUcRpqvi9gO1i4g0UkZNLIXOawm8zLFFifgomaq8dBXw8749kz/H7KjqvvkkE60f3pKw1+1Gd2ZodGSfxmm2W8GkRmm6dRjCSElaqosKNlV5XyQEI0Vavp9ij1VaqelxFX/pajjr6RvWFGMKqvK/7ZkrQxYuvoa2mmnRY1qV+wotBVmqQewv2Z40sG26qWmHcxReT54d
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: IA3PR04MB9680.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3a0d77ca-a9d1-4514-59cd-08df347b1e16
+X-MS-Exchange-CrossTenant-originalarrivaltime: 27 Oct 2026 22:39:09.9676
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: /TSlMQ4AzJvTZIP9Ihfp78T8eXKtyaA/gUD9MeFQxlMvMT3bBykmmnDjAt0WWgmRPyNfNwEmx67B5G7Umot6JA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR04MB10303
 
-Filesystems no longer pass a struct iomap_ops with separate
-->iomap_begin() and ->iomap_end() callbacks. Instead, every iomap
-operation takes a single iomap_iter_next() callback directly.
-iomap_iter_next() finishes the previous mapping (if any) and produces
-the next one. Most filesystems build it from begin and end helpers via
-the iomap_iter_next() helper.
-
-Update the iomap documentation to match this change.
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-Signed-off-by: Joanne Koong <joannelkoong@gmail.com>
----
- Documentation/filesystems/iomap/design.rst    | 140 +++++++++++++-----
- .../filesystems/iomap/operations.rst          |  68 ++++-----
- Documentation/filesystems/iomap/porting.rst   |  16 +-
- 3 files changed, 151 insertions(+), 73 deletions(-)
-
-diff --git a/Documentation/filesystems/iomap/design.rst b/Documentation/filesystems/iomap/design.rst
-index 681e0cbb6944..508e63ce205c 100644
---- a/Documentation/filesystems/iomap/design.rst
-+++ b/Documentation/filesystems/iomap/design.rst
-@@ -75,7 +75,10 @@ At a high level, an iomap operation `looks like this
- 
- 1. For each byte in the operation range...
- 
--   1. Obtain a space mapping via ``->iomap_begin``
-+   1. Obtain the next space mapping via the ``iomap_iter_next_fn`` callback.
-+      From the second iteration onwards this same callback first finishes
-+      the previous mapping (committing or unreserving space as needed)
-+      and then produces the next one.
- 
-    2. For each sub-unit of work...
- 
-@@ -86,7 +89,13 @@ At a high level, an iomap operation `looks like this
- 
-    3. Increment operation cursor
- 
--   4. Release the mapping via ``->iomap_end``, if necessary
-+iomap repeats this until the range is fully consumed.  The ``iomap_iter_next_fn``
-+callback returns ``1`` while there is more of the range left to process,
-+``0`` once it is fully consumed, or a negative errno on error.
-+Filesystems rarely implement this callback by hand. The ``iomap_iter_next``
-+helper implements the finish-then-produce sequence in terms of two smaller
-+callbacks, ``begin`` and ``end``. See `The Mapping Callback`_ below for more
-+info.
- 
- Each iomap operation will be covered in more detail below.
- This library was covered previously by an `LWN article
-@@ -189,7 +198,7 @@ The fields are as follows:
-    * **IOMAP_DELALLOC**: A promise to allocate space at a later time
-      ("delayed allocation").
-      If the filesystem returns IOMAP_F_NEW here and the write fails, the
--     ``->iomap_end`` function must delete the reservation.
-+     ``end`` function must delete the reservation.
-      The ``addr`` field must be set to ``IOMAP_NULL_ADDR``.
- 
-    * **IOMAP_MAPPED**: The file range maps to specific space on the
-@@ -208,12 +217,11 @@ The fields are as follows:
- 
-    * **IOMAP_INLINE**: The file range maps to the memory buffer
-      specified by ``inline_data``.
--     For write operation, the ``->iomap_end`` function presumably
--     handles persisting the data.
-+     For write operation, the ``end`` function must persist the data.
-      The ``addr`` field must be set to ``IOMAP_NULL_ADDR``.
- 
-  * ``flags`` describe the status of the space mapping.
--   These flags should be set by the filesystem in ``->iomap_begin``:
-+   These flags should be set by the filesystem in ``begin``:
- 
-    * **IOMAP_F_NEW**: The space under the mapping is newly allocated.
-      Areas that will not be written to must be zeroed.
-@@ -262,15 +270,15 @@ The fields are as follows:
-      update.
- 
-    These flags can be set by iomap itself during file operations.
--   The filesystem should supply an ``->iomap_end`` function if it needs
-+   The filesystem should supply an ``end`` function if it needs
-    to observe these flags:
- 
-    * **IOMAP_F_SIZE_CHANGED**: The file size has changed as a result of
-      using this mapping.
- 
-    * **IOMAP_F_STALE**: The mapping was found to be stale.
--     iomap will call ``->iomap_end`` on this mapping and then
--     ``->iomap_begin`` to obtain a new mapping.
-+     iomap will call ``end`` on this mapping and then ``begin`` to obtain a
-+     new mapping.
- 
-    Currently, these flags are only set by pagecache operations.
- 
-@@ -289,41 +297,103 @@ The fields are as follows:
- 
-  * ``private`` is a pointer to `filesystem-private information
-    <https://lore.kernel.org/all/20180619164137.13720-7-hch@lst.de/>`_.
--   This value will be passed unchanged to ``->iomap_end``.
-+   This value will be passed unchanged to ``end``.
- 
-  * ``validity_cookie`` is a magic freshness value set by the filesystem
-    that should be used to detect stale mappings.
-    For pagecache operations this is critical for correct operation
-    because page faults can occur, which implies that filesystem locks
--   should not be held between ``->iomap_begin`` and ``->iomap_end``.
-+   should not be held between ``begin`` and ``end``.
-    Filesystems with completely static mappings need not set this value.
-    Only pagecache operations revalidate mappings; see the section about
-    ``iomap_valid`` for details.
- 
--``struct iomap_ops``
-+The Mapping Callback
- --------------------
- 
--Every iomap function requires the filesystem to pass an operations
--structure to obtain a mapping and (optionally) to release the mapping:
-+Every iomap operation takes an ``iomap_iter_next_fn`` callback from the
-+filesystem. iomap calls it once per iteration of the file range:
- 
- .. code-block:: c
- 
-- struct iomap_ops {
--     int (*iomap_begin)(struct inode *inode, loff_t pos, loff_t length,
--                        unsigned flags, struct iomap *iomap,
--                        struct iomap *srcmap);
-+ typedef int (*iomap_iter_next_fn)(const struct iomap_iter *iter,
-+                              struct iomap *iomap, struct iomap *srcmap);
- 
--     int (*iomap_end)(struct inode *inode, loff_t pos, loff_t length,
--                      ssize_t written, unsigned flags,
--                      struct iomap *iomap);
-- };
-+``iomap_iter_next_fn``
-+~~~~~~~~~~~~~~~~~~~~~~
-+
-+This must finish the previous mapping, if any, and then produce the next
-+mapping for the current iteration position described by ``iter``.
-+The mapping is returned through ``iomap`` (and through ``srcmap`` for
-+operations that read from one mapping while writing to another; see
-+``begin`` below).
-+
-+The callback returns ``1`` to continue iterating, ``0`` once the file
-+range has been fully consumed, or a negative errno on error.
-+
-+Most filesystems are not expected to implement all of these behaviors
-+in this callback themselves.  They should instead call ``iomap_iter_next`` as
-+described below.
-+
-+``iomap_iter_next``
-+~~~~~~~~~~~~~~~~~~~
-+
-+Filesystems rarely need a hand-written ``iomap_iter_next_fn`` callback.  The
-+``iomap_iter_next`` helper implements the finish-then-produce sequence in
-+terms of two smaller callbacks, ``begin`` and ``end``, so most
-+``iomap_iter_next_fn`` implementations are simply:
-+
-+.. code-block:: c
-+
-+ static int my_iomap_next(const struct iomap_iter *iter,
-+                          struct iomap *iomap, struct iomap *srcmap)
-+ {
-+         return iomap_iter_next(iter, iomap, srcmap,
-+                                my_iomap_begin, my_iomap_end);
-+ }
-+
-+This boilerplate is normally generated with the ``DEFINE_IOMAP_ITER_NEXT()``
-+and ``DEFINE_IOMAP_ITER_NEXT_END()`` macros rather than written by hand.  Use
-+``DEFINE_IOMAP_ITER_NEXT()`` for the common case with no ``end`` callback, and
-+``DEFINE_IOMAP_ITER_NEXT_END()`` when an ``end`` callback is needed:
-+
-+.. code-block:: c
-+
-+ /* no end() callback */
-+ static DEFINE_IOMAP_ITER_NEXT(my_iomap_next, my_iomap_begin);
-+
-+ /* with an end() callback */
-+ static DEFINE_IOMAP_ITER_NEXT_END(my_iomap_next, my_iomap_begin,
-+                                   my_iomap_end);
-+
-+The macro generates a function with external linkage.  Prefix the invocation
-+with ``static`` for a file-local callback, or leave it non-``static`` and add
-+a matching declaration to a header when the callback is referenced from
-+another file.
-+
-+``end`` may be ``NULL`` when the filesystem has nothing to finish.
-+The two callbacks have these prototypes:
-+
-+.. code-block:: c
-+
-+ typedef int (*iomap_begin_fn)(struct inode *inode, loff_t pos,
-+                               loff_t length, unsigned flags,
-+                               struct iomap *iomap, struct iomap *srcmap);
-+
-+ typedef int (*iomap_end_fn)(struct inode *inode, loff_t pos,
-+                             loff_t length, ssize_t written,
-+                             unsigned flags, struct iomap *iomap);
-+
-+``iomap_iter_next`` is an inline helper, so when it is called with fixed
-+``begin`` and ``end`` functions the compiler can inline both into the
-+filesystem's ``iomap_iter_next_fn`` callback, keeping indirect calls out of the
-+iteration hot path.  The two callbacks are described next.
- 
--``->iomap_begin``
--~~~~~~~~~~~~~~~~~
-+``begin``
-+~~~~~~~~~
- 
--iomap operations call ``->iomap_begin`` to obtain one file mapping for
--the range of bytes specified by ``pos`` and ``length`` for the file
--``inode``.
-+The ``begin`` callback obtains one file mapping for the range of bytes
-+specified by ``pos`` and ``length`` for the file ``inode``.
- This mapping should be returned through the ``iomap`` pointer.
- The mapping must cover at least the first byte of the supplied file
- range, but it does not need to cover the entire requested range.
-@@ -377,18 +447,18 @@ information via ``srcmap``.
- Only pagecache and fsdax operations support reading from one mapping and
- writing to another.
- 
--``->iomap_end``
--~~~~~~~~~~~~~~~
-+``end``
-+~~~~~~~
- 
--After the operation completes, the ``->iomap_end`` function, if present,
--is called to signal that iomap is finished with a mapping.
-+After the operation completes, the ``end`` callback, if present, is called to
-+signal that iomap is finished with a mapping.
- Typically, implementations will use this function to tear down any
--context that were set up in ``->iomap_begin``.
-+context that was set up in ``begin``.
- For example, a write might wish to commit the reservations for the bytes
- that were operated upon and unreserve any space that was not operated
- upon.
- ``written`` might be zero if no bytes were touched.
--``flags`` will contain the same value passed to ``->iomap_begin``.
-+``flags`` will contain the same value passed to ``begin``.
- iomap ops for reads are not likely to need to supply this function.
- 
- Both functions should return a negative errno code on error, or zero on
-@@ -421,8 +491,8 @@ iomap is concerned:
-    accessing the folio until writeback is underway.
- 
-    * The **lower** level primitive is taken by the filesystem in the
--     ``->iomap_begin`` and ``->iomap_end`` functions to coordinate
--     access to the file space mapping information.
-+     ``begin`` and ``end`` functions to coordinate access to the file space
-+     mapping information.
-      The fields of the iomap object should be filled out while holding
-      this primitive.
-      The upper level synchronization primitive, if any, remains held
-diff --git a/Documentation/filesystems/iomap/operations.rst b/Documentation/filesystems/iomap/operations.rst
-index da982ca7e413..a5784dee0850 100644
---- a/Documentation/filesystems/iomap/operations.rst
-+++ b/Documentation/filesystems/iomap/operations.rst
-@@ -17,6 +17,12 @@ Supported File Operations
- Below are a discussion of the high level file operations that iomap
- implements.
- 
-+Each operation takes an ``iomap_iter_next_fn`` callback that supplies the file
-+mappings, as described in the iomap design document.  The per-operation
-+``flags`` documented below are passed to that callback; references to
-+``begin`` and ``end`` name the two steps a typical callback is built from
-+via ``iomap_iter_next``.
-+
- Buffered I/O
- ============
- 
-@@ -90,10 +96,10 @@ iomap calls these functions:
-     <https://lore.kernel.org/all/20180619164137.13720-6-hch@lst.de/>`_
-     that was set up by ``->get_folio``.
- 
--  - ``iomap_valid``: The filesystem may not hold locks between
--    ``->iomap_begin`` and ``->iomap_end`` because pagecache operations
--    can take folio locks, fault on userspace pages, initiate writeback
--    for memory reclamation, or engage in other time-consuming actions.
-+  - ``iomap_valid``: The filesystem may not hold locks between ``begin`` and
-+    ``end`` because pagecache operations can take folio locks, fault on
-+    userspace pages, initiate writeback for memory reclamation, or engage in
-+    other time-consuming actions.
-     If a file's space mapping data are mutable, it is possible that the
-     mapping for a particular pagecache folio can `change in the time it
-     takes
-@@ -114,12 +120,12 @@ iomap calls these functions:
-     If the mapping is not valid, the mapping will be sampled again.
- 
-     To support making the validity decision, the filesystem's
--    ``->iomap_begin`` function may set ``struct iomap::validity_cookie``
-+    ``begin`` function may set ``struct iomap::validity_cookie``
-     at the same time that it populates the other iomap fields.
-     A simple validation cookie implementation is a sequence counter.
-     If the filesystem bumps the sequence counter every time it modifies
-     the inode's extent map, it can be placed in the ``struct
--    iomap::validity_cookie`` during ``->iomap_begin``.
-+    iomap::validity_cookie`` during ``begin``.
-     If the value in the cookie is found to be different to the value
-     the filesystem holds when the mapping is passed back to
-     ``->iomap_valid``, then the iomap should considered stale and the
-@@ -199,7 +205,7 @@ Buffered Readahead and Reads
- The ``iomap_readahead`` function initiates readahead to the pagecache.
- The ``iomap_read_folio`` function reads one folio's worth of data into
- the pagecache.
--The ``flags`` argument to ``->iomap_begin`` will be set to zero.
-+The ``flags`` argument to ``begin`` will be set to zero.
- The pagecache takes whatever locks it needs before calling the
- filesystem.
- 
-@@ -231,7 +237,7 @@ Buffered Writes
- The ``iomap_file_buffered_write`` function writes an ``iocb`` to the
- pagecache.
- ``IOMAP_WRITE`` or ``IOMAP_WRITE`` | ``IOMAP_NOWAIT`` will be passed as
--the ``flags`` argument to ``->iomap_begin``.
-+the ``flags`` argument to ``begin``.
- Callers commonly take ``i_rwsem`` in either shared or exclusive mode
- before calling this function.
- 
-@@ -241,7 +247,7 @@ mmap Write Faults
- The ``iomap_page_mkwrite`` function handles a write fault to a folio in
- the pagecache.
- ``IOMAP_WRITE | IOMAP_FAULT`` will be passed as the ``flags`` argument
--to ``->iomap_begin``.
-+to ``begin``.
- Callers commonly take the mmap ``invalidate_lock`` in shared or
- exclusive mode before calling this function.
- 
-@@ -256,7 +262,7 @@ such `reservations
- <https://lore.kernel.org/linux-xfs/20220817093627.GZ3600936@dread.disaster.area/>`_
- because writeback will not consume the reservation.
- The ``iomap_write_delalloc_release`` can be called from a
--``->iomap_end`` function to find all the clean areas of the folios
-+``end`` function to find all the clean areas of the folios
- caching a fresh (``IOMAP_F_NEW``) delalloc mapping.
- It takes the ``invalidate_lock``.
- 
-@@ -274,7 +280,7 @@ Filesystems can call ``iomap_zero_range`` to perform zeroing of the
- pagecache for non-truncation file operations that are not aligned to
- the fsblock size.
- ``IOMAP_ZERO`` will be passed as the ``flags`` argument to
--``->iomap_begin``.
-+``begin``.
- Callers typically hold ``i_rwsem`` and ``invalidate_lock`` in exclusive
- mode before calling this function.
- 
-@@ -285,7 +291,7 @@ Filesystems can call ``iomap_file_unshare`` to force a file sharing
- storage with another file to preemptively copy the shared data to newly
- allocate storage.
- ``IOMAP_WRITE | IOMAP_UNSHARE`` will be passed as the ``flags`` argument
--to ``->iomap_begin``.
-+to ``begin``.
- Callers typically hold ``i_rwsem`` and ``invalidate_lock`` in exclusive
- mode before calling this function.
- 
-@@ -298,7 +304,7 @@ operation.
- ``truncate_setsize`` or ``truncate_pagecache`` will take care of
- everything after the EOF block.
- ``IOMAP_ZERO`` will be passed as the ``flags`` argument to
--``->iomap_begin``.
-+``begin``.
- Callers typically hold ``i_rwsem`` and ``invalidate_lock`` in exclusive
- mode before calling this function.
- 
-@@ -341,8 +347,8 @@ The fields are as follows:
-     though it will `reuse mappings
-     <https://lore.kernel.org/all/20231207072710.176093-15-hch@lst.de/>`_
-     for runs of contiguous dirty fsblocks within a folio.
--    Do not return ``IOMAP_INLINE`` mappings here; the ``->iomap_end``
--    function must deal with persisting written data.
-+    Do not return ``IOMAP_INLINE`` mappings here; the ``end`` function must
-+    deal with persisting written data.
-     Do not return ``IOMAP_DELALLOC`` mappings here; iomap currently
-     requires mapping to allocated space.
-     Filesystems can skip a potentially expensive mapping lookup if the
-@@ -428,7 +434,7 @@ writes for files.
- .. code-block:: c
- 
-  ssize_t iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
--                      const struct iomap_ops *ops,
-+                      iomap_iter_next_fn iomap_next,
-                       const struct iomap_dio_ops *dops,
-                       unsigned int dio_flags, void *private,
-                       size_t done_before);
-@@ -511,7 +517,7 @@ Return Values
-  * ``-ENOTBLK``: Fall back to buffered I/O.
-    iomap itself will return this value if it cannot invalidate the page
-    cache before issuing the I/O to storage.
--   The ``->iomap_begin`` or ``->iomap_end`` functions may also return
-+   The ``begin`` or ``end`` functions may also return
-    this value.
- 
-  * ``-EIOCBQUEUED``: The asynchronous direct I/O request has been
-@@ -526,7 +532,7 @@ A direct I/O read initiates a read I/O from the storage device to the
- caller's buffer.
- Dirty parts of the pagecache are flushed to storage before initiating
- the read io.
--The ``flags`` value for ``->iomap_begin`` will be ``IOMAP_DIRECT`` with
-+The ``flags`` value for ``begin`` will be ``IOMAP_DIRECT`` with
- any combination of the following enhancements:
- 
-  * ``IOMAP_NOWAIT``, as defined previously.
-@@ -542,7 +548,7 @@ caller's buffer.
- Dirty parts of the pagecache are flushed to storage before initiating
- the write io.
- The pagecache is invalidated both before and after the write io.
--The ``flags`` value for ``->iomap_begin`` will be ``IOMAP_DIRECT |
-+The ``flags`` value for ``begin`` will be ``IOMAP_DIRECT |
- IOMAP_WRITE`` with any combination of the following enhancements:
- 
-  * ``IOMAP_NOWAIT``, as defined previously.
-@@ -644,7 +650,7 @@ fsdax Reads
- 
- A fsdax read performs a memcpy from storage device to the caller's
- buffer.
--The ``flags`` value for ``->iomap_begin`` will be ``IOMAP_DAX`` with any
-+The ``flags`` value for ``begin`` will be ``IOMAP_DAX`` with any
- combination of the following enhancements:
- 
-  * ``IOMAP_NOWAIT``, as defined previously.
-@@ -657,7 +663,7 @@ fsdax Writes
- 
- A fsdax write initiates a memcpy to the storage device from the caller's
- buffer.
--The ``flags`` value for ``->iomap_begin`` will be ``IOMAP_DAX |
-+The ``flags`` value for ``begin`` will be ``IOMAP_DAX |
- IOMAP_WRITE`` with any combination of the following enhancements:
- 
-  * ``IOMAP_NOWAIT``, as defined previously.
-@@ -680,9 +686,9 @@ fsdax mmap Faults
- The ``dax_iomap_fault`` function handles read and write faults to fsdax
- storage.
- For a read fault, ``IOMAP_DAX | IOMAP_FAULT`` will be passed as the
--``flags`` argument to ``->iomap_begin``.
-+``flags`` argument to ``begin``.
- For a write fault, ``IOMAP_DAX | IOMAP_FAULT | IOMAP_WRITE`` will be
--passed as the ``flags`` argument to ``->iomap_begin``.
-+passed as the ``flags`` argument to ``begin``.
- 
- Callers commonly hold the same locks as they do to call their iomap
- pagecache counterparts.
-@@ -692,8 +698,8 @@ fsdax Truncation, fallocate, and Unsharing
- 
- For fsdax files, the following functions are provided to replace their
- iomap pagecache I/O counterparts.
--The ``flags`` argument to ``->iomap_begin`` are the same as the
--pagecache counterparts, with ``IOMAP_DAX`` added.
-+The ``flags`` argument to ``begin`` are the same as the pagecache counterparts,
-+with ``IOMAP_DAX`` added.
- 
-  * ``dax_file_unshare``
-  * ``dax_zero_range``
-@@ -719,8 +725,7 @@ SEEK_DATA
- 
- The ``iomap_seek_data`` function implements the SEEK_DATA "whence" value
- for llseek.
--``IOMAP_REPORT`` will be passed as the ``flags`` argument to
--``->iomap_begin``.
-+``IOMAP_REPORT`` will be passed as the ``flags`` argument to ``begin``.
- 
- For unwritten mappings, the pagecache will be searched.
- Regions of the pagecache with a folio mapped and uptodate fsblocks
-@@ -734,8 +739,7 @@ SEEK_HOLE
- 
- The ``iomap_seek_hole`` function implements the SEEK_HOLE "whence" value
- for llseek.
--``IOMAP_REPORT`` will be passed as the ``flags`` argument to
--``->iomap_begin``.
-+``IOMAP_REPORT`` will be passed as the ``flags`` argument to ``begin``.
- 
- For unwritten mappings, the pagecache will be searched.
- Regions of the pagecache with no folio mapped, or a !uptodate fsblock
-@@ -750,8 +754,7 @@ Swap File Activation
- The ``iomap_swapfile_activate`` function finds all the base-page aligned
- regions in a file and sets them up as swap space.
- The file will be ``fsync()``'d before activation.
--``IOMAP_REPORT`` will be passed as the ``flags`` argument to
--``->iomap_begin``.
-+``IOMAP_REPORT`` will be passed as the ``flags`` argument to ``begin``.
- All mappings must be mapped or unwritten; cannot be dirty or shared, and
- cannot span multiple block devices.
- Callers must hold ``i_rwsem`` in exclusive mode; this is already
-@@ -767,8 +770,7 @@ FS_IOC_FIEMAP
- 
- The ``iomap_fiemap`` function exports file extent mappings to userspace
- in the format specified by the ``FS_IOC_FIEMAP`` ioctl.
--``IOMAP_REPORT`` will be passed as the ``flags`` argument to
--``->iomap_begin``.
-+``IOMAP_REPORT`` will be passed as the ``flags`` argument to ``begin``.
- Callers commonly hold ``i_rwsem`` in shared mode before calling this
- function.
- 
-diff --git a/Documentation/filesystems/iomap/porting.rst b/Documentation/filesystems/iomap/porting.rst
-index 3d49a32c0fff..b995f426808a 100644
---- a/Documentation/filesystems/iomap/porting.rst
-+++ b/Documentation/filesystems/iomap/porting.rst
-@@ -50,8 +50,14 @@ Build the kernel, run fstests with the ``-g all`` option across a wide
- variety of your filesystem's supported configurations to build a
- baseline of which tests pass and which ones fail.
- 
--The recommended approach is first to implement ``->iomap_begin`` (and
--``->iomap_end`` if necessary) to allow iomap to obtain a read-only
-+Every iomap operation is driven by an ``iomap_iter_next_fn`` callback.
-+Filesystems normally do not write one by hand: implement ``begin``
-+(and ``end`` if necessary) and generate the callback with the
-+``DEFINE_IOMAP_ITER_NEXT()`` macro, or ``DEFINE_IOMAP_ITER_NEXT_END()`` if an
-+``end`` callback is needed.
-+
-+The recommended approach is first to implement ``begin`` (and
-+``end`` if necessary) to allow iomap to obtain a read-only
- mapping of a file range.
- In most cases, this is a relatively trivial conversion of the existing
- ``get_block()`` function for read-only mappings.
-@@ -62,7 +68,7 @@ If FIEMAP is returning the correct information, it's a good sign that
- other read-only mapping operations will do the right thing.
- 
- Next, modify the filesystem's ``get_block(create = false)``
--implementation to use the new ``->iomap_begin`` implementation to map
-+implementation to use the new ``begin`` implementation to map
- file space for selected read operations.
- Hide behind a debugging knob the ability to switch on the iomap mapping
- functions for selected call paths.
-@@ -82,14 +88,14 @@ I/O path because of bufferheads.
- The buffered read I/O paths doesn't need to be converted yet, though the
- direct I/O read path should be converted in this phase.
- 
--At this point, you should look over your ``->iomap_begin`` function.
-+At this point, you should look over your ``begin`` function.
- If it switches between large blocks of code based on dispatching of the
- ``flags`` argument, you should consider breaking it up into
- per-operation iomap ops with smaller, more cohesive functions.
- XFS is a good example of this.
- 
- The next thing to do is implement ``get_blocks(create == true)``
--functionality in the ``->iomap_begin``/``->iomap_end`` methods.
-+functionality in the ``begin``/``end`` methods.
- It is strongly recommended to create separate mapping functions and
- iomap ops for write operations.
- Then convert the direct I/O write path to iomap, and start running fsx
--- 
-2.52.0
-
+T24gVHVlLCAyMDI2LTEwLTI3IGF0IDE2OjUwICswMTAwLCBDYXJsb3MgTWFpb2xpbm8gd3JvdGU6
+DQo+IE9uIE1vbiwgT2N0IDI2LCAyMDI2IGF0IDAzOjM0OjU1UE0gKzEwMDAsIFdpbGZyZWQgTWFs
+bGF3YSB3cm90ZToNCj4gPiBGcm9tOiBXaWxmcmVkIE1hbGxhd2EgPHdpbGZyZWQubWFsbGF3YUB3
+ZGMuY29tPg0KPiA+IA0KPiA+IFRoZSBnb3RvIGZvciBmYWlsaW5nIHRvIHNldHVwIC9lcnJvci9t
+ZXRhZGF0YSBqdW1wcyB0byB0aGUgd3JvbmcNCj4gPiBwbGFjZQ0KPiA+IGluIHhmc19tb3VudF9z
+eXNmc19pbml0KCkuIEZpeCBpdC4NCj4gPiANCj4gPiBGaXhlczogYTlhN2I5ZTg2ODZkICgieGZz
+OiBhZGQgc3VwcG9ydCBmb3IgbGF6eSBkaXJlY3QgcmVhZCBib3VuY2UNCj4gPiBidWZmZXJpbmci
+KQ0KPiA+IFNpZ25lZC1vZmYtYnk6IFdpbGZyZWQgTWFsbGF3YSA8d2lsZnJlZC5tYWxsYXdhQHdk
+Yy5jb20+DQo+ID4gLS0tDQo+ID4gwqBmcy94ZnMveGZzX3N5c2ZzLmMgfCAyICstDQo+ID4gwqAx
+IGZpbGUgY2hhbmdlZCwgMSBpbnNlcnRpb24oKyksIDEgZGVsZXRpb24oLSkNCj4gPiANCj4gPiBk
+aWZmIC0tZ2l0IGEvZnMveGZzL3hmc19zeXNmcy5jIGIvZnMveGZzL3hmc19zeXNmcy5jDQo+ID4g
+aW5kZXggZTc3OTE3YWMxNzlkLi40YTZhOGM5MmMzYTEgMTAwNjQ0DQo+ID4gLS0tIGEvZnMveGZz
+L3hmc19zeXNmcy5jDQo+ID4gKysrIGIvZnMveGZzL3hmc19zeXNmcy5jDQo+ID4gQEAgLTkwNiw3
+ICs5MDYsNyBAQCB4ZnNfbW91bnRfc3lzZnNfaW5pdCgNCj4gPiDCoAkJCQkibWV0YWRhdGEiLCAm
+bXAtDQo+ID4gPm1fZXJyb3JfbWV0YV9rb2JqLA0KPiA+IMKgCQkJCXhmc19lcnJvcl9tZXRhX2lu
+aXQpOw0KPiA+IMKgCWlmIChlcnJvcikNCj4gPiAtCQlnb3RvIG91dF9yZW1vdmVfY3N1bV9kaXI7
+DQo+ID4gKwkJZ290byBvdXRfcmVtb3ZlX2Vycm9yX2RpcjsNCj4gDQo+IEhtbS4gSSB0aGluayB0
+aGlzIGlzIHdyb25nLiBEb24ndCB3ZSBuZWVkIHRvIHJlbW92ZSB0aGUNCj4gZmFpbF9hdF91bm1v
+dW50DQo+IGZpbGUgKmJlZm9yZSogcmVtb3ZpbmcgdGhlIGtvYmplY3Q/DQo+IA0KPiBTbywgd2Un
+ZCBuZWVkIHRvIGFjdHVhbGx5IGNhbGwgc3lzZnNfcmVtb3ZlX2ZpbGUoKSBiZWZvcmUgYWN0dWFs
+bHkNCj4gZGVsZXRpbmcgdGhlIG1fZXJyb3Jfa29iai4NCj4gDQo+IEkgYW0gaG9uZXN0bHkgbm90
+IHN1cmUgaWYga29iamVjdF9kZWwgd291bGQgY2xlYW4gdXAgYW55IGF0dHJpYnV0ZXMNCj4gYWRk
+ZWQgdGhlcmUsIGJ1dCBJIHRoaW5rIHRoYXQncyB0aGUgcmlnaHQgdGhpbmcgdG8gZG8gaGVyZT8h
+DQoNCldpdGggdGhlIHhmc19zeXNmc19kZWwobV9lcnJvcl9rb2JqKSwgd2UgZW5kIHVwIGluIHN5
+c2ZzX3JlbW92ZV9kaXIoKCkNCndoaWNoIGRlbGV0ZXMgYW55IHN1YmRpcnMvZmlsZXMuIFNvIHdl
+ICpzaG91ZG4ndCogbmVlZCB0byBleHBsaWNpdGx5IGRvDQphIHBlciBmaWxlIHJlbW92ZT8NCg0K
+DQpUaGFua3MhDQo=
