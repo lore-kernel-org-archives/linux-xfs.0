@@ -1,58 +1,58 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.137.202.133
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793115775;
-	b=QyYMq1Y0jzpfRKZ7vGPffyFbQv8HYu4MUqPxsGQzYRQIw31VeHmP9hUFsUgbGJSX2EW/
-	 QzNLmGRVxtrkSeTWCvR+pafCXi5qnitQmWFYtayKSglDbYrDoIdlDsWyRgTYlGNSj1HgL
-	 +2FLz0TAXTueHj0Cfy2N0e/oZpK/fUizXJJpFhwkL7sGrvCJnIvltqT7jQAcW/Uc14MZH
-	 igclOF2WdwWvxvt6jn6PL4fIAvEJ0xx8rt3EBu1iRJ6NHGud99OLwDON5BQRm64JLT8jh
-	 BnPvATHDzxE83w3mOTcMG/3T44NXkcN+svV4eTsptKh/5BLLTH5vi7W21nRVD4wqbog==
+	t=1793115778;
+	b=SVO797lI+Cq4GimxUIEWXhMdFJuKch8DVvyslkfAxCr7DDhMYombFsB8c5oD2IX0Gm4h
+	 ud4iEgu9aoo0AbNgfSZ17FvpMzS0NgurRXx14i5i1THCwwjZqghLi03kBDPSuJtbXlZiL
+	 1gasYN8C+nfa+OHIsKC6RUayfVAqUT5Xl3hfKAJQo+/3ObpDSQJp/+tCurKmx2CVcMnjT
+	 ADCfspUHo5EUUtYsA9mQt5kG/pWruRleK/szlxsZWeaV06hHyT32mzRqM/0bW8Su1TqpJ
+	 Cn9ZJwJxoAIQnNnccGBEesufFZm9/yYawztmQzHlsYRkhMW6Ef9INUuFPWKm/L4M/9g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793115775;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793115778;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
 	 Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding:X-SRS-Rewrite;
-	bh=k2sS5UbhrFn1tsqfa2r5ZfP9yDCd6aqc6kJHXYLk15Y=;
-	b=e20vd06gQqsvzWdiy86WEJfIruCTetRdxannq0oEmapZwfsAZZ6/MN3Uth+QT91olt0y
-	 2+ebJNvB0DnKcBtbceOGXfDJL9QQKbd2yBdKFtmho7Kd+xOSOioK4mfnBL3jgsCyijor9
-	 Q9npzBTJ4gt0iYIu1IuChj8QvevvJaYTsY/7niXIYmz/+WCNM2sQ/Uqey7zdK82DQHgmA
-	 XFpEt3TLcMoq15VYX95Kli1GZQOLqyI33dvwuKQ79BtNv/T/V5TmWGsolPsy15Ginbax8
-	 mNbp6vRSGYM8/muZZnsv8NOC2nMWKWre4GtI0PBSsDxFn3dx/3q+5wJSBbG3pCnwKCw==
+	bh=Yw8k0po94PXd6UVJYFR9/HDepqCnUdii4cZY7Iog8vI=;
+	b=HyqXmE9Ir4Ool/2NhknIsdTm688qmBgJ81ob3CkaSr7hS+bVCjYxp0G2LAcM0TMTtRCj
+	 Zl5vnAwjqPDBFLY9QX6HVRPRW/907FBtmATTwHZfEZSlHIOfYhGI0JPoLqZ1Re7vx3QQZ
+	 v2gUzKxVw3vkQGemXzik9SlgIrbRcRyviRHKfpTSSHeequ/9BwXCToD67jtEYjQGJQPNW
+	 WFie+/M5SI1vag5EhkYQsHp8ndfYjyGjbYNUvnJtc0/HIY+0q7rTNmB9u/Itllx5z5EOp
+	 0+SsKwbLx08KOrWrhi4G4kvEwU9dggZyfISRMg4K616O5cEci86DFXZw55yIHdardgQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=fail header.from=lst.de;
 	spf=none smtp.mailfrom=bombadil.srs.infradead.org;
-	dkim=pass header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=TgLtbbA8;
+	dkim=pass header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=zTK8PJrE;
 	arc=none smtp.remote-ip=198.137.202.133
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29154606A31A
-	for <linux-xfs@vger.kernel.org>; Tue, 27 Oct 2026 15:42:55 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 29154606A31A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1155F606A31B
+	for <linux-xfs@vger.kernel.org>; Tue, 27 Oct 2026 15:42:57 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1155F606A31B
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=TgLtbbA8
+	dkim=pass (2048-bit key, unprotected) header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=zTK8PJrE
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=k2sS5UbhrFn1tsqfa2r5ZfP9yDCd6aqc6kJHXYLk15Y=; b=TgLtbbA8+UkqEa+np3+PsUOEjU
-	XZEFEAds/dqr+aG1OMpmEEJNT+rMUHj6xCzEVA+ezrdlwNWBA9aPSDRk5WrosUxk4jglbAutvZ8di
-	OFb6Koe5VYbB98kO/v6FglbMZ6v0MFXbP1HXwPP5nD99jyheRABwpR8RP4lJENsN8bo/PMkpLp/V7
-	XDcyTVJtfyNjDXSAs+wn1MSOGkcnacZVHWYE0jC9eF4Ne2E7V9Uod4/3WfmNOo5AkZ3eEM0+0w4ny
-	ogZ5CSE4PE1Pdc7a880M9+WDc/vJILQBnQY5y0Et6ut48xdVtzuMstdkPxyFMOMcxtAanDzjmo32a
-	ks5D/xdA==;
+	bh=Yw8k0po94PXd6UVJYFR9/HDepqCnUdii4cZY7Iog8vI=; b=zTK8PJrESjmd1GSDOms4QJv2Fs
+	etcdbHjwPeZdmlG3P/U5QjH3qF9A3bo8QO4jGbsuqUJV0cFcTuLlSZP1/GliOshoCkOeL41+IVLoD
+	3HxGgxMMIywnRLWdFUogrCQcNvcfI+ahl+g2qPZPEKqit7iGF3BJD6iHefNUDwqq4IsZ2Z9RB1S+R
+	QXF6sT1CZtSNOU7O4LLs+ejzAX3A2VF9hQIv1uMGzxkaENB2C/sC2dsgg/48ngS/znVtD3DUDdy8Q
+	xTAQcGFCKFY6c9hR0o71zYXpViRQRf0MqYWkqiTpEiLM5M996SdPa/ADeRv71ccEX8cmw+FfWd7r4
+	jmJDt4PQ==;
 Received: from 2a02-8389-2301-9f00-31e8-efb6-e973-61ca.cable.dynamic.v6.surfer.at ([2a02:8389:2301:9f00:31e8:efb6:e973:61ca] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.100.1 #2 (Red Hat Linux))
-	id 1xLjKA-00000005FxN-1beg;
-	Tue, 27 Oct 2026 15:42:54 +0000
+	id 1xLjKD-00000005Fxz-0qzg;
+	Tue, 27 Oct 2026 15:42:57 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Andrey Albershteyn <aalbersh@kernel.org>
 Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH 5/7] stubs: use the i paramter to trace_xfs_trans_resv_calc_minlogsize
-Date: Tue, 27 Oct 2026 16:42:19 +0100
-Message-ID: <20261027154237.1997484-6-hch@lst.de>
+Subject: [PATCH 6/7] platform: use the iomap_flags argument to xfs_bmbt_to_iomap
+Date: Tue, 27 Oct 2026 16:42:20 +0100
+Message-ID: <20261027154237.1997484-7-hch@lst.de>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261027154237.1997484-1-hch@lst.de>
 References: <20261027154237.1997484-1-hch@lst.de>
@@ -68,30 +68,31 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-To avoid a compiler warning:
+Without this my gcc is unhappy:
 
-xfs_log_rlimit.c: In function 'libxfs_log_get_max_trans_res':
-xfs_log_rlimit.c:162:33: warning: variable 'i' set but not used [-Wunused-but-set-variable=]
-  162 |         unsigned int            i;
+xfs_bmap.c: In function 'xfs_bmapi_convert_one_delalloc':
+xfs_bmap.c:4360:33: warning: variable 'flags' set but not used [-Wunused-but-set-variable=]
+ 4360 |         uint16_t                flags = 0;
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/stubs/xfs_trace.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ libxfs/xfs_platform.h | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/libxfs/stubs/xfs_trace.h b/libxfs/stubs/xfs_trace.h
-index be9183fc33ad..2c7eb7ff0566 100644
---- a/libxfs/stubs/xfs_trace.h
-+++ b/libxfs/stubs/xfs_trace.h
-@@ -228,7 +228,7 @@
- #define trace_xfs_trans_read_buf_recur(a)	((void) 0)
- #define trace_xfs_trans_read_buf(a)		((void) 0)
- #define trace_xfs_trans_commit(a,b)		((void) 0)
--#define trace_xfs_trans_resv_calc_minlogsize(a,b,c) ((void) 0)
-+#define trace_xfs_trans_resv_calc_minlogsize(a,b,c) ((void)b)
- #define trace_xfs_log_get_max_trans_res(a,b)	((void) 0)
+diff --git a/libxfs/xfs_platform.h b/libxfs/xfs_platform.h
+index 4f4990a20dad..f71b9d702c84 100644
+--- a/libxfs/xfs_platform.h
++++ b/libxfs/xfs_platform.h
+@@ -51,7 +51,8 @@ extern struct kmem_cache *xfs_trans_cache;
  
- #define trace_xfs_defer_cancel(a,b)		((void) 0)
+ /* fake up iomap, (not) used in xfs_bmap.[ch] */
+ #define IOMAP_F_SHARED				0x04
+-#define xfs_bmbt_to_iomap(a, b, c, d, e, f)	((void) 0)
++#define xfs_bmbt_to_iomap(ip, iomap, got, mapping_flags, iomap_flags, seq) \
++		((void)iomap_flags)
+ 
+ /* fake up kernel's iomap, (not) used in xfs_bmap.[ch] */
+ struct iomap {
 -- 
 2.53.0
 
