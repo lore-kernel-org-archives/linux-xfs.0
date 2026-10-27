@@ -1,57 +1,59 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=203.254.224.34
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793090010;
-	b=Zo/sK9hKmKYxac/lPHeScU2lpAk5N1VGgo1kaoWeWzxCFNHRQP0ZhMUHZPIsEum9Cl4y
-	 YU7/g0b5pT1hKyajgWQOz3lwYY/cF3j9Ah7DG2OdGZCnOZlaZYvdM38fJT1C+l4gZsu/N
-	 Uj7mnt8e2E9egxgLB0x3++SGz67CdpBWoYo+cm+VAQQHiOWcmIMrx6xCOCqtpbJyHjbT6
-	 AZkoMw7+jzzknosdOUH/IwCrf0PqWd5xfz3rZorj0hz1qvLEDMLtIsNvxHBCLlY0rpZ+E
-	 ekD8I3m7QWyEjVh4/GASHYGaKdQTTjOQ70BzjAyU62OuuOvygXVXtldYIBzW+7pLjXw==
+	t=1793090106;
+	b=jZqGMgYMbuMdnNsd9GHgRSevlhzQBPzgnJfHEiZRzFs6vI585hUTOQ8gtJU2gzXPytpj
+	 HLywxkdMIK345/AkQK0NtdFrBLf3TB/4eukV1cy6yXg7BD80WUkY/XFTs5IlMdQT+hiB5
+	 hcuDBkAbVMpJWBc/tw+kygO+NnZ4FFU5ky6U+GKrv28SqqQNzzzZrXxzlMzbChpPQapBi
+	 oexppoaL4tZHUYc2CP+czEKxnryTqhClTGOaS1SmYcM6SSJAdqBFro/X0A+aHSxExb2Z1
+	 qfp0dlnsPRv8iqoYHvZntF6a7F1zqONtm3ef/5WNIsNmA1YfKEWHBKNvfbXaR9S9nsA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793090010;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 Mail-Followup-To:References:MIME-Version:Content-Type:
-	 Content-Disposition:Content-Transfer-Encoding:In-Reply-To;
-	bh=Uo3DA2gsd94uKPNlZ+zKEfHNZkJnRXl08pxC91bNfb0=;
-	b=d9T2s9KMW+WVVWSLErSr/i00tTue9xJyjJMKHE7iX/oKE1pBBA7Jp9ciIVTleF0hdBgL
-	 VVlMU6bGov9aut2iRvF/+J46rk5T1WZ8StzGTZuCprSkoX0oHoizzsvzJmPlPf1zv7c++
-	 BwAY9zLLfIdt1llt9IX3umfHyCKHW7w9ixYCR3Y22heksuYSAas/lWpEVlBLfhvpaqMGU
-	 DJq5G10ZqgZ4QUgQ2w976TJxLoAB+XQTXgdTn0Eux56ChADxSXETlvMpHkd4FhdPtIeUx
-	 901W0cEte6GnWrudYu5eMJQO/BjjYl5a33zIB1uqtkCR3De+pcvVV9/kvkAdd7RLe0g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793090106;
+	h=DMARC-Filter:Received:DKIM-Filter:DKIM-Signature:Received:Received:
+	 Mime-Version:Subject:Reply-To:Sender:From:To:CC:X-Priority:
+	 X-Content-Kind-Code:In-Reply-To:X-CPGS-Detection:X-Drm-Type:
+	 X-Msg-Generator:X-Msg-Type:X-Reply-Demand:Message-ID:Date:
+	 X-CMS-MailID:Content-Transfer-Encoding:Content-Type:X-Sendblock-Type:
+	 CMS-TYPE:X-CPGSPASS:X-CPGSPASS:cpgsPolicy:X-CFilter-Loop:
+	 X-CMS-RootMailID:References;
+	bh=5bahGxfUN75E2T3mOHUJ9Zz0leyIiVRMhMYoQV+Rpgs=;
+	b=1jEiJ+/ch/yq+5SgFAHX842PSm5+AV6jd8DiU+yrL4Wy8xDNFmzcpBhWwakbLOKZcu11
+	 33aZH3KLm5LhmaGZw89jSfiwlHYz+4VLgNngfmv/QHoOorvBTGYvoKJvLQ0VaQ7bl1Y1L
+	 633IeA/LSrI6XIuUUWB9JoG1VmStanQ+atDdDsHaTppN+rhkGoms0u1kJFIOEv4/sjHIs
+	 lmsQlZO+xSNERZ5XGRrFcSPZFDUlPLNub5TgHaDT2Sqjzf28QpRibS9nCN8oYNr2Am1k5
+	 E7gEfMiVVwE2/TlixaV7TW6SDck2aZC3FH9yBgVyScG+5shBDviRaUbEfA/jlFTFfLw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TUYZ+lt1;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=samsung.com;
+	spf=pass smtp.mailfrom=samsung.com;
+	dkim=pass header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=L4lEPNd+;
+	arc=none smtp.remote-ip=203.254.224.34
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8575F606A31A;
-	Tue, 27 Oct 2026 08:33:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C18F6606A31B
+	for <linux-xfs@vger.kernel.org>; Tue, 27 Oct 2026 08:35:05 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C18F6606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TUYZ+lt1
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5D4D31F01825;
-	Tue, 27 Oct 2026 08:33:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793090009;
-	bh=Uo3DA2gsd94uKPNlZ+zKEfHNZkJnRXl08pxC91bNfb0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=TUYZ+lt1qdb9HvfIxjdZRN98/QwSLtIXT9ACLhGF+jjQ5CwaWrl6XBIhDPInCIGIj
-	 NRRPT0w9mX9ldB4Bgy5nESJ6lSDG48g6l1Q6xPy1LphzFBmsY+ar6lAQWHQUy+mPQD
-	 ygCDIhN2sNff10I9ctbdXyGrsqFLnxm7xrMQhCerEtXPUMatVLuDg/B4u8VQd2nvGY
-	 yzqOv6RMc+kvp0jHFdE/CvyTEGY1tl5YdH3W4vV2j1+MXuoJSfkj7Nx0AqVLXLDtHb
-	 gpLJWb9tBz8JFiDSW7dvPwNPhq91aL8wFQ42JrJeFal18kueHqw18zMkcUrwUK568o
-	 clAEkTZkzF/0g==
-Date: Tue, 27 Oct 2026 16:33:21 +0800
-From: Zorro Lang <zlang@kernel.org>
-To: Lukas Herbolt <lherbolt@redhat.com>
-Cc: fstests@vger.kernel.org, hch@lst.de, linux-xfs@vger.kernel.org, 
-	Eric Sandeen <sandeen@redhat.com>
-Subject: Re: [PATCH 1/1] xfs: add test for ENOSR/ENOSPC on DIO into delalloc
- extents
-Message-ID: <auBcfVX2v_JOvr80@zlang-mailbox>
-Mail-Followup-To: Lukas Herbolt <lherbolt@redhat.com>, 
-	fstests@vger.kernel.org, hch@lst.de, linux-xfs@vger.kernel.org, 
-	Eric Sandeen <sandeen@redhat.com>
-References: <20261016091628.295119-1-lherbolt@redhat.com>
+	dkim=pass (1024-bit key, unprotected) header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=L4lEPNd+
+Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
+	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20261027083503epoutp04c7bb3016b43317043da49e80e73c5646~iVfL4BhN80453304533epoutp04z
+	for <linux-xfs@vger.kernel.org>; Tue, 27 Oct 2026 08:35:03 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20261027083503epoutp04c7bb3016b43317043da49e80e73c5646~iVfL4BhN80453304533epoutp04z
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1793090103;
+	bh=5bahGxfUN75E2T3mOHUJ9Zz0leyIiVRMhMYoQV+Rpgs=;
+	h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
+	b=L4lEPNd+F7ee8P3N/mHT/N1cn74Bk23jtK73oJvSICLDsyxIDUNmFDbFox9TiE9+x
+	 ADQgI+Kd7P6lLh55lo/7d7+/uivKwLd3FhCIpos1hwluRZoNZuiJTwo7wna/3uI5WM
+	 RB8L7kn8gWQ3LAMMrLPijurzgNnNQ3qzhXraLJ+s=
+Received: from epsnrtp04.localdomain (unknown [182.195.42.156]) by
+	epcas2p4.samsung.com (KnoxPortal) with ESMTPS id
+	20261027083503epcas2p494af9311ba030f4f9573dc589ba17ada~iVfLXfW_z1990719907epcas2p4J;
+	Tue, 27 Oct 2026 08:35:03 +0000 (GMT)
+Received: from epcas2p4.samsung.com (unknown [182.195.38.208]) by
+	epsnrtp04.localdomain (Postfix) with ESMTP id 4jDP1y6RkCz6B9mR; Tue, 27 Oct
+	2026 08:35:02 +0000 (GMT)
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -60,631 +62,57 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20261016091628.295119-1-lherbolt@redhat.com>
+Mime-Version: 1.0
+Subject: RE:(2) [PATCH v4 5/9] xfs: limit the count of a pNFS write
+ allocation to one extent
+Reply-To: daejun7.park@samsung.com
+Sender: Daejun Park <daejun7.park@samsung.com>
+From: Daejun Park <daejun7.park@samsung.com>
+To: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>
+CC: Carlos Maiolino <cem@kernel.org>, "linux-xfs@vger.kernel.org"
+	<linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, "Darrick J.
+ Wong" <djwong@kernel.org>, Dave Chinner <dgc@kernel.org>, Chuck Lever
+	<cel@kernel.org>, Jeff Layton <jlayton@kernel.org>, Dai Ngo
+	<Dai.Ngo@oracle.com>, Sergey Bashirov <sergeybashirov@gmail.com>, Andrey
+	Albershteyn <aalbersh@kernel.org>, "linux-nfs@vger.kernel.org"
+	<linux-nfs@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "stable@vger.kernel.org"
+	<stable@vger.kernel.org>, Daejun Park <daejun7.park@samsung.com>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+In-Reply-To: <atoImJxtg70XcIjS@quentin>
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <20261027083502epcms2p736b8c20d8a66bdc43b1f68e5cde0fc24@epcms2p7>
+Date: Tue, 27 Oct 2026 17:35:02 +0900
+X-CMS-MailID: 20261027083502epcms2p736b8c20d8a66bdc43b1f68e5cde0fc24
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+cpgsPolicy: CPGSC10-223,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20261022130241epcas2p22506b749cfa884fea92c554d34d3df19
+References: <atoImJxtg70XcIjS@quentin>
+	<20261020-xfs-pnfs-batch-v4-0-9230fa2ca4a4@samsung.com>
+	<20261020-xfs-pnfs-batch-v4-5-9230fa2ca4a4@samsung.com>
+	<CGME20261022130241epcas2p22506b749cfa884fea92c554d34d3df19@epcms2p7>
 
-On Fri, Oct 16, 2026 at 11:16:25AM +0200, Lukas Herbolt wrote:
->   Test if a DIO extending write into a speculative delalloc region on a
->   fragmented XFS filesystem does not trigger a dirty transaction cancel
->   (-ENOSR) or return a spurious -ENOSPC.
-> 
->   With allocsize=128MB, a buffered write creates a large delalloc extent.
->   A subsequent DIO write at i_size lands in the speculative prealloc
->   region. On a fragmented filesystem, xfs_bmapi_write converts the
->   delalloc starting from offset 0 but the allocation is too short to
->   reach the DIO offset, causing either -ENOSR (dirty transaction cancel
->   and filesystem shutdown) or -ENOSPC (wrong error from xfs_bmapi_write).
-> 
->   Assisted by LLM.
-> 
->   Fixed by kernel commits:
->     2a9b99d45be0 xfs: pass the actual offset and len to xfs_bmapi_allocate
->     21255afdd729 xfs: do not allocate the entire delalloc extent
->     6773da870ab8 xfs: fix error returns from xfs_bmapi_write
-> 
-> Co-developed-by: Eric Sandeen <sandeen@redhat.com>
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> Signed-off-by: Lukas Herbolt <lherbolt@redhat.com>
-> ---
->  .gitignore                 |   2 +
->  src/Makefile               |   3 +-
->  src/buffer_direct_io.c     | 154 ++++++++++++++++++++++++++++++++
->  src/fragment_fs.c          | 101 +++++++++++++++++++++
->  src/mix_buffer_direct_io.c | 175 +++++++++++++++++++++++++++++++++++++
->  tests/xfs/842              |  63 +++++++++++++
->  tests/xfs/842.out          |   2 +
->  7 files changed, 499 insertions(+), 1 deletion(-)
->  create mode 100644 src/buffer_direct_io.c
->  create mode 100644 src/fragment_fs.c
->  create mode 100644 src/mix_buffer_direct_io.c
->  create mode 100755 tests/xfs/842
->  create mode 100644 tests/xfs/842.out
-> 
-> diff --git a/.gitignore b/.gitignore
-> index d52ba4ad3085..eafc36c7d8ab 100644
-> --- a/.gitignore
-> +++ b/.gitignore
-> @@ -217,6 +217,8 @@ tags
->  /src/t_btrfs_received_uuid_ioctl
->  /src/btrfs_ioctl
->  /src/dio-read-into-mmap
-> +/src/buffer_direct_io
-> +/src/fragment_fs
+On Thu, Oct 22, 2026 at 03:02:30PM +0200, Pankaj Raghav wrote:
+> Isn't it better we add this in xfs_direct_write_iomap_begin() instead of
+> adding it in pnfs?
+[...]
+> +       count_fsb = min_t(xfs_filblks_t, count_fsb, XFS_MAX_BMBT_EXTLEN);
 
-You're trying to add 3 *.c programs in this patch, there're only 2 lines.
-And ...
+Thanks. That works for pNFS as well, as xfs_fs_map_blocks() passes the
+same count to xfs_iomap_write_direct(). I put the cap in
+xfs_fs_map_blocks() because it relies on the caller asking again for
+the rest of the range, which nfsd does, and the other caller,
+xfs_direct_write_iomap_begin(), already limits a mapping to 1024 pages.
 
->  
->  # Symlinked files
->  /tests/generic/035.out
-> diff --git a/src/Makefile b/src/Makefile
-> index 0ff607ae1593..c8964a59a539 100644
-> --- a/src/Makefile
-> +++ b/src/Makefile
-> @@ -21,7 +21,8 @@ TARGETS = dirstress fill fill2 getpagesize holes lstat64 \
->  	t_mmap_writev_overlap checkpoint_journal mmap-rw-fault allocstale \
->  	t_mmap_cow_memory_failure fake-dump-rootino dio-buf-fault rewinddir-test \
->  	readdir-while-renames dio-append-buf-fault dio-write-fsync-same-fd \
-> -	dio-writeback-race unlink-fsync truncate dio-read-into-mmap
-> +	dio-writeback-race unlink-fsync truncate dio-read-into-mmap \
-> +	mix_buffer_direct_io fragment_fs
-
-... there're only 2 too.
-
->  
->  LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
->  	preallo_rw_pattern_writer ftrunc trunc fs_perms testx looptest \
-> diff --git a/src/buffer_direct_io.c b/src/buffer_direct_io.c
-> new file mode 100644
-> index 000000000000..01b19994a2e2
-> --- /dev/null
-> +++ b/src/buffer_direct_io.c
-> @@ -0,0 +1,154 @@
-> +/*
-> + * Mixer of buffered and direct IO originally written to test for XFS -ENOSPC 
-> + * and -ENOSR dirty transaction cancel on fragmented filesystem.
-> + *
-> + * XFS notes:
-> + * Buffered write size.  With allocsize=128MB, the buffered write creates
-> + * a delalloc extent of [0, BUF_WRITE_SIZE + 128MB).  The DIO at i_size
-> + * is at file offset BUF_WRITE_SIZE.  xfs_bmapi_allocate (RHEL 8) starts
-> + * the delalloc conversion from offset 0; the allocation must span
-> + * BUF_WRITE_SIZE/blocksize blocks in one contiguous extent to reach the
-> + * DIO offset.  On a fragmented FS that's impossible — but the FS may
-> + * still have large free extents in metadata-sparse regions (20-40 MB is
-> + * common).  64 MB puts the DIO offset safely beyond those.
-> +
-> +
-> + *
-> + * Usage:
-> + *   ./mix_buffer_direct_io $SCRATCH_MNT
-> + */
-> +
-> +#define _GNU_SOURCE
-> +#include <stdio.h>
-> +#include <stdlib.h>
-> +#include <string.h>
-> +#include <unistd.h>
-> +#include <fcntl.h>
-> +#include <errno.h>
-> +#include <sys/stat.h>
-> +#include <sys/statvfs.h>
-> +
-> +#define BUF_WRITE_SIZE	(64 * 1024 * 1024)	/* 64 MB */
-> +
-> +/* DIO write size — must be block-aligned */
-> +#define DIO_SIZE	4096
-> +
-> +static int attempt_trigger(const char *dir, int attempt)
-> +{
-> +	char filepath[4096];
-> +	char *wbuf;
-> +	void *dbuf;
-> +	int bfd, dfd, ret;
-> +
-> +	snprintf(filepath, sizeof(filepath), "%s/target_%d", dir, attempt);
-> +
-> +	wbuf = calloc(1, BUF_WRITE_SIZE);
-> +	if (!wbuf) {
-> +		perror("calloc");
-> +		return -1;
-> +	}
-> +
-> +	if (posix_memalign(&dbuf, DIO_SIZE, DIO_SIZE)) {
-> +		perror("posix_memalign");
-> +		free(wbuf);
-> +		return -1;
-> +	}
-> +	memset(dbuf, 0xbb, DIO_SIZE);
-> +
-> +	/*
-> +	 * Open both fds up front. Keep the buffered fd open across the
-> +	 * DIO write so close() can't trigger writeback that converts the
-> +	 * delalloc before we hit it with DIO.
-> +	 */
-> +	bfd = open(filepath, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-> +	if (bfd < 0) {
-> +		if (errno == EIO || errno == EROFS) {
-> +			fprintf(stderr, "Filesystem shut down!\n");
-> +			free(wbuf); free(dbuf);
-> +			return 1;
-> +		}
-> +		perror("open for buffered write");
-> +		free(wbuf); free(dbuf);
-> +		return -1;
-> +	}
-> +
-> +	dfd = open(filepath, O_WRONLY | O_DIRECT);
-> +	if (dfd < 0) {
-> +		if (errno == EIO || errno == EROFS) {
-> +			fprintf(stderr, "Filesystem shut down!\n");
-> +			close(bfd);
-> +			free(wbuf); free(dbuf);
-> +			return 1;
-> +		}
-> +		perror("open for DIO");
-> +		close(bfd);
-> +		unlink(filepath);
-> +		free(wbuf); free(dbuf);
-> +		return -1;
-> +	}
-> +
-> +	/*
-> +	 * Step 1: One buffered write.
-> +	 * On XFS with  allocsize=128MB, this creates a delalloc extent of
-> +	 * [0, BUF_WRITE_SIZE + 128MB) but only [0, BUF_WRITE_SIZE) has pages. 
-> +	 * The rest is speculative prealloc.
-> +	 */
-> +	ret = pwrite(bfd, wbuf, BUF_WRITE_SIZE, 0);
-> +	if (ret < 0) {
-> +		if (errno == ENOSPC) {
-> +			fprintf(stderr, "attempt %d: ENOSPC on buffered write\n",
-> +				attempt);
-> +			close(dfd);
-> +			close(bfd);
-> +			unlink(filepath);
-> +			free(wbuf); free(dbuf);
-> +			return 0;
-> +		}
-> +		perror("buffered pwrite");
-> +		close(dfd);
-> +		close(bfd);
-> +		free(wbuf); free(dbuf);
-> +		return -1;
-> +	}
-> +
-> +	/*
-> +	 * Step 2: DIO extending write at i_size.
-> +	 *
-> +	 * Offset BUF_WRITE_SIZE is within the speculative delalloc but has no 
-> +	 * pages, so the DIO flush is a no-op. xfs_bmapi_write finds the 
-> +	 * delalloc starting at offset 0 and tries to convert from there. On 
-> +	 * our fragmented FS the allocation is 1 block at file offset 0,
-> +	 * nowhere near the DIO offset at block 256. Returns -ENOSPC or -ENOSR.
-> +	 */
-> +	ret = pwrite(dfd, dbuf, DIO_SIZE, BUF_WRITE_SIZE);
-> +	if (ret < 0) {
-> +		fprintf(stderr, "DIO pwrite failed: %s\n", strerror(errno));
-> +		close(dfd);
-> +		close(bfd);
-> +		free(wbuf); free(dbuf);
-> +		return errno;
-> +	}
-> +	close(dfd);
-> +	close(bfd);
-> +	unlink(filepath);
-> +	free(wbuf);
-> +	free(dbuf);
-> +	return 0;
-> +}
-> +
-> +int main(int argc, char *argv[])
-> +{
-> +	int i, ret;
-> +
-> +	if (argc != 2) {
-> +		fprintf(stderr, "  %s <directory>\n", argv[0]);
-> +		return 1;
-> +	}
-> +
-> +	for (i = 0; i < 1000; i++) {
-> +		ret = attempt_trigger(argv[1], i);
-> +		if (ret != 0)
-> +			return ret;
-> +	}
-> +	return 0;
-> +}
-> diff --git a/src/fragment_fs.c b/src/fragment_fs.c
-> new file mode 100644
-> index 000000000000..cee4edef73ff
-> --- /dev/null
-> +++ b/src/fragment_fs.c
-> @@ -0,0 +1,101 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +/*
-> + * Copyright (c) 2026 Eric Sandeen, Lukas Herbolt
-> + */
-> +
-> +/*
-> + * Fragment filesystem by creating fixed-size files and then deleting
-> + * every n-th one.
-> + *
-> + * Usage:
-> + *	fragment_fs <directory> <prefix> <file size> <delete every n-th file>
-> + */
-> +
-> +#include <stdio.h>
-> +#include <stdlib.h>
-> +#include <unistd.h>
-> +#include <fcntl.h>
-> +#include <errno.h>
-> +#include <sys/statvfs.h>
-> +
-> +static int fragment_fs(const char *dir, const char *prefix,
-> +		       off_t size, int delete_nth)
-> +{
-> +	char path[4096];
-> +	int i, fd;
-> +	int created = 0;
-> +
-> +	fprintf(stderr, "Fragmenting filesystem (filling to ENOSPC)...\n");
-> +
-> +	for (i = 0; ; i++) {
-> +		snprintf(path, sizeof(path), "%s/%s_%06d", dir, prefix, i);
-> +		fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-> +		if (fd < 0) {
-> +			if (errno == ENOSPC)
-> +				break;
-> +			perror("open frag file");
-> +			return -1;
-> +		}
-> +		if (fallocate(fd, 0, 0, size) < 0) {
-> +			close(fd);
-> +			unlink(path);
-> +			if (errno == ENOSPC)
-> +				break;
-> +			perror("fallocate frag file");
-> +			return -1;
-> +		}
-> +		close(fd);
-> +		created++;
-> +	}
-> +	fprintf(stderr, "Created %d files\n", created);
-> +
-> +	fprintf(stderr, "Deleting every %d-th file...\n", delete_nth);
-> +	for (i = 0; i < created; i += delete_nth) {
-> +		snprintf(path, sizeof(path), "%s/%s_%06d", dir, prefix, i);
-> +		unlink(path);
-> +	}
-> +	sync();
-> +
-> +	{
-> +		struct statvfs st;
-> +		if (statvfs(dir, &st) == 0) {
-> +			unsigned long free_mb = (st.f_bfree * st.f_bsize)
-> +						/ (1024 * 1024);
-> +			fprintf(stderr,
-> +				"%d files remain, ~%lu MB free\n",
-> +				created - created / delete_nth, free_mb);
-> +		}
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +int main(int argc, char *argv[])
-> +{
-> +	off_t file_size;
-> +	int delete_nth;
-> +
-> +	if (argc != 5) {
-> +		fprintf(stderr,
-> +			"Usage: %s <directory> <prefix> <file_size> <delete_every_nth>\n",
-> +			argv[0]);
-> +		return 1;
-> +	}
-> +
-> +	file_size = strtoll(argv[3], NULL, 0);
-> +	if (file_size <= 0) {
-> +		fprintf(stderr, "Invalid file size: %s\n", argv[3]);
-> +		return 1;
-> +	}
-> +
-> +	delete_nth = atoi(argv[4]);
-> +	if (delete_nth < 2) {
-> +		fprintf(stderr, "delete_every_nth must be >= 2\n");
-> +		return 1;
-> +	}
-> +
-> +	if (fragment_fs(argv[1], argv[2], file_size, delete_nth) < 0)
-> +		return 1;
-> +
-> +	return 0;
-> +}
-> diff --git a/src/mix_buffer_direct_io.c b/src/mix_buffer_direct_io.c
-> new file mode 100644
-> index 000000000000..0af227a7c9f0
-> --- /dev/null
-> +++ b/src/mix_buffer_direct_io.c
-> @@ -0,0 +1,175 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +/*
-> + * Copyright (c) 2026 Eric Sandeen, Lukas Herbolt
-> + */
-> +
-> +/*
-> + * Mix buffered and direct IO originally written to test for XFS -ENOSPC 
-> + * and -ENOSR dirty transaction cancel on fragmented filesystem.
-> + *
-> + * XFS notes:
-> + * Buffered write size. With allocsize=128MB, the buffered write creates
-> + * a delalloc extent of [0, buf_write_size + 128MB).  The DIO at i_size
-> + * is at file offset buf_write_size.  xfs_bmapi_allocate (RHEL 8) starts
-> + * the delalloc conversion from offset 0; the allocation must span
-> + * buf_write_size/blocksize blocks in one contiguous extent to reach the
-> + * DIO offset.  On a fragmented FS that's impossible — but the FS may
-> + * still have large free extents in metadata-sparse regions (20-40 MB is
-> + * common).  64 MB puts the DIO offset safely beyond those.
-> + *
-> + * Usage:
-> + *   ./mix_buffer_direct_io <dir> [buf_write_size] [dio_size]
-> + *
-> + *   buf_write_size  Buffered write size in bytes (default 67108864 / 64 MB)
-> + *   dio_size        DIO write size in bytes (default 4096), must be
-> + *                   block-aligned
-> + */
-> +
-> +#include <stdio.h>
-> +#include <stdlib.h>
-> +#include <string.h>
-> +#include <unistd.h>
-> +#include <fcntl.h>
-> +#include <errno.h>
-> +
-> +static int attempt_trigger(const char *dir, int attempt,
-> +			   off_t buf_write_size, size_t dio_size)
-> +{
-> +	char filepath[4096];
-> +	char *wbuf;
-> +	void *dbuf;
-> +	int bfd, dfd, ret;
-> +
-> +	snprintf(filepath, sizeof(filepath), "%s/target_%d", dir, attempt);
-> +
-> +	wbuf = calloc(1, buf_write_size);
-> +	if (!wbuf) {
-> +		perror("calloc");
-> +		return -1;
-> +	}
-> +
-> +	if (posix_memalign(&dbuf, dio_size, dio_size)) {
-> +		perror("posix_memalign");
-> +		free(wbuf);
-> +		return -1;
-> +	}
-> +	memset(dbuf, 0xbb, dio_size);
-> +
-> +	/*
-> +	 * Open both fds up front. Keep the buffered fd open across the
-> +	 * DIO write so close() can't trigger writeback that converts the
-> +	 * delalloc before we hit it with DIO.
-> +	 */
-> +	bfd = open(filepath, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-> +	if (bfd < 0) {
-> +		if (errno == EIO || errno == EROFS) {
-> +			fprintf(stderr, "Filesystem shut down!\n");
-> +			free(wbuf); free(dbuf);
-> +			return 1;
-> +		}
-> +		perror("open for buffered write");
-> +		free(wbuf); free(dbuf);
-> +		return -1;
-> +	}
-> +
-> +	dfd = open(filepath, O_WRONLY | O_DIRECT);
-> +	if (dfd < 0) {
-> +		if (errno == EIO || errno == EROFS) {
-> +			fprintf(stderr, "Filesystem shut down!\n");
-> +			close(bfd);
-> +			free(wbuf); free(dbuf);
-> +			return 1;
-> +		}
-> +		perror("open for DIO");
-> +		close(bfd);
-> +		unlink(filepath);
-> +		free(wbuf); free(dbuf);
-> +		return -1;
-> +	}
-> +
-> +	/*
-> +	 * Step 1: One buffered write.
-> +	 * On XFS with  allocsize=128MB, this creates a delalloc extent of
-> +	 * [0, buf_write_size + 128MB) but only [0, buf_write_size) has pages. 
-> +	 * The rest is speculative prealloc.
-> +	 */
-> +	ret = pwrite(bfd, wbuf, buf_write_size, 0);
-> +	if (ret < 0) {
-> +		if (errno == ENOSPC) {
-> +			fprintf(stderr, "attempt %d: ENOSPC on buffered write\n",
-> +				attempt);
-> +			close(dfd);
-> +			close(bfd);
-> +			unlink(filepath);
-> +			free(wbuf); free(dbuf);
-> +			return 0;
-> +		}
-> +		perror("buffered pwrite");
-> +		close(dfd);
-> +		close(bfd);
-> +		free(wbuf); free(dbuf);
-> +		return -1;
-> +	}
-> +
-> +	/*
-> +	 * Step 2: DIO extending write at i_size.
-> +	 *
-> +	 * Offset buf_write_size is within the speculative delalloc but has no 
-> +	 * pages, so the DIO flush is a no-op. xfs_bmapi_write finds the 
-> +	 * delalloc starting at offset 0 and tries to convert from there. On 
-> +	 * our fragmented FS the allocation is 1 block at file offset 0,
-> +	 * nowhere near the DIO offset at block 256. Returns -ENOSPC or -ENOSR.
-> +	 */
-> +	ret = pwrite(dfd, dbuf, dio_size, buf_write_size);
-> +	if (ret < 0) {
-> +		fprintf(stderr, "DIO pwrite failed: %s\n", strerror(errno));
-> +		close(dfd);
-> +		close(bfd);
-> +		free(wbuf); free(dbuf);
-> +		return errno;
-> +	}
-> +	close(dfd);
-> +	close(bfd);
-> +	unlink(filepath);
-> +	free(wbuf);
-> +	free(dbuf);
-> +	return 0;
-> +}
-> +
-> +int main(int argc, char *argv[])
-> +{
-> +	off_t buf_write_size = 64 * 1024 * 1024;
-> +	size_t dio_size = 4096;
-> +	int i, ret;
-> +
-> +	if (argc < 2 || argc > 4) {
-> +		fprintf(stderr,
-> +			"Usage: %s <dir> [buf_write_size] [dio_size]\n",
-> +			argv[0]);
-> +		return 1;
-> +	}
-> +
-> +	if (argc >= 3) {
-> +		buf_write_size = strtoll(argv[2], NULL, 0);
-> +		if (buf_write_size <= 0) {
-> +			fprintf(stderr, "Invalid buf_write_size: %s\n",
-> +				argv[2]);
-> +			return 1;
-> +		}
-> +	}
-> +	if (argc >= 4) {
-> +		dio_size = strtoul(argv[3], NULL, 0);
-> +		if (dio_size == 0 || dio_size % 512) {
-> +			fprintf(stderr, "Invalid dio_size: %s\n", argv[3]);
-> +			return 1;
-> +		}
-> +	}
-> +
-> +	for (i = 0; i < 1000; i++) {
-> +		ret = attempt_trigger(argv[1], i,
-> +				      buf_write_size, dio_size);
-> +		if (ret != 0)
-> +			return ret;
-> +	}
-> +	return 0;
-> +}
-> diff --git a/tests/xfs/842 b/tests/xfs/842
-> new file mode 100755
-> index 000000000000..b2b2f7c493e7
-> --- /dev/null
-> +++ b/tests/xfs/842
-> @@ -0,0 +1,63 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2026 Lukas Herbolt.  All Rights Reserved.
-> +#
-> +# FS QA Test 842
-> +#
-> +# Regression test for XFS -ENOSR dirty transaction cancel during DIO
-> +# write into a speculative delalloc region on a fragmented filesystem.
-> +# With allocsize=128MB, a buffered write creates a large delalloc extent.
-> +# A subsequent DIO extending write at i_size triggers xfs_bmapi_write to
-> +# convert the delalloc from offset 0; on a fragmented FS the allocation
-> +# is too short to reach the DIO offset, returning -ENOSR and cancelling
-> +# a dirty transaction, which shuts down the filesystem.
-> +#
-> +. ./common/preamble
-> +_begin_fstest auto enospc
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -r -f $tmp.*
-
-This _cleanup does same thing with default _cleanup, so we can remove it.
-
-> +}
-> +
-> +_require_test
-> +_require_scratch
-> +_require_test_program "fragment_fs"
-> +_require_test_program "buffer_direct_io"
-> +
-> +_scratch_mkfs_sized $((1<<30)) > "$seqres.full" 2>&1
-> +_scratch_mount -o allocsize=131072k >> "$seqres.full" 2>&1
-> +
-> +src/fragment_fs $SCRATCH_MNT frag 4096 2 >> "$seqres.full" 2>&1
-> +src/buffer_direct_io $SCRATCH_MNT >> "$seqres.full" 2>&1
-> +RET=$?
-> +
-> +_dmesg_since_test_start | grep -q "detected at xfs_trans_cancel"
-> +DMESG_CHECK=$?
-
-Can we just do:
-  _check_dmesg_for "detected at xfs_trans_cancel" || echo "xxxx" ?
-
-> +
-> +if [ $RET -eq 5 -a $DMESG_CHECK -eq 0 ]; then
-> +	_fixed_by_kernel_commit 2a9b99d45be0 \
-> +		"xfs: pass the actual offset and len to xfs_bmapi_allocate"
-> +	_fixed_by_kernel_commit 21255afdd729 \
-> +		"xfs: do not allocate the entire delalloc extent"
-> +	_fail "ENOSR dirty transaction cancel detected (ret=$RET)"
-> +
-> +elif [ $RET -eq 28 ]; then
-> +	_fixed_by_kernel_commit 2a9b99d45be0 \
-> +		"xfs: pass the actual offset and len to xfs_bmapi_allocate"
-> +	_fixed_by_kernel_commit 21255afdd729 \
-> +		"xfs: do not allocate the entire delalloc extent"
-> +	_fixed_by_kernel_commit 6773da870ab8 \
-> +		"xfs: fix error returns from xfs_bmapi_write"
-
-We usually do _fixed_by_kernel_commit as hints before the test starts. If you
-want to explain which hints correspond to different test results, I think
-adding a few comments should be enough.
-
-> +	_fail "ENOSPC returned from xfs_bmapi_write (ret=$RET)"
-> +
-> +elif [ $RET -eq 0 ]; then
-> +	echo "Silence is golden"
-
-Just print this line at the end of this case.
-
-> +else
-> +	_fail "Unknown error: src/buffer_direct_io error code $RET"
-> +fi
-
-The logic here is a bit messy. It might be better to let the .c test print
-different outputs to fail the golden image. Better to clean this up to
-keep the code straightforward.
-
-> +
-> +# success, all done
-> +status=0
-> +exit
-
-_exit 0
-
-> diff --git a/tests/xfs/842.out b/tests/xfs/842.out
-> new file mode 100644
-> index 000000000000..643d05289a33
-> --- /dev/null
-> +++ b/tests/xfs/842.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 842
-> +Silence is golden
-> -- 
-> 2.56.0
-> 
+Daejun
