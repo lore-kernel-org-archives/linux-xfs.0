@@ -1,88 +1,62 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=34.218.115.239
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.137.202.133
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793113223;
-	b=JYwOprDKi1pAZNwgoQFlfIYl5RVDJnXPkrF6vNSXIsd7gVW2/AAp871CT6wMHppjj+PN
-	 GfunqvmsW9fotpMklnyLuaSmfVVM7fPT1njb/8iCFLMC3jNwVDvxM0vR4HbPFGozeMNX5
-	 QuerO7spz6gv80RMUqQm67Q6SPipnHBVsYNOprRqRAUXO1vbHPlRlXLGN2rbk4S2tqbCs
-	 HEeRQg5DPoiEvG1n4cWLCA1Gv17C1ZbmAvRL/iVePLM8b90kJ14sk3rRvj3sgM+d87fqN
-	 PbLXH/nkd0m+n0IJnIEOQC1JnWdlbdjfdYbGIeK1bwYFjyhQ2mQLJ7goWqBCW3lkerQ==
+	t=1793114143;
+	b=R2TVCpcTPpZDnJkqeZU2Km+6hbs57DbqfZLiZdHuZM4PkDYuY/XxoorwbJHAQXWFIAbL
+	 CHyKg9wtMwaAPBcXpxZZKT2u9PsYfUHpSGe5Jay47iB4vJfvnsyXwcAUuED8gmG+i1Qp8
+	 KeBrCjIN6cNF+96uzW5qGscfJRHIv5d5d7D1EKPKcylghHKV4DQWbakJc+PgQMBY8k2H+
+	 zL1OXZfcEax7cPRtS7If9+I3VCayL4In+dKOLqCWYVxoWXBcirSNESov81CaLvpfj4I6j
+	 4whhCHpKqmz7teNdijFjuMr6XiT1FlnNC1WHGJfvaHvERmLRYcvGVsueXzbusAD4O3Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793113223;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:Received:Received:X-Farcaster-Flow-ID:Received:Received:
-	 From:To:CC:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
-	 MIME-Version:X-Originating-IP:X-ClientProxiedBy:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=plx93BXIQUOSUsvJsCgjZtiZG1rNFPpPYeNwPZQpSek=;
-	b=F/i5ySxUl9bmWkpsNfgDPZSq8/5Dm2/urMJtIak0g9nWwaL9YTEcbGSNbSkRPQcjLWaA
-	 3LcYLHnfDD20y7Aewp/sshIhIW57ZHMkvKHuzLfkC3XYi8/+7PWaiudo9ndo+iWK1znyK
-	 8A7+GVych36qRwV1R+mR+Td9eKSlK5YnT9+PQx4SNzpEbaXuRRl/9xCgdxBd4VG/GhtgZ
-	 1A4jUZTej8RtOH+ALnC2/Nmhpmqy1ip49R0Yulli2Lgbr2D14OAwXj0xzeUlvwRqqNQ5p
-	 ojevD9NlxsWOzZssHlQG5dUMQWX10l0uDB7L1wuaRjwh1r81PHo/Rl/vEK4Oj13Hj7w==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793114143;
+	h=DMARC-Filter:DKIM-Signature:Received:Date:From:To:Cc:Subject:
+	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
+	 In-Reply-To:X-SRS-Rewrite;
+	bh=j++aTtoBwRCqPAIJ1xdb0VPZ8eTvJmBg+6jD5++G4Yk=;
+	b=qezuyOfqJE3e/CK+ZBzT6bgASHolOL7g0vrmwV156UGzWwvWXSP/WAhOn+tOe7jQ6jyu
+	 vSm/5u3drCX42vWjFqUeUw8p/4qgl+JfUN2K7nsyiSWaiu0oesErHhkH7LnIXeHx42m4z
+	 93ewLj21lVQBh2Y+DQ175H+MK0HvXVlL8LzQmqyoQ0Wd+V+TpOZpJZ/oANETi76PiG1rJ
+	 pDm3QdkvwucsxkMD1Xj/wIe0u0ZFMZb0cNG9Z1vD87wKZyBbEo7P45lZucQ+rctk4Rmfg
+	 s0+mimNvJjZ+jd1mmRAdoSFW35WX/w7xVhb8S9GSVQyFazteGNXiBPAV87so2vWatgw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=amazon.it;
-	spf=pass smtp.mailfrom=amazon.it;
-	dkim=pass header.d=amazon.it header.i=@amazon.it header.a=rsa-sha256 header.s=amazoncorp2 header.b=Pr+4a0ZO;
-	arc=none smtp.remote-ip=34.218.115.239
-Received: from pdx-out-013.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-013.esa.us-west-2.outbound.mail-perimeter.amazon.com [34.218.115.239])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dmarc=pass header.from=infradead.org;
+	spf=none smtp.mailfrom=bombadil.srs.infradead.org;
+	dkim=pass header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=zYPm1ed+;
+	arc=none smtp.remote-ip=198.137.202.133
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16B4D606BA8A;
-	Tue, 27 Oct 2026 15:00:22 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 16B4D606BA8A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.it
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.it
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7ACFB606A31D;
+	Tue, 27 Oct 2026 15:15:40 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7ACFB606A31D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=amazon.it header.i=@amazon.it header.a=rsa-sha256 header.s=amazoncorp2 header.b=Pr+4a0ZO
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=amazon.it; i=@amazon.it; q=dns/txt; s=amazoncorp2;
-  t=1793113223; x=1824649223;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=plx93BXIQUOSUsvJsCgjZtiZG1rNFPpPYeNwPZQpSek=;
-  b=Pr+4a0ZO74Am0r5tComDFuEyLXg8/8D+ABkhsTH2E67J38O92mf1dO0y
-   r1MYp8tmC2Ug1owEhstAWv7YnR7TJilX2us4no1vjukDDX60nnVY/6mtO
-   RylVMeU4ZqUQAgIkgcISZxgDdVuSiK4VnaP8i3k3WhPy/90QcJG4auDMQ
-   DOOXiCBEEUol8blm6kJcyvU7zMDaz3KNOv/tJ5t8/Z265W6/p48/xhzWz
-   WXed5faNQDCbCttXMXYzT65X056B8ou5etRZuaIOKk6YF+bFv7s+nf2be
-   VnyA9x4Yv3AwYpRM73PttoWkOMM8v0egSDMMNKfviG7YY3SwXdGTnkZDb
-   g==;
-X-CSE-ConnectionGUID: ItHuiPCkQKSeJuplJtYZkw==
-X-CSE-MsgGUID: eak/GKDTTtOSAGPyGq8STg==
-X-IronPort-AV: E=Sophos;i="6.27,181,1787011200"; 
-   d="scan'208";a="32146695"
-Received: from ip-10-5-0-115.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.0.115])
-  by internal-pdx-out-013.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2026 15:00:20 +0000
-Received: from EX19MTAUWC002.ant.amazon.com [205.251.233.111:31033]
- by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.38.46:2525] with esmtp (Farcaster)
- id ef43fa70-f102-4124-a2a1-66e6ab51bbb5; Tue, 27 Oct 2026 15:00:20 +0000 (UTC)
-X-Farcaster-Flow-ID: ef43fa70-f102-4124-a2a1-66e6ab51bbb5
-Received: from EX19D001UWA001.ant.amazon.com (10.13.138.214) by
- EX19MTAUWC002.ant.amazon.com (10.250.64.143) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.56;
- Tue, 27 Oct 2026 15:00:19 +0000
-Received: from dev-dsk-dipiets-1b-77b833da.eu-west-1.amazon.com
- (10.253.66.177) by EX19D001UWA001.ant.amazon.com (10.13.138.214) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.56; Tue, 27 Oct 2026
- 15:00:15 +0000
-From: Salvatore Dipietro <dipiets@amazon.it>
-To: <hannes@cmpxchg.org>
-CC: <abuehaze@amazon.com>, <akpm@linux-foundation.org>, <alisaidi@amazon.com>,
-	<blakgeof@amazon.com>, <brauner@kernel.org>, <brendan.jackman@linux.dev>,
-	<david@redhat.com>, <dgc@kernel.org>, <dipietro.salvatore@gmail.com>,
-	<dipiets@amazon.it>, <djwong@kernel.org>, <hch@infradead.org>, <hch@lst.de>,
-	<linux-fsdevel@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-mm@kvack.org>, <linux-xfs@vger.kernel.org>, <matt@readmodwrite.com>,
-	<mhocko@suse.com>, <ritesh.list@gmail.com>, <rvvandan@amazon.com>,
-	<stable@vger.kernel.org>, <surenb@google.com>, <vbabka@kernel.org>,
-	<willy@infradead.org>, <ziy@nvidia.com>
-Subject: Re: [PATCH 1/2] mm: page_alloc: do not give all non-blocking requests reserve access
-Date: Tue, 27 Oct 2026 15:00:02 +0000
-Message-ID: <20261027150002.318916-1-dipiets@amazon.it>
-X-Mailer: git-send-email 2.50.1
-In-Reply-To: <arFBr22V60BMmVpl@cmpxchg.org>
-References: <arFBr22V60BMmVpl@cmpxchg.org>
+	dkim=pass (2048-bit key, unprotected) header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=zYPm1ed+
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=j++aTtoBwRCqPAIJ1xdb0VPZ8eTvJmBg+6jD5++G4Yk=; b=zYPm1ed+WeV/P4XRaKxze5ULLn
+	d73eYUIUD35RT6eCgg6stInU7k0gTgBDTtbZ+ox8HJYt26Uq15yJcPPW08vlFoUlVDFmj4MOZse0U
+	qDzo0/6KBEGY9cXN/2XiWL9XeXEHOxq4qTQZdIQbdZAOI6KIdo+hrezAGeb/affgCYM8Ock1OF3Id
+	7Ke2iExRW55aPL+tMoREO9gdxBpYAepA0m6TEGF/2hT8SKNVHaBwH+LkOMp/isUj1hz+PuQ/mtxit
+	yK2UEYf8fgGXN78uEsr7YR0eQcd9L3A3X+xN+r0kuh+oF5Jvyx1zHD+IKAA7o3wK/D1FWWtfT0x6B
+	jv0RA44w==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.100.1 #2 (Red Hat Linux))
+	id 1xLito-000000058gA-0E79;
+	Tue, 27 Oct 2026 15:15:40 +0000
+Date: Tue, 27 Oct 2026 08:15:40 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: xfs <linux-xfs@vger.kernel.org>,
+	linux-ext4 <linux-ext4@vger.kernel.org>,
+	linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+	fuse-devel <fuse-devel@lists.linux.dev>,
+	fstests <fstests@vger.kernel.org>
+Subject: Re: Farewell!
+Message-ID: <auDAHHC6a2ROBt7v@infradead.org>
+References: <20261016160037.GA107919@frogsfrogsfrogs>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -92,37 +66,14 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-ClientProxiedBy: EX19D031UWA002.ant.amazon.com (10.13.139.96) To
- EX19D001UWA001.ant.amazon.com (10.13.138.214)
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261016160037.GA107919@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
+Better late than never:  It was a pleasure to work with you,
+including some series that got close to remote pair programming.
 
-Hi Johannes,
-
-Vlastimil asked that v6 of my page_alloc patch [1] not go to mainline
-before these two patches land, so Andrew parked v6 at the tail of
-mm-unstable and dropped its Cc: stable until then.
-
-Are you still planning to work on 1/2 and 2/2, and if so, do you have
-a rough ETA? Or would you rather post them as a separate series as
-they are? If anything is needed on my side to move them forward, I'm
-happy to help.
-
-For what it's worth, I ran both stacked under v6 on v7.3-rc1 and saw
-no performance difference on my benchmark with or without them.
-
-[1] https://lore.kernel.org/linux-mm/20261001082152.2879289-1-dipiets@amazon.it/
-
-
-Thanks,
-Salvatore
-
-
-
-
-
-AMAZON DEVELOPMENT CENTER ITALY SRL, viale Monte Grappa 3/5, 20124 Milano, Italia, Registro delle Imprese di Milano Monza Brianza Lodi REA n. 2504859, Capitale Sociale: 10.000 EUR i.v., Cod. Fisc. e P.IVA 10100050961, Societa con Socio Unico
-
-
+Hope you'll have a great time without work, and we'll eventually see
+you back in one place or another
 
