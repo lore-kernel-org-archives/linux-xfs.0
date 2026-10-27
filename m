@@ -1,59 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=203.254.224.34
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.233
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793090106;
-	b=jZqGMgYMbuMdnNsd9GHgRSevlhzQBPzgnJfHEiZRzFs6vI585hUTOQ8gtJU2gzXPytpj
-	 HLywxkdMIK345/AkQK0NtdFrBLf3TB/4eukV1cy6yXg7BD80WUkY/XFTs5IlMdQT+hiB5
-	 hcuDBkAbVMpJWBc/tw+kygO+NnZ4FFU5ky6U+GKrv28SqqQNzzzZrXxzlMzbChpPQapBi
-	 oexppoaL4tZHUYc2CP+czEKxnryTqhClTGOaS1SmYcM6SSJAdqBFro/X0A+aHSxExb2Z1
-	 qfp0dlnsPRv8iqoYHvZntF6a7F1zqONtm3ef/5WNIsNmA1YfKEWHBKNvfbXaR9S9nsA==
+	t=1793095646;
+	b=SsTtT5AKAy74hXLyLPFuHDiGQ57D/n39SlsaMpWph+9sc4lLnHiB9AcsKnmSaY7BvhIm
+	 jhRy3iD4cLPp8RvLEOcMcmD0BQTSTwU+myGVudTcFoOAmg/ve4fr2ndonsUpYznzf9Ubk
+	 PPNLtZIfiVBceWhEsAda5qot/MEGiO2N46TeSgwI1yg9C3bB8OrAxGkx5Zas4ZrsIBXq9
+	 1J7b/NG2DO9DGYLnhW+gMOPj4n8XC8xAoV5jja9knm+RfZr2mJPdBU0NzfXkDDaxGAzMj
+	 +K/EPCKzaz1E9Chh8MDMlPIOzvEznVjIOq9MZG/oiGIBz9YekNRX2bNV0XoBcSsdpFw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793090106;
-	h=DMARC-Filter:Received:DKIM-Filter:DKIM-Signature:Received:Received:
-	 Mime-Version:Subject:Reply-To:Sender:From:To:CC:X-Priority:
-	 X-Content-Kind-Code:In-Reply-To:X-CPGS-Detection:X-Drm-Type:
-	 X-Msg-Generator:X-Msg-Type:X-Reply-Demand:Message-ID:Date:
-	 X-CMS-MailID:Content-Transfer-Encoding:Content-Type:X-Sendblock-Type:
-	 CMS-TYPE:X-CPGSPASS:X-CPGSPASS:cpgsPolicy:X-CFilter-Loop:
-	 X-CMS-RootMailID:References;
-	bh=5bahGxfUN75E2T3mOHUJ9Zz0leyIiVRMhMYoQV+Rpgs=;
-	b=1jEiJ+/ch/yq+5SgFAHX842PSm5+AV6jd8DiU+yrL4Wy8xDNFmzcpBhWwakbLOKZcu11
-	 33aZH3KLm5LhmaGZw89jSfiwlHYz+4VLgNngfmv/QHoOorvBTGYvoKJvLQ0VaQ7bl1Y1L
-	 633IeA/LSrI6XIuUUWB9JoG1VmStanQ+atDdDsHaTppN+rhkGoms0u1kJFIOEv4/sjHIs
-	 lmsQlZO+xSNERZ5XGRrFcSPZFDUlPLNub5TgHaDT2Sqjzf28QpRibS9nCN8oYNr2Am1k5
-	 E7gEfMiVVwE2/TlixaV7TW6SDck2aZC3FH9yBgVyScG+5shBDviRaUbEfA/jlFTFfLw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793095646;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding;
+	bh=fSot5EilqCYTXnvq8kQw3/OaKHnMrWXVOOIBWUnaAS8=;
+	b=Gyn9Bu3VbJEl8W5xkq9DFpdUqopeBgVorWhZhSf/CXnJUaQ03s7xhy6SUJU7SGRmuW0J
+	 NKHhRW7ZucgK5HAAkTRfab8+Y0SrVxzAWaz+c05mgFXW5BrCBQvstL/INzerOClS5loxc
+	 kifLfY//mfyP4FOb6pmB2/yStSNUdaQeC/Adm3+BQ/syp3IpkfLmjYg5Lc5uHCKWp/4+j
+	 Ky98qRVbeio0YpGPSBiKufT4z449mmAMJOYYSu6nLYniKduzKSa+r0HfBY35H6uu4lSTa
+	 iogys9V2hlDZg10tT+F35hU4IaojONJsubBBfYnomcoxwocnNK17M5q4+cfhfh8YqYA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=samsung.com;
-	spf=pass smtp.mailfrom=samsung.com;
-	dkim=pass header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=L4lEPNd+;
-	arc=none smtp.remote-ip=203.254.224.34
-Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=MyfAElSh;
+	arc=none smtp.remote-ip=95.215.58.233
+Received: from mta1.migadu.com (out-233.mta1.migadu.com [95.215.58.233])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C18F6606A31B
-	for <linux-xfs@vger.kernel.org>; Tue, 27 Oct 2026 08:35:05 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C18F6606A31B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E97F606A31A
+	for <linux-xfs@vger.kernel.org>; Tue, 27 Oct 2026 10:07:25 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2E97F606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=L4lEPNd+
-Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
-	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20261027083503epoutp04c7bb3016b43317043da49e80e73c5646~iVfL4BhN80453304533epoutp04z
-	for <linux-xfs@vger.kernel.org>; Tue, 27 Oct 2026 08:35:03 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20261027083503epoutp04c7bb3016b43317043da49e80e73c5646~iVfL4BhN80453304533epoutp04z
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1793090103;
-	bh=5bahGxfUN75E2T3mOHUJ9Zz0leyIiVRMhMYoQV+Rpgs=;
-	h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-	b=L4lEPNd+F7ee8P3N/mHT/N1cn74Bk23jtK73oJvSICLDsyxIDUNmFDbFox9TiE9+x
-	 ADQgI+Kd7P6lLh55lo/7d7+/uivKwLd3FhCIpos1hwluRZoNZuiJTwo7wna/3uI5WM
-	 RB8L7kn8gWQ3LAMMrLPijurzgNnNQ3qzhXraLJ+s=
-Received: from epsnrtp04.localdomain (unknown [182.195.42.156]) by
-	epcas2p4.samsung.com (KnoxPortal) with ESMTPS id
-	20261027083503epcas2p494af9311ba030f4f9573dc589ba17ada~iVfLXfW_z1990719907epcas2p4J;
-	Tue, 27 Oct 2026 08:35:03 +0000 (GMT)
-Received: from epcas2p4.samsung.com (unknown [182.195.38.208]) by
-	epsnrtp04.localdomain (Postfix) with ESMTP id 4jDP1y6RkCz6B9mR; Tue, 27 Oct
-	2026 08:35:02 +0000 (GMT)
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=MyfAElSh
+X-Envelope-To: linux-xfs@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=EmC1viSKISOlO+4LV4Tq5yi5YtyJNhBL4pIRDOKg2QA=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1793095644; v=1; x=1793700444;
+ b=MyfAElShe6jUrR9xnSoZrUkOVisggxknz1jRHruHD7OaBeWNHCrmn5Agq7SG26q26Tr6L7x8
+ VFGQVVAOiWWOkyiqqAr/mhMfcaRatGKy++wTfxv6TU93eW/3jYNlSxdR1o7kqMOD2/C4xV9G6Bh
+ 1LclLypAw4qdUMABgq6H5rpc=
+X-Envelope-To: linux-xfs@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 275ac0127e5d04df;
+	Tue, 27 Oct 2026 10:07:24 +0000
+X-Mizu-Trace-ID: 275ac0127e5d04df
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <0046bdae-1dd1-4f4b-a1e5-9eb7fe8b5fe0@linux.dev>
+Date: Tue, 27 Oct 2026 11:07:19 +0100
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -62,57 +57,105 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-Subject: RE:(2) [PATCH v4 5/9] xfs: limit the count of a pNFS write
- allocation to one extent
-Reply-To: daejun7.park@samsung.com
-Sender: Daejun Park <daejun7.park@samsung.com>
-From: Daejun Park <daejun7.park@samsung.com>
-To: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>
-CC: Carlos Maiolino <cem@kernel.org>, "linux-xfs@vger.kernel.org"
-	<linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, "Darrick J.
- Wong" <djwong@kernel.org>, Dave Chinner <dgc@kernel.org>, Chuck Lever
-	<cel@kernel.org>, Jeff Layton <jlayton@kernel.org>, Dai Ngo
-	<Dai.Ngo@oracle.com>, Sergey Bashirov <sergeybashirov@gmail.com>, Andrey
-	Albershteyn <aalbersh@kernel.org>, "linux-nfs@vger.kernel.org"
-	<linux-nfs@vger.kernel.org>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>, "stable@vger.kernel.org"
-	<stable@vger.kernel.org>, Daejun Park <daejun7.park@samsung.com>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-In-Reply-To: <atoImJxtg70XcIjS@quentin>
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <20261027083502epcms2p736b8c20d8a66bdc43b1f68e5cde0fc24@epcms2p7>
-Date: Tue, 27 Oct 2026 17:35:02 +0900
-X-CMS-MailID: 20261027083502epcms2p736b8c20d8a66bdc43b1f68e5cde0fc24
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-cpgsPolicy: CPGSC10-223,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20261022130241epcas2p22506b749cfa884fea92c554d34d3df19
-References: <atoImJxtg70XcIjS@quentin>
-	<20261020-xfs-pnfs-batch-v4-0-9230fa2ca4a4@samsung.com>
-	<20261020-xfs-pnfs-batch-v4-5-9230fa2ca4a4@samsung.com>
-	<CGME20261022130241epcas2p22506b749cfa884fea92c554d34d3df19@epcms2p7>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] iomap: only follow dio alignment requirement if specified
+To: Qu Wenruo <quwenruo.btrfs@gmx.com>, Qu Wenruo <wqu@suse.com>
+Cc: linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org,
+ linux-fsdevel@vger.kernel.org, stable@vger.kernel.org, da.gomez@kernel.org,
+ gost.dev@samsung.com
+References: <9fae60fcce5ae356deef5e38931124b9634dba3b.1792997261.git.wqu@suse.com>
+ <at-p1QXETaTvvj_r@quentin> <5f49d819-12ec-48b2-b9b2-adce264d266d@gmx.com>
+Content-Language: en-US
+From: Pankaj Raghav <pankaj.raghav@linux.dev>
+In-Reply-To: <5f49d819-12ec-48b2-b9b2-adce264d266d@gmx.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-On Thu, Oct 22, 2026 at 03:02:30PM +0200, Pankaj Raghav wrote:
-> Isn't it better we add this in xfs_direct_write_iomap_begin() instead of
-> adding it in pnfs?
-[...]
-> +       count_fsb = min_t(xfs_filblks_t, count_fsb, XFS_MAX_BMBT_EXTLEN);
 
-Thanks. That works for pNFS as well, as xfs_fs_map_blocks() passes the
-same count to xfs_iomap_write_direct(). I put the cap in
-xfs_fs_map_blocks() because it relies on the caller asking again for
-the rest of the range, which nfsd does, and the other caller,
-xfs_direct_write_iomap_begin(), already limits a mapping to 1024 pages.
 
-Daejun
+On 10/26/2026 9:59 PM, Qu Wenruo wrote:
+> 
+> 
+> 在 2026/10/27 06:19, Pankaj Raghav (Samsung) 写道:
+>> On Mon, Oct 26, 2026 at 05:18:13PM +1030, Qu Wenruo wrote:
+>>>
+>>> [CAUSE]
+>>> The failed command of fsx is COPY_RANGE:
+>>>
+>>>   copy range: 0x6800 to 0xa200 at 0x3f200
+>>>   do_copy_range:: Resource temporarily unavailable
+>>>   LOG DUMP (8 total operations):
+>>>   1(  1 mod 256): SKIPPED (no operation)
+>>>   2(  2 mod 256): SKIPPED (no operation)
+>>>   3(  3 mod 256): WRITE    0x14400 thru 0x211ff    (0xce00 bytes) HOLE
+>>>   4(  4 mod 256): FALLOC   0x72bf4 thru 0x76221    (0x362d bytes) EXTENDING
+>>>   5(  5 mod 256): SKIPPED (no operation)
+>>>   6(  6 mod 256): INSERT 0x11000 thru 0x13fff    (0x3000 bytes)
+>>>   7(  7 mod 256): TRUNCATE DOWN    from 0x79221 to 0xa800
+>>>   8(  8 mod 256): COPY 0x6800 thru 0xa1ff    (0x3a00 bytes) to 0x3f200 thru 
+>>> 0x42bff
+>>>   Log of operations saved to "/mnt/test/junk.fsxops"; replay with --replay-ops
+>>>   Correct content saved for comparison
+>>>   (maybe hexdump "/mnt/test/junk" vs "/mnt/test/junk.fsxgood")
+>>>
+>>> Both ext4 and xfs only require direct IO to be aligned to the logical
+>>> block size of the device, not the fs block size. So the 0x3a00 bytes
+>>> read at 0x6800 is allowed, and should succeed.
+>>>
+>>> But that range is a hole, and that commit makes iomap_dio_hole_iter()
+>>> round the zeroed length down to the fs block size unconditionally.
+>>> The first iteration zeroes 0x3a00 bytes but only advances 0x3000 bytes,
+>>> then the next iteration zeroes the remaining 0xa00 bytes, which is
+>>> rounded down to 0, so -EFAULT is returned.
+>>>
+>>> As ext4 and xfs do not pass IOMAP_DIO_PARTIAL, the whole read fails
+>>> with -EFAULT, which is then converted to -EAGAIN by copy_splice_read().
+>>> Every retry of fsx hits the same -EAGAIN, failing the run.
+>>>
+>>> That commit breaks all direct reads which range is not fs block aligned
+>>> for ext4 and xfs.
+>>>
+>>> [FIX]
+>>> Do not revert the range unless the dio has IOMAP_DIO_FSBLOCK_ALIGNED flag.
+>>>
+>>> iomap_dio_hole_iter() is only called for reads, and for now only btrfs
+>>> reads can reach this path with the flag set. Btrfs has the proper
+>>> fallback when dio returns -EFAULT.
+>>>
+>>> Fixes: 4025185cf953 ("iomap: follow the alignment requirement for 
+>>> iomap_dio_hole_iter()")
+>>> Cc: stable@vger.kernel.org
+
+FYI, your patches are not in 7.3 and only in linux-next. So we don't need to cc 
+stable?
+>>> Signed-off-by: Qu Wenruo <wqu@suse.com>
+>>> ---
+>>>   fs/iomap/direct-io.c | 26 ++++++++++++++++----------
+>>>   1 file changed, 16 insertions(+), 10 deletions(-)
+>>>
+>>
+>> Ignore my previous question (I had a old version of xfstests).
+>> I was able to reproduce the error on XFS, ext4 and this patch fixes it.
+>>
+>> One small nit: should we update the IOMAP_DIO_FSBLOCK_ALIGNED flag
+>> documentation to reflect this?
+>>
+>> At the moment the document says "Ensure each bio is aligned to fs block
+>> size". Should we expand it to say "Ensure each bio and any progress
+>> reported for hole/unwritten extents is aligned to fs block size"?
+> 
+> I'll change it to something like "Ensure every operation, including bio and 
+> folio zeroing, is aligned to fs block size".
+>
+
+This is better.
+> Will be included in the next update.
+> 
+
+And for the b4 error, feel free to use:
+Reviewed-by: Pankaj Raghav(Samsung) <pankaj.raghav@linux.dev>
+
+--
+Pankaj
+
