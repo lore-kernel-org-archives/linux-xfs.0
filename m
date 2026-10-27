@@ -1,59 +1,120 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=212.227.17.20
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793096000;
-	b=l9VUHW7tcMr7vHmqlMLIQgFD3iS1K6S0939j00MndV6TVaF84HGvJTDI/BKgC/jrb7xv
-	 bcQ0bTisYEnqJL8xiF8BhVcV/hqATLtBHUC+qRHeGRZ9qhnxNsiNASJ1qSOOS4EagpbGS
-	 m3MtV1trVBc++Fe5a33jlBMZv7ESIsfN0Iqfv+e6aUS5pWuE1U7YRwspn+kTvqhejOuK5
-	 kc0bdllfa79bMlnDO7a1yekHSzFEoIWVr0FNsUTOrJvJl99Z2IyHj3fl+t6w5vwP4iSCl
-	 llQBHIFZn3qVm77N17Hlo6Mm0FxOvXEkj6TFqTKXUYJNw56gtZ6BAilZwY0ZXCD4zKw==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793096000;
-	h=DMARC-Filter:DKIM-Signature:X-UI-Sender-Class:Received:Message-ID:
-	 Date:MIME-Version:User-Agent:Subject:To:Cc:References:
-	 Content-Language:From:Autocrypt:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding:X-Provags-ID:X-Spam-Flag:UI-OutboundReport;
-	bh=ZY3Lb15TC7lf20dsgPrngPNdZZONinF1cOG09umg0uA=;
-	b=vDDMmYT+iHqKnGRV2wPtH6Gx5GG3MUnQ+9l6hT63ddV3xVbk+xsGOLAGdvHrrh8is6oW
-	 sWFKWBwZzOKIFj4YSfl+uu9ZR4bvLxkECEYhg1ix3jsklWiiIGh9Cah03Kq19L3BRmJQY
-	 rgAQLcdC/FbYo0PXwlGYq+lXl58jdXLttyo8bY5WsW2u9U1BCoYh8u1X/GrXS6wNW5dow
-	 yRarJL12uIAVYFXUdiBZUrOqb20e+fWiquvoUeTwcoJzOiSoBVn4UgcE8FKF7hhaHuNCN
-	 DhqaWIHvwL5iUvZni8TCRkxvEEdAHr17RheEUosmwyDCv0pEY4my5K84JzEVpNuuM8w==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmx.com;
-	spf=pass smtp.mailfrom=gmx.com;
-	dkim=pass header.d=gmx.com header.i=quwenruo.btrfs@gmx.com header.a=rsa-sha256 header.s=s31663417 header.b=B6FAn6G5;
-	arc=none smtp.remote-ip=212.227.17.20
-Received: from mout.gmx.net (mout.gmx.net [212.227.17.20])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=170.10.129.124
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793097616;
+	b=jyw7xxUENtYy8KZ/Ztq97q0lfnmijfzcAnyUyDF9qWsQ6H24qq5N6yoHfDgNoAxfdLAL
+	 OKtrCZnfJTekgjj7ijzVd8j1pcErSSUhtGm4uWA0hNuw5TfDBIf1iufZSLglfip7DXMft
+	 ohI8yZ5aqnvhp5uhQsARY0p0tJPae2dwlNJwU6RH6biZGg7VrZ2ctfZ6WjsmyLQshRv64
+	 pxDngDR9q6bZ2tgnOz50pWEFUZksoOremCwz0nJTMjLJp5u8DDwUnRvW+fLCEmTq0C02J
+	 fLn6r/jC8bzZGAI95kilkPSX+z+W6nMYBHj6Dh2H7mzukQh7F5kD0oda7H35oLeE3XQ==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793097616;
+	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
+	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 X-Received:MIME-Version:References:In-Reply-To:From:Date:
+	 X-Gm-Features:Message-ID:Subject:To:Cc:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=7OYbDDzUmC/dcU5eCCTLOKEwzBV+TagsGcae08wBOPY=;
+	b=AdF2H/k4yYrlMXkaPupN/yoX52JHGUvtPSbvZ7qEdWFMHXOvIEqcfwXaZ4z+wK6fG5Rd
+	 wAKaAQQbzyhYjNe32+95M70S3Lx5Hx0vcIbYU+sJPSFXga1x3DZFA5zhYThMswufgcKRD
+	 XSCO6dcBRdZ0rSimfFM8xd0ayJPCdVw26A6+kNtv2kyIY756aLbwe0smXtsZkAUXD0MkR
+	 LFkSrojKreRniTawR4kEXrxNCuvQG34qNzQBi1dEP6xrQrB5Gs+iFTWksL9s3cH9SFJVw
+	 s8A88ZDxaqoFfSNg1fb4KvqBz7fVVIixa7z8DvtcU+RsxHMYaq35JFGNvSeTwjvoPuA==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=redhat.com;
+	spf=pass smtp.mailfrom=redhat.com;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=T6ohI07B;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=rdaIlOvb;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=170.10.129.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 590C5606A31B;
-	Tue, 27 Oct 2026 10:13:18 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 590C5606A31B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmx.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDF38606A330
+	for <linux-xfs@vger.kernel.org>; Tue, 27 Oct 2026 10:40:15 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BDF38606A330
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmx.com header.i=quwenruo.btrfs@gmx.com header.a=rsa-sha256 header.s=s31663417 header.b=B6FAn6G5
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmx.com;
-	s=s31663417; t=1793095987; x=1793700787; i=quwenruo.btrfs@gmx.com;
-	bh=ZY3Lb15TC7lf20dsgPrngPNdZZONinF1cOG09umg0uA=;
-	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:Subject:To:Cc:
-	 References:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding:cc:content-transfer-encoding:
-	 content-type:date:from:message-id:mime-version:reply-to:subject:
-	 to;
-	b=B6FAn6G5hkSTmxQ8xGT5WwyXpNkZId07ws5k8LGHoUPs18lmlWyPA7teNq9tKf+3
-	 aUhfiiZW3EORmgtfzKW2NWqU0+XaX9caeGE+TNviDT5D2NTSPZoMgKIC10tf5GnLU
-	 DI9tXj8QAbAY3Oryas3cAVPtCP9RMIz+zuZ6eZ3TER/qDiqNocKshK+KeZzPnLEw1
-	 nEJT13kjYqhtu3NmH+UK/s3qaKa5N7gbN6yGnalkvlbU43QY3hEuRHLqO0UWiAfKB
-	 x9QlTvPB0ZN6hNzFitAFhTDpw8zLns2TQfyXMJ8KIE1o1sP6Er9OS8ZkRO20Wj8F4
-	 OpQKBylQsSqnMYf8ug==
-X-UI-Sender-Class: 724b4f7f-cbec-4199-ad4e-598c01a50d3a
-Received: from client.hidden.invalid by mail.gmx.net (mrgmx104
- [212.227.17.174]) with ESMTPSA (Nemesis) id 1MLi8m-1x3yni2KCO-00Yf9G; Tue, 27
- Oct 2026 11:13:07 +0100
-Message-ID: <04a7e656-567d-458c-99b0-e9aa5960bd99@gmx.com>
-Date: Tue, 27 Oct 2026 20:42:59 +1030
+	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=T6ohI07B;
+	dkim=pass (2048-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=rdaIlOvb
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1793097614;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=7OYbDDzUmC/dcU5eCCTLOKEwzBV+TagsGcae08wBOPY=;
+	b=T6ohI07Bq5uaX4aA4YhCJTwLjbQPW0XiwkFSwN0Muc3xcIqqnO8p3lNvbK9HrskiaXifSC
+	rOE9Zc0M1+Gly/UKhfZ4emQbjBDcdJWAVMZ0b1J4yRV5+1j+fJafdwZivYhSjZbO56NyvT
+	IU6ztlNCybAS9vp7KS5VepMaKKSJRC4=
+Received: from mail-oo1-f72.google.com (mail-oo1-f72.google.com
+ [209.85.161.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-231-O9OtvLn3NX6x8huqHqkGiA-1; Tue, 27 Oct 2026 06:40:13 -0400
+X-MC-Unique: O9OtvLn3NX6x8huqHqkGiA-1
+X-Mimecast-MFC-AGG-ID: O9OtvLn3NX6x8huqHqkGiA_1793097612
+Received: by mail-oo1-f72.google.com with SMTP id 006d021491bc7-7044b48537dso5005393eaf.2
+        for <linux-xfs@vger.kernel.org>; Tue, 27 Oct 2026 03:40:13 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1793097612; cv=none;
+        d=google.com; s=arc-20260327;
+        b=QSqebR8qPPLSzK+UogUOu+jF/oj6C1NShjr4kh/54k7V7D9/7wXmGT3euU7LyoDyqQ
+         Uy28ucx5/a9RDHDMq8VlhSe+djoacsDh6785xs6X53NsmtX+ZtVpslwL8wDk+iDxClof
+         JbePvsBBBVWNAsVCrl4Haxfrf5sGqHW+eBXKVKIegB2MV54gfL1eztPkNeaZBnrxv2L3
+         4Arq8SKG0j8O/rfhsDfj7tAscZ9TnsAwxgzZ0sQauIhjPY+Pv3dajwi7D94CBHb/JCFD
+         EdvtbOcBlZIy/chAvUgM8CmhCFABoek9XlnQgPSIwy1nX0fCxIqbez1R8PL3jeIxx2ga
+         obrA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=7OYbDDzUmC/dcU5eCCTLOKEwzBV+TagsGcae08wBOPY=;
+        fh=Ak7T838pPpHQlZSaTOmUC2idjJvV/3yGAeWOoBIwLm4=;
+        b=FSNPW2MLC6b+EGrNOn9s01N+hkQu00apP2b7f5X8i6qAADbVUFihBhZ+4SmyWk2Fmk
+         CzaJkNap4AvPVSCAJahZY3Fr/GExVyFHIx2258bRls9wQzk/pHFJbxtz4synenCGgIt/
+         QC6pNrtGwXU1dHJe8+ygCGBMN92BtXOzOtVEozpd0h3x+k8/6YXcw3iI+/+P/WNkwxFe
+         Glkhl/o+NU0cMOf64rPUFpkaL3vIGDsqMVwJccPbhrLqvTbUj2mg8gfDnDHIr/rDMKRk
+         6PFNq6/wCT7GuEGWVC81N9/wlFNhfi2C0Ol3RAuD5t9/xJ17LKhkHFPRrI+DGvmYvoV+
+         1TLg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1793097612; x=1793702412; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=7OYbDDzUmC/dcU5eCCTLOKEwzBV+TagsGcae08wBOPY=;
+        b=rdaIlOvb1bW+BBtDAaU2ztnVZrmM46iad4pdCwjIASfVstOHRCtQhe7CFW1BlHEE3O
+         F7dXa5FOtp34k+QO1GbusbiYDr7Dw05SaLO56u5T0dWXbGgW3boEEkDCIg8OIpCFb9k0
+         1C1QvT0NZsOU2FDNif7+msBkjbjsp3eU7CWZml0z5qS7orASs7sCsM+pC180uUE2uMnl
+         XuRr7I/GwgHRKXOSSTZ3Xb+5emkgIfKHrMpDneEAg7GFo+rQCbDiokYff7jIA22Pmf4+
+         pgyCGvKnHkb/sWoVF2H1wIcOtAMywRKG7GIwLrduUDtAkPtePCfZNh8H1oR2ugYF2p4/
+         UVPg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793097612; x=1793702412;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=7OYbDDzUmC/dcU5eCCTLOKEwzBV+TagsGcae08wBOPY=;
+        b=SR2U8/aACt20YlBSW8OaiLd/wqnlzVIhRp6nGxJjw5ezqiXmp4O8P+txIHvrjihCGq
+         UlRebZj59R7OYrJUCKXIAkizxPbeoUPtgc14Kk2Q3+uL/pbQoABy60VE0CQzDg+59B/Y
+         H2h2Ye7/E+EC2YR5dOWwSVABgEDLJFpKFU61jebxC0PAWJ/6OTGoty+ZfGFobDVYOoG0
+         0j3F+r5hs/CFLyBZxSvfhzHVAQz2WzWUOpd73gVwCf1YF32/P7MrWRpLAyiWNspOyqrF
+         m5gADe/oHKCx64b61EfHGSPAa5DcfeyLIcxKkrDeuwBoX3RNkrseiYiKVaEqC1dGXPDN
+         uSqQ==
+X-Forwarded-Encrypted: i=1; AKwUvBy5lkArRMONKDnZgsyklFAoSdHCUYI68wKrFWs9koykuPWmwJe7nrtiia78M1ZhbbU1J19mswgcmug=@vger.kernel.org
+X-Gm-Message-State: AFq9FYLGwuzgm/fStHGMNalHYwrOT0J4r9R1TBOAAhYqCAUhOxzhwNcW
+	2+TChdsI2pDtLGzxgD3Uw1YVwzC1cgvJhX9zINOejHYQvf+xAqGbOgcs4Eb9TgjshMBoThkjHcW
+	aSECkfosLuyTcQ2fiyCwIdnQeGbqKkApT1XorV/DdL0n0DaX4frukd7IatNXQLin64nf/NwkBKM
+	Y/j+nm8S0S8Kt3m3SxOhVqDukjlKC0DR/c1GIw
+X-Gm-Gg: AYBFou1xMkVhsgbshEQ8UAL4yatLgF1PC9W0IFXyMo6vno1NWifkQMb2qDUeFds+/hV
+	i42UJVak/RC86vCKMMf32QlgkpXJCrJzy2XMQUnkG1nKlYpXVVo7pht+g2bhB+2DyVvTcyygjYD
+	NShiSQ54xECvmijguyNd+E89R++UMF/yTVh5CREIDQeOA5M/+fGXlMQw==
+X-Received: by 2002:a05:6820:828:b0:70b:a287:72b5 with SMTP id 006d021491bc7-70ba287795bmr4283941eaf.20.1793097612228;
+        Tue, 27 Oct 2026 03:40:12 -0700 (PDT)
+X-Received: by 2002:a05:6820:828:b0:70b:a287:72b5 with SMTP id
+ 006d021491bc7-70ba287795bmr4283925eaf.20.1793097611786; Tue, 27 Oct 2026
+ 03:40:11 -0700 (PDT)
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -63,192 +124,296 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] iomap: only follow dio alignment requirement if specified
-To: Pankaj Raghav <pankaj.raghav@linux.dev>, Qu Wenruo <wqu@suse.com>
-Cc: linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, stable@vger.kernel.org, da.gomez@kernel.org,
- gost.dev@samsung.com
-References: <9fae60fcce5ae356deef5e38931124b9634dba3b.1792997261.git.wqu@suse.com>
- <at-p1QXETaTvvj_r@quentin> <5f49d819-12ec-48b2-b9b2-adce264d266d@gmx.com>
- <0046bdae-1dd1-4f4b-a1e5-9eb7fe8b5fe0@linux.dev>
-Content-Language: en-US
-From: Qu Wenruo <quwenruo.btrfs@gmx.com>
-Autocrypt: addr=quwenruo.btrfs@gmx.com; keydata=
- xsBNBFnVga8BCACyhFP3ExcTIuB73jDIBA/vSoYcTyysFQzPvez64TUSCv1SgXEByR7fju3o
- 8RfaWuHCnkkea5luuTZMqfgTXrun2dqNVYDNOV6RIVrc4YuG20yhC1epnV55fJCThqij0MRL
- 1NxPKXIlEdHvN0Kov3CtWA+R1iNN0RCeVun7rmOrrjBK573aWC5sgP7YsBOLK79H3tmUtz6b
- 9Imuj0ZyEsa76Xg9PX9Hn2myKj1hfWGS+5og9Va4hrwQC8ipjXik6NKR5GDV+hOZkktU81G5
- gkQtGB9jOAYRs86QG/b7PtIlbd3+pppT0gaS+wvwMs8cuNG+Pu6KO1oC4jgdseFLu7NpABEB
- AAHNIlF1IFdlbnJ1byA8cXV3ZW5ydW8uYnRyZnNAZ214LmNvbT7CwJQEEwEIAD4CGwMFCwkI
- BwIGFQgJCgsCBBYCAwECHgECF4AWIQQt33LlpaVbqJ2qQuHCPZHzoSX+qAUCat7o8gUJFKS8
- OQAKCRDCPZHzoSX+qAogB/9C5ErH7KGAGpcLPte3Wcfdt3acCkGAuMpCjqOt8BVw30mX0kmF
- SRo2nODjz8YsYhWR1T8L3ylANAS/IGIJ64idBmObaqGHQn845nXLIvG33LqMsAGXmOJdRgTT
- BnBA+QFCEIZpo7L9Qt1dOQdHSpHT31Ta1kKsbDm582KPVBl6KRcJJBnjudIerOA1/L/zEyDa
- YjIfHIcvuM3Xm8AS00iBpsmc151QgCPljqnSRXBiup9C1oMgVlaROhY1iDam4UIQB6glkHQs
- LZhUmFDNimX5LxfOzi2pFJSjJvPclRZVX7Sq6XhK/OFb6IvswN7i0nUYZMQfuGDNqGn70ic3
- AQImzsBNBFnVga8BCACqU+th4Esy/c8BnvliFAjAfpzhI1wH76FD1MJPmAhA3DnX5JDORcga
- CbPEwhLj1xlwTgpeT+QfDmGJ5B5BlrrQFZVE1fChEjiJvyiSAO4yQPkrPVYTI7Xj34FnscPj
- /IrRUUka68MlHxPtFnAHr25VIuOS41lmYKYNwPNLRz9Ik6DmeTG3WJO2BQRNvXA0pXrJH1fN
- GSsRb+pKEKHKtL1803x71zQxCwLh+zLP1iXHVM5j8gX9zqupigQR/Cel2XPS44zWcDW8r7B0
- q1eW4Jrv0x19p4P923voqn+joIAostyNTUjCeSrUdKth9jcdlam9X2DziA/DHDFfS5eq4fEv
- ABEBAAHCwHwEGAEIACYCGwwWIQQt33LlpaVbqJ2qQuHCPZHzoSX+qAUCat7pCgUJFMw7KQAK
- CRDCPZHzoSX+qEjbB/9crFFjips2NKxkt2XUutUIKjBoUlg/xCeFIj8PsTuJePhrV9HzgKsa
- rJgSqo3t78oQWmeaP9WPoDYjfhOkQXEs+G9UwHe/LENm70+Q1jrwY3nlcR3YrkDCJ+EvMZOW
- ackgcOYn46Iri9DN91FbSTszPMnwHi/nf0aeJXicO9krrY5C8mUxv4CSKeKSRg/5BR59uDiy
- 9CMRHDtIDnpDWaLOXtUeowCdiC5O/jA571PMFx3Aolc7g4SSyNbYodblCBOdJrh0CVm2LlQW
- 3SXrvFpSAw7LMVDgsS8pTRt4A11eTIS7mz0zqafTohXP1wt+575IBHK5ZpThQb+PzSQmxAqa
-In-Reply-To: <0046bdae-1dd1-4f4b-a1e5-9eb7fe8b5fe0@linux.dev>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+References: <20261016091628.295119-1-lherbolt@redhat.com> <atoO8FTTt97n5oXv@bfoster>
+In-Reply-To: <atoO8FTTt97n5oXv@bfoster>
+From: Lukas Herbolt <lherbolt@redhat.com>
+Date: Tue, 27 Oct 2026 11:39:34 +0100
+X-Gm-Features: AclHuK_m8lZbkotZuR9w7kW9eff4dLNdlzU6LcQDjKpyj2QbDPGB5jhyLJrf5vI
+Message-ID: <CAM4Jq_7g1iTimXtGcy91ruEjHHv2t+X2voWiqTdPUY4WEzD+4A@mail.gmail.com>
+Subject: Re: [PATCH 1/1] xfs: add test for ENOSR/ENOSPC on DIO into delalloc extents
+To: Brian Foster <bfoster@redhat.com>
+Cc: zlang@kernel.org, fstests@vger.kernel.org, hch@lst.de, 
+	linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:1eOfqXjYjrq60t2+FPlFz/dZy+ATRunIHO8UuM4/+o8uAAIPXi8
- 0RbueRBf8SRKdHsYDabo7GNqhsLU7UlGEdz+aNElr1ITvXLP/LW+7HjLu+IKVQb9JtI8gXy
- FGO9jvtXSruOeCE30NRVRV2a/IppBbyWIYg6rq57Rj7tNoZZeiIH90JUHuHZnpqAnO/ZCx/
- d0UM/z7EjdQyCMhDi8gUQ==
-X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:Vwx/LLOqOFo=;tnN7VlXOQ7r1EI+MKcdzlZFqP74
- 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
 
-
-
-=E5=9C=A8 2026/10/27 20:37, Pankaj Raghav =E5=86=99=E9=81=93:
->=20
->=20
-[...]
->>>> Cc: stable@vger.kernel.org
->=20
-> FYI, your patches are not in 7.3 and only in linux-next. So we don't=20
-> need to cc stable?
-
-Unfortunately, it's already upstreamed.
-
-The commit hash, 4025185cf953 ("iomap: follow the alignment requirement=20
-for iomap_dio_hole_iter()"), is already in the upstream.
-
-Thanks,
-Qu
-
->>>> Signed-off-by: Qu Wenruo <wqu@suse.com>
->>>> ---
->>>> =C2=A0 fs/iomap/direct-io.c | 26 ++++++++++++++++----------
->>>> =C2=A0 1 file changed, 16 insertions(+), 10 deletions(-)
->>>>
->>>
->>> Ignore my previous question (I had a old version of xfstests).
->>> I was able to reproduce the error on XFS, ext4 and this patch fixes it=
-.
->>>
->>> One small nit: should we update the IOMAP_DIO_FSBLOCK_ALIGNED flag
->>> documentation to reflect this?
->>>
->>> At the moment the document says "Ensure each bio is aligned to fs bloc=
+On Thu, Oct 22, 2026 at 3:26=E2=80=AFPM Brian Foster <bfoster@redhat.com> w=
+rote:
+>
+> On Fri, Oct 16, 2026 at 11:16:25AM +0200, Lukas Herbolt wrote:
+> >   Test if a DIO extending write into a speculative delalloc region on a
+> >   fragmented XFS filesystem does not trigger a dirty transaction cancel
+> >   (-ENOSR) or return a spurious -ENOSPC.
+> >
+> >   With allocsize=3D128MB, a buffered write creates a large delalloc ext=
+ent.
+> >   A subsequent DIO write at i_size lands in the speculative prealloc
+> >   region. On a fragmented filesystem, xfs_bmapi_write converts the
+> >   delalloc starting from offset 0 but the allocation is too short to
+> >   reach the DIO offset, causing either -ENOSR (dirty transaction cancel
+> >   and filesystem shutdown) or -ENOSPC (wrong error from xfs_bmapi_write=
+).
+> >
+> >   Assisted by LLM.
+> >
+> >   Fixed by kernel commits:
+> >     2a9b99d45be0 xfs: pass the actual offset and len to xfs_bmapi_alloc=
+ate
+> >     21255afdd729 xfs: do not allocate the entire delalloc extent
+> >     6773da870ab8 xfs: fix error returns from xfs_bmapi_write
+> >
+> > Co-developed-by: Eric Sandeen <sandeen@redhat.com>
+> > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> > Signed-off-by: Lukas Herbolt <lherbolt@redhat.com>
+> > ---
+> >  .gitignore                 |   2 +
+> >  src/Makefile               |   3 +-
+> >  src/buffer_direct_io.c     | 154 ++++++++++++++++++++++++++++++++
+> >  src/fragment_fs.c          | 101 +++++++++++++++++++++
+> >  src/mix_buffer_direct_io.c | 175 +++++++++++++++++++++++++++++++++++++
+> >  tests/xfs/842              |  63 +++++++++++++
+> >  tests/xfs/842.out          |   2 +
+> >  7 files changed, 499 insertions(+), 1 deletion(-)
+> >  create mode 100644 src/buffer_direct_io.c
+> >  create mode 100644 src/fragment_fs.c
+> >  create mode 100644 src/mix_buffer_direct_io.c
+> >  create mode 100755 tests/xfs/842
+> >  create mode 100644 tests/xfs/842.out
+> >
+> ...
+>
+> Just a few higher level comments..
+>
+> > diff --git a/src/buffer_direct_io.c b/src/buffer_direct_io.c
+> > new file mode 100644
+> > index 000000000000..01b19994a2e2
+> > --- /dev/null
+> > +++ b/src/buffer_direct_io.c
+> ...
+> > diff --git a/src/fragment_fs.c b/src/fragment_fs.c
+> > new file mode 100644
+> > index 000000000000..cee4edef73ff
+> > --- /dev/null
+> > +++ b/src/fragment_fs.c
+> > @@ -0,0 +1,101 @@
+> > +// SPDX-License-Identifier: GPL-2.0
+> > +/*
+> > + * Copyright (c) 2026 Eric Sandeen, Lukas Herbolt
+> > + */
+> > +
+> > +/*
+> > + * Fragment filesystem by creating fixed-size files and then deleting
+> > + * every n-th one.
+> > + *
+> > + * Usage:
+> > + *   fragment_fs <directory> <prefix> <file size> <delete every n-th f=
+ile>
+> > + */
+> > +
+> > +#include <stdio.h>
+> > +#include <stdlib.h>
+> > +#include <unistd.h>
+> > +#include <fcntl.h>
+> > +#include <errno.h>
+> > +#include <sys/statvfs.h>
+> > +
+> > +static int fragment_fs(const char *dir, const char *prefix,
+> > +                    off_t size, int delete_nth)
+> > +{
+> > +     char path[4096];
+> > +     int i, fd;
+> > +     int created =3D 0;
+> > +
+> > +     fprintf(stderr, "Fragmenting filesystem (filling to ENOSPC)...\n"=
+);
+> > +
+> > +     for (i =3D 0; ; i++) {
+> > +             snprintf(path, sizeof(path), "%s/%s_%06d", dir, prefix, i=
+);
+> > +             fd =3D open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+> > +             if (fd < 0) {
+> > +                     if (errno =3D=3D ENOSPC)
+> > +                             break;
+> > +                     perror("open frag file");
+> > +                     return -1;
+> > +             }
+> > +             if (fallocate(fd, 0, 0, size) < 0) {
+> > +                     close(fd);
+> > +                     unlink(path);
+> > +                     if (errno =3D=3D ENOSPC)
+> > +                             break;
+> > +                     perror("fallocate frag file");
+> > +                     return -1;
+> > +             }
+> > +             close(fd);
+> > +             created++;
+> > +     }
+> > +     fprintf(stderr, "Created %d files\n", created);
+> > +
+> > +     fprintf(stderr, "Deleting every %d-th file...\n", delete_nth);
+> > +     for (i =3D 0; i < created; i +=3D delete_nth) {
+> > +             snprintf(path, sizeof(path), "%s/%s_%06d", dir, prefix, i=
+);
+> > +             unlink(path);
+> > +     }
+> > +     sync();
+> > +
+> > +     {
+> > +             struct statvfs st;
+> > +             if (statvfs(dir, &st) =3D=3D 0) {
+> > +                     unsigned long free_mb =3D (st.f_bfree * st.f_bsiz=
+e)
+> > +                                             / (1024 * 1024);
+> > +                     fprintf(stderr,
+> > +                             "%d files remain, ~%lu MB free\n",
+> > +                             created - created / delete_nth, free_mb);
+> > +             }
+> > +     }
+> > +
+> > +     return 0;
+> > +}
+> > +
+>
+> Any chance we can reuse existing code in fstests for this sort of free
+> space fragmentation? For example, see the punch-alternating tool and/or
+> something like generic/186 (if useful, maybe that code can be lifted
+> into a common helper).
+>
+I used to xfs_io to fragment the fs but it tool much more time. I will chec=
 k
->>> size". Should we expand it to say "Ensure each bio and any progress
->>> reported for hole/unwritten extents is aligned to fs block size"?
->>
->> I'll change it to something like "Ensure every operation, including=20
->> bio and folio zeroing, is aligned to fs block size".
->>
->=20
-> This is better.
->> Will be included in the next update.
->>
->=20
-> And for the b4 error, feel free to use:
-> Reviewed-by: Pankaj Raghav(Samsung) <pankaj.raghav@linux.dev>
->=20
-> --=20
-> Pankaj
+how it's done in the g/186 and see if we can use common helper
+> ...
+> > diff --git a/src/mix_buffer_direct_io.c b/src/mix_buffer_direct_io.c
+> > new file mode 100644
+> > index 000000000000..0af227a7c9f0
+> > --- /dev/null
+> > +++ b/src/mix_buffer_direct_io.c
+> > diff --git a/tests/xfs/842 b/tests/xfs/842
+> ...
+>
+> It looks like we have two mix I/O helper programs here, where this one
+> appears unused..?
+Ugh, I was doing some rename and I missed that.
+>
+> Also both appear to have some minor whitespace damage in the form of
+> trailing spaces at the end of some lines, so it might be worth fixing
+> that up as well.
+>
+> > new file mode 100755
+> > index 000000000000..b2b2f7c493e7
+> > --- /dev/null
+> > +++ b/tests/xfs/842
+> > @@ -0,0 +1,63 @@
+> > +#! /bin/bash
+> > +# SPDX-License-Identifier: GPL-2.0
+> > +# Copyright (c) 2026 Lukas Herbolt.  All Rights Reserved.
+> > +#
+> > +# FS QA Test 842
+> > +#
+> > +# Regression test for XFS -ENOSR dirty transaction cancel during DIO
+> > +# write into a speculative delalloc region on a fragmented filesystem.
+> > +# With allocsize=3D128MB, a buffered write creates a large delalloc ex=
+tent.
+> > +# A subsequent DIO extending write at i_size triggers xfs_bmapi_write =
+to
+> > +# convert the delalloc from offset 0; on a fragmented FS the allocatio=
+n
+> > +# is too short to reach the DIO offset, returning -ENOSR and cancellin=
+g
+> > +# a dirty transaction, which shuts down the filesystem.
+> > +#
+> > +. ./common/preamble
+> > +_begin_fstest auto enospc
+> > +
+> > +_cleanup()
+> > +{
+> > +     cd /
+> > +     rm -r -f $tmp.*
+> > +}
+> > +
+> > +_require_test
+>
+> Looks like we don't use the test dev in this test.
+>
+> > +_require_scratch
+> > +_require_test_program "fragment_fs"
+> > +_require_test_program "buffer_direct_io"
+> > +
+> > +_scratch_mkfs_sized $((1<<30)) > "$seqres.full" 2>&1
+> > +_scratch_mount -o allocsize=3D131072k >> "$seqres.full" 2>&1
+> > +
+> > +src/fragment_fs $SCRATCH_MNT frag 4096 2 >> "$seqres.full" 2>&1
+> > +src/buffer_direct_io $SCRATCH_MNT >> "$seqres.full" 2>&1
+> > +RET=3D$?
+> > +
+> > +_dmesg_since_test_start | grep -q "detected at xfs_trans_cancel"
+> > +DMESG_CHECK=3D$?
+> > +
+> > +if [ $RET -eq 5 -a $DMESG_CHECK -eq 0 ]; then
+> > +     _fixed_by_kernel_commit 2a9b99d45be0 \
+> > +             "xfs: pass the actual offset and len to xfs_bmapi_allocat=
+e"
+> > +     _fixed_by_kernel_commit 21255afdd729 \
+> > +             "xfs: do not allocate the entire delalloc extent"
+> > +     _fail "ENOSR dirty transaction cancel detected (ret=3D$RET)"
+> > +
+> > +elif [ $RET -eq 28 ]; then
+> > +     _fixed_by_kernel_commit 2a9b99d45be0 \
+> > +             "xfs: pass the actual offset and len to xfs_bmapi_allocat=
+e"
+> > +     _fixed_by_kernel_commit 21255afdd729 \
+> > +             "xfs: do not allocate the entire delalloc extent"
+> > +     _fixed_by_kernel_commit 6773da870ab8 \
+> > +             "xfs: fix error returns from xfs_bmapi_write"
+> > +     _fail "ENOSPC returned from xfs_bmapi_write (ret=3D$RET)"
+> > +
+> > +elif [ $RET -eq 0 ]; then
+> > +     echo "Silence is golden"
+> > +else
+> > +     _fail "Unknown error: src/buffer_direct_io error code $RET"
+> > +fi
+>
+> A brief comment above this might be helpful. I'm also curious if it can
+> be simplified a little. For example, I'm not sure we need to explicitly
+> _fail when we can rely on golden output and/or the dmesg checking that
+> happens by default. Also it looks like the commit hints are duplicate
+> except for the -ENOSPC specific one. So perhaps we could do something
+> like the following?
+>
+> echo "Silence is golden"
+>
+> # words about the error codes, i.e. EIO vs ENOSPC?
+> if [ $RET -neq 0 ]; then
+>         _fixed_by_kernel_commit <X>
+>         _fixed_by_kernel_commit <Y>
+>         [ $RET -eq 28 ] && _fixed_by_kernel_commit <Z>
+>         echo "... error code $RET"
+> fi
+>
+> Brian
+>
+> > +
+> > +# success, all done
+> > +status=3D0
+> > +exit
+> > diff --git a/tests/xfs/842.out b/tests/xfs/842.out
+> > new file mode 100644
+> > index 000000000000..643d05289a33
+> > --- /dev/null
+> > +++ b/tests/xfs/842.out
+> > @@ -0,0 +1,2 @@
+> > +QA output created by 842
+> > +Silence is golden
+> > --
+> > 2.56.0
+> >
+> >
+>
+
+Thanks
+
+--
+Lukas Herbolt
+SSME
+Red Hat
 
