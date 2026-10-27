@@ -1,58 +1,60 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.137.202.133
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793115845;
-	b=uadCDllns29LiAKEHpcaC0J6xQiQuR00xgwQ57xb7wmbXZS2IheTZJsN/p3W+llZ5mEB
-	 xkM4bX+GKEDJcAOnubjFn6jr9dQBQ09TFTtmdh1AON8cBSKl06SNeFlu23IhKeaz0zVtQ
-	 +2BfQLn8k7gVwmpVe7wAPHskEJE/pBlsIF6V3U43kBIwTTPWZ5B4CplHLLa2TZWJdikEj
-	 SEJBL4mt793iZ9ET+dz3xTuvC5izD34KBRfTi0DKnYvKJvCZ3M5lWYLoNdpzPrHxiivOw
-	 0Dgfr6lMDjvJz8ZGPo1s91BB/ojIwS3hnV7SQHc0EDorgwleuyCoRBTeTxp42uLDSLw==
+	t=1793115877;
+	b=waz0VWY43gpv4BrZu8M+x++T+Q70YqMdD6kliXR3MpgEeJlCeWJIhx3y8k2FRnJ3VAwK
+	 qCHYRSp9bD1eO5ynMmz68B2/eev0moaPIdBsnucmulDQYoWTHcKIEPousbQm6IMK0b6px
+	 di0lLooVVx5w7kv5wYQWl3aVwzTsyYWMh/YeQ179JsP/BH8Q6Kgp2US1TnNDhzQiEDdP0
+	 l9LiSnMfLgAJ/daw4jy/oHh/63o0pKs2K58EgIwEe0kY87xEc9RYEd48h+8TpTUSot9D1
+	 e5ZZik6bX0y2coKG9zcn+SXOcvcijyD5SpszDo5mTF/iSjat3iuRg6e97Y8H3/zlSEw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793115845;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793115877;
 	h=DMARC-Filter:DKIM-Signature:Received:Date:From:To:Cc:Subject:
 	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
 	 In-Reply-To:X-SRS-Rewrite;
 	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
-	b=r6NvXfTmHLLs7SbJNLllPk6BEnFoi7Z/GGWKbJAxbcuop5c4ZE/yq6jXVWQtDnvrFlZ2
-	 QryjM7HRscuE6M83BjH3/MUyYZ6jGmnjlkpWit9c2/sMjUYvlLsu+EQbZZfbK9HnsR5sI
-	 d91FxLQYWgGqn/gYGTG2hpFxsG9GIbdyuiqMldyiLgd/ahmRofxndNy1BxngkYyJhXQAN
-	 5Gnkha3rIw/yFs4bdMJBddMC1Bx1kFd7qrW5NjyvZ1uodbyIDcCBieKG9uBhW1dqaCvZd
-	 42iF93GVF0p8OFuRcp/OwTEgUIRhS5MtT9aeshdnOCy54xNgCz7iGbsiVwBgu7W5wxQ==
+	b=4L+BjMr5xEroooA1nxT/cjtIFRwO412iU1NmnMGoeMcS/DRqkAQNk1g4NVFlmoYDw1Pc
+	 raK8JBerCJM8NTBbZhDr1yYaAAiccpY5YGQB/e23UjXbPIzIxCZNM/0v7xCjeSYQRrzHx
+	 dIoc9fZLe1D8CKkH5PRKHZvtk0rgBKXm4m9VENqOauBO2UQ6Nt25XnKXXL++tj+ep2Clr
+	 iTpozjefZSgbqLlQNAzdXoUxYGNuMCMP41PEwrgGazJd36ayjUKrx8ldQNUEbEFz/UCzv
+	 Q8AFchOENia/G8QlWIuF8aTNmozxQsfkT+A4l8xsy1U8Z/l1XD+hDX3/Ed+Py/EV38A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=infradead.org;
 	spf=none smtp.mailfrom=bombadil.srs.infradead.org;
-	dkim=pass header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=UcOx+sHO;
+	dkim=pass header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=nNZjPWR3;
 	arc=none smtp.remote-ip=198.137.202.133
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B660D606A31A
-	for <linux-xfs@vger.kernel.org>; Tue, 27 Oct 2026 15:44:04 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B660D606A31A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD48060A3827;
+	Tue, 27 Oct 2026 15:44:36 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DD48060A3827
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=UcOx+sHO
+	dkim=pass (2048-bit key, unprotected) header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=nNZjPWR3
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=UcOx+sHObNtFMCaKO7Upzkal/i
-	GAu4Dr5PzRnEh8bBAcwO1++LDSc7BHkhhgQ8vsO5iVSnRJk+4sP7Ej9OsTSjaDTkJQCSJA2dbyfwW
-	jTptXrEQq+wD1tFG1jot93oeQqvQ2G8semzkTI13zTxwZmqn9L+QaImezOgPln2V/wEeIVKBujIbU
-	9lfjX9c1K/IXqVPYM3BQFZJkL+ENGa5uNmLAIpCILolM16v6/cmwYTJwwVwNzfSiKw9qbksOkscUd
-	1PvijMvJ9/KAHda/LtLcBmuTGG+ftI1FbQCKtGAa6If/wchG+Y6+VxCC9vfzU/fE+anKTSTW0E7wJ
-	Ju4ysnew==;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=nNZjPWR3HfdR6gBeyQjFZsC0uL
+	cwqQP1RpHraqUCTu8vhqyFiaTqryjmCbFWXoePCGIw/n6Dig2NjfvbF4q83wrBZrkgtto+xk9Wtd+
+	pCSJP5iZUneI1PpqYiQwYp6AxeBB1orR9ItOmkm92NVGLMijYS7ql5WntIKAjpx/32FQjs7o5x0Ya
+	Aaci1gCoMMDdrKhrjaiy+dCkqeEtU/eULkwrTwozokO5PhvMSfzrHVdOf4mxfG1dpCrJmzlx4oCzY
+	hDv/cOCudUuQ3JKHQo5DNoRI1OMVsU1Epd7lpFFg3TcH/RyT/gtV42S/ZlE2tAZzgaODWWGSrHGHf
+	Jn2x6kAQ==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.100.1 #2 (Red Hat Linux))
-	id 1xLjLI-00000005GA5-1tPA;
-	Tue, 27 Oct 2026 15:44:04 +0000
-Date: Tue, 27 Oct 2026 08:44:04 -0700
+	id 1xLjLo-00000005GDB-1sjc;
+	Tue, 27 Oct 2026 15:44:36 +0000
+Date: Tue, 27 Oct 2026 08:44:36 -0700
 From: Christoph Hellwig <hch@infradead.org>
-To: Andrey Albershteyn <aalbersh@kernel.org>
-Cc: linux-xfs@vger.kernel.org, Pavel Reichl <preichl@redhat.com>
-Subject: Re: [PATCH] libxfs: remove stale xfs_trans_mod_sb() declaration
-Message-ID: <auDGxNmO_XK3H0BA@infradead.org>
-References: <20261021085921.56883-2-aalbersh@kernel.org>
+To: Ravi Singh <ravising@redhat.com>
+Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Dave Chinner <dgc@kernel.org>
+Subject: Re: [PATCH] xfs: mark i_mode=0 and shut down on attr fork
+ inactivation failure
+Message-ID: <auDG5Dy2vVQgYeEE@infradead.org>
+References: <20261021063329.2853484-1-ravising@redhat.com>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -64,7 +66,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261021085921.56883-2-aalbersh@kernel.org>
+In-Reply-To: <20261021063329.2853484-1-ravising@redhat.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
 Looks good:
