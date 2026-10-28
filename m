@@ -1,71 +1,66 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=45.79.88.28
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793227426;
-	b=C/mnrFr1/UnQwyMrd0OVrypcZVWsuMggSYaMGP+EGc5AZLVVnRFp3/0D/7Nh7x33ZKx0
-	 vzndEBHvKyb4tWh8PMZ3eslLK1V6P3ROgtakfEiCdH6xFDEo/he8l9OfZEkK6YdxNtMRT
-	 3qbxyWMLN/rHojZIpwR6io1/MHE/5WIGrQ0UkNi8rwLwYZYLoYVvrIE6YSOxzLRFkpMjz
-	 t+O1QFJWxJ+2NzjWpglSORaGYUgxznPClt/+F7gDI8It1euqO9sg5PZPsMv+Z95PI6udw
-	 oAukTUXeMPyl0iULeU7yEBG75SroDfPpeslCvC9iX7AOEDKrnroM5hFjKa5m0ktliEQ==
+	t=1793227802;
+	b=5GOwE+wpB34Mnco47Ex1sJKP5w2QpDBN6X7/qrachmjgjiGp23t2dNYaA852uWW8koW+
+	 VRyWJ9kbs+6bqs+N2G4GZpq5O8p1fPblr27H5io8xc0UlRfJ6dsFw7ob6Px/e2Xf5XIQd
+	 PQgCYAvkCWmlUX9+UFoAqeXI+2yAKY0aQ9GvtVTiDoD2zrjcVoDs+3hPYBlDd/XOAmqvU
+	 cJEoRnHeqUSCKb0tAxI8QOuDtVlTvFmFC6b8Rwnfo8NMAsjmmLAWyOpwhLowq6CeR275h
+	 SmCz/O5vad+qbLeAXoaLajG9H6ddnmtky1eJIf1jl6cGoMV2ZZbFllxiwQ+WcX7sdew==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793227426;
-	h=DMARC-Filter:DKIM-Filter:DKIM-Signature:Received:From:To:Cc:Subject:
-	 In-Reply-To:References:Date:Message-ID:MIME-Version:Content-Type;
-	bh=j7f5LaVF7LK/0yFyUEEAwY1tZa6hpbG308Dw7fIa7rU=;
-	b=GG5b3skJlQ05Z0ruUMlK8d+lVpRg81xkKi9xBY8p9JbP+boCTS53hjZMXh9574vd2IYd
-	 ROXOqY//vIE73eCVBWZi4sEPI0G4Mrzoa5Ftss5m62kssEp88rQBROuMsrKUv29yn/4do
-	 R4e1+8remhckPbzqK+16EkZQqQBG38xqrnvSTnfS+4OU5fr6mjnMQcShWiwd1PrW9ZKTb
-	 iV4WLLe8MILPAF3gV3PMjGbxIx2/1krePcbyIMgm/m5YN9Ak8LgIayjdtX+arrMQYTMxk
-	 M9I5XivUbQgnh7rSzrK04TasfA9s0TkQf83SbuJ5/F54D1sfkbJPqnkw4dshmTvtTfQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793227802;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=BmDoHj1MHvhUgXHU+vuqR0K+Yg8Yy1nujE/6Kcj5G6o=;
+	b=fJ+YblrVhOzh+00V7Vs9ontWP4+0QzvWVRNLV3Gza++v+beBZFV4ahsuxKu5vwJQl+z8
+	 Mgy08GvfN6xiXBtVIYZu52t6HqjtjWSDy1qvag5j7fhDxY0J/f2oP0EUBjif5b57ectil
+	 nbjLn3D/SATUGPvhsKtcUv2CGQjiQ405u8pT2QusQZWDBNkzm5VRwcU+FzhVJ9wGcsNTE
+	 o48mFjcVn6gKLV8j0chzpBVFNGG4ot6EF28nknAWFHn4CQ+wJ8BQQZJmGavGtUjtVYF3m
+	 141L1+9rBlXRPMPA6kf4vhwxf6QfeXYQ4ctV3UW9+KYVi3/pVlBrXX0IycNKftZWZmg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=lwn.net;
-	spf=pass smtp.mailfrom=lwn.net;
-	dkim=pass header.d=lwn.net header.i=@lwn.net header.a=rsa-sha256 header.s=20201203 header.b=Ay00vNkW;
-	arc=none smtp.remote-ip=45.79.88.28
-Received: from ms.lwn.net (ms.lwn.net [45.79.88.28])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=g1saRV9X;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77F55606A31D;
-	Wed, 28 Oct 2026 22:43:45 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 77F55606A31D
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lwn.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lwn.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CAE3606A31D;
+	Wed, 28 Oct 2026 22:50:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=lwn.net header.i=@lwn.net header.a=rsa-sha256 header.s=20201203 header.b=Ay00vNkW
-DKIM-Filter: OpenDKIM Filter v2.11.0 ms.lwn.net 7796F40917
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=lwn.net; s=20201203;
-	t=1793227418; bh=j7f5LaVF7LK/0yFyUEEAwY1tZa6hpbG308Dw7fIa7rU=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-	b=Ay00vNkWXKz/a3v3C1SmUHLS84UNrjr4dRFLPEW3FqSxgzSVfZeLjC304WIpKE+Z5
-	 89/gK5bA2fv5Gz0y2UNlEQyIIZCdSSdAHbUkMJYINODdA/K1n/ECaIDInGCKcYJsQm
-	 O8BqhYWmUXSilPiFwryHObnT8gJmbibI9NOUH3wVIMHtYAMIjYw93piYHin6l9XMBJ
-	 LMAKyA7hhagBl9uEJghH/ERSQ67ywfxJ7C6U9/k4HhuNDCrdAtr5olDleUYAB/rMmB
-	 bA14CqPnxfZ5BXQGKg1JWjdTssLlG7GBKJY9AFshXjHxmZWYoyUwOZgtDDO18I8qpo
-	 PChgw6IN07bWg==
-Received: from localhost (mdns.lwn.net [45.79.72.68])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
-	(No client certificate requested)
-	by ms.lwn.net (Postfix) with ESMTPSA id 7796F40917;
-	Wed, 28 Oct 2026 22:43:38 +0000 (UTC)
-From: Jonathan Corbet <corbet@lwn.net>
-To: Dave Chinner <dgc@kernel.org>, Henry Martin <bsdhenrymartin@gmail.com>
-Cc: Carlos Maiolino <cem@kernel.org>, Andrew Morton
- <akpm@linux-foundation.org>, "Darrick J . Wong" <djwong@kernel.org>, Alex
- Deucher <alexander.deucher@amd.com>, David Hildenbrand <david@kernel.org>,
- Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>, Kairui Song
- <kasong@tencent.com>, Myeonghun Pak <mhun512@gmail.com>, Rafal Ostrowski
- <rafal.ostrowski@amd.com>, Likun Gao <Likun.Gao@amd.com>, James Clark
- <james.clark@linaro.org>, Anshuman Khandual <anshuman.khandual@arm.com>,
- Kevin Brodsky <kevin.brodsky@arm.com>, linux-xfs@vger.kernel.org,
- linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH] xfs: fix out-of-bounds write from crafted btree root
- numrecs during log recovery
-In-Reply-To: <auJ2jgIIh8e_JJwn@dread>
-References: <20261027151703.973392-1-bsdhenrymartin@gmail.com>
- <auJ2jgIIh8e_JJwn@dread>
-Date: Wed, 28 Oct 2026 16:43:37 -0600
-Message-ID: <87cxsto38m.fsf@trenco.lwn.net>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=g1saRV9X
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 888C51F01828;
+	Wed, 28 Oct 2026 22:49:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793227801;
+	bh=BmDoHj1MHvhUgXHU+vuqR0K+Yg8Yy1nujE/6Kcj5G6o=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=g1saRV9X7QPtVna/jYxkbnibt2GJ+fCet0oodd5v1JZ7xwjfCA2odV+hgJnH8Y0bN
+	 yU96xzJP6yGLyBxz78/F7uCk6eEn5KF8xVCnFWZJ+rWMONBA5bnBWwVDKQcYBHZ2W7
+	 CLkeL9qB2hsPQf/O4OlYdNZ5io4gsvMM6iyQwqVS/g9aD+DNIIGuP4+Y5Sfl72+h9l
+	 aPtDUTDyIjdk0mzIn1lzgnsinVmXWX1gwdF58k4k/Rc49mgeldejjqDIEMwPbBFEOu
+	 IIFP3vSfVCTpn9VCmFelDdu1o3ubdc3DGfyC5LlGWoxg0M98y4T17kgkUfg/79L6+I
+	 3jEbpTNKHFpnA==
+Date: Thu, 29 Oct 2026 09:49:50 +1100
+From: Dave Chinner <dgc@kernel.org>
+To: Henry Martin <bsdhenrymartin@gmail.com>
+Cc: Carlos Maiolino <cem@kernel.org>,
+	"Darrick J . Wong" <djwong@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Alex Deucher <alexander.deucher@amd.com>,
+	David Hildenbrand <david@kernel.org>,
+	Kairui Song <kasong@tencent.com>,
+	James Clark <james.clark@linaro.org>,
+	Long Li <leo.lilong@huawei.com>,
+	Kevin Brodsky <kevin.brodsky@arm.com>,
+	Javier Tia <javier@peridio.com>, SJ Park <sj@kernel.org>,
+	Rafal Ostrowski <rafal.ostrowski@amd.com>,
+	Myeonghun Pak <mhun512@gmail.com>, Likun Gao <Likun.Gao@amd.com>,
+	hongao <hongao@uniontech.com>, Kees Cook <kees+treewide@kernel.org>,
+	Cihan Karadag <cihan.cihan@gmail.com>, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH] xfs: fix out-of-bounds da node read with a crafted
+ record count
+Message-ID: <auJ8Dv304AnzETMy@dread>
+References: <20261027151754.975492-1-bsdhenrymartin@gmail.com>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -75,18 +70,92 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261027151754.975492-1-bsdhenrymartin@gmail.com>
 
-Dave Chinner <dgc@kernel.org> writes:
+On Tue, Oct 27, 2026 at 11:17:54PM +0800, Henry Martin wrote:
+> xfs_da3_node_verify() bounds the on-disk record count with:
+> 
+> 	/* we don't know if the node is for and attribute or directory
+> 	 * tree, so only fail if the count is outside both bounds
+> 	 */
+> 	if (ichdr.count > mp->m_dir_geo->node_ents &&
+> 	    ichdr.count > mp->m_attr_geo->node_ents)
+> 		return __this_address;
+> 
+> The "fail only outside both bounds" conjunction is forced weak
+> because the verify pass cannot tell directory from attribute nodes.
+> On filesystems with a multi-fsb directory block size (mkfs.xfs -n
+> size=64k, sb_dirblklog > 0), m_dir_geo->node_ents is much larger than
+> m_attr_geo->node_ents (~8184 vs ~504 for 64k/4k), so an attribute
+> tree node with a count in (attr_ents, dir_ents] passes verification.
+> Consumers then index the in-block btree array with that count and
+> read out of bounds:
+> 
+>   xfs_da3_node_lookup_int()   btree[max - 1].hashval  (max = count)
+>   xfs_da3_path_shift()        btree[nodehdr.count - 1].hashval / .before
+> 
+> with count=8184 the read lands ~61KB past the 4K buffer, and the
+> out-of-bounds "before" value is then used as a child block number.
+> The read path is reachable by an unprivileged user via
+> getxattr/listxattr once the malicious image is mounted.
+> 
+> Tightening the verify conjunction would falsely reject legitimate
+> large directory nodes whose counts live in the same interval, so
+> enforce the per-fork bound instead where the geometry is known: at
+> the two consumers that index the array with the on-disk count.
+> 
+> This issue was discovered by Tencent CodeBuddy Security.
 
-> Unless you know how to fix the discovered problem correctly, don't
-> send what your LLM proposed for review. It will be garbage, and all
-> that will do is annoy whoever has to review it. Just report the bug,
-> let the subsystem developers fix it.
+No, it's pretty obvious that we knew about it a long, long time ago.
+The bounds check we currently have catches gross corruptions, and
+for the types of corruption we see in the real world (i.e. media
+errors trashing entire sectors) this has been sufficient to avoid
+issues. Hence there's been no priority/urgency to fix stuff like
+this, because malicious images are not a threat model we are able to
+defend against.
 
-Just to be obnoxious...this runs counter to the advice we have in
-Documentation/process/security-bugs.rst, where reporters are requested
-to include a proposed fix as well.  It seems we're sending a bit of a
-mixed message...
+> Fixes: f5ea110044fa ("xfs: add CRCs to dir2/da node blocks")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Henry Martin <bsdhenrymartin@gmail.com>
+> ---
+>  fs/xfs/libxfs/xfs_da_btree.c | 16 ++++++++++++++++
+>  1 file changed, 16 insertions(+)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+> index 3d02a0d7ba44a..ab3deff11111e 100644
+> --- a/fs/xfs/libxfs/xfs_da_btree.c
+> +++ b/fs/xfs/libxfs/xfs_da_btree.c
+> @@ -1787,6 +1787,18 @@ xfs_da3_node_lookup_int(
+>  		} else
+>  			expected_level--;
+>  
+> +		/* The verify pass cannot tell directory from attribute
+> +		 * nodes, so its count bound has to allow both geometries.
+> +		 * Here we know the fork; enforce its geometry so crafted
+> +		 * counts cannot make the array indexing run out of the
+> +		 * block.
+> +		 */
+> +		if (nodehdr.count > args->geo->node_ents) {
+> +			xfs_buf_mark_corrupt(blk->bp);
+> +			xfs_da_mark_sick(args);
+> +			return -EFSCORRUPTED;
+> +		}
 
-jon
+Again, look at the code. The node header is verified a few lines
+above via xfs_da3_node_header_check(). We know that the read
+verifier cannot verify everything in IO context, so we have checks
+that are always done immediately after the buffer has been read
+before we start using the node header.
+
+If the new check is added there, then no other code needs to be
+touched. i.e. every place we first read a da-node can be correctly
+bounds checked because args->geo is available at all those call
+sites...
+
+-Dave.
+
+-- 
+Dave Chinner
+dgc@kernel.org
