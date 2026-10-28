@@ -1,21 +1,21 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=213.95.11.211
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793203930;
-	b=Bvq9xv2ZtWMeF5h9rgcLeZ5hA5Kcs1f1+/dKq8uMgP+Hde8defysqUQV0AI5qENBYQmU
-	 lZvgsi+8rCBmWAtya3OdFytXPOTx3CbSfE9b8v8WyACwRbwAswzqnWAozwqj46ZUdoCJY
-	 yUCU9ujy7xZmLeycEbIbZW21YTmN0RsO3KdPVayfcc2a0vGL/NU0/WQ1ncDaGJwbcyMqj
-	 8gQtxpEVWXPfOU7hrQlexHfeyZLtvkMb4zZHhE2X4jBGsufojLCmCqo+klX6SU0gpCQP+
-	 AfDvI4DMcXWYogdnLjOdlUp/EP+U06nHUZfvJ0cDSDn/ki3kpXb0w1UN/rjnb5LG0Dw==
+	t=1793204002;
+	b=em6Hni9asYYWamgXMbthfA2Vv8DWW35uQ3eMNqD1XpHFALaNalHGrHhPtfOtfKDknvtc
+	 kwW0Kk+qdSvQzVh09ugcEI4U9RySfaD+qZ3GO5AIWGRJFct/JjZr4SNiKcQU1C3kFO/qW
+	 WdPHK5NcBIFoucBJKG3XZeOy24SLByCVSAVi8TOtIE1agCWpdYyL/1YegSLFf1VrsU2ls
+	 QkcJT9uEFQCrygojYa/8uvjDK1IqagJailcdDG3WR5MTuaOa48D88HsRlc1D9E9T2pAeQ
+	 LKGEhvpaoZo7O8iCiTpqbd5dEwOTFhdRwiregD0YZ2+G42A/9IiYZe+a4Pn7/7cppjw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793203930;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793204002;
 	h=DMARC-Filter:Received:Date:From:To:Cc:Subject:Message-ID:References:
 	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To:User-Agent;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
-	b=GNb429SxdXpm4caVuhSn94pFiZc0SV5Ewq2RLfxSttEZ2JF3E3JQDxl2c7YSfmEf/hix
-	 v6VXnEVMkS23q52FjhrzPzcBTa6aHTKpksN8U2haK7288C64AHUm5o0dpy+QObThABY08
-	 dMzJYDiFJ6v+q9FgQoQve0WkuqsRNGw2scR/B7pBN3M0k0kuDNkGfZvzHXWEhIHX0sWVm
-	 QCa4FPchS9S9sR9jIBl/t4RI26wYTLvaKE8B1YkKrOaDSuLfR76C5AHbUXd+lbkzP8n2c
-	 8HBJh9j3oI0JLW21NWlZAy7wkmkEsIlFqy79DOEY13dpDRm9gfOlEZSUXVXx88w9r3g==
+	bh=+U9vQAqOD+d9gs99Jw3uJHoXyUBM0l0cltyCq9fNPzg=;
+	b=dPNNHL8iqTDgnAC4yUQLfyTsuHbxMO8H1PjkTGK09ADLrV0iIkFqMv97HqoKGIK8ex9o
+	 eO7U1+Ioextyo+6kw8Wpc+cW7NwpZRgHKWLRFmROXaoar1OmGURzkiTQmwJpmXzhmRnn2
+	 tzL5wOJnys7wUKxYx1cYsEQqcgQF/FGfJvPTGJ07HQbq4CDJjb+hRoOKbVQOrUWK6Mzxo
+	 b+FbcR0tcORgVw0HL6eDunE6n6qvDaUMATikiUw9abGqzmuMuiTDyMHmigtBTfv85AwUa
+	 ZOgimw+FrGWIibJgY3jOUNz/ABESBvZ5sdgE9qP1T34oGFc4NHdmFTBqr5gcCAOlxlw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=lst.de;
 	spf=pass smtp.mailfrom=lst.de;
@@ -23,28 +23,29 @@ ARC-Authentication-Results: i=1; smtp.subspace.kernel.org;
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0BA49606A31A;
-	Wed, 28 Oct 2026 16:12:09 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0BA49606A31A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB8F6606A31E;
+	Wed, 28 Oct 2026 16:13:21 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BB8F6606A31E
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id B0FEF68AFE; Wed, 28 Oct 2026 17:12:06 +0100 (CET)
-Date: Wed, 28 Oct 2026 17:12:06 +0100
+	id 0AD6C68AFE; Wed, 28 Oct 2026 17:13:18 +0100 (CET)
+Date: Wed, 28 Oct 2026 17:13:17 +0100
 From: Christoph Hellwig <hch@lst.de>
-To: daejun7.park@samsung.com
-Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org,
+To: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>
+Cc: Daejun Park <daejun7.park@samsung.com>,
+	Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org,
 	Christoph Hellwig <hch@lst.de>,
 	"Darrick J. Wong" <djwong@kernel.org>,
 	Dave Chinner <dgc@kernel.org>, Chuck Lever <cel@kernel.org>,
 	Jeff Layton <jlayton@kernel.org>, Dai Ngo <Dai.Ngo@oracle.com>,
 	Sergey Bashirov <sergeybashirov@gmail.com>,
 	Andrey Albershteyn <aalbersh@kernel.org>, linux-nfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4 8/9] xfs: add datasync and log_flushed arguments to
- xfs_log_force_inode()
-Message-ID: <20261028161206.GB20998@lst.de>
-References: <20261020-xfs-pnfs-batch-v4-0-9230fa2ca4a4@samsung.com> <20261020-xfs-pnfs-batch-v4-8-9230fa2ca4a4@samsung.com>
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH v4 5/9] xfs: limit the count of a pNFS write allocation
+ to one extent
+Message-ID: <20261028161317.GC20998@lst.de>
+References: <20261020-xfs-pnfs-batch-v4-0-9230fa2ca4a4@samsung.com> <20261020-xfs-pnfs-batch-v4-5-9230fa2ca4a4@samsung.com> <atoImJxtg70XcIjS@quentin>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -56,10 +57,21 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261020-xfs-pnfs-batch-v4-8-9230fa2ca4a4@samsung.com>
+In-Reply-To: <atoImJxtg70XcIjS@quentin>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-Looks good:
+On Thu, Oct 22, 2026 at 03:02:30PM +0200, Pankaj Raghav (Samsung) wrote:
+> > +		/*
+> > +		 * xfs_bmapi_write() maps at most XFS_MAX_BMBT_EXTLEN blocks
+> > +		 * in one mapping, so don't reserve blocks for more. The
+> > +		 * range comes from a client, and its block count may not
+> > +		 * even fit the 32-bit reservation. The rest of the range
+> > +		 * is mapped by a later call.
+> > +		 */
+> > +		end_fsb = min(end_fsb, offset_fsb + XFS_MAX_BMBT_EXTLEN);
+> 
+> Isn't it better we add this in xfs_direct_write_iomap_begin() instead of
+> adding it in pnfs?
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-
+Yes, that's what I tried to suggest in the last round.
+> 
