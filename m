@@ -1,121 +1,63 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=170.10.133.124
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793225391;
-	b=zmW7iXsG4CQcfGKqOGPpytHoOmnORFIlm3LGTGGd652XwmT4igeQMFV7BbM7ddFt5I3l
-	 i0m3I3IClrFU3mMOma4g50UAmHPuJewFwzW35d2GcYvKbJvzj2kmYwvHvGTVO/Q9C4dFq
-	 gYzWZdDqlt2bM6IfqEGJN7bI5T8m3xrOYPU5d8NZSSXbqKSJGDZgzHmRqic7i7x7OgYLt
-	 SgLyjfQGOBZEnI/SRj8qPPKYol7om0U7tIXvQr/7aqTWAEDOuDZumEjpqkkDJVxh03+ou
-	 Ao7Ug+jehnxdWztUWcBxQTzO3AUArg+Oh4PULTM9pDny0FWpfTuRLTYcQld+dSlSe+w==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793225391;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 X-Received:MIME-Version:References:In-Reply-To:From:Date:
-	 X-Gm-Features:Message-ID:Subject:To:Cc:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=j5xHrk121VJ6jsiOiBImMpaem11Ex15L22vqkzMRx+Y=;
-	b=ho0nHoYegAjimZ4GblTsHMKqeU4ocNRLpi7zBTge+aFPHRh4jfyc3eHT2gtcLhQamRLE
-	 5LJaARMgYTj83xIeY7eQxrvP2blBNnMFNxV7ID3gjcut/m0Q7TKn4bVAgrnp4+F8aW3nC
-	 E4K/iViATq+3rwNs1t/sb1MQVK1onWgbYO5yDU7tc3LaB91IENhMVZb+8qg0Jf46AyvW8
-	 l2ZPBqxSw+dZ6MEAQ9g7wfmdxPlVMqBZeT9cegdo2SRP/ToKeWDIzq6EQbzRU5n6t4IWi
-	 Ty+fKK+cIo48SAFy5rpFUSKaJH2Rv+HX0g2FQvChW3I5gOgZFNVdzTFU2fggfIionlw==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=PNja0RrK;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=dMvVeWef;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=170.10.133.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793226394;
+	b=CC44MiFUJWEQrdcGuQKKrzZ0y9Zvimgw4Rb/UA8amdDAixPJ6E2dsjmhAR0C/mcVHbST
+	 jbiEf55H35+/pyxdKlTkB8/XkTY53UOsZ3H+VEjZ5dTf05lEaqntIcndC2MUn8YoSWgFJ
+	 YJ7dJKNkbn1a9FWt+24K6rA3z6nyE1kM7XwYI/tKwGPIJ99pCqWrd6wj1Zd/rL25QzECH
+	 apbJA3Y8BEHQWX+a+hhAQSXu4PpVcVdrZ0HTo27GTcvih9FeOvHV9HFttMK+YLTYOgQCJ
+	 o/OWPWNHE3b1ksbEdI2crayT8d2cCx2BlRPEF/kRy0DkYwiREtAPATLQJxhWfLM8C7Q==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793226394;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=nMPhte1V9YDQtllfchPqLN25ThaUkzGItwYpG1ED2aE=;
+	b=I5TkMniKWTstnm81sO+qkbdDOKDD7DELi7kM7oZ9AOnB2J2bDM1b3jHEPZ0g0D9LLqEr
+	 UJb0n6aGLh+WRs2oB4qyaFlCBXfU9dpiciQLQt66xvNFSFz+Mye1MjIuc6jxGs9RjDnwr
+	 5Zfs4tEhiU7yWl2V4CvjsYM9Lg6+zpWeCYMt8J4Zh4z/CmWJdRJBKWa+I64KdOsxR69jP
+	 OhW8WKTrIvg7yA8ZSO/254xR6hB7k7912164I2AQGmu6nbHSABKGmlS2mpwdDBKiHaQfZ
+	 /qH/g4OTWvlxb8X62zlbjnQhAudEL0r1oDY7o9mm0lcP76r20BJiVucDGIYEPlAR3DQ==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WSoS9fTc;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A594D606A31F
-	for <linux-xfs@vger.kernel.org>; Wed, 28 Oct 2026 22:09:45 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A594D606A31F
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FF13606A31A;
+	Wed, 28 Oct 2026 22:26:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=PNja0RrK;
-	dkim=pass (2048-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=dMvVeWef
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1793225384;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=j5xHrk121VJ6jsiOiBImMpaem11Ex15L22vqkzMRx+Y=;
-	b=PNja0RrK+GAXFseGHRAPgDcQljq0pWRU5IrNz2yhBUldeqB5xObADIbjyjHyNHrutF7Pt+
-	rJoNk3kv9NPLEvl8XKZoimFvycT999RKjoXG01AAR++Ak8kkM30MDhOQrx+KtOHBWo5kfK
-	yRocWGrPgLWx6N9WURbn5mAhp5Y0UlA=
-Received: from mail-yx1-f70.google.com (mail-yx1-f70.google.com
- [74.125.224.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-440-rXWN3Jm6OqSzD0CWNmLNBw-1; Wed, 28 Oct 2026 18:09:43 -0400
-X-MC-Unique: rXWN3Jm6OqSzD0CWNmLNBw-1
-X-Mimecast-MFC-AGG-ID: rXWN3Jm6OqSzD0CWNmLNBw_1793225383
-Received: by mail-yx1-f70.google.com with SMTP id 956f58d0204a3-6756044f260so288261d50.0
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Oct 2026 15:09:43 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1793225383; cv=none;
-        d=google.com; s=arc-20260327;
-        b=iPe2q4MsemkxLZd6sbXOjS8gOR8rm0wsNdLbeCXt/6VYsCsNd0Q0YYrD1ANibAumuI
-         lgUiATWSg9VSHkdLBfA0dcscBbEKJfL6SVe71YnVNPO7vN59lFBu5cV9+J7Hftlf6x47
-         UbRw/yTggXUwO9I4BY2LQUsan8v5nNydfdkY6O9fvY7eQQRW+4ErrtA9uQMIyx/Fcv6+
-         CwjBHvNzq7HEkw4r56YnP3QXORG+fLWGYDeH3BosNABlQKZpIIIcPgP5lOHXNaCRLLRw
-         czUnuNuLCS6LGFIO3lCATSx3daL5fBsxszOmlUHrrDAa1E4RxKFec/aetmClBJwyAS4S
-         WlOg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=j5xHrk121VJ6jsiOiBImMpaem11Ex15L22vqkzMRx+Y=;
-        fh=CiCiEBXSaW1MqAqUQx0Rz3HqN1Xn2UxsMpvJRyUobwk=;
-        b=p+VI3EDD4CrWwr3Htw0kQN5iPHVey4CPAzyqy3gTXqDTQKSCSpwATBUGZhxyDkKhc0
-         P7/Tpy5ULkAeDju2Olyj/wtVKEcrHm0k8J+50Quv2NiJ1OfKVfDwlr0qpJvvVVhWxWZL
-         VqqRY2JFStm59Sfqo6FzN1clOy0w8qGitjh4j5GhL5KDNAZwNGomDBkbFYYX9Dv34nc+
-         +v5QNwTZQnPvcSiKMRuyOyujQC9n3MC5JJrXJlEYux02u4GN30lT3JXCVjv9AvJi2/Dp
-         e5sdiSLQNqodf6cZGCZgYr4dIwmA7pOdd3xm6Pc0SYL40dnLdKiOWDwHy78NLmJAYNAv
-         qgCg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1793225383; x=1793830183; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=j5xHrk121VJ6jsiOiBImMpaem11Ex15L22vqkzMRx+Y=;
-        b=dMvVeWefC8P+UdQKNVCTRzDnhWHngZQGob2rSgzwsZSnRN8SAHr7CL96OPYJXufFq7
-         zSTFFPllhPr/w76wrseeWsykFIT3XNeylizZvRvScikFw2Vx8ZBVf5aKYuJSSTUPuuch
-         XBaTxNgE5Gyy25Odb94BXqgaNMMlvyhAsHvl+cohQ1ckCaDBDm4+NkPEdFeD/j45D4SX
-         9JdubWa1Rkola0sqbNiDrUuR0ynjj8Js5euvpFf83x/dOZOzpzImQtYe9Q9exxMiq/qr
-         mXS/pEC6VjG6Gc4ktJQ1wDheP9WEZsIfL+MfkoZBHHuqMX4NfKOOS6gRPfYVsrX4HqWa
-         L7zw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793225383; x=1793830183;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=j5xHrk121VJ6jsiOiBImMpaem11Ex15L22vqkzMRx+Y=;
-        b=Hesu7B2Xo3V5Uy9sItksqInaHFho7for+4hHdPrfCreVEgWplj0o+BzLhIjDzj+g+N
-         7bv1OZono09rWkzX0Ur8sm8/FaJ+muQ/B+fSJmeV1ntnk19rGI4PRtI03mkLEPnr97Nb
-         cwOqjXasjR2Bq2eVW8gaInh1Hlrj/DKwscqTlJhiFQmpCoirGAk+V9bW9TGRzbgeGcNk
-         L4tgtKWsKDWuLb+DsK0YwEbKMplMEbHv+z5XTTmZm3hWs2ZRsc23O81K584xyigtvYqV
-         3jSsI+EJvwC2DAOnFPhrBvIYLOHe0XcGGNRHojHJhh5JZOrROFa/F1faLdrV1SLnuC+p
-         4wHw==
-X-Forwarded-Encrypted: i=1; AKwUvBzIUQYNoJfnxYE9S5e7vunpX+UthZKqKdBHUqFGSHjn7g7/Gq+JP0tzS2XrwZMXUE+YWqOKtfPf02o=@vger.kernel.org
-X-Gm-Message-State: AFq9FYINjj+RC9NKbRc0jgp8CRBhrzT4Rv5SM7OSa2OwHkKfK2MZhE2P
-	Cl7IPgCCOSzA2B/nRg+8ldpc0M+bWD1aW68QXQygdzUkS55KEtuRBZKFq80j0YBjTVZwQVseFKR
-	PRWajQUEy7T3598eZ8GvgZKTflgXU9kKVZ9K97oniKsORUUBiET9ZETsMaIaXsssnoo7ezJSzfv
-	Y53YgiNZ76JPZ4UIy4G4Xb2W2lQtbMoV1LT7iS
-X-Gm-Gg: AYBFou1o9WNVDE8ebCk1+xt0H9c7D20WR0C245G4LTILpJolh2bLuaHMufMACfrvmJm
-	yg7NBcgV2Ejsb+ittqMymEKYY1gewT4Mle4fDQjcz5h3kGS7fIZeq/bhPmDgvy9zkTOiq2vA55m
-	9UN/X+n3wAXcpQp/zKAGTopFApmxi3hPZeFGv7s4daZt3ObLdrAcb7zocVN3Ll8jd5RCZ6EDGIj
-	nyK0inNWe4ZkWlphU4EC5w48cJUQTQ2az6ThYbMonHwVg==
-X-Received: by 2002:a05:690e:1918:b0:679:ad2f:3fbf with SMTP id 956f58d0204a3-67a8d0047a5mr704864d50.8.1793225382832;
-        Wed, 28 Oct 2026 15:09:42 -0700 (PDT)
-X-Received: by 2002:a05:690e:1918:b0:679:ad2f:3fbf with SMTP id
- 956f58d0204a3-67a8d0047a5mr704846d50.8.1793225382297; Wed, 28 Oct 2026
- 15:09:42 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WSoS9fTc
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0AE221F01825;
+	Wed, 28 Oct 2026 22:26:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793226393;
+	bh=nMPhte1V9YDQtllfchPqLN25ThaUkzGItwYpG1ED2aE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=WSoS9fTcZWTUdX1Jv4krn0w92s84+hoC3Yc3vhHnAA96vRdtODwAPLPsqjzaqF+G6
+	 QIaWaYTWAPrZDWsN7nIqD3QVeW40znyEkDkzS5K6ZV+bY66wPnHcB0JVA6PyVwHrqm
+	 Tn4Fab9v4LRmOFCnCxFNEK+lQ+77eRmbHCLonttVz03p20IIAaQDz3XlTgHpxHPb3u
+	 l/xZ4Yip8G8bvZ1BJvmkeobY5WvqgnrNJLYfVi6okYcuEvDSxz8M5b2F5A4BD7Cmw+
+	 7D1XPuF1R859EphtoQay7l/ipulNN9nqhsw8uW84ZB/ehykXNZK5wFYM66yQnrelhW
+	 CSOqU5WU6jHJQ==
+Date: Thu, 29 Oct 2026 09:26:22 +1100
+From: Dave Chinner <dgc@kernel.org>
+To: Henry Martin <bsdhenrymartin@gmail.com>
+Cc: Carlos Maiolino <cem@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"Darrick J . Wong" <djwong@kernel.org>,
+	Alex Deucher <alexander.deucher@amd.com>,
+	David Hildenbrand <david@kernel.org>,
+	Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>,
+	Kairui Song <kasong@tencent.com>, Myeonghun Pak <mhun512@gmail.com>,
+	Rafal Ostrowski <rafal.ostrowski@amd.com>,
+	Likun Gao <Likun.Gao@amd.com>, James Clark <james.clark@linaro.org>,
+	Anshuman Khandual <anshuman.khandual@arm.com>,
+	Kevin Brodsky <kevin.brodsky@arm.com>, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH] xfs: fix out-of-bounds write from crafted btree root
+ numrecs during log recovery
+Message-ID: <auJ2jgIIh8e_JJwn@dread>
+References: <20261027151703.973392-1-bsdhenrymartin@gmail.com>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -125,43 +67,125 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261012-work-fs-sb_rdonly-v1-0-60743a3dc326@kernel.org>
- <20261012-work-fs-sb_rdonly-v1-21-60743a3dc326@kernel.org>
- <CAHc6FU6z4kX5R3Og8m0dYOHsjFcw+4Btvfe87AGPxy_EWs0E7A@mail.gmail.com> <20261028-zurschaustellen-okkupieren-inkompatibel-d11525ce88b8@brauner>
-In-Reply-To: <20261028-zurschaustellen-okkupieren-inkompatibel-d11525ce88b8@brauner>
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Date: Wed, 28 Oct 2026 23:09:31 +0100
-X-Gm-Features: AclHuK9MzobLdiG2EG9M5KT_ibZzYxdrTghiXff6ZlesOE7YSK8Ag_RtXekxyZI
-Message-ID: <CAHc6FU6VSAWQ4RJTO_eLnpqN5qvrShbJeT+ADwiA6ohpq8dO4Q@mail.gmail.com>
-Subject: Re: [PATCH RFC 21/28] gfs2: don't set SB_RDONLY on withdraw
-To: Christian Brauner <brauner@kernel.org>
-Cc: Jan Kara <jack@suse.com>, Al Viro <viro@zeniv.linux.org.uk>, ecryptfs@vger.kernel.org, 
-	linux-ext4@vger.kernel.org, jfs-discussion@lists.sourceforge.net, 
-	linux-nilfs@vger.kernel.org, exfat@lists.linux.dev, 
-	linux-fsdevel@vger.kernel.org, ntfs@lists.linux.dev, 
-	ocfs2-devel@lists.linux.dev, linux-btrfs@vger.kernel.org, 
-	gfs2@lists.linux.dev, linux-efi@vger.kernel.org, 
-	linux-mtd@lists.infradead.org, linux-xfs@vger.kernel.org, 
-	stable@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261027151703.973392-1-bsdhenrymartin@gmail.com>
 
-On Wed, Oct 28, 2026 at 5:02=E2=80=AFPM Christian Brauner <brauner@kernel.o=
-rg> wrote:
-> On Fri, Oct 16, 2026 at 02:01:00AM +0200, Andreas Gruenbacher wrote:
-> > According to commit d564053f0746 ("GFS2: Clean up freeze code"), the
-> > idea of the freeze sysfs file was to make it behave like the FIFREEZE
-> > / FITHAW ioctls. This isn't what the code is doing at all.
->
-> That's a pre-existing and separate from this series. freeze_store() calls
-> freeze_super() and thaw_super() directly with FREEZE_HOLDER_USERSPACE and=
- never
-> goes through gfs2_freeze_super() and gfs2_thaw_super(). So it never takes=
- the
-> freeze glock. I don't think that's for this series to fix.
+On Tue, Oct 27, 2026 at 11:17:03PM +0800, Henry Martin wrote:
+> xfs_bmbt_to_bmdr() converts a logged in-memory bmap btree root block
+> into its on-disk short form, and it trusts the source block's record
+> count for the copy sizes:
+> 
+> 	dblock->bb_level = rblock->bb_level;
+> 	dblock->bb_numrecs = rblock->bb_numrecs;
+> 	dmxr = xfs_bmdr_maxrecs(dblocklen, 0);
+> 	...
+> 	dmxr = be16_to_cpu(dblock->bb_numrecs);
+> 	memcpy(tkp, fkp, sizeof(*fkp) * dmxr);
+> 	memcpy(tpp, fpp, sizeof(*fpp) * dmxr);
+> 
+> The capacity bound (dmxr from xfs_bmdr_maxrecs) is computed and then
+> immediately overwritten with the attacker-controlled numrecs from the
+> source block.  During log recovery, xlog_recover_inode_dbroot() and
+> the XFS_ILOG_DBROOT/XFS_ILOG_ABROOT paths pass a raw log iovec as the
+> source block, so a crafted log item with numrecs up to 0xffff makes the
+> two memcpy calls copy up to 512KB each (8 * 65535) out of the log
+> buffer and into the inode fork area (a few hundred bytes) and past the
+> end of the inode buffer page: a page-granularity out-of-bounds write
+> with fully attacker-controlled length and content, before any dinode
+> verification runs (xfs_dinode_verify() only sees the result
+> afterwards).
+> 
+> The same pattern exists in xfs_rtrmapbt_to_disk() and
+> xfs_rtrefcountbt_to_disk(), which convert rt rmap and refcount btree
+> roots from log blocks using the source numrecs unbounded.
+> 
+> Validate that the source numrecs fits within the destination capacity
+> before converting, in all three conversion helpers.
+> 
+> This issue was discovered by Tencent CodeBuddy Security.
 
-I mainly wanted to point out that this behavior isn't intentional.
+No it wasn't. 
 
-Thanks,
-Andreas
+I've already proposed journal recovery validation infrastructure to
+knock out all these 'llm plays whack-a-mole-with-corrupted-logs"
+bugs once and for all. The first version of that was posted a couple
+of weeks ago:
 
+https://lore.kernel.org/linux-xfs/20261013060204.3138690-1-dgc@kernel.org/T/#t
+
+Sashiko flagged this specific bb_numrecs issue in review top the
+"[PATCH 41/48] xfs: validate logged btree fork roots during recovery"
+two weeks ago:
+
+| The comment above mentions that the region size has already been bounds
+| checked against the inode fork size. However, looking at the callers in
+| xlog_dinode_verify_dfork() and xlog_dinode_verify_afork(), is this check
+| actually performed for the XFS_DINODE_FMT_BTREE case?
+|
+| If a malicious log provides a large ilfp->ilf_dsize and bb_numrecs, this
+| could pass the validation here (since numrecs will match the expanded size),
+| but exceed the on-disk fork size.
+|
+| Could this later result in an out-of-bounds memcpy in xfs_bmbt_to_bmdr()
+| when the replayed bb_numrecs exceeds the maximum allowed records for the
+| on-disk fork?
+
+So, known issue, and I've already fixed this in my current working
+tree. As such, fuzzed garbage like this is rejected before any btree
+root is recovered now.
+
+Also:
+
+> Fixes: 658fa68b6f34 ("xfs: refactor log recovery inode item dispatch for pass2 commit functions")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Henry Martin <bsdhenrymartin@gmail.com>
+> ---
+>  fs/xfs/libxfs/xfs_bmap_btree.c       | 13 ++++++++++++-
+>  fs/xfs/libxfs/xfs_rtrefcount_btree.c | 13 +++++++++++++
+>  fs/xfs/libxfs/xfs_rtrmap_btree.c     | 12 ++++++++++++
+>  3 files changed, 37 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
+> index 758a4b1ccf5bb..118e8ab35f1d1 100644
+> --- a/fs/xfs/libxfs/xfs_bmap_btree.c
+> +++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+> @@ -148,6 +148,7 @@ xfs_bmbt_to_bmdr(
+>  	xfs_bmdr_block_t	*dblock,
+>  	int			dblocklen)
+>  {
+> +	int			maxrecs;
+>  	int			dmxr;
+>  	xfs_bmbt_key_t		*fkp;
+>  	__be64			*fpp;
+> @@ -167,7 +168,17 @@ xfs_bmbt_to_bmdr(
+>  	ASSERT(rblock->bb_level != 0);
+>  	dblock->bb_level = rblock->bb_level;
+>  	dblock->bb_numrecs = rblock->bb_numrecs;
+> -	dmxr = xfs_bmdr_maxrecs(dblocklen, 0);
+> +	maxrecs = xfs_bmdr_maxrecs(dblocklen, 0);
+> +	if (be16_to_cpu(dblock->bb_numrecs) > maxrecs) {
+> +		/* Corrupted log block: refuse the conversion instead of
+> +		 * copying past the end of the inode fork area.
+> +		 */
+> +		xfs_warn(mp, "bmbt log recovery: numrecs %d > max %d",
+> +			 be16_to_cpu(dblock->bb_numrecs), maxrecs);
+> +		memset(dblock, 0, dblocklen);
+> +		return;
+> +	}
+> +	dmxr = maxrecs;
+
+This is typical of poorly directed LLM code fixes. i.e. Slap a
+bandaid on the symptom without understanding how the problem should
+be fixed, so it actually makes the problem -worse- rather than
+better. But we fixed the out-of-bounds copy, so it must be good!
+
+Unless you know how to fix the discovered problem correctly, don't
+send what your LLM proposed for review. It will be garbage, and all
+that will do is annoy whoever has to review it. Just report the bug,
+let the subsystem developers fix it.
+
+-Dave.
+-- 
+Dave Chinner
+dgc@kernel.org
