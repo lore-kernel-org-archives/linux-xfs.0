@@ -1,62 +1,70 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793203120;
-	b=udPRHeEhB9kNwKqxaECN3Pv7bOlEnr5qW2WNheT86beHNGTyrJ1/kwWFT9AXDnXTFOy4
-	 DhIvGJz5I/3HjN6G6SjXJ7mByStUUcEU2bV9wN/EByLRmrw/IL1AfTj8aFyTuG8Feu1Yp
-	 K0u6RmJPZRQiu77XxGVrIHoTUSM5FnWGRmr0nNCxFWbZYTe8dzcP5Ek+9yysq3aGKuut3
-	 vN+Q+QmRJG3Aue+sRwHC7Wg+KFA/i/Uqin7yZ94ZUUUTCS9ZZEonuL8vXgObU4FpV/t4h
-	 hHvlq3PEKWox0KzauKdN7yq58VWS7c6MONnpQMlaNijM2GT9KShuOGzPjn5Sv9BK2/w==
+	t=1793203355;
+	b=Sb9WQ44/eKBg3l0+vHCd7gud410GX1/LRwt4B9wKaxewaktxbUn42NSGibxPDTi6Q9PE
+	 6V+a9FWJsHRX9RGKaqB9ThDLZyT8khyo5TbqF1rUBMW4PeC0OcYf4qrb9kfWIg0Hku1s/
+	 CkoNplEUl2ZWU8PrY/e06ZPLN4WwNwxw7QTLITBKXzH2osmN8uhW0oD9I7nCzTH/RCjXr
+	 bR0IY3/3Tz0Brq042cYzmgk1KmF8dNpRERe5NA+pZ6BhJbX8Gc9G13Def1NHs01IRcMyU
+	 vDqOuMxyEK2uP2wXDZap0aISAYArLpQg+S+qs7+IUfThZ3YJJ3KcbvLs5Bma4HpkjSw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793203120;
-	h=DMARC-Filter:DKIM-Signature:Received:Date:From:To:Cc:Subject:
-	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
-	 In-Reply-To:X-SRS-Rewrite;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
-	b=Wxa3Mtrl13fLM/Tqmy85yhq1vmpiVCQNdDH38gCdnQpgqofnN2xwwkhiI+X5/uiHTsPc
-	 ly3cAQMIPA5PlpMkvjHNYhbLxZzZN/ubtQetzy5Wkhp1BfmqXZFRCkaFXpiM9mO1l81fR
-	 +QN5d91nllZQVEZjrIqpuwOw4BIynFRAiLMuA8DYF9xq8x1eAdp4ibNSkL1t0VGkKn6AQ
-	 J5U3d4F1IZt6gRyBR064BYO9jzL6HlOmZz2B/bvbTDBdkww082Qos2boUGB40tvMnkXad
-	 zCkXiiRR28J9UR0zJcy3uHNGoy3hkDatOWUXabYup/DUYgZkBmKrMlZwSHCtZJKWFoA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793203355;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
+	 In-Reply-To:References:MIME-Version:X-Developer-Signature:
+	 X-Developer-Key:Content-Transfer-Encoding;
+	bh=pqvidO18/MsoqEupSyt5zaIZm2NWShVR3YPJxgjMIMs=;
+	b=Iiy3suYzY4jmVvODBRZcYpwtddHkypL9J7xqdWWDPuZyACTkUUrwhXGu+FBljKxbFEuR
+	 fI6SrYr23HS7ISj8wlzu2w8a6nzZKUvXwZs0hmw5N2E/ohyJKx2YdQxibmFjcOWqBGOos
+	 U3t1z0u2Ri/QWqH792pNZ9cY0mvSP8A/tRiss/xAJYsND6JM9u7Ff+jNYtyDSCWvOORcN
+	 lAZvqAXcxojXTXG9NfbIH1fH8FJIH7pAx6ikNNt7aSNgRICAiuCUWE2NgqpaFGYJin73W
+	 ZjKCSRQzgQmgilC+pOoSDYTW9g9yg+eNp9cfqEDnzdm2bQq7JT0SSOKSEpPRqXYFvOQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=infradead.org;
-	spf=none smtp.mailfrom=bombadil.srs.infradead.org;
-	dkim=pass header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=lrdrXwrL;
-	arc=none smtp.remote-ip=198.137.202.133
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ZG0L0aDj;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EE40606A320;
-	Wed, 28 Oct 2026 15:58:39 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1EE40606A320
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1FF0606A31D;
+	Wed, 28 Oct 2026 16:02:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=lrdrXwrL
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=lrdrXwrLoFOTWcSsCPFeo1oKQb
-	kStEXqax7ntAkpDUO2MZ06XjFQAmG6Ne+8YRD6FF434elHtMES0K6W4bzOra4Ek2gMGhf92Dj6nx7
-	1nWOvfkbG/UOhCXIzEXKwPqSgQ2GTlWHkdsXP4KpH3eZpAsxyp6nhrb7Uo/VSLt67vKeZAUMwAn8s
-	QtFS+32ZC96ymukxzwaD7lA4sP2obnxvrS3TFfVb14VcA1Hkf4oLwi44z4dqUmh3fybQw1GEIdgRy
-	JuLQv9KxqKfMeUlOpdKUxcLbphoI6exl+rIUGgNIr+/6xC1EZb/5/ALBTCQywZ5QC22XKJzBBRzgJ
-	QnCJYLTw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.100.1 #2 (Red Hat Linux))
-	id 1xM62x-00000007Tep-2Vlq;
-	Wed, 28 Oct 2026 15:58:39 +0000
-Date: Wed, 28 Oct 2026 08:58:39 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Zorro Lang <zlang@kernel.org>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-btrfs@vger.kernel.org, Anand Suveer Jain <asj@kernel.org>,
-	Chao Yu <chao@kernel.org>, Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 6/6] fstests: replace btrfs specific helpers with
- common sysfs helpers
-Message-ID: <auIbr44GkKwofZs3@infradead.org>
-References: <20261023203114.1655019-1-zlang@kernel.org>
- <20261023203114.1655019-7-zlang@kernel.org>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ZG0L0aDj
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E46E81F01828;
+	Wed, 28 Oct 2026 16:02:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793203354;
+	bh=pqvidO18/MsoqEupSyt5zaIZm2NWShVR3YPJxgjMIMs=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=ZG0L0aDjqTsgzLztgQj3GHplRgcp3JC3WsGZx/YxNehTd57FmefkseXr4Ci+4rVVw
+	 zsXoUG77/qVXIA2DpIi2sH2fHwl0axkhR82Tjx9aQoC7Sw4R9qUujs/7L2qGiiyxQv
+	 PNpbPrkUbijZwlr47dpkhLJ1a+VXN/J5c5ub85J3WNeW3H3YLxnJ6AENufO/RZu6Ya
+	 JpHCSjA8ZNcK6EQ4M9Yem1gPVU7Mm8F8EsMtwmSU7iQFut12ngDTz77ZcX2DeEmXuM
+	 DTQlwFe9KPqXNTo3ZYRHY5f02yibn5HXVRh1DwdEbuXTEKLho1gpQlejTX87U/GRT9
+	 4dpxOZTZfBbdQ==
+From: Christian Brauner <brauner@kernel.org>
+To: Andreas Gruenbacher <agruenba@redhat.com>
+Cc: Christian Brauner <brauner@kernel.org>,
+	Jan Kara <jack@suse.com>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	ecryptfs@vger.kernel.org,
+	linux-ext4@vger.kernel.org,
+	jfs-discussion@lists.sourceforge.net,
+	linux-nilfs@vger.kernel.org,
+	exfat@lists.linux.dev,
+	linux-fsdevel@vger.kernel.org,
+	ntfs@lists.linux.dev,
+	ocfs2-devel@lists.linux.dev,
+	linux-btrfs@vger.kernel.org,
+	gfs2@lists.linux.dev,
+	linux-efi@vger.kernel.org,
+	linux-mtd@lists.infradead.org,
+	linux-xfs@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: Re: [PATCH RFC 21/28] gfs2: don't set SB_RDONLY on withdraw
+Date: Wed, 28 Oct 2026 17:01:49 +0100
+Message-ID: <20261028-zurschaustellen-okkupieren-inkompatibel-d11525ce88b8@brauner>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <CAHc6FU6z4kX5R3Og8m0dYOHsjFcw+4Btvfe87AGPxy_EWs0E7A@mail.gmail.com>
+References: <20261012-work-fs-sb_rdonly-v1-0-60743a3dc326@kernel.org> <20261012-work-fs-sb_rdonly-v1-21-60743a3dc326@kernel.org> <CAHc6FU6z4kX5R3Og8m0dYOHsjFcw+4Btvfe87AGPxy_EWs0E7A@mail.gmail.com>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -66,12 +74,48 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261023203114.1655019-7-zlang@kernel.org>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1939; i=brauner@kernel.org; h=from:subject:message-id; bh=/2bL9FoOj20KqA4rEtCDZi7CA8CHUBzAXKXFts8ojnQ=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWQ9ksmL8GiJ4XnsbsM5a7aM7ZHXDo+ubXVQend6xo3Dq c6XHseWd5SyMIhxMciKKbI4tJuEyy3nqdhslKkBM4eVCWQIAxenAEzk10SGf8Zp6etfiUn5Kaa4 zdp+ONFrN+eR4/7Xl/x14Hr2cnIIdxQjw5rNYWumRtzN/zyzJWbl3ZUT/BYEPb13q6vr0/3MC10 NDQwA
+X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
+Content-Transfer-Encoding: 8bit
 
-Looks good:
+On Fri, Oct 16, 2026 at 02:01:00AM +0200, Andreas Gruenbacher wrote:
+> According to commit d564053f0746 ("GFS2: Clean up freeze code"), the
+> idea of the freeze sysfs file was to make it behave like the FIFREEZE
+> / FITHAW ioctls. This isn't what the code is doing at all.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+That's a pre-existing and separate from this series. freeze_store() calls
+freeze_super() and thaw_super() directly with FREEZE_HOLDER_USERSPACE and never
+goes through gfs2_freeze_super() and gfs2_thaw_super(). So it never takes the
+freeze glock. I don't think that's for this series to fix.
 
+> Not sure what should prevent us from fixing withdrawn filesystem
+> thawing and the SB_RDONLY issue in separate commits. Both need fixing
+> in the end, but that's okay.
+
+I guess.
+
+> So before this patch, 'mount -o remount,rw' of a withdrawn filesystem
+> fails with -EIO, and this patch changes it to -EROFS. What's wrong
+> with -EIO? Once do_withdraw() doesn't set SB_RDONLY anymore, the
+> filesystem will remain read-write mounted; getting an -EROFS error in
+> that state seems odd.
+
+You can keep -EIO but I tried to make it somewhat consistent.
+
+> > +       /* A withdrawn filesystem can't take the freeze glock anymore. */
+> > +       if (gfs2_withdrawn(sdp)) {
+> > +               mutex_unlock(&sdp->sd_freeze_mutex);
+> > +               return -EIO;
+> > +       }
+>
+> This is racy; the filesystem can still be withdrawn after this
+> gfs2_withdrawn() check. It should make more sense to bail out of the
+> for loop in gfs2_freeze_super() on withdrawn filesystems.
+
+Right, good catch.
+
+> I'm not a fan of those fake mount options. It doesn't matter all that
+> much for "withdrawn" because remounting will fail anyway, but it's
+> still messy.
+
+Sure.
