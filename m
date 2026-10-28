@@ -1,21 +1,21 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=213.95.11.211
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793198515;
-	b=i2xxr20ekIMYlLVHJncvL7AW9CNqsswN1RuGUBLFHsUQikYpUQUYFv9Ri6he0cmstaOp
-	 UPoEi8y7OWhKZHFl1xl+kZL4KqQ6jMVNUfICTISPsNs3lO5bdwBw/kpVmxSQRzYtJhyfb
-	 /vuG3amTK8zyg/BEPZ4C2tg4cRO7P8X/cAaDQBl1i7frjD2JeOnMq+pQscXIs1396nae7
-	 FvjXj9VyhpTg4kSzorHdgdZeVeq9PPYomVsvuJ9IVzAJf+9P8JUbQw9jYdUEyU8bVlG1C
-	 kJdt/U4d4cLwXNFbh5zxW8CieYPilUXD0aAk0KjAcu/tm+7dlSkuLPFUV8LPaiXZyUA==
+	t=1793199656;
+	b=YAg9qikKxGKQsxmMdy4fbcYpHRCeSa4gdrMMFb2V9VwWgyRv3INdxVWx27UQ/dpzXWA2
+	 WBhopiOg8vNXEWFf1Q+q+M2onI6HsBF3cKGSkHyKJ4YjoGQzhXX6WOsfSDAcocTAB5oHh
+	 a8yZAE4vDduMJAFLVBj3+1FV9/28yr5uDnzjUbYd1RNkYQvRpgkHHMf2LV6JrCfJj7kb+
+	 J1UEmCY9Dd9j2/NEMrM+6ByuFkVXfJh4X/oBHSIsoexVl3uq210uTHbHe1+5qbck0msE2
+	 ys0+/T2wSzWuaaVXAQrThU+/QiIqNzqu8OGDFO1bef6/NuVYX8Wcruy1bi3WRh2ck9w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793198515;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793199656;
 	h=DMARC-Filter:Received:Date:From:To:Cc:Subject:Message-ID:References:
 	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To:User-Agent;
-	bh=8RJ2Yn7WpwUCye9rkv6tfQ0zZ5Kyo7robmi/5qT0aAk=;
-	b=LRevH982gKLUHz2Z9MHT8uglZHTOQ1uWhgEzsc4Wmdn/h3o12I6hpZ7BQh8JQoFOaLGQ
-	 1SvdmcXqX9ZGq+naddLYRIhTrmujHOUaNO3UAxITMAquBAAH6DkWhswSFJXxyDf+hrZBz
-	 U4R9vJDTxrB1o+cd4p22wIX5A/GsI67bx/1oM6mAnQsQtttZdqXNm0GW+c6kVYck91Dht
-	 PfjBNk0dmb8NaU2Hrin7TanQmSaYcBe1JJmfc6+NqmlJWyVc1g/4QnLafgRYoUbmrcHtD
-	 7GNVzQthJZddGrUFFPr1c3EQfDLmpj+9d1ndZXVb8nxgl0+WGsZ8dih7GiKpghpLCYw==
+	bh=SqsVhitOdePujGrPLjfjoRG/ResbjWYsPperqBhRTF4=;
+	b=bgjmRnddShTsQogZiHyc7lz7IHJIeZdUJ91hnavMCLTsUKCYC4qtBeQHT46ahinHFEaF
+	 30yo1g7Ac3ljTddAl1FcsZJJM4p9yI2kZlxO5AQ+7WVV23Eqg2ao6fxpujqy6X3pXAgXs
+	 CILyS1OGWl+kich2E6nAHM0JEMySA+tCoLXdC0GWKq2zzJqPXErzAsKczUYWr7zLPKdhY
+	 hiol+a+cBkSPZEtxvNvGpTKGck1WDiiVjJfh3r4HWCeQ0N/YM7BzZpOw/3Z1S6iNGiRad
+	 /wPD17EERVgicRUZgKpGxqDVjEnYtZEgNvOBOD5JSWj9gSAC67qnrwPcFIHD+Mp9tXA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=lst.de;
 	spf=pass smtp.mailfrom=lst.de;
@@ -23,29 +23,39 @@ ARC-Authentication-Results: i=1; smtp.subspace.kernel.org;
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 254E6606A31E;
-	Wed, 28 Oct 2026 14:41:53 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 254E6606A31E
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0CD3606A31A;
+	Wed, 28 Oct 2026 15:00:55 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org F0CD3606A31A
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id C578F68AFE; Wed, 28 Oct 2026 15:41:48 +0100 (CET)
-Date: Wed, 28 Oct 2026 15:41:48 +0100
+	id 9DB8768AFE; Wed, 28 Oct 2026 16:00:49 +0100 (CET)
+Date: Wed, 28 Oct 2026 16:00:48 +0100
 From: Christoph Hellwig <hch@lst.de>
-To: Salvatore Dipietro <dipiets@amazon.it>
-Cc: hannes@cmpxchg.org, abuehaze@amazon.com, akpm@linux-foundation.org,
-	alisaidi@amazon.com, blakgeof@amazon.com, brauner@kernel.org,
-	brendan.jackman@linux.dev, david@redhat.com, dgc@kernel.org,
-	dipietro.salvatore@gmail.com, djwong@kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-mm@kvack.org, linux-xfs@vger.kernel.org,
-	matt@readmodwrite.com, mhocko@suse.com, ritesh.list@gmail.com,
-	rvvandan@amazon.com, stable@vger.kernel.org, surenb@google.com,
-	vbabka@kernel.org, willy@infradead.org, ziy@nvidia.com
-Subject: Re: [PATCH 1/2] mm: page_alloc: do not give all non-blocking
- requests reserve access
-Message-ID: <20261028144148.GA14023@lst.de>
-References: <arFBr22V60BMmVpl@cmpxchg.org> <20261027150002.318916-1-dipiets@amazon.it>
+To: Joanne Koong <joannelkoong@gmail.com>
+Cc: Christian Brauner <brauner@kernel.org>, linux-fsdevel@vger.kernel.org,
+	Christoph Hellwig <hch@lst.de>,
+	"Darrick J . Wong" <djwong@kernel.org>, changfengnan@bytedance.com,
+	kbusch@kernel.org, Matthew Wilcox <willy@infradead.org>,
+	Jan Kara <jack@suse.cz>, Jonathan Corbet <corbet@lwn.net>,
+	David Sterba <dsterba@suse.com>, Gao Xiang <xiang@kernel.org>,
+	Namjae Jeon <linkinjeon@kernel.org>, Theodore Ts'o <tytso@mit.edu>,
+	Jaegeuk Kim <jaegeuk@kernel.org>,
+	Miklos Szeredi <miklos@szeredi.hu>,
+	Andreas Gruenbacher <agruenba@redhat.com>,
+	Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>,
+	Hyunchul Lee <hyc.lee@gmail.com>,
+	Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
+	Carlos Maiolino <cem@kernel.org>,
+	Damien Le Moal <dlemoal@kernel.org>, libaokun@linux.alibaba.com,
+	bfoster@redhat.com, linux-ext4@vger.kernel.org,
+	linux-xfs@vger.kernel.org, Viacheslav Dubeyko <slava@dubeyko.com>,
+	Ryusuke Konishi <konishi.ryusuke@gmail.com>,
+	linux-nilfs@vger.kernel.org, fuse-devel@lists.linux.dev,
+	Zhang Yi <yi.zhang@huawei.com>
+Subject: Re: [PATCH 1/5] nilfs2: convert iomap ops to ->iomap_next()
+Message-ID: <20261028150048.GA15828@lst.de>
+References: <20261027215326.2693300-1-joannelkoong@gmail.com> <20261027215326.2693300-2-joannelkoong@gmail.com>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -57,25 +67,16 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261027150002.318916-1-dipiets@amazon.it>
+In-Reply-To: <20261027215326.2693300-2-joannelkoong@gmail.com>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Tue, Oct 27, 2026 at 03:00:02PM +0000, Salvatore Dipietro wrote:
-> 
-> Hi Johannes,
-> 
-> Vlastimil asked that v6 of my page_alloc patch [1] not go to mainline
-> before these two patches land, so Andrew parked v6 at the tail of
-> mm-unstable and dropped its Cc: stable until then.
-> 
-> Are you still planning to work on 1/2 and 2/2, and if so, do you have
-> a rough ETA? Or would you rather post them as a separate series as
-> they are? If anything is needed on my side to move them forward, I'm
-> happy to help.
-> 
-> For what it's worth, I ran both stacked under v6 on v7.3-rc1 and saw
-> no performance difference on my benchmark with or without them.
+On Tue, Oct 27, 2026 at 02:53:22PM -0700, Joanne Koong wrote:
+> Convert nilfs2 iomap_ops to the new ->iomap_next() callback. The callback
+> is generated with the DEFINE_IOMAP_ITER_NEXT() macro, which wraps the
+> iomap_iter_next() helper to finish the previous mapping if needed and
+> produce the next one. No functional changes are intended.
 
-It would be really important to get some fix for this into 7.3.
-We can still perfect it later.
+Looks good:
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
