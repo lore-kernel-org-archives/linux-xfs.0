@@ -1,66 +1,66 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793227802;
-	b=5GOwE+wpB34Mnco47Ex1sJKP5w2QpDBN6X7/qrachmjgjiGp23t2dNYaA852uWW8koW+
-	 VRyWJ9kbs+6bqs+N2G4GZpq5O8p1fPblr27H5io8xc0UlRfJ6dsFw7ob6Px/e2Xf5XIQd
-	 PQgCYAvkCWmlUX9+UFoAqeXI+2yAKY0aQ9GvtVTiDoD2zrjcVoDs+3hPYBlDd/XOAmqvU
-	 cJEoRnHeqUSCKb0tAxI8QOuDtVlTvFmFC6b8Rwnfo8NMAsjmmLAWyOpwhLowq6CeR275h
-	 SmCz/O5vad+qbLeAXoaLajG9H6ddnmtky1eJIf1jl6cGoMV2ZZbFllxiwQ+WcX7sdew==
+	t=1793230495;
+	b=MjAUBva4Roo2IqCbHpc8rhe87AvIAYUOKrGypOdLmg2XrpR1rRWwOlKaiz5chgOQ7kIf
+	 TNs3m6C+rTLTsA0AzczBxnIg400CCAXfeVASscFSYAaKHJ7eQKoVLWhYFttExhJa0sq+G
+	 RT9sfHRFiXajmtjhONv/CggcnLS82VVqKQ0E/vDuIIYiMGIw575+beYAeGpHg+ITPTrmV
+	 LOSTRSr/7I8jI2Vd4m84r/zXKJAkAwk95TPhtgqgGndYpSXt7qoo59dy4GpTqBTvWhPZj
+	 TEOW5AKKyz7JlfMEk8xIcaeBRlVn73o0Hf4M03JGjRmIPY0EB4fIBK1NMlZVoZgnZVg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793227802;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793230495;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=BmDoHj1MHvhUgXHU+vuqR0K+Yg8Yy1nujE/6Kcj5G6o=;
-	b=fJ+YblrVhOzh+00V7Vs9ontWP4+0QzvWVRNLV3Gza++v+beBZFV4ahsuxKu5vwJQl+z8
-	 Mgy08GvfN6xiXBtVIYZu52t6HqjtjWSDy1qvag5j7fhDxY0J/f2oP0EUBjif5b57ectil
-	 nbjLn3D/SATUGPvhsKtcUv2CGQjiQ405u8pT2QusQZWDBNkzm5VRwcU+FzhVJ9wGcsNTE
-	 o48mFjcVn6gKLV8j0chzpBVFNGG4ot6EF28nknAWFHn4CQ+wJ8BQQZJmGavGtUjtVYF3m
-	 141L1+9rBlXRPMPA6kf4vhwxf6QfeXYQ4ctV3UW9+KYVi3/pVlBrXX0IycNKftZWZmg==
+	bh=iP41gDW1dDLb62a6TOWXDfDFJDMH1BCLfRYXQKf/pYo=;
+	b=vQlxMZ4lRmFIs/PgXsqZkVOVPDc/VrWW40yAQ86V0b648LfF/dAK3KudQx5TyFPG0Fk8
+	 9LKAD6Us11Z8vS2/Kv+cz4v35KTKGUM7j8FwHBtxdXrFXgiuzIlfSs/wxnJoyw8Pw8N6j
+	 h+MDUQHbBt2dfkctkKY+BJD/VW7n8fMyc1GUNQKu6CBBFDX/Ch09jwMpa/7JQFIBXhI6r
+	 L6p4aaUFOs4RiaNzwVDGKA013qPtd2wBs02+oUxtUVXwaRqGNAdWs0BhNQJHBJ2yZEQDw
+	 mezWpGEhulJcfH2JX8VH4WSQnFsei8W0qcykCkgVRrteOgOrX7v8qGaGKYhz7eYvi6A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=g1saRV9X;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kdtMsEtH;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CAE3606A31D;
-	Wed, 28 Oct 2026 22:50:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48220606A31A;
+	Wed, 28 Oct 2026 23:34:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=g1saRV9X
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 888C51F01828;
-	Wed, 28 Oct 2026 22:49:57 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kdtMsEtH
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 347B41F01825;
+	Wed, 28 Oct 2026 23:34:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793227801;
-	bh=BmDoHj1MHvhUgXHU+vuqR0K+Yg8Yy1nujE/6Kcj5G6o=;
+	s=k20260515; t=1793230494;
+	bh=iP41gDW1dDLb62a6TOWXDfDFJDMH1BCLfRYXQKf/pYo=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=g1saRV9X7QPtVna/jYxkbnibt2GJ+fCet0oodd5v1JZ7xwjfCA2odV+hgJnH8Y0bN
-	 yU96xzJP6yGLyBxz78/F7uCk6eEn5KF8xVCnFWZJ+rWMONBA5bnBWwVDKQcYBHZ2W7
-	 CLkeL9qB2hsPQf/O4OlYdNZ5io4gsvMM6iyQwqVS/g9aD+DNIIGuP4+Y5Sfl72+h9l
-	 aPtDUTDyIjdk0mzIn1lzgnsinVmXWX1gwdF58k4k/Rc49mgeldejjqDIEMwPbBFEOu
-	 IIFP3vSfVCTpn9VCmFelDdu1o3ubdc3DGfyC5LlGWoxg0M98y4T17kgkUfg/79L6+I
-	 3jEbpTNKHFpnA==
-Date: Thu, 29 Oct 2026 09:49:50 +1100
+	b=kdtMsEtHmDNzVF4YPu+ZcICl/ZXdKh2G0CtWnlPvKGDdE3v8xuBbC6zXrMLdclWYo
+	 afqbXoVI2Aq17HAOhQ12dH1IgTkxmkhb6F9zPZcQgJpr7DY7tXfrOiqUB/Phl+GZYc
+	 0DbkzFSurp4VOwEo2NLtp+XqNw2P4ttys0hVHicRAMPRsBDtj0f9UTckbATHEBhul6
+	 MSwGskoKkUmFOldVwE9w4g7SFUZhJ/P64vqTjyibrLfSUH5WMOF3pzlbs3a+e6QJUb
+	 UxpD7/mrdg4kITQFE012/68d5CU95sxWJPz6ULdbl7jLxopDYN2T3iMGZJ2iN+Qpb8
+	 RgQCFRZe6bAfA==
+Date: Thu, 29 Oct 2026 10:34:44 +1100
 From: Dave Chinner <dgc@kernel.org>
-To: Henry Martin <bsdhenrymartin@gmail.com>
-Cc: Carlos Maiolino <cem@kernel.org>,
-	"Darrick J . Wong" <djwong@kernel.org>,
+To: Jonathan Corbet <corbet@lwn.net>
+Cc: Henry Martin <bsdhenrymartin@gmail.com>,
+	Carlos Maiolino <cem@kernel.org>,
 	Andrew Morton <akpm@linux-foundation.org>,
+	"Darrick J . Wong" <djwong@kernel.org>,
 	Alex Deucher <alexander.deucher@amd.com>,
 	David Hildenbrand <david@kernel.org>,
-	Kairui Song <kasong@tencent.com>,
-	James Clark <james.clark@linaro.org>,
-	Long Li <leo.lilong@huawei.com>,
-	Kevin Brodsky <kevin.brodsky@arm.com>,
-	Javier Tia <javier@peridio.com>, SJ Park <sj@kernel.org>,
+	Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>,
+	Kairui Song <kasong@tencent.com>, Myeonghun Pak <mhun512@gmail.com>,
 	Rafal Ostrowski <rafal.ostrowski@amd.com>,
-	Myeonghun Pak <mhun512@gmail.com>, Likun Gao <Likun.Gao@amd.com>,
-	hongao <hongao@uniontech.com>, Kees Cook <kees+treewide@kernel.org>,
-	Cihan Karadag <cihan.cihan@gmail.com>, linux-xfs@vger.kernel.org,
+	Likun Gao <Likun.Gao@amd.com>, James Clark <james.clark@linaro.org>,
+	Anshuman Khandual <anshuman.khandual@arm.com>,
+	Kevin Brodsky <kevin.brodsky@arm.com>, linux-xfs@vger.kernel.org,
 	linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH] xfs: fix out-of-bounds da node read with a crafted
- record count
-Message-ID: <auJ8Dv304AnzETMy@dread>
-References: <20261027151754.975492-1-bsdhenrymartin@gmail.com>
+Subject: Re: [PATCH] xfs: fix out-of-bounds write from crafted btree root
+ numrecs during log recovery
+Message-ID: <auKGlGJwOSZpioMd@dread>
+References: <20261027151703.973392-1-bsdhenrymartin@gmail.com>
+ <auJ2jgIIh8e_JJwn@dread>
+ <87cxsto38m.fsf@trenco.lwn.net>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -72,90 +72,45 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261027151754.975492-1-bsdhenrymartin@gmail.com>
+In-Reply-To: <87cxsto38m.fsf@trenco.lwn.net>
 
-On Tue, Oct 27, 2026 at 11:17:54PM +0800, Henry Martin wrote:
-> xfs_da3_node_verify() bounds the on-disk record count with:
+On Wed, Oct 28, 2026 at 04:43:37PM -0600, Jonathan Corbet wrote:
+> Dave Chinner <dgc@kernel.org> writes:
 > 
-> 	/* we don't know if the node is for and attribute or directory
-> 	 * tree, so only fail if the count is outside both bounds
-> 	 */
-> 	if (ichdr.count > mp->m_dir_geo->node_ents &&
-> 	    ichdr.count > mp->m_attr_geo->node_ents)
-> 		return __this_address;
+> > Unless you know how to fix the discovered problem correctly, don't
+> > send what your LLM proposed for review. It will be garbage, and all
+> > that will do is annoy whoever has to review it. Just report the bug,
+> > let the subsystem developers fix it.
 > 
-> The "fail only outside both bounds" conjunction is forced weak
-> because the verify pass cannot tell directory from attribute nodes.
-> On filesystems with a multi-fsb directory block size (mkfs.xfs -n
-> size=64k, sb_dirblklog > 0), m_dir_geo->node_ents is much larger than
-> m_attr_geo->node_ents (~8184 vs ~504 for 64k/4k), so an attribute
-> tree node with a count in (attr_ents, dir_ents] passes verification.
-> Consumers then index the in-block btree array with that count and
-> read out of bounds:
-> 
->   xfs_da3_node_lookup_int()   btree[max - 1].hashval  (max = count)
->   xfs_da3_path_shift()        btree[nodehdr.count - 1].hashval / .before
-> 
-> with count=8184 the read lands ~61KB past the 4K buffer, and the
-> out-of-bounds "before" value is then used as a child block number.
-> The read path is reachable by an unprivileged user via
-> getxattr/listxattr once the malicious image is mounted.
-> 
-> Tightening the verify conjunction would falsely reject legitimate
-> large directory nodes whose counts live in the same interval, so
-> enforce the per-fork bound instead where the geometry is known: at
-> the two consumers that index the array with the on-disk count.
-> 
-> This issue was discovered by Tencent CodeBuddy Security.
+> Just to be obnoxious...this runs counter to the advice we have in
+> Documentation/process/security-bugs.rst, where reporters are requested
+> to include a proposed fix as well.  It seems we're sending a bit of a
+> mixed message...
 
-No, it's pretty obvious that we knew about it a long, long time ago.
-The bounds check we currently have catches gross corruptions, and
-for the types of corruption we see in the real world (i.e. media
-errors trashing entire sectors) this has been sufficient to avoid
-issues. Hence there's been no priority/urgency to fix stuff like
-this, because malicious images are not a threat model we are able to
-defend against.
+These aren't security bugs. Bugs that result from maliciously
+corrupted filesystem images (i.e. fuzzed) are explicitly stated as
+not covered by the kernel security threat models. IOWs, they are
+just -bugs-, and bugs that just don't ever happen in the real world.
 
-> Fixes: f5ea110044fa ("xfs: add CRCs to dir2/da node blocks")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Henry Martin <bsdhenrymartin@gmail.com>
-> ---
->  fs/xfs/libxfs/xfs_da_btree.c | 16 ++++++++++++++++
->  1 file changed, 16 insertions(+)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-> index 3d02a0d7ba44a..ab3deff11111e 100644
-> --- a/fs/xfs/libxfs/xfs_da_btree.c
-> +++ b/fs/xfs/libxfs/xfs_da_btree.c
-> @@ -1787,6 +1787,18 @@ xfs_da3_node_lookup_int(
->  		} else
->  			expected_level--;
->  
-> +		/* The verify pass cannot tell directory from attribute
-> +		 * nodes, so its count bound has to allow both geometries.
-> +		 * Here we know the fork; enforce its geometry so crafted
-> +		 * counts cannot make the array indexing run out of the
-> +		 * block.
-> +		 */
-> +		if (nodehdr.count > args->geo->node_ents) {
-> +			xfs_buf_mark_corrupt(blk->bp);
-> +			xfs_da_mark_sick(args);
-> +			return -EFSCORRUPTED;
-> +		}
+The journal records are CRC'd and location stamped, so any sort of
+real world storage error (e.g.  media corruption, misdirected write,
+etc) will already be caught and rejected. Hence to get to these
+issues, someone has to corrupt the journal stuctures and manually
+rewrite the CRCs to get them to pass verification before we are
+exposed to any of these issues.
 
-Again, look at the code. The node header is verified a few lines
-above via xfs_da3_node_header_check(). We know that the read
-verifier cannot verify everything in IO context, so we have checks
-that are always done immediately after the buffer has been read
-before we start using the node header.
+Really, though, as someone who has learnt how to make LLMs generate
+decent code, I'm disappointed in how frequently I'm to tell random
+people using LLMs that their code is complete shite. LLMs don't
+generate bad code when they are well directed by a human.  Bad code
+is a sign of a poor coder (i.e. a human failing), regardless of
+whether an LLM generated the code or not.
 
-If the new check is added there, then no other code needs to be
-touched. i.e. every place we first read a da-node can be correctly
-bounds checked because args->geo is available at all those call
-sites...
+However, regardless of the skill and capability of the human driving
+the LLM, LLMs will still generate decent bug reports. I'll take a
+good bug report over bad code every day of the week.
 
 -Dave.
-
 -- 
 Dave Chinner
 dgc@kernel.org
