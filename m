@@ -1,48 +1,49 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793290132;
-	b=ghvnFweTV99IfUrfnCjxx65nV4/15CQ5tkQ1HdXk4WterA0SkotNPsR+FPH8zc0fyEIx
-	 UV28fOurJrDnPzcybl+HWu9fLEGQ5wHcnofoO/eJ3XCtR1G0V8CMKgTIY8LxpIJipN/gI
-	 CImI5mhYWLOmivQhHg/UK4V3dtISTREHIOCtcF5Dp+lzfUkU1+1YpTb9m76WKpu4mNQ5q
-	 LQLctruxxB+nxCdGqFVvrf66I43IvJ7w/N5/Dq7pJ8S+q59TdI9QQBZvPwRBCfsKAoXlY
-	 cr5ZpP2sLmfiX99DMkJ0JT24MMPxWAO6LZvyGVmHtfPKcvSz/Uu6rFtlD3407Mb5huQ==
+	t=1793290140;
+	b=keNQhY4emssleGDHxArjE2qwMfvh1hq74bMbu7mkHWTqbUAMO/hAN5FwNtyY2DzqnPZv
+	 FL4hbx5qB9EU+n/XcJrxMN+G5sBLw0h/QgTcRGOZEcQjJD2L+P3xOCiwGXB76/3CllRYI
+	 Wh0hP0RZ0/o5bwBn1Iv4dUPTaBWC/3TycpNgTCdFMjya3wSZPPFpVRAUV5V5GVh99LSzj
+	 IBQjUE4zg5XY6UjPprrYSOgMsY9w5yzfu42+OKSVc8Zj2xb6T+IAbLcBkx7pOK4E9kdff
+	 QrxHzeMibLABhGhIwhUY0e0RQhZ9GPmKHUWxdy1vzULc/VPDTNUSFkwNAFq6xW/+RxQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793290132;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793290140;
 	h=Received:DKIM-Signature:From:Date:Subject:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
 	 X-Mailer:X-Developer-Signature:X-Developer-Key;
-	bh=fYLTRB96LN7RebiK7hFKBZ3h+lwWyZev+AxtatE8lJc=;
-	b=Xvue4NfbDmH2Ts5y9bSFNfJHLrb7yYzU5eiDVhV7GmTI44aHTD6DvWHuADvl0cq38ukp
-	 NFi++djrAJDt5CzacYw9sn0EJHSl0lNMefttoLlCdauNxNno/s8kw/OxVwIPJ+NMrjJpG
-	 t6zznbliHMy6NDZLGGOjnB8fpIVERs0KNTzZ16ZIziQJFolDhRs4dOLEs49sRh0ad6COr
-	 7EIBo7uPAQiAAbZOfGF4pHChG47vGhi/j4aLBBPD40RU8tN1B/kCZSdT6vbiG4C/WtnHV
-	 NJSrqesD6LTwWwy1nEIK583YW7KThFTk7tE4QGiTGu0F6C1ND10mRRyFAibJVKn5KHQ==
+	bh=7BRw3zwpqOSWZwDl5SSKDl6DdQ83Q27IXTTC8q0I+MM=;
+	b=SAE4nxUPnoHA8JSBGA9cRx5oyGw8gmijSJvpBM1B06Ae8evU31iOowIClnGxj7isK62/
+	 NITBLkOrZtNgUmctnezEupApM0SxmYEPXILEZZZHA1NpXjBM0yG3qaQ3RSmBwRiB22pq7
+	 YFODVzrb/wn/Ia8vMUqXKufGp68ByBvZ6VM2UyiySEwvGVDB2voMfpIPoTE/IHwhxauiZ
+	 JXH186rzWc5djIewctonO/SMpS5+8o80zBbYQEk0xkJ+noVNsEqPonUglvOajHDMakEaG
+	 pVfVCUInGU+5ncjjMp/eFaQCXmBq8lqQW3uQ97WTCzK/KdY9IZHhNU85ksxsMSrCbfA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CAbb5DUl;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BK4mBoWq;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4C07606A324;
-	Thu, 29 Oct 2026 16:08:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC9EE606A33B;
+	Thu, 29 Oct 2026 16:08:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CAbb5DUl
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 319001F01816;
-	Thu, 29 Oct 2026 16:08:46 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BK4mBoWq
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B433F1F01816;
+	Thu, 29 Oct 2026 16:08:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793290131;
-	bh=fYLTRB96LN7RebiK7hFKBZ3h+lwWyZev+AxtatE8lJc=;
+	s=k20260515; t=1793290139;
+	bh=7BRw3zwpqOSWZwDl5SSKDl6DdQ83Q27IXTTC8q0I+MM=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=CAbb5DUluPoHDa9s81xrNaUrrMVZGOhJEsr3nOf5L11RYO1az07kuHlQC+sqJ2waE
-	 cKzYKUJATJ2hUTdX4GEC4InIrN5bsfrITO9yP0SsmPTbgSFuTQA2A/TEIjTK7ginCQ
-	 m9l/mopoDv48kMJaNh4X9HHavXRZRI4Tf/yEYkoMoSrfMAZfqQnfwK8UszXwf+/y9J
-	 4pV7wquhaaklkMbg0cC8jzaUtwx5sdUt8sSe9nVoMo49iMrnIe5No35nU5ePgqGfF7
-	 PEhiKIJw5APmAPaLOZ3ivb/zM8Z0ntpogljyeQG1MrmuUvdoohlqlCbcvPz5MjoxZ+
-	 pnfcprOoFUvPw==
+	b=BK4mBoWq5PNr9zCiGHhyJAczACYpVODG+qBfg8ooJ81XVq3KJ5knIFHqRBRNMdMFF
+	 Q6HIJY83vtuGWSMeP681tYNmLuftHmCSI1TvVGJ4HB6yFtOcPQg2x0N/U4nNQFy2HS
+	 LqOxNOdA5IjsE+/VMReNWXjecJze0uEpq5U/8yXfLEi1+3lFl2HWD0j9avAE46MTK7
+	 1C7sWJYmOOsVo7K9ttCZ3aOsLRZo36AlimuvY7du37X/C84t+uRK0b3D1ntku4rgKg
+	 3GJDC3C0TZ9Ux39XiRuhl8v9sn88TYcxFTJ0vsQ8TwWx9TnOC4iSQuZNnT87p00oCE
+	 2ljv8YTsZFjaQ==
 From: Christian Brauner <brauner@kernel.org>
-Date: Thu, 29 Oct 2026 17:07:12 +0100
-Subject: [PATCH v2 21/34] zonefs: don't set SB_RDONLY after I/O errors
+Date: Thu, 29 Oct 2026 17:07:14 +0100
+Subject: [PATCH v2 23/34] btrfs: check BTRFS_FS_STATE_RO instead of
+ SB_RDONLY at runtime
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -54,7 +55,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261029-work-fs-sb_rdonly-v2-21-2f44f64f0b66@kernel.org>
+Message-Id: <20261029-work-fs-sb_rdonly-v2-23-2f44f64f0b66@kernel.org>
 References: <20261029-work-fs-sb_rdonly-v2-0-2f44f64f0b66@kernel.org>
 In-Reply-To: <20261029-work-fs-sb_rdonly-v2-0-2f44f64f0b66@kernel.org>
 To: linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.com>
@@ -65,230 +66,393 @@ Cc: Al Viro <viro@zeniv.linux.org.uk>, ecryptfs@vger.kernel.org,
  linux-btrfs@vger.kernel.org, gfs2@lists.linux.dev, 
  linux-efi@vger.kernel.org, linux-mtd@lists.infradead.org, 
  linux-xfs@vger.kernel.org, 
- "Christian Brauner (Amutable)" <brauner@kernel.org>, stable@vger.kernel.org
+ "Christian Brauner (Amutable)" <brauner@kernel.org>
 X-Mailer: b4 0.17-dev-ce4c1
-X-Developer-Signature: v=1; a=openpgp-sha256; l=8256; i=brauner@kernel.org;
- h=from:subject:message-id; bh=lOaOSG9XUps4OEG0IvNRy9lQ1UJIH7otMWSnFL7mfmQ=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWQ9zjfwYP4201UoTDjBIPvicfazLu8MXGv08q41bGdfv
- lrpxaGUjlIWBjEuBlkxRRaHdpNwueU8FZuNMjVg5rAygQxh4OIUgIn8FWH473Rx2ZVGb87r2/x/
- sUV/tp7s3PNTcq3S18fsTyyU5oqwvmL4H3fl6V/ZpC7diTybaw7Z8xg6lSnHyBkZTZqz65JF2gs
- JFgA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=14055; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=MgT1spkvxgPt3hEvDfh3TXgbNtgvxemeRhl6B04s1vQ=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWQ9zjfwj72ldfz2XOedYsV2cdkSXzdOELqRrGwqlCv/u
+ LGWb69nRykLgxgXg6yYIotDu0m43HKeis1GmRowc1iZQIYwcHEKwESWvGD4HyY7ea7NVafcEn6t
+ deUKZS9kNWUC908+cZ+xYP35htnJ2owMP83fnmpZtF5n5z+TP6VHrHirJu7zeinb0zx5DpOR9Gp
+ XDgA=
 X-Developer-Key: i=brauner@kernel.org; a=openpgp;
  fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-zonefs sets SB_RDONLY from its I/O error handling without holding
-s_umount: with errors=remount-ro, when the zone report fails and when
-closing an explicitly opened zone fails. If that happens while the
-filesystem is frozen through bdev_freeze() thaw_super() sees a read-only
-superblock and leaves the s_writers rwsems locked. Writers hang and even
-a remount to read-write doesn't help because the next freeze blocks
-forever.
+Add btrfs_fs_rdonly() which tests BTRFS_FS_STATE_RO and use it instead
+of sb_rdonly() wherever btrfs checks for a read-only filesystem at
+runtime: the error handler, read repair, async discard, close_ctree(),
+btrfs_inc_block_group_ro(), check_inode_item(), device replace and add,
+cancelling a balance, the sysfs label and force_chunk_alloc stores, the
+qgroup PERTRANS conversions and the subvolume orphan cleanup. And check
+it next to every btrfs_root_readonly() check that guards a modification,
+e.g. in btrfs_permission(), btrfs_setattr(), btrfs_update_time(), the
+xattr and ACL handlers, btrfs_fileattr_set() and
+btrfs_remap_file_range_prep().
 
-So record the error in a new ZONEFS_SB_EMERGENCY_RO bit instead. All
-three places go through zonefs_set_emergency_ro() which keeps printing
-the warning once. Write opens, write_iter and setattr fail with EROFS
-and page_mkwrite with SIGBUS. An error on a read-only mount doesn't set
-the bit.
+BTRFS_FS_STATE_RO has always been set and cleared together with
+SB_RDONLY. The remaining sb_rdonly() users are mount and remount paths
+plus btrfs_is_full_ro() which only matters for rescue mounts.
 
-The state lasts until umount and zonefs.rst says so. A remount to
-read-only works and writes nothing. /proc/mounts keeps showing the
-filesystem read-write. ftruncate() and write faults through file
-descriptors and mappings from before the error are refused now too.
+This prepares for not setting SB_RDONLY from the error handler. Until
+then the only difference is that ftruncate() and FICLONE through files
+that were opened for writing before a forced remount to read-only, e.g.
+by sysrq u, fail with EROFS now instead of modifying the filesystem.
 
-Fixes: 8dcc1a9d90c1 ("fs: New zonefs file system")
-Cc: stable@vger.kernel.org
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- Documentation/filesystems/zonefs.rst |  4 ++--
- fs/zonefs/file.c                     | 17 +++++++++--------
- fs/zonefs/super.c                    | 34 ++++++++++++++++++++++++++--------
- fs/zonefs/zonefs.h                   | 16 ++++++++++++++++
- 4 files changed, 53 insertions(+), 18 deletions(-)
+ fs/btrfs/acl.c          |  3 ++-
+ fs/btrfs/bio.c          |  2 +-
+ fs/btrfs/block-group.c  |  2 +-
+ fs/btrfs/dev-replace.c  |  2 +-
+ fs/btrfs/discard.c      |  2 +-
+ fs/btrfs/disk-io.c      |  4 ++--
+ fs/btrfs/fs.h           | 10 ++++++++++
+ fs/btrfs/inode.c        |  8 ++++----
+ fs/btrfs/ioctl.c        |  8 ++++----
+ fs/btrfs/messages.c     |  8 ++++----
+ fs/btrfs/qgroup.c       |  4 ++--
+ fs/btrfs/reflink.c      |  3 ++-
+ fs/btrfs/sysfs.c        |  4 ++--
+ fs/btrfs/tree-checker.c |  2 +-
+ fs/btrfs/volumes.c      |  4 ++--
+ fs/btrfs/xattr.c        |  8 ++++++--
+ 16 files changed, 45 insertions(+), 29 deletions(-)
 
-diff --git a/Documentation/filesystems/zonefs.rst b/Documentation/filesystems/zonefs.rst
-index c22124c2213d..55ca0f2ef2b2 100644
---- a/Documentation/filesystems/zonefs.rst
-+++ b/Documentation/filesystems/zonefs.rst
-@@ -285,8 +285,8 @@ Further notes:
- * The "errors=remount-ro" mount option is the default behavior of zonefs I/O
-   error processing if no errors mount option is specified.
- * With the "errors=remount-ro" mount option, the change of the file access
--  permissions to read-only applies to all files. The file system is remounted
--  read-only.
-+  permissions to read-only applies to all files. A file system mounted
-+  read-write refuses all writes until it is unmounted.
- * Access permission and file size changes due to the device transitioning zones
-   to the offline condition are permanent. Remounting or reformatting the device
-   with mkfs.zonefs (mkzonefs) will not change back offline zone files to a good
-diff --git a/fs/zonefs/file.c b/fs/zonefs/file.c
-index 5b34849be7a2..8959b6b36a83 100644
---- a/fs/zonefs/file.c
-+++ b/fs/zonefs/file.c
-@@ -299,7 +299,7 @@ static vm_fault_t zonefs_filemap_page_mkwrite(struct vm_fault *vmf)
- 	struct inode *inode = file_inode(vmf->vma->vm_file);
- 	vm_fault_t ret;
+diff --git a/fs/btrfs/acl.c b/fs/btrfs/acl.c
+index 10a0d733bfd1..8bf11da118f7 100644
+--- a/fs/btrfs/acl.c
++++ b/fs/btrfs/acl.c
+@@ -107,8 +107,9 @@ int btrfs_set_acl(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 	int ret;
+ 	struct inode *inode = d_inode(dentry);
+ 	umode_t old_mode = inode->i_mode;
++	struct btrfs_root *root = BTRFS_I(inode)->root;
  
--	if (unlikely(IS_IMMUTABLE(inode)))
-+	if (unlikely(IS_IMMUTABLE(inode) || zonefs_emergency_ro(inode->i_sb)))
- 		return VM_FAULT_SIGBUS;
- 
- 	/*
-@@ -601,7 +601,7 @@ static ssize_t zonefs_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
- 	if (unlikely(IS_IMMUTABLE(inode)))
- 		return -EPERM;
- 
--	if (sb_rdonly(inode->i_sb))
-+	if (sb_rdonly(inode->i_sb) || zonefs_emergency_ro(inode->i_sb))
+-	if (btrfs_root_readonly(BTRFS_I(inode)->root))
++	if (btrfs_root_readonly(root) || btrfs_fs_rdonly(root->fs_info))
  		return -EROFS;
  
- 	/* Write operations beyond the zone capacity are not allowed */
-@@ -788,6 +788,9 @@ static int zonefs_file_open(struct inode *inode, struct file *file)
- {
+ 	if (type == ACL_TYPE_ACCESS && acl) {
+diff --git a/fs/btrfs/bio.c b/fs/btrfs/bio.c
+index 2c6234f6182f..987f29b1ac46 100644
+--- a/fs/btrfs/bio.c
++++ b/fs/btrfs/bio.c
+@@ -924,7 +924,7 @@ int btrfs_repair_bbio_failure(struct btrfs_bio *bbio, const struct bvec_iter *or
+ 	 * The fs either mounted RO or hit critical errors, no need
+ 	 * to continue repairing.
+ 	 */
+-	if (unlikely(sb_rdonly(fs_info->sb)))
++	if (unlikely(btrfs_fs_rdonly(fs_info)))
+ 		return 0;
+ 
+ 	if (btrfs_repair_one_zone(fs_info, logical))
+diff --git a/fs/btrfs/block-group.c b/fs/btrfs/block-group.c
+index 9a98e291769c..04c0c0b0c489 100644
+--- a/fs/btrfs/block-group.c
++++ b/fs/btrfs/block-group.c
+@@ -3138,7 +3138,7 @@ int btrfs_inc_block_group_ro(struct btrfs_block_group *cache,
+ 	 * In that case we should not start a new transaction on read-only fs.
+ 	 * Thus here we skip all chunk allocations.
+ 	 */
+-	if (sb_rdonly(fs_info->sb)) {
++	if (btrfs_fs_rdonly(fs_info)) {
+ 		mutex_lock(&fs_info->ro_block_group_mutex);
+ 		ret = inc_block_group_ro(cache, false);
+ 		mutex_unlock(&fs_info->ro_block_group_mutex);
+diff --git a/fs/btrfs/dev-replace.c b/fs/btrfs/dev-replace.c
+index cdfe093e5c5c..943ce620a046 100644
+--- a/fs/btrfs/dev-replace.c
++++ b/fs/btrfs/dev-replace.c
+@@ -1115,7 +1115,7 @@ int btrfs_dev_replace_cancel(struct btrfs_fs_info *fs_info)
+ 	int result;
  	int ret;
  
-+	if ((file->f_mode & FMODE_WRITE) && zonefs_emergency_ro(inode->i_sb))
-+		return -EROFS;
-+
- 	file->f_mode |= FMODE_CAN_ODIRECT;
- 	ret = generic_file_open(inode, file);
- 	if (ret)
-@@ -825,17 +828,15 @@ static void zonefs_seq_file_write_close(struct inode *inode)
- 			/*
- 			 * Leaving zones explicitly open may lead to a state
- 			 * where most zones cannot be written (zone resources
--			 * exhausted). So take preventive action by remounting
--			 * read-only.
-+			 * exhausted). So take preventive action by making the
-+			 * file system read-only.
- 			 */
- 			if (z->z_flags & ZONEFS_ZONE_OPEN &&
--			    !(sb->s_flags & SB_RDONLY)) {
-+			    !sb_rdonly(sb) && !zonefs_emergency_ro(sb)) {
- 				zonefs_warn(sb,
- 					"closing zone at %llu failed %d\n",
- 					z->z_sector, ret);
--				zonefs_warn(sb,
--					"remounting filesystem read-only\n");
--				sb->s_flags |= SB_RDONLY;
-+				zonefs_set_emergency_ro(sb);
- 			}
- 			goto unlock;
- 		}
-diff --git a/fs/zonefs/super.c b/fs/zonefs/super.c
-index b97f1f2b8dda..e7c97b75c601 100644
---- a/fs/zonefs/super.c
-+++ b/fs/zonefs/super.c
-@@ -247,6 +247,19 @@ static void zonefs_inode_update_mode(struct inode *inode)
- 	z->z_mode = inode->i_mode;
+-	if (sb_rdonly(fs_info->sb))
++	if (btrfs_fs_rdonly(fs_info))
+ 		return -EROFS;
+ 
+ 	mutex_lock(&dev_replace->lock_finishing_cancel_unmount);
+diff --git a/fs/btrfs/discard.c b/fs/btrfs/discard.c
+index 1c304bf473e5..e5c029813228 100644
+--- a/fs/btrfs/discard.c
++++ b/fs/btrfs/discard.c
+@@ -86,7 +86,7 @@ static bool btrfs_run_discard_work(const struct btrfs_discard_ctl *discard_ctl)
+ 						     struct btrfs_fs_info,
+ 						     discard_ctl);
+ 
+-	return (!(fs_info->sb->s_flags & SB_RDONLY) &&
++	return (!btrfs_fs_rdonly(fs_info) &&
+ 		test_bit(BTRFS_FS_DISCARD_RUNNING, &fs_info->flags));
+ }
+ 
+diff --git a/fs/btrfs/disk-io.c b/fs/btrfs/disk-io.c
+index c45cda4290d5..3dcacf7e4d1d 100644
+--- a/fs/btrfs/disk-io.c
++++ b/fs/btrfs/disk-io.c
+@@ -177,7 +177,7 @@ static int btrfs_repair_eb_io_failure(const struct extent_buffer *eb,
+ 	struct btrfs_bio *bbio;
+ 	int ret;
+ 
+-	if (sb_rdonly(fs_info->sb))
++	if (btrfs_fs_rdonly(fs_info))
+ 		return -EROFS;
+ 
+ 	/*
+@@ -4483,7 +4483,7 @@ void __cold close_ctree(struct btrfs_fs_info *fs_info)
+ 	/* Cancel or finish ongoing discard work */
+ 	btrfs_discard_cleanup(fs_info);
+ 
+-	if (!sb_rdonly(fs_info->sb)) {
++	if (!btrfs_fs_rdonly(fs_info)) {
+ 		/*
+ 		 * The cleaner kthread is stopped, so do one final pass over
+ 		 * unused block groups.
+diff --git a/fs/btrfs/fs.h b/fs/btrfs/fs.h
+index 2dd167c32d61..024c3ec7d058 100644
+--- a/fs/btrfs/fs.h
++++ b/fs/btrfs/fs.h
+@@ -1194,6 +1194,16 @@ static inline int btrfs_need_cleaner_sleep(const struct btrfs_fs_info *fs_info)
+ 		btrfs_fs_closing(fs_info);
  }
  
 +/*
-+ * Refuse writes after an error. SB_RDONLY needs s_umount and a remount, set on
-+ * a frozen file system it makes thaw_super() leave s_writers locked.
++ * Check whether the filesystem is read-only. BTRFS_FS_STATE_RO is set and
++ * cleared together with SB_RDONLY on mount, on remount and when an error forces
++ * the filesystem read-only. Use this instead of sb_rdonly() at runtime.
 + */
-+void zonefs_set_emergency_ro(struct super_block *sb)
++static inline bool btrfs_fs_rdonly(const struct btrfs_fs_info *fs_info)
 +{
-+	if (sb_rdonly(sb) ||
-+	    test_and_set_bit(ZONEFS_SB_EMERGENCY_RO, &ZONEFS_SB(sb)->s_state))
-+		return;
-+
-+	zonefs_warn(sb, "remounting filesystem read-only\n");
++	return test_bit(BTRFS_FS_STATE_RO, &fs_info->fs_state);
 +}
 +
- static int zonefs_io_error_cb(struct blk_zone *zone, unsigned int idx,
- 			      void *data)
+ static inline void btrfs_wake_unfinished_drop(struct btrfs_fs_info *fs_info)
  {
-@@ -339,13 +352,11 @@ static void zonefs_handle_io_error(struct inode *inode, struct blk_zone *zone,
- 		z->z_flags &= ~ZONEFS_ZONE_OPEN;
+ 	clear_and_wake_up_bit(BTRFS_FS_UNFINISHED_DROPS, &fs_info->flags);
+diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
+index abaa33471456..415c5145fcbe 100644
+--- a/fs/btrfs/inode.c
++++ b/fs/btrfs/inode.c
+@@ -5433,7 +5433,7 @@ static int btrfs_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
+ 	struct btrfs_root *root = BTRFS_I(inode)->root;
+ 	int ret;
  
- 	/*
--	 * If error=remount-ro was specified, any error result in remounting
--	 * the volume as read-only.
-+	 * If error=remount-ro was specified, any error makes the volume
-+	 * read-only.
- 	 */
--	if ((sbi->s_mount_opts & ZONEFS_MNTOPT_ERRORS_RO) && !sb_rdonly(sb)) {
--		zonefs_warn(sb, "remounting filesystem read-only\n");
--		sb->s_flags |= SB_RDONLY;
--	}
-+	if (sbi->s_mount_opts & ZONEFS_MNTOPT_ERRORS_RO)
-+		zonefs_set_emergency_ro(sb);
+-	if (btrfs_root_readonly(root))
++	if (btrfs_root_readonly(root) || btrfs_fs_rdonly(root->fs_info))
+ 		return -EROFS;
  
- 	/*
- 	 * Update block usage stats and the inode size  to prevent access to
-@@ -404,8 +415,7 @@ void __zonefs_io_error(struct inode *inode, bool write)
- 	if (ret != 1) {
- 		zonefs_err(sb, "Get inode %llu zone information failed %d\n",
- 			   inode->i_ino, ret);
--		zonefs_warn(sb, "remounting filesystem read-only\n");
--		sb->s_flags |= SB_RDONLY;
-+		zonefs_set_emergency_ro(sb);
- 		return;
+ 	ret = setattr_prepare(idmap, dentry, attr);
+@@ -6058,7 +6058,7 @@ struct inode *btrfs_lookup_dentry(struct inode *dir, struct dentry *dentry)
+ 			return ERR_CAST(inode);
+ 
+ 		down_read(&fs_info->cleanup_work_sem);
+-		if (!sb_rdonly(inode->vfs_inode.i_sb))
++		if (!btrfs_fs_rdonly(fs_info))
+ 			ret = btrfs_orphan_cleanup(sub_root);
+ 		up_read(&fs_info->cleanup_work_sem);
+ 		if (ret) {
+@@ -6421,7 +6421,7 @@ static int btrfs_update_time(struct inode *inode, enum fs_update_time type,
+ 	struct btrfs_root *root = BTRFS_I(inode)->root;
+ 	int dirty;
+ 
+-	if (btrfs_root_readonly(root))
++	if (btrfs_root_readonly(root) || btrfs_fs_rdonly(root->fs_info))
+ 		return -EROFS;
+ 	if (flags & IOCB_NOWAIT)
+ 		return -EAGAIN;
+@@ -9316,7 +9316,7 @@ static int btrfs_permission(const struct mnt_idmap *idmap,
+ 
+ 	if (mask & MAY_WRITE &&
+ 	    (S_ISREG(mode) || S_ISDIR(mode) || S_ISLNK(mode))) {
+-		if (btrfs_root_readonly(root))
++		if (btrfs_root_readonly(root) || btrfs_fs_rdonly(root->fs_info))
+ 			return -EROFS;
+ 		if (BTRFS_I(inode)->flags & BTRFS_INODE_READONLY)
+ 			return -EACCES;
+diff --git a/fs/btrfs/ioctl.c b/fs/btrfs/ioctl.c
+index f3e2afe221be..2063075906c8 100644
+--- a/fs/btrfs/ioctl.c
++++ b/fs/btrfs/ioctl.c
+@@ -291,7 +291,7 @@ int btrfs_fileattr_set(const struct mnt_idmap *idmap,
+ 	u32 inode_flags;
+ 	bool prop_set = false;
+ 
+-	if (btrfs_root_readonly(root))
++	if (btrfs_root_readonly(root) || btrfs_fs_rdonly(fs_info))
+ 		return -EROFS;
+ 
+ 	if (fileattr_has_fsx(fa))
+@@ -2453,7 +2453,7 @@ static int btrfs_ioctl_defrag(struct file *file, void __user *argp)
+ 	if (ret)
+ 		return ret;
+ 
+-	if (btrfs_root_readonly(root)) {
++	if (btrfs_root_readonly(root) || btrfs_fs_rdonly(root->fs_info)) {
+ 		ret = -EROFS;
+ 		goto out;
+ 	}
+@@ -3191,7 +3191,7 @@ static long btrfs_ioctl_dev_replace(struct btrfs_fs_info *fs_info,
+ 
+ 	switch (p->cmd) {
+ 	case BTRFS_IOCTL_DEV_REPLACE_CMD_START:
+-		if (sb_rdonly(fs_info->sb))
++		if (btrfs_fs_rdonly(fs_info))
+ 			return -EROFS;
+ 		if (!btrfs_exclop_start(fs_info, BTRFS_EXCLOP_DEV_REPLACE)) {
+ 			ret = BTRFS_ERROR_DEV_EXCL_RUN_IN_PROGRESS;
+@@ -3927,7 +3927,7 @@ static long _btrfs_ioctl_set_received_subvol(struct file *file,
+ 		goto out;
  	}
  
-@@ -539,6 +549,9 @@ static int zonefs_inode_setattr(const struct mnt_idmap *idmap,
- 	struct inode *inode = d_inode(dentry);
- 	int ret;
+-	if (btrfs_root_readonly(root)) {
++	if (btrfs_root_readonly(root) || btrfs_fs_rdonly(fs_info)) {
+ 		ret = -EROFS;
+ 		goto out;
+ 	}
+diff --git a/fs/btrfs/messages.c b/fs/btrfs/messages.c
+index 0704be7be871..cedca4050831 100644
+--- a/fs/btrfs/messages.c
++++ b/fs/btrfs/messages.c
+@@ -132,10 +132,10 @@ void __btrfs_handle_fs_error(struct btrfs_fs_info *fs_info, const char *function
+ #endif
  
-+	if (unlikely(zonefs_emergency_ro(inode->i_sb)))
-+		return -EROFS;
-+
- 	if (unlikely(IS_IMMUTABLE(inode)))
- 		return -EPERM;
+ 	/*
+-	 * Special case: if the error is EROFS, and we're already under
+-	 * SB_RDONLY, then it is safe here.
++	 * Special case: if the error is EROFS, and we're already read-only,
++	 * then it is safe here.
+ 	 */
+-	if (error == -EROFS && sb_rdonly(sb))
++	if (error == -EROFS && btrfs_fs_rdonly(fs_info))
+ 		return;
  
-@@ -1369,6 +1382,11 @@ static int zonefs_reconfigure(struct fs_context *fc)
- 	struct super_block *sb = fc->root->d_sb;
- 	struct zonefs_sb_info *sbi = sb->s_fs_info;
+ #ifdef CONFIG_PRINTK
+@@ -168,7 +168,7 @@ void __btrfs_handle_fs_error(struct btrfs_fs_info *fs_info, const char *function
+ 	if (!(sb->s_flags & SB_BORN))
+ 		return;
  
-+	/* An error made the file system read-only until it is unmounted. */
-+	if (sb_rdonly(sb) && !(fc->sb_flags & SB_RDONLY) &&
-+	    zonefs_emergency_ro(sb))
-+		return -EROFS;
-+
- 	sync_filesystem(fc->root->d_sb);
- 	/* Copy new options from ctx into sbi. */
- 	sbi->s_mount_opts = ctx->s_mount_opts;
-diff --git a/fs/zonefs/zonefs.h b/fs/zonefs/zonefs.h
-index 8175652241b5..b14822cb9c02 100644
---- a/fs/zonefs/zonefs.h
-+++ b/fs/zonefs/zonefs.h
-@@ -241,6 +241,16 @@ struct zonefs_sb_info {
- 	bool			s_sysfs_registered;
- 	struct kobject		s_kobj;
- 	struct completion	s_kobj_unregister;
-+
-+	unsigned long		s_state;
-+};
-+
-+/*
-+ * Super block state bits (s_state).
-+ */
-+enum {
-+	/* An error made the file system read-only until it is unmounted */
-+	ZONEFS_SB_EMERGENCY_RO,
- };
+-	if (sb_rdonly(sb))
++	if (btrfs_fs_rdonly(fs_info))
+ 		return;
  
- static inline struct zonefs_sb_info *ZONEFS_SB(struct super_block *sb)
-@@ -248,6 +258,11 @@ static inline struct zonefs_sb_info *ZONEFS_SB(struct super_block *sb)
- 	return sb->s_fs_info;
+ 	btrfs_discard_stop(fs_info);
+diff --git a/fs/btrfs/qgroup.c b/fs/btrfs/qgroup.c
+index a0651fbfe778..dc96c6aca1a9 100644
+--- a/fs/btrfs/qgroup.c
++++ b/fs/btrfs/qgroup.c
+@@ -4658,7 +4658,7 @@ static void qgroup_convert_meta(struct btrfs_fs_info *fs_info, u64 ref_root,
+ 
+ 		qgroup_rsv_release(fs_info, qgroup, num_bytes,
+ 				BTRFS_QGROUP_RSV_META_PREALLOC);
+-		if (!sb_rdonly(fs_info->sb))
++		if (!btrfs_fs_rdonly(fs_info))
+ 			qgroup_rsv_add(fs_info, qgroup, num_bytes,
+ 				       BTRFS_QGROUP_RSV_META_PERTRANS);
+ 
+@@ -4688,7 +4688,7 @@ void btrfs_qgroup_convert_reserved_meta(struct btrfs_root *root, int num_bytes)
+ 				      BTRFS_QGROUP_RSV_META_PREALLOC);
+ 	trace_btrfs_qgroup_meta_convert(root, num_bytes);
+ 	qgroup_convert_meta(fs_info, btrfs_root_id(root), num_bytes);
+-	if (!sb_rdonly(fs_info->sb))
++	if (!btrfs_fs_rdonly(fs_info))
+ 		add_root_meta_rsv(root, num_bytes, BTRFS_QGROUP_RSV_META_PERTRANS);
  }
  
-+static inline bool zonefs_emergency_ro(struct super_block *sb)
-+{
-+	return test_bit(ZONEFS_SB_EMERGENCY_RO, &ZONEFS_SB(sb)->s_state);
-+}
-+
- #define zonefs_info(sb, format, args...)	\
- 	pr_info("zonefs (%s): " format, sb->s_id, ## args)
- #define zonefs_err(sb, format, args...)		\
-@@ -260,6 +275,7 @@ void zonefs_inode_account_active(struct inode *inode);
- int zonefs_inode_zone_mgmt(struct inode *inode, enum req_op op);
- void zonefs_i_size_write(struct inode *inode, loff_t isize);
- void zonefs_update_stats(struct inode *inode, loff_t new_isize);
-+void zonefs_set_emergency_ro(struct super_block *sb);
- void __zonefs_io_error(struct inode *inode, bool write);
+diff --git a/fs/btrfs/reflink.c b/fs/btrfs/reflink.c
+index b5d2c094941d..de9bc8ba5028 100644
+--- a/fs/btrfs/reflink.c
++++ b/fs/btrfs/reflink.c
+@@ -857,7 +857,8 @@ static int btrfs_remap_file_range_prep(struct file *file_in, loff_t pos_in,
+ 	if (!(remap_flags & REMAP_FILE_DEDUP)) {
+ 		struct btrfs_root *root_out = inode_out->root;
  
- static inline void zonefs_io_error(struct inode *inode, bool write)
+-		if (btrfs_root_readonly(root_out))
++		if (btrfs_root_readonly(root_out) ||
++		    btrfs_fs_rdonly(root_out->fs_info))
+ 			return -EROFS;
+ 
+ 		ASSERT(inode_in->vfs_inode.i_sb == inode_out->vfs_inode.i_sb);
+diff --git a/fs/btrfs/sysfs.c b/fs/btrfs/sysfs.c
+index 3ac1fa608d3b..c7522aafde1b 100644
+--- a/fs/btrfs/sysfs.c
++++ b/fs/btrfs/sysfs.c
+@@ -751,7 +751,7 @@ static ssize_t btrfs_force_chunk_alloc_store(struct kobject *kobj,
+ 	if (!capable(CAP_SYS_ADMIN))
+ 		return -EPERM;
+ 
+-	if (sb_rdonly(fs_info->sb))
++	if (btrfs_fs_rdonly(fs_info))
+ 		return -EROFS;
+ 
+ 	ret = kstrtobool(buf, &val);
+@@ -980,7 +980,7 @@ static ssize_t btrfs_label_store(struct kobject *kobj,
+ 	if (!fs_info)
+ 		return -EPERM;
+ 
+-	if (sb_rdonly(fs_info->sb))
++	if (btrfs_fs_rdonly(fs_info))
+ 		return -EROFS;
+ 
+ 	/*
+diff --git a/fs/btrfs/tree-checker.c b/fs/btrfs/tree-checker.c
+index 9cd79d97b9b5..6cce0e6c759e 100644
+--- a/fs/btrfs/tree-checker.c
++++ b/fs/btrfs/tree-checker.c
+@@ -1325,7 +1325,7 @@ static int check_inode_item(struct extent_buffer *leaf,
+ 			       "unknown incompat flags detected: 0x%x", flags);
+ 		return -EUCLEAN;
+ 	}
+-	if (unlikely(!sb_rdonly(fs_info->sb) &&
++	if (unlikely(!btrfs_fs_rdonly(fs_info) &&
+ 		     (ro_flags & ~BTRFS_INODE_RO_FLAG_MASK))) {
+ 		inode_item_err(leaf, slot,
+ 			"unknown ro-compat flags detected on writeable mount: 0x%x",
+diff --git a/fs/btrfs/volumes.c b/fs/btrfs/volumes.c
+index d3e6a9b429dd..47879cc2160d 100644
+--- a/fs/btrfs/volumes.c
++++ b/fs/btrfs/volumes.c
+@@ -2964,7 +2964,7 @@ int btrfs_init_new_device(struct btrfs_fs_info *fs_info, const char *device_path
+ 	bool seeding_dev = false;
+ 	bool locked = false;
+ 
+-	if (sb_rdonly(sb) && !fs_devices->seeding)
++	if (btrfs_fs_rdonly(fs_info) && !fs_devices->seeding)
+ 		return -EROFS;
+ 
+ 	/* Forbid freezing until the device is a committed member (or unwound). */
+@@ -5297,7 +5297,7 @@ int btrfs_cancel_balance(struct btrfs_fs_info *fs_info)
+ 	 * mount time if the mount is read-write. Otherwise it's still paused
+ 	 * and we must not allow cancelling as it deletes the item.
+ 	 */
+-	if (sb_rdonly(fs_info->sb)) {
++	if (btrfs_fs_rdonly(fs_info)) {
+ 		mutex_unlock(&fs_info->balance_mutex);
+ 		return -EROFS;
+ 	}
+diff --git a/fs/btrfs/xattr.c b/fs/btrfs/xattr.c
+index cbee10b6b49a..c38ddee78636 100644
+--- a/fs/btrfs/xattr.c
++++ b/fs/btrfs/xattr.c
+@@ -365,7 +365,9 @@ static int btrfs_xattr_handler_set(const struct xattr_handler *handler,
+ 				   const char *name, const void *buffer,
+ 				   size_t size, int flags)
+ {
+-	if (btrfs_root_readonly(BTRFS_I(inode)->root))
++	struct btrfs_root *root = BTRFS_I(inode)->root;
++
++	if (btrfs_root_readonly(root) || btrfs_fs_rdonly(root->fs_info))
+ 		return -EROFS;
+ 
+ 	name = xattr_full_name(handler, name);
+@@ -409,7 +411,9 @@ static int btrfs_xattr_handler_set_security(const struct xattr_handler *handler,
+ 					    const void *buffer,
+ 					    size_t size, int flags)
+ {
+-	if (btrfs_root_readonly(BTRFS_I(inode)->root))
++	struct btrfs_root *root = BTRFS_I(inode)->root;
++
++	if (btrfs_root_readonly(root) || btrfs_fs_rdonly(root->fs_info))
+ 		return -EROFS;
+ 
+ 	name = xattr_full_name(handler, name);
 
 -- 
 2.53.0
