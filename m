@@ -1,21 +1,21 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=213.95.11.211
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793276519;
-	b=UzjhUtHcQvG4XNJxZS30M+b8xxQxlLc3+MwS8lpV4X2VG91XCKFeEewpvvZ/ti3IU+x6
-	 zECOGypZEKCLKrheQhsV6uhwLAJ+4t+VvkN4YzwXfQ8IjAWhAXpUqMQmJZGvOboBKyfMe
-	 l5/0NNkzuhv6LV3rc2mBFXVtOA+0QgtfOA4BV+Mm1djjBZawPf3It5wZpsK2mWqO+qmC0
-	 faSaA0avhtRQK9mwzLuyQ3712e0Mp+NhxneVGt8OJTqJlOqiFL9TrryDKszuSUdb8lX1M
-	 0eMNRgXUlPafwFuWjIx5fOrB4prhDrx7oAQJkOLXE/xCAfhiXfMS3UKDHCtb3N56Eng==
+	t=1793276743;
+	b=sqpkX+yZLp86f4C93o+b9d6rAUBE2iELog6TxSX+i3YXCib52ECJWLkpI8sG3yGHZGeU
+	 pnvhRBLsSVOa+I6KLlEVtfL1kviBdVAFIvLxBcynMyMNfQ8hhgCiu8cguskBw7fTdGHOQ
+	 ErYKrLmcFIMNbZZWhcT48RNbVSzHMCHtS/A9QP31CGUDH4vTUY4MGz2fdYiU3Zkl+72To
+	 JEdSeB0uhh7n6GFxJn9EkZTbWRGyNBKtXbOPTQmtwy8mLuVdpBulgg6Wq56sDi16wIyK2
+	 mUbXFey6YhfG9fKEVzaOQNONlEIxigHzfKcUVp2NZcme+joN+riJFtdg8pofzKFb55A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793276519;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793276743;
 	h=DMARC-Filter:Received:Date:From:To:Cc:Subject:Message-ID:References:
 	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To:User-Agent;
-	bh=FEPg0IBYjJwtMvKdVK/6nCY/XVULRmnng6fnH4Yf8Do=;
-	b=TJnfNy9uyPPoaf/f4qRTtDlGwC4gzOeShrwBalIXbp9YiBtQ4J/Of83cxtBMbpR78TDG
-	 uT0Goaayx4TFWjFjDgzWvgxOA6gfczc0eezoTU19qyh9x8aYqwtSh5N/kIsGNjWoY+a/d
-	 98Z93xeNQ/+5xj2/ZAQv7Oo+l0lZk9wLFCSkwMWO+FK/rU/EVAoVPN9cVwwFTfKGQoqJl
-	 F2xGOORmIGIeR66O8/TVfxD+ks7O6wHhWmaVqHdp/jYrD6qIJkfKWWbvvyCGlqAKIYVku
-	 9NxQdCw7BTCG5zm0cZmJI56wYfCN/WimRfQkH1IiswAmVPPVsfIBlQtTe9/I59pcgNw==
+	bh=aShoOWMQtI6kpARIbOBKfJ+D4MCc5UK8EnPBegPB/rM=;
+	b=dMgzBanvYi0pW+FiEawEQyZLorqi5Fcvn/I7gDztpGEqDdNzHgRtRFfuhO97YX32ZUD6
+	 G9HsJt2XoH64e8VPMnCb6SKFsK7p7DOFZBcU86OZQ5HPNOIYXQ6BumP2zphjVMUI7cxFQ
+	 lqinF1XGOj+Z+90BwDxT9ii993pbTtnxOriimu2EwDBYETamzlGJviuDZ+VPAFjFIUZHh
+	 rdtyiKTvHqnFEYyGaUFSqGSZjalfnFwCzl2Yhs+FWEqRDT9JgTCyJtrphdlzkyZNku7+W
+	 c4SFLDDR2HYeHOZz1IR513UuPsbaO4ddrT3BUZHjLdkWcq/IbxvAJXN7pF/AEs7xTFg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=lst.de;
 	spf=pass smtp.mailfrom=lst.de;
@@ -23,28 +23,28 @@ ARC-Authentication-Results: i=1; smtp.subspace.kernel.org;
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2E09606A31C;
-	Thu, 29 Oct 2026 12:21:58 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B2E09606A31C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF8D9606A31A
+	for <linux-xfs@vger.kernel.org>; Thu, 29 Oct 2026 12:25:42 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EF8D9606A31A
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 770EF68BFE; Thu, 29 Oct 2026 13:21:55 +0100 (CET)
-Date: Thu, 29 Oct 2026 13:21:55 +0100
+	id 1CBAD68BEB; Thu, 29 Oct 2026 13:25:38 +0100 (CET)
+Date: Thu, 29 Oct 2026 13:25:37 +0100
 From: Christoph Hellwig <hch@lst.de>
-To: Christian Brauner <brauner@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org,
-	Chris Mason <clm@meta.com>, Josef Bacik <josef@toxicpanda.com>,
-	Matthew Wilcox <willy@infradead.org>,
-	Zhang Yi <yi.zhang@huaweicloud.com>,
-	Joanne Koong <joannelkoong@gmail.com>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: Re: [PATCH 1/2] iomap: don't mark unwritten parts of a folio
- uptodate
-Message-ID: <20261029122155.GB24811@lst.de>
-References: <20261029-work-iomap-ai-fixes-v1-0-7eda63bc1b13@kernel.org> <20261029-work-iomap-ai-fixes-v1-1-7eda63bc1b13@kernel.org> <20261029121220.GA24197@lst.de> <20261029-betuchte-unzeit-heimcomputer-392ff6bd4772@brauner>
+To: Andrey Albershteyn <aalbersh@kernel.org>
+Cc: linux-xfs@vger.kernel.org, cem@kernel.org, cihan.cihan@gmail.com,
+	cmaiolino@redhat.com, dchinner@redhat.com, dgc@kernel.org,
+	djwong@kernel.org, floss@jetm.me, hch@lst.de,
+	hemanth.selam@gmail.com, jiapenglin@tencent.com,
+	johannes.thumshirn@wdc.com, kees+treewide@kernel.org,
+	norbert@doyensec.com,
+	syzbot+837bcd54843dd6262f2f@syzkaller.appspotmail.com,
+	yijiangshan@kylinos.cn, yun.zhou@windriver.com,
+	zenghongling@kylinos.cn
+Subject: Re: [PATCH 00/28] xfsprogs: libxfs sync for v7.3
+Message-ID: <20261029122537.GA25162@lst.de>
+References: <20261029120631.803074-1-aalbersh@kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -56,23 +56,10 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261029-betuchte-unzeit-heimcomputer-392ff6bd4772@brauner>
+In-Reply-To: <20261029120631.803074-1-aalbersh@kernel.org>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Thu, Oct 29, 2026 at 01:20:09PM +0100, Christian Brauner wrote:
-> > Can we wire this up to xfstests, please?
-> 
-> I have an endless queue of additional bugs to go through so I can say
-> yes but I can't commit to any timeframe nor the ability to remember.
-> 
-> > > Willy reported this back in 2024 (cf. [1]) and Zhang Yi posted the same
-> > > fix (cf. [2]) but it never got merged.
-> > 
-> > Should we credit the original submission then?
-> 
-> It's references in the commit message already. Tell me what you think we
-> need to see there and I'll amend in-tree.
+From a quick look over all the changes not directly ported from the
+kernel this looks good:
 
-Usually that just means taking the older patch instead of the newer one.
-Although chances are that this one might not apply anymore, in which
-case taking the new one should be ok.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
