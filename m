@@ -1,48 +1,48 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793290059;
-	b=Xm7yKQecN9mi203xA5fneyzPMQSD1NxvmlD3Ro1RV+7s39JwJTOgOGerWuHjA6w84F77
-	 APu3x2W9UeT4/bBfAjfdJM5nV7/1sXbMjYYapzgyR95D2utSnmJcr8aHDTqjSwcvfk7hz
-	 In1xINM8U1SJT5ikdSyWJY8KvJkDgQvUn5ihadg8E0mJtxb3h+PM0mJIw3u7EjCBayfUj
-	 Bl1nxvthIZLVylK5gp5Vky2M67siUic4zWp/zP6TuPswvsL+YCMoD7jZlmodx1Y7bzXhz
-	 s1HwIkH5oS2jqzt3G/ExNaMxEF2lDIDrQmtoqDIIxW7Rsa3cKKSg/4/ohB5ob8z++Yw==
+	t=1793290072;
+	b=Vo628Gip882foFX7RiizprfD2IYVucLlUjKKnGRXLiHIqYvn3YYuHSdx4LcqEw5uM9S6
+	 1wtZP/pfTqTkg9m6XaLINSog/AwnmYXUzAZ8UXN0Z7zASK+gRcyFMbHHCgja5qtG2UtjG
+	 yt8cRcilB0usq3akL9/TBfEk25lLQi6QkRjqYZQt7r+O0EQCvFUogwbHeqyOO7Qp+jiuK
+	 uCuUSKPbfN4gbl3ir4/4DV0q2gM7saFuwuAHSJeHFY/ApLC+ujO3qhNCCDwZj7E1SIn5f
+	 V/ekwYOPOHI8prLht1QhS+FpEDCfsaySww3gjtgOaOK1WzMQT4tFGQAPJrb+li/Sb3Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793290059;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793290072;
 	h=Received:DKIM-Signature:From:Date:Subject:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
 	 X-Mailer:X-Developer-Signature:X-Developer-Key;
-	bh=xNgZk8sqL0pi/BgMC10+2IZal4rVk0LbmvrvuXhJ2Dk=;
-	b=dcKWOwdxgXjfAr7r4/03PLelooPvmjfxaRryQLnhDB4aT67DHVPsQBs7dim992ABxsyk
-	 emKIgpbLEuwn1kqtF8M4L4UH7S88J0yIjqnFOQHbFtBf3QGTKDPrzXsWC/4QBn8h7f320
-	 4sjC9auEfq/Al9l5yAmt3VXJJ/QCj6GNxXYjYBldnkywFJehTh3ClwjFz5vtBqWM99NIm
-	 QnuYgaXcVX91RqBs4GETyjJmZo/YjsrnSyaxYbp35fHklfiu4+/kCsVNEJDncBHdeM10R
-	 MprIWmFwrfWE3WES2mN9N5bRh03Ovkc9Oywp5IeMGeddStTT8x+pszvVWIYvMRexUDw==
+	bh=vWXoC3DGBRzxnPUyhv6W7lJ/GIRbUyR3KNIt8HGMfr4=;
+	b=ouhhLRjTpifHCQYRfJrz92AUUUTd8/ScbXGgiDQnMeZNyrpkKtGB2DXUUVMF0TUsQQWC
+	 Az1AkVMvqXJuuNygK2cu2d4bO1eU/bwEC2c/J8QmFqzlnygfrGytMulSOwuxoaRS0Kw8Y
+	 gCWT/cGniV3Dcso13idW3ms+B79hXxpIjUXLgtPkRsA3OgxxAO36aKVAfN4yOR9I09713
+	 FWl0Lgj1s/Urf/lMSgy16QhFRZoD1L7z7QqGZvId26o1QqvxppR4p97QMfZ6WoIXCfGbm
+	 bZigWO3c2opWM4x92TSKfsZei9vyf+gIsmgY82GmMfHGARIxVvyFnqQKT25Ca96Q+0A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AlRagrjY;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hUtWbXhW;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0ECE606A31A;
-	Thu, 29 Oct 2026 16:07:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD4FA606A31C;
+	Thu, 29 Oct 2026 16:07:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AlRagrjY
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 805901F01826;
-	Thu, 29 Oct 2026 16:07:34 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hUtWbXhW
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CFADB1F031E1;
+	Thu, 29 Oct 2026 16:07:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793290058;
-	bh=xNgZk8sqL0pi/BgMC10+2IZal4rVk0LbmvrvuXhJ2Dk=;
+	s=k20260515; t=1793290071;
+	bh=vWXoC3DGBRzxnPUyhv6W7lJ/GIRbUyR3KNIt8HGMfr4=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=AlRagrjY6o1gWRJCJgnfCv2vf7Bcfac+CV9YW1vTP2WwuW9tEuQHBhevP5ePYv6wU
-	 tZm/UfOxlRJO5sw/a2Nplq+A8PWYDB8BkatYa8/unWums0YZOd7jiODkUS1bQuoXDc
-	 2r237CVoc0X/eY5Af46WpEvX1ZVjahYsPaB2Gk6AXIVz2nlCClJI5khPlYaE7iT7p/
-	 XDhxiJCpt5DJKGR+EHHl4F0uT78HBaolBZCT7M33rjZhbbhgAo2PcjBtaKm9eZkw6X
-	 NWXJ/Hi6PIE9ox1qUK/7i9IAhFrGTWMyjol5owtz516sIM6RN//r2rt7z0U4U/YYMu
-	 YskLTlKankV9Q==
+	b=hUtWbXhW3fJajno1Nrb7Ec4J0dHYN6h6leJoiQclqb/1dXpC0rODkG3fKujqVJr7g
+	 34NGOPd1Z8IWVuqab9cP4r7S6etN9kh/tBXDV04IsaZ7rc2d4TTMfJjVR6z3LsJoWX
+	 0mS6H/DFYxU2xnNZuLCWw9zQFOsRo2dvw4vxruXIcM2HLQ3+08QrcQNbaK/VZR48kh
+	 YE0d2V6FVDCPczojym4K41diZWjEoXTRQZEnMtQK4MjJ5FoKWk6P5rJJAGCIuXKDmD
+	 DOfd75tdwmpnHOd2KQUSHKuR9w7mDMj+YlbQ5eIr8OX70MQbHtWSH4qBw84eEdmYXu
+	 MtDsALtrfKoSw==
 From: Christian Brauner <brauner@kernel.org>
-Date: Thu, 29 Oct 2026 17:06:55 +0100
-Subject: [PATCH v2 04/34] ext2: don't set SB_RDONLY after filesystem errors
+Date: Thu, 29 Oct 2026 17:06:58 +0100
+Subject: [PATCH v2 07/34] fat: don't set SB_RDONLY after filesystem errors
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -54,7 +54,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261029-work-fs-sb_rdonly-v2-4-2f44f64f0b66@kernel.org>
+Message-Id: <20261029-work-fs-sb_rdonly-v2-7-2f44f64f0b66@kernel.org>
 References: <20261029-work-fs-sb_rdonly-v2-0-2f44f64f0b66@kernel.org>
 In-Reply-To: <20261029-work-fs-sb_rdonly-v2-0-2f44f64f0b66@kernel.org>
 To: linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.com>
@@ -65,217 +65,220 @@ Cc: Al Viro <viro@zeniv.linux.org.uk>, ecryptfs@vger.kernel.org,
  linux-btrfs@vger.kernel.org, gfs2@lists.linux.dev, 
  linux-efi@vger.kernel.org, linux-mtd@lists.infradead.org, 
  linux-xfs@vger.kernel.org, 
- "Christian Brauner (Amutable)" <brauner@kernel.org>, 
- Karl Mehltretter <kmehltretter@gmail.com>
+ "Christian Brauner (Amutable)" <brauner@kernel.org>
 X-Mailer: b4 0.17-dev-ce4c1
-X-Developer-Signature: v=1; a=openpgp-sha256; l=7123; i=brauner@kernel.org;
- h=from:subject:message-id; bh=5u6R9zyuZJuhy+aULhR8Qmnz6ME9R6gfqmURw2sS7bQ=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWQ9ztdTcqkry2sNm/UkdlqstlmLZfOJPyXf/Zv1Gi4ds
- vu446ZZRykLgxgXg6yYIotDu0m43HKeis1GmRowc1iZQIYwcHEKwETmbWBk6NSRkMm8L+79MOZB
- ilh2q/3C3Y21/O3N07TCL2Uniy54yPA/osBzTguz6qL/+QvZjD99OlhX/nB9ZZQO+13e3VnnFGa
- wAQA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=7436; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=8raaRLMglHB1XzqC3kqIXTQ2e6NIuFME1v48GfRyzxs=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWQ9ztfvYHB9vsnz5x3XmYyHfxs2f/r63Dfm+ZOFbRuEH
+ 52bm8O1pqOUhUGMi0FWTJHFod0kXG45T8Vmo0wNmDmsTCBDGLg4BWAixzcx/BVea9y9bfOv8ijd
+ w1cCtgem+tSvUBc8JL28WUXJ6fkhj0UM/x1Lc8MKtk/YanDo+RP+95vm84afb1uT/P97oXVzw79
+ bYVwA
 X-Developer-Key: i=brauner@kernel.org; a=openpgp;
  fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-With errors=remount-ro ext2_error() sets SB_RDONLY from whatever context
-hit the error and without holding s_umount. That races with everyone
-else changing sb->s_flags and it breaks freezing. If it happens while
-the filesystem is frozen thaw_super() sees a read-only superblock and
-leaves the s_writers rwsems locked so every writer hangs. A lookup in a
-corrupted directory is enough. Karl proposed teaching thaw_super() about
-it but Jan preferred fixing the filesystems (cf. [1]) like ext4 and f2fs
-already did.
+With errors=remount-ro, the default, __fat_fs_error() sets SB_RDONLY
+from whatever context hit the error and without holding s_umount. If
+that happens while the filesystem is frozen through bdev_freeze(), e.g.
+by a device mapper suspend, thaw_super() sees a read-only superblock and
+leaves the s_writers rwsems locked so every writer hangs.
 
 So call sb_set_emergency_ro() instead and let the VFS refuse
-modifications. ext2 still refuses allocations, ext2_write_inode(),
-ext2_sync_fs() and ext2_xattr_set() itself. The superblock isn't written
-after the error is recorded and unlinked inodes are left to e2fsck.
-ext2_handle_dirsync() treats EROFS as success in that state because the
-entry was already changed.
+modifications. fat still refuses FAT writes, cluster allocation,
+write_begin, O_DIRECT writes, FITRIM and fat_write_inode() itself,
+leaves the volume marked dirty and doesn't free fallocated clusters on
+evict. With the flush mount option msdos treats EROFS from
+fat_flush_inodes() as success in that state because the directory
+entries were already changed. Errors while mounting still set SB_RDONLY,
+nothing can freeze the superblock before SB_BORN.
 
-A remount to read-write fails until umount and writes through file
-descriptors opened before the error fail with EROFS.
+A remount to read-write fails until umount and a remount to read-only
+doesn't mark the volume clean. Writes through file descriptors opened
+before the error fail with EROFS.
 
-[1]: https://lore.kernel.org/r/hyhuckyohsabx2suvq3z7uy3pbgmihva6wgzxr3op7pzcrlu33@p7zzlgp2ehjf
-
-Reported-by: Karl Mehltretter <kmehltretter@gmail.com>
-Link: https://lore.kernel.org/r/20260903060855.4610-1-kmehltretter@gmail.com
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- fs/ext2/balloc.c |  5 +++++
- fs/ext2/dir.c    |  3 +++
- fs/ext2/ialloc.c |  2 ++
- fs/ext2/inode.c  | 10 ++++++++--
- fs/ext2/super.c  | 24 ++++++++++++++++++------
- fs/ext2/xattr.c  |  2 ++
- 6 files changed, 38 insertions(+), 8 deletions(-)
+ fs/fat/dir.c    |  3 +++
+ fs/fat/fatent.c | 11 ++++++++++-
+ fs/fat/file.c   |  4 ++++
+ fs/fat/inode.c  | 19 +++++++++++++++++--
+ fs/fat/misc.c   | 19 +++++++++++++------
+ 5 files changed, 47 insertions(+), 9 deletions(-)
 
-diff --git a/fs/ext2/balloc.c b/fs/ext2/balloc.c
-index 80acc1e19387..77f2ed5a76a2 100644
---- a/fs/ext2/balloc.c
-+++ b/fs/ext2/balloc.c
-@@ -1236,6 +1236,11 @@ ext2_fsblk_t ext2_new_blocks(struct inode *inode, ext2_fsblk_t goal,
- 	*errp = -ENOSPC;
- 	sb = inode->i_sb;
+diff --git a/fs/fat/dir.c b/fs/fat/dir.c
+index 35bdb62944a2..553034bcbed4 100644
+--- a/fs/fat/dir.c
++++ b/fs/fat/dir.c
+@@ -1329,6 +1329,9 @@ int fat_add_entries(struct inode *dir, void *slots, int nr_slots,
+ 	loff_t pos;
+ 	bool saw_eod;
  
-+	if (sb_emergency_ro(sb)) {
-+		*errp = -EROFS;
-+		return 0;
-+	}
-+
- 	/*
- 	 * Check quota for allocation of this block.
- 	 */
-diff --git a/fs/ext2/dir.c b/fs/ext2/dir.c
-index e17bbc7598c1..c2c9fc2d0b27 100644
---- a/fs/ext2/dir.c
-+++ b/fs/ext2/dir.c
-@@ -445,6 +445,9 @@ static int ext2_handle_dirsync(struct inode *dir)
- 	err = filemap_write_and_wait(dir->i_mapping);
- 	if (!err)
- 		err = sync_inode_metadata(dir, 1);
-+	/* The change is done, an error made us read-only in the meantime. */
-+	if (err == -EROFS && sb_emergency_ro(dir->i_sb))
-+		err = 0;
- 	return err;
- }
- 
-diff --git a/fs/ext2/ialloc.c b/fs/ext2/ialloc.c
-index bf21b57cf98c..2741ecd2b94f 100644
---- a/fs/ext2/ialloc.c
-+++ b/fs/ext2/ialloc.c
-@@ -433,6 +433,8 @@ struct inode *ext2_new_inode(struct inode *dir, umode_t mode,
- 	int err;
- 
- 	sb = dir->i_sb;
-+	if (sb_emergency_ro(sb))
-+		return ERR_PTR(-EROFS);
- 	inode = new_inode(sb);
- 	if (!inode)
- 		return ERR_PTR(-ENOMEM);
-diff --git a/fs/ext2/inode.c b/fs/ext2/inode.c
-index 12ac4cfe1500..5c4831f8f45d 100644
---- a/fs/ext2/inode.c
-+++ b/fs/ext2/inode.c
-@@ -71,7 +71,9 @@ void ext2_evict_inode(struct inode * inode)
- 	struct ext2_block_alloc_info *rsv;
- 	int want_delete = 0;
- 
--	if (!inode->i_nlink && !is_bad_inode(inode)) {
-+	/* After an error made us read-only the inode is left to e2fsck. */
-+	if (!inode->i_nlink && !is_bad_inode(inode) &&
-+	    !sb_emergency_ro(inode->i_sb)) {
- 		want_delete = 1;
- 		dquot_initialize(inode);
- 	} else {
-@@ -1481,10 +1483,14 @@ int ext2_write_inode(struct inode *inode, struct writeback_control *wbc)
- 	uid_t uid = i_uid_read(inode);
- 	gid_t gid = i_gid_read(inode);
- 	struct buffer_head * bh;
--	struct ext2_inode * raw_inode = ext2_get_inode(sb, ino, &bh);
-+	struct ext2_inode *raw_inode;
- 	int n;
- 	int err = 0;
- 
-+	if (sb_emergency_ro(sb))
++	if (unlikely(sb_emergency_ro(sb)))
 +		return -EROFS;
 +
-+	raw_inode = ext2_get_inode(sb, ino, &bh);
- 	if (IS_ERR(raw_inode))
-  		return -EIO;
+ 	sinfo->nr_slots = nr_slots;
  
-diff --git a/fs/ext2/super.c b/fs/ext2/super.c
-index fb217ef2d69f..804a7224066d 100644
---- a/fs/ext2/super.c
-+++ b/fs/ext2/super.c
-@@ -53,7 +53,7 @@ void ext2_error(struct super_block *sb, const char *function,
- 	struct ext2_sb_info *sbi = EXT2_SB(sb);
- 	struct ext2_super_block *es = sbi->s_es;
- 
--	if (!sb_rdonly(sb)) {
-+	if (!sb_rdonly(sb) && !sb_emergency_ro(sb)) {
- 		spin_lock(&sbi->s_lock);
- 		sbi->s_mount_state |= EXT2_ERROR_FS;
- 		es->s_state |= cpu_to_le16(EXT2_ERROR_FS);
-@@ -73,11 +73,11 @@ void ext2_error(struct super_block *sb, const char *function,
- 
- 	if (test_opt(sb, ERRORS_PANIC))
- 		panic("EXT2-fs: panic from previous error\n");
--	if (!sb_rdonly(sb) && test_opt(sb, ERRORS_RO)) {
-+	/* SB_RDONLY needs s_umount, see sb_set_emergency_ro(). */
-+	if (!sb_rdonly(sb) && test_opt(sb, ERRORS_RO) &&
-+	    sb_set_emergency_ro(sb))
- 		ext2_msg(sb, KERN_CRIT,
- 			     "error: remounting filesystem read-only");
--		sb->s_flags |= SB_RDONLY;
--	}
- }
- 
- static void ext2_msg_fc(struct fs_context *fc, const char *prefix,
-@@ -179,7 +179,7 @@ static void ext2_put_super (struct super_block * sb)
- 	ext2_xattr_destroy_cache(sbi->s_ea_block_cache);
- 	sbi->s_ea_block_cache = NULL;
- 
--	if (!sb_rdonly(sb)) {
-+	if (!sb_rdonly(sb) && !sb_emergency_ro(sb)) {
- 		struct ext2_super_block *es = sbi->s_es;
- 
- 		spin_lock(&sbi->s_lock);
-@@ -1287,6 +1287,10 @@ static int ext2_sync_fs(struct super_block *sb, int wait)
- 	struct ext2_sb_info *sbi = EXT2_SB(sb);
- 	struct ext2_super_block *es = EXT2_SB(sb)->s_es;
- 
-+	/* Nothing may be written after an error made us read-only. */
-+	if (sb_emergency_ro(sb))
-+		return 0;
-+
- 	/*
- 	 * Write quota structures to quota file, sync_blockdev() will write
- 	 * them to disk later
-@@ -1307,6 +1311,9 @@ static int ext2_freeze(struct super_block *sb)
+ 	/* First stage: search free directory entries */
+diff --git a/fs/fat/fatent.c b/fs/fat/fatent.c
+index 2d10a815a579..158ce7056dcf 100644
+--- a/fs/fat/fatent.c
++++ b/fs/fat/fatent.c
+@@ -314,7 +314,7 @@ static void mark_fsinfo_dirty(struct super_block *sb)
  {
- 	struct ext2_sb_info *sbi = EXT2_SB(sb);
+ 	struct msdos_sb_info *sbi = MSDOS_SB(sb);
  
-+	if (sb_emergency_ro(sb))
-+		return 0;
-+
- 	/*
- 	 * Open but unlinked files present? Keep EXT2_VALID_FS flag cleared
- 	 * because we have unattached inodes and thus filesystem is not fully
-@@ -1349,7 +1356,9 @@ static int ext2_reconfigure(struct fs_context *fc)
- 	int flags = fc->sb_flags;
+-	if (sb_rdonly(sb) || !is_fat32(sbi))
++	if (sb_rdonly(sb) || sb_emergency_ro(sb) || !is_fat32(sbi))
+ 		return;
+ 
+ 	__mark_inode_dirty(sbi->fsinfo_inode, I_DIRTY_SYNC);
+@@ -419,6 +419,9 @@ int fat_ent_write(struct inode *inode, struct fat_entry *fatent,
+ 	const struct fatent_operations *ops = MSDOS_SB(sb)->fatent_ops;
  	int err;
  
--	sync_filesystem(sb);
-+	/* Nothing may be written after an error made us read-only. */
-+	if (!sb_emergency_ro(sb))
-+		sync_filesystem(sb);
- 
- 	new_opts.s_mount_opt = ctx->vals_s_mount_opt;
- 	new_opts.s_resuid = ctx->s_resuid;
-@@ -1360,6 +1369,9 @@ static int ext2_reconfigure(struct fs_context *fc)
- 	if ((bool)(flags & SB_RDONLY) == sb_rdonly(sb))
- 		goto out_set;
- 	if (flags & SB_RDONLY) {
-+		/* After an error nothing may be written, just go read-only. */
-+		if (sb_emergency_ro(sb))
-+			goto out_set;
- 		if (le16_to_cpu(es->s_state) & EXT2_VALID_FS ||
- 		    !(sbi->s_mount_state & EXT2_VALID_FS))
- 			goto out_set;
-diff --git a/fs/ext2/xattr.c b/fs/ext2/xattr.c
-index 8f608930a48c..12dfffff189c 100644
---- a/fs/ext2/xattr.c
-+++ b/fs/ext2/xattr.c
-@@ -429,6 +429,8 @@ ext2_xattr_set(struct inode *inode, int name_index, const char *name,
- 	ea_idebug(inode, "name=%d.%s, value=%p, value_len=%ld",
- 		  name_index, name, value, (long)value_len);
- 
-+	if (sb_emergency_ro(sb))
++	if (unlikely(sb_emergency_ro(sb)))
 +		return -EROFS;
- 	if (value == NULL)
- 		value_len = 0;
- 	if (name == NULL)
++
+ 	ops->ent_put(fatent, new);
+ 	if (wait) {
+ 		err = fat_sync_bhs(fatent->bhs, fatent->nr_bhs);
+@@ -513,6 +516,9 @@ static int __fat_alloc_clusters(struct inode *inode, int *cluster, int nr_cluste
+ 	struct buffer_head *bhs[MAX_BUF_PER_PAGE];
+ 	int i, count, err, nr_bhs, idx_clus;
+ 
++	if (unlikely(sb_emergency_ro(sb)))
++		return -EROFS;
++
+ 	lock_fat(sbi);
+ 	if (sbi->free_clusters != -1 && sbi->free_clus_valid &&
+ 	    sbi->free_clusters < nr_cluster) {
+@@ -620,6 +626,9 @@ int fat_free_clusters(struct inode *inode, int cluster)
+ 	int i, err, nr_bhs;
+ 	int first_cl = cluster, dirty_fsinfo = 0;
+ 
++	if (unlikely(sb_emergency_ro(sb)))
++		return -EROFS;
++
+ 	nr_bhs = 0;
+ 	fatent_init(&fatent);
+ 	lock_fat(sbi);
+diff --git a/fs/fat/file.c b/fs/fat/file.c
+index d4f1b360b974..3d0a81994fb7 100644
+--- a/fs/fat/file.c
++++ b/fs/fat/file.c
+@@ -135,6 +135,10 @@ static int fat_ioctl_fitrim(struct inode *inode, unsigned long arg)
+ 	if (!capable(CAP_SYS_ADMIN))
+ 		return -EPERM;
+ 
++	/* Don't trust the FAT after an error. */
++	if (unlikely(sb_emergency_ro(sb)))
++		return -EROFS;
++
+ 	if (!bdev_max_discard_sectors(sb->s_bdev))
+ 		return -EOPNOTSUPP;
+ 
+diff --git a/fs/fat/inode.c b/fs/fat/inode.c
+index d85c8fbdcca4..afd73dc4ba9a 100644
+--- a/fs/fat/inode.c
++++ b/fs/fat/inode.c
+@@ -228,6 +228,9 @@ static int fat_write_begin(const struct kiocb *iocb,
+ {
+ 	int err;
+ 
++	if (unlikely(sb_emergency_ro(mapping->host->i_sb)))
++		return -EROFS;
++
+ 	err = cont_write_begin(iocb, mapping, pos, len,
+ 				foliop, fsdata, fat_get_block,
+ 				&MSDOS_I(mapping->host)->mmu_private);
+@@ -264,6 +267,8 @@ static ssize_t fat_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
+ 	ssize_t ret;
+ 
+ 	if (iov_iter_rw(iter) == WRITE) {
++		if (unlikely(sb_emergency_ro(inode->i_sb)))
++			return -EROFS;
+ 		/*
+ 		 * FIXME: blockdev_direct_IO() doesn't use ->write_begin(),
+ 		 * so we need to update the ->mmu_private to block boundary.
+@@ -662,6 +667,10 @@ static int fat_sync_inode_metadata(struct inode *inode,
+ 
+ static void fat_free_eofblocks(struct inode *inode)
+ {
++	/* Nothing can be freed after an error. */
++	if (sb_emergency_ro(inode->i_sb))
++		return;
++
+ 	/* Release unwritten fallocated blocks on inode eviction. */
+ 	if ((inode->i_blocks << 9) >
+ 			round_up(MSDOS_I(inode)->mmu_private,
+@@ -710,8 +719,8 @@ static void fat_set_state(struct super_block *sb,
+ 	struct fat_boot_sector *b;
+ 	struct msdos_sb_info *sbi = MSDOS_SB(sb);
+ 
+-	/* do not change any thing if mounted read only */
+-	if (sb_rdonly(sb) && !force)
++	/* do not change any thing if mounted read only or after an error */
++	if ((sb_rdonly(sb) && !force) || sb_emergency_ro(sb))
+ 		return;
+ 
+ 	/* do not change state if fs was dirty */
+@@ -954,6 +963,9 @@ static int fat_write_inode(struct inode *inode, struct writeback_control *wbc)
+ {
+ 	int err;
+ 
++	if (unlikely(sb_emergency_ro(inode->i_sb)))
++		return -EROFS;
++
+ 	if (inode->i_ino == MSDOS_FSINFO_INO) {
+ 		struct super_block *sb = inode->i_sb;
+ 
+@@ -1949,6 +1961,9 @@ int fat_flush_inodes(struct super_block *sb, struct inode *i1, struct inode *i2)
+ 		ret = writeback_inode(i2);
+ 	if (!ret)
+ 		ret = sync_blockdev_nowait(sb->s_bdev);
++	/* The change is done, an error made us read-only in the meantime. */
++	if (ret == -EROFS && sb_emergency_ro(sb))
++		ret = 0;
+ 	return ret;
+ }
+ EXPORT_SYMBOL_GPL(fat_flush_inodes);
+diff --git a/fs/fat/misc.c b/fs/fat/misc.c
+index 65d02f2edec3..05d061b594a6 100644
+--- a/fs/fat/misc.c
++++ b/fs/fat/misc.c
+@@ -14,9 +14,9 @@
+  * fat_fs_error reports a file system problem that might indicate fa data
+  * corruption/inconsistency. Depending on 'errors' mount option the
+  * panic() is called, or error message is printed FAT and nothing is done,
+- * or filesystem is remounted read-only (default behavior).
+- * In case the file system is remounted read-only, it can be made writable
+- * again by remounting it.
++ * or the filesystem is made read-only (default behavior): a mount in
++ * progress comes up read-only, a mounted filesystem refuses all further
++ * modifications until it is unmounted.
+  */
+ void __fat_fs_error(struct super_block *sb, int report, const char *fmt, ...)
+ {
+@@ -32,10 +32,17 @@ void __fat_fs_error(struct super_block *sb, int report, const char *fmt, ...)
+ 		va_end(args);
+ 	}
+ 
+-	if (opts->errors == FAT_ERRORS_PANIC)
++	if (opts->errors == FAT_ERRORS_PANIC) {
+ 		panic("FAT-fs (%s): fs panic from previous error\n", sb->s_id);
+-	else if (opts->errors == FAT_ERRORS_RO && !sb_rdonly(sb)) {
+-		sb->s_flags |= SB_RDONLY;
++	} else if (opts->errors == FAT_ERRORS_RO && !sb_rdonly(sb)) {
++		/*
++		 * Before SB_BORN the mounter holds s_umount so SB_RDONLY is
++		 * fine. Later it needs a remount, see sb_set_emergency_ro().
++		 */
++		if (!(sb->s_flags & SB_BORN))
++			sb->s_flags |= SB_RDONLY;
++		else if (!sb_set_emergency_ro(sb))
++			return;
+ 		fat_msg(sb, KERN_ERR, "Filesystem has been set read-only");
+ 	}
+ }
 
 -- 
 2.53.0
