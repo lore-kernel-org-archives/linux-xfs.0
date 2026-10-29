@@ -1,101 +1,82 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.221.45
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793304533;
-	b=zCYXU9cIClk1sxDy1B8BlsnIw88AsKG8RlM+cQqj7aL/f/JUcxhloVe4Fwsl3D4dcyWq
-	 ee/rqqYd0IpJkXGQCCE6DlR3TCv/JwBh28wo6F9dFpc+vYYmvncY7EjhIvWHn7FLKoLFY
-	 g1R6TlUhjrQ/Oi1KLZTjMKIXYWC4SlcpaoMlFGqI35Sn9oqWssFBa0iU3bjCfe141MYAB
-	 /oCRbry1+RDg8wvb+4wY1z3MHoo1kYJFW/Qh1RowUc27dTO7oSQXBNTjEVoRbiIYmbAv9
-	 BAiktY/sWlmvFAkN7czDh7W4tL0KwfBOa09qvXaMWs4ceEGieepRZwKl1XKFX6ENyWg==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793304533;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
-	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=a7zkNlVrzlPSpxoUpXt3vRmcwmTKMbpAgzHY1qs7+DM=;
-	b=Y12i+1dzLfAfP0KGOD4MrsSwiI5xa99PFscmWMNX7s33Vyk38mAUADbjtlI2Lb+rfit3
-	 fX8UZD+Sy5PckL9O6JblB+SgHrKtEDPccYf1kvsoad2JrBOTxdheibXG363o3nIyts+EH
-	 4RDPSzZGXjZ1qcmGKCvpry8qoe56BsWwWPg2ni8LdD6NehJVEf0llT0QnO6cxaSPYoqfq
-	 yxBXPqTAsgi2L3p6nnnsB8DljThCccy7qZueeBBcvsVFEa2k+/g7JnG8cA91cG4kxcGBh
-	 0EMvUI7/2rfWmL3N/aQthyBsCxLKgKw0AjojP/K8Pdev+Zl40CCzbm/drgctKyfrwoA==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=cF5c8VtD;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.221.45
-Received: from mail-wr1-f45.google.com (mail-wr1-f45.google.com [209.85.221.45])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.130
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793307108;
+	b=QWpy6xZFqE4Cwxr23Dqqrcpczk736jddba55eJGU6w029+oxwtNxqSxpGdK13tBcs+zB
+	 bI4vSGGs2AxcMX4NfwoGdUm80PfDYLhKaIi+g6EQCEMzR6RtCaI/NKcnTSqv7PCzwFCrr
+	 FZPvCv0Wy2Hm24Yg8fTfmbaUxTC2ddeZCeDzbxPm9p4sWjENkRO4F3Jye0KKf98E2C7aS
+	 BU8OhVj/p4f8E06dDPnWkRGi71DNSe7xZWpJudG+9MWLoEf/j18AHbYZQbAR8BTXkcmEB
+	 M7qKp6S8YN/UJzL1VP2U9P07YvnrOINiLlUc+SFSRRyZdJnRsrBON90LF3bWF5MuwmA==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793307108;
+	h=DMARC-Filter:Received:DKIM-Signature:DKIM-Signature:Received:
+	 Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding:X-Spam-Flag:X-Spam-Level:X-Spamd-Result:
+	 X-Spam-Score;
+	bh=RdeptIPG1aMF2zMuVlv65CiM+a455QAQAz2c9ztPVnw=;
+	b=tQkUfIJl+mdNKOaucFGUY9YXUDIYRcyaByh8UFal58IpjsnJLn0ZFAJlLPduIgj+9gAD
+	 hzcE1nOq1/P/S1Hv5fALS86umnnltzGbE4CQ/v8PjX/MQK1nkMCV1eLXrfpRw53G8+Bf9
+	 TSxDN6guRHuM4g1FzrEy8XkVS4CobJ7hprAFj04FISriP/xVAlDtfxOGPB6+3tz3wxmoh
+	 vouZhTB7zNloL2pez0KC6ckLbgGDqb1kDqzGTJyRSVacSsY6nbwmeuRxmnU2FPwQKaVNz
+	 gc2t7G+bX5rHzHeYUddh2p4hHtI7IaAFf1mEg7LtH+1rDdrJ293vI53EBbfjWKQex5A==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=suse.com;
+	spf=pass smtp.mailfrom=suse.com;
+	dkim=pass header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=susede1 header.b=og3qckoP;
+	dkim=pass header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=susede1 header.b=QrS5na9y;
+	arc=none smtp.remote-ip=195.135.223.130
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36D2D606A31A
-	for <linux-xfs@vger.kernel.org>; Thu, 29 Oct 2026 20:08:52 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 36D2D606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85CE2606A322;
+	Thu, 29 Oct 2026 20:51:47 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 85CE2606A322
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=cF5c8VtD
-Received: by mail-wr1-f45.google.com with SMTP id ffacd0b85a97d-48bbb06e746so6215f8f.3
-        for <linux-xfs@vger.kernel.org>; Thu, 29 Oct 2026 13:08:52 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1793304530; cv=none;
-        d=google.com; s=arc-20260327;
-        b=rCve06O6QtSykq11hxkwn+A1yPYD2qd3jR1S4wCDEOrrtgHJUD5g9iHlHuavVJlZbP
-         6iCt6OCCwF7i9m5nXYkHzqzkyzwcRX8r5seR/U5c7gSKx38cZurq3RzRvMmUH4v0Wmru
-         kReelnbLHHGTANN3UP79vaSqipGBfnnJvZSf60KQkweog6PVBdQ9aTHDpHh+UFScMHhL
-         mbUOqFQvh+UcEPLJpl+87xlJuBRM/qNtm0XfXbPQWYFeakRhoW85SdIgCsvZvEJwKyFn
-         2oVatDnqxRJcmdIKSgk5PgCpwbzLqrRc4CTTx4XDpctd7DXmMC/7DbcceU8F7Z/Wd5WF
-         6hnA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=a7zkNlVrzlPSpxoUpXt3vRmcwmTKMbpAgzHY1qs7+DM=;
-        fh=pyLIjINTUTUAzt1nc+gcx6BL7h42v3meDmP1iL/vdho=;
-        b=c2YYcw4g5wIyjxnVlb4Xgzv1pzunMV2M1mUKhTu4/r/qqyfYDwC03e+Y4yhvfiYN5o
-         LjNQ/KhFOzpLiEl25tU/UTU/2fjdF6MbL0kHX3UZl4N4u7nDMNzBaZtbbSEj5Lkn7YMw
-         UZSTkJI2yJYx4IMn5DW7bTSo0K1LERom2FQT21RS9RlZawnCsp8tzc7x+AWKAxPBrPU9
-         AzNFNL4X2xv2lel6jYZ51A1RhukaZDqS1qS8cAfbsQ13gAk8e0NkTI7mFigDdnWIGcj6
-         L+OZCs7hki742DuwCdMur/t2EXUi2VYb62vU8OL3u1c1ZFA6I1YNEOmoP/8lZ/myHp8U
-         yo/g==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793304530; x=1793909330; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=a7zkNlVrzlPSpxoUpXt3vRmcwmTKMbpAgzHY1qs7+DM=;
-        b=cF5c8VtDD9mtXXMfx73tPPZP6ZGyc7Iyom5qIfSSirBoVjl+k1aJU9TlqtCNPsvv6t
-         YUj/b2XjUvWOJEgA+rmpLJCfK19zhHTB1E2NO6z0KZh+kricy7kJQ9VZbjQpkW4sHs2H
-         GNH8iRpemMGf5zAL7uGgGkMT+qaLFijGwdUVsaYuCiPasfiKk96yNECS37KfKjR41wvN
-         zZRT7TKNKbHpIe1WqHXSoQbXF9sNULGInMaoyeU9alUXbydvm6CBahzyFHaCUh+Rfvjl
-         KIIq9oRgvQUrNMFu9mgicexxTpmFPnBWaby0bq75EL6n9D5+kcYsM2Ye5O9qfRLcDhDk
-         D9Vw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793304530; x=1793909330;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=a7zkNlVrzlPSpxoUpXt3vRmcwmTKMbpAgzHY1qs7+DM=;
-        b=OoLB3q+IQO2vuwU82rEBfSNazeZaZjZZTBW8tq2rBwcxyYwjXi9cL7zg8TU2MecnRt
-         yX+yFJBJIaZqz1yhxtZxUaUtFDl5/KBrwRXS8vYLWmncpohggD5Hgqqm1iZi6x1aUZyT
-         8XMpMTRaJhWMPCAi/RKXrHaSo7morIf+p/PTq6Fqw30g8Bk375c8kfh0PUZV8DOOE2K8
-         1QCXi0yjcmlaMUe6HBMo9MX3jq5UYwYe00s+lbI3fv683SfUOTryrnzEmA1nqhk6jI9p
-         lIKIORiTlZrMrcDmV3Ok1cBtELHKP28+uWCDlgdl/NGl4IAWNeC6henKaST0VacgSvdG
-         eOMg==
-X-Forwarded-Encrypted: i=1; AKwUvBwjG1Q6vWabFdRXz3w+FKPyyT92DeVadDpMt3b09HYt2ZoeHRBDY+uhYhbiQWmC9cHmOX6b1kMU4pc=@vger.kernel.org
-X-Gm-Message-State: AFq9FYJM6Wj/ol+Pr5GbSEfmEFJlret8czpwS+2nv+oruVGH+8F7nUJU
-	u61zsDDqZRK432R2TionnkYYQ2grzqSRxtTIOFDgpH7dg+fcd7JfMH3Ek9WmklRl15MUCM63FSa
-	hol2V0hHj5UOn74g9k/7yZDHquq8HfoU=
-X-Gm-Gg: AYBFou1jiMpBm3OzGcqdRVhNuIOdoYbEP2QcDP1cTK4ZBl3QHfj5iNy1/WgJYHkIalH
-	/4ucWZuuk5lQy24vDRCVJBr7aX4u+SYoqQX8YksdkhkEO1leSQvtQLsWtVZECBthm0Uh9Z5T7XE
-	T6cm/ZSPu61qsX7wa8w97SU+Xk+5wQYrLp9f2Ar1wiaQYxqBpGsFpxrz8GCop6T+63F0gJiVAKA
-	AFZC8yJI0KIvAfdtC4QAMU2NYwMWK3cvsxbje0Cj+GTqr4c9AsMC+dtW0i+4Nd74mX4Zp/Sxf+T
-	rk/jhqfiqpbGQpOpMz+asMmkCcOTwu/bbkoGUN+2tLe1anOeJRBx8lwdypDnMNyyuHtki8SWVtO
-	4Zyew3c9pylgbnPjs645xe3tI3i6MJPTvwrdy3oAxPB1XXbEwUUFMcHIk8ebtZImEjEVJ2xn2Vu
-	XNBDeGWOqlOFWoCQ0fVQ==
-X-Received: by 2002:a05:6000:1ac5:b0:48b:116d:56fb with SMTP id
- ffacd0b85a97d-48e6e2bbfe0mr1122858f8f.1.1793304530377; Thu, 29 Oct 2026
- 13:08:50 -0700 (PDT)
+	dkim=pass (1024-bit key, unprotected) header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=susede1 header.b=og3qckoP;
+	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=susede1 header.b=QrS5na9y
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 6CC2722275;
+	Thu, 29 Oct 2026 20:51:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+	t=1793307105; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+	bh=RdeptIPG1aMF2zMuVlv65CiM+a455QAQAz2c9ztPVnw=;
+	b=og3qckoPEUs84oWLaSyFrTl+bsGq7Qo6i8iwyAfjAIIrAq4Lx4rOPvls7stAZPdUL/AR4Y
+	kTu+NpvI/Z6MKmHCLhbsIUU1Au8KVr5UYYVvYuTxUcCv2WFnX8ridjetJlESPXiGvthlCg
+	AgmZfBmRJcrQb8Y+HulYqClbZzoHQEE=
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+	t=1793307104; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+	bh=RdeptIPG1aMF2zMuVlv65CiM+a455QAQAz2c9ztPVnw=;
+	b=QrS5na9y7Zx9GPCDEbrPsJTjg3i939yEAWaCxqbeyOjnoV3CX8XxtZCDfMqeFVw/+RCI1Y
+	8qp49dgTTprajlA1FtsT+MM74v6d5ApB+xcRd1SSrn11Bxn8sPpiBsTEXhTK9zVrIDzkLu
+	G8DQwBV3CPuqPrgOfM9w25EuxX2+9mI=
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 5932513419;
+	Thu, 29 Oct 2026 20:51:42 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id CMGKKt2x42qmUgAAD6G6ig
+	(envelope-from <wqu@suse.com>); Thu, 29 Oct 2026 20:51:42 +0000
+From: Qu Wenruo <wqu@suse.com>
+To: linux-btrfs@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org
+Cc: "Pankaj Raghav(Samsung)" <pankaj.raghav@linux.dev>
+Subject: [PATCH v4] iomap: only follow dio alignment requirement if specified
+Date: Fri, 30 Oct 2026 07:21:23 +1030
+Message-ID: <0e89c49b6f7804081f4041007b81ac620a153830.1793307063.git.wqu@suse.com>
+X-Mailer: git-send-email 2.56.0
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -105,54 +86,120 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261029-work-iomap-ai-fixes-v1-0-7eda63bc1b13@kernel.org> <20261029-work-iomap-ai-fixes-v1-1-7eda63bc1b13@kernel.org>
-In-Reply-To: <20261029-work-iomap-ai-fixes-v1-1-7eda63bc1b13@kernel.org>
-From: Joanne Koong <joannelkoong@gmail.com>
-Date: Thu, 29 Oct 2026 13:08:36 -0700
-X-Gm-Features: AclHuK_mxORIH-qEHKr1ZEzSnp2s6A1zchn0cpynNg9TXiYPbvV1ECJaStfOffg
-Message-ID: <CAJnrk1YiF=OEYQzwFpkzmBY_78+fNKgg5CafaWOa7KwGR+XN-w@mail.gmail.com>
-Subject: Re: [PATCH 1/2] iomap: don't mark unwritten parts of a folio uptodate
-To: Christian Brauner <brauner@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Chris Mason <clm@meta.com>, 
-	Josef Bacik <josef@toxicpanda.com>, Matthew Wilcox <willy@infradead.org>, 
-	Zhang Yi <yi.zhang@huaweicloud.com>, "Darrick J. Wong" <djwong@kernel.org>, 
-	Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org, stable@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-Spam-Flag: NO
+X-Spam-Level: 
+X-Spamd-Result: default: False [-11.80 / 50.00];
+	SUSE_INTERNAL_BYPASS(-9.00)[];
+	BAYES_HAM(-3.00)[100.00%];
+	MID_CONTAINS_FROM(1.00)[];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_MISSING_CHARSET(0.50)[];
+	NEURAL_HAM_SHORT(-0.20)[-0.996];
+	MIME_GOOD(-0.10)[text/plain];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.com:email,linux.dev:email];
+	FROM_HAS_DN(0.00)[];
+	ARC_NA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	TO_DN_SOME(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	FROM_EQ_ENVFROM(0.00)[];
+	DKIM_SIGNED(0.00)[suse.com:s=susede1];
+	RCPT_COUNT_THREE(0.00)[4];
+	RCVD_TLS_ALL(0.00)[]
+X-Spam-Score: -11.80
 
-On Thu, Oct 29, 2026 at 3:35=E2=80=AFAM Christian Brauner <brauner@kernel.o=
-rg> wrote:
->
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index 907873073b03..d6e2f1ded5ca 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -920,6 +920,7 @@ static int __iomap_write_begin(const struct iomap_ite=
-r *iter,
->                 if (iomap_block_needs_zeroing(iter, block_start)) {
->                         if (WARN_ON_ONCE(iter->flags & IOMAP_UNSHARE))
->                                 return -EIO;
-> +                       /* uptodate once copied, see __iomap_write_end() =
-*/
->                         folio_zero_segments(folio, poff, from, to, poff +=
- plen);
->                 } else {
->                         const struct iomap *iomap =3D iomap_iter_srcmap(i=
-ter);
-> @@ -943,8 +944,8 @@ static int __iomap_write_begin(const struct iomap_ite=
-r *iter,
->
->                         if (iomap->flags & IOMAP_F_ZERO_TAIL)
->                                 folio_zero_segment(folio, to, poff + plen=
-);
-> +                       iomap_set_range_uptodate(folio, poff, plen);
->                 }
-> -               iomap_set_range_uptodate(folio, poff, plen);
->         } while ((block_start +=3D plen) < block_end);
->
->         return 0;
->
+After commit 4025185cf953 ("iomap: follow the alignment requirement for
+iomap_dio_hole_iter()"), generic/091 fails on both xfs and ext4.
 
-The fix looks good to me.
+The reason is that ext4 and xfs (except COW write) do not require full
+block alignment for direct IO. They are totally fine reading a sub-block
+range.
 
-Reviewed-by: Joanne Koong <joannelkoong@gmail.com>
+That commit fails any direct read of sub-block holes/prealloc, even those
+filesystems can handle it without any problem.
+
+Fix the regression by only follow the block alignment if the
+IOMAP_DIO_FSBLOCK_ALIGNED flag is set.
+
+Fixes: 4025185cf953 ("iomap: follow the alignment requirement for iomap_dio_hole_iter()")
+Reviewed-by: Pankaj Raghav(Samsung) <pankaj.raghav@linux.dev>
+Signed-off-by: Qu Wenruo <wqu@suse.com>
+---
+Changelog:
+v4:
+- Use a shorter commit message to explain the problem.
+
+v3:
+- Drop CC: stable
+  The commit is only in the v7.4 release cycle, not affecting any stable
+  release.
+
+- Add Reviewed-by tag from Pankaj
+
+v2:
+- Update the comment of IOMAP_DIO_FSBLOCK_ALIGNED
+  To indicate that hole zeroing is also affected.
+---
+ fs/iomap/direct-io.c  | 26 ++++++++++++++++----------
+ include/linux/iomap.h |  3 ++-
+ 2 files changed, 18 insertions(+), 11 deletions(-)
+
+diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+index 45bb24934f3d..ad041ac3252a 100644
+--- a/fs/iomap/direct-io.c
++++ b/fs/iomap/direct-io.c
+@@ -590,18 +590,24 @@ static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
+ static int iomap_dio_hole_iter(struct iomap_iter *iter, struct iomap_dio *dio)
+ {
+ 	loff_t copied = iov_iter_zero(iomap_length(iter), dio->submit.iter);
+-	unsigned int bs = i_blocksize(iter->inode);
+-	loff_t aligned_copied = round_down(copied, bs);
+ 
+-	/*
+-	 * If fs block size is larger than page size, page fault failure
+-	 * can cause @copied to be page aligned but not fs block aligned.
+-	 */
+-	iov_iter_revert(dio->submit.iter, copied - aligned_copied);
+-	dio->size += aligned_copied;
+-	if (!aligned_copied)
++	if (dio->flags & IOMAP_DIO_FSBLOCK_ALIGNED) {
++		loff_t aligned_copied = round_down(copied,
++						   i_blocksize(iter->inode));
++
++		/*
++		 * For fs passing IOMAP_DIO_FSBLOCK_ALIGNED flag, if fs block
++		 * size is larger than page size, page fault failure
++		 * can cause @copied to be page aligned but not fs block
++		 * aligned.
++		 */
++		iov_iter_revert(dio->submit.iter, copied - aligned_copied);
++		copied = aligned_copied;
++	}
++	dio->size += copied;
++	if (!copied)
+ 		return -EFAULT;
+-	return iomap_iter_advance(iter, aligned_copied);
++	return iomap_iter_advance(iter, copied);
+ }
+ 
+ static int iomap_dio_inline_iter(struct iomap_iter *iomi, struct iomap_dio *dio)
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index 59718f73c15a..5254430844b2 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -693,7 +693,8 @@ struct iomap_dio_ops {
+ #define IOMAP_DIO_PARTIAL		(1 << 2)
+ 
+ /*
+- * Ensure each bio is aligned to fs block size.
++ * Ensure every operation, including bio and hole zeroing, is aligned to fs
++ * block size.
+  *
+  * For filesystems which need to calculate/verify the checksum of each fs
+  * block. Otherwise they may not be able to handle unaligned bios.
+-- 
+2.56.0
+
