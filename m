@@ -1,73 +1,51 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=45.79.88.28
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793284629;
-	b=HgY5dsH3CD/Lib5yd0IINlyo9WUnuB2QPbi4uT5TUvJqEO52Aexn4MhWBsdt9qZhoIqw
-	 iSBbOZtGup6XLUUXJq6odhS6l9f/FOG5/Amh/+AqtDU+Vqj3Ed7y89JAtHX4IS8cp5rCk
-	 F21Z5x9tS4y6yg6KuAQuquf0Ccyh32Jeusb8RCEMklSNobTsm5FFOvmP/JArZNqYbnuVB
-	 xU9G2DU5McEnm2PKp8CeZhifseX7GQIN5Ot0vLihe/LOWF/An2CrsMgr8oQ8RM9BMmbHC
-	 lePK4Z+ZgFza4S+tsNODgnSBlzU0LSskQaKzJPFHP5uM8SFgAoKpkj7bAnOez8BjjNw==
+	t=1793285358;
+	b=Y0gXqe5CXq29m82a38z2tTJR34zaAaGYlRxN7ah7gNpz4MxN7+UKBRNINiEPucNmjWPI
+	 E4p4cSCQ+hhFiTCZ1PJvEiT1HuxmeWCCjLkoYLqeYctWfwp/0WDyeMSqPP2YAkbd6uf/V
+	 C/TT+2FHEOws2ZTw7/xBohi3F7eEUnvEr/8j8aicT/58UL2RkZdvQ/0fWEGwDDMvLwucz
+	 k8X6AZ6vnlllW5xchBK7pF9wdaen6bV5lpDyG46zoFb4Asyua7tLo9Y9FqMAHR0OovC6P
+	 Bo8gfojcrTSO6NJRfMm2lkY+UJvsBaDizUGm+g+hQ7QKfdVesHzX5PKvMQiTxGtjy+Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793284629;
-	h=DMARC-Filter:DKIM-Filter:DKIM-Signature:Received:From:To:Cc:Subject:
-	 In-Reply-To:References:Date:Message-ID:MIME-Version:Content-Type;
-	bh=DS9sgLqAP/1EvRFFFqIg5sk0bi7L6HM+95oRDwxbCZE=;
-	b=cCGFo8vTvlmXvJGMFuwVOESdMi+IlxrWUlI4BAy1S2oXBbtQOVFY7LdU4Lmg5x56lkC2
-	 Q3effsDf1Kgkojkg0FgSC/Dz5aD43oFItTCbUccdCB5VljMx4Ff06rKj+IKbaIgt5OiM9
-	 TCLL6jH8pPX5inOacALRviOxSl05vWASF23ilZunsdqU4EukxFnPnd27dqRD5bc5qeT57
-	 qXQh1PUmziTqZcI5A89xN8BhDicvlYDxf6HLhzC4db9Lwo2YrCkFQHCVRtsPxVTnjik8c
-	 cUTvn6n6+Wtm80lhHu8F4LtrHzF3lL17PuEIyXz/N03SrOg0kLSG/x/vreZrESWBboQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793285358;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=4QrEbTQGtnljChX3zPFzp85XMlzPbGmcRo9faCYXuc8=;
+	b=Y1tWl7mrF3vsOUzRKdttExst/3GGxECluspIc8lPNzOXTaRbnygkMxHJ/a8Ijv5h/U2r
+	 BYr1IbtrDbppBjMYmV0jKzd2mldPZUcARnlSIZpoCoN88ZW6udeOce/rip1WoH4NMIsCN
+	 RSvQ2viGlqZrAo+2OF5HIRy2OGOp+g0HmnDZ5sDZMyhwYfRek1r45+F1HMtGXy61teCV6
+	 9XeKHivOZv5ptU/dbSrzr+8/arDOFBqu38Ej+C/s8fw8CDi1/kzoXsp2nSaAhPyB8/5Nk
+	 9/dfgrj3ncID3fCWRxQDKW6uIElo/ReOL4TCfazA9YkzLKzEW+EOr+xeaOBuKB1MNRA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=lwn.net;
-	spf=pass smtp.mailfrom=lwn.net;
-	dkim=pass header.d=lwn.net header.i=@lwn.net header.a=rsa-sha256 header.s=20201203 header.b=JL860Aq5;
-	arc=none smtp.remote-ip=45.79.88.28
-Received: from ms.lwn.net (ms.lwn.net [45.79.88.28])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dAXuWCh+;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 417D5606A31E;
-	Thu, 29 Oct 2026 14:37:08 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 417D5606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lwn.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lwn.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3E7F606A31F
+	for <linux-xfs@vger.kernel.org>; Thu, 29 Oct 2026 14:49:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=lwn.net header.i=@lwn.net header.a=rsa-sha256 header.s=20201203 header.b=JL860Aq5
-DKIM-Filter: OpenDKIM Filter v2.11.0 ms.lwn.net 3DFDC40911
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=lwn.net; s=20201203;
-	t=1793284627; bh=DS9sgLqAP/1EvRFFFqIg5sk0bi7L6HM+95oRDwxbCZE=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-	b=JL860Aq5NVfRCBDh62rDcU0WJSmwj0ctywPT6zzWMJk6t7smReAhCcvkzOwcQ8bFR
-	 tVuP3qOc6GFMABSyRNk/wF862TX4dkUo81iF6IoNvToLkAE2SzkDDRajw3Wv0cJcJ7
-	 wVMAVaMmqO6rBFsLG+sa2DJWEMBtnGZacco3XsnTugyKQ2IuXrrot2ahkyB7mmrzMC
-	 oQJiigW/rhPDvTVPSnJG4w43lLgbTxCer0ZuBfl2rrVaFYHQyh0CUD8DkcEdKwWHx6
-	 CntoOeHsrdeTYHC39I3/SuGm2JgLQMlfy14VEiLVHIPFFAqMIoYcopuztGy4PyRFxb
-	 C0VZ+WndVRwFw==
-Received: from localhost (mdns.lwn.net [45.79.72.68])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
-	(No client certificate requested)
-	by ms.lwn.net (Postfix) with ESMTPSA id 3DFDC40911;
-	Thu, 29 Oct 2026 14:37:07 +0000 (UTC)
-From: Jonathan Corbet <corbet@lwn.net>
-To: Dave Chinner <dgc@kernel.org>
-Cc: Henry Martin <bsdhenrymartin@gmail.com>, Carlos Maiolino
- <cem@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, "Darrick J .
- Wong" <djwong@kernel.org>, Alex Deucher <alexander.deucher@amd.com>, David
- Hildenbrand <david@kernel.org>, Kuninori Morimoto
- <kuninori.morimoto.gx@renesas.com>, Kairui Song <kasong@tencent.com>,
- Myeonghun Pak <mhun512@gmail.com>, Rafal Ostrowski
- <rafal.ostrowski@amd.com>, Likun Gao <Likun.Gao@amd.com>, James Clark
- <james.clark@linaro.org>, Anshuman Khandual <anshuman.khandual@arm.com>,
- Kevin Brodsky <kevin.brodsky@arm.com>, linux-xfs@vger.kernel.org,
- linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH] xfs: fix out-of-bounds write from crafted btree root
- numrecs during log recovery
-In-Reply-To: <auKGlGJwOSZpioMd@dread>
-References: <20261027151703.973392-1-bsdhenrymartin@gmail.com>
- <auJ2jgIIh8e_JJwn@dread> <87cxsto38m.fsf@trenco.lwn.net>
- <auKGlGJwOSZpioMd@dread>
-Date: Thu, 29 Oct 2026 08:37:06 -0600
-Message-ID: <87v76kmv3h.fsf@trenco.lwn.net>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dAXuWCh+
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A726B1F031E1;
+	Thu, 29 Oct 2026 14:49:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793285357;
+	bh=4QrEbTQGtnljChX3zPFzp85XMlzPbGmcRo9faCYXuc8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=dAXuWCh+DjAGnBlsJVs6LVcH7QwkPzmKlHnyVk8t44x8iPH73czXAMMUER0dw53Xn
+	 qQjzUbxV5EdTSNOWoegf8llKxzEN56QB2PH4jBIcX3/eqPQ1RL7tsx+8zVMUObHL3D
+	 WtaVCA3hKAt5ZH9zobQgDqWE8dCXahTpVjtt3ovEvrSMWo5NXB43n9nnWIb0IMl6sV
+	 BCJOxy10dVUnIu7fFr3usXYxbClKz1myrzLKqqBhA5IWTQdbsIjozGQXDm7mo/Q8Ii
+	 k/q2knAU9ELkqFbWR6Ohxti717nJ+U7OW+yRPSFpoF5ceyYgh6UwcjfrAu+XZG56qo
+	 D3wVtQDu5MsPg==
+Date: Thu, 29 Oct 2026 15:49:13 +0100
+From: Andrey Albershteyn <aalbersh@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: fix libxfs compiler warnings
+Message-ID: <auNc0ydS2tNV5ndL@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+References: <20261027154237.1997484-1-hch@lst.de>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -77,33 +55,19 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261027154237.1997484-1-hch@lst.de>
 
-Dave Chinner <dgc@kernel.org> writes:
+On 2026-10-27 16:42:14, Christoph Hellwig wrote:
+> Hi all,
+> 
+> this series has a few fixes so that xfsprogs compiles warning free on
+> Debian unstable.
+> 
 
-> On Wed, Oct 28, 2026 at 04:43:37PM -0600, Jonathan Corbet wrote:
->> Dave Chinner <dgc@kernel.org> writes:
->> 
->> > Unless you know how to fix the discovered problem correctly, don't
->> > send what your LLM proposed for review. It will be garbage, and all
->> > that will do is annoy whoever has to review it. Just report the bug,
->> > let the subsystem developers fix it.
->> 
->> Just to be obnoxious...this runs counter to the advice we have in
->> Documentation/process/security-bugs.rst, where reporters are requested
->> to include a proposed fix as well.  It seems we're sending a bit of a
->> mixed message...
->
-> These aren't security bugs. Bugs that result from maliciously
-> corrupted filesystem images (i.e. fuzzed) are explicitly stated as
-> not covered by the kernel security threat models. IOWs, they are
-> just -bugs-, and bugs that just don't ever happen in the real world.
+The series looks good to me
+Reviewed-by: Andrey Albershteyn <aalbersh@kernel.org>
 
-I wasn't arguing about the nature of the bug ... just noting the
-disconnect with what I've heard from some maintainers, who say that
-providing a patch helps in the identification of the problem, even if
-the patch is not used.
-
-Thanks,
-
-jon
+-- 
+- Andrey
