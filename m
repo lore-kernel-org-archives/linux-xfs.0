@@ -1,52 +1,51 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793290241;
-	b=mS4PpKJfC6YLmXAcFz2htZEH5bo9RYuXkQtouN2zpsqXHdLUFPP7vGOAHOg95tVYiCz0
-	 tLZHI2cacA8V247AXFmMLcabLaMrkjNms0saaLC+sfw10CD18WKsVDxh5CPKXiTksOhfC
-	 iRLFR43c4i+OVEt9ynNMfTQsfSFA4D9vU8c6XWCgPfRWFnX4zuKA06WIMiAJpIUU1r9mf
-	 XTpkFgX68bmEg4tOmVnSY9Wfr8UHMg03cTGIZMyScejp+2h0F1Zcjtmf7L1xapYxnMeIJ
-	 C/RDQPNi30+gpCZvmExRkVzC90D+HkpN10gly4kIygTHJ3Dh/NTQr6do+SMiusGvt/A==
+	t=1793290243;
+	b=xwwJzJsbbnj1H8m2KtpeboOUPPuDA5GJ2YSYl261vY+IRCEKcfe4IBG1Ucz8+xV/HWuk
+	 kQkw4EynCMoEcc+5Zos8+06QksJ5g15q6dl9p3+wefEWmhbyyfyuHbEopY0F15UrjEWyN
+	 GZT5WD3t2iM5xbiQsHYeKvSZvHTpFsQAEqKYj8amhD2+MTbZXE96QwGbKfZXE0/lRK8rM
+	 MKgJPLInUIEaxizu+i34untri3KFTTz5LIRaW5unS2Vi+94GGx8fvyocq1pa4i8AOwIIM
+	 sEC+898RkLhQE4/6pAWzPMtjAoCDvIolmyxBJYCAM8ehtD9RUbL4kJwjFOU+SNUIxRQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793290241;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793290243;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 In-Reply-To:References:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=sKmHnUARw5TDn8gbaRklrLHNyiWOz1HX1b95BzcilwY=;
-	b=rf+vnnCRFQosBl3B2j2mJj6VS9SWpVVXUd7jLvBUVeJ7kvi4MPFWVCG+AHqYwGVepVkq
-	 P92+DnHOLURPyBeXYCurNVCMHm9ACE8lWgoC9oOjpE6SM61bQ9/NW3hGMYXQ9r75nj515
-	 6dLoggvHADQZVkb5GQ2qBl6LdXhmhwJUJh/K8G+J+i6Z+0Sa5yr0WVPpTZ+5LG5nEvma1
-	 RajeEBCxSELnbi+vXYk9JO6NMmlwz/wGgDGjn0BctLe1dSdaAF7HhyONbFKd3dqB36uVX
-	 OuoS8ZPXIkvV/DvPdNEdMg6R8I234MsWyYwm4EeInFKzcSD6zaiaGrXuwN8C16hB2zQ==
+	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
+	bh=1Mo8dlqB4NxW9JjlVTuv+n3vaG52fJjc+P18lNtMeUo=;
+	b=k9eRIrpa6Yf44w9Bf9CPu+Nc4YTroKn4q6AQB5pk67nmkQdvFOfn9wUkru0Z7hWxZS/v
+	 B25nVpaMcos82TyUos2dBV0Ei3di7/9rVdr2HQCRSgm5njOgS5J1EoTyIwbjHaCaNKHPX
+	 NW4GhtNe1+Y6bIBmFp0dvohHAkssnr2glMkbnUAP89J18kR4GHZEnXlhQxbfLrP4znWce
+	 p1nkwNQlPctjwHpF/jhnQbocxyaNbJa5CsZXix0019lIsQ4OaRCxXihvK+ZQjaWBaoUUl
+	 3vdbrLXjLvxRsniBktxOhFSYPKrXOGsFPUSSV8P6dOJ4gaiW3+29AkKDxJTMH6zBSyQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="l/CXEaqw";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=O2t1Kr8Q;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63098606A327
-	for <linux-xfs@vger.kernel.org>; Thu, 29 Oct 2026 16:10:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA817606A327
+	for <linux-xfs@vger.kernel.org>; Thu, 29 Oct 2026 16:10:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=l/CXEaqw
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 54A871F01824;
-	Thu, 29 Oct 2026 16:10:40 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=O2t1Kr8Q
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B37651F01816;
+	Thu, 29 Oct 2026 16:10:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793290241;
-	bh=sKmHnUARw5TDn8gbaRklrLHNyiWOz1HX1b95BzcilwY=;
+	s=k20260515; t=1793290242;
+	bh=1Mo8dlqB4NxW9JjlVTuv+n3vaG52fJjc+P18lNtMeUo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=l/CXEaqwKAiPO8HoifRDuuQi6lnaExEUTikM6/pMQKGZw29fHazUx/ClYm/1Dg/PR
-	 ylWdg9QyFCtaU0dL4rIKtY604dS2+yZyecYN/N8flV4ExWhV9jFnjDnQp+iO7EMCiY
-	 jKcj2hD/pjKG7JHnxKvXWebRDqzHPTSiscm3BXN53MnSIumOXtSTMjf9Q/NQiohOOL
-	 3dL/f+bdkHjNN1DoHyMxjMN9ROUQqpJZl5/63YttNATe7/pRRcHxYfDiOHF+8veBeI
-	 XEdo+2r9Z8dF1AcaNiGevvyRbnXxfxzMNuq0x4bqn3Fpx3Gb69UpVbtv8Qbq1gp6lP
-	 RpHZWkIRckYeg==
+	b=O2t1Kr8Qnp3M+DhiT92fnecXhxSeHNm7N71Aq/wbAinMytsHL+j3XhwFOpH1i1+bt
+	 jlkUd0nwsdE0OaEgucH7RE5quroK9hnYF2sRfSJL9ICIaWkXoCQl8gx/tdvAGq4AdO
+	 6iZfMJdG/PyYRVgpAWaWljz6hLreOl2BGNJsFpScAr7M53bjo0/Nb3VbGluFuSD5BO
+	 JWFvw3suM5sRBu3G1I+8f+Bc93wAdolCFV0MkKqxZql/ape+EwPSSEpJXdTdE5xCC6
+	 DLTnYOLm97Qxnw9DEKlb3+/iFQvkGunFnB4XzDdzZSoGds3NlthpLpGNTz/55nCplI
+	 MIuqhNNuab4sg==
 From: Andrey Albershteyn <aalbersh@kernel.org>
 To: linux-xfs@vger.kernel.org
 Cc: Andrey Albershteyn <aalbersh@kernel.org>,
 	hch@lst.de
-Subject: [PATCH 1/2] xfs: fix two warnings in xfs_alloc.c
-Date: Thu, 29 Oct 2026 17:10:22 +0100
-Message-ID: <20261029161027.1213438-2-aalbersh@kernel.org>
+Subject: [PATCH 2/2] xfsprogs: add gcc generated stack usage files to gitignore
+Date: Thu, 29 Oct 2026 17:10:23 +0100
+Message-ID: <20261029161027.1213438-3-aalbersh@kernel.org>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20261029161027.1213438-1-aalbersh@kernel.org>
 References: <20261029161027.1213438-1-aalbersh@kernel.org>
@@ -59,40 +58,29 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-There's still two warnings in xfs_alloc due to unused alloc_flags var.
+These are generated by gcc due to recently added:
 
-xfs_alloc.c: In function ‘xfs_alloc_ag_vextent_near’:
-xfs_alloc.c:1676:33: error: parameter ‘alloc_flags’ set but not used [-Werror=unused-but-set-parameter=]
- 1676 |         uint32_t                alloc_flags)
-      |         ~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~
-xfs_alloc.c: In function ‘xfs_alloc_ag_vextent_size’:
-xfs_alloc.c:1792:33: error: parameter ‘alloc_flags’ set but not used [-Werror=unused-but-set-parameter=]
- 1792 |         uint32_t                alloc_flags)
-      |         ~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~
+WARNINGS += -fstack-usage
 
 Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
 ---
- libxfs/stubs/xfs_extent_busy.h | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ .gitignore | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/libxfs/stubs/xfs_extent_busy.h b/libxfs/stubs/xfs_extent_busy.h
-index e7d1bcdb2fab..2ef307f0f901 100644
---- a/libxfs/stubs/xfs_extent_busy.h
-+++ b/libxfs/stubs/xfs_extent_busy.h
-@@ -15,6 +15,9 @@
- 	*(busy_gen) = __foo;					\
- 	false;							\
- })
--#define xfs_extent_busy_flush(tp,pag,busy_gen,alloc_flags)	((int)(0))
-+#define xfs_extent_busy_flush(tp,pag,busy_gen,alloc_flags)	({	\
-+	(void)alloc_flags;						\
-+	(int)(0);							\
-+})
+diff --git a/.gitignore b/.gitignore
+index eb3decd108be..f5411ed52198 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -9,6 +9,7 @@
+ /include/platform_defs.h
+ /include/builddefs
+ /install-sh
++*.su
  
- #endif /* __XFS_EXTENT_BUSY_H__ */
+ # magic directory symlinks
+ /include/disk
 -- 
 2.54.0
 
