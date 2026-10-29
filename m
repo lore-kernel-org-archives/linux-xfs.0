@@ -1,48 +1,49 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793290076;
-	b=1Y6AksAtljwSdYJaqYnWfRdqILXWjjcfSF2bna0X9zTtlD5q8NovMzWo6trhd2uY3BDp
-	 Ww2wb/t9JvIZsB4i+u1k2HKQO6DMllcv2lYiRx3iBC2MipTE5L/TA2eebqGsb79BeFKAe
-	 XlAuWDuDmmeZMAW8wnYDTuVjP7ul8S2fXq6SX3iTDJpoHiKwIXeVV7XjjRFD3SB7427QE
-	 Cq94+DlqhguAo75Ue234QNiBQsp/OEshFYWGwe7zJG5D8HRPU12Eip1cVFsNqqk9Gr41J
-	 M7pCG43nVz6xbQcLBf30PigZsXeJ41FLpdFR2TUHpDZ8c1a1z52ehU1Ml+rgghKqdoA==
+	t=1793290067;
+	b=zBLE+3zM4rB6WKauAvdNZNfPPg8Jx1ymxtOi/vBS0f5KO9h2AKH8OxHQpqxAXJ7ukvMS
+	 JA7ZgNpfr+lp0SHgWcTnvuwTQ740x6Q3/zp9xEgJJW4AbTzRv8TZ2Owlsgzy0IN3LZs0o
+	 ijffrPBiZzHdEn9V4fkuB0cgMnhlPBCmzuMnAuWRAvPMwM0Sba8pm2IcQxMdjxSQTgoRQ
+	 qkKl+p/188cYqkh3h7Q1b6OvL7z0q0hZ/CVhkTnrorUXbSgg0JhQ1l++FnWRnWcRf3Hti
+	 CoUbO2v/j3qUF1qY7Rr/evu+KvoL2x0nSQOKGZFsrz73SVIOIxxbDVQ6rRFtk9krupQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793290076;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793290067;
 	h=Received:DKIM-Signature:From:Date:Subject:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
 	 X-Mailer:X-Developer-Signature:X-Developer-Key;
-	bh=zxzMnAfr+mLITGlXVw2HHwWaLKEq9rk+KQbTmA0gnZc=;
-	b=GWXZOntutR0HNfkYNghhhfsz8ZzGsoTZe0FvSpigjY/fAd6m5h1YGLZWpY9XSDWfZgIf
-	 09SmmJSrIye60kATp0dxulXqgqjTnukpxyXuewg/nTILiMI0ZgfF34BYgi8Pl75Ihc0Cb
-	 JS7jY3M23hixnxsM3deDOxYJCYk8bVCsCLkNhcoouKYVgtcmS7j+tgBY/WTxlMdgzo8M6
-	 IPHqQvdWb59DEIsx3RKoUFDyl8JrFu+4cinYDaVeZXLpTq7/OuG5u9lw916z3kH7VsSLI
-	 Kg9bc1RurDcOinqGR1r2/9Gb9zE1j7lo1ci9hgVHofmdDVGbRfAEWnli5ckF4kxbqdw==
+	bh=kveNn4j/GWeYrnti6f44EeqZoatALymzZ1v9ov541sk=;
+	b=s1p4vC2nANz9DxiZ0zGN1tW6xjAZ0sCQDmL0Qhm13JaMaC5RXXumAWgO3QI923wgYgxu
+	 ZvM2/rnP/r0nhobbISkLCoALsyO6fMkzZGjiaUjBYn4xuEq8o3i52HPxmzAS5cEUHJb1M
+	 8NxZ+AS/GmRKVxS4+M+QdalVGAXDddVMK8Pdh5XGg9qxezSh0lv30YCbNnQdGT0BpOto2
+	 0lb5CFNokjHbQ0rFgPpmkUbhcPc6vJzb9w29aJETXkcNAF8uqpZX/HFgOByqS68/LN820
+	 PoinlxLDAyLTNaSnDlmgwrq5epTJx7Q2IQuX3f5A66CRQnLRPAqNf5PQtaBQdiaB5gw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="lZ/NtxuW";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RlUquBNs;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4668C60A2600;
-	Thu, 29 Oct 2026 16:07:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72972606A323;
+	Thu, 29 Oct 2026 16:07:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lZ/NtxuW
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F3B3F1F01829;
-	Thu, 29 Oct 2026 16:07:51 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RlUquBNs
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 336A81F01824;
+	Thu, 29 Oct 2026 16:07:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793290075;
-	bh=zxzMnAfr+mLITGlXVw2HHwWaLKEq9rk+KQbTmA0gnZc=;
+	s=k20260515; t=1793290067;
+	bh=kveNn4j/GWeYrnti6f44EeqZoatALymzZ1v9ov541sk=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=lZ/NtxuW+whuET0o12ey+U43ax2RjET2OlE1sxt2rJYT5lAhZhE7nCGkk3w6L4uwG
-	 Gpv/NOomzhz109Zgzhq4ZopFhZ2MqmhhfkdciraP6cyN0KAKmTutcGeVw8Xkpm47h+
-	 FdROUWFWq9PkGga8qYGhHhY5JrKfsEITLjdQLo1hWaee+eT0E47r3yYiQ+/tVof5F7
-	 y9Fg4mwMp73+2lplQrwS8LKDTmw+4HTlimsHI+cMqnEXzXwpqtu0Hh1YDQkP1I24Jx
-	 KHO1QAvKX55syZQXI09EsjRMmKBALzT1TAqTfLVEWIXBaCchpAjEV6fwXEikbormVj
-	 gommYd3qzRDIw==
+	b=RlUquBNsrDtCLKwUecn0DUBR3oLX6ZESdpaf9Opt7wiIWS8/pl5OntDis/ohpLEQn
+	 ac1QSgTsOFGUli+GKpPs6xCnCfWvi+teA+SNSCS2kOvnin52DOt5Em9yQUW60ZrjaN
+	 3U8bn+V4DACQt7S5AbipkHLgaqfYdWYncJlNn7/0AYDp4JC/A/N0NSl1aNcMIwCYdy
+	 Rc1zYGC63tTSjSsdEPFep919+IgPu/2MtMmQCB6KKa9IPcymjviK3oe7TE61Tuwfmb
+	 tZ1kKNdkOHidWMF5CGY0lyua9UTdiYBArCY6XkRrwNfU4zXesisyu5gnoEZ8+2yOz7
+	 B896S6Y7N5VLw==
 From: Christian Brauner <brauner@kernel.org>
-Date: Thu, 29 Oct 2026 17:06:59 +0100
-Subject: [PATCH v2 08/34] exfat: keep the current mount options on remount
+Date: Thu, 29 Oct 2026 17:06:57 +0100
+Subject: [PATCH v2 06/34] nilfs2: don't set SB_RDONLY after filesystem
+ errors
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -54,7 +55,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261029-work-fs-sb_rdonly-v2-8-2f44f64f0b66@kernel.org>
+Message-Id: <20261029-work-fs-sb_rdonly-v2-6-2f44f64f0b66@kernel.org>
 References: <20261029-work-fs-sb_rdonly-v2-0-2f44f64f0b66@kernel.org>
 In-Reply-To: <20261029-work-fs-sb_rdonly-v2-0-2f44f64f0b66@kernel.org>
 To: linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.com>
@@ -65,117 +66,300 @@ Cc: Al Viro <viro@zeniv.linux.org.uk>, ecryptfs@vger.kernel.org,
  linux-btrfs@vger.kernel.org, gfs2@lists.linux.dev, 
  linux-efi@vger.kernel.org, linux-mtd@lists.infradead.org, 
  linux-xfs@vger.kernel.org, 
- "Christian Brauner (Amutable)" <brauner@kernel.org>, stable@vger.kernel.org
+ "Christian Brauner (Amutable)" <brauner@kernel.org>, 
+ Karl Mehltretter <kmehltretter@gmail.com>, 
+ Ryusuke Konishi <konishi.ryusuke@gmail.com>
 X-Mailer: b4 0.17-dev-ce4c1
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3964; i=brauner@kernel.org;
- h=from:subject:message-id; bh=mZbazIJ3QS8ZQ3YBus7040jsx8ku0rcjHK0u0BKdtWQ=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWQ9ztfvmdgeu79zf5Tfy+ctSyx97ngf2HGVPWRfrAuD/
- OtDnxz/dJSyMIhxMciKKbI4tJuEyy3nqdhslKkBM4eVCWQIAxenAExkWg3D/4gbJytOb0pfIrqu
- /PG8B9lxZzaeb1ZeLBr68J/43z6faRYM/1Qf1nipbj/0ZfLEa0cn9U5Ybb4iodhmjjoXt5SzQpP
- xeyYA
+X-Developer-Signature: v=1; a=openpgp-sha256; l=9921; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=csUy0jt26u0t2G96OWe0GxhGfzrZOn8y/Ie4DWlh7UA=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWQ9ztfPUb6wYBbvydk2Tr3bvdeL3zA68LM+kVfs1v1Q1
+ 40sHbsXdpSyMIhxMciKKbI4tJuEyy3nqdhslKkBM4eVCWQIAxenAEykj5ORYYliuqGd+Bch46X5
+ YfEnzdJcfLYqbGI9dCnv8S2VNS6OUxkZ2n722uW2nZi2wuTTrknSe7MOTP8Xw7Mmq+SNAA/r5eS
+ rDAA=
 X-Developer-Key: i=brauner@kernel.org; a=openpgp;
  fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-exfat_init_fs_context() only inherits uid, gid, fmask and dmask for a
-reconfigure. But exfat_reconfigure() refuses to change iocharset,
-keep_last_dots, sys_tz, time_offset and allow_utime. So every remount
-that doesn't repeat a non-default value for one of them fails with
-EINVAL, including emergency remount (sysrq u) which passes no options at
-all. And an option-less remount silently resets errors=, zero_size_dir
-and discard.
+With errors=remount-ro, the nilfs2 default, __nilfs_error() sets
+SB_RDONLY from whatever context hit the error and without holding
+s_umount. If that happens while the filesystem is frozen thaw_super()
+sees a read-only superblock and leaves the s_writers rwsems locked so
+every writer hangs.
 
-So start a reconfigure from the current options like gfs2 does. The
-iocharset string stays NULL in the new context because
-->init_fs_context() runs without s_umount for mount(2) and a concurrent
-remount could free it. It's only compared if the remount names one. A
-shutdown turns discard off for good so exfat_reconfigure() keeps it off.
+nilfs2 already treats a runtime SB_RDONLY as "degraded because of
+corruption" in a lot of places and that can stay. So call
+sb_set_emergency_ro() instead and add nilfs_sb_rdonly() which is true
+for a read-only mount and for the emergency state. Use it for every
+sb_rdonly() check that guards a write. FITRIM is refused and
+nilfs_sync_fs() and a remount to read-only don't write anything anymore.
 
-The next patch stops exfat from setting SB_RDONLY after errors. An
-errored exfat then stays read-write and emergency remount would run into
-this as well.
+nilfs2 explicitly supported "mount -o remount,rw" after an error so far.
+Now the state lasts until umount like on ext4. That includes a mount
+that reconfigures a superblock only snapshots kept alive.
+nilfs_get_tree() does that without reconfigure_super() so
+nilfs_reconfigure() refuses going read-write itself. Writes through file
+descriptors opened before the error fail with EROFS now instead of being
+dropped.
 
-Fixes: e6fd5d3a4317 ("exfat: support modifying mount options via remount")
-Cc: stable@vger.kernel.org
+Reported-by: Karl Mehltretter <kmehltretter@gmail.com>
+Link: https://lore.kernel.org/r/20260903060855.4610-1-kmehltretter@gmail.com
+Acked-by: Ryusuke Konishi <konishi.ryusuke@gmail.com>
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- fs/exfat/super.c | 31 ++++++++++++++++++-------------
- 1 file changed, 18 insertions(+), 13 deletions(-)
+ fs/nilfs2/inode.c     |  4 ++--
+ fs/nilfs2/ioctl.c     |  4 ++++
+ fs/nilfs2/mdt.c       |  2 +-
+ fs/nilfs2/page.c      |  2 +-
+ fs/nilfs2/segment.c   | 13 ++++++-------
+ fs/nilfs2/sufile.h    |  2 +-
+ fs/nilfs2/super.c     | 29 ++++++++++++++++++++++-------
+ fs/nilfs2/the_nilfs.h |  6 ++++++
+ 8 files changed, 43 insertions(+), 19 deletions(-)
 
-diff --git a/fs/exfat/super.c b/fs/exfat/super.c
-index 4943cef97741..44d2000007df 100644
---- a/fs/exfat/super.c
-+++ b/fs/exfat/super.c
-@@ -797,14 +797,12 @@ static int exfat_reconfigure(struct fs_context *fc)
- 		mutex_unlock(&sbi->s_lock);
+diff --git a/fs/nilfs2/inode.c b/fs/nilfs2/inode.c
+index a99a69e9f91b..0d4995a08b78 100644
+--- a/fs/nilfs2/inode.c
++++ b/fs/nilfs2/inode.c
+@@ -162,7 +162,7 @@ static int nilfs_writepages(struct address_space *mapping,
+ 	struct inode *inode = mapping->host;
+ 	int err = 0;
+ 
+-	if (sb_rdonly(inode->i_sb)) {
++	if (nilfs_sb_rdonly(inode->i_sb)) {
+ 		nilfs_clear_dirty_pages(mapping, false);
+ 		return -EROFS;
  	}
+@@ -848,7 +848,7 @@ void nilfs_evict_inode(struct inode *inode)
+ 	truncate_inode_pages_final(&inode->i_data);
  
--	if (new_opts->allow_utime == (unsigned short)-1)
--		new_opts->allow_utime = ~new_opts->fs_dmask & 0022;
--
- 	/*
- 	 * Since the old settings of these mount options are cached in
- 	 * inodes or dentries, they cannot be modified dynamically.
- 	 */
--	if (strcmp(new_opts->iocharset, cur_opts->iocharset) ||
-+	if ((new_opts->iocharset &&
-+	     strcmp(new_opts->iocharset, cur_opts->iocharset)) ||
- 	    new_opts->keep_last_dots != cur_opts->keep_last_dots ||
- 	    new_opts->sys_tz != cur_opts->sys_tz ||
- 	    new_opts->time_offset != cur_opts->time_offset ||
-@@ -815,6 +813,10 @@ static int exfat_reconfigure(struct fs_context *fc)
- 	    new_opts->allow_utime != cur_opts->allow_utime)
- 		return -EINVAL;
+ 	nilfs = sb->s_fs_info;
+-	if (unlikely(sb_rdonly(sb) || !nilfs->ns_writer)) {
++	if (unlikely(nilfs_sb_rdonly(sb) || !nilfs->ns_writer)) {
+ 		/*
+ 		 * If this inode is about to be disposed after the file system
+ 		 * has been degraded to read-only due to file system corruption
+diff --git a/fs/nilfs2/ioctl.c b/fs/nilfs2/ioctl.c
+index 686ac53498bc..42848601b394 100644
+--- a/fs/nilfs2/ioctl.c
++++ b/fs/nilfs2/ioctl.c
+@@ -1050,6 +1050,10 @@ static int nilfs_ioctl_trim_fs(struct inode *inode, void __user *argp)
+ 	if (!capable(CAP_SYS_ADMIN))
+ 		return -EPERM;
  
-+	/* A shutdown turned discard off for good. */
-+	if (exfat_forced_shutdown(sb))
-+		new_opts->discard = 0;
++	/* Don't trust the segment usage after an error. */
++	if (sb_emergency_ro(inode->i_sb))
++		return -EROFS;
 +
- 	if (new_opts->discard != cur_opts->discard &&
- 	    new_opts->discard &&
- 	    !bdev_max_discard_sectors(sb->s_bdev)) {
-@@ -823,6 +825,8 @@ static int exfat_reconfigure(struct fs_context *fc)
+ 	if (!bdev_max_discard_sectors(nilfs->ns_bdev))
+ 		return -EOPNOTSUPP;
+ 
+diff --git a/fs/nilfs2/mdt.c b/fs/nilfs2/mdt.c
+index 77dc2be2ce65..3679a21dcb29 100644
+--- a/fs/nilfs2/mdt.c
++++ b/fs/nilfs2/mdt.c
+@@ -400,7 +400,7 @@ static int nilfs_mdt_writeback(struct address_space *mapping,
+ 	if (!inode)
+ 		return 0;
+ 
+-	if (sb_rdonly(inode->i_sb)) {
++	if (nilfs_sb_rdonly(inode->i_sb)) {
+ 		/*
+ 		 * It means that filesystem was remounted in read-only
+ 		 * mode because of error or metadata corruption. But we
+diff --git a/fs/nilfs2/page.c b/fs/nilfs2/page.c
+index 857926da9f21..c71b82244f9d 100644
+--- a/fs/nilfs2/page.c
++++ b/fs/nilfs2/page.c
+@@ -259,7 +259,7 @@ int nilfs_copy_dirty_pages(struct address_space *dmap,
+ 
+ 		folio_lock(folio);
+ 		if (unlikely(!folio_test_dirty(folio))) {
+-			if (WARN_ONCE(!sb_rdonly(smap_inode->i_sb),
++			if (WARN_ONCE(!nilfs_sb_rdonly(smap_inode->i_sb),
+ 					"inconsistent dirty state\n"))
+ 				goto unlock_folio;
+ 
+diff --git a/fs/nilfs2/segment.c b/fs/nilfs2/segment.c
+index af0c3560444f..24b6e9597d5d 100644
+--- a/fs/nilfs2/segment.c
++++ b/fs/nilfs2/segment.c
+@@ -317,7 +317,7 @@ void nilfs_relax_pressure_in_lock(struct super_block *sb)
+ 	struct the_nilfs *nilfs = sb->s_fs_info;
+ 	struct nilfs_sc_info *sci = nilfs->ns_writer;
+ 
+-	if (sb_rdonly(sb) || unlikely(!sci) || !sci->sc_flush_request)
++	if (nilfs_sb_rdonly(sb) || unlikely(!sci) || !sci->sc_flush_request)
+ 		return;
+ 
+ 	set_bit(NILFS_SC_PRIOR_FLUSH, &sci->sc_flags);
+@@ -2099,7 +2099,7 @@ static int nilfs_segctor_do_construct(struct nilfs_sc_info *sci, int mode)
+ 	struct the_nilfs *nilfs = sci->sc_super->s_fs_info;
+ 	int err;
+ 
+-	if (sb_rdonly(sci->sc_super))
++	if (nilfs_sb_rdonly(sci->sc_super))
+ 		return -EROFS;
+ 
+ 	nilfs_sc_cstage_set(sci, NILFS_ST_INIT);
+@@ -2323,7 +2323,7 @@ int nilfs_construct_segment(struct super_block *sb)
+ 	struct nilfs_sc_info *sci = nilfs->ns_writer;
+ 	struct nilfs_transaction_info *ti;
+ 
+-	if (sb_rdonly(sb) || unlikely(!sci))
++	if (nilfs_sb_rdonly(sb) || unlikely(!sci))
+ 		return -EROFS;
+ 
+ 	/* A call inside transactions causes a deadlock. */
+@@ -2356,7 +2356,7 @@ int nilfs_construct_dsync_segment(struct super_block *sb, struct inode *inode,
+ 	struct nilfs_transaction_info ti;
+ 	int err = 0;
+ 
+-	if (sb_rdonly(sb) || unlikely(!sci))
++	if (nilfs_sb_rdonly(sb) || unlikely(!sci))
+ 		return -EROFS;
+ 
+ 	nilfs_transaction_lock(sb, &ti, 0);
+@@ -2870,9 +2870,8 @@ int nilfs_attach_log_writer(struct super_block *sb, struct nilfs_root *root)
+ 
+ 	if (nilfs->ns_writer) {
+ 		/*
+-		 * This happens if the filesystem is made read-only by
+-		 * __nilfs_error or nilfs_remount and then remounted
+-		 * read/write.  In these cases, reuse the existing
++		 * This happens if the filesystem is remounted read-only and
++		 * then read/write again.  In this case, reuse the existing
+ 		 * writer.
+ 		 */
+ 		return 0;
+diff --git a/fs/nilfs2/sufile.h b/fs/nilfs2/sufile.h
+index 5888ed479c8b..d5e7598e36b3 100644
+--- a/fs/nilfs2/sufile.h
++++ b/fs/nilfs2/sufile.h
+@@ -76,7 +76,7 @@ int nilfs_sufile_trim_fs(struct inode *sufile, struct fstrim_range *range);
+ 		int _err = (err);					\
+ 									\
+ 		if (unlikely(_err))					\
+-			_err = WARN_ONCE(!sb_rdonly((sufile)->i_sb),	\
++			_err = WARN_ONCE(!nilfs_sb_rdonly((sufile)->i_sb), \
+ 				"unexpected sufile error %d\n", _err) ? \
+ 				-EIO : -EROFS;				\
+ 		_err;							\
+diff --git a/fs/nilfs2/super.c b/fs/nilfs2/super.c
+index 2e3b591c117c..edb7d379ecbd 100644
+--- a/fs/nilfs2/super.c
++++ b/fs/nilfs2/super.c
+@@ -137,12 +137,13 @@ void __nilfs_error(struct super_block *sb, const char *function,
+ 
+ 	va_end(args);
+ 
+-	if (!sb_rdonly(sb)) {
++	if (!nilfs_sb_rdonly(sb)) {
+ 		nilfs_set_error(sb);
+ 
+ 		if (nilfs_test_opt(nilfs, ERRORS_RO)) {
+ 			printk(KERN_CRIT "Remounting filesystem read-only\n");
+-			sb->s_flags |= SB_RDONLY;
++			/* SB_RDONLY needs s_umount, see sb_set_emergency_ro(). */
++			sb_set_emergency_ro(sb);
+ 		}
  	}
  
- 	swap(*cur_opts, *new_opts);
-+	/* The iocharset can't change, keep the current string. */
-+	swap(cur_opts->iocharset, new_opts->iocharset);
+@@ -508,7 +509,7 @@ static void nilfs_put_super(struct super_block *sb)
  
- 	return 0;
- }
-@@ -849,23 +853,24 @@ static int exfat_init_fs_context(struct fs_context *fc)
+ 	nilfs_detach_log_writer(sb);
  
- 	if (fc->purpose == FS_CONTEXT_FOR_RECONFIGURE && fc->root) {
- 		struct super_block *sb = fc->root->d_sb;
--		struct exfat_mount_options *cur_opts = &EXFAT_SB(sb)->options;
+-	if (!sb_rdonly(sb)) {
++	if (!nilfs_sb_rdonly(sb)) {
+ 		down_write(&nilfs->ns_sem);
+ 		nilfs_cleanup_super(sb);
+ 		up_write(&nilfs->ns_sem);
+@@ -529,6 +530,10 @@ static int nilfs_sync_fs(struct super_block *sb, int wait)
+ 	struct nilfs_super_block **sbp;
+ 	int err = 0;
  
--		sbi->options.fs_uid = cur_opts->fs_uid;
--		sbi->options.fs_gid = cur_opts->fs_gid;
--		sbi->options.fs_fmask = cur_opts->fs_fmask;
--		sbi->options.fs_dmask = cur_opts->fs_dmask;
-+		/*
-+		 * Start from the current options so a remount only changes
-+		 * what it specifies. The iocharset string stays with the
-+		 * superblock, see exfat_reconfigure().
-+		 */
-+		sbi->options = EXFAT_SB(sb)->options;
-+		sbi->options.iocharset = NULL;
- 	} else {
- 		sbi->options.fs_uid = current_uid();
- 		sbi->options.fs_gid = current_gid();
- 		sbi->options.fs_fmask = current->fs->umask;
- 		sbi->options.fs_dmask = current->fs->umask;
-+		sbi->options.allow_utime = -1;
-+		sbi->options.errors = EXFAT_ERRORS_RO;
-+		exfat_set_iocharset(&sbi->options, exfat_default_iocharset);
++	/* Nothing may be written after an error made us read-only. */
++	if (sb_emergency_ro(sb))
++		return 0;
++
+ 	/* This function is called when super block should be written back */
+ 	if (wait)
+ 		err = nilfs_construct_segment(sb);
+@@ -588,7 +593,7 @@ static int nilfs_freeze(struct super_block *sb)
+ 	struct the_nilfs *nilfs = sb->s_fs_info;
+ 	int err;
+ 
+-	if (sb_rdonly(sb))
++	if (nilfs_sb_rdonly(sb))
+ 		return 0;
+ 
+ 	/* Mark super block clean */
+@@ -602,7 +607,7 @@ static int nilfs_unfreeze(struct super_block *sb)
+ {
+ 	struct the_nilfs *nilfs = sb->s_fs_info;
+ 
+-	if (sb_rdonly(sb))
++	if (nilfs_sb_rdonly(sb))
+ 		return 0;
+ 
+ 	down_write(&nilfs->ns_sem);
+@@ -1083,7 +1088,7 @@ nilfs_fill_super(struct super_block *sb, struct fs_context *fc)
+ 		goto failed_unload;
  	}
  
--	sbi->options.allow_utime = -1;
--	sbi->options.errors = EXFAT_ERRORS_RO;
--	exfat_set_iocharset(&sbi->options, exfat_default_iocharset);
--
- 	fc->s_fs_info = sbi;
- 	fc->ops = &exfat_context_ops;
- 	return 0;
+-	if (!sb_rdonly(sb)) {
++	if (!nilfs_sb_rdonly(sb)) {
+ 		err = nilfs_attach_log_writer(sb, fsroot);
+ 		if (err)
+ 			goto failed_checkpoint;
+@@ -1095,7 +1100,7 @@ nilfs_fill_super(struct super_block *sb, struct fs_context *fc)
+ 
+ 	nilfs_put_root(fsroot);
+ 
+-	if (!sb_rdonly(sb)) {
++	if (!nilfs_sb_rdonly(sb)) {
+ 		down_write(&nilfs->ns_sem);
+ 		nilfs_setup_super(sb, true);
+ 		up_write(&nilfs->ns_sem);
+@@ -1141,6 +1146,10 @@ static int nilfs_reconfigure(struct fs_context *fc)
+ 	if (fc->sb_flags & SB_RDONLY) {
+ 		sb->s_flags |= SB_RDONLY;
+ 
++		/* After an error nothing may be written, just go read-only. */
++		if (sb_emergency_ro(sb))
++			goto out;
++
+ 		/*
+ 		 * Remounting a valid RW partition RDONLY, so set
+ 		 * the RDONLY flag and then mark the partition as valid again.
+@@ -1152,6 +1161,12 @@ static int nilfs_reconfigure(struct fs_context *fc)
+ 		__u64 features;
+ 		struct nilfs_root *root;
+ 
++		/* The VFS doesn't refuse this when nilfs_get_tree() calls us. */
++		if (sb_emergency_ro(sb)) {
++			err = -EROFS;
++			goto ignore_opts;
++		}
++
+ 		/*
+ 		 * Mounting a RDONLY partition read-write, so reread and
+ 		 * store the current valid flag.  (It may have been changed
+diff --git a/fs/nilfs2/the_nilfs.h b/fs/nilfs2/the_nilfs.h
+index 4776a70f01ae..f90d5bd6e7d3 100644
+--- a/fs/nilfs2/the_nilfs.h
++++ b/fs/nilfs2/the_nilfs.h
+@@ -205,6 +205,12 @@ THE_NILFS_FNS(GC_RUNNING, gc_running)
+ THE_NILFS_FNS(SB_DIRTY, sb_dirty)
+ THE_NILFS_FNS(PURGING, purging)
+ 
++/* Mounted read-only or read-only after an error. */
++static inline bool nilfs_sb_rdonly(struct super_block *sb)
++{
++	return sb_rdonly(sb) || sb_emergency_ro(sb);
++}
++
+ /*
+  * Mount option operations
+  */
 
 -- 
 2.53.0
