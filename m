@@ -1,100 +1,79 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=74.125.230.68
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793234734;
-	b=dik4lICPic8jxJy8RrZJ+8c3G6sxcp2Arxg5hjWoCVrofoJTarp5c32vpcAIeQF/yzSL
-	 oPsc3lhSCAnmJgvR4H1X2wOhEptvrH3FpH7kNcg4/Ty+DXxDQa4vTFS4hHllcgErUd2ul
-	 ++jyjL3C7z7AGi0oARZHP0DfTGriLrNPZzRd7yslyXMB0tvjT8s40SNt2PJHYoGXIoUdQ
-	 qQq3N07eHPhcNj0E4iaYJPZMfvF1KbH9V35+kJXpVgkM52ZrCwpxr+T1dF5uAd3SQA76a
-	 0EstO/2zuN5ze2fxMGbvu0AdSpiFrup3Obewtt+WeRSMZnuOYarr2ACgVykB3B4CuLA==
+	t=1793240581;
+	b=BOYBCfZaM0LTwRfaMBGWGANi1lNwymTrnkrQGX2YWqQ5WW3ocQgslGILnJe0A3paskHz
+	 e1XTpk3G0A0CwDtlek5iavkxtaxa8QUgQh5REYRr8yOxA1E8UCfPX6BYSStOQ/jWZaXpN
+	 Ob+31JRl7ArmBg68vDVWxfxFHjP8eMbPNHoraUV7rvNrfJzFyjGpBvtEiAmSewakOQF/X
+	 9yT4g7QgqkTFz5acl0648ZqUc55GqTHOpegkD05gIdCc9uApKkUC6uouf3a66QP7mcZth
+	 aHSh18a3acr/8N+FDkpzakfewSBBSOYDYJHXEdGj+Xb6p3ZqBpokZLOD5Bw3nCgwb8w==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793234734;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
-	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=IX66bHE1Qh/sWHYMzKZGzmSLPQlS8Qn4BjuO8xpQVSw=;
-	b=ymxfvEuv+d8h+Xh14RPb2Sy6EIRw+wXl1qE4Q9pHqN7kbSoSMLgj6bg7vh1Q11u3aC9q
-	 XRmLH+A4FlxNom8+A6xYd1p6b0+e2yhNEJ4tAdM0q+YJkBxJEvMNHPPusJM9BiWNBKPLa
-	 cSW2mNf0/9dp/sHvNuh14mYLeYhcNk3IJe9EMIcRcRv1dTrvaoy/RGUlQzf6cY8sWdfgE
-	 V2SLkYYgXSvoJ4zY+phflqx4WgNMQYmPF5oXSPsG5tfMWT63ykSuOgymKExdFeR6NNtfF
-	 zeNKlkDYgxfuTaydP3P8kb9ZvZtyxD/xytFKpMsIPMm3Up5yoJ1lMSwtuTC9A+Xef+w==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793240581;
+	h=Received:DKIM-Signature:Received:From:Subject:Date:Message-Id:
+	 MIME-Version:Content-Type:Content-Transfer-Encoding:X-B4-Tracking:To:
+	 Cc:X-Mailer:X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To;
+	bh=4XiBHu6J1/Wrk04/tYhxMDSUV7+mtsUoRrkmRrRsd0M=;
+	b=one67BU8UOa8ffvYKot7414cNWfNIh2J5WtC+9vcH2skIaM4FynkUHANH4PJwpYjVBK8
+	 3DG5pG7nccr9IfNQwR4Y4rbWcPXDP7o2YkI/9G8BTfKIDJmpQQ/2HVbH7H8TfWJeln+VZ
+	 wvHNHbo3tTJ4pEg0n8JQsGnGWVx10slhoDZAdk1xdzeRp3izFN96N1XIeBbiqJ0K5V5EK
+	 AlFkFkM4DlIlze+xXkXHktKK53zk27OpsfV1gZ117ZZBcgATpAi6NML0Hqu24l81Dk52+
+	 hIE36RMGuNYQ5jyjEukLpnpZAJCVVocFErIPTiD/Wt7urfosa4gwXk4wHXm2xQoL4fQ==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=0uUyOHE3;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=74.125.230.68
-Received: from mail-lr2-f4.google.com (mail-lr2-f4.google.com [74.125.230.68])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lL25Ki0F;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5264606A31D;
+	Thu, 29 Oct 2026 02:23:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lL25Ki0F
+Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
+ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
+	t=1793240580;
+	b=bX5I1nwQpqXfR9EQ/S5eGx1Ly8xCcB/6muvsbQqCuu4hdmsB7W1HyavQzGHnL+QMFLLK
+	 KqbDa7G9UKvhjNtlYmcJJiZ4/VOAJcO1dj2XPC4Fp3EdEpVxWBuyWemh6bhjogLRDP1Cc
+	 Jsb4nBS+E/Bf/QRH7NO+pAYTx+G48E9Cc8AA8BG5hkySpEkA9VJNGoW3fqOYpAlRCNGqf
+	 foZLv6g811EUqX++DTx77/4o9Z+Sp8I4nAKLO9c/EPmtH9ahJTH3Le1X7BDWQFRrp2bFt
+	 sBfo23k/3VDgk5SzTIDqRP4oV21wPmSZsEo8KRZ6fJTQN2VnJtC89rD/4mz/WBXAacw==
+ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
+	c=relaxed/relaxed; t=1793240580;
+	h=DKIM-Signature:Received:From:Subject:Date:Message-Id:MIME-Version:
+	 Content-Type:Content-Transfer-Encoding:X-B4-Tracking:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To;
+	bh=4XiBHu6J1/Wrk04/tYhxMDSUV7+mtsUoRrkmRrRsd0M=;
+	b=OQ1mxFaRBiKiqEOhKsSsL0n4YatP/UOavyMXlkCorkSJNkqrVg8jGyMoyDW+/BMiLo8A
+	 fItggKoLDK7H0M7i1KW1INnF553Zt2+IoxVEx3BeuVNuDVSMyY6voRziUJA1gt11rTVwP
+	 cYYDPcw3o4DfuXDT0JCrgsLjcdLfQJ7CYOXVKJUUHQ4Cxq0Mu3lJu1WYRigEglVRKEIwQ
+	 KObtaq33iIVrHSNRg6MJWpe8XxPhZkHlJIUxL9uYGhygoA/uscfIKbLeAhIQtswMKlsb/
+	 6efRolrT5ZOEXXCuA4TDFDDxR8yKRPZZfcZ+LnwEohmw8Tqo1FcAFWJL9yTGCJfkc6g==
+ARC-Authentication-Results: i=1; smtp.kernel.org; 
+	arc=none smtp.remote-ip=100.80.115.77
+Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28329606A31A
-	for <linux-xfs@vger.kernel.org>; Thu, 29 Oct 2026 00:45:34 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 28329606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=0uUyOHE3
-Received: by mail-lr2-f4.google.com with SMTP id 38308e7fff4ca-3ac4f373d3bso2058371fa.0
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Oct 2026 17:45:34 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1793234732; cv=none;
-        d=google.com; s=arc-20260327;
-        b=nF80Sf3E5c5rVQECg98sE0ia2/J2geLqaGyfoZWc50VAdNfkCnlJSj9rbyA3cWxxmg
-         69E9p3SDJHLA+UwnDGuqHy3D0wnMtQC2poQY4UxmXv/2ZqGqm4WsVA55dPZMVXMzc0bt
-         xtM3KeP1CXt+7CHp2gw41jr5cQEmsE+u3GnXjGgMoqgqpt8MHeQLvI8sNfuBEYhRUD98
-         iEx8IhEf2KlGJLcvBHg8afKQJp3yH/8JF6sMz6wq5h9vnlP01FYKwJ6brnKQVrnaiUpN
-         eN1fwikYEDsfaoHWCi57/O/Iyps4ArFwVl+HtFVwKsu9Wuk7NhPDjWAdeDd22+VCmdGU
-         X4aQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=IX66bHE1Qh/sWHYMzKZGzmSLPQlS8Qn4BjuO8xpQVSw=;
-        fh=izKa2iWIQUNQKYXCeXDytPSmuKRpr4AhTF2rXdWHi5A=;
-        b=GNHLgwFMdQz7UTOzfysp+12S80zzlSgDzQ9DLDzypzGQqu8FSDqeiuYcQw8gLcXRov
-         SreQWw4hc6MgKi0nI+I3sk/vBiiJaGdgj3Yy+BxmmKkYZSfzSxbx9tuVfM4kBxfYbzpt
-         bsaOp/iAMjdFIe9ViOh1839ZMqrtjA/dau+l0OaQ7h7FAgWxUuvk2FObELZ/DcruBbwj
-         99BIzNjYsp98iZSFizjqevuVh5zuAXi20hkNUIA3eNbonDjtWydyambFy5ljIA+jxlY+
-         gkHs9ue1U3HtEH/NrZuxQTfbeQSD0NgUAdfCiUljpCJgUkgJ1Rv/0H9KrvwMjuRZROwH
-         C2YQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793234732; x=1793839532; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=IX66bHE1Qh/sWHYMzKZGzmSLPQlS8Qn4BjuO8xpQVSw=;
-        b=0uUyOHE3f8jNsMWp8FK0asGRw9EbEY1CXKry67A2oKasSy2HG2zwirNGL+3eeHeCiF
-         fICA8MshW9HlWQFQqeApWcIVaE6cFsDUgpN1Gf2FtjWg6t9W8tppgEfIOHVpucFW/hMg
-         1h0/u2xIm2bWfHTAlbDFvqVkttTyQHL/IhzdaLhWEC2Mcdy86MkQ/2NvXVazb4Pbwk0o
-         dW/vFeRaMnTV0A1e3ZjT5vX4zastObB82nkwqY7TEhnLOFwT/QQrMPcLj5gtrSCuG58Y
-         DrqBy4w8+kAblPZb2vNJzaZewRbknNeqQ1AZaEtijvIeldQtr+m07a/mqpm/3AlnWpZp
-         ZY4A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793234732; x=1793839532;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=IX66bHE1Qh/sWHYMzKZGzmSLPQlS8Qn4BjuO8xpQVSw=;
-        b=hIYzXvmVfaxyvvEo+iv/koZ+y1wUyRaINYGSQrJTq7bpDq0RhpUKzZM6AWSl5ABK42
-         IrxlKPIg2YigtfZLJR1mVAP+B+5B3OR9QF4TUtodZtnQZuYNehV6CqMbHcRJqxzYZDG8
-         pbdsxQrQvSfxZgpp070yMQAuUfJMwXq/SyDlPN/mWien7Tz7+K59Y3b34dh9WlFbz+9c
-         YVKT2x+uobQYN4uqZHFEKrmVGPK41ClzbtqsqYsJTVazM2KDJwxFZOjBKGw7L4YACQet
-         cfLzEIffDJK7aTwzqLH18YwJVO6gqGoHIFThaR+uLXXEaFG5dQYBReTjQhbBmuzcSJWe
-         jDQg==
-X-Forwarded-Encrypted: i=1; AKwUvBwsS8miM2YaXUdOUD+fVbsfMKN/Pz+mardrJEUqEPJELp4bATdPbIqUCdTFdnGPWNf+RVOAZGq4YgM=@vger.kernel.org
-X-Gm-Message-State: AFq9FYIRtd0hc6b0tcmUxZbuMAbxWU1Zs33pkh7ziFZF/rxwyJMQ487J
-	6aZdvDIrWnI1bjOW99AJ5nsGkHN1PpyF32mtofIBbXLZ3kGiLyxW+EPV7Z286+IEdl3HAYiFV0n
-	PTqHqQbYGXn/IQwZsjNUNAgbpkar8SCk=
-X-Gm-Gg: AYBFou3lThdm0ZNrpizNf5VraQi+SAQCEE41CigYA7HIpdrZmIeIX4YT7KXeZtlKTep
-	NuHiKkHyU20GV5A6e1oqFSiOwnhvFUYcapeb56L4mpm2wflyEbnbbnGBh5F9brU+YRq1kButRbc
-	Vea6TMwvQx+oFvA3BxeF6pYgldeOpNIPTQYwxb803bs9qTT7GFoL7kxNvzvILGXDniTSov2CoYG
-	eLV//ZYnjpPtC90eBfrhuCBjqCkeZElAKy0aWDSGCrhNu4pZoiUBgX06EurGORPHgb4Ll3Sq/Nt
-	Ay4rvhshUaEW7CAbRpJjGPdoKGk1YYUuSZjOvL5KHyWId90ZvovxSj2mtc21pcs2+Vb/vUboN0i
-	i5fbQFoJQWZbQDMeX4+4zFLWFHqwvgUEnHHCgIiAPheJK69k2T+iTrvYF
-X-Received: by 2002:a05:6512:10c2:b0:5bf:a2ce:1a21 with SMTP id
- 2adb3069b0e04-5bfcad39f9bmr1447564e87.12.1793234732196; Wed, 28 Oct 2026
- 17:45:32 -0700 (PDT)
+	by smtp.kernel.org (Postfix) with ESMTPS id 56B0E1F031E2;
+	Thu, 29 Oct 2026 02:22:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793240580;
+	bh=4XiBHu6J1/Wrk04/tYhxMDSUV7+mtsUoRrkmRrRsd0M=;
+	h=From:Subject:Date:To:Cc:Reply-To;
+	b=lL25Ki0FcCwkvnUQCASQEDpsS/YI/zKPTPfcyTnxaDipcbmKXTSAaElgr/IOHG4l1
+	 +W0QPiQd5zOEQLcb5CWs577B0mytcLfNMgQdZmEeOHZ/LdX8oiFPX7A9mfQYz7uZCr
+	 56eL20toH5IobhNd5EnfnybvalVkIlfQtR8cx4/kALenJCRv2ogPjb6eFR8+e/pO0r
+	 gYKaup7gKCZ49CNx7yZaAflGdxG8dBITwdDUXuwqxjpc+YZozn2RQNqkKRNmcOEroL
+	 7fdeJ85GAuWIUFx9fVHn+DZ2w158iVQdh+qDTyjMdgwL1MW2FFtwtYz/T6j82MN2Hl
+	 Eyjx3Wv/chjMA==
+Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
+	by lkml.kernel.org (Postfix) with ESMTP id A6C3F45662;
+	Thu, 29 Oct 2026 02:22:58 +0000 (UTC)
+From: Daejun Park via B4 Relay <devnull+daejun7.park.samsung.com@kernel.org>
+Subject: [PATCH v5 0/9] xfs: pNFS block layout fixes
+Date: Thu, 29 Oct 2026 11:22:57 +0900
+Message-Id: <20261029-xfs-pnfs-batch-v5-0-ef8d2eafb7fa@samsung.com>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -104,94 +83,102 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <CAO-4RZ25PZ5BM+83Vk8t5NUY3ksLGz5nzONrncipu2_MZhFSsg@mail.gmail.com>
- <auJYmq07gDhTkJfe@dread>
-In-Reply-To: <auJYmq07gDhTkJfe@dread>
-From: =?UTF-8?B?6ZOu?= <fengaojigui88@gmail.com>
-Date: Thu, 29 Oct 2026 08:45:20 +0800
-X-Gm-Features: AclHuK8bMR8xx8cfMsFzPtwhX3EUD4u5xaeiHNGfFd4E3fzBEuOQaMNxkXZrHCY
-Message-ID: <CAO-4RZ1noJO3fFYZdnVLk7K=YS5uT7+=CS2PrA5XuNeZ+cxBLA@mail.gmail.com>
-Subject: Re: [BUG] xfs: undersized log triggers assertion in xfs_log_mount()
-To: Dave Chinner <dgc@kernel.org>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAAGu4moC/3XMQQ6CMBCF4auQrq0pQwviynsYF6VMoQsK6WCDI
+ dzdwkpj3EzyT/K+lREGh8Su2coCRkdu9CnUKWOm175D7trUDASUucgVXyzxyafT6Nn0/KKkqiE
+ XGrFhaTQFtG45wPsjde9oHsPr8GOxf/9SseCCK2lN1QDKsmpvpAd6+u5sxoHtWJQfAIgfQCagh
+ kJYDUZLLb+BbdvenCpY+e8AAAA=
+To: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
+Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <djwong@kernel.org>, 
+ Dave Chinner <dgc@kernel.org>, Pankaj Raghav <p.raghav@samsung.com>, 
+ Chuck Lever <cel@kernel.org>, Jeff Layton <jlayton@kernel.org>, 
+ Dai Ngo <Dai.Ngo@oracle.com>, Sergey Bashirov <sergeybashirov@gmail.com>, 
+ Andrey Albershteyn <aalbersh@kernel.org>, linux-nfs@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, stable@vger.kernel.org, 
+ Daejun Park <daejun7.park@samsung.com>
+X-Mailer: b4 0.13.0
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1793240577; l=3097;
+ i=daejun7.park@samsung.com; s=20261006; h=from:subject:message-id;
+ bh=c/1TEndM7InozfzPWoIRGtybrwNWX1Xg1TAnNYOp1+w=;
+ b=+Hhyw83TxI8HBGZoFKKAYZ5ZKpcWypWiqrKh4t6W7wio3bJbyDws59vEZFOTU1tWLU0qPm//I
+ qF6I4tSSzeeBalOMkb+d7qFEdRypvTghDUpMls7MXTVTL0HZ8NHuXOt
+X-Developer-Key: i=daejun7.park@samsung.com; a=ed25519;
+ pk=4yUfDqGRZTIj0Ik43z1GoMZRWCNm/rgX6uJuM9dtNIg=
+X-Endpoint-Received: by B4 Relay for daejun7.park@samsung.com/20261006 with
+ auth_id=1122
+X-Original-From: Daejun Park <daejun7.park@samsung.com>
+Reply-To: daejun7.park@samsung.com
 
-Hi Dave,
+The XFS side of the pNFS block and SCSI layout fixes. A pNFS client
+alone can trigger the bugs fixed by patches 1 and 3 to 6. Patch 7
+closes a race with a local process writing to a shared mapping.
+Patches 8 and 9 make a LAYOUTCOMMIT stable the way fdatasync does.
 
-Thank you for the clarification, and I apologize for not checking the
-relevant code more carefully before sending the report.
+Patch 3 needs patch 2. Patch 4 should not go without patches 2 and 3,
+and patch 6 not without patch 5. Patches 1 to 6 are marked for stable.
+XFS_BMAPI_CONVERT_ONLY takes bit 12 of the bmapi flags, which the
+fs-verity series [1] also uses.
 
-I'll be more thorough in my analysis before submitting future reports.
+Tested on nfsd-testing plus this series in QEMU guests. nfsd exported
+XFS on an nvmet-tcp namespace to pynfs ([2] and local tests for patches
+5 and 6) and the Linux client, with KASAN and lockdep and also with
+XFS_DEBUG. fstests -g quick ran on a local XFS. Each patch builds with
+W=1 on for-next.
 
-Thanks again for your time.
+[1] https://lore.kernel.org/r/20261002223705.2175542-14-aalbersh@kernel.org
+[2] https://lore.kernel.org/r/20261014-pynfs-block-commit-v1-0-1723979f495f@samsung.com
+
+---
+Changes in v5:
+- Cap the block count in xfs_iomap_write_direct() instead of
+  xfs_fs_map_blocks().
+- Clamp the layout length with min_t(), as min() rejects u64 against
+  loff_t.
+- Assert that XFS_BMAPI_CONVERT_ONLY allocated nothing.
+- Shorter commit messages, with test results below the --- line.
+
+Changes in v4:
+- Limit a pNFS allocation to XFS_MAX_BMBT_EXTLEN blocks instead of
+  refusing a count whose reservation would wrap.
+
+Changes in v3:
+- Post the XFS pNFS patches as one series.
+- Split XFS_BMAPI_CONVERT_ONLY from its pNFS user.
+- Return -ENOSR when nothing is mapped, and commit the transaction
+  instead of cancelling it.
+- Add the datasync arguments to xfs_log_force_inode() itself.
+
+---
+Daejun Park (9):
+      xfs: mark the inode preallocated for pNFS write layouts past EOF
+      xfs: add a flag to convert unwritten extents without allocating blocks
+      xfs: refuse a pNFS LAYOUTCOMMIT of a range without blocks
+      xfs: clamp a pNFS LAYOUTCOMMIT extent before computing its end
+      xfs: cap the block count of xfs_iomap_write_direct() at one extent
+      xfs: clamp the pNFS layout range to the maximum file size
+      xfs: take the invalidate lock while mapping a pNFS layout
+      xfs: add datasync and log_flushed arguments to xfs_log_force_inode()
+      xfs: make pNFS LAYOUTCOMMIT stable the way fdatasync does
+
+ fs/xfs/libxfs/xfs_bmap.c | 14 +++++++--
+ fs/xfs/libxfs/xfs_bmap.h | 10 +++++-
+ fs/xfs/xfs_export.c      |  2 +-
+ fs/xfs/xfs_file.c        | 52 +++---------------------------
+ fs/xfs/xfs_inode.c       | 36 ++++++++++++++++++---
+ fs/xfs/xfs_inode.h       |  3 +-
+ fs/xfs/xfs_ioend.c       |  2 +-
+ fs/xfs/xfs_iomap.c       | 28 +++++++++++++++--
+ fs/xfs/xfs_iomap.h       |  3 +-
+ fs/xfs/xfs_pnfs.c        | 82 +++++++++++++++++++++++++++++++++---------------
+ fs/xfs/xfs_zone_gc.c     |  2 +-
+ 11 files changed, 147 insertions(+), 87 deletions(-)
+---
+base-commit: ec8f62cc109a3f596b3c65dc0f1011c209239051
+change-id: 20261015-xfs-pnfs-batch-85459210aeeb
 
 Best regards,
-Zheng
+-- 
+Daejun Park <daejun7.park@samsung.com>
 
-On Thu, Oct 29, 2026 at 4:18=E2=80=AFAM Dave Chinner <dgc@kernel.org> wrote=
-:
->
-> On Wed, Oct 28, 2026 at 01:00:54AM +0800, =E9=93=AE wrote:
-> > Hi Carlos,
-> >
-> > Executing the stored syzkaller testcases on Linux 7.3.0 ultimately trig=
-gers
-> > an assertion in xfs_log_mount():
-> >
-> >   XFS (loop0): AAIEEE! Log failed size checks. Abort!
-> >   XFS: Assertion failed: 0, file: fs/xfs/xfs_log.c, line: 597
-> >   kernel BUG at fs/xfs/xfs_message.c:102!
-> >   ...
-> >   xfs_log_mount+0x4e3/0x590
-> >   xfs_mountfs+0x10b9/0x2270
-> >   xfs_fs_fill_super+0x15cc/0x20b0
-> >   ...
-> >   Kernel panic - not syncing: Fatal exception
-> >
-> > The log size check reports 516 blocks, below the required minimum of
-> > 636 blocks.
-> >
-> > Is this an expected assertion with my XFS debug configuration, or shoul=
-d
-> > this malformed image be rejected without triggering a kernel BUG?
->
-> A brief look at the code the error message points at answers your
-> question:
->
->                 /*
->                  * Log check errors are always fatal on v5; or whenever b=
-ad
->                  * metadata leads to a crash.
->                  */
->                 if (xfs_has_crc(mp)) {
->                         xfs_crit(mp, "AAIEEE! Log failed size checks. Abo=
-rt!");
-> >>>>>>                  ASSERT(0);
->                         error =3D -EINVAL;
->                         goto out_free_log;
->                 }
->                 xfs_crit(mp, "Log size out of supported range.");
->                 xfs_crit(mp,
-> "Continuing onwards, but if log hangs are experienced then please report =
-this message in the bug report.");
->
->
-> If you turn off CONFIG_XFS_DEBUG=3Dy, then what happens to that
-> ASSERT(0)?
->
-> That's right, the ASSERT(0) goes away, and then an undersized log
-> causes the mount to fail with -EINVAL as it should.
->
-> > I am reporting an observable assertion from a syzkaller reproduction. I=
- am
-> > not claiming a new vulnerability or a specific root cause.
->
-> Please do a cursory code inspection next time, because the code
-> often makes it pretty clear what the answer to your question is....
->
-> -Dave.
->
-> --
-> Dave Chinner
-> dgc@kernel.org
+
