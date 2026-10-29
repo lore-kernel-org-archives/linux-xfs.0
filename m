@@ -1,77 +1,62 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=18.9.28.11
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793241394;
-	b=YklPWhPgUyGca3dlVfhKRIEo2kFfurNmBscw/nOH+CR0+xgN4JlmqVpIYt8S/m4MTveX
-	 8NqH9lu6eq3GjMDBTeaPIAm2bEPU46TibsBwlVkLftji+ywiAfPxEe9g1dCNozfaWbUpw
-	 ppEtHZgqBaCKfWRjhA6UOo8k60/3B4fIWzvpYR5UgpAkTOPLM6Q0gIVP7P60BMp1VjBbT
-	 oMsxu/JFSu5FwXtp47R7+Hwjd/h1WakPL4Ee+9GJTxOwSenzmuxKhBjwyRfX477YGK68V
-	 4iTybOTnFp+l6l+bJ1baVWzBcuaQRzCvhNVGUQXRlZBnw3o06lto9PFxxOqt3bCBX8Q==
+	t=1793253319;
+	b=iAI6nyjyTt3Pr8RVd/TwVaJFkC4saRByRwgPezgGPDC8te9d6z5equSRsjzvctdFwNji
+	 uhEeQVj6TBreD3PltQg6I+rtCDz6aApXgtSDioP6wXPybm60eZ0sunkt4d8da2TPF+VDI
+	 fPZU8y1Um+nVSWFse6Y+W4p9NrBWt5mpktg8EwNsbkcjMDHYAjMlg0sk+sTnDW98cmDQC
+	 6vVMsfXDcO0A3LsuSjXpWsY4JGk+OA+v55TQnETYxTAJ7vfTJ+kNpuXKj2oCM/Vd4VI7h
+	 pVFP3fBr+/MkrSViozq1/WaGhjz/5cdErO+BT6qlE69sFSUOUcuwH9jcLwk4jYWaI8g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793241394;
-	h=DMARC-Filter:Received:DKIM-Signature:Received:Date:From:To:Cc:
-	 Subject:Message-ID:References:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To;
-	bh=+xhRwd9MYDt0tvkIhIFVmiSdsV4hM76bGb1xq49PgPM=;
-	b=GB/iJCi3SzMHhwryt7BHw5P8OkxIBFPrsswpdLf+hxSIZP0dy+QcTYWTYfq2IexDXdN8
-	 VQ1qVypd00gkfkXwc5SgiGn1G8vBMZnM6/vV8NnTO9klhBqXXPiBx7b66XBb9hCXx59n5
-	 1OrKHEAltUV2j+jMa2S82bZtU8R0RYtQS0L75cU1SZiLtniYO8Fq4CmNpG7fZ41ITYVV/
-	 u7AqnKnOlfYKe+5wJ6xKL1gFjTGhU9QtWbltIf3s/13sPJ+pzWVI5m6ZokoHd8n4aFQN8
-	 XTh0ui0KuMDV3fPDNbP1SpSKxhB6gPCYCL0PJyUb7SZxefb85uVopsHmBoP1gL9/GBA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793253319;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-Id:
+	 In-Reply-To:References:X-Mailer:Mime-Version:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=hddx7cW1nUVz3kkMDf5xox3K0/URdftdZ51g0o1y9xk=;
+	b=cyHumlj2SLQlNBQxkS7jhQkE/q9L81bG3o53wddanZ7XjhTaVFvbY3iCgs9WZWb0TCen
+	 YWmmUWX0L/BYx6t+so8f4LqVxXKqPAtizbF0I+V15zYrtQSFF9ArwFvu/6wrhpK3SJHe4
+	 q3Mjgp4TKjmz/zFc2Z8Z3iX4vJpVnpqXN2QNucTbxaRn5BKzQfBO9Ua81r2pQItj/c0em
+	 CincXWwwC2dxYTwz0+m0KAhXTL0aqu0CBCNI5HCuIdV1jc4oUQqGVgfZwfMhFkwnUHscu
+	 0RykMOMcNwB45RKRmla9ncjzMe63/nX+R8jbC70fXHmikwLxOstJ6a3/Od5+j5+ym4g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=mit.edu;
-	spf=pass smtp.mailfrom=mit.edu;
-	dkim=pass header.d=mit.edu header.i=@mit.edu header.a=rsa-sha256 header.s=outgoing header.b=T+lWHQea;
-	arc=none smtp.remote-ip=18.9.28.11
-Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dkim=pass header.d=linux-foundation.org header.i=@linux-foundation.org header.a=rsa-sha256 header.s=korg header.b=CzzFQDyd;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E737606A321
-	for <linux-xfs@vger.kernel.org>; Thu, 29 Oct 2026 02:36:33 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7E737606A321
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mit.edu
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mit.edu
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A1D6606A31A;
+	Thu, 29 Oct 2026 05:55:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=mit.edu header.i=@mit.edu header.a=rsa-sha256 header.s=outgoing header.b=T+lWHQea
-Received: from macsyma.thunk.org ([12.0.67.227])
-	(authenticated bits=0)
-        (User authenticated as tytso@ATHENA.MIT.EDU)
-	by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 69T2Z4lO004165
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 28 Oct 2026 22:35:06 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mit.edu; s=outgoing;
-	t=1793241310; bh=+xhRwd9MYDt0tvkIhIFVmiSdsV4hM76bGb1xq49PgPM=;
-	h=Date:From:Subject:Message-ID:MIME-Version:Content-Type;
-	b=T+lWHQeaP1i9hnr8/s6uca+jUyjj3dYJXNKhCJwzn78rfUH5i2+M8Pbom5196uFpQ
-	 BK0u2a4IBX0n8ozAmgZn7zcNt3oZWLx/o5giEtDseaXQ5Y2viiNQ22+o0IKr518xb5
-	 6neQS2gJFgHFcctSVZxZmYNxN1uITIWTHuRhjzwmDsAiEDDPvAvELLulKtYAt5dy/W
-	 mRPuSs9SeGMSHjVpooDDE1FvBCfic5lx4cJAqLiz3an+ERShuLelFV+uRlMeHfTuVu
-	 4+0R2Fstuup6LAKFbe9TMImzozdmhzHjzq9jXWbhShRDD+z2j4pHGpFr66qzGSBVa7
-	 BIRmhFXCSz3jw==
-Received: by macsyma.thunk.org (Postfix, from userid 15806)
-	id A253A237A5BD; Wed, 28 Oct 2026 22:35:03 -0400 (EDT)
-Date: Wed, 28 Oct 2026 22:35:03 -0400
-From: "Theodore Tso" <tytso@mit.edu>
-To: Dave Chinner <dgc@kernel.org>
-Cc: Jonathan Corbet <corbet@lwn.net>, Henry Martin <bsdhenrymartin@gmail.com>,
-        Carlos Maiolino <cem@kernel.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Alex Deucher <alexander.deucher@amd.com>,
-        David Hildenbrand <david@kernel.org>,
-        Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>,
-        Kairui Song <kasong@tencent.com>, Myeonghun Pak <mhun512@gmail.com>,
-        Rafal Ostrowski <rafal.ostrowski@amd.com>,
-        Likun Gao <Likun.Gao@amd.com>, James Clark <james.clark@linaro.org>,
-        Anshuman Khandual <anshuman.khandual@arm.com>,
-        Kevin Brodsky <kevin.brodsky@arm.com>, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH] xfs: fix out-of-bounds write from crafted btree root
- numrecs during log recovery
-Message-ID: <auKuGGDHTxhCDJSY@mit.edu>
-References: <20261027151703.973392-1-bsdhenrymartin@gmail.com>
- <auJ2jgIIh8e_JJwn@dread>
- <87cxsto38m.fsf@trenco.lwn.net>
- <auKGlGJwOSZpioMd@dread>
+	dkim=pass (1024-bit key, unprotected) header.d=linux-foundation.org header.i=@linux-foundation.org header.a=rsa-sha256 header.s=korg header.b=CzzFQDyd
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52BC21F01825;
+	Thu, 29 Oct 2026 05:55:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux-foundation.org; s=korg; t=1793253319;
+	bh=hddx7cW1nUVz3kkMDf5xox3K0/URdftdZ51g0o1y9xk=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=CzzFQDydrJtAi2nM2ke5/ieg4gB6r0aQxtJggHBc49Wvn3D68/5DrhEf5hGSC7tK7
+	 aNRgjcj/Sgj0ZwCermfUWR69bU+QqkajLJL75XVXc6kklaiII0Sir8NYw9rH8LLYlD
+	 7x5kovjRCSppfOyZkbk27wxx43tUAitJVCv8iEyQ=
+Date: Wed, 28 Oct 2026 22:55:17 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Salvatore Dipietro <dipiets@amazon.it>, hannes@cmpxchg.org,
+ abuehaze@amazon.com, alisaidi@amazon.com, blakgeof@amazon.com,
+ brauner@kernel.org, brendan.jackman@linux.dev, david@redhat.com,
+ dgc@kernel.org, dipietro.salvatore@gmail.com, djwong@kernel.org,
+ linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-mm@kvack.org, linux-xfs@vger.kernel.org, matt@readmodwrite.com,
+ mhocko@suse.com, ritesh.list@gmail.com, rvvandan@amazon.com,
+ stable@vger.kernel.org, surenb@google.com, vbabka@kernel.org,
+ willy@infradead.org, ziy@nvidia.com
+Subject: Re: [PATCH 1/2] mm: page_alloc: do not give all non-blocking
+ requests reserve access
+Message-Id: <20261028225517.75e13881be22461a8c94e07d@linux-foundation.org>
+In-Reply-To: <20261028144148.GA14023@lst.de>
+References: <arFBr22V60BMmVpl@cmpxchg.org>
+	<20261027150002.318916-1-dipiets@amazon.it>
+	<20261028144148.GA14023@lst.de>
+X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -80,42 +65,200 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <auKGlGJwOSZpioMd@dread>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Thu, Oct 29, 2026 at 10:34:44AM -0500, Dave Chinner wrote:
-> These aren't security bugs. Bugs that result from maliciously
-> corrupted filesystem images (i.e. fuzzed) are explicitly stated as
-> not covered by the kernel security threat models. IOWs, they are
-> just -bugs-, and bugs that just don't ever happen in the real world.
+On Wed, 28 Oct 2026 15:41:48 +0100 Christoph Hellwig <hch@lst.de> wrote:
 
-Well, there are people/companies who might be silly/stupid enough to
-think that containers are a real security isolation layer[1], and who
-think that they can let random users mount untrusted file systems in a
-container, and not have to worry about one company gaining access to
-PII belonging to another company because both companies are using a
-particular cloud hosting provider which uses containers and allows
-their customers to mount file systems as (container) root, with
-multiple customers sharing the some physical host.
+> On Tue, Oct 27, 2026 at 03:00:02PM +0000, Salvatore Dipietro wrote:
+> > 
+> > Hi Johannes,
+> > 
+> > Vlastimil asked that v6 of my page_alloc patch [1] not go to mainline
+> > before these two patches land, so Andrew parked v6 at the tail of
+> > mm-unstable and dropped its Cc: stable until then.
+> > 
+> > Are you still planning to work on 1/2 and 2/2, and if so, do you have
+> > a rough ETA? Or would you rather post them as a separate series as
+> > they are? If anything is needed on my side to move them forward, I'm
+> > happy to help.
+> > 
+> > For what it's worth, I ran both stacked under v6 on v7.3-rc1 and saw
+> > no performance difference on my benchmark with or without them.
+> 
+> It would be really important to get some fix for this into 7.3.
+> We can still perfect it later.
 
-As Dave has said, *all* of the file system maintainers have explicitly
-disclaimed this security model; from our perspective the block device
-is inside the trusted computing base (TCB), and if someone wants to
-dedicaste one or more full-time engineers to be file system developers
-who have contributed a large number of improvements to the file
-system, and who understand the context that they can competently drive
-LLM's to create architecturally sound patches, I *might* be willing to
-change my stance for ext4.  But those hosting providers' engineers
-would have do most of the work to try to make this security model work
---- and it might be that using fuse2fs, and running that fuse server
-in a sandbox (e.g. seccomp-bpf, etc.) might be a much simpler /
-cheaper solution in the end.
+What is "this"?  You're referring to the performance regression which
+Salvatore's "mm/page_alloc: avoid direct reclaim and compaction for
+costly __GFP_NORETRY allocations" addresses?
 
-Cheers,
+In
+https://lore.kernel.org/all/9f415dc7-adad-4161-b20d-7c3173f50ff3@kernel.org/
+vbabka indicated that Fixes: 281dd25c1a01 is needed on that patch.  The
+patch I'm sitting on (below) has Fixes: 5d8edfb900d5.  Please clarify.
 
-					- Ted
+In
+https://lore.kernel.org/all/c6e2c1e1-a285-406e-a2b6-c09e05df91d8@kernel.org/
+vbabka argued that Salvatore's "mm/page_alloc: avoid direct reclaim and
+compaction for costly __GFP_NORETRY allocations" should be a 7.4 thing.
 
-[1] There's a *reason* why Google Kubernetes Engine (GKE) uses VM's
-and not containers as a security isolation layer.  :-)
+So it's all clear as mud.  Can people please clarify?
+
+I have hannes's series "mm: page_alloc: fix reserve access for
+non-blocking requests, v2" in mm-hotfixes, planned for 7.4-rcX.
+
+Should I move Salvatore's "mm/page_alloc: avoid direct reclaim and
+compaction for costly __GFP_NORETRY allocations, v6" into mm-hotfixes
+also, and restore its cc:stable?
+
+My vote: "yes" - that's a pretty obnoxious perf regression.
+
+
+From: Salvatore Dipietro <dipiets@amazon.it>
+Subject: mm/page_alloc: avoid direct reclaim and compaction for costly __GFP_NORETRY allocations
+Date: Thu, 1 Oct 2026 08:21:51 +0000
+
+Commit 5d8edfb900d5 ("iomap: Copy larger chunks from userspace")
+introduced high-order folio allocations in the iomap buffered write path. 
+When memory is fragmented, each failed costly-order allocation enters
+__alloc_pages_slowpath() which runs direct reclaim, direct compaction and
+drain_all_pages(), causing a 0.38x throughput drop on PostgreSQL pgbench
+(simple-update) with 1024 clients on a 96-vCPU arm64 system.
+
+The root issue is that direct reclaim and direct compaction are too
+expensive for hot allocation paths that have fallbacks to smaller
+allocations.  __filemap_get_folio_mpol() already marks higher-order
+allocations with __GFP_NORETRY | __GFP_NOWARN, signalling that the caller
+can handle failure.  However, the page allocator still enters the full
+blocking slowpath for costly orders with __GFP_NORETRY, which is
+unnecessarily aggressive when the caller will simply retry at a lower
+order.
+
+For costly-order allocations with __GFP_NORETRY, clear
+__GFP_DIRECT_RECLAIM at the very start of the slowpath, before
+can_direct_reclaim, can_compact and the nofail checks are evaluated.  This
+makes the entire slowpath treat the request as non-blocking: no direct
+reclaim, no direct compaction and no drain_all_pages() IPI across every
+CPU.  Reclaim and compaction move to the background instead: kswapd is
+still woken for reclaim, and it wakes kcompactd for defragmentation.  The
+system keeps its long-term health while the latency-critical direct
+allocation path no longer stalls.
+
+Allocations that also request __GFP_THISNODE are exempted.  That flag
+pairing identifies the local-node-first THP attempt issued by
+alloc_pages_mpol() (mempolicy.c), which relies on direct compaction to
+form transparent huge pages.
+
+Clearing __GFP_DIRECT_RECLAIM makes these allocations reach the
+!can_direct_reclaim bailout, which since commit 4c0ed883e051
+("mm/page_alloc: fix defrag_mode for non-reclaimable allocations") drops
+ALLOC_NOFRAGMENT and retries instead of failing when defrag_mode is on. 
+With vm.defrag_mode=1 a __GFP_NORETRY allocation could therefore succeed
+by fragmenting another migratetype's pageblock.  That is the wrong trade
+for a caller that has already communicated it can handle failure and has a
+cheap lower-order fallback, so exclude __GFP_NORETRY from the relaxation. 
+The exclusion is not restricted to costly orders: any __GFP_NORETRY caller
+has said it can cope with failure, so failing is preferable to fragmenting
+for all of them.
+
+Test environment:
+  Hardware:  AWS EC2 m8g.24xlarge (96 vCPU, arm64)
+             12x 1TB IO2 32000 IOPS RAID0 XFS
+  OS:        AL2023
+  Kernel:    v7.3-rc1
+  Database:  PostgreSQL 18.4
+  Workload:  pgbench simple-update, 1024 clients, 96 threads, 1200s
+
+Results (average of 3 runs, TPS):
+
+  Config                                       Avg TPS   % vs baseline
+  v7.3-rc1 baseline (vm.defrag_mode=0)          58,602               -
+  v7.3-rc1 + this patch (vm.defrag_mode=0)     157,246         +168.3%
+  v7.3-rc1 baseline (vm.defrag_mode=1)         109,012               -
+  v7.3-rc1 + this patch (vm.defrag_mode=1)     157,778          +44.7%
+
+Link: https://lore.kernel.org/20261001082152.2879289-1-dipiets@amazon.it
+Link: https://lore.kernel.org/all/20260403193535.9970-1-dipiets@amazon.it/T/#t [v1]
+Link: https://lore.kernel.org/linux-mm/20260420161404.642-1-dipiets@amazon.it/T/#u [v2]
+Link: https://lore.kernel.org/all/20260710143437.12379-1-dipiets@amazon.it/T/#u [v3]
+Link: https://lore.kernel.org/all/20260904115629.3993331-1-dipiets@amazon.it/T/#u [v4]
+Link: https://lore.kernel.org/all/20260911142102.2294202-1-dipiets@amazon.it/T/#u [v5]
+Fixes: 5d8edfb900d5 ("iomap: Copy larger chunks from userspace")
+Signed-off-by: Salvatore Dipietro <dipiets@amazon.it>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+Acked-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
+Acked-by: Zi Yan <ziy@nvidia.com>
+Reviewed-by: Johannes Weiner <hannes@cmpxchg.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Cc: David Hildenbrand <david@kernel.org>
+Cc: Michal Hocko <mhocko@suse.com>
+Cc: Matthew Wilcox <willy@infradead.org>
+Cc: Dave Chinner <dgc@kernel.org>
+Cc: Ritesh Harjani <ritesh.list@gmail.com>
+Cc: Dmitry Ilvokhin <d@ilvokhin.com>
+Cc: Hazem Mohamed Abuelfotoh <abuehaze@amazon.com>
+Cc: Ali Saidi <alisaidi@amazon.com>
+Cc: Geoff Blake <blakgeof@amazon.com>
+Cc: Christian Brauner <brauner@kernel.org>
+Cc: <dipietro.salvatore@gmail.com>
+Cc: Darrick J. Wong <djwong@kernel.org>
+Cc: Brendan Jackman <brendan.jackman@linux.dev>
+Cc: <rvvandan@amazon.com>
+Cc: Suren Baghdasaryan <surenb@google.com>
+Cc: "Garg, Shivank" <shivankg@amd.com>
+---
+
+ mm/page_alloc.c |   21 ++++++++++++++++++---
+ 1 file changed, 18 insertions(+), 3 deletions(-)
+
+--- a/mm/page_alloc.c~mm-page_alloc-avoid-direct-reclaim-and-compaction-for-costly-__gfp_noretry-allocations
++++ a/mm/page_alloc.c
+@@ -4773,10 +4773,10 @@ static inline struct page *
+ __alloc_pages_slowpath(gfp_t gfp_mask, unsigned int order,
+ 						struct alloc_context *ac)
+ {
+-	bool can_direct_reclaim = gfp_mask & __GFP_DIRECT_RECLAIM;
+-	bool can_compact = can_direct_reclaim && gfp_compaction_allowed(gfp_mask);
+-	bool nofail = gfp_mask & __GFP_NOFAIL;
+ 	const bool costly_order = order > PAGE_ALLOC_COSTLY_ORDER;
++	bool can_direct_reclaim;
++	bool can_compact;
++	bool nofail;
+ 	struct page *page = NULL;
+ 	unsigned int alloc_flags;
+ 	unsigned long did_some_progress;
+@@ -4791,6 +4791,18 @@ __alloc_pages_slowpath(gfp_t gfp_mask, u
+ 	bool can_retry_reserves = true;
+ 	unsigned long alloc_start_time = jiffies;
+ 
++	/*
++	 * Costly __GFP_NORETRY callers have a cheap fallback, so don't stall
++	 * them in reclaim or compaction. __GFP_THISNODE callers are exempt.
++	 */
++	if (costly_order && (gfp_mask & __GFP_NORETRY) &&
++	    !(gfp_mask & __GFP_THISNODE))
++		gfp_mask &= ~__GFP_DIRECT_RECLAIM;
++
++	can_direct_reclaim = gfp_mask & __GFP_DIRECT_RECLAIM;
++	can_compact = can_direct_reclaim && gfp_compaction_allowed(gfp_mask);
++	nofail = gfp_mask & __GFP_NOFAIL;
++
+ 	if (unlikely(nofail)) {
+ 		/*
+ 		 * We don't support __GFP_NOFAIL without __GFP_DIRECT_RECLAIM,
+@@ -4907,8 +4919,11 @@ retry:
+ 		 * Reclaim/compaction cannot run, so defrag_mode's strategy
+ 		 * of enforcing ALLOC_NOFRAGMENT cannot be fulfilled. Allow
+ 		 * fallbacks rather than failing the allocation outright.
++		 * Not for __GFP_NORETRY: those have a cheap lower order
++		 * fallback, so failing beats fragmenting.
+ 		 */
+ 		if (defrag_mode && (alloc_flags & ALLOC_NOFRAGMENT) &&
++		    !(gfp_mask & __GFP_NORETRY) &&
+ 		    (gfp_mask & __GFP_KSWAPD_RECLAIM)) {
+ 			alloc_flags &= ~ALLOC_NOFRAGMENT;
+ 			goto retry;
+_
+
