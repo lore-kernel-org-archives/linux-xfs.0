@@ -1,50 +1,73 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=45.79.88.28
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793276743;
-	b=sqpkX+yZLp86f4C93o+b9d6rAUBE2iELog6TxSX+i3YXCib52ECJWLkpI8sG3yGHZGeU
-	 pnvhRBLsSVOa+I6KLlEVtfL1kviBdVAFIvLxBcynMyMNfQ8hhgCiu8cguskBw7fTdGHOQ
-	 ErYKrLmcFIMNbZZWhcT48RNbVSzHMCHtS/A9QP31CGUDH4vTUY4MGz2fdYiU3Zkl+72To
-	 JEdSeB0uhh7n6GFxJn9EkZTbWRGyNBKtXbOPTQmtwy8mLuVdpBulgg6Wq56sDi16wIyK2
-	 mUbXFey6YhfG9fKEVzaOQNONlEIxigHzfKcUVp2NZcme+joN+riJFtdg8pofzKFb55A==
+	t=1793284629;
+	b=HgY5dsH3CD/Lib5yd0IINlyo9WUnuB2QPbi4uT5TUvJqEO52Aexn4MhWBsdt9qZhoIqw
+	 iSBbOZtGup6XLUUXJq6odhS6l9f/FOG5/Amh/+AqtDU+Vqj3Ed7y89JAtHX4IS8cp5rCk
+	 F21Z5x9tS4y6yg6KuAQuquf0Ccyh32Jeusb8RCEMklSNobTsm5FFOvmP/JArZNqYbnuVB
+	 xU9G2DU5McEnm2PKp8CeZhifseX7GQIN5Ot0vLihe/LOWF/An2CrsMgr8oQ8RM9BMmbHC
+	 lePK4Z+ZgFza4S+tsNODgnSBlzU0LSskQaKzJPFHP5uM8SFgAoKpkj7bAnOez8BjjNw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793276743;
-	h=DMARC-Filter:Received:Date:From:To:Cc:Subject:Message-ID:References:
-	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To:User-Agent;
-	bh=aShoOWMQtI6kpARIbOBKfJ+D4MCc5UK8EnPBegPB/rM=;
-	b=dMgzBanvYi0pW+FiEawEQyZLorqi5Fcvn/I7gDztpGEqDdNzHgRtRFfuhO97YX32ZUD6
-	 G9HsJt2XoH64e8VPMnCb6SKFsK7p7DOFZBcU86OZQ5HPNOIYXQ6BumP2zphjVMUI7cxFQ
-	 lqinF1XGOj+Z+90BwDxT9ii993pbTtnxOriimu2EwDBYETamzlGJviuDZ+VPAFjFIUZHh
-	 rdtyiKTvHqnFEYyGaUFSqGSZjalfnFwCzl2Yhs+FWEqRDT9JgTCyJtrphdlzkyZNku7+W
-	 c4SFLDDR2HYeHOZz1IR513UuPsbaO4ddrT3BUZHjLdkWcq/IbxvAJXN7pF/AEs7xTFg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793284629;
+	h=DMARC-Filter:DKIM-Filter:DKIM-Signature:Received:From:To:Cc:Subject:
+	 In-Reply-To:References:Date:Message-ID:MIME-Version:Content-Type;
+	bh=DS9sgLqAP/1EvRFFFqIg5sk0bi7L6HM+95oRDwxbCZE=;
+	b=cCGFo8vTvlmXvJGMFuwVOESdMi+IlxrWUlI4BAy1S2oXBbtQOVFY7LdU4Lmg5x56lkC2
+	 Q3effsDf1Kgkojkg0FgSC/Dz5aD43oFItTCbUccdCB5VljMx4Ff06rKj+IKbaIgt5OiM9
+	 TCLL6jH8pPX5inOacALRviOxSl05vWASF23ilZunsdqU4EukxFnPnd27dqRD5bc5qeT57
+	 qXQh1PUmziTqZcI5A89xN8BhDicvlYDxf6HLhzC4db9Lwo2YrCkFQHCVRtsPxVTnjik8c
+	 cUTvn6n6+Wtm80lhHu8F4LtrHzF3lL17PuEIyXz/N03SrOg0kLSG/x/vreZrESWBboQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=lst.de;
-	spf=pass smtp.mailfrom=lst.de;
-	arc=none smtp.remote-ip=213.95.11.211
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dmarc=pass header.from=lwn.net;
+	spf=pass smtp.mailfrom=lwn.net;
+	dkim=pass header.d=lwn.net header.i=@lwn.net header.a=rsa-sha256 header.s=20201203 header.b=JL860Aq5;
+	arc=none smtp.remote-ip=45.79.88.28
+Received: from ms.lwn.net (ms.lwn.net [45.79.88.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF8D9606A31A
-	for <linux-xfs@vger.kernel.org>; Thu, 29 Oct 2026 12:25:42 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EF8D9606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 1CBAD68BEB; Thu, 29 Oct 2026 13:25:38 +0100 (CET)
-Date: Thu, 29 Oct 2026 13:25:37 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Andrey Albershteyn <aalbersh@kernel.org>
-Cc: linux-xfs@vger.kernel.org, cem@kernel.org, cihan.cihan@gmail.com,
-	cmaiolino@redhat.com, dchinner@redhat.com, dgc@kernel.org,
-	djwong@kernel.org, floss@jetm.me, hch@lst.de,
-	hemanth.selam@gmail.com, jiapenglin@tencent.com,
-	johannes.thumshirn@wdc.com, kees+treewide@kernel.org,
-	norbert@doyensec.com,
-	syzbot+837bcd54843dd6262f2f@syzkaller.appspotmail.com,
-	yijiangshan@kylinos.cn, yun.zhou@windriver.com,
-	zenghongling@kylinos.cn
-Subject: Re: [PATCH 00/28] xfsprogs: libxfs sync for v7.3
-Message-ID: <20261029122537.GA25162@lst.de>
-References: <20261029120631.803074-1-aalbersh@kernel.org>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 417D5606A31E;
+	Thu, 29 Oct 2026 14:37:08 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 417D5606A31E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lwn.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lwn.net
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=lwn.net header.i=@lwn.net header.a=rsa-sha256 header.s=20201203 header.b=JL860Aq5
+DKIM-Filter: OpenDKIM Filter v2.11.0 ms.lwn.net 3DFDC40911
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=lwn.net; s=20201203;
+	t=1793284627; bh=DS9sgLqAP/1EvRFFFqIg5sk0bi7L6HM+95oRDwxbCZE=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+	b=JL860Aq5NVfRCBDh62rDcU0WJSmwj0ctywPT6zzWMJk6t7smReAhCcvkzOwcQ8bFR
+	 tVuP3qOc6GFMABSyRNk/wF862TX4dkUo81iF6IoNvToLkAE2SzkDDRajw3Wv0cJcJ7
+	 wVMAVaMmqO6rBFsLG+sa2DJWEMBtnGZacco3XsnTugyKQ2IuXrrot2ahkyB7mmrzMC
+	 oQJiigW/rhPDvTVPSnJG4w43lLgbTxCer0ZuBfl2rrVaFYHQyh0CUD8DkcEdKwWHx6
+	 CntoOeHsrdeTYHC39I3/SuGm2JgLQMlfy14VEiLVHIPFFAqMIoYcopuztGy4PyRFxb
+	 C0VZ+WndVRwFw==
+Received: from localhost (mdns.lwn.net [45.79.72.68])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	(No client certificate requested)
+	by ms.lwn.net (Postfix) with ESMTPSA id 3DFDC40911;
+	Thu, 29 Oct 2026 14:37:07 +0000 (UTC)
+From: Jonathan Corbet <corbet@lwn.net>
+To: Dave Chinner <dgc@kernel.org>
+Cc: Henry Martin <bsdhenrymartin@gmail.com>, Carlos Maiolino
+ <cem@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, "Darrick J .
+ Wong" <djwong@kernel.org>, Alex Deucher <alexander.deucher@amd.com>, David
+ Hildenbrand <david@kernel.org>, Kuninori Morimoto
+ <kuninori.morimoto.gx@renesas.com>, Kairui Song <kasong@tencent.com>,
+ Myeonghun Pak <mhun512@gmail.com>, Rafal Ostrowski
+ <rafal.ostrowski@amd.com>, Likun Gao <Likun.Gao@amd.com>, James Clark
+ <james.clark@linaro.org>, Anshuman Khandual <anshuman.khandual@arm.com>,
+ Kevin Brodsky <kevin.brodsky@arm.com>, linux-xfs@vger.kernel.org,
+ linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH] xfs: fix out-of-bounds write from crafted btree root
+ numrecs during log recovery
+In-Reply-To: <auKGlGJwOSZpioMd@dread>
+References: <20261027151703.973392-1-bsdhenrymartin@gmail.com>
+ <auJ2jgIIh8e_JJwn@dread> <87cxsto38m.fsf@trenco.lwn.net>
+ <auKGlGJwOSZpioMd@dread>
+Date: Thu, 29 Oct 2026 08:37:06 -0600
+Message-ID: <87v76kmv3h.fsf@trenco.lwn.net>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -54,12 +77,33 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261029120631.803074-1-aalbersh@kernel.org>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Type: text/plain
 
-From a quick look over all the changes not directly ported from the
-kernel this looks good:
+Dave Chinner <dgc@kernel.org> writes:
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+> On Wed, Oct 28, 2026 at 04:43:37PM -0600, Jonathan Corbet wrote:
+>> Dave Chinner <dgc@kernel.org> writes:
+>> 
+>> > Unless you know how to fix the discovered problem correctly, don't
+>> > send what your LLM proposed for review. It will be garbage, and all
+>> > that will do is annoy whoever has to review it. Just report the bug,
+>> > let the subsystem developers fix it.
+>> 
+>> Just to be obnoxious...this runs counter to the advice we have in
+>> Documentation/process/security-bugs.rst, where reporters are requested
+>> to include a proposed fix as well.  It seems we're sending a bit of a
+>> mixed message...
+>
+> These aren't security bugs. Bugs that result from maliciously
+> corrupted filesystem images (i.e. fuzzed) are explicitly stated as
+> not covered by the kernel security threat models. IOWs, they are
+> just -bugs-, and bugs that just don't ever happen in the real world.
+
+I wasn't arguing about the nature of the bug ... just noting the
+disconnect with what I've heard from some maintainers, who say that
+providing a patch helps in the identification of the problem, even if
+the patch is not used.
+
+Thanks,
+
+jon
