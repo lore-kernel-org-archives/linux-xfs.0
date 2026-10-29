@@ -1,49 +1,49 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793290178;
-	b=eynhQxYwc57vEETAUrKqjcFaM6SdmX2BESfbdiHQSyVMdUqxvTLlCaa3zQxzXnUJjAiZ
-	 gf1UaDsB7vtsq3/zYsa8d6ngI0RaxQ4JiakMDZTs+4DuwVQs+x8hPLUQsQHw43VR1K5t7
-	 PwPvqUIJ5Bspt+Uq4SKq8zmBd+Q11DOxyjeqTcE6PSEzzwaGDlxeLIoLVu0oe/Psh60/K
-	 9Hp8loCDLh0o4XIAyWE3AH3/2QO03IsjnpxzZxjhPjaF/otwoISEUgK6GzmQvF2rlyZGN
-	 69BszuHvG5O/8HXvOXkBWliVT5JGzD1c2eZo+xTBENnd504px6DP5So0pGAmNA+xVtQ==
+	t=1793290186;
+	b=Zfy1Ayi0tBi1P9WGRsgSqy+KffjvKoHR+B8V1Q7OjR3ALJzLf+PfaCQdJHrIVhgjQdyu
+	 0A/FH3GboR9zKafNO2qXiSdQnE/O0Pd52QBpgghwn3QfgveBT0oHWIFWMqXRU/HYozXfp
+	 mWY8dIcSZqu/ukSEIDBaNZLIeDAo3WLL2FEgQ/G6EkQmh1zJ2ZQtqnf3Pg4L70RANiF7k
+	 FbY+rKIJzMytTDQ9eaTKT/V0Macy/yrpEJc7HzogTnWTiZT5LIhkDgI/QxHI2HUabz6zk
+	 7Xy9F5YkW9L0TCbrgDnnisSNFGTAlqWwMBLfFait9vmuWrw9ZQ9oWvNWNeZJytewYjQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793290178;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793290186;
 	h=Received:DKIM-Signature:From:Date:Subject:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
 	 X-Mailer:X-Developer-Signature:X-Developer-Key;
-	bh=droVfVyW/J4NWE7mh5TfQyRMSBtnbhnE555QImfVgFk=;
-	b=4H7s+UOY8iCsUxxV2G27qy/crITVLFh5ygNXKNOJaSz0nU6JuMPdE4yAPFsefTUEUJWM
-	 nF34rzRI+SJvWZE4nKtbs9l1yfPx08wrIXYdq3ibvVPkvU1CGr8yxcr3KgyD3tF1B/AtV
-	 FdRsDx1VY97YkuYaZypGt216ki8KNjkj77xjLih5vmmclF8oNj5c4vPx7CtUzpkxhSbrh
-	 qM8eaOBkeYOL1d7OXILEe92WWv//82Cb4usKBOMMNSRk69jFHKxDBk80tqOUoeOdczgcY
-	 31erBYW8whXTFdbPYcQFfpXqgIP2Rpy8eErtu3pnzT3SVXp52a4ooQUcczywnPSP3HA==
+	bh=k/JaVVqCIjBjwcZ4Ktq0cqt6WTLnv5uHe8dvAAAN/MI=;
+	b=N2B9r0DCQfW08RCCMl3uLWF5llvxO/K5Obdls9pkIICH2st5jnoqaemF4t7SyLTtqRa/
+	 ocHYQtZ9HLL5OO5LWd8/a9R3AYkEI9VA5SmhaPBejwIK/7jyyBoYKLk4kVMHE+8Xfe0Jy
+	 kNy4DyrkzIGWzCwzt9XCDsoftm1zA8OUwd+yaiV8uKScQs1OpykB6Sm6ttReCr5rJBK0m
+	 lvp5OvAOfeXaTp2TJS8KbTlabs6qJNClBI1h/v0koghPKGTShDImcMfgAtuVFx9/3acTK
+	 wiVPP4IqIViFgPoZYHwFDyStj/ly9H/npGQrOqwnX390EYcYe2MDQaYVVhU1UwuQTQg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DmiBIKvc;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=KIWlCk7A;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E47CB606A323;
-	Thu, 29 Oct 2026 16:09:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 469F8606A33E;
+	Thu, 29 Oct 2026 16:09:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DmiBIKvc
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB4021F01824;
-	Thu, 29 Oct 2026 16:09:33 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=KIWlCk7A
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 870A31F031E1;
+	Thu, 29 Oct 2026 16:09:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793290177;
-	bh=droVfVyW/J4NWE7mh5TfQyRMSBtnbhnE555QImfVgFk=;
+	s=k20260515; t=1793290186;
+	bh=k/JaVVqCIjBjwcZ4Ktq0cqt6WTLnv5uHe8dvAAAN/MI=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=DmiBIKvcYo74I4nINRVqEQsM6UxXLe3ZO7GA8zAG26uGNJncRRSqNSUDEks0wZGgx
-	 mg0MXafEidSkLIaGd2NGJg3kiupo02jfbEH3q/gGwzMBv2dgpTbibsi4vWdGVJrVxq
-	 uq4DBpAcFJVDbbPTpzPQNg8zXt1qEHGqgF+ChOvohTFMmWOmY2f5csLygi16Yb/Gjl
-	 cSxlPkxNvANPSsTWOxwtfg5wbvIUNDvKzuHyS9vnJgLASa5MsjpmzYdSXiOmQ+okEK
-	 ZC47/BA3lAZeY5TM8cAva35uuaIr3dTd+2uZwlfucN7U8lvMCYSZlsAgtWLyFu/ToU
-	 RZEs+od7LUSyg==
+	b=KIWlCk7AAJ2etTqUPf+UdcSsuMQuZHztzBRdcCGj27/lOxeGr5s2jXCZKUnct1Hqq
+	 u5XAaC7A1gbXRFYN//rzwBw44pCdOv6XKEZnPNidM4AS000LBTp1JaUTSwelZg75v1
+	 1v6U3BCWVAwmPqodxjhWjrHf2ygSXLcPRlmoMpXiseljbpwhkV4CraSn3ri/a0CzoO
+	 reSvsImFDP2+2el6B0AQRGIzkPw01/7bPt0yBtT7y19A7eoygxGFOvKE0H+mRI7efO
+	 c1Ti9Rr52z8ZG3rgoTtor5WIZO8sAPlyY/LQ7w0y879e0gl9ALerXcHaSyVpMhAQdB
+	 JB8ShTo3zTMSQ==
 From: Christian Brauner <brauner@kernel.org>
-Date: Thu, 29 Oct 2026 17:07:23 +0100
-Subject: [PATCH v2 32/34] selftests/filesystems: test ext4 remounts in the
- emergency state
+Date: Thu, 29 Oct 2026 17:07:25 +0100
+Subject: [PATCH v2 34/34] selftests/filesystems: test xfs remounts after a
+ shutdown
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -55,7 +55,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261029-work-fs-sb_rdonly-v2-32-2f44f64f0b66@kernel.org>
+Message-Id: <20261029-work-fs-sb_rdonly-v2-34-2f44f64f0b66@kernel.org>
 References: <20261029-work-fs-sb_rdonly-v2-0-2f44f64f0b66@kernel.org>
 In-Reply-To: <20261029-work-fs-sb_rdonly-v2-0-2f44f64f0b66@kernel.org>
 To: linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.com>
@@ -68,81 +68,87 @@ Cc: Al Viro <viro@zeniv.linux.org.uk>, ecryptfs@vger.kernel.org,
  linux-xfs@vger.kernel.org, 
  "Christian Brauner (Amutable)" <brauner@kernel.org>
 X-Mailer: b4 0.17-dev-ce4c1
-X-Developer-Signature: v=1; a=openpgp-sha256; l=11147; i=brauner@kernel.org;
- h=from:subject:message-id; bh=QxpEnsHCux4FRQlDy0wwCs1cyujIv0qreUa1yUPO61M=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWQ9zjd4vmHLk/Y3wodmOO364tX+2vbLhtnLLBcFmiy6E
- Lw2YbbGjY5SFgYxLgZZMUUWh3aTcLnlPBWbjTI1YOawMoEMYeDiFICJnBVn+Gf2t7vgaNvlOyti
- PW+pXlcJct9SpsCZe9db9uDxU/+PtTgz/FPSv/tH6tilUMXEnM/u1ZvKT34Qr8jw7klVTbshxXG
- 7jgkA
+X-Developer-Signature: v=1; a=openpgp-sha256; l=11137; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=/Voe/wFwqfK8+ON5qhwC5PvGjQ85ofAqpLXJMC6O98s=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWQ9zjd4wrdORilhoSWvYNZB2e59widt47JWxGwyfiYtP
+ v3leqOHHaUsDGJcDLJiiiwO7Sbhcst5KjYbZWrAzGFlAhnCwMUpABOZKsDwv5A/2aVg45/UMv5j
+ XM0N7+My+WsFHXfEyVziSPY2DDrdycjwYilHyLqj3f4LHiTYP3fQuphzZfIXv89s3/8xT/nNFar
+ IDgA=
 X-Developer-Key: i=brauner@kernel.org; a=openpgp;
  fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-Add tests for remounting ext4 after FS_IOC_SHUTDOWN with the default and
-the nologflush flags and after an error with and without a journal:
+Add tests for remounting xfs after FS_IOC_SHUTDOWN with the default, the
+logflush and the nologflush flags and after a shutdown that the remount
+to read-only causes itself:
 
-- option-only remount doesn't make it read-only, the error state alone
-  reports ST_RDONLY
-- remount to read-only works and writes nothing
-- remount to read-write fails with EROFS
+- option-only remount keeps it read-write
+- remount to read-only works
+- remount to read-write fails with EIO
 
-The tests need root, loop devices and mkfs.ext4.
+The image lives on a tmpfs of its own. For the last variant the test
+punches out the log and shrinks the tmpfs so the log write during the
+remount fails with ENOSPC.
+
+The tests need root, loop devices and mkfs.xfs.
 
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
  .../selftests/filesystems/sb_rdonly/.gitignore     |   1 +
- .../selftests/filesystems/sb_rdonly/Makefile       |   2 +-
- .../testing/selftests/filesystems/sb_rdonly/config |   1 +
- .../sb_rdonly/ext4_emergency_remount_test.c        | 305 +++++++++++++++++++++
- 4 files changed, 308 insertions(+), 1 deletion(-)
+ .../selftests/filesystems/sb_rdonly/Makefile       |   3 +-
+ .../testing/selftests/filesystems/sb_rdonly/config |   2 +
+ .../sb_rdonly/xfs_shutdown_remount_test.c          | 299 +++++++++++++++++++++
+ 4 files changed, 304 insertions(+), 1 deletion(-)
 
 diff --git a/tools/testing/selftests/filesystems/sb_rdonly/.gitignore b/tools/testing/selftests/filesystems/sb_rdonly/.gitignore
-index 96daf47a494f..7445dbe15229 100644
+index 7445dbe15229..26bf6c87edc1 100644
 --- a/tools/testing/selftests/filesystems/sb_rdonly/.gitignore
 +++ b/tools/testing/selftests/filesystems/sb_rdonly/.gitignore
-@@ -1,3 +1,4 @@
- # SPDX-License-Identifier: GPL-2.0-only
+@@ -2,3 +2,4 @@
  emergency_ro_test
  gfs2_withdraw_test
-+ext4_emergency_remount_test
+ ext4_emergency_remount_test
++xfs_shutdown_remount_test
 diff --git a/tools/testing/selftests/filesystems/sb_rdonly/Makefile b/tools/testing/selftests/filesystems/sb_rdonly/Makefile
-index 89d72fcf8600..acd1d70d0fe2 100644
+index acd1d70d0fe2..0998b82b95d6 100644
 --- a/tools/testing/selftests/filesystems/sb_rdonly/Makefile
 +++ b/tools/testing/selftests/filesystems/sb_rdonly/Makefile
-@@ -1,5 +1,5 @@
+@@ -1,5 +1,6 @@
  # SPDX-License-Identifier: GPL-2.0
--TEST_GEN_PROGS := emergency_ro_test gfs2_withdraw_test
-+TEST_GEN_PROGS := emergency_ro_test gfs2_withdraw_test ext4_emergency_remount_test
+-TEST_GEN_PROGS := emergency_ro_test gfs2_withdraw_test ext4_emergency_remount_test
++TEST_GEN_PROGS := emergency_ro_test gfs2_withdraw_test ext4_emergency_remount_test \
++		  xfs_shutdown_remount_test
  
  CFLAGS += -Wall -O2 -g $(KHDR_INCLUDES)
  
 diff --git a/tools/testing/selftests/filesystems/sb_rdonly/config b/tools/testing/selftests/filesystems/sb_rdonly/config
-index ab660b588e6d..d98bd667314b 100644
+index d98bd667314b..fdb9dd69e701 100644
 --- a/tools/testing/selftests/filesystems/sb_rdonly/config
 +++ b/tools/testing/selftests/filesystems/sb_rdonly/config
-@@ -1,5 +1,6 @@
- CONFIG_BLK_DEV_LOOP=y
- CONFIG_EXT2_FS=y
-+CONFIG_EXT4_FS=y
+@@ -4,3 +4,5 @@ CONFIG_EXT4_FS=y
  CONFIG_GFS2_FS=y
  CONFIG_JFS_FS=y
  CONFIG_NILFS2_FS=y
-diff --git a/tools/testing/selftests/filesystems/sb_rdonly/ext4_emergency_remount_test.c b/tools/testing/selftests/filesystems/sb_rdonly/ext4_emergency_remount_test.c
++CONFIG_TMPFS=y
++CONFIG_XFS_FS=y
+diff --git a/tools/testing/selftests/filesystems/sb_rdonly/xfs_shutdown_remount_test.c b/tools/testing/selftests/filesystems/sb_rdonly/xfs_shutdown_remount_test.c
 new file mode 100644
-index 000000000000..5c541bb68ef7
+index 000000000000..6d296e2c916c
 --- /dev/null
-+++ b/tools/testing/selftests/filesystems/sb_rdonly/ext4_emergency_remount_test.c
-@@ -0,0 +1,305 @@
++++ b/tools/testing/selftests/filesystems/sb_rdonly/xfs_shutdown_remount_test.c
+@@ -0,0 +1,299 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
-+ * ext4 refused every change of the read-only state in its emergency state and
-+ * emergency remount (sysrq u) WARNed. Check that after a shutdown or an error
-+ * a remount can go read-only without writing anything, not back to read-write,
-+ * and that option-only remounts work. sysrq u itself can't be tested here, the
-+ * plain remount goes through the same path minus SB_FORCE.
++ * A shut down xfs refused to go read-only and emergency remount (sysrq u)
++ * WARNed. Check that the remount works, also when its own flush shuts xfs
++ * down, that going back to read-write fails with EIO and that option-only
++ * remounts work. sysrq u itself can't be tested here, the plain remount goes
++ * through the same path minus SB_FORCE.
 + */
 +#define _GNU_SOURCE
++#include <endian.h>
 +#include <errno.h>
 +#include <fcntl.h>
++#include <linux/falloc.h>
 +#include <linux/fs.h>
 +#include <linux/loop.h>
 +#include <sched.h>
@@ -159,7 +165,8 @@ index 000000000000..5c541bb68ef7
 +
 +#include "../../kselftest_harness.h"
 +
-+#define IMG_SIZE	(128 << 20)
++/* mkfs.xfs refuses filesystems smaller than 300MiB */
++#define IMG_SIZE	(512 << 20)
 +
 +#ifndef FS_IOC_SHUTDOWN
 +#define FS_IOC_SHUTDOWN _IOR('X', 125, __u32)
@@ -167,79 +174,44 @@ index 000000000000..5c541bb68ef7
 +#ifndef FS_SHUTDOWN_FLAGS_DEFAULT
 +#define FS_SHUTDOWN_FLAGS_DEFAULT 0x0
 +#endif
++#ifndef FS_SHUTDOWN_FLAGS_LOGFLUSH
++#define FS_SHUTDOWN_FLAGS_LOGFLUSH 0x1
++#endif
 +#ifndef FS_SHUTDOWN_FLAGS_NOLOGFLUSH
 +#define FS_SHUTDOWN_FLAGS_NOLOGFLUSH 0x2
 +#endif
 +
-+enum how { HOW_SHUTDOWN, HOW_ERROR };
-+
-+FIXTURE(ext4_emergency) {
++FIXTURE(xfs_shutdown) {
 +	char dir[64];
 +	char img[96];
 +	char mnt[96];
 +	char dev[32];
 +	int loop;
 +	int loop_fd;
++	bool tmpfs;
 +	bool mounted;
 +};
 +
-+FIXTURE_VARIANT(ext4_emergency) {
-+	const char *mkfs;
-+	enum how how;
-+	__u32 shutdown_flags;
-+	const char *state;	/* the state option shown in the mount options */
++FIXTURE_VARIANT(xfs_shutdown) {
++	/* FS_IOC_SHUTDOWN flags, -1 lets the remount's own flush shut it down */
++	int shutdown_flags;
 +};
 +
-+FIXTURE_VARIANT_ADD(ext4_emergency, shutdown) {
-+	.mkfs = "mkfs.ext4 -q -F -b 4096",
-+	.how = HOW_SHUTDOWN,
-+	.shutdown_flags = FS_SHUTDOWN_FLAGS_NOLOGFLUSH,
-+	.state = "shutdown",
-+};
-+
-+/* the journal stays live, going read-only must not write it */
-+FIXTURE_VARIANT_ADD(ext4_emergency, shutdown_default) {
-+	.mkfs = "mkfs.ext4 -q -F -b 4096",
-+	.how = HOW_SHUTDOWN,
++FIXTURE_VARIANT_ADD(xfs_shutdown, shutdown_default) {
 +	.shutdown_flags = FS_SHUTDOWN_FLAGS_DEFAULT,
-+	.state = "shutdown",
 +};
 +
-+FIXTURE_VARIANT_ADD(ext4_emergency, error) {
-+	.mkfs = "mkfs.ext4 -q -F -b 4096",
-+	.how = HOW_ERROR,
-+	.state = "emergency_ro",
++FIXTURE_VARIANT_ADD(xfs_shutdown, shutdown_logflush) {
++	.shutdown_flags = FS_SHUTDOWN_FLAGS_LOGFLUSH,
 +};
 +
-+FIXTURE_VARIANT_ADD(ext4_emergency, error_nojournal) {
-+	.mkfs = "mkfs.ext4 -q -F -b 4096 -O ^has_journal",
-+	.how = HOW_ERROR,
-+	.state = "emergency_ro",
++FIXTURE_VARIANT_ADD(xfs_shutdown, shutdown_nologflush) {
++	.shutdown_flags = FS_SHUTDOWN_FLAGS_NOLOGFLUSH,
 +};
 +
-+static bool mount_option(const char *mnt, const char *opt)
-+{
-+	char line[4096], needle[128];
-+	bool found = false;
-+	FILE *f;
-+
-+	f = fopen("/proc/self/mountinfo", "r");
-+	if (!f)
-+		return false;
-+	snprintf(needle, sizeof(needle), " %s ", mnt);
-+	while (fgets(line, sizeof(line), f)) {
-+		char *super;
-+
-+		if (!strstr(line, needle))
-+			continue;
-+		/* the superblock options follow the separator */
-+		super = strstr(line, " - ");
-+		if (super && strstr(super, opt))
-+			found = true;
-+	}
-+	fclose(f);
-+	return found;
-+}
++FIXTURE_VARIANT_ADD(xfs_shutdown, shutdown_by_remount) {
++	.shutdown_flags = -1,
++};
 +
 +/* The superblock options start with its own "ro" or "rw". */
 +static bool super_rdonly(const char *mnt)
@@ -266,52 +238,73 @@ index 000000000000..5c541bb68ef7
 +	return ro;
 +}
 +
-+/* Sectors written to the loop device so far, -1 on error. */
-+static long long written(int loop)
++static uint32_t get_be32(const unsigned char *p)
 +{
-+	unsigned long long v[7];
-+	char path[64];
-+	FILE *f;
-+	int n;
++	uint32_t v;
 +
-+	snprintf(path, sizeof(path), "/sys/block/loop%d/stat", loop);
-+	f = fopen(path, "r");
-+	if (!f)
-+		return -1;
-+	n = fscanf(f, "%llu %llu %llu %llu %llu %llu %llu",
-+		   &v[0], &v[1], &v[2], &v[3], &v[4], &v[5], &v[6]);
-+	fclose(f);
-+	return n == 7 ? (long long)v[6] : -1;
++	memcpy(&v, p, sizeof(v));
++	return be32toh(v);
 +}
 +
-+static int enter_emergency(FIXTURE_DATA(ext4_emergency) *self,
-+			   const FIXTURE_VARIANT(ext4_emergency) *variant)
++static uint64_t get_be64(const unsigned char *p)
 +{
-+	char path[128];
-+	int fd, ret;
++	uint64_t v;
 +
-+	if (variant->how == HOW_SHUTDOWN) {
-+		__u32 flags = variant->shutdown_flags;
++	memcpy(&v, p, sizeof(v));
++	return be64toh(v);
++}
 +
-+		fd = open(self->mnt, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
-+		if (fd < 0)
-+			return -1;
-+		ret = ioctl(fd, FS_IOC_SHUTDOWN, &flags);
-+		close(fd);
-+		return ret;
-+	}
++/*
++ * Make the next log write fail: punch the log out of the image on our tmpfs
++ * and shrink the tmpfs to what is in use, so the log write needs a page it
++ * can't get and fails with ENOSPC.
++ */
++static int fail_log_writes(FIXTURE_DATA(xfs_shutdown) *self)
++{
++	uint32_t blocksize, agblocks, logblocks;
++	uint64_t logstart, agno, agbno;
++	unsigned char sb[512];
++	struct statvfs sv;
++	char opts[64];
++	int fd, ret = -1;
 +
-+	/* ext4_error() through the test knob, errors=remount-ro reacts */
-+	snprintf(path, sizeof(path), "/sys/fs/ext4/loop%d/trigger_fs_error", self->loop);
-+	fd = open(path, O_WRONLY | O_CLOEXEC);
++	fd = open(self->img, O_RDWR | O_CLOEXEC);
 +	if (fd < 0)
 +		return -1;
-+	ret = write(fd, "selftest", 8) == 8 ? 0 : -1;
++	/* struct xfs_dsb */
++	if (pread(fd, sb, sizeof(sb), 0) != sizeof(sb) || memcmp(sb, "XFSB", 4))
++		goto out;
++	blocksize = get_be32(sb + 4);
++	logstart = get_be64(sb + 48);
++	agblocks = get_be32(sb + 84);
++	logblocks = get_be32(sb + 96);
++	if (!logstart)
++		goto out;
++	/* sb_agblklog */
++	agno = logstart >> sb[124];
++	agbno = logstart & ((1ULL << sb[124]) - 1);
++	if (fallocate(fd, FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE,
++		      (agno * agblocks + agbno) * blocksize,
++		      (uint64_t)logblocks * blocksize))
++		goto out;
++
++	/* the loop device may still allocate pages in between */
++	for (int tries = 0; tries < 10; tries++) {
++		if (statvfs(self->dir, &sv))
++			break;
++		snprintf(opts, sizeof(opts), "size=%llu",
++			 (unsigned long long)(sv.f_blocks - sv.f_bfree) * sv.f_frsize);
++		if (!mount(NULL, self->dir, NULL, MS_REMOUNT, opts)) {
++			ret = 0;
++			break;
++		}
++	}
++out:
 +	close(fd);
 +	return ret;
 +}
 +
-+static void ext4_emergency_cleanup(FIXTURE_DATA(ext4_emergency) *self)
++static void xfs_shutdown_cleanup(FIXTURE_DATA(xfs_shutdown) *self)
 +{
 +	if (self->mounted)
 +		umount2(self->mnt, MNT_DETACH);
@@ -319,10 +312,12 @@ index 000000000000..5c541bb68ef7
 +		close(self->loop_fd);	/* LO_FLAGS_AUTOCLEAR detaches it */
 +	unlink(self->img);
 +	rmdir(self->mnt);
++	if (self->tmpfs)
++		umount2(self->dir, MNT_DETACH);
 +	rmdir(self->dir);
 +}
 +
-+FIXTURE_SETUP(ext4_emergency)
++FIXTURE_SETUP(xfs_shutdown)
 +{
 +	struct loop_config cfg = { .info.lo_flags = LO_FLAGS_AUTOCLEAR };
 +	char cmd[256], path[128];
@@ -330,6 +325,7 @@ index 000000000000..5c541bb68ef7
 +
 +	self->loop = -1;
 +	self->loop_fd = -1;
++	self->tmpfs = false;
 +	self->mounted = false;
 +
 +	if (geteuid() != 0)
@@ -340,8 +336,11 @@ index 000000000000..5c541bb68ef7
 +	ASSERT_EQ(unshare(CLONE_NEWNS), 0);
 +	ASSERT_EQ(mount(NULL, "/", NULL, MS_REC | MS_PRIVATE, NULL), 0);
 +
-+	snprintf(self->dir, sizeof(self->dir), "/tmp/ext4_emergency.XXXXXX");
++	snprintf(self->dir, sizeof(self->dir), "/tmp/xfs_shutdown.XXXXXX");
 +	ASSERT_NE(mkdtemp(self->dir), NULL);
++	/* fail_log_writes() needs the image on a tmpfs of our own */
++	ASSERT_EQ(mount("tmpfs", self->dir, "tmpfs", 0, "size=1g,mode=0700"), 0);
++	self->tmpfs = true;
 +	snprintf(self->img, sizeof(self->img), "%s/img", self->dir);
 +	snprintf(self->mnt, sizeof(self->mnt), "%s/mnt", self->dir);
 +	ASSERT_EQ(mkdir(self->mnt, 0700), 0);
@@ -349,11 +348,11 @@ index 000000000000..5c541bb68ef7
 +	fd = open(self->img, O_RDWR | O_CREAT | O_CLOEXEC, 0600);
 +	ASSERT_GE(fd, 0);
 +	ASSERT_EQ(ftruncate(fd, IMG_SIZE), 0);
-+	snprintf(cmd, sizeof(cmd), "%s %s >/dev/null 2>&1", variant->mkfs, self->img);
++	snprintf(cmd, sizeof(cmd), "mkfs.xfs -q -f %s >/dev/null 2>&1", self->img);
 +	if (system(cmd)) {
 +		close(fd);
-+		ext4_emergency_cleanup(self);
-+		SKIP(return, "mkfs.ext4 failed or is not available");
++		xfs_shutdown_cleanup(self);
++		SKIP(return, "mkfs.xfs failed or is not available");
 +	}
 +
 +	ctl = open("/dev/loop-control", O_RDWR | O_CLOEXEC);
@@ -376,10 +375,10 @@ index 000000000000..5c541bb68ef7
 +	close(ctl);
 +	close(fd);
 +
-+	ret = mount(self->dev, self->mnt, "ext4", 0, "errors=remount-ro");
++	ret = mount(self->dev, self->mnt, "xfs", 0, NULL);
 +	if (ret && errno == ENODEV) {
-+		ext4_emergency_cleanup(self);
-+		SKIP(return, "kernel lacks ext4");
++		xfs_shutdown_cleanup(self);
++		SKIP(return, "kernel lacks xfs");
 +	}
 +	ASSERT_EQ(ret, 0);
 +	self->mounted = true;
@@ -389,47 +388,46 @@ index 000000000000..5c541bb68ef7
 +	ASSERT_GE(fd, 0);
 +	ASSERT_EQ(write(fd, "data\n", 5), 5);
 +	ASSERT_EQ(fsync(fd), 0);
++	/* leave something dirty for the shutdown */
++	ASSERT_EQ(write(fd, "more\n", 5), 5);
 +	close(fd);
 +}
 +
-+FIXTURE_TEARDOWN(ext4_emergency)
++FIXTURE_TEARDOWN(xfs_shutdown)
 +{
-+	ext4_emergency_cleanup(self);
++	xfs_shutdown_cleanup(self);
 +}
 +
-+TEST_F_TIMEOUT(ext4_emergency, remount, 60)
++TEST_F_TIMEOUT(xfs_shutdown, remount, 60)
 +{
-+	long long w0, w1;
 +	struct statvfs sv;
-+	int ret;
++	int fd, ret;
 +
-+	ASSERT_EQ(enter_emergency(self, variant), 0);
-+	ASSERT_TRUE(mount_option(self->mnt, variant->state));
++	if (variant->shutdown_flags < 0) {
++		ASSERT_EQ(fail_log_writes(self), 0);
++	} else {
++		__u32 flags = variant->shutdown_flags;
 +
-+	/* nothing below may write, get whatever is still dirty out first */
-+	sync();
-+	w0 = written(self->loop);
-+	ASSERT_GE(w0, 0);
++		fd = open(self->mnt, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
++		ASSERT_GE(fd, 0);
++		ASSERT_EQ(ioctl(fd, FS_IOC_SHUTDOWN, &flags), 0);
++		close(fd);
++	}
 +
-+	/* only options change, the error state alone reports ST_RDONLY */
-+	ASSERT_EQ(mount(NULL, self->mnt, NULL, MS_REMOUNT, "errors=remount-ro"), 0);
++	/* only options change */
++	ASSERT_EQ(mount(NULL, self->mnt, NULL, MS_REMOUNT, NULL), 0);
 +	ASSERT_EQ(statvfs(self->mnt, &sv), 0);
-+	ASSERT_EQ(!!(sv.f_flag & ST_RDONLY), variant->how == HOW_ERROR);
++	ASSERT_FALSE(!!(sv.f_flag & ST_RDONLY));
 +
 +	/* going read-only works */
 +	ret = mount(NULL, self->mnt, NULL, MS_REMOUNT | MS_RDONLY, NULL);
 +	ASSERT_EQ(ret, 0) TH_LOG("remount read-only: %s", strerror(errno));
 +	ASSERT_TRUE(super_rdonly(self->mnt));
-+	ASSERT_TRUE(mount_option(self->mnt, variant->state));
 +
-+	/* without writing anything */
-+	w1 = written(self->loop);
-+	ASSERT_EQ(w1, w0) TH_LOG("%lld sectors written by the remounts", w1 - w0);
-+
-+	/* going back to read-write doesn't */
++	/* going back to read-write doesn't, also not after the remount's shutdown */
 +	ret = mount(NULL, self->mnt, NULL, MS_REMOUNT, NULL);
 +	ASSERT_EQ(ret, -1);
-+	ASSERT_EQ(errno, EROFS);
++	ASSERT_EQ(errno, EIO);
 +	ASSERT_TRUE(super_rdonly(self->mnt));
 +
 +	ASSERT_EQ(umount(self->mnt), 0);
