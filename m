@@ -1,44 +1,44 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793275820;
-	b=F0aWFry1EUkZtj8SKSjrgnG1mI3b5Q/pXkwpDwKMQz5cIQcyfuidbl8Dm6cT5BaR0Psv
-	 HyJGtgoWzAoK9BRqOfvNibuhPO7BYO0V5TBSOtulDFm0kTVEAvdqyIT1UZEVWsSEkNl1s
-	 ryRk03UbB9Z9ASqYuBwSkJt8dofZe0y/vjNT/03PfxFnfLEBBoC+G5ZUMrACV1UIx1+Sl
-	 17seg9HSflSFF7deRI6JqKKUiKyvcKIJaKNmxpq6rVs8chG1EfO/0OXqBz/RVGv7ioW1X
-	 JDD7lRT5T98UUEuIawIGsO8gdVADX/l6fYf/7L/n/u5bXpFw33tVkQKYOIyfYpZVNYw==
+	t=1793275824;
+	b=Ozsnl5B54mMS40jGwtxOa3dKQ67N3AezJS+v46vTJQBWgUDAIWKMuX1la6eIKq8wN/Vy
+	 X+TCUR4F4RVn7mYp8TitdqbyeZ6TzKb7v8dTiaRBcHgHbPygNEVhB8wTjXE1+DHL2/lsZ
+	 185CEXbhdoxvfkpKpWy0Yk4L+/08wFf2unq9kAGAARU2YEBk75se3oe6Jq3JCaiaD50mk
+	 xpSUdtyI7CGEU8qIfVWE+nzUxnimQI52WNvrRn6OUEFYCrKb2cstdGuxnWlgKgQBI3jwA
+	 AJRW4WQVJojWe46Lb/LHb825PoKpN3Qei4cSNIq+mg7ZzgaCKA9Q0xXgYHFCVxIgaXQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793275820;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793275824;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=n7W5kEK35SAYpuMZv56I+hSsV4aDuu+dHLsT2OFe8Eo=;
-	b=rTFQLVNDQyloroogbimk0YrOWBmNJsHXKtN7Hnf9hJ190fNPAocWxOtAxCpmLA89u3qy
-	 hWSU+EtG1sDWUJF2BCVVX/9uWXqUtVZcuTs99EIJq/ACNZf7p6uZMBuOKQcUKW25su1tU
-	 1Z8iJY2wt582cuWJ87TOR8/jbDkhfPb7uLP3hLAlSL4vmwO12Ea1NCYipN0UDHmbLXB7Y
-	 LAN2yruP3dmtL7AmcXgxF+B5Y+8S1XlTbQ3tlejTMpu+1aVSdewQTCbNeRrql7r3RUioh
-	 sVbpUCCAWqeN4fEp05OPL27PDrNGHCJrFHcQG9Qb0HBK9ptZlg2Rvx3obuGffXuYc3g==
+	bh=MRh3BiAuWNIxur4C0q2eKnBi0sby8SjJGNLf4vVX+Uk=;
+	b=Y9WKhRxEiFwTP6hD3+mUadTq8cf+/BY9vDcVfA2khjcaQKoP0bNc4osao+8KoS5LLwyM
+	 WGufUFkvGfkugctULh8QtVO+kW5Vc8ZPrapYp8rW6ypvReypGSI6Q1KhHcm/OHAbHjxlE
+	 +iVLW5Kd5riFRNmcrO70zpDr0e+tfpgFydUQcyxd/mTw+mcQvRK2HfHZF5zklX7TBMr/3
+	 QC6PhiBHSmhB3rmCZ9Erd2pUVfyGFvz4j6IntlkqzFqsKaB1e4l4G3G20Qi4UHnaSbHrB
+	 l7y19+wnch0+XxRucEuUQQOFDqNFGJS74UIUj4e2/MG98aCHD1bfKphTowBg5n+567w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NeOrWKZI;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Cate9XYP;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F572606A31A
-	for <linux-xfs@vger.kernel.org>; Thu, 29 Oct 2026 12:10:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45ECD606A31A
+	for <linux-xfs@vger.kernel.org>; Thu, 29 Oct 2026 12:10:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NeOrWKZI
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B426C1F01828;
-	Thu, 29 Oct 2026 12:10:15 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Cate9XYP
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2B7781F01825;
+	Thu, 29 Oct 2026 12:10:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793275819;
-	bh=n7W5kEK35SAYpuMZv56I+hSsV4aDuu+dHLsT2OFe8Eo=;
+	s=k20260515; t=1793275824;
+	bh=MRh3BiAuWNIxur4C0q2eKnBi0sby8SjJGNLf4vVX+Uk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=NeOrWKZIa6W5XxRj9EumyrPqK+VecnkBoZ7h7MgHrGuSDCRrIWhyZVvZ8uR/DtI3c
-	 KpZTZEqQUrs/8uuukGMcyaxuEvuHTHg1MMts7Mkp1TGoAegmQ2nxSGeZ2V52Lu+I2h
-	 ghRNlr5BPQbvB5vDVCZ7Vbz1Q32QzDpEBP0sAAPzZfO3xsX4BRWI0hRZtSYDO61nee
-	 qHMcHrSOepqE6LdQ9mbH092HdGVy97zrVedHXUDVVBDgHRD/Od3y49wwFwznMjGK5U
-	 HNW4MTPWSW0jLQJkp87q+lqxs8fPwpbF7gS9jl3wSIs35eWT0TEHwy5FHSmfkDOARl
-	 9duXsTT7ZjF9Q==
+	b=Cate9XYPzn12xEXf10wa6lfZJeuGfIajNB3DdzstfAGeDtSMEDBGK/KoJXOzDCuXZ
+	 qDBAWRHliBJB7OhD4TIYLqSwP2g+QyTfH62DIqMxaR+h333Acjix3EuYhsjFJOUzNM
+	 ypuMFQQ9AKxTd6czSFGzLx4NcY6Oa30iUMsxiNsRSeZEVteBPU/dh7/o9H5yK4FJfs
+	 iEgFUTLBPv0KqNMnATUCeg68alLGvS0kxwu+ly90SwcXojRFcs5wBfTXSQvv9gw1F4
+	 uGYLVVMJjD50FA7FXuPdqf4rdzyDuMm4i0ijayNGO4s+cI8yXPBrobA79TVAnURYQm
+	 aBBIFkRBZDnVg==
 From: Andrey Albershteyn <aalbersh@kernel.org>
 To: linux-xfs@vger.kernel.org
 Cc: cem@kernel.org,
@@ -59,9 +59,9 @@ Cc: cem@kernel.org,
 	yun.zhou@windriver.com,
 	zenghongling@kylinos.cn,
 	Javier Tia <javier@peridio.com>
-Subject: [PATCH 13/28] xfs: give the deferred barrier op type a name
-Date: Thu, 29 Oct 2026 13:06:10 +0100
-Message-ID: <20261029120631.803074-14-aalbersh@kernel.org>
+Subject: [PATCH 14/28] xfs: report the error that made deferred work shut down the fs
+Date: Thu, 29 Oct 2026 13:06:11 +0100
+Message-ID: <20261029120631.803074-15-aalbersh@kernel.org>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20261029120631.803074-1-aalbersh@kernel.org>
 References: <20261029120631.803074-1-aalbersh@kernel.org>
@@ -78,40 +78,71 @@ Content-Transfer-Encoding: 8bit
 
 From: Javier Tia <javier@peridio.com>
 
-Source kernel commit: 91c15cee394e9958898ef1ed55d9ced4c26e2800
+Source kernel commit: d058f24b163a8d63866ac6bbe5f06b41aabe97d7
 
-xfs_barrier_defer_type is the only xfs_defer_op_type with no .name.
-Every other one carries a short string used for tracing and reporting:
-attr, bmap, extent_free, agfl_free, rtextent_free, refcount,
-rtrefcount, rmap, rtrmap and exchmaps.
+When a deferred operation fails and shuts the filesystem down,
+xfs_defer_finish_noroll() reports neither the errno nor which operation
+originated it, so the log cannot tell a transient -ENOSPC from real
+corruption.  Report the operation type, errno and remaining reservation.
 
-That has been harmless because nothing dereferences the field, but it
-leaves a NULL in a table where every other entry is populated, so the
-first caller to print it gets "(null)" in the kernel and undefined
-behaviour in the userspace libxfs build of this file, where xfs_alert
-lands in fprintf.  xfs_defer_add() already treats a missing member of
-this table as worth shutting the filesystem down for, so an unpopulated
-one is out of step with how the file handles its own ops tables.
+trace_xfs_defer_finish_error() runs after xfs_force_shutdown(), which
+BUGs under fs.xfs.panic_mask and so never fires for the first failure;
+move it ahead of the shutdown and mirror it to xfs_alert() for systems
+without tracing armed.  Capture the op name while the item is live (dfp
+is freed once its work list drains) and suppress the alert once the fs is
+already down.
 
 Signed-off-by: Javier Tia <floss@jetm.me>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Carlos Maiolino <cem@kernel.org>
 ---
- libxfs/xfs_defer.c | 1 +
- 1 file changed, 1 insertion(+)
+ libxfs/xfs_defer.c | 15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
 
 diff --git a/libxfs/xfs_defer.c b/libxfs/xfs_defer.c
-index 4aa232fbd214..6c247d73cf1d 100644
+index 6c247d73cf1d..aaf643a2d842 100644
 --- a/libxfs/xfs_defer.c
 +++ b/libxfs/xfs_defer.c
-@@ -226,6 +226,7 @@ xfs_defer_barrier_cancel_item(
- }
+@@ -653,6 +653,7 @@ xfs_defer_finish_noroll(
+ 	struct xfs_trans		**tp)
+ {
+ 	struct xfs_defer_pending	*dfp = NULL;
++	const char			*what = "chain";
+ 	int				error = 0;
+ 	LIST_HEAD(dop_pending);
+ 	LIST_HEAD(dop_paused);
+@@ -702,9 +703,17 @@ xfs_defer_finish_noroll(
+ 				struct xfs_defer_pending, dfp_list);
+ 		if (!dfp)
+ 			break;
++		what = dfp->dfp_ops->name;
+ 		error = xfs_defer_finish_one(*tp, dfp);
+ 		if (error && error != -EAGAIN)
+ 			goto out_shutdown;
++		/*
++		 * A finished item is no longer a candidate for a later
++		 * failure.  An -EAGAIN one is not finished, so it keeps the
++		 * attribution across the roll that completes it.
++		 */
++		if (!error)
++			what = "chain";
+ 	}
  
- static const struct xfs_defer_op_type xfs_barrier_defer_type = {
-+	.name		= "barrier",
- 	.max_items	= 1,
- 	.create_intent	= xfs_defer_barrier_create_intent,
- 	.abort_intent	= xfs_defer_barrier_abort_intent,
+ 	/* Requeue the paused items in the outgoing transaction. */
+@@ -716,8 +725,12 @@ xfs_defer_finish_noroll(
+ out_shutdown:
+ 	list_splice_tail_init(&dop_paused, &dop_pending);
+ 	xfs_defer_trans_abort(*tp, &dop_pending);
+-	xfs_force_shutdown((*tp)->t_mountp, SHUTDOWN_CORRUPT_INCORE);
+ 	trace_xfs_defer_finish_error(*tp, error);
++	if (!xfs_is_shutdown((*tp)->t_mountp))
++		xfs_alert((*tp)->t_mountp,
++			  "deferred %s work failed, error %d, %u blocks reserved",
++			  what, error, (*tp)->t_blk_res);
++	xfs_force_shutdown((*tp)->t_mountp, SHUTDOWN_CORRUPT_INCORE);
+ 	xfs_defer_cancel_list((*tp)->t_mountp, &dop_pending);
+ 	xfs_defer_cancel(*tp);
+ 	return error;
 -- 
 2.54.0
 
