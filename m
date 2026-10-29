@@ -1,82 +1,68 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793307108;
-	b=QWpy6xZFqE4Cwxr23Dqqrcpczk736jddba55eJGU6w029+oxwtNxqSxpGdK13tBcs+zB
-	 bI4vSGGs2AxcMX4NfwoGdUm80PfDYLhKaIi+g6EQCEMzR6RtCaI/NKcnTSqv7PCzwFCrr
-	 FZPvCv0Wy2Hm24Yg8fTfmbaUxTC2ddeZCeDzbxPm9p4sWjENkRO4F3Jye0KKf98E2C7aS
-	 BU8OhVj/p4f8E06dDPnWkRGi71DNSe7xZWpJudG+9MWLoEf/j18AHbYZQbAR8BTXkcmEB
-	 M7qKp6S8YN/UJzL1VP2U9P07YvnrOINiLlUc+SFSRRyZdJnRsrBON90LF3bWF5MuwmA==
+	t=1793307596;
+	b=U1AVzphoQufV/UA9RjkpJZYRG+GCtZPRmuypdWpiYVr38WjtJjdnvSXf96cXtEOij+GY
+	 LPsjoKFRaZk3DIaFs1CYhgqSUP8ONR0LMWY6mL5iZkP9WHiahW51d52oe7UHIkUw6OOZv
+	 pOI3a0TgoSZTWFxFwmksV3ljnSu1MVNpoY2zqFnInILa5H4jF235Ki/SzVfL/d08/zjVo
+	 WxmgduTZ3imVwkBEcjSlJlo6EKaR2fFGKZ/JwdCG9s+rLh/xNvnr1iZbIVRUCcoGIXj3P
+	 wIsfI+YPMYnvNW2SgXZH5etlVBjyTzXvHAwjhDHhTAYIJfo32294y4gdL4wEaAwwK0w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793307108;
-	h=DMARC-Filter:Received:DKIM-Signature:DKIM-Signature:Received:
-	 Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding:X-Spam-Flag:X-Spam-Level:X-Spamd-Result:
-	 X-Spam-Score;
-	bh=RdeptIPG1aMF2zMuVlv65CiM+a455QAQAz2c9ztPVnw=;
-	b=tQkUfIJl+mdNKOaucFGUY9YXUDIYRcyaByh8UFal58IpjsnJLn0ZFAJlLPduIgj+9gAD
-	 hzcE1nOq1/P/S1Hv5fALS86umnnltzGbE4CQ/v8PjX/MQK1nkMCV1eLXrfpRw53G8+Bf9
-	 TSxDN6guRHuM4g1FzrEy8XkVS4CobJ7hprAFj04FISriP/xVAlDtfxOGPB6+3tz3wxmoh
-	 vouZhTB7zNloL2pez0KC6ckLbgGDqb1kDqzGTJyRSVacSsY6nbwmeuRxmnU2FPwQKaVNz
-	 gc2t7G+bX5rHzHeYUddh2p4hHtI7IaAFf1mEg7LtH+1rDdrJ293vI53EBbfjWKQex5A==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793307596;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=zv/crP/MT0jYur3oiHEd6/mz9hTesI/3yGVAKcISCCI=;
+	b=CvqlKciRRdUTcI4iwnHWDvrbIvkHzQzmlTZsl8fOEH4JNV3Lh27Q9OnDm4QKPLPvm2np
+	 UOUT3VTiG5bTmRdSgMbVqI7FPNKiz69obnx/dnXvY7zjXQu8XOKyP1NitjI6GBCUkTTST
+	 +zhYWwtdjJd79/9XWzHob0A4QKGhXrRFcMdqKoRbKhMN/oV6kGwETme80aDxwo4UxIwUa
+	 9xHcKUkyfljQe3NsVdDqyAQWRHNnF7xCBTsvtNZcZvSPOnYQnGHa53ZtEowrHRgkQrT9+
+	 oj3p1xJ8nTykwX41DZofC887UmfTeRGXxhKE+u/xOQAJL1dEfMc7mudmrRVL3/EyH0g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=suse.com;
-	spf=pass smtp.mailfrom=suse.com;
-	dkim=pass header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=susede1 header.b=og3qckoP;
-	dkim=pass header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=susede1 header.b=QrS5na9y;
-	arc=none smtp.remote-ip=195.135.223.130
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HPaeDql8;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85CE2606A322;
-	Thu, 29 Oct 2026 20:51:47 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 85CE2606A322
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B36A606A31C;
+	Thu, 29 Oct 2026 20:59:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=susede1 header.b=og3qckoP;
-	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=susede1 header.b=QrS5na9y
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 6CC2722275;
-	Thu, 29 Oct 2026 20:51:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-	t=1793307105; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-	bh=RdeptIPG1aMF2zMuVlv65CiM+a455QAQAz2c9ztPVnw=;
-	b=og3qckoPEUs84oWLaSyFrTl+bsGq7Qo6i8iwyAfjAIIrAq4Lx4rOPvls7stAZPdUL/AR4Y
-	kTu+NpvI/Z6MKmHCLhbsIUU1Au8KVr5UYYVvYuTxUcCv2WFnX8ridjetJlESPXiGvthlCg
-	AgmZfBmRJcrQb8Y+HulYqClbZzoHQEE=
-Authentication-Results: smtp-out1.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-	t=1793307104; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-	bh=RdeptIPG1aMF2zMuVlv65CiM+a455QAQAz2c9ztPVnw=;
-	b=QrS5na9y7Zx9GPCDEbrPsJTjg3i939yEAWaCxqbeyOjnoV3CX8XxtZCDfMqeFVw/+RCI1Y
-	8qp49dgTTprajlA1FtsT+MM74v6d5ApB+xcRd1SSrn11Bxn8sPpiBsTEXhTK9zVrIDzkLu
-	G8DQwBV3CPuqPrgOfM9w25EuxX2+9mI=
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 5932513419;
-	Thu, 29 Oct 2026 20:51:42 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id CMGKKt2x42qmUgAAD6G6ig
-	(envelope-from <wqu@suse.com>); Thu, 29 Oct 2026 20:51:42 +0000
-From: Qu Wenruo <wqu@suse.com>
-To: linux-btrfs@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org
-Cc: "Pankaj Raghav(Samsung)" <pankaj.raghav@linux.dev>
-Subject: [PATCH v4] iomap: only follow dio alignment requirement if specified
-Date: Fri, 30 Oct 2026 07:21:23 +1030
-Message-ID: <0e89c49b6f7804081f4041007b81ac620a153830.1793307063.git.wqu@suse.com>
-X-Mailer: git-send-email 2.56.0
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HPaeDql8
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5BFCA1F01816;
+	Thu, 29 Oct 2026 20:59:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793307596;
+	bh=zv/crP/MT0jYur3oiHEd6/mz9hTesI/3yGVAKcISCCI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=HPaeDql8TU0d83FLVuu7oZ6q9sc5s25c41uOxEQGAX9lBJBmM0MJO9OUT31O3vCQa
+	 apmX9azBQIHLuMgB2GF4LwJLiAvezvIoQ94Kg9l79OhfXEOVK0QaclqGHcfVsZiU8i
+	 6bgQPnbu/UZkyZP/FPjMDLBEf5a8zlRC9UqCH8A4zanGetv6d0T+qlWmJS+nChbket
+	 IcNRN9bTgr7SfH3Bstf1L0Eiyq5lbOdoIAwrlAfdpjBzEZxMzBl5rCLThFa7GWWA+C
+	 GfabmOkNjMxLWmxAbJ6ijStKwQyppzrId+YIKipXKR39lt8yRUjSI1RcSdEbdUxMU0
+	 H4hfMbOr1KY/A==
+Date: Fri, 30 Oct 2026 07:59:45 +1100
+From: Dave Chinner <dgc@kernel.org>
+To: Jonathan Corbet <corbet@lwn.net>
+Cc: Henry Martin <bsdhenrymartin@gmail.com>,
+	Carlos Maiolino <cem@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"Darrick J . Wong" <djwong@kernel.org>,
+	Alex Deucher <alexander.deucher@amd.com>,
+	David Hildenbrand <david@kernel.org>,
+	Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>,
+	Kairui Song <kasong@tencent.com>, Myeonghun Pak <mhun512@gmail.com>,
+	Rafal Ostrowski <rafal.ostrowski@amd.com>,
+	Likun Gao <Likun.Gao@amd.com>, James Clark <james.clark@linaro.org>,
+	Anshuman Khandual <anshuman.khandual@arm.com>,
+	Kevin Brodsky <kevin.brodsky@arm.com>, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH] xfs: fix out-of-bounds write from crafted btree root
+ numrecs during log recovery
+Message-ID: <auOzwfNyfbSNLCDC@dread>
+References: <20261027151703.973392-1-bsdhenrymartin@gmail.com>
+ <auJ2jgIIh8e_JJwn@dread>
+ <87cxsto38m.fsf@trenco.lwn.net>
+ <auKGlGJwOSZpioMd@dread>
+ <87v76kmv3h.fsf@trenco.lwn.net>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -86,120 +72,70 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Spam-Flag: NO
-X-Spam-Level: 
-X-Spamd-Result: default: False [-11.80 / 50.00];
-	SUSE_INTERNAL_BYPASS(-9.00)[];
-	BAYES_HAM(-3.00)[100.00%];
-	MID_CONTAINS_FROM(1.00)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_MISSING_CHARSET(0.50)[];
-	NEURAL_HAM_SHORT(-0.20)[-0.996];
-	MIME_GOOD(-0.10)[text/plain];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.com:email,linux.dev:email];
-	FROM_HAS_DN(0.00)[];
-	ARC_NA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	TO_DN_SOME(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	FROM_EQ_ENVFROM(0.00)[];
-	DKIM_SIGNED(0.00)[suse.com:s=susede1];
-	RCPT_COUNT_THREE(0.00)[4];
-	RCVD_TLS_ALL(0.00)[]
-X-Spam-Score: -11.80
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <87v76kmv3h.fsf@trenco.lwn.net>
 
-After commit 4025185cf953 ("iomap: follow the alignment requirement for
-iomap_dio_hole_iter()"), generic/091 fails on both xfs and ext4.
+On Thu, Oct 29, 2026 at 08:37:06AM -0600, Jonathan Corbet wrote:
+> Dave Chinner <dgc@kernel.org> writes:
+> 
+> > On Wed, Oct 28, 2026 at 04:43:37PM -0600, Jonathan Corbet wrote:
+> >> Dave Chinner <dgc@kernel.org> writes:
+> >> 
+> >> > Unless you know how to fix the discovered problem correctly, don't
+> >> > send what your LLM proposed for review. It will be garbage, and all
+> >> > that will do is annoy whoever has to review it. Just report the bug,
+> >> > let the subsystem developers fix it.
+> >> 
+> >> Just to be obnoxious...this runs counter to the advice we have in
+> >> Documentation/process/security-bugs.rst, where reporters are requested
+> >> to include a proposed fix as well.  It seems we're sending a bit of a
+> >> mixed message...
+> >
+> > These aren't security bugs. Bugs that result from maliciously
+> > corrupted filesystem images (i.e. fuzzed) are explicitly stated as
+> > not covered by the kernel security threat models. IOWs, they are
+> > just -bugs-, and bugs that just don't ever happen in the real world.
+> 
+> I wasn't arguing about the nature of the bug ... just noting the
+> disconnect with what I've heard from some maintainers, who say that
+> providing a patch helps in the identification of the problem, even if
+> the patch is not used.
 
-The reason is that ext4 and xfs (except COW write) do not require full
-block alignment for direct IO. They are totally fine reading a sub-block
-range.
+In this day and age, feeding a bug description to an LLM to get an
+analysis of the issue takes less time and is more informative than
+trying to get the same information from a patch generated by an LLM
+to 'fix' the problem.
 
-That commit fails any direct read of sub-block holes/prealloc, even those
-filesystems can handle it without any problem.
+It's verifying the correctness of the root cause analysis that is
+important here, not the code review.  LLMs frequently miss important
+stuff that experienced developers know, and it's that wider context
+that makes all the difference.
 
-Fix the regression by only follow the block alignment if the
-IOMAP_DIO_FSBLOCK_ALIGNED flag is set.
+With everyone presenting fixes rather than bugs now, we end up
+having to reverse engineer both the problem and why the specific fix
+was chosen during code review. The typical commit message is
+opaque and doesn't describe the symptoms that the bug exhibited.
+This makes "code review" much harder and more time consuming than if
+the bug was simply reported to the list.
 
-Fixes: 4025185cf953 ("iomap: follow the alignment requirement for iomap_dio_hole_iter()")
-Reviewed-by: Pankaj Raghav(Samsung) <pankaj.raghav@linux.dev>
-Signed-off-by: Qu Wenruo <wqu@suse.com>
----
-Changelog:
-v4:
-- Use a shorter commit message to explain the problem.
+After a year of using LLMs to write code and fixing complex bugs, I
+know that an LLM requires its context to be properly primed for it
+to generate a solid fix rather than a copy-pasted band-aid. It needs
+to understand abstractions, other code that does similar things,
+pre-exiting helper functions, etc. These generally lie outside the
+immeidate scope of the code containing the bug. This is where the
+experience and skill of the person running the LLM make all the
+difference.
 
-v3:
-- Drop CC: stable
-  The commit is only in the v7.4 release cycle, not affecting any stable
-  release.
+IOWs, the important part of fixing a bug with an LLM is running an
+extensive, guided root cause analysis process to fully prime the
+context window. Hence I want comprehensive bug reports to run the
+analysis process on, not have to try and recreate that from somebody
+(or something) else's interpretation of how the bug should be
+fixed....
 
-- Add Reviewed-by tag from Pankaj
-
-v2:
-- Update the comment of IOMAP_DIO_FSBLOCK_ALIGNED
-  To indicate that hole zeroing is also affected.
----
- fs/iomap/direct-io.c  | 26 ++++++++++++++++----------
- include/linux/iomap.h |  3 ++-
- 2 files changed, 18 insertions(+), 11 deletions(-)
-
-diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-index 45bb24934f3d..ad041ac3252a 100644
---- a/fs/iomap/direct-io.c
-+++ b/fs/iomap/direct-io.c
-@@ -590,18 +590,24 @@ static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
- static int iomap_dio_hole_iter(struct iomap_iter *iter, struct iomap_dio *dio)
- {
- 	loff_t copied = iov_iter_zero(iomap_length(iter), dio->submit.iter);
--	unsigned int bs = i_blocksize(iter->inode);
--	loff_t aligned_copied = round_down(copied, bs);
- 
--	/*
--	 * If fs block size is larger than page size, page fault failure
--	 * can cause @copied to be page aligned but not fs block aligned.
--	 */
--	iov_iter_revert(dio->submit.iter, copied - aligned_copied);
--	dio->size += aligned_copied;
--	if (!aligned_copied)
-+	if (dio->flags & IOMAP_DIO_FSBLOCK_ALIGNED) {
-+		loff_t aligned_copied = round_down(copied,
-+						   i_blocksize(iter->inode));
-+
-+		/*
-+		 * For fs passing IOMAP_DIO_FSBLOCK_ALIGNED flag, if fs block
-+		 * size is larger than page size, page fault failure
-+		 * can cause @copied to be page aligned but not fs block
-+		 * aligned.
-+		 */
-+		iov_iter_revert(dio->submit.iter, copied - aligned_copied);
-+		copied = aligned_copied;
-+	}
-+	dio->size += copied;
-+	if (!copied)
- 		return -EFAULT;
--	return iomap_iter_advance(iter, aligned_copied);
-+	return iomap_iter_advance(iter, copied);
- }
- 
- static int iomap_dio_inline_iter(struct iomap_iter *iomi, struct iomap_dio *dio)
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 59718f73c15a..5254430844b2 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -693,7 +693,8 @@ struct iomap_dio_ops {
- #define IOMAP_DIO_PARTIAL		(1 << 2)
- 
- /*
-- * Ensure each bio is aligned to fs block size.
-+ * Ensure every operation, including bio and hole zeroing, is aligned to fs
-+ * block size.
-  *
-  * For filesystems which need to calculate/verify the checksum of each fs
-  * block. Otherwise they may not be able to handle unaligned bios.
+-Dave.
 -- 
-2.56.0
-
+Dave Chinner
+dgc@kernel.org
