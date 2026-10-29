@@ -1,44 +1,44 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793275789;
-	b=R7GQ6CHeYa9O2E3nH3Njuhw4f24u8bduoWtGnBjbPp2CB2JQBzUrizBTvZUD8kxex2z1
-	 SdU0eOEmLYlo9hrJ7u3fe5oF6TxWab+INAHZZJeQJ6fFWTnMXyqBreXsWSOBgcpUJ/WJN
-	 CD9E6AksYgnKj2ZCr/kQbNfieSBkrhXnwpvyurOfN1W078Qh583PGcesC3ZGGSNhH50J2
-	 qvP3vUyuNQiOzEXRCtKn2Fz6uBX5zj/Y0D4z0OJeQxv417CJqN06SsSUUFBNL29tCki9B
-	 4Ln146Va5997UyA2tKMstKD2QjWEKNkQVZmp+pukpBHDIPTjARsfJjndR6n7OVLBTQQ==
+	t=1793275794;
+	b=SnoYK2Ap7JaxO3DugaOWulfOcig8Q9DuA/GnNlzVMI1sQinEQPsX1+EUJ04G0k6FZWZn
+	 dDnRWKP4z83+g1Uta2Clf+GEYW4iQlaTmdbCGUjT1BvqnxsgsAGYAHUhJu50IrpQuiyL+
+	 +tRod/c9uRV2sMK3hqxKA55leMB3mhlNkVdnwa31oz9vFnc8sOFbvcl09ume/km8ROB6H
+	 /1w1EJ+r/PWzdbQ1Qajh10+ySEYOU7eS0TWwyjUnMCP7r9FWzK1mqmKKs3/CgMBclwCdp
+	 Q2KcVvn2VFCp9QVHCOyGzM17+IQDpYNYlYp7BDH9yyQyxBMl6+FYxbc9lrmjTCUgHCg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793275789;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793275794;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=S2sPNKl9gfCBQyDSxy0OdwqJfIl5r1lP7Qa2y/dFr/8=;
-	b=EFpOSdli2f6wMbQA8c2XsCbLO/2cPRlKTpkmAwjVfn+tz5Hm4uuM6HIhu6dazxzsU/yF
-	 az9a7Zy0anJMsYBRfnkczrU4Im4DZVY61gXzopgnnZJmBmlqEpCm21gX6bbnxxJGkXbQV
-	 gZgU6fVSXZqrAUDpfabAs4kbBPe0XDABcUC4tKp4ohFSPn5n026ny6FOus/ZJCjDLBEYY
-	 cr3FLPhHwzEMZSEfFdklHjSuCSzqz8kMxRRPglHu9k6ykJ/8celrXVd5+XrRBVWhiTYhG
-	 Uw+6IBo1+nsWTlpQr+95ty4q72TEKR4bJiMcXqvtFQi7kvzSpyS7STLBnqTLg3qAzUA==
+	bh=n4/Oy4A7x388fHKkGcLIfHB1LsnPeZeEfoIDDVezIE4=;
+	b=bnPVJA9Mer8MCLLvJ6W2Rp1riUK9k9PKjlfoKGVhTlGhgyevoOZQGydssRWTWqlQhDNp
+	 zaqueQeZotyUvmn5JX83bBR6z9TMWk70BVYgkja8cKgebPWdyZQT4LhSwYLOxp4cVK+pK
+	 1fJqN+kBzt/+8+EJgxo3646yTZCr/dFoXbU3es8rAwKEZ4gI7yqJGJvmbTyas5Lf2Nt2i
+	 79tf46DjJlrEp0czL2kByh/KqXTCVWd0h5OCB8jR7Yc2W/gYVDZ2ZdLgCxd1wC+w8sdpA
+	 R2n8z9UKYOrNOcslX5lSBgArO9OJBSx49PRDqTn8yytVINSGG2Cewb+dRP3eO7fhEug==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hGD0maEp;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IHCQsv6H;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84CA4606A325
-	for <linux-xfs@vger.kernel.org>; Thu, 29 Oct 2026 12:09:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D088D606A31A
+	for <linux-xfs@vger.kernel.org>; Thu, 29 Oct 2026 12:09:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hGD0maEp
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5028A1F01825;
-	Thu, 29 Oct 2026 12:09:45 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IHCQsv6H
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A44981F01828;
+	Thu, 29 Oct 2026 12:09:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793275789;
-	bh=S2sPNKl9gfCBQyDSxy0OdwqJfIl5r1lP7Qa2y/dFr/8=;
+	s=k20260515; t=1793275793;
+	bh=n4/Oy4A7x388fHKkGcLIfHB1LsnPeZeEfoIDDVezIE4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=hGD0maEpp07GmnbA10dbTED0ljMvcbUL6xWpW4ORIbxEJUKFrLL4F6nvzHr7z1kMP
-	 DQ+ULBgfAgMVDPGKI8coTI7CLPRl1V+kt08Qw8v2SNMLnswWHOTgi7Vx0LOaa6D4Pr
-	 8R09Kdf73yQpgMiDkpw+OZb7kHo3W2w+oNPmO8dFQc2Oh/RMnK0ZRxrE+Tv5vcL0Zo
-	 F4BzCluN6nufpNI+KmD2wyU3aqbeleTIp/N0kmwRQdgKXkMo++LGCnO8oUIsDcTvQw
-	 kzQjL0DO+9jLel8e9UewWD1qc5WvZ7f53LMavEk9kEsDlQtUDe/jfKG1i2zJXP1rKj
-	 Sr4ohc3f4rprw==
+	b=IHCQsv6HHNWgRO9j3s0+MbaZg/nLJKbMnzT0RaVgxKf2hmjUT+1grzq7auhCYU49j
+	 4VUXAqvEz8FChspDdd1+m6iUNNUeOPb0l9JcdUp1OfXDKLaq85MRfCxQuqNDAJIoLw
+	 /ieyCJKEy3f82LBQLL6v30IdZQAEf+gt2HK3A4pYz1ZPH2bV3HU2GVoe8ag2Cgv2+j
+	 Zc4YBR/rlDuTzQZb7kw1nuWspq1dIohZUhYWyeq+fUzAi83Tj/DNGqsmTUajRcarkI
+	 DO+IkeBlv1zCRU5yGRIOEDxBslPhkZ7V3LqrDKwob0Ht5zdpe6b1fFmrHbIzgr1kEe
+	 p1ecH6HG1f7CA==
 From: Andrey Albershteyn <aalbersh@kernel.org>
 To: linux-xfs@vger.kernel.org
 Cc: cem@kernel.org,
@@ -58,9 +58,9 @@ Cc: cem@kernel.org,
 	yijiangshan@kylinos.cn,
 	yun.zhou@windriver.com,
 	zenghongling@kylinos.cn
-Subject: [PATCH 06/28] xfs: remove spurious XBF_DONE clearing on readahead validation failure
-Date: Thu, 29 Oct 2026 13:06:03 +0100
-Message-ID: <20261029120631.803074-7-aalbersh@kernel.org>
+Subject: [PATCH 07/28] xfs: hide b_flags manipulation from code outside of xfs_buf.c
+Date: Thu, 29 Oct 2026 13:06:04 +0100
+Message-ID: <20261029120631.803074-8-aalbersh@kernel.org>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20261029120631.803074-1-aalbersh@kernel.org>
 References: <20261029120631.803074-1-aalbersh@kernel.org>
@@ -77,79 +77,68 @@ Content-Transfer-Encoding: 8bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Source kernel commit: 7a4eae80b5b3db8d68961af3707fd56f2220cc29
+Source kernel commit: 9f224de410d7efafc44ce1880aabd0101aa8688f
 
-Both callers of ->verify_read already do this, so don't duplicate the
-flag manipulation.
+Add helpers for the remaining buffer flags manipulation not done in the
+core buffer cache code.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Carlos Maiolino <cem@kernel.org>
 ---
- libxfs/xfs_dquot_buf.c |  8 +++-----
- libxfs/xfs_inode_buf.c | 15 ++++++++-------
- 2 files changed, 11 insertions(+), 12 deletions(-)
+ libxfs/xfs_btree_staging.c | 7 +++----
+ libxfs/xfs_ialloc.c        | 2 +-
+ libxfs/xfs_platform.h      | 5 +++++
+ 3 files changed, 9 insertions(+), 5 deletions(-)
 
-diff --git a/libxfs/xfs_dquot_buf.c b/libxfs/xfs_dquot_buf.c
-index 21e74d6d17d9..e4599a084be5 100644
---- a/libxfs/xfs_dquot_buf.c
-+++ b/libxfs/xfs_dquot_buf.c
-@@ -251,8 +251,8 @@ xfs_dquot_buf_read_verify(
- /*
-  * readahead errors are silent and simply leave the buffer as !done so a real
-  * read will then be run with the xfs_dquot_buf_ops verifier. See
-- * xfs_inode_buf_verify() for why we use EIO and ~XBF_DONE here rather than
-- * reporting the failure.
-+ * xfs_inode_buf_verify() for why we use EIO here rather than reporting the
-+ * failure.
-  */
- static void
- xfs_dquot_buf_readahead_verify(
-@@ -261,10 +261,8 @@ xfs_dquot_buf_readahead_verify(
- 	struct xfs_mount	*mp = bp->b_mount;
+diff --git a/libxfs/xfs_btree_staging.c b/libxfs/xfs_btree_staging.c
+index c3c7ea54895a..7314dab4bcfb 100644
+--- a/libxfs/xfs_btree_staging.c
++++ b/libxfs/xfs_btree_staging.c
+@@ -248,11 +248,10 @@ xfs_btree_bload_drop_buf(
+ 		return 0;
  
- 	if (!xfs_dquot_buf_verify_crc(mp, bp, true) ||
--	    xfs_dquot_buf_verify(mp, bp, true) != NULL) {
-+	    xfs_dquot_buf_verify(mp, bp, true) != NULL)
- 		xfs_buf_ioerror(bp, -EIO);
--		bp->b_flags &= ~XBF_DONE;
--	}
- }
- 
- /*
-diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
-index 8ea12f82ad81..6fff9bbd39ab 100644
---- a/libxfs/xfs_inode_buf.c
-+++ b/libxfs/xfs_inode_buf.c
-@@ -27,12 +27,14 @@
-  * has not had the inode cores stamped into it. Hence for readahead, the buffer
-  * may be potentially invalid.
-  *
-- * If the readahead buffer is invalid, we need to mark it with an error and
-- * clear the DONE status of the buffer so that a followup read will re-read it
-- * from disk. We don't report the error otherwise to avoid warnings during log
-- * recovery and we don't get unnecessary panics on debug kernels. We use EIO here
-- * because all we want to do is say readahead failed; there is no-one to report
-- * the error to, so this will distinguish it from a non-ra verifier failure.
-+ * If the readahead buffer is invalid, we need to mark it with an error so that a
-+ * followup read will re-read it from disk.
-+ *
-+ * We don't report the error otherwise to avoid warnings during log recovery and
-+ * we don't get unnecessary panics on debug kernels.  Use EIO here because all
-+ * we want to do is say readahead failed; there is no-one to report the error
-+ * to, so this will distinguish it from a non-ra verifier failure.
-+ *
-  * Changes to this readahead error behaviour also need to be reflected in
-  * xfs_dquot_buf_readahead_verify().
-  */
-@@ -62,7 +64,6 @@ xfs_inode_buf_verify(
- 		if (unlikely(!di_ok ||
- 				XFS_TEST_ERROR(mp, XFS_ERRTAG_ITOBP_INOTOBP))) {
- 			if (readahead) {
--				bp->b_flags &= ~XBF_DONE;
- 				xfs_buf_ioerror(bp, -EIO);
- 				return;
+ 	/*
+-	 * Mark this buffer XBF_DONE (i.e. uptodate) so that a subsequent
+-	 * xfs_buf_read will not pointlessly reread the contents from the disk.
++	 * Mark this buffer uptodate so that a subsequent xfs_buf_read will
++	 * not pointlessly reread the contents from the disk.
+ 	 */
+-	bp->b_flags |= XBF_DONE;
+-
++	xfs_buf_set_uptodate(bp);
+ 	xfs_buf_delwri_queue_here(bp, buffers_list);
+ 	xfs_buf_relse(bp);
+ 	*bpp = NULL;
+diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
+index a064289e1634..912b796bf5b6 100644
+--- a/libxfs/xfs_ialloc.c
++++ b/libxfs/xfs_ialloc.c
+@@ -412,7 +412,7 @@ xfs_ialloc_inode_init(
+ 				xfs_trans_ordered_buf(tp, fbuf);
  			}
+ 		} else {
+-			fbuf->b_flags |= XBF_DONE;
++			xfs_buf_set_uptodate(fbuf);
+ 			xfs_buf_delwri_queue(fbuf, buffer_list);
+ 			xfs_buf_relse(fbuf);
+ 		}
+diff --git a/libxfs/xfs_platform.h b/libxfs/xfs_platform.h
+index 4f4990a20dad..c6787ee4c83c 100644
+--- a/libxfs/xfs_platform.h
++++ b/libxfs/xfs_platform.h
+@@ -314,6 +314,11 @@ xfs_buf_incore(
+ void __xfs_buf_mark_corrupt(struct xfs_buf *bp, xfs_failaddr_t fa);
+ #define xfs_buf_mark_corrupt(bp) __xfs_buf_mark_corrupt((bp), __this_address)
+ 
++static inline void xfs_buf_set_uptodate(struct xfs_buf *bp)
++{
++	/* does nothing, XBF_DONE is not LIBXFS_B_UPTODATE */
++}
++
+ static inline void
+ xfs_buf_readahead(
+ 	struct xfs_buftarg	*target,
 -- 
 2.54.0
 
