@@ -1,44 +1,44 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793275829;
-	b=MH0qp8LMjIqfsmautzzEAvYZQ2pViPWUaSBMLcD67Wjx9cuQk+cd66foUfUvg0qPpoxO
-	 G+79tlav1Bo+k3NbzUgTAuE0GTEwIkTkmjD5OoUVzQSLsewI8gOXiLYwgiO0HrZN2U9c6
-	 ZPh3gfOw2XGJN/QQh6A26RKQbcfzHWOUUXKQBVCXPx0ulAFyNacDBfzXUs2RJ878v1Kjq
-	 oh9zY3PjboRC74NkqLhm5Pc/pPN89z7cUlWdphyY/UKKSKeKCVvXOOTtyzg2hn/99uujq
-	 zl4cev/oOdKHy4Jgihq8MQYE9znsSR2pBJ/eCiPxm3NsaVuCCW31n60ABmi+UQlWCGQ==
+	t=1793275833;
+	b=rCgLAHwmuiABh1H2P22uUPCV+y72OJCL/vhyRmETSkGC8gaZsfT119O/6njRneAjnGFE
+	 1IB7g+m/8EDMP8FTsYxBy6AqxxNHBxW8m1Ry468XAfNB066pG6mKPjlJ3tp1E7nODTgo2
+	 9VzB7dj7DhWFwB6BAKVS2tLKjQ6uHFEHJ/3q2IALGl6Ma26uLFu5DQrW7iRAAZEttMf2v
+	 6atZPZk5avDlDkEuRUSutpsvBncoTiSNdlxcqu6yxfqvORWni9Z0EKe60fW7srJhNhGOo
+	 BR2MTmsEy2eodnDNp7SqaJ9TygjffPWm1sFFBAhl4rfjWE/h8Gufg/ZmQNJhRhAs6FQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793275829;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793275833;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=jCCGn2m3nm9DYnXtdFv3Pyd1fGgOwMTKCBSF96S9lCo=;
-	b=v9XovG/ksQgR+eOWwrqPzw+MZGwcmvqDuqFp0idFgx9sAo9/lQSsF0EIs0dkf1YnGIKM
-	 H7gZ0/4+EzzSYY8Rn50eJ9dyTuSJof8FQko5vDkURiC/nACR4vBJ3WF7jM1GS3F2yoq5/
-	 59LJrd5u3VtrNRzT6SwVKeGQIxrLY8qolDAR8y3B/dAXhcIrDLIakfCL5oGNnYZci1ntS
-	 e/vhQ3tED97RGqKXPhdlbP1z8Cl9gM7R9uHmcJYQnTams59wJms8WDh80DZlI0ZIGBC3L
-	 hyfgbiXp2LQhPgxUnlxeQ3KQt7kID8DnkxL1QZDder0JUH8wXIxQD81tq9fhNvGx/QA==
+	bh=lr9nMqAnounU6voTUYVKVlhcaFmu7qPrtk+99DK3LN0=;
+	b=cwgw940FOJCnnq6e4XX4+ANtD87xNtgGZJKHeBOZ1KoNtLgoJsOFDHhz8xz9Sfr9l6aQ
+	 SWRAIIOKZjFiD1QG2Bp2fQZecrr4bNoF1BFVleXYAAoVknuqRim95SMgJN4R+9EJUgsC0
+	 aGHYiDy3kYgsGb7sLwRqP+U12LwyAVGt/zASKSz/E3qCj7FRiWwWMZ5m6BWXqwTERoeDn
+	 pQAKLEj5Se3BOIAhbTHrBicEcqUnd/8irHnxZ/sTADqeK0HLKZGOHvHzXei1lkW2e/YCF
+	 1C7lZchQwRDTjnCDmigahZNMte59eDskPhxcEE8Xuhf8LnEjq21/E3nPL7QSrL6bVEA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=oN09Vx6U;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=aEgf9cDr;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8F3A606A325
-	for <linux-xfs@vger.kernel.org>; Thu, 29 Oct 2026 12:10:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BA2D606A31A
+	for <linux-xfs@vger.kernel.org>; Thu, 29 Oct 2026 12:10:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=oN09Vx6U
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 972FE1F031E0;
-	Thu, 29 Oct 2026 12:10:24 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=aEgf9cDr
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 100D61F031E6;
+	Thu, 29 Oct 2026 12:10:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793275828;
-	bh=jCCGn2m3nm9DYnXtdFv3Pyd1fGgOwMTKCBSF96S9lCo=;
+	s=k20260515; t=1793275833;
+	bh=lr9nMqAnounU6voTUYVKVlhcaFmu7qPrtk+99DK3LN0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=oN09Vx6UHSA8uNuoKekCyNU7wKtkx1XG00QChK5XMbT2Wb8mnP+Wvn+j0TMRCp84Z
-	 WTYlDM+4pXvND7RSnLnYs00qwl1+CoPpLj6OwMlsDZHBxZ6giphUPo5z4rylgemamW
-	 YUNAh9DFW4BvvTes2U+2dZIHyNBOIVuFqCK3GzT2LGd1B6AR/U5HYlVoRRc6/JKmDu
-	 buPzwhrkidEJBts/SpsRW33CYFZk2iXxSag29AbW/wbMs6SSxAVU8O7nxWrUvm43IH
-	 AV1mPaGQjXclZB67LdPH5ugA96xRCyPQD+qHg7p9IwOW+UIFVo6HA26rjsNAn1CqFR
-	 rKzqHIuJSvB/A==
+	b=aEgf9cDreU0NIEg98ZlfakSmASJrSSrzK0qNwpqAvWSH+MA5HVTEdfi/iu5acKDdq
+	 gaHxUDP+tYzCLDJy9QkABFBfgM6VrZuVvdYo8LLjMIiEaEUrAQC13c4fu9D64sJ6SK
+	 eDy5DCpRhbj2tSoXfGPp+pdeZxJ6DtftFxd0yT6TmUl9JMMMHNv9hGZJCHB8Qj4U63
+	 o8wTrh1xVLauAHBtYiFx8DA33g2EkRLKKArPCE5A6lxOcNBSln9ALYE9VJO9bVBkgs
+	 E2JcM1saWUYWAUiWgp6m8kGN0VveUp2Fu8qMNJhO896MfsUH4J9oi8qAiaXVqVmZDt
+	 km0WCY5M9pjPw==
 From: Andrey Albershteyn <aalbersh@kernel.org>
 To: linux-xfs@vger.kernel.org
 Cc: cem@kernel.org,
@@ -59,9 +59,9 @@ Cc: cem@kernel.org,
 	yun.zhou@windriver.com,
 	zenghongling@kylinos.cn,
 	Javier Tia <javier@peridio.com>
-Subject: [PATCH 15/28] xfs: correct the parent pointer space reservation comment
-Date: Thu, 29 Oct 2026 13:06:12 +0100
-Message-ID: <20261029120631.803074-16-aalbersh@kernel.org>
+Subject: [PATCH 16/28] xfs: initialise args->total for parent pointer updates
+Date: Thu, 29 Oct 2026 13:06:13 +0100
+Message-ID: <20261029120631.803074-17-aalbersh@kernel.org>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20261029120631.803074-1-aalbersh@kernel.org>
 References: <20261029120631.803074-1-aalbersh@kernel.org>
@@ -78,58 +78,75 @@ Content-Transfer-Encoding: 8bit
 
 From: Javier Tia <javier@peridio.com>
 
-Source kernel commit: 6c0fc3cb4e879927b338b4fcb6de6a25c0a67608
+Source kernel commit: 8e4ebb6afaa34bd2e8ce52da231003d24111c2d6
 
-The comment on xfs_parent_calc_space_res() claims parent pointers are
-"always the first attr in an attr tree".  They are not: a parent pointer
-is recorded per dirent, so by the Nth hardlink the attr fork is already
-in leaf or node format.  The reservation is still correct, because
-XFS_DAENTER_SPACE_RES() covers a split at every level of a maximum-depth
-attr dabtree whatever format the fork is in, but anyone auditing a
-shortfall here is led by the comment to look for a bug that is not
-there.
+xfs_parent_da_args_init() builds an xfs_da_args from a zeroed
+xfs_parent_args (kmem_cache_zalloc), leaving args->total == 0.
+xfs_da_grow_inode_int() treats that field as a running block reservation
+and subtracts from it; because it is an xfs_extlen_t (uint32_t), the
+first attr-fork growth wraps it to ~0U.  That defeats the free-space
+check in xfs_alloc_space_available(), and when it coincides with an AG
+that has exactly zero available blocks the allocation is clamped to
+maxlen 0 and returns -ENOSPC, which xfs_defer_finish_noroll() escalates
+to a filesystem shutdown.
 
-Rewrite the comment to state what actually bounds the result, and record
-why the double split allowance and the extent-add term differ from
-xfs_attr_calc_size().
+Set args->total the way the log recovery path does
+(xfs_attri_recover_work(), xfs_attr_item.c:706), in the add and replace
+paths that can grow the fork.  Removals and lookups never grow it, so
+they leave the field alone, matching that switch.
 
+Fixes: b7c62d90c12c ("xfs: parent pointer attribute creation")
 Signed-off-by: Javier Tia <floss@jetm.me>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Carlos Maiolino <cem@kernel.org>
 ---
- libxfs/xfs_trans_space.c | 19 +++++++++++++++++--
- 1 file changed, 17 insertions(+), 2 deletions(-)
+ libxfs/xfs_parent.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-diff --git a/libxfs/xfs_trans_space.c b/libxfs/xfs_trans_space.c
-index 9b8f495c9049..c4cd547033e5 100644
---- a/libxfs/xfs_trans_space.c
-+++ b/libxfs/xfs_trans_space.c
-@@ -22,8 +22,23 @@ xfs_parent_calc_space_res(
- 	unsigned int		namelen)
+diff --git a/libxfs/xfs_parent.c b/libxfs/xfs_parent.c
+index 992263f810f8..0576424ed8f1 100644
+--- a/libxfs/xfs_parent.c
++++ b/libxfs/xfs_parent.c
+@@ -192,7 +192,7 @@ xfs_parent_addname(
+ 	const struct xfs_name	*parent_name,
+ 	struct xfs_inode	*child)
  {
- 	/*
--	 * Parent pointers are always the first attr in an attr tree, and never
--	 * larger than a block
-+	 * A parent pointer is recorded per dirent, so an inode with N links
-+	 * carries N of them and the attr fork can already be in leaf or node
-+	 * format when one is added.  That does not affect the reservation:
-+	 * XFS_DAENTER_SPACE_RES covers a split at every level of a
-+	 * maximum-depth attr dabtree, whatever format the fork is in now.
-+	 *
-+	 * The name is a dirent name and the value is a struct xfs_parent_rec,
-+	 * so the leaf entry is always local and never exceeds 272 bytes.
-+	 * Parent pointers require V5, hence a 1k minimum block size, so the
-+	 * entry always stays under half a block and this needs none of the
-+	 * double split allowance that xfs_attr_calc_size() makes.
-+	 *
-+	 * The second term hands a byte count to a macro whose parameter counts
-+	 * mappings, so it asks for more extent-add allowance than the single
-+	 * mapping a parent pointer adds - how much more depends on the block
-+	 * size.  It over-reserves either way, which is why it is left alone:
-+	 * correcting the unit would shrink a reservation that is only generous.
- 	 */
- 	return XFS_DAENTER_SPACE_RES(mp, XFS_ATTR_FORK) +
- 	       XFS_NEXTENTADD_SPACE_RES(mp, namelen, XFS_ATTR_FORK);
+-	int			error;
++	int			error, local;
+ 
+ 	error = xfs_parent_iread_extents(tp, child);
+ 	if (error)
+@@ -202,6 +202,10 @@ xfs_parent_addname(
+ 	xfs_parent_da_args_init(&ppargs->args, tp, &ppargs->rec, child,
+ 			I_INO(child), parent_name);
+ 
++	/* Growing the attr fork needs a real reservation in args->total. */
++	ppargs->args.total = xfs_attr_calc_size(&ppargs->args, &local);
++	ASSERT(local);
++
+ 	return xfs_attr_setname(&ppargs->args, 0);
+ }
+ 
+@@ -238,7 +242,7 @@ xfs_parent_replacename(
+ 	const struct xfs_name	*new_name,
+ 	struct xfs_inode	*child)
+ {
+-	int			error;
++	int			error, local;
+ 
+ 	error = xfs_parent_iread_extents(tp, child);
+ 	if (error)
+@@ -248,6 +252,10 @@ xfs_parent_replacename(
+ 	xfs_parent_da_args_init(&ppargs->args, tp, &ppargs->rec, child,
+ 			I_INO(child), old_name);
+ 
++	/* Growing the attr fork needs a real reservation in args->total. */
++	ppargs->args.total = xfs_attr_calc_size(&ppargs->args, &local);
++	ASSERT(local);
++
+ 	xfs_inode_to_parent_rec(&ppargs->new_rec, new_dp);
+ 
+ 	ppargs->args.new_name = new_name->name;
 -- 
 2.54.0
 
