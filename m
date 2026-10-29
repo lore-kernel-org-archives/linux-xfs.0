@@ -1,44 +1,44 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793275794;
-	b=SnoYK2Ap7JaxO3DugaOWulfOcig8Q9DuA/GnNlzVMI1sQinEQPsX1+EUJ04G0k6FZWZn
-	 dDnRWKP4z83+g1Uta2Clf+GEYW4iQlaTmdbCGUjT1BvqnxsgsAGYAHUhJu50IrpQuiyL+
-	 +tRod/c9uRV2sMK3hqxKA55leMB3mhlNkVdnwa31oz9vFnc8sOFbvcl09ume/km8ROB6H
-	 /1w1EJ+r/PWzdbQ1Qajh10+ySEYOU7eS0TWwyjUnMCP7r9FWzK1mqmKKs3/CgMBclwCdp
-	 Q2KcVvn2VFCp9QVHCOyGzM17+IQDpYNYlYp7BDH9yyQyxBMl6+FYxbc9lrmjTCUgHCg==
+	t=1793275798;
+	b=DVBFDaE+yS4WRxwLQAJq1rhdzasHzan37DrNBeLPYl8BwUoBLXw/OdbLHMAw59ygyyQC
+	 yYrx3RZLDs6bhBUllAH6z9167XLCTjehnlkMUHGGEweholwu/C6X74eBaKBc4Y0jIrXu8
+	 Q1GKFHrPAw946pGz77s281J2+Ql+y2ImvF8guR9mzjHDvhHoH5Zvrvqr45DAC9hglu1n0
+	 m2cezr2M3mCZHdz4MYs1X9dwbl6VyBUuyQANLDGB5Mz44na/RPxJCseGKTa7BI0E0zDW4
+	 GF1Iu/RkP+PIo6nnYbGPU4R/Qt/QVHZ+rm4gVhx5L3TcPKHGZbmld/K7H0NDz+O3LBA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793275794;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793275798;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=n4/Oy4A7x388fHKkGcLIfHB1LsnPeZeEfoIDDVezIE4=;
-	b=bnPVJA9Mer8MCLLvJ6W2Rp1riUK9k9PKjlfoKGVhTlGhgyevoOZQGydssRWTWqlQhDNp
-	 zaqueQeZotyUvmn5JX83bBR6z9TMWk70BVYgkja8cKgebPWdyZQT4LhSwYLOxp4cVK+pK
-	 1fJqN+kBzt/+8+EJgxo3646yTZCr/dFoXbU3es8rAwKEZ4gI7yqJGJvmbTyas5Lf2Nt2i
-	 79tf46DjJlrEp0czL2kByh/KqXTCVWd0h5OCB8jR7Yc2W/gYVDZ2ZdLgCxd1wC+w8sdpA
-	 R2n8z9UKYOrNOcslX5lSBgArO9OJBSx49PRDqTn8yytVINSGG2Cewb+dRP3eO7fhEug==
+	bh=ep5xvhWczLZZx3IlL2iibxdd0CGO6TxlutNW+n0+Gw0=;
+	b=K0riwFHw1xIqwRz1U9lSNRXsxUXcB3nouG3jJUf/hps5B1u4SVvPpRGgh2iH4hucQdWQ
+	 v+IG8lIqG2w5y+3P++CM4YRPcEhVknz0mlKw87K+W1QpdPabuOWgemZNuy73qea5+/8HD
+	 Hy6sGWcWZhUVnuvuvuDh0ciYtWBBn8BFaVrjIMGGZYXdPWRdEgFLXrNcr2x9s0iwlX7Jf
+	 UHt1wsdsTCZo4ctJ8qvJSGEpbRRypCRhvkibB+7sY5qgyaUry2guKeyohMYW7vXqL0UcV
+	 yd4XNaHGdXD/sCtCbX2HCjL9KBQrgoeXImbO95/1y2lPULeM3Bjk4LAZ8556w9tpzug==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IHCQsv6H;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dg8BAOQP;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D088D606A31A
-	for <linux-xfs@vger.kernel.org>; Thu, 29 Oct 2026 12:09:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 174B3606A31A
+	for <linux-xfs@vger.kernel.org>; Thu, 29 Oct 2026 12:09:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IHCQsv6H
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A44981F01828;
-	Thu, 29 Oct 2026 12:09:49 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dg8BAOQP
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EA29E1F01825;
+	Thu, 29 Oct 2026 12:09:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793275793;
-	bh=n4/Oy4A7x388fHKkGcLIfHB1LsnPeZeEfoIDDVezIE4=;
+	s=k20260515; t=1793275797;
+	bh=ep5xvhWczLZZx3IlL2iibxdd0CGO6TxlutNW+n0+Gw0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=IHCQsv6HHNWgRO9j3s0+MbaZg/nLJKbMnzT0RaVgxKf2hmjUT+1grzq7auhCYU49j
-	 4VUXAqvEz8FChspDdd1+m6iUNNUeOPb0l9JcdUp1OfXDKLaq85MRfCxQuqNDAJIoLw
-	 /ieyCJKEy3f82LBQLL6v30IdZQAEf+gt2HK3A4pYz1ZPH2bV3HU2GVoe8ag2Cgv2+j
-	 Zc4YBR/rlDuTzQZb7kw1nuWspq1dIohZUhYWyeq+fUzAi83Tj/DNGqsmTUajRcarkI
-	 DO+IkeBlv1zCRU5yGRIOEDxBslPhkZ7V3LqrDKwob0Ht5zdpe6b1fFmrHbIzgr1kEe
-	 p1ecH6HG1f7CA==
+	b=dg8BAOQP+9iHH+rRUJF//0MX0agdLtMHtvhg71vVrKOMSZi/wfPxi0dRQZL9FLjtI
+	 f5HfkKIw/HCNnKhi2Jsomz9iowjHIBexkMoMXX1wuMZkaVzwoPqfmMjU4lQ3gpZbf3
+	 IjXuaOVTU2f6EASHJQ0X50178TEt4inJRpI6r7GPB6j8FbvZQHRZP1YVU+XLssDqEv
+	 rQP8e1sS7B+q02TdnsAT3X7OvgYROq4QrOUvpasEgvCmm3jnBFZOqzNuU2ql9GRnka
+	 eYtkVUMJ9aTYqix8FMg+akPmGm/UslfUFDvC/U7skImHZNTN624HxUkBt8gbuSvv6F
+	 FAKQWf6G7kK5A==
 From: Andrey Albershteyn <aalbersh@kernel.org>
 To: linux-xfs@vger.kernel.org
 Cc: cem@kernel.org,
@@ -58,9 +58,9 @@ Cc: cem@kernel.org,
 	yijiangshan@kylinos.cn,
 	yun.zhou@windriver.com,
 	zenghongling@kylinos.cn
-Subject: [PATCH 07/28] xfs: hide b_flags manipulation from code outside of xfs_buf.c
-Date: Thu, 29 Oct 2026 13:06:04 +0100
-Message-ID: <20261029120631.803074-8-aalbersh@kernel.org>
+Subject: [PATCH 08/28] xfs: validate attr entry pointer before field access
+Date: Thu, 29 Oct 2026 13:06:05 +0100
+Message-ID: <20261029120631.803074-9-aalbersh@kernel.org>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20261029120631.803074-1-aalbersh@kernel.org>
 References: <20261029120631.803074-1-aalbersh@kernel.org>
@@ -75,70 +75,61 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Christoph Hellwig <hch@lst.de>
+From: Hongling Zeng <zenghongling@kylinos.cn>
 
-Source kernel commit: 9f224de410d7efafc44ce1880aabd0101aa8688f
+Source kernel commit: b7eea80be25f3334f131d52982b3131aba77b97d
 
-Add helpers for the remaining buffer flags manipulation not done in the
-core buffer cache code.
+xfs_attr3_leaf_verify_entry() accesses lentry/rentry fields (namelen,
+valuelen) before checking if the entry pointer itself is within bounds.
+If nameidx is crafted to point near the end of the buffer, these field
+accesses can read out-of-bounds before the bounds check at
+name_end > buf_end is performed.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Add explicit bounds checks for entry pointers before accessing their
+fields. Use offsetof() to check that the start of the flexible array
+member (nameval/name) is within bounds, which ensures all preceding
+fields are safe to access.
+
+Fixes: c84760659dcf2 ("xfs: check attribute leaf block structure")
+Signed-off-by: Hongling Zeng <zenghongling@kylinos.cn>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Carlos Maiolino <cem@kernel.org>
 ---
- libxfs/xfs_btree_staging.c | 7 +++----
- libxfs/xfs_ialloc.c        | 2 +-
- libxfs/xfs_platform.h      | 5 +++++
- 3 files changed, 9 insertions(+), 5 deletions(-)
+ libxfs/xfs_attr_leaf.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-diff --git a/libxfs/xfs_btree_staging.c b/libxfs/xfs_btree_staging.c
-index c3c7ea54895a..7314dab4bcfb 100644
---- a/libxfs/xfs_btree_staging.c
-+++ b/libxfs/xfs_btree_staging.c
-@@ -248,11 +248,10 @@ xfs_btree_bload_drop_buf(
- 		return 0;
- 
- 	/*
--	 * Mark this buffer XBF_DONE (i.e. uptodate) so that a subsequent
--	 * xfs_buf_read will not pointlessly reread the contents from the disk.
-+	 * Mark this buffer uptodate so that a subsequent xfs_buf_read will
-+	 * not pointlessly reread the contents from the disk.
+diff --git a/libxfs/xfs_attr_leaf.c b/libxfs/xfs_attr_leaf.c
+index 86c5c09a5db4..b6288395f853 100644
+--- a/libxfs/xfs_attr_leaf.c
++++ b/libxfs/xfs_attr_leaf.c
+@@ -325,6 +325,13 @@ xfs_attr3_leaf_verify_entry(
  	 */
--	bp->b_flags |= XBF_DONE;
--
-+	xfs_buf_set_uptodate(bp);
- 	xfs_buf_delwri_queue_here(bp, buffers_list);
- 	xfs_buf_relse(bp);
- 	*bpp = NULL;
-diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
-index a064289e1634..912b796bf5b6 100644
---- a/libxfs/xfs_ialloc.c
-+++ b/libxfs/xfs_ialloc.c
-@@ -412,7 +412,7 @@ xfs_ialloc_inode_init(
- 				xfs_trans_ordered_buf(tp, fbuf);
- 			}
- 		} else {
--			fbuf->b_flags |= XBF_DONE;
-+			xfs_buf_set_uptodate(fbuf);
- 			xfs_buf_delwri_queue(fbuf, buffer_list);
- 			xfs_buf_relse(fbuf);
- 		}
-diff --git a/libxfs/xfs_platform.h b/libxfs/xfs_platform.h
-index 4f4990a20dad..c6787ee4c83c 100644
---- a/libxfs/xfs_platform.h
-+++ b/libxfs/xfs_platform.h
-@@ -314,6 +314,11 @@ xfs_buf_incore(
- void __xfs_buf_mark_corrupt(struct xfs_buf *bp, xfs_failaddr_t fa);
- #define xfs_buf_mark_corrupt(bp) __xfs_buf_mark_corrupt((bp), __this_address)
- 
-+static inline void xfs_buf_set_uptodate(struct xfs_buf *bp)
-+{
-+	/* does nothing, XBF_DONE is not LIBXFS_B_UPTODATE */
-+}
+ 	if (ent->flags & XFS_ATTR_LOCAL) {
+ 		lentry = xfs_attr3_leaf_name_local(leaf, idx);
 +
- static inline void
- xfs_buf_readahead(
- 	struct xfs_buftarg	*target,
++		/* Validate lentry pointer is within bounds before field access */
++		if ((char *)lentry >= buf_end)
++			return __this_address;
++		if ((char *)lentry + offsetof(struct xfs_attr_leaf_name_local, nameval) > buf_end)
++			return __this_address;
++
+ 		namesize = xfs_attr_leaf_entsize_local(lentry->namelen,
+ 				be16_to_cpu(lentry->valuelen));
+ 		name_end = (char *)lentry + namesize;
+@@ -332,6 +339,13 @@ xfs_attr3_leaf_verify_entry(
+ 			return __this_address;
+ 	} else {
+ 		rentry = xfs_attr3_leaf_name_remote(leaf, idx);
++
++		/* Validate rentry pointer is within bounds before field access */
++		if ((char *)rentry >= buf_end)
++			return __this_address;
++		if ((char *)rentry + offsetof(struct xfs_attr_leaf_name_remote, name) > buf_end)
++			return __this_address;
++
+ 		namesize = xfs_attr_leaf_entsize_remote(rentry->namelen);
+ 		name_end = (char *)rentry + namesize;
+ 		if (rentry->namelen == 0)
 -- 
 2.54.0
 
