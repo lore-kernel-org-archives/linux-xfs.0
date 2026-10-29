@@ -1,48 +1,49 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793290174;
-	b=JxpwqXAwb/xFOpdM0X2wHhnfHHahIOd0gf0iGEEejNUFrhnuAxClJAoOhq37iEmhHkxO
-	 BE9rmlLftW5zvFRhSuF1dj79EhPL2+1ShFHES9D4Tqx8Ob7VCb9geR8BHBSvck1SQoHDi
-	 dXdDPFdL+jslnyjTh26aXhT4E+zWsMh6e7cq9Rpk1Rw5bUF3caJp1t2/ob2fOG9p2c3kH
-	 cTn8mSnXH5J/UpI/THuWQrr3s4/2nqzTXNCccWmwHAnJFxMzL4nsBibts5niIo1Qp1sMQ
-	 554px3b+1+oc2uBqLdC24y/jRG0n16QayheSuf8xuALCyVt7nSZfNA9SaLjXRzBWRvw==
+	t=1793290169;
+	b=mXo5f0zBjZjzU1hCXrpAQYVn2XQg4VIYXud2Rmh2OosTML8Q8SiEY3rn/tIrt0/eueZ+
+	 uML3ga0C4C/TfA5TQO7AhFolOKVQYC3QIKWCYNKBT5NgU1iawpZycdpK1YdtqqZE7zgDR
+	 a9FwlqkOeYqG8TclWcDq1lMzXQ9FdBUQpKAnTX9tno2XqiAzotHnqMgJY6gBbAg/SOYd6
+	 z88KcCkqPf3nEPdnUhANlrk/ZMAhca/cHACRJRC856Vr0UbUYdvi5F9kGxZyY3FPV/o5W
+	 XUCV5waOq66lQeWFcsGyys9LMnd4jHsPjF73F/365fWHQqnaRB+JBQncUKayKRLM6VA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793290174;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793290169;
 	h=Received:DKIM-Signature:From:Date:Subject:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
 	 X-Mailer:X-Developer-Signature:X-Developer-Key;
-	bh=5Pp7M5kHXjNf3+1q9VkVlIi5dRXg3Q7oc/xEP3VOCsw=;
-	b=Bk3ik1kAyySxFz6i2ZRTZ6UkbjttGjHbgFgpgiOd1iceJqOY3RoXrf8OVDmVbAD0Ux1f
-	 y/WHwgAeGKB0fLP7wfCFza+SqXCEb5pv9Ze6pUPZe15qfBpyLWvTQ5dX7cu1Y2IMcuO+5
-	 OUnNagR5oZO3pE0OlfXRB9w7pPHGRyPbZtNVP2uPJmovt7HbdAKT0czsOGuVCYF3ZRiUS
-	 BTlAOq/4J8ZXI6R7wvW1rs52l7Xy5whsJRmL7N0kTocv5B1W2QJxdYmyo6pKjq4/eCNZH
-	 i0nYJWPNCD/e18QVcqUz9T59IfFGFF4hLdtVSAohn9LzEvIwnYRMHVUDSn0pA5fBblA==
+	bh=tghqoO8dgKkXNrANwBfbEQhOH6ptXpRkG83I7JeJUiM=;
+	b=AZoF3pkwQLoeNtuxDvh2oLCDNQU7e3ZWzMWihU04EurlSvMf/4u1ZC/3xy90Mtse+inP
+	 K59orDAokSSHRy/G+jjr4oWZUQ8BAfaIWj87InAhzwFcXDACK0KPXNTU80pDoUNWsz1uq
+	 N3AMt2IZVibSOw9xSciJdkEW/M5rFnsEwh1GIk4aEUpQUUIQGdbotrdkKIdl7OJbBoOeh
+	 P1LTQw3yj5xVCnKPbRy2do7vSsLZsEXrRMTgFHxIjHhKUdSyYotEQ8ePldVZA5Ey4x33+
+	 +xfD/BzeVKPBJa0xDlsrS3AQzq4PvjrjWKq+TE1V7rJQbqwrU+T+fepvavvYMWWVKQg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=LBGAP223;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=StoUJS5a;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C41D7606A337;
-	Thu, 29 Oct 2026 16:09:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=LBGAP223
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BDFD41F01825;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 697A6606E009;
 	Thu, 29 Oct 2026 16:09:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=StoUJS5a
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3057E1F031E5;
+	Thu, 29 Oct 2026 16:09:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793290173;
-	bh=5Pp7M5kHXjNf3+1q9VkVlIi5dRXg3Q7oc/xEP3VOCsw=;
+	s=k20260515; t=1793290169;
+	bh=tghqoO8dgKkXNrANwBfbEQhOH6ptXpRkG83I7JeJUiM=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=LBGAP2234hdWhTWmkiwtcNBNLZv3kdKW7A12H240APspISuOw8K0/DrAk7cojALfy
-	 eCHxkuc1RjFeg9gL9Niid947L2sIZw0O1vp4xM3WSlJ/cIZ+6GJwJzAmYhb1pUSigM
-	 elffXST2g2mTJoisTvyydqNgN1fAMiS9HWcTtk4UGR/v1R9ojlbwgaxL0cJDVDkGH9
-	 fLOAD9/SI1nCadBee7QduMMaKKYC16TUXwXDzVE2+RpABZBbICCzAn71NbYDalAJBA
-	 xiIoaKYRb9NGzWeBGBwaNy4g1sVrHEexNQhZrmOdcjHIG9gTW2Z0Jjt2hJygAQl/kT
-	 0cCHArmLVPfmA==
+	b=StoUJS5aez/Dy/p0iLnpmzYRskJI6njG4RHriV4VKwHnEmSuoJpr7bf64RKmoL5kZ
+	 LpYsoz5f1fhAS24bkRrkWLnYofAnj8P0THUafKWW7RafHWI2dCVm0A2NrfftU/4EJ4
+	 W/a36jiBtQyLdmCJJlDckE5uFA4+djxGxtfNu5HW0DKMCMXrP35nweWjwITAu2twm8
+	 Ar8Ozhlu/wg5Jvnl8D2aAP4Pdl8NzfwCxb/DsbUJOTYcGiyhF6CGbKIGj15TD3X0LQ
+	 JCblZ8bW5R4fvo7BPU3E1I+l8B02IQOsLnwajPji0+DPvdymSCKmpGwsKnw6kjCi+2
+	 J8bcUPJXeTwdA==
 From: Christian Brauner <brauner@kernel.org>
-Date: Thu, 29 Oct 2026 17:07:22 +0100
-Subject: [PATCH v2 31/34] ext4: use the generic emergency read-only state
+Date: Thu, 29 Oct 2026 17:07:21 +0100
+Subject: [PATCH v2 30/34] ext4: allow remounting read-only in the emergency
+ state
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -54,7 +55,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261029-work-fs-sb_rdonly-v2-31-2f44f64f0b66@kernel.org>
+Message-Id: <20261029-work-fs-sb_rdonly-v2-30-2f44f64f0b66@kernel.org>
 References: <20261029-work-fs-sb_rdonly-v2-0-2f44f64f0b66@kernel.org>
 In-Reply-To: <20261029-work-fs-sb_rdonly-v2-0-2f44f64f0b66@kernel.org>
 To: linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.com>
@@ -65,41 +66,80 @@ Cc: Al Viro <viro@zeniv.linux.org.uk>, ecryptfs@vger.kernel.org,
  linux-btrfs@vger.kernel.org, gfs2@lists.linux.dev, 
  linux-efi@vger.kernel.org, linux-mtd@lists.infradead.org, 
  linux-xfs@vger.kernel.org, 
- "Christian Brauner (Amutable)" <brauner@kernel.org>
+ "Christian Brauner (Amutable)" <brauner@kernel.org>, stable@vger.kernel.org, 
+ Jan Kara <jack@suse.cz>
 X-Mailer: b4 0.17-dev-ce4c1
-X-Developer-Signature: v=1; a=openpgp-sha256; l=980; i=brauner@kernel.org;
- h=from:subject:message-id; bh=QT9bEmgMx7HOZfltPAgtswWtwVjCWwJIOMw37FP7ctQ=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWQ9zjeY/8T6pH+S+Yw5W3oCW1aZtRdPydBI8eCT75jgs
- r9D4FRARykLgxgXg6yYIotDu0m43HKeis1GmRowc1iZQIYwcHEKwET8kxkZDm07O8G75MpxzcAF
- s/+9sTCSZFr/8Vf0/KXT3zcKLp8yg53hf0Dn32fFXMe3rvnJUbozJu2VU4WVc/3d0K9vLs7e8dD
- mBxcA
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2356; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=ti3vaFeq1wr2J3gmGLEbz9S2kgER+gU7DSPKbKEcJIw=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWQ9zjf41qx6p3hhZPmz/Xlf/a8WR073X8O4NyFMf+t+I
+ fspOo5HO0pZGMS4GGTFFFkc2k3C5ZbzVGw2ytSAmcPKBDKEgYtTACbCa8vIcHxmS8CnWPEZp67N
+ 5q6/bvdVvq+uhv25WeeDk0V1PSeXvgeqyC7PmRFnnz+z9ejFH64Pv2xW9n99ZfOORsPiqZ2ThaV
+ 5AQ==
 X-Developer-Key: i=brauner@kernel.org; a=openpgp;
  fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-Set SB_STATE_EMERGENCY_RO next to EXT4_FLAGS_EMERGENCY_RO when an error
-makes the filesystem read-only. The VFS then refuses modifications
-before they reach ext4 and reports the superblock as read-only like it
-did when ext4 still set SB_RDONLY. The shutdown state stays ext4's own
-and so do all of ext4's checks because they cover both states. ext4
-keeps showing "emergency_ro" in its mount options.
+__ext4_remount() refuses any change of the read-only state with EROFS
+while ext4_emergency_state() is set, i.e. after a shutdown or an error.
+Neither sets SB_RDONLY anymore, so a remount to read-only fails and the
+filesystem stays read-write. Emergency remount (sysrq u) asks with
+SB_FORCE and reconfigure_super() WARNs, a panic with panic_on_warn:
 
+  forced remount of a ext4 fs returned -30
+
+Becoming read-only doesn't need to write anything. So allow it and skip
+everything in that branch that would touch the disk: sync_filesystem(),
+dquot_suspend(), the s_state update, ext4_mark_recovery_complete() and
+the superblock commit without a journal. Going read-write is still
+refused.
+
+Note that ext4_emergency_state() only exists since v6.15. Older stable
+trees need ext4_forced_shutdown() instead.
+
+Fixes: 95257987a638 ("ext4: drop EXT4_MF_FS_ABORTED flag")
+Fixes: d3476f3dad4a ("ext4: don't set SB_RDONLY after filesystem errors")
+Cc: stable@vger.kernel.org
+Reviewed-by: Jan Kara <jack@suse.cz>
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- fs/ext4/super.c | 1 +
- 1 file changed, 1 insertion(+)
+ fs/ext4/super.c | 18 ++++++++++++------
+ 1 file changed, 12 insertions(+), 6 deletions(-)
 
 diff --git a/fs/ext4/super.c b/fs/ext4/super.c
-index ae5ba6823c01..afbdbb607b14 100644
+index 9cae52471dee..ae5ba6823c01 100644
 --- a/fs/ext4/super.c
 +++ b/fs/ext4/super.c
-@@ -757,6 +757,7 @@ static void ext4_handle_error(struct super_block *sb, bool force_ro, int error,
- 	 * and other problems.
- 	 */
- 	set_bit(EXT4_FLAGS_EMERGENCY_RO, &EXT4_SB(sb)->s_ext4_flags);
-+	sb_set_emergency_ro(sb);
- }
+@@ -6761,11 +6761,16 @@ static int __ext4_remount(struct fs_context *fc, struct super_block *sb)
  
- static void update_super_work(struct work_struct *work)
+ 	if ((bool)(fc->sb_flags & SB_RDONLY) != sb_rdonly(sb)) {
+ 		if (ext4_emergency_state(sb)) {
+-			err = -EROFS;
+-			goto restore_opts;
+-		}
+-
+-		if (fc->sb_flags & SB_RDONLY) {
++			/*
++			 * Going read-only must work for emergency remount
++			 * (sysrq u) but nothing may be written, just flip it.
++			 */
++			if (!(fc->sb_flags & SB_RDONLY)) {
++				err = -EROFS;
++				goto restore_opts;
++			}
++			sb->s_flags |= SB_RDONLY;
++		} else if (fc->sb_flags & SB_RDONLY) {
+ 			err = sync_filesystem(sb);
+ 			if (err < 0)
+ 				goto restore_opts;
+@@ -6876,7 +6881,8 @@ static int __ext4_remount(struct fs_context *fc, struct super_block *sb)
+ 			goto restore_opts;
+ 	}
+ 
+-	if (sbi->s_journal == NULL && !(old_sb_flags & SB_RDONLY)) {
++	if (sbi->s_journal == NULL && !(old_sb_flags & SB_RDONLY) &&
++	    !ext4_emergency_state(sb)) {
+ 		err = ext4_commit_super(sb);
+ 		if (err)
+ 			goto restore_opts;
 
 -- 
 2.53.0
