@@ -1,48 +1,49 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793290085;
-	b=aZaFNkgGS2JIn6hTZ+nTG25xAs7ub0NjLFfbb3i8SkhjAZr/TaVOsyA141QlEsBEbD+y
-	 aF2UiGNWXebHFpcWlseLaCJtgSLYADbAWBOia9gv+aZ+SptA4B4HH5vHme1BqLSs9baxF
-	 R2kTKMO90SPwejySfpabO7WWflMKFUfYt7gsSOSPdphMpRL+ixaG57teCcA1lTS8l0Mej
-	 Lz/MIqDlgWRRJl90mPFOW9V9KD/Jv5l3Zgvf5kaTPTfXQVaKI9yYI/9tjtUnSGmNYZoYd
-	 E5Gv5mQjFAuXj9f79+DGTfW7UbqsZwGmFKBBKyFK6ORMJOcxZvVClEVVj6CRT+Q1ZWA==
+	t=1793290098;
+	b=U24GrwWfoAj1eKZR2cOD9gc9CMo8vKcNXbojvyX62wRspLrqPHes05xe3brtmpagajXW
+	 pM9ftT36z7UU0dVfyNUCgZm8ykuf1S3oxSS9fmDqiUjagzSW4cWV6HhNNzJZVNU/hLAMx
+	 uJcUEvG7KGSAoFg2I40OamknGZ/dbTfMZVW8oC4VMlcmnv7QBUkb60aw1WSk/niYXkLYl
+	 bgLMmvbOYeDPjAkR6UcP0a4A0oF22FEPI+0tx24rYPRiH9LxSs6KkQdZzNRPlS4MzTUcO
+	 CMhz6Pe7SLj/6kPWrN/eb1/nBpu54tYN1Ds66ZlqDWqOWEOsM0b+Ke5SpVFZkcrjbcA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793290085;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793290098;
 	h=Received:DKIM-Signature:From:Date:Subject:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
 	 X-Mailer:X-Developer-Signature:X-Developer-Key;
-	bh=Ld8tK5M3ket5fFNNR85Z6vJpytIJnb6SUdsH7qSK2pc=;
-	b=cdc/KNx29U/eUiZi6lR30extl69TtmKkYS0o5SCGaa7TN0N4tjc6gTB0Jr5qNCq4oXkG
-	 7MUx8YVheiJ9PWtBkz0IiXtIq+MFW+43sTyeU0OYiWwTuDLriUIAvcfKWLdK1Gln790KH
-	 RZmIJ8OkGWHgN1B3ViizUF2saAtH9ABJ4zmPYLs8WgiKhhNy7v7HXLRNKblbs/vCq7vh3
-	 Jd7zwN1ysqWWHOrJz4kMh9wGLj9NgQeo/PqWOymb4YhlhKl8CmpDgr4Gzz/3gpwvuwrN9
-	 exHm7kvuP+25hhMuySTHXI7ut2FPrHWfyijyhiAjcdmYsw/s09kP4z6viz+Myjj6SBw==
+	bh=iVtfPcXJU1Dl8ABOoiDUG8I8knzlj5kyhgqCw7tVF5M=;
+	b=hhXAv6BtBmwaHVpJ0SIw+BN5ULvmFtvkfduDGZdL9fwAhYQkmdck1X6NkX5Hq/AwTrBU
+	 /FWWErDnrFT3aUKVgX7mF72OnJi1MaEzDr7+Wf70l0y6NPR7AC9Li0hjf08Y+5DUfgKBO
+	 bDaQPvpBaSy/o1ZKbkXBO8ODqO0CzaiCN9ePnqOoSbwOn96/P2Z58BbjvnDZ5yi0zHx2Z
+	 bnFfrd2+5u8+vrCZTVbxra6lnLdKNkIaxRlNsxedghw4Z007U6OC6UriWgczti5xJbDSQ
+	 1Ei9hrzinwAAZyBwXgxzf2nT2mtOYwQf6uue2uut1BbFlIH02whrDvSceqp7HQ994fA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=FlJul7Vs;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SaNj3haK;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CBB8606A31D;
-	Thu, 29 Oct 2026 16:08:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FD70606A31A;
+	Thu, 29 Oct 2026 16:08:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=FlJul7Vs
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4BEC1F01826;
-	Thu, 29 Oct 2026 16:08:00 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SaNj3haK
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A20F91F01816;
+	Thu, 29 Oct 2026 16:08:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793290084;
-	bh=Ld8tK5M3ket5fFNNR85Z6vJpytIJnb6SUdsH7qSK2pc=;
+	s=k20260515; t=1793290097;
+	bh=iVtfPcXJU1Dl8ABOoiDUG8I8knzlj5kyhgqCw7tVF5M=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=FlJul7Vsdpn3n5A2HEqFsf/yVzUNEuowhdfB/IkGNzGZzl9akfrpY/E1BY9MANWoC
-	 6NTg+QQB7hEf317fcdHpECmonUmtIf/Kk/6tbiSridFhxUmx+ykizzqv843eY8TuCy
-	 sfA/OHVqFal6LvPuk/flXur/QzCN8rAW7qyT/m5ruF2p1Rgaw/x4C0ADkhauzDccDS
-	 UaSS9p8/N2zr27gWAz9/BurwyH6xuA9eyamYTNN+giQXuZWHs7A7p86RQYUsJY9kGG
-	 wAgrrs6byWUpu73Yiqf659jW89OaTl9O2n3fdlLAc6Q+dSDPCHkD7ZRWlQwVoRUuhu
-	 G59QTXC4RR7gQ==
+	b=SaNj3haKjPhS0EV5du9JfwoaG8Rin7tmXFLxPOygnrJjfpOEMsH1kKI3PDQ5XrA31
+	 elsbGH2JC31Wkk9r2juQXQaMil6mGer0JYCXeGnlS7/hHIbTjXtNGAiTEsULpLJxMu
+	 x7YJWpentI1ho5FrGAqj77ZuQkE0HOtBSPBH+2h5Sw/HmrQ7Qr5Z3mw2MkbbdT1YeW
+	 C4YSP8lYmdEQ5tm4M6lVTrBxeZPwia5DPaoZf9AuXRGXTJe+LAly8bh0nCkCaJXpRy
+	 gtiqGKF122MQYR1+vHibsjYN3LXS6PReB5hM7+APMQef/PKfJbmCFxtyQT0H0voNLH
+	 HSOMgvztVLvIA==
 From: Christian Brauner <brauner@kernel.org>
-Date: Thu, 29 Oct 2026 17:07:01 +0100
-Subject: [PATCH v2 10/34] exfat: use the generic emergency read-only state
+Date: Thu, 29 Oct 2026 17:07:04 +0100
+Subject: [PATCH v2 13/34] hfsplus: don't set SB_RDONLY when creating the
+ attributes tree
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -54,7 +55,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261029-work-fs-sb_rdonly-v2-10-2f44f64f0b66@kernel.org>
+Message-Id: <20261029-work-fs-sb_rdonly-v2-13-2f44f64f0b66@kernel.org>
 References: <20261029-work-fs-sb_rdonly-v2-0-2f44f64f0b66@kernel.org>
 In-Reply-To: <20261029-work-fs-sb_rdonly-v2-0-2f44f64f0b66@kernel.org>
 To: linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.com>
@@ -65,114 +66,133 @@ Cc: Al Viro <viro@zeniv.linux.org.uk>, ecryptfs@vger.kernel.org,
  linux-btrfs@vger.kernel.org, gfs2@lists.linux.dev, 
  linux-efi@vger.kernel.org, linux-mtd@lists.infradead.org, 
  linux-xfs@vger.kernel.org, 
- "Christian Brauner (Amutable)" <brauner@kernel.org>
+ "Christian Brauner (Amutable)" <brauner@kernel.org>, 
+ Viacheslav Dubeyko <slava@dubeyko.com>
 X-Mailer: b4 0.17-dev-ce4c1
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3494; i=brauner@kernel.org;
- h=from:subject:message-id; bh=+iq+q4dT/MCyRISfgOR900E8oovb/RAJIKa4lXXMNr4=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWQ9zteXPaXoqaoVKrP4YPZcRucr4T3c76ftE0485Kb+z
- fBoifKkjlIWBjEuBlkxRRaHdpNwueU8FZuNMjVg5rAygQxh4OIUgIlc3Mnwv5rhTJ3850P/t7a+
- Lnq0NK15yae5L6PLle12WXsHpjzXYWRkaAmuLxDMuysxn7XGalb80QfX38+02/h9zzLVMr/E1Sz
- GLAA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=4282; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=ceXsregJOQeiQPf6PAYWpIExvMexFMwQYxKrBcvN4/M=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWQ9ztf/G9F4fqpwKhPTyquti1c/aoie/mDt5qzJk/o3n
+ OiRrDI53VHKwiDGxSArpsji0G4SLrecp2KzUaYGzBxWJpAhDFycAjCRNWcY/ofueNnGaSAsE9ow
+ Q/pZjtOVzvKr4cfmvV425Zn10Rk6T2sYGR4lKM17/HbTJjHHb7e8RaenbuR6nMZutGfxEYddod2
+ vjJkA
 X-Developer-Key: i=brauner@kernel.org; a=openpgp;
  fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-Set SB_STATE_EMERGENCY_RO instead of a private bit when an error makes
-the filesystem read-only. exfat_emergency_state() keeps telling a
-shutdown (EIO) and the emergency state (EROFS) apart so none of its
-callers change. The VFS refuses the remount to read-write now so exfat
-doesn't have to, and /proc/mounts shows the filesystem read-only again.
+hfs_btree_open() sets SB_RDONLY when the map record of a b-tree doesn't
+mark the header node as used. That's fine while mounting. But
+hfsplus_create_attributes_file() calls it too when the first extended
+attribute is set on a filesystem that has no attributes file yet. That
+runs on the live filesystem without s_umount and a filesystem must not
+change SB_RDONLY behind the VFS' back.
 
+hfsplus_create_attributes_file() opens a tree it has just created itself
+with the header node marked as used, so there's nothing to check there.
+Move the check into hfsplus_fill_super() and do it for every tree it
+opens. No functional changes.
+
+Suggested-by: Viacheslav Dubeyko <slava@dubeyko.com>
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- fs/exfat/exfat_fs.h | 13 ++-----------
- fs/exfat/misc.c     |  6 ++----
- fs/exfat/super.c    |  7 +------
- 3 files changed, 5 insertions(+), 21 deletions(-)
+ fs/hfsplus/btree.c      | 42 ++++++++++++++++++++++++++++--------------
+ fs/hfsplus/hfsplus_fs.h |  1 +
+ fs/hfsplus/super.c      |  5 +++++
+ 3 files changed, 34 insertions(+), 14 deletions(-)
 
-diff --git a/fs/exfat/exfat_fs.h b/fs/exfat/exfat_fs.h
-index c0e712d9083a..ac138f111988 100644
---- a/fs/exfat/exfat_fs.h
-+++ b/fs/exfat/exfat_fs.h
-@@ -123,7 +123,6 @@ enum {
+diff --git a/fs/hfsplus/btree.c b/fs/hfsplus/btree.c
+index bd4dbdbc8f98..4a67569050e3 100644
+--- a/fs/hfsplus/btree.c
++++ b/fs/hfsplus/btree.c
+@@ -270,7 +270,6 @@ struct hfs_btree *hfs_btree_open(struct super_block *sb, u32 id)
+ 	struct hfs_btree *tree;
+ 	struct hfs_btree_header_rec *head;
+ 	struct address_space *mapping;
+-	struct hfs_bnode *node;
+ 	struct inode *inode;
+ 	struct page *page;
+ 	unsigned int size;
+@@ -381,19 +380,6 @@ struct hfs_btree *hfs_btree_open(struct super_block *sb, u32 id)
+ 	kunmap_local(head);
+ 	put_page(page);
  
- /* Superblock flags */
- #define EXFAT_FLAGS_SHUTDOWN	1
--#define EXFAT_FLAGS_EMERGENCY_RO	2	/* read-only after an error */
- 
- struct exfat_dentry_namebuf {
- 	char *lfn;
-@@ -376,20 +375,12 @@ static inline int exfat_forced_shutdown(struct super_block *sb)
- 	return test_bit(EXFAT_FLAGS_SHUTDOWN, &EXFAT_SB(sb)->s_exfat_flags);
- }
- 
--static inline int exfat_emergency_ro(struct super_block *sb)
--{
--	return test_bit(EXFAT_FLAGS_EMERGENCY_RO, &EXFAT_SB(sb)->s_exfat_flags);
--}
+-	node = hfs_bnode_find(tree, HFSPLUS_TREE_HEAD);
+-	if (IS_ERR(node))
+-		goto free_inode;
 -
--/*
-- * Modifications are refused after a forced shutdown (-EIO) and after an error
-- * with errors=remount-ro (-EROFS).
-- */
-+/* -EIO after a forced shutdown, -EROFS after an error with errors=remount-ro */
- static inline int exfat_emergency_state(struct super_block *sb)
- {
- 	if (unlikely(exfat_forced_shutdown(sb)))
- 		return -EIO;
--	if (unlikely(exfat_emergency_ro(sb)))
-+	if (unlikely(sb_emergency_ro(sb)))
- 		return -EROFS;
- 	return 0;
- }
-diff --git a/fs/exfat/misc.c b/fs/exfat/misc.c
-index 56dcb93ce69e..03c5c2b9a65e 100644
---- a/fs/exfat/misc.c
-+++ b/fs/exfat/misc.c
-@@ -25,8 +25,7 @@
-  */
- void __exfat_fs_error(struct super_block *sb, int report, const char *fmt, ...)
- {
--	struct exfat_sb_info *sbi = EXFAT_SB(sb);
--	struct exfat_mount_options *opts = &sbi->options;
-+	struct exfat_mount_options *opts = &EXFAT_SB(sb)->options;
- 	va_list args;
- 	struct va_format vaf;
+-	if (!hfs_bmap_test_bit(node, 0)) {
+-		pr_warn("(%s): %s (cnid 0x%x) map record invalid or bitmap corruption detected, forcing read-only.\n",
+-				sb->s_id, hfs_btree_name(id), id);
+-		pr_warn("Run fsck.hfsplus to repair.\n");
+-		sb->s_flags |= SB_RDONLY;
+-	}
+-
+-	hfs_bnode_put(node);
+-
+ 	return tree;
  
-@@ -49,8 +48,7 @@ void __exfat_fs_error(struct super_block *sb, int report, const char *fmt, ...)
- 		 */
- 		if (!(sb->s_flags & SB_BORN))
- 			sb->s_flags |= SB_RDONLY;
--		else if (test_and_set_bit(EXFAT_FLAGS_EMERGENCY_RO,
--					  &sbi->s_exfat_flags))
-+		else if (!sb_set_emergency_ro(sb))
- 			return;
- 		exfat_err(sb, "Filesystem has been set read-only");
+  fail_page:
+@@ -407,6 +393,34 @@ struct hfs_btree *hfs_btree_open(struct super_block *sb, u32 id)
+ 	return NULL;
+ }
+ 
++/*
++ * Check the map record of a b-tree at mount. hfs_btree_open() can't do it
++ * because hfsplus_create_attributes_file() calls it on the live filesystem
++ * where SB_RDONLY must not be set.
++ */
++int hfsplus_btree_check_map(struct hfs_btree *tree)
++{
++	struct super_block *sb = tree->sb;
++	struct hfs_bnode *node;
++
++	node = hfs_bnode_find(tree, HFSPLUS_TREE_HEAD);
++	if (IS_ERR(node)) {
++		pr_err("failed to load %s header node\n",
++		       hfs_btree_name(tree->cnid));
++		return PTR_ERR(node);
++	}
++
++	if (!hfs_bmap_test_bit(node, 0)) {
++		pr_warn("(%s): %s (cnid 0x%x) map record invalid or bitmap corruption detected, forcing read-only.\n",
++				sb->s_id, hfs_btree_name(tree->cnid), tree->cnid);
++		pr_warn("Run fsck.hfsplus to repair.\n");
++		sb->s_flags |= SB_RDONLY;
++	}
++
++	hfs_bnode_put(node);
++	return 0;
++}
++
+ /* Release resources used by a btree */
+ void hfs_btree_close(struct hfs_btree *tree)
+ {
+diff --git a/fs/hfsplus/hfsplus_fs.h b/fs/hfsplus/hfsplus_fs.h
+index 6f240f87f8ff..58c780b09b6f 100644
+--- a/fs/hfsplus/hfsplus_fs.h
++++ b/fs/hfsplus/hfsplus_fs.h
+@@ -362,6 +362,7 @@ int hfsplus_block_free(struct super_block *sb, u32 offset, u32 count);
+ u32 hfsplus_calc_btree_clump_size(u32 block_size, u32 node_size, u64 sectors,
+ 				  int file_id);
+ struct hfs_btree *hfs_btree_open(struct super_block *sb, u32 id);
++int hfsplus_btree_check_map(struct hfs_btree *tree);
+ void hfs_btree_close(struct hfs_btree *tree);
+ int hfs_btree_write(struct hfs_btree *tree);
+ int hfs_bmap_reserve(struct hfs_btree *tree, u32 rsvd_nodes);
+diff --git a/fs/hfsplus/super.c b/fs/hfsplus/super.c
+index ff7d6b3336a6..532f23502df3 100644
+--- a/fs/hfsplus/super.c
++++ b/fs/hfsplus/super.c
+@@ -564,6 +564,11 @@ static int hfsplus_fill_super(struct super_block *sb, struct fs_context *fc)
  	}
-diff --git a/fs/exfat/super.c b/fs/exfat/super.c
-index feeda41a8074..67b34cfce247 100644
---- a/fs/exfat/super.c
-+++ b/fs/exfat/super.c
-@@ -100,7 +100,7 @@ static int exfat_set_vol_flags(struct super_block *sb, unsigned short new_flags)
- 	 * if this volume has been mounted with read-only,
- 	 * or an error left it read-only (it stays dirty then)
- 	 */
--	if (sb_rdonly(sb) || exfat_emergency_ro(sb))
-+	if (sb_rdonly(sb) || sb_emergency_ro(sb))
- 		return 0;
+ 	sb->s_xattr = hfsplus_xattr_handlers;
  
- 	p_boot->vol_flags = cpu_to_le16(new_flags);
-@@ -789,11 +789,6 @@ static int exfat_reconfigure(struct fs_context *fc)
- 
- 	fc->sb_flags |= SB_NODIRATIME;
- 
--	/* After an error the filesystem stays read-only until unmount. */
--	if ((fc->sb_flags_mask & SB_RDONLY) && !(fc->sb_flags & SB_RDONLY) &&
--	    sb_rdonly(sb) && exfat_emergency_ro(sb))
--		return -EROFS;
--
- 	sync_filesystem(sb);
- 
- 	if ((fc->sb_flags & (SB_FORCE | SB_RDONLY)) == SB_RDONLY &&
++	if (hfsplus_btree_check_map(sbi->ext_tree) ||
++	    hfsplus_btree_check_map(sbi->cat_tree) ||
++	    (sbi->attr_tree && hfsplus_btree_check_map(sbi->attr_tree)))
++		goto out_close_attr_tree;
++
+ 	inode = hfsplus_iget(sb, HFSPLUS_ALLOC_CNID);
+ 	if (IS_ERR(inode)) {
+ 		pr_err("failed to load allocation file\n");
 
 -- 
 2.53.0
