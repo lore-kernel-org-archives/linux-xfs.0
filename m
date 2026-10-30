@@ -1,55 +1,101 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793372012;
-	b=E0iuIdYyioXdHi7ERbrOhO20NmVLiN66Td+X5PSAWUNjiw4S+qQZ8qSraSPipAmubAAK
-	 K368m6kF61yrNXpkTCDPaJMDZukmm9Q9IgFnTvQVkmPS5c3ZqxtRgIQWmipmGqdo1xYY5
-	 mnZslYxufIkykHX4wNxFTY3Xi70G7xHJJLEaRUcEXTnH1PNxlX/tjGu/3/kRovXr5kn2Z
-	 ameUGW89zE1AlL7ly+0n3OO/QLI/AI9m5EhFVM3p6SLxvBmC/1AlFzWEGJbLFPrld/Pxl
-	 CK57duhmXcdn4EUaK6cp8PGJl6mtjjTF8Dg8CR7qEu/lwlJ0InbTMXXEnPU4f1rCEvA==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793372012;
-	h=Received:DKIM-Signature:From:To:Cc:In-Reply-To:References:Subject:
-	 Message-Id:Date:MIME-Version:Content-Type:Content-Transfer-Encoding:
-	 X-Mailer;
-	bh=3TtOn0cDTZv6utMUpVam0IdvVpfshqnFhO1Zm/bU5/8=;
-	b=ZTO1TDw0XSFLWVAunHBH4eDLj2gnNKw8YgEZXu+uGSou5vul9LWEfgE8+D6YpZwZbEb7
-	 8e/T8V8X/XBjbilNP6H8UBJ7i0m1sbuyNfGVCCYYkyT0ejATQvEmAVRYstxhii1d/uGuL
-	 nE74MegfzHII/fUp520mjiTIW7CzvRHNQNM67cbJGJOxZHVEH8X93YVjRm84IcVNAa8Gv
-	 LDOrKzTUYfD56b72/bFrJMgBzgb0xwdZeVA80O00imAv7H6MvsJtbs6JGZxj12YDKD7EW
-	 ZgmWSzl1RMaAI6bwr5D1jZPFYN+sBUU+MsuwqRiZkavCy9IyjI9LbcixCUZ/BIkn7gQ==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kkp1lfrx;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.221.46
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793389710;
+	b=lFZD7v9aaBIYt2zHqpXZiQUDlbfr/IHSgUEGIJfMQzRqKzzvk3HyKtRkyjuusgvLd2tz
+	 +cCBWPlJqAS4wyoiR4bamH+2UAtdRodeo6t/Lvog91qcGBhox6wL1aFS9U/207nTbzjQz
+	 aO95Ti7Q8Y7hPxeySM8kXSKVEL/5rkZ8WOOFi+3yZTRiik6D38JZe9cYQXuS5h1WjqbZN
+	 86RKkHSkk7PTpeej5HdVv81EYnzjWHI5kpa8QC2IJ7twBbFx41dmVmc8OuSPMujhDXXA2
+	 bFEcuGr6uUvDuPFatAcsS/M30ng/ZoBIE1n6u5Zk0Ty2LnBHtAQsCpoTCmdMmmZpOqg==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793389710;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
+	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
+	bh=B3QeQKv83CCubBRhLwLfDBWq4r5yqUeetrN4Gz6lflQ=;
+	b=XPV6bCopFHH/yhP4XjCYA1wOuj3ARIizy/s+WwPkvHPPkot7D7sSFCnJK6QF5Rm5fS6g
+	 Xss//J6h2TFHoDPVWX6F8/OYcOKrEzhcw0/iFmLGlNAiOjt5VjwX6Tb24ynvoD04xYHJ+
+	 GR/b0IAA0ijp5ENokzoX2r/dKWFLn1J8qOGLZaB0IwHvR9bTZFB3CGRMJTQawWI/I6qTr
+	 oiHQLFJHCvzi6B8V6KHERkcE37xadRTp4/cO8weSNSAe7XTTcXdLQVpZ68aHrx1vgEydu
+	 trbDuxYDthtBnD9L2SqbhFtNdYIrGiIl9SI3QAZgwuBeEVpbl5Y/9qyDRCvllxYxRwg==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b="wyv/v7L8";
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.221.46
+Received: from mail-wr1-f46.google.com (mail-wr1-f46.google.com [209.85.221.46])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1CC3606A31C;
-	Fri, 30 Oct 2026 14:53:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D659E606A320
+	for <linux-xfs@vger.kernel.org>; Fri, 30 Oct 2026 19:48:29 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D659E606A320
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kkp1lfrx
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 491C01F00A16;
-	Fri, 30 Oct 2026 14:53:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793372011;
-	bh=3TtOn0cDTZv6utMUpVam0IdvVpfshqnFhO1Zm/bU5/8=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=kkp1lfrxbkJGXL2Oyech8G12zmBLgH1LLj47TAGUQGDFUGj6P21t5Q06kWhJLzYeo
-	 j8jJTj0mqo+4X3SL09XJPM0F2lpiODgx7A4ibI0y4TkwQJCNxbxoHn0geUE7S8t8k6
-	 MqHo3la2r+IyANuRMg0oPlToPVQSy6C7Xvzw3UGXw1IwF2Z4GqXRGjqk3dWy1C/dZu
-	 yHP+BLc9MN0+ZeoIzlfA1V9jXFVDqDXxHhSUufZClbFDWaAMgu8SE5mSwEmYK1bvJF
-	 p/ElKMFMxi60csi8ZPsosp5LE7dHQ36SHASGyXxfEBlkYs08bVTg1/FLvpiamy8yAY
-	 dX/Gs78/b1qkQ==
-From: Christian Brauner <brauner@kernel.org>
-To: linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, 
- linux-fsdevel@vger.kernel.org, Qu Wenruo <wqu@suse.com>
-Cc: "Pankaj Raghav(Samsung)" <pankaj.raghav@linux.dev>
-In-Reply-To: <0e89c49b6f7804081f4041007b81ac620a153830.1793307063.git.wqu@suse.com>
-References: <0e89c49b6f7804081f4041007b81ac620a153830.1793307063.git.wqu@suse.com>
-Subject: Re: [PATCH v4] iomap: only follow dio alignment requirement if
- specified
-Message-Id: <20261030-auszuarbeiten-socken-unerlaubt-bce667f40820@brauner>
-Date: Fri, 30 Oct 2026 15:53:28 +0100
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=wyv/v7L8
+Received: by mail-wr1-f46.google.com with SMTP id ffacd0b85a97d-48e47347279so772979f8f.1
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Oct 2026 12:48:29 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1793389708; cv=none;
+        d=google.com; s=arc-20260327;
+        b=aPcfQpXwbRN4iP2wjcr06/IDYy6IV5ttep3BPpBLbaiaMz7E1pgDY1UnLqJtrXkoUB
+         4xP4c5GxZXwqqfSuMePWH027u1giQsF1lzbmC0zsouUSLomrs0ny5vdHPjStTzyvqUjU
+         R1xcFmPHqL+9rEnXgQ3ntuOL2c/bHYYTNbvzrpPGcAzQgpRZUYorIZM3TCqCBka/7sXU
+         I2OB7GZqirf3naS8eAvJw/+CCyU+FrSqh8tw/CJqqXbsLe3js9AD5xzXDUNEs4hVYvY2
+         K+r4c0z+euT9hyHUUcVWQWfhiN3Zq/UvtBxn/hnzOnVaBwInR/EFMdp06CFLRhCKydsq
+         McCg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=B3QeQKv83CCubBRhLwLfDBWq4r5yqUeetrN4Gz6lflQ=;
+        fh=BiNPvWh47juzrGiJMo9ZBOEnK42Ntl0ekuJPRw6ynKs=;
+        b=R2zRE2LmXvyxLV2PVzyROYkJ51Mi9BKqWM6WKCb0FzFIAJwMKwnWroCSdJ5g8YUxPS
+         VH3TUe4N4fDEcUGNfwg55H+5LOl3ly/0L3suvm+RWvRKtk0pu+qhylc5UxmARGRKG+jT
+         TBY8uLe61V7WW48X9HHU9KBj7GWaIlaNR8RV1Po+VWkRwFBH1EfdckIrT2eGqullAX2j
+         adprBc7tSq7fMKahZC5Zxmsvn+TSqkqdVYS3M7qDoF9rSS+gBT0x8qsdFGSgUr3+05Mm
+         MjH16+7/CZm5wm3b2N/HREHQV3mdvVzUTxWbjyO/LURCOCcMwX1YPV3xOUTJJM8xhNx/
+         Aneg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1793389708; x=1793994508; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=B3QeQKv83CCubBRhLwLfDBWq4r5yqUeetrN4Gz6lflQ=;
+        b=wyv/v7L8ZjnHsyc20OjjJOPmD/d8wZkqutlwDLWfoawPlVGaLkb+9+1Q4rDqm0kyyr
+         lbSR15f762gdfiaSH5Q7eEU9n6kF6PrrymY/LNTU9ZS2K3cEw4P7hxyB3qy3qk2K3HX2
+         9EACw1yTy6dG+Th59oeBPohq82am5cg3DuP5ilBO2nTZwcaEXu/Qokyz/TBYdnp8BIec
+         9WJho9V8nkW9owQOoX+dF9K+f+xSf4u195/2QTDbn5vRjTcZjNCpDHIMZM1Dd5YXUJWX
+         VvuQq7SrYbYvRUp5v66RyLaybHGnVGnuRLAkTqvqY0/1OiP7Wkf58D4Sf0ROqP8yLS2I
+         GfAQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793389708; x=1793994508;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=B3QeQKv83CCubBRhLwLfDBWq4r5yqUeetrN4Gz6lflQ=;
+        b=YVxV80UMFHHNzhXUIJWm3nFRFGXxFQ5uQAwBCOcu6qrctaovCuYwhH9f3iACkVgyiI
+         y4lB7u+PWI++mR20L652umKW5Nxw45ICJGWKwMXcaAX5BK9ykNBYEKJlfF9T2NvCSMoi
+         cUqVSk6FjRtRIuv9NJylZP8hIJGnpbOHMU4O+mpkMqH+sbBxrDTptBgn08HIlIgc5aTT
+         bhu41CXDzRb5PUoahQrB4VzWMhUEj3FTW3iUYpy88YNGUxckTU35xS2Vy514vdKvdm0k
+         Dqr8H4tiIEqrTs/uAvm0G+A4OeXGYUc8b2soV53SI0M/I26G/VEDwh7wHcyd+7julrOf
+         5swg==
+X-Forwarded-Encrypted: i=1; AKwUvByDm+1chsXskhh/tQ55M1qW7mQPp27eO5pjUHqCQAIb1MQ4hq72Kg7WiuI9ouLUbuH8WEb4SsB/+Co=@vger.kernel.org
+X-Gm-Message-State: AFq9FYJJtWlbMuYD8Uc9raWIm5XnZ85NwmaewV1ayJpnEBdlqLi5vDbq
+	pRU3kPTlOVF+ZP/lHkFiRYc3YEYy4aA+peEDXRDHUlXKF2oRGDgPuF6772hCUbkLR2IYZJ7r38C
+	RjyrfVedxieYAim5GGRg4adZBsqyiRoM=
+X-Gm-Gg: AYBFou3UrsBZtyRMrOQVMkdtt30tS84MqcDdG6rdaHuGJRwEZYsH6Q9qKuAaN1+JOjE
+	xom2A4gcRljK1TYZL+nuX8dHMvSio1nNAPVWRAPA15U4FrRThLZP3n2mcSFe5zc4miIzHNnpOcn
+	Kwfmiq0h/GMTIzIYbZCBRZuVAO1DGkgXrV9ulUNa3+GJtDENB3YFT5cjZzPROjUSGCTh8VKClV4
+	E6DTyCqJWEZ+OJVgf+G1ERprM+kmgreDDj4E0IVkjSFDE7Xr1vgN44GhKOjtY6bQedTPyOTCVVQ
+	W9vnP2L0vQ0aFT5yjhdlGFEnX8/OSF7mkMbyFqH0GLf3xeQBZt2O9JxBhjgGfCGStVXyrABGQrg
+	AKH7w066Y89Js5k1B5J5lW6WL5/CD/px3ZT4+IfUm7fBcFIqDPqUhhQ6zsGjUpDr7Y4mj2NzoiC
+	7O2FszArLe1EYftw6vpA==
+X-Received: by 2002:a05:6000:40ca:b0:48c:5304:5e50 with SMTP id
+ ffacd0b85a97d-48e6e2620d8mr8708785f8f.0.1793389707952; Fri, 30 Oct 2026
+ 12:48:27 -0700 (PDT)
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -59,35 +105,47 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.17-dev-ce4c1
+References: <20261027215326.2693300-1-joannelkoong@gmail.com>
+In-Reply-To: <20261027215326.2693300-1-joannelkoong@gmail.com>
+From: Joanne Koong <joannelkoong@gmail.com>
+Date: Fri, 30 Oct 2026 12:48:15 -0700
+X-Gm-Features: AclHuK9oCK5VP76Wbek63tch4M8ewVUH28c6PHPAdmsJkgtv-kMhmrFiNwyHte4
+Message-ID: <CAJnrk1bqPCy8ryVjCsUWR2+4jkNE8rJJU2bUFsO3Q7nznsF7xA@mail.gmail.com>
+Subject: Re: [PATCH 0/5] iomap: remaining patches for iomap_iter_next conversion
+To: Christian Brauner <brauner@kernel.org>
+Cc: linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, 
+	"Darrick J . Wong" <djwong@kernel.org>, changfengnan@bytedance.com, kbusch@kernel.org, 
+	Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>, Jonathan Corbet <corbet@lwn.net>, 
+	David Sterba <dsterba@suse.com>, Gao Xiang <xiang@kernel.org>, Namjae Jeon <linkinjeon@kernel.org>, 
+	"Theodore Ts'o" <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>, Miklos Szeredi <miklos@szeredi.hu>, 
+	Andreas Gruenbacher <agruenba@redhat.com>, Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>, 
+	Hyunchul Lee <hyc.lee@gmail.com>, 
+	Konstantin Komarov <almaz.alexandrovich@paragon-software.com>, Carlos Maiolino <cem@kernel.org>, 
+	Damien Le Moal <dlemoal@kernel.org>, libaokun@linux.alibaba.com, bfoster@redhat.com, 
+	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	Viacheslav Dubeyko <slava@dubeyko.com>, Ryusuke Konishi <konishi.ryusuke@gmail.com>, 
+	linux-nilfs@vger.kernel.org, fuse-devel@lists.linux.dev, 
+	Zhang Yi <yi.zhang@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Fri, 30 Oct 2026 07:21:23 +1030, Qu Wenruo wrote:
-> After commit 4025185cf953 ("iomap: follow the alignment requirement for
-> iomap_dio_hole_iter()"), generic/091 fails on both xfs and ext4.
-> 
-> The reason is that ext4 and xfs (except COW write) do not require full
-> block alignment for direct IO. They are totally fine reading a sub-block
-> range.
-> 
-> [...]
+On Tue, Oct 27, 2026 at 2:58=E2=80=AFPM Joanne Koong <joannelkoong@gmail.co=
+m> wrote:
+>
+> These patches are being sent out now in case anyone wants to look at the
+> preparatory patches or patch 4. This series applies cleanly to both curre=
+nt
+> mainline and next-20261027. If anything conflicts by the time you pick it=
+ up
+> at the end of the merge window, I'll rebase and resend.
+>
 
-Applied to the vfs.fixes branch of the vfs/vfs.git tree.
-Patches in the vfs.fixes branch should appear in linux-next soon.
+I pulled in Linus's latest tree (commit abf8c33470f7) and the series
+still applies cleanly with no conflicts. It also applies cleanly on
+top of next-20261030, which includes the remaining btrfs, ntfs, exfat,
+ext2, and gfs2 changes that haven't been merged yet. There shouldn't
+be any conflicts between this series and anything else going in this
+window.
 
-Please report any outstanding bugs that were missed during review in a
-new review to the original patch series allowing us to drop it.
-
-It's encouraged to provide Acked-bys and Reviewed-bys even though the
-patch has now been applied. If possible patch trailers will be updated.
-
-Note that commit hashes shown below are subject to change due to rebase,
-trailer updates or similar. If in doubt, please check the listed branch.
-
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
-branch: vfs.fixes
-
-[1/1] iomap: only follow dio alignment requirement if specified
-      https://git.kernel.org/vfs/vfs/c/87d02f3e98a8
-
+Thanks,
+Joanne
