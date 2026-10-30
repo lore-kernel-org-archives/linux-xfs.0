@@ -1,47 +1,49 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=124.71.93.112
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=115.124.30.119
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793322449;
-	b=A9QdVH51i3fj93CYCuRnk6QVcZ9Mkn8cFjw3lg+EfLP37akEKce+Ue69SNGWVGsLT61Q
-	 SvZRFMj53vlgtZaL7V8+oDPkPdU1B1TcHeeD1w0Ib5thzaCjxCOGQ26iZrgEfuQXMAd/T
-	 cYBfuFRYpidIhtBajDhdzU9CMp8JvEJJ7LO83cd4EOKHaLM+Xj8dbN9ZbddJ1QFOqu0/G
-	 GDVkhTmveNXqEW1WEhSerHhQCQw2s2/a0z3b7ugIlyT65ISzK5/cqhb3HrKPlVXWE3rzP
-	 7uvrSGs8Lwk02x1mmhnV5Dbry+ON7rZJrfhX5EWF/lJT6xbfUj6+YMh8jGyanyl/q7g==
+	t=1793329145;
+	b=2klpSdm6WW8MR3X+auas8q0UXUYNbhiE+7pMTPwmLvliku7LEhsZVwWOlKLPI90xKg+t
+	 G0w7ULw92YX8h0i1ZY/jh6ezA7y0d6qr5SESR9V0t/eWyl3sYExiyPQByJxFWjCDyZH6x
+	 ny4rTVYnguHG6Vc5XNOCaRBYEXilAA6xuCf9OqRzEs8QZbgno/ajaawLDfEgNHlbE41LS
+	 ZNE4syjA/Kjq8d6045tSuQqWwQoCGGn5SGYCW5mbGBfGOLRYDo2h2Id+n9IgBqBXjfKH6
+	 TPIzMzxX08bQJnjMjzKUUGCOQCTs8Wjo5MHs0J/5KEaxJ3fi+BfUMTgvu+k2ze27nfw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793322449;
-	h=DMARC-Filter:Received:Received:Received:Message-ID:Date:MIME-Version:
-	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:X-CM-TRANSID:
-	 X-Coremail-Antispam:X-CM-SenderInfo;
-	bh=PZrFme8Z9ERkoIaIGLnSAqVdeuU7p1Vpb8U9cUCLBTg=;
-	b=YeBSsl050FlRwg39Hncpl1rMQGguN/5Ak48O4AtgTQrddDsnFovdiOzVvTi3r8FkzkgE
-	 +nrbI0j5W54f3XmwPRjhgNohvzOZh0qGsFpQU+aPqlIDK6yGJu9/I/SRCJrKp/e1/vTsn
-	 8J2eHmzsTmBmKkdBYVm3C8MaxkvD08lHfQBs06iLBRqfEKlpNyZuex8vc9JDeJe7k23th
-	 L5swiNSmvGe3++H/WbVl2M1hUJE8r41phGcnoW2C9Nu4WXg6zBLYKIP+FGaRcS72U+tCJ
-	 M1JCr1mmuloobNetHjBgxoEuoL/DqXBRsLfK+hTj2BdPCN+h67q4+PMP47twqUEL7hA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793329145;
+	h=DMARC-Filter:DKIM-Signature:X-Alimail-AntiSpam:Received:Message-ID:
+	 Date:MIME-Version:User-Agent:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type:Content-Transfer-Encoding;
+	bh=w/Jd2p/prMhPtETNelJfTcFSgzTHlHRnVEoen9y0JaA=;
+	b=bz2qlnfc+5uTpVMWPfZn1lfZ8Jxco1CEimIMtzhDwkcE9ByZGySPbCwzTwprQYkJ1oYT
+	 gBF1gXQJ9ORnt6xgBHdUU0rO6NR/hXcNeuC6SRAJZZ6ENxvvukguy/Rll7lNtXqcVlRDv
+	 LD38MTWoTq9gokd8w3WzGRY4OL0Cu3TSTbJYg2pMI3B8og+xLZydHxux8wPYWrS37fIpi
+	 LA+cl6PDOsWO2FmPE+8VeHtbF9r+gd+TPOgK3uG0bvG7zDZSXuyZcc+pcya+ic5W86VT+
+	 6dFJe59v/o6vejyy5yEBjgU8qu6zYCUIhxZrh6eP5aABwbDeWiFGdiuwKIUiPwjSayQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=huaweicloud.com;
-	spf=pass smtp.mailfrom=huaweicloud.com;
-	arc=none smtp.remote-ip=124.71.93.112
-Received: from dggmsgout12.his.huawei.com (dggmsgout12.his.huawei.com [124.71.93.112])
+	dmarc=pass header.from=linux.alibaba.com;
+	spf=pass smtp.mailfrom=linux.alibaba.com;
+	dkim=pass header.d=linux.alibaba.com header.i=@linux.alibaba.com header.a=rsa-sha256 header.s=default header.b=hSHEsgsY;
+	arc=none smtp.remote-ip=115.124.30.119
+Received: from out30-119.freemail.mail.aliyun.com (out30-119.freemail.mail.aliyun.com [115.124.30.119])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DEB7606A31C;
-	Fri, 30 Oct 2026 01:07:27 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6DEB7606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.177])
-	by dggmsgout12.his.huawei.com (SkyGuard) with ESMTP id 4jG2xf4xphz1ygS;
-	Fri, 30 Oct 2026 09:07:02 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id E4CB840657;
-	Fri, 30 Oct 2026 09:07:18 +0800 (CST)
-Received: from [10.174.179.19] (unknown [10.174.179.19])
-	by APP4 (Coremail) with UTF8SMTPSA id gCh0CgCn5fTF7eNq3yxsCQ--.62529S3;
-	Fri, 30 Oct 2026 09:07:18 +0800 (CST)
-Message-ID: <cddab9e4-0b57-40c3-a38b-34c738254f87@huaweicloud.com>
-Date: Fri, 30 Oct 2026 09:07:16 +0800
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 926C9606A31C;
+	Fri, 30 Oct 2026 02:59:02 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 926C9606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key, unprotected) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.a=rsa-sha256 header.s=default header.b=hSHEsgsY
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1793329134; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
+	bh=w/Jd2p/prMhPtETNelJfTcFSgzTHlHRnVEoen9y0JaA=;
+	b=hSHEsgsYOl/knZoiaKmOo9/szTsdb243LBtAHNpX/8InfeQ+O8kqyPkUuu0Awv2qPGL1dtHu80lxiinShoX3C//q9xO3uJS7nJ9pA7n/Uvoqx9PjlbXVT4MQjJDtbupw0uuaN9Pd4ZUnz3XFWW920V7V0LBApZUCRivWHHA722Q=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R961e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033037026112;MF=joseph.qi@linux.alibaba.com;NM=1;PH=DS;RN=17;SR=0;TI=SMTPD_---0XDkufcn_1793329132;
+Received: from 30.221.129.214(mailfrom:joseph.qi@linux.alibaba.com fp:SMTPD_---0XDkufcn_1793329132 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Fri, 30 Oct 2026 10:58:53 +0800
+Message-ID: <0a8576a4-e397-4a49-ab0e-8f0f32bf2642@linux.alibaba.com>
+Date: Fri, 30 Oct 2026 10:58:52 +0800
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -52,109 +54,95 @@ List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] iomap: don't mark unwritten parts of a folio uptodate
-To: Christian Brauner <brauner@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
- Chris Mason <clm@meta.com>, Josef Bacik <josef@toxicpanda.com>,
- Matthew Wilcox <willy@infradead.org>, Joanne Koong <joannelkoong@gmail.com>,
- "Darrick J. Wong" <djwong@kernel.org>, Brian Foster <bfoster@redhat.com>,
- linux-xfs@vger.kernel.org, stable@vger.kernel.org
-References: <20261029-work-iomap-ai-fixes-v1-0-7eda63bc1b13@kernel.org>
- <20261029-work-iomap-ai-fixes-v1-1-7eda63bc1b13@kernel.org>
-Content-Language: en-US
-From: Zhang Yi <yi.zhang@huaweicloud.com>
-In-Reply-To: <20261029-work-iomap-ai-fixes-v1-1-7eda63bc1b13@kernel.org>
+Subject: Re: [PATCH v2 19/34] ocfs2: keep the current mount options on remount
+To: Christian Brauner <brauner@kernel.org>, linux-fsdevel@vger.kernel.org,
+ Jan Kara <jack@suse.com>
+Cc: Al Viro <viro@zeniv.linux.org.uk>, ecryptfs@vger.kernel.org,
+ linux-ext4@vger.kernel.org, jfs-discussion@lists.sourceforge.net,
+ linux-nilfs@vger.kernel.org, exfat@lists.linux.dev, linux-mm@kvack.org,
+ ntfs@lists.linux.dev, ocfs2-devel@lists.linux.dev,
+ linux-btrfs@vger.kernel.org, gfs2@lists.linux.dev,
+ linux-efi@vger.kernel.org, linux-mtd@lists.infradead.org,
+ linux-xfs@vger.kernel.org
+References: <20261029-work-fs-sb_rdonly-v2-0-2f44f64f0b66@kernel.org>
+ <20261029-work-fs-sb_rdonly-v2-19-2f44f64f0b66@kernel.org>
+From: Joseph Qi <joseph.qi@linux.alibaba.com>
+In-Reply-To: <20261029-work-fs-sb_rdonly-v2-19-2f44f64f0b66@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:gCh0CgCn5fTF7eNq3yxsCQ--.62529S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxAF4kGF1DJw4fGr18CrWktFb_yoW5CrWkpr
-	Z8Kayjkrs7tr17Zwn7ZF9rAry0yw43Wr43CF18G3s8Z3Z0qrWxWr1vgayYvF18ZrZ7GFWF
-	qF4v9Fy5W3W5ZrDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUv2b4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26r4UJVWxJr1l84ACjcxK6I8E87Iv6x
-	kF7I0E14v26F4UJVW0owAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAq
-	x4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6x
-	CaFVCjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7MxkF7I0E
-	n4kS14v26r1q6r43MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I
-	0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWU
-	tVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcV
-	CY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAF
-	wI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa
-	7IU17KsUUUUUU==
-X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-On 10/29/2026 6:34 PM, Christian Brauner wrote:
-> For a buffered write into a hole, an unwritten or new extent, or past
-> EOF __iomap_write_begin() zeroes the parts of the blocks outside of the
-> write and then marks the blocks uptodate. That includes the range of the
-> write itself which still holds whatever was in the folio before. It only
-> becomes valid once the copy from userspace has filled it in.
-> 
-> But the copy can come up short and __iomap_write_end() only rejects a
-> short copy if the folio isn't uptodate. If the zeroed blocks were all
-> that was missing the folio is uptodate by then, the short copy is
-> accepted, and the rest of the range is exposed to readers and can end up
-> on disk. A source buffer that ends in an unmapped page is enough:
-> 
->         ftruncate(fd, 4096);
->         pwrite(fd, p, 3000, 100);    /* 16 bytes at p, then PROT_NONE */
->         pread(fd, buf, 4096, 0);
-> 
-> The write returns 16 and the read returns 2984 bytes of whatever was in
-> that page before. If other blocks of the folio aren't uptodate the short
-> copy is rejected but the zeroed blocks keep their uptodate bits and the
-> retry with the copied length leaves the same bytes behind.
-> 
-> Only mark blocks uptodate in __iomap_write_begin() after reading them.
-> __iomap_write_end() marks the zeroed blocks uptodate once the copy has
-> succeeded and rejects a short copy.
-> 
-> Willy reported this back in 2024 (cf. [1]) and Zhang Yi posted the same
-> fix (cf. [2]) but it never got merged.
-> 
 
-Ha, thanks for picking this fix back up. I had missed this patch while
-sending the iomap fixes.
 
-> [1]: https://lore.kernel.org/all/ZqsN5ouQTEc1KAzV@casper.infradead.org
-> [2]: https://lore.kernel.org/all/20240812121159.3775074-6-yi.zhang@huaweicloud.com
+On 10/30/26 12:07 AM, Christian Brauner wrote:
+> ocfs2_init_fs_context() doesn't inherit the current mount options for a
+> reconfigure. But ocfs2_check_set_options() insists on exactly one
+> heartbeat mode and ocfs2_reconfigure() refuses to change the data mode.
+> So every remount without heartbeat= fails with EINVAL, including
+> emergency remount (sysrq u) which passes no options at all, and that
+> WARNs for every ocfs2 mounted read-write. A remount that does pass
+> heartbeat= silently resets every option it doesn't repeat, e.g. noacl,
+> errors=, barrier= and preferred_slot=.
 > 
-> Fixes: 9dc55f1389f9 ("iomap: add support for sub-pagesize buffered I/O without buffer heads")
-> Reported-by: Josef Bacik <josef@toxicpanda.com>
-> Cc: stable@vger.kernel.org
+> So start a reconfigure from the current options like exfat and gfs2 do.
+> Asking for a different data or heartbeat mode still fails with EINVAL.
+> 
+> The next patch stops ocfs2 from setting SB_RDONLY after errors. An
+> errored ocfs2 then stays read-write and emergency remount would run into
+> this as well.
+> 
 > Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
-
-Looks good to me.
-
-Reviewed-by: Zhang Yi <yi.zhang@huawei.com>
-
 > ---
->  fs/iomap/buffered-io.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
+>  fs/ocfs2/super.c | 13 +++++++++++++
+>  1 file changed, 13 insertions(+)
 > 
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index 907873073b03..d6e2f1ded5ca 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -920,6 +920,7 @@ static int __iomap_write_begin(const struct iomap_iter *iter,
->  		if (iomap_block_needs_zeroing(iter, block_start)) {
->  			if (WARN_ON_ONCE(iter->flags & IOMAP_UNSHARE))
->  				return -EIO;
-> +			/* uptodate once copied, see __iomap_write_end() */
->  			folio_zero_segments(folio, poff, from, to, poff + plen);
->  		} else {
->  			const struct iomap *iomap = iomap_iter_srcmap(iter);
-> @@ -943,8 +944,8 @@ static int __iomap_write_begin(const struct iomap_iter *iter,
+> diff --git a/fs/ocfs2/super.c b/fs/ocfs2/super.c
+> index 0af2245ae303..67283244426e 100644
+> --- a/fs/ocfs2/super.c
+> +++ b/fs/ocfs2/super.c
+> @@ -1222,6 +1222,19 @@ static int ocfs2_init_fs_context(struct fs_context *fc)
+>  	mopt->resv_level = OCFS2_DEFAULT_RESV_LEVEL;
+>  	mopt->dir_resv_level = -1;
 >  
->  			if (iomap->flags & IOMAP_F_ZERO_TAIL)
->  				folio_zero_segment(folio, to, poff + plen);
-> +			iomap_set_range_uptodate(folio, poff, plen);
->  		}
-> -		iomap_set_range_uptodate(folio, poff, plen);
->  	} while ((block_start += plen) < block_end);
+> +	/*
+> +	 * Start from the current options so a remount only changes what it
+> +	 * specifies, emergency remount passes none at all.
+> +	 */
+> +	if (fc->purpose == FS_CONTEXT_FOR_RECONFIGURE) {
+> +		struct ocfs2_super *osb = OCFS2_SB(fc->root->d_sb);
+> +
+> +		mopt->mount_opt = osb->s_mount_opt;
+> +		mopt->atime_quantum = osb->s_atime_quantum;
+> +		mopt->slot = osb->preferred_slot;
+> +		mopt->user_stack = ocfs2_userspace_stack(osb);
+> +	}
+
+ocfs2_reconfigure() decides the transition from fc->sb_flags alone without
+sb_flags_mask test, unlike reconfigure_super(). And fspick() passes
+fs_context_for_reconfigure(target.dentry, 0, 0). So on a read-only mount:
+
+  fspick(AT_FDCWD, "/mnt", 0)        sb_flags 0, sb_flags_mask 0
+  fsconfig(fd, FSCONFIG_SET_STRING, "atime_quantum", "30", 0)
+  fsconfig(fd, FSCONFIG_CMD_RECONFIGURE)
+    reconfigure_super()
+      ocfs2_reconfigure()
+        (bool)(0 & SB_RDONLY) != sb_rdonly(sb)  -> 0 != 1, enters
+        fc->sb_flags & SB_RDONLY                -> 0, takes the rw branch
+        sb->s_flags &= ~SB_RDONLY
+        osb->osb_flags &= ~OCFS2_OSB_SOFT_RO
+        ocfs2_enable_quotas(osb)                -> writes the quota files
+
+The final WRITE_ONCE(sb->s_flags, ...) in reconfigure_super() then
+leaves it cleared, because SB_RDONLY is not in sb_flags_mask. The same
+falls out of a legacy remount whose flags omit MS_RDONLY.
+
+So it seems we should test sb_flags_mask as well?
+
+Thanks,
+Joseph
+
+> +
+>  	fc->fs_private = mopt;
+>  	fc->ops = &ocfs2_context_ops;
 >  
->  	return 0;
 > 
 
