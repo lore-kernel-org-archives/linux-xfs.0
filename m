@@ -1,91 +1,94 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.53
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793550477;
-	b=f0zMzjEO8sSK25o3TgMnXX6PuUaY7Wc9pL74rhlZac6QQooS46nwqIF+IH5itXL9UQoQ
-	 oqB0TxJSrpkNRsD03EGZU2Crh3YsONgjweCxWtkwclX6EvkTs4JbqpKfDzTMkd15ghTAI
-	 OIXfDIxPKJt/nGfhAckcQ5ICaKnh7itu74vRej85OrSx+NJJNnsVqWTNY5VDG3dEpHaBp
-	 Z8uFmOTVBJbpvcTuIEVac/OojRyrvPKMJxKR46CrULa1v5H7sHr6k9+HZdHFaf6uJdtZK
-	 71ddXbC1HRcKXun0EwrcDfAIvcDo2vpncr28Jy2gIabSG0wBr6mhQ0xsTCBqWKQXgLw==
+	t=1793550478;
+	b=KodTE9nF5Z6qEQ4nyOlyMgQ5CKVedgj7ZWZPwdh/n8CXJyIcN/ZkReKQCTelEoD3sPK6
+	 ZZoC7vITzxf82MIP7QQZ+wZCdXpRAuLpzo9cllDRG9DGIsixJ6C6M6ZDQPh76yqjALwHm
+	 e/5ftvpo4La60yVB2Mz22PVyVIHLJVc2PRshGZ6VVK6uKm66hwIoUK0LjwVIOv4Rc2c26
+	 W0ziPStYj7S3HCIF/vajQq0VdXmToFXXS540+bwmLLn73Yknklh41jP8QQhrRe1ZX17t9
+	 NUN/a7CUeJsR7zBJYH9jqs60JWwNHjEr/3SQeh+RVBCWr/UgXC6gKA6ik8T3qExGzQg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793550477;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793550478;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:
 	 X-Google-Original-From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=Tc5C0CNkfJTLARpctHnevx+G/1G/OIJl59fgi/hJAQ4=;
-	b=m3KTLcwzzYbrunAoVakSH3PSFlp+fWYH/o9S+4JN/Y7DuP5/HVXNRMW8bKQOhaxxVNtI
-	 ndS1keeKZuBcPH3aoxaE1yvCdmb0YgvQSZ49/8OnQVJRo/4ZANG7mrDCgdCwP8UgurI28
-	 gybTW0WoMN2YarDTBr90Hb5yH7l1xbYufVaXUlg2iz5104r/lOpvVFbQsaBLnysKyFjfZ
-	 CssNbwIVGq6UO/25/2M7XUQpbFdp+VVEoJ4jbrgzWzQOxjSaSojX/b04KfhTH9jiFXYLa
-	 tBxVO9o4LJ0cBnqJ6N+0OKuLucTs4r4py2Zc4cCVdrKTJD7TGgToYiERWXUHNdKyKNA==
+	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
+	bh=REJsOLwnT2P/avPBtR/BK6p8j1ibMqDK3+PxP0rMxnQ=;
+	b=K7sL3gW/X/y8HwslFdeDgdzMDKm2ce/f9Sx8qZw552WdXpkBGZ/cdPigbgUADVcMG44n
+	 v7RGvI9ePbRIsSiHp00kgfO7+RC7fotlhU8gpYLxfzWcV9YYbKwFJ6W5XaA9PNNquIqN7
+	 5ncxH+XfcJ7DU1RVTNWbfHwkD22tDHyjGbjJEr2Eg1fjWDfzs4ZxgvDbuwQC2uijOC+hf
+	 3YFJNLzYtfU/gn69giV8TKBQ7YtWMfTx6JMqe6eGVYF7/FUB03DVVzfM50mpJ093SCMMw
+	 R8QmScOCW+MBAHzxE/7QOk0S77bCzeAp0TAGvov0JUutJUiD0oJqd4WvSX40PHSEiuQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=xcmuoaU4;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=C+evjEM2;
 	arc=none smtp.remote-ip=209.85.128.53
 Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D152606A324
-	for <linux-xfs@vger.kernel.org>; Sun,  1 Nov 2026 16:27:57 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5D152606A324
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D3F1606A32C
+	for <linux-xfs@vger.kernel.org>; Sun,  1 Nov 2026 16:27:58 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4D3F1606A32C
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=xcmuoaU4
-Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-4a215e64962so20673025e9.1
-        for <linux-xfs@vger.kernel.org>; Sun, 01 Nov 2026 08:27:57 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=C+evjEM2
+Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-4a214c5c4c0so18439575e9.3
+        for <linux-xfs@vger.kernel.org>; Sun, 01 Nov 2026 08:27:58 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793550476; x=1794155276; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=Tc5C0CNkfJTLARpctHnevx+G/1G/OIJl59fgi/hJAQ4=;
-        b=xcmuoaU4AtnjGXzEwG4THXulwnIcdxklU9rBQdL2qX7AqhbNPrLc+oDjZCgzpaMF3z
-         8pqINRg1YPiTgQoG/xy7Y6LX1HseECus+exrWTf07ap7jXJS7TQ/DzDL7MX1BdxU0plJ
-         QkGHg2+VClitwc7Vg1LZ0+EoqeVhAo88495zIAblk5Y8lA4192IsE1rOeDFCbv3vPsQJ
-         MXSBQbWKibi12KXJUD7auQncWq5f7F7H5YvrM4bGKI4f4rvBYbE8GmrBPKK9phXDfTN/
-         M5ksD+IJCPlKCUzNy0OMFtKBmV3D8RI1z+YyyGZ4e2kT87dqYA1CbE9m5jaLSDP16rj2
-         DcYg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793550476; x=1794155276;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20260707; t=1793550477; x=1794155277; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=Tc5C0CNkfJTLARpctHnevx+G/1G/OIJl59fgi/hJAQ4=;
-        b=UjhRnXgtfBQ9u/ECAVUNxfM++4owpX6FSuUhBwaIvEN3Y9XwUsf09Y3HgU/DlSQaZm
-         gl+cf3zuefKntD+gxwx6iR0NGzo055++BzKCMMaaxLsrNYldihw/BCTlVryJiS2Ob7Hh
-         pt8KtVtLau93/hxgkmd57ApZQtfX3/mXywNxdcc4e3hYisnBv0ys3ZdBuRmowFcFWYwz
-         foNbfZMSTT/QTFmAfHN2fgKIH6y9mEAGJA/a5T6QfHC9mXMswqnJl00IeO7RrEHprAni
-         VfDKCpCNHlbztqgAUvTCwANApuxF7Nsqg+ZM2jhr4WshU7x/9+MA53bbWgMzP7MHA3IV
-         BPQA==
-X-Gm-Message-State: AFq9FYLS2ThH9GTofxADc/ejx0krt8ICgAB0jGKp2NmGfQ67Y7d7cHy+
-	nMUWo7GWvzUNzMrmgPShvEp6IVhr2P8m4K+GH7cK8WvpCGtLItE5KExGkAek
-X-Gm-Gg: AYBFou3l4D26OUjNkUXuO57tk2XS0ayl7OPEAxx/1PmVe/hMQWE/Ki6u+g7E8QnhPDf
-	U/EaVtOwgFFvmrOLONtLfldeyfSt6BlRL8rIArWjmtyXb0TaQLV4bvwl1lF27Oujg+bRXmbDSS1
-	jaxmfROUdoZL8MO02uhK9VLpyw8yBzxUzrCxGclPtRTTLdUoa7AzejTk2SRL9LIN3Mk7tfK40f8
-	teWPrf6WORaF7k2quvT9EuaWlVozHS7fqlHCupBXvhsmxYtMqpdB2Tl0UxSn1kePXH9O4yDo5FM
-	IaGljmQgrKh6p0Ql9Jt8kc3pS4C67vnJlFA+B/AFNhOBHEaScjfLxxSoYVpbUC7iQOLV83Lhdh9
-	9/9ziF1o9hxXkYiQfd8rPB/DGKNweeSglZ7Qg9+KrtouDNS+gQl3dMtHU6fFgqMz65h/yfgP8hc
-	2Fncq1nfvzj1QW4dGbUObvGHE5fYeSiv8mdT+9C0xazyYWjJHeKjWsLS/hranW73qxTsWIavlUa
-	lypLHex8dM9Qn2MovTUQFcP6ztu41JMDk42h/8UpRDm3rUZf7Y1wM0A13AQPvOd+/yexo2e7RmJ
-	J9apXjeo/FGrvMRzWJlqYAl1mfBGgn0a1A==
-X-Received: by 2002:a05:600c:3b0e:b0:4a7:7d22:c50c with SMTP id 5b1f17b1804b1-4ac150b2243mr196741005e9.2.1793550475599;
-        Sun, 01 Nov 2026 08:27:55 -0800 (PST)
+        bh=REJsOLwnT2P/avPBtR/BK6p8j1ibMqDK3+PxP0rMxnQ=;
+        b=C+evjEM2OrhLT+6KkcCd0FWwVf+ZcZwDv14IY3cpJn8QDazvadj1x1Fplnm+OGnoj6
+         4GSqUId2Uyu8If+Yy/8LWYnvo6IIwcGK/DLacZ79p9Nnw1ryxpo1pzTcJjHZ5L5L+3TB
+         exnt83habACZIpZm/Vht2kPICa8Ah1i/mWv7Pc+cxw0CVRBgmWJ1N7u8q/mlsOzIQKRB
+         0mMWU7xkDLPPFmMq8bZiMTPWiZ+QA7TWhHkKBsH+0CGZJzSAMBbxZNcwJ6TPbrsMBHLF
+         JNOoqhfkclt2IVEbZz166p32LV7Ckf2gzKKgUmhnxLOFXmjczJz62jk5QjbkQ32fDAAd
+         2aJg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793550477; x=1794155277;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=REJsOLwnT2P/avPBtR/BK6p8j1ibMqDK3+PxP0rMxnQ=;
+        b=QkTIR4F5blTp8NPKjsX1UhZ/5H4WbRIfDKXAVsa1jdKXqB3vgsNpqRgcLOVp8eJ9GH
+         dASiXcRbKU3PsKjPOb53HsrN6EGyuSCggSG2Pqpku13LuOspDoqg/WgkE30O/GQrBfvc
+         moA6t6UjWdujT1dotcDYk4V1yD4ZsfhAe/Xn8kH5fAgYtS944LXt5AaPAmMpkcbJZq8f
+         ZKHcQnAOOC0TJ02Q8kshF1oIL4A7/nwrtBTEVZCS6ZNSKHaA/y+MKFYt7q2ad1xmNxGd
+         u6tesBPxEOmCEpa2R32mO3DT5wSW/NWqbqQ5v3qx0mezy0AFjM4QpeCqLlWtu8AcEKob
+         OdLg==
+X-Gm-Message-State: AFq9FYJ1TNz3Qb9mgnU43rh78t7YqIoMUWWo8dwVYj//Z8bfxnjYfPQC
+	jvLmDb4rKJPuMfzLfq9Ipnl2fz6TE7SwALzQky7v9izCmxOF8bDPZkfNIvH5
+X-Gm-Gg: AYBFou18YmpRzkpxuixgYKjdqYu+a96uXXdy2+CeiM9BSq/zoVsAVSkEQX/a1L7GWn+
+	OS4RQlx5CFwKypL8er8foqokxvnhJDZmK55ATQtKTXLHnLNv8WVuJae0MiNE+T9PS4bqw8cJNIe
+	sM5oh3c/B3XxaUGJcXsqVtYg7TcCfKyku/uVT9yuP/kZoJgjqvYoTh9nGuU8WqKsQiOIj5ehrWb
+	NKaLqXH6UkbhG5H2SHNSNjuoBEp1YUbqIM1gdSQlGeRzN92jY+pTheWdreAdyqwVc0hOZ96J4QT
+	B5KidHvfFaKKvZQptbdQR10meC+ggZCLt9UeULNKTtX6De/FdtR1NNNUJR4jqnMirGZVl4A6PuA
+	6or+d0pxmX2Mt6rKmko69soiMRyXyS+dCanrAaV+8JsGE8ySrpsMruwZI8Kqf6E3nUYTfR2zm6a
+	isvHL3Sewsy1S3CULeoVVRsnqPlZ92NJrEc8EHuXeTdkh14rkOAodcNI2Db/Ovt1v26HnhlERtg
+	kD7ST4ptlOiXLLhXvy+5ObhEOt6IVlXb9fg3KbZEz0OvgpQPPD9Bcs4iZNy6VxiKtgyP0rBmZC7
+	A5tsPsM/9FE=
+X-Received: by 2002:a05:600c:a4c:b0:4a1:fba8:b13d with SMTP id 5b1f17b1804b1-4ac17d16ba4mr178304325e9.9.1793550476570;
+        Sun, 01 Nov 2026 08:27:56 -0800 (PST)
 Received: from debian.. ([2001:41d0:303:db6b::])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4ac0a66caefsm167095245e9.5.2026.11.01.08.27.53
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4ac0a66caefsm167095245e9.5.2026.11.01.08.27.55
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 01 Nov 2026 08:27:54 -0800 (PST)
+        Sun, 01 Nov 2026 08:27:55 -0800 (PST)
 From: Tristan Madani <tristmd@gmail.com>
 X-Google-Original-From: Tristan Madani <tristan@talencesecurity.com>
 To: linux-xfs@vger.kernel.org
 Cc: aalbersh@kernel.org,
 	djwong@kernel.org,
 	Tristan Madani <tristan@talencesecurity.com>
-Subject: [PATCH xfsdump 0/2] xfsdump: replace assert-only validation with runtime checks
-Date: Sun,  1 Nov 2026 16:27:51 +0000
-Message-ID: <20261101162753.1443201-1-tristan@talencesecurity.com>
+Subject: [PATCH xfsdump 1/2] xfsrestore: validate dh_sz in read_dirent() before reading name data
+Date: Sun,  1 Nov 2026 16:27:52 +0000
+Message-ID: <20261101162753.1443201-2-tristan@talencesecurity.com>
 X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20261101162753.1443201-1-tristan@talencesecurity.com>
+References: <20261101162753.1443201-1-tristan@talencesecurity.com>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -97,23 +100,44 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Hi,
+read_dirent() reads directory entries from dump archives into a stack
+buffer. The dh_sz field (uint16_t, up to 65535) is read from the
+archive and used as the read length, but validation was assert()-only
+and compiled out in release builds (-DNDEBUG).
 
-These two patches replace assert()-only validation in xfsrestore's
-archive parsing with runtime bounds checks. The asserts are compiled
-out in release builds (-DNDEBUG), leaving the on-disk dh_sz and ah_sz
-fields unchecked when processing dump archives.
+Replace the three assert() calls with a runtime check that rejects
+entries where dh_sz exceeds the buffer size, is smaller than the
+header, or is misaligned.
 
-Both patches follow the same pattern: replace the assert() with an
-if-check that returns RV_CORRUPT on invalid values.
+Signed-off-by: Tristan Madani <tristan@talencesecurity.com>
+---
+ restore/content.c | 13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
 
-Tristan Madani (2):
-  xfsrestore: validate dh_sz in read_dirent() before reading name data
-  xfsrestore: validate ah_sz in restore_extattr() before reading attribute data
+diff --git a/restore/content.c b/restore/content.c
+index 7ec3a4d..9074c34 100644
+--- a/restore/content.c
++++ b/restore/content.c
+@@ -8234,9 +8234,16 @@ read_dirent(drive_t *drivep,
 
- restore/content.c | 17 ++++++++++++-----
- 1 file changed, 12 insertions(+), 5 deletions(-)
-
+ 	/* read the remainder of the dirent.
+ 	 */
+-	assert((size_t)dhdrp->dh_sz <= direntbufsz);
+-	assert((size_t)dhdrp->dh_sz >= sizeof(direnthdr_t));
+-	assert(!((size_t)dhdrp->dh_sz & (DIRENTHDR_ALIGN - 1)));
++	if ((size_t)dhdrp->dh_sz > direntbufsz
++	    || (size_t)dhdrp->dh_sz < sizeof(direnthdr_t)
++	    || ((size_t)dhdrp->dh_sz & (DIRENTHDR_ALIGN - 1))) {
++		mlog(MLOG_NORMAL | MLOG_WARNING, _(
++			"corrupt directory entry header "
++			"(dh_sz %u, max %zu)\n"),
++			(unsigned int)dhdrp->dh_sz,
++			direntbufsz);
++		return RV_CORRUPT;
++	}
+ 	if ((size_t)dhdrp->dh_sz > sizeof(direnthdr_t)) {
+ 		size_t remsz = (size_t)dhdrp->dh_sz - sizeof(direnthdr_t);
+ 		nread = read_buf(namep,
 --
 2.53.0
 
