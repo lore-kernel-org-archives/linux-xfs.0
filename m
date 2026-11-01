@@ -1,94 +1,91 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.52
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.49
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793550480;
-	b=0LGFSgZZd/JP5OMVM1L0F1r6CZjVjsBp63qhl/uWYVm/dOr+M/QT/T8Rc28cduzuOwTR
-	 hdh1jF6r3lakFqpzxfyo63ILvttcSsbuql6cZ2WeXdIpmbwh9nCsIAAiLhLVg3KC8oM54
-	 rbvm33DzseCMvNl9H1W6kbup+g+ru7IT+xrfWMNVMKwGXLsYDacmmPpKF+CM6LC/Gv7Oq
-	 YDLPJtB0B5s4AB/BSH/I7OhB6U5Ftv1PwHvz50bNgkZ8OVDPODbNu5r1mVrh6Hgdinb06
-	 4XoiSl67/TIzCORZdqyL9KAeJxAkXomI1lGFuK8W68D9B5O/DY1sYOMB/jxHeXJF3+w==
+	t=1793550487;
+	b=2HyVxxCNxPxOHoiKiOnTmy+3w8zkXxkqVpLu4Yu1ocghDBVxPwG3wdpGiRvDiRwuHkOP
+	 DEg2upvU0pfS9R2gf2op+XtlISWQCLBv7216XMVr6tw/7n4ZzFVYuX7fu7z8rga50dHTH
+	 TCqCZ8G/vEPG4+E7pGw1Ai2jtDhgObqw46SN6pSRjeAWcREVapPmxsP8DUUVyDqBifTkT
+	 LOgEWS/SY+SNu1mrYsVNnBroGXXe5EECd4Zh3SoiYY3N10e6IcmWlbauWSA3KFnysXHFM
+	 ItfsuQO8dVn4KRGarOKDdI4NwKVG3Kc1BoGsxylKBPuAYyFVscm2+rbrvjDd/6RfAlQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793550480;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793550487;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:
 	 X-Google-Original-From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=Lp3PD+Wc5gwkcUVzOJ9F6L0GnIZkLFC/kLgvNsq48cQ=;
-	b=m5gckc5HNQi6+1DLPr3vuZRRvf+h4sKCoIsq4sCbs7PIj8Myuu/NGB/LQPgtFfLlDGFT
-	 XMhy0FMvdSztm8DhZFfMsG9gYnxXS9u6gignNtc/sjVzBDw3iyD69RovIF86SgsGhJdMw
-	 fjcccEe+2XJVV43xqRIcES6UYaE0AfkZBoXz9+NhEw7UcyqCHeIPCs++g44TJfRcopNKr
-	 vtezCXZdDbnNC616bq+kzzZv1QuY7dcAESJE0Ap4ZQjYDameqQdg1eBP9z1GRqKI3Q/i9
-	 iuUFsgvAu2CafqEA0606LErIVeIO+VciMsllPUyIavhzfpoOoo1nlFp2z0Idc+sSa/w==
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=b3X7tmZ6ZPCx2umNISBeMMD61ZO/zf2nwzQTuecr2P8=;
+	b=RCFqv/1zjxOz8cpP0PihsQhdrBg8MT7jjUJCm9bu7kLWxnIu1mzB/5XcgI0X2HdNG4vt
+	 diDYUgeW8QkVCHJPwf2zWBWb2Mw7ANFaKwQc2vvXKqfEwxU1eRKVLky43dYUo9ygpmPUy
+	 T/aDpcEiFFlehchkqjVEauZ2BS0S6TTN/+DpimGe6v9qHF70SXbxCE5pi6f/JpRHgHO7K
+	 5E5H4c3PIBg59dSxRtSQL9+jZvdqSE6blx64P0BsVjn5r980lJ2G7riFPQtTpcKNtmwti
+	 MQpl/+Ra6pE5M4Ik029fs9ku5EwMStiOCQk18KdVe9jn05+DEglCu9TOk3j/ydL2Z4g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=fjDmj4Kw;
-	arc=none smtp.remote-ip=209.85.128.52
-Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=J0k7B6DF;
+	arc=none smtp.remote-ip=209.85.128.49
+Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29216606A325
-	for <linux-xfs@vger.kernel.org>; Sun,  1 Nov 2026 16:27:59 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 29216606A325
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0059A606A326
+	for <linux-xfs@vger.kernel.org>; Sun,  1 Nov 2026 16:28:06 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0059A606A326
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=fjDmj4Kw
-Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-4a549cd7fd2so19378755e9.0
-        for <linux-xfs@vger.kernel.org>; Sun, 01 Nov 2026 08:27:59 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=J0k7B6DF
+Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-4a59100fa83so19087085e9.0
+        for <linux-xfs@vger.kernel.org>; Sun, 01 Nov 2026 08:28:06 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793550478; x=1794155278; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=Lp3PD+Wc5gwkcUVzOJ9F6L0GnIZkLFC/kLgvNsq48cQ=;
-        b=fjDmj4Kw/7wK2PWf+CEE+h23Ji8u4sZWOSO/m7R+MM3qL5YmAmz7rSH8b0h0C/GlSc
-         FHkRGLh8L0ySCczKNsMxFguTf8AxqPQfjc35OeCLpZe/b2O6DnBNsIERxZVJ3069VMGd
-         StkqcdbVbnFJzW0iNyuTiD4u3HYKeFmfIIFrTmKcEB+MKXXGyxIPx2AU0bw4p3yEX2iv
-         hpcYe4fCgdyJRg+2VD9fd9n+XOJGpK9kXxRIW0bKxCKhtNiUPgBIqtj0cqUOuK23IN3l
-         kq6QuXOMg3liNE1J7sJep9XT785/gaK28W/0MVdKeUYLiBAoo3GNOcIJ03RQc4UVt+83
-         Z0bg==
+        d=gmail.com; s=20260707; t=1793550485; x=1794155285; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=b3X7tmZ6ZPCx2umNISBeMMD61ZO/zf2nwzQTuecr2P8=;
+        b=J0k7B6DFPzOoOIaJ9tVEoU0Ycy8aNCGnXZKrUCulDpX9/fGkoUDEZiIEMOQEeuZ2Or
+         /37yrqC0Se9MERBFdvzMmGgzKqiuz3E4khRvSW6/zk2z2QTNZjybMmtBnvtnKPMDAHix
+         LTiBnKV5aRusW38z15+vULScq6yZ0PSyjxOWSm+VnJPKUWFevW4zypUg/SYYDxAzOCKX
+         PiaRy/2Us+R2brvWuEnUeqjqzi7/j9simvnJNXKY7zoRRTS7SZqgO26kMMG/sfgKrxQ4
+         gX/SlEEcGscdVnXdxEZ3ZaaUqCq8uKB/U+tc2NIasKe0CD1FjxMMVKkniYT5IDigK4OT
+         kxlQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793550478; x=1794155278;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=Lp3PD+Wc5gwkcUVzOJ9F6L0GnIZkLFC/kLgvNsq48cQ=;
-        b=gRLhii9vL/YpMVZizY6AIKvUsT96ngHYDI9lDpAq/DDleCN5m118lq34rk3xzcyzmA
-         m2Vr/BG24tGjjr8ryUXaS6R9wPtfXRLsghjVFIDasCbUjKjPwbXFbxUgS5lR4ZeK61yQ
-         ASyS4mpG7Lg+p0QSflObUWv+ltLDMUjPpmjT5y0FEq2CIeEYJ7xBrmlb/xa0vQgx/5g3
-         Q/h/8J9DL9uQdbl4Sv4t/avM2QjotjnquTmflAct3p7VVdEhIz7qIHQA5DzUewkyt7Yv
-         E0FeDNo/oe7ePianSaiqDxKYl9qnscLez6KYGUPWOEW+qhhdQRckih/St7D/Dd546Gms
-         M/gw==
-X-Gm-Message-State: AFq9FYKABSPG4slR+9FLBlzmDjsm1V9H8hRv+0yzFZQmzugUzSQo6yXV
-	vq2I4OrIxygBK8uilS1PRIATb80m2sc4cNLiBt0BOsih0U/VwOOeLXT1DBar
-X-Gm-Gg: AYBFou1uTWPhlgsLFCX1g8l7Fh0WSMaDi76TN5tEAFGpZ1pvaaZ/SMT16ADk4n3UnlF
-	hfPcDIbqzqIKyi4Ab+nQNj7w88pOAbnM96O0Z8xbpknScYbjCzOieOPgD4uwWmuvKPVUsfaFQba
-	v2/OShtwqG/ClSrXX/sS5LnonYMExaoz9HunRe8EK7hpg+m4huasM4ZAhyXQXCTSH41b4HRnplY
-	VZl4PR3NCjCak5117mTDVXFSy0A/V0nBbyBKxbt3mUXZaIwiJpssOxU0kyA65hH2K3cZsBNnF5U
-	nPf3gTNT+audqNNn9wO0iBOmYzuP8FpSYoWzHiEWynhD+HSsx0qQO0Aprq5bsQSSG1D9PYWRwrB
-	N7txDmrOvTtXFUN/nhnH/nFPSA/gPsioragf8BDGpxc2S30XOPm1vJF/t0Dp6noRr9hOcrc1ilX
-	gwccNPtP65v+6YlX0Peb5bOLkVsiA5IfqVFSWu1yrdChmSmxnb1O5ZBJbgA/nIp1tffvO3iDkSK
-	+BtYaWuX9QKRM6qkTToxx2ajd28Z3WERH9CJeLMRRSucXHxprnlJ9WoWsPIFGjn5qLcFcihug4v
-	cstAtllDHr4=
-X-Received: by 2002:a05:600c:1d11:b0:4a1:c27d:e1a8 with SMTP id 5b1f17b1804b1-4ac174712admr187680465e9.10.1793550478383;
-        Sun, 01 Nov 2026 08:27:58 -0800 (PST)
+        d=1e100.net; s=20260707; t=1793550485; x=1794155285;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=b3X7tmZ6ZPCx2umNISBeMMD61ZO/zf2nwzQTuecr2P8=;
+        b=1W55Xs0AJhnVEr1MzShw7OpmoFNr29eDGnoYTNSVeiw9YjkJscB5y4/2m3pbp8XO6s
+         MZAaXaRSQozXZYRRJsDumwVOgMNZ2oAQy/sbLs71WqWL/mfstQshVwuP0o7qLzX0HSuk
+         Dk9v+73qhJXvTqv5QluZhS5iDbOxYqlPhgfv2yNr6LAZDnYdu70E7C0aTk39fXdDNl3O
+         2HgstspnDTNmsP0djJ8fRnz2LbKk9DXXvzlWl1wL5BWeQwrvDfIzocauW4FQngFAfqMy
+         qPhJ/BNou2v6WSizn8IWDe5iWekaMSchrQ44uxSSuEVJe9g7KKyjXUQI4V5Emdj6XryB
+         mfSA==
+X-Gm-Message-State: AFq9FYKbnlDApLL3kOMVg7cnR4NVa4fqEdkXABgphqcUgWRmG5jo1F5j
+	TnAG2WMNCI2IDmgD7shC/MdjndS+HkQqh618MhrdoeW4cFdKSv3hwCaG2trs
+X-Gm-Gg: AYBFou2wcvzjDqsxc06HHTdXNDpFobqP6u6tqgErYerTr16wjXVcPEmgHB+fLP2Ds78
+	ox8CeTKNz63aD9oQEy1v3wSnQcqBSBdf+XotQwd32h4SFs13iqvH0BelC2VMYY2VC3PZObeUMIU
+	eXcpJssK3JraT7UTPc04m1gRovyJ7tqntZ7pw6FBr8hHGOEYUnkNp9w3spfMgS6UKXISgEUefHX
+	BerCWBg1rsc6zHHIpUTBO/lZ/adfUQ8xvlaXEj4SBRLKI2bDZ+vWvJNZzqurIb0Mt4f322724iv
+	t9l8cvwpOpPubX25GmNwERAoCQMlXUG+tSsM9+qTvD3JMJCKhZy49o6wC/bShiyDmRQc0wgYsTJ
+	sl6JPcEh/+SIjezpzCE65T+uPKSfpWDOPDGzhYXvNT2ntRHUAXnxCDW+mABYNW0JWWELPWqtYZV
+	/XYyr3bErjPLsF7TFKq9e8HqBPDn00ErV8loNN1XmucStF9iHt/AltJvRu+De9rgNOGbRlbovBs
+	EGg3S5tKslCiloUIF+gIp8KtXnOxN3fSreqTBNN/maIs139MFmaAx/MDh132iJfhzouiApd6C6d
+	2ihxk3vcP+k=
+X-Received: by 2002:a05:600c:a012:b0:49f:fd2d:23c7 with SMTP id 5b1f17b1804b1-4ac17b2ce18mr177141675e9.27.1793550485307;
+        Sun, 01 Nov 2026 08:28:05 -0800 (PST)
 Received: from debian.. ([2001:41d0:303:db6b::])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4ac0a66caefsm167095245e9.5.2026.11.01.08.27.56
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4abf0b36853sm192023245e9.0.2026.11.01.08.28.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 01 Nov 2026 08:27:56 -0800 (PST)
+        Sun, 01 Nov 2026 08:28:04 -0800 (PST)
 From: Tristan Madani <tristmd@gmail.com>
 X-Google-Original-From: Tristan Madani <tristan@talencesecurity.com>
 To: linux-xfs@vger.kernel.org
 Cc: aalbersh@kernel.org,
 	djwong@kernel.org,
 	Tristan Madani <tristan@talencesecurity.com>
-Subject: [PATCH xfsdump 2/2] xfsrestore: validate ah_sz in restore_extattr() before reading attribute data
-Date: Sun,  1 Nov 2026 16:27:53 +0000
-Message-ID: <20261101162753.1443201-3-tristan@talencesecurity.com>
+Subject: [PATCH xfsprogs 0/5] xfsprogs: add missing bounds checks for on-disk fields
+Date: Sun,  1 Nov 2026 16:27:58 +0000
+Message-ID: <20261101162804.1444159-1-tristan@talencesecurity.com>
 X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20261101162753.1443201-1-tristan@talencesecurity.com>
-References: <20261101162753.1443201-1-tristan@talencesecurity.com>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -100,40 +97,29 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-restore_extattr() reads extended attribute records from dump archives
-into a heap buffer. The ah_sz field (uint32_t, up to ~4GB) is read
-from the archive and used as the read length, but validation was
-assert()-only and compiled out in release builds (-DNDEBUG).
+Hi Andrey,
 
-Replace the two assert() calls with a runtime check that rejects
-records where ah_sz exceeds the allocated buffer or is smaller than
-the header size.
+These five patches add missing bounds checks for on-disk fields that
+are used as loop counts or copy lengths in xfs_repair, xfs_copy,
+xfs_db, and xfs_logprint. In each case, sibling code paths in the
+same codebase already validate these fields correctly -- these patches
+close the gaps.
 
-Signed-off-by: Tristan Madani <tristan@talencesecurity.com>
----
- restore/content.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+Tristan Madani (5):
+  repair: validate MAC label attribute length before stack copy
+  copy: validate bb_numrecs before iterating alloc btree records
+  repair: cap extent record count at physical fork capacity
+  db: validate symlink target length in rdump_symlink
+  logprint: bounds-check continued log record copies
 
-diff --git a/restore/content.c b/restore/content.c
-index 9074c34..ae769f6 100644
---- a/restore/content.c
-+++ b/restore/content.c
-@@ -8667,8 +8667,13 @@ restore_extattr(drive_t *drivep,
- 		}
+ copy/xfs_copy.c      |  8 ++++++++
+ db/rdump.c           |  6 ++++++
+ logprint/log_redo.c  | 15 ++++++++++-----
+ repair/attr_repair.c |  6 ++++++
+ repair/dinode.c      |  5 +++++
+ repair/prefetch.c    |  3 ++-
+ 6 files changed, 37 insertions(+), 6 deletions(-)
 
- 		recsz = (size_t)ahdrp->ah_sz;
--		assert(recsz <= extattrbufsz);
--		assert(recsz >= EXTATTRHDR_SZ);
-+		if (recsz > extattrbufsz || recsz < EXTATTRHDR_SZ) {
-+			mlog(MLOG_NORMAL | MLOG_WARNING, _(
-+				"corrupt extended attribute record "
-+				"(ah_sz %zu, max %zu)\n"),
-+				recsz, extattrbufsz);
-+			return RV_CORRUPT;
-+		}
- 		nread = read_buf((char *)&ahdrp[1],
- 				  recsz - EXTATTRHDR_SZ,
- 				  (void *)drivep,
 --
 2.53.0
 
