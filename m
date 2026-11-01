@@ -1,91 +1,91 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.43
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.46
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793550488;
-	b=Rt/JFT9lcMDuKS6MNBk8wk07Ihq5M2kVETLGUmVX+g7uRbtUvZZua7hom+I0fYsUn07u
-	 FWW2bcimNmIDvDe5VYEKOSu8T2FMPfEXAErcCqIgInJr38Zj43WrfNOOQw4NPsX81u7/k
-	 EhWJ7Gz14KOYqDkLqWikzJFaMztM4KYwi5uzu+vbHAGt42h2a/YMIg0ZwCiNZH15S2kpo
-	 ACMraVrmMt9CrI6o56imLVbQPcwvbxpcutnd3eORwBxhxRK5HqaGgL8J7I8EBgXbPe/J5
-	 S8nVdg8Koo+nQw6l0Vo9I17ZT6juN+oBj4RAvpwHftJfvYWo2nsHaVizY69du0332fw==
+	t=1793550489;
+	b=n7rMQFHbXSJ676u1CP/tluim/Hj30EAZ4HVgPevtW6Q70uhmf28nJg7ltoaBpW+0sPds
+	 oCAYm/Mje1KKc5FkgGUwBYsFH2VgPS7qFWrwUalybWhsg81/pCY6d+02+5psCk7GU5SbV
+	 UMJCse6KsSgdCx7OgemsQRWaXYjfy2pkZjorbvNSiny38xeTO5qV83gNfW4YW9efLxin9
+	 kkQsM7GosG5IfpB14wZk3X14O20d9uNDY7bGkoFKfCsJxCJKdirF5QeZxhwlkbNNqvBQd
+	 AQ/jfngPx0v2Ho1upSC91mQH2/XKraeUgrn7gO9sUyt4BbXm9hzz8HtVvn1wv1nCuJQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793550488;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793550489;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:
 	 X-Google-Original-From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=LPcSCcUgApoUmnd2cGqQGwdkL7ZlB6BcE2iNYWpcRCc=;
-	b=w2R4v73SU9UEd4qNMcsMIxo0cduuz+w1ljkBpzhCH8bjlywJtYf5xy0whaZ72RTRJnF9
-	 5s96hz5AsGb4apjJ5WqQpZyYI3axzPmzalGjOVQNMSMbjx0boSiuSt841zF1KNdx+fOAd
-	 02fY2iQ9GPkGsKHaEKoeCwnDbtEzAI0fXV1pPNuLmSr8hpLU++kjXOUVM4qMoN6quQsaZ
-	 n9eo0zwfkgLz5YohyLwHtkQa+/FM9PgZL0vqiQXfYkwIXdo3Rx3lSgO/QYhvXtnasBpMA
-	 4/heXCPCXLecXgLlKRiCbq+RSNCExwAR99gg1oTQwG/+0EoBPzb0XGwZXIFqAaFVMDA==
+	bh=nefoxCveWO0xbEAordh7jDzaAtWnXNOWNSJ+ENu4gZw=;
+	b=jopPEejcwuz2ifoATB75ngtbjDjgJSd9GDx5KKEcgq7DVa4LaPfI+3VcAnYFgLg1R2lK
+	 3g9uUWsQwO9s8b34jFBoHohrI9LiLO+z/A1WynJShrbaEz1vf1HdZI+P3KMFTuDAiZxA1
+	 ONH4eqn46vCjdut7JaYITzMY0lU/BapQgk5f8kZY8MyFj6BZpXz8rP056jlEV7Z7wP6Ki
+	 QqNDO0Q33OXFOXl+JFpCEU2aXiPRvHvNdzHwuN8kG/pQQWuhFiVF8omPecv05KvtkNtiG
+	 TIYLcEOLg5za45xwbO+yxuZBRsZXmCMLEVxNpFuVcn65WnX6hpiRimgp0G7hWHC356g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=bE2DtvL0;
-	arc=none smtp.remote-ip=209.85.128.43
-Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=EgkSNL8X;
+	arc=none smtp.remote-ip=209.85.128.46
+Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6536606A329
-	for <linux-xfs@vger.kernel.org>; Sun,  1 Nov 2026 16:28:07 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D6536606A329
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9AAE0606A327
+	for <linux-xfs@vger.kernel.org>; Sun,  1 Nov 2026 16:28:08 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9AAE0606A327
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=bE2DtvL0
-Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-4a35db1f202so23309995e9.3
-        for <linux-xfs@vger.kernel.org>; Sun, 01 Nov 2026 08:28:07 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=EgkSNL8X
+Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-4a9a8d6cea8so28731225e9.1
+        for <linux-xfs@vger.kernel.org>; Sun, 01 Nov 2026 08:28:08 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793550486; x=1794155286; darn=vger.kernel.org;
+        d=gmail.com; s=20260707; t=1793550487; x=1794155287; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=LPcSCcUgApoUmnd2cGqQGwdkL7ZlB6BcE2iNYWpcRCc=;
-        b=bE2DtvL0ynh5XVbIJMxQsxBGkCjXUmlJ8xgBkbCfQfsIlRnGLtVUDGH7NgeXs+QcZr
-         oUW2oq80Qs8W0JFomvNKFhxmjLchAg5mZH+3m0fuf/w0wYXNeIE53O+kVbCnJ+nSjkiI
-         Fp1ldQEkTDA5xd3AzVZJzcOsqeBuVgySX/+wgYlSOFuB/Q47TMbLNFClo1JB8XLze9nD
-         nC6Va929QrcU+kQ4xLsNHJaZk5bwWHZ+5bXF+Bk44yeY3JqBbuoTWpmPr1b3rc39Fm3r
-         VkQR7yUlbMqSknlcSq/94klxcWaeYFZUoH36hD6YYMGHlwLjvGYt10b065Ndm2y8OCTs
-         CGBA==
+        bh=nefoxCveWO0xbEAordh7jDzaAtWnXNOWNSJ+ENu4gZw=;
+        b=EgkSNL8XByqFyT0Xrc+JT9yxtdAf9CDS05tYbQk6FY1fmWkgNa41dPSyeM30sEKjAX
+         NZgD4LD6xcTVI1+zGdI8Kt5/ibcQufecAVE+Yk7z6tk57mUp2y8hlABB/Ptt6uPcYdzQ
+         mG8UWLeyAjOcb2Gcqkw0Mh+U6RvMgH2JkJ1CAoTHG1VeY4ZPzCiLPDXp0zz6m5g9HRlr
+         exaiJIdEeqiI6Hb30MJsOb38BDCNhFmjfhlLUW0PqpW9Mx5uejShh86MiIiWr8pB2lES
+         QyawWD3UrG1fwUrqna4NnyHreNm2SEQOVMfqqlQP9nIzSulOkdhL9rq4NMp3erIirvD2
+         CI3w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793550486; x=1794155286;
+        d=1e100.net; s=20260707; t=1793550487; x=1794155287;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=LPcSCcUgApoUmnd2cGqQGwdkL7ZlB6BcE2iNYWpcRCc=;
-        b=p0A7wgdpGjRHaCzFFR/qQaiFpNZB6pR8/JrLFLBuWV/Jqf2uVfclJXOP+5VHi+MKUT
-         f6UpjFrKd3mNDeNj+S+xOuIUhWEVoVjWg+I3Es707M/0XBdmwKJolf/yE6sXO4eu/hVG
-         eV/UCg0UJQlR3EpzhOWR25/6ch+jgS6Ov7LPc+ecrtXYVklX7JE4LXcGmlLK3kkiwXXu
-         vBkn0fY3Kyj6eLd3lNrrKzqniiE4/zp9Izy40ASYOaFpPYC52iPTTJPpJX7iQ2YmhXlP
-         cPtLCabN0F6d5ZIjAfqV/YER5lbmtJ5XyNeS/EaJ8B4zfxt9pym9XDaSfTMonv8d9q+v
-         Rx6A==
-X-Gm-Message-State: AFq9FYIvsUyeHpSb1nRmmH+2UNH7c3ja0+gALyqrNB34wNGvfgyP9rIi
-	Km2kKnwDzXXK/0nSaUQ9slAxp+F78242/NZLWbpHoVCLDb8EUAOfkmtJkSn1
-X-Gm-Gg: AYBFou05Q20a7c962UQT0st784bRn9Hk7sCC8oqwbz3i1CenM8bEyofFFJiK5doTk87
-	wz4Bdn8Umx7Qg23x6bt7IkEapbNije0G8uZ877ipfOnbLa5pd2XbJumxQUDS9KAApUfYkIG5fh2
-	u8ExOGBAulDcaITHOy/09vEKi7UuUxTPTjlRLhMd/07cr6JHhaX4zw0FBYk4MhKcRUU283jWimX
-	oIbA33nwhwTJXUjhzgcg7skaQfP8id87f6N8a+C2hfVoDGMSJ7fZtzjA0g7ZhMuwNWI93BIh4Ax
-	Tzg25tG7R1e4EuPgU469wog1OPRoiYixrFSHet0+DGHNk94qb7kL1BUKqkekvdi6GF3Umu8+nB1
-	DrGdHWvNL5ug0yvLXQPDOIhGcb7M6Qm1KMqQosmM6ItECxLFxqKn/rJU7NQx1Y3tfPPVKK2ED1k
-	6MG0n+Dp8qvxhYU/4Kygen/CPC+Ck287DjC09blSWCYs8L7QWeHv0TzvQeDC3Q/ltEudsEtcjWD
-	b53jzG06HgZoUPwC/wL1k/wvTQFW2fwXO4hLiCrM0xaAsBUiZuLLU751IpRKQRvJyC3LCKA7IIo
-	pF57yy1dP93iSxgTtkjiklPR2Mdi9HEI
-X-Received: by 2002:a05:600c:4714:b0:4a6:30c3:1114 with SMTP id 5b1f17b1804b1-4ac180f1c7amr181077485e9.12.1793550486129;
+        bh=nefoxCveWO0xbEAordh7jDzaAtWnXNOWNSJ+ENu4gZw=;
+        b=mid03ctXZjTSgvH4Bt06u19IbSe/tGv/jwj7Whuw+bXM1AztwfzUncVF3W0kRVqWy1
+         YLTIm3IxLx7XAFibQ6GKlZH/x0xjQbQ5LXdyH/U3LXC0C0E3PthXaHIEXk277D1eNfL/
+         MYJk58oeIughnfObpnFMtDTZaymyUfZBX8/O2PS/EEVIC298eQmn1iyP/eS3yz6Kf5qR
+         pSzR9CPvXv36yGL666+bq935bR3Ynzh3yWjvcCYJDsSgpl7k7aT24bgWWTChQVagLVlI
+         Jr5RKz67kfv32FsZDnyif3zBs86Owf/3AGbvhX0Hxf5KyulOJeRL3gDsD37qC/XUJ8QS
+         i/zg==
+X-Gm-Message-State: AFq9FYJbZaxtdi2005EpJzRu1y6MmicDjgWVXA7YPb9KQBNetYx8cYjQ
+	wZo4b3/n71VF1MAFsyH2gkUcZFOwu/1E/oAMWiVV40VjkzkHY+sdX27g8e1R
+X-Gm-Gg: AYBFou1r4FSDZcIUSMPFUaV23WyTvWnVVlX0BM03+N3FIUNKYYXdDC0cju0NAJod9SL
+	O67j/NJgtG8rbkwmBwaeTymGZYvk2jXuolZdSOiBc39aczvSDCkbS1NQW/o30oumBrYN5y/Ho4p
+	/AKfMDQxLEkkehccRXaJE10IZcsm6YxcU5TRkWtDKri5ZWpo0BJufKojlg5eMmXMcOLyNPZwIRp
+	93gYNrta3t5F/A1jp9ngMp77XcNAM9/SszFzfEWZ2EY79aPwA8mr5VxjcSReEh98iKHNncr5nY5
+	GJfUKc17zwNU7CQJI7gjTDnj+HoM3LTNeJlW4GboFql+HDAHaziO+ZHT4hET7YRjTMXbXRDa1IT
+	1YBnn2RyMzzUTTjaoub9WNOf+K8Ayd5bQPoJDcNTxHjrdZf9lV93CzAtc6RST6CUN8/L8w6V5vA
+	1lwL6BgkOMo87RBVxixhZNb0/4MUggP4j8MiYVN9vTX4rAzGkJiyRVpDM8q4KXT221HUJL0npgH
+	9TA2zbVtjHoZJIurWqYzJYfaZy215ByWmUK4lKjafr8eEwbRp1I/Ez2rMNvfZbtWh7AiPSdCEVL
+	15iUfWShx8A=
+X-Received: by 2002:a05:600c:37c8:b0:4a2:18c4:61a5 with SMTP id 5b1f17b1804b1-4ac16acd93cmr186307385e9.6.1793550486953;
         Sun, 01 Nov 2026 08:28:06 -0800 (PST)
 Received: from debian.. ([2001:41d0:303:db6b::])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4abf0b36853sm192023245e9.0.2026.11.01.08.28.05
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4abf0b36853sm192023245e9.0.2026.11.01.08.28.06
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 01 Nov 2026 08:28:05 -0800 (PST)
+        Sun, 01 Nov 2026 08:28:06 -0800 (PST)
 From: Tristan Madani <tristmd@gmail.com>
 X-Google-Original-From: Tristan Madani <tristan@talencesecurity.com>
 To: linux-xfs@vger.kernel.org
 Cc: aalbersh@kernel.org,
 	djwong@kernel.org,
 	Tristan Madani <tristan@talencesecurity.com>
-Subject: [PATCH xfsprogs 1/5] repair: validate MAC label attribute length before stack copy
-Date: Sun,  1 Nov 2026 16:27:59 +0000
-Message-ID: <20261101162804.1444159-2-tristan@talencesecurity.com>
+Subject: [PATCH xfsprogs 2/5] copy: validate bb_numrecs before iterating alloc btree records
+Date: Sun,  1 Nov 2026 16:28:00 +0000
+Message-ID: <20261101162804.1444159-3-tristan@talencesecurity.com>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20261101162804.1444159-1-tristan@talencesecurity.com>
 References: <20261101162804.1444159-1-tristan@talencesecurity.com>
@@ -100,40 +100,43 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-valuecheck() copies on-disk MAC label attribute values into a
-stack-allocated xfs_mac_label_t buffer (508 bytes) using memmove()
-with the on-disk valuelen field as the copy length.  For leaf-format
-attributes, valuelen is a 16-bit value read directly from disk and
-can be up to 65535 bytes, overflowing the stack buffer.
+The alloc btree leaf record loop in xfs_copy uses the on-disk
+bb_numrecs field directly as the iteration count without checking
+that it does not exceed the maximum number of records that fit in
+a single btree block.  A crafted filesystem image with an inflated
+bb_numrecs causes reads past the btree block buffer.
 
-The ACL path in the same function already handles this correctly by
-using malloc(valuelen) for a heap allocation.  Add a bounds check
-for the MAC label path to reject oversized values before the copy.
+Add a check against mp->m_alloc_mxr[0] (the precomputed maximum
+leaf records per block) before the loop, consistent with the
+validation already present in repair/scan.c for the same btree
+type.
 
 Found by code audit.
 
 Signed-off-by: Tristan Madani <tristan@talencesecurity.com>
 ---
- repair/attr_repair.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ copy/xfs_copy.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/repair/attr_repair.c b/repair/attr_repair.c
-index 982dc838..876f4240 100644
---- a/repair/attr_repair.c
-+++ b/repair/attr_repair.c
-@@ -164,6 +164,12 @@ valuecheck(
- 			free(valuep);
+diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
+index 4692a4ff..9658aea3 100644
+--- a/copy/xfs_copy.c
++++ b/copy/xfs_copy.c
+@@ -1083,6 +1083,14 @@ main(int argc, char **argv)
+ 			}
 
- 	} else if (strncmp(namevalue, SGI_MAC_FILE, SGI_MAC_FILE_SIZE) == 0) {
-+		if (valuelen > sizeof(xfs_mac_label_t)) {
-+			do_warn(
-+	_("entry contains oversized value (%d bytes) in attribute named SGI_MAC_LABEL\n"),
-+				valuelen);
-+			return 1;
-+		}
- 		if (value == NULL) {
- 			memset(&macl, 0, sizeof(xfs_mac_label_t));
- 			memmove(&macl, namevalue+namelen, valuelen);
+ 			rec_ptr = XFS_ALLOC_REC_ADDR(mp, block, 1);
++			if (be16_to_cpu(block->bb_numrecs) >
++						mp->m_alloc_mxr[0]) {
++				do_log(
++			_("WARNING:  bb_numrecs %u exceeds max %u in AG %u.  Aborting.\n"),
++					be16_to_cpu(block->bb_numrecs),
++					mp->m_alloc_mxr[0], agno);
++				exit(1);
++			}
+ 			for (i = 0; i < be16_to_cpu(block->bb_numrecs);
+ 							i++, rec_ptr++)  {
+ 				/* calculate in daddr's */
 --
 2.53.0
 
