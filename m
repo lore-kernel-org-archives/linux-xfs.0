@@ -1,55 +1,53 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793605028;
-	b=WtzIfNwDvTGelBQlkeDuc42TKmchLh3VNDUZsHgZQT8+JNgbem8nSgGklNTAEjy6lTy+
-	 eBf9BQvtAvTAkSNCh1720tpPLmJ67VCi69qGGDMhRsMXKYuqCpD8i/KDhavVZ90uKjQI8
-	 fsEyyAF9zz4IjNlJ6BhFopRCyhVGQY7/kKw5bAxFOjB5pw6m3Vb9RKBcyKzxk+p1UcCAX
-	 AuX0vld2Fj2n1KjkMf46lDE0oPhBHwa9eipd3ZNeufXuLa5vBezn3Q2gQnYJIKYtb/9ti
-	 7bnbP7YRiAwkJoAtSFkGNSNjXRhXBMhxAg/zzpcsTQusezjBtMYDW/WuQ0p9zKqRaDA==
+	t=1793607134;
+	b=bFNG7YADkfhbRou9HO1/Ul8jx/Y+08sl5UBusIS4OwdB+2N3/1rnxszfT6MieY2pHfaI
+	 KhSOreDtc7CScUi3l0wxZ1TfANBG6irg6CcyVwuf9KZqsmKISlKzN+faz/yaZBHlHdRy6
+	 O+yWkVJW4AjLRV5c1bOeNoHXES4CxyV+hHPWl6PWMz9ZI3V3DM7xUjLXLLfsTPssF3G83
+	 5ccRWjQ5p5lRP/kHUreBozq52FC52AXPcwTsBs6+D+LT0wnpevfTfn1UPWyNoZ8OfjWeQ
+	 /HQqvoPH/4qty8P2357muCZvLYOdGLiOI5ByLT9j84IDAtLsauiM4c3lfiFD8d2IxYw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793605028;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 Mail-Followup-To:References:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To;
-	bh=GuieGMbyNSD13Qn2uxd14dcXP56/y9iy+bE6dEAYbbw=;
-	b=aVD7b0bu2t8hTWFydVPuvPMS/sys6TT1K3NcL5lEN4GAZiIwjCNXYpgc6t1RtwYj6oLV
-	 wKLviiRva2ghLfSit0UJUo4VH2dlIRrZgpvYuIl3nSCalxoBd67CSgF8g9bRLlEy+BeKp
-	 7y/auhtcwUzCBlxC8C4YJJ4aMZf1U62OsMkAeNLrI9cXR+csgT1j4Fy+NFYOTF0Dg21BG
-	 on9IA9WRc+r5DZKoIY2hf0+UzsMEveK2tD68HbrAvvuHsJuE3zcIaiaoDk7+Z/Rvz9m6m
-	 Ql8x3RBoUHadEWmJZCLWERJqu70V+cmw42++s86cmfMWaRwAYtF3QZN4UqcCV3iP4tg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793607134;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=HusQp0AGtF0cjfU8TUfSRst/vJsaQjK/030p/TyZ4vg=;
+	b=EYzCUUrwOzns53mNBahXRNNVfevNTYSeNa9yfdyziyNVXKNVhcmgh/21m5psNtUR9qA4
+	 vKYTxGQuLihK4OXAm7gmLzCTEqdFoQzYPyEhJ5m9lxF+d/e4e8OVDpB10w4JpT4zOdFXp
+	 /mfCqVNNhjw8CQP1pA7y5gflepA4Qq1GjTwqy7L3MWo7VW10S352rKUk9Os6RfWbAH5Md
+	 39ajOIPdUBiAwHcx9hdfS5X8rrTnwlGmBV6HDQoYVRtaO2ttfa/mVcCPgzTGQrM6syPky
+	 yfm/GTcVPRiL2t1W+u7OJGpmVK0wVZZQWSMBDgIEVB0t5yqsTiV6VnUGo6fcICEJyYw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=JGOdajgH;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EvKiAiFg;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF69160A260A;
-	Mon,  2 Nov 2026 07:37:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07728606A324;
+	Mon,  2 Nov 2026 08:12:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=JGOdajgH
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78E331F00A1A;
-	Mon,  2 Nov 2026 07:37:05 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EvKiAiFg
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6493F1F00919;
+	Mon,  2 Nov 2026 08:12:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793605027;
-	bh=GuieGMbyNSD13Qn2uxd14dcXP56/y9iy+bE6dEAYbbw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=JGOdajgHk6a6gDnapdaHnQIFiPnu92ijaZvkOp0W1/85eTy+rCP3r194vLz3qr7Nb
-	 CVtifjaphjaU84ILk/EJcWjFygIsxeGmclDWPAEFPeq0rvOwKjvgwCM1NyxfzmkOnY
-	 290vImhV/ARO+lewI5+VjONLJTs2mOkXdDDd66JANLvyEqe/eg31Ax8eUEEgl/aIEo
-	 UXkaUovX+7oTgAD2PLYl65jpkSR93MdYzJ9YJ2QjKKE7th0WI02avw0pEyWZq1EjZg
-	 B+lxs2xmGGpWQ74vDrinP59RPehWD5JZF4fp0mhqZdaDE0419DdjqYU+X2L5uFBzPD
-	 Wawaq0bRAukmw==
-Date: Mon, 2 Nov 2026 15:37:02 +0800
-From: Zorro Lang <zlang@kernel.org>
-To: Lukas Herbolt <lukas@herbolt.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2] lib/random.c fix undefined behavior on signed integer
- overflow.
-Message-ID: <aug9g-osyv31_yQN@zlang-mailbox>
-Mail-Followup-To: Lukas Herbolt <lukas@herbolt.com>, 
-	fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-References: <20261016092111.296275-1-lukas@herbolt.com>
+	s=k20260515; t=1793607133;
+	bh=HusQp0AGtF0cjfU8TUfSRst/vJsaQjK/030p/TyZ4vg=;
+	h=From:To:Cc:Subject:Date;
+	b=EvKiAiFgTVS1oF6oeVwv/nVCNBFcg9fLEDSOD/Y+jhggG2QNeaDBTs95831osn0TV
+	 jpZR6oYPOjXECLGLsuKQrApRKIVQIWmbmXGg+Ii7qYvvzyMeLjEvHCv6MKUKXzo7c0
+	 w8/6XbzDH4U+CaSNoa7qtYGKPb1h0z2Vh8aoiTV7Vawqi3oAkl/0oaqVW7ISn18UOu
+	 hgYoi2UjglkiapLLFPNZPjtikfxP+7sUF801fkuPEeFg6HRZ9adm2M6lo0oIuBJq/x
+	 0L5Wkend2v9IaLQ65eY3qOZKUMCO2qYA1T6z5/AkPa42ZymwyZW1186I8TqQH3o3z6
+	 zEfYXgkqholMg==
+From: Andrey Albershteyn <aalbersh@kernel.org>
+To: fstests@vger.kernel.org,
+	zlang@kernel.org
+Cc: linux-xfs@vger.kernel.org,
+	Andrey Albershteyn <aalbersh@kernel.org>
+Subject: [PATCH] xfs/619: fix mistyped seqres.full variable
+Date: Mon,  2 Nov 2026 09:11:57 +0100
+Message-ID: <20261102081156.640279-2-aalbersh@kernel.org>
+X-Mailer: git-send-email 2.54.0
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -59,76 +57,26 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261016092111.296275-1-lukas@herbolt.com>
+Content-Transfer-Encoding: 8bit
 
-On Fri, Oct 16, 2026 at 11:21:11AM +0200, Lukas Herbolt wrote:
-> The random.c now expects that signed integer to overflow and
-> triggers the  ^MASK branch. But signed int overflow is undefined
-> behavior and GCC can optimize this branch out with certain
-> CFLAGS/LDFLAGS. And cleaning up the dead code.
-> 
-> Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
-> ---
+Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
+---
+ tests/xfs/619 | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-V2 looks good to me,
+diff --git a/tests/xfs/619 b/tests/xfs/619
+index 7e542f705e60..583be7160be2 100755
+--- a/tests/xfs/619
++++ b/tests/xfs/619
+@@ -36,7 +36,7 @@ file1 ---755 3 1 /dev/null
+ $
+ EOF
+ 
+-_scratch_mkfs -f -n parent=1 -p $protofile >>$seqresres.full 2>&1 \
++_scratch_mkfs -f -n parent=1 -p $protofile >>$seqres.full 2>&1 \
+ 	|| _fail "mkfs failed"
+ _check_scratch_fs
+ 
+-- 
+2.54.0
 
-Reviewed-by: Zorro Lang <zlang@kernel.org>
-
->  lib/random.c | 34 +++++++---------------------------
->  1 file changed, 7 insertions(+), 27 deletions(-)
-> 
-> diff --git a/lib/random.c b/lib/random.c
-> index d5c81be817c8..558da4e6888d 100644
-> --- a/lib/random.c
-> +++ b/lib/random.c
-> @@ -162,38 +162,18 @@ static int32_t mt [128] =   {
->            69069
->  		};
->  
-> -double 
-> -_random (int32_t is [2])
-> -{
-> -	int32_t it, leh, nit;
-> -
-> -	it = is [0];
-> -	leh = is [1];
-> -	if (it <= 0)	
-> -		it = (it + it) ^ MASK;
-> -	else
-> -		it = it + it;
-> -	nit = it - 1;
-> -/*	to ensure all-ones pattern omitted    */
-> -	leh = leh * mt[nit & 127] + nit;
-> -	is [0] = it;    is [1] = leh;
-> -	if (leh < 0) leh = ~leh;
-> -	return (SCALE * ((int32_t) (leh | 1)));
-> -}
-> -
-> -
-> -
->  int32_t 
->  _irandm (int32_t is [2])
->  {
-> -	int32_t it, leh, nit;
-> -
-> +	int32_t it, leh, nit, apply_mask;
->  	it = is [0];
->  	leh = is [1];
-> -	if (it <= 0)	
-> -		it = (it + it) ^ MASK;
-> -	else
-> -		it = it + it;
-> +
-> +/* 	evaluate on original value - no UB here */
-> +	apply_mask = (it <= 0);
-> +/*	double via unsigned shift - well-defined */
-> +	it = (unsigned)it << 1;
-> +	if (apply_mask) it ^= MASK;
->  	nit = it - 1;
->  /*	to ensure all-ones pattern omitted    */
->  	leh = leh * mt[nit & 127] + nit;
-> -- 
-> 2.56.0
-> 
