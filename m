@@ -1,55 +1,51 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793617728;
-	b=KngT9EzLCH2gZnt3gW+cBJSK6x7qTRSymh+/zhgM259XidOG7GQMNffH+Mkp0xchr6e3
-	 BBl+W+PoTsOr0FNrhoUrXp/IFWd1pH70IzepNzsDbFp/+Si/vUnuF3Huy+RRcQmFkkKab
-	 +Uj/o7NCs3AnUuxvdwj448icdyXpyDV7aO56rRO/bEnj0Rw/sm17MU/R5BLvTY78lUp8j
-	 /y0qAOBW6qf06cqAZ9hW/O3+Ge0JGmEiWgRWOVALmHhYu7AFAf5ZOi4q7PuOwxiYw4Xqd
-	 yOoE92AGdBQ/AzHv7de0g251KjryHytf2OnFR5TR6zS2mZdaytgO/8khLesmP8nEMBA==
+	t=1793620362;
+	b=3xv0FJtPwAgGuEz0pqbpLEthmgJNXvmSqdyoV70lIrrH0AtUu9YZRV07p0mxJkKEdiut
+	 geWg+WgsZvSaagrIaosYD+8TB80NxiXmqsfWzL6J1o34JAf38ow0Jtr9qI/PypQGR2Ea+
+	 iVGlcydRXKbNBAYq1ck0XT3sV212LWjowJ9wyvndlwljcMIN3S9bNcjcvM4IXqgpBaUbw
+	 ckscH4Fw5pa9CDBrGczccoMM3KZn3FZtCaKynDIxafy8V/lnBVoedzAp4NKWArUb2LKa5
+	 LmjMZow2mpek2p0V6v/2dJfPYzdNOe9Uw2IOjkxz6eKKwMQ6y84UauqNsFxbQl1fRDA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793617728;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793620362;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:
-	 Content-Transfer-Encoding:In-Reply-To;
-	bh=vKivxmk0Fp/Q25vo6oTqWa5phfU7YrjeQWxvIf6IC+g=;
-	b=BfaW7VIsZKOe4WzDSvqa1IHZgGLiX95JOk35hsjy/tUQDU/d7ndAuAV8Cab+2U9MtAU4
-	 7el0kdi9btYkKdz6KK+MvGHFsmGVOszEX1862UZuIEMhOLuJdIeLHYHVanyIKYkPlk/bF
-	 UuGxJILYQX/KSwgeNbQhXxNNr5HSL65P8pN3++KHfI92NcxhNIhj352BgVdB1YZ98BqLr
-	 hfOh7PLFsTW8qH1waqifHGkDhP6cVW2Gyhr5kYyNi4BaIZDj68ydY0z8ZHXsHOWQ9aCps
-	 DD/pi3Jy9U46ewykwOxbKhpqvnfqpfmL2aA56N/NAtIwEwr1KpR2EqkzQvfqDIBmWAQ==
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=RNrgB0X0sFHSJq6hlCGDS+dbe/z5kRcC+D/NzEx9/KI=;
+	b=v0LxWicuIbGenkrD1Qrdjap1UOgf3b3E1rd1vAXZl9mWgdE0G6jjvk/WIlif6vQdRcYf
+	 cFoWnRPRajG8IyVJQ0G4kvcro5keAhwiyGCM2HCNgAs2QdGlM8OIltMrDqvwTLMydlz7q
+	 Jmfqz3F9NE1+9WMzzZlMiz1nPbxxn3vh+r41/RuQA2lIXq7+AndyYWvedn31t9xRUtvj/
+	 6fEJlaisITLbgnhFYM5mn7KLhnBpU3n4nFr5XGqB+bbqJPNlkLvD2Dp7X6rnPT3FptkXa
+	 zJIHUjZEyIBVillFv9ix8GjM9Ikft2QNehISLylSGN69h64dc9mipCCzPkl4AF/3UCw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UkrNBaQr;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BbOPN9Op;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24BB2606A32F;
-	Mon,  2 Nov 2026 11:08:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79038606A324
+	for <linux-xfs@vger.kernel.org>; Mon,  2 Nov 2026 11:52:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UkrNBaQr
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A29611F00A16;
-	Mon,  2 Nov 2026 11:08:46 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BbOPN9Op
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 461641F00A16;
+	Mon,  2 Nov 2026 11:52:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793617727;
-	bh=vKivxmk0Fp/Q25vo6oTqWa5phfU7YrjeQWxvIf6IC+g=;
+	s=k20260515; t=1793620362;
+	bh=RNrgB0X0sFHSJq6hlCGDS+dbe/z5kRcC+D/NzEx9/KI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=UkrNBaQr8nrfYUXUf6x/jboQX0SGbIpUnV4lCW8UH2lrmoFZTbM0DlDdc0/upJjL2
-	 Z27FuwE55Ld3qoaHFLxgMxAhJqC1g2ir3zMjSvw2yPXX0ycASIXlMGMYsdvURkFzOF
-	 efy5JnZR9TxeHnxmlWN8W7yLiim+KOnu3NbzCUsrKkRcJGov141WVCxsPuUwn/Jdp/
-	 XHyrApUGGGF9+8Oa61qa1JRe6CHxmRUUFCA33VJWBzZBGrZX1O8G24Zm9TwH5Q382X
-	 S6dTSNJqbzyfsxKrcl6teA2KMfuk9JZ4dAd0n6tkiCSyusEZtWpXM9B3au8HpPWIKo
-	 n6Df0cnrNroFg==
-Date: Mon, 2 Nov 2026 12:08:43 +0100
+	b=BbOPN9OpkOjyE2+Qb9qQRJGAIANF8sWbJygsds3/PrbowMbG46JP2r8T+i/qT+D77
+	 /l+lb/Hzg+qXYAPOZJyJwgKX1RLe+6bd62GUG3YEocrisMRH28mWjo7IMzbaZg5nNW
+	 UXjF3VWw2CeWsUtWM6Oid0eiXf2BEwu+1VgJzqLD9VkbT3G890ge+oeSMbZdrj6lL7
+	 q5UMxTOHHLn2JokdUwm6E3Y5FJq61V8QQOV+5sv3KepuDPxjTfaCqaCjPPw4eWbxzX
+	 dGQ9Vk+dlEMa3tXKVVz6L0RoXQd7P6Cn4+iNRYlfGX765sFvIRjkxkIVH4XFVKA/2m
+	 RmB3vJiaTFHOg==
+Date: Mon, 2 Nov 2026 12:52:38 +0100
 From: Carlos Maiolino <cem@kernel.org>
-To: Wilfred Mallawa <wilfred.mallawa@wdc.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, 
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] xfs: fix unwind handling during xfs_mount_sysfs_init()
-Message-ID: <auhvGIXs1XVqNxgF@nidhogg.toxiclabs.cc>
-References: <20261026053454.987673-2-wilfred.opensource@gmail.com>
- <auDFY4Lkxs76I_F5@cronus.toxiclabs.cc>
- <7aa0056fad8faa98a79b2df930fec1119797b51c.camel@wdc.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: fix recovery of partial attr removals
+Message-ID: <auh1xhogpIaw2d5t@nidhogg.toxiclabs.cc>
+References: <20261028081125.2209827-1-hch@lst.de>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -59,57 +55,73 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <7aa0056fad8faa98a79b2df930fec1119797b51c.camel@wdc.com>
+In-Reply-To: <20261028081125.2209827-1-hch@lst.de>
 
-On Tue, Oct 27, 2026 at 10:39:09PM +0000, Wilfred Mallawa wrote:
-> On Tue, 2026-10-27 at 16:50 +0100, Carlos Maiolino wrote:
-> > On Mon, Oct 26, 2026 at 03:34:55PM +1000, Wilfred Mallawa wrote:
-> > > From: Wilfred Mallawa <wilfred.mallawa@wdc.com>
-> > > 
-> > > The goto for failing to setup /error/metadata jumps to the wrong
-> > > place
-> > > in xfs_mount_sysfs_init(). Fix it.
-> > > 
-> > > Fixes: a9a7b9e8686d ("xfs: add support for lazy direct read bounce
-> > > buffering")
-> > > Signed-off-by: Wilfred Mallawa <wilfred.mallawa@wdc.com>
-> > > ---
-> > >  fs/xfs/xfs_sysfs.c | 2 +-
-> > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > > 
-> > > diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-> > > index e77917ac179d..4a6a8c92c3a1 100644
-> > > --- a/fs/xfs/xfs_sysfs.c
-> > > +++ b/fs/xfs/xfs_sysfs.c
-> > > @@ -906,7 +906,7 @@ xfs_mount_sysfs_init(
-> > >  				"metadata", &mp-
-> > > >m_error_meta_kobj,
-> > >  				xfs_error_meta_init);
-> > >  	if (error)
-> > > -		goto out_remove_csum_dir;
-> > > +		goto out_remove_error_dir;
-> > 
-> > Hmm. I think this is wrong. Don't we need to remove the
-> > fail_at_unmount
-> > file *before* removing the kobject?
-> > 
-> > So, we'd need to actually call sysfs_remove_file() before actually
-> > deleting the m_error_kobj.
-> > 
-> > I am honestly not sure if kobject_del would clean up any attributes
-> > added there, but I think that's the right thing to do here?!
+On Wed, Oct 28, 2026 at 09:09:39AM +0100, Christoph Hellwig wrote:
+> When running xfs/753 on parent pointer-enabled file systems with DEBUG
+> enabled, log recovery will eventually crash after a few dozen iterations
+> due to an ASSERT that XFS_ATTR_INCOMPLETE is not already set when
+> xfs_attr3_leaf_setflag is called:
 > 
-> With the xfs_sysfs_del(m_error_kobj), we end up in sysfs_remove_dir(()
-> which deletes any subdirs/files. So we *shoudn't* need to explicitly do
-> a per file remove?
+> XFS: Assertion failed: (entry->flags & XFS_ATTR_INCOMPLETE) == 0, file: fs/xfs/libxfs/xfs_attr_leaf.c, line: 3045
+> 
+> This is because parent pointer use logged attributes, and the attribute
+> intents do not track the work that has been done as the transaction
+> rolls, and the recovery mechanism is to run the operation from scratch.
+> Because of this various places check for XFS_DA_OP_RECOVERY skip work
+> already done.  But while recovery tolerates an attribute already fully
+> removed, it currently trips the above assert for an attribute that
+> already has the INCOMPLETE bit set, but still exists.  Fix this by
+> handling the case like all the others.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+> 
+> This really wants a Fixes tag and/or a cc stable, but I have a really
+> hard time coming up with a good one.  The logged attrs are a messy
+> history with tons of refactoring, but this actually code goes back way
+> beyond that, but wasn't a problem before the attr item recovery.  Logged
+> attrs themselves are still only a debug option and not used by default
+> except for the parent pointer.  Any good suggestions?
 
-Yup, you're right.
+Uff.. I think this goes waaaay back, even before CRC?!
 
+Giving this wasn't a proble before LARP, I'd probably be inclined to set
+a Fixes pointing towards 1d08e11d04d2.
+Not because it imminently fixes that patch, but that the broken behavior
+kind of started after that. Cc stable probably v5.19. I don't think
+there is any point before that.
+
+For the patch though:
 Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
 > 
+>  fs/xfs/libxfs/xfs_attr_leaf.c | 9 ++++++++-
+>  1 file changed, 8 insertions(+), 1 deletion(-)
 > 
-> Thanks!
+> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+> index 6068fad9dc9e..82932b5c02fd 100644
+> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
+> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+> @@ -3042,7 +3042,14 @@ xfs_attr3_leaf_setflag(
+>  #endif
+>  	entry = &xfs_attr3_leaf_entryp(leaf)[args->index];
+>  
+> -	ASSERT((entry->flags & XFS_ATTR_INCOMPLETE) == 0);
+> +	if (entry->flags & XFS_ATTR_INCOMPLETE) {
+> +		if (!(args->op_flags & XFS_DA_OP_RECOVERY)) {
+> +			ASSERT(args->op_flags & XFS_DA_OP_RECOVERY);
+> +			return -EFSCORRUPTED;
+> +		}
+> +		return 0;
+> +	}
+> +
+>  	entry->flags |= XFS_ATTR_INCOMPLETE;
+>  	xfs_trans_log_buf(args->trans, bp,
+>  			XFS_DA_LOGRANGE(leaf, entry, sizeof(*entry)));
+> -- 
+> 2.53.0
+> 
+> 
