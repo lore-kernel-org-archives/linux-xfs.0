@@ -1,54 +1,55 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.70
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793565214;
-	b=A7zfObzRF35uLaKyerW6ARE4zSrVKjnHl7xCpv0citsrvNXEwf0W0boP6vPKuTsQsnKG
-	 Ld+LYrQhhYNrvdqvC+LmrC1w6ya8k7X3GVk+4Q9rGmaYe+uCLUy0Wj3GNXRXHCVwWvmOf
-	 Ux+DX3ruaCj0WxnbQQ1cdsTU/n1UTejq2IXWwdfFigCKvjFwHZVtCoj5uPd2xl1fJn+8B
-	 PAoi5zF8iyR54UN1yYk8zJ6tyE54JB8xYSxDIvDLrnOhBHyYGfX8imNU9+3OBvwe0gaD0
-	 e5hGBc4xP/lrCoQGBynjdtUwDU58XkTztCNCJ2malGd5m0z/3gojlQROsEn1JaVE+KQ==
+	t=1793605028;
+	b=WtzIfNwDvTGelBQlkeDuc42TKmchLh3VNDUZsHgZQT8+JNgbem8nSgGklNTAEjy6lTy+
+	 eBf9BQvtAvTAkSNCh1720tpPLmJ67VCi69qGGDMhRsMXKYuqCpD8i/KDhavVZ90uKjQI8
+	 fsEyyAF9zz4IjNlJ6BhFopRCyhVGQY7/kKw5bAxFOjB5pw6m3Vb9RKBcyKzxk+p1UcCAX
+	 AuX0vld2Fj2n1KjkMf46lDE0oPhBHwa9eipd3ZNeufXuLa5vBezn3Q2gQnYJIKYtb/9ti
+	 7bnbP7YRiAwkJoAtSFkGNSNjXRhXBMhxAg/zzpcsTQusezjBtMYDW/WuQ0p9zKqRaDA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793565214;
-	h=DMARC-Filter:Received:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
-	 X-Gm-Message-State:MIME-Version:X-Received:Date:
-	 X-Google-Appengine-App-Id:X-Google-Appengine-App-Id-Alias:Message-ID:
-	 Subject:From:To:Content-Type;
-	bh=2dTv+40A8MU9jbQstiny/cxNJ+aTnQerlecbgJEPaYA=;
-	b=eFwYqD8is18JIoQoJ+aiCr2K7r1hLs1bBv5ZsumiTJ2NRHdYB564mKHs7ySSzzmUWBKF
-	 joi1H/asI9vO68dP6u0xpg2UXIRGSnxWB1Ay66slL5Tzs9qRX6+L+FCcRnFIWBRIDxU9S
-	 0HbmqTXq7j2bXzL+BKW6B5Gy1fq2kfhJ3EQxOEyg3jQTbT6RVkrmGFEVPb22j8/XqB5Co
-	 dBfIFM7BkGVUcCxLQyuHSkgExQDEDZpGtt/yHCPkvykL2MDUJANig8ivWOCqgtJamI8tW
-	 Ve5qrNLgMif9FhWasTHgudh/hm7fIs3sIrb9XhBybVTRHV+9Bti3/hPS47tQoYxo5bw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793605028;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 Mail-Followup-To:References:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To;
+	bh=GuieGMbyNSD13Qn2uxd14dcXP56/y9iy+bE6dEAYbbw=;
+	b=aVD7b0bu2t8hTWFydVPuvPMS/sys6TT1K3NcL5lEN4GAZiIwjCNXYpgc6t1RtwYj6oLV
+	 wKLviiRva2ghLfSit0UJUo4VH2dlIRrZgpvYuIl3nSCalxoBd67CSgF8g9bRLlEy+BeKp
+	 7y/auhtcwUzCBlxC8C4YJJ4aMZf1U62OsMkAeNLrI9cXR+csgT1j4Fy+NFYOTF0Dg21BG
+	 on9IA9WRc+r5DZKoIY2hf0+UzsMEveK2tD68HbrAvvuHsJuE3zcIaiaoDk7+Z/Rvz9m6m
+	 Ql8x3RBoUHadEWmJZCLWERJqu70V+cmw42++s86cmfMWaRwAYtF3QZN4UqcCV3iP4tg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=fail header.from=syzkaller.appspotmail.com;
-	spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com;
-	arc=none smtp.remote-ip=209.85.210.70
-Received: from mail-ot1-f70.google.com (mail-ot1-f70.google.com [209.85.210.70])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=JGOdajgH;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06E79606A327
-	for <linux-xfs@vger.kernel.org>; Sun,  1 Nov 2026 20:33:33 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 06E79606A327
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-ot1-f70.google.com with SMTP id 46e09a7af769-83c2311eb1dso4294866a34.1
-        for <linux-xfs@vger.kernel.org>; Sun, 01 Nov 2026 12:33:33 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793565213; x=1794170013;
-        h=content-type:to:from:subject:message-id:date:mime-version
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=2dTv+40A8MU9jbQstiny/cxNJ+aTnQerlecbgJEPaYA=;
-        b=NULikNPHGbUUuvey0PLpWe6q97hNoBV3pnBhGYFET2+borIFGT/l8iqEaoS+SBwvuN
-         isWTXSGkcpynw0OkeN0HF5y2KjJjAeLwUmiJNAzuGn30s5zxSfNFXQTkEX28qwxaFV0C
-         L7CGX+DkyiTK8p7Y0elBsmusYKuBgSzfd8AIEx11QTXEfMXSi+sY4nLdRf/J84/KlufE
-         IlXjlbjwwLU9fv4gOUJ54KBAgipG/udTGRLnq8M5C2viSZ4y29IHTDqv0kWDEnLIdn0B
-         XdurTTtviFGzgueQTD4RuECujnGTnweFRxOhU/5LgrTBjG9XCay81+bQklQVyQZ8UUAM
-         gAeA==
-X-Forwarded-Encrypted: i=1; AKwUvBxb3mphqGTvFCGC9tm0A7ogld7A8ZKe7D1x+R+TGx1oSLN0hyd6TU1UBgflQY5OJxvpNhM/pMOF3Lo=@vger.kernel.org
-X-Gm-Message-State: AFq9FYKVCierKiAWxAfHK8lIWZU/KRDEys9XoqjNtf7wKWRbAJu1Ii3k
-	O2kNIdQGy0epXGVJM+s18unQ1fvRcYDzVDfGLjid4qiTFYCE37rRrXfluMx00Hg66g68mXS6u1O
-	GBjQyHAkhL4a8wnynMO/Cpy82HImsOJYjwoBUamd48UIkFDncHkzrn2CUTLM=
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF69160A260A;
+	Mon,  2 Nov 2026 07:37:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=JGOdajgH
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78E331F00A1A;
+	Mon,  2 Nov 2026 07:37:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793605027;
+	bh=GuieGMbyNSD13Qn2uxd14dcXP56/y9iy+bE6dEAYbbw=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=JGOdajgHk6a6gDnapdaHnQIFiPnu92ijaZvkOp0W1/85eTy+rCP3r194vLz3qr7Nb
+	 CVtifjaphjaU84ILk/EJcWjFygIsxeGmclDWPAEFPeq0rvOwKjvgwCM1NyxfzmkOnY
+	 290vImhV/ARO+lewI5+VjONLJTs2mOkXdDDd66JANLvyEqe/eg31Ax8eUEEgl/aIEo
+	 UXkaUovX+7oTgAD2PLYl65jpkSR93MdYzJ9YJ2QjKKE7th0WI02avw0pEyWZq1EjZg
+	 B+lxs2xmGGpWQ74vDrinP59RPehWD5JZF4fp0mhqZdaDE0419DdjqYU+X2L5uFBzPD
+	 Wawaq0bRAukmw==
+Date: Mon, 2 Nov 2026 15:37:02 +0800
+From: Zorro Lang <zlang@kernel.org>
+To: Lukas Herbolt <lukas@herbolt.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2] lib/random.c fix undefined behavior on signed integer
+ overflow.
+Message-ID: <aug9g-osyv31_yQN@zlang-mailbox>
+Mail-Followup-To: Lukas Herbolt <lukas@herbolt.com>, 
+	fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+References: <20261016092111.296275-1-lukas@herbolt.com>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -58,47 +59,76 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-Received: by 2002:a05:6808:181d:b0:523:dee6:7ae0 with SMTP id
- 5614622812f47-5640de07f62mr5409409b6e.58.1793565213054; Sun, 01 Nov 2026
- 12:33:33 -0800 (PST)
-Date: Sun, 01 Nov 2026 12:33:33 -0800
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <6ae7a21d.7fe51036.1ecf7.002d.GAE@google.com>
-Subject: [syzbot] Monthly xfs report (Nov 2026)
-From: syzbot <syzbot+list16a9fddd1bb92a94c686@syzkaller.appspotmail.com>
-To: cem@kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261016092111.296275-1-lukas@herbolt.com>
 
-Hello xfs maintainers/developers,
+On Fri, Oct 16, 2026 at 11:21:11AM +0200, Lukas Herbolt wrote:
+> The random.c now expects that signed integer to overflow and
+> triggers the  ^MASK branch. But signed int overflow is undefined
+> behavior and GCC can optimize this branch out with certain
+> CFLAGS/LDFLAGS. And cleaning up the dead code.
+> 
+> Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
+> ---
 
-This is a 31-day syzbot report for the xfs subsystem.
-All related reports/information can be found at:
-https://syzkaller.appspot.com/upstream/s/xfs
+V2 looks good to me,
 
-During the period, 0 new issues were detected and 0 were fixed.
-In total, 11 issues are still open and 35 have already been fixed.
+Reviewed-by: Zorro Lang <zlang@kernel.org>
 
-Some of the still happening issues:
-
-Ref Crashes Repro Title
-<1> 910     Yes   possible deadlock in xfs_icwalk_ag (3)
-                  https://syzkaller.appspot.com/bug?extid=789028412a4af61a2b61
-<2> 27      Yes   KASAN: slab-use-after-free Read in xfs_defer_item_unpause
-                  https://syzkaller.appspot.com/bug?extid=e7f24354da9f7915bc54
-<3> 6       Yes   KASAN: slab-use-after-free Write in xlog_cil_push_work
-                  https://syzkaller.appspot.com/bug?extid=c32ff62cf4913d345d0c
-
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-To disable reminders for individual bugs, reply with the following command:
-#syz set <Ref> no-reminders
-
-To change bug's subsystems, reply with:
-#syz set <Ref> subsystems: new-subsystem
-
-You may send multiple commands in a single email message.
+>  lib/random.c | 34 +++++++---------------------------
+>  1 file changed, 7 insertions(+), 27 deletions(-)
+> 
+> diff --git a/lib/random.c b/lib/random.c
+> index d5c81be817c8..558da4e6888d 100644
+> --- a/lib/random.c
+> +++ b/lib/random.c
+> @@ -162,38 +162,18 @@ static int32_t mt [128] =   {
+>            69069
+>  		};
+>  
+> -double 
+> -_random (int32_t is [2])
+> -{
+> -	int32_t it, leh, nit;
+> -
+> -	it = is [0];
+> -	leh = is [1];
+> -	if (it <= 0)	
+> -		it = (it + it) ^ MASK;
+> -	else
+> -		it = it + it;
+> -	nit = it - 1;
+> -/*	to ensure all-ones pattern omitted    */
+> -	leh = leh * mt[nit & 127] + nit;
+> -	is [0] = it;    is [1] = leh;
+> -	if (leh < 0) leh = ~leh;
+> -	return (SCALE * ((int32_t) (leh | 1)));
+> -}
+> -
+> -
+> -
+>  int32_t 
+>  _irandm (int32_t is [2])
+>  {
+> -	int32_t it, leh, nit;
+> -
+> +	int32_t it, leh, nit, apply_mask;
+>  	it = is [0];
+>  	leh = is [1];
+> -	if (it <= 0)	
+> -		it = (it + it) ^ MASK;
+> -	else
+> -		it = it + it;
+> +
+> +/* 	evaluate on original value - no UB here */
+> +	apply_mask = (it <= 0);
+> +/*	double via unsigned shift - well-defined */
+> +	it = (unsigned)it << 1;
+> +	if (apply_mask) it ^= MASK;
+>  	nit = it - 1;
+>  /*	to ensure all-ones pattern omitted    */
+>  	leh = leh * mt[nit & 127] + nit;
+> -- 
+> 2.56.0
+> 
