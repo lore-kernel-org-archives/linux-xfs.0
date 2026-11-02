@@ -1,53 +1,59 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793607134;
-	b=bFNG7YADkfhbRou9HO1/Ul8jx/Y+08sl5UBusIS4OwdB+2N3/1rnxszfT6MieY2pHfaI
-	 KhSOreDtc7CScUi3l0wxZ1TfANBG6irg6CcyVwuf9KZqsmKISlKzN+faz/yaZBHlHdRy6
-	 O+yWkVJW4AjLRV5c1bOeNoHXES4CxyV+hHPWl6PWMz9ZI3V3DM7xUjLXLLfsTPssF3G83
-	 5ccRWjQ5p5lRP/kHUreBozq52FC52AXPcwTsBs6+D+LT0wnpevfTfn1UPWyNoZ8OfjWeQ
-	 /HQqvoPH/4qty8P2357muCZvLYOdGLiOI5ByLT9j84IDAtLsauiM4c3lfiFD8d2IxYw==
+	t=1793614210;
+	b=zxVFXuXdmR+n3VwXNE7E4N0T85LKIQYvpHOnYznKTShyNHOUqqyTyYJI1GcB0S7x6P69
+	 iQdcy5aLQuIQXY60xvvIlwjJ7ogR4jtnRpkNh8mn20M+Al5AUr0OuaUu27gznS0iY7BCn
+	 GiiyidEQ7EUo3uJIGc64aLFczXAwv5tGfe2BATecyU4Tk9jNls1rUdONHTPjmCEoHAL6e
+	 w1QB7yxj2VaQHZYpp87q+T5XT+OpKIoiT1DfytOJcuc07M7S0ONMyHJD6Daj6TbItRk0I
+	 1gKXF5z6xe2+Ldn6ybAbd0umo+Z7snZYgb0MeLDoL9/OE0AFqmtMVRzkMHUX2JSU8vA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793607134;
-	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=HusQp0AGtF0cjfU8TUfSRst/vJsaQjK/030p/TyZ4vg=;
-	b=EYzCUUrwOzns53mNBahXRNNVfevNTYSeNa9yfdyziyNVXKNVhcmgh/21m5psNtUR9qA4
-	 vKYTxGQuLihK4OXAm7gmLzCTEqdFoQzYPyEhJ5m9lxF+d/e4e8OVDpB10w4JpT4zOdFXp
-	 /mfCqVNNhjw8CQP1pA7y5gflepA4Qq1GjTwqy7L3MWo7VW10S352rKUk9Os6RfWbAH5Md
-	 39ajOIPdUBiAwHcx9hdfS5X8rrTnwlGmBV6HDQoYVRtaO2ttfa/mVcCPgzTGQrM6syPky
-	 yfm/GTcVPRiL2t1W+u7OJGpmVK0wVZZQWSMBDgIEVB0t5yqsTiV6VnUGo6fcICEJyYw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793614210;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=2Og0Q1VOJHkTmMnFzes6Fs3Mlg11CKsB+9W7RmnajRY=;
+	b=SaNIkNcZZJddW3564lPIfjp4dMD6tx+7S999RUkEZZ5dJziVTCMJrG2QlJTgP759cRml
+	 fm/rl0B4uh/t920SAKfyPHBPBzuh6dsK5CxQngU3BADhGexsndzRLUfv7tNux5YdgWAs/
+	 vGba4e/aTSijxI5PhxLqf4nrzJEtAQbtzT2VXYY5z9URGKATJDD85XqmvFTv7GxveaeCE
+	 cqCRhvIeqv0JIXh6OLcNGYbSParPr4ep61t+BGqRKgcnV82JDndmYoiuAO3PY0UYSZORq
+	 PiOay3Pq/1RFLA9dTxi9AJPYEM0yHzWUNxcahPML6UMjRITBuz//r0woVZvyA1bLUDA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EvKiAiFg;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GOSTae2Y;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07728606A324;
-	Mon,  2 Nov 2026 08:12:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3474D606A326
+	for <linux-xfs@vger.kernel.org>; Mon,  2 Nov 2026 10:10:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EvKiAiFg
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6493F1F00919;
-	Mon,  2 Nov 2026 08:12:12 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GOSTae2Y
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8A95E1F000C1;
+	Mon,  2 Nov 2026 10:10:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793607133;
-	bh=HusQp0AGtF0cjfU8TUfSRst/vJsaQjK/030p/TyZ4vg=;
-	h=From:To:Cc:Subject:Date;
-	b=EvKiAiFgTVS1oF6oeVwv/nVCNBFcg9fLEDSOD/Y+jhggG2QNeaDBTs95831osn0TV
-	 jpZR6oYPOjXECLGLsuKQrApRKIVQIWmbmXGg+Ii7qYvvzyMeLjEvHCv6MKUKXzo7c0
-	 w8/6XbzDH4U+CaSNoa7qtYGKPb1h0z2Vh8aoiTV7Vawqi3oAkl/0oaqVW7ISn18UOu
-	 hgYoi2UjglkiapLLFPNZPjtikfxP+7sUF801fkuPEeFg6HRZ9adm2M6lo0oIuBJq/x
-	 0L5Wkend2v9IaLQ65eY3qOZKUMCO2qYA1T6z5/AkPa42ZymwyZW1186I8TqQH3o3z6
-	 zEfYXgkqholMg==
+	s=k20260515; t=1793614209;
+	bh=2Og0Q1VOJHkTmMnFzes6Fs3Mlg11CKsB+9W7RmnajRY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=GOSTae2Yg2oDO0HmKwWczivHqqvnDLG4GRWbzUGrkb8zifya8SQSM6kBJwqn7Xab8
+	 k1G3/ICg7u0IAAHeCxYlOdtYAbktLDsGq9b0IWcIMvLbWUQHcPxEfaFHYatabd/JvY
+	 wGCW44kOqf6wOMjvNuclVLzu9g2nQh734TfobrP1JfUvGnXU2Z0aHjqRbY5Pu2M7E5
+	 Vl2rxVNPYd7V9aJTsxxe8Et3bAVHoOryA7mePauSR/kyGZ/6FMMnOxS/lMy/kOfr26
+	 EQcnACSeSKn9PjR2/56w/VjAOx4YJBMkt3WLZSmLOWJKrSkXBHszjb24FldS4yzddj
+	 9i62boSa3zjlA==
+Date: Mon, 2 Nov 2026 11:10:05 +0100
 From: Andrey Albershteyn <aalbersh@kernel.org>
-To: fstests@vger.kernel.org,
-	zlang@kernel.org
-Cc: linux-xfs@vger.kernel.org,
-	Andrey Albershteyn <aalbersh@kernel.org>
-Subject: [PATCH] xfs/619: fix mistyped seqres.full variable
-Date: Mon,  2 Nov 2026 09:11:57 +0100
-Message-ID: <20261102081156.640279-2-aalbersh@kernel.org>
-X-Mailer: git-send-email 2.54.0
+To: Wilfred Mallawa <wilfred.mallawa@wdc.com>
+Cc: "cem@kernel.org" <cem@kernel.org>, 
+	"djwong@kernel.org" <djwong@kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: [xfsprogs] mkfs: fixup memory leak on exit
+Message-ID: <auhhUx9TNM4i1YoA@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+References: <20261006101232.357124-2-wilfred.opensource@gmail.com>
+ <asTQdEMkpzc7_tSd@cronus.toxiclabs.cc>
+ <75bc883c4d45a514aaad949dfe301c3f2a79112a.camel@wdc.com>
+ <20261006144851.GX2705364@frogsfrogsfrogs>
+ <asd7554UisFwlOsc@cronus.toxiclabs.cc>
+ <e042c937a34eb92afdc0208a2f6571076f096ba6.camel@wdc.com>
+ <ass13wWEOO9woOOw@cronus.toxiclabs.cc>
+ <d74e85022834ec1c39c79931d64b4c805001e7cd.camel@wdc.com>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -57,26 +63,28 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <d74e85022834ec1c39c79931d64b4c805001e7cd.camel@wdc.com>
 
-Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
----
- tests/xfs/619 | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On 2026-10-12 00:43:28, Wilfred Mallawa wrote:
+> On Sun, 2026-10-11 at 09:09 +0200, Carlos Maiolino wrote:
+> > > > 
+> > > 
+> > > Just to clarify, should I can spin up a V2 that frees all of the
+> > > getstr() allocations in xfs_mkfs? or shall we drop this for now?
+> > 
+> > I'm happy getting rid of leaks even if they are just before we
+> > exit().
+> > Final decision is from the maintainer thought. Andrey has been OOO
+> > past
+> > few days, so perhaps wait for him to come back and decide?!
+> > 
+> > Cheers.
+> 
+> Okay, sounds good!
 
-diff --git a/tests/xfs/619 b/tests/xfs/619
-index 7e542f705e60..583be7160be2 100755
---- a/tests/xfs/619
-+++ b/tests/xfs/619
-@@ -36,7 +36,7 @@ file1 ---755 3 1 /dev/null
- $
- EOF
- 
--_scratch_mkfs -f -n parent=1 -p $protofile >>$seqresres.full 2>&1 \
-+_scratch_mkfs -f -n parent=1 -p $protofile >>$seqres.full 2>&1 \
- 	|| _fail "mkfs failed"
- _check_scratch_fs
- 
+Sound good to me, to have it freed.
+
 -- 
-2.54.0
-
+- Andrey
