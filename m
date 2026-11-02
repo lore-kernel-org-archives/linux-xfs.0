@@ -1,44 +1,44 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793630548;
-	b=OBOCX9wPBGK23L1bzfYCVPa5eq3TzzWTqm+lva1Os9at2lVTasKNLhX8ebsexp5mUJfP
-	 pgceywc1PlII1A2WH68UMq+0yfcw2YBQ34UfHQC0w0YmsKNHjuQS6w/VIdjvNllSs8bRz
-	 OWpynTp+O8YOamnJwaGXqWCOWBq+P2MH/NDSubYGmtIhLPyR7GfB7B5Dffz40qTQDajEO
-	 Gbv8FdfDKqu99z3iEQ/aiJ+2BbZAqNvxhOMZeA6q5MHRupOtld1e3mLXMhDm7waUYy1HH
-	 3OUjglI8FN9/7kRGqRr61VHc5x5Viy/J0lNbWQ+3XxUrxpL7Rhn/9HMf5eylo1uOyOw==
+	t=1793630550;
+	b=QY7dunupICsD9BNBCiMz8062cVZac/Zs2dXWUrS+oxpbft2pTUY9vuGOvASnRdWDky2n
+	 pPphaxetv+01UXCGk1BDTaaT0Wgw0GngtHrQcryVJGgulZL26LoMAaZJOSUdGF0lY5+IM
+	 RXpzqV7asYg+Y5eP/96NcUEPTGda9fv4o/obGwnYrbFoVWXbnGaXnpc6e982/ZOWws7x9
+	 eZVYBMaSBEXD3X3LRR7LDusoFxsJHoofzYhLpZUSC2qOVf47Zl9f05uASfSas7KK6Oz+E
+	 SVJPETiuYrzqyBAQH6H3UFUiKDupqi0NXTpInpb8yK0op30Vn2HjyOb5e0AtpDs+Ylw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793630548;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793630550;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=qd13v2RUTF342dW9ZSY0F09ZXMTvV25aQrZ1Kj+DhRs=;
-	b=mBDUl+ZuDDtdDTGMTDBUs4farSXEqi/lsPjJkOLTDDhtf4xzSiAtg3efw/0iXFVqIwf/
-	 8Dp7cRB87+Cx7vZr9kR59/3xy4skaw50DtYdXqWI4FBibN8mfVRK7SrffEYsULR4feB80
-	 vzJR5QXogCkgtnTurJRcmnVt+zpLTqpwn4aFtpgd1P8mICsSfuQtdtT++Gp0Cm4VEiFHe
-	 Fxn+SBCRBDyUaj7ijJx49a2zB+L4vhtHIGM7kttNbIniKJrVwwGScuZqTQVwgrKBU9kDq
-	 s1UdYztT/L28LUCe63u852P05UulIUYmgnG81/AVRxLrf1HlH4CLo0OMC7S+LXTMscA==
+	bh=Ub5Mc7c3KTkaOQNxHiDTq3x3/nZWPIMH1nsb+P4eYc8=;
+	b=WH5WJwg9qyguVi4i7rQne3H31goSySrP93479/TUL0r3maks3+ItOhD2QHfmKS3csVfR
+	 6VuLw0SED6hsavau6rn+zC4xvyTnsco6oixknvAV/DzslR9UIsjTcjPaw+jHreokv4TJD
+	 2Q4R0wtZXirHioPobEedBiyxYikdc/GRnQIU74oOpaYkvL7AXGuAL07RefwiRNzcc8JBj
+	 67iROqc+4X01XrJ23QdgFq5mlUla30diCBfar+033lqd2CljzfIdxoxpcz5tnwbR+eD7A
+	 WpGvnAesjS7Y+sl84zjld2y8Cl+Ou8xgq7+Q77qJ/ELw8MYDZde/ZzHcZZRMr991tDg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jmYl9oWp;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="JAYZh/uP";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1E91606FB7B;
-	Mon,  2 Nov 2026 14:42:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2AC2A607E0E9;
+	Mon,  2 Nov 2026 14:42:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jmYl9oWp
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5C9D31F00A18;
-	Mon,  2 Nov 2026 14:42:25 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=JAYZh/uP
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E47E11F00A17;
+	Mon,  2 Nov 2026 14:42:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793630547;
-	bh=qd13v2RUTF342dW9ZSY0F09ZXMTvV25aQrZ1Kj+DhRs=;
+	s=k20260515; t=1793630550;
+	bh=Ub5Mc7c3KTkaOQNxHiDTq3x3/nZWPIMH1nsb+P4eYc8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=jmYl9oWporlhGm9opyZVxTVYkp4bB82VQFRMgukakRcySMwItxHEjkO/bgpzgByA3
-	 71iq5smYUnkbmbsJILcr2IgwO3iRUA1C0BgKjIr0pjuUu2HXTs4t3xHs/YrB/dqLdR
-	 UsosavjbkaIM/RdCYldN05QScgXX/m16ejLRky4N04pRqsq5SeaRiPuMOa/u39ltWa
-	 ZGxmwfSlGDBkvThIxbwVjf8P2YpWo+KCBrA0KhcOcVi5uJRM1KaLeuOxkra0QO/DXf
-	 jwtTrYxpIAzjyETxfONRWousxFKs2iUzed8MFYE4/qk6tZLTmJSuEMDZa/+9rjlE7U
-	 NqHAKLXmBmz4g==
+	b=JAYZh/uPGdsSDJ2lUowKBnBRaqoMh7EPQhBtrY+M9ugz/cMLllFXDyO/QnAt3JTY1
+	 8NrWP+40PyK/KDX1K3IpfAsdFNPp6QGaM5ssDhpNrRnEm8dCz0j9Bcqt2yapEo3gDS
+	 VsbbFm/W8CYAMFzBY+GPLaKwV9GcX9Wa+Y9rRRqU/oe9eJPxAmJBcoe4GgPkL2ZXbx
+	 CHILjnhRWbQD7cqJrQxbSn+RTG5cyG5cwF8UUeQrgZBMieAunxNeD8hVDA+IdfWsJ1
+	 SFZDbzu4Kp2RAJb6iWYzbnEymq3B4z/Gd3/kyKAMCBy3HDzxAsN+1RBYq/ctqJYuN/
+	 A/E10JyrIBE8w==
 From: Andrey Albershteyn <aalbersh@kernel.org>
 To: ebiggers@kernel.org,
 	hch@lst.de,
@@ -49,9 +49,9 @@ Cc: Andrey Albershteyn <aalbersh@kernel.org>,
 	linux-fsdevel@vger.kernel.org,
 	david@fromorbit.com,
 	"Darrick J. Wong" <djwong@kernel.org>
-Subject: [PATCH v18 07/15] xfs: add XFS_BMAPI_UNWRITTEN to unmap unwritten extents in __xfs_bunmapi()
-Date: Mon,  2 Nov 2026 15:41:37 +0100
-Message-ID: <20261102144147.2393369-8-aalbersh@kernel.org>
+Subject: [PATCH v18 08/15] xfs: don't remove written extents past EOF on fsverity inodes
+Date: Mon,  2 Nov 2026 15:41:38 +0100
+Message-ID: <20261102144147.2393369-9-aalbersh@kernel.org>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20261102144147.2393369-1-aalbersh@kernel.org>
 References: <20261102144147.2393369-1-aalbersh@kernel.org>
@@ -66,66 +66,109 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The __xfs_bunmapi() is used to remove all extents past EOF. Add
-XFS_BMAPI_UNWRITTEN to remove only unwritten extents, while leaving
-written ones in place. This will be used in following patch to clean up
-unwritten extents on fsverity inodes.
+xfs_free_eofblocks() removes all extents past EOF unless the
+XFS_DIFLAG_PREALLOC or XFS_DIFLAG_APPEND flags are set. This is
+undesired for fsverity as it stores metadata beyond EOF. However, while
+merkle tree is being built, delayed preallocation and unwritten extents
+are used. After metadata construction is done, fsverity inodes becomes
+read-only and won't be changed anymore, none of these unwritten extents
+or preallocations in post EOF region will be used.
+
+Let xfs_free_eofblocks() be called on fsverity inode as usual to remove
+anything which is not written extent. However, inodes which are
+undergoing merkle tree construction need to be skipped in case reclaim
+takes place.
 
 Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 6 +++++-
- fs/xfs/libxfs/xfs_bmap.h | 6 +++++-
- 2 files changed, 10 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_bmap_util.c | 31 ++++++++++++++++++++++++++++---
+ 1 file changed, 28 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index a35a44cf8c63..706f2ead42f5 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -5279,6 +5279,10 @@ __xfs_bunmapi(
- 		if (del.br_startoff + del.br_blockcount > end + 1)
- 			del.br_blockcount = end + 1 - del.br_startoff;
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 865aec3ae5ab..32cec523fd52 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -31,6 +31,7 @@
+ #include "xfs_rtbitmap.h"
+ #include "xfs_rtgroup.h"
+ #include "xfs_zone_alloc.h"
++#include <linux/fsverity.h>
  
-+		if ((flags & XFS_BMAPI_UNWRITTEN) &&
-+		    del.br_state != XFS_EXT_UNWRITTEN)
-+			goto skip;
+ /* Kernel only BMAP related definitions and functions */
+ 
+@@ -553,6 +554,15 @@ xfs_can_free_eofblocks(
+ 	if (last_fsb <= end_fsb)
+ 		return false;
+ 
++	/*
++	 * Don't clean fsverity inodes as they already have been cleaned up and
++	 * are read-only. Skip inodes which have merkle tree being built, the
++	 * merkle tree is written beyond EOF
++	 */
++	if (fsverity_active(VFS_IC(ip)) ||
++	    xfs_iflags_test(ip, XFS_VERITY_CONSTRUCTION))
++		return false;
 +
- 		if (!isrt || (flags & XFS_BMAPI_REMAP))
- 			goto delete;
+ 	/*
+ 	 * Check if there is an post-EOF extent to free.  If there are any
+ 	 * delalloc blocks attached to the inode (data fork delalloc
+@@ -579,6 +589,9 @@ xfs_free_eofblocks(
+ 	struct xfs_trans	*tp;
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	int			error;
++	int			bmapi_flags = XFS_BMAPI_NODISCARD;
++	bool			has_verity =
++			ip->i_diflags2 & XFS_DIFLAG2_VERITY;
  
-@@ -5413,7 +5417,7 @@ __xfs_bunmapi(
- 			if (error)
- 				goto error0;
+ 	/* Attach the dquots to the inode up front. */
+ 	error = xfs_qm_dqattach(ip);
+@@ -593,15 +606,20 @@ xfs_free_eofblocks(
+ 	 *
+ 	 * Note that this means we also leave speculative preallocations in
+ 	 * place for preallocated files.
++	 *
++	 * Clean up delalloc reservations for fsverity too as those won't be
++	 * used
+ 	 */
+-	if (ip->i_diflags & (XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND)) {
++	if (ip->i_diflags & (XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND) ||
++			has_verity) {
+ 		if (ip->i_delayed_blks) {
+ 			xfs_bmap_punch_delalloc_range(ip, XFS_DATA_FORK,
+ 				round_up(XFS_ISIZE(ip), mp->m_sb.sb_blocksize),
+ 				LLONG_MAX, NULL);
  		}
--
-+skip:
- 		end = del.br_startoff - 1;
- nodelete:
- 		/*
-diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-index e9f5416e4c05..25b24ff8e4de 100644
---- a/fs/xfs/libxfs/xfs_bmap.h
-+++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -90,6 +90,9 @@ struct xfs_bmalloca {
- /* Try to align allocations to the extent size hint */
- #define XFS_BMAPI_EXTSZALIGN	(1u << 11)
+ 		xfs_inode_clear_eofblocks_tag(ip);
+-		return 0;
++		if (!has_verity)
++			return 0;
+ 	}
  
-+/* Process unwritten extents only. Used for unmapping */
-+#define XFS_BMAPI_UNWRITTEN	(1u << 12)
+ 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0, &tp);
+@@ -613,6 +631,13 @@ xfs_free_eofblocks(
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	xfs_trans_ijoin(tp, ip, 0);
+ 
++	/*
++	 * While fs-verity writes metadata after EOF, it can leave unwritten
++	 * preallocations.  Clear all that out.
++	 */
++	if (has_verity)
++		bmapi_flags |= XFS_BMAPI_UNWRITTEN;
 +
- #define XFS_BMAPI_FLAGS \
- 	{ XFS_BMAPI_ENTIRE,	"ENTIRE" }, \
- 	{ XFS_BMAPI_METADATA,	"METADATA" }, \
-@@ -102,7 +105,8 @@ struct xfs_bmalloca {
- 	{ XFS_BMAPI_COWFORK,	"COWFORK" }, \
- 	{ XFS_BMAPI_NODISCARD,	"NODISCARD" }, \
- 	{ XFS_BMAPI_NORMAP,	"NORMAP" },\
--	{ XFS_BMAPI_EXTSZALIGN,	"EXTSZALIGN" }
-+	{ XFS_BMAPI_EXTSZALIGN,	"EXTSZALIGN" }, \
-+	{ XFS_BMAPI_UNWRITTEN,	"UNWRITTEN" }
+ 	/*
+ 	 * Do not update the on-disk file size.  If we update the on-disk file
+ 	 * size and then the system crashes before the contents of the file are
+@@ -620,7 +645,7 @@ xfs_free_eofblocks(
+ 	 * bug).
+ 	 */
+ 	error = xfs_itruncate_extents_flags(&tp, ip, XFS_DATA_FORK,
+-				XFS_ISIZE(ip), XFS_BMAPI_NODISCARD);
++				XFS_ISIZE(ip), bmapi_flags);
+ 	if (error)
+ 		goto err_cancel;
  
- 
- static inline int xfs_bmapi_aflag(int w)
 -- 
 2.54.0
 
