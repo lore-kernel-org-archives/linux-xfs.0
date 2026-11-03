@@ -1,53 +1,55 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793700156;
-	b=r6MArzjuy5NvjKzQWjKgyjRel3cS69mab3wu9KHcJqOWWQNvs4LxuRlOSdt3VLtjzFmc
-	 pw1a+e4AC0FNTHK+Skk7bhClRPZTFRk8dYTc81F9m3JM1ymOYkVluV4fpoc9lbVG/oHm8
-	 m4Ff7cpg98RYMhk0wYO5yWiPtA2NC0ZQ58myFutyjWdhqzK9fYXOauyF6DD4WoXneknf2
-	 NPOk9RYLUkarVdGsN7dABzS5Xxfgn8QiWfzWbqcoy84y65PF+J9gZCKeANuDfUD38xx2s
-	 A3DrYpqxpQIpgk2dxSgdij6Cah2G6XLAjSgtI4KGaZO+wkvlefPVPKx8UuzOdGypByQ==
+	t=1793700153;
+	b=zXOfB5cefVG8nSNwBhj3pJpRlY0X+949rVkGUlbQ6IxMLui2S08uKFeNokTvVCIRYvl+
+	 hNbvvzlkrEcnNmHVZqR5uAgGzU76NFt76WXdIDHwfkhcC+Ne9EWFgEXjRT1fbOU6JIz8Q
+	 VwkWkzUycxIpi/IIVFihsmSbhugenGtH48Bl/hMfeWT4hz5N5oxtay+A1g7q8mpTh6Ymd
+	 +PYZ4vzAEJqFk29Sdpsilf5qeUwrMElxYMvEfTKc83gHG0DAvPLpK3sfkMya9FFS8niXi
+	 mLn4JSxITZPO8dZdsGKOHrZK+Nz6KZrP3q5l4AOMU77O5cvgOf0jNA1GraVFUxUSHFg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793700156;
-	h=Received:DKIM-Signature:From:To:In-Reply-To:References:Subject:
+	a=rsa-sha256; c=relaxed/relaxed; t=1793700153;
+	h=Received:DKIM-Signature:From:To:Cc:In-Reply-To:References:Subject:
 	 Message-Id:Date:MIME-Version:Content-Type:Content-Transfer-Encoding:
 	 X-Mailer;
-	bh=oRS0byXxrxQ/FrUsf7DbZopH6usYQwj5ZwozRajoYWw=;
-	b=FxBvT8Ovc4vTT9K2pAXoJyWQL2/G9ZzNva2XlAV0F1vnICukh8iSlyl+qGoij+vnx5Sm
-	 d1+3CRDqfPsYJhuDUpJMGw6lT2Z6voP3QP6+C5Jrx5ZB//g0kNPIACWeqU3zc3zDPHE2u
-	 asAMpmaQbHUM+RqSvMRJc67Z4itrpr/vh+P7lfMxNR0D4ZtMc/3XXggXG8kP8gUYp8gSG
-	 EZqNzUUNB5bFZJbzGm9DT4APceMlurEQ4TTQD5/7vnS17tjfKVRmlaBK5Kh0BW9F79Eeh
-	 zS8Fd8Jd5PCNG+wjLeVJi+b7OKCEWfYksLMF4ude4EjhVm2OnxDFkLPet3IUZn59/tg==
+	bh=ULJ2TWBBVlC7sChbQAFH+ZA6jDL8UwnJ6JcCVc9Wk4o=;
+	b=w6KKvZ/vR7stIZZ4t9XkIl/h/d93kncqz/jKA30JzUdRguGWHCq/xTDI/GeK84JOkutd
+	 +W9XBWPJ3a2q7VI1IzBFTet1TzbqRxti3g2dpWkCG5sB45RTj9ksJfwz5YRSwqBMtk8MB
+	 Vvl3GYYT4LbrhgRLlEcxgHRjhd6hgm4rdiuTPOITndaQjQ4+T+pLjcynJ8pcX8pnQOXBO
+	 z/ig3uZAj1eeU+xa8GZhdLwl6YzLSOVne6tnE4GRzmh2xm0z6yNRFpIYNxapFI538Qf+t
+	 UQy3OodsHZAfrUCFr81L6LD7XbAU5Nh70J5OXpfTgdB3x7bpXtdv0BLogISYnm1csIg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=a54Md4AJ;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dZxQBwCK;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26A52606D81A
-	for <linux-xfs@vger.kernel.org>; Tue,  3 Nov 2026 10:02:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95F54606C527;
+	Tue,  3 Nov 2026 10:02:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=a54Md4AJ
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 30CD31F01806;
-	Tue,  3 Nov 2026 10:02:35 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dZxQBwCK
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6110F1F00919;
+	Tue,  3 Nov 2026 10:02:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793700155;
-	bh=oRS0byXxrxQ/FrUsf7DbZopH6usYQwj5ZwozRajoYWw=;
-	h=From:To:In-Reply-To:References:Subject:Date;
-	b=a54Md4AJbsxgMRF5wkOXC5fsBxbbEOJdo3RH8zhL3XHWjBpejjZAySa66A6l7eeCb
-	 8XPt0TNzU7CgdqleW+VqKOVz+hMYE1ES4KY75S0gpuQ88OpB06rY8evxwcpmMp7RqO
-	 MLGQuxoGRfxG/hjJnJfMgJlSO5pN+AMPy/CS5e5DZzNqua4JzbL2YwmSZFK1quhsy1
-	 zhlrpBePVmUZr13KpzFhu3M1e7gSVV9jRofnmldBwW29x6plPMnO7pQj2396meSIkp
-	 LVGLsbVI4A+3szhFlY3VsX6BOt6KeCv9WNvmH1t4BQmzrpzV6kFCpivX/lhHRiGvzm
-	 k5UnQ89xga2aw==
+	s=k20260515; t=1793700153;
+	bh=ULJ2TWBBVlC7sChbQAFH+ZA6jDL8UwnJ6JcCVc9Wk4o=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date;
+	b=dZxQBwCKZp6ENatcmC1DY1D9wMFFWbEFBEmtWBGwt1Bh4pIJyemJPIVxhRA/pvLNn
+	 e8999By5yf9gfHjMSwmLD9MRakff6Cd2BTqtibM8niq6J0Vq33XEEYCSi3QPnsMVVb
+	 DX6quUR7P3TlwKtCRYGdlrLvlmyDwDkLP9UWZ6DWc7SEHDhoeT+w2cQD0iiDK42ymP
+	 D/MA51dapZWmc6DCioEWFkj5BcfmyPgmYDf7TBajcoMx9DSQqAQuO8TA8ZoTLIMOXG
+	 1KPphhMXhoAFrlBiNuRg5hvh1WwqOu8rpq4ieEZ5WYqZvlvAMziBPMoz6ykn48WAlz
+	 nI0nH5+26OASQ==
 From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org, Anthony Iliopoulos <ailiop@suse.com>
-In-Reply-To: <20261021210032.14001-1-ailiop@suse.com>
-References: <20261021210032.14001-1-ailiop@suse.com>
-Subject: Re: [PATCH] xfs: skip iunlock with empty iolock flags in
- xfs_file_dio_write_aligned
-Message-Id: <179370015491.413123.2922473638051257538.b4-ty@kernel.org>
-Date: Tue, 03 Nov 2026 11:02:34 +0100
+To: =?utf-8?q?Adri=C3=A1n_Garc=C3=ADa_Casado?= <adriangarciacasado42@gmail.com>
+Cc: "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org, 
+ linux-kernel@vger.kernel.org
+In-Reply-To: <20261020195628.248878-1-adriangarciacasado42@gmail.com>
+References: <20261020195628.248878-1-adriangarciacasado42@gmail.com>
+Subject: Re: [PATCH] xfs: add __printf attribute to
+ xfs_buf_alert_ratelimited()
+Message-Id: <179370015211.413123.4983220960926610415.b4-ty@kernel.org>
+Date: Tue, 03 Nov 2026 11:02:32 +0100
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -58,24 +60,25 @@ List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 X-Mailer: b4 0.14.3
 
-On Wed, 21 Oct 2026 23:00:32 +0200, Anthony Iliopoulos wrote:
-> When using RWF_NOWAIT, xfs_file_write_checks may fail to acquire an
-> exclusive lock upgrade and return -EAGAIN for aligned DIO, setting
-> iolock to 0.
+On Tue, 20 Oct 2026 21:56:28 +0200, Adrián García Casado wrote:
+> xfs_printk_level() and _xfs_alert_tag() in fs/xfs/xfs_message.h are
+> annotated with __printf(3, 4), but xfs_buf_alert_ratelimited() in the
+> same header is missing the attribute.
 > 
-> In XFS_DEBUG kernels, passing no lock flags to xfs_iunlock triggers an
-> assertion failure. Fix this by unlocking the iolock only when there are
-> any flags set.
+> Because xfs_buf_alert_ratelimited() formats its variadic arguments via
+> struct va_format and %pV, the compiler does not suggest the format
+> attribute under -Wsuggest-attribute=format, and callers do not get
+> compile-time format string checking.
 > 
 > [...]
 
 Applied to for-next, thanks!
 
-[1/1] xfs: skip iunlock with empty iolock flags in xfs_file_dio_write_aligned
-      commit: 1e253beed5340fdf1aa43cc684e085a6d468f5f7
+[1/1] xfs: add __printf attribute to xfs_buf_alert_ratelimited()
+      commit: 976d3cd5b0a307881a0772f2fb8d4557c2f4994b
 
 Best regards,
 -- 
