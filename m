@@ -1,63 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793697790;
-	b=LiLZW+T8Dw2QU7kuyZYmL4PTXUU1FuJIl2QX20NLZYQVKlMoIvvtVO6SB1h3hhsE8hNo
-	 GskRVOdep/6zGrrkakItaeHmDxmigZoWxAQQv7LdaVL19/0Ez2wzCvZY/nxhf6dHbgUpv
-	 zlgZo4I48Jo7Qg92/wQEVoGYHAP00ceXz5TNhf9KeKsEG5VtRI38MLbp/NQ8K8Qo3xI+i
-	 CTYVraUTR7svfFHmJNV4Zq7qqDTEpR4dcMNq+f0HMS5UFT7kmDLiMF/bQAj0ph/XMafHE
-	 HZnhJ+aGulw9NTm6IBKwecAIi1TLbpwzcHSKKXGGmoe99N0DO1JNemC77EpA4xo9czg==
+	t=1793697944;
+	b=wjA/SgsTf5w/fo6Rp7toKery0goaHndUscDAXdNYMCWWSv8Ex7ct67TscZiQ7WzZmU39
+	 AsXrq35m+kTxsTDmRUP4977WaYXVL5hnz8X8jGx8WJ5Dtzhio0qBKgSJVceZQYCUJlaP5
+	 d/uBKXdtQluXM0Sm2Ly2Sj33bqMYABU49bNAANdsAJtC69T5WHaSaAHWfvmYV6r5Kha0f
+	 0YPE+DOgMDAQF6RhwVUW8SO46EaMaX6g/+FA9Fp6stkP4skjQEgLaAzQngnWMZm87Qo00
+	 6N3TNVW+B1pKLeg5AYHOyKp5Y5SRvIeICiGHO3CFP5+O6LqP80hIDHdFdLaamX5QofA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793697790;
-	h=DMARC-Filter:DKIM-Signature:Received:Date:From:To:Cc:Subject:
-	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
-	 In-Reply-To:X-SRS-Rewrite;
-	bh=M/TzfbzfWwzQ+WKfKCge6q9Z6sEOvQF5XO3AHOK/QBw=;
-	b=w4NEg58d3kAiBYtRmmzLj8Phy4e9/GjRO68DUNnCQkDBdURyX8J7B4NXDQ9OsY6x6QjW
-	 +iwzAmi0/cCNA4hm2gFfIhB/A0I5hyMvHZ9BXyj/U1W5RwCDUTNLn4CpSgVa5imozEY4L
-	 oCETmfVIPWS9qLN5LaYgQVmwTdIx1fG4tNKWDw9aflhZErlNW7yb7Yhzb9w9/YvozPonP
-	 /klcM99K2jSvLo3BpY9+LpOkfQCjTcZnpfZc8GaVK/fITedHEpAhiV371AXCKSOoWKZqI
-	 tZe6sz/B0kIN+uKHuQjntTlxz1Djof6c7Q32n2qzZ48GKN0z7PWbiMuGiCZQloLo8pA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793697944;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=fw+5UUWd0jJUngJ4Z/YOl8DT5axXhKsgE3TUjaTJBRo=;
+	b=xreGCEJSqoaS9SFxs1NPfqWCJs5eU+zKDN4CSukIQwhHrd6oKGknelDvC4iDvaT9lIN6
+	 /2AvLddVupGKZLPpEXCP2Yqea+RqeG6IOA7UMXhjhO3PEFcNuo3PMill1w9hHfVn7QvHO
+	 d95+gG4BOLENbL59gtVgUv7DFqLvwAe4RHZqYNNnyagpgc8NjoksOrG9w7z6kbd6ePSxB
+	 CkOE8iXliKfTFu7bHimMwAS0tBrdsaXw0SV4jnaHe+BormCXncTMNiExpOf5YN8Sl0g2c
+	 LZG0ro3Q9vDdQWCtgmBPfz73vwSoUfkWuZVrqjASQmaKGTiddr3CCT9s64QqYnC9RnA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=infradead.org;
-	spf=none smtp.mailfrom=bombadil.srs.infradead.org;
-	dkim=pass header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=OTSQ75Gi;
-	arc=none smtp.remote-ip=198.137.202.133
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=J2eyDk+E;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AC02606A326;
-	Tue,  3 Nov 2026 09:23:07 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7AC02606A326
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE8D7606A329
+	for <linux-xfs@vger.kernel.org>; Tue,  3 Nov 2026 09:25:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=OTSQ75Gi
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=M/TzfbzfWwzQ+WKfKCge6q9Z6sEOvQF5XO3AHOK/QBw=; b=OTSQ75GilPMYFQ/1FdNI4mXSVM
-	cDHT3jRez2aeh1naZ6kMjYP7krflKeJkAL+xEgweouvpHOQZEVypuPDczz/afKtHVr5rX555laZXV
-	5wZu8GKmcCY4TnGpeiNm2ZXfj9iNF6HnShdn7KayiVS5KY9Pza7RRSeOF4HDHHeDjrFJ+vKychAsb
-	bmZpUgsGEnzoZOXzKyNieUqsFsskJoX0SpyB94ScJkptAxIi6g7zAtTRA51PsL72/NFL/azRQueZ5
-	BDGVjVqX9wxzE4yKjRCR1+a9vpv3TX3kZUdMgUpIR/PjOn6ceOp7ux4R+dAioI0nXApSaQhUT8wAU
-	ZONMJG6Q==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.100.1 #2 (Red Hat Linux))
-	id 1xOAjS-00000001jkt-3jF2;
-	Tue, 03 Nov 2026 09:23:06 +0000
-Date: Tue, 3 Nov 2026 01:23:06 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Andrey Albershteyn <aalbersh@kernel.org>
-Cc: ebiggers@kernel.org, hch@lst.de, Carlos Maiolino <cem@kernel.org>,
-	fsverity@lists.linux.dev, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, david@fromorbit.com,
-	"Darrick J. Wong" <djwong@kernel.org>
-Subject: Re: [PATCH v18 04/15] xfs: don't report dio_mem_align and
- dio_offset_align for fsverity files
-Message-ID: <aumn-nXavmu_vsZY@infradead.org>
-References: <20261102144147.2393369-1-aalbersh@kernel.org>
- <20261102144147.2393369-5-aalbersh@kernel.org>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=J2eyDk+E
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E2AE71F00919;
+	Tue,  3 Nov 2026 09:25:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793697943;
+	bh=fw+5UUWd0jJUngJ4Z/YOl8DT5axXhKsgE3TUjaTJBRo=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=J2eyDk+E7ZJzCzzHNS/7eJ6U1jLL7YR/OHKKP6HCx1Y0OP5/YHTjV733TYgYGyyTA
+	 lI4SkBcaKGVZQNMVuVboZdSSm9NB60B8jX4AmCb1191FrfBGEweLWP7zfhpqQ6myHt
+	 S4P605uoRNLLbeJFEYcDzE/R/CKqvYybqITRblzMyCagJKIkgGpXCkOWhv1nr/PE92
+	 /2B+pMa+tR2IVaR2GnjaQPO5hbmPGCQnOV4t/kR4c6aPLItaBgN45k9MZrYdk9zOvf
+	 Vfn+nTQtochxy/fDhQftfjQfm5PKZG2bL1VKskcvvNIkkXWpBi4uoh7YZUB+bfHvMp
+	 H43yeJ1eqBokg==
+Date: Tue, 3 Nov 2026 10:25:39 +0100
+From: Andrey Albershteyn <aalbersh@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/2] xfsprogs: add gcc generated stack usage files to
+ gitignore
+Message-ID: <aumm86mEWhMUfNtL@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+References: <20261029161027.1213438-1-aalbersh@kernel.org>
+ <20261029161027.1213438-3-aalbersh@kernel.org>
+ <20261103054411.GD1559@lst.de>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -69,21 +60,37 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261102144147.2393369-5-aalbersh@kernel.org>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20261103054411.GD1559@lst.de>
 
-On Mon, Nov 02, 2026 at 03:41:34PM +0100, Andrey Albershteyn wrote:
->  	struct block_device	*bdev = target->bt_bdev;
->  
->  	stat->result_mask |= STATX_DIOALIGN | STATX_DIO_READ_ALIGN;
-> +
-> +	if (fsverity_active(VFS_I(ip)))
-> +		return;
-> +
+On 2026-11-03 06:44:11, Christoph Hellwig wrote:
+> On Thu, Oct 29, 2026 at 05:10:23PM +0100, Andrey Albershteyn wrote:
+> > These are generated by gcc due to recently added:
+> > 
+> > WARNINGS += -fstack-usage
+> 
+> I don't actually see that added, and I also think we really should not
+> add it by default.
 
-A comment based on the commit message on why filling out the comments
-here is fine would probably be helpful.
+Yes it's not set yet, I meant to reference Darrick's patches with
+Warnings [1]. I thought your patchset is also a preparation for pulling
+those warnings. I can resend Darrick's patchset without stack-usage,
+I will look if all of those are necessary actually
 
-Otherwise looks good:
+1: https://lore.kernel.org/linux-xfs/20261015144610.GP2705364@frogsfrogsfrogs/
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
+> That being said, having it in gitignore if someone wants to use it is
+> perfectly fine, so:
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
+
+Thanks
+
+> with a slight tweak to the commit message.
+> 
+
+Oh sorry, I already pulled that in for-next
+
+-- 
+- Andrey
