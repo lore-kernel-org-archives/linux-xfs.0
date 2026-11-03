@@ -1,59 +1,51 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=213.95.11.211
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793683502;
-	b=1shywyPK7nP+Oh3rP4CCPORmvNOOYxwPxFq82AdS3psQhegV/pMbTUYbuwHV4f6FkoaC
-	 LHuBOy6vKg3Dl0to3FeWrJEiQ13V6VH6pBa04lpvCz3cRyDi9MyA9EPoZT54RR9eFdXyV
-	 xfK3LwlaEe5EGKJJyyTmyvw2YZE8/ceI6/XGcfsqGB3y0zoc3hCbYmKJX/n/FwrQOJCgm
-	 Q95naX0qHQatPFZRNiORKTuDk8+7HBFbQSU2cRcZTkjazuQSNglBiM7QfOp59HWGArMDT
-	 Me6f8U+K7CwLEky+JN6b3hvbaK6GCUPsnl1/Jk/YMvDgLcLEBgE0HP9N9COdU8cFcVQ==
+	t=1793684519;
+	b=0cdOk2bB75mGAnPcgYnDlXijK+Qb4Z5bzvXcvOdn1E0rfj5UHaCOo6tT1QUGYhP2gH+7
+	 00G+xxQgg5briVDOLofW+J2qY00fyWxD6JW+1U7+8JLoWzElo7/i9/Kk9QpzmaCtt2Igz
+	 MhLJR4aI6Nl7sHtW3T/ULZbrqOu0Esh9avlLJT8+hDl/2fHFooVxd4B/A1k+4BwhpLMwP
+	 VwmA1y+sWf3awrmFWKHhPrbN51AUxNzUuIlT+b8zrhPFf6tCVteB8hiQ+ubQwcuLc3UfE
+	 5bxTltDcj5ka7qdXGHv6y1Sd8Wr6HqrYvC6q7fFsSXBRZVfi2pUle6thR0KOY5hNBFg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793683502;
-	h=DMARC-Filter:DKIM-Signature:Received:Date:From:To:Cc:Subject:
-	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
-	 In-Reply-To:X-SRS-Rewrite;
-	bh=4RjCt2HcFSTcGsbIlTTEtnHofJhlvmBhXGpSDkKK+VI=;
-	b=me0OuqmNeXLb4DBntJOK4NHzuNxcmdRNZik9VMyxJycy5zF/upA7+Yb992S5SUqTUU3t
-	 V2cq8nx+2deFAPIRxGzuH8+nzENFJylT81g/ZxzYL3BkwNhFlM+ciZTxlfrjIT8HDthtj
-	 IkLubAQsNGlS0TUaUf3Mc4DyCLnWVvNGBN0P83rfAQvftnPTds7FzuDWqsCU72/nruMni
-	 KVML6FOVeL2XMQcyr63huvLTeQUoU9j1r/y6gaq/ybHa05RvtHLVL94aJ5GmWazf/w9gy
-	 4aVIQ2bl9rQwFmtAcWj6Wc1y21U8on/odvC1eoNyMECUCDK21xxJw9+jIucA+wfWbbg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793684519;
+	h=DMARC-Filter:Received:Date:From:To:Cc:Subject:Message-ID:References:
+	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To:User-Agent;
+	bh=bQ8ajFT5xhILdB0dsRYEtZZRvSWnG4oIvX2mQOlC0CI=;
+	b=Gbr2BRCLIinP2xc2kLrVO+qrWZx1Xrs1zclomEmz85OELmRlOH4lwzlvVgvXNyoFMlR3
+	 gGeAHgMGDc+LL/uUmi/Y5HfFF1srs6Y6mdfi+/vwz80oGbBBx8CWS0XJfAgC+ZILlVi2z
+	 JEv+2iLQLx1Thr6iCtjcgmJZRvpHyI4yDV8w0ch5tT1VxLsOWkAscCOc42fxjdBM4hoV2
+	 CNXjeMA6T4ipGsJCRoSbw+7RSfze7G22oMocTdV4rlql6eqpnht0EikzHG4w5N7DB+gB3
+	 GmtdzAtQFcDL0Q3ylGsGh+h46LwJxc765RmBX7vx9e+AcpOX6Cb5cOjpUQNcboPE/mA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=infradead.org;
-	spf=none smtp.mailfrom=bombadil.srs.infradead.org;
-	dkim=pass header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=yAuyI4ev;
-	arc=none smtp.remote-ip=198.137.202.133
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=pass header.from=lst.de;
+	spf=pass smtp.mailfrom=lst.de;
+	arc=none smtp.remote-ip=213.95.11.211
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37F4E606A324
-	for <linux-xfs@vger.kernel.org>; Tue,  3 Nov 2026 05:25:00 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 37F4E606A324
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=yAuyI4ev
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=4RjCt2HcFSTcGsbIlTTEtnHofJhlvmBhXGpSDkKK+VI=; b=yAuyI4evXFMILvcM8++RC9TgT4
-	XZGDoBP5VHWCCXnF4ijodHDJwWhzblTZuiE2wx8KsVD/to/5slaGfWiL9+kc0QM/VB8saVlVp4lB7
-	4OkUfkA5L6wnEoUwYhm4G4r6ju+8N6SxvTbllmynI0zVXz6DNXvoGhqPcC6logExC6BBCuQka567n
-	MvFe9aaXRFUhoxk/w8tEajUFtQZ+dH1mUTqXzmMC7epA+lF0YcCa0h8gEm//JKs8QqJ5co1swWOjK
-	lVvo1W0Lym3gysyU1x45Wi2j/SA714cACf6sgRZjx7Yf6YOCWnM6BxcUfgB1MNVlEXHeEMJKy+AUd
-	Bm+lmh6A==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.100.1 #2 (Red Hat Linux))
-	id 1xO712-000000018Fs-1I3t;
-	Tue, 03 Nov 2026 05:25:00 +0000
-Date: Mon, 2 Nov 2026 21:25:00 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Lauri Gates <lauri.gates@gmail.com>
-Cc: linux-xfs@vger.kernel.org, Carlos Maiolino <cem@kernel.org>
-Subject: Re: Concurrent FIEMAP on reflinked files serialises on the AGF
- buffer lock
-Message-ID: <aulwLCnibXfaMzR_@infradead.org>
-References: <20261102193533.93690-1-lauri.gates@gmail.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E7BB606A324;
+	Tue,  3 Nov 2026 05:41:58 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8E7BB606A324
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 3967B68AFE; Tue,  3 Nov 2026 06:41:55 +0100 (CET)
+Date: Tue, 3 Nov 2026 06:41:55 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Christian Brauner <brauner@kernel.org>
+Cc: linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.com>,
+	Al Viro <viro@zeniv.linux.org.uk>, ecryptfs@vger.kernel.org,
+	linux-ext4@vger.kernel.org, jfs-discussion@lists.sourceforge.net,
+	linux-nilfs@vger.kernel.org, exfat@lists.linux.dev,
+	linux-mm@kvack.org, ntfs@lists.linux.dev,
+	ocfs2-devel@lists.linux.dev, linux-btrfs@vger.kernel.org,
+	gfs2@lists.linux.dev, linux-efi@vger.kernel.org,
+	linux-mtd@lists.infradead.org, linux-xfs@vger.kernel.org,
+	stable@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v2 33/34] xfs: allow remounting read-only after a
+ shutdown
+Message-ID: <20261103054155.GB1559@lst.de>
+References: <20261029-work-fs-sb_rdonly-v2-0-2f44f64f0b66@kernel.org> <20261029-work-fs-sb_rdonly-v2-33-2f44f64f0b66@kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -65,60 +57,13 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261102193533.93690-1-lauri.gates@gmail.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20261029-work-fs-sb_rdonly-v2-33-2f44f64f0b66@kernel.org>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-Hi Lauri,
+Btw, if my previous reply wasn't clear:  please add the test for this
+to xfstests where they actually get run regularly and not the kernel
+selftests which for file systems are basically unused.
 
-On Mon, Nov 02, 2026 at 09:32:45PM +0200, Lauri Gates wrote:
-> Hi,
-> 
-> FIEMAP on files with XFS_DIFLAG2_REFLINK set does not scale across
-> threads. For every written extent, xfs_read_iomap_begin() calls
-> xfs_reflink_trim_around_shared() (IOMAP_REPORT), which goes to
-> xfs_reflink_find_shared() and reads the AGF of the extent's AG with
-> xfs_alloc_read_agf(pag, NULL, 0, &agbp). Concurrent callers queue on
-> that buffer's b_sema. A parallel du-style scan of a reflinked tree
-> stops scaling at roughly the AG count, and threads working in the same
-> AG run slower than one thread alone.
-
-FIEMAP is purely a debug interface for file system developers.  So
-running it in parallel for lots of files is highly unexpected and
-suggests a misuse of the interface.
-
-> My question, in more detail at the end: does reporting the shared flag
-> for FIEMAP need the AGF buffer locked?
-
-It needs to protect against agf_refcount_level changing, so yes.
-In theory it would be fine with a shared lock on the AGF buffer if
-we had a shared/exclusive lock on the buffers (which is something
-I've wondered about a few times before), or some other high-level
-synchronization against adding more reflinks.
-
-> I ran into this adding a shared-block mode to dust, a du clone, which
-> FIEMAPs every file and counts FIEMAP_EXTENT_SHARED extents once.
-> Inodes without the reflink flag return early and are unaffected.
-
-Ok, so this is the use case.  The more efficient way to do this
-would be to subtract the multiple mapped extents based on the
-refcount btree, i.e.
-
-	for each AG (and RTG with rtreflink):
-		for each entry in the (rt)refcountbt:
-			subtract rc_blockcount * (rc_refcount - 1);
-
-We'd need a new ioctl for that, but it should be pretty easy.
-The major downside is that this only works for whole-device du,
-but then also any other version would have a really hard time figuring
-out what to do with reflinks the span the reported/not reported
-boundary.
-
-> I am not suggesting dropping the flag. Commit 5f9268ca53ac ("xfs:
-> don't bother looking at the refcount tree for reads") kept
-> IOMAP_REPORT on the refcount lookup deliberately, and Dave described
-> the shared flag as a field diagnostic for reflinked files:
-> https://lore.kernel.org/all/20210124214346.GC4626@dread.disaster.area/
-
-IOMAP_REPORT/FIEMAP reporting the shared flag is probably exactly what
-your tool relies on...
+Bonus points for having generic tests instead of purely file system
+specific ones.
 
