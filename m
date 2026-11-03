@@ -1,62 +1,43 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=213.95.11.211
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793699057;
-	b=GrJ0iBDlEF/dbx3lbYxGq4dYV/Ju8BvutC8s2XCyXRo1AmZ1y0OcEFYiOvKH5cp/H888
-	 Ij1khajRXxjYsM/NNw5hh+Uqtw4XGXUo32kK3g7kt4ewCvERhzmBR8uRDh1ILZQOMp60C
-	 xa5DMj1NiRSOic/Hl0Nh95nBxX5Z0AsCc3wWaVx1quChw4BHdkZb1p5ag5tEu30br+wHM
-	 lVtaH4m6gZXiUXSHAN4MEhmRoK1hwsqRjJe8ES0E3GxbmzC30uPfUjj1lE+clqzTTlnRa
-	 THweZY5Pjzf2AbQXVIZAu/mT/HwR/zcS6tKSQp1jfEA4VzFmrkGbwFX6HsDC/6lCAgg==
+	t=1793699187;
+	b=PEjI4KIIzqecNmGnEn2FkYNUM5uD8F4OnBhlkw7ttfWsER5re2eGjA9yEereimOMMB2c
+	 0p/80n/aPKjzmnlTaV2UQlcDZI0OCwH1JnjiVg5XVBPJVx/eYo1xzPgOsZiEnrA2YV49T
+	 GcPmsjZg1mtab2M/IaOsSd/jYPwBNqiD0QyLnCgKpwwSjsltFtsgaKspKoGHCqKf6pTJ5
+	 5dIWQSa4wAjmipSdTOoVacjAJUnLANrmqLiByyD9VnPIMmurEAwrhZj6at2YaJUN7XVLF
+	 AZ07ZbQZXs2z2WcAAa0yuXnCOy1JYLc9mtFosOi06d9v1JEAPOg6YNxzd6fyYgB9kOA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793699057;
-	h=DMARC-Filter:DKIM-Signature:Received:Date:From:To:Cc:Subject:
-	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
-	 In-Reply-To:X-SRS-Rewrite;
-	bh=qC7bVX25yVHxpZRWnWsEQAWyeAjoX7Ln+fxwlJ7EAVU=;
-	b=GX4xWIAApuAushOIl6KYmkERHsPMs/D2+GdgeIY0rCzboo0i4F9hRGbAyeEeb8zKT/kS
-	 dqhE972qixmf32nzKZqFtWgHb5+iLi+YCswaFwzvAbiKzclinZOETluEELpz34CVvzsz+
-	 56kn2d1I5kXSXQI+qT7pD76DBemHgMhkpi+Y+RLtifJOiCprxPrZMRrUuJXPfAF7FRT8h
-	 Nf974EMmcIvwBUhFy1k5vNO8X9frMKkbQfCT2vzSDKkKk1jSTL90Mlp4cvvQtdv8r2yjp
-	 qUak2+caZJXKOHy/tfyFn2yBAiMwBFtXTyD1efeVEAX4gMpkQvtdeDmpiJ2Jv3ZbkCw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793699187;
+	h=DMARC-Filter:Received:Date:From:To:Cc:Subject:Message-ID:References:
+	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To:User-Agent;
+	bh=EUylDX5F2ZoS+oqGVhvG371RdeEQQZ/3tCqtaf7j6As=;
+	b=beIGoqjMGSpyr14TV6wLzWcil1BsRC43yZn5bKqdCYLjgdXxtpzw8LwFAjGdKmIsZiMv
+	 wZBhw9mQGget8ZH0SiSMsk+OsggOlb0WbEFRsikxPf3NIhxbYp81V5ZLiokjv0ritgOZW
+	 esgyOpEZWgyysjFqoBOC5UmHxp9kF7eNHDGl5eiFKoacUzarTtS/7oLfeyPyw0MrttVgu
+	 O0HPK8Zt3cTZWZ6JjUmq7qGAZ+Q7hJCoi3CXPnXpiwkzTomi9jL11ptdIhGNtI6RYFBww
+	 J8csXnZ60371jgrvwlFvXPQgKrqZuvwXqvSrgbQzNi9DbfmwF5RTkyWZV3fUfMlUZXA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=infradead.org;
-	spf=none smtp.mailfrom=bombadil.srs.infradead.org;
-	dkim=pass header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b="MLM/12WO";
-	arc=none smtp.remote-ip=198.137.202.133
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=pass header.from=lst.de;
+	spf=pass smtp.mailfrom=lst.de;
+	arc=none smtp.remote-ip=213.95.11.211
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E581606A324;
-	Tue,  3 Nov 2026 09:44:16 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1E581606A324
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=MLM/12WO
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=qC7bVX25yVHxpZRWnWsEQAWyeAjoX7Ln+fxwlJ7EAVU=; b=MLM/12WOZF+MJ1RD+lXiCZvxTy
-	yfkXTsrNFVp3j0tuMrsf6ZM5X2d5fEoNDjOHXPPlKj6TA6PLoL3HJ+Euw/7SnZZds57yJRXoqr2Px
-	SmNj/OAYeulSRjrkbNOFhS0Cd9t4meKDNgwF/eBN/TlVFCXdftEhpcYbRAWziFtcfOXKqu4HrFS/l
-	CEL5ekDSLs2iv5dIoexGkXMdAi6dbXFkZVxWsmTx/wqGyGv14wlLxCfutX8/D8tuQyhfp+Kwat+gO
-	ratrq4SN/422jF38Dohh7xcq7L/t33OuDVffgZKXGrQql1/3MMDPC7EkHRchZwMLW9gErvucEd+iE
-	dcHmLvaw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.100.1 #2 (Red Hat Linux))
-	id 1xOB3w-00000001nBy-2QoT;
-	Tue, 03 Nov 2026 09:44:16 +0000
-Date: Tue, 3 Nov 2026 01:44:16 -0800
-From: Christoph Hellwig <hch@infradead.org>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68AB860A261A
+	for <linux-xfs@vger.kernel.org>; Tue,  3 Nov 2026 09:46:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 68AB860A261A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id B321C68BEB; Tue,  3 Nov 2026 10:46:21 +0100 (CET)
+Date: Tue, 3 Nov 2026 10:46:21 +0100
+From: Christoph Hellwig <hch@lst.de>
 To: Andrey Albershteyn <aalbersh@kernel.org>
-Cc: ebiggers@kernel.org, hch@lst.de, Carlos Maiolino <cem@kernel.org>,
-	fsverity@lists.linux.dev, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, david@fromorbit.com,
-	"Darrick J. Wong" <djwong@kernel.org>
-Subject: Re: [PATCH v18 15/15] xfs: enable ro-compat fs-verity flag
-Message-ID: <aums8EgQ8eIoDL_w@infradead.org>
-References: <20261102144147.2393369-1-aalbersh@kernel.org>
- <20261102144147.2393369-16-aalbersh@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/2] xfsprogs: add gcc generated stack usage files to
+ gitignore
+Message-ID: <20261103094621.GA6108@lst.de>
+References: <20261029161027.1213438-1-aalbersh@kernel.org> <20261029161027.1213438-3-aalbersh@kernel.org> <20261103054411.GD1559@lst.de> <aumm86mEWhMUfNtL@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -68,11 +49,24 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261102144147.2393369-16-aalbersh@kernel.org>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <aumm86mEWhMUfNtL@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-Kinda skipped over a lot more of the Sashiko comments that look
-at least remotely sensible to the one here, which seems most
-important:  XFS_SB_FEAT_RO_COMPAT_VERITY for sure should not
-be allowed if CONFIG_FS_VERITY is not set.
+On Tue, Nov 03, 2026 at 10:25:39AM +0100, Andrey Albershteyn wrote:
+> On 2026-11-03 06:44:11, Christoph Hellwig wrote:
+> > On Thu, Oct 29, 2026 at 05:10:23PM +0100, Andrey Albershteyn wrote:
+> > > These are generated by gcc due to recently added:
+> > > 
+> > > WARNINGS += -fstack-usage
+> > 
+> > I don't actually see that added, and I also think we really should not
+> > add it by default.
+> 
+> Yes it's not set yet, I meant to reference Darrick's patches with
+> Warnings [1]. I thought your patchset is also a preparation for pulling
+> those warnings. I can resend Darrick's patchset without stack-usage,
+> I will look if all of those are necessary actually
+
+I think a lot of them are over the top.  A good first step would be
+to catch up with the kernel flags.
 
