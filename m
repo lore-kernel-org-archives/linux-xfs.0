@@ -1,57 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793719623;
-	b=oyDdt3L7fUu9ohl0Sqh7KpZSOTk+pTelvHOTXn1AogWIMDlB26eI4W/IC8TeAEzqamGw
-	 3+SPwYhNTJDPIrGan49zOJatHbyVI51xdNQKeiMzzDILbG2c3NhF0sTnUy1h26d2/lqGA
-	 WUpL3+peXygAxxW+Xmdnv7hQnfX5aPrJ0Gw0u33VfrBhlEQnT3hzQ2M8Z2pCk9DTOnwUC
-	 0QN30wtWzms/jobMW7STsDKxyj2El1Hb11gP7OJ0braXZf/xdfYeqQ0sGys+NgozV1lk1
-	 PdCU4gkuLIxwphGOyg/RCFvBAwDFJP/Zh8umeTyQjPB+qkyJoO3QjLZSmCVvbhzbOTw==
+	t=1793719980;
+	b=V/sG+wcK+d+NxZUQbG+SGFp7LWp733ALLxTyAgnSt4qP1iRzpdylocTo1+h5Nc7KMB57
+	 T/YBlpXKGaUH9qTI3d1QEiOfGnEJN5YWRtBVMxWrqsatfnTRGui4wBVtjlRiUy+d1QQ/P
+	 QAPxKtsIwkdmfB6lbEM1zBwVOyNF1Hnjk0rr01toS/OKKftw3aK4sL0L0OGc08spcxJxb
+	 33WM83RkQ3qmLw/ehh0hsBAap87XU5eWFRTXTiX5pWLNrX9UtUNhltr4po7WS9+s0R27i
+	 HVtzJQythDwkLYGJQm1yVIti86OGHCT1BrrzRqn3vTHjPtiJkok7U9CFbWnG+EBNH2g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793719623;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793719980;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=AVZUW7JEVGyeoQnEv0aslvSoDcn0jwFFot05lDDKtnc=;
-	b=Vnzd23phh3ziru9j8kXNH3zhzrI/ZjyXfgMzEo2qESskvpSMQVF8gGAFGJp59dGUG3T+
-	 usRveCuZcb5DWQwJA5UFqdTRifl4hlQVuZwJUjTSNEBd6v8yU+cGmyIg2M7dpCuLj65uy
-	 scjsmAnzvx/kRn1dw2tGnjV9kGDxBdn86LEOMMSH4Kl7KIzC6nxchy773UyNKDNdk8z6O
-	 4Dc0kQBm+MT+ePjl8AIi4egjdV9RQ5DLqm1F2HZuQv8VgGJSNt0782EjcAXUAWfGImRh7
-	 104WlTqqvYcrqNCpoYh+RjA/k7kTe/nyv4becGsdie8bsyVYgqJAIwfxlDXQjQ5EYgg==
+	bh=PWsvbulylLPc/MZjsg7bEUrnSl6xePrJR8OJvu66xZU=;
+	b=zA6LdfPqrvIAByquiEeM2pDFo+7bksmZ5WLgyiGSnpt6clXkOqo4nxQdV34nBqDfPPrE
+	 43VnWDntOhToTwVJ5sJfKXYzr0BtwgWCA5cjgv6icDoe4Eh4Ial0X3ocEwB0cbfFtkbWU
+	 n4ETqVBAXvNAsty67P6MFm5tU3ga4hpuOiLx29kygOON6cLoa28SGEUzVmLoP7fDhuVtH
+	 sqriW+zPKRZjUWK8bM6x+Jey3tuf7g1EHZKo+EadHWtuPBXsHBJJTgV8Y7UNttzXMBC5S
+	 IScO7egd8xdGuTrXv36TmT8UBMnEqq32UTMNd+DMHnN9a8OXNSpaYiv6lS1lZCERQLA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RZdU131h;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Wq+wpvCQ;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C82C606A327;
-	Tue,  3 Nov 2026 15:27:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0DD7606EEB7;
+	Tue,  3 Nov 2026 15:32:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RZdU131h
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A3C2D1F000C1;
-	Tue,  3 Nov 2026 15:27:00 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Wq+wpvCQ
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 391051F000C1;
+	Tue,  3 Nov 2026 15:32:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793719622;
-	bh=AVZUW7JEVGyeoQnEv0aslvSoDcn0jwFFot05lDDKtnc=;
+	s=k20260515; t=1793719979;
+	bh=PWsvbulylLPc/MZjsg7bEUrnSl6xePrJR8OJvu66xZU=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=RZdU131hHHiXO815LwHHIQfeuVTRF+gd7FcxH4k1B5Py73GQ8BHW2XtljNxk9Yozq
-	 /6NUVmAvu7H5yF7ulh0kBbVYsTKFZ6bvWuPrQufn0VS3N/O9xv/hzSN0QIgb3wuRgf
-	 DyANwWe83Ttk5AHodaZ7cD4ZsocRYiQkehg2dkLP1JEzFP54iz8DLGPf/yCfy7TTUR
-	 VNstnWmiZL9CY6BhaH2IeMZQovL/gZ7DWx+XUjNaYw48j7hTEquPBqpfJHJFIY81hm
-	 uk48B0oWaVMg+NYBa5TZ+0Dq05fSp8lqqiTPCKlNrwJV+eVAaxfu0XhcCEqIIgWT6y
-	 zRMEUXCQVV37g==
-Date: Tue, 3 Nov 2026 16:26:58 +0100
-From: Andrey Albershteyn <aalbersh@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: ebiggers@kernel.org, hch@lst.de, Carlos Maiolino <cem@kernel.org>, 
-	fsverity@lists.linux.dev, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	david@fromorbit.com, "Darrick J. Wong" <djwong@kernel.org>
-Subject: Re: [PATCH v18 05/15] xfs: handle fsverity I/O in write/read path
-Message-ID: <aun7nfkSqaV2RT1c@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
-References: <20261102144147.2393369-1-aalbersh@kernel.org>
- <20261102144147.2393369-6-aalbersh@kernel.org>
- <aumrai1iWxj97svo@infradead.org>
- <aunQUzz7AV-qvys-@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
- <aun1e6gedSrVDuRQ@infradead.org>
+	b=Wq+wpvCQJyC90wEzcZFbvBIZ0vtnbPqNVvUVql+LfZk52zvG8KjIXQuuiGDN2ewYv
+	 fnHIjU7fHf6xRwmNCY58wakU0NXaLfxEVxzHj67KME0kfmSiidcn2OrXSXADVBNGZf
+	 iMhnyzWdOKFgu4u4PJgGu1jItcpB+zjXfAotF98ukMYY4AGSq07pDmdzFaj330nofC
+	 7RzQQjxjjXTRiWx3vXv4dgh8ahOl7Oy8EJMiwkSjhUI2CYVeIX5F65X+1CBfb9a8Ta
+	 BGff6F5PJYwCwvgMSX3soMp+PGGHG9nBNU7E4F6eSkBqqQhEA08IRtkLF3NxPoS+Qv
+	 7ieJl0YgZACog==
+Date: Tue, 3 Nov 2026 16:32:54 +0100
+From: Carlos Maiolino <cem@kernel.org>
+To: jianyungao89@gmail.com
+Cc: linux-kernel@vger.kernel.org, stable@vger.kernel.org, 
+	"Darrick J. Wong" <djwong@kernel.org>, Alexei Starovoitov <ast@kernel.org>, 
+	Eric Sandeen <sandeen@redhat.com>, Mykyta Yatsenko <mykyta.yatsenko5@gmail.com>, 
+	Yuzuki Ishiyama <ishiyama@hpc.is.uec.ac.jp>, Dave Chinner <dchinner@redhat.com>, 
+	"open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs: fix spurious len double-counting in rmap three-way
+ merge check
+Message-ID: <aun6-mywXYg2VTL4@nidhogg.toxiclabs.cc>
+References: <20261103144148.14430-1-jianyungao89@gmail.com>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -63,39 +62,59 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aun1e6gedSrVDuRQ@infradead.org>
+In-Reply-To: <20261103144148.14430-1-jianyungao89@gmail.com>
 
-On 2026-11-03 06:53:47, Christoph Hellwig wrote:
-> [Note: a question for Eric about lifting a flag to the VFS below]
+On Tue, Nov 03, 2026 at 10:41:44PM +0800, jianyungao89@gmail.com wrote:
+> From: Jianyun Gao <jianyungao89@gmail.com>
 > 
-> On Tue, Nov 03, 2026 at 02:55:48PM +0100, Andrey Albershteyn wrote:
-> > > Is there a reason to not just move the IOMAP_F_FSVERITY handling
-> > > into xfs_bmbt_to_iomap?  It would break if single extent is shared
-> > > between data and verity data, but we already leave a large enough hole
-> > > that this could never happen, right?
-> > 
-> > I think it can be moved to xfs_bmbt_to_iomap(), but we will need an
-> > offset there. The one extent case could happen if file size is
-> > exactly 64k and we got continuous phys space allocation with merkle
-> > tree (then the extents will be merged).
+> In xfs_rmap_map, the left-edge merge path already executes
+> ltrec.rm_blockcount += len at line 1119 before checking whether the
+> right record is also contiguous and can be merged.  The subsequent
+> overflow guard therefore must compare the already-incremented
+> ltrec.rm_blockcount plus gtrec.rm_blockcount against XFS_RMAP_LEN_MAX,
+> but it incorrectly adds len a second time:
 > 
-> Or a multiple of 64k, yeah.  I though we went for an "air gap",
-> but I have to admit I forgot all the details of this already.
+> (unsigned long)ltrec.rm_blockcount + len +
+>    gtrec.rm_blockcount <= XFS_RMAP_LEN_MAX
 > 
-> I guess passing an offset it is then.  And maybe also add a comment
-> about that while you're at it?
+> The extra len makes the check too strict: when the real merged length
+> does not overflow but the inflated value exceeds XFS_RMAP_LEN_MAX, the
+> three-way merge is rejected and the code falls back to a two-way merge,
+> leaving the right record unmerged.  This produces rmap btree
+> fragmentation but does not corrupt on-disk metadata.
+> 
+> Remove the spurious len from the overflow check.
+> 
+> Fixes: 0a1b0b3855cf7 ("xfs: add an extent to the rmap btree")
+> Cc: <stable@vger.kernel.org>
+> Signed-off-by: Jianyun Gao <jianyungao89@gmail.com>
 
-air gap is zero on multiples of 64k, this is more of an alignment
-with largest page size fsverity supports than the gap between
-data/metadata (not to have mix of data/metadata in one page). The
-xfs_fsverity_metadata_offset() is
+Hi, even though this looks reasonably correct, how did you find this
+issue?
+Did you test this at all against any regressions (i.e. running it
+against xfstests)? This is touching critical logic on the rmap trees
+which can potentially end really bad.
 
-	loff_t
-	xfs_fsverity_metadata_offset(
-		const struct xfs_inode	*ip)
-	{
-		return round_up(i_size_read(VFS_IC(ip)), XFS_FSVERITY_START_ALIGN);
-	}
+Cheers.
 
--- 
-- Andrey
+> ---
+>  fs/xfs/libxfs/xfs_rmap.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+> index 14aef87837a9..c2b2f8e7502d 100644
+> --- a/fs/xfs/libxfs/xfs_rmap.c
+> +++ b/fs/xfs/libxfs/xfs_rmap.c
+> @@ -1120,7 +1120,7 @@ xfs_rmap_map(
+>  		if (have_gt &&
+>  		    bno + len == gtrec.rm_startblock &&
+>  		    (ignore_off || offset + len == gtrec.rm_offset) &&
+> -		    (unsigned long)ltrec.rm_blockcount + len +
+> +		    (unsigned long)ltrec.rm_blockcount +
+>  				gtrec.rm_blockcount <= XFS_RMAP_LEN_MAX) {
+>  			/*
+>  			 * right edge also contiguous, delete right record
+> -- 
+> 2.34.1
+> 
+> 
