@@ -1,59 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793700159;
-	b=ux+AUeyX9RLPS2RaYBWLu4fuaFWaiflb3ZO7MGpD5cqR8YDdjqkT2NGdQJvKpmgyaCkF
-	 F9yv6nN+UaJ6fOvjYB7wZY4ayR635x+t/2OXq8XwyqUtgKWBpaL+UeSnJboDsFHfuz4Ts
-	 UtCMLbLwWxNe5o6l48sC1XTKUvLXySfFcZjr7OSEbU1lZOg5rui7UnvXJ76TR3x1bpV57
-	 O2ftd0rBdDgY7ZEm17XcOR/kiw78+xQfunQKZyyOuWN7kBJ0Q0jb3Smr3GnExG23TEZMs
-	 dKt4xIevL5LzSm2gOY7BlOpSozZBIKDA+isuSLUrD2Tji34x/As8DYLnxRI6FWjDsIw==
+	t=1793700152;
+	b=WaLqe/7IdEoSSujUf8+O/A0R8H4OapkoOjYuz+R9wJeebG6RrkXTU5bf8pMjgiiqZNF0
+	 OPYTus0j+Vl46kcxLskSYlckgiM07uLqFbtOuiRKILEova3AWLZTfwNw2RZp5Iam0urbi
+	 l7gAJ1/96U5U7s566aUG1gOXNwie49917LKCCQqpAaxwJR3nKoQdkr1HyJuB/IJoabGeK
+	 PT9CIHTc6jNMc1MYrYWeZ+LhuXW7blK8awx0afrAhIXoAa+pmfQqEb2QkS0vhos2KpAPV
+	 qVoNCWCACmDBLrVOFZ6lUr3is/kzE8ng3EoPLUV/zTOHrFfbOASiBi7uh64DN0/UZQQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793700159;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793700152;
 	h=Received:DKIM-Signature:From:To:Cc:In-Reply-To:References:Subject:
 	 Message-Id:Date:MIME-Version:Content-Type:Content-Transfer-Encoding:
 	 X-Mailer;
-	bh=kK7XpNqxG62m/TpkL4tKDvMu3ybSBpgtB4KwbYycrl4=;
-	b=PRg1ODb3bZcLt90bgcWrleZDqab21cuBtiwuAwnxrN99dH0P72sMrC+7nTv4+aNkxTOz
-	 xy136ca0JtxW6C0Co3SWHnYBXQdFXjMQzcyVVaqdq9sTEw2dzbcca2rN1qLR8gSFV3XVU
-	 nLM0QF5rxza+bN4e3L7XIsBUtwkydLSV+sPYwOR9KF3pNtq+rZh7ec4zYLGuhmdGPpNM/
-	 14Y2wDkh0SavG7zj5kfg+r6KfXB4lRWGJQB7LoIr03IQxwKFz/7dGYTl8vlH59vIw4fam
-	 w+i3zGxxTxMXR367oapFom9MTqy9nZDkWdlTkYWWjOgmmWu0aB/oGbxi4cOkFMSlO8w==
+	bh=gxsoD+1AIorzMN6ftpvqvD5McYOdU2nQhJzwWXn/xJ0=;
+	b=oMjktKWihvShJ5I1thBQhDI5LD0KRSJ/RmcJab/6NJvH5I4VVRfc5GYbJG2Khnq3jFSl
+	 k9eC11yibn1MOinqN2onBzRUp2XOBbgcvF+cXrrPsR1+OHcgjPXVJ2Dn/96UgYW+p8wWP
+	 V2kHlp4TlLWACzV+Q6TJCTnxwqh6RQBchS8EUCpo9P2yM8xiMZ9dJYP3fq7c7tIdUmDsu
+	 yHKWO9P73mGO9AEy1QXKlx7BJJiKFdiGfZp+0efAn5v28HqRvu0E8w9h1S/1/G6ANZQU+
+	 uVksTpJlSzvSaqmK+JJTDqbTxsTtDQCbg1B6S5KILWmnLb63RjejU1aO3R+XYQ87hsg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=I5t7PIYa;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hLM3ymAb;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1B4D606D83C;
-	Tue,  3 Nov 2026 10:02:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55710606A33D;
+	Tue,  3 Nov 2026 10:02:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=I5t7PIYa
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3209F1F00A02;
-	Tue,  3 Nov 2026 10:02:36 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hLM3ymAb
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6612A1F000C1;
+	Tue,  3 Nov 2026 10:02:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793700158;
-	bh=kK7XpNqxG62m/TpkL4tKDvMu3ybSBpgtB4KwbYycrl4=;
+	s=k20260515; t=1793700151;
+	bh=gxsoD+1AIorzMN6ftpvqvD5McYOdU2nQhJzwWXn/xJ0=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=I5t7PIYanTLoYeFgjHWPgXrpIDDuN9eaK9KjbAookoeRSJRZXrsE5N1WEdH3fdREM
-	 dJ5sUg9+Oxc3LUMzuf1HAYYrHXMS58r8xSYRnYd6L+N7qWfqz/XKbuWtddSMJjTBZ1
-	 lfx1awQy5qt4eGBjhiPyTvCY5Wh60Gl2LBGucONi0bJxkNcKiZStuSHYZ6z9TJtfwJ
-	 xj8gE+/cKAaesOzUZtGdFvX79u7QwzGVhUsliwyqp6HoTIUS+VEp+V7qVICqy8zPmE
-	 kC6T/2ophnU8zutF3m8uBpATs4C6pSY7WFKWZZ50WqiNO1Cl8591hyDQk2VgWkhuD2
-	 XizjVVbAEz20g==
+	b=hLM3ymAb6apG8R89uHdW50Ysf4SMewDJENmbnZaPwLctmbDIDcdIK3uGeqH9B06ic
+	 9FeWm+RIymPRGv5nNMxRsXbvbcZ4lvYE4i6hCTl21nyUjsAaTjqqw4fbiLjkGALwCh
+	 3xo5IrIdjNy9UslIIWznstcpozCq6e5naQyRVpnl499bWtSHGKkLCHPygrTPriZWqx
+	 PghRhPUiilGLffIvyt6MnSb7TRZuO664i78pLICfjsbZCSwHJ6nstGsbAi4A+0yb0w
+	 xDk6tv8HUxwWTdlfQ0HyNdAt5qnfEp+xaE0vebu6Kyzn4KYirvNUHjvEKBotnLJ973
+	 Y1YRp73XhN/fg==
 From: Carlos Maiolino <cem@kernel.org>
-To: linux-kernel@vger.kernel.org, jianyungao89@gmail.com
-Cc: stable@vger.kernel.org, "Darrick J. Wong" <djwong@kernel.org>, 
- Alexei Starovoitov <ast@kernel.org>, 
- Kefeng Wang <wangkefeng.wang@huawei.com>, Viktor Malik <vmalik@redhat.com>, 
- Yuzuki Ishiyama <ishiyama@hpc.is.uec.ac.jp>, 
- Bill O'Donnell <billodo@sgi.com>, David Chinner <david@fromorbit.com>, 
- Lachlan McIlroy <lachlan@sgi.com>, linux-xfs@vger.kernel.org
-In-Reply-To: <20261102150146.19777-1-jianyungao89@gmail.com>
-References: <20261102150146.19777-1-jianyungao89@gmail.com>
-Subject: Re: [PATCH] xfs: fix temporary cursor leak in btree shift
- corruption paths
-Message-Id: <179370015592.413123.10191493207403501135.b4-ty@kernel.org>
-Date: Tue, 03 Nov 2026 11:02:35 +0100
+To: linux-xfs@vger.kernel.org, Daejun Park <daejun7.park@samsung.com>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, Dave Chinner <dgc@kernel.org>, 
+ Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org, 
+ stable@vger.kernel.org
+In-Reply-To: <20261026-xfs-fitrim-skip-v1-0-cddd8414f99c@samsung.com>
+References: <20261026-xfs-fitrim-skip-v1-0-cddd8414f99c@samsung.com>
+Subject: Re: [PATCH 0/2] xfs: discard every free extent in a whole-AG
+ FITRIM
+Message-Id: <179370015013.413123.5201894669879295169.b4-ty@kernel.org>
+Date: Tue, 03 Nov 2026 11:02:30 +0100
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -67,22 +64,23 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.3
 
-On Mon, 02 Nov 2026 23:01:41 +0800, jianyungao89@gmail.com wrote:
-> In xfs_btree_lshift and xfs_btree_rshift, when XFS_IS_CORRUPT detects
-> an invalid firstrec/lastrec result after xfs_btree_dup_cursor has
-> successfully allocated a temporary cursor, the error path jumps to
-> error0 which returns without freeing tcur.  This leaks the cursor
-> memory, the xfs_group reference, and the per-level buffer references
-> held by the duplicated cursor.  Jump to error1 instead, which calls
-> xfs_btree_del_cursor(tcur, XFS_BTREE_ERROR) to properly release all
-> resources.
+On Mon, 26 Oct 2026 10:54:04 +0900, Daejun Park wrote:
+> A whole-device fstrim walks each AG but the last by length. Two bugs
+> in that walk leave free extents undiscarded, while fstrim reports the
+> whole range as trimmed. Patch 2 depends on patch 1.
+> 
+> The new fstests case xfs/842, sent separately, fails without this
+> series and passes with it. ./check -g trim shows no regressions
+> (generic/038 and 500 were not run).
 > 
 > [...]
 
 Applied to for-next, thanks!
 
-[1/1] xfs: fix temporary cursor leak in btree shift corruption paths
-      commit: 2bbca049deeb1699cafd966cb2793fee576ee409
+[1/2] xfs: don't skip free extents in later batches of a whole-AG FITRIM
+      commit: 595e67d7261673d03c96950ffbb2e545c00376ed
+[2/2] xfs: don't skip free extents of the longest length in a whole-AG FITRIM
+      commit: 5745f4f10a1a16aa5bb020acc38afa33f2d5ff99
 
 Best regards,
 -- 
