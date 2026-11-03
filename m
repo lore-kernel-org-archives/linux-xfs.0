@@ -1,64 +1,76 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=113.46.200.221
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=203.254.224.34
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793703424;
-	b=0clqSkS6qfvlS9UsJ8rhVpv7aRze2ony4gSWQkqGPSHMnKMMKqTuc023vkJUt8FXPlBX
-	 /eMoF2RbaFB2CNsHXB9S2ZIbbzjdKNnYbgDbUKkbEVN2j71v4eT8wqKrVIzPf90f9CYsQ
-	 g2hY0LoeKlG3RW9fyetHU8dF8G2hbYPQBqrQB3TYhj8rPV3DZWSvXWI1LtZQscZEHuB50
-	 QoBr8pEutZ7OXpWum6tWiDtdYvDN6rXiO0qHb4UuV8u6Gw5xoJJlCHrnpHCZ4V/yoVE28
-	 n5kZEz7udZ98CQ+uq6jwyI41gTLzDdDlG0mIWuB1WFwKOmsD84izMAUaP5tLiFYq/VQ==
+	t=1793705703;
+	b=B8jBJU9wkNkpXM4h/OvqJGyi50aKyZGOgqgq76GnHg/A+krwMwNiz8tEx/F8sbJxel55
+	 vWzsMP+9mYodTvNwIwfOzPgSPfCcsfWPaGCBFP6XeVQDGv3Oj+XvB324mmMadPBc0qy8l
+	 dmgSM3K8FwBx7JUVt/D3BghDeD3Q3Z/j+hDUSYMG55npflvxZI/acwWnn9hqQqYle0XgS
+	 zBf8RF0pitJMmmjAdMq6q+VkdtlXIy1XkQ8zxXadZEBDujWumW0lrl7DpmhVj48LhioQ5
+	 6FAgN05kKJ2d40wFZfq5JcxzI1M8sgAkHw+fufTdRqERG7TjZ+B51lvSDTl0wYztA/g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793703424;
-	h=DMARC-Filter:dkim-signature:Received:Received:Received:From:To:CC:
-	 Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding:Content-Type:X-Originating-IP:
-	 X-ClientProxiedBy;
-	bh=yALifMD/tP/5ZyBxCKPn8/yZq7ZSj/nIISQQ0UN9vRk=;
-	b=ONrKuobYeT24gATE3V3y7MEYf4ga0ZC1M7px29Qk8jkFia+wHchJvyb3Zos0CVcEKaY2
-	 7s+WORXRpD8LXi0P11joJef2KkIbVszSyG8qHVxtAx/1IxqSJGMur6uGcB9cTEwUH7mg3
-	 5MMlKL34GS3DeIo9SVVNPV0EfqMiIeAEKfaWmEdGLlxv2EWvlrkpsqd37nY15A2F4+fCY
-	 +mPl91BkhRp1kuLeVfTgiPUR4XnR/wW+8bwyIjSkr6C7RSSsYryC0KNw/OT5zR/e7YquN
-	 DfTOK5BadbuQhWtqZI8VbhvP0XVkcmuXPE3/80DI6wBn8CMMY95EqURhkoXAzlNbmPA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793705703;
+	h=DMARC-Filter:Received:DKIM-Filter:DKIM-Signature:Received:Received:
+	 Received:Received:From:To:Cc:Subject:Date:Message-Id:X-Mailer:
+	 In-Reply-To:MIME-Version:Content-Transfer-Encoding:X-CMS-MailID:
+	 X-Msg-Generator:Content-Type:X-Sendblock-Type:CMS-TYPE:cpgsPolicy:
+	 X-CFilter-Loop:X-CMS-RootMailID:References;
+	bh=CAI1h5YO8LYTf9x/LoRpduAEOlD23JNm6Y6TXo0PMN8=;
+	b=yA8EuLr+09VWT2PTcCWcqSAXYDUmO/NalmyskNxNOg8qFr2oYdpIWkQgW3VSApBQmU18
+	 5BCvVTJAuipFxT97xHSsfrGQTebWuetk0+85dhl1LcSBL8Tpyt0CNN3ImBhAUjr7WsKi4
+	 5HZ6vRpeCR7SJa/mfZt+xW05BE7XgaKDlRflRf3Z6UPg7m/E/lVFpGOE69CTlpZ4ffBvt
+	 r9Mu2DhtJbmCkKrvehYeRhN10Yr0OkRo0QtMNzNVsXj8YHQaWnQKJRwDsNQtHsyJ1w6kc
+	 cSbAgAbNrSuuHrw5ee0Vkz7L5REEdKXQEXgXC8NA4nv9leqjF8wKCMLjLexFiUfMRRw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=huawei.com;
-	spf=pass smtp.mailfrom=huawei.com;
-	dkim=pass header.d=huawei.com header.i=@huawei.com header.a=rsa-sha256 header.s=dkim header.b=OB+xVk6A;
-	arc=none smtp.remote-ip=113.46.200.221
-Received: from canpmsgout06.his.huawei.com (canpmsgout06.his.huawei.com [113.46.200.221])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=pass header.from=samsung.com;
+	spf=pass smtp.mailfrom=samsung.com;
+	dkim=pass header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=WNE8mjBZ;
+	arc=none smtp.remote-ip=203.254.224.34
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC9F0606C58B
-	for <linux-xfs@vger.kernel.org>; Tue,  3 Nov 2026 10:57:01 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BC9F0606C58B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C7CF606A324
+	for <linux-xfs@vger.kernel.org>; Tue,  3 Nov 2026 11:35:01 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6C7CF606A324
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=huawei.com header.i=@huawei.com header.a=rsa-sha256 header.s=dkim header.b=OB+xVk6A
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=yALifMD/tP/5ZyBxCKPn8/yZq7ZSj/nIISQQ0UN9vRk=;
-	b=OB+xVk6Av8Y4dFQZIYPW17epec/11evcoThnUGLvFCedtSutgCEhVFB/6Z9ZTf3KCL5haInLk
-	KMrw6ofx+voJLYAXEHZCcu19ClsZN58l+FaPqC9enOsJ+N/mQvHZbNg3VfO6+N3PylEtw8C9cCZ
-	PLW2ZO3gbmntlgdxVvSazGs=
-Received: from mail.maildlp.com (unknown [172.19.162.197])
-	by canpmsgout06.his.huawei.com (SkyGuard) with ESMTPS id 4jJlrP0rtSzRhQn;
-	Tue,  3 Nov 2026 18:56:53 +0800 (CST)
-Received: from kwepemk300003.china.huawei.com (unknown [7.202.195.93])
-	by mail.maildlp.com (Postfix) with ESMTPS id C78DB4057D;
-	Tue,  3 Nov 2026 18:56:58 +0800 (CST)
-Received: from ubuntu (10.50.87.83) by kwepemk300003.china.huawei.com
- (7.202.195.93) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.45; Tue, 3 Nov
- 2026 18:56:58 +0800
-From: Kefeng Wang <wangkefeng.wang@huawei.com>
-To: Carlos Maiolino <cem@kernel.org>, <linux-xfs@vger.kernel.org>
-CC: Kefeng Wang <wangkefeng.wang@huawei.com>, Brian Foster
-	<bfoster@redhat.com>, "Darrick J. Wong" <djwong@kernel.org>
-Subject: [PATCH v2] xfs: kill xfs_trans_set/clear_context() helpers
-Date: Tue, 3 Nov 2026 18:56:54 +0800
-Message-ID: <20261103105654.3129688-1-wangkefeng.wang@huawei.com>
-X-Mailer: git-send-email 2.55.0
+	dkim=pass (1024-bit key, unprotected) header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=WNE8mjBZ
+Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
+	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20261103113459epoutp04c702da1d1cf526e999a2108b36c0bc2f~khdR92BdR1940919409epoutp04F
+	for <linux-xfs@vger.kernel.org>; Tue,  3 Nov 2026 11:34:59 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20261103113459epoutp04c702da1d1cf526e999a2108b36c0bc2f~khdR92BdR1940919409epoutp04F
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1793705699;
+	bh=CAI1h5YO8LYTf9x/LoRpduAEOlD23JNm6Y6TXo0PMN8=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=WNE8mjBZ3JZZUBozjLcKmUzHC6gTnDqWkErehE9RooN7CjX4WNLzQQ+CapF7EIwIO
+	 XqTV9fUx5TNuOBh4QUxKySrbcBRCwv+XNeIn4BvWJX+qfkT9zJ1BLhaF91qRbpzGh5
+	 JemPQl0X/3Avak6ZM1ry9wpRP9rkkFOlwplal2JQ=
+Received: from epsnrtp04.localdomain (unknown [182.195.42.156]) by
+	epcas5p4.samsung.com (KnoxPortal) with ESMTPS id
+	20261103113458epcas5p483f3e741ee13e8c0486942ff7914ee74~khdRVrQgz1832818328epcas5p4L;
+	Tue,  3 Nov 2026 11:34:58 +0000 (GMT)
+Received: from epcas5p3.samsung.com (unknown [182.195.38.89]) by
+	epsnrtp04.localdomain (Postfix) with ESMTP id 4jJmhK6Scbz6B9m7; Tue,  3 Nov
+	2026 11:34:57 +0000 (GMT)
+Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
+	epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
+	20261103111024epcas5p3ebaf05995f2105fa7c41239296ebf894~khH00Q2043164131641epcas5p3H;
+	Tue,  3 Nov 2026 11:10:24 +0000 (GMT)
+Received: from localhost.localdomain (unknown [107.99.41.245]) by
+	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+	20261103111022epsmtip12546f0e60f7cbd38fc9f7b2ee147567d~khHyxcGMq2962229622epsmtip1P;
+	Tue,  3 Nov 2026 11:10:22 +0000 (GMT)
+From: Anuj Gupta <anuj20.g@samsung.com>
+To: brauner@kernel.org, hch@lst.de, djwong@kernel.org, dgc@kernel.org,
+	cem@kernel.org, jack@suse.cz, axboe@kernel.dk, kbusch@kernel.org
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	gost.dev@samsung.com, Anuj Gupta <anuj20.g@samsung.com>, Kanchan Joshi
+	<joshi.k@samsung.com>
+Subject: [PATCH v7 1/8] fs: add write-stream management ioctls
+Date: Tue,  3 Nov 2026 16:36:33 +0530
+Message-Id: <20261103110640.1000095-2-anuj20.g@samsung.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20261103110640.1000095-1-anuj20.g@samsung.com>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -69,105 +81,68 @@ List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: kwepems100001.china.huawei.com (7.221.188.238) To
- kwepemk300003.china.huawei.com (7.202.195.93)
+X-CMS-MailID: 20261103111024epcas5p3ebaf05995f2105fa7c41239296ebf894
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: REQ_APPROVE
+CMS-TYPE: 105P
+cpgsPolicy: CPGSC10-542,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20261103111024epcas5p3ebaf05995f2105fa7c41239296ebf894
+References: <20261103110640.1000095-1-anuj20.g@samsung.com>
+	<CGME20261103111024epcas5p3ebaf05995f2105fa7c41239296ebf894@epcas5p3.samsung.com>
 
-Open code the helpers so that tp->t_pflags access is explicit, reducing
-the risk of misusing them outside the transaction owner thread as seen
-in xfs_btree_split_worker().
+Add three ioctls for write stream management:
 
-Suggested-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Signed-off-by: Kefeng Wang <wangkefeng.wang@huawei.com>
+  FS_IOC_WRITE_STREAM_GET_MAX  number of streams the filesystem offers
+  FS_IOC_WRITE_STREAM_ALLOC    reserve a stream, returns an fd
+  FS_IOC_WRITE_STREAM_SET      set or clear a stream on a file
+
+Write streams are a resource the kernel manages and applications ask
+for.
+
+ALLOC reserves a stream and returns a stream fd; the stream stays
+reserved as long as that fd is open. ALLOC fails once all streams are
+reserved.
+
+SET assigns the stream named by the stream_fd in struct
+fs_write_stream_set to an open file; the same stream fd can be used to
+set the stream on any number of files. SET with FS_WRITE_STREAM_SET_CLEAR
+and a stream_fd of -1 clears whatever stream the file carries.
+
+Suggested-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Anuj Gupta <anuj20.g@samsung.com>
+Signed-off-by: Kanchan Joshi <joshi.k@samsung.com>
 ---
-v2:
-- Since the previous patches have already been merged[1],
-  rebased on v7.4-rc1 and collect RB
+ include/uapi/linux/fs.h | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-[1] https://lore.kernel.org/linux-xfs/aqOp035i41XIrDXg@infradead.org/
-
- fs/xfs/libxfs/xfs_btree.c |  4 ----
- fs/xfs/libxfs/xfs_trans.h | 14 --------------
- fs/xfs/xfs_trans.c        | 10 +++++++---
- 3 files changed, 7 insertions(+), 21 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index 2434c54a3570..4faab8cd3a52 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -3009,10 +3009,6 @@ xfs_btree_split_worker(
- 						struct xfs_btree_split_args, work);
- 	unsigned int		nofs_flags;
+diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
+index a46c33692aa2..4a20ceb4e742 100644
+--- a/include/uapi/linux/fs.h
++++ b/include/uapi/linux/fs.h
+@@ -345,6 +345,21 @@ struct file_attr {
+ /* Get logical block metadata capability details */
+ #define FS_IOC_GETLBMD_CAP		_IOWR(0x15, 2, struct logical_block_metadata_cap)
  
--	/*
--	 * Don't use xfs_trans_set_context() here: it would overwrite the
--	 * caller's saved NOFS state in tp->t_pflags. Use a local scope.
--	 */
- 	nofs_flags = memalloc_nofs_save();
- 
- 	args->result = __xfs_btree_split(args->cur, args->level, args->ptrp,
-diff --git a/fs/xfs/libxfs/xfs_trans.h b/fs/xfs/libxfs/xfs_trans.h
-index 05b3cc19a311..b0c7724d0619 100644
---- a/fs/xfs/libxfs/xfs_trans.h
-+++ b/fs/xfs/libxfs/xfs_trans.h
-@@ -264,20 +264,6 @@ int xfs_trans_alloc_dir(struct xfs_inode *dp, struct xfs_trans_res *resv,
- 		struct xfs_inode *ip, unsigned int *dblocks,
- 		struct xfs_trans **tpp, int *nospace_error);
- 
--static inline void
--xfs_trans_set_context(
--	struct xfs_trans	*tp)
--{
--	tp->t_pflags = memalloc_nofs_save();
--}
--
--static inline void
--xfs_trans_clear_context(
--	struct xfs_trans	*tp)
--{
--	memalloc_nofs_restore(tp->t_pflags);
--}
--
- static inline void
- xfs_trans_cancel(
- 	struct xfs_trans	*tp)
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 8f0c308f312f..973e82e1e323 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -72,7 +72,7 @@ xfs_trans_free(
- 	xfs_extent_busy_clear(&tp->t_busy, false);
- 
- 	trace_xfs_trans_free(tp, _RET_IP_);
--	xfs_trans_clear_context(tp);
-+	memalloc_nofs_restore(tp->t_pflags);
- 	if (!(tp->t_flags & XFS_TRANS_NO_WRITECOUNT))
- 		sb_end_intwrite(tp->t_mountp->m_super);
- 	xfs_trans_free_dqinfo(tp);
-@@ -220,7 +220,11 @@ __xfs_trans_alloc(
- 	tp = kmem_cache_zalloc(xfs_trans_cache, GFP_KERNEL | __GFP_NOFAIL);
- 	if (!(flags & XFS_TRANS_NO_WRITECOUNT))
- 		sb_start_intwrite(mp->m_super);
--	xfs_trans_set_context(tp);
-+	/*
-+	 * Save NOFS state for xfs_trans_free() to restore. Only the
-+	 * transaction owner thread may touch tp->t_pflags.
-+	 */
-+	tp->t_pflags = memalloc_nofs_save();
- 	tp->t_flags = flags;
- 	tp->t_mountp = mp;
- 	INIT_LIST_HEAD(&tp->t_items);
-@@ -1038,7 +1042,7 @@ xfs_trans_roll(
- 	 * xfs_trans_free.  Set it again here before doing memory
- 	 * allocations.
- 	 */
--	xfs_trans_set_context(tp);
-+	tp->t_pflags = memalloc_nofs_save();
- 
- 	if (error)
- 		return error;
++struct fs_write_stream_set {
++	__s32		stream_fd;	/* IN: stream to attach, -1 to clear */
++	__u32		flags;		/* IN: FS_WRITE_STREAM_SET_* */
++};
++
++/* Clear the file's write stream. Requires stream_fd to be -1. */
++#define FS_WRITE_STREAM_SET_CLEAR	(1U << 0)
++
++/* GET_MAX returns the count through its argument; ALLOC returns a stream fd
++ * as the ioctl return value and takes none.
++ */
++#define FS_IOC_WRITE_STREAM_GET_MAX	_IOR(0x15, 3, __u32)
++#define FS_IOC_WRITE_STREAM_ALLOC	_IO(0x15, 4)
++#define FS_IOC_WRITE_STREAM_SET		_IOW(0x15, 5, struct fs_write_stream_set)
++
+ /*
+  * Inode flags (FS_IOC_GETFLAGS / FS_IOC_SETFLAGS)
+  *
 -- 
-2.55.0
+2.25.1
 
