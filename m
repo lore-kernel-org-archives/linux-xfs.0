@@ -1,49 +1,58 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=212.227.17.11
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793700568;
-	b=bxgMyIP9WpsAknalwkUpWUsdU8nMXmLJ4KeA4AF1oFUpoa84DfF/K+MhyblhnVGM2fNx
-	 durgmdGt5UnjOcUecC+Pacg1hMOb5SwxmBDX8xr1RLb/Jn20MGMl+GhfyikZs5VoV7Fnh
-	 GFJDnFM2BRtvQCBSIi7UmEh97PVhqq9MUPcTJs/hNyCpr8O1wM2ke08xAjws0ET10lk+f
-	 cgHI3fBdIcWLEM6oL3m4adBaX2WMRkf9f7VMFaVcLHIufh8Ag5yIq69DnLtZkpSCpdtS3
-	 BdwBIVVS1NynqkGHei2/65XCiiTpOPOeyKNu8gl0k68+OuW8W7p8Lm1v+LsFzMau84Q==
+	t=1793702630;
+	b=xnEEl/g8c0sXcwMvlUq2EuP5l8K+OWPKh/e7aBbigDZMf1fEodsg5REzSNMwA7uGWlbE
+	 PuXJkYGokRHH3RpSEIuFet7ApwrcXvKtIyspIx4HiivOrfC3ocooeXhS3VDHJC0qBKuW1
+	 CmA/Y0qh1DEvDLOYBr1btWYXm52CZd+bzWmOHKwffH7vNa+i4EPhGA15ywoYQs8PTg8wS
+	 uza0bEeIGO0u+f2NQK2lV4qgCKcd5DcXrRKm6j5oBO8MKiCIvUGJt3ZOIL5HMKoLnkYvK
+	 bJWvl/6I1gx6E09RFEwpSA3STxWPf4Y9tgJDXh+L8ygzngBIvn1q155s+1XdOqOHV1Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793700568;
-	h=Received:DKIM-Signature:Date:From:To:Subject:Message-ID:MIME-Version:
-	 Content-Type:Content-Disposition:Content-Transfer-Encoding;
-	bh=eAXDg7FHSWLsk46nlc1so4Du6jyg0OECLL/lFYpeT30=;
-	b=C6l/+UztffqtN/+7R9irVOseTJcOmV7hLNP4q10ke2RkSVu+Pg2muUVz/g2Y8BIGRLxP
-	 fOY2vmna3EsdOeyRnOzYKivTDl1HjXFre3W2X7Wl9SyW+2I88kMjROFzCakXG0DlK+cSP
-	 2kmKC/MmxVwAxq2eweaaswZPhs7yTzerD4gBMMQ2DxUnfPzybUsMHQeB2++FM54D7/yIx
-	 tA4Fp9OiOajflqC+EHmtVsNVUkLUWxN7e43mr07XeKbeEA4qvqRUA0ANiqfyucA75JI7S
-	 LOCduNOt24IYSZ/J1UNCeJEIURPVpyUmIUCJNxIJ/Rz+CtWgPJfZ1vgxtFIeW0tSkRA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793702630;
+	h=DMARC-Filter:DKIM-Signature:X-UI-Sender-Class:Received:Message-ID:
+	 Date:MIME-Version:User-Agent:To:Cc:References:Subject:
+	 Content-Language:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding:X-Provags-ID:X-Spam-Flag:UI-OutboundReport;
+	bh=eikMRmKOtIKFihA7RtGFBBN60oPP05oBcRZhobubR1Q=;
+	b=BlVCXPitIiqwovd/ThuTWc9mLQrFA7VTDudrOk7tDTqolet6d/50L2R3ENLh/IKqxH6G
+	 78Daw/L2eTWb2NZKJYhND1+fDwp9dPw417O+6emCfzHT8zVBH4iD8agRox3NXv8HIhAeD
+	 RmatC1E98PLh//KWknUgKVsniqkpBSrDG339Fza0khzmcj5ysbhe47WBywZOCeVk8pFyY
+	 xA6Glqc0V9tQJBY+l64PRcmW94MOipMINnHE3NoSEsVpdqEcp4j8KoUwYL0up6y3Vlu0l
+	 0yk617WeuZCEr36BiiL0LLZZPtlOT19C2xmwyhIq+vyAYWBdsgUy8NdwNgc8TApa16A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jkSNVeQH;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=web.de;
+	spf=pass smtp.mailfrom=web.de;
+	dkim=pass header.d=web.de header.i=markus.elfring@web.de header.a=rsa-sha256 header.s=s29768273 header.b=isPaZqGN;
+	arc=none smtp.remote-ip=212.227.17.11
+Received: from mout.web.de (mout.web.de [212.227.17.11])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C62EB606FAF5
-	for <linux-xfs@vger.kernel.org>; Tue,  3 Nov 2026 10:09:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F208C606F7E1;
+	Tue,  3 Nov 2026 10:43:48 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org F208C606F7E1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jkSNVeQH
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F84A1F000C1
-	for <linux-xfs@vger.kernel.org>; Tue,  3 Nov 2026 10:09:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793700567;
-	bh=eAXDg7FHSWLsk46nlc1so4Du6jyg0OECLL/lFYpeT30=;
-	h=Date:From:To:Subject;
-	b=jkSNVeQH32qxe/c5cKFznVl5Eo8pYW36U2bKa4wTxOFBBs+N8BQ3mnhQYBbzvpTIu
-	 P72RP311cNh6wYSpUmr+DHLqXHjuSFaLKz4kL7hveXhlp0LgHVo6bPMLLv7l7qpv5u
-	 R7cLkxnhudaPjdre6wkS4sdi6K4WPuobHeTvvfkCDJlGoikcv5TpzlxwfVt+nxp7iT
-	 ugctX5peS/Ik1Hl/YMT8ANTnyy53/gSg6wdI5rBRMyVBzE4Aa6EgxYvlyHCp1W+VqD
-	 YIl76pFvViixf0E7uVJ4EMqMlbeDJzcZ7CTfjkzSEtnLZj4IwfoxoLWWqHC9HL2RKI
-	 dYXAsrUWElEbw==
-Date: Tue, 3 Nov 2026 11:09:24 +0100
-From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org
-Subject: Subject: [ANNOUNCE] xfs-linux: for-next is now 9dde020e1968
-Message-ID: <aumw9Gazayh1SxZh@nidhogg.toxiclabs.cc>
+	dkim=pass (2048-bit key, unprotected) header.d=web.de header.i=markus.elfring@web.de header.a=rsa-sha256 header.s=s29768273 header.b=isPaZqGN
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
+	s=s29768273; t=1793702607; x=1794307407; i=markus.elfring@web.de;
+	bh=eikMRmKOtIKFihA7RtGFBBN60oPP05oBcRZhobubR1Q=;
+	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:To:Cc:References:
+	 Subject:From:In-Reply-To:Content-Type:Content-Transfer-Encoding:
+	 cc:content-transfer-encoding:content-type:date:from:message-id:
+	 mime-version:reply-to:subject:to;
+	b=isPaZqGN8QeUWwFvMf/kPF0gP2z1NYbze3wTRvc1unzbPh6xXdBlHpdw8wQVLl49
+	 C7pluSSZajmdl4QJoYz05wLiB7i/ylWfSqVmuADNp2aZXrohqZTitjidME/LqqD+c
+	 5O0XimNSXVMKYxZXQQaJ0PU3nu2BrtyjeHanit+AVD8R35N+JCwHGkGfuF3coymw7
+	 QVzgaPx1/PQim+/4gnFjWp8j4i7el1uegKFflLoT77gatv0qTvD9ZNjuN9uNepNlB
+	 HFBMRCuoP7RPrnoV7l18691xnzV3/GDS7zbd1+oC8lFf053wlw7GFUSd7fsv4lRnm
+	 VNaD6Z+ZI8C7Wo2EmA==
+X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
+Received: from client.hidden.invalid by smtp.web.de (mrweb106
+ [213.165.67.124]) with ESMTPSA (Nemesis) id 1Mf3uS-1wrZvZ2wRu-00gpx8; Tue, 03
+ Nov 2026 11:43:27 +0100
+Message-ID: <717984c9-a0c2-43d8-a801-d36c18c7040d@web.de>
+Date: Tue, 3 Nov 2026 11:43:18 +0100
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -53,73 +62,134 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+To: Jianyun Gao <jianyungao89@gmail.com>, linux-xfs@vger.kernel.org,
+ Carlos Maiolino <cem@kernel.org>
+Cc: stable@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+ Alexei Starovoitov <ast@kernel.org>, Bill O'Donnell <billodo@sgi.com>,
+ "Darrick J. Wong" <djwong@kernel.org>, David Chinner <david@fromorbit.com>,
+ Kefeng Wang <wangkefeng.wang@huawei.com>, Lachlan McIlroy <lachlan@sgi.com>,
+ Viktor Malik <vmalik@redhat.com>, Yuzuki Ishiyama <ishiyama@hpc.is.uec.ac.jp>
+References: <20261102150146.19777-1-jianyungao89@gmail.com>
+Subject: Re: [PATCH] xfs: fix temporary cursor leak in btree shift corruption
+ paths
+Content-Language: en-GB, de-DE
+From: Markus Elfring <Markus.Elfring@web.de>
+In-Reply-To: <20261102150146.19777-1-jianyungao89@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:JsKEoR3htlDkXLu7ClGTaIyyw6vhb+7Y7dtXF308Dij1n77IMYo
+ 3KhwAEajAd/0SY273upCekPJOH0UsTPWTlDaLAoLX6FwFCzFxJD6wqBYpAhZYf9GJdk3PTP
+ vzkFdufyH04fjh0MbNBTTRn1jDqK2wQTCclhRr9C4XiCu7yfSHb8cxKGRIBGQr3T2s6TBxg
+ uEmSjWApXvRvrleebq/rA==
+X-Spam-Flag: NO
+UI-OutboundReport: notjunk:1;M01:P0:d/PEv0Lk21E=;i6n1mPvBjFUuP59BIAVRfrvEj4p
+ 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
 
-Hi folks,
+=E2=80=A6
+> held by the duplicated cursor.  Jump to error1 instead, which calls
+> xfs_btree_del_cursor(tcur, XFS_BTREE_ERROR) to properly release all
+> resources.
 
-The xfs-linux/for-next branch has just been updated.
-
-Patches often get missed, if your outstanding patches have been
-reviewed, are not already merged in the mainline and are not
-listed below, please give me a heads-up.
-
-Yes, this is a new format for the announces I'm experimenting with,
-expect it to change in the near future.
-Giving how dynamic for-next has became, ISTM it would be more useful for
-such announces to contain a list of patches staged for integration other
-than the most recent patches pushed into for-next. Comments/suggestions
-are welcome.
-
-Follows the list of staged patches.
-
------ Fixes for v7.4 -----
-
-Anthony Iliopoulos (1):
-      [1e253beed534] xfs: skip iunlock with empty iolock flags in xfs_file_dio_write_aligned
-
-Binbin Deng (1):
-      [0344a9492efa] xfs: set healthmon mount cookie before publishing it
-
-Daejun Park (2):
-      [595e67d72616] xfs: don't skip free extents in later batches of a whole-AG FITRIM
-      [5745f4f10a1a] xfs: don't skip free extents of the longest length in a whole-AG FITRIM
-
-Jianyun Gao (1):
-      [2bbca049deeb] xfs: fix temporary cursor leak in btree shift corruption paths
-
-Ravi Singh (1):
-      [bde0010631a2] xfs: mark i_mode=0 and shut down on attr fork inactivation failure
-
-Wilfred Mallawa (1):
-      [7e31d6dd3419] xfs: fix unwind handling during xfs_mount_sysfs_init()
-
------ Next Merge-Window (v7.5) -----
-
-Adrián García Casado (1):
-      [976d3cd5b0a3] xfs: add __printf attribute to xfs_buf_alert_ratelimited()
-
-Daejun Park (9):
-      [77d5d75d727a] xfs: mark the inode preallocated for pNFS write layouts past EOF
-      [e0fbfbec7d5b] xfs: add a flag to convert unwritten extents without allocating blocks
-      [faf5f20d6c00] xfs: refuse a pNFS LAYOUTCOMMIT of a range without blocks
-      [351fccff2881] xfs: clamp a pNFS LAYOUTCOMMIT extent before computing its end
-      [cefa7c7b065d] xfs: cap the block count of xfs_iomap_write_direct() at one extent
-      [e4211f8034ce] xfs: clamp the pNFS layout range to the maximum file size
-      [d58a23e183d5] xfs: take the invalidate lock while mapping a pNFS layout
-      [c92cc6514b9c] xfs: add datasync and log_flushed arguments to xfs_log_force_inode()
-      [c3b00a553cbb] xfs: make pNFS LAYOUTCOMMIT stable the way fdatasync does
-
-Eric Sandeen (8):
-      [20496da47af3] xfs: remove redundant stat checks after xfs_btree_insert()
-      [e2293d89c56b] xfs: remove redundant stat checks after xfs_refcount_insert()
-      [87f5edcd7190] xfs: remove redundant stat checks after xfs_inobt_insert_rec()
-      [cfad3431d3ad] xfs: remove redundant stat check after rcbagbt_insert()
-      [25b97ffb8111] xfs: remove status parameter from several btree insert functions
-      [c71f58e4fde5] xfs: add stat check to xfs_btree_delete and remove caller checks
-      [12be672e210c] xfs: remove redundant stat checks after xfs_refcount_delete()
-      [01b68405c7f0] xfs: remove status parameter from two btree delete functions
-
-Siddh Raman Pant (1):
-      [13257daacb8f] xfs: Fix duplicate assignment in xfs_alloc_read_agf.
+Can further source code clean-up become helpful for affected function impl=
+ementations?
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Do=
+cumentation/process/coding-style.rst?h=3Dv7.4-rc1#n526
+=09
+Regards,
+Markus
