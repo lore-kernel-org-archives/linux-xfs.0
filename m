@@ -1,75 +1,74 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=203.254.224.25
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=203.254.224.24
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793705707;
-	b=dRz8f/9bMfyM/g/s9lr0/44QK8akBdzhInNNuXFPDekFSRaKb08vmztnw+JkrwNAAc6W
-	 WIR0NnDPIAbj0bqs/zozUNJIgN5ybKI7jqIX8G5Jp7VuOcGKS+SXVkem7Jnh7O2mne9xe
-	 yC+828BsV34x3zhQUWxwXiKJB9MAAFa9jH/uTB3TvkEs/Oz2H8m1NRkzgsbPnNfTuV2nO
-	 WZ+NrARSUz9Okl3rRWwMOLHv9j6zc5mIaz5H+2YI2LRFh4/ts6BIWTE5FArqAjLSbWNDe
-	 ORJUvM10GZkBgidSyn4Q2KlwJD85EfKNW+30wSG2yC/esw4ZXT9tW6PEJCZLZRCAsHQ==
+	t=1793705709;
+	b=dyUdVWeZiw4vfAeRR9bBLMMHS2SXjox1S+CjF9G/cOU1S0AdhptMaT4T+I5ad57XCRyc
+	 PBv4e8SBNDSY7T5DwghY4g58ws4SGaI0B6EN7MDYWCqSHRf99gXRXX086bQpmuYWt10v9
+	 9KgifrHLd0HOV1qBf/j9Yo3hAIDHrph2D6dNj6JwEx0LrBZT8kVFzQHuZmiR9S0ylg4PW
+	 uFe8AHdsQzvOTifmFJkwDgbuXwLpQ0elyWhKEn3hjiqlioGJXevanSj8eDjCIwSxMIg1A
+	 zEMSx7G/LsxLmXJGz5jkaUu8I3BqQ2gDA13WD2c8rijabuCle9Xz3EbbZ31ZQ65AhwA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793705707;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793705709;
 	h=DMARC-Filter:Received:DKIM-Filter:DKIM-Signature:Received:Received:
 	 Received:Received:From:To:Cc:Subject:Date:Message-Id:X-Mailer:
 	 In-Reply-To:MIME-Version:Content-Transfer-Encoding:X-CMS-MailID:
 	 X-Msg-Generator:Content-Type:X-Sendblock-Type:CMS-TYPE:cpgsPolicy:
 	 X-CFilter-Loop:X-CMS-RootMailID:References;
-	bh=h0JrNw87CscCaBms8Ase1x7lT41MWkvuKN0Y4IRfPqY=;
-	b=ngb0ipAGE7Bd9gKhXdB3a9XyqpRlLYDhbyn80PeDAlBtD8jB/tOm++gm3Tumt1GqrFZ2
-	 uRzoW2mdyULe5+p2rl98/suH7aIuQ5DVNnfSw3T0prTNv/b50V+Laak8klSLsuzrUfTgZ
-	 xFd8XZESsQdCXZ8loyZhfcD+vZrjb+SNM/ju1etKEc3yIbFDvTIP1h4RKvEV0WAMkpAEW
-	 zDUQs5Ls716YGvRFOTpjPgLyo/bA1U53ARAtpPtC8XX1QHgU3JVsiSnHr+2M3XQ4jCnkA
-	 L4hNM5rcdrkUboMwZih2QXt/XrU6lNgcW4WSsY3huK9U0rkkBYGbxiTCb5dQoYDMVag==
+	bh=qUoTF1GFibUaOrUhwHp4xkivi/UPZyIB5VH8PprULIM=;
+	b=Fuj8BN5NvzB7a619y5NQQcEP1p6JK19T0N+t3J/yYlErXoILxfLiwUjU/pGnmMI2yMWG
+	 BmoWqdtnkaWgw8LKa3FAV6m8YhAgXCc0g8CpM4HLMt6cJAFNP1AHghV1a/wyAuDma1JiC
+	 j09ObecoTNqLcnj5xRwvM+MTTymTSY6UjwiTok+9oYQhJaq0hKx03B2KcDZLfUA0Pd1Qr
+	 zd6ZCw99cZXRAQ8DvtYhiOQOXTZJ8kFrw9/LjtOm6O6gHuXxUaS0hMCt9DdHXui14TZBO
+	 enwtDGdBXHdFwbkaqHq1HyL1RS1OlGuG8LpzNDFR1FiF+8jgcAeqgV+Zt3xxv8meomA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=samsung.com;
 	spf=pass smtp.mailfrom=samsung.com;
-	dkim=pass header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=C4r169oA;
-	arc=none smtp.remote-ip=203.254.224.25
-Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
+	dkim=pass header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b="rJPakO/B";
+	arc=none smtp.remote-ip=203.254.224.24
+Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
 	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99FB7606A327
-	for <linux-xfs@vger.kernel.org>; Tue,  3 Nov 2026 11:35:06 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 99FB7606A327
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0AC3606A33C
+	for <linux-xfs@vger.kernel.org>; Tue,  3 Nov 2026 11:35:08 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B0AC3606A33C
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=C4r169oA
-Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
-	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20261103113504epoutp02a3d1c849cdc78ad08f01bb65e4eae4bc~khdW7L-SU0877508775epoutp02h
-	for <linux-xfs@vger.kernel.org>; Tue,  3 Nov 2026 11:35:04 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20261103113504epoutp02a3d1c849cdc78ad08f01bb65e4eae4bc~khdW7L-SU0877508775epoutp02h
+	dkim=pass (1024-bit key, unprotected) header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=rJPakO/B
+Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
+	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20261103113506epoutp0133d07e88a2496f83ea66aad9116ec1f4~khdZE_MAI2985029850epoutp01C
+	for <linux-xfs@vger.kernel.org>; Tue,  3 Nov 2026 11:35:06 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20261103113506epoutp0133d07e88a2496f83ea66aad9116ec1f4~khdZE_MAI2985029850epoutp01C
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1793705704;
-	bh=h0JrNw87CscCaBms8Ase1x7lT41MWkvuKN0Y4IRfPqY=;
+	s=mail20170921; t=1793705706;
+	bh=qUoTF1GFibUaOrUhwHp4xkivi/UPZyIB5VH8PprULIM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=C4r169oAQ0kxy9sNn9dXpJGVSZZniv5/KipI/EtqVfYVRF7cvoVZlk0FfvLy1vr5v
-	 vWk5Gw4BX3kxcIFKSsqG7uXWgr/6EzDjAKJD7OfrWcR47E008laltP2wNn0VzHw0ak
-	 msWEfFwiBr/DrqXhZTywdz9rMoECmsOfJtUB9mvU=
-Received: from epsnrtp04.localdomain (unknown [182.195.42.156]) by
-	epcas5p2.samsung.com (KnoxPortal) with ESMTPS id
-	20261103113504epcas5p239c507eaf09727e1f3589fcd27291339~khdWXxSe91162911629epcas5p2x;
-	Tue,  3 Nov 2026 11:35:04 +0000 (GMT)
-Received: from epcas5p4.samsung.com (unknown [182.195.38.93]) by
-	epsnrtp04.localdomain (Postfix) with ESMTP id 4jJmhR06jQz6B9m8; Tue,  3 Nov
-	2026 11:35:03 +0000 (GMT)
+	b=rJPakO/BkHzYtMJ0ZZDM+OGisBJBjfM+EPgmkChC/ZP/kpfXKFJxP8dWXPJ0K3dx6
+	 sKATKs+BxF4f6Ah1Sv22rxO/BG8ufnzkLp/CgEp3Y6du1NFuT5KYbqx4CxLo3G9gut
+	 NL90Su9a4fU9PvZHfWf/ALGlepvVf9xJtKMYmFD0=
+Received: from epsnrtp02.localdomain (unknown [182.195.42.154]) by
+	epcas5p3.samsung.com (KnoxPortal) with ESMTPS id
+	20261103113505epcas5p3a507f2dcfdde11559669baf8d3d1bec1~khdYNLj8a2877828778epcas5p3q;
+	Tue,  3 Nov 2026 11:35:05 +0000 (GMT)
+Received: from epcas5p3.samsung.com (unknown [182.195.38.93]) by
+	epsnrtp02.localdomain (Postfix) with ESMTP id 4jJmhT2DjNz2SSKd; Tue,  3 Nov
+	2026 11:35:05 +0000 (GMT)
 Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
 	epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
-	20261103111029epcas5p190c5155d6c2702ee7705212e9885dddd~khH5EaXSL0247702477epcas5p1a;
-	Tue,  3 Nov 2026 11:10:29 +0000 (GMT)
+	20261103111031epcas5p19a4cdbbf45612ff2c541b2aa0bb6cc30~khH7E7ekb0206702067epcas5p12;
+	Tue,  3 Nov 2026 11:10:31 +0000 (GMT)
 Received: from localhost.localdomain (unknown [107.99.41.245]) by
 	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-	20261103111027epsmtip10a53667d58a04bd982970ad43b7fa2b4~khH3XTsH72883528835epsmtip1R;
-	Tue,  3 Nov 2026 11:10:27 +0000 (GMT)
+	20261103111029epsmtip17c6b1e977c017f9df0c60d49ab0ab5a8~khH5UGw5v2910629106epsmtip1L;
+	Tue,  3 Nov 2026 11:10:29 +0000 (GMT)
 From: Anuj Gupta <anuj20.g@samsung.com>
 To: brauner@kernel.org, hch@lst.de, djwong@kernel.org, dgc@kernel.org,
 	cem@kernel.org, jack@suse.cz, axboe@kernel.dk, kbusch@kernel.org
 Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
 	gost.dev@samsung.com, Anuj Gupta <anuj20.g@samsung.com>, Kanchan Joshi
 	<joshi.k@samsung.com>
-Subject: [PATCH v7 3/8] fs: add i_write_stream, exclusive with the write
- life time hint
-Date: Tue,  3 Nov 2026 16:36:35 +0530
-Message-Id: <20261103110640.1000095-4-anuj20.g@samsung.com>
+Subject: [PATCH v7 4/8] xfs: implement software write-stream management
+Date: Tue,  3 Nov 2026 16:36:36 +0530
+Message-Id: <20261103110640.1000095-5-anuj20.g@samsung.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20261103110640.1000095-1-anuj20.g@samsung.com>
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -82,144 +81,334 @@ List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CMS-MailID: 20261103111029epcas5p190c5155d6c2702ee7705212e9885dddd
+X-CMS-MailID: 20261103111031epcas5p19a4cdbbf45612ff2c541b2aa0bb6cc30
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: REQ_APPROVE
 CMS-TYPE: 105P
 cpgsPolicy: CPGSC10-542,Y
 X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20261103111029epcas5p190c5155d6c2702ee7705212e9885dddd
+X-CMS-RootMailID: 20261103111031epcas5p19a4cdbbf45612ff2c541b2aa0bb6cc30
 References: <20261103110640.1000095-1-anuj20.g@samsung.com>
-	<CGME20261103111029epcas5p190c5155d6c2702ee7705212e9885dddd@epcas5p1.samsung.com>
+	<CGME20261103111031epcas5p19a4cdbbf45612ff2c541b2aa0bb6cc30@epcas5p1.samsung.com>
 
-From: Kanchan Joshi <joshi.k@samsung.com>
+Implement the FS_IOC_WRITE_STREAM_* handlers.
 
-Keep the attached stream id in the VFS inode rather than the
-filesystem's own, so that fcntl_set_rw_hint() can see it. It is a u16 in
-the 32-bit hole after i_state, so struct inode does not grow on 64-bit.
+Keep a stream pool in the data device buftarg, sized from the AG count.
+The id is stored in inode->i_write_stream and is not written to disk.
 
-Add inode_set_write_stream() to set or clear it. It refuses a stream
-while a write life time hint is set, under i_lock as fcntl_set_rw_hint()
-does, so both sides of the exclusion are enforced in the VFS.
+Write streams, filestreams and write life time hints are mutually
+exclusive. GET_MAX reports zero for filestream and realtime inodes, SET
+rejects those and any inode carrying a hint, and setattr refuses to turn
+on filestream or realtime placement while a stream is attached.
+
+ALLOC is restricted to CAP_SYS_ADMIN.
 
 Suggested-by: Christoph Hellwig <hch@lst.de>
 Suggested-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Kanchan Joshi <joshi.k@samsung.com>
 Signed-off-by: Anuj Gupta <anuj20.g@samsung.com>
+Signed-off-by: Kanchan Joshi <joshi.k@samsung.com>
 ---
- fs/fcntl.c                    |  7 +++++++
- fs/inode.c                    |  2 ++
- fs/write_streams.c            | 23 +++++++++++++++++++++++
- include/linux/fs.h            |  2 +-
- include/linux/write_streams.h |  6 ++++++
- 5 files changed, 39 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_buf.c   | 31 ++++++++++++++++++
+ fs/xfs/xfs_buf.h   |  6 ++++
+ fs/xfs/xfs_inode.c | 61 +++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_inode.h |  4 +++
+ fs/xfs/xfs_ioctl.c | 79 ++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_super.c |  5 +++
+ 6 files changed, 186 insertions(+)
 
-diff --git a/fs/fcntl.c b/fs/fcntl.c
-index 9b71bc9d71d1..271ff8f61354 100644
---- a/fs/fcntl.c
-+++ b/fs/fcntl.c
-@@ -383,7 +383,14 @@ static long fcntl_set_rw_hint(struct file *file, unsigned long arg)
- 	if (!rw_hint_valid(hint))
- 		return -EINVAL;
- 
-+	/* keep write stream and write life time hint mutually exclusive */
-+	spin_lock(&inode->i_lock);
-+	if (hint != WRITE_LIFE_NOT_SET && READ_ONCE(inode->i_write_stream)) {
-+		spin_unlock(&inode->i_lock);
-+		return -EBUSY;
-+	}
- 	WRITE_ONCE(inode->i_write_hint, hint);
-+	spin_unlock(&inode->i_lock);
- 
- 	/*
- 	 * file->f_mapping->host may differ from inode. As an example,
-diff --git a/fs/inode.c b/fs/inode.c
-index f63535ee3629..4b07125f27cd 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -21,6 +21,7 @@
- #include <linux/list_lru.h>
- #include <linux/iversion.h>
- #include <linux/rw_hint.h>
-+#include <linux/write_streams.h>
- #include <linux/seq_file.h>
- #include <linux/debugfs.h>
- #include <trace/events/writeback.h>
-@@ -246,6 +247,7 @@ int inode_init_always_gfp(struct super_block *sb, struct inode *inode, gfp_t gfp
- 	atomic_set(&inode->i_writecount, 0);
- 	inode->i_size = 0;
- 	inode->i_write_hint = WRITE_LIFE_NOT_SET;
-+	inode->i_write_stream = WRITE_STREAM_NOT_SET;
- 	inode->i_blocks = 0;
- 	inode->i_bytes = 0;
- 	inode->i_generation = 0;
-diff --git a/fs/write_streams.c b/fs/write_streams.c
-index 4c7ad3198bb9..d97cdafc7d1a 100644
---- a/fs/write_streams.c
-+++ b/fs/write_streams.c
-@@ -140,3 +140,26 @@ int write_stream_get_id(struct file *file, const struct write_stream_pool *pool)
- 	return ws->id;
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 6c93b4f5629c..d8ce03a9f49c 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -1648,6 +1648,7 @@ void
+ xfs_free_buftarg(
+ 	struct xfs_buftarg	*btp)
+ {
++	write_stream_pool_destroy(&btp->bt_stream_pool);
+ 	xfs_destroy_buftarg(btp);
+ 	fs_put_dax(btp->bt_daxdev, btp->bt_mount);
+ 	/* the main block device is closed by kill_block_super */
+@@ -1685,6 +1686,36 @@ xfs_configure_buftarg_atomic_writes(
+ 	btp->bt_awu_max = max_bytes;
  }
- EXPORT_SYMBOL_GPL(write_stream_get_id);
+ 
++/* the block layer can tag I/O with at most U8_MAX write streams */
++#define XFS_MAX_WRITE_STREAMS		U8_MAX
 +
-+/**
-+ * inode_set_write_stream - attach or clear the write stream of an inode
-+ * @inode: inode to update
-+ * @id: stream id, or WRITE_STREAM_NOT_SET to clear
-+ *
-+ * A write stream and a write life time hint are mutually exclusive.
-+ *
-+ * Return: 0, or -EBUSY if @inode has a write life time hint.
-+ */
-+int inode_set_write_stream(struct inode *inode, u16 id)
++/* Heuristic to derive software write stream count from a group topology */
++static unsigned int
++xfs_sw_write_stream_count(
++	unsigned int		nr_groups)
 +{
-+	spin_lock(&inode->i_lock);
-+	if (id != WRITE_STREAM_NOT_SET &&
-+	    inode->i_write_hint != WRITE_LIFE_NOT_SET) {
-+		spin_unlock(&inode->i_lock);
-+		return -EBUSY;
-+	}
-+	WRITE_ONCE(inode->i_write_stream, id);
-+	spin_unlock(&inode->i_lock);
-+	return 0;
++	unsigned int		group_set_size;
++
++	if (nr_groups >= 16)
++		group_set_size = 4;
++	else if (nr_groups >= 8)
++		group_set_size = 2;
++	else
++		group_set_size = 1;
++	return min(nr_groups / group_set_size, XFS_MAX_WRITE_STREAMS);
 +}
-+EXPORT_SYMBOL_GPL(inode_set_write_stream);
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 99caef43ff3c..3ed20abf4a46 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -812,7 +812,7 @@ struct inode {
- 
- 	/* Misc */
- 	struct inode_state_flags i_state;
--	/* 32-bit hole */
-+	u16			i_write_stream;
- 	struct rw_semaphore	i_rwsem;
- 
- 	/* Timestamp for writeback list ordering and age checks (jiffies). */
-diff --git a/include/linux/write_streams.h b/include/linux/write_streams.h
-index d27f42df5984..258358d9c31d 100644
---- a/include/linux/write_streams.h
-+++ b/include/linux/write_streams.h
-@@ -6,6 +6,10 @@
- #include <linux/types.h>
- 
- struct file;
-+struct inode;
 +
-+/* i_write_stream value of an inode that has no write stream */
-+#define WRITE_STREAM_NOT_SET	0
++int
++xfs_buftarg_init_streams(
++	struct xfs_buftarg	*btp,
++	unsigned int		nr_groups)
++{
++	unsigned int		nr_streams;
++
++	nr_streams = xfs_sw_write_stream_count(nr_groups);
++	return write_stream_pool_init(&btp->bt_stream_pool, nr_streams);
++}
++
+ /* Configure a buffer target that abstracts a block device. */
+ int
+ xfs_configure_buftarg(
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index a4729253b56f..b5292e5731e3 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -15,6 +15,7 @@
+ #include <linux/uio.h>
+ #include <linux/list_lru.h>
+ #include <linux/lockref.h>
++#include <linux/write_streams.h>
  
+ extern struct kmem_cache *xfs_buf_cache;
+ 
+@@ -102,6 +103,9 @@ struct xfs_buftarg {
+ 	unsigned int		bt_awu_min;
+ 	unsigned int		bt_awu_max;
+ 
++	/* slot pool for stream fds on this device */
++	struct write_stream_pool bt_stream_pool;
++
+ 	struct rhashtable	bt_hash;
+ };
+ 
+@@ -360,6 +364,8 @@ extern void xfs_buftarg_wait(struct xfs_buftarg *);
+ extern void xfs_buftarg_drain(struct xfs_buftarg *);
+ int xfs_configure_buftarg(struct xfs_buftarg *btp, unsigned int sectorsize,
+ 		xfs_fsblock_t nr_blocks);
++int xfs_buftarg_init_streams(struct xfs_buftarg *btp,
++		unsigned int nr_groups);
+ 
+ #define xfs_readonly_buftarg(buftarg)	bdev_read_only((buftarg)->bt_bdev)
+ 
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 05a14da28031..636f039e8f71 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -4,6 +4,7 @@
+  * All Rights Reserved.
+  */
+ #include <linux/iversion.h>
++#include <linux/write_streams.h>
+ 
+ #include "xfs_platform.h"
+ #include "xfs_fs.h"
+@@ -47,6 +48,66 @@
+ 
+ struct kmem_cache *xfs_inode_cache;
+ 
++/* Number of write streams available to this inode. */
++int
++xfs_inode_max_write_streams(
++	struct xfs_inode	*ip)
++{
++	xfs_assert_ilocked(ip, XFS_ILOCK_SHARED | XFS_ILOCK_EXCL);
++
++	if (xfs_inode_is_filestream(ip))
++		return 0;
++	if (XFS_IS_REALTIME_INODE(ip))
++		return 0;
++	return write_stream_pool_count(&xfs_inode_buftarg(ip)->bt_stream_pool);
++}
++
++/* Bind the write stream named by @stream_fd to @ip */
++int
++xfs_inode_set_write_stream(
++	struct xfs_inode	*ip,
++	int			stream_fd)
++{
++	CLASS(fd, f)(stream_fd);
++	struct xfs_buftarg	*target;
++	int			id, error = 0;
++
++	if (!fd_file(f))
++		return -EBADF;
++	xfs_ilock(ip, XFS_ILOCK_EXCL);
++	if (XFS_IS_REALTIME_INODE(ip)) {
++		error = -EINVAL;
++		goto out_unlock;
++	}
++
++	target = xfs_inode_buftarg(ip);
++	id = write_stream_get_id(fd_file(f), &target->bt_stream_pool);
++	if (id < 0) {
++		error = id;
++		goto out_unlock;
++	}
++
++	/* Filestream and write-stream are mutually exclusive */
++	if (xfs_inode_is_filestream(ip)) {
++		error = -EINVAL;
++		goto out_unlock;
++	}
++
++	error = inode_set_write_stream(VFS_I(ip), id);
++out_unlock:
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++	return error;
++}
++
++void
++xfs_inode_clear_write_stream(
++	struct xfs_inode	*ip)
++{
++	xfs_ilock(ip, XFS_ILOCK_EXCL);
++	inode_set_write_stream(VFS_I(ip), WRITE_STREAM_NOT_SET);
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++}
++
  /*
-  * Write stream slot pool, embedded in whatever filesystem object scopes
-@@ -30,4 +34,6 @@ int  write_stream_alloc_fd(struct write_stream_pool *pool, struct file *file);
- int  write_stream_get_id(struct file *file,
- 			 const struct write_stream_pool *pool);
+  * These two are wrapper routines around the xfs_ilock() routine used to
+  * centralize some grungy code.  They are used in places that wish to lock the
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 75eff68c1e39..15cd735d8fe9 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -681,4 +681,8 @@ int xfs_icreate_dqalloc(const struct xfs_icreate_args *args,
+ 		struct xfs_dquot **udqpp, struct xfs_dquot **gdqpp,
+ 		struct xfs_dquot **pdqpp);
  
-+int  inode_set_write_stream(struct inode *inode, u16 id);
++int xfs_inode_max_write_streams(struct xfs_inode *ip);
++int xfs_inode_set_write_stream(struct xfs_inode *ip, int stream_fd);
++void xfs_inode_clear_write_stream(struct xfs_inode *ip);
 +
- #endif /* _LINUX_WRITE_STREAMS_H */
+ #endif	/* __XFS_INODE_H__ */
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index f81b6e52ac40..2490b6ec5f4e 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -557,6 +557,11 @@ xfs_ioctl_setattr_xflags(
+ 	bool			rtflag = (fa->fsx_xflags & FS_XFLAG_REALTIME);
+ 	uint64_t		i_flags2;
+ 
++	/* refuse a filestream/realtime flag change while a stream is attached */
++	if (READ_ONCE(VFS_I(ip)->i_write_stream) &&
++	    ((fa->fsx_xflags & FS_XFLAG_FILESTREAM) || rtflag))
++		return -EINVAL;
++
+ 	if (rtflag != XFS_IS_REALTIME_INODE(ip)) {
+ 		/* Can't change realtime flag if any extents are allocated. */
+ 		if (xfs_inode_has_filedata(ip))
+@@ -1436,6 +1441,73 @@ xfs_ioc_free_eofblocks(
+ 	return xfs_blockgc_free_space(mp, &icw);
+ }
+ 
++static int
++xfs_ioc_write_stream_get_max(
++	struct file		*filp,
++	void __user		*arg)
++{
++	struct xfs_inode	*ip = XFS_I(file_inode(filp));
++	__u32			max;
++
++	xfs_ilock(ip, XFS_ILOCK_SHARED);
++	max = xfs_inode_max_write_streams(ip);
++	xfs_iunlock(ip, XFS_ILOCK_SHARED);
++
++	return put_user(max, (__u32 __user *)arg);
++}
++
++static int
++xfs_ioc_write_stream_alloc(
++	struct file		*filp)
++{
++	struct xfs_inode	*ip = XFS_I(file_inode(filp));
++	struct xfs_buftarg	*target;
++	int			max;
++
++	if (!capable(CAP_SYS_ADMIN))
++		return -EPERM;
++
++	xfs_ilock(ip, XFS_ILOCK_SHARED);
++	max = xfs_inode_max_write_streams(ip);
++	target = xfs_inode_buftarg(ip);
++	xfs_iunlock(ip, XFS_ILOCK_SHARED);
++
++	if (!max)
++		return -EOPNOTSUPP;
++	return write_stream_alloc_fd(&target->bt_stream_pool, filp);
++}
++
++static int
++xfs_ioc_write_stream_set(
++	struct file		*filp,
++	void __user		*arg)
++{
++	struct xfs_inode	*ip = XFS_I(file_inode(filp));
++	struct fs_write_stream_set set;
++
++	if (!(filp->f_mode & FMODE_WRITE))
++		return -EBADF;
++	if (copy_from_user(&set, arg, sizeof(set)))
++		return -EFAULT;
++	if (set.flags & ~FS_WRITE_STREAM_SET_CLEAR)
++		return -EINVAL;
++
++	/* Regular files only. */
++	if (!S_ISREG(VFS_I(ip)->i_mode))
++		return -EINVAL;
++
++	if (!inode_owner_or_capable(file_mnt_idmap(filp), VFS_I(ip)))
++		return -EPERM;
++
++	if (set.flags & FS_WRITE_STREAM_SET_CLEAR) {
++		if (set.stream_fd != -1)
++			return -EINVAL;
++		xfs_inode_clear_write_stream(ip);
++		return 0;
++	}
++	return xfs_inode_set_write_stream(ip, set.stream_fd);
++}
++
+ /*
+  * These long-unused ioctls were removed from the official ioctl API in 5.17,
+  * but retain these definitions so that we can log warnings about them.
+@@ -1575,6 +1647,13 @@ xfs_file_ioctl(
+ 	case XFS_IOC_VERIFY_MEDIA:
+ 		return xfs_ioc_verify_media(filp, arg);
+ 
++	case FS_IOC_WRITE_STREAM_GET_MAX:
++		return xfs_ioc_write_stream_get_max(filp, arg);
++	case FS_IOC_WRITE_STREAM_ALLOC:
++		return xfs_ioc_write_stream_alloc(filp);
++	case FS_IOC_WRITE_STREAM_SET:
++		return xfs_ioc_write_stream_set(filp, (void __user *)arg);
++
+ 	default:
+ 		return -ENOTTY;
+ 	}
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 5a06132aa384..a541e97b580f 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -608,6 +608,11 @@ xfs_setup_devices(
+ 	if (error)
+ 		return error;
+ 
++	error = xfs_buftarg_init_streams(mp->m_ddev_targp,
++			mp->m_sb.sb_agcount);
++	if (error)
++		return error;
++
+ 	if (mp->m_logdev_targp && mp->m_logdev_targp != mp->m_ddev_targp) {
+ 		unsigned int	log_sector_size = BBSIZE;
+ 
 -- 
 2.25.1
 
