@@ -1,56 +1,74 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793736467;
-	b=OBsl2ZflvZ7R9MOaOaHcazvBoJXFfXwXjMBA0BWhdzimOHg6jqkis/NbyNaHDH/Bwfm9
-	 2WGe52F9+D63bLi2j7oPtwXNHTYaGMpNrTLgHwPAx77Mp/gWYA7aEyrEjRJCglN1cnzEL
-	 5dmK1dyMgrSC4F+1xL5skrhnqorjdFmFtl/od4PQXGsqnKsTTwH8nvgiQZw0C0JmiYCGX
-	 bboKcqBS1Llu7F3Ph36s+2D6yesf/TX4MQRPeeze25X+eI0ie6dDKcvzsyXfuIA3HDJrS
-	 aIYGVwS6GQAuPk175odFsakR6Q7jHNdsfvAFpwtKp77KMC3NVlhfsmzQJES5cxh3R7Q==
+	t=1793738850;
+	b=4SM92F9yarmKg5VM6u9v1HK8+pgtvTJ7mVFo9hcQspQPflEzR0b8Iafm5j59CIhiHOIe
+	 8GGL3dJ6pmQFyAU7aBVkA1kBlmC6O3BtVhB9ogWjN0F91iG8WqLADsA3A6wSK7T79dUBh
+	 YxI2cXJCqT211Vtbw6BC/5GWJZcXBicxQrkWLuOUv4NrzLMbwFNqPEV+7PMzeyav8rrLA
+	 zU0bM3cPTkJGKOZCh652Xd/HluSEuvhN64lTQ87r3+2QY3Tswf3V9VNurWuBxVJAFSW6X
+	 mqzLuOnWMqjNjXs2f7I5ov5lcVGI6Sy/uBW7Gjyq3oNCcZek45jFH+aGix23kia/EZw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793736467;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793738850;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=5rZwAD3Ycaihst6dgcoNSxFsehJMseduQ8wGz5Hbzvw=;
-	b=U6Y0F1dvEDqd4ByqQJ5Kp3kCsERAXVyll9ZWQpdJlvw1SO54JP9E4AfLBVDP5jLJ8ElR
-	 u0Kqe5emrWDaulbU1BoPfV88rnQj7ahJhGLZXln/dkrZsFK2VOMht1M020zgAWRmGmu2V
-	 HyEDYwuOfDKcAyYA5M8P04SZanuSLJNWrPQUgyEd4GMouq6sYMHrMFKidI1C2nt/NZ1DV
-	 hYtVPG54WV0CAXn28p+POGM8lpmZT+fR9LXROuQyHtaXBltJITeminhl4qvs+BwDDu0rt
-	 I7GbzfFiGgcqPXMWcM969M93ATgNWTkiYFyB/JzglRJD90WaUR1zVheZoCmElK6/J/A==
+	bh=WA4JldT6jZkiRqUOUhymd9+bMbgaai5DPTFvHOVFxkY=;
+	b=Qn5mIq53Zv5l+UvWGCZIwMdvweISPZamN04qnVrd6lC56+DYIYQooWSlDhyDSe0X+rfy
+	 0PU4dHD2lBTnmYzmdfRoGiQ+HGuujLIjQlnRnehkm0eIvogjhOcGYRXQ/3qyq5xQcX7/u
+	 EtVl7Sq8a+OFXYkd6pAHQljB2aIQ8UoK6Wcp86Rwn5We4/ItexRqg0R7EQYEt8sDRMeCB
+	 MRIeVEJLA/COh/Jle8itlIW2ViJhH2sR9Cv1wrpzgRTYS2F/X8YljuphOGuAKI7q8rSpg
+	 FE79rSje6yym9fqdUoq5Qd4ETWVnS9g0BYXVw7gPmJARfeFi3AmFVFMJlmupDiqUz2w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jCC3nV3g;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=MZ5aB4fV;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15DCE606A31B;
-	Tue,  3 Nov 2026 20:07:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6ACCE606A332;
+	Tue,  3 Nov 2026 20:47:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jCC3nV3g
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 777DE1F000C1;
-	Tue,  3 Nov 2026 20:07:44 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=MZ5aB4fV
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 219691F0093A;
+	Tue,  3 Nov 2026 20:47:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793736466;
-	bh=5rZwAD3Ycaihst6dgcoNSxFsehJMseduQ8wGz5Hbzvw=;
+	s=k20260515; t=1793738850;
+	bh=WA4JldT6jZkiRqUOUhymd9+bMbgaai5DPTFvHOVFxkY=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=jCC3nV3gatYb+Op+60ZOPxNoM07PP2vmltvuWnmxmXsapTEmJjATJ7Nr6ROlU3ZeY
-	 kHis+d1l0GqsnjSrVf6k4t2mhB323KrYjYFec9GQ+u+xjyH5DmTGnk2pJguctxEjLW
-	 MAK0ac+wmy5baBVsuFkGb1c6bkO1yq/Q+OHz65KtZROwEVXqhT0y+5ZET3JAfq/QU+
-	 ycQ5Cg3scRwTpTYrY429Bk5l72MDqb8Q7x3SoGpjbcO3ZZJjlI2yDFF2s09na/pOey
-	 5aWbIQ9VtwzJ496kH61763zne4hBv9T2tfF9dK8GsjlDTbvuUfQRTmZwvWY3oUIOXr
-	 XTQF91uXjCFJw==
-Date: Wed, 4 Nov 2026 07:07:37 +1100
+	b=MZ5aB4fVto6FbxRg77AGVx0jiXNVhH38K6sxyQ4CgLc3S9lJLQH7InuTEYv8lfOaf
+	 5uoad99J7Yo66MZORzU1SueYppREaWAp7DnLjMArd/bw7llqmgjA7QeRkN0TecqOjw
+	 mgPYGDAwQqwyEL4ByoiIyUJS5Ynf7UPLyKjtpGQBMTUIJCZtNDazrMWwmoLIPejkIK
+	 R4yBtwITyXNn68MPxARx6qpkmGIeYtFfjYSs2zxU7gR3nB0yXltF941REAJYSVQAZs
+	 JOShTK4Swr6Tw/lPkD7UPNQLTdL9bwzUWCtu2lgQU5SbFGQKMkCODHWkdfiTaQncQD
+	 tHuce+fkMYTgw==
+Date: Wed, 4 Nov 2026 07:47:09 +1100
 From: Dave Chinner <dgc@kernel.org>
-To: Yiqing Wu <wuyiqing@cmss.chinamobile.com>
-Cc: Christian Brauner <brauner@kernel.org>, gfs2@lists.linux.dev,
-	Kefeng Wang <wangkefeng.wang@huawei.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Shakeel Butt <shakeel.butt@linux.dev>, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-	syzbot+5e659793378ad9e06387@syzkaller.appspotmail.com
-Subject: Re: [PATCH] iomap: allow writeback from kswapd again
-Message-ID: <auo_CehOVzTMq6kc@dread>
-References: <20261103023804.8074-1-wuyiqing@cmss.chinamobile.com>
+To: Kaitao Cheng <kaitao.cheng@linux.dev>
+Cc: gregkh@linuxfoundation.org, arve@android.com, tkjos@android.com,
+	brauner@kernel.org, cmllamas@google.com, aliceryhl@google.com,
+	nat@pixelcluster.dev, arunpravin.paneerselvam@amd.com,
+	maarten.lankhorst@linux.intel.com, mripard@kernel.org,
+	tzimmermann@suse.de, airlied@gmail.com, simona@ffwll.ch,
+	viro@zeniv.linux.org.uk, agruenba@redhat.com, trondmy@kernel.org,
+	anna@kernel.org, cel@kernel.org, jlayton@kernel.org, cem@kernel.org,
+	akpm@linux-foundation.org, david@fromorbit.com, david@kernel.org,
+	hughd@google.com, hannes@cmpxchg.org, yosry@kernel.org,
+	nphamcs@gmail.com, matthew.auld@intel.com, matthew.brost@intel.com,
+	thomas.hellstrom@linux.intel.com, jack@suse.cz, neil@brown.name,
+	okorniev@redhat.com, Dai.Ngo@oracle.com, tom@talpey.com,
+	qi.zheng@linux.dev, roman.gushchin@linux.dev, muchun.song@linux.dev,
+	ziy@nvidia.com, baolin.wang@linux.alibaba.com, liam@infradead.org,
+	nico.pache@linux.dev, ryan.roberts@arm.com, dev.jain@arm.com,
+	baohua@kernel.org, lance.yang@linux.dev, usama.arif@linux.dev,
+	kas@kernel.org, mhocko@kernel.org, shakeel.butt@linux.dev,
+	ljs@kernel.org, kasong@tencent.com, axelrasmussen@google.com,
+	yuanchu@google.com, weixugc@google.com, baoquan.he@linux.dev,
+	chengming.zhou@linux.dev, linux-kernel@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, linux-fsdevel@vger.kernel.org,
+	gfs2@lists.linux.dev, linux-nfs@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-mm@kvack.org,
+	Kaitao Cheng <chengkaitao@kylinos.cn>
+Subject: Re: [PATCH] mm/list_lru: Account node removals in isolation helpers
+Message-ID: <aupITfr9pBKPrU20@dread>
+References: <20261103045053.59548-1-kaitao.cheng@linux.dev>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -62,119 +80,82 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261103023804.8074-1-wuyiqing@cmss.chinamobile.com>
+In-Reply-To: <20261103045053.59548-1-kaitao.cheng@linux.dev>
 
-On Tue, Nov 03, 2026 at 10:38:04AM +0800, Yiqing Wu wrote:
-> Commit ff59f71f1c95 ("iomap: simplify writepages reclaim guard") removed
-> the PF_KSWAPD exemption from the iomap_writepages() guard on the
-> assumption that kswapd can no longer reach filesystem writeback now
-> that pageout() returns PAGE_ACTIVATE for non-shmem, non-anon folios.
-> That assumption only covers the folio reclaim path.  kswapd can still
-> reach filesystem writeback through the inode shrinkers, and syzbot
-> reports exactly that on GFS2:
+On Tue, Nov 03, 2026 at 12:50:53PM +0800, Kaitao Cheng wrote:
+> From: Kaitao Cheng <chengkaitao@kylinos.cn>
 > 
->   WARNING: (current->flags & PF_MEMALLOC) in iomap_writepages
->   kswapd -> balance_pgdat -> shrink_node -> shrink_slab
->   -> super_cache_scan -> prune_icache_sb -> evict
->   -> gfs2_evict_inode -> evict_linked_inode -> gfs2_log_flush
->   -> gfs2_ordered_write -> filemap_fdatawrite -> do_writepages
->   -> gfs2_writepages -> iomap_writepages
+> Successful writeback calls zswap_entry_free(), which removes the entry
+> from the LRU and decrements both the sublist and node item counts.
+> shrink_memcg_cb() then returns LRU_REMOVED_RETRY, causing the LRU walker
+> to decrement the node count again.
+> 
+> The affected call path before this change is:
+> 
+>   __list_lru_walk_one()
+>     shrink_memcg_cb()
+>       zswap_writeback_entry()
+>         zswap_entry_free()
+>           zswap_lru_del()
+>             list_lru_del()
+>               __list_lru_del()
+>                 atomic_long_dec()  /* first node count decrement */
+>       return LRU_REMOVED_RETRY
+>     atomic_long_dec()              /* second node count decrement */
 
-Oh, that's awful. Nothing should be calling into iomap_writepages
-from reclaim context.
+That's a bug in the zswap code. You shouldn't be calling
+list_lru_del() from __list_lru_walk_one() context.
 
-i.e. Doing data writeback from the inode cache shrinker is extremely
-suboptimal for many reasons, so I'd consider this a gfs2 bug, not an
-iomap issue. It's even worse when data writeback is being driven by
-an inode cache shrinker. I'm surprised that lockdep hasn't thrown a
-hissy-fit over this (i.e. inode locks taken in writeback appearing
-both above and below reclaim.
+Walker callbacks are supposed to use list_lru_isolate() or
+list_lru_isolate_move() to remove the item from the LRU under the
+lru lock. i.e. the walk and remove are a single atomic operation,
+accounted by the walker infrastructure.
 
-This is the patch series that Jan Kara came up with to deal with
-these issues in inode eviction:
+LRU_REMOVED_RETRY is for walkers that need to do work -after- the
+item has been removed from the LRU (e.g. reclaim work that can't run
+under the lru lock). i.e. the pattern for the callback code is
+remove-unlock-reclaim-LRU_REMOVED_RETRY.
 
-https://lore.kernel.org/linux-fsdevel/20261009133253.20102-1-jack@suse.cz/
+What the zswap code is doing is
+unlock-reclaim-lock-remove-unlock-LRU_REMOVED_RETRY. That's
+problematic, as we can have concurrent walkers, and so it's possible
+that two shrinker invocations try to remove the same item at the
+same time....
 
-This allows filesystems to defer inode eviction that might block
-(e.g. due to transaction reservations, journal commits, metadata
-read requirements, data writeback requirements, etc) to a context
-where the work is allowed to block and isn't running under memory
-reclaim context or restrictions.
+.... oh, what a nasty hack.
 
-That patchset is needed for ext4, XFS alreayd does this, and it
-would seem that gfs2 needs it for glock reclaim....
+The zswap code is doing a list_move_tail() on the LRU object to
+rotate it to the end of the LRU list before dropping the LRU lock,
+in the hope that a concurrent scanner won't trip over it. That 
+doesn't fix anything...
 
-> Under memory pressure kswapd evicts GFS2 inodes whose glock is still
-> dirty, and gfs2_evict_inode() -> gfs2_log_flush() ->
-> gfs2_ordered_write() then writes back the ordered data of every inode
-> on sd_log_ordered.  This is long-standing, intentional behaviour: in
-> the default data=ordered mode GFS2 must flush dirty data before the
-> log commit that writes the metadata.
+> During the mailing list discussion, Johannes Weiner suggested making
+> users of the isolation interface responsible for maintaining the item
+> counts, rather than having the walker decrement the node count based
+> on the callback's return value.
 
-It's also long standing, known broken behaviour w.r.t. shrinkers
-running in memory reclaim contexts.
+urk. How is smearing the LRU NUMA abstraction into all the isolation
+interfaces an improvement?
 
-So, why doesn't this warning happen through the direct reclaim path?
-i.e.  what makes only kswapd trigger this?
+It seems to me that that this LRU hacking is all because of this:
 
-I see nothing that prevents direct reclaim doing inode eviction
-from triggering this same path through gfs2_evict_inode(). IOWs,
-direct reclaim should also be triggering the warning in
-iomap_writepages(), hence it is not clear to me why re-adding the
-kswapd guard is anything other than a band-aid over the broken code
-in gfs2....
+         * 2. Usually, objects are taken off the LRU for reclaim. In
+         *    this case this isn't possible, because if reclaim fails
+         *    for whatever reason, we have no means of knowing if the
+         *    entry is alive to put it back on the LRU.
 
-> Writeback from kswapd has been
-> explicitly allowed since 2010, when the guard was still in XFS:
-> commit d4f7a5cbd544 ("xfs: allow writeback from kswapd"), because
-> the kswapd stack usage is low and it cannot deadlock on the
-> filesystem.
+And so to work around this inability of zswap to handle failure
+sanely, the LRU list the reclaim code is being abused. And now the
+abuse of the lru list code is triggering problems with the LRU
+infrastructure, the suggestion is to push internal LRU structures
+into all LRU list walkers to allow racy (and IMO broken) walker
+behaviour?
 
-No, that was a regression fix for turning off all writeback from
-reclaim in XFS as a 'what problems does stopping mm reclaim
-writeback actually cause' experiment. That was the first steps we
-took down the path to get rid of the problematic random dirty page
-writeback issues that memory reclaim had.
+I'd much prefer the zswap code get fixed than to have to modify a
+dozen other subsystems to enable zswap to work around broken reclaim
+code...
 
-IOWs, we didn't want to allow it, but we had to tolerate it because
-the MM behaviour was unfixable at the time. Now that the
-pageout()->.writepage() path for dirty filebacked page writeback is
-gone from the mm, we no longer have to tolerate this behaviour 
-and so the guard got removed. It only took 15 years to get to this
-point....
-
-tl;dr: Writeback through iomap in memory reclaim context is -a bug-.
-
-> Beyond the noisy warning the new guard is actively harmful: it returns
-> -EIO on every hit (WARN_ON_ONCE only limits the report), while
-> gfs2_ordered_write() ignores the filemap_fdatawrite() return value, so
-> the log commit proceeds with metadata even though the ordered data was
-> never written, breaking the data-before-metadata ordering guarantee of
-> data=ordered mode.
-
-This is definitely a gfs2 bug - writeback can fail for -many-
-reasons, so ignoring IO submission failures when data integrity is
-required is a definitely filesystem bug.
-
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index d6e2f1ded5ca..324da0f5cb29 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -2082,7 +2082,7 @@ iomap_writepages(struct iomap_writepage_ctx *wpc)
->  	 * Writeback from reclaim context should never happen except in the case
->  	 * of a VM regression so warn about it and refuse to write the data.
->  	 */
-> -	if (WARN_ON_ONCE((current->flags & PF_MEMALLOC)))
-> +	if (WARN_ON_ONCE((current->flags & PF_MEMALLOC) && !current_is_kswapd()))
->  		return -EIO;
-
-AFAICT, direct reclaim will still trigger this warning and the bad
-gfs2 behaviour, so I'm struggling to see this as anything other than
-shooting the messenger...
-
-Cheers,
-
-Dave.
+-Dave.
 -- 
 Dave Chinner
 dgc@kernel.org
