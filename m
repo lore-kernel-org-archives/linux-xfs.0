@@ -1,44 +1,44 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793818068;
-	b=isWJWg/L/cUjXiBZsPqYsGGx05pmbJ16gEPRHP3CZFpzWBrqs1KNGYqxOK8TLDY9K+CF
-	 e6qihTw90ttAnvs9EglAOoGhbLrSk558lvPiK0BOn09yA4H3i+aOuOvquWPCaGhoID0/2
-	 jL20GurOIKh0JcRCElnrvvb54RrHTp0FCIK5XvZ3El4u3EZziDyONz5GKFuEYLxs1REki
-	 8XStH5GI2kcnGwcMbCk/tp9UnyCCP3sZRDhHTe/6sRNVGJ/jxMot1bpWkeB2BgvNttcCD
-	 yYSqh+BW92mxWSYbDqJVd3XwvKMjdpGCZeS6RQFwkXRobezVpb/wVB5w5n7sjrvp+UQ==
+	t=1793818072;
+	b=QZBT3xyw1icBUNhxE3MRIcq51lJFdVm6G4M0qdBdZ4AnvEyYzDpyohWRbNGDpBLRvuhA
+	 KdQ0ynAfJlSpMR0AgjlFzbnnzBI1v028omtX8UR6VivPIGY1TapDSpj/ZE+TUqFALc1P8
+	 3cgAtRG/nFIeBH1kMVNlJVMMM1Wzlgs7rZqvuIltep9P7GiWJfmyfGwwOWv5QRXKEGLSe
+	 yHex5MSLdNxJosTG2jUYpsXbpJ0HUrII6N7COX9ft7NiffyRHCx7T8OODtyuTxMGfFq+z
+	 oDyKOnR48oL3N2dkBZQptmaMS4LR6M1P7w2a+OA7KWhpOXHCL7vI+8JxqTQscuIyG6g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793818068;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793818072;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=DtGS0vRMqbkR2qIhIMFsNn2Em9iffczI0GITCsA+yA4=;
-	b=Zn+3gsgTy0WPRCQuLz8kKA8a+UYI/KeKlA6LcyZh5gbXkhamu8O+VJ20aNatOvStfStI
-	 TYAnuEbhE9GAnZpFmQD3RKrliJG2z5dxMCVTf0ZhZhcWxn6cdGSxWijT3n7+llMQD12nd
-	 eNAodf5rzx+aqBSN06F/D2T+Vt+Ol7Q68w4rMUZW35xfGKR5Rp82K6nYI1z01ZUHwBWbY
-	 GcXJAWGw7IfN0Bm5qNZ6fO4WrFOLWQ42D3Dx+JZCh2rd/7Maw2BW4qRePNJ0pKL3qS8kY
-	 WQ9pg/8h4SWiSq41Hmyc6md62+PJ3WuRXZ+3TZux11h0EoUTM+XbIeZxvVvs9s5L9jQ==
+	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
+	bh=I/Ge8YoTfYkJ0fPA3QoH3DGdYM7Wm5JlNshnWy3bCN8=;
+	b=3ihcd9tythHDTFntNZsMP9Lwe7wRfaHR3YhHlAI/A+VySkJdQxwFE7pWr8bGVARyRehv
+	 RaS8oY2YBNx+FGuAU+iJViwBYBdXB61IY2TsoJUYaSKhRp8dkmeVGzWc240XgxiyjQfku
+	 nQTvyx3cinZbK6vxAGHlJwHW0EskfeHLgW4oLE2dltadko0hij+R+YjDNhxpioafSs9A4
+	 tTJ9BWbTVpYGTkwyzK+iEBAi8SYPS8DrFugzkCIsMfKxVYbtA6CY0qOzPFzoX7C6lV6Kf
+	 t8dOdqoO0tgNbb5Oxqu8G0Gwii7z2FTJnNH14nyU6wIPhqU26iVt0iyarEZi9MsBdsA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=JKwgfDQw;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GLzSoYGx;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A7AE606A31B;
-	Wed,  4 Nov 2026 18:47:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9ACB6606A328;
+	Wed,  4 Nov 2026 18:47:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=JKwgfDQw
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C70D61F000C1;
-	Wed,  4 Nov 2026 18:47:45 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GLzSoYGx
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A699F1F00919;
+	Wed,  4 Nov 2026 18:47:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793818068;
-	bh=DtGS0vRMqbkR2qIhIMFsNn2Em9iffczI0GITCsA+yA4=;
-	h=From:To:Cc:Subject:Date;
-	b=JKwgfDQwsMS6KGOlyV6kgkK8PuL9pcEY9I6pNQRZrg9V6xL4XKfTmxBRPvBrzdFzA
-	 RpNCjyz0DT/0b+Er0bji0QV/9s5wS6eADVHodHWMxkC4MnEgH+LC70vvu0ZMnuWCFp
-	 Qlfma9a5NfklR2gj/wn8h9q6sDXnDxgQigMLwcPSN6E+tu8e/yBHNeAAyWVnYeKsSk
-	 s2Sr9eCWNYR0vFH+UQQoFUCIdWsEc638UCPSNnuh0IRbAbNNLzugjM5G4V06loqqOp
-	 Lz0m6BHWCPhpxjoWsGxA3yBb+dgJln/tCqnTbRNqRLvluUrw5a2HOoS7ZHUsQmDeSc
-	 f0suYEkq8F8WA==
+	s=k20260515; t=1793818071;
+	bh=I/Ge8YoTfYkJ0fPA3QoH3DGdYM7Wm5JlNshnWy3bCN8=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=GLzSoYGxmNy9F7CnduUge/XACOoYpvEf7fs7wUPQYOJ/ab4OtTjXrfpREl2VjE2lU
+	 AdErOkH8t+9QxwtyatLnWhFCG1C4NXby9lC6xtOKzd552BvWUw6Wb9coZ32hN751md
+	 KedUCqSc0tfRrbUch9LZ6OpQZ/U4emWQSV+iD7IDLqI+i3tiEfQNV1+0h2i3L6fV2q
+	 4+OJ5dH7pd6qlx2NXQXW7HKHb2Nen9tyI0TFoVSZzJzJAqEHS5BAlbz9C21SPxpCzy
+	 Qu60RVHcY1KnpvjikBaIsCfVLOQVpS1Y7cGffIy4S4VBJI9YXGlj2uznAMqWnLTIrb
+	 vSpbi+FQxikgA==
 From: Zorro Lang <zlang@kernel.org>
 To: fstests@vger.kernel.org
 Cc: linux-xfs@vger.kernel.org,
@@ -46,10 +46,12 @@ Cc: linux-xfs@vger.kernel.org,
 	Anand Suveer Jain <asj@kernel.org>,
 	Chao Yu <chao@kernel.org>,
 	Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH v3 0/6] Refactor *_fs_sysfs_* helpers
-Date: Thu,  5 Nov 2026 02:47:30 +0800
-Message-ID: <20261104184736.1564283-1-zlang@kernel.org>
+Subject: [PATCH v3 1/6] fstests: rename _*_fs_sysfs_attr helpers to _*_fs_sysfs_dev_attr
+Date: Thu,  5 Nov 2026 02:47:31 +0800
+Message-ID: <20261104184736.1564283-2-zlang@kernel.org>
 X-Mailer: git-send-email 2.56.0
+In-Reply-To: <20261104184736.1564283-1-zlang@kernel.org>
+References: <20261104184736.1564283-1-zlang@kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -61,90 +63,448 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-As we talked in:
-  https://lore.kernel.org/fstests/amhKovVDjwawoWdQ@zlang-mailbox/
+The _set/_get/_has/_require_fs_sysfs_attr helpers all operate on
+per-device sysfs entries under /sys/fs/$FSTYP/$dev.  Insert "_dev_"
+into their names to distinguish them from other sysfs paths such as
+/sys/fs/$FSTYP/features/, and update all callers. No functional
+change.
 
-This patchset refactors two redundant and messy sets of *_fs_sysfs_* helpers
-(PATCH 1/6 2/6), move btrfs specific sysfs policy helpers to common/btrfs
-(PATCH 3/6), introduces helpers for /sys/fs/$FSTYP/features (PATCH 4/6),
-and replaces the original btrfs-specific helpers with these common ones
-(PATCH 6/6).
+Signed-off-by: Zorro Lang <zlang@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ common/btrfs    |  4 ++--
+ common/rc       | 30 +++++++++++++++---------------
+ common/sysfs    |  6 +++---
+ common/xfs      | 22 +++++++++++-----------
+ tests/btrfs/253 | 22 +++++++++++-----------
+ tests/btrfs/334 |  2 +-
+ tests/f2fs/025  |  2 +-
+ tests/xfs/006   |  2 +-
+ tests/xfs/177   |  2 +-
+ tests/xfs/264   |  8 ++++----
+ tests/xfs/668   |  6 +++---
+ tests/xfs/669   |  6 +++---
+ tests/xfs/670   |  2 +-
+ 13 files changed, 57 insertions(+), 57 deletions(-)
 
-V2 did below changes:
-
-1) According to review point:
-     https://lore.kernel.org/fstests/aqjsBs6QUtIukk05@infradead.org/
-   split original patch 1/5 to two patches 1/6 and 2/6.
-2) According to review point:
-     https://lore.kernel.org/fstests/aqjsZZD4RPVK-uBn@infradead.org/
-   rename functions in common/sysfs and move them to common/btrfs.
-
-V3 did below changes:
-1) Address Christoph's review points on [PATCH 2/6] by introducing
-   _require_{test,scratch}_sysfs_dev_attr and wrapping lines that were too
-   long (Waiting for RVB).
-2) Since an upcoming test case (btrfs/363) is also affected by [PATCH 6/6],
-   I have rebased patch 6/6 and the entire patchset onto the latest
-   patches-in-queue branch.
-
-Thanks,
-Zorro
-
-Zorro Lang (6):
-  fstests: rename _*_fs_sysfs_attr helpers to _*_fs_sysfs_dev_attr
-  fstests: consolidate _require_fs_sysfs and _require_fs_sysfs_dev_attr
-  common: move btrfs-only sysfs policy helpers out of common/sysfs
-  common/rc: add helpers for /sys/fs/$FSTYP/features/
-  common/rc: use common helper in _require_fanotify_ioerrors for f2fs
-  fstests: replace btrfs specific helpers with common sysfs helpers
-
- common/btrfs      | 176 ++++++++++++++++++++++++++++++++++++----------
- common/rc         | 109 +++++++++++++++++++++-------
- common/sysfs      | 145 --------------------------------------
- common/xfs        |  24 ++++---
- tests/btrfs/010   |   3 +-
- tests/btrfs/055   |   2 +-
- tests/btrfs/056   |   2 +-
- tests/btrfs/112   |   2 +-
- tests/btrfs/131   |   2 +-
- tests/btrfs/165   |   2 +-
- tests/btrfs/188   |   2 +-
- tests/btrfs/192   |   2 +-
- tests/btrfs/201   |   2 +-
- tests/btrfs/205   |   2 +-
- tests/btrfs/209   |   2 +-
- tests/btrfs/211   |   2 +-
- tests/btrfs/219   |   3 +-
- tests/btrfs/231   |   2 +-
- tests/btrfs/253   |  29 ++++----
- tests/btrfs/285   |   3 +-
- tests/btrfs/296   |   8 +--
- tests/btrfs/304   |   4 +-
- tests/btrfs/305   |   4 +-
- tests/btrfs/306   |   4 +-
- tests/btrfs/307   |   4 +-
- tests/btrfs/308   |   4 +-
- tests/btrfs/311   |   2 +-
- tests/btrfs/313   |   2 +-
- tests/btrfs/314   |   2 +-
- tests/btrfs/315   |   2 +-
- tests/btrfs/329   |   5 +-
- tests/btrfs/334   |   5 +-
- tests/btrfs/342   |   2 +-
- tests/btrfs/352   |   2 +-
- tests/btrfs/363   |   2 +-
- tests/f2fs/025    |   2 +-
- tests/generic/098 |   2 +-
- tests/generic/101 |   2 +-
- tests/xfs/006     |   4 +-
- tests/xfs/177     |   4 +-
- tests/xfs/264     |  14 ++--
- tests/xfs/668     |   6 +-
- tests/xfs/669     |   6 +-
- tests/xfs/670     |   2 +-
- 44 files changed, 307 insertions(+), 303 deletions(-)
- delete mode 100644 common/sysfs
-
+diff --git a/common/btrfs b/common/btrfs
+index b1703b78..b52b4b11 100644
+--- a/common/btrfs
++++ b/common/btrfs
+@@ -906,8 +906,8 @@ _qgroup_mode()
+ 		_fail "Usage: _qgroup_mode <mounted_device>"
+ 	fi
+ 
+-	if _has_fs_sysfs_attr $dev /qgroups/mode; then
+-		_get_fs_sysfs_attr $dev qgroups/mode
++	if _has_fs_sysfs_dev_attr $dev /qgroups/mode; then
++		_get_fs_sysfs_dev_attr $dev qgroups/mode
+ 	else
+ 		echo "qgroup"
+ 	fi
+diff --git a/common/rc b/common/rc
+index 1eccd60c..43c95930 100644
+--- a/common/rc
++++ b/common/rc
+@@ -4223,7 +4223,7 @@ _require_fs_survives_data_write_eio()
+ 		# This is an XFS per-mount sysfs attribute, not a block queue
+ 		# attribute.  Its existence means XFS mounted this instance with
+ 		# zoned filesystem semantics.
+-		if _has_fs_sysfs_attr "$dev" "zoned/max_open_zones"; then
++		if _has_fs_sysfs_dev_attr "$dev" "zoned/max_open_zones"; then
+ 			_notrun "zoned XFS shuts down on data write EIO"
+ 		fi
+ 		;;
+@@ -5481,8 +5481,8 @@ _fs_sysfs_dname()
+ #  - content: the content of $attr
+ #
+ # Usage example:
+-#   _set_fs_sysfs_attr /dev/mapper/scratch-dev error/fail_at_unmount 0
+-_set_fs_sysfs_attr()
++#   _set_fs_sysfs_dev_attr /dev/mapper/scratch-dev error/fail_at_unmount 0
++_set_fs_sysfs_dev_attr()
+ {
+ 	local dev=$1
+ 	shift
+@@ -5491,7 +5491,7 @@ _set_fs_sysfs_attr()
+ 	local content="$*"
+ 
+ 	if [ ! -b "$dev" -o -z "$attr" -o -z "$content" ];then
+-		_fail "Usage: _set_fs_sysfs_attr <mounted_device> <attr> <content>"
++		_fail "Usage: _set_fs_sysfs_dev_attr <mounted_device> <attr> <content>"
+ 	fi
+ 
+ 	local dname=$(_fs_sysfs_dname $dev)
+@@ -5507,14 +5507,14 @@ _set_fs_sysfs_attr()
+ #  - attr: path name under /sys/fs/$FSTYP/$dev
+ #
+ # Usage example:
+-#   _get_fs_sysfs_attr /dev/mapper/scratch-dev error/fail_at_unmount
+-_get_fs_sysfs_attr()
++#   _get_fs_sysfs_dev_attr /dev/mapper/scratch-dev error/fail_at_unmount
++_get_fs_sysfs_dev_attr()
+ {
+ 	local dev=$1
+ 	local attr=$2
+ 
+ 	if [ ! -b "$dev" -o -z "$attr" ];then
+-		_fail "Usage: _get_fs_sysfs_attr <mounted_device> <attr>"
++		_fail "Usage: _get_fs_sysfs_dev_attr <mounted_device> <attr>"
+ 	fi
+ 
+ 	local dname=$(_fs_sysfs_dname $dev)
+@@ -5529,14 +5529,14 @@ _get_fs_sysfs_attr()
+ #  - attr: path name under /sys/fs/$FSTYP/$dev
+ #
+ # Usage example:
+-#   _has_fs_sysfs_attr /dev/mapper/scratch-dev error/fail_at_unmount
+-_has_fs_sysfs_attr()
++#   _has_fs_sysfs_dev_attr /dev/mapper/scratch-dev error/fail_at_unmount
++_has_fs_sysfs_dev_attr()
+ {
+ 	local dev=$1
+ 	local attr=$2
+ 
+ 	if [ ! -b "$dev" -o -z "$attr" ];then
+-		_fail "Usage: _has_fs_sysfs_attr <mounted_device> <attr>"
++		_fail "Usage: _has_fs_sysfs_dev_attr <mounted_device> <attr>"
+ 	fi
+ 
+ 	local dname=$(_fs_sysfs_dname $dev)
+@@ -5550,10 +5550,10 @@ _has_fs_sysfs_attr()
+ #  - attr: path name under /sys/fs/$FSTYP/$dev
+ #
+ # Usage example:
+-#   _require_fs_sysfs_attr /dev/mapper/scratch-dev error/fail_at_unmount
+-_require_fs_sysfs_attr()
++#   _require_fs_sysfs_dev_attr /dev/mapper/scratch-dev error/fail_at_unmount
++_require_fs_sysfs_dev_attr()
+ {
+-	_has_fs_sysfs_attr "$@" && return
++	_has_fs_sysfs_dev_attr "$@" && return
+ 
+ 	local dev=$1
+ 	local attr=$2
+@@ -5571,7 +5571,7 @@ _require_fs_sysfs_attr()
+ #   _has_fs_sysfs error/fail_at_unmount
+ _has_fs_sysfs()
+ {
+-	_has_fs_sysfs_attr $TEST_DEV "$@"
++	_has_fs_sysfs_dev_attr $TEST_DEV "$@"
+ }
+ 
+ # Require the existence of a sysfs entry at /sys/fs/$FSTYP/DEV/$ATTR
+@@ -6302,7 +6302,7 @@ _require_fanotify_ioerrors()
+ 		;;
+ 	ext4)
+ 		# added at the same time as err_report_sec
+-		x="$(_get_fs_sysfs_attr $TEST_DEV err_report_sec)"
++		x="$(_get_fs_sysfs_dev_attr $TEST_DEV err_report_sec)"
+ 		test -n "$x" && return 0
+ 		;;
+ 	f2fs)
+diff --git a/common/sysfs b/common/sysfs
+index 16d4b482..c36ab426 100644
+--- a/common/sysfs
++++ b/common/sysfs
+@@ -61,11 +61,11 @@ _set_sysfs_policy()
+ 	shift
+ 	local policy=$@
+ 
+-	_set_fs_sysfs_attr $dev $attr ${policy}
++	_set_fs_sysfs_dev_attr $dev $attr ${policy}
+ 
+ 	case "$FSTYP" in
+ 	btrfs)
+-		_get_fs_sysfs_attr $dev $attr | grep -q "[${policy}]"
++		_get_fs_sysfs_dev_attr $dev $attr | grep -q "[${policy}]"
+ 		if [[ $? != 0 ]]; then
+ 			echo "Setting sysfs $attr $policy failed"
+ 		fi
+@@ -85,7 +85,7 @@ _set_sysfs_policy_must_fail()
+ 	shift
+ 	local policy=$@
+ 
+-	_set_fs_sysfs_attr $dev $attr ${policy} | _filter_sysfs_error \
++	_set_fs_sysfs_dev_attr $dev $attr ${policy} | _filter_sysfs_error \
+ 							   | tee -a $seqres.full
+ }
+ 
+diff --git a/common/xfs b/common/xfs
+index 318b1a3b..8bd144e3 100644
+--- a/common/xfs
++++ b/common/xfs
+@@ -1167,23 +1167,23 @@ _reset_xfs_sysfs_error_handling()
+ 		_fail "Usage: reset_xfs_sysfs_error_handling <device>"
+ 	fi
+ 
+-	_set_fs_sysfs_attr $dev error/fail_at_unmount 1
++	_set_fs_sysfs_dev_attr $dev error/fail_at_unmount 1
+ 	echo -n "error/fail_at_unmount="
+-	_get_fs_sysfs_attr $dev error/fail_at_unmount
++	_get_fs_sysfs_dev_attr $dev error/fail_at_unmount
+ 
+ 	# Make sure all will be configured to retry forever by default, except
+ 	# for ENODEV, which is an unrecoverable error, so it will be configured
+ 	# to not retry on error by default.
+ 	for e in default EIO ENOSPC; do
+-		_set_fs_sysfs_attr $dev \
++		_set_fs_sysfs_dev_attr $dev \
+ 				   error/metadata/${e}/max_retries -1
+ 		echo -n "error/metadata/${e}/max_retries="
+-		_get_fs_sysfs_attr $dev error/metadata/${e}/max_retries
++		_get_fs_sysfs_dev_attr $dev error/metadata/${e}/max_retries
+ 
+-		_set_fs_sysfs_attr $dev \
++		_set_fs_sysfs_dev_attr $dev \
+ 				   error/metadata/${e}/retry_timeout_seconds -1
+ 		echo -n "error/metadata/${e}/retry_timeout_seconds="
+-		_get_fs_sysfs_attr $dev \
++		_get_fs_sysfs_dev_attr $dev \
+ 				   error/metadata/${e}/retry_timeout_seconds
+ 	done
+ }
+@@ -1226,13 +1226,13 @@ _xfs_prepare_for_eio_shutdown()
+ 	_add_dmesg_filter "Internal error"
+ 
+ 	# Don't retry any writes during the (presumably) post-shutdown unmount
+-	_has_fs_sysfs "$ctlfile" && _set_fs_sysfs_attr $dev "$ctlfile" 1
++	_has_fs_sysfs "$ctlfile" && _set_fs_sysfs_dev_attr $dev "$ctlfile" 1
+ 
+ 	# Disable retry of metadata writes that fail with EIO
+ 	for ctl in max_retries retry_timeout_seconds; do
+ 		ctlfile="error/metadata/EIO/$ctl"
+ 
+-		_has_fs_sysfs "$ctlfile" && _set_fs_sysfs_attr $dev "$ctlfile" 0
++		_has_fs_sysfs "$ctlfile" && _set_fs_sysfs_dev_attr $dev "$ctlfile" 0
+ 	done
+ }
+ 
+@@ -2149,7 +2149,7 @@ _scratch_xfs_force_no_metadir()
+ # do not run on zoned file systems
+ _require_xfs_scratch_non_zoned()
+ {
+-	if _has_fs_sysfs_attr $SCRATCH_DEV "zoned/max_open_zones"; then
++	if _has_fs_sysfs_dev_attr $SCRATCH_DEV "zoned/max_open_zones"; then
+ 		_notrun "Not supported on zoned file systems"
+ 	fi
+ }
+@@ -2160,12 +2160,12 @@ _require_xfs_scratch_zoned()
+ 	local attr="zoned/max_open_zones"
+ 	local min_open_zones=$1
+ 
+-	if ! _has_fs_sysfs_attr $SCRATCH_DEV $attr; then
++	if ! _has_fs_sysfs_dev_attr $SCRATCH_DEV $attr; then
+ 		_notrun "Requires zoned file system"
+ 	fi
+ 
+ 	if [ -n "${min_open_zones}" ]; then
+-		local has_open_zones=`_get_fs_sysfs_attr $SCRATCH_DEV $attr`
++		local has_open_zones=`_get_fs_sysfs_dev_attr $SCRATCH_DEV $attr`
+ 
+ 		if [ "${min_open_zones}" -gt "${has_open_zones}" ]; then
+ 			_notrun "Requires at least ${min_open_zones} open zones"
+diff --git a/tests/btrfs/253 b/tests/btrfs/253
+index a0cc9b55..d8b58f49 100755
+--- a/tests/btrfs/253
++++ b/tests/btrfs/253
+@@ -119,7 +119,7 @@ FIRST_DATA_CHUNK_SIZE_B=$((1024 * 1024 * 1024))
+ 
+ # For metadata, we are safe to use the exported value, as the default
+ # metadata chunk size limit is already smaller than its stripe size.
+-FIRST_METADATA_CHUNK_SIZE_B=$(_get_fs_sysfs_attr ${SCRATCH_BDEV} allocation/metadata/chunk_size)
++FIRST_METADATA_CHUNK_SIZE_B=$(_get_fs_sysfs_dev_attr ${SCRATCH_BDEV} allocation/metadata/chunk_size)
+ 
+ echo "Orig Data chunk size    = ${FIRST_DATA_CHUNK_SIZE_B}"     >> ${seqres}.full
+ echo "Orig Metaata chunk size = ${FIRST_METADATA_CHUNK_SIZE_B}" >> ${seqres}.full
+@@ -138,8 +138,8 @@ alloc_size "Metadata" METADATA_SIZE_START_MB
+ echo "Block group Data alloc size     = ${DATA_SIZE_START_MB}MB"     >> $seqres.full
+ echo "Block group Metadata alloc size = ${METADATA_SIZE_START_MB}MB" >> $seqres.full
+ 
+-_set_fs_sysfs_attr ${SCRATCH_BDEV} allocation/data/force_chunk_alloc 1
+-_set_fs_sysfs_attr ${SCRATCH_BDEV} allocation/metadata/force_chunk_alloc 1
++_set_fs_sysfs_dev_attr ${SCRATCH_BDEV} allocation/data/force_chunk_alloc 1
++_set_fs_sysfs_dev_attr ${SCRATCH_BDEV} allocation/metadata/force_chunk_alloc 1
+ 
+ alloc_size "Data"     FIRST_DATA_SIZE_MB
+ alloc_size "Metadata" FIRST_METADATA_SIZE_MB
+@@ -171,15 +171,15 @@ fi
+ echo "Second block group Data alloc size     = ${SECOND_DATA_CHUNK_SIZE_B}"     >> $seqres.full
+ echo "Second block group Metadata alloc size = ${SECOND_METADATA_CHUNK_SIZE_B}" >> $seqres.full
+ 
+-_set_fs_sysfs_attr ${SCRATCH_BDEV} allocation/data/chunk_size ${SECOND_DATA_CHUNK_SIZE_B}
+-_set_fs_sysfs_attr ${SCRATCH_BDEV} allocation/metadata/chunk_size ${SECOND_METADATA_CHUNK_SIZE_B}
++_set_fs_sysfs_dev_attr ${SCRATCH_BDEV} allocation/data/chunk_size ${SECOND_DATA_CHUNK_SIZE_B}
++_set_fs_sysfs_dev_attr ${SCRATCH_BDEV} allocation/metadata/chunk_size ${SECOND_METADATA_CHUNK_SIZE_B}
+ 
+-SECOND_DATA_CHUNK_SIZE_READ_B=$(_get_fs_sysfs_attr ${SCRATCH_BDEV} allocation/data/chunk_size)
+-SECOND_METADATA_CHUNK_SIZE_READ_B=$(_get_fs_sysfs_attr ${SCRATCH_BDEV} allocation/metadata/chunk_size)
++SECOND_DATA_CHUNK_SIZE_READ_B=$(_get_fs_sysfs_dev_attr ${SCRATCH_BDEV} allocation/data/chunk_size)
++SECOND_METADATA_CHUNK_SIZE_READ_B=$(_get_fs_sysfs_dev_attr ${SCRATCH_BDEV} allocation/metadata/chunk_size)
+ 
+-_set_fs_sysfs_attr ${SCRATCH_BDEV} allocation/data/force_chunk_alloc 1
++_set_fs_sysfs_dev_attr ${SCRATCH_BDEV} allocation/data/force_chunk_alloc 1
+ echo "Allocated data chunk" >> $seqres.full
+-_set_fs_sysfs_attr ${SCRATCH_BDEV} allocation/metadata/force_chunk_alloc 1
++_set_fs_sysfs_dev_attr ${SCRATCH_BDEV} allocation/metadata/force_chunk_alloc 1
+ echo "Allocated metadata chunk" >> $seqres.full
+ 
+ alloc_size "Data"     SECOND_DATA_SIZE_MB
+@@ -210,12 +210,12 @@ echo "Allocation size in bytes = ${THIRD_DATA_CHUNK_SIZE_B}"  >> ${seqres}.full
+ # Do allocation until free space is exhausted.
+ #
+ echo "Third allocation."
+-_set_fs_sysfs_attr ${SCRATCH_BDEV} allocation/data/chunk_size ${THIRD_DATA_CHUNK_SIZE_B}
++_set_fs_sysfs_dev_attr ${SCRATCH_BDEV} allocation/data/chunk_size ${THIRD_DATA_CHUNK_SIZE_B}
+ 
+ free_space FREE_SPACE_MB
+ while [ $FREE_SPACE_MB -gt $THIRD_DATA_CHUNK_SIZE_MB ]; do
+ 	alloc_size "Data" THIRD_DATA_SIZE_MB
+-	_set_fs_sysfs_attr ${SCRATCH_BDEV} allocation/data/force_chunk_alloc 1
++	_set_fs_sysfs_dev_attr ${SCRATCH_BDEV} allocation/data/force_chunk_alloc 1
+ 
+ 	free_space FREE_SPACE_MB
+ done
+diff --git a/tests/btrfs/334 b/tests/btrfs/334
+index d81ec921..08b66dc7 100755
+--- a/tests/btrfs/334
++++ b/tests/btrfs/334
+@@ -13,7 +13,7 @@ _begin_fstest auto quick
+ . ./common/filter
+ 
+ _require_test
+-_require_fs_sysfs_attr $TEST_DEV allocation/data/chunk_size
++_require_fs_sysfs_dev_attr $TEST_DEV allocation/data/chunk_size
+ 
+ _verify_sysfs_syntax $TEST_DEV allocation/data/chunk_size 256m
+ 
+diff --git a/tests/f2fs/025 b/tests/f2fs/025
+index 6fc18d98..31dd56a8 100755
+--- a/tests/f2fs/025
++++ b/tests/f2fs/025
+@@ -21,7 +21,7 @@ _require_scratch_shutdown
+ _require_xfs_io_command "pwrite"
+ _require_xfs_io_command "truncate"
+ _require_f2fs_io_command gc_urgent
+-_require_fs_sysfs_attr $TEST_DEV gc_urgent
++_require_fs_sysfs_dev_attr $TEST_DEV gc_urgent
+ _require_check_dmesg
+ 
+ # Clear options to avoid interference from external configurations
+diff --git a/tests/xfs/006 b/tests/xfs/006
+index 20fd104b..e03ade1d 100755
+--- a/tests/xfs/006
++++ b/tests/xfs/006
+@@ -38,7 +38,7 @@ _reset_xfs_sysfs_error_handling $DMERROR_DEV
+ # errors at unmount time. _fail the test if we fail to set it to 1,
+ # because the test probably will hang in such case and block
+ # subsequent tests.
+-attr=`_get_fs_sysfs_attr $DMERROR_DEV error/fail_at_unmount`
++attr=`_get_fs_sysfs_dev_attr $DMERROR_DEV error/fail_at_unmount`
+ if [ "$attr" != "1" ]; then
+ 	_fail "Failed to set error/fail_at_unmount: $attr"
+ fi
+diff --git a/tests/xfs/177 b/tests/xfs/177
+index 8d23f66d..38b68a7d 100755
+--- a/tests/xfs/177
++++ b/tests/xfs/177
+@@ -51,7 +51,7 @@ _require_scratch
+ _require_fs_sysfs stats/stats
+ 
+ count_xfs_inode_objs() {
+-	_get_fs_sysfs_attr $SCRATCH_DEV stats/stats | awk '/vnodes/ {print $2}'
++	_get_fs_sysfs_dev_attr $SCRATCH_DEV stats/stats | awk '/vnodes/ {print $2}'
+ }
+ 
+ dump_debug_info() {
+diff --git a/tests/xfs/264 b/tests/xfs/264
+index a6e816d3..c8a2f714 100755
+--- a/tests/xfs/264
++++ b/tests/xfs/264
+@@ -39,12 +39,12 @@ do_test()
+ 	_dmerror_mount
+ 	_reset_xfs_sysfs_error_handling $DMERROR_DEV
+ 	# Disable fail_at_unmount before test EIO error handling
+-	_set_fs_sysfs_attr $DMERROR_DEV error/fail_at_unmount 0
++	_set_fs_sysfs_dev_attr $DMERROR_DEV error/fail_at_unmount 0
+ 	echo -n "error/fail_at_unmount="
+-	_get_fs_sysfs_attr $DMERROR_DEV error/fail_at_unmount
++	_get_fs_sysfs_dev_attr $DMERROR_DEV error/fail_at_unmount
+ 
+-	_set_fs_sysfs_attr $DMERROR_DEV $attr 1
+-	num=`_get_fs_sysfs_attr $DMERROR_DEV $attr`
++	_set_fs_sysfs_dev_attr $DMERROR_DEV $attr 1
++	num=`_get_fs_sysfs_dev_attr $DMERROR_DEV $attr`
+ 	echo "$attr=$num"
+ 	# _fail the test if we fail to set $attr to 1, because the test
+ 	# probably will hang in such case and block subsequent tests.
+diff --git a/tests/xfs/668 b/tests/xfs/668
+index 940a6a38..900099e8 100755
+--- a/tests/xfs/668
++++ b/tests/xfs/668
+@@ -36,7 +36,7 @@ done
+ # remount read-only and set the gc limit to free up unused space
+ _scratch_remount ro
+ rt_available_pre="$(_xfs_get_user_available_rt_blocks "$SCRATCH_MNT")"
+-_set_fs_sysfs_attr $SCRATCH_DEV "zoned/zonegc_low_space" 100
++_set_fs_sysfs_dev_attr $SCRATCH_DEV "zoned/zonegc_low_space" 100
+ 
+ # reclaiming a zone with 5% used blocks should take way less than 1 second
+ sleep 1
+@@ -46,14 +46,14 @@ rt_available_post="$(_xfs_get_user_available_rt_blocks "$SCRATCH_MNT")"
+ [ "$rt_available_post" -gt "$rt_available_pre" ] && \
+ 	_fail "gc should not run while read only"
+ 
+-_set_fs_sysfs_attr $SCRATCH_DEV "zoned/zonegc_low_space" 0
++_set_fs_sysfs_dev_attr $SCRATCH_DEV "zoned/zonegc_low_space" 0
+ 
+ # remount rw and check that gc starts, frees up blocks and stops after
+ # the threshold is set to reclaim the unused blocks
+ _scratch_remount rw
+ 
+ rt_available_pre="$(_xfs_get_user_available_rt_blocks "$SCRATCH_MNT")"
+-_set_fs_sysfs_attr $SCRATCH_DEV "zoned/zonegc_low_space" 100
++_set_fs_sysfs_dev_attr $SCRATCH_DEV "zoned/zonegc_low_space" 100
+ 
+ i=0
+ while [ $(_xfs_get_rt_gc_required "$SCRATCH_MNT") -eq "1" ]; do
+diff --git a/tests/xfs/669 b/tests/xfs/669
+index 25e3f04a..c9c5bc79 100755
+--- a/tests/xfs/669
++++ b/tests/xfs/669
+@@ -35,7 +35,7 @@ $MKFS_XFS_PROG -b size=${bsize} -r zoned=1,rgsize=${blocks}b \
+ _mount $SCRATCH_DEV $SCRATCH_MNT -o max_open_zones=${open_zones} || \
+ 	_notrun "Zoned allocator not supported"
+ 
+-_has_fs_sysfs_attr $SCRATCH_DEV zoned/nr_open_zones || \
++_has_fs_sysfs_dev_attr $SCRATCH_DEV zoned/nr_open_zones || \
+ 	_notrun "This test requires /sys/fs/${FSTYP}/$SCRATCH_DEV/zoned/nr_open_zones"
+ 
+ for i in $(seq 1 $nr_files); do
+@@ -51,8 +51,8 @@ done
+ _scratch_unmount
+ _mount $SCRATCH_DEV $SCRATCH_MNT -o max_open_zones=${open_zones}
+ 
+-max_open=$(_get_fs_sysfs_attr $SCRATCH_DEV zoned/max_open_zones)
+-nr_open=$(_get_fs_sysfs_attr $SCRATCH_DEV zoned/nr_open_zones)
++max_open=$(_get_fs_sysfs_dev_attr $SCRATCH_DEV zoned/max_open_zones)
++nr_open=$(_get_fs_sysfs_dev_attr $SCRATCH_DEV zoned/nr_open_zones)
+ 
+ if [ ${max_open} -ne $((open_zones - 1)) ]; then
+ 	_fail "Test needs adjustments for multiple open GC zones"
+diff --git a/tests/xfs/670 b/tests/xfs/670
+index 9b248d96..a9df3deb 100755
+--- a/tests/xfs/670
++++ b/tests/xfs/670
+@@ -36,7 +36,7 @@ $XFS_GROWFS_PROG $SCRATCH_MNT -R $((2 * rblocks)) >> $seqres.full 2>&1 || \
+ # For zoned file systems, check that the growfs did increase the available free
+ # zones.  This avoids a hang on unfixed kernels when filling later.
+ free_zones_post=$(_xfs_get_mountstat $SCRATCH_MNT "free zones:")
+-if _has_fs_sysfs_attr $SCRATCH_DEV "zoned/max_open_zones"; then
++if _has_fs_sysfs_dev_attr $SCRATCH_DEV "zoned/max_open_zones"; then
+ 	if [ "$free_zones_pre" == "$free_zones_post" ]; then
+ 		_fail "growfs did not increase free zones"
+ 	fi
 -- 
 2.56.0
 
