@@ -1,54 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793801511;
-	b=z8nSpDG6EsUSjLlsprwRUTEFUSqzLOjlD1s/fQvkfhsl7dTAT39131TUFQjFX/KEkiLS
-	 zLTEVluBxZ5eF3762ONobGT6gfTmDof57h+3Aswyil0qvttKTj7cu752VjVi8PSxvVgLX
-	 jj+Rb3KOm1ybQisBLJYpxsSE5oNWJyh2/2mZ+IfhwAmjQUoUcp5RlFQBHX7SzLrxQMD4+
-	 KLF21XBiu/2/vYMJuq2D6YMYVqZiPDt7hmMbbTPiWBF9Qqa3c77O3HhxhVsm2yvDGphsd
-	 B9DdkO44U9EEG4k/gSIalYuTC1YD4WZO/rg91aCKq5+fKQGSq4CIHqxQ0Q01tcU1e5A==
+	t=1793801509;
+	b=T6rjiWe22M58iy7knjSAQIlVdPWSAXjhHGrVsn0BcjtbGLFFav+NYbkcQIcExR/BHV0z
+	 9XkInFL9Q/RfP/MG/dq4ord/is0xdjuNWX6ogazt82iEdXyonNqGmfwGXtZ+EOg0hYAd8
+	 VS8I8oR0lct5x9C6Ft62Sxl1VKGIp64UNrG03Cija4SRwMZxgtLRToCCKqYB6J0MFjl3D
+	 zvMKvBYTmMZJkJanuSxqFp4k402Nh4FPojRtzt5bqpcFkdfbCIlAd0f1PtMGyIFkCd6EY
+	 ilvcsvZ4FpuQ1g/9+e0ljFCwfhjkRmHg3FjJ1K5dtvntCEOlgmCIkuGoQpEwlkaox0w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793801511;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793801509;
 	h=Received:DKIM-Signature:From:To:Cc:In-Reply-To:References:Subject:
 	 Message-Id:Date:MIME-Version:Content-Type:Content-Transfer-Encoding:
 	 X-Mailer;
-	bh=d1PpzXU8mrjP7OFzeevpUh8xy9cWgUX+wwF4PCP//LE=;
-	b=qAgvLvkO4U0hZ3r4S8KTvLqwGoBoymCIaCMzx3ejFimWti02C4tdESMPN5UZ/tMPEToa
-	 Ze13odEhuG+gXoDbc9AuqmZEuPiIgtK3PA7RS/x7RVmuE2N+NsdnXLf5tuxorbFpgz7aa
-	 e+IstKTCOVQLz4AMdb8qv9yzA0ivwmleJPR5OhSv3HGHoaASaXrUp5m2MWmE7tjPfCB32
-	 LuBjxYbJ9q21xtmUpeEhnVsK6nTxmotFK+89p7ha8gGygArjCyT01RQTUqUGFeGtetaGz
-	 EYC+Wr7yodFzcE0o5IY82FmfxXjqKq/5geykTp2DYdumUcea0dhQAg1+WjP5NxvmATg==
+	bh=xUf29/ZuQXA5n7Aj13d43eFSCViWwTTjNal4MWf5b0Y=;
+	b=qxZl1efT5FazJ8qEMPHut9Q3G4lDhlHDMqEXey5JgjrJslBeUpzYAyivKtADZGfqXSDk
+	 /PU6G17wVHf1yP1L3hYNYTJ6UEvC9XkpDDraK/4WH+sto/e7SJCWRjBSZDUGazC9qOAf+
+	 h2R4kClOUcoD8DaU30cqKk2VxDwGQNw7MH7hJB9kRfeY/7AXRQW4HFg9Qtj5XJqm6GnOi
+	 UaRKy9r5P51C4xavFvr0fR0jrsYtoEWT3gXVl+kET0Y5UdJLIfCnfmIvmkvuU3BOz48it
+	 uJRN8ixFQhlGWx1JO5NaO9gxbwsPQ1ZmPjIYuufZyW4HmBXf+Yo7LWzpfhrOY7BL+Ew==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UI1BmNdM;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Fmxj6Bqs;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D051606EE89
-	for <linux-xfs@vger.kernel.org>; Wed,  4 Nov 2026 14:11:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE7D0606A328;
+	Wed,  4 Nov 2026 14:11:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UI1BmNdM
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 015871F00A02;
-	Wed,  4 Nov 2026 14:11:49 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Fmxj6Bqs
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1B9311F000C1;
+	Wed,  4 Nov 2026 14:11:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793801510;
-	bh=d1PpzXU8mrjP7OFzeevpUh8xy9cWgUX+wwF4PCP//LE=;
+	s=k20260515; t=1793801508;
+	bh=xUf29/ZuQXA5n7Aj13d43eFSCViWwTTjNal4MWf5b0Y=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=UI1BmNdM3KnDg/5LeNGdnUFkXJJz4ukOXPjQt9LotSA7fw2xWUd8hq1bxv8XEThoo
-	 SVH5tw/MlIEinw4Kvdlmw0TRJjHMmieAMU4sH5hNr10dgErloAq+9oMuOQHzNk3oLN
-	 CrZErcfhyB23+ud/+Qbqk+Xcy41fd3uT5usC0eVeCI6YU5z0hAtJHE92UYFY21WGbw
-	 TBbYUh/YuEO/XF+cp790VJ7xCCS/2MT57hJHlPC8qpzmZaYpJrx2EThYqJQTKhEV5R
-	 vVx3lraNRvlUB2y7KIu9Qecl0ATNzQWRK4/Jq6T526azdmKgbG75AFsSqOdMCUme6v
-	 oqMGZKL47ps3A==
+	b=Fmxj6BqsRvL3xVhjV325BY2v5VCsFoAbTjF7g2+5MSxeRZz8CiJUCvFEX1D7AMRCJ
+	 JCrNBo89gzk0L6pgYLhM/4ZQTAcWzl3ooL5vlxRUkHW3Xm0pBzd2IzV80EPTM6T3pH
+	 tLaWP1oq2mKnqC+j7yqCLtrN4/WswBAI6ecSTDDmsotKCSNzbHCht44+HWVRqOFrIs
+	 8rjCBD8ZxKidG15rhdbM8qW6FyjQuvXPNMrNNuswbGJuMQ4Lx6irZYa7OL66LM7qsP
+	 6vXxJKRYQ2zZPI7iFhMV9ceIDkhaGeGG7x2HJLtl/vlDLVYs4NH/SCZUkKEkLknzhw
+	 eeYOBVn+aaxXQ==
 From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org, Kefeng Wang <wangkefeng.wang@huawei.com>
-Cc: Brian Foster <bfoster@redhat.com>, 
- "Darrick J. Wong" <djwong@kernel.org>
-In-Reply-To: <20261103105654.3129688-1-wangkefeng.wang@huawei.com>
-References: <20261103105654.3129688-1-wangkefeng.wang@huawei.com>
-Subject: Re: [PATCH v2] xfs: kill xfs_trans_set/clear_context() helpers
-Message-Id: <179380150972.5728.15418976397607956894.b4-ty@kernel.org>
-Date: Wed, 04 Nov 2026 15:11:49 +0100
+To: Reid Downing <skibletz@gmail.com>
+Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ "Darrick J . Wong" <djwong@kernel.org>, Eric Sandeen <sandeen@redhat.com>, 
+ Christoph Hellwig <hch@lst.de>, stable@vger.kernel.org
+In-Reply-To: <20261027161748.2760321-1-skibletz@gmail.com>
+References: <20261027161748.2760321-1-skibletz@gmail.com>
+Subject: Re: [PATCH v2] xfs: fix wrong compat fields in
+ xfs_ioctl32_bstat_copyin()
+Message-Id: <179380150683.5728.1818667649783476739.b4-ty@kernel.org>
+Date: Wed, 04 Nov 2026 15:11:46 +0100
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -62,17 +64,16 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.3
 
-On Tue, 03 Nov 2026 18:56:54 +0800, Kefeng Wang wrote:
-> Open code the helpers so that tp->t_pflags access is explicit, reducing
-> the risk of misusing them outside the transaction owner thread as seen
-> in xfs_btree_split_worker().
+On Tue, 27 Oct 2026 12:17:48 -0400, Reid Downing wrote:
+> bs_blocks and bs_xflags were both read from bstat32->bs_size.
+> Read each one from its own field instead.
 > 
 > 
 
 Applied to for-next, thanks!
 
-[1/1] xfs: kill xfs_trans_set/clear_context() helpers
-      commit: 7ba9663607b31108b4350b604a3c85ae86c67c19
+[1/1] xfs: fix wrong compat fields in xfs_ioctl32_bstat_copyin()
+      commit: b7eb276a39b14e685c2fe578f8ac22fc48ff9e6c
 
 Best regards,
 -- 
