@@ -1,60 +1,60 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.137.202.133
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793782808;
-	b=mbB0EtSWdE0uadisd+WP6RtkvLtSPhbkNdSqEbKRla/1gn7/LHq0qgiDVtgeu4wUgooc
-	 5dlunEXjy6TLSals9PLhwXsr0oN1WmKIQJw2d78IGmwO5Khf6E9W/jdqBryAFuG7YuFcn
-	 7esy4TifyTawiM2bLVSh7QqJ0yMd4vSG8zh3R7LbMRZvFM+cdWsrNERxSf+jhxBAl784Y
-	 8X2MFEWgsE26xsLNBYP4I6fOtxHYRHNDq6yvBv1ZIkzhRYRKAZFKHb7IwSV1/JR1M6RQ4
-	 yeJ83XLqZnqUvLtY/ffmA/+/18vFS9egYzSS8OPvrr0SjuPlWZqACev4YFd9d3tOY1Q==
+	t=1793782813;
+	b=diRTv2fEFj+eHselg+hKpE6w250TtVuuOzdrIFPGz4Y3kLCMas9ajtIZDmqZ2herGP7X
+	 Qj9Lwwpvp+jEt1rZcijFNuy+Znk39NcKCang6VfcXRzYKyzI3Jj5LB8EfZOGpZWW2QJ4v
+	 QI1Fh3nhPIZp8G2785GXlN/xAF+RYrW1fGvg9SKrHofk2fracpIs+T6QjjoubJbtaFvox
+	 a3ma12uax7ejApBKMkW7NVsBfyS00LsGBRkhUT3pjY+yR48OugRFnk29tK7N9ibaKyYOh
+	 cfAVWfGwR/rv8xIsniBkVmMvOdlQUqmqXlKrO0R8YAZ7WnIZyHGMGTWB3cOMfucfvQQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793782808;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793782813;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
 	 Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding:X-SRS-Rewrite;
-	bh=oTeUtPEa9aAfP6RlCq9QFduF0XyrniNu4Ye5Y4RGKLs=;
-	b=OzMXUu14h5Fn9Gh7UPGK1DqAgBwYYmLEb3om0y/Q/+zy0JEx5TqXQerLEdKFprW0RDy3
-	 48ZVkJXh1lq5igNF0oW72XDWoQur23MvYmtyaqGDhV4qWPeJHrej5CGuSLT4Z18Crb7K0
-	 /40EZudhv8Uwv4hSUK2+7qBKhs9RQb1E+LGATdeNg3E0AmVlvRhkQMfgQnCmrQ/TSOy8C
-	 IhKkhXPyITqzxdSWgt4J8XPQ9L6/w9YToRd843wEgkpA5HLgbv5ZWzveXJ1Y/UrwahYek
-	 VvfEE8wXHSjNSq4RbE9EmyHhiJNWboE8m29Qp7SCleNBb6up03+7lAc80gpbmkwDp8Q==
+	bh=WbqJwU0qT6GMO96nsNcz3a3Er6iKi/Md014r9CMaIow=;
+	b=3hpjye1zXvv8CnDdvawsgy1L2gFL+O5mv9ps35OPnXz5qajEJ7pGHJWzQWSODmF3nGQq
+	 kK3FaEDpXxFQCJrnIriQLzvRpE//H+kRotcKI27ddZiiaPhWBs10dDsHXhE+BnB9pPtDA
+	 3IhChRabFD5gMzlxlFlHSsfMVQmwKw8o9ZOZ6FIZE3dcnmFAYFGBMq2jeU9zf4c/o04lD
+	 mt/9jHtYGD4cLl30tGWavBHfyb4h7kD+HbL7uMMv8pOjM+ktAo4W69gMavgFqRdrYMb4i
+	 CuEvzY/td1rDIbMXiUFLZYisQNN4qCBwFFnl1IF8N6XCAXfcX9/2yJPXUxvz7Pn3jUw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=fail header.from=lst.de;
 	spf=none smtp.mailfrom=bombadil.srs.infradead.org;
-	dkim=pass header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=07hZFkeg;
+	dkim=pass header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b="S/l7Iz0v";
 	arc=none smtp.remote-ip=198.137.202.133
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4364606A332;
-	Wed,  4 Nov 2026 09:00:07 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C4364606A332
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A7C3606A330;
+	Wed,  4 Nov 2026 09:00:13 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7A7C3606A330
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=07hZFkeg
+	dkim=pass (2048-bit key, unprotected) header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=S/l7Iz0v
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=oTeUtPEa9aAfP6RlCq9QFduF0XyrniNu4Ye5Y4RGKLs=; b=07hZFkegzr5r8D0FAYMTM8nCnr
-	O6Zn/PQ88E5aSIfJ5eUdKiz5fgdd2HbXxfF2nKakKPoPRZNrr2Q0XZ2v1S/8WMfcQR58ncHipw2sQ
-	pi2/YnYBhyzjZApiBHwoPluds9D8eX5KgzwaQDR64HS3Y8bIu90wupxSLeXHujsrKQ0MuNxlJ9S9s
-	ZF8N25c8TJbUoe1KD0SJuO9/qIAd6/RuDho01qK2P/OcoDcxj3ehhiQscuvxW2+MNUpVZvvd3tJtj
-	Euh14ihXWABXhoZ6v+F7+frrO0MdarBUVRspgETscZb6wOfhY+J15YyAV+pK0RnwmMCZKhC7GqmoS
-	KLCB2OVw==;
+	bh=WbqJwU0qT6GMO96nsNcz3a3Er6iKi/Md014r9CMaIow=; b=S/l7Iz0vOdOg/094MnJIh09uau
+	iNVQnR82Ybz7KGxVOR5DZKI7jGghAnXV3WT3DaNmvC91plxFfj5huOErovr93pejnE/rL71kSPe0z
+	G+WFHKMEWQIBkupNYcJsgbdwPGVzFU4M0VWIN63InvEAEwvT6QERdeE7GE7GbKxoq0+/JHQkLL8bw
+	RHQga1i/G3Scjd8Bs8vyRqeoi9plZo8XU11+ei1o+C0w3q6eIUKhQgKT16rpFfjIYBPfF7xmLvlV3
+	7qQdbhQ7bEhbqbxkzl7THCfil8FWD2+5+xYd88z+sIRnrBu5FjDhdDoL+iTP4ENT7glkBRsa1M8KW
+	luIqc2aQ==;
 Received: from 2a02-8389-2301-9f00-31e8-efb6-e973-61ca.cable.dynamic.v6.surfer.at ([2a02:8389:2301:9f00:31e8:efb6:e973:61ca] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.100.1 #2 (Red Hat Linux))
-	id 1xOWqk-00000004oPV-3xaS;
-	Wed, 04 Nov 2026 09:00:07 +0000
+	id 1xOWqq-00000004oQP-2gb1;
+	Wed, 04 Nov 2026 09:00:12 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org,
 	"Darrick J. Wong" <djwong@kernel.org>
-Subject: [PATCH 12/25] xfs: calculate the log reservation for logging data checksum buffers
-Date: Wed,  4 Nov 2026 09:57:16 +0100
-Message-ID: <20261104085929.317544-13-hch@lst.de>
+Subject: [PATCH 14/25] xfs: data checksums require stable writes
+Date: Wed,  4 Nov 2026 09:57:18 +0100
+Message-ID: <20261104085929.317544-15-hch@lst.de>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261104085929.317544-1-hch@lst.de>
 References: <20261104085929.317544-1-hch@lst.de>
@@ -70,89 +70,30 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-The data checksum is logged in its own transaction, which only logs the
-checksum buffers.  While the maximum size of a checksummed data write
-is the same as that of a single checksum buffer, the Zone Append based
-zoned write path can't guarantee alignment, so a reservation for an
-extra slack buffer is needed.
+Call mapping_set_stable_writes based on the data checksum flag
+so that the page cache doesn't change data in-flight as that could
+corrupt the checksum.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_trans_resv.c | 23 +++++++++++++++++++++++
- fs/xfs/libxfs/xfs_trans_resv.h |  4 ++++
- 2 files changed, 27 insertions(+)
+ fs/xfs/xfs_inode.h | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-index b09c88aec185..25f7581ea90c 100644
---- a/fs/xfs/libxfs/xfs_trans_resv.c
-+++ b/fs/xfs/libxfs/xfs_trans_resv.c
-@@ -11,6 +11,7 @@
- #include "xfs_log_format.h"
- #include "xfs_trans_resv.h"
- #include "xfs_mount.h"
-+#include "xfs_rtcsumfile.h"
- #include "xfs_da_format.h"
- #include "xfs_da_btree.h"
- #include "xfs_inode.h"
-@@ -1235,6 +1236,24 @@ xfs_calc_qm_dqalloc_reservation_minlogsize(
- 	return xfs_calc_qm_dqalloc_reservation(mp, true);
- }
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 56d5a670ba75..169208e1c7da 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -628,7 +628,8 @@ int	xfs_break_layouts(struct inode *inode, uint *iolock,
  
-+/*
-+ * Log data checksums for a write.
-+ *
-+ * Writes do not have to be aligned to checksum file blocks and thus can
-+ * spill into an extra buffer that needs to be accounted for.
-+ */
-+unsigned int
-+xfs_calc_csum_reservation(
-+	struct xfs_mount	*mp,
-+	unsigned int		csum_len)
-+{
-+	unsigned int		payload_size = xfs_rtcsum_payload_size(mp);
-+
-+	return xfs_calc_buf_res(
-+			howmany(csum_len + payload_size, payload_size),
-+			mp->m_rtcsum_bsize);
-+}
-+
- /*
-  * Syncing the incore super block changes to disk.
-  *     the super block to reflect the changes: sector size
-@@ -1355,6 +1374,10 @@ xfs_trans_resv_calc(
- 
- 	xfs_calc_namespace_reservations(mp, resp);
- 
-+	resp->tr_csum.tr_logres =
-+		xfs_calc_csum_reservation(mp, XFS_RTCSUM_MAX_WRITE);
-+	resp->tr_csum.tr_logcount = XFS_DEFAULT_LOG_COUNT;
-+
- 	/*
- 	 * The following transactions are logged in logical format with
- 	 * a default log count.
-diff --git a/fs/xfs/libxfs/xfs_trans_resv.h b/fs/xfs/libxfs/xfs_trans_resv.h
-index 336279e0fc61..fbd978a91cc8 100644
---- a/fs/xfs/libxfs/xfs_trans_resv.h
-+++ b/fs/xfs/libxfs/xfs_trans_resv.h
-@@ -49,6 +49,7 @@ struct xfs_trans_resv {
- 	struct xfs_trans_res	tr_sb;		/* modify superblock */
- 	struct xfs_trans_res	tr_fsyncts;	/* update timestamps on fsync */
- 	struct xfs_trans_res	tr_atomic_ioend; /* untorn write completion */
-+	struct xfs_trans_res	tr_csum;	/* data checksums in metafile */
- };
- 
- /* shorthand way of accessing reservation structure */
-@@ -121,6 +122,9 @@ unsigned int xfs_calc_itruncate_reservation_minlogsize(struct xfs_mount *mp);
- unsigned int xfs_calc_write_reservation_minlogsize(struct xfs_mount *mp);
- unsigned int xfs_calc_qm_dqalloc_reservation_minlogsize(struct xfs_mount *mp);
- 
-+unsigned int xfs_calc_csum_reservation(struct xfs_mount *mp,
-+		unsigned int csum_len);
-+
- xfs_extlen_t xfs_calc_max_atomic_write_fsblocks(struct xfs_mount *mp);
- xfs_extlen_t xfs_calc_atomic_write_log_geometry(struct xfs_mount *mp,
- 		xfs_extlen_t blockcount, unsigned int *new_logres);
+ static inline void xfs_update_stable_writes(struct xfs_inode *ip)
+ {
+-	if (bdev_stable_writes(xfs_inode_buftarg(ip)->bt_bdev))
++	if (xfs_is_rtcsum_inode(ip) ||
++	    bdev_stable_writes(xfs_inode_buftarg(ip)->bt_bdev))
+ 		mapping_set_stable_writes(VFS_I(ip)->i_mapping);
+ 	else
+ 		mapping_clear_stable_writes(VFS_I(ip)->i_mapping);
 -- 
 2.53.0
 
