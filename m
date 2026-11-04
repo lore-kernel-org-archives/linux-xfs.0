@@ -1,59 +1,59 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.137.202.133
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793782825;
-	b=bshM2mDowaZOiIUVPPgL6X4WZC6MtXGLktQVG0NssJwi6YVwVYEjzA1Ut1CzI4yDxO6P
-	 icmHes7Z1tSRoZCdN79+csJjhRtoK0792GJ5qAzDbtDV0Xt2rcheOi9pNyPjxagNJgZwt
-	 GEwjR6WqtdBN7CECMCWy7q07Li45WOyJlmJijd9d0qzP+H3O13BD6WRL0ojLReH7LI+YR
-	 NNQIIMEiYZ2Eu6J2nt4xg6RgsDUfhiO/D3PGLddr8xUkyWVJ1L8GvPwyvNgSi5Pjzkd4R
-	 criQcI4McJpoN7icd+MHrOAKlFfx9reYdDChyhHcXd4jJV3opuvyi2Tgvcup2aAUHQw==
+	t=1793782834;
+	b=lHeCMKyFnwVAwf5r/YBpWPXwrSDp4hXqLjEZcwHr2dAHKFpxdhsbdfYmd4mxN9FIo5N9
+	 sdKSuIYI4/FSVb86t4ZvYB9u2hAzxk1qCXmpWDuRQ3g+USYtc2nv0bTcntGFq5MbDLJDp
+	 QWG2IS/iZq8wJt8AUuoPabSoGJ2wJWKm3G/lX9/J0//9FOYfTRK89SLM2ia9sOqL0lieQ
+	 RNlZJw94ODT3D20j7VEgQ/pIrGRSjY2pbfH3hHGdSGpyOfw+GaO04vGg+e72lpy49rgL8
+	 Og4ac/il8utWbZBDbW9xGItur5KUWEqNvxIDZKOHXhyJkiGpKhUemrhX6eLgrf+gtzg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793782825;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793782834;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
 	 Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding:X-SRS-Rewrite;
-	bh=GYXQUBzOr1PjB/GSyrXP3Q7Lkpc8us6orGJkalvu4+Y=;
-	b=h6mIIs2aZD8Eu1lQpLf7irvmYDThhe+r/79sHAg6W06Uw1X5NIKfQAy04YrqcrcJoEGN
-	 zZtrI2LWHv4fySxyIb+t9NcVYBRqfq0Lkiv1OHIv6C4WbrCozb6zRpYzUvBrNZMcsTKg9
-	 +GnhxMgREjhRLXXGrDsNwCLcg+fgV9TAvC1sSEWmaQy1K2MNbcHZpzXhg98snfVauBZMM
-	 Aq4zsnkPezBxRydnoorT6suc3g8fNesw8i4LN3Lf7WBUww35KkGnvVgtaof4xnYhrCyqi
-	 cAytGk6kmO3FQhKTfrFfkZuiTLC+9STCIPlWizAvtDPPP2/pDTGFsJYHTh1YXGf7Bfw==
+	bh=mq/fIeDzXgigUAbEc4Pr7j1E7gw2CVJ/NaLzWXar24E=;
+	b=2oD7q4bWkqas5t5tSaHS1ccOmCVhRxokP04ASjKU4VEQq6u00UdraL8BGpP+Ya9GuHad
+	 fvGUSMYiuTPDS29UfYUdENF53qD8evuzpDbGKr3AQgUdHig7HJ7If59eks4KFukyqqAXi
+	 6CmwJ5Be80IHGagWSODOG5tT2579R1b/zXm85gctjFNW2w66SkejEC6vkjM5kYQ8Ol1d6
+	 YGHiBs3Fk1gwWaCJnhC+R833o/MxGAoyvNZNSJ7cbORVeLN4HkjVXelP2105qbDene/7z
+	 Zk4zXpbGsyRxasNnur4dx5nZgwngeLf7pwunzmsa6f1YjJ6poLf7x0qeUI4jar6VeFA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=fail header.from=lst.de;
 	spf=none smtp.mailfrom=bombadil.srs.infradead.org;
-	dkim=pass header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=nk9vy8Xk;
+	dkim=pass header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=b9mmaMkE;
 	arc=none smtp.remote-ip=198.137.202.133
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 370D9606A32E;
-	Wed,  4 Nov 2026 09:00:25 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 370D9606A32E
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6DD8606A332;
+	Wed,  4 Nov 2026 09:00:33 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A6DD8606A332
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=nk9vy8Xk
+	dkim=pass (2048-bit key, unprotected) header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=b9mmaMkE
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=GYXQUBzOr1PjB/GSyrXP3Q7Lkpc8us6orGJkalvu4+Y=; b=nk9vy8XkYP6WRhy0SoxGiUS5Ag
-	kuw1lxa3ZP4CdXZ6Vk21DWMYrR4Cazp3lJE/dsVVKVvQHvKOlQIKg0gQkl2VZPk3jAHEA00G23ck7
-	5wjUgjAM/cE2hoE/5ns4LkXNxSgzKS4fL1HpgzdwIqccPotWKpJ7ozjJW4+BOG2pter+j7n46ripT
-	VB3TM0MASWwo0aGIZ44fbavtNt+ax1QMWCBnbnSNwhGY1Qbr8R7eY1qzxHv/swkV909cuMre3uBkU
-	k1N5c8EewhJ9yNKWBNVni4z9Kb+RsbZEBbu22Mu5gTpjxEL8sw+NF+KTJC00UfuikY9WVD1Y6b9o/
-	w63Y/QYg==;
+	bh=mq/fIeDzXgigUAbEc4Pr7j1E7gw2CVJ/NaLzWXar24E=; b=b9mmaMkEChDp37A8IXX4vyCVqk
+	kpfsEfYLz0M3f4xC9feNXDaB5zqYgUfF4YG8btH/uhLPFYaoYtle0b+VS9Xl325uJoACZx6265K9Z
+	BypMsfS5bzO2miNm4fls5fCbRV1VyCAvKAzB2Zp07Lr4iVQ7RyU/yqJps1dp9rB0D6eYOsODJAU5k
+	UNUKUj34LAHWOpKBSwbJPipPFmpfymDR2kvOHm6sTnz1ZKClh32U66/DALCh5/rxd8AL9BWredcmx
+	VUEO2L1KOe+8y/j9aWvaluSMMZGlcPIX314IQbPkAIO7+WW/N2yXUTWfAq4pZgv1UrkqHA1wx+LFH
+	rLadzsxA==;
 Received: from 2a02-8389-2301-9f00-31e8-efb6-e973-61ca.cable.dynamic.v6.surfer.at ([2a02:8389:2301:9f00:31e8:efb6:e973:61ca] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.100.1 #2 (Red Hat Linux))
-	id 1xOWr2-00000004oVT-2QmS;
-	Wed, 04 Nov 2026 09:00:24 +0000
+	id 1xOWrA-00000004oYQ-3fgC;
+	Wed, 04 Nov 2026 09:00:33 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org
-Subject: [PATCH 18/25] xfs: add data checksum support to zoned garbage collection
-Date: Wed,  4 Nov 2026 09:57:22 +0100
-Message-ID: <20261104085929.317544-19-hch@lst.de>
+Subject: [PATCH 21/25] xfs: don't try to verify checksums on empty zones
+Date: Wed,  4 Nov 2026 09:57:25 +0100
+Message-ID: <20261104085929.317544-22-hch@lst.de>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261104085929.317544-1-hch@lst.de>
 References: <20261104085929.317544-1-hch@lst.de>
@@ -69,144 +69,110 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Transfer the checksum from the old location to the new one.  The
-implementation mirrors that of user data reads and writes.
+xfs_scrub can sometimes send XFS_IOC_VERIFY_MEDIA ioctls for ranges
+that have never been written since the last zone reset, which will
+lead to checksum verification failures.
+
+Protect against this by checking that the range is valid.  To make the
+range-check non-racy hold the IOLOCK of the rmap inode over the entire
+media verification and cycle through it before resetting a zone, as that
+is the only way to rewrite data in a zone.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_zone_gc.c | 66 ++++++++++++++++++++++++++++++++++++--------
- 1 file changed, 54 insertions(+), 12 deletions(-)
+ fs/xfs/xfs_verify_media.c | 46 ++++++++++++++++++++++++++++++++++++---
+ fs/xfs/xfs_zone_gc.c      |  7 ++++++
+ 2 files changed, 50 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/xfs_zone_gc.c b/fs/xfs/xfs_zone_gc.c
-index cea5447a886d..9296f584282a 100644
---- a/fs/xfs/xfs_zone_gc.c
-+++ b/fs/xfs/xfs_zone_gc.c
-@@ -21,6 +21,7 @@
- #include "xfs_zone_alloc.h"
- #include "xfs_zone_priv.h"
- #include "xfs_zones.h"
-+#include "xfs_rtcsum.h"
+diff --git a/fs/xfs/xfs_verify_media.c b/fs/xfs/xfs_verify_media.c
+index bafaac2f3ea8..d94bee0b9b6b 100644
+--- a/fs/xfs/xfs_verify_media.c
++++ b/fs/xfs/xfs_verify_media.c
+@@ -25,6 +25,7 @@
+ #include "xfs_rtcsum.h"
  #include "xfs_trace.h"
+ #include "xfs_verify_media.h"
++#include "xfs_zone_alloc.h"
  
- /*
-@@ -106,6 +107,9 @@ struct xfs_gc_bio {
- 	/* Realtime group currently being reclaimed */
- 	struct xfs_rtgroup		*victim_rtg;
+ #include <linux/fserror.h>
  
-+	/* Buffer for data checksums */
-+	struct xfs_buf			*csum_bp;
-+
- 	/* Bio used for reads and writes, including the bvec used by it */
- 	struct bio			bio;	/* must be last */
- };
-@@ -660,6 +664,20 @@ xfs_zone_gc_alloc_blocks(
- 	return true;
- }
- 
-+static void
-+xfs_zone_gc_free_chunk(
-+	struct xfs_gc_bio	*chunk)
+@@ -291,6 +292,46 @@ xfs_submit_verify_bio(
+  *
+  * When the alignment leads to an empty range, give up.
+  */
++static int
++xfs_csum_verify_metafile(
++	struct xfs_mount	*mp,
++	struct bio		*bio,
++	struct bvec_iter	*saved_iter,
++	void			*csum_buf,
++	xfs_fsblock_t		bno)
 +{
-+	atomic_dec(&chunk->victim_rtg->rtg_gccount);
-+	xfs_rtgroup_rele(chunk->victim_rtg);
-+	list_del(&chunk->entry);
-+	xfs_open_zone_put(chunk->oz);
-+	if (chunk->csum_bp)
-+		xfs_buf_rele(chunk->csum_bp);
-+	xfs_irele(chunk->ip);
-+	bio_put(&chunk->bio);
++	struct xfs_rtgroup	*rtg;
++	bool			is_valid;
++	int			error = 0;
++
++	rtg = xfs_rtgroup_get(mp, xfs_rtb_to_rgno(mp, bno));
++	if (!rtg)
++		return -EFSCORRUPTED;
++
++	/*
++	 * Only validate the checksums for valid data, as data never written
++	 * will not have valid checksums.  We need to hold the iolock on the
++	 * rmap inode over the actual verification to prevent freeing of blocks
++	 * and thus a zone reset to happen underneath us.
++	 *
++	 * Note that this still relies on cooperating userspace, as there also
++	 * can be blocks that were written but never recorded after an unclean
++	 * shutdown, which this check does not catch.  It purely tries to deal
++	 * with races vs the previous FSMAP output used by xfs_scrub.
++	 */
++	xfs_ilock(rtg_rmap(rtg), XFS_IOLOCK_SHARED);
++	xfs_ilock(rtg_rmap(rtg), XFS_ILOCK_SHARED);
++	is_valid = xfs_zone_rgbno_is_valid(rtg, xfs_rtb_to_rgbno(mp, bno));
++	xfs_iunlock(rtg_rmap(rtg), XFS_ILOCK_SHARED);
++
++	if (is_valid)
++		error = xfs_csum_verify(mp, bio, saved_iter, csum_buf, bno,
++				false);
++	xfs_iunlock(rtg_rmap(rtg), XFS_IOLOCK_SHARED);
++	xfs_rtgroup_put(rtg);
++	return error;
 +}
 +
- static void
- xfs_zone_gc_add_data(
- 	struct xfs_gc_bio	*chunk)
-@@ -725,6 +743,11 @@ xfs_zone_gc_start_chunk(
- 	if (!xfs_zone_gc_iter_irec(mp, iter, &irec, &ip))
- 		return false;
+ static int
+ xfs_submit_verify_bio_csum(
+ 	struct xfs_mount	*mp,
+@@ -339,9 +380,8 @@ xfs_submit_verify_bio_csum(
+ 	if (error)
+ 		goto out_buf_rele;
  
-+	if (xfs_has_rtcsum(mp)) {
-+		irec.rm_blockcount = min(irec.rm_blockcount,
-+			xfs_rtcsum_max_len(mp, irec.rm_startblock));
-+	}
-+
- 	if (!xfs_zone_gc_alloc_blocks(data, &irec.rm_blockcount, &daddr,
- 			&is_seq)) {
- 		xfs_irele(ip);
-@@ -748,6 +771,7 @@ xfs_zone_gc_start_chunk(
- 	chunk->data = data;
- 	chunk->oz = data->oz;
- 	chunk->victim_rtg = iter->victim_rtg;
-+	chunk->csum_bp = NULL;
- 	atomic_inc(&rtg_group(chunk->victim_rtg)->xg_active_ref);
- 	atomic_inc(&chunk->victim_rtg->rtg_gccount);
+-	error = xfs_csum_verify(mp, &bio, &saved_iter,
+-			csum_bp->b_addr + xfs_rtb_to_rtcsumoff(mp, bno), bno,
+-			false);
++	error = xfs_csum_verify_metafile(mp, &bio, &saved_iter,
++			csum_bp->b_addr + xfs_rtb_to_rtcsumoff(mp, bno), bno);
+ 	if (error) {
+ 		xfs_verify_media_error(mp, me, btp, *daddr, bbcount, error);
+ 		error = 1;
+diff --git a/fs/xfs/xfs_zone_gc.c b/fs/xfs/xfs_zone_gc.c
+index 9296f584282a..7e04693fd573 100644
+--- a/fs/xfs/xfs_zone_gc.c
++++ b/fs/xfs/xfs_zone_gc.c
+@@ -1001,6 +1001,13 @@ xfs_submit_zone_reset_bio(
  
-@@ -764,22 +788,22 @@ xfs_zone_gc_start_chunk(
- 	list_add_tail(&chunk->entry, &data->reading);
- 	xfs_zone_gc_iter_advance(iter, irec.rm_blockcount);
+ 	trace_xfs_zone_reset(rtg);
  
-+	if (xfs_is_rtcsum_inode(ip)) {
-+		int error;
++	/*
++	 * Cycle through the rmap inode iolock to synchronize against
++	 * xfs_csum_verify_metafile.
++	 */
++	xfs_ilock(rtg_rmap(rtg), XFS_IOLOCK_SHARED);
++	xfs_iunlock(rtg_rmap(rtg), XFS_IOLOCK_SHARED);
 +
-+		error = xfs_rtcsum_read_async(mp, chunk->old_startblock,
-+				&chunk->csum_bp);
-+		if (error) {
-+			xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
-+			xfs_zone_gc_free_chunk(chunk);
-+			return false;
-+		}
-+	}
-+
- 	submit_bio(bio);
- 	return true;
- }
+ 	ASSERT(rtg_rmap(rtg)->i_used_blocks == 0);
  
--static void
--xfs_zone_gc_free_chunk(
--	struct xfs_gc_bio	*chunk)
--{
--	atomic_dec(&chunk->victim_rtg->rtg_gccount);
--	xfs_rtgroup_rele(chunk->victim_rtg);
--	list_del(&chunk->entry);
--	xfs_open_zone_put(chunk->oz);
--	xfs_irele(chunk->ip);
--	bio_put(&chunk->bio);
--}
--
- static void
- xfs_zone_gc_submit_write(
- 	struct xfs_zone_gc_data	*data,
-@@ -832,6 +856,9 @@ xfs_zone_gc_split_write(
- 	split_chunk->old_startblock = chunk->old_startblock;
- 	split_chunk->new_daddr = chunk->new_daddr;
- 	split_chunk->oz = chunk->oz;
-+	split_chunk->csum_bp = chunk->csum_bp;
-+	if (split_chunk->csum_bp)
-+		xfs_buf_hold(split_chunk->csum_bp);
- 	atomic_inc(&chunk->oz->oz_ref);
- 
- 	split_chunk->victim_rtg = chunk->victim_rtg;
-@@ -919,6 +946,21 @@ xfs_zone_gc_finish_chunk(
- 
- 	if (chunk->is_seq)
- 		chunk->new_daddr = chunk->bio.bi_iter.bi_sector;
-+
-+	if (xfs_is_rtcsum_inode(ip)) {
-+		unsigned int	boff;
-+
-+		error = xfs_buf_read_async_wait(chunk->csum_bp);
-+		if (error)
-+			goto free;
-+
-+		boff = xfs_rtb_to_rtcsumoff(mp, chunk->old_startblock);
-+		error = xfs_rtcsum_log(chunk->oz, chunk->new_daddr, chunk->len,
-+				chunk->csum_bp->b_addr + boff);
-+		if (error)
-+			goto free;
-+	}
-+
- 	error = xfs_zoned_end_io(ip, chunk->offset, chunk->len,
- 			chunk->new_daddr, chunk->oz, chunk->old_startblock);
- free:
+ 	if (XFS_TEST_ERROR(mp, XFS_ERRTAG_ZONE_RESET)) {
 -- 
 2.53.0
 
