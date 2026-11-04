@@ -1,54 +1,54 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793826726;
-	b=bL2kV/woxYkMfmZLJ0eNUUZoUbEqH4FwXQUHWCIAHBC1zgoUKg0/dCIYjyZxxJ584Oph
-	 j9L22UFXLt8AoKJ31eCiFc99lj2iyBl4o1iSeuNT0/2TnOEmEvTHHGUiC8daz5XuflHOC
-	 E3T2KjR8tn26VlnqsSSPx/hJw9Q1K+dH5nO/JpnkhbKEfX8BULiJU+9xJmp8g8OmJZdJ9
-	 MiTMA1Sb6Jz+0W4ZhZ17A6uuUTfFfF2jUZEhja5rqHxpYKggdF1DUE7xln49GsMhuO9CQ
-	 Y8WRzho02tve/jPEHNIau7kdYa04KI97DcIip+nbzWMXC4RV+T2mIMQOTj08ayDW9Tw==
+	t=1793829471;
+	b=HphBLO1l0eiWRIz62rlud4MyfMiwo6Gc0jJr8KoajSxfMvtLV3Romgpb/cuMBzCKO80p
+	 zGPB8gi/+W+MQt1auIHKrkatjC74DVcw7lpTGG5J2WzGJVrtrs0C0Kxn9/0J0/pJyB8/I
+	 XE5ie7FQNv8PwRo0dCS3yVLL3G7ldoz3Y3TUNU6ENbFerRrRKulZyKWlmZ1yZzzGIaf0a
+	 3lsWXq6C1pS2Lo9AMqclHgccuNxQAQzc8p8NpuURk3tp7pdn8bBhBwa/E7vyfaQto6JHR
+	 PKIFRHeo1Xhwjm/58L126qFvd0H1sJrN+c0zdV2JRuDLazGJlmNLgVZaITTmjOWaQiA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793826726;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793829471;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=cIEShrT0jFeuA5ogvweS7WqvQc7l2e9mZFD56ht6fXE=;
-	b=ZG10SnjBgoHzmMiG3PsHEVrrN/S5MYDnZLZK25wiSsv2PAudVUnoAFSo3R8RW9K26hLW
-	 4dve1Mlk5kawMc3lhBH4S1ohYBlUnBFFOUNtlR4TkIt5MDTjiLJYWEkpFAHxl+l+TG3dz
-	 tef8wJU3jkm8zUGJscuKoSbbMoosiVuGAK91rMT5MpItJzMN+chX6sNGAWs661tAIVvrA
-	 yZSG2F3jjUDo83agRkWmphlH/YB1YqkAp3vcJcxST9jEje5NhPZ8JYrRRJcIpmDtdPrTL
-	 2ASKFjzKZWWcyuJWfjjCNEcee0YAsmXrRH1PtY3/opKkLBm7FWB0AylOV0VVh9gguAw==
+	bh=Pt10OpIafDHO+/s8UZzP68e4Ey+bkeQd5gvZCMNXoJs=;
+	b=xd8+QfgrbqXnP8CMJuyz6x91w7AjusxLpFUUc7nz+LhB6xr/q5OCRwrxc5BW3AGKPNQV
+	 EEr2GYb4jTgPbb6eNMmNPopEj0vZYtCXlMPSBZbSsmxBUhaCtS1XA8vVDL6zpiJYWSaWl
+	 /OTbacpgo174TbLZqNhCb9tqCcp8MLjU4rpd4F09e9kFeyf5c9bFA9E0wfdFB269cZIfw
+	 Fz0QHn/YxGuLc699y6ZoatdK62MEsoOA01pAKNe7aTqP6eMZdUzaYmz9mXHq8EZdKVOhp
+	 pkofeByQuNnKBt4jYqKyPZ4LjCDFwgQTtAoCkzPm2AgSFSGsvS4jbdZAjfZmHGgM/TQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ezglBNM+;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=MAca+erH;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EFB7606D81F
-	for <linux-xfs@vger.kernel.org>; Wed,  4 Nov 2026 21:12:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A125D606AB0B;
+	Wed,  4 Nov 2026 21:57:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ezglBNM+
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C55DB1F0093A;
-	Wed,  4 Nov 2026 21:12:04 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=MAca+erH
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 110E91F00A17;
+	Wed,  4 Nov 2026 21:57:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793826725;
-	bh=cIEShrT0jFeuA5ogvweS7WqvQc7l2e9mZFD56ht6fXE=;
+	s=k20260515; t=1793829471;
+	bh=Pt10OpIafDHO+/s8UZzP68e4Ey+bkeQd5gvZCMNXoJs=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=ezglBNM+XAuRrn4u0EIiw3ADvuAOu5P0HrFDjp8B5rzy4dQ7ftfPUgBjdbdh2h2et
-	 s4z/mHhwnhqCOHdxutrutmziVp0ANaup/tcHN7KheCjqVAFYoIEbazKY9UtAbQ0XNF
-	 5RVckW55yBAHGHauszz4X/0ZTVYzRkPoPjD3vmiFPknvEDPW7Al7SghKi5ujxH3Did
-	 W5XiU40mP1jIm5BUcpQPtkRXJ74rgJNwgBQODq48JcoL2zabBCQj8jm6c0VxjV/j4g
-	 P7wyNpDuSxnWwcXTbquGvKksEfPRbZpD1+38cqoiUch978py3krMZ6LAb5hboWg9DC
-	 mvGL0vsEfJTmg==
-Date: Thu, 5 Nov 2026 08:11:57 +1100
-From: Dave Chinner <dgc@kernel.org>
-To: Lauri Gates <lauri.gates@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
-	Carlos Maiolino <cem@kernel.org>
-Subject: Re: Concurrent FIEMAP on reflinked files serialises on the AGF
- buffer lock
-Message-ID: <auufnV0S2g7mUtQG@dread>
-References: <aulwLCnibXfaMzR_@infradead.org>
- <20261104124118.34200-1-lauri.gates@gmail.com>
+	b=MAca+erHy9DR7OyreR+xCs9Mb/ZuNFmIA1Px0E9Wf3rP6Bz4Md7LYWALQDukRMQdh
+	 P5pYWT9fx/UHsEJMno83Tf61qCmIeZSI3bKLpodUjU2ty4+MzYeswuyT857wesl9r7
+	 QEWaeuWTjq0lUPDsfeSFMK5ZcCnDTs1q6YqVV8sEIe2bUb7gLV0Ir3bTQlp9CVhUPz
+	 yc+hpzv6ncSncR+9+aWvAnAJxCwiCAL1amJ6wsw9t5bDBUWDSxU4yRwKgXVTyS/3iN
+	 +6xPgugAWGGs1A37hLKpGw285h8qkstXE7CkrflkXghHAyhWwqcqh7GFa+kvdLKtw1
+	 nb4ye4C9X/LqA==
+Date: Wed, 4 Nov 2026 21:57:49 +0000
+From: Eric Biggers <ebiggers@kernel.org>
+To: Andrey Albershteyn <aalbersh@kernel.org>
+Cc: hch@lst.de, fsverity@lists.linux.dev, linux-xfs@vger.kernel.org,
+	linux-btrfs@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+	linux-ext4@vger.kernel.org
+Subject: Re: [PATCH 0/5] fsverity: lift ioctl() input masking and runtime
+ inode flag to VFS
+Message-ID: <20261104215749.GA3648616@google.com>
+References: <20261104194618.103332-1-aalbersh@kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -60,63 +60,19 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261104124118.34200-1-lauri.gates@gmail.com>
+In-Reply-To: <20261104194618.103332-1-aalbersh@kernel.org>
 
-On Wed, Nov 04, 2026 at 02:41:16PM +0200, Lauri Gates wrote:
-> On Mon, Nov 02, 2026 at 09:25:00PM -0800, Christoph Hellwig wrote:
-> > FIEMAP is purely a debug interface for file system developers.  So
-> > running it in parallel for lots of files is highly unexpected and
-> > suggests a misuse of the interface.
+On Wed, Nov 04, 2026 at 08:46:09PM +0100, Andrey Albershteyn wrote:
+> Hi folks,
 > 
-> Understood, and that is why I am looking at the alternatives below.
+> This patchset lifts two things from filesystems to VFS level:
+> - No-oping FS_VERITY_FL in SET ioctl()
+> - runtime fsverity construction flag
 > 
-> > It needs to protect against agf_refcount_level changing, so yes.
-> > In theory it would be fine with a shared lock on the AGF buffer if
-> > we had a shared/exclusive lock on the buffers (which is something
-> > I've wondered about a few times before), or some other high-level
-> > synchronization against adding more reflinks.
-> 
-> Thanks, that answers it. If shared buffer locks are ever tried, I can
-> run the reproducer against the patches.
-> 
-> > The more efficient way to do this
-> > would be to subtract the multiple mapped extents based on the
-> > refcount btree, i.e.
-> >
-> >	for each AG (and RTG with rtreflink):
-> >		for each entry in the (rt)refcountbt:
-> >			subtract rc_blockcount * (rc_refcount - 1);
-> >
-> > We'd need a new ioctl for that, but it should be pretty easy.
-> > The major downside is that this only works for whole-device du,
-> > but then also any other version would have a really hard time figuring
-> > out what to do with reflinks the span the reported/not reported
-> > boundary.
-> 
-> A whole-device total would be useful on its own, but du tools mostly
-> report per directory. dust handles the boundary by counting each
-> shared extent once within the scanned tree, so a block shared with a
-> file outside the scan is charged to the scan in full. That is a policy
-> choice, and it needs to know which files own which shared blocks.
-> 
-> GETFSMAP already returns that: with rmapbt, each shared range comes
-> back once per owning inode. On a test image with 100,000 reflinked
-> pairs (7.2.12, arm64 VM, xfsprogs 6.6.0 defaults, which enable rmapbt),
-> a whole-device fsmap walk took about 120 ms, against 387 ms for a
-> single-threaded FIEMAP walk of the same 200,000 files. But it returns
-> owners only with CAP_SYS_ADMIN, as ioctl_fsmap(2) documents, so it
-> covers a du tool run as root and not one run as an ordinary user.
+> The first one fixes BTRFS get-modify-set loop with
+> FS_IOC_GETFLAGS/SETFLAGS ioctl()s, as it does return fsverity flag but
+> not mask it out.
 
-fsmap() takes an arbitrary open fd on the filesystem being queried.
-We could allow owner-based queries if the owner in the filter key
-matches the inode backing the fd that is passed into the query. If
-the task already has a file open for that inode, then it's already
-been given permission to access/read metadata for that file (same as
-FIEMAP).
+Changes to 'struct inode' should be Cc'ed to linux-fsdevel as well.
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-dgc@kernel.org
+- Eric
