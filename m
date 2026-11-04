@@ -1,44 +1,44 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793818072;
-	b=QZBT3xyw1icBUNhxE3MRIcq51lJFdVm6G4M0qdBdZ4AnvEyYzDpyohWRbNGDpBLRvuhA
-	 KdQ0ynAfJlSpMR0AgjlFzbnnzBI1v028omtX8UR6VivPIGY1TapDSpj/ZE+TUqFALc1P8
-	 3cgAtRG/nFIeBH1kMVNlJVMMM1Wzlgs7rZqvuIltep9P7GiWJfmyfGwwOWv5QRXKEGLSe
-	 yHex5MSLdNxJosTG2jUYpsXbpJ0HUrII6N7COX9ft7NiffyRHCx7T8OODtyuTxMGfFq+z
-	 oDyKOnR48oL3N2dkBZQptmaMS4LR6M1P7w2a+OA7KWhpOXHCL7vI+8JxqTQscuIyG6g==
+	t=1793818088;
+	b=dU72aAGN3VmsTUtBEyFie+sD8EXMPCjMRuLghDAZjBHE6wFBhR5oNK73LRbxpT/ThrXX
+	 lBTLHbZBU36LbP5p9mSXREWzhWIfzluyYmAEHy12bdQw+3AChI4nlpP4Nq4arOV4bxQCl
+	 mBJobrkO8Eu/+I6LCjOtbOMLx445sWHCRBdAeYO3VOYLOHJrA54pkh8MM0GYgMb5z6evh
+	 R7sUcdeKV4ool2S/33821b6JWjBsySrJyNtq56y4NFREwX5zjnVIsZ7yRV+M1y+tMmYHn
+	 eQCqmQUndNQoJ7bQJ/aC86iZapd/9uazHjaSGw8O1iE+tbF5SFH0r7d9D28P2KCZb4g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793818072;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793818088;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=I/Ge8YoTfYkJ0fPA3QoH3DGdYM7Wm5JlNshnWy3bCN8=;
-	b=3ihcd9tythHDTFntNZsMP9Lwe7wRfaHR3YhHlAI/A+VySkJdQxwFE7pWr8bGVARyRehv
-	 RaS8oY2YBNx+FGuAU+iJViwBYBdXB61IY2TsoJUYaSKhRp8dkmeVGzWc240XgxiyjQfku
-	 nQTvyx3cinZbK6vxAGHlJwHW0EskfeHLgW4oLE2dltadko0hij+R+YjDNhxpioafSs9A4
-	 tTJ9BWbTVpYGTkwyzK+iEBAi8SYPS8DrFugzkCIsMfKxVYbtA6CY0qOzPFzoX7C6lV6Kf
-	 t8dOdqoO0tgNbb5Oxqu8G0Gwii7z2FTJnNH14nyU6wIPhqU26iVt0iyarEZi9MsBdsA==
+	bh=2XXdpQaY2YIIGWC7aJondq3RxuTBZ1TNAvtD2wE4RTA=;
+	b=2p0iNbSJ5WggmHMnqwAzs2O4K6F8Xa9cyyr/rGSvV+tVNCTyORhjFZql5Aj4ulDAeffG
+	 GhV+v3tHwVlgCegC/+IxKSKHFquIQhkjnglDcUTtR52XUTcDJSEGDBVWC6xYzCApQPfIi
+	 gWswQ9qUUlYLqEhIN6atuUFd2KEuy9RGkWtF048hCwhZtB/8af+6yJyIG/s/7z/JHPyGc
+	 /q4YdHlg6pgXbNPA6kug/ZW/xq8aVXdFKwwAuMAV1C81Ngb8lsHZ0YWDPw8lePbyekpOy
+	 +gHkUNuCQYvnKZFTjUMDdp74DmgRmoOlxv000NsCuYoROkdrNEt5vfCesY43wWdwkvg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GLzSoYGx;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kyk6dHO9;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9ACB6606A328;
-	Wed,  4 Nov 2026 18:47:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C49B1606A329;
+	Wed,  4 Nov 2026 18:48:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GLzSoYGx
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A699F1F00919;
-	Wed,  4 Nov 2026 18:47:48 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kyk6dHO9
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 73FFA1F00919;
+	Wed,  4 Nov 2026 18:48:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793818071;
-	bh=I/Ge8YoTfYkJ0fPA3QoH3DGdYM7Wm5JlNshnWy3bCN8=;
+	s=k20260515; t=1793818087;
+	bh=2XXdpQaY2YIIGWC7aJondq3RxuTBZ1TNAvtD2wE4RTA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=GLzSoYGxmNy9F7CnduUge/XACOoYpvEf7fs7wUPQYOJ/ab4OtTjXrfpREl2VjE2lU
-	 AdErOkH8t+9QxwtyatLnWhFCG1C4NXby9lC6xtOKzd552BvWUw6Wb9coZ32hN751md
-	 KedUCqSc0tfRrbUch9LZ6OpQZ/U4emWQSV+iD7IDLqI+i3tiEfQNV1+0h2i3L6fV2q
-	 4+OJ5dH7pd6qlx2NXQXW7HKHb2Nen9tyI0TFoVSZzJzJAqEHS5BAlbz9C21SPxpCzy
-	 Qu60RVHcY1KnpvjikBaIsCfVLOQVpS1Y7cGffIy4S4VBJI9YXGlj2uznAMqWnLTIrb
-	 vSpbi+FQxikgA==
+	b=kyk6dHO9pgA3eYLXzOxZ1dPz/KFPFHpP1O8IAdpXd3t9/4Gmr6FRTwh/KHa6hGCYn
+	 NBRYP2GC6zEn8DX/bTHey+5s5p2C3EFc7DQJqeBhvpwwRwkOmJFaOWjBWcTQ3FvqyF
+	 JHiZCKKVV2EyzLIyXu4QJK1UneuOHM7vL7MDd9UPNcxgL+zHCtwB9GK/ni98cHEbQC
+	 UJD4UHequo/eCLp7qXbrXRojujPh5DMGGfuzFSfConyPcow4fxzEymX91mokn6rmW3
+	 YYnecjBtp9PHdVdsqH2KQb7F9+itTPuJQ+iUK44VMtxJXmGv/HYpv8+ZG2EVTvtpO/
+	 Luc4PlnUuayeA==
 From: Zorro Lang <zlang@kernel.org>
 To: fstests@vger.kernel.org
 Cc: linux-xfs@vger.kernel.org,
@@ -46,9 +46,9 @@ Cc: linux-xfs@vger.kernel.org,
 	Anand Suveer Jain <asj@kernel.org>,
 	Chao Yu <chao@kernel.org>,
 	Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH v3 1/6] fstests: rename _*_fs_sysfs_attr helpers to _*_fs_sysfs_dev_attr
-Date: Thu,  5 Nov 2026 02:47:31 +0800
-Message-ID: <20261104184736.1564283-2-zlang@kernel.org>
+Subject: [PATCH v3 6/6] fstests: replace btrfs specific helpers with common sysfs helpers
+Date: Thu,  5 Nov 2026 02:47:36 +0800
+Message-ID: <20261104184736.1564283-7-zlang@kernel.org>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261104184736.1564283-1-zlang@kernel.org>
 References: <20261104184736.1564283-1-zlang@kernel.org>
@@ -63,448 +63,544 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The _set/_get/_has/_require_fs_sysfs_attr helpers all operate on
-per-device sysfs entries under /sys/fs/$FSTYP/$dev.  Insert "_dev_"
-into their names to distinguish them from other sysfs paths such as
-/sys/fs/$FSTYP/features/, and update all callers. No functional
-change.
+Switch from btrfs specific helpers to the generic sysfs helpers
+across btrfs test cases, reduce code duplication.
 
 Signed-off-by: Zorro Lang <zlang@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- common/btrfs    |  4 ++--
- common/rc       | 30 +++++++++++++++---------------
- common/sysfs    |  6 +++---
- common/xfs      | 22 +++++++++++-----------
- tests/btrfs/253 | 22 +++++++++++-----------
- tests/btrfs/334 |  2 +-
- tests/f2fs/025  |  2 +-
- tests/xfs/006   |  2 +-
- tests/xfs/177   |  2 +-
- tests/xfs/264   |  8 ++++----
- tests/xfs/668   |  6 +++---
- tests/xfs/669   |  6 +++---
- tests/xfs/670   |  2 +-
- 13 files changed, 57 insertions(+), 57 deletions(-)
+ common/btrfs      | 37 ++-----------------------------------
+ common/rc         |  3 ++-
+ tests/btrfs/010   |  3 ++-
+ tests/btrfs/055   |  2 +-
+ tests/btrfs/056   |  2 +-
+ tests/btrfs/112   |  2 +-
+ tests/btrfs/131   |  2 +-
+ tests/btrfs/165   |  2 +-
+ tests/btrfs/188   |  2 +-
+ tests/btrfs/192   |  2 +-
+ tests/btrfs/201   |  2 +-
+ tests/btrfs/205   |  2 +-
+ tests/btrfs/209   |  2 +-
+ tests/btrfs/211   |  2 +-
+ tests/btrfs/219   |  3 +--
+ tests/btrfs/231   |  2 +-
+ tests/btrfs/285   |  1 -
+ tests/btrfs/296   |  8 +-------
+ tests/btrfs/304   |  4 ++--
+ tests/btrfs/305   |  4 ++--
+ tests/btrfs/306   |  4 ++--
+ tests/btrfs/307   |  4 ++--
+ tests/btrfs/308   |  4 ++--
+ tests/btrfs/311   |  2 +-
+ tests/btrfs/313   |  2 +-
+ tests/btrfs/314   |  2 +-
+ tests/btrfs/315   |  2 +-
+ tests/btrfs/342   |  2 +-
+ tests/btrfs/352   |  2 +-
+ tests/btrfs/363   |  2 +-
+ tests/generic/098 |  2 +-
+ tests/generic/101 |  2 +-
+ 32 files changed, 39 insertions(+), 78 deletions(-)
 
 diff --git a/common/btrfs b/common/btrfs
-index b1703b78..b52b4b11 100644
+index 38658a11..0bbcb830 100644
 --- a/common/btrfs
 +++ b/common/btrfs
-@@ -906,8 +906,8 @@ _qgroup_mode()
- 		_fail "Usage: _qgroup_mode <mounted_device>"
+@@ -100,26 +100,6 @@ _require_btrfs_mkfs_uuid_option()
  	fi
+ }
  
--	if _has_fs_sysfs_attr $dev /qgroups/mode; then
--		_get_fs_sysfs_attr $dev qgroups/mode
-+	if _has_fs_sysfs_dev_attr $dev /qgroups/mode; then
-+		_get_fs_sysfs_dev_attr $dev qgroups/mode
- 	else
- 		echo "qgroup"
- 	fi
+-_require_btrfs_fs_feature()
+-{
+-	if [ -z $1 ]; then
+-		echo "Missing feature name argument for _require_btrfs_fs_feature"
+-		_exit 1
+-	fi
+-	feat=$1
+-	modprobe btrfs > /dev/null 2>&1
+-	[ -e /sys/fs/btrfs/features/$feat ] || \
+-		_notrun "Feature $feat not supported by the available btrfs version"
+-}
+-
+-_require_btrfs_fs_sysfs()
+-{
+-	modprobe btrfs > /dev/null 2>&1
+-	[ -e /sys/fs/btrfs/features ] || \
+-		_notrun "Sysfs not supported by the available btrfs version"
+-
+-}
+-
+ _require_btrfs_no_compress()
+ {
+ 	if _normalize_mount_options "$MOUNT_OPTIONS" | grep -q "compress"; then
+@@ -962,18 +942,6 @@ _require_scratch_enable_simple_quota()
+ 	_scratch_unmount
+ }
+ 
+-_has_btrfs_sysfs_feature_attr()
+-{
+-	local feature_attr=$1
+-
+-	[ -z $feature_attr ] && \
+-		_fail "Missing feature name argument for _has_btrfs_sysfs_attr"
+-
+-	modprobe btrfs &> /dev/null
+-
+-	test -e /sys/fs/btrfs/features/$feature_attr
+-}
+-
+ # Print the fsid and metadata uuid replaced with constant strings FSID and
+ # METADATA_UUID. Compare temp_fsid with fsid and metadata_uuid, then echo what
+ # it matches to or TEMP_FSID. This helps in comparing with the golden output.
+@@ -983,9 +951,8 @@ _check_temp_fsid()
+ 	local fsid
+ 	local metadata_uuid
+ 
+-	_require_btrfs_fs_sysfs
+-	_require_btrfs_fs_feature temp_fsid
+-	_require_btrfs_fs_feature metadata_uuid
++	_require_fs_sysfs_feature_attr temp_fsid
++	_require_fs_sysfs_feature_attr metadata_uuid
+ 	_require_btrfs_command inspect-internal dump-super
+ 
+ 	# on disk fsid
 diff --git a/common/rc b/common/rc
-index 1eccd60c..43c95930 100644
+index a8d3c3d8..14303783 100644
 --- a/common/rc
 +++ b/common/rc
-@@ -4223,7 +4223,7 @@ _require_fs_survives_data_write_eio()
- 		# This is an XFS per-mount sysfs attribute, not a block queue
- 		# attribute.  Its existence means XFS mounted this instance with
- 		# zoned filesystem semantics.
--		if _has_fs_sysfs_attr "$dev" "zoned/max_open_zones"; then
-+		if _has_fs_sysfs_dev_attr "$dev" "zoned/max_open_zones"; then
- 			_notrun "zoned XFS shuts down on data write EIO"
- 		fi
- 		;;
-@@ -5481,8 +5481,8 @@ _fs_sysfs_dname()
- #  - content: the content of $attr
- #
- # Usage example:
--#   _set_fs_sysfs_attr /dev/mapper/scratch-dev error/fail_at_unmount 0
--_set_fs_sysfs_attr()
-+#   _set_fs_sysfs_dev_attr /dev/mapper/scratch-dev error/fail_at_unmount 0
-+_set_fs_sysfs_dev_attr()
+@@ -5634,6 +5634,7 @@ _require_fs_sysfs_feature_attr()
  {
- 	local dev=$1
- 	shift
-@@ -5491,7 +5491,7 @@ _set_fs_sysfs_attr()
- 	local content="$*"
+ 	local attr=$1
  
- 	if [ ! -b "$dev" -o -z "$attr" -o -z "$content" ];then
--		_fail "Usage: _set_fs_sysfs_attr <mounted_device> <attr> <content>"
-+		_fail "Usage: _set_fs_sysfs_dev_attr <mounted_device> <attr> <content>"
- 	fi
++	modprobe $FSTYP > /dev/null 2>&1
+ 	_has_fs_sysfs_feature_attr "$attr" && return
  
- 	local dname=$(_fs_sysfs_dname $dev)
-@@ -5507,14 +5507,14 @@ _set_fs_sysfs_attr()
- #  - attr: path name under /sys/fs/$FSTYP/$dev
- #
- # Usage example:
--#   _get_fs_sysfs_attr /dev/mapper/scratch-dev error/fail_at_unmount
--_get_fs_sysfs_attr()
-+#   _get_fs_sysfs_dev_attr /dev/mapper/scratch-dev error/fail_at_unmount
-+_get_fs_sysfs_dev_attr()
+ 	_notrun "This test requires /sys/fs/${FSTYP}/features/${attr}"
+@@ -6136,7 +6137,7 @@ _require_duplicate_fsid()
  {
- 	local dev=$1
- 	local attr=$2
- 
- 	if [ ! -b "$dev" -o -z "$attr" ];then
--		_fail "Usage: _get_fs_sysfs_attr <mounted_device> <attr>"
-+		_fail "Usage: _get_fs_sysfs_dev_attr <mounted_device> <attr>"
- 	fi
- 
- 	local dname=$(_fs_sysfs_dname $dev)
-@@ -5529,14 +5529,14 @@ _get_fs_sysfs_attr()
- #  - attr: path name under /sys/fs/$FSTYP/$dev
- #
- # Usage example:
--#   _has_fs_sysfs_attr /dev/mapper/scratch-dev error/fail_at_unmount
--_has_fs_sysfs_attr()
-+#   _has_fs_sysfs_dev_attr /dev/mapper/scratch-dev error/fail_at_unmount
-+_has_fs_sysfs_dev_attr()
- {
- 	local dev=$1
- 	local attr=$2
- 
- 	if [ ! -b "$dev" -o -z "$attr" ];then
--		_fail "Usage: _has_fs_sysfs_attr <mounted_device> <attr>"
-+		_fail "Usage: _has_fs_sysfs_dev_attr <mounted_device> <attr>"
- 	fi
- 
- 	local dname=$(_fs_sysfs_dname $dev)
-@@ -5550,10 +5550,10 @@ _has_fs_sysfs_attr()
- #  - attr: path name under /sys/fs/$FSTYP/$dev
- #
- # Usage example:
--#   _require_fs_sysfs_attr /dev/mapper/scratch-dev error/fail_at_unmount
--_require_fs_sysfs_attr()
-+#   _require_fs_sysfs_dev_attr /dev/mapper/scratch-dev error/fail_at_unmount
-+_require_fs_sysfs_dev_attr()
- {
--	_has_fs_sysfs_attr "$@" && return
-+	_has_fs_sysfs_dev_attr "$@" && return
- 
- 	local dev=$1
- 	local attr=$2
-@@ -5571,7 +5571,7 @@ _require_fs_sysfs_attr()
- #   _has_fs_sysfs error/fail_at_unmount
- _has_fs_sysfs()
- {
--	_has_fs_sysfs_attr $TEST_DEV "$@"
-+	_has_fs_sysfs_dev_attr $TEST_DEV "$@"
- }
- 
- # Require the existence of a sysfs entry at /sys/fs/$FSTYP/DEV/$ATTR
-@@ -6302,7 +6302,7 @@ _require_fanotify_ioerrors()
- 		;;
- 	ext4)
- 		# added at the same time as err_report_sec
--		x="$(_get_fs_sysfs_attr $TEST_DEV err_report_sec)"
-+		x="$(_get_fs_sysfs_dev_attr $TEST_DEV err_report_sec)"
- 		test -n "$x" && return 0
- 		;;
- 	f2fs)
-diff --git a/common/sysfs b/common/sysfs
-index 16d4b482..c36ab426 100644
---- a/common/sysfs
-+++ b/common/sysfs
-@@ -61,11 +61,11 @@ _set_sysfs_policy()
- 	shift
- 	local policy=$@
- 
--	_set_fs_sysfs_attr $dev $attr ${policy}
-+	_set_fs_sysfs_dev_attr $dev $attr ${policy}
- 
  	case "$FSTYP" in
- 	btrfs)
--		_get_fs_sysfs_attr $dev $attr | grep -q "[${policy}]"
-+		_get_fs_sysfs_dev_attr $dev $attr | grep -q "[${policy}]"
- 		if [[ $? != 0 ]]; then
- 			echo "Setting sysfs $attr $policy failed"
- 		fi
-@@ -85,7 +85,7 @@ _set_sysfs_policy_must_fail()
- 	shift
- 	local policy=$@
- 
--	_set_fs_sysfs_attr $dev $attr ${policy} | _filter_sysfs_error \
-+	_set_fs_sysfs_dev_attr $dev $attr ${policy} | _filter_sysfs_error \
- 							   | tee -a $seqres.full
- }
- 
-diff --git a/common/xfs b/common/xfs
-index 318b1a3b..8bd144e3 100644
---- a/common/xfs
-+++ b/common/xfs
-@@ -1167,23 +1167,23 @@ _reset_xfs_sysfs_error_handling()
- 		_fail "Usage: reset_xfs_sysfs_error_handling <device>"
- 	fi
- 
--	_set_fs_sysfs_attr $dev error/fail_at_unmount 1
-+	_set_fs_sysfs_dev_attr $dev error/fail_at_unmount 1
- 	echo -n "error/fail_at_unmount="
--	_get_fs_sysfs_attr $dev error/fail_at_unmount
-+	_get_fs_sysfs_dev_attr $dev error/fail_at_unmount
- 
- 	# Make sure all will be configured to retry forever by default, except
- 	# for ENODEV, which is an unrecoverable error, so it will be configured
- 	# to not retry on error by default.
- 	for e in default EIO ENOSPC; do
--		_set_fs_sysfs_attr $dev \
-+		_set_fs_sysfs_dev_attr $dev \
- 				   error/metadata/${e}/max_retries -1
- 		echo -n "error/metadata/${e}/max_retries="
--		_get_fs_sysfs_attr $dev error/metadata/${e}/max_retries
-+		_get_fs_sysfs_dev_attr $dev error/metadata/${e}/max_retries
- 
--		_set_fs_sysfs_attr $dev \
-+		_set_fs_sysfs_dev_attr $dev \
- 				   error/metadata/${e}/retry_timeout_seconds -1
- 		echo -n "error/metadata/${e}/retry_timeout_seconds="
--		_get_fs_sysfs_attr $dev \
-+		_get_fs_sysfs_dev_attr $dev \
- 				   error/metadata/${e}/retry_timeout_seconds
- 	done
- }
-@@ -1226,13 +1226,13 @@ _xfs_prepare_for_eio_shutdown()
- 	_add_dmesg_filter "Internal error"
- 
- 	# Don't retry any writes during the (presumably) post-shutdown unmount
--	_has_fs_sysfs "$ctlfile" && _set_fs_sysfs_attr $dev "$ctlfile" 1
-+	_has_fs_sysfs "$ctlfile" && _set_fs_sysfs_dev_attr $dev "$ctlfile" 1
- 
- 	# Disable retry of metadata writes that fail with EIO
- 	for ctl in max_retries retry_timeout_seconds; do
- 		ctlfile="error/metadata/EIO/$ctl"
- 
--		_has_fs_sysfs "$ctlfile" && _set_fs_sysfs_attr $dev "$ctlfile" 0
-+		_has_fs_sysfs "$ctlfile" && _set_fs_sysfs_dev_attr $dev "$ctlfile" 0
- 	done
- }
- 
-@@ -2149,7 +2149,7 @@ _scratch_xfs_force_no_metadir()
- # do not run on zoned file systems
- _require_xfs_scratch_non_zoned()
- {
--	if _has_fs_sysfs_attr $SCRATCH_DEV "zoned/max_open_zones"; then
-+	if _has_fs_sysfs_dev_attr $SCRATCH_DEV "zoned/max_open_zones"; then
- 		_notrun "Not supported on zoned file systems"
- 	fi
- }
-@@ -2160,12 +2160,12 @@ _require_xfs_scratch_zoned()
- 	local attr="zoned/max_open_zones"
- 	local min_open_zones=$1
- 
--	if ! _has_fs_sysfs_attr $SCRATCH_DEV $attr; then
-+	if ! _has_fs_sysfs_dev_attr $SCRATCH_DEV $attr; then
- 		_notrun "Requires zoned file system"
- 	fi
- 
- 	if [ -n "${min_open_zones}" ]; then
--		local has_open_zones=`_get_fs_sysfs_attr $SCRATCH_DEV $attr`
-+		local has_open_zones=`_get_fs_sysfs_dev_attr $SCRATCH_DEV $attr`
- 
- 		if [ "${min_open_zones}" -gt "${has_open_zones}" ]; then
- 			_notrun "Requires at least ${min_open_zones} open zones"
-diff --git a/tests/btrfs/253 b/tests/btrfs/253
-index a0cc9b55..d8b58f49 100755
---- a/tests/btrfs/253
-+++ b/tests/btrfs/253
-@@ -119,7 +119,7 @@ FIRST_DATA_CHUNK_SIZE_B=$((1024 * 1024 * 1024))
- 
- # For metadata, we are safe to use the exported value, as the default
- # metadata chunk size limit is already smaller than its stripe size.
--FIRST_METADATA_CHUNK_SIZE_B=$(_get_fs_sysfs_attr ${SCRATCH_BDEV} allocation/metadata/chunk_size)
-+FIRST_METADATA_CHUNK_SIZE_B=$(_get_fs_sysfs_dev_attr ${SCRATCH_BDEV} allocation/metadata/chunk_size)
- 
- echo "Orig Data chunk size    = ${FIRST_DATA_CHUNK_SIZE_B}"     >> ${seqres}.full
- echo "Orig Metaata chunk size = ${FIRST_METADATA_CHUNK_SIZE_B}" >> ${seqres}.full
-@@ -138,8 +138,8 @@ alloc_size "Metadata" METADATA_SIZE_START_MB
- echo "Block group Data alloc size     = ${DATA_SIZE_START_MB}MB"     >> $seqres.full
- echo "Block group Metadata alloc size = ${METADATA_SIZE_START_MB}MB" >> $seqres.full
- 
--_set_fs_sysfs_attr ${SCRATCH_BDEV} allocation/data/force_chunk_alloc 1
--_set_fs_sysfs_attr ${SCRATCH_BDEV} allocation/metadata/force_chunk_alloc 1
-+_set_fs_sysfs_dev_attr ${SCRATCH_BDEV} allocation/data/force_chunk_alloc 1
-+_set_fs_sysfs_dev_attr ${SCRATCH_BDEV} allocation/metadata/force_chunk_alloc 1
- 
- alloc_size "Data"     FIRST_DATA_SIZE_MB
- alloc_size "Metadata" FIRST_METADATA_SIZE_MB
-@@ -171,15 +171,15 @@ fi
- echo "Second block group Data alloc size     = ${SECOND_DATA_CHUNK_SIZE_B}"     >> $seqres.full
- echo "Second block group Metadata alloc size = ${SECOND_METADATA_CHUNK_SIZE_B}" >> $seqres.full
- 
--_set_fs_sysfs_attr ${SCRATCH_BDEV} allocation/data/chunk_size ${SECOND_DATA_CHUNK_SIZE_B}
--_set_fs_sysfs_attr ${SCRATCH_BDEV} allocation/metadata/chunk_size ${SECOND_METADATA_CHUNK_SIZE_B}
-+_set_fs_sysfs_dev_attr ${SCRATCH_BDEV} allocation/data/chunk_size ${SECOND_DATA_CHUNK_SIZE_B}
-+_set_fs_sysfs_dev_attr ${SCRATCH_BDEV} allocation/metadata/chunk_size ${SECOND_METADATA_CHUNK_SIZE_B}
- 
--SECOND_DATA_CHUNK_SIZE_READ_B=$(_get_fs_sysfs_attr ${SCRATCH_BDEV} allocation/data/chunk_size)
--SECOND_METADATA_CHUNK_SIZE_READ_B=$(_get_fs_sysfs_attr ${SCRATCH_BDEV} allocation/metadata/chunk_size)
-+SECOND_DATA_CHUNK_SIZE_READ_B=$(_get_fs_sysfs_dev_attr ${SCRATCH_BDEV} allocation/data/chunk_size)
-+SECOND_METADATA_CHUNK_SIZE_READ_B=$(_get_fs_sysfs_dev_attr ${SCRATCH_BDEV} allocation/metadata/chunk_size)
- 
--_set_fs_sysfs_attr ${SCRATCH_BDEV} allocation/data/force_chunk_alloc 1
-+_set_fs_sysfs_dev_attr ${SCRATCH_BDEV} allocation/data/force_chunk_alloc 1
- echo "Allocated data chunk" >> $seqres.full
--_set_fs_sysfs_attr ${SCRATCH_BDEV} allocation/metadata/force_chunk_alloc 1
-+_set_fs_sysfs_dev_attr ${SCRATCH_BDEV} allocation/metadata/force_chunk_alloc 1
- echo "Allocated metadata chunk" >> $seqres.full
- 
- alloc_size "Data"     SECOND_DATA_SIZE_MB
-@@ -210,12 +210,12 @@ echo "Allocation size in bytes = ${THIRD_DATA_CHUNK_SIZE_B}"  >> ${seqres}.full
- # Do allocation until free space is exhausted.
- #
- echo "Third allocation."
--_set_fs_sysfs_attr ${SCRATCH_BDEV} allocation/data/chunk_size ${THIRD_DATA_CHUNK_SIZE_B}
-+_set_fs_sysfs_dev_attr ${SCRATCH_BDEV} allocation/data/chunk_size ${THIRD_DATA_CHUNK_SIZE_B}
- 
- free_space FREE_SPACE_MB
- while [ $FREE_SPACE_MB -gt $THIRD_DATA_CHUNK_SIZE_MB ]; do
- 	alloc_size "Data" THIRD_DATA_SIZE_MB
--	_set_fs_sysfs_attr ${SCRATCH_BDEV} allocation/data/force_chunk_alloc 1
-+	_set_fs_sysfs_dev_attr ${SCRATCH_BDEV} allocation/data/force_chunk_alloc 1
- 
- 	free_space FREE_SPACE_MB
- done
-diff --git a/tests/btrfs/334 b/tests/btrfs/334
-index d81ec921..08b66dc7 100755
---- a/tests/btrfs/334
-+++ b/tests/btrfs/334
-@@ -13,7 +13,7 @@ _begin_fstest auto quick
+ 	"btrfs")
+-		_require_btrfs_fs_feature temp_fsid
++		_require_fs_sysfs_feature_attr temp_fsid
+ 		;;
+ 	"ext4")
+ 		;;
+diff --git a/tests/btrfs/010 b/tests/btrfs/010
+index d27c6dd2..f6114c59 100755
+--- a/tests/btrfs/010
++++ b/tests/btrfs/010
+@@ -23,7 +23,8 @@ _cleanup()
  . ./common/filter
  
  _require_test
--_require_fs_sysfs_attr $TEST_DEV allocation/data/chunk_size
-+_require_fs_sysfs_dev_attr $TEST_DEV allocation/data/chunk_size
+-_require_btrfs_fs_sysfs
++_require_test_sysfs_dev_attr allocation/metadata/bytes_may_use
++_require_test_sysfs_dev_attr allocation/global_rsv_reserved
  
- _verify_sysfs_syntax $TEST_DEV allocation/data/chunk_size 256m
+ # Create 32k extents. All of these extents will be accounted as outstanding and
+ # reserved.
+diff --git a/tests/btrfs/055 b/tests/btrfs/055
+index bd0755d2..5d6fba4b 100755
+--- a/tests/btrfs/055
++++ b/tests/btrfs/055
+@@ -25,7 +25,7 @@ _cleanup()
  
-diff --git a/tests/f2fs/025 b/tests/f2fs/025
-index 6fc18d98..31dd56a8 100755
---- a/tests/f2fs/025
-+++ b/tests/f2fs/025
-@@ -21,7 +21,7 @@ _require_scratch_shutdown
- _require_xfs_io_command "pwrite"
- _require_xfs_io_command "truncate"
- _require_f2fs_io_command gc_urgent
--_require_fs_sysfs_attr $TEST_DEV gc_urgent
-+_require_fs_sysfs_dev_attr $TEST_DEV gc_urgent
- _require_check_dmesg
+ _require_scratch
+ _require_cloner
+-_require_btrfs_fs_feature "no_holes"
++_require_fs_sysfs_feature_attr "no_holes"
+ _require_btrfs_mkfs_feature "no-holes"
  
- # Clear options to avoid interference from external configurations
-diff --git a/tests/xfs/006 b/tests/xfs/006
-index 20fd104b..e03ade1d 100755
---- a/tests/xfs/006
-+++ b/tests/xfs/006
-@@ -38,7 +38,7 @@ _reset_xfs_sysfs_error_handling $DMERROR_DEV
- # errors at unmount time. _fail the test if we fail to set it to 1,
- # because the test probably will hang in such case and block
- # subsequent tests.
--attr=`_get_fs_sysfs_attr $DMERROR_DEV error/fail_at_unmount`
-+attr=`_get_fs_sysfs_dev_attr $DMERROR_DEV error/fail_at_unmount`
- if [ "$attr" != "1" ]; then
- 	_fail "Failed to set error/fail_at_unmount: $attr"
+ test_btrfs_clone_with_holes()
+diff --git a/tests/btrfs/056 b/tests/btrfs/056
+index 08f9aac6..10e676a7 100755
+--- a/tests/btrfs/056
++++ b/tests/btrfs/056
+@@ -29,7 +29,7 @@ _cleanup()
+ 
+ _require_scratch
+ _require_cloner
+-_require_btrfs_fs_feature "no_holes"
++_require_fs_sysfs_feature_attr "no_holes"
+ _require_btrfs_mkfs_feature "no-holes"
+ _require_dm_target flakey
+ 
+diff --git a/tests/btrfs/112 b/tests/btrfs/112
+index 1326b824..5ff5eb73 100755
+--- a/tests/btrfs/112
++++ b/tests/btrfs/112
+@@ -15,7 +15,7 @@ _begin_fstest auto quick clone prealloc compress
+ 
+ _require_scratch
+ _require_cloner
+-_require_btrfs_fs_feature "no_holes"
++_require_fs_sysfs_feature_attr "no_holes"
+ _require_btrfs_mkfs_feature "no-holes"
+ _require_xfs_io_command "falloc"
+ 
+diff --git a/tests/btrfs/131 b/tests/btrfs/131
+index b54b8326..fa9c00ae 100755
+--- a/tests/btrfs/131
++++ b/tests/btrfs/131
+@@ -16,7 +16,7 @@ _begin_fstest auto quick
+ 
+ _require_scratch
+ _require_btrfs_command inspect-internal dump-super
+-_require_btrfs_fs_feature free_space_tree
++_require_fs_sysfs_feature_attr free_space_tree
+ _require_btrfs_v1_cache
+ 
+ _scratch_mkfs >/dev/null 2>&1
+diff --git a/tests/btrfs/165 b/tests/btrfs/165
+index a1099d88..9dc8afab 100755
+--- a/tests/btrfs/165
++++ b/tests/btrfs/165
+@@ -34,7 +34,7 @@ rm_r_subvol() {
+ . ./common/filter
+ 
+ _require_scratch
+-_require_btrfs_fs_feature "rmdir_subvol"
++_require_fs_sysfs_feature_attr "rmdir_subvol"
+ 
+ _scratch_mkfs > /dev/null 2>&1 || _fail "mkfs failed"
+ _scratch_mount
+diff --git a/tests/btrfs/188 b/tests/btrfs/188
+index 6a3e9831..24169040 100755
+--- a/tests/btrfs/188
++++ b/tests/btrfs/188
+@@ -24,7 +24,7 @@ _cleanup()
+ 
+ _require_test
+ _require_scratch
+-_require_btrfs_fs_feature "no_holes"
++_require_fs_sysfs_feature_attr "no_holes"
+ _require_btrfs_mkfs_feature "no-holes"
+ _require_xfs_io_command "fpunch"
+ _require_xfs_io_command "falloc" "-k"
+diff --git a/tests/btrfs/192 b/tests/btrfs/192
+index 56ec2b28..f40ef46e 100755
+--- a/tests/btrfs/192
++++ b/tests/btrfs/192
+@@ -28,7 +28,7 @@ _cleanup()
+ 
+ 
+ _require_command "$BLKDISCARD_PROG" blkdiscard
+-_require_btrfs_fs_feature "no_holes"
++_require_fs_sysfs_feature_attr "no_holes"
+ _require_btrfs_mkfs_feature "no-holes"
+ _require_log_writes
+ _require_scratch
+diff --git a/tests/btrfs/201 b/tests/btrfs/201
+index 50262086..a40bd77b 100755
+--- a/tests/btrfs/201
++++ b/tests/btrfs/201
+@@ -27,7 +27,7 @@ _require_scratch
+ _require_dm_target flakey
+ _require_attrs
+ _require_xfs_io_command "fpunch"
+-_require_btrfs_fs_feature "no_holes"
++_require_fs_sysfs_feature_attr "no_holes"
+ _require_btrfs_mkfs_feature "no-holes"
+ _require_odirect
+ 
+diff --git a/tests/btrfs/205 b/tests/btrfs/205
+index a557ab14..4f5161a6 100755
+--- a/tests/btrfs/205
++++ b/tests/btrfs/205
+@@ -22,7 +22,7 @@ _begin_fstest auto quick clone compress prealloc
+ _require_scratch_reflink
+ _require_xfs_io_command "falloc" "-k"
+ _require_command "$CHATTR_PROG" chattr
+-_require_btrfs_fs_feature "no_holes"
++_require_fs_sysfs_feature_attr "no_holes"
+ _require_btrfs_mkfs_feature "no-holes"
+ # We want to create a compressed inline extent representing 4K of data for file
+ # foo1 and then clone it into a file without compression, and since compression
+diff --git a/tests/btrfs/209 b/tests/btrfs/209
+index bd98b635..10876731 100755
+--- a/tests/btrfs/209
++++ b/tests/btrfs/209
+@@ -26,7 +26,7 @@ _cleanup()
+ 
+ _require_scratch
+ _require_dm_target flakey
+-_require_btrfs_fs_feature "no_holes"
++_require_fs_sysfs_feature_attr "no_holes"
+ _require_btrfs_mkfs_feature "no-holes"
+ _require_xfs_io_command "sync_range"
+ 
+diff --git a/tests/btrfs/211 b/tests/btrfs/211
+index 38dbadf9..3a8b22a1 100755
+--- a/tests/btrfs/211
++++ b/tests/btrfs/211
+@@ -27,7 +27,7 @@ _require_scratch
+ _require_xfs_io_command "falloc" "-k"
+ # fiemap needed by _count_extents()
+ _require_xfs_io_command "fiemap"
+-_require_btrfs_fs_feature "no_holes"
++_require_fs_sysfs_feature_attr "no_holes"
+ _require_btrfs_mkfs_feature "no-holes"
+ _require_dm_target flakey
+ 
+diff --git a/tests/btrfs/219 b/tests/btrfs/219
+index 052f61a3..358cccb4 100755
+--- a/tests/btrfs/219
++++ b/tests/btrfs/219
+@@ -47,7 +47,6 @@ loop_dev2=""
+ 
+ _require_test
+ _require_loop
+-_require_btrfs_fs_sysfs
+ _require_btrfs_forget_or_module_loadable
+ _fixed_by_kernel_commit 5f58d783fd78 \
+ 	"btrfs: free device in btrfs_close_devices for a single device filesystem"
+@@ -91,7 +90,7 @@ _btrfs_forget_or_module_reload
+ 
+ _mount $loop_dev1 $loop_mnt1 > /dev/null 2>&1 || \
+ 	_fail "Failed to mount the third time"
+-if ! _has_btrfs_sysfs_feature_attr temp_fsid; then
++if ! _has_fs_sysfs_feature_attr temp_fsid; then
+ 	_mount $loop_dev2 $loop_mnt2 > /dev/null 2>&1 && \
+ 		_fail "We were allowed to mount when we should have failed"
  fi
-diff --git a/tests/xfs/177 b/tests/xfs/177
-index 8d23f66d..38b68a7d 100755
---- a/tests/xfs/177
-+++ b/tests/xfs/177
-@@ -51,7 +51,7 @@ _require_scratch
- _require_fs_sysfs stats/stats
+diff --git a/tests/btrfs/231 b/tests/btrfs/231
+index 5ebb2fdd..9e7f3eb1 100755
+--- a/tests/btrfs/231
++++ b/tests/btrfs/231
+@@ -25,7 +25,7 @@ _cleanup()
+ . ./common/dmflakey
  
- count_xfs_inode_objs() {
--	_get_fs_sysfs_attr $SCRATCH_DEV stats/stats | awk '/vnodes/ {print $2}'
-+	_get_fs_sysfs_dev_attr $SCRATCH_DEV stats/stats | awk '/vnodes/ {print $2}'
+ _require_scratch
+-_require_btrfs_fs_feature "no_holes"
++_require_fs_sysfs_feature_attr "no_holes"
+ _require_btrfs_mkfs_feature "no-holes"
+ _require_dm_target flakey
+ 
+diff --git a/tests/btrfs/285 b/tests/btrfs/285
+index d8a70572..fb4b4e1f 100755
+--- a/tests/btrfs/285
++++ b/tests/btrfs/285
+@@ -15,7 +15,6 @@ sysfs_size_classes() {
  }
  
- dump_debug_info() {
-diff --git a/tests/xfs/264 b/tests/xfs/264
-index a6e816d3..c8a2f714 100755
---- a/tests/xfs/264
-+++ b/tests/xfs/264
-@@ -39,12 +39,12 @@ do_test()
- 	_dmerror_mount
- 	_reset_xfs_sysfs_error_handling $DMERROR_DEV
- 	# Disable fail_at_unmount before test EIO error handling
--	_set_fs_sysfs_attr $DMERROR_DEV error/fail_at_unmount 0
-+	_set_fs_sysfs_dev_attr $DMERROR_DEV error/fail_at_unmount 0
- 	echo -n "error/fail_at_unmount="
--	_get_fs_sysfs_attr $DMERROR_DEV error/fail_at_unmount
-+	_get_fs_sysfs_dev_attr $DMERROR_DEV error/fail_at_unmount
+ _require_scratch
+-_require_btrfs_fs_sysfs
+ _require_test_sysfs_dev_attr allocation/data/size_classes
  
--	_set_fs_sysfs_attr $DMERROR_DEV $attr 1
--	num=`_get_fs_sysfs_attr $DMERROR_DEV $attr`
-+	_set_fs_sysfs_dev_attr $DMERROR_DEV $attr 1
-+	num=`_get_fs_sysfs_dev_attr $DMERROR_DEV $attr`
- 	echo "$attr=$num"
- 	# _fail the test if we fail to set $attr to 1, because the test
- 	# probably will hang in such case and block subsequent tests.
-diff --git a/tests/xfs/668 b/tests/xfs/668
-index 940a6a38..900099e8 100755
---- a/tests/xfs/668
-+++ b/tests/xfs/668
-@@ -36,7 +36,7 @@ done
- # remount read-only and set the gc limit to free up unused space
- _scratch_remount ro
- rt_available_pre="$(_xfs_get_user_available_rt_blocks "$SCRATCH_MNT")"
--_set_fs_sysfs_attr $SCRATCH_DEV "zoned/zonegc_low_space" 100
-+_set_fs_sysfs_dev_attr $SCRATCH_DEV "zoned/zonegc_low_space" 100
+ f="$SCRATCH_MNT/f"
+diff --git a/tests/btrfs/296 b/tests/btrfs/296
+index 0baf89c0..19e3fdea 100755
+--- a/tests/btrfs/296
++++ b/tests/btrfs/296
+@@ -14,14 +14,8 @@ _require_scratch_dev_pool 3
+ _fixed_by_kernel_commit b7625f461da6 \
+ 	"btrfs: sysfs: update fs features directory asynchronously"
  
- # reclaiming a zone with 5% used blocks should take way less than 1 second
- sleep 1
-@@ -46,14 +46,14 @@ rt_available_post="$(_xfs_get_user_available_rt_blocks "$SCRATCH_MNT")"
- [ "$rt_available_post" -gt "$rt_available_pre" ] && \
- 	_fail "gc should not run while read only"
+-# We need the global features support
+-_require_btrfs_fs_sysfs
+-
+-global_features="/sys/fs/btrfs/features"
+ # Make sure we have support RAID1C34 first
+-if [ ! -f "${global_features}/raid1c34" ]; then
+-	_notrun "no RAID1C34 support"
+-fi
++_require_fs_sysfs_feature_attr raid1c34
  
--_set_fs_sysfs_attr $SCRATCH_DEV "zoned/zonegc_low_space" 0
-+_set_fs_sysfs_dev_attr $SCRATCH_DEV "zoned/zonegc_low_space" 0
+ _scratch_dev_pool_get 3
  
- # remount rw and check that gc starts, frees up blocks and stops after
- # the threshold is set to reclaim the unused blocks
- _scratch_remount rw
+diff --git a/tests/btrfs/304 b/tests/btrfs/304
+index 18f73590..ec165a21 100755
+--- a/tests/btrfs/304
++++ b/tests/btrfs/304
+@@ -16,8 +16,8 @@ _begin_fstest auto quick raid remount volume raid-stripe-tree
+ _require_btrfs_command inspect-internal dump-tree
+ _require_btrfs_mkfs_feature "raid-stripe-tree"
+ _require_scratch_dev_pool 4
+-_require_btrfs_fs_feature "raid_stripe_tree"
+-_require_btrfs_fs_feature "free_space_tree"
++_require_fs_sysfs_feature_attr "raid_stripe_tree"
++_require_fs_sysfs_feature_attr "free_space_tree"
+ _require_btrfs_free_space_tree
+ _require_btrfs_no_compress
+ _require_btrfs_support_sectorsize 4096
+diff --git a/tests/btrfs/305 b/tests/btrfs/305
+index 45747627..ddb3a8ee 100755
+--- a/tests/btrfs/305
++++ b/tests/btrfs/305
+@@ -17,8 +17,8 @@ _begin_fstest auto quick raid remount volume raid-stripe-tree
+ _require_btrfs_command inspect-internal dump-tree
+ _require_btrfs_mkfs_feature "raid-stripe-tree"
+ _require_scratch_dev_pool 4
+-_require_btrfs_fs_feature "raid_stripe_tree"
+-_require_btrfs_fs_feature "free_space_tree"
++_require_fs_sysfs_feature_attr "raid_stripe_tree"
++_require_fs_sysfs_feature_attr "free_space_tree"
+ _require_btrfs_free_space_tree
+ _require_btrfs_no_compress
+ _require_btrfs_support_sectorsize 4096
+diff --git a/tests/btrfs/306 b/tests/btrfs/306
+index db3defc8..ebc21190 100755
+--- a/tests/btrfs/306
++++ b/tests/btrfs/306
+@@ -17,8 +17,8 @@ _begin_fstest auto quick raid remount volume raid-stripe-tree
+ _require_btrfs_command inspect-internal dump-tree
+ _require_btrfs_mkfs_feature "raid-stripe-tree"
+ _require_scratch_dev_pool 4
+-_require_btrfs_fs_feature "raid_stripe_tree"
+-_require_btrfs_fs_feature "free_space_tree"
++_require_fs_sysfs_feature_attr "raid_stripe_tree"
++_require_fs_sysfs_feature_attr "free_space_tree"
+ _require_btrfs_free_space_tree
+ _require_btrfs_no_compress
+ _require_btrfs_support_sectorsize 4096
+diff --git a/tests/btrfs/307 b/tests/btrfs/307
+index 02a9d4d3..552fdf19 100755
+--- a/tests/btrfs/307
++++ b/tests/btrfs/307
+@@ -16,8 +16,8 @@ _begin_fstest auto quick raid remount volume raid-stripe-tree
+ _require_btrfs_command inspect-internal dump-tree
+ _require_btrfs_mkfs_feature "raid-stripe-tree"
+ _require_scratch_dev_pool 4
+-_require_btrfs_fs_feature "raid_stripe_tree"
+-_require_btrfs_fs_feature "free_space_tree"
++_require_fs_sysfs_feature_attr "raid_stripe_tree"
++_require_fs_sysfs_feature_attr "free_space_tree"
+ _require_btrfs_free_space_tree
+ _require_btrfs_no_compress
  
- rt_available_pre="$(_xfs_get_user_available_rt_blocks "$SCRATCH_MNT")"
--_set_fs_sysfs_attr $SCRATCH_DEV "zoned/zonegc_low_space" 100
-+_set_fs_sysfs_dev_attr $SCRATCH_DEV "zoned/zonegc_low_space" 100
+diff --git a/tests/btrfs/308 b/tests/btrfs/308
+index c4ccaa0f..9fab9795 100755
+--- a/tests/btrfs/308
++++ b/tests/btrfs/308
+@@ -17,8 +17,8 @@ _begin_fstest auto quick raid remount volume raid-stripe-tree
+ _require_btrfs_command inspect-internal dump-tree
+ _require_btrfs_mkfs_feature "raid-stripe-tree"
+ _require_scratch_dev_pool 4
+-_require_btrfs_fs_feature "raid_stripe_tree"
+-_require_btrfs_fs_feature "free_space_tree"
++_require_fs_sysfs_feature_attr "raid_stripe_tree"
++_require_fs_sysfs_feature_attr "free_space_tree"
+ _require_btrfs_free_space_tree
+ _require_btrfs_no_compress
+ _require_btrfs_no_nodatacow
+diff --git a/tests/btrfs/311 b/tests/btrfs/311
+index 9ac997db..81d57da1 100755
+--- a/tests/btrfs/311
++++ b/tests/btrfs/311
+@@ -24,7 +24,7 @@ _cleanup()
  
- i=0
- while [ $(_xfs_get_rt_gc_required "$SCRATCH_MNT") -eq "1" ]; do
-diff --git a/tests/xfs/669 b/tests/xfs/669
-index 25e3f04a..c9c5bc79 100755
---- a/tests/xfs/669
-+++ b/tests/xfs/669
-@@ -35,7 +35,7 @@ $MKFS_XFS_PROG -b size=${bsize} -r zoned=1,rgsize=${blocks}b \
- _mount $SCRATCH_DEV $SCRATCH_MNT -o max_open_zones=${open_zones} || \
- 	_notrun "Zoned allocator not supported"
+ _require_cp_reflink
+ _require_scratch
+-_require_btrfs_fs_feature temp_fsid
++_require_fs_sysfs_feature_attr temp_fsid
  
--_has_fs_sysfs_attr $SCRATCH_DEV zoned/nr_open_zones || \
-+_has_fs_sysfs_dev_attr $SCRATCH_DEV zoned/nr_open_zones || \
- 	_notrun "This test requires /sys/fs/${FSTYP}/$SCRATCH_DEV/zoned/nr_open_zones"
+ mnt1=$TEST_DIR/$seq/mnt1
+ mkdir -p $mnt1
+diff --git a/tests/btrfs/313 b/tests/btrfs/313
+index 7d09aaad..4729d2a4 100755
+--- a/tests/btrfs/313
++++ b/tests/btrfs/313
+@@ -22,7 +22,7 @@ _cleanup()
  
- for i in $(seq 1 $nr_files); do
-@@ -51,8 +51,8 @@ done
- _scratch_unmount
- _mount $SCRATCH_DEV $SCRATCH_MNT -o max_open_zones=${open_zones}
+ _require_cp_reflink
+ _require_scratch_dev_pool 2
+-_require_btrfs_fs_feature temp_fsid
++_require_fs_sysfs_feature_attr temp_fsid
  
--max_open=$(_get_fs_sysfs_attr $SCRATCH_DEV zoned/max_open_zones)
--nr_open=$(_get_fs_sysfs_attr $SCRATCH_DEV zoned/nr_open_zones)
-+max_open=$(_get_fs_sysfs_dev_attr $SCRATCH_DEV zoned/max_open_zones)
-+nr_open=$(_get_fs_sysfs_dev_attr $SCRATCH_DEV zoned/nr_open_zones)
+ _scratch_dev_pool_get 2
  
- if [ ${max_open} -ne $((open_zones - 1)) ]; then
- 	_fail "Test needs adjustments for multiple open GC zones"
-diff --git a/tests/xfs/670 b/tests/xfs/670
-index 9b248d96..a9df3deb 100755
---- a/tests/xfs/670
-+++ b/tests/xfs/670
-@@ -36,7 +36,7 @@ $XFS_GROWFS_PROG $SCRATCH_MNT -R $((2 * rblocks)) >> $seqres.full 2>&1 || \
- # For zoned file systems, check that the growfs did increase the available free
- # zones.  This avoids a hang on unfixed kernels when filling later.
- free_zones_post=$(_xfs_get_mountstat $SCRATCH_MNT "free zones:")
--if _has_fs_sysfs_attr $SCRATCH_DEV "zoned/max_open_zones"; then
-+if _has_fs_sysfs_dev_attr $SCRATCH_DEV "zoned/max_open_zones"; then
- 	if [ "$free_zones_pre" == "$free_zones_post" ]; then
- 		_fail "growfs did not increase free zones"
- 	fi
+diff --git a/tests/btrfs/314 b/tests/btrfs/314
+index 01646157..8f4dfd82 100755
+--- a/tests/btrfs/314
++++ b/tests/btrfs/314
+@@ -22,7 +22,7 @@ _cleanup()
+ . ./common/filter.btrfs
+ 
+ _require_scratch_dev_pool 2
+-_require_btrfs_fs_feature temp_fsid
++_require_fs_sysfs_feature_attr temp_fsid
+ 
+ _scratch_dev_pool_get 2
+ 
+diff --git a/tests/btrfs/315 b/tests/btrfs/315
+index b9fdba6a..74574bdd 100755
+--- a/tests/btrfs/315
++++ b/tests/btrfs/315
+@@ -21,7 +21,7 @@ _cleanup()
+ . ./common/filter
+ 
+ _require_scratch_dev_pool 3
+-_require_btrfs_fs_feature temp_fsid
++_require_fs_sysfs_feature_attr temp_fsid
+ 
+ _scratch_dev_pool_get 3
+ 
+diff --git a/tests/btrfs/342 b/tests/btrfs/342
+index e88b47e0..96446640 100755
+--- a/tests/btrfs/342
++++ b/tests/btrfs/342
+@@ -13,7 +13,7 @@ _begin_fstest auto quick
+ 
+ _require_scratch
+ _require_btrfs_command inspect-internal dump-super
+-_require_btrfs_fs_feature free_space_tree
++_require_fs_sysfs_feature_attr free_space_tree
+ 
+ # The block-group-tree feature relies on v2 cache, thus it doesn't support
+ # "nospace_cache" mount option.
+diff --git a/tests/btrfs/352 b/tests/btrfs/352
+index 1d40c09c..9551f3d4 100755
+--- a/tests/btrfs/352
++++ b/tests/btrfs/352
+@@ -14,7 +14,7 @@ _begin_fstest auto quick remount
+ _fixed_by_kernel_commit XXXXXXXXXXXX \
+ 	"btrfs: fix leaking BTRFS_FS_STATE_REMOUNTING flag"
+ 
+-_require_btrfs_fs_feature supported_rescue_options
++_require_fs_sysfs_feature_attr supported_rescue_options
+ 
+ if ! grep -q "ignorebadroots" "/sys/fs/btrfs/features/supported_rescue_options"; then
+ 	_notrun "\"rescue=ignorebadroots\" mount option not supported"
+diff --git a/tests/btrfs/363 b/tests/btrfs/363
+index 60140933..755234c2 100755
+--- a/tests/btrfs/363
++++ b/tests/btrfs/363
+@@ -24,7 +24,7 @@ _cleanup()
+ . ./common/dmflakey
+ 
+ _require_btrfs_mkfs_feature "raid-stripe-tree"
+-_require_btrfs_fs_feature "raid_stripe_tree"
++_require_fs_sysfs_feature_attr "raid_stripe_tree"
+ _require_scratch
+ _require_dm_target flakey
+ 
+diff --git a/tests/generic/098 b/tests/generic/098
+index ff6cf908..ff003f60 100755
+--- a/tests/generic/098
++++ b/tests/generic/098
+@@ -24,7 +24,7 @@ _require_scratch
+ # feature is enabled (introduced in kernel 3.14). So enable the feature if the
+ # fs being tested is btrfs.
+ if [ $FSTYP == "btrfs" ]; then
+-	_require_btrfs_fs_feature "no_holes"
++	_require_fs_sysfs_feature_attr "no_holes"
+ 	_require_btrfs_mkfs_feature "no-holes"
+ 	MKFS_OPTIONS="$MKFS_OPTIONS -O no-holes"
+ fi
+diff --git a/tests/generic/101 b/tests/generic/101
+index 31660277..e51be5b5 100755
+--- a/tests/generic/101
++++ b/tests/generic/101
+@@ -32,7 +32,7 @@ _require_dm_target flakey
+ # feature is enabled (introduced in kernel 3.14). So enable the feature if the
+ # fs being tested is btrfs.
+ if [ $FSTYP == "btrfs" ]; then
+-	_require_btrfs_fs_feature "no_holes"
++	_require_fs_sysfs_feature_attr "no_holes"
+ 	_require_btrfs_mkfs_feature "no-holes"
+ 	MKFS_OPTIONS="$MKFS_OPTIONS -O no-holes"
+ fi
 -- 
 2.56.0
 
