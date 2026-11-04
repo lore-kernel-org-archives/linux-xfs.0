@@ -1,59 +1,54 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793821600;
-	b=C9Cm4DIKIz1ENq+dyQJQbWIWCrrn5LBbHpxeObt2/kjwVtCJ+CN5sGrly5mkpDowAmwt
-	 HYYcaYZBYHASE06Jq7Zj4HiqRwwJ5ybtHDkZ8MjJgbasmwf6oUUpTg1Ep5a1d9ftXKgGC
-	 3MHznVSrM2xQr8vXpl9Ah5+NAHcCT+bkxhTYO5VJaYNNGfdSjPALb5XYFr578AFjqoskg
-	 m7YctVFHeoMf9sci+KnL8swnnqwGn4Ak+lWbGzPMYwNlk4+xkzoggmYY+aukDpnouGhKR
-	 dNh5hAuvGYC7Y+KjLcf6DWXkMG4RQd3/1oiPeT7JZgcoh7/+n38IqatK5YQFPCbjF1g==
+	t=1793826263;
+	b=FsXaX6C2GjbrK47RpwHiX2WZehLVf3AXVs5Vsiw9PWv8TLyQbAYqjybD0SkY2WDF+rV2
+	 /6fWT8mQe3dQq0LxFH9t+6rYdIsi/VhjbuhcCgi6t2oIHUs8m8LzOH4bdN6EUneE0THOY
+	 jibUGrszLdvyIvB9ewwCVReAbtPW7JSJSn4ZG2nrF2nw5qGQWINmT2Um1x8dtJ3kCeE3q
+	 oSHumKgmvt4VZ1XngSDsLCMgs2H7AHh/q3V1p6MA9EPdXqri77VaPp4DPsRs6pyQchcUI
+	 LGgLDXiwQ8Ttfnfbxl7mSvd3MNJ67Pz+4iV46XJj28QE8PaTrfZ0MwiTTSbHpjnNOjg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793821600;
-	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=nLWgWt4BnslkaMJq2Nml0U4unW/O/XancfYoUJ4qlpY=;
-	b=PeikUnhPSsLUMrxudoZEnLXtWYrjiPsxK+pwlWsDkzkMy0tBfBL8ko5uras6eE5yVpiz
-	 1HOprFz3WFchHLA+A6ArLkIPV9LZePvUJtaT1oWoraNu0AWX1f5SCywv51LQKT1GrSB39
-	 xVgrMn5YLFaqlKHZtX73NMv3mAKDORq6fFLCz6fqRt4zlUUQVGEvAOREAb1dFyg6JM+MW
-	 1Onk1RxAY+vfD9KXjABLtuzneg0KyGZSCuSgwjzZN538KdTpWSChhHNhuemCWmE/k5cH4
-	 6HCeX139Hu2HujFhw/e0y+j/P2B93jNGW5dDBU9dU7XJMvuq9i8eNNZG/RXdaAFfpkw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793826263;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=dwtFWN/4cYJVMt8Xf3Mo9Ioh5U7rpzYxYFROJxRMYWM=;
+	b=bNm5ATlra8i4XkLtPo3Pxiknqq4y6Tj5kpfAfzmrIIGRyxTqHIZgG+qms275OK6CqeZx
+	 S8VV/GiGBgAfDrnKL0X9/roXGnU8rFJxTzx0EKtAR9/1Sk7hgV0jpNaoy0Us9A/+ksj9L
+	 2Mh6siwzOLf/VOETV15EGmbnmg5MFhxHCA8rk3HGhKDeQzmn42c3gRlUiAPDV1YzqlZaP
+	 HTkxuVYY7+DmXyGElPNEhLGx25aVNjQ5seObhHoIeZbhUj52jLM57t9caZKZM8h0XLRC8
+	 TgPDXFDqghQF2NCdGliVWK0A6E81RQHHO08G79udTIFQGmWRpxdieXlR7cmViFHJyGw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=JV8zWonE;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OzDkMIbv;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F208606AE24;
-	Wed,  4 Nov 2026 19:46:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A2EE606D4C7
+	for <linux-xfs@vger.kernel.org>; Wed,  4 Nov 2026 21:04:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=JV8zWonE
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4DF741F00A16;
-	Wed,  4 Nov 2026 19:46:38 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OzDkMIbv
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 576D71F00A15;
+	Wed,  4 Nov 2026 21:04:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793821600;
-	bh=nLWgWt4BnslkaMJq2Nml0U4unW/O/XancfYoUJ4qlpY=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=JV8zWonEqR4h/SA8OGbd0OSvNnOISgTde/PJZyQvV1QYh4hIfYDy6ZUo3B/Tsa7zS
-	 KRnPzr0RRgpZaOo3XRH9Ca6/X1rXXlfmG42parV4Tii1FPjJF7/17Et/xBBEuGDeDe
-	 7TYoSGkCtI07xrLzEX4p+1MoUXAYaWShcL0vimgdoVfQ9lF+4WWgJJ3M5MlqDATX1x
-	 nfE2/ikrKF0aXkVED6MPX7LDtqUR7TMLZuXVw2c+EoMTlkzeJegvDNBCT0keEmtRPs
-	 +Me/+ExzC7K3eVvS41POcZA5uk5r9XRL3lRh3a6P/frCL8jNfLH52V05V5KeQTFrB7
-	 3npT5IofCfN3w==
-From: Andrey Albershteyn <aalbersh@kernel.org>
-To: ebiggers@kernel.org,
-	hch@lst.de,
-	fsverity@lists.linux.dev
-Cc: Andrey Albershteyn <aalbersh@kernel.org>,
-	linux-xfs@vger.kernel.org,
-	linux-btrfs@vger.kernel.org,
-	linux-f2fs-devel@lists.sourceforge.net,
-	linux-ext4@vger.kernel.org
-Subject: [PATCH 2/5] fsverity: add I_VERITY_BUILDING inode state flag
-Date: Wed,  4 Nov 2026 20:46:11 +0100
-Message-ID: <20261104194618.103332-3-aalbersh@kernel.org>
-X-Mailer: git-send-email 2.54.0
-In-Reply-To: <20261104194618.103332-1-aalbersh@kernel.org>
-References: <20261104194618.103332-1-aalbersh@kernel.org>
+	s=k20260515; t=1793826263;
+	bh=dwtFWN/4cYJVMt8Xf3Mo9Ioh5U7rpzYxYFROJxRMYWM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=OzDkMIbvGTnoEMnghYENinasEEJkRAIqM2EgSCb/J47yElbmKIEaMW9Cx71A1dWO1
+	 fHpDCEe3qHXwkC/ETayM95REVSJmn8V7cmMMK0hEWLCck+L8Ler1yNQJKSOnXYQ443
+	 +vNB48G7RkqzsoWk4r3N+msbJNIpOvQktRvlDyx+1iNUf6/W1jRpRwhmw9/x6t/B3o
+	 sPq3fgDqTW104QrJY9wo5ANPoOt5uh+tA0y9fWJk3mo8u2gMKXoRFimg+aB3koIoPR
+	 WlAsGcZmxCv5v/1r3Ml8pDwCJrZf9+dJvneDTLNVQHsScFFvminfrwAOM8tPb4BKUO
+	 Z4zmlSyZxqptg==
+Date: Thu, 5 Nov 2026 08:04:15 +1100
+From: Dave Chinner <dgc@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Lauri Gates <lauri.gates@gmail.com>, linux-xfs@vger.kernel.org,
+	Carlos Maiolino <cem@kernel.org>
+Subject: Re: Concurrent FIEMAP on reflinked files serialises on the AGF
+ buffer lock
+Message-ID: <auudz7Iwm2MrNA-b@dread>
+References: <20261102193533.93690-1-lauri.gates@gmail.com>
+ <aulwLCnibXfaMzR_@infradead.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -63,145 +58,80 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aulwLCnibXfaMzR_@infradead.org>
 
-Every filesystem that supports fs-verity keeps a private runtime inode
-flag meaning Merkle tree is currently being built *_VERITY_IN_PROGRESS.
-They all serve the same two purposes: reject a concurrent enable with
--EBUSY and let the write paths recognize the special writes done while
-the tree is under construction.
+On Mon, Nov 02, 2026 at 09:25:00PM -0800, Christoph Hellwig wrote:
+> Hi Lauri,
+> 
+> On Mon, Nov 02, 2026 at 09:32:45PM +0200, Lauri Gates wrote:
+> > Hi,
+> > 
+> > FIEMAP on files with XFS_DIFLAG2_REFLINK set does not scale across
+> > threads. For every written extent, xfs_read_iomap_begin() calls
+> > xfs_reflink_trim_around_shared() (IOMAP_REPORT), which goes to
+> > xfs_reflink_find_shared() and reads the AGF of the extent's AG with
+> > xfs_alloc_read_agf(pag, NULL, 0, &agbp). Concurrent callers queue on
+> > that buffer's b_sema. A parallel du-style scan of a reflinked tree
+> > stops scaling at roughly the AG count, and threads working in the same
+> > AG run slower than one thread alone.
+> 
+> FIEMAP is purely a debug interface for file system developers.  So
+> running it in parallel for lots of files is highly unexpected and
+> suggests a misuse of the interface.
+> 
+> > My question, in more detail at the end: does reporting the shared flag
+> > for FIEMAP need the AGF buffer locked?
 
-Hoist this flag into the VFS as a new inode state flag,
-I_VERITY_BUILDING, and manage its lifetime in the generic fs-verity
-enable path. The flag is set after ->begin_enable_verity() succeeds and
-cleared after ->end_enable_verity() returns (both on the success and the
-rollback paths). Add the concurrent-enable guard.
+The problem is that we don't have a 'this inode has shared extents'
+flag in the file_getattr() flag set, hence there is no easy way to
+query if the inode may or may not have shared extents in it. That
+would be trivial to add, and would avoid the need to FIEMAP every
+single file in the fs to check for shared extents...
 
-A new helper, fsverity_is_building(), is provided for filesystems to
-query the flag. No filesystem uses it yet; the per-fs flags are
-converted in following patches.
+> It needs to protect against agf_refcount_level changing, so yes.
+> In theory it would be fine with a shared lock on the AGF buffer if
+> we had a shared/exclusive lock on the buffers (which is something
+> I've wondered about a few times before), or some other high-level
+> synchronization against adding more reflinks.
+> 
+> > I ran into this adding a shared-block mode to dust, a du clone, which
+> > FIEMAPs every file and counts FIEMAP_EXTENT_SHARED extents once.
+> > Inodes without the reflink flag return early and are unaffected.
+> 
+> Ok, so this is the use case.  The more efficient way to do this
+> would be to subtract the multiple mapped extents based on the
+> refcount btree, i.e.
+> 
+> 	for each AG (and RTG with rtreflink):
+> 		for each entry in the (rt)refcountbt:
+> 			subtract rc_blockcount * (rc_refcount - 1);
+> 
+> We'd need a new ioctl for that, but it should be pretty easy.
+> The major downside is that this only works for whole-device du,
+> but then also any other version would have a really hard time figuring
+> out what to do with reflinks the span the reported/not reported
+> boundary.
 
-Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
----
- fs/verity/enable.c       | 22 +++++++++++++++++++---
- include/linux/fs.h       |  6 ++++++
- include/linux/fsverity.h | 21 +++++++++++++++++++++
- 3 files changed, 46 insertions(+), 3 deletions(-)
+Efficient ad hoc physical extent status querying is what the
+GETFSMAP ioctl is supposed to provide, right?
 
-diff --git a/fs/verity/enable.c b/fs/verity/enable.c
-index fe8493280b77..65d3571c62b5 100644
---- a/fs/verity/enable.c
-+++ b/fs/verity/enable.c
-@@ -229,13 +229,23 @@ static int enable_verity(struct file *filp,
- 
- 	/*
- 	 * Start enabling verity on this file, serialized by the inode lock.
--	 * Fail if verity is already enabled or is already being enabled.
-+	 * Fail if verity is already enabled or is already being enabled. Set
-+	 * I_VERITY_BUILDING inode runtime flag which will be cleared when
-+	 * enablement succeeded or rolled back.
- 	 */
- 	inode_lock(inode);
--	if (IS_VERITY(inode))
-+	if (IS_VERITY(inode)) {
- 		err = -EEXIST;
--	else
-+	} else if (inode_state_read_once(inode) & I_VERITY_BUILDING) {
-+		err = -EBUSY;
-+	} else {
- 		err = vops->begin_enable_verity(filp);
-+		if (!err) {
-+			spin_lock(&inode->i_lock);
-+			inode_state_set(inode, I_VERITY_BUILDING);
-+			spin_unlock(&inode->i_lock);
-+		}
-+	}
- 	inode_unlock(inode);
- 	if (err)
- 		goto out;
-@@ -291,6 +301,9 @@ static int enable_verity(struct file *filp,
- 	 */
- 	inode_lock(inode);
- 	err = vops->end_enable_verity(filp, desc, desc_size, params.tree_size);
-+	spin_lock(&inode->i_lock);
-+	inode_state_clear(inode, I_VERITY_BUILDING);
-+	spin_unlock(&inode->i_lock);
- 	inode_unlock(inode);
- 	if (err) {
- 		fsverity_err(inode, "%ps() failed with err %d",
-@@ -317,6 +330,9 @@ static int enable_verity(struct file *filp,
- rollback:
- 	inode_lock(inode);
- 	(void)vops->end_enable_verity(filp, NULL, 0, params.tree_size);
-+	spin_lock(&inode->i_lock);
-+	inode_state_clear(inode, I_VERITY_BUILDING);
-+	spin_unlock(&inode->i_lock);
- 	inode_unlock(inode);
- 	goto out;
- }
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 99caef43ff3c..7c90ce09f797 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -707,6 +707,11 @@ is_uncached_acl(struct posix_acl *acl)
-  * I_LRU_ISOLATING	Inode is pinned being isolated from LRU without holding
-  *			i_count.
-  *
-+ * I_VERITY_BUILDING	fs-verity is being enabled on the inode: the Merkle
-+ *			tree is under construction.  The file is effectively
-+ *			read-only to userspace; the only writes happening are
-+ *			for the fs-verity metadata.
-+ *
-  * Q: What is the difference between I_WILL_FREE and I_FREEING?
-  *
-  * __I_{SYNC,NEW,LRU_ISOLATING} are used to derive unique addresses to wait
-@@ -741,6 +746,7 @@ enum inode_state_flags_enum {
- 	I_SYNC_QUEUED		= (1U << 17),
- 	I_PINNING_NETFS_WB	= (1U << 18),
- 	I_METADATA_WRITEBACK	= (1U << 19),
-+	I_VERITY_BUILDING	= (1U << 20),
- };
- 
- #define I_DIRTY_INODE (I_DIRTY_SYNC | I_DIRTY_DATASYNC)
-diff --git a/include/linux/fsverity.h b/include/linux/fsverity.h
-index 61fe96ccdff6..c72edec57e30 100644
---- a/include/linux/fsverity.h
-+++ b/include/linux/fsverity.h
-@@ -164,6 +164,22 @@ static inline bool fsverity_active(const struct inode *inode)
- 	return false;
- }
- 
-+/**
-+ * fsverity_is_building() - is fs-verity being enabled on the inode
-+ * @inode: inode to check
-+ *
-+ * This checks whether the inode's Merkle tree is currently being built.
-+ * While this is the case the file is read-only to userspace and the only writes
-+ * allowed are for the fs-verity metadata. This becomes false when fsverity
-+ * metadata is fully created and written to disk or building failed.
-+ *
-+ * Return: true if fs-verity is being enabled on the inode
-+ */
-+static inline bool fsverity_is_building(const struct inode *inode)
-+{
-+	return inode_state_read_once((struct inode *)inode) & I_VERITY_BUILDING;
-+}
-+
- struct fsverity_info *__fsverity_get_info(const struct inode *inode);
- /**
-  * fsverity_get_info - get fsverity information for an inode
-@@ -217,6 +233,11 @@ static inline bool fsverity_active(const struct inode *inode)
- 	return false;
- }
- 
-+static inline bool fsverity_is_building(const struct inode *inode)
-+{
-+	return false;
-+}
-+
- static inline struct fsverity_info *fsverity_get_info(const struct inode *inode)
- {
- 	return NULL;
+The owner of an physical extent is part of the input key filters, so
+it extending the implementation to filter extents by owner field
+would allow arbitrary per-file extent map lookups. e.g.
+functionality like "report only shared extents for a given inode
+number range" is well within the functional scope of this interface.
+
+That allows dust to fstat a file to get the total block count and
+inode number, call file_getattr() to see if the file has shared
+extents, and then use fsmap to efficiently query the exact shared
+extent list for that inode and so calculate the shared block count
+for that inode number....
+
+Cheers,
+
+Dave.
 -- 
-2.54.0
-
+Dave Chinner
+dgc@kernel.org
