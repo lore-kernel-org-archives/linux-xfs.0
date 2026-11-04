@@ -1,57 +1,69 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=213.97.179.56
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793818085;
-	b=4ZMTkMUe2IXDIMGYBl7nX+4FRMT/XaCrWl0qs6TzpIaeK4tGc/4xzp7299SJ1aLnX2Wd
-	 rWkhkfZrwyaCYOrtR7mqpLjy/pUqSlovYy0IEl/gMuzm9Log4WCHurvSRX1kvplI5hYKe
-	 6eRGp2vMgXxqz2PMzhNvFGefJQeGWZn7litsqg4LJoWDQovoEE0GnYqUCzTnFnbDlPj1R
-	 Eh5lqPXb3wwg6aKRLohxgBukFMWOY1hFeChTHQiMdRvAOWkdqy3uUUQpZ9M2aOoWWbK3K
-	 N5NDmJ/ami4keRYd+LYlDsZIdUHLhCNiQcvuFNG0NqMR+oApaW88oEPHNjzdKqxECLg==
+	t=1793819509;
+	b=SO3AhqWVAizj/i7/ZoV6Tv3O1cQ7KsVxsWUOYZY+AekrAH/z/FRDw/ORqMR33mVajvbE
+	 MQRHExRPvmZNXSaguvEfl6rWvbSN0rJ+qsuhceGvyKcMmQkS1N0SO2lM+JnACWqYxLNa7
+	 qgOWwcecV2aCSAs3Kj5O+hyayWts3vlTn93C0KaRt/crg7X2OsFIUcfM5TBLNVV3LVY5V
+	 0I8ghYB/Qxbb7lqDFlQO1mfMcVP14TPAHGSX/GChGtelmqY7OLY/O6zM6p93/dx17TOjI
+	 oI1SwgDr/ulavwCBcxGRAZRjB+4chTn/lLrcME47rS6PwvHZtwrePXDizu3NBuXETzA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793818085;
-	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=piTRSwW498KP64b3vfsBfh6T+tdP3ME+PlOqF83q4q8=;
-	b=JjOoU2DT+Gns2uOnhjZ0VRkut/spedxWKRx8D6ehIRa6mPWOEGDO3w6SFh2tI00CW347
-	 l9/ti+H8hlaolEqjSYXJSB2kaElRnvkByUNd4xPOk3KP9AkhZfynkab4/qJQFs8m16A0Y
-	 98sor5GB4hjJKvm0KGr5Z5nIlBbXNCs/zxwL2fIS0CpoansmozI2sS9NsCl/j64plncTm
-	 m0mMLP/x5fmcFT4bzBcqdQvVmLEvF88JkrG3lRvlkimQSbchyFyDn3cbtHOJk/UFff8k5
-	 nljls5jAujT/Xue/xwCfvjQ5nQhE3a6+ak2+jUWDlhRLL0ziuDAJjbAfMEZAlspWfYg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793819509;
+	h=DMARC-Filter:DKIM-Signature:Received:Date:From:To:Cc:Subject:
+	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
+	 In-Reply-To;
+	bh=kQCDgLQog4AfZ803aJDiF06q9I2NpsVkPXVUjCXTu2c=;
+	b=U11ZZ/tf2ONl7Cqm6ATuS71KSgz6Aty3QXwSaKby63NGbS/U1/uEszmJfTp6VaWCLiu8
+	 QODlA7yxo0WmNe86u2oAdb9dMRWsFqpUm8UQAxizucRcqG2eIbdFy5I04kq4d5FLteRZD
+	 hPnVZJvU36DzArz1rcCbETzwYzmsiyVeZd/iMZZgnxMxM4E22LZZ9G3+OJlk1hTpRq58N
+	 8f4QuWhX0sieT1F+V+5FWaEetrHclBoaAzCGni0hL3apV+5oMp6ENidGkItb33lxGz96I
+	 o2t9mLB1NtgB2khnTeSU9scupX9QcLHijQoKfd2y1rA7X2NBGZ4XAGL5+XzqYb0U+Qw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TtQkTKqs;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=igalia.com;
+	spf=pass smtp.mailfrom=igalia.com;
+	dkim=pass header.d=igalia.com header.i=@igalia.com header.a=rsa-sha256 header.s=20170329 header.b=VEmYirc+;
+	arc=none smtp.remote-ip=213.97.179.56
+Received: from fanzine2.igalia.com (fanzine2.igalia.com [213.97.179.56])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33BE6606A326;
-	Wed,  4 Nov 2026 18:48:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26528606A31B;
+	Wed,  4 Nov 2026 19:11:47 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 26528606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=igalia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=igalia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TtQkTKqs
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 739071F000C1;
-	Wed,  4 Nov 2026 18:48:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793818084;
-	bh=piTRSwW498KP64b3vfsBfh6T+tdP3ME+PlOqF83q4q8=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=TtQkTKqs7ykU3CFtSQf5LC4RF9mfAfoStQ6xShkuBXQLu3AqX8QBHt07Naq9qoZtI
-	 EO0lAf76K/diM5Q2YG7SqtWJ4Y2Lok/k2E4TlHR9G+2QXScT561ciG3M6/YU/75Rcr
-	 2GGEaMYvn7Ydn2cjZVwqV81IY2P6TRJSWikuhdfB3kw+ps6QCCNYxWFUHbDX3lTyv0
-	 LB5cDrjxx2/C3xhcJ9cAoLyptL0UN2YoMcxAoqBqfZyqPw7peXyg4CWS/F8lMb3Pi/
-	 jQTD2DN3JdTl0tVv8M8S3YV9vI8ad0pjOqzZatBH2x5B8NgtK7svQU69PN6dNAmlQ2
-	 A1l0BCyZygG5Q==
-From: Zorro Lang <zlang@kernel.org>
-To: fstests@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org,
-	linux-btrfs@vger.kernel.org,
-	Anand Suveer Jain <asj@kernel.org>,
-	Chao Yu <chao@kernel.org>,
-	Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH v3 5/6] common/rc: use common helper in _require_fanotify_ioerrors for f2fs
-Date: Thu,  5 Nov 2026 02:47:35 +0800
-Message-ID: <20261104184736.1564283-6-zlang@kernel.org>
-X-Mailer: git-send-email 2.56.0
-In-Reply-To: <20261104184736.1564283-1-zlang@kernel.org>
-References: <20261104184736.1564283-1-zlang@kernel.org>
+	dkim=pass (2048-bit key, unprotected) header.d=igalia.com header.i=@igalia.com header.a=rsa-sha256 header.s=20170329 header.b=VEmYirc+
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=igalia.com;
+	s=20170329; h=Content-Type:MIME-Version:Message-ID:Subject:Cc:To:From:Date:
+	From:Reply-To; bh=kQCDgLQog4AfZ803aJDiF06q9I2NpsVkPXVUjCXTu2c=; t=1793819507;
+	x=2109179507; b=VEmYirc+1f8C476CiOIYu0eMbFVNfTgFlkFTw3sZkuyz7GWe0MrKIpS8nf/EF
+	BBSZZfpbky760kVeU6axz9QTsoW2ZuTinzE7GYnMQ7hBfhhC1hIYGXh5i2j9EQEMiAjPXFYTFHJHQ
+	8xeX3p+Bzz2GEpjvvKoiioQYDyU15iQ3uhxuNehNbgDh4jhm94HlDVHIcKXXstXrE/rIH/jXPpqO4
+	YO2LIWu+BZeqKV4vxv868lQGXODo+lkqJm0S9GNVz2EcOgEOXEIzpJVQro2ODT/o/VJGXxw9xCgdj
+	2RVTOeKp7Tha8D+4eQsS39TjPHrndR4czkDFNvEOp1sylx5A5A==;
+Received: from 179-125-72-1-dinamico.pombonet.net.br ([179.125.72.1] helo=quatroqueijos.cascardo.eti.br)
+	by fanzine2.igalia.com with esmtpsa 
+	(Cipher TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256) (Exim)
+	id 1xOgOV-002Zhk-QV; Wed, 04 Nov 2026 20:11:36 +0100
+Date: Wed, 4 Nov 2026 16:11:24 -0300
+From: Thadeu Lima de Souza Cascardo <cascardo@igalia.com>
+To: Salvatore Dipietro <dipiets@amazon.it>
+Cc: linux-kernel@vger.kernel.org, hch@infradead.org, abuehaze@amazon.com,
+	akpm@linux-foundation.org, alisaidi@amazon.com, blakgeof@amazon.com,
+	brauner@kernel.org, dgc@kernel.org, dipietro.salvatore@gmail.com,
+	djwong@kernel.org, hannes@cmpxchg.org, jackmanb@google.com,
+	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+	linux-xfs@vger.kernel.org, mhocko@suse.com, ritesh.list@gmail.com,
+	rvvandan@amazon.com, stable@vger.kernel.org, surenb@google.com,
+	vbabka@kernel.org, willy@infradead.org, ziy@nvidia.com,
+	David Hildenbrand <david@redhat.com>,
+	Christoph Hellwig <hch@lst.de>, Dmitry Ilvokhin <d@ilvokhin.com>,
+	Brendan Jackman <brendan.jackman@linux.dev>,
+	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>
+Subject: Re: [PATCH v6] mm/page_alloc: avoid direct reclaim and compaction
+ for costly __GFP_NORETRY allocations
+Message-ID: <auuDXDglZ-Z1LZhA@quatroqueijos.cascardo.eti.br>
+References: <20261001082152.2879289-1-dipiets@amazon.it>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -61,33 +73,182 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261001082152.2879289-1-dipiets@amazon.it>
 
-The f2fs branch of _require_fanotify_ioerrors() reads the raw
-/sys/fs/f2fs/features/fserror path.  Use the new
-_get_fs_sysfs_feature_attr helper instead.
+On Thu, Oct 01, 2026 at 08:21:51AM +0000, Salvatore Dipietro wrote:
+> Commit 5d8edfb900d5 ("iomap: Copy larger chunks from userspace")
+> introduced high-order folio allocations in the iomap buffered write
+> path.  When memory is fragmented, each failed costly-order allocation
+> enters __alloc_pages_slowpath() which runs direct reclaim, direct
+> compaction and drain_all_pages(), causing a 0.38x throughput drop on
+> PostgreSQL pgbench (simple-update) with 1024 clients on a 96-vCPU arm64
+> system.
+> 
+> The root issue is that direct reclaim and direct compaction are too
+> expensive for hot allocation paths that have fallbacks to smaller
+> allocations.  __filemap_get_folio_mpol() already marks higher-order
+> allocations with __GFP_NORETRY | __GFP_NOWARN, signalling that the
+> caller can handle failure.  However, the page allocator still enters the
+> full blocking slowpath for costly orders with __GFP_NORETRY, which is
+> unnecessarily aggressive when the caller will simply retry at a lower
+> order.
+> 
+> For costly-order allocations with __GFP_NORETRY, clear
+> __GFP_DIRECT_RECLAIM at the very start of the slowpath, before
+> can_direct_reclaim, can_compact and the nofail checks are evaluated.
+> This makes the entire slowpath treat the request as non-blocking: no
+> direct reclaim, no direct compaction and no drain_all_pages() IPI
+> across every CPU.  Reclaim and compaction move to the background
+> instead: kswapd is still woken for reclaim, and it wakes kcompactd for
+> defragmentation.  The system keeps its long-term health while the
+> latency-critical direct allocation path no longer stalls.
+> 
+> Allocations that also request __GFP_THISNODE are exempted.  That flag
+> pairing identifies the local-node-first THP attempt issued by
+> alloc_pages_mpol() (mempolicy.c), which relies on direct compaction to
+> form transparent huge pages.
+> 
+> Clearing __GFP_DIRECT_RECLAIM makes these allocations reach the
+> !can_direct_reclaim bailout, which since commit 4c0ed883e051
+> ("mm/page_alloc: fix defrag_mode for non-reclaimable allocations") drops
+> ALLOC_NOFRAGMENT and retries instead of failing when defrag_mode is on.
+> With vm.defrag_mode=1 a __GFP_NORETRY allocation could therefore succeed
+> by fragmenting another migratetype's pageblock.  That is the wrong trade
+> for a caller that has already communicated it can handle failure and has
+> a cheap lower-order fallback, so exclude __GFP_NORETRY from the
+> relaxation.  The exclusion is not restricted to costly orders: any
+> __GFP_NORETRY caller has said it can cope with failure, so failing is
+> preferable to fragmenting for all of them.
+> 
+> Test environment:
+>   Hardware:  AWS EC2 m8g.24xlarge (96 vCPU, arm64)
+>              12x 1TB IO2 32000 IOPS RAID0 XFS
+>   OS:        AL2023
+>   Kernel:    v7.3-rc1
+>   Database:  PostgreSQL 18.4
+>   Workload:  pgbench simple-update, 1024 clients, 96 threads, 1200s
+> 
+> Results (average of 3 runs, TPS):
+> 
+>   Config                                       Avg TPS   % vs baseline
+>   v7.3-rc1 baseline (vm.defrag_mode=0)          58,602               -
+>   v7.3-rc1 + this patch (vm.defrag_mode=0)     157,246         +168.3%
+>   v7.3-rc1 baseline (vm.defrag_mode=1)         109,012               -
+>   v7.3-rc1 + this patch (vm.defrag_mode=1)     157,778          +44.7%
+> 
+> Link: https://lore.kernel.org/all/20260403193535.9970-1-dipiets@amazon.it/T/#t [v1]
+> Link: https://lore.kernel.org/linux-mm/20260420161404.642-1-dipiets@amazon.it/T/#u [v2]
+> Link: https://lore.kernel.org/all/20260710143437.12379-1-dipiets@amazon.it/T/#u [v3]
+> Link: https://lore.kernel.org/all/20260904115629.3993331-1-dipiets@amazon.it/T/#u [v4]
+> Link: https://lore.kernel.org/all/20260911142102.2294202-1-dipiets@amazon.it/T/#u [v5]
+> Fixes: 5d8edfb900d5 ("iomap: Copy larger chunks from userspace")
+> Cc: stable@vger.kernel.org
+> Cc: Andrew Morton <akpm@linux-foundation.org>
+> Cc: Vlastimil Babka <vbabka@kernel.org>
+> Cc: David Hildenbrand <david@redhat.com>
+> Cc: Michal Hocko <mhocko@suse.com>
+> Cc: Johannes Weiner <hannes@cmpxchg.org>
+> Cc: Matthew Wilcox <willy@infradead.org>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Dave Chinner <dgc@kernel.org>
+> Cc: Ritesh Harjani <ritesh.list@gmail.com>
+> Cc: Zi Yan <ziy@nvidia.com>
+> Cc: Dmitry Ilvokhin <d@ilvokhin.com>
+> Cc: linux-mm@kvack.org
+> Cc: linux-fsdevel@vger.kernel.org
+> Cc: linux-xfs@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
+> Acked-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
+> Acked-by: Zi Yan <ziy@nvidia.com>
+> Reviewed-by: Johannes Weiner <hannes@cmpxchg.org>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Salvatore Dipietro <dipiets@amazon.it>
+> ---
+>  mm/page_alloc.c | 21 ++++++++++++++++++---
+>  1 file changed, 18 insertions(+), 3 deletions(-)
+> 
+> diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+> index 12fac9084c48..64d09964ca77 100644
+> --- a/mm/page_alloc.c
+> +++ b/mm/page_alloc.c
+> @@ -4784,10 +4784,10 @@ static inline struct page *
+>  __alloc_pages_slowpath(gfp_t gfp_mask, unsigned int order,
+>  						struct alloc_context *ac)
+>  {
+> -	bool can_direct_reclaim = gfp_mask & __GFP_DIRECT_RECLAIM;
+> -	bool can_compact = can_direct_reclaim && gfp_compaction_allowed(gfp_mask);
+> -	bool nofail = gfp_mask & __GFP_NOFAIL;
+>  	const bool costly_order = order > PAGE_ALLOC_COSTLY_ORDER;
+> +	bool can_direct_reclaim;
+> +	bool can_compact;
+> +	bool nofail;
+>  	struct page *page = NULL;
+>  	unsigned int alloc_flags;
+>  	unsigned long did_some_progress;
+> @@ -4802,6 +4802,18 @@ __alloc_pages_slowpath(gfp_t gfp_mask, unsigned int order,
+>  	bool can_retry_reserves = true;
+>  	unsigned long alloc_start_time = jiffies;
+>  
+> +	/*
+> +	 * Costly __GFP_NORETRY callers have a cheap fallback, so don't stall
+> +	 * them in reclaim or compaction. __GFP_THISNODE callers are exempt.
+> +	 */
+> +	if (costly_order && (gfp_mask & __GFP_NORETRY) &&
+> +	    !(gfp_mask & __GFP_THISNODE))
+> +		gfp_mask &= ~__GFP_DIRECT_RECLAIM;
+> +
+> +	can_direct_reclaim = gfp_mask & __GFP_DIRECT_RECLAIM;
+> +	can_compact = can_direct_reclaim && gfp_compaction_allowed(gfp_mask);
+> +	nofail = gfp_mask & __GFP_NOFAIL;
+> +
+>  	if (unlikely(nofail)) {
+>  		/*
+>  		 * Also we don't support __GFP_NOFAIL without __GFP_DIRECT_RECLAIM,
 
-Signed-off-by: Zorro Lang <zlang@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- common/rc | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+This would trigger a warning if __GFP_NOFAIL and __GFP_NORETRY were ever
+used together, though that does not make sense and I haven't found a case
+where it is used in practice.
 
-diff --git a/common/rc b/common/rc
-index 35f5d21e..a8d3c3d8 100644
---- a/common/rc
-+++ b/common/rc
-@@ -6360,8 +6360,8 @@ _require_fanotify_ioerrors()
- 		test -n "$x" && return 0
- 		;;
- 	f2fs)
--		local feat_file="/sys/fs/f2fs/features/fserror"
--		if [ -f "$feat_file" ] && [ "$(cat "$feat_file")" = "supported" ]; then
-+		x="$(_get_fs_sysfs_feature_attr fserror 2>/dev/null)"
-+		if [ "$x" = "supported" ];then
- 			return 0
- 		fi
- 		;;
--- 
-2.56.0
+Aside from either warning for the specific case of these flags being used
+together or adding a comment right here to that effect, I don't think any
+other change is needed, though.
 
+Another comment about the general approach: TTM pool page allocator does
+use __GFP_NORETRY and __GFP_DIRECT_RECLAIM for high orders and when we
+previously suggested to drop __GFP_DIRECT_RECLAIM to avoid compaction, it
+was frowned upon. In the end, a lot of other changes were made and for the
+relevant cases, this does not seem to change its current behavior, amongst
+other things, because it uses __GFP_THISNODE.
+
+I did run some TTM GTT allocations with some fragmentation workload and I
+haven't seen much change in the latency for these high order allocations,
+so:
+
+Tested-by: Thadeu Lima de Souza Cascardo <cascardo@igalia.com>
+
+> @@ -4918,8 +4930,11 @@ __alloc_pages_slowpath(gfp_t gfp_mask, unsigned int order,
+>  		 * Reclaim/compaction cannot run, so defrag_mode's strategy
+>  		 * of enforcing ALLOC_NOFRAGMENT cannot be fulfilled. Allow
+>  		 * fallbacks rather than failing the allocation outright.
+> +		 * Not for __GFP_NORETRY: those have a cheap lower order
+> +		 * fallback, so failing beats fragmenting.
+>  		 */
+>  		if (defrag_mode && (alloc_flags & ALLOC_NOFRAGMENT) &&
+> +		    !(gfp_mask & __GFP_NORETRY) &&
+>  		    (gfp_mask & __GFP_KSWAPD_RECLAIM)) {
+>  			alloc_flags &= ~ALLOC_NOFRAGMENT;
+>  			goto retry;
+> 
+> base-commit: cee9395acd8043be0644b25c34bfa86623f2b935
+> -- 
+> 2.50.1
+> 
+> 
+> 
+> 
+> AMAZON DEVELOPMENT CENTER ITALY SRL, viale Monte Grappa 3/5, 20124 Milano, Italia, Registro delle Imprese di Milano Monza Brianza Lodi REA n. 2504859, Capitale Sociale: 10.000 EUR i.v., Cod. Fisc. e P.IVA 10100050961, Societa con Socio Unico
+> 
+> 
+> 
