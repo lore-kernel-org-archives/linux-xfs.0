@@ -1,60 +1,61 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.137.202.133
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793782783;
-	b=lNDQvcIvFJWTinF8pei0Eo1XPwgDTz2sdLkfK/2e+joO/03XKs8sdHRe6cODbpiW8b1v
-	 v9ufmOD3CyrnLaATVt+VCyykdFPYFX7yq6VdNnXS/QRuS3iEWVzZWLR810FscDwSdwjmD
-	 uKm2Aab9Qt/JPOHpYxnkXsNhBoRNIIiHPY6PpWHJEoaYG3T656BelpvfPDLBNLyVXLtV6
-	 ldSwcvlBdsIRmDNdgtWMF0KRFBMLEz2xyWNf0vX2lMRAd0WvWj5Bdpj7NpWBRTYKJ8RLD
-	 1EwEnhhfBOXs66JqmucxYJqSDNWgPnRE/4Df7xkA4p7MteYTnUL7KxXX+ger/iVQrcg==
+	t=1793782778;
+	b=FOYM5UsL0qNtcJxCjWv0jPErW2blywjidvxKKlHzf90nuttyZTuV1DhgfXJ8UrFDDfpd
+	 87m6LylvoJv9mvR43iaWp0+9IyZOr/DfBy7pz5VNiFM7o9JfV2uMLHxD2z4aww29RWH71
+	 uzmHuPVW4o4TLsZAR7e+FqAERbLYjQX4h0Kni6ECud7fl7I+tvyGeOzz5uw/IF3a5c7CN
+	 Kkx8+ifjbcP/jifnBtE8QY8E3jxO/bxosDKaaFIA1W56cK1BoIyNz87jdb9f05vJ5MpWA
+	 aW0LqLveBxOFDZtjELVzZ8h+d6cCPqV5hskfigUl9FwkfUzR2CVmmTYOYSCITxn08lg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793782783;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793782778;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
 	 Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding:X-SRS-Rewrite;
-	bh=7cfCkUzPD9T3QchB6R7FTN2TL6jI1u9mcAOxdVYVoXw=;
-	b=WVKEv7uVkrHVc7lqmu5E104Znr9JJrmdxecoreKB13ZgLoCEcPypONoTlIhZgWCehuny
-	 cTPSKfKCl4REMdKA+zlix+kxahT976AUrrU2zKgGkfTFqicGq25vCct9XLUvXBq+CG4ji
-	 mn2hdDFx+1pmJYmb0hPmxFMiJg7AoTxJiAvaYB1Wiuq17UlGJSfwca3pp6ZCREfr/IhhS
-	 NlYLaLxJ1rbAYPk8tooFEaQKWcYIsoVIIAS68ijcgr8qMj5EorpDOP0ME9l1eUYKykhw0
-	 xUjPI5Im5293BUmxf/hqvIM7ct/vbbCDiSKejkv2WbEHwmXtdY+8f/v93+GHyVM1qSA==
+	bh=iIIac8rRaPh4NN2FkWFeMGtRqRIOVgIqI12HcROzgLI=;
+	b=2Uv0ouILxbkUu1XNMpm7Javo4sakL5uRVoi0LTi/2TXM4jrGZv7NRcc2Nji3/ZkgU7+I
+	 BQVzJqXlv9ImOiaYcDlzkqFjhMJh3n+ZatW2G9APWNyLqlXaJQgkIIcx8ypgyG74hM3RS
+	 U88B0vTWbWKsaXt83oI1bLb7yGT9GycisD2Xz74v5/SOqfeTGu7wNP1k1eZI5VLBxC6z8
+	 Q/iVCiOKlchvcbAhyLWZcrWA/iAi06v1a7/PyCRkOHxo6JYz8T8TmxdCtd51wBJY6E+Tb
+	 ve1pLyK5+WWgweO6DoTqZT4mg4k71NRIJILY1vE87QuzqRKLncnB9s1M9lBCfWzLVoA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=fail header.from=lst.de;
 	spf=none smtp.mailfrom=bombadil.srs.infradead.org;
-	dkim=pass header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=m6CkH8nA;
+	dkim=pass header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=nXpC77wS;
 	arc=none smtp.remote-ip=198.137.202.133
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCCB8606A32F;
-	Wed,  4 Nov 2026 08:59:42 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BCCB8606A32F
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 946FE606A32E;
+	Wed,  4 Nov 2026 08:59:36 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 946FE606A32E
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=m6CkH8nA
+	dkim=pass (2048-bit key, unprotected) header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=nXpC77wS
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=7cfCkUzPD9T3QchB6R7FTN2TL6jI1u9mcAOxdVYVoXw=; b=m6CkH8nA0MF033YMTdHT5cfwJF
-	QBEfTrspQUOdR0M9DNBtCimv1YcHzc6o6L4ibT9rwatA5tenZOaw7YbsspropFJKGrtb6kOmGGyas
-	9U0P0j/UvrjI5qWO0Aqa5zU58DPzO9HtZ6acju+4OXSHxE2Mt8FklzcHs9PdgZFVKlWuXOAYlvRMH
-	Pzh17icivOQqY87AB4PyqdwY8YBxSJP/qJbVuQGavuwFdoTljdIfshVctSht6jruavHbGjyJ5zgbU
-	yJKH0XbIE52ka97vaGo4S/NqkkQMn+WB7sovFGTjNDnhsRjnB3ACHMCYc6tNWugkJZAua/jj8ZO37
-	ZVEVADLw==;
+	bh=iIIac8rRaPh4NN2FkWFeMGtRqRIOVgIqI12HcROzgLI=; b=nXpC77wSJv8C5p9gNFnkYcHpMg
+	5PT+So+i6+banEm8nw9Xh8VduOr1qlkUp+4N34Uyj+EZJ7V0iuyirH3rt1VigsPvoRN53Wp4pdjJF
+	t9hmeSZ5ps68KzDoGNgXwPq8mUFD38acMz/rm3vPgG0wHVCQyED/YUelvZqMrXRvr90aASF+KZUAb
+	GnXDpZKeuy9giecGMwIP5uq6OjC4b6VE4I3opcHFJy5Q9hgZ7sf/8UYLiNPKEl8Y7m8NzJXvnkcHI
+	N9uXulWNu5NFqwscD5fbJqwalzR+T+pcdbQJP4zP90uhvpC+S8uJ5REXmlHBq21zg21ndbV61s3fz
+	ezoKEuxA==;
 Received: from 2a02-8389-2301-9f00-31e8-efb6-e973-61ca.cable.dynamic.v6.surfer.at ([2a02:8389:2301:9f00:31e8:efb6:e973:61ca] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.100.1 #2 (Red Hat Linux))
-	id 1xOWqM-00000004oKI-02WO;
-	Wed, 04 Nov 2026 08:59:42 +0000
+	id 1xOWqG-00000004oJC-1QER;
+	Wed, 04 Nov 2026 08:59:36 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org,
-	Wilfred Mallawa <wilfred.opensource@gmail.com>
-Subject: [PATCH 03/25] xfs: always call xfs_update_stable_writes in xfs_ioctl_setattr_xflags
-Date: Wed,  4 Nov 2026 09:57:07 +0100
-Message-ID: <20261104085929.317544-4-hch@lst.de>
+	Damien Le Moal <dlemoal@kernel.org>,
+	"Darrick J. Wong" <djwong@kernel.org>
+Subject: [PATCH 01/25] block: export fs_bio_integrity_verify
+Date: Wed,  4 Nov 2026 09:57:05 +0100
+Message-ID: <20261104085929.317544-2-hch@lst.de>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261104085929.317544-1-hch@lst.de>
 References: <20261104085929.317544-1-hch@lst.de>
@@ -70,35 +71,30 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Currently xfs_update_stable_writes() is never called when the RT flag is
-flipped because xfs_ioctl_setattr_xflags() updates ip->i_diflags before
-comparing the rtflag variable to XFS_IS_REALTIME_INODE(ip), and thus
-the stable flag can be set incorretly when flipping the realtime bit
-on an existing file.
+From: Damien Le Moal <dlemoal@kernel.org>
 
-Fix this by unconditionally calling xfs_update_stable_writes for regular
-files.
+XFS will need to call this in the iomap_write_ops.read_folio_range
+implementation.
 
-Fixes: d528a6c1d4b6 ("xfs: data checksums require stable writes")
-Reported-by: Wilfred Mallawa <wilfred.opensource@gmail.com>
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/xfs_ioctl.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ block/bio-integrity-fs.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index f81b6e52ac40..36ba609a2593 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -595,7 +595,7 @@ xfs_ioctl_setattr_xflags(
- 	 * Make the stable writes flag match that of the device the inode
- 	 * resides on when flipping the RT flag.
- 	 */
--	if (rtflag != XFS_IS_REALTIME_INODE(ip) && S_ISREG(VFS_I(ip)->i_mode))
-+	if (S_ISREG(VFS_I(ip)->i_mode))
- 		xfs_update_stable_writes(ip);
+diff --git a/block/bio-integrity-fs.c b/block/bio-integrity-fs.c
+index c8e91ada8ca6..20d0a3d52932 100644
+--- a/block/bio-integrity-fs.c
++++ b/block/bio-integrity-fs.c
+@@ -74,6 +74,7 @@ int fs_bio_integrity_verify(struct bio *bio, struct bvec_iter *data_iter)
+ 		bio_integrity_bytes(bi, data_iter->bi_size >> SECTOR_SHIFT);
+ 	return blk_status_to_errno(bio_integrity_verify(bio, data_iter));
+ }
++EXPORT_SYMBOL_GPL(fs_bio_integrity_verify);
  
- 	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
+ static int __init fs_bio_integrity_init(void)
+ {
 -- 
 2.53.0
 
