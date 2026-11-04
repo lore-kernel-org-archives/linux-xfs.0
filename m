@@ -1,59 +1,98 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.42
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793811249;
-	b=m1IgsHo0oAQYd7Hx4WklGQM9MEpxeYTdKj9bkWwbKOlR3/I18/5S/rJN/c4tWa4uznGK
-	 fLYfPECTrhCeFzi9BSjE1Z2+QlWFAcsBXC+NL+bplgryxniXpFziW7+J/RGi3tz2cJ71D
-	 OSb7IKKqmrFxhqV008874jrRz+PgUyfj0A+rQNN6idckZLpK8fBqMLGYVitFaUdwEmeyH
-	 7XfWF5ZeN0rhnPXDULSpElSj8ZVYG2k/sIZTQtuICcA6y3rPILq6i8krCIq767PKneh+2
-	 8jr8h59mnxnK3s0CRYH//ElNLCJ3uHLV1cqcUSZLEBubEGPn633T3LQEF2uUtMYnP7g==
+	t=1793815971;
+	b=iDRP4xIpyXs5kHeC/9IDfV9ZuH16rEz6y6xkhNeI+Rj4uUS+68Rvxh5Cd2NTEzM7Nrrw
+	 dsZEgVqbR/UlkiTsuYtrnHr2RJiirCgUtU6LorsVYvf6mL3JCud55pwQB7xO+tuY4qxtG
+	 PRYLqz5UE2F33yDAeUdQaP1t9XISU8+aUtv1fzjCYSizWMxtvu8tOVNMsBtedRX25Jj+W
+	 rHDmpvWktg925a0QJvGGNcqiRhw+d3e0N+aEYnSvxxpMkppBeoi3oNfuhDYX6p3Eh8SwO
+	 0nyRUbMlIuo+j+idXm+taxR5vRtIzU2Ry7Lc/tZK1v5MAAxgD8ni+CPd7N7UBYXGr7g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793811249;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 Mail-Followup-To:References:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To;
-	bh=ta0YKC1Y9tLQCPa9StPGB82XrJOeEAKNBXFfeZJ282Q=;
-	b=PHiXayQd5A/l/fj+StSRq8RKRpkL1XWcm47ndUBJ64i1txkxG5gUSt8Vo0Ju4NUp1p0F
-	 MpXn+TTQZWPomPQIxUGzpYspplasgpgcoBWYZ19uwvUSujiHSGS3Zk437opvCo9ximeu0
-	 O+nv9s74yVAQGLpSs67B8i1u+cM14u0P+olQbrmVvpg7d2AgueASIyoUhGuS7nN7Nncjk
-	 Mp1vTADfLgh0YKUsC3LXO+AambIiUSJvtO2IT8tiZZtfjijg3H1Cz72dCXmbvjE8hK9dq
-	 neMb0Dey55ZxeZ4/8M+MuiVoR5LY0eVmmCooIeSevSDSCCvvvmYhwI3R9ITrCssN+Xw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793815971;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=4jR5g7ZhU4ZTGj4CMxjvz0KvZ1iGvcXv9dfVeD7UpZk=;
+	b=kMLQONpbaOXGAKd+2Q+E3+ifVTubSXECLdJNGqOgF7U7a4z0vVo2awI3r+0Y3z3jDsOw
+	 iI3aq77qkatBIJFjx1dhJIsq+Fb/oXqPxcJwUDIGEFUPGhb8m+MHvBqFf9UKeUVYcklgi
+	 IQfxubG/PA/PytdjMqIsevN18gyd9wLHhtgRaUHdXptqSAlCYVdtRRDDACH5wU+98McIv
+	 D48fo4ihHqvGNEB1ZepRc39/xUNFAt7ihZwWg09L/jAQ9RXa00SwynDCkPwwcI827tLMu
+	 gEDPM0flUYtAi3RS7mUzvVEt66WFyd13UXrQWHtY6bIZvfgHBKlGWbK/x7UmtHlwC3A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Nk+94HdO;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=FIsUsuW5;
+	arc=none smtp.remote-ip=209.85.216.42
+Received: from mail-pj1-f42.google.com (mail-pj1-f42.google.com [209.85.216.42])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D2CA606A32F;
-	Wed,  4 Nov 2026 16:54:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73DC5606A68D
+	for <linux-xfs@vger.kernel.org>; Wed,  4 Nov 2026 18:12:50 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 73DC5606A68D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Nk+94HdO
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7B5921F00919;
-	Wed,  4 Nov 2026 16:54:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793811248;
-	bh=ta0YKC1Y9tLQCPa9StPGB82XrJOeEAKNBXFfeZJ282Q=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Nk+94HdOy69o+pBgCU6rjCgTlGarXipWretnsoILCda+Rtc0vR611Uumc0U9F6n5Z
-	 e43gSzWHhaWrQqG7L52O0P5lfuZOZduTBzIvPBxaiQKOJhypeNMXoojc/2pPtce+2n
-	 PK1hX+LiUfG1/tzFJUMVHjrH/Vsfjo17opaKDE8OR7UFN4ubLutnuBOqGQoyiiyp87
-	 ZUXeJuIla2tNVjmknJ3pyc1/dsDJ+wI33iH971qc59ndYuanfGiFYw/gSyvs5wPvhs
-	 2VDX64ioLSNKAmeNfFVsel9F2FFgYCv6AVo8syp0jVCIPF7jfzqHCkEjE2b8+sHcDH
-	 NQfBouXpuzXlQ==
-Date: Thu, 5 Nov 2026 00:54:00 +0800
-From: Zorro Lang <zlang@kernel.org>
-To: Matthias Goergens <matthias.goergens@gmail.com>
-Cc: fstests@vger.kernel.org, fdmanana@kernel.org, 
-	linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, djwong@kernel.org, 
-	amir73il@gmail.com
-Subject: Re: [PATCH v3] generic: test FIDEDUPERANGE result reporting with
- REPORT_PROGRESS
-Message-ID: <ausEel6ipFsEAtpg@zlang-mailbox>
-Mail-Followup-To: Matthias Goergens <matthias.goergens@gmail.com>, 
-	fstests@vger.kernel.org, fdmanana@kernel.org, linux-xfs@vger.kernel.org, 
-	linux-btrfs@vger.kernel.org, djwong@kernel.org, amir73il@gmail.com
-References: <20260817095017.948979-1-matthias.goergens@gmail.com>
- <20261030083403.3041196-1-matthias.goergens@gmail.com>
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=FIsUsuW5
+Received: by mail-pj1-f42.google.com with SMTP id 98e67ed59e1d1-3b0a519049aso424531a91.1
+        for <linux-xfs@vger.kernel.org>; Wed, 04 Nov 2026 10:12:50 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1793815970; x=1794420770; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=4jR5g7ZhU4ZTGj4CMxjvz0KvZ1iGvcXv9dfVeD7UpZk=;
+        b=FIsUsuW5NoG69NJafmTOnWTznIvcoqZo9UCZ1OuHWAJjN8xWk48DArZpaYIeDy7AOo
+         fn4neCccdUetUbZSOD1K3XrAUS4J5vTo8ArjURPPx0SazxfY9IoqYkRZ/1RcM6/nwiKx
+         B7LWinKQdNzU8mGzrPmE2vvx0ddvlXnbJ7IUuycGjK3Ku2G8rh++LHJTcSQXjAqSiw97
+         MqIVhh4LBxQ/trfg1H1a1UNhBygB1CbBln/FOuuhOBmyK+WM0hf/Sz+mS7/IfuRnBCdT
+         lf8KLBO78MdLpJ5+qeVXdjs6xZ57fQHvgqZEJz0wB2i1imJarCx72nyQ6UEPRXjFVFhx
+         pQEQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793815970; x=1794420770;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=4jR5g7ZhU4ZTGj4CMxjvz0KvZ1iGvcXv9dfVeD7UpZk=;
+        b=w8Vyb7NwdWnd34EYn7D7Hb/v137JIjboJj0muZcIlX8MtNCvxOwXUkTCZRlgTltGCV
+         DO1FJRSZXRnticxHUU0/8OlvuTZ6avucvCcK7j1pzcG66yfiMHXmgjV1XJ7ZeKpbUcKG
+         nNILrjnQZdGztvTKK2dHKn+zvCSKkMvF8gwZxMJw6yYGw/VDPrzy90Niw6CUmZWF1ozy
+         mTHmGTOtOc50lyowUa1OtTfUKbSYrP4+cWAgTA05OFUZKPOfkEL0DfMsBhZvzCs2CYti
+         yBRR+0UTVf7DrVGE5p2RMZwY0xsa7s3NQnLiSLhGAqmoN+CQswLxk7nBdKSNmZ5rP8Yb
+         hMAg==
+X-Forwarded-Encrypted: i=1; AKwUvBxUuvwJIEquP/FHrQBGmjb+sOp8QkLF1bUuVYxz/t7URxplNkDepC/T9SZYIbYumG19KzuF5lmsT0w=@vger.kernel.org
+X-Gm-Message-State: APuU4Z/vbRVItDIXytNADU4WQV/KZUMjJxAYiAoglh7bqark4AmoYsxX
+	I0lLn2/MLal4ll+2UoZr/PJnI8vc034cAlVkdvX5bOnqEKr9lLyskpcz
+X-Gm-Gg: AYBFou1TC7uiuCQbFv/haniObetTnT2nVzmrfr73Jly+g5Tu2hr325Dek4WC6Q/tuic
+	cy5vg4XaFdGeJIn16feQp3M+f4gjQPEL06npyEBL6expYhBOKopmCckoeL3QO/VhIhik0dgEuDm
+	TjWXD/vbLVBd0opC4cyFBWr4gleOeodjaigzeiqWfanUI5/TNk0g+yTfDE3AGvdLvZQfJlSqj2t
+	7oSM7z+ymGqhkCmJXeVZinK5qsLrXyh2pEnXS4uzmekUsOOWo1Je0sgTExlrVivBnK4uEuusyv3
+	oZemRCaK90d+2Z9LresOkrrKGhcYOOYd4Bq+qg77xJLRtbr+PYPa8wjPvfEtBQAsC2yF2cYjD5y
+	68RWtdR99kSQE+sGOKyxE9By3UZ4rHVe+dm1YlFHdhlquMne44KhpmAxy1Otn7Pd+mYa6aRQ1S3
+	DjbrsqpQcsiwB2h+wFplR0e8jkYU8bUEKCXlajGZ7oT3XO2hVRhi5i6yOl70KB87bXzABPCfp94
+	oc9LOkGbYATezJPOdQuEo5mL4UNd/0ckBDRUNuXkI92Q+ORhwZFi0ZOVMW24hIgn7ppq/QCrliD
+	jqL+G1XR1LDhV40IsodB6RR4a/dzvOjm02KD7bLLsibs575euyicIn5tk6SW5MI9+7xghwKIJGf
+	3cPhF7g==
+X-Received: by 2002:a17:90b:28c5:b0:3ad:ce24:acfa with SMTP id 98e67ed59e1d1-3ae897c652dmr13485282a91.20.1793815969563;
+        Wed, 04 Nov 2026 10:12:49 -0800 (PST)
+Received: from archlinux.tail3acd4.ts.net ([69.110.143.170])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b0b31a3efasm78326a91.9.2026.11.04.10.12.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 04 Nov 2026 10:12:49 -0800 (PST)
+From: Vitali Lovich <vlovich@gmail.com>
+To: linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Cc: brauner@kernel.org,
+	viro@zeniv.linux.org.uk,
+	jack@suse.cz,
+	cem@kernel.org,
+	djwong@kernel.org
+Subject: [RFC PATCH 1/6] fs: implement range-based generation-coordinated DIO draining
+Date: Wed,  4 Nov 2026 10:12:41 -0800
+Message-ID: <f8d8760ee9bfac6478fe18f866c8b809b2c22f40.1793815542.git.vlovich@gmail.com>
+X-Mailer: git-send-email 2.56.0
+In-Reply-To: <cover.1793815542.git.vlovich@gmail.com>
+References: <cover.1793815542.git.vlovich@gmail.com>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -63,467 +102,510 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261030083403.3041196-1-matthias.goergens@gmail.com>
+Content-Transfer-Encoding: 8bit
 
-On Fri, Oct 30, 2026 at 04:34:03PM +0800, Matthias Goergens wrote:
-> Add a raw FIDEDUPERANGE helper that reports each destination's
-> bytes_deduped and status, and a test for the new
-> FILE_DEDUPE_RANGE_REPORT_PROGRESS flag: explicit zero-length success, a
-> request shortened for an interior destination but not for one ending at
-> EOF, a sub-block request that makes no progress, differing contents
-> (status DIFFERS, zero bytes), a per-destination error, rejection of an
-> unknown flag bit, and one unflagged case pinning the legacy reporting of
-> the requested length.  The test is skipped on kernels that reject the
-> flag.
-> 
-> xfs_io retries shortened dedupe operations, so its output cannot verify
-> one raw multi-destination ioctl or distinguish an explicit zero-length
-> request from a nonzero request shortened to zero; hence the helper.
-> 
-> Signed-off-by: Matthias Goergens <matthias.goergens@gmail.com>
-> ---
-> Christian Brauner applied the kernel series to vfs-7.5.misc on
-> 21 October.  Reference the flag commit in _wants_kernel_commit:
-> 847f74d6293b (vfs: add FILE_DEDUPE_RANGE_REPORT_PROGRESS flag to
-> FIDEDUPERANGE).
-> https://lore.kernel.org/all/20261021-rente-privat-mitfiebern-1b76f4650038@brauner/
+Whole-inode direct I/O (DIO) draining currently requires filesystems to
+exclude all new submission requests, even those completely disjoint from
+the range being modified.
 
-Now that the implementation of this feature is clear, let's proceed with
-merging this test case.
+Add generation accounting and range admission to allow filesystems to
+drain a finite cohort of in-flight DIO while concurrently admitting
+new, disjoint DIO under a shared i_rwsem.
 
->
-> v3:
-> - reference the applied kernel flag commit
-> - renumber 806 to 810: for-next already uses 806 for an xattr test
-> - use _get_file_block_size instead of _get_block_size (Zorro, on v1)
-> - the kernel side (v5) now has Reviewed-by from Amir and Darrick, the
->   acks Zorro asked to wait for; it reports bytes_deduped = 0 on DIFFERS
->   (the advance hint tested in v2 was dropped), so both DIFFERS cases
->   expect zero
-> - new case: an unknown flag bit is rejected with EINVAL (helper -F)
-> - new case: two small differing files ending at EOF report 0 bytes,
->   status DIFFERS
-> - _notrun on kernels that reject the flag, rather than failing
-> - .gitignore entry moved into alphabetical order
-> 
-> Previously tested on 2 October as generic/806 under QEMU on v7.3-rc4
-> with and without the v5 series, on btrfs, XFS (4k and 1k blocks) and
-> ext4.  With the series generic/517 and
-> generic/806 pass on btrfs and both XFS configurations; without it 806 is
-> not run ("kernel does not support FILE_DEDUPE_RANGE_REPORT_PROGRESS")
-> and 517 passes.  On ext4 both are not run (no dedupe).
-> 
-> Validation refreshed on 30 October against fstests for-next d07dca72:
-> helper builds with -Wall -Wextra -Werror -O2; bash -n passes.  The
-> filesystem tests have not been rerun on that base.
-> 
->  .gitignore            |   1 +
->  src/Makefile          |   2 +-
->  src/fideduperange.c   | 172 ++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/810     | 144 +++++++++++++++++++++++++++++++++++
->  tests/generic/810.out |   9 +++
->  5 files changed, 327 insertions(+), 1 deletion(-)
->  create mode 100644 src/fideduperange.c
->  create mode 100755 tests/generic/810
->  create mode 100644 tests/generic/810.out
-> 
-> diff --git a/.gitignore b/.gitignore
-> index cdcfa06..418ef7c 100644
-> --- a/.gitignore
-> +++ b/.gitignore
-> @@ -86,6 +86,7 @@ tags
->  /src/fake-dump-rootino
->  /src/fault
->  /src/feature
-> +/src/fideduperange
->  /src/fiemap-tester
->  /src/fill
->  /src/fill2
-> diff --git a/src/Makefile b/src/Makefile
-> index eaf0621..774447e 100644
-> --- a/src/Makefile
-> +++ b/src/Makefile
-> @@ -25,7 +25,7 @@ TARGETS = dirstress fill fill2 getpagesize holes lstat64 \
->  
->  LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
->  	preallo_rw_pattern_writer ftrunc trunc fs_perms testx looptest \
-> -	locktest unwritten_mmap bulkstat_unlink_test deduperace \
-> +	locktest unwritten_mmap bulkstat_unlink_test deduperace fideduperange \
+This reserves the top two bits of i_inode->i_dio_count for generation
+and draining state, utilizes seqcount_latch_t for lockless range snapshot
+validation, and introduces a new ->dio_drain_complete VFS operation to
+resolve private drain state lazily without bloating struct inode or
+per-request storage.
 
-This part might conflict with a patch ready to be merged ('xfstests: Unify the
-build targets under LINUX_TARGET'). Could you try rebasing onto the
-'patches-in-queue' branch in your next version? That way, I can merge it
-directly later.
+Signed-off-by: Vitali Lovich <vlovich@gmail.com>
+---
+ Documentation/filesystems/locking.rst         |  89 ++++++++++-----
+ Documentation/filesystems/vfs.rst             |  41 +++++++
+ fs/inode.c                                    | 107 +++++++++++++++++-
+ fs/xfs/xfs_reflink.h                          |   2 +-
+ include/linux/fs.h                            |  92 ++++++++++++++-
+ .../litmus-tests/DIO-register-first.litmus    |  36 ++++++
+ 6 files changed, 334 insertions(+), 33 deletions(-)
+ create mode 100644 tools/memory-model/litmus-tests/DIO-register-first.litmus
 
->  	bulkstat_unlink_test_modified t_dir_offset t_futimens t_immutable \
->  	stale_handle pwrite_mmap_blocked t_dir_offset2 seek_sanity_test \
->  	seek_copy_test t_readdir_1 t_readdir_2 fsync-tester nsexec cloner \
-> diff --git a/src/fideduperange.c b/src/fideduperange.c
-> new file mode 100644
-> index 0000000..d8aef98
-> --- /dev/null
-> +++ b/src/fideduperange.c
-> @@ -0,0 +1,172 @@
-> +// SPDX-License-Identifier: GPL-2.0-or-later
-> +/*
-> + * Issue a raw FIDEDUPERANGE ioctl and report each destination's result.
-> + */
-> +#include <errno.h>
-> +#include <fcntl.h>
-> +#include <getopt.h>
-> +#include <inttypes.h>
-> +#include <linux/fs.h>
-> +#include <stdint.h>
-> +#include <stdio.h>
-> +#include <stdlib.h>
-> +#include <string.h>
-> +#include <sys/ioctl.h>
-> +#include <unistd.h>
-> +
-> +/*
-> + * Local copies of the UAPI types: the system linux/fs.h may predate the
-> + * FILE_DEDUPE_RANGE_REPORT_PROGRESS flag.  The layout matches the kernel
-> + * UAPI.
-> + */
-> +#ifndef FILE_DEDUPE_RANGE_REPORT_PROGRESS
-> +#define FILE_DEDUPE_RANGE_REPORT_PROGRESS (1U << 0)
-> +#endif
-> +#define FILE_DEDUPE_RANGE_SAME		0
-> +#define FILE_DEDUPE_RANGE_DIFFERS	1
+diff --git a/Documentation/filesystems/locking.rst b/Documentation/filesystems/locking.rst
+index f7363ad770c7..cfd4ce7ed563 100644
+--- a/Documentation/filesystems/locking.rst
++++ b/Documentation/filesystems/locking.rst
+@@ -93,40 +93,44 @@ prototypes::
+ 	int (*fileattr_get)(struct dentry *dentry, struct file_kattr *fa);
+ 	struct posix_acl * (*get_acl)(const struct mnt_idmap *, struct dentry *, int);
+ 	struct offset_ctx *(*get_offset_ctx)(struct inode *inode);
++	void (*dio_drain_complete)(struct inode *inode);
+ 
+ locking rules:
+-	all may block
++	all may block except dio_drain_complete
+ 
+-==============	==================================================
+-ops		i_rwsem(inode)
+-==============	==================================================
+-lookup:		shared
+-create:		exclusive
+-link:		exclusive (both)
+-mknod:		exclusive
+-symlink:	exclusive
+-mkdir:		exclusive
+-unlink:		exclusive (both)
+-rmdir:		exclusive (both)(see below)
+-rename:		exclusive (both parents, some children)	(see below)
+-readlink:	no
+-get_link:	no
+-setattr:	exclusive
+-permission:	no (may not block if called in rcu-walk mode)
+-get_inode_acl:	no
+-get_acl:	no
+-getattr:	no
+-listxattr:	no
+-fiemap:		no
+-update_time:	no
+-sync_lazytime:	no
+-atomic_open:	shared (exclusive if O_CREAT is set in open flags)
+-tmpfile:	no
+-fileattr_get:	no or exclusive
+-fileattr_set:	exclusive
+-get_offset_ctx  no
+-==============	==================================================
++==================  ==================================================
++ops                 i_rwsem(inode)
++==================  ==================================================
++lookup:             shared
++create:             exclusive
++link:               exclusive (both)
++mknod:              exclusive
++symlink:            exclusive
++mkdir:              exclusive
++unlink:             exclusive (both)
++rmdir:              exclusive (both)(see below)
++rename:             exclusive (both parents, some children) (see below)
++readlink:           no
++get_link:           no
++setattr:            exclusive
++permission:         no (may not block if called in rcu-walk mode)
++get_inode_acl:      no
++get_acl:            no
++getattr:            no
++listxattr:          no
++fiemap:             no
++update_time:        no
++sync_lazytime:      no
++atomic_open:        shared (exclusive if O_CREAT is set in open flags)
++tmpfile:            no
++fileattr_get:       no or exclusive
++fileattr_set:       exclusive
++get_offset_ctx      no
++dio_drain_complete  no
++==================  ==================================================
+ 
++->dio_drain_complete() does not require i_rwsem and must not block. It may
++run in interrupt context.
+ 
+ 	Additionally, ->rmdir(), ->unlink() and ->rename() have ->i_rwsem
+ 	exclusive on victim.
+@@ -138,6 +142,31 @@ get_offset_ctx  no
+ See Documentation/filesystems/directory-locking.rst for more detailed discussion
+ of the locking scheme for directory operations.
+ 
++Direct I/O range draining
++=========================
++
++Range drainers acquire ``drain->lock`` before ``inode->i_rwsem`` and any
++filesystem locks needed by the protected operation. Hold the drain mutex
++through inode_dio_drain_finish(): it serializes range publication, cohort
++draining, the protected operation, and exclusion removal. Never wait for
++this mutex while holding i_rwsem, even shared.
++
++A drainer can drop i_rwsem and reacquire it exclusively during write
++checks, for example to strip privileges. Acquiring the mutex inside shared
++i_rwsem would permit this deadlock:
++
++1. Drainer A holds the drain mutex and shared i_rwsem.
++2. Drainer B holds shared i_rwsem and waits for A's drain mutex.
++3. A drops shared i_rwsem and tries to acquire it exclusively. B's shared
++   lock prevents A from proceeding, while B cannot release it until A
++   releases the mutex.
++
++Callers that already hold i_rwsem must drop it before waiting for the drain
++mutex, then reacquire i_rwsem and repeat their checks. DIO admission and
++completion do not acquire the drain mutex, so the old cohort can complete
++while a drainer holds it. Drain the old cohort before taking any filesystem
++lock that its I/O preparation or completion might need.
++
+ xattr_handler operations
+ ========================
+ 
+diff --git a/Documentation/filesystems/vfs.rst b/Documentation/filesystems/vfs.rst
+index 1824462a4371..60fa5c12e451 100644
+--- a/Documentation/filesystems/vfs.rst
++++ b/Documentation/filesystems/vfs.rst
+@@ -445,6 +445,7 @@ As of kernel 2.6.22, the following members are defined:
+ 				    struct dentry *dentry, struct file_kattr *fa);
+ 		int (*fileattr_get)(struct dentry *dentry, struct file_kattr *fa);
+ 	        struct offset_ctx *(*get_offset_ctx)(struct inode *inode);
++		void (*dio_drain_complete)(struct inode *inode);
+ 	};
+ 
+ Again, all methods are called without any locks being held, unless
+@@ -634,6 +635,46 @@ otherwise noted.
+         filesystem must define this operation to use
+         simple_offset_dir_operations.
+ 
++``dio_drain_complete``
++	called by inode_dio_end_generation() when a direct I/O request
++	from the old generation completes while a drain is active.
++	Filesystems that use inode_dio_drain_start() must implement this
++	method to look up their private struct inode_dio_drain pointer
++	(allocated via inode_dio_drain_get() and retained until inode
++	reclamation) and pass it to inode_dio_drain_complete(). Because
++	a drain may be started while earlier requests are already in
++	flight, the method must locate the drain state from the inode
++	itself rather than from per-request submission state. May be
++	called in interrupt context and must not sleep.
++
++	inode_dio_drain_start() returns -EOPNOTSUPP without changing drain
++	state if this method is absent. Callers must check for success
++	before waiting for or finishing the drain.
++
++	Drain operations serialize with the drain mutex, then hold i_rwsem
++	shared to exclude truncate and buffered writes. Never wait for the
++	drain mutex while holding i_rwsem: its owner may need to drop shared
++	i_rwsem and reacquire it exclusively during write checks. See the
++	deadlock example in Documentation/filesystems/locking.rst.
++
++	Every DIO admission must use inode_dio_try_begin() to register
++	provisionally with a fully ordered atomic increment before reading the
++	range snapshot and preparing or submitting I/O. A failed admission
++	withdraws its token with generation-aware completion accounting before
++	returning. The caller must drop its submission lock before waiting for
++	the exclusion to clear, then reacquire the lock and recheck the request.
++
++	inode_dio_drain_start() publishes both copies of a seqcount_latch_t
++	range snapshot before the fully ordered generation flip and DIO count
++	snapshot. Earlier registrations belong to the finite old cohort;
++	later registrations observe the exclusion or a later snapshot.
++	Nonoverlapping new-generation I/O can proceed without extending the
++	old cohort. Readers only load and validate scalar snapshots, and do
++	not acquire the drain mutex, including on PREEMPT_RT. The lazy drain
++	allocation is acquired through its published pointer and lives until
++	inode reclaim. inode_dio_drain_finish() publishes an inactive snapshot
++	and wakes blocked admissions. Range reuse requires no RCU grace period.
++
+ The Address Space Object
+ ========================
+ 
+diff --git a/fs/inode.c b/fs/inode.c
+index f63535ee3629..7b027547b305 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -358,6 +358,7 @@ struct inode *alloc_inode(struct super_block *sb)
+ 
+ void __destroy_inode(struct inode *inode)
+ {
++	WARN_ON_ONCE(atomic_read(&inode->i_dio_count) & INODE_DIO_DRAINING);
+ 	inode_detach_wb(inode);
+ 	security_inode_free(inode);
+ 	fsnotify_inode_delete(inode);
+@@ -2778,10 +2779,114 @@ EXPORT_SYMBOL(inode_owner_or_capable);
+  */
+ bool inode_dio_finished(const struct inode *inode)
+ {
+-	return atomic_read(&inode->i_dio_count) == 0;
++	return !(atomic_read(&inode->i_dio_count) & INODE_DIO_COUNT_MASK);
+ }
+ EXPORT_SYMBOL(inode_dio_finished);
+ 
++/*
++ * Allocated on the first draining operation, never on ordinary DIO. The
++ * filesystem owns the pointer and retains the allocation until inode reclaim.
++ */
++struct inode_dio_drain *inode_dio_drain_get(struct inode_dio_drain **drainp)
++{
++	struct inode_dio_drain *drain, *existing;
++
++	/* Acquire the initialized metadata published by the successful cmpxchg. */
++	drain = smp_load_acquire(drainp);
++	if (drain)
++		return drain;
++	drain = kzalloc_obj(*drain, GFP_NOFS);
++	if (!drain)
++		return ERR_PTR(-ENOMEM);
++	mutex_init(&drain->lock);
++	seqcount_latch_init(&drain->range_seq);
++	existing = cmpxchg(drainp, NULL, drain);
++	if (existing) {
++		kfree(drain);
++		/* A failed cmpxchg does not acquire the winner's initialization. */
++		drain = smp_load_acquire(drainp);
++	}
++	return drain;
++}
++EXPORT_SYMBOL_GPL(inode_dio_drain_get);
++
++/* Writers hold drain->lock; readers retain scalars, never copy pointers. */
++static void inode_dio_publish_range(struct inode_dio_drain *drain,
++		bool active, loff_t start, loff_t last)
++{
++	struct inode_dio_range range = {
++		.active = active, .start = start, .last = last,
++	};
++
++	lockdep_assert_held(&drain->lock);
++	write_seqcount_latch_begin(&drain->range_seq);
++	drain->range[0] = range;
++	write_seqcount_latch(&drain->range_seq);
++	drain->range[1] = range;
++	write_seqcount_latch_end(&drain->range_seq);
++}
++
++/*
++ * The drain mutex serializes drain operations before they acquire the shared
++ * inode lock. Never wait for it while holding i_rwsem: its owner may need to
++ * drop shared i_rwsem and reacquire it exclusively during write checks.
++ * Keep the mutex through the protected operation and inode_dio_drain_finish().
++ * Every DIO on this inode must use inode_dio_try_begin() for admission and
++ * generation-aware completion accounting, including pre-submission failures.
++ * The filesystem must publish the drain pointer before calling this function
++ * and provide ->dio_drain_complete to find it at completion, including for
++ * requests admitted before the first drain allocation.
++ * Return -EOPNOTSUPP without publishing a drain if the callback is absent.
++ */
++int inode_dio_drain_start(struct inode *inode, struct inode_dio_drain *drain,
++			 loff_t start, loff_t last)
++{
++	unsigned int old;
++
++	lockdep_assert_held(&drain->lock);
++	lockdep_assert_held(&inode->i_rwsem);
++	if (!inode->i_op->dio_drain_complete)
++		return -EOPNOTSUPP;
++	WARN_ON_ONCE(atomic_read(&inode->i_dio_count) & INODE_DIO_DRAINING);
++	WARN_ON_ONCE(atomic_read(&drain->pending));
++	WARN_ON_ONCE(drain->range[0].active);
++	atomic_set(&drain->pending, 0);
++	/* Both latch copies are published before the fully ordered cohort cutover. */
++	inode_dio_publish_range(drain, true, start, last);
++	old = atomic_fetch_xor(INODE_DIO_DRAINING | INODE_DIO_GENERATION,
++			&inode->i_dio_count);
++	/* Early completions subtract from zero; adding the snapshot reconciles it. */
++	atomic_add(old & INODE_DIO_COUNT_MASK, &drain->pending);
++	return 0;
++}
++EXPORT_SYMBOL_GPL(inode_dio_drain_start);
++
++void inode_dio_drain_wait(struct inode *inode, struct inode_dio_drain *drain)
++{
++	lockdep_assert_held(&drain->lock);
++	wait_var_event(&inode->i_dio_count, !atomic_read(&drain->pending));
++}
++EXPORT_SYMBOL_GPL(inode_dio_drain_wait);
++
++void inode_dio_drain_finish(struct inode *inode, struct inode_dio_drain *drain)
++{
++	lockdep_assert_held(&drain->lock);
++	WARN_ON_ONCE(atomic_read(&drain->pending));
++	atomic_fetch_and(~INODE_DIO_DRAINING, &inode->i_dio_count);
++	inode_dio_publish_range(drain, false, 0, 0);
++	/* Order exclusion clearing before wake_up_var's waiter check. */
++	smp_mb();
++	wake_up_var(&inode->i_dio_count);
++}
++EXPORT_SYMBOL_GPL(inode_dio_drain_finish);
++
++void inode_dio_drain_complete(struct inode *inode, struct inode_dio_drain *drain)
++{
++	if (atomic_dec_and_test(&drain->pending))
++		wake_up_var(&inode->i_dio_count);
++}
++EXPORT_SYMBOL_GPL(inode_dio_drain_complete);
++
+ /**
+  * inode_dio_wait - wait for outstanding DIO requests to finish
+  * @inode: inode to wait for
+diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
+index 683c1841e640..c862b9a01c78 100644
+--- a/fs/xfs/xfs_reflink.h
++++ b/fs/xfs/xfs_reflink.h
+@@ -20,7 +20,7 @@ xfs_can_free_cowblocks(struct xfs_inode *ip)
+ 	if ((inode_state_read_once(inode) & I_DIRTY_PAGES) ||
+ 	    mapping_tagged(inode->i_mapping, PAGECACHE_TAG_DIRTY) ||
+ 	    mapping_tagged(inode->i_mapping, PAGECACHE_TAG_WRITEBACK) ||
+-	    atomic_read(&inode->i_dio_count))
++	    !inode_dio_finished(inode))
+ 		return false;
+ 	return true;
+ }
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 99caef43ff3c..016f621345af 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -24,6 +24,7 @@
+ #include <linux/mm_types.h>
+ #include <linux/capability.h>
+ #include <linux/semaphore.h>
++#include <linux/seqlock.h>
+ #include <linux/fcntl.h>
+ #include <linux/rculist_bl.h>
+ #include <linux/atomic.h>
+@@ -2040,6 +2041,8 @@ struct inode_operations {
+ 			    struct dentry *dentry, struct file_kattr *fa);
+ 	int (*fileattr_get)(struct dentry *dentry, struct file_kattr *fa);
+ 	struct offset_ctx *(*get_offset_ctx)(struct inode *inode);
++	/* Complete an old-generation DIO during a drain; must not sleep. */
++	void (*dio_drain_complete)(struct inode *inode);
+ } ____cacheline_aligned;
+ 
+ /* Did the driver provide valid mmap hook configuration? */
+@@ -3170,6 +3173,92 @@ bool inode_dio_finished(const struct inode *inode);
+ void inode_dio_wait(struct inode *inode);
+ void inode_dio_wait_interruptible(struct inode *inode);
+ 
++/*
++ * Completion and drain publication share this single atomic cutover. Only
++ * inodes whose DIO always uses the generation-aware helpers may arm a drain.
++ * The low bits retain the normal DIO count, including newer generations.
++ */
++#define INODE_DIO_COUNT_MASK	((1U << 30) - 1)
++#define INODE_DIO_GENERATION	(1U << 30)
++#define INODE_DIO_DRAINING	(1U << 31)
++
++struct inode_dio_range {
++	bool		active;
++	loff_t		start;
++	loff_t		last;
++};
++
++struct inode_dio_drain {
++	struct mutex	lock;
++	atomic_t	pending;
++	seqcount_latch_t range_seq;
++	struct inode_dio_range range[2];
++};
++
++struct inode_dio_drain *inode_dio_drain_get(struct inode_dio_drain **drainp);
++int __must_check inode_dio_drain_start(struct inode *inode,
++		struct inode_dio_drain *drain, loff_t start, loff_t last);
++void inode_dio_drain_wait(struct inode *inode, struct inode_dio_drain *drain);
++void inode_dio_drain_finish(struct inode *inode, struct inode_dio_drain *drain);
++void inode_dio_drain_complete(struct inode *inode, struct inode_dio_drain *drain);
++
++/* The allocation lives until inode reclaim; readers need no RCU section. */
++static inline bool inode_dio_drain_overlap(struct inode *inode,
++		struct inode_dio_drain *drain, loff_t pos, loff_t len)
++{
++	struct inode_dio_range range;
++	unsigned int seq;
++	loff_t last;
++
++	if (!len || !drain)
++		return false;
++	do {
++		seq = read_seqcount_latch(&drain->range_seq);
++		range.active = READ_ONCE(drain->range[seq & 1].active);
++		range.start = READ_ONCE(drain->range[seq & 1].start);
++		range.last = READ_ONCE(drain->range[seq & 1].last);
++	} while (read_seqcount_latch_retry(&drain->range_seq, seq));
++	last = min_t(u64, LLONG_MAX, (u64)pos + len - 1);
++	return range.active && last >= range.start && pos <= range.last;
++}
++
++static inline bool inode_dio_begin_generation(struct inode *inode)
++{
++	return atomic_fetch_inc(&inode->i_dio_count) &
++		INODE_DIO_GENERATION;
++}
++
++static inline void inode_dio_end_generation(struct inode *inode, bool generation)
++{
++	unsigned int old = atomic_fetch_sub(1, &inode->i_dio_count);
++
++	/* A later load of the generation would race with drain publication. */
++	if (unlikely((old & INODE_DIO_DRAINING) &&
++		     !!(old & INODE_DIO_GENERATION) != generation))
++		inode->i_op->dio_drain_complete(inode);
++	if ((old & INODE_DIO_COUNT_MASK) == 1)
++		wake_up_var(&inode->i_dio_count);
++}
++
++/*
++ * Register before inspecting the exclusion. The fully ordered increment pairs
++ * with the publisher's fully ordered generation cutover: a request either
++ * belongs to the finite old cohort or observes the published range (or a
++ * later snapshot). No I/O preparation may precede this admission helper.
++ * Rejected requests withdraw their provisional token before waiting/returning.
++ */
++static inline bool inode_dio_try_begin(struct inode *inode,
++		struct inode_dio_drain **drainp, loff_t pos, loff_t len,
++		bool *generation)
++{
++	*generation = inode_dio_begin_generation(inode);
++	/* Pair with the first allocation's publication in inode_dio_drain_get(). */
++	if (!inode_dio_drain_overlap(inode, smp_load_acquire(drainp), pos, len))
++		return true;
++	inode_dio_end_generation(inode, *generation);
++	return false;
++}
++
+ /**
+  * inode_dio_begin - signal start of a direct I/O requests
+  * @inode: inode the direct I/O happens on
+@@ -3191,7 +3280,8 @@ static inline void inode_dio_begin(struct inode *inode)
+  */
+ static inline void inode_dio_end(struct inode *inode)
+ {
+-	if (atomic_dec_and_test(&inode->i_dio_count))
++	if ((atomic_fetch_sub(1, &inode->i_dio_count) &
++	     INODE_DIO_COUNT_MASK) == 1)
+ 		wake_up_var(&inode->i_dio_count);
+ }
+ 
+diff --git a/tools/memory-model/litmus-tests/DIO-register-first.litmus b/tools/memory-model/litmus-tests/DIO-register-first.litmus
+new file mode 100644
+index 000000000000..a7bca403bdfa
+--- /dev/null
++++ b/tools/memory-model/litmus-tests/DIO-register-first.litmus
+@@ -0,0 +1,36 @@
++C DIO-register-first
++
++(*
++ * Result: Never
++ *
++ * Model one drain cutover, with count bit 0 and generation bit 1.
++ * Publishing both latch copies (or the first initialized drain pointer)
++ * precedes the fully ordered generation RMW. An admission increment which
++ * follows the cutover must see the exclusion. A pre-cutover registration is
++ * instead accounted in the finite old cohort. Completion and subsequent
++ * latch reuse are deliberately outside this single-cutover ordering model.
++ *)
++
++{
++	atomic_t count = 0;
++	int active = 0;
++}
++
++P0(atomic_t *count, int *active)
++{
++	int r0;
++
++	WRITE_ONCE(*active, 1);
++	r0 = atomic_fetch_add(2, count);
++}
++
++P1(atomic_t *count, int *active)
++{
++	int r0;
++	int r1;
++
++	r0 = atomic_fetch_add(1, count);
++	r1 = READ_ONCE(*active);
++}
++
++exists (1:r0=2 /\ 1:r1=0)
+-- 
+2.56.0
 
-Perhaps these two definitions could be moved into the "#ifndef FIDEDUPERANGE"
-block below.
-
-> +
-> +struct file_dedupe_range_info_local {
-> +	__s64 dest_fd;
-> +	__u64 dest_offset;
-> +	__u64 bytes_deduped;
-> +	__s32 status;
-> +	__u32 reserved;
-> +};
-> +
-> +struct file_dedupe_range_local {
-> +	__u64 src_offset;
-> +	__u64 src_length;
-> +	__u16 dest_count;
-> +	__u16 reserved1;
-> +	__u32 flags;
-> +	struct file_dedupe_range_info_local info[0];
-
-How about replacing this GCC zero-length array "info[0]" with C standard
-flexible array "info[]" ?
-
-> +};
-
-Regarding these two *_local structures, I've considered a few alternatives,
-such as:
-  AC_CHECK_MEMBER([struct file_dedupe_range.flags],
-                [AC_DEFINE([HAVE_FILE_DEDUPE_RANGE_FLAGS] ...
-
-What do you or others think?
-
-Thanks,
-Zorro
-
-> +
-> +#ifndef FIDEDUPERANGE
-> +#define FIDEDUPERANGE _IOWR(0x94, 54, struct file_dedupe_range_local)
-> +#endif
-> +
-> +static __u32 range_flags;
-> +
-> +static void
-> +usage(const char *progname)
-> +{
-> +	fprintf(stderr,
-> +		"Usage: %s [-f] [-F flags] src src_offset length dest dest_offset "
-> +		"[dest dest_offset ...]\n"
-> +		"  -f: set FILE_DEDUPE_RANGE_REPORT_PROGRESS\n"
-> +		"  -F: set the raw flags value (e.g. 0x2 for an unknown bit)\n",
-> +		progname);
-> +	exit(EXIT_FAILURE);
-> +}
-> +
-> +static uint64_t
-> +parse_u64(const char *arg, const char *name)
-> +{
-> +	char *end;
-> +	unsigned long long value;
-> +
-> +	errno = 0;
-> +	value = strtoull(arg, &end, 0);
-> +	if (errno || end == arg || *end != '\0') {
-> +		fprintf(stderr, "Invalid %s: %s\n", name, arg);
-> +		exit(EXIT_FAILURE);
-> +	}
-> +
-> +	return value;
-> +}
-> +
-> +int
-> +main(int argc, char **argv)
-> +{
-> +	struct file_dedupe_range_local *range;
-> +	size_t range_size;
-> +	unsigned int dest_count;
-> +	unsigned int i;
-> +	int src_fd;
-> +	int ret;
-> +	int c;
-> +
-> +	const char *progname = argv[0];
-> +
-> +	while ((c = getopt(argc, argv, "fF:")) != -1) {
-> +		switch (c) {
-> +		case 'f':
-> +			range_flags |= FILE_DEDUPE_RANGE_REPORT_PROGRESS;
-> +			break;
-> +		case 'F':
-> +			range_flags |= (__u32)parse_u64(optarg, "flags");
-> +			break;
-> +		default:
-> +			usage(progname);
-> +		}
-> +	}
-> +	argc -= optind;
-> +	argv += optind;
-> +
-> +	if (argc < 5 || (argc - 3) % 2 != 0)
-> +		usage(progname);
-> +
-> +	dest_count = (argc - 3) / 2;
-> +	if (dest_count > UINT16_MAX) {
-> +		fprintf(stderr, "Too many destinations: %u\n", dest_count);
-> +		return EXIT_FAILURE;
-> +	}
-> +
-> +	range_size = sizeof(*range) +
-> +		dest_count * sizeof(struct file_dedupe_range_info_local);
-> +	range = calloc(1, range_size);
-> +	if (!range) {
-> +		perror("calloc");
-> +		return EXIT_FAILURE;
-> +	}
-> +
-> +	src_fd = open(argv[0], O_RDONLY);
-> +	if (src_fd < 0) {
-> +		perror(argv[0]);
-> +		free(range);
-> +		return EXIT_FAILURE;
-> +	}
-> +
-> +	range->src_offset = parse_u64(argv[1], "source offset");
-> +	range->src_length = parse_u64(argv[2], "length");
-> +	range->dest_count = dest_count;
-> +	range->flags = range_flags;
-> +
-> +	for (i = 0; i < dest_count; i++) {
-> +		const char *dest_path = argv[3 + i * 2];
-> +
-> +		range->info[i].dest_fd = open(dest_path, O_RDWR);
-> +		if (range->info[i].dest_fd < 0) {
-> +			perror(dest_path);
-> +			ret = EXIT_FAILURE;
-> +			goto close_destinations;
-> +		}
-> +		range->info[i].dest_offset =
-> +			parse_u64(argv[4 + i * 2], "destination offset");
-> +		/* Sentinels: the kernel must overwrite both output fields. */
-> +		range->info[i].bytes_deduped = ~0ULL;
-> +		range->info[i].status = INT32_MIN;
-> +	}
-> +
-> +	if (ioctl(src_fd, FIDEDUPERANGE, range) < 0) {
-> +		perror("FIDEDUPERANGE");
-> +		ret = EXIT_FAILURE;
-> +		goto close_destinations;
-> +	}
-> +
-> +	for (i = 0; i < dest_count; i++)
-> +		printf("destination %u: bytes=%" PRIu64 " status=%d\n", i,
-> +		       (uint64_t)range->info[i].bytes_deduped,
-> +		       range->info[i].status);
-> +	ret = EXIT_SUCCESS;
-> +
-> +close_destinations:
-> +	while (i > 0) {
-> +		i--;
-> +		close(range->info[i].dest_fd);
-> +	}
-> +	close(src_fd);
-> +	free(range);
-> +	return ret;
-> +}
-> diff --git a/tests/generic/810 b/tests/generic/810
-> new file mode 100755
-> index 0000000..2c09315
-> --- /dev/null
-> +++ b/tests/generic/810
-> @@ -0,0 +1,144 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2026 Matthias Goergens. All Rights Reserved.
-> +#
-> +# FS QA Test No. 810
-> +#
-> +# Check FIDEDUPERANGE result reporting with FILE_DEDUPE_RANGE_REPORT_PROGRESS:
-> +# bytes_deduped is the length actually deduplicated for zero-length,
-> +# shortened and zero-progress requests, and zero for differing requests and
-> +# errors; unknown flag bits are rejected; one unflagged case pins the legacy
-> +# reporting.
-> +#
-> +. ./common/preamble
-> +_begin_fstest auto quick dedupe clone
-> +
-> +. ./common/reflink
-> +
-> +_require_scratch_dedupe
-> +_require_test_program "fideduperange"
-> +
-> +_wants_kernel_commit 847f74d6293b \
-> +	"vfs: add FILE_DEDUPE_RANGE_REPORT_PROGRESS flag to FIDEDUPERANGE"
-> +
-> +_scratch_mkfs >>$seqres.full 2>&1
-> +_scratch_mount
-> +
-> +block_size=$(_get_file_block_size "$SCRATCH_MNT")
-> +short_length=$((2 * block_size))
-> +full_length=$((short_length + 100))
-> +
-> +src=$SCRATCH_MNT/src
-> +src_short=$SCRATCH_MNT/src-short
-> +src_diff=$SCRATCH_MNT/src-diff
-> +dest_interior=$SCRATCH_MNT/dest-interior
-> +dest_eof=$SCRATCH_MNT/dest-eof
-> +dest_short_eof=$SCRATCH_MNT/dest-short-eof
-> +dest_diff=$SCRATCH_MNT/dest-diff
-> +
-> +$XFS_IO_PROG -f -c "pwrite -S 0x6b 0 $full_length" "$src" \
-> +	>>$seqres.full 2>&1
-> +$XFS_IO_PROG -f -c "pwrite -S 0x6b 0 100" "$src_short" \
-> +	>>$seqres.full 2>&1
-> +$XFS_IO_PROG -f -c "pwrite -S 0x6b 0 $((full_length + block_size))" \
-> +	"$dest_interior" >>$seqres.full 2>&1
-> +$XFS_IO_PROG -f -c "pwrite -S 0x6b 0 $full_length" "$dest_eof" \
-> +	>>$seqres.full 2>&1
-> +$XFS_IO_PROG -f -c "pwrite -S 0x6b 0 100" "$dest_short_eof" \
-> +	>>$seqres.full 2>&1
-> +$XFS_IO_PROG -f -c "pwrite -S 0x61 0 $full_length" "$src_diff" \
-> +	>>$seqres.full 2>&1
-> +$XFS_IO_PROG -f -c "pwrite -S 0x62 0 $full_length" "$dest_diff" \
-> +	>>$seqres.full 2>&1
-> +
-> +# Kernels without the flag reject it with EINVAL before looking at any
-> +# destination.
-> +result=$($here/src/fideduperange -f "$src" 0 0 "$dest_interior" 0 2>&1)
-> +echo "flag probe: $result" >>$seqres.full
-> +if echo "$result" | grep -q "Invalid argument"; then
-> +	_notrun "kernel does not support FILE_DEDUPE_RANGE_REPORT_PROGRESS"
-> +fi
-> +
-> +check_results()
-> +{
-> +	local description="$1"
-> +	local expected="$2"
-> +	shift 2
-> +	local result
-> +	local ret
-> +
-> +	result=$($here/src/fideduperange "$@" 2>&1)
-> +	ret=$?
-> +	{
-> +		echo "$description"
-> +		echo "$result"
-> +	} >>$seqres.full
-> +
-> +	if [ $ret -ne 0 ]; then
-> +		_fail "$description: ioctl helper failed"
-> +	fi
-> +	if [ "$result" != "$expected" ]; then
-> +		_fail "$description: unexpected ioctl result"
-> +	fi
-> +
-> +	echo "$description"
-> +}
-> +
-> +# With the flag, bytes_deduped is the length the filesystem reports as
-> +# deduplicated on SAME, and zero on DIFFERS or an error.
-> +
-> +expected="destination 0: bytes=0 status=0"
-> +check_results "zero length: 0 bytes, SAME" "$expected" \
-> +	-f "$src" 0 0 "$dest_interior" 0
-> +
-> +expected="destination 0: bytes=$short_length status=0
-> +destination 1: bytes=$full_length status=0"
-> +check_results "mixed partial request: shortened, full" "$expected" \
-> +	-f "$src" 0 "$full_length" "$dest_interior" 0 "$dest_eof" 0
-> +
-> +expected="destination 0: bytes=0 status=0
-> +destination 1: bytes=100 status=0"
-> +check_results "sub-block request: zero progress, full" "$expected" \
-> +	-f "$src_short" 0 100 "$dest_interior" 0 "$dest_short_eof" 0
-> +
-> +expected="destination 0: bytes=0 status=1"
-> +check_results "differing contents: DIFFERS, zero bytes" "$expected" \
-> +	-f "$src_diff" 0 "$full_length" "$dest_diff" 0
-> +
-> +# Small differing files ending at EOF: still zero, not the request length.
-> +
-> +$XFS_IO_PROG -f -c "pwrite -S 0x41 0 512" "$SCRATCH_MNT/tiny-src" >>$seqres.full 2>&1
-> +$XFS_IO_PROG -f -c "pwrite -S 0x42 0 512" "$SCRATCH_MNT/tiny-dst" >>$seqres.full 2>&1
-> +
-> +expected="destination 0: bytes=0 status=1"
-> +check_results "small-file DIFFERS: zero bytes" "$expected" \
-> +	-f "$SCRATCH_MNT/tiny-src" 0 512 "$SCRATCH_MNT/tiny-dst" 0
-> +
-> +# On a per-destination error, status carries the errno and bytes_deduped
-> +# is zero (the huge offset fails VFS validation with EINVAL).
-> +
-> +expected="destination 0: bytes=0 status=-22"
-> +check_results "error: bytes zero on EINVAL" "$expected" \
-> +	-f "$src" 0 "$full_length" "$dest_interior" 9223372036854775807
-> +
-> +# An unknown flag bit is rejected before any destination is processed.
-> +
-> +result=$($here/src/fideduperange -F 0x2 "$src" 0 "$full_length" "$dest_interior" 0 2>&1)
-> +echo "unknown flag bit: $result" >>$seqres.full
-> +if echo "$result" | grep -q "Invalid argument"; then
-> +	echo "unknown flag bit: EINVAL"
-> +else
-> +	_fail "unknown flag bit: expected EINVAL, got: $result"
-> +fi
-> +
-> +# Without the flag, the legacy reporting is unchanged: the requested
-> +# length is reported even when the VFS shortens the range.
-> +
-> +expected="destination 0: bytes=$full_length status=0
-> +destination 1: bytes=$full_length status=0"
-> +check_results "unflagged legacy reporting: full length" "$expected" \
-> +	"$src" 0 "$full_length" "$dest_interior" 0 "$dest_eof" 0
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/generic/810.out b/tests/generic/810.out
-> new file mode 100644
-> index 0000000..f88ac62
-> --- /dev/null
-> +++ b/tests/generic/810.out
-> @@ -0,0 +1,9 @@
-> +QA output created by 810
-> +zero length: 0 bytes, SAME
-> +mixed partial request: shortened, full
-> +sub-block request: zero progress, full
-> +differing contents: DIFFERS, zero bytes
-> +small-file DIFFERS: zero bytes
-> +error: bytes zero on EINVAL
-> +unknown flag bit: EINVAL
-> +unflagged legacy reporting: full length
-> 
-> base-commit: d07dca72d2455f4ba8c660ad4c008541ccccb707
-> -- 
-> 2.56.0
-> 
