@@ -1,84 +1,84 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.42
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.51
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793815971;
-	b=iDRP4xIpyXs5kHeC/9IDfV9ZuH16rEz6y6xkhNeI+Rj4uUS+68Rvxh5Cd2NTEzM7Nrrw
-	 dsZEgVqbR/UlkiTsuYtrnHr2RJiirCgUtU6LorsVYvf6mL3JCud55pwQB7xO+tuY4qxtG
-	 PRYLqz5UE2F33yDAeUdQaP1t9XISU8+aUtv1fzjCYSizWMxtvu8tOVNMsBtedRX25Jj+W
-	 rHDmpvWktg925a0QJvGGNcqiRhw+d3e0N+aEYnSvxxpMkppBeoi3oNfuhDYX6p3Eh8SwO
-	 0nyRUbMlIuo+j+idXm+taxR5vRtIzU2Ry7Lc/tZK1v5MAAxgD8ni+CPd7N7UBYXGr7g==
+	t=1793815972;
+	b=1rsnqTfrkpR7lSzneyR4+k4pZbZnKyXutv7OGJiDPcIZ7Ql2uHRCnO4bgHWAQhSLV+B6
+	 /CIzfh8bdOwsgzU0J4kfK1IkgZb4UVFqVYWPJkTsRjN6SaY4RnFu93QH7r0UODq0L75sl
+	 38pf+qu3QRwDKLOk7jdmVG6MEUSIPUCNj72IZWdf7+lwzOv8PcFxJSB7Dj0d38ditnCKJ
+	 Ghw7UoRyz/Z9stde3VVlrYZ+A3iSw/9Q9JhGiNWc963zuXNQ9sOqSLjMpUTZUY4TFIPYH
+	 n1LL+781pCpOsPiAFU+eJRT/7KtSNiAvmmvLitgBcKitrZORd9TaMOMZ35RSMYKKD4A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793815971;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793815972;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
 	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
 	 MIME-Version:Content-Transfer-Encoding;
-	bh=4jR5g7ZhU4ZTGj4CMxjvz0KvZ1iGvcXv9dfVeD7UpZk=;
-	b=kMLQONpbaOXGAKd+2Q+E3+ifVTubSXECLdJNGqOgF7U7a4z0vVo2awI3r+0Y3z3jDsOw
-	 iI3aq77qkatBIJFjx1dhJIsq+Fb/oXqPxcJwUDIGEFUPGhb8m+MHvBqFf9UKeUVYcklgi
-	 IQfxubG/PA/PytdjMqIsevN18gyd9wLHhtgRaUHdXptqSAlCYVdtRRDDACH5wU+98McIv
-	 D48fo4ihHqvGNEB1ZepRc39/xUNFAt7ihZwWg09L/jAQ9RXa00SwynDCkPwwcI827tLMu
-	 gEDPM0flUYtAi3RS7mUzvVEt66WFyd13UXrQWHtY6bIZvfgHBKlGWbK/x7UmtHlwC3A==
+	bh=SLiPD53HR7PY8rScImE/+5BcuQFIJQbmIF65gIT4Fow=;
+	b=gqmQ8vtBQg598AiDdfqmXo0v4Th2znlmP7DeF27TKFoOzHdLHrU9t4cMariYpVx61olK
+	 vIKaXeFrkjTeLmWMrxdx3AheYLgEHYMYXLz3ZcwoecuTxKVFNm1xgTgDtecIBI11Szred
+	 9N9TnxCCq8L52Ndq3dsrYu1LhUBR9X0YZ50zMkGcV/MUqU7J/U0lY9Oi53JiGJKljCOK3
+	 riZFG/F7Eke8VcawvT6Zdie6NM6mQB7jRMVbED4/pnz3u0bLP1TcGfA9WRvUJHYAT7Ezb
+	 0IkbUyND6c6R3bJrJa9LGMzmyalq7gkH7q9y8CVSE1f1I9clORTt7z8EcuS+kHBsb8Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=FIsUsuW5;
-	arc=none smtp.remote-ip=209.85.216.42
-Received: from mail-pj1-f42.google.com (mail-pj1-f42.google.com [209.85.216.42])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b="tN//qUCJ";
+	arc=none smtp.remote-ip=209.85.216.51
+Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73DC5606A68D
-	for <linux-xfs@vger.kernel.org>; Wed,  4 Nov 2026 18:12:50 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 73DC5606A68D
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8740E606B207
+	for <linux-xfs@vger.kernel.org>; Wed,  4 Nov 2026 18:12:51 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8740E606B207
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=FIsUsuW5
-Received: by mail-pj1-f42.google.com with SMTP id 98e67ed59e1d1-3b0a519049aso424531a91.1
-        for <linux-xfs@vger.kernel.org>; Wed, 04 Nov 2026 10:12:50 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=tN//qUCJ
+Received: by mail-pj1-f51.google.com with SMTP id 98e67ed59e1d1-3ab41538192so909492a91.0
+        for <linux-xfs@vger.kernel.org>; Wed, 04 Nov 2026 10:12:51 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793815970; x=1794420770; darn=vger.kernel.org;
+        d=gmail.com; s=20260707; t=1793815971; x=1794420771; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=4jR5g7ZhU4ZTGj4CMxjvz0KvZ1iGvcXv9dfVeD7UpZk=;
-        b=FIsUsuW5NoG69NJafmTOnWTznIvcoqZo9UCZ1OuHWAJjN8xWk48DArZpaYIeDy7AOo
-         fn4neCccdUetUbZSOD1K3XrAUS4J5vTo8ArjURPPx0SazxfY9IoqYkRZ/1RcM6/nwiKx
-         B7LWinKQdNzU8mGzrPmE2vvx0ddvlXnbJ7IUuycGjK3Ku2G8rh++LHJTcSQXjAqSiw97
-         MqIVhh4LBxQ/trfg1H1a1UNhBygB1CbBln/FOuuhOBmyK+WM0hf/Sz+mS7/IfuRnBCdT
-         lf8KLBO78MdLpJ5+qeVXdjs6xZ57fQHvgqZEJz0wB2i1imJarCx72nyQ6UEPRXjFVFhx
-         pQEQ==
+        bh=SLiPD53HR7PY8rScImE/+5BcuQFIJQbmIF65gIT4Fow=;
+        b=tN//qUCJ2vDIkL4IwOY7DC6Qe9s8JylI9u451Pm6jLzcXejLHUjNhLiH4ST93PdSpx
+         88SjMM3tkte/B0Ade6FninIhtSrbSdd8ODyRhV0JzVL9CXvL4Njs1+JNsPj6UXn1AN9S
+         5JO+u1p4IhidehQRdX3sExxmvx7ZE+BFWwG39YOfsVxip5+0FUk2U8+xeE8+G16LW9bW
+         Td0ga4LyyTWN6XYcO5YbX4UyzoKPc2T6i/Jjumpb1mqM5XOXY7FlR43a68RHGdkDr4PJ
+         OnqDPkad+9uioHk8jahMj60IEO7X70iHmy4o7CdWgUz0yTjoEi+0TRjjcaR81shZ2k86
+         +QSw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793815970; x=1794420770;
+        d=1e100.net; s=20260707; t=1793815971; x=1794420771;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=4jR5g7ZhU4ZTGj4CMxjvz0KvZ1iGvcXv9dfVeD7UpZk=;
-        b=w8Vyb7NwdWnd34EYn7D7Hb/v137JIjboJj0muZcIlX8MtNCvxOwXUkTCZRlgTltGCV
-         DO1FJRSZXRnticxHUU0/8OlvuTZ6avucvCcK7j1pzcG66yfiMHXmgjV1XJ7ZeKpbUcKG
-         nNILrjnQZdGztvTKK2dHKn+zvCSKkMvF8gwZxMJw6yYGw/VDPrzy90Niw6CUmZWF1ozy
-         mTHmGTOtOc50lyowUa1OtTfUKbSYrP4+cWAgTA05OFUZKPOfkEL0DfMsBhZvzCs2CYti
-         yBRR+0UTVf7DrVGE5p2RMZwY0xsa7s3NQnLiSLhGAqmoN+CQswLxk7nBdKSNmZ5rP8Yb
-         hMAg==
-X-Forwarded-Encrypted: i=1; AKwUvBxUuvwJIEquP/FHrQBGmjb+sOp8QkLF1bUuVYxz/t7URxplNkDepC/T9SZYIbYumG19KzuF5lmsT0w=@vger.kernel.org
-X-Gm-Message-State: APuU4Z/vbRVItDIXytNADU4WQV/KZUMjJxAYiAoglh7bqark4AmoYsxX
-	I0lLn2/MLal4ll+2UoZr/PJnI8vc034cAlVkdvX5bOnqEKr9lLyskpcz
-X-Gm-Gg: AYBFou1TC7uiuCQbFv/haniObetTnT2nVzmrfr73Jly+g5Tu2hr325Dek4WC6Q/tuic
-	cy5vg4XaFdGeJIn16feQp3M+f4gjQPEL06npyEBL6expYhBOKopmCckoeL3QO/VhIhik0dgEuDm
-	TjWXD/vbLVBd0opC4cyFBWr4gleOeodjaigzeiqWfanUI5/TNk0g+yTfDE3AGvdLvZQfJlSqj2t
-	7oSM7z+ymGqhkCmJXeVZinK5qsLrXyh2pEnXS4uzmekUsOOWo1Je0sgTExlrVivBnK4uEuusyv3
-	oZemRCaK90d+2Z9LresOkrrKGhcYOOYd4Bq+qg77xJLRtbr+PYPa8wjPvfEtBQAsC2yF2cYjD5y
-	68RWtdR99kSQE+sGOKyxE9By3UZ4rHVe+dm1YlFHdhlquMne44KhpmAxy1Otn7Pd+mYa6aRQ1S3
-	DjbrsqpQcsiwB2h+wFplR0e8jkYU8bUEKCXlajGZ7oT3XO2hVRhi5i6yOl70KB87bXzABPCfp94
-	oc9LOkGbYATezJPOdQuEo5mL4UNd/0ckBDRUNuXkI92Q+ORhwZFi0ZOVMW24hIgn7ppq/QCrliD
-	jqL+G1XR1LDhV40IsodB6RR4a/dzvOjm02KD7bLLsibs575euyicIn5tk6SW5MI9+7xghwKIJGf
-	3cPhF7g==
-X-Received: by 2002:a17:90b:28c5:b0:3ad:ce24:acfa with SMTP id 98e67ed59e1d1-3ae897c652dmr13485282a91.20.1793815969563;
-        Wed, 04 Nov 2026 10:12:49 -0800 (PST)
+        bh=SLiPD53HR7PY8rScImE/+5BcuQFIJQbmIF65gIT4Fow=;
+        b=GfeXC8TG5sbhzu36WZLx50arqvEGyvqNpn/JCz2+UmT0Wau2TEhcQjGHZfZeH3xrm4
+         35ffsqQ67N6kBd/iOdk1tgMLtMSv4RIt1yKZDc2qkIH8pB0inpzBgbfRY8WOyqJALQUk
+         gVl2Zdf3cqN3f27ct3DIs/Fle4IPh/KwcRap9bahBsbGHAlLA3i3tnqCA5yQ4XcXKSAe
+         FGC2e8qsJ0F8aPrCy6jMQaBmz9UvezrGpet/f8owL+eSlcBA4j5BSf8C4U0lxpBghzjX
+         7BJycamjg7X1AJx5z77rBiZzJ2KyMcTek6GWdA8XH84IRblZMyIduy9YibDyUCIu+u8Z
+         KwCQ==
+X-Forwarded-Encrypted: i=1; AKwUvBwBqhnK/4g9yP2A3Vexd6ySx7wJk54e/lOjV8ihYrNDtJaAY4pU0LvebGQPRFxA1HuVpygmYusFPNI=@vger.kernel.org
+X-Gm-Message-State: APuU4Z8a1/DA9A/qi9xTas8oa4VWkLPj3lULFGck3/WNFdR4K5ZtK8nd
+	YcoKYOJDAUcpIbmm/lGQnqXF9mHFkQBOfz2ec3BXoyjlKXvDXl78lXoR
+X-Gm-Gg: AYBFou1tVDNBEkVfaltAOhCvYKRa6N9m1D5FAvxEOVPCKwiGZNG8pMqMh3RNnOLp3qm
+	1Vxg3QCJXHsQxFhtP3xi22jS+U6RGB6OOLW6xGapO4jidIH4ocjkhmrIn5B8rUlEuXGQRycAtIX
+	RxXaQtkUaCZldaf/FRfwSsCfmoTo+E04MlLqmUZYATlZTTczW+BJZyrQ5E+My0a1OZ02g/+roKM
+	wIlrvc63GwedNXi09FJiHXYqjtD4vcmUnJ4q5L+neOtfzCbHmQ1+DfiWyi+R15ab/p1zdz+75Jt
+	eFO5ZyADxK8yUibmJniynOgm3q7LnTw6u8Lx/5UZIqvNrID+RFQrc5h8EFDkT57gVPqo9dztVVP
+	HuXE+LOJ8TGCIkM4gmD7yhtYErhyMCORmdWVqxrIjBcSp8/oLMtYaf32kt4deyq3SbRE3KfY/gO
+	SZM40E5sgvY+xGe87t78EOK0oFYGK5HpkK+yyvf9R9XPz7Up8orspFZKPa8YK3ajmdjstqYhkgu
+	TW19R/+s4O14nrpuIMuM30iA6kklBBz/60tuzBLYJO06z5QSpDvjsr1IqGJw31O6v5TtwnePW7g
+	hNa8HAqrf+0WDc06kjhRiQgF2ROjbi9M7aCwz5vQW/xYS3KKhDR5eFeL7zbU2ZPYKQkr9v/fN/u
+	hIKvnrUODsAkgPylwOeov1JUZIXs=
+X-Received: by 2002:a17:90b:1c10:b0:39e:6a80:b799 with SMTP id 98e67ed59e1d1-3ae89799522mr15264959a91.41.1793815970772;
+        Wed, 04 Nov 2026 10:12:50 -0800 (PST)
 Received: from archlinux.tail3acd4.ts.net ([69.110.143.170])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b0b31a3efasm78326a91.9.2026.11.04.10.12.48
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b0b31a3efasm78326a91.9.2026.11.04.10.12.49
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 04 Nov 2026 10:12:49 -0800 (PST)
+        Wed, 04 Nov 2026 10:12:50 -0800 (PST)
 From: Vitali Lovich <vlovich@gmail.com>
 To: linux-fsdevel@vger.kernel.org,
 	linux-xfs@vger.kernel.org
@@ -87,9 +87,9 @@ Cc: brauner@kernel.org,
 	jack@suse.cz,
 	cem@kernel.org,
 	djwong@kernel.org
-Subject: [RFC PATCH 1/6] fs: implement range-based generation-coordinated DIO draining
-Date: Wed,  4 Nov 2026 10:12:41 -0800
-Message-ID: <f8d8760ee9bfac6478fe18f866c8b809b2c22f40.1793815542.git.vlovich@gmail.com>
+Subject: [RFC PATCH 2/6] iomap: support generation accounting and caller-registered DIO
+Date: Wed,  4 Nov 2026 10:12:42 -0800
+Message-ID: <50539e987d104871cff5c25b7e803eaea5d3da27.1793815542.git.vlovich@gmail.com>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <cover.1793815542.git.vlovich@gmail.com>
 References: <cover.1793815542.git.vlovich@gmail.com>
@@ -104,508 +104,284 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Whole-inode direct I/O (DIO) draining currently requires filesystems to
-exclude all new submission requests, even those completely disjoint from
-the range being modified.
+Generation draining requires every DIO request on an opted-in inode to
+preserve its admission generation until completion. Convert both generic
+iomap DIO and the simple-read path to generation-aware accounting,
+reusing their existing internal flag fields.
 
-Add generation accounting and range admission to allow filesystems to
-drain a finite cohort of in-flight DIO while concurrently admitting
-new, disjoint DIO under a shared i_rwsem.
+Allow callers to register DIO before entering iomap with
+IOMAP_DIO_ACCOUNTED and pass the saved token in IOMAP_DIO_GENERATION.
+Iomap owns that registration and releases it on completion or any early
+return, including allocation failures, empty requests and -ENOTBLK.
+Callers retrying through the generic path must acquire a fresh admission.
+Callers without a registration retain internal iomap accounting.
 
-This reserves the top two bits of i_inode->i_dio_count for generation
-and draining state, utilizes seqcount_latch_t for lockless range snapshot
-validation, and introduces a new ->dio_drain_complete VFS operation to
-resolve private drain state lazily without bloating struct inode or
-per-request storage.
+Pass the flags into iomap_dio_read_simple() and update existing XFS and
+ext4 callers to pass zero. Preserve the token through mapping and
+submission errors, and read it before bio_put() frees the bio-backed
+simple-read struct. The completion lifetime still includes filesystem
+end_io work and post-write invalidation.
 
 Signed-off-by: Vitali Lovich <vlovich@gmail.com>
 ---
- Documentation/filesystems/locking.rst         |  89 ++++++++++-----
- Documentation/filesystems/vfs.rst             |  41 +++++++
- fs/inode.c                                    | 107 +++++++++++++++++-
- fs/xfs/xfs_reflink.h                          |   2 +-
- include/linux/fs.h                            |  92 ++++++++++++++-
- .../litmus-tests/DIO-register-first.litmus    |  36 ++++++
- 6 files changed, 334 insertions(+), 33 deletions(-)
- create mode 100644 tools/memory-model/litmus-tests/DIO-register-first.litmus
+ fs/ext4/file.c        |  2 +-
+ fs/iomap/direct-io.c  | 36 +++++++++++++++++++++-------
+ fs/xfs/xfs_file.c     |  2 +-
+ include/linux/iomap.h | 56 +++++++++++++++++++++++++++++--------------
+ 4 files changed, 67 insertions(+), 29 deletions(-)
 
-diff --git a/Documentation/filesystems/locking.rst b/Documentation/filesystems/locking.rst
-index f7363ad770c7..cfd4ce7ed563 100644
---- a/Documentation/filesystems/locking.rst
-+++ b/Documentation/filesystems/locking.rst
-@@ -93,40 +93,44 @@ prototypes::
- 	int (*fileattr_get)(struct dentry *dentry, struct file_kattr *fa);
- 	struct posix_acl * (*get_acl)(const struct mnt_idmap *, struct dentry *, int);
- 	struct offset_ctx *(*get_offset_ctx)(struct inode *inode);
-+	void (*dio_drain_complete)(struct inode *inode);
+diff --git a/fs/ext4/file.c b/fs/ext4/file.c
+index 50d3c92709c8..cb6d6722c18e 100644
+--- a/fs/ext4/file.c
++++ b/fs/ext4/file.c
+@@ -91,7 +91,7 @@ static ssize_t ext4_dio_read_iter(struct kiocb *iocb, struct iov_iter *to)
+ 		return generic_file_read_iter(iocb, to);
+ 	}
  
- locking rules:
--	all may block
-+	all may block except dio_drain_complete
+-	ret = iomap_dio_read_simple(iocb, to, ext4_iomap_begin);
++	ret = iomap_dio_read_simple(iocb, to, ext4_iomap_begin, 0);
+ 	if (ret == -ENOTBLK)
+ 		ret = iomap_dio_rw(iocb, to, &ext4_iomap_ops, NULL, 0, NULL, 0);
+ 	inode_unlock_shared(inode);
+diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+index ad041ac3252a..fffe6702c42f 100644
+--- a/fs/iomap/direct-io.c
++++ b/fs/iomap/direct-io.c
+@@ -149,7 +149,8 @@ ssize_t iomap_dio_complete(struct iomap_dio *dio)
+ 	    !(dio->flags & IOMAP_DIO_NO_INVALIDATE))
+ 		kiocb_invalidate_post_direct_write(iocb, dio->size);
  
--==============	==================================================
--ops		i_rwsem(inode)
--==============	==================================================
--lookup:		shared
--create:		exclusive
--link:		exclusive (both)
--mknod:		exclusive
--symlink:	exclusive
--mkdir:		exclusive
--unlink:		exclusive (both)
--rmdir:		exclusive (both)(see below)
--rename:		exclusive (both parents, some children)	(see below)
--readlink:	no
--get_link:	no
--setattr:	exclusive
--permission:	no (may not block if called in rcu-walk mode)
--get_inode_acl:	no
--get_acl:	no
--getattr:	no
--listxattr:	no
--fiemap:		no
--update_time:	no
--sync_lazytime:	no
--atomic_open:	shared (exclusive if O_CREAT is set in open flags)
--tmpfile:	no
--fileattr_get:	no or exclusive
--fileattr_set:	exclusive
--get_offset_ctx  no
--==============	==================================================
-+==================  ==================================================
-+ops                 i_rwsem(inode)
-+==================  ==================================================
-+lookup:             shared
-+create:             exclusive
-+link:               exclusive (both)
-+mknod:              exclusive
-+symlink:            exclusive
-+mkdir:              exclusive
-+unlink:             exclusive (both)
-+rmdir:              exclusive (both)(see below)
-+rename:             exclusive (both parents, some children) (see below)
-+readlink:           no
-+get_link:           no
-+setattr:            exclusive
-+permission:         no (may not block if called in rcu-walk mode)
-+get_inode_acl:      no
-+get_acl:            no
-+getattr:            no
-+listxattr:          no
-+fiemap:             no
-+update_time:        no
-+sync_lazytime:      no
-+atomic_open:        shared (exclusive if O_CREAT is set in open flags)
-+tmpfile:            no
-+fileattr_get:       no or exclusive
-+fileattr_set:       exclusive
-+get_offset_ctx      no
-+dio_drain_complete  no
-+==================  ==================================================
+-	inode_dio_end(file_inode(iocb->ki_filp));
++	inode_dio_end_generation(file_inode(iocb->ki_filp),
++				dio->flags & IOMAP_DIO_GENERATION);
  
-+->dio_drain_complete() does not require i_rwsem and must not block. It may
-+run in interrupt context.
- 
- 	Additionally, ->rmdir(), ->unlink() and ->rename() have ->i_rwsem
- 	exclusive on victim.
-@@ -138,6 +142,31 @@ get_offset_ctx  no
- See Documentation/filesystems/directory-locking.rst for more detailed discussion
- of the locking scheme for directory operations.
- 
-+Direct I/O range draining
-+=========================
-+
-+Range drainers acquire ``drain->lock`` before ``inode->i_rwsem`` and any
-+filesystem locks needed by the protected operation. Hold the drain mutex
-+through inode_dio_drain_finish(): it serializes range publication, cohort
-+draining, the protected operation, and exclusion removal. Never wait for
-+this mutex while holding i_rwsem, even shared.
-+
-+A drainer can drop i_rwsem and reacquire it exclusively during write
-+checks, for example to strip privileges. Acquiring the mutex inside shared
-+i_rwsem would permit this deadlock:
-+
-+1. Drainer A holds the drain mutex and shared i_rwsem.
-+2. Drainer B holds shared i_rwsem and waits for A's drain mutex.
-+3. A drops shared i_rwsem and tries to acquire it exclusively. B's shared
-+   lock prevents A from proceeding, while B cannot release it until A
-+   releases the mutex.
-+
-+Callers that already hold i_rwsem must drop it before waiting for the drain
-+mutex, then reacquire i_rwsem and repeat their checks. DIO admission and
-+completion do not acquire the drain mutex, so the old cohort can complete
-+while a drainer holds it. Drain the old cohort before taking any filesystem
-+lock that its I/O preparation or completion might need.
-+
- xattr_handler operations
- ========================
- 
-diff --git a/Documentation/filesystems/vfs.rst b/Documentation/filesystems/vfs.rst
-index 1824462a4371..60fa5c12e451 100644
---- a/Documentation/filesystems/vfs.rst
-+++ b/Documentation/filesystems/vfs.rst
-@@ -445,6 +445,7 @@ As of kernel 2.6.22, the following members are defined:
- 				    struct dentry *dentry, struct file_kattr *fa);
- 		int (*fileattr_get)(struct dentry *dentry, struct file_kattr *fa);
- 	        struct offset_ctx *(*get_offset_ctx)(struct inode *inode);
-+		void (*dio_drain_complete)(struct inode *inode);
- 	};
- 
- Again, all methods are called without any locks being held, unless
-@@ -634,6 +635,46 @@ otherwise noted.
-         filesystem must define this operation to use
-         simple_offset_dir_operations.
- 
-+``dio_drain_complete``
-+	called by inode_dio_end_generation() when a direct I/O request
-+	from the old generation completes while a drain is active.
-+	Filesystems that use inode_dio_drain_start() must implement this
-+	method to look up their private struct inode_dio_drain pointer
-+	(allocated via inode_dio_drain_get() and retained until inode
-+	reclamation) and pass it to inode_dio_drain_complete(). Because
-+	a drain may be started while earlier requests are already in
-+	flight, the method must locate the drain state from the inode
-+	itself rather than from per-request submission state. May be
-+	called in interrupt context and must not sleep.
-+
-+	inode_dio_drain_start() returns -EOPNOTSUPP without changing drain
-+	state if this method is absent. Callers must check for success
-+	before waiting for or finishing the drain.
-+
-+	Drain operations serialize with the drain mutex, then hold i_rwsem
-+	shared to exclude truncate and buffered writes. Never wait for the
-+	drain mutex while holding i_rwsem: its owner may need to drop shared
-+	i_rwsem and reacquire it exclusively during write checks. See the
-+	deadlock example in Documentation/filesystems/locking.rst.
-+
-+	Every DIO admission must use inode_dio_try_begin() to register
-+	provisionally with a fully ordered atomic increment before reading the
-+	range snapshot and preparing or submitting I/O. A failed admission
-+	withdraws its token with generation-aware completion accounting before
-+	returning. The caller must drop its submission lock before waiting for
-+	the exclusion to clear, then reacquire the lock and recheck the request.
-+
-+	inode_dio_drain_start() publishes both copies of a seqcount_latch_t
-+	range snapshot before the fully ordered generation flip and DIO count
-+	snapshot. Earlier registrations belong to the finite old cohort;
-+	later registrations observe the exclusion or a later snapshot.
-+	Nonoverlapping new-generation I/O can proceed without extending the
-+	old cohort. Readers only load and validate scalar snapshots, and do
-+	not acquire the drain mutex, including on PREEMPT_RT. The lazy drain
-+	allocation is acquired through its published pointer and lives until
-+	inode reclaim. inode_dio_drain_finish() publishes an inactive snapshot
-+	and wakes blocked admissions. Range reuse requires no RCU grace period.
-+
- The Address Space Object
- ========================
- 
-diff --git a/fs/inode.c b/fs/inode.c
-index f63535ee3629..7b027547b305 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -358,6 +358,7 @@ struct inode *alloc_inode(struct super_block *sb)
- 
- void __destroy_inode(struct inode *inode)
- {
-+	WARN_ON_ONCE(atomic_read(&inode->i_dio_count) & INODE_DIO_DRAINING);
- 	inode_detach_wb(inode);
- 	security_inode_free(inode);
- 	fsnotify_inode_delete(inode);
-@@ -2778,10 +2779,114 @@ EXPORT_SYMBOL(inode_owner_or_capable);
-  */
- bool inode_dio_finished(const struct inode *inode)
- {
--	return atomic_read(&inode->i_dio_count) == 0;
-+	return !(atomic_read(&inode->i_dio_count) & INODE_DIO_COUNT_MASK);
- }
- EXPORT_SYMBOL(inode_dio_finished);
- 
-+/*
-+ * Allocated on the first draining operation, never on ordinary DIO. The
-+ * filesystem owns the pointer and retains the allocation until inode reclaim.
-+ */
-+struct inode_dio_drain *inode_dio_drain_get(struct inode_dio_drain **drainp)
-+{
-+	struct inode_dio_drain *drain, *existing;
-+
-+	/* Acquire the initialized metadata published by the successful cmpxchg. */
-+	drain = smp_load_acquire(drainp);
-+	if (drain)
-+		return drain;
-+	drain = kzalloc_obj(*drain, GFP_NOFS);
-+	if (!drain)
-+		return ERR_PTR(-ENOMEM);
-+	mutex_init(&drain->lock);
-+	seqcount_latch_init(&drain->range_seq);
-+	existing = cmpxchg(drainp, NULL, drain);
-+	if (existing) {
-+		kfree(drain);
-+		/* A failed cmpxchg does not acquire the winner's initialization. */
-+		drain = smp_load_acquire(drainp);
-+	}
-+	return drain;
-+}
-+EXPORT_SYMBOL_GPL(inode_dio_drain_get);
-+
-+/* Writers hold drain->lock; readers retain scalars, never copy pointers. */
-+static void inode_dio_publish_range(struct inode_dio_drain *drain,
-+		bool active, loff_t start, loff_t last)
-+{
-+	struct inode_dio_range range = {
-+		.active = active, .start = start, .last = last,
-+	};
-+
-+	lockdep_assert_held(&drain->lock);
-+	write_seqcount_latch_begin(&drain->range_seq);
-+	drain->range[0] = range;
-+	write_seqcount_latch(&drain->range_seq);
-+	drain->range[1] = range;
-+	write_seqcount_latch_end(&drain->range_seq);
-+}
-+
-+/*
-+ * The drain mutex serializes drain operations before they acquire the shared
-+ * inode lock. Never wait for it while holding i_rwsem: its owner may need to
-+ * drop shared i_rwsem and reacquire it exclusively during write checks.
-+ * Keep the mutex through the protected operation and inode_dio_drain_finish().
-+ * Every DIO on this inode must use inode_dio_try_begin() for admission and
-+ * generation-aware completion accounting, including pre-submission failures.
-+ * The filesystem must publish the drain pointer before calling this function
-+ * and provide ->dio_drain_complete to find it at completion, including for
-+ * requests admitted before the first drain allocation.
-+ * Return -EOPNOTSUPP without publishing a drain if the callback is absent.
-+ */
-+int inode_dio_drain_start(struct inode *inode, struct inode_dio_drain *drain,
-+			 loff_t start, loff_t last)
-+{
-+	unsigned int old;
-+
-+	lockdep_assert_held(&drain->lock);
-+	lockdep_assert_held(&inode->i_rwsem);
-+	if (!inode->i_op->dio_drain_complete)
-+		return -EOPNOTSUPP;
-+	WARN_ON_ONCE(atomic_read(&inode->i_dio_count) & INODE_DIO_DRAINING);
-+	WARN_ON_ONCE(atomic_read(&drain->pending));
-+	WARN_ON_ONCE(drain->range[0].active);
-+	atomic_set(&drain->pending, 0);
-+	/* Both latch copies are published before the fully ordered cohort cutover. */
-+	inode_dio_publish_range(drain, true, start, last);
-+	old = atomic_fetch_xor(INODE_DIO_DRAINING | INODE_DIO_GENERATION,
-+			&inode->i_dio_count);
-+	/* Early completions subtract from zero; adding the snapshot reconciles it. */
-+	atomic_add(old & INODE_DIO_COUNT_MASK, &drain->pending);
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(inode_dio_drain_start);
-+
-+void inode_dio_drain_wait(struct inode *inode, struct inode_dio_drain *drain)
-+{
-+	lockdep_assert_held(&drain->lock);
-+	wait_var_event(&inode->i_dio_count, !atomic_read(&drain->pending));
-+}
-+EXPORT_SYMBOL_GPL(inode_dio_drain_wait);
-+
-+void inode_dio_drain_finish(struct inode *inode, struct inode_dio_drain *drain)
-+{
-+	lockdep_assert_held(&drain->lock);
-+	WARN_ON_ONCE(atomic_read(&drain->pending));
-+	atomic_fetch_and(~INODE_DIO_DRAINING, &inode->i_dio_count);
-+	inode_dio_publish_range(drain, false, 0, 0);
-+	/* Order exclusion clearing before wake_up_var's waiter check. */
-+	smp_mb();
-+	wake_up_var(&inode->i_dio_count);
-+}
-+EXPORT_SYMBOL_GPL(inode_dio_drain_finish);
-+
-+void inode_dio_drain_complete(struct inode *inode, struct inode_dio_drain *drain)
-+{
-+	if (atomic_dec_and_test(&drain->pending))
-+		wake_up_var(&inode->i_dio_count);
-+}
-+EXPORT_SYMBOL_GPL(inode_dio_drain_complete);
-+
- /**
-  * inode_dio_wait - wait for outstanding DIO requests to finish
-  * @inode: inode to wait for
-diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-index 683c1841e640..c862b9a01c78 100644
---- a/fs/xfs/xfs_reflink.h
-+++ b/fs/xfs/xfs_reflink.h
-@@ -20,7 +20,7 @@ xfs_can_free_cowblocks(struct xfs_inode *ip)
- 	if ((inode_state_read_once(inode) & I_DIRTY_PAGES) ||
- 	    mapping_tagged(inode->i_mapping, PAGECACHE_TAG_DIRTY) ||
- 	    mapping_tagged(inode->i_mapping, PAGECACHE_TAG_WRITEBACK) ||
--	    atomic_read(&inode->i_dio_count))
-+	    !inode_dio_finished(inode))
- 		return false;
- 	return true;
- }
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 99caef43ff3c..016f621345af 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -24,6 +24,7 @@
- #include <linux/mm_types.h>
- #include <linux/capability.h>
- #include <linux/semaphore.h>
-+#include <linux/seqlock.h>
- #include <linux/fcntl.h>
- #include <linux/rculist_bl.h>
- #include <linux/atomic.h>
-@@ -2040,6 +2041,8 @@ struct inode_operations {
- 			    struct dentry *dentry, struct file_kattr *fa);
- 	int (*fileattr_get)(struct dentry *dentry, struct file_kattr *fa);
- 	struct offset_ctx *(*get_offset_ctx)(struct inode *inode);
-+	/* Complete an old-generation DIO during a drain; must not sleep. */
-+	void (*dio_drain_complete)(struct inode *inode);
- } ____cacheline_aligned;
- 
- /* Did the driver provide valid mmap hook configuration? */
-@@ -3170,6 +3173,92 @@ bool inode_dio_finished(const struct inode *inode);
- void inode_dio_wait(struct inode *inode);
- void inode_dio_wait_interruptible(struct inode *inode);
- 
-+/*
-+ * Completion and drain publication share this single atomic cutover. Only
-+ * inodes whose DIO always uses the generation-aware helpers may arm a drain.
-+ * The low bits retain the normal DIO count, including newer generations.
-+ */
-+#define INODE_DIO_COUNT_MASK	((1U << 30) - 1)
-+#define INODE_DIO_GENERATION	(1U << 30)
-+#define INODE_DIO_DRAINING	(1U << 31)
-+
-+struct inode_dio_range {
-+	bool		active;
-+	loff_t		start;
-+	loff_t		last;
-+};
-+
-+struct inode_dio_drain {
-+	struct mutex	lock;
-+	atomic_t	pending;
-+	seqcount_latch_t range_seq;
-+	struct inode_dio_range range[2];
-+};
-+
-+struct inode_dio_drain *inode_dio_drain_get(struct inode_dio_drain **drainp);
-+int __must_check inode_dio_drain_start(struct inode *inode,
-+		struct inode_dio_drain *drain, loff_t start, loff_t last);
-+void inode_dio_drain_wait(struct inode *inode, struct inode_dio_drain *drain);
-+void inode_dio_drain_finish(struct inode *inode, struct inode_dio_drain *drain);
-+void inode_dio_drain_complete(struct inode *inode, struct inode_dio_drain *drain);
-+
-+/* The allocation lives until inode reclaim; readers need no RCU section. */
-+static inline bool inode_dio_drain_overlap(struct inode *inode,
-+		struct inode_dio_drain *drain, loff_t pos, loff_t len)
-+{
-+	struct inode_dio_range range;
-+	unsigned int seq;
-+	loff_t last;
-+
-+	if (!len || !drain)
-+		return false;
-+	do {
-+		seq = read_seqcount_latch(&drain->range_seq);
-+		range.active = READ_ONCE(drain->range[seq & 1].active);
-+		range.start = READ_ONCE(drain->range[seq & 1].start);
-+		range.last = READ_ONCE(drain->range[seq & 1].last);
-+	} while (read_seqcount_latch_retry(&drain->range_seq, seq));
-+	last = min_t(u64, LLONG_MAX, (u64)pos + len - 1);
-+	return range.active && last >= range.start && pos <= range.last;
-+}
-+
-+static inline bool inode_dio_begin_generation(struct inode *inode)
-+{
-+	return atomic_fetch_inc(&inode->i_dio_count) &
-+		INODE_DIO_GENERATION;
-+}
-+
-+static inline void inode_dio_end_generation(struct inode *inode, bool generation)
-+{
-+	unsigned int old = atomic_fetch_sub(1, &inode->i_dio_count);
-+
-+	/* A later load of the generation would race with drain publication. */
-+	if (unlikely((old & INODE_DIO_DRAINING) &&
-+		     !!(old & INODE_DIO_GENERATION) != generation))
-+		inode->i_op->dio_drain_complete(inode);
-+	if ((old & INODE_DIO_COUNT_MASK) == 1)
-+		wake_up_var(&inode->i_dio_count);
-+}
-+
-+/*
-+ * Register before inspecting the exclusion. The fully ordered increment pairs
-+ * with the publisher's fully ordered generation cutover: a request either
-+ * belongs to the finite old cohort or observes the published range (or a
-+ * later snapshot). No I/O preparation may precede this admission helper.
-+ * Rejected requests withdraw their provisional token before waiting/returning.
-+ */
-+static inline bool inode_dio_try_begin(struct inode *inode,
-+		struct inode_dio_drain **drainp, loff_t pos, loff_t len,
-+		bool *generation)
-+{
-+	*generation = inode_dio_begin_generation(inode);
-+	/* Pair with the first allocation's publication in inode_dio_drain_get(). */
-+	if (!inode_dio_drain_overlap(inode, smp_load_acquire(drainp), pos, len))
-+		return true;
-+	inode_dio_end_generation(inode, *generation);
-+	return false;
-+}
-+
- /**
-  * inode_dio_begin - signal start of a direct I/O requests
-  * @inode: inode the direct I/O happens on
-@@ -3191,7 +3280,8 @@ static inline void inode_dio_begin(struct inode *inode)
-  */
- static inline void inode_dio_end(struct inode *inode)
- {
--	if (atomic_dec_and_test(&inode->i_dio_count))
-+	if ((atomic_fetch_sub(1, &inode->i_dio_count) &
-+	     INODE_DIO_COUNT_MASK) == 1)
- 		wake_up_var(&inode->i_dio_count);
- }
- 
-diff --git a/tools/memory-model/litmus-tests/DIO-register-first.litmus b/tools/memory-model/litmus-tests/DIO-register-first.litmus
-new file mode 100644
-index 000000000000..a7bca403bdfa
---- /dev/null
-+++ b/tools/memory-model/litmus-tests/DIO-register-first.litmus
-@@ -0,0 +1,36 @@
-+C DIO-register-first
-+
-+(*
-+ * Result: Never
+ 	if (ret > 0) {
+ 		iocb->ki_pos += ret;
+@@ -690,6 +691,12 @@ static int iomap_dio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
+  * the correct total number of bytes transferred; this is essential for
+  * completing partial requests asynchronously.
+  *
++ * When @dio_flags includes IOMAP_DIO_ACCOUNTED, iomap takes ownership of the
++ * caller's registration from inode_dio_try_begin() on entry, with its saved
++ * generation token supplied in IOMAP_DIO_GENERATION. Iomap releases the
++ * registration on completion or any early error or NULL return, including
++ * -ENOTBLK. Callers retrying the request must acquire a fresh registration.
 + *
-+ * Model one drain cutover, with count bit 0 and generation bit 1.
-+ * Publishing both latch copies (or the first initialized drain pointer)
-+ * precedes the fully ordered generation RMW. An admission increment which
-+ * follows the cutover must see the exclusion. A pre-cutover registration is
-+ * instead accounted in the finite old cohort. Completion and subsequent
-+ * latch reuse are deliberately outside this single-cutover ordering model.
-+ *)
+  * Returns -ENOTBLK In case of a page invalidation invalidation failure for
+  * writes.  The callers needs to fall back to buffered I/O in this case.
+  */
+@@ -708,6 +715,8 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 	};
+ 	bool wait_for_completion =
+ 		is_sync_kiocb(iocb) || (dio_flags & IOMAP_DIO_FORCE_WAIT);
++	bool accounted = dio_flags & IOMAP_DIO_ACCOUNTED;
++	bool generation = dio_flags & IOMAP_DIO_GENERATION;
+ 	struct blk_plug plug;
+ 	struct iomap_dio *dio;
+ 	loff_t ret = 0;
+@@ -715,11 +724,13 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 	trace_iomap_dio_rw_begin(iocb, iter, dio_flags, done_before);
+ 
+ 	if (!iomi.len)
+-		return NULL;
++		goto out_account;
+ 
+ 	dio = kmalloc_obj(*dio);
+-	if (!dio)
+-		return ERR_PTR(-ENOMEM);
++	if (!dio) {
++		ret = -ENOMEM;
++		goto out_account;
++	}
+ 
+ 	dio->iocb = iocb;
+ 	atomic_set(&dio->ref, 1);
+@@ -816,7 +827,10 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 			goto out_free_dio;
+ 	}
+ 
+-	inode_dio_begin(inode);
++	if (!accounted)
++		generation = inode_dio_begin_generation(inode);
++	if (generation)
++		dio->flags |= IOMAP_DIO_GENERATION;
+ 
+ 	blk_start_plug(&plug);
+ 	while ((ret = iomap_iter(&iomi, ops)) > 0) {
+@@ -901,6 +915,9 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 
+ out_free_dio:
+ 	kfree(dio);
++out_account:
++	if (accounted)
++		inode_dio_end_generation(inode, generation);
+ 	if (ret)
+ 		return ERR_PTR(ret);
+ 	return NULL;
+@@ -943,6 +960,7 @@ static ssize_t iomap_dio_simple_complete(struct iomap_dio_simple *sr)
+ 	struct bio *bio = &sr->bio;
+ 	struct kiocb *iocb = sr->iocb;
+ 	struct inode *inode = file_inode(iocb->ki_filp);
++	bool generation = sr->dio_flags & IOMAP_DIO_GENERATION;
+ 	ssize_t ret;
+ 
+ 	if (unlikely(bio->bi_status)) {
+@@ -962,7 +980,7 @@ static ssize_t iomap_dio_simple_complete(struct iomap_dio_simple *sr)
+ 		bio_release_pages(bio, false);
+ 		bio_put(bio);
+ 	}
+-	inode_dio_end(inode);
++	inode_dio_end_generation(inode, generation);
+ 	trace_iomap_dio_complete(iocb, ret < 0 ? ret : 0, ret);
+ 	return ret;
+ }
+@@ -980,7 +998,7 @@ static void iomap_dio_simple_end_io(struct bio *bio)
+ }
+ 
+ ssize_t __iomap_dio_read_simple(struct kiocb *iocb, struct iov_iter *iter,
+-		struct iomap_iter *iomi)
++		struct iomap_iter *iomi, bool generation)
+ {
+ 	gfp_t gfp = (iomi->flags & IOMAP_NOWAIT) ? GFP_NOWAIT : GFP_KERNEL;
+ 	struct iomap_dio_simple *sr;
+@@ -1019,7 +1037,7 @@ ssize_t __iomap_dio_read_simple(struct kiocb *iocb, struct iov_iter *iter,
+ 	}
+ 	sr = container_of(bio, struct iomap_dio_simple, bio);
+ 	sr->iocb = iocb;
+-	sr->dio_flags = 0;
++	sr->dio_flags = generation ? IOMAP_DIO_GENERATION : 0;
+ 
+ 	bio->bi_iter.bi_sector = iomap_sector(&iomi->iomap, iomi->pos);
+ 	bio->bi_ioprio = iocb->ki_ioprio;
+@@ -1064,7 +1082,7 @@ ssize_t __iomap_dio_read_simple(struct kiocb *iocb, struct iov_iter *iter,
+ out_bio_put:
+ 	bio_put(bio);
+ out_dio_end:
+-	inode_dio_end(iomi->inode);
++	inode_dio_end_generation(iomi->inode, generation);
+ 	return ret;
+ }
+ EXPORT_SYMBOL_GPL(__iomap_dio_read_simple);
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 7d0c8a197575..124a037cfa9f 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -253,7 +253,7 @@ xfs_file_dio_read(
+ 		ret = iomap_dio_rw(iocb, to, &xfs_read_iomap_ops,
+ 				&xfs_dio_read_bounce_ops, 0, NULL, 0);
+ 	} else {
+-		ret = iomap_dio_read_simple(iocb, to, xfs_read_iomap_begin);
++		ret = iomap_dio_read_simple(iocb, to, xfs_read_iomap_begin, 0);
+ 		if (ret == -ENOTBLK)
+ 			ret = iomap_dio_rw(iocb, to, &xfs_read_iomap_ops, NULL,
+ 					0, NULL, 0);
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index 5254430844b2..611c37c19f82 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -710,6 +710,16 @@ struct iomap_dio_ops {
+  */
+ #define IOMAP_DIO_BOUNCE		(1 << 4)
+ 
++/*
++ * IOMAP_DIO_ACCOUNTED indicates the caller has already registered this
++ * request with inode_dio_try_begin(); iomap takes ownership of the
++ * registration and releases it on completion or early return (including
++ * -ENOTBLK). IOMAP_DIO_GENERATION carries the generation token returned
++ * by that admission and is only meaningful with IOMAP_DIO_ACCOUNTED.
++ */
++#define IOMAP_DIO_ACCOUNTED	(1 << 5)
++#define IOMAP_DIO_GENERATION	(1 << 6)
 +
-+{
-+	atomic_t count = 0;
-+	int active = 0;
-+}
-+
-+P0(atomic_t *count, int *active)
-+{
-+	int r0;
-+
-+	WRITE_ONCE(*active, 1);
-+	r0 = atomic_fetch_add(2, count);
-+}
-+
-+P1(atomic_t *count, int *active)
-+{
-+	int r0;
-+	int r1;
-+
-+	r0 = atomic_fetch_add(1, count);
-+	r1 = READ_ONCE(*active);
-+}
-+
-+exists (1:r0=2 /\ 1:r1=0)
+ ssize_t iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 		const struct iomap_ops *ops, const struct iomap_dio_ops *dops,
+ 		unsigned int dio_flags, void *private, size_t done_before);
+@@ -727,7 +737,8 @@ void iomap_dio_bio_end_io(struct bio *bio);
+  * writes, zero-length I/O, and larger requests need the generic iomap direct
+  * I/O path.
+  *
+- * Does not support iomap_dio_ops, dio_flags, done_before or private data.
++ * Does not support iomap_dio_ops, done_before, private data, or dio_flags
++ * other than IOMAP_DIO_ACCOUNTED and IOMAP_DIO_GENERATION.
+  * The range must also stay within i_size and encrypted inodes must use the
+  * generic iomap direct I/O path.
+  *
+@@ -739,9 +750,10 @@ void iomap_dio_bio_end_io(struct bio *bio);
+  * is never advanced.
+  */
+ ssize_t __iomap_dio_read_simple(struct kiocb *iocb, struct iov_iter *iter,
+-		struct iomap_iter *iomi);
++		struct iomap_iter *iomi, bool generation);
+ static __always_inline ssize_t iomap_dio_read_simple(struct kiocb *iocb,
+-		struct iov_iter *iter, iomap_iter_begin_fn begin)
++		struct iov_iter *iter, iomap_iter_begin_fn begin,
++		unsigned int dio_flags)
+ {
+ 	struct iomap_iter iomi = {
+ 		.inode		= file_inode(iocb->ki_filp),
+@@ -749,39 +761,47 @@ static __always_inline ssize_t iomap_dio_read_simple(struct kiocb *iocb,
+ 		.len		= iov_iter_count(iter),
+ 		.flags		= IOMAP_DIRECT,
+ 	};
++	bool accounted = dio_flags & IOMAP_DIO_ACCOUNTED;
++	bool generation = dio_flags & IOMAP_DIO_GENERATION;
+ 	ssize_t ret;
+ 
+-	if (!iomi.len)
+-		return 0;
++	if (!iomi.len) {
++		ret = 0;
++		goto out_account;
++	}
+ 
+ 	/*
+ 	 * Simple dio is an optimization for small IO. Filter out large IO
+ 	 * early as it's the most common case to fail for typical direct IO
+ 	 * workloads.
+ 	 */
+-	if (iomi.len > iomi.inode->i_sb->s_blocksize)
+-		return -ENOTBLK;
+-	if (iocb->ki_pos + iomi.len > i_size_read(iomi.inode))
+-		return -ENOTBLK;
+-	if (IS_ENCRYPTED(iomi.inode))
+-		return -ENOTBLK;
++	ret = -ENOTBLK;
++	if (iomi.len > iomi.inode->i_sb->s_blocksize ||
++	    iocb->ki_pos + iomi.len > i_size_read(iomi.inode) ||
++	    IS_ENCRYPTED(iomi.inode))
++		goto out_account;
+ 
+ 	ret = kiocb_write_and_wait(iocb, iomi.len);
+ 	if (ret)
+-		return ret;
++		goto out_account;
+ 
+ 	if (iocb->ki_flags & IOCB_NOWAIT)
+ 		iomi.flags |= IOMAP_NOWAIT;
+ 
+-	inode_dio_begin(iomi.inode);
++	if (!accounted) {
++		generation = inode_dio_begin_generation(iomi.inode);
++		accounted = true;
++	}
+ 	ret = begin(iomi.inode, iomi.pos, iomi.len, iomi.flags, &iomi.iomap,
+ 			&iomi.srcmap);
+-	if (ret) {
+-		inode_dio_end(iomi.inode);
+-		return ret;
+-	}
++	if (ret)
++		goto out_account;
+ 
+-	return __iomap_dio_read_simple(iocb, iter, &iomi);
++	return __iomap_dio_read_simple(iocb, iter, &iomi, generation);
++out_account:
++	if (accounted)
++		inode_dio_end_generation(iomi.inode, generation);
++	return ret;
+ }
+ 
+ #ifdef CONFIG_SWAP
 -- 
 2.56.0
 
