@@ -1,95 +1,100 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.169
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793882757;
-	b=pBnRv3m46fAU2CD0iOYAz6oEj4SkdR6q7TqMBtrjSTcleUf6Vhz/vg/SsHKh/uLVV0cg
-	 jDrhCwbQMJb3xcH1H092d83UuEWSDfDjEA5jTJp1e2Fbn869KOUOcx7ldwfUinQyQJmmt
-	 ctf5uyC4D+vNvpZsC3SvYDa0CG8sq6G4CNmSBGuqJiJBQnfiSzDP/mDpDhfphV2fyLyKC
-	 kb8dmFxlt/E0WAzcAIpnvaX+AhH5iWUncyQqqlQ0PnJpTe+pxTHBdMNCFw4pfTihDyM89
-	 lFGtGJj9GJrPE0zOj3E2yGm4mKSavXZ4KTIxSMh6pNO+L801xuKzxT2TebyGtg/YdtA==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793882757;
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.45
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793884160;
+	b=pX12PmKmbzTgcfaf3PkOYFf7cfmxjwJ/UC6zA2en0cbIBzCWqKWF/vDtW4gWO80xVArY
+	 hdiQzy01yvYscoHAwML+BKOdO1VIzEcIArh4vipWsJo2G3UFuHGi1bVVumqHHhdLvF+Z5
+	 Jy8PIER8/YTqgk4Iz6aH9cUjBw0kxr0oSMRLNkOkxbGw/Ckn4hwEEaGzwc3FB1lScTVQg
+	 tnv2JxegVWZFyVue8eGZK1iqr6U8oITO3tLyqXAItC8SLUF8t1kCXAnhWEV4eBhGVOHkP
+	 LHkxkQhEXwHyoZJWa2/PfLa0LNHcw4fUjVeuj1jG9VF8qy5pciqH1a/9p0wh76xdwmQ==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793884160;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
-	 Date:Message-ID:In-Reply-To:References:Content-Type:
-	 Content-Transfer-Encoding:MIME-Version;
-	bh=i57L9NPhlWOeObQMnsgg83R3hDrmi9l2QFEwRbn/Ljs=;
-	b=SAKtnWGAUXOkycUyye4KtCfhK7D5oF4FeuVvx4bpOFe8jdcyaRNyhb3lR2XAf3IJytOf
-	 iQ47QHPJC5rdcmkQaNQcs/OBOrDNIvPV4iClCK55vHidQbtzOkvgp7Ew5yfpSVoUQiDeL
-	 sveRJlj0hGZd8smcW2y0wGU7rctm+Lr7w9+ukD/gP9NuQ3NxzQdFkSA6aDwkBY5YXU8ue
-	 0qKT2tvPO6ZhSzlvGOEXHUAp1zW65Wg+avDT0lLG45YUiFcYEKGcAK/7Q/tNmrb8Jgfi7
-	 mFmK2aNiqMNvGrWJL2qP32lLLI/SIuS8iyDH1aWXtlGsU1CVpSStIqzHd51ZclgsQ7Q==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
+	 Message-ID:Subject:To:Cc:Content-Type;
+	bh=jkmvscXAvNWOCA/eo1FekQ65BtW98C82Ndf/rsHkNE0=;
+	b=AdmDs6xYP10WUzHTsriN8SO9oupzy9A2eYBMvFUZ2sA+3TSrdccnWjzeEeuy7VmUjZY1
+	 aFyp6RXndEqCsHf+kI8XN3Ywi3NHxHvXvgVDSj0jsMnrpd4/ZrqXfx8zatHrK/Ds3UfkE
+	 Ankn9RUFpHlP2qefzM7EYNp5Rn7KnEqnjoQ/28dW5Xe05Pu128Kik4wUarCGa6NoxfA7N
+	 HqqV48lLHoRKNEF+MpprRZbx2OCRDhKC8JtM5nEUSgkYoSY4I+cebouk8pTMiFLrDD4+D
+	 mq5pL5BTTslYCrlk/OUEkjqQq/E09tB/uhEWhfj0XLsCxkTV0Tu0vmVow9B4XlD5VZw==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=Ns5PjF7Y;
-	arc=none smtp.remote-ip=209.85.215.169
-Received: from mail-pg1-f169.google.com (mail-pg1-f169.google.com [209.85.215.169])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=JUs1lRhO;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.45
+Received: from mail-ed1-f45.google.com (mail-ed1-f45.google.com [209.85.208.45])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F900606EEA3
-	for <linux-xfs@vger.kernel.org>; Thu,  5 Nov 2026 12:45:56 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8F900606EEA3
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31185606A31B
+	for <linux-xfs@vger.kernel.org>; Thu,  5 Nov 2026 13:09:20 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 31185606A31B
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=Ns5PjF7Y
-Received: by mail-pg1-f169.google.com with SMTP id 41be03b00d2f7-cc502d509c0so778649a12.2
-        for <linux-xfs@vger.kernel.org>; Thu, 05 Nov 2026 04:45:56 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=JUs1lRhO
+Received: by mail-ed1-f45.google.com with SMTP id 4fb4d7f45d1cf-6b581b6b0e9so666265a12.2
+        for <linux-xfs@vger.kernel.org>; Thu, 05 Nov 2026 05:09:19 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1793884158; cv=none;
+        d=google.com; s=arc-20260327;
+        b=Kz+e/Bw6aPsMHmfo6Nne0fcTIG6N2M4x22nMAkm0JBTgi7HWdafcasuUm6AS3FTkRp
+         XPvk7eO87VOqkTGeZyiGNuZGnxYt6qAVjwEg4bPHVX2eyULreVoI11HIYiYFN2HhcdY3
+         Cvwpkzyl21kSAWjqMlJ6Ph5/UJgODMVpmeG2pbdHIQzkcjBWvAc9e0/U7KT2KlulMNao
+         6Iftvf9/j5HDzucI9uSef2oJ3gi0NeC0lOUbbDfJSwwNHam6VOF9i3+c6pU6FW8YrdXv
+         L/sVPK6rA1SbSM5sEKWCTH6wmNCiPEEpoODRC7gRCtRA2vIyyaKXjlFIT522Tisp8hx2
+         wVyw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=jkmvscXAvNWOCA/eo1FekQ65BtW98C82Ndf/rsHkNE0=;
+        fh=MSh+XJSFiyrvDYy+zmLicE8jevpeNY4JUn9edgFV36E=;
+        b=cXek+iQ8i/I77iLyuOqS45iXrCeaPXsIEELOx2ykhouNPErwo7OdtCX9hqe1MkLGOJ
+         Avgs6ruCyuvB1I8Expo7oL9gnPAu/6AKK6FKKBvpyN+iRIfWEe8G6XzdbIJogLIdhpg8
+         mX9IbXfOy597Ue3jowpnXBFhYsiSlfBUaAEj45slOrHdTLURuy65YSvGfU5VZQAozD76
+         FnFNQkGSkUSMOpEb8AbUCW5n150T6TatwZj567Btw7jS/5SpAx4Kz0c+m1PJDKYP9qFs
+         /erNZ8bCmcG55KbjsC4YbhtOBFOm75a0u88IpFTEiKfX4gP/fAD7mJZMFlppiooA2Ntf
+         TDNQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793882756; x=1794487556; darn=vger.kernel.org;
-        h=mime-version:content-transfer-encoding:content-type:references
-         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=i57L9NPhlWOeObQMnsgg83R3hDrmi9l2QFEwRbn/Ljs=;
-        b=Ns5PjF7Ya4uyR2QPdgTml+KtqWzgFmLDMdsUQ8InjAUb6eJkT3m/ifAvufkx+zW1Y2
-         i8vA1fe0joPmbOhH3xWZbD1cblYL8BtQwgosNYoxrvhe+V9C3aVEFdfUsS69GZpHGero
-         Beq1z0BdJHgl0fPSlbQVyoKCha9IngnGBXEPzehERbpVlD+46hUwOXG5tMW4CEaq/UM3
-         zXALsnrrCiyiYbLghekwgN7VPpsS4zOn6uouAA7pGxYVpfjHwvpoaM5E15yvq0KEW2T0
-         Havv8EumZB4pkLkDmE/LMr/UzmBa4tVVfCtRzBeAg39s+iJBz6zFVnt7+Opu6knGKwi4
-         KVPg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793882756; x=1794487556;
-        h=mime-version:content-transfer-encoding:content-type:references
-         :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+        d=gmail.com; s=20260707; t=1793884158; x=1794488958; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=i57L9NPhlWOeObQMnsgg83R3hDrmi9l2QFEwRbn/Ljs=;
-        b=A5bmu1QZ13kJG4HRoVICgh512TqL/rS0osoNrOIfYgJvELhadR4UNBfMSp29rGiExp
-         wHsklqql5rc/C2s1fN9t76FDndbu6qyou481yqpQ+u/jQGDXZXmKedZ+V3Z/9MGeRibJ
-         QS8gKRYn1n56DW0VO6b+Z/qjN2V3bgmdbTL+/JFQeDCda8TJygmJOhN/ohjyjLB5uaL9
-         9BZ2UsqcKwNU42s7GVULHcWFnm0bEmH7wP3wVLNFDp16GhxwQ5IURgdEs7fOZd7jcgRy
-         JQZ7JDzFn14AXA2knpTR/KGNgZhthW/VHllWhbtX3Aur5qAWJlXUn9bqsWxmECCzpN0T
-         jwGA==
-X-Gm-Message-State: APuU4Z8QUWMZ86Y+FWOdXTXZdOZnLH8eHt3kHdnhgfcCGGApu8FVZJjf
-	ZyszmvZmGa74iH5bEBYZhSjExwzSGj4NNL7NiUiysKpi4w4w777qUosx
-X-Gm-Gg: AYBFou1Hrwcd8Sdgu0/hk7sOuHyeAuHC9oYvzuiP0zpStApSLs6DL9+4Iq4sXUQNlRj
-	f4Qo2NR5IbmUQYg2zF9qBpSn+2m/YEJL9/skZHj7x8iU3p7Nh6JLhhUBYmdHbYtXVgKr+jFHbLt
-	xnyk090/rt7GM3lJ28wnxKWhjgv6LubibQl8ad/OcCrTJM2NoD/KmMuNogsRU9yXOEow3IhwDCS
-	5liq2+ru8Dd9BL4ehsLP8dvRAZL+Y/Qxq7dJNqaTwKEkXnRVEWdh6fBjuvciN2GYhX3kZFBIwXK
-	4Eljb8z6OVv61FZJEmIa9jXTbhsRbEk+zvrHpfwkNY1CuTgDfsjvudxk0H/CxM1IpNkopr7H9Hc
-	sBFVz2FInlnLE86EmW0NhucalXERIVtjFvu3MWLIbRbHbz7QEUb8pnKFbSbOSChZONNyJv83q9v
-	t5A/5vo4XO686OWxCmN3+aAoLd5UQX6hvqEKMLSRwx/vZ04JBXNaMUR/T+wGjhDpmjOH/vTRwWO
-	9F82hH0QYpSRvccwxpofhkyslDE4neME7gEdqX0BTrXOjoBLAFZDoNwEBaeJf8kt+1FImNyLNed
-	XUuo0cxVVG9hBAbKSKU7oDa2RQdnTEo5MEn3B66hx/0VnnKmC7C5
-X-Received: by 2002:a17:90b:2551:b0:3ab:9f1a:3825 with SMTP id 98e67ed59e1d1-3ae8957c8b1mr17676948a91.4.1793882755612;
-        Thu, 05 Nov 2026 04:45:55 -0800 (PST)
-Received: from DESKTOP-UCPRL76.localdomain ([113.200.174.12])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b0b2cf80c9sm3927157a91.0.2026.11.05.04.45.53
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 Nov 2026 04:45:55 -0800 (PST)
-From: Zheng Shuhao <viennaoffh@gmail.com>
-To: "Carlos Maiolino" <cem@kernel.org>
-Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
- syzbot+e7f24354da9f7915bc54@syzkaller.appspotmail.com
-Subject: Re: [PATCH] xfs: fix slab-use-after-free in xrep_newbt_free()
-Date: Thu, 05 Nov 2026 20:45:52 +0800
-Message-ID: <1793882752.followup@viennaoffh.gmail.com>
-In-Reply-To: <atL8bTDPVGlpZ0LB@nidhogg.toxiclabs.cc>
-References: <20261016085536.591-1-viennaoffh@gmail.com>
- <atL8bTDPVGlpZ0LB@nidhogg.toxiclabs.cc>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+        bh=jkmvscXAvNWOCA/eo1FekQ65BtW98C82Ndf/rsHkNE0=;
+        b=JUs1lRhOPCwcs9X3rlblVurVgqsvLTVfuDmx0GXYpoORcQ3pyC7i74dzdRg1aNHQLF
+         AZWJITRvL5mRhtdbsr8lGM+sFvWQX61VodqJhj1l7cTCz5ICtt8F1lblo15BPA2YcWa5
+         7IVbEHDilI3RbpZXWPtcu8EVTl+Anod63vvxUuyBkhVsopxvZirImRElapBH4gsNK9M4
+         4RQ3uR69ZqWze+iWjxLtu/RIPaHWJz8PyGy9mgF7RgoHRhE0yE/EG/qycT1ui06jmA5U
+         zCEu0LR+6OGmJov1v67QNh1fKUqIBpLl1KpYeBAZPuINq/cHk64oQ2RyaCCSyafwTcu+
+         4lsg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793884158; x=1794488958;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=jkmvscXAvNWOCA/eo1FekQ65BtW98C82Ndf/rsHkNE0=;
+        b=KDF+uTSrzNsloV+Z6ZiwSdeP4BSARpDmBEDiBw/b01Snl+BxTB3cuxXCo2q0BWyp5P
+         o8rIypNE032PiW/41wbA+7Frs0R/YmnENjdr6SccFgNs2DUBLl/eInXJXFW/aUi9PzpN
+         ycKFAb0RQPjz0iqtLERDjUWmfKyYi3PXCvDxW+FLC2WItFLQQjsylLgxIPH9z5IiCEDP
+         5nppLJUy+I6226SjvZC+XjYgBBk2bDD8hCsnAY/QuNgcxISkD+ZWePu6gsYveQCTSisb
+         VtXUjIpyt5PSlqQqzwiI4kwtTsT4jHl1gNXndYVmecJsHc91KlBFcaOPEeDkva7JP0rW
+         O5bw==
+X-Forwarded-Encrypted: i=1; AKwUvBx7ytH0yW65UlkTgzCEKjZ+k5Mnz+oBIXUNl1jY+q+an4NWgQsjTqoqf8vFjNQPw7eR9Ev132xcK1E=@vger.kernel.org
+X-Gm-Message-State: APuU4Z8ahAGLgyK/F5VvK3EZpBZQy67i+ZaPO1M5yEaUZB4sFV2GM1pK
+	SjfnW5y6Efl16SVuMGbhtGtWYfF3jmlvpt5EWk5F/HS3vrAj0wd3AZBZiDFdD+J9t0c7CZ79n74
+	imVuXCWL46r9IveDk6Y+7P7DXvIZK8Q==
+X-Gm-Gg: AYBFou129/GE0oOgASAnYkn1vQI17ewwAI9yuZxqkS6hMr6xWfLzb1GvnRK0nNJDV1P
+	kope5ps6Ur0jXgTjtdgO5WXCRNHUS2+y464Z0IWloDitI4Rsaeg9Guo2bzre95xRc2MERzUGL4m
+	0UG2lXvnIy0s7hjHAHccOj8e0T9uYUslIwb2Z4bKyxM5cJIHm9R/Lf6dIqS+WE5SDPl/NViIGf5
+	AfH1tHnOI64TLQRMoXgKYKecNy+8Yt8DtpkD8vTiKj/HtMMuJOu45Gb2vxnF9y2cpyYkXhNWggw
+	qnh8nFFXl5AkEmzUu2VFHSUa9RLMtHZ7zeIUyBpCXlcTDTaBM2KIM6nWMIkKK93t4Ufbg4BQoq+
+	HRC4JLyMtnP/I/M7y4bNV2DDHahBgmxVPG8SNdpYz5A54p/4WdfD7VA/v51FpAF3eLaFKu0OZOI
+	1PdNSiZ3MpR8rx2Ei0gpFBq5kNbcpwZYmNStzocYH6ZE8N
+X-Received: by 2002:a05:6402:428f:b0:6b3:e89b:126a with SMTP id
+ 4fb4d7f45d1cf-6b4d428fa3fmr14003060a12.12.1793884158312; Thu, 05 Nov 2026
+ 05:09:18 -0800 (PST)
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -99,81 +104,29 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+References: <CGME20261103111022epcas5p4df6a10b70dd9a92992c117669c7227fc@epcas5p4.samsung.com>
+ <20261103110640.1000095-1-anuj20.g@samsung.com> <2003152d-5d33-424a-8191-badbe137e37c@wdc.com>
+In-Reply-To: <2003152d-5d33-424a-8191-badbe137e37c@wdc.com>
+From: Anuj gupta <anuj1072538@gmail.com>
+Date: Thu, 5 Nov 2026 18:38:40 +0530
+X-Gm-Features: AclHuK_IE3Nm_OtgyVou8Yme1bSHicg4bAvJGhKSCtpmlcsXrhW4foKGrcUBnBQ
+Message-ID: <CACzX3AtMO31MfQpxp_YyTqCqza6+NnPOMa4sGpjM90pd7cSi+g@mail.gmail.com>
+Subject: Re: [PATCH v7 0/8] xfs write streams
+To: Hans Holmberg <hans.holmberg@wdc.com>
+Cc: Anuj Gupta <anuj20.g@samsung.com>, brauner@kernel.org, hch@lst.de, djwong@kernel.org, 
+	dgc@kernel.org, cem@kernel.org, jack@suse.cz, axboe@kernel.dk, 
+	kbusch@kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
+	gost.dev@samsung.com
+Content-Type: text/plain; charset="UTF-8"
 
-Hi Carlos,
+> This looks pretty reasonable but I'd like to do some prototyping to see how this
+> would integrate with the zoned xfs allocator and run some benchmarks.
+>
+> Are the RocksDB patches publicly available somewhere?
 
-I have to admit I was not sure how to reply to your last message, or
-whether I should reply at all. You said to wait until the patch gets
-reviewed before sending a V2, so I did not want to push or send noise to
-the list. On the other hand, it has now been a few weeks without any
-further review or comment, and staying silent did not seem right either.
-So I am sending this short status note; if you would rather I simply
-wait, please say so and I will do that.
+Yes, the RocksDB write-stream changes are available here:
+https://github.com/anuj7781/rocksdb/tree/write-streams-v7
 
-I also wanted to close the two items you asked about earlier, since I
-promised them and then went quiet.
-
-> Yes, sharing the reproducer (and potentially hooking it up into
-> xfstests) is a good thing, specially giving the syzbot doesn't seem
-> to have a reproducer for it yet.
-
-The reproducer is a standalone harness, not a syzkaller program. It
-mounts a scratch XFS with rmapbt and reflink, starts an online repair
-that rebuilds a btree-format inode fork, and then issues
-XFS_IOC_GOINGDOWN (LOGFLUSH and NOLOGFLUSH) from 1 to 8 helper threads
-at 0-100 ms after the xfs_defer_item_pause tracepoint.
-
-On the unpatched kernel this produces the reported KASAN
-slab-use-after-free in xrep_newbt_free() -> xfs_defer_item_unpause()
-on every run. With the patch applied, the scrub ioctl returns -EIO, the
-shutdown path unwinds, the log replays on remount, the free block count
-is unchanged, file data reads back intact, and xfs_repair -n is clean.
-Healthy forced rebuilds still take the normal pause/unpause path.
-
-I can send the harness and logs, but I did not want to attach a large
-tarball to the list without asking first.
-
-> I'm also interested if you actually passed your patch through xfstests
-> before submitting it. There is no good fixing a bug if you create a
-> handful of others. Specialy agains scrub, online_repair (and maybe
-> fsstress_scrub) groups.
-
-I ran the patched kernel against the scrub and online-repair fuzzer
-cases, plus fsstress_scrub. To be precise about the coverage:
-
- - Completed with a real verdict: xfs/351, 353, 355, 357, 359, 361,
-   363, 365, 367, 369, 371, 373, 375, 377, 379, 381, 383, 385, 399,
-   401, 403, 405, 411, 413, 415, 417, 426, 428, 430, 497, 730, 733,
-   736, 786.
- - xfs/387, 389, 391, 393, 395, 397 were started but hit my per-test
-   timeout before reaching a verdict. They are long directory/xattr
-   walks; I am not counting them as passes.
-
-No KASAN report was produced by the patched kernel. The failures I did
-see are all reproducible on the unpatched baseline as well, so they are
-pre-existing and not introduced by this patch:
-
- - xfs_btree.c:1814 in xfs_btree_decrement (xfs/361, and also xfs/373)
- - xfs_buf.c:389 stale-buffer assertion (xfs/363, 365, 367)
- - xfs_log_cil.c:546 empty-transaction assertion (xfs/369)
- - xfs_attr_leaf.c:168 attribute-leaf assertion (xfs/401)
- - null-ptr-deref in xfs_btree_simple_query_range, reached from
-   xrep_dinode_count_rtgroup_rmaps (xfs/375, 377, 379, 385, 399, 413,
-   415, 417). This one reproduces identically on the baseline kernel.
-
-> You'll need to send a V2. But wait until your patch gets reviewed, you
-> don't need to send it right now.
-
-Understood. I am holding the V2 until there is review feedback. When I
-send it, it will use the correct identity:
-
-    From: Zheng Shuhao <viennaoffh@gmail.com>
-    Signed-off-by: Zheng Shuhao <viennaoffh@gmail.com>
-
-Is there anything you would like changed in the patch itself, or any
-additional data you want before I send the V2? If it is more useful, I
-can also send the reproducer and the per-test logs now, separately from
-the patch.
-
-Thanks,
-Zheng Shuhao
+>
+> Cheers,
+> Hans
