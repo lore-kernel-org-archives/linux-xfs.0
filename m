@@ -1,21 +1,21 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=213.95.11.211
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793961730;
-	b=SY91GNFgFGN+ibXm9JoThmuszOkkNshybqBmSaPaV1amdjtiPTMlVOwAi8e6USY/9EC/
-	 yqmHS7x7ZXofUkA71AnrqVJclhDBDh1LPCg1UURzoOQaWbOjIXoYc/I32ZGfSj3nPqOeg
-	 /nDDZs5I/5wQlesLCSnVo70vGb4lSYHkh+1VMWSGYEKP9koRD92fFXuQyaSvYbcBDSPwf
-	 rq1BAtb/KKWkPU62oZYo+qADJfsbqaS9G7vzCDZ3ChzKWbi31jHekg0MzOafYWsNt9rLe
-	 sTWqli5MZ45Ujba5g1BODUbYUQWnFUpa5L1uTyqSLrafJPtT0jyJXzsSpoR+JAjfa/A==
+	t=1793961850;
+	b=fI2dkpdkypyO92k3nBkEgJi6BfYcGAq7d3jksKdZDBz2jEfLQ6ANNRqY+aP7TWcc4Vjt
+	 dh3FriNB5xSQzWir3KVYDUek3ETwjMtzYL7gr5CWylin56n6vRHdnKhBYFDgMN8MheqwV
+	 ca89WlVcShU0bvnVFn6uIxerL/tSLYpq5gRLrgVJWN8u4gK5JlXEBP22V/DwXQMclT5JD
+	 Tfhc0FOqPkud+Upfah22hrZ+Q0bP/hxAgmKap0WHacykVpmbzZP9bpXHpooy4j7uIKiCF
+	 DAaqAEaIWZeXE4cFJKd52hSRf4YJjjAA/9KmnkJGvVuvtRoGG5LlaHMvo3uX7INLewQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793961730;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793961850;
 	h=DMARC-Filter:Received:Date:From:To:Cc:Subject:Message-ID:References:
 	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To:User-Agent;
-	bh=Y9kFrNqpqE15U9jIYdrxg+czSD6JG0cMxUhVLzPeOPE=;
-	b=kIa3PH5BS3OIb+h3RqNPlpR0k4ceLYvkZiTmmCmtc93hU9NdeKapHG9R8Xi8hhaJJ8Hx
-	 s5c2FivCWdJ7jQPwTe0ggM98rg8K98o2Wp3fOn8xc/wOfpYfbrqDuTi+YcFrOrtnTaup1
-	 tpYI94043DHybc2vzbHAUduz8h22KXMQN1ajrvy6F3U/RInuDFlDR+o9XC0pnVT512lcK
-	 3ukjDMVllERLZkos0qpsMj73BnDNx4QIf1fziDcOqvVWxe23eF0xP2B2dggMRKyODDhcH
-	 dqq0hlvLGQIh1pqYliOzd3nIRyM9OY9oOen9ttGj4fHY9YL7KNEa79A+zlSUGZRaVPA==
+	bh=SyHLvzb6celL0jDL0tyCZxUmWdmbDgVpxG3dwtVayYo=;
+	b=K1hmS+N8rtLhhvUrw1+JRV+TUq7CbMx4q0LYkeZYg/JvyoYotoXK4ga2GSurKg8Td5GU
+	 5ZFOE+4SpG2NVWAs/jw4Nu/axV4GVlrVz4feKBO7jNUiQqSpy+p0E+nsxnow5RXjod0Dv
+	 no3hx5052xIdTY8L93Iz4TaD9A5RbUaXj6Q3D20nlA3hz5AdhdfPE9xyj/OzZhrCUJ4JV
+	 gPTfytA/xqO1U4gDPRAjkgdyDqODHfJlM7RqToz/UmQCyNCJ2L2PqUJ/cvgOqOaMIzb2L
+	 UHr5gTMeIo9z6BOsoqR9+0pP9ApAv9srCqykzlDJhcVcqReriWRdEwKa1JSPASfJLsQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=lst.de;
 	spf=pass smtp.mailfrom=lst.de;
@@ -23,14 +23,14 @@ ARC-Authentication-Results: i=1; smtp.subspace.kernel.org;
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B804D606A329;
-	Fri,  6 Nov 2026 10:42:09 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B804D606A329
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30745606A33E;
+	Fri,  6 Nov 2026 10:44:09 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 30745606A33E
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id CF4B168BEB; Fri,  6 Nov 2026 11:42:05 +0100 (CET)
-Date: Fri, 6 Nov 2026 11:42:05 +0100
+	id 1CCC268BEB; Fri,  6 Nov 2026 11:44:04 +0100 (CET)
+Date: Fri, 6 Nov 2026 11:44:03 +0100
 From: Christoph Hellwig <hch@lst.de>
 To: Mengmeng Zhao <mengmeng.zhao@linux.dev>
 Cc: Jens Axboe <axboe@kernel.dk>, Dan Williams <djbw@kernel.org>,
@@ -49,10 +49,10 @@ Cc: Jens Axboe <axboe@kernel.dk>, Dan Williams <djbw@kernel.org>,
 	linux-fsdevel@vger.kernel.org, nvdimm@lists.linux.dev,
 	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
 	linux-mm@kvack.org, Li Wang <liwang@kylinos.cn>
-Subject: Re: [RFC 2/6] mm/filemap: refuse dmabuf iterators in the generic
- read/write copy paths
-Message-ID: <20261106104205.GB5668@lst.de>
-References: <20261105065847.196540-1-mengmeng.zhao@linux.dev> <20261105065847.196540-3-mengmeng.zhao@linux.dev>
+Subject: Re: [RFC 5/6] iomap: refuse dmabuf iterators on contents-encrypted
+ inodes
+Message-ID: <20261106104403.GC5668@lst.de>
+References: <20261105065847.196540-1-mengmeng.zhao@linux.dev> <20261105065847.196540-6-mengmeng.zhao@linux.dev>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -64,23 +64,13 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261105065847.196540-3-mengmeng.zhao@linux.dev>
+In-Reply-To: <20261105065847.196540-6-mengmeng.zhao@linux.dev>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Thu, Nov 05, 2026 at 02:58:43PM +0800, Mengmeng Zhao wrote:
-> From: Mengmeng Zhao <zhaomengmeng@kylinos.cn>
-> 
-> The generic copy helpers cannot touch device memory.
+I think contents-encrypted should be content-encrypted.
 
-Which generic copy helpers?  This doesn't seem to touch copy_file_range
-at all.
-
-> Refuse a
-> dmabuf iterator in generic_perform_write() and the filemap_read()
-> fallback while keeping any direct-I/O progress, and report a busy
-> folio from generic_file_direct_write() as -EAGAIN instead of asking
-> for the buffered fallback such an iterator cannot take.
-
-I suspect the fallback code in the callers might be a better stop
-for this.
+But we really need to find a way to make these checks more
+systematic instead of sprinkling them everywhere.  E.g. have a flag
+in file->f_mode to allow it, which then only leaves the direct I/O
+to buffered I/O fallback as a special case.
 
