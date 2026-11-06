@@ -1,113 +1,65 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.181
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.137.202.133
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793973973;
-	b=soZFUsB05tKAyW8kcCloxNwdgQV3hNOO5U1WIZi66hBD6qUXTwZzghCESoTZ48e56Xoq
-	 NNrcQkHerbVZXERgvzTdqW6KVi38uLxkBYhZu3enT08+Qz4pESt8oW6hyUL+eCLdg+skp
-	 dQ+LSE84ukrCcXQ+SxVIP/j7bCtl8RqPD+txFP82j1Tip930V/7wuM7AaEnr0UoE1TDgU
-	 o4j19kbmtdzGp5W8PsxmOU9lxyymZ4AIQJJv9XPyUTg2mfer9FzwQElI2TD2g1G+NnME9
-	 cvmWDjaR1rz69HkJeOdHh2tHpJ6eS1bU5MsUtXOs88WwGpt/1W9v5x47szX5XT+pgZg==
+	t=1793978406;
+	b=Ow/DD6zbJ+OWY9wM1qvu+k1ZJCA2njERi/K1wcV+9pp+j54+9E9qm2NcLqabn/yYsTjk
+	 QXoOCyVSwwWVxHqOhtJ0KJzNHyfYSY1jtSRuiCj3dOJWJvqeyUBz7uQyCFzdxLx7DsAK8
+	 CrOiT5CBB6zOYk+VpVA90gh1nKXh6Y2dmgxq6itMr4AU1gB0fOJt4U2ua7hexytvizAWm
+	 txjoF2IkLlAlvsH+ytl/pO6+VvCnl1qh9R4eeEUkLKKkvC0uxvWYGEXq4XaH8Zwr7nD9w
+	 rt+0ZxsZEjUnlEFEKMgprZwUXaDiZwY2Agk1NOZDRwFnFiXNRSdmpq4zHD9foCwp76Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793973973;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=eqhBVbUtw3dy734MGt0XscJMrayl/heBjdE55TwHpBE=;
-	b=CtiflXPgnk6/gK4WBh/ZS73n6i4soJZnKYiVrxOAgHM4ng9LdnyQDuOvYfn6PM/x7GE0
-	 Xvs1fYw9LCBgUiOQgGGIVHEhTkLU/0992xfSrYexlqTwPcQmHUJ12X2eYb09depoqIOYa
-	 ptB69+5l7S0tD3Q/87aE254KGo7rGha/bEVaPqLXFtgpUiw9Z04bUty3vyNt8PxMLnSKd
-	 tCa1j5i9iWR5x5DBaiYHR600bhnfLApcS9lBWyfCG7tWW03ms6gBPRJs0rbqr1xwM1xjg
-	 AY7hQZeL1uj84PunAoWE7NvqKOjymDRvrBSe1B5QmnAx5SIHsiuPl/lxktraNBuRJMg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793978406;
+	h=DMARC-Filter:DKIM-Signature:Received:Date:From:To:Cc:Subject:
+	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
+	 In-Reply-To:X-SRS-Rewrite;
+	bh=JlkehWuvNeAqUDDm0lW60pJ1rm2Tezb4uxm9g5ZPK2Y=;
+	b=xLdpzsD5Uqea/HNT4PhMc90Y7BYOSSNxltARc2M3TmMKNzeskIWXGYxk7s9ygM5VAUP4
+	 Wciaf6OeV60PLJ5IPbY7ZVbxuyEZtizfhk6BLVwI1V9OGtPXqhL6vOEh84LzCTzK8THKL
+	 vpK3nPaLe8M2nUnkC6rdJ3c8p0lstsXCG9KmJMzBKEDjvQxAK8J/EiU7c/IlCbirFmusF
+	 IKQ9/AMScB1KunDDLxbiQpCSc4RZH+ccICzeNdiDie7t8tmC3z6r9NzI9YBCn7fMggqKI
+	 1Zf2K7IvfTKpI6E4SxZiNxagLy4pRSseYnn4jeFPtFCt5E6/w8dyMhmqNainYDJ+bEQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=cmpxchg.org;
-	spf=pass smtp.mailfrom=cmpxchg.org;
-	arc=none smtp.remote-ip=209.85.128.181
-Received: from mail-yw1-f181.google.com (mail-yw1-f181.google.com [209.85.128.181])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=infradead.org;
+	spf=none smtp.mailfrom=bombadil.srs.infradead.org;
+	dkim=pass header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=NleT4fbb;
+	arc=none smtp.remote-ip=198.137.202.133
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7091606A331
-	for <linux-xfs@vger.kernel.org>; Fri,  6 Nov 2026 14:06:07 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E7091606A331
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmpxchg.org
-Received: by mail-yw1-f181.google.com with SMTP id 00721157ae682-8b309147589so5647027b3.1
-        for <linux-xfs@vger.kernel.org>; Fri, 06 Nov 2026 06:06:07 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg.org; s=google; t=1793973967; x=1794578767; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=eqhBVbUtw3dy734MGt0XscJMrayl/heBjdE55TwHpBE=;
-        b=rEFjIsRctA59Iu2/BHBn1Bio1Z530ac+g4EEE4umpjlRFctJ/W1yi+oJAJdR8sIKtC
-         0ANk4+IEeh+gWZdP8+5Abj0Wi+7JUGtI3eOPnJ0wMnngrGVtvT7+mdXKDwBc4VjMOreA
-         HRXNX16MAj9gPw3V6sQG29RsCMeifuq7vktm82eZ1OL9M0wUFDM8b1mHYrWOWDjP7hoA
-         FgchrqECOX93FzgDhG9Sn07L+FCR1PCSxN8pDG5a+ABli7EEuG5ifSugYUsuO9WbK3uX
-         2labLzJdsWWlMl8/Ibz30wICnbSFS6Rx+DAJRAtH3OrhgDaH9x+c/HNq/PuJNNkUGIVa
-         0UdQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793973967; x=1794578767;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=eqhBVbUtw3dy734MGt0XscJMrayl/heBjdE55TwHpBE=;
-        b=MXkq3T0fqjCjm1pP09S5UATMUse+zO7rLPTJMKZWHWucxXSGWpIpAKSVPSa6WzWkq8
-         sHnDv+cYqyTSwbKPhHOpye8ozvEI3i3eBkUvreTg2h08mcXw/Dzz0YKN1dLGKbrj2wm/
-         xrrU6ke5zBj9v867eynMMw8KEDnP924DL43G4QeGu6RJT05Jn4Oings42A06qH35/Pdi
-         RCsNGg48xEbnKPBOgLJVTmKxr0ZCNRF15kyGQokZh+OLSNZ/drNBi7AHj4CKNF+YNejr
-         UQhNlpK3Xxrc1rkJzLdDexMp4zCnIFnNjNE80kfExyhRGoC8SzWwaNpm5GOz/hx6C4W+
-         mdVA==
-X-Forwarded-Encrypted: i=1; AL+hErGoyzkRuHenYFXdzXx9z88CR2ARX2RZi7oHRNu7VnT5DQfH/lTHoUR21Js4tP6RTfOS/BVBAnQ4wsE=@vger.kernel.org
-X-Gm-Message-State: APuU4Z9ETw3Wl9nEA07EVTwm+TnSxX/L1TPgPt5N7Is9tNqoo4rUuAIv
-	VaXMowi8l/QFqrvlm7jeOmAQueLA+WXwTj6FNRxAB72j0rYyb2eRnru8C35HlksM6Z0=
-X-Gm-Gg: AYBFou1yVvYKMulH9sokgtorvbViCEp4T5t+8odDMFJhVLgVXHMKDUd+/PjHcGi5d21
-	vcVi07ISi0KFd0ZtPBVIlNtQmJCKB4HkCbPB4JIIm/6IktB1nUP7nEkt9Av8gjpyxxhZEbpp4JC
-	pj86vC4grm35ciOzMyfio8wj/6eZxaq0vrBen7vZWy1Zuz6UP/GmIne61q33owsSOd0EVVXe9Il
-	gEGPbSBETQVemyShVEWdvxS+DhwsbQOJn/GmugnwZR5l+s5ZzHINDzDA52e7+4kDhbO5LzJO59M
-	J8jvVwK4JIcQHu6ABW2Xf9ZHjoAFBuq91uNY517e9kD3NVJxT/XzIp9MZSR6uiT9UkWBwaK0/UI
-	LKuarusEO/BrevqpyQVDHPJ+Toc88eauWDHM5AodVj3RJkewaeZ2fF+5yvAbTiSQCw4RwBVebSE
-	aod4/SAx+w7ynPRlM9LLiZG14wVpI5UM7yLwXSi/KDeAbhy9kslvTzSExW3lczxMz1YxgqwR4AE
-	dADPAo6VqxiaX2MKVi9OyyHn4hGOMTSRs26prM0YHA9Ej7tVXi4I9AYELnHJ7EQqioh1dhfKb7S
-	1zy+vUKGQdtDykhuY5CYndil1R3w
-X-Received: by 2002:a05:690c:560f:10b0:8b3:10df:54a3 with SMTP id 00721157ae682-8b341b1ebe2mr10611897b3.65.1793973966605;
-        Fri, 06 Nov 2026 06:06:06 -0800 (PST)
-Received: from localhost ([2605:8600:200:14e3:365a:60ff:fe62:ff29])
-        by smtp.gmail.com with ESMTPSA id 00721157ae682-8b33f856f99sm19108527b3.34.2026.11.06.06.06.04
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 06 Nov 2026 06:06:04 -0800 (PST)
-Date: Fri, 6 Nov 2026 09:06:00 -0500
-From: Johannes Weiner <hannes@cmpxchg.org>
-To: Dave Chinner <dgc@kernel.org>
-Cc: Kaitao Cheng <kaitao.cheng@linux.dev>, gregkh@linuxfoundation.org,
-	arve@android.com, tkjos@android.com, brauner@kernel.org,
-	cmllamas@google.com, aliceryhl@google.com, nat@pixelcluster.dev,
-	arunpravin.paneerselvam@amd.com, maarten.lankhorst@linux.intel.com,
-	mripard@kernel.org, tzimmermann@suse.de, airlied@gmail.com,
-	simona@ffwll.ch, viro@zeniv.linux.org.uk, agruenba@redhat.com,
-	trondmy@kernel.org, anna@kernel.org, cel@kernel.org,
-	jlayton@kernel.org, cem@kernel.org, akpm@linux-foundation.org,
-	david@fromorbit.com, david@kernel.org, hughd@google.com,
-	yosry@kernel.org, nphamcs@gmail.com, matthew.auld@intel.com,
-	matthew.brost@intel.com, thomas.hellstrom@linux.intel.com,
-	jack@suse.cz, neil@brown.name, okorniev@redhat.com,
-	Dai.Ngo@oracle.com, tom@talpey.com, qi.zheng@linux.dev,
-	roman.gushchin@linux.dev, muchun.song@linux.dev, ziy@nvidia.com,
-	baolin.wang@linux.alibaba.com, liam@infradead.org,
-	nico.pache@linux.dev, ryan.roberts@arm.com, dev.jain@arm.com,
-	baohua@kernel.org, lance.yang@linux.dev, usama.arif@linux.dev,
-	kas@kernel.org, mhocko@kernel.org, shakeel.butt@linux.dev,
-	ljs@kernel.org, kasong@tencent.com, axelrasmussen@google.com,
-	yuanchu@google.com, weixugc@google.com, baoquan.he@linux.dev,
-	chengming.zhou@linux.dev, linux-kernel@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, linux-fsdevel@vger.kernel.org,
-	gfs2@lists.linux.dev, linux-nfs@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-	Kaitao Cheng <chengkaitao@kylinos.cn>
-Subject: Re: [PATCH] mm/list_lru: Account node removals in isolation helpers
-Message-ID: <au3eyCrHiuhbJx3u@cmpxchg.org>
-References: <20261103045053.59548-1-kaitao.cheng@linux.dev>
- <aupITfr9pBKPrU20@dread>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4990606D82E;
+	Fri,  6 Nov 2026 15:20:04 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A4990606D82E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=NleT4fbb
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=JlkehWuvNeAqUDDm0lW60pJ1rm2Tezb4uxm9g5ZPK2Y=; b=NleT4fbbVCJtudoFYZQqx17+Kf
+	qd8Dc4Tc5df3T/fufqZLn3arNky3pqfHKNX4gU1542rMqcTSbnhgjtItY9/iKDq8gu8urp2Ld+uiZ
+	SHK2ntWU681pUotk4L9ieyug3skM46z9FEVeDJI/aHEyd4CEvF6Slyc4Itx9vasM2g9klOjqRhJpR
+	A/pQKubHyqxD/KMMQod7PRSePZ4sKRjLjFnmok19kaackjreaOgt0cOl6+H8XIZY0DnqRoqMdoF5g
+	4YkQDM5x4jDU8rdyCu0A+O1NVDr+n9g8yXmtEWPI+X7/mmiQxl0LOvhKL8PkJwrm5Sh4/0iVspOpY
+	Hb5ns+9w==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.100.1 #2 (Red Hat Linux))
+	id 1xPLjY-0000000Cnlc-0PHR;
+	Fri, 06 Nov 2026 15:20:04 +0000
+Date: Fri, 6 Nov 2026 07:20:04 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: Lauri Gates <lauri.gates@gmail.com>
+Cc: Dave Chinner <dgc@kernel.org>, linux-xfs@vger.kernel.org,
+	Carlos Maiolino <cem@kernel.org>,
+	Christian Brauner <christian@brauner.io>, linux-api@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org,
+	ocfs2-devel@lists.linux.dev, linux-nfs@vger.kernel.org,
+	linux-cifs@vger.kernel.org
+Subject: Re: Concurrent FIEMAP on reflinked files serialises on the AGF
+ buffer lock
+Message-ID: <au3wJNbRPXQZG5Op@infradead.org>
+References: <auudz7Iwm2MrNA-b@dread>
+ <20261106122355.16885-1-lauri.gates@gmail.com>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -119,53 +71,21 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aupITfr9pBKPrU20@dread>
+In-Reply-To: <20261106122355.16885-1-lauri.gates@gmail.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Wed, Nov 04, 2026 at 07:47:09AM +1100, Dave Chinner wrote:
-> On Tue, Nov 03, 2026 at 12:50:53PM +0800, Kaitao Cheng wrote:
-> > From: Kaitao Cheng <chengkaitao@kylinos.cn>
-> > 
-> > Successful writeback calls zswap_entry_free(), which removes the entry
-> > from the LRU and decrements both the sublist and node item counts.
-> > shrink_memcg_cb() then returns LRU_REMOVED_RETRY, causing the LRU walker
-> > to decrement the node count again.
-> > 
-> > The affected call path before this change is:
-> > 
-> >   __list_lru_walk_one()
-> >     shrink_memcg_cb()
-> >       zswap_writeback_entry()
-> >         zswap_entry_free()
-> >           zswap_lru_del()
-> >             list_lru_del()
-> >               __list_lru_del()
-> >                 atomic_long_dec()  /* first node count decrement */
-> >       return LRU_REMOVED_RETRY
-> >     atomic_long_dec()              /* second node count decrement */
-> 
-> That's a bug in the zswap code. You shouldn't be calling
-> list_lru_del() from __list_lru_walk_one() context.
+On Fri, Nov 06, 2026 at 02:23:55PM +0200, Lauri Gates wrote:
+> Mirroring XFS_DIFLAG2_REFLINK, the flag would mean "may have shared
+> extents", which is all a du tool needs to decide whether to look
+> closer. If it helps, I can write the patch.
 
-Grr, Kaitao you dropped the wrong thing that I thought had merit in my
-proposal...
+Please do.  The main question are:
 
-Dave, would you mind taking a look at my patch at
-https://lore.kernel.org/all/auJkvb-Lq0M5Enkz@cmpxchg.org/?
+ - do we want it in fileattr_get or as a STATX_ATTR_ in statx.
+ - how do we make the query reliable, and do we even need to?
 
-Ignore zswap for a second. I know it has problems. Most of it stems
-from the fact that we rely on the swap locking and do none of our own
-locking/lifetime on the zswap entry. As a result we work around it in
-odd ways. Sorry, you didn't ask :-) That's worth revisiting, although
-it's likely more invasive work.
+Besides xfs, btrfs and ocfs2 also support reflinks, and nfs (and maybe
+cifs?) can export the semanics remotely.  So we really need a way
+to indicate if the file system could support reflinks to start with,
+and then one that the file could, so we probably need two bits
 
-The observation that led to the patch above was a much simpler one:
-since we now have the caller-locked __list_lru_del() anyway, the only
-difference between that and the list_lru_isolate* is the
-accounting. The patch is about one thing: removing the isolate helpers
-entirely. There is then simply one tool for caller-locked list
-unlinking, __list_lru_del(). It removes an avoidable distinction,
-shrinks the API surface, makes it harder to screw up.
-
-The zswap weirdness made me look at list_lru. Consider it a stress
-test from idiotic code :-) But I would propose the list_lru
-simplification for its own sake, regardless of what we do with zswap.
