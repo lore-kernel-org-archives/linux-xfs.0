@@ -1,50 +1,113 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.181
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793972757;
-	b=5tknAPbvVQUErnFIKNRl0Nyw8HOh3Bfjdt/xalrf0PwINFNCxfXpMa0XEwSmNbrMfcPC
-	 P2rIeBvBOmyiFetAKDPoQUbPJ3txBFHv8lF91/jx4LyDeZdKqo8It76OdctNAmuF6rYzg
-	 6eoiF0ZfY3bccFzvzrD6cz9Q8s2WLL+aovkTK8+uCwWZk6duUGn3HJ2At6vDP3PoFwZDX
-	 5A5TixhcAhG/YCeJO+zciwLhdM01Q+zgtJDQ4w5FpMipGrmXDjhzS46exkChWBwlEFSVc
-	 unkOhgmdceYigMPxeZhCZjlQ+FE19OfOkJ72mS0Bj2SaVwz38YSyUA/MKJq2sXTgzpQ==
+	t=1793973973;
+	b=soZFUsB05tKAyW8kcCloxNwdgQV3hNOO5U1WIZi66hBD6qUXTwZzghCESoTZ48e56Xoq
+	 NNrcQkHerbVZXERgvzTdqW6KVi38uLxkBYhZu3enT08+Qz4pESt8oW6hyUL+eCLdg+skp
+	 dQ+LSE84ukrCcXQ+SxVIP/j7bCtl8RqPD+txFP82j1Tip930V/7wuM7AaEnr0UoE1TDgU
+	 o4j19kbmtdzGp5W8PsxmOU9lxyymZ4AIQJJv9XPyUTg2mfer9FzwQElI2TD2g1G+NnME9
+	 cvmWDjaR1rz69HkJeOdHh2tHpJ6eS1bU5MsUtXOs88WwGpt/1W9v5x47szX5XT+pgZg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793972757;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 MIME-Version:Content-Type:Content-Disposition;
-	bh=PuaN9jhvvuR8lC6kF8K/oPWaEn3N0J0i+m7ihv5jIxM=;
-	b=1XWvUhMp1lCXwka6QswiActskjhBSK98qTeCjTXYd0GWQ+uwly6tKWe5N81xbvv2iDfD
-	 mWOhHk+nmF1SBGbOErNm/B3s41R+6E7hAetCbrgq88805LxH/eTtwk8NP39Q3jGTAz2h4
-	 Tcv5R1YFdlSDw4o3LNkaOqU905qqYld4cEi97E7J/PS+WCdaQbK9p+Gc3nVx6PjSSy3R7
-	 /kK2GJbzXUYUusw+qYs3TiLb6Ph9Qj8eSaDL8uiQ8sSOPkP4n3EZ3DC8ozTMPWdTH/+oB
-	 vHXd05Wg/E6R3ioe2sjjigsl4XI/GdCGNPkTbHJYd/CSRzaVylRzFsgsIxFr3gkLQ8g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793973973;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To;
+	bh=eqhBVbUtw3dy734MGt0XscJMrayl/heBjdE55TwHpBE=;
+	b=CtiflXPgnk6/gK4WBh/ZS73n6i4soJZnKYiVrxOAgHM4ng9LdnyQDuOvYfn6PM/x7GE0
+	 Xvs1fYw9LCBgUiOQgGGIVHEhTkLU/0992xfSrYexlqTwPcQmHUJ12X2eYb09depoqIOYa
+	 ptB69+5l7S0tD3Q/87aE254KGo7rGha/bEVaPqLXFtgpUiw9Z04bUty3vyNt8PxMLnSKd
+	 tCa1j5i9iWR5x5DBaiYHR600bhnfLApcS9lBWyfCG7tWW03ms6gBPRJs0rbqr1xwM1xjg
+	 AY7hQZeL1uj84PunAoWE7NvqKOjymDRvrBSe1B5QmnAx5SIHsiuPl/lxktraNBuRJMg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IOQiLLiY;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=cmpxchg.org;
+	spf=pass smtp.mailfrom=cmpxchg.org;
+	arc=none smtp.remote-ip=209.85.128.181
+Received: from mail-yw1-f181.google.com (mail-yw1-f181.google.com [209.85.128.181])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B44416082BCB
-	for <linux-xfs@vger.kernel.org>; Fri,  6 Nov 2026 13:45:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IOQiLLiY
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 935AB1F008A3;
-	Fri,  6 Nov 2026 13:45:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793972756;
-	bh=PuaN9jhvvuR8lC6kF8K/oPWaEn3N0J0i+m7ihv5jIxM=;
-	h=Date:From:To:Cc:Subject;
-	b=IOQiLLiYeMtamK8t7Je0cupJINMrbsVnuFpmeNtXBDg1AXr4+yjwFDfgtKJmvSOG+
-	 AVbGvSuUteeWg4WF3RI9ECYTeNARTEn/Z0tTCnN+wipNPuasneEqJJdUy7Co6hVjaY
-	 JR1L9bhd2+A9bpGdqstw6nWmRwDrsb5y82bQ4X2R6iOrM+eYEaZ3z8VK0buqqAi8+T
-	 Ozvhjtmh/b3SRIFQqDO+qnYX80UysICAZtkgPf0Ob3TlkfP0aT9U/9Xi74Pj6XcIWc
-	 EfE13EssRvdPnqBFKvwWkMz5D5ZioDyykOWpdQz/KkwveByF2d2bCwnZvOsC1bz+eG
-	 3HjCWSItUF2Ug==
-Date: Fri, 6 Nov 2026 14:45:52 +0100
-From: Carlos Maiolino <cem@kernel.org>
-To: torvalds@linux-foundation.org
-Cc: linux-xfs@vger.kernel.org
-Subject: [GIT PULL] XFS: Fixes for v7.4-rc2
-Message-ID: <au3QTc4bZbvePBT2@nidhogg.toxiclabs.cc>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7091606A331
+	for <linux-xfs@vger.kernel.org>; Fri,  6 Nov 2026 14:06:07 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E7091606A331
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmpxchg.org
+Received: by mail-yw1-f181.google.com with SMTP id 00721157ae682-8b309147589so5647027b3.1
+        for <linux-xfs@vger.kernel.org>; Fri, 06 Nov 2026 06:06:07 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg.org; s=google; t=1793973967; x=1794578767; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=eqhBVbUtw3dy734MGt0XscJMrayl/heBjdE55TwHpBE=;
+        b=rEFjIsRctA59Iu2/BHBn1Bio1Z530ac+g4EEE4umpjlRFctJ/W1yi+oJAJdR8sIKtC
+         0ANk4+IEeh+gWZdP8+5Abj0Wi+7JUGtI3eOPnJ0wMnngrGVtvT7+mdXKDwBc4VjMOreA
+         HRXNX16MAj9gPw3V6sQG29RsCMeifuq7vktm82eZ1OL9M0wUFDM8b1mHYrWOWDjP7hoA
+         FgchrqECOX93FzgDhG9Sn07L+FCR1PCSxN8pDG5a+ABli7EEuG5ifSugYUsuO9WbK3uX
+         2labLzJdsWWlMl8/Ibz30wICnbSFS6Rx+DAJRAtH3OrhgDaH9x+c/HNq/PuJNNkUGIVa
+         0UdQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793973967; x=1794578767;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=eqhBVbUtw3dy734MGt0XscJMrayl/heBjdE55TwHpBE=;
+        b=MXkq3T0fqjCjm1pP09S5UATMUse+zO7rLPTJMKZWHWucxXSGWpIpAKSVPSa6WzWkq8
+         sHnDv+cYqyTSwbKPhHOpye8ozvEI3i3eBkUvreTg2h08mcXw/Dzz0YKN1dLGKbrj2wm/
+         xrrU6ke5zBj9v867eynMMw8KEDnP924DL43G4QeGu6RJT05Jn4Oings42A06qH35/Pdi
+         RCsNGg48xEbnKPBOgLJVTmKxr0ZCNRF15kyGQokZh+OLSNZ/drNBi7AHj4CKNF+YNejr
+         UQhNlpK3Xxrc1rkJzLdDexMp4zCnIFnNjNE80kfExyhRGoC8SzWwaNpm5GOz/hx6C4W+
+         mdVA==
+X-Forwarded-Encrypted: i=1; AL+hErGoyzkRuHenYFXdzXx9z88CR2ARX2RZi7oHRNu7VnT5DQfH/lTHoUR21Js4tP6RTfOS/BVBAnQ4wsE=@vger.kernel.org
+X-Gm-Message-State: APuU4Z9ETw3Wl9nEA07EVTwm+TnSxX/L1TPgPt5N7Is9tNqoo4rUuAIv
+	VaXMowi8l/QFqrvlm7jeOmAQueLA+WXwTj6FNRxAB72j0rYyb2eRnru8C35HlksM6Z0=
+X-Gm-Gg: AYBFou1yVvYKMulH9sokgtorvbViCEp4T5t+8odDMFJhVLgVXHMKDUd+/PjHcGi5d21
+	vcVi07ISi0KFd0ZtPBVIlNtQmJCKB4HkCbPB4JIIm/6IktB1nUP7nEkt9Av8gjpyxxhZEbpp4JC
+	pj86vC4grm35ciOzMyfio8wj/6eZxaq0vrBen7vZWy1Zuz6UP/GmIne61q33owsSOd0EVVXe9Il
+	gEGPbSBETQVemyShVEWdvxS+DhwsbQOJn/GmugnwZR5l+s5ZzHINDzDA52e7+4kDhbO5LzJO59M
+	J8jvVwK4JIcQHu6ABW2Xf9ZHjoAFBuq91uNY517e9kD3NVJxT/XzIp9MZSR6uiT9UkWBwaK0/UI
+	LKuarusEO/BrevqpyQVDHPJ+Toc88eauWDHM5AodVj3RJkewaeZ2fF+5yvAbTiSQCw4RwBVebSE
+	aod4/SAx+w7ynPRlM9LLiZG14wVpI5UM7yLwXSi/KDeAbhy9kslvTzSExW3lczxMz1YxgqwR4AE
+	dADPAo6VqxiaX2MKVi9OyyHn4hGOMTSRs26prM0YHA9Ej7tVXi4I9AYELnHJ7EQqioh1dhfKb7S
+	1zy+vUKGQdtDykhuY5CYndil1R3w
+X-Received: by 2002:a05:690c:560f:10b0:8b3:10df:54a3 with SMTP id 00721157ae682-8b341b1ebe2mr10611897b3.65.1793973966605;
+        Fri, 06 Nov 2026 06:06:06 -0800 (PST)
+Received: from localhost ([2605:8600:200:14e3:365a:60ff:fe62:ff29])
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-8b33f856f99sm19108527b3.34.2026.11.06.06.06.04
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 06 Nov 2026 06:06:04 -0800 (PST)
+Date: Fri, 6 Nov 2026 09:06:00 -0500
+From: Johannes Weiner <hannes@cmpxchg.org>
+To: Dave Chinner <dgc@kernel.org>
+Cc: Kaitao Cheng <kaitao.cheng@linux.dev>, gregkh@linuxfoundation.org,
+	arve@android.com, tkjos@android.com, brauner@kernel.org,
+	cmllamas@google.com, aliceryhl@google.com, nat@pixelcluster.dev,
+	arunpravin.paneerselvam@amd.com, maarten.lankhorst@linux.intel.com,
+	mripard@kernel.org, tzimmermann@suse.de, airlied@gmail.com,
+	simona@ffwll.ch, viro@zeniv.linux.org.uk, agruenba@redhat.com,
+	trondmy@kernel.org, anna@kernel.org, cel@kernel.org,
+	jlayton@kernel.org, cem@kernel.org, akpm@linux-foundation.org,
+	david@fromorbit.com, david@kernel.org, hughd@google.com,
+	yosry@kernel.org, nphamcs@gmail.com, matthew.auld@intel.com,
+	matthew.brost@intel.com, thomas.hellstrom@linux.intel.com,
+	jack@suse.cz, neil@brown.name, okorniev@redhat.com,
+	Dai.Ngo@oracle.com, tom@talpey.com, qi.zheng@linux.dev,
+	roman.gushchin@linux.dev, muchun.song@linux.dev, ziy@nvidia.com,
+	baolin.wang@linux.alibaba.com, liam@infradead.org,
+	nico.pache@linux.dev, ryan.roberts@arm.com, dev.jain@arm.com,
+	baohua@kernel.org, lance.yang@linux.dev, usama.arif@linux.dev,
+	kas@kernel.org, mhocko@kernel.org, shakeel.butt@linux.dev,
+	ljs@kernel.org, kasong@tencent.com, axelrasmussen@google.com,
+	yuanchu@google.com, weixugc@google.com, baoquan.he@linux.dev,
+	chengming.zhou@linux.dev, linux-kernel@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, linux-fsdevel@vger.kernel.org,
+	gfs2@lists.linux.dev, linux-nfs@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-mm@kvack.org,
+	Kaitao Cheng <chengkaitao@kylinos.cn>
+Subject: Re: [PATCH] mm/list_lru: Account node removals in isolation helpers
+Message-ID: <au3eyCrHiuhbJx3u@cmpxchg.org>
+References: <20261103045053.59548-1-kaitao.cheng@linux.dev>
+ <aupITfr9pBKPrU20@dread>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -56,94 +119,53 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <aupITfr9pBKPrU20@dread>
 
-Hello Linus,
+On Wed, Nov 04, 2026 at 07:47:09AM +1100, Dave Chinner wrote:
+> On Tue, Nov 03, 2026 at 12:50:53PM +0800, Kaitao Cheng wrote:
+> > From: Kaitao Cheng <chengkaitao@kylinos.cn>
+> > 
+> > Successful writeback calls zswap_entry_free(), which removes the entry
+> > from the LRU and decrements both the sublist and node item counts.
+> > shrink_memcg_cb() then returns LRU_REMOVED_RETRY, causing the LRU walker
+> > to decrement the node count again.
+> > 
+> > The affected call path before this change is:
+> > 
+> >   __list_lru_walk_one()
+> >     shrink_memcg_cb()
+> >       zswap_writeback_entry()
+> >         zswap_entry_free()
+> >           zswap_lru_del()
+> >             list_lru_del()
+> >               __list_lru_del()
+> >                 atomic_long_dec()  /* first node count decrement */
+> >       return LRU_REMOVED_RETRY
+> >     atomic_long_dec()              /* second node count decrement */
+> 
+> That's a bug in the zswap code. You shouldn't be calling
+> list_lru_del() from __list_lru_walk_one() context.
 
-Could you please pull patches included in the tag below?
+Grr, Kaitao you dropped the wrong thing that I thought had merit in my
+proposal...
 
-An attempt merge against your current TOT has been successful.
+Dave, would you mind taking a look at my patch at
+https://lore.kernel.org/all/auJkvb-Lq0M5Enkz@cmpxchg.org/?
 
-The most notable fix here IMO is for xfs's pNFS support (mostly related
-to LAYOUTCOMMIT) and for that it contains several patches. Besides that,
-the PR contain bug fixes for different subsystems in xfs. The last patch
-in this PR is mostly a refactor than a bug fix, but the refactor is done
-to prevent a nasty journal transaction state corruption to happen.
+Ignore zswap for a second. I know it has problems. Most of it stems
+from the fact that we rely on the swap locking and do none of our own
+locking/lifetime on the zswap entry. As a result we work around it in
+odd ways. Sorry, you didn't ask :-) That's worth revisiting, although
+it's likely more invasive work.
 
-Thanks,
-Carlos
+The observation that led to the patch above was a much simpler one:
+since we now have the caller-locked __list_lru_del() anyway, the only
+difference between that and the list_lru_isolate* is the
+accounting. The patch is about one thing: removing the isolate helpers
+entirely. There is then simply one tool for caller-locked list
+unlinking, __list_lru_del(). It removes an avoidable distinction,
+shrinks the API surface, makes it harder to screw up.
 
-"The following changes since commit 6628e7d4c6b25c8d18f1345e3a20d21829aae7e4:
-
-  Linux 7.4-rc1 (2026-11-01 13:26:31 -0800)
-
-are available in the Git repository at:
-
-  git://git.kernel.org:/pub/scm/fs/xfs/xfs-linux.git tags/xfs-fixes-7.4-rc2
-
-for you to fetch changes up to 7ba9663607b31108b4350b604a3c85ae86c67c19:
-
-  xfs: kill xfs_trans_set/clear_context() helpers (2026-11-03 15:39:53 +0100)
-
-----------------------------------------------------------------
-xfs: fixes for v7.4-rc2
-
-Signed-off-by: Carlos Maiolino <cem@kernel.org>
-
-----------------------------------------------------------------
-Anthony Iliopoulos (1):
-      xfs: skip iunlock with empty iolock flags in xfs_file_dio_write_aligned
-
-Binbin Deng (1):
-      xfs: set healthmon mount cookie before publishing it
-
-Christoph Hellwig (1):
-      xfs: fix recovery of partial attr removals
-
-Daejun Park (11):
-      xfs: don't skip free extents in later batches of a whole-AG FITRIM
-      xfs: don't skip free extents of the longest length in a whole-AG FITRIM
-      xfs: mark the inode preallocated for pNFS write layouts past EOF
-      xfs: add a flag to convert unwritten extents without allocating blocks
-      xfs: refuse a pNFS LAYOUTCOMMIT of a range without blocks
-      xfs: clamp a pNFS LAYOUTCOMMIT extent before computing its end
-      xfs: cap the block count of xfs_iomap_write_direct() at one extent
-      xfs: clamp the pNFS layout range to the maximum file size
-      xfs: take the invalidate lock while mapping a pNFS layout
-      xfs: add datasync and log_flushed arguments to xfs_log_force_inode()
-      xfs: make pNFS LAYOUTCOMMIT stable the way fdatasync does
-
-Jianyun Gao (1):
-      xfs: fix temporary cursor leak in btree shift corruption paths
-
-Kefeng Wang (1):
-      xfs: kill xfs_trans_set/clear_context() helpers
-
-Ravi Singh (1):
-      xfs: mark i_mode=0 and shut down on attr fork inactivation failure
-
-Reid Downing (1):
-      xfs: fix wrong compat fields in xfs_ioctl32_bstat_copyin()
-
-Wilfred Mallawa (1):
-      xfs: fix unwind handling during xfs_mount_sysfs_init()
-
- fs/xfs/libxfs/xfs_attr_leaf.c |  9 ++++-
- fs/xfs/libxfs/xfs_bmap.c      | 14 ++++++--
- fs/xfs/libxfs/xfs_bmap.h      | 10 +++++-
- fs/xfs/libxfs/xfs_btree.c     |  8 ++---
- fs/xfs/libxfs/xfs_trans.h     | 14 --------
- fs/xfs/xfs_discard.c          | 26 +++++++++-----
- fs/xfs/xfs_export.c           |  2 +-
- fs/xfs/xfs_file.c             | 55 ++++-------------------------
- fs/xfs/xfs_healthmon.c        |  2 +-
- fs/xfs/xfs_inode.c            | 47 ++++++++++++++++++++++---
- fs/xfs/xfs_inode.h            |  3 +-
- fs/xfs/xfs_ioctl32.c          |  4 +--
- fs/xfs/xfs_ioend.c            |  2 +-
- fs/xfs/xfs_iomap.c            | 28 +++++++++++++--
- fs/xfs/xfs_iomap.h            |  3 +-
- fs/xfs/xfs_pnfs.c             | 82 ++++++++++++++++++++++++++++++-------------
- fs/xfs/xfs_sysfs.c            |  2 +-
- fs/xfs/xfs_trans.c            | 10 ++++--
- fs/xfs/xfs_zone_gc.c          |  2 +-
- 19 files changed, 198 insertions(+), 125 deletions(-)"
+The zswap weirdness made me look at list_lru. Consider it a stress
+test from idiotic code :-) But I would propose the list_lru
+simplification for its own sake, regardless of what we do with zswap.
