@@ -1,77 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=203.205.221.221
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.141
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794047416;
-	b=kkzuqGf13kZypLjGJHRnHnbJvGz+VuOOjzBAcbRdY76+avfrljwOsG4Nzp0RLmlC/zTo
-	 WZQsciUswuKn1W7k5kkDqBEGiM2N5B8C9v7wPnKKSuxY4tru9haT9vRj91LzvwRQ0QJSf
-	 h5ZEPlWqGvf/Tr1Naa92MyQyKg+aRPuDKmN08ADrAGjuyaszdW6ttaGrQH/DvOZXilB4O
-	 xFbIF12FVkNcDXE6UPRcknfrOuAIQhVhW1EflVPiOmWKKFH3lHub1QyTODXIxThNlaWu6
-	 +ILoYwV2m0VZ0vAnsiaDgzqyuU0pCPCwqZA4ncL1u8BVs/ZvjwKo02OP3E116zWzLeQ==
+	t=1794059861;
+	b=5AGxYpGcB6wWTLYkoauf2lQJD1lzyJkPp77nWQtR5r6rJ7zt1cBPmzHhTUhMXQJ1rFW5
+	 4Zf5EvjLkNLP/miT0xXyYtARvGto7DFzOYO/agcPBYjhT7VrVTfY5y6iI+TQm7/89cj+w
+	 iBgN0ooZucGln0FdON9HgKYb3VLVvSYFvaxH1u0Z60L8QJaD7wMtPp2//M4iNE3BwjMnY
+	 1lyxcJIyOklC5ZOuA8BQ8THqG1bBqA/a3SWt/dEDBBa9cwhFvznBWbS2k8dWUiU4ARsQX
+	 MS3JdVTz1RhEVrnXr7IDIxhOPrD+zARfuIo9Z3n5HsAof6hqY7q4qWn71yeF8igNNGQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794047416;
-	h=DMARC-Filter:DKIM-Signature:Received:X-QQ-mid:Message-ID:
-	 X-QQ-XMAILINFO:X-QQ-XMRINFO:From:To:Cc:Subject:X-OQ-MSGID:In-Reply-To:
-	 References:Date:Content-Type:Content-Transfer-Encoding:MIME-Version;
-	bh=TcuxYv+XuCgbw4KiXs1IpnIHCIqcFcgGjUNbAL5BTJo=;
-	b=JjmMBTMs40BhTFgz7IDPrgNVtVFA9/+DjnW2z/GZ+n+W3G0Rrm27eXXW44aX7/eeGSXz
-	 XWhViUXUOt5GeSfOCQmoSg8j01XWk3fNoiphuzYY8ns2a2czXTqPVNsZzqwGww7LSDc30
-	 jKCm/N7DO8SDqqNEb8IvMmS+OmMdUsjFZYdrR77ZsBpYb4QJ4MQQUFyUasgB4zHbPaXKk
-	 zI6CFyQcX9Fw0N9g2Yv9gBSIb0VSlEIWA61r6sbwWRZ4CZln3FfJ/sbZI0WRofBiahUL3
-	 59//B+sdpA5qKKT4JybmRQTuBx9IY81GPiJD7Bo9E+ySWt36cfFvOVfv5xp587th+Ng==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794059861;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=bof9tUcTOZBXMkDJCDfY6C3YrCB7UvJznTngHIBFOlg=;
+	b=lKoQLwwCZtn7Bn5OCnkF+4fgtgKSDZwT1K63k2m95oxy/NFyqiCXGDLC4glnj/xD952K
+	 Vg8DCumYu0YGakZX24zKybZFrJTL/P+sk7rnHyHJ90KWXbxC7HA2ShGbCYKSzWtoekGZG
+	 /E6htLe0TFCf8YoTAaUUTaSnP+meWI91iJpXvgbGxGbbFLlFhU3sJf/ZVJCvNVf5VHw7J
+	 Pd/M9q1N/ww5bDw1KQUhx9slhoQvDIcYsAg2Z3HNfsGHEaD/B46/8nRP3ZItLD6iRvzdM
+	 VDN7W+6TXVCBitrxCXo8LLsRyzXsElabUPXyfjBANL9Ym1XGRQtBWGMpNrvAMsgeRWg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=qq.com;
-	spf=pass smtp.mailfrom=qq.com;
-	dkim=pass header.d=qq.com header.i=@qq.com header.a=rsa-sha256 header.s=s201512 header.b=jw8BDy9E;
-	arc=none smtp.remote-ip=203.205.221.221
-Received: from out203-205-221-221.mail.qq.com (out203-205-221-221.mail.qq.com [203.205.221.221])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=lJxfz6F4;
+	arc=none smtp.remote-ip=95.215.58.141
+Received: from mta1.migadu.com (out-141.mta1.migadu.com [95.215.58.141])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47A0E606A326;
-	Sat,  7 Nov 2026 10:30:13 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 47A0E606A326
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 083D3606A332
+	for <linux-xfs@vger.kernel.org>; Sat,  7 Nov 2026 13:57:34 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 083D3606A332
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=qq.com header.i=@qq.com header.a=rsa-sha256 header.s=s201512 header.b=jw8BDy9E
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
-	t=1794047405; bh=TcuxYv+XuCgbw4KiXs1IpnIHCIqcFcgGjUNbAL5BTJo=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date;
-	b=jw8BDy9EuXav4ibaaFhY7jM0JBPqT5cW5NYS8bq5JLGlvS2EkVlyklc1gROwkwTCD
-	 KSrHmSOUcjVYXz5ivZQ87+5omaSKM18W/uptqs1E9e9kobDroa6yKxs5r81kSlN0jU
-	 G8M4AdVoZoMysbjXgc55F7bce4Tv1UJlUw1mWEIs=
-Received: from [172.18.4.77] ([202.113.185.209])
-	by newxmesmtplogicsvrszb51-0.qq.com (NewEsmtp) with SMTP
-	id 78380259; Sat, 07 Nov 2026 18:30:03 +0800
-X-QQ-mid: xmsmtpt1794047403t2pocn9j4
-Message-ID: <tencent_2485A31E7D66A27A52E9BF4747109D384C09@qq.com>
-X-QQ-XMAILINFO: NGZp1yYNf7Y+FC2NnpBTyNS2RInVc2qmDhS5yWgd4eXpIZDAJgOmE7RsMLEETC
-	 jv9Ma3hitk/uCQSO/LT08tN5JGlrCeqzzZzfEjN4UxIhndbDn3OeqKgWdORXCbizTYLoWCGCP+tW
-	 5RUtct0PQvy2czlm77KAxVTB7r6/e3aqgs2QMOvuB7OKa6pto5B4pDeQzKhmqtLQX6zvmBGVtKti
-	 3cBRk5UcIKntwJ7lgUnTuGhFw0+GY5KAJvI9wBOYSlk6BmwNsnD+pyqbDdaU0XV0dRpJ9Er4Rp4w
-	 w2WW5da+czlU74QfObT0mAXwWiYm5gURLt1LTde+22s+hEhjCnPryXQ6YPdcDiFVtL3OG8iPilN7
-	 qhtDbDWqAiZvwS3G5srTLWubnc8AXeZYw0wPtrBUfcfZ5JUsLHlY8QQnpICS21ruEXByzfbuX9Dh
-	 IvJ0Lex5ZlOlzw2f5nmebZ/tNc5Uf5CZSZiRe16+dCjf9KIMhIIK6/R5jH6dBXy1j5vpzsEx9vKx
-	 ET7EvdlTFvjgDITF8oiFuv71thpX5OjBrbko6MT5gujk6Ty09NIaKJ6B7hV6OUutnfkbPQDRYwF6
-	 Sy9OncDW1etsSTtRxUhQR1wkhMAOjIjeYLtCZ8x/Gb91wZ7Pb14g9cePwlvk+LTyVeK1AqxeafEK
-	 b6vJaumzgEtWoc0VHnlVbkpkP57J8kesSaVGStbZwlgwcgnil2QspiH9xT9a66hCE9OdaCdB0BXR
-	 /jHpDikNP33OLH/gt6g8x3tGZricD2/JqpyJ/qbLPIz8W+2n4VG/nSjF25uGxakofaLimNfvDrg1
-	 bBR6dGwxGVkzPeJRqwoXA3I59BKgTHZUENFaCImSpqiNyPLa2SRZ87yFUi5285k9uZisoPMIx5zz
-	 7DwfDLuHUDzs8hxXZ9YYQyzTuRTfZE+LZInIjxBMMJUZR7zbXnLhRaw0ghi4baZWrFUyTc8CykU9
-	 /8tMjlDD8iAkvh7k2FEmxpOXV8GoXikoPI2ssK+aci+Lr75VyVrmzw0e2gt0BmO4dqoBrsw05JVd
-	 9CrdqYG86EjacBoeKFpRZxcm0owz6QOA99DrxpZeAFa1Jk7yLlx/68iSH1to36FHXGmaBcmU2MJK
-	 aFViir
-X-QQ-XMRINFO: OD9hHCdaPRBwH5bRRRw8tsiH4UAatJqXfg==
-From: Guikun Yang <yangguikun19@qq.com>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
- linux-kernel@vger.kernel.org
-Subject: Re: xfs: XLOG_WAS_CONT_TRANS on a transaction with no buffered
- regions reads ri_buf[-1] - null deref Oops during mount log recovery
-X-OQ-MSGID: <c31-xfs-logged-sb-geometry-20261107@qq.com>
-In-Reply-To: <c30-xfs-wascont-rideref-20261107@qq.com>
-References: <c30-xfs-wascont-rideref-20261107@qq.com>
-Date: Sat, 07 Nov 2026 20:00:00 +0800
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=lJxfz6F4
+X-Envelope-To: linux-xfs@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=a4WQjTS9cLmNAnAJkm3u/yMKK8cVrEp4RpmNfDVq90s=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1794059853; v=1; x=1794664653;
+ b=lJxfz6F4qBNSR5tFla7gLu8C60Ut8j6sNhgl36PjYrBesekcQ460PWTFUBZKJBTXlOb167Cz
+ EYAxD+DU/YXTiDp0v0C46KCq/hhwcfZgC5Q+E2SOBt3QwWyB+hXy5CTC+iuQKMFnn9NMW+C4It5
+ ILQjSrkCXaBdr5OGpjI70qJg=
+X-Envelope-To: linux-xfs@vger.kernel.org
+Received: by mta12.migadu.com with ESMTPS id bb1f088a7420c55f;
+	Sat, 07 Nov 2026 13:57:32 +0000
+X-Mizu-Trace-ID: bb1f088a7420c55f
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <fd7ed305-6192-46e8-a5bb-cc1ed8f12f74@linux.dev>
+Date: Sat, 7 Nov 2026 21:57:02 +0800
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -81,78 +58,99 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] mm/list_lru: Account node removals in isolation helpers
+To: Johannes Weiner <hannes@cmpxchg.org>, Dave Chinner <dgc@kernel.org>
+Cc: gregkh@linuxfoundation.org, arve@android.com, tkjos@android.com,
+ brauner@kernel.org, cmllamas@google.com, aliceryhl@google.com,
+ nat@pixelcluster.dev, arunpravin.paneerselvam@amd.com,
+ maarten.lankhorst@linux.intel.com, mripard@kernel.org, tzimmermann@suse.de,
+ airlied@gmail.com, simona@ffwll.ch, viro@zeniv.linux.org.uk,
+ agruenba@redhat.com, trondmy@kernel.org, anna@kernel.org, cel@kernel.org,
+ jlayton@kernel.org, cem@kernel.org, akpm@linux-foundation.org,
+ david@fromorbit.com, david@kernel.org, hughd@google.com, yosry@kernel.org,
+ nphamcs@gmail.com, matthew.auld@intel.com, matthew.brost@intel.com,
+ thomas.hellstrom@linux.intel.com, jack@suse.cz, neil@brown.name,
+ okorniev@redhat.com, Dai.Ngo@oracle.com, tom@talpey.com, qi.zheng@linux.dev,
+ roman.gushchin@linux.dev, muchun.song@linux.dev, ziy@nvidia.com,
+ baolin.wang@linux.alibaba.com, liam@infradead.org, nico.pache@linux.dev,
+ ryan.roberts@arm.com, dev.jain@arm.com, baohua@kernel.org,
+ lance.yang@linux.dev, usama.arif@linux.dev, kas@kernel.org,
+ mhocko@kernel.org, shakeel.butt@linux.dev, ljs@kernel.org,
+ kasong@tencent.com, axelrasmussen@google.com, yuanchu@google.com,
+ weixugc@google.com, baoquan.he@linux.dev, chengming.zhou@linux.dev,
+ linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ linux-fsdevel@vger.kernel.org, gfs2@lists.linux.dev,
+ linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org,
+ Kaitao Cheng <chengkaitao@kylinos.cn>
+References: <20261103045053.59548-1-kaitao.cheng@linux.dev>
+ <aupITfr9pBKPrU20@dread> <au3eyCrHiuhbJx3u@cmpxchg.org>
+From: Kaitao Cheng <kaitao.cheng@linux.dev>
+In-Reply-To: <au3eyCrHiuhbJx3u@cmpxchg.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Hi,
+在 2026/11/6 22:06, Johannes Weiner 写道:
+> On Wed, Nov 04, 2026 at 07:47:09AM +1100, Dave Chinner wrote:
+>> On Tue, Nov 03, 2026 at 12:50:53PM +0800, Kaitao Cheng wrote:
+>>> From: Kaitao Cheng <chengkaitao@kylinos.cn>
+>>>
+>>> Successful writeback calls zswap_entry_free(), which removes the entry
+>>> from the LRU and decrements both the sublist and node item counts.
+>>> shrink_memcg_cb() then returns LRU_REMOVED_RETRY, causing the LRU walker
+>>> to decrement the node count again.
+>>>
+>>> The affected call path before this change is:
+>>>
+>>>   __list_lru_walk_one()
+>>>     shrink_memcg_cb()
+>>>       zswap_writeback_entry()
+>>>         zswap_entry_free()
+>>>           zswap_lru_del()
+>>>             list_lru_del()
+>>>               __list_lru_del()
+>>>                 atomic_long_dec()  /* first node count decrement */
+>>>       return LRU_REMOVED_RETRY
+>>>     atomic_long_dec()              /* second node count decrement */
+>>
+>> That's a bug in the zswap code. You shouldn't be calling
+>> list_lru_del() from __list_lru_walk_one() context.
+> 
+> Grr, Kaitao you dropped the wrong thing that I thought had merit in my
+> proposal...
+> 
+> Dave, would you mind taking a look at my patch at
+> https://lore.kernel.org/all/auJkvb-Lq0M5Enkz@cmpxchg.org/?
+> 
+> Ignore zswap for a second. I know it has problems. Most of it stems
+> from the fact that we rely on the swap locking and do none of our own
+> locking/lifetime on the zswap entry. As a result we work around it in
+> odd ways. Sorry, you didn't ask :-) That's worth revisiting, although
+> it's likely more invasive work.
+> 
+> The observation that led to the patch above was a much simpler one:
+> since we now have the caller-locked __list_lru_del() anyway, the only
+> difference between that and the list_lru_isolate* is the
+> accounting. The patch is about one thing: removing the isolate helpers
+> entirely. There is then simply one tool for caller-locked list
+> unlinking, __list_lru_del(). It removes an avoidable distinction,
+> shrinks the API surface, makes it harder to screw up.
 
-While continuing on the same recovery path I found a second issue in
-the log-replay handling of the primary superblock buffer - this one is
-an unvalidated install of logged geometry, and it is a different
-mechanism from the flag-sequence gap reported above.
+I don't think replacing EXPORT_SYMBOL_GPL(list_lru_isolate) with
+EXPORT_SYMBOL_GPL(__list_lru_del) makes much difference by itself.
+The only reason I kept list_lru_isolate() in the current version
+is to avoid passing an additional parameter (nid) to the isolate
+callbacks.
 
-## 5. Recovery installs the logged superblock without validating its
-   geometry fields
+I don't have a strong preference for the current approach. If we
+can reach a consensus, I'd be happy to send v3 with the proposed
+changes.
 
-xlog_recover_do_primary_sb_buffer() (fs/xfs/xfs_buf_item_recover.c)
-recovers the buffer, then installs the on-disk superblock into the
-in-core one with no validation:
+> The zswap weirdness made me look at list_lru. Consider it a stress
+> test from idiotic code :-) But I would propose the list_lru
+> simplification for its own sake, regardless of what we do with zswap.
 
-  error = xlog_recover_do_reg_buffer(mp, item, bp, buf_f, current_lsn);
-  ...
-  xfs_sb_from_disk(&mp->m_sb, dsb);
-
-The only checks afterwards are that the AG count and rtgroup count did
-not shrink. Everything else in the freshly installed superblock is
-used as-is. The immediately following consumers trust the geometry:
-
-  error = xfs_update_last_ag_size(mp, orig_agcount);
-
-which reaches __xfs_agino_range() (fs/xfs/libxfs/xfs_ag.c:172) and
-shifts by the freshly installed sb_inopblog:
-
-  UBSAN: shift-out-of-bounds in fs/xfs/libxfs/xfs_ag.c:172:11
-  shift exponent 40 is too large for 32-bit type 'unsigned int'
-   __xfs_agino_range.cold
-   xfs_update_last_ag_size
-   xlog_recover_buf_commit_pass2
-  Kernel panic - not syncing: UBSAN: panic_on_warn set ...
-
-The same mount-time read path validates these fields through
-xfs_sb_read_verify()/xfs_validate_sb(); the recovery path bypasses
-that entirely - the same on-disk structure gets two different levels
-of trust depending on which path reads it.
-
-## Reproducer
-
-The base image carries a real dirty log from a normal crash. The
-logged primary-superblock buffer item (XFS_LI_BUF, blf_blkno == 0,
-XFS_BLFT_SB_BUF) is located, one byte in its data region is changed -
-sb_inopblog, data offset 123, from 3 to 40 - and the v2 log record CRC
-is recomputed. The unmodified image recovers and mounts cleanly.
-
-Reproduced 3/3 with panic_on_warn=1. The code in mainline as of
-2026-11-07 is identical.
-
-Other geometry fields are installed through the same unvalidated
-xfs_sb_from_disk() call and feed the same consumers: sb_agblocks,
-sb_dblocks and sb_agcount go into __xfs_ag_block_count(),
-sb_inopblock into the inode geometry, sb_blocklog into every shift and
-mask derived from it. I did not chase each variant; the mechanism is
-the single unvalidated install.
-
-## Suggested fix
-
-Validate the recovered superblock before installing it - the existing
-xfs_validate_sb() (or at least its geometry subset) covers exactly the
-fields these consumers use:
-
-  xfs_sb_from_disk(&mp->m_sb, dsb);
-+ error = xfs_validate_sb(mp, &mp->m_sb, true);
-+ if (error) { ... return -EFSCORRUPTED; }
-
-The reproducer (log scanner that finds the SB buffer item, flips
-sb_inopblog and recomputes the CRC, ready-made image, serial log) is
-available on request.
-
-Thanks,
-Guikun Yang
+-- 
+Thanks
+Kaitao Cheng
 
