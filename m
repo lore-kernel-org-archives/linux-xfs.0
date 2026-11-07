@@ -1,102 +1,75 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.201.43
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1794001416;
-	b=igb37+jKW+3cV1dy7S5DVpoQ06jOTZM0sPAevRSvlz1G2ZzxZbvwMndUv8PXyiW5ZDWM
-	 Q0yHx6RHXk8ugUpZFMCoa2y/TJq6DkzeMZSDTL1zgRV5AWB6Xh+/RMeRgNWRFaPawxBX/
-	 h5P8oao6CdysRffn/Ts27WVqp2xttLCgSJyumF2OXYLQMdqTAIQBlCxeXyJXafh0XxEHh
-	 fNnf4czeECldldRqc9tfJBDDrgpAVXL3sviUarYhdwBjNQVr5tfx+kLjeeSZb8L8GPVor
-	 8L1uxs2iT0C+cgQ6BJhfc2dY28N3TpN81WylDM+W2aZMQZQwepOKEENOI0emKjCGjSw==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794001416;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:From:Date:Subject:
-	 Content-Type:Content-Transfer-Encoding:Message-Id:X-B4-Tracking:
-	 X-Change-ID:To:Cc:X-Mailer:X-ClientProxiedBy:MIME-Version:
-	 X-MS-PublicTrafficType:X-MS-TrafficTypeDiagnostic:
-	 X-MS-Office365-Filtering-Correlation-Id:X-MS-Exchange-SenderADCheck:
-	 X-MS-Exchange-AntiSpam-Relay:X-Microsoft-Antispam:
-	 X-Microsoft-Antispam-Message-Info:X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
-	 X-MS-Exchange-CrossTenant-UserPrincipalName:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=BgIXGY8SgvP6w3HtFUueuWDoGe84VhugkauvX26/Skg=;
-	b=Hk4mmkh4TTgTFvMtwYpYggEIBvdj2s6+ib304QFuNYZ/wKQk3PkgT1ig62kQJGSH88xO
-	 BvxKjJcjatz+b/6TLnBdfoMnNTwRwl8fnjzDHOs1w6SdtCj+aHAPT/HPlkMtTioWyCDtv
-	 bSajwOBUqRVino54L34rsXEbdr+6wLasx6Ee/6apgcBARcBG7VdXaz9OvU7t3Ge2ucoeL
-	 zMoOlClu4br4+EjmJ9LZbIAl4qOXOY1xuQfDicXWisDFI+0EdNYm66lh+rnaSqBDZfrjN
-	 ZgUMFxcAmc1PJiSNzD7072pcTqB9XFIvKr6FsnQ7YI/t8M80aHu2uK+nc4h0+KlltWw==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=nvidia.com;
-	spf=fail smtp.mailfrom=nvidia.com;
-	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=nAYhjlti;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.201.43
-Received: from CH4PR04CU002.outbound.protection.outlook.com (mail-northcentralusazon11013043.outbound.protection.outlook.com [40.107.201.43])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=203.205.221.210
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1794042914;
+	b=eL8OgpETsYsF6iVVxhRoydKJC++DC+x0aMP6u9535LOC7dfc5g8V8ggr3AQA9FdV4kL0
+	 4mRbhjyRN4r023sXsi13shuvlQ6Ayxt4LYTVZtVxkzMTSZL5LbSCw6F8raxtvHUGjDrHq
+	 dgbygSJBPzpx1KKnF7POk29lkfyu3RIYYtZzfvJru0NCMuVgl8NAX0Munx8DGi++Yz7HX
+	 VwbDZOPbqBvorgTC3E03FZzkuj6/C+Hw3VvtyZURbUmqnnDeeiXNqHjq6CNx0lW3pmy5P
+	 omE/HkIMxnerP1jPbyU/0ga+OvRKKixis9ruVl0i4zzckIM+h2o4w/gWXAu4vrD9ctw==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794042914;
+	h=DMARC-Filter:DKIM-Signature:Received:X-QQ-mid:Message-ID:
+	 X-QQ-XMAILINFO:X-QQ-XMRINFO:From:To:Cc:Subject:X-OQ-MSGID:Date:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	bh=MucAmHwZfvXXGvF6SgWbnq+9pRH9M2Sh8sGxdlGgfiY=;
+	b=GN3z6t0JOJEZ7NXVYOY8NMVCFX/AFHPyQa1fTR99+2BTQHIGR28kJh2GPJgJvOy94Wpi
+	 GTbpNbTKRuVixlVbeYzX7ZAiRiXzHX3egcODL02nLCAxJzLpu4HsNmOYKvHEGZpj2JwsF
+	 isPdvWWI/pfQZbsBfuN1yU9uD9zPElXzs9Ol6BfYa2x3ZpZ6LI0ubd4GOQgYci9JbH39y
+	 zL/iqETQu+7dwSHnsxig61R1XElffLj/tEQX4GlHsseDsUwAwCcs39ST4Lf1aieXOl1Wr
+	 udt7gx6cU1u55r6bHHSIYkM75idpSzOtboeEm9o9i57hZv9cRldV6vcXb9Kj8aojqjA==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=qq.com;
+	spf=pass smtp.mailfrom=qq.com;
+	dkim=pass header.d=qq.com header.i=@qq.com header.a=rsa-sha256 header.s=s201512 header.b=xk8EKJeS;
+	arc=none smtp.remote-ip=203.205.221.210
+Received: from out203-205-221-210.mail.qq.com (out203-205-221-210.mail.qq.com [203.205.221.210])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C094606A326;
-	Fri,  6 Nov 2026 21:43:35 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0C094606A326
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 559E1606A326;
+	Sat,  7 Nov 2026 09:15:11 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 559E1606A326
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=nAYhjlti
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=xNAKsUCCYVtB58GNH9KpIuAxcfve7+vqN0Wy1mMTcxJskqYTxifAtQCYAiqWkwvu1RDpi88U16o9Y8iZlMYen3bknqHTY2SFoWv0LP7pfh5h433TDxH9+9o8aJxyTXoHhH3JqtdXCsI1LvbBxBbe9amKTl9n2UiD191H7KUs5nXQNg16kBA0hSmq7sQ/LMm+/leER3y76ubQn5CweVntso0nuR1ikK3G2ASHJsdmgIaHRhwQjYfj4f0GWuEK+1sb6Me7KVDo4GNwPu+h2XKInf93ZhHbYk2t98f5W54x1soBqhywOox44GbQRYzK91d378USg2siOWVIqh3sm+8qig==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=BgIXGY8SgvP6w3HtFUueuWDoGe84VhugkauvX26/Skg=;
- b=pfzWMrlpqbbZKAoRN5OjkwlY+XPEF+dvmY0KOzRLMkWPZ2BC8ZBkPaftAalxnIckDWXLflWUJVB9LuDCfCJfIk6pVfOdxaFYwxIJxesOB67YyJpwn3pP8iPQYjs6xu7/R4C2orXXXPUPbSL61FKIelUP+PnQVR1XhCwR8Zmm133ESnPoq52d5mwfoh30P3HY8f0QdrTHfhmFHZoM0fYgqEbl0oePvbVWi1TVQ50+uVVGwzBwX/2AFpSLoph9rZqeuzgpMzq69owfqy1bXk3cYLlQu0d3JqkGq7B0MzKEWUiJWu7qGbwGP7RKUqTI+Hc0iEBHHvvCHOpVrUHH+z5SyA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=BgIXGY8SgvP6w3HtFUueuWDoGe84VhugkauvX26/Skg=;
- b=nAYhjltiMHlBNfEBH+GfGmaCf+aeGkTCk5Z9oagdpQ+PT0B/R6TeMqC86oJXkdwD7sWYjX9d9n1UBT3fDplCAW93XDVMB2YGwMSEH6JLEwfOwdRCRynCnGI9PXqnCnHjchIQNvwHenhKDiK2T3NBAX19P6zVeCgsU48onsf13Aff4h6s8xND+yu/bwKTdLPxPBdoNub2WOwETAPsf7U5CQLO2ebh08pKxS0OqZwgJNWa2wITe17QKdoOMXihSowvAPw/A8TifJ623ZwNEUa+9YcNdHoWlMHS7XKpQJTdKx8NhZxpwLGIZdXGBG+s/Gh9Urtfe1Rgug4C24QaTnEXiQ==
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from IA0PR12MB8374.namprd12.prod.outlook.com (2603:10b6:208:40e::7)
- by SJ2PR12MB8875.namprd12.prod.outlook.com (2603:10b6:a03:543::13) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.592.11; Fri, 6 Nov
- 2026 21:43:32 +0000
-Received: from IA0PR12MB8374.namprd12.prod.outlook.com
- ([fe80::d85f:4c87:ae84:3f16]) by IA0PR12MB8374.namprd12.prod.outlook.com
- ([fe80::d85f:4c87:ae84:3f16%6]) with mapi id 15.21.0592.007; Fri, 6 Nov 2026
- 21:43:32 +0000
-From: Zi Yan <ziy@nvidia.com>
-Date: Fri, 06 Nov 2026 16:43:20 -0500
-Subject: [PATCH] mm/truncate: unmap DAX entries before invalidating them
+	dkim=pass (1024-bit key, unprotected) header.d=qq.com header.i=@qq.com header.a=rsa-sha256 header.s=s201512 header.b=xk8EKJeS
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
+	t=1794042903; bh=MucAmHwZfvXXGvF6SgWbnq+9pRH9M2Sh8sGxdlGgfiY=;
+	h=From:To:Cc:Subject:Date;
+	b=xk8EKJeSUHrr+Moz8iA9+AMxn3rTI8rc7fnushpxAtct7zaailZXv2f+DN0KlsoNx
+	 4CmMKBACq+1KbOHwmcUD9rF7nncIivsOcAXYAUvx4THUbZHKwAgxHztJPQADY5vnIl
+	 SaxoebczMh7WzQGVEqGHy1HgUPBBWHmj0uFSo3FU=
+Received: from [172.18.4.77] ([202.113.185.209])
+	by newxmesmtplogicsvrsza53-0.qq.com (NewEsmtp) with SMTP
+	id 3C186437; Sat, 07 Nov 2026 17:15:01 +0800
+X-QQ-mid: xmsmtpt1794042901t9v37fqed
+Message-ID: <tencent_11C734248ADE0736CA2735F63B7064C76905@qq.com>
+X-QQ-XMAILINFO: Od8VqZhFMB3NV2D5EPFAJHQDK19H0OO5uzL+P3r5Su9o5xZiFC1qXZLSNTu/PI
+	 BQc4zsbquTWKy2asMC8RnORwP57sSx9/b7jHyIuuxOvNUd+nqp2JLi1/bZIW2ZGZlYZl+LXBuaZH
+	 1oxlZ0+HL+n24vleyiaL4lnRkWKocuu9MUTSkKcWtBkwsiTPSRYX4FgtmimB/aeQESYRJ0FfMnCH
+	 eBpB5bP4vsk4Hw+8EHU56aSJPIOAScIC95/nhQCW485+YxIlYTU7CTVj+ZB10GwoE55GKRS7fz9i
+	 HQModdSoIZ1uQ1o2A7XmC0NDxHDm9UkLODRFRVlTbmBWOr/VfvfXsdGJmAqy5UXFr7/kPhCaC8B9
+	 dpOC1Te4yZJgXjQTMvx2jgvDiK9zjG/JEo5SWTeGTpgm/QI9sYAWZAICw2Q2j5kfvN1Ki1EgGTa1
+	 T0LusQYJlaBxzWGaTy94YFZ3VN8+q9RnUM3vS3/fG2+5qiRcG2SrAzT+j0mIBJ51JNeX4UpbIq7I
+	 jfVfw8ImaAAZrgmiqwUOz3sHVwE16VSkBWAoo+VdNtglEqPSmd4DFsn8LWEt/X0kQp7+OtPX/uh7
+	 MPDe0mGqFiUZpskGiaHxhmFjuGGJO8/9nd8VXpI0jKTW8jFqnr/W6ez+3ypVlqRiEwgVSHcjdvrF
+	 PCWc//ftt8eI/mKqp32t8QowO6exH8I3fE8lhwnY4pdMN5kf+XA2ejBOqexJ7INOgbWfMpDQGYHm
+	 N26152VD+eWkAU7Se28mu1qFX5w9fR7Zy06lYSaIOVfnFy4FniN4NclqG1mv/bPu+g8IaGObrEqB
+	 /afCgynqt2rENmSKwpkV76SvSBEvn6hS5rJas0oGwMVssMJJFZf7q12omzJPEGRJG+hwLE8Zy0ba
+	 H4yBpJLQasr+7q9hR2I5wscDHBia6gLSJU3KobiMmtKLzM77RfO1L4tL2APAa+7xYnInDzud2mBu
+	 9/WpLsgljm4tV2Fq2NMs0WS5ZqkYDvgIb3+4p+oXhtK7djNq/fLLtEVyLg+miuPnV7PdZRSxp2//
+	 ZcOmRt1lsFt51UbUqXKwqUCeoar/qF1v/kiXvd6ByHmiZYaU3LgYPK8yB1k6bXm+T1+FWeAfhXw7
+	 5EdSwY8Jldcdy5CgI=
+X-QQ-XMRINFO: MSVp+SPm3vtSI1QTLgDHQqIV1w2oNKDqfg==
+From: Guikun Yang <yangguikun19@qq.com>
+To: Chandan Babu R <chandan.babu@oracle.com>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Subject: xfs: XLOG_WAS_CONT_TRANS on a transaction with no buffered regions
+ reads ri_buf[-1] - null deref Oops during mount log recovery
+X-OQ-MSGID: <c30-xfs-wascont-rideref-20261107@qq.com>
+Date: Sat, 07 Nov 2026 10:00:00 +0800
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20261106-fix-dax-invalidate-mapped-v1-1-292ce5958d67@nvidia.com>
-X-B4-Tracking: v=1; b=H4sIAAAAAAAC/yXMywqDMBCF4VeRWXcgiRdoX6V0Mc2MOtKmIbEii
- O9uWpcfnPNvkCWpZLhVGyRZNOsnFNhLBX6kMAgqF4MzrrPW1NjrikwraljopUyz4JtiFEY23rl
- r17dtU0P5xyRl/G/fH6fz9zmJn39B2PcDE2T3KX0AAAA=
-X-Change-ID: 20261103-fix-dax-invalidate-mapped-d0c2296f5543
-To: Dan Williams <djbw@kernel.org>, Matthew Wilcox <willy@infradead.org>, 
- Jan Kara <jack@suse.cz>, Alexander Viro <viro@zeniv.linux.org.uk>, 
- Christian Brauner <brauner@kernel.org>, 
- Andrew Morton <akpm@linux-foundation.org>
-Cc: David Hildenbrand <david@kernel.org>, 
- Alistair Popple <apopple@nvidia.com>, John Groves <John@Groves.net>, 
- Miklos Szeredi <miklos@szeredi.hu>, "Darrick J. Wong" <djwong@kernel.org>, 
- Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org, 
- linux-fsdevel@vger.kernel.org, nvdimm@lists.linux.dev, 
- linux-kernel@vger.kernel.org, linux-mm@kvack.org, stable@vger.kernel.org, 
- Zi Yan <ziy@nvidia.com>
-X-Mailer: b4 0.16.0
-X-ClientProxiedBy: BLAPR05CA0039.namprd05.prod.outlook.com
- (2603:10b6:208:335::20) To IA0PR12MB8374.namprd12.prod.outlook.com
- (2603:10b6:208:40e::7)
+Content-Transfer-Encoding: quoted-printable
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -106,265 +79,89 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: IA0PR12MB8374:EE_|SJ2PR12MB8875:EE_
-X-MS-Office365-Filtering-Correlation-Id: fd73c8b0-14d4-41c2-ad5c-08df3c4f008a
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|7416014|1800799024|366016|376014|261102123227099003|261102130727099003|261021123027099003|261021121427099003|261022075727099003|261022105027099003|261026121527099003|261009223027099003|261026140227099003|261028144727099003|5023799004|11063799006|56012099006|10067099003|18002099003;
-X-Microsoft-Antispam-Message-Info:
-	2vhq7AR+dP1XPpbyE5eA26Xzm5LhYog4aE15PBLZ7OOglfBZu2GiYcOYMaZCGlvKhXbodAiNyGR/f4gbZ3ueSk8tPcPU+PAO2q95cn9zE+63vkY70I5muBgRjF1zgxEK2iQSxLlnzHyNo3FqEZPKylu3Toa4mqnHR2RPGz+3c46RQnGvZlxoq59Fgpy8zfa+66lAoEUiaGFaflStpBQFUSp2h7TtuO+xadLMr5vrm1dUqvab+dqda5exnMYNrrH3AMp7hT1m2XQpZFcAANxw7fb6PtdIZ4uEmO499AcNCLyT0/UP8plW3/XEEoT2oE9+FsDC/7bCVDg2XI2DzY8C8a1tk57YBjKxPXMRivmvvNsm9uHeg7SsyoJkleGvuIm1nWig5sO7jzUgy2IZzCYR4lXVBqsfGNZYjeQGQEnAiE/OtEqruvRJUGGVZ/tqo/qdFZxIwPVmDQTLNx7GMEvVgwKnzGES4Ki7uzKQrZtckQ+5INccrqZEI1Xv5wMTLuH6I1tAi/IFv+jpEVKNWLYx1lKdXCpN+zpUOvnmXqUuX42wZF8RaNiN5PqGmkfFsax0SdBawOwc6C/knHvvRYtWgsqajPKPfHTE7R+++YXmsXNSP1oiJeeDil9wAHRw1TAFralCjbzlZz7Lzkfinyvx8xAfgPLf3J7BWI35cqkXphw=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:IA0PR12MB8374.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(7416014)(1800799024)(366016)(376014)(261102123227099003)(261102130727099003)(261021123027099003)(261021121427099003)(261022075727099003)(261022105027099003)(261026121527099003)(261009223027099003)(261026140227099003)(261028144727099003)(5023799004)(11063799006)(56012099006)(10067099003)(18002099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?aXNOcllLM01zZjNrUmg3YWo4RGl1ZTJXamlHY3VETzNoSjIzOHJGZlF6dVUr?=
- =?utf-8?B?Zk1xRkRaSEJBTE5xb3hmajVOQ3BCMnQ1d251QjlJSXhMWkZTem1vazhjV01B?=
- =?utf-8?B?dS94NTdrd1ZkVkF6RHIvZ2RpZXB1eTFPaTY3bTBQMUs5N1dKdkQ4MG5Bc050?=
- =?utf-8?B?WHZSZzVVZ1JZMGc0WjB3YlpndTQvZC9lcG1IeWgxRXNzSEpReHFscUZGL2lS?=
- =?utf-8?B?RHpYRElKYzI5NGlIR0tHK3hLVC9ydTM4TWl5V2twazFmOEkwdWxacVVoLzJH?=
- =?utf-8?B?Rzk2cngwK0dTaW1oSE5LVlF1SFpRWmIwVHkwRUY4dWpUVTFLVDN5UnZ2amg1?=
- =?utf-8?B?cnN4cnN0MkpLb3ZIQ0dzVGFaaW5OSjh5YURLV1JEZUoySTlpeFVxdHZMNlBV?=
- =?utf-8?B?ZVRFMDc5WnZBazgrK3poc1R6RjVsdUpxbDNYeFYveUN3SERWTXVaVTQxM0pq?=
- =?utf-8?B?bFIwVXc3SDk5U1crRWMvRnovei9NWHhHd0xxWEhUSDNLYVZFOHZUMGJ3QTFX?=
- =?utf-8?B?azJIYU5wVCtLVTkwNTM1NENoM0x6Wkd3NGJrOXlndFYrNmdteG9tME01Tjhi?=
- =?utf-8?B?K2s1eXNicDk2YTBUcDFRRUZDdXN4R2tJTlBORkpxNWU0TG55ZER5U0ZraVA1?=
- =?utf-8?B?d1Q1bWlaajZtWHc3TjFKcVJGWW9FelJHZDFyWnZhbStvNU45YzhhMG5HR01C?=
- =?utf-8?B?UC9nS3U5RG5OVFRuU0lKa05KSVp5b0lnemZMNmdQZERTYlhUSjBRVzhBUlB5?=
- =?utf-8?B?UlZ3TXhTaUxUNlA0eUJIK2g5WmNnbjUwejJkLzRHMi9rd2dqZ29jaDVTbE9P?=
- =?utf-8?B?Y0c2d0Qvbld0clU0ZVNPOWpHbHZJRlZZN3R5ajZMdnNkOXB2amNwOEhFVHZX?=
- =?utf-8?B?SnlCckwwSjN2eDM5WEtoZkJSajhtYUQ4NldZak5TRHBISVZhWnRjb2xLYkty?=
- =?utf-8?B?R0tzQlJPc1NYVWNiTktDY3hITGp2Qk9wTzMwMElyTG5zbjl2K3VHQkM0UDVq?=
- =?utf-8?B?di9DbmJpeS92NXU1SWFLa3JEUGxmeU1sTGU0TzFNRHQrV2VKclRBeTNzZ0dI?=
- =?utf-8?B?NldmUUtZZVJQVndTdG14NlROM2lnNlMzTFVseXk5OC9WeGZzcXRXdnpUSHNO?=
- =?utf-8?B?dVBNOHZkcGs4R2VjZWRzYmtLT0N0ZGNwM2V4U3NYWHZEMjFTcDZPVDFpb1Z6?=
- =?utf-8?B?S2F4YVNuOVgwMHNlbm12SmhCdjQydFpQaGNJb2pxbm54SGRrdjNyU3o5TjBZ?=
- =?utf-8?B?bE5EeWl0MkxrOXh4SmxubEMyVHkzaUE5UDBZUE5STjdqRVM2MUp4NWwxTjZj?=
- =?utf-8?B?d1U0NE5YL1VXRE9yV2lqUmpvOUFYTUdIQTZuV3cvOWZoVHNJTWx2Qm1HY1pk?=
- =?utf-8?B?N0xZd200SWo5ZTZ6dWtVNkY5cnBJQkJxTE9wbjBnM0FYa0JhaG8wdXNsTVpy?=
- =?utf-8?B?WVkwN1E1dXJ4YTFWZlNqNXhzdlRqdzJrSmNpODA4OE0wblNFQnk0R29nakQ4?=
- =?utf-8?B?Z1NObzI3U2ZUR3BDUFJrLzcrR1c1SGZjQUo4QzBoTGZ0a1hSemVmaE1NL1pH?=
- =?utf-8?B?dVBSWmlhSldJUm8wWi9DdTBaUGtYVTR1WGc3Yk1ZZlhJQkdJR3VIZURIVUZ2?=
- =?utf-8?B?VUt2U1ArS0lQaUNIUGpVVXVwS2x0b2JBZFFpK3BQU3ZKWGtQMVgySy9pZWYr?=
- =?utf-8?B?Y0lOcWdBSDBIdUJzdEZhcm8xVGIzQWh4YncvMll0NGRSSFlQcC9wQXQ3OTE0?=
- =?utf-8?B?Ym0xZjh0QlppUk53ZTlMMGg2dk01YWwveWExQ2k1Z0RnZEtYYVFJWjZPZUx2?=
- =?utf-8?B?Zk4zcGFnbkUvTVpDcjcvMmN3SW41YnVhWmFYWkRNVjBMOVpLZExoV0RpdmpF?=
- =?utf-8?B?KytMem9OeER3RVBBQzBDbVpHZUpCaU02SWVqdEw5RktMWnpoS1NucTI3YTVm?=
- =?utf-8?B?bG5MYmdlYlJyVnhNU3pobzd2VFZhY2puZ1RqdFlhK25PRENOZStGU2NGTGtB?=
- =?utf-8?B?eUhUdHp2dDJPejBITXhFdVRjSDRHQmg5MVB4MFlyNEY2SHM5cklFbzg4dFZ3?=
- =?utf-8?B?TWJHcmM0UVRhdkRLcDZQZU15R3JPaTdwYXJiZlRjUlFaMTZFNGF0K2p5bWgz?=
- =?utf-8?B?a1B2V3ZJSUFZQkM2a2ZjZlpHZFpOMmxNNllrbE1oSWNPZTJQSW1KNnZweFJl?=
- =?utf-8?B?Z1BBNGpaTDBWa3VxZEI4aSs3OTBuYU9idFo2ek4wTFVJejZieTBvZFJ2VWsy?=
- =?utf-8?B?c09XZkl2NHl3RnhLaE5qaktwMWkxVnJGQ05mblNabDVLRXhmZ0RaUlJzRGVN?=
- =?utf-8?Q?lAIDe/mFCFvrKTtPeY?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: fd73c8b0-14d4-41c2-ad5c-08df3c4f008a
-X-MS-Exchange-CrossTenant-AuthSource: IA0PR12MB8374.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Nov 2026 21:43:32.0515
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 5VWymNtuEi5JTuxLgHU3To/jemZjlXmq7RAJxUxf3VMpzzvS5MZl+dyr/45l7dKC
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ2PR12MB8875
 
-invalidate_inode_pages2_range() invalidates the clean DAX entries in the
-range through dax_invalidate_mapping_entry_sync() and only unmaps the range
-afterwards. Dropping the last association of an entry releases its folio
-by dissolving the folio into order-0 ones. If the entry is still mapped,
-1. dax_folio_put() warns;
-2. if the folio order is PMD, folio_remove_rmap_pmd() during the unmap
-   afterwards operates on an order-0 folio (the original head page) and
-   corrupts the original first tail page metadata.
+Hi,
 
-This is reachable from userspace with a copy-on-write write to a mapped
-reflinked file on XFS with DAX:
+Mounting an XFS volume whose log record after the transaction header
+carries an operation header with the XLOG_WAS_CONT_TRANS flag panics
+the kernel during log recovery - on a stock kernel, no sanitizer
+configuration needed:
 
-  WARNING: fs/dax.c:452 at dax_disassociate_entry.isra.0+0x147/0x1c0
-  Call Trace:
-   __dax_invalidate_entry+0x106/0x320
-   invalidate_inode_pages2_range+0x3ce/0x830
-   dax_iomap_rw+0x421/0xcc0
-   xfs_file_dax_write+0x252/0x9e0
-   vfs_write+0x53a/0xe70
-   __x64_sys_pwrite64+0x195/0x250
-   ...
-  WARNING: ./include/linux/rmap.h:351 at folio_remove_rmap_pmd+0x8b2/0xaf0
-  Call Trace:
-   split_huge_pmd_locked+0x751/0x2350
-   __split_huge_pmd+0x1bb/0x310
-   ...
-   unmap_mapping_pages+0x133/0x150
-   invalidate_inode_pages2_range+0x700/0x830
-   dax_iomap_rw+0x421/0xcc0
-   ...
+  BUG: unable to handle page fault for address: fffffffffffffff0
+  #PF: supervisor read access in kernel mode
+  Oops: Oops: 0000 [#1] SMP KASAN PTI
+  RIP: xlog_recover_add_to_cont_trans+0xf9/0x460
+   xlog_recovery_process_trans
+   xlog_recover_process_ophdr
+   xlog_recover_process_data
+   xlog_recover_process
+   xlog_do_recovery_pass
+  Kernel panic - not syncing: Fatal exception
 
-To fix it, unmap DAX ranges before invalidating them, as the page cache
-path does for mapped folios. In __dax_invalidate_entry(), when
-invalidating, skip an entry if the code is dropping its last association
-but its folio still has outstanding references. -EBUSY is returned for the
-skipped entries. The unmap before invalidation works because any remap of
-the folio between the unmap and invalidation will bump the folio refcount.
+## The gap
 
-Fixes: 38607c62b34b ("fs/dax: properly refcount fs dax pages")
-Cc: stable@vger.kernel.org
-Signed-off-by: Zi Yan <ziy@nvidia.com>
----
-I found this while auditing the paths that map pages into user page
-tables. invalidate_inode_pages2_range() releases the folios of DAX
-entries that are still mapped. For a PMD-mapped folio this corrupts what
-used to be its first tail page, and a copy-on-write write to a mapped
-reflinked file on XFS with DAX is enough to hit it.
+xlog_recover_add_to_trans() creates a recover item for the transaction
+header via xlog_recover_add_item():
 
-In QEMU with emulated NVDIMMs and XFS on an fsdax namespace:
+  item =3D kzalloc_obj(struct xlog_recover_item, ...);
+  INIT_LIST_HEAD(&item->ri_list);
+  list_add_tail(&item->ri_list, head);
 
-- Copy-on-write with the script below, PTE- and PMD-mapped, with only a
-  mapped and with a and b mapped. Before this patch, the WARNs in the
-  commit message and a corrupted first tail page in the PMD case. With this
-  patch: the mapping of a sees the new data, b keeps the old data, and
-  nothing warns, except for item 4 below.
+The item has ri_cnt =3D=3D 0 and ri_buf =3D=3D NULL - the transaction header
+itself is copied into trans->r_theader, not into the item.
 
-  mkfs.xfs -f -m reflink=1 -d su=2m,sw=1 /dev/pmem1
-  mount -o dax=always /dev/pmem1 /mnt && cd /mnt
-  xfs_io -f -c "extsize 2m" -c "pwrite -q -S 0x5a 0 4m" -c fsync a
-  xfs_io -f -c "reflink a 0 0 4m" b
-  (echo "mmap -r 0 4m"; echo "madvise -h 0 4m"; echo "mread 0 4m";
-   sleep 4; echo "mread -v 0 16") | xfs_io a &
-  sleep 2; xfs_io -c "pwrite -q -S 0xa5 0 8k" -c fsync a; wait
+If the very next operation header carries XLOG_WAS_CONT_TRANS,
+xlog_recovery_process_trans() dispatches to
+xlog_recover_add_to_cont_trans(), which takes the tail item and indexes
+it without checking that it has any regions buffered
+(fs/xfs/xfs_log_recover.c:2144):
 
-Open issues that this patch does not address. They are races or
-already exist without it.
+  item =3D list_entry(trans->r_itemq.prev, struct xlog_recover_item, ri_list);
+  old_ptr =3D item->ri_buf[item->ri_cnt-1].iov_base;
 
-1. A refault, or a short-term or speculative reference, between the
-   early unmap and the invalidation keeps a last association in place,
-   and invalidate_inode_pages2_range() returns -EBUSY.
-   dax_iomap_iter(), dax_unshare_iter() and dax_zero_iter() ignore that
-   and write the new extent anyway, which leaves a stale entry. Without
-   this patch the same race tears down the referenced folio. Should
-   these paths retry, or fail?
+ri_buf is NULL and ri_cnt is 0, so the expression reads
+NULL[-1] - the faulting address fffffffffffffff0.
 
-2. XFS device pre-removal ignores the result as well, so an entry kept
-   because of a short-term reference is not revisited before the
-   memmap goes away.
+Nothing on the path validates the operation-flag sequence against the
+item state. The only ri_cnt-related check in the recovery code is an
+ASSERT() in xlog_recover_reorder_trans(), which is a no-op on a kernel
+without XFS debugging enabled.
 
-3. folio->share is updated under each file's i_pages lock, so the
-   shared-count check here, like dax_folio_put() itself, can race with
-   another file dropping its share.
+Note that the flag's name suggests it belongs to a continuation, but
+reaching the crash does not require constructing one: a single
+XLOG_WAS_CONT_TRANS operation right after the transaction header is
+enough, because the dispatcher never checks that the previous region
+had a buffer attached.
 
-4. With reflink, after a copy-on-write write, a PTE fault can associate
-   an order-0 entry with a shared folio that another file still maps
-   with a PMD. That trips WARN_ON_ONCE(dax_entry_order(entry) !=
-   folio_order(folio)) in dax_associate_entry(), with and without this
-   patch.
+## Reproducer shape
 
-Based on an LLM's analysis, 1 and 2 can be fixed by holding the invalidate
-lock and breaking DAX layouts in the callers; 3 needs a per-folio lock
-for ->share; 4 needs a way to share a folio at different granularities,
-or no PMD mappings of shared extents as a simple fix.
+The volume is made with a real dirty log (mkfs.xfs, files, sync, crash),
+then the first region operation header after the transaction header has
+its oh_flags changed from 0x00 to 0x08 (XLOG_WAS_CONT_TRANS), and the
+v2 log record CRC is recomputed (328-byte header + h_len payload). The
+unmodified dirty-log image recovers and mounts cleanly as a control.
 
-LLMs were used to analyze the issue, write the patch, and review the code.
----
- fs/dax.c      | 28 ++++++++++++++++++++++++++--
- mm/truncate.c | 16 +++++++++++-----
- 2 files changed, 37 insertions(+), 7 deletions(-)
+Trigger is mount(2) alone. Reproduced 3/3 with panic_on_oops; the code
+in mainline as of 2026-11-06 is identical here.
 
-diff --git a/fs/dax.c b/fs/dax.c
-index 94ba41273347c..e448552d8080d 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -527,6 +527,24 @@ static struct page *dax_busy_page(void *entry)
- 		return NULL;
- }
- 
-+/*
-+ * Determine if an entry can be disassociated. It cannot be if it is its folio's
-+ * last association and the folio still has a reference.
-+ */
-+static bool dax_can_disassociate(void *entry)
-+{
-+	struct folio *folio;
-+
-+	if (dax_is_zero_entry(entry) || dax_is_empty_entry(entry))
-+		return true;
-+
-+	folio = dax_to_folio(entry);
-+	if (dax_folio_is_shared(folio) && folio->share > 1)
-+		return true;
-+
-+	return !folio_ref_count(folio);
-+}
-+
- /**
-  * dax_lock_folio - Lock the DAX entry corresponding to a folio
-  * @folio: The folio whose entry we want to lock
-@@ -853,9 +871,14 @@ static int __dax_invalidate_entry(struct address_space *mapping,
- 	entry = get_next_unlocked_entry(&xas, 0);
- 	if (!entry || WARN_ON_ONCE(!xa_is_value(entry)))
- 		goto out;
-+	/*
-+	 * Removing the last association of a folio releases the folio, so make
-+	 * sure the folio has no reference.
-+	 */
- 	if (!trunc &&
- 	    (xas_get_mark(&xas, PAGECACHE_TAG_DIRTY) ||
--	     xas_get_mark(&xas, PAGECACHE_TAG_TOWRITE)))
-+	     xas_get_mark(&xas, PAGECACHE_TAG_TOWRITE) ||
-+	     !dax_can_disassociate(entry)))
- 		goto out;
- 	dax_disassociate_entry(entry, mapping, trunc);
- 	xas_store(&xas, NULL);
-@@ -1017,7 +1040,8 @@ void dax_break_layout_final(struct inode *inode)
- EXPORT_SYMBOL_GPL(dax_break_layout_final);
- 
- /*
-- * Invalidate DAX entry if it is clean.
-+ * Invalidate DAX entry if it is clean and dropping it would not release a folio
-+ * that is still in use.
-  */
- int dax_invalidate_mapping_entry_sync(struct address_space *mapping,
- 				      pgoff_t index)
-diff --git a/mm/truncate.c b/mm/truncate.c
-index 9e9bf029635cf..b03cd99c4bba8 100644
---- a/mm/truncate.c
-+++ b/mm/truncate.c
-@@ -732,6 +732,15 @@ int invalidate_inode_pages2_range(struct address_space *mapping,
- 	if (mapping_empty(mapping))
- 		return 0;
- 
-+	/*
-+	 * Invalidating a DAX entry can release its folio, so unmap DAX entries
-+	 * before invalidating them. dax_invalidate_mapping_entry_sync() skips
-+	 * the last association of a folio that still has references, e.g.
-+	 * because it was faulted in again in the meantime.
-+	 */
-+	if (dax_mapping(mapping))
-+		unmap_mapping_pages(mapping, start, end - start + 1, false);
-+
- 	folio_batch_init(&fbatch);
- 	index = start;
- 	while (find_get_entries(mapping, &index, end, &fbatch, indices)) {
-@@ -787,11 +796,8 @@ int invalidate_inode_pages2_range(struct address_space *mapping,
- 		cond_resched();
- 	}
- 	/*
--	 * For DAX we invalidate page tables after invalidating page cache.  We
--	 * could invalidate page tables while invalidating each entry however
--	 * that would be expensive. And doing range unmapping before doesn't
--	 * work as we have no cheap way to find whether page cache entry didn't
--	 * get remapped later.
-+	 * For DAX, also zap the mappings that were faulted in while we were
-+	 * invalidating.
- 	 */
- 	if (dax_mapping(mapping)) {
- 		unmap_mapping_pages(mapping, start, end - start + 1, false);
+## Suggested fix
 
----
-base-commit: 63919467fb5239ab824de6a7a128b882055b24af
-change-id: 20261103-fix-dax-invalidate-mapped-d0c2296f5543
+Either bound the item before use in add_to_cont_trans(), or validate
+the flag sequence at dispatch time - XLOG_WAS_CONT_TRANS on a
+transaction whose tail item has no regions is corruption and should
+fail recovery the same way the other -EFSCORRUPTED paths do:
 
-Best regards,
---  
-Yan, Zi
+  item =3D list_entry(trans->r_itemq.prev, struct xlog_recover_item, ri_list);
++ if (!item->ri_cnt) {
++         xfs_warn(log->l_mp, "%s: continuation with no previous region", __f=
+unc__);
++         return -EFSCORRUPTED;
++ }
+
+The reproducer (image builder that locates the record/op, flips the
+flag and recomputes the CRC, plus a ready-made image and serial log) is
+available on request.
+
+Thanks,
+Guikun Yang
 
