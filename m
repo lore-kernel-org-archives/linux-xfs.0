@@ -1,67 +1,82 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=134.100.38.113
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794133853;
-	b=zZc0XocL3xZUGyikJWdmlQAHWHd9gjmvKd/OECzT5W0TCfrdkMs/xrbjkihJtMECzSmm
-	 1nERxArUrdTBZCV8SAQ/al1xcygnc6/bySFnga7Cd8tLM2mSaW4JZb/EsxgpU13odS18P
-	 NSzij2gar1+eEzmRiWzMvWVi33/YTnInAAfQcOlMcg/LaE+QPR41HRIj1LI7MnyPhB1mM
-	 2bwPVU//XVw65tRDoaMmWjcncilzYWP3En0iV0LJDV28pAI7SnxnWSpCeleOzlUQRMQ+x
-	 M5imhS4nVudqfFTD0F+s9Sm5FbSy6FiMySfV8PNcUXvGX2fH+d2vhZDu9U4t9/irctA==
+	t=1794153270;
+	b=E2e4Q3QI9ChnB2zcio+b8dGrmuUT+4Z6DUFfrZlaaVIAZJmobHr/AmL6VPDqo0NkkKTJ
+	 L3aQ7X3EZv1xuVk+Mhq8tyIo0vbOFvOradtgvnMmLoNB6BJLWqtnKgMl31vwSyffdI9B0
+	 FelcFnhgH96ju+mcz0I3Q+7E8lcFGM4tQQTNWFXOnkTPXttDpLjLuON5e/UXuVg3UHA9K
+	 l7B/NyRlclBDDRsU8jwogDN7NDX6SloDGE0H0bLnDcICTOS8ugkynqgz+rj+l6L++tBqH
+	 ZaVWcldNRp3vYftKSiLVU0zg/nzQE6oOJl6zubTuabZexi1NRiybs3ZKSOB86XIB6tg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794133853;
-	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:Date:From:To:
-	 Subject:Message-ID:Organization:X-Mailer:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding:X-ClientProxiedBy:X-Rspamd-UID:
-	 X-Rspamd-UID;
-	bh=J4B11OV3dV2GMpzb1s+wkmRGv9nMlc7PRwug3+SGlXk=;
-	b=aXSVbdHUDNb57DVPDj0GdvQIbFeTROVjSujp3fomb0SU2S2xu4tjvccwgLqUt+zAus/2
-	 7ppIj/KhMoE8MBxC2yG30VqZNn2VTh7dOoP+7bw9hbyGkLMjCs5Aj3iRTXUmD0T0tYYAU
-	 m6tLq4OR8DppBFfs9M4BG4ZKCq18qvPAMcfB0MYaVjeJ9g9q7MvzTOsbM8Sj8KAQfCAv+
-	 nFdLQnQnMAyJY37tTBCknJkAODMGlkRZII1XhtQ0+OrUagPXjtSnlLSZ4sT9gWVwhOYcN
-	 4/hDAUPikUChfhJKCc9qIvJuTpCTJZJY0Btl8czdyb27dDjk1tgc0+byuHr3u3hhFPA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794153270;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
+	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
+	bh=5GBHjUTFcUUKHRDe6Uz5ToMncS7KWKXWOvxbmPEhwVE=;
+	b=ulv9bpskAkhsJnq5Ac9ya+hT/GQ5w6ybCqglLj8tcWdSvapag17WLfuRK9mFDdYMQipv
+	 eAoSQDYuKThdJ822icqaKJAexVLpAQ7VGwSSx2j+m7+L0Db/0qG/t5G4pn8unv4tJDOwR
+	 leoLhQNJphQlIo9Hg79P+HOs1hBBB/8Z5hF/sRGUuUQPTnM2aMlj+5OQMbdZBCBD/zfPT
+	 +rAbfacCzwkBPCpWWMFJen8spjiFsHbf7GCYymJCAfBVFr+7bMs2RaA6h7kZiZsCM51J/
+	 HP9AC6FVdS2asPJFaPyyzU3t7DNxBvvfCJ5nGajGaL7HEopDi/HHt+G+fZRLT6usrNQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=uni-hamburg.de;
-	spf=pass smtp.mailfrom=uni-hamburg.de;
-	dkim=pass header.d=uni-hamburg.de header.i=@uni-hamburg.de header.a=rsa-sha256 header.s=rrzs003 header.b=FDa5lA9N;
-	arc=none smtp.remote-ip=134.100.38.113
-Received: from mailout.rrz.uni-hamburg.de (mxchg03.rrz.uni-hamburg.de [134.100.38.113])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ZJmK8oUf;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DF8C606A321
-	for <linux-xfs@vger.kernel.org>; Sun,  8 Nov 2026 10:30:50 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1DF8C606A321
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=uni-hamburg.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uni-hamburg.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C817606A31C;
+	Sun,  8 Nov 2026 15:54:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=uni-hamburg.de header.i=@uni-hamburg.de header.a=rsa-sha256 header.s=rrzs003 header.b=FDa5lA9N
-Received: from mailout.rrz.uni-hamburg.de (mxchg03.rrz.uni-hamburg.de [134.100.38.113])
-	by mxchg03.rrz.uni-hamburg.de (Postfix) with ESMTPS id 4jMq1s2bkTz2xJx
-	for <linux-xfs@vger.kernel.org>; Sun,  8 Nov 2026 11:30:41 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uni-hamburg.de;
-	s=rrzs003; t=1794133841;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=J4B11OV3dV2GMpzb1s+wkmRGv9nMlc7PRwug3+SGlXk=;
-	b=FDa5lA9Nw+FHn2GoHpRu21thtfyX9LMyAgewWPL4SWnlkJ4E+2tEe1JK5he2xnfbFHnjIC
-	9rxkI2sDRpw9+Z5456AkGK+ue7UO8Hybotu4oiwrdRvPFBSODXFl4T7rMOrcQv9EH2ePrv
-	k5J79yWiGZvJ7mIuFw8P6d19j4QeyPv+EVDvdD4i0hweQ07LRW4wRexVBfzH9kl3ApA2Ax
-	uISUUJi8XalaQkmMXOxyM7w49NGLvt1CKEIvhGTpc7LcyokXpK6QfVigO0hyBHvYdwKCWj
-	DIthTgGT9jFCXyv3aT4pWdtbHCRwrGpZA8Ho7Uon6UyBgWGcUspEBLEfE15Bkw==
-Received: from exchange.uni-hamburg.de (EX-S-MR06.uni-hamburg.de [134.100.84.89])
-	by mxchg03.rrz.uni-hamburg.de (Postfix) with ESMTPS id 4jMq1s1RFHz2xJs
-	for <linux-xfs@vger.kernel.org>; Sun,  8 Nov 2026 11:30:41 +0100 (CET)
-Received: from plasteblaster (134.100.32.91) by EX-S-MR06.uni-hamburg.de
- (134.100.84.89) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.56; Sun, 8 Nov
- 2026 11:30:40 +0100
-Date: Sun, 8 Nov 2026 11:30:39 +0100
-From: "Dr. Thomas Orgis" <thomas.orgis@uni-hamburg.de>
-To: <linux-xfs@vger.kernel.org>
-Subject: xfsprogs-7.2.1 non-parallel-safe make and some gcc-16.2.0 warnings
-Message-ID: <20261108113039.08688362@plasteblaster>
-Organization: =?UTF-8?B?VW5pdmVyc2l0w6R0?= Hamburg
-X-Mailer: Claws Mail 4.0.0 (GTK+ 3.24.33; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ZJmK8oUf
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 041841F0089F;
+	Sun,  8 Nov 2026 15:54:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794153270;
+	bh=5GBHjUTFcUUKHRDe6Uz5ToMncS7KWKXWOvxbmPEhwVE=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=ZJmK8oUfB5GK4SbMw3dQ4gH4wjlNa4ufA6yaxygD3Pbs5aQPHdlk4heug6b52tepR
+	 HDxpJJlU8tRKZUgzaTxtMt5yfwa6BJUtuObFCmPlQp5ro1G/aANuVZyCqpQyvuACBd
+	 xQCn+U+Ijo6zuGkJ2P84IAnkz63BANh0VFfve8TpGzqv/J3WeIZpC75uiyvmv2YXa8
+	 TsQJxAJxz8iLLP+w6S1PYYF6XGDXOJq7Yspz2c9uANiujJOPDZ53koYaa7XAmvDESh
+	 qfV16MLzWmPUrgefTB0jcFCI8f2brVRUadBdyxsFQ5aUyC1DtJHF8qO9VpNcFrUyj0
+	 FSoBfoNzq3IQw==
+From: Miguel Ojeda <ojeda@kernel.org>
+To: gregkh@linuxfoundation.org
+Cc: achill@achill.org,
+	akpm@linux-foundation.org,
+	broonie@kernel.org,
+	conor@kernel.org,
+	f.fainelli@gmail.com,
+	hargar@microsoft.com,
+	jonathanh@nvidia.com,
+	linux-kernel@vger.kernel.org,
+	linux@roeck-us.net,
+	lkft-triage@lists.linaro.org,
+	patches@kernelci.org,
+	patches@lists.linux.dev,
+	pavel@nabladev.com,
+	rwarsow@gmx.de,
+	shuah@kernel.org,
+	sr@sladewatkins.com,
+	stable@vger.kernel.org,
+	sudipm.mukherjee@gmail.com,
+	torvalds@linux-foundation.org,
+	Miguel Ojeda <ojeda@kernel.org>,
+	Carlos Maiolino <cem@kernel.org>,
+	linux-xfs@vger.kernel.org,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Christoph Hellwig <hch@lst.de>,
+	Huacai Chen <chenhuacai@kernel.org>,
+	WANG Xuerui <kernel@xen0n.name>,
+	loongarch@lists.linux.dev,
+	Richard Weinberger <richard@nod.at>,
+	Anton Ivanov <anton.ivanov@cambridgegreys.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-um@lists.infradead.org
+Subject: Re: [PATCH 6.18 000/869] 6.18.63-rc1 review
+Date: Sun,  8 Nov 2026 16:54:16 +0100
+Message-ID: <20261108155416.119775-1-ojeda@kernel.org>
+In-Reply-To: <20261107134852.069646174@linuxfoundation.org>
+References: <20261107134852.069646174@linuxfoundation.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -71,114 +86,48 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-ClientProxiedBy: EX-S-MR08.uni-hamburg.de (134.100.84.91) To
- EX-S-MR06.uni-hamburg.de (134.100.84.89)
-X-Rspamd-UID: f49cd3
-X-Rspamd-UID: 4afe72
+Content-Transfer-Encoding: 8bit
 
-Hi linux-xfs,
+On Sat, 07 Nov 2026 08:44:42 -0500 Greg Kroah-Hartman <gregkh@linuxfoundation.org> wrote:
+>
+> This is the start of the stable review cycle for the 6.18.63 release.
+> There are 869 patches in this series, all will be posted as a response
+> to this one.  If anyone has any issues with these being applied, please
+> let me know.
+>
+> Responses should be made by Mon, 09 Nov 2026 13:46:08 +0000.
+> Anything received after that time might be too late.
 
-I noticed that xfsprogs-7.2.1 `make install` fails for me with make
--j13 on a (oldish Xeon) box with 12 physical cores on two sockets (24
-hyperthreads). Plus, there are some warnings from gcc-16.2.0 in the
-default build that you might be interested in.
+Boot-tested under QEMU for Rust x86_64, arm64 and riscv64; built-tested
+for loongarch64 and arm32:
 
-The full build/install log is at
-	https://src.rrz.uni-hamburg.de/extra/paste/xfsprogs-7.2.1.log.bz2
+Tested-by: Miguel Ojeda <ojeda@kernel.org>
 
-The relevant excerpts:
+In loongarch64, I am seeing again the XFS issue:
 
-1. make install error with -j13
+  https://lore.kernel.org/stable/20261106071743.90363-1-ojeda@kernel.org/
 
-(after successful `make -j13`)
+Cc: Carlos Maiolino <cem@kernel.org>
+Cc: linux-xfs@vger.kernel.org
+Cc: Darrick J. Wong <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>
 
-Installing include-install
-../install-sh -o root -g root -m 755 -d /usr/include/xfs
-../../install-sh -o root -g root -m 644 xfs_db.8 /usr/share/man/man8/xfs_db=
-.8
-Installing libfrog-install-dev
-../../install-sh -o root -g root -m 644 xfs_estimate.8 /usr/share/man/man8/=
-xfs_estimate.8
-Installing libxfs-install-dev
-Installing libxlog-install-dev
-gmake[1]: *** No rule to make target 'xfs_rt', needed by 'defer_item.lo'.  =
-Stop.
-gmake[1]: *** Waiting for unfinished jobs....
-gmake[1]: *** No rule to make target 'xfs_rt', needed by 'defer_item.lo'.  =
-Stop.
-gmake[1]: *** Waiting for unfinished jobs....
-make: *** [Makefile:139: libxfs-install-dev] Error 2
-make: *** Waiting for unfinished jobs....
-make: *** [Makefile:139: libxfs-install-dev] Error 2
-make: *** Waiting for unfinished jobs....
+Cc: Huacai Chen <chenhuacai@kernel.org>
+Cc: WANG Xuerui <kernel@xen0n.name>
+Cc: loongarch@lists.linux.dev
 
-Re-running `make install` with -j1 works.
+For completeness, for UML I have been seeing (I will skip reporting these):
 
+  arch/um/drivers/ubd_kern.c:780:13: warning: stack frame size (1480) exceeds limit (1024) in 'ubd_device_release' [-Wframe-larger-than]
 
-2. gcc warnings
+  lib/kunit/test.c:684:5: warning: stack frame size (1208) exceeds limit (1024) in 'kunit_run_tests' [-Wframe-larger-than]
 
-xfs_alloc.c: In function '__xfs_free_extent':
-xfs_alloc.c:4017:41: warning: variable 'busy_flags' set but not used [-Wunu=
-sed-but-set-variable=3D]
- 4017 |         unsigned int                    busy_flags =3D 0;
-      |                                         ^~~~~~~~~~
+Cc: Richard Weinberger <richard@nod.at>
+Cc: Anton Ivanov <anton.ivanov@cambridgegreys.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-um@lists.infradead.org
 
-xfs_bmap.c: In function 'xfs_bmapi_convert_one_delalloc':
-xfs_bmap.c:4360:33: warning: variable 'flags' set but not used [-Wunused-bu=
-t-set-variable=3D]
- 4360 |         uint16_t                flags =3D 0;
-      |                                 ^~~~~
+Thanks!
 
-xfs_bmap.c: In function 'xfs_bmap_btree_to_extents':
-xfs_bmap.c:598:22: warning: 'cbp' may be used uninitialized [-Wmaybe-uninit=
-ialized]
-  598 |         if ((error =3D xfs_btree_check_block(cur, cblock, 0, cbp)))
-      |                      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-xfs_bmap.c:568:34: note: 'cbp' was declared here
-  568 |         struct xfs_buf          *cbp;   /* child block's buffer */
-      |                                  ^~~
-
-xfs_log_rlimit.c: In function 'libxfs_log_get_max_trans_res':
-xfs_log_rlimit.c:162:33: warning: variable 'i' set but not used [-Wunused-b=
-ut-set-variable=3D]
-  162 |         unsigned int            i;
-      |  =20
-                              ^
-xfs_copy.c: In function 'main':
-xfs_copy.c:562:25: warning: variable 'num_threads' set but not used [-Wunus=
-ed-but-set-variable=3D]
-  562 |         int             num_threads =3D 0;
-      |                         ^~~~~~~~~~~
-
-dino_chunks.c: In function 'process_uncertain_aginodes':
-dino_chunks.c:1349:33: warning: variable 'cnt' set but not used [-Wunused-b=
-ut-set-variable=3D]
- 1349 |         int                     cnt;
-      |                                 ^~~
-
-prefetch.c: In function 'do_inode_prefetch':
-prefetch.c:1027:33: warning: variable 'queues_started' set but not used [-W=
-unused-but-set-variable=3D]
- 1027 |         int                     queues_started =3D 0;
-      |                                 ^~~~~~~~~~~~~~
-
-btheight.c: In function 'construct_records_per_block':
-btheight.c:158:11: warning: assignment discards 'const' qualifier from poin=
-ter target type [-Wdiscarded-qualifiers]
-  158 |         p =3D strchr(tag, ':');
-      |           ^
-
-Please just ignore me if this is irrelevant with current development
-versions, I do not have time to invest in this, but thought it is more
-polite to say something than to just ignore it outright.
-
-
-Alrighty then,
-
-Thomas
-
---=20
-Dr. Thomas Orgis
-HPC @ Universit=C3=A4t Hamburg
+Cheers,
+Miguel
