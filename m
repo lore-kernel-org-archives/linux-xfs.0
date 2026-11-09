@@ -1,97 +1,112 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.93.195.19
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1794263462;
-	b=m3/Npzz5ZlOd6Qhkh87XeOyHkCuNh94b2XnKo38qFC6VgnXG5n3+e8SbMmoUh06qumx+
-	 v5fwp7yZjol9ZbpXdAMghQ5tIJlBk/ybaivyHnehM8/Z8JUIWbuHYUMBj+9H3TCHUGDju
-	 g9DnQ2jex3mRiw0nWnOvD8pAYBAPtpaoT+SsNhopSbwH6bN+4NgQBJ58+Q1ZuavKrf1P3
-	 tOS9bmjx8By/jwQyFJHgF2MPrRAjtqGB0RqqtDkNv9UChfzIJ+/SztYRZkHaRSZkxZJdm
-	 He6NhNgEyFjTasqGC0Yi0DP/Fx9AD9EKo7ehpc9ECgQ8dPrFsad4HvHKhTboAouQxIA==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794263462;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:Date:From:To:Cc:
-	 Subject:Message-ID:References:Content-Type:Content-Disposition:
-	 In-Reply-To:X-ClientProxiedBy:MIME-Version:X-MS-PublicTrafficType:
-	 X-MS-TrafficTypeDiagnostic:X-MS-Office365-Filtering-Correlation-Id:
-	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
-	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
-	 X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
-	 X-MS-Exchange-CrossTenant-UserPrincipalName:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=WOTFv6VJX6Xsjhv76PyixKH+T28COjVb1Ygxx/2pcso=;
-	b=RMAdD3rRbu6nPuSIOVKcCqvxD9P1rsbP7UUk1CSErakZy6/hW9qUxSP5Odru5frSRke0
-	 KywexiAqW0wGsbT3+W8D7sYUpqV/unvBKLdJJEsVkywo9LSwJcD6GjgUevAouEEjaISIy
-	 Q2F+DMY4hkFzsYJ2yeKIUkJN1Yolttv3PXY+o1nBxWPEYgZSTIK4+EpuNZhbNZd4spyPz
-	 oTs0tKlH4FKoZrjChTTSvxmOHwXXMFE+NT0bZpI6MqFY/EMsago6CWlLFfdxZ3Z97jVMM
-	 XkBta+ytKntfZ0oBfM7FX0jtJAn8PgBm+eyjv3/vXXz3NuHLIz6kqgEcszAf+rIcl9Q==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=nvidia.com;
-	spf=fail smtp.mailfrom=nvidia.com;
-	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=hTIw2MTj;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=40.93.195.19
-Received: from SN4PR2101CU001.outbound.protection.outlook.com (mail-southcentralusazon11012019.outbound.protection.outlook.com [40.93.195.19])
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=148.163.135.74
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1794264393;
+	b=Pe8TnxVtCdBj6FSUhCGbSStJglSiFd/ZkZrzQVQ8WpSqgKDxIqsXDyA0VwhQzaBIGOet
+	 F/AzL4KfNBPM2JHxs44oxKlcZjwuu5RcECgX11Lveos+cN0YqHy754EX0XEVKGg0WKJ+1
+	 DCthpj92AbW7QlySLIMNz+rjJEwg9yozvol3Vqyx7EA6D7RNxnDxQi4l5R9hwf3QAv9Gj
+	 4eoxWv4LBegd/Catux4bfPv+3sPl6MTbMGlDtwFnlLKtqnKQE18te6UV/5xfUZInXaPOK
+	 AhXcySjBTXoFZfFT8V0Byr1lQOnki9gAwp0l5AgfRmTv9brXsp7e14L4hBWhM6tPQEA==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794264393;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
+	 DKIM-Signature:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:Received:Message-ID:
+	 Date:MIME-Version:User-Agent:Subject:To:Cc:References:
+	 Content-Language:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding:X-Authority-Analysis:X-Proofpoint-ORIG-GUID:
+	 X-Proofpoint-Spam-Info:X-Proofpoint-GUID:
+	 X-Proofpoint-Spam-Details-Enc:X-Proofpoint-Virus-Version:
+	 X-Proofpoint-Spam-Details;
+	bh=WIZBljhWyOjAV704JqzV8vhFcRwS8d3hm/gLxcJtn20=;
+	b=057BOmfsCrBqruGvM2iMAPHqmivRfuBT1rOsmKHiucAQTnrBRULO++5gzq+AZiTzZoHA
+	 CxnsrTGQeBlBz3hFunu2FeOYtWKTsQjALoTAxvTcobVKO8NoSH94OAcsZx8FlZBXqmAHp
+	 1YoKHT4ZsjSH4aJxq4KRSJ/fFFh8+eXhuUf5sLrkI6p+DI+F52hkKduZwuEfv4NGMTYa+
+	 HosueFfyUDKgr2gkTOr49NVT/cMA4CsHwBVGkGyAG2QhRLME8tPP6CQ/IYVlwD4kYsPtC
+	 e+bo+LDcdwLfx1EMa9YMGVxIE82oNavWEWkAuR7d5l62ttMYacq1wPHU1PjdW9o8yCg==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=columbia.edu;
+	spf=pass smtp.mailfrom=columbia.edu;
+	dkim=pass header.d=columbia.edu header.i=@columbia.edu header.a=rsa-sha256 header.s=pps01 header.b=rJPYJ+Pf;
+	dkim=pass header.d=columbia.edu header.i=@columbia.edu header.a=rsa-sha256 header.s=lionmail header.b=xa+hwWfC;
+	arc=none smtp.remote-ip=148.163.135.74
+Received: from mx0a-00364e01.pphosted.com (mx0a-00364e01.pphosted.com [148.163.135.74])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0648606A325;
-	Mon,  9 Nov 2026 22:31:01 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B0648606A325
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C6C3606A321
+	for <linux-xfs@vger.kernel.org>; Mon,  9 Nov 2026 22:46:32 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7C6C3606A321
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=columbia.edu
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=columbia.edu
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=hTIw2MTj
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=vPB8V8CFDDMqcIWa+bYQb1M35AAaZI6ImQf/gEDy9Ca5dkVdjPwF/GVLkKGOREGMOcY52ADsUMpaJQxgZma4nqCJSaaitP8UpG2aNmMdefRgJWuohrsMdTXr6t3NjlUJjwqWA9CxPK2fhQnjwC9krKmlYDIIkgeXL3b0ehxNWiPeAcs4m2yHKXaKZZGpDaiM1+UcouAMqBldUJkfC4QD00q3Ofvh1eGiBfivYCN+ARdqqF9pomlVq6VNweVJ4FetURTQZqhf1WpnEAfjpSWtuDCxRY5Qtzr+gDNciE5P+JJqj9uyHFUCecq4B6Lr1IsDFWLXiK+H9UCpRkyh6JYZ/g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=WOTFv6VJX6Xsjhv76PyixKH+T28COjVb1Ygxx/2pcso=;
- b=isEyNOpPLwPiQFqoXYCZekJJQzPOyx7fRBG6x0UwTBzldhH6+GEUCksjS8K4dFLzU48MWsGx1PX7N0CtrXCBfjHEuRv/TKilWisatdbbzw5sgoUm66dGOaA8r1jahIK6TEb+mOs7YWqnSGA2BufVSHYUQe89f/b4YAZLJbZXO8ytsUJpDDOkEUyaE7L1Txd7qGSeesYB9yqTSF/DOBcrRs5QlWwmzBbBE6onRFFmPvoj6VMVag3rymuFM6Ip3RiAyWRKtnDIBXKyE0Q600/GTC+/QIqK2ha5IzhjA64HteTxeeBhc5E/NoRpmnacTl/MfisubYH8QBIqXpjQPx4nFw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=WOTFv6VJX6Xsjhv76PyixKH+T28COjVb1Ygxx/2pcso=;
- b=hTIw2MTjba/OAHoneV+Se0kqpLcwle7Z9kPvKFUzDDHdqXg9ExGy5a+SlTZHouYl/v0e6i0cX3kMlxEzQSRa7yCq/1CyfsbaIcMbDoWWo3T+CbdECDWcTGAlwYWJPDf1GbFVdaF93dhT59zB4hpwhTpF7/nnWWnGaxat/Ol3xn7ZLQen0Z6HOV2igKDGMDUJDgInab4l1mHPooSiKMBH1FqoDKrmQ+ifbqgsCnuswpOOOzK4SlLwE92d3B/BKBYqI1xFzsVGKHpjnaRWtcHMjDSaJ114BgGnxkVrWZlC25ul2dIG1oLyIANYq7Q4McoEkbOySjXtlPpn6QL56j1l/A==
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from SA3PR12MB598757.namprd12.prod.outlook.com
- (2603:10b6:806:52d::14) by SN7PR12MB8170.namprd12.prod.outlook.com
- (2603:10b6:806:32c::15) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.592.12; Mon, 9 Nov
- 2026 22:30:57 +0000
-Received: from SA3PR12MB598757.namprd12.prod.outlook.com
- ([fe80::e206:100:5946:a777]) by SA3PR12MB598757.namprd12.prod.outlook.com
- ([fe80::e206:100:5946:a777%5]) with mapi id 15.21.0592.010; Mon, 9 Nov 2026
- 22:30:57 +0000
-Date: Tue, 10 Nov 2026 09:30:52 +1100
-From: Alistair Popple <apopple@nvidia.com>
-To: Zi Yan <ziy@nvidia.com>
-Cc: Dan Williams <djbw@kernel.org>, Matthew Wilcox <willy@infradead.org>, 
-	Jan Kara <jack@suse.cz>, Alexander Viro <viro@zeniv.linux.org.uk>, 
-	Christian Brauner <brauner@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, 
-	David Hildenbrand <david@kernel.org>, John Groves <John@groves.net>, 
-	Miklos Szeredi <miklos@szeredi.hu>, "Darrick J. Wong" <djwong@kernel.org>, 
-	Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	nvdimm@lists.linux.dev, linux-kernel@vger.kernel.org, linux-mm@kvack.org, 
-	stable@vger.kernel.org
-Subject: Re: [PATCH] mm/truncate: unmap DAX entries before invalidating them
-Message-ID: <avJEEEL-9L-ycVW9@nvdebian.thelocal>
-References: <20261106-fix-dax-invalidate-mapped-v1-1-292ce5958d67@nvidia.com>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261106-fix-dax-invalidate-mapped-v1-1-292ce5958d67@nvidia.com>
-X-ClientProxiedBy: SY5P300CA0036.AUSP300.PROD.OUTLOOK.COM
- (2603:10c6:10:1fd::8) To SA3PR12MB598757.namprd12.prod.outlook.com
- (2603:10b6:806:52d::14)
+	dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.a=rsa-sha256 header.s=pps01 header.b=rJPYJ+Pf;
+	dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.a=rsa-sha256 header.s=lionmail header.b=xa+hwWfC
+Received: from pps.filterd (m0167070.ppops.net [127.0.0.1])
+	by mx0a-00364e01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6A9MRlAt3003224
+	for <linux-xfs@vger.kernel.org>; Mon, 9 Nov 2026 17:46:32 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=columbia.edu; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pps01; bh=WIZB
+	ljhWyOjAV704JqzV8vhFcRwS8d3hm/gLxcJtn20=; b=rJPYJ+PfHhoR2aC5ddre
+	KeX0TdnGyNff0y44edc9qO8omnXiG0NrT5sfljaWfFAbsoL94MHrzXPazE3d+qFT
+	/SKQftG+Rknkszqx3bWtOTlRrOoqsD/qf1W7Pani/bgd3TS8I22tMOP8VJ5rRj10
+	l9M9Nu8XtoWOYmt5kHgVpCOWVmo9hHIiaGFMK8XsGzXv7eVyeq5gtDm9v8p8wJWJ
+	bSzVKEkv/r88EFjHPXlneH6gL9V9wgG7s3ylcsavjTXCEIPoyRKkPBLPwA4foQe5
+	VkG4/vTvUMZWQKljuE5sEeZynPzCtkcnfE372yfe2FTqyT24VAmBfWGBCf405lJL
+	uA==
+Received: from mail-qv1-f71.google.com (mail-qv1-f71.google.com [209.85.219.71])
+	by mx0a-00364e01.pphosted.com (PPS) with ESMTPS id 4huhda3jcn-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-xfs@vger.kernel.org>; Mon, 09 Nov 2026 17:46:31 -0500 (EST)
+Received: by mail-qv1-f71.google.com with SMTP id 6a1803df08f44-91c6c1e082bso25118326d6.0
+        for <linux-xfs@vger.kernel.org>; Mon, 09 Nov 2026 14:46:31 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=columbia.edu; s=lionmail; t=1794264391; x=1794869191; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=WIZBljhWyOjAV704JqzV8vhFcRwS8d3hm/gLxcJtn20=;
+        b=xa+hwWfChS6blPVU9xF5h3SgWEjNFtz4hHzVqyb3q8634jEL3ZHywuPqJwY623mEqz
+         9RsZWr5K6SVaCxS8kVOh/0Nh0Ukkbd/wKFnZHSpjkp07Jajp52mC8VljZorLMdes1on2
+         8f3Th0Wi3L1OeTfQZ0nXLJKXgpkOcu61ZxdsLL7tk+OYkcQFbR0Zj1WKOYUjiBFIjW0o
+         ZqQKXSwkY6QvikNgrWkcsMHUFyaydz2y7c4DddLdYOAEmyQyBb5E2+VTIestR6kmupR7
+         6eCps4Cz0Hdr7anA1rXii1eGVLzvceiFJVHiX45UVnZlGY71AzcBvjwk+v+7mVYmexza
+         Sm3Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794264391; x=1794869191;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=WIZBljhWyOjAV704JqzV8vhFcRwS8d3hm/gLxcJtn20=;
+        b=iNKKsAptpxcPvCeyG4msv0v9kRDffOI0+42ZE6ViqLMPUU7IpU7lPLSLQhE4QUKOO6
+         qDhgWc+A5G0y7gpWkiThzGS0+MS+RGVu4mE4hpRNUKrsUeiEDtzTugrpPyQGaDNwqVbv
+         FKLiVFZltUhfoWfAk1TaKWt2wNeBtWoeXoWH+QGQwtlHH/JqOurXe5+q/MjZ8OTN3a7G
+         k3KSNtgoJAG700tzYTkd3/UahlhVNdRSzc/MettbLJ1ucp3Y+h0zlE6nUhfjS8VSI1Rn
+         N7oarg2dsfUmu7/ZdHPwCeG4i/mblHpj6idL7T+AU69viCSW+nU2Tx/ixeF3oYh9FaW4
+         W4aQ==
+X-Forwarded-Encrypted: i=1; AL+hErFIbAqYuxJF/tfKABl6hF+gSHqfkpUQu0vXVEi3muFpGcw6cHWW+8+ow9raNM/nvtxKJN9Gj6FEq00=@vger.kernel.org
+X-Gm-Message-State: APuU4Z/vvTT+tmvTMnU+2Fm2KtCOoro3RNFwNfFuY7VL5i6QfIfE7QvW
+	pW3+N632oCITMhSLvCrcm8FdQo4jW+nwpYAVoEVeM1WHw3skJ3vENLUciI+GrZjcWc2dNvcJovK
+	bz0FVEH2Dzv6DBdl7z5A7avJMTS5kXnjmyvOdhnAtIvxi/exl8p90VwjB4A==
+X-Gm-Gg: AYBFou0gtuG8ILUs9uP5qrOjUbKVuol1UOqMHjanm+ejyOE7bRvU41eupNbE4x+QpNn
+	j9MhWJS4cBRV2oOyAtw3BbW29IUQ4fB7bO7oXTFrXfusj1zox18UxPCApewrPYaqv0CrmuGH1UV
+	NoijMpSb1g6mZnLHP72gpa+o7zZWE7OQtybEhMGw4h8Ya95GvVNFkKaH0od5PzY0uLkG9kYgEbY
+	5MPLZPtrjnCFB33XcoEhIsRDB4enflSOERvWXwjCjEToaRmLyounrZ/1mwx3tFWshGlcareweL8
+	TDb6zoglz1/ppq81lavd+6PtmyqtXCs3xieZ1tLrnHPu35/oa5DLTfxz3koHfP1xN+yvzCwxDIy
+	OJCe0T0fWAPz5700eAhR0LyCUwI7RK4D8kRNQPJI0dotEJlqRtou/btD0ZgdSm0upLpuHKCeqqj
+	7Ae4i2D7oSt2/ujHe0R51XlrA=
+X-Received: by 2002:a05:6214:cc8:b0:914:cdbf:b6e with SMTP id 6a1803df08f44-91ef049b91amr14954446d6.22.1794264390517;
+        Mon, 09 Nov 2026 14:46:30 -0800 (PST)
+X-Received: by 2002:a05:6214:cc8:b0:914:cdbf:b6e with SMTP id 6a1803df08f44-91ef049b91amr14954056d6.22.1794264390014;
+        Mon, 09 Nov 2026 14:46:30 -0800 (PST)
+Received: from [10.207.116.169] (nat-128-59-178-16.net.columbia.edu. [128.59.178.16])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-91ef031aaddsm7023636d6.3.2026.11.09.14.46.29
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 09 Nov 2026 14:46:29 -0800 (PST)
+Message-ID: <21793564-61f4-4d57-b375-1271ad9bc70c@columbia.edu>
+Date: Mon, 9 Nov 2026 17:46:28 -0500
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -101,280 +116,134 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SA3PR12MB598757:EE_|SN7PR12MB8170:EE_
-X-MS-Office365-Filtering-Correlation-Id: 07faa934-f6b7-40bf-fbdd-08df3eb11fa8
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|7416014|366016|1800799024|376014|5023799004|11063799006|56012099006|261021121427099003|261021123027099003|261022075727099003|261028144727099003|261009223027099003|261026140227099003|261026121527099003|261102130727099003|261102123227099003|261022105027099003|10067099003|22082099003|18002099003;
-X-Microsoft-Antispam-Message-Info:
-	xqitOJy98/CS34PvzGwEqkm2dczp3ddybnveZ1TNhRgl1a8v0aWreGZFGoT/CpIX60xem2K6MGyRzXQkuh9BIRwoGugwscCGX85K00XNLGMTieXNvLQ7sEywDWV1KLg0v1Zf66x3BlaaUhJlS16WCtKaB8wuJ28opxwfSjta5hsEHOeWXRalerWfsr+n1tiVq6xkv2+cuVZq+9MJKsxyph4+KgKTIRm2HZtDQDVuqqlY6vtumZuYpFi1qCk+Fk5rWL6pT6q+wYqVNgriSmUNFNEbrdyhh9FiXkLDkm2vhtnoKB0Iz0/UgPLCd8SEHYu51EbMtYgSXS7c1wPGFIVE5MfvgHGPrUiwChWF2IlU3xQCHF5Fmt+7JiD3UaiHJHv0xqQzqFHv3upzmWZx4D/hTtrai+SDngLjb17GGs4g36EZ4q+INdSot2qp2Rr9BgPyGCDco1YFPzxlh7Carj4xHm95RpD7fYby6RWbsp8oPU71AV+M36/+P8Wkdd1wt8lLoVTFaIJ63r1k2Oc7tJ5+KhFEsZXRWNgf0R0L7a7DTicEqQAl6DjIlDSeo+PI1xdOfJ8OmF8/N0wOJkZMvNlikTdKyOKnscj19jYBU2vzC1sxU1sNlcbe8yeQpbD5L4RF0oWGhQ9xy/fW2KwN96C5KQaiITdOsiAx2uGliKHXI8g=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA3PR12MB598757.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(7416014)(366016)(1800799024)(376014)(5023799004)(11063799006)(56012099006)(261021121427099003)(261021123027099003)(261022075727099003)(261028144727099003)(261009223027099003)(261026140227099003)(261026121527099003)(261102130727099003)(261102123227099003)(261022105027099003)(10067099003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?2MJl2VcuWxf0z5OBdVHA6qp/xik/pLNER/4fS+bBfP0sVfzPxekSBgTBVPJM?=
- =?us-ascii?Q?jncCQPh7MZkaYQVW0/87JqQ3uNJ6BkaxLdlvKMSYdx5jYrz1SNCYMQkM/jZm?=
- =?us-ascii?Q?XRCAczeRdGS1N2wvrth618zPI+UgfWp1jTkH4COGH2DJ2pX2v0x07yhZjnhf?=
- =?us-ascii?Q?4zXHT949omXkwvmBU4vZzd1nUOZIY6V9CdMV2yuR6ohKAa6Nb6GKGFyHHH+B?=
- =?us-ascii?Q?4E1ZN2XgOBiVUIyNMvZR5//Eoq1DVnxJlLX4N8kwE6s1F+GaPKwAugUO5w9R?=
- =?us-ascii?Q?djLxofptfHDC8HU6+rlBBBy5SkkrrGtNvFd+xa+N5wwKlB/1ojAfS1tpx/dt?=
- =?us-ascii?Q?WkseI1LRFhcRzhPkmWyLA3foqaO3xsEjzOzJj5Xo0B3zh9MhdO+MxQlcwGO7?=
- =?us-ascii?Q?hYb3//Y1bCu+8Kx3Ywnj6zMxdh5c4bn1D0FmSeqxnqmE41T3Z7wa9XMHKzdI?=
- =?us-ascii?Q?8goBsnS7sJAarTSmigB/oVykAT+qwKd3tR/n6jGHsm+ZKftE//+b1+TuNPdI?=
- =?us-ascii?Q?JFvq0A0KeMD5+rq7SL/BEBNcIWzxtaFNs6Up1IXYdOBCQe213gY6SOBX6afx?=
- =?us-ascii?Q?j/DgB/dDs5r2dDvbtZoxXH7sTw19CbdznRuaU3aaXYPu6SjHnqzar6kNywRP?=
- =?us-ascii?Q?K0qgfdiJjxKyWxaeCfPuIr5JiMv2tKQJC4ujVcAEB0cPig4mOn5BArB71Dq/?=
- =?us-ascii?Q?jYt3hdH46ZHJtsXQ1F2tBQX6gXQkePWn3n0ii1eqW9zTWlzicF0lF+OZwX5z?=
- =?us-ascii?Q?bE6qv5tvzs9Xya79MOcxSNKlEV/ywrjK140DXGEJIold/1CyyEmF84acMy2J?=
- =?us-ascii?Q?H53HxqTjL4DwowT46OlN1ebrlOLsVjVC8/kKtwWoOgXhkEa1D2vnbFgFvSE4?=
- =?us-ascii?Q?vI+5AO2nUNATiF7Rl/VxzhZD+WPoyGoIqI0+g1recd7IyVi2IJldKZSxf4Ci?=
- =?us-ascii?Q?GQ3K/aKrMv3JB8ELUvsRvOllfpwy5lq5AF9otgz4nxgErGQHDrrgYsrUybKt?=
- =?us-ascii?Q?7+rq9+pxei2ufD3U/UaHjHw6TnObfncy9XHJam3ky8c0SW7VekOX9yXqE1ng?=
- =?us-ascii?Q?1xRkHplskFoZHm2uVZdhkX4GqLHmcPQ0tyNNj7HNxW4Xke3JIhtb/XNpchG7?=
- =?us-ascii?Q?DKTHsg4TfcJ3Y1Nj+StWSVCIBuA6uqyra1QzRg45Xg6I8w37aTdBQy2G17hN?=
- =?us-ascii?Q?SOEah/M/CwwgXTr6KrJ1lgrC0pMd7cl2HHYl3gZstbtQ7WAnqaMh6wVdXfWu?=
- =?us-ascii?Q?3JF0ZyBCGGGMYsR2ZOwwjoFz4BMJfMux1gyiRuTTm6gqo9kQgPTY73tJeRQR?=
- =?us-ascii?Q?Q0Ub3cKIzB9C/sCTU4tq1vTsmyOI67YUQ6IxoryxnTwXORhBXh9x7oRSKv/r?=
- =?us-ascii?Q?NNSO8BXipKXLAPqOzqDzEaBdFKPlMA4W/yKxKxcn0xi5nIWsnm8pxuBedMhz?=
- =?us-ascii?Q?herlBje3NJDlvfdP1CtUenbgRedmmc9rFCb2hITWkoUU1PI1fWqjt3Uiy4yd?=
- =?us-ascii?Q?Ky52bX/t9E1EcvrfxoAzm5c4LFAzfONQ0UwH7+rJshlilOHTIhPe4X1fU3qz?=
- =?us-ascii?Q?ui3S6B6lKnkSfzJvUHy8ZfhNO/fHt1PRo5IVNxcghehChfu6CzZWRlvzFT3y?=
- =?us-ascii?Q?PLdmVXgJDV3mXoahgGhSZkHGxGPB5ByY4wQ4DkPGw5tRzVSs383xt+qYuT0F?=
- =?us-ascii?Q?zUtgzvpGkRH/3gAzHRiJeLcV1YJiBw8Uu8/vuUUETSRQFM7Ktc0XarJv0yqU?=
- =?us-ascii?Q?n3dGSN/oMg=3D=3D?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 07faa934-f6b7-40bf-fbdd-08df3eb11fa8
-X-MS-Exchange-CrossTenant-AuthSource: SA3PR12MB598757.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Nov 2026 22:30:57.1918
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: UToODkYNpBpxmUI5J/x6PXhd+rHvkGem9o1RVDAHCebcsUh+sGQQLeeJ3jJzvXgyd+a3vqyOrg76xHzgTaAbKg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN7PR12MB8170
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 2/2] iomap: remove the atomic write length check in
+ iomap_dio_bio_iter_one()
+To: John Garry <john.garry@linux.dev>, Jens Axboe <axboe@kernel.dk>,
+        Christian Brauner <brauner@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+References: <20261107-blkdev-atomic-bounce-v1-0-f66344262096@columbia.edu>
+ <20261107-blkdev-atomic-bounce-v1-2-f66344262096@columbia.edu>
+ <3fc46788-d86d-44c5-8606-385d96fede4d@linux.dev>
+ <c27b9521-7c4f-41ff-88f8-55313b5f395c@columbia.edu>
+ <4022d4f9-5e2e-45d1-b9b8-208c80f82ecf@linux.dev>
+Content-Language: en-US
+From: Tal Zussman <tz2294@columbia.edu>
+In-Reply-To: <4022d4f9-5e2e-45d1-b9b8-208c80f82ecf@linux.dev>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Authority-Analysis: v=2.4 cv=NMVAaE6g c=1 sm=1 tr=0 ts=6af24d47 cx=c_pps
+ a=UgVkIMxJMSkC9lv97toC5g==:117 a=Gl6UJ28otdLh1ydVN8wMBg==:17
+ a=IkcTkHD0fZMA:10 a=zJRp6_cAMcgA:10 a=x7bEGLp0ZPQA:10 a=A0y_DWxS2BwA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=Da8U98TiO7q1upZEImrf:22 a=svvvyxlR1OQQkelhaPoB:22
+ a=-APkALjPeVA3zQJKllEA:9 a=QEXdDO2ut3YA:10 a=1HOtulTD9v-eNWfpl4qZ:22
+X-Proofpoint-ORIG-GUID: LMfZ1aEqFEXVnlhHqx_BWgZNyMTxNgGo
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMTA5MDA5MCBTYWx0ZWRfX/aFw1EE5eWcM
+ Uslg6YNK9eFELkXS7sZ47pUuCsHklLRZ/pgfPKR7M1c8nrNS2GS5tvSmtLCnQqJ/QcGEErBgMnw
+ +b1XKP59WtM3SN7z+bkb0des4cH2npWbRf8K8U3WLwPEazc+Ppvu
+X-Proofpoint-GUID: LMfZ1aEqFEXVnlhHqx_BWgZNyMTxNgGo
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTA5MDA5MCBTYWx0ZWRfXwkR2YD1+Ux1D
+ tsfRzrZ7G5Yj7/vsm95bZlG7pNiAHIjoEEXanVduaXf7a4sRFmRYBnjRDSF13jeWcnICMxGCwS5
+ F+lrNWIkwGc08R8MPqgwD5aPtiyvMPXYp6XzBEMPIA9BlisKFgrL4/5JYef8sPjGslNHxapvfaW
+ tJmESBsehAB8hc+rMGMtE6ybHCYjerMjde5VUSV/MquMJBFmz02z9nCdsVFExbL46B0OLH4FZEO
+ Tjh1phPIr/CBVE05HVK2DWjZutzFqZSCrR9QQEddl93uN/wlsgvemKTZtbuR2OKwTY2KZGQMKC8
+ jreDkOx48C9ZlKF0cbq3+NhKs2Ow8osq3CQt88T08DpG9tnGoNkfNwXxxL7v1PyZhG3SAdIuTyK
+ K/J8glcS1OVXi2o4zjya8XLWPa5pQmQCVpfLSGMU5vtX3qaFkLm+YIBynZEszu2VJ+qXT2H+kul
+ 0OwyVgTMicJ/qozblUw==
+X-Proofpoint-Virus-Version: vendor=nai engine=6900 definitions=11961
+ signatures=596817
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ priorityscore=1501 spamscore=0 suspectscore=0 clxscore=1015
+ lowpriorityscore=10 bulkscore=10 impostorscore=10 malwarescore=0 adultscore=0
+ phishscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2611040001
+ definitions=main-2611090090
 
-On 2026-11-07 at 08:43 +1100, Zi Yan <ziy@nvidia.com> wrote...
-> invalidate_inode_pages2_range() invalidates the clean DAX entries in the
-> range through dax_invalidate_mapping_entry_sync() and only unmaps the range
-> afterwards. Dropping the last association of an entry releases its folio
-> by dissolving the folio into order-0 ones. If the entry is still mapped,
-> 1. dax_folio_put() warns;
-> 2. if the folio order is PMD, folio_remove_rmap_pmd() during the unmap
->    afterwards operates on an order-0 folio (the original head page) and
->    corrupts the original first tail page metadata.
+On 11/9/26 1:44 PM, John Garry wrote:
+>> 
+>>> This looks ok. But I am just thinking that a CoW-based atomic write does
+>>> not have the single bio restriction, so we don't need to fail the atomic
+>>> in this case. However, we should have consistent rules for iovec's
+>>> whether it's a block device or regular file for ext4 or xfs, so this
+>>> makes sense.
+>>>
+>>> thanks
+>>>
+>>> BTW, you could be a real hero and add an xfstests case for this also.
+>>>
+>> 
+>> What specifically would you want to see tested? I can do an atomic write with
+>> a partially unmapped buffer, with and without stable writes, and check that it
+>> fails and that nothing is written.
 > 
-> This is reachable from userspace with a copy-on-write write to a mapped
-> reflinked file on XFS with DAX:
+> Just something similar to the blktests case which you added.
 > 
->   WARNING: fs/dax.c:452 at dax_disassociate_entry.isra.0+0x147/0x1c0
->   Call Trace:
->    __dax_invalidate_entry+0x106/0x320
->    invalidate_inode_pages2_range+0x3ce/0x830
->    dax_iomap_rw+0x421/0xcc0
->    xfs_file_dax_write+0x252/0x9e0
->    vfs_write+0x53a/0xe70
->    __x64_sys_pwrite64+0x195/0x250
->    ...
->   WARNING: ./include/linux/rmap.h:351 at folio_remove_rmap_pmd+0x8b2/0xaf0
->   Call Trace:
->    split_huge_pmd_locked+0x751/0x2350
->    __split_huge_pmd+0x1bb/0x310
->    ...
->    unmap_mapping_pages+0x133/0x150
->    invalidate_inode_pages2_range+0x700/0x830
->    dax_iomap_rw+0x421/0xcc0
->    ...
-> 
-> To fix it, unmap DAX ranges before invalidating them, as the page cache
-> path does for mapped folios. In __dax_invalidate_entry(), when
-> invalidating, skip an entry if the code is dropping its last association
-> but its folio still has outstanding references. -EBUSY is returned for the
-> skipped entries. The unmap before invalidation works because any remap of
-> the folio between the unmap and invalidation will bump the folio refcount.
 
-A quick check of callers of invalidate_inode_pages2_range() either ignore
-the return code or produce a WARN_ON if the invalidation fails. For example
-xfs_fs_commit_blocks(). I don't think anything makes that inherently safe
-against COW for example.
+Sounds good, I'll add it to the queue.
 
-That's pre-existing of course - but this patch does increase the likelihood of
-error. Overall though I think this patch is still an improvement, and based on
-code comments my AI agent concluded that these kind of issues are somewhat known
-anyway.
+> BTW, have you tested this partially-unmapped case for CoW-based atomics
+> on xfs? You can just do that by setting atomic_wr=0
+> 
 
-> Fixes: 38607c62b34b ("fs/dax: properly refcount fs dax pages")
+Yeah, I just tested it. It behaves as expected: returns -EFAULT with the file
+unchanged, both with and without bouncing.
 
-I suspect this issue actually preexists my changes here. Prior the page
-meta-data was still getting modified on disassociation even if the folio was
-referenced. In some ways proper refcounting just made it easier to catch these
-kind of problems, which was partly the point of doing it :-)
+The single-bio check depends on REQ_ATOMIC, which only the HW atomic path sets,
+so it doesn't apply to CoW writes, both before and after this series.
 
-But I think it makes sense to use this as the "Fixes" tag - backporting this to
-anything prior would be difficult and a rewrite of this fix anyway.
+In terms of consistency, the unmapped buffer returns -EINVAL on the non-bounce
+HW path (from bio_iov_iter_get_pages()) but -EFAULT for all other paths. That
+should probably be made consistent across HW and SW and bounce vs. non-bounce,
+but that's a separate change.
 
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Zi Yan <ziy@nvidia.com>
-> ---
-> I found this while auditing the paths that map pages into user page
-> tables. invalidate_inode_pages2_range() releases the folios of DAX
-> entries that are still mapped. For a PMD-mapped folio this corrupts what
-> used to be its first tail page, and a copy-on-write write to a mapped
-> reflinked file on XFS with DAX is enough to hit it.
-> 
-> In QEMU with emulated NVDIMMs and XFS on an fsdax namespace:
-> 
-> - Copy-on-write with the script below, PTE- and PMD-mapped, with only a
->   mapped and with a and b mapped. Before this patch, the WARNs in the
->   commit message and a corrupted first tail page in the PMD case. With this
->   patch: the mapping of a sees the new data, b keeps the old data, and
->   nothing warns, except for item 4 below.
-> 
->   mkfs.xfs -f -m reflink=1 -d su=2m,sw=1 /dev/pmem1
->   mount -o dax=always /dev/pmem1 /mnt && cd /mnt
->   xfs_io -f -c "extsize 2m" -c "pwrite -q -S 0x5a 0 4m" -c fsync a
->   xfs_io -f -c "reflink a 0 0 4m" b
->   (echo "mmap -r 0 4m"; echo "madvise -h 0 4m"; echo "mread 0 4m";
->    sleep 4; echo "mread -v 0 16") | xfs_io a &
->   sleep 2; xfs_io -c "pwrite -q -S 0xa5 0 8k" -c fsync a; wait
+Thanks,
+Tal
 
-Ideally I think this should be added to the xfstest suite - that was extremely
-useful during some of the refcounting reworks and found all sorts of interesting
-corner cases.
 
-> Open issues that this patch does not address. They are races or
-> already exist without it.
+> Thanks,
+> John
 > 
-> 1. A refault, or a short-term or speculative reference, between the
->    early unmap and the invalidation keeps a last association in place,
->    and invalidate_inode_pages2_range() returns -EBUSY.
->    dax_iomap_iter(), dax_unshare_iter() and dax_zero_iter() ignore that
->    and write the new extent anyway, which leaves a stale entry. Without
->    this patch the same race tears down the referenced folio. Should
->    these paths retry, or fail?
+>> 
+>>>> ---
+>>>>    fs/iomap/direct-io.c | 14 --------------
+>>>>    1 file changed, 14 deletions(-)
+>>>>
+>>>> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+>>>> index ad041ac3252a..aca7cbaea4af 100644
+>>>> --- a/fs/iomap/direct-io.c
+>>>> +++ b/fs/iomap/direct-io.c
+>>>> @@ -370,15 +370,6 @@ static ssize_t iomap_dio_bio_iter_one(struct iomap_iter *iter,
+>>>>    		goto out_put_bio;
+>>>>    	ret = bio->bi_iter.bi_size;
+>>>>    
+>>>> -	/*
+>>>> -	 * An atomic write bio must cover the complete length.  If it doesn't,
+>>>> -	 * error out.
+>>>> -	 */
+>>>> -	if ((op & REQ_ATOMIC) && WARN_ON_ONCE(ret != iomap_length(iter))) {
+>>>> -		ret = -EINVAL;
+>>>> -		goto out_bio_release_pages;
+>>>> -	}
+>>>> -
+>>>>    	if (dio->flags & IOMAP_DIO_WRITE)
+>>>>    		task_io_account_write(ret);
+>>>>    	else if ((dio->flags & IOMAP_DIO_USER_BACKED) &&
+>>>> @@ -393,11 +384,6 @@ static ssize_t iomap_dio_bio_iter_one(struct iomap_iter *iter,
+>>>>    	iomap_dio_submit_bio(iter, dio, bio, pos);
+>>>>    	return ret;
+>>>>    
+>>>> -out_bio_release_pages:
+>>>> -	if (dio->flags & IOMAP_DIO_BOUNCE)
+>>>> -		bio_free_folios(bio);
+>>>> -	else
+>>>> -		bio_release_pages(bio, false);
+>>>>    out_put_bio:
+>>>>    	bio_put(bio);
+>>>>    	return ret;
+>>>>
+>>>
+>> 
 > 
-> 2. XFS device pre-removal ignores the result as well, so an entry kept
->    because of a short-term reference is not revisited before the
->    memmap goes away.
-> 
-> 3. folio->share is updated under each file's i_pages lock, so the
->    shared-count check here, like dax_folio_put() itself, can race with
->    another file dropping its share.
-> 
-> 4. With reflink, after a copy-on-write write, a PTE fault can associate
->    an order-0 entry with a shared folio that another file still maps
->    with a PMD. That trips WARN_ON_ONCE(dax_entry_order(entry) !=
->    folio_order(folio)) in dax_associate_entry(), with and without this
->    patch.
-> 
-> Based on an LLM's analysis, 1 and 2 can be fixed by holding the invalidate
-> lock and breaking DAX layouts in the callers; 3 needs a per-folio lock
-> for ->share; 4 needs a way to share a folio at different granularities,
-> or no PMD mappings of shared extents as a simple fix.
-> 
-> LLMs were used to analyze the issue, write the patch, and review the code.
-> ---
->  fs/dax.c      | 28 ++++++++++++++++++++++++++--
->  mm/truncate.c | 16 +++++++++++-----
->  2 files changed, 37 insertions(+), 7 deletions(-)
-> 
-> diff --git a/fs/dax.c b/fs/dax.c
-> index 94ba41273347c..e448552d8080d 100644
-> --- a/fs/dax.c
-> +++ b/fs/dax.c
-> @@ -527,6 +527,24 @@ static struct page *dax_busy_page(void *entry)
->  		return NULL;
->  }
->  
-> +/*
-> + * Determine if an entry can be disassociated. It cannot be if it is its folio's
-> + * last association and the folio still has a reference.
-> + */
-> +static bool dax_can_disassociate(void *entry)
-> +{
-> +	struct folio *folio;
-> +
-> +	if (dax_is_zero_entry(entry) || dax_is_empty_entry(entry))
-> +		return true;
-> +
-> +	folio = dax_to_folio(entry);
-> +	if (dax_folio_is_shared(folio) && folio->share > 1)
-> +		return true;
-> +
-> +	return !folio_ref_count(folio);
-> +}
-> +
->  /**
->   * dax_lock_folio - Lock the DAX entry corresponding to a folio
->   * @folio: The folio whose entry we want to lock
-> @@ -853,9 +871,14 @@ static int __dax_invalidate_entry(struct address_space *mapping,
->  	entry = get_next_unlocked_entry(&xas, 0);
->  	if (!entry || WARN_ON_ONCE(!xa_is_value(entry)))
->  		goto out;
-> +	/*
-> +	 * Removing the last association of a folio releases the folio, so make
-> +	 * sure the folio has no reference.
-> +	 */
->  	if (!trunc &&
->  	    (xas_get_mark(&xas, PAGECACHE_TAG_DIRTY) ||
-> -	     xas_get_mark(&xas, PAGECACHE_TAG_TOWRITE)))
-> +	     xas_get_mark(&xas, PAGECACHE_TAG_TOWRITE) ||
-> +	     !dax_can_disassociate(entry)))
->  		goto out;
->  	dax_disassociate_entry(entry, mapping, trunc);
->  	xas_store(&xas, NULL);
-> @@ -1017,7 +1040,8 @@ void dax_break_layout_final(struct inode *inode)
->  EXPORT_SYMBOL_GPL(dax_break_layout_final);
->  
->  /*
-> - * Invalidate DAX entry if it is clean.
-> + * Invalidate DAX entry if it is clean and dropping it would not release a folio
-> + * that is still in use.
->   */
->  int dax_invalidate_mapping_entry_sync(struct address_space *mapping,
->  				      pgoff_t index)
-> diff --git a/mm/truncate.c b/mm/truncate.c
-> index 9e9bf029635cf..b03cd99c4bba8 100644
-> --- a/mm/truncate.c
-> +++ b/mm/truncate.c
-> @@ -732,6 +732,15 @@ int invalidate_inode_pages2_range(struct address_space *mapping,
->  	if (mapping_empty(mapping))
->  		return 0;
->  
-> +	/*
-> +	 * Invalidating a DAX entry can release its folio, so unmap DAX entries
-> +	 * before invalidating them. dax_invalidate_mapping_entry_sync() skips
-> +	 * the last association of a folio that still has references, e.g.
-> +	 * because it was faulted in again in the meantime.
-> +	 */
-> +	if (dax_mapping(mapping))
-> +		unmap_mapping_pages(mapping, start, end - start + 1, false);
-> +
->  	folio_batch_init(&fbatch);
->  	index = start;
->  	while (find_get_entries(mapping, &index, end, &fbatch, indices)) {
-> @@ -787,11 +796,8 @@ int invalidate_inode_pages2_range(struct address_space *mapping,
->  		cond_resched();
->  	}
->  	/*
-> -	 * For DAX we invalidate page tables after invalidating page cache.  We
-> -	 * could invalidate page tables while invalidating each entry however
-> -	 * that would be expensive. And doing range unmapping before doesn't
-> -	 * work as we have no cheap way to find whether page cache entry didn't
-> -	 * get remapped later.
-> +	 * For DAX, also zap the mappings that were faulted in while we were
-> +	 * invalidating.
->  	 */
->  	if (dax_mapping(mapping)) {
->  		unmap_mapping_pages(mapping, start, end - start + 1, false);
-> 
-> ---
-> base-commit: 63919467fb5239ab824de6a7a128b882055b24af
-> change-id: 20261103-fix-dax-invalidate-mapped-d0c2296f5543
-> 
-> Best regards,
-> --  
-> Yan, Zi
-> 
+
