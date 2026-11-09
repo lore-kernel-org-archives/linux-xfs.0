@@ -1,44 +1,44 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794268281;
-	b=a9eAedaYFP+hdmnASI+FxNJGraTR+rk1bFPy0Gm6t2ULEs3Zivxz37ZvzgqKKmhyURkR
-	 rzXUF4a7WL8+KmpQ7+QLCVXyW/qKC92nCHlQ2v0LNYx0FUmYgveT1HrU7q8tsTo+NaLaz
-	 LWZJswht9VAKJnYXf9Wud5PJvAKeIrTSr6q3tuDniFZszjNVBexNgoNM8aFkctlMEi8ri
-	 lmkR+327RNNoMZ6HyP4H+5Q8nqdu+pow2B3tPYQWdEE0d4Ow8NQMZPAe8W0yUX5pxgOWz
-	 1+/CXzMiL5MYmj1MSq4FyF7eOPD0cb504pI4njWVLUMkFnp7X84guydV4/OprYtSK8w==
+	t=1794268287;
+	b=i4gYaPgW7N7/FX/xr3Dog6xvUZxovcTK9FnVcKByBiTzgC+YT6XYczByNzznvBRNc09r
+	 Uu5JS5hQfYq/GgOymSnpISxbbtKhPJvhA79cRpbXVEyx2wweOQuzq7LWc/4QGSAn8gwwc
+	 M1gE3FcQYweJQ+Fb07jtDvjuXhS1I1zGeKZDuBCjktUFexNM/8XPWJHIeIEhDXp1s9J7x
+	 M5ZE9QlIsnh/1zOHTdYmHbIS6Kr9RtoLAgShfERutQSTKXs3351gMFh5Uk4EIphXRKIQB
+	 /2JZn6kq+lvW07D57EcEoyO5fC9ocn1kS3UNBzlwekWjR7dpT0w0qUtWiq/SMpbzVYA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794268281;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794268287;
 	h=Received:DKIM-Signature:From:To:Subject:Date:Message-ID:In-Reply-To:
 	 References:MIME-Version:Content-Type:Content-Transfer-Encoding;
-	bh=xebwCZ71jTrY9GbqrwXpYwC1G6Q6Dw22Bz/PxvMl554=;
-	b=a4XsG31fCiIf0pUAFNqVMWXzOSvRgxu92fB1m7WfIkQ6Sp5eH+GFR5WWFKo8RDhSbfVi
-	 dq9Q2HJKlEL/sqxVuRA5BMPzqQnv0uRCmxt1dQc+DooR5K7/RFxE8VTo4m7tOiUrbOxHO
-	 ZUpzDkcdUgTs2zJExEJxHWEOVxCLvxnrZ+qNELonAN/5dhALQrtHQuJFIwjpf1wrFZq+O
-	 G5gxQO10JMhGYox9/lxAvTgxqzGvq6JmSL9rLYeSYc/PO2iWOlunnadM7kncfc42MGjSk
-	 06h5/l0R3dG97tDfZ1oHMH55feJpnF2yLHQYAVioIVRrnjZm/VLfTFFxW/cB5OZYDGg==
+	bh=ly7glYuDm45Thr2JWJRUPb8YPQdXsd0uuDa6zXjMgHs=;
+	b=Z7onSswGrZCfDG+pyrKNoVAK8moSyQUTFqDtv2+cZEEx9JhJENsgcnJlFP+W4T9mhE0U
+	 XcOKjMzuJ0ZgK0NBVGvLFBmGtKv0XOmd+UAPgyx46Pdg68NdmXSS3MhO14LckfRZyCqVO
+	 bqZXw6ioeGElj/1DRcO/nxBKeCI+AJsDtbDTo1u7KTNnOMjQP9whPlYAVrRq7pDGjhrkV
+	 KDWi4MyulKQY8tqHfVLQuqE6YmVwRRGO64sH0DPJVUDOpKLsFddWfF9C7KC4CYx0CIzhe
+	 nGrBL1ZKmLo4RPEEAOnikV3LChvAwJrCw0MddGdKbeo4A1De5LJy51i5k5Vht4VWugg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DUUfDsXY;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="J6pw/EKA";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B88860A2600;
-	Mon,  9 Nov 2026 23:51:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56F1B606A33D;
+	Mon,  9 Nov 2026 23:51:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DUUfDsXY
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7F9D1F00900;
-	Mon,  9 Nov 2026 23:51:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=J6pw/EKA
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BD4FF1F008A1;
+	Mon,  9 Nov 2026 23:51:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794268281;
-	bh=xebwCZ71jTrY9GbqrwXpYwC1G6Q6Dw22Bz/PxvMl554=;
+	s=k20260515; t=1794268286;
+	bh=ly7glYuDm45Thr2JWJRUPb8YPQdXsd0uuDa6zXjMgHs=;
 	h=From:To:Subject:Date:In-Reply-To:References;
-	b=DUUfDsXYi1WN7hevkFFr+Q30XN5fqR1eQdUqouT7ztBKf2vujvRi6IAUvSUlMRCjS
-	 D+EonbPfBbdt2+TRn6bHwQl4TivZwHNl/lc6XyQ6Dwdsi+RQucJnOtv6VoUzsSF5f6
-	 dpSow+Rtgn0wlKpw5hT8AIMhqtDE+Imc0/TM9gk66GVQYWjOFsf3usH+L/CRhePhaT
-	 aN82dI9nYLi/+vH9hGir9tgERAFWKiJELW13I/FIFnNuMEPGbktawlmWsuMjGoXE4V
-	 MJjw9nj+y38C2IR30WxxPbJ+nHfuturUC694z4aoAD+jWAAZ3K6bX2BgRFXpjnyzDY
-	 zoM6BvWSCXjxg==
+	b=J6pw/EKAuQJ8a2XztrZjuouSP09aCET8KgYZXVt8O58II40n4rtjeu972YNAcibb7
+	 SyjaN7cnrgCc2KbQWc6ZgMAXTTB5Hh1qakX3cKXIcjEPKZ2t4r4FEug4yRaW8utTfZ
+	 jy9cCj2T8usYa1CPvYAkhXii7IMPSJzQ7+/TNWBApdHR3HeutPdFnkdhYA8FEMbnmn
+	 fOdlgnKyoL7Lewy3lwbiX5ohbI/kjIuFzzMXAvIkIYjQnBbktO8RgG0vnPM/hkrNJ6
+	 7HAdkYMRvP3UJHUhUCnxi9HqiVgCnOXYZZKkbKBSTFMz5YQnQtbuRW7WDZp9a6lHhR
+	 aBAidff3kZ0NA==
 From: Chris Mason <mason@kernel.org>
 To: mason@kernel.org,
 	tytso@mit.edu,
@@ -50,9 +50,9 @@ To: mason@kernel.org,
 	hch@lst.de,
 	linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org
-Subject: [PATCH v6 05/10] fs: validate atomic writes after O_APPEND and limits
-Date: Mon, 09 Nov 2026 18:51:16 -0500
-Message-ID: <20261109235111.14129-6-mason@kernel.org>
+Subject: [PATCH v6 09/10] xfs: refuse fallocate racing with realtime flag changes
+Date: Mon, 09 Nov 2026 18:51:20 -0500
+Message-ID: <20261109235111.14129-10-mason@kernel.org>
 In-Reply-To: <20261109235111.14129-1-mason@kernel.org>
 References: <20261109235111.14129-1-mason@kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -67,114 +67,103 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-An RWF_ATOMIC write on XFS with reflink can expose stale disk contents
-if O_APPEND or RLIMIT_FSIZE leaves it sector aligned but not block
-aligned.
+On a zoned XFS, fallocate() can dereference a NULL pointer if the
+realtime flag of the file is set during the call.
 
-XFS and ext4 call generic_atomic_write_valid() on the range that the
-caller passed. But generic_write_checks() changes the range later:
-O_APPEND moves the position, and RLIMIT_FSIZE cuts the length. XFS can
-then fill only a part of a new block, and still map the whole block into
-the file:
+xfs_file_fallocate() reserves zoned space only for a zoned inode, and
+tests for that before it takes the iolock. FS_IOC_FSSETXATTR can change
+the realtime flag of a file with no blocks in that gap.
+xfs_falloc_force_zero() then sees a zoned inode and reads the
+reservation, which is NULL:
 
-    block size 4096, i_size 512, O_APPEND
-    validated:        0 to 4095
-    written:          512 to 4607
-    new blocks:       0 to 8191
-    stale below EOF:  0 to 511
+    fallocate(FALLOC_FL_ZERO_RANGE)     FS_IOC_FSSETXATTR
+    ===============================     =================
+                                        takes the iolock
+    sees that the inode is not zoned
+    waits for the iolock
+                                        sets the realtime flag
+                                        drops the iolock
+    xfs_falloc_force_zero()
+      sees that the inode is zoned
+      /* ac is NULL */
 
-The fix used here is to validate an atomic write in
-generic_write_checks(), after its range is final, and to refuse one that
-was cut. XFS no longer picks the path of an atomic write by the
-alignment of the range that the caller passed.
+The fix used here is to test again under the iolock, and to fail the
+call with -EINVAL if the answer has changed, as the write path does.
 
-Fixes: f096207d3276 ("xfs: Validate atomic writes")
-Fixes: 43c696f9d094 ("ext4: Check for atomic writes support in write iter")
+Fixes: 058dd70c65ab ("xfs: implement buffered writes to zoned RT devices")
 Signed-off-by: Chris Mason <mason@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/ext4/file.c    |  4 ----
- fs/read_write.c   | 13 +++++++++++++
- fs/xfs/xfs_file.c | 17 +++++++++++------
- 3 files changed, 24 insertions(+), 10 deletions(-)
+ fs/xfs/xfs_file.c | 41 ++++++++++++++++++++++++++++++++---------
+ 1 file changed, 32 insertions(+), 9 deletions(-)
 
-diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-index 50d3c92709c8..e301d4faf1c3 100644
---- a/fs/ext4/file.c
-+++ b/fs/ext4/file.c
-@@ -802,10 +802,6 @@ ext4_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
- 		if (len < EXT4_SB(inode->i_sb)->s_awu_min ||
- 		    len > EXT4_SB(inode->i_sb)->s_awu_max)
- 			return -EINVAL;
--
--		ret = generic_atomic_write_valid(iocb, from);
--		if (ret)
--			return ret;
- 	}
- 
- 	if (iocb->ki_flags & IOCB_DIRECT)
-diff --git a/fs/read_write.c b/fs/read_write.c
-index 676728310899..1b34b7382619 100644
---- a/fs/read_write.c
-+++ b/fs/read_write.c
-@@ -1775,6 +1775,19 @@ ssize_t generic_write_checks(struct kiocb *iocb, struct iov_iter *from)
- 	if (ret)
- 		return ret;
- 
-+	/*
-+	 * O_APPEND has moved the position and the file size limits have
-+	 * shortened the write by now, so this is the range to validate.  An
-+	 * atomic write is all or nothing, so refuse it if it got shorter.
-+	 */
-+	if (iocb->ki_flags & IOCB_ATOMIC) {
-+		if (count != iov_iter_count(from))
-+			return -EINVAL;
-+		ret = generic_atomic_write_valid(iocb, from);
-+		if (ret)
-+			return ret;
-+	}
-+
- 	iov_iter_truncate(from, count);
- 	return iov_iter_count(from);
- }
 diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index be1f775128d1..153f53f964b9 100644
+index 515ddafc6673..26967ca4f3fb 100644
 --- a/fs/xfs/xfs_file.c
 +++ b/fs/xfs/xfs_file.c
-@@ -926,12 +926,21 @@ xfs_file_dio_write(
- 	if ((iocb->ki_pos | count) & target->bt_logical_sectormask)
- 		return -EINVAL;
- 
+@@ -1572,6 +1572,21 @@ xfs_falloc_allocate_range(
+ 		 FALLOC_FL_ZERO_RANGE |	FALLOC_FL_INSERT_RANGE |	\
+ 		 FALLOC_FL_UNSHARE_RANGE | FALLOC_FL_WRITE_ZEROES)
+
++/*
++ * For zoned file systems, zeroing the first and last block of a hole punch
++ * requires allocating a new block to rewrite the remaining data and new zeroes
++ * out of place, which needs a space reservation.
++ */
++static inline bool
++xfs_falloc_needs_zoned_resv(
++	struct xfs_inode	*ip,
++	int			mode)
++{
++	return xfs_is_zoned_inode(ip) &&
++		(mode & (FALLOC_FL_PUNCH_HOLE | FALLOC_FL_ZERO_RANGE |
++			 FALLOC_FL_COLLAPSE_RANGE));
++}
++
+ STATIC long
+ __xfs_file_fallocate(
+ 	struct file		*file,
+@@ -1590,6 +1605,19 @@ __xfs_file_fallocate(
+ 	if (error)
+ 		goto out_unlock;
+
 +	/*
-+	 * An atomic write is at least one block long, and generic_write_checks()
-+	 * refuses it unless its final position is a multiple of its length.  So
-+	 * there is no unaligned case to handle for it.
++	 * The caller looked at the realtime flag before we took the IOLOCK, to
++	 * decide if it has to reserve space.  Bail out if the flag has changed
++	 * since.
 +	 */
-+	if (iocb->ki_flags & IOCB_ATOMIC) {
-+		if (xfs_is_zoned_inode(ip))
-+			return xfs_file_dio_write_zoned(ip, iocb, from);
-+		return xfs_file_dio_write_atomic(ip, iocb, from);
++	if (xfs_falloc_needs_zoned_resv(ip, mode) != !!ac) {
++		xfs_warn_ratelimited(ip->i_mount,
++			"RT flag modifying during fallocate for inode 0x%llx.",
++			inode->i_ino);
++		error = -EINVAL;
++		goto out_unlock;
 +	}
 +
- 	if ((iocb->ki_pos | count) & ip->i_mount->m_blockmask)
- 		return xfs_file_dio_write_unaligned(ip, iocb, from);
- 	if (xfs_is_zoned_inode(ip))
- 		return xfs_file_dio_write_zoned(ip, iocb, from);
--	if (iocb->ki_flags & IOCB_ATOMIC)
--		return xfs_file_dio_write_atomic(ip, iocb, from);
- 	return xfs_file_dio_write_aligned(ip, iocb, from,
- 			&xfs_direct_write_iomap_ops, &xfs_dio_write_ops, NULL);
+ 	/*
+ 	 * Must wait for all AIO to complete before we continue as AIO can
+ 	 * change the file size on completion without holding any locks we
+@@ -1685,16 +1713,11 @@ xfs_file_fallocate(
+ 		return -EOPNOTSUPP;
+
+ 	/*
+-	 * For zoned file systems, zeroing the first and last block of a hole
+-	 * punch requires allocating a new block to rewrite the remaining data
+-	 * and new zeroes out of place.  Get a reservations for those before
+-	 * taking the iolock.  Dip into the reserved pool because we are
+-	 * expected to be able to punch a hole even on a completely full
+-	 * file system.
++	 * Get the reservation before taking the iolock.  Dip into the reserved
++	 * pool because we are expected to be able to punch a hole even on a
++	 * completely full file system.
+ 	 */
+-	if (xfs_is_zoned_inode(XFS_I(inode)) &&
+-	    (mode & (FALLOC_FL_PUNCH_HOLE | FALLOC_FL_ZERO_RANGE |
+-		     FALLOC_FL_COLLAPSE_RANGE)))
++	if (xfs_falloc_needs_zoned_resv(XFS_I(inode), mode))
+ 		return xfs_file_zoned_fallocate(file, mode, offset, len);
+ 	return __xfs_file_fallocate(file, mode, offset, len, NULL);
  }
-@@ -1128,10 +1137,6 @@ xfs_file_write_iter(
- 
- 		if (ocount > xfs_get_atomic_write_max(ip))
- 			return -EINVAL;
--
--		ret = generic_atomic_write_valid(iocb, from);
--		if (ret)
--			return ret;
- 	}
- 
- 	if (IS_DAX(inode))
--- 
+--
 2.55.0
 
