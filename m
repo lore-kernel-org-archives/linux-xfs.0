@@ -1,44 +1,44 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794268274;
-	b=GUfqZalj9XSWl4IsTirYCnLeXT6YkK0pOEhZLiLB2CeODqD0EI9PdAthDKpAIKkzbngp
-	 9g02TuJPA6SEiNe78rLKeS8TdFNYjxrLVwUHRe2duYOm1PuRbi+AI0JtIRu5C/m5UcGgL
-	 cDseL8Z85mOpLPy+uUc2JCcnZC1gBXSM7H3g7WCnzEd/a8PMXGWryIPqUn8qdgYeWTSdv
-	 5K5MmnbPbuWFuc32+3KFAa6GA2p5G8p6uDPnYKkDvhA8Tnhs1iD7sfEQnR3eHW1xqh8gI
-	 xnyUN8wRLBdJ5Jba2MtChioX0m3UMgOOWfw7MjfOwEeRIjbIDmwMxSeCZbRd6fM1nUw==
+	t=1794268280;
+	b=XzLTRhlcjge2pXDCkFQLw746tixVgxOxPVn4mynla1EB+G9NSH5Z9HLlzePPsH8IELg7
+	 7IRMwFaF2VKEU0Q3bYFqRu+Ge9CG/d5C8vpb1qzmXLYaFlvILFh+90872kgQi4fDmzAGT
+	 ul1RmaAgkzRc2lHTo+TBFn/j3puWGGH/gVh5If4MRqFUzO7w9JQarcer0s3z6XxB13eWc
+	 FzSYcq/4CDpSwzZpkKqhuBhJdbFtFswOYPvQ7TIMjp9c3Q9zczexZhLUjNJdsej6hj8Il
+	 XYXWFPQwpEb9HpeDvYnklvfWpT+2hw68Drd7bV0MZ+e9R/DoGhTjI99ZuRgcmxXnDsw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794268274;
-	h=Received:DKIM-Signature:From:To:Subject:Date:Message-ID:MIME-Version:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=ORbE1mg5iTUjQH+mp5nFuaGXJutZvkHOuo1HTwX2iCQ=;
-	b=xI3t1OokLBxetwMm1oagg2FJmqe7zT9BBAFUtNaVPCcg6WNpfVp/ram93ExzZkm0Zk7r
-	 gp0/PsqWscF7KRvghYuXjCI3Sepz6A3bwef6piKoQnbSfuBDAVwOF9jzpATbtVgks0n5Z
-	 3QNBsqnLEovCQm1IJ2nOlLKMMIEe9lSpcF2iS2KRNeL9aGEY595DfKvHASHchBV12+zxd
-	 58XAJFrytgg1YLndn4rqdKmS4CxTCDUVq+9xG7DI506p6Gpe+GKkHtn8iMmMVPD8RJV1j
-	 6qxslQOpMUmGzc1pdpJNfLK8v66YLmInS1RJZ1h1cmt8Ah7KSYQiBte8IaDMDjhaheA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794268280;
+	h=Received:DKIM-Signature:From:To:Subject:Date:Message-ID:In-Reply-To:
+	 References:MIME-Version:Content-Type:Content-Transfer-Encoding;
+	bh=ojny3GXsnm0Ra2ohVZXS1/GltzxL9d5vHYkxIh98clU=;
+	b=q79QBctmE8g7f9UUKFlkPl5uDig8rRKzEgi2aZLKZInXYcbzwiEqrw9cf+GMUgZad9iF
+	 sj2rGm3r9peyQvJ0GW6VBpoQkJUdmJbkp44hnRUZ6kHKhpSCa0vhot2QB4mtzoRxy6EmQ
+	 hcX68yTejENna2vNMHc2r02HWhe7Z+WoUIpvOVRtFe/VTuutwwYRKmUkhZQVUpCTBW/bp
+	 WoOr4znM92VRmm/DC7R2Im0wO8TWvgaE0BZF+fJL4GLA2iryC+Mlnul9R/iqbstB50+e9
+	 rEcF+fGXrMQ+BFBaTlbbRDl1+h1jk5nm8o+7s4a6hFx74I/VYXrdRpFDkipP4CHiPlQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kJyHu9pq;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VxXDNdjA;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15315606A31C;
-	Mon,  9 Nov 2026 23:51:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6A5060A2601;
+	Mon,  9 Nov 2026 23:51:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kJyHu9pq
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8769B1F0089F;
-	Mon,  9 Nov 2026 23:51:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VxXDNdjA
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69C561F008A2;
+	Mon,  9 Nov 2026 23:51:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794268273;
-	bh=ORbE1mg5iTUjQH+mp5nFuaGXJutZvkHOuo1HTwX2iCQ=;
-	h=From:To:Subject:Date;
-	b=kJyHu9pqpyNnrTWPhd5ClHZBO3IWtIQk7D6ohle9hVkUfeP1xdtWXFjoULewL/dzZ
-	 /kqO2liuRG0cYxCtTcz5Y0gC1aOc/ZAzyoBjnMYLsx9JoLMGv2L6sROEeBRlaDR7Xd
-	 l1bbEIsUkwb2J5ABlxBiHgoAfw6kEMJmQIhQ0t7L16PsuHTtSXcwt4eh2q4Hfz7VhN
-	 xgQyhuDnSqaTu01DoOPGYTKhgP/F3vU1WAM5WQaI1amfVCng590FgzuUH6f/s3ucJ7
-	 E4LKM9Tuxmw+BGs6euxOlNgF+GrC2mveZf7/gF3+UFR1+xNeNBaM2W58XNogn1N5/K
-	 9BkFSjHeM/FMg==
+	s=k20260515; t=1794268279;
+	bh=ojny3GXsnm0Ra2ohVZXS1/GltzxL9d5vHYkxIh98clU=;
+	h=From:To:Subject:Date:In-Reply-To:References;
+	b=VxXDNdjA4AKWy+6M0ZAKo2BYcqeDlDiUrK6o+E3uLIreFU7JVVXQ4SN0sogbBTaLb
+	 4yqhLW8S1YJAj2hDeczXr5DIfAN3W1nMUdZAaoWAD+2wqFoE8DlJ2FFWfAnFHlGhgY
+	 C0E2SCEE7LcetmjuepUZu1SRB23JEiftkMqVOf1Lce1JAGaUSYu6g6OwycnaNmhcMh
+	 2k60lrPy6r36RBEM9A4t22Ea3dvASElMUSVdX8CD4xfGAa3yH0mHk6d3/PMCizQwLe
+	 z+NsDEBkg1C0aYG2o7XlyWybP3xIuAzjzO2IM8tF1sdMK2BE87G04vj0zYoNV8+SM4
+	 JdMKDPk88sdJw==
 From: Chris Mason <mason@kernel.org>
 To: mason@kernel.org,
 	tytso@mit.edu,
@@ -50,9 +50,11 @@ To: mason@kernel.org,
 	hch@lst.de,
 	linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org
-Subject: [PATCH v6 00/10] reflink and atomic write bugs
-Date: Mon, 09 Nov 2026 18:51:11 -0500
-Message-ID: <20261109235111.14129-1-mason@kernel.org>
+Subject: [PATCH v6 04/10] iomap: don't punch delalloc under a dirty EOF block
+Date: Mon, 09 Nov 2026 18:51:15 -0500
+Message-ID: <20261109235111.14129-5-mason@kernel.org>
+In-Reply-To: <20261109235111.14129-1-mason@kernel.org>
+References: <20261109235111.14129-1-mason@kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -65,44 +67,85 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Hi everyone,
+After a failed buffered write, writeback on XFS can write in place to
+the shared block that contains EOF, and corrupt the other file that
+shares it.
 
-This series did a few rounds privately, but looks ready for the list
-now.  Except for Christoph's patch, these were all found and fixed
-by an LLM.
+After a failed buffered write, iomap_write_delalloc_release() punches
+the delalloc reservation of the write, except under dirty folios, which
+still need it. It looks for dirty folios only up to i_size, and punches
+the rest unconditionally. But XFS rounds that punch down to a block
+boundary, so the block that contains EOF loses its COW fork reservation,
+and writeback goes to the shared block:
 
-The meat of the series is fixing reflink corner cases that incorrectly
-let you write into the source of a reflink.  LLMs also tripped over a
-few ways to use atomic writes to expose stale blocks on the drive, and a
-few races with realtime flag manipulations.
+    block size 4096, i_size 5000, reservation 4096 to 8192
+    searched for dirty folios:  4096 to 5000
+    punched unconditionally:    5000 to 8192
+    rounded to blocks by XFS:   4096 to 8192
 
-Carlos and Christoph ran these through fstests (thanks guys).
+The fix used here is to look for dirty folios up to the end of the block
+that contains EOF.
 
-Chris Mason (9):
-  xfs: don't skip the flush before shifting extents
-  xfs: flush the shifted range before changing the file
-  xfs: don't change the block map under a dirty folio
-  iomap: don't punch delalloc under a dirty EOF block
-  fs: validate atomic writes after O_APPEND and limits
-  xfs: recheck direct write alignment after write checks
-  xfs: test for reflink after the dio write checks
-  xfs: refuse fallocate racing with realtime flag changes
-  xfs: restart faults racing with realtime flag changes
+Fixes: f43dc4dc3eff ("iomap: buffered write failure should not truncate the page cache")
+Fixes: f6f91d290c8b ("xfs: punch delalloc extents from the COW fork for COW writes")
+Signed-off-by: Chris Mason <mason@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/iomap/buffered-io.c | 34 ++++++++++++++++++++++++++++++----
+ 1 file changed, 30 insertions(+), 4 deletions(-)
 
-Christoph Hellwig (1):
-  xfs: refuse writes to files racing with realtime inode flag changes
-
- fs/ext4/file.c         |   4 --
- fs/iomap/buffered-io.c |  34 ++++++++--
- fs/read_write.c        |  13 ++++
- fs/xfs/xfs_bmap_util.c |  19 +++++-
- fs/xfs/xfs_file.c      | 150 +++++++++++++++++++++++++++++++++--------
- fs/xfs/xfs_iomap.c     |  33 ++++++++-
- fs/xfs/xfs_reflink.c   |   2 +-
- 7 files changed, 215 insertions(+), 40 deletions(-)
-
-
-base-commit: 7475ea8b58616b33c04afb976cf0fbaad9dd63fb
---
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index d6e2f1ded5ca..d0980a7f27d1 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -1495,9 +1495,34 @@ static void iomap_write_delalloc_scan(struct inode *inode,
+  * mapping_seek_hole_data() will return it, and we will skip the punch because
+  * the folio is dirty. THis is incorrect - we always need to punch out delalloc
+  * beyond EOF in this case as writeback will never write back and covert that
+- * delalloc block beyond EOF. Hence we limit the cached data scan range to EOF,
+- * resulting in always punching out the range from the EOF to the end of the
+- * range the iomap spans.
++ * delalloc block beyond EOF. Hence we limit the cached data scan range, and
++ * always punch out the range from the end of the scan to the end of the range
++ * the iomap spans.
++ *
++ * The scan cannot simply end at EOF, because EOF is a byte offset and a
++ * delalloc reservation covers whole blocks. If EOF lies inside a block, it
++ * splits that block in two:
++ *
++ *	[block start, EOF)	File data. If it is dirty it will be written
++ *				back, so the block must keep its delalloc
++ *				backing.
++ *	[EOF, block end)	Beyond EOF. By the rule above, this would always
++ *				be punched out.
++ *
++ * Both parts share one reservation, and it cannot be split: a punch of a part
++ * of a block takes away the reservation for the whole block. If the scan ended
++ * at EOF, we would skip the punch for the first part because it is dirty, and
++ * then punch the second part, which takes the reservation away from under the
++ * dirty data in the first part. On XFS, writeback that has lost a COW fork
++ * reservation like this writes in place, over a block that is shared with
++ * another file.
++ *
++ * Hence we treat the EOF block as a whole, and let the cached data over it
++ * decide: the scan range is rounded up to the end of the block that EOF lies
++ * in. If the data over the EOF block is dirty, the scan moves the punch start
++ * past the block. If it is clean, the block is punched like any other block in
++ * the range. Only blocks that start at or beyond EOF are punched
++ * unconditionally. If EOF is block aligned, the round up changes nothing.
+  *
+  * Intervals are of the form [start_byte, end_byte) (i.e. open ended) because it
+  * matches the intervals returned by mapping_seek_hole_data(). i.e. SEEK_DATA
+@@ -1511,7 +1536,8 @@ void iomap_write_delalloc_release(struct inode *inode, loff_t start_byte,
+ 		iomap_punch_t punch)
+ {
+ 	loff_t punch_start_byte = start_byte;
+-	loff_t scan_end_byte = min(i_size_read(inode), end_byte);
++	loff_t scan_end_byte = min_t(u64, end_byte,
++			round_up((u64)i_size_read(inode), i_blocksize(inode)));
+ 
+ 	/*
+ 	 * The caller must hold invalidate_lock to avoid races with page faults
+-- 
 2.55.0
 
