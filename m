@@ -1,54 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.25
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794249879;
-	b=F3+MgPzFp9aUJq9AO8mCBAnIMIxkA9wlXo/RewcCWU596Xcg8VYOTo4HtXvBMcHsk4EY
-	 0i3eayOgpHe17S5MRnMWt0AdVZFAmwRoQRnJzrR0c4bXLfgm5nZA0pRVb/xubxyNsOP7E
-	 vjO66s1JM7ck014TZ4h0amyQn+NJv/PV8yMi99lPzFEW2ROV17s1m8wf6EpA+0rGmXXBJ
-	 F0/B140m53/yU8qoCWHos5/wMzNJ6iRKPMV+nV+kKsPROVVtot3GcBPh2hfUvILQC7zwt
-	 JBOLM+OG9/jA0ZScpswy094iWAjyG1yJ+X/CToneVypJrCGuixMdCsIW8kocMD9S5wg==
+	t=1794259360;
+	b=hRqpjRK2I8NR2oVF3UChMnQsuKOgo/+ZHzUGNZB3hG+k9KsKah2FcjZVSboN0D0GGXOk
+	 ZZNAb+gxVPq3gzhhUlWuY6vnMDBPR603TSDBWC7toMTReGRNAcUoNLJOkkRuiBDDkmxtn
+	 TH5l9BFP3E8g29EN84zcu8agfdPle7b20Jz35nA8f47w1vuxHXSKKJTn6rNNhZ1hMHvJP
+	 Jg2S7a+faeKIKa48Osk72PbJgxO30d2nqmsWp9zRWcuZ6zAJ/dcVVbhFzmL8PSMJo6bya
+	 fosMpMWzFRGg0Lt9kQFS0/Ao4K+WLan1uhWBJ+u8RJqwMHUu0KX/x/qD/BIDFqcT23Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794249879;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=Bwh8vGADWjPBmVfab76LRrb7I0TG/Y5xxN+WzXcgV8c=;
-	b=1rlCiRw1wTFUV/zIakGj06UE6TXmET0pWluaWIpD8jOwlFrXGxnfVe6nunsbIzfCrFTh
-	 G7lGaGkcfwVayM8jJPN/G217lPVzNbli+hmke1xoijkdkwo1xI4QEkNShKMsYz+E1YtJ0
-	 TyFfDf+2DScCUY0DEdafsU57PxIRDng+vi+NJVECAIk5lP+4ADJQbnD24j6SvlG74qZdi
-	 +uqciRv8YjfTuEhiP1ONHc5t/o4m9RJRbcF0zIiWPFbxmb/+N7x0i4oVybZ0U7qGjJYj6
-	 rYUJGhCD6pUkmCg/IUqsqpWTYqdkJuWzAmrMlBbMl+YKe4G5kkThocCt1hI4usi8NQQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794259360;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=VmmPcPYItsebb9mMOGyfQXCmYH44K+FyjGDQHy364M8=;
+	b=d6MRLlSZDWY/hXeku99fICr1OX1xH8Y6TRu5jfEaySLtL32SmRpcgLm+YQpzpJVZ3GtI
+	 yP1JSOap/UNAYVEejuxOniRFjYAFuPq+KnYq7TUtQw2o0YkFgm0FvZyiAwvcKNJOyNhIx
+	 Makcs87savCxCUDqEELyUjK2Ob4ckvj4hz3cTxeRf4v/F6a4huVG7d4YfNefryUW4hX7F
+	 mVCOGMh0hgJ26LHQQB8DPTrFcNv4T+RzG4dpV63FFEs0owgn+TLuRQ86jo4DgQvxE9cXM
+	 ffO2w+Km4QhyB9hZLSV45Kde+dTMievMaAHL00j+yLLEBozSZusvsXTfKScBwocCQ/w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=A6H3JcTC;
-	arc=none smtp.remote-ip=95.215.58.25
-Received: from mta1.migadu.com (out-25.mta1.migadu.com [95.215.58.25])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=inxSYfS+;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BC31606A321
-	for <linux-xfs@vger.kernel.org>; Mon,  9 Nov 2026 18:44:37 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4BC31606A321
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04E79606A31C;
+	Mon,  9 Nov 2026 21:22:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=A6H3JcTC
-X-Envelope-To: linux-xfs@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=eejodZC9+iYJaqetGqYUSu07t8YAd2/V+1t3zStwLwI=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1794249876; v=1; x=1794854676;
- b=A6H3JcTC5htqLiYhRXDZjfXACQRFaxlvUYQRreKY7EJX0jrkW6Js56RoUVL4F96nIoTG4x68
- HJDvpI/MVrOQSQHYut+E18rc9OeFYvDLnxKnlJQiiAmCGYjhIXAxbR6Rb1FgbGkYWPOKckztDZp
- N8vFbftLcph0V8HaTDKSD3LM=
-X-Envelope-To: linux-xfs@vger.kernel.org
-Received: by mta10.migadu.com with ESMTPS id 24141ff8b478b109;
-	Mon, 09 Nov 2026 18:44:35 +0000
-X-Mizu-Trace-ID: 24141ff8b478b109
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <4022d4f9-5e2e-45d1-b9b8-208c80f82ecf@linux.dev>
-Date: Mon, 9 Nov 2026 18:44:34 +0000
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=inxSYfS+
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 941D01F008A1;
+	Mon,  9 Nov 2026 21:22:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794259359;
+	bh=VmmPcPYItsebb9mMOGyfQXCmYH44K+FyjGDQHy364M8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=inxSYfS+teFi+rkdT4zveK5+NxxXxU7Gwm2jfBeWtn8X0ABqz8LLSL5uZ9j809dc7
+	 HxgJJ0H50tKopZN+xHrCwSONFOZXP4gwl9eHSV4MrIsVFrE5JgMHjYWIHaZtweJxXB
+	 Dp3pTMG2wEtGSGr24/PI3RIL2sMt7wNcCTiwWMOIjMH4iyN9zUTfLrFaL0hsUccRk+
+	 CCJFwUHbQboQNH3WM45CQiZvOMz0JVUaGFqCrYbvdk1m6CAGGd6uGzA9XwujgVuq8G
+	 4zlihCXJa0OGSYdw/g97MXi+rsx32iZujd7prYgiaggFDGc70epDh6SWpQ/owztvBV
+	 DEhP4w7boG7pw==
+Date: Tue, 10 Nov 2026 08:22:31 +1100
+From: Dave Chinner <dgc@kernel.org>
+To: Guikun Yang <yangguikun19@qq.com>
+Cc: Chandan Babu R <chandan.babu@oracle.com>,
+	"Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: xfs: XLOG_WAS_CONT_TRANS on a transaction with no buffered
+ regions reads ri_buf[-1] - null deref Oops during mount log recovery
+Message-ID: <avI5l1074Qgn-ypN@dread>
+References: <tencent_11C734248ADE0736CA2735F63B7064C76905@qq.com>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -58,104 +58,45 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/2] iomap: remove the atomic write length check in
- iomap_dio_bio_iter_one()
-To: Tal Zussman <tz2294@columbia.edu>, Jens Axboe <axboe@kernel.dk>,
- Christian Brauner <brauner@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, linux-block@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
- linux-fsdevel@vger.kernel.org
-References: <20261107-blkdev-atomic-bounce-v1-0-f66344262096@columbia.edu>
- <20261107-blkdev-atomic-bounce-v1-2-f66344262096@columbia.edu>
- <3fc46788-d86d-44c5-8606-385d96fede4d@linux.dev>
- <c27b9521-7c4f-41ff-88f8-55313b5f395c@columbia.edu>
-Content-Language: en-US
-From: John Garry <john.garry@linux.dev>
-In-Reply-To: <c27b9521-7c4f-41ff-88f8-55313b5f395c@columbia.edu>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <tencent_11C734248ADE0736CA2735F63B7064C76905@qq.com>
 
-On 11/9/26 18:34, Tal Zussman wrote:
+On Sat, Nov 07, 2026 at 10:00:00AM +0800, Guikun Yang wrote:
+> Hi,
 > 
+> Mounting an XFS volume whose log record after the transaction header
+> carries an operation header with the XLOG_WAS_CONT_TRANS flag panics
+> the kernel during log recovery - on a stock kernel, no sanitizer
+> configuration needed:
 > 
-> On 11/8/26 12:06 PM, John Garry wrote:
->> On 11/8/26 04:24, Tal Zussman wrote:
->>> bio_iov_iter_get_pages() and bio_iov_iter_bounce_write() now fail a
->>> REQ_ATOMIC bio that doesn't cover the whole iterator, so the bio here
->>> always covers iomap_length() and the check can't trigger. Remove the
->>> check.
->>>
->>> Suggested-by: John Garry <john.garry@linux.dev>
->>> Link: https://lore.kernel.org/all/82978d5c-3e08-48e9-bf0a-7913e1cd0507@linux.dev/
->>> Signed-off-by: Tal Zussman <tz2294@columbia.edu>
->>
->> Reviewed-by: John Garry <john.garry@linux.dev>
->>
-> 
-> Thanks!
-> 
->> This looks ok. But I am just thinking that a CoW-based atomic write does
->> not have the single bio restriction, so we don't need to fail the atomic
->> in this case. However, we should have consistent rules for iovec's
->> whether it's a block device or regular file for ext4 or xfs, so this
->> makes sense.
->>
->> thanks
->>
->> BTW, you could be a real hero and add an xfstests case for this also.
->>
-> 
-> What specifically would you want to see tested? I can do an atomic write with
-> a partially unmapped buffer, with and without stable writes, and check that it
-> fails and that nothing is written.
+>   BUG: unable to handle page fault for address: fffffffffffffff0
+>   #PF: supervisor read access in kernel mode
+>   Oops: Oops: 0000 [#1] SMP KASAN PTI
+>   RIP: xlog_recover_add_to_cont_trans+0xf9/0x460
+>    xlog_recovery_process_trans
+>    xlog_recover_process_ophdr
+>    xlog_recover_process_data
+>    xlog_recover_process
+>    xlog_do_recovery_pass
+>   Kernel panic - not syncing: Fatal exception
 
-Just something similar to the blktests case which you added.
+Please stop with all these bug reports about things we -already know
+are not validated- and -are already being fixed-.
 
-BTW, have you tested this partially-unmapped case for CoW-based atomics 
-on xfs? You can just do that by setting atomic_wr=0
+https://lore.kernel.org/linux-xfs/20261013060204.3138690-1-dgc@kernel.org/
 
-Thanks,
-John
+Please run all your tests and analysis on the log verification
+series that addresses all these problems, and find holes in that
+series that still need to be plugged.
 
-> 
->>> ---
->>>    fs/iomap/direct-io.c | 14 --------------
->>>    1 file changed, 14 deletions(-)
->>>
->>> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
->>> index ad041ac3252a..aca7cbaea4af 100644
->>> --- a/fs/iomap/direct-io.c
->>> +++ b/fs/iomap/direct-io.c
->>> @@ -370,15 +370,6 @@ static ssize_t iomap_dio_bio_iter_one(struct iomap_iter *iter,
->>>    		goto out_put_bio;
->>>    	ret = bio->bi_iter.bi_size;
->>>    
->>> -	/*
->>> -	 * An atomic write bio must cover the complete length.  If it doesn't,
->>> -	 * error out.
->>> -	 */
->>> -	if ((op & REQ_ATOMIC) && WARN_ON_ONCE(ret != iomap_length(iter))) {
->>> -		ret = -EINVAL;
->>> -		goto out_bio_release_pages;
->>> -	}
->>> -
->>>    	if (dio->flags & IOMAP_DIO_WRITE)
->>>    		task_io_account_write(ret);
->>>    	else if ((dio->flags & IOMAP_DIO_USER_BACKED) &&
->>> @@ -393,11 +384,6 @@ static ssize_t iomap_dio_bio_iter_one(struct iomap_iter *iter,
->>>    	iomap_dio_submit_bio(iter, dio, bio, pos);
->>>    	return ret;
->>>    
->>> -out_bio_release_pages:
->>> -	if (dio->flags & IOMAP_DIO_BOUNCE)
->>> -		bio_free_folios(bio);
->>> -	else
->>> -		bio_release_pages(bio, false);
->>>    out_put_bio:
->>>    	bio_put(bio);
->>>    	return ret;
->>>
->>
-> 
+Do *not waste our time* reporting known problems that we are
+actively fixing. Make yourself and your LLM tokens useful by
+creating fstests reporducers for all the issues and then -testing
+the proposed fixes- and giving feedback on the fixes that already
+exist.
 
+-Dave.
+-- 
+Dave Chinner
+dgc@kernel.org
