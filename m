@@ -1,70 +1,73 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=162.62.57.252
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=162.62.58.216
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794245569;
-	b=06oWzhNSIgwbuSrvZGFN4K8HLxTj2pLix2jh07Oo4DI4eHZYLSEi2XING6ZNe/ulMsOt
-	 SJH0Ia9xUJEzjCyCzvro1cBJylFRfP5xinns/9fzS8hoB1XQkwipaaYykfC2p94tKlpro
-	 XISvg+tTelqiFINcw7HkEFMlCihuF+DgpP+0V9xC80FsupINEzSyUjwdRV6xmVt+7ySi+
-	 nQM4F4r3n5CIX/wwjrjRESkC445d/hh+EUgq52bSVVlSFb5Pis+rvwMyyT69IdakfvUbD
-	 joT+0XLpsaTJPFtWbLVLNBrkH9WBYPdtwz1gzRAc0QxSVaDfFhSscpBCjLjGFT+mAiw==
+	t=1794245608;
+	b=aPQc398+b5d8dJUjPD5JPCcH3RIcXJHcbP5mwe904R+i54XUWz7G1IwIq9c2IN7an72L
+	 yxLdPV5JlIQg0AB4/J1Hc3uFRX1UwGA1aaWOVuDxrPgsSaX8K3XFtogvIy81yWwRIqymZ
+	 v74i7gmZAwuthCpiquTNZgh7qRYozaOlaa0iqryZzeUdNxlOvPLJf6UiG1JyvAVvMWY+S
+	 C5wURUEepjdep0LaJ0JCoanRqdKHMAP59koP9gl6twURX4FGa/cxXnjuKDo8EPjEHP1l0
+	 omzuGZIGcc7yJ5VltnKnbERcv/36A7JMlLJuZvqzuI9KQfdK+VlKZLQ7UC33YnDdGPw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794245569;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794245608;
 	h=DMARC-Filter:DKIM-Signature:Received:X-QQ-mid:Message-ID:
 	 X-QQ-XMAILINFO:X-QQ-XMRINFO:From:To:Cc:Subject:Date:X-OQ-MSGID:
 	 MIME-Version:Content-Type:Content-Transfer-Encoding;
-	bh=tdN3CeEg68uIJzhvzT/ph7W8qSxkZkgZnCBjalX1+ro=;
-	b=raCNwBZM8pkroMlLyHcgbdo5xlSRiNLUoqvesgrWyzyOmDzyy5ypKhneeU5jseNtmsuY
-	 NQZJEFnAElWXo2wwe3tHjuRIfb9MunBG2lXV6Qoo3WaWCGlJlmEhbfP/2mNsGyZfo7qH2
-	 qIV7x+XCWkZvLiVb3nnLNq3OfkjNDtdwJwCchsqsBnv9k9aHN4JxzaJBlc6FgpLSpChC/
-	 j7Z6VfwLAb66TLb2xoWjd4uqIvVSmCe2NEY7hWcsBSgPFNKGd6pUs5RPFCDkpkaEgpBbA
-	 55b2T/l07sx3yyWsTtGg0Ii5EXmpa/lsmU2zsZi8vZ9jspgcT0NKmWZTTrHcVgVJ83A==
+	bh=dUKIJ/XyzMoGqH+elSoxlwUX6nrAsxgspguzZjb2vhk=;
+	b=a2vx5WxmH2X96uPqOPBUUwQpY4Nq5wkXs4bpJYcb+77TIHBUzR5r2oF/3Pho1sJdv27d
+	 1+Twb5M4fIqlpFmtw4wOgx3r1kyG7FuQodwSh4pTCkTWI+0xZ97WHk2tNbkeEb7ZHubdo
+	 oB8ZSD52yYQkz8Mr56miEf010i55+21fuPpuY4hKmz4CJFu41EqGVK63tSMN1cupxIptk
+	 ppNdMdeprI99IDN6cFP7SyPKtcvVsympz7O5p/LB04OaKcr/JT00FGUKRLg41CPehIvTD
+	 gadG61KwEKhGNi5qk3iMuLBAO11qJrXk9daR7ftXStJ4A1EtpLBa+LDo1nzsRaDCkQg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=qq.com;
 	spf=pass smtp.mailfrom=qq.com;
-	dkim=pass header.d=qq.com header.i=@qq.com header.a=rsa-sha256 header.s=s201512 header.b=yon9H9XH;
-	arc=none smtp.remote-ip=162.62.57.252
-Received: from out162-62-57-252.mail.qq.com (out162-62-57-252.mail.qq.com [162.62.57.252])
+	dkim=pass header.d=qq.com header.i=@qq.com header.a=rsa-sha256 header.s=s201512 header.b=qHnCBDEa;
+	arc=none smtp.remote-ip=162.62.58.216
+Received: from out162-62-58-216.mail.qq.com (out162-62-58-216.mail.qq.com [162.62.58.216])
 	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EAE4606A331
-	for <linux-xfs@vger.kernel.org>; Mon,  9 Nov 2026 17:32:46 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2EAE4606A331
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0F20606A321;
+	Mon,  9 Nov 2026 17:33:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A0F20606A321
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.a=rsa-sha256 header.s=s201512 header.b=yon9H9XH
+	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.a=rsa-sha256 header.s=s201512 header.b=qHnCBDEa
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
-	t=1794245563; bh=tdN3CeEg68uIJzhvzT/ph7W8qSxkZkgZnCBjalX1+ro=;
+	t=1794245602; bh=dUKIJ/XyzMoGqH+elSoxlwUX6nrAsxgspguzZjb2vhk=;
 	h=From:To:Cc:Subject:Date;
-	b=yon9H9XHOWgOU32Ka6/7O4dwu7CWyVFmauGNYpsflanCMiJ3spPfVg3yxiAostBRk
-	 sy0cWLQg7/wMgrku+BbpELp7gPtd3F4zCdjuS4ptGKmo0kU6CMqTSN67tV6KxhPzRb
-	 n8lGcvKoahAgVyj9nxsZQxINP7yIszjD5MrGfQwQ=
+	b=qHnCBDEaAMLH7Q8XddFhi6oOved6PquxyDIUwl8+9AIWoqByFUcFMZmAHaRWSjKdA
+	 fvzy5cYzk3vXPTjkMDwLfoqMyu3tAwwblKNMj2jctCSV7GR0cJnTGhlr8dRKNW4d91
+	 Y/czNTh1lvM49f7325fqoP3kea+a4RlNkt+urZCs=
 Received: from [172.18.4.77] ([202.113.185.209])
-	by newxmesmtplogicsvrsza53-0.qq.com (NewEsmtp) with SMTP
-	id 829A0ED6; Tue, 10 Nov 2026 01:32:41 +0800
-X-QQ-mid: xmsmtpt1794245561tl4qf4eo7
-Message-ID: <tencent_C48E4451F8984465A7BA7D338D003925980A@qq.com>
-X-QQ-XMAILINFO: NwU6Bou9okj/iuWBvmoGAcHMc4pKxD3DIEL12NOOWeM9caeA9vCLLFxvTPMLJb
-	 cNKEzefFA1yJe4794gWMEupLKqstSDmI2c1/rwIb/Y4xcSQlT3oTE5tHqwM26ACNHPTScBfrs2Ai
-	 zf+juPHBIPY3qy/L79+5RUlgm+jE7XYjnxJZeDbaX5vBDS8EUGR1SccxGgzzrG7lqF5on4fXxNCx
-	 tEh8cNApGM3iAAMdjkQdnXMxcVtfb8scuC/nhGLbwQt33BdeZsgsQwjOr1r2K51ht8WZ40GEDTTi
-	 Xsr/inzqv32L6RzDEH/7jZstDM4oTAt06uVAKirMRQx+dHXo42LcCOK0jGr+9WaZUTPfDccH4RRI
-	 M9XRX/4G76uUSkvMIpdyvuKLM7fyQEk9so3heqqCOcVzTYPm2vpE7GGn6E6tdhGE9myWgFDNJTk6
-	 yMLqc9Lrti00+/X5bUpBG/tQHS99ewYSZolXd67nSI7uS1EtIsDrQvWYxEnAKTwmU/FQm4oiWctn
-	 5sER4lN2p2Y6iHA3ILn43tl+LoOTje3FU75h7CyMir/JJfnleLTRgLzfm5OFhNQC8vpSspc4D2B6
-	 scTlm8EsD9D8bbIbA/snuVlAcypPESDypZ73BdPs+fZD/71mIovxjaNkfuQTFsKYgnT2O6bWhews
-	 CO0h92HM69nAeD4gzIQcdUFH283EJLbgTSw5Nlnokvs5mNUdUPtiEBMFRKfp6u0JrRrf1MLR8g8V
-	 A0MgcjIPFUsxdoPSo8xtErpO5SoC30vja+cxFEuT5tAKs8+aPGzeiARKn1sH+pUE100RnEaAo+AM
-	 bKjV9nNV2L5cbfT170sfYS2rXvqGsuENzUv9KbSyZyugSEQzLX87FBLzLCMm4bEr/dmkGajwOc65
-	 hHJvm5QkBdMuccazBQ/rFhT+66LeUBAWI1x1gDD/3gfBCxLpQLgD0CodfCXH14Nb2UgviZGaSROU
-	 Horu6UN9EdJphNFTsn46eRlNrp/TYAOknDRKF0G9fNY9FLh7940vpRe9dF8s8jCg7HvyAqR+Lwsq
-	 t9/W0K/eUh7JdnMNF0l1/SFZBoIKQJFp1ty09p31OFo/SdCPe7Foubaj0FHCc=
-X-QQ-XMRINFO: NS+P29fieYNwqS3WCnRCOn9D1NpZuCnCRA==
+	by newxmesmtplogicsvrszc43-0.qq.com (NewEsmtp) with SMTP
+	id 854B44ED; Tue, 10 Nov 2026 01:33:20 +0800
+X-QQ-mid: xmsmtpt1794245600t9mvu9umj
+Message-ID: <tencent_184425A5E27EBF8CC03B3D988647BDFA5C0A@qq.com>
+X-QQ-XMAILINFO: OeJ9zRfntlNP6oALGb+HWo7FwJX7ssaY9/P9tD1Q1dyMM789M2YlwG88Lst9FJ
+	 b5qrfnGB8RoTi+7j/o4OqE/r5WMMW8GiS+wzIs+yzjjKdMN1gA6U0qeZ/SomCtN8iPWhD0pLKPwf
+	 SM/rwT8v4+rutNMzJhR2Qt8ogzkiew5BFfq9ezc+vv53GTqIMnvC2CyVAH7lzDfes3QmfCrcejqU
+	 FKKHj/TvX9v47ZugT9bsOKZ9mRLpmVj6V34gGRP8/DV36dE0wvh6NKUs80TRPv2h1uSSZEtRfs7r
+	 z9KhJZbd4KSY1a308Kd2/KqAywBfBZ1rWgyHU+D1fLXlG9kWEv2NwmCggh/C2PyZeMG8J5T+VA65
+	 IhNHxw30o/wnAL25DpCaFtf674ehv9KdKzJpfRJIaKbM4a1uidHK/YDEewGvKSqX1/240FaPIWBL
+	 7G3z5KQEyIRSXB/IbVGHc7/RRt7XeSuFcCBVk57t0JIIguQpMpyi6QJ+57GlBVkcvRJH2y6MQTwu
+	 Wwc23VF6i3dacbvzKRSIdKPo3wziPz4asscfJILB0xUNFsP5Wad9AINiw4ZhKkgDZxhX8VKCUh2Z
+	 0spjsNf6IInzo5aJSL3as/e3XYAKPDoTZouC+6XjcSKd3RMCorncUPo6UoUtuUzEEvinE2egC1Zb
+	 23lVgX/lMS4hLmxBawtbWLsYIn2ComnHjW7uRnZyBBJSME6I3oGllETc4zDpqVgWGoRR6fGcP69K
+	 GFlIWrT/Nq0COIjHMSQ/nS7SNrVJHZO9diiutoTbQfWdbd1gvwESQvlnCD8vAFN8pQp0KS3sg1WE
+	 mFTm2+/U0cgdthj+GMRnlsLC0TLCDGdCTaYc9lsJRk9R8s4iWREzXhSqre8vfVW6qI27Vo8RWwbb
+	 boIDFykhpO9tztjxPywoHURtukuIG/Z1O+47WQRRHAXl7++nFiHTel08PdCO6U1+jB7lw2YYpN01
+	 U4BlpvIbwbGyMdjrnJl7mY9LipD/MqZ3p0Lxt3NG/V62F8zWfST1s+ssrnCBuovBulkyBuu+NE9P
+	 JF5wqtO+ojeToxgtuh7Zs66UhkWxsNxlNQyJLhSMzXYZ79zGGrTKtv3Sh2MBSSJ+Jb10g0ReodjQ
+	 nFVTlq0j8y2uUd92nRJLoOL4XkifOgEG3p8fkdAsK4TqHw/WHrOg2QPXx3Dg==
+X-QQ-XMRINFO: MSVp+SPm3vtSI1QTLgDHQqIV1w2oNKDqfg==
 From: Guikun Yang <yangguikun19@qq.com>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-Subject: [PATCH] xfs: reject a continuation op with no buffered region in log
-Date: Tue, 10 Nov 2026 20:00:00 +0800
-X-OQ-MSGID: <patch-xfs-wascont-20261110@qq.com>
+ linux-kernel@vger.kernel.org
+Subject:
+ [PATCH] xfs: reject a continuation op with no buffered region in log recovery
+Date: Tue, 10 Nov 2026 21:00:00 +0800
+X-OQ-MSGID: <patch-xfs-wascont-v2-20261110@qq.com>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -146,4 +149,8 @@ index 1111111..2222222 100644
  	old_len = item->ri_buf[item->ri_cnt-1].iov_len;
 --
 2.43.0
+
+Resend note: the first posting went out with a truncated Subject line and
+without linux-kernel on Cc - a defect in the tooling that sent it, no
+content changed.
 
