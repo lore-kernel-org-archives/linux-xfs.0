@@ -1,54 +1,54 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794272221;
-	b=ud1gEL1v6REzGbwuohkbrvnpeKGMSCkU8Ynliwd1KHx9kvk6nBjOrviQp1fbC7nNfxQH
-	 fZUmJg59vb/RLsSGuVIHhvZbe0hSI5Wda6mPyziBk33E37mUeLiNcihIWQG3B/g6J/+W2
-	 5B2KKxUx5y1OqHTHDUmPvm5SMbXL917fTlaBrSdBvNqGulXbyfpETi2B9wWx9uzahXEfK
-	 mkP1Nmw/GX3Rzx14w4eFfiFFqqoAysVNP7fkFVYSUy/cK1r/0nMCBELnVNf4q6trc4wED
-	 McWmjPwlcKubixFF9Yw2WNec3vz9/YuGwuWv4vbZZvwwOAK/BrVuk2KXPotJoEdQsnQ==
+	t=1794272223;
+	b=P/qeWzQ9ZpWJdg7F4HxH6NEgyS26jMTUzF9Gy94+sIESafb3vaazSEpxck6zC9AM7SS0
+	 IcLftshrLEJm4nAb1PlZliEvO6bZ5lqZ64bLf2od+wBqbDyxKmErtkgtEN65GqmZcPkYf
+	 nI2O0Px6Uwc58qTea6A1drKq9jOCm5+UJGruSlOLLTH/D7fLQmG03iKLmNLn6sfLsMbgy
+	 jqD80y0dLIlrvdpao9upLKLX6jB1S1N1utmZ5q7HXD5VRtOn+xxvnxHVN9DxKyz5102Pd
+	 aQNgbHi8S56s6JBEHuT8uYpnExt5eOq8ZnZcEgui35vto/s+l52YrFhRRlmHqChYynw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794272221;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794272223;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 Reply-To:MIME-Version:X-Patchwork-Hint:X-stable:
 	 Content-Transfer-Encoding;
-	bh=FdkwsRqMBlQ3UHAxOUJUruWWkoEH+0K+hgPgpwyEvcs=;
-	b=L1b4yiSV9RH/zylMd5pdAC3RwyHf0qyzVCmlypM2CCCNAWIRYc74ZbKhqntDOdxNuxUD
-	 ABZv3DObHui09q2Y4+vIZQ2BuPAxNkC0XDFqJZtJdomZB2Br4mKpYndGYkRel8mhywIkT
-	 RgOarmXKhbdkGo5ayEerwi5jev/rVuIo5roXcX2CZXcvL9nOouhqjVcGs7+N2dRu4Dwgn
-	 r2XiK4286L0etUtfShDHdj0jOmzkdQ+UNMyg2znIBvE+jopiBv8guU0vTs72nSVZXqPbP
-	 wEEjPl6ycKZXEm3kRY99AwaMFhA7Xj8Aa/+Qf9PD+zolInMHvvbWENqCLvj991O2otA==
+	bh=czzffEoyv+pyBw23/HoL/xXb8koPHhL+M0hkSdrd1N0=;
+	b=yaYQ6c+SSBnGEpO9ohDrixG/nTAcad9f22wCQdQEedAZbLxitW6HnoXo0/ip7HIPRxvm
+	 mNm/gj1D16rxPLRSCerPzuKZA+xj7QLkly2Dbv6EqHkW1+9tIkWv0lNH2VpqmmT6kLzlH
+	 n3T4CESWNMkM7HXDcWTYynzefXc9EkbtZT4GhaU+IRNjZfHgk8dbpDYd34rbhP4rGIVBI
+	 RsheM2l5rQdBAV6w8C7omaMmxcAivRZOjgdChtTp2ApEy9aAw95yUNeuhvuCGYLTo6ORZ
+	 +8QZNM2j6FGm17GsDFWfLztz+zK6qMvtfj/QEhiEUUZcjsR2V5lPgqdYglt7JfUqawQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Xap3Idbk;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bhwFEsXt;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B02CF606A31C;
-	Tue, 10 Nov 2026 00:57:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E255E606A31C;
+	Tue, 10 Nov 2026 00:57:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Xap3Idbk
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B16051F008A1;
-	Tue, 10 Nov 2026 00:56:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bhwFEsXt
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 28E641F008A1;
+	Tue, 10 Nov 2026 00:57:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794272220;
-	bh=FdkwsRqMBlQ3UHAxOUJUruWWkoEH+0K+hgPgpwyEvcs=;
+	s=k20260515; t=1794272222;
+	bh=czzffEoyv+pyBw23/HoL/xXb8koPHhL+M0hkSdrd1N0=;
 	h=From:To:Cc:Subject:Date:Reply-To;
-	b=Xap3IdbkzvUyb/ETysEwJZrF9n1SWvExJoyV6ertSRvTId99PmeXbb5SmnjbdQ+CE
-	 5JtPz5DQqSnUK50bBr6dYz4JSQrAEhKe8iFTtnaEZx7ltZ7HJCJot4ffrdfMsKHXoA
-	 TIRH05GSeH787K8T8nZQZ2pIAi5kO12q3wIfx7BSjl6iuuCgLr+iCA84O/uAUcJgYO
-	 Q9pzRrsB0G/OpY8icLd5aRKQ9HbHKQVhQ7czEUcktvCbfz/Q0vzbKCvrmR34x2aXjM
-	 OcK/CWx2KhXb11rzhF+q1mPrKkEtIH4BvfXMKoZe8vL2s4l1hTXVDbWrykaW3/Vc8x
-	 aBWQq4s7DOnGA==
+	b=bhwFEsXtQJREwBad3TBRwOkuN/Lcm5yBnAJOXG9oiKcFIiRkc8mWlMORjbMsMNr6e
+	 FsHUIqX1728HPcVcPEpTvyEnX0wjS8Xg+Bo4wndzi+xR/O4web5Lro/hz3epyR14QH
+	 D8wlZLoxXYW68ljb1aJL/r03WA0CDMlvXBZ0HhvP+HY22jTIjWILRLmqRZAcmAUH2B
+	 gT9rQQAiwxHhu/Z2MqNvX/aR5MBBbc068facYkPM7Xe/+jB2fV9qnooxhQnMuESorM
+	 35DzR5YtEZs1YiWHiqQfBNzZAtYRV3VLErVSIXvji5iC28P7qD1NliBKdak/0/vG+8
+	 o5I1VYE5T4gHg==
 From: Sasha Levin <sashal@kernel.org>
 To: stable-commits@vger.kernel.org,
-	skibletz@gmail.com
+	daejun7.park@samsung.com
 Cc: Amir Goldstein <amir73il@gmail.com>,
 	"Darrick J. Wong" <djwong@kernel.org>,
 	linux-xfs@vger.kernel.org
-Subject: Patch "xfs: fix wrong compat fields in xfs_ioctl32_bstat_copyin()" has been added to the 5.10-stable tree
-Date: Mon,  9 Nov 2026 19:56:58 -0500
-Message-ID: <20261110005658.3549108-1-sashal@kernel.org>
+Subject: Patch "xfs: clamp a pNFS LAYOUTCOMMIT extent before computing its end" has been added to the 5.10-stable tree
+Date: Mon,  9 Nov 2026 19:57:00 -0500
+Message-ID: <20261110005701.3549153-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 Reply-To: stable@vger.kernel.org
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -66,13 +66,13 @@ Content-Transfer-Encoding: 8bit
 
 This is a note to let you know that I've just added the patch titled
 
-    xfs: fix wrong compat fields in xfs_ioctl32_bstat_copyin()
+    xfs: clamp a pNFS LAYOUTCOMMIT extent before computing its end
 
 to the 5.10-stable tree which can be found at:
     http://www.kernel.org/git/?p=linux/kernel/git/stable/stable-queue.git;a=summary
 
 The filename of the patch is:
-     xfs-fix-wrong-compat-fields-in-xfs_ioctl32_bstat_cop.patch
+     xfs-clamp-a-pnfs-layoutcommit-extent-before-computin.patch
 and it can be found in the queue-5.10 subdirectory.
 
 If you, or anyone else, feels it should not be added to the stable tree,
@@ -80,36 +80,41 @@ please let <stable@vger.kernel.org> know about it.
 
 
 
-commit f8f935ff5cbbcb5b5a451ec172f0c085fa24d62c
-Author: Reid Downing <skibletz@gmail.com>
-Date:   Tue Oct 27 12:17:48 2026 -0400
+commit 860a13c85772ea79dff4b5d0cb5c0a0c1d37c983
+Author: Daejun Park <daejun7.park@samsung.com>
+Date:   Thu Oct 29 11:23:01 2026 +0900
 
-    xfs: fix wrong compat fields in xfs_ioctl32_bstat_copyin()
+    xfs: clamp a pNFS LAYOUTCOMMIT extent before computing its end
     
-    [ Upstream commit b7eb276a39b14e685c2fe578f8ac22fc48ff9e6c ]
+    [ Upstream commit d8c2bc88460f89e543ab3af622fc8f34c7011d71 ]
     
-    bs_blocks and bs_xflags were both read from bstat32->bs_size.
-    Read each one from its own field instead.
+    xfs_fs_commit_blocks() adds the client's length to the offset before it
+    clamps the end to the file size. A large length wraps the sum and
+    reaches xfs_iomap_write_unwritten() unclamped. With the previous two
+    patches the LAYOUTCOMMIT then fails with -EIO and converts nothing.
     
-    Fixes: e94fc4a43e5c39 ("[XFS] Add compat handlers for swapext ioctl")
-    Cc: stable@vger.kernel.org # v2.6.29
-    Signed-off-by: Reid Downing <skibletz@gmail.com>
-    Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+    Clamp the length first.
+    
+    Fixes: 527851124d10 ("xfs: implement pNFS export operations")
+    Cc: stable@vger.kernel.org
+    Signed-off-by: Daejun Park <daejun7.park@samsung.com>
+    Reviewed-by: Christoph Hellwig <hch@lst.de>
+    Reviewed-by: Pankaj Raghav <p.raghav@samsung.com>
     Signed-off-by: Carlos Maiolino <cem@kernel.org>
     Signed-off-by: Sasha Levin <sashal@kernel.org>
 
-diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-index c1771e7281177..62d62c2a9fc07 100644
---- a/fs/xfs/xfs_ioctl32.c
-+++ b/fs/xfs/xfs_ioctl32.c
-@@ -136,8 +136,8 @@ xfs_ioctl32_bstat_copyin(
- 	    xfs_ioctl32_bstime_copyin(&bstat->bs_atime, &bstat32->bs_atime) ||
- 	    xfs_ioctl32_bstime_copyin(&bstat->bs_mtime, &bstat32->bs_mtime) ||
- 	    xfs_ioctl32_bstime_copyin(&bstat->bs_ctime, &bstat32->bs_ctime) ||
--	    get_user(bstat->bs_blocks,	&bstat32->bs_size)	||
--	    get_user(bstat->bs_xflags,	&bstat32->bs_size)	||
-+	    get_user(bstat->bs_blocks,	&bstat32->bs_blocks)	||
-+	    get_user(bstat->bs_xflags,	&bstat32->bs_xflags)	||
- 	    get_user(bstat->bs_extsize,	&bstat32->bs_extsize)	||
- 	    get_user(bstat->bs_extents,	&bstat32->bs_extents)	||
- 	    get_user(bstat->bs_gen,	&bstat32->bs_gen)	||
+diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
+index 053b99929f835..8b82249b48110 100644
+--- a/fs/xfs/xfs_pnfs.c
++++ b/fs/xfs/xfs_pnfs.c
+@@ -250,9 +250,7 @@ xfs_fs_commit_blocks(
+ 		if (start > size)
+ 			continue;
+ 
+-		end = start + maps[i].length;
+-		if (end > size)
+-			end = size;
++		end = start + min_t(u64, maps[i].length, size - start);
+ 
+ 		length = end - start;
+ 		if (!length)
