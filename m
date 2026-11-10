@@ -1,54 +1,54 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794272018;
-	b=xHf90ysfU69JF2LYnlcRK4I3209Xd9RNOLCi+oBYcHLo+pkzu60OzgXB2OPBvlyTdHRN
-	 C4erUoGpKaIzNcLLtvVD9n/d3cfZiWGpQ6Hzq2OPvxtA2Vn180oogA8LggmJQFa2bC3iO
-	 oIFn838BHqkA8leNP8XcAOaIyu1ilZ8ITwqD2NKo0Aszge4pTIRTMR8ws18lQ706Duh29
-	 3OfyywJuYLNkOGROYR2WuZzAx2Cia7q4hIIvWbAdmqUZeW6iOlW503f6FS2OIhb3rQ2Mn
-	 6JXlkR/tmm209fAJ6Mp7UaD91p2ynkt7iXoWfjZRuxP0ua2poPiVpatE6O+ZbhFHq0A==
+	t=1794272206;
+	b=CVGrEIAGZ6beu3CZ4ToRzf9YtggO/D0JrIvkkHW4HbEI5lueOeT1Iz4A7hMFRR1Qe5Hj
+	 0RKJmkykwH+zSwAQujqq8B2Mfw2rlFFEEq9Yfqt4M/ZADZstlgdV1+GVDc0vOn6aGDjI7
+	 7zE+LWhHhdLFYzPnWabmqYa2vD5SbuPpsIc+/kUebuA+bCle3/U9F1dvaCITWH9BzKd7k
+	 pDlpvTSLjvjffHOklX2DZ++/9T97neoX/f8FkukLHKue2YQ//1fVPzYXFabDQCRDdnxkL
+	 I1pudxHeYClWDcWkax557GG9wgeWgYEJ1IErEmE/m2p2WHSLPGcMq9SbLQuC7OK6S7g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794272018;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794272206;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 Reply-To:MIME-Version:X-Patchwork-Hint:X-stable:
 	 Content-Transfer-Encoding;
-	bh=ARbtvfYyIL6KheK5ncYw37TfHfh/PkTmfzy22/gJ5jI=;
-	b=NPMHgnxYuvFsLtAD36gJ9Pq+bWLDN06Ud5sDlJL6GCpvE2MlPsIcXfcGfD7ZPz9kfjdt
-	 NyVizZBw7fKgMcVMkpHLq6mVCTf2FQNySb/cqs5+D62eYdKMDdD9I9ROxRw0GxzgsI2DX
-	 bRW4Gi9QrYuMGvPSWFdn4vy4puaNRrrh5D9wWwkusDjZjLx9aiyY/sj78o80Z3zuqxMtO
-	 91cjjXztK0M0vrhh0CIvtzIPaEQtevRl7cal+Q04S4SMyxaD80GhcLNtFWUJlttAVy1N0
-	 Zrp4JyGVyngXBEipOc1vem9DIymrMcHUohMjnWGamcE5ICFI0ksJhGXsy6F/5VOrKmw==
+	bh=dQx5RQJacGC9sacblpTQX3vu8RF+Tc4ZaB6TWdbyu2E=;
+	b=M8DLPMtdffj8wSx3z2nVFYZQI7/tiIglv2KdiQMJ3pSDsaSqbVX7d+xfkg6vxdKEPISf
+	 Oy6fYHVrM54acpTMFlJ3dmQRfjxMnBKeOiZ57k+dcQNKoY+bKOd+vY0WU+OC5rUfIisQX
+	 F7CLtM7gZX2S0SyCHtsNnu0S1xLR0D8WzIX8lnU/qJ/VBdzk80sh7EMY5SRkX9GS7lqke
+	 aAcStFFXPvlZ2DkjYLbcfaaVS8orlNuHBx1JHTR2HyfyyohaSmutrhIhcaKx9T2uIHIU4
+	 x9TOHCGZ1qTw0FvPJohvX2bkyPjz0Or19LsMj9ESAzOlFlGZgmaLr0PGsCd+oQYpd3Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=g6YB7Tp0;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WejqS+bf;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11591606A321;
-	Tue, 10 Nov 2026 00:53:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57B1E606A31C;
+	Tue, 10 Nov 2026 00:56:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=g6YB7Tp0
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 420FB1F0089F;
-	Tue, 10 Nov 2026 00:53:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WejqS+bf
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8B36B1F0089F;
+	Tue, 10 Nov 2026 00:56:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794272017;
-	bh=ARbtvfYyIL6KheK5ncYw37TfHfh/PkTmfzy22/gJ5jI=;
+	s=k20260515; t=1794272206;
+	bh=dQx5RQJacGC9sacblpTQX3vu8RF+Tc4ZaB6TWdbyu2E=;
 	h=From:To:Cc:Subject:Date:Reply-To;
-	b=g6YB7Tp0DJD7vJNs/72VOl1xYFH7aFuFoLp60tG2PHxF1JubERqyGgIs0CWpLz6BT
-	 /7gVtC2lwSUB85EyErDWbQouo8YjfgvLf6/h3zcF2PZ2gZr10XLiTCGbCppGP4CusC
-	 T/UhjdB5yLTJhXOpsg0CI6Y766FKBKYaYhGL4gI8ofAKpwBLJgsTvUBCw0DgGz/nce
-	 9dZpvHTqCy4OpjwpMaENsiseeNPOgWCGmHwTDirSPKGMRZ85hpQ2Kb4ardulJVBqDM
-	 S1XYmWYpZulHowKAFrHFtL7wjJtiyswuVeuGiIhr2dwXhtMJU1gF/h+3WbnbO4oAXl
-	 GX7qaburriX1w==
+	b=WejqS+bfdPT5gay45bmf3q2u4qH4XlAKN5OdDwlbB/QyoCw3bz3xzWIlJ5/OCZ4KQ
+	 iE3QPOMHhyKsVxbGeQ1QlozELUuJDN41P+f13Lamlbnptez4lum79Ijs9j3ejggw26
+	 qBjuTr8XWOf1spipLOawlpwItaRkjTMzjojzJyw0jRSPgl9O8OIN7qY04r0qHNRB9D
+	 nPo7xJ8asmb8nVmIYOjRJWcIMi3HFRyUH/kkv3YbpG9e8851Nx5nPqyl0tuRN2qND3
+	 kZHDNFGE1k0fa2VhFT1WkPbMHBbHsAPai4tzFOPrkpI6o9bzF+mvLj3anpLb6ISGHv
+	 s2hocszfA5OIw==
 From: Sasha Levin <sashal@kernel.org>
 To: stable-commits@vger.kernel.org,
-	daejun7.park@samsung.com
+	jianyungao89@gmail.com
 Cc: Amir Goldstein <amir73il@gmail.com>,
 	"Darrick J. Wong" <djwong@kernel.org>,
 	linux-xfs@vger.kernel.org
-Subject: Patch "xfs: clamp the pNFS layout range to the maximum file size" has been added to the 5.15-stable tree
-Date: Mon,  9 Nov 2026 19:53:35 -0500
-Message-ID: <20261110005336.3544596-1-sashal@kernel.org>
+Subject: Patch "xfs: fix temporary cursor leak in btree shift corruption paths" has been added to the 5.10-stable tree
+Date: Mon,  9 Nov 2026 19:56:44 -0500
+Message-ID: <20261110005644.3548844-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 Reply-To: stable@vger.kernel.org
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -66,61 +66,63 @@ Content-Transfer-Encoding: 8bit
 
 This is a note to let you know that I've just added the patch titled
 
-    xfs: clamp the pNFS layout range to the maximum file size
+    xfs: fix temporary cursor leak in btree shift corruption paths
 
-to the 5.15-stable tree which can be found at:
+to the 5.10-stable tree which can be found at:
     http://www.kernel.org/git/?p=linux/kernel/git/stable/stable-queue.git;a=summary
 
 The filename of the patch is:
-     xfs-clamp-the-pnfs-layout-range-to-the-maximum-file-.patch
-and it can be found in the queue-5.15 subdirectory.
+     xfs-fix-temporary-cursor-leak-in-btree-shift-corrupt.patch
+and it can be found in the queue-5.10 subdirectory.
 
 If you, or anyone else, feels it should not be added to the stable tree,
 please let <stable@vger.kernel.org> know about it.
 
 
 
-commit af123e2658fed8875ddd70358718276845f2bb9b
-Author: Daejun Park <daejun7.park@samsung.com>
-Date:   Thu Oct 29 11:23:03 2026 +0900
+commit 1362e99af29e04707c32a1bb12c53130ea08807f
+Author: Jianyun Gao <jianyungao89@gmail.com>
+Date:   Mon Nov 2 23:01:41 2026 +0800
 
-    xfs: clamp the pNFS layout range to the maximum file size
+    xfs: fix temporary cursor leak in btree shift corruption paths
     
-    [ Upstream commit 29f3c1be4e554c9dbc66e13333034e0947477cb6 ]
+    [ Upstream commit 2bbca049deeb1699cafd966cb2793fee576ee409 ]
     
-    xfs_fs_map_blocks() lets two bad layout ranges through. An offset of
-    2^63 or more is negative and passes "offset > limit". A length above
-    the limit, such as NFS4_UINT64_MAX, wraps "offset > limit - length"
-    and stays unclamped. With NFS4_UINT64_MAX, a read layout is built from
-    an uninitialized mapping.
+    In xfs_btree_lshift and xfs_btree_rshift, when XFS_IS_CORRUPT detects
+    an invalid firstrec/lastrec result after xfs_btree_dup_cursor has
+    successfully allocated a temporary cursor, the error path jumps to
+    error0 which returns without freeing tcur.  This leaks the cursor
+    memory, the xfs_group reference, and the per-level buffer references
+    held by the duplicated cursor.  Jump to error1 instead, which calls
+    xfs_btree_del_cursor(tcur, XFS_BTREE_ERROR) to properly release all
+    resources.
     
-    Reject a negative offset and one at the limit, and clamp the length.
-    This needs "xfs: cap the block count of xfs_iomap_write_direct() at one
-    extent".
-    
-    Fixes: 527851124d10 ("xfs: implement pNFS export operations")
     Cc: stable@vger.kernel.org
-    Signed-off-by: Daejun Park <daejun7.park@samsung.com>
-    Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-    Reviewed-by: Pankaj Raghav <p.raghav@samsung.com>
-    Reviewed-by: Christoph Hellwig <hch@lst.de>
+    Fixes: 9eaead51bed95 ("[XFS] implement generic xfs_btree_rshift")
+    Signed-off-by: Jianyun Gao <jianyungao89@gmail.com>
+    Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
     Signed-off-by: Carlos Maiolino <cem@kernel.org>
     Signed-off-by: Sasha Levin <sashal@kernel.org>
 
-diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
-index 7f950cf39e4d4..0bf547d730990 100644
---- a/fs/xfs/xfs_pnfs.c
-+++ b/fs/xfs/xfs_pnfs.c
-@@ -124,10 +124,9 @@ xfs_fs_map_blocks(
- 	if (!write)
- 		limit = max(limit, round_up(i_size_read(inode),
- 				     inode->i_sb->s_blocksize));
--	if (offset > limit)
-+	if (offset < 0 || offset >= limit)
- 		goto out_unlock;
--	if (offset > limit - length)
--		length = limit - offset;
-+	length = min_t(u64, length, limit - offset);
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index aaa59daa77d05..6cae1098f73e1 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -2396,7 +2396,7 @@ xfs_btree_lshift(
+ 		i = xfs_btree_firstrec(tcur, level);
+ 		if (XFS_IS_CORRUPT(tcur->bc_mp, i != 1)) {
+ 			error = -EFSCORRUPTED;
+-			goto error0;
++			goto error1;
+ 		}
  
- 	error = filemap_write_and_wait(inode->i_mapping);
- 	if (error)
+ 		error = xfs_btree_decrement(tcur, level, &i);
+@@ -2566,7 +2566,7 @@ xfs_btree_rshift(
+ 	i = xfs_btree_lastrec(tcur, level);
+ 	if (XFS_IS_CORRUPT(tcur->bc_mp, i != 1)) {
+ 		error = -EFSCORRUPTED;
+-		goto error0;
++		goto error1;
+ 	}
+ 
+ 	error = xfs_btree_increment(tcur, level, &i);
