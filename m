@@ -1,58 +1,58 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794347545;
-	b=oy3Pp8fCYfSLmCcQMpF228ZrfVxQrhEWys1RiA2yfJn1KuCX59LEUZ5ZuCrBGMt1Z5on
-	 lNyJx3CR7/XEKIyn/G8GuMVsdlZIkZb/wienmn3RcgudQBQI+y+qdzWLbe6IrOM96FNgx
-	 VXdw83O7ZE80TGycJNb5/Tvgq4LYdtPFIv7MHh0vVph2Z9LX28z0SX+cmYMoa61Lcg74m
-	 13UZD9XYsbuIWrID+ZXDykuVEVmV7FfxD8FPx6PUafppLWFnw4yP+7q+NiDdiP+4qlscB
-	 j2mXCJ09vaSezot0aU7pHZK0GCgaZ9TblDs2VYT19K+S8E39vxt4IT50ws7OdRunwOQ==
+	t=1794347656;
+	b=R8WEAsjnXDRYaiiljlQCvZL14md37kJ5byunm7I72FGajSxP3cPW0Wndwc0P+KvLZtTz
+	 dp4nT69EM6OW8DqZTA7cE9s9yv284HUUKQOQ/JIDojTZ8WYYIrfKYdb6g+StxB2fdGdEC
+	 Xxkc+6Z8Ch4Rm0ANqhDW5tn1IWz5pqhPW4tMwhSZQ+noc1Dd/W3hzvyFL3MKfmBnw9bLC
+	 x5wkgAZRCDckcnMzrWjX9/WwvUJCp2th6tqiSlhi32il7TnJtTZvjIug9rG5nDcc4rz4G
+	 fn6y2AzeffjP8/prfjFnNbBzn9k+1/oPZjcLkuJiyefzdeG2c7qzH7J6uGwmr/cWDaA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794347545;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794347656;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=NG5N/qv9kqIWaHQubYWcMp3ybQzZkmkmYbSR6qxrMo0=;
-	b=P94v6pTT5XcLFSJv2z86ZA4G2NQK9UjT/ujf3/Ai1HTL2wUUK9UJe7ygmLdiEUxfxyIC
-	 07fg2KLf/5iwzTmIciZFesL2qTrLgQeooIqGXend15/NHbug3o90cpVXM8bFHzuPHj5fw
-	 7oBCdtBxFHjwVXWGBA1Qorgo/c7uWrsWAvvhc5R98lTx1YeoLDjs4H7aVSXL57WHHLxKi
-	 vPKiekLQ+2BbbCDnls7qCKptWCS1+XRxelMoE+3YA8yLePsqI6ZzpKBQvaNY4J5Gwd40S
-	 e+dNdfo6QCvdrt+QAnNdlZhzwFWwBQXvE+XGdpFDCKvL41wtQG6eDgc/ucmOd3zrFBg==
+	bh=kvR+7LpUq2XDou+hL2YOto2Xs7eBH6ZEazzzuluspMo=;
+	b=zLv67wtRWqtOxmKqW3umQltdJXdPzyUt5B4i5EryHpM6p3B//6vbplNA+TF6A6yiQ1nb
+	 q6uwUO1lMnSzdIHVZ92K0P3/MIrj8ctYKYDWHuHvNgW2aa3Z0+BvGx0NIXo7iuxQ5hKXj
+	 Qml7Tb/bzuvCWacc6x1Xnigen1wQEhzzJFqGGK5/pSt4L46a7yJEeC1kgCeQ4PRa/X3On
+	 Wst6l2Rb/IE/7W6QEdDuBhJcrvF81EAgd/fBoS2ask7Uf/lWug/6NDj4Qx4RbzTRvgpN4
+	 d2S1y/LxMit+yCBqj8wjEkovyVZXEzJHRhF3CD0AqrS0BD2Vaqa+1rxIr7syQbK49Wg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=acw6ROyl;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="eaD/EfjD";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EC7D606A31C;
-	Tue, 10 Nov 2026 21:52:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46088606A32A;
+	Tue, 10 Nov 2026 21:54:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=acw6ROyl
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0BF171F0089F;
-	Tue, 10 Nov 2026 21:52:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=eaD/EfjD
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3D1531F0089F;
+	Tue, 10 Nov 2026 21:54:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794347544;
-	bh=NG5N/qv9kqIWaHQubYWcMp3ybQzZkmkmYbSR6qxrMo0=;
+	s=k20260515; t=1794347655;
+	bh=kvR+7LpUq2XDou+hL2YOto2Xs7eBH6ZEazzzuluspMo=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=acw6ROylAoj6eTCgQIZH1HF5HgE5P5i985FgFa/sQiOMubXxw/4hpDuAimeoYHbKS
-	 0SA7cNzKIUClpR0boV9m6svRkVNWvTapQsEiZPpLQHWIu8PhcvqBqPX9y4UUlZ2KY/
-	 5fwYfFdUXyOFfzFfZY38g+/FK3zGeFYWShaCqv09SrX3g48zWo0/Idrv0VFBg41AxO
-	 WoebTuoM7ofgzaxUvwBHUAS3R/uMOhy/D8K88+u2/Ll+1y/YvTKQAeAJSY4m5TCMYt
-	 ONPv2sRQBHG3ZpoZpNmdTMDQx4GhCZL9ou3GR4YFh4AcRI3UVK+GX6nRvFAQH/csHa
-	 xf2OIXvo4ErlQ==
-Date: Tue, 10 Nov 2026 22:52:18 +0100
+	b=eaD/EfjDchFyH1dENQH1aadvOuz1bw9jbkiQnmwV7pFQSv0SPcCuHPSy3cg1AgrZf
+	 u3NXwYhS+orvWDPCpPXaZyNSS+GoUOox6PG5uSdjRvqr3AzMoDafKsT4tR++Y52zyq
+	 O4s6HPV/ywyAlQatnavFQ0pBIjmeaDW+xUB5+IzysLQjiA6eAAw0QEBP/TtTETgLFl
+	 inp8RjcCw8Shmo9xA+CQnGybqXHfRUFl8MavInvwFF2mGgTJTmUjNtLd4cxgdb5YmJ
+	 zo9nAVwddgdwCbsFwqFgDPymJKL5pmccIM+9BnPTJunzaUztEcw+2CGbHe8zKjhAGe
+	 JD2NE+KXutgNA==
+Date: Tue, 10 Nov 2026 22:54:09 +0100
 From: Christian Brauner <brauner@kernel.org>
-To: Joseph Qi <joseph.qi@linux.alibaba.com>, linux-fsdevel@vger.kernel.org, 
+To: Zhihao Cheng <chengzhihao1@huawei.com>, linux-fsdevel@vger.kernel.org, 
 	Jan Kara <jack@suse.com>
 Cc: Al Viro <viro@zeniv.linux.org.uk>, ecryptfs@vger.kernel.org, 
 	linux-ext4@vger.kernel.org, jfs-discussion@lists.sourceforge.net, 
 	linux-nilfs@vger.kernel.org, exfat@lists.linux.dev, linux-mm@kvack.org, ntfs@lists.linux.dev, 
 	ocfs2-devel@lists.linux.dev, linux-btrfs@vger.kernel.org, gfs2@lists.linux.dev, 
 	linux-efi@vger.kernel.org, linux-mtd@lists.infradead.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2 19/34] ocfs2: keep the current mount options on remount
-Message-ID: <20261110-zerfallen-meiden-wacholderbeere-a90ac157e063@brauner>
+Subject: Re: [PATCH v2 28/34] ubifs: don't set SB_RDONLY after errors
+Message-ID: <20261110-erfanden-dossier-zahntechnik-efcb7a6439b0@brauner>
 References: <20261029-work-fs-sb_rdonly-v2-0-2f44f64f0b66@kernel.org>
- <20261029-work-fs-sb_rdonly-v2-19-2f44f64f0b66@kernel.org>
- <0a8576a4-e397-4a49-ab0e-8f0f32bf2642@linux.alibaba.com>
+ <20261029-work-fs-sb_rdonly-v2-28-2f44f64f0b66@kernel.org>
+ <0d472865-6cbb-cbb5-b361-1f2bf71dd528@huawei.com>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -64,29 +64,32 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <0a8576a4-e397-4a49-ab0e-8f0f32bf2642@linux.alibaba.com>
+In-Reply-To: <0d472865-6cbb-cbb5-b361-1f2bf71dd528@huawei.com>
 
-On Fri, Oct 30, 2026 at 10:58:52AM +0800, Joseph Qi wrote:
-> ocfs2_reconfigure() decides the transition from fc->sb_flags alone without
-> sb_flags_mask test, unlike reconfigure_super(). And fspick() passes
-> fs_context_for_reconfigure(target.dentry, 0, 0). So on a read-only mount:
+On Fri, Oct 30, 2026 at 11:42:15AM +0800, Zhihao Cheng wrote:
+> If we remove the c->ro_error check, ubifs_remount_ro->ubifs_wbuf_sync
+> will return EROFS and trigger ubifs_ro_mode() again, I think we can
+> retain the pre-check placement to trigger more error printing.
 
-> So it seems we should test sb_flags_mask as well?
+ubifs_ro_mode() doesn't do anything once c->ro_error is set so that
+won't print anything again. But there's no point in syncing the
+write-buffers and writing the master node after an error.
 
-No, that's a generic bug. I fixed that in reconfigure_super() with
-"super: keep the read-only state if a reconfiguration doesn't change it".
-That is in vfs-7.5.super (cf. [1]). This series depends on that work.
+So I'll skip both in ubifs_remount_ro() when c->ro_error is set like
+ubifs_put_super() does and only cancel the write-buffer timers. The
+remount to read-only itself has to keep working because the error
+doesn't set SB_RDONLY anymore.
 
-If SB_RDONLY isn't in sb_flags_mask it fills in the current read-only
-state. So ocfs2_reconfigure() sees SB_RDONLY and stays read-only. ocfs2
-is one of the 23 filesystems listed there that only look at
-fc->sb_flags.
+> BTW, a remount to read-write after an error is refused too.
 
-> The same falls out of a legacy remount whose flags omit MS_RDONLY.
+Only if c->ro_mount is set. ubifs_ro_mode() sets SB_RDONLY but never
+c->ro_mount. So after an error on a read-write mount ubifs_reconfigure()
+takes neither branch and reconfigure_super() clears SB_RDONLY again.
 
-No, do_remount() always passes MS_RMT_MASK which includes MS_RDONLY. A
-remount without MS_RDONLY asks for read-write.
+> The sb_rdonly won't affect the sync_fs_one_sb() after an error, and
+> sb_emergency_ro check in not added into sync_fs_one_sb, should we add
+> the c->ro_error check in ubifs_sync_fs() to prevent the failure
+> ubifs_wbuf_sync executing?
 
-Thanks for the review!
-
-[1]: https://lore.kernel.org/r/20261011-work-super-fixes-core-v1-11-c727176c5b53@kernel.org
+Yes, I'll return -EROFS from ubifs_sync_fs() when c->ro_error is set.
+After the !wait check so sync_filesystem() still gets to sync_inodes_sb().
