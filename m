@@ -1,47 +1,47 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=115.124.28.77
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=115.124.28.75
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1794282738;
-	b=T498mBpTzfoDluvV7S98d0aiYAKsGtigKFC79rxnGQbbXoLVvUsMs5AG31zoRFrsEV7U
-	 4qzpjQwfLmrAUSwEYPDAgOtMzqOMOkGF6Yx1+QpZQ9CdFP503uk0ynTOf0Dt7seksznyb
-	 Vbs6b5LlR24J59G5XJNSKtO6GJj3rU70Pt0nYnoINPxlrDCmgfU+iU2UaFfWmGxnyFps/
-	 gmaA+PdDjIWhupAX7kgtA6emXlQ1675KSUCpwPBM0y7veKOqStPVM9mMsZrFJf5pmf80u
-	 stDjLELJvFDTo9tuQXYsPy84Fdlw4MHBeySz4j5OrMaXIyPwQWZaEL38PqZmw+p/c5g==
+	b=hs3Vzt2QMQtnPvi1UzlUUnKs9kPgJ8aJ6JmbEufn4Wza9DOibvQVl5GetRnpPlWuwDLk
+	 t72up5RYJZvWS4c33NvIFIHz7XPGwWgoWVJu/3xp3+JPQPKl3feQ8DC543BZIxg2Lpec9
+	 AUrlgM+ZiFdWrqpcpC1e9DFBfQ6KffpyRt3kctFh744feV/Pge++T5G/W6vNwEuuSJYEa
+	 7NdzfnV2SL6cOV7iT2RCOXs8PyCHo9S/NrNFHLUwUDasUl0CAWO0PzL2iWaEGKa1GrkdK
+	 VH3ODuIhH+ZM5G7qOnjku2faLGQzC1TdzIE8Thyna5Tmj6fRWs9LObrPTNbmMvddI1g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1794282738;
 	h=DMARC-Filter:DKIM-Signature:X-Alimail-AntiSpam:Received:From:To:Cc:
-	 Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
+	 Subject:Date:Message-ID:X-Mailer:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=LnJWD/eQmPATzcQ3ya5TLYOaFRBgryPz/dxqLK+YACk=;
-	b=qWbv5E1gR3X4MpJC1FmkkjElwsjQ5LZpxZOcH/NA76kSlOv5zqCRkF4zdPVavRJqKWPr
-	 LFzhoylEPGWJNvos2N+aY50yNDqJAJEzHWQZFlLGY7xGEYhqDPTm7SOtUCUQSIbhhUtwz
-	 fo9Z+8Vv2VLRxUXZWXM5HkQ3Y7Y+rj7QVQcAGm2FdFC3lN/5/AaCwGm37JOJkYO8vsFbt
-	 c7PX1ZcXMAvawz5xW5Kh0G4knVBSFXMfhh0GbmhL5Kn/AyRq3YmZXAgDH+LZTBovs/IuV
-	 tnezIStuVw03NeQ73OCGfvulG8jwHhyRFShVj41q6F8V1vKQG4mM+KTJ5L+oTEPnNZQ==
+	bh=TsUCZE14JUqzvoVn8cOy7N5poFYy2E8OQkr7wMhqiZY=;
+	b=GOTxOQegCH3INRyT2SgVm7sV0T6dkiGqLYR1ozHUOAsnxolF7eGvvST6V1BjwaCMmr7D
+	 6qPkAX7zHOP3kCaoEPhmu3YGxhfpzVXG6LH2+Q/uGruhEBJN+fsA70jBj0QKNGY9ZLFxz
+	 cLCkkc9h2tRWZVmHSanxNUC4IiMgk59dGtn/Z3FWBV+NafBm1T9w+lWO76D7WlMpJufXg
+	 6Ho7ugD94Ik0aHrBXNXplBXWEUch/QikyldDSq/6+NyCH4EGhFLxpZRIOVyHxBMm7+X5o
+	 tiYj0fNl8KYlJDCwG1xY1Ra5ULn78N7ZXq9yST8Yaco2Iimbzd17zJmXQcUFQElUEfQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=none header.from=xiaopeng.com;
 	spf=pass smtp.mailfrom=xiaopeng.com;
-	dkim=pass header.d=xiaopeng.com header.i=@xiaopeng.com header.a=rsa-sha256 header.s=default header.b=a3pcsMJF;
-	arc=none smtp.remote-ip=115.124.28.77
-Received: from out28-77.mail.aliyun.com (out28-77.mail.aliyun.com [115.124.28.77])
+	dkim=pass header.d=xiaopeng.com header.i=@xiaopeng.com header.a=rsa-sha256 header.s=default header.b=ehUrc7PS;
+	arc=none smtp.remote-ip=115.124.28.75
+Received: from out28-75.mail.aliyun.com (out28-75.mail.aliyun.com [115.124.28.75])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E151C606A32A;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2EEF606A331;
 	Tue, 10 Nov 2026 03:52:16 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E151C606A32A
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E2EEF606A331
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=xiaopeng.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=xiaopeng.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=xiaopeng.com header.i=@xiaopeng.com header.a=rsa-sha256 header.s=default header.b=a3pcsMJF
+	dkim=pass (1024-bit key) header.d=xiaopeng.com header.i=@xiaopeng.com header.a=rsa-sha256 header.s=default header.b=ehUrc7PS
 DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
 	d=xiaopeng.com; s=default;
-	t=1794282735; h=From:To:Subject:Date:Message-ID:MIME-Version;
-	bh=LnJWD/eQmPATzcQ3ya5TLYOaFRBgryPz/dxqLK+YACk=;
-	b=a3pcsMJFG309kdgtvljhnVorU7N7qH6gd3Rrrtvf3QWyltU5Fx3PAMbRqQrzgn4SyUYJaELG3lVnGbynXEuvjd+CS1mVZAYEhgIfKUGuWFk9TLwpAa8BMeok1jzaOg2ZJWblnQR3pbH9cINZOZzQgCO6eSsq2Jf9BfDFCHNYGvk=
-X-Alimail-AntiSpam:AC=CONTINUE;BC=0.04436259|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_system_inform|0.0321415-0.00146777-0.966391;FP=14329174377433204728|0|0|0|0|-1|-1|-1;HT=maildocker-contentspam033040092104;MF=fangxy@xiaopeng.com;NM=1;PH=DS;RN=28;RT=28;SR=0;TI=SMTPD_---.k-eCFpa_1794282731;
-Received: from localhost.localdomain(mailfrom:fangxy@xiaopeng.com fp:SMTPD_---.k-eCFpa_1794282731 cluster:ay29)
+	t=1794282729; h=From:To:Subject:Date:Message-ID:MIME-Version;
+	bh=TsUCZE14JUqzvoVn8cOy7N5poFYy2E8OQkr7wMhqiZY=;
+	b=ehUrc7PSLPXRS0NQhge6wGn4M3M1o9D+6adD1HQ2abFMTbb6DH5FydMzoowZJHe29tMd5J9N5S82xugXObVmYLzI+Rx5syzN/vmFhX7O615lzUEkrAUF+ld236I3zB3I9/gmPsioGQKV5jJkrXLeZyVXw4wx45oty0ypakxhjnw=
+X-Alimail-AntiSpam:AC=CONTINUE;BC=0.04436259|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_system_inform|0.0212176-0.000354597-0.978428;FP=14696213412212959218|0|0|0|0|-1|-1|-1;HT=maildocker-contentspam033023087102;MF=fangxy@xiaopeng.com;NM=1;PH=DS;RN=27;RT=27;SR=0;TI=SMTPD_---.k-eCFj6_1794282725;
+Received: from localhost.localdomain(mailfrom:fangxy@xiaopeng.com fp:SMTPD_---.k-eCFj6_1794282725 cluster:ay29)
           by smtp.aliyun-inc.com;
-          Tue, 10 Nov 2026 11:52:13 +0800
+          Tue, 10 Nov 2026 11:52:07 +0800
 From: Fang Xieyan <fangxy@xiaopeng.com>
 To: Andrew Morton <akpm@linux-foundation.org>,
 	David Hildenbrand <david@kernel.org>,
@@ -69,14 +69,11 @@ Cc: Baolin Wang <baolin.wang@linux.alibaba.com>,
 	linux-mm@kvack.org,
 	linux-kernel@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	Liu Chao <liuc63@xiaopeng.com>
-Subject: [RFC PATCH 3/3] mm: enable filesystem page-cache large folios without THP
-Date: Tue, 10 Nov 2026 11:52:05 +0800
-Message-ID: <20261110035205.3036-4-fangxy@xiaopeng.com>
+	linux-xfs@vger.kernel.org
+Subject: [RFC PATCH 0/3] mm: enable filesystem page-cache large folios without THP
+Date: Tue, 10 Nov 2026 11:52:02 +0800
+Message-ID: <20261110035205.3036-1-fangxy@xiaopeng.com>
 X-Mailer: git-send-email 2.50.1
-In-Reply-To: <20261110035205.3036-1-fangxy@xiaopeng.com>
-References: <20261110035205.3036-1-fangxy@xiaopeng.com>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -88,188 +85,229 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Ten filesystems already opt in to file-backed large folios by calling
-mapping_set_large_folios() or mapping_set_folio_order_range() from their
-inode setup, unconditionally.  Every accessor that reports those orders
-is nevertheless compiled out when CONFIG_TRANSPARENT_HUGEPAGE is
-disabled, so the opt-in silently has no effect today.
+This series makes filesystem page-cache large folios work on kernels
+built with CONFIG_TRANSPARENT_HUGEPAGE=n, and keeps them splittable
+there.
 
-Gate the page cache order accessors on CONFIG_LARGE_FOLIO in addition to
-CONFIG_TRANSPARENT_HUGEPAGE.  Both conditions are still spelled out even
-though CONFIG_LARGE_FOLIO defaults to y when TRANSPARENT_HUGEPAGE is
-enabled, so that file-backed large folios do not silently disappear if
-that default is ever relaxed.
+1. Why this is needed
 
-PREFERRED_MAX_PAGECACHE_ORDER is left as it is.  Deriving it from
-CONFIG_PGTABLE_HAS_HUGE_LEAVES would let HUGETLB_PAGE raise the ceiling
-on its own, to HPAGE_PMD_ORDER capped by MAX_XAS_ORDER.  On arm64 with
-64K base pages that works out to order 11, a 128M folio, eight times
-what an LF-only build advertises today; the figure is arithmetic, not a
-measurement.  Without THP such folios cannot be PMD-mapped, so keeping
-the existing order-8 limit avoids substantially increasing the maximum
-page-cache allocation size without an established use case.
+TRANSPARENT_HUGEPAGE depends on !PREEMPT_RT (mm/Kconfig), so a
+PREEMPT_RT kernel always has THP off.  Today that also removes
+file-backed large folios entirely: the helpers that split them live in
+mm/huge_memory.c under CONFIG_TRANSPARENT_HUGEPAGE, and the order
+accessors in include/linux/pagemap.h short-circuit to "no large
+folios" when THP is off, so every filesystem that opts in silently
+ends up with order-0 folios.
 
-CONFIG_LARGE_FOLIO no longer only builds the split machinery, so its
-Kconfig help text is updated to match.  The default also carries a
-comment recording why THP must keep pulling this option in:
-mm/folio_split.o is built from CONFIG_LARGE_FOLIO, while huge_memory.o,
-built for THP, calls into it.  XFS also gates mounting
-block sizes larger than the page size on
-mapping_max_folio_size_supported(), which means large-block-size XFS
-cannot be mounted at all when CONFIG_LARGE_FOLIO is disabled; the
-rejection now points at the missing option instead of only reporting the
-block size as unsupported.
+The consequence is not only throughput.  XFS allows block sizes up to
+64K and fs/xfs/xfs_super.c refuses to mount anything larger than
+mapping_max_folio_size_supported().  With THP=n that helper reports
+PAGE_SIZE, so a 64K-block filesystem cannot be mounted at all:
 
-shmem keeps its THP dependency.  shmem_alloc_and_add_folio() forces
-orders to zero without THP, so the mapping is only opened large-folio
-capable when CONFIG_TRANSPARENT_HUGEPAGE is enabled.  Advertising the
-larger order while allocating order 0 would not be cosmetic:
+    XFS (vda): block size (65536 bytes) not supported; Only block size (4096) or less is supported
+
+There is no degraded mode to fall back to, because a block has to fit
+in a single page-cache folio - which is why
+fs/xfs/libxfs/xfs_ialloc.c derives min_folio_order from
+sb_blocklog - PAGE_SHIFT.  Either page-cache large folios work without
+THP, or the filesystem is unusable.
+
+2. What the series does
+
+The anon and file split helpers were already separated by Kairui
+Song's "mm/huge_memory: clean up and decouple the anon and file split
+helpers" (v6 04/17, in mm-unstable); that is the base this series
+starts from.
+
+1/3 moves the folio-splitting implementation out of mm/huge_memory.c
+into mm/folio_split.c without changing any behaviour.  The new object
+is still built by CONFIG_TRANSPARENT_HUGEPAGE, so a THP build keeps
+exactly the code it had before; a pure move is also the easiest thing
+to rebase on top of further churn in this area.
+
+2/3 builds that object for CONFIG_LARGE_FOLIO instead, and drops the
+anon, PMD and khugepaged dependencies a file-only build cannot have.
+The symbol comes from Matthew Wilcox's "[PATCH v9 12/15]"; if that
+series is in first, this patch shrinks to its Kconfig default and the
+accessors it already rewrites.
+
+3/3 enables filesystem page-cache large folios when THP is off.  It
+lifts the compile-time short circuits in pagemap.h for
+mapping_max_folio_size_supported(), mapping_set_folio_order_range(),
+mapping_max_folio_order() and mapping_min_folio_order().
+PREFERRED_MAX_PAGECACHE_ORDER is left alone: an LF-only build keeps
+the existing cap of order 8 instead of following HPAGE_PMD_ORDER.
+Without THP such folios cannot be PMD-mapped, so raising the ceiling
+would mainly increase the maximum page-cache allocation size.  The
+changelog has the arm64 64K-page arithmetic, which is a calculation
+and not a measurement.
+
+The split side is not rewritten: truncate, migration and memory-failure
+already call the helpers outside any THP ifdef, so with 2/3 in place
+they simply stop resolving to the -EINVAL stubs once 3/3 turns
+allocation on.  madvise is inside a THP ifdef and does not take part.
+
+3/3 also makes the XFS mount failure above say why it failed: when
+CONFIG_LARGE_FOLIO is not set, the warning now names the missing
+option instead of only reporting the block size as unsupported.  With
+LF=y the added warning is compiled out completely.
+
+3. Testing
+
+Six configurations build clean as full kernels, bzImage and the
+vmlinux link included, with no new warnings: A (THP=y), B (THP=n,
+LF=y), C (B plus HUGETLBFS), D (THP=n, LF=n), and RT-B and RT-C with
+PREEMPT_RT=y.  The PREEMPT_RT configurations were build-tested only.
+No runtime PREEMPT_RT stress test or livelock validation was
+performed.
+
+THP=y is unchanged: the .text sections of mm/filemap.o,
+mm/readahead.o and mm/shmem.o are byte-identical before and after the
+series (md5 equal, 45896, 7139 and 35314 bytes).  With THP=n and LF=n
+mm/filemap.o and mm/readahead.o stay identical (44584 and 6259 bytes)
+and every function in mm/shmem.o keeps its size; the only difference
+there is one dead argument load that the folded-out
+mapping_set_large_folios() call leaves behind, so the section keeps
+its 29778 bytes while its md5 does not match.
+
+In the new LF=y, THP=n configuration mm/shmem.o keeps its size as well,
+48 bytes shorter at 29730.  That difference is not from 3/3: 40 of the
+bytes are shmem_writeout(), which shrinks because 2/3 turns
+split_folio_to_list() from an inline -EINVAL stub into a real call, and
+the other 8 are the padding in front of the following function; the
+same 29730 bytes appear with 2/3 alone, and 3/3's own shmem hunk
+changes no function size.  The new call is unreachable in this
+configuration anyway, since shmem_alloc_and_add_folio() still forces
+order 0 without THP.
+
+Where the generated code really changes is the allocation policy:
+mm/readahead.o grows by 880 bytes of .text (6259 to 7139) and
+mm/filemap.o by 134 (44584 to 44718).  nm -u mm/folio_split.o lists no
+anon, pmd or khugepaged symbols.
+
+Runtime, x86_64, 4K pages, THP=n, QEMU/KVM, on a 64K-block XFS image
+(mkfs.xfs -b size=64k -s size=4k), with kprobes on
+filemap_alloc_folio, filemap_add_folio and __folio_split:
+
+  - writing 64M: 84 allocations - 59 at order-8, 5 at order-7, 5 at
+    order-6, 5 at order-5, 10 at order-4, i.e. exactly 64M;
+  - reading the same 64M back after drop_caches: 72 allocations,
+    62 at order-8, 1 at order-7, 5 at order-6, 4 at order-4;
+  - truncating 1M to 700K: one __folio_split, landing at order-4,
+    which is the min_folio_order XFS asked for; order-0 never appears
+    in any of the three phases;
+  - tmpfs writing 32M: 8192 shmem_alloc_folio calls, all order-0;
+  - shmem write vs F_SEAL_GROW, reproducible as: memfd_create(),
+    ftruncate() to exactly 4096 bytes, F_ADD_SEALS with F_SEAL_GROW,
+    then a single pwrite() of 8192 bytes at offset 0, comparing the
+    syscall's return value.  It returns 4096, the same as the
+    pre-series THP=n kernel.  A THP=y kernel returns -EPERM here, and
+    so did the LF-only build before shmem's mapping was put back
+    behind THP; that -EPERM is pre-existing behaviour of THP kernels,
+    this series neither introduces it nor extends it to other
+    configurations.
+
+Same image on the pre-series kernel, for reference: it fails to mount
+with -ENOSYS before any of the above can run.  The whole probe was
+re-run on the final revision of the series with identical numbers.
+
+4. What this turns on for existing filesystems
+
+LF=y makes the existing opt-in take effect for every filesystem that
+already asks for large folios, and that list is not ext4 only: ext4,
+xfs, btrfs, f2fs, fuse, afs, erofs, nfs, cifs and zonefs all call
+mapping_set_folio_order_range() or mapping_set_large_folios() from
+their inode or superblock setup, unconditionally, today.  Those paths
+run on any THP=y kernel; the new configuration is only THP=n with
+LF=y.  With THP off the ceiling is PREFERRED_MAX_PAGECACHE_ORDER,
+which stays at order 8.
+
+On the tested 4K-page configuration, 4K-block ext4 gets min order 0
+and max order 8, while 64K-block XFS gets min order 4.  Btrfs derives
+both ends from the mkfs sectorsize and nodesize.  A THP=y kernel keeps
+the order-9 ceiling (HPAGE_PMD_ORDER) it has today on 4K pages.
+
+shmem keeps its THP dependency: its mapping is only marked large-folio
+capable when THP is enabled, because shmem_alloc_and_add_folio() still
+forces orders to zero without it.  This matters beyond cosmetics.
 generic_perform_write() sizes its write chunk from
 mapping_max_folio_size() and passes that length to ->write_begin()
-before clamping it to folio_size(), while shmem_write_begin() rejects
-pos + len > i_size outright for F_SEAL_GROW.  A cross-EOF write would
-then fail as a whole instead of being partially satisfied up to i_size.
-THP=y kernels already behave that way; the point is not to spread that
-behaviour to a configuration which gains no large folios from it.
-Enabling shmem's large folios -- allocation, swap and split alike -- is
-left to a separate series.
+before clamping it to folio_size(), and shmem_write_begin() rejects
+pos + len > i_size for F_SEAL_GROW.  On a 4K memfd sealed with
+F_SEAL_GROW, an 8K write at offset 0 returns 4096 on the pre-series
+THP=n kernel and -EPERM on a THP=y kernel; advertising order 8 while
+allocating order 0 reproduced the -EPERM on an LF-only build.  Tying
+shmem's policy to LARGE_FOLIO means the allocation, swap and split
+sides together, which is a separate series.
 
-The stale comment on mapping_large_folio_support() is updated to match:
-large folios are now gated on CONFIG_LARGE_FOLIO rather than on THP, and
-CONFIG_LARGE_FOLIO is a default rather than a select from THP.
+5. What is not covered
 
-With CONFIG_TRANSPARENT_HUGEPAGE enabled the generated code is unchanged.
-Without it, file-backed large folios become reachable for the first time.
+Since PREEMPT_RT is the motivation, the RT side needs to be explicit.
+The freeze-to-xarray-update window in __folio_freeze_split_file() is
+the fourth freeze site named by Matthew Wilcox in the RT livelock
+thread started by Dong Hui
+(<c2ff0c66422c4e2d869499a1186ff0ae@xiaomi.com>):
 
-Reviewed-by: Liu Chao <liuc63@xiaopeng.com>
-Signed-off-by: Fang Xieyan <fangxy@xiaopeng.com>
----
- fs/xfs/xfs_super.c      |  2 ++
- include/linux/pagemap.h | 17 +++++++++++------
- mm/Kconfig              | 15 +++++++++++----
- mm/shmem.c              | 11 ++++++++++-
- 4 files changed, 34 insertions(+), 11 deletions(-)
+    There's also __folio_freeze_split_file().  I know PREEMPT_RT
+    disables TRANSPARENT_HUGEPAGE at the moment, but hopefully that
+    restriction will be lifted.
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 5a06132aa..29548faec 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1864,6 +1864,8 @@ xfs_fs_fill_super(
- 			xfs_warn(mp,
- "block size (%u bytes) not supported; Only block size (%zu) or less is supported",
- 				mp->m_sb.sb_blocksize, max_folio_size);
-+			if (!IS_ENABLED(CONFIG_LARGE_FOLIO))
-+				xfs_warn(mp, "CONFIG_LARGE_FOLIO is not set");
- 			error = -ENOSYS;
- 			goto out_free_sb;
- 		}
-diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
-index 73af18a37..2102733c1 100644
---- a/include/linux/pagemap.h
-+++ b/include/linux/pagemap.h
-@@ -393,7 +393,8 @@ static inline void mapping_set_gfp_mask(struct address_space *m, gfp_t mask)
-  */
- static inline size_t mapping_max_folio_size_supported(void)
- {
--	if (IS_ENABLED(CONFIG_TRANSPARENT_HUGEPAGE))
-+	if (IS_ENABLED(CONFIG_TRANSPARENT_HUGEPAGE) ||
-+	    IS_ENABLED(CONFIG_LARGE_FOLIO))
- 		return 1U << (PAGE_SHIFT + MAX_PAGECACHE_ORDER);
- 	return PAGE_SIZE;
- }
-@@ -418,7 +419,8 @@ static inline void mapping_set_folio_order_range(struct address_space *mapping,
- 						 unsigned int min,
- 						 unsigned int max)
- {
--	if (!IS_ENABLED(CONFIG_TRANSPARENT_HUGEPAGE))
-+	if (!IS_ENABLED(CONFIG_TRANSPARENT_HUGEPAGE) &&
-+	    !IS_ENABLED(CONFIG_LARGE_FOLIO))
- 		return;
- 
- 	if (min > MAX_PAGECACHE_ORDER)
-@@ -459,7 +461,8 @@ static inline void mapping_set_large_folios(struct address_space *mapping)
- static inline unsigned int
- mapping_max_folio_order(const struct address_space *mapping)
- {
--	if (!IS_ENABLED(CONFIG_TRANSPARENT_HUGEPAGE))
-+	if (!IS_ENABLED(CONFIG_TRANSPARENT_HUGEPAGE) &&
-+	    !IS_ENABLED(CONFIG_LARGE_FOLIO))
- 		return 0;
- 	return (mapping->flags & AS_FOLIO_ORDER_MAX_MASK) >> AS_FOLIO_ORDER_MAX;
- }
-@@ -467,7 +470,8 @@ mapping_max_folio_order(const struct address_space *mapping)
- static inline unsigned int
- mapping_min_folio_order(const struct address_space *mapping)
- {
--	if (!IS_ENABLED(CONFIG_TRANSPARENT_HUGEPAGE))
-+	if (!IS_ENABLED(CONFIG_TRANSPARENT_HUGEPAGE) &&
-+	    !IS_ENABLED(CONFIG_LARGE_FOLIO))
- 		return 0;
- 	return (mapping->flags & AS_FOLIO_ORDER_MIN_MASK) >> AS_FOLIO_ORDER_MIN;
- }
-@@ -500,8 +504,9 @@ static inline pgoff_t mapping_align_index(const struct address_space *mapping,
- }
- 
- /*
-- * Large folio support currently depends on THP.  These dependencies are
-- * being worked on but are not yet fixed.
-+ * Large folio support is opt-in per mapping and requires CONFIG_LARGE_FOLIO.
-+ * It does not depend on THP; CONFIG_LARGE_FOLIO defaults to y when
-+ * CONFIG_TRANSPARENT_HUGEPAGE is enabled.
-  */
- static inline bool mapping_large_folio_support(const struct address_space *mapping)
- {
-diff --git a/mm/Kconfig b/mm/Kconfig
-index 9f97ad698..7bbed71af 100644
---- a/mm/Kconfig
-+++ b/mm/Kconfig
-@@ -831,13 +831,20 @@ config LARGE_FOLIO
- 	bool "Large folio support for the page cache (without THP)" if !TRANSPARENT_HUGEPAGE
- 	depends on MMU
- 	select XARRAY_MULTI
-+	# Keep LARGE_FOLIO enabled whenever THP is enabled:
-+	# huge_memory.o is built for TRANSPARENT_HUGEPAGE and calls into
-+	# folio_split.o, which is built for LARGE_FOLIO.
- 	default y if TRANSPARENT_HUGEPAGE
- 	default n
- 	help
--	  Build the folio split implementation for page-cache large folios
--	  even when transparent hugepages are disabled.  Transparent
--	  hugepages imply this option; this option alone does not enable
--	  large folio allocation, it only makes splitting them possible.
-+	  Enable page-cache large folios even when transparent hugepages
-+	  are disabled.  This option defaults to y when transparent
-+	  hugepages are enabled.
-+
-+	  With this option enabled, filesystems that opt in per mapping get
-+	  large folios in the page cache, and those folios can be split.
-+	  Without it, page-cache folios stay order-0 even when a filesystem
-+	  asks for a larger order.
- 
- menuconfig TRANSPARENT_HUGEPAGE
- 	bool "Transparent Hugepage Support"
-diff --git a/mm/shmem.c b/mm/shmem.c
-index 4686875a3..399c8c9f1 100644
---- a/mm/shmem.c
-+++ b/mm/shmem.c
-@@ -3327,7 +3327,16 @@ static struct inode *__shmem_get_inode(const struct mnt_idmap *idmap,
- 	cache_no_acl(inode);
- 	if (sbinfo->noswap)
- 		mapping_set_unevictable(inode->i_mapping);
--	mapping_set_large_folios(inode->i_mapping);
-+	/*
-+	 * shmem large folios currently depend on THP:
-+	 * shmem_alloc_and_add_folio() forces order 0 without it, and
-+	 * advertising a larger mapping size makes
-+	 * generic_perform_write() pass a length that shmem_write_begin()
-+	 * rejects wholesale for F_SEAL_GROW before the folio size is
-+	 * known.
-+	 */
-+	if (IS_ENABLED(CONFIG_TRANSPARENT_HUGEPAGE))
-+		mapping_set_large_folios(inode->i_mapping);
- 
- 	switch (mode & S_IFMT) {
- 	default:
+This series does not fix that problem and does not claim to be
+RT-safe.  It only makes a code path that already exists on THP kernels
+reachable in a configuration that has no THP, which is the same
+exposure Kairui described in 06/17 as "should be fixed generically".
+One detail that may matter if a reader-side fix is chosen: the
+function already holds the xarray lock until the folio is no longer
+frozen and visible, since folio_ref_unfreeze() happens before
+xas_unlock_irq(), so a generic fix of that shape would cover this path
+without touching it.
+
+Also not tested here: the migration, memory-failure and madvise split
+entries at runtime (only truncate was exercised end to end), arm64
+with 64K pages, nommu, KASAN and lockdep, xfstests, and the btrfs
+order range.
+
+6. Questions
+
+(a) Non-THP split accounting.  count_mthp_stat() is a no-op without
+THP, so in an LF-only build a file split updates no counter at all and
+THP_SPLIT_PAGE does not even appear in /proc/vmstat.  I have a
+follow-up patch that gives the file path its own counter.  Would you
+rather see a new vmstat item, an existing one reused, or nothing?
+
+(b) Should XFS select LARGE_FOLIO itself?  Three lines of
+"select LARGE_FOLIO if MMU" in fs/xfs/Kconfig make 64K-block XFS
+mountable on a THP=n kernel with no manual configuration; I built such
+a kernel and mounted the 64K image.  The cost is mm/folio_split.o: 3.2K
+of .text in a THP=n build, code that every THP=y build already carries,
+paid also by XFS builds that will never use a block size above the page
+size.  Kconfig cannot express "only when a 64K filesystem is mounted".
+I left it out because it changes default coverage for a decision XFS
+maintainers should make, but I can add it as 4/4 if that is preferred.
+
+Comments welcome.
+
+Fang Xieyan (3):
+  mm: move folio split code into mm/folio_split.c
+  mm: build file-backed folio splitting with CONFIG_LARGE_FOLIO
+  mm: enable filesystem page-cache large folios without THP
+
+ MAINTAINERS                |   1 +
+ fs/xfs/xfs_super.c         |   2 +
+ include/linux/huge_mm.h    |  60 ++-
+ include/linux/page-flags.h |   5 +-
+ include/linux/pagemap.h    |  17 +-
+ mm/Kconfig                 |  19 +
+ mm/Makefile                |   1 +
+ mm/folio_split.c           | 969 +++++++++++++++++++++++++++++++++++++
+ mm/huge_memory.c           | 920 -----------------------------------
+ mm/internal.h              |   1 +
+ mm/shmem.c                 |  11 +-
+ 11 files changed, 1054 insertions(+), 952 deletions(-)
+ create mode 100644 mm/folio_split.c
+
+
+base-commit: b024a51b0184b1efb6f55b11aaf7b15a490a6307
 -- 
 2.50.1
 
