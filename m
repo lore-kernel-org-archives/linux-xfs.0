@@ -1,56 +1,78 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794271089;
-	b=NP1i0tPXPgSI3xx7xHVuwAZAs7VhTOpsdZsGpTnQajrN6NBCosSPB3JOhV5xvZRdf1nV
-	 dPqilVdgDgU5Yb7C9wc2ns5UpjD424Ihhx/IjGoh9NSc82zBdH8ZjOpJsdPN062yTWumQ
-	 8IBFv4UwoU06xmH7oQDYxc90P1m7EAyTi0jWjn/Mk1tC0vGLS5F/SmjjKvPrS/MbMNTlf
-	 C3e8OQrozzFo86qr/dOu754v6JLxTdyEw9hU3dQjF1Q3+GQNV6uj74crppNRYmayNTMJ+
-	 +JYW2iTtfINYDqcI/9Q7R7efNdo3TZ3rnsz/hq47wn6r83TNfpLtXrRQYEZ8KqzIQRw==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794271089;
-	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 Reply-To:MIME-Version:X-Patchwork-Hint:X-stable:
-	 Content-Transfer-Encoding;
-	bh=HUw04Ltx5FA2iUiX7+l9T98HXG/lqVd97NgCtGgJkc4=;
-	b=VKiDw2vpXU2dnasgbkpyvGc3/pjJMFEgM3C6YcRAgRoC62CCoBV4jJrZCX1WDDGHbUqM
-	 1umOl++0BZt7UjacL0NGi3o0yOBgz+YpTw701J2XnCjdWbur2PlexHZB9ol1dqB92KpSl
-	 bj7AkRSUdfW9M+Ek4qPgcT/ldQYG7jiy8zQ7A79N4Yx0jF1a/e0qOoOvkLSBbDqnNkvK0
-	 RBRM30LHakn5kJsB64oEKZpgFNOtKCappn5P6OaC8Yf7jmGUu8OLW/X60uKst5VWc53Ny
-	 u4D0Bc1A21/HQTzwH7hguTwoFAC9LX6cm3FpsxyoEqDYqt60XqNfIO8xdIcF+dgu4OA==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cQR9XGs9;
-	arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1794271098;
+	b=ZH66WZXOXy3b+QZBN4rJr/WdErhh7gQ19JPT6QkPRhCpeD9BKguBzEnujzx8x2A/Ea3Z
+	 tAZzi0VIOYFxBJybO5xn8FNrA2IBrZs1Dc/apaI8GQ50K/7ZNBtIz1IAYJYtVSZ62w9nU
+	 vnnqpZwTL7e1YgCrrxpucDdSbxCMMGYNTfwLvxpdMsAmeqPoPk0sivMRcGss09GRQOT9j
+	 031DlIg6ZDLQnK8kkT1CESUZpT7X6rVwqHA1Xwhi9loPt7B6h4Kn8VGWv/e2UWm4IAURL
+	 D8s0z0O6TrzkQOMDp3r3WN5Eu4t69yI9ysdqTXEYtVHEEVflIxoVcgAqIRw7xNaO3Kw==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794271098;
+	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
+	 Content-Type:Message-Id:X-B4-Tracking:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=F7SYWC9p63wzk1OOh3GF55OxJUzxN5yPYEBvs21OiD4=;
+	b=rBWOBCqa5e5wIMgRinhGGPQZQCWxd1I5Sq6LF45Inxmg7xCFyywehydlZ/At/Z5YGirr
+	 VxlQXd1tXlmS3z9dduf9l45YQ3Nv9CXUAbEdxOCkV1lIPU95QDiTQfOPPPnapb1Na3D+c
+	 GhtAIJ2BYSGo6smUz3E+aHJoVG2MgqEJ6IO9D/Yc6IjxdMhkbfbqJUqS1bkFqtlgY4wUL
+	 hRU7BqJVAGsuI6qda+ULlLc7pAZorqrjzb97UhSHuMS89TRC/ClANb88oAXNM/NEppv3S
+	 NWTSeBdrB0HrTriHykqNiAict/tijYC3ipETxWm8DY2NF3ZIt2dGdpTVDxiQFjRnNHw==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Rlu9OpHn;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D6F4606A31C;
-	Tue, 10 Nov 2026 00:38:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 638CA606A325;
+	Tue, 10 Nov 2026 00:38:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cQR9XGs9
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7E4591F0089F;
-	Tue, 10 Nov 2026 00:38:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Rlu9OpHn
+Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
+ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
+	t=1794271098;
+	b=K04v+fIUGfWMlR+vNYZjzR4NaL70pAnoxN7NMl4OD+d9znl9BdehfNF7G6bomSgHV1AP
+	 rDJIAlf71Sut7qmlR1EXfXKMUS7or4HnW4pzEScRnYQrBsdlD71kdMYjbQKF4MOe9Nugd
+	 hg0RkHKWiwvidEL2mSrCMwujIRFXaRAcLOzKPdsLzwUaALjpKxrzqli2hXVGYpxHG18hB
+	 ahUaEzm/5XeSLjNAG3CplxOQp7XAovIv5OpYWLdOQcJO/pHsQM+9Mv+dS2ccnXQlgLd+0
+	 ErED3ZeG16UGLkJQ0GOLjupJPw2h1PiRlvly3VZEtPJTVyZUQSSW2Uc8iEtDzWa5k7w==
+ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
+	c=relaxed/relaxed; t=1794271098;
+	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
+	 Message-Id:X-B4-Tracking:To:Cc:X-Mailer:X-Developer-Signature:
+	 X-Developer-Key:X-Endpoint-Received:X-Original-From:Reply-To:
+	 Content-Transfer-Encoding;
+	bh=F7SYWC9p63wzk1OOh3GF55OxJUzxN5yPYEBvs21OiD4=;
+	b=uGbuk6YsoKfHPGlDlP24EZLcdHNvBA91xnZJVolIx5pZ6toWtWHsEpCIJoGCEt2WnfgD
+	 r8UXRNROM8ydnf7RBJv7ummxueJYOoNwWXsvdHwvRmL9MJSZbRi+BnF85Jf5ens6fTN70
+	 VrUDVGN+w4fHX5mpB1aHTv8Dov85e/rrU9AqgpVF+29s9vKJTh1Sd0GBq/KbaDlzsNg8y
+	 POhMw22Gy3pb89sWe0v7vH8/xotplwcu4HeLPhWG47Wp3LVBpbmPXmBHl9jDiriZ69Mkr
+	 6r4mCqiFvUpi/XtQCizea73EMDa4VQM22kMwOfMk6dabXJjh8QIPWfN5SCtgewKbwBA==
+ARC-Authentication-Results: i=1; smtp.kernel.org; 
+	arc=none smtp.remote-ip=100.80.115.77
+Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	(No client certificate requested)
+	by smtp.kernel.org (Postfix) with ESMTPS id AF59B1F008A2;
+	Tue, 10 Nov 2026 00:38:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794271089;
-	bh=HUw04Ltx5FA2iUiX7+l9T98HXG/lqVd97NgCtGgJkc4=;
-	h=From:To:Cc:Subject:Date:Reply-To;
-	b=cQR9XGs9yw9ZZ9JDVsvUGlEik2C3x7oD2WuLn1qjdrqm6UUfKb+yQGeS9rIOfDeVq
-	 Q2r77yX3WEWyZCiuJbf3BIg3N3v36FsDyXu0+1WcoBm3ZcCZOsr1SpVNzGNiTcojjo
-	 xcNbDGCprPMNF2+3RNqomFxmnelvBZQk0+J+4RUEqrSzoPz8VAAWkRupfh5Q4dlhEX
-	 6LUXiUGRkujW5c48UYCMZcCavZz9Q/Bko6z5bGus/MaBz6HRmHob3UZvSOzZyTyTOL
-	 F3zsYnS5o/jUb8bg/AlJrVY1jJaYWEf+xVrRhENm7+82p4pcXa8xW44Njx+K1OX+ro
-	 ws+YDYGF0CsDw==
-From: Sasha Levin <sashal@kernel.org>
-To: stable-commits@vger.kernel.org,
-	jianyungao89@gmail.com
-Cc: Amir Goldstein <amir73il@gmail.com>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	linux-xfs@vger.kernel.org
-Subject: Patch "xfs: fix temporary cursor leak in btree shift corruption paths" has been added to the 6.6-stable tree
-Date: Mon,  9 Nov 2026 19:38:07 -0500
-Message-ID: <20261110003807.3527291-1-sashal@kernel.org>
-X-Mailer: git-send-email 2.53.0
-Reply-To: stable@vger.kernel.org
+	s=k20260515; t=1794271098;
+	bh=F7SYWC9p63wzk1OOh3GF55OxJUzxN5yPYEBvs21OiD4=;
+	h=From:Date:Subject:To:Cc:Reply-To;
+	b=Rlu9OpHnuB0ZRJiI8If98KrGmFurlDmcc+Xz553n9Af4StU7AHbr/nYGQMt5ufkpB
+	 zIEH9hngZqj7Sl8WxJs6P8KpPeAvMKSD1riH2VL+eZuKakuv7oyBTCgerekqstmlPR
+	 UWSEi70M+YJSsslh6Ey6EGzhAREHIHvvpCzWtkAcLz2KdlB+vJ5rz/vtn06MWrHYD+
+	 f6iSJGkG0PcZ4De+Cgiqx9FUmFj2B4vbRYZDcPkgU+0Kt24Wj+DXqpExCeJmY5lmf/
+	 WL+tCFtJ4SE8y3AE+Qk7jO2tFhPPNhuDQ05mYcW2rG2momN56mKbhqmrRSsAXaLZZA
+	 xNL39gK9SONmg==
+Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
+	by lkml.kernel.org (Postfix) with ESMTP id 0F71C4872D;
+	Tue, 10 Nov 2026 00:38:17 +0000 (UTC)
+From: Daejun Park via B4 Relay <devnull+daejun7.park.samsung.com@kernel.org>
+Date: Tue, 10 Nov 2026 09:38:17 +0900
+Subject: [PATCH] xfs: wait for direct I/O before swapping extents
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -60,69 +82,72 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-Patchwork-Hint: ignore
-X-stable: review
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Message-Id: <20261110-xfs-swapext-dio-wait-v1-1-b8ccc5d5ef3c@samsung.com>
+X-B4-Tracking: v=1; b=H4sIAHhn8moC/x3MMQ6AIAxA0auYzjYBBhWvYhwQi3ZRQ42SEO4uc
+ XzD/xmEIpPA2GSI9LDweVTotgG/u2Mj5LUajDKd1spiCoLyuovSjSuf+Dq+sVt6pbxxdtAENb0
+ iBU7/dppL+QBEvDAdZgAAAA==
+To: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
+Cc: Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>, 
+ "Darrick J. Wong" <djwong@kernel.org>, linux-kernel@vger.kernel.org, 
+ stable@vger.kernel.org, Daejun Park <daejun7.park@samsung.com>
+X-Mailer: b4 0.13.0
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1794271096; l=1421;
+ i=daejun7.park@samsung.com; s=20261006; h=from:subject:message-id;
+ bh=grxFvx5J+h49fGNJIZy/14ToLYlTBOdKLe89d7TYHY4=;
+ b=B51sfxA0+dz3DqeZ+HRW/V1/hxt+LhhEHxydxcXybSn6BwVKeZsYRYTVhyEbN1Z446A40ukcB
+ M770yk8DukNC2y8v4PlXy9orTllGOoVeeB6+FsoewycphEKwIN6cB/8
+X-Developer-Key: i=daejun7.park@samsung.com; a=ed25519;
+ pk=4yUfDqGRZTIj0Ik43z1GoMZRWCNm/rgX6uJuM9dtNIg=
+X-Endpoint-Received: by B4 Relay for daejun7.park@samsung.com/20261006 with
+ auth_id=1122
+X-Original-From: Daejun Park <daejun7.park@samsung.com>
+Reply-To: daejun7.park@samsung.com
+Content-Transfer-Encoding: 7bit
 
-This is a note to let you know that I've just added the patch titled
+From: Daejun Park <daejun7.park@samsung.com>
 
-    xfs: fix temporary cursor leak in btree shift corruption paths
+An AIO direct write drops the iolock before its bios complete.
+XFS_IOC_SWAPEXT does not wait for it. The write can land in blocks that
+the swap moved to the temporary file. Once xfs_fsr frees them, the
+write corrupts whatever reuses them.
 
-to the 6.6-stable tree which can be found at:
-    http://www.kernel.org/git/?p=linux/kernel/git/stable/stable-queue.git;a=summary
+Wait for direct I/O first, as exchange-range does.
 
-The filename of the patch is:
-     xfs-fix-temporary-cursor-leak-in-btree-shift-corrupt.patch
-and it can be found in the queue-6.6 subdirectory.
+Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+Cc: stable@vger.kernel.org
+Signed-off-by: Daejun Park <daejun7.park@samsung.com>
+---
+Tested with an AIO direct write held back by cgroup io.max. Before, the
+write reached files that reused the freed blocks in 7 of 7 runs. After,
+those files were intact. The new fstests case "xfs: test that swapext
+waits for in-flight direct I/O" fails before and passes after. Running
+fstests -g fsr shows no change.
 
-If you, or anyone else, feels it should not be added to the stable tree,
-please let <stable@vger.kernel.org> know about it.
+Applies with or without "xfs: break layouts before swapping extents".
+---
+ fs/xfs/xfs_bmap_util.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-
-
-commit 2af22d4e1b8e0420eb042c5288c321e027333534
-Author: Jianyun Gao <jianyungao89@gmail.com>
-Date:   Mon Nov 2 23:01:41 2026 +0800
-
-    xfs: fix temporary cursor leak in btree shift corruption paths
-    
-    [ Upstream commit 2bbca049deeb1699cafd966cb2793fee576ee409 ]
-    
-    In xfs_btree_lshift and xfs_btree_rshift, when XFS_IS_CORRUPT detects
-    an invalid firstrec/lastrec result after xfs_btree_dup_cursor has
-    successfully allocated a temporary cursor, the error path jumps to
-    error0 which returns without freeing tcur.  This leaks the cursor
-    memory, the xfs_group reference, and the per-level buffer references
-    held by the duplicated cursor.  Jump to error1 instead, which calls
-    xfs_btree_del_cursor(tcur, XFS_BTREE_ERROR) to properly release all
-    resources.
-    
-    Cc: stable@vger.kernel.org
-    Fixes: 9eaead51bed95 ("[XFS] implement generic xfs_btree_rshift")
-    Signed-off-by: Jianyun Gao <jianyungao89@gmail.com>
-    Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-    Signed-off-by: Carlos Maiolino <cem@kernel.org>
-    Signed-off-by: Sasha Levin <sashal@kernel.org>
-
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index 1328dadcfc299..331bf27f2b219 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -2467,7 +2467,7 @@ xfs_btree_lshift(
- 		i = xfs_btree_firstrec(tcur, level);
- 		if (XFS_IS_CORRUPT(tcur->bc_mp, i != 1)) {
- 			error = -EFSCORRUPTED;
--			goto error0;
-+			goto error1;
- 		}
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 865aec3ae5a..4d214708f9c 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1257,6 +1257,7 @@ xfs_swap_extent_flush(
+ {
+ 	int	error;
  
- 		error = xfs_btree_decrement(tcur, level, &i);
-@@ -2637,7 +2637,7 @@ xfs_btree_rshift(
- 	i = xfs_btree_lastrec(tcur, level);
- 	if (XFS_IS_CORRUPT(tcur->bc_mp, i != 1)) {
- 		error = -EFSCORRUPTED;
--		goto error0;
-+		goto error1;
- 	}
- 
- 	error = xfs_btree_increment(tcur, level, &i);
++	inode_dio_wait(VFS_I(ip));
+ 	error = filemap_write_and_wait(VFS_I(ip)->i_mapping);
+ 	if (error)
+ 		return error;
+
+---
+base-commit: 1e17fc56469d62d1c1ac45c137a2456d14456f1d
+change-id: 20261109-xfs-swapext-dio-wait-6b700c2a981e
+
+Best regards,
+-- 
+Daejun Park <daejun7.park@samsung.com>
+
+
