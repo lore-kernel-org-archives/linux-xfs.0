@@ -1,44 +1,44 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794337469;
-	b=xhzWT/Km7T+XcRoWJRA2NWseauNYq04j/PJpw8SGuh7RhDOrR1z1GiIIzFOfLyIqdFJ8
-	 g+sehSuNcub8Z72t36sZ1G0WvfDJVPG3AdKTth2cApvLHNnbFyFHroZGPMjg5eOSFKRex
-	 RqKTN8aL6RnwYlcq2RGt0OAQXgxi0zE58diG07nZ/j74Vh0TJ+nqJPuwNSW5jYlamzEqO
-	 VtGNZu9n0LPRy3NHCGZ2+r4cPfMSGMx9W6Gi/81uR++XDUIdGKyMIs19/+FKlxbIIINdx
-	 r+hYCmFOfQc8Eoc3pdg3R5HCNWR7prVyR5OHhoF0i2do5oNiO3LZ7B7M3rcw7aNKPoA==
+	t=1794337467;
+	b=yuNj5mvFNsbq+boYa67QLYR7cGiffnbQVjLuMhCcAuXbrZcN603Yd7RE2IbYhRDIC/SV
+	 Bw11GkIU8I5BrVyXgtJbAisjQio60v2Ov7fPWLSI9mY4fzLOdhTGGDtuTTzmmoCw9cx9+
+	 7/ZCpGbR1yahCW+MFRjt62DcvyrTB2hRq1uD/DxWdtbUTmZ/ukk2Ba9YCzyY2a407us6x
+	 5IUSDGIiJXZ4O4lLEQF+SabzGsWfHZ9EmowDvuCe7Pzk8syaOC5s1637I5Gx61VIBsRtR
+	 HHZ8bjRTwm2k+1ZGYhygcatmJj8K6efbLbKBpsO/bueq3qUMWHHbPFpDiS3XR+xv6Sg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794337469;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794337467;
 	h=Received:DKIM-Signature:From:To:Subject:Date:Message-ID:In-Reply-To:
 	 References:MIME-Version:Content-Type:Content-Transfer-Encoding;
-	bh=XCsvXYuvQoSS6Lf9NQzfxkQkAXgfWEJf9C4YV3i1EPk=;
-	b=lqGW/cZ5RyMkBL7Nl0JJCMH41hdVU7Wp2prZL0Z2EvgwEPM9cO849lHdgrFLLwZrLkLQ
-	 g2/LYASvs/x3ar8UjXhtLaFyqxugQaIFT+vY1gDILlTJqCtrhyCZDvSznTXxjw5rWQQyx
-	 28ai+XVwX97PBlvvkU84svzH1cQvMQdDpNUt/y81RL7jLxENf5l4IAODfn8sJZDoHVXgX
-	 oK4ZJT0VHUhDJOSKfyPh4KTELiKu4gijUrdAsEJWq17SFCuNCHMM1qrkliD266Fl+s2/B
-	 vgtEE7TE5YPVSUe8TTMG3fPXo7gHaOacZpbHIMiQ61muweNo0xH5ms5gtp+TcpBx58A==
+	bh=Z6NcfE7q4aw6EHDzqyxzrOJSO96VOIIF54Ip198CsSs=;
+	b=yqw3DxaFEA/YkWrjFb6cGxs5+Wbge/a8sA0/BqHgG5RPDV4fQV1IDSYJGHMWStZGA9Mp
+	 qLpPrpHJFPqQAZ8elhLsKqSGLzMacFNZVVvlZCkNCsj610e51Aen8fz5Y4ccCC8OhuB6H
+	 VIk6YA7i9bRkjddMUB+NfeDboaLYYDwEmhpHBfqm7S1nykl/Z4MTrB8fhFWy0kvbg+QhH
+	 p2n30m1yoQLoLbfXzdiIYKM5qC/joDP6Rt2kamfPoEE+1w0gGtOkN5+O0euF/htPSCV4q
+	 wRAnZIpXi9v+FL3gT4qdgZ0/VP9scp4UENgIbqbhCTY2YPR/P+YpyCzBt6fZmrNsjVw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fLXjiWVW;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DYz8mNu9;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17B0D606A320;
-	Tue, 10 Nov 2026 19:04:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fLXjiWVW
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7C8AD1F0089F;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 855D8606A337;
 	Tue, 10 Nov 2026 19:04:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DYz8mNu9
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B763F1F00900;
+	Tue, 10 Nov 2026 19:04:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794337468;
-	bh=XCsvXYuvQoSS6Lf9NQzfxkQkAXgfWEJf9C4YV3i1EPk=;
+	s=k20260515; t=1794337467;
+	bh=Z6NcfE7q4aw6EHDzqyxzrOJSO96VOIIF54Ip198CsSs=;
 	h=From:To:Subject:Date:In-Reply-To:References;
-	b=fLXjiWVWKLirwi045sS87MjGg4tLVOYTC9tvLqfzJeK9fORyJC4dTkymH6CLRk6GV
-	 wtDW7LHlcdRZoZVMwCLO6OoUErxYOeNb3MA12ynHD43BwDb+tULlEDTFGK1HrbQ7OO
-	 NN5upLbiKDAVHS9ZF9tSdPaoSPNuHTfAcg0eyh2LNtkiA+6WDAuLHirPHSgMFibacx
-	 nY14ocLdZt/wkl+DKUO36hqgxdUHthg1MMLvwfRyKpFaYAFH4ZjH4dSFE3zhi2gNTp
-	 jtzyBEqPCch0+W4IQDPjmEOKEXvacRFFR7NV/sqbgH1qhkPa6s7Rs3jy+WA9BZYoTQ
-	 ZBjwg6WbotnfA==
+	b=DYz8mNu94D9UTXC1UZAb0iVNDuG8dMpdKYmD4RDSA/BVuhCM85b0R218Hq8Eu2vkj
+	 2Sw8IHzxkrqKwBocIsdzsYE9DRAlVI4jY0yK0XmdNteqzFkErDViSLsdHPeCEIMxJG
+	 sVmhbMRSsEZr8UvppzzJZPbwXBFQHwfLPmNBwxGzZ6XDjslpE7sU9w3hrWVB8UoGIy
+	 6wm7JuiZK8uKg2Up1G10VcdI2g4tzJXzcdp9mCYrmIeuanQ5KXQY+KxBjZyfw+gXvd
+	 zJjOsJb/KtAHJ70t23kjFPopY/ftH3NpG5oCxvqMKJ1ZlxYQFL0FpgIoRhI9iAuNtT
+	 ZSCocRUuoENSg==
 From: Chris Mason <mason@kernel.org>
 To: mason@kernel.org,
 	tytso@mit.edu,
@@ -53,9 +53,9 @@ To: mason@kernel.org,
 	linux-ext4@vger.kernel.org,
 	tz2294@columbia.edu,
 	brauner@kernel.org
-Subject: [PATCH v7 04/11] iomap: don't punch delalloc under a dirty EOF block
-Date: Tue, 10 Nov 2026 14:04:22 -0500
-Message-ID: <20261110190417.32650-6-mason@kernel.org>
+Subject: [PATCH v7 03/11] xfs: don't change the block map under a dirty folio
+Date: Tue, 10 Nov 2026 14:04:21 -0500
+Message-ID: <20261110190417.32650-5-mason@kernel.org>
 In-Reply-To: <20261110190417.32650-1-mason@kernel.org>
 References: <20261110190417.32650-1-mason@kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -70,27 +70,32 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-After a failed buffered write, writeback on XFS can write in place to
-the shared block that contains EOF, and corrupt the other file that
-shares it.
+With CONFIG_TRANSPARENT_HUGEPAGE=y, writeback on XFS can write in place
+to a shared block and corrupt the other file that shares it.
 
-After a failed buffered write, iomap_write_delalloc_release() punches
-the delalloc reservation of the write, except under dirty folios, which
-still need it. It looks for dirty folios only up to i_size, and punches
-the rest unconditionally. But XFS rounds that punch down to a block
-boundary, so the block that contains EOF loses its COW fork reservation,
-and writeback goes to the shared block:
+xfs_map_blocks() writes in place unless the COW fork has an extent for
+the block. write() and write faults reserve one before they dirty a
+folio over a shared block, so xfs_flush_unmap_range() writes back and
+truncates the range before a clone changes the block map. But the holder
+of a GUP write pin takes no filesystem lock, and the truncate keeps a
+large dirty folio that straddles the range:
 
-    block size 4096, i_size 5000, reservation 4096 to 8192
-    searched for dirty folios:  4096 to 5000
-    punched unconditionally:    5000 to 8192
-    rounded to blocks by XFS:   4096 to 8192
+    clone                         pin holder         writeback
+    =====                         ==========         =========
+    writes the range back
+                                  dirties the folio
+    truncate keeps the folio
+    maps a shared block under it
+                                  dirties it again
+                                                     finds no COW extent
+                                                     writes in place
+                                                     /* shared block */
 
-The fix used here is to look for dirty folios up to the end of the block
-that contains EOF.
+The fix used here is to invalidate the range instead of truncating it,
+and to fail the call with -EINVAL if a dirty folio is left, before the
+block map changes.
 
-Fixes: f43dc4dc3eff ("iomap: buffered write failure should not truncate the page cache")
-Fixes: f6f91d290c8b ("xfs: punch delalloc extents from the COW fork for COW writes")
+Fixes: 6795801366da ("xfs: Support large folios")
 Signed-off-by: Chris Mason <mason@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
@@ -99,61 +104,51 @@ Notes:
     v6->v7:
     - No change.
 
- fs/iomap/buffered-io.c | 34 ++++++++++++++++++++++++++++++----
- 1 file changed, 30 insertions(+), 4 deletions(-)
+ fs/xfs/xfs_bmap_util.c | 17 +++++++++++++++--
+ fs/xfs/xfs_reflink.c   |  2 +-
+ 2 files changed, 16 insertions(+), 3 deletions(-)
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index d6e2f1ded5ca..d0980a7f27d1 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -1495,9 +1495,34 @@ static void iomap_write_delalloc_scan(struct inode *inode,
-  * mapping_seek_hole_data() will return it, and we will skip the punch because
-  * the folio is dirty. THis is incorrect - we always need to punch out delalloc
-  * beyond EOF in this case as writeback will never write back and covert that
-- * delalloc block beyond EOF. Hence we limit the cached data scan range to EOF,
-- * resulting in always punching out the range from the EOF to the end of the
-- * range the iomap spans.
-+ * delalloc block beyond EOF. Hence we limit the cached data scan range, and
-+ * always punch out the range from the end of the scan to the end of the range
-+ * the iomap spans.
-+ *
-+ * The scan cannot simply end at EOF, because EOF is a byte offset and a
-+ * delalloc reservation covers whole blocks. If EOF lies inside a block, it
-+ * splits that block in two:
-+ *
-+ *	[block start, EOF)	File data. If it is dirty it will be written
-+ *				back, so the block must keep its delalloc
-+ *				backing.
-+ *	[EOF, block end)	Beyond EOF. By the rule above, this would always
-+ *				be punched out.
-+ *
-+ * Both parts share one reservation, and it cannot be split: a punch of a part
-+ * of a block takes away the reservation for the whole block. If the scan ended
-+ * at EOF, we would skip the punch for the first part because it is dirty, and
-+ * then punch the second part, which takes the reservation away from under the
-+ * dirty data in the first part. On XFS, writeback that has lost a COW fork
-+ * reservation like this writes in place, over a block that is shared with
-+ * another file.
-+ *
-+ * Hence we treat the EOF block as a whole, and let the cached data over it
-+ * decide: the scan range is rounded up to the end of the block that EOF lies
-+ * in. If the data over the EOF block is dirty, the scan moves the punch start
-+ * past the block. If it is clean, the block is punched like any other block in
-+ * the range. Only blocks that start at or beyond EOF are punched
-+ * unconditionally. If EOF is block aligned, the round up changes nothing.
-  *
-  * Intervals are of the form [start_byte, end_byte) (i.e. open ended) because it
-  * matches the intervals returned by mapping_seek_hole_data(). i.e. SEEK_DATA
-@@ -1511,7 +1536,8 @@ void iomap_write_delalloc_release(struct inode *inode, loff_t start_byte,
- 		iomap_punch_t punch)
- {
- 	loff_t punch_start_byte = start_byte;
--	loff_t scan_end_byte = min(i_size_read(inode), end_byte);
-+	loff_t scan_end_byte = min_t(u64, end_byte,
-+			round_up((u64)i_size_read(inode), i_blocksize(inode)));
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 537c6b29417c..4673d5174645 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -863,8 +863,21 @@ xfs_flush_unmap_range(
+ 	error = filemap_write_and_wait_range(inode->i_mapping, start, end);
+ 	if (error)
+ 		return error;
+-	truncate_pagecache_range(inode, start, end);
+-	return 0;
++
++	/*
++	 * The callers go on to change the block map, so no folio may stay over
++	 * the range.  The holder of a GUP pin can mark a folio dirty again
++	 * after the flush, with no lock of ours.  A truncate drops such a folio
++	 * if it lies inside the range.  If it is a large folio that straddles
++	 * the range, the truncate cannot split it, so it zeroes a part of the
++	 * folio, keeps it, and reports nothing.  The invalidation removes whole
++	 * folios, changes no data, and fails on a dirty folio.
++	 */
++	error = invalidate_inode_pages2_range(inode->i_mapping,
++			start >> PAGE_SHIFT, end >> PAGE_SHIFT);
++	if (error == -EBUSY)
++		error = -EINVAL;
++	return error;
+ }
  
- 	/*
- 	 * The caller must hold invalidate_lock to avoid races with page faults
+ int
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 104542b10d9e..ff89516154bd 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -1663,7 +1663,7 @@ xfs_reflink_zero_posteof(
+ /*
+  * Prepare two files for range cloning.  Upon a successful return both inodes
+  * will have the iolock and mmaplock held, the page cache of the out file will
+- * be truncated, and any leases on the out file will have been broken.  This
++ * be invalidated, and any leases on the out file will have been broken.  This
+  * function borrows heavily from xfs_file_aio_write_checks.
+  *
+  * The VFS allows partial EOF blocks to "match" for dedupe even though it hasn't
 -- 
 2.55.0
 
