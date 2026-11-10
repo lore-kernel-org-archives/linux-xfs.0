@@ -1,54 +1,54 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794270138;
-	b=wOT/hQP1p91+DInpk8mrDG0QKsL91JTuPDTq6wdLNQg1kVrumzLD3CG9nb8d7sy/EyN4
-	 U3bXJsBzCZjg4+HLgtdQDK1+S37dqMfUwENqFzo+JCpl8f6T6xkiMrM6rGHCbfL76XtR7
-	 fhRVtNKDE+BDmCXtY65V46Egde7vHl1F8dZ12t+OFFwKso3DPoocW0rKY+wuDDpS94a+d
-	 Na1JzJX6c8tjlN5KHr1UMv54nF6EuEoif+L1whpmMiFCdHs+4ilxwG7beewWBgZW3EoWg
-	 BUt8sEt37/FWV7ADQqXtfiv8fjcjKaaATIV3eftvCqpZ4q3hRGVkoLCWHRmas6b+c/Q==
+	t=1794270520;
+	b=fBYQS8ZpolMLpR93UHjJvhLgiTrIB7qNsCvWaFIXYKFZrfELovghMRrnv319xHZeWSUk
+	 xzXC/gkX1wtBrl0IdMJtPaX/EK2p0vYR+CAV3QFxzDI1OAbz0WX7zDPyg5jCuiurwdpVL
+	 IelxRkP4wdQoMvQwyyb6vhI0nbo1JSriqaVsv0mwdaYK/M+KjCGRyv1CIi4P78KfoCwLI
+	 qUfnuj70OIcXKQ23XK/25CJJP7APhf9FO05JrttqQjAdjNHyBqNco+NkRYtRiLWwLSJR1
+	 3SUk0d11j36asUKDVl+3Hof/uEBEqcf0wQevfOoLeh41D7sEQQZE198FE/YBq1uQsjA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794270138;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794270520;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 Reply-To:MIME-Version:X-Patchwork-Hint:X-stable:
 	 Content-Transfer-Encoding;
-	bh=5Pfmi/oyelBH8ax5UuwsjqgZONObekDoc5+sahFWCHk=;
-	b=NyhZG8lBEU/pFGc+7+ZW8/z08IOTSn9RRcqvoQRUsWia/Y6hqZk1kC4nIr2EPnO/+tsh
-	 jdXqGuGuvFQPCoUtQhls4Wi2r9EV0uPRQ6AyH1OqtiOcJT8RyW8tWPdlbxkVWAuwFDKAi
-	 nDIRRqRlrwc5AVYYvXBCSgIoWi4gLHjz8YzgDxGbdHNkRVdIcHe05iVkZkDgFOkWBcBlx
-	 1LQDQvEPNh38Bq2LhNvicqwO2dpbSBnOyzJ8zBHKfpjgQ2ffo49KEl5iJYVZmDOKEnzFb
-	 Lb6719FoQ97hbNWy3hVmH8zm4r/rZ2DDRP5kK08n/BYca/2ypWpMb4H2iX/ZOmfFALA==
+	bh=cbWhCw4MSbEj7fbH8aVJEoHPZVzgRitxkQhCHI24H9U=;
+	b=SxV40CGOjLYp7LtsIcY1lQilZHy67bmLcmmzTPb3Bd/abXdoj08RBBza4tH+ks3t++0b
+	 /mD/LeMVyXbtNa+K/9cnuV1TcFt81GKV8RkBgTNuxX+66E0SCWkts4F8v4767vC8bCTET
+	 1uHGecRu2u9RpP1XKNEzuJ3x04FG4u7zcpSex62iQ2cGkotqAyfGjP8AMXuL3SdkwJbVi
+	 usFxc3Ytz7UpCJTiEtdRW5vMU4Cb7fqY2IYdFieT+qNJLdsZ5p4BFZtrA+hK+6dpe9oip
+	 sVh+LGLC2E4WZ0jw9YiLcn/8xeolMQLdZzXFpITGv8VrvKnb8sTKdlRSL/8BFL6TUXg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gotvOGOz;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OL9bZlLJ;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99A80606A31C;
-	Tue, 10 Nov 2026 00:22:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A652606A31C;
+	Tue, 10 Nov 2026 00:28:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gotvOGOz
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CEF061F0089F;
-	Tue, 10 Nov 2026 00:22:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OL9bZlLJ
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B85E81F0089F;
+	Tue, 10 Nov 2026 00:28:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794270138;
-	bh=5Pfmi/oyelBH8ax5UuwsjqgZONObekDoc5+sahFWCHk=;
+	s=k20260515; t=1794270520;
+	bh=cbWhCw4MSbEj7fbH8aVJEoHPZVzgRitxkQhCHI24H9U=;
 	h=From:To:Cc:Subject:Date:Reply-To;
-	b=gotvOGOzVtys9FuzmWxVIkZLLjNZ87+nhwpBj5yusBf5daZcy+FRNzE/fjoiAgQyX
-	 euz6C52knq6AXSyx1T3JDhx/59U7ylP7DnhTl0z1DXAhIj6P/QLokjdsVNcUXhVv5+
-	 GPfdmjPR+e02El7hXY7Ml+X3htHllMjpjtEQN/CiCpY2xrMpYLOgWslWWxUgAENlw4
-	 ZqSPbrzNhJYByl/dSw+rjdwcW+Wac1BwIPYYj5snGx9/jMF1FJPgsAMNPJ8D8wcDTq
-	 MUoM3l8qU05rCgP23ZYTD9jNFhnV90uxAD6p0RC9f91kaivBcRjjRY8L612+F3dCSA
-	 kPO+1d2weBVnw==
+	b=OL9bZlLJAFjmPszaRBBWcd4kxRKG5UipqdvlMsuy6B7eaXWu95Hr+dLPPNG0CUWYD
+	 buEsUTKsMunKWN9xIszW/BnzGhzJGJLWcuCPWaFcgRvpADN3H7OFwE9cltBnNwSJOF
+	 yzKUhLi1kPKEs/rpZlukrWh1dcMqlPF7dGo48MDNW0lRxi0PY5qPx+okD7oUZoF3EQ
+	 XpYEQT/X2Xogvo0um0Ts5Z3UL6y/TyoBGSJm1Z11hKxuvjA91I2FIowgvKGIMRjBBQ
+	 BYQBuD09lIyDIOVVvV8/SSNVO2mV5mrLQKElzOy7RDZ/j8ockQfWUgGfZIlsPychNU
+	 69ZimkYy3zFiA==
 From: Sasha Levin <sashal@kernel.org>
 To: stable-commits@vger.kernel.org,
-	hch@lst.de
+	daejun7.park@samsung.com
 Cc: Amir Goldstein <amir73il@gmail.com>,
 	"Darrick J. Wong" <djwong@kernel.org>,
 	linux-xfs@vger.kernel.org
-Subject: Patch "xfs: fix recovery of partial attr removals" has been added to the 6.18-stable tree
-Date: Mon,  9 Nov 2026 19:22:16 -0500
-Message-ID: <20261110002216.3505950-1-sashal@kernel.org>
+Subject: Patch "xfs: don't skip free extents in later batches of a whole-AG FITRIM" has been added to the 6.12-stable tree
+Date: Mon,  9 Nov 2026 19:28:38 -0500
+Message-ID: <20261110002838.3514608-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 Reply-To: stable@vger.kernel.org
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -66,68 +66,97 @@ Content-Transfer-Encoding: 8bit
 
 This is a note to let you know that I've just added the patch titled
 
-    xfs: fix recovery of partial attr removals
+    xfs: don't skip free extents in later batches of a whole-AG FITRIM
 
-to the 6.18-stable tree which can be found at:
+to the 6.12-stable tree which can be found at:
     http://www.kernel.org/git/?p=linux/kernel/git/stable/stable-queue.git;a=summary
 
 The filename of the patch is:
-     xfs-fix-recovery-of-partial-attr-removals.patch
-and it can be found in the queue-6.18 subdirectory.
+     xfs-don-t-skip-free-extents-in-later-batches-of-a-wh.patch
+and it can be found in the queue-6.12 subdirectory.
 
 If you, or anyone else, feels it should not be added to the stable tree,
 please let <stable@vger.kernel.org> know about it.
 
 
 
-commit 2dc3eff9bd101959068498d475771fd9b8a86437
-Author: Christoph Hellwig <hch@lst.de>
-Date:   Wed Oct 28 09:09:39 2026 +0100
+commit cbf1a0a054e5241dba78a8b69911a0928a5abdad
+Author: Daejun Park <daejun7.park@samsung.com>
+Date:   Mon Oct 26 10:54:05 2026 +0900
 
-    xfs: fix recovery of partial attr removals
+    xfs: don't skip free extents in later batches of a whole-AG FITRIM
     
-    [ Upstream commit 30bb61651d2da5a502cf504bcdad16c093c1bb08 ]
+    [ Upstream commit 595e67d7261673d03c96950ffbb2e545c00376ed ]
     
-    When running xfs/753 on parent pointer-enabled file systems with DEBUG
-    enabled, log recovery will eventually crash after a few dozen iterations
-    due to an ASSERT that XFS_ATTR_INCOMPLETE is not already set when
-    xfs_attr3_leaf_setflag is called:
+    A whole-device FITRIM walks every AG but the last by length, in
+    batches. xfs_trim_gather_extents() saves the record to restart from in
+    tcur->start. But tcur->start is also the start of the range to trim.
+    Later batches therefore never discard the free extents below that
+    block.
     
-    XFS: Assertion failed: (entry->flags & XFS_ATTR_INCOMPLETE) == 0, file: fs/xfs/libxfs/xfs_attr_leaf.c, line: 3045
+    Save the restart record in a new restart_bno field.
     
-    This is because parent pointer use logged attributes, and the attribute
-    intents do not track the work that has been done as the transaction
-    rolls, and the recovery mechanism is to run the operation from scratch.
-    Because of this various places check for XFS_DA_OP_RECOVERY skip work
-    already done.  But while recovery tolerates an attribute already fully
-    removed, it currently trips the above assert for an attribute that
-    already has the INCOMPLETE bit set, but still exists.  Fix this by
-    handling the case like all the others.
-    
-    Fixes: 1d08e11d04d2 ("xfs: Implement attr logging and replay")
-    Cc: stable@vger.kernel.org # v5.19
-    Signed-off-by: Christoph Hellwig <hch@lst.de>
-    Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+    Cc: stable@vger.kernel.org # v6.10
+    Fixes: b0ffe661fab4 ("xfs: fix performance problems when fstrimming a subset of a fragmented AG")
+    Signed-off-by: Daejun Park <daejun7.park@samsung.com>
+    Reviewed-by: Christoph Hellwig <hch@lst.de>
     Signed-off-by: Carlos Maiolino <cem@kernel.org>
     Signed-off-by: Sasha Levin <sashal@kernel.org>
 
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index 914f5dfb6463a..a6fe8a845079c 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -2948,7 +2948,14 @@ xfs_attr3_leaf_setflag(
- #endif
- 	entry = &xfs_attr3_leaf_entryp(leaf)[args->index];
+diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
+index 0b343776da8c3..9ad0d653f266b 100644
+--- a/fs/xfs/xfs_discard.c
++++ b/fs/xfs/xfs_discard.c
+@@ -160,6 +160,8 @@ struct xfs_trim_cur {
+ 	xfs_agblock_t	end;
+ 	xfs_extlen_t	minlen;
+ 	bool		by_bno;
++	/* restart point (with count) for the by-length walk */
++	xfs_agblock_t	restart_bno;
+ };
  
--	ASSERT((entry->flags & XFS_ATTR_INCOMPLETE) == 0);
-+	if (entry->flags & XFS_ATTR_INCOMPLETE) {
-+		if (!(args->op_flags & XFS_DA_OP_RECOVERY)) {
-+			ASSERT(args->op_flags & XFS_DA_OP_RECOVERY);
-+			return -EFSCORRUPTED;
-+		}
-+		return 0;
-+	}
-+
- 	entry->flags |= XFS_ATTR_INCOMPLETE;
- 	xfs_trans_log_buf(args->trans, bp,
- 			XFS_DA_LOGRANGE(leaf, entry, sizeof(*entry)));
+ static int
+@@ -205,14 +207,15 @@ xfs_trim_gather_extents(
+ 		error = xfs_alloc_lookup_le(cur, tcur->start, 0, &i);
+ 		if (!error && !i)
+ 			error = xfs_alloc_lookup_ge(cur, tcur->start, 0, &i);
+-	} else if (tcur->start == 0) {
++	} else if (tcur->restart_bno == NULLAGBLOCK) {
+ 		/* first time through a by-len starts with max length */
+ 		cur = xfs_cntbt_init_cursor(mp, tp, agbp, pag);
+ 		error = xfs_alloc_lookup_ge(cur, 0, tcur->count, &i);
+ 	} else {
+ 		/* nth time through a by-len starts where we left off */
+ 		cur = xfs_cntbt_init_cursor(mp, tp, agbp, pag);
+-		error = xfs_alloc_lookup_le(cur, tcur->start, tcur->count, &i);
++		error = xfs_alloc_lookup_le(cur, tcur->restart_bno,
++					    tcur->count, &i);
+ 	}
+ 	if (error)
+ 		goto out_del_cursor;
+@@ -242,9 +245,15 @@ xfs_trim_gather_extents(
+ 		if (--batch <= 0) {
+ 			/*
+ 			 * Update the cursor to point at this extent so we
+-			 * restart the next batch from this extent.
++			 * restart the next batch from this extent. The
++			 * by-length walk does not visit extents in block
++			 * order, so it must keep the start of the range and
++			 * restart from restart_bno instead.
+ 			 */
+-			tcur->start = fbno;
++			if (tcur->by_bno)
++				tcur->start = fbno;
++			else
++				tcur->restart_bno = fbno;
+ 			tcur->count = flen;
+ 			break;
+ 		}
+@@ -347,6 +356,7 @@ xfs_trim_perag_extents(
+ 		.start		= start,
+ 		.end		= end,
+ 		.minlen		= minlen,
++		.restart_bno	= NULLAGBLOCK,
+ 	};
+ 	int			error = 0;
+ 
