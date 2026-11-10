@@ -1,54 +1,54 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794269906;
-	b=tCZwWEiAPTi1QMzaA8g6kFE/HoyMWnpZSpWfUQko0PbiMPL7amJOe5iQumcOgo+dBE/u
-	 ZnZgN6rlHlDghFSEunXil1iK57ufLY7P1D+eQR5vrZOMzcfiWr+FjnXetq0wTiQqDTid5
-	 AyR7B+vGy46c78ClQmaBRB2Fk2yq81MxJMPkGmNL1EEqMfv20EQ/nEFK9r0ADPGte/YIN
-	 wSs40aSxQkwnNx4GRGmccS2t+kZk/i1vWTwSvgrSBpum3/DttXk75Kkd8um0E9+MmOraQ
-	 6/35oGYc+m7+C1o9pHxQffylFdxV89j2SrEBDuX4Tx2A/84dPQxe+oc6IM8eVsXTFoA==
+	t=1794269908;
+	b=AEZvXa08a3bkESd0L/VGESrj8QNMyiESgZqbgYBPZHPhu467tfPSlk2eG1+IxyqCUxH9
+	 IYbvljBB1VYJdVC2k0Efm+1QiofFmsIQTzIwhw2IOFPCGijxkohogJ6cR6w07V9aLXMiy
+	 nVq+bBEIug8I+/t+nIYTFcRci3BAyaNRhLqUD6WcurWV04YoX4+2aH0AN8RIuU4mkMIeX
+	 inKvK1pEDImD71IBOKb82c4BBqpefyLnUmpD4tQjQafBFANS3E4jy4Z8vPObyM24IciVf
+	 HhHOt2/HfJJ5aOPnwc4Gj+K9v3t1u3MrEFMY6ms8nA8FYQ8Zse6DXjJv05lJLeA+9uQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794269906;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794269908;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 Reply-To:MIME-Version:X-Patchwork-Hint:X-stable:
 	 Content-Transfer-Encoding;
-	bh=fiY2sB1IOr2iySZqxjOngrbq3cfFmzx94xF8g0iDh98=;
-	b=sCs2rBtIctabHwwlUqB1UVhwx84chnZQNwyB1yM6PJ5c9qRm2dAKJ0A83CWammvCIWMH
-	 UgaPuZrvvQFq8Zglyulq9pWV24STs6ryepoIFF9a2T1rq7kAZQdiqN0H+mqrgHdFrW4+Q
-	 SbiZNUuOv0llrcjY/1+A7bdvU14+WWho7zhv51fig9GuFBHbQCUbtBr5iHm2hRit4S063
-	 ARl0oikjtvseb5S1HHQUDbuFl85ZublPe7YbMUQA7f50UbM2cZPxYDPIuEd4LzW7sZppf
-	 V6KMKF1oYizKuFi4xMBugMVdOJeTyRrmcgrFw1j8WNcbyAKjY2GkeAVrloq9R3aPW2g==
+	bh=6QjvyYfu9C5p57G3ULHEMrVhdI4s7dG+TuRtuJktbWA=;
+	b=ihmzYARO3wlWahuE3od6w9rGjrWTKshwPP63/mqE5TYJ/QjeGOSmU7ay+Q+HPJ+Yo8M6
+	 GRe+7aFw3L72FRL9UgMGscxa1As6f2UTqHHcJtT3LJDLMs3kFGcIxCRcj9+wFRHXauiUE
+	 M21e+VPixTiNlK9THGQyZC4kvc9lWxjFQ9gUncyt2QoA9Nq4tVAS4WJQsS14xGqilppQT
+	 WvCbLMiEnIXAhy3IpMKvv56Usq14+WEaq93FKR+7RTuLCw+5fh79eLvCO1d7Exb4tMvK1
+	 9EmxKCScPwMJ0RXRe/k60vhZascmjzDidCCutb+7P4jcfRKe9V2hh3AMlDYCd57ZRHg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=JKfdEqGQ;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="kh/MrdiK";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31031606A326;
-	Tue, 10 Nov 2026 00:18:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F492606A325;
+	Tue, 10 Nov 2026 00:18:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=JKfdEqGQ
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6CE1B1F0089F;
-	Tue, 10 Nov 2026 00:18:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kh/MrdiK
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8C0B61F0089F;
+	Tue, 10 Nov 2026 00:18:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794269906;
-	bh=fiY2sB1IOr2iySZqxjOngrbq3cfFmzx94xF8g0iDh98=;
+	s=k20260515; t=1794269908;
+	bh=6QjvyYfu9C5p57G3ULHEMrVhdI4s7dG+TuRtuJktbWA=;
 	h=From:To:Cc:Subject:Date:Reply-To;
-	b=JKfdEqGQO77jmdK2avRKNtgVrTEvb6eV19p9hpFKJoLBtwM+BocyGhpHo5qTsGbR/
-	 R7isairPzA2sQs/U9V60ZDAnZ0c95mLwDj/ZREBJtA6D8IHNkK7KAnarCupVj+YrYV
-	 ywz3yaeokPz41MXNo3reydDAlcueSVS+wjh65ictpdMUltx3MNad1+Gjs6W3u4kHuj
-	 l9DStzv4wLUZVnv7rX0F6KwfGsZxSB+TP4AI0O+7YK6UJgU+cD+5YB0aCLdZShcb11
-	 ou4yU7yGdqo2zWEj6zhxUcGU7fZxidiuRualO84y+CHTCL+8rtn5GV9VfkgSkYTHu5
-	 a8pdOLuP+2PkA==
+	b=kh/MrdiKZWFkjfGNYpq0k/HfToee/5aILL1jR/O9BKY2AnsNPzDODQCdNZtwq6NcO
+	 tDcgGsOEk6rUuLaEv4aQxm3klcQP09qWWQa5Zffox0dlHG9hwfKlAJlJC29HoVtV1c
+	 0A8CYurUxke76d/gNXHaOkF8R4UoGfr69rSFGgmJQjFKd+hhX6p2nr3+7LoMGRiZrb
+	 yufXIAEg6NAWH3jLgWZLXoG36DJigOMm7TjPF+S4aG2g7+vdDH1K2tQE5F37p3h3LF
+	 CFyg5TRNJ6yxv2rwS9DB74dpjOvl16HjT6Wax/yeHzCCOmdyGQAPrdYMgg34jZ4bcZ
+	 ulvsvzUW2lMpA==
 From: Sasha Levin <sashal@kernel.org>
 To: stable-commits@vger.kernel.org,
 	daejun7.park@samsung.com
 Cc: Amir Goldstein <amir73il@gmail.com>,
 	"Darrick J. Wong" <djwong@kernel.org>,
 	linux-xfs@vger.kernel.org
-Subject: Patch "xfs: don't skip free extents in later batches of a whole-AG FITRIM" has been added to the 6.18-stable tree
-Date: Mon,  9 Nov 2026 19:18:24 -0500
-Message-ID: <20261110001824.3500405-1-sashal@kernel.org>
+Subject: Patch "xfs: don't skip free extents of the longest length in a whole-AG FITRIM" has been added to the 6.18-stable tree
+Date: Mon,  9 Nov 2026 19:18:26 -0500
+Message-ID: <20261110001826.3500454-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 Reply-To: stable@vger.kernel.org
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -66,13 +66,13 @@ Content-Transfer-Encoding: 8bit
 
 This is a note to let you know that I've just added the patch titled
 
-    xfs: don't skip free extents in later batches of a whole-AG FITRIM
+    xfs: don't skip free extents of the longest length in a whole-AG FITRIM
 
 to the 6.18-stable tree which can be found at:
     http://www.kernel.org/git/?p=linux/kernel/git/stable/stable-queue.git;a=summary
 
 The filename of the patch is:
-     xfs-don-t-skip-free-extents-in-later-batches-of-a-wh.patch
+     xfs-don-t-skip-free-extents-of-the-longest-length-in.patch
 and it can be found in the queue-6.18 subdirectory.
 
 If you, or anyone else, feels it should not be added to the stable tree,
@@ -80,83 +80,51 @@ please let <stable@vger.kernel.org> know about it.
 
 
 
-commit 3d6528182f89f799a7ef2acc95fc7c1bf20a7835
+commit 59387a8a121ce83c9ea70547a4a988aa126dc364
 Author: Daejun Park <daejun7.park@samsung.com>
-Date:   Mon Oct 26 10:54:05 2026 +0900
+Date:   Mon Oct 26 10:54:06 2026 +0900
 
-    xfs: don't skip free extents in later batches of a whole-AG FITRIM
+    xfs: don't skip free extents of the longest length in a whole-AG FITRIM
     
-    [ Upstream commit 595e67d7261673d03c96950ffbb2e545c00376ed ]
+    [ Upstream commit 5745f4f10a1a16aa5bb020acc38afa33f2d5ff99 ]
     
-    A whole-device FITRIM walks every AG but the last by length, in
-    batches. xfs_trim_gather_extents() saves the record to restart from in
-    tcur->start. But tcur->start is also the start of the range to trim.
-    Later batches therefore never discard the free extents below that
-    block.
+    Since commit a66d636385d6 ("xfs: fix fstrim offset calculations"), the
+    by-length walk of an AG in FITRIM starts with
+    xfs_alloc_lookup_ge(cur, 0, pagf_longest) and walks down. The lookup
+    lands on the longest free extent with the lowest block number. The
+    other free extents of that length sort after it and are never
+    discarded.
     
-    Save the restart record in a new restart_bno field.
+    Start every by-length batch with xfs_alloc_lookup_le() at restart_bno.
     
-    Cc: stable@vger.kernel.org # v6.10
-    Fixes: b0ffe661fab4 ("xfs: fix performance problems when fstrimming a subset of a fragmented AG")
+    Suggested-by: Dave Chinner <dgc@kernel.org>
+    Link: https://lore.kernel.org/r/ZgiJWxVcVwag0fIP@dread.disaster.area
+    Cc: stable@vger.kernel.org
+    Fixes: a66d636385d6 ("xfs: fix fstrim offset calculations")
     Signed-off-by: Daejun Park <daejun7.park@samsung.com>
     Reviewed-by: Christoph Hellwig <hch@lst.de>
     Signed-off-by: Carlos Maiolino <cem@kernel.org>
     Signed-off-by: Sasha Levin <sashal@kernel.org>
 
 diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
-index 6917de8321915..b866329c7a28d 100644
+index b866329c7a28d..98933c1725214 100644
 --- a/fs/xfs/xfs_discard.c
 +++ b/fs/xfs/xfs_discard.c
-@@ -166,6 +166,8 @@ struct xfs_trim_cur {
- 	xfs_agblock_t	end;
- 	xfs_extlen_t	minlen;
- 	bool		by_bno;
-+	/* restart point (with count) for the by-length walk */
-+	xfs_agblock_t	restart_bno;
- };
- 
- static int
-@@ -209,14 +211,15 @@ xfs_trim_gather_extents(
+@@ -211,12 +211,12 @@ xfs_trim_gather_extents(
  		error = xfs_alloc_lookup_le(cur, tcur->start, 0, &i);
  		if (!error && !i)
  			error = xfs_alloc_lookup_ge(cur, tcur->start, 0, &i);
--	} else if (tcur->start == 0) {
-+	} else if (tcur->restart_bno == NULLAGBLOCK) {
- 		/* first time through a by-len starts with max length */
- 		cur = xfs_cntbt_init_cursor(mp, tp, agbp, pag);
- 		error = xfs_alloc_lookup_ge(cur, 0, tcur->count, &i);
+-	} else if (tcur->restart_bno == NULLAGBLOCK) {
+-		/* first time through a by-len starts with max length */
+-		cur = xfs_cntbt_init_cursor(mp, tp, agbp, pag);
+-		error = xfs_alloc_lookup_ge(cur, 0, tcur->count, &i);
  	} else {
- 		/* nth time through a by-len starts where we left off */
+-		/* nth time through a by-len starts where we left off */
++		/*
++		 * A by-len walk starts at the last record of the longest
++		 * length (restart_bno is NULLAGBLOCK until the first batch
++		 * ends) and then where the previous batch stopped.
++		 */
  		cur = xfs_cntbt_init_cursor(mp, tp, agbp, pag);
--		error = xfs_alloc_lookup_le(cur, tcur->start, tcur->count, &i);
-+		error = xfs_alloc_lookup_le(cur, tcur->restart_bno,
-+					    tcur->count, &i);
- 	}
- 	if (error)
- 		goto out_del_cursor;
-@@ -246,9 +249,15 @@ xfs_trim_gather_extents(
- 		if (--batch <= 0) {
- 			/*
- 			 * Update the cursor to point at this extent so we
--			 * restart the next batch from this extent.
-+			 * restart the next batch from this extent. The
-+			 * by-length walk does not visit extents in block
-+			 * order, so it must keep the start of the range and
-+			 * restart from restart_bno instead.
- 			 */
--			tcur->start = fbno;
-+			if (tcur->by_bno)
-+				tcur->start = fbno;
-+			else
-+				tcur->restart_bno = fbno;
- 			tcur->count = flen;
- 			break;
- 		}
-@@ -351,6 +360,7 @@ xfs_trim_perag_extents(
- 		.start		= start,
- 		.end		= end,
- 		.minlen		= minlen,
-+		.restart_bno	= NULLAGBLOCK,
- 	};
- 	int			error = 0;
- 
+ 		error = xfs_alloc_lookup_le(cur, tcur->restart_bno,
+ 					    tcur->count, &i);
