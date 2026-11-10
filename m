@@ -1,54 +1,54 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794270083;
-	b=Bk4qMkdLKJYG8NZg1ZWwEtVBEsh2UCJ8/z2N6Hs7kKoHXug+VgA8MesrC40kwXGS88j3
-	 RjU07V1z2UyPxGCKfRUU4gGRU12Il/SY/3e9e7anY2hbo4yM+yeFriP4PhVvl/6t1m1lj
-	 jX9TBfMvGcZ8D1e6mAwX8D8Nco1ICBlJkq7UAYtZ1gABWK/kfWN0c3woWRYOjmldhVphI
-	 p1oFe3GmonQG51uwFZq0BaBk+wgM2mMBB7LvClGR29RiV3jTqtOkWnoWuiFkbAlFrE9uI
-	 Na9TqsU3cT+ZgKjNHaC1QfxwPQDkkfSM9yIHDZqhFes5xxzaFKpjnXnpNqdAczo7V4w==
+	t=1794270116;
+	b=CETU0egL8nAoDHw4VYMIh6GfH4fuqlPYCVtVMxjT2Y4xnTYr0WTgzSTace/mLwqW4/X6
+	 sTTls/w2JCgSCZPbnCmln9dSPWz3JGU6tDI/OS81XOyhw9N0t19D/UOMuVeNtZy3OarG+
+	 pzkpzc7SQ9fVtVyOLZHDcFDxCk4HQek78Loagr5aJ5+xlTVcqaoqq2oi7WibnWeznPBlk
+	 zYpgKzfBQ2QjMyNKvYn9hNrNWQXXhvf0PF15OUzrg+Y/waPeWZVpo8cB3Pmi7iBywjEhM
+	 Tf/XvyGpZ+DsrxjA9Smsx3hng9UT2wgtgP9jqfuyxukFO7bjsYx4IcyrgHOWgvDQRbA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794270083;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794270116;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 Reply-To:MIME-Version:X-Patchwork-Hint:X-stable:
 	 Content-Transfer-Encoding;
-	bh=vPvpQEoYIayIvh3m4bjbw3tcGLHPm7nokhlxoLdwDxw=;
-	b=mbuX0R8kPQ5uaKIVNaCt2ugJEOMrn+jWamYJi99INTvAR39793EGg3Cjem+NrV1G5j7W
-	 IVsiNVkSWRb27YTgnV0lMicb2q/ityFqmmWsgWP1MF/mWUqC3Z+ZQeDqctY3Q+tAQWKtc
-	 3+1Qm1p0Xvm4wCXfkYLzrGoIqa1r/s0qeSL/e4w4tBHZGhtF0+j7CQjoEdczOKoTCuUfB
-	 xz0uwzwjBv+159ZgSRzWm076Yu4uI0WbpJE6BEf/A2UTfp055Tk7pgaqQNIEU9qqXSaH4
-	 xj5pmbwJOXHVchAo+2G1kUg+qmHGephmm93cVcVwqmaB1ecjJ8IS69mxFujGA3xMMAg==
+	bh=auephBEFa1/w7o1hdoll+7OiXNT/uPo8zcx1iMsrbxs=;
+	b=sU1WbBXRUYWYo6faDJe1u2b4b5MXLdhU6Hxa7Lv8fOqDG856KOHrmN4k5skojWDB/Q7M
+	 C1zLhAAWLI8+D95L33AMDcYTrOw4A6MqyT/Q13SSogtjKItzG5Iygdhz79P1Are3gUG75
+	 mTpTMUP5u2MNyWAQD/dKfbkFbq8w+ITg+YZI5XaXno+cU0YQvWAPRjw2IgmZXLNryFrQf
+	 IG2nrTERT96SYpxRAqzKaKJoB5Nerossg1klt9SzF3SYU9V3NdXpHLgkAyrwD6Ez7ztW3
+	 TJ1+25RPjc0noWbcI+oZGhi5DkwUKHDTZsR8Rczy2bq9/uB9qRG8WLXXJ820vPCYuyA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VCtCJH8i;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=j6oeipPY;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0855B606A31C;
-	Tue, 10 Nov 2026 00:21:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD015606A321;
+	Tue, 10 Nov 2026 00:21:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VCtCJH8i
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4684E1F0089F;
-	Tue, 10 Nov 2026 00:21:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=j6oeipPY
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CAE501F0089F;
+	Tue, 10 Nov 2026 00:21:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794270082;
-	bh=vPvpQEoYIayIvh3m4bjbw3tcGLHPm7nokhlxoLdwDxw=;
+	s=k20260515; t=1794270115;
+	bh=auephBEFa1/w7o1hdoll+7OiXNT/uPo8zcx1iMsrbxs=;
 	h=From:To:Cc:Subject:Date:Reply-To;
-	b=VCtCJH8iKvusoau2FhMTT/dw4nqZZnvo9bOrWmsICzP89N209iQOjhcivWbspfzXY
-	 YqRMYJhWEsvE3lz0/TWxdvtZ45mv2oTgVqDg6bGN0PZglrkkx6B7W4BhyuaOP/Ulj1
-	 7xfvxwku+9khRgFOqjlFywuaHUw5jjJtaEVanAQDPczgdRg9yF3tCMqP4MzCepTGRY
-	 8sfaQiEWHmVwEVPh7YgQK5buAWXN7ox7qNx9xsEGp+jNQEWerzqJiDxx6x3IhfFcfm
-	 N9oLlCERG7KhB7RM5V4meK+lh8yG0QC3gxQoNn2tcv0YCj3y+2z8jZffGVSaoIif8c
-	 RB9VMIS+OH67w==
+	b=j6oeipPY4V3DnIT7iO1x4EzjgWHASjB0FE9dqHg8HaGrpHMs1GXhMRIclV+GslZJF
+	 Eie5KK/iloSog+E2CI8Oa6hQMFxbx93KUORCUCiYx+oxAOLGcFYqejeTlRteWrKl/i
+	 7FIYl6st2q2/6OFDAymtiAck6d52FM5470f4/2ddYId6eEgW8e0/FX4kH2WWWgSHk+
+	 Kg2akq+LC5yKw+avqrUZx7yeenSoyL0cVm1X4Cn0GX/J1gMAY96NEXt9CrxaMVcubB
+	 Mn1O9cWW5NDmyGaFp+e9ABs6cOR9zZC0OeXXo+4y6kBs8A45UcX2xY3Z7LD4QH/JLk
+	 JG5hD95lshiWA==
 From: Sasha Levin <sashal@kernel.org>
 To: stable-commits@vger.kernel.org,
-	jianyungao89@gmail.com
+	skibletz@gmail.com
 Cc: Amir Goldstein <amir73il@gmail.com>,
 	"Darrick J. Wong" <djwong@kernel.org>,
 	linux-xfs@vger.kernel.org
-Subject: Patch "xfs: fix temporary cursor leak in btree shift corruption paths" has been added to the 6.18-stable tree
-Date: Mon,  9 Nov 2026 19:21:20 -0500
-Message-ID: <20261110002121.3504551-1-sashal@kernel.org>
+Subject: Patch "xfs: fix wrong compat fields in xfs_ioctl32_bstat_copyin()" has been added to the 6.18-stable tree
+Date: Mon,  9 Nov 2026 19:21:53 -0500
+Message-ID: <20261110002153.3505411-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 Reply-To: stable@vger.kernel.org
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -66,13 +66,13 @@ Content-Transfer-Encoding: 8bit
 
 This is a note to let you know that I've just added the patch titled
 
-    xfs: fix temporary cursor leak in btree shift corruption paths
+    xfs: fix wrong compat fields in xfs_ioctl32_bstat_copyin()
 
 to the 6.18-stable tree which can be found at:
     http://www.kernel.org/git/?p=linux/kernel/git/stable/stable-queue.git;a=summary
 
 The filename of the patch is:
-     xfs-fix-temporary-cursor-leak-in-btree-shift-corrupt.patch
+     xfs-fix-wrong-compat-fields-in-xfs_ioctl32_bstat_cop.patch
 and it can be found in the queue-6.18 subdirectory.
 
 If you, or anyone else, feels it should not be added to the stable tree,
@@ -80,49 +80,36 @@ please let <stable@vger.kernel.org> know about it.
 
 
 
-commit 4318d42de04df2e8615eae782e34cb539e9d88d4
-Author: Jianyun Gao <jianyungao89@gmail.com>
-Date:   Mon Nov 2 23:01:41 2026 +0800
+commit 07468355490a73fece63bf600fcd68cf3206f5f2
+Author: Reid Downing <skibletz@gmail.com>
+Date:   Tue Oct 27 12:17:48 2026 -0400
 
-    xfs: fix temporary cursor leak in btree shift corruption paths
+    xfs: fix wrong compat fields in xfs_ioctl32_bstat_copyin()
     
-    [ Upstream commit 2bbca049deeb1699cafd966cb2793fee576ee409 ]
+    [ Upstream commit b7eb276a39b14e685c2fe578f8ac22fc48ff9e6c ]
     
-    In xfs_btree_lshift and xfs_btree_rshift, when XFS_IS_CORRUPT detects
-    an invalid firstrec/lastrec result after xfs_btree_dup_cursor has
-    successfully allocated a temporary cursor, the error path jumps to
-    error0 which returns without freeing tcur.  This leaks the cursor
-    memory, the xfs_group reference, and the per-level buffer references
-    held by the duplicated cursor.  Jump to error1 instead, which calls
-    xfs_btree_del_cursor(tcur, XFS_BTREE_ERROR) to properly release all
-    resources.
+    bs_blocks and bs_xflags were both read from bstat32->bs_size.
+    Read each one from its own field instead.
     
-    Cc: stable@vger.kernel.org
-    Fixes: 9eaead51bed95 ("[XFS] implement generic xfs_btree_rshift")
-    Signed-off-by: Jianyun Gao <jianyungao89@gmail.com>
+    Fixes: e94fc4a43e5c39 ("[XFS] Add compat handlers for swapext ioctl")
+    Cc: stable@vger.kernel.org # v2.6.29
+    Signed-off-by: Reid Downing <skibletz@gmail.com>
     Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
     Signed-off-by: Carlos Maiolino <cem@kernel.org>
     Signed-off-by: Sasha Levin <sashal@kernel.org>
 
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index dbe9df8c33004..b0824d381e7c6 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -2567,7 +2567,7 @@ xfs_btree_lshift(
- 		if (XFS_IS_CORRUPT(tcur->bc_mp, i != 1)) {
- 			xfs_btree_mark_sick(cur);
- 			error = -EFSCORRUPTED;
--			goto error0;
-+			goto error1;
- 		}
- 
- 		error = xfs_btree_decrement(tcur, level, &i);
-@@ -2737,7 +2737,7 @@ xfs_btree_rshift(
- 	if (XFS_IS_CORRUPT(tcur->bc_mp, i != 1)) {
- 		xfs_btree_mark_sick(cur);
- 		error = -EFSCORRUPTED;
--		goto error0;
-+		goto error1;
- 	}
- 
- 	error = xfs_btree_increment(tcur, level, &i);
+diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
+index b64785dc4354e..c2e01fcb6015d 100644
+--- a/fs/xfs/xfs_ioctl32.c
++++ b/fs/xfs/xfs_ioctl32.c
+@@ -123,8 +123,8 @@ xfs_ioctl32_bstat_copyin(
+ 	    xfs_ioctl32_bstime_copyin(&bstat->bs_atime, &bstat32->bs_atime) ||
+ 	    xfs_ioctl32_bstime_copyin(&bstat->bs_mtime, &bstat32->bs_mtime) ||
+ 	    xfs_ioctl32_bstime_copyin(&bstat->bs_ctime, &bstat32->bs_ctime) ||
+-	    get_user(bstat->bs_blocks,	&bstat32->bs_size)	||
+-	    get_user(bstat->bs_xflags,	&bstat32->bs_size)	||
++	    get_user(bstat->bs_blocks,	&bstat32->bs_blocks)	||
++	    get_user(bstat->bs_xflags,	&bstat32->bs_xflags)	||
+ 	    get_user(bstat->bs_extsize,	&bstat32->bs_extsize)	||
+ 	    get_user(bstat->bs_extents,	&bstat32->bs_extents)	||
+ 	    get_user(bstat->bs_gen,	&bstat32->bs_gen)	||
