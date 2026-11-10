@@ -1,54 +1,54 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794271774;
-	b=DHVN8tH7Os4D8Iy6KbvVASb2O+Hb3kEKJpXOTPjXgRzJa+N0Xo2vlTybcyZEkF//3Shz
-	 iw2jOKlQ36CeQXQoA938wSd/IiOXom4I2AAl4lEtwqg9UtFUx9AssUmPRqMP7Vhgs2ZHI
-	 JhvfGF8S+9OvfFPIbuY+x0ybyMDSeWUylkCiADQ5bY3F5di1jAhGV0BBWRq6f7K0VUHhr
-	 iymk6SqpDlyOqhGUIYC6G3YDeBMJqk6j15xI7Pj+ATBGx88yLzGuCheTRJPWO7efYfKOL
-	 Ka1h+4Owhd562mtTSxkM14T5RCJVvPMu9nBZqK5mKugdeNnS6I3pUPh1r+FxPiaH1ew==
+	t=1794271776;
+	b=KO4rxOM4yj+GqSe6Yo4muvbYW7L7/5/vQE82qk7WaoQpuRhTSbw4ur8bU0eQoHm1BAkW
+	 8az+cMGaWwL7Hi5maya85eS3nGI9rh3K4aTwpf+RN2ZS4EsAow6QbnoT2QE6iC7+82LPe
+	 bri7vwe3JabzqlkIAQKzas0iifptzYzT22ieyh7CqkSAHoNla06SO9ctTdLV2IbGTgPZ/
+	 fmLqhWc9y4oARpJC3N+TleLPHlpkmouFTW3mlJtJxeTYAO7mJDmOffl2ZlQ4XrEZbU3iI
+	 gTEzMYxn1NeemK58E4qT9UOc07yPQncGbhNpeQAvv3GNJg5FAmsvqqJRASLfJ+zgsbw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794271774;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794271776;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 Reply-To:MIME-Version:X-Patchwork-Hint:X-stable:
 	 Content-Transfer-Encoding;
-	bh=zYYgxLOPpfo6VcTd/iBy/DX6BeQey5KtPH7ECwORXlg=;
-	b=rfFT7y7NpI836LX9mgfHe2yMXW3edaqJlPaaRyF59YQfeQzE8hXgcK82NoZcI8xNGndK
-	 ULdsSbFu4J6PEWNRg4g2D//Z599X0JTnDUiBA70rgvUStLxwZS0eaBQKleG4t+Qzsrndt
-	 /1FtCu1/HhP6AL1i1ydHeViTySYd1thJel8+b2yMfvdtxUYhwnCkbHNKZuxqd54sLRc1/
-	 0wBQLIy9dORJRUGGbqypyPf9nlVpJtc9TKix19KGJrMGhGB0MpFIEzNOtcXZ5UyMo4/ko
-	 30w1yr1Qzzx4w2fzsBqtotgyKIKkUsMbUrZRd/5QSV3woi28oglyWoMTX/XoeKIjRsA==
+	bh=XJQKu4ulLyZTWocqi7xX7jankQHaEeM919F/o8KkaK0=;
+	b=stt1wXLLT93Y64LocDFUpHo+0eaZcQCtBtLTEPgb+OpsNTE4PRk8z6gEJidqbMVhgHEO
+	 mXv20DiLbpn4+pnL4Jee8P9KXJ9TGCoOS2KEKAcYjDqn074bgUhVdn+U8oXNcEywGzSlw
+	 BCIH4Ge92b5r3C7Y9ENFcknSJL2Uwzudz0JnmrY+vCUedYlGYfn9jsR7wBaLIcJ4u8vsk
+	 ZAQ/TlLqRsPNzR3/GNEmnc6pWyn+HwibC0f+pe+1hbbQkPCg2v+GtYAFwDI+C6HYNYMjN
+	 sF/UC2nc0Xp2ONPQuBisZ24Fm+cJm64i82JOYTaEYCY5ZlrAtU8+NImgnGkt1gWxCxQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Z8JCTazM;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kPbGZ5DO;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DCAC606A31C;
-	Tue, 10 Nov 2026 00:49:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88006606A31C;
+	Tue, 10 Nov 2026 00:49:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Z8JCTazM
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C39971F008BD;
-	Tue, 10 Nov 2026 00:49:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kPbGZ5DO
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BF14E1F0089F;
+	Tue, 10 Nov 2026 00:49:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794271774;
-	bh=zYYgxLOPpfo6VcTd/iBy/DX6BeQey5KtPH7ECwORXlg=;
+	s=k20260515; t=1794271776;
+	bh=XJQKu4ulLyZTWocqi7xX7jankQHaEeM919F/o8KkaK0=;
 	h=From:To:Cc:Subject:Date:Reply-To;
-	b=Z8JCTazMkp2YyooJvvIbqvQw1D49eE4FhLYFpSygMuVNlNZOexHFi4YFdDPGqx3Ch
-	 L/K5x56jHNhBKfMgv9yU5EKprEd8aBkX1Rvs6HJn7HZTn9lcPhMM0W8DLhd+ZjIGun
-	 Aak742AYW8hYR2BmWI7ZUA+9zCxDBthnNOGJHyEYj/DPhqIFB/prFOkCgeuRhzeMHA
-	 7EcRBf68EFZ+Sq+UQdU7yeLv5yzlV86IsdCGupxmdrWmklUgpX9lnWY1k3yBS4yzEI
-	 D0LUMGjBCYy/Opbd5AIN+eyeSThFrSxRwFcpNhRgzxafMT6qEWpmbFKKZK+80UmJot
-	 hqocYC+Kr+gAw==
+	b=kPbGZ5DOmC+ESimDqYtpDt/xXuMVViN8ugan413bzKNKTrzGP4pIHFGt+3h7+FB4z
+	 rckarRmuhudjOvQya1PiGZK7k32JKAbTNhKLmeac2ubc55Jga9lOyYXxuzbcaYyrJR
+	 E+JAtUPmwUmN6IbEp7fKCs4zUYwAELYIBJADFKYo5ncYPIpGJZiY0pcvybjxYS6ZMa
+	 bGERC4n2UCatOiCKPc/+V8Gkp6/AQiuM2odZJBE2t0BcD1poPvBTJ05vsakoOcTMJB
+	 9pgz9Bbws128QMUK6KnhV14nO0OiJ9VDje2OJg1H9h6K4P6iiYhY/RnLM/0kHdwlq0
+	 o7Qd9JF1lCjRg==
 From: Sasha Levin <sashal@kernel.org>
 To: stable-commits@vger.kernel.org,
 	daejun7.park@samsung.com
 Cc: Amir Goldstein <amir73il@gmail.com>,
 	"Darrick J. Wong" <djwong@kernel.org>,
 	linux-xfs@vger.kernel.org
-Subject: Patch "xfs: cap the block count of xfs_iomap_write_direct() at one extent" has been added to the 6.1-stable tree
-Date: Mon,  9 Nov 2026 19:49:31 -0500
-Message-ID: <20261110004931.3538814-1-sashal@kernel.org>
+Subject: Patch "xfs: clamp the pNFS layout range to the maximum file size" has been added to the 6.1-stable tree
+Date: Mon,  9 Nov 2026 19:49:34 -0500
+Message-ID: <20261110004934.3538862-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 Reply-To: stable@vger.kernel.org
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -66,13 +66,13 @@ Content-Transfer-Encoding: 8bit
 
 This is a note to let you know that I've just added the patch titled
 
-    xfs: cap the block count of xfs_iomap_write_direct() at one extent
+    xfs: clamp the pNFS layout range to the maximum file size
 
 to the 6.1-stable tree which can be found at:
     http://www.kernel.org/git/?p=linux/kernel/git/stable/stable-queue.git;a=summary
 
 The filename of the patch is:
-     xfs-cap-the-block-count-of-xfs_iomap_write_direct-at.patch
+     xfs-clamp-the-pnfs-layout-range-to-the-maximum-file-.patch
 and it can be found in the queue-6.1 subdirectory.
 
 If you, or anyone else, feels it should not be added to the stable tree,
@@ -80,48 +80,47 @@ please let <stable@vger.kernel.org> know about it.
 
 
 
-commit 7bcc14719635a06c699966bd511dfd571bda7fc9
+commit d832f7a1ae4b245482bdf1ecb82a827250693617
 Author: Daejun Park <daejun7.park@samsung.com>
-Date:   Thu Oct 29 11:23:02 2026 +0900
+Date:   Thu Oct 29 11:23:03 2026 +0900
 
-    xfs: cap the block count of xfs_iomap_write_direct() at one extent
+    xfs: clamp the pNFS layout range to the maximum file size
     
-    [ Upstream commit 66d1ce09ebd72709f8d739630c39f440445173fd ]
+    [ Upstream commit 29f3c1be4e554c9dbc66e13333034e0947477cb6 ]
     
-    xfs_iomap_write_direct() reserves blocks for the whole count in an
-    unsigned int. For a pNFS layout the client chooses that count, and an
-    RW LAYOUTGET for 16 TiB wraps the reservation and shuts XFS down.
+    xfs_fs_map_blocks() lets two bad layout ranges through. An offset of
+    2^63 or more is negative and passes "offset > limit". A length above
+    the limit, such as NFS4_UINT64_MAX, wraps "offset > limit - length"
+    and stays unclamped. With NFS4_UINT64_MAX, a read layout is built from
+    an uninitialized mapping.
     
-    xfs_bmapi_write() maps at most XFS_MAX_BMBT_EXTLEN blocks here, so cap
-    the count at that. nfsd asks again for the rest. The other callers get
-    the same mapping as before.
+    Reject a negative offset and one at the limit, and clamp the length.
+    This needs "xfs: cap the block count of xfs_iomap_write_direct() at one
+    extent".
     
-    Suggested-by: Darrick J. Wong <djwong@kernel.org>
-    Suggested-by: Christoph Hellwig <hch@lst.de>
-    Suggested-by: Pankaj Raghav <p.raghav@samsung.com>
     Fixes: 527851124d10 ("xfs: implement pNFS export operations")
     Cc: stable@vger.kernel.org
     Signed-off-by: Daejun Park <daejun7.park@samsung.com>
+    Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+    Reviewed-by: Pankaj Raghav <p.raghav@samsung.com>
     Reviewed-by: Christoph Hellwig <hch@lst.de>
     Signed-off-by: Carlos Maiolino <cem@kernel.org>
     Signed-off-by: Sasha Levin <sashal@kernel.org>
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 28a1c19dfdb3a..f2542bac50c35 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -245,6 +245,14 @@ xfs_iomap_write_direct(
+diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
+index 8ee7ca4201f0e..c51d29ef450d5 100644
+--- a/fs/xfs/xfs_pnfs.c
++++ b/fs/xfs/xfs_pnfs.c
+@@ -168,10 +168,9 @@ xfs_fs_map_blocks(
+ 	if (!write)
+ 		limit = max(limit, round_up(i_size_read(inode),
+ 				     inode->i_sb->s_blocksize));
+-	if (offset > limit)
++	if (offset < 0 || offset >= limit)
+ 		goto out_unlock;
+-	if (offset > limit - length)
+-		length = limit - offset;
++	length = min_t(u64, length, limit - offset);
  
- 	ASSERT(count_fsb > 0);
- 
-+	/*
-+	 * xfs_bmapi_write() maps at most XFS_MAX_BMBT_EXTLEN blocks in one
-+	 * mapping, so don't reserve blocks for more. A pNFS layout range
-+	 * comes from a client, and its block count may not even fit the
-+	 * 32-bit reservation. The caller maps the rest with a later call.
-+	 */
-+	count_fsb = min_t(xfs_filblks_t, count_fsb, XFS_MAX_BMBT_EXTLEN);
-+
- 	resaligned = xfs_aligned_fsb_count(offset_fsb, count_fsb,
- 					   xfs_get_extsz_hint(ip));
- 	if (unlikely(XFS_IS_REALTIME_INODE(ip))) {
+ 	error = filemap_write_and_wait(inode->i_mapping);
+ 	if (error)
