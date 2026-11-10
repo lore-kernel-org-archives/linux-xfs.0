@@ -1,44 +1,44 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794337467;
-	b=yuNj5mvFNsbq+boYa67QLYR7cGiffnbQVjLuMhCcAuXbrZcN603Yd7RE2IbYhRDIC/SV
-	 Bw11GkIU8I5BrVyXgtJbAisjQio60v2Ov7fPWLSI9mY4fzLOdhTGGDtuTTzmmoCw9cx9+
-	 7/ZCpGbR1yahCW+MFRjt62DcvyrTB2hRq1uD/DxWdtbUTmZ/ukk2Ba9YCzyY2a407us6x
-	 5IUSDGIiJXZ4O4lLEQF+SabzGsWfHZ9EmowDvuCe7Pzk8syaOC5s1637I5Gx61VIBsRtR
-	 HHZ8bjRTwm2k+1ZGYhygcatmJj8K6efbLbKBpsO/bueq3qUMWHHbPFpDiS3XR+xv6Sg==
+	t=1794337474;
+	b=REkzp9+OfrfyKWJFNcIgNw/JNm4FCQyNNdz45XrnjP+elmasOoluffQZ2/cg6dJaF0AN
+	 Ry2Ok1NTJz7KO5YOH+7lG9ZMebQQo6QCa68Yun2I8+bMuSOV+2Lz949e/zvSuNQULyjn9
+	 2eew+Lht90mpAsJcjaQRE0j6pqecc8VuU4FaRf3RjYr3aR67ZmP4rjiySD9swQHTFY0BE
+	 0ISfuGRBe+MuofOZPXJtJF/rVKekRwtrsNjcNFyKGlWTx7JNOxQhQlihRZVqVWq7jxa32
+	 n/BRG5tTa6wsxqEhP4ygOI8IJfOORoqROYNNUMfgq7f8Kg6YBkbzfmjmdWbujv4Fwdw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794337467;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794337474;
 	h=Received:DKIM-Signature:From:To:Subject:Date:Message-ID:In-Reply-To:
 	 References:MIME-Version:Content-Type:Content-Transfer-Encoding;
-	bh=Z6NcfE7q4aw6EHDzqyxzrOJSO96VOIIF54Ip198CsSs=;
-	b=yqw3DxaFEA/YkWrjFb6cGxs5+Wbge/a8sA0/BqHgG5RPDV4fQV1IDSYJGHMWStZGA9Mp
-	 qLpPrpHJFPqQAZ8elhLsKqSGLzMacFNZVVvlZCkNCsj610e51Aen8fz5Y4ccCC8OhuB6H
-	 VIk6YA7i9bRkjddMUB+NfeDboaLYYDwEmhpHBfqm7S1nykl/Z4MTrB8fhFWy0kvbg+QhH
-	 p2n30m1yoQLoLbfXzdiIYKM5qC/joDP6Rt2kamfPoEE+1w0gGtOkN5+O0euF/htPSCV4q
-	 wRAnZIpXi9v+FL3gT4qdgZ0/VP9scp4UENgIbqbhCTY2YPR/P+YpyCzBt6fZmrNsjVw==
+	bh=Dp5MWdGSJiANHCQJvA4KJu18Utk/FmwGUTwVrNB23T0=;
+	b=duA+/CeS017x5lISLnRGEnwoT+7QLubl6f8Bt1dfuinzejtQum2WdWwdGUXWqThtMRuX
+	 OMi0RqfNTVKrykEbeGlK/NMkdYbKHftSvuhsJVsPnNOGUvxphwAH64qofzJWKFszEjCsT
+	 DsNnWgZFDZkjGG+fmFhJYEJ+PfjJgwKAXzkqWCTEO+TyHNN/OJTU7smBRYzMhQUPk+0SM
+	 7GJuqbdXtlmNzdEW5S4Ye6KaW/qYW4AKrjg6QhT4tLCqMbS4apZWkIFY8FHljszQb1jGF
+	 1G5/anBKI3yOvKCkiuoSFrghyBB8kaBrkJMzcXV/bsxr50YeOOI5sMJurzA6iOKoXKA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DYz8mNu9;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Lt0nGYGn;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 855D8606A337;
-	Tue, 10 Nov 2026 19:04:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EF57606A334;
+	Tue, 10 Nov 2026 19:04:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DYz8mNu9
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B763F1F00900;
-	Tue, 10 Nov 2026 19:04:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Lt0nGYGn
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B9E831F008BC;
+	Tue, 10 Nov 2026 19:04:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794337467;
-	bh=Z6NcfE7q4aw6EHDzqyxzrOJSO96VOIIF54Ip198CsSs=;
+	s=k20260515; t=1794337474;
+	bh=Dp5MWdGSJiANHCQJvA4KJu18Utk/FmwGUTwVrNB23T0=;
 	h=From:To:Subject:Date:In-Reply-To:References;
-	b=DYz8mNu94D9UTXC1UZAb0iVNDuG8dMpdKYmD4RDSA/BVuhCM85b0R218Hq8Eu2vkj
-	 2Sw8IHzxkrqKwBocIsdzsYE9DRAlVI4jY0yK0XmdNteqzFkErDViSLsdHPeCEIMxJG
-	 sVmhbMRSsEZr8UvppzzJZPbwXBFQHwfLPmNBwxGzZ6XDjslpE7sU9w3hrWVB8UoGIy
-	 6wm7JuiZK8uKg2Up1G10VcdI2g4tzJXzcdp9mCYrmIeuanQ5KXQY+KxBjZyfw+gXvd
-	 zJjOsJb/KtAHJ70t23kjFPopY/ftH3NpG5oCxvqMKJ1ZlxYQFL0FpgIoRhI9iAuNtT
-	 ZSCocRUuoENSg==
+	b=Lt0nGYGnRRR5cYelyO+kHlhf6KpFDusje+an8TEncEc9gBYFZyJJj+qyZlYPBrEKh
+	 2CZgWoe927KMGJBkwEJ8yNKbYrFO76SaZabE3bKNzxxK4v3RJt0fE32T4OlyQ++6MI
+	 lXCpxUhWzF+En4I0vkwxPjPIikic0RIWh+vKNEbGUjh/bw1SVEDsP1+9dqO//1kMI1
+	 drFO9X5tN+Eo9XyCen8eyAfUTJrvLw9Trvmvd6Iel/FBqQgfgIPyBPKXDa6qahU5sd
+	 rvOBxMVvJfOHcB5VglEbx+dR6G3el3CdIHJTmbUc2z+nJW4tFSWo49t6Rb2ea27P9/
+	 jXCr4gNCehsrA==
 From: Chris Mason <mason@kernel.org>
 To: mason@kernel.org,
 	tytso@mit.edu,
@@ -53,9 +53,9 @@ To: mason@kernel.org,
 	linux-ext4@vger.kernel.org,
 	tz2294@columbia.edu,
 	brauner@kernel.org
-Subject: [PATCH v7 03/11] xfs: don't change the block map under a dirty folio
-Date: Tue, 10 Nov 2026 14:04:21 -0500
-Message-ID: <20261110190417.32650-5-mason@kernel.org>
+Subject: [PATCH v7 07/11] xfs: test for reflink after the dio write checks
+Date: Tue, 10 Nov 2026 14:04:25 -0500
+Message-ID: <20261110190417.32650-9-mason@kernel.org>
 In-Reply-To: <20261110190417.32650-1-mason@kernel.org>
 References: <20261110190417.32650-1-mason@kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -70,32 +70,28 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-With CONFIG_TRANSPARENT_HUGEPAGE=y, writeback on XFS can write in place
-to a shared block and corrupt the other file that shares it.
+A direct write that is not block aligned can expose stale disk contents
+on XFS if it races with the first clone of the file.
 
-xfs_map_blocks() writes in place unless the COW fork has an extent for
-the block. write() and write faults reserve one before they dirty a
-folio over a shared block, so xfs_flush_unmap_range() writes back and
-truncates the range before a clone changes the block map. But the holder
-of a GUP write pin takes no filesystem lock, and the truncate keeps a
-large dirty folio that straddles the range:
+xfs_file_dio_write_unaligned() falls back to buffered I/O if the file is
+reflinked, and tests for that right after it takes the iolock. But
+xfs_file_write_checks() runs after the test and can drop the iolock, for
+example if S_NOSEC is not set. A clone can run in that gap:
 
-    clone                         pin holder         writeback
-    =====                         ==========         =========
-    writes the range back
-                                  dirties the folio
-    truncate keeps the folio
-    maps a shared block under it
-                                  dirties it again
-                                                     finds no COW extent
-                                                     writes in place
-                                                     /* shared block */
+    direct write                        clone
+    ============                        =====
+    takes the iolock shared
+    sees that the file is not reflinked
+    drops the iolock
+                                        shares the blocks
+    takes the iolock exclusive
+    writes a part of a new COW block
+    maps the whole block into the file
+      /* the rest was never written */
 
-The fix used here is to invalidate the range instead of truncating it,
-and to fail the call with -EINVAL if a dirty folio is left, before the
-block map changes.
+The fix used here is to move the test after xfs_file_write_checks().
 
-Fixes: 6795801366da ("xfs: Support large folios")
+Fixes: ed1128c2d0c8 ("xfs: reduce exclusive locking on unaligned dio")
 Signed-off-by: Chris Mason <mason@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
@@ -104,51 +100,41 @@ Notes:
     v6->v7:
     - No change.
 
- fs/xfs/xfs_bmap_util.c | 17 +++++++++++++++--
- fs/xfs/xfs_reflink.c   |  2 +-
- 2 files changed, 16 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_file.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 537c6b29417c..4673d5174645 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -863,8 +863,21 @@ xfs_flush_unmap_range(
- 	error = filemap_write_and_wait_range(inode->i_mapping, start, end);
- 	if (error)
- 		return error;
--	truncate_pagecache_range(inode, start, end);
--	return 0;
-+
-+	/*
-+	 * The callers go on to change the block map, so no folio may stay over
-+	 * the range.  The holder of a GUP pin can mark a folio dirty again
-+	 * after the flush, with no lock of ours.  A truncate drops such a folio
-+	 * if it lies inside the range.  If it is a large folio that straddles
-+	 * the range, the truncate cannot split it, so it zeroes a part of the
-+	 * folio, keeps it, and reports nothing.  The invalidation removes whole
-+	 * folios, changes no data, and fails on a dirty folio.
-+	 */
-+	error = invalidate_inode_pages2_range(inode->i_mapping,
-+			start >> PAGE_SHIFT, end >> PAGE_SHIFT);
-+	if (error == -EBUSY)
-+		error = -EINVAL;
-+	return error;
- }
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 8ee88910b487..d888470d092a 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -877,9 +877,15 @@ xfs_file_dio_write_unaligned(
+ 	if (ret)
+ 		return ret;
  
- int
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 104542b10d9e..ff89516154bd 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1663,7 +1663,7 @@ xfs_reflink_zero_posteof(
- /*
-  * Prepare two files for range cloning.  Upon a successful return both inodes
-  * will have the iolock and mmaplock held, the page cache of the out file will
-- * be truncated, and any leases on the out file will have been broken.  This
-+ * be invalidated, and any leases on the out file will have been broken.  This
-  * function borrows heavily from xfs_file_aio_write_checks.
-  *
-  * The VFS allows partial EOF blocks to "match" for dedupe even though it hasn't
++	ret = xfs_file_write_checks(iocb, from, &iolock, NULL);
++	if (ret)
++		goto out_unlock;
++
+ 	/*
+ 	 * We can't properly handle unaligned direct I/O to reflink files yet,
+-	 * as we can't unshare a partial block.
++	 * as we can't unshare a partial block.  xfs_file_write_checks() can
++	 * drop the iolock and take it again, and the file can be reflinked in
++	 * between, so test for that only now.
+ 	 */
+ 	if (xfs_is_cow_inode(ip)) {
+ 		trace_xfs_reflink_bounce_dio_write(iocb, from);
+@@ -887,10 +893,6 @@ xfs_file_dio_write_unaligned(
+ 		goto out_unlock;
+ 	}
+ 
+-	ret = xfs_file_write_checks(iocb, from, &iolock, NULL);
+-	if (ret)
+-		goto out_unlock;
+-
+ 	/*
+ 	 * If we are doing exclusive unaligned I/O, this must be the only I/O
+ 	 * in-flight.  Otherwise we risk data corruption due to unwritten extent
 -- 
 2.55.0
 
