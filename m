@@ -1,51 +1,70 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=162.62.57.252
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794244200;
-	b=YFYpJ6+IilPF/1L1QFnvYNYmDEYoVxefGH6zGuOa2hrrWFQB0vnNnWTxd7UJEKQwzQq6
-	 qht2Bqc4j2EOB7CwB9eBhmZGZFnzU6UrHeTNYU9VJgaSW7e0ZOio5E8a+2VP7J0+TEgua
-	 JGcX4yWuBNeCsEQOgXlRVF/dr8aswfnYF36zsnR74Gk046IAdtxLs1Eki/1KTfMl1oW7M
-	 9FlSrWOs4nL26Cm2/qZDfoOa0aXp/+OkRPLO94kY0ZHXDEQ+TUkFIKL517UPpJi0sBiwZ
-	 mIIOEqTOqsz1eR+OyC8p0jTTpn2dfTq3ccbkYFsRUOv1GAc7UGepmfiT+BSwmHS2jVQ==
+	t=1794245569;
+	b=06oWzhNSIgwbuSrvZGFN4K8HLxTj2pLix2jh07Oo4DI4eHZYLSEi2XING6ZNe/ulMsOt
+	 SJH0Ia9xUJEzjCyCzvro1cBJylFRfP5xinns/9fzS8hoB1XQkwipaaYykfC2p94tKlpro
+	 XISvg+tTelqiFINcw7HkEFMlCihuF+DgpP+0V9xC80FsupINEzSyUjwdRV6xmVt+7ySi+
+	 nQM4F4r3n5CIX/wwjrjRESkC445d/hh+EUgq52bSVVlSFb5Pis+rvwMyyT69IdakfvUbD
+	 joT+0XLpsaTJPFtWbLVLNBrkH9WBYPdtwz1gzRAc0QxSVaDfFhSscpBCjLjGFT+mAiw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794244200;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=0MjNTh09fB02xvZARX+Z4TAHBb6ZpanKCZRK2ApbDtI=;
-	b=SAF5vh9FOXU/syqa8q+hN32PI6hLuKM6Sy9u1gE2VBR2caTfhgMD5lk9effFebLKcFh1
-	 VBUnrN9uVQ1Pps1btaXQo4GG3eIL5mpSgQM9Xuf5BjFYkpFV7JDyVIA9dE/+GkxadnObn
-	 x1rUJ7/uSulZnLEs4/eSJUpRIztDmk4C1xvKEefcNfLqlqafBavfLwB/IAov1iRcA5qqQ
-	 JBXXIRrDpvl1j8d7BqSuiV9Wyz7cRw4yW/nQ3FYOBKcV7PbctHL+o8qS38wQiUMLyOhBL
-	 u7KxxoMYrNmOswdE/PG4hiWXEFpRPJQTCnKEX8me1donOe/4quL0XqGq6FonruyXjBg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794245569;
+	h=DMARC-Filter:DKIM-Signature:Received:X-QQ-mid:Message-ID:
+	 X-QQ-XMAILINFO:X-QQ-XMRINFO:From:To:Cc:Subject:Date:X-OQ-MSGID:
+	 MIME-Version:Content-Type:Content-Transfer-Encoding;
+	bh=tdN3CeEg68uIJzhvzT/ph7W8qSxkZkgZnCBjalX1+ro=;
+	b=raCNwBZM8pkroMlLyHcgbdo5xlSRiNLUoqvesgrWyzyOmDzyy5ypKhneeU5jseNtmsuY
+	 NQZJEFnAElWXo2wwe3tHjuRIfb9MunBG2lXV6Qoo3WaWCGlJlmEhbfP/2mNsGyZfo7qH2
+	 qIV7x+XCWkZvLiVb3nnLNq3OfkjNDtdwJwCchsqsBnv9k9aHN4JxzaJBlc6FgpLSpChC/
+	 j7Z6VfwLAb66TLb2xoWjd4uqIvVSmCe2NEY7hWcsBSgPFNKGd6pUs5RPFCDkpkaEgpBbA
+	 55b2T/l07sx3yyWsTtGg0Ii5EXmpa/lsmU2zsZi8vZ9jspgcT0NKmWZTTrHcVgVJ83A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fQAzKD45;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=qq.com;
+	spf=pass smtp.mailfrom=qq.com;
+	dkim=pass header.d=qq.com header.i=@qq.com header.a=rsa-sha256 header.s=s201512 header.b=yon9H9XH;
+	arc=none smtp.remote-ip=162.62.57.252
+Received: from out162-62-57-252.mail.qq.com (out162-62-57-252.mail.qq.com [162.62.57.252])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D2B4606A31C
-	for <linux-xfs@vger.kernel.org>; Mon,  9 Nov 2026 17:09:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EAE4606A331
+	for <linux-xfs@vger.kernel.org>; Mon,  9 Nov 2026 17:32:46 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2EAE4606A331
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fQAzKD45
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8A1321F0089F;
-	Mon,  9 Nov 2026 17:09:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794244199;
-	bh=0MjNTh09fB02xvZARX+Z4TAHBb6ZpanKCZRK2ApbDtI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=fQAzKD45TyKB6fI3Wb6EhgJSrbOYb55NQ3MgwXy9sNVq9sMuPGIRFWQhOLeUA33e3
-	 wtAar61P/3iXs/z9EN4bHadP8jq5OoVI/SZQhOGjs3d8YZlBQ/xBacWhxY9i132LLx
-	 CnhNd9/bC2LbkdMGZWmyDHJ19ta+mbqQCcvCteKMi4hy/+cjil0kbRZjRG8DDhcHob
-	 i28nUtODj45/BiwzxYZb3utHnYTLuM0BQ574myDcSz2YPFPFxDInr22yKoYkDUFY6/
-	 Q2OhZwt49bBUwJaMT8IPPBxGETt7FXduQ9uKnHhSmzlMkrKzDzz1x0LOi53kGxQEqc
-	 JEJw34jIRUAMw==
-Date: Mon, 9 Nov 2026 18:09:51 +0100
-From: Carlos Maiolino <cem@kernel.org>
-To: Guikun Yang <yangguikun19@qq.com>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: check the region index against ri_total in buffer
-Message-ID: <avH-JslaJ4xlof4c@cronus.toxiclabs.cc>
-References: <tencent_ADBE1F465A9C5A4CFBA28A7D6AA39C527509@qq.com>
+	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.a=rsa-sha256 header.s=s201512 header.b=yon9H9XH
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
+	t=1794245563; bh=tdN3CeEg68uIJzhvzT/ph7W8qSxkZkgZnCBjalX1+ro=;
+	h=From:To:Cc:Subject:Date;
+	b=yon9H9XHOWgOU32Ka6/7O4dwu7CWyVFmauGNYpsflanCMiJ3spPfVg3yxiAostBRk
+	 sy0cWLQg7/wMgrku+BbpELp7gPtd3F4zCdjuS4ptGKmo0kU6CMqTSN67tV6KxhPzRb
+	 n8lGcvKoahAgVyj9nxsZQxINP7yIszjD5MrGfQwQ=
+Received: from [172.18.4.77] ([202.113.185.209])
+	by newxmesmtplogicsvrsza53-0.qq.com (NewEsmtp) with SMTP
+	id 829A0ED6; Tue, 10 Nov 2026 01:32:41 +0800
+X-QQ-mid: xmsmtpt1794245561tl4qf4eo7
+Message-ID: <tencent_C48E4451F8984465A7BA7D338D003925980A@qq.com>
+X-QQ-XMAILINFO: NwU6Bou9okj/iuWBvmoGAcHMc4pKxD3DIEL12NOOWeM9caeA9vCLLFxvTPMLJb
+	 cNKEzefFA1yJe4794gWMEupLKqstSDmI2c1/rwIb/Y4xcSQlT3oTE5tHqwM26ACNHPTScBfrs2Ai
+	 zf+juPHBIPY3qy/L79+5RUlgm+jE7XYjnxJZeDbaX5vBDS8EUGR1SccxGgzzrG7lqF5on4fXxNCx
+	 tEh8cNApGM3iAAMdjkQdnXMxcVtfb8scuC/nhGLbwQt33BdeZsgsQwjOr1r2K51ht8WZ40GEDTTi
+	 Xsr/inzqv32L6RzDEH/7jZstDM4oTAt06uVAKirMRQx+dHXo42LcCOK0jGr+9WaZUTPfDccH4RRI
+	 M9XRX/4G76uUSkvMIpdyvuKLM7fyQEk9so3heqqCOcVzTYPm2vpE7GGn6E6tdhGE9myWgFDNJTk6
+	 yMLqc9Lrti00+/X5bUpBG/tQHS99ewYSZolXd67nSI7uS1EtIsDrQvWYxEnAKTwmU/FQm4oiWctn
+	 5sER4lN2p2Y6iHA3ILn43tl+LoOTje3FU75h7CyMir/JJfnleLTRgLzfm5OFhNQC8vpSspc4D2B6
+	 scTlm8EsD9D8bbIbA/snuVlAcypPESDypZ73BdPs+fZD/71mIovxjaNkfuQTFsKYgnT2O6bWhews
+	 CO0h92HM69nAeD4gzIQcdUFH283EJLbgTSw5Nlnokvs5mNUdUPtiEBMFRKfp6u0JrRrf1MLR8g8V
+	 A0MgcjIPFUsxdoPSo8xtErpO5SoC30vja+cxFEuT5tAKs8+aPGzeiARKn1sH+pUE100RnEaAo+AM
+	 bKjV9nNV2L5cbfT170sfYS2rXvqGsuENzUv9KbSyZyugSEQzLX87FBLzLCMm4bEr/dmkGajwOc65
+	 hHJvm5QkBdMuccazBQ/rFhT+66LeUBAWI1x1gDD/3gfBCxLpQLgD0CodfCXH14Nb2UgviZGaSROU
+	 Horu6UN9EdJphNFTsn46eRlNrp/TYAOknDRKF0G9fNY9FLh7940vpRe9dF8s8jCg7HvyAqR+Lwsq
+	 t9/W0K/eUh7JdnMNF0l1/SFZBoIKQJFp1ty09p31OFo/SdCPe7Foubaj0FHCc=
+X-QQ-XMRINFO: NS+P29fieYNwqS3WCnRCOn9D1NpZuCnCRA==
+From: Guikun Yang <yangguikun19@qq.com>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+Subject: [PATCH] xfs: reject a continuation op with no buffered region in log
+Date: Tue, 10 Nov 2026 20:00:00 +0800
+X-OQ-MSGID: <patch-xfs-wascont-20261110@qq.com>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -55,84 +74,76 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <tencent_ADBE1F465A9C5A4CFBA28A7D6AA39C527509@qq.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 
-On Tue, Nov 10, 2026 at 02:00:00PM +0800, Guikun Yang wrote:
-> Both xlog_recover_do_reg_buffer() and xlog_recover_do_inode_buffer()
-> walk the buffer data map run by run and index item->ri_buf[] with a
-> counter that is advanced once per run. The number of runs in the
-> on-disk bitmap has no relationship to the number of regions the log
-> item actually carries (ri_total, from blf_size), and the only bound
-> on the index is an ASSERT - either the mid-loop ASSERT on ri_buf[i]
-> or the trailing ASSERT(i == item->ri_total) - both of which compile
-> away on production kernels.
+xlog_recover_add_to_cont_trans() takes the tail item of the transaction
+and indexes ri_buf[ri_cnt - 1] without checking that the item has any
+region buffered:
 
-Great... Your patch does not even apply to the tree...
+	item = list_entry(trans->r_itemq.prev, struct xlog_recover_item,
+			  ri_list);
+	old_ptr = item->ri_buf[item->ri_cnt-1].iov_base;
 
-> 
-> A crafted buffer log item with a data map that contains more runs
-> than blf_size claims regions walks the index past the end of ri_buf[]
-> and reads ri_buf[i].iov_base out of bounds. The destination side of
-> do_reg_buffer() is already validated for real since the CVE-2026-80536
-> fix ("... the only thing bounding the copy is an ASSERT(), which
-> compiles away on production kernels"); the source index was left to
-> the ASSERTs in both functions.
-> 
-> Validate the index before each ri_buf[] use, in both functions:
-> 
->   xlog_recover_do_reg_buffer(): i >= item->ri_total at the top of the
->   loop body, reported as a bad buffer log item.
-> 
->   xlog_recover_do_inode_buffer(): item_index >= item->ri_total right
->   after the run-advance loop.
-> 
-> Tested with two crafted dirty-log images (mount(2) alone): one hits
-> do_reg_buffer (16 runs, blf_size 2), one hits do_inode_buffer
-> (alternating map, blf_size 2). Both previously produced
-> KASAN: slab-out-of-bounds; with this patch both fail recovery with
-> the new message, and the unmodified images still mount.
-> 
-> Reported-by: Guikun Yang <yangguikun19@qq.com>  (bug reports of 2026-11-09, <c40-xfs-inodebuf-item-index-20261109@qq.com> and <c41-xfs-regbuf-run-index-20261109@qq.com>)
-> Signed-off-by: Guikun Yang <yangguikun19@qq.com>
-> ---
->  fs/xfs/xfs_buf_item_recover.c | 14 ++++++++++++++
->  1 file changed, 14 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
-> index 1111111..2222222 100644
-> --- a/fs/xfs/xfs_buf_item_recover.c
-> +++ b/fs/xfs/xfs_buf_item_recover.c
-> @@ -479,6 +479,13 @@ xlog_recover_do_reg_buffer(
->  		nbits = xfs_contig_bits(buf_f->blf_data_map,
->  					buf_f->blf_map_size, bit);
->  		ASSERT(nbits > 0);
-> +		if (XFS_IS_CORRUPT(mp, i >= item->ri_total)) {
-> +			xfs_alert(mp,
-> +"Bad buffer log item dirty bitmap (region %d, %d regions) at daddr 0x%llx.",
-> +				i, item->ri_total, xfs_buf_daddr(bp));
-> +			return -EFSCORRUPTED;
-> +		}
->  		ASSERT(item->ri_buf[i].iov_base != NULL);
->  		ASSERT(item->ri_buf[i].iov_len % XFS_BLF_CHUNK == 0);
->  		/*
-> @@ -688,6 +695,13 @@ xlog_recover_do_inode_buffer(
->  			nbits = xfs_contig_bits(buf_f->blf_data_map,
->  						buf_f->blf_map_size, bit);
->  			ASSERT(nbits > 0);
-> +			if (XFS_IS_CORRUPT(mp, item_index >= item->ri_total)) {
-> +				xfs_alert(mp,
-> +"Bad inode buffer log item dirty bitmap (region %d, %d regions) at daddr 0x%llx.",
-> +					item_index, item->ri_total,
-> +					xfs_buf_daddr(bp));
-> +				return -EFSCORRUPTED;
-> +			}
->  			reg_buf_offset = bit << XFS_BLF_SHIFT;
->  			reg_buf_bytes = nbits << XFS_BLF_SHIFT;
->  			item_index++;
-> 
-> Fixes: 658fa68b6f34 ("xfs: refactor log recovery buffer item dispatch for pass2 commit functions")
-> --
-> 2.43.0
-> 
+An item created by xlog_recover_add_item() has ri_cnt == 0 and
+ri_buf == NULL - the transaction header itself is copied into
+trans->r_theader, not into the item - so this evaluates to NULL[-1].
+xlog_recovery_process_trans() dispatches to this function for any op
+whose header carries XLOG_WAS_CONT_TRANS, and nothing on the way
+checks that flag sequence against the item state; the only related
+assertion in the recovery code is XFS_DEBUG-only.
+
+A crafted dirty log with a valid transaction header followed by an op
+header with XLOG_WAS_CONT_TRANS therefore faults at mount time on a
+stock kernel, without any sanitizer enabled:
+
+  BUG: unable to handle page fault for address: fffffffffffffff0
+  #PF: supervisor read access in kernel mode
+  Oops: 0000 [#1] SMP
+  RIP: xlog_recover_add_to_cont_trans+0xf9/0x460
+   xlog_recovery_process_trans
+   xlog_recover_process_ophdr
+   xlog_recover_process_data
+   xlog_recover_process
+   xlog_do_recovery_pass
+
+Note that reaching it does not require an actual split region: a single
+continuation op right after the transaction header is enough, because
+the dispatcher never checks that the previous region had a buffer
+attached.
+
+Treat it as log corruption and fail recovery, matching the other
+-EFSCORRUPTED paths in this file.
+
+Reported-by: Guikun Yang <yangguikun19@qq.com>
+Signed-off-by: Guikun Yang <yangguikun19@qq.com>
+---
+Tested on a crafted dirty-log image (real mkfs.xfs, files, sync, crash,
+then the first region op after the transaction header gets oh_flags
+0x08 and the v2 record CRC is recomputed): the modified image now fails
+recovery with the new message, while the unmodified image still
+recovers and mounts. The same image reproduced the NULL deref 3/3
+before the patch.
+
+ fs/xfs/xfs_log_recover.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 1111111..2222222 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -2147,6 +2147,11 @@ xlog_recover_add_to_cont_trans(
+ 	/* take the tail entry */
+ 	item = list_entry(trans->r_itemq.prev, struct xlog_recover_item,
+ 			  ri_list);
++	if (XFS_IS_CORRUPT(log->l_mp, item->ri_cnt == 0)) {
++		xfs_warn(log->l_mp,
++			 "%s: continuation with no buffered region", __func__);
++		return -EFSCORRUPTED;
++	}
+ 
+ 	old_ptr = item->ri_buf[item->ri_cnt-1].iov_base;
+ 	old_len = item->ri_buf[item->ri_cnt-1].iov_len;
+--
+2.43.0
+
