@@ -1,60 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794268289;
-	b=LYD+c4bwknP0W6JRKp2cR84AAFtPhMRFEiH8biMkVAOmZOYVbaBxJ9NVn3kNMMSdTCX2
-	 oWJQBNEWCD0mOw+1EqVhb3glGDKvYepQkFNw3rsb+fTcqsDYOAEYcAoWUdYb99l4aSHlE
-	 a0hTFKNxOGunU31upKMfqtSF8YIt3rwAY1lnr7rTDbUwA+4PsHmkrm52P3ydOTZYKp2Pk
-	 k+cUphxyj6czK/dGT5qkVQAJX6Yiaq41GWLMTZl8qV+SZHvweJ+6GjXW3xklBgZzQhxLI
-	 VWC8fiZELatIPBM8SgtpIYM5Wz0JFrrvNfoLPLyj6hXNX7+QvIHcRIR0o02DdnYeaUA==
+	t=1794269089;
+	b=UVFLjNivcvT8R7Q6u63HBgzWwPkxvFwvrmipFLceWFX2qNnmH/WsBhe6oh/mO3T+tQBm
+	 OTEqGWwxr7ZVM8YDltx/MKrMV02+uiTWvfWQHwpLz+NZrEpPJz+PHavHTA+/JOc9bX+8K
+	 1CGr0KacuCKaXxEjt72zpk0PIRYinuRhelF/cu/96/FawvT9NqMhkowE/rZMfJ4PF5ecz
+	 RNQUYYO0VA6UVgX2D2izsgX4dSmS94yNzJ4ynK+plWNr5tZlhGi3HQdGg51ghZvE3HH0I
+	 P0iucZMMTK5ryYQKPyUFcvE5QHOeBjxFMyWdIVP/1hPf9nwXWcPXvJROxNycrp6DaVQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794268289;
-	h=Received:DKIM-Signature:From:To:Subject:Date:Message-ID:In-Reply-To:
-	 References:MIME-Version:Content-Type:Content-Transfer-Encoding;
-	bh=QDooGSmj6o+7BecvXiHqRFpr+EwV+FnQqyyovvptWSw=;
-	b=pcv+ubsWQEbhO1WifTtSDPtW7qfOSDyPhHhx7gvwUQNxaVlGAwkZdM+01YjqWUsqnQrQ
-	 pE16NzUAezGlCojLjtoIJJwt5TRUcePSAYSVP7bz6tuJ7RSce/FQGOBNEyugMMkftvwK6
-	 v0enK0S033hnv5cPpfMgjGmKuEtwkhLM0vcBIqYIvUHqSwsqcLtFp9hKZF/azEiAaX/Fz
-	 vnKOOKZuuxeaoEIvau2X4WqX2QTPYoB62Idl33Y5znN5Y4o17SaCBoXsnNRIP5TNhA0KB
-	 ZM5tEBSDa94n2LGrOHwCfQsF1ioLPTQcQiLDId1Uyb9/r/5DpxUpCHKT3EIh6wajVNA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794269089;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
+	 Reply-To:MIME-Version:X-Patchwork-Hint:X-stable:
+	 Content-Transfer-Encoding;
+	bh=cqOWRrXU376torPTkOYcHiJyXHp86pQQj2Hzf0MqcnQ=;
+	b=H8eJXkOGQvZVEcs10h2gBLvZVym0ruGrv1FBqU7MAsBT4CpMUxjQPMp3A8aOfRrrQx5s
+	 nFkD+G7yRvmOOApMmjtZOvgLQ8j+vnoMW9rAmSaFN+3U3LxbvvANfX6uVODFRcvxz6AAN
+	 EOSIoHK672BbNK7t4qJa7+q71F7gFwx1ivifwP5zwTUNJwEKUYMzHCbzAC+bY+JvifGyd
+	 ZTg082ygWsfL7jODJXeaC957ceqcCnE8HpPwkTMd7/ZHvV8nzcT+XcncIJToNgtEFEFUS
+	 SvVkhXFtSVnOG2t92ysRIllOt4YszMlTTf2vBK+h1pkuqCJl5WJMXYQO4gqhSJj1kmQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=frwkv9fM;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dhBl7csw;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A567E606A326;
-	Mon,  9 Nov 2026 23:51:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D34DA606A325;
+	Tue, 10 Nov 2026 00:04:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=frwkv9fM
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3D4401F00900;
-	Mon,  9 Nov 2026 23:51:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dhBl7csw
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0AFE11F0089F;
+	Tue, 10 Nov 2026 00:04:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794268288;
-	bh=QDooGSmj6o+7BecvXiHqRFpr+EwV+FnQqyyovvptWSw=;
-	h=From:To:Subject:Date:In-Reply-To:References;
-	b=frwkv9fMlEG8vp+JQMtGpatzZTOVa5eyoBqQUJnTxdS1XVYIbxHL/TM+FrH1wDroY
-	 PifbHkzzrohxl+78qP1uyRrTpoKCwIhi1uwCmvaf/3rwG5WwxZhA2vCDLrZvK6AAWp
-	 mkB+uHaZr6X1Be3MsfTLoGbCnKaywFSXRX8QeevDepcbT0+Mxm/XXNmWQ07+9n1SBp
-	 btGEDlr5WRV2D4jbgYdTN0EHPbAZHQqH0SXd/qzqGhor6DEPKr+1wZXPGGHAyDYp5D
-	 MUIImvetkpZ93A+rVK+02C7Vrs8hm1TQIJni47e1UzuX/3tFHM+dt1gU3+IMssQ4hG
-	 ymSTo7QJiTZiA==
-From: Chris Mason <mason@kernel.org>
-To: mason@kernel.org,
-	tytso@mit.edu,
-	cem@kernel.org,
-	david@fromorbit.com,
-	jack@suse.cz,
-	djwong@kernel.org,
-	josef@toxicpanda.com,
-	hch@lst.de,
-	linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org
-Subject: [PATCH v6 10/10] xfs: restart faults racing with realtime flag changes
-Date: Mon, 09 Nov 2026 18:51:21 -0500
-Message-ID: <20261109235111.14129-11-mason@kernel.org>
-In-Reply-To: <20261109235111.14129-1-mason@kernel.org>
-References: <20261109235111.14129-1-mason@kernel.org>
+	s=k20260515; t=1794269088;
+	bh=cqOWRrXU376torPTkOYcHiJyXHp86pQQj2Hzf0MqcnQ=;
+	h=From:To:Cc:Subject:Date:Reply-To;
+	b=dhBl7cswycNc37tP8PpCpGsIyE1B2vUpgCxOhJ1o3VslEPxE8T1q3BT1qrmt41RrH
+	 XFCW39KpNAPQkn1ZTrQqoX8bhZ+EyMSyiLDJaMvZ7nGgYLYGvh3fwib1t/x089f+38
+	 z3rrz64utwN80ez7q1n3xnZ+fg/ug6pwWPbOViCS4nkLM7UwyJOGLbVzvtHFXARPai
+	 NIumCvxH3cWhWRstyWica45RdweXffW9XOtgVeRqEyuoo2FtjYsu74cD19LbL9Gty5
+	 3g+HmRhNIQg8Q7TBGEOg3UWU6I5FjK0oTJ3JFvAAkCsGfIYFdLrZlxDOGSEJrMu/id
+	 L2sfqCqpEmDjg==
+From: Sasha Levin <sashal@kernel.org>
+To: stable-commits@vger.kernel.org,
+	daejun7.park@samsung.com
+Cc: Amir Goldstein <amir73il@gmail.com>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	linux-xfs@vger.kernel.org
+Subject: Patch "xfs: don't skip free extents in later batches of a whole-AG FITRIM" has been added to the 7.3-stable tree
+Date: Mon,  9 Nov 2026 19:04:46 -0500
+Message-ID: <20261110000446.3482030-1-sashal@kernel.org>
+X-Mailer: git-send-email 2.53.0
+Reply-To: stable@vger.kernel.org
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -64,116 +60,103 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+X-Patchwork-Hint: ignore
+X-stable: review
 Content-Transfer-Encoding: 8bit
 
-On a zoned XFS, a store through a shared mapping can dereference a NULL
-pointer, or corrupt the free block counter, if the realtime flag of the
-file changes during the write fault.
+This is a note to let you know that I've just added the patch titled
 
-xfs_write_fault() reserves zoned space only for a zoned inode, and tests
-for that with no lock held. xfs_buffered_write_iomap_begin() tests again
-before it takes the ILOCK. FS_IOC_FSSETXATTR can change the flag of a
-file with no blocks between the two tests, since a fault never takes the
-IOLOCK:
+    xfs: don't skip free extents in later batches of a whole-AG FITRIM
 
-    write fault                           FS_IOC_FSSETXATTR
-    ===========                           =================
-    xfs_write_fault()
-      sees that the inode is not zoned
-                                          sets the realtime flag
-    xfs_buffered_write_iomap_begin()
-      sees that the inode is zoned
-      /* ac is NULL */
+to the 7.3-stable tree which can be found at:
+    http://www.kernel.org/git/?p=linux/kernel/git/stable/stable-queue.git;a=summary
 
-If the flag is cleared instead, xfs_zoned_buffered_write_iomap_begin()
-can be waiting for the ILOCK at that time. It then reserves blocks the
-zoned way on a regular inode, and the free block counter ends up too
-high.
+The filename of the patch is:
+     xfs-don-t-skip-free-extents-in-later-batches-of-a-wh.patch
+and it can be found in the queue-7.3 subdirectory.
 
-The fix used here is to test again under the ILOCK, before blocks are
-reserved or allocated, and to return -EAGAIN if the flag has changed, so
-that the fault starts over.
+If you, or anyone else, feels it should not be added to the stable tree,
+please let <stable@vger.kernel.org> know about it.
 
-Fixes: 058dd70c65ab ("xfs: implement buffered writes to zoned RT devices")
-Signed-off-by: Chris Mason <mason@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_iomap.c | 33 ++++++++++++++++++++++++++++++++-
- 1 file changed, 32 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index c3465204b8d5..3e71d619c657 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -264,6 +264,23 @@ xfs_iomap_eof_align_last_fsb(
- 	return end_fsb;
- }
 
-+/*
-+ * A write fault picks the zoned or the regular path before it takes a lock, and
-+ * it never takes the IOLOCK, which keeps the realtime flag stable for all other
-+ * callers.  The flag cannot change under the ILOCK, or once the inode has
-+ * blocks.  So look at it again under the ILOCK, before reserving or allocating
-+ * blocks, and make the fault start over if it has changed.
-+ */
-+static int
-+xfs_iomap_rtflag_changed(
-+	struct xfs_inode	*ip)
-+{
-+	xfs_warn_ratelimited(ip->i_mount,
-+		"RT flag modifying during page fault for inode 0x%llx.",
-+		VFS_I(ip)->i_ino);
-+	return -EAGAIN;
-+}
-+
- int
- xfs_iomap_write_direct(
- 	struct xfs_inode	*ip,
-@@ -334,6 +351,11 @@ xfs_iomap_write_direct(
+commit 99644ccad84bf44a5bd697d1029fd69558daabac
+Author: Daejun Park <daejun7.park@samsung.com>
+Date:   Mon Oct 26 10:54:05 2026 +0900
+
+    xfs: don't skip free extents in later batches of a whole-AG FITRIM
+    
+    [ Upstream commit 595e67d7261673d03c96950ffbb2e545c00376ed ]
+    
+    A whole-device FITRIM walks every AG but the last by length, in
+    batches. xfs_trim_gather_extents() saves the record to restart from in
+    tcur->start. But tcur->start is also the start of the range to trim.
+    Later batches therefore never discard the free extents below that
+    block.
+    
+    Save the restart record in a new restart_bno field.
+    
+    Cc: stable@vger.kernel.org # v6.10
+    Fixes: b0ffe661fab4 ("xfs: fix performance problems when fstrimming a subset of a fragmented AG")
+    Signed-off-by: Daejun Park <daejun7.park@samsung.com>
+    Reviewed-by: Christoph Hellwig <hch@lst.de>
+    Signed-off-by: Carlos Maiolino <cem@kernel.org>
+    Signed-off-by: Sasha Levin <sashal@kernel.org>
+
+diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
+index 906221ffe9ba8..8120f136af931 100644
+--- a/fs/xfs/xfs_discard.c
++++ b/fs/xfs/xfs_discard.c
+@@ -155,6 +155,8 @@ struct xfs_trim_cur {
+ 	xfs_agblock_t	end;
+ 	xfs_extlen_t	minlen;
+ 	bool		by_bno;
++	/* restart point (with count) for the by-length walk */
++	xfs_agblock_t	restart_bno;
+ };
+ 
+ static int
+@@ -198,14 +200,15 @@ xfs_trim_gather_extents(
+ 		error = xfs_alloc_lookup_le(cur, tcur->start, 0, &i);
+ 		if (!error && !i)
+ 			error = xfs_alloc_lookup_ge(cur, tcur->start, 0, &i);
+-	} else if (tcur->start == 0) {
++	} else if (tcur->restart_bno == NULLAGBLOCK) {
+ 		/* first time through a by-len starts with max length */
+ 		cur = xfs_cntbt_init_cursor(mp, tp, agbp, pag);
+ 		error = xfs_alloc_lookup_ge(cur, 0, tcur->count, &i);
+ 	} else {
+ 		/* nth time through a by-len starts where we left off */
+ 		cur = xfs_cntbt_init_cursor(mp, tp, agbp, pag);
+-		error = xfs_alloc_lookup_le(cur, tcur->start, tcur->count, &i);
++		error = xfs_alloc_lookup_le(cur, tcur->restart_bno,
++					    tcur->count, &i);
+ 	}
  	if (error)
- 		return error;
-
-+	if (xfs_is_zoned_inode(ip)) {
-+		error = xfs_iomap_rtflag_changed(ip);
-+		goto out_trans_cancel;
-+	}
-+
- 	error = xfs_iext_count_extend(tp, ip, XFS_DATA_FORK, nr_exts);
- 	if (error)
- 		goto out_trans_cancel;
-@@ -1668,7 +1690,6 @@ xfs_zoned_buffered_write_iomap_begin(
-
- 	ASSERT(!xfs_get_extsz_hint(ip));
- 	ASSERT(!(flags & IOMAP_UNSHARE));
--	ASSERT(ac);
-
- 	if (xfs_is_shutdown(mp))
- 		return -EIO;
-@@ -1682,6 +1703,11 @@ xfs_zoned_buffered_write_iomap_begin(
- 	if (error)
- 		return error;
-
-+	if (!xfs_is_zoned_inode(ip) || !ac) {
-+		error = xfs_iomap_rtflag_changed(ip);
-+		goto out_unlock;
-+	}
-+
- 	if (XFS_IS_CORRUPT(mp, !xfs_ifork_has_extents(&ip->i_df)) ||
- 	    XFS_TEST_ERROR(mp, XFS_ERRTAG_BMAPIFORMAT)) {
- 		xfs_bmap_mark_sick(ip, XFS_DATA_FORK);
-@@ -1865,6 +1891,11 @@ xfs_buffered_write_iomap_begin(
- 	if (error)
- 		return error;
-
-+	if (xfs_is_zoned_inode(ip)) {
-+		error = xfs_iomap_rtflag_changed(ip);
-+		goto out_unlock;
-+	}
-+
- 	if (XFS_IS_CORRUPT(mp, !xfs_ifork_has_extents(&ip->i_df)) ||
- 	    XFS_TEST_ERROR(mp, XFS_ERRTAG_BMAPIFORMAT)) {
- 		xfs_bmap_mark_sick(ip, XFS_DATA_FORK);
---
-2.55.0
-
+ 		goto out_del_cursor;
+@@ -235,9 +238,15 @@ xfs_trim_gather_extents(
+ 		if (--batch <= 0) {
+ 			/*
+ 			 * Update the cursor to point at this extent so we
+-			 * restart the next batch from this extent.
++			 * restart the next batch from this extent. The
++			 * by-length walk does not visit extents in block
++			 * order, so it must keep the start of the range and
++			 * restart from restart_bno instead.
+ 			 */
+-			tcur->start = fbno;
++			if (tcur->by_bno)
++				tcur->start = fbno;
++			else
++				tcur->restart_bno = fbno;
+ 			tcur->count = flen;
+ 			break;
+ 		}
+@@ -340,6 +349,7 @@ xfs_trim_perag_extents(
+ 		.start		= start,
+ 		.end		= end,
+ 		.minlen		= minlen,
++		.restart_bno	= NULLAGBLOCK,
+ 	};
+ 	int			error = 0;
+ 
