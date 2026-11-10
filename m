@@ -1,54 +1,54 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794270702;
-	b=e//xi5+Ck7yphpDU3d+AW8+6O1gOoLtxSITHSBaS6xRSh8o6/NVeWNkiSjtAr6WUe6oi
-	 bosh+UdD6DRGrfBWN4uy/cgPM+mNDOEX+XRZG7VJP1LRoAJ0GPXjE3B/D1dhvlZ+vtFG0
-	 0eNtimmyNzZB/2H2W8Y8NSI6/8IAWmtxJ5Lj3Gi4f9zzGzjRKbnGd/HOw+yzD9aruYbw8
-	 4Xo2tURcRr5jpr66fNN4BFMQMpku5l8FheeU8w1+xVg4pQHR64hsS+nTLaLW20urSUW9F
-	 psp0eZR68YxRJ92WqNA163yKS7eI/eC42kUfwgVLBHHS710n+9JbxUXqi5Ue7Tyae4g==
+	t=1794271089;
+	b=NP1i0tPXPgSI3xx7xHVuwAZAs7VhTOpsdZsGpTnQajrN6NBCosSPB3JOhV5xvZRdf1nV
+	 dPqilVdgDgU5Yb7C9wc2ns5UpjD424Ihhx/IjGoh9NSc82zBdH8ZjOpJsdPN062yTWumQ
+	 8IBFv4UwoU06xmH7oQDYxc90P1m7EAyTi0jWjn/Mk1tC0vGLS5F/SmjjKvPrS/MbMNTlf
+	 C3e8OQrozzFo86qr/dOu754v6JLxTdyEw9hU3dQjF1Q3+GQNV6uj74crppNRYmayNTMJ+
+	 +JYW2iTtfINYDqcI/9Q7R7efNdo3TZ3rnsz/hq47wn6r83TNfpLtXrRQYEZ8KqzIQRw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794270702;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794271089;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 Reply-To:MIME-Version:X-Patchwork-Hint:X-stable:
 	 Content-Transfer-Encoding;
-	bh=WV58SF/BdBk2Bc4+7ANgntpWJt3lSkglHhwzYRq6N8M=;
-	b=uOGwiV8TndnEs9c85uwfwsUfkm94Jirfb41c0bTFYqYOlmpYkwAKomDO/4HXtzxTuFH4
-	 5rWwrsjHFxXOqGTZs1L4KGuqRonvpwdrJqQ1ItUp79XaA5fvuOKvhDZp+8J92Uxi/KNoE
-	 qvc/XxSJkvxZsBhejmISGah/TboF483JEYbr8yhYYtAdoaNp+JL/+ukxp2F/yBiXJZ3y9
-	 cUnsA2MfbV7ze/6gjw2uY26x9Zs462HkBz/x8eJ8asQtQo/hw4zGxr2479RMz77TTmmek
-	 E6XA9BLo6+7e/wMJ/Hnhrcd0IxOrfdY4Vz0mNHFb/ijtIcRXJapE6YqIuVtklFKacUw==
+	bh=HUw04Ltx5FA2iUiX7+l9T98HXG/lqVd97NgCtGgJkc4=;
+	b=VKiDw2vpXU2dnasgbkpyvGc3/pjJMFEgM3C6YcRAgRoC62CCoBV4jJrZCX1WDDGHbUqM
+	 1umOl++0BZt7UjacL0NGi3o0yOBgz+YpTw701J2XnCjdWbur2PlexHZB9ol1dqB92KpSl
+	 bj7AkRSUdfW9M+Ek4qPgcT/ldQYG7jiy8zQ7A79N4Yx0jF1a/e0qOoOvkLSBbDqnNkvK0
+	 RBRM30LHakn5kJsB64oEKZpgFNOtKCappn5P6OaC8Yf7jmGUu8OLW/X60uKst5VWc53Ny
+	 u4D0Bc1A21/HQTzwH7hguTwoFAC9LX6cm3FpsxyoEqDYqt60XqNfIO8xdIcF+dgu4OA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SpNKnzi8;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cQR9XGs9;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52810606A325;
-	Tue, 10 Nov 2026 00:31:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D6F4606A31C;
+	Tue, 10 Nov 2026 00:38:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SpNKnzi8
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8C5131F0089F;
-	Tue, 10 Nov 2026 00:31:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cQR9XGs9
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7E4591F0089F;
+	Tue, 10 Nov 2026 00:38:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794270702;
-	bh=WV58SF/BdBk2Bc4+7ANgntpWJt3lSkglHhwzYRq6N8M=;
+	s=k20260515; t=1794271089;
+	bh=HUw04Ltx5FA2iUiX7+l9T98HXG/lqVd97NgCtGgJkc4=;
 	h=From:To:Cc:Subject:Date:Reply-To;
-	b=SpNKnzi8JTx0vg8uaH44Yg18nz8zuRr2z8PjE2w9pzFBVSbqOGiszIfmUkSHyrIaN
-	 yoRNfrti3mXKBJMaJac3nnUsdI4cqAvnYrusgKM9kP9bDFC4N1HtiHm1waNHJLWfje
-	 ISGI9kyYNwinqG36lsvNk+g9n1QSxpGFykJbUz4iE62mufLR+4luOlOpt2IlcxJ54o
-	 Haddb8W+NHmScG6Fl18cs+zBt6qMah6kNPSXjzhrqcZPF/u9JoBVxJTE1FzSgEMOV8
-	 APUUwU/iFWWcHitkKoenPAgPPazi1cM1UcquQUJ52ke4wCeMejvl9PxkmyGYalb21K
-	 5PKUAUuPJNzDA==
+	b=cQR9XGs9yw9ZZ9JDVsvUGlEik2C3x7oD2WuLn1qjdrqm6UUfKb+yQGeS9rIOfDeVq
+	 Q2r77yX3WEWyZCiuJbf3BIg3N3v36FsDyXu0+1WcoBm3ZcCZOsr1SpVNzGNiTcojjo
+	 xcNbDGCprPMNF2+3RNqomFxmnelvBZQk0+J+4RUEqrSzoPz8VAAWkRupfh5Q4dlhEX
+	 6LUXiUGRkujW5c48UYCMZcCavZz9Q/Bko6z5bGus/MaBz6HRmHob3UZvSOzZyTyTOL
+	 F3zsYnS5o/jUb8bg/AlJrVY1jJaYWEf+xVrRhENm7+82p4pcXa8xW44Njx+K1OX+ro
+	 ws+YDYGF0CsDw==
 From: Sasha Levin <sashal@kernel.org>
 To: stable-commits@vger.kernel.org,
-	hch@lst.de
+	jianyungao89@gmail.com
 Cc: Amir Goldstein <amir73il@gmail.com>,
 	"Darrick J. Wong" <djwong@kernel.org>,
 	linux-xfs@vger.kernel.org
-Subject: Patch "xfs: fix recovery of partial attr removals" has been added to the 6.12-stable tree
-Date: Mon,  9 Nov 2026 19:31:40 -0500
-Message-ID: <20261110003140.3518492-1-sashal@kernel.org>
+Subject: Patch "xfs: fix temporary cursor leak in btree shift corruption paths" has been added to the 6.6-stable tree
+Date: Mon,  9 Nov 2026 19:38:07 -0500
+Message-ID: <20261110003807.3527291-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 Reply-To: stable@vger.kernel.org
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -66,68 +66,63 @@ Content-Transfer-Encoding: 8bit
 
 This is a note to let you know that I've just added the patch titled
 
-    xfs: fix recovery of partial attr removals
+    xfs: fix temporary cursor leak in btree shift corruption paths
 
-to the 6.12-stable tree which can be found at:
+to the 6.6-stable tree which can be found at:
     http://www.kernel.org/git/?p=linux/kernel/git/stable/stable-queue.git;a=summary
 
 The filename of the patch is:
-     xfs-fix-recovery-of-partial-attr-removals.patch
-and it can be found in the queue-6.12 subdirectory.
+     xfs-fix-temporary-cursor-leak-in-btree-shift-corrupt.patch
+and it can be found in the queue-6.6 subdirectory.
 
 If you, or anyone else, feels it should not be added to the stable tree,
 please let <stable@vger.kernel.org> know about it.
 
 
 
-commit 8a340bb93ef082f03ebb4b072e2a86002390f8ed
-Author: Christoph Hellwig <hch@lst.de>
-Date:   Wed Oct 28 09:09:39 2026 +0100
+commit 2af22d4e1b8e0420eb042c5288c321e027333534
+Author: Jianyun Gao <jianyungao89@gmail.com>
+Date:   Mon Nov 2 23:01:41 2026 +0800
 
-    xfs: fix recovery of partial attr removals
+    xfs: fix temporary cursor leak in btree shift corruption paths
     
-    [ Upstream commit 30bb61651d2da5a502cf504bcdad16c093c1bb08 ]
+    [ Upstream commit 2bbca049deeb1699cafd966cb2793fee576ee409 ]
     
-    When running xfs/753 on parent pointer-enabled file systems with DEBUG
-    enabled, log recovery will eventually crash after a few dozen iterations
-    due to an ASSERT that XFS_ATTR_INCOMPLETE is not already set when
-    xfs_attr3_leaf_setflag is called:
+    In xfs_btree_lshift and xfs_btree_rshift, when XFS_IS_CORRUPT detects
+    an invalid firstrec/lastrec result after xfs_btree_dup_cursor has
+    successfully allocated a temporary cursor, the error path jumps to
+    error0 which returns without freeing tcur.  This leaks the cursor
+    memory, the xfs_group reference, and the per-level buffer references
+    held by the duplicated cursor.  Jump to error1 instead, which calls
+    xfs_btree_del_cursor(tcur, XFS_BTREE_ERROR) to properly release all
+    resources.
     
-    XFS: Assertion failed: (entry->flags & XFS_ATTR_INCOMPLETE) == 0, file: fs/xfs/libxfs/xfs_attr_leaf.c, line: 3045
-    
-    This is because parent pointer use logged attributes, and the attribute
-    intents do not track the work that has been done as the transaction
-    rolls, and the recovery mechanism is to run the operation from scratch.
-    Because of this various places check for XFS_DA_OP_RECOVERY skip work
-    already done.  But while recovery tolerates an attribute already fully
-    removed, it currently trips the above assert for an attribute that
-    already has the INCOMPLETE bit set, but still exists.  Fix this by
-    handling the case like all the others.
-    
-    Fixes: 1d08e11d04d2 ("xfs: Implement attr logging and replay")
-    Cc: stable@vger.kernel.org # v5.19
-    Signed-off-by: Christoph Hellwig <hch@lst.de>
+    Cc: stable@vger.kernel.org
+    Fixes: 9eaead51bed95 ("[XFS] implement generic xfs_btree_rshift")
+    Signed-off-by: Jianyun Gao <jianyungao89@gmail.com>
     Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
     Signed-off-by: Carlos Maiolino <cem@kernel.org>
     Signed-off-by: Sasha Levin <sashal@kernel.org>
 
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index aef8d66a016f9..b3f1eaa1ec45a 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -2961,7 +2961,14 @@ xfs_attr3_leaf_setflag(
- #endif
- 	entry = &xfs_attr3_leaf_entryp(leaf)[args->index];
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 1328dadcfc299..331bf27f2b219 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -2467,7 +2467,7 @@ xfs_btree_lshift(
+ 		i = xfs_btree_firstrec(tcur, level);
+ 		if (XFS_IS_CORRUPT(tcur->bc_mp, i != 1)) {
+ 			error = -EFSCORRUPTED;
+-			goto error0;
++			goto error1;
+ 		}
  
--	ASSERT((entry->flags & XFS_ATTR_INCOMPLETE) == 0);
-+	if (entry->flags & XFS_ATTR_INCOMPLETE) {
-+		if (!(args->op_flags & XFS_DA_OP_RECOVERY)) {
-+			ASSERT(args->op_flags & XFS_DA_OP_RECOVERY);
-+			return -EFSCORRUPTED;
-+		}
-+		return 0;
-+	}
-+
- 	entry->flags |= XFS_ATTR_INCOMPLETE;
- 	xfs_trans_log_buf(args->trans, bp,
- 			XFS_DA_LOGRANGE(leaf, entry, sizeof(*entry)));
+ 		error = xfs_btree_decrement(tcur, level, &i);
+@@ -2637,7 +2637,7 @@ xfs_btree_rshift(
+ 	i = xfs_btree_lastrec(tcur, level);
+ 	if (XFS_IS_CORRUPT(tcur->bc_mp, i != 1)) {
+ 		error = -EFSCORRUPTED;
+-		goto error0;
++		goto error1;
+ 	}
+ 
+ 	error = xfs_btree_increment(tcur, level, &i);
