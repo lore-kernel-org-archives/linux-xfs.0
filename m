@@ -1,54 +1,54 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794270123;
-	b=dpmjfpNNymvuSwqi27SFaH5Lstr5VV/HvFZmI2cCog42K6u73Zt1HRfOZ1YVpNgNterY
-	 F50tXl8FieZPSah9Hv9TbE4BQrKe7qpkABhLkvaTn3IyV6BnCzsLgWFaYCis0QQGwc4P7
-	 yQqTGuWVA1alozRM0lsuz1wkcwEzUISEQvfOKNc5dBSjY070n1ihOjDujOBC8J/URlIfw
-	 zTB+9OjyYUrCtgr1T/6MB2S3x944rXJzs5ujZ62AMPK9msbyIVXhQYv+j4fBq71flLBHs
-	 Q16e0FmvkIrL7rleydBPSBUQ/3hFymEVsg2dONw7rNLYl8ysgDKz1hAzHncEZrk+g+w==
+	t=1794270126;
+	b=L4QYfMM8F/Lu30CUc/Enveqo38QW/QQjy2rbKELhDbgGkXyL90u6/3rNYpvswYM8Oamt
+	 sjmh75y6raUkZ5CrehC7bHJ1EXgy1DMrx8NR7MveVAagtGfze9YpRBqEGfgVOlCcBBNWo
+	 RXL5q2NUioyIBzKvVkGwX/Tyu0s3+ka75ye+0qP/Wc4kVJexdLB20QvCJB89X/hfY4Bpb
+	 0BjcJQdVE1xbnh9f5gCN8XvXzjeTrxFMdM08VLLcZ0pDxyyuwP9j8LfDJT3v2A7qCp4rV
+	 XW9K7bEP5508+DstbUFRMwDPLqjp1wtmR9Mw5EVFOS6KU7N0ZIzvrzQRjUL6vnqmV0Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794270123;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794270126;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 Reply-To:MIME-Version:X-Patchwork-Hint:X-stable:
 	 Content-Transfer-Encoding;
-	bh=2J64EBFRklmHgVPBtbnylPOybqEX3QonMWfpADLSB+E=;
-	b=QHSsyz7g/f0lQfHq8VCcWllhj+BZmfGKVb9Tt3U10+jEI2MR3zu4gNGvJ5G5kHmtz2Yn
-	 +G3kfxW13xp47vR0oqb9tqszeazqiLJgVypJsbN5As8sf/4gHZLMZ7t49s3CU8uJbBH5m
-	 S4vmj/A9/vhC2zEroXqXtUfLrOeUkCcFGeTnSWb22StLBzFzhF8vBpY3L7nowchT04wzh
-	 xHmtEj+jZh2r0bpvoFllAY1EtEesEfNWkknkhwnJ71QA+1Tb7hdTnv87FyD+bEAi/bvkM
-	 xAYkcAadAtRAJoEM7WifIcfhlarW+jUx8/YnzFbZevhZ8/czuh1w9EXEbPd/wgsrWMw==
+	bh=g9zRU35e/WThdnKeYRLACVdi36r5+FtlsJWIllgW0Y4=;
+	b=HFNRSc/NpMzHhSo/iWpP1uY2xM8bd+YkxFuEb0cvdh04jGGCUkMQwXZ/haducsyFfQWF
+	 dZIMfpue6qYke/8+b/IEvIU20Ba5dWGPJ7GjseOZJMg1AsVBuOcgiY8kF/XFOsO2Yq406
+	 kNOEuMMBEshWXQM9JSp+mXXTCQ7rEADzXZSVcVqMPca1dRXbCA1omsqPQAFYo9xCtRm+N
+	 FL+GgTXiOEFtqYfVAitEKVUHQD59PFuIJ8WkfdcCJ7/YpRFmMp8azCytV+qh06whHj8fq
+	 cIc9WNM7uonsIwlDpo/tJONH9Tm9i6JY+VpQCJ3nzl3jXgaCyWZ9U8ISZ43BTx9iLFg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=N1wz4ksr;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bWx1o2PJ;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32A54606A31C;
-	Tue, 10 Nov 2026 00:22:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D36AE606A321;
+	Tue, 10 Nov 2026 00:22:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=N1wz4ksr
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1033A1F0089F;
-	Tue, 10 Nov 2026 00:22:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bWx1o2PJ
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ADAC61F008A1;
+	Tue, 10 Nov 2026 00:22:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794270122;
-	bh=2J64EBFRklmHgVPBtbnylPOybqEX3QonMWfpADLSB+E=;
+	s=k20260515; t=1794270125;
+	bh=g9zRU35e/WThdnKeYRLACVdi36r5+FtlsJWIllgW0Y4=;
 	h=From:To:Cc:Subject:Date:Reply-To;
-	b=N1wz4ksrQwdD7Y1nF/kfiRDvSy2Ms0LLtH0KbxUlqYeidPgdBxaVD4MNmuwJh6zB4
-	 cL4cMieQTYsxlbfg97e6XT2f0tBSnfLGtlrlzrgFvD24mFjdbs8z+s8taTMUSUMFrA
-	 qOFbYXR9Z//h/SAH9HelbeHID6fgr8ZhTjgHHqnIa409pHuy+ttP694Sdzs8CqYku7
-	 XKzGmC524AQ67Sel1tYbk0DZCZW0GOGXBWG+u7Ckqngr0Xk9SJoUElb5uj2ku7su9L
-	 po0t8ma4KxIC5qXxojjuO6KEnOz0SNjhICHHNrW8hap9No4yOxCjv1r/SZgvU+8tP4
-	 CdYcsYUBPd/Mg==
+	b=bWx1o2PJX5IVwOeZfRRj+r4zHqyy8sfTbd+WKkk4yJPzTfTJZ5pPbqvX8UeJCS8Xk
+	 FQVSYdzkc00et7a+bryRUYj05HBUwkPzRgoYE4WkrcScJvULRtHhdaEaRrWAnuA065
+	 2xiC17mSrjfmB8cz74yW+iZZcyxfQ2LoE9NQOVTf0GO2sMokdt4IpteX9CK9SFVLW2
+	 t48IyRxDaB8bL71rZ7a/kCq975hPrqyEylzoI/nw/ptpSfD+MO72O9VyTFehoD+vqF
+	 1hdh7Ia2dk9jSolWOcQqJ3kAouC+/BV9ABaEYkA5JO3iXsV7dFuNGlSLwh0YUVWccQ
+	 1AsmIhAbEIGtg==
 From: Sasha Levin <sashal@kernel.org>
 To: stable-commits@vger.kernel.org,
 	daejun7.park@samsung.com
 Cc: Amir Goldstein <amir73il@gmail.com>,
 	"Darrick J. Wong" <djwong@kernel.org>,
 	linux-xfs@vger.kernel.org
-Subject: Patch "xfs: mark the inode preallocated for pNFS write layouts past EOF" has been added to the 6.18-stable tree
-Date: Mon,  9 Nov 2026 19:22:00 -0500
-Message-ID: <20261110002200.3505549-1-sashal@kernel.org>
+Subject: Patch "xfs: add a flag to convert unwritten extents without allocating blocks" has been added to the 6.18-stable tree
+Date: Mon,  9 Nov 2026 19:22:03 -0500
+Message-ID: <20261110002203.3505592-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 Reply-To: stable@vger.kernel.org
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -66,13 +66,13 @@ Content-Transfer-Encoding: 8bit
 
 This is a note to let you know that I've just added the patch titled
 
-    xfs: mark the inode preallocated for pNFS write layouts past EOF
+    xfs: add a flag to convert unwritten extents without allocating blocks
 
 to the 6.18-stable tree which can be found at:
     http://www.kernel.org/git/?p=linux/kernel/git/stable/stable-queue.git;a=summary
 
 The filename of the patch is:
-     xfs-mark-the-inode-preallocated-for-pnfs-write-layou.patch
+     xfs-add-a-flag-to-convert-unwritten-extents-without-.patch
 and it can be found in the queue-6.18 subdirectory.
 
 If you, or anyone else, feels it should not be added to the stable tree,
@@ -80,93 +80,105 @@ please let <stable@vger.kernel.org> know about it.
 
 
 
-commit 55e88c74391a9b0c0ca2e31c5e7a957289eaec3f
+commit 2c2bcea650d618d064014b9903b9fa848a0024b6
 Author: Daejun Park <daejun7.park@samsung.com>
-Date:   Thu Oct 29 11:22:58 2026 +0900
+Date:   Thu Oct 29 11:22:59 2026 +0900
 
-    xfs: mark the inode preallocated for pNFS write layouts past EOF
+    xfs: add a flag to convert unwritten extents without allocating blocks
     
-    [ Upstream commit 8b8e265991556d99b6d721697f148975a7c68767 ]
+    [ Upstream commit f3ca3498dfe624f9b604c934263538a3acd55af5 ]
     
-    xfs_fs_map_blocks() marks the inode XFS_DIFLAG_PREALLOC only when it
-    allocates blocks for a write layout. A write layout past EOF can also
-    hand out allocated blocks, such as speculative preallocation. blockgc
-    then frees them under the layout, and another file may get them.
+    xfs_bmapi_write() with XFS_BMAPI_CONVERT also allocates blocks for
+    holes and delalloc extents in the range. Add XFS_BMAPI_CONVERT_ONLY for
+    callers that may only convert already allocated blocks. It stops at a
+    hole or delalloc extent, and returns -ENOSR if it stops before mapping
+    anything.
     
-    Mark the inode whenever a write mapping ends past EOF.
+    Marked for stable because "xfs: refuse a pNFS LAYOUTCOMMIT of a range
+    without blocks" needs it.
     
-    Fixes: 527851124d10 ("xfs: implement pNFS export operations")
+    Suggested-by: Christoph Hellwig <hch@lst.de>
+    Link: https://lore.kernel.org/r/20261013120359.GB2944@lst.de
     Cc: stable@vger.kernel.org
-    Reported-by: Chuck Lever <cel@kernel.org>
-    Link: https://lore.kernel.org/r/4de5356f-bc4d-4f1a-9c81-fce09b1b46fd@slotpi15m67
     Signed-off-by: Daejun Park <daejun7.park@samsung.com>
     Reviewed-by: Christoph Hellwig <hch@lst.de>
     Reviewed-by: Pankaj Raghav <p.raghav@samsung.com>
     Signed-off-by: Carlos Maiolino <cem@kernel.org>
     Signed-off-by: Sasha Levin <sashal@kernel.org>
 
-diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
-index 1b0b739571612..ef08f0f619f70 100644
---- a/fs/xfs/xfs_pnfs.c
-+++ b/fs/xfs/xfs_pnfs.c
-@@ -110,7 +110,15 @@ xfs_fs_map_update_inode(
- 	ip->i_diflags |= XFS_DIFLAG_PREALLOC;
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index bdffade9848f8..8fc6ee96e1f56 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -4130,6 +4130,8 @@ xfs_bmapi_finish(
+  * Returns a negative error code on failure, including -ENOSPC when it could not
+  * allocate any blocks and -ENOSR when it did allocate blocks to convert a
+  * delalloc range, but those blocks were before the passed in range.
++ * With XFS_BMAPI_CONVERT_ONLY, it stops at a hole or a delalloc extent instead
++ * of allocating blocks, and returns -ENOSR if it stops before mapping anything.
+  */
+ int
+ xfs_bmapi_write(
+@@ -4189,6 +4191,8 @@ xfs_bmapi_write(
+ 	 */
+ 	ASSERT((flags & (XFS_BMAPI_PREALLOC | XFS_BMAPI_ZERO)) !=
+ 			(XFS_BMAPI_PREALLOC | XFS_BMAPI_ZERO));
++	ASSERT(!(flags & XFS_BMAPI_CONVERT_ONLY) ||
++	       (flags & XFS_BMAPI_CONVERT));
  
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
--	return xfs_trans_commit(tp);
-+	error = xfs_trans_commit(tp);
-+	if (error)
-+		return error;
-+
-+	/*
-+	 * Force the log so that the blocks handed out to the client are
-+	 * guaranteed to be present even after a server crash.
-+	 */
-+	return xfs_log_force_inode(ip);
- }
- 
- /*
-@@ -135,6 +143,7 @@ xfs_fs_map_blocks(
- 	uint			lock_flags;
- 	int			error = 0;
- 	u64			seq;
-+	bool			update_inode = false;
- 
- 	if (xfs_is_shutdown(mp))
- 		return -EIO;
-@@ -203,20 +212,27 @@ xfs_fs_map_blocks(
- 				end_fsb - offset_fsb, 0, &imap, &seq);
- 		if (error)
- 			goto out_unlock;
-+		update_inode = true;
-+	} else {
-+		xfs_iunlock(ip, lock_flags);
- 
- 		/*
--		 * Ensure the next transaction is committed synchronously so
--		 * that the blocks allocated and handed out to the client are
--		 * guaranteed to be present even after a server crash.
-+		 * Blocks past EOF that were allocated for buffered writes, such
-+		 * as speculative preallocation, can be freed by
-+		 * xfs_free_eofblocks() without breaking the layout unless the
-+		 * inode is marked as preallocated. Mark it before handing them
-+		 * out for writing, as for blocks allocated above.
+ 	if (XFS_IS_CORRUPT(mp, !xfs_ifork_has_extents(ifp)) ||
+ 	    XFS_TEST_ERROR(mp, XFS_ERRTAG_BMAPIFORMAT)) {
+@@ -4237,6 +4241,9 @@ xfs_bmapi_write(
+ 		 * that we found, if any.
  		 */
-+		if (write && !(ip->i_diflags & XFS_DIFLAG_PREALLOC) &&
-+		    imap.br_startoff + imap.br_blockcount >
-+		    XFS_B_TO_FSB(mp, XFS_ISIZE(ip)))
-+			update_inode = true;
-+	}
+ 		if (need_alloc || wasdelay) {
++			if (flags & XFS_BMAPI_CONVERT_ONLY)
++				break;
 +
-+	if (update_inode) {
- 		error = xfs_fs_map_update_inode(ip);
--		if (!error)
--			error = xfs_log_force_inode(ip);
- 		if (error)
- 			goto out_unlock;
--
--	} else {
--		xfs_iunlock(ip, lock_flags);
+ 			bma.eof = eof;
+ 			bma.conv = !!(flags & XFS_BMAPI_CONVERT);
+ 			bma.wasdel = wasdelay;
+@@ -4332,10 +4339,13 @@ xfs_bmapi_write(
+ 	 *
+ 	 * To avoid a successful return with *nmap set to 0, return the magic
+ 	 * -ENOSR error code for this particular case so that the caller can
+-	 * handle it.
++	 * handle it. The same goes for XFS_BMAPI_CONVERT_ONLY stopping at a
++	 * hole or a delalloc extent at the start of the range, in which case
++	 * nothing has been changed.
+ 	 */
+ 	if (!n) {
+-		ASSERT(bma.nallocs >= *nmap);
++		ASSERT((flags & XFS_BMAPI_CONVERT_ONLY) ? bma.nallocs == 0 :
++							  bma.nallocs >= *nmap);
+ 		return -ENOSR;
  	}
- 	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+ 	*nmap = n;
+diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+index d5f2729305fad..76d25e5d5d9cb 100644
+--- a/fs/xfs/libxfs/xfs_bmap.h
++++ b/fs/xfs/libxfs/xfs_bmap.h
+@@ -90,6 +90,13 @@ struct xfs_bmalloca {
+ /* Try to align allocations to the extent size hint */
+ #define XFS_BMAPI_EXTSZALIGN	(1u << 11)
  
++/*
++ * Use with XFS_BMAPI_CONVERT to convert unwritten extents without allocating
++ * blocks. Stop at a hole or a delalloc extent: return the mappings found so
++ * far, or -ENOSR if there are none.
++ */
++#define XFS_BMAPI_CONVERT_ONLY	(1u << 12)
++
+ #define XFS_BMAPI_FLAGS \
+ 	{ XFS_BMAPI_ENTIRE,	"ENTIRE" }, \
+ 	{ XFS_BMAPI_METADATA,	"METADATA" }, \
+@@ -102,7 +109,8 @@ struct xfs_bmalloca {
+ 	{ XFS_BMAPI_COWFORK,	"COWFORK" }, \
+ 	{ XFS_BMAPI_NODISCARD,	"NODISCARD" }, \
+ 	{ XFS_BMAPI_NORMAP,	"NORMAP" },\
+-	{ XFS_BMAPI_EXTSZALIGN,	"EXTSZALIGN" }
++	{ XFS_BMAPI_EXTSZALIGN,	"EXTSZALIGN" }, \
++	{ XFS_BMAPI_CONVERT_ONLY,	"CONVERT_ONLY" }
+ 
+ 
+ static inline int xfs_bmapi_aflag(int w)
