@@ -1,54 +1,54 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794269375;
-	b=caeHyANjl835930DfYwzQG7E1mxIOKeBcZw7G0tPim8mUZkTLKKtqakX36hpFBolbt70
-	 CZrdrnkh7aVlxM8vwVNg0lIE+UYnx9pZrjrAroxHjqaKpKCBOoAh0CTMjAzI/FC5p+7vm
-	 UUXInfkyi//ALU7pdJzCX/CDNOb5mP2w6+PcoNr3iC1PJPubsvldMbtZPTRJqskIA3xss
-	 6H3fWa4L+EZgmE4PNm60citA0NIGwwI5+OXLbxDTfHl/nMh8dc0ZDFt3ddaQOQlbbQPKF
-	 0xEVrATW6Gul+8G3VwKkeCgt1rZXyUWkDAJ09sOniTc13sMUdSi2N2wXFa6qEaEyk+w==
+	t=1794269385;
+	b=COxUJ9akMkBTBaDKoJtq6ZRfmYKguJoFbFP/Fdts/xcP0i7oJ9Dqymd4XJ7FgGUoGe/E
+	 pac4Q2w5tFZD25jgFLdzK+AP7GxSSKvwDe+tQrnFCCGM31NX4nON1t2CMV8b1FRhJ5tJ9
+	 xSibR3BK/eNi41anjQ/AWXoRo2Mqbyh89wfKsmY/PhjIW9MGkMMW4JQpTTHIYN90ZcvOF
+	 W0NVrrrpFpOhBZJuBvhAeKHmiJYPZ1ef5Nn1dQrT1TB9ECOFLcwDBxC7us37X1by7XhPp
+	 K4A+oWqWYPIFRz30B19WNorwK7KTFNnt9KlaIKHH0WYnLNIXbXEno0a1NTj2SBwwhLg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794269375;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794269385;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 Reply-To:MIME-Version:X-Patchwork-Hint:X-stable:
 	 Content-Transfer-Encoding;
-	bh=D73DCMaheYkrJQywXilee4wy6kbBhV6B0vo+Xg1lZjM=;
-	b=rQVqCpneuznGrYwwlTaOWW7N2ApRxxBMUvitzotfVFRWW7RS3LTcvmM8VaBFOnSiH6+s
-	 YCjZ/pdfuLBlpd3EjlmX4FGEDFzSIZ74ErRUvsqBwiLTbSZaMKKf/DyPu4UYepEF6f5lQ
-	 9TZ8Hzm/OW1T6ROxjqLhvd/swC70U/wfHnwIPM7DKO+4GOiWZB326y2xYvPgH1O691xaV
-	 EUMA4wHd5wImPJqQMqecPAdk1gBzKtuuG9f2J+LmP89uUUkuEelTMY+WOGkM51aqOorh8
-	 jvylQRXjiJNGG+/c4cOrsuONlJBLxg2iqilzuzl9LAxSXQaEOg+fDkBJZ5XsOtuSoqg==
+	bh=htA4teSdzj07DF8bLbD3CVTxNu6BBp2/gbp8nW+sqYA=;
+	b=qGaeDUxL4xxY8qMyJLdeP7Gh/0y/5ZSNm6Z8Sij4Tnl+8wZxuLm8eyrCgNjAgzDCW9iy
+	 DIlW+1PHqoFgkh0dSFeVG9HLqgCYllXzAtteX0ptFLrs/cR5iQZQvZiRXdm9BUiTfE2wL
+	 oNl5JaG+lWKp6JO95uM11H/sl0otfiYmUxuYAN02/2477pmthdPx5q6PUHOgmGQZZ7a66
+	 f9cCIPJJJkv14687RhAKZh9X+zxL68GaRqj0ZuA5p4hpL9vXqyUjXfXfCdNRzd3flpFg3
+	 /GdNuUmsTaAm1zuRtDtmjGKarWM3vOabHq8+1wdzYHSElQLwvp3yQ8R0EsaCd92bOPw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NSfJsQ5K;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ds98yjGo;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 302D3606A326;
-	Tue, 10 Nov 2026 00:09:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 243DE606A33B;
+	Tue, 10 Nov 2026 00:09:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NSfJsQ5K
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6CC0D1F0089F;
-	Tue, 10 Nov 2026 00:09:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ds98yjGo
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 63BB01F0089F;
+	Tue, 10 Nov 2026 00:09:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794269375;
-	bh=D73DCMaheYkrJQywXilee4wy6kbBhV6B0vo+Xg1lZjM=;
+	s=k20260515; t=1794269385;
+	bh=htA4teSdzj07DF8bLbD3CVTxNu6BBp2/gbp8nW+sqYA=;
 	h=From:To:Cc:Subject:Date:Reply-To;
-	b=NSfJsQ5KtRk6BGcDKlWaw4TbFpsxZcFaSmE9fQKBetJy7YXz4eiThEwXPb0QpisDK
-	 y8xa0tX99yTtYlZ/wzkPphd/QcrhopvW8mmDZpo/03xTEGOgajk8lD/jLklLJf5ZBB
-	 yYos6KdFTYJ1zTVTqX55Wuab5vtEtzwl4dZl1FL2f2Tn1HdljD8llEWCGPBcReqGaI
-	 L3grUh8phkK/clASlknBapQVMxl5nrx1qcYuY2Zlwq3K26CJHbfzFvxuftP1/aIYiZ
-	 FlstoINYRDbAyHR8/cVr2vzh3eKAt9E6lmE5KhrUNaviA7PwKSsL4koqtjVrN7Ab83
-	 PphaUWZtWPyLw==
+	b=ds98yjGoynFNR9DKNkU8moGzumw41oEAa1DiJeFeoR1yfdHBAzwVIfu3ufXv3XfKl
+	 UefyDk1PqNkS6Ze92tQsgqwNG9iT4dYVev2DDKk5mbID+6G38ndMMmqCb5ngFLP+p2
+	 zHyLhu+qCGQOQy2wTsWjCrH3v84ALul0xhXoztfqbG5PlyAxi8serEnvghnwq5XhpC
+	 6AxdKLon9LnToccuyrCFy74TE0gRvRoDKyV38txXipG3FEoMawK060ez2/hMYlVlNj
+	 UG52XkZNbyhY8bnppL3zSJSDUwOi3s6v+Go1rBmghcj4zjTVXilMMhpqMW9acPbw4O
+	 xGjolSQ1DCMzA==
 From: Sasha Levin <sashal@kernel.org>
 To: stable-commits@vger.kernel.org,
-	daejun7.park@samsung.com
+	hch@lst.de
 Cc: Amir Goldstein <amir73il@gmail.com>,
 	"Darrick J. Wong" <djwong@kernel.org>,
 	linux-xfs@vger.kernel.org
-Subject: Patch "xfs: clamp a pNFS LAYOUTCOMMIT extent before computing its end" has been added to the 7.3-stable tree
-Date: Mon,  9 Nov 2026 19:09:33 -0500
-Message-ID: <20261110000933.3488317-1-sashal@kernel.org>
+Subject: Patch "xfs: fix recovery of partial attr removals" has been added to the 7.3-stable tree
+Date: Mon,  9 Nov 2026 19:09:43 -0500
+Message-ID: <20261110000943.3488532-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 Reply-To: stable@vger.kernel.org
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -66,13 +66,13 @@ Content-Transfer-Encoding: 8bit
 
 This is a note to let you know that I've just added the patch titled
 
-    xfs: clamp a pNFS LAYOUTCOMMIT extent before computing its end
+    xfs: fix recovery of partial attr removals
 
 to the 7.3-stable tree which can be found at:
     http://www.kernel.org/git/?p=linux/kernel/git/stable/stable-queue.git;a=summary
 
 The filename of the patch is:
-     xfs-clamp-a-pnfs-layoutcommit-extent-before-computin.patch
+     xfs-fix-recovery-of-partial-attr-removals.patch
 and it can be found in the queue-7.3 subdirectory.
 
 If you, or anyone else, feels it should not be added to the stable tree,
@@ -80,41 +80,54 @@ please let <stable@vger.kernel.org> know about it.
 
 
 
-commit 947997c2d71a678463d3611b40d94b1396f1c810
-Author: Daejun Park <daejun7.park@samsung.com>
-Date:   Thu Oct 29 11:23:01 2026 +0900
+commit ee067ecb28110088a13ee363a13eb78f69dd8db0
+Author: Christoph Hellwig <hch@lst.de>
+Date:   Wed Oct 28 09:09:39 2026 +0100
 
-    xfs: clamp a pNFS LAYOUTCOMMIT extent before computing its end
+    xfs: fix recovery of partial attr removals
     
-    [ Upstream commit d8c2bc88460f89e543ab3af622fc8f34c7011d71 ]
+    [ Upstream commit 30bb61651d2da5a502cf504bcdad16c093c1bb08 ]
     
-    xfs_fs_commit_blocks() adds the client's length to the offset before it
-    clamps the end to the file size. A large length wraps the sum and
-    reaches xfs_iomap_write_unwritten() unclamped. With the previous two
-    patches the LAYOUTCOMMIT then fails with -EIO and converts nothing.
+    When running xfs/753 on parent pointer-enabled file systems with DEBUG
+    enabled, log recovery will eventually crash after a few dozen iterations
+    due to an ASSERT that XFS_ATTR_INCOMPLETE is not already set when
+    xfs_attr3_leaf_setflag is called:
     
-    Clamp the length first.
+    XFS: Assertion failed: (entry->flags & XFS_ATTR_INCOMPLETE) == 0, file: fs/xfs/libxfs/xfs_attr_leaf.c, line: 3045
     
-    Fixes: 527851124d10 ("xfs: implement pNFS export operations")
-    Cc: stable@vger.kernel.org
-    Signed-off-by: Daejun Park <daejun7.park@samsung.com>
-    Reviewed-by: Christoph Hellwig <hch@lst.de>
-    Reviewed-by: Pankaj Raghav <p.raghav@samsung.com>
+    This is because parent pointer use logged attributes, and the attribute
+    intents do not track the work that has been done as the transaction
+    rolls, and the recovery mechanism is to run the operation from scratch.
+    Because of this various places check for XFS_DA_OP_RECOVERY skip work
+    already done.  But while recovery tolerates an attribute already fully
+    removed, it currently trips the above assert for an attribute that
+    already has the INCOMPLETE bit set, but still exists.  Fix this by
+    handling the case like all the others.
+    
+    Fixes: 1d08e11d04d2 ("xfs: Implement attr logging and replay")
+    Cc: stable@vger.kernel.org # v5.19
+    Signed-off-by: Christoph Hellwig <hch@lst.de>
+    Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
     Signed-off-by: Carlos Maiolino <cem@kernel.org>
     Signed-off-by: Sasha Levin <sashal@kernel.org>
 
-diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
-index 7ff83274a5135..19eb18e1290cf 100644
---- a/fs/xfs/xfs_pnfs.c
-+++ b/fs/xfs/xfs_pnfs.c
-@@ -328,9 +328,7 @@ xfs_fs_commit_blocks(
- 		if (start > size)
- 			continue;
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index 02ca50442b466..5b1fd62714205 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -3042,7 +3042,14 @@ xfs_attr3_leaf_setflag(
+ #endif
+ 	entry = &xfs_attr3_leaf_entryp(leaf)[args->index];
  
--		end = start + maps[i].length;
--		if (end > size)
--			end = size;
-+		end = start + min_t(u64, maps[i].length, size - start);
- 
- 		length = end - start;
- 		if (!length)
+-	ASSERT((entry->flags & XFS_ATTR_INCOMPLETE) == 0);
++	if (entry->flags & XFS_ATTR_INCOMPLETE) {
++		if (!(args->op_flags & XFS_DA_OP_RECOVERY)) {
++			ASSERT(args->op_flags & XFS_DA_OP_RECOVERY);
++			return -EFSCORRUPTED;
++		}
++		return 0;
++	}
++
+ 	entry->flags |= XFS_ATTR_INCOMPLETE;
+ 	xfs_trans_log_buf(args->trans, bp,
+ 			XFS_DA_LOGRANGE(leaf, entry, sizeof(*entry)));
