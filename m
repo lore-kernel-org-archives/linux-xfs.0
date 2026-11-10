@@ -1,44 +1,44 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794337460;
-	b=mH7tigZ9EuCCkpu9yvH7nEFQMzxQr0RzoryCdm9Z9hVbemJYvVqPHI3vaqGlRk61cFcp
-	 J0PRmRFRSWXoHJoERB75XYeK8ZDnxHPrYCcoktQwwOdhvbv+WaTFNRUnGsoVfSECu3gO5
-	 AZQfY+uPoW/duefP0iOaNF6njAJrFp1D3eMEI3bwsHYm4YQ/Yr5FHywKiGoICFiCXKqh2
-	 IcR/nF5fvgY4AjdSR/5krjSuMeL5vU/EQRrLzkmTh3pWwyDDkIb1He2GglGVjLA7YiFem
-	 D9Xdwf/+Fp/3EHe1+0wTzZS4aKt8Upq/FUqu+A86NmmiY1LqWz7Y+M4jnK/f37fXZBA==
+	t=1794337462;
+	b=nLa45gC8VYKqcX6R/fyHHdFllb2AAQTKVw5L3yGx2y5ya61AhHxAZOI7rzugULMWuO7X
+	 rzMNuwWXAXVJfGJ1KrtPein5NBeKCJU2ISEo9aaT+36fvT6BXgSVHtFWxOo8pdGIkGdJj
+	 dfaK4xHYcevaBxhDJrQAYCzuAeX0dd8T4QouIhiHO6S+cwJXVuStW0z3NZALMwJbp3O0J
+	 8I6P68yMWkuTZNrZVViGcrVJRiXQKtfkMiQBhdzehhaYJksAr71kRKdqhpPGycBzFrzGg
+	 45dMlfvb9LoEeR6fGjIA5e3XNLvtMQXj3A0cF7cwh0gg70lgdSarO/gAFig1pO/aBJg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794337460;
-	h=Received:DKIM-Signature:From:To:Subject:Date:Message-ID:MIME-Version:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=EnnxGoeGYm0FUifkifY9nHaG5KtKkTzcDn7h3Fya62I=;
-	b=zOwJzVP8+6fUQMgoMRLGkINI+UA1Nzb7gJinJzLoXTe2mUJES61h1GEAU1pz8L6Rj0wv
-	 tvPDwnUgoSVHwrLkubWT9BRLIrr1UzeG/Hou0qqbRj6P21KGWVpgF2JIxjmDVz92aO0w2
-	 ndxBBwKlsfYKIu9GfX5o7t5orAzzwRlU42ROkV+8xm0LpnHTujCgx4ESA4pZ+Y1O6drlm
-	 tzbCUCIzJhKhvYsoN63E6nNIcveJj+/DNaGLowqJeZHQKuZPOoEqhkcUC+kMH9D8j5wdp
-	 ymDlN1W+QMSJMNew7FkCKiHOoVpI8BMfb7UsKZTmXZ0UiGq30wGaX+08mSpGdsrwG8Q==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794337462;
+	h=Received:DKIM-Signature:From:To:Subject:Date:Message-ID:In-Reply-To:
+	 References:MIME-Version:Content-Type:Content-Transfer-Encoding;
+	bh=jot0meT61nYpnJvABWxTHeYzg5H0PbUz/w5w4CVIwGs=;
+	b=xLCKo7I7GEAFlhjyNmnfxTzet5vWWwgPlst/v8kOqingNhYoAf8CYAeweMcG3EBTYQPd
+	 Gh+DIdhTSybb5WIc38Wkua1mfxAWITkYCl+2R9XlPlItAUiYXQCLpSlVIZQhagDyxxCuP
+	 yUDUU4Xsdx4FOm2m3hhHdz73iQMIg705/2BbH3PRCQf/dVqD1QcbVP0KCyVVUSn0lQTlz
+	 1ZdXuvhxYcWthsgLKXxzzMcOBPve0ikO03AOiBNDqpc1yd3Wb9Vi/tWD4qu7AkEKGp/QK
+	 sAy/eDpLDLCA0KWa2a4ClY9sWXpbv827F1pVtS1hlEkOBY0zeKkA97vHtW9K21pXSQg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VI9zv8nr;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bYqabPnj;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 867FF606A321;
-	Tue, 10 Nov 2026 19:04:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E319606A31C;
+	Tue, 10 Nov 2026 19:04:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VI9zv8nr
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B35D51F0089F;
-	Tue, 10 Nov 2026 19:04:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bYqabPnj
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7838A1F008A1;
+	Tue, 10 Nov 2026 19:04:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794337460;
-	bh=EnnxGoeGYm0FUifkifY9nHaG5KtKkTzcDn7h3Fya62I=;
-	h=From:To:Subject:Date;
-	b=VI9zv8nrU3+0aOqIagM3RbUZ0jV8Yp6HBWHBrJR+XQmNfseHwTnBx+3FULa032Hnb
-	 0+3WzZjGTn8KR+uXvI/SYl5PLy57Ix2LFWJNjv5wBtdDJoZe3ELjJGX1ULcSVymkcc
-	 xBr+EVfx/sgAN8zXfdRZS6PEKRMAy2oX5TtSW4kVC2ZKg3CFGk0fnQDQoLbquY4FFA
-	 rPUHCSTmBG6i9uJZVZCMcxBgf4v0r8CnCbs6re6qa5Zee1Hos0LUf6hZ+d1zSIM4bn
-	 4ujldYnHMC1azkYz8vOWXvz9+xRr2ODf8rRJfXs8hzmyWJjfPMS6cfK942ODo9G/YG
-	 YZmfBJ+sJVStw==
+	s=k20260515; t=1794337461;
+	bh=jot0meT61nYpnJvABWxTHeYzg5H0PbUz/w5w4CVIwGs=;
+	h=From:To:Subject:Date:In-Reply-To:References;
+	b=bYqabPnjr36nnuM/IG5MPueh4TBjsyzTPzlejzErHFnaTQrnwlTtdB1HoWde0x7yi
+	 WzxuXwOb7DXMU0xs5OnBgN/I3VwUqiHAu6Sx5e0WVhEoT78CSjkLyqRvbaZFGMv4Xi
+	 KeNR1Y6SzXlPPDvdXQWhP+LOK4rhlWKHyDmeCRQI8ICYW/syH/vadu6HJbm9if5saE
+	 zoYeeHP/hZFnQ51ZYnChWwCYZ3vED7mHNi8sm6CzgkdsVeM8UepeRdfJbqkMVCJhIS
+	 iTP7KTvJxBIL2ixZqjFwF0/ehOCNVGhaN5gtpXfE20gLor/Cswz04QuEaw7GFvM74H
+	 KKCCgSylstmZQ==
 From: Chris Mason <mason@kernel.org>
 To: mason@kernel.org,
 	tytso@mit.edu,
@@ -54,8 +54,10 @@ To: mason@kernel.org,
 	tz2294@columbia.edu,
 	brauner@kernel.org
 Subject: [PATCH v7 00/11] reflink and atomic write bugs
-Date: Tue, 10 Nov 2026 14:04:17 -0500
-Message-ID: <20261110190417.32650-1-mason@kernel.org>
+Date: Tue, 10 Nov 2026 14:04:18 -0500
+Message-ID: <20261110190417.32650-2-mason@kernel.org>
+In-Reply-To: <20261110190417.32650-1-mason@kernel.org>
+References: <20261110190417.32650-1-mason@kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -88,6 +90,10 @@ and decisions about file writes.
 
 "xfs: restart faults racing with realtime flag changes" changed enough
 that I dropped Christoph's review.
+
+Tal Zussman's series is needed for my current ext4 patches to be
+correct:
+https://lore.kernel.org/all/20261012-ext4-atomic-no-fallback-v2-1-c4b30c60e500@columbia.edu/
 
 Chris Mason (10):
   xfs: don't skip the flush before shifting extents
