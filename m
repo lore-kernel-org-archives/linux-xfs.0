@@ -1,49 +1,75 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=115.124.30.133
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=113.46.200.226
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794360670;
-	b=FfO+lx5GXogLgqb7DWOxYqGfL+fjnDw1YZx3slNeIC3v4+Cc3UnugRghWpdcsC9dhquP
-	 giGHgAtZWkmEagFZyPpebKZ0VoVyRkMczeJMpgUlYw73vY+2VvQQ4z4yK4HRzs0APY3BL
-	 YNBLK3gL55Lt/G3qscMukWAWr0AbKNQfqggcr1RxSxr9PIpKoWFb0fTvtw/7jgL2dslMa
-	 vMPZSwG52GKFpqHI9mU0OJyTCR6A621Q1gAQ4Fxgz720hFJe7qcMm/v70PufBbeTLP5OE
-	 aArDEQ1SgC+TvqF6Me1XRcyIWMDYE5MyYEEJ8b7tPJRC2FAC0GVqVjh3/FlDDRHPvig==
+	t=1794362043;
+	b=fui28UVR7CFru0guYDFAqZNcerdMfvNrENWXwUDZkfEHi+Cs0P2QTBHgDCDut2PkRa61
+	 Lz0/raTdmsnU/G94qY1gQotZCvMg1tiEfxZ2jBJBRdlJyW+CwDZSLQ07MdZwPE4k92ePm
+	 CgAKZsv5YWOJ2osNa/j90qDe0FGmlG5yuvmDPL2pnBTW3/BYLlD7AtdNIYCCNC2vEM2SP
+	 nACDW9VbRISmO5HCZSmZ+iQmD+/aI4HiG2xfdNkuVPeIC9BY1525HzAC3TzHlp/e6inHj
+	 yn5NiPhUPxtYmuAbTxyiFxeHTy9n6i1+1hUS01eWDAvf2iNGRZ3gvrlrPt0u+uMTBMg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794360670;
-	h=DMARC-Filter:DKIM-Signature:X-Alimail-AntiSpam:Received:Message-ID:
-	 Date:MIME-Version:User-Agent:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type:Content-Transfer-Encoding;
-	bh=fz7Db6YPpucPps2P9eFgAPZMsl4Z2nZBpO1+iQqdPhM=;
-	b=RBXudb244Rweuyty63SC19rHx0w4ElIL+4AYxc8G84M3xHfHQ5LVGNRZsNrUcRkXkJEH
-	 q5FP0X704Gd1o5zUtY1T09F1xIJS79yfImNaqoZBsHaoTdQqW5RsLqV8d8n8WVLVtn9Sf
-	 dc/D7/Tj3QLc119ZInWARA9tUST3vFtWtyVboKVDlgCSEw0ZpaVWGsNZyLRb4iK82oGQH
-	 D3+q3uoDzMei+Wgi6WaK3KrYicoZBCLmTzg2BRBgLvw70ErJttB1rko2mSlpSMcPTlq7y
-	 J6skwU+HublMytAcf4DLkTq/Oq2m1HGbdsxwlFsbYTqXsBmZt7H0PGeEXOzf764e0vg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794362043;
+	h=DMARC-Filter:dkim-signature:Received:Received:Received:Subject:To:CC:
+	 References:From:Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:X-Originating-IP:
+	 X-ClientProxiedBy;
+	bh=3j8i2RMfXjq7ikEdRoC0M7EhfQxRKXJ1iTD8fT2y+DU=;
+	b=iHK0V/XvWhL/ZVMFgZ40mrR7HTiddEufLIDlAUma3ZC1qixbd7YwR2yoogUBc3bNOWFM
+	 knqSWEYaVJaU5r3W4sxhzct9ZhvjKnL8gCT5qFIvyJyoVNUJYzyiHLxeY0zfRxBvA2pQU
+	 T69QZollDyTqpcozk65Nao+lhTVeVhv4qPfLgcEU+AkfD6H8epJQf3NZU1MCVnTC3Rw+v
+	 RS/PMXpdwqfBC6PasDMqZpB8cQX5CewdcF6YBrm3REPkxc1blgHSR/pp2hE09oVU0nsep
+	 u24w7vkXF6s6Rbi/lKqPLry1GTbP/LnSQGf31R1Jmpp29ulrT/OCeGclmNkKTfHvolw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.alibaba.com;
-	spf=pass smtp.mailfrom=linux.alibaba.com;
-	dkim=pass header.d=linux.alibaba.com header.i=@linux.alibaba.com header.a=rsa-sha256 header.s=default header.b=mq7w0PoV;
-	arc=none smtp.remote-ip=115.124.30.133
-Received: from out30-133.freemail.mail.aliyun.com (out30-133.freemail.mail.aliyun.com [115.124.30.133])
+	dmarc=pass header.from=huawei.com;
+	spf=pass smtp.mailfrom=huawei.com;
+	dkim=pass header.d=huawei.com header.i=@huawei.com header.a=rsa-sha256 header.s=dkim header.b=u8WJaF3q;
+	arc=none smtp.remote-ip=113.46.200.226
+Received: from canpmsgout11.his.huawei.com (canpmsgout11.his.huawei.com [113.46.200.226])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D0DE606A321;
-	Wed, 11 Nov 2026 01:31:06 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6D0DE606A321
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 740CA606A326;
+	Wed, 11 Nov 2026 01:54:02 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 740CA606A326
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.a=rsa-sha256 header.s=default header.b=mq7w0PoV
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1794360664; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
-	bh=fz7Db6YPpucPps2P9eFgAPZMsl4Z2nZBpO1+iQqdPhM=;
-	b=mq7w0PoVXCwu1IX5ivmHA8As80sOmn10inPCZOG+QhlYp6qb0mg+dgSd17z1pXOsln4JJ09DELsc+5awHi3JyuM1vG3mkZkxNGxXiVtr8wj0fz65Fmeo+JddfxQeZaPB2cDKH76kna5eWQAcDs3+9zCCKwZ7z1M/3EU9JhzwAZ0=
-X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R121e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033045133197;MF=joseph.qi@linux.alibaba.com;NM=1;PH=DS;RN=17;SR=0;TI=SMTPD_---0XEX6F-L_1794360662;
-Received: from 30.221.145.127(mailfrom:joseph.qi@linux.alibaba.com fp:SMTPD_---0XEX6F-L_1794360662 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Wed, 11 Nov 2026 09:31:03 +0800
-Message-ID: <f6cdf5d0-9468-48cb-9bfb-0cc41b46c7fe@linux.alibaba.com>
-Date: Wed, 11 Nov 2026 09:31:01 +0800
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.a=rsa-sha256 header.s=dkim header.b=u8WJaF3q
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=3j8i2RMfXjq7ikEdRoC0M7EhfQxRKXJ1iTD8fT2y+DU=;
+	b=u8WJaF3qwa/K+ecI0wenMsNXgYb0HrhprmHkE4QJODjrBSe4+EjL0OlYwiEG9frJzY+4PPxby
+	qRrA9VhuhNZ4ggwJdtZrkD6d3YGfwh7W6Pdcao/OwZASKxUTbOa+r99DHhX+1mx0w7PHC/IOtLO
+	utdxMg8JLCv/gqi4hb5i1Kc=
+Received: from mail.maildlp.com (unknown [172.19.163.200])
+	by canpmsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4jPRQ61DyGzKm6m;
+	Wed, 11 Nov 2026 09:53:50 +0800 (CST)
+Received: from whupemo200011.china.huawei.com (unknown [7.152.185.179])
+	by mail.maildlp.com (Postfix) with ESMTPS id F100C4055B;
+	Wed, 11 Nov 2026 09:53:59 +0800 (CST)
+Received: from [10.174.178.46] (10.174.178.46) by
+ whupemo200011.china.huawei.com (7.152.185.179) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45; Wed, 11 Nov 2026 09:53:57 +0800
+Subject: Re: [PATCH v2 28/34] ubifs: don't set SB_RDONLY after errors
+To: Christian Brauner <brauner@kernel.org>, <linux-fsdevel@vger.kernel.org>,
+	Jan Kara <jack@suse.com>
+CC: Al Viro <viro@zeniv.linux.org.uk>, <ecryptfs@vger.kernel.org>,
+	<linux-ext4@vger.kernel.org>, <jfs-discussion@lists.sourceforge.net>,
+	<linux-nilfs@vger.kernel.org>, <exfat@lists.linux.dev>, <linux-mm@kvack.org>,
+	<ntfs@lists.linux.dev>, <ocfs2-devel@lists.linux.dev>,
+	<linux-btrfs@vger.kernel.org>, <gfs2@lists.linux.dev>,
+	<linux-efi@vger.kernel.org>, <linux-mtd@lists.infradead.org>,
+	<linux-xfs@vger.kernel.org>
+References: <20261029-work-fs-sb_rdonly-v2-0-2f44f64f0b66@kernel.org>
+ <20261029-work-fs-sb_rdonly-v2-28-2f44f64f0b66@kernel.org>
+ <0d472865-6cbb-cbb5-b361-1f2bf71dd528@huawei.com>
+ <20261110-erfanden-dossier-zahntechnik-efcb7a6439b0@brauner>
+From: Zhihao Cheng <chengzhihao1@huawei.com>
+Message-ID: <7cc1871c-9209-51ee-9d0e-c46e5adfaf1e@huawei.com>
+Date: Wed, 11 Nov 2026 09:53:56 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.5.0
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -53,56 +79,46 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 19/34] ocfs2: keep the current mount options on remount
-To: Christian Brauner <brauner@kernel.org>
-Cc: Al Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.com>,
- ecryptfs@vger.kernel.org, linux-ext4@vger.kernel.org,
- jfs-discussion@lists.sourceforge.net, linux-nilfs@vger.kernel.org,
- exfat@lists.linux.dev, linux-mm@kvack.org, ntfs@lists.linux.dev,
- ocfs2-devel@lists.linux.dev, linux-btrfs@vger.kernel.org,
- gfs2@lists.linux.dev, linux-efi@vger.kernel.org,
- linux-mtd@lists.infradead.org, linux-xfs@vger.kernel.org,
- linux-fsdevel@vger.kernel.org
-References: <20261029-work-fs-sb_rdonly-v2-0-2f44f64f0b66@kernel.org>
- <20261029-work-fs-sb_rdonly-v2-19-2f44f64f0b66@kernel.org>
- <0a8576a4-e397-4a49-ab0e-8f0f32bf2642@linux.alibaba.com>
- <20261110-zerfallen-meiden-wacholderbeere-a90ac157e063@brauner>
-From: Joseph Qi <joseph.qi@linux.alibaba.com>
-In-Reply-To: <20261110-zerfallen-meiden-wacholderbeere-a90ac157e063@brauner>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20261110-erfanden-dossier-zahntechnik-efcb7a6439b0@brauner>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: kwepems200001.china.huawei.com (7.221.188.67) To
+ whupemo200011.china.huawei.com (7.152.185.179)
 
+在 2026/11/11 5:54, Christian Brauner 写道:
+> On Fri, Oct 30, 2026 at 11:42:15AM +0800, Zhihao Cheng wrote:
+>> If we remove the c->ro_error check, ubifs_remount_ro->ubifs_wbuf_sync
+>> will return EROFS and trigger ubifs_ro_mode() again, I think we can
+>> retain the pre-check placement to trigger more error printing.
+> 
+> ubifs_ro_mode() doesn't do anything once c->ro_error is set so that
+> won't print anything again. But there's no point in syncing the
+> write-buffers and writing the master node after an error.
+> 
+Agreed
+> So I'll skip both in ubifs_remount_ro() when c->ro_error is set like
+> ubifs_put_super() does and only cancel the write-buffer timers. The
+> remount to read-only itself has to keep working because the error
+> doesn't set SB_RDONLY anymore.
+Agreed.
 
-
-On 11/11/26 5:52 AM, Christian Brauner wrote:
-> On Fri, Oct 30, 2026 at 10:58:52AM +0800, Joseph Qi wrote:
->> ocfs2_reconfigure() decides the transition from fc->sb_flags alone without
->> sb_flags_mask test, unlike reconfigure_super(). And fspick() passes
->> fs_context_for_reconfigure(target.dentry, 0, 0). So on a read-only mount:
 > 
->> So it seems we should test sb_flags_mask as well?
+>> BTW, a remount to read-write after an error is refused too.
 > 
-> No, that's a generic bug. I fixed that in reconfigure_super() with
-> "super: keep the read-only state if a reconfiguration doesn't change it".
-> That is in vfs-7.5.super (cf. [1]). This series depends on that work.
+> Only if c->ro_mount is set. ubifs_ro_mode() sets SB_RDONLY but never
+> c->ro_mount. So after an error on a read-write mount ubifs_reconfigure()
+> takes neither branch and reconfigure_super() clears SB_RDONLY again.
+Oh, I understand now, you mean the SB_RDONLY flag in vfs layer.
 > 
-> If SB_RDONLY isn't in sb_flags_mask it fills in the current read-only
-> state. So ocfs2_reconfigure() sees SB_RDONLY and stays read-only. ocfs2
-> is one of the 23 filesystems listed there that only look at
-> fc->sb_flags.
+>> The sb_rdonly won't affect the sync_fs_one_sb() after an error, and
+>> sb_emergency_ro check in not added into sync_fs_one_sb, should we add
+>> the c->ro_error check in ubifs_sync_fs() to prevent the failure
+>> ubifs_wbuf_sync executing?
 > 
-
-Now it looks fine.
-Reviewed-by: Joseph Qi <joseph.qi@linux.alibaba.com>
-
->> The same falls out of a legacy remount whose flags omit MS_RDONLY.
+> Yes, I'll return -EROFS from ubifs_sync_fs() when c->ro_error is set.
+> After the !wait check so sync_filesystem() still gets to sync_inodes_sb().
+Great.
 > 
-> No, do_remount() always passes MS_RMT_MASK which includes MS_RDONLY. A
-> remount without MS_RDONLY asks for read-write.
+> .
 > 
-> Thanks for the review!
-> 
-> [1]: https://lore.kernel.org/r/20261011-work-super-fixes-core-v1-11-c727176c5b53@kernel.org
-
 
