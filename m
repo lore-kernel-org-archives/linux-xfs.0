@@ -1,58 +1,61 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.189.121.228
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.110
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794393058;
-	b=oi47Qt/nLaqtUpdGGfDPiuWwpGNd2girGK1QPqmXlEC9M0HI9/KKUGvw3OjwLAqszSga
-	 K3AB0sKzZGnx6k4POQi+vlS7SdD0KyxKbmSTmMHYSfHoBlTjzSt8PLkTLl3zG+87/yl3w
-	 YjXroYNZLIFc1GVqWhQTDoCaU7XtGPGhntp4V7dfeaZSOFxg63A4bYLsRTOqBAgDLJCSN
-	 Y8HNLfQh13RIWY1ZP8lfszJHsx/j8mpVtswJQzA5l9TEvmySiGAuUPhvtVj8GRpnzfy0S
-	 ezCZvWw23vfObKUrmx6cC9BZ2SylOj9UoFjOO+qA8KOXHpeb397KStLBHMVbUjxU5pQ==
+	t=1794395518;
+	b=oaFloF7n6tD5rqrpBmEM1/4yax+dLQ52A4ISx8+kNQwz0QMIXUKb8m/6ef+x3Y6+srAl
+	 Reos2j8SVXYy+DQ+MC7619aDyNhf5tcaIoZ35ObVlcPaRL+fxQoDrlnSFuDYRwgPKxDOz
+	 z59ZDaV5oVyBslg0I/ktjqGrm7bF2pcst8PP1aXJ6I8GJNsaXmrHuyJnAIkIiPN88e8AF
+	 4SgzM/8c/KMpzrKxG88ikcaHSUm/uQ6vvdRkJKZfbW768zd6LFO1q5gmZ4dToZeJz50qY
+	 qDplm1y+fiAt/V65aB3NTCa7LECKXhK07uAS5+FGLsjLtyxNRux6j8Cvo5ooHNMdkYg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794393058;
-	h=DMARC-Filter:From:DKIM-Signature:To:Cc:Subject:Date:Message-ID:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=/I4bFa+psfJpgNv44k5w5uIx+LTkP2to/gMQAwFYuG4=;
-	b=3Txca47+a9GP1EjEDvWxvdJwYCbSkzDEYdKQv2h/lfpty5MxebSoTaNIQUCoi2gIsQfH
-	 vPYVGPgU6ym7YVbEaxucZa4oeNkBDJ243Cf+KGbgUZjGMIoI2qa7ntdV8SM5BRd9AkzOv
-	 jlHsNJFR62o6Une/pJfR20bX23AVr4eCU8B2/vmr0IsRXmivRTlmDryqgIjRHirpRnQPV
-	 tOgUjR/3hHBmiSwwZONRwC0miUKYNfe8aLuDeR5nzPdKmhqCLlMW7PcULZe0JGaHJg/aH
-	 jU/DczUMcnIIo3wuKaDYynaVaj/C4s3vyaiu28/qbElyvszk01+fAm6lSlO2J28Yc2g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794395518;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=nShDP18JigXMYT5zX1D0CYbMVkXJlUs0aEszqP9AdA0=;
+	b=evbCBv5G/Lxc9sZwAu97D5xcH3pzteBNGJNeeMJaBYtD9NjZYDvOf9PghcnyUuX9tlpP
+	 Ykv9ZpUtNT7mk5wAXCFh/XWoBZ/Iu7bjvsKKDvPIoQV5IBnnUel/4YEpDb32WJ4n1kaMY
+	 cuzhTeoIfbkqxchGiDQeESzxnhyAfpzZXUNYG1SdykznSacbsniBhtvg8EpKgumzE/6sk
+	 zrXBNUwO3wrJnlsz/vd5U24SeQpHlaiEKmAgENWsQ/F/KdgNFMFfopTAEPV37CU8SetqU
+	 66VrXqO4IaRFa+bNOMgS2osCFtv6e+58QJoqckdjOJcbT14BZ5fCbaJ2KO7Qmm9fdaQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=itx.no;
-	spf=pass smtp.mailfrom=itx.no;
-	dkim=pass header.d=itx.no header.i=@itx.no header.a=rsa-sha256 header.s=mx.itx.no header.b=f2kxejuW;
-	arc=none smtp.remote-ip=91.189.121.228
-Received: from mx.itxnorge.no (itx-kvm-14.itxnorge.no [91.189.121.228])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=SpUVYtkJ;
+	arc=none smtp.remote-ip=95.215.58.110
+Received: from mta1.migadu.com (out-110.mta1.migadu.com [95.215.58.110])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20B82606A31C;
-	Wed, 11 Nov 2026 10:30:57 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 20B82606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=itx.no
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=itx.no
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE9BF60A262E
+	for <linux-xfs@vger.kernel.org>; Wed, 11 Nov 2026 11:11:57 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AE9BF60A262E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=itx.no header.i=@itx.no header.a=rsa-sha256 header.s=mx.itx.no header.b=f2kxejuW
-From: Stian Halseth <stian@itx.no>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=itx.no; s=mx.itx.no;
-	t=1794393055;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=/I4bFa+psfJpgNv44k5w5uIx+LTkP2to/gMQAwFYuG4=;
-	b=f2kxejuWurzx8W+S9X0vlmUlL3qc+jXhEl3+40grVTS3dJR99sdMbnVX8Yx24hdEUbARDk
-	/7cZYlzuXF7S6fhrEl+UdqLhN7al7Q0RHbP4BeEOYzhZESPWQk1nRrxXR4DPZQWW+/2MwH
-	1N05ChU7VLyP/9ti9tvm5hm2RYTaSkA=
-To: Carlos Maiolino <cem@kernel.org>,
-	linux-xfs@vger.kernel.org
-Cc: "Darrick J . Wong" <djwong@kernel.org>,
-	sparclinux@vger.kernel.org,
-	Stian Halseth <stian@itx.no>,
-	Jan Engelhardt <jengelh@inai.de>,
-	Dave Chinner <dgc@kernel.org>,
-	stable@vger.kernel.org
-Subject: [PATCH v3] xfs: fix unaligned access to rmapbt high keys in scrub
-Date: Wed, 11 Nov 2026 11:30:47 +0100
-Message-ID: <20261111103047.604541-1-stian@itx.no>
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=SpUVYtkJ
+X-Envelope-To: linux-xfs@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=mWIKGIZPEaOwQ4LZ6Wr/q8Uww1kSWDcn4ugrc7Q+8sk=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1794395515; v=1; x=1795000315;
+ b=SpUVYtkJvcXFpdZVLLZuqwEq1PTuRhxWVJBJ6CunthERTXhZldhojATDbJ3nrtO+O2830eV1
+ RwHuKeMa7AT34kJOA1B/dL0v4Vk4xOG6gRynxHoQ81vSMiYKNaP+dYDSkvjXpP/kT65WqzkT9w8
+ /xpWR3QuXMJoL6vI7H9hckUI=
+X-Envelope-To: linux-xfs@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 1226d4e79ea8df7c;
+	Wed, 11 Nov 2026 11:11:55 +0000
+X-Mizu-Trace-ID: 1226d4e79ea8df7c
+X-Migadu-Flow: FLOW_OUT
+Date: Wed, 11 Nov 2026 12:11:51 +0100
+From: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org, Wilfred Mallawa <wilfred.opensource@gmail.com>
+Subject: Re: [PATCH 03/25] xfs: always call xfs_update_stable_writes in
+ xfs_ioctl_setattr_xflags
+Message-ID: <avRM1f0Lhw-Y1uxf@quentin>
+References: <20261104085929.317544-1-hch@lst.de>
+ <20261104085929.317544-4-hch@lst.de>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -62,89 +65,46 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261104085929.317544-4-hch@lst.de>
 
-The high keys in a rmapbt node block aren't naturally aligned.
-xchk_rmapbt_check_unwritten_in_keyflags() reads rm_offset through
-union xfs_btree_key and the union is 8-byte aligned.
+On Wed, Nov 04, 2026 at 09:57:07AM +0100, Christoph Hellwig wrote:
+> Currently xfs_update_stable_writes() is never called when the RT flag is
+> flipped because xfs_ioctl_setattr_xflags() updates ip->i_diflags before
+> comparing the rtflag variable to XFS_IS_REALTIME_INODE(ip), and thus
+> the stable flag can be set incorretly when flipping the realtime bit
+> on an existing file.
+> 
+> Fix this by unconditionally calling xfs_update_stable_writes for regular
+> files.
+> 
+> Fixes: d528a6c1d4b6 ("xfs: data checksums require stable writes")
 
-The compiler may use an 8-byte load, and on sparc64 each high key
-takes an unaligned access trap:
+Shouldn't this patch be folded in to the stable writes patches?
 
-  Kernel unaligned access at TPC[105a54d8] xchk_rmapbt_check_unwritten_in_keyflags+0xb8/0x160 [xfs]
+> Reported-by: Wilfred Mallawa <wilfred.opensource@gmail.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_ioctl.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index f81b6e52ac40..36ba609a2593 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -595,7 +595,7 @@ xfs_ioctl_setattr_xflags(
+>  	 * Make the stable writes flag match that of the device the inode
+>  	 * resides on when flipping the RT flag.
+>  	 */
+> -	if (rtflag != XFS_IS_REALTIME_INODE(ip) && S_ISREG(VFS_I(ip)->i_mode))
+> +	if (S_ISREG(VFS_I(ip)->i_mode))
+>  		xfs_update_stable_writes(ip);
+>  
+>  	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
+> -- 
+> 2.53.0
+> 
 
-Read the keys through the packed struct xfs_rmap_key instead. This
-tells the compiler they may be unaligned. Decode rm_offset with
-be64_to_cpu() and drop the byte-swapped flag.
-
-Fixes: 38384569a2a8 ("xfs: detect unwritten bit set in rmapbt node block keys")
-Reported-by: Jan Engelhardt <jengelh@inai.de>
-Closes: https://github.com/sparclinux/issues/issues/115
-Suggested-by: Dave Chinner <dgc@kernel.org>
-Cc: stable@vger.kernel.org # v6.4+
-Signed-off-by: Stian Halseth <stian@itx.no>
----
-Tested on sparc64 (T4, 7.3.4) by scrubbing the rmapbt of a loop-mounted
-image: alignment faults per scrub went from about 4000 to 0.
-
-v3: separate key and rkey variables plus a comment (Dave), shorter
-changelog.
-v2: https://lore.kernel.org/all/20261110223927.558557-1-stian@itx.no/
-v1: https://lore.kernel.org/all/20261109134853.1659991-1-stian@itx.no/
-
- fs/xfs/scrub/rmap.c | 21 ++++++++++++++-------
- 1 file changed, 14 insertions(+), 7 deletions(-)
-
-diff --git a/fs/xfs/scrub/rmap.c b/fs/xfs/scrub/rmap.c
-index 68e2847c962bb..7609c03cdc8ab 100644
---- a/fs/xfs/scrub/rmap.c
-+++ b/fs/xfs/scrub/rmap.c
-@@ -149,8 +149,6 @@ xchk_rmapbt_check_unwritten_in_keyflags(
- 	struct xfs_scrub	*sc = bs->sc;
- 	struct xfs_btree_cur	*cur = bs->cur;
- 	struct xfs_btree_block	*keyblock;
--	union xfs_btree_key	*lkey, *hkey;
--	__be64			badflag = cpu_to_be64(XFS_RMAP_OFF_UNWRITTEN);
- 	unsigned int		level;
- 
- 	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_PREEN)
-@@ -159,6 +157,14 @@ xchk_rmapbt_check_unwritten_in_keyflags(
- 	for (level = 1; level < cur->bc_nlevels; level++) {
- 		struct xfs_buf	*bp;
- 		unsigned int	ptr;
-+		/*
-+		 * The on-disk high keys in an rmap node block are not
-+		 * naturally aligned, so decode them through the packed
-+		 * struct xfs_rmap_key to make the compiler treat them as
-+		 * unaligned.
-+		 */
-+		union xfs_btree_key	*key;
-+		const struct xfs_rmap_key *rkey;
- 
- 		/* Only check the first time we've seen this node block. */
- 		if (cur->bc_levels[level].ptr > 1)
-@@ -166,15 +172,16 @@ xchk_rmapbt_check_unwritten_in_keyflags(
- 
- 		keyblock = xfs_btree_get_block(cur, level, &bp);
- 		for (ptr = 1; ptr <= be16_to_cpu(keyblock->bb_numrecs); ptr++) {
--			lkey = xfs_btree_key_addr(cur, ptr, keyblock);
--
--			if (lkey->rmap.rm_offset & badflag) {
-+			key = xfs_btree_key_addr(cur, ptr, keyblock);
-+			rkey = &key->rmap;
-+			if (be64_to_cpu(rkey->rm_offset) & XFS_RMAP_OFF_UNWRITTEN) {
- 				xchk_btree_set_preen(sc, cur, level);
- 				break;
- 			}
- 
--			hkey = xfs_btree_high_key_addr(cur, ptr, keyblock);
--			if (hkey->rmap.rm_offset & badflag) {
-+			key = xfs_btree_high_key_addr(cur, ptr, keyblock);
-+			rkey = &key->rmap;
-+			if (be64_to_cpu(rkey->rm_offset) & XFS_RMAP_OFF_UNWRITTEN) {
- 				xchk_btree_set_preen(sc, cur, level);
- 				break;
- 			}
 -- 
-2.43.0
-
+Pankaj
