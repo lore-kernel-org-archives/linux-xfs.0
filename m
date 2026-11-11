@@ -1,21 +1,21 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=213.95.11.211
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794418710;
-	b=ZQfmUD/IMjaxpsu0fH0TgM0fkjd0cCxzDkKLtQ+TY+0Dgooc7saUnqsrJEjnD5lxNcBH
-	 14EOK67HRYlEZFRb0yxTRCiErGUOn1m89D4al4ZAgFsfN6zxRlM9HBqwWYiD/X5W1FVBQ
-	 sAfLDSiyiMEJqrd2TcW6ZfvHhIv6d+MVmt36vinuYp28pHTk3YeRH4NahHuGaUcq726kd
-	 oPmdwv+MHQwgqnuumQprka8rQ4722BL4lv7gDcfzzkp/joYOV882fWtZ6CDQUlIxOvPLx
-	 GiyBEoMpXv0cdml+7+vVaOpYsxJ7X9hh6RAoc8cW+gggb+h22NJ1Cb3+/g5yvJvgH9Q==
+	t=1794418763;
+	b=nfFwHr+62abhTWYT25pmFbDGNSuTXOiPqscYrsElSGGofKpz/V9YpcjaiumzemWQeorR
+	 sfxvSxhNkRrbvOMXSevLgpVLHH2T0/Bax3Jqjf/S8mNU7WKfoXtSwHuSx0+GujvXnHaet
+	 dGVUbEMSrbwokgvMfSaRPOHXTVhJDkhCX966OvjmLqNiBVebhP3tpbTk8u1NidgjZVYMO
+	 1D+s46mj9FP9P5y7DQ6EptWHIL+edJ3HcZ/HGwouEyP2L38gCghWH7Lgx07xJ/wRjN5KM
+	 +aAHg25nJDxnuApPGl6cKVVN0iWeRmEnfUS4kxayc6KtnhRB+Ifxby0i4rQR4YPRVlA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794418710;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794418763;
 	h=DMARC-Filter:Received:Date:From:To:Cc:Subject:Message-ID:References:
 	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To:User-Agent;
-	bh=Z4Wu2dz9YLmjzccxYguLjWW5op3tnOPEW1Q0uFoSP/c=;
-	b=rVzbgO7VjIQBhLG047J1kAx6I9yyX6N1lZ7Q9KwkMgAsj5z86s9ichMRkJUjubdAUhkz
-	 w+f7nWA278wVYjdWev7rzuPIvsXVfcQ5JQZ9q/e6BNaUCnw7LX0FVWfdWHeCj5i0wrK/C
-	 fkbSLQuf9y8TTnwQ9X8t48P8k12aUFTy70CtP/xMmUt9ZwRnfdh2Myx6c6+LLcwzO3SZH
-	 V2Pe6HBwmN5MVOhs/UaVDnt69dN59WI7C0PGWzuBjcCiCKGHOYyD4UF/nApNPh9bGbzLd
-	 6sAF9aBr0fFd6Q9ac8Lpi0+3kZ0Zhm2AY1QZDb1V8ErSEIpyOJ3RPSIJ6caAi4JYrYQ==
+	bh=vNOReXNlhc8SfNhdgY060OXI6+WQlGPtujEcbSsN0UY=;
+	b=huNr0djQYdhQ7iZ1yzf2y+nfHbLDmBxmGqbLRg3OQ7UguzTB/9wHoM+d4l4gegAC38/6
+	 x8vYZCs37d/R7kBnfWLQHnPDtaq0t3h/WXZVpQFIrWo61+q5LnIB0aBwyLGYUHagGNE+M
+	 RFaAbblJoIDPw4ex+6ixppPmaRhurIltpwE6bHHDGmDRMViUWSE4kUE8zlqL09L0ERChH
+	 1PdpCToAnoMzjp7WCaXoG7pldvf5S6S9aMXH++5EKsFQBv7vgBez35YENEbZNYJ6B23YU
+	 ScvWHB9MoQNbcV5lgZ7CrLk5hcDdFX5X+fhNcYBxtB9GkoxnBkBf1HQvOqxhQiED7Tg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=lst.de;
 	spf=pass smtp.mailfrom=lst.de;
@@ -23,21 +23,22 @@ ARC-Authentication-Results: i=1; smtp.subspace.kernel.org;
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86A27606A321;
-	Wed, 11 Nov 2026 17:38:29 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 86A27606A321
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74087606A333;
+	Wed, 11 Nov 2026 17:39:23 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 74087606A333
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 4360B68D1C; Wed, 11 Nov 2026 18:38:26 +0100 (CET)
-Date: Wed, 11 Nov 2026 18:38:25 +0100
+	id 535DE68D17; Wed, 11 Nov 2026 18:39:20 +0100 (CET)
+Date: Wed, 11 Nov 2026 18:39:19 +0100
 From: Christoph Hellwig <hch@lst.de>
 To: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>
 Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
 	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 16/25] xfs: add support for reading with data checksums
-Message-ID: <20261111173825.GC20167@lst.de>
-References: <20261104085929.317544-1-hch@lst.de> <20261104085929.317544-17-hch@lst.de> <avRPwNoGozhWLdJz@quentin>
+Subject: Re: [PATCH 20/25] xfs: verify data checksums during media
+ verification
+Message-ID: <20261111173919.GD20167@lst.de>
+References: <20261104085929.317544-1-hch@lst.de> <20261104085929.317544-21-hch@lst.de> <avRUQnZqmuiQVC1h@quentin>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -49,22 +50,45 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <avRPwNoGozhWLdJz@quentin>
+In-Reply-To: <avRUQnZqmuiQVC1h@quentin>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Wed, Nov 11, 2026 at 12:31:52PM +0100, Pankaj Raghav (Samsung) wrote:
-> > diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> > index c30e688cfc9f..db834e5e60c1 100644
-> > --- a/fs/xfs/xfs_aops.c
-> > +++ b/fs/xfs/xfs_aops.c
-> > @@ -601,7 +601,8 @@ xfs_get_iomap_read_ops(
-> >  {
-> >  	struct xfs_inode		*ip = XFS_I(mapping->host);
-> >  
-> > -	if (bdev_has_integrity_csum(xfs_inode_buftarg(ip)->bt_bdev))
-> > +	if (xfs_has_rtcsum(ip->i_mount) ||
+On Wed, Nov 11, 2026 at 12:57:39PM +0100, Pankaj Raghav (Samsung) wrote:
+> > +/*
+> > + * Data checksums are per-FSB, so we can only validate FSB-aligned regions.
+> > + *
+> > + * When the alignment leads to an empty range, give up.
+> > + */
 > 
-> Shouldn't this be xfs_is_rtcsum_inode(ip) instead of a per mount option?
+> A comment here would be helpful about the return values.
+> 0 for success,
+> 1 for media errors
+> errno for other errors.
 
-Yes.
+Ok, I'll add it.
+
+> > +	unsigned int		bbcount;
+> > +	xfs_filblks_t		len;
+> > +	struct bio		bio;
+> > +	struct bio_vec		bv;
+> > +	int			error;
+> > +
+> > +	len = min3(end - bno, xfs_rtcsum_max_len(mp, bno),
+> > +			XFS_B_TO_FSBT(mp, folio_size(folio)));
+> 
+> For large block size systems, if we allocate a single page in the folio
+> due to fragmentation, len will always be zero (4096 >> (blocklog > 12)).
+> 
+> > +	if (!len) {
+> > +		*daddr = me->me_end_daddr;
+> > +		return 0;
+> > +	}
+> 
+> And we skip those ranges without verifying anything with a success.
+> 
+> I think we should raise the iosize to a single FSB in
+> xfs_verify_alloc_folio and should return ENOMEM if we cannot allocate
+> one?
+
+Yes, I'll do that.
 
