@@ -1,116 +1,76 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794406514;
-	b=pnS1pFA387ZVO9e7L211jNYdB7CVEsrISckdBlDXxrCwDOPeUUfigZ5M0EAL+1zpgNxX
-	 lPm/QrLfL6MQuWcOrgas8sOQ5Z3bPFBj8cqyfsx82wtvoBfh5i/IXTnWKMVKKRy7xre3V
-	 didVrbYy9r6f8XdubW6OdZF3tC02IRM2lP6r+ALbq8LBPteLp1Z4mmLu8BxgOHGIz5eB3
-	 mH8iQMuLFJKy0X64QnRZvbbjKxJ2FKSog3lQ5cbrAX93xiMGf6Buw5AV8/VilJ1QwYkrv
-	 VoVs/I60Jedx41RbDMk9TzI3pmAs2oLrsRkFHf9FdNysgpRbMaavWZ10LqWGjRWkYZA==
+	t=1794406939;
+	b=1yhtoaBb97fxMCPNYe6wwNR3brsLxVg2t5vSp2Wpdh3/7SASPHQMCEJ280HBkTdVKs5t
+	 h0ZSnJsWpKtcBCgfHqQ/x/3vZTonuXnu1yM0JDSVen488sXlnMteWeIAJJBAQgiGCAV7R
+	 n+fz36m+rLUMyyU4OO1zHU47Sb0IHY+XYOb2l+2VwUl5q6RskIh+WUBWl05f6knF14NWs
+	 zcysywxMDvBqjGH+Bvfkz/zvJO4LHJEGpxvdS0PXsWbOXiFLkWaKidP9YkjSRvZJL9f/5
+	 4saAnlm+MxDw1GeHwMm7LJVPmm1IxAV6tobcRxeEsnoEvgqMZqJsXIAr79ESMd3jLBw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794406514;
-	h=DMARC-Filter:Received:DKIM-Signature:DKIM-Signature:DKIM-Signature:
-	 DKIM-Signature:Received:Received:Received:Date:From:To:Cc:Subject:
+	a=rsa-sha256; c=relaxed/relaxed; t=1794406939;
+	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
+	 X-Mimecast-MFC-AGG-ID:Received:Received:Date:From:To:Cc:Subject:
 	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
-	 In-Reply-To:X-Rspamd-Queue-Id:X-Spam-Level:X-Rspamd-Server:
-	 X-Rspamd-Action:X-Spam-Flag:X-Spamd-Result:X-Spam-Score;
-	bh=iEM9kPeISwrg1hp3zFsHM5gU3S8hitOkRPQJum2vFMU=;
-	b=oDSv8TML6Br2ANrNyyHl5eLdEaqkGzeKqpFh5cUnWgNS3fFOATWhduyRajWfNTE5l6fy
-	 uzP1ErgGCX40NlHPlSkrYAyCKWd/DrM3AR1hSHvG7Gt9Errj1r27oDq/v6I2EXnOowHjj
-	 yJXfIJaifMDI9/c8fAjy0oc1c0mbEkwVJlkJSr6dcwENjDpa8I3oR9yzWDT+3C5P1fw2t
-	 RbK2FcApV6zWx9SnMoOkoEMy1hWiBt8IIC507Xei0f8qg6s4ZwFwoHWE9Sm3dFhOwvroq
-	 n/I8nuOGPIkkWsUxEZu67qnuVp5v8q97OyQpfwpLZyLlwi0nYOp8xfQAY+e7ZNPPghg==
+	 In-Reply-To:X-Scanned-By;
+	bh=s9mQE25+Qfpx9tF12B/fqXT+5fZAl/3JqrfvD0xw+WA=;
+	b=4qQ54nUkcn7zdI8Ego2NLM1F7mXUQUSJ2yt6hJl0/WX9uYHfeCFeBsQXHgtAWRR1DJMK
+	 9cq5PD6GzwLHrJWys1LSht2mQZnODTEnJhFPEGi4a2TdZBy2HA3xe3zbUam2M3ZqZEMzP
+	 fQZV4oB60nUw4e4MdUeSA/DrnWPZ1bChSRqHHB2ImJexeDX2PNKZ8XPL4RjBg2p7kE4a+
+	 xkj4XpGBlcVS2F9wUD1bA4NKaBTKueTqhzJsYcIf0B58G5Jfz03JuNc19TD0CDVBa5L76
+	 StnkfPHu6YLzqeB6I8KoYf27KqLIPH5KpdcUIezBa3WaYTrTPUJ4DK5cYkNYYxZSK+A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=suse.cz;
-	spf=pass smtp.mailfrom=suse.cz;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=r58BF0D8;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=15TlV9Nr;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=r58BF0D8;
-	dkim=neutral header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=15TlV9Nr;
-	arc=none smtp.remote-ip=195.135.223.130
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	dmarc=pass header.from=redhat.com;
+	spf=pass smtp.mailfrom=redhat.com;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=gjULlZhJ;
+	arc=none smtp.remote-ip=170.10.129.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FE1C606A334;
-	Wed, 11 Nov 2026 14:15:14 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3FE1C606A334
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39611606A33E
+	for <linux-xfs@vger.kernel.org>; Wed, 11 Nov 2026 14:22:18 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 39611606A33E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=r58BF0D8;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=15TlV9Nr;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=r58BF0D8;
-	dkim=neutral header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=15TlV9Nr
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=gjULlZhJ
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1794406938;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=s9mQE25+Qfpx9tF12B/fqXT+5fZAl/3JqrfvD0xw+WA=;
+	b=gjULlZhJNvFKYsqmYXVwibVSGfkg8/I83081YboD8cZj719PTeJEE5H/tbLTrUrDpL46hg
+	AW+ZAidpyawUozUzONAJgipEfKKxkTUYeUb91FwBmqXOFbMyBipv+x6eMZnqOM41b3bX9U
+	MBN0KByHyW7U9j8/eig+84oLZNGrz4k=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-673-wAzdZVctPd-82sdroRI-zA-1; Wed,
+ 11 Nov 2026 09:22:15 -0500
+X-MC-Unique: wAzdZVctPd-82sdroRI-zA-1
+X-Mimecast-MFC-AGG-ID: wAzdZVctPd-82sdroRI-zA_1794406934
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 09F3E22A5E;
-	Wed, 11 Nov 2026 14:15:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1794406512; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=iEM9kPeISwrg1hp3zFsHM5gU3S8hitOkRPQJum2vFMU=;
-	b=r58BF0D8W8gzgIAphVb7+yXG4Wp0CzJfQUUtsAILSsDExswBBX2Vz1DZhrqDcoIpRX0ZTt
-	0gBD9RMFaruNOsM+g+SXe7YVni3W376lEjHWkMsC8cv+03B46mcbwzWMdN6eutgUbVcR1I
-	skb2yG6nBdMmWTQD7PkbKOeYbn2js8w=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1794406512;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=iEM9kPeISwrg1hp3zFsHM5gU3S8hitOkRPQJum2vFMU=;
-	b=15TlV9Nrfb6fbwPB+XQGAF9gQF4YSshvgg4Qr4JwuaNYvo4isPqFDJlR8PRYTR3/TFQArE
-	KUe4A2NvjL7x2ZAw==
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=r58BF0D8;
-	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=15TlV9Nr
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1794406512; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=iEM9kPeISwrg1hp3zFsHM5gU3S8hitOkRPQJum2vFMU=;
-	b=r58BF0D8W8gzgIAphVb7+yXG4Wp0CzJfQUUtsAILSsDExswBBX2Vz1DZhrqDcoIpRX0ZTt
-	0gBD9RMFaruNOsM+g+SXe7YVni3W376lEjHWkMsC8cv+03B46mcbwzWMdN6eutgUbVcR1I
-	skb2yG6nBdMmWTQD7PkbKOeYbn2js8w=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1794406512;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=iEM9kPeISwrg1hp3zFsHM5gU3S8hitOkRPQJum2vFMU=;
-	b=15TlV9Nrfb6fbwPB+XQGAF9gQF4YSshvgg4Qr4JwuaNYvo4isPqFDJlR8PRYTR3/TFQArE
-	KUe4A2NvjL7x2ZAw==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id BD61B134E5;
-	Wed, 11 Nov 2026 14:15:11 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id oMu1Jm949GpWAQAAD6G6ig
-	(envelope-from <jack@suse.cz>); Wed, 11 Nov 2026 14:15:11 +0000
-Received: by quack.suse.cz (Postfix, from userid 1000)
-	id 475D422933; Wed, 11 Nov 2026 15:15:11 +0100 (CET)
-Date: Wed, 11 Nov 2026 15:15:11 +0100
-From: Jan Kara <jack@suse.cz>
-To: Christian Brauner <brauner@kernel.org>
-Cc: Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org, 
-	Jan Kara <jack@suse.com>, Al Viro <viro@zeniv.linux.org.uk>, ecryptfs@vger.kernel.org, 
-	linux-ext4@vger.kernel.org, jfs-discussion@lists.sourceforge.net, 
-	linux-nilfs@vger.kernel.org, exfat@lists.linux.dev, linux-mm@kvack.org, ntfs@lists.linux.dev, 
-	ocfs2-devel@lists.linux.dev, linux-btrfs@vger.kernel.org, gfs2@lists.linux.dev, 
-	linux-efi@vger.kernel.org, linux-mtd@lists.infradead.org, linux-xfs@vger.kernel.org, 
-	Karl Mehltretter <kmehltretter@gmail.com>
-Subject: Re: [PATCH v2 04/34] ext2: don't set SB_RDONLY after filesystem
- errors
-Message-ID: <za33axmgzmuzsj3zmfeh43fkphtcsqtkhhrauwuvs7aiftelgp@dzl6z322st5f>
-References: <20261029-work-fs-sb_rdonly-v2-0-2f44f64f0b66@kernel.org>
- <20261029-work-fs-sb_rdonly-v2-4-2f44f64f0b66@kernel.org>
- <5qefa4mracb3x2z4vsdejmkyyfrhdcrixmmnooz4rzwcdfoejm@mqkvixj6afwp>
- <20261110-kargheit-impfen-pausieren-881763d28b19@brauner>
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id E7D781956060;
+	Wed, 11 Nov 2026 14:22:13 +0000 (UTC)
+Received: from bfoster (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 0F4DD195608C;
+	Wed, 11 Nov 2026 14:22:11 +0000 (UTC)
+Date: Wed, 11 Nov 2026 09:22:09 -0500
+From: Brian Foster <bfoster@redhat.com>
+To: daejun7.park@samsung.com
+Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org,
+	Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Amir Goldstein <amir73il@gmail.com>, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] xfs: number the cache flushes submitted to each
+ buftarg
+Message-ID: <avR6EXipxwKzRlRN@bfoster>
+References: <20261111-xfs-fsync-flush-seq-v2-0-b5c00c25d276@samsung.com>
+ <20261111-xfs-fsync-flush-seq-v2-1-b5c00c25d276@samsung.com>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -122,90 +82,152 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261110-kargheit-impfen-pausieren-881763d28b19@brauner>
-X-Rspamd-Queue-Id: 09F3E22A5E
-X-Spam-Level: 
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Rspamd-Action: no action
-X-Spam-Flag: NO
-X-Spamd-Result: default: False [-11.51 / 50.00];
-	SUSE_INTERNAL_BYPASS(-9.00)[];
-	BAYES_HAM(-3.00)[100.00%];
-	SUSPICIOUS_RECIPS(1.50)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	RCPT_COUNT_TWELVE(0.00)[19];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	RCVD_COUNT_THREE(0.00)[3];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	MIME_TRACE(0.00)[0:+];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	ARC_NA(0.00)[];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	RCVD_TLS_LAST(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	DKIM_TRACE(0.00)[suse.cz:+];
-	MISSING_XM_UA(0.00)[];
-	TO_DN_SOME(0.00)[];
-	FREEMAIL_CC(0.00)[suse.cz,vger.kernel.org,suse.com,zeniv.linux.org.uk,lists.sourceforge.net,lists.linux.dev,kvack.org,lists.infradead.org,gmail.com];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo,suse.cz:dkim]
-X-Spam-Score: -11.51
+In-Reply-To: <20261111-xfs-fsync-flush-seq-v2-1-b5c00c25d276@samsung.com>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-On Tue 10-11-26 22:50:47, Christian Brauner wrote:
-> On Thu, Nov 05, 2026 at 10:22:07AM +0100, Jan Kara wrote:
-> > So shouldn't we just modify the sb_rdonly() check in sync_filesystem() to
-> > use also sb_emergency_ro() and don't bother with modifying individual
-> > filesystems?
+On Wed, Nov 11, 2026 at 12:17:11PM +0900, Daejun Park via B4 Relay wrote:
+> From: Daejun Park <daejun7.park@samsung.com>
 > 
-> The VFS patch I posted in v1 thread did that. I dropped it because
-> of jfs. jfs keeps anonymous tlocks for every allocation that writeback
-> hasn't committed yet. If sync_filesystem() bails after the error nothing
-> commits them before evict_inodes() and jfs_evict_inode() hits the
-> BUG_ON() for a non-empty anon_inode_list on umount.
+> fsync can only skip its own cache flush when its log force wrote out
+> the iclog. It cannot tell whether a flush that another task submitted
+> covers its data.
 > 
-> Which is what happened before the series because the error set
-> SB_RDONLY. jfs_reconfigure() relies on the same sync_filesystem() call
-> when going read-only after the error.
+> Number the cache flushes that the log code submits to each buftarg,
+> and record the highest number that completed without error. Nothing
+> reads the numbers yet.
 > 
-> jfs could commit them itself before evict_inodes() but that means a
-> ->kill_sb() wrapper and a txQuiesce()-like walk over the global
-> anon_list filtered by superblock. I don't think that's worth it.
-
-OK, so instead of BUGing in jfs_evict_inode(), shouldn't JFS just do
-something like:
-
--	BUG_ON(!list_empty(&ji->anon_inode_list));
-+	if (!list_empty(&ji->anon_inode_list)) {
-+		WARN_ON_ONCE(!sb_emergency_ro(inode->i_sb));
-+		/* This needs helper in fs/jfs/jfs_txnmgr.c */
-+		TXN_LOCK();
-+		list_del_init(&ji->anon_inode_list);
-+		TXN_UNLOCK();
-+	}
-
-So that JFS doesn't block everybody else? Because conceptually, once sb is
-marked as emergency read-only, we really want to stop writeback so letting
-sync_inodes() run seems moot.
-
-> > Is this really needed? All the xattr operations go through mnt_want_write()
-> > / mnt_want_write_file() so this should be caught in VFS...
+> Signed-off-by: Daejun Park <daejun7.park@samsung.com>
+> ---
+>  fs/xfs/xfs_buf.c      | 13 +++++++++++++
+>  fs/xfs/xfs_buf.h      | 21 +++++++++++++++++++++
+>  fs/xfs/xfs_log.c      | 28 +++++++++++++++++++++-------
+>  fs/xfs/xfs_log_priv.h |  1 +
+>  4 files changed, 56 insertions(+), 7 deletions(-)
 > 
-> Not the ones ecryptfs does on the lower filesystem...
-> Hm, maybe we should make ecryptfs get write access to the lower mount
-> instead and drop the xattr checks from the filesystems. Not sure.
+...
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index 74b324f915a..d99a5b678cf 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -1211,6 +1211,8 @@ xlog_ioend_work(
+>  		xlog_force_shutdown(log, SHUTDOWN_LOG_IO_ERROR);
+>  	}
+>  
+> +	if (!error && iclog->ic_flush_seq)
+> +		xfs_buftarg_flush_done(log->l_targ, iclog->ic_flush_seq);
 
-Argh, also NFS I assume. OK, that won't be easy to get rid of AFAICT (we
-generally don't have mount available there).
+Taking another look at this I started to also wonder whether to store
+this flush seq in the xlog_flush_done struct. It looks like we reuse
+that for multiple async flushes in flight, however, so probably not
+worth the complication to try and track all that there.
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Thanks for the tweaks and this all looks reasonable to me:
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  	xlog_state_done_syncing(iclog);
+>  	bio_uninit(&iclog->ic_bio);
+>  
+> @@ -1570,19 +1572,21 @@ xlog_flush_end_io(
+>  	bio_put(bio);
+>  }
+>  
+> -static void
+> +static s64
+>  xlog_flush_async(
+>  	struct xlog_flush_done	*done,
+> -	struct block_device	*bdev)
+> +	struct xfs_buftarg	*btp)
+>  {
+>  	struct bio		*bio;
+> +	s64			seq = xfs_buftarg_flush_start(btp);
+>  
+> -	bio = bio_alloc(bdev, 0, REQ_OP_WRITE | REQ_PREFLUSH | REQ_SYNC,
+> +	bio = bio_alloc(btp->bt_bdev, 0, REQ_OP_WRITE | REQ_PREFLUSH | REQ_SYNC,
+>  			GFP_NOFS);
+>  	bio->bi_private = done;
+>  	bio->bi_end_io = xlog_flush_end_io;
+>  	atomic_inc(&done->pending);
+>  	submit_bio(bio);
+> +	return seq;
+>  }
+>  
+>  /*
+> @@ -1605,16 +1609,17 @@ xlog_flush_data_caches(
+>  		.pending	= ATOMIC_INIT(1),
+>  		.done		= COMPLETION_INITIALIZER_ONSTACK(done.done),
+>  	};
+> +	s64			dseq = 0, rseq = 0, lseq;
+>  
+>  	*did_flush = false;
+>  	if (mp->m_ddev_targp != mp->m_logdev_targp &&
+>  	    bdev_write_cache(mp->m_ddev_targp->bt_bdev)) {
+> -		xlog_flush_async(&done, mp->m_ddev_targp->bt_bdev);
+> +		dseq = xlog_flush_async(&done, mp->m_ddev_targp);
+>  		*did_flush = true;
+>  	}
+>  	if (mp->m_rtdev_targp && mp->m_rtdev_targp != mp->m_ddev_targp &&
+>  	    bdev_write_cache(mp->m_rtdev_targp->bt_bdev)) {
+> -		xlog_flush_async(&done, mp->m_rtdev_targp->bt_bdev);
+> +		rseq = xlog_flush_async(&done, mp->m_rtdev_targp);
+>  		*did_flush = true;
+>  	}
+>  
+> @@ -1623,12 +1628,17 @@ xlog_flush_data_caches(
+>  		 * If we flushed any other device, also use an async flush for
+>  		 * the log device so that all flushes happen in parallel.
+>  		 */
+> -		xlog_flush_async(&done, mp->m_logdev_targp->bt_bdev);
+> +		lseq = xlog_flush_async(&done, mp->m_logdev_targp);
+>  
+>  		xlog_flush_done(&done);
+>  		wait_for_completion(&done.done);
+>  		if (done.status)
+>  			return -EIO;
+> +		if (dseq)
+> +			xfs_buftarg_flush_done(mp->m_ddev_targp, dseq);
+> +		if (rseq)
+> +			xfs_buftarg_flush_done(mp->m_rtdev_targp, rseq);
+> +		xfs_buftarg_flush_done(mp->m_logdev_targp, lseq);
+>  	}
+>  
+>  	return 0;
+> @@ -1678,14 +1688,18 @@ xlog_write_iclog(
+>  	iclog->ic_bio.bi_iter.bi_sector = log->l_logBBstart + bno;
+>  	iclog->ic_bio.bi_end_io = xlog_bio_end_io;
+>  	iclog->ic_bio.bi_private = iclog;
+> +	iclog->ic_flush_seq = 0;
+>  
+>  	if (iclog->ic_flags & XLOG_ICL_NEED_FLUSH) {
+>  		if (xlog_flush_data_caches(log->l_mp, &did_flush))
+>  			goto shutdown;
+>  	}
+>  	if (!did_flush &&
+> -	    (iclog->ic_flags & (XLOG_ICL_NEED_FLUSH | XLOG_ICL_NEED_FLUSH_LOG)))
+> +	    (iclog->ic_flags &
+> +	     (XLOG_ICL_NEED_FLUSH | XLOG_ICL_NEED_FLUSH_LOG))) {
+>  		iclog->ic_bio.bi_opf |= REQ_PREFLUSH;
+> +		iclog->ic_flush_seq = xfs_buftarg_flush_start(log->l_targ);
+> +	}
+>  	if (iclog->ic_flags & XLOG_ICL_NEED_FUA)
+>  		iclog->ic_bio.bi_opf |= REQ_FUA;
+>  
+> diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+> index 529720a4984..df0f13c4e04 100644
+> --- a/fs/xfs/xfs_log_priv.h
+> +++ b/fs/xfs/xfs_log_priv.h
+> @@ -222,6 +222,7 @@ struct xlog_in_core {
+>  #endif
+>  	struct semaphore	ic_sema;
+>  	struct work_struct	ic_end_io_work;
+> +	s64			ic_flush_seq;	/* buftarg flush number */
+>  	struct bio		ic_bio;
+>  	struct bio_vec		ic_bvec[];
+>  };
+> 
+> -- 
+> 2.43.0
+> 
+> 
+> 
+
