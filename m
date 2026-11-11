@@ -1,53 +1,55 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794375949;
-	b=eGn3gLMS6LdOb6LMpJf1TPCR8WLTRpUTjPH50W1k7jRsyvYuJmEcmC1Q/cWhuJ08uJZD
-	 gRLm24vtmX39VqzEDu1fOLXx7C7XpunGpBxtXp7/NetLWFJZbzeCzxFQk0L4KcPcSgx6G
-	 Qjh7K9o7mmUZfa7NajzQithnUYyFemsDPHGPlQ6D4T0e4Qu7Bs3fw1eWN/c1YkEUD3mr5
-	 LyEVnroaNb7akAm7XZyb1xjo6JgoJAQikyAAS+Pz8YK1eLVzjNi7g9MjMkT00Mt8MjruF
-	 wJbg9MGTJSb/iWS307jwyTBVsknSUgkBhgIdf06lL82OQ2e1EK747yFAEUHSn+pOESA==
+	t=1794379641;
+	b=YbYCk46UlFHIUHOmJ2lPJxtSUnRqHVFk+Ed7hmhzOsseWIWmwEqT7HAOKgwBsAMDihEg
+	 D70Bxo2/GjUYwfJSY5aQKrDonZqYLcjlEac47u+0oXydnWZzRpH18o65xeBlbmu5nVZZi
+	 i9lZISiXx1fbPL5zpG3RwV2QxDAnOhMs+fwRAz+4ST8jCMaX+d1a0GcsoMrPPTywCQjPo
+	 Zqq15u/5d4PVg4BAQt24AaA45Ob3Y6QjcWJ0++7ynHRjI+77B0squV5kkS0vQh0+Sx5ES
+	 el3/LfmoZEdQZj5LXqnrc3SO++PUYhxLtpQHNQ2XiebpBjEgVIqXqsQztdTJs/Zz7LA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794375949;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794379641;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=P+q8jJR9MxG8Thx7AIBBIg1m2jFAPwwzRg0y9kmkkKI=;
-	b=TtryHSAXuwmRrZ3JIRAKq9oKbNGFx8+uBa6GIdVuZEJJjlJtdlBSJmeVt92myoqY+UU8
-	 DkOjg8sMuqMW8RjuD60CgZead6MimslIiA1lsGh4Stv/t5GbN/WT7B+nih1PMtiRoCzHY
-	 LwOXujiv7s2C+Op7hpbt/PvwMOuIfUOLAyQYPaF0rhVa3uLMQmi2/qSdJf4d7YmMXIyb9
-	 GAbF9PylxDOFUAafV/10vbn/50qzjMSTDu4BPBtjs348UHyqRm9QWcEJlF4Nj3hpWxsGh
-	 nUFfh/ZMoMimdKhPW06ECC7qdSxQoVhUk8aMZYEZU9fQe7kSa+FN0WpZ8wJnNObqcAw==
+	bh=rizz0kyhNJ1YCkAfgnYmdjWW7spqcFj6soIo0U3qukA=;
+	b=Xx7XpRbnoDsQ89fcz9bDQnib1tki+Yhgp842E1h3u95l8e348KqyqZjFVfdV9WsQdrMR
+	 /0XbMOEeq913ij5W260NsyqIZgVHU8q2qYaOvZB7g9Jrudn7IeaVjUgRNgALGtnGngeJM
+	 H9xSC2ih81UHlnFDBZO0XhZdMdDAoe/cr+ZNm9/jNRGGQmoetrb+cIlg7KTns1p87G1iE
+	 4BvATdbL/iYucdHxi020O/7ycmzk84FLcNqmpzfwEbwqeFALJobGu08tfdvhPTE8QC7Y1
+	 8CvUfvjd04vYN2biJC+WH9FClfiEXu3WvmdGzCW4kGQbFaXqd2+7xQGwuaO1HhmQYpQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=MG+9y8WY;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jFNsEONc;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47449606A31C;
-	Wed, 11 Nov 2026 05:45:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D5ED606A326;
+	Wed, 11 Nov 2026 06:47:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=MG+9y8WY
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 370F61F00A05;
-	Wed, 11 Nov 2026 05:45:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jFNsEONc
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E6921F00A05;
+	Wed, 11 Nov 2026 06:47:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794375948;
-	bh=P+q8jJR9MxG8Thx7AIBBIg1m2jFAPwwzRg0y9kmkkKI=;
+	s=k20260515; t=1794379641;
+	bh=rizz0kyhNJ1YCkAfgnYmdjWW7spqcFj6soIo0U3qukA=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=MG+9y8WYQUlVW5DMsZrUP2SiQYoISIhHHUtXPWIS9V03uaceHYVyHeq5KTgbOV+1B
-	 nf36xTv76e0RAH7nhv6YIb0aUcGWt3nb4vceSzcB0mzcSMq9U2UO59hO7xQ+XAp8VX
-	 b38UbU2bgTBo35rgRP3dXlFLzaaFxH1TwfcaBep8PV88FO8++x3Z4LzIwyBxf4WGFO
-	 624ah+ApiNWl+YNL62Cn1Cf6rnw1uTIAAMI+E5dH7rb1cFt9qPcgRXdMiHQaOVZQpo
-	 UsLRGu44QsTue7qSZSJv/hvNLNuU4WzoqglZFKwPP/KluNthkGqilsG2JpdQcBL90s
-	 CoABLcSMel68g==
-Date: Wed, 11 Nov 2026 16:45:39 +1100
+	b=jFNsEONcd87Q2NYPTWAZFDabJtEpeUt/HScJuR5annauuIim/QKgco46001xb0Qyo
+	 vBB0j+eqx3aDM+UqJrdTasKjyiUnZfJcLfOlb2QhChaA+yCj3BdcBvFuUtBxkNKSM6
+	 HY+o3+N/K9WEWrMO8YowE+SlaeVneh5bkpm0cXsB28/8KHWIKKQTdvn2prI3z6+ZiI
+	 YBMxOrMgJBqN1bkcu4BbM61JPt0GwnQA/hLWRasZXPiH2DE3NRS7sKzcoJuPOdiGlr
+	 qwIplWdV/o9lPBLHc0PaVRcvwX91qHBV+a0GBVxl80Apa0xiyX5zfclo1R0b7FT8e0
+	 qixAhGbdB6Efg==
+Date: Wed, 11 Nov 2026 17:47:11 +1100
 From: Dave Chinner <dgc@kernel.org>
-To: Stian Halseth <stian@itx.no>
+To: daejun7.park@samsung.com
 Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org,
-	"Darrick J . Wong" <djwong@kernel.org>, sparclinux@vger.kernel.org,
-	Jan Engelhardt <jengelh@inai.de>, stable@vger.kernel.org
-Subject: Re: [PATCH v2] xfs: fix unaligned access to rmapbt high keys in scrub
-Message-ID: <avQBA_7WKwIobKKC@dread>
-References: <20261110223927.558557-1-stian@itx.no>
+	Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Amir Goldstein <amir73il@gmail.com>,
+	Brian Foster <bfoster@redhat.com>, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 0/2] xfs: skip redundant fsync cache flushes
+Message-ID: <avQPb5z4ExBOiEJq@dread>
+References: <20261111-xfs-fsync-flush-seq-v2-0-b5c00c25d276@samsung.com>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -59,86 +61,51 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261110223927.558557-1-stian@itx.no>
+In-Reply-To: <20261111-xfs-fsync-flush-seq-v2-0-b5c00c25d276@samsung.com>
 
-On Tue, Nov 10, 2026 at 11:39:27PM +0100, Stian Halseth wrote:
-> An rmapbt node stores each key as a low/high pair of packed 20-byte
-> struct xfs_rmap_key, so every high key is only 4-byte aligned.
-> xchk_rmapbt_check_unwritten_in_keyflags() reads rm_offset through
-> union xfs_btree_key, which is 8-byte aligned, so the compiler may use
-> an 8-byte load.
+On Wed, Nov 11, 2026 at 12:17:10PM +0900, Daejun Park via B4 Relay wrote:
+> Concurrent fsyncs often wait for an iclog that another task wrote out,
+> and then send their own cache flush. Patch 1 numbers the cache flushes
+> on each buftarg. Patch 2 uses the numbers to skip that flush when a
+> later flush has completed.
+> 
+> 16 fio jobs of 4k append + fsync in a QEMU guest: 1111 -> 4498
+> fsyncs/s.
 
-Ok, this trips my 'written by an LLM' filter. i.e. long
-run-on sentences, strung together with commas and "so ...". I
-mention this because....
+Ok, the number looks good, but IMO that's a very low number of
+concurrent fsyncs in general terms.
 
-> diff --git a/fs/xfs/scrub/rmap.c b/fs/xfs/scrub/rmap.c
-> index 68e2847c962bb..29609c5967fe3 100644
-> --- a/fs/xfs/scrub/rmap.c
-> +++ b/fs/xfs/scrub/rmap.c
-> @@ -149,8 +149,7 @@ xchk_rmapbt_check_unwritten_in_keyflags(
->  	struct xfs_scrub	*sc = bs->sc;
->  	struct xfs_btree_cur	*cur = bs->cur;
->  	struct xfs_btree_block	*keyblock;
-> -	union xfs_btree_key	*lkey, *hkey;
-> -	__be64			badflag = cpu_to_be64(XFS_RMAP_OFF_UNWRITTEN);
-> +	const struct xfs_rmap_key *lkey, *hkey;
->  	unsigned int		level;
->  
->  	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_PREEN)
-> @@ -166,15 +165,15 @@ xchk_rmapbt_check_unwritten_in_keyflags(
->  
->  		keyblock = xfs_btree_get_block(cur, level, &bp);
->  		for (ptr = 1; ptr <= be16_to_cpu(keyblock->bb_numrecs); ptr++) {
-> -			lkey = xfs_btree_key_addr(cur, ptr, keyblock);
-> +			lkey = &xfs_btree_key_addr(cur, ptr, keyblock)->rmap;
+Typically the journal doesn't start to bottleneck until there
+are hundreds to thousands of concurrent fsyncs and/or synchronous
+transaction commits running at once. NFS servers are typical for
+this, where there can be thousands of in-flight modifications that
+each require require ->commit_metadata to fsync changes before the
+server returns the response.
 
-The code fix smells of LLM, too: technically correct, but unreadable
-and unmaintainable.
+In the past, I have used dbench with increasing number of clients
+(into the thousands) to stress fsync/log force behaviour and
+scalability. The journal has historically topped out at somewhere
+around 20,000 forced log writes a second. It hits that limit when
+the built in batching (don't send the current iclog for write when
+not full if the previous one is still syncing) is not longer
+effective at reducing the number of iclog writes the log forcing
+load is driving....
 
-Regardless of where it came from, it's objectively -poor code-
-because:
+Hence the numbers look promising for low concurrency fsync
+workloads, but I'd really like to know waht happens at the high end
+when log force count rather than per-file fsync latency is the
+performance limiting factor. I suspect that it will improve
+performance by further mitigating the number of log writes and/or
+cache flushes that need to be done, but it really needs to be
+tested....
 
-- it uses a pattern that is not found anywhere else in the XFS code.
-- it costs nothing to use two variables here which would make the
-  code much more readable for a maintainer.
-- no comment to explain the issue the code has to avoid.
+I'd also like to know how this affects storage that does not require
+cache flushes - in those cases flushes are no-ops, so all this
+tracking and sequencing would likely be pure overhead....
 
-At minimum, a comment explaining why the code needs to be structured
-this way is needed. Humans like me are going to forget why the code
-needed to be structured this way in short order. Hence a comment is
-needed to remind me why the code was written this way next time I
-look at it.
+Cheers,
 
-IOWs, the code should look something like this:
-
-			/*
-			 * The on-disk high key in the rmap block may not be naturally
-			 * aligned, so we have to tell the compiler that we are
-			 * decoding rmap keys so it treats them correctly as an
-			 * unaligned packed structure.
-			 */
-			union xfs_btree_key *key;
-			const struct xfs_rmap_key *rkey;
-
-			key = xfs_btree_key_addr(cur, ptr, keyblock);
-			rkey = &key->rmap;
-			if (be64_to_cpu(rkey->rm_offset) & XFS_RMAP_OFF_UNWRITTEN) {
-				xchk_btree_set_preen(sc, cur, level);
-				break;
-			}
-
-			key = xfs_btree_high_key_addr(cur, ptr, keyblock);
-			rkey = &key->rmap;
-			if (be64_to_cpu(rkey->rm_offset) & XFS_RMAP_OFF_UNWRITTEN) {
-				xchk_btree_set_preen(sc, cur, level);
-				break;
-			}
-
-
--Dave.
-
-
+Dave.
 -- 
 Dave Chinner
 dgc@kernel.org
