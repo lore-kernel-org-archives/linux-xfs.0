@@ -1,56 +1,60 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.44
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794396100;
-	b=teqQ872DDYFLntsY6yufrz7lFMzIGiyNT6c8aYTnsBtc4is9XHGIoW+N39at8kY4jwm+
-	 pChsT+97WYSK1GGNnDrsDMAO/MWVmXNsEQJA5fXMmmbWNSFVNrFnspVQvcb1QWNglYr7K
-	 Cz0KwFVQPeubD9hbqTxgvAr4vp7YGuULra4TSsUchs5kmVwi3aDpS/sXCxu23iIw4yhRv
-	 cjv6wc6yNSbANobCYLFep4OEc8nuH+FEqv5ZzHI0faBHWsByOmUF/UT8HoqT8aseSQ055
-	 4TtdSV2uEDaUCXXSXKFpVyYH3NIrRujmzElAGD0JHbCDlIiZrsRceLAnMfmXqkHJigA==
+	t=1794396720;
+	b=MV+0IoeZM38sMOL/KurnW4oRtBnMMVfqmb/kL1SziZ1gmpkLWilxN19ODrnYy9eog+b+
+	 YRoSBBGgQHS4uUjy3orXlwolomZ2ltBGjKwOBM7gOu30JXG7VxYUxmi7vjYNiMHC6Tcdb
+	 TJUPPb+qbO4+xfJxgm7fIEJbP58UNWaj3PMpu0Cyi6yDFox8dVzG//eIYcf/6UGmECctA
+	 qlguR20NGkXvfhhuj72QE68OecGqE2cug1IxJYHDuxsNVz3quANKVFOX514VADBuB0HKX
+	 /y33iHIXtQj91+JzA/+sYxyYnjJdGV3fsoC4Mkt71q4Zifpm64em/INLscYmYA6eAOg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794396100;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	a=rsa-sha256; c=relaxed/relaxed; t=1794396720;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=Nwk0w3cw4cl11qJakkDZ+TjXZvkQ4TxfC3BEvxKHlbQ=;
-	b=j90iQsuZLL9Ef0GtMWgy2ksZVOkQ2qtQhvcoYcY9L8WA6q4LoDFn9tzebpvoqnU5AfyE
-	 eL8HxAB44zAm9M93HX7DGMZIDj7qxoqMc7rqatp+hvyyUV83/G05bXLsPNkjFYPKIIl0x
-	 owxkFh1EnZBxHI3eDkns4jQMvifVDFg5WAiirRgww7IBnJ7rxxzRGbcRZRvEW8HFrAVWd
-	 c1nllzyiZWWhsq311Y0PmO5D05dQzhJcc45tplu33pkQvsHWtID8/3PNVTUd8YkZ7cFvL
-	 KaIfcanm8fsRO9sUBoMGISdCLlKt30iqCUDW3RABg3tEigkt74v/9AmgFnxBnY9uzGg==
+	bh=35V3MBb3/B+i0WSH1JZearQNILa3rdNf4KCJ9ar7n0Y=;
+	b=B+AojX3vubYGiM2q//RAukDX0X12U0q7l7eUa77/J7cdG9DOGkg0GxCTh1CUMfh4Nao6
+	 Uu8a35M0f3kkPVP7YKN086zG15aP9sv+dTh+dsy4iMnVL3gqXak1xwUPal5EscDgywkeY
+	 G+wtQrnM742s6VBdhvSXC/42Bti6oZoa3H0lnLMSVkfFSg2CEa5Va9X0m9ZONz+hkPcWi
+	 1EVMsLWQaMf6AvAS97yc8DjFonCAOG+Szqe9EiU6L/KpddmZdVFNHnYKsolgTmGzDCyvq
+	 7LVYZ7BH+GHq81KWu9Nmy/Dk+uRlhXLGp+dxECUOY6luIKHtT49rQnx5AS3mYR+1izw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="nOGz/Vc0";
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=obfStFx7;
+	arc=none smtp.remote-ip=95.215.58.44
+Received: from mta1.migadu.com (out-44.mta1.migadu.com [95.215.58.44])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C97E2606A324;
-	Wed, 11 Nov 2026 11:21:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF6C5606A321
+	for <linux-xfs@vger.kernel.org>; Wed, 11 Nov 2026 11:31:58 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BF6C5606A321
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=nOGz/Vc0
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 094C61F00A05;
-	Wed, 11 Nov 2026 11:21:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794396100;
-	bh=Nwk0w3cw4cl11qJakkDZ+TjXZvkQ4TxfC3BEvxKHlbQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=nOGz/Vc0jEbILhvWwYAVeBfiditgKT1dD3EfPM6ZAbxXHeC8AaUg0UanoZ/88oXV8
-	 mEXcrpuR2/Cp1e/CEnaYV60Ovlpsf8lE/1eCsMStB0oyWWjq8Bwdl/iS9GqerJ+Srs
-	 Ul/++BnbUyvUlONhNDK5QHA6DijCTblT6y0AQD+Q6z3oAumIEimgQ5pwUDhCrR5eyX
-	 EIQ3YIDt8jJuU13mLFa991/UST8LTiXldAHPGhpTPWiugjy6l4VXWtapvcrcyzszV8
-	 FhNHAmz/9509qgrKaujz9abPvHN+tABDOWq03tOSMW5+N0jT5yChywav1ZbTiQO64H
-	 0doidrb0f41PQ==
-Date: Wed, 11 Nov 2026 12:21:35 +0100
-From: Christian Brauner <brauner@kernel.org>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: Chris Mason <mason@kernel.org>, tytso@mit.edu, david@fromorbit.com, 
-	jack@suse.cz, djwong@kernel.org, josef@toxicpanda.com, hch@lst.de, 
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH v6 04/10] iomap: don't punch delalloc under a dirty EOF
- block
-Message-ID: <20261111-esskultur-nahebringen-beiwerk-4a8a3b77bbf1@brauner>
-References: <20261109235111.14129-1-mason@kernel.org>
- <20261109235111.14129-5-mason@kernel.org>
- <avLnAe4A6EB8Whyg@nidhogg.toxiclabs.cc>
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=obfStFx7
+X-Envelope-To: linux-xfs@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=oqWUGVElRBr5oQDm9wyWE9Xl/dvm1ksZ5tyenrhg2NY=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1794396716; v=1; x=1795001516;
+ b=obfStFx7nGxEJk0Bi6v0awaFc19JwMkH56pO5pke9JK9Kq6n+6cIqv5gwi9RP7bkKiLP2RGA
+ YcusUgS9EPQgjDXmwlCdrqQ+AoC2qINVuXePAOzMsXD+51J2F8TfCssGQYRrLg0iAZWo9obGi48
+ +VnUnDKr7wV0hMNRGT9eIEaM=
+X-Envelope-To: linux-xfs@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 7e5b0a92b0c43409;
+	Wed, 11 Nov 2026 11:31:56 +0000
+X-Mizu-Trace-ID: 7e5b0a92b0c43409
+X-Migadu-Flow: FLOW_OUT
+Date: Wed, 11 Nov 2026 12:31:52 +0100
+From: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 16/25] xfs: add support for reading with data checksums
+Message-ID: <avRPwNoGozhWLdJz@quentin>
+References: <20261104085929.317544-1-hch@lst.de>
+ <20261104085929.317544-17-hch@lst.de>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -60,14 +64,43 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <avLnAe4A6EB8Whyg@nidhogg.toxiclabs.cc>
+In-Reply-To: <20261104085929.317544-17-hch@lst.de>
 
-On Tue, Nov 10, 2026 at 10:43:37AM +0100, Carlos Maiolino wrote:
-> Christian, is it ok with you if I pull this through xfs tree?
+On Wed, Nov 04, 2026 at 09:57:20AM +0100, Christoph Hellwig wrote:
+> All reads from files with data checksums have the returned iomaps for
+> data blocks limited to be inside a single RT csum file block, so that
+> each data read only needs to deal with a single checksum buffer.
+> 
+> All reads on checksummed files need to use ioends so that the checksum
+> can be verified from process context.  The ioend submission path looks
+> up the checksum buffer and kicks of an asynchronous read of it.  The
+> completion path waits for the buffer if needed and verifies the checksum.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_aops.c  |   3 +-
+>  fs/xfs/xfs_ioend.c | 120 +++++++++++++++++++++++++++++++++++++++------
+>  fs/xfs/xfs_iomap.c |  23 +++++++--
+>  3 files changed, 126 insertions(+), 20 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index c30e688cfc9f..db834e5e60c1 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -601,7 +601,8 @@ xfs_get_iomap_read_ops(
+>  {
+>  	struct xfs_inode		*ip = XFS_I(mapping->host);
+>  
+> -	if (bdev_has_integrity_csum(xfs_inode_buftarg(ip)->bt_bdev))
+> +	if (xfs_has_rtcsum(ip->i_mount) ||
 
-Sure,
-Acked-by: Christian Brauner <brauner@kernel.org>
+Shouldn't this be xfs_is_rtcsum_inode(ip) instead of a per mount option?
 
+> +	    bdev_has_integrity_csum(xfs_inode_buftarg(ip)->bt_bdev))
+>  		return &xfs_iomap_read_ops;
+>  	return &iomap_bio_read_ops;
+>  }
 -- 
+Pankaj
