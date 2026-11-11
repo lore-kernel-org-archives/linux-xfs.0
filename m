@@ -1,58 +1,59 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=203.254.224.25
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794351835;
-	b=PAel/PIlIoffLTWvXgutBcxiBOpEW5WgbRKtldr+7JyHz3DocLKp/v+xIv7+K8kQy73u
-	 w8XdOJvf96rMdDyhFFiayvjLkJUfF5mITg33WnfGQs6NCaJZp8nIFGRMoLt5eJh0m/2kH
-	 nmtc3ie9624m0YbSsDhE+HfS4ySwOJYOTKIFGbOxBKHiC3F0OctrPYGIZMz2xNNpWE+Zr
-	 i42Q5M0KZ4vRqXfnCGQlOd/UbS6AlIyp3a2EszdNCYR5sQj6qBqbEX6fjxUWfxgwdG5AB
-	 rSyhclHx/mCwggK9HGtNTbsLtJW28/kuwgmt8tcvWzcSQnfUZ4eRBBNn5VFpNVKIFjg==
+	t=1794359090;
+	b=NvLYJFKlNPH+qYLLCeZJ6hXshNRbNWkqbzpk7RUmHs5snm2OqDxw2QwoQWF96t6tfYnH
+	 BWKu6DtNLl+iul13UhYApnw/zTn6cqO4dOeRWtpW31MX7F7E5JWsdawr2QvtQXO2f2GIe
+	 qvfClOR+U2PvH0erVsM/sBWiSBSSrGXD+ACtV8nANNZAZay4qYH59B3kHVmihecoW7O7S
+	 GUk8lus4d30nkCdKOUFj8ASB2GbMaMI3w3Y+unUd0VJm/IK7zXaJj6Nm601fIlWv3fmPv
+	 Ttf8T2PWsh7NLaRA0SNJv8kHb22SdN+SgbvYXPo9x6zE6jZcZFrSkRTKEgJQpVFBKTw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794351835;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=2pIaRdIwsMurNh146HSaQSteAZp0sNsCvcBlMEMyjn0=;
-	b=DGqZ+Hm4bFVRk/RMt39s8X1LEYjZMByZlc0eBXu8aT8wFGmfZfDnbgiA55j7Oh4HatSx
-	 sfr9ys0pvRkHe+tvRppusTNvQueyBOaXWSmS/Awpjr6n5lgpachyG77/e/zJteBWbEgyV
-	 /H3jUsD0m3ommG7GUIBjJYmoPbnS3uD4GIIKWHrYEECObVdm0057p+77UtG3rTZmoGHuU
-	 EAN130lV8yabJBaQoVYj/G9OfzHpNrnQ+O95dE2jb+UjkUnAXCZKfUt4N+eHDFFWupLEB
-	 AmHcBE6t+DyEdo8WlvwewUBoZPI8TpEeANFvwOp8j9FAv0Mm9MQAAQ1PBImr2OYmcRg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794359090;
+	h=DMARC-Filter:Received:DKIM-Filter:DKIM-Signature:Received:Received:
+	 Mime-Version:Subject:Reply-To:Sender:From:To:CC:X-Priority:
+	 X-Content-Kind-Code:In-Reply-To:X-CPGS-Detection:X-Drm-Type:
+	 X-Msg-Generator:X-Msg-Type:X-Reply-Demand:Message-ID:Date:
+	 X-CMS-MailID:Content-Transfer-Encoding:Content-Type:X-Sendblock-Type:
+	 CMS-TYPE:X-CPGSPASS:X-CPGSPASS:cpgsPolicy:X-CFilter-Loop:
+	 X-CMS-RootMailID:References;
+	bh=GiKvb46pmPIsIzjT9+8NqIO6uycJTt0qqmhwF5WaVL0=;
+	b=OdLsdAGO+e6jNxv8XY6AnMRzhmRpVjbm7bGprind4XfMcwW/y9noeTWva3AWbkiXOwCW
+	 StB56m7qfJX4l9/Cn3OGyzMPUKJDiJDJEqZKYPXswMvndqvklZ/hm5+po0+RED6FvW2ly
+	 p/IbtOrCLtTJV7lbkY9cc0tjfpwGQy9lfkLd2nfnLVia10DiZTFIYd6wD/xg0H3/bRA9k
+	 xEscY5QJBOYvYZGp79VHrI+oFaC84SIMJ5Qu4/tauJTAQJionsoUxqVnjebcQE+N6GlRf
+	 cMDImzMp8mYXwQrEDych1VmV+PKSU3S+sLcU7C3t+INRJvs6syTEUbOnCBHul34kARg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kBTW1rxq;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=samsung.com;
+	spf=pass smtp.mailfrom=samsung.com;
+	dkim=pass header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=BKktBoTX;
+	arc=none smtp.remote-ip=203.254.224.25
+Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30CD2606A32A;
-	Tue, 10 Nov 2026 23:03:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 223C6606A320
+	for <linux-xfs@vger.kernel.org>; Wed, 11 Nov 2026 01:04:48 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 223C6606A320
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kBTW1rxq
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 62AB91F00A04;
-	Tue, 10 Nov 2026 23:03:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794351834;
-	bh=2pIaRdIwsMurNh146HSaQSteAZp0sNsCvcBlMEMyjn0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=kBTW1rxq9WZhdtKSM6ZrjLcJDA8KX7zpquW0WCtTZj93ht9JZWcFZTmPvobJNFp5p
-	 W7fw8ONKkd7a9uW9Mg/qf4xDHmOd8hlnRbFF4foksH2xX7qk3QGzGbJYkAa75ekFwJ
-	 OzRNYXI4MvxDD+4HZGPSx2NnRi9PmevHAGdVkVYZRdLMTwDjyRsnAHYGk68OvDDay8
-	 rDnhbCiAaL/Brr0qiCC6247tRAhK2n7XP0yf/xOtZuuMjJqM4qWjPWN7jzk4Svxfvw
-	 pqYkF6OUqIPT5t0qg/xeybx0vaHstfPqOrvFTHTSgBMM/vz9TsD1LPwReRhbFj1B84
-	 7XfdQtupW+l0w==
-Date: Tue, 10 Nov 2026 15:03:53 -0800
-From: Eric Biggers <ebiggers@kernel.org>
-To: Andrey Albershteyn <aalbersh@kernel.org>
-Cc: hch@lst.de, fsverity@lists.linux.dev, dsterba@suse.com,
-	linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org,
-	linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, brauner@kernel.org,
-	viro@zeniv.linux.org.uk, jaegeuk@kernel.org, chao@kernel.org,
-	tytso@mit.edu
-Subject: Re: [PATCH v2 5/5] f2fs: use I_VERITY_BUILDING instead of private
- flags
-Message-ID: <20261110230353.GI1907@quark>
-References: <20261105115532.613467-1-aalbersh@kernel.org>
- <20261105115532.613467-6-aalbersh@kernel.org>
+	dkim=pass (1024-bit key, unprotected) header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=BKktBoTX
+Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
+	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20261111010446epoutp02fd0cf37c51bfa3bb6350fe7392129fdf~m2BUasuR90998209982epoutp02S
+	for <linux-xfs@vger.kernel.org>; Wed, 11 Nov 2026 01:04:46 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20261111010446epoutp02fd0cf37c51bfa3bb6350fe7392129fdf~m2BUasuR90998209982epoutp02S
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1794359086;
+	bh=GiKvb46pmPIsIzjT9+8NqIO6uycJTt0qqmhwF5WaVL0=;
+	h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
+	b=BKktBoTX8zlzZefXM6WrPLscwhV9AVJTACR4ESI5kvenc2CWe6YpLQ+Zes/x8OgZn
+	 faKXMyYINlI88I8I3yrUUBqEEjJMpCmZ7vKKPTJVQQoWzM1slDeB4NusseM9MX9GTq
+	 w0l6B7HcO5FMRzDqHRv55cMjRW+dTjzsyaG5ty90=
+Received: from epsnrtp04.localdomain (unknown [182.195.42.156]) by
+	epcas2p3.samsung.com (KnoxPortal) with ESMTPS id
+	20261111010446epcas2p39e5b6a345df9915383a215e287457105~m2BUMojI72708527085epcas2p3n;
+	Wed, 11 Nov 2026 01:04:46 +0000 (GMT)
+Received: from epcas2p2.samsung.com (unknown [182.195.38.207]) by
+	epsnrtp04.localdomain (Postfix) with ESMTP id 4jPQKV0fNYz6B9mB; Wed, 11 Nov
+	2026 01:04:46 +0000 (GMT)
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -61,25 +62,53 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261105115532.613467-6-aalbersh@kernel.org>
+Mime-Version: 1.0
+Subject: RE:(2) [PATCH 1/2] xfs: number the cache flushes submitted to each
+ buftarg
+Reply-To: daejun7.park@samsung.com
+Sender: Daejun Park <daejun7.park@samsung.com>
+From: Daejun Park <daejun7.park@samsung.com>
+To: Brian Foster <bfoster@redhat.com>
+CC: Carlos Maiolino <cem@kernel.org>, "linux-xfs@vger.kernel.org"
+	<linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Dave Chinner
+	<david@fromorbit.com>, "Darrick J. Wong" <djwong@kernel.org>, Amir Goldstein
+	<amir73il@gmail.com>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, Daejun Park <daejun7.park@samsung.com>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+In-Reply-To: <avIGZ9ABd_pXSy1L@bfoster>
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <20261111010445epcms2p7972ac621507b96f995e477b203e952dc@epcms2p7>
+Date: Wed, 11 Nov 2026 10:04:45 +0900
+X-CMS-MailID: 20261111010445epcms2p7972ac621507b96f995e477b203e952dc
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+cpgsPolicy: CPGSC10-223,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20261109174425epcas2p37306753cba345ce4909a28d2a77fb208
+References: <avIGZ9ABd_pXSy1L@bfoster>
+	<20261105-xfs-fsync-flush-seq-v1-0-299bdf5e28c3@samsung.com>
+	<20261105-xfs-fsync-flush-seq-v1-1-299bdf5e28c3@samsung.com>
+	<CGME20261109174425epcas2p37306753cba345ce4909a28d2a77fb208@epcms2p7>
 
-On Thu, Nov 05, 2026 at 12:55:30PM +0100, Andrey Albershteyn wrote:
->  	/*
-> -	 * Write all pages (both data and verity metadata).  Note that this must
-> -	 * happen before clearing FI_VERITY_IN_PROGRESS; otherwise pages beyond
-> -	 * i_size won't be written properly.  For crash consistency, this also
-> -	 * must happen before the verity inode flag gets persisted.
-> +	 * Write all pages (both data and verity metadata). For crash
-> +	 * consistency, this also must happen before the verity inode flag gets
-> +	 * persisted.
->  	 */
+On Mon, Nov 09, 2026 at 12:44:07PM -0500, Brian Foster wrote:
+> > +	iclog->ic_flush_seq = 0;
+> > +	if (iclog->ic_bio.bi_opf & REQ_PREFLUSH)
+> > +		iclog->ic_flush_seq = xfs_buftarg_flush_start(log->l_targ);
+>
+> Bit of a nit, but it looks like this would be cleaner if we moved both
+> of these a bit further up. I.e., zero ->ic_flush_seq right after where
+> we init the iclog->ic_bio fields, and then move the assignment under the
+> same block where we set the PREFLUSH flag. Hm?
 
-Same as ext4 patch: the deleted sentence (which wasn't deleted properly,
-as it left the "this also must happen" clause dangling) actually still
-applies.  Just it should be updated to use the new flag name, or else
-refer to ->end_enable_verity() returning instead.
-
-- Eric
+Thanks, agreed. In v2 xlog_write_iclog() will zero ic_flush_seq right
+after the ic_bio setup and take the number in the branch that sets
+REQ_PREFLUSH.
