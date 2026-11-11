@@ -1,59 +1,49 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=203.254.224.24
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=115.124.30.133
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794359145;
-	b=0OyS53FnvME6KtMxfi2l8dJvjatqj4hzxQTxWtCwtL0k+UejPp7FD8b3OaLwfbss1/IY
-	 vnapoIuZEI+U78DgZA9U00PlAU0v0E4pYboH4lfzK0dEP/Nczy1IBTuEPdQ3dqDrTRgsB
-	 Zu/3u66Mj5OwOPqXLlqW2XCab1qTZu1xfQ2Gf+f6u1MZe3knAi/2xNcNq+5vBMYUxdJy6
-	 UklfLgyhqUvQZWTJflOJh7K/rQ5p2SBH+eF83s5hMyVAfMlngKX8GLIZVawBK73XAOqJ8
-	 OgWkFKXshdYqMsy6BbPFz19MZkTvaZNbcxALG9S65yMKK8EKdbAZjY9twKBoxy9NUFA==
+	t=1794360670;
+	b=FfO+lx5GXogLgqb7DWOxYqGfL+fjnDw1YZx3slNeIC3v4+Cc3UnugRghWpdcsC9dhquP
+	 giGHgAtZWkmEagFZyPpebKZ0VoVyRkMczeJMpgUlYw73vY+2VvQQ4z4yK4HRzs0APY3BL
+	 YNBLK3gL55Lt/G3qscMukWAWr0AbKNQfqggcr1RxSxr9PIpKoWFb0fTvtw/7jgL2dslMa
+	 vMPZSwG52GKFpqHI9mU0OJyTCR6A621Q1gAQ4Fxgz720hFJe7qcMm/v70PufBbeTLP5OE
+	 aArDEQ1SgC+TvqF6Me1XRcyIWMDYE5MyYEEJ8b7tPJRC2FAC0GVqVjh3/FlDDRHPvig==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794359145;
-	h=DMARC-Filter:Received:DKIM-Filter:DKIM-Signature:Received:Received:
-	 Mime-Version:Subject:Reply-To:Sender:From:To:CC:X-Priority:
-	 X-Content-Kind-Code:In-Reply-To:X-CPGS-Detection:X-Drm-Type:
-	 X-Msg-Generator:X-Msg-Type:X-Reply-Demand:Message-ID:Date:
-	 X-CMS-MailID:Content-Transfer-Encoding:Content-Type:X-Sendblock-Type:
-	 CMS-TYPE:X-CPGSPASS:X-CPGSPASS:cpgsPolicy:X-CFilter-Loop:
-	 X-CMS-RootMailID:References;
-	bh=pkbznhaBkCFi1U32w1V8mYszmNFl3w7n8yFnD+biYIw=;
-	b=tE6ACnE51SIWvUKD+dWluo0EdE76ekphv+VamcjB8BVgIOMGu7EfoZq1eIqbpn2zox6M
-	 tXGMjCAgD5s2Fh3m6RfGKdext+mroYMbf6T4Ks9436+K5yXsvGwHwx7Q3JZMFEHDoSgv7
-	 HQrdma2a452DWerGa0l0VpMFaG1HEbONLMV8zeJBYHAVKW5YtEFWCnV5LoYnWwXz08z/B
-	 FKaft50FyzvMDep8n9f0GTAMjENOcVgh49GwAomXqQ3vUCCDVcYLPYNsoaQwPtxsBBgj4
-	 cATdmjgjzokx76ixoHRaIl48SPeY8klQxcm5IbNDQxSmQ+Ic+6GIW97SYZWpiLQpXzQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794360670;
+	h=DMARC-Filter:DKIM-Signature:X-Alimail-AntiSpam:Received:Message-ID:
+	 Date:MIME-Version:User-Agent:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type:Content-Transfer-Encoding;
+	bh=fz7Db6YPpucPps2P9eFgAPZMsl4Z2nZBpO1+iQqdPhM=;
+	b=RBXudb244Rweuyty63SC19rHx0w4ElIL+4AYxc8G84M3xHfHQ5LVGNRZsNrUcRkXkJEH
+	 q5FP0X704Gd1o5zUtY1T09F1xIJS79yfImNaqoZBsHaoTdQqW5RsLqV8d8n8WVLVtn9Sf
+	 dc/D7/Tj3QLc119ZInWARA9tUST3vFtWtyVboKVDlgCSEw0ZpaVWGsNZyLRb4iK82oGQH
+	 D3+q3uoDzMei+Wgi6WaK3KrYicoZBCLmTzg2BRBgLvw70ErJttB1rko2mSlpSMcPTlq7y
+	 J6skwU+HublMytAcf4DLkTq/Oq2m1HGbdsxwlFsbYTqXsBmZt7H0PGeEXOzf764e0vg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=samsung.com;
-	spf=pass smtp.mailfrom=samsung.com;
-	dkim=pass header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=roQgUXRE;
-	arc=none smtp.remote-ip=203.254.224.24
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dmarc=pass header.from=linux.alibaba.com;
+	spf=pass smtp.mailfrom=linux.alibaba.com;
+	dkim=pass header.d=linux.alibaba.com header.i=@linux.alibaba.com header.a=rsa-sha256 header.s=default header.b=mq7w0PoV;
+	arc=none smtp.remote-ip=115.124.30.133
+Received: from out30-133.freemail.mail.aliyun.com (out30-133.freemail.mail.aliyun.com [115.124.30.133])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B900D606A320
-	for <linux-xfs@vger.kernel.org>; Wed, 11 Nov 2026 01:05:44 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B900D606A320
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D0DE606A321;
+	Wed, 11 Nov 2026 01:31:06 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6D0DE606A321
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=roQgUXRE
-Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
-	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20261111010542epoutp0126fddb5af88917482ddb82d62b3d82fb~m2CIet0jE1081110811epoutp01B
-	for <linux-xfs@vger.kernel.org>; Wed, 11 Nov 2026 01:05:42 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20261111010542epoutp0126fddb5af88917482ddb82d62b3d82fb~m2CIet0jE1081110811epoutp01B
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1794359142;
-	bh=pkbznhaBkCFi1U32w1V8mYszmNFl3w7n8yFnD+biYIw=;
-	h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-	b=roQgUXREzBn4PfbSNNPJFipYYxMKmlJNlUFuGkW9D9DrheXqA54S5ACaUV9czG+Qa
-	 VmHowaBd2VR8xflhxYJImrXBVePSubzCN2QUCj7fxh7lOOEXpNefErry18kT5Jw9DX
-	 5D1Bo/hg7Nk1G0gDc/aPE/WuARmmw93wvW3XMEq8=
-Received: from epsnrtp04.localdomain (unknown [182.195.42.156]) by
-	epcas2p2.samsung.com (KnoxPortal) with ESMTPS id
-	20261111010541epcas2p200b17ebabe51ea1b2f88afdadd42392f~m2CH3vTV00724607246epcas2p2W;
-	Wed, 11 Nov 2026 01:05:41 +0000 (GMT)
-Received: from epcas2p1.samsung.com (unknown [182.195.38.200]) by
-	epsnrtp04.localdomain (Postfix) with ESMTP id 4jPQLY44jsz6B9m9; Wed, 11 Nov
-	2026 01:05:41 +0000 (GMT)
+	dkim=pass (1024-bit key, unprotected) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.a=rsa-sha256 header.s=default header.b=mq7w0PoV
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1794360664; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
+	bh=fz7Db6YPpucPps2P9eFgAPZMsl4Z2nZBpO1+iQqdPhM=;
+	b=mq7w0PoVXCwu1IX5ivmHA8As80sOmn10inPCZOG+QhlYp6qb0mg+dgSd17z1pXOsln4JJ09DELsc+5awHi3JyuM1vG3mkZkxNGxXiVtr8wj0fz65Fmeo+JddfxQeZaPB2cDKH76kna5eWQAcDs3+9zCCKwZ7z1M/3EU9JhzwAZ0=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R121e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033045133197;MF=joseph.qi@linux.alibaba.com;NM=1;PH=DS;RN=17;SR=0;TI=SMTPD_---0XEX6F-L_1794360662;
+Received: from 30.221.145.127(mailfrom:joseph.qi@linux.alibaba.com fp:SMTPD_---0XEX6F-L_1794360662 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Wed, 11 Nov 2026 09:31:03 +0800
+Message-ID: <f6cdf5d0-9468-48cb-9bfb-0cc41b46c7fe@linux.alibaba.com>
+Date: Wed, 11 Nov 2026 09:31:01 +0800
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -62,91 +52,57 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-Subject: RE:(2) [PATCH 2/2] xfs: skip the fsync flush when a later flush has
- completed
-Reply-To: daejun7.park@samsung.com
-Sender: Daejun Park <daejun7.park@samsung.com>
-From: Daejun Park <daejun7.park@samsung.com>
-To: Brian Foster <bfoster@redhat.com>
-CC: Carlos Maiolino <cem@kernel.org>, "linux-xfs@vger.kernel.org"
-	<linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Dave Chinner
-	<david@fromorbit.com>, "Darrick J. Wong" <djwong@kernel.org>, Amir Goldstein
-	<amir73il@gmail.com>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>, Daejun Park <daejun7.park@samsung.com>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-In-Reply-To: <avIGmcLZPKIDlf06@bfoster>
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <20261111010540epcms2p1ac660f3ce4c6c2ed55836c8b1615a4d6@epcms2p1>
-Date: Wed, 11 Nov 2026 10:05:40 +0900
-X-CMS-MailID: 20261111010540epcms2p1ac660f3ce4c6c2ed55836c8b1615a4d6
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 19/34] ocfs2: keep the current mount options on remount
+To: Christian Brauner <brauner@kernel.org>
+Cc: Al Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.com>,
+ ecryptfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+ jfs-discussion@lists.sourceforge.net, linux-nilfs@vger.kernel.org,
+ exfat@lists.linux.dev, linux-mm@kvack.org, ntfs@lists.linux.dev,
+ ocfs2-devel@lists.linux.dev, linux-btrfs@vger.kernel.org,
+ gfs2@lists.linux.dev, linux-efi@vger.kernel.org,
+ linux-mtd@lists.infradead.org, linux-xfs@vger.kernel.org,
+ linux-fsdevel@vger.kernel.org
+References: <20261029-work-fs-sb_rdonly-v2-0-2f44f64f0b66@kernel.org>
+ <20261029-work-fs-sb_rdonly-v2-19-2f44f64f0b66@kernel.org>
+ <0a8576a4-e397-4a49-ab0e-8f0f32bf2642@linux.alibaba.com>
+ <20261110-zerfallen-meiden-wacholderbeere-a90ac157e063@brauner>
+From: Joseph Qi <joseph.qi@linux.alibaba.com>
+In-Reply-To: <20261110-zerfallen-meiden-wacholderbeere-a90ac157e063@brauner>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-cpgsPolicy: CPGSC10-223,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20261109174511epcas2p22eb1ad7fec0b96837feb110984f57fa7
-References: <avIGmcLZPKIDlf06@bfoster>
-	<20261105-xfs-fsync-flush-seq-v1-0-299bdf5e28c3@samsung.com>
-	<20261105-xfs-fsync-flush-seq-v1-2-299bdf5e28c3@samsung.com>
-	<CGME20261109174511epcas2p22eb1ad7fec0b96837feb110984f57fa7@epcms2p1>
 
-On Mon, Nov 09, 2026 at 12:44:57PM -0500, Brian Foster wrote:
-> > 16 fio jobs of 4k append + fsync, QEMU guest on a 990 PRO without
-> > power loss protection (virtio-blk, cache=none): 809 -> 4185 fsyncs/s,
-> > mean fsync latency 19.8 -> 3.8 ms.
->
-> Can you include this in the commit log so we have a record of the perf
-> impact?
 
-Thanks, will do in v2. I measured both kernels again on the current
-for-next, so the numbers differ from the ones above, and added a single
-job line.
 
-[...]
-> I think it would be helpful if the comment here and perhaps above
-> xfs_buftarg_flush_seq() referred to the submit/completion ordering logic
-> being applied. Maybe even rename seq -> submit_seq as well to make it
-> more clear. For example, something like:
->
-> "Return true if a flush has been submitted and completed since
-> @submit_seq was sampled. If so, this guarantees writes completed before
-> @submit_seq are flushed to disk."
+On 11/11/26 5:52 AM, Christian Brauner wrote:
+> On Fri, Oct 30, 2026 at 10:58:52AM +0800, Joseph Qi wrote:
+>> ocfs2_reconfigure() decides the transition from fc->sb_flags alone without
+>> sb_flags_mask test, unlike reconfigure_super(). And fspick() passes
+>> fs_context_for_reconfigure(target.dentry, 0, 0). So on a read-only mount:
+> 
+>> So it seems we should test sb_flags_mask as well?
+> 
+> No, that's a generic bug. I fixed that in reconfigure_super() with
+> "super: keep the read-only state if a reconfiguration doesn't change it".
+> That is in vfs-7.5.super (cf. [1]). This series depends on that work.
+> 
+> If SB_RDONLY isn't in sb_flags_mask it fills in the current read-only
+> state. So ocfs2_reconfigure() sees SB_RDONLY and stays read-only. ocfs2
+> is one of the 23 filesystems listed there that only look at
+> fc->sb_flags.
+> 
 
-Agreed. v2 will rename the argument of xfs_buftarg_flushed_since() to
-submit_seq and reword its comment along those lines. The comment above
-xfs_buftarg_flush_seq() will say that it samples the submit counter, and
-that a flush numbered above the sample was submitted after the sample.
+Now it looks fine.
+Reviewed-by: Joseph Qi <joseph.qi@linux.alibaba.com>
 
-[...]
-> Ok, so I think I follow the logic. We write the file, sample the submit
-> sequence (after write completes), then can optimize away our own flush
-> if we can confirm that a flush submitted after write completion has
-> already completed. Right?
+>> The same falls out of a legacy remount whose flags omit MS_RDONLY.
+> 
+> No, do_remount() always passes MS_RMT_MASK which includes MS_RDONLY. A
+> remount without MS_RDONLY asks for read-write.
+> 
+> Thanks for the review!
+> 
+> [1]: https://lore.kernel.org/r/20261011-work-super-fixes-core-v1-11-c727176c5b53@kernel.org
 
-Yes, that is the logic.
 
-> That kind of makes me wonder whether we could do something like "flush
-> or wait on any flush submitted after this seq," but maybe that's
-> something for another day. ;)
-
-I'd like to leave waiting for an in-flight flush to a follow-up.
-
-[...]
-> > -	 * If the log force was a no-op, we may still need to flush the
-> > -	 * file data target cache here. This can happen for fdatasync/O_DSYNC
-> > -	 * when no metadata needed to be committed.
->
-> Did we intend to remove the comment on why we flush in the first place?
-
-No, that was not intended. Thanks for catching it. The paragraph was
-deleted while I was cleaning up the comment changes. v2 keeps it and
-adds the new condition after it.
