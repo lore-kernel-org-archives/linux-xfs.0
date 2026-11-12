@@ -1,44 +1,44 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794445356;
-	b=vFydqqbkl20b7MrMpt3hIO5nhZeKx5Jf2/RHPo3PJoaFOs8P7kBLXk0bHJCZXFWjOX9l
-	 TSzbNsOivTPtPKRy25Fj/uRMUae+0XXSITi6DbFnSD6Zz6Hf7BGTmlAMBxMk0d3BsxGM1
-	 xy0aNuwAwT4+7Qi5GgYkI3zfrBey7mhS4wgbO+huozIYr1Rx52D16izovBwBppsuTjp4Q
-	 Y9Y8ZXUk7TegNXpWepFt1zUUaE/3RNF4NLFH8NMQ6Ds1nfFw0QNJtD6+zFT0VxnWegmC8
-	 qer7srUL0mkkQdIH/j5YwI39UU94gjHHr3Y2TUu7vOIH3AnIQs3a9n+4D7zLPwkMsYQ==
+	t=1794445357;
+	b=kKvxJhBZKIlL7AOg7L+ritprxdvkN2ONCyuEwHR3LU0EIqwODJ/bGcnYW/1Yin5Jiz+b
+	 v8UF5mpyNKWy36oxhEVI1j69cq8X7zReXuHZyMBsAE5PGCkDkfa7NbALBfNp75r7RedvM
+	 EzNhI/yS2m60uPYD1Ti5Vmpf3fPJ/HcKqaboAz319JfX3oGIFvYTKkO6iteHKvUC/49YG
+	 IOyJ5RKnzM/VXxtVjTUUBudJiEdOHfid5cIfAJU8Jq1mk7l2b0NnnXjUpmzZZHcm1ir2J
+	 de8NM9Ek8eyOZWVuuVrQhpDl9AlVaAd2xrQyRaVzuDtA58XoWAL3S7wO6LZqL+KyPYQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794445356;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794445357;
 	h=Received:DKIM-Signature:From:To:Subject:Date:Message-ID:In-Reply-To:
 	 References:MIME-Version:Content-Type:Content-Transfer-Encoding;
-	bh=wdcOD6NooPR8ufc7d1pGrtab6fBn8Smwobz1ebtqowg=;
-	b=iwkHmYW2PGMBa2C1j/19IZ0xQIuSwCbhEc+d7kMmlEAkrbeQr/LV2eOTfPkqivuhhcgG
-	 AbrkFBc1eFUqM87pVp7ezB5FaejSIn+5hSRSWB1IbyX0R8ZWUj34RqjKQaxsQnRp0gsMC
-	 /Bs+sk8OiPlCT/IG60exJGpxykYMfPuxRu3Z0a20LN0vX1wavakauDKKjGxTkSHVH+ymK
-	 O1/zc7a28YtdrSneFuVnHpLYEj51Rjt4ajKospnOZc8T5M3YQKK5eUsokIu5pl80k+CMC
-	 KTNgFd+Zh2fuLgvtd+T8pFnOT6HZxNR/WPA4BvjEE/VYVQ1KLbk8PRgj+r3IY3iehZw==
+	bh=WqO0pJMJF+rEU4fJC/7faLegk+yw1GUf8GH4Qsj2pJI=;
+	b=zk0HXyCiouhsLGo3d2JK8a6+hfMEVWY4mBoe3VVdXRoyyoOg56sEpFpBFrxKHwdR+vDd
+	 BE3LAZC7YuITAkAnJVCtFb9G1g/TVefb/VNScWUD3bXFriL/pmw+6Xw+in/UmSd/apcgE
+	 MIbKoopJ/vK6ZSfIWc46AYBwydgVQYCqdiwBOghdGQiJrxmuee9TDBaabkDlBXqekoxQs
+	 YchSLhasWX4mZUsogXwbYU647JAzvJPHxSxAy0vUyzOzOa94TKhIHlWgFyidifOWC62qA
+	 zNSFQ/sIsl7FJAQSaSRGBCQY4JP/9TJ1KrCUtmap+NLAFVd/ip7XJvjaedyuoFuM31A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cd+Dl2XJ;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NfI2XS7c;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1453E606A8A6;
-	Thu, 12 Nov 2026 01:02:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 804D5606A8A9;
+	Thu, 12 Nov 2026 01:02:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cd+Dl2XJ
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 492C81F00A05;
-	Thu, 12 Nov 2026 01:02:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NfI2XS7c
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EFB101F00A06;
+	Thu, 12 Nov 2026 01:02:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794445355;
-	bh=wdcOD6NooPR8ufc7d1pGrtab6fBn8Smwobz1ebtqowg=;
+	s=k20260515; t=1794445357;
+	bh=WqO0pJMJF+rEU4fJC/7faLegk+yw1GUf8GH4Qsj2pJI=;
 	h=From:To:Subject:Date:In-Reply-To:References;
-	b=cd+Dl2XJUohrDIoYioTI4+/j9bMP2uS/uE4rEgvzzh6i7LE9UAoFK+Qp/vcxWL8ik
-	 Xv0c73ixtmSG33x8yC78yWjsv7osjpBkcprFyoflIpS4Ot2t7rsU5uIOeBAcTh8TmP
-	 7T2Y/cirjOFZUZCYJF4T3BefsT6N1GGHun3R0FIUGrBjardAtGA/2wYIfScoyMc6t4
-	 sLVaDk4NZSFhdGnd0ow5W1Dttam/PbJ/Av+j4JzxMyBH1s/NkBlEGR+rAgOMybou7d
-	 NQnalpjenmGel5XDaYux7M8fiPBEWCGbna5l3bZPLYco2J46E7h69ReL3/oo2lmw+u
-	 Gl+hlBbANRgFA==
+	b=NfI2XS7cSVtF8RxK7x0ecTNzmpxulm37OkfoZza9TWkhE6cijwwEQQa2OyS6RIwn6
+	 hgEeEdV8MoxW+V/ydfPEKFvLtt06tXtoXE7866l+iO1luAhCSlh5t/lJOui3JvJceb
+	 WKp930YqErlUdMCUbcXFnMs5d3N0jvhUfQXOULJsmpiCZXnIPcApOMkQ/D6zP+JTwa
+	 P2cEWR6nUMKE+h/NAW0Jb2ZUql6cBjnPhEVtQAjohzg4VUdun586n6SyJgNOLj3Rws
+	 W5Ws2ihm7/+tbr1NyhMNL6ncpKt7p3o79pmxrbm51E+qkO67Jcp82qbXP/cUeYPPnZ
+	 ywU+PimxThg3g==
 From: Chris Mason <mason@kernel.org>
 To: mason@kernel.org,
 	tytso@mit.edu,
@@ -53,9 +53,9 @@ To: mason@kernel.org,
 	linux-ext4@vger.kernel.org,
 	tz2294@columbia.edu,
 	brauner@kernel.org
-Subject: [PATCH v8 02/15] xfs: flush the shifted range before changing the file
-Date: Wed, 11 Nov 2026 20:02:31 -0500
-Message-ID: <20261112010229.51029-3-mason@kernel.org>
+Subject: [PATCH v8 03/15] xfs: don't change the block map under a dirty folio
+Date: Wed, 11 Nov 2026 20:02:32 -0500
+Message-ID: <20261112010229.51029-4-mason@kernel.org>
 In-Reply-To: <20261112010229.51029-1-mason@kernel.org>
 References: <20261112010229.51029-1-mason@kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -70,18 +70,32 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-If writeback of the range to be shifted fails, collapse range on XFS can
-fail with its hole already punched, and insert range with the file
-already grown.
+With CONFIG_TRANSPARENT_HUGEPAGE=y, writeback on XFS can write in place
+to a shared block and corrupt the other file that shares it.
 
-Both calls change the file first: collapse range punches its hole, and
-insert range grows i_size. Only then does xfs_prepare_shift() flush the
-range from the offset to EOF, and that flush fails if the writeback
-fails.
+xfs_map_blocks() writes in place unless the COW fork has an extent for
+the block. write() and write faults reserve one before they dirty a
+folio over a shared block, so xfs_flush_unmap_range() writes back and
+truncates the range before a clone changes the block map. But the holder
+of a GUP write pin takes no filesystem lock, and the truncate keeps a
+large dirty folio that straddles the range:
 
-The fix used here is to flush and invalidate that range before the file
-is changed.
+    clone                         pin holder         writeback
+    =====                         ==========         =========
+    writes the range back
+                                  dirties the folio
+    truncate keeps the folio
+    maps a shared block under it
+                                  dirties it again
+                                                     finds no COW extent
+                                                     writes in place
+                                                     /* shared block */
 
+The fix used here is to invalidate the range instead of truncating it,
+and to fail the call with -EINVAL if a dirty folio is left, before the
+block map changes.
+
+Fixes: 6795801366da ("xfs: Support large folios")
 Signed-off-by: Chris Mason <mason@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
@@ -93,60 +107,51 @@ Notes:
     v6->v7:
     - No change.
 
- fs/xfs/xfs_file.c | 25 +++++++++++++++++++++++--
- 1 file changed, 23 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_bmap_util.c | 17 +++++++++++++++--
+ fs/xfs/xfs_reflink.c   |  2 +-
+ 2 files changed, 16 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 396aca8c66a9..be1f775128d1 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1201,6 +1201,22 @@ xfs_falloc_setsize(
- 			&iattr);
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 537c6b29417c..4673d5174645 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -863,8 +863,21 @@ xfs_flush_unmap_range(
+ 	error = filemap_write_and_wait_range(inode->i_mapping, start, end);
+ 	if (error)
+ 		return error;
+-	truncate_pagecache_range(inode, start, end);
+-	return 0;
++
++	/*
++	 * The callers go on to change the block map, so no folio may stay over
++	 * the range.  The holder of a GUP pin can mark a folio dirty again
++	 * after the flush, with no lock of ours.  A truncate drops such a folio
++	 * if it lies inside the range.  If it is a large folio that straddles
++	 * the range, the truncate cannot split it, so it zeroes a part of the
++	 * folio, keeps it, and reports nothing.  The invalidation removes whole
++	 * folios, changes no data, and fails on a dirty folio.
++	 */
++	error = invalidate_inode_pages2_range(inode->i_mapping,
++			start >> PAGE_SHIFT, end >> PAGE_SHIFT);
++	if (error == -EBUSY)
++		error = -EINVAL;
++	return error;
  }
  
-+/*
-+ * Collapse and insert range change the file in several steps, and each step
-+ * writes back and empties the part of the page cache that it needs.  That can
-+ * fail.  Do it here for everything that is going to move, before the first
-+ * step, so that a failure leaves the file as it was.  xfs_prepare_shift()
-+ * starts one allocation unit before the offset, so do the same.
-+ */
-+static int
-+xfs_falloc_flush_shift_range(
-+	struct xfs_inode	*ip,
-+	loff_t			offset)
-+{
-+	offset -= min_t(loff_t, offset, xfs_inode_alloc_unitsize(ip));
-+	return xfs_flush_unmap_range(ip, offset, XFS_ISIZE(ip) - offset);
-+}
-+
- static int
- xfs_falloc_collapse_range(
- 	struct file		*file,
-@@ -1222,6 +1238,10 @@ xfs_falloc_collapse_range(
- 	if (offset + len >= i_size_read(inode))
- 		return -EINVAL;
- 
-+	error = xfs_falloc_flush_shift_range(XFS_I(inode), offset);
-+	if (error)
-+		return error;
-+
- 	error = xfs_collapse_file_space(XFS_I(inode), offset, len, ac);
- 	if (error)
- 		return error;
-@@ -1263,9 +1283,10 @@ xfs_falloc_insert_range(
- 	 * fork. This shifts back out beyond EOF, but creates an expectedly
- 	 * written post-eof block. The insert is going to flush, unmap and
- 	 * cancel prealloc across this whole range, so flush EOF now before we
--	 * bump i_size to provide consistent behavior.
-+	 * bump i_size to provide consistent behavior.  Flush and unmap the rest
-+	 * of the range as well, so that a failure to do so leaves i_size alone.
- 	 */
--	error = filemap_write_and_wait_range(inode->i_mapping, isize, isize);
-+	error = xfs_falloc_flush_shift_range(XFS_I(inode), offset);
- 	if (error)
- 		return error;
- 
+ int
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 104542b10d9e..ff89516154bd 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -1663,7 +1663,7 @@ xfs_reflink_zero_posteof(
+ /*
+  * Prepare two files for range cloning.  Upon a successful return both inodes
+  * will have the iolock and mmaplock held, the page cache of the out file will
+- * be truncated, and any leases on the out file will have been broken.  This
++ * be invalidated, and any leases on the out file will have been broken.  This
+  * function borrows heavily from xfs_file_aio_write_checks.
+  *
+  * The VFS allows partial EOF blocks to "match" for dedupe even though it hasn't
 -- 
 2.55.0
 
