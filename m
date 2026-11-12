@@ -1,44 +1,44 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794445354;
-	b=ik+OI4WACG9Vc4kWSCvDBDfRG21F4dFVMutRuRdee/toHJMwMJ3oucj1PNXusMq1bF3F
-	 hS0AIxxiGNPpua/pCT64hl/2EZnWovOt6FFxAwfSefNL5LrKf9GAoGFVfD840k/kop+aj
-	 sVauVOZvV2i1+EQ0mB61ed7zP3ZzrptzYvByLqoYMlbFTBN5EOYsRaodWMCgXTKCpUDnq
-	 FcqmCvq9i3P53i5kvfx6PKGi3V0dCZ6Xg89+MHwZBwiFtlUyH66UqqI+ex2MhS6Pc8v+F
-	 /rm7OW2pAIrWvxRoiQXS///G1EwYi6wwyNTHCRIRVffyZCUN6hAtZn87z8k0IF8xy3g==
+	t=1794445352;
+	b=ASUTQQua4IfjRHrJLbq6DUJuOwVJIkyDTt01MaMeKkJP1fKImqeRnaRtEFZgauDh9/FK
+	 7ixxWrF+iv36vVf2s2rYJQvApK/hiNnBauFAE3twjhvX2QhwQx4FOqm3xc3AjZHe2nuDf
+	 jYj/KYw1HGz0zF3cv+zYvrs7URrSPpABFwxvLqrAwJYTk4kfkc8Ao5diWT+3Scl9IsvDM
+	 ufqcAB5rifjULwKl2ilEmg026tdivEZhAP7bykLEvX1l4suC05Voe7tV0sblrQPUVOFLB
+	 ZW1i5w2xgGj7Lfn9hBBkGZ9w/mwIu73qGXmc6EUL6czLJKlGSUUcKFxN8cyyg1ImN/A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794445354;
-	h=Received:DKIM-Signature:From:To:Subject:Date:Message-ID:In-Reply-To:
-	 References:MIME-Version:Content-Type:Content-Transfer-Encoding;
-	bh=XQpLAovqM9mY9un73tRxcWVStioX9SQYj5iP9YI+sVw=;
-	b=fMCVzQsmSc6k9zeOdahmKcwrzDTjnO9478TwHssFqOelo06WoueqE6R5+FXeVOlASSbx
-	 VtV/tvfUS72kvLDHc5RdrrJ9mN4ZQdyypqT+BvFEYCk63IUKpuieV5lQBhgHeVIoHz91d
-	 1jd7/6zoHQ3WZv2BR7k0k2PMuS7/uMoZk2qmsJ0W5ObnZd5gGI2Lbns0Nw0EiCmHhUA86
-	 fiQLuQ56PbnZryxnCrpuJOFR9D5a8DraSj9ijG/eOrFJhE7KCjBUwIo3cTJ+IUq1QltJO
-	 8OrMimr5HE+7a8YoVerEvmG4XkrUEdeiLgRcbDwML4z+kv8w1ga9k2Y/RT+6W+tjKPQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794445352;
+	h=Received:DKIM-Signature:From:To:Subject:Date:Message-ID:MIME-Version:
+	 Content-Type:Content-Transfer-Encoding;
+	bh=UJ6pBTxZI5zl/SA/eySRsyQjQecxO78gpkfJo+Szb8g=;
+	b=wujaFxhMVdEL81kMT5uK4IuF5MsRzWqjRNCiH2/IuGqSd+4RTV1YHVa31Ncgk2Uc25v/
+	 wjCXy+YXorfLFgxJQfg0JFpSAXQ3kmT8DYcUWrgKtfW9Ns3GZrTzuCGNfItJG4EzDIiiC
+	 V+/VK9BLFl8j1DZj61UJ61rVEgdC+it0Tl2zmg4rPw4tpmJKnpObdqtsyQP8b4bR6LR0J
+	 WR0IxTB3fjCmJKFw300XGTx5Hw3vLKmz3Uo6rX9jhSjgLtrb8sghoqqDnwUewygi+JVQW
+	 EBto/Ijq8fXI3DuI4iN5SlIyc8E37o47F5qbK89kGCqtps05/93T0EXEwavi6cumWoQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="SmULT/c0";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AFQvf56g;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24D6560A260C;
-	Thu, 12 Nov 2026 01:02:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SmULT/c0
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9620B1F00A05;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A77EC606A32A;
 	Thu, 12 Nov 2026 01:02:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AFQvf56g
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E13491F00A07;
+	Thu, 12 Nov 2026 01:02:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794445354;
-	bh=XQpLAovqM9mY9un73tRxcWVStioX9SQYj5iP9YI+sVw=;
-	h=From:To:Subject:Date:In-Reply-To:References;
-	b=SmULT/c07Q6wqcyLbVwSFaamJcTK7eo1aIUwI6FVxUdfw33rh7WFd4WwHMsDC2UAa
-	 W8B8iKipHaqsrXrOJGnUQk7dYKYK08JdUW/RUdkrKFwU4XHi/MYMUHM50K2P3oQuVm
-	 xszT0vipfKx/puXW/WLHNiLsQ/2b87mJgI9fsdknU4JZXIPohwEUXilGvyHiOpJx+I
-	 Ti0AZxt2A8ntbXsD60VQBKPGKa7Up2i7G/z1k5BfzuYLUidEi9HdtLGoNZIHD5tDfQ
-	 FlFOkuxCaWX3/cvDvi5L6zNgdJ7YuCFT/FgpLNZ9k9WXIMuOD6888tMlMKIn541fO0
-	 vJDbki45/SYRg==
+	s=k20260515; t=1794445352;
+	bh=UJ6pBTxZI5zl/SA/eySRsyQjQecxO78gpkfJo+Szb8g=;
+	h=From:To:Subject:Date;
+	b=AFQvf56g3eIjArlJVOsynAYId/FJfXW06wkO3vrXUr8fNKxURuMlM0SSFVNc2vi/s
+	 H+tV7ZD0qWvvTRYghHBFtZeuB6wWknEHWem1VBSZFxvsY3Ep1eZ3aFepUQCy/+lFo+
+	 XbfzjdCohn1A3o2+vHnLw6NSz1RStz4XLGto3BkfIB9fuTDuRJcma7a1h58tolCMZC
+	 EW8taYMOhAXYg17ynEsLGpdYnry+WaJMWYUTNI++6sX1jrNmmct5evaLGujWBWSg0N
+	 AmNTFuVS9e8zSGxwL2gmex+NqngG4j0tL1Lv2c67S3XxEefTKBfbSCEpncC8CnoC57
+	 ufhtxzUbVauDg==
 From: Chris Mason <mason@kernel.org>
 To: mason@kernel.org,
 	tytso@mit.edu,
@@ -53,11 +53,9 @@ To: mason@kernel.org,
 	linux-ext4@vger.kernel.org,
 	tz2294@columbia.edu,
 	brauner@kernel.org
-Subject: [PATCH v8 01/15] xfs: don't skip the flush before shifting extents
-Date: Wed, 11 Nov 2026 20:02:30 -0500
-Message-ID: <20261112010229.51029-2-mason@kernel.org>
-In-Reply-To: <20261112010229.51029-1-mason@kernel.org>
-References: <20261112010229.51029-1-mason@kernel.org>
+Subject: [PATCH v8 00/15] reflink and atomic write bugs
+Date: Wed, 11 Nov 2026 20:02:29 -0500
+Message-ID: <20261112010229.51029-1-mason@kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -70,50 +68,82 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-On an XFS file larger than 4 EiB, collapse range and insert range can
-drop dirty data without writing it back, and then fail with
-EFSCORRUPTED.
+[ the send command got interrupted apologies for the two dups ]
 
-xfs_prepare_shift() flushes the page cache from its offset to EOF, but
-passes i_size as the length. Above 4 EiB the end of that range can
-overflow and turn negative. filemap_write_and_wait_range() then writes
-nothing, but truncate_pagecache_range() takes the end as unsigned and
-drops every folio from the start of the range onward.
+This series did a few rounds privately, but looks ready for the list
+now.  Carlos has accepted patches 1-4, but I've kept them here so the
+whole series can still be tested.
 
-A delalloc extent under a dropped folio stays in the data fork, and the
-shift returns -EFSCORRUPTED for it.
+Except for Christoph's patch, these were all found and fixed
+by an LLM.
 
-The fix used here is to pass i_size - offset as the length.
+The meat of the series is fixing reflink corner cases that incorrectly
+let you write into the source of a reflink.  LLMs also tripped over a
+few ways to use atomic writes to expose stale blocks on the drive, and a
+few races with realtime flag and extent size hint manipulations.
 
-Fixes: 7f9f71be84bc ("xfs: extent shifting doesn't fully invalidate page cache")
-Fixes: feeb9b269523 ("filemap: skip write and wait if end offset precedes start")
-Signed-off-by: Chris Mason <mason@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
+v7->v8:
 
-Notes:
-    v7->v8:
-    - No change.
-    
-    v6->v7:
-    - No change.
+Christoph pointed out that only page faults can cope with the -EAGAIN
+from "xfs: restart faults racing with realtime flag changes".  pNFS is
+the one other caller that can really get there, so now faults get
+-EAGAIN and everyone else gets -EINVAL.
 
- fs/xfs/xfs_bmap_util.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Sashiko had two complaints about the same patch.  The stale reservation
+is fixed by the two "resample" patches.  Those are the rest of the 3
+additional patches I promised in v7, I just managed to leave them out of
+the posting.
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 865aec3ae5ab..537c6b29417c 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -980,7 +980,7 @@ xfs_prepare_shift(
- 	 * Writeback and invalidate cache for the remainder of the file as we're
- 	 * about to shift down every extent from offset to EOF.
- 	 */
--	error = xfs_flush_unmap_range(ip, offset, XFS_ISIZE(ip));
-+	error = xfs_flush_unmap_range(ip, offset, XFS_ISIZE(ip) - offset);
- 	if (error)
- 		return error;
- 
--- 
-2.55.0
+The second complaint turned out to be on disk corruption for realtime
+filesystems with extents bigger than one block, with nothing returning
+an error.  That's the new "xfs: test for an extsize hint again under the
+ILOCK".
+
+While checking what a DAX fault does with the -EAGAIN, we found that DAX
+and zoned inodes don't work together at all.  With a zoned filesystem on
+pmem and dax=always, the first store into a mapped file oopses on
+7.4-rc2, and so does ftruncate().  "xfs: don't enable DAX on zoned
+inodes" turns DAX off for zoned inodes.
+
+Added Christoph's review to "xfs: test for always COW after the dio
+write checks".
+
+v6->v7:
+
+Sashiko noticed a few pre-existing corners that I had ignored, so we
+have 3 additional patches dealing with races between FS_IOC_FSSETXATTR
+and decisions about file writes.
+
+"xfs: restart faults racing with realtime flag changes" changed enough
+that I dropped Christoph's review.
+
+Chris Mason (14):
+  xfs: don't skip the flush before shifting extents
+  xfs: flush the shifted range before changing the file
+  xfs: don't change the block map under a dirty folio
+  iomap: don't punch delalloc under a dirty EOF block
+  fs: validate atomic writes after O_APPEND and limits
+  xfs: recheck direct write alignment after write checks
+  xfs: test for reflink after the dio write checks
+  xfs: test for always COW after the dio write checks
+  xfs: refuse fallocate racing with realtime flag changes
+  xfs: restart faults racing with realtime flag changes
+  xfs: test for an extsize hint again under the ILOCK
+  xfs: resample the extsize hint after taking the ILOCK
+  xfs: resample the COW extsize hint after cycling ILOCK
+  xfs: don't enable DAX on zoned inodes
+
+Christoph Hellwig (1):
+  xfs: refuse writes to files racing with realtime inode flag changes
+
+ fs/ext4/file.c         |   4 -
+ fs/iomap/buffered-io.c |  34 ++++++++-
+ fs/read_write.c        |  13 ++++
+ fs/xfs/xfs_bmap_util.c |  19 ++++-
+ fs/xfs/xfs_file.c      | 167 ++++++++++++++++++++++++++++++++---------
+ fs/xfs/xfs_ioctl.c     |   8 +-
+ fs/xfs/xfs_iomap.c     |  73 ++++++++++++++++--
+ fs/xfs/xfs_iops.c      |   4 +
+ fs/xfs/xfs_reflink.c   |  16 +++-
+ 9 files changed, 282 insertions(+), 56 deletions(-)
 
