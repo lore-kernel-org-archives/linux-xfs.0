@@ -1,44 +1,44 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794519980;
-	b=1OhBns8X12JMo0M5Z+6h7cIjWyCY2yeQDYTPV9+lC+ktsGOEsaBC/votT6MFBZApt3T4
-	 Uxv0ry9Is93omheP+oJZDn7xOrZ6ecqeuR5umBkRsefqyOvApbnHfS3zSBmLRSnCVr+Uc
-	 0Wwi47/opnpgDK4LGRMbdFubwqD2uMUDlZAJLI9iAMFaGHOlFzECNLqw36o+GyPJOkrUU
-	 hCfAv/6iS9cWZWl0v4KUli24M1dOJnMnPFmLY+TurWDmZu6hsZLuKO+Ncw/sRigE+YxU/
-	 4WpcFPgTa4sfYg7LP/wfv+4OG2Ye66CyYCN/pJEqYjwX/UtV21B2HIN/GU0swQuJATQ==
+	t=1794519981;
+	b=ZRPmYzu+np2iFXaMNdGGHLgxO7Qj/9lUFIJlS5eF+RxeOrf5fURcnVHLA+JswTu7T5UZ
+	 WXJAlo6cIXTOCix7jrEP3KfUjpmlL0UAkvCC7bwarZ3ntJdAyAgHefo942E3+d6lNt0hR
+	 DxwvUpSLfO2U3YdxrTGb7PUsufvjnISFRQx+8P6cNHd0W2rZZayp6k2mg3NJ16XJ+meY3
+	 IwpjecXDaZxlXRj6Hb6DVBxvTZCkjFLZ8vdCs9Fzf+c9PLqqJjNQ6xrT+pUqvB6dmUTaM
+	 9YNh2efZ8tBjrXkCK/3xKB1PtX1An6JKR2lnmNlibRNxCXNIk47rNox2+3KGS0k3XNQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794519980;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794519981;
 	h=Received:DKIM-Signature:From:To:Subject:Date:Message-ID:In-Reply-To:
 	 References:MIME-Version:Content-Type:Content-Transfer-Encoding;
-	bh=zQecoqK1U3fT6xcN1EIuZ3RBsnV4n9MBeaFYMmpatRY=;
-	b=dcC+UflTNQJhM5T1Bds0gWfEkB0sQLVslBd18375ORu6ng8Eexq16Rovu/+FyHOEog/C
-	 LOEfhDArUmV3T9oU3KOkLOeKPSVs+i2vXmJ66mVOBHWq5XlOWZ1yWc+pZIqOWDDU+FUUg
-	 eDt41CcMZuzTg1Oiq4meQBL40FR0BEs1QaT3umC2819LkP3WmyUEmnze5xKrPoLJrCeZz
-	 DzFDS0fFFF0oFVZTbPANiR3IVlygLhLhsIYMb73b/eJ2ODSmAPuKWi7ES0LDpwa3yEkID
-	 N5O9kvFSY/c9rfX7kdRzpSGnhhC7ahZAp0RiDX2R6+mHY5zV+kpmdo9FWvfPLQxXhJg==
+	bh=dhSFR2ubadcyXaAKett/4h+Z0PAEFKYZEE0yEgeDYgE=;
+	b=BnQ5nocC7zgzF6daqARLepL88WTZNZ8XeXZ5T6cjB3zw/KHylkQV07EinyZeKeBhQ6sO
+	 gKxnQq+TYmjCQsXaLbmUfZLNYNhZsqCFSCXuQWjMO81m4JV717m3TBvmDrpMq2SRMvrt9
+	 x7k4MHMZjiEomzx2tj+AYmhtUtqeb2b070Ws+j09Mv4AGVb3tPKCIE/rtByTxpOVWb1iS
+	 9dNcqRSp4RClCCUnakoLQ9gTe89TlQFIZTN7PEWJvFhVZXamwEp9bvTso/IchD2+mVfsl
+	 o4HQgiW4kwh/yDwpTNuXz3g+cZdXNmgDu8AWs1idySU2JVC0pgeP+Glj6ZvCn2dN4Yg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="iVJlcYr/";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lNcaDmma;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1461B606A880;
-	Thu, 12 Nov 2026 21:46:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE209606A880;
+	Thu, 12 Nov 2026 21:46:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iVJlcYr/
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7CDC71F000C7;
-	Thu, 12 Nov 2026 21:46:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lNcaDmma
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B97A1F000C5;
+	Thu, 12 Nov 2026 21:46:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794519979;
-	bh=zQecoqK1U3fT6xcN1EIuZ3RBsnV4n9MBeaFYMmpatRY=;
+	s=k20260515; t=1794519981;
+	bh=dhSFR2ubadcyXaAKett/4h+Z0PAEFKYZEE0yEgeDYgE=;
 	h=From:To:Subject:Date:In-Reply-To:References;
-	b=iVJlcYr/bYTgn1xL0+UYk0XO5WaXjs/1JhP6HxJ7wwhD/eVRfPXgeNF+VkK9gvslF
-	 zGkbDW8/U46JusdhtxDLVa3q/wwvvCI9dRl/94t7kVoSRhykvtCa7iVsZS6RtVELwO
-	 LCB0/8KvqQ+OW60KpeYkRv6HDocUxEPrWpl3OCxZkVQHt8D3gOqu2j3oyQD7ycyGIn
-	 UPL0RFscgf21TCUIVz8KQScYK62Mk5neID8qqLzUMyeoyyJY4SwQjC7EtzfasGwaqN
-	 srggR+237SEeT5BHpAYgIyFwBqwDbA8ZEG0bCgbi2+lvvbOsmhC3bWkmo6boI4BG+m
-	 ZLSOPGKsFIkhA==
+	b=lNcaDmmajZ+lz1UoySq0J+MPCUW5U2mZloPcWxVju1g27w7T/lJA9klBfgEUgBIe/
+	 EV/D93SJ7Erw0v5orywlUlkCzmqMyD0XizsgoJFpm9gsnJfCgzu7GqhwkFyfAl7RvM
+	 dNfbQvB5P1dbX8u+j2jBIjlu9M/mYQZH4NF+UQqITJLZkFQWErGGPXKCJ0t/lNoV4+
+	 KUEAwjN1BKlSysBL8cmFJDq/NHSDzwKpNUnp1Bh8PwS3GH4U2aJFobmBZAR3kJ/OQU
+	 1N8BkM2EEMaP6bZTNt4ou3GSMwYrIxKUAGH+agbv8v/cDuWPahQuXYxSRiht7+WJR0
+	 L2TKyrJ4Ff18g==
 From: Chris Mason <mason@kernel.org>
 To: mason@kernel.org,
 	tytso@mit.edu,
@@ -53,9 +53,9 @@ To: mason@kernel.org,
 	linux-ext4@vger.kernel.org,
 	tz2294@columbia.edu,
 	brauner@kernel.org
-Subject: [PATCH v9 07/14] xfs: test for reflink after the dio write checks
-Date: Thu, 12 Nov 2026 16:46:11 -0500
-Message-ID: <20261112214604.67875-8-mason@kernel.org>
+Subject: [PATCH v9 08/14] xfs: refuse writes to files racing with realtime inode flag changes
+Date: Thu, 12 Nov 2026 16:46:12 -0500
+Message-ID: <20261112214604.67875-9-mason@kernel.org>
 In-Reply-To: <20261112214604.67875-1-mason@kernel.org>
 References: <20261112214604.67875-1-mason@kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -70,70 +70,60 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-A direct write that is not block aligned can expose stale disk contents
-on XFS if it races with the first clone of the file.
+From: Christoph Hellwig <hch@lst.de>
 
-xfs_file_dio_write_unaligned() falls back to buffered I/O if the file is
-reflinked, and tests for that right after it takes the iolock. But
-xfs_file_write_checks() runs after the test and can drop the iolock, for
-example if S_NOSEC is not set. A clone can run in that gap:
+Zoned writes need to reserve space before taking the iolock to avoid
+deadlocks with garbage collection.  But this means that the realtime inode
+flag which indicates if the file will be placed on the zoned realtime
+device or the main data device can be flipped after taking the reservation
+and before taking the write, or after deciding to go down the regular
+write path, both of which can't work.
 
-    direct write                        clone
-    ============                        =====
-    takes the iolock shared
-    sees that the file is not reflinked
-    drops the iolock
-                                        shares the blocks
-    takes the iolock exclusive
-    writes a part of a new COW block
-    maps the whole block into the file
-      /* the rest was never written */
+Re-sample the realtime flag just before the actual write, and refuse the
+write if the flag changed.  Do not retry the write using the now correct
+path, as switching the flag under a write is not a normal use case, and
+trying to flip between the zoned and regular path is an inherent life
+lock as it could be switched around again the next time this check is
+performed.
 
-The fix used here is to move the test after xfs_file_write_checks().
-
-Fixes: ed1128c2d0c8 ("xfs: reduce exclusive locking on unaligned dio")
+Fixes: 058dd70c65ab ("xfs: implement buffered writes to zoned RT devices")
+Fixes: 2e2383405824 ("xfs: implement direct writes to zoned RT devices")
+Reported-by: Chris Mason <mason@kernel.org>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Chris Mason <mason@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 ---
 
 Notes:
     v6->v9: no change
 
- fs/xfs/xfs_file.c | 12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
+ fs/xfs/xfs_file.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
 diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 8ee88910b487..d888470d092a 100644
+index d888470d092a..515ddafc6673 100644
 --- a/fs/xfs/xfs_file.c
 +++ b/fs/xfs/xfs_file.c
-@@ -877,9 +877,15 @@ xfs_file_dio_write_unaligned(
- 	if (ret)
- 		return ret;
- 
-+	ret = xfs_file_write_checks(iocb, from, &iolock, NULL);
-+	if (ret)
-+		goto out_unlock;
-+
- 	/*
- 	 * We can't properly handle unaligned direct I/O to reflink files yet,
--	 * as we can't unshare a partial block.
-+	 * as we can't unshare a partial block.  xfs_file_write_checks() can
-+	 * drop the iolock and take it again, and the file can be reflinked in
-+	 * between, so test for that only now.
- 	 */
- 	if (xfs_is_cow_inode(ip)) {
- 		trace_xfs_reflink_bounce_dio_write(iocb, from);
-@@ -887,10 +893,6 @@ xfs_file_dio_write_unaligned(
- 		goto out_unlock;
+@@ -441,6 +441,19 @@ xfs_file_write_checks(
+ 		goto restart;
  	}
  
--	ret = xfs_file_write_checks(iocb, from, &iolock, NULL);
--	if (ret)
--		goto out_unlock;
--
++	/*
++	 * Now that we are in the same IOLOCK critical section as the actual
++	 * write, check that the inode still has the realtime flag in the state
++	 * that the caller expects.  If not, some deliberately cleared it while
++	 * I/O is ongoing, so bail out.
++	 */
++	if (xfs_is_zoned_inode(XFS_I(inode)) != !!ac) {
++		xfs_warn_ratelimited(XFS_I(inode)->i_mount,
++			"RT flag modifying during write for inode 0x%llx.",
++			inode->i_ino);
++		return -EINVAL;
++	}
++
  	/*
- 	 * If we are doing exclusive unaligned I/O, this must be the only I/O
- 	 * in-flight.  Otherwise we risk data corruption due to unwritten extent
+ 	 * If the offset is beyond the size of the file, we need to zero all
+ 	 * blocks that fall between the existing EOF and the start of this
 -- 
 2.55.0
 
