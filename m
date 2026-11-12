@@ -1,44 +1,44 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794519983;
-	b=5PZT0aLLugKN0+Fa0pttSyf65fYb+CTiBx4p6lCXictUZGeTGXIvAXkFIhJQ3qxsR6fc
-	 b5yGiksDJWqKlvOmPP4/vNiz0I29f6zKunOZS6rhoEimh83983kNmXgb3cLeBkWzBWMdR
-	 aRflAYVZcDDyjhst+gYQT4iYqntaByzJZgS4FE3osCLm+KmcEla2Bs2aWlbI3N2RfM3h/
-	 m7Y8bYkjk310NA79NWOy1hCtkcWS1yXoNh7KFL9UH3xUt7EHWeO3DfCI8s6fansuKKWfn
-	 aSx3z09KmeZUI2SG7Ers9eNPPxHJpeYjG1/xaD5JbxJohf30N0171aoa73cD2WddESA==
+	t=1794519987;
+	b=WFPQILHX15DBXdUapAYIMHtIkxeWruduEtRoSUXwXX1XHzNVwvUVxV9XC/BIw51hkSpl
+	 PQFobo+bbzVJycQSk9qA9BTw1eWFXZguRLAlah55iKWm2526muon/pKrOcsaWvA9zssGp
+	 ogowb6RnsKDPYuCIIB+o+Yba9QQXjbHieoIobjm4NOTZa6rBelkiP1UDIkcn/hYz0jGAe
+	 hs1Jtt8J4Zdk92VTqhOs98z7pxk3ewp7/Yl8nTOpcmzSo9XvoENUzTmHZlQ+gTat0YXC5
+	 MajmCftKRmxAwqkMe/6EVnCqukfyFQvQbooZ5uv2L7OamQFVKQETSvUf2BZ6aFqwSjQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794519983;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794519987;
 	h=Received:DKIM-Signature:From:To:Subject:Date:Message-ID:In-Reply-To:
 	 References:MIME-Version:Content-Type:Content-Transfer-Encoding;
-	bh=ROx6rmO1IG5GBm1H27epjcQGPzICGItHt0prG07/jUs=;
-	b=t5KG4jSCVhOGptxNtSYm863jqjMm48IIfoEZB8RpMty4UZpLUcOpm8rFQZ9Dfeu2npBv
-	 LiwS7/3EW/RhcAiWrdNEyNUq9BavM5K0OtoIeuQQozvaZIVRkSXMzhbOiQ+XMjnfudSBW
-	 +4bxdoGYn7QF+7JBQUBI1FuMoXlBQVZ33QS2L+qpyRkSJQi4h7EaxOoiMH7SpuorqsetB
-	 Tl1OLXbkkJ3JIuzZ5VJolWEaeTQfXWpAwIgexwt7Lvp3UT0uV+4OHvCKzoq4JHsEBiJHi
-	 BuFHBAeew5en3vpBn+ybyPKRHOOrxWmxkPfI/sU674ah04sZ5ZV7LsJSjVpzwhQWCxg==
+	bh=FwSZ6EZwDbjC6g0eYcq1DfB8oiXV4dgLC1WiPq1Ih5s=;
+	b=vpH/C+Mw2V4Aq78kUqrQAIqw4VGtMZxchURTJn6+7I89h7x79BGYvAFddaKqbtOs66wj
+	 v+JiIa+4XUTmZ6pdGm3m4IZkfEDLQpjaJWPIxAbGGtZGZfVGb/ZQckETu8d7Wh235wG84
+	 hQLWKLG5tCYeVqJfKsjUTJdZAQ8FX35QQpGPRAI6Xs3U4Hlaubtc2NocjK2DRx+9o438W
+	 MP++bp2w3AmXgfidIC4cm6Cp46mwnA5IIexgVEqJ0M/h3gb3lBQ6FK9SxPXTn82hYuQAa
+	 e01pqCZG2xndouQy5ZpZiZfcL5KYsoJlxuVPccFNnB/vk7GVYlaqCUPupxoecliVdfA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jZfg50iV;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XNSgWH97;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 942DC606A32D;
-	Thu, 12 Nov 2026 21:46:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56BD1606A88F;
+	Thu, 12 Nov 2026 21:46:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jZfg50iV
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F3C021F000C5;
-	Thu, 12 Nov 2026 21:46:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XNSgWH97
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7BC551F000D1;
+	Thu, 12 Nov 2026 21:46:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794519983;
-	bh=ROx6rmO1IG5GBm1H27epjcQGPzICGItHt0prG07/jUs=;
+	s=k20260515; t=1794519986;
+	bh=FwSZ6EZwDbjC6g0eYcq1DfB8oiXV4dgLC1WiPq1Ih5s=;
 	h=From:To:Subject:Date:In-Reply-To:References;
-	b=jZfg50iVr97kdkMZuuVE9a180YJfORrjKZ1ssJOAi4V+q/XjnOCZq2oKDtB/QiZ7u
-	 6iG1JmI+921DF45rV0/bs69PAHPp1zT1grFvZQMEZND4I5UT6AkPrjp0rviDgQKSoq
-	 fmrVCjTPBitrWEVKMj8u/gKq79X9/lvXDFoyRhKJEAicH927Epz/vGbIlVPNqjVcpO
-	 fqfWRlSuFiErsCtL/LMV0zzhVd4SSk9iePsm9ICrJylV89LzclrJVa0cA0JZvXHlTh
-	 xe/PtlOnTy/D4ojeO5uXOTPFQWww/D3pJ3vszDjUGtZskxOPbI3HO/lMPELmVNqDTN
-	 gK75kqRWDPVAA==
+	b=XNSgWH97i2S7lg0p1jJ1yoBnSlxDofVGjxTQisr8j6iQ3LtJebLrsMnZFLPi/pwjU
+	 4zycl6f+Q4PPxFdRBWOMT6Wfogz+EYhQF992jeIhWYJeN8kGgz6DLJbddejqJkwFB6
+	 KkHmelTxpVDn020STuGNU/xaej5+fIZCv9t6BqcGtPgXgHRzY5OYLwRxbjPnDrTMHy
+	 iQQQntu02hKYcNAiU8hhl7f06WhZLtaDUWXYOCi+r4WbROjxcuBo3IhVRnyyLZpGBd
+	 bTs3V6pdJLV437GeSvYkVBR78thqKBVSs08I9QpVXwrEh7oeTuyw3ZPIqCqHUnKbYj
+	 ONO9ubkBxmNiw==
 From: Chris Mason <mason@kernel.org>
 To: mason@kernel.org,
 	tytso@mit.edu,
@@ -53,9 +53,9 @@ To: mason@kernel.org,
 	linux-ext4@vger.kernel.org,
 	tz2294@columbia.edu,
 	brauner@kernel.org
-Subject: [PATCH v9 09/14] xfs: test for always COW after the dio write checks
-Date: Thu, 12 Nov 2026 16:46:13 -0500
-Message-ID: <20261112214604.67875-10-mason@kernel.org>
+Subject: [PATCH v9 11/14] xfs: take the MMAPLOCK in xfs_fileattr_set()
+Date: Thu, 12 Nov 2026 16:46:15 -0500
+Message-ID: <20261112214604.67875-12-mason@kernel.org>
 In-Reply-To: <20261112214604.67875-1-mason@kernel.org>
 References: <20261112214604.67875-1-mason@kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -70,86 +70,109 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-A direct write to a zoned file from vectors that are not block aligned
-can silently corrupt the file's data, if the realtime flag is cleared
-and set again while the write starts.
+A store through a shared mapping can corrupt a realtime file system on
+disk, or shut a file system down, if FS_IOC_FSSETXATTR changes the
+realtime flag or an extent size hint of the file during the write fault.
 
-Every bio of an always COW write has to cover whole blocks, so
-xfs_file_dio_write_aligned() passes IOMAP_DIO_FSBLOCK_ALIGNED for such
-an inode. But it tests for always COW before it takes the IOLOCK, and
-the realtime flag of a file with no blocks can change until then:
+A write fault reads the flag and the hints more than once: to choose
+delayed allocation, to size the block reservation, and again in the
+allocator. All of these have to see the same values. System calls that
+write do the same, but they hold the IOLOCK, which keeps the ioctl out.
+A fault only holds the MMAPLOCK, which the ioctl does not take:
 
-    xfs_file_dio_write_zoned()            FS_IOC_FSSETXATTR
-    ==========================            =================
-    xfs_zoned_write_space_reserve()
-                                          clears the realtime flag
-    xfs_file_dio_write_aligned()
-      xfs_is_always_cow_inode() is false
-                                          sets the realtime flag
-      xfs_ilock_iocb_for_write()
-      xfs_file_write_checks()
-      iomap_dio_rw()
-        splits a bio inside a block
+    write fault                         FS_IOC_FSSETXATTR
+    ===========                         =================
+    takes the MMAPLOCK
+    xfs_iomap_write_direct()
+      reserves blocks for the old hint
+                                        takes the ILOCK
+                                        raises the hint
+                                        drops the ILOCK
+      takes the ILOCK
+      xfs_bmapi_write()
+        allocates for the new hint
+        /* more than was reserved */
 
-The fix used here is to test for always COW once the IOLOCK is held.
+The fix used here is to make the ioctl take the MMAPLOCK of a regular
+file as well.
 
-Before commit 8caec6c9fef7 ("xfs: support sub-block aligned vectors in
-always COW mode"), xfs_file_dio_write() made the same test with no lock
-held, to send such vectors down the unaligned path. So v6.15 to v6.18
-have the same race, and need a different version of this fix.
-
-Fixes: 2e2383405824 ("xfs: implement direct writes to zoned RT devices")
 Signed-off-by: Chris Mason <mason@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
 
 Notes:
-    v8->v9: no change
-    
-    v7->v8:
-    - Added the Reviewed-by of Christoph Hellwig.
-    
-    v6->v7:
+    v8->v9:
     - New patch.
 
- fs/xfs/xfs_file.c | 17 +++++++++--------
- 1 file changed, 9 insertions(+), 8 deletions(-)
+ fs/xfs/xfs_inode.c |  3 ++-
+ fs/xfs/xfs_ioctl.c | 17 +++++++++++++++--
+ 2 files changed, 17 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 515ddafc6673..5fa8b07a779d 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -708,14 +708,6 @@ xfs_file_dio_write_aligned(
- 	unsigned int		dio_flags = 0;
- 	ssize_t			ret;
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index cb61305e4b80..0584ad11f92b 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -134,7 +134,8 @@ xfs_lock_flags_assert(
+  * take both the i_rwsem and the invalidate_lock. These locks should *only* be
+  * both taken in places where we need to invalidate the page cache in a race
+  * free manner (e.g. truncate, hole punch and other extent manipulation
+- * functions).
++ * functions), or where we change inode attributes that both kinds of IO rely
++ * on (xfs_fileattr_set).
+  */
+ void
+ xfs_ilock(
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index f81b6e52ac40..af13ad6784b7 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -757,6 +757,7 @@ xfs_fileattr_set(
+ 	struct xfs_trans	*tp;
+ 	struct xfs_dquot	*pdqp = NULL;
+ 	struct xfs_dquot	*olddquot = NULL;
++	bool			isreg = S_ISREG(VFS_I(ip)->i_mode);
+ 	int			error;
  
--	/*
--	 * For always COW inodes, each bio must be aligned to the file system
--	 * block size and not just the device sector size because we need to
--	 * allocate a block-aligned amount of space for each write.
--	 */
--	if (xfs_is_always_cow_inode(ip))
--		dio_flags |= IOMAP_DIO_FSBLOCK_ALIGNED;
--
- 	ret = xfs_ilock_iocb_for_write(iocb, &iolock);
- 	if (ret)
- 		return ret;
-@@ -743,6 +735,15 @@ xfs_file_dio_write_aligned(
- 		xfs_ilock_demote(ip, XFS_IOLOCK_EXCL);
- 		iolock = XFS_IOLOCK_SHARED;
- 	}
-+
+ 	trace_xfs_ioctl_setattr(ip);
+@@ -804,10 +805,18 @@ xfs_fileattr_set(
+ 
+ 	xfs_ioctl_setattr_prepare_dax(ip, fa);
+ 
 +	/*
-+	 * For always COW inodes, each bio must be aligned to the file system
-+	 * block size and not just the device sector size because we need to
-+	 * allocate a block-aligned amount of space for each write.  The
-+	 * realtime flag can change until we hold the IOLOCK, so test only now.
++	 * A write fault only holds the MMAPLOCK, and it looks at the realtime
++	 * flag and at the extent size hints more than once.  Only regular files
++	 * have write faults.
 +	 */
-+	if (xfs_is_always_cow_inode(ip))
-+		dio_flags |= IOMAP_DIO_FSBLOCK_ALIGNED;
- 	if (mapping_stable_writes(iocb->ki_filp->f_mapping))
- 		dio_flags |= IOMAP_DIO_BOUNCE;
- 	trace_xfs_file_direct_write(iocb, from);
++	if (isreg)
++		xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
++
+ 	tp = xfs_ioctl_setattr_get_trans(ip, pdqp);
+ 	if (IS_ERR(tp)) {
+ 		error = PTR_ERR(tp);
+-		goto error_free_dquots;
++		goto error_unlock;
+ 	}
+ 
+ 	error = xfs_ioctl_setattr_check_extsize(ip, fa);
+@@ -864,6 +873,8 @@ xfs_fileattr_set(
+ 
+ skip_xattr:
+ 	error = xfs_trans_commit(tp);
++	if (isreg)
++		xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
+ 
+ 	/*
+ 	 * Release any dquot(s) the inode had kept before chown.
+@@ -875,7 +886,9 @@ xfs_fileattr_set(
+ 
+ error_trans_cancel:
+ 	xfs_trans_cancel(tp);
+-error_free_dquots:
++error_unlock:
++	if (isreg)
++		xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
+ 	xfs_qm_dqrele(pdqp);
+ 	return error;
+ }
 -- 
 2.55.0
 
