@@ -1,63 +1,46 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=213.95.11.211
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794489665;
-	b=r4/y09Y2V67qI+fvpyDaSffrCmwLQz6YeLUoxdKM+gh10n2qf3YFMEWHYe6vwJvlPrRY
-	 wrT8Xu2LvKxuA0rW5gv4o9d8PXLur9WsEv4ovA+AGfBABY9U7qK+1S6vh3jlALtef3cjK
-	 DC5FgoKxHKOFynv9LwsOovbgcu3GPVMhr8Hvz3+criX48oshWcH+QWvE+h1V+ESwlACro
-	 eIPK+j32lU9cXcHVoGvF6Q20tS0b7qAGzrAF4TEWAaaJuUEl1NAOAvh3aA1lj5x9RKOsI
-	 9ui4Y+1KSnMyOGJhAsouTXF7cudH7oIr7orpzefYuMU5/fPcJTdYVXXMvJiOgrQhKLw==
+	t=1794490450;
+	b=2n6Ssjo6jBep5OTRtHjGnAoNaAAfzopdEupB2prE2O9RNGrPXawIt4i5RyxOuOmKAvOJ
+	 sa1AcItfrxIQ1sQngeW7zSPK2z9KhspJCZ0HA2Q9AXWItckNOCZ82Q1jdnZbNy3PFjauD
+	 /P1r/V627sYHUCtN2KCwlkyFao633RmFii6GAopmX9vZLK7anBVeLAdmreSh20t0qaF6+
+	 dx/LY6dbz1t/8gvrR9n68RptpKVpiJUw2UHpbNFtWXWNpqxe1+kLFte8IX170vi57chvx
+	 5JDMvEkkDwuQ31p314fvp6KBtBn04jgYND5Bus2EplaACmpn2GY8UNIRyjCNGW25MmA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794489665;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=2TVb8qDZ4KT/CTu1G3B1wlWvG0RXp8XP3qjnuNYzjOg=;
-	b=u700fACwqvVEU56bLfh8WQT77aVbb9Za0mlXenYTObhpIcmBSILWk40+I6+1h1NmC+RF
-	 huz/poklpHrmwoDwgjybIIh0AmKpa0U41NrHSPjR8+IclCi5MfsGF61glld/l+Eowd+Ki
-	 NqG1oKHSm1vx2uyvO6EJ/DOtfSZ46Y10owoeHL3UDF4vTu/MzdlaIRy+UIEMb00dQuWcQ
-	 q4pMD/AEwkxECTtg575SYulwVJEOw2SllwI0Sy4Wzr54DvYBG+SRV88Wi+4gPevbxGbzR
-	 ppOKyqwrSFE/arHyDwL3EpG1mFzRmJmrxXYkQG2GLtEBORkFaP1qaC15uaT2hEzc9rg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794490450;
+	h=DMARC-Filter:Received:Date:From:To:Cc:Subject:Message-ID:References:
+	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To:User-Agent;
+	bh=CBKekYMv1yODu1Hhni9YQMRnZ2R0/Puj1Zsf+AAfSZg=;
+	b=VQgJnhCTr2F2LhT6ehMEv5U+J1MuYC1ecpV0jV1muphfo099TvqO0EVnbYAK6XJpFMld
+	 +ju+GCyGjvmicoibSwBdOwoUwKxRaqGgQURL5I9jwsyk4WFwj//TWInHqFytN1LrxA9PK
+	 M3CW2XKHJN1QZMV9A0obh3/qaeq46i59qlcIHC6YeMvyxyt2frfaJ88Cgmg2OKvTVLeuE
+	 Xl3aJCIRQm2+Hv2RNz0PU4QjTXxx17dSq6hJRxt525NqRbqdTJBf8j0+Bido9J9Ner4rZ
+	 Pp0aKfEYNWnlteGP6Obox+2YmtV3hi45Iggs+aI+eSuz86v55Ax1SCJi5RsbCct+qSw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=MmvF84R0;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=lst.de;
+	spf=pass smtp.mailfrom=lst.de;
+	arc=none smtp.remote-ip=213.95.11.211
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08BC2606A330;
-	Thu, 12 Nov 2026 13:21:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=MmvF84R0
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0D581F00A05;
-	Thu, 12 Nov 2026 13:21:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794489664;
-	bh=2TVb8qDZ4KT/CTu1G3B1wlWvG0RXp8XP3qjnuNYzjOg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=MmvF84R0gtLndw24gzSFT3ub5yJmtlvjtQewwlBkOj3aPXQTksQ4drEzrc46OvL/z
-	 wo9GRa3UsS1F1xzmaEOQVjwk+tWBf2XT/7mCHBb8HSswe2CPaa8KtfXoHjL9Y0GbyO
-	 1efF5XqnKzznSG9DEGEO7OMYE2iaaSETCJ8OFamxUwQlBUJWVpDt1tjvUs4hkM1QL2
-	 IWFg+ih4NX2foIqjeWjsniqTNNlHAD8H5+koYNsWz+ArokDl49tjta/Dn88XnGLkGJ
-	 3S6OKico8mJafJNwprIMppBt+ZwOOYREUSFE9sMr0CwvZQk9NrRSiDsIISSMrUCwF/
-	 4a2UthzwC3fuQ==
-Date: Thu, 12 Nov 2026 14:20:58 +0100
-From: Christian Brauner <brauner@kernel.org>
-To: Jan Kara <jack@suse.cz>
-Cc: linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.com>, 
-	Al Viro <viro@zeniv.linux.org.uk>, ecryptfs@vger.kernel.org, linux-ext4@vger.kernel.org, 
-	jfs-discussion@lists.sourceforge.net, linux-nilfs@vger.kernel.org, exfat@lists.linux.dev, 
-	linux-mm@kvack.org, ntfs@lists.linux.dev, ocfs2-devel@lists.linux.dev, 
-	linux-btrfs@vger.kernel.org, gfs2@lists.linux.dev, linux-efi@vger.kernel.org, 
-	linux-mtd@lists.infradead.org, linux-xfs@vger.kernel.org, 
-	Karl Mehltretter <kmehltretter@gmail.com>, Dave Kleikamp <shaggy@kernel.org>
-Subject: Re: [PATCH v2 04/34] ext2: don't set SB_RDONLY after filesystem
- errors
-Message-ID: <20261112-besorgen-nobel-handschuhe-fb3373259b5f@brauner>
-References: <20261029-work-fs-sb_rdonly-v2-0-2f44f64f0b66@kernel.org>
- <20261029-work-fs-sb_rdonly-v2-4-2f44f64f0b66@kernel.org>
- <5qefa4mracb3x2z4vsdejmkyyfrhdcrixmmnooz4rzwcdfoejm@mqkvixj6afwp>
- <20261110-kargheit-impfen-pausieren-881763d28b19@brauner>
- <za33axmgzmuzsj3zmfeh43fkphtcsqtkhhrauwuvs7aiftelgp@dzl6z322st5f>
- <20261112-wohncontainer-saurier-wonnen-91f30c3b3ae2@brauner>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A74D606A31C;
+	Thu, 12 Nov 2026 13:34:09 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3A74D606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 7C4E06732A; Thu, 12 Nov 2026 14:34:03 +0100 (CET)
+Date: Thu, 12 Nov 2026 14:34:03 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Chris Mason <mason@kernel.org>
+Cc: tytso@mit.edu, cem@kernel.org, david@fromorbit.com, jack@suse.cz,
+	djwong@kernel.org, josef@toxicpanda.com, hch@lst.de,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-ext4@vger.kernel.org, tz2294@columbia.edu, brauner@kernel.org
+Subject: Re: [PATCH v8 11/15] xfs: restart faults racing with realtime flag
+ changes
+Message-ID: <20261112133403.GA22165@lst.de>
+References: <20261112010229.51029-1-mason@kernel.org> <20261112010229.51029-12-mason@kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -67,46 +50,167 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261112-wohncontainer-saurier-wonnen-91f30c3b3ae2@brauner>
+In-Reply-To: <20261112010229.51029-12-mason@kernel.org>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Thu, Nov 12, 2026 at 01:01:34PM +0100, Christian Brauner wrote:
-> Fwiw, this leaks the inode's anonymous tlocks. They're from TxLock which
-> is shared by all jfs mounts. txLock() also sets mp->lid and pinned the
-> metapages with metapage_nohomeok().
->
-> So the helper would have to tear all of that down like txAbort() does
-> and drop the pins. Doable, I guess not sure if this belongs into the
-> series.
+On Wed, Nov 11, 2026 at 08:02:40PM -0500, Chris Mason wrote:
+> On a zoned XFS, a store through a shared mapping can dereference a NULL
+> pointer, or corrupt the free block counter, if the realtime flag of the
+> file changes during the write fault.
+> 
+> xfs_write_fault() reserves zoned space only for a zoned inode, and tests
+> for that with no lock held. xfs_buffered_write_iomap_begin() tests again
+> before it takes the ILOCK. FS_IOC_FSSETXATTR can change the flag of a
+> file with no blocks between the two tests, since a fault never takes the
+> IOLOCK:
+> 
+>     write fault                           FS_IOC_FSSETXATTR
+>     ===========                           =================
+>     xfs_write_fault()
+>       sees that the inode is not zoned
+>                                           sets the realtime flag
+>     xfs_buffered_write_iomap_begin()
+>       sees that the inode is zoned
+>       /* ac is NULL */
+> 
+> If the flag is cleared instead, xfs_zoned_buffered_write_iomap_begin()
+> can be waiting for the ILOCK at that time. It then reserves blocks the
+> zoned way on a regular inode, and the free block counter ends up too
+> high.
+> 
+> The fix used here is to test again under the ILOCK, before blocks are
+> reserved or allocated, and to make the fault start over if the flag has
+> changed. Any other caller that gets there fails, as a write does.
+> 
+> Fixes: 058dd70c65ab ("xfs: implement buffered writes to zoned RT devices")
+> Signed-off-by: Chris Mason <mason@kernel.org>
+> ---
+> 
+> Notes:
+>     v7->v8:
+>     - Only a page fault gets -EAGAIN. Any other caller that gets to one of
+>       the tests fails with -EINVAL, as a write and an fallocate do. pNFS can
+>       get there: xfs_fs_map_blocks() tests the flag before it takes its
+>       locks (Christoph Hellwig).
+>     - The warning now says "during block mapping".
+>     - The helper reads the inode number with I_INO(), and its comment no
+>       longer says that the flag is stable once the inode has blocks.
+>     - Was 11/11.
+>     
+>     v6->v7:
+>     - xfs_direct_write_iomap_begin() tests the flag too, as soon as it holds
+>       the ILOCK. It could allocate blocks for a COW fork extent before it
+>       got to the test in xfs_iomap_write_direct().
+>     - The assert on the extent size hint in
+>       xfs_zoned_buffered_write_iomap_begin() moved below the test of the
+>       flag.
+>     - Dropped the Reviewed-by of Christoph Hellwig, since the patch changed.
+>     - Was 10/10.
+> 
+>  fs/xfs/xfs_iomap.c | 42 ++++++++++++++++++++++++++++++++++++++++--
+>  1 file changed, 40 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index c3465204b8d5..d36650450cbb 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -264,6 +264,25 @@ xfs_iomap_eof_align_last_fsb(
+>  	return end_fsb;
+>  }
+>  
+> +/*
+> + * A write fault picks the zoned or the regular path before it takes a lock, and
+> + * it never takes the IOLOCK.  The realtime flag cannot change under the ILOCK,
+> + * so look at it again there, before reserving or allocating blocks.  Only a
+> + * fault can start over, so refuse any other caller, as the write path does.
+> + */
+> +static int
+> +xfs_iomap_rtflag_changed(
+> +	struct xfs_inode	*ip,
+> +	unsigned int		flags)
+> +{
+> +	xfs_warn_ratelimited(ip->i_mount,
+> +		"RT flag modifying during block mapping for inode 0x%llx.",
+> +		I_INO(ip));
+> +	if (flags & IOMAP_FAULT)
+> +		return -EAGAIN;
+> +	return -EINVAL;
+> +}
+> +
+>  int
+>  xfs_iomap_write_direct(
+>  	struct xfs_inode	*ip,
+> @@ -334,6 +353,11 @@ xfs_iomap_write_direct(
+>  	if (error)
+>  		return error;
+>  
+> +	if (xfs_is_zoned_inode(ip)) {
+> +		error = xfs_iomap_rtflag_changed(ip, flags);
+> +		goto out_trans_cancel;
+> +	}
+> +
+>  	error = xfs_iext_count_extend(tp, ip, XFS_DATA_FORK, nr_exts);
+>  	if (error)
+>  		goto out_trans_cancel;
+> @@ -919,6 +943,11 @@ xfs_direct_write_iomap_begin(
+>  	if (error)
+>  		return error;
+>  
+> +	if (xfs_is_zoned_inode(ip)) {
+> +		error = xfs_iomap_rtflag_changed(ip, flags);
+> +		goto out_unlock;
+> +	}
+> +
+>  	/*
+>  	 * The reflink iflag could have changed since the earlier unlocked
+>  	 * check, check if it again and relock if needed.
+> @@ -1666,9 +1695,7 @@ xfs_zoned_buffered_write_iomap_begin(
+>  	struct xfs_iext_cursor	icur;
+>  	int			error = 0;
+>  
+> -	ASSERT(!xfs_get_extsz_hint(ip));
+>  	ASSERT(!(flags & IOMAP_UNSHARE));
+> -	ASSERT(ac);
+>  
+>  	if (xfs_is_shutdown(mp))
+>  		return -EIO;
+> @@ -1682,6 +1709,12 @@ xfs_zoned_buffered_write_iomap_begin(
+>  	if (error)
+>  		return error;
+>  
+> +	if (!xfs_is_zoned_inode(ip) || !ac) {
+> +		error = xfs_iomap_rtflag_changed(ip, flags);
+> +		goto out_unlock;
+> +	}
 
-So ok, I tried to do this in a vm. With jfs.nTxLock=256 three rounds of
-error + umount leaked 163 tlocks and the next writer on a fresh jfs hung
-in txBeginAnon().
+For actual writes this can't happens as we're under the IOLOCK (i_rwsem)
+taken in xfs_file_buffered_write here, and the only way to change
+the REALTIME flag is through vfs_fileattr_set which also takes
+i_rwsem in exclusive mode.  So this should probably assert that
+IOMAP_FAULT is set.
 
-I think txAbort() might be the wrong model. It only drops the pin when
-mp->lsn is set and doesn't free linelocks. So this would need a helper
-modelled on txUnlock().
+Given that the MMAPLOCK (invalidate_lock) nests inside the IOLOCK,
+it might makes sense to also take the MMAPLOCK exclusive in
+xfs_fileattr_set and just check for the rtflag check early in
+__xfs_write_fault instead of leaking this into iomap for buffered
+I/O.  This would also remove the need for the extra ac check.
 
-Fwiw, the BUG_ON() also triggers without this series. The error sets
-SB_RDONLY, sync_filesystem() bails at umount and nothing commits the
-anonymous tlocks. This series fixes that as a side effect because
-sync_filesystem() keeps running.
+> @@ -1865,6 +1898,11 @@ xfs_buffered_write_iomap_begin(
+>  	if (error)
+>  		return error;
+>  
+> +	if (xfs_is_zoned_inode(ip)) {
+> +		error = xfs_iomap_rtflag_changed(ip, flags);
+> +		goto out_unlock;
+> +	}
 
-> All the check
-> does is make syncfs() return without writing anything and make unmount
-> drop whatever the flusher hasn't gotten to yet. Which might be the goal
-> you're after?
+Same here.
 
-I tried that too on fat and ext2. With the check and an umount right
-after the error new files are gone on both. If the flusher ran first
-nothing is lost. That's exactly what happens without this series. If
-writeback is allowed to finish nothing is lost either way.
-
-Skipping these superblocks in the flusher is no better. ext4
-effectively does that in its emergency state (ext4_writepages() bails)
-and the stuck dirty pages throttle everyone else from testing. with 1.4G
-stuck on ext4 a dd to ext2 on another disk crawled at ~1MB/s until ext4
-was unmounted (cf. [1]).
-
-[1]: https://lore.kernel.org/r/ZEnb7KuOWmu5P+V9@ovpn-8-24.pek2.redhat.com
+>  	if (XFS_IS_CORRUPT(mp, !xfs_ifork_has_extents(&ip->i_df)) ||
+>  	    XFS_TEST_ERROR(mp, XFS_ERRTAG_BMAPIFORMAT)) {
+>  		xfs_bmap_mark_sick(ip, XFS_DATA_FORK);
+> -- 
+> 2.55.0
+---end quoted text---
