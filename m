@@ -1,44 +1,44 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794445373;
-	b=0YpQfFXXaK03eLB7PezyTN9l00W710Vuoo6HtsCbTtJwN6tbqkq6MOb/2GWuLmbafc5n
-	 Yn4W323zi2UiipHjO7OYMngddA+HfpPZQDB1vE8eBpXzGyVp8jEY+gvZjfSacbmNuxvY4
-	 raBf3eNwq7pvGnXn/bw08zBxDMhqL3/8d8GqIKRA1azom4eWIk7VDx43kvDvy/iEeODru
-	 YYgzft+o1pi/0e4UDlqB59j9ZiNgqgpaO3otrU4qIS630nEy05aTzEyM4450PScFX+wyb
-	 HqTXaSSMjFSARTGGZLjhVX2k4PU8m7vHUYIFKyC6onHrZc/U+/I+09Cu23PYMlXr8Sw==
+	t=1794445374;
+	b=uMtB/JjIXvRROapySShiquEHQBmoq6wJ0whOPG0/iAd8OFGyaKzlySc+zJqCnO4oehPP
+	 RlCa2t3dawxvtyUB8qCdMf74wCSbXqgyxhhQbxbseCV5MEyCzktu0+LZ+hTWRGEFwGTYv
+	 d7FmvjyPjhaYXryuybd5EgZxGnpOc6WTPYvdLIfnbWLe9D5RBOhlIMrJ91L6jPCd4SWMR
+	 mcR879y12AZx55RbHSYyytq33CTgkf5SlVJSaIxIgzC0qiLh23ibZZ3efOr5cPunQbIXI
+	 mrPofmF8Sh1P8ic5uIZMk0Wg6tudT8Wk5aK49weUdRGQTGL2L5gTS+FdYj0IBIaOMog==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794445373;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794445374;
 	h=Received:DKIM-Signature:From:To:Subject:Date:Message-ID:In-Reply-To:
 	 References:MIME-Version:Content-Type:Content-Transfer-Encoding;
-	bh=1NvT+krDmSD5Mne/wvXNG+j6Knb/tWR7T5atZL4jonI=;
-	b=WLr/smUGucKwFJPyY/5R4jt/6vlSISNyI6CZ6yj26bvYm/U/ASwiS2dZ+JPwJvzuWCya
-	 eWzTZ3OpvpE7nahSaAnZJU52NjwW6bEleXz/gQWqw5LLmGz1H08ApVnf6S1Pt9nTgpM7p
-	 eMTXfSa7Tw0AtRcHFqemLx38O5PRbdG4noNjZP4Iga4OU5vWpsL2fQNbIh4w90/eGARj2
-	 Hx+w7Xk5mZd6c4IyGjrSAhaXEvS9zb4ZlPsIoxFhTfujtgzQOxx+bFHoxwWd07p9Evv8e
-	 8T8gr4UW2auQlXCN1k5MngW84/AfwWYSLBsDeWB2QGpDg/mn5acHJl7FGsdzKAGaIVQ==
+	bh=3qbqmc6cdWPSncv1+TSlwXoNXgVr5nmRF5eCdfntADM=;
+	b=3jsU8dLXMvUUk6EP0Fb+UJZ1Ltti0eZkFFOHoeStFxEWYxeptWdATCbZIROzyQzIgIil
+	 IdyOpv3ePUWo6k2WNYunFHLXkKFgA6EBN8tGRejjzP/Wpii8IqRHNt/7oFvj3yy2TCvWw
+	 VOz4BshsyYzyVnOj731Auu8JgIRNUo2b/er5oG7bUXUoB6SepM6D/RTPudquS5C29UmG5
+	 SgaPuRv9bZTuIw2B67FdWKe+oBchfACWmFDQWu8ZE1Sv6HExifI2qfKvqSaMn2Gs9f0dK
+	 IcZBAkfzdbCw5eO3rHopF3i0B+aoWX2E+tJBrW3CpOp+22oMmm2C5y5qex5JedMcGyg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XTjwuBiJ;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fm5YPT71;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0040460A3809;
-	Thu, 12 Nov 2026 01:02:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 658C5606A887;
+	Thu, 12 Nov 2026 01:02:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XTjwuBiJ
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 386F91F00A08;
-	Thu, 12 Nov 2026 01:02:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fm5YPT71
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DD0F61F00A09;
+	Thu, 12 Nov 2026 01:02:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794445372;
-	bh=1NvT+krDmSD5Mne/wvXNG+j6Knb/tWR7T5atZL4jonI=;
+	s=k20260515; t=1794445374;
+	bh=3qbqmc6cdWPSncv1+TSlwXoNXgVr5nmRF5eCdfntADM=;
 	h=From:To:Subject:Date:In-Reply-To:References;
-	b=XTjwuBiJD13VLadsXebY88aOPrX57xZck3mBQKeOPMN7NkxG5LJPT6ZBBjwLz50/9
-	 Xham23hHJ+sO3In/ZdKLIV1syFX8dp+MnBwxNs8u+WwHrGmYbwup4rl5iRBjPL3hOs
-	 qjavYoKsrHEapoU4K79CX7KTbpd3Rd8lp6POyr2rI969egYBvr6k4Xd2h4rEskSOZJ
-	 fSu6XZMa9zbzKO5ehI9ciWyEVBw/dI4T3+2tJ2n0O17axdjCT41bU35pP5TpERL2Os
-	 CtePsPsuT9hyBzowhUC+ys0hlTHPw6d01yE6mnQQ55Z0var9vOjEds+7CqUdVSON0z
-	 Mm/LcCVGGkjKQ==
+	b=fm5YPT71WnLqt/itHD7ZE3K8qObFzCsSsK0dPbE2LYQO2qSKNjjByEG1PcVm4gCED
+	 SJOR+YZtyR0h4VC5TRmjuYg1VfgRcz/F3za3rrVkH4tQ96MS0JtOs73D75tsu6zWES
+	 my0GHT2J8Xiz2Lb/xasLbuRb8/I4enPUNQMsQmXlpmGvzt/7gz9XwPfLcFAEz0w7G3
+	 xV38t/H7URyf42LUzJ0X1dS0PHr0TVpuGrVWwmVlOa4f0lIMsHp0OSdkHWzwxwBCXu
+	 plkvRd0ZF+7/DqoTuX6IWeteFfF5JhKfzMCCkRR/AoCZY2s6JxsVN2U4eSi33+W3Ig
+	 xIayp8HdnyXsQ==
 From: Chris Mason <mason@kernel.org>
 To: mason@kernel.org,
 	tytso@mit.edu,
@@ -53,9 +53,9 @@ To: mason@kernel.org,
 	linux-ext4@vger.kernel.org,
 	tz2294@columbia.edu,
 	brauner@kernel.org
-Subject: [PATCH v8 12/15] xfs: test for an extsize hint again under the ILOCK
-Date: Wed, 11 Nov 2026 20:02:41 -0500
-Message-ID: <20261112010229.51029-13-mason@kernel.org>
+Subject: [PATCH v8 13/15] xfs: resample the extsize hint after taking the ILOCK
+Date: Wed, 11 Nov 2026 20:02:42 -0500
+Message-ID: <20261112010229.51029-14-mason@kernel.org>
 In-Reply-To: <20261112010229.51029-1-mason@kernel.org>
 References: <20261112010229.51029-1-mason@kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -70,26 +70,32 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-A store through a shared mapping can corrupt the data fork and the free
-block counter on disk, if the realtime flag of the file is set during
-the write fault and realtime extents are larger than one block.
+A write fault on a file with an extent size hint can overrun its block
+reservation and shut down the filesystem, if it races with a change of
+the hint or of the realtime flag.
 
-Such a realtime inode has an extent size hint, and cannot use delayed
-allocation. xfs_buffered_write_iomap_begin() tests for a hint before it
-takes the ILOCK. FS_IOC_FSSETXATTR can change the flag of a file with no
-blocks until then, since a fault never takes the IOLOCK:
+xfs_iomap_write_direct() sizes the reservation from the hint and the
+flag before xfs_trans_alloc_inode() takes the ILOCK, and the allocator
+reads both again under it. But a write fault only holds the MMAPLOCK,
+and FS_IOC_FSSETXATTR changes both on a file with no blocks without it:
 
-    write fault                           FS_IOC_FSSETXATTR
-    ===========                           =================
-    xfs_buffered_write_iomap_begin()
-      xfs_get_extsz_hint() is 0
-                                          sets the realtime flag
-      xfs_ilock_for_iomap()
-      xfs_bmapi_reserve_delalloc()
-        /* 1 block, 0 realtime extents */
+    write fault                         FS_IOC_FSSETXATTR
+    ===========                         =================
+    xfs_iomap_write_direct()
+      hint is 1 block
+      dblocks = 1 + bmbt blocks
+                                        xfs_ilock(ILOCK_EXCL)
+                                        hint = 4096 blocks
+                                        xfs_iunlock(ILOCK_EXCL)
+      xfs_trans_alloc_inode()
+      xfs_bmapi_write()
+        allocates 4096 blocks
+        xfs_trans_mod_sb()
+          t_blk_res_used > t_blk_res
 
-The fix used here is to test for a hint again once the ILOCK is held,
-and to allocate the blocks right away if the inode has got one.
+The fix used here is to compare both with the values that sized the
+reservation once the ILOCK is held, and to start over if either has
+changed.
 
 Signed-off-by: Chris Mason <mason@kernel.org>
 ---
@@ -98,30 +104,58 @@ Notes:
     v7->v8:
     - New patch.
 
- fs/xfs/xfs_iomap.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ fs/xfs/xfs_iomap.c | 21 ++++++++++++++++++---
+ 1 file changed, 18 insertions(+), 3 deletions(-)
 
 diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index d36650450cbb..b414e2cff346 100644
+index b414e2cff346..7fb61f56a414 100644
 --- a/fs/xfs/xfs_iomap.c
 +++ b/fs/xfs/xfs_iomap.c
-@@ -1903,6 +1903,16 @@ xfs_buffered_write_iomap_begin(
- 		goto out_unlock;
+@@ -295,9 +295,11 @@ xfs_iomap_write_direct(
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	struct xfs_trans	*tp;
+ 	xfs_filblks_t		resaligned;
++	xfs_extlen_t		extsz;
+ 	int			nimaps;
+ 	unsigned int		dblocks, rblocks;
+ 	bool			force = false;
++	bool			rt;
+ 	int			error;
+ 	int			bmapi_flags = XFS_BMAPI_PREALLOC;
+ 	int			nr_exts = XFS_IEXT_ADD_NOSPLIT_CNT;
+@@ -312,9 +314,11 @@ xfs_iomap_write_direct(
+ 	 */
+ 	count_fsb = min_t(xfs_filblks_t, count_fsb, XFS_MAX_BMBT_EXTLEN);
+ 
+-	resaligned = xfs_aligned_fsb_count(offset_fsb, count_fsb,
+-					   xfs_get_extsz_hint(ip));
+-	if (unlikely(XFS_IS_REALTIME_INODE(ip))) {
++retry:
++	extsz = xfs_get_extsz_hint(ip);
++	rt = XFS_IS_REALTIME_INODE(ip);
++	resaligned = xfs_aligned_fsb_count(offset_fsb, count_fsb, extsz);
++	if (unlikely(rt)) {
+ 		dblocks = XFS_DIOSTRAT_SPACE_RES(mp, 0);
+ 		rblocks = resaligned;
+ 	} else {
+@@ -358,6 +362,17 @@ xfs_iomap_write_direct(
+ 		goto out_trans_cancel;
  	}
  
 +	/*
-+	 * A write fault doesn't hold the IOLOCK, so the inode may have got an
-+	 * extent size hint since the test above.
++	 * A write fault doesn't hold the IOLOCK, so what sized the reservation
++	 * can change until we hold the ILOCK.
 +	 */
-+	if (xfs_get_extsz_hint(ip)) {
-+		xfs_iunlock(ip, lockmode);
-+		return xfs_direct_write_iomap_begin(inode, offset, count,
-+				flags, iomap, srcmap);
++	if (extsz != xfs_get_extsz_hint(ip) ||
++	    rt != XFS_IS_REALTIME_INODE(ip)) {
++		xfs_trans_cancel(tp);
++		xfs_iunlock(ip, XFS_ILOCK_EXCL);
++		goto retry;
 +	}
 +
- 	if (XFS_IS_CORRUPT(mp, !xfs_ifork_has_extents(&ip->i_df)) ||
- 	    XFS_TEST_ERROR(mp, XFS_ERRTAG_BMAPIFORMAT)) {
- 		xfs_bmap_mark_sick(ip, XFS_DATA_FORK);
+ 	error = xfs_iext_count_extend(tp, ip, XFS_DATA_FORK, nr_exts);
+ 	if (error)
+ 		goto out_trans_cancel;
 -- 
 2.55.0
 
