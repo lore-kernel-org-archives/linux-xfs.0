@@ -1,44 +1,44 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794519985;
-	b=wKkTVbrXOMzfe1uMWijBwFCdy3RUgOFg6KCAqTw16H8oRLTam4+h9KRrz3hnXcxkcDH+
-	 +T8MSaQBNzkSiQy/VM0n5sNzJh06zZTI3IO+5xQ0APlAWt5FehSAmJuDs2C+6aoPHsejZ
-	 eCWkk4ZEFYKQ7AhnXDoOXkQU51t8hSZnKaS1nGQHfGLbn6isF7N1w5YXMuIsumdqBXxMr
-	 89Pn3A4J+BrQP/nLiolHGE+deUJTpZQ+HDq81KTpM4DvWrxixJ5LnvFk5HV6NkF30S/5z
-	 KzoUKoVoPm+2vwKdPNZ5OR4qZzW1Ed61FcRsyocak9t1SJz3dxYeg4WfsQ4TcpIvcBg==
+	t=1794519991;
+	b=2XYZ8SuufCZIT3iJWJkDCApakN16DewMNaper4poYoHLzF2mXeifPuAST2+eFBgTYS58
+	 8LQdwgYyZEVTMEEPu/FrgTr/3DN1RYU5oks8S2guD6Mg6bxxUnyhopgN2igTR1uNmR46e
+	 aINrdqL3MvBJlzgJjNq/+7EdgvmIBtkRIrqTHua0KSeXjt1NEvD8ZKOsDneD5ZOh1swTp
+	 zD9YVHVECBCFJCAWtBD0mu/n1eIRFBP2XWUe3faKg+ZzsFRhk9HXsf30O3vwLrZ1qxwEt
+	 OzHuRjO0mrpdoZj9fA1rTHzwVToXl7GzStHJSuzD9C0Du+jr/tXjsDbBAPfASNJotVg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794519985;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794519991;
 	h=Received:DKIM-Signature:From:To:Subject:Date:Message-ID:In-Reply-To:
 	 References:MIME-Version:Content-Type:Content-Transfer-Encoding;
-	bh=1mHPLrOS3OArzUqJuavd9J77wJ97SanHQHyuHIlePfA=;
-	b=A94iDKHW/4iz4DGJVjvBDNSzo/E+lgJUKY/iq1YX40aqn4hfT0DOwFRNIp09aAmw2GuC
-	 5H4OCdr6sMwK1GnTNELl9NlmvkwA8WJdx+od/goaaoNgCRDZnDplp3aTd24at8drus0TH
-	 j0SQKAHeEvfXrM00G9649qL7EwoabK6o9T17+WzdMZ0dkcIhrLwnomnkwGBcxf6HrK0NO
-	 8zIaWsYdQWBv0CCwQuhoEKcUeqiFqGslOwMgvJSX8WEodDxEhGn8bLN/u3BDxKjrhbKaK
-	 ABn6btS4bFFZ3kd7J1Syon50H8+NyTA99Rep3xGpO0QnmPxuxzpQh1efyJUNfcih7KQ==
+	bh=9M7tjtD0z2+HWzcxTNlE58HbSH+XbPuIDRBiX2N9YqM=;
+	b=2w3rWKgHsMMX80qnoyFssRxE8FrMr79Bdv6oM0GeXKJg8b7Ohjd25pvetXZkqzJ8Ssl6
+	 NrxFxlYakxjx/zODJi7HCRVFRfcqoJvUoYM/NnDg/+aVdlLOFVHXxfS2wCBAMCr3NlgWy
+	 iAVJ6f7VKbHdVRBw0mfPFKf5vTbxGHSWG3eTL4gUn9MbMPVfmTh4LFmO1JUPJaLMlXe4U
+	 hgkJZ7RTwMpSKmQW7e7SE0aaztcaNnH/6le3unGZDNfhioYlu9Z37UhsNYy06tU4DCmzt
+	 nZS24s9/zICxg5l/k1pXWY0I4+wf1BBHuUkhC/FwO1oBINn8ML8fHiNl6w/w2lZigVQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=T2m4uqwe;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=LTqG09y7;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EAEF606A88A;
-	Thu, 12 Nov 2026 21:46:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED9A2606A897;
+	Thu, 12 Nov 2026 21:46:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=T2m4uqwe
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BA8011F000C5;
-	Thu, 12 Nov 2026 21:46:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=LTqG09y7
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 04B7B1F000C4;
+	Thu, 12 Nov 2026 21:46:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794519985;
-	bh=1mHPLrOS3OArzUqJuavd9J77wJ97SanHQHyuHIlePfA=;
+	s=k20260515; t=1794519990;
+	bh=9M7tjtD0z2+HWzcxTNlE58HbSH+XbPuIDRBiX2N9YqM=;
 	h=From:To:Subject:Date:In-Reply-To:References;
-	b=T2m4uqwemM7yRTOm6LyhhtbwM/72QDRcgksnmYRZ9b1Oqb2ErIHNBisZdxSpQWISj
-	 A2brGh+OSq/aUQUkY0dfg1mlb59YNKEg9RbvzMbhWL44eiyRP7g0x+Xc1L1nxZX9k6
-	 9My3+Jxyife1yNiVHX4weMTfcEN1XvbxpMG8HLNnfaDKgWytc2VuIjbRTuu98A+OJm
-	 gHpU8m8oHE+MuwzeyQ+fvjEaUS+KELHBAqa+sp5pdMLOqZiddpzAw/LhF2IcW13ueb
-	 QvXuH9UM4LucQeRMpNCeDoVwWzXGGqZRcrLl3x+TJYOL3ohWZeIbbRA3OmxjYoWB5H
-	 TB6P/15PRLR8Q==
+	b=LTqG09y7aowQ7R91qxe/b3QTf2b6nmYp0X00QFH1qJU13d0QPGcXh0WR/5tMJ2CkE
+	 5wblJFm/meeRMAPlH5OltQzdJibl3Xe9EilRT2nXeg16ezH4L23m1pJeGhysDBJ9xS
+	 UeATPXn47/dwPNSGNEh7u2QsMqqKxlYSrePONU8ahK/oBIPrhR7hjn4CcTjIjbTl8P
+	 KEaN9r72YK+N+ARMuGi0Tq7W5BBT3QcYYRF+GSk66PCpqJ+vs781Pf7fQzsnIK6/f/
+	 +OjOX7B4hE94ICt0mLqg5RLWguvEEK1CROI23yY/JPslbIPHfVgegWSNhXPkuKSdUf
+	 QvVCWBBSX+WiA==
 From: Chris Mason <mason@kernel.org>
 To: mason@kernel.org,
 	tytso@mit.edu,
@@ -53,9 +53,9 @@ To: mason@kernel.org,
 	linux-ext4@vger.kernel.org,
 	tz2294@columbia.edu,
 	brauner@kernel.org
-Subject: [PATCH v9 10/14] xfs: refuse fallocate racing with realtime flag changes
-Date: Thu, 12 Nov 2026 16:46:14 -0500
-Message-ID: <20261112214604.67875-11-mason@kernel.org>
+Subject: [PATCH v9 13/14] xfs: don't enable DAX on zoned inodes
+Date: Thu, 12 Nov 2026 16:46:17 -0500
+Message-ID: <20261112214604.67875-14-mason@kernel.org>
 In-Reply-To: <20261112214604.67875-1-mason@kernel.org>
 References: <20261112214604.67875-1-mason@kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -70,110 +70,83 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-On a zoned XFS, fallocate() can dereference a NULL pointer if the
-realtime flag of the file is set during the call.
+A store through a shared mapping can dereference a NULL pointer if the
+file is zoned and has S_DAX.
 
-xfs_file_fallocate() reserves zoned space only for a zoned inode, and
-tests for that before it takes the iolock. FS_IOC_FSSETXATTR can change
-the realtime flag of a file with no blocks in that gap.
-xfs_falloc_force_zero() then sees a zoned inode and reads the
-reservation, which is NULL:
+The zoned code does not support DAX, but XFS doesn't check for this:
+with dax=always or FS_XFLAG_DAX, an inode gets S_DAX if its device does
+DAX, and an internal zoned section on pmem does. The write fault then
+takes the zoned path:
 
-    fallocate(FALLOC_FL_ZERO_RANGE)     FS_IOC_FSSETXATTR
-    ===============================     =================
-                                        takes the iolock
-    sees that the inode is not zoned
-    waits for the iolock
-                                        sets the realtime flag
-                                        drops the iolock
-    xfs_falloc_force_zero()
-      sees that the inode is zoned
-      /* ac is NULL */
+    xfs_filemap_fault()
+      xfs_write_fault()
+        xfs_write_fault_zoned()
+          page_folio(vmf->page)     /* NULL in a DAX fault */
 
-The fix used here is to test again under the iolock, and to fail the
-call with -EINVAL if the answer has changed, as the write path does.
+ftruncate() crashes in a similar way, in xfs_reflink_end_cow().
 
-Fixes: 058dd70c65ab ("xfs: implement buffered writes to zoned RT devices")
+The fix used here is to never set S_DAX on a zoned inode, and to refuse
+to change the realtime flag of an S_DAX inode on a zoned file system.
+
+Zoned files now use the page cache with dax=always or FS_XFLAG_DAX. A
+file whose realtime flag is cleared stays without DAX until its inode
+is evicted.
+
+Fixes: be458049ffe3 ("xfs: enable the zoned RT device feature")
 Signed-off-by: Chris Mason <mason@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
 
 Notes:
-    v7->v9: no change
+    v8->v9:
+    - The commit log and the comments say that the zoned code does not
+      support DAX, no longer that it cannot (Christoph Hellwig).
+    - The commit log no longer says that ftruncate() only crashes on kernels
+      without an earlier patch of the series. That patch has lost the test
+      that stopped it.
+    - Was 15/15.
     
-    v6->v7:
-    - No change.
-    - Was 9/10.
+    v7->v8:
+    - New patch.
 
- fs/xfs/xfs_file.c | 41 ++++++++++++++++++++++++++++++++---------
- 1 file changed, 32 insertions(+), 9 deletions(-)
+ fs/xfs/xfs_ioctl.c | 8 +++++---
+ fs/xfs/xfs_iops.c  | 4 ++++
+ 2 files changed, 9 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 5fa8b07a779d..78c9668c806b 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1573,6 +1573,21 @@ xfs_falloc_allocate_range(
- 		 FALLOC_FL_ZERO_RANGE |	FALLOC_FL_INSERT_RANGE |	\
- 		 FALLOC_FL_UNSHARE_RANGE | FALLOC_FL_WRITE_ZEROES)
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index af13ad6784b7..49ba762ea969 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -564,11 +564,13 @@ xfs_ioctl_setattr_xflags(
  
-+/*
-+ * For zoned file systems, zeroing the first and last block of a hole punch
-+ * requires allocating a new block to rewrite the remaining data and new zeroes
-+ * out of place, which needs a space reservation.
-+ */
-+static inline bool
-+xfs_falloc_needs_zoned_resv(
-+	struct xfs_inode	*ip,
-+	int			mode)
-+{
-+	return xfs_is_zoned_inode(ip) &&
-+		(mode & (FALLOC_FL_PUNCH_HOLE | FALLOC_FL_ZERO_RANGE |
-+			 FALLOC_FL_COLLAPSE_RANGE));
-+}
+ 		/*
+ 		 * If S_DAX is enabled on this file, we can only switch the
+-		 * device if both support fsdax.  We can't update S_DAX because
+-		 * there might be other threads walking down the access paths.
++		 * device if both support fsdax, and the zoned code does not.
++		 * We can't update S_DAX because there might be other threads
++		 * walking down the access paths.
+ 		 */
+ 		if (IS_DAX(VFS_I(ip)) &&
+-		    (mp->m_ddev_targp->bt_daxdev == NULL ||
++		    (xfs_has_zoned(mp) ||
++		     mp->m_ddev_targp->bt_daxdev == NULL ||
+ 		     (mp->m_rtdev_targp &&
+ 		      mp->m_rtdev_targp->bt_daxdev == NULL)))
+ 			return -EINVAL;
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index d307ec97fac8..a84a4c1c3fc2 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -1373,6 +1373,10 @@ xfs_inode_supports_dax(
+ 	if (mp->m_sb.sb_blocksize != PAGE_SIZE)
+ 		return false;
+ 
++	/* The zoned code does not support DAX. */
++	if (xfs_is_zoned_inode(ip))
++		return false;
 +
- STATIC long
- __xfs_file_fallocate(
- 	struct file		*file,
-@@ -1591,6 +1606,19 @@ __xfs_file_fallocate(
- 	if (error)
- 		goto out_unlock;
- 
-+	/*
-+	 * The caller looked at the realtime flag before we took the IOLOCK, to
-+	 * decide if it has to reserve space.  Bail out if the flag has changed
-+	 * since.
-+	 */
-+	if (xfs_falloc_needs_zoned_resv(ip, mode) != !!ac) {
-+		xfs_warn_ratelimited(ip->i_mount,
-+			"RT flag modifying during fallocate for inode 0x%llx.",
-+			inode->i_ino);
-+		error = -EINVAL;
-+		goto out_unlock;
-+	}
-+
- 	/*
- 	 * Must wait for all AIO to complete before we continue as AIO can
- 	 * change the file size on completion without holding any locks we
-@@ -1686,16 +1714,11 @@ xfs_file_fallocate(
- 		return -EOPNOTSUPP;
- 
- 	/*
--	 * For zoned file systems, zeroing the first and last block of a hole
--	 * punch requires allocating a new block to rewrite the remaining data
--	 * and new zeroes out of place.  Get a reservations for those before
--	 * taking the iolock.  Dip into the reserved pool because we are
--	 * expected to be able to punch a hole even on a completely full
--	 * file system.
-+	 * Get the reservation before taking the iolock.  Dip into the reserved
-+	 * pool because we are expected to be able to punch a hole even on a
-+	 * completely full file system.
- 	 */
--	if (xfs_is_zoned_inode(XFS_I(inode)) &&
--	    (mode & (FALLOC_FL_PUNCH_HOLE | FALLOC_FL_ZERO_RANGE |
--		     FALLOC_FL_COLLAPSE_RANGE)))
-+	if (xfs_falloc_needs_zoned_resv(XFS_I(inode), mode))
- 		return xfs_file_zoned_fallocate(file, mode, offset, len);
- 	return __xfs_file_fallocate(file, mode, offset, len, NULL);
+ 	/* Device has to support DAX too. */
+ 	return xfs_inode_buftarg(ip)->bt_daxdev != NULL;
  }
 -- 
 2.55.0
