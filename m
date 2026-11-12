@@ -1,44 +1,44 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794519978;
-	b=dFC6/14xAusKjOV8DjJbbXxi1g79T0YJ7ykn75dF8yQV1ZjxOniPGHv+jpGqrvUqa561
-	 nZOuhKw2I6gUsgSQ/5aKbPH+QsFI3914hk0DK1A0u344/92J12thFnDbIgWR+VQm8Jski
-	 Er2wpTx+2u4bn0RDFCXmXblSe+JhEvimBtUah6Qckc4AypR/NjLpYp8TXhoEFECW5CCDh
-	 Cv67Zjs8KfdTI83TI59mNUyXSxd8F8H4okOoLuij27tVTR3O82DkbtLMyNqG1Kl9NU8Tl
-	 IQfgJtAjrz5OhxA5C3RZiivpVSC+6Zjk96T3QxakD7oNM/Q7SktN3Jrxx/bpr0m2taw==
+	t=1794519983;
+	b=5PZT0aLLugKN0+Fa0pttSyf65fYb+CTiBx4p6lCXictUZGeTGXIvAXkFIhJQ3qxsR6fc
+	 b5yGiksDJWqKlvOmPP4/vNiz0I29f6zKunOZS6rhoEimh83983kNmXgb3cLeBkWzBWMdR
+	 aRflAYVZcDDyjhst+gYQT4iYqntaByzJZgS4FE3osCLm+KmcEla2Bs2aWlbI3N2RfM3h/
+	 m7Y8bYkjk310NA79NWOy1hCtkcWS1yXoNh7KFL9UH3xUt7EHWeO3DfCI8s6fansuKKWfn
+	 aSx3z09KmeZUI2SG7Ers9eNPPxHJpeYjG1/xaD5JbxJohf30N0171aoa73cD2WddESA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794519978;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794519983;
 	h=Received:DKIM-Signature:From:To:Subject:Date:Message-ID:In-Reply-To:
 	 References:MIME-Version:Content-Type:Content-Transfer-Encoding;
-	bh=rl/PbKsTJF0pJDZxebmQ7rtJpHMrnVDAE4d6qabG+6Y=;
-	b=AXRhHvF6Rg1QswQcWDANSprZ5FxW4NuCP8DEYBMyLz2UtiNM0lo97duzXBNJm66B6U3R
-	 I0S+G+ImBzFdPXLVGqy3Q9OjqZmK/7T+60HQwo7I3cj04dvznc+t6rO0VRXjzYkA4wWzG
-	 0nMakx8gI3aggECHxdGinqsyv7xluKO7IB4B56z7nO2AF3x89QznxyhhAgV4jqTWa5x+/
-	 6W1tkhVIeBwDS3AEkVYz3F0CzAVe1x9BrJoemjEsNPSZrU70kPV9UwZ9vAKplfeER3P+u
-	 eGWVzdxElDBvfwq3o9sALDUA3U2XMXoZq1BqJBWI6cpFPhP2fllHAUPnoR0cMkkaWjA==
+	bh=ROx6rmO1IG5GBm1H27epjcQGPzICGItHt0prG07/jUs=;
+	b=t5KG4jSCVhOGptxNtSYm863jqjMm48IIfoEZB8RpMty4UZpLUcOpm8rFQZ9Dfeu2npBv
+	 LiwS7/3EW/RhcAiWrdNEyNUq9BavM5K0OtoIeuQQozvaZIVRkSXMzhbOiQ+XMjnfudSBW
+	 +4bxdoGYn7QF+7JBQUBI1FuMoXlBQVZ33QS2L+qpyRkSJQi4h7EaxOoiMH7SpuorqsetB
+	 Tl1OLXbkkJ3JIuzZ5VJolWEaeTQfXWpAwIgexwt7Lvp3UT0uV+4OHvCKzoq4JHsEBiJHi
+	 BuFHBAeew5en3vpBn+ybyPKRHOOrxWmxkPfI/sU674ah04sZ5ZV7LsJSjVpzwhQWCxg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=KrjQv6la;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jZfg50iV;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52B5E60A2605;
-	Thu, 12 Nov 2026 21:46:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 942DC606A32D;
+	Thu, 12 Nov 2026 21:46:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=KrjQv6la
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B42A71F000C7;
-	Thu, 12 Nov 2026 21:46:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jZfg50iV
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F3C021F000C5;
+	Thu, 12 Nov 2026 21:46:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794519978;
-	bh=rl/PbKsTJF0pJDZxebmQ7rtJpHMrnVDAE4d6qabG+6Y=;
+	s=k20260515; t=1794519983;
+	bh=ROx6rmO1IG5GBm1H27epjcQGPzICGItHt0prG07/jUs=;
 	h=From:To:Subject:Date:In-Reply-To:References;
-	b=KrjQv6lab2KH2JzsfKl0r6Td2nUO38RHztNAhP0dgZkwyoD3siyDsWts9QABX4j3l
-	 K3QuU308unReJL+jqLsFxZ8BnaGLTwCHuZ5kPeYDD5VYNXffMAdiTRa/Ere4V7fmU9
-	 /I3wHWUYZybf6gRzTwQEkTEjRo/vJba3H09e9W9kL03YsPk+XCBLeJe5kw+E41d7aC
-	 nUUikl9ygoWbaDVtNH9LnMzvGHLxCBSkE2jzBnWCCxdCRNSbWmPh/AZnfsHsoygOOb
-	 0LQ/A6r/aR8yBA0ZqSsuf8WqJcSYu0z35gwgvrQdAsgkeee1naeqUQ89Qb9oscereR
-	 xb7dmFsLs+H8Q==
+	b=jZfg50iVr97kdkMZuuVE9a180YJfORrjKZ1ssJOAi4V+q/XjnOCZq2oKDtB/QiZ7u
+	 6iG1JmI+921DF45rV0/bs69PAHPp1zT1grFvZQMEZND4I5UT6AkPrjp0rviDgQKSoq
+	 fmrVCjTPBitrWEVKMj8u/gKq79X9/lvXDFoyRhKJEAicH927Epz/vGbIlVPNqjVcpO
+	 fqfWRlSuFiErsCtL/LMV0zzhVd4SSk9iePsm9ICrJylV89LzclrJVa0cA0JZvXHlTh
+	 xe/PtlOnTy/D4ojeO5uXOTPFQWww/D3pJ3vszDjUGtZskxOPbI3HO/lMPELmVNqDTN
+	 gK75kqRWDPVAA==
 From: Chris Mason <mason@kernel.org>
 To: mason@kernel.org,
 	tytso@mit.edu,
@@ -53,9 +53,9 @@ To: mason@kernel.org,
 	linux-ext4@vger.kernel.org,
 	tz2294@columbia.edu,
 	brauner@kernel.org
-Subject: [PATCH v9 06/14] xfs: recheck direct write alignment after write checks
-Date: Thu, 12 Nov 2026 16:46:10 -0500
-Message-ID: <20261112214604.67875-7-mason@kernel.org>
+Subject: [PATCH v9 09/14] xfs: test for always COW after the dio write checks
+Date: Thu, 12 Nov 2026 16:46:13 -0500
+Message-ID: <20261112214604.67875-10-mason@kernel.org>
 In-Reply-To: <20261112214604.67875-1-mason@kernel.org>
 References: <20261112214604.67875-1-mason@kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -70,106 +70,86 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-A direct write to a reflinked file on XFS can expose stale disk contents
-if O_APPEND or RLIMIT_FSIZE leaves it sector aligned but not block
-aligned.
+A direct write to a zoned file from vectors that are not block aligned
+can silently corrupt the file's data, if the realtime flag is cleared
+and set again while the write starts.
 
-A direct write cannot fill only a part of a shared block, so XFS does
-such a write through the page cache. xfs_file_dio_write() decides that
-from the range that the caller passed. But O_APPEND and RLIMIT_FSIZE
-change the range later, in xfs_file_write_checks():
+Every bio of an always COW write has to cover whole blocks, so
+xfs_file_dio_write_aligned() passes IOMAP_DIO_FSBLOCK_ALIGNED for such
+an inode. But it tests for always COW before it takes the IOLOCK, and
+the realtime flag of a file with no blocks can change until then:
 
-    block size 4096, i_size 4608, O_APPEND, block 1 is shared
-    checked:        0 to 4095, block aligned
-    written:        4608 to 8703
-    new COW block:  4096 to 8191
-    never written:  4096 to 4607
+    xfs_file_dio_write_zoned()            FS_IOC_FSSETXATTR
+    ==========================            =================
+    xfs_zoned_write_space_reserve()
+                                          clears the realtime flag
+    xfs_file_dio_write_aligned()
+      xfs_is_always_cow_inode() is false
+                                          sets the realtime flag
+      xfs_ilock_iocb_for_write()
+      xfs_file_write_checks()
+      iomap_dio_rw()
+        splits a bio inside a block
 
-The fix used here is to check the alignment again once the range is
-final, and to start over on the unaligned path if it no longer holds. A
-zoned file now falls back to buffered I/O ahead of that path.
+The fix used here is to test for always COW once the IOLOCK is held.
 
-Fixes: 0613f16cd201 ("xfs: implement CoW for directio writes")
-Fixes: 3c68d44a2b49 ("xfs: allocate direct I/O COW blocks in iomap_begin")
+Before commit 8caec6c9fef7 ("xfs: support sub-block aligned vectors in
+always COW mode"), xfs_file_dio_write() made the same test with no lock
+held, to send such vectors down the unaligned path. So v6.15 to v6.18
+have the same race, and need a different version of this fix.
+
+Fixes: 2e2383405824 ("xfs: implement direct writes to zoned RT devices")
 Signed-off-by: Chris Mason <mason@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
 
 Notes:
-    v6->v9: no change
+    v8->v9: no change
+    
+    v7->v8:
+    - Added the Reviewed-by of Christoph Hellwig.
+    
+    v6->v7:
+    - New patch.
 
- fs/xfs/xfs_file.c | 44 ++++++++++++++++++++++++++++++++++++++------
- 1 file changed, 38 insertions(+), 6 deletions(-)
+ fs/xfs/xfs_file.c | 17 +++++++++--------
+ 1 file changed, 9 insertions(+), 8 deletions(-)
 
 diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 153f53f964b9..8ee88910b487 100644
+index 515ddafc6673..5fa8b07a779d 100644
 --- a/fs/xfs/xfs_file.c
 +++ b/fs/xfs/xfs_file.c
-@@ -710,6 +710,17 @@ xfs_file_dio_write_aligned(
+@@ -708,14 +708,6 @@ xfs_file_dio_write_aligned(
+ 	unsigned int		dio_flags = 0;
+ 	ssize_t			ret;
+ 
+-	/*
+-	 * For always COW inodes, each bio must be aligned to the file system
+-	 * block size and not just the device sector size because we need to
+-	 * allocate a block-aligned amount of space for each write.
+-	 */
+-	if (xfs_is_always_cow_inode(ip))
+-		dio_flags |= IOMAP_DIO_FSBLOCK_ALIGNED;
+-
+ 	ret = xfs_ilock_iocb_for_write(iocb, &iolock);
  	if (ret)
- 		goto out_unlock;
- 
-+	/*
-+	 * O_APPEND moves the position and the file size limits shorten the
-+	 * write, so only now is the range final.  If it is not block aligned,
-+	 * this is the wrong path for it.  Return -EAGAIN to
-+	 * xfs_file_dio_write(), which picks the path.
-+	 */
-+	if ((iocb->ki_pos | iov_iter_count(from)) & ip->i_mount->m_blockmask) {
-+		ret = -EAGAIN;
-+		goto out_unlock;
-+	}
-+
- 	/*
- 	 * We don't need to hold the IOLOCK exclusively across the IO, so demote
- 	 * the iolock back to shared if we had to take the exclusive lock in
-@@ -921,6 +932,7 @@ xfs_file_dio_write(
- 	struct xfs_inode	*ip = XFS_I(file_inode(iocb->ki_filp));
- 	struct xfs_buftarg      *target = xfs_inode_buftarg(ip);
- 	size_t			count = iov_iter_count(from);
-+	ssize_t			ret;
- 
- 	/* direct I/O must be aligned to device logical sector size */
- 	if ((iocb->ki_pos | count) & target->bt_logical_sectormask)
-@@ -937,12 +949,32 @@ xfs_file_dio_write(
- 		return xfs_file_dio_write_atomic(ip, iocb, from);
+ 		return ret;
+@@ -743,6 +735,15 @@ xfs_file_dio_write_aligned(
+ 		xfs_ilock_demote(ip, XFS_IOLOCK_EXCL);
+ 		iolock = XFS_IOLOCK_SHARED;
  	}
- 
--	if ((iocb->ki_pos | count) & ip->i_mount->m_blockmask)
--		return xfs_file_dio_write_unaligned(ip, iocb, from);
--	if (xfs_is_zoned_inode(ip))
--		return xfs_file_dio_write_zoned(ip, iocb, from);
--	return xfs_file_dio_write_aligned(ip, iocb, from,
--			&xfs_direct_write_iomap_ops, &xfs_dio_write_ops, NULL);
-+	/*
-+	 * O_APPEND and the file size limits can still change the range, in
-+	 * xfs_file_write_checks().  So a range that is block aligned here may
-+	 * not stay so, and the write then comes back with -EAGAIN.  If we are
-+	 * doing nonblocking user I/O, propagate the error.
-+	 */
-+	if (!((iocb->ki_pos | count) & ip->i_mount->m_blockmask)) {
-+		if (xfs_is_zoned_inode(ip))
-+			ret = xfs_file_dio_write_zoned(ip, iocb, from);
-+		else
-+			ret = xfs_file_dio_write_aligned(ip, iocb, from,
-+					&xfs_direct_write_iomap_ops,
-+					&xfs_dio_write_ops, NULL);
-+		if (ret != -EAGAIN || (iocb->ki_flags & IOCB_NOWAIT))
-+			return ret;
-+	}
 +
 +	/*
-+	 * Zoned inodes always write out of place, which does not work for a
-+	 * part of a block.  Fall back to buffered I/O.
++	 * For always COW inodes, each bio must be aligned to the file system
++	 * block size and not just the device sector size because we need to
++	 * allocate a block-aligned amount of space for each write.  The
++	 * realtime flag can change until we hold the IOLOCK, so test only now.
 +	 */
-+	if (xfs_is_zoned_inode(ip)) {
-+		trace_xfs_reflink_bounce_dio_write(iocb, from);
-+		return -ENOTBLK;
-+	}
-+	return xfs_file_dio_write_unaligned(ip, iocb, from);
- }
- 
- static noinline ssize_t
++	if (xfs_is_always_cow_inode(ip))
++		dio_flags |= IOMAP_DIO_FSBLOCK_ALIGNED;
+ 	if (mapping_stable_writes(iocb->ki_filp->f_mapping))
+ 		dio_flags |= IOMAP_DIO_BOUNCE;
+ 	trace_xfs_file_direct_write(iocb, from);
 -- 
 2.55.0
 
