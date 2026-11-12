@@ -1,21 +1,21 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=213.95.11.211
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794491079;
-	b=2ydJH8Tcnfr5ReYrDc/7JWH8S6wZ/LquFZVd2H95NJyR4lQ0YPMR9X34de94b4/x6Gxp
-	 NFDe49dfNvDGT7s/DxjIMo4v+mA8eHqeuesDWxMbzzTF/dmf2qIpiAfH3xYHQv4TQtEpf
-	 7dWZNrVloYohHzElhxOOZbMWxymZFzLgZ0OHH59HIK9qHSGPhSKZvk1tExGJqEwZiD9ph
-	 KJRZgEzCGZEZC6LbxlSRTdWrplGHnnaC6cX3Q2Ftd617bYCStlKE6rf1oog8HG2GdjKCX
-	 MVU613ktZ3zDnBK/AWaGHgF+YWD7lESA93TKBAGwRp4S7787vkJthV0pY52wDH8gV+g==
+	t=1794491356;
+	b=OsdXCHJH+Ii50eVIi4mWqvQjuTe7hGeDdejWNf22MON9Q7mD9ZxiFFPOYXZ/uZ/rLkvb
+	 IulvQpb6kc4nFr+rHLxQPKSM5NbdbpI/v200x0NQYCKFl56dJwdUDKM6DeSc/eOIEC27Q
+	 t8ZWgcnX/fMDCaW9FmrG7kaQnur7lJEFa2AHIT5uj+52MTWDIRU3KIhAKa2/S443F3Pzl
+	 SUBKC0oUTpjlT04+ve+XN2PBD6fH7zi0TpHuNwSJPiO2OH6lttRAy4X1vtniGxy1efDJ+
+	 SsFolLfszKBudgsyl3rjFy42X/n8rsBnXGCtn0F4b/g7JM5eDv4mH8No2WuKDXMHgyg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794491079;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794491356;
 	h=DMARC-Filter:Received:Date:From:To:Cc:Subject:Message-ID:References:
 	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To:User-Agent;
-	bh=huV7xmuDVdG97XQMo4Y+bmwA9xBpsETbVZrx/+nEpOw=;
-	b=H2lZA1ranDIdM3v6urkuceHJ4vz9gQ/Jqsp0RQdSzZpQk2blmK5L0KMoG+CvMwMtWvdX
-	 w9LTBQDhtDlwHxgG//upIXCx33slXqOorkJIS/uc5O2b69++oS89fs+/1Q2Opz4I+kzAX
-	 LzuX18EpeH9konr0UgU4IEPbDJ48ubZ5+WJYKtfl3JKRHvBevJqHFd+x6QzXA20xAmRg+
-	 xfUvFCesYy831N7uhM9GQJlmBUWiKRyvUDRiPFq7iLUo0ZOSH08FNq1GhhirnGsFvOSvW
-	 0IlFO4MYHffunvRTOd7svWpY58DF0NqTTA9NKw0Iu5C6s653hGaqOgBwxK+kSU/hMvg==
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
+	b=iC6vmakhqQNPCILOI6Z6rRxbIkMRJGH9y6mzoLyR+xH7EGaiv2iETUT2Rtzsx6d1EEUp
+	 k2vFlXsjqGyeII2b13NOpc14BIfxeviuyDnoc+twrjJcH/gvN9fB+SqdakvbnT8NFIRDX
+	 i0GtHeVScemseSY9M7SfAzPmC2b0aU5ZE+JcHFifVGEu27z8ZrTCcJo2HsRxNv2r3iPuh
+	 9PuKhIabmjiMDE6Q36Gsn3ixlkJAwbC9WPl3nVvdWdPndNfBNuI3LCLsLcyG4gJtSDCrM
+	 oW6DFIp89V7HOpVh0eS/t2+reUteLvZgxy9mpGeJq3zIUYAU+WDwUDPRh6HXGA5hOBQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=lst.de;
 	spf=pass smtp.mailfrom=lst.de;
@@ -23,22 +23,27 @@ ARC-Authentication-Results: i=1; smtp.subspace.kernel.org;
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60426606A321;
-	Thu, 12 Nov 2026 13:44:39 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 60426606A321
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD117606A321;
+	Thu, 12 Nov 2026 13:49:15 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BD117606A321
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 3446F68D05; Thu, 12 Nov 2026 14:44:35 +0100 (CET)
-Date: Thu, 12 Nov 2026 14:44:34 +0100
+	id 894A168D05; Thu, 12 Nov 2026 14:49:11 +0100 (CET)
+Date: Thu, 12 Nov 2026 14:49:11 +0100
 From: Christoph Hellwig <hch@lst.de>
-To: Hengyu Liang <hengyul@cs.unc.edu>
-Cc: Carlos Maiolino <cem@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>,
-	Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH] xfs: fix f_bfree underflow in statfs()
-Message-ID: <20261112134434.GA23459@lst.de>
-References: <20261112102018.3922571-1-hengyul@cs.unc.edu>
+To: daejun7.park@samsung.com
+Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org,
+	Pankaj Raghav <p.raghav@samsung.com>,
+	Pankaj Raghav <pankaj.raghav@linux.dev>,
+	John Garry <john.garry@linux.dev>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] xfs: check the disk address for hardware atomic
+ writes
+Message-ID: <20261112134911.GA23845@lst.de>
+References: <20261112-xfs-hw-atomic-align-v2-1-c90394805e7b@samsung.com>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -50,21 +55,10 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261112102018.3922571-1-hengyul@cs.unc.edu>
+In-Reply-To: <20261112-xfs-hw-atomic-align-v2-1-c90394805e7b@samsung.com>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Thu, Nov 12, 2026 at 05:20:18AM -0500, Hengyu Liang wrote:
-> The issue can be reproduced on a new 2 GiB filesystem mounted on /mnt:
-> 
->     for i in $(seq 3000); do head -c 65536 /dev/zero > /mnt/s$i; done
->     dd if=/dev/zero of=/mnt/big bs=1M
->     xfs_io -x -c 'resblks 100000000' /mnt
->     for i in $(seq 1 2 3000); do rm /mnt/s$i; done
->     sync
->     df -h /mnt
-
-Can you add this to xfstests?
-
-The fix itself looks good, thanks a lot!
+Looks good:
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
+
