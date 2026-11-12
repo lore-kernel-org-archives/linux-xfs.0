@@ -1,44 +1,44 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794519969;
-	b=hsq80MvfSpzXW9HHuAScN44potmVuT2wjayk9jrt7jGIhfEIXo1OHd5O65mcpc+6x6hA
-	 EiXjIzYRmDWBX+mageXw5gCldkkJm1aZkSPtQBRSChffL5LikRLADgXh8j/D6qzhqpT0a
-	 RxGcRM+jywuBlgCUsA9guxSt9gdRpxt/8S5M0PHcgQ0UaV2H731CIOlpe2q/EuooJQ7iJ
-	 pC2B+3g8q0bFqPIqFrzjUcaoulCxASrMuNN5r0MMV6kr2viATcZBoEpDq14/XzQr8exvs
-	 CU1XUvRqRaYnOpIKJw1vWMRnmgj66ds5YMsLp+FZAstFD9xEdhbC4qEY32ACn8Fy+iA==
+	t=1794519971;
+	b=yGX4rEQe1g65ZCB6k0GkLdp55DC81FFujL1HwjWjrqmjF/ukzizHVP+hfekvsI81Iqwi
+	 GCzZaxwoYbKNOLYedbg9+GIMi6dG7g4GZX73uvcDQSRRnrwaFoEr9fAvvuMdO5wDs0zpf
+	 erURLAyYNVBhm3YU3l/+IfwcpF0RutFagQj5UZmhLevuOR2bp6vwYgomZ+V3v5FysKBq+
+	 9vON+8Er+hBtc4dyRAqHMK0gPShxOUh94+gY0JZTEPtjjGYIAxxV7+Kqa0RHEHf0JiIrR
+	 0HMHJRYVwTfw+E5T5XsuuCHcbGfOxvEitYam64tIGGO9MEArhXcnvVbOQCe8zWnBAPA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794519969;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794519971;
 	h=Received:DKIM-Signature:From:To:Subject:Date:Message-ID:In-Reply-To:
 	 References:MIME-Version:Content-Type:Content-Transfer-Encoding;
-	bh=VlC7l+lvdhqvniJEYM0bym0+IQSPQAdz8J8PY4r+AoQ=;
-	b=BusGTWwmsl7p17pXSdrMlDlk6IdTy9lFBc/VnmaIBo0+ck/JwyIxqkpuU2UctFsvpWWB
-	 iQwSzfD6CopFKU35Z9/g+4wQxcp1pia88ugjlmDVq9pIedtJckqsZGlk3N8/8hF21UJF2
-	 2Bue+UecsDuOIwZ5wdzDEO7pXBmspCMc0wrV66q825es33ngmpgXsr8nGbLZ3zhVm25e3
-	 +79ttjK9P/8kEn6fLMyu+FC7KYkAFtbXVp5+GgJs84dPoUS140ao68qhp3EgI+cs8PinQ
-	 kuN0cj4c/56+E0km7FW99aYnMWOwU24DvKBzqPvmTMvUFPYrhO3/ZuDlgtqhvm06XPw==
+	bh=mxKRfWymEhtiO4U6xQqttLq6lkQ7E/WLxKKc01cUC4c=;
+	b=paWoZt/r1xaRj+KHPyTi2jXZysEt2rShNakFjIxL18d7n/hlinSyYWM9es4jbGtIeeBY
+	 uZw9uCxcx9T/EPa1/L9g2qNIBChd9Ui9/x9CUFZSVUvkeDmog5aBrERHCbPUZpGBFOAea
+	 iQ5jOMvh+/fZrhmND1QFSonU0bBPNrYbWVqvyj41XISEKAoFGz0Rz6a00p0ZyqDUK3i8+
+	 KBaBJteH9EsvJmkBjP1ozQCaWiGJCnt4w634z48FYmF6L7HcqX0AxRCtG+45djWrVM7sz
+	 +YfWYPB54+nTqdII+K/PC6uUX/PoQ4uNHXlyGWQA0xmhxIEG04Ehi4haqEz7B111IVg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=KW849d+N;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=KfLiqpSl;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E084606A338;
-	Thu, 12 Nov 2026 21:46:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BBD3606A895;
+	Thu, 12 Nov 2026 21:46:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=KW849d+N
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C8A8C1F000C5;
-	Thu, 12 Nov 2026 21:46:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=KfLiqpSl
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 92B091F000D2;
+	Thu, 12 Nov 2026 21:46:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794519969;
-	bh=VlC7l+lvdhqvniJEYM0bym0+IQSPQAdz8J8PY4r+AoQ=;
+	s=k20260515; t=1794519971;
+	bh=mxKRfWymEhtiO4U6xQqttLq6lkQ7E/WLxKKc01cUC4c=;
 	h=From:To:Subject:Date:In-Reply-To:References;
-	b=KW849d+NoetwiiyZu9EnGYam22FiemNJ/xWT1W0Fo0oME02yQ3yXBMzk7al5fzN5b
-	 lxZEGJHfiYnViL0V0PT3O48PyltbclekBjwSLUZeVeTariRtvQ3mbz4MvEnMln0jqc
-	 Gy0SF/iYG6skydXWXcPVOo/cwu9hNY4giE/Wx7Uror4CYSWQq6ds5qOFRLbYlBw1pw
-	 /Ql4ybEdtYZgXCqpWvjvpTaUmdVfJ4DJD5xQUPKBCxk5LxW6setGasl7cvFNIIVWz2
-	 JS/yoBP/WO3gHVPYNPbBp3JBvp5K8Va3DQF/bgN9EHm86q2Xy8TAhAeKVBlFcrbH/I
-	 E331cRC3ce+Qw==
+	b=KfLiqpSl3PHCiBMLu5m/RcpJz9N+6ICKzxdbrw5OPlx5UU9tQKtx0Pl+SLJr7XNxM
+	 f5/Yq+/RhmVzFZ0lPjGwtzPcB2dQgHU82EJLLeAOF22qRwdo61w1efEq1MjD/dZihF
+	 cfrjcd7tWpt1/w8AgIDaz7PPBSiwzfJXBI+Krra2oG8e86aPT0g8eeDcSDlN5R8y7t
+	 HLNLQ3EJKjlq74RTK+Uhe3FT6U251xqgWSLE2/UqKk+bCjsHx7uc8CmOWg1aGSrWmX
+	 nR3I+vtroxsj9ajWQWuHo2n3zDJkIIXcuy1jH01r1qr9JJLF6kyGpuXNEv43eM1QvY
+	 cctUDt+Bl7DyA==
 From: Chris Mason <mason@kernel.org>
 To: mason@kernel.org,
 	tytso@mit.edu,
@@ -53,9 +53,9 @@ To: mason@kernel.org,
 	linux-ext4@vger.kernel.org,
 	tz2294@columbia.edu,
 	brauner@kernel.org
-Subject: [PATCH v9 01/14] xfs: don't skip the flush before shifting extents
-Date: Thu, 12 Nov 2026 16:46:05 -0500
-Message-ID: <20261112214604.67875-2-mason@kernel.org>
+Subject: [PATCH v9 02/14] xfs: flush the shifted range before changing the file
+Date: Thu, 12 Nov 2026 16:46:06 -0500
+Message-ID: <20261112214604.67875-3-mason@kernel.org>
 In-Reply-To: <20261112214604.67875-1-mason@kernel.org>
 References: <20261112214604.67875-1-mason@kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -70,23 +70,18 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-On an XFS file larger than 4 EiB, collapse range and insert range can
-drop dirty data without writing it back, and then fail with
-EFSCORRUPTED.
+If writeback of the range to be shifted fails, collapse range on XFS can
+fail with its hole already punched, and insert range with the file
+already grown.
 
-xfs_prepare_shift() flushes the page cache from its offset to EOF, but
-passes i_size as the length. Above 4 EiB the end of that range can
-overflow and turn negative. filemap_write_and_wait_range() then writes
-nothing, but truncate_pagecache_range() takes the end as unsigned and
-drops every folio from the start of the range onward.
+Both calls change the file first: collapse range punches its hole, and
+insert range grows i_size. Only then does xfs_prepare_shift() flush the
+range from the offset to EOF, and that flush fails if the writeback
+fails.
 
-A delalloc extent under a dropped folio stays in the data fork, and the
-shift returns -EFSCORRUPTED for it.
+The fix used here is to flush and invalidate that range before the file
+is changed.
 
-The fix used here is to pass i_size - offset as the length.
-
-Fixes: 7f9f71be84bc ("xfs: extent shifting doesn't fully invalidate page cache")
-Fixes: feeb9b269523 ("filemap: skip write and wait if end offset precedes start")
 Signed-off-by: Chris Mason <mason@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
@@ -94,19 +89,57 @@ Reviewed-by: Christoph Hellwig <hch@lst.de>
 Notes:
     v6->v9: no change
 
- fs/xfs/xfs_bmap_util.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/xfs_file.c | 25 +++++++++++++++++++++++--
+ 1 file changed, 23 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 865aec3ae5ab..537c6b29417c 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -980,7 +980,7 @@ xfs_prepare_shift(
- 	 * Writeback and invalidate cache for the remainder of the file as we're
- 	 * about to shift down every extent from offset to EOF.
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 396aca8c66a9..be1f775128d1 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -1201,6 +1201,22 @@ xfs_falloc_setsize(
+ 			&iattr);
+ }
+ 
++/*
++ * Collapse and insert range change the file in several steps, and each step
++ * writes back and empties the part of the page cache that it needs.  That can
++ * fail.  Do it here for everything that is going to move, before the first
++ * step, so that a failure leaves the file as it was.  xfs_prepare_shift()
++ * starts one allocation unit before the offset, so do the same.
++ */
++static int
++xfs_falloc_flush_shift_range(
++	struct xfs_inode	*ip,
++	loff_t			offset)
++{
++	offset -= min_t(loff_t, offset, xfs_inode_alloc_unitsize(ip));
++	return xfs_flush_unmap_range(ip, offset, XFS_ISIZE(ip) - offset);
++}
++
+ static int
+ xfs_falloc_collapse_range(
+ 	struct file		*file,
+@@ -1222,6 +1238,10 @@ xfs_falloc_collapse_range(
+ 	if (offset + len >= i_size_read(inode))
+ 		return -EINVAL;
+ 
++	error = xfs_falloc_flush_shift_range(XFS_I(inode), offset);
++	if (error)
++		return error;
++
+ 	error = xfs_collapse_file_space(XFS_I(inode), offset, len, ac);
+ 	if (error)
+ 		return error;
+@@ -1263,9 +1283,10 @@ xfs_falloc_insert_range(
+ 	 * fork. This shifts back out beyond EOF, but creates an expectedly
+ 	 * written post-eof block. The insert is going to flush, unmap and
+ 	 * cancel prealloc across this whole range, so flush EOF now before we
+-	 * bump i_size to provide consistent behavior.
++	 * bump i_size to provide consistent behavior.  Flush and unmap the rest
++	 * of the range as well, so that a failure to do so leaves i_size alone.
  	 */
--	error = xfs_flush_unmap_range(ip, offset, XFS_ISIZE(ip));
-+	error = xfs_flush_unmap_range(ip, offset, XFS_ISIZE(ip) - offset);
+-	error = filemap_write_and_wait_range(inode->i_mapping, isize, isize);
++	error = xfs_falloc_flush_shift_range(XFS_I(inode), offset);
  	if (error)
  		return error;
  
