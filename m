@@ -1,44 +1,44 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794445377;
-	b=AnDpF7JLqOojYY7EKv/ho8+z7fswP7pBviZ78Yi8yBlli/r/rkMktB9Dwe2V6NhMCG/p
-	 7zKH0pA+E9NMswlyhpnt6E9OmuxHLa89O27ocrXznR3RZ8xdKCehDrLuiCU5U98BbeSrN
-	 WyTh5w5ATAKz0YEE8LYmyLHYAFScv97dbnD3TO2D9OcS1edMUWu+BCrP27sm9pJ0kFh9v
-	 MCdg68tljNG73q6D12fn5OiYd+pWjdBGDGIKEhnQrqG2cnzJUO3vz8fPgCnfu+ntNgIBo
-	 pVWMF/j+Jp2tIKB46TFWj6qd0lG4zQ15MzG49O40BIDeWrU6Pp90Nu+iJRcjEJinmgA==
+	t=1794445373;
+	b=0YpQfFXXaK03eLB7PezyTN9l00W710Vuoo6HtsCbTtJwN6tbqkq6MOb/2GWuLmbafc5n
+	 Yn4W323zi2UiipHjO7OYMngddA+HfpPZQDB1vE8eBpXzGyVp8jEY+gvZjfSacbmNuxvY4
+	 raBf3eNwq7pvGnXn/bw08zBxDMhqL3/8d8GqIKRA1azom4eWIk7VDx43kvDvy/iEeODru
+	 YYgzft+o1pi/0e4UDlqB59j9ZiNgqgpaO3otrU4qIS630nEy05aTzEyM4450PScFX+wyb
+	 HqTXaSSMjFSARTGGZLjhVX2k4PU8m7vHUYIFKyC6onHrZc/U+/I+09Cu23PYMlXr8Sw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794445377;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794445373;
 	h=Received:DKIM-Signature:From:To:Subject:Date:Message-ID:In-Reply-To:
 	 References:MIME-Version:Content-Type:Content-Transfer-Encoding;
-	bh=7/w+AZxd+IIQx3RNgcyzCGCQQXUUF7P9lbhXcrnaHvQ=;
-	b=BjDVgapirXawejtdF6O5DWac76oGPaGlLoGh0C/2fDQHtytT1qsLetvyD5go/O6xKRhL
-	 ykMZvDtbVD8Kwxhm2XxQPn7Kg1rIyCZJtHuMb7g0b0Cq68rdrAQhDje0BBLjbn68k0wds
-	 2LccMRHUKr3sDE7ensQW9PzR4mkOHWJYt8MDUfLhgD+L+eVKik0lpBtnQzXZ6s5x6k00D
-	 MjgQG2TMiFd0rnVlRGOIgDOXuGa5wLsJyjE9611ZGYj+JUOk9V9LTtSS/bItRRAbHwcoK
-	 0VeH11xSKEpQ7W95JOQvcPCGY2F+rp56n/50rnE4ReybwQZBGC2dAfoOhkQM2/b+/kQ==
+	bh=1NvT+krDmSD5Mne/wvXNG+j6Knb/tWR7T5atZL4jonI=;
+	b=WLr/smUGucKwFJPyY/5R4jt/6vlSISNyI6CZ6yj26bvYm/U/ASwiS2dZ+JPwJvzuWCya
+	 eWzTZ3OpvpE7nahSaAnZJU52NjwW6bEleXz/gQWqw5LLmGz1H08ApVnf6S1Pt9nTgpM7p
+	 eMTXfSa7Tw0AtRcHFqemLx38O5PRbdG4noNjZP4Iga4OU5vWpsL2fQNbIh4w90/eGARj2
+	 Hx+w7Xk5mZd6c4IyGjrSAhaXEvS9zb4ZlPsIoxFhTfujtgzQOxx+bFHoxwWd07p9Evv8e
+	 8T8gr4UW2auQlXCN1k5MngW84/AfwWYSLBsDeWB2QGpDg/mn5acHJl7FGsdzKAGaIVQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ACS8rQHo;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XTjwuBiJ;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB89960A3819;
-	Thu, 12 Nov 2026 01:02:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0040460A3809;
+	Thu, 12 Nov 2026 01:02:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ACS8rQHo
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B1781F00A08;
-	Thu, 12 Nov 2026 01:02:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XTjwuBiJ
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 386F91F00A08;
+	Thu, 12 Nov 2026 01:02:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794445377;
-	bh=7/w+AZxd+IIQx3RNgcyzCGCQQXUUF7P9lbhXcrnaHvQ=;
+	s=k20260515; t=1794445372;
+	bh=1NvT+krDmSD5Mne/wvXNG+j6Knb/tWR7T5atZL4jonI=;
 	h=From:To:Subject:Date:In-Reply-To:References;
-	b=ACS8rQHocmLddM1txIpJRQ0Ql1J5779HEeEVQLwvSHjqwzDUeFijqV446ohb5cITo
-	 i+ommKAkiBj5+Xy2WxOqWPPbRaz8JTyUznjnpJ2Br/slrhkj5UuqnDmV+bi1d/izM7
-	 7yzBRPbd1MThsxsvi0THhxF+hRdf8agk09KUwjiFse2k9K2XLBiHVDG6glw/+v63XR
-	 SmdFZdvqW+9+wjbD+v4OhN8SvOOGofIVyqoAmxd6U+8k2etAU4sp0pOG5n6sRNPGpp
-	 wevkdgiZ3gexD4VG2lSqojlTGmMwWVeHvyDjuJMKHAJ6XrxLf4GiWpW2nwfCdtsPkk
-	 Ln6DIy8etiNAQ==
+	b=XTjwuBiJD13VLadsXebY88aOPrX57xZck3mBQKeOPMN7NkxG5LJPT6ZBBjwLz50/9
+	 Xham23hHJ+sO3In/ZdKLIV1syFX8dp+MnBwxNs8u+WwHrGmYbwup4rl5iRBjPL3hOs
+	 qjavYoKsrHEapoU4K79CX7KTbpd3Rd8lp6POyr2rI969egYBvr6k4Xd2h4rEskSOZJ
+	 fSu6XZMa9zbzKO5ehI9ciWyEVBw/dI4T3+2tJ2n0O17axdjCT41bU35pP5TpERL2Os
+	 CtePsPsuT9hyBzowhUC+ys0hlTHPw6d01yE6mnQQ55Z0var9vOjEds+7CqUdVSON0z
+	 Mm/LcCVGGkjKQ==
 From: Chris Mason <mason@kernel.org>
 To: mason@kernel.org,
 	tytso@mit.edu,
@@ -53,9 +53,9 @@ To: mason@kernel.org,
 	linux-ext4@vger.kernel.org,
 	tz2294@columbia.edu,
 	brauner@kernel.org
-Subject: [PATCH v8 15/15] xfs: don't enable DAX on zoned inodes
-Date: Wed, 11 Nov 2026 20:02:44 -0500
-Message-ID: <20261112010229.51029-16-mason@kernel.org>
+Subject: [PATCH v8 12/15] xfs: test for an extsize hint again under the ILOCK
+Date: Wed, 11 Nov 2026 20:02:41 -0500
+Message-ID: <20261112010229.51029-13-mason@kernel.org>
 In-Reply-To: <20261112010229.51029-1-mason@kernel.org>
 References: <20261112010229.51029-1-mason@kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -70,31 +70,27 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-A store through a shared mapping can dereference a NULL pointer if the
-file is zoned and has S_DAX.
+A store through a shared mapping can corrupt the data fork and the free
+block counter on disk, if the realtime flag of the file is set during
+the write fault and realtime extents are larger than one block.
 
-DAX writes in place, and zoned inodes are only written out of place, so
-the two can't work together. XFS doesn't check for this: with dax=always
-or FS_XFLAG_DAX, an inode gets S_DAX if its device does DAX, and an
-internal zoned section on pmem does. The write fault then takes the
-zoned path:
+Such a realtime inode has an extent size hint, and cannot use delayed
+allocation. xfs_buffered_write_iomap_begin() tests for a hint before it
+takes the ILOCK. FS_IOC_FSSETXATTR can change the flag of a file with no
+blocks until then, since a fault never takes the IOLOCK:
 
-    xfs_filemap_fault()
-      xfs_write_fault()
-        xfs_write_fault_zoned()
-          page_folio(vmf->page)     /* NULL in a DAX fault */
+    write fault                           FS_IOC_FSSETXATTR
+    ===========                           =================
+    xfs_buffered_write_iomap_begin()
+      xfs_get_extsz_hint() is 0
+                                          sets the realtime flag
+      xfs_ilock_for_iomap()
+      xfs_bmapi_reserve_delalloc()
+        /* 1 block, 0 realtime extents */
 
-ftruncate() crashes in a similar way, in xfs_reflink_end_cow(), on
-kernels without "xfs: restart faults racing with realtime flag changes".
+The fix used here is to test for a hint again once the ILOCK is held,
+and to allocate the blocks right away if the inode has got one.
 
-The fix used here is to never set S_DAX on a zoned inode, and to refuse
-to change the realtime flag of an S_DAX inode on a zoned file system.
-
-Zoned files now use the page cache with dax=always or FS_XFLAG_DAX. A
-file whose realtime flag is cleared stays without DAX until its inode
-is evicted.
-
-Fixes: be458049ffe3 ("xfs: enable the zoned RT device feature")
 Signed-off-by: Chris Mason <mason@kernel.org>
 ---
 
@@ -102,46 +98,30 @@ Notes:
     v7->v8:
     - New patch.
 
- fs/xfs/xfs_ioctl.c | 8 +++++---
- fs/xfs/xfs_iops.c  | 4 ++++
- 2 files changed, 9 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_iomap.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index f81b6e52ac40..8f042610db03 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -564,11 +564,13 @@ xfs_ioctl_setattr_xflags(
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index d36650450cbb..b414e2cff346 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -1903,6 +1903,16 @@ xfs_buffered_write_iomap_begin(
+ 		goto out_unlock;
+ 	}
  
- 		/*
- 		 * If S_DAX is enabled on this file, we can only switch the
--		 * device if both support fsdax.  We can't update S_DAX because
--		 * there might be other threads walking down the access paths.
-+		 * device if both support fsdax, and zoned inodes never do.  We
-+		 * can't update S_DAX because there might be other threads
-+		 * walking down the access paths.
- 		 */
- 		if (IS_DAX(VFS_I(ip)) &&
--		    (mp->m_ddev_targp->bt_daxdev == NULL ||
-+		    (xfs_has_zoned(mp) ||
-+		     mp->m_ddev_targp->bt_daxdev == NULL ||
- 		     (mp->m_rtdev_targp &&
- 		      mp->m_rtdev_targp->bt_daxdev == NULL)))
- 			return -EINVAL;
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index d307ec97fac8..03ca1873b6d7 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -1373,6 +1373,10 @@ xfs_inode_supports_dax(
- 	if (mp->m_sb.sb_blocksize != PAGE_SIZE)
- 		return false;
- 
-+	/* Zoned inodes are always written out of place, DAX writes in place. */
-+	if (xfs_is_zoned_inode(ip))
-+		return false;
++	/*
++	 * A write fault doesn't hold the IOLOCK, so the inode may have got an
++	 * extent size hint since the test above.
++	 */
++	if (xfs_get_extsz_hint(ip)) {
++		xfs_iunlock(ip, lockmode);
++		return xfs_direct_write_iomap_begin(inode, offset, count,
++				flags, iomap, srcmap);
++	}
 +
- 	/* Device has to support DAX too. */
- 	return xfs_inode_buftarg(ip)->bt_daxdev != NULL;
- }
+ 	if (XFS_IS_CORRUPT(mp, !xfs_ifork_has_extents(&ip->i_df)) ||
+ 	    XFS_TEST_ERROR(mp, XFS_ERRTAG_BMAPIFORMAT)) {
+ 		xfs_bmap_mark_sick(ip, XFS_DATA_FORK);
 -- 
 2.55.0
 
