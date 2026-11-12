@@ -1,44 +1,44 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794445361;
-	b=PoeI3rQAIA8Are9F/SZN29sfWOmDL00Ek7LYlX8+ghPFLuzEyh7fp9LxWQleshTd7aNf
-	 AT3JUwiMVgvMd+Z19JO3f/lMWtR2PsSJhBgtqXyDzcj1wUSVNmN4srQQ0WijyB/lLWfQb
-	 8KUhM+weLvE6MzaCft9fs9H2kapRljh8it1b0gvKjNQm0nnFEQgvutqnorqxQ9StLAKio
-	 ZHyEjDapOqWacg2PGwMubc0kvNtO/kIVLtGzru7vdytS0fnCoQPNx3ALbkdNmrRhPaKaK
-	 vM4L62ebQE+SJUG8oqUGVCTP/4493NpXdt8G3OsG65wRQkdPT9Dx4HUp+OWzTyAcslw==
+	t=1794445356;
+	b=vFydqqbkl20b7MrMpt3hIO5nhZeKx5Jf2/RHPo3PJoaFOs8P7kBLXk0bHJCZXFWjOX9l
+	 TSzbNsOivTPtPKRy25Fj/uRMUae+0XXSITi6DbFnSD6Zz6Hf7BGTmlAMBxMk0d3BsxGM1
+	 xy0aNuwAwT4+7Qi5GgYkI3zfrBey7mhS4wgbO+huozIYr1Rx52D16izovBwBppsuTjp4Q
+	 Y9Y8ZXUk7TegNXpWepFt1zUUaE/3RNF4NLFH8NMQ6Ds1nfFw0QNJtD6+zFT0VxnWegmC8
+	 qer7srUL0mkkQdIH/j5YwI39UU94gjHHr3Y2TUu7vOIH3AnIQs3a9n+4D7zLPwkMsYQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794445361;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794445356;
 	h=Received:DKIM-Signature:From:To:Subject:Date:Message-ID:In-Reply-To:
 	 References:MIME-Version:Content-Type:Content-Transfer-Encoding;
-	bh=ngzFb7KDxIvetgaBIy7qbLRpOtTsuaYkyw1eOJTS7BI=;
-	b=t3E223mp7FBbswIqcf0OLomndHF6WLcr954FESGyC/AYBpnegxu0R8fZe/HNL6lI8qie
-	 Xj1fbzX1HghObaFGSppSLbB4BEasvektSfSj4w+SfbiuVxajkZpXSnBVCAX1/BoZpI3oN
-	 bQaEY9P4+NIiugeyI+G+h4T6r8AQmeBvjZrZYJ9FxU+ruIwpalKegS6wBU8RJs5KAYGmU
-	 sFZNrK66WcvyKvFvcyfyz3OHX324auorW5L6Cm2RH4TaWup2hN3GkBXFcKMKOtyrUs+oM
-	 zw0ECYOQdzaLaTqFuS1rsy76ZrsfUII/N6VkoLB7ewF4ywu7pwsugubbCOSW187fo1g==
+	bh=wdcOD6NooPR8ufc7d1pGrtab6fBn8Smwobz1ebtqowg=;
+	b=iwkHmYW2PGMBa2C1j/19IZ0xQIuSwCbhEc+d7kMmlEAkrbeQr/LV2eOTfPkqivuhhcgG
+	 AbrkFBc1eFUqM87pVp7ezB5FaejSIn+5hSRSWB1IbyX0R8ZWUj34RqjKQaxsQnRp0gsMC
+	 /Bs+sk8OiPlCT/IG60exJGpxykYMfPuxRu3Z0a20LN0vX1wavakauDKKjGxTkSHVH+ymK
+	 O1/zc7a28YtdrSneFuVnHpLYEj51Rjt4ajKospnOZc8T5M3YQKK5eUsokIu5pl80k+CMC
+	 KTNgFd+Zh2fuLgvtd+T8pFnOT6HZxNR/WPA4BvjEE/VYVQ1KLbk8PRgj+r3IY3iehZw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=aLpeQVlG;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cd+Dl2XJ;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0C9360A2636;
-	Thu, 12 Nov 2026 01:02:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1453E606A8A6;
+	Thu, 12 Nov 2026 01:02:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=aLpeQVlG
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F9701F00A0D;
-	Thu, 12 Nov 2026 01:02:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cd+Dl2XJ
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 492C81F00A05;
+	Thu, 12 Nov 2026 01:02:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794445360;
-	bh=ngzFb7KDxIvetgaBIy7qbLRpOtTsuaYkyw1eOJTS7BI=;
+	s=k20260515; t=1794445355;
+	bh=wdcOD6NooPR8ufc7d1pGrtab6fBn8Smwobz1ebtqowg=;
 	h=From:To:Subject:Date:In-Reply-To:References;
-	b=aLpeQVlGsKRMvC6UhBzDVFeDK348BZROuu51ziHX7lznZJV8y9UIywLLQP9wI8Pka
-	 aw77nyZ3FsaYpCFlWHGN/Yfni7j4d7mYFHKIE3WQDf/uOm1CvOKzVI/ZFxYRwr3w52
-	 UnBdj2Ix3HazkRLUEFgoKEexnDNYYqUHSqx2qfYdvPw+quIt7vKGiNnEX11XBqASuj
-	 R2+yz3PID1d5sI6Ppm8WRR7bJd57VsVZ46YgloGFeQxeL6H76jCVZB/jQ86TeFqsbQ
-	 FRRdeYMwg9+hy0/FQPDp+yO/CO3XlFlZ17S3OdRpinyOETO6igiw3WvdW1POyMNrHa
-	 oHtJxfNZGvBWA==
+	b=cd+Dl2XJUohrDIoYioTI4+/j9bMP2uS/uE4rEgvzzh6i7LE9UAoFK+Qp/vcxWL8ik
+	 Xv0c73ixtmSG33x8yC78yWjsv7osjpBkcprFyoflIpS4Ot2t7rsU5uIOeBAcTh8TmP
+	 7T2Y/cirjOFZUZCYJF4T3BefsT6N1GGHun3R0FIUGrBjardAtGA/2wYIfScoyMc6t4
+	 sLVaDk4NZSFhdGnd0ow5W1Dttam/PbJ/Av+j4JzxMyBH1s/NkBlEGR+rAgOMybou7d
+	 NQnalpjenmGel5XDaYux7M8fiPBEWCGbna5l3bZPLYco2J46E7h69ReL3/oo2lmw+u
+	 Gl+hlBbANRgFA==
 From: Chris Mason <mason@kernel.org>
 To: mason@kernel.org,
 	tytso@mit.edu,
@@ -53,9 +53,9 @@ To: mason@kernel.org,
 	linux-ext4@vger.kernel.org,
 	tz2294@columbia.edu,
 	brauner@kernel.org
-Subject: [PATCH v8 05/15] fs: validate atomic writes after O_APPEND and limits
-Date: Wed, 11 Nov 2026 20:02:34 -0500
-Message-ID: <20261112010229.51029-6-mason@kernel.org>
+Subject: [PATCH v8 02/15] xfs: flush the shifted range before changing the file
+Date: Wed, 11 Nov 2026 20:02:31 -0500
+Message-ID: <20261112010229.51029-3-mason@kernel.org>
 In-Reply-To: <20261112010229.51029-1-mason@kernel.org>
 References: <20261112010229.51029-1-mason@kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -70,30 +70,20 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-An RWF_ATOMIC write on XFS with reflink can expose stale disk contents
-if O_APPEND or RLIMIT_FSIZE leaves it sector aligned but not block
-aligned.
+If writeback of the range to be shifted fails, collapse range on XFS can
+fail with its hole already punched, and insert range with the file
+already grown.
 
-XFS and ext4 call generic_atomic_write_valid() on the range that the
-caller passed. But generic_write_checks() changes the range later:
-O_APPEND moves the position, and RLIMIT_FSIZE cuts the length. XFS can
-then fill only a part of a new block, and still map the whole block into
-the file:
+Both calls change the file first: collapse range punches its hole, and
+insert range grows i_size. Only then does xfs_prepare_shift() flush the
+range from the offset to EOF, and that flush fails if the writeback
+fails.
 
-    block size 4096, i_size 512, O_APPEND
-    validated:        0 to 4095
-    written:          512 to 4607
-    new blocks:       0 to 8191
-    stale below EOF:  0 to 511
+The fix used here is to flush and invalidate that range before the file
+is changed.
 
-The fix used here is to validate an atomic write in
-generic_write_checks(), after its range is final, and to refuse one that
-was cut. XFS no longer picks the path of an atomic write by the
-alignment of the range that the caller passed.
-
-Fixes: f096207d3276 ("xfs: Validate atomic writes")
-Fixes: 43c696f9d094 ("ext4: Check for atomic writes support in write iter")
 Signed-off-by: Chris Mason <mason@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
 
 Notes:
@@ -103,89 +93,60 @@ Notes:
     v6->v7:
     - No change.
 
- fs/ext4/file.c    |  4 ----
- fs/read_write.c   | 13 +++++++++++++
- fs/xfs/xfs_file.c | 17 +++++++++++------
- 3 files changed, 24 insertions(+), 10 deletions(-)
+ fs/xfs/xfs_file.c | 25 +++++++++++++++++++++++--
+ 1 file changed, 23 insertions(+), 2 deletions(-)
 
-diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-index 50d3c92709c8..e301d4faf1c3 100644
---- a/fs/ext4/file.c
-+++ b/fs/ext4/file.c
-@@ -802,10 +802,6 @@ ext4_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
- 		if (len < EXT4_SB(inode->i_sb)->s_awu_min ||
- 		    len > EXT4_SB(inode->i_sb)->s_awu_max)
- 			return -EINVAL;
--
--		ret = generic_atomic_write_valid(iocb, from);
--		if (ret)
--			return ret;
- 	}
- 
- 	if (iocb->ki_flags & IOCB_DIRECT)
-diff --git a/fs/read_write.c b/fs/read_write.c
-index 676728310899..1b34b7382619 100644
---- a/fs/read_write.c
-+++ b/fs/read_write.c
-@@ -1775,6 +1775,19 @@ ssize_t generic_write_checks(struct kiocb *iocb, struct iov_iter *from)
- 	if (ret)
- 		return ret;
- 
-+	/*
-+	 * O_APPEND has moved the position and the file size limits have
-+	 * shortened the write by now, so this is the range to validate.  An
-+	 * atomic write is all or nothing, so refuse it if it got shorter.
-+	 */
-+	if (iocb->ki_flags & IOCB_ATOMIC) {
-+		if (count != iov_iter_count(from))
-+			return -EINVAL;
-+		ret = generic_atomic_write_valid(iocb, from);
-+		if (ret)
-+			return ret;
-+	}
-+
- 	iov_iter_truncate(from, count);
- 	return iov_iter_count(from);
- }
 diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index be1f775128d1..153f53f964b9 100644
+index 396aca8c66a9..be1f775128d1 100644
 --- a/fs/xfs/xfs_file.c
 +++ b/fs/xfs/xfs_file.c
-@@ -926,12 +926,21 @@ xfs_file_dio_write(
- 	if ((iocb->ki_pos | count) & target->bt_logical_sectormask)
+@@ -1201,6 +1201,22 @@ xfs_falloc_setsize(
+ 			&iattr);
+ }
+ 
++/*
++ * Collapse and insert range change the file in several steps, and each step
++ * writes back and empties the part of the page cache that it needs.  That can
++ * fail.  Do it here for everything that is going to move, before the first
++ * step, so that a failure leaves the file as it was.  xfs_prepare_shift()
++ * starts one allocation unit before the offset, so do the same.
++ */
++static int
++xfs_falloc_flush_shift_range(
++	struct xfs_inode	*ip,
++	loff_t			offset)
++{
++	offset -= min_t(loff_t, offset, xfs_inode_alloc_unitsize(ip));
++	return xfs_flush_unmap_range(ip, offset, XFS_ISIZE(ip) - offset);
++}
++
+ static int
+ xfs_falloc_collapse_range(
+ 	struct file		*file,
+@@ -1222,6 +1238,10 @@ xfs_falloc_collapse_range(
+ 	if (offset + len >= i_size_read(inode))
  		return -EINVAL;
  
-+	/*
-+	 * An atomic write is at least one block long, and generic_write_checks()
-+	 * refuses it unless its final position is a multiple of its length.  So
-+	 * there is no unaligned case to handle for it.
-+	 */
-+	if (iocb->ki_flags & IOCB_ATOMIC) {
-+		if (xfs_is_zoned_inode(ip))
-+			return xfs_file_dio_write_zoned(ip, iocb, from);
-+		return xfs_file_dio_write_atomic(ip, iocb, from);
-+	}
++	error = xfs_falloc_flush_shift_range(XFS_I(inode), offset);
++	if (error)
++		return error;
 +
- 	if ((iocb->ki_pos | count) & ip->i_mount->m_blockmask)
- 		return xfs_file_dio_write_unaligned(ip, iocb, from);
- 	if (xfs_is_zoned_inode(ip))
- 		return xfs_file_dio_write_zoned(ip, iocb, from);
--	if (iocb->ki_flags & IOCB_ATOMIC)
--		return xfs_file_dio_write_atomic(ip, iocb, from);
- 	return xfs_file_dio_write_aligned(ip, iocb, from,
- 			&xfs_direct_write_iomap_ops, &xfs_dio_write_ops, NULL);
- }
-@@ -1128,10 +1137,6 @@ xfs_file_write_iter(
+ 	error = xfs_collapse_file_space(XFS_I(inode), offset, len, ac);
+ 	if (error)
+ 		return error;
+@@ -1263,9 +1283,10 @@ xfs_falloc_insert_range(
+ 	 * fork. This shifts back out beyond EOF, but creates an expectedly
+ 	 * written post-eof block. The insert is going to flush, unmap and
+ 	 * cancel prealloc across this whole range, so flush EOF now before we
+-	 * bump i_size to provide consistent behavior.
++	 * bump i_size to provide consistent behavior.  Flush and unmap the rest
++	 * of the range as well, so that a failure to do so leaves i_size alone.
+ 	 */
+-	error = filemap_write_and_wait_range(inode->i_mapping, isize, isize);
++	error = xfs_falloc_flush_shift_range(XFS_I(inode), offset);
+ 	if (error)
+ 		return error;
  
- 		if (ocount > xfs_get_atomic_write_max(ip))
- 			return -EINVAL;
--
--		ret = generic_atomic_write_valid(iocb, from);
--		if (ret)
--			return ret;
- 	}
- 
- 	if (IS_DAX(inode))
 -- 
 2.55.0
 
