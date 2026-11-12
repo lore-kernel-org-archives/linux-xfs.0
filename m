@@ -1,85 +1,88 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=148.163.158.5
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794473683;
-	b=MHN2UXRU0Tg7E8itWn2n8T9b6NUCd5YP+/V5lQX63pjWpPORoNg6nFIjjnj4n1pIB0xk
-	 kjaQBlg296FFjXw9Ca2DE3fNrAaGTPkaReksN0f4jt0OSPXFqJ46/36zVdUBSTcMvLD5M
-	 9RM7LBj5Pp0sT8FA5eZKuXQiAW5Dizy4EF6if5TtKmVnlyoh0OyWQc1mMbOGgj2ZsTyOw
-	 9tWMuGOrhg4vxnZ/Ot0+y7+8XSD34YDMKxUEMkolo+BCbjgkKXa92O6mvq/r0MypKJEP8
-	 8iWoPbsy3nXJZgheU0ExS6Mk3Vr0NZq5OtlLxO8b/16sJebNv3SauF/zGzJxmRh0V5Q==
+	t=1794473692;
+	b=GJZBmahzpA1o2GqnceKVipRHe4Lgnr10etuPvLUk5ZYWi4uIJMOczTxzdCjgZqp+oxW3
+	 SBOZDhseuWhdGeQypVBiYv8Bvvy7bPAjlTgus5SpT64RFY3Y8h3EaH4x9epbuhGwvFwwp
+	 dCIjcZtpAx3nSshXw4p2y7oqBJdTUDYRdbV0KUis9XYrH3t571/RxmMMZ52e3davf6PR+
+	 zcGwNXbBGtxQiQu1Qva9DjqerIgdribIFoC3yVy2olNJn3IZPWVRMA0VqwS72CFAGiE9N
+	 /O9xrvJSseDimJw0e1zBYAGIeukeKD14RAZqUgVjtoJ6/zs/JdwonFbXX8tVPGCK6Qw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794473683;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794473692;
 	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:Received:
 	 Received:Received:Received:Received:From:To:Cc:Subject:Date:
-	 Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding:
-	 X-TM-AS-GCONF:X-Proofpoint-Spam-Details-Enc:X-Proofpoint-ORIG-GUID:
-	 X-Proofpoint-Spam-Info:X-Authority-Analysis:X-Proofpoint-GUID:
-	 X-Proofpoint-Virus-Version:X-Proofpoint-Spam-Details;
-	bh=AQ6QX/9/Ngi6GpEyy1p+sSu6EZpzw1YUjuWKB8vrDw0=;
-	b=fwbHbtCVnA3TU1GOWY6lIa/s9yvWpQoCMV70p868rTlDP/hcJ2UhP7W6Mordu2wof+vZ
-	 qGok0Mp/vczKvEyx9biETi5cDq8emJhnSBx2ebrMoQ1CoLjta025Q58sDXT0Hmk0LuN2Q
-	 ShhjjyuQMOG1SjicQq3qUVKSTOcSuMruSLHgB0eS+nSVHGx2eUsm3p2pyVW9sLIZCxDYx
-	 eDc54LfheCaTyfnNlg8tvHNEig8Y7HYoVS7YmpZz86hDByzeAUo30r7GX8hJDVM+Z7AsH
-	 9Cvmsjl4ECn1VmdJycO/bMvHGY8eiBp7kExFM65S/7Wrgw5TApY9rWNc/G3lgXjZw8Q==
+	 Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding:X-TM-AS-GCONF:X-Authority-Analysis:
+	 X-Proofpoint-Spam-Details-Enc:X-Proofpoint-Spam-Info:
+	 X-Proofpoint-ORIG-GUID:X-Proofpoint-GUID:X-Proofpoint-Virus-Version:
+	 X-Proofpoint-Spam-Details;
+	bh=gLkp9fR4J1Hx3FpReblhfzk5zJx+vl5VLp5NLQqRvPw=;
+	b=qkSVHcAieKxqFQcW3kNPChPB/sKcMsqzs7jaCIq3evvyKsNW1mFh4QZbN50NdOzZcX0n
+	 f7qWNqVrWtIS8tyqm3IWBCewHB7q4qmJdxQj73JfQohfivacTAx+jwNMEC+fU8Jgaqi7b
+	 n3oZfF1T78siwpT2N0LQzUwJ+PM+kXtFsXD0BQalNabUol6wXQiZ2DvoNaRH2B30/xcjW
+	 GqDE7Co3NS7DuFZCzhQWJqrEnY/lN6gaEs0M2qsgR58H5ZedWhdqpxU09ZAgEVXFVihGa
+	 1TE7b6o8Hj8V7FWl6hL7z6cKJ39/3Kz2ZQP9sJF4p4vDKXh5mu83SM99G8dVFkglnKQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.ibm.com;
 	spf=pass smtp.mailfrom=linux.ibm.com;
-	dkim=pass header.d=ibm.com header.i=@ibm.com header.a=rsa-sha256 header.s=pp1 header.b=NMPrXhmQ;
-	arc=none smtp.remote-ip=148.163.156.1
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+	dkim=pass header.d=ibm.com header.i=@ibm.com header.a=rsa-sha256 header.s=pp1 header.b="M/741mKn";
+	arc=none smtp.remote-ip=148.163.158.5
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58182606A323;
-	Thu, 12 Nov 2026 08:54:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 58182606A323
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CEC8606A323;
+	Thu, 12 Nov 2026 08:54:51 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8CEC8606A323
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.a=rsa-sha256 header.s=pp1 header.b=NMPrXhmQ
-Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6AC2iGM61214707;
-	Thu, 12 Nov 2026 08:54:41 GMT
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.a=rsa-sha256 header.s=pp1 header.b=M/741mKn
+Received: from pps.filterd (m0356516.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6AC2iE3k2795601;
+	Thu, 12 Nov 2026 08:54:48 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:date:from:message-id:mime-version
-	:subject:to; s=pp1; bh=AQ6QX/9/Ngi6GpEyy1p+sSu6EZpzw1YUjuWKB8vrD
-	w0=; b=NMPrXhmQikrj0XpH1Jh10RPj7bDIl6O0S1DH7JVH70aMm1mWlb8WTuTZv
-	UMGuytjeAW/OYRGkNqBvFfZTvDhMBej4MjL0CVl/HV0Hx7UGRZnQRF7uEKHWk7Zm
-	Pa++T8KB7rMNEGFPPPCwFYdZNoTwVhFctyqh+nkh0Kv2R5R9RYULlBJLhD/9Ltq6
-	hvxai0AsVpdcN8WXHY9Y32N7wU9o7oHzl7JzlTBCEu2ud7BdALDyOlYiavWqsCE+
-	DJ1EEha6BXXgBBCbgXCtpp1sMd8rTYCMdDOQS7NI6M7J3l4SBQsJ+aYp2FaSo6Uw
-	pARxtO0ouXEI6KgoOWa/SLbCTXpEg==
+	:content-transfer-encoding:date:from:in-reply-to:message-id
+	:mime-version:references:subject:to; s=pp1; bh=gLkp9fR4J1Hx3FpRe
+	blhfzk5zJx+vl5VLp5NLQqRvPw=; b=M/741mKn6T28uRLs/FZWIUwpDIfeDW4kN
+	Ny+/Mr/yLnZ5iJJv2F8HVRNerrcOHWSrwWOKjnZJt9NcX39U9ES6WmELU22xm2oQ
+	EFhklDDqysivlo77JSc+pK7bzwZ79qepmehDINNFmxLcGZ8F5l0W2KwtvbFSD9OU
+	2n5EsFlu00ZmJNVkLuYzRme52FPwPwxUqgYhgaBodf4bvaL3wEO9EZXLqHc0k9kH
+	F9lB8MOAnG7mr7mpAeA55l/uei+dit//gg/7Yap/hGCT/06ldgX0JYahrBUaaRjv
+	01jYU+aM5Q/jF1C5N97bsdlpS/hqI144YG3pE9BggReWyjt9SFQvA==
 Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4hsunten6g-1
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4hssdkx6rm-1
 	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Thu, 12 Nov 2026 08:54:41 +0000 (GMT)
+	Thu, 12 Nov 2026 08:54:48 +0000 (GMT)
 Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma12.dal12v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 6AC8CmwR053934;
-	Thu, 12 Nov 2026 08:54:40 GMT
-Received: from smtprelay02.fra02v.mail.ibm.com ([9.218.2.226])
-	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 4hv309r30a-1
+	by ppma12.dal12v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 6AC8DJE1053937;
+	Thu, 12 Nov 2026 08:54:48 GMT
+Received: from smtprelay01.fra02v.mail.ibm.com ([9.218.2.227])
+	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 4hv309r30k-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 12 Nov 2026 08:54:40 +0000 (GMT)
+	Thu, 12 Nov 2026 08:54:48 +0000 (GMT)
 Received: from smtpav03.fra02v.mail.ibm.com (smtpav03.fra02v.mail.ibm.com [10.20.54.102])
-	by smtprelay02.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 6AC8sass56164796
+	by smtprelay01.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 6AC8sibC42664344
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 12 Nov 2026 08:54:36 GMT
+	Thu, 12 Nov 2026 08:54:44 GMT
 Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id BF3A72006E;
-	Thu, 12 Nov 2026 08:54:36 +0000 (GMT)
+	by IMSVA (Postfix) with ESMTP id 7D27E2006E;
+	Thu, 12 Nov 2026 08:54:44 +0000 (GMT)
 Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id EC0F420067;
-	Thu, 12 Nov 2026 08:54:33 +0000 (GMT)
+	by IMSVA (Postfix) with ESMTP id 868E120069;
+	Thu, 12 Nov 2026 08:54:41 +0000 (GMT)
 Received: from li-c2a6f0cc-327f-11b2-a85c-8351a23fe076.ibm.com.com (unknown [9.66.81.33])
 	by smtpav03.fra02v.mail.ibm.com (Postfix) with ESMTP;
-	Thu, 12 Nov 2026 08:54:33 +0000 (GMT)
+	Thu, 12 Nov 2026 08:54:41 +0000 (GMT)
 From: Barnali Guha Thakurata <barnali@linux.ibm.com>
 To: fstests@vger.kernel.org
 Cc: zlang@kernel.org, linux-xfs@vger.kernel.org, ojaswin@linux.ibm.com,
         Barnali Guha Thakurata <barnali@linux.ibm.com>
-Subject: [PATCH 1/2] common/populate: avoid test directory space exhaustion from metadump caching
-Date: Thu, 12 Nov 2026 14:23:12 +0530
-Message-ID: <7c72292aca3a279987feb6722aba2cedfb720159.1794470252.git.barnali@linux.ibm.com>
+Subject: [PATCH 2/2] xfs/601: skip test if TEST_DEV has insufficient space
+Date: Thu, 12 Nov 2026 14:23:13 +0530
+Message-ID: <485259ed3afdf26dd68ecd5b567258e3d1f1d35f.1794470252.git.barnali@linux.ibm.com>
 X-Mailer: git-send-email 2.56.0
+In-Reply-To: <7c72292aca3a279987feb6722aba2cedfb720159.1794470252.git.barnali@linux.ibm.com>
+References: <7c72292aca3a279987feb6722aba2cedfb720159.1794470252.git.barnali@linux.ibm.com>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -91,112 +94,66 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTEyMDAzNCBTYWx0ZWRfX7SA0RmPVqhrY
- XNy1ufSQZw5m7M7qnsVr4bYGdiaBXILZYwYaBd7j4Us0ML1e3lmgnJtkBSkrobvV6z31JVTYGBr
- /XAbVtjDkkLxKeTLtL7kLoxyqNAOonbcDujdTA+xv4jY1o8qj7o7brrizYRH/8fmOhGuTz15ll/
- BbopjMK+VsIEoWP6QKnJk+tB1b2r5mFMkNurs1wb0VoXYMky0Xis7cpILuViCtS8ez5+1wrhqq5
- KL7gEoUV2W2AWF+R885+n7RkvbVS1grfrHUEh0cyOvKxuppf1SCh88D55j6CEHDPD4kY5IqOXbS
- aZVOOJQrKkcWSr1bqF2wuGXLfG72fZfjQdY5y8ZLlH/ou9+roca5SaWSdhY+4bOZJnZnJf+yszq
- W3ovDO7l5s1djpnA4ZsDJtVo7tke4z8/Dm4nv0u5xgGBqs42YBWSY9ABJodj+MO+XTugC88aVtH
- 3Kbbc5jYiPKoI7Jh2MA==
-X-Proofpoint-ORIG-GUID: YKn8JpZhr8RrIcG8ar13vMMdPyAv3OXW
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMTEyMDAzNCBTYWx0ZWRfX7inXM1ekTB32
- GiaIjIKsMP6XTV9grDS1tMMpY7HWRLn9dZcNSOwXe6LRBGCVm8KdBVOJwCt+VWqSEnTW1qV3H8U
- 67FGOco9sUEVh8GCMboo0L6SOF8JY7E=
-X-Authority-Analysis: v=2.4 cv=euZKXYpX c=1 sm=1 tr=0 ts=6af57ed1 cx=c_pps
+X-Authority-Analysis: v=2.4 cv=POqaavqC c=1 sm=1 tr=0 ts=6af57ed8 cx=c_pps
  a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
  a=zJRp6_cAMcgA:10 a=VkNPw1HP01LnGYTKEx00:22 a=RnoormkPH1_aCDwRdu11:22
- a=uAbxVGIbfxUO_5tXvNgY:22 a=VnNF1IyMAAAA:8 a=8wZH3mX2JmYfVqS-50EA:9
-X-Proofpoint-GUID: YKn8JpZhr8RrIcG8ar13vMMdPyAv3OXW
+ a=Y2IxJ9c9Rs8Kov3niI8_:22 a=VnNF1IyMAAAA:8 a=at2klVYvxK389UH1VQQA:9
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTEyMDAzNCBTYWx0ZWRfX4PrrsVdFYuAm
+ B0A79lqPRyn5onDwPJoiEowub3hpdfNm8zO7xm07W1Exk0Z2yI8l++AZjk3kbhW8wMo+1ndb3CP
+ k6Em1xwQMflBlFI7gXSQlofBv88Uttymrcl6VhTvUZo+bCQgMcbKhyUr8rFezJ1KvuMj5NMk44h
+ yL82M9F/fevi3lJtKE05zFLt8Y78dnGscN5F+fXOwth0Ik9jo1KBRHX9dn1HcoJH8/n0vOuUoWP
+ AnpC6ED5zhoRPy+8+L6Wk9SAkOW8GwT9qKkgzCWpXiGXEJNVO2hcjTlXyoCcLztiPkXIdh+RALm
+ t6sxljXuYvNe2IyGf3nbq26lLlIdMTEt1Fprd9jyw0po0zPjqdY0JfTTRZvKHsOCo+2g3XOJ515
+ ANCm3DCXj7TJZsCsj3G7+ozxYO6ZppEAE4QKSd3HkWo8TPWnPrgmpr62zguNmnDNAtDghLSVpxx
+ UMu4+qFTB3w+aKVEVwA==
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMTEyMDAzNCBTYWx0ZWRfX1UpPN+pEf4e8
+ elRgj87mmOregIE/cc+sGUH7AJp6YTzRB6JvzxHMc5+qCDjT+6O8ZH1iqLRIh8TfztIRxavpw2W
+ F/DgcNjIUwPwQEw3s+n8Yc9tOeTs3Dk=
+X-Proofpoint-ORIG-GUID: 0f-oNYxzN1SnP65joruI0R_3WEafYHQe
+X-Proofpoint-GUID: 0f-oNYxzN1SnP65joruI0R_3WEafYHQe
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
  definitions=2026-11-12_01,2026-11-11_03,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- phishscore=0 clxscore=1011 suspectscore=0 spamscore=0 priorityscore=1501
- lowpriorityscore=0 bulkscore=0 impostorscore=0 adultscore=0 malwarescore=0
+ priorityscore=1501 bulkscore=0 impostorscore=0 malwarescore=0 phishscore=0
+ lowpriorityscore=0 suspectscore=0 adultscore=0 spamscore=0 clxscore=1011
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
  reason=mlx scancount=1 engine=8.22.0-2611040001 definitions=main-2611120034
 
-Previously, caching the populated scratch device metadump was done
-unconditionally. Saving these large metadumps can exhaust the test
-directory's available space, leading to subsequent test failures due
-to lack of space.
+Currently, the test fails with no clear message when TEST_DEV does
+not have enough free space to hold the copy img of the scratch device.
 
-Introduce a space check in the caching path. By default, only save the
-populated metadump if the space occupied on the scratch device is less
-than 40% of the space available on the test device.
+Check that TEST_DEV has enough free space before proceeding and skip
+the test with a descriptive message if it does not.
 
-Also introduce the "FORCECACHE" environment variable. When the user sets
-FORCECACHE=1, bypass this space check and force caching the metadump.
-
-Without patch:
-	./check -g auto
-	...
-	Failed 46 of 1282 tests
-
-With patch:
-	./check -g auto
-	...
-	Failed 36 of 1282 tests
-
-	FORCECACHE=1 ./check -g auto
-	...
-	Failed 46 of 1282 tests
-
-Suggested-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
 Signed-off-by: Barnali Guha Thakurata <barnali@linux.ibm.com>
 ---
- check           |  6 ++++++
- common/populate | 20 +++++++++++++++++++-
- 2 files changed, 25 insertions(+), 1 deletion(-)
+ tests/xfs/601 | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-diff --git a/check b/check
-index afe855bc..2846a52e 100755
---- a/check
-+++ b/check
-@@ -44,6 +44,12 @@ export QA_CHECK_FS=${QA_CHECK_FS:=true}
- # number of diff lines from a failed test, 0 for whole output
- export DIFF_LENGTH=${DIFF_LENGTH:=10}
+diff --git a/tests/xfs/601 b/tests/xfs/601
+index 44911ea3..a30f6732 100755
+--- a/tests/xfs/601
++++ b/tests/xfs/601
+@@ -34,6 +34,18 @@ _xfs_skip_offline_rebuild
+ echo "Format and populate"
+ _scratch_populate_cached nofill > $seqres.full 2>&1
  
-+# Some tests use _scratch_populate_cached() style helpers to populate
-+# SCRATCH device once and cache the metadump in TEST device so subsequent
-+# calls can be faster. The caching is optional based on how much space
-+# TEST device has, however we can force the caching using FORCECACHE=1
-+export FORCECACHE="${FORCECACHE:-}"
++# Check if TEST_DEV has enough free space for SCRATCH_DEV copy img
++test_avail=$(_get_available_space $TEST_DIR)
++_scratch_mount
++scratch_total=$(_get_total_space $SCRATCH_MNT)
++scratch_avail=$(_get_available_space $SCRATCH_MNT)
++scratch_occupied=$((scratch_total-scratch_avail))
++_scratch_unmount
 +
- # by default don't output timestamps
- timestamp=${TIMESTAMP:=false}
- . common/exit
-diff --git a/common/populate b/common/populate
-index f3672c1a..8dafe45f 100644
---- a/common/populate
-+++ b/common/populate
-@@ -1177,6 +1177,24 @@ _scratch_populate_cached() {
- 		;;
- 	esac
++if [ "$((test_avail * 100))" -le "$((scratch_occupied * 110))" ]; then
++        _notrun "$TEST_DEV too small"
++fi
++
+ mkdir -p $testdir
+ copy_file=$testdir/copy.img
  
--	_scratch_populate_save_metadump "${POPULATE_METADUMP}" && \
-+	if [ "$FORCECACHE" = 1 ]; then
-+		# FORCECACHE is explicitly 1 - always save the metadump
-+		_scratch_populate_save_metadump "${POPULATE_METADUMP}" && \
- 			echo "${meta_descr}" > "${populate_metadump_descr}"
-+	else
-+		# FORCECACHE is not 1 (or not provided) - only save if
-+		# scratch device occupied data is less than 40% of the
-+		# space available in the test device
-+		test_avail=$(_get_available_space $TEST_DIR)
-+		scratch_total=$(_get_total_space $SCRATCH_MNT)
-+		scratch_avail=$(_get_available_space $SCRATCH_MNT)
-+		scratch_occupied=$((scratch_total-scratch_avail))
-+		if [ "$scratch_occupied" -lt \
-+			"$((test_avail * 40 / 100))" ]; then
-+			_scratch_populate_save_metadump \
-+				"${POPULATE_METADUMP}" && \
-+				echo "${meta_descr}" > \
-+					"${populate_metadump_descr}"
-+		fi
-+	fi
- }
 -- 
 2.56.0
 
