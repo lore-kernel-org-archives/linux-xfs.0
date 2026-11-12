@@ -1,88 +1,94 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.222.175
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794473692;
-	b=GJZBmahzpA1o2GqnceKVipRHe4Lgnr10etuPvLUk5ZYWi4uIJMOczTxzdCjgZqp+oxW3
-	 SBOZDhseuWhdGeQypVBiYv8Bvvy7bPAjlTgus5SpT64RFY3Y8h3EaH4x9epbuhGwvFwwp
-	 dCIjcZtpAx3nSshXw4p2y7oqBJdTUDYRdbV0KUis9XYrH3t571/RxmMMZ52e3davf6PR+
-	 zcGwNXbBGtxQiQu1Qva9DjqerIgdribIFoC3yVy2olNJn3IZPWVRMA0VqwS72CFAGiE9N
-	 /O9xrvJSseDimJw0e1zBYAGIeukeKD14RAZqUgVjtoJ6/zs/JdwonFbXX8tVPGCK6Qw==
+	t=1794478839;
+	b=z1sMweJWEB3VdkUz51cUYiINZcG2Ifke61L1k2qWHE5+wcep8c9JYkjM4t28oco1OSGe
+	 7KgSWcCJPeS7bdl7bnqwoXiCMAuh1Pkq46Kn3AqdB4dsYsevncG5kcdMvkMpn8QsKSmvr
+	 H+JxgI9wtWzBL1wftoUBxUulBTcmraWYerOqknldPTs5L+iGWYI1cNXRcH4kR1oQuue/8
+	 x9jwehX+FsRXk9I/OCDUHiI3x5YVzFDHye2emLFom4xdPDjY4iYTqKR3TuphXCIU6AQ8k
+	 jsxWfzgoi/TrNex4zd+vX0/bWD1dGhcYt0lEFhMGH60XCDAjn9tFbhUF889K7HsuDpQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794473692;
-	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:Received:
-	 Received:Received:Received:Received:From:To:Cc:Subject:Date:
-	 Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding:X-TM-AS-GCONF:X-Authority-Analysis:
-	 X-Proofpoint-Spam-Details-Enc:X-Proofpoint-Spam-Info:
-	 X-Proofpoint-ORIG-GUID:X-Proofpoint-GUID:X-Proofpoint-Virus-Version:
-	 X-Proofpoint-Spam-Details;
-	bh=gLkp9fR4J1Hx3FpReblhfzk5zJx+vl5VLp5NLQqRvPw=;
-	b=qkSVHcAieKxqFQcW3kNPChPB/sKcMsqzs7jaCIq3evvyKsNW1mFh4QZbN50NdOzZcX0n
-	 f7qWNqVrWtIS8tyqm3IWBCewHB7q4qmJdxQj73JfQohfivacTAx+jwNMEC+fU8Jgaqi7b
-	 n3oZfF1T78siwpT2N0LQzUwJ+PM+kXtFsXD0BQalNabUol6wXQiZ2DvoNaRH2B30/xcjW
-	 GqDE7Co3NS7DuFZCzhQWJqrEnY/lN6gaEs0M2qsgR58H5ZedWhdqpxU09ZAgEVXFVihGa
-	 1TE7b6o8Hj8V7FWl6hL7z6cKJ39/3Kz2ZQP9sJF4p4vDKXh5mu83SM99G8dVFkglnKQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794478839;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=EF7KRxBo0qNjwVf72fb3/RBlZOqXFYYSTlSs7Me9Vk0=;
+	b=s71c8rS2Ikv8slMvsoGmT4xfp1V0zeiUZ0631PTJHAw06nh+SCFsqJz7NHTh2plSrymX
+	 L7INUWfbSr5ovApSvYaQ0TdznCorNNikDwiuRfas/RFGqE/6cWFN2Pl/P5QKbuu1vV83P
+	 GRtBYSelEBGnRotUkflpZ75yLRdLnxXyIsQIJjv5dgod8Bdx5b5e5w5m+P97gZcN9DxkO
+	 aySK+EJ3od1NjjLYs2twMwuJFcOfOhSsVySkfXSi4on6Vkd+d8rv9/s3PnOZSPG/sbgOA
+	 SttjRfcv96lkYtQqKrPxs+UF/GebpZMxNTq1+JvuMOmzGm4yNS6N+m3yfhitDfdoyOA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.ibm.com;
-	spf=pass smtp.mailfrom=linux.ibm.com;
-	dkim=pass header.d=ibm.com header.i=@ibm.com header.a=rsa-sha256 header.s=pp1 header.b="M/741mKn";
-	arc=none smtp.remote-ip=148.163.158.5
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=cs.unc.edu;
+	spf=pass smtp.mailfrom=cs.unc.edu;
+	dkim=pass header.d=cs.unc.edu header.i=@cs.unc.edu header.a=rsa-sha256 header.s=google header.b=BZ0kacbc;
+	arc=none smtp.remote-ip=209.85.222.175
+Received: from mail-qk1-f175.google.com (mail-qk1-f175.google.com [209.85.222.175])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CEC8606A323;
-	Thu, 12 Nov 2026 08:54:51 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8CEC8606A323
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F584606A32E
+	for <linux-xfs@vger.kernel.org>; Thu, 12 Nov 2026 10:20:38 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4F584606A32E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cs.unc.edu
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cs.unc.edu
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.a=rsa-sha256 header.s=pp1 header.b=M/741mKn
-Received: from pps.filterd (m0356516.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6AC2iE3k2795601;
-	Thu, 12 Nov 2026 08:54:48 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=pp1; bh=gLkp9fR4J1Hx3FpRe
-	blhfzk5zJx+vl5VLp5NLQqRvPw=; b=M/741mKn6T28uRLs/FZWIUwpDIfeDW4kN
-	Ny+/Mr/yLnZ5iJJv2F8HVRNerrcOHWSrwWOKjnZJt9NcX39U9ES6WmELU22xm2oQ
-	EFhklDDqysivlo77JSc+pK7bzwZ79qepmehDINNFmxLcGZ8F5l0W2KwtvbFSD9OU
-	2n5EsFlu00ZmJNVkLuYzRme52FPwPwxUqgYhgaBodf4bvaL3wEO9EZXLqHc0k9kH
-	F9lB8MOAnG7mr7mpAeA55l/uei+dit//gg/7Yap/hGCT/06ldgX0JYahrBUaaRjv
-	01jYU+aM5Q/jF1C5N97bsdlpS/hqI144YG3pE9BggReWyjt9SFQvA==
-Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4hssdkx6rm-1
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Thu, 12 Nov 2026 08:54:48 +0000 (GMT)
-Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma12.dal12v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 6AC8DJE1053937;
-	Thu, 12 Nov 2026 08:54:48 GMT
-Received: from smtprelay01.fra02v.mail.ibm.com ([9.218.2.227])
-	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 4hv309r30k-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 12 Nov 2026 08:54:48 +0000 (GMT)
-Received: from smtpav03.fra02v.mail.ibm.com (smtpav03.fra02v.mail.ibm.com [10.20.54.102])
-	by smtprelay01.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 6AC8sibC42664344
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 12 Nov 2026 08:54:44 GMT
-Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 7D27E2006E;
-	Thu, 12 Nov 2026 08:54:44 +0000 (GMT)
-Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 868E120069;
-	Thu, 12 Nov 2026 08:54:41 +0000 (GMT)
-Received: from li-c2a6f0cc-327f-11b2-a85c-8351a23fe076.ibm.com.com (unknown [9.66.81.33])
-	by smtpav03.fra02v.mail.ibm.com (Postfix) with ESMTP;
-	Thu, 12 Nov 2026 08:54:41 +0000 (GMT)
-From: Barnali Guha Thakurata <barnali@linux.ibm.com>
-To: fstests@vger.kernel.org
-Cc: zlang@kernel.org, linux-xfs@vger.kernel.org, ojaswin@linux.ibm.com,
-        Barnali Guha Thakurata <barnali@linux.ibm.com>
-Subject: [PATCH 2/2] xfs/601: skip test if TEST_DEV has insufficient space
-Date: Thu, 12 Nov 2026 14:23:13 +0530
-Message-ID: <485259ed3afdf26dd68ecd5b567258e3d1f1d35f.1794470252.git.barnali@linux.ibm.com>
-X-Mailer: git-send-email 2.56.0
-In-Reply-To: <7c72292aca3a279987feb6722aba2cedfb720159.1794470252.git.barnali@linux.ibm.com>
-References: <7c72292aca3a279987feb6722aba2cedfb720159.1794470252.git.barnali@linux.ibm.com>
+	dkim=pass (2048-bit key, unprotected) header.d=cs.unc.edu header.i=@cs.unc.edu header.a=rsa-sha256 header.s=google header.b=BZ0kacbc
+Received: by mail-qk1-f175.google.com with SMTP id af79cd13be357-930c0f9c1b1so426283985a.1
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Nov 2026 02:20:38 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cs.unc.edu; s=google; t=1794478837; x=1795083637; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=EF7KRxBo0qNjwVf72fb3/RBlZOqXFYYSTlSs7Me9Vk0=;
+        b=BZ0kacbcCRVq6LBGBfa+HzANug4uNF5z0Lf8jwfzYrm1y6NYl9QHzLqnz9KNipWQWY
+         nTZnUTi006r+tN2LBDLQNShf+oemvUPDqVuliBF+QIuyPx5oOqsuwbXLhOiC1CfSgcB1
+         2Aq4jnAuQOsdy2mcuDvEVQRdXWpwVghQ7pJi24Uk7RGBGO1QiPHCslgbJpZ+IZwNNKCp
+         mqOxnrecpPgEsRvQD3XCt57xznz7iMIvpw9KcteBARSdGVmxQJoLBvllPC2EEqBThiJ3
+         laJ6SW7CT/viIhZGjKcCbeb4KTZAweFxs11Lo26Jpf3BVtEBCc7rSklk+mmRR4WLEk/0
+         iilw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794478837; x=1795083637;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=EF7KRxBo0qNjwVf72fb3/RBlZOqXFYYSTlSs7Me9Vk0=;
+        b=p14F3uMh3t5Q4vJB8RtMvQMC92s2FJDIEno+oMNN2EAOTn+pA6I586EiXsx2apJali
+         Pj4HqVeBvkFPCqk2rdeZiCr2izzrVC0aEksfP4C1fGNp2N/MZVoGSOOBHtIm9Gj2ja0h
+         rlVbzxp4aV3uHFFtEDAGuub9LnNVBfVg4a+wy6Y7uT6Bx0cqF78Aff7YoQ9FC/qjbtTI
+         p+XyKTCtZttuDfJuQ+R4QwtYoDuGV5qrAtEBfLtCF1aUfammAMBHN4VgJ8YmWsbI9rqI
+         gXC3tWd04ouJQU1bbxgPqAxp9DvXWfpzCAYN/R+gf+Luvx2EHuhjg1CNCt/8Gs7AMLr5
+         GXDw==
+X-Forwarded-Encrypted: i=1; AL+hErHqvGmntx89SxZsQczhf0hcb32EDUQC2oNzcvOqSdoFt0SjgCDmmeJSRBP7Os4okfhoBf93dFEgPNI=@vger.kernel.org
+X-Gm-Message-State: APuU4Z8Q4fuCP0ECducVrDhHMBQVFbqFKKMV51r6O8O39B8vpMaP2kcK
+	s22IgCAUWNgx8VLn26NRRcbo9lxglGft+E6+mAisMHaSJ/xRnks5xZl7fSjDd18rrA==
+X-Gm-Gg: AYBFou0J+AmAYOYZ+HzPQjmdNcUrWT3UWR9UXHA1FfiXtQp7v9rrE655Y7eNQb5aOs6
+	RrR8btrBL3NuMC2O1Nt7wYt4kDyc5G4fr7Z8hAWhod/mev6KGV+NJdnSXiHeJkfPg+Cw1i5C7r2
+	Ny0VnDnz4qixFisP0eEA30rHuJULRKWh/k3kad6AJiIxAUk2TtNpworf+au8qTbxZXzCIEQo05u
+	KpAcmWXZiya1sQ68W5uc9xYhcyjtIHldqFbrOodqkzQgjJv876+17ykzFHa0gIXUmbyv2y/gi2l
+	mYi/dNnVAh7UV7kP0C3aWKgN5pvPK8Oh4bPdeAdh4LDzs+ZLAj5ABGBhVF63wA6PG42Pe3hUHZa
+	iJWNbF6HVK9TdWPrJrdMqMTSHEum/RluVGHPIbtZ/s0m0NNRYKoPvfPdeE16O8MCrV6UhGABtQA
+	SVs2DaDlsrDijdzj4XVVUlPZnhvSeAtUh9ACQly/GeyvftIayUW0u4e6TrrmPg8+Pwy0HEqcU/V
+	wGUPzK2+QygMTnBMf5a0bGBK33UbDSWBES6YNbOxv+JLAriAysC2KYhTocX9pUYYdLg7k7wNiN2
+	Ru3cBTtvS4QKqxT/d7qMKLACOIXvuMdY3lVd45WRmdN6NZmrLuv2uUdI1phJSxtZ/H2dYTteNw=
+	=
+X-Received: by 2002:a05:620a:4412:b0:93f:38c7:64e1 with SMTP id af79cd13be357-947affc99efmr842215585a.25.1794478837209;
+        Thu, 12 Nov 2026 02:20:37 -0800 (PST)
+Received: from cobra01.cs.unc.edu (cobra01.cs.unc.edu. [152.2.130.143])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-9479e7a8348sm691143785a.26.2026.11.12.02.20.36
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 12 Nov 2026 02:20:36 -0800 (PST)
+From: Hengyu Liang <hengyul@cs.unc.edu>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>,
+	Christoph Hellwig <hch@lst.de>,
+	linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: [PATCH] xfs: fix f_bfree underflow in statfs()
+Date: Thu, 12 Nov 2026 05:20:18 -0500
+Message-ID: <20261112102018.3922571-1-hengyul@cs.unc.edu>
+X-Mailer: git-send-email 2.53.0
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -93,67 +99,77 @@ List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Authority-Analysis: v=2.4 cv=POqaavqC c=1 sm=1 tr=0 ts=6af57ed8 cx=c_pps
- a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
- a=zJRp6_cAMcgA:10 a=VkNPw1HP01LnGYTKEx00:22 a=RnoormkPH1_aCDwRdu11:22
- a=Y2IxJ9c9Rs8Kov3niI8_:22 a=VnNF1IyMAAAA:8 a=at2klVYvxK389UH1VQQA:9
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTEyMDAzNCBTYWx0ZWRfX4PrrsVdFYuAm
- B0A79lqPRyn5onDwPJoiEowub3hpdfNm8zO7xm07W1Exk0Z2yI8l++AZjk3kbhW8wMo+1ndb3CP
- k6Em1xwQMflBlFI7gXSQlofBv88Uttymrcl6VhTvUZo+bCQgMcbKhyUr8rFezJ1KvuMj5NMk44h
- yL82M9F/fevi3lJtKE05zFLt8Y78dnGscN5F+fXOwth0Ik9jo1KBRHX9dn1HcoJH8/n0vOuUoWP
- AnpC6ED5zhoRPy+8+L6Wk9SAkOW8GwT9qKkgzCWpXiGXEJNVO2hcjTlXyoCcLztiPkXIdh+RALm
- t6sxljXuYvNe2IyGf3nbq26lLlIdMTEt1Fprd9jyw0po0zPjqdY0JfTTRZvKHsOCo+2g3XOJ515
- ANCm3DCXj7TJZsCsj3G7+ozxYO6ZppEAE4QKSd3HkWo8TPWnPrgmpr62zguNmnDNAtDghLSVpxx
- UMu4+qFTB3w+aKVEVwA==
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMTEyMDAzNCBTYWx0ZWRfX1UpPN+pEf4e8
- elRgj87mmOregIE/cc+sGUH7AJp6YTzRB6JvzxHMc5+qCDjT+6O8ZH1iqLRIh8TfztIRxavpw2W
- F/DgcNjIUwPwQEw3s+n8Yc9tOeTs3Dk=
-X-Proofpoint-ORIG-GUID: 0f-oNYxzN1SnP65joruI0R_3WEafYHQe
-X-Proofpoint-GUID: 0f-oNYxzN1SnP65joruI0R_3WEafYHQe
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
- definitions=2026-11-12_01,2026-11-11_03,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 bulkscore=0 impostorscore=0 malwarescore=0 phishscore=0
- lowpriorityscore=0 suspectscore=0 adultscore=0 spamscore=0 clxscore=1011
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2611040001 definitions=main-2611120034
 
-Currently, the test fails with no clear message when TEST_DEV does
-not have enough free space to hold the copy img of the scratch device.
+Commit dd324cb79e54 ("xfs: refactor xfs_fs_statfs") made
+xfs_statfs_data() limit f_bfree with max(0LL, ...) instead of
+max_t(int64_t, 0, ...).
 
-Check that TEST_DEV has enough free space before proceeding and skip
-the test with a descriptive message if it does not.
+However, the value is an unsigned difference, so max() never picks 0.
+As of now, when the free block counter is below the count of
+unavailable blocks, statfs() reports f_bfree and f_bavail close to 2^64
+instead of 0, and df prints negative sizes.
 
-Signed-off-by: Barnali Guha Thakurata <barnali@linux.ibm.com>
+A similar issue happened before and was fixed by commit 237aac4624aa
+("xfs: ensure f_bfree returned by statfs() is non-negative"). Perhaps
+the refactored code needs that fix as well.
+
+The issue can be reproduced on a new 2 GiB filesystem mounted on /mnt:
+
+    for i in $(seq 3000); do head -c 65536 /dev/zero > /mnt/s$i; done
+    dd if=/dev/zero of=/mnt/big bs=1M
+    xfs_io -x -c 'resblks 100000000' /mnt
+    for i in $(seq 1 2 3000); do rm /mnt/s$i; done
+    sync
+    df -h /mnt
+
+Before commit dd324cb79e54 ("xfs: refactor xfs_fs_statfs"), the result
+is:
+
+    Filesystem      Size  Used Avail Use% Mounted on
+    /dev/vda        2.0G  2.0G     0 100% /mnt
+
+After that commit, the result is:
+
+    Filesystem      Size  Used Avail Use% Mounted on
+    /dev/vda        2.0G  -64Z  -24K 100% /mnt
+
+This patch will compare the difference as a signed value again.
+
+Fixes: dd324cb79e54 ("xfs: refactor xfs_fs_statfs")
+Cc: stable@vger.kernel.org # v6.14
+Signed-off-by: Hengyu Liang <hengyul@cs.unc.edu>
 ---
- tests/xfs/601 | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+The resblks ioctl only keeps the reproducer short. The same values show
+up after filling a filesystem, writing with O_DIRECT into preallocated
+space and deleting files.
 
-diff --git a/tests/xfs/601 b/tests/xfs/601
-index 44911ea3..a30f6732 100755
---- a/tests/xfs/601
-+++ b/tests/xfs/601
-@@ -34,6 +34,18 @@ _xfs_skip_offline_rebuild
- echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
+Application impact (Ubuntu 26.04 user space, XFS root in that state):
+on v6.13, "apt install" stops with "You don't have enough free space in
+/var/cache/apt/archives/". On v6.14, it prints "18.4 EB available",
+starts the download and fails with ENOSPC. GNOME's "Low Disk Space"
+notification is sent on v6.13 and not on v6.14.
+
+Tested on xfs for-next: with this patch, df, apt and the notification
+behave as on v6.13.
+
+ fs/xfs/xfs_super.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 5a06132aa384..42be6bd34d43 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -916,7 +916,7 @@ xfs_statfs_data(
+ 		xfs_sum_freecounter(mp, XC_FREE_BLOCKS);
  
-+# Check if TEST_DEV has enough free space for SCRATCH_DEV copy img
-+test_avail=$(_get_available_space $TEST_DIR)
-+_scratch_mount
-+scratch_total=$(_get_total_space $SCRATCH_MNT)
-+scratch_avail=$(_get_available_space $SCRATCH_MNT)
-+scratch_occupied=$((scratch_total-scratch_avail))
-+_scratch_unmount
-+
-+if [ "$((test_avail * 100))" -le "$((scratch_occupied * 110))" ]; then
-+        _notrun "$TEST_DEV too small"
-+fi
-+
- mkdir -p $testdir
- copy_file=$testdir/copy.img
+ 	/* make sure st->f_bfree does not underflow */
+-	st->f_bfree = max(0LL,
++	st->f_bfree = max_t(int64_t, 0,
+ 		fdblocks - xfs_freecounter_unavailable(mp, XC_FREE_BLOCKS));
  
+ 	/*
+
+base-commit: 48326a2382d80715475d10ce98734ac65d2d2150
 -- 
-2.56.0
+2.53.0
 
