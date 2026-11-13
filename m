@@ -1,51 +1,51 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.243
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.233
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794553675;
-	b=uCFSGV5YPYON3Z8SM+1Gid7sUN337WUxHCycNXG7FOpfCFGnBBezY8CPFlIYMNJSGY9F
-	 GLTnJ2cgceUSSAorbiXsb+8Q8vMrA/lnDm5LsaKcYQk5COJs0256EYcjzIBTCox2TMC2+
-	 YnPfucVGpbLXh3pOEaO11LIAzUHIvsih55TJ9BU0PBqFhmaIo27eUOogZ9ikIKq4vOxtG
-	 /W1Nivq2aWUOj+DyahqX7qFkGaVyNFpI8kAv20fTGYtlqFAEGt+kPhQdx4PUFdaVj/YvK
-	 MXwmsjKCeE3yjX8kVcFdkXXDjWOQq1+0qiRvL1srLc9W9xSP0o79vc0z4UjDnfSJTMg==
+	t=1794553691;
+	b=Ri7MWcvnsBXspyZ7C8ZD+czmq/tjz51x0cqzFikxwt1QyeP9RiKNGnnUSsVJcFA7TjkW
+	 3l2mYG8KcU2IoqLRROWVhzKioyW3K9qVw+KCJD25f5Bfp1HctV8ci8+miNr36/LgyU3hV
+	 +6XQKLbNqj07RN8oC1rPNju6SqUmYNx5kLSo9Ykd35fnF25D9okWrK0Bf58mXj2YsqOMz
+	 HxWMh5obggo6M7mZ9Ps6TZgSKm0DGoXOgplxcyzmvTfYKHPN1yfMnuLY2U3hz8HRAVnRl
+	 A7OhUAv2TucOO7FJ5sZZwE165kTvLo6oJa0mArccPPnEg1ThfmqAXWOFSNtrP/xPBFw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794553675;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794553691;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
 	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
 	 X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=Y5c7omIAneSZefT9dfmZbyqefVv1syPKSN+V7Y2Kmgg=;
-	b=0VGn98zU3CsQ8vwnir+FZ0JV9DQnVeRZzV/btxvgCzTUqDVTSKpesYeq2gpcZGkOXHcH
-	 wUnOcvhN7VXSJjtbn+gWMTjOO6cP9Qh79Q1ATEStIWYoyFQ8X0xqlkuNPuoZIes7nbDxB
-	 1o0rsxjdvNHqjuHNXlKE8Q/LhcaX9Gs5hFOiWo0Ztgg9ih8Ok1fRPLtJYwWzdDCMteH+U
-	 qV49UAlXu9h5lxFKoBDvmf1CJhvxtzzkF4I9PErPVYZs78fgtRIhMezjy0iq6FfaYsONX
-	 iRijLmfgIyagLuqLsehIhJc+OLFPlQKA4kfGDaItHuEzQk0tEjhbdOpautFGguWn/aA==
+	bh=oE2P4TXXbwbeZXnmaDd39X4I7W+VRQ8H2a+gqtaKE6M=;
+	b=WDRCPKf/NHpggP8UQDHeazCcr6MVC5JhtENLyjvCaZFr6qZLsYnbDlshWHewEOlmYrzx
+	 0jKcK/C28p5yJHqBhPllDCOGib2ntGY1K822i0ZhChlSvUlWIuDZTE299Uvb20b8sF48O
+	 yozUFn4GXuQ2jJVPeDDUYzMHIR7MrzA8ahzXopCmCOtx5XYE7yK2LT2USc99okufKUm6O
+	 wPoNE0IO2Fj98yVoIiD6N2rTpy9MpBSxP16oxZEkDhxGD0PHP40+tjd+Wn66by/V+O/tO
+	 U+mYHnHPrj2k/w1i4Z365dSy48Qf/rI1G+LZhf22m7zWHN7Tz4a5ROajvO5UWyU50sA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=RSa8yJKW;
-	arc=none smtp.remote-ip=91.218.175.243
-Received: from mta0.migadu.com (out-243.mta0.migadu.com [91.218.175.243])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=nKxRPFkc;
+	arc=none smtp.remote-ip=95.215.58.233
+Received: from mta1.migadu.com (out-233.mta1.migadu.com [95.215.58.233])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E04D606A887
-	for <linux-xfs@vger.kernel.org>; Fri, 13 Nov 2026 07:07:54 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9E04D606A887
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED8E6606A890
+	for <linux-xfs@vger.kernel.org>; Fri, 13 Nov 2026 07:08:10 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org ED8E6606A890
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=RSa8yJKW
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=nKxRPFkc
 X-Envelope-To: linux-xfs@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=wlo9vUd47ggH1TaP4OgfLMAqjSMe1zHTjJ3E73DhNZo=;
+DKIM-Signature: a=rsa-sha256; bh=TGEyrdi/pv1jc6teZ+wM/XGPkjaMpK/OOKnCVbRJDcg=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1794553673; v=1; x=1795158473;
- b=RSa8yJKWKSA+JxYP4Pun8TgADBCQWOoF3MI11B0wxXP5X/Mcy/Am+sMm4fE7S2HtKaZ0QCra
- IVmRmQPzqnewVGrHmsm6wzSyerWAQJEFjLjAZgVysHKB3PGW9EPtILBYI3R1WFYyPbPLcRWNQeI
- CPHjrrSAqs1plnmG1hjJ/Tpk=
+ t=1794553689; v=1; x=1795158489;
+ b=nKxRPFkcrzPC7ZgkWruNcPuZqp1vlKz1pSass6D1zhpeWU/BBB78IxjJXoYSiRXWR3S/RBIh
+ pTYcDSfp7qwzJP6QdsnXUceKvQPByHKrDddl4aN+Hy4zIc6Mi84vxB4uw2NZLDSf1+dwOPop5Pp
+ 0EP0xibP82F/nsdxwbJaCiDw=
 X-Envelope-To: linux-xfs@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id c98b5bb3fe46bebc;
-	Fri, 13 Nov 2026 07:07:52 +0000
-X-Mizu-Trace-ID: c98b5bb3fe46bebc
+Received: by smtp.migadu.com with ESMTPS id 32332e07033e4feb;
+	Fri, 13 Nov 2026 07:08:08 +0000
+X-Mizu-Trace-ID: 32332e07033e4feb
 X-Migadu-Flow: FLOW_OUT
 From: Mengmeng Zhao <mengmeng.zhao@linux.dev>
 To: Christoph Hellwig <hch@lst.de>,
@@ -82,9 +82,9 @@ Cc: linux-block@vger.kernel.org,
 	linaro-mm-sig@lists.linaro.org,
 	Li Wang <liwang@kylinos.cn>,
 	Mengmeng Zhao <zhaomengmeng@kylinos.cn>
-Subject: [RFC PATCH v2 4/8] blk-mq: factor out a dma-buf bio refusal helper
-Date: Fri, 13 Nov 2026 15:06:17 +0800
-Message-ID: <20261113070621.273953-5-mengmeng.zhao@linux.dev>
+Subject: [RFC PATCH v2 5/8] blk-crypto: refuse dma-buf bios in the fallback path
+Date: Fri, 13 Nov 2026 15:06:18 +0800
+Message-ID: <20261113070621.273953-6-mengmeng.zhao@linux.dev>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20261113070621.273953-1-mengmeng.zhao@linux.dev>
 References: <20261113070621.273953-1-mengmeng.zhao@linux.dev>
@@ -101,59 +101,42 @@ Content-Transfer-Encoding: 8bit
 
 From: Mengmeng Zhao <zhaomengmeng@kylinos.cn>
 
-Move the dma-buf integrity check out of blk_mq_submit_bio() into
-bio_dmabuf_should_reject(), so that such checks have one place to grow.
+The inline encryption fallback encrypts through the data pages of a bio,
+which a dma-buf bio does not have: its vec pointer holds the
+driver-private dma_buf_io_map.  A crypt context the device supports
+natively is programmed from the request instead, so refuse only where
+the fallback is about to run.
 
-No functional change.
+blk_mq_submit_bio() is too late for this: submit_bio_noacct() has already
+rejected a context the device does not support natively, while submitters
+reach the fallback before the bio is queued.  No in-tree submitter builds
+such a bio today.
 
 Signed-off-by: Mengmeng Zhao <zhaomengmeng@kylinos.cn>
 Signed-off-by: Li Wang <liwang@kylinos.cn>
 ---
- block/blk-mq.c | 24 +++++++++++++++---------
- 1 file changed, 15 insertions(+), 9 deletions(-)
+ block/blk-crypto.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 5ae22d556540..887d5cc5bb5e 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -3099,6 +3099,20 @@ static bool bio_unaligned(const struct bio *bio, struct request_queue *q)
- 	return false;
- }
- 
-+/*
-+ * A dma-buf bio carries a driver-private map instead of pages, so the block
-+ * layer cannot generate or verify integrity metadata for it.  Only reject when
-+ * it would have to do that itself, not if the submitter attached its own
-+ * payload or if generation or verification is turned off for the device.
-+ */
-+static bool bio_dmabuf_should_reject(struct bio *bio)
-+{
-+	if (!op_is_dmabuf(bio->bi_opf))
-+		return false;
-+	return bdev_has_integrity_csum(bio->bi_bdev) &&
-+	       (bio_integrity_action(bio) & BI_ACT_CHECK);
-+}
-+
- /**
-  * blk_mq_submit_bio - Create and send a request to block device.
-  * @bio: Bio pointer.
-@@ -3160,15 +3174,7 @@ void blk_mq_submit_bio(struct bio *bio)
- 		goto queue_exit;
+diff --git a/block/blk-crypto.c b/block/blk-crypto.c
+index bc3a9f59574b..01b8d26040dc 100644
+--- a/block/blk-crypto.c
++++ b/block/blk-crypto.c
+@@ -271,6 +271,14 @@ bool __blk_crypto_submit_bio(struct bio *bio)
+ 			bio_endio_status(bio, BLK_STS_NOTSUPP);
+ 			return false;
+ 		}
++		/*
++		 * The fallback encrypts from the data pages, which a dma-buf
++		 * bio does not have.
++		 */
++		if (op_is_dmabuf(bio->bi_opf)) {
++			bio_endio_status(bio, BLK_STS_NOTSUPP);
++			return false;
++		}
+ 		return blk_crypto_fallback_bio_prep(bio);
  	}
  
--	/*
--	 * The block layer cannot generate or verify PI for a dma-buf bio, as
--	 * that walks the data pages.  Only fail the bio if it needs that, not
--	 * if the submitter attached its own integrity payload or if PI
--	 * generation or verification is turned off for the device.
--	 */
--	if (unlikely(op_is_dmabuf(bio->bi_opf) &&
--		     bdev_has_integrity_csum(bio->bi_bdev) &&
--		     (bio_integrity_action(bio) & BI_ACT_CHECK))) {
-+	if (unlikely(bio_dmabuf_should_reject(bio))) {
- 		bio_endio_status(bio, BLK_STS_NOTSUPP);
- 		goto queue_exit;
- 	}
 -- 
 2.43.0
 
