@@ -1,48 +1,48 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794571241;
-	b=d98AnBKHv6/5pzWo1+XooaNGCD0qRmCbNlByIFbO45DjZDMafaJK52GFIqcLImeq26Za
-	 IxzjpoTkgKlIsPzJzSVDW8Mi5W725sCe02gUSh1UHOg5c9RPZc2dfN/HdWG4TqHbYBrvD
-	 sW9NAyBZcXz0N1UdQMYCXwJzzlOgqWwedgDXyFd58ommz1bNF/X/PiV3iktGcEIdO7910
-	 m/Ob7KDs+fumZ1GHinFu74vmehVXg4+thMZORWX+Lo02KBg47KmtxFSIU401APo3E5/5S
-	 gLIu5WTyCplWQTkJA66HsCI6k527yfjK/WVeNaQ6fC8zpwy3POV8oo72z6PCDDHNFTg==
+	t=1794571250;
+	b=ki8joO0GJCdrRBXmtBptMWh8bgrV5kq3ZvwYxjTuT/W500LM5shuckHRFqSBfA6KCxez
+	 tyHsQlXYoBJ1RODt+qIvFUCDEjUjGLx5ScaYWYnEukCNHTPvOzgSVtYxL0R7InM3fa6+p
+	 511T4qyLOORRaQbucpsBu7vqOlPN78tFF1Pq0w3hr8nAnTvXfaGEdilXsUW0juvwwfAfg
+	 HkD4yZbWQLU0Xod/tWFiAPyEInrLKJOzwS0hFvQuTaNi40ZpGnz17ptr8cBJFoj8Gx7dh
+	 sxRvkzF1njGHGn36/aurXhzXvNMbsjtmoz0nBVGz+ubes2F4rkvZuYSm2MIt0iYvVjg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794571241;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794571250;
 	h=Received:DKIM-Signature:From:Date:Subject:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
 	 X-Mailer:X-Developer-Signature:X-Developer-Key;
-	bh=nU3OufY6+FaT2mhYk2oVX6KtX/0MjQOWC5b6SehCa5A=;
-	b=easRYTAVosQ5fwGFkHXtINFjcbv3Hwwah2fm22lDP9Xf/1SyZZH+FIhPtSCHLphWmHeb
-	 4d3WFq9/4h6biLQ/V92gsmyPSMCtsNMz8/Rfux5P4+TCQxI7EyUFrTWa5WWXTdWpzfHQp
-	 pi8rwBjjaZ3zurBkJtsJDqj87p2zyljG0UzTGUYX/aSzV9UUz5aoHfGM/AzubkGoZOPzT
-	 kx+gBS/Kc3auK+9uG7TWk7qWjzGyBMbV/bn8cXJsxRL7S5zGy9HVX4I3dGzkA1Nk4V3aU
-	 ELAMeI1UgsAViqxju+YlqmSnt58knr1D5KUHvpKWF1YN7W3/084N81Gw1YEJejn8GBA==
+	bh=fO/77PxjazTXozaWYmXfnUNBIcfWAA9M213KUMdEO2E=;
+	b=w6eGC6yytHsoXmYVJB7r9hwi6Y6J18TzznPOS6zz4mlqR5+z9Qlrq1u2yZBWFGDA6EmE
+	 9OFW1TgfZcygtVC6fbno60i8Zp7RnsLmNjtdj6e2FoqSf7aBmsFEuG0wKzIPBvJpVq6kI
+	 itsHCpGJa5iebCdBITwuJagBfZHQHKlXHykN7ob5oRElNh89elhj8mC4/OlybvhQiCgNi
+	 SLb1xdm8ZXxqePzt1hcrX1YZvLLVVputW1l/DY4L81wZfJa4SOeHRSM8C2FPtO7NzKBbl
+	 TthU8oBeSxcs68p2g/8amDm/P9/xMz0gxhV4h+zqQdnIXSgzyRL7i5CqDePf44hSEgg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="lGt0h/YB";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=O4PJhCa9;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E6A4606A8B8;
-	Fri, 13 Nov 2026 12:00:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40471606A88B;
+	Fri, 13 Nov 2026 12:00:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lGt0h/YB
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 254151F000C4;
-	Fri, 13 Nov 2026 12:00:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=O4PJhCa9
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4455C1F000D0;
+	Fri, 13 Nov 2026 12:00:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794571241;
-	bh=nU3OufY6+FaT2mhYk2oVX6KtX/0MjQOWC5b6SehCa5A=;
+	s=k20260515; t=1794571249;
+	bh=fO/77PxjazTXozaWYmXfnUNBIcfWAA9M213KUMdEO2E=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=lGt0h/YBsqT7OSSFsb5HSFcr33+VxTmIVizXcOzyi63U5oNYzOKL/5m8HJiu59IOs
-	 DLPwByIae25b3p2QfF4as6AzLeSJOP0euanhmeh6Q2RtJvpbxDufj3bk+eXM9VAXrw
-	 fsTBZoiY1clVi2+EP0LQIrfV797AgrSiArb34Gx+4CWtTKDjXpPcdGw30ELG1xfbN8
-	 CqXwE0x5bA7Tm2TtHuWYZ+fRPd8wCxBzWjNld7j5MXx9pINmS06RwnCLFGf3dNvKoN
-	 fWG9A/R5xHfNMFbl+ZAfirB91KetEp70qJ94g7nXknO4Sf15PdNVLAGvdoq/gi7sfj
-	 VpjBgS2lwtHSg==
+	b=O4PJhCa9GmprnCSodb1Tvbb5kApzBmc9OY3BjB+klV4lzQqGkYLRy4J9XCwPWpgSe
+	 xbwQUYHBIhjx2aSoPuJ+YCZ0M9uzKPLEU0OXxmpUcPq28r/yrwofrICt9RE2KfGMXT
+	 0P9zk91R8g/+C8WyS8lIR7JipZtseBKB75Vi3tDqIhrAXzoU2OeaLi8XuvQiCB+ydM
+	 mHYj9piJvtVu4YrS77Kz4D0t0eLFN08qSngK45yf60mjQ0rcyERqc2U9vHRbawZQPm
+	 kewOhL5htAQCPY93n9kLf/hq1uqgXcQIM0wC6m59Nfoyxu2ghl71D/f9J8gPuPh0Yt
+	 gB3NCmsUUkouw==
 From: Christian Brauner <brauner@kernel.org>
-Date: Fri, 13 Nov 2026 12:59:03 +0100
-Subject: [PATCH v3 07/33] jfs: don't set SB_RDONLY after filesystem errors
+Date: Fri, 13 Nov 2026 12:59:05 +0100
+Subject: [PATCH v3 09/33] fat: don't set SB_RDONLY after filesystem errors
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -54,7 +54,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261113-work-fs-sb_rdonly-v3-7-0be92bb73709@kernel.org>
+Message-Id: <20261113-work-fs-sb_rdonly-v3-9-0be92bb73709@kernel.org>
 References: <20261113-work-fs-sb_rdonly-v3-0-0be92bb73709@kernel.org>
 In-Reply-To: <20261113-work-fs-sb_rdonly-v3-0-0be92bb73709@kernel.org>
 To: linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.com>
@@ -65,319 +65,202 @@ Cc: Al Viro <viro@zeniv.linux.org.uk>, ecryptfs@vger.kernel.org,
  linux-btrfs@vger.kernel.org, gfs2@lists.linux.dev, 
  linux-efi@vger.kernel.org, linux-mtd@lists.infradead.org, 
  linux-xfs@vger.kernel.org, 
- "Christian Brauner (Amutable)" <brauner@kernel.org>, 
- Karl Mehltretter <kmehltretter@gmail.com>
+ "Christian Brauner (Amutable)" <brauner@kernel.org>
 X-Mailer: b4 0.17-dev-ce4c1
-X-Developer-Signature: v=1; a=openpgp-sha256; l=10332; i=brauner@kernel.org;
- h=from:subject:message-id; bh=QCdP/lCc0z2rYNymWUec+FNzkOErRfknRyOVNelxSMo=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWR9+72wNqO4NFc6v/5tq1LgYxvbTxWMrst2729anX32/
- sRt5zT4OkpZGMS4GGTFFFkc2k3C5ZbzVGw2ytSAmcPKBDKEgYtTACby6DQjw8Jp7FcWt/dFnPOo
- 4JhieqiRUZ+XUf/ljf6kPQqKTrtcJjH8FVwbya525R5rf7vGxCsBu1d9vHo87tlx24ANnS+FEpw
- OsAAA
+X-Developer-Signature: v=1; a=openpgp-sha256; l=6918; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=hJjqcETpnF8Bw85Y5EMVd99FPp/4PHlnKsk14i9xJCk=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWR9+73k3peNa5ziZH+ZT1ELYw4+uesn+5H7Rk2sP/jlF
+ yvX+fnodJSyMIhxMciKKbI4tJuEyy3nqdhslKkBM4eVCWQIAxenAExkTx/Db9Yqy4MBDS6hZlsO
+ Lplv8Oe/8oaXf4q65T7I7D50+OGTnXwM/wNW7r0ZHML9PKJIeIqbSv6pmtDjirnnKx9OyT79Pvy
+ hFgMA
 X-Developer-Key: i=brauner@kernel.org; a=openpgp;
  fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-With errors=remount-ro, the jfs default, jfs_handle_error() sets
-SB_RDONLY from whatever context hit the error and without holding
-s_umount. If that happens while the filesystem is frozen thaw_super()
-skips jfs_unfreeze() and leaves the s_writers rwsems locked. Writers
-hang and umount shuts the log down a second time and crashes.
+With errors=remount-ro, the default, __fat_fs_error() sets SB_RDONLY
+from whatever context hit the error and without holding s_umount. If
+that happens while the filesystem is frozen through bdev_freeze(), e.g.
+by a device mapper suspend, thaw_super() sees a read-only superblock and
+leaves the s_writers rwsems locked so every writer hangs.
 
 So call sb_set_emergency_ro() instead and let the VFS refuse
-modifications. jfs_unfreeze() used sb_rdonly() to tell whether
-jfs_freeze() shut the log down. Track that in JFS_FLAGS_LOG_SHUTDOWN
-instead so thaw undoes exactly what freeze did.
-
-jfs refuses inode and block allocation and the xattr and ACL setters
-itself, before txBegin() because failing txCommit() with tlocks held
-trips an assert. Allocations writeback hasn't committed yet when the
-error hits leave anonymous tlocks behind. So jfs_dirty_inode() still
-queues commits for those inodes and extRecord() marks the inode dirty
-like extAlloc() does, writeback commits what it still gets to.
-jfs_evict_inode() frees whatever is left and only warns if the
-filesystem is neither read-only nor in the emergency state.
-
-A resize is refused after an error. And with nointegrity jfs_unfreeze()
-records FM_DIRTY again when the error hit while the filesystem was
-frozen.
+modifications. fat still refuses FAT writes, cluster allocation,
+write_begin, O_DIRECT writes and FITRIM itself, leaves the volume marked
+dirty and doesn't free fallocated clusters on evict. fat_write_inode()
+keeps working. Writeback still writes the FAT and the directory blocks
+and rename and create leave the new entry with cluster 0 and size 0
+until fat_write_inode() fills them in. Errors while mounting still set
+SB_RDONLY, nothing can freeze the superblock before SB_BORN.
 
 After a remount to read-only a remount to read-write fails until umount.
 A plain remount to read-write right after the error succeeds but the
-filesystem stays read-only. Writes through file descriptors opened
-before the error fail with EROFS.
+filesystem stays read-only. A remount to read-only doesn't mark the
+volume clean. Writes through file descriptors opened before the error
+fail with EROFS.
 
-Reported-by: Karl Mehltretter <kmehltretter@gmail.com>
-Link: https://lore.kernel.org/r/20260903060855.4610-1-kmehltretter@gmail.com
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- fs/jfs/acl.c        |  3 +++
- fs/jfs/inode.c      |  6 +++++-
- fs/jfs/ioctl.c      |  4 ++++
- fs/jfs/jfs_dtree.c  |  3 ++-
- fs/jfs/jfs_extent.c | 10 ++++++++++
- fs/jfs/jfs_incore.h |  6 ++++++
- fs/jfs/jfs_inode.c  |  3 +++
- fs/jfs/super.c      | 36 +++++++++++++++++++++++++++++++-----
- fs/jfs/xattr.c      |  3 +++
- 9 files changed, 67 insertions(+), 7 deletions(-)
+ fs/fat/dir.c    |  3 +++
+ fs/fat/fatent.c | 11 ++++++++++-
+ fs/fat/file.c   |  4 ++++
+ fs/fat/inode.c  | 13 +++++++++++--
+ fs/fat/misc.c   | 19 +++++++++++++------
+ 5 files changed, 41 insertions(+), 9 deletions(-)
 
-diff --git a/fs/jfs/acl.c b/fs/jfs/acl.c
-index 6e0a7feb6c808..ab4c07db7b4ad 100644
---- a/fs/jfs/acl.c
-+++ b/fs/jfs/acl.c
-@@ -98,6 +98,9 @@ int jfs_set_acl(const struct mnt_idmap *idmap, struct dentry *dentry,
- 	struct inode *inode = d_inode(dentry);
- 	umode_t mode = inode->i_mode;
+diff --git a/fs/fat/dir.c b/fs/fat/dir.c
+index 35bdb62944a2e..553034bcbed40 100644
+--- a/fs/fat/dir.c
++++ b/fs/fat/dir.c
+@@ -1329,6 +1329,9 @@ int fat_add_entries(struct inode *dir, void *slots, int nr_slots,
+ 	loff_t pos;
+ 	bool saw_eod;
  
-+	if (sb_emergency_ro(inode->i_sb))
++	if (unlikely(sb_emergency_ro(sb)))
 +		return -EROFS;
 +
- 	tid = txBegin(inode->i_sb, 0);
- 	mutex_lock(&JFS_IP(inode)->commit_mutex);
- 	if (type == ACL_TYPE_ACCESS && acl) {
-diff --git a/fs/jfs/inode.c b/fs/jfs/inode.c
-index 24b51461aacc9..2f9d6d311de91 100644
---- a/fs/jfs/inode.c
-+++ b/fs/jfs/inode.c
-@@ -178,7 +178,7 @@ void jfs_evict_inode(struct inode *inode)
- 	 * nothing did.
- 	 */
- 	if (ji->atlhead) {
--		WARN_ON_ONCE(!sb_rdonly(inode->i_sb));
-+		WARN_ON_ONCE(!sb_rdonly_any(inode->i_sb));
- 		txAbortAnon(inode);
- 	}
- 	BUG_ON(!list_empty(&ji->anon_inode_list));
-@@ -196,6 +196,10 @@ void jfs_dirty_inode(struct inode *inode, int flags)
+ 	sinfo->nr_slots = nr_slots;
+ 
+ 	/* First stage: search free directory entries */
+diff --git a/fs/fat/fatent.c b/fs/fat/fatent.c
+index 2d10a815a5797..9e4bb0140320f 100644
+--- a/fs/fat/fatent.c
++++ b/fs/fat/fatent.c
+@@ -314,7 +314,7 @@ static void mark_fsinfo_dirty(struct super_block *sb)
  {
- 	static int noisy = 5;
+ 	struct msdos_sb_info *sbi = MSDOS_SB(sb);
  
-+	/* After an error only allocations under way still get committed. */
-+	if (sb_emergency_ro(inode->i_sb) && !READ_ONCE(JFS_IP(inode)->atlhead))
-+		return;
-+
- 	if (isReadOnly(inode)) {
- 		if (!special_file(inode->i_mode) && noisy) {
- 			/* kernel allows writes to devices on read-only
-diff --git a/fs/jfs/ioctl.c b/fs/jfs/ioctl.c
-index 27d39cddaca6e..df38ab15e3326 100644
---- a/fs/jfs/ioctl.c
-+++ b/fs/jfs/ioctl.c
-@@ -116,6 +116,10 @@ long jfs_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
- 		if (!capable(CAP_SYS_ADMIN))
- 			return -EPERM;
- 
-+		/* Don't trust the block map after an error. */
-+		if (sb_emergency_ro(sb))
-+			return -EROFS;
-+
- 		if (!bdev_max_discard_sectors(sb->s_bdev)) {
- 			jfs_warn("FITRIM not supported on device");
- 			return -EOPNOTSUPP;
-diff --git a/fs/jfs/jfs_dtree.c b/fs/jfs/jfs_dtree.c
-index 8ce6e4458cc25..330d291df12af 100644
---- a/fs/jfs/jfs_dtree.c
-+++ b/fs/jfs/jfs_dtree.c
-@@ -2935,7 +2935,8 @@ int jfs_readdir(struct file *file, struct dir_context *ctx)
- 				if ((jfs_dirent->position < 2) ||
- 				    (jfs_dirent->position >=
- 				     JFS_IP(ip)->next_index)) {
--					if (!page_fixed && !isReadOnly(ip)) {
-+					if (!page_fixed && !isReadOnly(ip) &&
-+					    !sb_emergency_ro(ip->i_sb)) {
- 						fix_page = 1;
- 						/*
- 						 * setting overflow and setting
-diff --git a/fs/jfs/jfs_extent.c b/fs/jfs/jfs_extent.c
-index 46529bcc8297e..ba55e0bbecd24 100644
---- a/fs/jfs/jfs_extent.c
-+++ b/fs/jfs/jfs_extent.c
-@@ -74,6 +74,9 @@ extAlloc(struct inode *ip, s64 xlen, s64 pno, xad_t * xp, bool abnr)
- 	int rc;
- 	int xflag;
- 
-+	if (sb_emergency_ro(ip->i_sb))
-+		return -EROFS;
-+
- 	if (isReadOnly(ip)) {
- 		jfs_error(ip->i_sb, "read-only filesystem\n");
- 		return -EIO;
-@@ -258,6 +261,9 @@ int extRecord(struct inode *ip, xad_t * xp)
- {
- 	int rc;
- 
-+	if (sb_emergency_ro(ip->i_sb))
-+		return -EROFS;
-+
- 	if (isReadOnly(ip)) {
- 		jfs_error(ip->i_sb, "read-only filesystem\n");
- 		return -EIO;
-@@ -270,6 +276,10 @@ int extRecord(struct inode *ip, xad_t * xp)
- 	/* update the extent */
- 	rc = xtUpdate(0, ip, xp);
- 
-+	/* get the anonymous tlocks committed, like extAlloc() does */
-+	if (!rc)
-+		mark_inode_dirty(ip);
-+
- 	mutex_unlock(&JFS_IP(ip)->commit_mutex);
- 	return rc;
- }
-diff --git a/fs/jfs/jfs_incore.h b/fs/jfs/jfs_incore.h
-index 5aaafedb8fbce..b8d76415fae76 100644
---- a/fs/jfs/jfs_incore.h
-+++ b/fs/jfs/jfs_incore.h
-@@ -192,6 +192,7 @@ struct jfs_sb_info {
- 	struct inode *direct_inode;	/* metadata inode */
- 	uint		state;		/* mount/recovery state	*/
- 	unsigned long	flag;		/* mount time flags */
-+	unsigned long	jfs_flags;	/* runtime state, JFS_FLAGS_* */
- 	uint		p_state;	/* state prior to going no integrity */
- 	kuid_t		uid;		/* uid to override on-disk uid */
- 	kgid_t		gid;		/* gid to override on-disk gid */
-@@ -202,6 +203,11 @@ struct jfs_sb_info {
- /* jfs_sb_info commit_state */
- #define IN_LAZYCOMMIT 1
- 
-+/* jfs_sb_info jfs_flags bits */
-+enum {
-+	JFS_FLAGS_LOG_SHUTDOWN,	/* jfs_freeze() shut the log down */
-+};
-+
- static inline struct jfs_inode_info *JFS_IP(struct inode *inode)
- {
- 	return container_of(inode, struct jfs_inode_info, vfs_inode);
-diff --git a/fs/jfs/jfs_inode.c b/fs/jfs/jfs_inode.c
-index f10f295d1502f..10e70b5a9c6ff 100644
---- a/fs/jfs/jfs_inode.c
-+++ b/fs/jfs/jfs_inode.c
-@@ -45,6 +45,9 @@ struct inode *ialloc(struct inode *parent, umode_t mode)
- 	struct jfs_inode_info *jfs_inode;
- 	int rc;
- 
-+	if (sb_emergency_ro(sb))
-+		return ERR_PTR(-EROFS);
-+
- 	inode = new_inode(sb);
- 	if (!inode) {
- 		jfs_warn("ialloc: new_inode returned NULL!");
-diff --git a/fs/jfs/super.c b/fs/jfs/super.c
-index 8180d83d33fed..e7b43c2860a33 100644
---- a/fs/jfs/super.c
-+++ b/fs/jfs/super.c
-@@ -63,7 +63,7 @@ static void jfs_handle_error(struct super_block *sb)
- {
- 	struct jfs_sb_info *sbi = JFS_SBI(sb);
- 
--	if (sb_rdonly(sb))
-+	if (sb_rdonly_any(sb))
+-	if (sb_rdonly(sb) || !is_fat32(sbi))
++	if (sb_rdonly_any(sb) || !is_fat32(sbi))
  		return;
  
- 	updateSuper(sb, FM_DIRTY);
-@@ -74,7 +74,8 @@ static void jfs_handle_error(struct super_block *sb)
- 	else if (sbi->flag & JFS_ERR_REMOUNT_RO) {
- 		jfs_err("ERROR: (device %s): remounting filesystem as read-only",
- 			sb->s_id);
--		sb->s_flags |= SB_RDONLY;
-+		/* SB_RDONLY needs s_umount, see sb_set_emergency_ro(). */
-+		sb_set_emergency_ro(sb);
- 	}
+ 	__mark_inode_dirty(sbi->fsinfo_inode, I_DIRTY_SYNC);
+@@ -419,6 +419,9 @@ int fat_ent_write(struct inode *inode, struct fat_entry *fatent,
+ 	const struct fatent_operations *ops = MSDOS_SB(sb)->fatent_ops;
+ 	int err;
  
- 	/* nothing is done for continue beyond marking the superblock dirty */
-@@ -367,6 +368,10 @@ static int jfs_reconfigure(struct fs_context *fc)
- 	int flag = ctx->flag;
- 	int ret;
- 
-+	/* Don't resize based on a block map we don't trust after an error. */
-+	if (ctx->resize && sb_emergency_ro(sb))
++	if (unlikely(sb_emergency_ro(sb)))
 +		return -EROFS;
 +
- 	sync_filesystem(sb);
+ 	ops->ent_put(fatent, new);
+ 	if (wait) {
+ 		err = fat_sync_bhs(fatent->bhs, fatent->nr_bhs);
+@@ -513,6 +516,9 @@ static int __fat_alloc_clusters(struct inode *inode, int *cluster, int nr_cluste
+ 	struct buffer_head *bhs[MAX_BUF_PER_PAGE];
+ 	int i, count, err, nr_bhs, idx_clus;
  
- 	/* Transfer results of parsing to the sbi */
-@@ -382,7 +387,8 @@ static int jfs_reconfigure(struct fs_context *fc)
- 	ctx->nls_map = NULL;
++	if (unlikely(sb_emergency_ro(sb)))
++		return -EROFS;
++
+ 	lock_fat(sbi);
+ 	if (sbi->free_clusters != -1 && sbi->free_clus_valid &&
+ 	    sbi->free_clusters < nr_cluster) {
+@@ -620,6 +626,9 @@ int fat_free_clusters(struct inode *inode, int cluster)
+ 	int i, err, nr_bhs;
+ 	int first_cl = cluster, dirty_fsinfo = 0;
  
- 	if (ctx->resize) {
--		if (sb_rdonly(sb)) {
-+		/* An error can also hit during the sync above. */
-+		if (sb_rdonly_any(sb)) {
- 			pr_err("JFS: resize requires volume to be mounted read-write\n");
- 			return -EROFS;
- 		}
-@@ -415,6 +421,9 @@ static int jfs_reconfigure(struct fs_context *fc)
- 		return ret;
- 	}
- 	if (!sb_rdonly(sb) && readonly) {
-+		/* After an error nothing may be written, umount closes the log. */
-+		if (sb_emergency_ro(sb))
-+			return 0;
- 		rc = dquot_suspend(sb, -1);
- 		if (rc < 0)
- 			return rc;
-@@ -587,6 +596,15 @@ static int jfs_freeze(struct super_block *sb)
- 	int rc = 0;
++	if (unlikely(sb_emergency_ro(sb)))
++		return -EROFS;
++
+ 	nr_bhs = 0;
+ 	fatent_init(&fatent);
+ 	lock_fat(sbi);
+diff --git a/fs/fat/file.c b/fs/fat/file.c
+index d4f1b360b9743..3d0a81994fb70 100644
+--- a/fs/fat/file.c
++++ b/fs/fat/file.c
+@@ -135,6 +135,10 @@ static int fat_ioctl_fitrim(struct inode *inode, unsigned long arg)
+ 	if (!capable(CAP_SYS_ADMIN))
+ 		return -EPERM;
  
- 	if (!sb_rdonly(sb)) {
-+		/*
-+		 * After an error leave the log open and the superblock alone.
-+		 * Waiting for everything to be written home needs a quiesced
-+		 * log, jfs_flush_journal() BUG()s otherwise.
-+		 */
-+		if (sb_emergency_ro(sb)) {
-+			jfs_flush_journal(log, 1);
-+			return 0;
-+		}
- 		txQuiesce(sb);
- 		rc = lmLogShutdown(log);
- 		if (rc) {
-@@ -597,6 +615,7 @@ static int jfs_freeze(struct super_block *sb)
++	/* Don't trust the FAT after an error. */
++	if (unlikely(sb_emergency_ro(sb)))
++		return -EROFS;
++
+ 	if (!bdev_max_discard_sectors(sb->s_bdev))
+ 		return -EOPNOTSUPP;
  
- 			return rc;
- 		}
-+		set_bit(JFS_FLAGS_LOG_SHUTDOWN, &sbi->jfs_flags);
- 		rc = updateSuper(sb, FM_CLEAN);
- 		if (rc) {
- 			jfs_err("jfs_freeze: updateSuper failed");
-@@ -616,15 +635,22 @@ static int jfs_unfreeze(struct super_block *sb)
- 	struct jfs_log *log = sbi->log;
- 	int rc = 0;
+diff --git a/fs/fat/inode.c b/fs/fat/inode.c
+index d85c8fbdcca46..2779583c64423 100644
+--- a/fs/fat/inode.c
++++ b/fs/fat/inode.c
+@@ -228,6 +228,9 @@ static int fat_write_begin(const struct kiocb *iocb,
+ {
+ 	int err;
  
--	if (!sb_rdonly(sb)) {
-+	/* Undo what jfs_freeze() did, also if an error happened meanwhile. */
-+	if (test_bit(JFS_FLAGS_LOG_SHUTDOWN, &sbi->jfs_flags)) {
- 		rc = updateSuper(sb, FM_MOUNT);
- 		if (rc) {
- 			jfs_error(sb, "updateSuper failed\n");
- 			goto out;
- 		}
-+		/* With nointegrity FM_MOUNT forgets an error while frozen. */
-+		if (sb_emergency_ro(sb))
-+			updateSuper(sb, FM_DIRTY);
- 		rc = lmLogInit(log);
--		if (rc)
-+		if (rc) {
- 			jfs_error(sb, "lmLogInit failed\n");
-+			goto out;
-+		}
-+		clear_bit(JFS_FLAGS_LOG_SHUTDOWN, &sbi->jfs_flags);
- out:
- 		txResume(sb);
- 	}
-diff --git a/fs/jfs/xattr.c b/fs/jfs/xattr.c
-index dcc4a69d44fec..c3216a34fc662 100644
---- a/fs/jfs/xattr.c
-+++ b/fs/jfs/xattr.c
-@@ -936,6 +936,9 @@ static int __jfs_xattr_set(struct inode *inode, const char *name,
- 	tid_t tid;
- 	int rc;
++	if (unlikely(sb_emergency_ro(mapping->host->i_sb)))
++		return -EROFS;
++
+ 	err = cont_write_begin(iocb, mapping, pos, len,
+ 				foliop, fsdata, fat_get_block,
+ 				&MSDOS_I(mapping->host)->mmu_private);
+@@ -264,6 +267,8 @@ static ssize_t fat_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
+ 	ssize_t ret;
  
+ 	if (iov_iter_rw(iter) == WRITE) {
++		if (unlikely(sb_emergency_ro(inode->i_sb)))
++			return -EROFS;
+ 		/*
+ 		 * FIXME: blockdev_direct_IO() doesn't use ->write_begin(),
+ 		 * so we need to update the ->mmu_private to block boundary.
+@@ -662,6 +667,10 @@ static int fat_sync_inode_metadata(struct inode *inode,
+ 
+ static void fat_free_eofblocks(struct inode *inode)
+ {
++	/* Nothing can be freed after an error. */
 +	if (sb_emergency_ro(inode->i_sb))
-+		return -EROFS;
++		return;
 +
- 	tid = txBegin(inode->i_sb, 0);
- 	mutex_lock(&ji->commit_mutex);
- 	rc = __jfs_setxattr(tid, inode, name, value, size, flags);
+ 	/* Release unwritten fallocated blocks on inode eviction. */
+ 	if ((inode->i_blocks << 9) >
+ 			round_up(MSDOS_I(inode)->mmu_private,
+@@ -710,8 +719,8 @@ static void fat_set_state(struct super_block *sb,
+ 	struct fat_boot_sector *b;
+ 	struct msdos_sb_info *sbi = MSDOS_SB(sb);
+ 
+-	/* do not change any thing if mounted read only */
+-	if (sb_rdonly(sb) && !force)
++	/* do not change any thing if mounted read only or after an error */
++	if ((sb_rdonly(sb) && !force) || sb_emergency_ro(sb))
+ 		return;
+ 
+ 	/* do not change state if fs was dirty */
+diff --git a/fs/fat/misc.c b/fs/fat/misc.c
+index 65d02f2edec38..05d061b594a67 100644
+--- a/fs/fat/misc.c
++++ b/fs/fat/misc.c
+@@ -14,9 +14,9 @@
+  * fat_fs_error reports a file system problem that might indicate fa data
+  * corruption/inconsistency. Depending on 'errors' mount option the
+  * panic() is called, or error message is printed FAT and nothing is done,
+- * or filesystem is remounted read-only (default behavior).
+- * In case the file system is remounted read-only, it can be made writable
+- * again by remounting it.
++ * or the filesystem is made read-only (default behavior): a mount in
++ * progress comes up read-only, a mounted filesystem refuses all further
++ * modifications until it is unmounted.
+  */
+ void __fat_fs_error(struct super_block *sb, int report, const char *fmt, ...)
+ {
+@@ -32,10 +32,17 @@ void __fat_fs_error(struct super_block *sb, int report, const char *fmt, ...)
+ 		va_end(args);
+ 	}
+ 
+-	if (opts->errors == FAT_ERRORS_PANIC)
++	if (opts->errors == FAT_ERRORS_PANIC) {
+ 		panic("FAT-fs (%s): fs panic from previous error\n", sb->s_id);
+-	else if (opts->errors == FAT_ERRORS_RO && !sb_rdonly(sb)) {
+-		sb->s_flags |= SB_RDONLY;
++	} else if (opts->errors == FAT_ERRORS_RO && !sb_rdonly(sb)) {
++		/*
++		 * Before SB_BORN the mounter holds s_umount so SB_RDONLY is
++		 * fine. Later it needs a remount, see sb_set_emergency_ro().
++		 */
++		if (!(sb->s_flags & SB_BORN))
++			sb->s_flags |= SB_RDONLY;
++		else if (!sb_set_emergency_ro(sb))
++			return;
+ 		fat_msg(sb, KERN_ERR, "Filesystem has been set read-only");
+ 	}
+ }
 
 -- 
 2.53.0
