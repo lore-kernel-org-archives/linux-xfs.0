@@ -1,93 +1,133 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.57
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.131
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794553741;
-	b=f/sYS85381vxpybMVH04m3fI6oju9+wYkDL3KndTvpckAfGeceQyAA8Aw5Hxf/3oNoN8
-	 tNKdZ9w5KmxNv9xPFitmG86k6fL5NuUgCvih78GqkD2R8cLVMYprTuLQY/mnK7GCZquc+
-	 KbsRO9fLV4O1KBX3m1CE+Vs9F4xgQpyav1YRvc8KmIOY4rJaJpUD63Pn7MYI2hjQ4zO2x
-	 R/MQt9WJdPCJsMruM9J0nOxlAkgSVgIXfcw3QDVhH59FPy/+wfqQ0TjaoPSEHvMtZMMW5
-	 asotJHxp7kZE3qc3/sES0PMYFDi8pPWj4IKmZlYvbppYF9m2bbUnsmKqUju1RxdbWMw==
+	t=1794559665;
+	b=XbrIlj6sPOffWLpQhMqaZHo2xIC8DqVUBxiE4TukYLMw3LSwWGgbR9/y4A0peRTV1Q0V
+	 88M7TqrPsEMnJWE6JzLS9fUl8bL4FOOBuvY099r873kFgpmSz3QsS6vFw22pw9vRb9OLu
+	 /Tw8efIW7bbFSNeG/Ro+HRnK8jUiCn1+zWQP9hmxa7U5Fh0yUnnIsl7waGTCCHireAh9E
+	 meA1+cvQ+woAvWKqf4xYzO6yaYmJmjPH3Dc3mqd4xWGRfmbHs6HF4jRP85Ex2CGdwn7X5
+	 +AeKnIZy7i+lDM6f3VXBt5gTwHNrAMFqP7a7pa0zXll2K1AJ4DIuyfwWVfqmaGbTZ2g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794553741;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
-	 X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=SYhdRBfbhOCrZODwMof2LJJutjMOsW3pk0k9wT+4x1s=;
-	b=gYiFFHCE4Yn+ncxCvXJoMIltdFFFoATN0k7x9srAhrDmcfBKZDXZPIHOvKKHO3dOFv78
-	 g79MgH6K8Mmmiadv9SNg+OGRoKxfg0S4MzWJzDJlaMqyZhn5OrQ3R4pKKhAlmVlIaxW1x
-	 PYjimNhEUPZT9LmFizLZ/N5zTa4ebeaQJPf3qjRNifXpbjYwAB9OdummWqfi6SuFOHmjg
-	 TeX8jfEP1nei8Hz8hchAUHn76lIJxvVwYMT8a1ERkr1GEVugIfZGfEhWaNMPOncKq//87
-	 rbejhA/T6TvAtjeEg/0WA+N9nGMylcRIleP+PI1zNdnX/TpwemhFz7tYlg9moP/D/jw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794559665;
+	h=DMARC-Filter:Received:DKIM-Signature:DKIM-Signature:DKIM-Signature:
+	 DKIM-Signature:Received:Received:Received:From:To:Cc:Subject:Date:
+	 Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
+	 X-Developer-Signature:X-Developer-Key:Content-Transfer-Encoding:
+	 X-Spamd-Result:X-Spam-Score:X-Spam-Level:X-Spam-Flag;
+	bh=Z98a10fHzT++6ngZEHshG/H2z2HCNkc0ofB6cf23iao=;
+	b=j/B0HIvVj5NnSaKJGL5wQJgnE71sFwfBrbO+7dI8JKKIvDWwfzbvAqhhMNQUrlA1tLUJ
+	 3N7TTcrCoea+M89ypyIeEscGw9ralUx8mWTzfBjrSvBzsgxOySe5G2SdhWWzWy9uVwJLm
+	 xHgTaEEkixG3TNsDb2nKyi9ccheOl/KloJEkkOVx0B6cnu67cTavmeJ0O9VUJQ8+05jni
+	 DedrhIZceAEbhIjmDHw4ro7tgi2XEUoAyVDSXACz0VKeUKVI3X4FBtpzrq+8HYn0Ym8TK
+	 DkSg9TFTLyUB5ufJhCvXAKVcjDvhuNtTPUdk+UKb8EPMzboaZ7AgLyHXeBXSM/hhlLA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b="Dp9/6ycq";
-	arc=none smtp.remote-ip=91.218.175.57
-Received: from mta0.migadu.com (out-57.mta0.migadu.com [91.218.175.57])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=none header.from=suse.cz;
+	spf=pass smtp.mailfrom=suse.cz;
+	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=p1PjY5Ov;
+	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=59b71h5U;
+	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=p1PjY5Ov;
+	dkim=neutral header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=59b71h5U;
+	arc=none smtp.remote-ip=195.135.223.131
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DC3760A2612
-	for <linux-xfs@vger.kernel.org>; Fri, 13 Nov 2026 07:09:00 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7DC3760A2612
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D50C8606B363;
+	Fri, 13 Nov 2026 08:47:44 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D50C8606B363
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=Dp9/6ycq
-X-Envelope-To: linux-xfs@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=ePA00gWH1MMaJNHfq4j4NnI+p0p7J/Mr89Hwy2EXwkk=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1794553738; v=1; x=1795158538;
- b=Dp9/6ycq2YWXiQ6b4AiPtsFaJAAG7cErPS8EDzt4qVA6R6GQkKRwJudQmlf7LPL9q5LTxVew
- XcOsQdZ2T2QoIlXmthGFUc4CkwoDua3I53Newym883kisoCTBE/pi44tegesqzL8SvBnD/2rjiO
- W/5O4s3f/zHv7QPdPPW9/80Q=
-X-Envelope-To: linux-xfs@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 60ee62a93959a5fb;
-	Fri, 13 Nov 2026 07:08:57 +0000
-X-Mizu-Trace-ID: 60ee62a93959a5fb
-X-Migadu-Flow: FLOW_OUT
-From: Mengmeng Zhao <mengmeng.zhao@linux.dev>
-To: Christoph Hellwig <hch@lst.de>,
-	Anuj Gupta <anuj1072538@gmail.com>,
-	Nitesh Shetty <nj.shetty@samsung.com>,
-	Jens Axboe <axboe@kernel.dk>,
-	Sumit Semwal <sumit.semwal@linaro.org>,
-	christian.koenig@amd.com,
-	Philipp Stanner <phasta@kernel.org>,
-	Dan Williams <djbw@kernel.org>,
-	Matthew Wilcox <willy@infradead.org>,
-	Jan Kara <jack@suse.cz>,
-	Alexander Viro <viro@zeniv.linux.org.uk>,
-	Christian Brauner <brauner@kernel.org>,
-	tytso@mit.edu,
-	Andreas Dilger <adilger.kernel@dilger.ca>,
-	Baokun Li <libaokun@linux.alibaba.com>,
-	Ojaswin Mujoo <ojaswin@linux.ibm.com>,
-	"Ritesh Harjani (IBM)" <ritesh.list@gmail.com>,
-	Zhang Yi <yi.zhang@huawei.com>,
-	asml.silence@gmail.com,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>
-Cc: linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	nvdimm@lists.linux.dev,
-	linux-ext4@vger.kernel.org,
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=p1PjY5Ov;
+	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=59b71h5U;
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=p1PjY5Ov;
+	dkim=neutral header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=59b71h5U
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 579C61F82F;
+	Fri, 13 Nov 2026 08:47:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1794559663; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Z98a10fHzT++6ngZEHshG/H2z2HCNkc0ofB6cf23iao=;
+	b=p1PjY5OvtCLshRodLIl+qksUzxWjYgUbxkQZYFV8Fi21RjfBL4MWoqMkzNdzoSkpP1oU0Q
+	7PYpKecMrALj0u00wTTXafOy4mx2jhIxH1m6KD8RnjT8VzuwJw5xpUDb4mDC2msBku2DuD
+	ASOWKb3Gc0MPzYAY82vEOjPpDmlLH2o=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1794559663;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Z98a10fHzT++6ngZEHshG/H2z2HCNkc0ofB6cf23iao=;
+	b=59b71h5UpNNXXrIHVb3Mbia9BjwFaXND0ms8AH+dtl2fOpYULX3Amygl/rPASpvrjFtajI
+	W/J1ScVxYvMNUOCA==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1794559663; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Z98a10fHzT++6ngZEHshG/H2z2HCNkc0ofB6cf23iao=;
+	b=p1PjY5OvtCLshRodLIl+qksUzxWjYgUbxkQZYFV8Fi21RjfBL4MWoqMkzNdzoSkpP1oU0Q
+	7PYpKecMrALj0u00wTTXafOy4mx2jhIxH1m6KD8RnjT8VzuwJw5xpUDb4mDC2msBku2DuD
+	ASOWKb3Gc0MPzYAY82vEOjPpDmlLH2o=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1794559663;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Z98a10fHzT++6ngZEHshG/H2z2HCNkc0ofB6cf23iao=;
+	b=59b71h5UpNNXXrIHVb3Mbia9BjwFaXND0ms8AH+dtl2fOpYULX3Amygl/rPASpvrjFtajI
+	W/J1ScVxYvMNUOCA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id E17361368B;
+	Fri, 13 Nov 2026 08:47:42 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id 7BOYMK7O9mqPFwAAD6G6ig
+	(envelope-from <jack@suse.cz>); Fri, 13 Nov 2026 08:47:42 +0000
+Received: by quack.suse.cz (Postfix, from userid 1000)
+	id 2E9F422C30; Fri, 13 Nov 2026 09:47:42 +0100 (CET)
+From: Jan Kara <jack@suse.cz>
+To: Christian Brauner <brauner@kernel.org>
+Cc: <linux-fsdevel@vger.kernel.org>,
+	Andreas Gruenbacher <agruenba@redhat.com>,
+	gfs2@lists.linux.dev,
+	Mike Marshall <hubcap@omnibond.com>,
+	Martin Brandenburg <martin@omnibond.com>,
+	devel@lists.orangefs.org,
+	Dave Kleikamp <shaggy@kernel.org>,
+	jfs-discussion@lists.sourceforge.net,
+	Carlos Maiolino <cem@kernel.org>,
 	linux-xfs@vger.kernel.org,
-	linux-doc@vger.kernel.org,
-	linux-media@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
-	linaro-mm-sig@lists.linaro.org,
-	Li Wang <liwang@kylinos.cn>,
-	Mengmeng Zhao <zhaomengmeng@kylinos.cn>
-Subject: [RFC PATCH v2 8/8] ext4: support dma-buf registered buffers for direct I/O
-Date: Fri, 13 Nov 2026 15:06:21 +0800
-Message-ID: <20261113070621.273953-9-mengmeng.zhao@linux.dev>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20261113070621.273953-1-mengmeng.zhao@linux.dev>
-References: <20261113070621.273953-1-mengmeng.zhao@linux.dev>
+	David Howells <dhowells@redhat.com>,
+	Marc Dionne <marc.dionne@auristor.com>,
+	linux-afs@lists.infradead.org,
+	Miklos Szeredi <miklos@szeredi.hu>,
+	fuse-devel@lists.linux.dev,
+	<linux-block@vger.kernel.org>,
+	Chuck Lever <cel@kernel.org>,
+	Jeff Layton <jlayton@kernel.org>,
+	linux-nfs@vger.kernel.org,
+	Eric Biggers <ebiggers@kernel.org>,
+	Jaegeuk Kim <jaegeuk@kernel.org>,
+	linux-fscrypt@vger.kernel.org,
+	Jan Kara <jack@suse.cz>
+Subject: [PATCH 04/13] fs: Provide inode_is_dirty() helper
+Date: Fri, 13 Nov 2026 09:47:04 +0100
+Message-ID: <20261113084700.739002-17-jack@suse.cz>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20261113083336.15152-1-jack@suse.cz>
+References: <20261113083336.15152-1-jack@suse.cz>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -97,176 +137,64 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=953; i=jack@suse.cz; h=from:subject; bh=xOmo84WJOisQVAhQnOPGQkdou8zuAdb6TcwawJJufqw=; b=owEBbQGS/pANAwAIAZydqgc/ZEDZAcsmYgBq9s6Gf2G0M3LorDLP5OvjOgq4WAHvSsH554SUA qj6hLx64miJATMEAAEIAB0WIQSrWdEr1p4yirVVKBycnaoHP2RA2QUCavbOhgAKCRCcnaoHP2RA 2VGQB/9ekMeVHsyMTY52QC9Ajnl7GwwQOMx4b5NxdHjsWCmVMFrkMT3opTfSbHtdFDSepchQMt2 g+NskCoAOO1J1kD8DXBuIByMnLhzEs14RPJYZzVKSiM/yzbL4MQOqIW5QGk+BNojsbQtCApCen3 3gjdj9pUxfCA69MPNHb6GkRt2j045meRcgI7kQeKRPHTbce8RADmIdfIbkks14hfna0skwaiTXs uv/vAgUgb9KpFQ276vNtde87gqaBHyf/jpqe0z5Pd40UcwpZVyII7jBZ/6oSWkKGtnnsXWwjHZs Li4c1jot+3hZKifTXS475/z/6mf/pRJbRPgtfsK1iewhS7jr
+X-Developer-Key: i=jack@suse.cz; a=openpgp; fpr=93C6099A142276A28BBE35D815BC833443038D8C
 Content-Transfer-Encoding: 8bit
+X-Spamd-Result: default: False [-11.80 / 50.00];
+	SUSE_INTERNAL_BYPASS(-9.00)[];
+	BAYES_HAM(-3.00)[100.00%];
+	MID_CONTAINS_FROM(1.00)[];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_MISSING_CHARSET(0.50)[];
+	NEURAL_HAM_SHORT(-0.20)[-0.984];
+	MIME_GOOD(-0.10)[text/plain];
+	RCVD_TLS_LAST(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	FROM_HAS_DN(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[24];
+	TO_DN_SOME(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	ARC_NA(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	R_RATELIMIT(0.00)[to_ip_from(RLyaw51ggmke6bkcxeyajg5whq)];
+	RCVD_COUNT_THREE(0.00)[3];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.cz:email,imap1.dmz-prg2.suse.org:helo]
+X-Spam-Score: -11.80
+X-Spam-Level: 
+X-Spam-Flag: NO
 
-From: Mengmeng Zhao <zhaomengmeng@kylinos.cn>
+Provide inode_is_dirty() helper for use by filesystems (mostly fsync
+methods).
 
-Advertise FMODE_CAN_DMABUF_IO for inodes that can support dma-buf I/O
-and implement ->init_dma_buf_io_ctx() by registering the buffer against
-the filesystem's block device.  The capability follows
-ext4_dio_alignment(), so an inode that can never do direct I/O -
-fs-verity, data=journal or inline data - is refused at open, and
-encrypted inodes are refused on the inode flag, which is set even
-without CONFIG_FS_ENCRYPTION.  The inode is rechecked at registration
-because DAX can be enabled after the file was opened.
-
-A dma-buf iterator has no pages to copy from, so it must never reach the
-page cache.  ext4_buffered_read_iter() and ext4_buffered_write_iter() are
-the single sinks of the buffered fallbacks and refuse it there; a short
-direct I/O write still reports its progress, and the DAX write path
-refuses at its entry instead of after starting a journal handle.
-
-Signed-off-by: Mengmeng Zhao <zhaomengmeng@kylinos.cn>
-Signed-off-by: Li Wang <liwang@kylinos.cn>
+Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/ext4/ext4.h | 11 +++++++++++
- fs/ext4/file.c | 44 +++++++++++++++++++++++++++++++++++++++++---
- 2 files changed, 52 insertions(+), 3 deletions(-)
+ include/linux/fs.h | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-diff --git a/fs/ext4/ext4.h b/fs/ext4/ext4.h
-index f38fec3167fb..028b2e5ddc8b 100644
---- a/fs/ext4/ext4.h
-+++ b/fs/ext4/ext4.h
-@@ -4135,6 +4135,17 @@ static inline bool ext4_inode_can_atomic_write(struct inode *inode)
- 		EXT4_SB(inode->i_sb)->s_awu_min > 0;
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 99caef43ff3c..025f5d890689 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -2217,6 +2217,17 @@ static inline void mark_inode_dirty_sync(struct inode *inode)
+ 	__mark_inode_dirty(inode, I_DIRTY_SYNC);
  }
  
 +/*
-+ * dma-buf I/O needs an inode that supports direct I/O without the page cache.
-+ * IS_ENCRYPTED() tests the inode flag, which is set even without
-+ * CONFIG_FS_ENCRYPTION.
++ * Check whether inode itself needs to be written out either at all or for
++ * the purposes of datasync if @datasync is set.
 + */
-+static inline bool ext4_inode_can_dmabuf_io(struct inode *inode)
++static inline bool inode_is_dirty(struct inode *inode, bool datasync)
 +{
-+	return !IS_DAX(inode) && !IS_ENCRYPTED(inode) &&
-+	       ext4_dio_alignment(inode) != 0;
++	int mask = datasync ? I_DIRTY_DATASYNC : (I_DIRTY_INODE | I_DIRTY_TIME);
++
++	return inode_state_read_once(inode) & mask;
 +}
 +
- extern int ext4_block_write_begin(handle_t *handle, struct folio *folio,
- 				  loff_t pos, unsigned len,
- 				  get_block_t *get_block);
-diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-index 50d3c92709c8..5a8481637da5 100644
---- a/fs/ext4/file.c
-+++ b/fs/ext4/file.c
-@@ -30,6 +30,7 @@
- #include <linux/uio.h>
- #include <linux/mman.h>
- #include <linux/backing-dev.h>
-+#include <linux/blkdev.h>
- #include "ext4.h"
- #include "ext4_jbd2.h"
- #include "xattr.h"
-@@ -66,6 +67,15 @@ static bool ext4_should_use_dio(struct kiocb *iocb, struct iov_iter *iter)
- 	return IS_ALIGNED(iocb->ki_pos | iov_iter_alignment(iter), dio_align);
- }
- 
-+static ssize_t ext4_buffered_read_iter(struct kiocb *iocb, struct iov_iter *to)
-+{
-+	/* a dma-buf iterator has no pages for the page cache to copy into */
-+	if (iov_iter_is_dmabuf_map(to))
-+		return -EOPNOTSUPP;
-+
-+	return generic_file_read_iter(iocb, to);
-+}
-+
- static ssize_t ext4_dio_read_iter(struct kiocb *iocb, struct iov_iter *to)
+ static inline void set_inode_metadata_writeback(struct inode *inode)
  {
- 	ssize_t ret;
-@@ -88,7 +98,7 @@ static ssize_t ext4_dio_read_iter(struct kiocb *iocb, struct iov_iter *to)
- 		 * taken.
- 		 */
- 		iocb->ki_flags &= ~IOCB_DIRECT;
--		return generic_file_read_iter(iocb, to);
-+		return ext4_buffered_read_iter(iocb, to);
- 	}
- 
- 	ret = iomap_dio_read_simple(iocb, to, ext4_iomap_begin);
-@@ -119,7 +129,7 @@ static ssize_t ext4_dax_read_iter(struct kiocb *iocb, struct iov_iter *to)
- 	if (!IS_DAX(inode)) {
- 		inode_unlock_shared(inode);
- 		/* Fallback to buffered IO in case we cannot support DAX */
--		return generic_file_read_iter(iocb, to);
-+		return ext4_buffered_read_iter(iocb, to);
- 	}
- 	ret = dax_iomap_rw(iocb, to, &ext4_iomap_ops);
- 	inode_unlock_shared(inode);
-@@ -146,7 +156,7 @@ static ssize_t ext4_file_read_iter(struct kiocb *iocb, struct iov_iter *to)
- 	if (iocb->ki_flags & IOCB_DIRECT)
- 		return ext4_dio_read_iter(iocb, to);
- 
--	return generic_file_read_iter(iocb, to);
-+	return ext4_buffered_read_iter(iocb, to);
- }
- 
- static ssize_t ext4_file_splice_read(struct file *in, loff_t *ppos,
-@@ -354,6 +364,10 @@ static ssize_t ext4_buffered_write_iter(struct kiocb *iocb,
- 	if (iocb->ki_flags & IOCB_NOWAIT)
- 		return -EOPNOTSUPP;
- 
-+	/* a dma-buf iterator cannot be handled by buffered I/O */
-+	if (iov_iter_is_dmabuf_map(from))
-+		return -EOPNOTSUPP;
-+
- 	inode_lock(inode);
- 
- 	/*
-@@ -688,6 +702,10 @@ static ssize_t ext4_dio_write_iter(struct kiocb *iocb, struct iov_iter *from)
- 		ssize_t err;
- 		loff_t endbyte;
- 
-+		/* a dma-buf iterator cannot fall back to buffered I/O */
-+		if (iov_iter_is_dmabuf_map(from))
-+			return ret;
-+
- 		/*
- 		 * There is no support for atomic writes on buffered-io yet,
- 		 * we should never fallback to buffered-io for DIO atomic
-@@ -731,6 +749,10 @@ ext4_dax_write_iter(struct kiocb *iocb, struct iov_iter *from)
- 	bool extend = false;
- 	struct inode *inode = file_inode(iocb->ki_filp);
- 
-+	/* a dma-buf iterator cannot be handled by DAX either */
-+	if (iov_iter_is_dmabuf_map(from))
-+		return -EOPNOTSUPP;
-+
- 	if (iocb->ki_flags & IOCB_NOWAIT) {
- 		if (!inode_trylock(inode))
- 			return -EAGAIN;
-@@ -1014,6 +1036,8 @@ static int ext4_file_open(struct inode *inode, struct file *filp)
- 		filp->f_mode |= FMODE_CAN_ATOMIC_WRITE;
- 
- 	filp->f_mode |= FMODE_NOWAIT | FMODE_CAN_ODIRECT;
-+	if (ext4_inode_can_dmabuf_io(inode))
-+		filp->f_mode |= FMODE_CAN_DMABUF_IO;
- 	return dquot_file_open(inode, filp);
- }
- 
-@@ -1050,10 +1074,24 @@ loff_t ext4_llseek(struct file *file, loff_t offset, int whence)
- 	return vfs_setpos(file, offset, maxbytes);
- }
- 
-+static int ext4_file_init_dma_buf_io_ctx(struct file *file,
-+					 struct dma_buf_io_ctx *ctx)
-+{
-+	struct inode *inode = file_inode(file);
-+
-+	/* DAX can be enabled after the file was opened */
-+	if (!ext4_inode_can_dmabuf_io(inode))
-+		return -EOPNOTSUPP;
-+
-+	/* all file data lives on s_bdev, which never changes for ext4 */
-+	return bdev_init_dma_buf_io_ctx(inode->i_sb->s_bdev, ctx);
-+}
-+
- const struct file_operations ext4_file_operations = {
- 	.llseek		= ext4_llseek,
- 	.read_iter	= ext4_file_read_iter,
- 	.write_iter	= ext4_file_write_iter,
-+	.init_dma_buf_io_ctx = ext4_file_init_dma_buf_io_ctx,
- 	.iopoll		= iocb_bio_iopoll,
- 	.unlocked_ioctl = ext4_ioctl,
- #ifdef CONFIG_COMPAT
+ 	spin_lock(&inode->i_lock);
 -- 
-2.43.0
+2.53.0
 
