@@ -1,66 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.153
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794562715;
-	b=ArSFkwWTkA5eSH8iJOCpOT+tzFQIQvM84vOhCNgTvjEeGWXy024Wd9CH52JCHXmYksdA
-	 HxoIJP6CGIUKfJlqJ6Y9vC13Lh13l4XcnvFj6HxR88PszCzyo+Y4iaxDK0kftPSkJWs/9
-	 4PHxHrH1vS8f+4uqQjZdLx919ryL11vw3NOwHXrXPzNovjpKWikls7+4Er64t3/Un8OlI
-	 etwmNko7D5VKHsWE3UqTcQ5gYPyTcBZej11I8aem3fJ/vjBT76Wgms4cBc7bRo+TV4Xfs
-	 BnBzZv0MztodyDq7IRu7y01mHr8tImBWLEju5HpsskUmZJiqXq0CSklmlciBtcNg5+A==
+	t=1794563127;
+	b=q3NayLMsSKwIYEV39tx+31GRSWaTz+EAQoXZpsC4mUewaRX/hJBxoeyuP2MVG5qrBI+F
+	 UBFZKUMkbjCrDNTguFT8vlH6oZY4A4JOXppS6JDjrkJGA91j0f65vJDlZpEBW7C470gRC
+	 w4yTOX1drep28dfOWn5oTo8Y17uHIfR2hgdjqU3Gjo61JDw17Wjbu4mNCEfozf4Yd1bBw
+	 sPH2BWiKXukG2jaH9hYzTnwTbFv086H6ToGV7WiUrh82f0QCYKYkn4q6JPTGCBSCi6niK
+	 RpArxFFFVUNhpINvVsJUehVQT/2bI2hyLgdN7sSevh/gCArFxvUkMFIPf53s8Dbgpzw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794562715;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=cyYiEXj4r2TdfxUYkpb5oOHA+dMqnC/KnZCWbHMkenQ=;
-	b=JX4S6gyYbzsiSWQW4KbGL+o+bG5BZ1kHrpqtfjm1gZQKvyySj1siKm+TLw3oOKSyNmir
-	 yMhFvhEn6hoRuQHuDvIKW2iYEJQ023PlaTAg5SllPRsBamEqmcgznZsCeW+C7XI5sdok+
-	 AFHyigqjIQQCuqIYbBlEkpyQ/ae/8cZdC/NYubbyD6znGQV2z9VmpLB9zidKMoNeyubJK
-	 QROF2RPnRxVVZpljL+yp6OilrnqsbaVWs7FcbXW4b9+jYj2Kj6wkETwmVrlY7cpb0gk+C
-	 SXDDPr8Hk0vyAyhPZaEZHYlI4GSZQmfUZYmIFQjdPRM3cYdz03lEq0IJi984BoeCGYw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794563127;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding;
+	bh=9maGvXRQaCNT3iGa6KnlcrBKjyNiCGaT2SKE8+5ppl4=;
+	b=jcG6wqCnTFN07zkDAREoXVT0ymngjm6dS8BJ6dCpbRVQ2zoE8c+M/h1WB5SSmYOULdvu
+	 Pmh4V+9WBrsRHZSQ8zGbdNgfRbRBauP3osyNzFcFm0Qb8epoOifjzQddBni+cf0sJqVJk
+	 epu8jxPDwLdokkRHZo3uc1NFTlOgcCJgkvMQ0xrdZ5B6wp3u7v5X7caDxh5zgdCUEH0OA
+	 eGs3Xwbgh4JMCvNmBTqg7d4khqoTHDvRYsUb4Xs0EXSD9m5j3zgEXHlLu+rQQ9rQRk5mk
+	 7H/JUxLFU53uUxFBsC/i6TCw+lmD3SLvPjukdv9YIrNQHF/rsHIitqTTLUVMjMV0Rnw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=G0aoPaWB;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=qiRvbgt+;
+	arc=none smtp.remote-ip=91.218.175.153
+Received: from mta0.migadu.com (out-153.mta0.migadu.com [91.218.175.153])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98344606A334;
-	Fri, 13 Nov 2026 09:38:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC496606A31C
+	for <linux-xfs@vger.kernel.org>; Fri, 13 Nov 2026 09:45:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EC496606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=G0aoPaWB
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 33F321F000C4;
-	Fri, 13 Nov 2026 09:38:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794562715;
-	bh=cyYiEXj4r2TdfxUYkpb5oOHA+dMqnC/KnZCWbHMkenQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=G0aoPaWBd72jNdaUejL1FLrAnRK3dBg7nKImNWeUFNW4z4PCgCfYTdQz1fkRwVHmb
-	 KMUT4o1pv98YTq4+sOb0DRnY5NA9AhSY9muPozYtlPKP7GITGIWVyqxlT2Lbe4gDgh
-	 DUKeiVG6uBVTl5/xgukvDHNaOL5j36fa2FQ4TKuu/sqZvneH+k7Y9Kkvsr58uzYShF
-	 m6liZNx7Yn9oUKVS6OG22zQht8IfiDOTOY2ocG2nLZ33OCWigHMStPuFGS8jRrcEDg
-	 HPmsR3svBeIaC1O1WZTEBFOuB731AaPpyqUmnt9jeKGaFcyRTBKxm1yOv1bk0r5wv1
-	 n093Q7JztiiYw==
-Date: Fri, 13 Nov 2026 10:38:28 +0100
-From: Christian Brauner <brauner@kernel.org>
-To: Jan Kara <jack@suse.cz>
-Cc: linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.com>, 
-	Al Viro <viro@zeniv.linux.org.uk>, ecryptfs@vger.kernel.org, linux-ext4@vger.kernel.org, 
-	jfs-discussion@lists.sourceforge.net, linux-nilfs@vger.kernel.org, exfat@lists.linux.dev, 
-	linux-mm@kvack.org, ntfs@lists.linux.dev, ocfs2-devel@lists.linux.dev, 
-	linux-btrfs@vger.kernel.org, gfs2@lists.linux.dev, linux-efi@vger.kernel.org, 
-	linux-mtd@lists.infradead.org, linux-xfs@vger.kernel.org, 
-	Karl Mehltretter <kmehltretter@gmail.com>, Dave Kleikamp <shaggy@kernel.org>
-Subject: Re: [PATCH v2 04/34] ext2: don't set SB_RDONLY after filesystem
- errors
-Message-ID: <20261113-hermachen-qualvoll-porzellan-adc585bf14d1@brauner>
-References: <20261029-work-fs-sb_rdonly-v2-0-2f44f64f0b66@kernel.org>
- <20261029-work-fs-sb_rdonly-v2-4-2f44f64f0b66@kernel.org>
- <5qefa4mracb3x2z4vsdejmkyyfrhdcrixmmnooz4rzwcdfoejm@mqkvixj6afwp>
- <20261110-kargheit-impfen-pausieren-881763d28b19@brauner>
- <za33axmgzmuzsj3zmfeh43fkphtcsqtkhhrauwuvs7aiftelgp@dzl6z322st5f>
- <20261112-wohncontainer-saurier-wonnen-91f30c3b3ae2@brauner>
- <20261112-besorgen-nobel-handschuhe-fb3373259b5f@brauner>
- <20261112-aktivieren-datteln-assimilieren-062b8257ed49@brauner>
- <7rm43pfkasky5th4fs65qdt4l2d6j3togha56idrqhs4524qca@u7socb57rg3v>
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=qiRvbgt+
+X-Envelope-To: linux-xfs@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=tIt5W2yVysz0C6c0WiAUoXuFquyWfvrCJVtGSZUAG24=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1794563124; v=1; x=1795167924;
+ b=qiRvbgt+WArrQiV/nnu8BZ5Bo/+4rHtjLw5LzgpOYdLydJxq2+9N0jX0IpcLhE4w9YCYo7rs
+ u+m0KJ5FlVyCksjJVu7Jppo7aNaT7VS6a5xnqNgBOfKPpwErDAEGzMmOorRcnUr3K5OYVRstugq
+ v0sti7pAAce060uhB0nnRAkE=
+X-Envelope-To: linux-xfs@vger.kernel.org
+Received: by mta12.migadu.com with ESMTPS id 3056ac4d99aaa11e;
+	Fri, 13 Nov 2026 09:45:23 +0000
+X-Mizu-Trace-ID: 3056ac4d99aaa11e
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <b34aac03-0d43-4ed1-9561-cb6e0e9c582f@linux.dev>
+Date: Fri, 13 Nov 2026 09:45:22 +0000
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -70,57 +58,86 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <7rm43pfkasky5th4fs65qdt4l2d6j3togha56idrqhs4524qca@u7socb57rg3v>
+User-Agent: Mozilla Thunderbird
+Subject: Re: (2) [PATCH v2] xfs: check the disk address for hardware atomic
+ writes
+To: daejun7.park@samsung.com, Carlos Maiolino <cem@kernel.org>,
+ "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Cc: Pankaj Raghav Partha Sarathy <p.raghav@samsung.com>,
+ Pankaj Raghav <pankaj.raghav@linux.dev>, "Darrick J. Wong"
+ <djwong@kernel.org>, Christoph Hellwig <hch@lst.de>,
+ Dave Chinner <david@fromorbit.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <b1fba95d-97c8-44ae-a5be-6d2fba7e7e78@linux.dev>
+ <20261112-xfs-hw-atomic-align-v2-1-c90394805e7b@samsung.com>
+ <CGME20261112082952epcas2p1f902c4243d451635ff27fe1a1c5035fe@epcms2p5>
+ <20261113025544epcms2p575490538b97c26387515f8b5fc90c321@epcms2p5>
+Content-Language: en-US
+From: John Garry <john.garry@linux.dev>
+In-Reply-To: <20261113025544epcms2p575490538b97c26387515f8b5fc90c321@epcms2p5>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Thu, Nov 12, 2026 at 07:27:45PM +0100, Jan Kara wrote:
-> On Thu 12-11-26 18:03:55, Christian Brauner wrote:
-> > Ok, so if I understood you correctly the changes below should be
-> > implementing what you ask, @Jan.
-> > 
-> > It's a diff against v2:
-> > 
-> > - jfs: free the anonymous tlocks when evicting an inode the way
-> >   txUnlock() does. That's also a mainline fix.
-> > 
-> > - fs: sync_filesystem() and sync(2) skip a superblock in the emergency
-> >   state. syncfs(2) and Q_SYNC return EROFS.
-> > 
-> > - fs: refuse to freeze a superblock in the emergency state. Otherwise
-> >   freeze doesn't sync anything anymore and the flusher keeps writing to
-> >   the frozen filesystem.
-> > 
-> >   That means, FIFREEZE and dm suspend with lockfs now fail with EROFS on
-> >   an errored ext2, fat etc. I think you said that you expect freeze to
-> >   fail anyway. I think that's right.
-> > 
-> >   The exfat, ntfs, btrfs and ext4 shutdown ioctls then have to skip the
-> >   freeze after an error.
-> > 
-> > - ext2, fat, affs, ufs and hfs: drop the ->write_inode() refusals.
-> >   Otherwise the flusher writes data and bitmaps but never the inodes.
-> > 
-> > - ext2, jfs, nilfs2, ocfs2 and ubifs: their ->sync_fs() checks are dead
-> >   now and go.
-> > 
-> > - ubifs: drop dirty folios and inodes after an error. Without the sync
-> >   at remount the flusher otherwise hits ubifs' asserts after a remount
-> >   to read-only.
-> > 
-> > With that nothing is synced on request after an error anymore.
-> > 
-> > syncfs, fsync and Q_SYNC return EROFS without writing anything and
-> > sync(2) and umount skip the filesystem's own sync.
-> > 
-> > The flusher and the block device flushes in sync(2) and
-> > kill_block_super() still write. So what ends up on disk is the same as
-> > on mainline today:
-> > 
-> > Is that what you had in mind?
+On 11/13/26 02:55, Daejun Park wrote:
+> On Thu, Nov 12, 2026 at 08:29:42AM +0000, John Garry wrote:
+>> On 11/12/26 00:41, Daejun Park via B4 Relay wrote:
+> [...]
+>>> -	if (!IS_ALIGNED(imap->br_startblock, imap->br_blockcount))
+>> Is there anywhere else in which we do an alignment check on
+>> br_startblock that relies on the group size to be a multiple of the HW
+>> awu max?
+> No, I did not find another one. This is the only check of the start
+> block for the REQ_ATOMIC path. Two other places depend on the group
+> alignment, but neither checks br_startblock:
 > 
-> Wow, that was quick! Indeed this looks like what I had in mind and I like
-> the result. Thanks for implementing it so quickly.
+> - xfs_get_atomic_write_max_opt() already caps max_opt at
+>    xfs_calc_group_awu_align_max(), the largest power-of-two factor of
+>    the group size (from ec8f62cc109a).
+> - The allocator aligns the AG block number, not the disk address,
+>    for example for XFS_BMAPI_EXTSZALIGN in
+>    xfs_atomic_write_cow_iomap_begin(). In an unaligned AG, that extent
+>    can still be misaligned on disk. With this patch, the next atomic
+>    write to it goes through COW instead of failing.
 
-No problem. We're paying off technical debt, big time... So I my motto
-is "let's go", so we can focus on the fun things again.
+hmm.. I am still not confident that this the best fix. And if it is, 
+then I think that we should still change the size pre-check in 
+xfs_file_dio_write_atomic(). Here's a combined change which I am 
+thinking of:
+
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -776,7 +776,7 @@ xfs_file_dio_write_atomic(
+          * HW offload should be faster, so try that first if it is already
+          * known that the write length is not too large.
+          */
+-       if (ocount > xfs_inode_buftarg(ip)->bt_awu_max)
++       if (ocount > xfs_get_atomic_write_max_opt())
+                 dops = &xfs_atomic_write_cow_iomap_ops;
+         else
+                 dops = &xfs_direct_write_iomap_ops;
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index c3465204b8d5..c54aaa4b8816 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -863,7 +863,7 @@ xfs_bmap_hw_atomic_write_possible(
+         /*
+          * The ->iomap_begin caller should ensure this, but check anyway.
+          */
+-       return len <= xfs_inode_buftarg(ip)->bt_awu_max;
++       return len <= xfs_get_atomic_write_max_opt();
+  }
+
+bt_awu_max is the HW max, and you are saying that it is not aligned with 
+the AG size (and so need a disk alignment check). However, opt max 
+should be (aligned to AG size), so we could check that vs size instead.
+
+Note that I am just using xfs_get_atomic_write_max_opt() for 
+illustrative purposes and we could save this value in xfs_inode_buftarg().
+
+BTW, with your proposed change, since HW size is not aligned to AG size 
+and we only check the size vs HW size for HW offload, it is in theory 
+possible to have an atomic write which straddles the AG and is rejected, 
+right?
+
+Thanks,
+John
