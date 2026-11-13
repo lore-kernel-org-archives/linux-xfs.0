@@ -1,57 +1,51 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=13.75.44.102
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794573852;
-	b=SjUF2JY01TkwRrH/yr6h2htfg7mRaj12DV7frzsMEc+pRewG0UT6TLfsPI5eWA247cig
-	 4Rmgq0DssPBXoED4IOuYt0i8CcMcMlIlYLjCrSTpwqDvVr0vnTIH95CxbCqilQ6dsPLtn
-	 7ob+TzVle8GmUU7hHjXBceN4tiokYTR6xCZncR/BueCbYOUgq/cNulC5kzbCBK1wfBrnc
-	 PWkPU7cihlfY9/5f1vCS6W346ATC4P59j7lT2Cx++Bf6h5rXLb+ocxebJEX5K1LSGcsvD
-	 jus4mdh/yn2b1ixiIBYkJZ4Q6Xgw0u0fZQ026e5Y3lGf0rGzR5QwcsyxN/jq/B2PxfQ==
+	t=1794574036;
+	b=zJzbFXfnmPlI+vcW5iE+hW89TH6WQ9nQgu7j5dWwAo16Sp+vjg6uAwmvLmp63zhzZCVB
+	 MSYF55OPyccs49QaOJXWm7U43K9epx7z/e4+TbeOs/l/pSfYrHQP8F4iTYZwOuCwr2+Nw
+	 UPp2qfSxgkGxtnIDrwgGNbCkUS/Ek1isL9AC4o/DnNWBAPjLiyMZM+Ca8cWUIqmyzuQFP
+	 9joBCTFfdb2oPcbPxdYkAf35pCfhJfXYLKzafCQROAHj7sMJKF3w5dz+ek2WGT49GbKAU
+	 UrO0N5zsc4T2z0vPDBU9h8rhruP9JHblgRRMkGQNWZS3SMWeEJIdzAemLhKma2/zseA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794573852;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 MIME-Version:Content-Type:Content-Disposition;
-	bh=RCCZgsCQKIfCtLCzQ8cWSF069fHI6xwLCB12zNRTLvI=;
-	b=c4fQ4U16aGqfbQKj0NqUuZc3ZxOD2F/NfAnJWOH/ff+aJOe3iMyo6znEwwosco5eAJtG
-	 narLwhignSStz5B+OBYFGA+IFf9MyQ1iwiWM4c4miYe8ICulhyPN3DrU3d40GZyp0JUNU
-	 6hKUX64WiQk9OQoM6WCC9myqzlIplwajCd50OTXiDEOluTKioY2PuQ0awCvYLWw2/Zhmb
-	 V6fOGv3GIh0m7+7SVpcbIMCY2yduo3R6A6Km0dm9ukds697/LwPGxCxIZP2MTgsCzrPRX
-	 5oUJVr/yHlJXL/DYKabg7wVAQdFhMF5Yjd/Csmg9f0rCvGggO6T8dRltX9XdsdvpgWw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794574036;
+	h=DMARC-Filter:Received:X-Originating-IP:Date:X-CM-HeaderCharset:From:
+	 To:Cc:Subject:X-Priority:X-Mailer:In-Reply-To:References:
+	 X-CM-CTRLMSGS:Content-Type:MIME-Version:Message-ID:X-Coremail-Locale:
+	 X-CM-TRANSID:X-CM-SenderInfo:X-Coremail-Antispam;
+	bh=CA6Jj7tgwCEJ18uO4HiUijAW5skFnDtbdZsxC9JuDL8=;
+	b=hI4qJntcfY7vGOfNdNWZA3Yv1SoGOLswH7pe2ABjzquTJmEid9JqD8QvkA7Bu9/iGmk2
+	 9irYNY7opHkGAGnmRV6g3coaeygz/YeVjUAbAmMOrtpkbA0S+8c0YLng2uHb7YXZV827I
+	 tRLemNRgoWhisOd/bFjYVzxs+16mxks8W8LQekbRN4T/bIIVGJP+ZqkFeuRx/54QY5f9B
+	 7oWJpRVMxQafM3aVv4YyMuFu9aej/rYQewO2YTnQOLFV+qPB9l9TuCqOxZcFN6Yjt/DVF
+	 DGKzKT0oZMG2IOVdJu5dfLdlUjVMtRzCYEbN+Xh5WT083WQn6xN7L4vcVACZIliSO7A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=JTpwJinA;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C7A2606A323
-	for <linux-xfs@vger.kernel.org>; Fri, 13 Nov 2026 12:44:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=JTpwJinA
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21D941F000C4;
-	Fri, 13 Nov 2026 12:44:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794573851;
-	bh=RCCZgsCQKIfCtLCzQ8cWSF069fHI6xwLCB12zNRTLvI=;
-	h=Date:From:To:Cc:Subject;
-	b=JTpwJinAbJDH97VXxl3J9Fymmxjnur0vvzRYPmGKiU+9004rngdXIF+URSfDgq/qV
-	 gfk1umgFBmWH0t5MGhCJXURtY1WAcZsX1h6El+b7YoxTfd9oapyoRTmkMlTTpiiR7o
-	 MW/GELP3UrZtCj3V7ylegS/9TULBN03lnSsbM4+R+mwAYrv7Q8c8jjpuKYAGTkfmvl
-	 5h0Kg5vsyzVX5tEn9Ne3ildGiz5n+e+5oZFSVrhCJ+DKYS/PO7sagU/FfVIydDe+aL
-	 ScyH4WsQyagwoD/rTegrB45wE047wQ68SLMiBXDWkEeQ/H7/hp4fKmT/eb0jCxrULw
-	 8LBlY3HWFdaIQ==
-Date: Fri, 13 Nov 2026 13:44:04 +0100
-From: Andrey Albershteyn <aalbersh@kernel.org>
-To: linux-xfs@vger.kernel.org
-Cc: aalbersh@kernel.org, cem@kernel.org, 
-	chris.thomas@antimatter-studios.com, cihan.cihan@gmail.com, cmaiolino@redhat.com, dchinner@redhat.com, 
-	dgc@kernel.org, djwong@kernel.org, floss@jetm.me, hch@lst.de, 
-	hemanth.selam@gmail.com, jiapenglin@tencent.com, johannes.thumshirn@wdc.com, 
-	kees+treewide@kernel.org, muhammad_hazley_samsudin_from.tp@tech.gov.sg, 
-	norbert@doyensec.com, preichl@redhat.com, sandeen@redhat.com, 
-	syzbot+837bcd54843dd6262f2f@syzkaller.appspotmail.com, yijiangshan@kylinos.cn, yun.zhou@windriver.com, 
-	zenghongling@kylinos.cn
-Subject: [ANNOUNCE] xfsprogs: v7.3.0 released
-Message-ID: <avcFtK6orlaKoQIa@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+	dmarc=none header.from=hust.edu.cn;
+	spf=pass smtp.mailfrom=hust.edu.cn;
+	arc=none smtp.remote-ip=13.75.44.102
+Received: from azure-sdnproxy.icoremail.net (azure-sdnproxy.icoremail.net [13.75.44.102])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 5B2B5606A330;
+	Fri, 13 Nov 2026 12:47:14 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5B2B5606A330
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=hust.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=hust.edu.cn
+Received: from xuhx$hust.edu.cn ( [10.12.190.107] ) by ajax-webmail-app1
+ (Coremail) ; Fri, 13 Nov 2026 20:47:10 +0800 (GMT+08:00)
+Date: Fri, 13 Nov 2026 20:47:10 +0800 (GMT+08:00)
+X-CM-HeaderCharset: UTF-8
+From: =?UTF-8?B?5b6Q5pmX57+U?= <xuhx@hust.edu.cn>
+To: cem@kernel.org
+Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: xfs: use-after-free in stats_clear sysctl handler during module
+ unload
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version 2025.3-cmXT6 build
+ 20260810(6c94e3b5) Copyright (c) 2002-2026 www.mailtech.cn hust
+In-Reply-To: <2026102727-data-sequel-ce41@gregkh>
+References: <4c7f9772.192e1.1a17d5c2ed5.Coremail.xuhx@hust.edu.cn>
+ <2026102727-data-sequel-ce41@gregkh>
+X-CM-CTRLMSGS: =?B?/vTixDiH6nJ5xwDR7hwMki1N8jM=
+Content-Type: multipart/mixed; 
+	boundary="----=_Part_522930_407483201.1794574030005"
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -61,166 +55,243 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Message-ID: <3434b976.263a1.1a1d4f294b5.Coremail.xuhx@hust.edu.cn>
+X-Coremail-Locale: zh_CN
+X-CM-TRANSID:IAEQrMCmbmrOBvdqWy9HAA--.15029W
+X-CM-SenderInfo: bgsqjkayqyjmo6kx23oohg3hdfq/1tbiAQoKB2r15u2DUAAAsB
+X-Coremail-Antispam: 1Ur529EdanIXcx71UUUUU7IcSsGvfJ3iIAIbVAYjsxI4VWkCw
+	CS07vEb4IE77IF4wCS07vE1I0E4x80FVAKz4kxMIAIbVAFxVCaYxvI4VCIwcAKzIAtYxBI
+	daVFxhVjvjDU=
 
-Hi folks,
+------=_Part_522930_407483201.1794574030005
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: base64
 
-The xfsprogs master branch in repository at:
+ZXhpdF94ZnNfZnMoKSBmcmVlcyB4ZnNzdGF0cy54c19zdGF0cyBiZWZvcmUgdW5yZWdpc3Rlcmlu
+ZyB0aGUgZnMveGZzCnN5c2N0bCB0YWJsZS4gIEEgd3JpdGUgdG8gL3Byb2Mvc3lzL2ZzL3hmcy9z
+dGF0c19jbGVhciB0aGF0IGlzIGFscmVhZHkgaW4KeGZzX3N0YXRzX2NsZWFyX3Byb2NfaGFuZGxl
+cigpLCBvciB0aGF0IGVudGVycyBiZXR3ZWVuIHRoZSBmcmVlIGFuZCB0aGUKdW5yZWdpc3Rlciwg
+Y2FsbHMgeGZzX3N0YXRzX2NsZWFyYWxsKCkgb24gdGhlIGZyZWVkIHBlci1jcHUgcG9pbnRlcjsg
+dGhhdApmdW5jdGlvbiByZWFkcyB0d28gY291bnRlcnMgZnJvbSB0aGUgYXJlYSBhbmQgdGhlbiBt
+ZW1zZXRzIHRoZSB3aG9sZQpwZXItY3B1IHN0cnVjdHVyZS4gIFRoZSByZXN1bHQgaXMgYSB1c2Ut
+YWZ0ZXItZnJlZSByZWFkL3dyaXRlIG9mIGEKcGVyLWNwdSBhbGxvY2F0aW9uLCB3aXRoIHRoZSB1
+c3VhbCBjb25zZXF1ZW5jZXMgd2hlbiB0aGUgYXJlYSBoYXMgYmVlbgpyZXVzZWQ6IHNpbGVudCBj
+b3JydXB0aW9uIG9mIGFub3RoZXIgc3Vic3lzdGVtJ3MgcGVyLWNwdSBkYXRhLCByYW5kb20KY3Jh
+c2hlcywgb3IgYSBLQVNBTiByZXBvcnQgb24gYSBrZXJuZWwgd2hvc2UgcGVyLWNwdSBhbGxvY2F0
+b3IgaXMKaW5zdHJ1bWVudGVkLgoKVGhlIG9yZGVyaW5nIGJ1ZyBpcyBzbWFsbCBidXQgdGhlIHN5
+bmNocm9uaXphdGlvbiBhcmd1bWVudCBpcyBub3QKc3VidGxlLiAgdW5yZWdpc3Rlcl9zeXNjdGxf
+dGFibGUoKSBpcyB0aGUgcG9pbnQgdGhhdCB3YWl0cyBmb3IgYW4gYWN0aXZlCnN5c2N0bCBoYW5k
+bGVyOyBpdCBpcyBjYWxsZWQgYWZ0ZXIgZnJlZV9wZXJjcHUoKS4gIGZyZWVfcGVyY3B1KCkgaXRz
+ZWxmCmRvZXMgbm90IHdhaXQgZm9yIGEgaGFuZGxlciBhbmQgZG9lcyBub3QgaW52YWxpZGF0ZSB0
+aGUgZXhpc3Rpbmcgc3lzY3RsCmVudHJ5LCBzbyBhIHdyaXRlciBjYW4gdXNlIHRoZSBzdGFsZSBw
+b2ludGVyIGJlZm9yZSB0aGUgd2FpdCBzdGFydHMuClRoZSBzYW1lIGZyZWUtdGhlbi11bnJlZ2lz
+dGVyIHNlcXVlbmNlIGV4aXN0cyBvbiB0aGUgaW5pdCBlcnJvciBwYXRoLgpUaGlzIGlzIGEgdGVh
+cmRvd24tb3JkZXIgYnVnLCBub3QgYSBtaXNzaW5nIGxvY2sgaW4gdGhlIGhhbmRsZXIuCgpUaGUg
+ZGV0YWlsZWQgZGVzY3JpcHRpb246CgoqIFRlc3QgZW52aXJvbm1lbnQgLyBhZmZlY3RlZCB2ZXJz
+aW9uCgogIExpbnV4IDcuMy4wIHNuYXBzaG90ICh0aGUgdHJlZSB1c2VkIGZvciB0aGlzIGF1ZGl0
+OyBNYWtlZmlsZSByZXBvcnRzCiAgVkVSU0lPTj03IFBBVENITEVWRUw9MyBTVUJMRVZFTD0wKSwg
+eDg2XzY0LCBnY2MgMTMuMy4wLCBRRU1VL0tWTQogIGd1ZXN0LiAgQ09ORklHX1hGU19GUz1tLCBD
+T05GSUdfUFJPQ19GUz15LCBLQVNBTiBlbmFibGVkLiAgVGhlCiAgYmVoYXZpb3IgaXMgaW4gdGhl
+IG1vZHVsZSBsb2FkL3VubG9hZCBwYXRoLCBzbyBpdCBpcyBpbmRlcGVuZGVudCBvZgogIHRoZSBm
+aWxlc3lzdGVtIG9uIGRpc2s7IG5vIFhGUyBtb3VudCBpcyByZXF1aXJlZC4KCiAgVGhlIHNvdXJj
+ZSBsaW5lcyBiZWxvdyBhcmUgZnJvbSB0aGUgNy4zLjAgdHJlZS4gIFRoZSBvcmRlciBoYXMgYmVl
+bgogIHN0YWJsZSBmb3IgYSBsb25nIHRpbWUsIGJ1dCBwbGVhc2UgcmUtY2hlY2sgdGhlIGV4YWN0
+IGxpbmUgbnVtYmVycyBvbgogIHlvdXIgdHJlZSBiZWZvcmUgYXBwbHlpbmcgYSBwYXRjaC4KCiog
+TWVjaGFuaXNtCgogIFRoZSBoYW5kbGVyIGlzIHJlZ2lzdGVyZWQgZm9yIC9wcm9jL3N5cy9mcy94
+ZnMvc3RhdHNfY2xlYXIgYXQKICBmcy94ZnMveGZzX3N5c2N0bC5jOjE3Mi0xNzkgYW5kIGV4ZWN1
+dGVzOgoKICAgICAgZnMveGZzL3hmc19zeXNjdGwuYzoxMy0zMAogICAgICB4ZnNfc3RhdHNfY2xl
+YXJfcHJvY19oYW5kbGVyKCkKICAgICAgICAgIC4uLgogICAgICAgICAgcmV0ID0gcHJvY19kb2lu
+dHZlY19taW5tYXgoY3RsLCB3cml0ZSwgYnVmZmVyLCBsZW5wLCBwcG9zKTsKICAgICAgICAgIGlm
+ICghcmV0ICYmIHdyaXRlICYmICp2YWxwKSB7CiAgICAgICAgICAgICAgICAgIHhmc19zdGF0c19j
+bGVhcmFsbCh4ZnNzdGF0cy54c19zdGF0cyk7CiAgICAgICAgICAgICAgICAgIHhmc19zdGF0c19j
+bGVhciA9IDA7CiAgICAgICAgICB9CgogIHhmc19zdGF0c19jbGVhcmFsbCgpIHdhbGtzIGV2ZXJ5
+IHBvc3NpYmxlIENQVSwgcmVhZHMKICB4c19pbm9kZXNfYWN0aXZlL3hzX2lub2Rlc19tZXRhLCBh
+bmQgbWVtc2V0cyB0aGUgcGVyLWNwdSBzdHJ1Y3R1cmU6CgogICAgICBmcy94ZnMveGZzX3N0YXRz
+LmM6MTAxLTExOAogICAgICBmb3JfZWFjaF9wb3NzaWJsZV9jcHUoYykgewogICAgICAgICAgICAg
+IHByZWVtcHRfZGlzYWJsZSgpOwogICAgICAgICAgICAgIHhzX2lub2Rlc19hY3RpdmUgPSBwZXJf
+Y3B1X3B0cihzdGF0cywgYyktPnMueHNfaW5vZGVzX2FjdGl2ZTsKICAgICAgICAgICAgICB4c19p
+bm9kZXNfbWV0YSA9IHBlcl9jcHVfcHRyKHN0YXRzLCBjKS0+cy54c19pbm9kZXNfbWV0YTsKICAg
+ICAgICAgICAgICBtZW1zZXQocGVyX2NwdV9wdHIoc3RhdHMsIGMpLCAwLCBzaXplb2YoKnN0YXRz
+KSk7CiAgICAgICAgICAgICAgLi4uCiAgICAgICAgICAgICAgcHJlZW1wdF9lbmFibGUoKTsKICAg
+ICAgfQoKICBUaGUgdW5sb2FkIHBhdGggZnJlZXMgdGhlIHBvaW50ZXIgYmVmb3JlIHRoZSBzeXNj
+dGwgdGFibGUgaXMKICB1bnJlZ2lzdGVyZWQ6CgogICAgICBmcy94ZnMveGZzX3N1cGVyLmM6Mjc0
+OC0yNzY3CiAgICAgIGV4aXRfeGZzX2ZzKCkKICAgICAgICAgIC4uLgogICAgICAgICAgeGNoa19n
+bG9iYWxfc3RhdHNfdGVhcmRvd24oKTsKICAgICAgICAgIHhmc19zeXNmc19kZWwoJnhmc3N0YXRz
+LnhzX2tvYmopOwogICAgICAgICAgZnJlZV9wZXJjcHUoeGZzc3RhdHMueHNfc3RhdHMpOyAgICAg
+ICAgPC0tIHBvaW50ZXIgYmVjb21lcyBzdGFsZQogICAgICAgICAga3NldF91bnJlZ2lzdGVyKHhm
+c19rc2V0KTsKICAgICAgICAgIGRlYnVnZnNfcmVtb3ZlKHhmc19kZWJ1Z2ZzKTsKICAgICAgICAg
+IHhmc19zeXNjdGxfdW5yZWdpc3RlcigpOyAgICAgICAgICAgICAgIDwtLSB3YWl0IGhhcHBlbnMg
+dG9vIGxhdGUKCiAgdW5yZWdpc3Rlcl9zeXNjdGxfdGFibGUoKSBkb2VzIHdhaXQgZm9yIGFuIGFj
+dGl2ZSBoYW5kbGVyLiAgSW4KICBmcy9wcm9jL3Byb2Nfc3lzY3RsLmM6MzAwLTMwNywgc3RhcnRf
+dW5yZWdpc3RlcmluZygpIGNoZWNrcyBwLT51c2VkOwogIGlmIGEgaGFuZGxlciBpcyBhY3RpdmUg
+aXQgYXJtcyBhIGNvbXBsZXRpb24gYW5kIHdhaXRzLiAgVGhlIGhhbmRsZXIKICBob2xkcyB0aGUg
+c3lzY3RsIGhlYWRlciBmb3IgdGhlIHdob2xlIGNhbGwKICAoZnMvcHJvYy9wcm9jX3N5c2N0bC5j
+OjU1My02MTQpLCBzbyB0aGUgd2FpdCBpcyBlZmZlY3RpdmUgb25jZSBpdCBpcwogIHJlYWNoZWQu
+ICBUaGUgYnVnIGlzIHNpbXBseSB0aGF0IGZyZWVfcGVyY3B1KCkgaXMgcmVhY2hlZCBmaXJzdC4K
+CiAgZnJlZV9wZXJjcHUoKSAobW0vcGVyY3B1LmM6MjI0MC0yMjY5KSBvbmx5IHJldHVybnMgdGhl
+IGFyZWEgdG8gdGhlCiAgcGVyLWNwdSBhbGxvY2F0b3IuICBJdCBkb2VzIG5vdCB3YWl0IGZvciBz
+eXNjdGwgdXNlcnMsIGRvZXMgbm90CiAgc3luY2hyb25pemVfcmN1KCksIGFuZCBkb2VzIG5vdCBj
+bGVhciB4ZnNzdGF0cy54c19zdGF0cy4gIEFmdGVyIGl0CiAgcmV0dXJucywgdGhlIGFyZWEgY2Fu
+IGJlIHJldXNlZCBieSB0aGUgbmV4dCBhbGxvY19wZXJjcHUoKS4KCiAgQW4gb3BlbiBmZCBvbiB0
+aGUgc3lzY3RsIGZpbGUgZG9lcyBub3QgcGluIHRoZSBtb2R1bGU6CiAgcHJvY19zeXNfb3Blbigp
+IChmcy9wcm9jL3Byb2Nfc3lzY3RsLmM6NjI5LTY0MSkgZ3JhYnMgdGhlIGhlYWRlciBvbmx5CiAg
+Zm9yIHRoZSBkdXJhdGlvbiBvZiBvcGVuKCkgYW5kIGRvZXMgbm90IHRyeV9tb2R1bGVfZ2V0KCku
+ICBTbyBybW1vZAogIGNhbiBwcm9jZWVkIHdoaWxlIGEgd3JpdGVyIHN0aWxsIGhhcyB0aGUgZmls
+ZSBvcGVuLgoKICBUaGUgaW5pdCBlcnJvciBwYXRoIGhhcyB0aGUgc2FtZSBvcmRlcjoKCiAgICAg
+IGZzL3hmcy94ZnNfc3VwZXIuYzoyNzI3LTI3MzUKICAgICAgb3V0X3JlbW92ZV9zdGF0c19rb2Jq
+OgogICAgICAgICAgeGZzX3N5c2ZzX2RlbCgmeGZzc3RhdHMueHNfa29iaik7CiAgICAgIG91dF9m
+cmVlX3N0YXRzOgogICAgICAgICAgZnJlZV9wZXJjcHUoeGZzc3RhdHMueHNfc3RhdHMpOwogICAg
+ICBvdXRfa3NldF91bnJlZ2lzdGVyOgogICAgICAgICAga3NldF91bnJlZ2lzdGVyKHhmc19rc2V0
+KTsKICAgICAgb3V0X2RlYnVnZnNfdW5yZWdpc3RlcjoKICAgICAgICAgIGRlYnVnZnNfcmVtb3Zl
+KHhmc19kZWJ1Z2ZzKTsKICAgICAgICAgIHhmc19zeXNjdGxfdW5yZWdpc3RlcigpOwoKICBJZiB4
+ZnNfc3lzZnNfaW5pdCgpIGZhaWxzLCB4c19zdGF0cyBpcyBsaXZlIGFuZCB0aGlzIGlzIHRoZSBz
+YW1lIFVBRi4KICBJZiBhbGxvY19wZXJjcHUoKSBmYWlsZWQgZWFybGllciwgeHNfc3RhdHMgaXMg
+TlVMTCBhbmQKICB4ZnNfc3RhdHNfY2xlYXJhbGwoTlVMTCkgY29tcHV0ZXMgcGVyX2NwdV9wdHIo
+TlVMTCwgYykgZnJvbSB0aGUgcGVyLWNwdQogIGJhc2U7IHRoZSBzdWJzZXF1ZW50IG1lbXNldCBj
+b3JydXB0cyBwZXItY3B1IGRhdGEgaW5zdGVhZCBvZiBkb2luZyBhCiAgbGl0ZXJhbCBOVUxMIGRl
+cmVmZXJlbmNlLiAgQm90aCBjYXNlcyBhcmUgZml4ZWQgYnkgdW5yZWdpc3RlcmluZyB0aGUKICBz
+eXNjdGwgdGFibGUgYmVmb3JlIGRyb3BwaW5nIHRoZSBzdGF0cyBwb2ludGVyLgoKICBUaGUgcmFj
+ZSBkb2VzIG5vdCByZXF1aXJlIHRoZSBoYW5kbGVyIHRvIHN0YXJ0IGFmdGVyIGZyZWVfcGVyY3B1
+KCkuCiAgQSBoYW5kbGVyIHRoYXQgZW50ZXJlZCB4ZnNfc3RhdHNfY2xlYXJhbGwoKSBiZWZvcmUg
+dGhlIGZyZWUgYW5kIHdhcwogIHByZWVtcHRlZCBpbiB0aGUgcGVyLUNQVSBsb29wIHdpbGwgcmVz
+dW1lIGFuZCB3cml0ZSB0byB0aGUgc2FtZSBhcmVhCiAgYWZ0ZXIgZnJlZV9wZXJjcHUoKSByZXR1
+cm5zLiAgdW5yZWdpc3Rlcl9zeXNjdGxfdGFibGUoKSBoYXMgbm90IGJlZ3VuCiAgd2FpdGluZyBh
+dCB0aGF0IHBvaW50LCBzbyBpdCBjYW5ub3QgaGVscC4KCiogVHJpZ2dlciBtb2RlbAoKICAtIENP
+TkZJR19YRlNfRlM9bTsgWEZTIGxvYWRlZCBhcyBhIG1vZHVsZTsgQ09ORklHX1BST0NfRlM9eS4K
+ICAtIE5vIFhGUyBmaWxlc3lzdGVtIGlzIG1vdW50ZWQgKGEgbW91bnQgaG9sZHMgYSBtb2R1bGUg
+cmVmZXJlbmNlIGFuZAogICAgcHJldmVudHMgcm1tb2QpLgogIC0gQSB1c2VyIGFibGUgdG8gd3Jp
+dGUgL3Byb2Mvc3lzL2ZzL3hmcy9zdGF0c19jbGVhciAobW9kZSAwNjQ0LAogICAgbm9ybWFsbHkg
+cm9vdCkgYW5kIHRvIHVubG9hZCB0aGUgbW9kdWxlIChyb290L0NBUF9TWVNfTU9EVUxFKS4KICAt
+IFNNUCBvciBwcmVlbXB0aWJsZSBrZXJuZWw7IGEgd3JpdGVyIGFscmVhZHkgaW5zaWRlIHRoZSBo
+YW5kbGVyLCBvcgogICAgYSB3cml0ZXIgZW50ZXJpbmcgYmV0d2VlbiBmcmVlX3BlcmNwdSgpIGFu
+ZAogICAgeGZzX3N5c2N0bF91bnJlZ2lzdGVyKCksIHJhY2VzIHRoZSB1bmxvYWQuCiAgLSBDb25z
+ZXF1ZW5jZTogVUFGIHJlYWQvd3JpdGUgb2YgdGhlIHBlci1jcHUgYXJlYTsgaWYgdGhlIGFyZWEg
+aGFzCiAgICBiZWVuIHJldXNlZCwgY29ycnVwdGlvbiBvZiBhbm90aGVyIHN1YnN5c3RlbSdzIHBl
+ci1jcHUgc3RhdGUsCiAgICByYW5kb20gY3Jhc2gsIG9yIG1lbW9yeS1jb3JydXB0aW9uIHN5bXB0
+b21zLiAgVGhpcyBpcyBhIGxvY2FsCiAgICBwcml2aWxlZ2VkIGJ1Zywgbm90IGFuIHVucHJpdmls
+ZWdlZCBMUEUuCgoqIFJlcHJvZHVjZXIgCgogIEkgdXNlZCBhIEtBU0FOLWVuYWJsZWQgNy4zLjAg
+a2VybmVsIHdpdGggQ09ORklHX1hGU19GUz1tIGFuZCBhIHJlYWQtb25seSBrcHJvYmUgZGV0ZWN0
+b3IKICAoeGZzcmFjZS5jKS4gIFRoZSBkZXRlY3RvciByZWNvcmRzIHRoZSBwb2ludGVyIHBhc3Nl
+ZCB0bwogIGZyZWVfcGVyY3B1KCkgYnkgdGhlIHJtbW9kIHRocmVhZCwgY29uZmlybXMgdGhhdAog
+IHhmc19zeXNjdGxfdW5yZWdpc3RlcigpIGlzIGVudGVyZWQgYWZ0ZXIgdGhhdCBmcmVlLCBhbmQg
+dGhlbiBjb21wYXJlcwogIHRoZSBhcmd1bWVudCBvZiBldmVyeSB4ZnNfc3RhdHNfY2xlYXJhbGwo
+KSBjYWxsIHdpdGggdGhlIHJlY29yZGVkCiAgcG9pbnRlci4gIEEgbWF0Y2ggaXMgcmVwb3J0ZWQg
+YXMgVUFGLVdJTkRPVy4KCiAgQ29udHJvbGxlZCBydW46IDE2IHdyaXRlcnMgbG9vcCBvbgogIC9w
+cm9jL3N5cy9mcy94ZnMvc3RhdHNfY2xlYXIsIHRoZW4gcm1tb2QgeGZzIHJ1bnM7IHRoZSBkZXRl
+Y3RvciBhZGRzIGFuCiAgODAwIG1zIHN0YWxsIGF0IHhmc19zeXNjdGxfdW5yZWdpc3RlcigpIHRv
+IHdpZGVuIHRoZSB3aW5kb3cuICBSZXN1bHQ6CgogICAgICBYRlNSQUNFOiBmcmVlX3BlcmNwdShm
+ZmZmZmZmZjlmZjBmMjkwKSBlbnRyeSwgY29tbT1ybW1vZAogICAgICBYRlNSQUNFOiB4ZnNfc3lz
+Y3RsX3VucmVnaXN0ZXIoKSBhZnRlciBmcmVlX3BlcmNwdShmZmZmZmZmZjlmZjBmMjkwKTsKICAg
+ICAgICAgICAgICAgc3RhbGxpbmcgODAwbXMsIGNvbW09cm1tb2QKICAgICAgWEZTUkFDRTogVUFG
+LVdJTkRPVyB4ZnNfc3RhdHNfY2xlYXJhbGwoZmZmZmZmZmY5ZmYwZjI5MCkgYWZ0ZXIKICAgICAg
+ICAgICAgICAgZnJlZV9wZXJjcHUsIGNvbW09aW5pdCBwaWQ9MTI0CiAgICAgIC4uLgogICAgICBY
+RlNSQUNFLUlOSVQ6IHJtbW9kIHN0YXR1cz0wCgogIDI3MiBVQUYtV0lORE9XIGxpbmVzLCBhbGwg
+d2l0aCB0aGUgc2FtZSBwb2ludGVyIGZmZmZmZmZmOWZmMGYyOTA7IHRoZQogIHNlcmlhbCBsb2cg
+aXMgY29tcGxldGUsIHRoZSBkbWVzZyByaW5nIHJldGFpbmVkIDEzMiBvZiB0aGVtLiAgQ29udHJv
+bAogIHJ1bnM6IG5vIHdyaXRlcnMgLT4gMDsgd3JpdGVycyBidXQgbm8gcm1tb2QgLT4gMC4KCiAg
+S0FTQU4gZGlkIG5vdCBwcm9kdWNlIGEgdXNlLWFmdGVyLWZyZWUgcmVwb3J0OiBmcmVlX3BlcmNw
+dSgpIHVzZXMgdGhlCiAgcGVyLWNwdSBhbGxvY2F0b3IsIGFuZCBtbS9wZXJjcHUuYyBoYXMgbm8g
+S0FTQU4gcG9pc29uL3VucG9pc29uIGhvb2tzLgogIFRoZSBkaXJlY3QgZXZpZGVuY2UgaXMgdGhl
+cmVmb3JlIHRoZSBrcHJvYmUgcG9pbnRlciBjb21wYXJpc29uLCBub3QgYQogIEtBU0FOIHN0YWNr
+LiAgSSBhbSBzdGF0aW5nIHRoaXMgZXhwbGljaXRseSBzbyB0aGUgYWJzZW5jZSBvZiBhIEtBU0FO
+CiAgc3BsYXQgaXMgbm90IHJlYWQgYXMgYWJzZW5jZSBvZiB0aGUgYnVnLgoKICBUaGUgODAwIG1z
+IHN0YWxsIGlzIGFydGlmaWNpYWwuICBJdCBwcm92ZXMgdGhhdCB0aGUgaW50ZXJsZWF2aW5nIGlz
+CiAgcmVhY2hhYmxlOyBpdCBkb2VzIG5vdCBtZWFzdXJlIHRoZSBuYXR1cmFsIGhpdCByYXRlLiAg
+VGhlIGtleSBsaW5lcwogIGFuZCBhIHN0YWNrIGV4Y2VycHQgYXJlIGluIHRoZSBldmlkZW5jZS8g
+ZGlyZWN0b3J5IG9mIHRoZSByZXBvcnQgcGFja2FnZTsKICB0aGUgZnVsbCA1MTIgS0Igc2VyaWFs
+IGxvZyBpcyBhdmFpbGFibGUgb24gcmVxdWVzdC4KCiAgRmlsZXMgYXR0YWNoZWQ6CgogICAgICB4
+ZnNyYWNlLmMgICAgICAgICAgICAga3Byb2JlIGRldGVjdG9yCiAgICAgIE1ha2VmaWxlICAgICAg
+ICAgICAgICBkZXRlY3RvciBidWlsZAogICAgICBpbml0LXhmcyAgICAgICAgICAgICAgVk0gaW5p
+dDogbG9hZCB4ZnMua28sIHN0YXJ0IHdyaXRlcnMsIHJtbW9kCiAgICAgIG1raW5pdHJhbWZzLXhm
+cy5zaCAgICBidWlsZCB0aGUgdGVzdCBpbml0cmFtZnMKICAgICAgcnVuLXZtLXhmcy5zaCAgICAg
+ICAgIGJvb3QgdGhlIFhGUy1lbmFibGVkIGtlcm5lbCB1bmRlciBRRU1VCgoKKiBTdWdnZXN0ZWQg
+ZGlyZWN0aW9uCgogIE1vdmUgeGZzX3N5c2N0bF91bnJlZ2lzdGVyKCkgYmVmb3JlIGZyZWVfcGVy
+Y3B1KHhmc3N0YXRzLnhzX3N0YXRzKSBpbgogIGV4aXRfeGZzX2ZzKCksIGFuZCBhcHBseSB0aGUg
+c2FtZSBvcmRlcmluZyB0byB0aGUgaW5pdCBlcnJvciBwYXRoLiAgVGhlCiAgdW5yZWdpc3RlciB0
+aGVuIHdhaXRzIGZvciBhY3RpdmUgaGFuZGxlcnMsIGFuZCB0aGUgc3Vic2VxdWVudCBmcmVlCiAg
+Y2Fubm90IHJhY2Ugd2l0aCB4ZnNfc3RhdHNfY2xlYXJhbGwoKS4KCiAgQXMgaGFyZGVuaW5nLCBz
+ZXQgeGZzc3RhdHMueHNfc3RhdHMgPSBOVUxMIGFmdGVyIGZyZWVfcGVyY3B1KCkgYW5kCiAgY2hl
+Y2sgaXQgaW4geGZzX3N0YXRzX2NsZWFyX3Byb2NfaGFuZGxlcigpIChhbmQgaW4gdGhlIHN5c2Zz
+CiAgc3RhdHNfY2xlYXJfc3RvcmUoKSk7IHVzZSBSRUFEX09OQ0UoKS9XUklURV9PTkNFKCkgZm9y
+IHRoZSBwb2ludGVyIGlmCiAgaXQgaXMgcmVhZCBvdXRzaWRlIHRoZSBzeXNjdGwgcGF0aC4gIFRo
+ZSBOVUxMIGNoZWNrIGFsb25lIGlzIG5vdAogIHN1ZmZpY2llbnQ6IGEgaGFuZGxlciBjYW4gc3Rp
+bGwgcmVhZCB0aGUgcG9pbnRlciB3aGlsZSBpdCBpcyBiZWluZwogIGZyZWVkLCBzbyB0aGUgb3Jk
+ZXJpbmcgZml4IGlzIHRoZSByb290IGZpeC4KCiAgSSBkaWQgbm90IGF0dGFjaCBhIHBhdGNoIGJl
+Y2F1c2UgSSBkbyBub3Qga25vdyB0aGUgaW50cm9kdWNpbmcgY29tbWl0CiAgYW5kIGJlY2F1c2Ug
+dGhlIGZpeCBzaG91bGQgYmUgcmV2aWV3ZWQgdG9nZXRoZXIgd2l0aCB0aGUgaW5pdCBlcnJvcgog
+IHBhdGguICBJIGFtIGhhcHB5IHRvIHRlc3QgYSBwcm9wb3NlZCBwYXRjaCBvbiB0aGUgc2FtZSBR
+RU1VIHNldHVwLgoKCiAgUGxlYXNlIGtlZXAgbWUgaW4gQ2M7IEkgYW0gbm90IHN1YnNjcmliZWQg
+dG8gdGhlIGxpc3RzLgoKUmVnYXJkcywKSGFueGlhbmcgWHUKeHVoeEBodXN0LmVkdS5jbgo=
+------=_Part_522930_407483201.1794574030005
+Content-Type: application/x-zip-compressed; name=poc.zip
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="poc.zip"
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+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
+------=_Part_522930_407483201.1794574030005--
 
-has just been updated.
-
-This release has a fix for CVE-2026-108472 [1]. This release enables metadata
-directory trees by default for newly created filesystems. This release includes
-multiple fixes gcc 16.2 warnings. The xfs_db now correctly lists shortform
-parent pointers with 13 byte names. The rest of the changes is sync with kernel
-code and updates to maintainer tools.
-
-1: https://access.redhat.com/security/cve/cve-2026-108472
-
-Patches often get missed, so if your outstanding patches are properly reviewed
-on the list and not included in this update, please let me know.
-
-The for-next branch has also been updated to match the state of master.
-
-The new head of the master branch is commit:
-
-e02d0a8efd81d454481641c9bd5680b5febb1261
-
-New commits:
-
-Andrey Albershteyn (5):
-      [1c042af146e6] libxfs: remove stale xfs_trans_mod_sb() declaration
-      [c50fa8510ac1] xfs: fix two warnings in xfs_alloc.c
-      [7ebfc20eb88e] xfsprogs: add gcc generated stack usage files to gitignore
-      [1c122bbd3c88] xfs_admin: remove eval use
-      [e02d0a8efd81] xfsprogs: Release v7.3.0
-
-Christoph Hellwig (9):
-      [80018a28a877] xfs: remove spurious XBF_DONE clearing on readahead validation failure
-      [180a2e434c12] xfs: hide b_flags manipulation from code outside of xfs_buf.c
-      [5085dca9f68d] libfrog: constify getprnam
-      [63b7ae1b61a8] libfrog: constify cvt*
-      [6f8bef3a2c5f] db: constify construct_records_per_block
-      [859beedfa796] repair: remove the unused queues_started variable in do_inode_prefetch
-      [b62bd03a6d1b] stubs: use the i paramter to trace_xfs_trans_resv_calc_minlogsize
-      [5ad4d0812a3c] platform: use the iomap_flags argument to xfs_bmbt_to_iomap
-      [2ee6bbe82c0f] stubs: use more arguments to xfs_extent_busy_insert
-
-Christopher Thomas (1):
-      [850cb9654f6a] xfs_db: read a shortform parent pointer's value after its name
-
-Cihan Karadag (1):
-      [6beb86682dc7] xfs: use kmalloc_objs() instead of kmalloc() in xfs_da_grow_inode_int
-
-Darrick J. Wong (11):
-      [ea42938abb7a] mkfs: add config file for the 2026 LTS kernel
-      [a0b95a987608] mkfs: enable metadata directory trees by default
-      [83b41647a724] tools: add a new script to generate fixes tags
-      [65ae0151999d] xfs: fix the rtrmap and rtrefcount _maxlevels_ondisk functions
-      [5a1354e6af1c] xfs: fix xfs_rtrmapbt_mem_cursor for non-rmap filesystems
-      [f119fbadba2b] xfs: preserve owner on in-memory btree creation
-      [0442536d62fc] xfs: don't leak new_bp if xfs_btree_bload_drop_buf fails
-      [d7a3896a4e61] xfs: fix under-reservation of blocks when repairing sf directories
-      [2072b93c7e07] xfs: don't let hidden_space go negative in xfs_metafile_resv_init
-      [82fdb617af23] xfs: fix wild memcpy access when formatting ondisk rtrefcount btree roots
-      [5815674fbe35] xfs: fix exchange-range-to-eof file size exchange
-
-Eric Sandeen (1):
-      [1688728b6c90] libxfs: capture error return of cache_node_allocate()
-
-Hemanth Selam (1):
-      [07ff777ef47a] xfs: fix typos and repeated words in comments
-
-Hongling Zeng (1):
-      [6789f05429a3] xfs: validate attr entry pointer before field access
-
-Javier Tia (6):
-      [0a5e07e1a1ad] xfs: initialise error in xfs_defer_finish_one()
-      [474b14a4cd52] xfs: give the deferred barrier op type a name
-      [673000170fbc] xfs: report the error that made deferred work shut down the fs
-      [7c1efc4e8ea6] xfs: correct the parent pointer space reservation comment
-      [ee39c700588a] xfs: initialise args->total for parent pointer updates
-      [5405a44f484a] xfs: assert the reservation covers each da fork growth
-
-Jiangshan Yi (1):
-      [17fe3cd5718c] xfs: remove duplicate INO1_WRITTEN check
-
-Johannes Thumshirn (4):
-      [b9a16b80f60d] xfs: add xfs_metadir_create_file helper
-      [817b0d825073] xfs: create quota metadir inodes using xfs_metadir_create_file
-      [d7890cb8656d] xfs: create rtgroup metadir inodes using xfs_metadir_create_file
-      [377dc7ef91ab] xfs: mark internal metadir file creation helpers static
-
-Kees Cook (1):
-      [577eccc58bd8] treewide: refresh kmalloc_obj() conversions
-
-Lin Jiapeng (1):
-      [b7365c4b67a3] xfs: fix exchange-range reflink flag clearing issue with INO1_WRITTEN
-
-Norbert Szetei (1):
-      [e923094ba9c1] xfs: stop exchanging reflink flags when exchanging mappings
-
-Yun Zhou (1):
-      [6166ba6451de] xfs: don't hold buffer locks across sync transaction commit in xfs_sync_sb_buf
-
-Code Diffstat:
-
- .gitignore                     |   1 +
- VERSION                        |   4 +-
- configure.ac                   |   2 +-
- db/btheight.c                  |   2 +-
- db/namei.c                     |   2 +-
- db/xfs_admin.sh                | 142 ++++++++++++++++++++++++++++-------------
- debian/changelog               |   6 ++
- doc/CHANGES                    |  13 ++++
- include/kmem.h                 |  14 ++++
- libfrog/convert.c              |  20 +++---
- libfrog/convert.h              |  24 +++----
- libfrog/projects.c             |   2 +-
- libfrog/projects.h             |   2 +-
- libxfs/cache.c                 |   2 +-
- libxfs/stubs/xfs_extent_busy.h |   9 ++-
- libxfs/stubs/xfs_mount.h       |   4 ++
- libxfs/stubs/xfs_trace.h       |   2 +-
- libxfs/trans.c                 |   2 +-
- libxfs/xfs_ag.h                |   2 +-
- libxfs/xfs_alloc.c             |   4 +-
- libxfs/xfs_attr_leaf.c         |  16 ++++-
- libxfs/xfs_btree_mem.c         |   2 +
- libxfs/xfs_btree_staging.c     |  11 ++--
- libxfs/xfs_da_btree.c          |  10 +--
- libxfs/xfs_da_btree.h          |   2 +
- libxfs/xfs_defer.c             |  18 +++++-
- libxfs/xfs_dquot_buf.c         |  47 ++++----------
- libxfs/xfs_errortag.h          |   2 +-
- libxfs/xfs_exchmaps.c          |  95 +++++----------------------
- libxfs/xfs_format.h            |   2 +-
- libxfs/xfs_ialloc.c            |   2 +-
- libxfs/xfs_inode_buf.c         |  17 ++---
- libxfs/xfs_log_format.h        |   4 +-
- libxfs/xfs_metadir.c           |  84 ++++++++++++++----------
- libxfs/xfs_metadir.h           |   8 ++-
- libxfs/xfs_metafile.c          |   8 +--
- libxfs/xfs_parent.c            |  12 +++-
- libxfs/xfs_platform.h          |  10 ++-
- libxfs/xfs_rtgroup.c           |  58 ++++++++---------
- libxfs/xfs_rtgroup.h           |   6 +-
- libxfs/xfs_rtrefcount_btree.c  |  11 ++--
- libxfs/xfs_rtrmap_btree.c      |   6 +-
- libxfs/xfs_sb.c                |  37 +++++------
- libxfs/xfs_trans_space.c       |  19 +++++-
- man/man8/mkfs.xfs.8.in         |   6 +-
- mkfs/Makefile                  |   3 +-
- mkfs/lts_7.3.conf              |  29 +++++++++
- mkfs/xfs_mkfs.c                |   1 +
- repair/prefetch.c              |   2 -
- tools/git-fixes                |  62 ++++++++++++++++++
- 50 files changed, 517 insertions(+), 332 deletions(-)
- create mode 100644 mkfs/lts_7.3.conf
- create mode 100755 tools/git-fixes
-
--- 
-- Andrey
