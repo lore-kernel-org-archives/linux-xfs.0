@@ -1,112 +1,59 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=82.195.75.108
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794581692;
-	b=P3vItzE8r1DQcizJZsjg2bpfSJEXxGao4bEKPt1HtSmcWRm8I4Dx3KMYiwXXBxolyo9P
-	 CnQZNZAHkrI+hk8UK+1LpVuTp85HeSGA1JN4t2Kq2bCQJEoJvqmrTHxD+xU8SNOxX3oSO
-	 83IkkzZPr4JcS6mBFDRyyailn+1Pw1NLdjx4uTxeQdoOvOylT04Z/aMe3CTwf36OWEy+F
-	 tBo7B8wDMhtuzyuG8U6fXXZ6MnLRPA0J3iLkoUO5TISLRK6vwZLwDh0NZuvSQ2MMpuw8e
-	 s4RpFhTedHCpD4fHdPPaT+itNbDLOMFouNpJj+uvx5AkyZEi1DvTxq8djOyieWJd8HQ==
+	t=1794582182;
+	b=KXPGUwvcC0ia9rs6GAHyLsfPNEvQ//6jPRdNUdOnw9//DgRAcesJ1lFkMfHLYWGg12ys
+	 A65zEBsxtmCIPastNoAc1gDHJyQH1kDdSmhjdu3L3188e8HdMcjaWplLwTruqDt1r4ZfZ
+	 c2hYuaEv9/l8lvDi1jsNLEJMC/6PP1ZA4ZtU0MydLBQKixkWV+ciwPkjMtKOvowusJa8I
+	 VCdw8lQQSSRKBdKPDnfzdtqXBMVBZrLMrIxCnK/rOzwJEBh+0PQWUSv89061t7C6wWC8H
+	 hSa54+omOBHe/VolfhCRtg0PxZIHY8N8Z0CMQUY/KAkINvqO7xCtZWljMWARtLLF37g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794581692;
-	h=DMARC-Filter:Received:DKIM-Signature:DKIM-Signature:DKIM-Signature:
-	 DKIM-Signature:Received:Received:Received:Date:From:To:Cc:Subject:
-	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
-	 In-Reply-To:X-Spamd-Result:X-Spam-Score:X-Spam-Level:X-Spam-Flag;
-	bh=kLg1wy+Nl3hNJVUViyQU914DrXr8uKXxDSBe+HH3+OI=;
-	b=gswewipYS8rwZ/40HbDDL7NFZqaakXNJchVEnvaFqxkaZZerFaHvK54i13BZN9+UMo3o
-	 7FaHoGQVyZWK6pR5fWFTz8h3EeMbEde+UuxYhhkwOfXINDxyvuGOotptQj+qEJADD21Jq
-	 Xuaire+yNvh8pYYSir4PspT+wp1rCIQMoDQ3Tyq3dQjgQCng21unuGrsWl+4gxsVhld5O
-	 Pecvl4ne3eRq6nbcc+vxsPt1om9EpyK2W18Xs8S1Mme3aYgJpDZdCxzdjNmbvoBkskuKz
-	 l9NrzZSu10MDyeeFmJnlcPfCcu9PP8Sn/Q0xuM3QGfBQniFwa4Aw3v9gpFS0qyDi8zQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794582182;
+	h=DMARC-Filter:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
+	 Content-Type:Content-Transfer-Encoding:Message-Id:X-B4-Tracking:
+	 X-Change-ID:To:Cc:X-Mailer:X-Developer-Signature:X-Developer-Key:
+	 X-Debian-User;
+	bh=pyCq0NqkWUNbbpN2bi3/AvWqxCKTwLjFR2xE9UGzNYg=;
+	b=PlzZPEKQ/lwykyktQTdvbKMjmzEliWvMKa9qVfwHN6lgfvlDpUP6IbSM8l7ebH3tJmCs
+	 HvUrg1/MjgBSLJiWOsj7i3APt3qHkENdI4cy6RRbqllRg86O/A3CAfHo+OVrpEWCeCRvt
+	 vPbD+8FbwQgZzx+xFfwtNVy5ZA/S9vujlnreifCwrSw0CvHvZi4lylQNFKblpIufYzfLN
+	 vKTjYFkyHXfSRrpgFIkGTUkl6YWZNqyUtOr4QQMvYSlc6XT8AVYlBCv0jkCjzg6dvdJML
+	 L8qq7cwwNX8sw9iq1l3F2J71e1Th/ekHNDWljuj5+AC/5Fioon1MdQBs65cqmus3qSw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=suse.cz;
-	spf=pass smtp.mailfrom=suse.cz;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=HbiPobah;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=QBNwugyQ;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=HbiPobah;
-	dkim=neutral header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=QBNwugyQ;
-	arc=none smtp.remote-ip=195.135.223.131
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	dmarc=pass header.from=debian.org;
+	spf=pass smtp.mailfrom=debian.org;
+	dkim=pass header.d=debian.org header.i=@debian.org header.a=rsa-sha256 header.s=smtpauto.stravinsky header.b=plJ3a7SK;
+	arc=none smtp.remote-ip=82.195.75.108
+Received: from stravinsky.debian.org (stravinsky.debian.org [82.195.75.108])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D64FE606A330;
-	Fri, 13 Nov 2026 14:54:51 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D64FE606A330
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BD5C606A323;
+	Fri, 13 Nov 2026 15:03:02 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3BD5C606A323
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=debian.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=debian.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=HbiPobah;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=QBNwugyQ;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=HbiPobah;
-	dkim=neutral header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=QBNwugyQ
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 0100E1F76B;
-	Fri, 13 Nov 2026 14:54:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1794581690; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=kLg1wy+Nl3hNJVUViyQU914DrXr8uKXxDSBe+HH3+OI=;
-	b=HbiPobahhoFdy1JualtlCQSG5WiHGbYkeN97T1slq4syz8ydxAAmyFBMnw9wIWMymvWQBA
-	OibY1yJc8woYnm917MtaAgfxA3/FGLQWnqOg9S4/Gje0GR/2m8TO3d0XcGyF5ZnSISlDva
-	Pm+cC9vb75/3LpW2TrEGkQOayOm27Hw=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1794581690;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=kLg1wy+Nl3hNJVUViyQU914DrXr8uKXxDSBe+HH3+OI=;
-	b=QBNwugyQn7fvnUpfJc61DDJ3B5ezL3Vu/dwAt7y/gE33yL9lBDupL5AB9JAf8phimNZdBs
-	djr90So7chpqQRAg==
-Authentication-Results: smtp-out2.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1794581690; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=kLg1wy+Nl3hNJVUViyQU914DrXr8uKXxDSBe+HH3+OI=;
-	b=HbiPobahhoFdy1JualtlCQSG5WiHGbYkeN97T1slq4syz8ydxAAmyFBMnw9wIWMymvWQBA
-	OibY1yJc8woYnm917MtaAgfxA3/FGLQWnqOg9S4/Gje0GR/2m8TO3d0XcGyF5ZnSISlDva
-	Pm+cC9vb75/3LpW2TrEGkQOayOm27Hw=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1794581690;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=kLg1wy+Nl3hNJVUViyQU914DrXr8uKXxDSBe+HH3+OI=;
-	b=QBNwugyQn7fvnUpfJc61DDJ3B5ezL3Vu/dwAt7y/gE33yL9lBDupL5AB9JAf8phimNZdBs
-	djr90So7chpqQRAg==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id BBF48134C3;
-	Fri, 13 Nov 2026 14:54:49 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id hybEI7kk92pSFgAAD6G6ig
-	(envelope-from <jack@suse.cz>); Fri, 13 Nov 2026 14:54:49 +0000
-Received: by quack.suse.cz (Postfix, from userid 1000)
-	id 50A352396E; Fri, 13 Nov 2026 15:54:49 +0100 (CET)
-Date: Fri, 13 Nov 2026 15:54:49 +0100
-From: Jan Kara <jack@suse.cz>
-To: Christian Brauner <brauner@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.com>, 
-	Al Viro <viro@zeniv.linux.org.uk>, ecryptfs@vger.kernel.org, linux-ext4@vger.kernel.org, 
-	jfs-discussion@lists.sourceforge.net, linux-nilfs@vger.kernel.org, exfat@lists.linux.dev, 
-	linux-mm@kvack.org, ntfs@lists.linux.dev, ocfs2-devel@lists.linux.dev, 
-	linux-btrfs@vger.kernel.org, gfs2@lists.linux.dev, linux-efi@vger.kernel.org, 
-	linux-mtd@lists.infradead.org, linux-xfs@vger.kernel.org, 
-	Karl Mehltretter <kmehltretter@gmail.com>
-Subject: Re: [PATCH v3 06/33] ext2: don't set SB_RDONLY after filesystem
- errors
-Message-ID: <wsdk673ps54ncvmj7xvgzghgcf7y27uw4w7ahrgbytdy6tdxg3@ldvmi2yk3lm7>
-References: <20261113-work-fs-sb_rdonly-v3-0-0be92bb73709@kernel.org>
- <20261113-work-fs-sb_rdonly-v3-6-0be92bb73709@kernel.org>
+	dkim=pass (2048-bit key, unprotected) header.d=debian.org header.i=@debian.org header.a=rsa-sha256 header.s=smtpauto.stravinsky header.b=plJ3a7SK
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=debian.org;
+	s=smtpauto.stravinsky; h=X-Debian-User:Cc:To:Message-Id:
+	Content-Transfer-Encoding:Content-Type:MIME-Version:Subject:Date:From:
+	Reply-To:Content-ID:Content-Description:In-Reply-To:References;
+	bh=pyCq0NqkWUNbbpN2bi3/AvWqxCKTwLjFR2xE9UGzNYg=; b=plJ3a7SKuHDKsijoOtYJLNzd4B
+	SJHg8Gi/AqZkN3WGUS4n8El3WbYaRU/XAfhDGmwtNbjw6HVUx1ZWRuzbOCyI7yiOXiSIucgECMW08
+	l5AqewP/loZED/u7oP1h5rcrNXl611bMsV99CKEeft75Y4EkD5RpVOU/x5S8Vx5RRP8K6I+3tDbTj
+	BzneIzYYZj00JXhPVwWge8OjBy4dXrJ83g6sU59yMU14FKH+tk9UbOLo/hhjvhG0lCimjzTViDbWQ
+	pJISlA9grtvfcsHsUqPppgjP+u91s+dMp/zh7XYA0pZ9KPGQEt8fTX1XuyfMAfsWN5HHb5Qf6jdnT
+	o1R6W30w==;
+Received: from authenticated-user
+	by stravinsky.debian.org with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.96)
+	(envelope-from <leitao@debian.org>)
+	id 1xRsnp-00EpoX-0E;
+	Fri, 13 Nov 2026 15:02:57 +0000
+From: Breno Leitao <leitao@debian.org>
+Date: Fri, 13 Nov 2026 07:02:17 -0800
+Subject: [PATCH] iomap: don't update i_size of block devices on buffered
+ write
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -116,188 +63,103 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261113-work-fs-sb_rdonly-v3-6-0be92bb73709@kernel.org>
-X-Spamd-Result: default: False [-11.30 / 50.00];
-	SUSE_INTERNAL_BYPASS(-9.00)[];
-	BAYES_HAM(-3.00)[100.00%];
-	SUSPICIOUS_RECIPS(1.50)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	MISSING_XM_UA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	RCPT_COUNT_TWELVE(0.00)[18];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	TO_DN_SOME(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	FREEMAIL_CC(0.00)[vger.kernel.org,suse.com,zeniv.linux.org.uk,lists.sourceforge.net,lists.linux.dev,kvack.org,lists.infradead.org,gmail.com];
-	RCVD_COUNT_THREE(0.00)[3];
-	FROM_EQ_ENVFROM(0.00)[];
-	RCVD_TLS_LAST(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.cz:email,suse.com:email,imap1.dmz-prg2.suse.org:helo]
-X-Spam-Score: -11.30
-X-Spam-Level: 
-X-Spam-Flag: NO
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20261113-iomap-bdev-isize-v1-1-699603b589da@debian.org>
+X-B4-Tracking: v=1; b=H4sIAHgm92oC/x2MQQqAIBAAvyJ7bqEtUOor0UFzqz1UohCR+Pek4
+ 8DMZEgchROMKkPkW5JcZwVqFCy7PTdG8ZWhaztNRD3KddiAzvONVX4ZrTak9TIYcgZqFiKv8vz
+ LaS7lA0NDnTliAAAA
+X-Change-ID: 20261113-iomap-bdev-isize-a67166c971b7
+To: Christian Brauner <brauner@kernel.org>, Jens Axboe <axboe@kernel.dk>, 
+ Hannes Reinecke <hare@suse.de>, Pankaj Raghav <p.raghav@samsung.com>, 
+ Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Cc: Luis Chamberlain <mcgrof@kernel.org>, linux-xfs@vger.kernel.org, 
+ linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ kernel-team@meta.com, Breno Leitao <leitao@debian.org>
+X-Mailer: b4 0.15-dev-47773
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2852; i=leitao@debian.org;
+ h=from:subject:message-id; bh=M/pgn12mnH/26a7TA8n6ANx9y8OZg9GkxYYG2atBOgA=;
+ b=owEBbQKS/ZANAwAIATWjk5/8eHdtAcsmYgBq9yadmRLzrxGKs3AoxKma8P6Rf6CCENNLueOJ3
+ SxRRHnDzNKJAjMEAAEIAB0WIQSshTmm6PRnAspKQ5s1o5Of/Hh3bQUCavcmnQAKCRA1o5Of/Hh3
+ bQOwD/937/2daeq15i60vn65fr4oiPKmWDWI7sY9PA/Kuv55RKc8PFrkaRTUSTQKIE01OQZTUtQ
+ ak5NkoEnG9x0MyXJywaTKDGeQZc1q0yNNtgIVpbilYGIhx74DtZBo7E7l2arH7/EPYyM/crEtxc
+ QSP9L0CjvOe1NRxOoZIXXZUEjWylEdpzCf8TLLsYtvgimwg+qhxw767NtmEjjelyCO8x9y7+Xa6
+ DxyV/9/vZ8GRzUUPSsWPXoODByN1knw/SSZolCyljgzduCSMiucrKMWM1xVLjtiv+2owvq/XnJj
+ RkbBe4JCAw8rXu3l2jFEXdeiyqMml5FST3JSccNdcUCxncaKt1BDRQzY82HlAl2LjspjgUzKPoo
+ 5f25nhwxLtj1a3uOCgrrtdhnBm7rc/a/x9wzSQrg4qWPlI7EtTfOKXVHwR/OFq9yibBmki3veRE
+ PMuhVZuskItjMgD2KzcvAFGL6DcvinvEAIT3wC8NSS99WP7RrnvXCHwHQ1uY21rz0yHuobL9rot
+ 0VRwzJSobQ8e1ZkGeh6Ku3RoklH5hZO2QnxEvwHKrmtEg9/xH5iWtf4S0qMuTJtE60RyUWByhVb
+ nSNb0lCRJj1NJ6eJVQIpZu5UF0nUa5TkCgOmNcxpu5QxJRN9dmy8RYN4glYGzZBF1+wSNA6dHGs
+ GNWvfubNmvLQabg==
+X-Developer-Key: i=leitao@debian.org; a=openpgp;
+ fpr=AC8539A6E8F46702CA4A439B35A3939FFC78776D
+X-Debian-User: leitao
 
-On Fri 13-11-26 12:59:02, Christian Brauner wrote:
-> With errors=remount-ro ext2_error() sets SB_RDONLY from whatever context
-> hit the error and without holding s_umount. That races with everyone
-> else changing sb->s_flags and it breaks freezing. If it happens while
-> the filesystem is frozen thaw_super() sees a read-only superblock and
-> leaves the s_writers rwsems locked so every writer hangs. A lookup in a
-> corrupted directory is enough. Karl proposed teaching thaw_super() about
-> it but Jan preferred fixing the filesystems (cf. [1]) like ext4 and f2fs
-> already did.
-> 
-> So call sb_set_emergency_ro() instead and let the VFS refuse
-> modifications. ext2 still refuses allocations and ext2_xattr_set()
-> itself, ecryptfs calls the latter without write access on the lower
-> mount. Unlinked inodes are left to e2fsck. ext2_write_inode() keeps
-> working because writeback still writes data, bitmaps, indirect and
-> directory blocks after the error and they'd be lost without the inode.
-> A thaw after an error while frozen still writes the superblock but
-> EXT2_ERROR_FS stays set in it.
-> 
-> After a remount to read-only a remount to read-write fails until umount.
-> A plain remount to read-write right after the error succeeds but the
-> filesystem stays read-only. Writes through file descriptors opened
-> before the error fail with EROFS.
-> 
-> [1]: https://lore.kernel.org/r/hyhuckyohsabx2suvq3z7uy3pbgmihva6wgzxr3op7pzcrlu33@p7zzlgp2ehjf
-> 
-> Reported-by: Karl Mehltretter <kmehltretter@gmail.com>
-> Link: https://lore.kernel.org/r/20260903060855.4610-1-kmehltretter@gmail.com
-> Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
+We are seeing this warning on an arm64 linux-next host while the ublk
+selftests run (stress_01 deletes the ublk disks under fio buffered
+writes):
 
-Looks good. Feel free to add:
+  WARNING: mm/truncate.c:902 at pagecache_isize_extended+0x37c/0x490, CPU#40: iou-wrk-3496756/3497370
+  Call trace:
+   pagecache_isize_extended+0x37c/0x490 (P)
+   iomap_file_buffered_write+0x38c/0x5d0
+   blkdev_buffered_write+0xcc/0x138
+   blkdev_write_iter+0x32c/0x4e0
+   io_write+0x77c/0xff8
 
-Reviewed-by: Jan Kara <jack@suse.cz>
+The theory is that the disk shrank under the write. del_gendisk() sets
+the capacity to 0, which writes the bdev inode's i_size under
+bd_size_lock only. A writer whose mapping predates that reads
+old_size == 0 in iomap_write_iter(), sets i_size to pos + written and
+calls pagecache_isize_extended(inode, 0, pos). blkdev_buffered_write()
+holds i_rwsem shared, so a writer at a lower offset can store a smaller
+i_size in between, and WARN_ON(to > inode->i_size) fires. Even without
+the warning, the write path regrows the size of a dead disk. The block
+layer owns that size (bdev_set_nr_sectors()), and blkdev_write_end()
+never touched it before the switch to iomap.
 
-								Honza
+A reproducer on linux-next supports the theory: 128 threads doing 64K
+buffered writes to a loop device, while another thread flips its
+capacity between 1M and 1G with LOOP_SET_STATUS64, hit the warning 6
+to 18 times per 30 second run (4 runs). With this patch it never fires,
+and data written through the page cache still reads back intact.
 
-> ---
->  fs/ext2/balloc.c |  5 +++++
->  fs/ext2/ialloc.c |  2 ++
->  fs/ext2/inode.c  |  4 +++-
->  fs/ext2/super.c  | 13 ++++++++-----
->  fs/ext2/xattr.c  |  2 ++
->  5 files changed, 20 insertions(+), 6 deletions(-)
-> 
-> diff --git a/fs/ext2/balloc.c b/fs/ext2/balloc.c
-> index 80acc1e193871..77f2ed5a76a28 100644
-> --- a/fs/ext2/balloc.c
-> +++ b/fs/ext2/balloc.c
-> @@ -1236,6 +1236,11 @@ ext2_fsblk_t ext2_new_blocks(struct inode *inode, ext2_fsblk_t goal,
->  	*errp = -ENOSPC;
->  	sb = inode->i_sb;
->  
-> +	if (sb_emergency_ro(sb)) {
-> +		*errp = -EROFS;
-> +		return 0;
-> +	}
-> +
->  	/*
->  	 * Check quota for allocation of this block.
->  	 */
-> diff --git a/fs/ext2/ialloc.c b/fs/ext2/ialloc.c
-> index bf21b57cf98cd..2741ecd2b94fc 100644
-> --- a/fs/ext2/ialloc.c
-> +++ b/fs/ext2/ialloc.c
-> @@ -433,6 +433,8 @@ struct inode *ext2_new_inode(struct inode *dir, umode_t mode,
->  	int err;
->  
->  	sb = dir->i_sb;
-> +	if (sb_emergency_ro(sb))
-> +		return ERR_PTR(-EROFS);
->  	inode = new_inode(sb);
->  	if (!inode)
->  		return ERR_PTR(-ENOMEM);
-> diff --git a/fs/ext2/inode.c b/fs/ext2/inode.c
-> index 12ac4cfe15003..dd28637c60737 100644
-> --- a/fs/ext2/inode.c
-> +++ b/fs/ext2/inode.c
-> @@ -71,7 +71,9 @@ void ext2_evict_inode(struct inode * inode)
->  	struct ext2_block_alloc_info *rsv;
->  	int want_delete = 0;
->  
-> -	if (!inode->i_nlink && !is_bad_inode(inode)) {
-> +	/* After an error made us read-only the inode is left to e2fsck. */
-> +	if (!inode->i_nlink && !is_bad_inode(inode) &&
-> +	    !sb_emergency_ro(inode->i_sb)) {
->  		want_delete = 1;
->  		dquot_initialize(inode);
->  	} else {
-> diff --git a/fs/ext2/super.c b/fs/ext2/super.c
-> index fb217ef2d69f0..10d5165459749 100644
-> --- a/fs/ext2/super.c
-> +++ b/fs/ext2/super.c
-> @@ -53,7 +53,7 @@ void ext2_error(struct super_block *sb, const char *function,
->  	struct ext2_sb_info *sbi = EXT2_SB(sb);
->  	struct ext2_super_block *es = sbi->s_es;
->  
-> -	if (!sb_rdonly(sb)) {
-> +	if (!sb_rdonly_any(sb)) {
->  		spin_lock(&sbi->s_lock);
->  		sbi->s_mount_state |= EXT2_ERROR_FS;
->  		es->s_state |= cpu_to_le16(EXT2_ERROR_FS);
-> @@ -73,11 +73,11 @@ void ext2_error(struct super_block *sb, const char *function,
->  
->  	if (test_opt(sb, ERRORS_PANIC))
->  		panic("EXT2-fs: panic from previous error\n");
-> -	if (!sb_rdonly(sb) && test_opt(sb, ERRORS_RO)) {
-> +	/* SB_RDONLY needs s_umount, see sb_set_emergency_ro(). */
-> +	if (!sb_rdonly(sb) && test_opt(sb, ERRORS_RO) &&
-> +	    sb_set_emergency_ro(sb))
->  		ext2_msg(sb, KERN_CRIT,
->  			     "error: remounting filesystem read-only");
-> -		sb->s_flags |= SB_RDONLY;
-> -	}
->  }
->  
->  static void ext2_msg_fc(struct fs_context *fc, const char *prefix,
-> @@ -179,7 +179,7 @@ static void ext2_put_super (struct super_block * sb)
->  	ext2_xattr_destroy_cache(sbi->s_ea_block_cache);
->  	sbi->s_ea_block_cache = NULL;
->  
-> -	if (!sb_rdonly(sb)) {
-> +	if (!sb_rdonly_any(sb)) {
->  		struct ext2_super_block *es = sbi->s_es;
->  
->  		spin_lock(&sbi->s_lock);
-> @@ -1360,6 +1360,9 @@ static int ext2_reconfigure(struct fs_context *fc)
->  	if ((bool)(flags & SB_RDONLY) == sb_rdonly(sb))
->  		goto out_set;
->  	if (flags & SB_RDONLY) {
-> +		/* After an error nothing may be written, just go read-only. */
-> +		if (sb_emergency_ro(sb))
-> +			goto out_set;
->  		if (le16_to_cpu(es->s_state) & EXT2_VALID_FS ||
->  		    !(sbi->s_mount_state & EXT2_VALID_FS))
->  			goto out_set;
-> diff --git a/fs/ext2/xattr.c b/fs/ext2/xattr.c
-> index 8f608930a48c6..12dfffff189cb 100644
-> --- a/fs/ext2/xattr.c
-> +++ b/fs/ext2/xattr.c
-> @@ -429,6 +429,8 @@ ext2_xattr_set(struct inode *inode, int name_index, const char *name,
->  	ea_idebug(inode, "name=%d.%s, value=%p, value_len=%ld",
->  		  name_index, name, value, (long)value_len);
->  
-> +	if (sb_emergency_ro(sb))
-> +		return -EROFS;
->  	if (value == NULL)
->  		value_len = 0;
->  	if (name == NULL)
-> 
-> -- 
-> 2.53.0
-> 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Skip the size update and pagecache_isize_extended() for block devices.
+
+Fixes: 487c607df790 ("block: use iomap for writes to block devices")
+Signed-off-by: Breno Leitao <leitao@debian.org>
+---
+ fs/iomap/buffered-io.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 6d843b168d5f7d..3a171a70e6adde 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -1256,14 +1256,15 @@ static int iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i,
+ 		 * unlock and release the folio.
+ 		 */
+ 		old_size = iter->inode->i_size;
+-		if (pos + written > old_size &&
++		if (pos + written > old_size && !S_ISBLK(iter->inode->i_mode) &&
+ 		    !(iter->iomap.flags & IOMAP_F_FSVERITY)) {
+ 			i_size_write(iter->inode, pos + written);
+ 			iter->iomap.flags |= IOMAP_F_SIZE_CHANGED;
+ 		}
+ 		__iomap_put_folio(iter, write_ops, written, folio);
+ 
+-		if (old_size < pos && !(iter->iomap.flags & IOMAP_F_FSVERITY))
++		if (old_size < pos && !S_ISBLK(iter->inode->i_mode) &&
++		    !(iter->iomap.flags & IOMAP_F_FSVERITY))
+ 			pagecache_isize_extended(iter->inode, old_size, pos);
+ 
+ 		cond_resched();
+
+---
+base-commit: 6d582d78fad9d828e575ca0cdcff8ea47a77220b
+change-id: 20261113-iomap-bdev-isize-a67166c971b7
+
+Best regards,
+--  
+Breno Leitao <leitao@debian.org>
+
