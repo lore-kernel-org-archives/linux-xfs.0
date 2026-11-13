@@ -1,48 +1,48 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794571254;
-	b=2b0G4Sg7AOz7B6d4+DcaF0zMV3oXEmzTYzshr/03k/F/1E/2cbJ3mt4h6dY9G0WrJNHL
-	 +OVvVQNpsMmxkPNHbxq2/pHQgEejnJEhaoK96ZAeIVZtAAwX81yLfIDt93FeYIYOCLcEm
-	 00sOfBePc+mRHvO5bt6gq0M7zx5ekhHwB3NkRnzAp8FR0ZNg0t2NaK2/4fst0c1AiYwfR
-	 irje1rX/FBsZASt0R224u9E0nbNY44kNCyQ6+btVD/uBUkQdcoUgRrNqIxC6+R+6f97jU
-	 Ty46S6pp2hbHtkq5oAx1sCZO05zzp9lH97U5FdncjnTeMdaS2l26AysO04XWMu45i8g==
+	t=1794571263;
+	b=DpDMOiBEw38o1tKHYW5/dObSI5v7gtYDEgMFlZ6glHRkEb+1rNKC+YiaffPInr+Ps5ac
+	 NzA7Lx8LLNP8kUej2t6y54VJ8KmKOVugEfrxHW6ME8M7maI/vm3zXo8SgraOt4KKiuWd7
+	 Qshn4aK7FOcFyyZf25l30gKq65RQ06/c76rih5mqI3GU8bo2/y9fBwyna0l+nouLCO+1b
+	 LgL1MOkzXq/sqqlZyHOy/mIpbsZ70UMrsq3eqNbAHEji58XKUS/d6kMCWs6rTj/Bp3ioo
+	 wSxg97FT/vjCBg7GWLBsjG1nP2uImz7PxOtmGzgt/oOrMO4jVEr/IkpffuodJoFhE4Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794571254;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794571263;
 	h=Received:DKIM-Signature:From:Date:Subject:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
 	 X-Mailer:X-Developer-Signature:X-Developer-Key;
-	bh=Ypt6ULu3JwdPcJUCYN4Pu3PAb0qap28rHPCyQWyGM7s=;
-	b=KATqCNLwuWS+f9IMrK1ZHZeP2zWjgMSMFw/l3Tzw1Iv0iy7RPU0o8urkbeAPwkyWiwF4
-	 pJSUejndUgIikxafiBorAOaaNmXoRnAZ4dgcioeHHUc4cjITSxFNim/qx827x5k0q6y9Y
-	 aOADHMRGGCDnxYpgKXWlQi4Tf+8ptd84ymTL0G2QJrzAVUNtmqy15rkTAChJt7lnLSYZp
-	 /btvUl+5RnU06BBks243b0V7zF0riA8pzSSr0pnWjhwjzMF+2ecLDMZUS1j0f/JT4tuNV
-	 2CiByrVF997mDBnSyyHh3Mgqi+4s0rpSw4XOxbgz3tPUOqHIVYqx1sjHKxYWuWYxjWA==
+	bh=yyeMtFRiFUm1GgKqiaueiDO/IS6fCBvaYPtU/LMu/xo=;
+	b=oaO4XjCjaGV2PM3/7E9gYzWnAHCD7EwNM8rbrIRsY0tPqzLzd9Xud6iN73v7TnWGyJxS
+	 RLui/RFSJjIZfzVAmpGEIU73pZDaAyFvmK3maMiYYo6GFVh3xVCtbKoGosG1stMY2fCk+
+	 m8lEEoWTU3WXQI9s/TNAVdNosjFR/xBWh6FY33Yu2SL4rYPNl0/2APcJEcTU3VA3kMsVO
+	 qVbrng7FWkz9hXV1IyzbLnvdVl+s97ccEsHEimH/YXTOUPmpk5xFwdNf8s0Fo55GkmXze
+	 T2Llbpf13KNxDXMOfny+MGBJUOtSiqBhveVUd9L44QhKleTKWIIaRKHHPMma85IpgZA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WAJ2uDjA;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kF4AFKYZ;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97C28606A337;
-	Fri, 13 Nov 2026 12:00:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F1CE606A33F;
+	Fri, 13 Nov 2026 12:01:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WAJ2uDjA
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 59C001F000C4;
-	Fri, 13 Nov 2026 12:00:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kF4AFKYZ
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 07E831F000C9;
+	Fri, 13 Nov 2026 12:00:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794571254;
-	bh=Ypt6ULu3JwdPcJUCYN4Pu3PAb0qap28rHPCyQWyGM7s=;
+	s=k20260515; t=1794571262;
+	bh=yyeMtFRiFUm1GgKqiaueiDO/IS6fCBvaYPtU/LMu/xo=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=WAJ2uDjAWudaH8KPpTusxWD5T3lyda66Qun0huxINDe2hQlZsWqFpuproeFGHqH9l
-	 qgVPMsSmjd15IllLkxMEHr1fu68/jaHjUmhyQl+GSlICHMsh8INQwIwoYZ+KZEbzXH
-	 MZsQSnDpkE/5CUquOzq8zpDYEE/XneMMYIhr1I6weg7CiGvwKHLTLDm1KliMI21XRp
-	 XmyAwx59+M70ZeTKRl9Mt35u8qedo9LKYI3dy5hMpdmBRemUM7/zhtPDhVttb8LSQ5
-	 sT9VbWwKFSYZZ5iB+w9HJJj3mZIROf/grZRgKjY4FC62T1nN82taUsbfoZvaZSpxPB
-	 Vorm2daFZNsSg==
+	b=kF4AFKYZ6LTt4D1pyInaN9B6u0OE4jPZDqqgqRlu5SSxnCxqtEaOUJ+9FGVs79LN5
+	 LWwJvImEvXw1/hVRnIhQVs1XAl5oyAi3sjHQ7m8vSgf4vYHiAE49qa+Nbo40Uj0vJE
+	 c78CtHjAIAiUZeQG+LB5Ults4fwbM5XtpnTiSDELaN3V3HHjcJk82wrBi3krguYfik
+	 z4bJ7/0CyTVnxO8T12tpwrsl5fKdKGqCSpLZW5fFVOUPeGb8NokGmStMRW9vLj/Rm9
+	 8NKMUYABnEbHP8iXKEEYMPGAgFZTpyLPomrT9t3P93S0KMDFLQGtBq91Z0lJWC7HzM
+	 W/YQ2P1zAnNjA==
 From: Christian Brauner <brauner@kernel.org>
-Date: Fri, 13 Nov 2026 12:59:06 +0100
-Subject: [PATCH v3 10/33] exfat: keep the current mount options on remount
+Date: Fri, 13 Nov 2026 12:59:08 +0100
+Subject: [PATCH v3 12/33] exfat: use the generic emergency read-only state
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -54,7 +54,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261113-work-fs-sb_rdonly-v3-10-0be92bb73709@kernel.org>
+Message-Id: <20261113-work-fs-sb_rdonly-v3-12-0be92bb73709@kernel.org>
 References: <20261113-work-fs-sb_rdonly-v3-0-0be92bb73709@kernel.org>
 In-Reply-To: <20261113-work-fs-sb_rdonly-v3-0-0be92bb73709@kernel.org>
 To: linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.com>
@@ -65,117 +65,130 @@ Cc: Al Viro <viro@zeniv.linux.org.uk>, ecryptfs@vger.kernel.org,
  linux-btrfs@vger.kernel.org, gfs2@lists.linux.dev, 
  linux-efi@vger.kernel.org, linux-mtd@lists.infradead.org, 
  linux-xfs@vger.kernel.org, 
- "Christian Brauner (Amutable)" <brauner@kernel.org>, stable@vger.kernel.org
+ "Christian Brauner (Amutable)" <brauner@kernel.org>
 X-Mailer: b4 0.17-dev-ce4c1
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3966; i=brauner@kernel.org;
- h=from:subject:message-id; bh=xVd1t6ge+zArPbkQcafgR82XBzAI62aSa6+KImihqMQ=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWR9+730sNAfFnlho9cqhmKf3s/ePfn7RIU7t9QLoqcfn
- PxnMsO06o5SFgYxLgZZMUUWh3aTcLnlPBWbjTI1YOawMoEMYeDiFICJxL9nZOirrgy6Neuj+pu6
- QyeaP+ac5U09tzpWyOSx1QeXNTqrgxMY/opOem3tX7bb9f6lxXcZs084a6lu3JJzQv2nduniah3
- 53cwA
+X-Developer-Signature: v=1; a=openpgp-sha256; l=4142; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=ZSlUpRfgik1TuXvBBVvkw3QqcpPSPBH3FavShZHmWoU=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWR9+71iovftKZ2+13Pn17z7+Zx1wqsG5o2hLvcmBz1cE
+ LI1qXm3Q0cpC4MYF4OsmCKLQ7tJuNxynorNRpkaMHNYmUCGMHBxCsBEIpwYGS5VN1rdk4s1mHHD
+ MPH6rux/+n18sxXNQg3KDSfbV2k98mX4724wyXxD8okWRkeenetC72+76+Ps+jDH+si3g273dZh
+ vMAEA
 X-Developer-Key: i=brauner@kernel.org; a=openpgp;
  fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-exfat_init_fs_context() only inherits uid, gid, fmask and dmask for a
-reconfigure. But exfat_reconfigure() refuses to change iocharset,
-keep_last_dots, sys_tz, time_offset and allow_utime. So every remount
-that doesn't repeat a non-default value for one of them fails with
-EINVAL, including emergency remount (sysrq u) which passes no options at
-all. And an option-less remount silently resets errors=, zero_size_dir
-and discard.
+Set SB_STATE_EMERGENCY_RO instead of a private bit when an error makes
+the filesystem read-only. exfat_emergency_state() keeps telling a
+shutdown (EIO) and the emergency state (EROFS) apart so none of its
+callers change. The VFS refuses the remount to read-write now so exfat
+doesn't have to, and /proc/mounts shows the filesystem read-only again.
 
-So start a reconfigure from the current options like gfs2 does. The
-iocharset string stays NULL in the new context because
-->init_fs_context() runs without s_umount for mount(2) and a concurrent
-remount could free it. It's only compared if the remount names one. A
-shutdown turns discard off for good so exfat_reconfigure() keeps it off.
+The VFS also refuses to freeze the superblock in that state. So
+FS_IOC_SHUTDOWN with EXFAT_GOING_DOWN_DEFAULT or _FULLSYNC shuts down
+without the freeze after an error, there's nothing left to sync anyway.
 
-The next patch stops exfat from setting SB_RDONLY after errors. An
-errored exfat then stays read-write and emergency remount would run into
-this as well.
-
-Fixes: e6fd5d3a4317 ("exfat: support modifying mount options via remount")
-Cc: stable@vger.kernel.org
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- fs/exfat/super.c | 31 ++++++++++++++++++-------------
- 1 file changed, 18 insertions(+), 13 deletions(-)
+ fs/exfat/exfat_fs.h | 13 ++-----------
+ fs/exfat/misc.c     |  6 ++----
+ fs/exfat/super.c    | 12 ++++++------
+ 3 files changed, 10 insertions(+), 21 deletions(-)
 
-diff --git a/fs/exfat/super.c b/fs/exfat/super.c
-index 4943cef977418..44d2000007dfb 100644
---- a/fs/exfat/super.c
-+++ b/fs/exfat/super.c
-@@ -797,14 +797,12 @@ static int exfat_reconfigure(struct fs_context *fc)
- 		mutex_unlock(&sbi->s_lock);
- 	}
+diff --git a/fs/exfat/exfat_fs.h b/fs/exfat/exfat_fs.h
+index c0e712d9083a0..ac138f1119886 100644
+--- a/fs/exfat/exfat_fs.h
++++ b/fs/exfat/exfat_fs.h
+@@ -123,7 +123,6 @@ enum {
  
--	if (new_opts->allow_utime == (unsigned short)-1)
--		new_opts->allow_utime = ~new_opts->fs_dmask & 0022;
+ /* Superblock flags */
+ #define EXFAT_FLAGS_SHUTDOWN	1
+-#define EXFAT_FLAGS_EMERGENCY_RO	2	/* read-only after an error */
+ 
+ struct exfat_dentry_namebuf {
+ 	char *lfn;
+@@ -376,20 +375,12 @@ static inline int exfat_forced_shutdown(struct super_block *sb)
+ 	return test_bit(EXFAT_FLAGS_SHUTDOWN, &EXFAT_SB(sb)->s_exfat_flags);
+ }
+ 
+-static inline int exfat_emergency_ro(struct super_block *sb)
+-{
+-	return test_bit(EXFAT_FLAGS_EMERGENCY_RO, &EXFAT_SB(sb)->s_exfat_flags);
+-}
 -
- 	/*
- 	 * Since the old settings of these mount options are cached in
- 	 * inodes or dentries, they cannot be modified dynamically.
- 	 */
--	if (strcmp(new_opts->iocharset, cur_opts->iocharset) ||
-+	if ((new_opts->iocharset &&
-+	     strcmp(new_opts->iocharset, cur_opts->iocharset)) ||
- 	    new_opts->keep_last_dots != cur_opts->keep_last_dots ||
- 	    new_opts->sys_tz != cur_opts->sys_tz ||
- 	    new_opts->time_offset != cur_opts->time_offset ||
-@@ -815,6 +813,10 @@ static int exfat_reconfigure(struct fs_context *fc)
- 	    new_opts->allow_utime != cur_opts->allow_utime)
- 		return -EINVAL;
- 
-+	/* A shutdown turned discard off for good. */
-+	if (exfat_forced_shutdown(sb))
-+		new_opts->discard = 0;
-+
- 	if (new_opts->discard != cur_opts->discard &&
- 	    new_opts->discard &&
- 	    !bdev_max_discard_sectors(sb->s_bdev)) {
-@@ -823,6 +825,8 @@ static int exfat_reconfigure(struct fs_context *fc)
- 	}
- 
- 	swap(*cur_opts, *new_opts);
-+	/* The iocharset can't change, keep the current string. */
-+	swap(cur_opts->iocharset, new_opts->iocharset);
- 
+-/*
+- * Modifications are refused after a forced shutdown (-EIO) and after an error
+- * with errors=remount-ro (-EROFS).
+- */
++/* -EIO after a forced shutdown, -EROFS after an error with errors=remount-ro */
+ static inline int exfat_emergency_state(struct super_block *sb)
+ {
+ 	if (unlikely(exfat_forced_shutdown(sb)))
+ 		return -EIO;
+-	if (unlikely(exfat_emergency_ro(sb)))
++	if (unlikely(sb_emergency_ro(sb)))
+ 		return -EROFS;
  	return 0;
  }
-@@ -849,23 +853,24 @@ static int exfat_init_fs_context(struct fs_context *fc)
+diff --git a/fs/exfat/misc.c b/fs/exfat/misc.c
+index 56dcb93ce69e0..03c5c2b9a65ec 100644
+--- a/fs/exfat/misc.c
++++ b/fs/exfat/misc.c
+@@ -25,8 +25,7 @@
+  */
+ void __exfat_fs_error(struct super_block *sb, int report, const char *fmt, ...)
+ {
+-	struct exfat_sb_info *sbi = EXFAT_SB(sb);
+-	struct exfat_mount_options *opts = &sbi->options;
++	struct exfat_mount_options *opts = &EXFAT_SB(sb)->options;
+ 	va_list args;
+ 	struct va_format vaf;
  
- 	if (fc->purpose == FS_CONTEXT_FOR_RECONFIGURE && fc->root) {
- 		struct super_block *sb = fc->root->d_sb;
--		struct exfat_mount_options *cur_opts = &EXFAT_SB(sb)->options;
- 
--		sbi->options.fs_uid = cur_opts->fs_uid;
--		sbi->options.fs_gid = cur_opts->fs_gid;
--		sbi->options.fs_fmask = cur_opts->fs_fmask;
--		sbi->options.fs_dmask = cur_opts->fs_dmask;
-+		/*
-+		 * Start from the current options so a remount only changes
-+		 * what it specifies. The iocharset string stays with the
-+		 * superblock, see exfat_reconfigure().
-+		 */
-+		sbi->options = EXFAT_SB(sb)->options;
-+		sbi->options.iocharset = NULL;
- 	} else {
- 		sbi->options.fs_uid = current_uid();
- 		sbi->options.fs_gid = current_gid();
- 		sbi->options.fs_fmask = current->fs->umask;
- 		sbi->options.fs_dmask = current->fs->umask;
-+		sbi->options.allow_utime = -1;
-+		sbi->options.errors = EXFAT_ERRORS_RO;
-+		exfat_set_iocharset(&sbi->options, exfat_default_iocharset);
+@@ -49,8 +48,7 @@ void __exfat_fs_error(struct super_block *sb, int report, const char *fmt, ...)
+ 		 */
+ 		if (!(sb->s_flags & SB_BORN))
+ 			sb->s_flags |= SB_RDONLY;
+-		else if (test_and_set_bit(EXFAT_FLAGS_EMERGENCY_RO,
+-					  &sbi->s_exfat_flags))
++		else if (!sb_set_emergency_ro(sb))
+ 			return;
+ 		exfat_err(sb, "Filesystem has been set read-only");
  	}
+diff --git a/fs/exfat/super.c b/fs/exfat/super.c
+index feeda41a80741..e3587ed270245 100644
+--- a/fs/exfat/super.c
++++ b/fs/exfat/super.c
+@@ -100,7 +100,7 @@ static int exfat_set_vol_flags(struct super_block *sb, unsigned short new_flags)
+ 	 * if this volume has been mounted with read-only,
+ 	 * or an error left it read-only (it stays dirty then)
+ 	 */
+-	if (sb_rdonly(sb) || exfat_emergency_ro(sb))
++	if (sb_rdonly_any(sb))
+ 		return 0;
  
--	sbi->options.allow_utime = -1;
--	sbi->options.errors = EXFAT_ERRORS_RO;
--	exfat_set_iocharset(&sbi->options, exfat_default_iocharset);
+ 	p_boot->vol_flags = cpu_to_le16(new_flags);
+@@ -176,6 +176,11 @@ int exfat_force_shutdown(struct super_block *sb, u32 flags)
+ 	if (exfat_forced_shutdown(sb))
+ 		return 0;
+ 
++	/* After an error there is nothing to sync and freezing fails. */
++	if ((flags == EXFAT_GOING_DOWN_DEFAULT ||
++	     flags == EXFAT_GOING_DOWN_FULLSYNC) && sb_emergency_ro(sb))
++		flags = EXFAT_GOING_DOWN_NOSYNC;
++
+ 	switch (flags) {
+ 	case EXFAT_GOING_DOWN_DEFAULT:
+ 	case EXFAT_GOING_DOWN_FULLSYNC:
+@@ -789,11 +794,6 @@ static int exfat_reconfigure(struct fs_context *fc)
+ 
+ 	fc->sb_flags |= SB_NODIRATIME;
+ 
+-	/* After an error the filesystem stays read-only until unmount. */
+-	if ((fc->sb_flags_mask & SB_RDONLY) && !(fc->sb_flags & SB_RDONLY) &&
+-	    sb_rdonly(sb) && exfat_emergency_ro(sb))
+-		return -EROFS;
 -
- 	fc->s_fs_info = sbi;
- 	fc->ops = &exfat_context_ops;
- 	return 0;
+ 	sync_filesystem(sb);
+ 
+ 	if ((fc->sb_flags & (SB_FORCE | SB_RDONLY)) == SB_RDONLY &&
 
 -- 
 2.53.0
