@@ -1,115 +1,73 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=103.168.172.139
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=113.46.200.225
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794620798;
-	b=4i5QX92CE7jzh8rviVJFyIbVOnnHzs+gyAsamWE7PL5P/XasHf+AiQsSP+Az6GWYTy20
-	 Mq/EE0xlDEXzbiBmwLertZYgAjWrr9Q/IQtmWA0JKxsYJoGGGXQIQItyDb5zPp8jpzpFd
-	 BW2ozMD4INwF0B8N5+7N5uCkzCwyKjeon6L5+LGjlRyMtelnUgal1YDgVjr7Bwo0brSy6
-	 o9mHgOdncO9idE7Kfw+AIQqzj4l8+BLRWGCWdYenGSnn2Po1hdblsu4JF0GHLNI0x54IZ
-	 50rBIyGMqx+GilmWmt1054B8aIWj2paS3ijlfWIpnDE1jQJtW03F8v/DF9rbPQId7zg==
+	t=1794622646;
+	b=OG53jzqQ3f9OPJ2c2tR5XejNnQ0BLSWaI6GcV+IEIrq6h0EuXsm7OhyhEeGnTlhrOVeh
+	 3pdI5/KmBbf853tu7cWmRk67RoPU1cytgJGEb+Y8lhmYkgOTh8JXPllb9/fd/yeQv+Gbs
+	 yOQbFgJnwEuA5jLduvwVVDee+rU0MMV2qKT/dj6+h90ogLrfLNvPyUdSaYmgD6TPInLgt
+	 6iN4VUj6WlDkPw7UUSbBjyH1cHbWlEm8R7k8OESWAd6ifU05keeydydP41dfiZgVylgNu
+	 da6CEcs32U9Aixut2/e3UtTepezy3oeVFxhqlSF0jekB3fIDLjZG3XmYxyHQxL0rVNw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794620798;
-	h=DMARC-Filter:Received:Received:DKIM-Signature:DKIM-Signature:
-	 X-DKIM2-Info:DKIM2-Signature:X-DKIM2-Info:Message-Instance:
-	 X-ME-Sender:X-ME-Received:X-ME-Proxy-Cause:X-ME-Proxy:Feedback-ID:
-	 Received:Message-ID:Date:MIME-Version:User-Agent:Subject:To:
-	 References:Content-Language:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=6MXh/y1BidXf3leIHCkcHFW+ILNKZW5M2/kil2iQsmY=;
-	b=Ijidbh/8c/GSvlpAAyXpoR0NfyOp7J+rLLT6D249SMBe14x6b91KX0KBctTVxYjUsM6P
-	 q2vm9kabGnhAl3ORUDKfNr4RxRqJDEWiil/v3OMTuR3270zkMF7h9VNK6WANlEcif0yPo
-	 khN1I0pO6fbAXfajqsG8A3G3Xv/i99ZschItFiNHbLOajhRF6dgU1XQWEGSaLsz3C6V1Q
-	 6h0bHV1SudDnW9zZxAX4x6PiyoNF7iBsm/iNDOz5AWUmpitILlj89f20yuoAchNwrH1np
-	 FDPC2rP1zJJqYrHqL4A7SraVXCkfuGVPt7+JeGV1icGnN0ecoSsrEGa1Ewzo+P7gklA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794622646;
+	h=DMARC-Filter:dkim-signature:Received:Received:Received:Subject:To:CC:
+	 References:From:Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:X-Originating-IP:
+	 X-ClientProxiedBy;
+	bh=lamjSy1jct+Y32LWUG/7mqOA0l+lzlvT/xdWWaLZFKQ=;
+	b=N2bc503U/mCw2zrPZsKSPq3WYDTgWGDpRhDOTuWt7pSGYpbLNBUylCXXnJi0m29yAEUJ
+	 uUEjGURasXuJRFllIuEWl6/guO6JdaPUeZal9g2BJP4f9A//zSy0Fdd0oB1bO3JK0sqZu
+	 B5P32BOFhY+y219dLdOCr84Eilm+kPRn44Td1y9OkLhXkWmxoqiZ/DGxPbRKzJ/eQuX3F
+	 yBbLDO10hzrQvRYOFoujp4Fm/gCay+i7aOAa1NxqMWpyAADSwAn2TNpIsO7qSUpHKaXV1
+	 B0EpOYLKKqkfnRZ8egqK0tbZSR5GyFQ+Y0hRgRbQyfJzgMYf/0NT1g09+PTjtOAvtxg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=sandeen.net;
-	spf=pass smtp.mailfrom=sandeen.net;
-	dkim=pass header.d=sandeen.net header.i=@sandeen.net header.a=rsa-sha256 header.s=fm3 header.b=gKpCWELf;
-	dkim=pass header.d=messagingengine.com header.i=@messagingengine.com header.a=rsa-sha256 header.s=fm3 header.b=gDiWDJNh;
-	arc=none smtp.remote-ip=103.168.172.139
-Received: from flow-a4-smtp.messagingengine.com (flow-a4-smtp.messagingengine.com [103.168.172.139])
+	dmarc=pass header.from=huawei.com;
+	spf=pass smtp.mailfrom=huawei.com;
+	dkim=pass header.d=huawei.com header.i=@huawei.com header.a=rsa-sha256 header.s=dkim header.b=dmJo6jxo;
+	arc=none smtp.remote-ip=113.46.200.225
+Received: from canpmsgout10.his.huawei.com (canpmsgout10.his.huawei.com [113.46.200.225])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70102606A889
-	for <linux-xfs@vger.kernel.org>; Sat, 14 Nov 2026 01:46:35 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 70102606A889
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandeen.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3843A606A327;
+	Sat, 14 Nov 2026 02:17:23 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3843A606A327
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=sandeen.net header.i=@sandeen.net header.a=rsa-sha256 header.s=fm3 header.b=gKpCWELf;
-	dkim=pass (2048-bit key, unprotected) header.d=messagingengine.com header.i=@messagingengine.com header.a=rsa-sha256 header.s=fm3 header.b=gDiWDJNh
-Received: from phl-compute-05.internal (phl-compute-05.internal [10.202.2.45])
-	by mailflow.phl.internal (Postfix) with ESMTP id A513D1381988
-	for <linux-xfs@vger.kernel.org>; Fri, 13 Nov 2026 20:46:34 -0500 (EST)
-Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-05.internal (MEProxy); Fri, 13 Nov 2026 20:46:34 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net; h=
-	cc:content-transfer-encoding:content-type:content-type:date:date
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm3; t=1794620794;
-	 x=1794627994; bh=6MXh/y1BidXf3leIHCkcHFW+ILNKZW5M2/kil2iQsmY=; b=
-	gKpCWELfj8H1dVMzus6dBv7KtrgTnGqpXt6OnQabT4/eewoNxYo6xtOnufmhhBii
-	s1/40ks+qeob7RJ1uIjrRQr22uGIAdR5Uu6iRmQR2mwPlhLNt84w+cxKcUuh1Z+5
-	RvYNyH+5GHbqN8ReswTVj4BwQlrIHFokmJuH8OTmbuO3jaQkObhtu4sky2rdN+pX
-	EGNlanaTZHk3LAtjsPi6HXxSg8oKAK685f+7SKtdKgSMsamHNb72qzT8oCnrWT7P
-	sHCeuTlt1zEFNXXMEjAXHJd5CJlL/ouwQ+1EqriQiVAHMqumtdfyOTaLJZAmMgat
-	af6PU4M3MWnZugC6XOrZiQ==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:content-transfer-encoding:content-type
-	:content-type:date:date:feedback-id:feedback-id:from:from
-	:in-reply-to:in-reply-to:message-id:mime-version:references
-	:reply-to:subject:subject:to:to:x-me-proxy:x-me-sender
-	:x-me-sender:x-sasl-enc; s=fm3; t=1794620794; x=1794627994; bh=6
-	MXh/y1BidXf3leIHCkcHFW+ILNKZW5M2/kil2iQsmY=; b=gDiWDJNhGRAQkRob+
-	hjZnKPtOlRxIUuGyJLsc8odi8eqmpiTQ6ZkfXzgs5cF/tmf+oaYPHPDT2xQoGtug
-	3CjAs1J3uM085y3thTinGaXKOKWIpHPa/pEaoY+ZdNUiejMdAbXTjnRyqaZi5fh6
-	AQmt/soeIMa2D1LZADxIfSEvRnINiXlI3pvwK4MmWrvijJ43d2xfZZh0IumnCgYU
-	xUDanaKpjV7sg4WqE9N2Ln+xiZUCq0pbxrotEgJP6VhgUXhjU9CP6MrCxivHUYGz
-	9uBiYYOFp+hfywF9pyVrVMffb9DZYgGj0P0Owm6gKiUM6JPCT8EyTies2sr3ZH1H
-	kkLUQ==
-X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-09;
-	repo=github.com/dkim2wg/interop; date=2026-11-03; sw=lmtpprox;
-	action=sign d=sandeen.net a=rsa-sha256;
-DKIM2-Signature: i=1; m=1; t=1794620794; d=sandeen.net;
-	mf=PHNhbmRlZW5Ac2FuZGVlbi5uZXQ+;
-	rt=PGxpbnV4LXhmc0B2Z2VyLmtlcm5lbC5vcmc+;
-	s=fm3:rsa-sha256:Bn+Q4n4dWdYL01C6B6/4KPxdea/jUyypkHkKUdjVu5v0e1v
-	e0qxeevRGoApFLvMzcp70EwYGmhZhwNda9JliPdpXqwk65/4dMdQaZIeAFDMWcgp
-	fIEzcKfUnSRsDdXiisb9XuampBbpvRFqCFTA61LUHL7TTem7bQsqFNUHmsqVfgHQ
-	Wjh7f6Ldwd/I67dgGcOt1rNfE8ZIZAscxiG1JGPU5es4IM3YyoKAnwRjoSdOWq+1
-	HDBXY9/lEyHwuAsdXOdGFDj/+gnSBVS4iAGEX/RT0LjWGg8uddqCNS9qD4/J6RyU
-	qRkB/tzzPMQzRWrILJPXjCxF782cM2wqn3UpiNA==;
-X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-09;
-	repo=github.com/dkim2wg/interop; date=2026-11-03; sw=lmtpprox;
-	action=mi-m=1; hc=13;
-	hn=content-language,content-transfer-encoding,content-type,date,
-	feedback-id,from,in-reply-to,message-id,mime-version,references,
-	subject,to,user-agent;
-Message-Instance: m=1; h=sha256:GKh62SahXT0elXdvl2F83iYf83YKjgVy1qON8iSuxBw=:BHQ/RL4bD2u1whCeQX4UzRm/Y81MkEUBE7mMmvwxlwA=;
-X-ME-Sender: <xms:er33aoJwaM-gn6h1nlF9Suk97HdWnEESrYVs7_Rn1g2rnPfIC4Kosg>
-    <xme:er33avHHBD9XH7kYprMFRjvIykftAUAL8bqFXcvLheULJKCPqe98yFrqJLoqBoQae
-    EinXpwHo70lwZqhBG1NAqT0sFtZvVyk9iyeO5ZTHIc_EXfEY5kns-Bu>
-X-ME-Received: <xmr:er33auUS-uz-JZ9Ua1eUlJvpeG3eQ1glklLYZP1kGB6G0l-1vDXT1p1rjvC-5dp_jYG77DpyTh54EfNb6z_8AA>
-X-ME-Proxy-Cause: dmFkZTEGoyDVCBXSyGkYDJv6e2U2M7HBTpe2HQC0e0SSbIpBI7dHuVoaoRS/JspsA6i52t
-    mNGs3/o31A6YZXeWRrW1U91KeY+m3MF0rW3OcS0hQhisdMT7TWe4IDdRYYjwJcYsi/FDqL
-    FnKjyHamDCWLIIvbkDEfbuGu+WmmNTwOY6VXHUYcNXq7I5uUkhK1d5Wjb8cf6/s/IVLC2C
-    lB1M9IvjWROufAnSavVps2bmeoMyT5jH8A77mB5m3fXKMI76zooBAVRFPR2eqjUHJUvbbf
-    kjIlTAir6+LvgDKOmaTaInaLHDAHIo4dNMy2lYtN2qiYkqT0lkjIMsT/Bsy6o6V9oEY7pZ
-    Nz2wxt/P/JbpjH3Dm+Z/CSrIRKUz/D0tCIPBZPEfKDEZ6RDw9Ws4apyHeI6w/IRPZ3uumh
-    UD9JONtIkxhkJ0Mnx1dpXPjStgyfsE5jp2DgiUg1ARinb8teTk/tpWTR9BM78JfNG2qkpD
-    p0Cg7oOf3m9bShgOdtqPQuIIRFKb2FVw4lyWg19IJAfJwHhHaGGd9g/UcWf/kEhHeqexrK
-    ZRGJiXCYhb992SBoYCXtSlLHFC+LeX76TyJN0WdBTt24jCnPinWF8OD9NzUkLbBIEYyABz
-    CltBz1F4opnD4i6418zcxfu4y6PQoDcGsCwN4c2byNwuKpM4fsgAPKswvUhA
-X-ME-Proxy: <xmx:er33aqhKBf2E5PyLmfONc7wE7ZwQum58xU0HcW_8_-vkpQ5cvB_KEA>
-    <xmx:er33avSuWKCPJ_M-ZLAcaN_Vm3w-6BS1jOb2LER4Wm5_ltmBmYzgFg>
-    <xmx:er33atGijJXh8wTMRlZYfmpmVrPe4EQpw6kR6pw2I4be9hN7QLg7kQ>
-    <xmx:er33anki1GxR1tmjbgPzoFqz-5X-u05DTwCr0VmFq59P9eCznBAkug>
-    <xmx:er33asLwuQ_LZRT9i9IOXmVQ02-NuhmmUv3BXiciW1sAi2oEfnRXAPwp>
-Feedback-ID: i2b59495a:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA for
- <linux-xfs@vger.kernel.org>; Fri, 13 Nov 2026 20:46:34 -0500 (EST)
-Message-ID: <84fd7775-d64c-4d3d-b83b-226fc170ff4e@sandeen.net>
-Date: Fri, 13 Nov 2026 19:46:33 -0600
+	dkim=pass (1024-bit key, unprotected) header.d=huawei.com header.i=@huawei.com header.a=rsa-sha256 header.s=dkim header.b=dmJo6jxo
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=lamjSy1jct+Y32LWUG/7mqOA0l+lzlvT/xdWWaLZFKQ=;
+	b=dmJo6jxorxqj/soF5hgiJAk0L/VbZ+b6NQ150G77AKdiKykroxkSgy9jha28sMjYHaadv7xU4
+	gX5qGcCNkavMkbqMIDp0Pr2diskt5hVLJa0+T41ntlJJoc8GUBBS7KeBABGtvyISA72TUzk8pOV
+	JKQ3g1KA+Ky1blIGX4Su+70=
+Received: from mail.maildlp.com (unknown [172.19.163.163])
+	by canpmsgout10.his.huawei.com (SkyGuard) with ESMTPS id 4jRHnX4bKrz1K98l;
+	Sat, 14 Nov 2026 10:17:04 +0800 (CST)
+Received: from whupemo200011.china.huawei.com (unknown [7.152.185.179])
+	by mail.maildlp.com (Postfix) with ESMTPS id 8F8174048B;
+	Sat, 14 Nov 2026 10:17:15 +0800 (CST)
+Received: from [10.174.178.46] (10.174.178.46) by
+ whupemo200011.china.huawei.com (7.152.185.179) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45; Sat, 14 Nov 2026 10:17:13 +0800
+Subject: Re: [PATCH v3 30/33] ubifs: don't set SB_RDONLY after errors
+To: Christian Brauner <brauner@kernel.org>, <linux-fsdevel@vger.kernel.org>,
+	Jan Kara <jack@suse.com>
+CC: Al Viro <viro@zeniv.linux.org.uk>, <ecryptfs@vger.kernel.org>,
+	<linux-ext4@vger.kernel.org>, <jfs-discussion@lists.sourceforge.net>,
+	<linux-nilfs@vger.kernel.org>, <exfat@lists.linux.dev>, <linux-mm@kvack.org>,
+	<ntfs@lists.linux.dev>, <ocfs2-devel@lists.linux.dev>,
+	<linux-btrfs@vger.kernel.org>, <gfs2@lists.linux.dev>,
+	<linux-efi@vger.kernel.org>, <linux-mtd@lists.infradead.org>,
+	<linux-xfs@vger.kernel.org>
+References: <20261113-work-fs-sb_rdonly-v3-0-0be92bb73709@kernel.org>
+ <20261113-work-fs-sb_rdonly-v3-30-0be92bb73709@kernel.org>
+From: Zhihao Cheng <chengzhihao1@huawei.com>
+Message-ID: <17287026-cccc-f56c-15a3-029b9a2c38c9@huawei.com>
+Date: Sat, 14 Nov 2026 10:17:12 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.5.0
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -119,145 +77,209 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] xfs: validate dquot buffer geometry in dquot log recovery
-To: linux-xfs@vger.kernel.org
-References: <20261113110128.4001610-1-hdthky0@gmail.com>
-Content-Language: en-US
-From: Eric Sandeen <sandeen@sandeen.net>
-In-Reply-To: <20261113110128.4001610-1-hdthky0@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20261113-work-fs-sb_rdonly-v3-30-0be92bb73709@kernel.org>
+Content-Type: text/plain; charset="gbk"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: kwepems100001.china.huawei.com (7.221.188.238) To
+ whupemo200011.china.huawei.com (7.152.185.179)
 
-On 11/13/26 5:01 AM, Xingyuan Mo wrote:
-> xlog_recover_dquot_commit_pass2() has never really validated the dquot
-> log item. The only check on qlf_len is a DEBUG-only ASSERT, and
-> qlf_boffset goes straight into xfs_buf_offset() to pick the dquot slot
-> inside the chunk buffer:
+ÔÚ 2026/11/13 19:59, Christian Brauner Ð´µÀ:
+> ubifs_ro_mode() sets c->ro_error and SB_RDONLY from whatever context hit
+> the error, e.g. a failing write, and without holding s_umount. UBIFS
+> can't be frozen but that still races with everyone else changing
+> sb->s_flags. And c->ro_error alone already makes every write fail with
+> EROFS.
 > 
->         dqb = xfs_buf_offset(bp, dq_f->qlf_boffset);
->         ...
->         memcpy(ddq, recddq, item->ri_buf[1].iov_len);
-
-There's a large patch series on the list already, which contains the patch:
-
-[PATCH 30/48] xfs: validate dquot items during recovery
-
-Can you run your test case against that series, and if it passes, perhaps
-give it a Tested-by:?
-
--Eric
-
-> Both the offset and the length of the memcpy come from the journal of
-> the filesystem being mounted, so a crafted log can make mount time
-> replay write past the end of the chunk buffer. Sub-page block sizes
-> get an exact-size kmalloc for the buffer, so an offset of one blocksize
-> lands right on the KASAN redzone; larger offsets are wild writes. On
-> CRC filesystems the dd_lsn load in between is out of bounds too. The
-> recovery regions are allocated to the logged length, so a short region
-> 0 also turns the qlf_* dereferences into out-of-bounds reads.
+> So call sb_set_emergency_ro() instead. The background thread can hit
+> the error before SB_BORN but doesn't hold s_umount either. The xattr
+> setters check c->ro_error as well because ecryptfs calls them without
+> write access on the lower mount and they change the inode in memory
+> first.
 > 
-> Make this code validate the item like the rest of log recovery does:
-> both regions must be exactly the expected size, qlf_len must be 1, and
-> qlf_boffset must point inside the buffer that is about to be read.
-> The readahead path gets the region length and qlf_len checks too.
+> So far a remount to read-only after an error was refused and a remount
+> to read-write went through and cleared SB_RDONLY again because
+> c->ro_mount was never set. Now going read-only works. Nothing is synced
+> for it in that state and ubifs_remount_ro() skips the write-buffer syncs
+> and the master node like ubifs_put_super() does and only cancels the
+> write-buffer timers. Going read-write after that is refused by the VFS.
 > 
-> I reproduced this on a v4 filesystem with 512-byte blocks and user
-> quota enabled: force a few dquot transactions into the log, crash the
-> box so they stay dirty, rewrite qlf_boffset of the on-disk XFS_LI_DQUOT
-> items to 512 (one block past bp->b_addr) and mount. Without the fix,
-> replay trips KASAN:
+> The flusher still gets to the folios and inodes that were dirty before
+> the error, also after the remount which sets c->ro_mount and frees the
+> write reserve buffer. Every journal write fails with EROFS after an
+> error anyway. So do_writepage() and ubifs_write_inode() drop them
+> without going near the journal. Otherwise reserve_space() trips its
+> !c->ro_mount assert for every folio after the remount.
 > 
-> BUG: KASAN: slab-out-of-bounds in xlog_recover_dquot_commit_pass2+0x32a/0x500
-> Write of size 104 at addr ffff88801c8b0200 by task mount/430
-> CPU: 0 UID: 0 PID: 430 Comm: mount Not tainted 7.4.0-rc2-00021-gb3dfbde62cf1 #44 PREEMPT(lazy)
-> Call Trace:
->  <TASK>
->  dump_stack_lvl+0x73/0xb0
->  print_report+0xd1/0x610
->  kasan_report+0xff/0x130
->  kasan_check_range+0x10c/0x1c0
->  __asan_memcpy+0x3f/0x70
->  xlog_recover_dquot_commit_pass2+0x32a/0x500
->  xlog_recover_items_pass2+0x7d/0x1b0
->  xlog_recover_commit_trans+0x585/0x630
->  xlog_recovery_process_trans+0xe2/0xf0
->  xlog_recover_process_ophdr+0xf8/0x1d0
->  xlog_recover_process_data+0x126/0x270
->  xlog_recover_process+0x132/0x210
->  xlog_do_recovery_pass+0x6be/0x8f0
->  xlog_do_log_recovery+0x65/0x90
->  xlog_do_recover+0x7d/0x2b0
->  xlog_recover+0x1bc/0x2d0
->  xfs_log_mount+0x17b/0x2c0
->  xfs_mountfs+0x70a/0xe70
->  xfs_fs_fill_super+0xaca/0xf60
->  get_tree_bdev+0x14/0x20
->  xfs_fs_get_tree+0x19/0x20
->  vfs_get_tree+0x54/0x170
->  path_mount+0x4ad/0x13a0
->  __x64_sys_mount+0x1dd/0x210
->  do_syscall_64+0x10b/0x5f0
->  entry_SYSCALL_64_after_hwframe+0x77/0x7f
->  </TASK>
-> 
-> With the fix the same image is rejected without any out-of-bounds
-> access, and a pristine dirty log still recovers fine:
-> 
-> XFS (loop2): log mount/recovery failed: error -117
-> 
-> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-> Signed-off-by: Xingyuan Mo <hdthky0@gmail.com>
+> Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 > ---
->  fs/xfs/xfs_dquot_item_recover.c | 17 ++++++++++++++---
->  1 file changed, 14 insertions(+), 3 deletions(-)
+>   fs/ubifs/file.c  | 12 ++++++++++++
+>   fs/ubifs/io.c    |  6 +++++-
+>   fs/ubifs/super.c | 40 ++++++++++++++++++++++++++--------------
+>   fs/ubifs/xattr.c |  6 ++++++
+>   4 files changed, 49 insertions(+), 15 deletions(-)
+
+Reviewed-by: Zhihao Cheng <chengzhihao1@huawei.com>
 > 
-> diff --git a/fs/xfs/xfs_dquot_item_recover.c b/fs/xfs/xfs_dquot_item_recover.c
-> index b8854316ac756..3172efb94c277 100644
-> --- a/fs/xfs/xfs_dquot_item_recover.c
-> +++ b/fs/xfs/xfs_dquot_item_recover.c
-> @@ -47,7 +47,9 @@ xlog_recover_dquot_ra_pass2(
->  
->  	dq_f = item->ri_buf[0].iov_base;
->  	ASSERT(dq_f);
-> -	ASSERT(dq_f->qlf_len == 1);
-> +	if (item->ri_buf[0].iov_len != sizeof(struct xfs_dq_logformat) ||
-> +	    dq_f->qlf_len != 1)
-> +		return;
->  
->  	xlog_buf_readahead(log, dq_f->qlf_blkno,
->  			XFS_FSB_TO_BB(mp, dq_f->qlf_len),
-> @@ -84,7 +86,7 @@ xlog_recover_dquot_commit_pass2(
->  		xfs_alert(log->l_mp, "NULL dquot in %s.", __func__);
->  		return -EFSCORRUPTED;
->  	}
-> -	if (item->ri_buf[1].iov_len < sizeof(struct xfs_disk_dquot)) {
-> +	if (item->ri_buf[1].iov_len != sizeof(struct xfs_disk_dquot)) {
->  		xfs_alert(log->l_mp, "dquot too small (%zd) in %s.",
->  			item->ri_buf[1].iov_len, __func__);
->  		return -EFSCORRUPTED;
-> @@ -110,13 +112,22 @@ xlog_recover_dquot_commit_pass2(
->  	 */
->  	dq_f = item->ri_buf[0].iov_base;
->  	ASSERT(dq_f);
+> diff --git a/fs/ubifs/file.c b/fs/ubifs/file.c
+> index 99dd52715eee9..4eae6c2ae2eea 100644
+> --- a/fs/ubifs/file.c
+> +++ b/fs/ubifs/file.c
+> @@ -898,6 +898,13 @@ static int do_writepage(struct folio *folio, size_t len)
+>   
+>   	folio_start_writeback(folio);
+>   
+> +	/* Nothing gets written after an error, drop the folio. */
+> +	if (unlikely(c->ro_error)) {
+> +		err = -EROFS;
+> +		mapping_set_error(folio->mapping, err);
+> +		goto out;
+> +	}
 > +
-> +	if (item->ri_buf[0].iov_len != sizeof(struct xfs_dq_logformat))
-> +		return -EFSCORRUPTED;
+>   	block = folio->index << UBIFS_BLOCKS_PER_PAGE_SHIFT;
+>   	for (;;) {
+>   		blen = min_t(size_t, len, UBIFS_BLOCK_SIZE);
+> @@ -918,6 +925,7 @@ static int do_writepage(struct folio *folio, size_t len)
+>   		ubifs_ro_mode(c, err);
+>   	}
+>   
+> +out:
+>   	ubifs_assert(c, folio->private != NULL);
+>   	if (folio_test_checked(folio))
+>   		release_new_page_budget(c);
+> @@ -997,6 +1005,10 @@ static int ubifs_writepage(struct folio *folio, struct writeback_control *wbc)
+>   		goto out_unlock;
+>   	}
+>   
+> +	/* After an error do_writepage() drops the folio. */
+> +	if (unlikely(c->ro_error))
+> +		return do_writepage(folio, len);
 > +
->  	fa = xfs_dquot_verify(mp, recddq, dq_f->qlf_id);
->  	if (fa) {
->  		xfs_alert(mp, "corrupt dquot ID 0x%x in log at %pS",
->  				dq_f->qlf_id, fa);
->  		return -EFSCORRUPTED;
->  	}
-> -	ASSERT(dq_f->qlf_len == 1);
-> +	if (dq_f->qlf_len != 1)
-> +		return -EFSCORRUPTED;
+>   	spin_lock(&ui->ui_lock);
+>   	synced_i_size = ui->synced_i_size;
+>   	spin_unlock(&ui->ui_lock);
+> diff --git a/fs/ubifs/io.c b/fs/ubifs/io.c
+> index 6c6d682427793..931a88329b5f5 100644
+> --- a/fs/ubifs/io.c
+> +++ b/fs/ubifs/io.c
+> @@ -72,7 +72,11 @@ void ubifs_ro_mode(struct ubifs_info *c, int err)
+>   	if (!c->ro_error) {
+>   		c->ro_error = 1;
+>   		c->no_chk_data_crc = 0;
+> -		c->vfs_sb->s_flags |= SB_RDONLY;
+> +		/*
+> +		 * SB_RDONLY needs s_umount, see sb_set_emergency_ro(). The
+> +		 * background thread runs before SB_BORN already.
+> +		 */
+> +		sb_set_emergency_ro(c->vfs_sb);
+>   		ubifs_warn(c, "switched to read-only mode, error %d", err);
+>   		dump_stack();
+>   	}
+> diff --git a/fs/ubifs/super.c b/fs/ubifs/super.c
+> index 38972786817e7..2d71274e89ad0 100644
+> --- a/fs/ubifs/super.c
+> +++ b/fs/ubifs/super.c
+> @@ -312,6 +312,12 @@ static int ubifs_write_inode(struct inode *inode, struct writeback_control *wbc)
+>   		return 0;
+>   	}
+>   
+> +	/* Nothing gets written after an error, drop the change. */
+> +	if (unlikely(c->ro_error)) {
+> +		err = -EROFS;
+> +		goto out;
+> +	}
 > +
-> +	if (dq_f->qlf_boffset > BBTOB(XFS_FSB_TO_BB(mp, dq_f->qlf_len)) -
-> +				  sizeof(struct xfs_dqblk))
-> +		return -EFSCORRUPTED;
->  
->  	/*
->  	 * At this point we are assuming that the dquots have been allocated
+>   	/*
+>   	 * As an optimization, do not write orphan inodes to the media just
+>   	 * because this is not needed.
+> @@ -327,6 +333,7 @@ static int ubifs_write_inode(struct inode *inode, struct writeback_control *wbc)
+>   			err = dbg_check_inode_size(c, inode, ui->ui_size);
+>   	}
+>   
+> +out:
+>   	ui->dirty = 0;
+>   	mutex_unlock(&ui->ui_mutex);
+>   	ubifs_release_dirty_inode_budget(c, ui);
+> @@ -1839,19 +1846,26 @@ static void ubifs_remount_ro(struct ubifs_info *c)
+>   
+>   	dbg_save_space_info(c);
+>   
+> -	for (i = 0; i < c->jhead_cnt; i++) {
+> -		err = ubifs_wbuf_sync(&c->jheads[i].wbuf);
+> +	/* Like ubifs_put_super(), don't write anything after an error. */
+> +	if (!c->ro_error) {
+> +		for (i = 0; i < c->jhead_cnt; i++) {
+> +			err = ubifs_wbuf_sync(&c->jheads[i].wbuf);
+> +			if (err)
+> +				ubifs_ro_mode(c, err);
+> +		}
+> +
+> +		c->mst_node->flags &= ~cpu_to_le32(UBIFS_MST_DIRTY);
+> +		c->mst_node->flags |= cpu_to_le32(UBIFS_MST_NO_ORPHS);
+> +		c->mst_node->gc_lnum = cpu_to_le32(c->gc_lnum);
+> +		err = ubifs_write_master(c);
+>   		if (err)
+>   			ubifs_ro_mode(c, err);
+> +	} else {
+> +		/* Syncing the write-buffers would have canceled them. */
+> +		for (i = 0; i < c->jhead_cnt; i++)
+> +			hrtimer_cancel(&c->jheads[i].wbuf.timer);
+>   	}
+>   
+> -	c->mst_node->flags &= ~cpu_to_le32(UBIFS_MST_DIRTY);
+> -	c->mst_node->flags |= cpu_to_le32(UBIFS_MST_NO_ORPHS);
+> -	c->mst_node->gc_lnum = cpu_to_le32(c->gc_lnum);
+> -	err = ubifs_write_master(c);
+> -	if (err)
+> -		ubifs_ro_mode(c, err);
+> -
+>   	vfree(c->orph_buf);
+>   	c->orph_buf = NULL;
+>   	kfree(c->write_reserve_buf);
+> @@ -1977,10 +1991,7 @@ static int ubifs_reconfigure(struct fs_context *fc)
+>   		if (err)
+>   			return err;
+>   	} else if (!c->ro_mount && (fc->sb_flags & SB_RDONLY)) {
+> -		if (c->ro_error) {
+> -			ubifs_msg(c, "cannot re-mount R/O due to prior errors");
+> -			return -EROFS;
+> -		}
+> +		/* After an error ubifs_remount_ro() can't write but still works. */
+>   		ubifs_remount_ro(c);
+>   	}
+>   
+> @@ -1994,7 +2005,8 @@ static int ubifs_reconfigure(struct fs_context *fc)
+>   		mutex_unlock(&c->bu_mutex);
+>   	}
+>   
+> -	if (!c->need_recovery)
+> +	/* Only valid without a media failure, see ubifs_put_super(). */
+> +	if (!c->need_recovery && !c->ro_error)
+>   		ubifs_assert(c, c->lst.taken_empty_lebs > 0);
+>   
+>   	return 0;
+> diff --git a/fs/ubifs/xattr.c b/fs/ubifs/xattr.c
+> index 3b0e8a270f594..572f6f3e52ad3 100644
+> --- a/fs/ubifs/xattr.c
+> +++ b/fs/ubifs/xattr.c
+> @@ -260,6 +260,9 @@ int ubifs_xattr_set(struct inode *host, const char *name, const void *value,
+>   	if (check_lock)
+>   		ubifs_assert(c, inode_is_locked(host));
+>   
+> +	if (c->ro_error)
+> +		return -EROFS;
+> +
+>   	if (size > UBIFS_MAX_INO_DATA)
+>   		return -ERANGE;
+>   
+> @@ -564,6 +567,9 @@ static int ubifs_xattr_remove(struct inode *host, const char *name)
+>   
+>   	ubifs_assert(c, inode_is_locked(host));
+>   
+> +	if (c->ro_error)
+> +		return -EROFS;
+> +
+>   	if (fname_len(&nm) > UBIFS_MAX_NLEN)
+>   		return -ENAMETOOLONG;
+>   
+> 
 
