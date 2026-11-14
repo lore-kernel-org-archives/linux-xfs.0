@@ -1,115 +1,110 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=103.168.172.143
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794612873;
-	b=mui6KsihFHe1YrIio8mVEgTg89YkWE2C24g8aDaUAryxJ+KUnegEWgVrA7hTT4AaSSOn
-	 ChetVWuLe+6kEbfhrCm8iSt7W6Fx3iwU/9OFpzHrFcOq/PSKRgygUT8Ke/EJ4oEmGEMn7
-	 9kZVxj6pADnQu0PIBfYcCZzpVro9w3NA/CM5cX9WVCNXvnIfe8MMnzctov2+R/hBfmOzl
-	 RNX4gfMiVMbHVEuN4SLpAV7P6G1n9UMpFSnJgQG2VN2dpZasSP60vPOfX7IFLi4HIKNEw
-	 VDJNKkssaVGQGmGjgnPItHLRiwKHURJRnQzAFg5r9No5KxYdfvKsQ96NtT/Y6rXbFAA==
+	t=1794617988;
+	b=FDpg9dr1St8CWGWYyh4O8lMsgVl43ZXu8QTf8v6qmjJi/O88VNGm4f8EX6CtjuS6Kx/J
+	 HLdwPUz2ZS+37Ow6Ysc4FnVsXEERXu327A2109NRmxnuV5Tw2mcGe0ZCaBdSn0x/l9fl/
+	 kD7BSgI7rJFpTA1NOBhVHkv3C04fmG9D4mAXFuVXDREtKdi92ER63tE7mCd2om3AOS/y6
+	 qBG159X59QJlWDAchl7fE6ELEn7dZjmm5e1w4MQNK/TRZKcNCwlPAg7+Q6ezWIO0bDv8v
+	 iQCN5pF5LGlwPPmI02zM1L+Ve7HE8LwI2jhzUaVgtUA9N60GF59Ha4op/Aqxmt0g73g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794612873;
-	h=DMARC-Filter:Received:Received:DKIM-Signature:DKIM-Signature:
-	 X-DKIM2-Info:DKIM2-Signature:X-DKIM2-Info:Message-Instance:
-	 X-ME-Sender:X-ME-Received:X-ME-Proxy-Cause:X-ME-Proxy:Feedback-ID:
-	 Received:Message-ID:Date:MIME-Version:User-Agent:Subject:To:
-	 References:Content-Language:Cc:From:In-Reply-To:Content-Type:
+	a=rsa-sha256; c=relaxed/relaxed; t=1794617988;
+	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
+	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:Received:From:To:Cc:
+	 Subject:Date:Message-ID:X-Mailer:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=Oyo9zSeCz0Myv6TYufW01VNQ8oOw04Y12Sfo2pHArLY=;
-	b=y2dpKzwj9PKy7vhGu+OQifDJMEWFqiSdtGlY3P8dwaYpnofv6DZcChBAWWF0l1OL9s6l
-	 1ACpwPItwAjJeIa6C8ofa4K0CslDUKo+HaWX4vDrjlUBmZ7kx1Ijh5gA655aV83FOx9lp
-	 WENXlzNP3tdk6vgscHXrYQIXyysy3PuH15yQLmBox8ndeRW0J8YpvKHb4kNoqBto2v+e/
-	 FL4rq1DYaVsOO/XvRQCzJzShjO9mKPYOJnr8V8+0LZu/7zANsFS/3LACP10bnax+LwKQH
-	 VIbAuJjiIB6osV5xsLyfFQvmqnfejkQUA0aZLNZHDYC3Suix/nALodC0mhrtjkeGNVQ==
+	bh=K1yWxOrs7aLv3Az/EKcMIDPICU4PM/uIVfZVDOb46Ds=;
+	b=QcHmeymfpnTn89D1om84CF4M7Cgb7EG2GDyp1zVU7Wg640QwQ3CftL8E/1dDRtEij96/
+	 qPd3JT47bhKJvilvshGwckgJH+mpJgKEj+LA+N/hYyqZXGOw98F8gjTNgsJBVNZmz9lwV
+	 8QdACCia4PlYnl0u7tFG7qHUfJVPvYMUr5por9ZPfutU9MWuHOmh4O8N6JYnJgRkdhB5g
+	 j6s+pkBePMgKprAyTNoVlUVSQK/5EKxdUdKy+MvuciyJQF6jNATtH6pol2rkaxo804uA3
+	 UDyzxWi+hHcvOnVS66SNhWlDPbZlS4Z9kBXxiaEBRzNZqIWWlK6P5UEmIhHgMax4ong==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=sandeen.net;
-	spf=pass smtp.mailfrom=sandeen.net;
-	dkim=pass header.d=sandeen.net header.i=@sandeen.net header.a=rsa-sha256 header.s=fm3 header.b=c3+QhFii;
-	dkim=pass header.d=messagingengine.com header.i=@messagingengine.com header.a=rsa-sha256 header.s=fm3 header.b=UeXbK9LD;
-	arc=none smtp.remote-ip=103.168.172.143
-Received: from flow-a8-smtp.messagingengine.com (flow-a8-smtp.messagingengine.com [103.168.172.143])
+	dmarc=pass header.from=redhat.com;
+	spf=pass smtp.mailfrom=redhat.com;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b="frtjc3L/";
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=c1miEiFN;
+	arc=none smtp.remote-ip=170.10.129.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B31E606A337
-	for <linux-xfs@vger.kernel.org>; Fri, 13 Nov 2026 23:34:32 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2B31E606A337
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandeen.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD304606A327
+	for <linux-xfs@vger.kernel.org>; Sat, 14 Nov 2026 00:59:47 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CD304606A327
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=sandeen.net header.i=@sandeen.net header.a=rsa-sha256 header.s=fm3 header.b=c3+QhFii;
-	dkim=pass (2048-bit key, unprotected) header.d=messagingengine.com header.i=@messagingengine.com header.a=rsa-sha256 header.s=fm3 header.b=UeXbK9LD
-Received: from phl-compute-12.internal (phl-compute-12.internal [10.202.2.52])
-	by mailflow.phl.internal (Postfix) with ESMTP id 472601381930
-	for <linux-xfs@vger.kernel.org>; Fri, 13 Nov 2026 18:34:32 -0500 (EST)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-12.internal (MEProxy); Fri, 13 Nov 2026 18:34:32 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm3; t=1794612872;
-	 x=1794620072; bh=Oyo9zSeCz0Myv6TYufW01VNQ8oOw04Y12Sfo2pHArLY=; b=
-	c3+QhFiiD2du/i7Adsd+1rxWRrXxCi+0UL4uOjUmcz0GmxGKdeYSCaO5QI0JBr+5
-	3n3HbtsF4zdBtwva611EofPD1VGNDX1xL1QLgDBbI9udw05tDFyopzxR3MMTqsA+
-	S7f+2rK/5fS1ihqpERbWlkLj91+846830MtUa+XNNRkjFCMVWRGOYSXg+zVEHckK
-	dXl6JSObhJbB/VHfFDZwCUNoFeiNWyMh0vKC6PDNHp8TBN9uz61ghOAnSKH0fIGy
-	gwwhI7x53Dd/IrlxYojcQvGPcowxfE86EgSLD/XrM+9kYdCNtJ429CGvEb280Ori
-	qs9E8UkOtA9hviSXRDSlBQ==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1794612872; x=
-	1794620072; bh=Oyo9zSeCz0Myv6TYufW01VNQ8oOw04Y12Sfo2pHArLY=; b=U
-	eXbK9LDlwwUGJKXUMR3NwCjzkRHOeuk92N6pzZmjuMZe5d9iK7Hw806j7ASqihFg
-	1G8i4gWYHLAntnnLkNTdmeBc5f2mX3XdT4BYVOXa9GYu5jcRzhCzr5HFYbBtzMJN
-	Eh1WUzqDjz04FV+pu81sLi+fNvtDPkVWg/fd/v9FBdM40MDz9pL8uJjLxHe7uelu
-	3qvQAuuu0UtELNwijTdY3yIEgXJ9VKmhaZJK7FC3qP43AF3ES2oHp3EPkhMA/UbR
-	ATCznoULNpRFfacq9L6PeEnwS3AX2DEtkDWrboRNAP3aINvb9cnvGsIF1XNBeqvy
-	HX7Z/bmfZ96n648DPDmcA==
-X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-09;
-	repo=github.com/dkim2wg/interop; date=2026-11-03; sw=lmtpprox;
-	action=sign d=sandeen.net a=rsa-sha256;
-DKIM2-Signature: i=1; m=1; t=1794612872; d=sandeen.net;
-	mf=PHNhbmRlZW5Ac2FuZGVlbi5uZXQ+;
-	rt=PGxpbnV4LXhmc0B2Z2VyLmtlcm5lbC5vcmc+;
-	s=fm3:rsa-sha256:l5svp3Q9usohVonpIhgV9AYKAnjcgAESaC72PacUKNtsNes
-	fyq4LxNNSrmwPGBvCctLRB4DtENikD51+42Puh35UZqQSUqPP9kub25Qgux9D3eX
-	+3cheq/aWt1n6205gPyv2aRLsI6IIKNzI9Waxz+mOQszKNZhUODlVtV6t/batDSa
-	MkxNM8eJIA1MJqG9i/S6yGtIAejO5udIHYWjWFoQbWuYU8jh7/sfD/Z8pIT6nNeG
-	NLXWglq4g5NOnkRYwHkYeH27jWPLPLI5YFhvVtRiZoMxVltGkQp0uMAweINmcUIA
-	gkRw5CKz21ty0GaihPua1HqQcGXjbwcNVYw8P/g==;
-X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-09;
-	repo=github.com/dkim2wg/interop; date=2026-11-03; sw=lmtpprox;
-	action=mi-m=1; hc=14;
-	hn=cc,content-language,content-transfer-encoding,content-type,
-	date,feedback-id,from,in-reply-to,message-id,mime-version,
-	references,subject,to,user-agent;
-Message-Instance: m=1; h=sha256:OphFE05ZLwyFknARXcy1QMF1ZZ8O9yFpQQu2UMupfKQ=:FVYzbl8027YsGxZHlVMUPdw8AvYGZb6r6kRakL4Ksh8=;
-X-ME-Sender: <xms:h573ajWv66KdHNavudGcFOTTLJUxcA9y2y8l4hb-wXHdsFSmdoLKDQ>
-    <xme:h573apiAecA7JkHrpSz7TCJXsZKXas8E5VPDW0hIz5zq-RZM39iIE_Tt_I9AEDVlM
-    -VPfyVj0xaMKR9RinMyyzQECAKreQGwSGxJ6w67VUJPlwzVgv96uOo>
-X-ME-Received: <xmr:h573am_OKmOIX61LL9ccTur3iC-MTHyVxqtK8rfqXe8KislcsA3l3nrkeanIHmQ_g_AjzoecND6AQnsr6rQ3-A>
-X-ME-Proxy-Cause: dmFkZTFooXMj1Sm8N/o5ldSqFRpcJhNSKWZD+Ctfg3Q5FJGE+wD7KHZV6H7PZ77IM9yp4n
-    Jf3BHYEmTjk+l9XSX9RI2gIBg9AF6UDJeYecnNVNitWZ8y2kOwSIMCy0ekB1R9LjADAIVY
-    SsgF82WyXCS44jIibTS1Y2COwmjLZebS3kF8bukHxoHj6whda8CK6TXn4eulRjNCi63Uez
-    K6e+h+RG0fgprkIPtzFvfsbv3i4MkrGNcC5dcCNgD9tSh4uYiOjluzjgiYW6BC3DRHolSO
-    CXXB2w3LrGN720XHc7/SZG1MZbZ9fdAPXu0hVESK8y+ZHxqi/84r9y5ZcAu6l/awxUbPgq
-    ZK4j94gezMFRGAVIdHIN5VtuqFJSJqiSpYwz9vHZB+O640b43e76jadSItXR+Td1K30vzL
-    4driKrqEtifm3HAnlEWHtv0ohQL6nk74Yi8libAt0u/WcqMzdaQDBUOZs1abjwCPeA6NUD
-    /Jc1Z8XivTlca8ix4fnbiSYn4pCx3HquvrgxWRscs/07vfEeMeDVUMWo/U+ZhZbtH1HEnA
-    +5FEcxfFsYJUUFbML1YmsJvD2K93UVNtWkXAnzhUe5fSztapucNNsYoMJkUVKIgSvQNYlF
-    cNV5BgRKllfc5qMS/zQtNLsIgnTPSg/gWOD5Z761P3Tf96XRNyP/cdV6R4eQ
-X-ME-Proxy: <xmx:h573arCKndxkf80lTymPbJCmP420WbLw9mel1kJWcgqblDxU5L2jNA>
-    <xmx:h573arLfgs-vgmV8RSnBQYaSeDkLAjss8uZm2Hjwmb9zrMy03Rcmjg>
-    <xmx:h573amkinTUgV6E1OX9FLRR_avJGx4PH_LQoxSTwnz72qYi7sgxGUQ>
-    <xmx:h573ahEFHPzK1SHqnUDvraoBaoCu7YIiTgfDXeAkhdDKj476bSPVEQ>
-    <xmx:iJ73al7ow8K6_lOPw8XjDciWOj0MpshYNp3kj3Fa9_EjXgJS4SFHtkj7>
-Feedback-ID: i2b59495a:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
- 13 Nov 2026 18:34:30 -0500 (EST)
-Message-ID: <488fe62a-05ba-415f-babc-8b9a7190c228@sandeen.net>
-Date: Fri, 13 Nov 2026 17:34:30 -0600
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=frtjc3L/;
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=c1miEiFN
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1794617986;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=K1yWxOrs7aLv3Az/EKcMIDPICU4PM/uIVfZVDOb46Ds=;
+	b=frtjc3L/ARYWj10SQJD5PUEeNX0eg8ZLy5esEWoP1hnDo4zFzdQD8hyaVA0qrwG1MymOhy
+	jnY3rbe1aXS9yEy48zwrd87pfPEhauWUg9A54zk06n59azlVYPG7Tgrwy2X69zRAjmvAaO
+	TFt6IS2IFfGKanh+CFZnKHrz7s0830I=
+Received: from mail-oo1-f70.google.com (mail-oo1-f70.google.com
+ [209.85.161.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-621-lAa55I3MNL-3g1mqKGYNJA-1; Fri, 13 Nov 2026 19:59:45 -0500
+X-MC-Unique: lAa55I3MNL-3g1mqKGYNJA-1
+X-Mimecast-MFC-AGG-ID: lAa55I3MNL-3g1mqKGYNJA_1794617985
+Received: by mail-oo1-f70.google.com with SMTP id 006d021491bc7-716e232332aso2229589eaf.0
+        for <linux-xfs@vger.kernel.org>; Fri, 13 Nov 2026 16:59:45 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1794617984; x=1795222784; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=K1yWxOrs7aLv3Az/EKcMIDPICU4PM/uIVfZVDOb46Ds=;
+        b=c1miEiFNAktKjqA7ihuXvo8xJnB1uarOhbC/Cngu9RTiJir1ZREiU42o+1tEZ/Xofr
+         P4LhmqnTgIsFtwLQCcGowXP2+/yP6boiZmqktJqfzTFIUkht75zwCM8pFZnQcFH7mM2c
+         cjoFYPD5UC/88+bI0wh6baSehDDTFaGCQ2z1vPuL9zVVgq76RoKPVuDrS5ZHGHmH4QLw
+         4bkcCN6tutNkTeggDblyUwK1VtitgSsq89vavZNrM2bG5uqYyKF1x96hOKTK6u+da8Wo
+         QFKdpUDm276nSeynTRW0DvwSXUWTHkTa2OJNsLv8e959tTP5c2rst4+3Bs5qkQy8XH25
+         RSlA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794617984; x=1795222784;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=K1yWxOrs7aLv3Az/EKcMIDPICU4PM/uIVfZVDOb46Ds=;
+        b=xFxJjQT2i7hf0rkA2Z7E/cVWoXJt5BW1tofqgX+QMQ5Cd5Ij39+I72LNt1RumvjByr
+         jCiZYuUeDXYHkh9qAoFjDlIZvtCOF37+W7Roq0iSM6RRYhoHbx/iIpakdNE2gW1Q1erX
+         RvrWZmVO057ceE+X83tv1IHwZGad2eEODcnnz7T6jz7ib6gwgD0UbYpNzeMiR9oveZon
+         O/PhBRzVyKKWkFIDMiCzkxmxNyJaCbDxFCACPqVjbNSTN2apD9Pe+whOJ/pK7y9+gzOH
+         3NB5Wx9K17pNLVJ3t6yuinXtgnNBKPWpCOPEJ8QmuB3Ax6d7ZCb12d2E+3UztqfuXJMx
+         fLlw==
+X-Gm-Message-State: APuU4Z/JKDaMD1u+PAaGKtqQjj4txLPxaavxYv0rBT3gNsu9tuOEZmlQ
+	uUBopIs3wV6ylOjFFqJTuqzZ1UAM/+6fyC7aVK36qWPBN+0qz7OtXT4Bkx7htgGdHtJQsfznT1U
+	vl8fCeCeocCsQ9WXqB6wvRDFiD6ih/QRqN2BruEy9atLD4+okMtfPk2Ql5HrxB/tk11mx/cMUjK
+	T+mhTg08t+otmi5/YBcagHP6SPPh/pRkW9zHS4XhbOZD98
+X-Gm-Gg: AYBFou2H52GwsfawrLqYr9Emtzkaso197bWN0d9wQBTCZTy97KS9gVQNhTJ/0MG3An+
+	oessnBjcRBV2rg0D4Fp7T/JS2sKYlM9w+6YxAizUWb2llCyjEJ4nYiKLQWGks9dLxpQHfXNTMmp
+	iqn5k5enNxSoZEA34bGnW/D5c7uU141TX4UTYSecbY9xOHPM1rcIRYgfiamnpioRqT1E3EcCTbK
+	DRhcgbXO9ZvE+g10vVrF1WvYvdXz3OGxxfrgCJQVPVi13o7d9tgi06Tby9I6+9yfAak9ovuA39Z
+	j7hOe8BkOwpPaf/Ln9mhIcS+CZCW02AEXst01gRXRKfpAc3DqdQA8i8KRpYxTsXtqk2T4dm8rnu
+	eWdX3RUX9cVAq9mKLnHci4sksRgJOKuIvm1benOdgEv3JZeeAORAx1BrGYgbCWwMWDldvFkPqxj
+	dqeolgGNNLRhwobA==
+X-Received: by 2002:a05:6820:1518:b0:719:1627:6bfe with SMTP id 006d021491bc7-71ab4abb6c2mr2773790eaf.0.1794617984447;
+        Fri, 13 Nov 2026 16:59:44 -0800 (PST)
+X-Received: by 2002:a05:6820:1518:b0:719:1627:6bfe with SMTP id 006d021491bc7-71ab4abb6c2mr2773780eaf.0.1794617983811;
+        Fri, 13 Nov 2026 16:59:43 -0800 (PST)
+Received: from big24.xxmyappdomainxx.com (174-20-5-40.mpls.qwest.net. [174.20.5.40])
+        by smtp.gmail.com with ESMTPSA id 006d021491bc7-71ab411e269sm3402752eaf.2.2026.11.13.16.59.42
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 13 Nov 2026 16:59:43 -0800 (PST)
+From: Eric Sandeen <sandeen@redhat.com>
+To: linux-xfs@vger.kernel.org
+Cc: cem@kernel.org,
+	xuhx@hust.edu.cn,
+	Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] xfs: properly order xfsstats proc/sysfs init and teardown
+Date: Fri, 13 Nov 2026 18:59:24 -0600
+Message-ID: <20261114005925.103130-1-sandeen@redhat.com>
+X-Mailer: git-send-email 2.56.0
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -119,55 +114,98 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: xfs: data races on xfs_params and xfs_globals tunables
-To: linux-xfs@vger.kernel.org
-References: <4c7f9772.192e1.1a17d5c2ed5.Coremail.xuhx@hust.edu.cn>
- <2026102727-data-sequel-ce41@gregkh>
- <5495c57c.263aa.1a1d4f38fde.Coremail.xuhx@hust.edu.cn>
-Content-Language: en-US
-Cc: xuhx@hust.edu.cn
-From: Eric Sandeen <sandeen@sandeen.net>
-In-Reply-To: <5495c57c.263aa.1a1d4f38fde.Coremail.xuhx@hust.edu.cn>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-On 11/13/26 6:48 AM, 徐晗翔 wrote:
-> The global XFS tunables in xfs_params and xfs_globals are written through
-> sysctl/sysfs handlers and read on normal filesystem paths with no common
-> lock and without a consistent READ_ONCE()/WRITE_ONCE() protocol.  For the
-> most concrete case, _xfs_alert_tag() reads xfs_panic_mask twice:
-> 
->     if (xfs_panic_mask && (xfs_panic_mask & panic_tag)) {
->             xfs_alert(mp, "Transforming an alert into a BUG.");
->             do_panic = 1;
->     }
-> 
-> A concurrent write to /proc/sys/fs/xfs/panic_mask can change the value
-> between the two loads, so the first test can see a non-zero mask and the
-> second a zero (or a different) mask.  The result is either a missed
-> panic or a panic the administrator had just disabled.  The same pattern
-> exists for xfs_error_level and for the timer/rotorstep/inherit knobs; the
-> DEBUG-only xfs_globals sysfs attributes have the same plain-read/plain-
-> write pairing.  This is a policy/diagnostic data race, not memory
-> corruption, and I am reporting it separately from the stats_clear UAF.
+The xfs statistics are accessible both through procfs and through
+sysctls, so they need to be fully set up before exposure via those
+interfaces, and those interfaces both need to be torn down before
+the underlying percpu structures are freed. Today we get that wrong
+on both ends - we expose them through xfs_init_procfs before allocating
+the percpu structures, and we free those percpu structures before
+tearing down sysctls and procfs.
 
-Thanks. While I think this is correct, it's likely extremely difficult to
-hit - I think we'd need to be setting and reading and panicing all in
-the same moment, for this to matter. And even then, there's no very bad
-outcome.
+Fix init_xfs_fs by calling alloc_percpu(xfsstats) prior to
+xfs_init_procfs(), and fix the error unwind path to reflect this, then
+also move free_percpu() to after tearing down both procfs and sysctls
+in exit_xfs_fs.
 
-So it's maybe worth fixing, but I don't think this is a serious real-world
-flaw. Feel free to correct me if I'm missing something.
+Reported-by: Hanxiang Xu <xuhx@hust.edu.cn>
+Fixes: 80529c45ab66 ("xfs: pass xfsstats structures to handlers and macros")
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+ fs/xfs/xfs_super.c | 22 +++++++++++-----------
+ 1 file changed, 11 insertions(+), 11 deletions(-)
 
-(I'll look at the others too, I think it's probably the same situation,
-technically racy but probably not an issue in practice.)
-
-The stats handler UAF problem looks definitely worth fixing though, I'll
-look into sending a patch on that for sure.
-
-Thanks!
-
--Eric
-
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 5a06132aa384..769c622cff54 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -2668,9 +2668,15 @@ init_xfs_fs(void)
+ 	if (error)
+ 		goto out_destroy_wq;
+ 
++	xfsstats.xs_stats = alloc_percpu(struct xfsstats);
++	if (!xfsstats.xs_stats) {
++		error = -ENOMEM;
++		goto out_mru_cache_uninit;
++	}
++
+ 	error = xfs_init_procfs();
+ 	if (error)
+-		goto out_mru_cache_uninit;
++		goto out_free_stats;
+ 
+ 	error = xfs_sysctl_register();
+ 	if (error)
+@@ -2686,16 +2692,10 @@ init_xfs_fs(void)
+ 
+ 	xfsstats.xs_kobj.kobject.kset = xfs_kset;
+ 
+-	xfsstats.xs_stats = alloc_percpu(struct xfsstats);
+-	if (!xfsstats.xs_stats) {
+-		error = -ENOMEM;
+-		goto out_kset_unregister;
+-	}
+-
+ 	error = xfs_sysfs_init(&xfsstats.xs_kobj, &xfs_stats_ktype, NULL,
+ 			       "stats");
+ 	if (error)
+-		goto out_free_stats;
++		goto out_kset_unregister;
+ 
+ 	error = xchk_global_stats_setup(xfs_debugfs);
+ 	if (error)
+@@ -2727,8 +2727,6 @@ init_xfs_fs(void)
+ 	xchk_global_stats_teardown();
+  out_remove_stats_kobj:
+ 	xfs_sysfs_del(&xfsstats.xs_kobj);
+- out_free_stats:
+-	free_percpu(xfsstats.xs_stats);
+  out_kset_unregister:
+ 	kset_unregister(xfs_kset);
+  out_debugfs_unregister:
+@@ -2736,6 +2734,8 @@ init_xfs_fs(void)
+ 	xfs_sysctl_unregister();
+  out_cleanup_procfs:
+ 	xfs_cleanup_procfs();
++ out_free_stats:
++	free_percpu(xfsstats.xs_stats);
+  out_mru_cache_uninit:
+ 	xfs_mru_cache_uninit();
+  out_destroy_wq:
+@@ -2756,11 +2756,11 @@ exit_xfs_fs(void)
+ #endif
+ 	xchk_global_stats_teardown();
+ 	xfs_sysfs_del(&xfsstats.xs_kobj);
+-	free_percpu(xfsstats.xs_stats);
+ 	kset_unregister(xfs_kset);
+ 	debugfs_remove(xfs_debugfs);
+ 	xfs_sysctl_unregister();
+ 	xfs_cleanup_procfs();
++	free_percpu(xfsstats.xs_stats);
+ 	xfs_mru_cache_uninit();
+ 	xfs_destroy_workqueues();
+ 	xfs_destroy_caches();
+-- 
+2.56.0
 
