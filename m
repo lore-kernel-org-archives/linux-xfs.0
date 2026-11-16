@@ -1,56 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794826904;
-	b=xhE44Nr9xFwAs4zhwlvJgJvhujzJStnV2P0N22MdKEglVT6DHeWiIP3qvkCROM1/YkJC
-	 lyLTuD72wk/rKT1ScGowr7A86DvkWjRNpa+ZXS148nFYhzOGeAutyVt7h+V7069ZnErnE
-	 eczRqPQRMgzAdq62wsbdzklL+Bp0tA9hrESO1trFStDxL3pJYcPDKjoxYHKq7vGCcbVxC
-	 6sKoiRVjGx705XY1McHvuI9+KHvMny+hooIvlfP2AbHC7oS1PvXxYc0CBrdsNOnv79zzw
-	 DU+vXjUMrm29PDXXqS62C/+GWEMJitm8E2qiivrKvvw9xSAM6zDvNdrYYPqbkuxwjZg==
+	t=1794827132;
+	b=l5MQoNdFhpiShAn/IDGpToReM12WZnUADdzpXkHt9y682E7H6Laf9I1up5tfNnEhvpp7
+	 zUbmBUYDonwJn6dFzvY6P0CHvx/gpZyOQNxXEum4UyfKgpIgH8bNAeEZJAAaobsce0eln
+	 QPg+rTUyfGbLU1tLZwYZld8TClqoZb0EKluuZ0wR7fU8iuvccRfjLPobjIJtG0wPpOGuj
+	 1gfEQ3dKaxrH/wrojxp3EmKBJHBkBLqDc+O3IijlO8Q3YcgSl910CI8qljYIf3fUSLWIs
+	 luZYnathe2Sx3cMk4/vu1Vy+UrlaM0GnRlmZkigxDSb3JWl5rhKG3dQvb40L10LkZcA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794826904;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794827132;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=rroTLp+eaQRNnU0LsKUYVUIMIl/4UNECb6csRSxt+pc=;
-	b=uUl9oeU+636C8UC3U6dWIDcOhvZT+qnHOsW6RbnxE3wGo/YO7pVnFvLPxgogo2knbNLR
-	 7cKU7JVcEzSr4pk+P4G0SvDi3kQfy3bHPnNJcds3ZPaV1TPNDD5wgeTXZZJPGz5+3PqmX
-	 frp1KsiUV5Nrhd6PQNdaTjl4XIaasf1sCymrrOEA9skOb3jvuJv6UB79mr9ALGjKPVr8+
-	 mFzEmFIpfGJdAqGJvzBv/95fbic9bDDVZtwDebvK8DqRL7e7uBdEsnJ1ljVsEhu1k4b+U
-	 QlI0lohUa54COB85lbaxmV4SarV761mbBowTGMERLr5X/A3MyFlSMbkyOPbw03x3VVQ==
+	bh=6m7pNiFJP9GDQ5q5Qguwm4pP6n0KJNKNJUw997q7JCE=;
+	b=oJfQcf0GbljuHuI1+3wcKvqLgAPljg77RAHXmDpNgekr1y30JwzvmjYtHL7l57h/SvqZ
+	 uHyU3C+ULiqzqnOaHvleaRcBxrVxFL8T0lzmJthPM8wsjkdAGvzpaNZSKTD33jC36gibH
+	 CnTG/nriTHWiCvshGFDlyoWlV0duqAGv+ia3FJL0hCr3FLRFJ2MqXQVhS9IU40Y9vRFVN
+	 pk98qbaCHAJyLlk8NgZ01eeWltNZmF26F5WHgq40Ddd/XPtHUYtifujn5x7VkU8xoRzph
+	 EO6sT7nF+0wmyn/BScbXTRXtWHpIi/LI7j930ZmbrO8Kd8SMkV4YmXbctCqSb13aVjw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XHaBld3q;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=l+5jSjm1;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF892606A31C;
-	Mon, 16 Nov 2026 11:01:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EBAC76073C4D;
+	Mon, 16 Nov 2026 11:05:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XHaBld3q
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E226F1F000C4;
-	Mon, 16 Nov 2026 11:01:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=l+5jSjm1
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2AB211F000CB;
+	Mon, 16 Nov 2026 11:05:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794826903;
-	bh=rroTLp+eaQRNnU0LsKUYVUIMIl/4UNECb6csRSxt+pc=;
+	s=k20260515; t=1794827131;
+	bh=6m7pNiFJP9GDQ5q5Qguwm4pP6n0KJNKNJUw997q7JCE=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=XHaBld3qYxpgdIfX4sCJIOaST5mEWmarYTj17bst4F2XEB/+qnxhRCnwUdy/8oUBk
-	 d/NkT86oudzaQCc6Jh4uIgi22y8D/qtBRLSPFmfGAOlffFZTtXsV0OdRpoJIHDT/wf
-	 nuBbIF4bXT8xL+OLGOurgYuqmCFgZY3lxC9BBz5DNWhPDfk38zy3wcLU+8MX7DQDTu
-	 AWDcTai9r07KCMIuJmrtOnprDMUiI91Ilus7y2BRI+DQj/Hpjo4ktIZMEHFnkzbTsT
-	 F80jmNSybQxtzR36rxUdmJHqSTewScv2WPML4CELwwH0Rm84JUhYaosunQ18Faoq2k
-	 VH0X9T49zgwTw==
-Date: Mon, 16 Nov 2026 12:01:38 +0100
+	b=l+5jSjm1IFe81iQ/yNkb7eD/+1iKPUj/IepRtMoXO3ddKeFntCTQctHbDqPEi1cEw
+	 tcDahbr3Yqts0gD6DjIBXOqwwg2kaKWP8NfKJWjSQs/EWAFH1i+M2bHSBDoUVR6Ihq
+	 AN95Uv+3GZipwZ06OiDmFn0GzLhmG5sAo7Av/o98Ar6AbUWu3hJ1sKHvgH36rk+ILU
+	 155OFEUmUG+rt8YZLCwdE++jslfklSvJrDkyxLtQyvG/qZ5g3Sr6j6IZolEUSxcQ7j
+	 shv6iY++0sD7t4ixad3P9w7CVlxF4G4QS2n4LHIGwV2u6Nji2KKJcdjRCnkwfxavft
+	 ZDwtei9al43DQ==
+Date: Mon, 16 Nov 2026 12:05:26 +0100
 From: Carlos Maiolino <cem@kernel.org>
 To: Chris Mason <mason@kernel.org>
 Cc: tytso@mit.edu, david@fromorbit.com, jack@suse.cz, djwong@kernel.org, 
 	josef@toxicpanda.com, hch@lst.de, linux-xfs@vger.kernel.org, 
 	linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, tz2294@columbia.edu, 
 	brauner@kernel.org
-Subject: Re: [PATCH v9 06/14] xfs: recheck direct write alignment after write
- checks
-Message-ID: <avriLHmqPHpDs4fq@nidhogg.toxiclabs.cc>
+Subject: Re: [PATCH v9 05/14] fs: validate atomic writes after O_APPEND and
+ limits
+Message-ID: <avrjDb576l8Eup5s@nidhogg.toxiclabs.cc>
 References: <20261112214604.67875-1-mason@kernel.org>
- <20261112214604.67875-7-mason@kernel.org>
+ <20261112214604.67875-6-mason@kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -62,38 +62,39 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261112214604.67875-7-mason@kernel.org>
+In-Reply-To: <20261112214604.67875-6-mason@kernel.org>
 
-On Thu, Nov 12, 2026 at 04:46:10PM -0500, Chris Mason wrote:
-> A direct write to a reflinked file on XFS can expose stale disk contents
+On Thu, Nov 12, 2026 at 04:46:09PM -0500, Chris Mason wrote:
+> An RWF_ATOMIC write on XFS with reflink can expose stale disk contents
 > if O_APPEND or RLIMIT_FSIZE leaves it sector aligned but not block
 > aligned.
 > 
-> A direct write cannot fill only a part of a shared block, so XFS does
-> such a write through the page cache. xfs_file_dio_write() decides that
-> from the range that the caller passed. But O_APPEND and RLIMIT_FSIZE
-> change the range later, in xfs_file_write_checks():
+> XFS and ext4 call generic_atomic_write_valid() on the range that the
+> caller passed. But generic_write_checks() changes the range later:
+> O_APPEND moves the position, and RLIMIT_FSIZE cuts the length. XFS can
+> then fill only a part of a new block, and still map the whole block into
+> the file:
 > 
->     block size 4096, i_size 4608, O_APPEND, block 1 is shared
->     checked:        0 to 4095, block aligned
->     written:        4608 to 8703
->     new COW block:  4096 to 8191
->     never written:  4096 to 4607
+>     block size 4096, i_size 512, O_APPEND
+>     validated:        0 to 4095
+>     written:          512 to 4607
+>     new blocks:       0 to 8191
+>     stale below EOF:  0 to 511
 > 
-> The fix used here is to check the alignment again once the range is
-> final, and to start over on the unaligned path if it no longer holds. A
-> zoned file now falls back to buffered I/O ahead of that path.
+> The fix used here is to validate an atomic write in
+> generic_write_checks(), after its range is final, and to refuse one that
+> was cut. XFS no longer picks the path of an atomic write by the
+> alignment of the range that the caller passed.
 > 
-> Fixes: 0613f16cd201 ("xfs: implement CoW for directio writes")
-> Fixes: 3c68d44a2b49 ("xfs: allocate direct I/O COW blocks in iomap_begin")
+> Fixes: f096207d3276 ("xfs: Validate atomic writes")
+> Fixes: 43c696f9d094 ("ext4: Check for atomic writes support in write iter")
 > Signed-off-by: Chris Mason <mason@kernel.org>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-This patch kind of relies on patch 5 which we still didn't reach a
-consensus yet. Ext4 patches from Tal have not been merged AFAIK so I'm
-pulling in the other patches from the series by now, leaving back
-patches 5 and 6, so we can fix the atomic path once we reach a consensus
-on ext4's side.
+FWIW, this is another patch that would normally go through Brauner's
+branch, so just in case once we get it settled...
+
+Chris, Ted, Jan. Are you guys fine if I merge this patch through xfs's
+tree?
 
 
 > ---
@@ -101,78 +102,89 @@ on ext4's side.
 > Notes:
 >     v6->v9: no change
 > 
->  fs/xfs/xfs_file.c | 44 ++++++++++++++++++++++++++++++++++++++------
->  1 file changed, 38 insertions(+), 6 deletions(-)
+>  fs/ext4/file.c    |  4 ----
+>  fs/read_write.c   | 13 +++++++++++++
+>  fs/xfs/xfs_file.c | 17 +++++++++++------
+>  3 files changed, 24 insertions(+), 10 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 153f53f964b9..8ee88910b487 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -710,6 +710,17 @@ xfs_file_dio_write_aligned(
->  	if (ret)
->  		goto out_unlock;
->  
-> +	/*
-> +	 * O_APPEND moves the position and the file size limits shorten the
-> +	 * write, so only now is the range final.  If it is not block aligned,
-> +	 * this is the wrong path for it.  Return -EAGAIN to
-> +	 * xfs_file_dio_write(), which picks the path.
-> +	 */
-> +	if ((iocb->ki_pos | iov_iter_count(from)) & ip->i_mount->m_blockmask) {
-> +		ret = -EAGAIN;
-> +		goto out_unlock;
-> +	}
-> +
->  	/*
->  	 * We don't need to hold the IOLOCK exclusively across the IO, so demote
->  	 * the iolock back to shared if we had to take the exclusive lock in
-> @@ -921,6 +932,7 @@ xfs_file_dio_write(
->  	struct xfs_inode	*ip = XFS_I(file_inode(iocb->ki_filp));
->  	struct xfs_buftarg      *target = xfs_inode_buftarg(ip);
->  	size_t			count = iov_iter_count(from);
-> +	ssize_t			ret;
->  
->  	/* direct I/O must be aligned to device logical sector size */
->  	if ((iocb->ki_pos | count) & target->bt_logical_sectormask)
-> @@ -937,12 +949,32 @@ xfs_file_dio_write(
->  		return xfs_file_dio_write_atomic(ip, iocb, from);
+> diff --git a/fs/ext4/file.c b/fs/ext4/file.c
+> index 50d3c92709c8..e301d4faf1c3 100644
+> --- a/fs/ext4/file.c
+> +++ b/fs/ext4/file.c
+> @@ -802,10 +802,6 @@ ext4_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
+>  		if (len < EXT4_SB(inode->i_sb)->s_awu_min ||
+>  		    len > EXT4_SB(inode->i_sb)->s_awu_max)
+>  			return -EINVAL;
+> -
+> -		ret = generic_atomic_write_valid(iocb, from);
+> -		if (ret)
+> -			return ret;
 >  	}
 >  
-> -	if ((iocb->ki_pos | count) & ip->i_mount->m_blockmask)
-> -		return xfs_file_dio_write_unaligned(ip, iocb, from);
-> -	if (xfs_is_zoned_inode(ip))
-> -		return xfs_file_dio_write_zoned(ip, iocb, from);
-> -	return xfs_file_dio_write_aligned(ip, iocb, from,
-> -			&xfs_direct_write_iomap_ops, &xfs_dio_write_ops, NULL);
+>  	if (iocb->ki_flags & IOCB_DIRECT)
+> diff --git a/fs/read_write.c b/fs/read_write.c
+> index 676728310899..1b34b7382619 100644
+> --- a/fs/read_write.c
+> +++ b/fs/read_write.c
+> @@ -1775,6 +1775,19 @@ ssize_t generic_write_checks(struct kiocb *iocb, struct iov_iter *from)
+>  	if (ret)
+>  		return ret;
+>  
 > +	/*
-> +	 * O_APPEND and the file size limits can still change the range, in
-> +	 * xfs_file_write_checks().  So a range that is block aligned here may
-> +	 * not stay so, and the write then comes back with -EAGAIN.  If we are
-> +	 * doing nonblocking user I/O, propagate the error.
+> +	 * O_APPEND has moved the position and the file size limits have
+> +	 * shortened the write by now, so this is the range to validate.  An
+> +	 * atomic write is all or nothing, so refuse it if it got shorter.
 > +	 */
-> +	if (!((iocb->ki_pos | count) & ip->i_mount->m_blockmask)) {
-> +		if (xfs_is_zoned_inode(ip))
-> +			ret = xfs_file_dio_write_zoned(ip, iocb, from);
-> +		else
-> +			ret = xfs_file_dio_write_aligned(ip, iocb, from,
-> +					&xfs_direct_write_iomap_ops,
-> +					&xfs_dio_write_ops, NULL);
-> +		if (ret != -EAGAIN || (iocb->ki_flags & IOCB_NOWAIT))
+> +	if (iocb->ki_flags & IOCB_ATOMIC) {
+> +		if (count != iov_iter_count(from))
+> +			return -EINVAL;
+> +		ret = generic_atomic_write_valid(iocb, from);
+> +		if (ret)
 > +			return ret;
 > +	}
 > +
-> +	/*
-> +	 * Zoned inodes always write out of place, which does not work for a
-> +	 * part of a block.  Fall back to buffered I/O.
-> +	 */
-> +	if (xfs_is_zoned_inode(ip)) {
-> +		trace_xfs_reflink_bounce_dio_write(iocb, from);
-> +		return -ENOTBLK;
-> +	}
-> +	return xfs_file_dio_write_unaligned(ip, iocb, from);
+>  	iov_iter_truncate(from, count);
+>  	return iov_iter_count(from);
 >  }
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index be1f775128d1..153f53f964b9 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -926,12 +926,21 @@ xfs_file_dio_write(
+>  	if ((iocb->ki_pos | count) & target->bt_logical_sectormask)
+>  		return -EINVAL;
 >  
->  static noinline ssize_t
+> +	/*
+> +	 * An atomic write is at least one block long, and generic_write_checks()
+> +	 * refuses it unless its final position is a multiple of its length.  So
+> +	 * there is no unaligned case to handle for it.
+> +	 */
+> +	if (iocb->ki_flags & IOCB_ATOMIC) {
+> +		if (xfs_is_zoned_inode(ip))
+> +			return xfs_file_dio_write_zoned(ip, iocb, from);
+> +		return xfs_file_dio_write_atomic(ip, iocb, from);
+> +	}
+> +
+>  	if ((iocb->ki_pos | count) & ip->i_mount->m_blockmask)
+>  		return xfs_file_dio_write_unaligned(ip, iocb, from);
+>  	if (xfs_is_zoned_inode(ip))
+>  		return xfs_file_dio_write_zoned(ip, iocb, from);
+> -	if (iocb->ki_flags & IOCB_ATOMIC)
+> -		return xfs_file_dio_write_atomic(ip, iocb, from);
+>  	return xfs_file_dio_write_aligned(ip, iocb, from,
+>  			&xfs_direct_write_iomap_ops, &xfs_dio_write_ops, NULL);
+>  }
+> @@ -1128,10 +1137,6 @@ xfs_file_write_iter(
+>  
+>  		if (ocount > xfs_get_atomic_write_max(ip))
+>  			return -EINVAL;
+> -
+> -		ret = generic_atomic_write_valid(iocb, from);
+> -		if (ret)
+> -			return ret;
+>  	}
+>  
+>  	if (IS_DAX(inode))
 > -- 
 > 2.55.0
 > 
