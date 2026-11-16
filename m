@@ -1,54 +1,65 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.137
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=220.197.31.2
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794819271;
-	b=rESEGaHUJDu1wcjSPeSe+yvZbyweQhazyxeToWcGUhrdK1YCLCE/AI3xhaRSMWaoELLP
-	 u5H5PSoqsmeot2gNU2xqvfvphHjMjS1ar+nzBC/m2CpWRbCITXb4c/Q0QBiAusJE6L7ZW
-	 T3Cvp5vOVOmMoB9R1vJwydaknHJzbmPBViSpBMfeEVx4i/VpNxUY5nOshobcDOjYOYZqo
-	 jKjkVYtgX3coD571paA1mwJBiw9DS8ara0H0G1ij3oIHdnGE5YAp3TLfG9M/sw17s4twc
-	 I7jfC10gAtwnEqG05HN1Cy8vdsHFWuqAnCm01qGes0WPesM43zI3IORaQrA5lBBu38w==
+	t=1794819567;
+	b=5kaqhd03gyCoqkYJKjfb8Te/J+y/wv4IwiUQq7hWFeEjHv5vAvxSYgKIIvl9lY5Dogj+
+	 J7bxeGgRc67CzfTTj1lrFYQ3NRh9hxpPKz7dfgtixEFLiLpU5BfUkoViPmCc0jBpnwqcZ
+	 Dbx8Y0Y6SEjXrjE7aEvQyqsaU2WmDLFJFzfE+NbD3gRmQ7k1T0WyxHUSRosiqg1G6t0X5
+	 nvvI2AIfiVgv7UlYR5xAJ/IJfpZW6aHfm6VEuSEzGoF6sK+8hOVGdD8F6/pp7TLEQPkMC
+	 vHtaNJum01j9WxlzEaQEB9hksCqhLpGM/rA7WI4P+LyIGYHSoF1xFVSi56YInBnRMww==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794819271;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:To:References:Content-Language:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=d+mXw65c0SE6wEj5pgC38F7l7JItQ/bmLuVhHdw962U=;
-	b=Ur9THSnam8iO11k1jVlvy5dMk8E7rZW17kt1xXZ3xY1HYc9rJSaAoLjdnk9uMu3ubkya
-	 0CZm/Q3EX2ry8lhGsJkr9pN/TeuixxSxo7myNxXy8Vr7HRMy7mrspfdlAaYt+tvFgu8g7
-	 JYZmr5TBO9sriTor29ILGVfl22nznFLhh+7GtGiiIVrBMGfk6Cey3rIJbCuUjiPO692i1
-	 lQojZnb/L3dRLZVGa1dgZQU1k46oZ77A14dNsQKPrYEMg+JWTLWcd/6fOMz3wIv4I+Gdk
-	 8J6EzX4tvw8dIeVarhjSTV/KHwoUJBWLPUNPYFzulqRVntRyJUN1eHrmEIrtVrRLXhw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794819567;
+	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
+	 Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding:X-CM-TRANSID:X-Coremail-Antispam:
+	 X-CM-SenderInfo;
+	bh=U2saAtZWcXBIwZFXVYwyAX+JkhAmBRTGW/WXX2GuG1c=;
+	b=wd5PStG/VXEQmP1S/xaXrOGoTUGCmy19QlczQrqcBZSDoRuo06G0H8xwkmkLHt6F6dzO
+	 q4uqqkfJPlYShgoX6AcnjrXxeSq9lKyJyTmh0SMfAA5pJYi+ZzsxSNvmlIj5t6XI8l0Xb
+	 oHzA04p8GygB3dA6LgCsBg/WKM0mZIHkh+rW2h3OEN6+cKI6nwv+EtNyr6ZeWM1b/KZSL
+	 V08T8idxlOp9ZycnOXI8a3RaHuPkLWXwIMnrZwlVniHvD/+8bBFp0GedSiQM+g6wpUpE7
+	 XDfH/EJhMuRAT3jHF7SfV0m8FCP9AItwICxAoc0NUcutRk4KtHFoaIbzToiaxivrXtQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=Y7bTbmN2;
-	arc=none smtp.remote-ip=95.215.58.137
-Received: from mta1.migadu.com (out-137.mta1.migadu.com [95.215.58.137])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=163.com;
+	spf=pass smtp.mailfrom=163.com;
+	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=kqZ28SZt;
+	arc=none smtp.remote-ip=220.197.31.2
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F6E2606A329
-	for <linux-xfs@vger.kernel.org>; Mon, 16 Nov 2026 08:54:30 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9F6E2606A329
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9AE24606A88E;
+	Mon, 16 Nov 2026 08:59:25 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9AE24606A88E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=Y7bTbmN2
-X-Envelope-To: linux-xfs@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=0sRRqe1bUPwNHEpxIAAix2mTeq6VNF5XZiHC5lka8Wg=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1794819268; v=1; x=1795424068;
- b=Y7bTbmN2A08zQtkW2hNnPOk5NQkOX0MzA0AhNZ1T4Dcevf1eR7SWPPglS/gX/mL4vGJH2/rz
- eMIIsrohjJn9huQQ6RRYrVYI1qMoIzt3CQhLdiq7xi5LINBLp+vPqlEZrMyK1fLIm2a4KoFEENj
- LU53WIfbB/TiOcMpLfmyUy3w=
-X-Envelope-To: linux-xfs@vger.kernel.org
-Received: by mta12.migadu.com with ESMTPS id 053895ab281f066a;
-	Mon, 16 Nov 2026 08:54:28 +0000
-X-Mizu-Trace-ID: 053895ab281f066a
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <260c0d7d-39cb-40ca-9a49-2ae8a3531676@linux.dev>
-Date: Mon, 16 Nov 2026 08:54:27 +0000
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=kqZ28SZt
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=U2
+	saAtZWcXBIwZFXVYwyAX+JkhAmBRTGW/WXX2GuG1c=; b=kqZ28SZtn2ATvdNReJ
+	NXcUpbgVMPr7pTuli8tzOHozXmWOJDYENOA7HX7Fklrjb+pnL6FQhZ1+iZsm5iPT
+	nSMm21quO7oHkLvCfhNvJcSn64rUSsnIApwmYxwvc6xJf7CI22aEGiQLQQXV8ZXE
+	fv49z2smWxVXLRcCjJLScyI0s=
+Received: from czl-pc (unknown [])
+	by gzga-smtp-mtada-g0-2 (Coremail) with SMTP id _____wAH5iLPxfpqqlTnHw--.59228S6;
+	Mon, 16 Nov 2026 16:58:59 +0800 (CST)
+From: Chi Zhiling <chizhiling@163.com>
+To: linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	exfat@lists.linux.dev,
+	linux-kernel@vger.kernel.org
+Cc: Namjae Jeon <linkinjeon@kernel.org>,
+	Sungjong Seo <sj1557.seo@samsung.com>,
+	Yuezhang Mo <yuezhang.mo@sony.com>,
+	Christian Brauner <brauner@kernel.org>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Chi Zhiling <chizhiling@kylinos.cn>
+Subject: [PATCH v4 4/5] exfat: serialize file expansion with mmap write faults
+Date: Mon, 16 Nov 2026 16:57:51 +0800
+Message-ID: <20261116085752.3908082-5-chizhiling@163.com>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20261116085752.3908082-1-chizhiling@163.com>
+References: <20261116085752.3908082-1-chizhiling@163.com>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -58,83 +69,61 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] xfs: do not let tr_atomic_ioend raise the minimum log
- size
-To: linux-xfs@vger.kernel.org, Dave Chinner <dgc@kernel.org>
-References: <20261113043055.2578595-1-hengyul@cs.unc.edu>
-Content-Language: en-US
-From: John Garry <john.garry@linux.dev>
-In-Reply-To: <20261113043055.2578595-1-hengyul@cs.unc.edu>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wAH5iLPxfpqqlTnHw--.59228S6
+X-Coremail-Antispam: 1Uf129KBjvJXoW7WFWrWr4UWFWUXrWfGr15Jwb_yoW8Ar15pr
+	W5Gws5JFs8X34rur1v93WDZw1Y9a4xWFZrZa4Svan3AF95tr109an5tryjyFWUtws7Gr4j
+	qFs0qFy7W3WDGw7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07je_M3UUUUU=
+X-CM-SenderInfo: hfkl6xxlol0wi6rwjhhfrp/xtbC+BP+nGr6xdOQtgAA3p
 
-On 11/13/26 04:30, Hengyu Liang wrote:
-> Commit b1e09178b73a ("xfs: commit CoW-based atomic writes atomically")
-> added the tr_atomic_ioend reservation and made
-> xfs_log_calc_trans_resv_for_minlogblocks() copy it from the running
-> filesystem.
-> 
-> However, the copy has the current log count of tr_itruncate. On a
-> filesystem with rmapbt and without reflink that count is 4, while the
-> function puts the old count of 2 back for tr_itruncate itself. As of
-> now, the minimum log size of such a filesystem is larger than the one
-> its mkfs.xfs used, and the filesystem does not mount any more when its
-> log has the old minimum size.
-> 
-> The issue can be reproduced with mkfs.xfs from xfsprogs 5.13:
-> 
->      truncate -s 512M xfs.img
->      mkfs.xfs -m rmapbt=1,reflink=0 xfs.img
->      mount -o loop xfs.img /mnt
-> 
-> Before commit b1e09178b73a ("xfs: commit CoW-based atomic writes
-> atomically"), the mount succeeds.
-> 
-> After that commit, it fails with EINVAL:
-> 
->      XFS (loop0): Log size 878 blocks too small, minimum size is 962 blocks
->      XFS (loop0): AAIEEE! Log failed size checks. Abort!
-> 
-> This patch will use the old log count for the copy as well. These
-> filesystems have no reflink, so they never use this reservation.
-> 
-> Fixes: b1e09178b73a ("xfs: commit CoW-based atomic writes atomically")
-> Cc: stable@vger.kernel.org # v6.16
-> Signed-off-by: Hengyu Liang <hengyul@cs.unc.edu>
-> ---
-> mkfs.xfs 4.9 to 5.13 give such a log to an rmapbt=1,reflink=0
-> filesystem below 1 GiB, or up to 16 GiB with -d su=256k,sw=4.
-> 
-> Application impact (Ubuntu 26.04 user space): udisks2 2.10.91 is asked
-> to mount a filesystem made as above ("udisksctl mount -b /dev/vda"). On
-> v6.15, it mounts it at /run/media/root/STICK513. On v6.16, it fails
-> with "Error mounting /dev/vda ... wrong fs type, bad option, bad
-> superblock".
-> 
-> Tested on xfs for-next with 45 images made by mkfs.xfs 4.9 to 6.6: 26
-> do not mount without this patch, all mount with it, and the largest
-> reservation is the same as on v6.15.
-> 
->   fs/xfs/libxfs/xfs_log_rlimit.c | 2 ++
->   1 file changed, 2 insertions(+)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_log_rlimit.c b/fs/xfs/libxfs/xfs_log_rlimit.c
-> index 37712b2f8757..9454c91e9fb3 100644
-> --- a/fs/xfs/libxfs/xfs_log_rlimit.c
-> +++ b/fs/xfs/libxfs/xfs_log_rlimit.c
-> @@ -128,6 +128,8 @@ xfs_log_calc_trans_resv_for_minlogblocks(
->   		resv->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT;
->   		resv->tr_itruncate.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
->   		resv->tr_qm_dqalloc.tr_logcount = XFS_WRITE_LOG_COUNT;
-> +		/* tr_atomic_ioend starts as a copy of tr_itruncate. */
-> +		resv->tr_atomic_ioend.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
+From: Namjae Jeon <linkinjeon@kernel.org>
 
-I have to admit that I am not really familiar with this log code. 
-Darrick was, but unfortunately he is no involved. The change looks sane, 
-even though we are partially overwriting resv->tr_atomic_ioend (from 
-when it is set earlier in the same function). Dave Chinner may be able 
-to kindly help review.
+File expansion changes allocation and i_size while mmap write faults
+can initialize the invalid range. Cleaning only the old EOF folio does
+not serialize the whole expansion with those faults.
 
-Thanks,
-John
+Wait for direct I/O and hold invalidate_lock exclusively across cluster
+allocation, EOF cleanup and the i_size update. Apply this to the common
+expansion path used by ftruncate and fallocate.
+
+Fixes: 98431d2cd1eb ("exfat: mark straddling folio RO and zero the post-EOF range")
+Signed-off-by: Namjae Jeon <linkinjeon@kernel.org>
+---
+ fs/exfat/file.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
+
+diff --git a/fs/exfat/file.c b/fs/exfat/file.c
+index 47e95b14d570..0d1eeeeffa76 100644
+--- a/fs/exfat/file.c
++++ b/fs/exfat/file.c
+@@ -81,7 +81,7 @@ static void exfat_pagecache_isize_extended(struct inode *inode, loff_t from,
+ 	folio_put(folio);
+ }
+ 
+-static int exfat_cont_expand(struct inode *inode, loff_t size)
++static int __exfat_cont_expand(struct inode *inode, loff_t size)
+ {
+ 	int ret;
+ 	unsigned int num_clusters, new_num_clusters, last_clu;
+@@ -158,6 +158,17 @@ static int exfat_cont_expand(struct inode *inode, loff_t size)
+ 	return -EIO;
+ }
+ 
++static int exfat_cont_expand(struct inode *inode, loff_t size)
++{
++	int ret;
++
++	inode_dio_wait(inode);
++	filemap_invalidate_lock(inode->i_mapping);
++	ret = __exfat_cont_expand(inode, size);
++	filemap_invalidate_unlock(inode->i_mapping);
++	return ret;
++}
++
+ /*
+  * Preallocate space for a file. This implements exfat's fallocate file
+  * operation, which gets called from sys_fallocate system call. User space
+-- 
+2.53.0
+
