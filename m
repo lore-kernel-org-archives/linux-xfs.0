@@ -1,59 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=203.254.224.25
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794822894;
-	b=bS+A64D6gikapZV09T7y2qRRz9GRRWOpjqhI7bAbzPmsfUexgKE7+HDLA4r5NbK6H9Ng
-	 ghzd58oZGYinZkEDKxOA1ZzVXIoIU5uytBUOfuMnZPbOi8RCI7urNyfzdz7i2StU/FqI3
-	 +y//edAh8AhuOK7iMqczaZy7VbDZkO98Z5A5bevTeRhi+dd/ufdkOAgEEFzI91MUAg2Bq
-	 WBgvcu6nML12AkqEWWDa/iG9kLbIma+zOOL/Scv2E0ud5Az8yNHzOw32GwxRHHQ/LWl59
-	 j98J0IP4HtQzteWOEgM1ZFkUuUhOiZIibu8Imlq2R0vfWF7eq9H0Z9v4j9D4BoYOo8A==
+	t=1794826904;
+	b=xhE44Nr9xFwAs4zhwlvJgJvhujzJStnV2P0N22MdKEglVT6DHeWiIP3qvkCROM1/YkJC
+	 lyLTuD72wk/rKT1ScGowr7A86DvkWjRNpa+ZXS148nFYhzOGeAutyVt7h+V7069ZnErnE
+	 eczRqPQRMgzAdq62wsbdzklL+Bp0tA9hrESO1trFStDxL3pJYcPDKjoxYHKq7vGCcbVxC
+	 6sKoiRVjGx705XY1McHvuI9+KHvMny+hooIvlfP2AbHC7oS1PvXxYc0CBrdsNOnv79zzw
+	 DU+vXjUMrm29PDXXqS62C/+GWEMJitm8E2qiivrKvvw9xSAM6zDvNdrYYPqbkuxwjZg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794822894;
-	h=DMARC-Filter:Received:DKIM-Filter:DKIM-Signature:Received:Received:
-	 Mime-Version:Subject:Reply-To:Sender:From:To:CC:X-Priority:
-	 X-Content-Kind-Code:In-Reply-To:X-CPGS-Detection:X-Drm-Type:
-	 X-Msg-Generator:X-Msg-Type:X-Reply-Demand:Message-ID:Date:
-	 X-CMS-MailID:Content-Transfer-Encoding:Content-Type:X-Sendblock-Type:
-	 CMS-TYPE:X-CPGSPASS:X-CPGSPASS:cpgsPolicy:X-CFilter-Loop:
-	 X-CMS-RootMailID:References;
-	bh=p37TzPPaQxXbDXDs23NTbmcI4MGLq8txBbkhklNkR9A=;
-	b=AEuFoOI41woo9aRe1X3P0s1c5d+Onl1QXSH0cCqrBqChC52Pz4GrBcQzXXDidikqhPa0
-	 TVVp2xr8aGEJNzGpXWHk0G1mNfE7jIeAeKcaoM8NN9BDIMRChsbzZRCvKPADFpe1dmOPu
-	 QZJalBiHKMDIsGxLW2Y6NTQrOzh/Jlh9vBfEB+vAC+lcgOW8eyKfI+ZdaOqN/UF+CLLUx
-	 Qgr/0LOYlAzci0Ps+aa9qxTh/Rdiekvvnq9HO++LlHCT9yGETSkykm0sfmtzNLSoR5zWV
-	 ZtKdFmNOCbwhJYphfL8Z5IiVAL4jv7yxs+haMuSYUl9cvzb2sABn7UVehcSze6s5hTg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794826904;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=rroTLp+eaQRNnU0LsKUYVUIMIl/4UNECb6csRSxt+pc=;
+	b=uUl9oeU+636C8UC3U6dWIDcOhvZT+qnHOsW6RbnxE3wGo/YO7pVnFvLPxgogo2knbNLR
+	 7cKU7JVcEzSr4pk+P4G0SvDi3kQfy3bHPnNJcds3ZPaV1TPNDD5wgeTXZZJPGz5+3PqmX
+	 frp1KsiUV5Nrhd6PQNdaTjl4XIaasf1sCymrrOEA9skOb3jvuJv6UB79mr9ALGjKPVr8+
+	 mFzEmFIpfGJdAqGJvzBv/95fbic9bDDVZtwDebvK8DqRL7e7uBdEsnJ1ljVsEhu1k4b+U
+	 QlI0lohUa54COB85lbaxmV4SarV761mbBowTGMERLr5X/A3MyFlSMbkyOPbw03x3VVQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=samsung.com;
-	spf=pass smtp.mailfrom=samsung.com;
-	dkim=pass header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=NFcg2oAY;
-	arc=none smtp.remote-ip=203.254.224.25
-Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XHaBld3q;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E9DA606A323
-	for <linux-xfs@vger.kernel.org>; Mon, 16 Nov 2026 09:54:53 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6E9DA606A323
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF892606A31C;
+	Mon, 16 Nov 2026 11:01:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=NFcg2oAY
-Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
-	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20261116095450epoutp02780ca9eec6246e4dd05bb797765031d7~ofejNEQdV1161411614epoutp02v
-	for <linux-xfs@vger.kernel.org>; Mon, 16 Nov 2026 09:54:50 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20261116095450epoutp02780ca9eec6246e4dd05bb797765031d7~ofejNEQdV1161411614epoutp02v
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1794822890;
-	bh=p37TzPPaQxXbDXDs23NTbmcI4MGLq8txBbkhklNkR9A=;
-	h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-	b=NFcg2oAYapV4cFNjVm9QBSqqZ0M8n+/FQ37Oqn+mY58SXBEunBGUumGwjaSyHdA/R
-	 ZAhkWKD7XUGK8vRVkLYNw/z3CKU3HS3hCGh03rU/mtRW0vtUl4s2DYojBES727IAs7
-	 S4dhrqztxaK4KKNzCdsmjxn/5MxqqDSnrwTLI2LI=
-Received: from epsnrtp02.localdomain (unknown [182.195.42.154]) by
-	epcas2p2.samsung.com (KnoxPortal) with ESMTPS id
-	20261116095449epcas2p2a288c413ca6f9ca4362c9de33f574a0b~ofeim-tHj1406114061epcas2p2F;
-	Mon, 16 Nov 2026 09:54:49 +0000 (GMT)
-Received: from epcas2p3.samsung.com (unknown [182.195.38.204]) by
-	epsnrtp02.localdomain (Postfix) with ESMTP id 4jSjrn2cnyz2SSKZ; Mon, 16 Nov
-	2026 09:54:49 +0000 (GMT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XHaBld3q
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E226F1F000C4;
+	Mon, 16 Nov 2026 11:01:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794826903;
+	bh=rroTLp+eaQRNnU0LsKUYVUIMIl/4UNECb6csRSxt+pc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=XHaBld3qYxpgdIfX4sCJIOaST5mEWmarYTj17bst4F2XEB/+qnxhRCnwUdy/8oUBk
+	 d/NkT86oudzaQCc6Jh4uIgi22y8D/qtBRLSPFmfGAOlffFZTtXsV0OdRpoJIHDT/wf
+	 nuBbIF4bXT8xL+OLGOurgYuqmCFgZY3lxC9BBz5DNWhPDfk38zy3wcLU+8MX7DQDTu
+	 AWDcTai9r07KCMIuJmrtOnprDMUiI91Ilus7y2BRI+DQj/Hpjo4ktIZMEHFnkzbTsT
+	 F80jmNSybQxtzR36rxUdmJHqSTewScv2WPML4CELwwH0Rm84JUhYaosunQ18Faoq2k
+	 VH0X9T49zgwTw==
+Date: Mon, 16 Nov 2026 12:01:38 +0100
+From: Carlos Maiolino <cem@kernel.org>
+To: Chris Mason <mason@kernel.org>
+Cc: tytso@mit.edu, david@fromorbit.com, jack@suse.cz, djwong@kernel.org, 
+	josef@toxicpanda.com, hch@lst.de, linux-xfs@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, tz2294@columbia.edu, 
+	brauner@kernel.org
+Subject: Re: [PATCH v9 06/14] xfs: recheck direct write alignment after write
+ checks
+Message-ID: <avriLHmqPHpDs4fq@nidhogg.toxiclabs.cc>
+References: <20261112214604.67875-1-mason@kernel.org>
+ <20261112214604.67875-7-mason@kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -62,74 +59,121 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-Subject: RE:(2) (2) (2) [PATCH v2] xfs: check the disk address for hardware
- atomic writes
-Reply-To: daejun7.park@samsung.com
-Sender: Daejun Park <daejun7.park@samsung.com>
-From: Daejun Park <daejun7.park@samsung.com>
-To: John Garry <john.garry@linux.dev>, Carlos Maiolino <cem@kernel.org>,
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-CC: Pankaj Raghav Partha Sarathy <p.raghav@samsung.com>, Pankaj Raghav
-	<pankaj.raghav@linux.dev>, "Darrick J. Wong" <djwong@kernel.org>, Christoph
-	Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Daejun Park
-	<daejun7.park@samsung.com>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-In-Reply-To: <96330e94-d3c0-447c-aef0-7c56b24e122b@linux.dev>
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <20261116095448epcms2p7c3d40cf340a05ad81a6c33820c3f1e61@epcms2p7>
-Date: Mon, 16 Nov 2026 18:54:48 +0900
-X-CMS-MailID: 20261116095448epcms2p7c3d40cf340a05ad81a6c33820c3f1e61
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-cpgsPolicy: CPGSC10-223,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20261112082952epcas2p1f902c4243d451635ff27fe1a1c5035fe
-References: <96330e94-d3c0-447c-aef0-7c56b24e122b@linux.dev>
-	<b34aac03-0d43-4ed1-9561-cb6e0e9c582f@linux.dev>
-	<b1fba95d-97c8-44ae-a5be-6d2fba7e7e78@linux.dev>
-	<20261112-xfs-hw-atomic-align-v2-1-c90394805e7b@samsung.com>
-	<20261113025544epcms2p575490538b97c26387515f8b5fc90c321@epcms2p5>
-	<20261116073903epcms2p13ca5bac24c591ae487f0b30dc45b87f8@epcms2p1>
-	<CGME20261112082952epcas2p1f902c4243d451635ff27fe1a1c5035fe@epcms2p7>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261112214604.67875-7-mason@kernel.org>
 
-On Mon, Nov 16, 2026 at 08:11:51AM +0000, John Garry wrote:
-> Yeah, I was really asking if HW atomic could span 2x extents before we 
-> catch it.
+On Thu, Nov 12, 2026 at 04:46:10PM -0500, Chris Mason wrote:
+> A direct write to a reflinked file on XFS can expose stale disk contents
+> if O_APPEND or RLIMIT_FSIZE leaves it sector aligned but not block
+> aligned.
+> 
+> A direct write cannot fill only a part of a shared block, so XFS does
+> such a write through the page cache. xfs_file_dio_write() decides that
+> from the range that the caller passed. But O_APPEND and RLIMIT_FSIZE
+> change the range later, in xfs_file_write_checks():
+> 
+>     block size 4096, i_size 4608, O_APPEND, block 1 is shared
+>     checked:        0 to 4095, block aligned
+>     written:        4608 to 8703
+>     new COW block:  4096 to 8191
+>     never written:  4096 to 4607
+> 
+> The fix used here is to check the alignment again once the range is
+> final, and to start over on the unaligned path if it no longer holds. A
+> zoned file now falls back to buffered I/O ahead of that path.
+> 
+> Fixes: 0613f16cd201 ("xfs: implement CoW for directio writes")
+> Fixes: 3c68d44a2b49 ("xfs: allocate direct I/O COW blocks in iomap_begin")
+> Signed-off-by: Chris Mason <mason@kernel.org>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-It is caught before any bio is built. xfs_direct_write_iomap_begin()
-checks with xfs_bmap_hw_atomic_write_possible() that one mapping covers
-the whole write. For a write over two extents it returns -ENOPROTOOPT,
-and xfs_file_dio_write_atomic() redoes the write through COW, which is
-still atomic. If a shorter mapping ever got past that check, iomap
-fails the write with -EINVAL instead of issuing a partial REQ_ATOMIC
-bio.
+This patch kind of relies on patch 5 which we still didn't reach a
+consensus yet. Ext4 patches from Tal have not been merged AFAIK so I'm
+pulling in the other patches from the series by now, leaving back
+patches 5 and 6, so we can fix the atomic path once we reach a consensus
+on ext4's side.
 
-> Maybe what you have in this patch is ok. I'll wait for v3 and consider 
-> it more. Sorry for the hesitancy.
 
-I wrote the v3 I described and tested it against v2 before posting it.
-v3 sends every write above the group alignment to COW, also when the
-extent is aligned on disk, as in AG 0. v2 sends those writes to the
-hardware and falls back to COW when the hardware path is not possible,
-for example when the extent is misaligned on disk. So I'll keep v2 as
-posted and not send v3.
-
-For reference only, on emulated NVMe (QEMU) with a 64 KiB atomic unit
-and boundary, non-debug kernels, three runs of 10000 overwrites: a
-64 KiB atomic overwrite in AG 0 took 35.2-38.6 us with v2 and
-69.4-78.1 us with v3. In a misaligned AG 1 it took 70.5-88.8 us with
-v2 and 68.8-88.7 us with v3.
-
-Best regards,
-Daejun
+> ---
+> 
+> Notes:
+>     v6->v9: no change
+> 
+>  fs/xfs/xfs_file.c | 44 ++++++++++++++++++++++++++++++++++++++------
+>  1 file changed, 38 insertions(+), 6 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 153f53f964b9..8ee88910b487 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -710,6 +710,17 @@ xfs_file_dio_write_aligned(
+>  	if (ret)
+>  		goto out_unlock;
+>  
+> +	/*
+> +	 * O_APPEND moves the position and the file size limits shorten the
+> +	 * write, so only now is the range final.  If it is not block aligned,
+> +	 * this is the wrong path for it.  Return -EAGAIN to
+> +	 * xfs_file_dio_write(), which picks the path.
+> +	 */
+> +	if ((iocb->ki_pos | iov_iter_count(from)) & ip->i_mount->m_blockmask) {
+> +		ret = -EAGAIN;
+> +		goto out_unlock;
+> +	}
+> +
+>  	/*
+>  	 * We don't need to hold the IOLOCK exclusively across the IO, so demote
+>  	 * the iolock back to shared if we had to take the exclusive lock in
+> @@ -921,6 +932,7 @@ xfs_file_dio_write(
+>  	struct xfs_inode	*ip = XFS_I(file_inode(iocb->ki_filp));
+>  	struct xfs_buftarg      *target = xfs_inode_buftarg(ip);
+>  	size_t			count = iov_iter_count(from);
+> +	ssize_t			ret;
+>  
+>  	/* direct I/O must be aligned to device logical sector size */
+>  	if ((iocb->ki_pos | count) & target->bt_logical_sectormask)
+> @@ -937,12 +949,32 @@ xfs_file_dio_write(
+>  		return xfs_file_dio_write_atomic(ip, iocb, from);
+>  	}
+>  
+> -	if ((iocb->ki_pos | count) & ip->i_mount->m_blockmask)
+> -		return xfs_file_dio_write_unaligned(ip, iocb, from);
+> -	if (xfs_is_zoned_inode(ip))
+> -		return xfs_file_dio_write_zoned(ip, iocb, from);
+> -	return xfs_file_dio_write_aligned(ip, iocb, from,
+> -			&xfs_direct_write_iomap_ops, &xfs_dio_write_ops, NULL);
+> +	/*
+> +	 * O_APPEND and the file size limits can still change the range, in
+> +	 * xfs_file_write_checks().  So a range that is block aligned here may
+> +	 * not stay so, and the write then comes back with -EAGAIN.  If we are
+> +	 * doing nonblocking user I/O, propagate the error.
+> +	 */
+> +	if (!((iocb->ki_pos | count) & ip->i_mount->m_blockmask)) {
+> +		if (xfs_is_zoned_inode(ip))
+> +			ret = xfs_file_dio_write_zoned(ip, iocb, from);
+> +		else
+> +			ret = xfs_file_dio_write_aligned(ip, iocb, from,
+> +					&xfs_direct_write_iomap_ops,
+> +					&xfs_dio_write_ops, NULL);
+> +		if (ret != -EAGAIN || (iocb->ki_flags & IOCB_NOWAIT))
+> +			return ret;
+> +	}
+> +
+> +	/*
+> +	 * Zoned inodes always write out of place, which does not work for a
+> +	 * part of a block.  Fall back to buffered I/O.
+> +	 */
+> +	if (xfs_is_zoned_inode(ip)) {
+> +		trace_xfs_reflink_bounce_dio_write(iocb, from);
+> +		return -ENOTBLK;
+> +	}
+> +	return xfs_file_dio_write_unaligned(ip, iocb, from);
+>  }
+>  
+>  static noinline ssize_t
+> -- 
+> 2.55.0
+> 
+> 
