@@ -1,50 +1,50 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794871093;
-	b=nJyYcjM+KqPQyYbitH6vEJPW59rjPJci6lSZWOK0Qoa5mMoHrqkCupiG0pbDD3rdCH1H
-	 7+M7LqZWjN5678RD6ii/xKFzptnUdoCGVe0O7am7JoalZMsdJ9qJc8WiB4sfmppgZKf3+
-	 L76GELVdaR3hdaGpXPunRSFkvHPRRjvHXkS3Kdcr9fTDRjB5FWuetdJnV7r0ECOgyg7D+
-	 6wMISdZRZ5H7QNMTAFkriZ83wn0XZBnTd6J9SjFkkj/1x0SWe11cxPg/CAikPfzlEk4Fm
-	 zpo+HWyrmFVh0Wf5/8PY9TZMK0wxhgG360gaxvXZKy/wNIhCq1LE7QuGJ1t2A7qYm0w==
+	t=1794871095;
+	b=ybfP+9R0fiv6Av7VeQE9TsMDNK4PXK850kJF50PeWU7qTyjwkWBVmRf1wNKLi0GrzU3p
+	 Bq6S3uOs5yzraN9lLA4XUBHYvTuYQeRGZ4F7gaXWM2VFDdNkYf6cM+Rc0/7h7AbEf/WzN
+	 EBLZ7XBAHH6V1pbWXjuB+H2CXr2EaEKsDj9MyBg5RYiQVY32+tF8scd6clsnBz+PiftEW
+	 0OhVOS7FsjAtHtOm0pFIDnOEZ9U2XhDgG5X7Vyx9e3mmn6vcF68P5e7Jp31Q3h3Ij30h3
+	 eLxDncuf96gJPj2R3JvbfJlMZ4Xo6DkPsRJZAewDX0bx4l9Dh0DmQCjW0neiUE1/mDg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794871093;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794871095;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=vochL8tsEEvhhkH3rFwjKtuPdwOZa5INSPyw6y8SWcc=;
-	b=f5ivGPKfQ5Rqsw4eolyjyKBKfSVqwGdemmo4OUyuGbJC+4m2YvFEsvWmhL6knVPUU6GX
-	 rMhJOZKgm0KRK1RJlpD8chcP9NIba9tQNLWKFU0sWYtxzZgTxRKYZ4N+qBSo5BShNFIzB
-	 0FIVp+kvCtFleBtxxNrQ244q2dydQS38nAljHAkMJrfh4O0HHYaaTELHjzgwU6ZXmBSO2
-	 UMbMLWfABnriDCaSv3AP/OXmG+QRx9yg/OmX05q/Ig/PjXgJxenr+i7lf1OR603Dp8wfH
-	 l4X9YWdno0/9CLFBVivtKw4MC9eqPrYKv4oWocsuiYWTaEKgxlaprgtj7t8d/1wmyew==
+	bh=cdf9bsCznPSnOUKqXyB73uKSkbCHY/weqB5kx7yQ4h0=;
+	b=Vloj9hN7i5+Jb7YQaOawmsRgFNDETGLHq0dzT6D476ogyG7ftH5xL6O0FizxYe0zO68z
+	 kywHVjP4cj/AaN/pCCxNiBwEwOHPBXK1uukmagLLf4X0/3WZ3VyREtktX3hYFI2LhLjB+
+	 F0Igh5g5xZxoai8k7rOUruTvSK60gwNnixN0DJNx19ZwDyy5jK0N/J8SFw/A/kGZoqCzb
+	 yizh9+RzfI0IBKRzFxWfqIfdicFjFu6Del06Xl2EqdSH20c582fD21UPB6KF9kOCiLrSd
+	 8Ay6ir/nulmyVfOf9GwsWq1ZCEa3yrzs4ON+bSZdUjKMl/IOEy1Fx6NPp/nRZ+D73Og==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=FaVQmL+1;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=F0ESbieY;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 875D3606A31C
-	for <linux-xfs@vger.kernel.org>; Mon, 16 Nov 2026 23:18:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09E8F606A335
+	for <linux-xfs@vger.kernel.org>; Mon, 16 Nov 2026 23:18:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=FaVQmL+1
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A161B1F000C4;
-	Mon, 16 Nov 2026 23:18:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=F0ESbieY
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D80A91F000C4;
+	Mon, 16 Nov 2026 23:18:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794871093;
-	bh=vochL8tsEEvhhkH3rFwjKtuPdwOZa5INSPyw6y8SWcc=;
+	s=k20260515; t=1794871094;
+	bh=cdf9bsCznPSnOUKqXyB73uKSkbCHY/weqB5kx7yQ4h0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=FaVQmL+1eoUTD5JCIYe8z8771EbEdfAPyG2ZGYwwgyfsY4t7mY8WJ4ntsJ0O702xY
-	 lX11nXdYzbK83NMQg/nwa7qL7GELt2Ad8EuIfMdh3YfOqQxZQGKdhj+ebOCN/JmX/k
-	 xCpp2XNO3cmEj+Lwn5HvhS3seJNHwcwe4REw6NPuEN0J70aWYJEI2Re1jghbigUq3P
-	 vz961Va03L+ht3I927/Th4YJao9SPF3Y/YK+dEgASsHFc2Zm8lnhOotfozmi71XT38
-	 lMwkB7+egX7v1Ksk2py2knFNWDgJO1yxTo45txtWApx1RCij6Jv20JzcXuJO1SsDxO
-	 Txbu5B9zIJUQw==
+	b=F0ESbieYf37zplbZ2wvFA2OTP3Ml4cBilZGO6ag1dn8HRw350VeXGYbh/eZIfoZEw
+	 leAYujAdCMKsNQhOdS/KIibQCi4mdTZqgK0RuafowMivajoa+H2YT6T3A1vDH8GJ9x
+	 Wl3ZngMYqVpLfsOa52qGUeVV0ndCnI6jV65pgO/bHnPilThajUFAo03Kq5xPnOEQXF
+	 8PViHqXus9cdJCDORIhRW6JY4yiedWJCIuyIAajoGSnJbou3otIA+5UB0hnpexyFEI
+	 JVYH2pjL0rAhwBTczCD3aoPTM1e6s9Br1Q3OZG37b3UpG1WXbvFo7io/nDit80iOB0
+	 JAwxHwTZ6fbzQ==
 From: Dave Chinner <dgc@kernel.org>
 To: linux-xfs@vger.kernel.org
 Cc: cem@kernel.org
-Subject: [PATCH 46/59] xfs: validate the logged inode core during recovery
-Date: Tue, 17 Nov 2026 10:15:03 +1100
-Message-ID: <20261116231707.3625263-47-dgc@kernel.org>
+Subject: [PATCH 47/59] xfs: validate the logged inode forks during recovery
+Date: Tue, 17 Nov 2026 10:15:04 +1100
+Message-ID: <20261116231707.3625263-48-dgc@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20261116231707.3625263-1-dgc@kernel.org>
 References: <20261116231707.3625263-1-dgc@kernel.org>
@@ -59,553 +59,346 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The log dinode core carries the inode fields being recovered into the on-disk
-inode. Recovery validated only a handful of these fields, scattered through the
-commit handler as it set up the replay, so most of the core was trusted and
-written back without being checked.
+An inode item logs a data and/or attribute fork region alongside the core. The
+commit handler trusted these regions. It guarded them only with asserts as it
+copied each fork into the on-disk inode. A fork whose format, size or placement
+did not agree with the core was replayed regardless.
 
-Add xfs_log_dinode_verify() that verifies the fields carried in the log dinode
-core. Call it during item validation once the core region length has been
-checked, so the whole core is trusted before replay begins.
+Verify the logged forks during item validation, once the core has been verified,
+so the fork is trusted before replay begins. The contents of the fork regions
+are not inspected here. A device inode is handled separately as it holds its
+rdev in the format header and logs no data fork region. The asserts the commit
+handler used are removed.
 
-The fork offset check is common to the on-disk and log dinode, so
-xfs_dinode_verify_forkoff() is recast as xfs_inode_verify_forkoff() taking the
-offset and format as arguments and shared between them. The extent count helper
-already present in recovery is converted to the failaddr idiom so it composes as
-a sub-check of the new verifier.
-
-The core checks the commit handler performed are removed, and the core region
-length is now checked exactly against the size the running filesystem logs. The
-on-disk inode magic check in the commit handler is also removed as the inode
-buffer verifier run by the buffer read already performs it.
+The fork size calculation was duplicated between the on-disk inode macros and
+the in-memory inode helpers. Add __xfs_inode_fork_size(), keyed on the scalar
+fork offset, and route the macros, the in-memory helpers and the new log dinode
+check through it so the calculation exists in one place.
 
 Assisted-by: LLM
 Signed-off-by: Dave Chinner <dgc@kernel.org>
 ---
- fs/xfs/libxfs/xfs_inode_buf.c   |  19 +-
- fs/xfs/libxfs/xfs_inode_buf.h   |   2 +
- fs/xfs/xfs_inode_item_recover.c | 362 ++++++++++++++++++++++----------
- 3 files changed, 259 insertions(+), 124 deletions(-)
+ fs/xfs/libxfs/xfs_format.h      |   8 +-
+ fs/xfs/libxfs/xfs_inode_fork.c  |   2 +-
+ fs/xfs/xfs_inode.h              |  43 +++++---
+ fs/xfs/xfs_inode_item_recover.c | 168 +++++++++++++++++++++++++++++---
+ 4 files changed, 185 insertions(+), 36 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index 8c9d296ebfe9..8d5618684813 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.c
-+++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -477,17 +477,18 @@ xfs_dinode_verify_fork(
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 469e879149ac..939514309012 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -1103,13 +1103,11 @@ enum xfs_dinode_fmt {
+ #define XFS_DFORK_BOFF(dip)		XFS_FORKOFF_TO_B((dip)->di_forkoff)
+ 
+ #define XFS_DFORK_DSIZE(dip,mp) \
+-	((dip)->di_forkoff ? XFS_DFORK_BOFF(dip) : XFS_LITINO(mp))
++	__xfs_inode_fork_size(mp, (dip)->di_forkoff, XFS_DATA_FORK)
+ #define XFS_DFORK_ASIZE(dip,mp) \
+-	((dip)->di_forkoff ? XFS_LITINO(mp) - XFS_DFORK_BOFF(dip) : 0)
++	__xfs_inode_fork_size(mp, (dip)->di_forkoff, XFS_ATTR_FORK)
+ #define XFS_DFORK_SIZE(dip,mp,w) \
+-	((w) == XFS_DATA_FORK ? \
+-		XFS_DFORK_DSIZE(dip, mp) : \
+-		XFS_DFORK_ASIZE(dip, mp))
++	__xfs_inode_fork_size(mp, (dip)->di_forkoff, w)
+ 
+ #define XFS_DFORK_MAXEXT(dip, mp, w) \
+ 	(XFS_DFORK_SIZE(dip, mp, w) / sizeof(struct xfs_bmbt_rec))
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+index 0cf91ea2bf37..d856174ed8fa 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.c
++++ b/fs/xfs/libxfs/xfs_inode_fork.c
+@@ -86,7 +86,7 @@ xfs_iformat_local(
+ 	 */
+ 	if (unlikely(size > XFS_DFORK_SIZE(dip, ip->i_mount, whichfork))) {
+ 		xfs_warn(ip->i_mount,
+-	"corrupt inode %llu (bad size %d for local fork, size = %zd).",
++	"corrupt inode %llu (bad size %d for local fork, size = %u).",
+ 			(unsigned long long)I_INO(ip), size,
+ 			XFS_DFORK_SIZE(dip, ip->i_mount, whichfork));
+ 		xfs_inode_verifier_error(ip, -EFSCORRUPTED,
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index b16eee99b567..71cea0bcd932 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -135,19 +135,39 @@ static inline unsigned int xfs_inode_fork_boff(struct xfs_inode *ip)
+ 	return XFS_FORKOFF_TO_B(ip->i_forkoff);
+ }
+ 
+-static inline unsigned int xfs_inode_data_fork_size(struct xfs_inode *ip)
++/*
++ * Space available to a fork given the inode's fork offset. The on-disk, logged
++ * and in-memory inodes all express the fork offset the same way, so share this
++ * calculation through a scalar helper.
++ */
++static inline unsigned int
++__xfs_inode_fork_size(
++	struct xfs_mount	*mp,
++	uint8_t			forkoff,
++	int			whichfork)
+ {
+-	if (xfs_inode_has_attr_fork(ip))
+-		return xfs_inode_fork_boff(ip);
++	unsigned int		boff = XFS_FORKOFF_TO_B(forkoff);
+ 
+-	return XFS_LITINO(ip->i_mount);
++	switch (whichfork) {
++	case XFS_DATA_FORK:
++		return forkoff ? boff : XFS_LITINO(mp);
++	case XFS_ATTR_FORK:
++		return forkoff ? XFS_LITINO(mp) - boff : 0;
++	default:
++		return 0;
++	}
++}
++
++static inline unsigned int xfs_inode_data_fork_size(struct xfs_inode *ip)
++{
++	return __xfs_inode_fork_size(ip->i_mount, ip->i_forkoff,
++			XFS_DATA_FORK);
+ }
+ 
+ static inline unsigned int xfs_inode_attr_fork_size(struct xfs_inode *ip)
+ {
+-	if (xfs_inode_has_attr_fork(ip))
+-		return XFS_LITINO(ip->i_mount) - xfs_inode_fork_boff(ip);
+-	return 0;
++	return __xfs_inode_fork_size(ip->i_mount, ip->i_forkoff,
++			XFS_ATTR_FORK);
+ }
+ 
+ static inline unsigned int
+@@ -155,14 +175,7 @@ xfs_inode_fork_size(
+ 	struct xfs_inode	*ip,
+ 	int			whichfork)
+ {
+-	switch (whichfork) {
+-	case XFS_DATA_FORK:
+-		return xfs_inode_data_fork_size(ip);
+-	case XFS_ATTR_FORK:
+-		return xfs_inode_attr_fork_size(ip);
+-	default:
+-		return 0;
+-	}
++	return __xfs_inode_fork_size(ip->i_mount, ip->i_forkoff, whichfork);
+ }
+ 
+ /* Convert from vfs inode to xfs inode */
+diff --git a/fs/xfs/xfs_inode_item_recover.c b/fs/xfs/xfs_inode_item_recover.c
+index 572d276074f6..566b03d1fe03 100644
+--- a/fs/xfs/xfs_inode_item_recover.c
++++ b/fs/xfs/xfs_inode_item_recover.c
+@@ -441,6 +441,128 @@ xlog_dinode_verify(
  	return NULL;
  }
  
--static xfs_failaddr_t
--xfs_dinode_verify_forkoff(
--	struct xfs_dinode	*dip,
--	struct xfs_mount	*mp)
-+xfs_failaddr_t
-+xfs_inode_verify_forkoff(
-+	struct xfs_mount	*mp,
-+	uint8_t			forkoff,
-+	uint8_t			format)
- {
--	if (!dip->di_forkoff)
-+	if (!forkoff)
- 		return NULL;
- 
--	switch (dip->di_format)  {
-+	switch (format)  {
- 	case XFS_DINODE_FMT_DEV:
--		if (dip->di_forkoff != XFS_B_TO_FORKOFF(sizeof(xfs_dev_t)))
-+		if (forkoff != XFS_B_TO_FORKOFF(sizeof(xfs_dev_t)))
- 			return __this_address;
- 		break;
- 	case XFS_DINODE_FMT_META_BTREE:
-@@ -497,7 +498,7 @@ xfs_dinode_verify_forkoff(
- 	case XFS_DINODE_FMT_LOCAL:	/* fall through ... */
- 	case XFS_DINODE_FMT_EXTENTS:    /* fall through ... */
- 	case XFS_DINODE_FMT_BTREE:
--		if (dip->di_forkoff >= XFS_B_TO_FORKOFFT(XFS_LITINO(mp)))
-+		if (forkoff >= XFS_B_TO_FORKOFFT(XFS_LITINO(mp)))
- 			return __this_address;
- 		break;
- 	default:
-@@ -683,7 +684,7 @@ xfs_dinode_verify(
- 		return __this_address;
- 
- 	/* check for illegal values of forkoff */
--	fa = xfs_dinode_verify_forkoff(dip, mp);
-+	fa = xfs_inode_verify_forkoff(mp, dip->di_forkoff, dip->di_format);
- 	if (fa)
- 		return fa;
- 
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.h
-index f3624532b023..5e8e7f920d55 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.h
-+++ b/fs/xfs/libxfs/xfs_inode_buf.h
-@@ -35,6 +35,8 @@ xfs_failaddr_t xfs_inode_validate_extsize(struct xfs_mount *mp,
- xfs_failaddr_t xfs_inode_validate_cowextsize(struct xfs_mount *mp,
- 		uint32_t cowextsize, uint16_t mode, uint16_t flags,
- 		uint64_t flags2);
-+xfs_failaddr_t xfs_inode_verify_forkoff(struct xfs_mount *mp, uint8_t forkoff,
-+		uint8_t format);
- 
- static inline uint64_t xfs_inode_encode_bigtime(struct timespec64 tv)
- {
-diff --git a/fs/xfs/xfs_inode_item_recover.c b/fs/xfs/xfs_inode_item_recover.c
-index 98596f27fb06..572d276074f6 100644
---- a/fs/xfs/xfs_inode_item_recover.c
-+++ b/fs/xfs/xfs_inode_item_recover.c
-@@ -23,6 +23,8 @@
- #include "xfs_icache.h"
- #include "xfs_ialloc.h"
- #include "xfs_ag.h"
-+#include "xfs_dir2.h"
-+#include "xfs_metafile.h"
- #include "xfs_bmap_btree.h"
- #include "xfs_rtrmap_btree.h"
- #include "xfs_rtrefcount_btree.h"
-@@ -213,7 +215,7 @@ xfs_log_dinode_to_disk(
- 	xfs_log_dinode_to_disk_iext_counters(from, to);
- }
- 
--STATIC int
-+static xfs_failaddr_t
- xlog_dinode_verify_extent_counts(
- 	struct xfs_mount	*mp,
- 	struct xfs_log_dinode	*ldip)
-@@ -223,45 +225,220 @@ xlog_dinode_verify_extent_counts(
- 
- 	if (xfs_log_dinode_has_large_extent_counts(ldip)) {
- 		if (!xfs_has_large_extent_counts(mp) ||
--		    (ldip->di_nrext64_pad != 0)) {
--			XFS_CORRUPTION_ERROR(
--				"Bad log dinode large extent count format",
--				XFS_ERRLEVEL_LOW, mp, ldip, sizeof(*ldip));
--			xfs_alert(mp,
--				"Bad inode 0x%llx, large extent counts %d, padding 0x%x",
--				ldip->di_ino, xfs_has_large_extent_counts(mp),
--				ldip->di_nrext64_pad);
--			return -EFSCORRUPTED;
--		}
-+		    (ldip->di_nrext64_pad != 0))
-+			return __this_address;
- 
- 		nextents = ldip->di_big_nextents;
- 		anextents = ldip->di_big_anextents;
- 	} else {
--		if (ldip->di_version == 3 && ldip->di_v3_pad != 0) {
--			XFS_CORRUPTION_ERROR(
--				"Bad log dinode di_v3_pad",
--				XFS_ERRLEVEL_LOW, mp, ldip, sizeof(*ldip));
--			xfs_alert(mp,
--				"Bad inode 0x%llx, di_v3_pad 0x%llx",
--				ldip->di_ino, ldip->di_v3_pad);
--			return -EFSCORRUPTED;
--		}
-+		if (ldip->di_version == 3 && ldip->di_v3_pad != 0)
-+			return __this_address;
- 
- 		nextents = ldip->di_nextents;
- 		anextents = ldip->di_anextents;
- 	}
- 
--	if (unlikely(nextents + anextents > ldip->di_nblocks)) {
--		XFS_CORRUPTION_ERROR("Bad log dinode extent counts",
--				XFS_ERRLEVEL_LOW, mp, ldip, sizeof(*ldip));
--		xfs_alert(mp,
--			"Bad inode 0x%llx, large extent counts %d, nextents 0x%llx, anextents 0x%x, nblocks 0x%llx",
--			ldip->di_ino, xfs_has_large_extent_counts(mp), nextents,
--			anextents, ldip->di_nblocks);
--		return -EFSCORRUPTED;
-+	if (nextents + anextents > ldip->di_nblocks)
-+		return __this_address;
-+
-+	return NULL;
-+}
-+
 +/*
-+ * Host order counterpart of xfs_dinode_verify_metadir(). The generic v3 field
-+ * checks that verifier repeats are already covered before we get here, so this
-+ * only validates the metadata inode specific rules.
++ * Verify the logged data fork against the core and the fork region that carries
++ * it. The core has already been verified, so the mode and fork offset can be
++ * trusted here. The data fork format must be valid for the inode mode, whether
++ * or not the fork was logged. A regular file has no local format data fork. If
++ * the fork was logged, the field logged for it must match that format, and the
++ * region holding it must be the size the format header records. A local or
++ * extents fork is copied verbatim into the inode fork, so it must also fit
++ * within the space the fork offset leaves for it. A btree fork is logged in the
++ * larger expanded form and compressed into the fork on replay, so it does not
++ * get the fit check. The contents of the region are not inspected.
 + */
 +static xfs_failaddr_t
-+xlog_dinode_verify_metadir(
-+	struct xfs_mount	*mp,
-+	struct xfs_log_dinode	*ldip)
++xlog_dinode_verify_dfork(
++	struct xfs_mount		*mp,
++	struct xfs_log_dinode		*ldip,
++	struct xfs_inode_log_format	*ilfp,
++	struct xlog_recover_item	*item)
 +{
-+	if (!xfs_has_metadir(mp))
-+		return __this_address;
++	unsigned int			field = ilfp->ilf_fields & XFS_ILOG_DFORK;
++	unsigned int			fork_size;
 +
-+	if (ldip->di_metatype >= XFS_METAFILE_MAX)
-+		return __this_address;
-+
-+	/* Metadata files can only be directories or regular files */
-+	if (!S_ISDIR(ldip->di_mode) && !S_ISREG(ldip->di_mode))
-+		return __this_address;
-+
-+	/* They must have zero access permissions */
-+	if (ldip->di_mode & 0777)
-+		return __this_address;
-+
-+	/* DMAPI event and state masks are zero */
-+	if (ldip->di_dmevmask || ldip->di_dmstate)
-+		return __this_address;
-+
-+	/*
-+	 * User and group IDs must be zero.  The project ID is used for
-+	 * grouping inodes.  Metadata inodes are never accounted to quotas.
-+	 */
-+	if (ldip->di_uid || ldip->di_gid)
-+		return __this_address;
-+
-+	/* Mandatory inode flags must be set */
-+	if (S_ISDIR(ldip->di_mode)) {
-+		if ((ldip->di_flags & XFS_METADIR_DIFLAGS) != XFS_METADIR_DIFLAGS)
-+			return __this_address;
-+	} else {
-+		if ((ldip->di_flags & XFS_METAFILE_DIFLAGS) != XFS_METAFILE_DIFLAGS)
-+			return __this_address;
- 	}
- 
--	return 0;
-+	/* dax flags2 must not be set */
-+	if (ldip->di_flags2 & XFS_DIFLAG2_DAX)
-+		return __this_address;
-+
-+	return NULL;
-+}
-+
-+/*
-+ * Verify the logged inode core. This is the host order counterpart of
-+ * xfs_dinode_verify(), restricted to the fields carried in the log dinode
-+ * core. The checks that read the data or attribute fork contents are done
-+ * separately against the logged fork regions, and the checks that only apply
-+ * to a written on-disk inode (the CRC, di_next_unlinked, the LSN) do not apply
-+ * to the log dinode at all.
-+ */
-+static xfs_failaddr_t
-+xlog_dinode_verify(
-+	struct xfs_mount	*mp,
-+	xfs_ino_t		ino,
-+	struct xfs_log_dinode	*ldip)
-+{
-+	xfs_failaddr_t		fa;
-+	uint16_t		mode;
-+	uint16_t		flags;
-+	uint64_t		flags2;
-+
-+	if (ldip->di_magic != XFS_DINODE_MAGIC)
-+		return __this_address;
-+
-+	/*
-+	 * Only inode versions 2 and 3 are valid. Verify the version specific
-+	 * integrity information, which for v3 must be checked before the rest
-+	 * of the core so it can be trusted.
-+	 */
-+	switch (ldip->di_version) {
-+	case 2:
-+		if (ldip->di_metatype)
++	switch (ldip->di_format) {
++	case XFS_DINODE_FMT_LOCAL:
++		if (S_ISREG(ldip->di_mode))
 +			return __this_address;
 +		break;
-+	case 3:
-+		if (!xfs_has_v3inodes(mp))
-+			return __this_address;
-+		if (ldip->di_ino != ino)
-+			return __this_address;
-+		if (!uuid_equal(&ldip->di_uuid, &mp->m_sb.sb_meta_uuid))
-+			return __this_address;
-+		if (!(ldip->di_flags2 & XFS_DIFLAG2_METADATA) &&
-+		    ldip->di_metatype)
-+			return __this_address;
++	case XFS_DINODE_FMT_EXTENTS:
++	case XFS_DINODE_FMT_BTREE:
++	case XFS_DINODE_FMT_META_BTREE:
 +		break;
 +	default:
 +		return __this_address;
 +	}
 +
-+	/* don't allow invalid i_size */
-+	if (ldip->di_size & (1ULL << 63))
-+		return __this_address;
-+
-+	mode = ldip->di_mode;
-+	if (mode && xfs_mode_to_ftype(mode) == XFS_DIR3_FT_UNKNOWN)
-+		return __this_address;
-+
-+	/*
-+	 * No zero-length symlinks/dirs unless they're unlinked and hence being
-+	 * inactivated.
-+	 */
-+	if ((S_ISLNK(mode) || S_ISDIR(mode)) && ldip->di_size == 0) {
-+		if (ldip->di_nlink)
-+			return __this_address;
-+	}
-+
-+	fa = xlog_dinode_verify_extent_counts(mp, ldip);
-+	if (fa)
-+		return fa;
-+
-+	flags = ldip->di_flags;
-+
-+	if (mode && (flags & XFS_DIFLAG_REALTIME) && !mp->m_rtdev_targp)
-+		return __this_address;
-+
-+	/* check for illegal values of forkoff */
-+	fa = xfs_inode_verify_forkoff(mp, ldip->di_forkoff, ldip->di_format);
-+	if (fa)
-+		return fa;
-+
-+	/* Do we have appropriate data fork formats for the mode? */
-+	switch (mode & S_IFMT) {
-+	case S_IFIFO:
-+	case S_IFCHR:
-+	case S_IFBLK:
-+	case S_IFSOCK:
-+		if (ldip->di_format != XFS_DINODE_FMT_DEV)
-+			return __this_address;
-+		break;
-+	case S_IFREG:
-+	case S_IFLNK:
-+	case S_IFDIR:
-+	case 0:
-+		/* Fork format is verified against the logged fork regions. */
-+		break;
-+	default:
-+		return __this_address;
-+	}
-+
-+	/* extent size hint validation */
-+	fa = xfs_inode_validate_extsize(mp, ldip->di_extsize, mode, flags);
-+	if (fa)
-+		return fa;
-+
-+	/* only version 3 or greater inodes are extensively verified here */
-+	if (ldip->di_version < 3)
++	if (!field)
 +		return NULL;
 +
-+	flags2 = ldip->di_flags2;
-+
-+	/* don't allow reflink/cowextsize if we don't have reflink */
-+	if ((flags2 & (XFS_DIFLAG2_REFLINK | XFS_DIFLAG2_COWEXTSIZE)) &&
-+	     !xfs_has_reflink(mp))
++	if (item->ri_buf[2].iov_len != xlog_calc_iovec_len(ilfp->ilf_dsize))
 +		return __this_address;
 +
-+	/* only regular files get reflink */
-+	if ((flags2 & XFS_DIFLAG2_REFLINK) && (mode & S_IFMT) != S_IFREG)
-+		return __this_address;
++	fork_size = __xfs_inode_fork_size(mp, ldip->di_forkoff, XFS_DATA_FORK);
 +
-+	/* don't let reflink and realtime mix */
-+	if ((flags2 & XFS_DIFLAG2_REFLINK) && (flags & XFS_DIFLAG_REALTIME) &&
-+	    !xfs_has_rtreflink(mp))
-+		return __this_address;
-+
-+	if (xfs_has_zoned(mp) && ldip->di_metatype == XFS_METAFILE_RTRMAP) {
-+		if (ldip->di_used_blocks > mp->m_sb.sb_rgextents)
++	switch (ldip->di_format) {
++	case XFS_DINODE_FMT_LOCAL:
++		if (field != XFS_ILOG_DDATA)
 +			return __this_address;
-+	} else {
-+		/* COW extent size hint validation */
-+		fa = xfs_inode_validate_cowextsize(mp, ldip->di_cowextsize,
-+				mode, flags, flags2);
-+		if (fa)
-+			return fa;
-+	}
-+
-+	/* bigtime iflag can only happen on bigtime filesystems */
-+	if (xfs_log_dinode_has_bigtime(ldip) && !xfs_has_bigtime(mp))
-+		return __this_address;
-+
-+	if (flags2 & XFS_DIFLAG2_METADATA) {
-+		fa = xlog_dinode_verify_metadir(mp, ldip);
-+		if (fa)
-+			return fa;
++		if (ilfp->ilf_dsize > fork_size)
++			return __this_address;
++		break;
++	case XFS_DINODE_FMT_EXTENTS:
++		if (field != XFS_ILOG_DEXT)
++			return __this_address;
++		if (ilfp->ilf_dsize > fork_size)
++			return __this_address;
++		break;
++	case XFS_DINODE_FMT_BTREE:
++	case XFS_DINODE_FMT_META_BTREE:
++		if (field != XFS_ILOG_DBROOT)
++			return __this_address;
++		break;
 +	}
 +
 +	return NULL;
- }
- 
- static inline int
-@@ -315,8 +492,9 @@ xlog_recover_inode_nregions(
- }
- 
- /*
-- * The format header (region 0) is logged in either the host format or the 32
-- * bit on-disk format, so it must match one of those two sizes.
-+ * Region 0 is the format header, logged in either the host format or the 32 bit
-+ * on-disk format, so it must match one of those two sizes. Region 1 is the log
-+ * dinode core, always logged at the size the running filesystem uses.
-  */
- static int
- xlog_recover_inode_validate_region(
-@@ -326,14 +504,25 @@ xlog_recover_inode_validate_region(
- {
- 	size_t				len = item->ri_buf[region_index].iov_len;
- 
--	if (region_index > 0)
-+	if (region_index == 0) {
-+		if (len != sizeof(struct xfs_inode_log_format) &&
-+		    len != sizeof(struct xfs_inode_log_format_32)) {
-+			xfs_warn(log->l_mp,
-+				"INODE: bad format region length %zu recovered.",
-+				len);
-+			return -EFSCORRUPTED;
-+		}
- 		return 0;
++}
++
++/*
++ * Verify the logged attribute fork against the core and the fork region that
++ * carries it, as for the data fork. The attribute fork has no local device or
++ * metadata btree format.
++ */
++static xfs_failaddr_t
++xlog_dinode_verify_afork(
++	struct xfs_mount		*mp,
++	struct xfs_log_dinode		*ldip,
++	struct xfs_inode_log_format	*ilfp,
++	struct xlog_recover_item	*item)
++{
++	unsigned int			field = ilfp->ilf_fields & XFS_ILOG_AFORK;
++	unsigned int			fork_size;
++	unsigned int			region;
++
++	switch (ldip->di_aformat) {
++	case XFS_DINODE_FMT_LOCAL:
++	case XFS_DINODE_FMT_EXTENTS:
++	case XFS_DINODE_FMT_BTREE:
++		break;
++	default:
++		return __this_address;
 +	}
- 
--	if (len != sizeof(struct xfs_inode_log_format) &&
--	    len != sizeof(struct xfs_inode_log_format_32)) {
--		xfs_warn(log->l_mp,
--			"INODE: bad format region length %zu recovered.", len);
--		return -EFSCORRUPTED;
-+	if (region_index == 1) {
-+		if (len != xfs_log_dinode_size(log->l_mp)) {
-+			xfs_warn(log->l_mp,
-+				"INODE: bad core region length %zu recovered.",
-+				len);
-+			return -EFSCORRUPTED;
-+		}
-+		return 0;
- 	}
- 
- 	return 0;
-@@ -468,10 +657,11 @@ xlog_recover_inode_check_location(
- }
- 
- /*
-- * Validate the format header once it is in host format. The item size records
-- * how many regions the item should have, the set of logged fields fixes what
-- * that count must be, and the inode number fixes the buffer location, so all of
-- * these are checked against the header here.
-+ * Validate the format header once it is in host format, then the log dinode
-+ * core it describes. The item size records how many regions the item should
-+ * have, the set of logged fields fixes what that count must be, and the inode
-+ * number fixes the buffer location, so all of these are checked against the
-+ * header here.
-  */
- static int
- xlog_recover_inode_validate_item(
-@@ -479,6 +669,8 @@ xlog_recover_inode_validate_item(
- 	struct xlog_recover_item	*item)
- {
- 	struct xfs_inode_log_format	*ilfp;
-+	struct xfs_log_dinode		*ldip;
-+	xfs_failaddr_t			fa;
- 	unsigned int			nregions;
- 	int				error;
- 
-@@ -520,7 +712,20 @@ xlog_recover_inode_validate_item(
++
++	if (!field)
++		return NULL;
++
++	region = (ilfp->ilf_fields & XFS_ILOG_DFORK) ? 3 : 2;
++	if (item->ri_buf[region].iov_len != xlog_calc_iovec_len(ilfp->ilf_asize))
++		return __this_address;
++
++	fork_size = __xfs_inode_fork_size(mp, ldip->di_forkoff, XFS_ATTR_FORK);
++
++	switch (ldip->di_aformat) {
++	case XFS_DINODE_FMT_LOCAL:
++		if (field != XFS_ILOG_ADATA)
++			return __this_address;
++		if (ilfp->ilf_asize > fork_size)
++			return __this_address;
++		break;
++	case XFS_DINODE_FMT_EXTENTS:
++		if (field != XFS_ILOG_AEXT)
++			return __this_address;
++		if (ilfp->ilf_asize > fork_size)
++			return __this_address;
++		break;
++	case XFS_DINODE_FMT_BTREE:
++		if (field != XFS_ILOG_ABROOT)
++			return __this_address;
++		break;
++	}
++
++	return NULL;
++}
++
+ static inline int
+ xlog_recover_inode_dbroot(
+ 	struct xfs_mount	*mp,
+@@ -725,6 +847,36 @@ xlog_recover_inode_validate_item(
  		return -EFSCORRUPTED;
  	}
  
--	return xlog_recover_inode_check_location(log, ilfp);
-+	error = xlog_recover_inode_check_location(log, ilfp);
-+	if (error)
-+		return error;
++	/*
++	 * A device inode holds its rdev in the format header and logs no data
++	 * fork region. Any other inode has its logged data fork verified against
++	 * the core and the fork offset.
++	 */
++	if (ldip->di_format == XFS_DINODE_FMT_DEV) {
++		if (ilfp->ilf_fields & XFS_ILOG_DFORK) {
++			xfs_warn(log->l_mp,
++				"INODE: device inode 0x%llx logged a data fork.",
++				ilfp->ilf_ino);
++			return -EFSCORRUPTED;
++		}
++	} else {
++		fa = xlog_dinode_verify_dfork(log->l_mp, ldip, ilfp, item);
++		if (fa) {
++			xfs_warn(log->l_mp,
++				"INODE: inode 0x%llx logged data fork failed validation at %pS",
++				ilfp->ilf_ino, fa);
++			return -EFSCORRUPTED;
++		}
++	}
 +
-+	ldip = item->ri_buf[1].iov_base;
-+	fa = xlog_dinode_verify(log->l_mp, ilfp->ilf_ino, ldip);
++	fa = xlog_dinode_verify_afork(log->l_mp, ldip, ilfp, item);
 +	if (fa) {
 +		xfs_warn(log->l_mp,
-+			"INODE: inode 0x%llx log dinode failed validation at %pS",
++			"INODE: inode 0x%llx logged attr fork failed validation at %pS",
 +			ilfp->ilf_ino, fa);
 +		return -EFSCORRUPTED;
 +	}
 +
-+	return 0;
+ 	return 0;
  }
  
- STATIC int
-@@ -541,7 +746,6 @@ xlog_recover_inode_commit_pass2(
- 	int				attr_index;
- 	uint				fields;
- 	struct xfs_log_dinode		*ldip;
--	uint				isize;
- 	xfs_failaddr_t			fa;
+@@ -840,10 +992,6 @@ xlog_recover_inode_commit_pass2(
+ 		goto out_owner_change;
+ 	len = item->ri_buf[2].iov_len;
+ 	src = item->ri_buf[2].iov_base;
+-	ASSERT(in_f->ilf_size <= 4);
+-	ASSERT((in_f->ilf_size == 3) || (fields & XFS_ILOG_AFORK));
+-	ASSERT(!(fields & XFS_ILOG_DFORK) ||
+-	       (len == xlog_calc_iovec_len(in_f->ilf_dsize)));
  
  	/*
-@@ -558,28 +762,8 @@ xlog_recover_inode_commit_pass2(
- 			0, &bp, &xfs_inode_buf_ops);
- 	if (error)
- 		return error;
--	ASSERT(in_f->ilf_fields & XFS_ILOG_CORE);
- 	dip = xfs_buf_offset(bp, in_f->ilf_boffset);
--
--	/*
--	 * Make sure the place we're flushing out to really looks
--	 * like an inode!
--	 */
--	if (XFS_IS_CORRUPT(mp, !xfs_verify_magic16(bp, dip->di_magic))) {
--		xfs_alert(mp,
--	"%s: Bad inode magic number, dip = "PTR_FMT", dino bp = "PTR_FMT", ino = %lld",
--			__func__, dip, bp, in_f->ilf_ino);
--		error = -EFSCORRUPTED;
--		goto out_release;
--	}
- 	ldip = item->ri_buf[1].iov_base;
--	if (XFS_IS_CORRUPT(mp, ldip->di_magic != XFS_DINODE_MAGIC)) {
--		xfs_alert(mp,
--			"%s: Bad inode log record, rec ptr "PTR_FMT", ino %lld",
--			__func__, item, in_f->ilf_ino);
--		error = -EFSCORRUPTED;
--		goto out_release;
--	}
+ 	 * The recovered inode is verified only after the fork data has been
+@@ -877,10 +1025,7 @@ xlog_recover_inode_commit_pass2(
+ 		break;
  
- 	/*
- 	 * If the inode has an LSN in it, recover the inode only if the on-disk
-@@ -636,58 +820,6 @@ xlog_recover_inode_commit_pass2(
+ 	default:
+-		/*
+-		 * There are no data fork flags set.
+-		 */
+-		ASSERT((fields & XFS_ILOG_DFORK) == 0);
++		/* No data fork was logged. */
+ 		break;
  	}
  
+@@ -897,7 +1042,6 @@ xlog_recover_inode_commit_pass2(
+ 		}
+ 		len = item->ri_buf[attr_index].iov_len;
+ 		src = item->ri_buf[attr_index].iov_base;
+-		ASSERT(len == xlog_calc_iovec_len(in_f->ilf_asize));
  
--	if (unlikely(S_ISREG(ldip->di_mode))) {
--		if (ldip->di_format != XFS_DINODE_FMT_EXTENTS &&
--		    ldip->di_format != XFS_DINODE_FMT_BTREE &&
--		    ldip->di_format != XFS_DINODE_FMT_META_BTREE) {
--			XFS_CORRUPTION_ERROR(
--				"Bad log dinode data fork format for regular file",
--				XFS_ERRLEVEL_LOW, mp, ldip, sizeof(*ldip));
--			xfs_alert(mp,
--				"Bad inode 0x%llx, data fork format 0x%x",
--				in_f->ilf_ino, ldip->di_format);
+ 		switch (in_f->ilf_fields & XFS_ILOG_AFORK) {
+ 		case XFS_ILOG_ADATA:
+@@ -912,12 +1056,6 @@ xlog_recover_inode_commit_pass2(
+ 					 len, (struct xfs_bmdr_block *)dest,
+ 					 XFS_DFORK_ASIZE(dip, mp));
+ 			break;
+-
+-		default:
+-			xfs_warn(log->l_mp, "%s: Invalid flag", __func__);
+-			ASSERT(0);
 -			error = -EFSCORRUPTED;
 -			goto out_release;
--		}
--	} else if (unlikely(S_ISDIR(ldip->di_mode))) {
--		if ((ldip->di_format != XFS_DINODE_FMT_EXTENTS) &&
--		    (ldip->di_format != XFS_DINODE_FMT_BTREE) &&
--		    (ldip->di_format != XFS_DINODE_FMT_LOCAL)) {
--			XFS_CORRUPTION_ERROR(
--				"Bad log dinode data fork format for directory",
--				XFS_ERRLEVEL_LOW, mp, ldip, sizeof(*ldip));
--			xfs_alert(mp,
--				"Bad inode 0x%llx, data fork format 0x%x",
--				in_f->ilf_ino, ldip->di_format);
--			error = -EFSCORRUPTED;
--			goto out_release;
--		}
--	}
--
--	error = xlog_dinode_verify_extent_counts(mp, ldip);
--	if (error)
--		goto out_release;
--
--	if (unlikely(ldip->di_forkoff > mp->m_sb.sb_inodesize)) {
--		XFS_CORRUPTION_ERROR("Bad log dinode fork offset",
--				XFS_ERRLEVEL_LOW, mp, ldip, sizeof(*ldip));
--		xfs_alert(mp,
--			"Bad inode 0x%llx, di_forkoff 0x%x",
--			in_f->ilf_ino, ldip->di_forkoff);
--		error = -EFSCORRUPTED;
--		goto out_release;
--	}
--	isize = xfs_log_dinode_size(mp);
--	if (unlikely(item->ri_buf[1].iov_len > isize)) {
--		XFS_CORRUPTION_ERROR("Bad log dinode size", XFS_ERRLEVEL_LOW,
--				     mp, ldip, sizeof(*ldip));
--		xfs_alert(mp,
--			"Bad inode 0x%llx log dinode size 0x%zx",
--			in_f->ilf_ino, item->ri_buf[1].iov_len);
--		error = -EFSCORRUPTED;
--		goto out_release;
--	}
--
- 	/*
- 	 * Recover the log dinode inode into the on disk inode.
- 	 *
+ 		}
+ 	}
+ 
 -- 
 2.55.0
 
