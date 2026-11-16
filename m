@@ -1,50 +1,50 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794871066;
-	b=Tz7O+orcrvTvSQ0GjybV9CpWwiGemG/CRv7a0Ydowzj1037ptxOfVLxvETI/HbfNcPYc
-	 Skc7TzYgp5vpX+e2azpD0roRVnwCxqZxicpbf5Es2mbP4h3S7PFEzImuO74SG2lOiIIR1
-	 lKdsOaXIdnl1a78f53g0VtQy+Aqi59iugV/8xUEt/ZK9URosCfYI9RP3oXTmdNgxzXEVC
-	 tHGDd/1VXFt4KGov2bVBBnfTDInt/lb3e2nMrPlov9gmWMr9MFE17vP5ybKeGP3RkmXlr
-	 +5c/libCdT2xC4wxiIEMSxTNtrV5WLfDhQPih3blX08Up1KHOJZ8I/6iEOmfzbAZGug==
+	t=1794871067;
+	b=vvh+6YermAhjieWJCMzFeocUGKPYqxnmH245zHjXRhCffKRY4gpX80O/73bJrSY7deej
+	 1TNE9IogsRNtHnVjIPUQjvSdLuznzjeXlGo1CK/ooizpxldcH4xQLLgTgo6yn5dlIPgZ2
+	 lXf8q/cnOWV4iNZku0XkRkWvVL43/Y9E6CSCYInDrIz2QZ+YHE9ufPd77lKPtjAqjMizp
+	 ZUPPtwynHe4JIRRfxYUA+fEVXA/jXia68Eh80BTdpvGWDRcXsjCTVilXY3Lcu70RWg/m6
+	 RNK0aiHei4LSwt93AmxAWY2XgQclVBBIRpIvU+lXJEXOKwXaW8iPm0/AK7EZt9liLQw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794871066;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794871067;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=CB1S0zNA4qycxHQNWTu3sGoqqvfCUaijZuxyH6Orc/E=;
-	b=2yTqKkXA2grhMlHoByUq/pnwnJwMb35d4w7dUx5XyctiE8YYGS0syvx2NvDcbNlsFQM9
-	 uR6QHT3DloIVx6G7My0blIIvtNDup561uCOHJGZYQb1PN2cDOXs4Gbls9VBJU5Z0nhPEg
-	 Y1rMaXs939rcE7XYCkkHbadqWCxJWrSUgEJ9DK7yoZR+/TgUw2AdRF+Qw2abk4mDqp2se
-	 T9/4bY6buXR4M5VN1tHubQxBQ8bizuRoQCnfAPvxKc5ruyBTK50FuN8doC08NwHYKkHtN
-	 We79SVeb71AeE/w4Fb7wXDtdEJsh0M+aJi78NgNFYRlDnzSbN4cOZWNs6KVWO5kLARg==
+	bh=cvO8Hr8GE7NYjG/AbcDVpb+FWSBtY9puIt4jNx60IXU=;
+	b=LR+GKPWLccjtGW9bleXSTy2eRmOlzCsoNhpqUyXP6+wZt1Yt0EogRB+nspWa2HOZrYiu
+	 95/3ilGY6yEJ5Wx4MMECfN8P7lB/wmVgy2cqrxaFLyGAztoujlclxt6gwsCdQ/pGVk+Vk
+	 FYShel+USHcgjEzWdchS3Z1RT3O4G6EfPbrkefyWjMdAJO9ZUXyok3xYHudCDsn+c0oLw
+	 gntsZE8BJ2Do4CKnjMLgYTb+becH395LOlyk5fvkHn5LJSsf6LWVRGHAzSkc4rdSZrXKL
+	 rDYRRtsq2DAQnfyQNhn6Bk6bKWJp0MSbZtMUXc1u3vS5Sqnu+AIBfrJQj0JjHrXdvZA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HSxhR4d6;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GXYJ8vU2;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 682CA606A33F
-	for <linux-xfs@vger.kernel.org>; Mon, 16 Nov 2026 23:17:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D999606A329
+	for <linux-xfs@vger.kernel.org>; Mon, 16 Nov 2026 23:17:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HSxhR4d6
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6E8741F000C4;
-	Mon, 16 Nov 2026 23:17:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GXYJ8vU2
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F53B1F000C4;
+	Mon, 16 Nov 2026 23:17:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794871066;
-	bh=CB1S0zNA4qycxHQNWTu3sGoqqvfCUaijZuxyH6Orc/E=;
+	s=k20260515; t=1794871067;
+	bh=cvO8Hr8GE7NYjG/AbcDVpb+FWSBtY9puIt4jNx60IXU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=HSxhR4d6GA+Omsf5xBbxaSpxEok9F50SVRAmazqwahsxNe3tMRCZiOb775zG6HsGJ
-	 ygO+DkaVTnAuw7LqoXaCWVoAxqxXyYKis2ByRSRwd5OvVS8vAzXmFBMQ/w1Gg0wUGh
-	 ozFWPuK+YFESYfILMg8hCIgdwaLVxhjX5lvHFG3Fnb5pMYd9w7q8c7pyoz/OmgrTIP
-	 /1fso34MprFpcWsSgRO9QinjTR9RuAR/mdofCO9jW0SDZpRfyUJ9bLC/VRsu0Fi6yN
-	 ytYoz3J9O0XZbxCG5CmVAzT/FiaxoLmFP2KCrRW1IHsUFKOmAWYdTOtknZeG1+u8lh
-	 BAaJAtG3JULWA==
+	b=GXYJ8vU2zQeOUEqQEnrhWCIi0eBjCloROlXnwY6vZ0mR9c7jO4IVThdlv0WrTU1UC
+	 4h2IWohlKFRvIVasSfdGDos/1TMv11fohxblqZsi91aJvxymU4MpUtSqIptq8Vi9F0
+	 6MMS7gGJX0LG/HLLgsYd8FwCLtdWOx09r5ouXrfbMxx56fDL53oHm1hybWsEy2+6tU
+	 S7Ik8PPEnXFUW7H8wqlcYDmec5nu3UlQztjhANIeTApY4OnOhEAS1dT8fmCdv1rCMZ
+	 fbPF7u2PMkB14zw0SpTRFQ4Tyt9d/yZ+Ah5ZDJO/0BK34cGdMK0HuKrvZ2zyj03cRZ
+	 pJk239X/HUm7Q==
 From: Dave Chinner <dgc@kernel.org>
 To: linux-xfs@vger.kernel.org
 Cc: cem@kernel.org
-Subject: [PATCH 25/59] xfs: handle zero length continuation op headers during recovery
-Date: Tue, 17 Nov 2026 10:14:42 +1100
-Message-ID: <20261116231707.3625263-26-dgc@kernel.org>
+Subject: [PATCH 26/59] xfs: bound the assembled region size during recovery
+Date: Tue, 17 Nov 2026 10:14:43 +1100
+Message-ID: <20261116231707.3625263-27-dgc@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20261116231707.3625263-1-dgc@kernel.org>
 References: <20261116231707.3625263-1-dgc@kernel.org>
@@ -59,155 +59,80 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The log writer can start the transaction header at the start of a checkpoint
-with a zero length op header, with the header data following in the
-continuation. This is the only region the log writer ever opens with a zero
-length op header. Recovery used to handle this as a special case in the
-bespoke transaction header decode. Routing the transaction header through the
-generic item assembly dropped that handling.
+A region split across continuation op headers is grown one fragment at a time
+with no limit on the total size, so a corrupt continuation stream can drive an
+unbounded allocation during recovery.
 
-A zero length op header that opens the transaction header carries nothing to
-decode, so the item cannot be initialised until the continuation arrives.
-Leave a sentinel in r_cur_item for this case so the continuation is decoded as
-the first region of the transaction header.
-
-A zero length op header anywhere else in a checkpoint is corrupt, as is a zero
-length op header that completes a region. Reject them. A continuation that
-reaches the append path with no item under assembly is also treated as a
-corrupt log.
+Add XLOG_MAX_REGION_SIZE - the largest object logged in a single region - as a
+format level bound usable by both the log write and recovery paths, and reject
+a continuation once the assembled region would exceed it. Use the same constant
+for the existing per-op-header length check.
 
 Assisted-by: LLM
 Signed-off-by: Dave Chinner <dgc@kernel.org>
 ---
- fs/xfs/libxfs/xfs_log_recover.h |  9 +++++
- fs/xfs/xfs_log_recover.c        | 59 ++++++++++++++++++++++++++++-----
- 2 files changed, 60 insertions(+), 8 deletions(-)
+ fs/xfs/libxfs/xfs_log_format.h |  8 ++++++++
+ fs/xfs/xfs_log_recover.c       | 21 ++++++++++++---------
+ 2 files changed, 20 insertions(+), 9 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_log_recover.h b/fs/xfs/libxfs/xfs_log_recover.h
-index f4dbed616ee6..d2e128fca058 100644
---- a/fs/xfs/libxfs/xfs_log_recover.h
-+++ b/fs/xfs/libxfs/xfs_log_recover.h
-@@ -171,6 +171,15 @@ struct xlog_recover {
- 	struct xlog_recover_item *r_cur_item;	/* item currently being rebuilt */
- };
+diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
+index 6e620380d5dc..6d49cb831d73 100644
+--- a/fs/xfs/libxfs/xfs_log_format.h
++++ b/fs/xfs/libxfs/xfs_log_format.h
+@@ -38,6 +38,14 @@ typedef uint32_t xlog_tid_t;
+ 
+ #define XLOG_HEADER_SIZE	512
  
 +/*
-+ * The current recovery item can sometimes start with a zero length continuation
-+ * op header. In this case there is nothing to decode, so the recovery item
-+ * cannot be initialised yet. Leave this sentinel in r_cur_item instead so the
-+ * continuation initialises the recovery item from the start of the continued
-+ * region data.
++ * The largest object that is logged in a single region: a whole buffer in a
++ * buffer log item, or a remote attribute value. This bounds the size of any
++ * single log region both when writing the log and when reassembling regions
++ * during recovery.
 + */
-+#define XLOG_RECOVER_CONT_ITEM	((struct xlog_recover_item *)1UL)
++#define XLOG_MAX_REGION_SIZE	max(XFS_MAX_BLOCKSIZE, XFS_XATTR_SIZE_MAX)
 +
- #define ITEM_TYPE(i)	(*(unsigned short *)(i)->ri_buf[0].iov_base)
+ /* Minimum number of transactions that must fit in the log (defined by mkfs) */
+ #define XFS_MIN_LOG_FACTOR	3
  
- #define	XLOG_RECOVER_CRCPASS	0
 diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 0c7788345cd3..aea6f5404cec 100644
+index aea6f5404cec..374de5d21da6 100644
 --- a/fs/xfs/xfs_log_recover.c
 +++ b/fs/xfs/xfs_log_recover.c
-@@ -2400,6 +2400,18 @@ xlog_recover_add_to_cont_trans(
- 	char			*ptr, *old_ptr;
- 	int			old_len;
- 
-+	/*
-+	 * A continuation must append to a region under assembly. The only valid
-+	 * way to reach here without one is a region opened by a zero length op
-+	 * header, which the dispatch in xlog_recovery_process_trans() routes to
-+	 * xlog_recover_add_to_trans() instead. So no current item here means the
-+	 * log is corrupt.
-+	 */
-+	if (!item) {
-+		xfs_warn(log->l_mp, "%s: continuation with no item", __func__);
-+		return -EFSCORRUPTED;
-+	}
-+
+@@ -2415,6 +2415,16 @@ xlog_recover_add_to_cont_trans(
  	old_ptr = item->ri_buf[item->ri_cnt-1].iov_base;
  	old_len = item->ri_buf[item->ri_cnt-1].iov_len;
  
-@@ -2445,8 +2457,28 @@ xlog_recover_add_to_trans(
- 	char			*ptr;
- 	int			error;
- 
--	if (!len)
 +	/*
-+	 * Only the transaction header at the start of a checkpoint can be
-+	 * opened by a zero length fragment, with its data following in the
-+	 * continuation. A zero length fragment anywhere else, or one that
-+	 * completes a region, is corrupt.
-+	 *
-+	 * There is nothing to decode yet, so leave a sentinel in r_cur_item so
-+	 * that xlog_recover_process_trans() will call here again with the
-+	 * continuation that carries the data we need to initialise the
-+	 * recovery item.
++	 * Bound the assembled region size before growing the buffer so a corrupt
++	 * continuation stream cannot drive an unbounded allocation.
 +	 */
-+	if (!len) {
-+		if (region_complete || trans->r_cur_item ||
-+		    trans->r_theader.th_magic == XFS_TRANS_HEADER_MAGIC) {
-+			xfs_warn(log->l_mp,
-+				"%s: zero length region in transaction 0x%x",
-+				__func__, trans->r_log_tid);
-+			return -EFSCORRUPTED;
-+		}
-+		trans->r_cur_item = XLOG_RECOVER_CONT_ITEM;
- 		return 0;
++	if (old_len + len > XLOG_MAX_REGION_SIZE) {
++		xfs_warn(log->l_mp, "%s: region too large (0x%x)",
++			__func__, old_len + len);
++		return -EFSCORRUPTED;
 +	}
++
+ 	ptr = kvrealloc(old_ptr, len + old_len, GFP_KERNEL);
+ 	if (!ptr)
+ 		return -ENOMEM;
+@@ -2836,15 +2846,8 @@ xlog_recover_validate_ophdr(
+ 		return ERR_PTR(-EFSCORRUPTED);
+ 	}
  
- 	ptr = xlog_kvmalloc(len);
- 	memcpy(ptr, dp, len);
-@@ -2461,7 +2493,7 @@ xlog_recover_add_to_trans(
- 	 * fragment here.
- 	 */
- 	item = trans->r_cur_item;
--	if (!item) {
-+	if (!item || item == XLOG_RECOVER_CONT_ITEM) {
- 		struct xfs_inode_log_format *in_f = /* any will do */
- 			(struct xfs_inode_log_format *)ptr;
- 
-@@ -2517,9 +2549,10 @@ xlog_recover_free_trans(
- 
- 	/*
- 	 * An item still being rebuilt has not been added to the item queue yet,
--	 * so free it separately.
-+	 * so free it separately. The sentinel is not a real item and has nothing
-+	 * to free.
- 	 */
--	if (trans->r_cur_item)
-+	if (trans->r_cur_item && trans->r_cur_item != XLOG_RECOVER_CONT_ITEM)
- 		xlog_recover_free_item(trans->r_cur_item);
- 
- 	/* Free the transaction recover structure */
-@@ -2564,15 +2597,25 @@ xlog_recovery_process_trans(
- 	 */
- 	switch (flags) {
- 	/* expected flag values */
-+	case XLOG_WAS_CONT_TRANS:
-+		/*
-+		 * A continuation appends to the region under assembly, unless
-+		 * the region was opened by a zero length op header. In that case
-+		 * r_cur_item holds the sentinel and this continuation carries
-+		 * the first data of the region, so fall through and decode it as
-+		 * the first region of a new item.
-+		 */
-+		if (trans->r_cur_item != XLOG_RECOVER_CONT_ITEM) {
-+			error = xlog_recover_add_to_cont_trans(log, trans, dp,
-+							len, region_complete);
-+			break;
-+		}
-+		fallthrough;
- 	case 0:
- 	case XLOG_CONTINUE_TRANS:
- 		error = xlog_recover_add_to_trans(log, trans, dp, len,
- 						  region_complete);
- 		break;
--	case XLOG_WAS_CONT_TRANS:
--		error = xlog_recover_add_to_cont_trans(log, trans, dp, len,
--						       region_complete);
--		break;
- 	case XLOG_COMMIT_TRANS:
- 		/*
- 		 * The commit record is written after all items in the
+-	/*
+-	 * A single region cannot be larger than the largest object we log in
+-	 * one region. That is a whole buffer in a buffer log item (up to
+-	 * XFS_MAX_BLOCKSIZE, e.g. a 64k directory block on a 4k block size
+-	 * filesystem) or a remote attribute value (up to XFS_XATTR_SIZE_MAX,
+-	 * logged in its own region); both are 64k.
+-	 */
+-	BUILD_BUG_ON(XFS_XATTR_SIZE_MAX > XFS_MAX_BLOCKSIZE);
+-	if (len > XFS_MAX_BLOCKSIZE) {
++	/* A single region cannot be larger than the largest object we log. */
++	if (len > XLOG_MAX_REGION_SIZE) {
+ 		if (!quiet)
+ 			xfs_warn(log->l_mp, "%s: length 0x%x too large",
+ 				__func__, len);
 -- 
 2.55.0
 
