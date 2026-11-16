@@ -1,63 +1,63 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=111.22.67.151
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=111.22.67.135
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794793728;
-	b=3T+fIPBNVshiOkrYH6gHcgJiXIWsgua4teXOIstNfaecm/42SrZyVZ6gpEFqEki7ZXrG
-	 QX7/QCiDJbIJ9ASgPNtRvh+JVfeHSq6jWMs/I104vfLqgFdcNiIJxPH4TYMHncPA1WdRy
-	 Of0pEnluDj+h8SN8Ui5kYJlRJgjOCXfAauWedZLtqRSEvxEKg09ayQ4vD+SawRQ5cMuJE
-	 mNJpzotaP41jYLCoucp8NC46tCGSg0I7ff/rlU1D3b6QWXOsudwx+nsOe2LkE7klZemNR
-	 cXcfBE++RI8esZk81KHPUIA5LLcmqwGh6P0ainXFutBTNsFEEn6hZaZcxb8OEZDFlOQ==
+	t=1794794727;
+	b=lb4phWsIwDMi6Q8Fr87PFePZwHF4Oi3lLgY0NIOXRoXN9j0Qvjq5b3fFy64CKIwDwKiW
+	 qtYZ1N7ctQf2MYs7mdBQW+uFwdlVpwWZEJxnb4o1RS1KKDf1fRQMpevmw2UlyK3V27IU3
+	 gtzcEqgqMb+0KDNhrq6fuo08Hrk0DutiWome3kE303lWlkHd6nTaBdIaN0eAhNNVEs/or
+	 vXR+PJ3TVm18WYdHCFx9+At9D7bXW3hmLgS0KCZPIcUejXXUb5LohdmW2ksLwxUKLNtzM
+	 5GMe7/JqCdJ/fE49wq1fKgVOQsURzWVKDhMBOb7Zksd4kQ4jMmPdllfx7eDVsaAoKKg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794793728;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794794727;
 	h=DMARC-Filter:DKIM-Signature:X-RM-TagInfo:X-RM-SPAM-FLAG:Received:
 	 X-RM-TRANSID:X-RM-TagInfo:X-RM-SPAM-FLAG:Received:X-RM-TRANSID:From:
 	 To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=ZGXJ9Z6c5QRKFJOfmStwKcNo6B6D+MpUfYxYJOSZg1Y=;
-	b=0pwANh3W4VW7zFMemaH5126ZLx2RnYl4y7DLSorrGGizzmbelE/gi6JUzVjED9OOmLtx
-	 dGnwPSzisqDE6YAv/32bzTVzeZ88iKykHuwMBKdW30dBxmrGgdh5wRE7qXBAKyw3Pyed4
-	 LBdcwbuRuytwvTFu9i3gOxyAEAHsZy5rV9aNWX2EnZL1yj6gxnAIofo5XWfdEYEPcE30W
-	 DKEmd64g6mK37F8ZZBJMbQu5U1OyW6xHSHgaoe9tA7Ker4sZ4PNKcQAJz25LAN/6pEimj
-	 yvWWOh/5xh9eI4ZqH019bUFoQetNOtu9DiIdw7BFSHfmaJFR9wMr+JOEWXEQrDV27+w==
+	bh=2515uiLTOM/+vjYwb37E+7pSLDJDjWStwAr/vSQ+Lg8=;
+	b=B4zQ9J4qxRd7pyEsbksG92gXXYd+/e1Caccz/nJTVgQxHUFuyY7ri3XbUzJr7dg9uM8C
+	 YiPTXD12J4307sjTSWRzNeit4OU05fHZwtDUUPGJsPnwC+a/T9mYoEvrCDq2VkGy+ENz3
+	 siyh2Vv3Jswb2gFnzfNdnbF/JLZ5F3993FMmXYubccucrCX9vHYL1rcHoySREOTNRzpU2
+	 VS9lo4DzM4+J/Tvrwc0TwhQIDIOMEyJMhi9Diq95kMGAZ9M4pVL8PzTHnaNzr6Z3FOwGF
+	 7HBhZkL3V4VloKJJi/JEb2KhT/CeYJ5xC+rybFOprpW1W9uqp5ZtCU9eTYOh7+gmwVg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=cmss.chinamobile.com;
 	spf=pass smtp.mailfrom=cmss.chinamobile.com;
-	dkim=pass header.d=cmss.chinamobile.com header.i=@cmss.chinamobile.com header.a=rsa-sha256 header.s=default header.b=DjkUab7K;
-	arc=none smtp.remote-ip=111.22.67.151
-Received: from cmccmta8.chinamobile.com (cmccmta8.chinamobile.com [111.22.67.151])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 5CEE2606A331;
-	Mon, 16 Nov 2026 01:48:47 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5CEE2606A331
+	dkim=pass header.d=cmss.chinamobile.com header.i=@cmss.chinamobile.com header.a=rsa-sha256 header.s=default header.b=JIlKpums;
+	arc=none smtp.remote-ip=111.22.67.135
+Received: from cmccmta2.chinamobile.com (cmccmta2.chinamobile.com [111.22.67.135])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 472E5606A31C;
+	Mon, 16 Nov 2026 02:05:24 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 472E5606A31C
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmss.chinamobile.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmss.chinamobile.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=cmss.chinamobile.com header.i=@cmss.chinamobile.com header.a=rsa-sha256 header.s=default header.b=DjkUab7K
+	dkim=pass (1024-bit key) header.d=cmss.chinamobile.com header.i=@cmss.chinamobile.com header.a=rsa-sha256 header.s=default header.b=JIlKpums
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
 	d=cmss.chinamobile.com; s=default; l=0;
 	h=from:subject:message-id:to:cc:mime-version;
 	bh=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=;
-	b=DjkUab7KVkJ2HvI8uNxSlAuvJpMKfnzp6r++iAV5UOo8bmBsN++KrHP5k+eXRlAQ0ZTqqUU3FCoVs
-	 l6jTv0pg9sls0m+78poGDPH0lOCXYEKCz1zls2+gHxW4Ggzk7M18VauGBFBuHLKWi7OHkpGARxpaxt
-	 RV+cdWXgsm+7cLLQ=
+	b=JIlKpums5C2z7N7Joa5gWYg7JI+ZMMFU9RzKxu6/iy/V63sKeFszQ5nee/GeUlemdDaKv4yFzrj9T
+	 G/flvWJlLbJi5vomvTs3p7U1K/DHRlwBHQ7xUpbXhTkbsHebPouAGvpYdHNnAbhka3g76or9bLLaAO
+	 Crgeyf+UkbB0IFd0=
 X-RM-TagInfo: emlType=0                                       
 X-RM-SPAM-FLAG:00000000
 Received:from spf.mail.chinamobile.com (unknown[10.188.0.87])
-	by rmmx-syy-dmz-app06-12006 (RichMail) with SMTP id 2ee66afa60fb6ea-c669a;
-	Mon, 16 Nov 2026 09:48:44 +0800 (CST)
-X-RM-TRANSID:2ee66afa60fb6ea-c669a
+	by rmmx-syy-dmz-app07-12007 (RichMail) with SMTP id 2ee76afa64e21db-faeb0;
+	Mon, 16 Nov 2026 10:05:23 +0800 (CST)
+X-RM-TRANSID:2ee76afa64e21db-faeb0
 X-RM-TagInfo: emlType=0                                       
 X-RM-SPAM-FLAG:00000000
 Received:from fedora (unknown[223.108.79.102])
-	by rmsmtp-syy-appsvr02-12002 (RichMail) with SMTP id 2ee26afa60f06ba-77819;
-	Mon, 16 Nov 2026 09:48:44 +0800 (CST)
-X-RM-TRANSID:2ee26afa60f06ba-77819
+	by rmsmtp-syy-appsvr07-12007 (RichMail) with SMTP id 2ee76afa64deb3c-77a94;
+	Mon, 16 Nov 2026 10:05:23 +0800 (CST)
+X-RM-TRANSID:2ee76afa64deb3c-77a94
 From: Yiqing Wu <wuyiqing@cmss.chinamobile.com>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: linux-xfs@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Yiqing Wu <wuyiqing@cmss.chinamobile.com>
-Subject: [PATCH] xfs: remove unused variable in xchk_stats_estimate_bufsize()
-Date: Mon, 16 Nov 2026 09:48:02 +0800
-Message-ID: <20261116014802.16078-1-wuyiqing@cmss.chinamobile.com>
+Subject: [PATCH] xfs: remove unused variable in xrep_tempfile_copyin()
+Date: Mon, 16 Nov 2026 10:05:10 +0800
+Message-ID: <20261116020510.17329-1-wuyiqing@cmss.chinamobile.com>
 X-Mailer: git-send-email 2.56.0
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -70,40 +70,40 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The css variable in xchk_stats_estimate_bufsize() is initialized to
-point to the start of the cs_stats array and incremented on every
-iteration of the scan loop, but it is never dereferenced.  GCC flags
-this as a dead assignment when building with W=1:
+The pos variable in xrep_tempfile_copyin() is initialized from the
+starting file offset and incremented on every iteration of the copy
+loop, but it is never used.  GCC flags this as a dead assignment when
+building with W=1:
 
-  fs/xfs/scrub/stats.c:146:34: warning: variable css set but not used [-Wunused-but-set-variable=]
+  fs/xfs/scrub/tempfile.c:493:33: warning: variable pos set but not used [-Wunused-but-set-variable=]
 
 Drop the variable and the loop increment.
 
 Signed-off-by: Yiqing Wu <wuyiqing@cmss.chinamobile.com>
 ---
- fs/xfs/scrub/stats.c | 3 +--
+ fs/xfs/scrub/tempfile.c | 3 +--
  1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/fs/xfs/scrub/stats.c b/fs/xfs/scrub/stats.c
-index 6934d76cfd15..dfdac4e7b4ad 100644
---- a/fs/xfs/scrub/stats.c
-+++ b/fs/xfs/scrub/stats.c
-@@ -143,7 +143,6 @@ STATIC size_t
- xchk_stats_estimate_bufsize(
- 	struct xchk_stats	*cs)
- {
--	struct xchk_scrub_stats	*css = &cs->cs_stats[0];
- 	unsigned int		i;
- 	size_t			field_width;
- 	size_t			ret = 0;
-@@ -157,7 +156,7 @@ xchk_stats_estimate_bufsize(
- 			      offsetof(struct xchk_scrub_stats, checktime_us)) /
- 			     sizeof(uint64_t));
+diff --git a/fs/xfs/scrub/tempfile.c b/fs/xfs/scrub/tempfile.c
+index 59a9213a3c7d..6340afcc22cf 100644
+--- a/fs/xfs/scrub/tempfile.c
++++ b/fs/xfs/scrub/tempfile.c
+@@ -490,7 +490,6 @@ xrep_tempfile_copyin(
+ 	struct xfs_buf		*bp;
+ 	xfs_fileoff_t		flush_mask;
+ 	xfs_fileoff_t		end = off + len;
+-	loff_t			pos = XFS_FSB_TO_B(mp, off);
+ 	int			error = 0;
  
--	for (i = 0; i < XFS_SCRUB_TYPE_NR; i++, css++) {
-+	for (i = 0; i < XFS_SCRUB_TYPE_NR; i++) {
- 		if (!name_map[i])
- 			continue;
+ 	ASSERT(S_ISREG(VFS_I(sc->tempip)->i_mode));
+@@ -498,7 +497,7 @@ xrep_tempfile_copyin(
+ 	/* Flush buffers to disk every 512K */
+ 	flush_mask = XFS_B_TO_FSBT(mp, (1U << 19)) - 1;
+ 
+-	for (; off < end; off++, pos += mp->m_sb.sb_blocksize) {
++	for (; off < end; off++) {
+ 		struct xfs_bmbt_irec	map;
+ 		int			nmaps = 1;
  
 -- 
 2.56.0
