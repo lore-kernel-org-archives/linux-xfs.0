@@ -1,50 +1,50 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794871056;
-	b=qY9lJyitD0KaUf7ykl6gtQWGuDm93wiBpsBkh4AzW5Ts9Oa/2MGde3OkgscgGJjsSaSJ
-	 ITGVAfYDGyEgcb17Ae8SYErDTviisw1+n/F4xDm4SMdaDcksDf919ZbB4G1NJGWj61d7Z
-	 8H5qkXf4pluE+OfIicpwAVxASdYaJ4Js6zZoQtHMg4E68d4kVv6XxDQDfYJcqcNFGm/Ku
-	 PtDYL2xf4W9gnpoNwTjZP7hWq3O/gx+JuZQmJXZe6ja8B16cCz0UG23zpmqSmcNItDehp
-	 lNcjpWNOIbmOwy07SfWx9NA8Ibska+nHtLDKPOmo9m3/rXAj8Fxx5rbQc5RtP/sP3vw==
+	t=1794871057;
+	b=05vYqKHzLdIZr4s7+qLQVQKPAn0MdFxWLIZuF9lHFhXuPY7Wst7gT0v37TnCBjxZX3Wh
+	 DupSMwj2BUgGb+krv4UMxUDu/EbpZ2F2YFmBxHtxbu8ZCsFVqvpAl8j78ppVjIu7PcOmY
+	 XyvZxDfn5w8cbHYdO34jpchNr57eXasFONimIZ8ZzeEl9o/QySscjhtowvtFvZ/CYFf6V
+	 ic6aPoTboaPv594ot2OjVV+4y6lVkqRZoqUosk7xs2/ao8iY0oVawQ3KzQBDbeeP74glP
+	 h5BdVNYS6yzhF4dKYyfEht8Gz73HW2mj77iqNDRohserxamIoBeRuPKaqRtoIOu73zQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794871056;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794871057;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=Df7OwdKUvaN49gaARXXkA6jU7maCRyn06eIa1Qe2xgY=;
-	b=sUDO0HGLvhKM7X1kJiuiMCvN8sL/tc4VQhS24rWZjnJHlt+JC1nhn/xaWEWLJcJ9+G16
-	 sG9UJqUARS6wUKoGuEE/ypnYpdFl/6iOy5Ly2UxFm9PncmD34aINSmc+5jS/9dwvQCKkC
-	 tkrVxwJbPjlEHlcnihzvxMTRn7W+kPAjADCXjg4iuv4hS7vEFL++ecNMmgsFxfk6CPhZp
-	 vGTWqOFJZfnO1If5WUU9aWbCKZdB5EnfkFQP5W+GmpifJwKwoJDPS0muA82H0mkCM0sYr
-	 j37SYqCI4o4+BAy+4NqKll6/ELw1dyQqsyHONETuZNdTLyNQDxeSxVQ2svymSnnp6zw==
+	bh=ZJeX8gtsRg93Bolqe/4zvsi+mU1h3OsIsi3wvXvUmG0=;
+	b=kfzQG2z4OEVfIn66ZJJzG73oWi91hHzuXswKP+zpLqCmOZkcBfNCprBUS6wYfB6Yd/bg
+	 2tnbdLWiSvOh1GXwtPKVeYyImJ5gzlk4TLibcVAfKUxa+s0CK/m+FIw0UAPsWcPgkkNHC
+	 Pe8pjBxP04fntlJhtIhFVkxY13akESFsO4fnZkkBiMpSLVps6jEKX76JeMNGDD6nK+snj
+	 YWiBsiXML+jU3tKH5Hr2WEceWYUwA4Tzh3JUTHMGTJ+Z/m9IlFIRuLRsFBlhw38UNA+eE
+	 HPoeIHGui+6fLUEUe7oswe+656Yaq3FO6BITMybc9vcIojV7jsz1pP0+w3arBbTY54g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=FiYMukT3;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AdOa9ymv;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D9CE606A323
-	for <linux-xfs@vger.kernel.org>; Mon, 16 Nov 2026 23:17:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90B9E606A329
+	for <linux-xfs@vger.kernel.org>; Mon, 16 Nov 2026 23:17:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=FiYMukT3
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 631211F000C4;
-	Mon, 16 Nov 2026 23:17:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AdOa9ymv
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8DFD51F000C6;
+	Mon, 16 Nov 2026 23:17:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794871056;
-	bh=Df7OwdKUvaN49gaARXXkA6jU7maCRyn06eIa1Qe2xgY=;
+	s=k20260515; t=1794871057;
+	bh=ZJeX8gtsRg93Bolqe/4zvsi+mU1h3OsIsi3wvXvUmG0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=FiYMukT3ba6z/jWPQfY1yIPVruoB01qk/ar1DWKoynfh9KCCBlZpOcNICyvVDKcR7
-	 +TF5pXmnArhEw1wYKSKhYHp3SFjtttdY6RJfpO7b7+91MdTRaLdSWszwBOFNU9PmuN
-	 I9wQg7nyevB9jugtFXHO7rXWfQLs1DIux4xWQ0k45brKRpnwN+81rQJW20cTvcCTUS
-	 rIISaUGoQZr2RVaZ/WFe63aEbjdlzaDgDduq6ZDq39lDKcGVLoMEOmdiRP3j9+OQ6y
-	 r1qvDS9iXHHRmARDU0HX0x1c9ZtmcPIphOjaKgV0chb0xN+g/+yCzleAMkpct1viqM
-	 Gp9YO1p2pOKJA==
+	b=AdOa9ymvorL2tceJRiF4UCAIRf3WhRIKFWDy/D7zqmkFzPapuYqlQ9OrjhZkEi77Y
+	 F8u1cg/2jxDC0HOanah+KpqRVbjWPjyNGUdJsl++ZbOSBB1U55B/CCjQHtIPtNwPtk
+	 7kmFHXzeOZB3r0VV+oFovUKAq4FGG428WdfjlIejjR9RNwAX7FHRPfPEL/z9gwoywx
+	 7X2QoihI6cAbg7veAC2oFxjbQb0U1HDIh0gWjta+LjY96bjjx7MsDNtSBJjKKnWjyl
+	 23T75IOO8bysZwiLV7OAeMro401T2c5A+Wg3Czw8gdqRo98qkjBoBvOeqkTaT3JXP4
+	 6U82NRoDX5wPQ==
 From: Dave Chinner <dgc@kernel.org>
 To: linux-xfs@vger.kernel.org
 Cc: cem@kernel.org
-Subject: [PATCH 17/59] xfs: add log item validation infrastructure to log recovery
-Date: Tue, 17 Nov 2026 10:14:34 +1100
-Message-ID: <20261116231707.3625263-18-dgc@kernel.org>
+Subject: [PATCH 18/59] xfs: recover the transaction header as a validated item type
+Date: Tue, 17 Nov 2026 10:14:35 +1100
+Message-ID: <20261116231707.3625263-19-dgc@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20261116231707.3625263-1-dgc@kernel.org>
 References: <20261116231707.3625263-1-dgc@kernel.org>
@@ -59,476 +59,287 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Log recovery decodes log items straight out of the journal and trusts the
-region layout it finds there. Corrupt or malicious journal contents can
-therefore drive recovery with bogus type codes, region counts and header
-lengths before any validation happens. Add the infrastructure that later
-patches will use to validate each item as it is decoded, and wire the
-generic validation call sites into the region assembly path so per-type
-patches only need to supply the checks.
+The transaction header that starts each recovered transaction was decoded by
+a bespoke path: xlog_recovery_process_trans() routed the first op records of
+a transaction to xlog_recover_init_new_trans() based on an r_hdr_decoded
+flag, which reassembled the header into r_theader with its own inline magic
+and length checks. This is a second, parallel copy of the region assembly and
+validation logic that the generic item path already provides, and it is not
+subject to the item validation infrastructure.
 
-struct xlog_recover_item_ops gains a min_hdr_len field (the minimum valid
-length of the format header in ri_buf[0]) and four optional callbacks:
-validate_nregions() returns the number of regions to assemble for the item;
-validate_region() checks a single region once it has been fully assembled;
-validate_item() checks the whole item once all of its regions are present;
-and complete() is a per-type completion hook run once the item is fully
-assembled and validated.
+Decode the header through the generic item machinery instead. The header is
+laid out so that the first two 16 bit words at the front of its single region
+- which xlog_recover_add_item() reads as the item type and region count -
+overlap the 32 bit th_magic field. Register an xlog_recover_item_ops keyed on
+the magic so the header is assembled, validated and completed exactly like any
+other item, and consumed via its ->complete() method (copied into the
+transaction and freed rather than queued for replay).
 
-The region count is a per-type method rather than a static bound because not
-all recovered types describe their regions with the same "type/size" format
-header that log items use. Each such type needs to extract and validate its
-own region count. Types that do use the common layout supply no method and
-fall back to the generic xlog_recover_nregions() helper, which accepts any
-0 < count <= XLOG_MAX_REGIONS_IN_ITEM.
+The XFS log is written in host byte order, so which half of th_magic is read
+as the type depends on the endianness of the host that wrote the log. Two ops
+entries are registered, one for each order; on any given host only one of the
+two type codes is matched. The type-count method validates that the other
+half of the magic is present and returns a region count of 1, the region
+validation checks the full magic and exact header length once assembled, and
+min_hdr_len rejects a short header.
 
-Item completion is driven through a shared path.
-xlog_recover_complete_region() runs the min_hdr_len check on the format
-header and the type's validate_region() callback once a region is complete,
-then completes the item via xlog_recover_complete_item() - which runs
-validate_item() - once the final region has been assembled. A region is
-complete when it is not a partial continuation fragment, tracked with a
-region_complete flag derived from XLOG_CONTINUE_TRANS in
-xlog_recovery_process_trans() and passed into both
-xlog_recover_add_to_trans() and xlog_recover_add_to_cont_trans(). Running
-the header and region checks only at region-completion time means a region
-split across op records is not rejected while it is still being assembled.
-
-A completed item is queued on the transaction for replay by default. The
-complete() hook lets a type do type-specific work at completion first, and it
-may consume the item there and then rather than have it queued for later
-recovery: returning XLOG_RECOVER_ITEM_CONSUMED frees the item instead of
-queuing it, while returning 0 falls through to the default queuing. This
-supports items that need finalising during decode, including pseudo-items
-that are consumed rather than replayed. No type supplies the hook yet.
-
-The ops lookup, unknown-type rejection and region-count validation move into
-xlog_recover_add_item() as part of this, so the lookup is no longer done in
-xlog_recover_reorder_trans() and xlog_find_item_ops() now takes the type
-code directly. No item type supplies the new field or callbacks yet, so the
-generic helper is always used and there is no functional change beyond the
-unknown-type rejection moving earlier in decode.
+With the header handled as an item, xlog_recover_init_new_trans(), the
+r_hdr_decoded flag and the special-case dispatch in
+xlog_recovery_process_trans() are all removed; a header op record now falls
+through to xlog_recover_add_to_trans()/add_to_cont_trans() like any other
+region.
 
 Assisted-by: LLM
 Signed-off-by: Dave Chinner <dgc@kernel.org>
 ---
- fs/xfs/libxfs/xfs_log_recover.h |  53 +++++++
- fs/xfs/xfs_log_recover.c        | 238 +++++++++++++++++++++++---------
- 2 files changed, 225 insertions(+), 66 deletions(-)
+ fs/xfs/libxfs/xfs_log_recover.h |   1 -
+ fs/xfs/xfs_log_recover.c        | 199 +++++++++++++++++++-------------
+ 2 files changed, 121 insertions(+), 79 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_log_recover.h b/fs/xfs/libxfs/xfs_log_recover.h
-index 1fef69ec918c..dbb4bb5c57ad 100644
+index dbb4bb5c57ad..f4dbed616ee6 100644
 --- a/fs/xfs/libxfs/xfs_log_recover.h
 +++ b/fs/xfs/libxfs/xfs_log_recover.h
-@@ -11,6 +11,7 @@
-  * define how recovery should work for that type of log item.
-  */
- struct xlog_recover_item;
-+struct xlog_recover;
- struct xfs_defer_op_type;
- 
- /* Sorting hat for log items as they're read in. */
-@@ -24,6 +25,24 @@ enum xlog_recover_reorder {
- struct xlog_recover_item_ops {
- 	uint16_t	item_type;	/* XFS_LI_* type code. */
- 
-+	/*
-+	 * Minimum valid length of the item's format header (ri_buf[0]). Checked
-+	 * as the item is decoded from the journal before the region data is
-+	 * trusted. A value of 0 means no minimum header length is enforced.
-+	 */
-+	uint16_t	min_hdr_len;
-+
-+	/*
-+	 * Validate the region count read from the front of the item's first
-+	 * region and return the number of regions to assemble for the item.
-+	 * The returned count is used to size ri_buf and to detect item
-+	 * completion, so it need not equal the raw on-disk value (the
-+	 * transaction header, for example, ignores it and always returns 1).
-+	 * Returns a negative error (e.g. -EFSCORRUPTED) if the count is
-+	 * invalid. Types that do not supply this use xlog_recover_nregions().
-+	 */
-+	int (*validate_nregions)(struct xlog *log, uint16_t nregions);
-+
- 	/*
- 	 * Help sort recovered log items into the order required to replay them
- 	 * correctly.  Log item types that always use XLOG_REORDER_ITEM_LIST do
-@@ -58,8 +77,42 @@ struct xlog_recover_item_ops {
- 	 */
- 	int (*commit_pass2)(struct xlog *log, struct list_head *buffer_list,
- 			    struct xlog_recover_item *item, xfs_lsn_t lsn);
-+
-+	/*
-+	 * Validate a single region of the item once it has been fully
-+	 * assembled from the journal.  Called with the index of the region to
-+	 * check.  Returns 0 if the region is valid or a negative error (e.g.
-+	 * -EFSCORRUPTED) if it is not.  Optional.
-+	 */
-+	int (*validate_region)(struct xlog *log,
-+			       struct xlog_recover_item *item,
-+			       int region_index);
-+
-+	/*
-+	 * Validate the whole item once all of its regions have been assembled
-+	 * from the journal.  Used for cross-region structural checks that can
-+	 * only be done with the complete item.  Returns 0 if the item is valid
-+	 * or a negative error (e.g. -EFSCORRUPTED) if it is not.  Optional.
-+	 */
-+	int (*validate_item)(struct xlog *log,
-+			     struct xlog_recover_item *item);
-+
-+	/*
-+	 * Dispose of the item once it has been fully assembled and validated,
-+	 * instead of the default of queuing it on the transaction for replay.
-+	 * Used by pseudo-items that are consumed during decode rather than
-+	 * replayed (e.g. the transaction header, which is copied into the
-+	 * transaction).  Returns XLOG_RECOVER_ITEM_CONSUMED if it took
-+	 * ownership of the item (the caller then frees it), 0 to fall back to
-+	 * the default queuing, or a negative error.  Optional.
-+	 */
-+	int (*complete)(struct xlog *log, struct xlog_recover *trans,
-+			struct xlog_recover_item *item);
+@@ -168,7 +168,6 @@ struct xlog_recover {
+ 	int			r_state;	/* not needed */
+ 	xfs_lsn_t		r_lsn;		/* xact lsn */
+ 	struct list_head	r_itemq;	/* q for items */
+-	bool			r_hdr_decoded;	/* trans header fully decoded */
+ 	struct xlog_recover_item *r_cur_item;	/* item currently being rebuilt */
  };
  
-+/* ->complete() took ownership of the item; do not queue it for replay. */
-+#define XLOG_RECOVER_ITEM_CONSUMED	1
-+
- extern const struct xlog_recover_item_ops xlog_icreate_item_ops;
- extern const struct xlog_recover_item_ops xlog_buf_item_ops;
- extern const struct xlog_recover_item_ops xlog_inode_item_ops;
 diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index e5eca851d497..dee839b831b1 100644
+index dee839b831b1..4f05b5130bdd 100644
 --- a/fs/xfs/xfs_log_recover.c
 +++ b/fs/xfs/xfs_log_recover.c
-@@ -1829,12 +1829,12 @@ static const struct xlog_recover_item_ops *xlog_recover_item_ops[] = {
- 
- static const struct xlog_recover_item_ops *
- xlog_find_item_ops(
--	struct xlog_recover_item		*item)
-+	uint16_t				item_type)
- {
- 	unsigned int				i;
- 
- 	for (i = 0; i < ARRAY_SIZE(xlog_recover_item_ops); i++)
--		if (ITEM_TYPE(item) == xlog_recover_item_ops[i]->item_type)
-+		if (xlog_recover_item_ops[i]->item_type == item_type)
- 			return xlog_recover_item_ops[i];
- 
- 	return NULL;
-@@ -1916,15 +1916,6 @@ xlog_recover_reorder_trans(
- 			break;
- 		}
- 
--		item->ri_ops = xlog_find_item_ops(item);
--		if (!item->ri_ops) {
--			xfs_warn(log->l_mp,
--				"%s: unrecognized type of log operation (%d)",
--				__func__, ITEM_TYPE(item));
--			error = -EFSCORRUPTED;
--			break;
--		}
--
- 		if (item->ri_ops->reorder)
- 			fate = item->ri_ops->reorder(item);
- 
-@@ -2097,37 +2088,171 @@ xlog_recover_commit_trans(
- 	return error;
- }
- 
-+/*
-+ * Generic region count validation for item types that do not supply their own
-+ * ->validate_nregions() method. Any non-zero count up to the maximum an item
-+ * can hold is accepted, and the count is used as-is.
-+ */
-+static int
-+xlog_recover_nregions(
-+	struct xlog		*log,
-+	uint16_t		nregions)
-+{
-+	if (nregions == 0 || nregions > XLOG_MAX_REGIONS_IN_ITEM) {
-+		xfs_warn(log->l_mp,
-+	"bad number of regions (%d) in inode log format", nregions);
-+		return -EFSCORRUPTED;
-+	}
-+	return nregions;
-+}
-+
-+/*
-+ * Start decoding a new log item. The item type and region count come from the
-+ * type/size fields at the front of the item's first region. Look up the item
-+ * ops from the type, validate the region count, then allocate and initialise
-+ * the item.
-+ *
-+ * Returns the new item, which becomes the item currently being rebuilt, or an
-+ * ERR_PTR() if the type is unknown or the region count is invalid. The item is
-+ * not placed on the transaction's item queue until it has been fully decoded
-+ * (see xlog_recover_complete_item()).
-+ */
- STATIC struct xlog_recover_item *
- xlog_recover_add_item(
--	struct xlog_recover	*trans)
-+	struct xlog		*log,
-+	struct xlog_recover	*trans,
-+	uint16_t		item_type,
-+	uint16_t		nregions)
- {
-+	const struct xlog_recover_item_ops *ops;
- 	struct xlog_recover_item *item;
-+	int			valid_nregions;
- 
--	item = kzalloc_obj(struct xlog_recover_item, GFP_KERNEL | __GFP_NOFAIL);
--	INIT_LIST_HEAD(&item->ri_list);
-+	ops = xlog_find_item_ops(item_type);
-+	if (!ops) {
-+		xfs_warn(log->l_mp,
-+			"%s: unrecognized type of log operation (0x%x)",
-+			__func__, item_type);
-+		return ERR_PTR(-EFSCORRUPTED);
-+	}
- 
- 	/*
--	 * The item is not placed on the transaction's item queue until it has
--	 * been fully decoded (see xlog_recover_complete_item()). Until then it
--	 * is tracked as the item currently being rebuilt.
-+	 * Validate the region count and determine how many regions to assemble
-+	 * for the item. The type may override the raw count (e.g. the
-+	 * transaction header always has a single region).
- 	 */
-+	if (ops->validate_nregions)
-+		valid_nregions = ops->validate_nregions(log, nregions);
-+	else
-+		valid_nregions = xlog_recover_nregions(log, nregions);
-+	if (valid_nregions < 0)
-+		return ERR_PTR(valid_nregions);
-+
-+	item = kzalloc_obj(struct xlog_recover_item, GFP_KERNEL | __GFP_NOFAIL);
-+	INIT_LIST_HEAD(&item->ri_list);
-+	item->ri_ops = ops;
-+	item->ri_total = valid_nregions;
-+	item->ri_buf = kzalloc_objs(*item->ri_buf, item->ri_total,
-+				    GFP_KERNEL | __GFP_NOFAIL);
-+
- 	trans->r_cur_item = item;
- 	return item;
- }
- 
- /*
-- * A log item has been fully decoded from the journal. Move it onto the
-- * transaction's item queue and clear the current item so the next region
-- * decoded starts a new item.
-+ * Free up any resources allocated by the transaction
-+ *
-+ * Remember that EFIs, EFDs, and IUNLINKs are handled later.
+@@ -1801,7 +1801,128 @@ xlog_recover_iget_handle(
+  *
+  ******************************************************************************
   */
- static void
-+xlog_recover_free_item(
-+	struct xlog_recover_item *item)
-+{
-+	int			i;
-+
-+	/* Free the regions in the item. */
-+	for (i = 0; i < item->ri_cnt; i++)
-+		kvfree(item->ri_buf[i].iov_base);
-+	/* Free the item itself */
-+	kfree(item->ri_buf);
-+	kfree(item);
-+}
 +
 +/*
-+ * A log item has been fully decoded from the journal. Validate the assembled
-+ * item, then move it onto the transaction's item queue and clear the current
-+ * item so the next region decoded starts a new item.
++ * The transaction header that starts each recovered transaction is not a log
++ * item, but it is decoded from the journal as a region in exactly the same way.
++ * Give it an xlog_recover_item_ops so it is assembled and validated through the
++ * same generic machinery as everything else, then consumed into the
++ * transaction rather than queued for replay.
 + *
-+ * A type may instead consume the item during decode via its ->complete()
-+ * method, in which case it is freed here rather than queued for replay.
++ * ITEM_TYPE() and xlog_recover_add_item() read the 16 bit type and region count
++ * from the first two 16 bit words at the front of the first region. For the
++ * transaction header these words overlap the 32 bit th_magic field, so the two
++ * halves of the magic act as the type and the region count. The XFS log is
++ * written in host byte order, so which half is read as the type depends on the
++ * endianness of the host that wrote the log: on a little endian host the type
++ * is 0x414e and the count is 0x5452, and on a big endian host they are the
++ * other way around. Register an ops entry for each order so a log is recovered
++ * correctly regardless of the byte order it was written in; on any given host
++ * only one of the two type codes is ever matched. Neither 0x414e nor 0x5452
++ * collides with an XFS_LI_* type code.
++ *
++ * The header always has a single region regardless of the count read from the
++ * journal, so validate_nregions() checks that the other half of the magic is
++ * present and returns 1.
 + */
++#define XLOG_TRANS_HDR_MAGIC_LO		((uint16_t)XFS_TRANS_HEADER_MAGIC)
++#define XLOG_TRANS_HDR_MAGIC_HI		((uint16_t)(XFS_TRANS_HEADER_MAGIC >> 16))
++
 +static int
- xlog_recover_complete_item(
-+	struct xlog		*log,
- 	struct xlog_recover	*trans)
- {
- 	struct xlog_recover_item *item = trans->r_cur_item;
-+	int			error;
-+
-+	if (item->ri_ops->validate_item) {
-+		error = item->ri_ops->validate_item(log, item);
-+		if (error)
-+			return error;
++xlog_recover_trans_hdr_check_half(
++	struct xlog			*log,
++	uint16_t			nregions,
++	uint16_t			expected)
++{
++	if (nregions != expected) {
++		xfs_warn(log->l_mp,
++	"bad transaction header magic number 0x%x, expected 0x%x",
++			nregions, expected);
++		return -EFSCORRUPTED;
 +	}
-+
-+	if (item->ri_ops->complete) {
-+		error = item->ri_ops->complete(log, trans, item);
-+		if (error < 0)
-+			return error;
-+		if (error == XLOG_RECOVER_ITEM_CONSUMED) {
-+			xlog_recover_free_item(item);
-+			trans->r_cur_item = NULL;
-+			return 0;
-+		}
-+	}
- 
- 	list_add_tail(&item->ri_list, &trans->r_itemq);
- 	trans->r_cur_item = NULL;
-+	return 0;
++	return 1;
 +}
 +
-+/*
-+ * A region of the current item has been fully assembled from the journal.
-+ * Validate it, and if it is the last region of the item complete the item.
-+ * Called only when the region is complete (not a partial continuation).
-+ */
++/* Little endian host: type is the low half, count is the high half. */
 +static int
-+xlog_recover_complete_region(
-+	struct xlog		*log,
-+	struct xlog_recover	*trans)
++xlog_recover_trans_hdr_nregions_le(
++	struct xlog			*log,
++	uint16_t			nregions)
 +{
-+	struct xlog_recover_item *item = trans->r_cur_item;
-+	int			error;
++	return xlog_recover_trans_hdr_check_half(log, nregions,
++			XLOG_TRANS_HDR_MAGIC_HI);
++}
 +
-+	/*
-+	 * The format header (region 0) must be at least the minimum size for
-+	 * the item type. This is checked here, once the region is complete, so
-+	 * a partial first fragment is not rejected while still being assembled.
-+	 */
-+	if (item->ri_cnt == 1 && item->ri_ops->min_hdr_len &&
-+	    item->ri_buf[0].iov_len < item->ri_ops->min_hdr_len) {
++/* Big endian host: type is the high half, count is the low half. */
++static int
++xlog_recover_trans_hdr_nregions_be(
++	struct xlog			*log,
++	uint16_t			nregions)
++{
++	return xlog_recover_trans_hdr_check_half(log, nregions,
++			XLOG_TRANS_HDR_MAGIC_LO);
++}
++
++static int
++xlog_recover_trans_hdr_validate(
++	struct xlog			*log,
++	struct xlog_recover_item	*item,
++	int				region_index)
++{
++	struct xfs_trans_header		*thdr = item->ri_buf[region_index].iov_base;
++	size_t				len = item->ri_buf[region_index].iov_len;
++
++	if (len != sizeof(struct xfs_trans_header)) {
 +		xfs_warn(log->l_mp,
-+	"log item type 0x%x header too short (%zu < %u)",
-+			item->ri_ops->item_type, item->ri_buf[0].iov_len,
-+			item->ri_ops->min_hdr_len);
++	"bad transaction header length %zu, expected %zu",
++			len, sizeof(struct xfs_trans_header));
 +		return -EFSCORRUPTED;
 +	}
 +
-+	if (item->ri_ops->validate_region) {
-+		error = item->ri_ops->validate_region(log, item,
-+						      item->ri_cnt - 1);
-+		if (error)
-+			return error;
++	if (thdr->th_magic != XFS_TRANS_HEADER_MAGIC) {
++		xfs_warn(log->l_mp,
++	"bad transaction header magic number 0x%x, expected 0x%x",
++			thdr->th_magic, XFS_TRANS_HEADER_MAGIC);
++		return -EFSCORRUPTED;
 +	}
 +
-+	if (item->ri_cnt == item->ri_total)
-+		return xlog_recover_complete_item(log, trans);
 +	return 0;
- }
- 
- /*
-@@ -2216,11 +2341,10 @@ xlog_recover_add_to_cont_trans(
- 
- 	/*
- 	 * The continued region is only complete once its final fragment has
--	 * been appended. When that finishes the item's last region, the item is
--	 * complete.
-+	 * been appended; until then it cannot be validated.
- 	 */
--	if (region_complete && item->ri_cnt == item->ri_total)
--		xlog_recover_complete_item(trans);
-+	if (region_complete)
-+		return xlog_recover_complete_region(log, trans);
++}
++
++static int
++xlog_recover_trans_hdr_complete(
++	struct xlog			*log,
++	struct xlog_recover		*trans,
++	struct xlog_recover_item	*item)
++{
++	/*
++	 * The header has been validated. Copy it into the transaction and
++	 * consume the item - it is not a log item and is not replayed.
++	 */
++	memcpy(&trans->r_theader, item->ri_buf[0].iov_base,
++			sizeof(struct xfs_trans_header));
++	return XLOG_RECOVER_ITEM_CONSUMED;
++}
++
++static const struct xlog_recover_item_ops xlog_trans_hdr_le_item_ops = {
++	.item_type		= XLOG_TRANS_HDR_MAGIC_LO,
++	.min_hdr_len		= sizeof(struct xfs_trans_header),
++	.validate_nregions	= xlog_recover_trans_hdr_nregions_le,
++	.validate_region	= xlog_recover_trans_hdr_validate,
++	.complete		= xlog_recover_trans_hdr_complete,
++};
++
++static const struct xlog_recover_item_ops xlog_trans_hdr_be_item_ops = {
++	.item_type		= XLOG_TRANS_HDR_MAGIC_HI,
++	.min_hdr_len		= sizeof(struct xfs_trans_header),
++	.validate_nregions	= xlog_recover_trans_hdr_nregions_be,
++	.validate_region	= xlog_recover_trans_hdr_validate,
++	.complete		= xlog_recover_trans_hdr_complete,
++};
++
+ static const struct xlog_recover_item_ops *xlog_recover_item_ops[] = {
++	&xlog_trans_hdr_le_item_ops,
++	&xlog_trans_hdr_be_item_ops,
+ 	&xlog_buf_item_ops,
+ 	&xlog_inode_item_ops,
+ 	&xlog_dquot_item_ops,
+@@ -2255,67 +2376,6 @@ xlog_recover_complete_region(
  	return 0;
  }
  
-@@ -2247,6 +2371,7 @@ xlog_recover_add_to_trans(
- {
- 	struct xlog_recover_item *item;
- 	char			*ptr;
-+	int			error;
- 
- 	if (!len)
- 		return 0;
-@@ -2256,37 +2381,32 @@ xlog_recover_add_to_trans(
- 
- 	/*
- 	 * If there is no item currently being rebuilt, this region is the first
--	 * region of a new item. Start the item and use its first region to
--	 * determine how many regions it has.
-+	 * region of a new item. The type and region count are at the front of
-+	 * the region; start the item from them. ptr is still standalone here,
-+	 * so on error it just needs to be freed (out_free). Per-region size
-+	 * validation (including min_hdr_len) happens once the region is
-+	 * complete, below, because this first region may only be a partial
-+	 * fragment here.
- 	 */
- 	item = trans->r_cur_item;
- 	if (!item) {
- 		struct xfs_inode_log_format *in_f = /* any will do */
- 			(struct xfs_inode_log_format *)ptr;
- 
--		if (in_f->ilf_size == 0 ||
--		    in_f->ilf_size > XLOG_MAX_REGIONS_IN_ITEM) {
--			xfs_warn(log->l_mp,
--		"bad number of regions (%d) in inode log format",
--				  in_f->ilf_size);
--			ASSERT(0);
--			kvfree(ptr);
--			return -EFSCORRUPTED;
-+		item = xlog_recover_add_item(log, trans, in_f->ilf_type,
-+					     in_f->ilf_size);
-+		if (IS_ERR(item)) {
-+			error = PTR_ERR(item);
-+			goto out_free;
- 		}
+-/*
+- * Decode the transaction header at the start of a new transaction.
+- *
+- * The transaction header is not a log item. It can be arbitrarily split across
+- * op records, so it may arrive whole in a single op record, or as an initial
+- * fragment (cont == false) followed by one or more continuation fragments
+- * (cont == true). Reassemble it directly into r_theader where the rest of
+- * recovery expects to find it.
+- */
+-STATIC int
+-xlog_recover_init_new_trans(
+-	struct xlog		*log,
+-	struct xlog_recover	*trans,
+-	char			*dp,
+-	int			len,
+-	bool			cont,
+-	bool			region_complete)
+-{
+-	char			*ptr;
 -
--		item = xlog_recover_add_item(trans);
--		item->ri_total = in_f->ilf_size;
--		item->ri_buf = kzalloc_objs(*item->ri_buf, item->ri_total,
--					    GFP_KERNEL | __GFP_NOFAIL);
- 	}
- 
--	if (item->ri_total <= item->ri_cnt) {
-+	if (item->ri_cnt >= item->ri_total) {
- 		xfs_warn(log->l_mp,
- 	"log item region count (%d) overflowed size (%d)",
- 				item->ri_cnt, item->ri_total);
--		ASSERT(0);
--		kvfree(ptr);
+-	/*
+-	 * All regions are 32 bit aligned, so the smallest valid fragment is 4
+-	 * bytes; that is also the minimum needed to read the magic number. A
+-	 * fragment larger than the whole header is corruption in either case.
+-	 */
+-	if (len < 4 || len > sizeof(struct xfs_trans_header)) {
+-		xfs_warn(log->l_mp, "%s: bad header length %d", __func__, len);
 -		return -EFSCORRUPTED;
-+		error = -EFSCORRUPTED;
-+		goto out_free;
- 	}
- 
- 	/* Description region is ri_buf[0] */
-@@ -2296,32 +2416,18 @@ xlog_recover_add_to_trans(
- 	trace_xfs_log_recover_item_add(log, trans, item, 0);
- 
- 	/*
--	 * The item is complete once its final region has been fully decoded. If
--	 * this region continues into the next op record it is not complete yet,
--	 * so the item cannot be either.
-+	 * A region that continues into the next op record is not yet complete
-+	 * and cannot be validated until the continuation finishes assembling
-+	 * it. ptr is now owned by the item, so the transaction teardown frees
-+	 * it on any error from here.
- 	 */
--	if (region_complete && item->ri_cnt == item->ri_total)
--		xlog_recover_complete_item(trans);
-+	if (region_complete)
-+		return xlog_recover_complete_region(log, trans);
- 	return 0;
+-	}
+-
+-	if (!cont) {
+-		/*
+-		 * Initial fragment. The magic number is at the start of the
+-		 * header, which lands at the start of r_theader.
+-		 */
+-		if (*(uint *)dp != XFS_TRANS_HEADER_MAGIC) {
+-			xfs_warn(log->l_mp,
+-			"%s: bad header magic number 0x%x, expected 0x%x",
+-				__func__, *(uint *)dp, XFS_TRANS_HEADER_MAGIC);
+-			return -EFSCORRUPTED;
+-		}
+-		ptr = (char *)&trans->r_theader;
+-	} else {
+-		/* continuation fragment completes the tail of the header */
+-		ptr = (char *)&trans->r_theader +
+-				sizeof(struct xfs_trans_header) - len;
+-	}
+-
+-	memcpy(ptr, dp, len);
+-
+-	/*
+-	 * The transaction header is a single region, so it is fully decoded
+-	 * once the region is complete. The header is not a log item, so nothing
+-	 * is added to the item queue here; the first log item region decoded
+-	 * after this will start the first item.
+-	 */
+-	if (region_complete)
+-		trans->r_hdr_decoded = true;
+-	return 0;
 -}
 -
--/*
-- * Free up any resources allocated by the transaction
-- *
-- * Remember that EFIs, EFDs, and IUNLINKs are handled later.
-- */
--static void
--xlog_recover_free_item(
--	struct xlog_recover_item *item)
--{
--	int			i;
+ STATIC int
+ xlog_recover_add_to_cont_trans(
+ 	struct xlog		*log,
+@@ -2486,22 +2546,6 @@ xlog_recovery_process_trans(
+ 	if (flags & XLOG_WAS_CONT_TRANS)
+ 		flags &= ~XLOG_CONTINUE_TRANS;
  
--	/* Free the regions in the item. */
--	for (i = 0; i < item->ri_cnt; i++)
--		kvfree(item->ri_buf[i].iov_base);
--	/* Free the item itself */
--	kfree(item->ri_buf);
--	kfree(item);
-+out_free:
-+	kvfree(ptr);
-+	return error;
- }
+-	/*
+-	 * Until the transaction header has been fully decoded we are still
+-	 * assembling it at the start of the transaction rather than decoding a
+-	 * log item. The header can arrive whole (flags == 0), as an initial
+-	 * fragment (XLOG_CONTINUE_TRANS) or as a continuation fragment
+-	 * (XLOG_WAS_CONT_TRANS); XLOG_WAS_CONT_TRANS distinguishes the
+-	 * continuation.
+-	 */
+-	if (!trans->r_hdr_decoded &&
+-	    (!flags || (flags & (XLOG_CONTINUE_TRANS | XLOG_WAS_CONT_TRANS)))) {
+-		error = xlog_recover_init_new_trans(log, trans, dp, len,
+-					flags & XLOG_WAS_CONT_TRANS,
+-					region_complete);
+-		goto out_error;
+-	}
+-
+ 	/*
+ 	 * Callees must not free the trans structure. We'll decide if we need to
+ 	 * free it or not based on the operation being done and it's result.
+@@ -2551,7 +2595,6 @@ xlog_recovery_process_trans(
+ 		break;
+ 	}
  
- STATIC void
+-out_error:
+ 	if (error || freeit)
+ 		xlog_recover_free_trans(trans);
+ 	return error;
 -- 
 2.55.0
 
