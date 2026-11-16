@@ -1,50 +1,50 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794871041;
-	b=T3BBWwCCQ8S5xaWtM9o4ppugWGy0ziRokcBebKXQlcNg+/GdrkJFsgpZ7ZfFQUmcW1Dy
-	 H/RMH/9GnuGevOmLAGh8qahjo/hfKBAyfS+T+2a/YgS3cAtU8d/pxGoyYXFXF3Y20LPw5
-	 7OGe12XBkUWFW/MyCg7j4QErp1a0wC27ZclGZ7RvXZ6JPqhxtJKi5Ns2wmeSv2qlZU45G
-	 qKwYXjRDSD15Kt0qv+7MvHjOrct17LQP0EfaOMWVgEzw4crls+nz1+5R1DvXbTDdgrmvy
-	 W+WPiMf7W0rRtbullgxX4XjXjAa1uJVjVDKMWCczXCOVb9RC5HvPe+In7lALUfii9bQ==
+	t=1794871037;
+	b=MHYPMePz9ckYgPE2C9pPfKHq6LHYHkU7kGZfOaQ4/JcgnMtLtguT1YKe/w1cpgPmSDjX
+	 k6mit4P+42rSFF4ZQVaT0kejsZfG6B+SAnizpsHiXvnqETlgGOn3+71ryxhQYPKAUGSGJ
+	 9fxlHsgu88uARIsGCFD2O4BLvjqKFZWInXUwq8TkxoUG6+yhOyIxt8F+Jk3ha+P00vu1s
+	 qxmsOGB/ckivkajRceOxYcU1vT0Y/BfGZtPmkdv7FuezRoohrt8Cmg8/0xjF4TgxUeOuk
+	 dOVO/eb7vucnCaVxrBnPDE15AQZ88JT1JsvDgq1XYrblZmZ4AhCX8WA2O/7SpGTeNeg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794871041;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794871037;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=fzLAWd5oJQv66tWwy3oxL9Tr2Rjq4lL2O+riz+N+ABE=;
-	b=t7G+LxZHRoNDCRdDhztQmQLRQ5XxcOpVeDHtnsiwD5WvhgP6KcSoFPJvIdK46xDt/nHX
-	 3NwbrGSn6aeT7pWGd9ZMeEsjEdx/3v7+soih9k/0/9s8j/hNuu8DtH07VInZkUvlX9iFX
-	 /u3712X5r+zwgXlmB5PP6axkWDfrFf6Z8ELk0/BgF+EIcXTtlnNZO6dQkQCjZKrU4rZ3P
-	 ZlwkYKhJgdRnHLWquPiH9CH0+zbTgENPQ8Mqm79Ij+I6KJfKKCVsh+Tz90mRzMEHURtQs
-	 rP/IZWiezUFq2o9NfPhNEKC5Epz4H1+lCXfRtfaipbaFwUXP/Etnu1z3OqvctrE9gFw==
+	bh=zRk6XtMbqW059pASOn97GOOp5+jAoNK5MfTZMepaYdA=;
+	b=EMCnpS4l/YlpSZ9jwCUcF/gFlJdQDvuuc3xgl+kEDDBpCiUpz/5vgVUXExCIJZQZKnoi
+	 uoAqNgZ8GC6GrkAH9YdYswTRx4kMmcUClONR6f0uD4RjG7y+O7HayyClk3U1y7bIPbnEC
+	 RCe7reHgBENcgBawkJH2I9i7JGAloSxIFz3elkZpAyjoWzhouLoKsRBSiBJMtiqJMeZ9D
+	 RHMN/397jW5bzF2dQo6jk43aIMuvUWDurwDfB6j0ieV/w10qyzyFm/SHWFd0KQZKSD8Aw
+	 A9oizYTGbg74/lIlwnzYwFrzk8X2qjmVYBDYD9ow0LretKdxozAf4n/WdMyJLnNTg4A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UKHVvbCp;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=LkE2Fcr3;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23F17606A334
-	for <linux-xfs@vger.kernel.org>; Mon, 16 Nov 2026 23:17:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C354606A33F
+	for <linux-xfs@vger.kernel.org>; Mon, 16 Nov 2026 23:17:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UKHVvbCp
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A2CF1F000C4;
-	Mon, 16 Nov 2026 23:17:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=LkE2Fcr3
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2AB1F1F000C4;
+	Mon, 16 Nov 2026 23:17:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794871040;
-	bh=fzLAWd5oJQv66tWwy3oxL9Tr2Rjq4lL2O+riz+N+ABE=;
+	s=k20260515; t=1794871036;
+	bh=zRk6XtMbqW059pASOn97GOOp5+jAoNK5MfTZMepaYdA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=UKHVvbCp1iCiDUpRzAHyCX0/K7ct9tlZ2AYznAPiNp3XP1Yb3q4ZaXaBTcEqP95vL
-	 x8xZpUGWUrHZcTN1BzmNTCx/6lsULIquXU1rJQqjLnj0P09iJ7UOHSem3N4eqZ1kE7
-	 IlZ8XoeKDYaaaHAzLSsxm3LTtnjICpJgYSPsU1QOLreIOpxpsuL6qqyOdFcMmFN0+6
-	 nyPSS5oJ3hyvbY90rk0DwHu9YL7ZROjpWOMclLKHk2TpnVYcisd7PUyzRrXXmaKD6j
-	 rYg1YddUIpZoDFPpETlxXKvDi+ESPIG9SMPD+pfB8pf4ARJ+cTZv6g5wjPTHDndDg5
-	 MT0xdO6a+L9EA==
+	b=LkE2Fcr3z1KYHkoq1cc4RjscbKY2DNGZV9j6uL9iLJ3tk7QIFSaRx7I8NDHThhZMz
+	 PgtL46Rybdi0HU5VgQOWFoz1S6+efLqqB8rKyWVn89RY9FrfV6vlWsGB7VlBc299Wh
+	 L77dZ8Wn6b0wdOPdTKQgPziJOT/3UYhREp399dqNX2sVyXz08fKCkiWuHKGgJwDHeJ
+	 bR0UXk613DaEoVkUHLkFjAFL6Kk+3DXmlikcTzObhM+DZFWOUfgaktkYVOZCmEJWqw
+	 33Wl06wwIbl2Ib7NJnV7vOux1pEV0OnwgEPM5VWxiBXuDoOK0sO1b7v16xPUy+TpM/
+	 YJXX6g+aIg0zA==
 From: Dave Chinner <dgc@kernel.org>
 To: linux-xfs@vger.kernel.org
 Cc: cem@kernel.org
-Subject: [PATCH 05/59] xfs: recompute the transaction reservations after growfs
-Date: Tue, 17 Nov 2026 10:14:22 +1100
-Message-ID: <20261116231707.3625263-6-dgc@kernel.org>
+Subject: [PATCH 02/59] xfs: fix the rt rmap btree maximum level checks
+Date: Tue, 17 Nov 2026 10:14:19 +1100
+Message-ID: <20261116231707.3625263-3-dgc@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20261116231707.3625263-1-dgc@kernel.org>
 References: <20261116231707.3625263-1-dgc@kernel.org>
@@ -59,162 +59,107 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Growfs can leave the transaction reservations sized for the old geometry.
-Growing the data device or the realtime volume can increase the rt rmap
-btree height. The write and truncate reservations include that height, but
-growfs recomputes the btree heights without recomputing the reservations.
-Adding the first realtime volume also leaves the reservations without their
-realtime terms, because they are recalculated before the realtime feature
-is set. A transaction that later needs the larger reservation can overrun
-it and shut down the log.
+m_rtrmap_maxlevels is the maximum height of the rt rmap btree, including the
+inode root level. The deepest valid root level is therefore one less than
+m_rtrmap_maxlevels. The root loader, the block verifier and the inode repair
+code all reject only levels greater than m_rtrmap_maxlevels, so they accept a
+root one level too deep.
 
-The realtime grow also loses a configured max_atomic_write reservation. Its
-reservation update resets the atomic ioend reservation to the default.
-The atomic write limits are still sized for the larger reservation, so an
-atomic write can overrun its ioend transaction reservation.
+This level mismatch results in the same off-by-one that commit cc3144da377d
+fixed for the rt refcount btree when a cursor is built over a maximum height
+btree. To avoid this out of bounds access past the end of the cursor, reject
+levels at or above m_rtrmap_maxlevels instead.
 
-Add xfs_trans_resv_recalc() to recompute the reservations on a live
-filesystem. It calculates the reservations in a separate table and copies
-them into place, so a transaction never sees a partial update. It keeps a
-configured atomic ioend reservation, which growfs does not change. Call it
-after every growfs recomputes the rt btree heights. This replaces the
-realtime grow's update before the commit, which only refreshed a
-reservation that the grow takes from its temporary mount.
+There is a transient state on disk where an rtrmap inode has no contents,
+because growfs can create rtrmap inodes dynamically. m_rtrmap_maxlevels is zero
+until growfs adds the first realtime volume. The root loader and repair code
+therefore accept an empty level zero root when m_rtrmap_maxlevels is zero. A
+non-empty level zero root is a normal leaf root that is still checked to fit
+within the inode fork.
 
-Growfs and a remount that changes max_atomic_write are not serialised.
-Both update the atomic ioend reservation, so a racing remount can lose its
-update. The realtime grow already raced this way, because it reset the
-reservation in place. This race is not addressed here.
-
-Fixes: 59a57acbce28 ("xfs: check that the rtrmapbt maxlevels doesn't increase when growing fs")
-Fixes: 4528b9052731 ("xfs: allow sysadmins to specify a maximum atomic write limit at mount time")
+Fixes: fc6856c6ff08 ("xfs: introduce realtime rmap btree ondisk definitions")
+Fixes: f33659e8a114 ("xfs: wire up a new metafile type for the realtime rmap")
+Fixes: 3dd3aba6b92b ("xfs: repair rmap btree inodes")
 Assisted-by: LLM
 Signed-off-by: Dave Chinner <dgc@kernel.org>
 ---
- fs/xfs/libxfs/xfs_trans_resv.c | 27 +++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_trans_resv.h |  1 +
- fs/xfs/xfs_fsops.c             |  6 +++++-
- fs/xfs/xfs_rtalloc.c           | 13 ++++++-------
- 4 files changed, 39 insertions(+), 8 deletions(-)
+ fs/xfs/libxfs/xfs_rtrmap_btree.c | 29 ++++++++++++++++++++++++-----
+ fs/xfs/scrub/inode_repair.c      |  7 ++++++-
+ 2 files changed, 30 insertions(+), 6 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-index b09c88aec185..fadbed82cf07 100644
---- a/fs/xfs/libxfs/xfs_trans_resv.c
-+++ b/fs/xfs/libxfs/xfs_trans_resv.c
-@@ -1402,6 +1402,33 @@ xfs_trans_resv_calc(
- 	xfs_calc_default_atomic_ioend_reservation(resp);
- }
+diff --git a/fs/xfs/libxfs/xfs_rtrmap_btree.c b/fs/xfs/libxfs/xfs_rtrmap_btree.c
+index 2f00d0698ae1..ba0d4058e717 100644
+--- a/fs/xfs/libxfs/xfs_rtrmap_btree.c
++++ b/fs/xfs/libxfs/xfs_rtrmap_btree.c
+@@ -140,7 +140,7 @@ xfs_rtrmapbt_verify(
+ 	if (fa)
+ 		return fa;
+ 	level = be16_to_cpu(block->bb_level);
+-	if (level > mp->m_rtrmap_maxlevels)
++	if (level >= mp->m_rtrmap_maxlevels)
+ 		return __this_address;
  
-+/*
-+ * Recompute the transaction reservations on a live filesystem after growfs
-+ * has changed the geometry they depend on.
-+ *
-+ * The new reservations are calculated in a separate table and copied into
-+ * place, so that transactions starting during the update never see partially
-+ * calculated values.
-+ *
-+ * A configured atomic ioend reservation depends only on intent item sizes,
-+ * AG btree heights, the bmap btree height and the filesystem features, none of
-+ * which growfs changes. Keep it, rather than resetting it to the default.
-+ *
-+ * This is not serialised against a remount that changes max_atomic_write,
-+ * which also updates the atomic ioend reservation.
-+ */
-+void
-+xfs_trans_resv_recalc(
-+	struct xfs_mount	*mp)
-+{
-+	struct xfs_trans_resv	resv = {};
-+
-+	xfs_trans_resv_calc(mp, &resv);
-+	if (mp->m_awu_max_bytes)
-+		resv.tr_atomic_ioend = M_RES(mp)->tr_atomic_ioend;
-+	*M_RES(mp) = resv;
-+}
-+
- /*
-  * Return the per-extent and fixed transaction reservation sizes needed to
-  * complete an atomic write.
-diff --git a/fs/xfs/libxfs/xfs_trans_resv.h b/fs/xfs/libxfs/xfs_trans_resv.h
-index 336279e0fc61..33b5bd2e50df 100644
---- a/fs/xfs/libxfs/xfs_trans_resv.h
-+++ b/fs/xfs/libxfs/xfs_trans_resv.h
-@@ -97,6 +97,7 @@ struct xfs_trans_resv {
- #define	XFS_WRITE_LOG_COUNT_REFLINK	8
+ 	return xfs_btree_fsblock_verify(bp, mp->m_rtrmap_mxr[level != 0]);
+@@ -692,17 +692,36 @@ xfs_iformat_rtrmap(
+ 	numrecs = be16_to_cpu(dfp->bb_numrecs);
+ 	level = be16_to_cpu(dfp->bb_level);
  
- void xfs_trans_resv_calc(struct xfs_mount *mp, struct xfs_trans_resv *resp);
-+void xfs_trans_resv_recalc(struct xfs_mount *mp);
- uint xfs_allocfree_block_count(struct xfs_mount *mp, uint num_ops);
- 
- unsigned int xfs_calc_finish_bui_reservation(struct xfs_mount *mp,
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index cd399e2a9c7f..3c68ab991a44 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -223,10 +223,14 @@ xfs_growfs_data_private(
- 		if (error == -ENOSPC)
- 			error = 0;
- 
--		/* Compute new maxlevels for rt btrees. */
+-	if (level > mp->m_rtrmap_maxlevels ||
+-	    xfs_rtrmap_droot_space_calc(level, numrecs) > dsize) {
+-		xfs_inode_mark_sick(ip, XFS_SICK_INO_CORE);
+-		return -EFSCORRUPTED;
++	if (level == 0) {
 +		/*
-+		 * Compute new maxlevels for rt btrees, and the transaction
-+		 * reservations that depend on them.
++		 * rtrmap inodes can be dynamically created by growfs, resulting
++		 * in a transient state on disk where they can have no contents.
++		 * Hence a rtrmap inode with an empty level zero root is a valid
++		 * state. Until growfs adds the first realtime volume there is
++		 * nothing to map, so the root must be empty.
 +		 */
- 		xfs_rtrmapbt_compute_maxlevels(mp);
- 		xfs_rtrefcountbt_compute_maxlevels(mp);
- 		xfs_rtbtree_compute_maxlevels(mp);
-+		xfs_trans_resv_recalc(mp);
++		if (mp->m_rtrmap_maxlevels == 0 && numrecs != 0)
++			goto out_corrupt;
++	} else if (level >= mp->m_rtrmap_maxlevels) {
++		/*
++		 * m_rtrmap_maxlevels includes the inode root level, so the
++		 * deepest valid root level is one less than that.
++		 */
++		goto out_corrupt;
  	}
  
- 	return error;
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 760d73e4afa2..b11a088e43ff 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -928,12 +928,14 @@ xfs_growfs_rt_zoned(
- 
- 	/*
- 	 * Ensure the mount RT feature flag is now set, and compute new
--	 * maxlevels for rt btrees.
-+	 * maxlevels for rt btrees and the transaction reservations that depend
-+	 * on them.
- 	 */
- 	mp->m_features |= XFS_FEAT_REALTIME;
- 	xfs_rtrmapbt_compute_maxlevels(mp);
- 	xfs_rtrefcountbt_compute_maxlevels(mp);
- 	xfs_rtbtree_compute_maxlevels(mp);
-+	xfs_trans_resv_recalc(mp);
- 
- 	/*
- 	 * Finally add the newly added zone to the freelist and add the space
-@@ -1054,11 +1056,6 @@ xfs_growfs_rt_bmblock(
- 	mp->m_rsumlevels = nmp->m_rsumlevels;
- 	mp->m_rsumblocks = nmp->m_rsumblocks;
- 
--	/*
--	 * Recompute the growfsrt reservation from the new rsumsize.
--	 */
--	xfs_trans_resv_calc(mp, &mp->m_resv);
--
- 	/*
- 	 * Sync sb counters now to reflect the updated values. Lazy counters are
- 	 * not always updated and in order to avoid inconsistencies between
-@@ -1074,12 +1071,14 @@ xfs_growfs_rt_bmblock(
- 
- 	/*
- 	 * Ensure the mount RT feature flag is now set, and compute new
--	 * maxlevels for rt btrees.
-+	 * maxlevels for rt btrees and the transaction reservations that depend
-+	 * on them.
- 	 */
- 	mp->m_features |= XFS_FEAT_REALTIME;
- 	xfs_rtrmapbt_compute_maxlevels(mp);
- 	xfs_rtrefcountbt_compute_maxlevels(mp);
- 	xfs_rtbtree_compute_maxlevels(mp);
-+	xfs_trans_resv_recalc(mp);
- 
- 	kfree(nmp);
++	if (xfs_rtrmap_droot_space_calc(level, numrecs) > dsize)
++		goto out_corrupt;
++
+ 	broot = xfs_broot_alloc(xfs_ifork_ptr(ip, XFS_DATA_FORK),
+ 			xfs_rtrmap_broot_space_calc(level, numrecs));
+ 	if (broot)
+ 		xfs_rtrmapbt_from_disk(ip, dfp, dsize, broot);
  	return 0;
++
++out_corrupt:
++	xfs_inode_mark_sick(ip, XFS_SICK_INO_CORE);
++	return -EFSCORRUPTED;
+ }
+ 
+ /* Convert in-memory form of btree root to on-disk form. */
+diff --git a/fs/xfs/scrub/inode_repair.c b/fs/xfs/scrub/inode_repair.c
+index a9ccf763c059..4486881329b9 100644
+--- a/fs/xfs/scrub/inode_repair.c
++++ b/fs/xfs/scrub/inode_repair.c
+@@ -969,8 +969,13 @@ xrep_dinode_bad_rtrmapbt_fork(
+ 	nrecs = be16_to_cpu(dfp->bb_numrecs);
+ 	level = be16_to_cpu(dfp->bb_level);
+ 
+-	if (level > sc->mp->m_rtrmap_maxlevels)
++	/* Same root level rules as xfs_iformat_rtrmap(). */
++	if (level == 0) {
++		if (sc->mp->m_rtrmap_maxlevels == 0 && nrecs != 0)
++			return true;
++	} else if (level >= sc->mp->m_rtrmap_maxlevels) {
+ 		return true;
++	}
+ 	if (xfs_rtrmap_droot_space_calc(level, nrecs) > dfork_size)
+ 		return true;
+ 	if (level > 0 && nrecs == 0)
 -- 
 2.55.0
 
