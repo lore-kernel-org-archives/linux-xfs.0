@@ -1,50 +1,50 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794871101;
-	b=uNqtXha2pOLqX293XFfJUf5L6u4zpClFfNT7qbvBRacHmLwgLRTcFTR+6/sznb7kVJtd
-	 Tu5s60ZWDLDn0Pul1UgWKXsHB5hfysfkDWEaxIEd/+mNcNZvzwRO24LGRe7lIH67Jmzwv
-	 11WoS08bWJvPaYsHjM10/oB5pybQCxaCLUDrjHqfy40iHO75FfUUZu9ktaYV773Uc8Hwh
-	 IKFh1skDZKod6xmzbjWI5wwjYZFLn3ZyH2l4/KnVusG3Jh2CkzJfTBU+iRu02CRSZBvXJ
-	 G+S+xpdLphdK+lPQHqrLm0QLNXNFMaeVMUiaqB0wfRPpbMr1B3A2x/x0tBFX4C+bOqw==
+	t=1794871102;
+	b=ucdMdtwEZlhNNSCmBxRuAjrRNBPP07uOkMWs8yVUxywFReX1tKiyKL0IQSikEN+jV+//
+	 Eoi8jw7fboRNgd4oJbuqQl0zZ7OhFZkzzw9TIcYy9bwHlL+n9fm5ncb4Ok57va9loeRqx
+	 3Z5yOgO8xj+4sw0pJkHAzFXv3i0njf+SJdI4Hpq1GfK7RLRwqOMyXqqeJKhiMbGElaWkW
+	 p36flPCUkqDvL0e7t4785r3F8iMk7YnX0TPP0EX2hZ9JkQLeTv6dcDZv0R9PA9JUthLqf
+	 XDoOT0qIZabUzz/Hi+tfKTPtUjI4AJIDvdc+glI6yvH4ORYvP9NRIWuxFrHz7pavX2w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794871101;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794871102;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=bXiI5puHVTLG9ZCQ4BjhNQPMCTp0+5zfiWWAHEeXV7Q=;
-	b=4px6IYK4UwEsJKCN7yZ+/4utjVtI8xYfOmJCJykhh04BASGJFIUmo0+ZKL1sDGkkLEWB
-	 1BVMjNYEWyfArM17na+UidldfTC7VdFkkWuzYD9dmKKhXFSjIhBPApJBkpdQJmQz0FMIj
-	 BhkMt7OHHVj/KnISN/dz2RfR8TgTTfKTYif4desG+biUTt60VL8Pd4zFEDsYajjZtMMwN
-	 oJ71HC7DqsNNEJrj7A+x0R+txuAJY9syTpSTw5xDS6sDgjOWCNHRKJu49gemD7QrL7piw
-	 aAb+A05qEwCVQjcohKaJd6D/SG5mIRyG0vT/WHlPpO83Y9d/OD5eOGIlNqCSGlJB4zA==
+	bh=aLetgLf/rm2N6n9fxojPTgeCuMADGu1H4pjlxclHpLI=;
+	b=sx/bSdWF1m+LJQpkcrsVG3jJ/kTcF8uWQ6UB6Jov0lcImPAP2DVAqqzZthIw9QpGXStg
+	 itbwj3kW7E5kPibZt8GVLhOjQ3+2pNvWh9drst3UcE7VfVt+nkzSrTMuKLL0E5bHomm3I
+	 tsnwLnrAw1k44CBt0Fhb2JcQCkf02Vofcvc4JllMywBn2dkl6Z12TfVE6lLZL11lLWqNe
+	 B+uTMudlzIvKMHqx0DETkKOVbO41WP/uQOLLqZeJrFD4+ymPt9WeZvKjg6sIe9jk8EQyq
+	 MeMlPz40CjrmSTW8SOG8oQZVFzlg0pBEMGzX1WFCaS93NmFqYI68urcYNz1AG/k285g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SFjfpHu5;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=deMdjyPc;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 716EC606A332
-	for <linux-xfs@vger.kernel.org>; Mon, 16 Nov 2026 23:18:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFA2E606A330
+	for <linux-xfs@vger.kernel.org>; Mon, 16 Nov 2026 23:18:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SFjfpHu5
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8DE491F000C7;
-	Mon, 16 Nov 2026 23:18:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=deMdjyPc
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C680F1F000D1;
+	Mon, 16 Nov 2026 23:18:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794871101;
-	bh=bXiI5puHVTLG9ZCQ4BjhNQPMCTp0+5zfiWWAHEeXV7Q=;
+	s=k20260515; t=1794871102;
+	bh=aLetgLf/rm2N6n9fxojPTgeCuMADGu1H4pjlxclHpLI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=SFjfpHu5kAW4L0E4AZKKk8P4sy96YZPB5pb+Y0FGtlWNPDBtY7IZ1/+ztttMxd5wQ
-	 mlE6rfi1p6GjoVwUgZllLmhxsLaxhNgqv1NAYKSK+Tw7fivEDxWHORzIAsbeFcJdUg
-	 qmjdqCX69nhxGrAx4N63YIgTB8G9omSxtZqXBB81MVNIL9Z19Teneo+C2Ch+X8Y94S
-	 jhubBjPzw/SStVL7FX9+WaLhrDLrQPD1KKdB3fjjjT+PUCjKpxVeT6r1qkWuTUVbmP
-	 d+9xLI2OG92wx3dlYKVGjDimcawvy3yl//WNj4lBnQui3UcZGgkXHoSh1iprvhaN2+
-	 vJNCZjR42xTJQ==
+	b=deMdjyPcQcWY1uI8H5yPpCHfDLk2AoTEMG+AdrFYR8H/eua8HeyuUanVfJGFDjNm4
+	 hEXzKOrW88NSdSzVoswxFc3ArAQBkZcTwfjSoLbpShHOFmLWD78bVDSNZV1CONJmd8
+	 r7GCzZbgda535gkyQApdAm/4lhtEDhEcDCmfBlYzbSjvS7sQtHFZshs9P8CwGX/n7h
+	 O1NAJym0KVFu3MckvoUN4j2Nt5fpLSx/REIdek8a4BYbPGzRLVtbYmbBPf9lHCeAp8
+	 KS7a4Qy1DbfP+LyKjyhcPamKuOGCq7WsFh4V6ftP+/BO8z2PlzKba+WeHZMI8b0XEP
+	 5oR1jJ1a6izzw==
 From: Dave Chinner <dgc@kernel.org>
 To: linux-xfs@vger.kernel.org
 Cc: cem@kernel.org
-Subject: [PATCH 52/59] xfs: validate logged metadata btree fork roots during recovery
-Date: Tue, 17 Nov 2026 10:15:09 +1100
-Message-ID: <20261116231707.3625263-53-dgc@kernel.org>
+Subject: [PATCH 53/59] xfs: check logged btree fork roots fit in the inode fork during recovery
+Date: Tue, 17 Nov 2026 10:15:10 +1100
+Message-ID: <20261116231707.3625263-54-dgc@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20261116231707.3625263-1-dgc@kernel.org>
 References: <20261116231707.3625263-1-dgc@kernel.org>
@@ -59,220 +59,74 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-A metadata btree format data fork holds an rt rmap or rt refcount btree root,
-logged as the expanded in-core btree root like a bmap btree root. Recovery
-copied this root into the inode without inspecting it, so a corrupt root was
-replayed as it stood.
+A btree format fork is logged as the expanded in-core btree root. Replay
+converts it to the compact on-disk root as it copies it into the inode. The
+conversion lays the root out using the capacity of the on-disk fork, then copies
+as many keys and pointers as the logged root says it holds. Nothing bounds that
+record count by what the fork can hold. A logged root that is otherwise
+consistent but holds too many records is copied past the end of the fork, into
+the rest of the inode cluster buffer.
 
-Validate the logged metadata btree root once the fork has been verified against
-the core. The root is checked as a short btree root block whose record count
-fills the fork region exactly, and its node pointers are checked to be in range.
-The record and key contents are relative to a realtime group, which is not set up
-until after log recovery, so their validation is left to the first runtime access
-to the root block.
-
-The maximum height of these btrees depends on the filesystem geometry, which
-a growfs being recovered can change. The geometry the item will be replayed
-against is not known when it is validated, so the root level is bounded by
-the largest height any geometry allows. The runtime root loaders check it
-against the real geometry once recovery has finished. An empty level zero
-root is accepted, because growfs creates these inodes before it adds the
-first realtime volume.
+Reject a logged btree root whose compact on-disk form does not fit within the
+inode fork. This uses the same check as the runtime root loaders apply when they
+read a root from disk.
 
 Assisted-by: LLM
 Signed-off-by: Dave Chinner <dgc@kernel.org>
 ---
- fs/xfs/xfs_inode_item_recover.c | 170 +++++++++++++++++++++++++++++++-
- 1 file changed, 169 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_inode_item_recover.c | 18 ++++++++++++++++--
+ 1 file changed, 16 insertions(+), 2 deletions(-)
 
 diff --git a/fs/xfs/xfs_inode_item_recover.c b/fs/xfs/xfs_inode_item_recover.c
-index d9ab9900a201..efb142efa0ef 100644
+index efb142efa0ef..6920aab9263a 100644
 --- a/fs/xfs/xfs_inode_item_recover.c
 +++ b/fs/xfs/xfs_inode_item_recover.c
-@@ -529,6 +529,173 @@ xlog_dinode_verify_bmbt_root(
- 	return NULL;
- }
+@@ -478,8 +478,8 @@ xlog_dinode_verify_extents(
+  * length is fixed by the record count, so the region size fixes how many
+  * records the root can hold.
+  *
+- * The region size has already been bounds checked against the inode fork size,
+- * so it is known to fit within the fork and does not need rechecking here.
++ * The logged root is converted to the compact on-disk root when it is replayed
++ * into the inode, so it is the compact form that must fit within the fork.
+  */
+ static xfs_failaddr_t
+ xlog_dinode_verify_bmbt_root(
+@@ -515,6 +515,10 @@ xlog_dinode_verify_bmbt_root(
+ 	if (numrecs == 0 || size != xfs_bmap_broot_space_calc(mp, numrecs))
+ 		return __this_address;
  
-+/*
-+ * Verify a logged rt rmap btree root, as for the bmap btree root. The node
-+ * pointers are filesystem block numbers and are checked here.
-+ */
-+static xfs_failaddr_t
-+xlog_dinode_verify_rtrmap_root(
-+	struct xfs_mount		*mp,
-+	struct xfs_log_dinode		*ldip,
-+	void				*src,
-+	unsigned int			size)
-+{
-+	struct xfs_btree_block		*block = src;
-+	xfs_failaddr_t			fa;
-+	unsigned int			level;
-+	unsigned int			numrecs;
-+	unsigned int			i;
-+
-+	if (size < XFS_RTRMAP_BLOCK_LEN)
++	if (xfs_bmdr_space_calc(numrecs) >
++	    __xfs_inode_fork_size(mp, ldip->di_forkoff, whichfork))
 +		return __this_address;
 +
-+	/*
-+	 * The maximum rtrmap btree height depends on the filesystem geometry,
-+	 * which a growfs being recovered can change. The geometry this item
-+	 * will be replayed against is not known yet, so bound the root level by
-+	 * the largest height any geometry allows. The root is checked against
-+	 * the real geometry when the inode is loaded after recovery. Tighter
-+	 * validation depends on solving the recovery geometry problem described
-+	 * in the log recovery validation design document.
-+	 */
-+	fa = xfs_btree_check_fsblock_root_hdr(mp, XFS_RTRMAP_CRC_MAGIC,
-+			xfs_rtrmapbt_maxrecs(mp, size,
-+				be16_to_cpu(block->bb_level) == 0),
-+			block, 0, xfs_rtrmapbt_maxlevels_ondisk() - 1);
-+	if (fa)
-+		return fa;
-+
-+	/*
-+	 * rtrmap inodes can be dynamically created by growfs, resulting in a
-+	 * transient state on disk where they can have no contents. Only a level
-+	 * zero root may be empty.
-+	 */
-+	level = be16_to_cpu(block->bb_level);
-+	numrecs = be16_to_cpu(block->bb_numrecs);
-+	if (level > 0 && numrecs == 0)
-+		return __this_address;
-+
-+	if (size != xfs_rtrmap_broot_space_calc(level, numrecs))
-+		return __this_address;
-+
-+	/*
-+	 * A leaf root holds records whose bounds are relative to a realtime
-+	 * group. The realtime groups are not set up until long after log
-+	 * recovery runs, so the leaf contents cannot be validated here. That is
-+	 * deferred to the first runtime access to the root block.
-+	 */
-+	if (level == 0)
-+		return NULL;
-+
-+	for (i = 1; i <= numrecs; i++) {
-+		xfs_rtrmap_ptr_t	*ptr = xfs_rtrmap_broot_ptr_addr(mp,
-+						block, i, size);
-+
-+		if (!xfs_verify_fsbno(mp, be64_to_cpu(*ptr)))
-+			return __this_address;
-+	}
-+
-+	return NULL;
-+}
-+
-+/*
-+ * Verify a logged rt refcount btree root, as for the rt rmap btree root.
-+ */
-+static xfs_failaddr_t
-+xlog_dinode_verify_rtrefcount_root(
-+	struct xfs_mount		*mp,
-+	struct xfs_log_dinode		*ldip,
-+	void				*src,
-+	unsigned int			size)
-+{
-+	struct xfs_btree_block		*block = src;
-+	xfs_failaddr_t			fa;
-+	unsigned int			level;
-+	unsigned int			numrecs;
-+	unsigned int			i;
-+
-+	if (size < XFS_RTREFCOUNT_BLOCK_LEN)
-+		return __this_address;
-+
-+	/*
-+	 * The maximum rtrefcount btree height depends on the filesystem
-+	 * geometry, which a growfs being recovered can change. The geometry
-+	 * this item will be replayed against is not known yet, so bound the
-+	 * root level by the largest height any geometry allows. The root is
-+	 * checked against the real geometry when the inode is loaded after
-+	 * recovery. Tighter validation depends on solving the recovery geometry
-+	 * problem described in the log recovery validation design document.
-+	 */
-+	fa = xfs_btree_check_fsblock_root_hdr(mp, XFS_RTREFC_CRC_MAGIC,
-+			xfs_rtrefcountbt_maxrecs(mp, size,
-+				be16_to_cpu(block->bb_level) == 0),
-+			block, 0, xfs_rtrefcountbt_maxlevels_ondisk() - 1);
-+	if (fa)
-+		return fa;
-+
-+	/*
-+	 * rtrefcount inodes can be dynamically created by growfs, resulting in
-+	 * a transient state on disk where they can have no contents. Only a
-+	 * level zero root may be empty.
-+	 */
-+	level = be16_to_cpu(block->bb_level);
-+	numrecs = be16_to_cpu(block->bb_numrecs);
-+	if (level > 0 && numrecs == 0)
-+		return __this_address;
-+
-+	if (size != xfs_rtrefcount_broot_space_calc(level, numrecs))
-+		return __this_address;
-+
-+	/*
-+	 * A leaf root holds records whose bounds are relative to a realtime
-+	 * group. The realtime groups are not set up until long after log
-+	 * recovery runs, so the leaf contents cannot be validated here. That is
-+	 * deferred to the first runtime access to the root block.
-+	 */
-+	if (level == 0)
-+		return NULL;
-+
-+	for (i = 1; i <= numrecs; i++) {
-+		xfs_rtrefcount_ptr_t	*ptr = xfs_rtrefcount_broot_ptr_addr(mp,
-+						block, i, size);
-+
-+		if (!xfs_verify_fsbno(mp, be64_to_cpu(*ptr)))
-+			return __this_address;
-+	}
-+
-+	return NULL;
-+}
-+
-+/*
-+ * Verify a logged metadata btree root. The metadata btree type is fixed by the
-+ * inode, so it is chosen from the log dinode metadata type.
-+ */
-+static xfs_failaddr_t
-+xlog_dinode_verify_metabtree_root(
-+	struct xfs_mount		*mp,
-+	struct xfs_log_dinode		*ldip,
-+	void				*src,
-+	unsigned int			size)
-+{
-+	/*
-+	 * growfs creates these inodes before it adds a realtime volume, so gate
-+	 * them on the btree feature rather than the realtime btree feature, as
-+	 * the root loaders do.
-+	 */
-+	switch (ldip->di_metatype) {
-+	case XFS_METAFILE_RTRMAP:
-+		if (!xfs_has_rmapbt(mp))
-+			return __this_address;
-+		return xlog_dinode_verify_rtrmap_root(mp, ldip, src, size);
-+	case XFS_METAFILE_RTREFCOUNT:
-+		if (!xfs_has_reflink(mp))
-+			return __this_address;
-+		return xlog_dinode_verify_rtrefcount_root(mp, ldip, src, size);
-+	default:
-+		return __this_address;
-+	}
-+}
-+
- /*
-  * Verify a logged shortform symlink target. The logged target is the on-disk
-  * form, which is not null terminated, so this cannot use
-@@ -635,7 +802,8 @@ xlog_dinode_verify_dfork(
- 	case XFS_DINODE_FMT_META_BTREE:
- 		if (field != XFS_ILOG_DBROOT)
- 			return __this_address;
--		break;
-+		return xlog_dinode_verify_metabtree_root(mp, ldip,
-+				item->ri_buf[2].iov_base, ilfp->ilf_dsize);
- 	}
+ 	for (i = 1; i <= numrecs; i++) {
+ 		struct xfs_bmbt_key	*key = xfs_bmbt_key_addr(mp, block, i);
+ 		xfs_bmbt_ptr_t		*ptr = xfs_bmap_broot_ptr_addr(mp, block,
+@@ -578,6 +582,11 @@ xlog_dinode_verify_rtrmap_root(
+ 	if (size != xfs_rtrmap_broot_space_calc(level, numrecs))
+ 		return __this_address;
  
- 	return NULL;
++	/* The compact on-disk form of the root must fit within the fork. */
++	if (xfs_rtrmap_droot_space_calc(level, numrecs) >
++	    __xfs_inode_fork_size(mp, ldip->di_forkoff, XFS_DATA_FORK))
++		return __this_address;
++
+ 	/*
+ 	 * A leaf root holds records whose bounds are relative to a realtime
+ 	 * group. The realtime groups are not set up until long after log
+@@ -646,6 +655,11 @@ xlog_dinode_verify_rtrefcount_root(
+ 	if (size != xfs_rtrefcount_broot_space_calc(level, numrecs))
+ 		return __this_address;
+ 
++	/* The compact on-disk form of the root must fit within the fork. */
++	if (xfs_rtrefcount_droot_space_calc(level, numrecs) >
++	    __xfs_inode_fork_size(mp, ldip->di_forkoff, XFS_DATA_FORK))
++		return __this_address;
++
+ 	/*
+ 	 * A leaf root holds records whose bounds are relative to a realtime
+ 	 * group. The realtime groups are not set up until long after log
 -- 
 2.55.0
 
