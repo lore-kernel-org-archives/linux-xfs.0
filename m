@@ -1,54 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.119
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.137
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794816718;
-	b=zZUxLdErJHX/Edz/IRea/x0KJZrpnI9zfJX8Ynq47zf3b9rFX9a+uh92lia6o3A0lwVp
-	 tSwf+9rgs2XkflgNIAIBkSRqMNn+5IuTEaAcRC4jeySUEjRooK9vLqrfyp/LfETYjCA+q
-	 w28Q0iIcNxkmF2XZXe6Jpn3wtCbVbcdZAk8tU1wN58RA9wfRNkmsYhzHIgUD2VE4a3SNy
-	 DmHWY5mU1fZcYAfb8MajhMRCbYcZEyN1yYAGOczhActLpdmx/iR+a9ZuAf4yW2ri4GhWG
-	 k8bR4sIH6NHQWhVBPfRVpT6Ly9/Zx/epdu5PXBnkFYwF+09noU1mgL9C9WlVFXJsdJQ==
+	t=1794819271;
+	b=rESEGaHUJDu1wcjSPeSe+yvZbyweQhazyxeToWcGUhrdK1YCLCE/AI3xhaRSMWaoELLP
+	 u5H5PSoqsmeot2gNU2xqvfvphHjMjS1ar+nzBC/m2CpWRbCITXb4c/Q0QBiAusJE6L7ZW
+	 T3Cvp5vOVOmMoB9R1vJwydaknHJzbmPBViSpBMfeEVx4i/VpNxUY5nOshobcDOjYOYZqo
+	 jKjkVYtgX3coD571paA1mwJBiw9DS8ara0H0G1ij3oIHdnGE5YAp3TLfG9M/sw17s4twc
+	 I7jfC10gAtwnEqG05HN1Cy8vdsHFWuqAnCm01qGes0WPesM43zI3IORaQrA5lBBu38w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794816718;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794819271;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
 	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=0A5JduA4TQkMkkORQO+6yh7+M9Z6zGTtj1C3RlvkmNE=;
-	b=3stOINgjCSrYLpiRv7a5IXTxywGt/NKbbEvrpFz+xwtMbGq57Ooc7XsEmXaVnuLFUAGg
-	 GTCa5IfNeEuo9IkySGPuRYUsagySkeysb4mw30wFPFT0K7qeAE1xmwW16LBdsO6H1PRQF
-	 +Ak3NLRyE2CfL33roYOZo00rTQ2adDDwahu8XeqvDfr3N69CUy1UVE7JCWTa/2fHf/Zqy
-	 qaF7zDdFKhHj0IbjaiWeG3SErFpQrEA6KBGmM46lHb8Sb3LxsG86v5DYqAkV+tm61MuQy
-	 ftcAlSzXKmTMzQS7BKsExJanQ6K5YwmW49SvkV6TVdzkQkPBJhv2qDLI4iX0rHOx/Jg==
+	 Subject:To:References:Content-Language:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=d+mXw65c0SE6wEj5pgC38F7l7JItQ/bmLuVhHdw962U=;
+	b=Ur9THSnam8iO11k1jVlvy5dMk8E7rZW17kt1xXZ3xY1HYc9rJSaAoLjdnk9uMu3ubkya
+	 0CZm/Q3EX2ry8lhGsJkr9pN/TeuixxSxo7myNxXy8Vr7HRMy7mrspfdlAaYt+tvFgu8g7
+	 JYZmr5TBO9sriTor29ILGVfl22nznFLhh+7GtGiiIVrBMGfk6Cey3rIJbCuUjiPO692i1
+	 lQojZnb/L3dRLZVGa1dgZQU1k46oZ77A14dNsQKPrYEMg+JWTLWcd/6fOMz3wIv4I+Gdk
+	 8J6EzX4tvw8dIeVarhjSTV/KHwoUJBWLPUNPYFzulqRVntRyJUN1eHrmEIrtVrRLXhw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=qHuUUJes;
-	arc=none smtp.remote-ip=95.215.58.119
-Received: from mta1.migadu.com (out-119.mta1.migadu.com [95.215.58.119])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=Y7bTbmN2;
+	arc=none smtp.remote-ip=95.215.58.137
+Received: from mta1.migadu.com (out-137.mta1.migadu.com [95.215.58.137])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2769606A8A1
-	for <linux-xfs@vger.kernel.org>; Mon, 16 Nov 2026 08:11:57 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D2769606A8A1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F6E2606A329
+	for <linux-xfs@vger.kernel.org>; Mon, 16 Nov 2026 08:54:30 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9F6E2606A329
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=qHuUUJes
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=Y7bTbmN2
 X-Envelope-To: linux-xfs@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=9GDYmFY+izJGRdfGQica9R9+gmd9m0wCYgt03m/gIQw=;
+DKIM-Signature: a=rsa-sha256; bh=0sRRqe1bUPwNHEpxIAAix2mTeq6VNF5XZiHC5lka8Wg=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1794816716; v=1; x=1795421516;
- b=qHuUUJesNrb8gn7y1yaRofkI5ZGVHRyunAibatdGkTfgPIxV1IegCAj0tbnAZ26DOlo+N9Nk
- Tiq7VX7DbqPn0xgcqxIkO7godJIyRG3A78uiS1OOX7o5mrMcWgCvP4zO9FfalMrN2yDsiFXpWIb
- BBWuh8pUrbrz3BB+FaUwhs9c=
+ t=1794819268; v=1; x=1795424068;
+ b=Y7bTbmN2A08zQtkW2hNnPOk5NQkOX0MzA0AhNZ1T4Dcevf1eR7SWPPglS/gX/mL4vGJH2/rz
+ eMIIsrohjJn9huQQ6RRYrVYI1qMoIzt3CQhLdiq7xi5LINBLp+vPqlEZrMyK1fLIm2a4KoFEENj
+ LU53WIfbB/TiOcMpLfmyUy3w=
 X-Envelope-To: linux-xfs@vger.kernel.org
-Received: by mta10.migadu.com with ESMTPS id c382d307db08706c;
-	Mon, 16 Nov 2026 08:11:56 +0000
-X-Mizu-Trace-ID: c382d307db08706c
+Received: by mta12.migadu.com with ESMTPS id 053895ab281f066a;
+	Mon, 16 Nov 2026 08:54:28 +0000
+X-Mizu-Trace-ID: 053895ab281f066a
 X-Migadu-Flow: FLOW_OUT
-Message-ID: <96330e94-d3c0-447c-aef0-7c56b24e122b@linux.dev>
-Date: Mon, 16 Nov 2026 08:11:51 +0000
+Message-ID: <260c0d7d-39cb-40ca-9a49-2ae8a3531676@linux.dev>
+Date: Mon, 16 Nov 2026 08:54:27 +0000
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -59,78 +59,82 @@ List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: (2) (2) [PATCH v2] xfs: check the disk address for hardware
- atomic writes
-To: daejun7.park@samsung.com, Carlos Maiolino <cem@kernel.org>,
- "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Cc: Pankaj Raghav Partha Sarathy <p.raghav@samsung.com>,
- Pankaj Raghav <pankaj.raghav@linux.dev>, "Darrick J. Wong"
- <djwong@kernel.org>, Christoph Hellwig <hch@lst.de>,
- Dave Chinner <david@fromorbit.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <b34aac03-0d43-4ed1-9561-cb6e0e9c582f@linux.dev>
- <b1fba95d-97c8-44ae-a5be-6d2fba7e7e78@linux.dev>
- <20261112-xfs-hw-atomic-align-v2-1-c90394805e7b@samsung.com>
- <20261113025544epcms2p575490538b97c26387515f8b5fc90c321@epcms2p5>
- <CGME20261112082952epcas2p1f902c4243d451635ff27fe1a1c5035fe@epcms2p1>
- <20261116073903epcms2p13ca5bac24c591ae487f0b30dc45b87f8@epcms2p1>
+Subject: Re: [PATCH] xfs: do not let tr_atomic_ioend raise the minimum log
+ size
+To: linux-xfs@vger.kernel.org, Dave Chinner <dgc@kernel.org>
+References: <20261113043055.2578595-1-hengyul@cs.unc.edu>
 Content-Language: en-US
 From: John Garry <john.garry@linux.dev>
-In-Reply-To: <20261116073903epcms2p13ca5bac24c591ae487f0b30dc45b87f8@epcms2p1>
+In-Reply-To: <20261113043055.2578595-1-hengyul@cs.unc.edu>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 11/16/26 07:39, Daejun Park wrote:
-> On Fri, Nov 13, 2026 at 09:45:22AM +0000, John Garry wrote:
->> hmm.. I am still not confident that this the best fix. And if it is,
->> then I think that we should still change the size pre-check in
->> xfs_file_dio_write_atomic(). Here's a combined change which I am
->> thinking of:
-> [...]
->> bt_awu_max is the HW max, and you are saying that it is not aligned with
->> the AG size (and so need a disk alignment check). However, opt max
->> should be (aligned to AG size), so we could check that vs size instead.
+On 11/13/26 04:30, Hengyu Liang wrote:
+> Commit b1e09178b73a ("xfs: commit CoW-based atomic writes atomically")
+> added the tr_atomic_ioend reservation and made
+> xfs_log_calc_trans_resv_for_minlogblocks() copy it from the running
+> filesystem.
 > 
+> However, the copy has the current log count of tr_itruncate. On a
+> filesystem with rmapbt and without reflink that count is 4, while the
+> function puts the old count of 2 back for tr_itruncate itself. As of
+> now, the minimum log size of such a filesystem is larger than the one
+> its mkfs.xfs used, and the filesystem does not mount any more when its
+> log has the old minimum size.
+> 
+> The issue can be reproduced with mkfs.xfs from xfsprogs 5.13:
+> 
+>      truncate -s 512M xfs.img
+>      mkfs.xfs -m rmapbt=1,reflink=0 xfs.img
+>      mount -o loop xfs.img /mnt
+> 
+> Before commit b1e09178b73a ("xfs: commit CoW-based atomic writes
+> atomically"), the mount succeeds.
+> 
+> After that commit, it fails with EINVAL:
+> 
+>      XFS (loop0): Log size 878 blocks too small, minimum size is 962 blocks
+>      XFS (loop0): AAIEEE! Log failed size checks. Abort!
+> 
+> This patch will use the old log count for the copy as well. These
+> filesystems have no reflink, so they never use this reservation.
+> 
+> Fixes: b1e09178b73a ("xfs: commit CoW-based atomic writes atomically")
+> Cc: stable@vger.kernel.org # v6.16
+> Signed-off-by: Hengyu Liang <hengyul@cs.unc.edu>
+> ---
+> mkfs.xfs 4.9 to 5.13 give such a log to an rmapbt=1,reflink=0
+> filesystem below 1 GiB, or up to 16 GiB with -d su=256k,sw=4.
+> 
+> Application impact (Ubuntu 26.04 user space): udisks2 2.10.91 is asked
+> to mount a filesystem made as above ("udisksctl mount -b /dev/vda"). On
+> v6.15, it mounts it at /run/media/root/STICK513. On v6.16, it fails
+> with "Error mounting /dev/vda ... wrong fs type, bad option, bad
+> superblock".
+> 
+> Tested on xfs for-next with 45 images made by mkfs.xfs 4.9 to 6.6: 26
+> do not mount without this patch, all mount with it, and the largest
+> reservation is the same as on v6.15.
+> 
+>   fs/xfs/libxfs/xfs_log_rlimit.c | 2 ++
+>   1 file changed, 2 insertions(+)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_log_rlimit.c b/fs/xfs/libxfs/xfs_log_rlimit.c
+> index 37712b2f8757..9454c91e9fb3 100644
+> --- a/fs/xfs/libxfs/xfs_log_rlimit.c
+> +++ b/fs/xfs/libxfs/xfs_log_rlimit.c
+> @@ -128,6 +128,8 @@ xfs_log_calc_trans_resv_for_minlogblocks(
+>   		resv->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT;
+>   		resv->tr_itruncate.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
+>   		resv->tr_qm_dqalloc.tr_logcount = XFS_WRITE_LOG_COUNT;
+> +		/* tr_atomic_ioend starts as a copy of tr_itruncate. */
+> +		resv->tr_atomic_ioend.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
 
-uhhh... I thought about this a bit more, and I am really not sure on the 
-best solution. On one hand, atomic writes whose length is above opt max 
-should not use HW atomics. Or, more specifically, the user can't expect 
-HW atomics to be used. However, if HW atomic is possible, then it would 
-be silly not to use it.
-
-> Thanks, agreed. v3 will check the size instead of the disk address,
-> in both xfs_file_dio_write_atomic() and
-> xfs_bmap_hw_atomic_write_possible(). The limit is the one max_opt
-> applies: the smaller of bt_awu_max and the largest power-of-two factor
-> of the group size. Below that limit the existing br_startblock check is
-> enough, so v3 drops the disk address check.
-> 
-> v3 puts this limit in a helper that xfs_get_atomic_write_max_opt() also
-> uses, so max_opt and the checks use the same hardware limit. The checks
-> call the helper rather than max_opt, since max_opt is 0 on a filesystem
-> without reflink. When I tried max_opt there, the one-block atomic
-> writes went to COW and failed with -EINVAL. The helper returns
-> bt_awu_max when there are no groups, which is the rt device without
-> rtgroups.
-> 
->> BTW, with your proposed change, since HW size is not aligned to AG size
->> and we only check the size vs HW size for HW offload, it is in theory
->> possible to have an atomic write which straddles the AG and is rejected,
->> right?
-> 
-> Userspace does not see a rejection. Such a write maps to two extents,
-> so xfs_bmap_hw_atomic_write_possible() returns false and the write goes
-> through COW. 
-
-Yeah, I was really asking if HW atomic could span 2x extents before we 
-catch it.
-
-> This is the same in v2 and v3. In v3, a write sent to the
-> hardware is also aligned and no larger than the group alignment, so it
-> cannot cross a group boundary.
-> 
-Maybe what you have in this patch is ok. I'll wait for v3 and consider 
-it more. Sorry for the hesitancy.
+I have to admit that I am not really familiar with this log code. 
+Darrick was, but unfortunately he is no involved. The change looks sane, 
+even though we are partially overwriting resv->tr_atomic_ioend (from 
+when it is set earlier in the same function). Dave Chinner may be able 
+to kindly help review.
 
 Thanks,
 John
