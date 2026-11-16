@@ -1,50 +1,50 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794871084;
-	b=a7HYhu08lbVtpr+HkgULNn7nekRt3FmhfHPXmKLJLU5tMlY+kgzy/zoXChBT2Nfh3Vl2
-	 AF2Wu51502GHTg21KI8+a/lWlY81UdzTBjmIB8ao6iaqGQxQogxu7nKrFaxfn02EmNRUf
-	 V4RUnhAk6QkbWdS2v8XXlwAiGh9smK4v4RjAy2ETuzNhJzo8gMa3Bx0HpPx/jmVWJeFQN
-	 8YS+G4brtKZpZ3SgKzDenldgOayEnHEMpC1vubQSCMIy+48S+1BcLff6QqmHAIsvBZXl/
-	 ka3TvBi+O+Mq0jd8kcdLYvZkxr4YXZ46IbuMBpk2JmtQLkzshLykMXsL0jxWyKvtkmg==
+	t=1794871085;
+	b=xGfNN1PlLmXOGeAj9/vAP6eYVpLVQO21NX+VHYrYrecbLQ9Yqk638noZ3WFREvfonrJg
+	 NlCcdruVWRGBfGLXpGFqQxq2T2uu8rVz86fZO5KuvtVeXfdcBc0jEiZGpvoQTJ2fG+n6g
+	 fT0j3SjPv0GhtCcLIwCQHYQCeGuPuCJ1MGHOpgiQJYssOcXY+Mkx0pz3Knrz8CwGGoUQJ
+	 75//8a1k87s4VwGKR63QJI/NGoSpomI5g5hwgnL9NBmGtJkK4Bekk9BedeYxR6TweBeDS
+	 clunTcx3iQY+QF/4BJ4IgnuZr/gyd8TzfxWryOwoqlCmL7D2h7+QcEHvEt8RKlkhPyg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794871084;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794871085;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=DtpxvUu0oEjAZTXw+mX9jXx75NfLmd0ss0jnkSPauUo=;
-	b=lvCEJp5o/4oEl3cypKBaw6wlZfmZDzN/VKW/2NLvK7AZp8VnNBCI4EwmdZeu6nbrFwLL
-	 MWXhaTJkPcsQxigAp2pbTEcBzqfXRZmxy3g7dGscMflI0NMWhIvH986g0qGW598Ai4hmq
-	 U+4mm3qpow208aLhjUSSiPcle1QiJPXdNGOdGtctfYir5tvnkYU+FIZORkYkAIxjuQZqX
-	 WrBlVyX3UAlqf05qvLXn5V7E2ur9yURKOxYYr0QrcSu7ZEYj1bodXcC4pG/q/mujNmCdB
-	 hOFyfkj8xMLXQaRP/6FNfhECHWqr5AC2+qEGUHhTzZS6dsJ0QJiyz609iA/3kbZVkuQ==
+	bh=inzcl2YREfpDHbkJ3hXCrTHM8iSoIrSU/f8ByouSgpg=;
+	b=B7gq5aQbDlwRim2D2+gioLzV5+RcgrTZKMXoUSVLgxprQZMASWLCjAmJ2TzvRuAVXrIY
+	 kIxjXRK4Vdx5rdw9GtRV0MhYiAjjsusGMG+r945pZiPQqS/mspUj8mmw7Nehf9Lh0K7kN
+	 lTuRuda7XKjTZgfP6e7PRWXRAZPuObvoXAabZkjWzzAuPaJuYMV+kKgC0QFsQBCZVmvsT
+	 1HXRNtYBPZn1o3QIurH59iTteFGbTIs0t1mfNF9YsK9ucb8q0XHH91Ghyyml8/7wFNSVp
+	 jM2v3/WD4KFfrLu15inOng2eRy2Yml8UZYC1vN1uoQ1xkGgOWkMRS2SK+9pajhbheag==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="N+Ad/kLx";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cStBGiv0;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8319C606A336
-	for <linux-xfs@vger.kernel.org>; Mon, 16 Nov 2026 23:18:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C15A606A33D
+	for <linux-xfs@vger.kernel.org>; Mon, 16 Nov 2026 23:18:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=N+Ad/kLx
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 20FD41F000C9;
-	Mon, 16 Nov 2026 23:18:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cStBGiv0
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AA7511F000C4;
+	Mon, 16 Nov 2026 23:18:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794871084;
-	bh=DtpxvUu0oEjAZTXw+mX9jXx75NfLmd0ss0jnkSPauUo=;
+	s=k20260515; t=1794871085;
+	bh=inzcl2YREfpDHbkJ3hXCrTHM8iSoIrSU/f8ByouSgpg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=N+Ad/kLxRbL2yUVik/9f+UjDqKcGdlpz5uGMhHP+QOnxVePGu84NqF2r64lZJ4RZR
-	 KF9CO3kka4y3FPikuaUM3+ji8s17vrEdw27w+u6RT1sddfXrUH1w2uEY5MknoM+Lj7
-	 eD7COcUNTAnFDsTyPeNAkgfVPy5EB7dYxhIs9V+J8ebdP11kkLaNZBNzMS3bAK5RuK
-	 a7mfXOpEpT5B76Xjc55A+bYWwX90nOTzmfVP5E9G8ONK5ZPmXfBT4hgrr9/rPDS7VP
-	 DXDHZPBErk/NDpOhpyRcra0JQG5LGG9WpuK21FYrrRENMa/AdKEVnhjRlgYONRVc6F
-	 kXoLKoCT+W2mg==
+	b=cStBGiv0JG5BA1gqaWmgbH/k9jfvjS51Eckd7Wny6WYJ6TpjRucRiciwVfsaKM2PJ
+	 eHmkFC77Uq9xln/dLO/mMX07H6Q2CVCihlQbwonDKOwswI0Ww8z2XIXQgGe8pq4Azy
+	 Ke2tdph4y3OOwSgnmhTXcvZ3PMRGWTq1R8Us1wPyRVNvw9TH9Hhm1+ciJUcFfGGDY1
+	 fcFnWhKAV1hpjBEJJxbk9FutMsez3Ely0xkQxKwTpxb7jkNObrx2CZnxE/l0I9ZQEp
+	 Z0mip0ceF6QDDijZw88vfY75vcJbXna/wVGaK85nt5Ydre/MoaGyR7el2RF/yzkquJ
+	 6Cm/9iaVfEx1g==
 From: Dave Chinner <dgc@kernel.org>
 To: linux-xfs@vger.kernel.org
 Cc: cem@kernel.org
-Subject: [PATCH 39/59] xfs: validate mapping exchange done items during recovery
-Date: Tue, 17 Nov 2026 10:14:56 +1100
-Message-ID: <20261116231707.3625263-40-dgc@kernel.org>
+Subject: [PATCH 40/59] xfs: validate dquot items during recovery
+Date: Tue, 17 Nov 2026 10:14:57 +1100
+Message-ID: <20261116231707.3625263-41-dgc@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20261116231707.3625263-1-dgc@kernel.org>
 References: <20261116231707.3625263-1-dgc@kernel.org>
@@ -59,68 +59,177 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-A mapping exchange done item is a single fixed size region, but recovery only
-checked its length in the commit handler and never checked its padding.
+A dquot item is a format header region followed by the dquot record region.
+Recovery validated the dquot record with xfs_dquot_verify() but never checked
+the log format header, and only loosely checked the record region size, all
+during commit rather than as the item was decoded. The buffer address and
+offset in the format header were used to read a buffer without any bounds
+checking.
 
-Validate the region length and require the padding to be zero as the item is
-decoded. The commit handler can then trust the item, so the length check is
-removed from it.
+Validate the region layout and the whole item up front as it is decoded, so
+commit and readahead can trust the item. The location of a dquot within its
+cluster buffer is fixed by the dquot ID, so the logged offset must match the
+location derived from the ID. The redundant checks are removed from commit and
+readahead.
 
 Assisted-by: LLM
 Signed-off-by: Dave Chinner <dgc@kernel.org>
 ---
- fs/xfs/xfs_exchmaps_item.c | 32 ++++++++++++++++++++++++++++----
- 1 file changed, 28 insertions(+), 4 deletions(-)
+ fs/xfs/xfs_dquot_item_recover.c | 119 ++++++++++++++++++++++++++------
+ 1 file changed, 97 insertions(+), 22 deletions(-)
 
-diff --git a/fs/xfs/xfs_exchmaps_item.c b/fs/xfs/xfs_exchmaps_item.c
-index 973df8ded795..02e57aee1fa3 100644
---- a/fs/xfs/xfs_exchmaps_item.c
-+++ b/fs/xfs/xfs_exchmaps_item.c
-@@ -629,17 +629,41 @@ xlog_recover_xmd_commit_pass2(
- 	struct xfs_xmd_log_format	*xmd_formatp;
+diff --git a/fs/xfs/xfs_dquot_item_recover.c b/fs/xfs/xfs_dquot_item_recover.c
+index 1291e50d3031..b0be570c4842 100644
+--- a/fs/xfs/xfs_dquot_item_recover.c
++++ b/fs/xfs/xfs_dquot_item_recover.c
+@@ -35,11 +35,6 @@ xlog_recover_dquot_ra_pass2(
+ 		return;
  
- 	xmd_formatp = item->ri_buf[0].iov_base;
--	if (item->ri_buf[0].iov_len != sizeof(struct xfs_xmd_log_format)) {
--		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW,
--				 -EFSCORRUPTED, log->l_mp);
-+	xlog_recover_release_intent(log, XFS_LI_XMI, xmd_formatp->xmd_xmi_id);
-+	return 0;
+ 	recddq = item->ri_buf[1].iov_base;
+-	if (recddq == NULL)
+-		return;
+-	if (item->ri_buf[1].iov_len < sizeof(struct xfs_disk_dquot))
+-		return;
+-
+ 	type = recddq->d_type & XFS_DQTYPE_REC_MASK;
+ 	ASSERT(type);
+ 	if (log->l_quotaoffs_flag & type)
+@@ -80,15 +75,6 @@ xlog_recover_dquot_commit_pass2(
+ 		return 0;
+ 
+ 	recddq = item->ri_buf[1].iov_base;
+-	if (recddq == NULL) {
+-		xfs_alert(log->l_mp, "NULL dquot in %s.", __func__);
+-		return -EFSCORRUPTED;
+-	}
+-	if (item->ri_buf[1].iov_len < sizeof(struct xfs_disk_dquot)) {
+-		xfs_alert(log->l_mp, "dquot too small (%zd) in %s.",
+-			item->ri_buf[1].iov_len, __func__);
+-		return -EFSCORRUPTED;
+-	}
+ 
+ 	/*
+ 	 * This type of quotas was turned off, so ignore this record.
+@@ -109,14 +95,6 @@ xlog_recover_dquot_commit_pass2(
+ 	 * removed since the last mount - ENOSYS.
+ 	 */
+ 	dq_f = item->ri_buf[0].iov_base;
+-	ASSERT(dq_f);
+-	fa = xfs_dquot_verify(mp, recddq, dq_f->qlf_id);
+-	if (fa) {
+-		xfs_alert(mp, "corrupt dquot ID 0x%x in log at %pS",
+-				dq_f->qlf_id, fa);
+-		return -EFSCORRUPTED;
+-	}
+-	ASSERT(dq_f->qlf_len == 1);
+ 
+ 	/*
+ 	 * At this point we are assuming that the dquots have been allocated
+@@ -175,8 +153,105 @@ xlog_recover_dquot_commit_pass2(
+ 	return error;
+ }
+ 
++/* A dquot item is a format header region followed by the dquot record. */
++static int
++xlog_recover_dquot_nregions(
++	struct xlog			*log,
++	uint16_t			nregions)
++{
++	if (nregions != 2)
++		return -EFSCORRUPTED;
++	return 2;
 +}
 +
-+/* The xmd is a single fixed size region. */
 +static int
-+xlog_recover_xmd_validate_region(
++xlog_recover_dquot_validate_region(
 +	struct xlog			*log,
 +	struct xlog_recover_item	*item,
 +	int				region_index)
 +{
-+	struct xfs_xmd_log_format	*xmd_formatp =
-+		item->ri_buf[region_index].iov_base;
++	size_t				len = item->ri_buf[region_index].iov_len;
++	size_t				expected;
 +
-+	if (item->ri_buf[region_index].iov_len !=
-+			sizeof(struct xfs_xmd_log_format)) {
-+		xfs_warn(log->l_mp, "XMD: bad item region length %zu recovered.",
-+				item->ri_buf[region_index].iov_len);
++	if (region_index == 0)
++		expected = sizeof(struct xfs_dq_logformat);
++	else
++		expected = sizeof(struct xfs_disk_dquot);
++
++	if (len != expected) {
++		xfs_warn(log->l_mp,
++			"DQUOT: bad region %d length %zu recovered.",
++			region_index, len);
 +		return -EFSCORRUPTED;
 +	}
 +
-+	/* The padding is always written as zero. */
-+	if (xmd_formatp->__pad != 0) {
-+		xfs_warn(log->l_mp, "XMD: bad padding 0x%x recovered.",
-+				xmd_formatp->__pad);
- 		return -EFSCORRUPTED;
- 	}
- 
--	xlog_recover_release_intent(log, XFS_LI_XMI, xmd_formatp->xmd_xmi_id);
- 	return 0;
- }
- 
- const struct xlog_recover_item_ops xlog_xmd_item_ops = {
- 	.item_type		= XFS_LI_XMD,
-+	.min_hdr_len		= sizeof(struct xfs_xmd_log_format),
-+	.validate_nregions	= xlog_recover_single_region,
-+	.validate_region	= xlog_recover_xmd_validate_region,
- 	.commit_pass2		= xlog_recover_xmd_commit_pass2,
++	return 0;
++}
++
++static int
++xlog_recover_dquot_validate_item(
++	struct xlog			*log,
++	struct xlog_recover_item	*item)
++{
++	struct xfs_mount		*mp = log->l_mp;
++	struct xfs_dq_logformat		*dq_f = item->ri_buf[0].iov_base;
++	struct xfs_disk_dquot		*ddq = item->ri_buf[1].iov_base;
++	xfs_failaddr_t			fa;
++	unsigned int			ndquots;
++	unsigned int			start;
++	unsigned int			end;
++
++	if (dq_f->qlf_len != XFS_DQUOT_CLUSTER_SIZE_FSB) {
++		xfs_warn(mp, "DQUOT: bad buffer length %d recovered.",
++				dq_f->qlf_len);
++		return -EFSCORRUPTED;
++	}
++
++	/*
++	 * There is a fixed relationship between the dquot ID and its location
++	 * in the cluster buffer. These must match and the dqblk must still fit
++	 * within the dquot cluster buffer size.
++	 */
++	ndquots = xfs_calc_dquots_per_chunk(
++			XFS_FSB_TO_BB(mp, XFS_DQUOT_CLUSTER_SIZE_FSB));
++	start = (dq_f->qlf_id % ndquots) * sizeof(struct xfs_dqblk);
++	end = start + sizeof(struct xfs_dqblk);
++	if (dq_f->qlf_boffset != start) {
++		xfs_warn(mp,
++	"DQUOT: dquot id 0x%x bad buffer offset %u, expected %u recovered.",
++				dq_f->qlf_id, dq_f->qlf_boffset, start);
++		return -EFSCORRUPTED;
++	}
++	if (end > XFS_FSB_TO_B(mp, XFS_DQUOT_CLUSTER_SIZE_FSB)) {
++		xfs_warn(mp,
++	"DQUOT: dquot id 0x%x at offset %u overruns buffer size %lld recovered.",
++				dq_f->qlf_id, start,
++				XFS_FSB_TO_B(mp, XFS_DQUOT_CLUSTER_SIZE_FSB));
++		return -EFSCORRUPTED;
++	}
++
++	if (!xfs_verify_fsbno(mp, XFS_DADDR_TO_FSB(mp, dq_f->qlf_blkno))) {
++		xfs_warn(mp, "DQUOT: bad buffer block 0x%llx recovered.",
++				dq_f->qlf_blkno);
++		return -EFSCORRUPTED;
++	}
++
++	fa = xfs_dquot_verify(mp, ddq, dq_f->qlf_id);
++	if (fa) {
++		xfs_warn(mp, "DQUOT: dquot id 0x%x failed validation at %pS",
++				dq_f->qlf_id, fa);
++		return -EFSCORRUPTED;
++	}
++
++	return 0;
++}
++
+ const struct xlog_recover_item_ops xlog_dquot_item_ops = {
+ 	.item_type		= XFS_LI_DQUOT,
++	.min_hdr_len		= sizeof(struct xfs_dq_logformat),
++	.validate_nregions	= xlog_recover_dquot_nregions,
++	.validate_region	= xlog_recover_dquot_validate_region,
++	.validate_item		= xlog_recover_dquot_validate_item,
+ 	.ra_pass2		= xlog_recover_dquot_ra_pass2,
+ 	.commit_pass2		= xlog_recover_dquot_commit_pass2,
  };
 -- 
 2.55.0
