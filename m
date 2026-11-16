@@ -1,50 +1,50 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794871051;
-	b=KOgtlAh7YaEQIn/TJVnwiOukq7HrdmsU4lm48rHGRNUftA7bTRhrQxWHrsDAq5+N9tn6
-	 iB84h+C0xR+w0FxB2FYzk+dUNbOqubmiiljfvakvpIZeWJanIXVuifW90DBYbRZH5k+6n
-	 tVPKzS8Oc3GVAfT45KpQgf5YIbKwsdXCfGp7UWY0U4tL3eZDG6A6iDeusf9pk9xkhWmSJ
-	 ayTWfk6kuuYMvZKV1CDTDuWDJKNmVoiAgdefOEoLo5IDEgDYKoixhx21pVZBfwN5SY7gP
-	 M1klgTsTL1KTjlJBW8mJu1b7g4FQZJkncxmrHKnC+c04DdZuRlEgmzWC5HbDtRQIeSg==
+	t=1794871052;
+	b=qUOL9lF5KGoSwxb5mZw/brzTicfunXlhHgHnUwzyx+hrainzU6lH5mhrIDIfx89kcwbY
+	 z9X0xv86NGEoYCLKUKySVWzlUwrryOT/uC9Mz3cyyaOuJsh4ehYLwDn/4prBS2w9jgpd2
+	 UtsggWWaUUI6w7ODaAUV8932gtWYwnD5zVJTQlX1Xm3P4gjeyrvyDfrE0+PvdEvL9t5Oq
+	 NHEscIF1u9FXl0AtcHHz7hmPF29BUzoO7kHwFrQcp9BOVbqABLnGU7IHjPc7OqO9yp6JQ
+	 jWVaKWLtC58rZwlfFa3cm1d+W//PMHakDPPejYfEGPIPJ0T7Yg/TU9VGDd0YZEJhJIw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794871051;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794871052;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=W8FHly6CvGMspDvbmx0et8aeYnC0kIh1/YKD+wH1U2Q=;
-	b=DoYsaEUA1TVUUXaKTMxCHR3/rPvdQnnK4NS0/hdzWS1yWsu9dFCEK1XKi3pcQ5ctXWSG
-	 9YXQ8s4YXz0v5I3s/p17dN0EmZOTi6iXZsqVqWRvyAE0vkIN2zlH3CvKdyXx3Q9PD7OIV
-	 d0IOla66YXuorlyMV5Ej1mfQeujzON6PRSpuPYsk88ukhEPaP0HvNV+hWxUnJRcqMf9np
-	 drl9Yu4pyRRp698enuX6BrjglT12gEVb6cZZrkbR6WYoDSs+NozExQVPPrzIA6SuKCuJF
-	 KdPisF/Jxt2bKs7jmPuVUkJFnCO2mxA0BozOfwnrd3XdWaGoHI5tZk9WyqTG8HzZkkQ==
+	bh=zNgP1OYAQxv13bTV/PhGDAf28ID/3rSANZZpoaPRcMo=;
+	b=vbjGRRSprP/TUJ6b2qM5tx2O/fsy2tvZ8ETFxL7U6X9t1f3CZ/RqBiOP4PZHjj4PUKcT
+	 kX21ckMyVZyLhp5/K3tRyD/WUSkUsScY7h0TzqDA+8lJPK0V1No/rsVSwVVmdUY2HVaZe
+	 PtTt8b78cflINSlKBC1+N1n+cdkk86F9g0hD8BXmOwagR6ggMXc27hImo/7JdezL77OX0
+	 Z5X2eC+dgnW368oi0zDzVnYY46gz+gQuGUBZ/E5rl/6jmEJiTuUnAN+FR7kquXBLrOl6e
+	 eo7KcRjBVeCRDLc1mXRyR9A5cKxpMkKNVQrEb1d7Ny14f5x1JiYxrl5VBNYI8UoY+6g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HUjQo30y;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=KQkP5u8F;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3559F606A32F
-	for <linux-xfs@vger.kernel.org>; Mon, 16 Nov 2026 23:17:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0D56606A31C
+	for <linux-xfs@vger.kernel.org>; Mon, 16 Nov 2026 23:17:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HUjQo30y
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 596911F000C4;
-	Mon, 16 Nov 2026 23:17:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=KQkP5u8F
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8B1C11F000C7;
+	Mon, 16 Nov 2026 23:17:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794871051;
-	bh=W8FHly6CvGMspDvbmx0et8aeYnC0kIh1/YKD+wH1U2Q=;
+	s=k20260515; t=1794871052;
+	bh=zNgP1OYAQxv13bTV/PhGDAf28ID/3rSANZZpoaPRcMo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=HUjQo30ysTsg1AXo5994LVruQjkJv7BggmxmjcE6wT6iVjVCHbfxSNk7/usyuSq7l
-	 cEGMvLDlFprKPlRiXLkQBSP9cxE/IPLVjWoaiCEYIgt1ANwWGv4XVTcqwqdsYnk7xh
-	 0HUE94geh1RU3/KycGif1S0cpzpbOLMpb0PaPgXrmTQtUet5gQBdBJIppzxqbhubqJ
-	 0o8Ml4RVREerzsgWWzSv3ORgB1OMIrpekPrVsqwJOcResa5v/7n7GU4sVobn7xxixo
-	 xJPoUjtg0LVJg3LnSCGRc1jVMvg2FSMVMf9XklZTdtKFP8It5nf1iSrjEY2STeCGEH
-	 v8hd7br5QKCNQ==
+	b=KQkP5u8FZV2gD0LAns9zxznen0QJV3T5tIZm0OdKiULu9xtNzp++6CJW12I4KP8qN
+	 100QuQIoasDEyxEHXhGdXvCAX2WrrypV1hQHCWLfoa2G2dpq3Ip4eqAdOMqgD5JnJP
+	 nCNlzfICbaeNyILNNaYHrBRXhyCI7c5LIgQg/K2Enfl8Dc4Cz96qSo5BwlK0wYP7Vj
+	 Cx0OAIQNXMJDkfrxTqT2Kx71o7J7SVMMrAid9BOPyN1MZnNLjetp/XXBQJmS4hP1PQ
+	 NLGBGM0d17aOzt3paFeQJA15LoD/pI7yaab68x6qrCglx+ocTQ2ZF+acFVEKAUxG00
+	 PWgDr2Ga2hoRA==
 From: Dave Chinner <dgc@kernel.org>
 To: linux-xfs@vger.kernel.org
 Cc: cem@kernel.org
-Subject: [PATCH 13/59] xfs: lift transaction header parsing out of the region assembly
-Date: Tue, 17 Nov 2026 10:14:30 +1100
-Message-ID: <20261116231707.3625263-14-dgc@kernel.org>
+Subject: [PATCH 14/59] xfs: track transaction header decode state explicitly
+Date: Tue, 17 Nov 2026 10:14:31 +1100
+Message-ID: <20261116231707.3625263-15-dgc@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20261116231707.3625263-1-dgc@kernel.org>
 References: <20261116231707.3625263-1-dgc@kernel.org>
@@ -59,187 +59,84 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The transaction header at the start of a recovered transaction is not a log
-item. Its parsing is tangled into the generic log item region assembly code.
-Both region assembly functions carry a special case that decodes the header
-instead of a log item region while the item queue is empty.
+Recovery decides whether an incoming op record is part of the transaction
+header by checking whether the transaction item queue is empty. That is an
+indirect signal. It only works because no item is added until the header is
+complete.
 
-Move the header decoding into a single helper called before log item region
-processing. The two header decode paths are merged, so the header length is
-checked in one place. A header fragment must now be at least 4 bytes, the
-minimum needed to read the magic number. The bad magic warning reports the
-observed and expected values. The ASSERT(0) calls on the corruption paths are
-removed so debug builds exercise the error paths.
-
-The header is still reassembled in place. The first log item is still added
-once the header is complete. Removing the header special cases allows the
-region assembly functions to be simplified in following patches.
+Add an explicit flag to the recovery transaction. It is set once the header
+has been fully assembled, at the same point the first item is added. Use it to
+route op records instead of the item queue state. There is no functional
+change.
 
 Assisted-by: LLM
 Signed-off-by: Dave Chinner <dgc@kernel.org>
 ---
- fs/xfs/xfs_log_recover.c | 113 +++++++++++++++++++++++++--------------
- 1 file changed, 73 insertions(+), 40 deletions(-)
+ fs/xfs/libxfs/xfs_log_recover.h |  1 +
+ fs/xfs/xfs_log_recover.c        | 24 ++++++++++++++----------
+ 2 files changed, 15 insertions(+), 10 deletions(-)
 
+diff --git a/fs/xfs/libxfs/xfs_log_recover.h b/fs/xfs/libxfs/xfs_log_recover.h
+index 9e712e62369c..ad73a1a6abf8 100644
+--- a/fs/xfs/libxfs/xfs_log_recover.h
++++ b/fs/xfs/libxfs/xfs_log_recover.h
+@@ -115,6 +115,7 @@ struct xlog_recover {
+ 	int			r_state;	/* not needed */
+ 	xfs_lsn_t		r_lsn;		/* xact lsn */
+ 	struct list_head	r_itemq;	/* q for items */
++	bool			r_hdr_decoded;	/* trans header fully decoded */
+ };
+ 
+ #define ITEM_TYPE(i)	(*(unsigned short *)(i)->ri_buf[0].iov_base)
 diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index fd356b09f9d1..494bf5ebfa7b 100644
+index 494bf5ebfa7b..c50f85757216 100644
 --- a/fs/xfs/xfs_log_recover.c
 +++ b/fs/xfs/xfs_log_recover.c
-@@ -2108,35 +2108,76 @@ xlog_recover_add_item(
- 	list_add_tail(&item->ri_list, head);
+@@ -2155,15 +2155,19 @@ xlog_recover_init_new_trans(
+ 				sizeof(struct xfs_trans_header) - len;
+ 	}
+ 
++	memcpy(ptr, dp, len);
++
+ 	/*
+-	 * Add an item to the transaction once the header is complete: for an
+-	 * unsplit header that is this initial fragment (len == full header),
++	 * The header is complete once the full struct has been assembled: for
++	 * an unsplit header that is this initial fragment (len == full header),
+ 	 * and for a split header it is the continuation fragment that finishes
+-	 * it.
++	 * it. Mark it decoded and add the item that subsequent log item regions
++	 * will be decoded into.
+ 	 */
+-	if (cont || len == sizeof(struct xfs_trans_header))
++	if (cont || len == sizeof(struct xfs_trans_header)) {
++		trans->r_hdr_decoded = true;
+ 		xlog_recover_add_item(&trans->r_itemq);
+-	memcpy(ptr, dp, len);
++	}
+ 	return 0;
  }
  
-+/*
-+ * Decode the transaction header at the start of a new transaction.
-+ *
-+ * The transaction header is not a log item. It can be arbitrarily split across
-+ * op records, so it may arrive whole in a single op record, or as an initial
-+ * fragment (cont == false) followed by one or more continuation fragments
-+ * (cont == true). Reassemble it directly into r_theader where the rest of
-+ * recovery expects to find it.
-+ */
- STATIC int
--xlog_recover_add_to_cont_trans(
-+xlog_recover_init_new_trans(
- 	struct xlog		*log,
- 	struct xlog_recover	*trans,
- 	char			*dp,
--	int			len)
-+	int			len,
-+	bool			cont)
- {
--	struct xlog_recover_item *item;
--	char			*ptr, *old_ptr;
--	int			old_len;
-+	char			*ptr;
- 
- 	/*
--	 * If the transaction is empty, the header was split across this and the
--	 * previous record. Copy the rest of the header.
-+	 * All regions are 32 bit aligned, so the smallest valid fragment is 4
-+	 * bytes; that is also the minimum needed to read the magic number. A
-+	 * fragment larger than the whole header is corruption in either case.
- 	 */
--	if (list_empty(&trans->r_itemq)) {
--		ASSERT(len <= sizeof(struct xfs_trans_header));
--		if (len > sizeof(struct xfs_trans_header)) {
--			xfs_warn(log->l_mp, "%s: bad header length", __func__);
-+	if (len < 4 || len > sizeof(struct xfs_trans_header)) {
-+		xfs_warn(log->l_mp, "%s: bad header length %d", __func__, len);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	if (!cont) {
-+		/*
-+		 * Initial fragment. The magic number is at the start of the
-+		 * header, which lands at the start of r_theader.
-+		 */
-+		if (*(uint *)dp != XFS_TRANS_HEADER_MAGIC) {
-+			xfs_warn(log->l_mp,
-+			"%s: bad header magic number 0x%x, expected 0x%x",
-+				__func__, *(uint *)dp, XFS_TRANS_HEADER_MAGIC);
- 			return -EFSCORRUPTED;
- 		}
--
--		xlog_recover_add_item(&trans->r_itemq);
-+		ptr = (char *)&trans->r_theader;
-+	} else {
-+		/* continuation fragment completes the tail of the header */
- 		ptr = (char *)&trans->r_theader +
- 				sizeof(struct xfs_trans_header) - len;
--		memcpy(ptr, dp, len);
--		return 0;
- 	}
- 
-+	/*
-+	 * Add an item to the transaction once the header is complete: for an
-+	 * unsplit header that is this initial fragment (len == full header),
-+	 * and for a split header it is the continuation fragment that finishes
-+	 * it.
-+	 */
-+	if (cont || len == sizeof(struct xfs_trans_header))
-+		xlog_recover_add_item(&trans->r_itemq);
-+	memcpy(ptr, dp, len);
-+	return 0;
-+}
-+
-+STATIC int
-+xlog_recover_add_to_cont_trans(
-+	struct xlog		*log,
-+	struct xlog_recover	*trans,
-+	char			*dp,
-+	int			len)
-+{
-+	struct xlog_recover_item *item;
-+	char			*ptr, *old_ptr;
-+	int			old_len;
-+
- 	/* take the tail entry */
- 	item = list_entry(trans->r_itemq.prev, struct xlog_recover_item,
- 			  ri_list);
-@@ -2180,31 +2221,6 @@ xlog_recover_add_to_trans(
- 
- 	if (!len)
- 		return 0;
--	if (list_empty(&trans->r_itemq)) {
--		/* we need to catch log corruptions here */
--		if (*(uint *)dp != XFS_TRANS_HEADER_MAGIC) {
--			xfs_warn(log->l_mp, "%s: bad header magic number",
--				__func__);
--			ASSERT(0);
--			return -EFSCORRUPTED;
--		}
--
--		if (len > sizeof(struct xfs_trans_header)) {
--			xfs_warn(log->l_mp, "%s: bad header length", __func__);
--			ASSERT(0);
--			return -EFSCORRUPTED;
--		}
--
--		/*
--		 * The transaction header can be arbitrarily split across op
--		 * records. If we don't have the whole thing here, copy what we
--		 * do have and handle the rest in the next record.
--		 */
--		if (len == sizeof(struct xfs_trans_header))
--			xlog_recover_add_item(&trans->r_itemq);
--		memcpy(&trans->r_theader, dp, len);
--		return 0;
--	}
- 
- 	ptr = xlog_kvmalloc(len);
- 	memcpy(ptr, dp, len);
-@@ -2302,6 +2318,21 @@ xlog_recovery_process_trans(
- 	if (flags & XLOG_WAS_CONT_TRANS)
+@@ -2319,14 +2323,14 @@ xlog_recovery_process_trans(
  		flags &= ~XLOG_CONTINUE_TRANS;
  
-+	/*
-+	 * An empty item queue means we are still decoding the transaction
-+	 * header at the start of the transaction rather than a log item. The
-+	 * header can arrive whole (flags == 0), as an initial fragment
-+	 * (XLOG_CONTINUE_TRANS) or as a continuation fragment
-+	 * (XLOG_WAS_CONT_TRANS); XLOG_WAS_CONT_TRANS distinguishes the
-+	 * continuation.
-+	 */
-+	if (list_empty(&trans->r_itemq) &&
-+	    (!flags || (flags & (XLOG_CONTINUE_TRANS | XLOG_WAS_CONT_TRANS)))) {
-+		error = xlog_recover_init_new_trans(log, trans, dp, len,
-+					flags & XLOG_WAS_CONT_TRANS);
-+		goto out_error;
-+	}
-+
  	/*
- 	 * Callees must not free the trans structure. We'll decide if we need to
- 	 * free it or not based on the operation being done and it's result.
-@@ -2335,6 +2366,8 @@ xlog_recovery_process_trans(
- 		error = -EFSCORRUPTED;
- 		break;
- 	}
-+
-+out_error:
- 	if (error || freeit)
- 		xlog_recover_free_trans(trans);
- 	return error;
+-	 * An empty item queue means we are still decoding the transaction
+-	 * header at the start of the transaction rather than a log item. The
+-	 * header can arrive whole (flags == 0), as an initial fragment
+-	 * (XLOG_CONTINUE_TRANS) or as a continuation fragment
++	 * Until the transaction header has been fully decoded we are still
++	 * assembling it at the start of the transaction rather than decoding a
++	 * log item. The header can arrive whole (flags == 0), as an initial
++	 * fragment (XLOG_CONTINUE_TRANS) or as a continuation fragment
+ 	 * (XLOG_WAS_CONT_TRANS); XLOG_WAS_CONT_TRANS distinguishes the
+ 	 * continuation.
+ 	 */
+-	if (list_empty(&trans->r_itemq) &&
++	if (!trans->r_hdr_decoded &&
+ 	    (!flags || (flags & (XLOG_CONTINUE_TRANS | XLOG_WAS_CONT_TRANS)))) {
+ 		error = xlog_recover_init_new_trans(log, trans, dp, len,
+ 					flags & XLOG_WAS_CONT_TRANS);
 -- 
 2.55.0
 
