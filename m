@@ -1,50 +1,50 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794871035;
-	b=qifT5lf1WjK53BUunNbkCMCSspsow7VLk91s04b5mnWv5NRQ3qp7FFojytp9uj6OnOEP
-	 pTt0Ls7ha6JPdDIreIiFA7YW8Twjae+Yin4VOp1CewJAF2Q2S9P0Ua2kIbtF7dxzUIwLZ
-	 bFIarlE8GV2MdleD81oRyZihIUfjxaAXfyLqV0/o8BLsg/42GQi8blJD11L/QS8mnlzs/
-	 QGsEfvRjKBnUgQsh4jSIC4d24FUZLzThpoCMOTT2yxlqFNOLPmV6MUeFGMlZa9YXV4WNw
-	 i8S5551N5Ll+insbwOGtbN5jc4F3NoFn6NzlVh8OFC/Uwgormk8hqj+5VsKpZNfA9Ew==
+	t=1794871038;
+	b=4EQ+KU2mhidOc6+at+37hbr0r3z8mdupJcA3wcB4MzZjcZ8R0cAaHoMsQAwhTX5iRHwO
+	 kpRvGY6iYzi3WpifmcTNA5WDGaYBFuHQboBpVIoOQeiwx8cEMh0qTB1upZhocc413szfi
+	 xq5uWLSKkJjNkKtm3BoaREmwu06sSDqeHYeGMcgsWom0L2rZXIBCnzDWdNCvUFXIPgNcV
+	 hZKIgNNxUiqE3w4mcpSDN2/l0zim8SNiZZa36+OtQ5r0+CPyXqJvvn9/Tmy0ztIA9X6UZ
+	 ipnM59BwYitpsEqHKdPS71EwONoNuYvotPctj2LfIEMI8tuUhSAvnhv+SeNOYyNKFew==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794871035;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794871038;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=Ggq+NIlJ11ouVICCn+Z8RYg+IPNPn0JrAipHGAb4jMU=;
-	b=1rSQ82RFlRWVdSbIroGs6WTzeBwb8Pv5AbtG0Q9gWkTAPXrTzJJKi1FXbuuexymkzr9x
-	 gNVDKbcchafiiRm0Pge0FShvPnzLfIEy5JxwMSkLwMt1H+UQOk7C1Eltug6StNMuRHc2b
-	 aCyG5FPeo15fts3isF7IU7lG/sxxhm3SISuf5hlSeTtlHNJ8saaXp+zhBTZryzj5poqXD
-	 i6f500XozhfpmvkHJwyrDpbh1iJdseAJ8zbYG+aUHRwW+xW705PMhPgwi7zuEGFQ/6CF7
-	 1U0L2KAkZI+E8boPw8tMuC9XgToVATFHfpKo035KQTC4Estlz+hp53xPKUNX4XuNolw==
+	bh=YeL8yRXu2RhjyFwDwFEeBg11Sncko6M+bdov2T+ysTo=;
+	b=dOx+4dbJPBhpDWhapuokJVXTUj9jV25ptNUKMtNK2gEFPpGKEuu6D2aPUiyCxaTc3Yhg
+	 6ah+PGR7Ln2fA/+4/TqKSdqOpwiA2AKF8mY+tyHnV3z6JSS49FdyAoeJVrblx1IL6qF0y
+	 1O6nN24o3BUwvND31bz0xLs2E6JwKb+FQxtR6V0MYFcy4BVf31LserLC/s1iC+PwGO4JI
+	 2iH8HzmB6xlFCDa43LmVDpc2rTU9/46B/eLtEwowZd8hs86reKfjEa8yIgxYsqci5suDI
+	 I+MFhflAB17Mj0c36wILXIZDELIBlsx9r7qmSPIBvDAJoIyzVaZAEu4J32+olFgvMZg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="chf/UGQR";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=oVE04ZWG;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D039B606A32C
-	for <linux-xfs@vger.kernel.org>; Mon, 16 Nov 2026 23:17:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72759606A323
+	for <linux-xfs@vger.kernel.org>; Mon, 16 Nov 2026 23:17:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=chf/UGQR
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EB6A61F000C5;
-	Mon, 16 Nov 2026 23:17:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=oVE04ZWG
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5E2601F000C4;
+	Mon, 16 Nov 2026 23:17:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794871035;
-	bh=Ggq+NIlJ11ouVICCn+Z8RYg+IPNPn0JrAipHGAb4jMU=;
+	s=k20260515; t=1794871038;
+	bh=YeL8yRXu2RhjyFwDwFEeBg11Sncko6M+bdov2T+ysTo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=chf/UGQR7p2S4NbxvFB4TmxqAw/P/B5HfGB7magptL69b1AVtEVdkxIootPxr46FB
-	 2OGcX2/yiagRGJVKBOg+A1Hk/GEZfRAOzUKp5bOYydHlOFOPXIJnBh7Ah+A55jZzrq
-	 ibCp1PRBWGEtoV/xaeb/GmsVVSv47vrCuJxlM67JPfhGx3cfcn8vy17jhH3EVB5AhX
-	 PVVSS9iGPMP4pEb8s5DFVuodyYnDQdiDit9CU89Ks5T8QVsYVp93lMnlNPnyCA1FM3
-	 gqSF2DpBp/rpqhD2cXlFqwi+YjK2bLOEB5D/VN/e8HK122xm5wKswVKVJE3xmVs0kQ
-	 2eoQPugdSFiGw==
+	b=oVE04ZWG8kK0lGLzC6xTvR1+3WVzX6cqzyg3AmxhWQBuEb+aawNwgnbB9Q6v8wOTi
+	 EZfYRZd67P+CE2r1HfiT85Z4Wa7ePpN4AJd9CV6JNO38yHFfjhpQzY2rhD9q1oMkKh
+	 k3f7u8NZiasaqYDJB2QGAof9YEjKS46euhAGwi7QXWOP2KwN7/VVBBHNtYGtGOoTIq
+	 8joR211HaTbF+fvYwKGHrdFu4WpH9LGYc2wNWAhasQxGlnun40YYZhozdUe9hWSGRY
+	 XvWYPvQ7fx+C7BTiRSNmOv+DqEizMrSalHu6XYlZYwbc+G3CIhBwq4pNKzV+wFIYro
+	 veamIgTkUU/Tg==
 From: Dave Chinner <dgc@kernel.org>
 To: linux-xfs@vger.kernel.org
 Cc: cem@kernel.org
-Subject: [PATCH 01/59] xfs: set the unmount record operation header length
-Date: Tue, 17 Nov 2026 10:14:18 +1100
-Message-ID: <20261116231707.3625263-2-dgc@kernel.org>
+Subject: [PATCH 03/59] xfs: allow an empty rt refcount btree root before the rt volume exists
+Date: Tue, 17 Nov 2026 10:14:20 +1100
+Message-ID: <20261116231707.3625263-4-dgc@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20261116231707.3625263-1-dgc@kernel.org>
 References: <20261116231707.3625263-1-dgc@kernel.org>
@@ -59,73 +59,99 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The unmount record is written to the log with a hand built operation
-header passed directly to xlog_write() through xlog_write_one_vec().
-The operation header length was never set, so the unmount record is
-written with a zero length header even though it carries an unmount
-log format structure. Recovery does not check the unmount record, so
-the incorrect length goes unnoticed.
+There is a transient state on disk where an rtrefcount inode has no contents,
+because growfs can create rtrefcount inodes dynamically. m_rtrefc_maxlevels is
+zero until growfs adds the first realtime volume. Growfs loads an existing
+rtrefcount inode before it adds the space and recomputes m_rtrefc_maxlevels. An
+inode left behind by an earlier growfs that failed after creating it is loaded
+while m_rtrefc_maxlevels is still zero.
 
-Before commit db357078b0423e ("xfs: introduce xlog_write_full()")
-the operation header length was rewritten correctly by xlog_write(),
-hence the incorrectly built unmount header went unnoticed. After
-that commit, xlog_write() never rewrote operation header lengths for
-regions that fit fully into the iclog. This change exposed the
-problem with the unmount record header construction.
+Commit cc3144da377d changed the root loader to reject levels at or above
+m_rtrefc_maxlevels. That rejects every level when m_rtrefc_maxlevels is zero,
+including the empty level zero root. A retried growfs then fails on a valid
+inode.
 
-Set the operation header length when building the unmount record.
-xlog_write_one_vec() now validates that the operation header length
-is set correctly for the region being written, and shuts down the
-filesystem if a malformed record write is detected.
+Accept an empty level zero root when m_rtrefc_maxlevels is zero. A non-empty
+level zero root is a normal leaf root that is still checked to fit within the
+inode fork.
 
-Fixes: db357078b0423e ("xfs: introduce xlog_write_full()")
+The inode repair code rejects only levels greater than m_rtrefc_maxlevels, so it
+disagrees with the root loader. Give it the same root level rules.
+
+Fixes: cc3144da377d ("xfs: fix off-by-one in rtrefcount btree root level validation")
+Fixes: 92b2019493d1 ("xfs: repair inodes that have a refcount btree in the data fork")
+Cc: stable@vger.kernel.org # v6.14
 Assisted-by: LLM
 Signed-off-by: Dave Chinner <dgc@kernel.org>
 ---
- fs/xfs/xfs_log.c | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+ fs/xfs/libxfs/xfs_rtrefcount_btree.c | 27 +++++++++++++++++++++++----
+ fs/xfs/scrub/inode_repair.c          |  7 ++++++-
+ 2 files changed, 29 insertions(+), 5 deletions(-)
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 74b324f915a1..ab7ee848562c 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -811,6 +811,7 @@ xlog_write_one_vec(
- 	struct xfs_log_iovec	*reg,
- 	struct xlog_ticket	*ticket)
- {
-+	struct xlog_op_header	*ophdr = reg->i_addr;
- 	struct xfs_log_vec	lv = {
- 		.lv_niovecs	= 1,
- 		.lv_iovecp	= reg,
-@@ -818,6 +819,20 @@ xlog_write_one_vec(
- 	};
- 	LIST_HEAD		(lv_chain);
+diff --git a/fs/xfs/libxfs/xfs_rtrefcount_btree.c b/fs/xfs/libxfs/xfs_rtrefcount_btree.c
+index 697f5e622685..b91b2f1895ce 100644
+--- a/fs/xfs/libxfs/xfs_rtrefcount_btree.c
++++ b/fs/xfs/libxfs/xfs_rtrefcount_btree.c
+@@ -559,17 +559,36 @@ xfs_iformat_rtrefcount(
+ 	numrecs = be16_to_cpu(dfp->bb_numrecs);
+ 	level = be16_to_cpu(dfp->bb_level);
  
-+	/*
-+	 * The caller builds the operation header itself, and xlog_write() no
-+	 * longer rewrites the length when the region is written whole. Make sure
-+	 * the length the caller recorded in the header matches the region, so a
-+	 * bad header is caught here rather than being written to the log.
-+	 */
-+	if (reg->i_len != sizeof(*ophdr) + be32_to_cpu(ophdr->oh_len)) {
-+		xfs_alert(log->l_mp,
-+			"%s: region length %u does not match op header length %u",
-+			__func__, reg->i_len, be32_to_cpu(ophdr->oh_len));
-+		xlog_force_shutdown(log, SHUTDOWN_LOG_IO_ERROR);
-+		return -EFSCORRUPTED;
-+	}
+-	if (level >= mp->m_rtrefc_maxlevels ||
+-	    xfs_rtrefcount_droot_space_calc(level, numrecs) > dsize) {
+-		xfs_inode_mark_sick(ip, XFS_SICK_INO_CORE);
+-		return -EFSCORRUPTED;
++	if (level == 0) {
++		/*
++		 * rtrefcount inodes can be dynamically created by growfs,
++		 * resulting in a transient state on disk where they can have no
++		 * contents. Hence a rtrefcount inode with an empty level zero
++		 * root is a valid state. Until growfs adds the first realtime
++		 * volume there is nothing to count, so the root must be empty.
++		 */
++		if (mp->m_rtrefc_maxlevels == 0 && numrecs != 0)
++			goto out_corrupt;
++	} else if (level >= mp->m_rtrefc_maxlevels) {
++		/*
++		 * m_rtrefc_maxlevels includes the inode root level, so the
++		 * deepest valid root level is one less than that.
++		 */
++		goto out_corrupt;
+ 	}
+ 
++	if (xfs_rtrefcount_droot_space_calc(level, numrecs) > dsize)
++		goto out_corrupt;
 +
- 	/* account for space used by record data */
- 	ticket->t_curr_res -= lv.lv_bytes;
+ 	broot = xfs_broot_alloc(xfs_ifork_ptr(ip, XFS_DATA_FORK),
+ 			xfs_rtrefcount_broot_space_calc(level, numrecs));
+ 	if (broot)
+ 		xfs_rtrefcountbt_from_disk(ip, dfp, dsize, broot);
+ 	return 0;
++
++out_corrupt:
++	xfs_inode_mark_sick(ip, XFS_SICK_INO_CORE);
++	return -EFSCORRUPTED;
+ }
  
-@@ -842,6 +857,7 @@ xlog_write_unmount_record(
- 		.ophdr = {
- 			.oh_clientid = XFS_LOG,
- 			.oh_tid = cpu_to_be32(ticket->t_tid),
-+			.oh_len = cpu_to_be32(sizeof(struct xfs_unmount_log_format)),
- 			.oh_flags = XLOG_UNMOUNT_TRANS,
- 		},
- 		.ulf = {
+ /*
+diff --git a/fs/xfs/scrub/inode_repair.c b/fs/xfs/scrub/inode_repair.c
+index 4486881329b9..05bb4be29390 100644
+--- a/fs/xfs/scrub/inode_repair.c
++++ b/fs/xfs/scrub/inode_repair.c
+@@ -1002,8 +1002,13 @@ xrep_dinode_bad_rtrefcountbt_fork(
+ 	nrecs = be16_to_cpu(dfp->bb_numrecs);
+ 	level = be16_to_cpu(dfp->bb_level);
+ 
+-	if (level > sc->mp->m_rtrefc_maxlevels)
++	/* Same root level rules as xfs_iformat_rtrefcount(). */
++	if (level == 0) {
++		if (sc->mp->m_rtrefc_maxlevels == 0 && nrecs != 0)
++			return true;
++	} else if (level >= sc->mp->m_rtrefc_maxlevels) {
+ 		return true;
++	}
+ 	if (xfs_rtrefcount_droot_space_calc(level, nrecs) > dfork_size)
+ 		return true;
+ 	if (level > 0 && nrecs == 0)
 -- 
 2.55.0
 
