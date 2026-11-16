@@ -1,49 +1,53 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794842426;
-	b=4pP5Yw088wfR56ccaWy3V+1lu7lCTdrfxXhG0onH0dY/z9Qyq/ARTKW7k9Jp6+L5R7+d
-	 X2kvaXuC4RqXhqJwo8xpcGGDeNy5Wlk0mhZYP2dfwHiOCtCpYsV84R/+u6cxl+R5XOQNX
-	 6XVqSLWlWrT99PD2pDTDMxw/HS20onf/PNc0+2yjkcyga9jaWnieCZq+ckMq9MtxKRtnh
-	 0VM+KqWoGuJbvAuKVT7kZpDT9wMwTLOuupCST38cuN6st4IQW6elWmeXGt+Aya1a/Poip
-	 spNXWaFMgvNFZJHHTY4VgDiwf2DPezRfHrU1kqyjtQ2FKcD4KHh3qKO2aokTjHMsIZw==
+	t=1794860650;
+	b=TuOraYc1TzZWD9OeY7cEX3PNFrdUIm5ktlzvZGgpc0tS3vBzpYKZ/JUNcwLcr7DeANve
+	 SFyv2ZNwzdF8y2H5a4GWK0C/g+wQc3wwOsnow6hsWJ1wtc5LKeBQB4QDAkvtbAp+TTeP8
+	 yUol+cZxn9QCSpemffA96J9kekd7ALDuOhmX5Fct5827ULZ/WPIPgByUG0P5qEbWWpjAH
+	 0I/O2IaZk/ngXXJXnupqBCsPn68fBdHYAEE8Zhlw+EZ2Kns6piFytemCXeogewylwik9e
+	 UF3/fDSJpmB4lD98GC+sIbmmfaLsAMn0NByHDWt7eAH7CX/9lPmM2LgRvqmkyBUMJ1A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794842426;
-	h=Received:DKIM-Signature:Date:From:To:Subject:Message-ID:MIME-Version:
-	 Content-Type:Content-Disposition:Content-Transfer-Encoding;
-	bh=EuwerLpUZyxMTnfmn/efDAw7K6nLMnb7DdMD/Ec2UXs=;
-	b=MQAX11NqBl2+rF2+/Cm6By0xbZBZ++Ix9iVMRSiRiQKrhRVKXWbzF12E/zigi2JivRV2
-	 oiRIRMLY3wPubX/ocm9k7nwgS2I6kQASJiHYtkvT6qeZ7dnyaMuQI5LxPiy0277AJjRxp
-	 awNXsAGV7nZ81cmzeMPpR0iuKGeSn/FhH3EsOZyJVMo6f0cJ4nnULa1qjoiXB/Vh/bWel
-	 p+WasxfXebyFOHI1cHUXx3YEx/smBGMnbbSWPYDKuHtp1IG6pFG8biJdoY9tK8NwUrceP
-	 lMfDZrx0TQ17uT75JJL/Oz+/MZCG8Rna/45QrFI4/F19mGU+EiqiUV3gwH6dp9jIHew==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794860650;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=HrlmSbrwQHWwvlWeL6X+hzN4/F5s9LgrGzsG4wxnpcM=;
+	b=1NRcF1q2fAXIl9tdE45j8nXqhOlRkMfPEUkGzNsyTHe1tSCqtKF4KMvOjwPwiMdqt+J6
+	 SQXuNN1CDToLre0OEbwX2MWhhnU3H2GmdcwNC4ytnzi23HNSXXXQDivaNqQhxC58Znu1S
+	 NRd2Y6vtTwsO3iZZfQvnsjRfy3MkrXfYtOBzQOwB7EqAb9uY360b6LXsZSRhJmdh4QLG5
+	 W+CZvbrBvO7Y3S59ZGMj/T4pG/4b2KQlCKKmsUK49QU3SzyE4/BzHjsALyLYVAHVRsWgt
+	 UhITEsvy/sTpoUYUyIOesj1LqWWz9lXHwzPr9Q/QSjFqjZsB0zFavoiQE5QH4B+P9ng==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=aaxoqFFN;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UINgJHJi;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8566606A323
-	for <linux-xfs@vger.kernel.org>; Mon, 16 Nov 2026 15:20:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7716606A331
+	for <linux-xfs@vger.kernel.org>; Mon, 16 Nov 2026 20:24:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=aaxoqFFN
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E382D1F000C4
-	for <linux-xfs@vger.kernel.org>; Mon, 16 Nov 2026 15:20:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UINgJHJi
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB9F11F000C5;
+	Mon, 16 Nov 2026 20:24:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794842426;
-	bh=EuwerLpUZyxMTnfmn/efDAw7K6nLMnb7DdMD/Ec2UXs=;
-	h=Date:From:To:Subject;
-	b=aaxoqFFNTsuqpsJXIexE5w1dklE51XNomTVyxMA7QxnTbdQ47mhV25oeDaXgc4pa+
-	 zI9prD+ObTZKt4yMbH9Ss+tmCv5VJRjJ3SaFHIChUd324LUYy0iMdzj5IgrCX9TZMy
-	 P/y3/UJFvvI7AYO52GU0AJ18yEMhTq8Akgv4DhGC23I7quwpHyJaDCBUzvjKMG/IqT
-	 +5NQ2Q1z+g7Y4GiZ1ANFp+2vDa06VcpP9fz+rjR+X8ldCF6pG7W1xiheU6jeR3o5zS
-	 ikT3bjrF1b9R7iJ5Wm8QUJybkboS0g8X7ZgtQAR/2+4EcFg05cPh11gxoH2XVBkK9v
-	 SkbhK39Y8284A==
-Date: Mon, 16 Nov 2026 16:20:23 +0100
-From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org
-Subject: Subject: [ANNOUNCE] xfs-linux: for-next is now 14ae7b4071ae
-Message-ID: <avsecxVFoDKQfexo@nidhogg.toxiclabs.cc>
+	s=k20260515; t=1794860650;
+	bh=HrlmSbrwQHWwvlWeL6X+hzN4/F5s9LgrGzsG4wxnpcM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=UINgJHJigXij+94CcPSZSl/DyWvv9HBouaW35NUOOKk22v0Gl4kMpfGv4SKmhdAmw
+	 F+sFZ6TEBW/zLHknVds2svu/NDR/DaB0tkbQGLkhM+dTIdn3QY6r6l8sVHLXT+qYhk
+	 6YT1VIVvaCXIJjK6lclVunPQpHQLEdm1G9myOt0+tYUDR7cjVSgr4JAeHuqMMb6bNt
+	 Y3jHHs7q20CKdJ3agIeo159gq1+9uFPF7j3PJgf3f31QKRMpDK1EX0cL6YGifLi4eg
+	 m9zL6fidzif8A7I4ikMeySlaBTTfwfgXquGpIr08U5gETLcr3n6DfQb8tL5aASVH0K
+	 psP58c9DohY+Q==
+Date: Tue, 17 Nov 2026 07:24:01 +1100
+From: Dave Chinner <dgc@kernel.org>
+To: John Garry <john.garry@linux.dev>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: do not let tr_atomic_ioend raise the minimum log
+ size
+Message-ID: <avtmYUPn6BMB56AX@dread>
+References: <20261113043055.2578595-1-hengyul@cs.unc.edu>
+ <260c0d7d-39cb-40ca-9a49-2ae8a3531676@linux.dev>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -53,73 +57,111 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <260c0d7d-39cb-40ca-9a49-2ae8a3531676@linux.dev>
 
-Hi folks,
+On Mon, Nov 16, 2026 at 08:54:27AM +0000, John Garry wrote:
+> On 11/13/26 04:30, Hengyu Liang wrote:
+> > Commit b1e09178b73a ("xfs: commit CoW-based atomic writes atomically")
+> > added the tr_atomic_ioend reservation and made
+> > xfs_log_calc_trans_resv_for_minlogblocks() copy it from the running
+> > filesystem.
+> > 
+> > However, the copy has the current log count of tr_itruncate. On a
+> > filesystem with rmapbt and without reflink that count is 4, while the
+> > function puts the old count of 2 back for tr_itruncate itself. As of
+> > now, the minimum log size of such a filesystem is larger than the one
+> > its mkfs.xfs used, and the filesystem does not mount any more when its
+> > log has the old minimum size.
+> > 
+> > The issue can be reproduced with mkfs.xfs from xfsprogs 5.13:
+> > 
+> >      truncate -s 512M xfs.img
+> >      mkfs.xfs -m rmapbt=1,reflink=0 xfs.img
+> >      mount -o loop xfs.img /mnt
+> > 
+> > Before commit b1e09178b73a ("xfs: commit CoW-based atomic writes
+> > atomically"), the mount succeeds.
+> > 
+> > After that commit, it fails with EINVAL:
+> > 
+> >      XFS (loop0): Log size 878 blocks too small, minimum size is 962 blocks
+> >      XFS (loop0): AAIEEE! Log failed size checks. Abort!
+> > 
+> > This patch will use the old log count for the copy as well. These
+> > filesystems have no reflink, so they never use this reservation.
+> > 
+> > Fixes: b1e09178b73a ("xfs: commit CoW-based atomic writes atomically")
+> > Cc: stable@vger.kernel.org # v6.16
+> > Signed-off-by: Hengyu Liang <hengyul@cs.unc.edu>
+> > ---
+> > mkfs.xfs 4.9 to 5.13 give such a log to an rmapbt=1,reflink=0
+> > filesystem below 1 GiB, or up to 16 GiB with -d su=256k,sw=4.
+> > 
+> > Application impact (Ubuntu 26.04 user space): udisks2 2.10.91 is asked
+> > to mount a filesystem made as above ("udisksctl mount -b /dev/vda"). On
+> > v6.15, it mounts it at /run/media/root/STICK513. On v6.16, it fails
+> > with "Error mounting /dev/vda ... wrong fs type, bad option, bad
+> > superblock".
+> > 
+> > Tested on xfs for-next with 45 images made by mkfs.xfs 4.9 to 6.6: 26
+> > do not mount without this patch, all mount with it, and the largest
+> > reservation is the same as on v6.15.
+> > 
+> >   fs/xfs/libxfs/xfs_log_rlimit.c | 2 ++
+> >   1 file changed, 2 insertions(+)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_log_rlimit.c b/fs/xfs/libxfs/xfs_log_rlimit.c
+> > index 37712b2f8757..9454c91e9fb3 100644
+> > --- a/fs/xfs/libxfs/xfs_log_rlimit.c
+> > +++ b/fs/xfs/libxfs/xfs_log_rlimit.c
+> > @@ -128,6 +128,8 @@ xfs_log_calc_trans_resv_for_minlogblocks(
+> >   		resv->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT;
+> >   		resv->tr_itruncate.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
+> >   		resv->tr_qm_dqalloc.tr_logcount = XFS_WRITE_LOG_COUNT;
+> > +		/* tr_atomic_ioend starts as a copy of tr_itruncate. */
+> > +		resv->tr_atomic_ioend.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
+> 
+> I have to admit that I am not really familiar with this log code. Darrick
+> was, but unfortunately he is no involved. The change looks sane, even though
+> we are partially overwriting resv->tr_atomic_ioend (from when it is set
+> earlier in the same function). Dave Chinner may be able to kindly help
+> review.
 
-The xfs-linux/for-next branch has just been updated.
+I'm not sure that it fixes the issue, because the min log
+size calculation should not contain the tr_atomic_ioend reservation
+size at all, regardless of it's value. The minlogsize calc is for
+compatibility with kernels that predate atomic writes completely,
+so adding that reservation to the calc just seems wrong.
 
-Patches often get missed, if your outstanding patches have been
-reviewed, are not already merged in the mainline and are not
-listed below, please give me a heads-up.
+There are more fundamental problems with the atomic ioend
+reservation, though, starting with the 'use truncate as a default'
+behaviour, then changing it later.
 
-Follows the list of staged patches.
+I've been forced to look at this .... mess over the past couple of
+weeks because the journal format validation work I've been doing has
+tripped over reservation recalculation issues.  Growfs (and recovery
+of growfs op) needs to recalculate a bunch of transaction
+reservation values (e.g. all the new rt btree stuff), and the atomic
+write reservations are currently not able to be recalculated
+atomically and safely on a running filesystem. 
 
------ Fixes for v7.4 -----
+Atomic write reservations are also broken w.r.t. remount based size
+changes because running a minlogsize calc on a running filesystem
+temporarily changes mount wide constants for the purposes of
+recalculating the reservations. Remount doesn't stop reads from
+occurring, so various metadata pulled in from disk won't be 
+correctly validated whilst the minlogsize calc is being run....
 
-Chris Mason (11):
-      [8190880c904f] xfs: don't skip the flush before shifting extents
-      [d467837a485c] xfs: flush the shifted range before changing the file
-      [a38c5aadc06a] xfs: don't change the block map under a dirty folio
-      [6fe08320c38c] iomap: don't punch delalloc under a dirty EOF block
-      [3b6942b13203] xfs: test for reflink after the dio write checks
-      [bdc3ee45df55] xfs: test for always COW after the dio write checks
-      [f01f70e00770] xfs: refuse fallocate racing with realtime flag changes
-      [230565493938] xfs: take the MMAPLOCK in xfs_fileattr_set()
-      [03cbbd80a3e7] xfs: restart faults racing with realtime flag changes
-      [44e555acd77a] xfs: don't enable DAX on zoned inodes
-      [855abf2cf8cd] xfs: test for realtime and reflink under the pNFS locks
+A week ago I changed the atomic write reservation code to replace
+the "set default then calculate a different value later" behaviour
+with a single calcuation based on the current log size to avoid
+user-adjustable atomic write size limits having impact on journal
+size limits. I think it will address the above problem, too, but
+I'll have to go check...
 
-Christoph Hellwig (2):
-      [369726f6be71] xfs: always call xfs_update_stable_writes in xfs_ioctl_setattr_xflags
-      [7b2438af4d91] xfs: refuse writes to files racing with realtime inode flag changes
-
-Daejun Park (2):
-      [0d8026c7ac0c] xfs: break layouts before swapping extents
-      [844bc1167f1b] xfs: wait for direct I/O before swapping extents
-
-Eric Sandeen (1):
-      [765db499ad58] xfs: properly order xfsstats proc/sysfs init and teardown
-
-Hengyu Liang (1):
-      [f0b9e58eee23] xfs: fix f_bfree underflow in statfs()
-
-Rik van Riel (1):
-      [f9bfe5af596a] xfs: keep successful near rt allocations
-
-Yiqing Wu (2):
-      [56b3c41b05ae] xfs: remove unused variable in xchk_stats_estimate_bufsize()
-      [5c7da17f904d] xfs: remove unused variable in xrep_tempfile_copyin()
-
------ Next Merge-Window (v7.5) -----
-
-Adrián García Casado (1):
-      [976d3cd5b0a3] xfs: add __printf attribute to xfs_buf_alert_ratelimited()
-
-Carlos Maiolino (1):
-      [e5d3bcc6897a] xfs: remove redundant extra assert from xfs_zone_gc_query
-
-Eric Sandeen (8):
-      [20496da47af3] xfs: remove redundant stat checks after xfs_btree_insert()
-      [e2293d89c56b] xfs: remove redundant stat checks after xfs_refcount_insert()
-      [87f5edcd7190] xfs: remove redundant stat checks after xfs_inobt_insert_rec()
-      [cfad3431d3ad] xfs: remove redundant stat check after rcbagbt_insert()
-      [25b97ffb8111] xfs: remove status parameter from several btree insert functions
-      [c71f58e4fde5] xfs: add stat check to xfs_btree_delete and remove caller checks
-      [12be672e210c] xfs: remove redundant stat checks after xfs_refcount_delete()
-      [01b68405c7f0] xfs: remove status parameter from two btree delete functions
-
-Siddh Raman Pant (1):
-      [13257daacb8f] xfs: Fix duplicate assignment in xfs_alloc_read_agf.
+-Dave.
+-- 
+Dave Chinner
+dgc@kernel.org
