@@ -1,110 +1,49 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794834119;
-	b=IWJLN02QXlBEyXGiBuPzz23CxCBfyc2iCCp87w+v6LzomEjIQh/SVF2Iu7YMy5hPCJVE
-	 7sTUXPqnRH5HJM7seQ2CC/7oAkSQQBc8NTEUKy8awMmkuDcCqIAFmDV1EFLhvs8M+wczK
-	 8Fv7xESkMEsc5yzpQCetkVPQjfYO3Pgb4KaXpTrhx7aBKlVL7bXFR5rjaDiLux7/FXqAV
-	 Bnwy9HvzHTWEM3KIC1F3cHRaXHVSMbAbyjW2XjlTgM7ZUCAZAIfdJRdzx4kDT0j8mAmgt
-	 noI//RBjExTfLbmBENurWmaZ7PZtKNyHlxWF0o1u7VhFPN+MWT3Z/KDomFsljwx0YwA==
+	t=1794842426;
+	b=4pP5Yw088wfR56ccaWy3V+1lu7lCTdrfxXhG0onH0dY/z9Qyq/ARTKW7k9Jp6+L5R7+d
+	 X2kvaXuC4RqXhqJwo8xpcGGDeNy5Wlk0mhZYP2dfwHiOCtCpYsV84R/+u6cxl+R5XOQNX
+	 6XVqSLWlWrT99PD2pDTDMxw/HS20onf/PNc0+2yjkcyga9jaWnieCZq+ckMq9MtxKRtnh
+	 0VM+KqWoGuJbvAuKVT7kZpDT9wMwTLOuupCST38cuN6st4IQW6elWmeXGt+Aya1a/Poip
+	 spNXWaFMgvNFZJHHTY4VgDiwf2DPezRfHrU1kqyjtQ2FKcD4KHh3qKO2aokTjHMsIZw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794834119;
-	h=DMARC-Filter:Received:DKIM-Signature:DKIM-Signature:DKIM-Signature:
-	 DKIM-Signature:Received:Received:Received:Date:From:To:Cc:Subject:
-	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
-	 In-Reply-To:X-Spamd-Result:X-Spam-Score:X-Spam-Level:X-Spam-Flag;
-	bh=8hoH9IiMClrhIYBlChM8QXxExxezUhUuWXttxdmFZd0=;
-	b=TSzKpnGqEGFeHvxzudV2WABVYUtnCn2utEdGtwa1GcqcWeFN+tBxuXOIqMsk5GxdSHK4
-	 a+pRQulS0KfdEQQ28RvDWJedS3RYdtxtBU6OMr2qLA6j/mpn97kM3eD/WqI4xq2hpoY3A
-	 kPSBJ2mntKj89Wbh0xe8H53gBfiicXzPzNf8iHwJQw2d9lH2MY5qO0+9GQrzPZdxpxybP
-	 +LyxyfPXZr3LemCLWh7qHuPq3OLARlah9pupJRXmgTZSpfV1caMrelTb4L/udiQ3Eu4E4
-	 xWVIMqu4L5PeRHmElf9OUDmdmH0FWM0l0VqHW6oeNvrLL9W9qMxXfLAHjPagf0Hb8Sg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794842426;
+	h=Received:DKIM-Signature:Date:From:To:Subject:Message-ID:MIME-Version:
+	 Content-Type:Content-Disposition:Content-Transfer-Encoding;
+	bh=EuwerLpUZyxMTnfmn/efDAw7K6nLMnb7DdMD/Ec2UXs=;
+	b=MQAX11NqBl2+rF2+/Cm6By0xbZBZ++Ix9iVMRSiRiQKrhRVKXWbzF12E/zigi2JivRV2
+	 oiRIRMLY3wPubX/ocm9k7nwgS2I6kQASJiHYtkvT6qeZ7dnyaMuQI5LxPiy0277AJjRxp
+	 awNXsAGV7nZ81cmzeMPpR0iuKGeSn/FhH3EsOZyJVMo6f0cJ4nnULa1qjoiXB/Vh/bWel
+	 p+WasxfXebyFOHI1cHUXx3YEx/smBGMnbbSWPYDKuHtp1IG6pFG8biJdoY9tK8NwUrceP
+	 lMfDZrx0TQ17uT75JJL/Oz+/MZCG8Rna/45QrFI4/F19mGU+EiqiUV3gwH6dp9jIHew==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=suse.cz;
-	spf=pass smtp.mailfrom=suse.cz;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=eM0QG5J3;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=nFTu75P6;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=eM0QG5J3;
-	dkim=neutral header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=nFTu75P6;
-	arc=none smtp.remote-ip=195.135.223.131
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=aaxoqFFN;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27331606A31C;
-	Mon, 16 Nov 2026 13:01:58 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 27331606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8566606A323
+	for <linux-xfs@vger.kernel.org>; Mon, 16 Nov 2026 15:20:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=eM0QG5J3;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=nFTu75P6;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=eM0QG5J3;
-	dkim=neutral header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=nFTu75P6
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 6BB9B1F7DC;
-	Mon, 16 Nov 2026 13:01:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1794834116; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=8hoH9IiMClrhIYBlChM8QXxExxezUhUuWXttxdmFZd0=;
-	b=eM0QG5J3Ar/OVjoYH6swhmg6PKuxZgUUR1IHIk43PrM2A69lkei/rWWc3kwcwUbBDqXw8S
-	QdvBdc4NCdthG0uBFU/zIGI5J1Mm9Y7DZOEEAxmMB3uLeAsL2spf0QvibifkOPSJWCfyly
-	fJ/ckF9SV0Ob5fYDpnOl33Pi/4/cnm0=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1794834116;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=8hoH9IiMClrhIYBlChM8QXxExxezUhUuWXttxdmFZd0=;
-	b=nFTu75P6K5wj0EArRmSK26ssY0+ylZtWHcmtzvUewC22sXsLJqxnzJTnrOGcObUSEdlmWm
-	jxJq6udjPa3EjwCw==
-Authentication-Results: smtp-out2.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1794834116; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=8hoH9IiMClrhIYBlChM8QXxExxezUhUuWXttxdmFZd0=;
-	b=eM0QG5J3Ar/OVjoYH6swhmg6PKuxZgUUR1IHIk43PrM2A69lkei/rWWc3kwcwUbBDqXw8S
-	QdvBdc4NCdthG0uBFU/zIGI5J1Mm9Y7DZOEEAxmMB3uLeAsL2spf0QvibifkOPSJWCfyly
-	fJ/ckF9SV0Ob5fYDpnOl33Pi/4/cnm0=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1794834116;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=8hoH9IiMClrhIYBlChM8QXxExxezUhUuWXttxdmFZd0=;
-	b=nFTu75P6K5wj0EArRmSK26ssY0+ylZtWHcmtzvUewC22sXsLJqxnzJTnrOGcObUSEdlmWm
-	jxJq6udjPa3EjwCw==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 4B39A1334C;
-	Mon, 16 Nov 2026 13:01:56 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id 8wKuCcT++mowDAAAD6G6ig
-	(envelope-from <jack@suse.cz>); Mon, 16 Nov 2026 13:01:56 +0000
-Received: by quack.suse.cz (Postfix, from userid 1000)
-	id D12C824DFF; Mon, 16 Nov 2026 14:01:51 +0100 (CET)
-Date: Mon, 16 Nov 2026 14:01:51 +0100
-From: Jan Kara <jack@suse.cz>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: Chris Mason <mason@kernel.org>, tytso@mit.edu, david@fromorbit.com, 
-	jack@suse.cz, djwong@kernel.org, josef@toxicpanda.com, hch@lst.de, 
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, 
-	tz2294@columbia.edu, brauner@kernel.org
-Subject: Re: [PATCH v9 05/14] fs: validate atomic writes after O_APPEND and
- limits
-Message-ID: <m5dhonfzqplecjhldeaws2frc4dzemayru4itnudhdlwhkxld6@5ps7o7uspt7h>
-References: <20261112214604.67875-1-mason@kernel.org>
- <20261112214604.67875-6-mason@kernel.org>
- <avrjDb576l8Eup5s@nidhogg.toxiclabs.cc>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=aaxoqFFN
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E382D1F000C4
+	for <linux-xfs@vger.kernel.org>; Mon, 16 Nov 2026 15:20:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794842426;
+	bh=EuwerLpUZyxMTnfmn/efDAw7K6nLMnb7DdMD/Ec2UXs=;
+	h=Date:From:To:Subject;
+	b=aaxoqFFNTsuqpsJXIexE5w1dklE51XNomTVyxMA7QxnTbdQ47mhV25oeDaXgc4pa+
+	 zI9prD+ObTZKt4yMbH9Ss+tmCv5VJRjJ3SaFHIChUd324LUYy0iMdzj5IgrCX9TZMy
+	 P/y3/UJFvvI7AYO52GU0AJ18yEMhTq8Akgv4DhGC23I7quwpHyJaDCBUzvjKMG/IqT
+	 +5NQ2Q1z+g7Y4GiZ1ANFp+2vDa06VcpP9fz+rjR+X8ldCF6pG7W1xiheU6jeR3o5zS
+	 ikT3bjrF1b9R7iJ5Wm8QUJybkboS0g8X7ZgtQAR/2+4EcFg05cPh11gxoH2XVBkK9v
+	 SkbhK39Y8284A==
+Date: Mon, 16 Nov 2026 16:20:23 +0100
+From: Carlos Maiolino <cem@kernel.org>
+To: linux-xfs@vger.kernel.org
+Subject: Subject: [ANNOUNCE] xfs-linux: for-next is now 14ae7b4071ae
+Message-ID: <avsecxVFoDKQfexo@nidhogg.toxiclabs.cc>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -114,167 +53,73 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <avrjDb576l8Eup5s@nidhogg.toxiclabs.cc>
-X-Spamd-Result: default: False [-12.80 / 50.00];
-	SUSE_INTERNAL_BYPASS(-9.00)[];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	ARC_NA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	RCPT_COUNT_TWELVE(0.00)[13];
-	MISSING_XM_UA(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	RCVD_COUNT_THREE(0.00)[3];
-	TO_DN_SOME(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	URIBL_BLOCKED(0.00)[suse.cz:email,suse.com:email,imap1.dmz-prg2.suse.org:helo];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	RCVD_TLS_LAST(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,imap1.dmz-prg2.suse.org:helo,suse.cz:email]
-X-Spam-Score: -12.80
-X-Spam-Level: 
-X-Spam-Flag: NO
+Content-Transfer-Encoding: 8bit
 
-On Mon 16-11-26 12:05:26, Carlos Maiolino wrote:
-> On Thu, Nov 12, 2026 at 04:46:09PM -0500, Chris Mason wrote:
-> > An RWF_ATOMIC write on XFS with reflink can expose stale disk contents
-> > if O_APPEND or RLIMIT_FSIZE leaves it sector aligned but not block
-> > aligned.
-> > 
-> > XFS and ext4 call generic_atomic_write_valid() on the range that the
-> > caller passed. But generic_write_checks() changes the range later:
-> > O_APPEND moves the position, and RLIMIT_FSIZE cuts the length. XFS can
-> > then fill only a part of a new block, and still map the whole block into
-> > the file:
-> > 
-> >     block size 4096, i_size 512, O_APPEND
-> >     validated:        0 to 4095
-> >     written:          512 to 4607
-> >     new blocks:       0 to 8191
-> >     stale below EOF:  0 to 511
-> > 
-> > The fix used here is to validate an atomic write in
-> > generic_write_checks(), after its range is final, and to refuse one that
-> > was cut. XFS no longer picks the path of an atomic write by the
-> > alignment of the range that the caller passed.
-> > 
-> > Fixes: f096207d3276 ("xfs: Validate atomic writes")
-> > Fixes: 43c696f9d094 ("ext4: Check for atomic writes support in write iter")
-> > Signed-off-by: Chris Mason <mason@kernel.org>
-> 
-> FWIW, this is another patch that would normally go through Brauner's
-> branch, so just in case once we get it settled...
-> 
-> Chris, Ted, Jan. Are you guys fine if I merge this patch through xfs's
-> tree?
+Hi folks,
 
-Yes. For the VFS and ext4 bits feel free to add:
+The xfs-linux/for-next branch has just been updated.
 
-Reviewed-by: Jan Kara <jack@suse.cz>
+Patches often get missed, if your outstanding patches have been
+reviewed, are not already merged in the mainline and are not
+listed below, please give me a heads-up.
 
-								Honza
+Follows the list of staged patches.
 
-> 
-> 
-> > ---
-> > 
-> > Notes:
-> >     v6->v9: no change
-> > 
-> >  fs/ext4/file.c    |  4 ----
-> >  fs/read_write.c   | 13 +++++++++++++
-> >  fs/xfs/xfs_file.c | 17 +++++++++++------
-> >  3 files changed, 24 insertions(+), 10 deletions(-)
-> > 
-> > diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-> > index 50d3c92709c8..e301d4faf1c3 100644
-> > --- a/fs/ext4/file.c
-> > +++ b/fs/ext4/file.c
-> > @@ -802,10 +802,6 @@ ext4_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
-> >  		if (len < EXT4_SB(inode->i_sb)->s_awu_min ||
-> >  		    len > EXT4_SB(inode->i_sb)->s_awu_max)
-> >  			return -EINVAL;
-> > -
-> > -		ret = generic_atomic_write_valid(iocb, from);
-> > -		if (ret)
-> > -			return ret;
-> >  	}
-> >  
-> >  	if (iocb->ki_flags & IOCB_DIRECT)
-> > diff --git a/fs/read_write.c b/fs/read_write.c
-> > index 676728310899..1b34b7382619 100644
-> > --- a/fs/read_write.c
-> > +++ b/fs/read_write.c
-> > @@ -1775,6 +1775,19 @@ ssize_t generic_write_checks(struct kiocb *iocb, struct iov_iter *from)
-> >  	if (ret)
-> >  		return ret;
-> >  
-> > +	/*
-> > +	 * O_APPEND has moved the position and the file size limits have
-> > +	 * shortened the write by now, so this is the range to validate.  An
-> > +	 * atomic write is all or nothing, so refuse it if it got shorter.
-> > +	 */
-> > +	if (iocb->ki_flags & IOCB_ATOMIC) {
-> > +		if (count != iov_iter_count(from))
-> > +			return -EINVAL;
-> > +		ret = generic_atomic_write_valid(iocb, from);
-> > +		if (ret)
-> > +			return ret;
-> > +	}
-> > +
-> >  	iov_iter_truncate(from, count);
-> >  	return iov_iter_count(from);
-> >  }
-> > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> > index be1f775128d1..153f53f964b9 100644
-> > --- a/fs/xfs/xfs_file.c
-> > +++ b/fs/xfs/xfs_file.c
-> > @@ -926,12 +926,21 @@ xfs_file_dio_write(
-> >  	if ((iocb->ki_pos | count) & target->bt_logical_sectormask)
-> >  		return -EINVAL;
-> >  
-> > +	/*
-> > +	 * An atomic write is at least one block long, and generic_write_checks()
-> > +	 * refuses it unless its final position is a multiple of its length.  So
-> > +	 * there is no unaligned case to handle for it.
-> > +	 */
-> > +	if (iocb->ki_flags & IOCB_ATOMIC) {
-> > +		if (xfs_is_zoned_inode(ip))
-> > +			return xfs_file_dio_write_zoned(ip, iocb, from);
-> > +		return xfs_file_dio_write_atomic(ip, iocb, from);
-> > +	}
-> > +
-> >  	if ((iocb->ki_pos | count) & ip->i_mount->m_blockmask)
-> >  		return xfs_file_dio_write_unaligned(ip, iocb, from);
-> >  	if (xfs_is_zoned_inode(ip))
-> >  		return xfs_file_dio_write_zoned(ip, iocb, from);
-> > -	if (iocb->ki_flags & IOCB_ATOMIC)
-> > -		return xfs_file_dio_write_atomic(ip, iocb, from);
-> >  	return xfs_file_dio_write_aligned(ip, iocb, from,
-> >  			&xfs_direct_write_iomap_ops, &xfs_dio_write_ops, NULL);
-> >  }
-> > @@ -1128,10 +1137,6 @@ xfs_file_write_iter(
-> >  
-> >  		if (ocount > xfs_get_atomic_write_max(ip))
-> >  			return -EINVAL;
-> > -
-> > -		ret = generic_atomic_write_valid(iocb, from);
-> > -		if (ret)
-> > -			return ret;
-> >  	}
-> >  
-> >  	if (IS_DAX(inode))
-> > -- 
-> > 2.55.0
-> > 
-> > 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+----- Fixes for v7.4 -----
+
+Chris Mason (11):
+      [8190880c904f] xfs: don't skip the flush before shifting extents
+      [d467837a485c] xfs: flush the shifted range before changing the file
+      [a38c5aadc06a] xfs: don't change the block map under a dirty folio
+      [6fe08320c38c] iomap: don't punch delalloc under a dirty EOF block
+      [3b6942b13203] xfs: test for reflink after the dio write checks
+      [bdc3ee45df55] xfs: test for always COW after the dio write checks
+      [f01f70e00770] xfs: refuse fallocate racing with realtime flag changes
+      [230565493938] xfs: take the MMAPLOCK in xfs_fileattr_set()
+      [03cbbd80a3e7] xfs: restart faults racing with realtime flag changes
+      [44e555acd77a] xfs: don't enable DAX on zoned inodes
+      [855abf2cf8cd] xfs: test for realtime and reflink under the pNFS locks
+
+Christoph Hellwig (2):
+      [369726f6be71] xfs: always call xfs_update_stable_writes in xfs_ioctl_setattr_xflags
+      [7b2438af4d91] xfs: refuse writes to files racing with realtime inode flag changes
+
+Daejun Park (2):
+      [0d8026c7ac0c] xfs: break layouts before swapping extents
+      [844bc1167f1b] xfs: wait for direct I/O before swapping extents
+
+Eric Sandeen (1):
+      [765db499ad58] xfs: properly order xfsstats proc/sysfs init and teardown
+
+Hengyu Liang (1):
+      [f0b9e58eee23] xfs: fix f_bfree underflow in statfs()
+
+Rik van Riel (1):
+      [f9bfe5af596a] xfs: keep successful near rt allocations
+
+Yiqing Wu (2):
+      [56b3c41b05ae] xfs: remove unused variable in xchk_stats_estimate_bufsize()
+      [5c7da17f904d] xfs: remove unused variable in xrep_tempfile_copyin()
+
+----- Next Merge-Window (v7.5) -----
+
+Adrián García Casado (1):
+      [976d3cd5b0a3] xfs: add __printf attribute to xfs_buf_alert_ratelimited()
+
+Carlos Maiolino (1):
+      [e5d3bcc6897a] xfs: remove redundant extra assert from xfs_zone_gc_query
+
+Eric Sandeen (8):
+      [20496da47af3] xfs: remove redundant stat checks after xfs_btree_insert()
+      [e2293d89c56b] xfs: remove redundant stat checks after xfs_refcount_insert()
+      [87f5edcd7190] xfs: remove redundant stat checks after xfs_inobt_insert_rec()
+      [cfad3431d3ad] xfs: remove redundant stat check after rcbagbt_insert()
+      [25b97ffb8111] xfs: remove status parameter from several btree insert functions
+      [c71f58e4fde5] xfs: add stat check to xfs_btree_delete and remove caller checks
+      [12be672e210c] xfs: remove redundant stat checks after xfs_refcount_delete()
+      [01b68405c7f0] xfs: remove status parameter from two btree delete functions
+
+Siddh Raman Pant (1):
+      [13257daacb8f] xfs: Fix duplicate assignment in xfs_alloc_read_agf.
