@@ -1,50 +1,50 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794871038;
-	b=4EQ+KU2mhidOc6+at+37hbr0r3z8mdupJcA3wcB4MzZjcZ8R0cAaHoMsQAwhTX5iRHwO
-	 kpRvGY6iYzi3WpifmcTNA5WDGaYBFuHQboBpVIoOQeiwx8cEMh0qTB1upZhocc413szfi
-	 xq5uWLSKkJjNkKtm3BoaREmwu06sSDqeHYeGMcgsWom0L2rZXIBCnzDWdNCvUFXIPgNcV
-	 hZKIgNNxUiqE3w4mcpSDN2/l0zim8SNiZZa36+OtQ5r0+CPyXqJvvn9/Tmy0ztIA9X6UZ
-	 ipnM59BwYitpsEqHKdPS71EwONoNuYvotPctj2LfIEMI8tuUhSAvnhv+SeNOYyNKFew==
+	t=1794871039;
+	b=QqWrtlUlBlL6uTdilN+BtV+1O17OlQbw+sPbu26bPRazYyv2aXQ51L6Wa4fvLokFRCYl
+	 4Cwp1q+38tZU6wiUUpXaGsAiHjLXdrzmRY+HuLWMUxK7Sa0Xt3V2LC8L/vnCn4Us1vG4V
+	 4/F/4KvEaywDzNwOrM4v2tRQSwjzQyx4GCZNoDYDXsggJa+pYVdTZyOJSacbp1eb6cJGQ
+	 joQDxlrVUBwEZNCxwLXsNuKo5feQb39g3hw3eb8hBl3/FyEW4Ktr990+mQ2FphvS6+E2y
+	 LwL70dISdsuZxx/3EH0hu9K28L+qKv3l9jGXafp2EFiQ+UgpiqPjNQxZZNa2tnRxguQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794871038;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794871039;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=YeL8yRXu2RhjyFwDwFEeBg11Sncko6M+bdov2T+ysTo=;
-	b=dOx+4dbJPBhpDWhapuokJVXTUj9jV25ptNUKMtNK2gEFPpGKEuu6D2aPUiyCxaTc3Yhg
-	 6ah+PGR7Ln2fA/+4/TqKSdqOpwiA2AKF8mY+tyHnV3z6JSS49FdyAoeJVrblx1IL6qF0y
-	 1O6nN24o3BUwvND31bz0xLs2E6JwKb+FQxtR6V0MYFcy4BVf31LserLC/s1iC+PwGO4JI
-	 2iH8HzmB6xlFCDa43LmVDpc2rTU9/46B/eLtEwowZd8hs86reKfjEa8yIgxYsqci5suDI
-	 I+MFhflAB17Mj0c36wILXIZDELIBlsx9r7qmSPIBvDAJoIyzVaZAEu4J32+olFgvMZg==
+	bh=nXsAvi0K5T7xSb5+poAMyDdz32GgmofLuPK5TFgGAYs=;
+	b=Oot6EnAGcM8Pmy6RXLRTFx3Ihnw6g2kI36XEGVUlIyFSuE+Zj4rOOwioiBTbP2SVjn7G
+	 nmIJxf1KZeZ6gEWYPYwHaSNac9QcSC/h7LCBXTRSMAOu4OK6+IrblAgg+aJIsU1haZeE3
+	 nlwznnP2CXWsztJdpUK/KSp+Rwi7aGSeQbLPz+G+mGzHi5RONqlsNsFNnufqiaA9MHAa1
+	 HvGFaaTywvuLy39Z0j6mNZ0b1wRCo9++FAegMm5sSo4MgcFR1FE7Zb7867FBn8CiQatR5
+	 UjBm33PH83uRNNHiTPCuQ8228IwS2AAdirjRAiPsEuyeUuV+Fet7KKt2qlUX7SRCsPQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=oVE04ZWG;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="W/EaZXNt";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72759606A323
-	for <linux-xfs@vger.kernel.org>; Mon, 16 Nov 2026 23:17:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C90D3606A31C
+	for <linux-xfs@vger.kernel.org>; Mon, 16 Nov 2026 23:17:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=oVE04ZWG
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5E2601F000C4;
-	Mon, 16 Nov 2026 23:17:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=W/EaZXNt
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8EEF91F000C7;
+	Mon, 16 Nov 2026 23:17:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794871038;
-	bh=YeL8yRXu2RhjyFwDwFEeBg11Sncko6M+bdov2T+ysTo=;
+	s=k20260515; t=1794871039;
+	bh=nXsAvi0K5T7xSb5+poAMyDdz32GgmofLuPK5TFgGAYs=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=oVE04ZWG8kK0lGLzC6xTvR1+3WVzX6cqzyg3AmxhWQBuEb+aawNwgnbB9Q6v8wOTi
-	 EZfYRZd67P+CE2r1HfiT85Z4Wa7ePpN4AJd9CV6JNO38yHFfjhpQzY2rhD9q1oMkKh
-	 k3f7u8NZiasaqYDJB2QGAof9YEjKS46euhAGwi7QXWOP2KwN7/VVBBHNtYGtGOoTIq
-	 8joR211HaTbF+fvYwKGHrdFu4WpH9LGYc2wNWAhasQxGlnun40YYZhozdUe9hWSGRY
-	 XvWYPvQ7fx+C7BTiRSNmOv+DqEizMrSalHu6XYlZYwbc+G3CIhBwq4pNKzV+wFIYro
-	 veamIgTkUU/Tg==
+	b=W/EaZXNtgUNL6XAJ8U2RZZqJJEY+wR6rDUQ9YgyUqW/6FxYxE47I11YPjjxiRm63R
+	 wbEacIgwaTJB7QWjRRBuVqE0+0QH4shb07tZHGDB/K6bwegMxVB2ad3cj+uA9T3l+V
+	 pACQTGf20Ej2djgD/lozk5prLDtAZYGtvFZoc9tqY3B3dG4rbm5IINoyiPWy9e9Jw5
+	 0VGOufO58E7C2/yrHXBsJUc582ZWOf5ZDjao4u7WfO+AoJgTY4nIKeXNrWbsRIR/ws
+	 PCA1EOa6oOiglCeoAZWSNKmfoiu9Xtr2AxoD/rjjZkuH/pZhwsjSvBu+rYIlRGx9QE
+	 YSRLCQ5lt1d5w==
 From: Dave Chinner <dgc@kernel.org>
 To: linux-xfs@vger.kernel.org
 Cc: cem@kernel.org
-Subject: [PATCH 03/59] xfs: allow an empty rt refcount btree root before the rt volume exists
-Date: Tue, 17 Nov 2026 10:14:20 +1100
-Message-ID: <20261116231707.3625263-4-dgc@kernel.org>
+Subject: [PATCH 04/59] xfs: recompute the rt btree maxlevels when growfs changes them
+Date: Tue, 17 Nov 2026 10:14:21 +1100
+Message-ID: <20261116231707.3625263-5-dgc@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20261116231707.3625263-1-dgc@kernel.org>
 References: <20261116231707.3625263-1-dgc@kernel.org>
@@ -59,99 +59,101 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-There is a transient state on disk where an rtrefcount inode has no contents,
-because growfs can create rtrefcount inodes dynamically. m_rtrefc_maxlevels is
-zero until growfs adds the first realtime volume. Growfs loads an existing
-rtrefcount inode before it adds the space and recomputes m_rtrefc_maxlevels. An
-inode left behind by an earlier growfs that failed after creating it is loaded
-while m_rtrefc_maxlevels is still zero.
+m_rtbtree_maxlevels is the larger of the rt rmap and rt refcount btree maximum
+heights, and the metadata btree space reservation code uses it. It is only
+computed at mount time.
 
-Commit cc3144da377d changed the root loader to reject levels at or above
-m_rtrefc_maxlevels. That rejects every level when m_rtrefc_maxlevels is zero,
-including the empty level zero root. A retried growfs then fails on a valid
-inode.
+Growfs recomputes m_rtrmap_maxlevels and m_rtrefc_maxlevels when realtime
+growfs adds the first realtime volume, and when data growfs changes the data
+device size that bounds their height. m_rtbtree_maxlevels is stale until the
+next mount after either of these. It stays zero after growfs adds the first
+realtime volume.
 
-Accept an empty level zero root when m_rtrefc_maxlevels is zero. A non-empty
-level zero root is a normal leaf root that is still checked to fit within the
-inode fork.
+Move the helper that computes it into xfs_mount.h, and call it wherever growfs
+recomputes the rt btree maximum heights.
 
-The inode repair code rejects only levels greater than m_rtrefc_maxlevels, so it
-disagrees with the root loader. Give it the same root level rules.
-
-Fixes: cc3144da377d ("xfs: fix off-by-one in rtrefcount btree root level validation")
-Fixes: 92b2019493d1 ("xfs: repair inodes that have a refcount btree in the data fork")
-Cc: stable@vger.kernel.org # v6.14
+Fixes: 05290bd5c623 ("xfs: allow inode-based btrees to reserve space in the data device")
 Assisted-by: LLM
 Signed-off-by: Dave Chinner <dgc@kernel.org>
 ---
- fs/xfs/libxfs/xfs_rtrefcount_btree.c | 27 +++++++++++++++++++++++----
- fs/xfs/scrub/inode_repair.c          |  7 ++++++-
- 2 files changed, 29 insertions(+), 5 deletions(-)
+ fs/xfs/xfs_fsops.c   | 1 +
+ fs/xfs/xfs_mount.c   | 9 ---------
+ fs/xfs/xfs_mount.h   | 9 +++++++++
+ fs/xfs/xfs_rtalloc.c | 2 ++
+ 4 files changed, 12 insertions(+), 9 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_rtrefcount_btree.c b/fs/xfs/libxfs/xfs_rtrefcount_btree.c
-index 697f5e622685..b91b2f1895ce 100644
---- a/fs/xfs/libxfs/xfs_rtrefcount_btree.c
-+++ b/fs/xfs/libxfs/xfs_rtrefcount_btree.c
-@@ -559,17 +559,36 @@ xfs_iformat_rtrefcount(
- 	numrecs = be16_to_cpu(dfp->bb_numrecs);
- 	level = be16_to_cpu(dfp->bb_level);
- 
--	if (level >= mp->m_rtrefc_maxlevels ||
--	    xfs_rtrefcount_droot_space_calc(level, numrecs) > dsize) {
--		xfs_inode_mark_sick(ip, XFS_SICK_INO_CORE);
--		return -EFSCORRUPTED;
-+	if (level == 0) {
-+		/*
-+		 * rtrefcount inodes can be dynamically created by growfs,
-+		 * resulting in a transient state on disk where they can have no
-+		 * contents. Hence a rtrefcount inode with an empty level zero
-+		 * root is a valid state. Until growfs adds the first realtime
-+		 * volume there is nothing to count, so the root must be empty.
-+		 */
-+		if (mp->m_rtrefc_maxlevels == 0 && numrecs != 0)
-+			goto out_corrupt;
-+	} else if (level >= mp->m_rtrefc_maxlevels) {
-+		/*
-+		 * m_rtrefc_maxlevels includes the inode root level, so the
-+		 * deepest valid root level is one less than that.
-+		 */
-+		goto out_corrupt;
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 21114bb6d4ff..cd399e2a9c7f 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -226,6 +226,7 @@ xfs_growfs_data_private(
+ 		/* Compute new maxlevels for rt btrees. */
+ 		xfs_rtrmapbt_compute_maxlevels(mp);
+ 		xfs_rtrefcountbt_compute_maxlevels(mp);
++		xfs_rtbtree_compute_maxlevels(mp);
  	}
  
-+	if (xfs_rtrefcount_droot_space_calc(level, numrecs) > dsize)
-+		goto out_corrupt;
-+
- 	broot = xfs_broot_alloc(xfs_ifork_ptr(ip, XFS_DATA_FORK),
- 			xfs_rtrefcount_broot_space_calc(level, numrecs));
- 	if (broot)
- 		xfs_rtrefcountbt_from_disk(ip, dfp, dsize, broot);
+ 	return error;
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 60931cb00817..e4036eec579d 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -833,15 +833,6 @@ xfs_set_max_atomic_write_opt(
  	return 0;
-+
-+out_corrupt:
-+	xfs_inode_mark_sick(ip, XFS_SICK_INO_CORE);
-+	return -EFSCORRUPTED;
  }
  
+-/* Compute maximum possible height for realtime btree types for this fs. */
+-static inline void
+-xfs_rtbtree_compute_maxlevels(
+-	struct xfs_mount	*mp)
+-{
+-	mp->m_rtbtree_maxlevels = max(mp->m_rtrmap_maxlevels,
+-				      mp->m_rtrefc_maxlevels);
+-}
+-
  /*
-diff --git a/fs/xfs/scrub/inode_repair.c b/fs/xfs/scrub/inode_repair.c
-index 4486881329b9..05bb4be29390 100644
---- a/fs/xfs/scrub/inode_repair.c
-+++ b/fs/xfs/scrub/inode_repair.c
-@@ -1002,8 +1002,13 @@ xrep_dinode_bad_rtrefcountbt_fork(
- 	nrecs = be16_to_cpu(dfp->bb_numrecs);
- 	level = be16_to_cpu(dfp->bb_level);
+  * This function does the following on an initial mount of a file system:
+  *	- reads the superblock from disk and init the mount struct
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index cbcfb89c67a4..43afd55a613a 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -487,6 +487,15 @@ static inline bool xfs_has_rtreflink(const struct xfs_mount *mp)
+ 	       xfs_has_reflink(mp);
+ }
  
--	if (level > sc->mp->m_rtrefc_maxlevels)
-+	/* Same root level rules as xfs_iformat_rtrefcount(). */
-+	if (level == 0) {
-+		if (sc->mp->m_rtrefc_maxlevels == 0 && nrecs != 0)
-+			return true;
-+	} else if (level >= sc->mp->m_rtrefc_maxlevels) {
- 		return true;
-+	}
- 	if (xfs_rtrefcount_droot_space_calc(level, nrecs) > dfork_size)
- 		return true;
- 	if (level > 0 && nrecs == 0)
++/* Compute maximum possible height for realtime btree types for this fs. */
++static inline void
++xfs_rtbtree_compute_maxlevels(
++	struct xfs_mount	*mp)
++{
++	mp->m_rtbtree_maxlevels = max(mp->m_rtrmap_maxlevels,
++				      mp->m_rtrefc_maxlevels);
++}
++
+ static inline bool xfs_has_nonzoned(const struct xfs_mount *mp)
+ {
+ 	return !xfs_has_zoned(mp);
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index 31d90828b4e9..760d73e4afa2 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -933,6 +933,7 @@ xfs_growfs_rt_zoned(
+ 	mp->m_features |= XFS_FEAT_REALTIME;
+ 	xfs_rtrmapbt_compute_maxlevels(mp);
+ 	xfs_rtrefcountbt_compute_maxlevels(mp);
++	xfs_rtbtree_compute_maxlevels(mp);
+ 
+ 	/*
+ 	 * Finally add the newly added zone to the freelist and add the space
+@@ -1078,6 +1079,7 @@ xfs_growfs_rt_bmblock(
+ 	mp->m_features |= XFS_FEAT_REALTIME;
+ 	xfs_rtrmapbt_compute_maxlevels(mp);
+ 	xfs_rtrefcountbt_compute_maxlevels(mp);
++	xfs_rtbtree_compute_maxlevels(mp);
+ 
+ 	kfree(nmp);
+ 	return 0;
 -- 
 2.55.0
 
