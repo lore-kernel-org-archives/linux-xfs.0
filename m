@@ -1,112 +1,112 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=103.168.172.151
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794873709;
-	b=Lxg0j7PWrl4adMEuUoYTrwr7pX+NEphlIVHfNSNquBs3bcwgeQQyl1F57M8BvrjLQOb0
-	 juc7Dp246mjPadsM8wViZDWipsTw6bc0k3aFEbCdLLvVxqokAWkLRZmjs/wAFSFkCww2t
-	 2dJpvEk5qDj5qau3j7LuLxs3Wik2Pf9Hl6si2tsM1l3mhWR8ZbNuuBeHEe3sYsqkyrvFG
-	 YurqZCB+u7oR12Xxoag6MlqG4L/LHpRN2RUR2Ij6okpPHnnYZtm7Q2+ArhzkciTRqdoeq
-	 aGN1iwPihfxuZCh+Vu8FgdKcJj9ywmUEGNZvvRiH6azVp3Z0ehUl8okFxAd7jyoT84g==
+	t=1794873717;
+	b=qPaqWZUO4yHZz2EVWRA5GTpc20JIlrkNgOYh7J6aIwQpQCy+xyj69AatZT9zaXYet3cX
+	 9ADQOmaU5RteA1viumC4SXBt10wZp36MXZ8bneYlh/iGWNELUMgdn+C0VIkQCNt4/onMd
+	 plynz/NSTB3ur3/QAoDHzpK0YlC6E3p66E8EOIGogApDB7W0yBE+HAfNsuyiUEGKaMiym
+	 AEMgkEamd+LvH97VRfqvWBoL9EyOXwvGTutpyxvHOkwQ7SbURK3VJkc0EqwqonNFAqMC3
+	 QeW2jAwd5t43iyMbDWGySZTFEqdFDIGY8KwB839fi5aX0t9fHNhCuAopHcSgfrWGcsA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794873709;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794873717;
 	h=DMARC-Filter:Received:Received:DKIM-Signature:DKIM-Signature:
 	 X-DKIM2-Info:DKIM2-Signature:X-DKIM2-Info:Message-Instance:
 	 X-ME-Sender:X-ME-Received:X-ME-Proxy-Cause:X-ME-Proxy:Feedback-ID:
 	 Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:
 	 References:Reply-To:MIME-Version:Content-Transfer-Encoding;
-	bh=iIAOm2lO6QpQNVOJTbL8Bgbw9WIRjtGNSHgIT3oLz3s=;
-	b=CEVhbvL3XdjFn1BhlHzY1pvK0RR80Q7XVKGm4JkVOn3utvRDLhO4n8KJPbKVpqqRAdD7
-	 QKh93Zyv8f/Rl8Kr/W2z+lHjBctp9kfCHdCRqU1Mm74yh/gdFCkIJ7rTihHZjwF3V9Ep1
-	 zFmB3A9L0vZRVN2aB3Z+7APW118RKHdwfITIUKo3zxqasQZoq/Zr1aOchxadGENQcyOlW
-	 vXHSHql1C3SZZm4AjcaJrhQoSH66XBW+kJPcz5TLkC7fILpR7pxPHQIk97cQg46MwdBhw
-	 vw470ykMWhff4uqrwkBMnD9OjsM/zeu875N36rmtmCFkOxhSauApEa5G19jKIORYXvQ==
+	bh=C7sWl1wG48MQ07r4zoW2vh68HNiuHxVXcgb2L1fNbYE=;
+	b=yDgl9BHaqGz2rZFg9YokzMabWLzIgQpoIuYbIyVSS/pYzjvmVvF+e4QDZ7fyZfuKLXa2
+	 4TG2OQxkY7SvXjZzrEaB5pktH49Jhj4LTyHKMiGkW0WKc2u1NRKWfG2g5AEN42pyQMp/9
+	 tkui6whELS1LI77WaHtN9TJDBVhfKp/l0fodXrCtBBnNySUy1unBRd+4OOa22vWiJUOnj
+	 5U53PsRhKZLXA8JcbrjTAzQ+C9Edxn8ZoSX42VuGBmhSTwZ3oKp82gae3uftSstwpXjPh
+	 e6k3CH+AuRMO2dsGsnwverwQqzlQe7kPFaSr6f5Jmn69GKXAcfqWdti2PHVRUPv/yGA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=ownmail.net;
 	spf=pass smtp.mailfrom=ownmail.net;
-	dkim=pass header.d=ownmail.net header.i=@ownmail.net header.a=rsa-sha256 header.s=fm3 header.b=F+LoLdgJ;
-	dkim=pass header.d=messagingengine.com header.i=@messagingengine.com header.a=rsa-sha256 header.s=fm3 header.b=e0uXZ6Tp;
+	dkim=pass header.d=ownmail.net header.i=@ownmail.net header.a=rsa-sha256 header.s=fm3 header.b=0GAKIdqw;
+	dkim=pass header.d=messagingengine.com header.i=@messagingengine.com header.a=rsa-sha256 header.s=fm3 header.b=hDWO0Tpk;
 	arc=none smtp.remote-ip=103.168.172.151
 Received: from fout-a8-smtp.messagingengine.com (fout-a8-smtp.messagingengine.com [103.168.172.151])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D15E606A32A
-	for <linux-xfs@vger.kernel.org>; Tue, 17 Nov 2026 00:01:48 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8D15E606A32A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92CB8606A31C
+	for <linux-xfs@vger.kernel.org>; Tue, 17 Nov 2026 00:01:56 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 92CB8606A31C
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ownmail.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ownmail.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=ownmail.net header.i=@ownmail.net header.a=rsa-sha256 header.s=fm3 header.b=F+LoLdgJ;
-	dkim=pass (2048-bit key, unprotected) header.d=messagingengine.com header.i=@messagingengine.com header.a=rsa-sha256 header.s=fm3 header.b=e0uXZ6Tp
-Received: from phl-compute-12.internal (phl-compute-12.internal [10.202.2.52])
-	by mailfout.phl.internal (Postfix) with ESMTP id C316DEC0824
-	for <linux-xfs@vger.kernel.org>; Mon, 16 Nov 2026 19:01:47 -0500 (EST)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-12.internal (MEProxy); Mon, 16 Nov 2026 19:01:47 -0500
+	dkim=pass (2048-bit key, unprotected) header.d=ownmail.net header.i=@ownmail.net header.a=rsa-sha256 header.s=fm3 header.b=0GAKIdqw;
+	dkim=pass (2048-bit key, unprotected) header.d=messagingengine.com header.i=@messagingengine.com header.a=rsa-sha256 header.s=fm3 header.b=hDWO0Tpk
+Received: from phl-compute-03.internal (phl-compute-03.internal [10.202.2.43])
+	by mailfout.phl.internal (Postfix) with ESMTP id DA908EC0889
+	for <linux-xfs@vger.kernel.org>; Mon, 16 Nov 2026 19:01:55 -0500 (EST)
+Received: from phl-frontend-03 ([10.202.2.162])
+  by phl-compute-03.internal (MEProxy); Mon, 16 Nov 2026 19:01:55 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ownmail.net; h=
 	cc:cc:content-transfer-encoding:content-type:date:date:from:from
 	:in-reply-to:in-reply-to:message-id:mime-version:references
-	:reply-to:reply-to:subject:subject:to:to; s=fm3; t=1794873707;
-	 x=1794960107; bh=iIAOm2lO6QpQNVOJTbL8Bgbw9WIRjtGNSHgIT3oLz3s=; b=
-	F+LoLdgJT6wgJNGy00Klf3LfXZvSmPoRA6FnIDNMYjAe86jj2ybM7VLvJrjA6fYm
-	mswVk+69ROdPv6HsIY2RMrtrZOdY2OYbfT+PtUbYdJ2CjVxLr89gDUzjcwxiwXAT
-	LRnizKiJWzOO05YBz+AqJ10kc0hRJl6p84VVJQOnnN0E9K4F2ixPbsHx211dYgZ8
-	8BDFbKc3sBIF7L8cDMCqT/PD5GwmoWrFTAi6u7KBhN1J+p+27IrE8IOi1HobGFim
-	WM9GUhAb52HghD7TFhE3uKTegmBl7/BG9OiWKqKkkUlDovqj9AFgvEIHubZsJLj8
-	9vGaj1ZvueitlNXeBIkwwg==
+	:reply-to:reply-to:subject:subject:to:to; s=fm3; t=1794873715;
+	 x=1794960115; bh=C7sWl1wG48MQ07r4zoW2vh68HNiuHxVXcgb2L1fNbYE=; b=
+	0GAKIdqwLEVc4s2GojNoid6jRJ4e9UF1YhZqqdeXkcLiCeOdQOkFEK1+1J6MiywO
+	Ctc47Sd4XX5N1RAywkHl2itA08MmiYtpqAj+4BZII0e/cECUcDT7LEM567MZxPSb
+	AV7CzOR03NLhDeRszgE8MEIKuMKeldIhBjcTTKfd3wgsHRhDw+y5SR8gika4vKiQ
+	aq03JqD0ACawK6iuwEKWkpEKmkHGSqdae95BHtW49d448zOtgOGCMxWfmzwIyhGV
+	/GIg5Y2QsHRd4qQVgJDt7kDnWE2bptPeg3Z7o0JVM8I41UgIAqdLP3BosXAMseTV
+	DV5ONpYrJ+TBTLJ1eoMp/A==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
 	messagingengine.com; h=cc:cc:content-transfer-encoding
 	:content-type:date:date:feedback-id:feedback-id:from:from
 	:in-reply-to:in-reply-to:message-id:mime-version:references
 	:reply-to:reply-to:subject:subject:to:to:x-me-proxy:x-me-sender
-	:x-me-sender:x-sasl-enc; s=fm3; t=1794873707; x=1794960107; bh=i
-	IAOm2lO6QpQNVOJTbL8Bgbw9WIRjtGNSHgIT3oLz3s=; b=e0uXZ6TpXVcXjwuf0
-	ABzlVoX1hlcJbumEFfc8uNQ0CmbUkxu3TtnXFFDrOyDaFS+w0cSXFn3VgzIxGVv/
-	rj2ar5d8adU3nHmoUDjfMInMIiORlYV585k3kThp+3eiioxa3WpVGzvUH+BziGXJ
-	dSScSvM5arLMV/vmsdCvGH2V1CXKB5ADPHaVPhezToPEh9bw0zbYz0R4GkaOmX29
-	DaL3I4T6Few1TQfzXODNLpUSYbSeK420RASszdo7poekuGAeEhZ/xPkMU/fSuRs6
-	GjMOwPqcVZBpd+8Bn83HI1mLQN8a8ZSImo/YChb9MQzfXlfHsp57I77cg6TuJx+T
-	tPLLw==
+	:x-me-sender:x-sasl-enc; s=fm3; t=1794873715; x=1794960115; bh=C
+	7sWl1wG48MQ07r4zoW2vh68HNiuHxVXcgb2L1fNbYE=; b=hDWO0Tpkh8TVL5xtZ
+	kfX755qHlI7pUIVjrsV6ptN3irpKvydI/BjoMhrIdt811u4ENuIq0R+2ULRWYb3t
+	GmSBS98/6kCPAjNVfTK4mwPW1SbzbNICVBiPfRRoaeOKxqIvGoF/c7SHNOQuGXgc
+	ZUPd5/H29vm/VF2s7BBguXzwXcvB9deD36iIQOcjgr01p8jRHvRplP6HZLU1pniG
+	WPCbe4s1yC6oQOIuFpp9YNZNF6fse5xdBYxF7vNWB4+EydAy8IaHl7hUAl5+lBhB
+	HE0G3cns3+krFT7QxgWOboCPbGxJudxmbVasRHBdK96wu4Ye5gbsc0mQxnhP7fPP
+	cfa8w==
 X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-09;
 	repo=github.com/dkim2wg/interop; date=2026-11-03; sw=lmtpprox;
 	action=sign d=ownmail.net a=rsa-sha256;
-DKIM2-Signature: i=1; m=1; t=1794873707; d=ownmail.net;
+DKIM2-Signature: i=1; m=1; t=1794873715; d=ownmail.net;
 	mf=PG5laWxiQG93bm1haWwubmV0Pg==;
 	rt=PGxpbnV4LXhmc0B2Z2VyLmtlcm5lbC5vcmc+;
-	s=fm3:rsa-sha256:aCPdG/nYEXyKhMdRanijBdUd6ItXZYNgACkJYAJpC4P8VoN
-	/sxwwP8Dc2De7ae1pbLmWichiY5BtF9WUAgf5JG4KhV+NEHA3AqG/jJ5O9t6z3Rf
-	mYLtjjj8SWWMl9b1sHqB96K7efb9mVAYC8/OFFDhr3etk2TcAmopG+e1om49Oq6L
-	gik1m9xplo4ndkCxEEt4J6/zatvw2LfhzFFwA4SYQMfnNhv24dFc4WjEKNezmV6s
-	mMDpaZFaqaD+zupBdh5aHgK8+gecC0LPjjiCs68JvNygq6HiXMy8FwMjKzzh/n4g
-	WL9K0O2ewuxltrigULwf21nECeqN/IdLU1UXb1Q==;
+	s=fm3:rsa-sha256:ob9tAMiDalg2LJO0iuwM0D2SFvA3sOkVw6mrZieU3LF7zRQ
+	nX0YoQT1pn0JIkIEsFYqM1Ey+vAeLhSnwyN5Wrjqq2lGuyQAEgkPoqhQkLPPOVQ1
+	idq8oeDx09CBvwbqdasdBz3A+HNMQhHGPxMHc88k7curAPMkxPq8Ap935SpQv/4T
+	ru3yCWU0jw1ueHutNEmqanwEdquHVB2tj5r37RDXdjPvotINIXfYmKzk5zeP2YtX
+	rJxLj0w9Tq7DHIJ6B0CJnIoFXgJtQCOKAFLVVeTx4JgKIvVmeJOw2YGNEyK3nLDP
+	KPBj/C6hdYs0My2ydqzm5GksQ0lKxNMEH+s9acA==;
 X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-09;
 	repo=github.com/dkim2wg/interop; date=2026-11-03; sw=lmtpprox;
 	action=mi-m=1; hc=12;
 	hn=cc,content-transfer-encoding,date,feedback-id,from,
 	in-reply-to,message-id,mime-version,references,reply-to,subject,
 	to;
-Message-Instance: m=1; h=sha256:gmiRStICROQAPeEHtzUrO1Osv21BjjsgukamHKPkV6A=:TnYk6Us2qwHOQ7ZbL7drRjEiRjFRhnkzrlnE9ZTXkBc=;
-X-ME-Sender: <xms:a5n7au7tZIU0ELbSk7_02uku1eLe8y9q7QtSDDhP2P_DK9ObYPNvEg>
-    <xme:a5n7apPT9tKsWMJnfJC2CcthEjaz-WKVRHzW2ZQK_xYZm_l-ARa5XQUgq4YdqHOiA
-    areO-q-4iWq8Ef98vLbHyLdvLtBfQctPYfTNWoXucFt5MBN8Cg>
-X-ME-Received: <xmr:a5n7aiEs4bUBEyEzk3Y5kDUDkVoP1467SdOz1Co-MB4yLenWUc2DQLd33Z9GEph1BEMOpOiVXqIVEvcnU4AZyXfXMVtvorA>
+Message-Instance: m=1; h=sha256:oMgQUvucOl4P8cRbGNSDfSmjEMYlFoatWXuIC44BE+U=:Xd1WqezOWR4RGPff0oXZeRAR/TSzcmc9gClT/ovY9uY=;
+X-ME-Sender: <xms:c5n7auHIDLqext--NfPK41UrohZQXd0SzE6AZTWr80YVP8AoZStPnA>
+    <xme:c5n7agpfKZ_bWH9UfTqc6QV80jgqT3Cxw-8pzDT6ibfG1F5tyRHJfsNPCObMuDUUz
+    Axt3fUdqUgPVR1XIcbShEMrSsxQx1YSynW7FPX4cxcTGzOeiA>
+X-ME-Received: <xmr:c5n7asx3Z9RUj2zvBcr2ZzYcKB_mLlXQ-_z0xDfiv6lH4YgDy0VEMsJXbKTX982XKOObdKynv5fUkjnPAQ7BoXgEb94PGgc>
 X-ME-Proxy-Cause: dmFkZTEWLllwmZbCQ7cO93As6sGHtjiFdYj9k/VSqMvUwk1xfk9pKn/ZCX7mnpLkIaqMef
     K/82szmVYemJN/I0DCAIOCHeaPZ7/Xa2GnBqk902ewdx8hjF22LzMBgW8kwMwZuhDEqmG+
     fRzfUtzcgzHNqdnt0hptgxxppIMFQUfVlAsIvg7fvTNv54Da321pj6NeCTNh6yP98D0Rix
     0qUujhXor+6vA1uX99KaZah7Remd9bF8xjGXqzB2MsscQiqTyvs6dLxlge9fkMF8nj1I3u
-    +RSOpU+TvlDvjmsK8NtReLJ34nN/1FLS6YOAknIb84eISWftGKSVwY1LnVjpVMr2cR7DpO
-    Y0h/zKtwlxM0uvEfa7g8Jx/Ey/3+ldN6Sjz2mRXqaEZ2hmLY4820tj8fL6lwjN21CoBYQz
-    GIWLW9iEBzj59lwXb3i+Nhfzpzq83E74pbh7inCaF4yKQsKw0NTRW4w1npTfrI0VHN1QqE
-    TVzGrFEbQJb6Whs732iR6GGZBw3CAbBgUgj3CmiR11QFLXYe79wKSy6nV74BTgcaF8aSbT
-    a7ZjNFSH6+6cXY3bpNxdzkUL0tqfa4vfmJ9LR6x3TELkcnAkrPqDG1f7kYWfQg/LoXiaoN
-    YyZbJUcgZsmsXk8ZyJSwLI9Mvtz8pgPOqDpFIdIYh4Q1qZqMw0LFsciurKQw
-X-ME-Proxy: <xmx:a5n7at0XrbVLqROgcupNhRbriS5O-bsjQ_2AG5f8yklDRjEhSqsN4w>
-    <xmx:a5n7apFUBcquhGw9aw-1KfPVB996xWjWf8QHc2-7pB9HgjXwcCeACw>
-    <xmx:a5n7auwOWJ3i-UqOdxUfBRaHyMEOb3SPf7VRuc7f2eJ5DQO53LRFpQ>
-    <xmx:a5n7agmmNFpZlhDsOqDxcM6F14WY5mmhLliXtb-C8oLmRlOXJOWj6w>
-    <xmx:a5n7atwtnaAGimM0pNoecCnJ7u-xKm05MYFmHVEyVOPN7lmS6VEW874k>
+    +RSOpU+TvlDvjmsK8NtReLJ34nN/1FLS6YOAknIb84eISWftGKSVwY1LnVjpVMr2cR7DsZ
+    w8Wb5rwjaydSGelossxx6bl1V7hOhKVIq+toFprLFYhRN/SlwVDMmaYKduO57Gh7OaGuBF
+    h0J4sIrwb2zt8R9hW4hgNqcN8fzRhYzaDBPcxdVTtNH2vUX1m4VQoIpenYJuGlyjzLN8sB
+    wi/kGQQCcooy0DrWZfM2ov3GXkEVgq5I5zBJSiuy+vPMURU0NBtPZQS/3EdbHTkVso2+v4
+    Ckv+2iECJM88DmP71AxqjfON8WBYjJIHFkY7G93aYb/jDcLJHw/cEvt0enpH8T0capz27l
+    7RHejCjOiJI++LMcjLuNNKGl98A5MSAixcFcvWSPAd1YIjZgNtMRDKNYJgpw
+X-ME-Proxy: <xmx:c5n7aqzxemjS9U4i14HWz_7__2CGVeJd1tw-oWJDEKQSsotVnV7kDg>
+    <xmx:c5n7arQLLyrbTJvbO20jPnJTo41ac5-vdVcPNcnbsMdF1dKQLTjPAQ>
+    <xmx:c5n7atN66DenQEH96djIUqJ5Zw6Bk0MjIDbmoJsZlIcD-oCpa1d04Q>
+    <xmx:c5n7amQhmLWxxD2dZ3fFuI1Epj5bjY1tlmr-dTsDkRq6C0NXp3s3nA>
+    <xmx:c5n7aosnP57ugyhY2Otjf1KpVZNHti6cwXLd9I_thE6BHShMSvWCjukE>
 Feedback-ID: i9d664b8f:Fastmail
 Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
- 16 Nov 2026 19:01:41 -0500 (EST)
+ 16 Nov 2026 19:01:50 -0500 (EST)
 From: NeilBrown <neilb@ownmail.net>
 To: Alexander Viro <viro@zeniv.linux.org.uk>,
 	Christian Brauner <brauner@kernel.org>
@@ -127,9 +127,9 @@ Cc: Jan Harkes <jaharkes@cs.cmu.edu>,
 	linux-um@lists.infradead.org,
 	ntfs@lists.linux.dev,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH v2 2/4] coda: don't d_drop() early.
-Date: Tue, 17 Nov 2026 10:54:59 +1100
-Message-ID: <20261117000115.1433875-3-neilb@ownmail.net>
+Subject: [PATCH v2 3/4] hostfs: don't d_drop() before d_splice_alias() in hostfs_mkdir()
+Date: Tue, 17 Nov 2026 10:55:00 +1100
+Message-ID: <20261117000115.1433875-4-neilb@ownmail.net>
 X-Mailer: git-send-email 2.50.0.107.gf914562f5916.dirty
 In-Reply-To: <20261117000115.1433875-1-neilb@ownmail.net>
 References: <20261117000115.1433875-1-neilb@ownmail.net>
@@ -147,43 +147,28 @@ Content-Transfer-Encoding: 8bit
 
 From: NeilBrown <neil@brown.name>
 
-Proposed locking changes will mean that calling d_drop() could
-effectively unlock the name allowing a parallel lookup to proceed.
-For this reason it should only be called *after* the attempt to create a
-symlink (in this case) has completed (whether successfully or not).
-
-So move the d_drop() to after the venus_symlink() call.
-
-Doing this also means that if the upcall that handles venus_symlink()
-happens to look up the name being created, it will get -ENOENT rather
-then a possible deadlock.
+hostfs_mkdir() uses d_drop() and d_splice_alias() to ensure it has the
+right dentry after a mkdir.
+d_drop() is no longer needed here and will cause problem for future
+changes to directory locking.  So remove the d_drop().
 
 Signed-off-by: NeilBrown <neil@brown.name>
 ---
- fs/coda/dir.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ fs/hostfs/hostfs_kern.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/fs/coda/dir.c b/fs/coda/dir.c
-index a85be5962e62..b47299527b65 100644
---- a/fs/coda/dir.c
-+++ b/fs/coda/dir.c
-@@ -249,13 +249,13 @@ static int coda_symlink(const struct mnt_idmap *idmap,
- 	if (symlen > CODA_MAXPATHLEN)
- 		return -ENAMETOOLONG;
- 
-+	error = venus_symlink(dir_inode->i_sb, coda_i2f(dir_inode), name, len,
-+			      symname, symlen);
- 	/*
--	 * This entry is now negative. Since we do not create
-+	 * This entry is still negative. Since we did not create
- 	 * an inode for the entry we have to drop it.
- 	 */
- 	d_drop(de);
--	error = venus_symlink(dir_inode->i_sb, coda_i2f(dir_inode), name, len,
--			      symname, symlen);
- 
- 	/* mtime is no good anymore */
- 	if (!error)
+diff --git a/fs/hostfs/hostfs_kern.c b/fs/hostfs/hostfs_kern.c
+index 613146e76dec..7cf25c29cb78 100644
+--- a/fs/hostfs/hostfs_kern.c
++++ b/fs/hostfs/hostfs_kern.c
+@@ -700,7 +700,6 @@ static struct dentry *hostfs_mkdir(const struct mnt_idmap *idmap, struct inode *
+ 		dentry = ERR_PTR(err);
+ 	} else {
+ 		inode = hostfs_iget(dentry->d_sb, file);
+-		d_drop(dentry);
+ 		dentry = d_splice_alias(inode, dentry);
+ 	}
+ 	__putname(file);
 -- 
 2.50.0.107.gf914562f5916.dirty
 
