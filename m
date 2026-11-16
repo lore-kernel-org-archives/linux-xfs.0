@@ -1,53 +1,134 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=103.168.172.151
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794871110;
-	b=S1MrOyreOwGcd61Up8g4qofX4WYFBReLT1FJKslcK0OjdvuTBTAoOeepQ5/le2SwFwmi
-	 TFOih+H9SkIOwk5SHlZHPHWwyLYemJrcrC9QnvuUW+8zo9pPWkBW/N15wsWY1CcsBOAnP
-	 gyDbwPhqzv2H98yB8vDrDDkqCPIwvXD3wZ2OScYGLwEsMEeROhTt64vh963fIv41r14xl
-	 JdC6CWqvCMxFeCWytUE4fRiTEndr6kEMGK4Auj3GcvE9bDTekhKuUtBxRUQdNhdemN35d
-	 qv7rv9HqzkeHL/5WKrqdisKD8W/v7+CqS9JmwVfSz2HBwQBrEctgLhnkpf5s0Vtyc2g==
+	t=1794873691;
+	b=Dh8+RxXzKt1Y/YkjobTDlBhJuk9I+uFS01Jah86Ti71Y+FleRby01a1aFXMAbaAlrk58
+	 RGiOQzYRW5uCi2aOHYJ2rdTU90ib96ocdCtNqH9f+fiwHubURhoxhEMDvo2yhQSgULSqW
+	 n/PiV0evsqldPX/8vCBxmnYrDwkRIPzvWeFNN9sxaPaXaOgmLZZ9p5ZVeQnWEFB9VZdel
+	 lUcfhK6Kprtu0jziNjIFRjBrQpcf8qC8IofHH9W2u80l6nGepS+YcEhzuJ2C9ZyCTlq7r
+	 RULbUZLUgnuqJZes37RU3zEPC7Gestwbfd3/DVuOdV21Q2S2FYoCImXnVIWDKlPVvKw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794871110;
-	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=zBSj+H3yBXWXoJ/nylK52ZyagxojWwEDgAa+1vuCVus=;
-	b=cO8fAWFFDSjg8KAHh9wVHojMsbx1wSuysE7t87JEEM1P2hZVLPqnR5FUmsUpGwYxNYiJ
-	 1y2FmpvggSlOzMu6AQW8Aq2bhtb5MSPsulAZbTp/KrAYuYxoK6fdn1NYMFqfxHFKIXYrU
-	 9YPIaBznTZxc/2AAvMmn4z8LenUZ/LBkFruJW25HGN6GmNFzHEePJYIkYLORLc8MfrqRW
-	 V3hKNMnZ6nG3d7cwBg6y48TKeWMzzRa6hWNJr/uRjTjNtm8z04nsRuG9r7AF+2WlQuJH4
-	 5RHrVBJ/Vpab7WlmyY1jCheHJJypARsjdT4jZTdvduedSmpya/ueHUGEbRSQ+vc1nJA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794873691;
+	h=DMARC-Filter:Received:Received:DKIM-Signature:DKIM-Signature:
+	 X-DKIM2-Info:DKIM2-Signature:X-DKIM2-Info:Message-Instance:
+	 X-ME-Sender:X-ME-Received:X-ME-Proxy-Cause:X-ME-Proxy:Feedback-ID:
+	 Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:Reply-To:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=VclKIlHHA6sJRvKYQDUB0ymsoIETh0nxUoTC2xTBROc=;
+	b=k0TYpTFJj1vdcKZJ1eYCtP1pI1B40nRJncTNnS55OIDq3TWeceppVtwkRA+2S++VYNOK
+	 aGqixh2rU0SVIYV1VyFlw8oMBstFopS/zYSNjzx2DOOqC7PkBG0IgxPm9qvSTZheiAEv4
+	 7uIX6njBWM20Ld8iXoxvLwOoJtkEp2/k8lrKenNUoxBG7Q5qoyRHTMaGLhZVt//Nr/3M0
+	 JVREhvVCCnyqhecvGipgGOk7KgLpYJST8P8dwCkEjkq4yvIooJLG6e4LR/FwYOBkRbr/i
+	 NUzuW3qwGYnbt+l8DCHB+qlmlExJPr5vUfe8swljHqatiVP7dEZffTlja07Wdlx77pw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SaRmiWah;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=ownmail.net;
+	spf=pass smtp.mailfrom=ownmail.net;
+	dkim=pass header.d=ownmail.net header.i=@ownmail.net header.a=rsa-sha256 header.s=fm3 header.b=kRzcoJ66;
+	dkim=pass header.d=messagingengine.com header.i=@messagingengine.com header.a=rsa-sha256 header.s=fm3 header.b=sxTVMqnc;
+	arc=none smtp.remote-ip=103.168.172.151
+Received: from fout-a8-smtp.messagingengine.com (fout-a8-smtp.messagingengine.com [103.168.172.151])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB7B4606A32A
-	for <linux-xfs@vger.kernel.org>; Mon, 16 Nov 2026 23:18:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAFBC606A32C
+	for <linux-xfs@vger.kernel.org>; Tue, 17 Nov 2026 00:01:30 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AAFBC606A32C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ownmail.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ownmail.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SaRmiWah
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 985091F000CD;
-	Mon, 16 Nov 2026 23:18:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794871110;
-	bh=zBSj+H3yBXWXoJ/nylK52ZyagxojWwEDgAa+1vuCVus=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=SaRmiWahMNSbIHJ4WYaC+SJE6ecn+/SNGL1xBRECs1MWlPiqRjSRRonUkezL1QZvI
-	 V6UfEKu94Qb4gA67Z3lQQesf84OsFrcDq9pwnko7lj+fpMCeCqnFTgzBvH7UHOZKCC
-	 zeA1CHcRkgLtby8Itcx20MsL+Sft3B1znffGf/V1YnBAj5tFztuHHS+OMKLpwCfQd8
-	 XoztNYP+n1cPvl3cClL/yIdlNiDlWpZvonVakVkGm68aKJ2U+++6L/0kWmggX18ucl
-	 ZLPrKDhbu4jOWa3IDwnqXu6PZDYE7uHZSRzIaEk22mWvmqEj6Eu07cbW36QFi/vIZE
-	 xcKcgea9Mzg6A==
-From: Dave Chinner <dgc@kernel.org>
-To: linux-xfs@vger.kernel.org
-Cc: cem@kernel.org
-Subject: [PATCH 59/59] xfs: validate logged dquot buffers during recovery
-Date: Tue, 17 Nov 2026 10:15:16 +1100
-Message-ID: <20261116231707.3625263-60-dgc@kernel.org>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20261116231707.3625263-1-dgc@kernel.org>
-References: <20261116231707.3625263-1-dgc@kernel.org>
+	dkim=pass (2048-bit key, unprotected) header.d=ownmail.net header.i=@ownmail.net header.a=rsa-sha256 header.s=fm3 header.b=kRzcoJ66;
+	dkim=pass (2048-bit key, unprotected) header.d=messagingengine.com header.i=@messagingengine.com header.a=rsa-sha256 header.s=fm3 header.b=sxTVMqnc
+Received: from phl-compute-04.internal (phl-compute-04.internal [10.202.2.44])
+	by mailfout.phl.internal (Postfix) with ESMTP id D78A0EC083D
+	for <linux-xfs@vger.kernel.org>; Mon, 16 Nov 2026 19:01:29 -0500 (EST)
+Received: from phl-frontend-03 ([10.202.2.162])
+  by phl-compute-04.internal (MEProxy); Mon, 16 Nov 2026 19:01:29 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ownmail.net; h=
+	cc:cc:content-transfer-encoding:content-type:date:date:from:from
+	:in-reply-to:message-id:mime-version:reply-to:reply-to:subject
+	:subject:to:to; s=fm3; t=1794873689; x=1794960089; bh=VclKIlHHA6
+	sJRvKYQDUB0ymsoIETh0nxUoTC2xTBROc=; b=kRzcoJ667cUXvisSe1N6SZcN4q
+	WnY09eXeCv+dtJ4kiKJdT9thSHgftISUXwwUr0WFuueS74+x21ZUpM97toG1DkzM
+	9wA679dC0R89tzqXIfMF2s/PtfAG/78f0+gfRrC2jW551PHQku+jVzIzR5cgftQP
+	li0HSIsl52Ckp/adATHQCRplZ2bGz/pGvqHggMF4VHkDrNyb8EdzdT1DmMj5RBxk
+	/AZqTFlpzBwwKIEuJcZfekuU1ZVkRS6sTcdFlHEnvq+gZJjI3CygLtE8/Xx9arLh
+	ALraIstQq/QEq4R9kGH9+Jz4M658Cn0JBWX7jDcn4UyKHUAMuIthigmjKRMQ==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:date:date:feedback-id:feedback-id:from:from
+	:in-reply-to:message-id:mime-version:reply-to:reply-to:subject
+	:subject:to:to:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
+	fm3; t=1794873689; x=1794960089; bh=VclKIlHHA6sJRvKYQDUB0ymsoIET
+	h0nxUoTC2xTBROc=; b=sxTVMqncODQsJB3CdIxwydPijrkwtkL9GR+b2Fd5OM5j
+	p57hYxuZfc8iJMiSS7wRl7ofwvljsbTNSuU7rnorRFL85aAecrcnF+UMBUx4BPlg
+	YuHXMKrcYA600CjY+Nfuvqe2FtZX20G4HD80JVbjzrHeI4Lh6LnCzFDu7ZhtYeEy
+	fUbCdynP1/ysBOv+bHvMAqZmo+7ITybhB9qT1BTQ/xS8L+Sqlb2e2LCkey9fQvpC
+	YDTMfTozFCG5g+w/DHejGWiMHEkbITz6sYFFvXqudHmoeChW7yrgItSsCJZyelt2
+	InZTMoS9XXCtbFdWIsLhUNnI5xK+bOEWJVAl776EPg==
+X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-09;
+	repo=github.com/dkim2wg/interop; date=2026-11-03; sw=lmtpprox;
+	action=sign d=ownmail.net a=rsa-sha256;
+DKIM2-Signature: i=1; m=1; t=1794873689; d=ownmail.net;
+	mf=PG5laWxiQG93bm1haWwubmV0Pg==;
+	rt=PGxpbnV4LXhmc0B2Z2VyLmtlcm5lbC5vcmc+;
+	s=fm3:rsa-sha256:rXW7vkCLZCpNVdetIxLsF01+NFS0qlLjp7SKm0r+AI9Efj/
+	mINHNdiA77xRFH7P/lBB54LHNows3pRFzao4s8uX5JxFxwiAkhbqbqQqj1q3Dby0
+	Kd30pjCmd0ow4TR0rz+9ZQuagGiYj3jn01iN/GH97DpklLJ5YvsyA9Mo3rNFqRy0
+	p6sTKiKRxwJ4RJF344pOwgs9aq4Q2XWGqDzCrLgaOkeloPeMfwmtKl9paKrmOg/q
+	5REZx6Knry0lcMTQeVVwqqnmsoiBiXC3fw0EKG7ZHYcv2FYlKzaY+9jzDhZ7sMaK
+	k87r/ZIPoKUWxeq/OYmpQg9IvIUs28yMkPtIu1Q==;
+X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-09;
+	repo=github.com/dkim2wg/interop; date=2026-11-03; sw=lmtpprox;
+	action=mi-m=1; hc=10;
+	hn=cc,content-transfer-encoding,date,feedback-id,from,
+	message-id,mime-version,reply-to,subject,to;
+Message-Instance: m=1; h=sha256:DHMeLMEDMgA1DsP9ifE/HQN9j5FDVtbY1HGX4wUdWKE=:rfa9m0UcUgaCLag8g7pw3/CotcToDQzfpQPsiR5Ld1o=;
+X-ME-Sender: <xms:WJn7akNlHS6nh1LPAdeQ8mJieXw0dTqL30HtmkQ8WSKSwLh2gdBQPg>
+    <xme:WJn7asQAFB1AaS9BVITpRd2Ma6qfnNP4h41W0GxyDvxI6B2a8mWoJbaKqbFHpooda
+    eMMaqVh2ECpfY2a5hbCbUFZGlokquvgOkAolJvf2GIiOtpZUAs>
+X-ME-Received: <xmr:WJn7av5vE6I4wSNgOH9D42nCte-LZAFL_IHJiaUlLsZQUDR_wQSajghF6BLBsmdbULCMhJAzYKTQ9IjAtLJA4s6bVJvtKQY>
+X-ME-Proxy-Cause: dmFkZTEasDYJk7gUKjj95qJVCDLZ9z5UC3lFOr3mxXp2NqpnduBj0huNRvY2bKuTgCo4S3
+    /ya8LB3Lk1oB3klihdJ8BJX7HvucoWWfwxXQGZVCiOL7v1xyZ9E98HqZfATW3DsfVt7Buf
+    HDDi7kdFSz9V0lrnyG8NHXxthuyOZNaaxSoPUxOpn/Lx6gss1jQ90vOmLNUrp6zNAp1xK/
+    E4mh4beTE7vRnNF/4JgosJzZk15qzccfwiemAiZKTwiIk+j4r/xWrb9oLBME2rnW+IoIvW
+    0V/qJU0eecbujgkGwVUDIsxD3Y6lpRQk5PP5i06J9n0ZK3tSwD2jlIApyzfnpXecO0aekI
+    YP7JC9DDnt1xRq9JFMoLPhAYpZkAtVNVNSH5gEoZIi7C0aPBBsQBMIViGuIiKDao50lB9F
+    p6tN48LqvrHWNcKcaWmtCOeMnAkIkfTTnVk9/JKz/eYXPvTAtHz5Mvx5G2IUqqpw7j5cte
+    OB/XPM6N/K5BcHWjLoCm5nM9RVsNCib50G3J2xslJ3/rzsBiKDyfUjfU+8KsQEsWr1Ur/t
+    gHkZmHuiiGV4Uc4653RVdjM/u8Tw79N1YjLfxU/d6QHtzCJrdCvtEZ5UzyiMIVlPeCsmol
+    fRQfVzoheGRV/H6KdXDBWV8edCUkBEw3bhvtVjD8eIAhz4kEOMh3VLZBCI5A
+X-ME-Proxy: <xmx:WJn7avaKyKXmKVjcLrcBrlYWOhs0GdLqhy2PEMb0vkme78mxFeL_4Q>
+    <xmx:WJn7ajbMKXjXNIp0U6ft9ml21M-9hQPLEi8q6uLIIA94zBBqbhzD5g>
+    <xmx:WJn7ai0-eejyGrgasRnIdMps7wNS0XmZWgUdbySiZaLmd17dG8K2Qw>
+    <xmx:WJn7arYqthUhGb2DFEgLfdNlRGKnc-gg5Cs0osnHyattF9CnN6zuFA>
+    <xmx:WZn7ahWueiiJZNMoiG7ULnt1omal0J4HlDPfylQ0ZSRLnwPdbysG7_i2>
+Feedback-ID: i9d664b8f:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
+ 16 Nov 2026 19:01:23 -0500 (EST)
+From: NeilBrown <neilb@ownmail.net>
+To: Alexander Viro <viro@zeniv.linux.org.uk>,
+	Christian Brauner <brauner@kernel.org>
+Cc: Jan Harkes <jaharkes@cs.cmu.edu>,
+	coda@cs.cmu.edu,
+	Jan Kara <jack@suse.cz>,
+	Richard Weinberger <richard@nod.at>,
+	Anton Ivanov <anton.ivanov@cambridgegreys.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Namjae Jeon <linkinjeon@kernel.org>,
+	Hyunchul Lee <hyc.lee@gmail.com>,
+	Carlos Maiolino <cem@kernel.org>,
+	Jeff Layton <jlayton@kernel.org>,
+	Amir Goldstein <amir73il@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	codalist@coda.cs.cmu.edu,
+	linux-fsdevel@vger.kernel.org,
+	linux-um@lists.infradead.org,
+	ntfs@lists.linux.dev,
+	linux-xfs@vger.kernel.org
+Subject: [PATCH v2 0/4] multiple-filesystems: prepare for changes to VFS locking
+Date: Tue, 17 Nov 2026 10:54:57 +1100
+Message-ID: <20261117000115.1433875-1-neilb@ownmail.net>
+X-Mailer: git-send-email 2.50.0.107.gf914562f5916.dirty
+Reply-To: NeilBrown <neil@brown.name>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -59,246 +140,46 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-A buffer with a dquot type flag is only ever logged by
-xfs_qm_init_dquot_blk(), which initialises and logs the whole buffer in a
-single region. So such a buffer has exactly two regions: the format header,
-and one data region covering the entire buffer that holds a full chunk of
-valid dquots. Online repair also logs whole dquot buffers, but without the
-type flag, so they are not checked here.
+In this v2:
+ - shmem patch is dropped - it isn't necessary and the is a problem
+   with it which isn't worth fixing at this point
+ - configfs patch is dropped - Al didn't like it and it isn't 
+   necessary
+ - ovl patch is dropped - I probably need to solve that a different 
+    way and it is significant enough that it deserves to be separate from
+    this series
+ - slight renaming of bool var and goto labels in first patch
 
-Validate this in the buffer item validate_item callback. A buffer carrying a
-dquot type flag must have that shape, and every dquot in the logged chunk is
-verified so a corrupt dquot is never replayed to disk. The dquot content check
-in the replay path only looked at the first dquot and relied on the replay loop
-for the region bounds, so it is removed and the replay loop reduces to copying
-the logged regions into the buffer.
+Original description, updated.
 
-To share the per-dquot verification, xfs_dquot_verify_chunk() is factored out of
-xfs_dquot_buf_verify(). It walks a chunk of dquots and, on failure, updates its
-dquot pointer to the offending dquot so the caller can report it. The buffer
-read verifier is otherwise unchanged.
+I am working on changes to directory locking.  The medium term goal is
+to lift d_alloc_parallel() locking above i_rwsem, so d_alloc_paralle()
+can be run unlocked, and consequently cannot be called when ->i_rwsem is
+held.
 
-Assisted-by: LLM
-Signed-off-by: Dave Chinner <dgc@kernel.org>
----
- fs/xfs/libxfs/xfs_dquot_buf.c  | 64 ++++++++++++++++-------------
- fs/xfs/libxfs/xfs_quota_defs.h |  2 +
- fs/xfs/xfs_buf_item_recover.c  | 73 +++++++++++++++++++---------------
- 3 files changed, 81 insertions(+), 58 deletions(-)
+This patch set makes small changes to a number of filesystems which each
+require just one patch.  Patch series for nfs, afs, cifs, fuse, cephfs
+have been posted separately
 
-diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
-index 6c8a9afdfb1c..d6837c840989 100644
---- a/fs/xfs/libxfs/xfs_dquot_buf.c
-+++ b/fs/xfs/libxfs/xfs_dquot_buf.c
-@@ -179,6 +179,38 @@ xfs_dquot_buf_verify_crc(
- 	return true;
- }
- 
-+/*
-+ * Verify every dquot in a full chunk of dquots. We don't know what the id of
-+ * the first dquot is supposed to be, just that they should be increasing
-+ * monotonically within the chunk. If the first id is corrupt, then it will fail
-+ * on the second dquot in the chunk so corruptions could point to the wrong
-+ * dquot in this case. On failure @dqb is updated to point at the failing dquot
-+ * so the caller can report it.
-+ */
-+xfs_failaddr_t
-+xfs_dquot_verify_chunk(
-+	struct xfs_mount	*mp,
-+	struct xfs_dqblk	**dqb,
-+	unsigned int		ndquots)
-+{
-+	xfs_failaddr_t		fa;
-+	xfs_dqid_t		id = 0;
-+	unsigned int		i;
-+
-+	for (i = 0; i < ndquots; i++) {
-+		if (i == 0)
-+			id = be32_to_cpu((*dqb)[i].dd_diskdq.d_id);
-+
-+		fa = xfs_dqblk_verify(mp, &(*dqb)[i], id + i);
-+		if (fa) {
-+			*dqb = &(*dqb)[i];
-+			return fa;
-+		}
-+	}
-+
-+	return NULL;
-+}
-+
- STATIC xfs_failaddr_t
- xfs_dquot_buf_verify(
- 	struct xfs_mount	*mp,
-@@ -187,9 +219,7 @@ xfs_dquot_buf_verify(
- {
- 	struct xfs_dqblk	*dqb = bp->b_addr;
- 	xfs_failaddr_t		fa;
--	xfs_dqid_t		id = 0;
- 	int			ndquots;
--	int			i;
- 
- 	/*
- 	 * if we are in log recovery, the quota subsystem has not been
-@@ -201,32 +231,12 @@ xfs_dquot_buf_verify(
- 	else
- 		ndquots = xfs_calc_dquots_per_chunk(bp->b_length);
- 
--	/*
--	 * On the first read of the buffer, verify that each dquot is valid.
--	 * We don't know what the id of the dquot is supposed to be, just that
--	 * they should be increasing monotonically within the buffer. If the
--	 * first id is corrupt, then it will fail on the second dquot in the
--	 * buffer so corruptions could point to the wrong dquot in this case.
--	 */
--	for (i = 0; i < ndquots; i++) {
--		struct xfs_disk_dquot	*ddq;
-+	fa = xfs_dquot_verify_chunk(mp, &dqb, ndquots);
-+	if (fa && !readahead)
-+		xfs_buf_verifier_error(bp, -EFSCORRUPTED, __func__, dqb,
-+				sizeof(struct xfs_dqblk), fa);
- 
--		ddq = &dqb[i].dd_diskdq;
--
--		if (i == 0)
--			id = be32_to_cpu(ddq->d_id);
--
--		fa = xfs_dqblk_verify(mp, &dqb[i], id + i);
--		if (fa) {
--			if (!readahead)
--				xfs_buf_verifier_error(bp, -EFSCORRUPTED,
--					__func__, &dqb[i],
--					sizeof(struct xfs_dqblk), fa);
--			return fa;
--		}
--	}
--
--	return NULL;
-+	return fa;
- }
- 
- static xfs_failaddr_t
-diff --git a/fs/xfs/libxfs/xfs_quota_defs.h b/fs/xfs/libxfs/xfs_quota_defs.h
-index 551d7ae46c5c..73d82edf0969 100644
---- a/fs/xfs/libxfs/xfs_quota_defs.h
-+++ b/fs/xfs/libxfs/xfs_quota_defs.h
-@@ -132,6 +132,8 @@ extern xfs_failaddr_t xfs_dquot_verify(struct xfs_mount *mp,
- 		struct xfs_disk_dquot *ddq, xfs_dqid_t id);
- extern xfs_failaddr_t xfs_dqblk_verify(struct xfs_mount *mp,
- 		struct xfs_dqblk *dqb, xfs_dqid_t id);
-+xfs_failaddr_t xfs_dquot_verify_chunk(struct xfs_mount *mp,
-+		struct xfs_dqblk **dqb, unsigned int ndquots);
- extern int xfs_calc_dquots_per_chunk(unsigned int nbblks);
- extern void xfs_dqblk_repair(struct xfs_mount *mp, struct xfs_dqblk *dqb,
- 		xfs_dqid_t id, xfs_dqtype_t type);
-diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
-index 32c7bf16378a..7be00f0e6b34 100644
---- a/fs/xfs/xfs_buf_item_recover.c
-+++ b/fs/xfs/xfs_buf_item_recover.c
-@@ -483,8 +483,6 @@ xlog_recover_do_reg_buffer(
- 	int			i;
- 	int			bit;
- 	int			nbits;
--	xfs_failaddr_t		fa;
--	const size_t		size_disk_dquot = sizeof(struct xfs_disk_dquot);
- 
- 	trace_xfs_log_recover_buf_reg_buf(mp->m_log, buf_f);
- 
-@@ -498,39 +496,10 @@ xlog_recover_do_reg_buffer(
- 		nbits = xfs_contig_bits(buf_f->blf_data_map,
- 					buf_f->blf_map_size, bit);
- 
--		/*
--		 * Do a sanity check if this is a dquot buffer. Just checking
--		 * the first dquot in the buffer should do. XXXThis is
--		 * probably a good thing to do for other buf types also.
--		 */
--		fa = NULL;
--		if (buf_f->blf_flags &
--		   (XFS_BLF_UDQUOT_BUF|XFS_BLF_PDQUOT_BUF|XFS_BLF_GDQUOT_BUF)) {
--			if (item->ri_buf[i].iov_base == NULL) {
--				xfs_alert(mp,
--					"XFS: NULL dquot in %s.", __func__);
--				goto next;
--			}
--			if (item->ri_buf[i].iov_len < size_disk_dquot) {
--				xfs_alert(mp,
--					"XFS: dquot too small (%zd) in %s.",
--					item->ri_buf[i].iov_len, __func__);
--				goto next;
--			}
--			fa = xfs_dquot_verify(mp, item->ri_buf[i].iov_base, -1);
--			if (fa) {
--				xfs_alert(mp,
--	"dquot corrupt at %pS trying to replay into block 0x%llx",
--					fa, xfs_buf_daddr(bp));
--				goto next;
--			}
--		}
--
- 		memcpy(xfs_buf_offset(bp,
- 			(uint)bit << XFS_BLF_SHIFT),	/* dest */
- 			item->ri_buf[i].iov_base,		/* source */
- 			nbits<<XFS_BLF_SHIFT);		/* length */
-- next:
- 		i++;
- 		bit += nbits;
- 	}
-@@ -1309,6 +1278,44 @@ xlog_recover_buf_verify_type(
- 	return NULL;
- }
- 
-+/*
-+ * A buffer with a dquot type flag is only logged by xfs_qm_init_dquot_blk(),
-+ * which initialises and logs the entire buffer in one go. Online repair also
-+ * logs whole dquot buffers, but without the type flag, so they are replayed as
-+ * regular buffers and are not checked here. So a logged dquot buffer has
-+ * exactly one data region covering the whole buffer, and that region is a full
-+ * chunk of valid dquots. Reject anything else, then verify every dquot in the
-+ * logged chunk so a corrupt dquot is not replayed onto disk.
-+ */
-+static int
-+xlog_recover_buf_validate_dquot(
-+	struct xlog			*log,
-+	struct xlog_recover_item	*item,
-+	struct xfs_buf_log_format	*blf)
-+{
-+	struct xfs_dqblk		*dqb;
-+	xfs_failaddr_t			fa;
-+	unsigned int			ndquots;
-+
-+	if (item->ri_total != 2 ||
-+	    item->ri_buf[1].iov_len != BBTOB(blf->blf_len)) {
-+		xfs_warn(log->l_mp,
-+			"BUF: dquot buffer is not a single whole region recovered.");
-+		return -EFSCORRUPTED;
-+	}
-+	dqb = item->ri_buf[1].iov_base;
-+
-+	ndquots = xfs_calc_dquots_per_chunk(blf->blf_len);
-+	fa = xfs_dquot_verify_chunk(log->l_mp, &dqb, ndquots);
-+	if (fa) {
-+		xfs_warn(log->l_mp,
-+			"BUF: dquot at %pS failed validation recovered.", fa);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	return 0;
-+}
-+
- /*
-  * Validate the whole buffer item once all regions are assembled. The item size
-  * must match the number of regions attached. A cancelled buffer is not
-@@ -1416,6 +1423,10 @@ xlog_recover_buf_validate_item(
- 	if (ri != item->ri_total || total > BBTOB(blf->blf_len))
- 		goto bad_map;
- 
-+	if (blf->blf_flags &
-+	    (XFS_BLF_UDQUOT_BUF | XFS_BLF_PDQUOT_BUF | XFS_BLF_GDQUOT_BUF))
-+		return xlog_recover_buf_validate_dquot(log, item, blf);
-+
- 	return 0;
- 
- bad_map:
--- 
-2.55.0
+The main requirements are:
+ 1/ that d_alloc_parallel() not be called while i_rwsem is held.
+    Places which currently do this can be changed to use d_alloc_trylock(),
+    or d_duplicate(), or change to drop and retake the parent lock.
 
+ 2/ a dentry must not be d_drop()ed while an operation is ongoing, as an
+    unlocked d_alloc_parallel() would then be able to create a new
+    dentry with the same name.  d_splice_alias() can now work with a
+    hash dentry, so often the d_drop() can simply be dropped.  Other
+    times it can be moved to after the operation has completed.
+
+I think it would be best for these to land in the VFS tree and would
+appreciate Acks from relevant maintainer.
+
+Thanks,
+NeilBrown
+
+
+ [PATCH v2 1/4] VFS/xfs/ntfs: drop parent lock across
+ [PATCH v2 2/4] coda: don't d_drop() early.
+ [PATCH v2 3/4] hostfs: don't d_drop() before d_splice_alias() in
+ [PATCH v2 4/4] procfs: drop parent lock for d_alloc_parallel() in
