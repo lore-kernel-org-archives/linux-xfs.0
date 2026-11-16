@@ -1,50 +1,50 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794871102;
-	b=ucdMdtwEZlhNNSCmBxRuAjrRNBPP07uOkMWs8yVUxywFReX1tKiyKL0IQSikEN+jV+//
-	 Eoi8jw7fboRNgd4oJbuqQl0zZ7OhFZkzzw9TIcYy9bwHlL+n9fm5ncb4Ok57va9loeRqx
-	 3Z5yOgO8xj+4sw0pJkHAzFXv3i0njf+SJdI4Hpq1GfK7RLRwqOMyXqqeJKhiMbGElaWkW
-	 p36flPCUkqDvL0e7t4785r3F8iMk7YnX0TPP0EX2hZ9JkQLeTv6dcDZv0R9PA9JUthLqf
-	 XDoOT0qIZabUzz/Hi+tfKTPtUjI4AJIDvdc+glI6yvH4ORYvP9NRIWuxFrHz7pavX2w==
+	t=1794871104;
+	b=P3N2AKpR8dqK7AjndhdZhVy2dMLURAH0BXYhC2D9QJDvLaR5jQrG4phy2kUxRCkfCZmH
+	 0tkXLclZWL92PoAX5kx0Kc2RodUc+gjK8JoM6aV0SBYFG92Y7v+0gkDXYIl6wfNHPr02z
+	 cDr6H4lZYIw6lO913Zzaqpu5ulwuNKBmlGqwtnWjFo9SIxMt/Mx5xBjkQDRtPJ1k8uy9M
+	 AhRFCoJu+RUZTKOiEPEPTuEungurxm8FiqBioZdCbbgNrM3vv9IXXOqmf82b45G3R4sg+
+	 ogRbPT7ULsCoW14xcOkRY6liXdxaiHc3a/ny+UvxedNqQJf2UYk3/UDg+mkZCzZ7FaQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794871102;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794871104;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=aLetgLf/rm2N6n9fxojPTgeCuMADGu1H4pjlxclHpLI=;
-	b=sx/bSdWF1m+LJQpkcrsVG3jJ/kTcF8uWQ6UB6Jov0lcImPAP2DVAqqzZthIw9QpGXStg
-	 itbwj3kW7E5kPibZt8GVLhOjQ3+2pNvWh9drst3UcE7VfVt+nkzSrTMuKLL0E5bHomm3I
-	 tsnwLnrAw1k44CBt0Fhb2JcQCkf02Vofcvc4JllMywBn2dkl6Z12TfVE6lLZL11lLWqNe
-	 B+uTMudlzIvKMHqx0DETkKOVbO41WP/uQOLLqZeJrFD4+ymPt9WeZvKjg6sIe9jk8EQyq
-	 MeMlPz40CjrmSTW8SOG8oQZVFzlg0pBEMGzX1WFCaS93NmFqYI68urcYNz1AG/k285g==
+	bh=1SDYqian/FW93+AnoAO856xTAyiPK590M6Mlw6hu+m4=;
+	b=kLFPerygkHNzSeMh8ZthMu9ySAy4HrTShhD6zNr+h7gOjrS1cAwFYPvJ7ABvR6dUc+9r
+	 wgTQaHXyGSpIpNg2XobFb+gmW8A1cu3Zq1iJrOK7USqtr+5qTPN03j9WCHzepPtJ17d23
+	 WN23f+OBPVgkCUSCSC0KbRoVAx7n7B6MXObv7TQti6Um1HkKsglU2QgBRml/8rQFJkguX
+	 k/1eEFTYhfu+0+Fgoij0EJgwARPyaLtgqADWnTiR7h3vBFH+Hj7GqJuwk0UI06d5Jio64
+	 9AcDQisu7ms/JBpYixt8L7FM57r5DsakS564v3AMGzhoAtilKNwlZTrnnR6xIM72Ylg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=deMdjyPc;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=FjmjFJVN;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFA2E606A330
-	for <linux-xfs@vger.kernel.org>; Mon, 16 Nov 2026 23:18:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83807606A323
+	for <linux-xfs@vger.kernel.org>; Mon, 16 Nov 2026 23:18:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=deMdjyPc
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C680F1F000D1;
-	Mon, 16 Nov 2026 23:18:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=FjmjFJVN
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2C30F1F000CD;
+	Mon, 16 Nov 2026 23:18:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794871102;
-	bh=aLetgLf/rm2N6n9fxojPTgeCuMADGu1H4pjlxclHpLI=;
+	s=k20260515; t=1794871104;
+	bh=1SDYqian/FW93+AnoAO856xTAyiPK590M6Mlw6hu+m4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=deMdjyPcQcWY1uI8H5yPpCHfDLk2AoTEMG+AdrFYR8H/eua8HeyuUanVfJGFDjNm4
-	 hEXzKOrW88NSdSzVoswxFc3ArAQBkZcTwfjSoLbpShHOFmLWD78bVDSNZV1CONJmd8
-	 r7GCzZbgda535gkyQApdAm/4lhtEDhEcDCmfBlYzbSjvS7sQtHFZshs9P8CwGX/n7h
-	 O1NAJym0KVFu3MckvoUN4j2Nt5fpLSx/REIdek8a4BYbPGzRLVtbYmbBPf9lHCeAp8
-	 KS7a4Qy1DbfP+LyKjyhcPamKuOGCq7WsFh4V6ftP+/BO8z2PlzKba+WeHZMI8b0XEP
-	 5oR1jJ1a6izzw==
+	b=FjmjFJVNqUOjV0bYVFr+SrduGOgnqKR+KQV7ByGARAmig8pW5UUXiQtqXvods5VwE
+	 1AykLGFJIyGgenVzD9x88jwVqQ9LtBoKKPdc714XO4sH1F58h1a5HX5Xl0qh5YkOYe
+	 nltQJUclVmsdh+mK9JpFsPgQLRI7g17wXgW0LmDOFy93O4sirRy/nb8+LZXLV9YNUc
+	 5Yc6vS9SNa/v00EqzlUth+ivdyWyW1+jHO1wsoUleNt6FA6pAf3SNGrZ6KwO6AovH5
+	 J/ia7EkSCg5mXk2EF2rIm2DWvTH+E0WfDHmJuk1isXZenqoCApX8MaoPl+KhvHn+NP
+	 yLLfF5svSaCGQ==
 From: Dave Chinner <dgc@kernel.org>
 To: linux-xfs@vger.kernel.org
 Cc: cem@kernel.org
-Subject: [PATCH 53/59] xfs: check logged btree fork roots fit in the inode fork during recovery
-Date: Tue, 17 Nov 2026 10:15:10 +1100
-Message-ID: <20261116231707.3625263-54-dgc@kernel.org>
+Subject: [PATCH 54/59] xfs: validate buffer item region count during recovery
+Date: Tue, 17 Nov 2026 10:15:11 +1100
+Message-ID: <20261116231707.3625263-55-dgc@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20261116231707.3625263-1-dgc@kernel.org>
 References: <20261116231707.3625263-1-dgc@kernel.org>
@@ -59,74 +59,46 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-A btree format fork is logged as the expanded in-core btree root. Replay
-converts it to the compact on-disk root as it copies it into the inode. The
-conversion lays the root out using the capacity of the on-disk fork, then copies
-as many keys and pointers as the logged root says it holds. Nothing bounds that
-record count by what the fork can hold. A logged root that is otherwise
-consistent but holds too many records is copied past the end of the fork, into
-the rest of the inode cluster buffer.
-
-Reject a logged btree root whose compact on-disk form does not fit within the
-inode fork. This uses the same check as the runtime root loaders apply when they
-read a root from disk.
+Validate the number of regions in a buffer log item as it is decoded from the
+journal. A cancelled buffer logs only its format header, so the valid range
+spans the whole range a log item can hold.
 
 Assisted-by: LLM
 Signed-off-by: Dave Chinner <dgc@kernel.org>
 ---
- fs/xfs/xfs_inode_item_recover.c | 18 ++++++++++++++++--
- 1 file changed, 16 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_buf_item_recover.c | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
-diff --git a/fs/xfs/xfs_inode_item_recover.c b/fs/xfs/xfs_inode_item_recover.c
-index efb142efa0ef..6920aab9263a 100644
---- a/fs/xfs/xfs_inode_item_recover.c
-+++ b/fs/xfs/xfs_inode_item_recover.c
-@@ -478,8 +478,8 @@ xlog_dinode_verify_extents(
-  * length is fixed by the record count, so the region size fixes how many
-  * records the root can hold.
-  *
-- * The region size has already been bounds checked against the inode fork size,
-- * so it is known to fit within the fork and does not need rechecking here.
-+ * The logged root is converted to the compact on-disk root when it is replayed
-+ * into the inode, so it is the compact form that must fit within the fork.
-  */
- static xfs_failaddr_t
- xlog_dinode_verify_bmbt_root(
-@@ -515,6 +515,10 @@ xlog_dinode_verify_bmbt_root(
- 	if (numrecs == 0 || size != xfs_bmap_broot_space_calc(mp, numrecs))
- 		return __this_address;
+diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
+index 383d0e87ef6a..3742099de2eb 100644
+--- a/fs/xfs/xfs_buf_item_recover.c
++++ b/fs/xfs/xfs_buf_item_recover.c
+@@ -1211,8 +1211,25 @@ xlog_recover_buf_commit_pass2(
+ 	return 0;
+ }
  
-+	if (xfs_bmdr_space_calc(numrecs) >
-+	    __xfs_inode_fork_size(mp, ldip->di_forkoff, whichfork))
-+		return __this_address;
++/*
++ * A buffer item is a format header region followed by a region for each dirty
++ * range of the buffer. However, a cancelled buffer only logs a format header,
++ * hence the valid region count range spans the entire range a log item can
++ * legally have.
++ */
++static int
++xlog_recover_buf_nregions(
++	struct xlog			*log,
++	uint16_t			nregions)
++{
++	if (nregions < 1 || nregions > XLOG_MAX_REGIONS_IN_ITEM)
++		return -EFSCORRUPTED;
++	return nregions;
++}
 +
- 	for (i = 1; i <= numrecs; i++) {
- 		struct xfs_bmbt_key	*key = xfs_bmbt_key_addr(mp, block, i);
- 		xfs_bmbt_ptr_t		*ptr = xfs_bmap_broot_ptr_addr(mp, block,
-@@ -578,6 +582,11 @@ xlog_dinode_verify_rtrmap_root(
- 	if (size != xfs_rtrmap_broot_space_calc(level, numrecs))
- 		return __this_address;
- 
-+	/* The compact on-disk form of the root must fit within the fork. */
-+	if (xfs_rtrmap_droot_space_calc(level, numrecs) >
-+	    __xfs_inode_fork_size(mp, ldip->di_forkoff, XFS_DATA_FORK))
-+		return __this_address;
-+
- 	/*
- 	 * A leaf root holds records whose bounds are relative to a realtime
- 	 * group. The realtime groups are not set up until long after log
-@@ -646,6 +655,11 @@ xlog_dinode_verify_rtrefcount_root(
- 	if (size != xfs_rtrefcount_broot_space_calc(level, numrecs))
- 		return __this_address;
- 
-+	/* The compact on-disk form of the root must fit within the fork. */
-+	if (xfs_rtrefcount_droot_space_calc(level, numrecs) >
-+	    __xfs_inode_fork_size(mp, ldip->di_forkoff, XFS_DATA_FORK))
-+		return __this_address;
-+
- 	/*
- 	 * A leaf root holds records whose bounds are relative to a realtime
- 	 * group. The realtime groups are not set up until long after log
+ const struct xlog_recover_item_ops xlog_buf_item_ops = {
+ 	.item_type		= XFS_LI_BUF,
++	.validate_nregions	= xlog_recover_buf_nregions,
+ 	.reorder		= xlog_recover_buf_reorder,
+ 	.ra_pass2		= xlog_recover_buf_ra_pass2,
+ 	.commit_pass1		= xlog_recover_buf_commit_pass1,
 -- 
 2.55.0
 
