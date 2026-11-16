@@ -1,63 +1,64 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=111.22.67.151
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794669552;
-	b=svqHVxSRPk5OytE9w/jWylX0X+MCvahHdYF+H28AFMKPWcTNgKE9wcMTrPB8osE+vv2g
-	 psf3P25eeimztlHtFvhDMSvlAShb2U5iX4AC5hrM/zF/5pKL52PGMJCIO1Y3mkFUEoqt6
-	 BLwinc342cI2U/GxmfN3WzLNqGcicEpPS/TnwuFKRbc0i61RX9yz/DRj/yObc6ip1jcke
-	 lprMi62+DQQuiN9pCsCajsheZ4RU33pgPOCw0y8FarqVM7WSF9YuD55zeo77ICrdnVfyo
-	 ijIjT+05Juj33a9PYimBeusfpCwoZUfdQbVrQH8tkySQA7llx+y/KOqFup3JkXdBx/Q==
+	t=1794793728;
+	b=3T+fIPBNVshiOkrYH6gHcgJiXIWsgua4teXOIstNfaecm/42SrZyVZ6gpEFqEki7ZXrG
+	 QX7/QCiDJbIJ9ASgPNtRvh+JVfeHSq6jWMs/I104vfLqgFdcNiIJxPH4TYMHncPA1WdRy
+	 Of0pEnluDj+h8SN8Ui5kYJlRJgjOCXfAauWedZLtqRSEvxEKg09ayQ4vD+SawRQ5cMuJE
+	 mNJpzotaP41jYLCoucp8NC46tCGSg0I7ff/rlU1D3b6QWXOsudwx+nsOe2LkE7klZemNR
+	 cXcfBE++RI8esZk81KHPUIA5LLcmqwGh6P0ainXFutBTNsFEEn6hZaZcxb8OEZDFlOQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794669552;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 Mail-Followup-To:References:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To;
-	bh=Qu/0WIZ8Dq53p2n6YqF3E3pv9S8eZe2FdkWqn1VfGZY=;
-	b=IeEkwLSoKnRr431dQideWN/p9jMjH2RH2BOgsjavcrgnUhlj3n9GzFZNgnUAVdaiD6PZ
-	 mfyfmJLb3c9rOUDZQIwmA5S2XXgjwwfdT+HGQVn7G9MY1dfFDk50TcsffXzMwD9qa7HKJ
-	 10ZOfAoKp4yrVlHjfE2HOenCuZsOSYJ5oB/CI4Qoliw3K2svRkJVbpKYk35yLHbW5VD14
-	 rlZAJQRTgMF2iNHT1NKaEZg+XUUhtDm9aDpnB7+Gs6YXIUxv6K26nkz7VPP8gb4Cgq050
-	 wOkltZ/9LWpp4fZoQejEHKT8WqYzCy9M+f2yslAADkfVzSNOKiAclMgVTK3ot2pcfgA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794793728;
+	h=DMARC-Filter:DKIM-Signature:X-RM-TagInfo:X-RM-SPAM-FLAG:Received:
+	 X-RM-TRANSID:X-RM-TagInfo:X-RM-SPAM-FLAG:Received:X-RM-TRANSID:From:
+	 To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=ZGXJ9Z6c5QRKFJOfmStwKcNo6B6D+MpUfYxYJOSZg1Y=;
+	b=0pwANh3W4VW7zFMemaH5126ZLx2RnYl4y7DLSorrGGizzmbelE/gi6JUzVjED9OOmLtx
+	 dGnwPSzisqDE6YAv/32bzTVzeZ88iKykHuwMBKdW30dBxmrGgdh5wRE7qXBAKyw3Pyed4
+	 LBdcwbuRuytwvTFu9i3gOxyAEAHsZy5rV9aNWX2EnZL1yj6gxnAIofo5XWfdEYEPcE30W
+	 DKEmd64g6mK37F8ZZBJMbQu5U1OyW6xHSHgaoe9tA7Ker4sZ4PNKcQAJz25LAN/6pEimj
+	 yvWWOh/5xh9eI4ZqH019bUFoQetNOtu9DiIdw7BFSHfmaJFR9wMr+JOEWXEQrDV27+w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hRh+De9a;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CA56606A323;
-	Sat, 14 Nov 2026 15:19:12 +0000 (UTC)
+	dmarc=pass header.from=cmss.chinamobile.com;
+	spf=pass smtp.mailfrom=cmss.chinamobile.com;
+	dkim=pass header.d=cmss.chinamobile.com header.i=@cmss.chinamobile.com header.a=rsa-sha256 header.s=default header.b=DjkUab7K;
+	arc=none smtp.remote-ip=111.22.67.151
+Received: from cmccmta8.chinamobile.com (cmccmta8.chinamobile.com [111.22.67.151])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 5CEE2606A331;
+	Mon, 16 Nov 2026 01:48:47 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5CEE2606A331
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmss.chinamobile.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmss.chinamobile.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hRh+De9a
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 715BF1F000C4;
-	Sat, 14 Nov 2026 15:19:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794669552;
-	bh=Qu/0WIZ8Dq53p2n6YqF3E3pv9S8eZe2FdkWqn1VfGZY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=hRh+De9arbJulQhHIXnMDtBDRcZwEMHFpp+p1Jdu2UlT/zKEpDB7/2KdM4CMWrTKj
-	 GxQ+Z/ETc0pmquo/112pjd4zpBb9QLCcb/dVEAnu5SGM0HiRaDsTMzGZaVo8qfsihD
-	 Ivaf7eii7k9lK32bSqs5erUFWRoOtDtskrNyVeCA4ouo+wb8QG7OnkVS4H03gfbVqN
-	 sUpLD5LbBA55pxlIOhDmkzBI529SrZwqTFM9DoYDK0+9LzjL2c4XAMts/YcygFzojN
-	 1yNfHbwbY47KyJzbrzyPlZc0D2Za02OCs4g7F8eaN0Kmdyo3lfSPT6iBrJmpD0gX98
-	 bgBTughBp4JTA==
-Date: Sat, 14 Nov 2026 23:18:58 +0800
-From: Zorro Lang <zlang@kernel.org>
-To: Daejun Park <daejun7.park@samsung.com>
-Cc: Brian Foster <bfoster@redhat.com>, 
-	"fstests@vger.kernel.org" <fstests@vger.kernel.org>, "Darrick J. Wong" <djwong@kernel.org>, 
-	Christoph Hellwig <hch@lst.de>, Dave Chinner <dgc@kernel.org>, 
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: (2) [PATCH 1/2] xfs/438: retry failed metadata writes again
-Message-ID: <avh7wJ0pJH5olehG@zlang-mailbox>
-Mail-Followup-To: Daejun Park <daejun7.park@samsung.com>, 
-	Brian Foster <bfoster@redhat.com>, "fstests@vger.kernel.org" <fstests@vger.kernel.org>, 
-	"Darrick J. Wong" <djwong@kernel.org>, Christoph Hellwig <hch@lst.de>, Dave Chinner <dgc@kernel.org>, 
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-References: <avXIstx55STwYao7@bfoster>
- <20261112-xfs-438-dquot-retry-v1-0-73149b823246@samsung.com>
- <20261112-xfs-438-dquot-retry-v1-1-73149b823246@samsung.com>
- <CGME20261112141007epcas2p462246c1d6a82b4540937ad955dbfd8ec@epcms2p7>
- <20261113025637epcms2p7293f70d38c194bcc0484811c63137f94@epcms2p7>
+	dkim=pass (1024-bit key) header.d=cmss.chinamobile.com header.i=@cmss.chinamobile.com header.a=rsa-sha256 header.s=default header.b=DjkUab7K
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=cmss.chinamobile.com; s=default; l=0;
+	h=from:subject:message-id:to:cc:mime-version;
+	bh=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=;
+	b=DjkUab7KVkJ2HvI8uNxSlAuvJpMKfnzp6r++iAV5UOo8bmBsN++KrHP5k+eXRlAQ0ZTqqUU3FCoVs
+	 l6jTv0pg9sls0m+78poGDPH0lOCXYEKCz1zls2+gHxW4Ggzk7M18VauGBFBuHLKWi7OHkpGARxpaxt
+	 RV+cdWXgsm+7cLLQ=
+X-RM-TagInfo: emlType=0                                       
+X-RM-SPAM-FLAG:00000000
+Received:from spf.mail.chinamobile.com (unknown[10.188.0.87])
+	by rmmx-syy-dmz-app06-12006 (RichMail) with SMTP id 2ee66afa60fb6ea-c669a;
+	Mon, 16 Nov 2026 09:48:44 +0800 (CST)
+X-RM-TRANSID:2ee66afa60fb6ea-c669a
+X-RM-TagInfo: emlType=0                                       
+X-RM-SPAM-FLAG:00000000
+Received:from fedora (unknown[223.108.79.102])
+	by rmsmtp-syy-appsvr02-12002 (RichMail) with SMTP id 2ee26afa60f06ba-77819;
+	Mon, 16 Nov 2026 09:48:44 +0800 (CST)
+X-RM-TRANSID:2ee26afa60f06ba-77819
+From: Yiqing Wu <wuyiqing@cmss.chinamobile.com>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Yiqing Wu <wuyiqing@cmss.chinamobile.com>
+Subject: [PATCH] xfs: remove unused variable in xchk_stats_estimate_bufsize()
+Date: Mon, 16 Nov 2026 09:48:02 +0800
+Message-ID: <20261116014802.16078-1-wuyiqing@cmss.chinamobile.com>
+X-Mailer: git-send-email 2.56.0
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -67,32 +68,45 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261113025637epcms2p7293f70d38c194bcc0484811c63137f94@epcms2p7>
+Content-Transfer-Encoding: 8bit
 
-On Fri, Nov 13, 2026 at 11:56:37AM +0900, Daejun Park wrote:
-> On Thu, Nov 12, 2026 at 09:09:54AM -0500, Brian Foster wrote:
-> > On Thu, Nov 12, 2026 at 10:37:17AM +0900, Daejun Park via B4 Relay wrote:
-> [...]
-> > > +# The dquot buffer write must still be failing and retried here. A shut
-> > > +# down filesystem means that the test missed the hang it checks.
-> >
-> > Nit on the comment.. something like this is a little more clear to me:
-> >
-> > # Run a stat to confirm we haven't shutdown prematurely. We expect the
-> > # fs to be running metadata write retries. A shutdown fs at this point
-> > # means that we haven't properly tested for the hang.
-> >
-> > But this LGTM regardless. Maybe Zorro can fix that up if you agree:
-> 
-> Thanks, agreed. Your wording is clearer.
-> 
-> Zorro, could you replace the comment with Brian's when you apply this?
-> Patch 2 does not touch these lines.
+The css variable in xchk_stats_estimate_bufsize() is initialized to
+point to the start of the cs_stats array and incremented on every
+iteration of the scan loop, but it is never dereferenced.  GCC flags
+this as a dead assignment when building with W=1:
 
-Sure, I'll help that.
+  fs/xfs/scrub/stats.c:146:34: warning: variable css set but not used [-Wunused-but-set-variable=]
 
-> 
-> Best regards,
-> Daejun
+Drop the variable and the loop increment.
+
+Signed-off-by: Yiqing Wu <wuyiqing@cmss.chinamobile.com>
+---
+ fs/xfs/scrub/stats.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/fs/xfs/scrub/stats.c b/fs/xfs/scrub/stats.c
+index 6934d76cfd15..dfdac4e7b4ad 100644
+--- a/fs/xfs/scrub/stats.c
++++ b/fs/xfs/scrub/stats.c
+@@ -143,7 +143,6 @@ STATIC size_t
+ xchk_stats_estimate_bufsize(
+ 	struct xchk_stats	*cs)
+ {
+-	struct xchk_scrub_stats	*css = &cs->cs_stats[0];
+ 	unsigned int		i;
+ 	size_t			field_width;
+ 	size_t			ret = 0;
+@@ -157,7 +156,7 @@ xchk_stats_estimate_bufsize(
+ 			      offsetof(struct xchk_scrub_stats, checktime_us)) /
+ 			     sizeof(uint64_t));
+ 
+-	for (i = 0; i < XFS_SCRUB_TYPE_NR; i++, css++) {
++	for (i = 0; i < XFS_SCRUB_TYPE_NR; i++) {
+ 		if (!name_map[i])
+ 			continue;
+ 
+-- 
+2.56.0
+
+
+
