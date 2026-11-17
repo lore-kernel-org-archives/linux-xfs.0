@@ -1,55 +1,55 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=113.46.200.218
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=113.46.200.222
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794926054;
-	b=fWr6bP2nqHf88naYp+moYjZXDhvbiy48Cr5ijWiptlXOhmHM9qlBlBVBjv2jkN19+LlA
-	 oBR7+ipKTpD5scb+KXyJ0Y/SG4bfbAZJoWqA53iSYw5V5qkzJ7kXXQTYHvaB06oHcA7Ce
-	 KGuDstksPe7td+8l60vENQj0D5a37oT4ErPJ43+Qjp6X93N5Fkg5aFCaHhfjRK3DRiXGy
-	 z+UjgE6CVm9mmolpqL7mrG2oA9o1hlU3phFJoQtubDGyNMFUn20j3cG7n3ALFjg96LYGq
-	 Isnybks/3pn//8w0MJ9uQoWIaXJCPLDmi4UV68/sXWGrK89Telcj3RogjGXFjkl+o1g==
+	t=1794926060;
+	b=KvzPaXKHzy6LZ3N9wY/PwF4ZtnfUjBYCKSUTe2sIl8iZtWdo2QKGliw/lz3hGkWgA+2l
+	 Pn4M6pzzL2w+zmdSn8BcJruvW2aDocFudL9UM5tlbOq6Rn/ys7ttuzH3CfpdV6A/UPNLs
+	 FCLU8lAZoy2MXJW2QdAUY7M2x+TDgXqGj2zyrOg3nX/K/Svcohano/5MaQS++oFpQvW8R
+	 HaeVzK/JverocCD/oySsWPlBiWbBC9JJjM2O27YQRK8gyEpe5PWHdgpeRmPPSfy2nOTPE
+	 V8ivCL/gScFE4f+rY+N0QrX12IgC+nrWMIKmGsQqhr7YyMfB5bA990JPS/7/Ul5dNhw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794926054;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794926060;
 	h=DMARC-Filter:dkim-signature:Received:Received:Received:From:To:CC:
 	 Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Type:X-Originating-IP:X-ClientProxiedBy;
-	bh=Lwx5zFX1Q48jMbIRnAQ6FkYyC3hzO7w2JiOQ12MFv7k=;
-	b=5sW3scTwKjiUFDEHOCJFSg2wA5i5pvmtel0URdcpaR85Ohe5h3M5mb9ejOoTWy21wkI9
-	 0B9n2ENisldh3GJo9DeRyIt6gtWR0aOwqquxkM3anrjTIvobZwjjpMQiAnN1VYdRSnZXq
-	 Acd5Q/KdOn76XbbGwYdDeVdU8SLaJL+xGVPpMUR3v0Crkp+NcqOLWFeioTVqdX2iHOT+h
-	 dBQcEl6QiAG4DFP3lWxCpSbYe2nyqLNwMOpkIzCIx4eO6Y50UrfOGr1Gn5T/ltRvaGVU1
-	 +aI1frJkjt7tpXRgU+xZIRJmGhdJZ+mc5XZOxfFx/7B/20i1OffmNSpJ6q/GcspdleA==
+	bh=yp9C+GxjlpKb314SrFvwyNilz2vyZ0+Fp14pVZtlXoQ=;
+	b=vksEAoGvX/XB5RAIwp/3mluV7YRmQ/F6xpnhvPVivme5goubT4ByPfGN0PyPRE5GSOUC
+	 G2DO/La5X2QxvaLuNzmZRdPorQH8I87zLw75XOF1fQTNff5J2oWooOfnyrjA9z2zehwUQ
+	 8FoA6vrIx+/NdlAClUfafVhLTAWU3mGLbHrzu2kVmyIczHLia1dgBIu9u5dLuCqxgPQLW
+	 f3+KjG8fTtVZFIOfEqGmflibHcksPZxM/PZE85pIMLIZNAyIehGjZ/XHqgIp902nq01lg
+	 iq7LkqLnpcvD55b/s7hEsb58rPMlpVz6H4ODURevpqa09vVPlCCl5o48WaRco02fPJg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=huawei.com;
 	spf=pass smtp.mailfrom=huawei.com;
-	dkim=pass header.d=huawei.com header.i=@huawei.com header.a=rsa-sha256 header.s=dkim header.b=AwUDQQTD;
-	arc=none smtp.remote-ip=113.46.200.218
-Received: from canpmsgout03.his.huawei.com (canpmsgout03.his.huawei.com [113.46.200.218])
+	dkim=pass header.d=huawei.com header.i=@huawei.com header.a=rsa-sha256 header.s=dkim header.b=3lBl+gXS;
+	arc=none smtp.remote-ip=113.46.200.222
+Received: from canpmsgout07.his.huawei.com (canpmsgout07.his.huawei.com [113.46.200.222])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DA8B606A882;
-	Tue, 17 Nov 2026 14:34:11 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5DA8B606A882
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53929606ABAF;
+	Tue, 17 Nov 2026 14:34:19 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 53929606ABAF
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.a=rsa-sha256 header.s=dkim header.b=AwUDQQTD
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.a=rsa-sha256 header.s=dkim header.b=3lBl+gXS
 dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
 	c=relaxed/relaxed; q=dns/txt;
 	h=From;
-	bh=Lwx5zFX1Q48jMbIRnAQ6FkYyC3hzO7w2JiOQ12MFv7k=;
-	b=AwUDQQTDJsHVV3oKdMK84allb55iL2G19/ig2IfgY7Z4CDYxUsa1tfU8cgNPRjGAzkmMinZDx
-	2sI/uy7UFwCRCtB24fX01B4BXWJIr3xuuUEjeqzv+1npDSKRM8Dm8tdLPaqVNMACK0XEMLnALbc
-	VYuwiJ53eJY+Z1G0GQQrgEo=
-Received: from mail.maildlp.com (unknown [172.19.162.197])
-	by canpmsgout03.his.huawei.com (SkyGuard) with ESMTPS id 4jTRzg5RBjzpSyl;
-	Tue, 17 Nov 2026 22:33:19 +0800 (CST)
+	bh=yp9C+GxjlpKb314SrFvwyNilz2vyZ0+Fp14pVZtlXoQ=;
+	b=3lBl+gXS0CupZqXqMwtxYccV2LAZIDKxjdPoedNXkH2yR52sYhgd5yBQ2M550XFYAcrYL2ZiW
+	GasIRCTTf9+USUXxxGgVuwhQWxxzcxp4va+r/cdp3n7lxZzW2Zlh99vyqrIsZqxLNYTUqWRg+s/
+	/eqWkUXvJQeGPMXNqB26AhY=
+Received: from mail.maildlp.com (unknown [172.19.162.92])
+	by canpmsgout07.his.huawei.com (SkyGuard) with ESMTPS id 4jTS0L5VVXzLlTR;
+	Tue, 17 Nov 2026 22:33:54 +0800 (CST)
 Received: from whupemk100010.china.huawei.com (unknown [7.152.184.41])
-	by mail.maildlp.com (Postfix) with ESMTPS id 3382F40579;
-	Tue, 17 Nov 2026 22:34:08 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id BE27C40586;
+	Tue, 17 Nov 2026 22:34:13 +0800 (CST)
 Received: from octopus.huawei.com (10.67.174.191) by
  whupemk100010.china.huawei.com (7.152.184.41) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.45; Tue, 17 Nov 2026 22:34:02 +0800
+ 15.2.2562.45; Tue, 17 Nov 2026 22:34:07 +0800
 From: Cai Xinchen <caixinchen1@huawei.com>
 To: <mic@digikod.net>, <gnoack@google.com>, <paul@paul-moore.com>,
 	<brauner@kernel.org>, <jack@suse.cz>, <caixinchen1@huawei.com>
@@ -86,9 +86,9 @@ CC: <amir73il@gmail.com>, <andrii@kernel.org>, <apparmor@lists.ubuntu.com>,
 	<stephen.smalley.work@gmail.com>, <takedakn@nttdata.co.jp>, <tom@talpey.com>,
 	<viro@zeniv.linux.org.uk>, <yonghong.song@linux.dev>, <yuezhang.mo@sony.com>,
 	<zohar@linux.ibm.com>, <utilityemal77@gmail.com>, <lujialin4@huawei.com>
-Subject: [PATCH -next -v4 08/17] LSM: rename inode_setattr to path_setattr and pass struct path and file
-Date: Tue, 17 Nov 2026 23:05:33 +0800
-Message-ID: <20261117150542.1169451-9-caixinchen1@huawei.com>
+Subject: [PATCH -next -v4 09/17] LSM: rename inode_getattr to path_getattr and pass struct file
+Date: Tue, 17 Nov 2026 23:05:34 +0800
+Message-ID: <20261117150542.1169451-10-caixinchen1@huawei.com>
 X-Mailer: git-send-email 2.18.0.huawei.25
 In-Reply-To: <20261117150542.1169451-1-caixinchen1@huawei.com>
 References: <20261117150542.1169451-1-caixinchen1@huawei.com>
@@ -105,866 +105,364 @@ Content-Type: text/plain
 X-ClientProxiedBy: kwepems100002.china.huawei.com (7.221.188.206) To
  whupemk100010.china.huawei.com (7.152.184.41)
 
-The inode_setattr hook is called from notify_change(), which now holds a
-struct path and a struct file.  Pass both, next to the target dentry and
-the idmap: path-based checks must use the caller-supplied path, while
-inode-based checks must authorize the target dentry, which can differ
-when a filesystem forwards a change (NTFS named streams).
+The inode_getattr hook already receives a struct path, so rename it to
+path_getattr to follow the path_* convention, and rename
+security_inode_getattr() and its SELinux, Smack, AppArmor and TOMOYO
+implementations accordingly.
 
-Rename the hook and security_inode_setattr() to path_setattr to follow
-the path_* convention.  The rename cannot be deferred: BPF LSM programs
-are not verified against the argument list, and the attr argument moves
-from ctx slot 2 to slot 3 while slot 2 becomes a dentry whose d_flags is
-a u32 at offset 0, so a program reading iattr->ia_valid would silently
-read DCACHE_OP_HASH instead of failing to load.
+Also pass the struct file through which the attributes are requested,
+when there is one, for the same reason as the other metadata hooks.
+vfs_getattr() keeps its signature and delegates to the new exported
+vfs_getattr_file(), which takes the file and passes it to the hook;
+callers that already hold the file use it directly, the others pass NULL.
 
-do_fchmodat(), do_fchownat() and do_utimes_path() now dispatch an empty
-path with AT_EMPTY_PATH to the file descriptor-based helpers, following
-the vfs_fstatat() pattern, so that AT_EMPTY_PATH keeps accepting O_PATH
-descriptors; vfs_utimes() audits the request once when it is given a
-file.
-
-Also make the new arguments usable from BPF: mark path->dentry trusted in
-the verifier, name the file argument file__nullable in the strong stub,
-and add the already-locked sleepable path hooks to d_inode_locked_hooks.
-path_link, path_rename, path_rmdir and path_unlink stay out of it, as
-their path and dentry arguments name different inodes.
+Update the BPF selftests, the d_path BTF allowlist and the BPF_PROG()
+argument lists to the new names and signature.
 
 Signed-off-by: Cai Xinchen <caixinchen1@huawei.com>
 ---
- Documentation/filesystems/porting.rst | 11 ++++-
- drivers/base/devtmpfs.c               |  4 +-
- fs/attr.c                             | 28 +++++++-----
- fs/bpf_fs_kfuncs.c                    | 54 +++++++++++++++++++++-
- fs/btrfs/volumes.c                    |  2 +-
- fs/ecryptfs/inode.c                   |  4 +-
- fs/exfat/file.c                       |  5 ++-
- fs/fat/file.c                         |  5 ++-
- fs/init.c                             |  6 +--
- fs/inode.c                            |  2 +-
- fs/internal.h                         |  6 ++-
- fs/nfsd/nfs4state.c                   |  4 +-
- fs/nfsd/vfs.c                         |  4 +-
- fs/ntfs/named_stream.c                |  3 +-
- fs/open.c                             | 64 ++++++++++++++++++++++-----
- fs/overlayfs/overlayfs.h              |  2 +-
- fs/smb/server/smb2pdu.c               |  2 +-
- fs/smb/server/smbacl.c                |  2 +-
- fs/utimes.c                           | 36 ++++++++++++---
- include/linux/fs.h                    |  9 ++--
- include/linux/lsm_hook_defs.h         | 17 ++++++-
- include/linux/security.h              | 13 +++---
- init/initramfs.c                      |  2 +-
- kernel/bpf/bpf_lsm.c                  |  2 +-
- kernel/bpf/bpf_lsm_proto.c            | 16 +++++++
- kernel/bpf/verifier.c                 | 13 ++++++
- security/integrity/evm/evm_main.c     | 13 +++---
- security/security.c                   | 16 ++++---
- security/selinux/hooks.c              |  8 ++--
- security/smack/smack_lsm.c            | 14 +++---
- 30 files changed, 283 insertions(+), 84 deletions(-)
+ drivers/block/loop.c                          | 12 +++-
+ drivers/block/zloop.c                         | 14 +++-
+ fs/bpf_fs_kfuncs.c                            |  4 +-
+ fs/stat.c                                     | 68 ++++++++++++++-----
+ fs/xfs/xfs_ioctl.c                            |  2 +-
+ include/linux/fs.h                            |  3 +
+ include/linux/lsm_hook_defs.h                 |  3 +-
+ include/linux/security.h                      |  5 +-
+ kernel/bpf/bpf_lsm.c                          |  2 +-
+ kernel/bpf/bpf_lsm_proto.c                    | 11 +++
+ kernel/trace/bpf_trace.c                      |  2 +-
+ security/apparmor/lsm.c                       |  5 +-
+ security/security.c                           |  9 +--
+ security/selinux/hooks.c                      |  5 +-
+ security/smack/smack_lsm.c                    |  8 ++-
+ security/tomoyo/tomoyo.c                      |  8 ++-
+ .../testing/selftests/bpf/prog_tests/d_path.c |  2 +-
+ .../testing/selftests/bpf/progs/test_d_path.c |  5 +-
+ .../bpf/progs/test_d_path_check_rdonly_mem.c  |  5 +-
+ .../bpf/progs/test_d_path_check_types.c       |  5 +-
+ .../selftests/bpf/progs/verifier_vfs_accept.c |  2 +-
+ 21 files changed, 125 insertions(+), 55 deletions(-)
 
-diff --git a/Documentation/filesystems/porting.rst b/Documentation/filesystems/porting.rst
-index f3feb27e898c..396e23af4c1f 100644
---- a/Documentation/filesystems/porting.rst
-+++ b/Documentation/filesystems/porting.rst
-@@ -1446,7 +1446,16 @@ dentry must provide a struct path.  struct iattr has a new ia_path member,
- which notify_change() sets for the duration of the call; it must not be
- stored beyond that.  Filesystems that forward a change to another inode
- can use notify_change_target() to update the target dentry while keeping
--the caller-supplied path in ia_path.
-+the caller-supplied path in ia_path; path-based LSM checks are performed
-+on that path, and the setattr LSM hook receives both it and the target
-+dentry, so inode-based LSMs keep authorizing the inode that is actually
-+changed.  notify_change() also takes the struct file through which the
-+change was requested, if any.  vfs_utimes() takes the same trailing struct
-+file argument.  The inode_setattr LSM hook is renamed to
-+path_setattr and now receives the struct path and the target dentry
-+before struct iattr, plus a trailing struct file (NULL for path-based
-+and kernel-internal callers); the security_inode_setattr() wrapper is
-+renamed to security_path_setattr() accordingly.
+diff --git a/drivers/block/loop.c b/drivers/block/loop.c
+index a3325ceab484..d4d4d1fce05c 100644
+--- a/drivers/block/loop.c
++++ b/drivers/block/loop.c
+@@ -462,7 +462,7 @@ static void loop_update_dio_alignment(struct loop_device *lo)
+ 	 * file can't be used for direct-io at all, so fall back to the block
+ 	 * device limits in that case.
+ 	 */
+-	if (!vfs_getattr(&file->f_path, &st, STATX_DIOALIGN, 0) &&
++	if (!vfs_getattr_file(&file->f_path, &st, STATX_DIOALIGN, 0, file) &&
+ 	    (st.result_mask & STATX_DIOALIGN) && st.dio_mem_align) {
+ 		lo->lo_min_dio_size = st.dio_offset_align;
+ 		lo->lo_dio_mem_align = min(st.dio_mem_align - 1, PAGE_SIZE - 1);
+@@ -1220,7 +1220,15 @@ loop_get_status(struct loop_device *lo, struct loop_info64 *info)
+ 	path = lo->lo_backing_file->f_path;
+ 	path_get(&path);
+ 	mutex_unlock(&lo->lo_mutex);
+-	ret = vfs_getattr(&path, &stat, STATX_INO, AT_STATX_SYNC_AS_STAT);
++	/*
++	 * The backing file was opened by the task that configured the
++	 * device, not by the one querying it, and the attributes are
++	 * returned to the requester: do not hand the file over to the LSM
++	 * hook, the metadata read is checked against the requester's
++	 * domain instead.
++	 */
++	ret = vfs_getattr_file(&path, &stat, STATX_INO,
++			       AT_STATX_SYNC_AS_STAT, NULL);
+ 	if (!ret) {
+ 		info->lo_device = huge_encode_dev(stat.dev);
+ 		info->lo_inode = stat.ino;
+diff --git a/drivers/block/zloop.c b/drivers/block/zloop.c
+index 9d82850d3f44..3b0feb1379ff 100644
+--- a/drivers/block/zloop.c
++++ b/drivers/block/zloop.c
+@@ -316,7 +316,13 @@ static int zloop_update_seq_zone(struct zloop_device *zlo, unsigned int zone_no)
  
- ---
+ 	lockdep_assert_held(&zone->lock);
  
-diff --git a/drivers/base/devtmpfs.c b/drivers/base/devtmpfs.c
-index 410906a66ee9..00f2e3e7e27e 100644
---- a/drivers/base/devtmpfs.c
-+++ b/drivers/base/devtmpfs.c
-@@ -291,7 +291,7 @@ static int handle_create(const char *nodename, umode_t mode, kuid_t uid,
- 		newattrs.ia_gid = gid;
- 		newattrs.ia_valid = ATTR_MODE|ATTR_UID|ATTR_GID;
- 		inode_lock(d_inode(dentry));
--		notify_change(&nop_mnt_idmap, &attr_path, &newattrs, NULL);
-+		notify_change(&nop_mnt_idmap, &attr_path, &newattrs, NULL, NULL);
- 		inode_unlock(d_inode(dentry));
+-	ret = vfs_getattr(&zone->file->f_path, &stat, STATX_SIZE, 0);
++	/*
++	 * The zone file belongs to the task that set up the zone, not to
++	 * the one using the block device, so check the metadata read
++	 * against the current domain.
++	 */
++	ret = vfs_getattr_file(&zone->file->f_path, &stat, STATX_SIZE, 0,
++			       NULL);
+ 	if (ret < 0) {
+ 		pr_err("%pg: Failed to get zone %u file stat (err=%d)\n",
+ 		       zlo->disk->part0, zone_no, ret);
+@@ -1074,7 +1080,8 @@ static int zloop_get_block_size(struct zloop_device *zlo,
+ 	 * file can't be used for direct-io at all, so fall back to the block
+ 	 * device limits in that case.
+ 	 */
+-	if (!vfs_getattr(&zone->file->f_path, &st, STATX_DIOALIGN, 0) &&
++	if (!vfs_getattr_file(&zone->file->f_path, &st, STATX_DIOALIGN, 0,
++			      zone->file) &&
+ 	    (st.result_mask & STATX_DIOALIGN) && st.dio_mem_align) {
+ 		zlo->block_size = st.dio_offset_align;
+ 		zlo->dio_mem_align = min(st.dio_mem_align - 1, PAGE_SIZE - 1);
+@@ -1153,7 +1160,8 @@ static int zloop_init_zone(struct zloop_device *zlo, struct zloop_options *opts,
+ 		zone->cond = BLK_ZONE_COND_NOT_WP;
+ 		zone->wp = U64_MAX;
  
- 		/* mark as kernel-created inode */
-@@ -392,7 +392,7 @@ static int handle_remove(const char *nodename, struct device *dev)
- 		newattrs.ia_valid =
- 			ATTR_UID|ATTR_GID|ATTR_MODE;
- 		inode_lock(d_inode(dentry));
--		notify_change(&nop_mnt_idmap, &attr_path, &newattrs, NULL);
-+		notify_change(&nop_mnt_idmap, &attr_path, &newattrs, NULL, NULL);
- 		inode_unlock(d_inode(dentry));
- 		err = vfs_unlink(&nop_mnt_idmap, d_inode(parent.dentry),
- 				 dentry, NULL);
-diff --git a/fs/attr.c b/fs/attr.c
-index f8fd0f061612..8d2495728b1b 100644
---- a/fs/attr.c
-+++ b/fs/attr.c
-@@ -401,7 +401,8 @@ static int do_notify_change(const struct path *const path,
- 			    const struct mnt_idmap *const idmap,
- 			    struct dentry *const dentry,
- 			    struct iattr *attr,
--			    struct delegated_inode *delegated_inode)
-+			    struct delegated_inode *delegated_inode,
-+			    struct file *const file)
- {
- 	struct inode *inode = dentry->d_inode;
- 	umode_t mode = inode->i_mode;
-@@ -513,7 +514,7 @@ static int do_notify_change(const struct path *const path,
- 	    !vfsgid_valid(i_gid_into_vfsgid(idmap, inode)))
- 		return -EOVERFLOW;
- 
--	error = security_inode_setattr(idmap, dentry, attr);
-+	error = security_path_setattr(idmap, path, dentry, attr, file);
- 	if (error)
- 		return error;
- 
-@@ -557,6 +558,7 @@ static int do_notify_change(const struct path *const path,
-  * @path:	object affected
-  * @attr:	new attributes
-  * @delegated_inode: returns inode, if the inode is delegated
-+ * @file:	file through which the attribute change is requested, if any
-  *
-  * The caller must hold the i_rwsem exclusively on the affected object.
-  *
-@@ -581,10 +583,11 @@ static int do_notify_change(const struct path *const path,
-  * Return: 0 on success, or a negative error on failure.
-  */
- int notify_change(const struct mnt_idmap *idmap, const struct path *path,
--		  struct iattr *attr, struct delegated_inode *delegated_inode)
-+		  struct iattr *attr, struct delegated_inode *delegated_inode,
-+		  struct file *file)
- {
- 	return do_notify_change(path, idmap, path->dentry, attr,
--				delegated_inode);
-+				delegated_inode, file);
- }
- EXPORT_SYMBOL(notify_change);
- 
-@@ -595,24 +598,29 @@ EXPORT_SYMBOL(notify_change);
-  * @target: dentry of the inode whose attributes are changed
-  * @attr: attributes to change
-  * @delegated_inode: returns inode needing a delegation break
-+ * @file: file through which the change was requested, if any
-  *
-  * This is for filesystems that apply a metadata change to an inode other
-  * than the one the caller named (e.g. NTFS named streams).  The path the
-  * change was requested through is recorded in @attr->ia_path so that the
-- * caller can pass it back when it forwards the change; @target supplies
-- * the inode to update.  @target must be the inode of the same file as
-- * @path, e.g. the base inode of a named stream.  The caller must hold the
-- * i_rwsem exclusively on @target.
-+ * caller can pass it back when it forwards the change; path-based LSM
-+ * checks are then performed on @path, while inode-based LSM checks and the
-+ * update itself use @target.  @target must be the inode of the same file
-+ * as @path, e.g. the base inode of a named stream.  The caller must hold
-+ * the i_rwsem exclusively on @target, and on @path->dentry->d_inode, which
-+ * ->setattr already holds: the LSM hook is called with both inodes locked.
-  *
-  * Return: 0 on success, or a negative error on failure.
-  */
- int notify_change_target(const struct mnt_idmap *idmap,
- 			 const struct path *path, struct dentry *target,
- 			 struct iattr *attr,
--			 struct delegated_inode *delegated_inode)
-+			 struct delegated_inode *delegated_inode,
-+			 struct file *file)
- {
- 	if (WARN_ON_ONCE(!target))
- 		return -EINVAL;
--	return do_notify_change(path, idmap, target, attr, delegated_inode);
-+	return do_notify_change(path, idmap, target, attr, delegated_inode,
-+				file);
- }
- EXPORT_SYMBOL_GPL(notify_change_target);
+-		ret = vfs_getattr(&zone->file->f_path, &stat, STATX_SIZE, 0);
++		ret = vfs_getattr_file(&zone->file->f_path, &stat,
++				       STATX_SIZE, 0, zone->file);
+ 		if (ret < 0) {
+ 			pr_err("Failed to get zone %u file stat\n", zone_no);
+ 			goto out_fput;
 diff --git a/fs/bpf_fs_kfuncs.c b/fs/bpf_fs_kfuncs.c
-index 35ccd98a4de6..a28a6eaaa145 100644
+index a28a6eaaa145..079fe44ccd9b 100644
 --- a/fs/bpf_fs_kfuncs.c
 +++ b/fs/bpf_fs_kfuncs.c
-@@ -527,6 +527,34 @@ BTF_SET_START(bpf_inode_init_xattr_hooks)
- BTF_ID(func, bpf_lsm_inode_init_security)
- BTF_SET_END(bpf_inode_init_xattr_hooks)
+@@ -538,7 +538,7 @@ BTF_SET_END(bpf_inode_init_xattr_hooks)
+  * would update the victim without i_rwsem, and the non-locking one would
+  * deadlock on the parent.  Reject both kfuncs for these hooks.
+  *
+- * inode_getattr() is also reached both with and without i_rwsem: path-based
++ * path_getattr() is also reached both with and without i_rwsem: path-based
+  * callers such as stat(2) hold no lock, while nfsd fills the pre-operation
+  * attributes from nfsd_setattr() with the inode already write-locked.
+  */
+@@ -546,7 +546,7 @@ BTF_ID_LIST_SINGLE(bpf_set_dentry_xattr_ids, func, bpf_set_dentry_xattr)
+ BTF_ID_LIST_SINGLE(bpf_remove_dentry_xattr_ids, func, bpf_remove_dentry_xattr)
  
-+/*
-+ * Hooks that expose two dentries, only one of which is locked: the path
-+ * argument names the parent directory, which the caller already write-locked,
-+ * while the dentry argument is the victim, whose inode is only locked later
-+ * by vfs_link(), vfs_rename(), vfs_rmdir() or vfs_unlink().
+ BTF_SET_START(d_inode_ambiguous_hooks)
+-BTF_ID(func, bpf_lsm_inode_getattr)
++BTF_ID(func, bpf_lsm_path_getattr)
+ #ifdef CONFIG_SECURITY_PATH
+ BTF_ID(func, bpf_lsm_path_link)
+ BTF_ID(func, bpf_lsm_path_rename)
+diff --git a/fs/stat.c b/fs/stat.c
+index b032821efb79..e68dc17f23c4 100644
+--- a/fs/stat.c
++++ b/fs/stat.c
+@@ -172,11 +172,12 @@ EXPORT_SYMBOL_GPL(generic_fill_statx_atomic_writes);
+  * @request_mask: STATX_xxx flags indicating what the caller wants
+  * @query_flags: Query mode (AT_STATX_SYNC_TYPE)
+  *
+- * Get attributes without calling security_inode_getattr.
++ * Get attributes without calling security_path_getattr.
+  *
+- * Currently the only caller other than vfs_getattr is internal to the
+- * filehandle lookup code, which uses only the inode number and returns no
+- * attributes to any user.  Any other code probably wants vfs_getattr.
++ * Callers must call security_path_getattr() beforehand, unless they only
++ * use the attributes internally: the filehandle lookup code, for
++ * instance, uses only the inode number and returns no attributes to any
++ * user.  Code that merely holds a path probably wants vfs_getattr().
+  */
+ int vfs_getattr_nosec(const struct path *path, struct kstat *stat,
+ 		      u32 request_mask, unsigned int query_flags)
+@@ -261,32 +262,62 @@ EXPORT_SYMBOL(vfs_getattr_nosec);
+  */
+ int vfs_getattr(const struct path *path, struct kstat *stat,
+ 		u32 request_mask, unsigned int query_flags)
++{
++	return vfs_getattr_file(path, stat, request_mask, query_flags, NULL);
++}
++EXPORT_SYMBOL(vfs_getattr);
++
++/**
++ * vfs_getattr_file - Get the enhanced basic attributes of an open file
++ * @path: The file of interest
++ * @stat: Where to return the statistics
++ * @request_mask: STATX_xxx flags indicating what the caller wants
++ * @query_flags: Query mode (AT_STATX_SYNC_TYPE)
++ * @file: The file through which the attributes are requested, if any
 + *
-+ * The dentry xattr kfuncs cannot pick a correct variant for such a hook, and
-+ * the verifier cannot tell which dentry a program passes: the locking variant
-+ * would update the victim without i_rwsem, and the non-locking one would
-+ * deadlock on the parent.  Reject both kfuncs for these hooks.
++ * Like vfs_getattr(), for callers that hold the struct file the operation
++ * is requested through: security_path_getattr() receives that file, so
++ * that LSMs can authorize the operation with the rights available at
++ * open(2) time.  When @file is set it must refer to the same object as
++ * @path.  Callers that do not hold a file should use vfs_getattr()
++ * instead.
 + *
-+ * inode_getattr() is also reached both with and without i_rwsem: path-based
-+ * callers such as stat(2) hold no lock, while nfsd fills the pre-operation
-+ * attributes from nfsd_setattr() with the inode already write-locked.
++ * 0 will be returned on success, and a -ve error code if unsuccessful.
 + */
-+BTF_ID_LIST_SINGLE(bpf_set_dentry_xattr_ids, func, bpf_set_dentry_xattr)
-+BTF_ID_LIST_SINGLE(bpf_remove_dentry_xattr_ids, func, bpf_remove_dentry_xattr)
-+
-+BTF_SET_START(d_inode_ambiguous_hooks)
-+BTF_ID(func, bpf_lsm_inode_getattr)
-+#ifdef CONFIG_SECURITY_PATH
-+BTF_ID(func, bpf_lsm_path_link)
-+BTF_ID(func, bpf_lsm_path_rename)
-+BTF_ID(func, bpf_lsm_path_rmdir)
-+BTF_ID(func, bpf_lsm_path_unlink)
-+#endif /* CONFIG_SECURITY_PATH */
-+BTF_SET_END(d_inode_ambiguous_hooks)
-+
- static int bpf_fs_kfuncs_filter(const struct bpf_prog *prog, u32 kfunc_id)
++int vfs_getattr_file(const struct path *path, struct kstat *stat,
++		     u32 request_mask, unsigned int query_flags,
++		     struct file *file)
  {
- 	if (!btf_id_set8_contains(&bpf_fs_kfunc_set_ids, kfunc_id))
-@@ -539,8 +567,14 @@ static int bpf_fs_kfuncs_filter(const struct bpf_prog *prog, u32 kfunc_id)
- 			return -EACCES;
- 		return 0;
- 	}
--	if (prog->type == BPF_PROG_TYPE_LSM)
-+	if (prog->type == BPF_PROG_TYPE_LSM) {
-+		if ((kfunc_id == bpf_set_dentry_xattr_ids[0] ||
-+		     kfunc_id == bpf_remove_dentry_xattr_ids[0]) &&
-+		    btf_id_set_contains(&d_inode_ambiguous_hooks,
-+					prog->aux->attach_btf_id))
-+			return -EACCES;
- 		return 0;
-+	}
- 	if (prog->type != BPF_PROG_TYPE_STRUCT_OPS)
- 		return -EACCES;
- 	/* ->st_ops is unset during the cfg pass; enforced once it is set. */
-@@ -568,9 +602,25 @@ BTF_ID(func, bpf_lsm_inode_post_setattr)
- BTF_ID(func, bpf_lsm_inode_post_setxattr)
- BTF_ID(func, bpf_lsm_inode_removexattr)
- BTF_ID(func, bpf_lsm_inode_rmdir)
--BTF_ID(func, bpf_lsm_inode_setattr)
-+BTF_ID(func, bpf_lsm_path_setattr)
- BTF_ID(func, bpf_lsm_inode_setxattr)
- BTF_ID(func, bpf_lsm_inode_unlink)
-+/*
-+ * Path hooks whose path argument is already locked by the caller.  They can
-+ * run sleepable programs (see sleepable_lsm_hooks), so the dentry xattr
-+ * kfuncs must use their _locked variants there.
-+ *
-+ * path_link, path_rename, path_rmdir and path_unlink hand over both a locked
-+ * parent (the path) and an unlocked victim (the dentry), so the dentry xattr
-+ * kfuncs are rejected for programs attached to them (see
-+ * d_inode_ambiguous_hooks).
-+ */
-+#ifdef CONFIG_SECURITY_PATH
-+BTF_ID(func, bpf_lsm_path_chmod)
-+BTF_ID(func, bpf_lsm_path_chown)
-+BTF_ID(func, bpf_lsm_path_mkdir)
-+BTF_ID(func, bpf_lsm_path_symlink)
-+#endif /* CONFIG_SECURITY_PATH */
- BTF_SET_END(d_inode_locked_hooks)
+ 	int retval;
  
- bool bpf_lsm_has_d_inode_locked(const struct bpf_prog *prog)
-diff --git a/fs/btrfs/volumes.c b/fs/btrfs/volumes.c
-index 3d4ef6725de0..a230f7c43c06 100644
---- a/fs/btrfs/volumes.c
-+++ b/fs/btrfs/volumes.c
-@@ -2152,7 +2152,7 @@ static void update_dev_time(const char *device_path)
- 	}
- 
- 	if (!err) {
--		vfs_utimes(&path, NULL);
-+		vfs_utimes(&path, NULL, NULL);
- 		path_put(&path);
- 	}
+-	retval = security_inode_getattr(path);
++	retval = security_path_getattr(path, file);
+ 	if (unlikely(retval))
+ 		return retval;
+ 	return vfs_getattr_nosec(path, stat, request_mask, query_flags);
  }
-diff --git a/fs/ecryptfs/inode.c b/fs/ecryptfs/inode.c
-index 566fbcbbf7df..0f029435c6a6 100644
---- a/fs/ecryptfs/inode.c
-+++ b/fs/ecryptfs/inode.c
-@@ -822,7 +822,7 @@ static int __ecryptfs_truncate(struct dentry *dentry, const struct iattr *ia)
- set_size:
- 	lower_ia.ia_valid |= ATTR_SIZE;
- 	inode_lock(d_inode(lower_dentry));
--	rc = notify_change(&nop_mnt_idmap, &lower_path, &lower_ia, NULL);
-+	rc = notify_change(&nop_mnt_idmap, &lower_path, &lower_ia, NULL, NULL);
- 	inode_unlock(d_inode(lower_dentry));
- out:
- 	ecryptfs_put_lower_file(inode);
-@@ -932,7 +932,7 @@ static int ecryptfs_setattr(const struct mnt_idmap *idmap,
+-EXPORT_SYMBOL(vfs_getattr);
++EXPORT_SYMBOL(vfs_getattr_file);
  
- 		inode_lock(d_inode(lower_path.dentry));
- 		rc = notify_change(&nop_mnt_idmap, &lower_path, &lower_ia,
--				   NULL);
-+				   NULL, NULL);
- 		inode_unlock(d_inode(lower_path.dentry));
- 	}
- out:
-diff --git a/fs/exfat/file.c b/fs/exfat/file.c
-index 18ac88c979fc..ddf5c47176bd 100644
---- a/fs/exfat/file.c
-+++ b/fs/exfat/file.c
-@@ -551,8 +551,9 @@ static int exfat_ioctl_set_attributes(struct file *file, u32 __user *user_attr)
- 	 * out the RO attribute for checking by the security
- 	 * module, just because it maps to a file mode.
- 	 */
--	err = security_inode_setattr(file_mnt_idmap(file),
--				     file->f_path.dentry, &ia);
-+	err = security_path_setattr(file_mnt_idmap(file),
-+				    &file->f_path, file->f_path.dentry,
-+				    &ia, file);
- 	if (err)
- 		goto out_unlock_inode;
+ /**
+  * vfs_fstat - Get the basic attributes by file descriptor
+  * @fd: The file descriptor referring to the file of interest
+  * @stat: The result structure to fill in.
+  *
+- * This function is a wrapper around vfs_getattr().  The main difference is
+- * that it uses a file descriptor to determine the file location.
++ * This function is a wrapper around vfs_getattr_file().  The main
++ * difference is that it uses a file descriptor to determine the file
++ * location, and passes that file to security_path_getattr(), so that
++ * LSMs can later authorize the operation with the rights available at
++ * open(2) time.
+  *
+  * 0 will be returned on success, and a -ve error code if unsuccessful.
+  */
+ int vfs_fstat(int fd, struct kstat *stat)
+ {
+ 	CLASS(fd_raw, f)(fd);
++
+ 	if (fd_empty(f))
+ 		return -EBADF;
+-	return vfs_getattr(&fd_file(f)->f_path, stat, STATX_BASIC_STATS, 0);
++	return vfs_getattr_file(&fd_file(f)->f_path, stat, STATX_BASIC_STATS,
++				0, fd_file(f));
+ }
  
-diff --git a/fs/fat/file.c b/fs/fat/file.c
-index 70583e791bdc..4ca635cd2bd4 100644
---- a/fs/fat/file.c
-+++ b/fs/fat/file.c
-@@ -92,8 +92,9 @@ static int fat_ioctl_set_attributes(struct file *file, u32 __user *user_attr)
- 	 * out the RO attribute for checking by the security
- 	 * module, just because it maps to a file mode.
- 	 */
--	err = security_inode_setattr(file_mnt_idmap(file),
--				     file->f_path.dentry, &ia);
-+	err = security_path_setattr(file_mnt_idmap(file),
-+				    &file->f_path, file->f_path.dentry,
-+				    &ia, file);
- 	if (err)
- 		goto out_unlock_inode;
+ static int statx_lookup_flags(int flags)
+@@ -302,9 +333,11 @@ static int statx_lookup_flags(int flags)
+ }
  
-diff --git a/fs/init.c b/fs/init.c
-index 33e312d74f58..b65e47e59ee0 100644
---- a/fs/init.c
-+++ b/fs/init.c
-@@ -107,7 +107,7 @@ int __init init_chown(const char *filename, uid_t user, gid_t group, int flags)
- 		return error;
- 	error = mnt_want_write(path.mnt);
- 	if (!error) {
--		error = chown_common(&path, user, group);
-+		error = chown_common(&path, user, group, NULL);
- 		mnt_drop_write(path.mnt);
- 	}
- 	path_put(&path);
-@@ -122,7 +122,7 @@ int __init init_chmod(const char *filename, umode_t mode)
- 	error = kern_path(filename, LOOKUP_FOLLOW, &path);
+ static int vfs_statx_path(const struct path *path, int flags, struct kstat *stat,
+-			  u32 request_mask)
++			  u32 request_mask, struct file *file)
+ {
+-	int error = vfs_getattr(path, stat, request_mask, flags);
++	int error;
++
++	error = vfs_getattr_file(path, stat, request_mask, flags, file);
  	if (error)
  		return error;
--	error = chmod_common(&path, mode);
-+	error = chmod_common(&path, mode, NULL);
- 	path_put(&path);
- 	return error;
- }
-@@ -201,7 +201,7 @@ int __init init_utimes(char *filename, struct timespec64 *ts)
- 	error = kern_path(filename, 0, &path);
- 	if (error)
- 		return error;
--	error = vfs_utimes(&path, ts);
-+	error = vfs_utimes(&path, ts, NULL);
- 	path_put(&path);
- 	return error;
- }
-diff --git a/fs/inode.c b/fs/inode.c
-index e4af8a44932b..ff4a6b50ee84 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -2388,7 +2388,7 @@ static int __remove_privs(const struct mnt_idmap *idmap,
- 	 * Note we call this on write, so notify_change will not
- 	 * encounter any conflicting delegations:
- 	 */
--	return notify_change(idmap, path, &newattrs, NULL);
-+	return notify_change(idmap, path, &newattrs, NULL, NULL);
- }
  
- static int file_remove_privs_flags(struct file *file, unsigned int flags)
-diff --git a/fs/internal.h b/fs/internal.h
-index d6a3b48f1633..79a18e8ad29e 100644
---- a/fs/internal.h
-+++ b/fs/internal.h
-@@ -201,10 +201,12 @@ struct file *file_close_fd_locked(struct files_struct *files, unsigned fd);
- int filp_close_sync(struct file *filp, fl_owner_t id);
- 
- int do_ftruncate(struct file *file, loff_t length, unsigned int flags);
--int chmod_common(const struct path *path, umode_t mode);
-+int chmod_common(const struct path *path, umode_t mode,
-+		  struct file *file);
- int do_fchownat(int dfd, const char __user *filename, uid_t user, gid_t group,
- 		int flag);
--int chown_common(const struct path *path, uid_t user, gid_t group);
-+int chown_common(const struct path *path, uid_t user, gid_t group,
-+		  struct file *file);
- extern int vfs_open(const struct path *, struct file *);
- int vfs_open_consume(struct path *, struct file *);
- struct file *task_path_open(const struct path *path);
-diff --git a/fs/nfsd/nfs4state.c b/fs/nfsd/nfs4state.c
-index b89898fe6323..844942c5dd8a 100644
---- a/fs/nfsd/nfs4state.c
-+++ b/fs/nfsd/nfs4state.c
-@@ -10550,7 +10550,7 @@ static int cb_getattr_update_times(const struct path *path,
- 
- 	attrs.ia_valid |= ATTR_DELEG;
- 	inode_lock(inode);
--	ret = notify_change(&nop_mnt_idmap, path, &attrs, NULL);
-+	ret = notify_change(&nop_mnt_idmap, path, &attrs, NULL, NULL);
- 	inode_unlock(inode);
- 	return ret;
- }
-@@ -10831,7 +10831,7 @@ void nfsd_update_cmtime_attr(struct file *f, unsigned int flags)
- 	};
- 
- 	inode_lock(inode);
--	ret = notify_change(&nop_mnt_idmap, &f->f_path, &attr, NULL);
-+	ret = notify_change(&nop_mnt_idmap, &f->f_path, &attr, NULL, NULL);
- 	inode_unlock(inode);
- 	if (ret)
- 		pr_notice_ratelimited("nfsd: Unable to update timestamps on "
-diff --git a/fs/nfsd/vfs.c b/fs/nfsd/vfs.c
-index 371c3d716112..9eae731ecb26 100644
---- a/fs/nfsd/vfs.c
-+++ b/fs/nfsd/vfs.c
-@@ -478,7 +478,7 @@ static int __nfsd_setattr(const struct path *path, struct iattr *iap)
- 			return -EFBIG;
- 
- 		host_err = notify_change(&nop_mnt_idmap, path, &size_attr,
--					  NULL);
-+					  NULL, NULL);
- 		if (host_err)
- 			return host_err;
- 		iap->ia_valid &= ~ATTR_SIZE;
-@@ -504,7 +504,7 @@ static int __nfsd_setattr(const struct path *path, struct iattr *iap)
- 	if (!(iap->ia_valid & ATTR_DELEG))
- 		iap->ia_valid |= ATTR_CTIME;
- 
--	return notify_change(&nop_mnt_idmap, path, iap, NULL);
-+	return notify_change(&nop_mnt_idmap, path, iap, NULL, NULL);
+@@ -328,7 +361,8 @@ static int vfs_statx_fd(int fd, int flags, struct kstat *stat,
+ 	CLASS(fd_raw, f)(fd);
+ 	if (fd_empty(f))
+ 		return -EBADF;
+-	return vfs_statx_path(&fd_file(f)->f_path, flags, stat, request_mask);
++	return vfs_statx_path(&fd_file(f)->f_path, flags, stat, request_mask,
++			      fd_file(f));
  }
  
  /**
-diff --git a/fs/ntfs/named_stream.c b/fs/ntfs/named_stream.c
-index 1c55588df5ba..05cac62fca1d 100644
---- a/fs/ntfs/named_stream.c
-+++ b/fs/ntfs/named_stream.c
-@@ -901,7 +901,8 @@ static int ntfs_stream_setattr_common(const struct mnt_idmap *idmap,
- 				err = -EINVAL;
- 			} else {
- 				err = notify_change_target(idmap, attr->ia_path,
--							   base_dentry, &base_attr, NULL);
-+							   base_dentry, &base_attr,
-+							   NULL, NULL);
- 			}
- 		} else {
- 			err = 0;
-diff --git a/fs/open.c b/fs/open.c
-index a96d490915f6..52301fb3536c 100644
---- a/fs/open.c
-+++ b/fs/open.c
-@@ -65,8 +65,13 @@ int do_truncate(const struct mnt_idmap *idmap, const struct path *path,
- 	if (ret)
- 		return ret;
- 
--	/* Note any delegations or leases have already been broken: */
--	ret = notify_change(idmap, path, &newattrs, NULL);
-+	/*
-+	 * Note any delegations or leases have already been broken.  The
-+	 * truncate hooks authorize the size change on the syscall paths
-+	 * (truncate(2), ftruncate(2) and open(O_TRUNC)) before they get
-+	 * here, so no struct file is passed to the setattr hook.
-+	 */
-+	ret = notify_change(idmap, path, &newattrs, NULL, NULL);
- 	inode_unlock(dentry->d_inode);
- 	return ret;
- }
-@@ -665,7 +670,7 @@ SYSCALL_DEFINE2(fchroot, int, fd, unsigned int, flags)
- 	return error;
- }
- 
--int chmod_common(const struct path *path, umode_t mode)
-+int chmod_common(const struct path *path, umode_t mode, struct file *file)
- {
- 	struct inode *inode = path->dentry->d_inode;
- 	struct delegated_inode delegated_inode = { };
-@@ -685,7 +690,7 @@ int chmod_common(const struct path *path, umode_t mode)
- 	newattrs.ia_mode = (mode & S_IALLUGO) | (inode->i_mode & ~S_IALLUGO);
- 	newattrs.ia_valid = ATTR_MODE | ATTR_CTIME;
- 	error = notify_change(mnt_idmap(path->mnt), path, &newattrs,
--			      &delegated_inode);
-+			      &delegated_inode, file);
- out_unlock:
- 	inode_unlock(inode);
- 	if (is_delegated(&delegated_inode)) {
-@@ -701,7 +706,7 @@ int chmod_common(const struct path *path, umode_t mode)
- int vfs_fchmod(struct file *file, umode_t mode)
- {
- 	audit_file(file);
--	return chmod_common(&file->f_path, mode);
-+	return chmod_common(&file->f_path, mode, file);
- }
- 
- SYSCALL_DEFINE2(fchmod, unsigned int, fd, umode_t, mode)
-@@ -723,13 +728,30 @@ static int do_fchmodat(int dfd, const char __user *filename, umode_t mode,
- 
- 	if (unlikely(flags & ~(AT_SYMLINK_NOFOLLOW | AT_EMPTY_PATH)))
- 		return -EINVAL;
-+	/*
-+	 * A NULL pathname is rejected with EFAULT for these system calls,
-+	 * even with AT_EMPTY_PATH: getname_maybe_null() would otherwise
-+	 * treat it like an empty path and act on the file descriptor.
-+	 */
-+	if (!filename)
-+		return -EFAULT;
-+
-+	CLASS(filename_maybe_null, name)(filename, flags);
-+
-+	if (!name && dfd >= 0) {
-+		CLASS(fd_raw, f)(dfd);
-+
-+		if (fd_empty(f))
-+			return -EBADF;
-+
-+		return vfs_fchmod(fd_file(f), mode);
-+	}
- 
- 	lookup_flags = (flags & AT_SYMLINK_NOFOLLOW) ? 0 : LOOKUP_FOLLOW;
--	CLASS(filename_uflags, name)(filename, flags);
- retry:
- 	error = filename_lookup(dfd, name, lookup_flags, &path, NULL);
- 	if (!error) {
--		error = chmod_common(&path, mode);
-+		error = chmod_common(&path, mode, NULL);
- 		path_put(&path);
- 		if (retry_estale(error, lookup_flags)) {
- 			lookup_flags |= LOOKUP_REVAL;
-@@ -786,7 +808,8 @@ static inline bool setattr_vfsgid(struct iattr *attr, kgid_t kgid)
- 	return true;
- }
- 
--int chown_common(const struct path *path, uid_t user, gid_t group)
-+int chown_common(const struct path *path, uid_t user, gid_t group,
-+		 struct file *file)
- {
- 	const struct mnt_idmap *idmap;
- 	struct user_namespace *fs_userns;
-@@ -824,7 +847,7 @@ int chown_common(const struct path *path, uid_t user, gid_t group)
- 		from_vfsgid(idmap, fs_userns, newattrs.ia_vfsgid));
- 	if (!error)
- 		error = notify_change(idmap, path, &newattrs,
--				      &delegated_inode);
-+				      &delegated_inode, file);
- 	inode_unlock(inode);
- 	if (is_delegated(&delegated_inode)) {
- 		error = break_deleg_wait(&delegated_inode);
-@@ -843,15 +866,32 @@ int do_fchownat(int dfd, const char __user *filename, uid_t user, gid_t group,
- 
- 	if ((flag & ~(AT_SYMLINK_NOFOLLOW | AT_EMPTY_PATH)) != 0)
- 		return -EINVAL;
-+	/*
-+	 * A NULL pathname is rejected with EFAULT for these system calls,
-+	 * even with AT_EMPTY_PATH: getname_maybe_null() would otherwise
-+	 * treat it like an empty path and act on the file descriptor.
-+	 */
-+	if (!filename)
-+		return -EFAULT;
-+
-+	CLASS(filename_maybe_null, name)(filename, flag);
-+
-+	if (!name && dfd >= 0) {
-+		CLASS(fd_raw, f)(dfd);
-+
-+		if (fd_empty(f))
-+			return -EBADF;
-+
-+		return vfs_fchown(fd_file(f), user, group);
-+	}
- 
- 	lookup_flags = (flag & AT_SYMLINK_NOFOLLOW) ? 0 : LOOKUP_FOLLOW;
--	CLASS(filename_uflags, name)(filename, flag);
- retry:
- 	error = filename_lookup(dfd, name, lookup_flags, &path, NULL);
- 	if (!error) {
- 		error = mnt_want_write(path.mnt);
- 		if (!error) {
--			error = chown_common(&path, user, group);
-+			error = chown_common(&path, user, group, NULL);
- 			mnt_drop_write(path.mnt);
- 		}
- 		path_put(&path);
-@@ -888,7 +928,7 @@ int vfs_fchown(struct file *file, uid_t user, gid_t group)
+@@ -339,10 +373,10 @@ static int vfs_statx_fd(int fd, int flags, struct kstat *stat,
+  * @stat: The result structure to fill in.
+  * @request_mask: STATX_xxx flags indicating what the caller wants
+  *
+- * This function is a wrapper around vfs_getattr().  The main difference is
+- * that it uses a filename and base directory to determine the file location.
+- * Additionally, the use of AT_SYMLINK_NOFOLLOW in flags will prevent a symlink
+- * at the given name from being referenced.
++ * This function is a wrapper around vfs_statx_path().  The main difference
++ * with vfs_getattr() is that it uses a filename and base directory to
++ * determine the file location.  Additionally, the use of AT_SYMLINK_NOFOLLOW
++ * in flags will prevent a symlink at the given name from being referenced.
+  *
+  * 0 will be returned on success, and a -ve error code if unsuccessful.
+  */
+@@ -361,7 +395,7 @@ static int vfs_statx(int dfd, struct filename *filename, int flags,
+ 	error = filename_lookup(dfd, filename, lookup_flags, &path, NULL);
  	if (error)
  		return error;
- 	audit_file(file);
--	error = chown_common(&file->f_path, user, group);
-+	error = chown_common(&file->f_path, user, group, file);
- 	mnt_drop_write_file(file);
- 	return error;
- }
-diff --git a/fs/overlayfs/overlayfs.h b/fs/overlayfs/overlayfs.h
-index 71885794421e..d8b16b3a51b4 100644
---- a/fs/overlayfs/overlayfs.h
-+++ b/fs/overlayfs/overlayfs.h
-@@ -219,7 +219,7 @@ static inline int ovl_do_notify_change(struct ovl_fs *ofs,
- 		.dentry = upperdentry,
- 	};
- 
--	return notify_change(ovl_upper_mnt_idmap(ofs), &path, attr, NULL);
-+	return notify_change(ovl_upper_mnt_idmap(ofs), &path, attr, NULL, NULL);
- }
- 
- static inline int ovl_do_rmdir(struct ovl_fs *ofs,
-diff --git a/fs/smb/server/smb2pdu.c b/fs/smb/server/smb2pdu.c
-index 9ba1ae94b283..5be89216f5f6 100644
---- a/fs/smb/server/smb2pdu.c
-+++ b/fs/smb/server/smb2pdu.c
-@@ -9079,7 +9079,7 @@ static int set_file_basic_info(struct ksmbd_file *fp,
- 		}
- 
- 		inode_lock(inode);
--		rc = notify_change(idmap, &filp->f_path, &attrs, NULL);
-+		rc = notify_change(idmap, &filp->f_path, &attrs, NULL, filp);
- 		inode_unlock(inode);
- 	}
- out:
-diff --git a/fs/smb/server/smbacl.c b/fs/smb/server/smbacl.c
-index 9fcc7f412e45..a491e32e1e7b 100644
---- a/fs/smb/server/smbacl.c
-+++ b/fs/smb/server/smbacl.c
-@@ -1975,7 +1975,7 @@ int set_info_sec(struct ksmbd_conn *conn, struct ksmbd_tree_connect *tcon,
- 	}
- 
- 	inode_lock(inode);
--	rc = notify_change(idmap, path, &newattrs, NULL);
-+	rc = notify_change(idmap, path, &newattrs, NULL, NULL);
- 	inode_unlock(inode);
- 	if (get_write)
- 		mnt_drop_write(path->mnt);
-diff --git a/fs/utimes.c b/fs/utimes.c
-index 5193d504d289..94a3946a41ce 100644
---- a/fs/utimes.c
-+++ b/fs/utimes.c
-@@ -7,6 +7,7 @@
- #include <linux/uaccess.h>
- #include <linux/compat.h>
- #include <asm/unistd.h>
-+#include <linux/audit.h>
- #include <linux/filelock.h>
- #include "internal.h"
- 
-@@ -18,7 +19,8 @@ static bool nsec_valid(long nsec)
- 	return nsec >= 0 && nsec <= 999999999;
- }
- 
--int vfs_utimes(const struct path *path, struct timespec64 *times)
-+int vfs_utimes(const struct path *path, struct timespec64 *times,
-+	       struct file *file)
- {
- 	int error;
- 	struct iattr newattrs;
-@@ -34,6 +36,13 @@ int vfs_utimes(const struct path *path, struct timespec64 *times)
- 			times = NULL;
- 	}
- 
-+	/*
-+	 * Like vfs_fchmod(), audit the request once for the file
-+	 * descriptor based spellings; path based callers pass no file.
-+	 */
-+	if (file)
-+		audit_file(file);
-+
- 	error = mnt_want_write(path->mnt);
- 	if (error)
- 		goto out;
-@@ -65,7 +74,7 @@ int vfs_utimes(const struct path *path, struct timespec64 *times)
- retry_deleg:
- 	inode_lock(inode);
- 	error = notify_change(mnt_idmap(path->mnt), path, &newattrs,
--			      &delegated_inode);
-+			      &delegated_inode, file);
- 	inode_unlock(inode);
- 	if (is_delegated(&delegated_inode)) {
- 		error = break_deleg_wait(&delegated_inode);
-@@ -87,16 +96,33 @@ static int do_utimes_path(int dfd, const char __user *filename,
- 
- 	if (flags & ~(AT_SYMLINK_NOFOLLOW | AT_EMPTY_PATH))
- 		return -EINVAL;
-+	/*
-+	 * A NULL pathname is rejected with EFAULT for these system calls,
-+	 * even with AT_EMPTY_PATH: getname_maybe_null() would otherwise
-+	 * treat it like an empty path and act on the file descriptor.
-+	 */
-+	if (!filename)
-+		return -EFAULT;
-+
-+	CLASS(filename_maybe_null, name)(filename, flags);
-+
-+	if (!name && dfd >= 0) {
-+		CLASS(fd_raw, f)(dfd);
-+
-+		if (fd_empty(f))
-+			return -EBADF;
-+
-+		return vfs_utimes(&fd_file(f)->f_path, times, fd_file(f));
-+	}
- 
- 	if (!(flags & AT_SYMLINK_NOFOLLOW))
- 		lookup_flags |= LOOKUP_FOLLOW;
- 
--	CLASS(filename_uflags, name)(filename, flags);
- retry:
- 	error = filename_lookup(dfd, name, lookup_flags, &path, NULL);
- 	if (error)
- 		return error;
--	error = vfs_utimes(&path, times);
-+	error = vfs_utimes(&path, times, NULL);
+-	error = vfs_statx_path(&path, flags, stat, request_mask);
++	error = vfs_statx_path(&path, flags, stat, request_mask, NULL);
  	path_put(&path);
  	if (retry_estale(error, lookup_flags)) {
  		lookup_flags |= LOOKUP_REVAL;
-@@ -113,7 +139,7 @@ static int do_utimes_fd(int fd, struct timespec64 *times, int flags)
- 	CLASS(fd, f)(fd);
- 	if (fd_empty(f))
- 		return -EBADF;
--	return vfs_utimes(&fd_file(f)->f_path, times);
-+	return vfs_utimes(&fd_file(f)->f_path, times, fd_file(f));
- }
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index f81b6e52ac40..c418e38a78c2 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1249,7 +1249,7 @@ xfs_ioc_dioinfo(
+ 	struct dioattr		da;
+ 	int			error;
  
- /*
+-	error = vfs_getattr(&file->f_path, &st, STATX_DIOALIGN, 0);
++	error = vfs_getattr_file(&file->f_path, &st, STATX_DIOALIGN, 0, file);
+ 	if (error)
+ 		return error;
+ 
 diff --git a/include/linux/fs.h b/include/linux/fs.h
-index cd19aa264a98..d501d3d9ef0d 100644
+index d501d3d9ef0d..0e65e53cad84 100644
 --- a/include/linux/fs.h
 +++ b/include/linux/fs.h
-@@ -1831,7 +1831,8 @@ int vfs_mkobj(struct dentry *, umode_t,
- 
- int vfs_fchown(struct file *file, uid_t user, gid_t group);
- int vfs_fchmod(struct file *file, umode_t mode);
--int vfs_utimes(const struct path *path, struct timespec64 *times);
-+int vfs_utimes(const struct path *path, struct timespec64 *times,
-+		struct file *file);
- 
- #ifdef CONFIG_COMPAT
- extern long compat_ptr_ioctl(struct file *file, unsigned int cmd,
-@@ -2730,11 +2731,13 @@ static inline int bmap(struct inode *inode,  sector_t *block)
- #endif
- 
- int notify_change(const struct mnt_idmap *, const struct path *,
--		  struct iattr *, struct delegated_inode *);
-+		  struct iattr *, struct delegated_inode *,
-+		  struct file *);
- int notify_change_target(const struct mnt_idmap *idmap,
- 			 const struct path *path, struct dentry *target,
- 			 struct iattr *attr,
--			 struct delegated_inode *delegated_inode);
-+			 struct delegated_inode *delegated_inode,
-+			 struct file *file);
- int inode_permission(const struct mnt_idmap *, struct inode *, int);
- int generic_permission(const struct mnt_idmap *, struct inode *, int);
- static inline int file_permission(struct file *file, int mask)
+@@ -3241,6 +3241,9 @@ void generic_fill_statx_atomic_writes(struct kstat *stat,
+ 				      unsigned int unit_max_opt);
+ extern int vfs_getattr_nosec(const struct path *, struct kstat *, u32, unsigned int);
+ extern int vfs_getattr(const struct path *, struct kstat *, u32, unsigned int);
++int vfs_getattr_file(const struct path *path, struct kstat *stat,
++		     u32 request_mask, unsigned int query_flags,
++		     struct file *file);
+ void __inode_add_bytes(struct inode *inode, loff_t bytes);
+ void inode_add_bytes(struct inode *inode, loff_t bytes);
+ void __inode_sub_bytes(struct inode *inode, loff_t bytes);
 diff --git a/include/linux/lsm_hook_defs.h b/include/linux/lsm_hook_defs.h
-index 81a304ce87a3..180d2427e5f9 100644
+index 180d2427e5f9..504db4be1cf9 100644
 --- a/include/linux/lsm_hook_defs.h
 +++ b/include/linux/lsm_hook_defs.h
-@@ -147,8 +147,21 @@ LSM_HOOK(int, 0, inode_follow_link, struct dentry *dentry, struct inode *inode,
- 	 bool rcu)
- LSM_HOOK(int, 0, inode_permission, const struct mnt_idmap *idmap,
- 	 struct inode *inode, int mask)
--LSM_HOOK(int, 0, inode_setattr, const struct mnt_idmap *idmap, struct dentry *dentry,
--	 struct iattr *attr)
-+/*
-+ * The struct file argument of the hooks below is NULL when the operation
-+ * is not performed through a file descriptor.  It is a borrowed reference
-+ * that is only valid for the duration of the hook call: implementations
-+ * must neither take a reference on it nor use it after the hook returns.
-+ *
-+ * path_setattr runs with the i_rwsem held exclusively on the inode of both
-+ * @dentry and @path->dentry: the VFS locks the inode named by @path before
-+ * calling ->setattr, and a filesystem forwarding the change locks the target
-+ * inode before notify_change_target() invokes the hook.  BPF LSM programs
-+ * attached to this hook therefore use the locked dentry xattr kfuncs.
-+ */
-+LSM_HOOK(int, 0, path_setattr, const struct mnt_idmap *idmap,
-+	 const struct path *path, struct dentry *dentry,
-+	 struct iattr *attr, struct file *file)
+@@ -164,7 +164,8 @@ LSM_HOOK(int, 0, path_setattr, const struct mnt_idmap *idmap,
+ 	 struct iattr *attr, struct file *file)
  LSM_HOOK(void, LSM_RET_VOID, inode_post_setattr, const struct mnt_idmap *idmap,
  	 struct dentry *dentry, int ia_valid)
- LSM_HOOK(int, 0, inode_getattr, const struct path *path)
+-LSM_HOOK(int, 0, inode_getattr, const struct path *path)
++LSM_HOOK(int, 0, path_getattr, const struct path *path,
++	 struct file *file)
+ LSM_HOOK(int, 0, inode_xattr_skipcap, const char *name)
+ LSM_HOOK(int, 0, inode_setxattr, const struct mnt_idmap *idmap,
+ 	 const struct path *path, const char *name, const void *value,
 diff --git a/include/linux/security.h b/include/linux/security.h
-index 3c52a5d2c708..e929ef320888 100644
+index e929ef320888..a2f2c97473dd 100644
 --- a/include/linux/security.h
 +++ b/include/linux/security.h
-@@ -430,8 +430,9 @@ int security_inode_follow_link(struct dentry *dentry, struct inode *inode,
- 			       bool rcu);
- int security_inode_permission(const struct mnt_idmap *idmap,
- 			      struct inode *inode, int mask);
--int security_inode_setattr(const struct mnt_idmap *idmap,
--			   struct dentry *dentry, struct iattr *attr);
-+int security_path_setattr(const struct mnt_idmap *idmap,
-+			  const struct path *path, struct dentry *dentry,
-+			  struct iattr *attr, struct file *file);
+@@ -435,7 +435,7 @@ int security_path_setattr(const struct mnt_idmap *idmap,
+ 			  struct iattr *attr, struct file *file);
  void security_inode_post_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
  				 int ia_valid);
- int security_inode_getattr(const struct path *path);
-@@ -1002,9 +1003,11 @@ static inline int security_inode_permission(const struct mnt_idmap *idmap,
- 	return 0;
- }
+-int security_inode_getattr(const struct path *path);
++int security_path_getattr(const struct path *path, struct file *file);
+ int security_inode_setxattr(const struct mnt_idmap *idmap,
+ 			    const struct path *path, const char *name,
+ 			    const void *value, size_t size, int flags,
+@@ -1017,7 +1017,8 @@ security_inode_post_setattr(const struct mnt_idmap *idmap, struct dentry *dentry
+ 			    int ia_valid)
+ { }
  
--static inline int security_inode_setattr(const struct mnt_idmap *idmap,
--					 struct dentry *dentry,
--					 struct iattr *attr)
-+static inline int security_path_setattr(const struct mnt_idmap *idmap,
-+					const struct path *path,
-+					struct dentry *dentry,
-+					struct iattr *attr,
+-static inline int security_inode_getattr(const struct path *path)
++static inline int security_path_getattr(const struct path *path,
 +					struct file *file)
  {
  	return 0;
  }
-diff --git a/init/initramfs.c b/init/initramfs.c
-index ebddde9c8f0d..c8172440276e 100644
---- a/init/initramfs.c
-+++ b/init/initramfs.c
-@@ -144,7 +144,7 @@ static void __init do_utime(char *filename, time64_t mtime)
- static void __init do_utime_path(const struct path *path, time64_t mtime)
- {
- 	struct timespec64 t[2] = { { .tv_sec = mtime }, { .tv_sec = mtime } };
--	vfs_utimes(path, t);
-+	vfs_utimes(path, t, NULL);
- }
- 
- static __initdata LIST_HEAD(dir_list);
 diff --git a/kernel/bpf/bpf_lsm.c b/kernel/bpf/bpf_lsm.c
-index 25b65557731d..c8d25b7ba2ea 100644
+index c8d25b7ba2ea..6ac14e4020a4 100644
 --- a/kernel/bpf/bpf_lsm.c
 +++ b/kernel/bpf/bpf_lsm.c
-@@ -352,7 +352,7 @@ BTF_ID(func, bpf_lsm_inode_readlink)
- BTF_ID(func, bpf_lsm_inode_removexattr)
- BTF_ID(func, bpf_lsm_inode_rename)
- BTF_ID(func, bpf_lsm_inode_rmdir)
--BTF_ID(func, bpf_lsm_inode_setattr)
-+BTF_ID(func, bpf_lsm_path_setattr)
- BTF_ID(func, bpf_lsm_inode_setxattr)
- BTF_ID(func, bpf_lsm_inode_symlink)
- BTF_ID(func, bpf_lsm_inode_unlink)
+@@ -342,7 +342,7 @@ BTF_ID(func, bpf_lsm_file_receive)
+ 
+ BTF_ID(func, bpf_lsm_inode_create)
+ BTF_ID(func, bpf_lsm_inode_free_security)
+-BTF_ID(func, bpf_lsm_inode_getattr)
++BTF_ID(func, bpf_lsm_path_getattr)
+ BTF_ID(func, bpf_lsm_inode_getxattr)
+ BTF_ID(func, bpf_lsm_inode_mknod)
+ BTF_ID(func, bpf_lsm_inode_need_killpriv)
 diff --git a/kernel/bpf/bpf_lsm_proto.c b/kernel/bpf/bpf_lsm_proto.c
-index 814a30a7959e..5d4e9ccd0078 100644
+index 5d4e9ccd0078..510e18542e49 100644
 --- a/kernel/bpf/bpf_lsm_proto.c
 +++ b/kernel/bpf/bpf_lsm_proto.c
-@@ -33,6 +33,22 @@ noinline int bpf_lsm_inode_init_security(struct inode *inode, struct inode *dir,
- 	return -EOPNOTSUPP;
+@@ -49,6 +49,17 @@ noinline int bpf_lsm_path_setattr(const struct mnt_idmap *idmap,
+ 	return 0;
  }
  
 +/*
-+ * Strong definition of the path_setattr() BPF LSM hook.  @dentry is the
-+ * inode whose attributes are changed and can differ from @path->dentry for
-+ * filesystems that forward the change.  The file argument is only set for
-+ * file descriptor-based operations and is NULL for path-based and in-kernel
-+ * callers, so mark it as PTR_MAYBE_NULL.
++ * Strong definition of the path_getattr() BPF LSM hook.  The file argument is
++ * only set by callers that hold the struct file the operation is requested
++ * through, and is NULL for path-based callers, so mark it as PTR_MAYBE_NULL.
 + */
-+noinline int bpf_lsm_path_setattr(const struct mnt_idmap *idmap,
-+				  const struct path *path,
-+				  struct dentry *dentry,
-+				  struct iattr *attr,
++noinline int bpf_lsm_path_getattr(const struct path *path,
 +				  struct file *file__nullable)
 +{
 +	return 0;
@@ -973,177 +471,228 @@ index 814a30a7959e..5d4e9ccd0078 100644
  /*
   * Strong definitions of the inode xattr BPF LSM hooks.  The file argument is
   * only set for file descriptor-based operations and is NULL for path-based
-diff --git a/kernel/bpf/verifier.c b/kernel/bpf/verifier.c
-index 72a4372ad814..d08e95823dd6 100644
---- a/kernel/bpf/verifier.c
-+++ b/kernel/bpf/verifier.c
-@@ -6687,6 +6687,18 @@ BTF_TYPE_SAFE_TRUSTED(struct file) {
- 	struct inode *f_inode;
- };
- 
-+/*
-+ * LSM hooks that take a struct path hand over a path that is valid for the
-+ * duration of the hook, so that BPF LSM programs can safely reach its dentry
-+ * (e.g. to call the dentry xattr kfuncs).  Only the dentry is marked as
-+ * trusted: the template applies to every trusted struct path, and some
-+ * callers (e.g. the Landlock tracepoints) build one with mnt left NULL, which
-+ * a trusted pointer would make dereferenceable without a fault check.
-+ */
-+BTF_TYPE_SAFE_TRUSTED(struct path) {
-+	struct dentry *dentry;
-+};
-+
- /*
-  * The pointer fields in the sched_ext ops argument containers are pinned by the
-  * callers for the duration of the ops calls and are never NULL.
-@@ -6757,6 +6769,7 @@ static bool type_is_trusted(struct bpf_verifier_env *env,
- 	BTF_TYPE_EMIT(BTF_TYPE_SAFE_TRUSTED(struct bpf_iter__task));
- 	BTF_TYPE_EMIT(BTF_TYPE_SAFE_TRUSTED(struct linux_binprm));
- 	BTF_TYPE_EMIT(BTF_TYPE_SAFE_TRUSTED(struct file));
-+	BTF_TYPE_EMIT(BTF_TYPE_SAFE_TRUSTED(struct path));
- 	BTF_TYPE_EMIT(BTF_TYPE_SAFE_TRUSTED(struct scx_init_task_args));
- 	BTF_TYPE_EMIT(BTF_TYPE_SAFE_TRUSTED(struct scx_cpu_release_args));
- 	BTF_TYPE_EMIT(BTF_TYPE_SAFE_TRUSTED(struct scx_sub_attach_args));
-diff --git a/security/integrity/evm/evm_main.c b/security/integrity/evm/evm_main.c
-index 963a1bc89a7d..8a7a150e180c 100644
---- a/security/integrity/evm/evm_main.c
-+++ b/security/integrity/evm/evm_main.c
-@@ -982,16 +982,19 @@ static int evm_attr_change(const struct mnt_idmap *idmap,
+diff --git a/kernel/trace/bpf_trace.c b/kernel/trace/bpf_trace.c
+index 310740045498..7006e1830269 100644
+--- a/kernel/trace/bpf_trace.c
++++ b/kernel/trace/bpf_trace.c
+@@ -962,7 +962,7 @@ BPF_CALL_3(bpf_d_path, const struct path *, path, char *, buf, u32, sz)
+ BTF_SET_START(btf_allowlist_d_path)
+ #ifdef CONFIG_SECURITY
+ BTF_ID(func, security_file_permission)
+-BTF_ID(func, security_inode_getattr)
++BTF_ID(func, security_path_getattr)
+ BTF_ID(func, security_file_open)
+ #endif
+ #ifdef CONFIG_SECURITY_PATH
+diff --git a/security/apparmor/lsm.c b/security/apparmor/lsm.c
+index eaebc3c60c5a..2329d73f1d6b 100644
+--- a/security/apparmor/lsm.c
++++ b/security/apparmor/lsm.c
+@@ -457,7 +457,8 @@ static int apparmor_path_chown(const struct path *path, kuid_t uid, kgid_t gid)
+ 	return common_perm_cond(OP_CHOWN, path, AA_MAY_CHOWN);
  }
  
- /**
-- * evm_inode_setattr - prevent updating an invalid EVM extended attribute
-+ * evm_path_setattr - prevent updating an invalid EVM extended attribute
-  * @idmap: idmap of the mount
-- * @dentry: pointer to the affected dentry
-+ * @path: pointer to the affected object
-+ * @dentry: inode whose attributes are changed
-  * @attr: iattr structure containing the new file attributes
-+ * @file: file through which the attribute change is requested, if any
-  *
-  * Permit update of file attributes when files have a valid EVM signature,
-  * except in the case of them having an immutable portable signature.
-  */
--static int evm_inode_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
--			     struct iattr *attr)
-+static int evm_path_setattr(const struct mnt_idmap *idmap,
-+			    const struct path *path, struct dentry *dentry,
-+			    struct iattr *attr, struct file *file)
+-static int apparmor_inode_getattr(const struct path *path)
++static int apparmor_path_getattr(const struct path *path,
++				 struct file *file)
  {
- 	unsigned int ia_valid = attr->ia_valid;
- 	enum integrity_status evm_status;
-@@ -1229,7 +1232,7 @@ static int __init init_evm(void)
+ 	return common_perm_cond(OP_GETATTR, path, AA_MAY_GETATTR);
  }
+@@ -1803,7 +1804,7 @@ static struct security_hook_list apparmor_hooks[] __ro_after_init = {
+ 	LSM_HOOK_INIT(path_chmod, apparmor_path_chmod),
+ 	LSM_HOOK_INIT(path_chown, apparmor_path_chown),
+ 	LSM_HOOK_INIT(path_truncate, apparmor_path_truncate),
+-	LSM_HOOK_INIT(inode_getattr, apparmor_inode_getattr),
++	LSM_HOOK_INIT(path_getattr, apparmor_path_getattr),
  
- static struct security_hook_list evm_hooks[] __ro_after_init = {
--	LSM_HOOK_INIT(inode_setattr, evm_inode_setattr),
-+	LSM_HOOK_INIT(path_setattr, evm_path_setattr),
- 	LSM_HOOK_INIT(inode_post_setattr, evm_inode_post_setattr),
- 	LSM_HOOK_INIT(inode_copy_up_xattr, evm_inode_copy_up_xattr),
- 	LSM_HOOK_INIT(inode_setxattr, evm_inode_setxattr),
+ 	LSM_HOOK_INIT(file_open, apparmor_file_open),
+ 	LSM_HOOK_INIT(file_receive, apparmor_file_receive),
 diff --git a/security/security.c b/security/security.c
-index 6d2bdfaf234d..e27add36b0a6 100644
+index e27add36b0a6..c7cc9c51becd 100644
 --- a/security/security.c
 +++ b/security/security.c
-@@ -1866,10 +1866,13 @@ int security_inode_permission(const struct mnt_idmap *idmap,
+@@ -1908,18 +1908,19 @@ void security_inode_post_setattr(const struct mnt_idmap *idmap, struct dentry *d
  }
  
  /**
-- * security_inode_setattr() - Check if setting file attributes is allowed
-+ * security_path_setattr() - Check if setting file attributes is allowed
-  * @idmap: idmap of the mount
-- * @dentry: file
+- * security_inode_getattr() - Check if getting file attributes is allowed
+- * @path: file
++ * security_path_getattr() - Check if getting file attributes is allowed
 + * @path: file (the VFS makes no guarantees with regard to @path->mnt)
-+ * @dentry: inode whose attributes are changed; this can differ from
-+ *          @path->dentry when a filesystem forwards the change
-  * @attr: new attributes
-+ * @file: file through which the attribute change is requested, if any
++ * @file: file through which the attributes are retrieved, if any
   *
-  * Check permission before setting file attributes.  Note that the kernel call
-  * to notify_change is performed from several locations, whenever file
-@@ -1878,14 +1881,15 @@ int security_inode_permission(const struct mnt_idmap *idmap,
+  * Check permission before obtaining file attributes.
   *
   * Return: Returns 0 if permission is granted.
   */
--int security_inode_setattr(const struct mnt_idmap *idmap,
--			   struct dentry *dentry, struct iattr *attr)
-+int security_path_setattr(const struct mnt_idmap *idmap,
-+			  const struct path *path, struct dentry *dentry,
-+			  struct iattr *attr, struct file *file)
+-int security_inode_getattr(const struct path *path)
++int security_path_getattr(const struct path *path, struct file *file)
  {
- 	if (unlikely(IS_PRIVATE(d_backing_inode(dentry))))
+ 	if (unlikely(IS_PRIVATE(d_backing_inode(path->dentry))))
  		return 0;
--	return call_int_hook(inode_setattr, idmap, dentry, attr);
-+	return call_int_hook(path_setattr, idmap, path, dentry, attr, file);
+-	return call_int_hook(inode_getattr, path);
++	return call_int_hook(path_getattr, path, file);
  }
--EXPORT_SYMBOL_GPL(security_inode_setattr);
-+EXPORT_SYMBOL_GPL(security_path_setattr);
  
  /**
-  * security_inode_post_setattr() - Update the inode after a setattr operation
 diff --git a/security/selinux/hooks.c b/security/selinux/hooks.c
-index 85b18c155a17..0d55906f62e5 100644
+index 0d55906f62e5..0323b38fa777 100644
 --- a/security/selinux/hooks.c
 +++ b/security/selinux/hooks.c
-@@ -3317,8 +3317,10 @@ static int selinux_inode_permission(const struct mnt_idmap *idmap,
- 	return rc;
+@@ -3348,7 +3348,8 @@ static int selinux_path_setattr(const struct mnt_idmap *idmap,
+ 	return dentry_has_perm(cred, dentry, av);
  }
  
--static int selinux_inode_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
--				 struct iattr *iattr)
-+static int selinux_path_setattr(const struct mnt_idmap *idmap,
-+				const struct path *path,
-+				struct dentry *dentry,
-+				struct iattr *iattr, struct file *file)
+-static int selinux_inode_getattr(const struct path *path)
++static int selinux_path_getattr(const struct path *path,
++				struct file *file)
  {
- 	const struct cred *cred = current_cred();
- 	struct inode *inode = d_backing_inode(dentry);
-@@ -7737,7 +7739,7 @@ static struct security_hook_list selinux_hooks[] __ro_after_init = {
- 	LSM_HOOK_INIT(inode_readlink, selinux_inode_readlink),
+ 	struct task_security_struct *tsec;
+ 
+@@ -7740,7 +7741,7 @@ static struct security_hook_list selinux_hooks[] __ro_after_init = {
  	LSM_HOOK_INIT(inode_follow_link, selinux_inode_follow_link),
  	LSM_HOOK_INIT(inode_permission, selinux_inode_permission),
--	LSM_HOOK_INIT(inode_setattr, selinux_inode_setattr),
-+	LSM_HOOK_INIT(path_setattr, selinux_path_setattr),
- 	LSM_HOOK_INIT(inode_getattr, selinux_inode_getattr),
+ 	LSM_HOOK_INIT(path_setattr, selinux_path_setattr),
+-	LSM_HOOK_INIT(inode_getattr, selinux_inode_getattr),
++	LSM_HOOK_INIT(path_getattr, selinux_path_getattr),
  	LSM_HOOK_INIT(inode_xattr_skipcap, selinux_inode_xattr_skipcap),
  	LSM_HOOK_INIT(inode_setxattr, selinux_inode_setxattr),
+ 	LSM_HOOK_INIT(inode_post_setxattr, selinux_inode_post_setxattr),
 diff --git a/security/smack/smack_lsm.c b/security/smack/smack_lsm.c
-index 74c4a40ef028..c66cdb8a45d7 100644
+index c66cdb8a45d7..ec1e29f26700 100644
 --- a/security/smack/smack_lsm.c
 +++ b/security/smack/smack_lsm.c
-@@ -1265,15 +1265,19 @@ static int smack_inode_permission(const struct mnt_idmap *idmap, struct inode *i
+@@ -1296,12 +1296,14 @@ static int smack_path_setattr(const struct mnt_idmap *idmap,
  }
  
  /**
-- * smack_inode_setattr - Smack check for setting attributes
-+ * smack_path_setattr - Smack check for setting attributes
-  * @idmap: idmap of the mount
-- * @dentry: the object
-+ * @path: the object
-+ * @dentry: inode whose attributes are changed
-  * @iattr: for the force flag
-+ * @file: file through which the attribute change is requested, if any
+- * smack_inode_getattr - Smack check for getting attributes
++ * smack_path_getattr - Smack check for getting attributes
+  * @path: path to extract the info from
++ * @file: file through which the attributes are retrieved, if any
   *
   * Returns 0 if access is permitted, an error code otherwise
   */
--static int smack_inode_setattr(const struct mnt_idmap *idmap, struct dentry *dentry,
--			       struct iattr *iattr)
-+static int smack_path_setattr(const struct mnt_idmap *idmap,
-+			      const struct path *path,
-+			      struct dentry *dentry,
-+			      struct iattr *iattr, struct file *file)
+-static int smack_inode_getattr(const struct path *path)
++static int smack_path_getattr(const struct path *path,
++			      struct file *file)
  {
  	struct smk_audit_info ad;
- 	int rc;
-@@ -5200,7 +5204,7 @@ static struct security_hook_list smack_hooks[] __ro_after_init = {
- 	LSM_HOOK_INIT(inode_rmdir, smack_inode_rmdir),
+ 	struct inode *inode = d_backing_inode(path->dentry);
+@@ -5205,7 +5207,7 @@ static struct security_hook_list smack_hooks[] __ro_after_init = {
  	LSM_HOOK_INIT(inode_rename, smack_inode_rename),
  	LSM_HOOK_INIT(inode_permission, smack_inode_permission),
--	LSM_HOOK_INIT(inode_setattr, smack_inode_setattr),
-+	LSM_HOOK_INIT(path_setattr, smack_path_setattr),
- 	LSM_HOOK_INIT(inode_getattr, smack_inode_getattr),
+ 	LSM_HOOK_INIT(path_setattr, smack_path_setattr),
+-	LSM_HOOK_INIT(inode_getattr, smack_inode_getattr),
++	LSM_HOOK_INIT(path_getattr, smack_path_getattr),
  	LSM_HOOK_INIT(inode_xattr_skipcap, smack_inode_xattr_skipcap),
  	LSM_HOOK_INIT(inode_setxattr, smack_inode_setxattr),
+ 	LSM_HOOK_INIT(inode_post_setxattr, smack_inode_post_setxattr),
+diff --git a/security/tomoyo/tomoyo.c b/security/tomoyo/tomoyo.c
+index c66e02ed8ee3..cf0090df7eab 100644
+--- a/security/tomoyo/tomoyo.c
++++ b/security/tomoyo/tomoyo.c
+@@ -112,13 +112,15 @@ static int tomoyo_bprm_check_security(struct linux_binprm *bprm)
+ }
+ 
+ /**
+- * tomoyo_inode_getattr - Target for security_inode_getattr().
++ * tomoyo_path_getattr - Target for security_path_getattr().
+  *
+  * @path: Pointer to "struct path".
++ * @file: Pointer to "struct file", or NULL.
+  *
+  * Returns 0 on success, negative value otherwise.
+  */
+-static int tomoyo_inode_getattr(const struct path *path)
++static int tomoyo_path_getattr(const struct path *path,
++			       struct file *file)
+ {
+ 	return tomoyo_path_perm(TOMOYO_TYPE_GETATTR, path, NULL);
+ }
+@@ -570,7 +572,7 @@ static struct security_hook_list tomoyo_hooks[] __ro_after_init = {
+ 	LSM_HOOK_INIT(path_mknod, tomoyo_path_mknod),
+ 	LSM_HOOK_INIT(path_link, tomoyo_path_link),
+ 	LSM_HOOK_INIT(path_rename, tomoyo_path_rename),
+-	LSM_HOOK_INIT(inode_getattr, tomoyo_inode_getattr),
++	LSM_HOOK_INIT(path_getattr, tomoyo_path_getattr),
+ 	LSM_HOOK_INIT(file_ioctl, tomoyo_file_ioctl),
+ 	LSM_HOOK_INIT(file_ioctl_compat, tomoyo_file_ioctl),
+ 	LSM_HOOK_INIT(path_chmod, tomoyo_path_chmod),
+diff --git a/tools/testing/selftests/bpf/prog_tests/d_path.c b/tools/testing/selftests/bpf/prog_tests/d_path.c
+index ec73291ef060..3b5a20939ea9 100644
+--- a/tools/testing/selftests/bpf/prog_tests/d_path.c
++++ b/tools/testing/selftests/bpf/prog_tests/d_path.c
+@@ -98,7 +98,7 @@ static int trigger_fstat_events(pid_t pid)
+ 	if (!ASSERT_GE(ret, 0, "set_pathname for dir"))
+ 		goto out_close;
+ 
+-	/* triggers vfs_getattr */
++	/* triggers vfs_fstat() */
+ 	fstat(pipefd[0], &fileStat);
+ 	fstat(pipefd[1], &fileStat);
+ 	fstat(sockfd, &fileStat);
+diff --git a/tools/testing/selftests/bpf/progs/test_d_path.c b/tools/testing/selftests/bpf/progs/test_d_path.c
+index edb5494a47f7..908ade86f262 100644
+--- a/tools/testing/selftests/bpf/progs/test_d_path.c
++++ b/tools/testing/selftests/bpf/progs/test_d_path.c
+@@ -19,9 +19,8 @@ int called_stat = 0;
+ int called_close = 0;
+ int path_match_fallocate = 0;
+ 
+-SEC("fentry/security_inode_getattr")
+-int BPF_PROG(prog_stat, struct path *path, struct kstat *stat,
+-	     __u32 request_mask, unsigned int query_flags)
++SEC("fentry/security_path_getattr")
++int BPF_PROG(prog_stat, struct path *path, struct file *file)
+ {
+ 	pid_t pid = bpf_get_current_pid_tgid() >> 32;
+ 	__u32 cnt = cnt_stat;
+diff --git a/tools/testing/selftests/bpf/progs/test_d_path_check_rdonly_mem.c b/tools/testing/selftests/bpf/progs/test_d_path_check_rdonly_mem.c
+index 27c27cff6a3a..668ce78cff31 100644
+--- a/tools/testing/selftests/bpf/progs/test_d_path_check_rdonly_mem.c
++++ b/tools/testing/selftests/bpf/progs/test_d_path_check_rdonly_mem.c
+@@ -7,9 +7,8 @@
+ 
+ extern const int bpf_prog_active __ksym;
+ 
+-SEC("fentry/security_inode_getattr")
+-int BPF_PROG(d_path_check_rdonly_mem, struct path *path, struct kstat *stat,
+-	     __u32 request_mask, unsigned int query_flags)
++SEC("fentry/security_path_getattr")
++int BPF_PROG(d_path_check_rdonly_mem, struct path *path, struct file *file)
+ {
+ 	void *active;
+ 	__u32 cpu;
+diff --git a/tools/testing/selftests/bpf/progs/test_d_path_check_types.c b/tools/testing/selftests/bpf/progs/test_d_path_check_types.c
+index 7e02b7361307..18b411f2abad 100644
+--- a/tools/testing/selftests/bpf/progs/test_d_path_check_types.c
++++ b/tools/testing/selftests/bpf/progs/test_d_path_check_types.c
+@@ -11,9 +11,8 @@ struct {
+ 	__uint(max_entries, 1 << 12);
+ } ringbuf SEC(".maps");
+ 
+-SEC("fentry/security_inode_getattr")
+-int BPF_PROG(d_path_check_rdonly_mem, struct path *path, struct kstat *stat,
+-	     __u32 request_mask, unsigned int query_flags)
++SEC("fentry/security_path_getattr")
++int BPF_PROG(d_path_check_rdonly_mem, struct path *path, struct file *file)
+ {
+ 	void *active;
+ 	u32 cpu;
+diff --git a/tools/testing/selftests/bpf/progs/verifier_vfs_accept.c b/tools/testing/selftests/bpf/progs/verifier_vfs_accept.c
+index 25f37a3dd7cf..81142d217655 100644
+--- a/tools/testing/selftests/bpf/progs/verifier_vfs_accept.c
++++ b/tools/testing/selftests/bpf/progs/verifier_vfs_accept.c
+@@ -71,7 +71,7 @@ int BPF_PROG(get_task_exe_file_and_put_kfunc_from_argument,
+ 	return 0;
+ }
+ 
+-SEC("lsm.s/inode_getattr")
++SEC("lsm.s/path_getattr")
+ __success
+ int BPF_PROG(path_d_path_from_path_argument, struct path *path)
+ {
 -- 
 2.18.0.huawei.25
 
