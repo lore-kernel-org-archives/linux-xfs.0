@@ -1,77 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794949842;
-	b=x4slXXDJjI4+vhMXFzyGbDz9Bc4Cj3Yur2Z92cnPhSWtupbPe0PgtUo3xjJJ6sbNRUtF
-	 5NSYsen7U2ABquKo6DH0cY6dvKw6LlDZYjnqcwb/+jUrqMA83EV0zqF6S4iDQrexXUruh
-	 naM9Df81JCHxx0yYkgbxzqUtVhMeW+ojZ7O51KVM8jaeQEaysQ8yWHu/PmZibVnChOaWq
-	 r9GRuNECbJF5VZ0mcS9pfbeRacEs750c5NHW5pFOkMstgvv37ObMajUuklsP+gkOtH+W6
-	 pBwjQsp/oVtzRdh9e43FGnlIuqNDP9qk32TQ4k8ZkE0KbND4yMezIC/BRbbWgTARZWw==
+	t=1794954596;
+	b=faDES7LjiFP9pL+pZ1/l5gxHa3YAr+d2i5VeJ/IfBXGLCoe/jVHIQDxEXSuOoIgYJFWF
+	 IPyYQduX7yFlpYlGk8dduQ6U5Y0NEy+fzzePEq59iq5dgE2UAHRklct9dHiuJAeGAY3Nc
+	 H89de92SRY9PIhThBVE/rYjboiz6QTJ/9MgN4ADp9JG3ybfPKFbH/pyI2g3GtPc5PfeMn
+	 NftZUxubgKp9KkYQNdruRlooRyExrOWRqhJBgbv0OD825evKUvAZoQGM9/1n9bxbdWKqv
+	 p65jxhc/THq+8TOvX2s8xfmLZjsnroy+gpf9FQ+IIf16RYKXpiPwlXAFkJIt8vR9dBQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794949842;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:Received:Date:From:To:Cc:Subject:
-	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
-	 In-Reply-To:X-Scanned-By;
-	bh=qdKdEl0zxLLbjG6lERQLivg57KN6iKjjOdwmcujeJ9o=;
-	b=YKrcZ/eIIhKaANAzoJpI00ZnsnJkgkuI29kLoaCm1YKI8f+TdTVZ+V5qCzG9qQU9MZOU
-	 zqsmZuQKAmEoUXXhgKvc8a/1wU7yb4uYA00KGo1XRNpVPj1b37+J0xR/yaCxYLZyted08
-	 oWmkgHTM9eI7rRnvZyom+PVJklSZSKnJdTSC+7pJW3sLhcRlh0EaM7BCsfPOmuHX+DQpt
-	 MHQpFcGU0PjrPa8386DVAJLUFZik8hewWwnmr+GEzcOASh0VjgLZvKZGo+gyqOiKNA4Eh
-	 IVlhOMu+saE3Fy4TeuF0E4d0Op2mtSf/3uQsAlB3R9229bnP2KwSPju9R4+orvApVKA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794954596;
+	h=Received:DKIM-Signature:Received:X-Gm-Message-State:X-Received:
+	 MIME-Version:References:In-Reply-To:From:Date:
+	 X-Gmail-Original-Message-ID:X-Gm-Features:Message-ID:Subject:To:Cc:
+	 Content-Type:Content-Transfer-Encoding;
+	bh=QgCr0DpcBXV214M0n10zOgwhTeGtnk5rboT1ob7NYxc=;
+	b=whOIVK88hawcyfkL+Oa8S1W7M6n7dSsU9cKdCpT6nLWnoiJTMskyaEP+xa/NBLdKg24r
+	 fSRq1uMv8HpgK7g4H2bFXgk7dLykaKaWm8yUK4Fm6laDJZJ3IJdAKKxapiL/qDsd5aXgt
+	 ge8ZX0IdcAv5c32L1ux+Ki4NGwJKNEqZSUaXfEvlyRqrHjB5ib1Oiv9AtYYaJybghQYwQ
+	 H58asrPKjRupwRfdvqTfTJn6kXy4QY5Ko3LQCzyQGCKUZgJfDTkHX7oTG6TI2m5S4vHnZ
+	 9/Vei5H7QhceT1re+nd6v61SSLmeCmm+DvnM0PhCC1LOp1CWLmcfoevx7BYQNWAzTGQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=gLfSQXnV;
-	arc=none smtp.remote-ip=170.10.129.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Ue+7J1Jd;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EED5606A336
-	for <linux-xfs@vger.kernel.org>; Tue, 17 Nov 2026 21:10:42 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4EED5606A336
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94824606A8A0
+	for <linux-xfs@vger.kernel.org>; Tue, 17 Nov 2026 22:29:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=gLfSQXnV
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1794949841;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=qdKdEl0zxLLbjG6lERQLivg57KN6iKjjOdwmcujeJ9o=;
-	b=gLfSQXnVaUX0fEefNbuTjxUYQuIZz5l07lVlYYMp+YfNfwqJ/PqSdBsxllAf0MZV+6c+CV
-	D0O90AmVOnA6T5onQR9SEi2TqX/B6+g9gntIOJsrUxqg5UjKLdlZyqJE+O9L8VnQI89tQS
-	X6f2JnlU7ozd+pLOyrkflkDnBb8iJvc=
-Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-651-l5Lup1M-NmSW3rGiqJPyIQ-1; Tue,
- 17 Nov 2026 16:10:36 -0500
-X-MC-Unique: l5Lup1M-NmSW3rGiqJPyIQ-1
-X-Mimecast-MFC-AGG-ID: l5Lup1M-NmSW3rGiqJPyIQ_1794949835
-Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id DDC98195606D;
-	Tue, 17 Nov 2026 21:10:34 +0000 (UTC)
-Received: from bfoster (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 43C071801977;
-	Tue, 17 Nov 2026 21:10:33 +0000 (UTC)
-Date: Tue, 17 Nov 2026 16:10:31 -0500
-From: Brian Foster <bfoster@redhat.com>
-To: Shashank Mohan Jain <jain.sm@gmail.com>
-Cc: Christian Brauner <brauner@kernel.org>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Matthew Wilcox <willy@infradead.org>,
-	Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] iomap: fix offset truncation in
- iomap_fill_dirty_folios() on 32-bit
-Message-ID: <avzCx52Sl5g3tuZu@bfoster>
-References: <20261117164756.97065-1-jain.sm@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Ue+7J1Jd
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51C7D1F00927
+	for <linux-xfs@vger.kernel.org>; Tue, 17 Nov 2026 22:29:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794954596;
+	bh=QgCr0DpcBXV214M0n10zOgwhTeGtnk5rboT1ob7NYxc=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc;
+	b=Ue+7J1JdQLy6J5AfwVs6ZStS30tAZoxfS3fq9QmWBk6ZL/wr0FebCEbbgS1hEKE/1
+	 yq5BaUSyMi9UiVTIurr+vjBx5XUZGmQpaDW6Hh2vLA29IDJkiMxmWjPld2XnJRhvKm
+	 QyVPIiXb13QwQ5HWZ42wce+1pDMcmiQ6F62JRGsTu9noV9WJU/0AprrPvHFkOz5ezz
+	 emsZIlutt+2VL7IfUShrCQvwAKdCSAfi5yAggijFFcr1i+C5sPtktGzIVa+dTW/v4c
+	 YJSaJEzlvIcFGZouhep9sVaSPn9ryOHUURRMlqdoQiCiJStLPJ3x1Co8xROPM59jsd
+	 p8lRM/vHt8A7Q==
+Received: by mail-ej1-f44.google.com with SMTP id a640c23a62f3a-c50a4a2132cso30758066b.3
+        for <linux-xfs@vger.kernel.org>; Tue, 17 Nov 2026 14:29:56 -0800 (PST)
+X-Gm-Message-State: APuU4Z9unJq7/bKK13Lz2vupHShO/zb2KcU7S4UFoRut/yaHy71szCuX
+	BjliSO9km1oQXKdgvec0qYhWA7tjWqN7+pWWyR1r0+sJsJ5N0K/H9yfoNaCtNKvxW9CRyWQFlby
+	sEzaYfAUaCE0Ynd/AIOSnv7Yv125pnYI=
+X-Received: by 2002:a17:907:9607:b0:c49:a235:8e0c with SMTP id
+ a640c23a62f3a-c510e1f18bfmr51977566b.22.1794954594914; Tue, 17 Nov 2026
+ 14:29:54 -0800 (PST)
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -81,92 +58,72 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261117164756.97065-1-jain.sm@gmail.com>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
+References: <20261116085752.3908082-1-chizhiling@163.com>
+In-Reply-To: <20261116085752.3908082-1-chizhiling@163.com>
+From: Namjae Jeon <linkinjeon@kernel.org>
+Date: Wed, 18 Nov 2026 07:29:42 +0900
+X-Gmail-Original-Message-ID: <CAKYAXd-R319UyMqTw5LJiuhWMYgbqe9HP_pKyH9LQXPxYaE_6Q@mail.gmail.com>
+X-Gm-Features: AclHuK8CBeUwkMopgpP3h-E5Ufv0KRH7jQ07bswOO_DvGn0S7YxPUnFSsbqmUKo
+Message-ID: <CAKYAXd-R319UyMqTw5LJiuhWMYgbqe9HP_pKyH9LQXPxYaE_6Q@mail.gmail.com>
+Subject: Re: [PATCH v4 0/5] exfat: fix valid_size update races
+To: Chi Zhiling <chizhiling@163.com>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
+	exfat@lists.linux.dev, linux-kernel@vger.kernel.org, 
+	Sungjong Seo <sj1557.seo@samsung.com>, Yuezhang Mo <yuezhang.mo@sony.com>, 
+	Christian Brauner <brauner@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>, 
+	Chi Zhiling <chizhiling@kylinos.cn>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, Nov 17, 2026 at 10:17:56PM +0530, Shashank Mohan Jain wrote:
-> iomap_fill_dirty_folios() turns the page index at which the dirty
-> folio lookup ended into the file offset it returns to the caller:
-> 
-> 	*start = (pstart << PAGE_SHIFT);
-> 
-> pstart is a pgoff_t. On a 32-bit kernel the shift is done in 32 bits
-> and the upper bits are lost for every offset at or above 4 GiB.
-> 
-> XFS uses the returned offset in xfs_buffered_write_iomap_begin() to
-> trim an unwritten mapping to the range covered by the lookup. With the
-> truncated offset the end of that range is below its start and
-> xfs_trim_extent() leaves a mapping of zero length. iomap_iter_done()
-> warns about it,
-> 
->   WARNING: fs/iomap/iter.c:38 at iomap_iter+0x33c/0x36c
->   WARNING: fs/iomap/iter.c:39 at iomap_iter+0x34c/0x36c
-> 
-> and iomap_zero_range() does not terminate: a mapping of zero length is
-> what the iterator takes for the start of an iteration, so it asks for
-> the next mapping again and again without checking how much of the
-> range is left.
-> 
-> On i386 with XFS (4k blocks) this is enough to trigger it:
-> 
-> 	fd = open("f", O_RDWR | O_CREAT, 0644);
-> 	fallocate(fd, 0, 5ULL << 30, 1 << 20);
-> 	ftruncate(fd, (5ULL << 30) + 1000);
-> 
-> ftruncate() never returns. The task spins in iomap_zero_range() with
-> the inode locked and does not react to SIGKILL. A write behind an
-> unaligned EOF which is in an unwritten block above 4 GiB fails with
-> EFSCORRUPTED instead, after "XFS (vda): Access to block zero in inode
-> 132 start_block: 0 start_off: 140002 blkcnt: 0 extent-state: 0":
-> 
-> 	fallocate(fd, 0, 5ULL << 30, 1000);
-> 	pwrite(fd, buf, 100, (5ULL << 30) + 8192);
-> 
-> The same calls work below 4 GiB, and v6.19 behaves like v7.3-rc6.
-> 
-> Cast the page index to loff_t before the shift.
-> 
-> Tested with an i386 kernel in qemu and XFS on a virtio disk: the two
-> sequences above hang and fail without this change and succeed with
-> it.
-> 
-> Fixes: 395ed1ef0012 ("iomap: optional zero range dirty folio processing")
-> Cc: stable@vger.kernel.org
-> Assisted-by: LLM
-> Signed-off-by: Shashank Mohan Jain <jain.sm@gmail.com>
-> ---
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
-> Prepared with Claude Code (Anthropic), model Claude Opus 5.5
-> (claude-opus-5-5).
-> 
-> First sent privately to security@kernel.org on 11 October; Matthew
-> Wilcox asked for it to be posted as a normal patch. Sorry for the delay.
-> The code is unchanged in mainline, so this is the same fix, rebased on
-> 666539eecdf4.
-> 
->  fs/iomap/buffered-io.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index 6d843b1..846f87a 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -1735,7 +1735,7 @@ iomap_fill_dirty_folios(
->  	}
->  
->  	count = filemap_get_folios_dirty(mapping, &pstart, pend, iter->fbatch);
-> -	*start = (pstart << PAGE_SHIFT);
-> +	*start = (loff_t)pstart << PAGE_SHIFT;
->  	*iomap_flags |= IOMAP_F_FOLIO_BATCH;
->  	return count;
->  }
-> 
-> base-commit: 666539eecdf4db623f5e3c3e55cf9f2dfad24aa4
-> -- 
-> 2.43.0
-> 
-
+On Mon, Nov 16, 2026 at 5:59=E2=80=AFPM Chi Zhiling <chizhiling@163.com> wr=
+ote:
+>
+> From: Chi Zhiling <chizhiling@kylinos.cn>
+>
+> exFAT uses valid_size (ValidDataLength) as the on-disk boundary of
+> initialised data, but the current code advances it too late and without
+> proper serialisation.  Buffered writes can silently lose data reclaimed
+> before valid_size covers it, file expansion and page faults can
+> initialise the same range concurrently, and a failed or short direct
+> write can still grow the file on disk.
+>
+> This series advances valid_size under the folio lock, keeps zeroed_size
+> in sync with the block tails that were actually initialised, and
+> revalidates cached iomaps for buffered writes.  File expansion holds
+> invalidate_lock across allocation, EOF cleanup and the i_size update.
+> Direct writes are prepared and written back through their destination
+> boundary folio before submission, publish i_size and valid_size only
+> from ->end_io(), and hold invalidate_lock across completion, post-write
+> invalidation, gap initialisation and rollback so that mmap faults
+> cannot interfere.
+>
+> V4:
+> - Fold the series into five patches and rebase onto current exfat/dev.
+> - Add a patch that serialises file expansion with mmap write faults.
+> - Rework direct writes: prepare and write back the invalid range through
+>   the destination boundary folio, initialise the gap after the post-write
+>   invalidation, and keep pure overwrites asynchronous.
+> - Track initialised block tails in zeroed_size instead of
+>   IOMAP_F_ZERO_TAIL, record the on-disk length in i_size, and finish
+>   short direct reads with filemap_read().
+> - Pick up the Reviewed-by on the iomap patch.
+>
+> V3: https://lore.kernel.org/exfat/20261016033349.3104509-1-chizhiling@163=
+.com/
+> V2: https://lore.kernel.org/exfat/20261013033837.2748258-1-chizhiling@163=
+.com/
+> V1: https://lore.kernel.org/exfat/59056131-e3bd-4003-8c30-0a356cf0bd82@16=
+3.com/
+> Link: https://lore.kernel.org/exfat/10029d6f-13cc-4d17-a2f9-b093a8339dde/=
+T/#t
+>
+> Chi Zhiling (3):
+>   iomap: export iomap_bio_read_folio_range_sync()
+>   exfat: increase VDL before unlocking initialized folios
+>   exfat: zero invalid VDL tails in buffered and direct reads
+>
+> Namjae Jeon (2):
+>   exfat: serialize file expansion with mmap write faults
+>   exfat: coordinate direct writes with mmap faults
+Applied 2/5 ~ 5/5 patches to #dev.
+Thanks!
