@@ -1,54 +1,54 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794914162;
-	b=dmEad1cWyNkESYYUPojg8XOV6Zgtc9/9AGOYkMOP8eqd6M5fZVk487GvqgO//cy/6CBV
-	 ljE0/y61zNaKytpDV33VU1hgCzjMVOG8EsWfiCNMZKiFxmGPOtCueNgqdNqBloxExc96o
-	 a7atRhVZUCdE32aGZYNbros1lpmLDMe1XJSKQQwonoI+GXg55m4xpIf44O23MKNnkMaYh
-	 bRU6ZLKL7nlfOuOPUgH4KpcMiRNVbe8mgseGrV/rBXHZoUzFCWBYis22EnQCIhXpP3LTf
-	 xZx8v/Fe0S5BnIGTfAxkiZqtXWyTqAL4Xplwzp1Q51iXIIcoP3ewvLxhV276EUGESow==
+	t=1794916487;
+	b=5RYlkWAZ2xU/DNT/IMKvQ0URK/u+CiZBUcsf6x9TNq+0YKEtHGbQ01qQAsPRCzG3Lnpi
+	 R5zxBKLLU93Xlp8GgQzEZhd782Wg3jtzLBaGwq7RdIaSZNun21L3oH5LtBsE8ApnNPZAq
+	 PoZ6Py+2mcE2vFVSVHHQfSf9qRWQoju3p5gSqrDjK/j+V4ZlVMFFRsc6EYTcvJMxnfJwF
+	 j60YZX1swA9ankhrTVUhOMaDpRv1Y8/ZN0fbu17X7Mc91dq7xrXi25S0sfyG8dM51rYvx
+	 tp+J+dDA4iUg89QucmhgdzgDFteCIRF6Wfr8LbG8n5h8Zg+1cbXPRx3BuT1PdVvfflQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794914162;
-	h=Received:DKIM-Signature:Received:X-Gm-Message-State:X-Received:
-	 MIME-Version:References:In-Reply-To:From:Date:
-	 X-Gmail-Original-Message-ID:X-Gm-Features:Message-ID:Subject:To:Cc:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=bfBKw5Dqe7/QCgl28CEIM4EiUR1wvD/Rw1mMg1W1wSQ=;
-	b=FEbBI+v3xWkdOl+f4Lo3gaUgI1p0BdWhmnEsMojoLx+pKvU++sTeR3eYP99nwp2Uh4IC
-	 0eP1e8GGhdZ1QTfk0cjdNhFF/UXGnE/KvqoCfRv5yAllJ3czHK0V3oOmuBKylTnFkZtLL
-	 R1KNf6BoCM9uahwsxk68EaJZVM1HNJaihFSpi56f2nSIpNmTdPfsbx61DCB6QXQg3uIxp
-	 RFAPBqOuZbY70CnuAJXg+jnIZDSMPvgDt5IIhZLkHm4Pu4GyJePnToTFST2XH6HcDdI36
-	 WM8u5Ms6lp8/fWtSCtiPKIwD20rHiTrMYpOQ1GYduA2PKT1o1L9nFm9fotj6ppXRU4Q==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794916487;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 MIME-Version:Content-Type:Content-Disposition;
+	bh=n9HR0jteZ7i3l47CGbAAeoGccO/M6Cb8YzdaapwoXGw=;
+	b=JvT4Wg3uJK5oEXOEMpbXhVY1M6cMOfzS/Je7O7X7YhU717Tvsv0rruiq1nIgRL/XE4D7
+	 Cyhe42UGakNQ9n2g54nP2S+4fSRnKdXPL93vhSUXcKoejEdTBMAtDoaC5/Iak6FyWBqWb
+	 utJn7rFRSn5SsyWMKEKFKQlZ/j3M/V2FFA3XczjzdkBZ/G3nJSzUT6VUA7amG3c3z8oRM
+	 VlY/AOSmojAn78IRli2JPrYd+Q9s30n8VOzRDoeUuEZc8yCx/A3PuI1C944rrdlKoRZla
+	 Uv1TMIDiQvq0STMNkRyE3gh8rtNdZyx0+lbYbrtyadZmEn3WtzFNNlR+F83ZPvr979g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=YlkbXgUU;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OpRgQvSl;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31E3E606A338
-	for <linux-xfs@vger.kernel.org>; Tue, 17 Nov 2026 11:16:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44112606A330;
+	Tue, 17 Nov 2026 11:54:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=YlkbXgUU
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B9E1E1F000C9
-	for <linux-xfs@vger.kernel.org>; Tue, 17 Nov 2026 11:16:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OpRgQvSl
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 381281F000C4;
+	Tue, 17 Nov 2026 11:54:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794914161;
-	bh=bfBKw5Dqe7/QCgl28CEIM4EiUR1wvD/Rw1mMg1W1wSQ=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=YlkbXgUUQRhyrxgpsJ7Qvml07CSWbgUu8B9MBcv6Rb7T7SWdq8Aq1SQrmZk4EnAhp
-	 TcmeQ1ddK4h+Pu6rPK+bVxj9nTENOoMDtpxr/d7pzn6PP0stPZXXTCeTk/x9BdxWok
-	 By92sXJDNTF9T+YZxDMLuMMgthIA0MZbqwOtlsHUtiyjq7qF12Dwctp5QuSSU1oZ62
-	 3mIGTmaU9HYjlOR/Mw83mXoVkeR8viHwpqjJvVoFTQ+3NlPR3N4Vfq12juTxVu4Kvy
-	 pNy7xoR8tcMopGP9TY5NVo+AKp8eALuZYTDKFnCrTCR9bJzmyt4brkpbKPdrhEUdpo
-	 BZpOOnX6mFrCA==
-Received: by mail-ej1-f49.google.com with SMTP id a640c23a62f3a-c45551fa84eso843263366b.3
-        for <linux-xfs@vger.kernel.org>; Tue, 17 Nov 2026 03:16:01 -0800 (PST)
-X-Gm-Message-State: APuU4Z+lAqKa6OLAst5JigMdM5hUjdXbLekiN19h2UeB5CtViSYkGdrK
-	bMowkMraEREFV3REtDRUNWl6VhQaEMxvrITZQmL0L98UXRlGHz9MHQnJ5YxWDZzm4VbBJgR80dV
-	/p7b7hEky/r/v7EphbB3XB79xOlZ2ptA=
-X-Received: by 2002:a17:907:3e9e:b0:c40:4848:f7fa with SMTP id
- a640c23a62f3a-c50965421ebmr1168834366b.44.1794914160376; Tue, 17 Nov 2026
- 03:16:00 -0800 (PST)
+	s=k20260515; t=1794916486;
+	bh=n9HR0jteZ7i3l47CGbAAeoGccO/M6Cb8YzdaapwoXGw=;
+	h=Date:From:To:Cc:Subject;
+	b=OpRgQvSlXTSaSMjmxAFnas5BF1gXYcb77pO3YOboprkAVyMcVsSZ218Wc5dj5sav2
+	 vflQKPJckNGgGjt1pQAcK4ssPgTo3X5r3itqdaLitWm9tPbFuyznS2jzqR+VWw5ilI
+	 7Zbru7m/Xoj2TcMg5vnLBqDGvQiND5chH0Kvzu9pr7fGfEID3r5j8MJJPoESeYqwXa
+	 Cizu6lX5OTr7Yjzs0gG36zTsFxjdDPCx0O/QzuixKxdhyxOHZ+1LSP6+yoR08VV8YO
+	 GrfbNyioR+EyXOMmcY+bQkJR0dGS8Q2MSMhdSx/3Z5ri1Au/vu+t0GSA530AS0YpVW
+	 LSRfeesYYHMCA==
+Date: Tue, 17 Nov 2026 11:54:42 +0000
+From: Mark Brown <broonie@kernel.org>
+To: David Chinner <david@fromorbit.com>, Carlos Maiolino <cem@kernel.org>,
+	linux-xfs@vger.kernel.org
+Cc: Chris Mason <mason@kernel.org>, Christian Brauner <brauner@kernel.org>,
+	Joanne Koong <joannelkoong@gmail.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux Next Mailing List <linux-next@vger.kernel.org>
+Subject: linux-next: manual merge of the xfs tree with the origin tree
+Message-ID: <avxAggF2dYl8eMSx@sirena.org.uk>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -58,42 +58,84 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261116085752.3908082-1-chizhiling@163.com> <20261116085752.3908082-2-chizhiling@163.com>
-In-Reply-To: <20261116085752.3908082-2-chizhiling@163.com>
-From: Namjae Jeon <linkinjeon@kernel.org>
-Date: Tue, 17 Nov 2026 20:15:47 +0900
-X-Gmail-Original-Message-ID: <CAKYAXd_wMVWSp1OZox-dF+G9x3seF1pTe436Y5dhR8LAqjtPdA@mail.gmail.com>
-X-Gm-Features: AclHuK_g651WVLWBvZ3JkfDxJ0juXOGnsif_vLCZ2PuPoqhZPKjOh8aIm_6kPfQ
-Message-ID: <CAKYAXd_wMVWSp1OZox-dF+G9x3seF1pTe436Y5dhR8LAqjtPdA@mail.gmail.com>
-Subject: Re: [PATCH v4 1/5] iomap: export iomap_bio_read_folio_range_sync()
-To: Chi Zhiling <chizhiling@163.com>, Christian Brauner <brauner@kernel.org>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	exfat@lists.linux.dev, linux-kernel@vger.kernel.org, 
-	Sungjong Seo <sj1557.seo@samsung.com>, Yuezhang Mo <yuezhang.mo@sony.com>, 
-	"Darrick J. Wong" <djwong@kernel.org>, Chi Zhiling <chizhiling@kylinos.cn>, 
-	Christoph Hellwig <hch@lst.de>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="2MrhXHFioS1OTaqV"
+Content-Disposition: inline
+
+
+--2MrhXHFioS1OTaqV
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, Nov 16, 2026 at 5:59=E2=80=AFPM Chi Zhiling <chizhiling@163.com> wr=
-ote:
->
-> From: Chi Zhiling <chizhiling@kylinos.cn>
->
-> Filesystems that provide a buffered write ->read_folio_range handler
-> need to perform the same synchronous bio read as the default handler.
-> Move the declaration of iomap_bio_read_folio_range_sync() from the
-> internal header to <linux/iomap.h>, together with the !CONFIG_BLOCK
-> fallback, and export it so that modular filesystems can call it.
->
-> exfat will call it from its own ->read_folio_range handler to zero
-> the stale bytes between valid_size and the end of the block under
-> the folio lock during buffered writes.
->
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Chi Zhiling <chizhiling@kylinos.cn>
-Reviewed-by: Namjae Jeon <linkinjeon@kernel.org>
+Hi all,
 
-Christian, if you apply this patch(1/5) to the iomap tree, I will
-apply the remaining patches (2-5) into the exFAT tree.
-Thanks!
+Today's linux-next merge of the xfs tree got a conflict in:
+
+  fs/xfs/xfs_file.c
+
+between commit:
+
+  9e8fc16dc6b47 ("iomap: pass iomap_iter_next_fn directly instead of struct=
+ iomap_ops")
+
+=66rom the origin tree and commit:
+
+  03cbbd80a3e70 ("xfs: restart faults racing with realtime flag changes")
+
+=66rom the xfs tree.
+
+I fixed it up (see below) and can carry the fix as necessary. This
+is now fixed as far as linux-next is concerned, but any non trivial
+conflicts should be mentioned to your upstream maintainer when your tree
+is submitted for merging.  You may also want to consider cooperating
+with the maintainer of the conflicting tree to minimise any particularly
+complex conflicts.
+
+diff --cc fs/xfs/xfs_file.c
+index d61ea8e2c8e40,8070a07e601f5..0000000000000
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@@ -1980,11 -2039,22 +2040,22 @@@ __xfs_write_fault
+  		lock_mode =3D XFS_MMAPLOCK_EXCL;
+  	}
+ =20
+- 	if (IS_DAX(inode))
++ 	/*
++ 	 * The caller picked the zoned or the regular path with no lock held.
++ 	 * The realtime flag cannot change under the MMAPLOCK, so look at it
++ 	 * again, and start over if it has changed.
++ 	 */
++ 	if (xfs_is_zoned_inode(ip) !=3D !!ac) {
++ 		xfs_warn_ratelimited(ip->i_mount,
++ 			"RT flag modifying during page fault for inode 0x%llx.",
++ 			inode->i_ino);
++ 		ret =3D VM_FAULT_NOPAGE;
++ 	} else if (IS_DAX(inode)) {
+  		ret =3D xfs_dax_fault_locked(vmf, order, true);
+- 	else
++ 	} else {
+ -		ret =3D iomap_page_mkwrite(vmf, &xfs_buffered_write_iomap_ops,
+ +		ret =3D iomap_page_mkwrite(vmf, xfs_buffered_write_iomap_next,
+  				ac);
++ 	}
+  	xfs_iunlock(ip, lock_mode);
+ =20
+  	sb_end_pagefault(inode->i_sb);
+
+--2MrhXHFioS1OTaqV
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEyBAABCgAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAmr8QIEACgkQJNaLcl1U
+h9CSbQf3QB4RrbZT+Eo+3S5JndWSXTiha+TRbQ9Y3ftMgqAskjcWjjR0WFAi1+Q0
+x+huY6ndgJVRNrdE5dFx3/Q07H73A+++RPyECs+SDOP0sSOOQeBxst+CS9VM3Bi+
+gLdM26dEgbQNuv41H3WmByazoKzCF61VUGPeRmMiSEE+SmscXxeplF9DdTV/zfCh
+VcZnhODwAOnwDRKA5Yt1uoqdrq8j2qp3/CRNFcImcE1oqI5PGsBJ4Di1Gu7XRTGf
+yXNcWMVtcfSLu3YJZMpB0t0WOZg1XfNrL4GUmKn6SiepdlRffUTIE6im1PIjZrNs
+39xN1ZixR72em8pIxzy8313nKOAV
+=V56E
+-----END PGP SIGNATURE-----
+
+--2MrhXHFioS1OTaqV--
