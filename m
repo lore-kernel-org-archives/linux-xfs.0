@@ -1,54 +1,54 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794992334;
-	b=goFKybYXi6UQipB1jEqwNRKANcgDk3NwUd5qPI4R+ukoKuryLTYQ4M9ZfXxiObuJHxog
-	 L7PKW9p1S0ZZqChb2k8BUaVNIQ2kAu6XYMcfeRy5S1xyACocfjVV63T9KS88EiVi2GHQ8
-	 bznEzuolVD+jPatKGjbBkwwLsyD15qej5Me3c+wCAWL6ONOJenWjli8XqaWw8CfRHGTnb
-	 SZ+P3EyLXV51QmBhS1pqcom5rnKMbTF3sJwa7rJ6tIdlyIlheuPY2F+m7aiQs+8eVhBpM
-	 4V9SX5kbhA/y9/qYWk01/QFvriJzhb0AVSIZ2eWDjAoF09NaLZxIC3zI9PQQSKOlEjg==
+	t=1794992339;
+	b=w9iXDBcHT7HnCwa13e4gN+vVIjvkEfYqvXFVKyPWZwRhkypUoodj0o4xMorCXL521fKC
+	 q3bCQY5/unDUlCnMmjq0ymQeF7J4/4zcjNOAW/5AAhYGc4/XouRXlkyTRhjFqbvJ7brr/
+	 OnjEcXWYL9G1dz4Ti+t8mpb/mwvof7tPagctBwZWjA675sCJsLv1ZE96G3NXmnYZyaOwZ
+	 0A/USG3Q3Mvl61I4GMnQARswQu9129ghSWHXLqsHo5UeOXA/Wx1fZKYnUNnLrhxPW9i8O
+	 pIYko/lSRBU2HzMYt8EVd8YyvVDWdnWEqzGNPGzhxU5brukMXmFas4WEJf1njbb/eqw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794992334;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794992339;
 	h=Received:DKIM-Signature:From:To:Cc:In-Reply-To:References:Subject:
 	 Message-Id:Date:MIME-Version:Content-Type:Content-Transfer-Encoding:
 	 X-Mailer;
-	bh=XtAiizFNPZX1yW14JcAmupOVKAb7p+j5iTw0z219uvA=;
-	b=yiAIuR+/HWW/7EVjgvosOHR3tdslzusu7x7lFOkmF42mdg7zsDUzrx3M/jnKeGGgtV60
-	 knzp8hPTRNoOQ9gV4jUtVRQ3QU14NRcpx533daBHVUaGYfSS5bkC+ZGWesUS7pNVszoZ4
-	 ByaEblZWyCjxO47IhetrFZFEKM8+MY5UCuyvDqde3VAwhVWnsAELrK8G8kw7N3fj/muwy
-	 BcXdJpmpaUvUTnW/jdC6rjgETrJG7LKg6jLX49U3lmZ5NcYcDBfiDEqSfO2Qg6ZorI+Rh
-	 3a2ouMGQq6JcblY6NypXLpuL5grApjJ0CoFm8YsG1JQCkPK4dZCOJA/YPdqluvApkcg==
+	bh=4u+NNLWEM85m+eLVVZXfFRxdPZ/ybHRbZTDzL1gpdEo=;
+	b=mXoSs/w0lhRbSaSE1u6KMmvaBDXe4niVt29QVl3RnorghFtT9p06HBqwo94pV81MPX/o
+	 PzN4baeajXun954bWm7EsHW/3KExrih2BW1Dm1ug0WM9+HR4UYOUGURx7FFY0dXzb9+5Y
+	 PHI7OBImI+1suUIw3JBBGErF9VafJ9OqoNXjGRFRnXEa27XYR3n2auJUdtIBtgOg+1nT+
+	 A88T0/VRT7FR4cpsF4k+HWpTgEKEHPud0eg1EKwWLWh67+3D1jxkiyyd+DM4TniB9PeQ0
+	 8Lhz1w/xczbI19hWVReo3ICI+4QvwtvoV3MVUG3fmvMWW1R8T/UM6OKuJ/4MQAUAn3Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="m8U/R7Ee";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ZAK+zaRn;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA502606A337
-	for <linux-xfs@vger.kernel.org>; Wed, 18 Nov 2026 08:58:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05548606A895;
+	Wed, 18 Nov 2026 08:58:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=m8U/R7Ee
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E47651F000CA;
-	Wed, 18 Nov 2026 08:58:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ZAK+zaRn
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 198971F000C6;
+	Wed, 18 Nov 2026 08:58:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794992333;
-	bh=XtAiizFNPZX1yW14JcAmupOVKAb7p+j5iTw0z219uvA=;
+	s=k20260515; t=1794992338;
+	bh=4u+NNLWEM85m+eLVVZXfFRxdPZ/ybHRbZTDzL1gpdEo=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=m8U/R7EedcS3MjyaCPkSog4u1G/hFXNEOQaYwhEIDanLElpQ8fi7juF2fBTuUbMOL
-	 G2j8urGiVpn4kqTsYyqAWebc06e+wDkfzyJgyxBPJqsN1abY9t0kfXB20mio4EV10Y
-	 omg6rkvLnU/HBLEcXcz6WrNtMJL3BBJqt+ik3Rz4PaXDKQK2Xkswzrv5EoIcWmkskC
-	 4aFr0IcUm9T6TGorApN+p7I750NLNmVjuTR0ZcReWqUIJXqgMFcnFmYCvSEHxj0Y6j
-	 LOljzKi08wFjlPcMLtv39cTVgUWWi1GEaSNd5Tor/My5tRu6I4BDAytYK9nIYm6A5t
-	 Bh7haFCw48ExQ==
+	b=ZAK+zaRnpzmNA0pgLL5AWiYm/LDvsIeHJ5qdCjmaygU1jHUaM6aCJ7lCR/R6+Y0yx
+	 XIIHZM3XBya1bq0dpPyTnOU8ipVUFDWIN0ShqeBZR5gTxE4T55EJBLue9IExnDE3SU
+	 3sOB8T8YhaVE2pGgJ3ze8zqWpXNaEpPPfkB9yBc5VvdP12ux6BgzKeLNv8VIycBI6g
+	 xGYcBR+xJLaiI8G94MmVdoAswuXDj5gZjnkYaLSniKjCFvYIHXxRllZ/tdR0ZkvPLV
+	 19usqzOe7O+q859IIY3VxdqsDuF1NVb/vbMOmRzed1YZfKLdSK9ZDdtpcTpGboLPos
+	 YqSX/ylWql21w==
 From: Carlos Maiolino <cem@kernel.org>
-To: cem@kernel.org
-Cc: linux-xfs@vger.kernel.org, hch@lst.de
-In-Reply-To: <20261109102507.262283-1-cem@kernel.org>
-References: <20261109102507.262283-1-cem@kernel.org>
-Subject: Re: [PATCH] xfs: remove redundant extra assert from
- xfs_zone_gc_query
-Message-Id: <179499233263.5574.4971950907568766789.b4-ty@kernel.org>
-Date: Wed, 18 Nov 2026 09:58:52 +0100
+To: Yiqing Wu <wuyiqing@cmss.chinamobile.com>
+Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <20261116014802.16078-1-wuyiqing@cmss.chinamobile.com>
+References: <20261116014802.16078-1-wuyiqing@cmss.chinamobile.com>
+Subject: Re: [PATCH] xfs: remove unused variable in
+ xchk_stats_estimate_bufsize()
+Message-Id: <179499233780.5574.6310002190973802227.b4-ty@kernel.org>
+Date: Wed, 18 Nov 2026 09:58:57 +0100
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -62,21 +62,20 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.3
 
-On Mon, 09 Nov 2026 11:25:01 +0100, cem@kernel.org wrote:
-> We initially assert that iter->next_startblock is lower or equal
-> than the total blocks in the rtg.  If we are in the later case
-> (next_startblock being equal to blocks in rtg) the conditional
-> right after the first assert, will jump out of the function.
-> After the conditional, the only remaining case is next_startblock
-> being lower than the rtg block count.  So the second assert seems
-> redundant to me.
+On Mon, 16 Nov 2026 09:48:02 +0800, Yiqing Wu wrote:
+> The css variable in xchk_stats_estimate_bufsize() is initialized to
+> point to the start of the cs_stats array and incremented on every
+> iteration of the scan loop, but it is never dereferenced.  GCC flags
+> this as a dead assignment when building with W=1:
+> 
+>   fs/xfs/scrub/stats.c:146:34: warning: variable css set but not used [-Wunused-but-set-variable=]
 > 
 > [...]
 
 Applied to for-next, thanks!
 
-[1/1] xfs: remove redundant extra assert from xfs_zone_gc_query
-      commit: e5d3bcc6897a30d4a47e0332bc86a7c2bd44a6c8
+[1/1] xfs: remove unused variable in xchk_stats_estimate_bufsize()
+      commit: 56b3c41b05ae2fc342ac874757d65482322eb360
 
 Best regards,
 -- 
