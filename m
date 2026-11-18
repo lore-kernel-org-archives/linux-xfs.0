@@ -1,83 +1,60 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794994563;
-	b=uige0oKgeJWHNoG03Q1AnC9RbaARJdL19qZ9Cg6wcaiovz6lJg0OI4jSfLdshI6pv/KA
-	 jNTbX25cpcj4qJwBTfPw+8JDoufK3Fvp/jbnvx0D+tUohfBDDtOjT6dOISs3ecs2GGbYo
-	 G5AThHr8o3ab/U7fSBbVlYmKRXC77kzPLvdQgTB7LxWQH9yN/WhNIVZugbODndFujLfNz
-	 mBMbC3/TqZPWxIx7G3SPse7KNk8zpjbUjizLLu+bDk9ihboeT//pRIrBRvxjDfgQgjgpS
-	 zYvse4vQKSHZ1TPSXiDV5BeuXCMzxHxJKoPJumVuTsxW5B82CRCALk/SKsDf13HgYPA==
+	t=1795001505;
+	b=g8a0BaTY+6Qq0YkNrX5JpqRF2Sk9ZSNAkCMidhEzfos6XW/++aNkT7hY+gshCTvlsy4w
+	 oAx6BC3dk2+yAXIY4/qT84dn1sUCG3vNJyBoyqWhM+kWgC9rKR34IHkYJnvqvn3R+GqhE
+	 zf1Kh6q2fLKo+KftE+Q5Jf+9ORLme2/lDq6GvsgKoVBwXCv2LT6eLeNeP1Zq5ArVtgKmx
+	 AXyq/Cohi5rYUo9DoSKtHvYNaZTqF5TlrZPNbFdUTHJ9L9M6bqd7gJRHmil3pA7Ppwi0r
+	 oh8jAez7hBEAPtPcdKrG/4rWjutvMXRjLR/4MqUdElEhi2soiQkMJP6c/GwzGsP6Kjg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794994563;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795001505;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=oEtrs9YN++TIvppEtfu/diqt2HKppGf1oq8L8HaJ3VE=;
-	b=JHHT6GeaZBO6zG1NBYKWec1cXinR97AX7khOViQRUydYGKs8oRGE8KnVjaK8LhOUL+ZW
-	 rYalF4yIvB1/GcW3Gh6XFeHnIQQU1RrVXzJKOiPSF/tmESHYxAltdbu8PyNrFbZKEOwoW
-	 ieHmCdmJqFi16QijcxgD4pZ7esxPiMB3xrxcFcFAMWg8QhqrDXE/hVlLi7NE9PhfQa48N
-	 m0UHIkDkylbLWRYiv7HzD98MIKFWkl4feBVjd+nwcBXkE1hu2exRzTREtQqK1NE7gs8si
-	 zlGbHK7KLZ6EWISue9p52Vro7wvl3vAtremgw33zWnDqWGo+aPs65LeSnimlleR9NSw==
+	bh=ti2hkmNuDOWadhSGxF1m8Eafguzo4rmwnOEmvRTOKQg=;
+	b=XMjADcqG3qBa4L5Fnih0WEO+0q+EeQU014JuCMzSvkYRLHNqO+ezniVBnDqqC9FBJ4mU
+	 SPvCvwfGRMPs5I+8/vT+apKcDRD3JvZQZRQICqaUbuvr05HeOzSMvlnAext0hrluMA1DW
+	 HkKAQhyjB0pY3H9Y+k5THuhcx3nNO6H2fZSn7+EQCpXOu7aWi5juJ09BiWaLHxcFhF/S3
+	 eX5n5J+aGbLr8bJoSL7Mv7/CNuWOIX76P8mGIxGhzq2qkfiuayRKUYP2gFXT12A7emsDN
+	 UQHdm4O5ERuL7dWCs9koJ/+Pm7D+hjpQUPdqTP34pXmffqbkciU1rLTBl7gtPKn53lQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=nahPYjtB;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ODIO9pZm;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8235B606A31C;
-	Wed, 18 Nov 2026 09:36:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B7F7606A333;
+	Wed, 18 Nov 2026 11:31:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=nahPYjtB
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48F321F000C4;
-	Wed, 18 Nov 2026 09:35:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ODIO9pZm
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7E32C1F000C4;
+	Wed, 18 Nov 2026 11:31:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794994563;
-	bh=oEtrs9YN++TIvppEtfu/diqt2HKppGf1oq8L8HaJ3VE=;
+	s=k20260515; t=1795001504;
+	bh=ti2hkmNuDOWadhSGxF1m8Eafguzo4rmwnOEmvRTOKQg=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=nahPYjtBD1Iaas2FHy09zfnsVzzPWV2xfnaZM4o2uDixquvqwuHvQ+/o6Lx3RmcT7
-	 A5MLlaaWHi5zeDFe6Pr6Zu/1tZf365UdM7zLPXtacuahcYasmLgD5icYRCqSxPoOAQ
-	 apSPaDPnXbhT/Rjv6/c4yyGGAb3a6EIjZs+gpHbG4KtSnFEboWn87xat6LJyla++Jd
-	 yjbLXh2HQKcIglQe/QgOIjdxO0MlY4PzADbD2mLPuxiLGazQOP1N6OqiCY11zDd0cS
-	 +PtK7soRS49YQWtEbo0XhLlRb2q60FYLSeh5q1DNqhKbRWl7YpSpO779dHK9eKPFp5
-	 s/bgKJ6Xw8nfA==
-Date: Wed, 18 Nov 2026 10:35:40 +0100
-From: Christian Brauner <brauner@kernel.org>
-To: Cai Xinchen <caixinchen1@huawei.com>
-Cc: Al Viro <viro@zeniv.linux.org.uk>, mic@digikod.net, gnoack@google.com, 
-	paul@paul-moore.com, jack@suse.cz, amir73il@gmail.com, andrii@kernel.org, 
-	apparmor@lists.ubuntu.com, ast@kernel.org, axboe@kernel.dk, bpf@vger.kernel.org, 
-	casey@schaufler-ca.com, cel@kernel.org, cem@kernel.org, chenxiaosong@chenxiaosong.com, 
-	code@tyhicks.com, corbet@lwn.net, Dai.Ngo@oracle.com, dakr@kernel.org, 
-	daniel@iogearbox.net, dhowells@redhat.com, dlemoal@kernel.org, 
-	dmitry.kasatkin@gmail.com, driver-core@lists.linux.dev, dsterba@suse.com, 
-	ecryptfs@vger.kernel.org, eddyz87@gmail.com, emil@etsalapatis.com, 
-	eric.snowberg@oracle.com, exfat@lists.linux.dev, georgia.garcia@canonical.com, 
-	gregkh@linuxfoundation.org, hch@lst.de, hirofumi@mail.parknet.co.jp, hyc.lee@gmail.com, 
-	ihor.solodrai@linux.dev, jlayton@kernel.org, jmorris@namei.org, johan@kernel.org, 
-	john.fastabend@gmail.com, john.johansen@canonical.com, jolsa@kernel.org, 
-	kpsingh@kernel.org, linkinjeon@kernel.org, linux-api@vger.kernel.org, 
-	linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-cifs@vger.kernel.org, 
-	linux-doc@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-integrity@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org, linux-nfs@vger.kernel.org, 
-	linux-security-module@vger.kernel.org, linux-trace-kernel@vger.kernel.org, 
-	linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, liubaolin12138@163.com, 
-	martin.lau@linux.dev, mason@kernel.org, mathieu.desnoyers@efficios.com, 
-	matt@bobrowski.net, memxor@gmail.com, mhiramat@kernel.org, miklos@szeredi.hu, 
-	neil@brown.name, netfs@lists.linux.dev, ntfs@lists.linux.dev, okorniev@redhat.com, 
-	omosnacek@gmail.com, penguin-kernel@i-love.sakura.ne.jp, rafael@kernel.org, 
-	rdunlap@infradead.org, roberto.sassu@huawei.com, rostedt@goodmis.org, 
-	selinux@vger.kernel.org, senozhatsky@chromium.org, serge@hallyn.com, 
-	sj1557.seo@samsung.com, skhan@linuxfoundation.org, song@kernel.org, 
-	stephen.smalley.work@gmail.com, takedakn@nttdata.co.jp, tom@talpey.com, yonghong.song@linux.dev, 
-	yuezhang.mo@sony.com, zohar@linux.ibm.com, utilityemal77@gmail.com, 
-	lujialin4@huawei.com
-Subject: Re: [PATCH -next -v4 02/17] LSM: pass struct path to the
- inode_setsecctx hook
-Message-ID: <20261118-nordlicht-badeort-daumen-813a1e9fd0b3@brauner>
-References: <20261117150542.1169451-1-caixinchen1@huawei.com>
- <20261117150542.1169451-3-caixinchen1@huawei.com>
- <20261117184342.GR989762@ZenIV>
- <20261118001641.GA1669148@ZenIV>
- <bdc22808-9f22-46f7-b42d-e6bd8e1eeaca@huawei.com>
+	b=ODIO9pZmjYH1kZMTAUIhrLtNRhxyJLwHyVTBNB7l7Qu+neQPbJ9dCl0eBk9KYHa3N
+	 /Vieo866GiWsxthi2PUQXCbWvh7BRQTeI/1R4E+Q2venKkuYsOb1ezgQRhhlce+GFF
+	 QWo0r0zYe9OYi9XGyE5y7akfnlOg1+7ZUsUJv5E2WJKnR3gVsqqXd3KuIV3yez32wx
+	 R7c+/ueTUFxehQp+SxdgmsOXILl326ocUsp2E9Z9CbZ1UP0Vddrb6smC4h6oT+hWKJ
+	 zFv2q/4p84woUI1S5mY8V6fv2FtULFhqAgeueAomZXon5W5llDhHWjxKDEwOOFkehb
+	 lrg5Aisxxszqg==
+Date: Wed, 18 Nov 2026 12:31:35 +0100
+From: Carlos Maiolino <cem@kernel.org>
+To: Jan Kara <jack@suse.cz>
+Cc: Christian Brauner <brauner@kernel.org>, linux-fsdevel@vger.kernel.org, 
+	Andreas Gruenbacher <agruenba@redhat.com>, gfs2@lists.linux.dev, Mike Marshall <hubcap@omnibond.com>, 
+	Martin Brandenburg <martin@omnibond.com>, devel@lists.orangefs.org, Dave Kleikamp <shaggy@kernel.org>, 
+	jfs-discussion@lists.sourceforge.net, linux-xfs@vger.kernel.org, David Howells <dhowells@redhat.com>, 
+	Marc Dionne <marc.dionne@auristor.com>, linux-afs@lists.infradead.org, 
+	Miklos Szeredi <miklos@szeredi.hu>, fuse-devel@lists.linux.dev, linux-block@vger.kernel.org, 
+	Chuck Lever <cel@kernel.org>, Jeff Layton <jlayton@kernel.org>, linux-nfs@vger.kernel.org, 
+	Eric Biggers <ebiggers@kernel.org>, Jaegeuk Kim <jaegeuk@kernel.org>, linux-fscrypt@vger.kernel.org
+Subject: Re: [PATCH 02/13] xfs: Drop pointless I_DIRTY_PAGES check in
+ xfs_can_free_cowblocks()
+Message-ID: <av2MieP4-v3axqLA@cronus.toxiclabs.cc>
+References: <20261113083336.15152-1-jack@suse.cz>
+ <20261113084700.739002-15-jack@suse.cz>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -87,24 +64,41 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <bdc22808-9f22-46f7-b42d-e6bd8e1eeaca@huawei.com>
+In-Reply-To: <20261113084700.739002-15-jack@suse.cz>
 
-On Wed, Nov 18, 2026 at 04:59:29PM +0800, Cai Xinchen wrote:
-> There are two places that violate (1), both introduced by this series of
-> patches in ksmbd:
->
-> smb2_parent_compressed() and smb_inherit_dacl() pair the directory entry
-> returned by dget_parent()
->
-> with path->mnt, and problems arise once that directory entry becomes the
-> root of its mount point.
+On Fri, Nov 13, 2026 at 09:47:02AM +0100, Jan Kara wrote:
+> PAGECACHE_TAG_DIRTY is the authoritative source of information about any
+> folio being dirty in the mapping. I_DIRTY_PAGES is just an approximation
+> used by writeback code that can get stale under certain situations. So
+> just rely on the authoritative check.
+> 
+> Signed-off-by: Jan Kara <jack@suse.cz>
+> ---
+>  fs/xfs/xfs_reflink.h | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
+> index 683c1841e640..1310cc9fe829 100644
+> --- a/fs/xfs/xfs_reflink.h
+> +++ b/fs/xfs/xfs_reflink.h
+> @@ -17,8 +17,7 @@ xfs_can_free_cowblocks(struct xfs_inode *ip)
+>  {
+>  	struct inode *inode = VFS_I(ip);
+>  
+> -	if ((inode_state_read_once(inode) & I_DIRTY_PAGES) ||
+> -	    mapping_tagged(inode->i_mapping, PAGECACHE_TAG_DIRTY) ||
+> +	if (mapping_tagged(inode->i_mapping, PAGECACHE_TAG_DIRTY) ||
+>  	    mapping_tagged(inode->i_mapping, PAGECACHE_TAG_WRITEBACK) ||
+>  	    atomic_read(&inode->i_dio_count))
+>  		return false;
+> -- 
+> 2.53.0
 
-No, (1) holds there. dget_parent() never leaves the superblock so the
-parent has the same ->d_sb as path->dentry.
+For this patch, feel free to add:
 
-What happens at the root of a mount is that the parent isn't below
-path->mnt->mnt_root anymore. That's a different property and struct path
-doesn't guarantee that (open_by_handle_at(), nfsd with
-no_subtree_check). So there's nothing to fix for (1) in those two.
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+
+> 
+> 
