@@ -1,58 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=113.46.200.224
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794993434;
-	b=SZjtEk4+03rUjxb6jpY8KjvCwW8Iu9cWIZJGAu0BCSaRC33vxYDYr385MdAePDR3Zerv
-	 Y1b5/3TBUCenZ9ipuVeHPvFdMSyiHXu54geZHeojvBy305gS2w/NQWV2HVOldhBko47S9
-	 p+T09XKMxkpGq0ghzD7NxwMKDtjYRh8HNs5Ng8SCYFiqVwRq/uyShKvZDhdnzKCmOSV1z
-	 4LEiWkgnP6h1o7XO19bvcGiG8Tj0/SV7kms6nk5801SGtxCefPloGDCDnocHqmzzrL92m
-	 GzpKa7aA2hCXsm5dMSAn8yucmFz19jEtHcY7vZUyouEoZdRbPIy7KJfr5G/LEkvMR7A==
+	t=1794993734;
+	b=GvaxGtRm9IWM5xtSCfQK+DQy+XBhEv16a0mIVtqSdPM5XuGxUS/f/zNJFOWVBQbO4y5I
+	 RUizCqI8RVdjgoO9rROn23nHRZ8Ol4AHuYiRxdjtELoG+KfQv0EG6XIZ+yUSLnm3Sfut3
+	 /Qg/F699/2tVcCipOqC9bRKBqJaf32+zH5sEfhu5qmHekW4RkPwlYlINJwrVQCK5Q7aD6
+	 CQPANTbJT4clopU4SuyaRd1Gk0w6X0fdsY7nVE7u6/+APXBtj8Fxql5P1CK7P9dE17tb7
+	 WULlF3lik1+/HMzKf+PKNQcPZFqDB81WtN+QLCsBAp6sqOvYuh/F8MP0lv+ZOrORtBg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794993434;
-	h=DMARC-Filter:dkim-signature:Received:Received:Received:Message-ID:
-	 Date:MIME-Version:User-Agent:Subject:To:CC:References:
-	 Content-Language:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding:X-Originating-IP:X-ClientProxiedBy;
-	bh=xsIsDZiCZyB7+lKhnSB47LX6hbKq7VMg+O30s3v8xU0=;
-	b=5gGwX4qeeuNA0xE4XiLnTNe6+OuoMxrBar7wo0rKhrIQrXUKaBJopV7ClykQyawWgYIN
-	 QTpUaGXNPCc3yb7/JoDRa1MsRVwohSgje4p8jcGXiTjR4zcK7NKTa57UzhYs2PXVaBMFC
-	 ICDAAG50uvl95Mr1Mu/pcFX/Dg+Nop555aSZx7VK0TbOnx9uJpJrgRTUI5cQqt3k1xt+M
-	 jgE+p96MvtX8QNUXtaR3INblbJEAyrWl8sfJDkI7ZzIBzp/cAZG/1ciAuLzD5XR9it8nw
-	 wXMiFbKPZ0jWoBX+xYXyGGj1CosrE1v2c58A/yJEmldtupyd90BNDO+hmqBsXPBBPyw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794993734;
+	h=Received:DKIM-Signature:Date:From:To:Subject:Message-ID:References:
+	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=+eRM7RCxKkjUM1SLXVJaR+ztORC3O6DdbU7dKPK3eLA=;
+	b=1IlG0X2j7KVia0/Lknl4thFlOOQNkqW1o6ZzHFUy4U07OflP15Eh36cimU7GkbnbeUNl
+	 lKiRH+R/6bDg6JOcMPmoG8awAztJsxiWkKub32OdNOqah4vGgdPuJg71QAMgDbe4Iw7uv
+	 /LZKaDJmOxZOF2K5OzM/1jD2M3aNzz55Qaft6chtotqqrvnm5Qg5iT+23dzxRnJ5prXKd
+	 SFLmvZVk0oVhUEUUhvqo3Vr3/knplJXBJ5+urVhYT/AnNNIVVWADT34FRZGoH31EwNoNN
+	 waDJgh6InHrCUgydZE76xyOUt7l9dKqK9tzWmeGt/ul0kuwcOx5iKee/bgrnkF3gWSg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=huawei.com;
-	spf=pass smtp.mailfrom=huawei.com;
-	dkim=pass header.d=huawei.com header.i=@huawei.com header.a=rsa-sha256 header.s=dkim header.b=PV3E+oEf;
-	arc=none smtp.remote-ip=113.46.200.224
-Received: from canpmsgout09.his.huawei.com (canpmsgout09.his.huawei.com [113.46.200.224])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="OSe3oD3/";
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0925606A31C;
-	Wed, 18 Nov 2026 09:17:13 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B0925606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 999D0606A320;
+	Wed, 18 Nov 2026 09:22:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.a=rsa-sha256 header.s=dkim header.b=PV3E+oEf
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=xsIsDZiCZyB7+lKhnSB47LX6hbKq7VMg+O30s3v8xU0=;
-	b=PV3E+oEfe6GWTlN7IzcOZNtMuGokpGaMaE5HT+w5Vk98jOWnb53YzhdAAkTed93AvGp6D+ngZ
-	ftGk2P047j6/rbz8Ke0Kewk86yZLKYBKuM/FH/uksdfAvh6qdTvxfoyU41EsmNujsw5oLc+20hb
-	oGEWnwe8RZuneZEt42a2+8c=
-Received: from mail.maildlp.com (unknown [172.19.162.92])
-	by canpmsgout09.his.huawei.com (SkyGuard) with ESMTPS id 4jTww23GW7z1cySm;
-	Wed, 18 Nov 2026 17:16:50 +0800 (CST)
-Received: from whupemk100010.china.huawei.com (unknown [7.152.184.41])
-	by mail.maildlp.com (Postfix) with ESMTPS id 41D7540586;
-	Wed, 18 Nov 2026 17:17:10 +0800 (CST)
-Received: from [10.67.110.140] (10.67.110.140) by
- whupemk100010.china.huawei.com (7.152.184.41) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.45; Wed, 18 Nov 2026 17:17:02 +0800
-Message-ID: <61823b38-032d-4e4c-bcbb-82fe83c34ade@huawei.com>
-Date: Wed, 18 Nov 2026 17:17:01 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OSe3oD3/
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5FD8D1F000C4;
+	Wed, 18 Nov 2026 09:22:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794993734;
+	bh=+eRM7RCxKkjUM1SLXVJaR+ztORC3O6DdbU7dKPK3eLA=;
+	h=Date:From:To:Subject:References:In-Reply-To;
+	b=OSe3oD3/Du+96FBmnQRQAzAqUg/m60SZdQA2eyCHhhPyP5Hbv/o94vUn16fWHYziR
+	 6q1dzjS5Qd/8fAOPm5ZsHUxi/qENZiYcakksIu+yyy4of8iwbh97G+qLJbEV1hPn5S
+	 lFA8Cb+CA6wdOYuHT4tE3nCKxfKoDGcnntmNY1fhiymEjVM8awnYvVbmBmK2CcPI3Y
+	 hwe7Jq2b3Mhe7VjoxExeMtBp1+M85wkX6nKqpuL3D6A+7Ba93bPJ/xgUrUuARnb65U
+	 ZBHAYJU/axV25NzfUoejoDMdR08I+02GjY8JmkGmN2Tqbou0pkEJ0Ky2uAAfdRlUDM
+	 V7Q2FE7Tp6VdQ==
+Date: Wed, 18 Nov 2026 10:22:08 +0100
+From: Carlos Maiolino <cem@kernel.org>
+To: tytso@mit.edu, david@fromorbit.com, jack@suse.cz, djwong@kernel.org, 
+	josef@toxicpanda.com, hch@lst.de, linux-xfs@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, tz2294@columbia.edu, 
+	brauner@kernel.org, Chris Mason <mason@kernel.org>
+Subject: Re: [PATCH v8 00/15] reflink and atomic write bugs
+Message-ID: <av1t_kTHq6CMHcCF@nidhogg.toxiclabs.cc>
+References: <20261112010229.51029-1-mason@kernel.org>
+ <179499232752.5574.398287961322700808.b4-ty@kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -62,63 +58,64 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH -next -v4 01/17] fs: pass struct path to notify_change()
-To: Al Viro <viro@zeniv.linux.org.uk>
-CC: <mic@digikod.net>, <gnoack@google.com>, <paul@paul-moore.com>,
-	<brauner@kernel.org>, <jack@suse.cz>, <amir73il@gmail.com>,
-	<andrii@kernel.org>, <apparmor@lists.ubuntu.com>, <ast@kernel.org>,
-	<axboe@kernel.dk>, <bpf@vger.kernel.org>, <casey@schaufler-ca.com>,
-	<cel@kernel.org>, <cem@kernel.org>, <chenxiaosong@chenxiaosong.com>,
-	<code@tyhicks.com>, <corbet@lwn.net>, <Dai.Ngo@oracle.com>,
-	<dakr@kernel.org>, <daniel@iogearbox.net>, <dhowells@redhat.com>,
-	<dlemoal@kernel.org>, <dmitry.kasatkin@gmail.com>,
-	<driver-core@lists.linux.dev>, <dsterba@suse.com>,
-	<ecryptfs@vger.kernel.org>, <eddyz87@gmail.com>, <emil@etsalapatis.com>,
-	<eric.snowberg@oracle.com>, <exfat@lists.linux.dev>,
-	<georgia.garcia@canonical.com>, <gregkh@linuxfoundation.org>, <hch@lst.de>,
-	<hirofumi@mail.parknet.co.jp>, <hyc.lee@gmail.com>,
-	<ihor.solodrai@linux.dev>, <jlayton@kernel.org>, <jmorris@namei.org>,
-	<johan@kernel.org>, <john.fastabend@gmail.com>,
-	<john.johansen@canonical.com>, <jolsa@kernel.org>, <kpsingh@kernel.org>,
-	<linkinjeon@kernel.org>, <linux-api@vger.kernel.org>,
-	<linux-block@vger.kernel.org>, <linux-btrfs@vger.kernel.org>,
-	<linux-cifs@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-	<linux-fsdevel@vger.kernel.org>, <linux-integrity@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-kselftest@vger.kernel.org>,
-	<linux-nfs@vger.kernel.org>, <linux-security-module@vger.kernel.org>,
-	<linux-trace-kernel@vger.kernel.org>, <linux-unionfs@vger.kernel.org>,
-	<linux-xfs@vger.kernel.org>, <liubaolin12138@163.com>,
-	<martin.lau@linux.dev>, <mason@kernel.org>, <mathieu.desnoyers@efficios.com>,
-	<matt@bobrowski.net>, <memxor@gmail.com>, <mhiramat@kernel.org>,
-	<miklos@szeredi.hu>, <neil@brown.name>, <netfs@lists.linux.dev>,
-	<ntfs@lists.linux.dev>, <okorniev@redhat.com>, <omosnacek@gmail.com>,
-	<penguin-kernel@i-love.sakura.ne.jp>, <rafael@kernel.org>,
-	<rdunlap@infradead.org>, <roberto.sassu@huawei.com>, <rostedt@goodmis.org>,
-	<selinux@vger.kernel.org>, <senozhatsky@chromium.org>, <serge@hallyn.com>,
-	<sj1557.seo@samsung.com>, <skhan@linuxfoundation.org>, <song@kernel.org>,
-	<stephen.smalley.work@gmail.com>, <takedakn@nttdata.co.jp>, <tom@talpey.com>,
-	<yonghong.song@linux.dev>, <yuezhang.mo@sony.com>, <zohar@linux.ibm.com>,
-	<utilityemal77@gmail.com>, <lujialin4@huawei.com>
-References: <20261117150542.1169451-1-caixinchen1@huawei.com>
- <20261117150542.1169451-2-caixinchen1@huawei.com>
- <20261117183059.GP989762@ZenIV> <20261117183440.GQ989762@ZenIV>
-Content-Language: en-US
-From: Cai Xinchen <caixinchen1@huawei.com>
-In-Reply-To: <20261117183440.GQ989762@ZenIV>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: kwepems500001.china.huawei.com (7.221.188.70) To
- whupemk100010.china.huawei.com (7.152.184.41)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <179499232752.5574.398287961322700808.b4-ty@kernel.org>
 
-Yes.  ovl_do_notify_change() passes
-ovl_upper_mnt(ofs) together with the real upperdentry, so the sb matches,
-and the idmap handed down is ovl_upper_mnt_idmap(ofs), i.e. taken from
-that very mount.  It runs under with_ovl_creds(), like the other ovl_do_*
-forwards, so an LSM sees a genuine upper-layer path instead of a merged
-dentry whose mount we cannot name - which is the point of converting the
-metadata helpers.
+On Wed, Nov 18, 2026 at 09:58:47AM +0100, Carlos Maiolino wrote:
+> On Wed, 11 Nov 2026 20:02:29 -0500, Chris Mason wrote:
+> > [ the send command got interrupted apologies for the two dups ]
+> > 
+> > This series did a few rounds privately, but looks ready for the list
+> > now.  Carlos has accepted patches 1-4, but I've kept them here so the
+> > whole series can still be tested.
+> > 
+> > Except for Christoph's patch, these were all found and fixed
+> > by an LLM.
+> > 
+> > [...]
 
-On 11/18/2026 2:34 AM, Al Viro wrote:
-> Incidentally, will the mount reference you are supplying in case of overlayfs
-> upper layer be any good for LSM users?
+FWIW seems like B4 didn't realize not all patches were pulled.
+Specifically patches 5 and 6 were left out.
+
+Just explicitly mentioning it so somebody do not get confused.
+
+> 
+> Applied to for-next, thanks!
+> 
+> [01/15] xfs: don't skip the flush before shifting extents
+>         (no commit info)
+> [02/15] xfs: flush the shifted range before changing the file
+>         (no commit info)
+> [03/15] xfs: don't change the block map under a dirty folio
+>         (no commit info)
+> [04/15] iomap: don't punch delalloc under a dirty EOF block
+>         (no commit info)
+> [05/15] fs: validate atomic writes after O_APPEND and limits
+>         (no commit info)
+> [06/15] xfs: recheck direct write alignment after write checks
+>         (no commit info)
+> [07/15] xfs: test for reflink after the dio write checks
+>         commit: 3b6942b132033cbc3f6566f698709d9038daf7b2
+> [08/15] xfs: refuse writes to files racing with realtime inode flag changes
+>         commit: 7b2438af4d91dcb8fe3de99e55beb06f3c168309
+> [09/15] xfs: test for always COW after the dio write checks
+>         commit: bdc3ee45df55d8aa478d8a5d6a7e9b1186f511ba
+> [10/15] xfs: refuse fallocate racing with realtime flag changes
+>         commit: f01f70e00770c6d21b468f80b488e6407a6947dc
+> [11/15] xfs: restart faults racing with realtime flag changes
+>         commit: 03cbbd80a3e7070e8ab63996a94a7815722c2578
+> [12/15] xfs: test for an extsize hint again under the ILOCK
+>         (no commit info)
+> [13/15] xfs: resample the extsize hint after taking the ILOCK
+>         (no commit info)
+> [14/15] xfs: resample the COW extsize hint after cycling ILOCK
+>         (no commit info)
+> [15/15] xfs: don't enable DAX on zoned inodes
+>         commit: 44e555acd77a839110f3b1e02a75f9165baaaeec
+> 
+> Best regards,
+> -- 
+> Carlos Maiolino <cem@kernel.org>
+> 
+> 
