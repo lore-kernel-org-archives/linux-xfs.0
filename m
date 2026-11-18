@@ -1,54 +1,55 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794992341;
-	b=0IS/pT5tYN5Ts6QKsV+YPr7YpAWcnW3GRACUGjIIJ/Tc+dEeIqR/68t7/FKxEbZXqcZ0
-	 jo6gsCXFLJ6LroEWrUpiS0vM/VhU5kfMKL4XJH/E1ilNwk0zpryUaRVlIxJiDs/GYVHYy
-	 UUIhE0i1C9J6MsoLOwZBqY3agfc4ijeN/ezyInvB/sAy/DrQZ8ZuQ3he/CANGT2+QxqZ9
-	 X2gZ17BrkTBBlsZBdozr8IyDbcs1cqrccrQi/IW1/gv646wkNImWcaL4m6M0/CkUqe7cj
-	 G3Jk6Ofpxj+Ti7jLD37TfpCzdYiWis3/CxtIeyAvDHNy7ylmEPfjuewSC66SF8WAgpQ==
+	t=1794992337;
+	b=2je523e5wNhKF79bYkbu38PFBLfkDz0o7iZVDKFUYpx5DTbvOhWdIr/ulqkvdPaWB4kT
+	 g+CbfE5CiLR9GhMUrv+Cd5X3xmdnJPSbaCLNbEv3fhG6AFuEvnfwJFXvNf0eBqS9mWNwQ
+	 cggize6a745a2U0eFh+rtcZ0fjgzpwHGVhf1P7+x1mSVnfT/6oZQ6WUAWf8WZuNBiuA4Y
+	 8yhSe9ro2GVtnrFA8wJLq9V0H2AC6S8K+ySabAO4nZSzGRx3eArq74fGqK7K1F1YT+Nl5
+	 YH0s1wJrr0HUrNvUch9weUQAnt+ugWjeiojxYj2R1atv1DQsrB8exC/4ccZuUyC3tVA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794992341;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794992337;
 	h=Received:DKIM-Signature:From:To:Cc:In-Reply-To:References:Subject:
 	 Message-Id:Date:MIME-Version:Content-Type:Content-Transfer-Encoding:
 	 X-Mailer;
-	bh=zYYY60GcrqcBT5vMnZB8Nuqc2EsNShOf4EWlFfvFVsQ=;
-	b=i3pghIpnXS/chj6Y5xb/zwCKQ3u8bXiof87c8Ohq0JwGoHSLciT2+EiU7x4d9BRiQj00
-	 7h/gcX2NQK/kgt5FJ6D//Sn/oJGdWtqQ6kq34p6uIBNmxn6XvWnPTK72/HcRiVuoDyVcs
-	 w5/CT67O8E57s0ec68iAMfZGbsL++G7MMt2Y9j8SP2xCnS4dzTsw3yLbMl4g42DkpIQII
-	 TS1DS+1M6OB0PSTFGQ2RNoDEaV8SOFEqn3s7VN+9lzI83HsNU4tmLH/VTEZJR5MgynkzQ
-	 yZBibcNnt8gJOnQ9rU+SJpasu397atJB9n+u/rZouPt4y4R12vIh6d1rchdIclH4xmA==
+	bh=16q+QGNnClWPAhZ6ICQsB/lvmg8JavVivPJYpngnr6g=;
+	b=R4rSNG2A6V15IF4E1m/j+qGDYc9YQMm32Y+TokO8mNY+w0lcOf1n04u5TJ+qhceVt+F9
+	 sqBMyX/QpaZyrm9zVSYlJ2dgsT0QlkTpcAYEBLNXMnW2tuAgUi9NhkTPlYwdY3faZVQht
+	 4tqUidccxU1FVIsv5udQ5uJSArnPSfCKOqU2rtdabg5qWSHvLc7S7fAfZCnxCff9LWcB1
+	 1rjCNjwRxK5MDzLRZLvQE1J3Xdh0nXtUerTTO8Y5QyGnyVnw/o4BDfPK3JK2VS5VLEO0r
+	 5+aU0DebUC5UefUoi6oj7ThzNDty2Nql5JUvufC6607auMwbKQIWUXdQyTyagUTtE3Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=aarPjwLG;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Mh+LgBuW;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88A08606A890
-	for <linux-xfs@vger.kernel.org>; Wed, 18 Nov 2026 08:59:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDA6E606A31C;
+	Wed, 18 Nov 2026 08:58:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=aarPjwLG
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 98CCD1F000C4;
-	Wed, 18 Nov 2026 08:59:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Mh+LgBuW
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3D93B1F000D0;
+	Wed, 18 Nov 2026 08:58:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794992341;
-	bh=zYYY60GcrqcBT5vMnZB8Nuqc2EsNShOf4EWlFfvFVsQ=;
+	s=k20260515; t=1794992337;
+	bh=16q+QGNnClWPAhZ6ICQsB/lvmg8JavVivPJYpngnr6g=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=aarPjwLGSTsMsHO773iW7GAQ/1wKm5/9Vl1E0purivoEZ+H+Oz4i1yEVvLVSygLMy
-	 U1zuX78WqwIc8XRnrhV+MQwwCC8mNzxjiguffEIcGm9a3GcRjz9GwsGV7AeYA7cgIf
-	 Kco4wyUMlrmuHuHGK4SHIO2D+3FinaFe7EDzo4di4kfaArmg1vBepiLDuEFALfSnpG
-	 JO9ku9scZHEvfDYaBUlS3PCtkCSMiyMreG+SpDmok1EAHleFspCu7vhVqQDrtMPOsr
-	 fPW3BZn8RWO05A3xPgTb1GrIOJp02GP/nJ3n/gxBnDb6jE+mbHHLZcL9A7TfaEwZH0
-	 KCSPHfepf/kaA==
+	b=Mh+LgBuWklmCKLHWV9NomONKrZIuqLjpIBVQXa7Nu/QePRAUB7OQpLXqpMT1aP03P
+	 8XKTgBicN/TEpfplUsGbCUNBC1VDj4qslo0dqpt7aKVA83FVgy2I/zhBRdxTZ6E9TL
+	 k1Cb3IqDXKPbZEIQMp7c/wwCjyUFhAp1DYSmwF33W/ABw+RI2yK99uuRXhq17Iq1Ht
+	 ybaglpIRKm7gRrKnQ4awHlg0NK9vSPnH1LvkNhry7P/B66pl5q0XYp/ZSNXPFKVYC7
+	 VI4+f8o6+1Z9sNnKAEq+yRt+hCE6Pg2mdpjpSNzDinq38fvBN0U2wEoQlz6WfFhQw1
+	 hwtX8U2lhmZTQ==
 From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>
-Cc: xuhx@hust.edu.cn
-In-Reply-To: <20261114005925.103130-1-sandeen@redhat.com>
-References: <20261114005925.103130-1-sandeen@redhat.com>
-Subject: Re: [PATCH] xfs: properly order xfsstats proc/sysfs init and
- teardown
-Message-Id: <179499234032.5574.17794386237944477976.b4-ty@kernel.org>
-Date: Wed, 18 Nov 2026 09:59:00 +0100
+To: Hengyu Liang <hengyul@cs.unc.edu>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, Christoph Hellwig <hch@lst.de>, 
+ linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ stable@vger.kernel.org
+In-Reply-To: <20261112102018.3922571-1-hengyul@cs.unc.edu>
+References: <20261112102018.3922571-1-hengyul@cs.unc.edu>
+Subject: Re: [PATCH] xfs: fix f_bfree underflow in statfs()
+Message-Id: <179499233595.5574.11097163378563687104.b4-ty@kernel.org>
+Date: Wed, 18 Nov 2026 09:58:55 +0100
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -62,21 +63,22 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.3
 
-On Fri, 13 Nov 2026 18:59:24 -0600, Eric Sandeen wrote:
-> The xfs statistics are accessible both through procfs and through
-> sysctls, so they need to be fully set up before exposure via those
-> interfaces, and those interfaces both need to be torn down before
-> the underlying percpu structures are freed. Today we get that wrong
-> on both ends - we expose them through xfs_init_procfs before allocating
-> the percpu structures, and we free those percpu structures before
-> tearing down sysctls and procfs.
+On Thu, 12 Nov 2026 05:20:18 -0500, Hengyu Liang wrote:
+> Commit dd324cb79e54 ("xfs: refactor xfs_fs_statfs") made
+> xfs_statfs_data() limit f_bfree with max(0LL, ...) instead of
+> max_t(int64_t, 0, ...).
+> 
+> However, the value is an unsigned difference, so max() never picks 0.
+> As of now, when the free block counter is below the count of
+> unavailable blocks, statfs() reports f_bfree and f_bavail close to 2^64
+> instead of 0, and df prints negative sizes.
 > 
 > [...]
 
 Applied to for-next, thanks!
 
-[1/1] xfs: properly order xfsstats proc/sysfs init and teardown
-      commit: 765db499ad5837365b445b26b6fc81f30f134758
+[1/1] xfs: fix f_bfree underflow in statfs()
+      commit: f0b9e58eee233547e5d77e467ccee89d7a59dd63
 
 Best regards,
 -- 
