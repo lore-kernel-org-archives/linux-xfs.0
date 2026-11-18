@@ -1,58 +1,58 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=113.46.200.223
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=113.46.200.224
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794992392;
-	b=e0YMyep6eJwCCQBU9a/9LeYja2WYaSPNUnD2B3aTOeLnJoWfFvhL4DQLOMSwg1AEMvur
-	 lOb4SbTNRdtrBoj+PvMbM+3zEqqrdhTClguw7XofUYf4cQphQs2OJKf/3J8A7f97P4rAx
-	 pbneEDxV1vtDZB3pWa/9sC5aMpd+PYEoaTgNElPxhSo3CzBFCcGPEQ5e+ELp+ZIl0S/aW
-	 pbGkO9VP/gFYbOIHupiy2ShQsMlQWGXp+xdkaHsP8kUQlS/JsScP5Drypdxi51rdm+SjR
-	 BmwnXEtXyXyj/XV8hXYWP4a7g+/hgwULRg/UXWaDcqHj/xl4Rz2FGBan4+/CpvX4K7A==
+	t=1794993223;
+	b=ouYoLaIkyQk96IUstm+X2QO4RdLuUajOMYKIcdoOqKGtvLApMr7ODAq7Ai8w2TGJ15Au
+	 y3a5kicmhV55e5jvggxZCuKSZUox9WChYp3K/ZVd64UjSbpP/nrJ5ruxuXxy+8zAobcjj
+	 B87pudA7SJUkkeQMEooGhbKX0fKQd582rNWwFoE/9Vy09rJ8WjUesAf6QvRNn1wf1Ba9s
+	 q6DdW4kt1uc98L+x6pQVdhHEW3KM6LX6nOLj+ix6Oj7OcA9RjgV0Eeqqpu4J7urpVgmc3
+	 uJDoTkCZN+oBHRyh0Q17OlTf0a3Omo6RnOtfY/uRt/J8FWDP84gBQoAhub+PvX+nlDw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794992392;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794993223;
 	h=DMARC-Filter:dkim-signature:Received:Received:Received:Message-ID:
 	 Date:MIME-Version:User-Agent:Subject:To:CC:References:
 	 Content-Language:From:In-Reply-To:Content-Type:
 	 Content-Transfer-Encoding:X-Originating-IP:X-ClientProxiedBy;
-	bh=zDjwPIFBALJRu9G1JpFQxNCh37Ku2FGitfdnf5CWttU=;
-	b=XgtlHz/XhptJpgOSFRInWECSMvdZl2+AsM95Yj11y7A/b29Js3+A70h6tddO2mtfo8um
-	 R9zx/Jq1jk9rr1ypLrv0bQEMrNXP561sqk5wX/y75rrEmoImIzSyBp0T/wBsmXPqOBNCF
-	 zWqa9yIPAeofnsjmowFhgyxBrPmj8oDvYgbZ8SnIvataqnpPdw7sCvVQd3NJtMI42F5cE
-	 JPjKROiod3fvkkwgVA9CvDFq0Y6azPmrokS0JIYgMJL54uTbKg6hYFVOmrrbkOkObfVDP
-	 p5SRbMEz4e8sWZqkXufYtwyskJOATRENeejQgrNUfi3oaq4dk6tPjjNSMqSIj9lE8TA==
+	bh=gqPBU5vSzctPXUMsg32k86Yb/Qp3EYKKyTavFdf5sH8=;
+	b=cq8NLcIpxDrs6FZXJ9TmlxhEruIKvkgPI1uREp7kORsNKvIzr7w6MNgcrrT96NxzcYuO
+	 UdxiG0DqjmtyfxWX9acvL98DQxDQfV6MfYrunjlHx+rLiZ5Oq8tAV0Pxr9PyVzaD9fiuz
+	 7+iwMIHDotrBwpcQox45wAdZI+9yUyUjf8+kHf0tOJmfSb1I6llmNroVY8DoLLmGhL8w5
+	 XKXixs+alpq1dCuozqBfVN//awQAAf/IOCuWeMZQRDzwPuP5dMncRxpelRBZJIpr0KTZt
+	 yXZbkJYVUHkOyQHQMho/01zCDgA6hQZ7fcTeroPzT0xxZepZ8CSKhWAonW57cJLwLkQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=huawei.com;
 	spf=pass smtp.mailfrom=huawei.com;
-	dkim=pass header.d=huawei.com header.i=@huawei.com header.a=rsa-sha256 header.s=dkim header.b=YG0f5s+2;
-	arc=none smtp.remote-ip=113.46.200.223
-Received: from canpmsgout08.his.huawei.com (canpmsgout08.his.huawei.com [113.46.200.223])
+	dkim=pass header.d=huawei.com header.i=@huawei.com header.a=rsa-sha256 header.s=dkim header.b=u7vlY2Tx;
+	arc=none smtp.remote-ip=113.46.200.224
+Received: from canpmsgout09.his.huawei.com (canpmsgout09.his.huawei.com [113.46.200.224])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70493606A325;
-	Wed, 18 Nov 2026 08:59:50 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 70493606A325
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 615CE606A336;
+	Wed, 18 Nov 2026 09:13:42 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 615CE606A336
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=huawei.com header.i=@huawei.com header.a=rsa-sha256 header.s=dkim header.b=YG0f5s+2
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.a=rsa-sha256 header.s=dkim header.b=u7vlY2Tx
 dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
 	c=relaxed/relaxed; q=dns/txt;
 	h=From;
-	bh=zDjwPIFBALJRu9G1JpFQxNCh37Ku2FGitfdnf5CWttU=;
-	b=YG0f5s+2kvHrKlKCN7CB4HY4p0LT+CaaaGw+BSvo7+/ssB/SQ9sM0FXb1MTh9BFkL9Mv7Wn3S
-	BNOqmdVJd6x1gk7TjCfNf3D3ZpPYsdFv+Yf8GC5xj0argsiNrvpyQ++8NgtWzUN+FazgOOGwEZ0
-	m7pnB1IrMWzbaj4bmorQi1I=
-Received: from mail.maildlp.com (unknown [172.19.163.163])
-	by canpmsgout08.his.huawei.com (SkyGuard) with ESMTPS id 4jTwWs2RMwzmV6N;
-	Wed, 18 Nov 2026 16:59:21 +0800 (CST)
+	bh=gqPBU5vSzctPXUMsg32k86Yb/Qp3EYKKyTavFdf5sH8=;
+	b=u7vlY2TxckHQP+tYQthSmXBs8/AgddjDNh8bkjwDxaHhPAcGONyr849lvDagg0uq2tPODQr+O
+	RNkZ/GSkSnHrw23pVJBgD4eBpcXClBJwejVje/VjYL1bZHv0QSts4KMpbezyGFZ04qUx8679+NR
+	1cZfatNyiz6HsIFs9LF+vZQ=
+Received: from mail.maildlp.com (unknown [172.19.163.127])
+	by canpmsgout09.his.huawei.com (SkyGuard) with ESMTPS id 4jTwr04b2Pz1cyPH;
+	Wed, 18 Nov 2026 17:13:20 +0800 (CST)
 Received: from whupemk100010.china.huawei.com (unknown [7.152.184.41])
-	by mail.maildlp.com (Postfix) with ESMTPS id B45424048B;
-	Wed, 18 Nov 2026 16:59:40 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id 6D73B40561;
+	Wed, 18 Nov 2026 17:13:40 +0800 (CST)
 Received: from [10.67.110.140] (10.67.110.140) by
  whupemk100010.china.huawei.com (7.152.184.41) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.45; Wed, 18 Nov 2026 16:59:31 +0800
-Message-ID: <bdc22808-9f22-46f7-b42d-e6bd8e1eeaca@huawei.com>
-Date: Wed, 18 Nov 2026 16:59:29 +0800
+ 15.2.2562.45; Wed, 18 Nov 2026 17:13:33 +0800
+Message-ID: <32b8d9c9-27d2-4da9-8618-ccfc44dee7a3@huawei.com>
+Date: Wed, 18 Nov 2026 17:13:31 +0800
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -63,8 +63,7 @@ List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH -next -v4 02/17] LSM: pass struct path to the
- inode_setsecctx hook
+Subject: Re: [PATCH -next -v4 01/17] fs: pass struct path to notify_change()
 To: Al Viro <viro@zeniv.linux.org.uk>
 CC: <mic@digikod.net>, <gnoack@google.com>, <paul@paul-moore.com>,
 	<brauner@kernel.org>, <jack@suse.cz>, <amir73il@gmail.com>,
@@ -102,92 +101,42 @@ CC: <mic@digikod.net>, <gnoack@google.com>, <paul@paul-moore.com>,
 	<yonghong.song@linux.dev>, <yuezhang.mo@sony.com>, <zohar@linux.ibm.com>,
 	<utilityemal77@gmail.com>, <lujialin4@huawei.com>
 References: <20261117150542.1169451-1-caixinchen1@huawei.com>
- <20261117150542.1169451-3-caixinchen1@huawei.com>
- <20261117184342.GR989762@ZenIV> <20261118001641.GA1669148@ZenIV>
+ <20261117150542.1169451-2-caixinchen1@huawei.com>
+ <20261117183059.GP989762@ZenIV>
 Content-Language: en-US
 From: Cai Xinchen <caixinchen1@huawei.com>
-In-Reply-To: <20261118001641.GA1669148@ZenIV>
+In-Reply-To: <20261117183059.GP989762@ZenIV>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 X-ClientProxiedBy: kwepems500001.china.huawei.com (7.221.188.70) To
  whupemk100010.china.huawei.com (7.152.184.41)
 
-Sorry, this is a major issue. I checked the current state of the patchset
+On whether we want the mount references at all: they are not for NTFS.
+The path-based LSM hooks need them - Landlock's check walks the hierarchy
+up from the object with path->mnt->mnt_root and follow_up(), for every
+layer, and the idmap we pass has to be the one of the mount the path was
+checked in.  NTFS is only the reason for ia_path/notify_change_target():
+->setattr() has no path argument, so a change forwarded to the base inode
+would otherwise lose the mount.
 
-- fs/attr.c, fs/open.c, fs/inode.c, fs/utimes.c, fs/namei.c,
-fs/coredump.c, drivers/block/loop.c: nd->path or file->f_path (in loop.c:
-the f_path of the backing file, where file == NULL is intentional).
-
-- drivers/base/devtmpfs.c: the mount point of the parent directory, 
-which contains a directory entry that was just created or is about to be 
-deleted.
-
-- fs/cachefiles/xattr.c: cache->mnt, under which a directory entry is 
-searched.
-
-- fs/ecryptfs: ecryptfs_lower_path(), which is the mount point of the 
-lower-level directory entry itself.
-
-- fs/nfsd: exp->ex_path.mnt, which contains fh_dentry, a value decoded via
-exportfs_decode_fh_raw(exp->ex_path.mnt,...), or exp->ex_path.dentry.
-
-- fs/overlayfs: ovl_upper_mnt(ofs), which contains the actual 
-upper-level directory entry.
-
-There are two places that violate (1), both introduced by this series of 
-patches in ksmbd:
-
-smb2_parent_compressed() and smb_inherit_dacl() pair the directory entry 
-returned by dget_parent()
-
-with path->mnt, and problems arise once that directory entry becomes the 
-root of its mount point.
-
-I will fix these issues in v5 and ensure this invariant.
-
-If you find any place where (1) still does not hold, please point it 
-out, and I
-will fix it.
-
-On 11/18/2026 8:16 AM, Al Viro wrote:
-> On Tue, Nov 17, 2026 at 06:43:42PM +0000, Al Viro wrote:
->> On Tue, Nov 17, 2026 at 11:05:27PM +0800, Cai Xinchen wrote:
->>> The inode_setsecctx hook and its security_inode_setsecctx() caller in
->>> fs/nfsd operate on a dentry even though both have a struct path
->>> available.  Pass a const struct path so that the coming conversion of the
->>> xattr helpers can be reflected in the implementations; for now SELinux
->>> and Smack keep passing path->dentry and &nop_mnt_idmap to
->>> __vfs_setxattr_locked().
->>>
->>> Also document in lsm_hook_defs.h what a struct path argument may be used
->>> for: it can be passed to VFS helpers taking a struct path, but nothing is
->>> guaranteed about path->mnt.
->> No, with the side of Hell, No.
->>
->>> + * Hooks that take a struct path argument: the VFS only sanctions passing
->>> + * the path to VFS helpers that take a struct path (e.g. notify_change());
->>> + * it makes no guarantees with regard to path->mnt, whose layout and
->>> + * implementation details are subject to change.  Implementations must
->>> + * not rely on its properties.
->> NAKed-by: Al Viro <viro@zeniv.linux.org.uk>
->>
->> If that kind of stuff actually does get passed to any existing hooks, we need
->> to fix that ASAP.  If not, consider that a blanket NAK on any patch series
->> that would introduce such.
->>
->> We are not going there.  At all.  "Must not rely on its properties" ==
->> "must make sure that no existing functions with struct path * arguments
->> ever have such malformed instances passed to them".  Which is not going
->> to be feasible to enforce.  And yes, that very much includes any VFS helpers.
-> To elaborate a bit: correctness of quite a few places does depend upon the
-> following invaraint:
-> 	path->mnt->mnt_sb == path->dentry->d_sb		(1)
-> for all struct path pointers they might possibly run into.  _Some_
-> functions might _currently_ be safe to call with that constraint violated;
-> there's neither a list of such functions nor any promise whatsoever that
-> call that is currently safe in such conditions will remain safe at any
-> later point.
+On 11/18/2026 2:30 AM, Al Viro wrote:
+> That needs a bit along the lines of "path MUST be consistent - don't combine
+> a dentry from one filesystem with mount of another".  All in-kernel callers
+> might have appropriate struct mount references on hand, but for out-of-tree
+> code that might be not true and we'd better be upfront about the headache
+> we are inflicting.
 >
-> _IF_ you can guarantee that (1) is not violated, we have something to
-> talk about; otherwise, don't call your object struct path and don't
-> pass it to anything that expects to deal with struct path.
+> I'm not sure we really want to provide those mount references, TBH - it does
+> add a constraint not just on out-of-tree callers, but upon the future uses
+> in the kernel.  If NTFS is the only reason... ugh.
+
+ok, I will change in v5
+
+> BTW, why not something like
+>
+> 		notify_change(&nop_mnt_idmap,
+> 			      &(struct path){.mnt = path.mnt, .dentry = dentry},
+> 			      &newattrs, NULL);
+> instead of that named local?  Same question for other places like that...
+
+
