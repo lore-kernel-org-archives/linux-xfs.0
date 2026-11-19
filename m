@@ -1,123 +1,107 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795108989;
-	b=Rg47tOk9q27s2vE7jiNZezt/Yf3qhEYGzr40hxVjjLVTSCjgFaFfdCFJT60VXeS87jjN
-	 8dpT2Z2V+aXvLrpzEyFk9lFskCSD2D8zHbrs4BgCjHHMwnj0tsRNy59EaMYV9/NHP5Qvb
-	 ankO+kZ5NIMAkaaES4cw9i5N90CN6Qws77zWE0qhSq60uvbHkrSIp+/BuRhYMqLVfV9MV
-	 7UqVoIRvJwpeGfr9c4hm2MojYamqV/OXbitg2aQK2Ncph2MrX+kmB4z9IRwbLyUX9CC1O
-	 ujiLABfYUCZRLsVX5Fr0JcuAymNWwMU8dlShaGpncvmFaOnGhTsdp+/S6fdjv/oHA9w==
+	t=1795118711;
+	b=X0tvgS+3muG14DLeK+2KWxozPD5b0xLAJb4EaBRGYO8KLuXE6WmbJG+w8i4Uyhf6l1k8
+	 N8SKWrzzsB5CXENeN2TiQ/1U4KenQimo7ogn6rO+48wxprgfIM+Y++c2qhtIyaaWDWsH6
+	 afSHfqDcLDvkzqYpmDOS1N7EQ4EokwZLPsDuU849bFS4V1RiSCV2+KpS928AEQz/GCmLF
+	 Wx2q9CZ9AJi+RrnNrdNYk5CzmP4bYd+qQupXiF8Hp8tZ9uBvXFvZszjCqHkGpQdhpbA7d
+	 kjQ1MWJzP1TWEcnE2eEpbYAkmmaPeDghE7Q/pIBKRtBHKVSOattGTMHfCMvnsXpbwjQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795108989;
-	h=DMARC-Filter:Received:DKIM-Signature:DKIM-Signature:DKIM-Signature:
-	 DKIM-Signature:Received:Received:Received:Date:From:To:Cc:Subject:
-	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
-	 Content-Transfer-Encoding:In-Reply-To:X-Rspamd-Queue-Id:X-Spam-Level:
-	 X-Rspamd-Server:X-Rspamd-Action:X-Spam-Flag:X-Spamd-Result:
-	 X-Spam-Score;
-	bh=1Wm5iqQHUYdGAarP0mjCGKsz4+MXWHrAKw+70dxWMRE=;
-	b=IcO+vwWdsRlDCcSdpwSDeccViU9ZXzpgUU61R9lNBriqZz9IwPadw6Vf3MlL44dZrD1j
-	 HyfuYDJM5v4bKFS/JKUYiUuyMOBGT8wkecbHp6kHcVxw1T8Py2p4k1xyP4D5EsXHf2h+m
-	 1/23T9Uc24dxgc23F5nzul5jLRZ58OxpFneXje1OeOObTEQTSPieTkoC3gbqSeeadF9pB
-	 9YWVqWNOChAf3uH3PjBEdW90cCbdr7qhyNpbgdFqmyBBOF5GFYdulcw8noqWoBzW0q9sA
-	 O9kYgWdYI5fryODJcw991ZkIGtjma53aKJBApj/gddfHMgzD3iLuilAOTrlFIg/F00A==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795118711;
+	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
+	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:Received:Message-ID:
+	 Date:MIME-Version:User-Agent:Subject:To:References:Content-Language:
+	 From:In-Reply-To:Content-Type:Content-Transfer-Encoding;
+	bh=03I6wjDEiblELfAS7QQgi6boZSqyYStegum8bFV18fY=;
+	b=hANpmY8vmYtKqtojQ07ObCKL0ws9pPDZUb7dAQJYeLDZNQZMIjR7nX6lS4/tccCEMajh
+	 7JqeWZntuuMwCiWX2GfrQfsLODSxRpkESABON1H0aTlBdTn2hGGRKtGIy6lIhnghXapnW
+	 vQUddotCTszSw84TQGExrSR6lcSikwuvIw2Le3gkrp+Xp3qDVVXuKbI44ok5COWvXkpdM
+	 E548Lz8x/zOpdD2tbCJPiA6yrWF9p2boP7fKHF2pwXD7hUemy79Kl2IjebAvbjfovqWcO
+	 rsLKJVCh/KRoTzQ2Nb8wpBW0PWgIQqT9qIe0mDIhUrretr4ZxF15OZO60CbnJw8UKcQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=suse.cz;
-	spf=pass smtp.mailfrom=suse.cz;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=PXBHlrgf;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b="yVhMt1/s";
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=PXBHlrgf;
-	dkim=neutral header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b="yVhMt1/s";
-	arc=none smtp.remote-ip=195.135.223.131
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	dmarc=pass header.from=redhat.com;
+	spf=pass smtp.mailfrom=redhat.com;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b="YH79WWB/";
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=oR9s5FiO;
+	arc=none smtp.remote-ip=170.10.133.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7C8D606A32A;
-	Thu, 19 Nov 2026 17:23:08 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A7C8D606A32A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2648E606A32A
+	for <linux-xfs@vger.kernel.org>; Thu, 19 Nov 2026 20:05:10 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2648E606A32A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=PXBHlrgf;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=yVhMt1/s;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=PXBHlrgf;
-	dkim=neutral header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=yVhMt1/s
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 8B04C1FA9C;
-	Thu, 19 Nov 2026 17:23:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1795108986; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
+	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=YH79WWB/;
+	dkim=pass (2048-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=oR9s5FiO
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1795118710;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=1Wm5iqQHUYdGAarP0mjCGKsz4+MXWHrAKw+70dxWMRE=;
-	b=PXBHlrgfYbI+JJxF/v08s3dXWhH6f0vHnN071+GnPD2j/Z0/oc3h5Znz80fcGSsPXUHdk1
-	yHfXtlZq8byVQl28gZTXLako5YAD9Z7x3xsZILPRY9UShnsDTZwGGXaB+7Wjz+3ADf4mdr
-	SXnrYhmuei5E+law5M57gcVBPkSsUR0=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1795108986;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=1Wm5iqQHUYdGAarP0mjCGKsz4+MXWHrAKw+70dxWMRE=;
-	b=yVhMt1/srNiWd/sYvbvRDSy0zo1vsKR4MVUFPz1M/UDm8JFTw7us4wWSehEblXVxAhiSYc
-	x3F84/iSy8vH4/Aw==
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=PXBHlrgf;
-	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b="yVhMt1/s"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1795108986; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=1Wm5iqQHUYdGAarP0mjCGKsz4+MXWHrAKw+70dxWMRE=;
-	b=PXBHlrgfYbI+JJxF/v08s3dXWhH6f0vHnN071+GnPD2j/Z0/oc3h5Znz80fcGSsPXUHdk1
-	yHfXtlZq8byVQl28gZTXLako5YAD9Z7x3xsZILPRY9UShnsDTZwGGXaB+7Wjz+3ADf4mdr
-	SXnrYhmuei5E+law5M57gcVBPkSsUR0=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1795108986;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=1Wm5iqQHUYdGAarP0mjCGKsz4+MXWHrAKw+70dxWMRE=;
-	b=yVhMt1/srNiWd/sYvbvRDSy0zo1vsKR4MVUFPz1M/UDm8JFTw7us4wWSehEblXVxAhiSYc
-	x3F84/iSy8vH4/Aw==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 5A1A41334C;
-	Thu, 19 Nov 2026 17:23:06 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id B6s1Dnow/2pTOQAAD6G6ig
-	(envelope-from <jack@suse.cz>); Thu, 19 Nov 2026 17:23:06 +0000
-Received: by quack.suse.cz (Postfix, from userid 1000)
-	id D88B12529E; Thu, 19 Nov 2026 18:23:05 +0100 (CET)
-Date: Thu, 19 Nov 2026 18:23:05 +0100
-From: Jan Kara <jack@suse.cz>
-To: Andreas Gruenbacher <agruenba@redhat.com>
-Cc: Jan Kara <jack@suse.cz>, Christian Brauner <brauner@kernel.org>, 
-	linux-fsdevel@vger.kernel.org, gfs2@lists.linux.dev, Mike Marshall <hubcap@omnibond.com>, 
-	Martin Brandenburg <martin@omnibond.com>, devel@lists.orangefs.org, Dave Kleikamp <shaggy@kernel.org>, 
-	jfs-discussion@lists.sourceforge.net, Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org, 
-	David Howells <dhowells@redhat.com>, Marc Dionne <marc.dionne@auristor.com>, 
-	linux-afs@lists.infradead.org, Miklos Szeredi <miklos@szeredi.hu>, fuse-devel@lists.linux.dev, 
-	linux-block@vger.kernel.org, Chuck Lever <cel@kernel.org>, Jeff Layton <jlayton@kernel.org>, 
-	linux-nfs@vger.kernel.org, Eric Biggers <ebiggers@kernel.org>, 
-	Jaegeuk Kim <jaegeuk@kernel.org>, linux-fscrypt@vger.kernel.org
-Subject: Re: [PATCH 06/13] gfs2: Avoid racy dirtiness check in gfs2_fsync()
-Message-ID: <ntzwnqethzdzix45gbxpmajmjiu2pwp7hpelmcmim5i5qabrqq@ahxo7kpx65qh>
-References: <20261116171044.6938-1-jack@suse.cz>
- <20261118145941.1063127-19-jack@suse.cz>
- <CAHc6FU7NoZua98SGP9Kuga58gAcco6X__u=kOPfsUqbefAKLFQ@mail.gmail.com>
- <wo5723b7wrmu35q5qffzs7zzqwnojk3ireel2jkit2kxgv6bra@yd3gbigdmmdk>
- <CAHc6FU5HY9x5ntTOz_xk36T0XTzjNc8R4jy2zzpQKo=19HNMog@mail.gmail.com>
+	bh=03I6wjDEiblELfAS7QQgi6boZSqyYStegum8bFV18fY=;
+	b=YH79WWB/8SEhkD73Iti//+6bQ90NNj/m4lB+mTvFm82b+sRSVl0O63Mf00g1aqhxCi5r8Y
+	TMWOBSrSt5E+uqLazLmBEw9Gd5pDKwbqrWNB7DmQIQubmKET5aczBUEVYOa4cIZ/Zr/9Uu
+	meFtq6nUfemankmWqr9hC53IEIpZyDU=
+Received: from mail-qk1-f200.google.com (mail-qk1-f200.google.com
+ [209.85.222.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-561-Jj6py7CIN3eEfxRMBWSf3Q-1; Thu, 19 Nov 2026 15:03:37 -0500
+X-MC-Unique: Jj6py7CIN3eEfxRMBWSf3Q-1
+X-Mimecast-MFC-AGG-ID: Jj6py7CIN3eEfxRMBWSf3Q_1795118617
+Received: by mail-qk1-f200.google.com with SMTP id af79cd13be357-949b0d322fcso30042085a.2
+        for <linux-xfs@vger.kernel.org>; Thu, 19 Nov 2026 12:03:37 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1795118616; x=1795723416; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:to:subject:user-agent:mime-version:date
+         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=03I6wjDEiblELfAS7QQgi6boZSqyYStegum8bFV18fY=;
+        b=oR9s5FiOUx2Iz2plEYA5rrEoKDhQEnQuYq8dIJTfpEtwSW2+iAuckLZylk+85SG6si
+         alr7kBk/2+6pTHp4vtGMTzpN8tJgsFyd7l2w9WiUYfrx3Zre5iu7MqHx043JQ+KzrW/1
+         PvtTAMJ7ovmtMQYI4/Xc/Aol62atWBJyUig6yBpbC5Q6O4xEATz97EAXGZHr+5LAMS/8
+         khXL5IyFcg65Qu7gLeZpfwK5vDpUNwzw4sys/NptberbAm23OZObYy6hbr7X5RXxc0PL
+         FvJy9n74nkufDV3nBiGpBctdFKKULGBInmurWyduAiDVWtfPjcGAsLatwkEDTF/WLb4H
+         Nuog==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795118617; x=1795723417;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:to:subject:user-agent:mime-version:date
+         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=03I6wjDEiblELfAS7QQgi6boZSqyYStegum8bFV18fY=;
+        b=ij8yK66g4+++zM3L69HmhUBRkM4J3WR3RObZf/QGrhwSeh6QJFWuI9wXUwcNMcKrbn
+         00QZuivlkCaySVljcoWTfLzetf+ONnBq3ip2RPRcukp0Ds1c20BaK8A5JuZU9Hy9iylF
+         yOn1C0drHZE+pFeR87NBI63NlPnx6mmWYSwqODenuab05DE9gksVoWMYsBJvo6r7ZsBm
+         acaBOt7NQgdXKXNUrSsrRuZFqheesAca9EW0HmAjwf7Ni79wpvWStFR7mHJjP2UX7afW
+         upKq1aj7Bp48M6kwqGhiy804Cl4nU0nl+Z54oQGf3sVgMnufqRUK6ptdr16rF/d7HeRp
+         01ug==
+X-Gm-Message-State: APuU4Z+D+jQcN3Up2+GlIZynvvtXvQN9yR3HD/ZADxC5aA5U9hnhGerr
+	BPtr80o8NEoQNZenJw0E41jZii+O0/6VaFjX+GvcTInn2PyyqQgEJD3P2Gk0d+Q8u9VyIFBNZsr
+	6gFh2PT1O6Ilbcd73EcyO88XplbmQZnkEwVQUWficPXca6PXgrTotSTL3mAsYvi8R6GgJMINKjG
+	W4U9UtCQapuvicWOKGFCXIzTA5QVGzml3jYe6qh1z2G1Uh
+X-Gm-Gg: AYBFou2koTL20RjcIhqdK+HGg9gXMpGg9vwVVA0INsFzk0Y0RJ1wjqd3dTpXUwnKHqa
+	IztEUQ4TV6h+MHCYg/NIb6yUKyv/EN9QB0UQYBZzTwGJgF7OUVkQqHYb8o2TJic8oMcBBx2kxdl
+	mDQbzMBff2NwEcRBMs1TVzq+d+Sv62fk9KhUVbRUdMiU3QTeMMbvp0zgbzam73wl1lanETQSeVi
+	mkaoZe4CH080f8MyO3DpN2Vf21MlyHC1//veSvucLYYsD6N0KD7wOG8ESnVjdIfpzy0mvtK0gt8
+	mj+6A4A9pWUvP6CYPcKBA2EgM1ALj0rKuGjERVMCV5IY+Uz7F7sV3ReNfHLVZe1l6GKLipps+ZV
+	h77SNlDtDToaIk3UKF6HFnykynJwfoXZeHIi9P0sBb8VC2oV89cnqphdgJopM9Z5KfpnRSbUO43
+	doLbe7SCizy9c=
+X-Received: by 2002:a05:620a:17aa:b0:949:9985:e097 with SMTP id af79cd13be357-949ba96becfmr128046785a.15.1795118616388;
+        Thu, 19 Nov 2026 12:03:36 -0800 (PST)
+X-Received: by 2002:a05:620a:17aa:b0:949:9985:e097 with SMTP id af79cd13be357-949ba96becfmr128035985a.15.1795118615479;
+        Thu, 19 Nov 2026 12:03:35 -0800 (PST)
+Received: from [10.0.4.228] (174-20-5-40.mpls.qwest.net. [174.20.5.40])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-949bb0319fcsm40760085a.4.2026.11.19.12.03.34
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 19 Nov 2026 12:03:35 -0800 (PST)
+Message-ID: <932ff720-e339-4518-b448-14a76f929d58@redhat.com>
+Date: Thu, 19 Nov 2026 14:03:33 -0600
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -127,91 +111,59 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAHc6FU5HY9x5ntTOz_xk36T0XTzjNc8R4jy2zzpQKo=19HNMog@mail.gmail.com>
-X-Rspamd-Queue-Id: 8B04C1FA9C
-X-Spam-Level: 
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Rspamd-Action: no action
-X-Spam-Flag: NO
-X-Spamd-Result: default: False [-13.01 / 50.00];
-	SUSE_INTERNAL_BYPASS(-9.00)[];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	RCVD_COUNT_THREE(0.00)[3];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	RCPT_COUNT_TWELVE(0.00)[24];
-	FROM_HAS_DN(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	TO_DN_SOME(0.00)[];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	FROM_EQ_ENVFROM(0.00)[];
-	RCVD_TLS_LAST(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	DKIM_TRACE(0.00)[suse.cz:+];
-	MISSING_XM_UA(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.cz:dkim,suse.cz:email,suse.com:email,imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo]
-X-Spam-Score: -13.01
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] xfs: initialize error in xfs_getfsmap_rtdev_rtbitmap()
+To: linux-xfs@vger.kernel.org
+References: <20261119170449.1513687-1-irogers@google.com>
+Content-Language: en-US
+From: Eric Sandeen <sandeen@redhat.com>
+In-Reply-To: <20261119170449.1513687-1-irogers@google.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Thu 19-11-26 13:17:57, Andreas Gruenbacher wrote:
-> On Thu, Nov 19, 2026 at 1:05 PM Jan Kara <jack@suse.cz> wrote:
-> > On Thu 19-11-26 00:35:42, Andreas Gruenbacher wrote:
-> > > On Wed, Nov 18, 2026 at 4:00 PM Jan Kara <jack@suse.cz> wrote:
-> > > > Check for I_DIRTY_PAGES state in gfs2_fsync() is racy because
-> > > > __writeback_single_inode() unconditionally clears the flag and
-> > > > reinstates it only later based on PAGECACHE_TAG_DIRTY tag. If
-> > > > gfs2_fsync() unlocked read of i_state hits in between, it will not see
-> > > > I_DIRTY_PAGES although there may be dirty folios in the mapping. Check
-> > > > for PAGECACHE_TAG_DIRTY instead and use inode_is_dirty() helper for
-> > > > inode metadata dirtiness check.
-> > > >
-> > > > Signed-off-by: Jan Kara <jack@suse.cz>
-> > ...
-> > > > @@ -760,12 +760,8 @@ static int gfs2_fsync(struct file *file, loff_t start, loff_t end,
-> > > >                         return ret1;
-> > > >         }
-> > > >
-> > > > -       if (!gfs2_is_jdata(ip))
-> > > > -               sync_state &= ~I_DIRTY_PAGES;
-> > > > -       if (datasync)
-> > > > -               sync_state &= ~I_DIRTY_SYNC;
-> > > > -
-> > > > -       if (sync_state) {
-> > > > +       if (inode_is_dirty(inode, datasync) ||
-> > > > +           (gfs2_is_jdata(ip) && dirty_data)) {
-> > >
-> > > this adds back the I_DIRTY_TIME check explicitly removed in commit:
-> > >
-> > > 3aac630b5ce1 ("gfs2: don't worry about I_DIRTY_TIME in gfs2_fsync()")
-> > >
-> > > Could you please clarify what's going on?
-> >
-> > I wonder how you remember this after five years :). Anyway, the truth is I
-> > forgot fsync path is calling sync_lazytime() as well before calling into
-> > ->fsync and even if I remembered that, then it would be fragile for the
-> > helper to rely on that (and there are already users of inode_is_dirty() and
-> > inode_or_mapping_dirty() which want it). So to summarize you are correct
-> > that the added I_DIRTY_TIME check is unnecessary for gfs2_fsync() as it
-> > should never trigger just for that but it is also harmless and the helper
-> > is more robust that way.
+On 11/19/26 11:04 AM, Ian Rogers wrote:
+> When xfs_getfsmap_rtdev_rtbitmap() was converted to iterate over realtime
+> groups with xfs_rtgroup_next_range(), 'error' was left uninitialized. If a
+> continuation or range-bounded FS_IOC_GETFSMAP query has start_rgno >
+> end_rgno (for example when keys[0].fmr_physical + keys[0].fmr_length lies
+> in a higher realtime group than keys[1].fmr_physical while both remain
+> below eofs), the while loop executes zero iterations and returns the
+> uninitialized stack variable 'error' directly to userspace as the ioctl()
+> return value.
 > 
-> Alright. Could you please include that in the commit message?
+> Initialize 'error' to 0, matching xfs_getfsmap_rtdev_rmapbt().
 > 
-> Reviewed-by: Andreas Gruenbacher <agruenba@redhat.com>
+> Found via an x86_64 LLVM=1 (Clang 21.1.8) allyesconfig audit with
+> -Wconditional-uninitialized enabled; fix and changelog drafted with an AI
+> coding assistant. Build-tested with LLVM=1 W=1 and
+> -Wconditional-uninitialized; not runtime-tested on a live XFS realtime
+> filesystem.
+> 
+> Fixes: e3088ae2dcae ("xfs: move RT bitmap and summary information to the rtgroup")
+> Signed-off-by: Ian Rogers <irogers@google.com>
 
-Sure added this to the changelog. Thanks for review!
+This looks right to me. Returning "nothing, successfull, with error 0" is
+correct. xfs_rtgroup_next_range() also cannot return an error that must be
+captured. There might be weird subtleties if we ever get shrink going, but
+for now this looks correct, thanks.
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
+> ---
+>  fs/xfs/xfs_fsmap.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
+> index 041bb2105ec6..3ccf3ce23332 100644
+> --- a/fs/xfs/xfs_fsmap.c
+> +++ b/fs/xfs/xfs_fsmap.c
+> @@ -760,7 +760,7 @@ xfs_getfsmap_rtdev_rtbitmap(
+>  	xfs_rgnumber_t			start_rgno, end_rgno;
+>  	struct xfs_rtgroup		*rtg = NULL;
+>  	uint64_t			eofs;
+> -	int				error;
+> +	int				error = 0;
+>  
+>  	eofs = XFS_FSB_TO_BB(mp, mp->m_sb.sb_rblocks);
+>  	if (keys[0].fmr_physical >= eofs)
+
