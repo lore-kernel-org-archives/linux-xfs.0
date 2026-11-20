@@ -1,69 +1,60 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.178
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795180283;
-	b=EajUWIoGFwE0xgrVEBREOU8CBcVWDXoEB64S0ITORio/8Dg9n2kOdIG4OY1cSdZXxcAU
-	 7UnMyvjtLOPcptpfTzOhKiuIhwitu2kMNEPw8S5sCZO/xm/qqFNXZrGtm35bgcNeBgJv4
-	 XI8a9fP1NfkRoplQh1WrYkGKJLw2cG97GZkU8/TF3ZNfRPnkQiJNv9Q2o3y68naXb9Tf2
-	 czrK1SrSnRClf+g1dw4vO+8L9sFgVVSVbNuUpJmkviIH6rDIyqFVmHdDelEt0crqpLwxp
-	 IAbVGAn1StFhj0W6t1kzW1nVvChTRPj/Z8lkjEYE3fA1eZ3lGDf/SGfhO0g4A+cLhUg==
+	t=1795181725;
+	b=IlQq/X1ccldS0q3qDV9Tdbfv7AIsNz13B2GntJjVen1RMrNBq3HWlA8Uiah9Pb6wecCt
+	 PrqABuaS96mFLuoGVyhKIDznFyGa/ihCJEu6GexwUEZZRnBPEEgQVgTpQMvFnKcWeOImE
+	 /chOEBKEmZoQoxQ2DPIUoXSMpsi63+OIXyTYTUnRmLPQCFpg73okaKSqGxhiPSQ+FpL3H
+	 IxfTJ2FWkUf+R7XpIhpE8PygY5/4vvdj9bglM0C7KwURc+aP4BdkyZP2Gplnk6c4bO/GK
+	 fSigorlg8+dpNDOxUx5OrB4aZXxp1QpZ1hQ5vZ6Wb0bcv/+8qIMj+JPnsofnCzRfaEw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795180283;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Date:From:To:Cc:Subject:Message-ID:
+	a=rsa-sha256; c=relaxed/relaxed; t=1795181725;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=11EUqqsBHqKJhSEKaLjedxJRvUSCpiSlKRotGWVYopQ=;
-	b=rrBin/y9NPFQwUqpbxAz72jE7bRn1IN++eKpu2vuMdiWHSjricCHOHby0Y9eJhKwVqAw
-	 UkYhhJX+0c1KgG4WPir18DYTufTwMgNkSHfgusp+zzMGLczVHrqqaeNjd07dEHBn0ww8s
-	 SoT+EWiwbk9Mvi9X+YJ1WJsHlGJDZubCQaBlo3s0UzRP75Tggeuxz5azlApHT3f38ori0
-	 rWTBvhcjBnLRcnT4KX+PNh1x0NMsiAykgrecBXbMH9Ouh4hYdYOQ8Pnm8ja7yeCU4c+6O
-	 Ef/j+2+9Brr2n/66nQbNa4Ml4w9lDzO9mTAafqQvKpt5ef4PEgZ3ZiSUki4XSQloBNw==
+	bh=bjsloV/HcKsVj7z9+HkdbWf0MogK/qby7SPqWG2uzjE=;
+	b=ej6k1zemzhC4vsnHXmco+dvpSsEA7g0FzFyHvLj8qr0rzbkx+3u9Shbqn0B3doHVJuG/
+	 o7s17J5GXV7r2mEqWS4R8fvPZd8X0UIYF5IzFDGRh0I6/Fr4Q/mn9idTpSyzwPyD9snlR
+	 sDTbqO8upWh6FNHD8e9GeYIY4klbiszew5dvlvnGi4xPvOsxW/g+L2jaOu58875krRWdJ
+	 XT2FMGfDD3IBlRBn8zsGJpdBo3xbufTcysbwC42h+VGm2sBJkyRAB4HmjMmP0KlvCnJdS
+	 LRBrHFrMXBLAaTAK4UCDdv33Xh2L8fbNzjaDtSLradxDP+OeafmR21K3kXQggWonijQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=pcpMXMRk;
-	arc=none smtp.remote-ip=91.218.175.178
-Received: from mta0.migadu.com (out-178.mta0.migadu.com [91.218.175.178])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BLPFOBmp;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8BD1606A333
-	for <linux-xfs@vger.kernel.org>; Fri, 20 Nov 2026 13:11:22 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C8BD1606A333
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6703D606A320;
+	Fri, 20 Nov 2026 13:35:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=pcpMXMRk
-X-Envelope-To: linux-xfs@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=AFN9OOtQlK1HJO8cWelVMtGeAQ6PKLi87EwwnhaP1iY=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1795180281; v=1; x=1795785081;
- b=pcpMXMRkQ4Ns6fd064vPWWatVGroU9IVtkGO3ROe58Y6pOfgmdrRaA8URbSyfTUF5AbEgZhD
- i68/L46VO8eq6YVzH9zTsvTRNPM0a79tLxALqyXzHBnW3aN7CqxWw7P6596t4l+BKqmEoxYpK8c
- D1wn0Zhz0yPrczpYDf0gH1hM=
-X-Envelope-To: linux-xfs@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 1d043ee31403846b;
-	Fri, 20 Nov 2026 13:11:20 +0000
-X-Mizu-Trace-ID: 1d043ee31403846b
-X-Migadu-Flow: FLOW_OUT
-Date: Fri, 20 Nov 2026 14:11:11 +0100
-From: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>
-To: Jan Kara <jack@suse.cz>
-Cc: Christian Brauner <brauner@kernel.org>, linux-fsdevel@vger.kernel.org, 
-	Andreas Gruenbacher <agruenba@redhat.com>, gfs2@lists.linux.dev, Mike Marshall <hubcap@omnibond.com>, 
-	Martin Brandenburg <martin@omnibond.com>, devel@lists.orangefs.org, Dave Kleikamp <shaggy@kernel.org>, 
-	jfs-discussion@lists.sourceforge.net, Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org, 
-	David Howells <dhowells@redhat.com>, Marc Dionne <marc.dionne@auristor.com>, 
-	linux-afs@lists.infradead.org, Miklos Szeredi <miklos@szeredi.hu>, fuse-devel@lists.linux.dev, 
-	linux-block@vger.kernel.org, Chuck Lever <cel@kernel.org>, Jeff Layton <jlayton@kernel.org>, 
-	linux-nfs@vger.kernel.org, Eric Biggers <ebiggers@kernel.org>, 
-	Jaegeuk Kim <jaegeuk@kernel.org>, linux-fscrypt@vger.kernel.org, 
-	Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH 02/13] xfs: Drop pointless I_DIRTY_PAGES check in
- xfs_can_free_cowblocks()
-Message-ID: <awBGYTkywYFOaYOI@quentin>
-References: <20261116171044.6938-1-jack@suse.cz>
- <20261118145941.1063127-15-jack@suse.cz>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BLPFOBmp
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C6FD11F000C4;
+	Fri, 20 Nov 2026 13:35:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795181725;
+	bh=bjsloV/HcKsVj7z9+HkdbWf0MogK/qby7SPqWG2uzjE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=BLPFOBmpNPHpPFx0FWOYG24EYgD7CUJ6t1qXvqZvlVs6L6nHAmWejU+nksKDRzX3E
+	 f/XCAUy92isyUIw3hdQtZ8BNA3hNpUFMmXAmE6dS8UXxYkJEb1gOJmqlVhSFk8eLTN
+	 Hr3CspzOnm4nCBGB4u961t4qHU47LXPtLvnwyk+mDXbXxfeqCLDjKcRpAAgj5U+hz7
+	 5H0cR7yQatjexLmeVub/wDBbYwWsYymhDblsgHz9sezq4uP4rKtf9ZYcoolylc2PGX
+	 5TO1ramemZqDM7Zh1yS04udn5oCJsiE7pzpoF1fOaXS+TEyxhkFqjvFL0mnj/wsE9h
+	 DH/9sDXLIxCDQ==
+Date: Fri, 20 Nov 2026 14:35:18 +0100
+From: Christian Brauner <brauner@kernel.org>
+To: NeilBrown <neil@brown.name>
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>, 
+	Jan Harkes <jaharkes@cs.cmu.edu>, coda@cs.cmu.edu, Jan Kara <jack@suse.cz>, 
+	Richard Weinberger <richard@nod.at>, Anton Ivanov <anton.ivanov@cambridgegreys.com>, 
+	Johannes Berg <johannes@sipsolutions.net>, Namjae Jeon <linkinjeon@kernel.org>, 
+	Hyunchul Lee <hyc.lee@gmail.com>, Carlos Maiolino <cem@kernel.org>, 
+	Jeff Layton <jlayton@kernel.org>, Amir Goldstein <amir73il@gmail.com>, 
+	linux-kernel@vger.kernel.org, codalist@coda.cs.cmu.edu, linux-fsdevel@vger.kernel.org, 
+	linux-um@lists.infradead.org, ntfs@lists.linux.dev, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2 1/4] VFS/xfs/ntfs: drop parent lock across
+ d_alloc_parallel() in d_add_ci()
+Message-ID: <20261120-veranda-tiger-seemeilen-397d57fb2258@brauner>
+References: <20261117000115.1433875-1-neilb@ownmail.net>
+ <20261117000115.1433875-2-neilb@ownmail.net>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -73,40 +64,58 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20261118145941.1063127-15-jack@suse.cz>
+In-Reply-To: <20261117000115.1433875-2-neilb@ownmail.net>
 
-On Wed, Nov 18, 2026 at 03:59:36PM +0100, Jan Kara wrote:
-> PAGECACHE_TAG_DIRTY is the authoritative source of information about any
-> folio being dirty in the mapping. I_DIRTY_PAGES is just an approximation
-> used by writeback code that can get stale under certain situations. So
-> just rely on the authoritative check.
-> 
-> Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-> Signed-off-by: Jan Kara <jack@suse.cz>
+On Tue, Nov 17, 2026 at 10:54:58AM +1100, NeilBrown wrote:
+> We don't need to keep the parent lock held when d_add_ci() is run - the
+> VFS doesn't need it as dentry is exclusively held due to
+> DCACHE_PAR_LOOKUP and the filesystem has finished its work.
 
-Looks good,
-Reviewed-by: Pankaj Raghav (Samsung) <pankaj.raghav@linux.dev>
+I'm not sure that holds? Only d_alloc_parallel() honours
+DCACHE_PAR_LOOKUP. lookup_one_qstr_excl() still uses d_alloc() and
+relies on the exclusive lock to guarantee that there are no in-lookup
+children at all. That stops being true here:
 
-> ---
->  fs/xfs/xfs_reflink.h | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-> index 683c1841e640..1310cc9fe829 100644
-> --- a/fs/xfs/xfs_reflink.h
-> +++ b/fs/xfs/xfs_reflink.h
-> @@ -17,8 +17,7 @@ xfs_can_free_cowblocks(struct xfs_inode *ip)
->  {
->  	struct inode *inode = VFS_I(ip);
->  
-> -	if ((inode_state_read_once(inode) & I_DIRTY_PAGES) ||
-> -	    mapping_tagged(inode->i_mapping, PAGECACHE_TAG_DIRTY) ||
-> +	if (mapping_tagged(inode->i_mapping, PAGECACHE_TAG_DIRTY) ||
->  	    mapping_tagged(inode->i_mapping, PAGECACHE_TAG_WRITEBACK) ||
->  	    atomic_read(&inode->i_dio_count))
->  		return false;
-> -- 
-> 2.53.0
-> 
+> +		if (lookup_flags & LOOKUP_SHARED)
+> +			inode_unlock_shared(d_inode(dentry->d_parent));
+> +		else
+> +			inode_unlock(d_inode(dentry->d_parent));
+> +		must_relock = true;
+>  		found = d_alloc_parallel(dentry->d_parent, name);
+
+So if "Foo" exists on an ascii-ci xfs:
+
+P1: stat("FOO")                      P2: unlink("Foo")
+lookup_slow()
+-> xfs_vn_ci_lookup()
+   -> d_add_ci(dentry, X, "Foo")
+      -> inode_unlock_shared(dir)
+      -> found = d_alloc_parallel()
+                                     start_dirop()
+                                     -> inode_lock_nested(dir)
+                                     -> lookup_one_qstr_excl("Foo")
+                                        -> d2 = d_alloc()
+                                        -> xfs_vn_ci_lookup()
+                                           -> d_splice_alias(X, d2)
+                                     vfs_unlink()
+                                     -> xfs_vn_unlink()
+                                        -> d_invalidate(d2)
+                                     inode_unlock(dir)
+      -> d_splice_alias(X, found)
+
+IOW, "Foo" ends up as a hashed positive dentry for an unlinked inode
+that nothing revalidates.
+
+open("Foo", O_CREAT) then opens the orphan instead of creating a new
+file and O_EXCL fails with EEXIST. Do a rename() instead of the unlink()
+and "Foo" keeps pointing to what is now "Bar". ntfs gets there the same
+way.
+
+Before this patch lookup_slow() held the lock shared across all of
+that so start_dirop() couldn't get in between.
+
+So afaict this needs "VFS: use d_alloc_parallel() in
+lookup_one_qstr_excl()" from your RFC to go in first. Unless I'm
+missing something obvious.
