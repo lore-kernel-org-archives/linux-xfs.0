@@ -1,56 +1,54 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795162565;
-	b=UXOcEnh4/B2G8XHLpqFqa9N0enqRU5ae463dGDbqi+BGtE2WO4kGW6bHzXeVABwzEPy0
-	 IL+A02xt15mZ0e16ms/1psAq9I9LL7dG1jP6WRKmG4o1fa57JsJmKWUR8GczsZviXhAbu
-	 PKpFNVhizCoFJHBtED6ldhGjbXIgGFEMf8bxkE1Al0jghUF4xmIhq1YY3nnQcqKRyQvdl
-	 jEJjugaxVFOE7LqM0yBlY3Dphtda6194HwATqHElJO97Y0uEUJioUEwdNR+tGU7XpoVDj
-	 5wcUtsJgVNJdxj5QZQj3WtXKZAuHWifnynTDmkwUZtQLUPB2VQPPawrILQ1Q+sD2KtA==
+	t=1795165482;
+	b=Vvz17fu8Fc46E/n5SRfgVjKff6GrOODqSO7Qrs46vDxQa8uyI/tdB0FOfoexkLoCR8Ov
+	 UYtv89DGuznjPVZ4CDDLIrSlHMUJWHg7Mo2M5R7ya0/hEPOP+63BCnqwp1flj6pQCJ/qk
+	 c7dknDcsuRlxnuEWgyWdHZUUZYuRZ1OVUItNi8nWqQRCnfDvPL2Ur4FKHB9ytrSvWa0xX
+	 TTO2lMU2GLBfgZn2AIB4NCp9TeY2793gEn+muFAU1F9KbpPUVPzuqFT6lLRsJQwKBh7IV
+	 /mX+7LCwfcBFqsXFCQb5gntTyzd1T4L3oJP0vuJf8syJltWo0GDF8C7UubkgMWcJR1g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795162565;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795165482;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=gRnXn7A8a8ltwBq+RheRl5mDgBsU2Z5PbLlb1u7e8CU=;
-	b=BJFsRyUJY4UbcqL6JI/lco7oXma4kGulbpVSgOy4JnXw6hh1QSJINwavxrVeXQ8GwhbE
-	 gdcvOn6sxz2wZQuAyKfXvqnbGrqYZ+DTr/d4uUNqpro1duain6/3aSeTpk0rgZ5l1ojsF
-	 vf5O4kOqz+G0AbQCvyXg8IvG0N3ozGCHnD7WBMO3m7swkG5TRb3nyokCL68DSjpU+nKgN
-	 cMs+EEys8nx4v6PSw1eg0xwuRmnKBBf6wgnYAwTZ1objbxUWwxNOrKfbdySDt+k3V7Wcp
-	 HBCUSvCw5L4/Qr833lyjaDohk2o1CszYpBXyzGbwkc6P5cemTJCLvdM1hB+JdCp6NIg==
+	bh=0i1q7QXoQpyw7U+kbS9CbTzSUpFctyuEhoMiaekUXV0=;
+	b=N7qyMagp6UgA648wmNwEaXsOOq54zqx6kr5iDOkHkXOiwUDGjlglyL0MunKKyQEiOMrq
+	 RDPc6ZMlgKuTioB88HXuyQoqLVd4pXXyowr63URTTJmMN87RHI4axn06RGL5G+PHPeA0y
+	 jSrLkm7q/7DbeQ46GUeLEMvgvF26lfJvSLKcMQ7zkhTGeNx8il6TRXd6gvnxlMxDy2lYo
+	 idmG4H0Wkjt0j+nrQNU1ipxCDwLEQKFdHjHfuVvEILyuO4YBPrvuSJULuzualtAMqBZ6K
+	 tH9dO6iAy7ltod4bMrFS6XxjZYXSe9gDfsPcOEiQqd9KKk28W2ssj5l9Tmbe61TZwuA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=O3SBUo3Q;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IhrGSlie;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63C14606A332;
-	Fri, 20 Nov 2026 08:16:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C2E6606A333;
+	Fri, 20 Nov 2026 09:04:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=O3SBUo3Q
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DEE661F000CA;
-	Fri, 20 Nov 2026 08:16:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IhrGSlie
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C384A1F000C6;
+	Fri, 20 Nov 2026 09:04:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795162565;
-	bh=gRnXn7A8a8ltwBq+RheRl5mDgBsU2Z5PbLlb1u7e8CU=;
+	s=k20260515; t=1795165481;
+	bh=0i1q7QXoQpyw7U+kbS9CbTzSUpFctyuEhoMiaekUXV0=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=O3SBUo3Qd1oYvzOGUJ5rYpD2S8YhyUOUglVc/LxFyzDJLfoAn4a0DXLMJ/nR+m9M8
-	 sNN5u2N3okNnUETsRESBjksvHqkmuUTTC0GL7Ont3UhHFelFdFj0HhHZ7depwkLkrM
-	 Tfv/2kQ7CM3b6uy97snz53Hu1sfbx+dQsM6VxJ2fSK5sIWd8oDLSs7VmdAamuShnoF
-	 Q9DEGgGxDOMCy7wPXUwg36k8y4264dUYGGGdHlM6kDleWtbjv+uydRghVSrMVw5/EQ
-	 7uL+EVf4BdNUN8gnHe6Dn2+hYNRRLpE+tOjk9vaTUe7t98luO9gcouKOjdlybNTogO
-	 pIEzydj/7wkog==
-Date: Fri, 20 Nov 2026 09:15:58 +0100
-From: Andrey Albershteyn <aalbersh@kernel.org>
-To: Christian Brauner <brauner@kernel.org>
-Cc: ebiggers@kernel.org, hch@lst.de, fsverity@lists.linux.dev, 
-	dsterba@suse.com, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, 
-	linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	viro@zeniv.linux.org.uk, jaegeuk@kernel.org, chao@kernel.org, tytso@mit.edu
-Subject: Re: [PATCH v2 2/5] fsverity: add I_VERITY_BUILDING inode state flag
-Message-ID: <awABahzFVV5pX6bG@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
-References: <20261105115532.613467-1-aalbersh@kernel.org>
- <20261105115532.613467-3-aalbersh@kernel.org>
- <20261119-gefunden-beteiligen-epidemie-5a23ff160ef4@brauner>
+	b=IhrGSlieICNdpQD+S2EFBPZbistZAhe5LomuJdvVVJj61IRoirzeBTM3qemoO3lT9
+	 GqcetHnecqBmRhrcqPij5z1BQxNa1TyVn1qfoBM1Gyb1w3ztBVQlo1I0YcFSgX45yn
+	 ke2ZY7lMRlDk0uJpweHBGJ9TjQc2t57B+g5DSUWxzvfgc205/yGI8O7A1MA1zuUHUo
+	 2LgFe1yV6EBsqFLvqu3Fj26GWae9y28vu9qeGXs5KjD2BC6XZeeiAIGLH9Eey8NKjB
+	 hQen8Th96khGc/3hFyKwHZEA2+1KYvbMQuvnh6W7Vdm5dOXC8itUEuHsN2Ri35Ownd
+	 8lPa2Yq34KlmQ==
+Date: Fri, 20 Nov 2026 10:04:37 +0100
+From: Christian Brauner <brauner@kernel.org>
+To: Tal Zussman <tz2294@columbia.edu>, Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, John Garry <john.garry@linux.dev>, 
+	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 0/2] block: fail short atomic bounce bios in
+ bio_iov_iter_bounce_write()
+Message-ID: <20261120-gratwanderung-wickeln-mitkommen-1fa50bede59a@brauner>
+References: <20261107-blkdev-atomic-bounce-v1-0-f66344262096@columbia.edu>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -60,39 +58,21 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20261119-gefunden-beteiligen-epidemie-5a23ff160ef4@brauner>
+In-Reply-To: <20261107-blkdev-atomic-bounce-v1-0-f66344262096@columbia.edu>
 
-On 2026-11-19 21:48:27, Christian Brauner wrote:
-> On Thu, Nov 05, 2026 at 12:55:27PM +0100, Andrey Albershteyn wrote:
-> > Every filesystem that supports fs-verity keeps a private runtime inode
-> > flag meaning Merkle tree is currently being built *_VERITY_IN_PROGRESS.
-> > They all serve the same two purposes: reject a concurrent enable with
-> > -EBUSY and let the write paths recognize the special writes done while
-> >
-> > ...
-> >
-> > +/**
-> > + * fsverity_is_building() - is fs-verity being enabled on the inode
-> > + * @inode: inode to check
-> > + *
-> > + * This checks whether the inode's Merkle tree is currently being built.
-> > + * While this is the case the file is read-only to userspace and the only writes
-> > + * allowed are for the fs-verity metadata. This becomes false when fsverity
-> > + * metadata is fully created and written to disk or building failed.
-> > + *
-> > + * Return: true if fs-verity is being enabled on the inode
-> > + */
-> > +static inline bool fsverity_is_building(const struct inode *inode)
-> > +{
-> > +	return inode_state_read_once((struct inode *)inode) & I_VERITY_BUILDING;
+On Sat, Nov 07, 2026 at 11:24:34PM -0500, Tal Zussman wrote:
+> bio_iov_iter_get_pages() fails a short REQ_ATOMIC bio. In contrast,
+> bio_iov_iter_bounce_write() doesn't, so a bounced atomic write that runs
+> into a folio allocation failure triggers a WARN_ON_ONCE() in
+> iomap_dio_bio_iter_one().
 > 
-> Isn't the fix to make inode_state_read_once() take a const struct inode *?
+> The first patch makes bio_iov_iter_bounce_write() also check that a
+> REQ_ATOMIC bio covers the whole iterator, and clean up and return
+> -EINVAL if it doesn't. With both paths covered the iomap check can't
+> trigger, so the second patch removes it, as suggested by John Garry.
 > 
+> ---
 
-Yes I have a fix, I will send as part of this series in the next
-revision
-
--- 
-- Andrey
+No objections per se, I just would like see Christoph take a look first.
