@@ -1,44 +1,44 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795190031;
-	b=XhC6hfNyu2OiRp/d4GOhwAVwXTVk0pEF+/lo0FAwJjWSIvyG8AB1+cEEWOCLu7AmNJgi
-	 bRyh8GRqbtEvomIZ/gekfQYqPe8AgMs4MaF5eCEZSSj90mNhpC2fdX6ZcAIqUVIOzbpbh
-	 1HigTKKa+E7jUyuAlCDxVLrUw7m/xpDG6WamrNuE7h889LKOWsEU8rWtFit6CKdm6LFHs
-	 Ev+aVsKXLMntspILEd36h4XB0gMURpnCEgauoAvPdecZBaPUPFKz8d6QmCXKIIGERbgl+
-	 1qnCwHZtqGtCbZzW/sVjmW5++jXkPJ6kqKYzf3WJzMbSPgpJoFT5ULZRsNqvixpu0Qw==
+	t=1795190044;
+	b=ga3e2K7NThvVlb9YM3+AdLtmCATm5ym/rFrXqIYhK+IbkNAkOtsyM+qrZaXypCSk7+Bu
+	 1l5Gci/gzfwuEeKWsHVjUA19MScL3kg9kdIkE1Jq+XQfxv7x4pMFnEl1Oihb1oaUsA1fF
+	 7en5Yndv5lX5gXqpbHMnTtIgaZTgygBnaXhUh1hH8vpubT9ok0QbruAqHBdnBXP8ZNGY2
+	 YLbNdy1Ad4n5SQzPANvRD4Br4qOklX6WfC1AYxSJM4unXkIJ1EDn02QcfIlvtH+xndJ0O
+	 2GPijPiXAjvqj95CUotSUEwHKa6kc4kK4/BIA3rixKN9F5f4Y9j22+TPhE8GZ+GgxXg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795190031;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795190044;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=E5gSXNwtA5kQIUw/uoqqaybdSZDyhnTy+gYKDJ9u12s=;
-	b=BDfRlbDAp77e46FNdW6dh54AMzZ4KxYpLFw71qxSxBtA6RaOzLx/Lv2fK5c+6Md6obMM
-	 nGDQoYWmuMncS+B+MjePD4qRqIwfIFkHNLQNd0GBVjamrVvW3AuBR8eYB6xs8j7cfNlps
-	 QNshX0DwlLuUD8o1/hMshuDaCYqzIb2EcbFJLW1PTrWqpjKk5dWIPTwBJA5psYTKP+XAw
-	 so+CNYLYxVFCscd1EYbfsCRAGTqFXqFrFMaRDTii6xYkTlVtRqx5gYgPvlROGo0K1TR8a
-	 FTKvjGw2oqbR1ooh+uxvydPu7LGa6WElYDakeD298EcoVyYsxxJ8VjFgoJY7EuaETOw==
+	bh=d64oy+cTLXmeYoVqPxnHx95FYIWBNAnJoC4BVDuan+U=;
+	b=jVJ+bbDTLO8HVM3bNojVOJf903aRQj0ZSwisn7yKXhcTQHfVbeJrKX2jQM/mQHgYSg3x
+	 xhqH8hFa/nN2Upkajde8b9WwuqpXQX0y0HAreNt+xRCRRReIwYKRKpRuW7YDnuGiy1syS
+	 xfQX9FlF+JdfMXGmo1zowo5vYK3nSQVh8LfsHYnfCJDRABgCjti1eJ1OAnUxaRAr5CLDZ
+	 1M+ms4us0BxulTbCq4byra5aTabC8E3tuUffAnpRGE7X6Z77+T3C8kox8QyAXqmcJdm9w
+	 hzD39SVHA65Yo66k0usBdZI0QDhTNb/HbPGcFomVSx4/1hB1PGtPe2LRpBFR4Rr+HZQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OZdZos0i;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Z67BRIpI;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D26C606A334;
-	Fri, 20 Nov 2026 15:53:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7118A60A2600;
+	Fri, 20 Nov 2026 15:54:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OZdZos0i
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 991DB1F000C0;
-	Fri, 20 Nov 2026 15:53:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Z67BRIpI
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D6A581F000E1;
+	Fri, 20 Nov 2026 15:54:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795190031;
-	bh=E5gSXNwtA5kQIUw/uoqqaybdSZDyhnTy+gYKDJ9u12s=;
+	s=k20260515; t=1795190044;
+	bh=d64oy+cTLXmeYoVqPxnHx95FYIWBNAnJoC4BVDuan+U=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=OZdZos0iO9L6qP1cpJU5weQvoMm3GHHjbXInIphUY28MGhkG3q2du8yD1xctmgmGH
-	 gbt5/zngGoW28ArrsGoS5dH08PXLMsK9lDXGaagnSQ4md9kSA5Bb/AILT1ycq4YnED
-	 LuCGIqLwqkUtQuvMURjrahA5GCFlOodAjsxyCa5A6qrAzx5WM20BmRCGS02h6RpWuA
-	 qR0TgLvJ3tyiP1vP9Jc2EVhb7AMmvLJIHj1L7MupZbXQsL2OrPRmydy6SRJBoRHF4u
-	 TIg/XFB1MetA6nLlgzGlBgJsFmuMtHquozmk6XV7WQU1seCdlRciBDnscGTQY6evN8
-	 Bi2lWhQPS3Vcw==
+	b=Z67BRIpIOVAM0LHS7fHGKmS5m2/l5JJqzXdbkyXd2XkWDGuFUOGdpxWlyWA2FNVTa
+	 x/LAqJqHMSru5710+GExPrz4v17uGZMGuLODrcL3MRYowsVCgeEgq3rpRKeTwCiTBJ
+	 O7eOdE2ccLiZhUMBCJF2xBZORxMn5bQygFv3fMMBikRRl6EukeA6nAc/NJ8O+pV80L
+	 InwrJhbpK4urgQVLC8emFR6Dl1xoY0ToXZZuxT2DZqlMPikif2IMmSS95Y5oZ4V/Mb
+	 JcKF4vx82iI4k3uH9CVWzXOozq/wMR2yeLaYM3J5/lQWDIbvcRNqxkmVzqZBWv09+k
+	 kAVD1evrBv31A==
 From: Andrey Albershteyn <aalbersh@kernel.org>
 To: "fsdevel" <linux-fsdevel@vger.kernel.org>,
 	"fsverity" <fsverity@lists.linux.dev>,
@@ -53,12 +53,10 @@ Cc: Andrey Albershteyn <aalbersh@kernel.org>,
 	tytso@mit.edu,
 	chao@kernel.org,
 	jaegeuk@kernel.org,
-	viro@zeniv.linux.org.uk,
-	Jan Kara <jack@suse.cz>,
-	Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v3 1/7] fs: constify inode argument of inode_state_read_once()
-Date: Fri, 20 Nov 2026 16:50:23 +0100
-Message-ID: <20261120155032.187246-2-aalbersh@kernel.org>
+	viro@zeniv.linux.org.uk
+Subject: [PATCH v3 4/7] iomap: use fsverity_is_building() to check for fsverity IO
+Date: Fri, 20 Nov 2026 16:50:26 +0100
+Message-ID: <20261120155032.187246-5-aalbersh@kernel.org>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20261120155032.187246-1-aalbersh@kernel.org>
 References: <20261120155032.187246-1-aalbersh@kernel.org>
@@ -73,29 +71,30 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Constify inode parameter so that callers can pass const inode. Callers
-do not need a change.
+Recently, inode gained new I_VERITY_BUILDING flag. This flag indicates
+that inode is undergoing fsverity metadata construction. Previously, it
+was indicated by stale iomap flag on the IO, now we can check the inode
+instead. As fsverity inodes are read-only, the only write IO happening
+during I_VERITY_BUILDING is fsverity metadata.
 
 Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
-Reviewed-by: Jan Kara <jack@suse.cz>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- include/linux/fs.h | 2 +-
+ fs/iomap/buffered-io.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 5b3a100aba77..5c62a968fbde 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -878,7 +878,7 @@ struct inode {
-  *
-  * We hide all of it behind helpers so that we can validate consumers.
-  */
--static inline enum inode_state_flags_enum inode_state_read_once(struct inode *inode)
-+static inline enum inode_state_flags_enum inode_state_read_once(const struct inode *inode)
- {
- 	return READ_ONCE(inode->i_state.__state);
- }
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 6d843b168d5f..0a176741e7b0 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -1930,7 +1930,7 @@ static bool iomap_writeback_handle_eof(struct folio *folio,
+ 	struct inode *inode = wpc->inode;
+ 	u64 isize = i_size_read(inode);
+ 
+-	if (wpc->iomap.flags & IOMAP_F_FSVERITY) {
++	if (fsverity_is_building(inode)) {
+ 		WARN_ON_ONCE(folio_pos(folio) < isize);
+ 		return true;
+ 	}
 -- 
 2.54.0
 
