@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795213067;
-	b=NpOjs8ZXilvZE6mEECFCUT6hktrWlrSlPuNiXjLQOpAFFL8MI3SOS968MNh6srdFfHMO
-	 PxomZZdb1dqnTkMCWnRISoesHmQy5IKMR5I9zLINtt5B8+YpqWpBBUDuWRrmwy+9iOu3q
-	 1pgmumbLRMN4VEva2HnEo/mL5NCbLnwlyQxpowRIYfG3u2ldvA/CVqv5TOAHrT5P7vk9Z
-	 KGWWn7fWWe81L32vr0L49UIZ9eKaaLjdoRXLmuw3D1KA/0B+Ln/amfLwPEnXGgIyyQHIo
-	 fD8gv9M9PxA2A7FCLxuUyH3FyBl1Ghjdv3afpY1prTZ2yWXl1P2qzx0CQuFqUT15L7Q==
+	t=1795213214;
+	b=M6rBDEUSnjcPRas9YA5LXQBclqLdINidPJQ2V9APj09B1mjIms2eCxiGed0uDq6BG1M6
+	 baoH7WtMDImXXsvItl/ZVIKuXvwDLY3eik3CttrZclxT8metUarjSIZy0A//XS5eAU61k
+	 dB103ux101DIS+vPkfCLQgVnyIrGAzYgvMJ/OAbaJHgoYhvlF7Ita3lT8lNT+hAmaF636
+	 n42fJ5oqKeoabmZ3L+QZyBbqareD34Oll9Iogud+98m7LQ0YYieMHtFP8929LC3A/jPxI
+	 hYp/nNT0Tyb+lMbpJFRTVO5Ow1VgDiEUBeMEXJsvp19IuZ9McRJx4ZVGjoOshxjP3UA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795213067;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795213214;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=khFB9XB534fgekb/CoE+7bFIpuAhIcZTTRU6XFAnt0g=;
-	b=3xWpOLOFBEm2bC+y9OgOKZGMAOIOi19u9Z1IaOVw9WjIWuE/Szx4HOhRUS3l9Vz3gAXh
-	 gclyTHhV/n649ZUFbuYIbKFcmkPHXb10Zh+CEvEOut4x1Olg2UULefS5i+/VqTk8DaTce
-	 w8kDS6fuVOq1yoBHFApX36yYcK+kRKPhscujtris7SjoDoSZBT2Ci+Uya3kHLX06M+PfR
-	 wy7YcHqZeqJoN1Fdtj4313ZLex8fYbxRj5p0R1f449MlKYWuC53rovLeniZAKMijQ3Hgu
-	 Ju097MAkI7gLkSEM9q8C7Xdts5G6cnPqn+aT5ccJvd4hFVc+B2v5CJiLcuy0XqDIezw==
+	bh=Aq8c5jMV6FAXyr7m5r03HEVCZDhHL41cwgsujaioS6A=;
+	b=49EeBsijQJjAxJSBoAaRP3bK95kkOE2Iq4r+VTfn9QDQ5BTIV3xKdcEhWVFbhxA2ZWB7
+	 bZD3n6sHJOT518wYBixXDc6oWE9XJd7S5LS8rHDiRk38lF5/waG34dmC9hgfe17ZZY9S0
+	 iRA6n0KVo67uas8V7gnKX7uK9PYmP8XlODCKJiJV0omHW8BxQ2WWPd5vX3B/HelJ/c5Ju
+	 rONWfZzmilkK9v4EF5Aw8R6b8A4ovxaojmHvtwBiFXRSXzHTPYEL8/n1bm3GHPwsmfCdk
+	 bN0792p+Ekh9EMHBbMrGlVKqn8tZR1wHsn8sNDMIGswPWt+enpKM4GHvXfc/o/yoatA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RWUwWl3D;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mROE1RDF;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D639606A334;
-	Fri, 20 Nov 2026 22:17:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 498C6606A6BD;
+	Fri, 20 Nov 2026 22:20:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RWUwWl3D
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5DE581F000CA;
-	Fri, 20 Nov 2026 22:17:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mROE1RDF
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51A981F000D0;
+	Fri, 20 Nov 2026 22:20:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795213066;
-	bh=khFB9XB534fgekb/CoE+7bFIpuAhIcZTTRU6XFAnt0g=;
+	s=k20260515; t=1795213213;
+	bh=Aq8c5jMV6FAXyr7m5r03HEVCZDhHL41cwgsujaioS6A=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=RWUwWl3Dzutjwu7Cy5jDblMhQtXMeEMH4EURZs10qbRLcoXjIZ7zcCpQAVc+Naejb
-	 l/HCvk8+QixPPXRUj7W2pxs1bVmhbNVSQCR2qD+y/1Ux9RSGs6CE2n8X2DCp5zGjbQ
-	 /CZYQdVIC93EmoqO8hA8heVbGIFhudDBJ1uC2HxllmaCFeSNbqBKrjHt4hqwXwr663
-	 ljXB95Jbz6123HBoN4nK/hmKhn/5h7romjkMCkp1itCWaHuiw0yaD7gAkCoOyZBqgA
-	 hVOZEJOOYcMRoCo6oadpSJYrrkm1Jc1fTUZC8H0aul3fHOIdrLW6xv+TBKRnrfKvXw
-	 3UOjZpRfSTChA==
-Date: Fri, 20 Nov 2026 22:17:44 +0000
+	b=mROE1RDF4XR/10ikQZwTB7UauvDH8Mr0dtNAipdw8X4FBhIUtl4UuLN1CK6fWMrvA
+	 S6GnDbxs18Gpd9S+N167jEN6pdhS1mHG16PUjB8K1WV6xmBNbQrsVM3FReCSvZ9j1P
+	 ghEnvSdOgS5O2d5+USYeir0mVGqjfa8uecN4PpOIrF1TBwSv7Mczx7RFXRcYU0tNWs
+	 Iw+TgsABMdafm2FfaPqUnqKVmigWAcpU8qcKWlnbpj2KHLKtry+JPYVirQVxnF0R8F
+	 OldD5aP2DlLdJbIkvBTArvseERJ/s2ZYpD0bpeZ9WhZ2TXWU/1YsQ6/EeqWciLHfhX
+	 B/zHscYkajU8w==
+Date: Fri, 20 Nov 2026 22:20:11 +0000
 From: Eric Biggers <ebiggers@kernel.org>
 To: Andrey Albershteyn <aalbersh@kernel.org>
 Cc: fsdevel <linux-fsdevel@vger.kernel.org>,
@@ -50,12 +50,11 @@ Cc: fsdevel <linux-fsdevel@vger.kernel.org>,
 	linux-xfs <linux-xfs@vger.kernel.org>, dsterba@suse.com,
 	Christian Brauner <brauner@kernel.org>, tytso@mit.edu,
 	chao@kernel.org, jaegeuk@kernel.org, viro@zeniv.linux.org.uk,
-	Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v3 3/7] fs,fsverity: add I_VERITY_BUILDING inode state
- flag
-Message-ID: <20261120221744.GB3048696@google.com>
+	Boris Burkov <boris@bur.io>, Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v3 2/7] fs: strip FS_VERITY_FL from FS_IOC_SETFLAGS
+Message-ID: <20261120222011.GC3048696@google.com>
 References: <20261120155032.187246-1-aalbersh@kernel.org>
- <20261120155032.187246-4-aalbersh@kernel.org>
+ <20261120155032.187246-3-aalbersh@kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -67,37 +66,26 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261120155032.187246-4-aalbersh@kernel.org>
+In-Reply-To: <20261120155032.187246-3-aalbersh@kernel.org>
 
-On Fri, Nov 20, 2026 at 04:50:25PM +0100, Andrey Albershteyn wrote:
-> + * I_VERITY_BUILDING	fs-verity is being enabled on the inode: the Merkle
-> + *			tree is under construction.  The file is effectively
-> + *			read-only to userspace; the only writes happening are
-> + *			for the fs-verity metadata.
+On Fri, Nov 20, 2026 at 04:50:24PM +0100, Andrey Albershteyn wrote:
+> The common use of FS_IOC_GETFLAGS/SETFLAGS is get-modify-set loop.
+> Filesystems could return verity status with GETFLAGS, attempting to then
+> pass FS_VERITY_FL to SETFLAGS is not allowed.
+> 
+> The ext4 and f2fs already treat FS_VERITY_FL in the set path as no-op,
+> however, BTRFS returns -EOPNOTSUPP. So, the modification of other flags
+> doesn't work on BTRFS for fsverity inodes.
+> 
+> Fix it for BTRFS and anyone else, the ext4 and f2fs masking becomes
+> no-op. The file_get/setattr() path is fine here as this flag is cleared
+> right before fileattr_set_prepare(). The future fsverity support in XFS
+> would also need it.
 
-Existing dirty data can still be written out though, right?
-
-> diff --git a/include/linux/fsverity.h b/include/linux/fsverity.h
-> index 61fe96ccdff6..e02f79682e33 100644
-> --- a/include/linux/fsverity.h
-> +++ b/include/linux/fsverity.h
-> @@ -36,11 +36,12 @@ struct fsverity_operations {
->  	 * @filp: a readonly file descriptor for the file
->  	 *
->  	 * The filesystem must do any needed filesystem-specific preparations
-> -	 * for enabling verity, e.g. evicting inline data.  It also must return
-> -	 * -EBUSY if verity is already being enabled on the given file.
-> +	 * for enabling verity, e.g. evicting inline data.
->  	 *
->  	 * i_rwsem is held for write.
->  	 *
-> +	 * I_VERITY_BUILDING is set on the inode for the duration of enabling.
-> +	 *
->  	 * Return: 0 on success, -errno on failure
->  	 */
->  	int (*begin_enable_verity)(struct file *filp);
-
-The new sentence doesn't seem relevant here, as the flag isn't set
-during this method call.
+The commit message should explicitly state that this changes behavior
+not just in the get-modify-set case on btrfs, but also makes
+FS_VERITY_FL be silently ignored if it's attempted to be set on a file
+that didn't have it before.  I guess that behavior is okay since ext4
+and f2fs do that, but we should be intentional about it.
 
 - Eric
