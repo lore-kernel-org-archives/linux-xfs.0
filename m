@@ -1,58 +1,46 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=213.95.11.211
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795192897;
-	b=yGPM4lrgQrAc5EbVW0XcTm11FDgHrXhHIRHq4/8Yherim+MBJ6IxTiBqYJ+M565hscgk
-	 ukcAIhuBI8VlOVyDzIOxwmc52ifkMF/9tKzxDQ7q1WVL70TELeVEc976ri/vjiCSGKQ5J
-	 e+mql3SgTHTRj2LLbBHY6voqDMeNStjvUHxmMtuJq9+kG4+sIPeo0dMuZQvHgSDdeCRgv
-	 TjJHAecHRaql20Vbs5YkFD8K60QS6sg16CEI/+5G1i/45QxioDN1D6IPtZRTFdA5CyqOD
-	 iUY+d9yAccX2ajMjGTlLQPpCuA4H8qewz53QiTWdGbp3h0gfP5EF/hNIvFQ1LWkg0/A==
+	t=1795192993;
+	b=x3oiYs7xn8BCMd7rA9OostRCtilHNylSGRfTdDe2CCvAwqTHvRolUgLH0BryQoN+OmV7
+	 CJYpdResjcXF+Ys21gXOYIwNk66N+KZIvJMEbHC73BZyAr9u++u3BDZPABLnP7NF1rGlc
+	 CqeYpEGhQ0uqiWnm4MaHetDfWRa1kytHhjkNYc0Bzl3GqnuEJqu29GsnTqN+TIE8wAfIn
+	 qHUuckDpNJlkl88UqK1q/t2G87bIbCule3SV+saRqvFQMuTStyb6JmjNYC4Q1RWP7adZ6
+	 +ytNmqSSm7bByBJIWFPOy3cUqgHaLcheurYkpnOkf1l8oJoVba5Z7hkKhJGnQV5zczw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795192897;
-	h=DMARC-Filter:DKIM-Signature:Received:Date:From:To:Cc:Subject:
-	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
-	 In-Reply-To:X-SRS-Rewrite;
-	bh=1Hq+hojdoxw+/v4KlDxYaB6PBI4yggOzHf2YZeSElgU=;
-	b=u4eswtsh8X2MXP8hMAZNcszlj+0LqnsGOnRbtzMIQECxCh6gynQUfuFzrFWaHhGkT/Jo
-	 8xI0pUgxGieYHGLtm2BcFfEmeN+4JOuEYW39z3Iqo/U42rOJ+jVYVHGzOdsqP2wIoyS82
-	 Y+s0qiP0SXjrj3u0W1egCeQVH/RN/qagGs7tt2sJ9gu00E1JJnnOoj0flE++7u4jlxBiE
-	 XIvjQhoZXLFgppF54X/kaCqO38ILGHSDvQUgb3GBp7MMQjoIoQvBq0jEWSCXw3883DVym
-	 65ebhlseNie6RooJxqBjSqGasct01bZcxrP9j0hdNnoY+bNrRrSLERqN/kshuf5p6RQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795192993;
+	h=DMARC-Filter:Received:Date:From:To:Cc:Subject:Message-ID:References:
+	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To:User-Agent;
+	bh=+31TwLq8mlbw/chbUXL8vDb3S/TW39pYqyiL0lr5JVs=;
+	b=A3F8mIfK7TSbNEORSuLTU5QRGLGB54TbVAmVCDRvgSoh4+dBwytHri7TRC/WrCNeWDDg
+	 Bc2ljGzJYJaDqehLUCPUM0YFCrOrbf6G9iK6qAq4aircdJqPOsehl23vVt2dvECpCvJWg
+	 tEYmkoAP48oUM7jD6vpwH8hQya//mV88Tf+MZ+D5iaAnGjUJOaiq03j4qOlRGPJGSbKBQ
+	 CTUyFn+/ts4m07sDPOe+NmRqiT8oPBVoLuhlEJciH56JPhaCYNVP+ZigkK3cZ7SoWotWR
+	 6zo42FiFQYXWqcmXbeMXsZCuWr03s/HVAWrF9jZsMVXjKvgxoy4q7QKj4vVPj5Kroyg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=infradead.org;
-	spf=none smtp.mailfrom=bombadil.srs.infradead.org;
-	dkim=pass header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=B5yvfzUS;
-	arc=none smtp.remote-ip=198.137.202.133
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=pass header.from=lst.de;
+	spf=pass smtp.mailfrom=lst.de;
+	arc=none smtp.remote-ip=213.95.11.211
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADD5D606A60B
-	for <linux-xfs@vger.kernel.org>; Fri, 20 Nov 2026 16:41:36 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org ADD5D606A60B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=B5yvfzUS
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=1Hq+hojdoxw+/v4KlDxYaB6PBI4yggOzHf2YZeSElgU=; b=B5yvfzUSXEO1sRWrtdkx9XPhiY
-	5mZG3aVuHhGrYg9Vcv8LIMlwj9Xxx1nsKmXoaODTH2uQtOCL0X/dWSgfHFrsiXHFjoVRkysZqO+h1
-	y2FXAcwqfX+S8r3OzvzgzAt5+fksbhBryg8Fs1gr8gGXzknF+08AS573SE4hM2451fQ09CpSPGvlR
-	mLdTE2mINSDX0Bvs3SoohnIrAyDaYuvrcRFr5eDvIU6GdnoflSoLtvUa0jxnZgzxL2lDy5aRvSMOm
-	59UXwZPCWmA4wFiniuVEKfBVVn/bpiK9BFLBp0qmgv2KKMe99Yb3ezsgfFuWAPZpdjr2Nb9jMP7n8
-	jh6582bQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.100.1 #2 (Red Hat Linux))
-	id 1xURg8-0000000FZrq-0gu6;
-	Fri, 20 Nov 2026 16:41:36 +0000
-Date: Fri, 20 Nov 2026 08:41:36 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Dave Chinner <dgc@kernel.org>
-Cc: linux-xfs@vger.kernel.org, cem@kernel.org
-Subject: Re: [V2 PATCH 00/59] Validate journal log items during log recovery.
-Message-ID: <awB4QFBLZF6fQzEG@infradead.org>
-References: <20261116231707.3625263-1-dgc@kernel.org>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E591D606A33A;
+	Fri, 20 Nov 2026 16:43:12 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E591D606A33A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id AE6396732A; Fri, 20 Nov 2026 17:43:09 +0100 (CET)
+Date: Fri, 20 Nov 2026 17:43:09 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Christian Brauner <brauner@kernel.org>
+Cc: Tal Zussman <tz2294@columbia.edu>, Christoph Hellwig <hch@lst.de>,
+	Jens Axboe <axboe@kernel.dk>, John Garry <john.garry@linux.dev>,
+	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 0/2] block: fail short atomic bounce bios in
+ bio_iov_iter_bounce_write()
+Message-ID: <20261120164309.GB32683@lst.de>
+References: <20261107-blkdev-atomic-bounce-v1-0-f66344262096@columbia.edu> <20261120-gratwanderung-wickeln-mitkommen-1fa50bede59a@brauner>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -64,18 +52,14 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261116231707.3625263-1-dgc@kernel.org>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20261120-gratwanderung-wickeln-mitkommen-1fa50bede59a@brauner>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-Please try to get this going by splitting it up.   The first 11 patches
-have nothing to do with your design and framework, so let's get them
-out first, Ccing people who touched the area etc.  And the apply
-geometry at log recovery bits are scary.  Yes, we probably need them,
-but without testing I fear they might create even more problems than
-they solve.  So let's get coverage for that.
+On Fri, Nov 20, 2026 at 10:04:37AM +0100, Christian Brauner wrote:
+> No objections per se, I just would like see Christoph take a look first.
 
-Once we get the initial bits in I'll try to move on to the rest, but
-even there it would really help to chunk it up, i.e. do a series
-just for the generic log recovery changes without item-specific bits
-to keep everyone focussed and speed up the iteration.
+No fucking idea.  As far a I can tell atomic writes are a mess and we
+should not have done them in the first place.  Ask the people who
+create this mess.
 
+---end quoted text---
