@@ -1,44 +1,44 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795190036;
-	b=BOa3J592wLWirqK7AJSPwuovgbDLRKFHtwzxIbRfY/8/21P6dJY2Xg5Aj0ZVtJSVMqn8
-	 x6zGzresnLPP1LBU9tpiDHQMqFcNP5Md3yoN+JP3mDW6B4togb3RqYLAbdsCyJEYRUuye
-	 ljnTUR/x8c9vksfJlpBvu5JOemJ2kgva3Uvk79NdqUB7W4q0f+Ivf8mNqPnC16LZkrIwo
-	 FPfiXmEciH3WxdVI5QeM2pWQ6Z0qziQNsc5OJo/BXj8qgvhaEU6KSaKyPAfizYTTAjno2
-	 ErvWFQjDzTHPN4/iqXj80kfdNnqLCvCGiXomA5xRJPbtmqQJK6Lz4LTC+r0M7mkdgHA==
+	t=1795190031;
+	b=XhC6hfNyu2OiRp/d4GOhwAVwXTVk0pEF+/lo0FAwJjWSIvyG8AB1+cEEWOCLu7AmNJgi
+	 bRyh8GRqbtEvomIZ/gekfQYqPe8AgMs4MaF5eCEZSSj90mNhpC2fdX6ZcAIqUVIOzbpbh
+	 1HigTKKa+E7jUyuAlCDxVLrUw7m/xpDG6WamrNuE7h889LKOWsEU8rWtFit6CKdm6LFHs
+	 Ev+aVsKXLMntspILEd36h4XB0gMURpnCEgauoAvPdecZBaPUPFKz8d6QmCXKIIGERbgl+
+	 1qnCwHZtqGtCbZzW/sVjmW5++jXkPJ6kqKYzf3WJzMbSPgpJoFT5ULZRsNqvixpu0Qw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795190036;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795190031;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=ETEjCRJqTj2rcNQGoOiUFzLxZ0618BE5SBDlsxU9kIQ=;
-	b=cyzY4MNWFp9SOHsjpBtLkZdBXb0ZDTxcVBBpGWXkLvV9ZnMN6gx15bDyYwVvoxUC4jyR
-	 4QCYx3G5eaB8riqkSNBUmLPvcTjZW85gCvDmG/reDu8HY1im6QvQxXkvkpAuDJJXJsOzE
-	 jP4tGdgXqo40o85tk+j/GsrJt4AUHdJXfMbSGyor9NSvcd5qlUiCNmcXiHRD777+ffjOZ
-	 sZiOy2msl7idxppL7mfK9iH6CuTD5vd5OiT7bDuB9SwRp6XOk427qQC3LYN4RYddpChVC
-	 YFvWoMugN0EURsXNIakHexbtoUztMXg05555dlmfUvlk9Cgk4jh111f8SsVrDqU002w==
+	bh=E5gSXNwtA5kQIUw/uoqqaybdSZDyhnTy+gYKDJ9u12s=;
+	b=BDfRlbDAp77e46FNdW6dh54AMzZ4KxYpLFw71qxSxBtA6RaOzLx/Lv2fK5c+6Md6obMM
+	 nGDQoYWmuMncS+B+MjePD4qRqIwfIFkHNLQNd0GBVjamrVvW3AuBR8eYB6xs8j7cfNlps
+	 QNshX0DwlLuUD8o1/hMshuDaCYqzIb2EcbFJLW1PTrWqpjKk5dWIPTwBJA5psYTKP+XAw
+	 so+CNYLYxVFCscd1EYbfsCRAGTqFXqFrFMaRDTii6xYkTlVtRqx5gYgPvlROGo0K1TR8a
+	 FTKvjGw2oqbR1ooh+uxvydPu7LGa6WElYDakeD298EcoVyYsxxJ8VjFgoJY7EuaETOw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ik3ISORV;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OZdZos0i;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5560560A2600;
-	Fri, 20 Nov 2026 15:53:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D26C606A334;
+	Fri, 20 Nov 2026 15:53:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ik3ISORV
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3E1FA1F000C4;
-	Fri, 20 Nov 2026 15:53:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OZdZos0i
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 991DB1F000C0;
+	Fri, 20 Nov 2026 15:53:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795190035;
-	bh=ETEjCRJqTj2rcNQGoOiUFzLxZ0618BE5SBDlsxU9kIQ=;
+	s=k20260515; t=1795190031;
+	bh=E5gSXNwtA5kQIUw/uoqqaybdSZDyhnTy+gYKDJ9u12s=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=ik3ISORVw1eoMJOwfI0KgGK5y31QoAyanFb4Y3ShFXUYimJxc2d+lHdECp6wbpq/X
-	 +bGCs1jwb/rlqfI6/FUiKQbdeEyHzVLGB1b7X+86YfAF6dajtzPI2BMboiez0JfozO
-	 im55TIYLktdcPKj/QB6YFAlC8Q8P/h6+bXLM5OM2/67VAeOuhCxwszEC8j1A1nvGqD
-	 LwkNma1hLPoNfH93m71sTQOQ1oGZyjsAsdJkop1aYgGr3A1/9LKPQfihMLfF0S8kVN
-	 n+FfHX2l1SB7cu1rcBxaf8vbzQM526/l/njvCIDv3GSodQeQ+BFsxtjgelGFaSGEgH
-	 JqeRlGV7msHZA==
+	b=OZdZos0iO9L6qP1cpJU5weQvoMm3GHHjbXInIphUY28MGhkG3q2du8yD1xctmgmGH
+	 gbt5/zngGoW28ArrsGoS5dH08PXLMsK9lDXGaagnSQ4md9kSA5Bb/AILT1ycq4YnED
+	 LuCGIqLwqkUtQuvMURjrahA5GCFlOodAjsxyCa5A6qrAzx5WM20BmRCGS02h6RpWuA
+	 qR0TgLvJ3tyiP1vP9Jc2EVhb7AMmvLJIHj1L7MupZbXQsL2OrPRmydy6SRJBoRHF4u
+	 TIg/XFB1MetA6nLlgzGlBgJsFmuMtHquozmk6XV7WQU1seCdlRciBDnscGTQY6evN8
+	 Bi2lWhQPS3Vcw==
 From: Andrey Albershteyn <aalbersh@kernel.org>
 To: "fsdevel" <linux-fsdevel@vger.kernel.org>,
 	"fsverity" <fsverity@lists.linux.dev>,
@@ -54,11 +54,11 @@ Cc: Andrey Albershteyn <aalbersh@kernel.org>,
 	chao@kernel.org,
 	jaegeuk@kernel.org,
 	viro@zeniv.linux.org.uk,
-	Boris Burkov <boris@bur.io>,
+	Jan Kara <jack@suse.cz>,
 	Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v3 2/7] fs: strip FS_VERITY_FL from FS_IOC_SETFLAGS
-Date: Fri, 20 Nov 2026 16:50:24 +0100
-Message-ID: <20261120155032.187246-3-aalbersh@kernel.org>
+Subject: [PATCH v3 1/7] fs: constify inode argument of inode_state_read_once()
+Date: Fri, 20 Nov 2026 16:50:23 +0100
+Message-ID: <20261120155032.187246-2-aalbersh@kernel.org>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20261120155032.187246-1-aalbersh@kernel.org>
 References: <20261120155032.187246-1-aalbersh@kernel.org>
@@ -73,49 +73,29 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The common use of FS_IOC_GETFLAGS/SETFLAGS is get-modify-set loop.
-Filesystems could return verity status with GETFLAGS, attempting to then
-pass FS_VERITY_FL to SETFLAGS is not allowed.
+Constify inode parameter so that callers can pass const inode. Callers
+do not need a change.
 
-The ext4 and f2fs already treat FS_VERITY_FL in the set path as no-op,
-however, BTRFS returns -EOPNOTSUPP. So, the modification of other flags
-doesn't work on BTRFS for fsverity inodes.
-
-Fix it for BTRFS and anyone else, the ext4 and f2fs masking becomes
-no-op. The file_get/setattr() path is fine here as this flag is cleared
-right before fileattr_set_prepare(). The future fsverity support in XFS
-would also need it.
-
-Cc: Boris Burkov <boris@bur.io>
-Cc: David Sterba <dsterba@suse.com>
-Fixes: 146054090b08 ("btrfs: initial fsverity support")
 Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
+Reviewed-by: Jan Kara <jack@suse.cz>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/file_attr.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ include/linux/fs.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/file_attr.c b/fs/file_attr.c
-index 833e03810b24..81bf55f9b255 100644
---- a/fs/file_attr.c
-+++ b/fs/file_attr.c
-@@ -199,6 +199,16 @@ static int fileattr_set_prepare(struct inode *inode,
- 	if (err)
- 		return err;
- 
-+	/*
-+	 * FS_VERITY_FL is settable only via FS_IOC_ENABLE_VERITY; never through
-+	 * fileattr
-+	 *
-+	 * Treat it as a no-op so the FS_IOC_GETFLAGS/SETFLAGS round-trip
-+	 * doesn't break for other flags
-+	 */
-+	fa->flags &= ~FS_VERITY_FL;
-+	fa->fsx_xflags &= ~FS_XFLAG_VERITY;
-+
- 	/*
- 	 * Project Quota ID state is only allowed to change from within the init
- 	 * namespace. Enforce that restriction only if we are trying to change
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 5b3a100aba77..5c62a968fbde 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -878,7 +878,7 @@ struct inode {
+  *
+  * We hide all of it behind helpers so that we can validate consumers.
+  */
+-static inline enum inode_state_flags_enum inode_state_read_once(struct inode *inode)
++static inline enum inode_state_flags_enum inode_state_read_once(const struct inode *inode)
+ {
+ 	return READ_ONCE(inode->i_state.__state);
+ }
 -- 
 2.54.0
 
