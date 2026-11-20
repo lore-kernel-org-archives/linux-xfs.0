@@ -1,44 +1,44 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795190310;
-	b=eEeajdaX58GksMBVxVcY8JA4ILe6BrqXMdTs3YCcovluAn3/a38C49oGn4BH2wv6+2t5
-	 chf2SEHaEEy7uj39BIoKjqsDkic4K4bt3/wq/HNJ+gUsMqHoyjwkoVexITsibTA7lEuEm
-	 yZ7pSpyxBcVprJLpjgfNxDb6mWNQsMO2HHFsFzfrlaJ5UhOQRf2Tr6i2B3Dh2ccQ4zTyU
-	 fpK4vPExb0iWNXTD5KQ1cmhYV8caI2Z3kwnqgyxhlmaCsmIS5u6tOW/5igtj1sNL9lyqc
-	 9h/jWH1PosYdalSar+97U4rThBKpb73aiNsyAsjXHuTeWBj6p4lHv/N4HP+8uKSvJXw==
+	t=1795190316;
+	b=3CFKxI9DdfnLNhDgpKu4Z8wzz+3gRrkhwqHU4nASf7j1lhFOLGN4cFpyMhCOeVlFIMBy
+	 w5vnsvGljy4A0bUdET+0rcDskpmJwbtjIWH3zpZ/3353Vr+p2SoC4iL7B9c7lgArXKjuZ
+	 UQwpz4npjY8sXiwccqkpftBfuEp/8eZf+Iu2jiRIfduJb7fxmcrleYSn9SHdU47IlGmrZ
+	 qcwwSqCo0kDX3dq2ls+4WCgbFpnLAocCtDFRPeK4IdtVugFVsCQsxql8G+0jG/VAxTgHo
+	 ErNeQ7hWAPHJfHB7GaH58R5tPrq4VOB4AsDxOLoowd86pIjFhVChumuFwY8s6EzTxCw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795190310;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795190316;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=cRNvHuL/5PrBLE24h6cbDnjO9r11f0E2kcoBC+EwYWE=;
-	b=pSFUl1g8kz+QbHW+a3n0qilNKQV8mwQ3dJUCZ3ig5Z8SE240GTLJSTzw7blaB00HPQpr
-	 XLochppyxuWKc5Cdr8tRTrCTbef0/KRlVecI6y7R670dSd7NGVmbMvrWESr03sKsCJZiS
-	 +zjChIZRhiv133VP2N49nKwOveXzC5xyvIifgDy/NosPyYlg5nRTsOkwMCUHHfRVZmNEt
-	 fiHgJ57/QGU1NuYwX/j3v2D1PVCw+tX2WsL+DpQ9L8NyC0PkazqYZVXjZan5XMEz6nkbH
-	 pc3ZH4TQkXereItAj1Wt9qYa3vvxnkFgK8OkNTkLnA3CscmEVWgiN8nn+83XqH9J/sg==
+	bh=0GRF4szdTQx2tPRYFJ4gnZN+nH74SF0ck2Adu/0U3S0=;
+	b=l6O52/uIqaMPT/ySuqpGUDfGgDwsFtFmYXIpbGiLjeyPYXPd2rFhwpxjvgDwYISgLABQ
+	 iQfasVPPaLPGQtvqisFnViB+PfS8Gyi01cCqOWuhd6vMj1VCgYq045yGc5135PK8/B/Bh
+	 A6BTgAelarH6k4rB2kP+T4LqCB69Rn/qXsesAWrlG6L0UBxYnq9Mh6nzPL/Tcaz1u0zNS
+	 JHSF9TIkH9RaYkIt+B+wbMXhoWEqEbn8VA5WC79cBd+kt+Lt9gIJq4MJilzUWSCs3V+8J
+	 I5PJBPQSxGMzHfDkvNd1b4L1bSVc4ERBWDrf8tODwLjmAC645+OyOo7CqpNN1zSg5Ig==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UnZ0dx6v;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Wx51WsQ8;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69CD3606A325;
-	Fri, 20 Nov 2026 15:58:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10DE260A2603;
+	Fri, 20 Nov 2026 15:58:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UnZ0dx6v
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E292C1F00AE3;
-	Fri, 20 Nov 2026 15:58:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Wx51WsQ8
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C69251F00ADE;
+	Fri, 20 Nov 2026 15:58:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795190309;
-	bh=cRNvHuL/5PrBLE24h6cbDnjO9r11f0E2kcoBC+EwYWE=;
+	s=k20260515; t=1795190315;
+	bh=0GRF4szdTQx2tPRYFJ4gnZN+nH74SF0ck2Adu/0U3S0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=UnZ0dx6vgo1hyXAua3Nrk71pfKv3uz4gLoZ3Ua6eoWdwTpp3dUK+GJ7zmUfABdykx
-	 1mhW8f+j3374SRG6NesNLsSqeEGinyEadW8sMXqA8f+yhYx4eyNTAubGRRNvVz04DD
-	 xWH9Jw8l+Bxrdq/OF5mLnkX21+SrCc59N5euFfELsn68OlZKhik+WbxU1wTmNBXPmK
-	 cwjlGdQA40w+X4RJylLoCPbwA8Jagozu8ywQ9oyDZsci7xNJwJ3C22A4qRbVqjytGy
-	 qSeFexv4rCEFgVn1qIMGCZ0bj61ki79OSXMoEskl8CzwsXymRb1ZRGG/mqJNg7UVQg
-	 TIoISDUrzBXqA==
+	b=Wx51WsQ80d4JonKHfzQCrX/+tM/1blH/Dq7eZhhu0jj5rRH0FDmgKaCp1xg5VU4gv
+	 9f1SNC6S9M93Ze8nTuuHfXziH/cZ/hibmcd64Bx6NqsUhdDOOg729HD8bnEyoDt8KE
+	 QGDD5ATsQ9fCgNyKn6IZIb/okSU7fiMPDhqlqYqYjaD7ErbThQUMxiG4PISXUdxCk3
+	 foOxWyujIM7g254AdLky15ZHXhvhM5jpwvcI8X63VDdn+2lQULAzE/yq6gJ75g5XkC
+	 Z5Db4hRI9pIHAwBoLZ+ifNu6GDkY4iU8vCivCMgK2CYNP9oJbFLb+Av+x8iDyRvjed
+	 cU+U3RSV1uY8w==
 From: Andrey Albershteyn <aalbersh@kernel.org>
 To: "Eric Biggers" <ebiggers@kernel.org>,
 	"Christoph Hellwig" <hch@lst.de>,
@@ -47,10 +47,11 @@ To: "Eric Biggers" <ebiggers@kernel.org>,
 	"linux-xfs" <linux-xfs@vger.kernel.org>
 Cc: Andrey Albershteyn <aalbersh@kernel.org>,
 	"fsdevel" <linux-fsdevel@vger.kernel.org>,
-	david@fromorbit.com
-Subject: [PATCH v19 05/15] xfs: handle fsverity I/O in write/read path
-Date: Fri, 20 Nov 2026 16:57:39 +0100
-Message-ID: <20261120155752.192025-6-aalbersh@kernel.org>
+	david@fromorbit.com,
+	"Darrick J. Wong" <djwong@kernel.org>
+Subject: [PATCH v19 07/15] xfs: add XFS_BMAPI_UNWRITTEN to unmap unwritten extents in __xfs_bunmapi()
+Date: Fri, 20 Nov 2026 16:57:41 +0100
+Message-ID: <20261120155752.192025-8-aalbersh@kernel.org>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20261120155752.192025-1-aalbersh@kernel.org>
 References: <20261120155752.192025-1-aalbersh@kernel.org>
@@ -65,358 +66,89 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-For write/writeback set IOMAP_F_FSVERITY flag telling iomap to not
-update inode size and to not skip folios beyond EOF.
-
-Initiate fsverity writeback with IOMAP_F_FSVERITY set to tell iomap
-should not skip folio that is dirty beyond EOF.
-
-In read path let iomap know that we are reading fsverity metadata. So,
-treat holes in the tree as request to synthesize tree blocks and hole
-after descriptor as end of the fsverity region.
+The __xfs_bunmapi() is used to remove all extents past EOF. Add
+XFS_BMAPI_UNWRITTEN to remove only unwritten extents, while leaving
+written ones in place. This will be used in following patch to clean up
+unwritten extents on fsverity inodes.
 
 Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/Makefile            |  1 +
- fs/xfs/libxfs/xfs_bmap.c   |  4 +--
- fs/xfs/libxfs/xfs_verity.c | 20 +++++++++++++
- fs/xfs/libxfs/xfs_verity.h | 13 ++++++++
- fs/xfs/xfs_aops.c          |  6 ++--
- fs/xfs/xfs_iomap.c         | 61 ++++++++++++++++++++++++++++----------
- fs/xfs/xfs_iomap.h         |  5 ++--
- fs/xfs/xfs_pnfs.c          |  2 +-
- 8 files changed, 89 insertions(+), 23 deletions(-)
- create mode 100644 fs/xfs/libxfs/xfs_verity.c
- create mode 100644 fs/xfs/libxfs/xfs_verity.h
+ fs/xfs/libxfs/xfs_bmap.c | 22 +++++++++++++++++++++-
+ fs/xfs/libxfs/xfs_bmap.h |  6 +++++-
+ 2 files changed, 26 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 399a207f2d0e..cb7f71457ee9 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -59,6 +59,7 @@ xfs-y				+= $(addprefix libxfs/, \
- 				   xfs_trans_resv.o \
- 				   xfs_trans_space.o \
- 				   xfs_types.o \
-+				   xfs_verity.o \
- 				   )
- # xfs_rtbitmap is shared with libxfs
- xfs-$(CONFIG_XFS_RT)		+= $(addprefix libxfs/, \
 diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 050522c58b16..f74411312901 100644
+index f74411312901..667b693aacb8 100644
 --- a/fs/xfs/libxfs/xfs_bmap.c
 +++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -4414,7 +4414,7 @@ xfs_bmapi_convert_one_delalloc(
- 	 * the extent.  Just return the real extent at this offset.
- 	 */
- 	if (!isnullstartblock(bma.got.br_startblock)) {
--		xfs_bmbt_to_iomap(ip, iomap, &bma.got, 0, flags,
-+		xfs_bmbt_to_iomap(ip, iomap, &bma.got, offset, 0, flags,
- 				xfs_iomap_inode_sequence(ip, flags));
- 		if (seq)
- 			*seq = READ_ONCE(ifp->if_seq);
-@@ -4462,7 +4462,7 @@ xfs_bmapi_convert_one_delalloc(
- 	XFS_STATS_INC(mp, xs_xstrat_quick);
- 
- 	ASSERT(!isnullstartblock(bma.got.br_startblock));
--	xfs_bmbt_to_iomap(ip, iomap, &bma.got, 0, flags,
-+	xfs_bmbt_to_iomap(ip, iomap, &bma.got, offset, 0, flags,
- 				xfs_iomap_inode_sequence(ip, flags));
- 	if (seq)
- 		*seq = READ_ONCE(ifp->if_seq);
-diff --git a/fs/xfs/libxfs/xfs_verity.c b/fs/xfs/libxfs/xfs_verity.c
-new file mode 100644
-index 000000000000..c1731b89a5a1
---- /dev/null
-+++ b/fs/xfs/libxfs/xfs_verity.c
-@@ -0,0 +1,20 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Copyright (C) 2026 Red Hat, Inc.
-+ */
-+#include "xfs_platform.h"
-+#include "xfs_fs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_mount.h"
-+#include "xfs_inode.h"
-+#include "xfs_verity.h"
-+
-+loff_t
-+xfs_fsverity_metadata_offset(
-+	const struct xfs_inode	*ip)
-+{
-+	return round_up(i_size_read(VFS_IC(ip)), XFS_FSVERITY_START_ALIGN);
-+}
-diff --git a/fs/xfs/libxfs/xfs_verity.h b/fs/xfs/libxfs/xfs_verity.h
-new file mode 100644
-index 000000000000..da90f798faa8
---- /dev/null
-+++ b/fs/xfs/libxfs/xfs_verity.h
-@@ -0,0 +1,13 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Copyright (C) 2026 Red Hat, Inc.
-+ */
-+#ifndef __XFS_VERITY_H__
-+#define __XFS_VERITY_H__
-+
-+#include "xfs_platform.h"
-+#include <linux/fsverity.h>
-+
-+loff_t xfs_fsverity_metadata_offset(const struct xfs_inode *ip);
-+
-+#endif	/* __XFS_VERITY_H__ */
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 1db6f3640c53..b9728997f944 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -23,6 +23,7 @@
- #include "xfs_ioend.h"
- #include "xfs_zone_alloc.h"
- #include "xfs_rtgroup.h"
-+#include "xfs_verity.h"
- 
- struct xfs_writepage_ctx {
- 	struct iomap_writepage_ctx ctx;
-@@ -265,7 +266,8 @@ xfs_map_blocks(
- 	    isnullstartblock(imap.br_startblock))
- 		goto allocate_blocks;
- 
--	xfs_bmbt_to_iomap(ip, &wpc->iomap, &imap, 0, 0, XFS_WPC(wpc)->data_seq);
-+	xfs_bmbt_to_iomap(ip, &wpc->iomap, &imap, offset, 0, 0,
-+			  XFS_WPC(wpc)->data_seq);
- 	trace_xfs_map_blocks_found(ip, offset, count, whichfork, &imap);
- 	return 0;
- allocate_blocks:
-@@ -441,7 +443,7 @@ xfs_zoned_map_blocks(
- 		imap.br_startblock = HOLESTARTBLOCK;
- 		imap.br_state = XFS_EXT_NORM;
- 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
--		xfs_bmbt_to_iomap(ip, &wpc->iomap, &imap, 0, 0, 0);
-+		xfs_bmbt_to_iomap(ip, &wpc->iomap, &imap, offset, 0, 0, 0);
- 		return 0;
- 	}
- 	end_fsb = min(end_fsb, imap.br_startoff + imap.br_blockcount);
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 50eae7ff6145..5117704530f6 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -32,6 +32,8 @@
- #include "xfs_rtbitmap.h"
- #include "xfs_icache.h"
- #include "xfs_zone_alloc.h"
-+#include "xfs_verity.h"
-+#include <linux/fsverity.h>
- 
- #define XFS_ALLOC_ALIGN(mp, off) \
- 	(((off) >> mp->m_allocsize_log) << mp->m_allocsize_log)
-@@ -54,6 +56,15 @@ xfs_alert_fsblock_zero(
- 	return -EFSCORRUPTED;
- }
- 
-+static bool
-+xfs_iomap_is_fsverity_metadata(
-+	struct xfs_inode	*ip,
-+	loff_t			offset)
-+{
-+	return offset >= xfs_fsverity_metadata_offset(ip) &&
-+	       (fsverity_is_building(VFS_I(ip)) || fsverity_active(VFS_I(ip)));
-+}
-+
- u64
- xfs_iomap_inode_sequence(
- 	struct xfs_inode	*ip,
-@@ -101,6 +112,7 @@ xfs_bmbt_to_iomap(
- 	struct xfs_inode	*ip,
- 	struct iomap		*iomap,
- 	struct xfs_bmbt_irec	*imap,
-+	loff_t			offset,
- 	unsigned int		mapping_flags,
- 	u16			iomap_flags,
- 	u64			sequence_cookie)
-@@ -152,6 +164,15 @@ xfs_bmbt_to_iomap(
- 			iomap->flags |= IOMAP_F_INTEGRITY;
- 	}
+@@ -5220,6 +5220,22 @@ __xfs_bunmapi(
+ 	ASSERT(len > 0);
+ 	ASSERT(nexts >= 0);
  
 +	/*
-+	 * Tell iomap when this I/O covers fs-verity metadata so it handles size
-+	 * updates and post-EOF folios correctly.  The attr fork uses a separate
-+	 * offset space, so exclude it.
++	 * XFS_BMAPI_UNWRITTEN is only used by fs-verity to drop unwritten
++	 * blocks past EOF while keeping written ones (fsverity metadata).
++	 *
++	 * The XFS_BMAPI_UNWRITTEN could not be used with realtime inodes with
++	 * realtime extent larger than 1 filesystem block. This is because the
++	 * realtime inode with larger extents could have EOF in the middle of
++	 * the extent. Removing these unwritten extent beyond EOF could lead to
++	 * removal of data before EOF.
++	 *
++	 * fs-verity is not allowed to be enabled on realtime files whose
++	 * extent size is larger than 1.
 +	 */
-+	if (!(iomap_flags & IOMAP_F_XATTR) &&
-+	    xfs_iomap_is_fsverity_metadata(ip, offset))
-+		iomap->flags |= IOMAP_F_FSVERITY;
++	ASSERT(!((flags & XFS_BMAPI_UNWRITTEN) &&
++		 xfs_inode_has_bigrtalloc(ip)));
 +
- 	/*
- 	 * If the inode is dirty for datasync purposes, let iomap know so it
- 	 * doesn't elide the IO completion journal flushes on O_DSYNC IO.
-@@ -1006,7 +1027,8 @@ xfs_direct_write_iomap_begin(
- 	seq = xfs_iomap_inode_sequence(ip, iomap_flags);
- 	xfs_iunlock(ip, lockmode);
- 	trace_xfs_iomap_found(ip, offset, length, XFS_DATA_FORK, &imap);
--	return xfs_bmbt_to_iomap(ip, iomap, &imap, flags, iomap_flags, seq);
-+	return xfs_bmbt_to_iomap(ip, iomap, &imap, offset, flags, iomap_flags,
-+			seq);
- 
- allocate_blocks:
- 	error = -EAGAIN;
-@@ -1037,7 +1059,7 @@ xfs_direct_write_iomap_begin(
- 		return error;
- 
- 	trace_xfs_iomap_alloc(ip, offset, length, XFS_DATA_FORK, &imap);
--	return xfs_bmbt_to_iomap(ip, iomap, &imap, flags,
-+	return xfs_bmbt_to_iomap(ip, iomap, &imap, offset, flags,
- 				 iomap_flags | IOMAP_F_NEW, seq);
- 
- out_found_cow:
-@@ -1045,13 +1067,15 @@ xfs_direct_write_iomap_begin(
- 	trace_xfs_iomap_found(ip, offset, length - offset, XFS_COW_FORK, &cmap);
- 	if (imap.br_startblock != HOLESTARTBLOCK) {
- 		seq = xfs_iomap_inode_sequence(ip, 0);
--		error = xfs_bmbt_to_iomap(ip, srcmap, &imap, flags, 0, seq);
-+		error = xfs_bmbt_to_iomap(ip, srcmap, &imap, offset, flags,
-+				0, seq);
- 		if (error)
- 			goto out_unlock;
- 	}
- 	seq = xfs_iomap_inode_sequence(ip, IOMAP_F_SHARED);
- 	xfs_iunlock(ip, lockmode);
--	return xfs_bmbt_to_iomap(ip, iomap, &cmap, flags, IOMAP_F_SHARED, seq);
-+	return xfs_bmbt_to_iomap(ip, iomap, &cmap, offset, flags,
-+			IOMAP_F_SHARED, seq);
- 
- out_unlock:
- 	if (lockmode)
-@@ -1270,7 +1294,8 @@ xfs_atomic_write_cow_iomap_begin(
- 	trace_xfs_iomap_found(ip, offset, length, XFS_COW_FORK, &cmap);
- 	seq = xfs_iomap_inode_sequence(ip, IOMAP_F_SHARED);
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
--	return xfs_bmbt_to_iomap(ip, iomap, &cmap, flags, IOMAP_F_SHARED, seq);
-+	return xfs_bmbt_to_iomap(ip, iomap, &cmap, offset, flags,
-+			IOMAP_F_SHARED, seq);
- 
- convert_delay:
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-@@ -1622,8 +1647,9 @@ xfs_zoned_fill_srcmap(
- 	 */
- 	xfs_trim_extent(&smap, offset_fsb, *end_fsb - offset_fsb);
- 	*end_fsb = min(*end_fsb, smap.br_startoff + smap.br_blockcount);
--	return xfs_bmbt_to_iomap(ip, srcmap, &smap, flags, 0,
--			xfs_iomap_inode_sequence(ip, 0));
-+	return xfs_bmbt_to_iomap(ip, srcmap, &smap,
-+			XFS_FSB_TO_B(ip->i_mount, offset_fsb), flags,
-+			0, xfs_iomap_inode_sequence(ip, 0));
- }
- 
- static int
-@@ -1796,7 +1822,7 @@ xfs_zoned_buffered_write_iomap_begin(
- 	trace_xfs_iomap_alloc(ip, offset, XFS_FSB_TO_B(mp, count_fsb),
- 			XFS_COW_FORK, &got);
- done:
--	error = xfs_bmbt_to_iomap(ip, iomap, &got, flags, iomap_flags,
-+	error = xfs_bmbt_to_iomap(ip, iomap, &got, offset, flags, iomap_flags,
- 			xfs_iomap_inode_sequence(ip, IOMAP_F_SHARED));
- out_unlock:
- 	xfs_iunlock(ip, lockmode);
-@@ -2104,7 +2130,8 @@ xfs_buffered_write_iomap_begin(
- found_imap:
- 	seq = xfs_iomap_inode_sequence(ip, iomap_flags);
- 	xfs_iunlock(ip, lockmode);
--	return xfs_bmbt_to_iomap(ip, iomap, &imap, flags, iomap_flags, seq);
-+	return xfs_bmbt_to_iomap(ip, iomap, &imap, offset, flags, iomap_flags,
-+			seq);
- 
- convert_delay:
- 	xfs_iunlock(ip, lockmode);
-@@ -2119,8 +2146,8 @@ xfs_buffered_write_iomap_begin(
- 
- found_cow:
- 	if (imap.br_startoff <= offset_fsb) {
--		error = xfs_bmbt_to_iomap(ip, srcmap, &imap, flags, 0,
--				xfs_iomap_inode_sequence(ip, 0));
-+		error = xfs_bmbt_to_iomap(ip, srcmap, &imap, offset, flags,
-+				0, xfs_iomap_inode_sequence(ip, 0));
- 		if (error)
- 			goto out_unlock;
- 	} else {
-@@ -2131,7 +2158,8 @@ xfs_buffered_write_iomap_begin(
- 	iomap_flags |= IOMAP_F_SHARED;
- 	seq = xfs_iomap_inode_sequence(ip, iomap_flags);
- 	xfs_iunlock(ip, lockmode);
--	return xfs_bmbt_to_iomap(ip, iomap, &cmap, flags, iomap_flags, seq);
-+	return xfs_bmbt_to_iomap(ip, iomap, &cmap, offset, flags, iomap_flags,
-+			seq);
- 
- out_unlock:
- 	xfs_iunlock(ip, lockmode);
-@@ -2238,7 +2266,7 @@ xfs_read_iomap_begin(
+ 	error = xfs_iread_extents(tp, ip, whichfork);
  	if (error)
  		return error;
- 	trace_xfs_iomap_found(ip, offset, length, XFS_DATA_FORK, &imap);
--	return xfs_bmbt_to_iomap(ip, iomap, &imap, flags,
-+	return xfs_bmbt_to_iomap(ip, iomap, &imap, offset, flags,
- 				 shared ? IOMAP_F_SHARED : 0, seq);
- }
+@@ -5281,6 +5297,10 @@ __xfs_bunmapi(
+ 		if (del.br_startoff + del.br_blockcount > end + 1)
+ 			del.br_blockcount = end + 1 - del.br_startoff;
  
-@@ -2298,7 +2326,7 @@ xfs_seek_iomap_begin(
- 			end_fsb = min(end_fsb, data_fsb);
- 		xfs_trim_extent(&cmap, offset_fsb, end_fsb - offset_fsb);
- 		seq = xfs_iomap_inode_sequence(ip, IOMAP_F_SHARED);
--		error = xfs_bmbt_to_iomap(ip, iomap, &cmap, flags,
-+		error = xfs_bmbt_to_iomap(ip, iomap, &cmap, offset, flags,
- 				IOMAP_F_SHARED, seq);
++		if ((flags & XFS_BMAPI_UNWRITTEN) &&
++		    del.br_state != XFS_EXT_UNWRITTEN)
++			goto skip;
++
+ 		if (!isrt || (flags & XFS_BMAPI_REMAP))
+ 			goto delete;
+ 
+@@ -5415,7 +5435,7 @@ __xfs_bunmapi(
+ 			if (error)
+ 				goto error0;
+ 		}
+-
++skip:
+ 		end = del.br_startoff - 1;
+ nodelete:
  		/*
- 		 * This is a COW extent, so we must probe the page cache
-@@ -2322,7 +2350,7 @@ xfs_seek_iomap_begin(
- done:
- 	seq = xfs_iomap_inode_sequence(ip, 0);
- 	xfs_trim_extent(&imap, offset_fsb, end_fsb - offset_fsb);
--	error = xfs_bmbt_to_iomap(ip, iomap, &imap, flags, 0, seq);
-+	error = xfs_bmbt_to_iomap(ip, iomap, &imap, offset, flags, 0, seq);
- out_unlock:
- 	xfs_iunlock(ip, lockmode);
- 	return error;
-@@ -2370,7 +2398,8 @@ xfs_xattr_iomap_begin(
- 	if (error)
- 		return error;
- 	ASSERT(nimaps);
--	return xfs_bmbt_to_iomap(ip, iomap, &imap, flags, IOMAP_F_XATTR, seq);
-+	return xfs_bmbt_to_iomap(ip, iomap, &imap, offset, flags,
-+			IOMAP_F_XATTR, seq);
- }
+diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+index fb7481e8190c..f1df6b4b695e 100644
+--- a/fs/xfs/libxfs/xfs_bmap.h
++++ b/fs/xfs/libxfs/xfs_bmap.h
+@@ -97,6 +97,9 @@ struct xfs_bmalloca {
+  */
+ #define XFS_BMAPI_CONVERT_ONLY	(1u << 12)
  
- DEFINE_IOMAP_ITER_NEXT(xfs_xattr_iomap_next, xfs_xattr_iomap_begin);
-diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
-index 071fff666507..c9bd6de1bfda 100644
---- a/fs/xfs/xfs_iomap.h
-+++ b/fs/xfs/xfs_iomap.h
-@@ -22,8 +22,9 @@ xfs_fileoff_t xfs_iomap_eof_align_last_fsb(struct xfs_inode *ip,
++/* Process unwritten extents only. Used for unmapping */
++#define XFS_BMAPI_UNWRITTEN	(1u << 13)
++
+ #define XFS_BMAPI_FLAGS \
+ 	{ XFS_BMAPI_ENTIRE,	"ENTIRE" }, \
+ 	{ XFS_BMAPI_METADATA,	"METADATA" }, \
+@@ -110,7 +113,8 @@ struct xfs_bmalloca {
+ 	{ XFS_BMAPI_NODISCARD,	"NODISCARD" }, \
+ 	{ XFS_BMAPI_NORMAP,	"NORMAP" },\
+ 	{ XFS_BMAPI_EXTSZALIGN,	"EXTSZALIGN" }, \
+-	{ XFS_BMAPI_CONVERT_ONLY,	"CONVERT_ONLY" }
++	{ XFS_BMAPI_CONVERT_ONLY,	"CONVERT_ONLY" }, \
++	{ XFS_BMAPI_UNWRITTEN,	"UNWRITTEN" }
  
- u64 xfs_iomap_inode_sequence(struct xfs_inode *ip, u16 iomap_flags);
- int xfs_bmbt_to_iomap(struct xfs_inode *ip, struct iomap *iomap,
--		struct xfs_bmbt_irec *imap, unsigned int mapping_flags,
--		u16 iomap_flags, u64 sequence_cookie);
-+		struct xfs_bmbt_irec *imap, loff_t offset,
-+		unsigned int mapping_flags, u16 iomap_flags,
-+		u64 sequence_cookie);
  
- int xfs_zero_range(struct xfs_inode *ip, loff_t pos, loff_t len,
- 		struct xfs_zone_alloc_ctx *ac, bool *did_zero);
-diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
-index 065875c8b7da..ff097400d064 100644
---- a/fs/xfs/xfs_pnfs.c
-+++ b/fs/xfs/xfs_pnfs.c
-@@ -256,7 +256,7 @@ xfs_fs_map_blocks(
- 	}
- 	xfs_iunlock(ip, XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL);
- 
--	error = xfs_bmbt_to_iomap(ip, iomap, &imap, 0, 0, seq);
-+	error = xfs_bmbt_to_iomap(ip, iomap, &imap, offset, 0, 0, seq);
- 	*device_generation = mp->m_generation;
- 	return error;
- out_unlock:
+ static inline int xfs_bmapi_aflag(int w)
 -- 
 2.54.0
 
