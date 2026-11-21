@@ -1,66 +1,48 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=213.95.11.211
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795220137;
-	b=qpNhTfFWva12Hu1nFhDnkguM14OGSzxGCYUFn/LCmg0Or0Clu7+F+ZwRd8c5R7lLHnse
-	 5xtjimU4wCYuskAJW78//1OSekBz+z4RxlOdfmixty65WEtL6RjbtU7fM7mjqHsM/B6RV
-	 r301dzCSiawofqu/JCBH7RXpb4tHVRKsyv8xEWRYdIRZaOPEmw3UVGNLEANm1NxY936Ol
-	 uACXAsPz8hqnfdflLFXj8hd5KVpQJWC2qc3BYRRewJaVFJsJA4BX7dgcnVUJLSxYKu79E
-	 9UfSWUv1M0Zs1LpIylGMhqm7YgfZecvgSZMLOr5EY2BrKkiV9ens2DnF+cQbZaBKWhw==
+	t=1795220791;
+	b=vUOGHeoEZKdcmaQUUgMhSNCTSgCS6yE/aYl9Qyr/6IKFT8fHn3h5ldswJEFcCJd8LV2b
+	 w5LKTUCUh0X8d9bS3x8EVH86ZI/2tNSPW5D3YHXyzI7vV9cZrTw3+V6uk8PIMWNAKvB+9
+	 /dlgbqgTMIA1OUjF3eL5JRwv2dJhbKQG04B6jwnGGeY6uEfIGTGf3btkS4Tz4TKjBRep7
+	 BE5oIw0q7iuLhnzflKm/X2Ret7QzFU2cwhr5ioESLkB0wuODPjqqO4mMgAkR4uZGYZr1Y
+	 DFwnuJOpwBhZwZB5uVzh6GVdAZwOPHe7OizRF73l+zikbVYVvGV7SJ3GwXHSysrDRdg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795220137;
-	h=DMARC-Filter:DKIM-Signature:Received:Date:From:To:Cc:Subject:
-	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
-	 In-Reply-To:X-SRS-Rewrite;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795220791;
+	h=DMARC-Filter:Received:Date:From:To:Cc:Subject:Message-ID:References:
+	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To:User-Agent;
 	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
-	b=SjisINx9FfyaE+/G8jmqcq6Fr36sGDzrQLG+XhRJ6i3nuX3Wf9VrBGrgarR63YyxiarW
-	 K2K2eVE9qVpLOFRa+HqAVAnO7PuNWOZihzgwaiFsddU+bykSL6oZvavasuZ1pAa2lEHcl
-	 KgH1JUtIv8ulkvmpQf1WNmvhVv0BHqotDg+y5q0lW4y8269xGza7zEeDQzK4eEv65JSD4
-	 FHVmgBHo11jBnXuifWr5B+sQ0QU8MURRvMXPm3ImR/tMzL9d0qY2lMFmpFmEuz2mpaZjN
-	 UJEkC9gSpIa32BMW3A5mR6ZsGgU5KN2s7nu4wV/CIJPgQQac7ivSigfh8Yw+qQAUhKw==
+	b=AfL2TEYW1C6XR5/bDZFHdnOO72T6D8+VZynUayUo61QCFFghpPbok8P5MMVHKRbbRlQB
+	 xhUrjnpRlKC3GbacqvNxMl+NEw+WgGdKENptYAqsHIwHqej6N8sGMztNlfMNbIpnWkKkZ
+	 n103ZEcnmWk0XNgMKalQOTEmGuh/XcAdZ9XS3JBDcYj66/Zw4DnNtnUZPZV1XMtXk8Cjj
+	 F/eZqLBG1FzP1Fq0m+zXTEHs377/63IP8dbh9gtxrj9cvJ9ATbd/qHAt6ftmQBWNMW8S2
+	 mmu9tOZ5iu3fMm1sftTf+By8Q7XKE6LVLz/k3xOa9vwPKsdJChu27YBY9o8uGUXd8vQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=infradead.org;
-	spf=none smtp.mailfrom=bombadil.srs.infradead.org;
-	dkim=pass header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=bGWTabL7;
-	arc=none smtp.remote-ip=198.137.202.133
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=pass header.from=lst.de;
+	spf=pass smtp.mailfrom=lst.de;
+	arc=none smtp.remote-ip=213.95.11.211
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95596606A692;
-	Sat, 21 Nov 2026 00:15:32 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 95596606A692
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=bGWTabL7
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=bGWTabL7KzDhuuh4YUV1Nzpm4E
-	CMuXFUprmXcP17I1ethA0y0kwpqmtzPRDue5CG/IjiDC4D7zQAoCSnC40dR2RK7VB9ThdfiGnhW/2
-	DI/zQ796Cie6rffq0vGVURHhvxovoGpx3h3KUN5yWt5PVUFh7j7/+/z95heuyxVqPC5kSZ+1VofqK
-	VvBW70RoBxRXH4xPKl7QIX8KpyIk5rAM4MVhbUah+U/XplHYhBI9ZYKFT+6mS9mkZY7+PboRq5RvY
-	hvSC0/86l4XD0kWF6byXaqgpOlLEz9l6xSKBYjoE3lkROWO6mdweeXzzLiSA9W+v3E/SpxiJ2IP8j
-	n197PS+g==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.100.1 #2 (Red Hat Linux))
-	id 1xUYlM-0000000GUHy-3gmK;
-	Sat, 21 Nov 2026 00:15:28 +0000
-Date: Fri, 20 Nov 2026 16:15:28 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Breno Leitao <leitao@debian.org>
-Cc: Christian Brauner <brauner@kernel.org>, Jens Axboe <axboe@kernel.dk>,
-	Hannes Reinecke <hare@suse.de>,
-	Pankaj Raghav <p.raghav@samsung.com>,
-	Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-	Luis Chamberlain <mcgrof@kernel.org>,
-	Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-	kernel-team@meta.com
-Subject: Re: [PATCH v2] iomap: don't update i_size of block devices on
- buffered write
-Message-ID: <awDioKmT7qYBdiT6@infradead.org>
-References: <20261120-iomap-bdev-isize-v2-1-f25cc668fbc1@debian.org>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C314A60A2608;
+	Sat, 21 Nov 2026 00:26:28 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C314A60A2608
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 45D736732A; Sat, 21 Nov 2026 01:26:25 +0100 (CET)
+Date: Sat, 21 Nov 2026 01:26:25 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Andrey Albershteyn <aalbersh@kernel.org>
+Cc: Eric Biggers <ebiggers@kernel.org>, Christoph Hellwig <hch@lst.de>,
+	Carlos Maiolino <cem@kernel.org>,
+	fsverity <fsverity@lists.linux.dev>,
+	linux-xfs <linux-xfs@vger.kernel.org>,
+	fsdevel <linux-fsdevel@vger.kernel.org>, david@fromorbit.com,
+	"Darrick J. Wong" <djwong@kernel.org>
+Subject: Re: [PATCH v19 07/15] xfs: add XFS_BMAPI_UNWRITTEN to unmap
+ unwritten extents in __xfs_bunmapi()
+Message-ID: <20261121002625.GC13395@lst.de>
+References: <20261120155752.192025-1-aalbersh@kernel.org> <20261120155752.192025-8-aalbersh@kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -72,8 +54,8 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261120-iomap-bdev-isize-v2-1-f25cc668fbc1@debian.org>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20261120155752.192025-8-aalbersh@kernel.org>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
 Looks good:
 
