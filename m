@@ -1,58 +1,64 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795293674;
-	b=bRZiCzgmkerDiY880W0eQYr3YsA0Erf1RYHHPhFRTeqAePnjn7SMsL84iZVwgQQnlhRd
-	 AVLl5+zxcRMwp99FuYEixfTUknivutG2aTvsa83eTemV+CE52Mh0DfzUGNoG3wcKAGA2/
-	 hnVdL4BAPsJoTvDYgYuyb+KETk0vqw3N+T0aWMeIg1ZT8yddgl335v4hPJsF2PvsAcXte
-	 QRNvaQ/fcKslz23RDq+t4Vtlx/BEjPVSoLirGzBTlZRbuQiPOn/fc79JBCARApqEf9xr0
-	 Y2OSj7XIHTtC/UAQdYdIs38v6FjgI+J0xx12LvKDxYtfp40WrbTra7GWRNhfAcdRdlg==
+	t=1795304423;
+	b=KP+++UwgmXPaSCZ123KLQDnlQNNEnQxtxSG3NBZYGuiXaU9diAIEvabWJeubtlkB7Guq
+	 ya5/AJO7AzWwKYhDC8TDTQHzMzpKlWXp8r838tLtO+rmvVUbMCh9ujE6UBaczypISQmEK
+	 XlqIO53vJKLkfWtwp1ehLDW2XglZvbN36bIqzTAe4EPbZENnGEvVC3mOolZ56qrBqaOI2
+	 m72CKvM/JBsF1jX3H+7WQ5ub4jITzYBbGCrkWVPCG2VqkgDDRkjN3wuWwh/KQtu3oSDlK
+	 FfLjEF+CBiRXLbeaVnx8JtAY5wLYWUfRgaLoouDVZuTwpqQqzKV62b0lDzSRhI9I/6A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795293674;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=hmRMq/jyaz6ubqP2Q/8QAmwoitBfjKyHf2qlq73z/v0=;
-	b=1Z7UYkXnU1oDnm1ddLIfLMNii/sA+3r4ZoL0TGxLnGPgDAO/hH49w3z9Y7xtymUzbiwk
-	 Yibn9gl9t+SSV05ktXuxXLxMS1Yu6J1vBvhwwkqfk8gSTLyr1GwwqruMuAxow4EgmT5gC
-	 A5/AH8ybgvIXgdanJBUgy2DGuyEXC+rc0xTt8lLeEKSoaPkJf6xvaR2n3BNGAWQzHpA5W
-	 K1QkIObaaRp3eFPJ9jjUBqX93WFx/1dEvdzLa6WPKjuc0YjIhNVUFHtnGsdqiO39od102
-	 CElfkVhnrc9tgcgatmzO5BzuA+kEFJQ+atuUtE2wGEQeV+jQGLXYa38Om+afxrgONJg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795304423;
+	h=Received:DKIM-Signature:Received:Subject:From:In-Reply-To:References:
+	 X-PR-Tracked-List-Id:X-PR-Tracked-Message-Id:X-PR-Tracked-Remote:
+	 X-PR-Tracked-Commit-Id:X-PR-Merge-Tree:X-PR-Merge-Refname:
+	 X-PR-Merge-Commit-Id:Message-Id:Date:To:Cc;
+	bh=fBIq47AVLPInkagUxpJrBM82pb0jiiVwMQRNhW22De0=;
+	b=tMdMf526nYFm/nz0mSueOyZzxgIbZGZ+bP/cFokLsUF4UeHAoJQk3kEDSeFjLm7ZLy3N
+	 Ovv/kX1SBXqA9eFZo8DzUWOlJTug3sMscR2n4mGb/v1bYIm6wIJVQNv2vCnuj4Vm7d+hq
+	 imT6uT5qtnW7MbgaY+l8P1XlBp4J4l4aFXkvcuGBeOcrQA1zN3QpAuC3ju8vtpZIzALeL
+	 Yp0d3mUTXHXZQE9e06pGr75WnSu5/nN+qu3miyKwNDQWoWID2NenWyOwFsGuu/oYVSfyl
+	 34AMenhdQNZcWaN6+buuzXh5XYxMPVs1Pn3AsZypUnVrb+Nn3jrHz9gvAt0itx1+5dg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="asgtto/P";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Bnq8+Tm4;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B841606A320;
-	Sat, 21 Nov 2026 20:41:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E17A2606A32A
+	for <linux-xfs@vger.kernel.org>; Sat, 21 Nov 2026 23:40:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=asgtto/P
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2C82C1F000C0;
-	Sat, 21 Nov 2026 20:41:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Bnq8+Tm4
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BF6A51F000D0;
+	Sat, 21 Nov 2026 23:40:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795293674;
-	bh=hmRMq/jyaz6ubqP2Q/8QAmwoitBfjKyHf2qlq73z/v0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=asgtto/P/mqBPw1Axj+fEFZsvYqeSF/ZmIFH4PnCav4vjk1EbTjJ0mTk50wXzXd3A
-	 0oPFL4L3Soh2pKh6TNWZ0JSsVbLH0ArdhUWSpj9CqFwFPmMUVqG1r5h5vC44+KPoXl
-	 IR2BtKSF+byzNkv20T34sbwoIxBfP2Au8bsE80sR6c0kF2VA8MPzCvevXGiZgqVo4c
-	 Ih2S1i5XOt/camX8d7qFp4AF4rSFWnUSEIfOE7Bamymi/uFcvttZy8TP3iTO4po1sD
-	 USsdPvR/w9Ks6xkidDC065RYjoqD8Vpq4iibvN1DrVToa1VhYtqvYCgR9ESKu7c95F
-	 yRPPqnQHCa93w==
-Date: Sat, 21 Nov 2026 21:41:08 +0100
-From: Andrey Albershteyn <aalbersh@kernel.org>
-To: Eric Biggers <ebiggers@kernel.org>
-Cc: fsdevel <linux-fsdevel@vger.kernel.org>, 
-	fsverity <fsverity@lists.linux.dev>, linux-ext4 <linux-ext4@vger.kernel.org>, 
-	linux-btrfs <linux-btrfs@vger.kernel.org>, linux-f2fs <linux-f2fs-devel@lists.sourceforge.net>, 
-	linux-xfs <linux-xfs@vger.kernel.org>, dsterba@suse.com, Christian Brauner <brauner@kernel.org>, 
-	tytso@mit.edu, chao@kernel.org, jaegeuk@kernel.org, viro@zeniv.linux.org.uk
-Subject: Re: [PATCH v3 4/7] iomap: use fsverity_is_building() to check for
- fsverity IO
-Message-ID: <awFTapiR9KK9H6PC@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
-References: <20261120155032.187246-1-aalbersh@kernel.org>
- <20261120155032.187246-5-aalbersh@kernel.org>
- <20261120222302.GD3048696@google.com>
+	s=k20260515; t=1795304422;
+	bh=fBIq47AVLPInkagUxpJrBM82pb0jiiVwMQRNhW22De0=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc;
+	b=Bnq8+Tm4cLyCJkZJdaLXguph7unBDAsT+t6huhGSZyCxMnyBandj2Bx2B9ck0fx9Y
+	 5w1yrOD0wC/6ofgwhCETuHbOMil2zVJTJex/bl97Lup77STpyvcfk4pnI4VmjfSmF/
+	 3Gp+SFPQ0R8srB2xam5I/OrRLrOFRXYBxnrKqQihlGX5D/AnZQdFz2WdvX32aM3FQz
+	 hY6ZbxbCsKl2ejClpSPZNQgPGkH+QNbVRcg3BIbqk8orH+xwWIrHcfVyCdUdaNBQBA
+	 tc0RHLYRqJIOYeHvohdJ8D9i7Vcx4EQcEh7Z+lxO3POKhehICOHeowNBCxIC0tnFFf
+	 DTTfwFu14vTvw==
+Received: from [10.30.226.235] (localhost [IPv6:::1])
+	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id B442E391B08F;
+	Sat, 21 Nov 2026 23:40:22 +0000 (UTC)
+Subject: Re: [GIT PULL] XFS: Fixes for v7.4-rc4
+From: pr-tracker-bot@kernel.org
+In-Reply-To: <awHueLf-qBHxapi-@cronus.toxiclabs.cc>
+References: <awHueLf-qBHxapi-@cronus.toxiclabs.cc>
+X-PR-Tracked-List-Id: <linux-xfs.vger.kernel.org>
+X-PR-Tracked-Message-Id: <awHueLf-qBHxapi-@cronus.toxiclabs.cc>
+X-PR-Tracked-Remote: git://git.kernel.org:/pub/scm/fs/xfs/xfs-linux.git tags/xfs-fixes-7.4-rc4
+X-PR-Tracked-Commit-Id: 855abf2cf8cd69a248362ca4b518de9387dd6bf5
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: f802b6558eb81bd5888d761a0cdc8afe5fd8c941
+Message-Id: <179530442131.1212204.10423909461248747629.pr-tracker-bot@kernel.org>
+Date: Sat, 21 Nov 2026 23:40:21 +0000
+To: Carlos Maiolino <cem@kernel.org>
+Cc: torvalds@linux-foundation.org, linux-xfs@vger.kernel.org
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -61,52 +67,16 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261120222302.GD3048696@google.com>
 
-On 2026-11-20 22:23:02, Eric Biggers wrote:
-> On Fri, Nov 20, 2026 at 04:50:26PM +0100, Andrey Albershteyn wrote:
-> > As fsverity inodes are read-only, the only write IO happening
-> > during I_VERITY_BUILDING is fsverity metadata.
-> 
-> I think this is not accurate?  The inode is not a "fsverity inode" yet,
-> and it can still have dirty data in it that is undergoing writeback.
+The pull request you sent on Sat, 21 Nov 2026 20:42:06 +0100:
 
-XFS flushes data folios in _begin_enable(). Make sense for me to
-have data stable on disk before starting the build, if any error
-happens in data writeback we won't spent time building the tree.
-That why the warning below.
+> git://git.kernel.org:/pub/scm/fs/xfs/xfs-linux.git tags/xfs-fixes-7.4-rc4
 
-But as I_VERITY_BUILDING exists now, I don't think there's
-requirement to sync data before starting the build, I will update
-the comment.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/f802b6558eb81bd5888d761a0cdc8afe5fd8c941
 
-> 
-> > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> > index 6d843b168d5f..0a176741e7b0 100644
-> > --- a/fs/iomap/buffered-io.c
-> > +++ b/fs/iomap/buffered-io.c
-> > @@ -1930,7 +1930,7 @@ static bool iomap_writeback_handle_eof(struct folio *folio,
-> >  	struct inode *inode = wpc->inode;
-> >  	u64 isize = i_size_read(inode);
-> >  
-> > -	if (wpc->iomap.flags & IOMAP_F_FSVERITY) {
-> > +	if (fsverity_is_building(inode)) {
-> >  		WARN_ON_ONCE(folio_pos(folio) < isize);
-> >  		return true;
-> >  	}
-> 
-> This function no longer needs the 'wpc' parameter: it can be passed
-> 'inode' directly instead.
-
-Sure, I will update it.
-
-> Sashiko also found an issue with this change.
-
-That's related to my response above.
-
+Thank you!
 
 -- 
-- Andrey
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
