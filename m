@@ -1,114 +1,60 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=103.168.172.145
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795466942;
-	b=cnOR9NcpxGj5WRtgFTMShwmF5HqN3BNoOyXICv7HOrOs41MpYCQqhXVlY/J5FnSozRF3
-	 igxQcX6spblr9yDuV6wUHya0a4LTfhYVVads3X2glC6bg72tkrpYot6s7xEum49o3np4M
-	 3O/NvGjeXPmt2lDwPGNunD46cNbBTvRCTaR1jkVDXvMhryF05B3/b/PbFQ92ra6yHYZqN
-	 lep1UmBHRrgaf5Tj6BlwZ8CsA2fMkKuk7Eei00e7R0GDbUTFn/FP4kbJHi/KX8HVxzqt6
-	 iJLdUmHrV/CCiOOxkmoeM8MgzY3w7x/+pBXYkyZ5Pm1n51dVNc9c1Dglgodc4avi1NQ==
+	t=1795466971;
+	b=v93MOToT96cYv9iePrRPohuGchen2fLyINosX4k6Gka8H1+fNC3VYjx7U4EtBLyLGzM1
+	 hGWuUsf5QBOhy8Xy40XmL2RHfsdiNekihVLwlAyPiZvE9aoB1qQuAtHYB3gs248Ra2X0a
+	 YAPdQOHByqvSgq2Ko0Db4s/3zkpi+Efd7uzUrsj1gmp8VmiS7q5NFFeIVWpdvIfwPsAWL
+	 Tf/h34hNnKaF+SAC10sBv4vrfRvcgqUZUHQKrNfos9Xqe3yDMnlXrDNjifNku5NXoNoDs
+	 kXe0sHvy0byoI/tFKPahenIQ4TSw4AwK+Ms+TYyIkJfG3dbcgdZ7Qgwgd9e3Kjc3vjg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795466942;
-	h=DMARC-Filter:Received:Received:DKIM-Signature:DKIM-Signature:
-	 X-DKIM2-Info:DKIM2-Signature:X-DKIM2-Info:Message-Instance:
-	 X-ME-Sender:X-ME-Received:X-ME-Proxy-Cause:X-ME-Proxy:Feedback-ID:
-	 Received:Content-Type:Content-Transfer-Encoding:MIME-Version:From:To:
-	 Cc:Subject:In-reply-to:References:Date:Message-id:Reply-To;
-	bh=o9zLSXJuEnjCYOHrQ29UaL5++JY+uZSugjvH7QOgkgM=;
-	b=jO3WA06vVLxNAdCunMNPqBOQbXNBXIkiSdQ3GB2mlfVOFobA6sGU8Sj6e7c2eUrbtUIh
-	 0phTTzo0qadXKHWfqAnvzSeP0++bnq74RJSkpY5W6liB4YC/MzFgoy9k1d5pKXmB1p91V
-	 9tvau/aBrsz7IAR1Kkf2sd7WddW+2En+9JfgiU6AqjciikkPxzSukDKVAfImWY6nTjjul
-	 fVra6XzXBf5PH/ArojXjx1uOiffJczejHbWI3FUmRVuDZQpZzDl2QGqBmJT2Y8XVZ1210
-	 8wLdQLLBNyt1yeG1kEcLTRwf/HL6z03vpTkaCPC8R7BkzirJTaT8VVOHgZgaDizmtlA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795466971;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=Erw1O6wwL5fM4mtOlZyTOkojZUaVQzW8DQ7JMB6yxjM=;
+	b=eySnsDXpfez6Ua5gGQ1o18WuU+2K5e8LyXKXiIGgVEa16WcUanLu5SI1EYRufrj4MFw2
+	 zVTmM1zqVJfpk8slmBsR3Er2tvnAvjLlAkSSxyZ7DU0RkLhVA7jlKR+tAOBcSgRkKLACx
+	 By5C+DcBR1yEeMGBlmFLBKthiXi9rHDaIq1X6Z7LtksBty+lEpS2GI6pDmOJ6k9T1H44q
+	 wvc3LVKhS1Wg7/riPQ+jZKoUPnXJaZZgsgXmDFhIGgCVSWE7G/gRgcJPBMU0coDow8FkR
+	 YmjVFCEuZ6D1L9MMLna3HgtjXmWIT4TlYztmmm1+k9HkZLcQBAXf2giNw7ZsT7Kfsvg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=ownmail.net;
-	spf=pass smtp.mailfrom=ownmail.net;
-	dkim=pass header.d=ownmail.net header.i=@ownmail.net header.a=rsa-sha256 header.s=fm3 header.b="GUqi7D/+";
-	dkim=pass header.d=messagingengine.com header.i=@messagingengine.com header.a=rsa-sha256 header.s=fm3 header.b=GeCTSuUL;
-	arc=none smtp.remote-ip=103.168.172.145
-Received: from fout-a2-smtp.messagingengine.com (fout-a2-smtp.messagingengine.com [103.168.172.145])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TGiil+xt;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D06DF606A31E
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Nov 2026 20:49:01 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D06DF606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ownmail.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ownmail.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEF19606A326;
+	Mon, 23 Nov 2026 20:49:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=ownmail.net header.i=@ownmail.net header.a=rsa-sha256 header.s=fm3 header.b=GUqi7D/+;
-	dkim=pass (2048-bit key, unprotected) header.d=messagingengine.com header.i=@messagingengine.com header.a=rsa-sha256 header.s=fm3 header.b=GeCTSuUL
-Received: from phl-compute-01.internal (phl-compute-01.internal [10.202.2.41])
-	by mailfout.phl.internal (Postfix) with ESMTP id 08B0CEC1FDF
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Nov 2026 15:49:01 -0500 (EST)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-01.internal (MEProxy); Mon, 23 Nov 2026 15:49:01 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ownmail.net; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:reply-to:subject:subject:to:to; s=fm3; t=
-	1795466941; x=1795553341; bh=o9zLSXJuEnjCYOHrQ29UaL5++JY+uZSugjv
-	H7QOgkgM=; b=GUqi7D/+zOLrqWSCzm+MYwrgGUjLKLl+XyO3sqEMlbWx7SCD96N
-	xOr7y+zBHvOJU64RURKgirlFowf3Nwr3aEDK51YyBQlTYsXZPHXQBIekNZKCnUv4
-	KsJ7waiQTqtIfKfIciO2t0+seQCxjIoBE/jzWA+bLsUFuvppgIe1oUUDuduARfs0
-	t3JPhbBc3ixP9z2lo3LiqRiZ6svS6iP3JqTZaE4IPjo6wwG/9Hk1S2y/EdvPD7i7
-	VeW9Ha3EU2WYxmJ3DxwIb2mHDAm2WO5nWwgvgUT3UiPRd1agj+ERpo+8YO9P8RIa
-	pHNuAA3m5BdklG2F+1juF+ysaWNVwkdTd2g==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1795466941; x=
-	1795553341; bh=o9zLSXJuEnjCYOHrQ29UaL5++JY+uZSugjvH7QOgkgM=; b=G
-	eCTSuULw905Aod95KYVphrgcfjTxFP0oxax/QIzCt7Z08DmPbXq87xmjvsq87B1o
-	T7FpSf/jOkxbzNfI9K9UvX8+L+n3jzN0UFd38r6Kqug7Mikbl1O/2EmrG2SO3FI1
-	KHnotRnxKL/i6//1NMYSCNNAQD5Lw8zQIP5We+msQKoeN8HunYpxYa/NgEin0FBL
-	OrwyXhfhr1+ovrOEMzpq4EqB2X4zDBEfT7EuPoC4GZVcDg7QuNgDviNaNXLJmX39
-	10qq1kOBTAvLEMe0kGmTgufHnX1lPRueLiduAXke6LIBKcNxkA/MXcp84nvwDaqA
-	INQFdl5CmGnTdw0oHc84w==
-X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-09;
-	repo=github.com/dkim2wg/interop; date=2026-11-03; sw=lmtpprox;
-	action=sign d=ownmail.net a=rsa-sha256;
-DKIM2-Signature: i=1; m=1; t=1795466941; d=ownmail.net;
-	mf=PG5laWxiQG93bm1haWwubmV0Pg==;
-	rt=PGxpbnV4LXhmc0B2Z2VyLmtlcm5lbC5vcmc+;
-	s=fm3:rsa-sha256:wLTRuWuBPsmlhrIabZkMOiXFCBJ7D+kaDoQqv1Tal0Ve/eb
-	F5LybaALGH5Saa4lYdEuFOBEBZjb5AKEig9ZxwlgFob+vixYFf+9bX41d0cQhMGy
-	5cTgpo1giPg2GxX2b9zPdxCJKdGl1uFqC/UwGOy8fbueY6BEF6A4sB65c3QFk5Cq
-	AeoskxyA0+j0HDzOIdEyjXb6ld4b5DC09AZ5tj+rZrMrAWgiycQpJy5lwZTGMah/
-	xpswAWxTAIvBr+QXqFs1W/zjTxKjuY6iqI3gVRRiJnvDWXokryYDx/TvFdZq6B/t
-	wVZGOfs7X+WVCoTb2DsUnjgk0JYBoj3xfdkqzvw==;
-X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-09;
-	repo=github.com/dkim2wg/interop; date=2026-11-03; sw=lmtpprox;
-	action=mi-m=1; hc=13;
-	hn=cc,content-transfer-encoding,content-type,date,feedback-id,
-	from,in-reply-to,message-id,mime-version,references,reply-to,
-	subject,to;
-Message-Instance: m=1; h=sha256:iRsZPrvVIwPX/h3pXgxfTnT/eDywSz9BnLpkefyq+Ow=:TQjb9nmWbWE1VynL6JHeebg3yoN+S4zxdXHZHN+WKgw=;
-X-ME-Sender: <xms:u6YEa7TXivWPuJUmQwTofE3_mOq1Vd-dGbfdKdCpR8XRf4mdVhKkOA>
-    <xme:u6YEa-FAq9luXdWY2R16GtwHX7z9lzSVvh-3xidwqcC_0YdC1p2FjR8MM26AohERW
-    8Y2RTcrRVy8N0Cfpe0u2k3jK-WQI80vUAOYxgi3mQC340Hcf-54>
-X-ME-Received: <xmr:u6YEa1fKzxLr8_1Q8wvmXU9XFcWRl1eA7ksz9FFvxFJ4ilMV2X37c48RFAVhVI5O2MjFjpePCFj_Mpy26V917zelIABh1kc>
-X-ME-Proxy-Cause: dmFkZTECMQJK4fdkHy0fWLPUcFTfrq9t91uSnuEGiUSnuJVoCkINLH+FzKpB2tSIh00Nhk
-    5BK9SRt/YA6/FrvyPQt1zAAzcR5cOsyqFz7nx9uu0f4KSe3wR0kPiRBN+OVBWFQfytz/nn
-    yyGl8KiMZ8B/aculVSmccW/8zngN0Q/vdl6AlkON9HCNZS3RB6++ZKfrcMUpGub8gwOvLm
-    AfxvFEkzIq6zthR7ARiUVw30kV7XdmJ780kxcA9EMVKyogzFKXYyTyYLNb86ZISYUb8d/z
-    rFvorNZzKKTgs8fkSA6/DEx90/h/JJKzOE5MWqhdr2fZujknKzF4prwngvHkH/gzMXhOjI
-    W2qJFidfdQhutil75qA7q28SL5utgHyPCYjGk3jbYPNIWOTW+lgKSOHM9PFUOVE4MR33Yb
-    yQOG+YP7xrsB3fg8W8oObe16vE6p/BlLe0wvL9GnHvZqPldBX7whsOfLYvg8K3vS3y7Ztv
-    vtLFOJ6eyHRKhRwQUJBelmJtRhZB0ya0x0/gCpihCgyIW69Pz9HM2foCdkHyEPxE8i33+l
-    gb6gKLN69B9x5kOtGKlbuEucLQnIluC26ckmgsXzWq+85qJTrQQHreucLfGmT62E6CMJmN
-    wfzX1snjy9o8lEEGvvcxDAvGTgc3an/ek3fbgvvdrM0gP8oQwfzLkuvh788w
-X-ME-Proxy: <xmx:u6YEa9v4MlfSFvBYUW3AaaxOuVN6K8LRsbr3wpg2UnQhGQakfgongQ>
-    <xmx:u6YEa7dUUoaxCTu3vhu-0mhfleuvvFLqCPMmBXEj7KynRAJsHDJseg>
-    <xmx:u6YEaxpDSw_mNUDwFA2fQi7eSu1e-qmUbgp2qhZsZ4P45ocBhlqw1A>
-    <xmx:u6YEa58xC17HGroqH_gvx4Lperpo4blG6Pv2gD5Od9dlgym1vNWEag>
-    <xmx:vaYEa5q6WPtMSV6UnT0CuFMsOg-aNwZnOEi6QNWbCtNynKKtn7P9IXVR>
-Feedback-ID: i9d664b8f:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
- 23 Nov 2026 15:48:54 -0500 (EST)
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TGiil+xt
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 247231F000CA;
+	Mon, 23 Nov 2026 20:49:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795466971;
+	bh=Erw1O6wwL5fM4mtOlZyTOkojZUaVQzW8DQ7JMB6yxjM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=TGiil+xtu1TYm6SODXtb2IoMmuuWvv2hflqNT7bS2cN6SvbaF26F5RXa/SNV4NOHl
+	 ii+vFc+zFSnYutGVN1/B/jJ3nzVyFjhw5ehPWaFeXoVEuuQiiFNMz6e9ZcbEyUumot
+	 IQesuMDJhGqfBrH79ErYmJjNoHmWd82K1JD5318uyU5kc+vHth0gJ0v6M0PxMkAx13
+	 D3anaULdwig8RPtOpu7pf7AnoB/O1lQ9cgIEpUVqVxKFfEZg5J/by4IHxPf4/RGgiE
+	 +wsPTygGWgcefZ/SLyIhrr3R+/d1thrO9BQOYl1hHahNvSQKlq4pSvp6afiG61RBoQ
+	 lve0wy/Tb47Lg==
+Date: Tue, 24 Nov 2026 07:49:21 +1100
+From: Dave Chinner <dgc@kernel.org>
+To: Jan Kara <jack@suse.cz>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	Christian Brauner <brauner@kernel.org>,
+	Qing Zhang <diasyzhangqing@gmail.com>, viro@zeniv.linux.org.uk,
+	raven@themaw.net, djwong@kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [RFC PATCH] namei: revalidate the symlink dentry before invoking
+ get_link in RCU-walk
+Message-ID: <awSm0WX5bb5p9hnW@dread>
+References: <20261118083945.1449264-1-diasyzhang@tencent.com>
+ <20261120-desillusionieren-holzhammer-mieten-8ec8551ef2b0@brauner>
+ <awB0RE6WN_v4YBbn@infradead.org>
+ <awNlrO5A-kdDOYvO@dread>
+ <d2w6jvflihqiyfbht3qv3mgjg3muuuvmhnss5j5dp4zh6axhn2@nsegavvnkpie>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -118,90 +64,175 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-From: NeilBrown <neilb@ownmail.net>
-To: "Christian Brauner" <brauner@kernel.org>
-Cc: "Alexander Viro" <viro@zeniv.linux.org.uk>,
- "Jan Harkes" <jaharkes@cs.cmu.edu>, coda@cs.cmu.edu,
- "Jan Kara" <jack@suse.cz>, "Richard Weinberger" <richard@nod.at>,
- "Anton Ivanov" <anton.ivanov@cambridgegreys.com>,
- "Johannes Berg" <johannes@sipsolutions.net>,
- "Namjae Jeon" <linkinjeon@kernel.org>, "Hyunchul Lee" <hyc.lee@gmail.com>,
- "Carlos Maiolino" <cem@kernel.org>, "Jeff Layton" <jlayton@kernel.org>,
- "Amir Goldstein" <amir73il@gmail.com>, linux-kernel@vger.kernel.org,
- codalist@coda.cs.cmu.edu, linux-fsdevel@vger.kernel.org,
- linux-um@lists.infradead.org, ntfs@lists.linux.dev, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2 1/4] VFS/xfs/ntfs: drop parent lock across
- d_alloc_parallel() in d_add_ci()
-In-reply-to: <20261120-veranda-tiger-seemeilen-397d57fb2258@brauner>
-References: <20261117000115.1433875-1-neilb@ownmail.net>
-  <20261117000115.1433875-2-neilb@ownmail.net>
-  <20261120-veranda-tiger-seemeilen-397d57fb2258@brauner>
-Date: Tue, 24 Nov 2026 07:48:49 +1100
-Message-id: <179546692990.1728055.10797595669821351188@noble.neil.brown.name>
-Reply-To: NeilBrown <neil@brown.name>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <d2w6jvflihqiyfbht3qv3mgjg3muuuvmhnss5j5dp4zh6axhn2@nsegavvnkpie>
 
-On Sat, 21 Nov 2026, Christian Brauner wrote:
-> On Tue, Nov 17, 2026 at 10:54:58AM +1100, NeilBrown wrote:
-> > We don't need to keep the parent lock held when d_add_ci() is run - the
-> > VFS doesn't need it as dentry is exclusively held due to
-> > DCACHE_PAR_LOOKUP and the filesystem has finished its work.
+On Mon, Nov 23, 2026 at 09:50:21AM +0100, Jan Kara wrote:
+> On Mon 23-11-26 08:59:08, Dave Chinner wrote:
+> > On Fri, Nov 20, 2026 at 08:24:36AM -0800, Christoph Hellwig wrote:
+> > > On Fri, Nov 20, 2026 at 02:59:42PM +0100, Christian Brauner wrote:
+> > > > This only makes the window smaller.
+> > > > 
+> > > > XFS can still reinitialize the inode right after this check and while
+> > > > get() is running. Then ->get_link() operates on an inode that is being
+> > > > reset underneath it. And the !get check only catches the case where the
+> > > > that re-init already finished before we loaded ->get_link.
+> > > > 
+> > > > RCU pathwalk relies on inode memory not being reused before a grace
+> > > > period has passed. XFS itself frees inodes via call_rcu() but the
+> > > > recycle path hands the same struct inode out again without waiting for
+> > > > existing RCU walkers.
+> > > > 
+> > > > So that should be fixed in XFS, either by not recycling an inode in
+> > > > place while RCU walkers can still see it or by keeping i_op and the link
+> > > > state valid across a recycle.
+> > > 
+> > > Not recycling the inode really isn't an option, as that means there
+> > > would cause duplicate inodes in the xfs inode cache.  Keeping i_op and
+> > > state in place sounds a bit more feasibly, but could be iffy as well.
+> > > 
+> > > The best thing would be to find a way to keep the inode alive at the VFS
+> > > level when XFS marks it reclaimable.  That would be a huge an invasive
+> > > change, but it would solve this and many other problems as well.
+> > 
+> > I don't think that's feasible without a massive rework of the VFS
+> > inode life cycle management and/or the way XFS tracks inode metadata
+> > dirtiness for writeback purposes.
+> > 
+> > Background:
+> > 
+> > The xfs_iget_recycle() code exists because dirty XFS_IRECLAIMABLE
+> > inodes are tied into the journal machinery and need writeback before
+> > they can be reclaimed. This is all invisible to the VFS, and it is
+> > done via lockless lookups and atomic state checks without the need
+> > for reference counts within XFS itself.
+> > 
+> > The issue is that reclaiming such an inode generally requires a log
+> > force to stabilise it in the journal before it can be written back,
+> > and the act of writing it back requires access to the inode state.
+> > Hence the journal requires the XFS inode to live in XFS_IRECLAIMABLE
+> > state until metadata writeback is complete, regardless of any other
+> > inode state changes.
+> > 
+> > xfs_ireclaim() can expedite the writeback portion of reclaim (by
+> > running an inode flush) but it does not expedite the required
+> > journal flush if the inode is still dirty in memory. On lookup
+> > of an XFS_IRECLAIMABLE inode in RCU mode, we cannot directly reclaim
+> > a dirty XFS_IRECLAIMABLE inode because it requires blocking on both
+> > a log force and metadata writeback. That's why the inode is sitting
+> > in the XFS_IRECLAIMABLE limbo in the first place...
+> > 
+> > That's where the xfs_iget_recycle() code stepped in - it
+> > reinitialises the VFS portion of the inode without affecting the
+> > internal journal state of the inode. This allows new modifications to
+> > be added to the inode and the attached log item without any
+> > discontinuities in journal state.
+> > 
+> > The reason it does a full initialisation of the VFS inode is that
+> > the inode can change identity whilst in XFS_IRECLAIMABLE. i.e. it
+> > could be unlinked and then reallocated as a different inode (same
+> > number, different generation), and so the type can change (e.g. REG
+> > -> DIR) and hence a full VFS init is required to recycle it.
+> > 
+> > And the reason that we've always done this recycle is for
+> > performance reasons - the inode allocation algorithms can prefer to
+> > allocate recently freed inodes (for locality reasons), and hence
+> > recently unlinked inodes in the IRECLAIMABLE state can be
+> > reallocated and need recycling because the final unlink state hasn't
+> > reached stable media before they are recycled.
+> > 
+> > Doing things like forcing logs, instant reclaim, RCU
+> > synchronisation, etc have all had significant performance impacts
+> > due to the additional latency these operations add to common
+> > workload patterns. Hence the rarity of this recycle issue hasn't
+> > outweighed the cost of the "simple" fixes to everyday operation.
 > 
-> I'm not sure that holds? Only d_alloc_parallel() honours
-> DCACHE_PAR_LOOKUP. lookup_one_qstr_excl() still uses d_alloc() and
-> relies on the exclusive lock to guarantee that there are no in-lookup
-> children at all. That stops being true here:
-> 
-> > +		if (lookup_flags & LOOKUP_SHARED)
-> > +			inode_unlock_shared(d_inode(dentry->d_parent));
-> > +		else
-> > +			inode_unlock(d_inode(dentry->d_parent));
-> > +		must_relock = true;
-> >  		found = d_alloc_parallel(dentry->d_parent, name);
-> 
-> So if "Foo" exists on an ascii-ci xfs:
-> 
-> P1: stat("FOO")                      P2: unlink("Foo")
-> lookup_slow()
-> -> xfs_vn_ci_lookup()
->    -> d_add_ci(dentry, X, "Foo")
->       -> inode_unlock_shared(dir)
->       -> found = d_alloc_parallel()
->                                      start_dirop()
->                                      -> inode_lock_nested(dir)
->                                      -> lookup_one_qstr_excl("Foo")
->                                         -> d2 = d_alloc()
->                                         -> xfs_vn_ci_lookup()
->                                            -> d_splice_alias(X, d2)
->                                      vfs_unlink()
->                                      -> xfs_vn_unlink()
->                                         -> d_invalidate(d2)
->                                      inode_unlock(dir)
->       -> d_splice_alias(X, found)
-> 
-> IOW, "Foo" ends up as a hashed positive dentry for an unlinked inode
-> that nothing revalidates.
-> 
-> open("Foo", O_CREAT) then opens the orphan instead of creating a new
-> file and O_EXCL fails with EEXIST. Do a rename() instead of the unlink()
-> and "Foo" keeps pointing to what is now "Bar". ntfs gets there the same
-> way.
-> 
-> Before this patch lookup_slow() held the lock shared across all of
-> that so start_dirop() couldn't get in between.
-> 
-> So afaict this needs "VFS: use d_alloc_parallel() in
-> lookup_one_qstr_excl()" from your RFC to go in first. Unless I'm
-> missing something obvious.
-> 
+> I'd just mention one possible solution which you didn't mention below (I
+> don't know how complex it would get for XFS but we effectively do this in
+> ext4) - make the VFS part of the inode and the journalled portion of the
+> inode separate entities in memory (independently allocated & freed).
 
-Yes, I see that now - thanks.
-And that means we don't need LOOKUP_SHARED at all.
+Yes, that's another avenue - we already have the abstraction of hte
+log items being tracked and used by the journal, and the inode
+simply contains a pointer to the log item for.
 
-The AFS patches also drop and retake the lock, so they need to be after
-d_alloc_parallel() is used in lookup_one_qstr_excl(), and also after the
-d_drop() changes.  So I think I should combine the AFS patch set with
-this one.  I'll try that and check that it still makes sense.
+*however*
 
-Thanks,
-NeilBrown
+> Then
+> you can free the VFS portion of the inode while still keeping the
+> journalled portion allocated.
 
+The separation is between the XFS/VFS inode structure and the xfs
+log item structure. The problem is that the XFS/VFS inode is a
+single comingled structure (i.e. struct xfs_inode { ... struct inode
+vfs_inode; } and xfs_iget_recycle() is reinitialising just the VFS
+portion of the structure.
+
+The reality is that the XFS inode is still needed by journal
+writeback to format the current state of the inode into the backing
+buffer at writeback time, because the delta written to the journal
+is not tracked by the log item itself past the journal commit.
+
+We used to have separate XFS and VFS inode structures - a couple of
+decades ago. That went away a long time ago, and I don't think we
+really want to go back in that direction because we'd have to undo
+all the inode field deduplication we've done in the last 15 years...
+
+> If the inode location on disk gets
+> reallocated, you allocate fresh VFS part and recycle the journalled part.
+> In ext4 we have this natural separation between the buffer carrying the
+> inode structure on disk which is part of the journalling process and the
+> inode itself so this separation is easy there. For XFS I presume this is
+> complex or you wouldn't bother with all the separate inode lifetime logic
+> but I just wanted to toss this idea out.
+
+XFS uses individual structure-based inode logging, not buffer based
+logging. Hence writeback of the inode log item still needs to format
+the inode structure into the backing buffer. Hence the inode
+structure must be available at writeback time, and because we do
+transactions on inodes after evict (e.g. unlinked inode freeing),
+the inode structure -must- persistent beyond the VFS inode life
+cycle.
+
+When describing the above solutions, I did consider "can we keep the
+log item and reallocate the struct xfs_inode and point it back at
+the log item?" to do somethign similar to what you suggest. We could
+potentially do that, but the changes we need to do first to enable
+it are .... quite extensive.
+
+Unfortunately, the log items are not reference counted by the
+journal when being tracked for writeback, and the inode is not
+reference counted by the log item's back pointer to the inode
+itself. Hence disconnecting and reparenting the inode log item
+whilst it is still active in the journal machinery is ... excitingly
+complex.
+
+(FYI - log item writeback reference counting and dynamic inode log
+item design docs:
+
+https://lore.kernel.org/all/aqI6v-_dc2DDSbgB@dread/
+
+tl;dr: very complex!)
+
+Then there's the fact that the inode cluster buffer tracks dirty
+inode log items, too. Hence there's situations where buffer IO
+completion can reach through the attached inode log item to the XFS
+inode to change state, and it does this without holding a direct
+reference to the inode, too. The state that allows this to be done
+safely is held in the XFS inode itself (the flush 'lock' and
+XFS_IFLUSHING) and processing is dependent on inode state (e.g.
+XFS_ISTALE), and hence any 'replacement' of the xfs inode cannot be
+done whilst the inode itself is under writeback....
+
+So, yeah, I did consider the 'leave the log item in the journal,
+recreate just the XFS/VFS inode' path, but handling the changeover
+in a sane manner seems far more complex than the 'flush, reclaim,
+reallocate' approach.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+dgc@kernel.org
