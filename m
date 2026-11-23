@@ -1,54 +1,83 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.45
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795467664;
-	b=bYJnXm/YNyGvPEW7r6jB/XtBgLi+leyr5CK9nk9rH6E1awM+Rzbu/T/2VQwNNwI9Q08V
-	 8plqVmmc/y86dsAvmxR1MDQmWGQ2AylK/Ehkjio0OKFLJ+91eXbQsbJmIYtm9NMeNHm0i
-	 1aYaJqUtvlSZZHlJiUfjbImwEaHIeXRg1cNUDdngc4TOlcgkH/LkjVrGFlwtEQWKfjcO3
-	 ra9qYmUS8qCEyKQSGSq5/P48D06NbHHiy10m2KzxHjko2KLiBzEToMcR0vYrfZRCf+D8s
-	 Y9C5A/xq+2PmEKMWtpRKzqRNT69i/W+aGwC7mtUrq4ht8QhQ6eqmNKEUbPwKiu9aHQw==
+	t=1795470310;
+	b=JE4a9Roo58pS+ZH0nzZpMPVpMZe/vLSPmBRqbnCK3TKqOpji6GMtkCVt7QqX07SJexhQ
+	 DCLLb09bFURDJplPPuoyWL8kjl+9+EE7JaCVnKD4lsH+Q4+Wdk7DpVkyuP25k3EoX8G/h
+	 3bOg6Zluqa9i/KFtx4vpLp3iPMSd/1OC1SazWYggbiC/zSF5UET0hiUPD/vvTaTQIttMC
+	 2EoUgXDUdyEBIct+hJ62zvXuHlbe+71fOVSn4bfrWZyEZvj8pjjf2CjEUPXX+/+H0iiTQ
+	 S1kzszOTLKw4lrrBePSQzzKFYRb8U4XiNI4LfnMoR82izgCuIKD+WgfG1S7M6l8ukOQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795467664;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=J9Opdh6yJ1qIz1G0SDFryCdOUkdl0P/HGHSXDd7vrNc=;
-	b=hFiPIkL7TNj2eZmLHK6GWmM8HxPa4wZ8uNkaUwqEBUG5MKaMu9hoLO8XJqVmHGl+gZ7U
-	 bPGZdtBrncuwnBavvLQ4nAk6o9w1kee7zGlpBPD7TsjgnfDemNmnJPVM3TYUa8YgFaTAO
-	 VvXE5lCJv80O2f7qXxllHH4uFzlJy+W5vLC0331Yml2Yo6x/9S5/r14iiS/ToCHwAF3iY
-	 wCXTGo2Y4h25O4bopuCxJLnvvtOHZZf6ascapBdZuUrd8TxiPflRvoP/S7C0P/pXmDksI
-	 N/WRHgpyNQUdutUf2k2aXq7E2TCA3sLvropxwJD5ursOQ2T3SibqlNcyKtiIxHXYnBQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795470310;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Mime-Version:Content-Type:Date:Message-Id:Cc:Subject:From:To:X-Mailer:
+	 References:In-Reply-To;
+	bh=LkpmMbGmbwOY5rWgpls3HX12a8MYucO7aG0St1F+2Jo=;
+	b=DNmq9cfjBLk6Wv0MSQN7nIiLv5xK8BCAjdBPMx7HQYJOkP4U+BDzr6wDbYpNZiN1eCTn
+	 +hDHqoPqE3NGhQ1yOvOG46bf/6nAhHoYmM7IMR6Pn4TvHeQujJyzDZ6csC88/c9wvZBKp
+	 w0M6XMC/LVohJl0Vusu6O8U27vfJ3q39Juqt6pNz9uBT/6iF7YsDCKx3S0hjTIYisdnWV
+	 +xjo61XXgtYfYqIrl4HfotR6Fnj3iP3I0cgQEK+CYmmJKl+coBSS7MKp2P8/4I4I3VYMo
+	 G2l3nNyOyovUm//4ZukoISd6S4s3xzzrRsqpUQYW2IEIUjrTF+imQ/vNDyF4fvRI+LQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VWspVJZ7;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=VZ0qknZT;
+	arc=none smtp.remote-ip=209.85.128.45
+Received: from mail-wm1-f45.google.com (mail-wm1-f45.google.com [209.85.128.45])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06264606A321
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Nov 2026 21:01:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7B8F606A331
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Nov 2026 21:45:09 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A7B8F606A331
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VWspVJZ7
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8BAA11F000CA;
-	Mon, 23 Nov 2026 21:01:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795467663;
-	bh=J9Opdh6yJ1qIz1G0SDFryCdOUkdl0P/HGHSXDd7vrNc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=VWspVJZ7k99IPWLioYiY+cHFnGX+PV5IhNlf+p0kOr4nOn0/QlXl78fZG1NzWfTmz
-	 tMgRaXuS3mCWpBUGZb1YZxD+EYY1/kn9ysuXJUTf4MtVYH51R6/3nMiJiXxMgd9Ldz
-	 r63eucKeHSADBgCTz4b1nK8F2MhTcboyXMFoHggC9mvOTX6zGpk1nj2wnJtzgDvb0l
-	 ik5+4TjxjlBpxRQ1mLD8P4uAv5KOM4qdQurLmPp+wCHiLo7uCEu/oZ76CWG2IX6lVh
-	 Qw9P7k51LzhIC7LgekxzJRIXppqkZESa1NW0sVm9ol5gFC+rFTmQ6d92zD4hYwb6US
-	 lbyFLbnemdIVQ==
-Date: Tue, 24 Nov 2026 08:00:55 +1100
-From: Dave Chinner <dgc@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org, cem@kernel.org
-Subject: Re: [PATCH 07/59] xfs: update the rt geometry when recovering a
- superblock change
-Message-ID: <awSphzZ8c-aeqVxh@dread>
-References: <20261116231707.3625263-1-dgc@kernel.org>
- <20261116231707.3625263-8-dgc@kernel.org>
- <awB3BHsu97cNiCki@infradead.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=VZ0qknZT
+Received: by mail-wm1-f45.google.com with SMTP id 5b1f17b1804b1-4a2000d5fb1so21763305e9.1
+        for <linux-xfs@vger.kernel.org>; Mon, 23 Nov 2026 13:45:09 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1795470308; x=1796075108; darn=vger.kernel.org;
+        h=in-reply-to:references:to:from:subject:cc:message-id:date
+         :content-type:mime-version:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=LkpmMbGmbwOY5rWgpls3HX12a8MYucO7aG0St1F+2Jo=;
+        b=VZ0qknZT6G8jiDP7QwV1V0pKiCHfdpHhv+ble/Qqp2dsIvFkJZWZEQo9bOyiSNJfxd
+         S62RlIDUJbUvN3ioWmiGkyqYIloVbEYSHTae7xvHfTYjToSl0gWsie7uEe66mU9suH3p
+         OVMHRCvIk0WsbVuDVgcLSNPF7Ec0HXwEKBtOuom5CsvElRQA+M09E4cfcpO+i6PBdryb
+         ntAhjU6XZ90W6FYquDYaWxhvbvTHEcYGCuWP5AiwluJI8NENSfLLy/pk0lrjhY0kyvi0
+         bgVXn3+C6HgJDHqY72JeJyuVhniaC40uz87cw3lEvo4xKYC0niCxsDe90FBOCsZpGKYq
+         0TKA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795470308; x=1796075108;
+        h=in-reply-to:references:to:from:subject:cc:message-id:date
+         :content-type:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=LkpmMbGmbwOY5rWgpls3HX12a8MYucO7aG0St1F+2Jo=;
+        b=AEz26l8V2tuZjN5ZJZSgh+2JFRJpfPLUYNcKRtRmBWsG9V+zmJgs/NUler/BuknUy0
+         60Ctb1yH+aocH7OBEZjF8PqrC9FfScpOHgOvuLDfrUW1/1y4poDJsgslIayh1/2P6ws6
+         rnLVVDP/dUQj9UZ5f9Fqbzy7/kmlRpbk2DagW7Vk/9OMjm7plBn88JqcykCr9XKsjpze
+         W1es3SFmRfsYiyETFFBhVmfP0cYgDOrCDqPgAqe/bdG1wS3OCaIqwIMfFrjT73x9MtnW
+         +46PRqd1ZZQvdJF97DedEjeB8anAKHH1KaWOlQ5kbTJtoc9FonfWQys6iL46QAUR36dL
+         +alA==
+X-Forwarded-Encrypted: i=1; AL+hErGMWz6aFMQ7XNfukLBuQ64gBVImrpBgtCKeQj2lWWRNsyG2vGwFcJP/xjxXQP8xyeoWwnCGkhNHhKw=@vger.kernel.org
+X-Gm-Message-State: APuU4Z91wXZDntpk+e1ZZEDnqg5w8m9Je5YB7eGZSBCw3saPoML4phyw
+	5dN4bioKisE0fuHH5Q2OZ9fdz1oGQTDD4CTT6dt75HjUarHK0XsQfSAR
+X-Gm-Gg: AZFdTZckK2JD1FZu48i6k6QRjeZE6UejaS4ULgC9mMwoCGlyCSASJ9El2PhukL5qv8J
+	h5fyF5CbsYEU5Iwg9tay+MGvZ4pQymP4LoCPsHCNkpn0eVwkAFfbd/xgClnMlO4hNpwcjq1csJa
+	8U8Fe37I/YTs24GFewkFFFX6a67FeBImCDd3c1KgKDwe2zjQ0v+nbxDv5E7T8b583xQ2aqE86bD
+	HCrADmMq5BD/qcluCo4DOYyvS4SOF4w0DkdWcgt/TANcpGBaAdprhMyuy7Eo9mZCYCtvkm+ufMp
+	fshBt9BeYRsNdFo9KnPKqnx2cC6f7bFpno4vScyTNLeI8CcnNak+CUvsj9Qn21lnixzafCClqQo
+	9BS8mod7F4PBXtoHt3x2Q+fJgXrSbGhOGijWf/BIUevuqlsjR7eYCUyMFyAwt3l/pBJ1IHrbJx2
+	642n0oSc+f1owObYoH+SzEBkYWwyDriF8/QRMkJeDnBAj3sM1qxefPyAMZevE8EWk6IBLI53Qy+
+	xeoiKRJR1sTUzx/1OovS631T/P0k8ZtA11rk/DuGvhJI05FBVU3ELtSyUXloeh6NC2sIX74NJ1m
+	yYpVgSs0PZ06fyOFD7rjeG6vCUBaiPdhLVzbqHc3mXwdfvM=
+X-Received: by 2002:a05:600c:a08b:b0:4a5:87b3:ddc1 with SMTP id 5b1f17b1804b1-4bb88922c52mr247479825e9.13.1795470307434;
+        Mon, 23 Nov 2026 13:45:07 -0800 (PST)
+Received: from localhost ([2001:b07:5d26:7a6a:365a:60ff:fe0d:cfc6])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4bb88442995sm390803475e9.2.2026.11.23.13.45.05
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 23 Nov 2026 13:45:06 -0800 (PST)
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -57,172 +86,96 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <awB3BHsu97cNiCki@infradead.org>
+Mime-Version: 1.0
+Content-Type: multipart/signed;
+ boundary=f93e91cd8129c4ef5a6623f4aac998269e771b61eaa5f43d069bef622e5a;
+ micalg=pgp-sha512; protocol="application/pgp-signature"
+Date: Mon, 23 Nov 2026 22:45:05 +0100
+Message-Id: <DN2X3RC5JUFQ.2LNGLQOUX4ZPF@gmail.com>
+Cc: "Namjae Jeon" <linkinjeon@kernel.org>, "Hyunchul Lee"
+ <hyc.lee@gmail.com>, "Alexander Viro" <viro@zeniv.linux.org.uk>, "Christian
+ Brauner" <brauner@kernel.org>, "Chuck Lever" <cel@kernel.org>, "Jeff
+ Layton" <jlayton@kernel.org>, "Jan Kara" <jack@suse.cz>, "Darrick J . Wong"
+ <djwong@kernel.org>, "Andrey Albershteyn" <aalbersh@kernel.org>,
+ =?utf-8?q?Pali_Roh=C3=A1r?= <pali@kernel.org>, "Lauri Gates"
+ <lauri.gates@gmail.com>, "Christoph Hellwig" <hch@infradead.org>, "Dave
+ Chinner" <dgc@kernel.org>, <linux-btrfs@vger.kernel.org>,
+ <linux-xfs@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <linux-fsdevel@vger.kernel.org>, <ntfs@lists.linux.dev>,
+ <linux-nfs@vger.kernel.org>, <linux-api@vger.kernel.org>
+Subject: Re: [PATCH 0/3] Add f*_xflags_{rw,ro}_mask flags to the fileattr
+ API
+From: "koraynilay" <koray.fra@gmail.com>
+To: "Amir Goldstein" <amir73il@gmail.com>, "koraynilay"
+ <koray.fra@gmail.com>
+X-Mailer: aerc 0.22.0-0-gc2f86b7abde3
+References: <20261122000856.536902-1-koray.fra@gmail.com>
+ <CAOQ4uxgf2KE=Ag13EPAu5=KnrFwt7zRH=im-qmLc8+i10Tjd+Q@mail.gmail.com>
+In-Reply-To: <CAOQ4uxgf2KE=Ag13EPAu5=KnrFwt7zRH=im-qmLc8+i10Tjd+Q@mail.gmail.com>
 
-On Fri, Nov 20, 2026 at 08:36:20AM -0800, Christoph Hellwig wrote:
-> On Tue, Nov 17, 2026 at 10:14:24AM +1100, Dave Chinner wrote:
-> > Recovering a growfs can change the realtime geometry. Adding the first
-> > realtime volume can change the realtime extent size. It also brings the rt
-> > rmap and rt refcount btrees into use. Changing the data device size changes
-> > the height those btrees can reach. Superblock recovery does not update the
-> > realtime geometry, the mount features or the realtime btree maximum heights.
-> > 
-> > The rest of recovery then runs with the old geometry. New rtgroups are set up
-> > with the wrong layout. Valid realtime btree blocks can fail verification and
-> > abort recovery. A realtime device needs to be defined to recover realtime
-> > metadata. Abort superblock recovery if it adds a realtime volume but no device
-> > exists.
-> 
-> Do you have a testcase for this?  I'd hate to add all this code without
-> actually being exercise as that introduces the chance of even more
-> issues due to untested code.
+--f93e91cd8129c4ef5a6623f4aac998269e771b61eaa5f43d069bef622e5a
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
 
-Yes, I do. Three test cases in this script, two of them fail to
-mount after the growfs-shutdown with corruption warnings during
-recovery, the other succeeds when it should fail because the
-root btree block is completely empty and we don't check for that
-at all.
+On Mon Nov 23, 2026 at 2:35 PM CET, Amir Goldstein wrote:
+> On Sun, Nov 22, 2026 at 1:09=E2=80=AFAM koraynilay <koray.fra@gmail.com> =
+wrote:
+>>
+>> This is a follow up patch series stemmed from [1] and [2], splitting the
+>> _mask change for the fileattr API into its own separate patch.
+>>
+>> The first patch is a preparatory patch so that the code in the patch
+>> after can be formatted better.
+>>
+>> The second patch is the actual implementation, which introduces:
+>> - fa_xflags_{rw,ro}_mask fields to struct file_attr
+>> - fsx_xflags_{rw,ro}_mask fields and has_masks selector to struct file_k=
+attr
+>>
+>> These masks have the following semantics:
+>> - rw_mask:
+>>   * for filesystems: advertise which xflags they support changing
+>>   * for userspace: specify which xflags it wants to modify
+>> - ro_mask:
+>>   * for filesystems: advertise which xflags they support only reading
+>>   * for userspace: ignored
+>
+> Nice!
+> I think this API description is very clear and coherent
 
-$ cat test-rt-growfs-recovery.sh
-#!/bin/bash
-# SPDX-License-Identifier: GPL-2.0
-#
-# Recovery of a growfs that adds the FIRST realtime volume to an rtgroups
-# filesystem.
-#
-# xfs_mountfs() computes m_rtrmap_maxlevels / m_rtrefc_maxlevels (and the
-# XFS_FEAT_REALTIME feature bit) from the superblock BEFORE log recovery. On a
-# filesystem with no realtime section these are all zero. Log recovery replays
-# the growfs superblock change (sb_rblocks/sb_rgcount become non-zero) but does
-# not recompute them, and xfs_rtmount_inodes() then loads the new rtgroup
-# inodes with the stale zero values.
-#
-# Predictions:
-#   reflink=1          mount FAILS: xfs_iformat_rtrefcount() rejects every
-#                      level when m_rtrefc_maxlevels == 0 (level >= 0).
-#   reflink=0          mount SUCCEEDS: xfs_iformat_rtrmap() uses level > 0,
-#                      so an empty level 0 rtrmap root passes.
-#   reflink=0 + frag   mount FAILS: enough rt allocations before the crash
-#                      push the rtrmap root above level 0, which is rejected.
-#
-# Must run as root. Uses loop devices over sparse files.
+By the way, should I use this description in the commit message (and
+integrate it with missing information before/after the bullet points),
+or should I keep the current one?
 
-set -u
+(current one:)
+> This lets filesystems advertise their support for specific xflags, like
+> statx.stx_attributes_mask does, and userspace can specify only which
+> xflags it wants to change without needing a RMW cycle:
+> - on GET: each filesystem that wants to support this new API fills the
+>   masks according to its supported and read-only xflags, then:
+>   * for boolean xflags: it fills fsx_xflags with the current on-disk valu=
+e
+>   * for value xflags: it sets the xflag bit to 1 in fsx_xflags and the
+>     xflag value in the struct field;
+> - on SET: userspace fills the rw_mask with the bits of the xflags it
+>   wants to change, then:
+>   * for boolean xflags: it provides the xflag value as a bit in fa_xflags
+>   * for value xflags: it sets the xflag bit to 1 in fa_xflags and then
+>     provides the value in the struct field; if the xflag bit is set to 0
+>     instead, this informs the kernel to unset/clear that value.
 
-WORKDIR=${WORKDIR:-/tmp/rtgrow}
-MNT=${MNT:-/mnt/rtgrow}
-SIZE=${SIZE:-4g}
-FRAG_EXTENTS=${FRAG_EXTENTS:-2000}
+Thanks,
+koraynilay
 
-DATA=""
-RT=""
+--f93e91cd8129c4ef5a6623f4aac998269e771b61eaa5f43d069bef622e5a
+Content-Type: application/pgp-signature; name="signature.asc"
 
-die() { echo "FATAL: $*" >&2; cleanup; exit 1; }
+-----BEGIN PGP SIGNATURE-----
 
-cleanup()
-{
-	mountpoint -q "$MNT" && umount "$MNT" 2>/dev/null
-	[ -n "$DATA" ] && losetup -d "$DATA" 2>/dev/null
-	[ -n "$RT" ] && losetup -d "$RT" 2>/dev/null
-	DATA=""
-	RT=""
-}
-trap cleanup EXIT
+iHUEABYKAB0WIQSgVimKafU5DQMcjcDmj22qf5IGXAUCawSz4QAKCRDmj22qf5IG
+XFP0AQDoHuI0GUaYOoQkPYkvkC952uJ2NGRvnCWrDXc2mGNcRgD8D3IvRyNkeRF4
+hY+IdbU3Ldb+X7gx8ejbGnOW7iQXcAM=
+=P1l+
+-----END PGP SIGNATURE-----
 
-kmsg() { echo "rtgrow-test: $*" > /dev/kmsg; }
-
-# Print the kernel log lines emitted since the marker for this case.
-dmesg_since()
-{
-	dmesg | sed -n "/rtgrow-test: BEGIN $1\$/,\$p"
-}
-
-[ "$(id -u)" -eq 0 ] || die "must run as root"
-for c in mkfs.xfs xfs_growfs xfs_io xfs_db losetup; do
-	command -v $c >/dev/null || die "$c not found"
-done
-mkdir -p "$WORKDIR" "$MNT" || die "cannot create $WORKDIR or $MNT"
-
-# Write every other block of a realtime file so each allocation is a separate
-# extent and a separate rtrmap record, growing the rtrmap btree.
-fragment_rt()
-{
-	local f="$MNT/rtfile"
-	local i
-
-	touch "$f" || return 1
-	# The realtime flag can only be set on an empty file.
-	xfs_io -c "chattr +r" "$f" || return 1
-	for ((i = 0; i < FRAG_EXTENTS; i++)); do
-		echo "pwrite -q $((i * 8192)) 4096"
-	done | xfs_io "$f" >/dev/null || return 1
-	xfs_io -c fsync "$f" || return 1
-	echo "  rt file extents: $(xfs_io -c 'fiemap' "$f" | grep -vc hole)"
-}
-
-run_case()
-{
-	local name=$1 reflink=$2 frag=$3
-	local data_img="$WORKDIR/$name-data.img"
-	local rt_img="$WORKDIR/$name-rt.img"
-
-	echo
-	echo "=== case $name: reflink=$reflink frag=$frag"
-	kmsg "BEGIN $name"
-
-	rm -f "$data_img" "$rt_img"
-	truncate -s "$SIZE" "$data_img" "$rt_img" || die "truncate"
-
-	# No -r option: the filesystem has rtgroups but no realtime section.
-	mkfs.xfs -q -f -m metadir=1,rmapbt=1,reflink=$reflink "$data_img" ||
-		die "mkfs"
-
-	DATA=$(losetup -f --show "$data_img") || die "losetup data"
-	RT=$(losetup -f --show "$rt_img") || die "losetup rt"
-
-	mount -o rtdev="$RT" "$DATA" "$MNT" || die "initial mount"
-	echo "  before growfs: $(xfs_info "$MNT" | grep -E '^realtime')"
-
-	xfs_growfs -r "$MNT" >/dev/null || die "growfs -r"
-	echo "  after growfs:  $(xfs_info "$MNT" | grep -E '^realtime')"
-
-	if [ "$frag" = 1 ]; then
-		fragment_rt || die "fragmenting rt file"
-	fi
-
-	# Force the log to disk but write no metadata back, so the next mount
-	# has to recover the growfs.
-	xfs_io -x -c "shutdown -f" "$MNT" || die "shutdown"
-	umount "$MNT" || die "umount after shutdown"
-
-	kmsg "RECOVERY MOUNT $name"
-	if mount -o rtdev="$RT" "$DATA" "$MNT"; then
-		echo "  RESULT: recovery mount SUCCEEDED"
-		echo "  after recovery: $(xfs_info "$MNT" | grep -E '^realtime')"
-		umount "$MNT"
-	else
-		echo "  RESULT: recovery mount FAILED"
-	fi
-
-	echo "  --- kernel log for case $name ---"
-	dmesg_since "$name" | sed 's/^/  /'
-
-	echo "  --- rtgroup 0 btree inodes (xfs_db) ---"
-	for f in rmap refcount; do
-		xfs_db -r -R "$RT" -c "path -m /rtgroups/0.$f" -c "print core.format" \
-			"$DATA" 2>&1 | sed "s/^/  0.$f: /"
-	done
-
-	cleanup
-}
-
-run_case reflink1 1 0
-run_case reflink0 0 0
-run_case reflink0-frag 0 1
-
--- 
-Dave Chinner
-dgc@kernel.org
+--f93e91cd8129c4ef5a6623f4aac998269e771b61eaa5f43d069bef622e5a--
