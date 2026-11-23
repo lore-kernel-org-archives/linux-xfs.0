@@ -1,63 +1,100 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.92
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795440349;
-	b=LsNQDz8pTYrAFRx6keejyAQoB/YEYDqf9uAnTPlOvxHEYCP9woZsWg34WgJSbo+Fj4mG
-	 3fiAkEXGlZRrm6+Ak5+PYcEouVZ20kbrTGYhOGK1B9xy3ns8Q2A/NHjAgaTyoWiJ3fYVP
-	 5bcEAh6Z+njvvIBOsNd8IhcehiKbQMOpqbT1hoIs/MwBNZkvXUVBWQQ581HMDW6wCymKY
-	 EQusrvS4k5UHc+9VBUUqZrbS44wvOMl6zo9rDl1Xi4RjgYHXD2RjF5ZSzxutz30O4x5Mg
-	 yqIg1ie3+ZhC2Vg/5sClSOj2Dj+Wp+5J6D6vVLWEL6f4Ly8NWH41ylH5XSxJRchyHkQ==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795440349;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=T8O+IMwq73DKWaCETyOUwPWWKedm3WPb1gOuS1Bq/z8=;
-	b=yNEnuBvWvoKS7ZRfNTreQgPGhHcBgfaIoQa2KwvtwAr9fiZonUtLEVCshX/3+a406etX
-	 Doyggoa0r+NPgLmX86bxoMPNWQXis6dNWrdybIzz+ipSF9PG1SqM6K8zn2JRMt+FKCglp
-	 4j8gp4dzF2opqniT2zxcAcjIipOw6EEjiPipsCSWDfi/yxeYiJCE5khB2zr0MSUPcCejT
-	 oEwt2HuCcYAbmtwRrN8XDhQIWbLtuVSkQeLhPFIxaZ+sKF6n6MsvA385VbtgIWG8U2b78
-	 JMoEKfe7RQsx+mFBYsx26S4WsBrh2SU1ur0j22/mDfUQ1TpWYCQ9/zdvEEmzKxSk1xw==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=FGTtzTx3;
-	arc=none smtp.remote-ip=95.215.58.92
-Received: from mta1.migadu.com (out-92.mta1.migadu.com [95.215.58.92])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.54
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1795440928;
+	b=P73FkVFViXsjY8w5PPesbzzhTB9VZjLKZZUo1EShqzMLN568BS3Y3WmWoD8cIjK8Ue5U
+	 YoYVsXJq76e/cAXaT2EuDYhYjlGX4SfqQiiGNyfrkWWotZM3WMSJMlvv3P350EKgG8jON
+	 EiyK/PMUpg8KiamCHVXxa8EARuz9dQYWL7bVl5lnoRRrGXvoJGPrSEwHihnuCGMGqk0fn
+	 c0aWMmpTPSoeeSPDs4n0Ll+AAWrkKP05roAFHUbNQYd6/VFgx9+9C2Utr3XYnu6TMYcNZ
+	 6MIrgUFZr0VPfRV3qBdPWyldzA4We0czEJXOweg4qFDGIyWmzn7S067cY5eo01Z1ppg==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795440928;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
+	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
+	bh=wA48BtGM3vO5100Jfaf4088EYVNimRYHtUBWITFpY8A=;
+	b=RQ4E2dFEyjFRhM7m/ODNSQlsbuD1Kqq2EwwkGXodOFywQQZ2TIqMrKmD04Kx2Ym7XD9t
+	 TDejFzzFGNay4mjQ2Li/5RC1I9h7/+Ftn+Cw26cBCFeKvCcR0unVn2B3cf69hsZrdcMK6
+	 QdHIBQ3zCZIGJsKZjqw9Yq/JtbWCTaV4a/YM6Jx5Igb1nXcV6rKHLbKpgOYbRMjeeQkim
+	 HpwP0UFfYsmpCMsNJ/xOuHiW7gThYj4f8L0WkKlIBV68/82zEjrS4UjP+eD3KXiVFwcOb
+	 CyXIFPtkJ0YjLJqXlBQ78I1inb9OEu7QVLhADa1GTgOX+QaYbHYyvzV3zZYanik147Q==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=CUalyFmo;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.54
+Received: from mail-ed1-f54.google.com (mail-ed1-f54.google.com [209.85.208.54])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D9A2606A689
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Nov 2026 13:25:47 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4D9A2606A689
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F608606A32C
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Nov 2026 13:35:28 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3F608606A32C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=FGTtzTx3
-X-Envelope-To: linux-xfs@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=tbk+drw3u/7c7rBBUEyK6aW4QMPAthoqFlpaZ0IfUX0=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1795440346; v=1; x=1796045146;
- b=FGTtzTx3q4OFAVR/gAWAxcgk3jOxgvIE+1fQNhh9qU7QPRmJSAXE6TLBk7Dv/fcxuz0DT5tk
- Dsm/CheLo0lLn6204WzAQ6axIZ7takzksnZjCEYD6/oUkB8ZDzM9kF2ulyKCbZ+DLCdfjvni9Qv
- rQ2HqxJTcxyPkh/nv5G21iSY=
-X-Envelope-To: linux-xfs@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 30c0ddf016deec71;
-	Mon, 23 Nov 2026 13:25:39 +0000
-X-Mizu-Trace-ID: 30c0ddf016deec71
-X-Migadu-Flow: FLOW_OUT
-Date: Mon, 23 Nov 2026 14:25:35 +0100
-From: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>
-To: Breno Leitao <leitao@debian.org>
-Cc: Christian Brauner <brauner@kernel.org>, Jens Axboe <axboe@kernel.dk>, 
-	Hannes Reinecke <hare@suse.de>, Pankaj Raghav <p.raghav@samsung.com>, 
-	Johannes Thumshirn <johannes.thumshirn@wdc.com>, Luis Chamberlain <mcgrof@kernel.org>, 
-	Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, kernel-team@meta.com
-Subject: Re: [PATCH v2] iomap: don't update i_size of block devices on
- buffered write
-Message-ID: <awQ-uwPzYYEVJxjz@quentin>
-References: <20261120-iomap-bdev-isize-v2-1-f25cc668fbc1@debian.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=CUalyFmo
+Received: by mail-ed1-f54.google.com with SMTP id 4fb4d7f45d1cf-6b87a92c17eso4577724a12.3
+        for <linux-xfs@vger.kernel.org>; Mon, 23 Nov 2026 05:35:28 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1795440927; cv=none;
+        d=google.com; s=arc-20260327;
+        b=NwyFNcMJTdb2VpCbEF+ie5/bRTnfOXuKsK+DXWM5mDtEgMvCCJIXwgA8gGMvmegXwR
+         U4ahgHe07lR2YWLJTOXCZ23Bf3bffGKADsXSK3f3CntFGWapweHBHhyxyn9OjR577Y8M
+         VumOqb2DVhgl2UlpBt3LomqIjpXkM8qVlEIUjg/hn/LZ9qRbCtaQKImaNN7F093ahp5/
+         SUVv3gEN5YXQfkLEWdEM0YqobgAi9c7+5PohqSR60v4oBHKQV9jYbFKvzJhkWNg9X+OV
+         ULU+9emNmmJy7bewOGYfwCHHlfTxDx7vcZ7JGDKFZ/V0gE0q54CPZPjHO9aI2GBk674s
+         EotQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=wA48BtGM3vO5100Jfaf4088EYVNimRYHtUBWITFpY8A=;
+        fh=P41ie3xVaiSzp0Jdl8OLMKlrqUswvj8R1E14zcK02J4=;
+        b=E7Bc0elJHaSCf9IIfoB0hYko2YX5KmkyCqg2bg6ETElw1Guom9/N7L3/sZYebLNBvp
+         nl9gYlGEuCc3fjmYMY5rULYOtPYyXOVDKv47HkKBURF/FqaN/u4C0f6grOlLF0wLazAE
+         +L7/n4zh6IyAF/AzdH1umcxZVS4d3x9li7cdX2ydAlFtaweP5FxOmXTmjImxMKMss2VB
+         Hiupg6KU8NkiYt/H5aYxOXXhZYB56xcUs6SMXF84O0EKArLo85yT8MUajnIL/GXDVRVI
+         hBnqEMopIZ4qxCA8ve+1RsdbKL6TYRx7XznCiHIlPUUIKxRwv+RmjUgKpNGQpeWXrDQm
+         NsYg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1795440927; x=1796045727; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=wA48BtGM3vO5100Jfaf4088EYVNimRYHtUBWITFpY8A=;
+        b=CUalyFmoReb/83xqvr2Uap9kVXJPiulZAZ9BuYFqHt3BZvwosq+NJSvwCx7EXaJ61q
+         0UImgM/pK6aJnaecMJUvuPZ2cI7g4pQe50qM9Pea8hpjQVdlAcsrhBAjR5pkLoL6krP6
+         nRENxUXoYZaxAwVNugh+MZ7YZxx2ccbHZqMsfjTLAWxmMDno9W5bQVXg6ZykzS6zofee
+         MuNz4LKoADJSq/Wy8NqZgyRU3Eg71INdz3RDm6YrbcXLD3QD36tPN1Wy8wpv41odHg+C
+         B4L+HLWFbiG+tetJRVhqx1bMgUVGiUgvZsZjbnHTLfWPYdIp22KPI7gyBEnpYFSEFiNv
+         Y33w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795440927; x=1796045727;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=wA48BtGM3vO5100Jfaf4088EYVNimRYHtUBWITFpY8A=;
+        b=LPV/ldx8j7sok6brEk3+9rFrW3juzk3R9uZ+dFFhVhKMDFCduaPPrIPAXoB9+NLQWm
+         /909REjmjNUCTajIOF1HSYPSlaV9tqvav6xpu/WePss6QqRLD/q4Z1CvEJsG/vA18hVK
+         prrzJ9T3v4UqetUzPNJ6lUlQzI/6XVfv4UVjwHxJgg98rgtqgpQVucrpwGvEn1iavV4B
+         lF1do0QVMKXClFsGk5ZLkr9m+oC3USxkjSDvx2RCr9u6p+V5QIHSyxLk6UZbEFlpDBzq
+         oYYcqNA34yhm884TmMCqfDwQBrijsFDCJkGLkK2+rAkgDPNU1Q5rNOPG17W177z9L2r/
+         4bKA==
+X-Forwarded-Encrypted: i=1; AL+hErFef3mjjSJR1hj6xwQl4rx8JensN8gyS9JrekdakDHfwVcWa+eXkaRn0eWgz2kJW+0feFWY/U8RkwE=@vger.kernel.org
+X-Gm-Message-State: APuU4Z/cquj2uhKQNcSlsyDUHX3Uxp19CebJNLzP0Mv/9Ywiygs9lArg
+	8WAMt8p/wX3XhkLuv19OPzu+Ub8u/8Na4UzZN3bQp5czLjCUWtpaqzVlE4QkXSTrNZO/pTLVuxK
+	5k7UZV62PjCG1UnChQFF0k01fYR1fLDA=
+X-Gm-Gg: AZFdTZe12L6KxwpDTMSu+/J+DMaJmGkIESN/8qt909YRUlthhMVI8CgMiGEI9XgEVaF
+	ihsqMAZRk/xzNyysQTJue5Y5pqTDumY6FpyHNXl/kU7XGiD4Xr8DW3v1THXS4hoS9DH1m8oxF9R
+	4tpCJGrZTtzzA4M3UCAUQCGzDkOwrTxgk2btgYsT1nx0Y6fvBbWUkLRZMXKzjr2WuDkV+I0Lz7T
+	eeoEkPgW5ZHyAq5qYT/3N2RFdsUS+yO3/RN7Q8w73/xLfGUb/oM9Pf320lcgbNNs1mI8bWVUhx9
+	+4tKhkmr3kjKTriPcsQ5RS5+7ebCqLTBSvud53usLH0VTyAb/9o3QRugCsIyg4nSvVxo0Ylri7u
+	4r6tqCcnvgXVVn0YXccRzBWHqIh8IkfIPJQ6hnS6v+rZiGPkVZ/ZT4c6K5WOMUD8K+7KMcQ==
+X-Received: by 2002:a05:6402:1ed4:b0:6ba:7e42:d88b with SMTP id
+ 4fb4d7f45d1cf-6ba7e42da5dmr4190054a12.12.1795440926543; Mon, 23 Nov 2026
+ 05:35:26 -0800 (PST)
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -67,47 +104,96 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261120-iomap-bdev-isize-v2-1-f25cc668fbc1@debian.org>
+References: <20261122000856.536902-1-koray.fra@gmail.com>
+In-Reply-To: <20261122000856.536902-1-koray.fra@gmail.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Mon, 23 Nov 2026 14:35:15 +0100
+X-Gm-Features: Aa3M54oltothA2ZyBgLZ2dfkBmCeGTagh_PAD6Wp2_FkqMP-qy6jOW6gmvjqNlE
+Message-ID: <CAOQ4uxgf2KE=Ag13EPAu5=KnrFwt7zRH=im-qmLc8+i10Tjd+Q@mail.gmail.com>
+Subject: Re: [PATCH 0/3] Add f*_xflags_{rw,ro}_mask flags to the fileattr API
+To: koraynilay <koray.fra@gmail.com>
+Cc: Namjae Jeon <linkinjeon@kernel.org>, Hyunchul Lee <hyc.lee@gmail.com>, 
+	Alexander Viro <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>, 
+	Chuck Lever <cel@kernel.org>, Jeff Layton <jlayton@kernel.org>, Jan Kara <jack@suse.cz>, 
+	"Darrick J . Wong" <djwong@kernel.org>, Andrey Albershteyn <aalbersh@kernel.org>, =?UTF-8?Q?Pali_Roh=C3=A1r?= <pali@kernel.org>, 
+	Lauri Gates <lauri.gates@gmail.com>, Christoph Hellwig <hch@infradead.org>, Dave Chinner <dgc@kernel.org>, 
+	linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
+	ntfs@lists.linux.dev, linux-nfs@vger.kernel.org, linux-api@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Fri, Nov 20, 2026 at 12:24:39PM -0800, Breno Leitao wrote:
-> We are seeing this warning on an arm64 linux-next host while the ublk
-> selftests run (stress_01 deletes the ublk disks under fio buffered
-> writes):
-> 
->   WARNING: mm/truncate.c:902 at pagecache_isize_extended+0x37c/0x490, CPU#40: iou-wrk-3496756/3497370
->   Call trace:
->    pagecache_isize_extended+0x37c/0x490 (P)
->    iomap_file_buffered_write+0x38c/0x5d0
->    blkdev_buffered_write+0xcc/0x138
->    blkdev_write_iter+0x32c/0x4e0
->    io_write+0x77c/0xff8
-> 
-> The theory is that the disk shrank under the write. del_gendisk() sets
-> the capacity to 0, which writes the bdev inode's i_size under
-> bd_size_lock only. A writer whose mapping predates that reads
-> old_size == 0 in iomap_write_iter(), sets i_size to pos + written and
-> calls pagecache_isize_extended(inode, 0, pos). blkdev_buffered_write()
-> holds i_rwsem shared, so a writer at a lower offset can store a smaller
-> i_size in between, and WARN_ON(to > inode->i_size) fires. Even without
-> the warning, the write path regrows the size of a dead disk. The block
-> layer owns that size (bdev_set_nr_sectors()), and blkdev_write_end()
-> never touched it before the switch to iomap.
-> 
-> A reproducer on linux-next supports the theory: 128 threads doing 64K
-> buffered writes to a loop device, while another thread flips its
-> capacity between 1M and 1G with LOOP_SET_STATUS64, hit the warning 6
-> to 18 times per 30 second run (4 runs). With this patch it never fires,
-> and data written through the page cache still reads back intact.
-> 
-> Skip the size update and pagecache_isize_extended() for block devices.
-> 
-> Fixes: 487c607df790 ("block: use iomap for writes to block devices")
-> Signed-off-by: Breno Leitao <leitao@debian.org>
+On Sun, Nov 22, 2026 at 1:09=E2=80=AFAM koraynilay <koray.fra@gmail.com> wr=
+ote:
+>
+> This is a follow up patch series stemmed from [1] and [2], splitting the
+> _mask change for the fileattr API into its own separate patch.
+>
+> The first patch is a preparatory patch so that the code in the patch
+> after can be formatted better.
+>
+> The second patch is the actual implementation, which introduces:
+> - fa_xflags_{rw,ro}_mask fields to struct file_attr
+> - fsx_xflags_{rw,ro}_mask fields and has_masks selector to struct file_ka=
+ttr
+>
+> These masks have the following semantics:
+> - rw_mask:
+>   * for filesystems: advertise which xflags they support changing
+>   * for userspace: specify which xflags it wants to modify
+> - ro_mask:
+>   * for filesystems: advertise which xflags they support only reading
+>   * for userspace: ignored
 
-Looks good,
-Reviewed-by: Pankaj Raghav (Samsung) <pankaj.raghav@linux.dev>
+Nice!
+I think this API description is very clear and coherent
 
---
-Pankaj
+>
+> (ro_mask for userspace was also proposed as a "verification mask"[3] but
+> I left out that semantic to keep this patch series more contained, and
+> can be added later if needed.)
+
+Not so easily added later.
+We cannot change the meaning from ignore to verify without any opt-in
+later, but we could use the combination of
+rw_mask |=3D X
+ro_mask |=3D X
+
+to "verify" (set it as long as it is already set)
+all we need to do now is make sure that the API returns -EINVAL
+for rw_mask & ro_mask on set.
+
+>
+> This allows userspace to not have to do a RMW cycle when using the
+> file_[gs]etattr() syscalls, avoiding possible race conditions and
+> simplifying their usage.
+>
+> Patch 2/3 also introduces the missing FS_XFLAG_PROJID flag so that
+> programs like chattr can leverage the new mask API.
+> FS_XFLAG_PROJID is kept out of the legacy FS_XFLAG_MASK and so it's
+> defined as part of a new FS_FILE_ATTR_XFLAGS_MASK group of xflags that
+> will be used moving forward for any new xflag (like the one proposed in [=
+2]).
+>
+> Patch 3/3 converts fs/ntfs to this new API, to show how it can benefit
+> filesystem drivers too.
+>
+> The series has been tested across NTFS, ext4 (with project quotas), XFS
+> (project quotas and extent size hints), and Btrfs.
+>
+
+Judging from the number of bugs reported by Sashiko and by my agent
+on the COMMON flags change,
+I think this needs test coverage for the old APIs, especially with old bina=
+ries
+chattt/xfs_io that do the get/set cycle and re-built binaries with new head=
+ers
+both tested against old and new kernel.
+Sorry, but the UAPI issues are fragile...
+
+This is one of the changes that would have been very hard to audit without
+the LLM agents. Hopefully with the agents it is doable, but need to guide
+them how to review/test for regressions.
+
+Thanks,
+Amir.
