@@ -1,59 +1,59 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795460917;
-	b=lLzdgfT3AMk/i01D1+bRRKtxCXx2HCq24E3ZYB3eT1bAtxadopFZJb97r+E6N7EeaR3J
-	 n0SWjhMOCmpda7onQ/kVrbI9mYBQzUX/ZwD+CbvPIegzxN62WuIYOSuAJ8b1udYZkf0yj
-	 tQuQuOUyU97VTpXHx5jYNDE6EySELSDEUkTHx9KKvlPALxEuGAW/Kt+hNc9AZMi/rXr8u
-	 izwAKxkFIbeKgbCiHdszTa6Dk0h5LjHpZ/8X8lgjUAEjijdQ17bIefxLgZqlozx7RC5Oq
-	 FpRG94FzDaxabuh2BTm2TjkHiZZvVu65WIY1yEOpMw/hZYx81EN0MUgGaOIg5+av26w==
+	t=1795460959;
+	b=UT1fTpX5EOnLMNYZSowQZtsjYeYBcyz4Sz6YW8kFQzONPfTmmEg4Cb/IGHZmdx9pbTTU
+	 W2F7OyCO0k1yhi/VhWQV51aj/riqGk4cl1pw/EwM7Fd6FglN0MfA8T61Ke2Q9zU4ItC70
+	 jOw+fLmAy515i5nlZ9UxmaqLlnuc9f7PiEnGImduwWvFpgFg5A1FHV77EpFvLNsmQCXuL
+	 BiQEHeIUmsJBIfnRTIOsskIZXyLto5cnJ3acjiUnbFV1BJf4dGJWnk9ltKtaWoQX2YJAP
+	 CXAxYn5YLIc373P6Glpk9Sh4Bn74Ph6uMlunUuDWs2ZVRj2oM7vbOWJ4TiG6AdDy7mw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795460917;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795460959;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 Mail-Followup-To:References:MIME-Version:Content-Type:
 	 Content-Disposition:In-Reply-To;
-	bh=fTN8vdK235+uC79sauRv+UP8AALuyUxzYO9E3eZKSZc=;
-	b=iTXkxqcLc09/C0UmYB1bqR/ho8qiNH+ygMKbPe4PboEKn9KiU6D2RN2uEeJXFUtLNuux
-	 fLC7IZv53NQYEpDU/jxIWZ3Z8pVLGbVpJHqNZAPnnjaA9x9m8Eci3DnyzNMf/iWgug5EM
-	 9iCSAnNR7ql+ViubnOcZIulQqLuEZ/SWWrB/O1g5x0OvPQtSz0c/9d/+ncWw55Vnvv6Kl
-	 H0ELowKxNLncbyb/rjxixGni0SGagWlw48Jm8U3kvZ5eXxS6X4y7nsQq+V9xWq5Nl40El
-	 jY/pY5sCior8/HgrHifOxVM0IOI7Rh7N2VnAUeUAAPkeAFNH1uH9vmFqv1wed/8nxog==
+	bh=3Bu/vCbyCmVQQLhIexXQF1Q1/I5m6K6flPXyY7ZW/a8=;
+	b=nxrI9nI0YrUNiAbdzW8YgQLsgPO8aiIOwLA3wsO7TzagNQ4d912NJRRJEFImtN3O25x5
+	 06o4gIQM5NS5rGPNCfCqAvpRAu/58npw+lsPb0ww6tBy4Jn+JRVC+l48DRd3J0b4+i6zb
+	 X5zrURO6zOp5eM8Y0vjTs+aeziGj7LTlQLfTH4i/l3xlcwK/Jacgord7FkfFiiwNe/a1U
+	 ILXvCIyPoBROYy44pbk1AjMWhD36GpemOnOLEy7w+XKtDfHgp/DCE28GfNXqS6c7voY/g
+	 0PUk6yoEu7cTfavNTQQnGGYVhw9iYXAFlmnvGxq7WKRaMWBM8SfsdSftZ0sO8NiV7hA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kfy3RuDS;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kQbty4Fc;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46400606A31A;
-	Mon, 23 Nov 2026 19:08:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4617A606A331;
+	Mon, 23 Nov 2026 19:09:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kfy3RuDS
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 85E1D1F000ED;
-	Mon, 23 Nov 2026 19:08:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kQbty4Fc
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D9151F0093C;
+	Mon, 23 Nov 2026 19:09:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795460917;
-	bh=fTN8vdK235+uC79sauRv+UP8AALuyUxzYO9E3eZKSZc=;
+	s=k20260515; t=1795460958;
+	bh=3Bu/vCbyCmVQQLhIexXQF1Q1/I5m6K6flPXyY7ZW/a8=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=kfy3RuDSQ9EIQvEeNT3epUDAPezGpBL+AyFR3Xgqc57X2lce7oOHHb/xFaT27FTWZ
-	 s5zKBXkhCFQM9QwiEf5/wQo8BJ35drSvcGtePSMiEZ/XrZ538pR2CNqJ4BOzQnA5nq
-	 1e/pZu+s4oH2KNYMk4y4kB0xbTtCDjCQqgTwQ8SD9YmD2n0lJiObxDqIHvwJD/bN2K
-	 HhcgRtPSmTMUff9Az8j5KbpWljbxclib6bL5ZAKNowkNtBr3Stu2glxrjuay8bdEJK
-	 LCT9SNOVFlhT7hlD4li2+AG8Vlup4ncCBQNwdik6dPOVzL4+ZeloWCF7qf7/wYV/bO
-	 cBrXJ8q6HnyJQ==
-Date: Tue, 24 Nov 2026 03:08:29 +0800
+	b=kQbty4FcXmazFpUPBT79tt5WNfGnPLDNtPl8gEc0+l5pfnw3qF4LkrG5s9bsngtUT
+	 vvMAhwxdZHvTQcnPdZ0UQLZL9fzua+NJsH/44ososrDEquZabHyb9p3D3LeQEq4PEm
+	 KGesIvYB4YLbi/hzT8z2wrgaFeXUsWC5PaMocxdCmvQL4ALvKHKkFC8ipyMzaY/k8a
+	 lrmTSFnyweASV8dnfoJ0oCP4p4byTw9HOBAbARP6odl6Xih8UhoJgA6mwkbFr/edB5
+	 2IfN2exGEObBn4AAGILz/YH6y1GPVG9utxnLUxd21nzOlzBJYfXl85HaSbugj8QQTB
+	 4sB9U7uMIlo/A==
+Date: Tue, 24 Nov 2026 03:09:10 +0800
 From: Zorro Lang <zlang@kernel.org>
 To: Anand Jain <asj@kernel.org>
 Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, 
 	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, 
 	linux-f2fs-devel@lists.sourceforge.net
-Subject: Re: [PATCH 20/21] fstests: generic/744: migrate to
- _create_cloned_loop_devs()
-Message-ID: <awSPHC1UWULsJCx8@zlang-mailbox>
+Subject: Re: [PATCH 21/21] fstests: _create_loop_device_like_bdev() remove
+ unused variable
+Message-ID: <awSPT9iTEjkaJpD3@zlang-mailbox>
 Mail-Followup-To: Anand Jain <asj@kernel.org>, fstests@vger.kernel.org, 
 	linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, 
 	linux-f2fs-devel@lists.sourceforge.net
 References: <cover.1791272793.git.asj@kernel.org>
- <2d0903ee55156a1a384f95b6e54ce2bacf0c9a77.1791272793.git.asj@kernel.org>
+ <caf98f05a61c028dc1af75c11785cece28d400da.1791272793.git.asj@kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -65,124 +65,31 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <2d0903ee55156a1a384f95b6e54ce2bacf0c9a77.1791272793.git.asj@kernel.org>
+In-Reply-To: <caf98f05a61c028dc1af75c11785cece28d400da.1791272793.git.asj@kernel.org>
 
-On Tue, Oct 06, 2026 at 04:55:46PM +0800, Anand Jain wrote:
-> Switch generic/744 to use the common _create_cloned_loop_devs() helper
-> to format, modify, and clone the underlying loop devices, avoiding
-> open-coded clone setup and teardown logic.
+On Tue, Oct 06, 2026 at 04:55:47PM +0800, Anand Jain wrote:
+> Remove unused local dev.
 > 
 > Signed-off-by: Anand Jain <asj@kernel.org>
 > ---
 
 Reviewed-by: Zorro Lang <zlang@kernel.org>
 
->  tests/generic/744 | 70 ++++++++++++++++++-----------------------------
->  1 file changed, 27 insertions(+), 43 deletions(-)
+>  common/rc | 1 -
+>  1 file changed, 1 deletion(-)
 > 
-> diff --git a/tests/generic/744 b/tests/generic/744
-> index 330d86ce826a..c522d6f46713 100755
-> --- a/tests/generic/744
-> +++ b/tests/generic/744
-> @@ -10,71 +10,55 @@
->  . ./common/preamble
->  _begin_fstest auto clone volume tempfsid
->  
-> -_cleanup()
-> -{
-> -	cd /
-> -	rm -r -f $tmp.*
-> -
-> -	_unmount $mnt2 &> /dev/null
-> -	_unmount $mnt1 &> /dev/null
-> -	[ -b "$loop_dev2" ] && _destroy_loop_device $loop_dev2
-> -	[ -b "$loop_dev1" ] && _destroy_loop_device $loop_dev1
-> -	[ -n "$seq" ] && rm -rf $TEST_DIR/$seq
-> -}
-> -
->  . ./common/filter
->  . ./common/reflink
->  
-> -_require_clone_mount
->  _require_test
->  _require_block_device $TEST_DEV
->  _require_test_reflink
->  _require_cp_reflink
->  _require_loop
->  
-> -clone_filesystem()
-> +_cleanup()
+> diff --git a/common/rc b/common/rc
+> index 58e4c234b0f4..5bc4c52bb8d0 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -4815,7 +4815,6 @@ _create_loop_device_like_bdev()
 >  {
-> -	local dev1=$1
-> -	local dev2=$2
-> -
-> -	_mkfs_dev $dev1
-> -
-> -	_mount $dev1 $mnt1
-> -	$XFS_IO_PROG -fc 'pwrite -S 0x61 0 9000' $mnt1/foo >> $seqres.full
-> -	_unmount $mnt1
-> +	cd /
-> +	rm -r -f $tmp.*
+>  	local file=$1
+>  	local bdev=$2
+> -	local dev
+>  	local blksize
 >  
-> -	# device dump of $dev1 to $dev2
-> -	dd if=$dev1 of=$dev2 conv=fsync status=none || _fail "dd failed: $?"
-> +	_unmount $mnt2 &> /dev/null
-> +	_unmount $mnt1 &> /dev/null
-> +	_destroy_cloned_loop_devs "${devs[@]}" 2> /dev/null
->  }
->  
-> -[ -n "$seq" ] && rm -rf $TEST_DIR/$seq
-> -mkdir $TEST_DIR/$seq
-> +add_foo()
-> +{
-> +	local orig_dev="$1"
-> +	local temp_mnt="$TEST_DIR/$seq/temp_mnt"
-> +
-> +	mkdir -p $temp_mnt
-> +	_mount $(_common_dev_mount_options) $(_clone_mount_options) $orig_dev $temp_mnt
-> +	$XFS_IO_PROG -fc 'pwrite -S 0x61 0 9000' $temp_mnt/foo >> $seqres.full
-> +	$XFS_IO_PROG -c 'fsync' $temp_mnt/foo
-> +	_unmount $temp_mnt
-> +}
->  
-> +rm -rf $TEST_DIR/$seq 2>/dev/null
-> +mkdir -p $TEST_DIR/$seq
-> +# Setup base loop device and its clone
-> +devs=()
-> +_create_cloned_loop_devs devs add_foo
->  mnt1=$TEST_DIR/$seq/mnt1
->  mnt2=$TEST_DIR/$seq/mnt2
-> -mkdir -p $mnt1 $mnt2
-> -
-> -loop_file1="$TEST_DIR/$seq/image1"
-> -truncate -s 300m "$loop_file1"
-> -loop_dev1=$(_create_loop_device "$loop_file1")
-> -
-> -loop_file2="$TEST_DIR/$seq/image2"
-> -truncate -s 300m "$loop_file2"
-> -loop_dev2=$(_create_loop_device "$loop_file2")
-> -
-> -clone_filesystem ${loop_dev1} ${loop_dev2}
-> +mkdir -p $mnt1
-> +mkdir -p $mnt2
->  
->  # Mounting original device
-> -_mount $(_common_dev_mount_options) $(_clone_mount_options) $loop_dev1 $mnt1
-> +_mount $(_common_dev_mount_options) $(_clone_mount_options) ${devs[0]} $mnt1
->  $XFS_IO_PROG -fc 'pwrite -S 0x61 0 9000' $mnt1/foo | _filter_xfs_io
-> -
->  # Mounting cloned device
-> -_mount $(_common_dev_mount_options) $(_clone_mount_options) $loop_dev2 $mnt2 \
-> +_mount $(_common_dev_mount_options) $(_clone_mount_options) ${devs[1]} $mnt2 \
->  					|| _fail "mount of cloned device failed"
->  
->  # cp reflink across two different filesystems must fail
->  _cp_reflink $mnt1/foo $mnt2/bar 2>&1 | _filter_test_dir
->  
-> -# success, all done
-> -status=0
-> -exit
-> +_exit 0
+>  	test -b "$bdev" || \
 > -- 
 > 2.43.0
 > 
