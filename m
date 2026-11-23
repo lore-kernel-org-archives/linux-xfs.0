@@ -1,59 +1,59 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795460409;
-	b=a4teBaAnUe0FWJffPq628VA8NMw8MiOfWHHgy6PfxveqruAHGQmUFdJFsINXqnLw8mro
-	 ZOul8pw6F+eDSoYW4USdqClX0r/fFdQ73WEgaspfEr1T6Q6XAKUijNuxZeXEpwfr3Rct3
-	 q9AhLbFBNDt2/l4X/LD3Yq+4R5Jf1ZHHibn5HUTMJe6jGqklhSrIaietU1GNn5Jtc8ppD
-	 XVZtUbeCVY+VlRQDq+ooH3rVhjMwQEYdMVSrA4x+VAm8udc1gnLeGX+t1ez7l4jAfTP22
-	 vLdhLdaZJt/zdP1qZVaOwxH5/WX+7iLNsld0M9tRPt/TjHfcEE1Pl9hC/rln4wWPWeQ==
+	t=1795460651;
+	b=asihq/Hqugi9wpl1ogrd92CmaLUD+jgY2T1CqPJp7zT1P3vtHSHHLu5u1tCxupOZv+m/
+	 Yok9jVVupp4CkVhtF8f7wbI1rYHYfy1vaUziP2uOLwIVY+KqpD6CNmiEwpxSY2E491WsX
+	 YN8ktWAoRcm7PlYrZqt56X5uezKavqjhTR3H7r6sq5MCe7Y+99Pz+nWW8tMwHhiZ4yArx
+	 eNCYWbJAbfzVrudXUMzirT84X7p9StQcDkDAzgbcMGRl9qRs+QShmcM39u2OwyAKKyxDp
+	 xFw9+D/qxSgu4bwWMdLZWX67PjLQthHeKAi+TKPUKyQPgLHuioT2kVRfQCIyABUva9A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795460409;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795460651;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 Mail-Followup-To:References:MIME-Version:Content-Type:
 	 Content-Disposition:In-Reply-To;
-	bh=emheEOQkou06XepSqyP4hmHa7Pz+4doN2S3r24jNc0g=;
-	b=uRhn1PKhGsVs8ITsFVsApL4cOufbX/ZKYUElpx4taOmZqb6XK+b2IT8OCMvibJTuLhhA
-	 FpS5nvO3E/9c+1DkgY7W2mD/lNPD7hK8hA5dJ8MmWD9NpQciSLOixVzT5WTVF+5iMymkM
-	 Yg8UCI5UqbY9zPr4WmVcpJrVcUsIMQ4CyHgO7TZFFpZiWOUWmAjEfgqKEhLJnKiEhakfu
-	 QZ+zZmrHJAAlGhrOlik3B7fRem/UCLYnp2NFt/v5OXSbNi+SEau/wvLzsiJH4srsNNyku
-	 5gebPB5i9T9ygq/aFzW74kl3GNDjfnVcjNczbe2x4tRfvv7ykmSlIxdTHPHWa1FQBrg==
+	bh=NMWwVWVTeHtMwupcRu9IpvymnFnmUx86vHQQ3BkUYBg=;
+	b=BbrXhmx07fm0qZTZBbR+NZpHLLtenkSpFA9KL3FBkqlOIScLdY3QY4nmTsyExYCwpTHf
+	 /yQ6eNuUIiM7Apn5Fvv2/x+uehTFzxy3T6N8kJd0HkOEZMyHEy/Qy8ihBHBv3YS+uQPmV
+	 dFYzt4p5YoPIIF5neK4ncLSH34D4X7KEmHIXGn/VJQkctUFVhx3aVsKTWiq3+nqVMGLEK
+	 c4yoW6ksfun39O1g+0JXuOLiF3bec3PBI+MWA5pvGIReO+GJ3Yz2bkBBAds2LdKWhFFd2
+	 ZbjsssJrf2Fv/CX/62R+e9DLrEHctiUDBSYmqHiDb/o/GfJhNt7yzswnxk+8KV+37gg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SJSDmHbG;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Xnq9a9ZK;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CAEF7606A321;
-	Mon, 23 Nov 2026 19:00:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4473C606A31A;
+	Mon, 23 Nov 2026 19:04:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SJSDmHbG
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B7DD41F000C4;
-	Mon, 23 Nov 2026 19:00:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Xnq9a9ZK
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8A5E51F000CA;
+	Mon, 23 Nov 2026 19:04:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795460409;
-	bh=emheEOQkou06XepSqyP4hmHa7Pz+4doN2S3r24jNc0g=;
+	s=k20260515; t=1795460650;
+	bh=NMWwVWVTeHtMwupcRu9IpvymnFnmUx86vHQQ3BkUYBg=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=SJSDmHbG2GG5RavcVePuZOUeTweTxW4Loxe1K3eoNchxHON7lkheWMG3wBv0NBkC0
-	 XGvrIQRuuTRn5/EPdLixBphkBezSw8TLAq9zeQNoAWfIOiAUemIqM4EefzHp8BUwgz
-	 di658A5HtzYa+yDcjqePlVIcI/9aY8X2odPXqzP7iQTGXw+F8ePdr0WGWQsbm+3xxw
-	 1FwXL69l/K3ocVKvLbkwvs13ij2TnIV94GldpEJmCO14xXiVC7C0TlCdaWjWaoLrg/
-	 8fCXMo/o8JsjDErxaCdZHS2Vg0b1lugOBRTUMTx+tgfyU0GrO/wicR7/jwGohzWXS2
-	 OBHWDz/hQSBiQ==
-Date: Tue, 24 Nov 2026 03:00:01 +0800
+	b=Xnq9a9ZK11s0SNmAZ7xgEwO0fh7NeyaapEmNP9kc2H9GMrqUBCMoNs8QWoEmOQJK/
+	 i0TBTHJT9x0IcCRDJkZicqbGHLtigw1i8dW2xpBtrjKxQ0SALBOqi2FPMtuydS35bC
+	 M+4RDld7/WsryBfUMBbXhAhFdlBGe6FRJTxcVmMFTUwD3foLAAc2ALqA6xXu4Gj+WJ
+	 X/xxJdZgNDnxAHeIg87nPZ30q6s2bcJLCHzITep9njS3B04kLVUOUp5Orkqm17a4ks
+	 WWKtuD0fSrVxnBY/t3k/ajG//s6uLoTBq7lSOlxjhxVa4vMKtA9lbnPykCMvZ9Tnvk
+	 hFP/CHPS8f0Jw==
+Date: Tue, 24 Nov 2026 03:04:02 +0800
 From: Zorro Lang <zlang@kernel.org>
 To: Anand Jain <asj@kernel.org>
 Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, 
 	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, 
 	linux-f2fs-devel@lists.sourceforge.net
-Subject: Re: [PATCH 18/21] fstests: test UUID consistency for clones with
- metadata_uuid
-Message-ID: <awSM_yAiZm9rIFdG@zlang-mailbox>
+Subject: Re: [PATCH 11/21] fstests: verify statfs f_fsid is derived from the
+ filesystem UUID
+Message-ID: <awSNZ_Zn4tAT-xYS@zlang-mailbox>
 Mail-Followup-To: Anand Jain <asj@kernel.org>, fstests@vger.kernel.org, 
 	linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, 
 	linux-f2fs-devel@lists.sourceforge.net
 References: <cover.1791272793.git.asj@kernel.org>
- <97ba190c96d3fa545404d2c2f489d34f8f9466e9.1791272793.git.asj@kernel.org>
+ <98450cf50f0b962f4b6c2b0a16ec10c47362bccd.1791272793.git.asj@kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -65,120 +65,83 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <97ba190c96d3fa545404d2c2f489d34f8f9466e9.1791272793.git.asj@kernel.org>
+In-Reply-To: <98450cf50f0b962f4b6c2b0a16ec10c47362bccd.1791272793.git.asj@kernel.org>
 
-On Tue, Oct 06, 2026 at 04:55:44PM +0800, Anand Jain wrote:
-> Btrfs and xfs uses the metadata_uuid superblock feature to change the
-> on-disk UUID without rewriting every block header. This patch adds a
-> sanity check to ensure UUID consistency when a filesystem with
-> metadata_uuid enabled is cloned.
+On Tue, Oct 06, 2026 at 04:55:37PM +0800, Anand Jain wrote:
+> On btrfs and ext4, statfs f_fsid is computed from the filesystem UUID,
+> so a filesystem created with a known UUID must always report the same
+> f_fsid. Userspace relies on this, for example fanotify and file handle
+> users that identify a filesystem across mounts.
+> 
+> Guards against f_fsid changing across kernel versions, which would break
+> userspace that relies on it.
 > 
 > Signed-off-by: Anand Jain <asj@kernel.org>
 > ---
-
-
-
->  tests/generic/906     | 74 +++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/906.out |  6 ++++
->  2 files changed, 80 insertions(+)
->  create mode 100644 tests/generic/906
->  create mode 100644 tests/generic/906.out
+>  tests/generic/902     | 38 ++++++++++++++++++++++++++++++++++++++
+>  tests/generic/902.out |  2 ++
+>  2 files changed, 40 insertions(+)
+>  create mode 100644 tests/generic/902
+>  create mode 100644 tests/generic/902.out
 > 
-> diff --git a/tests/generic/906 b/tests/generic/906
+> diff --git a/tests/generic/902 b/tests/generic/902
 > new file mode 100644
-> index 000000000000..99516f18aa39
+> index 000000000000..44dd685a887b
 > --- /dev/null
-> +++ b/tests/generic/906
-> @@ -0,0 +1,74 @@
+> +++ b/tests/generic/902
+> @@ -0,0 +1,38 @@
 > +#! /bin/bash
 > +# SPDX-License-Identifier: GPL-2.0
 > +# Copyright (c) 2026 Anand Jain <asj@kernel.org>.  All Rights Reserved.
 > +#
-> +# FS QA Test No. 906
+> +# FS QA Test No. 902
 > +#
-> +# Verify that the cloned filesystem UUID remains consistent, even when the
-> +# `metadata_uuid` feature is enabled.
-> +#
+> +# Verify that statfs f_fsid is derived from the filesystem UUID.
+> +# Create a filesystem with a fixed UUID, mount it, and check that f_fsid
+> +# matches the expected value. Applies only to filesystems that derive
+> +# f_fsid from the UUID (btrfs, ext4).
 > +
 > +. ./common/preamble
-> +. ./common/filter
 > +
-> +_begin_fstest auto quick mount tempfsid
+> +_begin_fstest auto quick
 > +
-> +_require_test
-> +_require_loop
-> +_require_metadata_uuid
+> +_require_scratch
+> +_require_uuid_based_fsid
+    ^^^^^
 > +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -r -f $tmp.*
-> +	umount $mnt1 $mnt2 2>/dev/null
+> +_fixed_by_fs_commit btrfs 72de4807ba84 \
+> +	"btrfs: derive f_fsid with dev_t only when temp_fsid is active"
+> +
+> +_scratch_mkfs_uuid >> $seqres.full 2>&1 || _fail "mkfs failed"
+    ^^^^^
+I noticed this function supports f2fs, whereas _require_uuid_based_fsid above
+doesn't. Since both functions are introduced in this patchset, I'm wondering
+if you intend to run this test case on f2fs or not.
 
-  _unmount
-
-> +	_destroy_cloned_loop_devs "${devs[@]}" 2> /dev/null
-> +}
 > +
-> +filter_pool()
-> +{
-> +	sed -e "s|${devs[0]}|DEV1|g" -e "s|${mnt1}|MNT1|g" \
-> +	    -e "s|${devs[1]}|DEV2|g" -e "s|${mnt2}|MNT2|g" | _filter_spaces
-> +}
+> +_scratch_mount
 > +
-> +rm -rf $TEST_DIR/$seq 2>/dev/null
-> +mkdir -p $TEST_DIR/$seq
-> +# Create base loop device and its clone, applying the metadata_uuid tuning
-> +# callback to the base filesystem before the copy occurs.
-> +devs=()
-> +_create_cloned_loop_devs devs _change_metadata_uuid
-> +mnt1=$TEST_DIR/$seq/mnt1
-> +mnt2=$TEST_DIR/$seq/mnt2
-> +mkdir -p $mnt1
-> +mkdir -p $mnt2
+> +blkid $SCRATCH_DEV >> $seqres.full
+> +f_fsid=$(stat -f -c "%i" $SCRATCH_MNT)
+> +expected=$(_scratch_expected_fsid)
 > +
-> +# Get the uuid from the source device
-> +fsuuid=$(blkid -s UUID -o value ${devs[0]})
+> +echo "f_fsid=$f_fsid expected=$expected" >> $seqres.full
 > +
-> +# Mount both clone and baseline
-> +_mount $(_common_dev_mount_options) $(_clone_mount_options) ${devs[0]} $mnt1 || \
-> +						_fail "Failed to mount dev1"
-> +_mount $(_common_dev_mount_options) $(_clone_mount_options) ${devs[1]} $mnt2 || \
-> +						_fail "Failed to mount dev2"
+> +[[ $f_fsid == "$expected" ]] || _fail "f_fsid mismatch"
 > +
-> +findmnt -o SOURCE,TARGET,UUID "${devs[0]}" | tail -n +2 | \
-> +				sed -e "s/${fsuuid}/FSUUID/g" | filter_pool
-> +findmnt -o SOURCE,TARGET,UUID "${devs[1]}" | tail -n +2 | \
-> +				sed -e "s/${fsuuid}/FSUUID/g" | filter_pool
+> +_scratch_unmount
 > +
-> +# Cycle mounts and reverse the initialization order to ensure UUID tracking
-> +# doesn't mismatch or flip when metadata_uuid optimization is active.
-> +echo "**** mount cycle ****"
-> +_unmount $mnt1
-> +_unmount $mnt2
-> +_mount $(_common_dev_mount_options) $(_clone_mount_options) ${devs[1]} $mnt2 || \
-> +						_fail "Failed to mount dev2"
-> +_mount $(_common_dev_mount_options) $(_clone_mount_options) ${devs[0]} $mnt1 || \
-> +						_fail "Failed to mount dev1"
-> +
-> +findmnt -o SOURCE,TARGET,UUID "${devs[0]}" | tail -n +2 | \
-> +				sed -e "s/${fsuuid}/FSUUID/g" | filter_pool
-> +findmnt -o SOURCE,TARGET,UUID "${devs[1]}" | tail -n +2 | \
-> +				sed -e "s/${fsuuid}/FSUUID/g" | filter_pool
+> +echo "Silence is golden"
 > +
 > +_exit 0
-> diff --git a/tests/generic/906.out b/tests/generic/906.out
+> diff --git a/tests/generic/902.out b/tests/generic/902.out
 > new file mode 100644
-> index 000000000000..b484c86d8e7f
+> index 000000000000..e20395365cb5
 > --- /dev/null
-> +++ b/tests/generic/906.out
-> @@ -0,0 +1,6 @@
-> +QA output created by 906
-> +DEV1 MNT1 FSUUID
-> +DEV2 MNT2 FSUUID
-> +**** mount cycle ****
-> +DEV1 MNT1 FSUUID
-> +DEV2 MNT2 FSUUID
+> +++ b/tests/generic/902.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 902
+> +Silence is golden
 > -- 
 > 2.43.0
 > 
