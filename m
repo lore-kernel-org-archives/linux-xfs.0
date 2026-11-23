@@ -1,99 +1,99 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.179
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.224.52
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795472858;
-	b=aXb9jIIS++yGYNKvg2AJRfxOBKUFQSyv1EuPUUwrUhhWLugn9AqLc/l48/TTNVC9BdwM
-	 AHkip9DDCMBvsd/kH/DbpsTtzUnO4ay4i+Jh0yL+qz8chYo5PtXrLyvFIkSNnYpbL5GsX
-	 FX6Gwj26VPDgwOrPovmISnkMHVVVZQcuFHmXFUxSzPcWvwz0GihhA1V79SPMlU8Ln9GZV
-	 orUeIFjzIrSmmaQi0XlYbAImVN/3cLh+yaegHDHzLFvwvkr/xUEuhRH/Wl2bbb3VWpFNO
-	 NatBXnEO+ZO7VsuTtJORJWZUgO9VLQA4VSoEUAmEephXc6kDoHL4yqJ5NtLkL3i09Cw==
+	t=1795472988;
+	b=QHJxMdgEuIcXQE/WpgUJbWcK350XaNEfYuRV1esmjkoAo9kruwtqQiSK4fZ9vuJYiYr0
+	 KQDDdknXANjIB+aQCP1xv2UTWOk1GTr7pKKI1mV8aEGt1ySz8oBM4bfbvai05KFIsX16V
+	 Ni1L+Z0nrrgfe+N4NrqUO4mex6PG6FSOwQCgJlg8RBa61xiKspcTDe2iKQg2JH4bWNxIT
+	 /Q09Pt8R8InGD9iLHY592iQFi70JaRNDTyf+yBiciJoHgojIRJcu5+R8wKNj0P1RWK7Gj
+	 9VWs3yEE/8oM3PIdllXQfkLhMSBemLIukMioWmPAfjj3kxewfB5BTNa3LjoT84vOF7w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795472858;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795472988;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
 	 Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:Autocrypt:
 	 Content-Type:Content-Transfer-Encoding:User-Agent:MIME-Version;
-	bh=b7qQ9lbizvdrD5tIAAtT+wq73TxyjOqbhSOwF4Nb4EA=;
-	b=CF3ulhoojHWkHIalh5O5X5c+3/WPkm1wADaCU/ZPm9qDn0Wyl4jO9PVSSVEx9PRRxvVU
-	 aNxbl7rGBMPm3rS4glpD+Pqip2h+N9PkKKP8lKOhvoFHl8U38kkmerhhSETyM9/fm/1k5
-	 RPJQIX9eBbrIKFDw0XKjYwYqyPFo/FpuYRdqwBazQZNPcc2IRg6fQ6ZKIW+QBKrBdTGnU
-	 0NmKJlUuLTfp4hxOVU6JpVZ6aLAVmaXCmZDTEHavPx5SC+Uxjikbsk5taiWWKlaY3yPfX
-	 gNAoFVWovFcng947fRyJ8bYzMHd9gKcNOGNvrpGulF1qJA/LStqHQrh8Svf7ljQwCLg==
+	bh=vcuvpU2ZjCticcRCz8mBiVPYz9CrCiT6lwDcRw9mKTQ=;
+	b=qXDICE0nI5TAgL+56S7V50W6LKn1WcMl9m38smjQb2ftZcfR5jf/cJuPDsnuoBpBw4fm
+	 yG/6qNGjjdH8MJT2AWTZta9Uq5A8T+F9XNbbUkzoc3Z+Aq8c0tFiMZzi+IkuJ/Z2QgqPd
+	 WHDFv3bZxmsDLaAkNQeyWywtm4wI5cC1JAZyFFFha3BysvJeVnl94TjgLx0TCLRH6w1Sq
+	 pMtmex/VFWUL/LoeYWJPWa1sP2cs4ZIeuAyeX6/Yjwtj7uKeryxMjOQYQNkLohPctCZhA
+	 c4G5Zy/gQqWTGaEf34rHnsVP/jthvx8bNHASvEFjY2qZ5YQlNDlYhZvTbJwBQVKVLeA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=none header.from=dubeyko.com;
 	spf=pass smtp.mailfrom=dubeyko.com;
-	dkim=pass header.d=dubeyko-com.20260707.gappssmtp.com header.i=@dubeyko-com.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=Ns+Z7XCH;
-	arc=none smtp.remote-ip=209.85.128.179
-Received: from mail-yw1-f179.google.com (mail-yw1-f179.google.com [209.85.128.179])
+	dkim=pass header.d=dubeyko-com.20260707.gappssmtp.com header.i=@dubeyko-com.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=KtDuIlg7;
+	arc=none smtp.remote-ip=74.125.224.52
+Received: from mail-yx1-f52.google.com (mail-yx1-f52.google.com [74.125.224.52])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D8D1606A322
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Nov 2026 22:27:38 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4D8D1606A322
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF31D606A31E
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Nov 2026 22:29:47 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EF31D606A31E
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=dubeyko.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dubeyko.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=dubeyko-com.20260707.gappssmtp.com header.i=@dubeyko-com.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=Ns+Z7XCH
-Received: by mail-yw1-f179.google.com with SMTP id 00721157ae682-8b0d126f631so32319497b3.2
-        for <linux-xfs@vger.kernel.org>; Mon, 23 Nov 2026 14:27:38 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=dubeyko-com.20260707.gappssmtp.com header.i=@dubeyko-com.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=KtDuIlg7
+Received: by mail-yx1-f52.google.com with SMTP id 956f58d0204a3-67c6a0abc2eso4053888d50.0
+        for <linux-xfs@vger.kernel.org>; Mon, 23 Nov 2026 14:29:47 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=dubeyko-com.20260707.gappssmtp.com; s=20260707; t=1795472857; x=1796077657; darn=vger.kernel.org;
+        d=dubeyko-com.20260707.gappssmtp.com; s=20260707; t=1795472987; x=1796077787; darn=vger.kernel.org;
         h=mime-version:user-agent:content-transfer-encoding:content-type
          :autocrypt:references:in-reply-to:date:cc:to:from:subject:message-id
          :from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=b7qQ9lbizvdrD5tIAAtT+wq73TxyjOqbhSOwF4Nb4EA=;
-        b=Ns+Z7XCHQEc1VwaFhiGIQBArfSp9nO0Rw16D/MDphvU9RRCeg2kExQwu0/DMMgZj6x
-         ZzZMWhKKlfLkI0B1hlyEvGdBHmsD3bC5BoettnWIXmoEMEd2UZ9Gqv0+qJgPUTzVxO1O
-         Qm06CG9DFWyvqQbrVZdgAglF7+Jmto4U9vfmOb0Wn+Y0YPwY6XJIUSjhrfBgcRJumOMb
-         rrrRQ3JWsHJybHgPcn0qEAaD0Q+MH6Bh6L8UVum9QaiMoro1VOyt4bkBqzKImicm4Uay
-         0JgK9Gs5PV+wRWIPEdcC/IzyTGxc7pS1M5c+lkCQXHItENsZlFVlO/0oC+PJlnYH1sG/
-         h8Gw==
+        bh=vcuvpU2ZjCticcRCz8mBiVPYz9CrCiT6lwDcRw9mKTQ=;
+        b=KtDuIlg7B6694VnHPFw7U/qUJ9VgUogU7LUZZ9brTOJ/Zb3QnI5MjsCqFakjLz7Xei
+         Bb1tH+rvHn4qN/u8+sGvH03N3IyDQNnp05tMYh8RfBSuPT6LOioKeYy9jPq0d+3Aaf3i
+         j4V6hy4vMlUS5Jx53/6NiyF56H2ho4tb2gX8EwKl2y4veDtFCWi3kV53zA1l7LG1Z0Ws
+         n2d5SGshAufJMVDqQinqhmLd3SHlFjYvOKQaWa5FEBIt1mEwtTVUl5R7OA+yhxc2MGlm
+         danQUZf22swSh4xHm9s5CfwDQKFp0LhUQwMD9LF70WKfHjTTUw8u0MrH0InLBRZB6y8d
+         +N9Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795472857; x=1796077657;
+        d=1e100.net; s=20260707; t=1795472987; x=1796077787;
         h=mime-version:user-agent:content-transfer-encoding:content-type
          :autocrypt:references:in-reply-to:date:cc:to:from:subject:message-id
          :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to:content-type;
-        bh=b7qQ9lbizvdrD5tIAAtT+wq73TxyjOqbhSOwF4Nb4EA=;
-        b=D+4AacQbXVWRye9FLgqmXKpQjOtcLg8IsR2nm6FQWM+yOugYj3wWZxyRpzEk8Hc7aN
-         TaR1bqAW8KB41Ues59u96cHO36ec3hJthbAwvyPcUqgMzzB8zxYui0goAI+Kp61M+lg9
-         rRNZjaLWi/vygE5D7HK83NvVedvuRn1ysNN71qyi2uB/4xSpHQYr3BW4yAbezS8ql7TC
-         9CJdlFsTqNZMS9kMU5l5mHcFIF6nSt4Df+x/Ey/wIGsxWY8cWv42L2sUGpzsA1raNL/F
-         oXFvmyV1kYw/zAGYdRbnvKyAkwuFqSe6P9H0jdd5exQ6Qg5Z0y9U5RZinA7hdSd6N1bB
-         HHhA==
-X-Forwarded-Encrypted: i=1; AL+hErFSYqGAse1vJCUKjk4Jfrb9qvUUEVItEnA+SoDfERbhAXrdJb5uxI5QaOMv/XFmfEoyYuegHENhuoY=@vger.kernel.org
-X-Gm-Message-State: APuU4Z9NPNkQ7pB7cqpn5s8wUX/ddrz8N/2Cqsdbv4KSDTDL1/soP19j
-	XecqEF4d4w5TP3i9TE/eZJ7AzuTSqXddmi0qog76NugZi/x8nSU3X8N2T4A/jh5U6iQ=
-X-Gm-Gg: AZFdTZfxFklGjJGIE+/KkAGrIP19war3FU/5NdNGageBn1HaCTlvMJbUxjUiKfDShDz
-	NV0ajo5gYXht9pslXhDBgST0KOMNQYUTfC0e38QAoz9gY70bmUa2LDp9VuJBw6jM66ifmHuyuD8
-	sD11LvFydeC7N20fd0arkjHr5fYBKEVcodAbOaeGIT+s+LzJmScdzdAkkqP9hLWK9yJ4aKp+onV
-	mUsDhbChLvGrwN1kYDAs8TB0ibh1XNlMYGz3fxZT+j494zm9ZvHeCxK/L5TZC8+XIDLd1PMp1/w
-	KL2yXjEpfsZXsKNOljjpSClycUeIydnlcyxpvtywVTCgQcMF0ukWfZBYMt56o5KtTgoj5AOP0zG
-	1ehH6PjKDXsGlasemoytJqB4E/aeqa9+PUe6a8p7RqWgIkFwlPe2vKODH9tU2T5U2QhfXzLEr6s
-	pr0yXAcoS9j5dDOvw4a9vYZJeNr1oFPeNGHycTNodzkA+fcCemWOr58j9tC3hdl8lCvPl6Bed5e
-	4/unnpxBvjLqcb0C9mgLujd2MLErA7Taoq+7yHOcC7JeUSZtpLfLvrtMqis37UH1lOU/zJxLM+x
-	5whG1QU70YILRzwpqsVLZbc9MJuMHm1Tci9Et1beOXrbA3IR06z91zAveMDr3gg3aDIb8F+Jeo8
-	cD0MBl/woJgqwBGdR6Xj/ryBcafchTQ3k4yYd/KAeXFCJKYH1Amlsb9O881fLvkqnrDStK1T5j7
-	zfpIo3IiXa3GUw2QRa5GY=
-X-Received: by 2002:a05:690c:6f91:b0:8b3:1390:fc1a with SMTP id 00721157ae682-8b520319601mr50315907b3.2.1795472857366;
-        Mon, 23 Nov 2026 14:27:37 -0800 (PST)
+        bh=vcuvpU2ZjCticcRCz8mBiVPYz9CrCiT6lwDcRw9mKTQ=;
+        b=gEp0sWU+HgJg7eiGSYMk/854xuoKdjudgZYfXNatL5L6KxbfOdicQJOAtETJ2+OweT
+         eH1Z4Rl5KVaWG+c9afCVU8dMPtSFJ6UM3/0IqZtDzBRvXNqO5QPB5LsDSFNvrb99MCF0
+         nEZ5g9Dlz7WRCGfEMm4AwrPwYVIu+RUXYtvCaP5MF7N8m3ju9PVK6DFyEDDJdgjQsaeq
+         oMX7PriK88Cg6hQI/fWzmf1Vehewj7PONAjad7enQwFhYSsKF6PzRtTwC0nwtMX4tcdp
+         iCQjT20WGC22VJrYiVCwgZXymhb/eFRGnG6N2dDaFU3oU1dkqdlGP93g3r8zkkG+3wgl
+         xnog==
+X-Forwarded-Encrypted: i=1; AL+hErG6dFHdyIz/1nZnOYwKPfDKDar6azS47XFJegwObhaF5FcPLDTjRUPqTp+YASXfr7i2QHkRCYeiVGk=@vger.kernel.org
+X-Gm-Message-State: APuU4Z/UfrB5MmiyFCnUjCRQqesBMEddA2pcz744XbEH/VIJo9fS+smV
+	VPhbyWdkEf7q4/BMlTYzLTCpKcKheASvJuuM+m7+S+slJ5y3ZuZa4RQ4eTNNZN9lixGg1TVQ8dh
+	peEGSvDI=
+X-Gm-Gg: AZFdTZe5MmCX7ZYqEA7p4lUM34YeBfv48Nt7ILyAXXDfnd2UfcsR/epV3ah+wd1uoZI
+	REMrsWenNWlHQlnKvBmZ+XBPFRZ3XhFZ/y1/WHwgAJlTLwZWAD6beIJwHXTwDMq/7/HcSVH7uaS
+	GOPtdQE/TLN+7dSDKRo3f5NFkoxQ7oPZREfF5n2verbqaRJt59VMH4SmoVm4avQs+i0vdRcr6nK
+	dtS8/ulIdMNUCOx+E1OeowheFY6yY10GImqjMSmz7JzZNGNrJOoyfzZdTxKFokQM9JG6kdoWKDP
+	S2ztiaAyOHm8AuRzBGRnr640kJuQiVet1nmZZcOQjenUF/OOnvJwzvFXDkDaK/ts3tm1RvX2nEo
+	tgFleLeJKfsw3BeObPygHm+IAFLtJSQstVV+O4ra2dyET5L/Gxxgdx3Ob1N/+kjcWsmtFDB5oG3
+	9Tj5A4VgSe7jZnRbBXvk6rMVI9a/hl9Jl67IbDAa9+WATMEoG3VsRZK0XWFZRePy7zYHWOTcnjv
+	K5ifPYUJCuq/DgvLxnAyEXkIRUOCi6U/imgnf2B5OfW6ya7NHfFmMsflYhHTV5NdmX8SFmzGXvF
+	XEcehbAuNMrETBccHNjqgkngOQ4D+T/RdMLBHgJzR5fkG3NOVXgYiXKLgaSXpiBzahwpkjGa/lc
+	+tMyYiKTdsvTxf0RcS4t7t8sive/y1/WG1yBC6mc7sMPCFanILXRPsL90EoAHCtzG7gDvAOKzCb
+	1M9HWd5AJW7boF9dJbmkk=
+X-Received: by 2002:a05:690c:6a04:b0:8b4:d882:4a1a with SMTP id 00721157ae682-8b52032b647mr40897437b3.9.1795472987061;
+        Mon, 23 Nov 2026 14:29:47 -0800 (PST)
 Received: from ?IPv6:2600:1700:6476:1430:83a2:1030:d4d1:10b8? ([2600:1700:6476:1430:83a2:1030:d4d1:10b8])
-        by smtp.gmail.com with ESMTPSA id 00721157ae682-8b52028d8b2sm51587787b3.7.2026.11.23.14.27.35
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-8b52030ff10sm50259377b3.33.2026.11.23.14.29.45
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 23 Nov 2026 14:27:36 -0800 (PST)
-Message-ID: <db433a237a5ce3c093494c00fe2d8e9841928581.camel@dubeyko.com>
-Subject: Re: [PATCH v5 1/5] iomap: add iomap_dio_end_io() helper
+        Mon, 23 Nov 2026 14:29:46 -0800 (PST)
+Message-ID: <ae8b60d3c989ded1d02e5fce38d2d99c331e8daf.camel@dubeyko.com>
+Subject: Re: [PATCH v5 2/5] hfsplus: move file related operations to file.c
 From: Viacheslav Dubeyko <slava@dubeyko.com>
-To: Christian Brauner <brauner@kernel.org>, glaubitz@physik.fu-berlin.de, 
-	frank.li@vivo.com, hch@lst.de
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	vdubeyko@coreweave.com, linux-xfs@vger.kernel.org, "Darrick J. Wong"
-	 <djwong@kernel.org>
-Date: Mon, 23 Nov 2026 14:27:35 -0800
-In-Reply-To: <20261120-flach-befanden-notaufnahme-b0a663466be3@brauner>
+To: Christoph Hellwig <hch@lst.de>
+Cc: glaubitz@physik.fu-berlin.de, frank.li@vivo.com, 
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	vdubeyko@coreweave.com, brauner@kernel.org, linux-xfs@vger.kernel.org,
+ "Darrick J. Wong" <djwong@kernel.org>
+Date: Mon, 23 Nov 2026 14:29:44 -0800
+In-Reply-To: <20261120182228.GB2183@lst.de>
 References: <20261118004844.3849979-1-slava@dubeyko.com>
-	 <20261118004844.3849979-2-slava@dubeyko.com>
-	 <20261120-flach-befanden-notaufnahme-b0a663466be3@brauner>
+	 <20261118004844.3849979-3-slava@dubeyko.com> <20261120182228.GB2183@lst.de>
 Autocrypt: addr=slava@dubeyko.com; prefer-encrypt=mutual;
  keydata=mQINBGgaTLYBEADaJc/WqWTeunGetXyyGJ5Za7b23M/ozuDCWCp+yWUa2GqQKH40dxRIR
  zshgOmAue7t9RQJU9lxZ4ZHWbi1Hzz85+0omefEdAKFmxTO6+CYV0g/sapU0wPJws3sC2Pbda9/eJ
@@ -140,52 +140,17 @@ List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 
-On Fri, 2026-11-20 at 14:48 +0100, Christian Brauner wrote:
-> On Tue, Nov 17, 2026 at 04:48:40PM -0800, Viacheslav Dubeyko wrote:
-> > The helper updates i_size without any locking, so it can be used
-> > only
-> > by file systems that issue all direct writes extending i_size
-> > synchronously (IOMAP_DIO_FORCE_WAIT) under inode_lock.
+On Fri, 2026-11-20 at 19:22 +0100, Christoph Hellwig wrote:
+> On Tue, Nov 17, 2026 at 04:48:41PM -0800, Viacheslav Dubeyko wrote:
+> > --- /dev/null
+> > +++ b/fs/hfsplus/file.c
+> > @@ -0,0 +1,127 @@
+> > +// SPDX-License-Identifier: GPL-2.0
 >=20
-> Meh, this should really not be named so it looks like its the default
-> completion handler. iomap_dio_end_io() really sounds like it.
->=20
-> Name it after what it does. Plus, check the rule. With
-> IOMAP_DIO_FORCE_WAIT the completion runs in the context that still
-> holds
-> the inode lock, so the branch that updates i_size can assert that:
->=20
-> 	if (size && i_size_read(inode) < iocb->ki_pos + size) {
-> 		lockdep_assert_held_write(&inode->i_rwsem);
-> 		i_size_write(inode, iocb->ki_pos + size);
-> 		mark_inode_dirty(inode);
-> 	}
->=20
+> This loses the copyright information from inode.c
 
-Makes sense. Thanks for suggestion.
-
-> > +static inline
-> > +int iomap_dio_end_io(struct kiocb *iocb, ssize_t size,
->=20
-> This is an ->end_io callback so its address ends up in struct
-> iomap_dio_ops. Please make it a regular exported function in
-> fs/iomap/direct-io.c instead of a static inline in the header.
->=20
-
-Sounds good.
-
-> > Several file systems implement an almost identical ->end_io
-> > callback
-> > for direct writes: if the write succeeded and went beyond the
-> > current
-> > end-of-file, update i_size and mark the inode dirty (for example,
-> > ext2_dio_write_end_io()). Add a generic iomap_dio_end_io() helper
-> > for
-> > this case, so that file systems don't need to open-code it.
->=20
-> Hopefully that gets a follow-up patch right away and converts ext2.
-
-I'll do my best. :)
+Yeah, you are right. I missed this. Will add it to the next version of
+the patch.
 
 Thanks,
 Slava.
