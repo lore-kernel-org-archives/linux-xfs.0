@@ -1,47 +1,50 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=220.197.31.2
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795399268;
-	b=YUz9GkMbE5Ipv2rihyqAAwWFufPAgIMuBCo8KQ8JW9/jS1oi9L45ugkAKxR9D3JTSDYC
-	 N+GKibVc5k4jER7dm7TjtMbcP3LAXGZVys/7KtaiKx65Lr1kO6bvSm8EQpvtz1uUkyX/B
-	 wdpn8LsVEbsNYpuZXRkKhggMNiVRLmGk7DdB6u5nwsD7H4rtK0ozABcMd6D47xHPgPNAb
-	 yG0B5EsNGkyGVvw2fem/owIFFZaYgOyP+cOkDpVzI0h6UuHV8HKpJTERleSRwJLI4uHIP
-	 +4U62tmgLIQw8tU93YBJA4Uu5A7MeJtU3vHjDhkLKJ/+s29N16Zutl2LXUssej1IzeA==
+	t=1795403249;
+	b=Au+uccImHo/1/koOQgqyzH1X9Us9dbKabyTX0DIq90YkGK9aeHA7KTnEoL81QfW7YK4M
+	 Mk9+uWKz0KGqwPn1TbLeN6RPuMIKUOVBTE7Rf/7B+Wv2EbqTJlZpg2oS4e5X3ApKp60Yj
+	 mB++fdNZPar8w/BcQK/iarxy07qQUPu1YeFvJqiNGLg+9p1WZ1oaM39uC+oLu6+ufvaHI
+	 baB62li1qTj4c4P7yX1q6yYkRu5Em8lkuPdIvVIR2mkVJlKJ9OAjVOqmCWmnScOWsZNWL
+	 9TuWHu4Ei2TrXD/wCF7pYJ4IcZetxnvmtFa991upsCqeT+4U6P5vGkwkS23eVd4+Jsw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795399268;
-	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:From:To:Cc:References:Content-Language:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=m+gc+znZc0DYq0MzYS52FeXlxJDAFGgMkyRwnibnHlM=;
-	b=ompSdCHXV+j7pVNlQlX66opwsC0DCgBmIbbm6w4DvgyOHR8yO15uKx+8PihRus36wkDF
-	 QowoShNWD03Y00sR4gjowrtJqKK+KZKNdG9ws3DnRk9g54WeXw+mvQwdjqsPUGcx9RqbE
-	 qDHtrOXhe28xoXsFEfogYm0C8PFmYZXkInrqj+jXkromcCItnW7FamaS/FkfHD31gvY9i
-	 0SlJbAVvsP0Csu5J7SCSR/7RCtXl+unCHVXb83KtB8HLNxhOHgXaJjyrAz4Fb/iUBY/5G
-	 cShysmaTMAyraT/5bYk6T6QiQyyHZ/U3d42mJBxF17QkZ5aeDgMlZVigwc4lufC5irA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795403249;
+	h=DMARC-Filter:DKIM-Signature:Received:Message-ID:Date:MIME-Version:
+	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:X-CM-TRANSID:
+	 X-Coremail-Antispam:X-Originating-IP:X-CM-SenderInfo;
+	bh=eyDqS/O3c0kqK8TrfNnSDeEA8RqYuMsPMyYIE/Q0Xfo=;
+	b=miti/4tqN0hzh317PPqeaUGLj5QkhPNEislZYFDyqRFioTPeLlAOoguwN/QYpd/ZNkQD
+	 1iFAV6SAQbvuk2OuW72t3MxZwCV0A5HxdaUKiMGDK26vWdmXwDLq1g5TC4sZAWWaa4ygX
+	 GbTRBIN/Y4s1YSKwllTypYijqbwsebVDi9tYF3irIHBxSCoRgNXHP98rArybeIn3ezTU4
+	 2dUHkU92m5niVJ4xStma1yi/c1DgjNkhByu9hHRT7i3yPOVh7yNVfVj4Z69BxTFbld6pd
+	 YAgd0oPXXwdSYWEcqLD316VjPQhEZPM5FJ9P1TliVdiFf1qzqqWzusau7MFHyg/TIyA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ObsSb+Cv;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=163.com;
+	spf=pass smtp.mailfrom=163.com;
+	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=jFJwHuZ1;
+	arc=none smtp.remote-ip=220.197.31.2
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2AC7D606A31A;
-	Mon, 23 Nov 2026 02:01:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEF5E606A333;
+	Mon, 23 Nov 2026 03:07:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DEF5E606A333
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ObsSb+Cv
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8E04E1F000C6;
-	Mon, 23 Nov 2026 02:01:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795399267;
-	bh=m+gc+znZc0DYq0MzYS52FeXlxJDAFGgMkyRwnibnHlM=;
-	h=Date:Subject:From:To:Cc:References:In-Reply-To;
-	b=ObsSb+CvUC53o2tazBghu01uT+J9yR3VLwZ7GmvcOhHzyytJOMGBcUGOrB4OFcZJq
-	 ZkgqXr8f0jqSOAjLJpLZpjT1YBe8iRJNCelplysa/Ms4+s5NuN8yUUr5ZcASBPhHwU
-	 oTOtousKWDJg2UuxResC1TSNneVFiF3TYcdTSxGiNnjVkbw2JplywdCMfXCGaPyWIn
-	 CUegc3EfUoCaMnrKD4ctPfONutriIHzcBO9IvQK38Ri+qEFFvZfXuSdQ29EbeT5xSc
-	 DMM9ST3EpwWicTrN20MgfifP9+e6B0g88x04Jv/aq1uT7UUDCJbocSM5mOXPhGIXlF
-	 xoTGENrztTEOw==
-Message-ID: <768152d1-4215-4f27-a3ca-50252c5b5d9a@kernel.org>
-Date: Mon, 23 Nov 2026 10:01:03 +0800
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=jFJwHuZ1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
+	Content-Type; bh=eyDqS/O3c0kqK8TrfNnSDeEA8RqYuMsPMyYIE/Q0Xfo=;
+	b=jFJwHuZ1HFJzl9OR+ovjErymF3nyLSyzvVZ3QHhK32cktbkWzxOB7p3Jqgj1/Y
+	e91Ij7P/Tio3xYvwi3AhlsptEchbUgiH9N6uNS0qHVBBiPwo3pDqePHrZFCzu/Hm
+	thZXLMr9tzJeFjqEFQx8umJRX3NLKOIAUmTCaXdwwwfLk=
+Received: from [IPV6:2409:8900:1fd4:b208:1e0e:657f:3fe8:68fc] (unknown [])
+	by gzsmtp2 (Coremail) with SMTP id PSgvCgB3lRyyrQNr7GOJHA--.54075S2;
+	Mon, 23 Nov 2026 11:06:29 +0800 (CST)
+Message-ID: <6d054adc-5b6d-4a1c-b9e5-b32916e06abe@163.com>
+Date: Mon, 23 Nov 2026 11:06:26 +0800
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -52,159 +55,228 @@ List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 0/21] fstests: tests for cloned filesystem validation and
- f_fsid
-From: Anand Jain <asj@kernel.org>
-To: zlang@kernel.org
-Cc: linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
- linux-xfs@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
- fstests@vger.kernel.org
-References: <cover.1791272793.git.asj@kernel.org>
+Subject: Re: [PATCH 3/3] ntfs: switch to the new xflags fileattr API
+To: koraynilay <koray.fra@gmail.com>, Namjae Jeon <linkinjeon@kernel.org>,
+ Hyunchul Lee <hyc.lee@gmail.com>, Alexander Viro <viro@zeniv.linux.org.uk>,
+ Christian Brauner <brauner@kernel.org>
+Cc: Chuck Lever <cel@kernel.org>, Jeff Layton <jlayton@kernel.org>,
+ Jan Kara <jack@suse.cz>, "Darrick J . Wong" <djwong@kernel.org>,
+ Andrey Albershteyn <aalbersh@kernel.org>, Amir Goldstein
+ <amir73il@gmail.com>, =?UTF-8?Q?Pali_Roh=C3=A1r?= <pali@kernel.org>,
+ Lauri Gates <lauri.gates@gmail.com>, Christoph Hellwig <hch@infradead.org>,
+ Dave Chinner <dgc@kernel.org>, linux-btrfs@vger.kernel.org,
+ linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-fsdevel@vger.kernel.org, ntfs@lists.linux.dev,
+ linux-nfs@vger.kernel.org, linux-api@vger.kernel.org
+References: <20261122000856.536902-1-koray.fra@gmail.com>
+ <20261122000856.536902-4-koray.fra@gmail.com>
+ <1ebbb85f-3515-4c45-a850-8039aad93800@163.com>
+ <DN265Y2EAGQV.1ZD49JSIDMME5@gmail.com>
 Content-Language: en-US
-In-Reply-To: <cover.1791272793.git.asj@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: liubaolin <liubaolin12138@163.com>
+In-Reply-To: <DN265Y2EAGQV.1ZD49JSIDMME5@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:PSgvCgB3lRyyrQNr7GOJHA--.54075S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW3Wr48Gr18Zw4Duryrury7trb_yoW3Gw48p3
+	95CF4jkay8Jry3Can2q3ZIgayFvr4fCF4UZFy5tF18ZF9xtrn3W3ykKryfKFyUursakw1U
+	Way2v39xCrW3Z3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07UZiSLUUUUU=
+X-CM-SenderInfo: xolxutxrol0iasrtmqqrwthudrp/xtbC6hU0-msDrbVSSQAA3e
 
-Zorro,
-
- Could we merge the patches in stages? What's your plan?
-
-Regards, Anand
 
 
-On 6/10/26 16:55, Anand Jain wrote:
-> This series continues the work from the earlier "test coverage for cloned
-> filesystem ids" series (last posted as v8 [1]) and has been tested against
-> the major filesystems: Btrfs, XFS, ext4, and f2fs.
+在 2026/11/23 08:38, koraynilay 写道:
+> On Sun Nov 22, 2026 at 1:49 PM CET, liubaolin wrote:
+>>
+>>
+>> 在 2026/11/22 08:08, koraynilay 写道:
+>>> Switch ntfs_fileattr_[gs]et() from the legacy FS_*_FL flags to the
+>>> modern xflags (FS_XFLAG_*) fileattr API with masks.
+>>>
+>>> Introduce FS_XFLAG_COMPR and FS_XFLAG_ENCRYPT and add them to
+>>> FS_XFLAG_COMMON (and add FS_COMPR_FL and FS_ENCRYPT_FL to FS_COMMON_FL)
+>>> to be used in this API switch.
+>>>
+>>> Assisted-by: Gemini:3.8-flash-high antigravity-cli-1.5.11
+>>> Signed-off-by: koraynilay <koray.fra@gmail.com>
+>>> ---
+>>>    fs/file_attr.c           |  8 +++++
+>>>    fs/ntfs/file.c           | 63 +++++++++++++++++++---------------------
+>>>    include/linux/fileattr.h |  6 ++--
+>>>    include/uapi/linux/fs.h  |  2 ++
+>>
+>> Hi koraynilay,
+>>      One suggestion on the patch split: would it make sense to put the
+>> new COMPR/ENCRYPT xflags and their VFS handling in a separate patch
+>> before the NTFS conversion?
+>>      The changes to include/uapi/linux/fs.h, include/linux/fileattr.h
+>> and fs/file_attr.c introduce generic fileattr support, and the
+>> COMMON mask changes also affect other filesystems.
+>>      Keeping those changes together in a VFS patch would make the API
+>> and compatibility aspects easier to review.
+>>      The following NTFS patch could then focus on using the new flags
+>> while preserving the existing NTFS behaviour.
 > 
-> Although this version incorporates the review feedback received on v8, it
-> expands substantially with additional infrastructure helpers, an extra test
-> case to cover the recent regression report, and migration/cleanup of
-> existing generic/744. Because the patch count grew from 13 to 21 patches,
-> disrupting the previous patch numbering and scope, I have reset the
-> versioning and updated the subject line to better reflect the broader
-> validation coverage.
+> Hi Baolin and thanks for the feedback,
+> for now I put them in the same patch since they're not many lines of
+> code changes, but I now also had to add NOCOMP, maybe I'll split it in
+> the next version.
 > 
-> The core motivation remains identical: testing that mounting a block-level
-> cloned filesystem concurrently with the original filesystem behaves
-> correctly across filesystems and VFS subsystems (fanotify, statfs/f_fsid,
-> libblkid resolution, IMA measurement, exportfs file handles, and
-> metadata_uuid handling).
+>> Thanks,
+>> Baolin.
+>>
+>>>    4 files changed, 44 insertions(+), 35 deletions(-)
+>>> [...]
+>>>    	if (err)
+>>>    		return err;
+>>>    
+>>> -	if (fileattr_has_fsx(fa))
+>>> -		return -EOPNOTSUPP;
+>>> -
+>>> -	/* chattr passes the unchanged read-only flags back to us too. */
+>>> -	if (NInoCompressed(ni) || NInoWofCompressed(ni))
+>>> -		readonly |= FS_COMPR_FL;
+>>> -	if (NInoEncrypted(ni))
+>>> -		readonly |= FS_ENCRYPT_FL;
+>>> -	if ((fa->flags ^ readonly) & (FS_COMPR_FL | FS_ENCRYPT_FL))
+>>> -		return -EOPNOTSUPP;
+>>> -	allowed |= readonly;
+>>> -
+>>> -	/* Case folding is a read-only, mount-wide property. */
+>>> -	if (!NVolCaseSensitive(ni->vol))
+>>> -		allowed |= FS_CASEFOLD_FL;
+>>> -	if (fa->flags & ~allowed)
+>> Hi koraynilay,
+>>      There is another case worth keeping in mind when replacing this check:
+>>      fileattr_fill_flags() only translates a subset of FS_*_FL bits,
+>> so some unsupported flags will not appear in fsx_xflags.
+>>     For example, a direct SETFLAGS request containing only FS_NOCOW_FL
+>> produces fsx_xflags == 0. On a normal file on a case-sensitive mount,
+>> the new check would accept that request.
+>>     If the file already has persistent NODUMP set, the request would also
+>> clear it, since the setter rebuilds linuxflags without NODUMP and writes
+>> it back to the EA. The current code rejects the request and leaves the
+>> existing attributes unchanged.
+>>
+>>     Would it be possible to keep validating fa->flags when flags_valid is
+>> set, in addition to the xflags check?
 > 
-> Summary of major changes since v8:
-> - Added 1 new regression test case to verify statfs f_fsid derivation against FS UUID.
-> - Dropped the test case verifying f_fsid persistence across mount cycles on
->   cloned filesystems, as this assumption is no longer valid following the Btrfs kernel
->   regression fix [2].
-> - Introduced common helpers:
->   . _require_security_ima() and _require_metadata_uuid().
->   . _scratch_mkfs_uuid() and helpers for f_fsid verification.
-> - Migrated generic/744 to utilize the new common clone helpers.
-> - Worked on the review comments.
+> We could, but the objective is to have filesystems that implement the
+> new _masks API use only xflags.
+
+Hi koraynilay,
+    That makes sense, and I'm fine with NTFS using only xflags.
+Could we still make sure that legacy SETFLAGS requests with flags 
+unsupported by NTFS are rejected rather than silently accepted after 
+conversion?
+
+Thanks,
+Baolin.
+
 > 
-> Details of changes:
-> - _create_cloned_loop_devs():
->   . Renamed from _loop_image_create_clone() to _create_cloned_loop_devs().
->   . Relocated backing image files from "$TEST_DIR/${seq}.*" to a dedicated
->     directory "$TEST_DIR/${seq}/*".
->   . Added internal call to _require_clone_mount().
->   . Switched from _create_loop_device() to _create_loop_device_like_bdev()
->     to guarantee identical logical/physical sector sizes (512 vs 4096)
->     between the original and cloned loop devices.
->   . Used an intermediate local setup step to ensure consistent Direct I/O
->     attributes across both loop devices (preventing the first device from
->     enabling DIO while the cloned device fell back to buffered mode).
->   . Added device geometry and DIO attribute dump to $seqres.full for debugging.
->   . Renamed teardown helper _loop_image_destroy() to _destroy_cloned_loop_devs().
-> - _clone_mount_options():
->   . Renamed from _clone_mount_option() to _clone_mount_options().
-> - _require_metadata_uuid():
->   . Factored out prerequisite checks from _change_metadata_uuid() into a new
->     dedicated helper _require_metadata_uuid() and invoked it accordingly.
-> - _require_clone_mount():
->   . Introduced new helper to check kernel support for concurrent clone mounts.
->   . Removed obsolete _require_duplicate_fsid() in favor of _require_clone_mount().
-> - _require_security_ima():
->   . Introduced new helper to check securityfs and IMA policy availability.
-> - _create_loop_device_like_bdev():
->   . Removed unused local variable 'dev'.
+>> Thanks,
+>> Baolin.
+>>
+>>
+>>> +	/*
+>>> +	 * When userspace uses file_[gs]etattr(), VFS already checks and fails
+>>> +	 * with -EOPNOTSUPP if rw_mask & ro_mask != 0 and rw_mask & ~allowed,
+>>> +	 * but for FS_IOC_SETFLAGS and FS_IOC_FSSETXATTR VFS can't check for
+>>> +	 * allowed flags as these ioctls don't support fsx_xflags_{rw,ro}_mask,
+>>> +	 * so we need to check for unsupported flags anyway.
+>>> +	 */
+>>> +	if (!fa->has_masks &&
+>>> +	    ((fa->fsx_xflags & ~NTFS_RW_XFLAGS) ||
+>>> +	     fa->fsx_extsize || fa->fsx_projid || fa->fsx_cowextsize))
+>>>    		return -EOPNOTSUPP;
+>>
+>> Hi koraynilay,
+>>      Could we keep the existing handling of read-only attributes
+>> for legacy SETFLAGS callers here?
+>>      On a case-insensitive NTFS mount, the VFS carries over
+>> FS_XFLAG_CASEFOLD from the current attributes, since it is not in
+>> FS_XFLAG_COMMON.
+>> This check would then reject it because CASEFOLD is not in
+>> NTFS_RW_XFLAGS, so even chattr +d would fail with EOPNOTSUPP.
+>>      The unchanged COMPR/ENCRYPT bits that chattr reads with GETFLAGS and
+>> passes back with SETFLAGS would also be rejected on compressed/encrypted
+>> files.
+>>      Allowing those existing read-only attributes to be passed back
+>> unchanged  would let users continue setting and clearing the persistent
+>> flags through chattr,as they can today.
+>>
+>> Thanks,
+>> Baolin.
 > 
-> - Test Cases common update:
->   - Adjusted test groups: replaced 'clone' with 'tempfsid'.
->   - Standardized test exits: replaced open-coded "status=0; exit" with "_exit 0".
->   - Dropped stale "_require_block_device $TEST_DEV" checks left over from before
->     migrating tests to loop devices.
->   - Percolated helper renames across all tests:
->     . _loop_image_create_clone -> _create_cloned_loop_devs
->     . _loop_image_destroy      -> _destroy_cloned_loop_devs
->     . _clone_mount_option      -> _clone_mount_options
->   - Added cleanup of "$TEST_DIR/$seq" in test exit/cleanup handlers.
+> Since I wasn't quite satisfied with this version, I'm working on a
+> revisited v2, that is hopefully cleaner and fixes these bugs and the
+> ones reported by sashiko.
 > 
-> - Test Cases Individual Updates:
->   - generic/744:
->     . Replaced _require_duplicate_fsid with _require_clone_mount().
->     . Migrated to common _create_cloned_loop_devs() and _clone_mount_options().
->   - generic/902:
->     . New regression test case added to verify statfs f_fsid derivation against filesystem UUID.
->   - generic/903:
->     . Added --noheadings flag to findmnt queries for cleaner output parsing.
->   - generic/904:
->     . Dropped 'auto' and 'quick' from test groups due to runtime and policy requirements.
->     . Updated referenced kernel commit IDs.
+> Thanks,
+> koraynilay
 > 
-> [1] https://lore.kernel.org/fstests/cover.1784949154.git.asj@kernel.org
-> [2] 72de4807ba84 ("btrfs: derive f_fsid with dev_t only when temp_fsid is active")
 > 
-> Anand Jain (21):
->   fstests: introduce _require_clone_mount() helper
->   fstests: introduce _create_cloned_loop_devs() helper
->   fstests: add _clone_mount_options() helper
->   fstests: add FSNOTIFYWAIT_PROG
->   fstests: add _require_fanotify_function
->   fstests: add _require_unique_f_fsid() helper
->   fstests: add SEMANAGE_PROG
->   fstests: verify fanotify isolation on cloned filesystems
->   fstests: introduce helper _scratch_mkfs_uuid()
->   fstests: add helpers to verify the expected f_fsid
->   fstests: verify statfs f_fsid is derived from the filesystem UUID
->   fstests: verify libblkid resolution of duplicate UUIDs
->   fstests: introduce _require_security_ima() helper
->   fstests: verify IMA isolation on cloned filesystems
->   fstests: verify exportfs file handles on cloned filesystems
->   fstests: introduce _require_metadata_uuid() helper
->   fstests: add _change_metadata_uuid helper
->   fstests: test UUID consistency for clones with metadata_uuid
->   fstests: generic/744: use new helper _require_clone_mount()
->   fstests: generic/744: migrate to _create_cloned_loop_devs()
->   fstests: _create_loop_device_like_bdev() remove unused variable
-> 
->  common/config         |   2 +
->  common/rc             | 262 +++++++++++++++++++++++++++++++++++++++---
->  tests/generic/744     |  72 +++++-------
->  tests/generic/901     | 142 +++++++++++++++++++++++
->  tests/generic/901.out |   7 ++
->  tests/generic/902     |  38 ++++++
->  tests/generic/902.out |   2 +
->  tests/generic/903     |  71 ++++++++++++
->  tests/generic/903.out |   6 +
->  tests/generic/904     | 113 ++++++++++++++++++
->  tests/generic/904.out |  10 ++
->  tests/generic/905     |  79 +++++++++++++
->  tests/generic/905.out |   2 +
->  tests/generic/906     |  74 ++++++++++++
->  tests/generic/906.out |   6 +
->  15 files changed, 827 insertions(+), 59 deletions(-)
->  create mode 100644 tests/generic/901
->  create mode 100644 tests/generic/901.out
->  create mode 100644 tests/generic/902
->  create mode 100644 tests/generic/902.out
->  create mode 100644 tests/generic/903
->  create mode 100644 tests/generic/903.out
->  create mode 100644 tests/generic/904
->  create mode 100644 tests/generic/904.out
->  create mode 100644 tests/generic/905
->  create mode 100644 tests/generic/905.out
->  create mode 100644 tests/generic/906
->  create mode 100644 tests/generic/906.out
+>>>    
+>>>    	forced_immutable = ntfs_is_forced_immutable(vi);
+>>> -	if (!(fa->flags & FS_IMMUTABLE_FL) && forced_immutable)
+>>> +	if (!(fa->fsx_xflags & FS_XFLAG_IMMUTABLE) && forced_immutable)
+>>>    		return -EPERM;
+>>>    
+>>> -	if (fa->flags & FS_IMMUTABLE_FL) {
+>>> +	if (fa->fsx_xflags & FS_XFLAG_IMMUTABLE) {
+>>>    		new_fl |= S_IMMUTABLE;
+>>>    		/* Do not persist an immutable bit derived from the mount. */
+>>>    		if (!forced_immutable ||
+>>>    		    (ni->linuxflags & NTFS_LINUXFLAGS_IMMUTABLE))
+>>>    			linuxflags |= NTFS_LINUXFLAGS_IMMUTABLE;
+>>>    	}
+>>> -	if (fa->flags & FS_APPEND_FL) {
+>>> +	if (fa->fsx_xflags & FS_XFLAG_APPEND) {
+>>>    		new_fl |= S_APPEND;
+>>>    		linuxflags |= NTFS_LINUXFLAGS_APPEND;
+>>>    	}
+>>> -	if (fa->flags & FS_NODUMP_FL)
+>>> +	if (fa->fsx_xflags & FS_XFLAG_NODUMP)
+>>>    		linuxflags |= NTFS_LINUXFLAGS_NODUMP;
+>>> -	if (fa->flags & FS_NOATIME_FL) {
+>>> +	if (fa->fsx_xflags & FS_XFLAG_NOATIME) {
+>>>    		new_fl |= S_NOATIME;
+>>>    		linuxflags |= NTFS_LINUXFLAGS_NOATIME;
+>>>    	}
+>>> diff --git a/include/linux/fileattr.h b/include/linux/fileattr.h
+>>> index 4faa40febf11..219e7c8eb601 100644
+>>> --- a/include/linux/fileattr.h
+>>> +++ b/include/linux/fileattr.h
+>>> @@ -7,12 +7,14 @@
+>>>    #define FS_COMMON_FL \
+>>>    	(FS_SYNC_FL | FS_IMMUTABLE_FL | FS_APPEND_FL | \
+>>>    	 FS_NODUMP_FL |	FS_NOATIME_FL | FS_DAX_FL | \
+>>> -	 FS_PROJINHERIT_FL | FS_VERITY_FL)
+>>> +	 FS_PROJINHERIT_FL | FS_VERITY_FL | FS_COMPR_FL | \
+>>> +	 FS_ENCRYPT_FL)
+>>>    
+>>>    #define FS_XFLAG_COMMON \
+>>>    	(FS_XFLAG_SYNC | FS_XFLAG_IMMUTABLE | FS_XFLAG_APPEND | \
+>>>    	 FS_XFLAG_NODUMP | FS_XFLAG_NOATIME | FS_XFLAG_DAX | \
+>>> -	 FS_XFLAG_PROJINHERIT | FS_XFLAG_VERITY)
+>>> +	 FS_XFLAG_PROJINHERIT | FS_XFLAG_VERITY | FS_XFLAG_COMPR | \
+>>> +	 FS_XFLAG_ENCRYPT)
+>>>    
+>>>    /* Read-only inode flags */
+>>>    #define FS_XFLAG_RDONLY_MASK \
+>>> diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
+>>> index e40806b3a69c..09fc7e066485 100644
+>>> --- a/include/uapi/linux/fs.h
+>>> +++ b/include/uapi/linux/fs.h
+>>> @@ -275,6 +275,8 @@ struct file_attr {
+>>>    #define FS_XFLAG_CASENONPRESERVING 0x00080000	/* case not preserved */
+>>>    
+>>>    #define FS_XFLAG_PROJID		0x00100000	/* project ID */
+>>> +#define FS_XFLAG_COMPR		0x00200000	/* Compress file */
+>>> +#define FS_XFLAG_ENCRYPT	0x00400000	/* Encrypted file */
+>>>    #define FS_XFLAG_HASATTR	0x80000000	/* no DIFLAG for this	*/
+>>>    
+>>>    /* the read-only stuff doesn't really belong here, but any other place is
 > 
 
