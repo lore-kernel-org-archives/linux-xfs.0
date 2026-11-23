@@ -1,58 +1,59 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795459549;
-	b=iLCBTZdosWyq4TfP8gIjvBciyy8hbu4midkfyBnu2wqt0zEz5ixtmpO+vbMGQcJtVhm5
-	 anDnffU33NOllTp5e/X0QDM91k0pNHs33soNjR4QwIgHktU5X4/uVrQyOI7S3R3t/T4Jw
-	 qiMwKmCFGuYotI/JUYOO4sE+FC48DclH1iLxx291u/MY5rTDiAqeRHkEp0xc0ED04cnQ6
-	 jbj6LSQfJqHRB0Oc9rPN+aZFjOgDq3TyyjhksjNGRyri2KRNr51kL6A5Jcbihejzbxqe9
-	 JUoUnV1zMXT9jaARTxn6yUVmWa9SyDPxDShWJBfRRSOhjhMNUTjqgm08u+IkYkPQwwg==
+	t=1795459617;
+	b=Djagi0q4htJiq2tP2W7eG370AyuWAEzx8apJ6BOPYjVHl0SsKeF/heGWHnBCzQ+Bnw7w
+	 qMDT+I2iT1EHIxX7MIUMpxJ79TewrqS+x2jhO0KoEPEBOkUs5uZRD+0iqfHBSUNH6Xo6g
+	 8jLzbX7jGIN/NxKwKd4U2KDy7f0hIDhCHyCPHsudjN3xZcruOTigM5/tMYdnvn/uWwVmh
+	 6PhDyHThIFLUQ6HqGH5SL5jEnQoxMxJ/ZCsy1FxMnC/IdPa6DZRAuqVJP0XtsHRBUt/hL
+	 ym4VRicEE3pDVFGJkdWssiPVQvUpzusjBY7qXJbC6/9s25ckd+/qhna6ngYlwdiNTGg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795459549;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795459617;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 Mail-Followup-To:References:MIME-Version:Content-Type:
 	 Content-Disposition:In-Reply-To;
-	bh=PxiNA7miBJTHGn0Z9SSPAwEi4XJ3UirlOj8JQBSf8JA=;
-	b=mHx3NoTsV8ux32opau8IJW8/TdwbYyaqnkv5p9Dp+0q92VT2qGQJjgE3SC3DLo3Cfuqp
-	 JcZNsNrhdJYTQgrYUPrKEVnBKFrxXFsCvmxiyD5fjhammIYe5DUS7LZapJCGmfsAOmMHB
-	 R3/LJeQRvjTGwocIcWkbIfs6qDLts7CWM8+QULKGOku2NjT04r65h3SezSkFCJIG5wRQt
-	 6dBBa67+9qPaPJZHzSr1bb8QaVQgZT1BiVxUmpEyjfWDSAdfCP51UQWKI1pmOrSMf7ikF
-	 uUug7pVAoeaIuAbxrk3EXAyne6WxZ1v0GSoJiSyQzccFmw7RRqSJYMeTPUjzdHcChCA==
+	bh=jEgTy2gI/IlCDectbC/WzfFgVpdI3lObRhjlmOoXpHw=;
+	b=blRNf0NHWcoghDrc5Uxh3jKOr85BBBKlQHhW/J6d0IpIzCkAN9bi9nPQq8aTeR4lLcfn
+	 XGrRLTzv7Dw9JNtSV4ZcahWcEIEOq7qDhi6KPyi2YIRH5VHMu09AYDZRx58vKoyFCOqL+
+	 /qZGALYwnC7qhule52xNekBIcrd99FZmYHnffMzyrzbQkfBjod/vt2ZGQvkGvkAzFs86r
+	 rHMrwANffSfo0judvDTBQtXL5lfxxUM+9KICrNr9Smd/dRe8Y9hgNnJ2K7oqS6lEYRMFr
+	 M6L2fDNP2Phelr3QbExvgOCWahqoHN8WuLAZYZ1MDO6xQbv1/30i3benw6qtAqO5ipA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fg1T6wql;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GzvswWaE;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2957C606A31A;
-	Mon, 23 Nov 2026 18:45:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CAE0606A31A;
+	Mon, 23 Nov 2026 18:46:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fg1T6wql
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 067081F000D4;
-	Mon, 23 Nov 2026 18:45:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GzvswWaE
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A5D621F000C4;
+	Mon, 23 Nov 2026 18:46:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795459547;
-	bh=PxiNA7miBJTHGn0Z9SSPAwEi4XJ3UirlOj8JQBSf8JA=;
+	s=k20260515; t=1795459616;
+	bh=jEgTy2gI/IlCDectbC/WzfFgVpdI3lObRhjlmOoXpHw=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=fg1T6wqlWfCdvHfchAwMVIpFqeJYm34dDAF1fdbyHK8/cQtm/QaABqnz9D+g4Sjr2
-	 SoZrWgXXt85Ls09buOpcM0RhFYgiQm2Yf/8cr6ajo33w9fnurbJW6WyuXHmdA+O32l
-	 Yu6+FyvJ1P6KN8fKmu4j+GsO58mXTf0xb3l0SM6enPKe7YJu77yXoUKwmo7LP35c0W
-	 hXq7swXRei4oIZob7BrlQ6x0tY7DTkXF9kRLXY+AdH4Cadecgyj1b7pMFmTgTPspAu
-	 BmDG4jqJ7GCFdcEY9ZOvgvnCHv+Dc9yrccDDAvSkR8bGSMGpO9B4enYJsIDx1r68Lz
-	 yYKZfxn/Xe+9w==
-Date: Tue, 24 Nov 2026 02:45:34 +0800
+	b=GzvswWaElhQlroSK2fjY7vkgFjL0BjMCQz9a96B9OOTuABcrMrbDQ4MbJQkoCyUb+
+	 XI5K/xaybbNy1Tw07I+9swqdUJJyQ2lFoK86+qNQuZmGsL2vH/Yng0+8YCXkjTS2F4
+	 2riLyDzHPE6CaMAoEnoWOPntBxpkC5D+zfO4j1thB54c2Xn8GE+OyD7EmUsSKWTuGr
+	 4KjXY8OoIdRodDXngaqAFoP4KFcfODgMPbvtN+F5JJ+fU2e4djuvYKucMdjGhS0uQ8
+	 BOkcdFbwhSfz6c9bZwfjrLPiEIJm/vAvnbkPT7S7w4Ov05OPRU0qS6LT0qhilUlnMM
+	 bItVF/PAXBpaQ==
+Date: Tue, 24 Nov 2026 02:46:47 +0800
 From: Zorro Lang <zlang@kernel.org>
 To: Anand Jain <asj@kernel.org>
 Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, 
 	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, 
 	linux-f2fs-devel@lists.sourceforge.net
-Subject: Re: [PATCH 10/21] fstests: add helpers to verify the expected f_fsid
-Message-ID: <awSJlKPANuJTZtJK@zlang-mailbox>
+Subject: Re: [PATCH 11/21] fstests: verify statfs f_fsid is derived from the
+ filesystem UUID
+Message-ID: <awSJ4nnsW6m7_J7H@zlang-mailbox>
 Mail-Followup-To: Anand Jain <asj@kernel.org>, fstests@vger.kernel.org, 
 	linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, 
 	linux-f2fs-devel@lists.sourceforge.net
 References: <cover.1791272793.git.asj@kernel.org>
- <d33f55ca2c1b13426dd27c1c9921b2a60c3afbf2.1791272793.git.asj@kernel.org>
+ <98450cf50f0b962f4b6c2b0a16ec10c47362bccd.1791272793.git.asj@kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -64,67 +65,80 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <d33f55ca2c1b13426dd27c1c9921b2a60c3afbf2.1791272793.git.asj@kernel.org>
+In-Reply-To: <98450cf50f0b962f4b6c2b0a16ec10c47362bccd.1791272793.git.asj@kernel.org>
 
-On Tue, Oct 06, 2026 at 04:55:36PM +0800, Anand Jain wrote:
-> Add two helpers to common/rc:
+On Tue, Oct 06, 2026 at 04:55:37PM +0800, Anand Jain wrote:
+> On btrfs and ext4, statfs f_fsid is computed from the filesystem UUID,
+> so a filesystem created with a known UUID must always report the same
+> f_fsid. Userspace relies on this, for example fanotify and file handle
+> users that identify a filesystem across mounts.
 > 
-> _require_uuid_based_fsid() skips the test unless the filesystem derives
-> statfs f_fsid from the UUID alone (currently btrfs and ext4).
-> 
-> _scratch_expected_fsid() prints the f_fsid expected for a filesystem
-> created with the fixed test UUID.
+> Guards against f_fsid changing across kernel versions, which would break
+> userspace that relies on it.
 > 
 > Signed-off-by: Anand Jain <asj@kernel.org>
 > ---
 
 Reviewed-by: Zorro Lang <zlang@kernel.org>
 
->  common/rc | 31 +++++++++++++++++++++++++++++++
->  1 file changed, 31 insertions(+)
+>  tests/generic/902     | 38 ++++++++++++++++++++++++++++++++++++++
+>  tests/generic/902.out |  2 ++
+>  2 files changed, 40 insertions(+)
+>  create mode 100644 tests/generic/902
+>  create mode 100644 tests/generic/902.out
 > 
-> diff --git a/common/rc b/common/rc
-> index 37df780f64ef..a11235ec03b8 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -6065,6 +6065,37 @@ hexdump()
->  	_fail "Use _hexdump(), please!"
->  }
->  
-> +# Require a filesystem whose statfs f_fsid is derived from the filesystem
-> +# UUID only, so that it is stable across devices and mounts.
-> +_require_uuid_based_fsid()
-> +{
-> +	case $FSTYP in
-> +	btrfs|ext4)
-> +		;;
-> +	*)
-> +		_notrun "Require a filesystem that derives f_fsid from the UUID only"
-> +		;;
-> +	esac
-> +}
+> diff --git a/tests/generic/902 b/tests/generic/902
+> new file mode 100644
+> index 000000000000..44dd685a887b
+> --- /dev/null
+> +++ b/tests/generic/902
+> @@ -0,0 +1,38 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2026 Anand Jain <asj@kernel.org>.  All Rights Reserved.
+> +#
+> +# FS QA Test No. 902
+> +#
+> +# Verify that statfs f_fsid is derived from the filesystem UUID.
+> +# Create a filesystem with a fixed UUID, mount it, and check that f_fsid
+> +# matches the expected value. Applies only to filesystems that derive
+> +# f_fsid from the UUID (btrfs, ext4).
 > +
-> +# Print the statfs f_fsid expected for a filesystem created with the test
-> +# UUID 12345678-1234-1234-1234-123456789abc.
-> +# Must be guarded by _require_uuid_based_fsid.
-> +_scratch_expected_fsid()
-> +{
-> +	case $FSTYP in
-> +	ext4)
-> +		echo "4c44000088884c44"
-> +		;;
-> +	btrfs)
-> +		echo "444c444c888d"
-> +		;;
-> +	*)
-> +		return 1
-> +		;;
-> +	esac
-> +}
+> +. ./common/preamble
 > +
->  # Try to create a file with inode->i_blocks >= (length / blocksize).
->  # There may be some small overhead, e.g. ext2 filesystem allocates a
->  # substantial number of blocks to store block mappings. Those are accounted
+> +_begin_fstest auto quick
+> +
+> +_require_scratch
+> +_require_uuid_based_fsid
+> +
+> +_fixed_by_fs_commit btrfs 72de4807ba84 \
+> +	"btrfs: derive f_fsid with dev_t only when temp_fsid is active"
+> +
+> +_scratch_mkfs_uuid >> $seqres.full 2>&1 || _fail "mkfs failed"
+> +
+> +_scratch_mount
+> +
+> +blkid $SCRATCH_DEV >> $seqres.full
+> +f_fsid=$(stat -f -c "%i" $SCRATCH_MNT)
+> +expected=$(_scratch_expected_fsid)
+> +
+> +echo "f_fsid=$f_fsid expected=$expected" >> $seqres.full
+> +
+> +[[ $f_fsid == "$expected" ]] || _fail "f_fsid mismatch"
+> +
+> +_scratch_unmount
+> +
+> +echo "Silence is golden"
+> +
+> +_exit 0
+> diff --git a/tests/generic/902.out b/tests/generic/902.out
+> new file mode 100644
+> index 000000000000..e20395365cb5
+> --- /dev/null
+> +++ b/tests/generic/902.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 902
+> +Silence is golden
 > -- 
 > 2.43.0
 > 
