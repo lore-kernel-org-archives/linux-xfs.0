@@ -1,54 +1,59 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.70
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795460189;
-	b=YJ2pJy6BYtND2y/bvSebYEQZzcSQYdwMOEXGBRH+elefnYrjviKXroqEap7cWHhux7wW
-	 TYW52rB8shZ96wL0w1FRrTw89hRAJU/NHSFIUd0Xvxs/ogHUsl6mA3ZgpyierrKh5kzPU
-	 PVItBF2bbySziqzMlo9fcfdB9zNNfUyurqS5qfEfwJXZxJcKs5V7AncqRuouJeLDODnoT
-	 tH+og35uj2gTPQ4GJY3x3paJVZxZFgQ52OEKWjwPeZg7s2VefhKwJ7p6Y/zrVT++TbJnB
-	 hxnSd2mxMoG+/8XWgWZew2okWVbtc08myEd/CHF4lSEjzNGCQFmmlbgMgzM4/lo6pnA==
+	t=1795460253;
+	b=2+p4P4ts9zusEm01i5kLAI8lI71MaAaGLMVyZY72oCywsqGblpPkk36DhH/gIgHUc98t
+	 9ry+WwhoIcvZSJv7hT4Pd0mUMluviv7UGxPWintCu5QN5+W2XzyQaj9nE1Myi7K2BRliL
+	 aMGIA2NDykgtFS1rho86+O0VnHSsE1eVBaUJ5xMaicjO8J05u8mfSfKRy8/dTgk23ktK5
+	 /10U1/Cw6gozQVRXmM4ZPo5vCkV1wa2Gz17acaYXJ1V24PXKBBzDCqb9JarsbQ3knGwLF
+	 8D0JJUrc5D7U8DCSL9TrBS1Qu4pLacPEBXf3/hmT2xEwy2wtg9vh3p3+ZivoXgz3ikA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795460189;
-	h=DMARC-Filter:Received:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
-	 X-Gm-Message-State:MIME-Version:X-Received:Date:
-	 X-Google-Appengine-App-Id:X-Google-Appengine-App-Id-Alias:Message-ID:
-	 Subject:From:To:Content-Type;
-	bh=OnczQ3wxMDViQssbLqUHjFh88GfCTCb774Gt0G83kDQ=;
-	b=Qzl/PhLPjoVPRXwBXUYNaAaesIqx93liXDmXY1eToWSKs5ASY7MNrvlZCF6edLrHafqL
-	 K8rTuQteJXdKMOu0tBsiStAPAaABMZM6c9gm1ALgnWZhZlFn04EkDnjyElTgbbJ1A/kUU
-	 fCdjMytDw/om8phPHQFXwxqdN+3jsXqzMGiwcQdh5c/Y6lyorOEGyPY/b4NKG6r5iPegF
-	 pnHyMcuXSt+WXA26aR8gRyJEUzyW+XtO2Sl+08bc7wkOw1+5M9n+yNcByv7OJFJOA4I+5
-	 5KCgS+5U3TkGYeAX9i4UVmA7RMFH9pwIHkIOCoYiZi5c5D8+2+3JSjzXGK/XeOqaFZQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795460253;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 Mail-Followup-To:References:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To;
+	bh=H93CB7j1oNhjdUYK0ZSNjTneR70X6EfbfNI+/55q5ew=;
+	b=kQYzZHRw7R6P3gVgRhqMGH+IEETG84bwZYRXQbkaKvA9oQdsVhbu/zoZRcSnotMOfkDq
+	 +LOeOlxfV7h61nklCuhXBTJvcirsl6PiqxMR+MvpRaos0V9PQDhgW6u0+ul4Q7GA4m0uZ
+	 35VSaCSsOgdtkCryZsE/Yj9fYqQEGuL2FniQ5soPOOMzuo3mIw3GfH0NcyicmGpOyrQrf
+	 G937zF5ewo6QDH4oqA9BVqVsFDMjwokrFukDmz3ZWmYh83LwrgJ4KxA1KhQuwXfB7M69b
+	 UxkdImddLEmFj9W4ykzrgjOfvPq4xEX0y/Pu81EWMcShRMeECxvdjLCnl0Rmn5YcHQQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=fail header.from=syzkaller.appspotmail.com;
-	spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com;
-	arc=none smtp.remote-ip=209.85.210.70
-Received: from mail-ot1-f70.google.com (mail-ot1-f70.google.com [209.85.210.70])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=N22qDFAe;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60151606A331
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Nov 2026 18:56:29 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 60151606A331
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-ot1-f70.google.com with SMTP id 46e09a7af769-83edc5c5ae9so3812160a34.1
-        for <linux-xfs@vger.kernel.org>; Mon, 23 Nov 2026 10:56:29 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795460188; x=1796064988;
-        h=content-type:to:from:subject:message-id:date:mime-version
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=OnczQ3wxMDViQssbLqUHjFh88GfCTCb774Gt0G83kDQ=;
-        b=vRzmsdo5Fm9ZjoEsTgWfkyrY++1+z5I6gFozxxC0aFTWl9gBRsuZP9giO6S7JPHJoI
-         5PNOHkO918QL3JHIYwnYxPzwJL45FJGdxffQ8n3mjo4Tm+UrLUH/kLT4ZYA9WG07yDoL
-         gYi58PHJngJ7zySUjwwlz/F0PWOSjMFUoWe+hTPhcz7IL3FiqJXfO/ISbGGNlMVmKfZU
-         eybYa8NojPariRnRcmtZBb4+dYD5msxn41hUARWKcS0kxvfanulKfBQ7fmDPq6Rez828
-         emUdKstLEC/TqSUcZFzD0Rkr4IhS4n9AiZ+ILd7W2uVyApjV0KULYUjOcA0CfVKhWhtZ
-         nZtQ==
-X-Forwarded-Encrypted: i=1; AL+hErGfru7LEk4uyU6atyDNfjvlYz83GpqcS8p12a+BcGEp74E19tQ8LDvb5mf9STy5By41IyMbOAMoWHY=@vger.kernel.org
-X-Gm-Message-State: APuU4Z/2u4wDtPQkOAeM4QIU6EDDUEqdjxgAG4PPRUMjUE8h9+kcpP02
-	xB9SZx9NfKU8EpEfxG/ZH1JFaM8tE5bbruC/wEX/oik71XegvJdpM6RII7/Y8TfDGQbJ0uO5khX
-	Jb7cKHMFcx9dnCqn+tIAZDAhTDJTatd1m25BaU6dVh8pQxeocz3CruBifaos=
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96470606A31A;
+	Mon, 23 Nov 2026 18:57:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=N22qDFAe
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB8FC1F000C0;
+	Mon, 23 Nov 2026 18:57:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795460253;
+	bh=H93CB7j1oNhjdUYK0ZSNjTneR70X6EfbfNI+/55q5ew=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=N22qDFAebF8d4UjhzQWu2mMTYnWBxTYas5KtcaDCQSHOknLswE/0QUdWCR/N7nm9q
+	 FCixJs2Lqu3BoFr+eAWHuXBPfYLhKp101i6rFpZnKgWAn649RoakvGSQMWG7AErDaG
+	 G1Wn7Vqfd3Nx0lbQl1P0BvX69HH22fo7EOnHZC0OgMvQ7y0kUPZGKONNPA2psackpo
+	 RQ4r6QgHnAjZZoTYvOt1iXG+O1ri/Y67sdmwY/kiQq6OX5cha94200fdg6pUC6JGx1
+	 1o5UyvLCgLaUbkhdSlXYtD/Pd+DG6kpJwr0Ri56/bq7A4wBN+fDYCcSBxfxSTp2E+o
+	 kR57gbbDYyloQ==
+Date: Tue, 24 Nov 2026 02:57:24 +0800
+From: Zorro Lang <zlang@kernel.org>
+To: Anand Jain <asj@kernel.org>
+Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, 
+	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	linux-f2fs-devel@lists.sourceforge.net
+Subject: Re: [PATCH 15/21] fstests: verify exportfs file handles on cloned
+ filesystems
+Message-ID: <awSMZ6pYfpYH20bZ@zlang-mailbox>
+Mail-Followup-To: Anand Jain <asj@kernel.org>, fstests@vger.kernel.org, 
+	linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	linux-f2fs-devel@lists.sourceforge.net
+References: <cover.1791272793.git.asj@kernel.org>
+ <40f9fa47341946da9edbe10498c3d8d789ce202f.1791272793.git.asj@kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -58,112 +63,119 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-Received: by 2002:a05:6808:6f97:b0:573:30a5:f24d with SMTP id
- 5614622812f47-57a0a10c7f6mr13468904b6e.17.1795460188434; Mon, 23 Nov 2026
- 10:56:28 -0800 (PST)
-Date: Mon, 23 Nov 2026 10:56:28 -0800
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <6b048c5c.a481e175.27cf24.0021.GAE@google.com>
-Subject: [syzbot] [iomap?] WARNING in iomap_release_folio
-From: syzbot <syzbot+daa4cd155cd8696efe4f@syzkaller.appspotmail.com>
-To: brauner@kernel.org, linux-fsdevel@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <40f9fa47341946da9edbe10498c3d8d789ce202f.1791272793.git.asj@kernel.org>
 
-Hello,
+On Tue, Oct 06, 2026 at 04:55:41PM +0800, Anand Jain wrote:
+> Ensure that exportfs can correctly decode file handles on a cloned
+> filesystem across a mount cycle, by file handles generated on a
+> cloned device remain valid after mount cycle.
+> 
+> Signed-off-by: Anand Jain <asj@kernel.org>
+> ---
 
-syzbot found the following issue on:
+Reviewed-by: Zorro Lang <zlang@kernel.org>
 
-HEAD commit:    4843f6873f7c Merge tag 'sysctl-7.04-fixes-rc4' of git://gi..
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=106a12b5580000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=3cc6a7ee2d24d208
-dashboard link: https://syzkaller.appspot.com/bug?extid=daa4cd155cd8696efe4f
-compiler:       Debian clang version 22.1.8 (1~deb13u4), Debian LLD 22.1.8
-
-Unfortunately, I don't have any reproducer for this issue yet.
-
-Downloadable assets:
-disk image (non-bootable): https://storage.googleapis.com/syzbot-assets/98fce4d0b21b/non_bootable_disk-4843f687.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/86db8b334894/vmlinux-4843f687.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/94ea4dad441a/bzImage-4843f687.xz
-
-AI-generated root cause summary:
-`ntfs3` registers iomap folio lifecycle callbacks (`iomap_dirty_folio` and
-`iomap_release_folio`) on `ntfs_aops` and `ntfs_aops_cmpr`, which attach a
-per-block `struct iomap_folio_state` (`ifs`) to folios whenever
-`i_blocks_per_folio(inode, folio) > 1` (such as when NTFS cluster size is
-smaller than `PAGE_SIZE`). However, `ntfs_read_folio()` in `fs/ntfs3/inode.c`
-directly calls `folio_mark_uptodate(folio)` instead of
-`iomap_folio_mark_uptodate(folio)` when `ni->i_valid <= vbo` (and the same
-pattern appears in `ni_read_folio_cmpr`, `ntfs_compress_write`, and
-`attr_make_nonresident`). If an earlier incomplete or aborted iomap
-write/zero-range operation left `ifs` attached to an `!uptodate` folio,
-`folio_mark_uptodate()` sets `PG_uptodate` without updating the `ifs->state`
-uptodate bitmap. When kswapd later reclaims the clean folio via
-`iomap_release_folio()` -> `ifs_free()`, `ifs_is_fully_uptodate(folio, ifs) !=
-folio_test_uptodate(folio)` triggers the `WARN_ON_ONCE`.
-
-full analysis:  https://syzkaller.appspot.com/x/ai_root_cause?x=daa4cd155cd8696efe4f
-
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+daa4cd155cd8696efe4f@syzkaller.appspotmail.com
-
-------------[ cut here ]------------
-ifs_is_fully_uptodate(folio, ifs) != folio_test_uptodate(folio)
-WARNING: fs/iomap/buffered-io.c:295 at ifs_free+0x22d/0x2c0 fs/iomap/buffered-io.c:294, CPU#0: kswapd0/84
-Modules linked in:
-CPU: 0 UID: 0 PID: 84 Comm: kswapd0 Not tainted syzkaller #0 PREEMPT(full) 
-Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
-RIP: 0010:ifs_free+0x22d/0x2c0 fs/iomap/buffered-io.c:294
-Code: 41 5f 5d e9 55 0a bb ff e8 30 8e 4d ff 90 0f 0b 90 e9 0a ff ff ff e8 22 8e 4d ff 90 0f 0b 90 e9 3a ff ff ff e8 14 8e 4d ff 90 <0f> 0b 90 eb c7 44 89 f9 80 e1 07 80 c1 03 38 c1 0f 8c 3d fe ff ff
-RSP: 0018:ffffc90000ed67e0 EFLAGS: 00010293
-RAX: ffffffff827bbe6c RBX: ffff88803922d400 RCX: ffff8880338a8000
-RDX: 0000000000000000 RSI: 0000000000000008 RDI: 0000000000000000
-RBP: 00000000827c3c01 R08: ffffea0000538607 R09: 1ffffd40000a70c0
-R10: dffffc0000000000 R11: fffff940000a70c1 R12: dffffc0000000000
-R13: 1ffffd40000a70c5 R14: 0000000000000008 R15: 0000000000000000
-FS:  0000000000000000(0000) GS:ffff88808a9ea000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00007fb6145bafe8 CR3: 000000004527b000 CR4: 0000000000352ef0
-Call Trace:
- <TASK>
- iomap_release_folio+0x254/0x450 fs/iomap/buffered-io.c:826
- shrink_folio_list+0x22e2/0x4d90 mm/vmscan.c:1569
- evict_folios+0x3326/0x4390 mm/vmscan.c:5097
- try_to_shrink_lruvec+0xf22/0x1630 mm/vmscan.c:5271
- shrink_one+0x312/0x10f0 mm/vmscan.c:5318
- shrink_many mm/vmscan.c:5381 [inline]
- lru_gen_shrink_node mm/vmscan.c:5459 [inline]
- shrink_node+0x631e/0x6c50 mm/vmscan.c:6465
- kswapd_shrink_node mm/vmscan.c:7258 [inline]
- balance_pgdat mm/vmscan.c:7429 [inline]
- kswapd+0x1ff4/0x3a20 mm/vmscan.c:7705
- kthread+0x38b/0x480 kernel/kthread.c:436
- ret_from_fork+0x514/0xb70 arch/x86/kernel/process.c:158
- ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
- </TASK>
-
-
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-
-If the report is already addressed, let syzbot know by replying with:
-#syz fix: exact-commit-title
-
-If you want to overwrite report's subsystems, reply with:
-#syz set subsystems: new-subsystem
-(See the list of subsystem names on the web dashboard)
-
-If the report is a duplicate of another one, reply with:
-#syz dup: exact-subject-of-another-report
-
-If you want to undo deduplication, reply with:
-#syz undup
+>  tests/generic/905     | 79 +++++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/905.out |  2 ++
+>  2 files changed, 81 insertions(+)
+>  create mode 100644 tests/generic/905
+>  create mode 100644 tests/generic/905.out
+> 
+> diff --git a/tests/generic/905 b/tests/generic/905
+> new file mode 100644
+> index 000000000000..d69c613110db
+> --- /dev/null
+> +++ b/tests/generic/905
+> @@ -0,0 +1,79 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2026 Anand Jain <asj@kernel.org>.  All Rights Reserved.
+> +#
+> +# FS QA Test No. 905
+> +# Verify that file handles encoded on a cloned filesystem remain valid and
+> +# resolvable via open_by_handle across a mount cycle and mount order swap.
+> +
+> +. ./common/preamble
+> +
+> +_begin_fstest auto quick exportfs tempfsid
+> +
+> +_require_test
+> +_require_exportfs
+> +_require_loop
+> +_require_test_program "open_by_handle"
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -r -f $tmp.*
+> +	_unmount $mnt1 2>/dev/null
+> +	_unmount $mnt2 2>/dev/null
+> +	_destroy_cloned_loop_devs "${devs[@]}" 2> /dev/null
+> +}
+> +
+> +# Create test dir and test files, encode file handles and store to tmp file
+> +create_test_files()
+> +{
+> +	rm -rf $testdir
+> +	mkdir -p $testdir
+> +	$here/src/open_by_handle -cwp -o $tmp.handles_file $testdir $NUMFILES
+> +}
+> +
+> +# Attempt to read and decode the saved file handles on the targeted mount point.
+> +test_file_handles()
+> +{
+> +	local opt=$1
+> +	local when=$2
+> +
+> +	echo test_file_handles after $when
+> +	$here/src/open_by_handle $opt -i $tmp.handles_file $mnt2 $NUMFILES
+> +}
+> +
+> +rm -rf $TEST_DIR/$seq 2>/dev/null
+> +mkdir -p $TEST_DIR/$seq
+> +# Setup base loop device and its clone
+> +devs=()
+> +_create_cloned_loop_devs devs
+> +mnt1=$TEST_DIR/$seq/mnt1
+> +mnt2=$TEST_DIR/$seq/mnt2
+> +mkdir -p $mnt1
+> +mkdir -p $mnt2
+> +
+> +# Mount both identical UUID filesystems simultaneously
+> +_mount $(_common_dev_mount_options) $(_clone_mount_options) ${devs[0]} $mnt1 || \
+> +						_fail "Failed to mount dev1"
+> +_mount $(_common_dev_mount_options) $(_clone_mount_options) ${devs[1]} $mnt2 || \
+> +						_fail "Failed to mount dev2"
+> +
+> +NUMFILES=1
+> +testdir=$mnt2/testdir
+> +
+> +# Decode file handles of files/dir after cycle mount
+> +create_test_files
+> +
+> +# Cycle mounts and reverse initialization sequence to check if
+> +# file handle lookups are okay
+> +_unmount $mnt1
+> +_unmount $mnt2
+> +_mount $(_common_dev_mount_options) $(_clone_mount_options) ${devs[1]} $mnt2 || \
+> +						_fail "Failed to mount dev2"
+> +_mount $(_common_dev_mount_options) $(_clone_mount_options) ${devs[0]} $mnt1 || \
+> +						_fail "Failed to mount dev1"
+> +
+> +# Verify file handles can still be resolved post-mount-cycle
+> +test_file_handles -rp "cycle mount"
+> +
+> +_exit 0
+> diff --git a/tests/generic/905.out b/tests/generic/905.out
+> new file mode 100644
+> index 000000000000..234f5ec35863
+> --- /dev/null
+> +++ b/tests/generic/905.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 905
+> +test_file_handles after cycle mount
+> -- 
+> 2.43.0
+> 
