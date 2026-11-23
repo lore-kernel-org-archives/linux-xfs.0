@@ -1,58 +1,58 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795458570;
-	b=h9ursOij24rW65IDYBs/x0T7NFfjw2mA5GqTbQlGbmcYaOuwe+/UuBPFiaPrIAbV3Ml2
-	 KDZeODjC7yL4g4XiovqG+7ej1j+0x2sM+V/HUHDYzATKddbQIOCJiwS9n7Djex3zaY/6z
-	 NrtpfVaDgmD24vyWoM7Qy48iLCa1rA5mH9neueONlS7hCCIu0/tzMwf/hiuAvVbTIKZv/
-	 y+YVgdE7bBmjBk6QjoPP6FzksEToiN43Ji6Jcf0HW5gyT3hhTvFaqA23MO0yq/JA7IBdH
-	 fxAeo/U5fI7r+Aw4vYyLKI4LcPlCbxfwsOE8+3KLug/KmQYzTxnMNMLUQW8wn8dZLvw==
+	t=1795458597;
+	b=c/c5/BHasGjKW2UzRZOAxgcE6qY7YF1xVEzugOuoHeeKGT18MVAjpjB+lU9AtPjgS47a
+	 45EwitIxhVAhtQglLGJ7azW+qJdeXnf+gwq3hc2xK7xRHO2LGhS/HXLAV2viznpAJwLC3
+	 Tvc1ZB75FqHPPKA/7crT5aii1qXcpQ43BkrHjqwCkXjkTQn4+yXCkA54a00cOOgiB1l1S
+	 jcTLt8xmAHpM5pbe4Ezax1AdbvZbuhihNQumtyomdGvADt2dNMNb6bvcltuvQHT00VgVy
+	 95NI/9RGB5YBf/76sdW3ZRZzkO/WC4QlrpIj/NZa/YQ+vvuIUHxqmkWTTiMg7F2Pp0A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795458570;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795458597;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 Mail-Followup-To:References:MIME-Version:Content-Type:
 	 Content-Disposition:In-Reply-To;
-	bh=9FVwijSS/u13QVeqTyKKb8D3NxGid/P0YoVWsdCD+gc=;
-	b=JPj/bxoyYxREc8Mw9wOc5AXaBeWEcSdp09XdOBMLD4Lb5pXIDj4sax0zBtZmvBVLHv9B
-	 08qQnqfElFtgOI+FJTxLO9YZpqI6h0LHwsRgPKKaaXwTOvs+1kjTVFBbEY3phEPBz4hU2
-	 kpR6yVkBdH46wfu+V6Xi+nOZxGPyfU04MvfgIchm8NNrWfTHo5924Eup6oRqmxj1CSHa2
-	 LWs+ZLoFitIDXMxNerHuRgxq+qbiFzkOf0xfFGGId+HfVA94yb9bP+40Mryq27F6dJzdz
-	 eStDDtHkitDfD/dNcB1xCnt8gcR2HULAYAHoHAfdv3vDShjJ4gGP0k4WD5Wn6QNMBNw==
+	bh=BdHWMmm06jZBjgiCOkE0+gowwPvFKGIFxAD8X66Ewlk=;
+	b=tB/9dWlFg0XjYx1Q45RCDPaiQRA02WGbU+qQybP0q+gVyfbxRqqEXdGqlPPKufx59dGQ
+	 rmsEkYZuTo1Gb9gvs3ZjzM/9OpAABFLaMpN9bgPSNqHmH92YOHiVCAyS7wyPdOPm5Xz6l
+	 5LoccW8zSOjW2OUYYfyvNZvZ0m00KvRntFDXG1oUiZwK2W5BlSCfgb9UXsdugFXgzY2H/
+	 IJbrzSqmklJP3r07yLipMhoUgD2gVHzLg1INUYE8XlO45MmfF5PXO2xj9hgI1cTxB/fgW
+	 ID43nuXO0SPgGrCKbGigfuBL0yDCBPUb4ZtBpK5LnL/AcQvSzijr8W6Met2DQSAxNig==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NDD4CU9t;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ehF+5Cte;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 045A8606A321;
-	Mon, 23 Nov 2026 18:29:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 981BF606A31A;
+	Mon, 23 Nov 2026 18:29:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NDD4CU9t
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 055991F000D4;
-	Mon, 23 Nov 2026 18:29:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ehF+5Cte
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1CCCA1F000D8;
+	Mon, 23 Nov 2026 18:29:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795458569;
-	bh=9FVwijSS/u13QVeqTyKKb8D3NxGid/P0YoVWsdCD+gc=;
+	s=k20260515; t=1795458597;
+	bh=BdHWMmm06jZBjgiCOkE0+gowwPvFKGIFxAD8X66Ewlk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=NDD4CU9tZCHQTX1HQBApcgQ+eam+hqAHxUI9qI/9mGXglS7mQT1hKWvGrgug09ScD
-	 6KL3xrvKyyoGdTDVm0TKXPRaqDvVSTAuLii8Xnb50ADdtPYwSLomTKW5O4R7MopqL0
-	 hmoTytl71lpc6l4gpm6Udlh0Tv9JFWAjkk48xUmadw7zpqzTtcVD3l8jcVVjK6ITTo
-	 CzytHyWLoy7SOqes2pqIXH9Ez/2RWKJv6WBKZ7W4zcQwcA7V4i+nOYlWaJOOPAmQmw
-	 QD5Hw+VQlqxQGa4ZCt4fKCmqu2r2/Hmep3LNmY/DpjJXTcHWED+vFqzaIiV25VoP8f
-	 i/GQv0ik7KxAw==
-Date: Tue, 24 Nov 2026 02:29:20 +0800
+	b=ehF+5CteBAZrpbmmiJ+LzV6QK8hBub3oSEJAy7k7nIFipUkXXd81cRQ4J/BRXAfBi
+	 gFeLbTbGOhNF9wua5HRsbiEtDeuv/JOXGlTC0jsFNtYbMRnIaUaE9PZT5M+pXoz5JP
+	 /pcoTbHdwYdfPCnjPR1BoAq+MM8rZcrY0v/5c1A2oDUUe0grn88JEcOzEVtkNPUk/0
+	 dGdB0ldo60hc5Wqk9Al75YAd9doF2pGews4frgqa6ebwirm8lf7q4WpmSbb3Utmbzo
+	 l/No0+2AdvrVZ2f/YOjMb1x7ETkANMrzE9Vx1UDt88AgRq6zLnO9TbLKDcVGH2fwST
+	 DbNYjbEsuR+ug==
+Date: Tue, 24 Nov 2026 02:29:48 +0800
 From: Zorro Lang <zlang@kernel.org>
 To: Anand Jain <asj@kernel.org>
 Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, 
 	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, 
 	linux-f2fs-devel@lists.sourceforge.net
-Subject: Re: [PATCH 06/21] fstests: add _require_unique_f_fsid() helper
-Message-ID: <awSDxwVociDn6649@zlang-mailbox>
+Subject: Re: [PATCH 07/21] fstests: add SEMANAGE_PROG
+Message-ID: <awSGEn5Oa3IQxzw2@zlang-mailbox>
 Mail-Followup-To: Anand Jain <asj@kernel.org>, fstests@vger.kernel.org, 
 	linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, 
 	linux-f2fs-devel@lists.sourceforge.net
 References: <cover.1791272793.git.asj@kernel.org>
- <523304ad35666548443b910955ae7d3a1669ae5a.1791272793.git.asj@kernel.org>
+ <8900633faf8103fe992514d07d69efc9d38e8241.1791272793.git.asj@kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -64,66 +64,31 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <523304ad35666548443b910955ae7d3a1669ae5a.1791272793.git.asj@kernel.org>
+In-Reply-To: <8900633faf8103fe992514d07d69efc9d38e8241.1791272793.git.asj@kernel.org>
 
-On Tue, Oct 06, 2026 at 04:55:32PM +0800, Anand Jain wrote:
-> Add a helper to check if the target filesystem supports unique f_fsid
-> tracking across cloned or snapshot instances.
-> 
-> Certain filesystems like XFS, Btrfs, and F2FS ensure unique f_fsid
-> identifiers per filesystem instance. However, Ext4 derives its f_fsid
-> directly from its superblock UUID, which leads to identical f_fsid
-> values on cloned images until the UUID is manually modified by userspace.
-> 
-> Introduce _require_unique_f_fsid() to allow test cases requiring strict
-> f_fsid uniqueness to skip gracefully on unsupported filesystems.
+On Tue, Oct 06, 2026 at 04:55:33PM +0800, Anand Jain wrote:
+> Define `SEMANAGE_PROG` for an upcoming test case that uses `semanage(8)`.
 > 
 > Signed-off-by: Anand Jain <asj@kernel.org>
 > ---
 
 Reviewed-by: Zorro Lang <zlang@kernel.org>
 
->  common/rc | 27 +++++++++++++++++++++++++++
->  1 file changed, 27 insertions(+)
+>  common/config | 1 +
+>  1 file changed, 1 insertion(+)
 > 
-> diff --git a/common/rc b/common/rc
-> index 0fcc1a614ad1..37b32b498c80 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -6417,6 +6417,33 @@ _require_fanotify_ioerrors()
->  	_notrun "$FSTYP does not support fanotify ioerrors"
->  }
+> diff --git a/common/config b/common/config
+> index 76b43b8c6ad9..e8fecc168e5a 100644
+> --- a/common/config
+> +++ b/common/config
+> @@ -243,6 +243,7 @@ export PARTED_PROG="$(type -P parted)"
+>  export XFS_PROPERTY_PROG="$(type -P xfs_property)"
+>  export FSCRYPTCTL_PROG="$(type -P fscryptctl)"
+>  export FSNOTIFYWAIT_PROG="$(type -P fsnotifywait)"
+> +export SEMANAGE_PROG="$(type -P semanage)"
 >  
-> +# Skip the test if the filesystem does not enforce unique f_fsids
-> +# natively. Checking this dynamically requires recreating a clone
-> +# layout, so we use a static lookup based on FSTYP.
-> +#
-> +# Across all filesystems, a UUID collision causes libblkid tools to return
-> +# non-deterministic device mappings. It is ultimately the responsibility
-> +# of the userspace utility or use-case to enforce uniqueness when a clone
-> +# diverges. For details, see mailing list thread discussions:
-> +#   Link: https://lore.kernel.org/linux-ext4/20260409131238.GC18443@macsyma-wired.lan/
-> +_require_unique_f_fsid()
-> +{
-> +	case "$FSTYP" in
-> +	ext*)
-> +		# Ext4 derives f_fsid from the superblock UUID, meaning
-> +		# clones share the same f_fsid until their UUIDs
-> +		# diverge.
-> +		_notrun "Target filesystem ($FSTYP) does not guarantee unique f_fsid on clones."
-> +		;;
-> +	*)
-> +		# Conversely, XFS, Btrfs, and F2FS ensure f_fsid remains
-> +		# unique per filesystem instance (often by deriving it
-> +		# from the UUID and underlying block device.)
-> +		;;
-> +	esac
-> +}
-> +
-> +
->  # Computes a percentage of the available space in a filesystem and
->  # returns that quantity in MB. The percentage must not contain a percent
->  # sign ("%").
+>  # udev wait functions.
+>  #
 > -- 
 > 2.43.0
 > 
