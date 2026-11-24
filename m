@@ -1,79 +1,80 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795560586;
-	b=JqCTdzV2TzjMJnBa+pSFLBG0rcmCRaZMqK/57KmuTRNjJ+XiD2J2PU3xPRatfsZ8qdPO
-	 32SB+X9zIDhm/m4lo7ksXceh8H+qu98zqJyqUXrbDQWSuDOs63jlFYm9bbbV9f3SqvYC2
-	 vjZMFMhAItRLkofA426VbQ3KDo3RZXDuRCoteVxA6wwJC0k5ihdaYHT21fREHCQDk5aGu
-	 4DC5L1tYFBH/vKibPNDKpgQgNjU2KcJnVCCctgQcDX94d8nDQd/oULCSwI5e88TjIO0ob
-	 AM5wZrijxWWPevNlGUfucEbYoJr181LcMHAEK9NzNk9x1P/UQL3y5XPfmVsJvzoEjXA==
+	t=1795560588;
+	b=XC8ZJKF1DPw3nB7BCXo6EjrZyczuOJjoiMLi/pwaaVU7vEF7dNJhFuzAOPPnNuhS+lyf
+	 ++IdTTVMNCCQNMr9Rh4hVIwPT6knTURLTDVaPsy52ulgZUUku9yunTbRI6isWg2fK80JI
+	 kzXn/2U4tV/pkNAnWxX4bTruRBYKMNR2zJnF8PG0wgzaEOtS0zAERMNLR+xnZmIRpAjKb
+	 cNAWkTwJDKgKNmy7N0vwPvVm1PimmtIdX44oe06VC8QUbl72PeMslHvNTMaZV2auMGgXn
+	 cMddQJJx/o8my6qZDstQJFAzpj3x/kN0BX+itnu9VLXTsA2N3Bn3cJo9kUXvyztnAzQ==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795560586;
-	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
-	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=7oQB3/O/c4dFGNnygzjgJHN8nXWsiGK/1pYzsrZRsWo=;
-	b=WQJB9kx8NZrT/LXWBqcBOoyV8eyq1QLS6Dj6KuKWn8YjgSZi8ZlOLd+D8wwOy2vbOhdu
-	 3SMKLkaYdNveNssn7SPlMS0w/U4rIgj5zafnbQsWueoTGr+v+C3XPsc/AzwfWALJsvCws
-	 z43gF+z1M5ooaNsea7w4PJzm1HtsFnPhnZAU5KsqezAWb/GXwuTvEtmAJ7sDHQvcJ/8hs
-	 m3xTcZjiM9lNjUioS9A/mT4XRWmkK48U6kSPIW6TviyTjb0K521lRfsnCWSKH0h5vGOtE
-	 NSGld1ebtmX7gTKtSROOAhFXqSm7jPTGOvJw49yeXjpqOstWprcpSSx7ljJp435dHng==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795560588;
+	h=Received:DKIM-Signature:Received:From:Subject:Date:Message-Id:
+	 MIME-Version:Content-Type:Content-Transfer-Encoding:X-B4-Tracking:
+	 X-Change-ID:To:Cc:X-Mailer:X-Developer-Signature:X-Developer-Key:
+	 X-Endpoint-Received:X-Original-From:Reply-To;
+	bh=RDm2bmuZC4O8E/WV+EWS6T+5kzzfwTBddlqcUwyyh64=;
+	b=Db70GdysIBmcBpmshqoVWyaOAsUIXLlabVpKAfQY8TUlkyQcR6sLQUsPfy4/jx7ZHIu3
+	 H03FXNnLAEG6jXVJ1R787EBClkP2NClegqKKuRhC3d1smH0wccF2Ddw1I7hKpQ4yAREa2
+	 iEBkICOZ7xMQS9V72x/yPwNbzylVOroJXk0WXUlC7xNbXGzijAg8C3jOjDaA3fziD50qz
+	 G5L8sq8qmjxLQF4YeIyLwBPpY8+fHnSZu4s75oEa3AIX73dKilkVC4GaruaZTKhcnuUi1
+	 vuxFC8P9LqTqAXcbH0XGPW6476MMSR344QE6oqSDuJPOlYVp2dgnl9nzc5u93ASH87Q==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DJAzHGn+;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GkNCSJ2v;
 	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C2A8606A321;
-	Tue, 24 Nov 2026 22:49:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FBC1606A31E;
+	Tue, 24 Nov 2026 22:49:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DJAzHGn+
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GkNCSJ2v
 Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
 ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1795560586;
-	b=YEZCBs00IYOxHSU+s6B3F8pUYKPzOlQMzG7xWE7+6ibgMbQYQiOV9OFlx8Ziq3Z1usID
-	 cKNbU+s2m16ZG/4xfZvS9+BktXDt8EZT1TLb8o4EAQkYnpw3/7K6IRh6ZEQFCiEuTOWo8
-	 ynkwBtGXsMC9Wc/QyzL05khvcgOY2mHsWfHgrtCYHq7li8jaej9reEZnijIFwTY4AQnzD
-	 mVL0FZHCl9Dc14Qpek5q7I0C4w7i977MD20nZ+Q2T4/uI66gbHo1ZgYAfap/QhxO1k9ZL
-	 ZSQupsBtrsBKRsX5sc6yGozUXodTW5KqI9qTHvhkJdHM0yo/KYouKF3pPCOlfd1PdiA==
+	t=1795560588;
+	b=FATm/Lu0dhrvcFjLhXw4I/6xRCDM4DMqlIspZcmJsA1NBdFTZbjXGULufyg+oIThMbDr
+	 sd15amto9Evu3rbdyClkwtkiYLgbekKAdr+c25mi6cif/IL1H+INgTP1LJibzTSBst53L
+	 EWj+wrcC4BEjE8yYYDGBfX1XSsy6bCn9Eq8b9sfgYKW/eOj32GCCzwmIWC5Z/kRbz4fcZ
+	 lWrCNyOLQiEzx5NrUbpFUe9NOxyHzWQ67WyfVsHbf6JIzCdQsz3aHl5dKqW4Z0HF4jOcD
+	 mH96TCCL/w1YL0KdnCyiXT7U+Yia3aDIz6wTwSJ83hYtDIIi6lEkhIdFMqZYbumubfA==
 ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1795560586;
-	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
-	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=7oQB3/O/c4dFGNnygzjgJHN8nXWsiGK/1pYzsrZRsWo=;
-	b=FvMH6zuh0KKgKuAxRKmVuWoc9OMrlsinPuu1S4MPknfXfxFIdtxoLE86KmW7g+vjztJw
-	 EbvCfWnHpi4l0iDWjnK/YI9uRdqS0OAnciCN8vaNnDlRphisoy4/jnwgOL0DEJOlZKmFi
-	 GGhPv27f6dZIT+R47pHjDpKrcrJiex9ELdtMVDaI0pFR1aj0ppcgUO/dFhj3w7Nx2IMlO
-	 6LotvGiyqzP1LnVLtCn5BsHE/US79NNTL/QRushNx+rJzEIv3OpheFeJ756dJIEiUovv5
-	 5CRxY9/0f+FtdDt3+pOYuXX/YDm0K9XLhwnLGgKH1U8SFIdC8ke7ZR13sV3Hl3YojpQ==
+	c=relaxed/relaxed; t=1795560588;
+	h=DKIM-Signature:Received:From:Subject:Date:Message-Id:MIME-Version:
+	 Content-Type:Content-Transfer-Encoding:X-B4-Tracking:X-Change-ID:To:
+	 Cc:X-Mailer:X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To;
+	bh=RDm2bmuZC4O8E/WV+EWS6T+5kzzfwTBddlqcUwyyh64=;
+	b=uXH/f1TtvdlbV7cvWnBsfIaWyoL4kuIg+3aGtgH+yEIaXb6mMWq6/EGzSa+ZONT4Y71B
+	 o3TQILT/1XfGOsx8qlfb00eO3OFtDI3ROJ7ZrxhrXybCc2gZuCELUE72UrMM9bcAIHN8G
+	 BiTXvv3yOhu/XEzJHSvfqTFW9yk2QQdtNaaK701/lTQTZl2rSMSH2ME9zfu93oecX0kh6
+	 w951pJFQUbyn4jv/2z9FrQVscsyFSA/WnybQmGrVG6aYPBeiXUcvk5DoEm9xAuc2CfPGn
+	 +gqOUqxRouRoKPEQ+Cmog8WHtfvDUv4IC7yD8us/M+qw38QDtuxmnOcPt9/FlTrba4g==
 ARC-Authentication-Results: i=1; smtp.kernel.org; 
 	arc=none smtp.remote-ip=100.80.115.77
 Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id 9C8A11F000D0;
+	by smtp.kernel.org (Postfix) with ESMTPS id 52A241F000D4;
 	Tue, 24 Nov 2026 22:49:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795560586;
-	bh=7oQB3/O/c4dFGNnygzjgJHN8nXWsiGK/1pYzsrZRsWo=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
-	b=DJAzHGn+eGaZLPlzq3dgNnxfJP7ZBiBS8a2MoTtnzXr/YmmQIifOt+taW6egoDb4C
-	 uPwTW1qxhSfiJR9aQ9aiidjEyninddP/DcC/m1ZSR3IkwDj/r2vUhC0NMRIVhjqm4D
-	 w39vrZx+N/xJyN8mgJaSiYv85eKR5mIQ7cep900B8ePTK4CKHphMMdFqVCda/KydTc
-	 9+H7CTmQeMOsb6UMOpV7tBZNzEv+AbqzEjtIQFE1HoZOzm+QGiWOy+swT77zaR9bYw
-	 L57tOQaATBFX4IZyT1Io+bJNExSs8VqEQMoTHG8uDLSbuQ9Zhrfd5d2mxtfJQX0QEv
-	 JuJlC9YADnuLA==
+	s=k20260515; t=1795560588;
+	bh=RDm2bmuZC4O8E/WV+EWS6T+5kzzfwTBddlqcUwyyh64=;
+	h=From:Subject:Date:To:Cc:Reply-To;
+	b=GkNCSJ2vH4AcKzgu8yd0oXlaJkkGPuR7pEY9PlVGO2R22SMb/Ufr22DNI86arAazl
+	 J2heyRkJ0f27bBfj1oztXGU/A+DKvlyJJNSxmlut9+n4MpWLBL6UPAPJTR+S+tjP6Y
+	 Qjip/PsXMV1srmnWunNy15mTZJOjQhLER4d17xsDQrqyBKozfCdF4sfn00gCxYRp+1
+	 Z9q6vv5bWmABoEM1mgZAeQXDY/qSW6pc8YOy1jk19oXfuSEaXHcSW67tQFU3BfqgpE
+	 rtKf3j1E6vn2XvRo9jz3h7AXTQHuPNvzbncTS7YMlLWb2T2UgZHQbILopZEM5N5TQh
+	 3IzYPWqpfxkqA==
 Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id 2E1F84CC1C;
-	Tue, 24 Nov 2026 22:49:38 +0000 (UTC)
+	by lkml.kernel.org (Postfix) with ESMTP id C3EEE4CBF9;
+	Tue, 24 Nov 2026 22:49:37 +0000 (UTC)
 From: Ernest Borowski via B4 Relay <devnull+ernest.borowski.git.proton.me@kernel.org>
-Date: Tue, 24 Nov 2026 23:49:37 +0100
-Subject: [PATCH v2 03/11] ntfs: release delalloc reservations cut off by
- truncate
+Subject: [PATCH v2 00/11] ntfs: delayed allocation accounting and stale
+ data fixes, part 1
+Date: Tue, 24 Nov 2026 23:49:34 +0100
+Message-Id: <20261124-b4-ntfs-delalloc-fixes-v2-0-f394c800ec03@proton.me>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -84,9 +85,12 @@ List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Message-Id: <20261124-b4-ntfs-delalloc-fixes-v2-3-f394c800ec03@proton.me>
-References: <20261124-b4-ntfs-delalloc-fixes-v2-0-f394c800ec03@proton.me>
-In-Reply-To: <20261124-b4-ntfs-delalloc-fixes-v2-0-f394c800ec03@proton.me>
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/4WOyw6CMBBFf4V07WhbXsGV/2FY9DFIDbakrQRD+
+ Hdb/ACXZ+bek7uRgN5gINdiIx4XE4yzCfipIGoU9oFgdGLCKW8Y4xxkBTYOATROYpqcgsGsGKC
+ WotMVdm1ZlySVZ4/HI3Xv/Y/DWz5RxWzLCSkCgvTCqjGfsvRymC2uMQdGE6Lzn2PawrLo74qFA
+ QXa8magWmFFy9vsXXT2/ELS7/v+BRV9EgfvAAAA
+X-Change-ID: 20261122-b4-ntfs-delalloc-fixes-5ba9d4e97353
 To: Namjae Jeon <linkinjeon@kernel.org>, Hyunchul Lee <hyc.lee@gmail.com>, 
  Baolin Liu <liubaolin12138@163.com>
 Cc: Christian Brauner <brauner@kernel.org>, Christoph Hellwig <hch@lst.de>, 
@@ -95,106 +99,150 @@ Cc: Christian Brauner <brauner@kernel.org>, Christoph Hellwig <hch@lst.de>,
  linux-kernel@vger.kernel.org, Zhan Xusheng <zhanxusheng1024@gmail.com>, 
  stable@vger.kernel.org, Ernest Borowski <ernest.borowski.git@proton.me>
 X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3407;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=6581;
  i=ernest.borowski.git@proton.me; s=default; h=from:subject:message-id;
- bh=3nT+zUonqfx2kvoDVZIlPQfmCvPmSP51Ad2wiF9F3AM=;
- b=owGbwMvMwCVWzJ65uCpJ5D/jabUkhmw2kXr90o281beWvL0Zy2Jz4uZy84q5HW7FkZwrn2YHN
- rheWXqqo5SFQYyLQVZMkaXj/40Qn5Bvn5bFafXBzGFlAhnCwMUpABM5+4+R4QRjZI9L2GqlM+vP
- rEpPW+rqtv/E89/MZm0F09/zcqXFJjMyLBSrDVT4uqiuSHpr0+OiuP/Cm5lTJkzVyhGLchHZV2D
- EBAA=
+ bh=2QCJ1Lv8pJcwRXH4oO49eHdWn2O+fC7Yd8/UYJK0wuE=;
+ b=owGbwMvMwCVWzJ65uCpJ5D/jabUkhmw2kXrFqeeSr7lzOB58c8Mt955/8Z1L+3c4Ose/XfV/a
+ uD9uR9+d5SyMIhxMciKKbJ0/L8R4hPy7dOyOK0+mDmsTCBDGLg4BWAiyXcYGRpzV0g/V/k/+5h1
+ fGSvLc90N20XwdVTi214407WfJR+YMzwV/jRc7OUkPiyNZuffTqeu2G+8ZtjE79qLtv84d6Vrev
+ FtNgB
 X-Developer-Key: i=ernest.borowski.git@proton.me; a=openpgp;
  fpr=88FFD8544C54F6F2A65E2A8E730769A37A6214FF
 X-Endpoint-Received: by B4 Relay for ernest.borowski.git@proton.me/default
  with auth_id=1589
 X-Original-From: Ernest Borowski <ernest.borowski.git@proton.me>
 Reply-To: ernest.borowski.git@proton.me
-Content-Transfer-Encoding: 7bit
 
-From: Ernest Borowski <ernest.borowski.git@proton.me>
+A write/truncate/punch-hole stress test on a 128 MiB volume showed the
+free space reported by statfs() falling from 79 MB to zero within 80
+seconds, after which writes failed with ENOSPC or came back short, while
+$Bitmap stayed correct.  The delalloc reservations in
+vol->dirty_clusters were not given back on several paths.  The same
+paths also had buffered writes into holes that exposed old disk
+contents.
 
-A buffered write into a hole turns the hole into an LCN_DELALLOC run and
-reserves its clusters in vol->dirty_clusters
-(ntfs_write_simple_iomap_begin_non_resident()).  Writeback hands the
-reservation back when ntfs_cluster_alloc() allocates the run.
+The series has four groups:
 
-A truncate that cuts off delalloc runs before writeback drops their
-dirty folios, frees the clusters of the attribute with
-ntfs_cluster_free(), which skips everything that is not a real cluster,
-and removes the runs with ntfs_rl_truncate_nolock().  Nothing gives the
-reservation back, so the free space reported by statfs() and used by
-ntfs_available_clusters_count() shrinks by that many clusters until the
-volume is unmounted.  $Bitmap is not affected.
+Patches 1-2 (iomap) are small prerequisites for patches 8 and 10.  ntfs
+reserves delalloc space in whole clusters, and a cluster can be smaller
+than a folio (1 KiB or 2 KiB clusters with 512-byte blocks).  Patch 1
+passes each run of clean blocks to ->punch() in one call, so that ntfs
+sees a whole clean cluster and can release it.  Patch 2 adds
+iomap_dirty_folio_range(), which patch 10 uses to dirty part of a folio.
+For XFS and ext4 the only effect of patch 1 is fewer ->punch() calls,
+and patch 2 changes nothing for them.
 
-Workloads that rewrite files (open(O_TRUNC) + write) or truncate freshly
-written data lose free space quickly: a test that writes, truncates and
-punches holes in six 400 KiB files on a 128 MiB volume sees statfs()
-free space drop from 79 MB to zero in 80 seconds, after which writes
-fail with ENOSPC or come back short.  A 1 MiB buffered write followed by
-ftruncate(fd, 0) and sync leaves 256 (4 KiB) clusters reserved.
+Patches 3-6 fix reservations that were lost or dropped: on truncate
+(3), when fallocate(), direct I/O or page_mkwrite() fill a hole (4),
+when a cluster allocation fails (5), and when a named stream is removed
+or an inode is evicted (6).
 
-Release the reservation of the delalloc runs that the shrink cuts off,
-before the runlist is truncated.
+Patches 7-8 handle a buffered write that fails after ->iomap_begin()
+reserved its clusters, which left delalloc runs that no data covers.
+Patch 7 fixes the runlist split helpers, which turned such a run into
+real clusters when it was punched or collapsed, and so corrupted
+$Bitmap.  Patch 8 turns the clusters the write did not use back into
+holes, so that no such run is left.
 
-Fixes: 495e90fa3348 ("ntfs: update attrib operations")
-Cc: stable@vger.kernel.org
-Signed-off-by: Ernest Borowski <ernest.borowski.git@proton.me>
+Patches 9-11 fix buffered writes into holes that showed old disk
+contents or lost data written through a shared mapping:
+- patch 9: the zeroing of a new cluster's edges gave up as soon as
+  writeback allocated the cluster;
+- patch 10: a copy that stopped inside a new cluster left the rest of
+  the cluster unzeroed;
+- patch 11: when a write fault or writeback allocated the clusters
+  during the copy, the write zeroed blocks instead of reading them,
+  which overwrote data written through a shared mapping.
+
+All patches are Cc stable.  Dependencies:
+- patches 1, 2, 3, 4 and 7 apply on their own;
+- 5 needs 4, 6 needs 3, and 8 needs 6;
+- 9 needs 8, 10 needs 9 and 2, and 11 needs 9;
+- 8 also needs 1 to release clusters smaller than a folio.
+
+  3 --> 6 --> 8 --> 9 --> 10 <-- 2
+              ^     |
+              1     +--> 11
+  4 --> 5
+  7
+
+Zhan Xusheng's "ntfs: trim the sizes after a short write" [1] fixes the
+file size after a short write.  Both series add the same helper,
+which zeroes from a worker when the writer has a fatal signal pending
+(iomap_zero_range() refuses to run then); whichever lands second can
+share one copy.  Part 2 follows with five more patches: st_blocks of
+delalloc data, and the remaining stale data windows of write faults,
+writeback and direct I/O into holes.
+
+Each bug fixed here has a reproducer that fails before and passes after
+its fix.  The reproducers run in QEMU on a kernel with KASAN, lockdep
+and UBSAN, at 512 B, 1 KiB, 2 KiB, 4 KiB, 16 KiB and 64 KiB clusters,
+with ntfsck -n after every case, on Ubuntu 26.04 and Arch Linux.  On
+ntfs-next f674e4b6c315 the eight reproducers of these bugs
+(short_copy_stale, delalloc_accounting, delalloc_alloc_failure,
+delalloc_failed_write, delalloc_zero_race, stale_wb_race,
+delalloc_partial_fail, stale_write_mapping) pass with this series,
+except for the st_blocks check of delalloc_alloc_failure, which part 2
+fixes.  Every test that passed before still passes, also with [1] v9 and
+the forced wait suggested for it applied.
+
+  tests:                    https://github.com/xerrni/linux-ntfs
+  ntfs-next:                https://github.com/xerrni/linux-ntfs/actions/runs/45387973158
+  ntfs-next + this series:  https://github.com/xerrni/linux-ntfs/actions/runs/45416562964
+  ntfs-next + this series + [1] v9 + the forced wait:
+                            https://github.com/xerrni/linux-ntfs/actions/runs/45416568573
+
+[1] https://lore.kernel.org/all/20261124025932.2360848-1-zhanxusheng1024@gmail.com/
+
 ---
- fs/ntfs/attrib.c | 33 +++++++++++++++++++++++++++++++++
- 1 file changed, 33 insertions(+)
+Changes in v2:
+- New patch 1 (iomap): one ->punch() call per run of clean blocks, so
+  that 1 KiB and 2 KiB clusters of a dirty folio are released after a
+  failed or short write (Hyunchul).
+- New patch 2 (iomap) and patch 10 (was 7): after a short copy, dirty
+  only the rest of the cluster, so the clusters the write did not reach
+  in the same folio are still released.
+- New patch 5, moved here from part 2: keep the reservations when a
+  cluster allocation fails, instead of resetting every file's
+  reservation or leaving a delalloc run with none (Hyunchul's question
+  on v1 patch 1).
+- New patch 11: revalidate the delalloc mapping when a write fault or
+  writeback allocated its clusters during the copy, instead of zeroing
+  data written through a shared mapping (Hyunchul).
+- Patches 3-4 and 6-9 are v1 patches 1-6, unchanged.
+- Cc the iomap maintainers and lists for patches 1 and 2.
+- Link to v1: https://patch.msgid.link/20261122-b4-ntfs-delalloc-fixes-v1-0-0726f0dce403@proton.me
 
-diff --git a/fs/ntfs/attrib.c b/fs/ntfs/attrib.c
-index 6ee6b6bcac..4028c310fc 100644
---- a/fs/ntfs/attrib.c
-+++ b/fs/ntfs/attrib.c
-@@ -4383,6 +4383,37 @@ static int ntfs_attr_make_resident(struct ntfs_inode *ni, struct ntfs_attr_searc
- 	return 0;
- }
- 
-+/*
-+ * ntfs_release_delalloc_from - give back the reservation of delalloc runs
-+ * @ni:		non-resident ntfs attribute whose runlist is about to be truncated
-+ * @start_vcn:	first vcn that is cut off
-+ *
-+ * Delayed allocation reserves vol->dirty_clusters for every LCN_DELALLOC
-+ * cluster when the buffered write is done and only gives it back when
-+ * writeback allocates the clusters.  Runs cut off by a truncate never reach
-+ * writeback (their dirty folios are dropped from the page cache), so their
-+ * reservation has to be released here or it is lost until unmount.
-+ *
-+ * The runlist must be mapped completely and locked for writing.
-+ */
-+static void ntfs_release_delalloc_from(struct ntfs_inode *ni, s64 start_vcn)
-+{
-+	struct runlist_element *rl = ni->runlist.rl;
-+	s64 nr = 0;
-+
-+	lockdep_assert_held_write(&ni->runlist.lock);
-+
-+	for (; rl && rl->length; rl++) {
-+		if (rl->lcn != LCN_DELALLOC || rl->vcn + rl->length <= start_vcn)
-+			continue;
-+		nr += rl->vcn + rl->length - max(rl->vcn, start_vcn);
-+	}
-+	if (!nr)
-+		return;
-+	ntfs_release_dirty_clusters(ni->vol, nr);
-+	ni->i_dealloc_clusters -= min_t(s64, nr, ni->i_dealloc_clusters);
-+}
-+
- /*
-  * ntfs_non_resident_attr_shrink - shrink a non-resident, open ntfs attribute
-  * @ni:		non-resident ntfs attribute to shrink
-@@ -4479,6 +4510,8 @@ static int ntfs_non_resident_attr_shrink(struct ntfs_inode *ni,
- 		}
- 		ntfs_attr_put_search_ctx(ctx);
- 
-+		ntfs_release_delalloc_from(ni, first_free_vcn);
-+
- 		/* Truncate the runlist itself. */
- 		if (ntfs_rl_truncate_nolock(vol, &ni->runlist, first_free_vcn)) {
- 			/*
+---
+Ernest Borowski (11):
+      iomap: punch out a run of clean blocks in one call
+      iomap: add a helper to mark a range of a folio dirty
+      ntfs: release delalloc reservations cut off by truncate
+      ntfs: do not consume delalloc reservations when filling holes
+      ntfs: keep delalloc reservations when a cluster allocation fails
+      ntfs: release the delalloc reservations of an evicted inode
+      ntfs: do not shift the cluster number of a delalloc run on split
+      ntfs: punch out the delalloc reservation of a failed buffered write
+      ntfs: zero new delalloc clusters even when writeback allocates them
+      ntfs: zero the rest of a new cluster after a short buffered write
+      ntfs: revalidate a buffered write's mapping after its clusters were allocated
 
--- 
-2.56.1
+ fs/iomap/buffered-io.c |  29 +++-
+ fs/ntfs/attrib.c       | 130 +++++++++++++++++-
+ fs/ntfs/attrib.h       |   2 +
+ fs/ntfs/inode.c        |  13 +-
+ fs/ntfs/inode.h        |   3 +
+ fs/ntfs/iomap.c        | 367 ++++++++++++++++++++++++++++++++++++++++---------
+ fs/ntfs/lcnalloc.c     |   1 -
+ fs/ntfs/runlist.c      |  13 +-
+ include/linux/iomap.h  |   1 +
+ 9 files changed, 485 insertions(+), 74 deletions(-)
+---
+base-commit: f674e4b6c315ebe742d08af80659386992d58ce9
+change-id: 20261122-b4-ntfs-delalloc-fixes-5ba9d4e97353
+
+Best regards,
+--  
+Ernest Borowski <ernest.borowski.git@proton.me>
 
 
