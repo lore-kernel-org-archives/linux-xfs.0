@@ -1,79 +1,79 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795560600;
-	b=vWw/vc9yBb+ZOD232XnaBqQvH9cQFVScXDUFb7L9K+Sw7pdEzCuNPIPaHwcq3QRxXZUo
-	 EwJFjFIxPcBpg0q0PM2AiasvdX1MeCK9q2wryTSLlG2ttT+ihSajJaLSlQMMCC5EiKAth
-	 1SHfwp/9+GiE+aWn8v0szYVRg3cLeUWS1t0ZJkbVuqEsX8Y9voDgB97xcnBPefpiQn21z
-	 lYTuBAzxQQUvgmimjCmmnsgZReDfQJbPZXzNJzSeWvz+4AFtPRI3RSNNfeDVWQDwdnsww
-	 0mq4y+QpaAbtxcgGMqgY+0v9JZryiDzYji++LZcVJnrpDBLquox9ZIrth0RAl62AnQw==
+	t=1795560602;
+	b=ookcsBMnKjAx4tDdHSU0Gnw/WQVK+N8qUazmi3mAFH/i5o4Z9SgQE87l+pyCsC7X9V6u
+	 yeR6RZIgw4pufPvY/rnZ+Scv+jgYxC4GemRYjbFxxcj6Rmuyrx9WMURWqtfTbWmPvBNyI
+	 6Vg7UUrrqXREhaYNtD9o5rTv71NnAqG39YC9jmScDqlsSDcCOs7b80KiUG6VaFyJRjBdZ
+	 GexHBTgI7OjQ6VjhNnvnMQlCN7hMPw352n+47P73ifFOETp3yf/1TMn2lXVc3H4/nsLao
+	 1o4Iiot5AQIbn+/bbhHdc6b0TLh+WUKSsu06m0lOjQqyIBb5ZJyMpvEibJKt8ATaq2A==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795560600;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795560602;
 	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
 	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=RI4kRWxl4XYAMairOnQShzPIXYese8AvwwdfRR+uYTw=;
-	b=TYKy/9ajtKvySAb0jVh/WyaoKCCTQsi+YrKO04B6pcPu4zNJYEswRlyyjGVICS1KvwZa
-	 7SdG6BV8o7/5uMGBsjDuYroEbokL42Spc6UEIXJjT3f4Bnw2omqGjxp1u8Try/4bwMizc
-	 g5JEC5/3r3EoUs3xGyosv9t/APMWMkWmg9KPP6k9hAl2A3zLevlkjUPpY7lOcesLtP17x
-	 /Zsmo9kFghfFLt3uUlpYTAQbJrSSPErkHSBf9/07cL0x7FrkoPHII8WngfNMVUpZMED+f
-	 Y4ClwFpyov5Ey+xWNikxcer+BcMl1luAwty/PJgEG3v0csqJIPkBkSZFIEyH18M62Aw==
+	bh=a2Ffas3bLeeCGSUnr0XQ4vHOK5iuvqsq87RRMDoP0wk=;
+	b=WxI9/9IhCpZT4jYwLxWKlN3fQtEI4xUMaX9bFWoTjV7IKF2lpfT7yJAlYP/KnDdKe5Ea
+	 6uenCJSylCj1H4zPmOtL/Wfvm7UHQJi1KjlEa9gEYWxwDs7gxGtUck+CKT5hscw0NsXF7
+	 DoFdunCx4gSPnpvnOQC/CDT0RFN6xTJoR3Y0AN4XCmrWNaNqkLXXoztWlKayDMYvbY+sX
+	 0rkVFc2KZrT1Wpshb/dJEKvbvRRgSS1nChE7ZRyMOglIIXFGUEHWTfEChHpIclEkqsqSq
+	 mfLoQI/E77lFmrLTkyMmYiTJJtt2yEWZa/sIeTBWZ0qIeRjsUsI7WG+SchVrFKlUMyA==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VDcpPKea;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kVZYz7tj;
 	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA803606A6A2;
-	Tue, 24 Nov 2026 22:50:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F119560A260E;
+	Tue, 24 Nov 2026 22:50:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VDcpPKea
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kVZYz7tj
 Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
 ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1795560600;
-	b=wViXWxRyoCkEOTX6jg6Yo8qoG2DK4eem7MVLKhvQo9W4WDPmNa6Wl+bgdyO/D0Hljr4V
-	 OO3zq6GuyNOEQntU69p1FzxOPiuogRoS/Ae4HO6wHs34rv3pB8vlyiH+rLhn68iy6nMZM
-	 orKHo5S013fTNWwVQ1YTh89ewUSSGuBNIIRLHIWXeduEWBts7NOdfg4wf6tKvgY/JzDHJ
-	 vM9aDy5+2Iw9XSh3XJreorDa1+cv2QC3PNkW3NX6hPoxu88j7/0I3AGb2E4O0duatIpKh
-	 MZi2JXifw7R4+Im7wjZhU04br5UYaODRGAemJW5VYtTFPdzeGZXuV1UfaOj+NVLroYg==
+	t=1795560601;
+	b=OTjiw0obrMKdlYFxDoU7mWQt2di8kYIbUFLDvjjvFysX0g0GR+T12qtbuF0cACQEXKEK
+	 3zMVH7oTP3AksVsLWboYKcd1v0FLu2gSEh4xqpSSw9Yo0xHITVkBIYY9IFnQt2NnB3R35
+	 kMLAux9j9WzEZt9yraDb9S0bLlsT4LbP5kT2/82c59r9Gmb6jyRLqtnZtd+y0Kq/yTZIG
+	 /oZv/AcMVCZVfwUx6BTOaEwkK90xnW+KCtCQbvLRrwFFZR+h5DbilO3m/9ktETQpXxC1Q
+	 k1vpE6ml5WNH9011d+0JiEI/+NQURu8fi7Ry9YzPive4D2d/xb8qp1CZ/O8uFKNgstQ==
 ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1795560600;
+	c=relaxed/relaxed; t=1795560601;
 	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
 	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=RI4kRWxl4XYAMairOnQShzPIXYese8AvwwdfRR+uYTw=;
-	b=Pxibp+95YcsuyPecJgprclNdfzf5FgX+CNs+U1xndkV/8O4iBH45Xd+XD/rusxE60YjY
-	 ShwTCrVuHcWnzwljjiiln/qk6/Qf58ADABje6J8+wOzVx3wjpX7IlLwkf1OkmSl0rrIQS
-	 AYr7ex9DTW0mjovHFgwTNGA37FinVgBg/jlFF/5pizlFdgDmypDUgx/FlSysp4EVgUVQQ
-	 uYZHI4JxkRRQqGSPIodQEiNIUaYAB6xcRx68KTPpM4U3jrlERJ+Mkwpvi55Hpc0DKYERS
-	 LhfcrcXlcrYm6URrWB99N8bYhSE/Ds4Wriey3WwaMATvjLAWTVupJxRwPAUP9IkCC4w==
+	bh=a2Ffas3bLeeCGSUnr0XQ4vHOK5iuvqsq87RRMDoP0wk=;
+	b=EKbOHUoMc8TRCMfoAYodm12MTLRFUgPMbpNkwAC6uZ02M2XAKH2BUA6NrSboSPyGGD4v
+	 4mKwJOfxs/3zDYIkDdJpNvj8tfTkHaR0ZyGhhere9Fxca25CGE6MnmLJXiHr5FFeHKT6x
+	 vZ3am6TcI/MG1o/WUjPOM+4GlFxR6N//bLgNNa75MLOUBpmTmn+INIjY5nFdIWykll0Pv
+	 34+C4TD9lv9BYHz24R5+ljWCM8+RjckN0zMawS4H3STGTl75YqnX+L1MvgoPnSQ/N04Ho
+	 49fw51EgV3eY2gMjniQ5RGslmuvO4DZN2TCJ7/na+kQEmow4tahMGx/TI2AXcIPpyZw==
 ARC-Authentication-Results: i=1; smtp.kernel.org; 
 	arc=none smtp.remote-ip=100.80.115.77
 Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id CB10A1F000D1;
-	Tue, 24 Nov 2026 22:49:48 +0000 (UTC)
+	by smtp.kernel.org (Postfix) with ESMTPS id 104721F000C6;
+	Tue, 24 Nov 2026 22:49:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795560600;
-	bh=RI4kRWxl4XYAMairOnQShzPIXYese8AvwwdfRR+uYTw=;
+	s=k20260515; t=1795560601;
+	bh=a2Ffas3bLeeCGSUnr0XQ4vHOK5iuvqsq87RRMDoP0wk=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
-	b=VDcpPKea3hnZCqsQMY4kLZ9fX00ylCnjH8Sx6VFaX8PilpGJzcuMC1KBJZQNZ3GlP
-	 MH8xaSwV9xopv5A9+860inFv9ryQaiy5Dqmd7MPCZtSa1IZeqEhTX9an+0UhyJNQNL
-	 XveWs/wrFIEWwlkY8w0ET2FaZBbpDq0ejRCxhnWss7V8ghuiJUOSjIFuhaG9hS2NF1
-	 WLaenleOZm2FYs79RFkjtuopyXmpqBqmqrSCzARbhjHR5W2aF6WmWQR1mxgZohK/TI
-	 sOlK/jL4F9/ZKSXj6PyRpWt9lhr4k3SIBeSkF0gX2sf5aSRm8OF0s+tw/ezyLNoCic
-	 bO2n+xHOL/Syg==
+	b=kVZYz7tj21VFLx0X8Br1rg83j6fLPJpSBiNS19hhkHHXNnLpZtEhS5OGHiRrcPG6G
+	 WUEckJwxWc9/Z22rcIHzBHA9kRjopyqWVnC2MATKvHrWKz9B0zJJZRW9I6MpSYTnWG
+	 39D9vzJrIdvvvhp74aOZIU0z8bhZ9zOtjs+pK4GO1dnk64Uba5SAdnufSgCwHlAEpG
+	 GZA9v3c5Paye3bOEnezbc9AoS3j+a0Gq6p/92rwnLo87ZBRTMwFOufP2Q6h293AzWF
+	 qzz8b/sqUex01ixk3LJF9sqQuvwvmpFSrG6PO4cX0pWi762UjTvsRInzJDdVH5zKsy
+	 3t+z+mT4/rnGw==
 Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id A64354CC2C;
+	by lkml.kernel.org (Postfix) with ESMTP id EC2374CC34;
 	Tue, 24 Nov 2026 22:49:38 +0000 (UTC)
 From: Ernest Borowski via B4 Relay <devnull+ernest.borowski.git.proton.me@kernel.org>
-Date: Tue, 24 Nov 2026 23:49:41 +0100
-Subject: [PATCH v2 07/11] ntfs: do not shift the cluster number of a
- delalloc run on split
+Date: Tue, 24 Nov 2026 23:49:43 +0100
+Subject: [PATCH v2 09/11] ntfs: zero new delalloc clusters even when
+ writeback allocates them
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -84,7 +84,7 @@ List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Message-Id: <20261124-b4-ntfs-delalloc-fixes-v2-7-f394c800ec03@proton.me>
+Message-Id: <20261124-b4-ntfs-delalloc-fixes-v2-9-f394c800ec03@proton.me>
 References: <20261124-b4-ntfs-delalloc-fixes-v2-0-f394c800ec03@proton.me>
 In-Reply-To: <20261124-b4-ntfs-delalloc-fixes-v2-0-f394c800ec03@proton.me>
 To: Namjae Jeon <linkinjeon@kernel.org>, Hyunchul Lee <hyc.lee@gmail.com>, 
@@ -95,13 +95,13 @@ Cc: Christian Brauner <brauner@kernel.org>, Christoph Hellwig <hch@lst.de>,
  linux-kernel@vger.kernel.org, Zhan Xusheng <zhanxusheng1024@gmail.com>, 
  stable@vger.kernel.org, Ernest Borowski <ernest.borowski.git@proton.me>
 X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3638;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=9573;
  i=ernest.borowski.git@proton.me; s=default; h=from:subject:message-id;
- bh=QYrY3PPRwc1pxE1XgYFpRxvEIryQYj/9Bk2ICaRmWlw=;
- b=owGbwMvMwCVWzJ65uCpJ5D/jabUkhmw2kYYNKpNPrYjlmmicdaAh77D82QOTDY73PDBqm3wvx
- KVz2sxLHaUsDGJcDLJiiiwd/2+E+IR8+7QsTqsPZg4rE8gQBi5OAZiIuR/DP/PMIsPY3Dbdqdpb
- vecl5Xzc8TqyyXmHYtrHeX/SprYsNWD4K9r80/G/hMCqFpfZtxOOb9cU3b/N9cyuhS7MH5L9BTo
- q2QA=
+ bh=XEJQKTLIixRNBY3im1HoKIxgT03eHpIBNJyLu/JSGrU=;
+ b=owGbwMvMwCVWzJ65uCpJ5D/jabUkhmw2kQaXA9JXLVMTjt9eGHZRse3a21sSYTHO52c7/BHti
+ ZLTFXzRUcrCIMbFICumyNLx/0aIT8i3T8vitPpg5rAygQxh4OIUgImkrWP47xl5Un2Zwof+p68Y
+ n8k3N9X+2WnFe+5IvLlG3+V9P10+LmD4H8+zZ76ObseHzqCNL0uZp+9Z8KI2MnE+90Ze4z6l7Dt
+ 7WQA=
 X-Developer-Key: i=ernest.borowski.git@proton.me; a=openpgp;
  fpr=88FFD8544C54F6F2A65E2A8E730769A37A6214FF
 X-Endpoint-Received: by B4 Relay for ernest.borowski.git@proton.me/default
@@ -112,92 +112,245 @@ Content-Transfer-Encoding: 7bit
 
 From: Ernest Borowski <ernest.borowski.git@proton.me>
 
-ntfs_rl_punch_hole() and ntfs_rl_collapse_range() advance the lcn of a
-run they split with "if (lcn > LCN_HOLE) lcn += n".  LCN_DELALLOC (-1)
-is greater than LCN_HOLE (-2), so splitting a delalloc run turns its
-tail into a run of real clusters starting at n - 1.
-ntfs_rl_insert_range() advances it unconditionally; its callers insert
-holes, so only a hole split for a non-hole source and a split delalloc
-run are affected.  ntfs_rle_lcn_contiguous() has the same problem and
-can merge a delalloc run with a following real run.
+When a buffered write starts or ends inside a cluster that is a hole,
+ntfs_write_simple_iomap_begin_non_resident() turns the hole into an
+LCN_DELALLOC run and then zeroes the part of the first and last cluster
+that the write does not cover, in the page cache, so that writeback
+writes whole clusters.  initialized_size already covers that part, and
+the clusters writeback allocates are not zeroed on disk.
 
-The punched-out part then goes to ntfs_cluster_free_from_rl(), which
-frees clusters that belong to other files or to metadata, and the part
-left in the runlist maps the file onto them.  Delalloc runs normally do
-not survive the writeback that fallocate() does first, but a buffered
-write that fails after ->iomap_begin() leaves one without dirty folios
-(fixed by the next patch); FALLOC_FL_PUNCH_HOLE or COLLAPSE_RANGE
-through it then corrupts the volume (ntfsck: "Found 1 inconsistent
-bitmap block(s)").
+The zeroing runs after mrec_lock and the runlist lock are dropped, and
+its ->iomap_valid() check, ntfs_iomap_valid(), calls the mapping stale
+as soon as the run is no longer delalloc.  Writeback that runs meanwhile
+(the background flusher, or FIEMAP_FLAG_SYNC and sync_file_range(),
+which do not take the inode lock) picks up the folios that were zeroed
+first, and ntfs_attr_map_cluster() allocates the whole delalloc run for
+them.  iomap_zero_range() then stops with -EPERM from
+ntfs_zero_read_iomap_end(), which the caller ignores.  The rest of the
+cluster is neither in the page cache nor on disk, so reads return what
+the reallocated clusters held before: data of deleted or truncated files.
 
-Only shift the lcn of runs that have real clusters.
+Reproducer: fill a file, fsync, truncate it to 0 and back up, then write
+small pieces at unaligned offsets into the holes while other threads
+call FIEMAP with FIEMAP_FLAG_SYNC.  With 4 KiB and 64 KiB clusters the
+old contents show up within seconds, also without the FIEMAP threads.
 
-Fixes: 11ccc9107dc4 ("ntfs: update runlist handling and cluster allocator")
+The validity check was there to keep the zeroing from overwriting data
+that an mmap write put into the new cluster in that window.  Hold the
+invalidate lock across ->iomap_begin() of a buffered write instead,
+which keeps page faults out from the moment the hole becomes delalloc
+until it is zeroed, and zero with the plain seek mapping, which zeroes
+delalloc and mapped ranges alike, so that writeback allocating the run
+no longer matters.  The error path of ->iomap_begin() now runs with the
+invalidate lock held.
+
+Fixes: b041ca562526 ("ntfs: update iomap and address space operations")
 Cc: stable@vger.kernel.org
 Signed-off-by: Ernest Borowski <ernest.borowski.git@proton.me>
 ---
- fs/ntfs/runlist.c | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+ fs/ntfs/iomap.c | 127 ++++++++++++++++++++++++--------------------------------
+ 1 file changed, 55 insertions(+), 72 deletions(-)
 
-diff --git a/fs/ntfs/runlist.c b/fs/ntfs/runlist.c
-index 76ba6ab72b..1e87db35ce 100644
---- a/fs/ntfs/runlist.c
-+++ b/fs/ntfs/runlist.c
-@@ -1770,7 +1770,7 @@ s64 ntfs_rl_get_compressed_size(struct ntfs_volume *vol, struct runlist_element
- static inline bool ntfs_rle_lcn_contiguous(struct runlist_element *left_rle,
- 					   struct runlist_element *right_rle)
+diff --git a/fs/ntfs/iomap.c b/fs/ntfs/iomap.c
+index 1909824c30..fd94d4b34f 100644
+--- a/fs/ntfs/iomap.c
++++ b/fs/ntfs/iomap.c
+@@ -297,39 +297,6 @@ static int ntfs_read_iomap_end(struct inode *inode, loff_t pos, loff_t length,
+ DEFINE_IOMAP_ITER_NEXT_END(ntfs_read_iomap_next, ntfs_read_iomap_begin,
+ 		ntfs_read_iomap_end);
+ 
+-/*
+- * Check that the cached iomap still matches the NTFS runlist before
+- * iomap_zero_range() is called. if the runlist changes while iomap is
+- * iterating a cached iomap, iomap_zero_range() may overwrite folios
+- * that have been already written with valid data.
+- */
+-static bool ntfs_iomap_valid(struct inode *inode, const struct iomap *iomap)
+-{
+-	struct ntfs_inode *ni = NTFS_I(inode);
+-	struct runlist_element *rl;
+-	s64 vcn, lcn;
+-
+-	if (!NInoNonResident(ni))
+-		return false;
+-
+-	vcn = iomap->offset >> ni->vol->cluster_size_bits;
+-
+-	down_read(&ni->runlist.lock);
+-	rl = __ntfs_attr_find_vcn_nolock(&ni->runlist, vcn);
+-	if (IS_ERR(rl)) {
+-		up_read(&ni->runlist.lock);
+-		return false;
+-	}
+-	lcn = ntfs_rl_vcn_to_lcn(rl, vcn);
+-	up_read(&ni->runlist.lock);
+-	return lcn == LCN_DELALLOC;
+-}
+-
+-static const struct iomap_write_ops ntfs_zero_iomap_folio_ops = {
+-	.put_folio = ntfs_iomap_put_folio,
+-	.iomap_valid = ntfs_iomap_valid,
+-};
+-
+ static int ntfs_seek_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
+ 		unsigned int flags, struct iomap *iomap, struct iomap *srcmap)
  {
--	if (left_rle->lcn > LCN_HOLE &&
-+	if (left_rle->lcn >= 0 &&
- 	    left_rle->lcn + left_rle->length == right_rle->lcn)
- 		return true;
- 	else if (left_rle->lcn == LCN_HOLE && right_rle->lcn == LCN_HOLE)
-@@ -1832,7 +1832,8 @@ struct runlist_element *ntfs_rl_insert_range(struct runlist_element *dst_rl, int
+@@ -337,17 +304,6 @@ static int ntfs_seek_iomap_begin(struct inode *inode, loff_t offset, loff_t leng
+ 			srcmap, false, false);
+ }
  
- 		i_rl[0].vcn = start_vcn;
- 		i_rl[0].length -= dst_rl_split.length;
--		i_rl[0].lcn += dst_rl_split.length;
-+		if (i_rl[0].lcn >= 0)
-+			i_rl[0].lcn += dst_rl_split.length;
- 	} else {
- 		struct runlist_element *dst_rle, *src_rle;
- merge_src_rle:
-@@ -1988,7 +1989,7 @@ struct runlist_element *ntfs_rl_punch_hole(struct runlist_element *dst_rl, int d
+-static int ntfs_zero_read_iomap_end(struct inode *inode, loff_t pos, loff_t length,
+-		ssize_t written, unsigned int flags, struct iomap *iomap)
+-{
+-	if ((flags & IOMAP_ZERO) && (iomap->flags & IOMAP_F_STALE))
+-		return -EPERM;
+-	return written;
+-}
+-
+-static DEFINE_IOMAP_ITER_NEXT_END(ntfs_zero_read_iomap_next,
+-		ntfs_seek_iomap_begin, ntfs_zero_read_iomap_end);
+-
+ DEFINE_IOMAP_ITER_NEXT(ntfs_seek_iomap_next, ntfs_seek_iomap_begin);
  
- 		(*punch_rl)[0].vcn = start_vcn;
- 		(*punch_rl)[0].length -= first_cnt;
--		if ((*punch_rl)[0].lcn > LCN_HOLE)
-+		if ((*punch_rl)[0].lcn >= 0)
- 			(*punch_rl)[0].lcn += first_cnt;
- 	}
+ int ntfs_dio_zero_range(struct inode *inode, loff_t offset, loff_t length)
+@@ -362,19 +318,28 @@ int ntfs_dio_zero_range(struct inode *inode, loff_t offset, loff_t length)
+ 				     BLKDEV_ZERO_NOUNMAP);
+ }
  
-@@ -2008,7 +2009,7 @@ struct runlist_element *ntfs_rl_punch_hole(struct runlist_element *dst_rl, int d
++/*
++ * Zero the part of a new delalloc cluster that the buffered write does not
++ * cover, in the page cache, so that writeback writes the whole cluster.
++ * Writeback can allocate the delalloc run while this runs (the folios
++ * zeroed first are dirty), so the zeroing must not depend on the mapping
++ * staying delalloc: iomap_zero_range() zeroes delalloc and mapped ranges
++ * alike.  The caller holds the invalidate lock, which keeps page faults
++ * from putting data into the cluster meanwhile.
++ */
+ static int ntfs_zero_range(struct inode *inode, loff_t offset, loff_t length)
+ {
+-	return iomap_zero_range(inode,
+-				offset, length,
+-				NULL,
+-				ntfs_zero_read_iomap_next,
+-				&ntfs_zero_iomap_folio_ops,
++	lockdep_assert_held_write(&inode->i_mapping->invalidate_lock);
++
++	return iomap_zero_range(inode, offset, length, NULL,
++				ntfs_seek_iomap_next, &ntfs_iomap_folio_ops,
+ 				NULL);
+ }
  
- 		new_rl[new_1st_cnt + 1].vcn = end_vcn + 1;
- 		new_rl[new_1st_cnt + 1].length -= first_cnt;
--		if (new_rl[new_1st_cnt + 1].lcn > LCN_HOLE)
-+		if (new_rl[new_1st_cnt + 1].lcn >= 0)
- 			new_rl[new_1st_cnt + 1].lcn += first_cnt;
+-static void ntfs_write_delalloc_release(struct inode *inode, loff_t pos,
+-					loff_t length, ssize_t written,
+-					unsigned int flags, struct iomap *iomap);
++static void __ntfs_write_delalloc_release(struct inode *inode, loff_t pos,
++					  loff_t length, ssize_t written,
++					  unsigned int flags,
++					  struct iomap *iomap);
  
- 		if (one_split_3)
-@@ -2136,7 +2137,7 @@ struct runlist_element *ntfs_rl_collapse_range(struct runlist_element *dst_rl, i
+ static int ntfs_write_simple_iomap_begin_non_resident(struct inode *inode, loff_t offset,
+ 						      loff_t length, struct iomap *iomap)
+@@ -528,8 +493,7 @@ static int ntfs_write_simple_iomap_begin_non_resident(struct inode *inode, loff_
+ 							      z_start,
+ 							      z_end - z_start);
+ 			}
+-			if ((!err || err == -EPERM) &&
+-			    max_clu_count > 1 &&
++			if (!err && max_clu_count > 1 &&
+ 			    (iomap->length & vol->cluster_size_mask &&
+ 			     end < ni->initialized_size)) {
+ 				loff_t z_start, z_end;
+@@ -544,16 +508,15 @@ static int ntfs_write_simple_iomap_begin_non_resident(struct inode *inode, loff_
+ 							      z_end - z_start);
+ 			}
  
- 		(*punch_rl)[0].vcn = start_vcn;
- 		(*punch_rl)[0].length -= first_cnt;
--		if ((*punch_rl)[0].lcn > LCN_HOLE)
-+		if ((*punch_rl)[0].lcn >= 0)
- 			(*punch_rl)[0].lcn += first_cnt;
- 	}
+-			if (err == -EPERM)
+-				err = 0;
+ 			if (err) {
+ 				/*
+ 				 * Nothing will be copied: drop the delalloc
+ 				 * clusters that no zeroed folio covers.
+ 				 */
+-				ntfs_write_delalloc_release(inode, offset,
+-							    iomap->length, 0,
+-							    IOMAP_WRITE, iomap);
++				__ntfs_write_delalloc_release(inode, offset,
++							      iomap->length, 0,
++							      IOMAP_WRITE,
++							      iomap);
+ 				return err;
+ 			}
+ 		}
+@@ -721,16 +684,27 @@ static int ntfs_write_iomap_begin_non_resident(struct inode *inode, loff_t offse
+ 	struct ntfs_inode *mrec_ni = ntfs_inode_is_named_stream(ni) ?
+ 			ntfs_base_inode(ni) : ni;
  
-@@ -2150,7 +2151,7 @@ struct runlist_element *ntfs_rl_collapse_range(struct runlist_element *dst_rl, i
+-	mutex_lock(&mrec_ni->mrec_lock);
++	if (ntfs_iomap_flags & NTFS_IOMAP_FLAGS_BEGIN) {
++		int err;
  
- 		new_rl[new_1st_cnt].vcn = end_vcn + 1;
- 		new_rl[new_1st_cnt].length -= first_cnt;
--		if (new_rl[new_1st_cnt].lcn > LCN_HOLE)
-+		if (new_rl[new_1st_cnt].lcn >= 0)
- 			new_rl[new_1st_cnt].lcn += first_cnt;
+-	if (ntfs_iomap_flags & NTFS_IOMAP_FLAGS_BEGIN)
+-		return  ntfs_write_simple_iomap_begin_non_resident(inode, offset,
+-								   length, iomap);
+-	else
+-		return ntfs_write_da_iomap_begin_non_resident(inode,
+-							      offset, length,
+-							      flags, iomap,
+-							      ntfs_iomap_flags);
++		/*
++		 * A hole becomes delalloc here and the rest of its partial
++		 * clusters is zeroed after the locks below are dropped: keep
++		 * page faults, which could write into those clusters, out
++		 * until then.
++		 */
++		filemap_invalidate_lock(inode->i_mapping);
++		mutex_lock(&mrec_ni->mrec_lock);
++		err = ntfs_write_simple_iomap_begin_non_resident(inode, offset,
++								 length, iomap);
++		filemap_invalidate_unlock(inode->i_mapping);
++		return err;
++	}
++
++	mutex_lock(&mrec_ni->mrec_lock);
++	return ntfs_write_da_iomap_begin_non_resident(inode, offset, length,
++						      flags, iomap,
++						      ntfs_iomap_flags);
+ }
  
- 		if (one_split_3)
+ static int __ntfs_write_iomap_begin(struct inode *inode, loff_t offset,
+@@ -802,9 +776,10 @@ static void ntfs_write_delalloc_punch(struct inode *inode, loff_t offset,
+  * Punch them out again, keeping every cluster that has dirty data in the
+  * page cache.
+  */
+-static void ntfs_write_delalloc_release(struct inode *inode, loff_t pos,
+-					loff_t length, ssize_t written,
+-					unsigned int flags, struct iomap *iomap)
++static void __ntfs_write_delalloc_release(struct inode *inode, loff_t pos,
++					  loff_t length, ssize_t written,
++					  unsigned int flags,
++					  struct iomap *iomap)
+ {
+ 	struct ntfs_volume *vol = NTFS_I(inode)->vol;
+ 	loff_t start_byte, end_byte;
+@@ -821,9 +796,17 @@ static void ntfs_write_delalloc_release(struct inode *inode, loff_t pos,
+ 	if (start_byte >= end_byte)
+ 		return;
+ 
+-	filemap_invalidate_lock(inode->i_mapping);
+ 	iomap_write_delalloc_release(inode, start_byte, end_byte, flags, iomap,
+ 				     ntfs_write_delalloc_punch);
++}
++
++static void ntfs_write_delalloc_release(struct inode *inode, loff_t pos,
++					loff_t length, ssize_t written,
++					unsigned int flags, struct iomap *iomap)
++{
++	filemap_invalidate_lock(inode->i_mapping);
++	__ntfs_write_delalloc_release(inode, pos, length, written, flags,
++				      iomap);
+ 	filemap_invalidate_unlock(inode->i_mapping);
+ }
+ 
 
 -- 
 2.56.1
