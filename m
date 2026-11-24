@@ -1,53 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795549803;
-	b=YeNMzLhkDPsd5PfzpA4AK8qMGQyIzhACVCOTO+36PbbDAts6J+GU0bQYRBvb4sOaRcFP
-	 2/CfgAj3jLKCHwYSKsbXsTlfFRgTcRloPkhf4dCgYn8+VnbWRKAVT5nEJSgV3L6doDKB0
-	 MISIbrVjjaKeiRK17nmcvg80cTW1jQeATzg8hqAfJLYYBegAuZJK2dipshn0zSMDbR20n
-	 BmZnRkZxCXasQ3/1AH4YGNk0omJ2yF8PJCzRgnxH5lJ2+RTj+aGknKSYQNXKGy13+bHO7
-	 wD+xw8xq6JZQIXmV75KcdoAnZkLLru4ZJ/t4C6TPhoHqCEYkzH0Fbeh3UNt1t1uWV3w==
+	t=1795550730;
+	b=Fwaj8ClATdfxym7ChiZRFpzcL/2dHdqe7B2SytR5/AMbeLFvYuADB3GevWTUe0Esk6zR
+	 g2vUgicA2rOuM5AE2hiW3XkznUjvBaVFjBGgIUJcrDaLluAK6myJtaxXWU8ROFqxs5S/Y
+	 k6G25Fh0Yndx+jp5OAyL3Tj5r6yvZa+Tvr7az7QywluN8VJpW9fHAPDUgHWtXYHRZrcT8
+	 ia7VwqadVgNA3Pog7yd8AEt0o4suZKvujuPgOklXQnbGpH0FGEwlZX7lt6flU75bhukRp
+	 QFY4jBhKsOS15zx0ywpeVzfmoBdhkuiunOn+RUtE54oXyT3MQqCgdrwI4AoMRBU2cyA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795549803;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795550730;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=jk/+An4Tq9yr8l5pdd/sFTQrAku+UXbvv4J7iHzCn20=;
-	b=eiOk2Y5PKdUhwCPUUVzmCiQKo1UMKlDtambR7s4pfMWXFBLAh4pbiW9xKCX//uVQ75sk
-	 m0Wfd6XyNTjoFOKzvQXeneN8Q2lWToqDm0OqFwqUOn2mJX+NNWEdLr7jzGKDEG1hJBuhC
-	 n3B88FE5jmr5UA3iL9lDJ39/x/PD44nNE4wMEr5L49xuokaRdCnbieCsYwBZ/GGOJRokQ
-	 xtnzAMj4gdFR6PFkcrbCITRpTEvZ6/72vGDq2PKSW/rGq8OpuNFWWDW3sMrv0WHYvAqRa
-	 dBSwARs7C+Jde3xjaBzRgNqYTKRPpInH0+e61/216lyx87w5rOu5Td5DdzFiblmkf8w==
+	bh=AyBvgoaflSOYlWmLqE/zHPGUFjIj+qxPBeaaPtkZhDU=;
+	b=aC4SQTuqCn+MZ36s4EbM2Hmwy87N0WC0lNGTDP1UtGd1jL8kMPiE6C67+iloaRSoe5LQ
+	 yrD8eZZOKIDgZEw4JlsLmGsPAXfpHAL/HVG0bYpCaqDFk1tTAOLNXLmc7RVx4A89sYMp4
+	 Us6d7/DvXExYoF1svu5v/hLz32zwW63jNqBYX3ZJ1FHbqugk01Xdgwjg9F7+14WgpfBkJ
+	 A6t63zNntDha1eazRb/hyRc13NIQaGALcswD4QfBK/uM0wcNuccUvmxiWLGJclYJI1svq
+	 Usg8spt//o3T8dCIKrxYdgysqOuE3iKb5Tve+ZiH64pDvazIzpwn0ky330sXoPrbpvA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lFvUkmmY;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="MGdCw1/5";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63B96606A33C
-	for <linux-xfs@vger.kernel.org>; Tue, 24 Nov 2026 19:50:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F604606A31E;
+	Tue, 24 Nov 2026 20:05:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lFvUkmmY
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 324BB1F000F2;
-	Tue, 24 Nov 2026 19:50:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=MGdCw1/5
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 01A9A1F000C6;
+	Tue, 24 Nov 2026 20:05:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795549803;
-	bh=jk/+An4Tq9yr8l5pdd/sFTQrAku+UXbvv4J7iHzCn20=;
+	s=k20260515; t=1795550729;
+	bh=AyBvgoaflSOYlWmLqE/zHPGUFjIj+qxPBeaaPtkZhDU=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=lFvUkmmYwTRet+Vr/inMtsIkermWBG5tFbyjAY4hS8J+tFwtYnl1mWg99ND6dg3a0
-	 NicaMx7egNsdg2yxaDfz1kjBQjWjJQ35YxYZcayO+q+N3bNOf+dTgwKFP6LlVT7mUg
-	 fllZ9LnzYvNbqNfB1C19rDmmcYTAeAJvahN+7p206eaoIDWRCSwCot4BCQLkb65qIo
-	 vJcLQhgrgyWcE7EG/iCmnOkodX1WVEfXrqDNjuxcuy1ZPHVKMFe0/sLTbqUHi3pZqd
-	 3cs/g8BknSbBFM1ypNC4418e52gZl4kcikaLipORe9Kje1h+9B9d7Tj649z20NEVs7
-	 4etVHxrMcXKoQ==
-Date: Wed, 25 Nov 2026 06:49:53 +1100
+	b=MGdCw1/5SZDEJzXkuLyv2kDRKES2MAQQwGlYaOLsnHLOHD1ul4NA0IPaHpTaAuybb
+	 gG53L7cYFO/uKp7fqdz3o9svkeK4/js90kSYSMrfk1E8qHD8gScUWkuZmFl/vI44JZ
+	 hzfaQSznQaLpx8iwEgZKcyLUUVWrtCPfVlBNPJA9bfQu9/bXI0ry2Jxp+9hVXswdWw
+	 zgxptwpsGif3tHzF/ErlHOWKmsGKxIyYRUTS6HzpDeDuqth8zRp7qy2XqQv+eZG1jE
+	 VyrgfbZeEvQLLuv92bNgd5IxwxMkzw197uwPfm6jrnsmTEp9B80ppNxEAB9gnWILfe
+	 RgzZewqWOKwsA==
+Date: Wed, 25 Nov 2026 07:05:20 +1100
 From: Dave Chinner <dgc@kernel.org>
-To: Ran Hongyun <ranhongyun1@huawei.com>
-Cc: cem@kernel.org, djwong@kernel.org, linux-xfs@vger.kernel.org,
-	chengzhihao1@huawei.com, yangerkun@huawei.com, yi.zhang@huawei.com,
-	wozizhi@huawei.com
-Subject: Re: [PATCH 0/2] xfs: fix zero-link inode link count handling
-Message-ID: <awXqYTBgUOMmWCzW@dread>
-References: <20261124115337.2297318-1-ranhongyun1@huawei.com>
+To: John Garry <john.garry@linux.dev>
+Cc: Wayne Gao <Wayne.Gao1@solidigm.com>, "cem@kernel.org" <cem@kernel.org>,
+	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+	"linux-api@vger.kernel.org" <linux-api@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [RFC PATCH] xfs: add a per-filesystem switch to force atomic CoW
+Message-ID: <awXuAESDkLr1nd3n@dread>
+References: <LV0PR10MB997684D5CA8A6AC037F6D1CD8AB9472@LV0PR10MB997684.namprd10.prod.outlook.com>
+ <awSd1JEB0F4WeKt0@dread>
+ <2a615ca6-3777-4b71-bea6-4072d4fbd950@linux.dev>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -59,37 +62,41 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261124115337.2297318-1-ranhongyun1@huawei.com>
+In-Reply-To: <2a615ca6-3777-4b71-bea6-4072d4fbd950@linux.dev>
 
-On Tue, Nov 24, 2026 at 07:53:37PM +0800, Ran Hongyun wrote:
-> This series fixes two paths that hand a zero-link inode to the VFS link
-> count helpers.
+On Tue, Nov 24, 2026 at 08:32:56AM +0000, John Garry wrote:
+> On 11/23/26 20:11, Dave Chinner wrote:
+> > > The intended use is a controlled comparison of hardware-backed and
+> > > software-backed RWF_ATOMIC writes on the same hardware, without having
+> > > to construct misaligned mappings to trigger fallback. The existing
+> > > DEBUG-only always_cow control also affects ordinary writes, which
+> > > changes the workload being compared.
+> > Ok, so you want it for your test/dev environment, not production?
+> > 
+> > I thought we could already change the block device characteristics (i.e. support hw
+> > atomic wirite or not) at the block device level?
 > 
-> Patch 1 makes the metadir repair code set the link count directly when
-> reconnecting an inode that was found on the unlinked list, instead of
-> calling inc_nlink() on a zero-link inode.
-> 
-> Patch 2 makes xfs_bumplink() reject the abnormal zero link count with
-> -EFSCORRUPTED.  A crafted image can contain a reachable directory with
-> di_nlink == 0; mkdir() or rename() into it then reaches inc_nlink() and
-> trips the VFS warning.
+> The block layer just accepts whatever atomic properties is reported by the
+> block driver and there is no method in the block layer to change these
+> limits or turn them off.
 
-With your changes, it shuts down the filesystem instead of issuing a
-warning and allowing things to keep working, yes? i.e. it turns a
-warning in a production system into a guaranteed denial of service.
+Isn't that a bit of an oversight? Lots of the hardware related IO
+capabilities are configurable in the bdev queue (e.g. max io sizes,
+max discard/unmap sizes, max queue depth, etc).
 
-AFAICT, the link count being wrong doesn't immediately result in
-anything worse than the link count being wrong. The warning is there
-to tell us the link count is wrong, but I'm not convinced that
-turning a warning into a shutdown is the right thing to be doing
-here.
+Sure, they are initially populated by the hardware values, but the
+user can then override them (e.g. via udev rules) and that means we
+don't have need to add 'override the <bdev queue property>'
+management interfaces to every filesystem that supports those
+specific bdev hardware offloads.
 
-If we are going to abort modification operations on inodes with
-incorrect zero link counts, then the link count needs to be checked
--before- we start modifying anything in the transaction, not deep in
-the guts where we cannot sanely back out with an error. i.e.
-xfs_bumplink() is the wrong place to be doing these sorts of
-corruption checks.
+> Then for the only block drivers which today support atomic - NVMe and SCSI -
+> similarly these we just use the atomic limits reported in the disk.
+
+That seems to be inconsistent with how we manage other hardware
+offload size limits on block devices. These are -not- filesystem
+properties, and we should not be trying to manage them at the
+filesystem level.
 
 -Dave.
 -- 
