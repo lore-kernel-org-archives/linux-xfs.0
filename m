@@ -1,60 +1,52 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=79.135.106.102
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795628290;
-	b=gSG+SV2ZDMPtPp1RJYHjT9w54wb04HxcYqqORdetFqlK5mt+n8BvI/5wVyBezsMuOgWy
-	 xbuOe7LGMDOzhnlmDza0hBmy5n1//yi5zx3KFkWJNIhf2B7Spf1VnThwS56knp9nqAWQQ
-	 QA1qg/SiqEqQyxHRSNCnpzqnHiS/UcjpnvZmqBR9f2n4zBlfR2qD4KaNKGHVMLCx8BiYj
-	 xNUHmCb9l+OxQL65Fp4koKvt+DoDeZ3sy1L0N4q4TC4ki2TECoPFHgE2yRPqF+ACvIeuM
-	 fNpa3QxumpaMVN9O40L2sFzVC1pqyRHyF5/molEKzqvb04GnfXcoxHdVZ+OmwOlPm5g==
+	t=1795628296;
+	b=ZOScQYoI6iAJ4xaLGtghg4YA9Whx2E9sXavdDIyQUjxlC6RFLbwIsP1Zo3+wNzsfLrWo
+	 j5NsbWdXgvBWKKijBnajQWgAaVUuF0mljkx0gdQgd50JaqvFwfsvzMIZjnWhwyyhCq0HC
+	 0gmirk6Z/uLgMKEhuyxe7/iM0cWOp18II9B9lkYKlmSKxhdy4NJRrPzCWN/FfVDJE1+7O
+	 hmwzkykNAk8VLVhc8MXTzF07huqUpQyRNGris9+rSQ7z2SuxLo73fY6pQrhoJp9TIn/Ib
+	 PrkXeQvTUNAUyjOLZ3tuxCYpDput2FJNCgm+WsU/GlLyF4OLDfMhwlkSK/mlbwJiPCg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795628290;
-	h=DMARC-Filter:DKIM-Signature:Date:To:From:Cc:Subject:Message-ID:
-	 In-Reply-To:References:Feedback-ID:X-Pm-Message-ID:MIME-Version:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=gAcavlN73Ya35kPG8jV5KeGYcjZOWAaF1oYlQD8iN5w=;
-	b=W/iYmPitJZJbXW821mrRIfysttzesz4kMjwgpAKBslozDJWFn0o0UfeS6QH4pttpWtgE
-	 85r8kmNJPlxPlmFTsTly9Yw5hj7wBQLt4WT5qxyeB7E0UtgKI5FeNUQq/obKT29WCi2fL
-	 Oo5gUI/fHV5lDJj7yNZ3M90QCGEXZPNlb6H63YXaok8PjFSbCKaPALXlncMGjsUv/6mjQ
-	 0435xbCcAxfFKspunsStEACFALFtvXUnjDuQQqsBub+G4tXkn040v0jDsac8EKVQjEccZ
-	 O6ZfSu3zXPadDAnqZgCC+bnw/5JoIrqPnMuBKwdBAss1KfFbGi9isDk2EbKw4Y55Pgw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795628296;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=YxMiXLQihJ0asnXw5sRiFB1zGJfVngEqOnCZhjIasaI=;
+	b=C/ifw0mNUY93UlCl21y8807C6craJDFiNZfuxRX95AwnZCrardES/mbCo5KPPcjEqdVD
+	 ub8GdGVENJ8pS010dVTtGoaIzR1SK3BU7dU3dW4kSuT/4AN8LVgDFgzHz0ygmXXXQ2Nkv
+	 fi+J6Sah9C6l+ydQsY8NBaht357/eqECe7dZNtbto2WOIakAHQ0opTu1G0cHJIG2DuwH6
+	 ctbxdqUvB6dvKaZCLKXdumA3rEZigvn0N785OmY57Ok16O0Q0/nnGPMaKhEbGRx9eryg0
+	 ZIAg+WDKiwCr2uNDtuytfkS8fWTTVY/tlINNXETX68gPqwqi770UTq+aTh3kItYDrFw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=proton.me;
-	spf=pass smtp.mailfrom=proton.me;
-	dkim=pass header.d=proton.me header.i=@proton.me header.a=rsa-sha256 header.s=protonmail2 header.b="f8RE/aLu";
-	arc=none smtp.remote-ip=79.135.106.102
-Received: from mail-106102.protonmail.ch (mail-106102.protonmail.ch [79.135.106.102])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WNrYdZmQ;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF194606A331;
-	Wed, 25 Nov 2026 17:38:09 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AF194606A331
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=proton.me
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=proton.me
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70303606A338
+	for <linux-xfs@vger.kernel.org>; Wed, 25 Nov 2026 17:38:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=proton.me header.i=@proton.me header.a=rsa-sha256 header.s=protonmail2 header.b=f8RE/aLu
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=proton.me;
-	s=protonmail2; t=1795628280; x=1795887480;
-	bh=gAcavlN73Ya35kPG8jV5KeGYcjZOWAaF1oYlQD8iN5w=;
-	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
-	 Feedback-ID:From:To:Cc:Date:Subject:Reply-To:Feedback-ID:
-	 Message-ID:BIMI-Selector;
-	b=f8RE/aLuMO7y6xfH6FYf9K2lVlTw6JA66iLH5dzXM/MikPcfj6UyoOONQqQMBDQxi
-	 9n8NX6KASD3e7fEEMowcp/Bb64dxxubWm09DjJvoNFOGcbBSRzte+f9RMiBwVbLRmW
-	 SV54BACFWgl0RNBUM+aNJB32SAK/M9LR125Q/BQbHhl86qhOzLoqYplZlgisCoPddd
-	 +3MMhOhRpDNwXbJPzMvKXDieMLyMC8HMZjsX5h9r0wCpGdtEypGLorKsXAzyZmNcPN
-	 ql947HEFM7GP2TMT8VSq1xo76AQFtN+zrTSEBFX8E0yfixHdTR3KzEusKbJujXcnOP
-	 xd8BlnvoSUuSg==
-Date: Wed, 25 Nov 2026 17:37:54 +0000
-To: Christoph Hellwig <hch@lst.de>
-From: Ernest Borowski <ernest.borowski.git@proton.me>
-Cc: ernest.borowski.git@proton.me, Namjae Jeon <linkinjeon@kernel.org>, Hyunchul Lee <hyc.lee@gmail.com>, Baolin Liu <liubaolin12138@163.com>, Christian Brauner <brauner@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>, ntfs@lists.linux.dev, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, Zhan Xusheng <zhanxusheng1024@gmail.com>, stable@vger.kernel.org
-Subject: Re: [PATCH v2 02/11] iomap: add a helper to mark a range of a folio dirty
-Message-ID: <179562827127.336908.5205349169070022087.b4-reply@b4>
-In-Reply-To: <20261125055016.GB20604@lst.de>
-References: <20261124-b4-ntfs-delalloc-fixes-v2-0-f394c800ec03@proton.me> <20261124-b4-ntfs-delalloc-fixes-v2-2-f394c800ec03@proton.me> <20261125055016.GB20604@lst.de>
-Feedback-ID: 236360163:user:proton
-X-Pm-Message-ID: 4839e5da1363b7916307013b17874d66462b3b46
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WNrYdZmQ
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52E7F1F000D1;
+	Wed, 25 Nov 2026 17:38:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795628295;
+	bh=YxMiXLQihJ0asnXw5sRiFB1zGJfVngEqOnCZhjIasaI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=WNrYdZmQ+FfD8bNlLHs6lfpeVuChe4YSkes3GDkunJFfSIET1ZMg6fpVlODgPH6hD
+	 fMq9EZ4QCHPeLqxHfcFfMYImZMadH+mDxcPuSNZ2HWlbcGgAV4bqMNhUnXNuWcxCWf
+	 NB5bUopanHSGe1+NYV0IOvXnR7/5pTvRpUTc4EwcxpFGYZIbJc/U352OcpuLvSU+o+
+	 6BqvJEu0zH8hCslTqaFCOp1qB8IaQZ18SDBBAWi+OcDsHO0HMCAoRO3BXKXnIBF5HW
+	 ZGGFyMVS88Qfjr3aw/F1c/uxcucLnYoqSTgv3uHblfnsaxEtKVYLnAlG6UAhc+QgWO
+	 wViYwi1u2D9Pw==
+Date: Wed, 25 Nov 2026 18:38:11 +0100
+From: Carlos Maiolino <cem@kernel.org>
+To: Alejandro Colomar <alx@kernel.org>
+Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <djwong@kernel.org>, 
+	Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] xfs: Remove incorrect use of '&'
+Message-ID: <awccmN95lHSd7vp2@cronus.toxiclabs.cc>
+References: <3783cf39b873890896eb889c8c09edb455559fce.1795626969.git.alx@kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -64,56 +56,41 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <3783cf39b873890896eb889c8c09edb455559fce.1795626969.git.alx@kernel.org>
 
-On Wed, Nov 25, 2026 at 06:50:16AM +0100, Christoph Hellwig wrote:
-> If we end up with this, iomap_dirty_folio should be rewritten
-> to call this instead of duplicating the logic.
+On Wed, Nov 25, 2026 at 06:16:45PM +0100, Alejandro Colomar wrote:
+> We want to pass the character array, not a pointer to it.
+> 
+> This seems an obvious typo, introduced in a48373e7d35a (2026-01-20;
+> "xfs: start creating infrastructure for health monitoring").
+> 
+> Cc: Darrick J. Wong <djwong@kernel.org>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Alejandro Colomar <alx@kernel.org>
+> ---
+>  fs/xfs/xfs_healthmon.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_healthmon.c b/fs/xfs/xfs_healthmon.c
+> index 2bdd747f1ead..56d19ffb02b3 100644
+> --- a/fs/xfs/xfs_healthmon.c
+> +++ b/fs/xfs/xfs_healthmon.c
+> @@ -1061,7 +1061,7 @@ xfs_healthmon_validate(
+>  		return false;
+>  	if (hmo->format != XFS_HEALTH_MONITOR_FMT_V0)
+>  		return false;
+> -	if (memchr_inv(&hmo->pad, 0, sizeof(hmo->pad)))
+> +	if (memchr_inv(hmo->pad, 0, sizeof(hmo->pad)))
+>  		return false;
+>  	return true;
 
-Done for v3. Both now share a static helper, and iomap_dirty_folio()
-keeps passing the mapping it is given rather than folio->mapping, as
-->dirty_folio can be called without the folio lock.
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-> But I'm a little sceptical the use of this can be correct.  I'll try
-> to look into it, but it might take some time to understand the ntfs
-> code.
+>  }
+> -- 
+> 2.55.0
+> 
 
-To save you some of that time: the user is ntfs_dirty_cluster_tail() in
-patch 10.
-
-ntfs reserves delalloc space in clusters, which can be larger than a
-block and larger or smaller than a folio, and it has no unwritten
-extents. If the copy of a buffered write into a hole stops early (an
-unmapped source page, a fatal signal), the rest of the cluster it
-stopped in is never written. Writeback then allocates the whole cluster
-and writes only the copied blocks, so a read of the rest after
-drop_caches returns stale disk data.
-
-Before the unused delalloc clusters are punched out, ntfs walks the rest
-of that cluster under the invalidate lock:
-
-- in an uptodate folio in the page cache, it locks the folio and uses
-  this helper to dirty only the blocks in that range. Those blocks
-  already hold the right contents: zeroes, or data a write through mmap
-  added since;
-- otherwise (no folio, or not uptodate), if the cluster is still
-  delalloc, it zeroes the range with iomap_zero_range().
-
-It cannot zero an uptodate folio without overwriting such mmap data,
-and it cannot use folio_mark_dirty(), because that dirties the whole
-folio. When clusters are smaller than the folio (1k and 2k clusters, or
-a large folio), the other blocks can be holes or delalloc clusters the
-write never reached: the punch would then keep those clusters reserved,
-and writeback would allocate clusters that hold only zeroes.
-
-The alternative needs no iomap change: when writeback allocates a
-cluster, zero on the disk the part the write does not cover, before the
-cluster goes into the runlist. A later series of mine already does this
-for clusters allocated by a write fault. Doing it in writeback costs
-extra zeroing I/O for every partly written cluster, but it also closes
-the race where writeback allocates the cluster before
-ntfs_dirty_cluster_tail() runs, which patch 10 leaves to that later
-series. If you think that is the better way, I can rework patch 10 like
-that and drop this patch.
 
