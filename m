@@ -1,59 +1,53 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795628781;
-	b=FCt/H3DjSIaKkpeIAw/42sSaV/CZltwaeX0NSIJJdD4ws+j8Pnndc3zw7sYJiwvsHo6l
-	 ZEG2udQghLk9Z1uJPiHIsdRwSxnHLNAjoufjswrv45bPWdAlpx30NRgnjVte0sfsWK1kg
-	 Z6eyiNIogWzPiVbpu3QsRkUpVIb/i2EosShNhqQV2dRABCybW8M8m5k+qUGpA1bbc4V9d
-	 JHtUadupN/71Cv1OQXz/gkbWR40WJXGOfRNUIXGjG7+kHi7qLfDmM0PeiEwt21Zfuhatx
-	 WS516pVPsgzVUh5d6zMJ95DuXH3qNYyiDoukh25hxQc1r6FQNwHuxFiypVjWJyLD07A==
+	t=1795630233;
+	b=ionC9StWx35CU1viC8pQmkGSBrr+N2aY4tOQlG2W8M4pJRhrETcMA4QxHKDAxm9CpSkl
+	 T5fw0Pe+3WR72r261RgOi7W6X1i/uy7b3LfPsOL/OMXpdKAVUj4+jmjCHZcoFgsF40VZb
+	 3ktfx1yZ24qUEqtPMzAiy+1pm37yREFao3MVnp89h1cFKM3XWo4deYpV0bfAtBR4QC55t
+	 QfEXaS92hu0O5/MkPrFTYTFDwEmGtvzZEMn3ju3/VxTTBc9lGnU+8BcUpGv2VP8JZjMT8
+	 RWmT+KTfmGH53rYQuhJwyGsegOJ14NtMIKZsgSpgrIKOVfa1K0Gn0mJjMTs9oFEby7g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795628781;
-	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=CZMVuuW8Z0sZJ+4aQAdQdzXUhgbrzBTT6X7icn2CvQs=;
-	b=nPae8Y/b4a0r49uEFKBT0bkzT19UKzUzK2o+6urcKHhgJdsVyvNYG9+2hdq2rBNnCKZS
-	 42aNBn02gXwEQ3a/BY+kh1eybkqDF+nRHtc6vOtfFHUzuJJMtlZqGClEWEfvAeyKv02+i
-	 SiorjXc8FTEyt3zJ6FGw1pzjnKIgOBIq0cGtCix/d4L7gxNB5V1C+fvahx4BDM827p5qn
-	 tQkHPdgHN/LRJRJRL+/K5O9nlYkCEoauZa9GUYhXzrlQO9glemgrYjeMPbGRusVyU8pBP
-	 zDhslxjeJgyXm8WLTQdjKsgBA5dleKMmrn+awIBK+hu8Uic3XtYTgSCbQqhBfQlZHKQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795630233;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=cnvFVVfsDszro7BDTUtT2mGOtTw1Rb1V9/qFs0+J5PM=;
+	b=DadCJAl54fMwynwhZpQgkTLO+mBa2s1xTtwbjWZ6bcvR03ONdl71WwwREyM7GAc4rX5p
+	 dp8dupVwRPkCEJrUGP6da8FCWuW2XXRNDQktpt/KrrVJ5bvWzcLSbiRXzQxcbx1QQAEOe
+	 TeMjqwUn1rtyW76R8HyCu28dMvbPPU4ezv0BgATMhlvtHMYzITHaFfaUh++0HgGuBL9au
+	 pHKZTuxY6pleTTB18coaGDYan1X5sqRwcinyjlLVmGu52YM3wPVGyUHcB7qIavvKA8R1y
+	 1NZG6at9AbAOwAdEA7mHBG7BZHbHtV8WIXpM+k+bxS2gHnrfSchVApz3MmTif0y2+oA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CUNnJIS4;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IOnXnaUl;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88B55606A321;
-	Wed, 25 Nov 2026 17:46:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01EBC606A326
+	for <linux-xfs@vger.kernel.org>; Wed, 25 Nov 2026 18:10:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CUNnJIS4
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 779801F000CA;
-	Wed, 25 Nov 2026 17:46:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IOnXnaUl
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 411AC1F000C6;
+	Wed, 25 Nov 2026 18:10:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795628780;
-	bh=CZMVuuW8Z0sZJ+4aQAdQdzXUhgbrzBTT6X7icn2CvQs=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=CUNnJIS4rVyaQunswSKTxipnPr62OzyIrx5hI3OyVeJz5DItVwoZ8FskEVPL/mWht
-	 maAyYnzZNyBf5auwxI2bAXBcJg+jTxpx5RraQbsNqLzQC29jY6qb5/bbB/D9wdfsg5
-	 Fb7irujXGZDAWz1Hc1eqC2t0yA+iqjSpYFjhvn8k8IOUnJj+Zlub5h4JG8ST80oE5g
-	 fJvpnihCwtdq6Ea0/ibzedEmOo3Kq6AAECs5Tk43NuSXHCVsEPJkiuy7alb6Ubv6ep
-	 i485jz4x6OxIKMSGKlmsgNEqYT/pdpBPCl1aLBj8isoocILXUZj6TZq/SR/bSSe3E9
-	 MZEyInZaHJ3zQ==
-From: cem@kernel.org
-To: cem@kernel.org
-Cc: linux-xfs@vger.kernel.org,
-	hch@lst.de,
-	sandeen@sandeen.net,
-	dgc@kernel.org,
-	aalbersh@kernel.org,
-	bfoster@redhat.com,
-	stable@vger.kernel.org
-Subject: [PATCH v3 2/2] xfs: force all shared extent swap to use rmap shared path
-Date: Wed, 25 Nov 2026 18:46:00 +0100
-Message-ID: <20261125174607.135959-3-cem@kernel.org>
-X-Mailer: git-send-email 2.56.1
-In-Reply-To: <20261125174607.135959-1-cem@kernel.org>
-References: <20261125174607.135959-1-cem@kernel.org>
+	s=k20260515; t=1795630232;
+	bh=cnvFVVfsDszro7BDTUtT2mGOtTw1Rb1V9/qFs0+J5PM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=IOnXnaUlmILSGMIJjN3KPGDKAnWxx2+N7Vf6Ot3DhLS3bzzUV5ws7e3mhNO6GEjK4
+	 4/tgVrDqGUD2wMv8KCNV26XVh7R61lHoe7iQUdhm025M3/j68tkfyhJBnYPg9nIdaS
+	 GMtdC9thfQrcELEmldj1xGm10A9RPwnzazzH9KjobXBb0esTBhTIX12rp4wxHfZSb7
+	 lExs1lbEGVNeu5nLa8qJnGwWiD68VHbFsv9J52cs9KPUhODYEqh2GVwgeDnrtdBmKA
+	 SG4OFpIJw/DdO49P/KNyMBIdFo+lVHyOSaANdp6pkpFoOlimh9Nmw/BlMrPEQ8G8AL
+	 oVIiT+qc145cA==
+Date: Wed, 25 Nov 2026 19:10:29 +0100
+From: Alejandro Colomar <alx@kernel.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org, Carlos Maiolino <cem@kernel.org>, 
+	"Darrick J. Wong" <djwong@kernel.org>, Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] xfs: Remove incorrect use of '&'
+Message-ID: <awckBo8FkdsGtb1t@devuan>
+References: <3783cf39b873890896eb889c8c09edb455559fce.1795626969.git.alx@kernel.org>
+ <34b824e8-21fc-4271-bd60-29cc8b06a292@sandeen.net>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -63,134 +57,103 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="idyrh6dmakyxj6pq"
+Content-Disposition: inline
+In-Reply-To: <34b824e8-21fc-4271-bd60-29cc8b06a292@sandeen.net>
 
-From: Carlos Maiolino <cem@kernel.org>
 
-Currently when swapping inodes with shared extents in a rmap enabled FS,
-we enforce the rmap updates to use the rmap_shared path only when the
-target inode has shared extents, but we should also be using the
-rmap_shared path for the case when only the source inode's extent is
-shared.
+--idyrh6dmakyxj6pq
+Content-Type: text/plain; protected-headers=v1; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+From: Alejandro Colomar <alx@kernel.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org, Carlos Maiolino <cem@kernel.org>, 
+	"Darrick J. Wong" <djwong@kernel.org>, Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] xfs: Remove incorrect use of '&'
+Message-ID: <awckBo8FkdsGtb1t@devuan>
+References: <3783cf39b873890896eb889c8c09edb455559fce.1795626969.git.alx@kernel.org>
+ <34b824e8-21fc-4271-bd60-29cc8b06a292@sandeen.net>
+MIME-Version: 1.0
+In-Reply-To: <34b824e8-21fc-4271-bd60-29cc8b06a292@sandeen.net>
 
-Reported-by: Lauri Gates <lauri.gates@gmail.com>
-Fixes: 1f08af52e7c9 ("xfs: implement swapext for rmap filesystems")
-Cc: stable@vger.kernel.org
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
----
-V3: Remove redundant code I forgot to remove on V2...
+Hi Eric,
 
-V2: Use a transaction roll when setting reflink flag to the inodes if we
-need to do update flags. I was initially avoiding doing so but seems
-like any attempt to fix it without logging the change always risks to
-leave a timebomb behind.
+> Date: 2026-11-25 11:43:00-0600
+> From: Eric Sandeen <sandeen@sandeen.net>
+>
+> On 11/25/26 11:16 AM, Alejandro Colomar wrote:
+> > We want to pass the character array, not a pointer to it.
+> >=20
+> > This seems an obvious typo, introduced in a48373e7d35a (2026-01-20;
+> > "xfs: start creating infrastructure for health monitoring").
+>=20
+>=20
+> So,
+>=20
+> Fixes: a48373e7d35a ("xfs: start creating infrastructure for health monit=
+oring")
+> Cc: stable@vger.kernel.org
 
- fs/xfs/xfs_bmap_util.c | 60 +++++++++++++++++++++++++++---------------
- 1 file changed, 39 insertions(+), 21 deletions(-)
+It's unnecessary, because the binary will have the same exact value
+passed.  It's only a type-system issue, which affects diagnostics etc.,
+but doesn't create an actual bug.
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 73e7db3203c0..4808bb728a95 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1302,17 +1302,6 @@ xfs_swap_extent_rmap(
- 	xfs_filblks_t			ilen;
- 	xfs_filblks_t			rlen;
- 	int				nimaps;
--	uint64_t			tip_flags2;
--
--	/*
--	 * If the source file has shared blocks, we must flag the donor
--	 * file as having shared blocks so that we get the shared-block
--	 * rmap functions when we go to fix up the rmaps.  The flags
--	 * will be switch for reals later.
--	 */
--	tip_flags2 = tip->i_diflags2;
--	if (ip->i_diflags2 & XFS_DIFLAG2_REFLINK)
--		tip->i_diflags2 |= XFS_DIFLAG2_REFLINK;
- 
- 	offset_fsb = 0;
- 	end_fsb = XFS_B_TO_FSB(ip->i_mount, i_size_read(VFS_I(ip)));
-@@ -1399,12 +1388,10 @@ xfs_swap_extent_rmap(
- 		offset_fsb += ilen;
- 	}
- 
--	tip->i_diflags2 = tip_flags2;
- 	return 0;
- 
- out:
- 	trace_xfs_swap_extent_rmap_error(ip, error, _RET_IP_);
--	tip->i_diflags2 = tip_flags2;
- 	return error;
- }
- 
-@@ -1547,6 +1534,41 @@ xfs_swap_change_owner(
- 	return error;
- }
- 
-+/*
-+ * If either file has shared blocks, both may own shared blocks once the extents
-+ * are exchanged, so set reflink flag on both and init the CoW fork.
-+ *
-+ * rmap code chooses how to process each extent based on the reflink flag on the
-+ * inode being remapped.  Both at runtime and when log recovery attempts to
-+ * replay deferred bmap intents.
-+ */
-+static int
-+xfs_extents_set_reflink(
-+	struct xfs_trans	**tpp,
-+	struct xfs_inode	*ip,
-+	struct xfs_inode	*tip)
-+{
-+	int			error;
-+
-+	if (xfs_is_reflink_inode(ip) == xfs_is_reflink_inode(tip))
-+		return 0;
-+
-+	ip->i_diflags2 |= XFS_DIFLAG2_REFLINK;
-+	tip->i_diflags2 |= XFS_DIFLAG2_REFLINK;
-+	xfs_ifork_init_cow(ip);
-+	xfs_ifork_init_cow(tip);
-+	xfs_trans_log_inode(*tpp, ip, XFS_ILOG_CORE);
-+	xfs_trans_log_inode(*tpp, tip, XFS_ILOG_CORE);
-+
-+	error = xfs_trans_roll(tpp);
-+	if (error)
-+		return error;
-+
-+	xfs_trans_ijoin(*tpp, ip, 0);
-+	xfs_trans_ijoin(*tpp, tip, 0);
-+	return 0;
-+}
-+
- int
- xfs_swap_extents(
- 	struct xfs_inode	*ip,	/* target inode */
-@@ -1705,6 +1727,10 @@ xfs_swap_extents(
- 	src_log_flags = XFS_ILOG_CORE;
- 	target_log_flags = XFS_ILOG_CORE;
- 
-+	error = xfs_extents_set_reflink(&tp, ip, tip);
-+	if (error)
-+		goto out_trans_cancel;
-+
- 	if (xfs_has_rmapbt(mp))
- 		error = xfs_swap_extent_rmap(&tp, ip, tip);
- 	else
-@@ -1713,14 +1739,6 @@ xfs_swap_extents(
- 	if (error)
- 		goto out_trans_cancel;
- 
--	/* Either inode may now own shared blocks; flag both, with CoW forks. */
--	if ((ip->i_diflags2 | tip->i_diflags2) & XFS_DIFLAG2_REFLINK) {
--		ip->i_diflags2 |= XFS_DIFLAG2_REFLINK;
--		tip->i_diflags2 |= XFS_DIFLAG2_REFLINK;
--		xfs_ifork_init_cow(ip);
--		xfs_ifork_init_cow(tip);
--	}
--
- 	/* Swap the cow forks. */
- 	if (xfs_has_reflink(mp)) {
- 		ASSERT(!ip->i_cowfp ||
--- 
-2.56.1
+I would add the 'Fixes' tag, but without stable@, since it doesn't need
+to be backported.  I didn't include the 'Fixes' tag because some
+maintainers don't want to see them if there's no bug in the binary.
 
+Let me know your preference.
+
+
+Cheers,
+Alex
+
+>=20
+> > Cc: Darrick J. Wong <djwong@kernel.org>
+> > Cc: Christoph Hellwig <hch@lst.de>
+> > Signed-off-by: Alejandro Colomar <alx@kernel.org>
+> > ---
+> >  fs/xfs/xfs_healthmon.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> >=20
+> > diff --git a/fs/xfs/xfs_healthmon.c b/fs/xfs/xfs_healthmon.c
+> > index 2bdd747f1ead..56d19ffb02b3 100644
+> > --- a/fs/xfs/xfs_healthmon.c
+> > +++ b/fs/xfs/xfs_healthmon.c
+> > @@ -1061,7 +1061,7 @@ xfs_healthmon_validate(
+> >  		return false;
+> >  	if (hmo->format !=3D XFS_HEALTH_MONITOR_FMT_V0)
+> >  		return false;
+> > -	if (memchr_inv(&hmo->pad, 0, sizeof(hmo->pad)))
+> > +	if (memchr_inv(hmo->pad, 0, sizeof(hmo->pad)))
+> >  		return false;
+> >  	return true;
+> >  }
+>=20
+
+--=20
+<https://www.alejandro-colomar.es>
+
+--idyrh6dmakyxj6pq
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEES7Jt9u9GbmlWADAi64mZXMKQwqkFAmsHJJQACgkQ64mZXMKQ
+wqlqvw/+IeveRZFtAXq3JbUIqgHUO0v2vtJueoeX8VWiGEtZoVCxoS8Pd8/ZqBpV
+GGQ5EXgyeSX9sPU5VnTZz4wC5oW8OBrxUs01oX1DO8pEATaYBP0rkGh/zpWEK6XW
+2V84aSWD2ELsjz65yMaN8YKtpW4OGHQn+clnnTWAV6DNLREzAsnI3he5tm75q6/+
+k5pjN0pW+Qhf6BA7L9pFwkk5MpZgnhZP+gNkkiW1IdOXzI2cCeq/vxH92u6qEDQq
+8g1maP9e8BFnGoSpZA6egthCbxb8KZZlGu/l71ujnkkmcBH9SExyTdJFGjn+6GTa
+6h1tzcMiFSYi0p7jPee/mOSF4j+Q/5o0QRdkSTDpd38gKM38GDh0N/MBXMbf2v6z
+DiN1QyHrfdQ8qhOiMIoI/FuQYV7p5iF1Bcm45u3KDJQq2QQyWSF9D8kGCxR+/SvN
+i2Q96nLfumVBgg+8msJ7YCmJm42pMF/oxnzP7+9g2N00EN9XXfLjFiBoUkVazUEJ
+Ka7MnxswHfD1VFGJb67bh68E/1gI0Spto/p5V0gy0TbZAswbuJir5TDWGNAGIjM4
+ZXebZSw7eanYddsp0AQOwy/yrI+0JZiz+AYf/qwhqpgYsPJL08SmCb0TB0I1Rkw5
+80bvDGKsCNeBKjoi/UnosrIx8vdFcf9L29ecTIGTimClHWvOPEw=
+=H/ZC
+-----END PGP SIGNATURE-----
+
+--idyrh6dmakyxj6pq--
