@@ -1,51 +1,63 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=193.35.52.50
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795637928;
-	b=QUZdvnGiFv2iISZ8XXc67njWreGQ50wj4Cy14Kugk1A3ITxzvSUNcAbWzzYF3yhSzttC
-	 2DYY+LU2I5qz8kTeiotFQddfrEAt5Vqk/51NII88S5vzAAy/UbHlAv80BP9DwONzJ+4Bq
-	 Oi1cBmoObxAoWFe0fkLYyk2WWT06bsWOoqqgRzUEmNriBone9FGLWj+uUA+O6DArQA9S6
-	 xIc7FrkO4w/2aGgMwYBY1sCGvflEp5rPuIxt+SKYrHK3h+XR90alPPgNcLVaios5EYwKf
-	 izajDqogrH3QKc+HTMn6255l5OEGmbV40zFadUFGAEYY/Iily4FN+A5ezOCSUASn3lQ==
+	t=1795638114;
+	b=oFgEEGYUz73+gHLUs8tn5ELUppzJDdBt/Pyim7VrWgQwEyhtyw0PiaWdKUcFV3n9NZF4
+	 S7lEmuIHoRx+JRlJmQlcRAzMFFpSSf2ND+t+66GlgqSGD5kr97KyYmIxksQxUTknKrqkv
+	 kVQ2PnhaKsOsf8IS3MYP31izJqfEeP81yrpjaOavTpK99PSui5iT+aaOA3ttCiGVouf+F
+	 T6Mk5QgiDAL509CKvXEmk9FRNhT+1M+iUyHTPTq6712zFcM+IqmgfGJEDiUhacHmm7sdh
+	 LLBJMYT+6l6Lqt2gRZKVJ6Fq81zm6wYJGjEMspGRAAHPM64X6OYD94H3/d6EHGAFXKQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795637928;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=+s1CzQIp+ra31lVXhRrG+VAc19W8BFw9ZtWwSGoEvfM=;
-	b=4Qjqe1q3/bkOrTHqO0/sGJdkAHe+sDuIVMRYRlqbrbaRamNhI7iqo0M27Bocd9zc752j
-	 MH7bt8wpUcCKwbC/jQ4Fd8H8XdKf8dQdQk0TaTx+N5gtxidc/O66LdeJCIu3uDnHm4DUj
-	 LhXDdr3Pn2nb1te72w9HpFzPHNhvGHP8JJFYnZqNRqjwz6h6eFmzkT3RDJBM6R2yAtW97
-	 YASSmsyTt4vARHtg+D0pJR3NgjeTIszNkNM1eAyGJT/TA9cPimsu6z0JYzTRj4FWQ97oR
-	 wTzgP79eJ+pVEeIoNFa4H1Pf0Aig46eKqoNBaoiDi3v4MBW9jAjXxgZEtoQjRirhgEQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795638114;
+	h=DMARC-Filter:DKIM-Signature:Received:Date:From:To:Cc:Subject:
+	 Message-ID:X-Operating-System:References:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To;
+	bh=SMuvUMmcd51+aQ9L+bd+zME39Xeb4Mz81XJwG9MwcCE=;
+	b=DuEMK+miYJJaI8K/561E/4h2gWJe4bwwuXcE9y1C2hXqRfm/oklCRMHqDfTCAm0SsRX3
+	 0sN59duttB4dWrUwm5K+VsISFmmkXP9g2QgE5DONcz0swEu1rvaiHlQSUt6j9ovg57+Sk
+	 Ig4Yx/R00lKFvtUmEVIt1bEDVrdLFC3JOOOPvDIqKvNaLVz4XvhncVWbxdHtJfzk+1qBD
+	 rq2Rn9ztvzFqXRInQtz+znB/hs7tlQ5fD+VL1Oo9gNsrmyBQAkCW1bAxAx2Pgy5Tsj6yC
+	 TdGsEVEdDDJhOSymoJgtr8BHD5+XAtHEOutOHCq3FLgEA1OuzBqHNqGgW7YGJGfx75A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lhfuaryK;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=none header.from=gunderson.no;
+	spf=pass smtp.mailfrom=gunderson.no;
+	dkim=pass header.d=gunderson.no header.i=@gunderson.no header.a=rsa-sha256 header.s=legacy header.b=po1JIVWC;
+	arc=none smtp.remote-ip=193.35.52.50
+Received: from pannekake.samfundet.no (pannekake.samfundet.no [193.35.52.50])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5918F606A31E
-	for <linux-xfs@vger.kernel.org>; Wed, 25 Nov 2026 20:18:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 183DB606A68C
+	for <linux-xfs@vger.kernel.org>; Wed, 25 Nov 2026 20:21:53 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 183DB606A68C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gunderson.no
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gunderson.no
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lhfuaryK
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1310B1F000C4;
-	Wed, 25 Nov 2026 20:18:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795637928;
-	bh=+s1CzQIp+ra31lVXhRrG+VAc19W8BFw9ZtWwSGoEvfM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=lhfuaryK3CnLPTDQTmUqyZ7M9Vq7fWH9braly3d4uaNMTNpWotZeYeH6S57UjAr4S
-	 kW7X6DLdA0eDsu01Izcfnrr5e657928mdtA0IMwhzu+YOJG4jhGaY3E7P0BDIN9g3U
-	 I/v0ouuvxdHjzmzEYGAlZSt4kzTckW7ogrUPWyNtNmShUNDnfsZXhM7J6shoUkw6Rn
-	 wPiAgLpszvLbwhxrStkjqINUUOFZwbZ9wZDW/QjiRw9GImhRa2aFugi7r1jX96Vhs0
-	 1iasaSdGSVxMekaM7ZG82TRIYpAxSP+++Ijnzci/HnZPKs4r2Tb8QIDWNARnyFsg0L
-	 hIrC5ZmxbHV9g==
-Date: Thu, 26 Nov 2026 07:18:39 +1100
-From: Dave Chinner <dgc@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: handle ophdr formatting entirely in xlog_write
-Message-ID: <awdCn4ByxYZSWE9E@dread>
-References: <20261125144430.728485-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=gunderson.no header.i=@gunderson.no header.a=rsa-sha256 header.s=legacy header.b=po1JIVWC
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=gunderson.no; s=legacy; h=In-Reply-To:Content-Type:MIME-Version:References:
+	Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:
+	Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+	Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+	List-Subscribe:List-Post:List-Owner:List-Archive;
+	bh=SMuvUMmcd51+aQ9L+bd+zME39Xeb4Mz81XJwG9MwcCE=; b=po1JIVWChG9KzvAk/f7S1Y5Y7d
+	Y6lFtamIHMOxaN+Bz2hl6h0778pDKVHk87htFuhWHywXFOFP5ZP/fJCl2XEvUynuBoic4Ulagsite
+	q7iQDq5p7V5/aIHqzwjjn0FPogg6k5agGb4I2oJWpGLyPuBOH0i4Y4w7COPJZLA/40zCPZzNMWYbp
+	Qc3maKNcL37mIp1zxJbh9hFTnapmaE/WR5lXW6DJjMOamnYKPBfxCg6IIQenUKfUjk2id6GAU3ZWG
+	Q+3xNq67Fourqo+oTdNcmSCinHTiBILO/cPCyOD2fIGG/+KaN3ELh+fa5BFElBcZruok6AIQHJW23
+	2SnDKPMQ==;
+Received: from sesse by pannekake.samfundet.no with local (Exim 4.98.2)
+	(envelope-from <steinar+bounces@gunderson.no>)
+	id 1xWJGb-00000004TyR-0VbL;
+	Wed, 25 Nov 2026 21:07:23 +0100
+Date: Wed, 25 Nov 2026 21:06:57 +0100
+From: "Steinar H. Gunderson" <steinar+kernel@gunderson.no>
+To: Dave Chinner <dgc@kernel.org>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: Hung I/O
+Message-ID: <qysdhvymyqqjfxxw3phjqgvpzufnrebgjukdehpmbhsov6475z@no5x7lcenlbd>
+X-Operating-System: Linux 7.3.6 on a x86_64
+References: <sh2gykmlybrlf77d6mp76pddecwl47pxoookx2sbo74y6ffme4@gcu2kqu7q4o2>
+ <awc-vvNFH3vfYLWv@dread>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -55,49 +67,36 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20261125144430.728485-1-hch@lst.de>
+In-Reply-To: <awc-vvNFH3vfYLWv@dread>
 
-On Wed, Nov 25, 2026 at 03:42:21PM +0100, Christoph Hellwig wrote:
-> Hi all,
-> 
-> for historic reasons, generating of the log ophdrs is split over the log
-> item formatting and the core log write in somewhat awkward ways.  This
-> less to subtle extra code, extra (small) memory usage for keeping the
-> headers in memory when they are not needed.  This series refactors
-> the log vec formatting a bit and the xlog_write code a lot so that the
-> ophdrs are formatted when writing to the iclog, and the no memory
-> for the ophdrs is allocated for logvecs in the CIL.
+On Thu, Nov 26, 2026 at 07:02:06AM +1100, Dave Chinner wrote:
+> can you post the entire dmesg output from 'echo w >
+> /proc/sysrq-trigger' and 'echo l > /proc/sysrq-trigger' to capture
+> all the currently blocked and running processes when the hang
+> happens.
 
-I don't have the capacity to review this any time soon.
+Sure. I'll recreate the issue, it shouldn't take forever; but it takes a
+while to get the system back to working again so that I can send email :-)
 
-Given all the issues we're still finding and having to fix from LLM
-analysis, I'm not a great fan of doing open-heart surgery to the
-core journal write path right now. This is not simple code, and
-without proper on-disk journal format verification, we've never
-really had a way of rigourously testing journal write path reworks.
+Some possibly relevant data points:
 
-These sorts of changes have always been a bit of a 'merge and hope'
-process because 'test it with log stress' via fstests doesn't
-actually verify that what has been written to the journal has been
-recovered correctly. It just tests that recovery completes with
-error, and the lack of errors used to imply 'the code is good'.
+ - It happens even without writes to the mmap-ed file.
+ - Changing the file system to ext4 gives the same problem
+   (stack traces show jbd2).
+ - Using a raw block device does _not_ give the same problem.
 
-I don't think that's good enough anymore. In this new world of
-journal fuzzing and LLM bug finding, we really need much
-more rigourous verification of what gets written to the journal
-before we start making fundamental changes to the way we track and
-write formatted log items into the journal. That way the log stress
-tests we currently have will formally verify that the contents
-of the journal being recovered are valid, and that we haven't
-introduced some subtle weird bug that will bite us in the future.
+>> Any ideas? It appears to be fairly easily reproducible, so I can do more
+>> debugging if need be (although it's a production machine, so not too much
+>> rebooting would be fine).
+> Start with getting all the blocked tasks and building a dependency
+> map of which tasks are stuck behind others. That will narrow down
+> whether this is some internal deadlock in the filesystem or whether
+> the lower layers of the stack have lost a bunch of IO completions...
 
-So, can we hold off making runtime infrastructure changes to the
-journal write path until after we land the recovery time on-disk
-journal format verification?
+OK, I'll see what I can find out.
 
--Dave.
+/* Steinar */
 -- 
-Dave Chinner
-dgc@kernel.org
+Homepage: https://www.sesse.net/
