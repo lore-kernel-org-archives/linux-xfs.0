@@ -1,53 +1,53 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795630233;
-	b=ionC9StWx35CU1viC8pQmkGSBrr+N2aY4tOQlG2W8M4pJRhrETcMA4QxHKDAxm9CpSkl
-	 T5fw0Pe+3WR72r261RgOi7W6X1i/uy7b3LfPsOL/OMXpdKAVUj4+jmjCHZcoFgsF40VZb
-	 3ktfx1yZ24qUEqtPMzAiy+1pm37yREFao3MVnp89h1cFKM3XWo4deYpV0bfAtBR4QC55t
-	 QfEXaS92hu0O5/MkPrFTYTFDwEmGtvzZEMn3ju3/VxTTBc9lGnU+8BcUpGv2VP8JZjMT8
-	 RWmT+KTfmGH53rYQuhJwyGsegOJ14NtMIKZsgSpgrIKOVfa1K0Gn0mJjMTs9oFEby7g==
+	t=1795630311;
+	b=XLHDz+Hk5PwgLOgG+tFHW99AzndtyZVcszs7QUwSqaADym8zOv6AeFs+2eBy/zF+TMxW
+	 QGVM/sny2MXRVsAfRFQZYm6XyNZJ25Zt5ZBzjOqY3Xs2GLFj0pY+MZreGomAyEX8QVPJD
+	 kg4W7musczLtMUDIuG/LKxR1YhsDyp80hgX6C4EBcb30nsKtz2wHcK0bdFAMl7xG54ejX
+	 WlSPQwr3k5t3N+m1zJLBfEoeD3coxvjVWItPDhmo50qqAuBXiMqA0J4dqh34JKCfezsuI
+	 RxTsfk/qVPilRx5O6md8F53nkjbebw0nT2OBx1tRSTSl/diqLrgLlIqSt2Mzu8Au8Vw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795630233;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795630311;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=cnvFVVfsDszro7BDTUtT2mGOtTw1Rb1V9/qFs0+J5PM=;
-	b=DadCJAl54fMwynwhZpQgkTLO+mBa2s1xTtwbjWZ6bcvR03ONdl71WwwREyM7GAc4rX5p
-	 dp8dupVwRPkCEJrUGP6da8FCWuW2XXRNDQktpt/KrrVJ5bvWzcLSbiRXzQxcbx1QQAEOe
-	 TeMjqwUn1rtyW76R8HyCu28dMvbPPU4ezv0BgATMhlvtHMYzITHaFfaUh++0HgGuBL9au
-	 pHKZTuxY6pleTTB18coaGDYan1X5sqRwcinyjlLVmGu52YM3wPVGyUHcB7qIavvKA8R1y
-	 1NZG6at9AbAOwAdEA7mHBG7BZHbHtV8WIXpM+k+bxS2gHnrfSchVApz3MmTif0y2+oA==
+	bh=xtMBFMoouCpDoeqK4+6LdrZDGz7E08Ldy1RfvHC/uag=;
+	b=TBUlhmPZHx9D/nLvCTOR2V7QFjDebSSZMFJv7LDMngETkZBGoaQSq8KeANZ1Ncscte8d
+	 XwLEiKsq41zAn0hxCOINc3P2V1doJairjDJUx/Gj0apZMoVlI6t0c+i7JZZ2Y0+S+Bl3i
+	 3T2Cd8qr7PhzGE8WIH9apzQVpn883Tjl0llvgtyH37X0Ma3wxuFlLuVenI7JSDEWHKwDq
+	 5HWH6WrBast9BZrMb8YkFIjmz9TELPsqMWTUoJrRRSEuHpYl6cRXPGwKqjyUKNA9WAAK8
+	 C8H9kc3DXlwixsy0REL4KXCCCsGelhug3Fx7K0k+h2K10hlgrgV7Ldun6izqfcjdO9w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IOnXnaUl;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Zu0+CJ3F;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01EBC606A326
-	for <linux-xfs@vger.kernel.org>; Wed, 25 Nov 2026 18:10:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5169606A339
+	for <linux-xfs@vger.kernel.org>; Wed, 25 Nov 2026 18:11:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IOnXnaUl
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 411AC1F000C6;
-	Wed, 25 Nov 2026 18:10:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Zu0+CJ3F
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6EFF81F000C4;
+	Wed, 25 Nov 2026 18:11:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795630232;
-	bh=cnvFVVfsDszro7BDTUtT2mGOtTw1Rb1V9/qFs0+J5PM=;
+	s=k20260515; t=1795630311;
+	bh=xtMBFMoouCpDoeqK4+6LdrZDGz7E08Ldy1RfvHC/uag=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=IOnXnaUlmILSGMIJjN3KPGDKAnWxx2+N7Vf6Ot3DhLS3bzzUV5ws7e3mhNO6GEjK4
-	 4/tgVrDqGUD2wMv8KCNV26XVh7R61lHoe7iQUdhm025M3/j68tkfyhJBnYPg9nIdaS
-	 GMtdC9thfQrcELEmldj1xGm10A9RPwnzazzH9KjobXBb0esTBhTIX12rp4wxHfZSb7
-	 lExs1lbEGVNeu5nLa8qJnGwWiD68VHbFsv9J52cs9KPUhODYEqh2GVwgeDnrtdBmKA
-	 SG4OFpIJw/DdO49P/KNyMBIdFo+lVHyOSaANdp6pkpFoOlimh9Nmw/BlMrPEQ8G8AL
-	 oVIiT+qc145cA==
-Date: Wed, 25 Nov 2026 19:10:29 +0100
+	b=Zu0+CJ3FsiCVn7sUVtN7Zrtc8ghf2v0JZsZntfoqB3CFdmrSPSXaj97VHx6jEM9/R
+	 n2xrHpvv95alUxW2CSL/yxxuOn/ZFM3J816KyLLgKI1cNJOuKAk/Ki6P2E4QbuOx4E
+	 bRQEPI6qZOPUS7cNLZp1MW0gDVWKnfxGkF3M/rjikzjCL3VlxvGnQB/ctDs7ngF5lf
+	 bRBWit/epRgupUY2iWlNTo2/L1mYwftD0J/lmUtsQGnw9ObsIeyQDnZ4I3pNLZ4U77
+	 QbwGXTyNka9zFbizblVsNifQGs691h+5Hlyu4bCHYaeRy0snMlsUVL4Ewh3a3dGjm+
+	 Jz4GkqWmP+8gQ==
+Date: Wed, 25 Nov 2026 19:11:48 +0100
 From: Alejandro Colomar <alx@kernel.org>
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org, Carlos Maiolino <cem@kernel.org>, 
-	"Darrick J. Wong" <djwong@kernel.org>, Christoph Hellwig <hch@lst.de>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <djwong@kernel.org>, 
+	Christoph Hellwig <hch@lst.de>
 Subject: Re: [PATCH] xfs: Remove incorrect use of '&'
-Message-ID: <awckBo8FkdsGtb1t@devuan>
+Message-ID: <awckyI8cAWM_kLzb@devuan>
 References: <3783cf39b873890896eb889c8c09edb455559fce.1795626969.git.alx@kernel.org>
- <34b824e8-21fc-4271-bd60-29cc8b06a292@sandeen.net>
+ <awccmN95lHSd7vp2@cronus.toxiclabs.cc>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -58,59 +58,37 @@ List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="idyrh6dmakyxj6pq"
+	protocol="application/pgp-signature"; boundary="qaozjenvmtvwtfjt"
 Content-Disposition: inline
-In-Reply-To: <34b824e8-21fc-4271-bd60-29cc8b06a292@sandeen.net>
+In-Reply-To: <awccmN95lHSd7vp2@cronus.toxiclabs.cc>
 
 
---idyrh6dmakyxj6pq
+--qaozjenvmtvwtfjt
 Content-Type: text/plain; protected-headers=v1; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 From: Alejandro Colomar <alx@kernel.org>
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org, Carlos Maiolino <cem@kernel.org>, 
-	"Darrick J. Wong" <djwong@kernel.org>, Christoph Hellwig <hch@lst.de>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <djwong@kernel.org>, 
+	Christoph Hellwig <hch@lst.de>
 Subject: Re: [PATCH] xfs: Remove incorrect use of '&'
-Message-ID: <awckBo8FkdsGtb1t@devuan>
+Message-ID: <awckyI8cAWM_kLzb@devuan>
 References: <3783cf39b873890896eb889c8c09edb455559fce.1795626969.git.alx@kernel.org>
- <34b824e8-21fc-4271-bd60-29cc8b06a292@sandeen.net>
+ <awccmN95lHSd7vp2@cronus.toxiclabs.cc>
 MIME-Version: 1.0
-In-Reply-To: <34b824e8-21fc-4271-bd60-29cc8b06a292@sandeen.net>
+In-Reply-To: <awccmN95lHSd7vp2@cronus.toxiclabs.cc>
 
-Hi Eric,
+Hi Carlos,
 
-> Date: 2026-11-25 11:43:00-0600
-> From: Eric Sandeen <sandeen@sandeen.net>
+> Date: 2026-11-25 18:38:11+0100
+> From: Carlos Maiolino <cem@kernel.org>
 >
-> On 11/25/26 11:16 AM, Alejandro Colomar wrote:
+> On Wed, Nov 25, 2026 at 06:16:45PM +0100, Alejandro Colomar wrote:
 > > We want to pass the character array, not a pointer to it.
 > >=20
 > > This seems an obvious typo, introduced in a48373e7d35a (2026-01-20;
 > > "xfs: start creating infrastructure for health monitoring").
->=20
->=20
-> So,
->=20
-> Fixes: a48373e7d35a ("xfs: start creating infrastructure for health monit=
-oring")
-> Cc: stable@vger.kernel.org
-
-It's unnecessary, because the binary will have the same exact value
-passed.  It's only a type-system issue, which affects diagnostics etc.,
-but doesn't create an actual bug.
-
-I would add the 'Fixes' tag, but without stable@, since it doesn't need
-to be backported.  I didn't include the 'Fixes' tag because some
-maintainers don't want to see them if there's no bug in the binary.
-
-Let me know your preference.
-
-
-Cheers,
-Alex
-
->=20
+> >=20
 > > Cc: Darrick J. Wong <djwong@kernel.org>
 > > Cc: Christoph Hellwig <hch@lst.de>
 > > Signed-off-by: Alejandro Colomar <alx@kernel.org>
@@ -130,30 +108,44 @@ Alex
 > > +	if (memchr_inv(hmo->pad, 0, sizeof(hmo->pad)))
 > >  		return false;
 > >  	return true;
+>=20
+> Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+
+Thanks!  Will you take the patch?
+
+
+Cheers,
+Alex
+
+>=20
 > >  }
+> > --=20
+> > 2.55.0
+> >=20
+>=20
 >=20
 
 --=20
 <https://www.alejandro-colomar.es>
 
---idyrh6dmakyxj6pq
+--qaozjenvmtvwtfjt
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAABCgAdFiEES7Jt9u9GbmlWADAi64mZXMKQwqkFAmsHJJQACgkQ64mZXMKQ
-wqlqvw/+IeveRZFtAXq3JbUIqgHUO0v2vtJueoeX8VWiGEtZoVCxoS8Pd8/ZqBpV
-GGQ5EXgyeSX9sPU5VnTZz4wC5oW8OBrxUs01oX1DO8pEATaYBP0rkGh/zpWEK6XW
-2V84aSWD2ELsjz65yMaN8YKtpW4OGHQn+clnnTWAV6DNLREzAsnI3he5tm75q6/+
-k5pjN0pW+Qhf6BA7L9pFwkk5MpZgnhZP+gNkkiW1IdOXzI2cCeq/vxH92u6qEDQq
-8g1maP9e8BFnGoSpZA6egthCbxb8KZZlGu/l71ujnkkmcBH9SExyTdJFGjn+6GTa
-6h1tzcMiFSYi0p7jPee/mOSF4j+Q/5o0QRdkSTDpd38gKM38GDh0N/MBXMbf2v6z
-DiN1QyHrfdQ8qhOiMIoI/FuQYV7p5iF1Bcm45u3KDJQq2QQyWSF9D8kGCxR+/SvN
-i2Q96nLfumVBgg+8msJ7YCmJm42pMF/oxnzP7+9g2N00EN9XXfLjFiBoUkVazUEJ
-Ka7MnxswHfD1VFGJb67bh68E/1gI0Spto/p5V0gy0TbZAswbuJir5TDWGNAGIjM4
-ZXebZSw7eanYddsp0AQOwy/yrI+0JZiz+AYf/qwhqpgYsPJL08SmCb0TB0I1Rkw5
-80bvDGKsCNeBKjoi/UnosrIx8vdFcf9L29ecTIGTimClHWvOPEw=
-=H/ZC
+iQIzBAABCgAdFiEES7Jt9u9GbmlWADAi64mZXMKQwqkFAmsHJOQACgkQ64mZXMKQ
+wql7+w/9GZ+ytOlJNUAdtRKyCbsQc8eYveHtjGr2vzeFCo84LUx72/8po3mTZgns
+LWBOOdMaOwam0ZuUdp3z79nH0vd58xHCzgtSv16o19aN4ByB8NeaRHeAS8QJFEmF
+1i0SzkrKhcFEW7JFG9rpB9cjQD9ObHAaQKR1pegGyZc/OG4BJA69D1ihZwkU4+6R
+AGgClRHHamIxSO5Ex2Hq2Uvyn99eOm7ZgUpHqwM6JhLNnmQAp902Qib6RVJc4Ba/
+qAgENJUupJCp/nwb5nND/ac3AI0mdg9LA4YYlwB1RQ10l+zhH6e0CsBnKBDeuhbM
+R1k50MJ7Idmo+Oy7D7HRBL1kZ/qCjZfHa7AaTLZ/N9DBoInXP+5KRm+XmrugLiFH
+SRyapA21wntRdWpmuakfZCjSnKYSwgxUwIc/5iw5315pZjt1yliMn5WqW6krdiKi
+0gA/mu2fLpYJqvIwMgFKDGQi45QQn8QFaAyjG0jnJVpp7DZZOKhZ8GLpbLjZeeOt
+1Ueh0ka33zpOU7Q2TwEwlijeODL9tdD/9w1o/8spGb7ja5sjrwlak269UPbLeF67
+SK6qtKIe/AD66wrjLa2lDGcyHXMQITsX7X7ufNfMzxjvVJnGhrnB22c0e9E2Wrid
+yig+odw9rwKYdi7ZcoGzVuwTsRCefj+7JwKpGKAN3HPRe5TrJf8=
+=qaZE
 -----END PGP SIGNATURE-----
 
---idyrh6dmakyxj6pq--
+--qaozjenvmtvwtfjt--
