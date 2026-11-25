@@ -1,66 +1,47 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=213.95.11.211
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795562169;
-	b=W7+nkpnfdoX1AVqht2SWdNYKgTFNyPYGFchwa4SGGZfq3uuAC9x6PN5grjVkPuneAmy6
-	 49F1XztXr+9uS88BhI9UBX5+aR0W01CduCaa9lpuc8UVdtrjVvgugr0yr07fscgxln12R
-	 J98HWFNZ/+jQul9qcMhgQyyEEDvAHdf39F5Orb+V0r5iN5hybSxok3kiV+Io9wwxPEhqW
-	 ZiQSc5mqpeXbyE8zabqJOkEB4Fgl/rEAunSOIZ7f/lk6ayLSegHCm4xHJ7cEt7g2lukRS
-	 sOaIunKIC7c6qGGVmTYzIWchlVRbkdEdwkjhFfbhurq6r7LFrmqq4otuVurpsPVGy0A==
+	t=1795585590;
+	b=oduw/g25JYhNVmZKztNZ0ZNxpkIM5aO60bWiZy6dFNrNnTsizTbiP7/jobiTn1ehrtEi
+	 WxXLSk8/uWDcz1QH9I0s+sbmbD/T9lGqfH5xJc1mzHyLmubANXEwGlO4xfxQucn9UbNqf
+	 jhr+P53Bc/mu4WJ19tC2MZU+G/jZUmp5qUpSa+i4BahKbFaoRACNAkK66oPsGM/inEQcv
+	 A3+nzAKoCbSG56F4WiUQKx2E/cyqkTwSVUlfnp9Ox8fWKQwUvPL6R2V/uEzTckFAqPShJ
+	 U//XHBc81FZmnb0t5d5tBKh1tq6vS+4R19Pd4qJws1JajCPmfSbdQcCdEjuKOQo2gkQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795562169;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=nw/51PF4TJNFh8UkFaKDOcT2MvzI7GDnyjnmESasy7A=;
-	b=2nhhA1jnfbO21h03arEICev4googn0Klf4a96IRFiyRYCzrQccZTUX3UEo1Vx9nTmiSG
-	 YNDrYz0jr3rRBeD7mINLAIjuODLDDOYOA1D5nQYMorUlq0oEkcLGvMusBugxNB3m/qEnP
-	 uT6yt8wOXFx+Y2vZPO+LY9QzoWSs55Sl4eADTSrL9sQIjQtNtj0SncNezvPiAkJ0Z2zX3
-	 uAjtnLFHDHmfGtCv9/8GhcK17mFFWAvZybTAfZPjodIaXo/RZ//sVjDyuoOnPDpSmCB20
-	 8b1zrMRwixxt1iHNmXLFm43C1SX8dptxnEFhzr/JHfb92lXndpMInyK5KN6Pw39DA7Q==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795585590;
+	h=DMARC-Filter:Received:Date:From:To:Cc:Subject:Message-ID:References:
+	 MIME-Version:Content-Type:Content-Disposition:
+	 Content-Transfer-Encoding:In-Reply-To:User-Agent;
+	bh=UjppQW2z3LMcQZPhdZjylAHGYGZ3oGJ4FmReTYyNVi0=;
+	b=B2SkMnhICtCTxkc5dgRn0nlbMfqk5R4zhRNdEPX9qYhFYzV/pVaSXwSX5aXDfhTr+d/w
+	 RydSNWhOHMJrwmo1hlkdwcPGMcyuelQCHxTiu2pnXkTEEUfra0+IibZ1KFP5lY3f7Goti
+	 HdNjcX+IqwLIHCRXJqDydAEyjA+/0e30/azF3bc6Pui/fAjK0pPiN8s1jNpYzKdH/r/lt
+	 8wuy5VubIoFWrzfNmuAGZpdAnS0B1Ty5R68nATldSXiXlj1Mmn3lBmNVMqryKcrW1vc0t
+	 zZt1h/wkSlkRXxtMKBsCj3axQN8TSR8cHUpKqx0dPPCgNQu2wn4xeaZizYO2/vbaQ5Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HPHUFdvH;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=lst.de;
+	spf=pass smtp.mailfrom=lst.de;
+	arc=none smtp.remote-ip=213.95.11.211
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE7EB606A31E;
-	Tue, 24 Nov 2026 23:16:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HPHUFdvH
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3E42E1F000C4;
-	Tue, 24 Nov 2026 23:16:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795562169;
-	bh=nw/51PF4TJNFh8UkFaKDOcT2MvzI7GDnyjnmESasy7A=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=HPHUFdvHFaRsE9kBhT28WZv933HqbbxEueLgYq6DCfD64pxj0Tm12m2wG2QQPry6u
-	 3LmY5mFetsFJ/IFlIXIMEpi6w3/NFm0EDZ2PvSRgFi+f58IGwQpicT30aXRhPvbGJA
-	 PMHsvkXxTueHLBJV0ToBHBwkmSoFxvkAiyiq61woFEzqBGQophErlMcHDwjRLTRHUh
-	 cS2au2/LHham7//s25WCXzlEdemwVwYGMePzlPxeWaDTRLwtM4N8suiZDUTeJbERSg
-	 MS9qM34OEGEEM+TGeuyOamWLJKh7IDQco/VNDvB6pGA8uRIGtwPxnzy/0NdAabSZt4
-	 MLRw5d/XPhQ0Q==
-Date: Tue, 24 Nov 2026 15:16:06 -0800
-From: Eric Biggers <ebiggers@kernel.org>
-To: Jan Kara <jack@suse.cz>
-Cc: Christian Brauner <brauner@kernel.org>, linux-fsdevel@vger.kernel.org,
-	Andreas Gruenbacher <agruenba@redhat.com>, gfs2@lists.linux.dev,
-	Mike Marshall <hubcap@omnibond.com>,
-	Martin Brandenburg <martin@omnibond.com>, devel@lists.orangefs.org,
-	Dave Kleikamp <shaggy@kernel.org>,
-	jfs-discussion@lists.sourceforge.net,
-	Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org,
-	David Howells <dhowells@redhat.com>,
-	Marc Dionne <marc.dionne@auristor.com>,
-	linux-afs@lists.infradead.org, Miklos Szeredi <miklos@szeredi.hu>,
-	fuse-devel@lists.linux.dev, linux-block@vger.kernel.org,
-	Chuck Lever <cel@kernel.org>, Jeff Layton <jlayton@kernel.org>,
-	linux-nfs@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>,
-	linux-fscrypt@vger.kernel.org
-Subject: Re: [PATCH v3 12/13] fscrypt: Use inode_or_folios_dirty() instead of
- explicit state check
-Message-ID: <20261124231606.GC2001@quark>
-References: <20261123085601.21199-1-jack@suse.cz>
- <20261123090040.19006-25-jack@suse.cz>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB602606A31E;
+	Wed, 25 Nov 2026 05:46:29 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DB602606A31E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id DEB7968BEB; Wed, 25 Nov 2026 06:46:24 +0100 (CET)
+Date: Wed, 25 Nov 2026 06:46:24 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Viacheslav Dubeyko <slava@dubeyko.com>
+Cc: Christoph Hellwig <hch@lst.de>, Christian Brauner <brauner@kernel.org>,
+	glaubitz@physik.fu-berlin.de, frank.li@vivo.com,
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+	vdubeyko@coreweave.com, linux-xfs@vger.kernel.org,
+	"Darrick J. Wong" <djwong@kernel.org>
+Subject: Re: [PATCH v5 1/5] iomap: add iomap_dio_end_io() helper
+Message-ID: <20261125054624.GB20515@lst.de>
+References: <20261118004844.3849979-1-slava@dubeyko.com> <20261118004844.3849979-2-slava@dubeyko.com> <20261120-flach-befanden-notaufnahme-b0a663466be3@brauner> <20261120182135.GA2183@lst.de> <ac4e59cc1a1a89fc5d3b33aa481cfa8372562f2d.camel@dubeyko.com>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -70,19 +51,36 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20261123090040.19006-25-jack@suse.cz>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <ac4e59cc1a1a89fc5d3b33aa481cfa8372562f2d.camel@dubeyko.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Mon, Nov 23, 2026 at 10:00:47AM +0100, Jan Kara wrote:
-> Use inode_or_folios_dirty() helper instead of explicit inode state
-> check. No functional change.
+On Mon, Nov 23, 2026 at 02:25:52PM -0800, Viacheslav Dubeyko wrote:
+> On Fri, 2026-11-20 at 19:21 +0100, Christoph Hellwig wrote:
+> > On Fri, Nov 20, 2026 at 02:48:09PM +0100, Christian Brauner wrote:
+> > > On Tue, Nov 17, 2026 at 04:48:40PM -0800, Viacheslav Dubeyko wrote:
+> > > > The helper updates i_size without any locking, so it can be used
+> > > > only
+> > > > by file systems that issue all direct writes extending i_size
+> > > > synchronously (IOMAP_DIO_FORCE_WAIT) under inode_lock.
+> > > 
+> > > Meh, this should really not be named so it looks like its the
+> > > default
+> > > completion handler. iomap_dio_end_io() really sounds like it.
+> > 
+> > Well, it actually should be the default handler as it does the right
+> > thing for simple file systems.  In fact I'd prefer to automatically
+> > call it if no ->end_io is set as that would remove a lot of
+> > boilerplate.
+> > 
+> > It would be nice to do that and remove the duplicate version in
+> > various
+> > file systems.
 > 
-> Signed-off-by: Jan Kara <jack@suse.cz>
-> ---
->  fs/crypto/keysetup.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> So, what's the final consensus on the function name? :) How should I
+> name it?
 
-Acked-by: Eric Biggers <ebiggers@kernel.org>
-
-- Eric
+iomap_dio_write_end_io can call it directly from iomap_dio_complete
+for writes that don't have a ->end_io caller.
