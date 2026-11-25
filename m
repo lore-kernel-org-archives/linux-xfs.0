@@ -1,58 +1,58 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.137.202.133
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795617920;
-	b=ZoHeuW6rKgTLCTUq5Cf4gw+3oQyz+n6jvEvuRxgv5OPwBBweci/eiZowoAj3W564DMUz
-	 P8swdIauNk4e1t3Dinwu+8kR4gvS8JGOSeuIUlabdwvVkt9CUmH9kSPIPsjj9U49SxcgK
-	 jCDk3CO2A6LnXP+Pe4hDTkGoI9VUn0TTGj4kRRB2J06SlxSCwXnJBfjghg/evH3bRYN/S
-	 /5Y1Fmfnye1na/AOuzgzV8ShW/CNQkUx3lrtm3HhhlkJ0JTfYDyA7xOFCagh1VfVw64np
-	 vR4y9x0ioG1Kq2t0Psa0M8IyO9qlJyU0hkb2pZ+jPCmeiC5a3g4Csgr5H+3pM3dfk3Q==
+	t=1795617923;
+	b=xa4kvzqTz8avMH0gg2VG6VdUMSZ4AyZJA5DwZStB6JddmWwJu0J/W4HUtzOUs4bjXGHJ
+	 Ba1xklxBNwfDIA0CDc3RxS59VgOPWNQA5MwPI9wTL4A2wPBsat13IjB6LZJDwRq/iZXcv
+	 6e3pFozobRyfxd4DLEIya8W0SMvNHKTQaqcYTXbkIH7kDv4gTKEddc8Be88+odrdpjVx1
+	 MaoFUPjuA+lC9GEu4sgv2LCXH8xKtBBiwlw+xnYAFkpombm22ReN6kfiG0bUs84PGkKy3
+	 65g6e8v6S3+Jv+L2eaZRniravjXOKJsm6n9GAuBjrHcLYNPcoX7yWyOl9zh99CcMAkQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795617920;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795617923;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
 	 Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding:X-SRS-Rewrite;
-	bh=bMz+wgvKggZ9XKhAGZqQ0v+1NG2pKHTr8oC8zfY1AHk=;
-	b=VA5/GaLgKn+lA3DBkbPhtOJnWrWfsNGaWGjYNHrN82ejsFJLlIuLofNqWd7stJDxW9Ls
-	 OxlyTEzoR8HoVAdqL2DX7PD1W9rGJZFBLISjj+2SM35r6gpHwx0oWhL54s1xgsHx1NAGe
-	 h5wEJbPHe79KB4axe2FocOLX+bXbIOra0/UoBlP3JDzvjH5lehBZb6el9pHlgu8TrY/Wp
-	 /6eZaZXF/xYsF+968vST7xqseCf3mNkxRdknCeAbQC6Il5hwLTp4dWCtRONT2p1hDUZV0
-	 NSBzwxJX12nfDmt00eLIqviDiBiYlQLNgtIaZ3i9Qw8kvNNyVUFZB2BWYFiFKpGtrZg==
+	bh=pZr4gwTs5CGkrDG9wIJNGO7T0+7Z3L4j5ujCxiTF4Ts=;
+	b=H0Bq82i09RSMhPoxzerrnaxe9fFrKr0vunuqtFYVjXse9UajXrBthlK72SjT8BlqBAuy
+	 wr71NXpz6ezrtxEkkKeyMCHIcEqLboOU3uWA4JKSdrL8IYsdhZiTYb2VNiWehBYrii3q0
+	 l38ZQTjvzCJau4FWq1uo6uqyPyLi5BUxvcOteEijgfnvA2lzJtdSvwwRuyo7g7WmAykFc
+	 ST4ITjyvNnaD8wgNQFFMJCCm7kXUdt6+NDanWuAE/qnJK48IQQcAaJtggba2qujxWCGuC
+	 EQKTozPfS2Onk+fvK+POR/tKW4ltFCuFMmjOAGHoE/SLyy26Un7DnpiNjkdsPhEXHRg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=fail header.from=lst.de;
 	spf=none smtp.mailfrom=bombadil.srs.infradead.org;
-	dkim=pass header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=Di8wgDaz;
+	dkim=pass header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b="Un1f/kIt";
 	arc=none smtp.remote-ip=198.137.202.133
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30B6A606A31E
-	for <linux-xfs@vger.kernel.org>; Wed, 25 Nov 2026 14:45:19 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 30B6A606A31E
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0EE4606A323
+	for <linux-xfs@vger.kernel.org>; Wed, 25 Nov 2026 14:45:22 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C0EE4606A323
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=Di8wgDaz
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=Un1f/kIt
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=bMz+wgvKggZ9XKhAGZqQ0v+1NG2pKHTr8oC8zfY1AHk=; b=Di8wgDazMlr92LccNbcEQuyIlh
-	2zgtszWgrSdLremQgp8pwTayMF9ZFl7h9hcDoDLoDmnV001lmKUMnGNWJD57BOmsknmBG54fEsixr
-	DyiQ3mpHy+LLBu12Api9ibvXEwgvRvvOk8QeVPs4OlKG2V83sGd3aCH2T3EgJWG0EPFAmJLOEd2R+
-	3PNIvXeBV4xwd/2hjYGBSO1pTfPCOEYVCaMFjUTz+zJzmc2hXrWLZuWcS09rJrmy0NkTOh+JOVrUa
-	Z1blq/wDK/yrss7IoCB7jIKzlM9s0jUDF/K1XZZYiqEp1lyLlGD/nxBbkMQKC7ORj14k+wM+xmyVI
-	5ZpJTRJQ==;
+	bh=pZr4gwTs5CGkrDG9wIJNGO7T0+7Z3L4j5ujCxiTF4Ts=; b=Un1f/kItzYBpuYisZ1c77n98Zj
+	6dy51BdQDwNuyc03piDiQOWWTqOyGMqYqH10WonsgZbAxMpYWd5Fx7xEeJ0VT3pVEa7JoMqQNn+vE
+	FJS7RI0Yo8b2/5SkZ6FFqlgBU05wd5ER4w6npQNqdiw9fgksEJqSOZ0XJJ3QE9nP2NEWj0DshiA1R
+	jKypPM7UQ1vKov8IuqsBGioNhL/x36FwIJIrVvMjQEPUdcR9DOdaBDNzU5nwjF2UJ2J80AqJfE6FW
+	n2pQ/ISoUepIM02gYhpdzAQQOjmkF1OwP8DVwaYT+W8w8qBnDfq/UrRvrXlUqOI/8w72LAyA9yPuQ
+	wSxm4pkg==;
 Received: from 2a02-8389-2301-9f00-7ed2-8579-02f4-a961.cable.dynamic.v6.surfer.at ([2a02:8389:2301:9f00:7ed2:8579:2f4:a961] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.100.1 #2 (Red Hat Linux))
-	id 1xWEFJ-0000000ADvv-3GPX;
-	Wed, 25 Nov 2026 14:45:19 +0000
+	id 1xWEFN-0000000ADx1-3kbn;
+	Wed, 25 Nov 2026 14:45:22 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH 12/15] xfs: remove the lv_bytes field from struct xfs_log_vec
-Date: Wed, 25 Nov 2026 15:42:33 +0100
-Message-ID: <20261125144430.728485-13-hch@lst.de>
+Subject: [PATCH 13/15] xfs: create ophdrs on the fly in xlog_write
+Date: Wed, 25 Nov 2026 15:42:34 +0100
+Message-ID: <20261125144430.728485-14-hch@lst.de>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261125144430.728485-1-hch@lst.de>
 References: <20261125144430.728485-1-hch@lst.de>
@@ -68,189 +68,242 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-lv_bytes is the sum of i_len in all log iovecs.  Replace it with a new
-xfs_log_vec_bytes helper that iterators over the iovecs to prepare for
-an accounting change in i_len.  Factor a few callers to calculate the
-value once instead of multiple times to avoid extra work even if it is
-fairly minimal.
+Currently each log iovec starts with an xlog_op_header in the CIL buffer.
+This wastes a little bit of memory, but more importantly makes managing
+the alignment of the individual log regions a bit annoying.
+
+Stop allocating this space now that the opheaders are generated by
+xlog_write and switch i_len to only account for the actual log region
+managed by the log item which doesn't include the opheader.  Instead
+the opheader is only included in the low-level space reservation managed
+by xfs_log_vec_bytes.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_log.c      |  8 ++++----
- fs/xfs/xfs_log_cil.c  | 24 +++++++++++-------------
- fs/xfs/xfs_log_priv.h | 10 +++++++++-
- 3 files changed, 24 insertions(+), 18 deletions(-)
+ fs/xfs/xfs_log.c      | 26 +++++++-----------
+ fs/xfs/xfs_log_cil.c  | 61 ++++++++++---------------------------------
+ fs/xfs/xfs_log_priv.h |  7 ++++-
+ 3 files changed, 29 insertions(+), 65 deletions(-)
 
 diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 9ce2872faf29..0a59cbdcc3cb 100644
+index 0a59cbdcc3cb..58a2fcc7275b 100644
 --- a/fs/xfs/xfs_log.c
 +++ b/fs/xfs/xfs_log.c
-@@ -814,15 +814,15 @@ xlog_write_one_vec(
- 	struct xfs_log_vec	lv = {
- 		.lv_niovecs	= 1,
- 		.lv_iovecp	= reg,
--		.lv_bytes	= reg->i_len,
+@@ -835,17 +835,12 @@ xlog_write_unmount_record(
+ 	struct xlog		*log,
+ 	struct xlog_ticket	*ticket)
+ {
+-	struct  {
+-		struct xlog_op_header ophdr;
+-		struct xfs_unmount_log_format ulf;
+-	} unmount_rec = {
+-		.ulf = {
+-			.magic = XLOG_UNMOUNT_TYPE,
+-		},
++	struct xfs_unmount_log_format ulf = {
++		.magic = XLOG_UNMOUNT_TYPE,
  	};
- 	LIST_HEAD		(lv_chain);
-+	unsigned int		bytes = xfs_log_vec_bytes(&lv);
+ 	struct xfs_log_iovec reg = {
+-		.i_addr = &unmount_rec,
+-		.i_len = sizeof(unmount_rec),
++		.i_addr = &ulf,
++		.i_len = sizeof(ulf),
+ 		.i_type = XLOG_REG_TYPE_UNMOUNT,
+ 	};
  
- 	/* account for space used by record data */
--	ticket->t_curr_res -= lv.lv_bytes;
-+	ticket->t_curr_res -= bytes;
+@@ -2016,7 +2011,7 @@ xlog_write_ophdr(
  
- 	list_add(&lv.lv_list, &lv_chain);
--	return xlog_write(log, ctx, &lv_chain, ticket, lv.lv_bytes);
-+	return xlog_write(log, ctx, &lv_chain, ticket, bytes);
- }
+ 	ophdr = xlog_write_space_advance(data, sizeof(struct xlog_op_header));
+ 	ophdr->oh_tid = cpu_to_be32(data->ticket->t_tid);
+-	ophdr->oh_len = cpu_to_be32(rlen - sizeof(struct xlog_op_header));
++	ophdr->oh_len = cpu_to_be32(rlen);
+ 	ophdr->oh_clientid = XFS_TRANSACTION;
+ 	ophdr->oh_flags = xlog_ophdr_flag(reg);
+ 	if (rlen != reg->i_len)
+@@ -2118,15 +2113,12 @@ xlog_write_region(
+ 		if (error)
+ 			return error;
+ 	}
+-
+-	rlen = min_t(uint32_t, reg->i_len, xlog_write_space_left(data));
++	rlen = min_t(uint32_t, reg->i_len,
++		xlog_write_space_left(data) - sizeof(struct xlog_op_header));
  
- /*
-@@ -1947,7 +1947,7 @@ xlog_print_trans(
- 			continue;
- 		xfs_warn(mp, "  niovecs	= %d", lv->lv_niovecs);
- 		xfs_warn(mp, "  alloc_size = %d", lv->lv_alloc_size);
--		xfs_warn(mp, "  bytes	= %d", lv->lv_bytes);
-+		xfs_warn(mp, "  bytes	= %u", xfs_log_vec_bytes(lv));
- 		xfs_warn(mp, "  buf used= %d", lv->lv_buf_used);
+ 	xlog_write_ophdr(data, reg, rlen);
+-	if (rlen > sizeof(struct xlog_op_header)) {
+-		xlog_write_iovec(data,
+-			reg->i_addr + sizeof(struct xlog_op_header),
+-			rlen - sizeof(struct xlog_op_header));
+-	}
++	if (rlen)
++		xlog_write_iovec(data, reg->i_addr, rlen);
  
- 		/* dump each iovec for the log item */
+ 	/*
+ 	 * If we wrote the whole region, move to the next region.
 diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index f8ca67a63763..20c1d229cc61 100644
+index 20c1d229cc61..541584f7d3b6 100644
 --- a/fs/xfs/xfs_log_cil.c
 +++ b/fs/xfs/xfs_log_cil.c
-@@ -351,7 +351,6 @@ xlog_cil_alloc_shadow_bufs(
- 				lv->lv_buf_used = XFS_LOG_VEC_ORDERED;
- 			else
- 				lv->lv_buf_used = 0;
--			lv->lv_bytes = 0;
- 		}
+@@ -301,15 +301,14 @@ xlog_cil_alloc_shadow_bufs(
+ 		 * the next one is naturally aligned.  We'll need to account for
+ 		 * that slack space here.
+ 		 *
+-		 * We also add the xlog_op_header to each region when
+-		 * formatting, but that's not accounted to the size of the item
+-		 * at this point. Hence we'll need an addition number of bytes
+-		 * for each vector to hold an opheader.
+-		 *
+ 		 * Then round nbytes up to 64-bit alignment so that the initial
+ 		 * buffer alignment is easy to calculate and verify.
++		 *
++		 * Note that this does not include the per-iovec ophdr, which
++		 * only exists in the iclog buffer, but not the CIL buffer.
+ 		 */
+-		nbytes = xlog_item_space(niovecs, nbytes);
++		nbytes = round_up(nbytes + niovecs * sizeof(uint64_t),
++				sizeof(uint64_t));
  
- 		/* Ensure the lv is set up according to ->iop_size */
-@@ -376,7 +375,7 @@ xfs_cil_prepare_item(
- {
- 	/* Account for the new LV being passed in */
- 	if (lv->lv_buf_used != XFS_LOG_VEC_ORDERED)
--		*diff_len += lv->lv_bytes;
-+		*diff_len += xfs_log_vec_bytes(lv);
- 
- 	/*
- 	 * If there is no old LV, this is the first time we've seen the item in
-@@ -392,7 +391,7 @@ xfs_cil_prepare_item(
- 	} else if (lip->li_lv != lv) {
- 		ASSERT(lv->lv_buf_used != XFS_LOG_VEC_ORDERED);
- 
--		*diff_len -= lip->li_lv->lv_bytes;
-+		*diff_len -= xfs_log_vec_bytes(lip->li_lv);
- 		lv->lv_item->li_lv_shadow = lip->li_lv;
- 	}
- 
-@@ -481,7 +480,6 @@ xlog_format_commit(
- 	}
- 	len += sizeof(struct xlog_op_header);
- 	lv->lv_buf_used += len;
--	lv->lv_bytes += len;
- 	vec->i_len = len;
- 
- 	/* Catch buffer overruns */
-@@ -568,14 +566,13 @@ xlog_cil_insert_format_items(
- 			 * set the item up as though it is a new insertion so
- 			 * that the space reservation accounting is correct.
- 			 */
--			*diff_len -= lv->lv_bytes;
-+			*diff_len -= xfs_log_vec_bytes(lv);
- 
- 			/* Ensure the lv is set up according to ->iop_size */
- 			lv->lv_niovecs = shadow->lv_niovecs;
- 
- 			/* reset the lv buffer information for new formatting */
- 			lv->lv_buf_used = 0;
--			lv->lv_bytes = 0;
- 			lv->lv_buf = (char *)lv +
- 					xlog_cil_iovec_space(lv->lv_niovecs);
- 		} else {
-@@ -1212,7 +1209,7 @@ struct xlog_cil_trans_hdr {
-  * in xlog_write() for handling empty opheaders for start, commit and unmount
-  * records much simpler.
+ 		/*
+ 		 * The data buffer needs to start 64-bit aligned, so round up
+@@ -418,17 +417,8 @@ struct xlog_format_buf {
+  * biggest basic data type we put into it. We have already accounted for this
+  * padding when sizing the buffer.
+  *
+- * However, this padding does not get written into the log, and hence we have to
+- * track the space used by the log vectors separately to prevent log space hangs
+- * due to inaccurate accounting (i.e. a leak) of the used log space through the
+- * CIL context ticket.
+- *
+- * We also add space for the xlog_op_header that describes this region in the
+- * log. This prepends the data region we return to the caller to copy their data
+- * into, so do all the static initialisation of the ophdr now. Because the ophdr
+- * is not 8 byte aligned, we have to be careful to ensure that we align the
+- * start of the buffer such that the region we return to the call is 8 byte
+- * aligned and packed against the tail of the ophdr.
++ * However, this padding does not get written into the log, and is not accounted
++ * for in i_len.
   */
--static void
-+static int
- xlog_cil_build_trans_hdr(
- 	struct xfs_cil_ctx	*ctx,
- 	struct xlog_cil_trans_hdr *hdr,
-@@ -1220,6 +1217,7 @@ xlog_cil_build_trans_hdr(
- 	int			num_iovecs)
+ void *
+ xlog_format_start(
+@@ -437,23 +427,14 @@ xlog_format_start(
  {
- 	struct xlog_ticket	*tic = ctx->ticket;
-+	int			len;
+ 	struct xfs_log_vec	*lv = lfb->lv;
+ 	struct xfs_log_iovec	*vec = &lv->lv_iovecp[lfb->idx];
+-	uint32_t		len;
+-	void			*buf;
  
- 	memset(hdr, 0, sizeof(*hdr));
+ 	ASSERT(lfb->idx < lv->lv_niovecs);
  
-@@ -1241,9 +1239,10 @@ xlog_cil_build_trans_hdr(
+-	len = lv->lv_buf_used + sizeof(struct xlog_op_header);
+-	if (!IS_ALIGNED(len, sizeof(uint64_t))) {
+-		lv->lv_buf_used = round_up(len, sizeof(uint64_t)) -
+-					sizeof(struct xlog_op_header);
+-	}
++	lv->lv_buf_used = round_up(lv->lv_buf_used, sizeof(uint64_t));
  
- 	lvhdr->lv_niovecs = 2;
- 	lvhdr->lv_iovecp = &hdr->lhdr[0];
--	lvhdr->lv_bytes = hdr->lhdr[0].i_len + hdr->lhdr[1].i_len;
- 
--	tic->t_curr_res -= lvhdr->lv_bytes;
-+	len = xfs_log_vec_bytes(lvhdr);
-+	tic->t_curr_res -= len;
-+	return len;
+ 	vec->i_type = type;
+ 	vec->i_addr = lv->lv_buf + lv->lv_buf_used;
+-
+-	buf = vec->i_addr + sizeof(struct xlog_op_header);
+-	ASSERT(IS_ALIGNED((unsigned long)buf, sizeof(uint64_t)));
+-	return buf;
++	return vec->i_addr;
  }
  
- /*
-@@ -1300,7 +1299,7 @@ xlog_cil_build_lv_chain(
- 
- 		/* we don't write ordered log vectors */
- 		if (lv->lv_buf_used != XFS_LOG_VEC_ORDERED)
--			*num_bytes += lv->lv_bytes;
-+			*num_bytes += xfs_log_vec_bytes(lv);
- 		*num_iovecs += lv->lv_niovecs;
- 		list_add_tail(&lv->lv_list, &ctx->lv_chain);
- 
-@@ -1478,8 +1477,7 @@ xlog_cil_push_work(
- 	 * Add the lvhdr to the head of the lv chain we pass to xlog_write() so
- 	 * it gets written into the iclog first.
+ void
+@@ -469,16 +450,11 @@ xlog_format_commit(
+ 	 * Always round up the length to the correct alignment so callers don't
+ 	 * need to know anything about this log vec layout requirement. This
+ 	 * means we have to zero the area the data to be written does not cover.
+-	 * This is complicated by fact the payload region is offset into the
+-	 * logvec region by the opheader that tracks the payload.
  	 */
--	xlog_cil_build_trans_hdr(ctx, &thdr, &lvhdr, num_iovecs);
--	num_bytes += lvhdr.lv_bytes;
-+	num_bytes += xlog_cil_build_trans_hdr(ctx, &thdr, &lvhdr, num_iovecs);
- 	list_add(&lvhdr.lv_list, &ctx->lv_chain);
+ 	len = xlog_calc_iovec_len(data_len);
+-	if (len - data_len != 0) {
+-		char	*buf = vec->i_addr + sizeof(struct xlog_op_header);
++	if (len - data_len != 0)
++		memset(vec->i_addr + data_len, 0, len - data_len);
  
- 	/*
-@@ -1767,7 +1765,7 @@ xlog_cil_process_intents(
- 			continue;
- 		set_bit(XFS_LI_WHITEOUT, &ilip->li_flags);
- 		trace_xfs_cil_whiteout_mark(ilip);
--		len += ilip->li_lv->lv_bytes;
-+		len += xfs_log_vec_bytes(ilip->li_lv);
- 		kvfree(ilip->li_lv);
- 		ilip->li_lv = NULL;
+-		memset(buf + data_len, 0, len - data_len);
+-	}
+-	len += sizeof(struct xlog_op_header);
+ 	lv->lv_buf_used += len;
+ 	vec->i_len = len;
  
+@@ -1170,11 +1146,7 @@ xlog_cil_write_commit_record(
+ 	struct xfs_cil_ctx	*ctx)
+ {
+ 	struct xlog		*log = ctx->cil->xc_log;
+-	struct xlog_op_header	ophdr = {
+-	};
+ 	struct xfs_log_iovec	reg = {
+-		.i_addr = &ophdr,
+-		.i_len = sizeof(struct xlog_op_header),
+ 		.i_type = XLOG_REG_TYPE_COMMIT,
+ 	};
+ 	int			error;
+@@ -1192,7 +1164,6 @@ xlog_cil_write_commit_record(
+ }
+ 
+ struct xlog_cil_trans_hdr {
+-	struct xlog_op_header	oph[2];
+ 	struct xfs_trans_header	thdr;
+ 	struct xfs_log_iovec	lhdr[2];
+ };
+@@ -1202,8 +1173,7 @@ struct xlog_cil_trans_hdr {
+  * need to account for the space used by the transaction header here as it is
+  * not accounted for in xlog_write().
+  *
+- * This is the only place we write a transaction header, so we also build the
+- * log opheaders that indicate the start of a log transaction and wrap the
++ * This is the only place we write a transaction header, so we also wrap the
+  * transaction header. We keep the start record in it's own log vector rather
+  * than compacting them into a single region as this ends up making the logic
+  * in xlog_write() for handling empty opheaders for start, commit and unmount
+@@ -1222,8 +1192,6 @@ xlog_cil_build_trans_hdr(
+ 	memset(hdr, 0, sizeof(*hdr));
+ 
+ 	/* Log start record */
+-	hdr->lhdr[0].i_addr = &hdr->oph[0];
+-	hdr->lhdr[0].i_len = sizeof(struct xlog_op_header);
+ 	hdr->lhdr[0].i_type = XLOG_REG_TYPE_LRHEADER;
+ 
+ 	/* transaction header in host byte order format */
+@@ -1232,9 +1200,8 @@ xlog_cil_build_trans_hdr(
+ 	hdr->thdr.th_tid = tic->t_tid;
+ 	hdr->thdr.th_num_items = num_iovecs;
+ 
+-	hdr->lhdr[1].i_addr = &hdr->oph[1];
+-	hdr->lhdr[1].i_len = sizeof(struct xlog_op_header) +
+-				sizeof(struct xfs_trans_header);
++	hdr->lhdr[1].i_addr = &hdr->thdr;
++	hdr->lhdr[1].i_len = sizeof(struct xfs_trans_header);
+ 	hdr->lhdr[1].i_type = XLOG_REG_TYPE_TRANSHDR;
+ 
+ 	lvhdr->lv_niovecs = 2;
 diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index 4ad66603b7a2..2d87f9eae493 100644
+index 2d87f9eae493..2be318c2eacf 100644
 --- a/fs/xfs/xfs_log_priv.h
 +++ b/fs/xfs/xfs_log_priv.h
-@@ -26,7 +26,6 @@ struct xfs_log_vec {
- 	struct xfs_log_iovec	*lv_iovecp;	/* iovec array */
- 	struct xfs_log_item	*lv_item;	/* owner */
- 	char			*lv_buf;	/* formatted buffer */
--	int			lv_bytes;	/* accounted space in buffer */
- 	int			lv_buf_used;	/* buffer space used so far */
- 	int			lv_alloc_size;	/* size of allocated lv */
- };
-@@ -746,4 +745,13 @@ static inline __be32 *xlog_cycle_data(struct xlog_rec_header *rhead, unsigned i)
+@@ -745,12 +745,17 @@ static inline __be32 *xlog_cycle_data(struct xlog_rec_header *rhead, unsigned i)
  	return &rhead->h_cycle_data[i];
  }
  
-+static inline unsigned int xfs_log_vec_bytes(struct xfs_log_vec *lv)
++static inline unsigned int xfs_log_iovec_bytes(struct xfs_log_iovec *reg)
 +{
-+	unsigned int	bytes = 0, i;
-+
-+	for (i = 0; i < lv->lv_niovecs; i++)
-+		bytes += lv->lv_iovecp[i].i_len;
-+	return bytes;
++	return sizeof(struct xlog_op_header) + reg->i_len;
 +}
 +
- #endif	/* __XFS_LOG_PRIV_H__ */
+ static inline unsigned int xfs_log_vec_bytes(struct xfs_log_vec *lv)
+ {
+ 	unsigned int	bytes = 0, i;
+ 
+ 	for (i = 0; i < lv->lv_niovecs; i++)
+-		bytes += lv->lv_iovecp[i].i_len;
++		bytes += xfs_log_iovec_bytes(&lv->lv_iovecp[i]);
+ 	return bytes;
+ }
+ 
 -- 
 2.53.0
 
