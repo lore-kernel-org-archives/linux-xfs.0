@@ -1,51 +1,51 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795636934;
-	b=MVey7jbSBM9UdZdz/ljdTbhS2hrvWx2KFeegDRW4hyOYWRhJCo/C1L9HpnrkjC2oIY31
-	 t/GHmEecIiHDeG7R/ll487uS2U5lOfcFLSHDo+n5F/d7hj3HK4jryWKX5SvdHMsmujy63
-	 8CK9cJOG7DhJb5LLQ9xIRhgScb4sOAqKsxqNv7qAv0YE4V0aoGBPOFebuOGeEiDKvIwUc
-	 NQEwjx7kN0hl2FX0f/HfwPj0z2NTgyd44G8WNh+prFYCUAAG7etzDQF1y7xVYDZTCxz+A
-	 +zNwq36YydxTYWMZyD7xVcTnNdeuJe7FrX7Uv7y+yE7XVhfWGyRehhkX53xqA59WoDQ==
+	t=1795637928;
+	b=QUZdvnGiFv2iISZ8XXc67njWreGQ50wj4Cy14Kugk1A3ITxzvSUNcAbWzzYF3yhSzttC
+	 2DYY+LU2I5qz8kTeiotFQddfrEAt5Vqk/51NII88S5vzAAy/UbHlAv80BP9DwONzJ+4Bq
+	 Oi1cBmoObxAoWFe0fkLYyk2WWT06bsWOoqqgRzUEmNriBone9FGLWj+uUA+O6DArQA9S6
+	 xIc7FrkO4w/2aGgMwYBY1sCGvflEp5rPuIxt+SKYrHK3h+XR90alPPgNcLVaios5EYwKf
+	 izajDqogrH3QKc+HTMn6255l5OEGmbV40zFadUFGAEYY/Iily4FN+A5ezOCSUASn3lQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795636934;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795637928;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=zqc6aqCp27QwPLaLncTqkvtMscQ6MbWXpYulVWJ9I1A=;
-	b=aA4R9DAQCX25SkgBx+JETqgOlwZ/3C36pMQ3c/1PjKxXPPiWF3Yz/qNxehXsg2ATwieh
-	 Du1NOi3Wv2g/V6FobElJslB4CxeDC55g5/7uKfVfV3NbAb9YHceqbkQMEV83ra3eGVtHB
-	 ZlQxuNT+Pw3cu/jj8otFZUrfrubW0yTKIUlCPA4Hlrt+MOGH9GziZ2A1sSHN6IaNyFyya
-	 1ixCllC4Eb1TnrZbxQevlg1x70UZBGp/iQmzIsI8UA1ngSNoTI+Ng6MESjLg7nE0ThRHW
-	 cGwblaTzypTZH55YY2rbR/t8SpHPrcufuYXGWqvlaPay1vtCHoqJ083wqVLhX9SNS3A==
+	bh=+s1CzQIp+ra31lVXhRrG+VAc19W8BFw9ZtWwSGoEvfM=;
+	b=4Qjqe1q3/bkOrTHqO0/sGJdkAHe+sDuIVMRYRlqbrbaRamNhI7iqo0M27Bocd9zc752j
+	 MH7bt8wpUcCKwbC/jQ4Fd8H8XdKf8dQdQk0TaTx+N5gtxidc/O66LdeJCIu3uDnHm4DUj
+	 LhXDdr3Pn2nb1te72w9HpFzPHNhvGHP8JJFYnZqNRqjwz6h6eFmzkT3RDJBM6R2yAtW97
+	 YASSmsyTt4vARHtg+D0pJR3NgjeTIszNkNM1eAyGJT/TA9cPimsu6z0JYzTRj4FWQ97oR
+	 wTzgP79eJ+pVEeIoNFa4H1Pf0Aig46eKqoNBaoiDi3v4MBW9jAjXxgZEtoQjRirhgEQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PlcIKujB;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lhfuaryK;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA2EA606A321
-	for <linux-xfs@vger.kernel.org>; Wed, 25 Nov 2026 20:02:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5918F606A31E
+	for <linux-xfs@vger.kernel.org>; Wed, 25 Nov 2026 20:18:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PlcIKujB
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8A6EE1F000C4;
-	Wed, 25 Nov 2026 20:02:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lhfuaryK
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1310B1F000C4;
+	Wed, 25 Nov 2026 20:18:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795636934;
-	bh=zqc6aqCp27QwPLaLncTqkvtMscQ6MbWXpYulVWJ9I1A=;
+	s=k20260515; t=1795637928;
+	bh=+s1CzQIp+ra31lVXhRrG+VAc19W8BFw9ZtWwSGoEvfM=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=PlcIKujBhOivVc6IOR852BtJCtxivoByFkHDsorKEnoNSD8HOv52h57/ueOHQ5m/Z
-	 rHXHjeTHQgKBLZhTVLUM4iMF4jnEGWSn0Nz0yBjcpPE2+rM7ziDzxSvANCV22lRZXh
-	 a2U0mxi/3uLp//JuGjkEz003XENVz+3RMOt3yElu+YkenVkQnBOB8QO11B699xhgEs
-	 U1ef14TomoEF2fe2mGD4C6kmhg+NZ93ddIRr88xUayrPuZTJqTgRzy4mSYX4ptA6Za
-	 OCWnqW8dQK59WVyDZ8clo0aUrSHbHX5ATrAdzJv3ThOA6EZKhmmtuoGOLCzOML5vbQ
-	 j3fN6vG8FOWHg==
-Date: Thu, 26 Nov 2026 07:02:06 +1100
+	b=lhfuaryK3CnLPTDQTmUqyZ7M9Vq7fWH9braly3d4uaNMTNpWotZeYeH6S57UjAr4S
+	 kW7X6DLdA0eDsu01Izcfnrr5e657928mdtA0IMwhzu+YOJG4jhGaY3E7P0BDIN9g3U
+	 I/v0ouuvxdHjzmzEYGAlZSt4kzTckW7ogrUPWyNtNmShUNDnfsZXhM7J6shoUkw6Rn
+	 wPiAgLpszvLbwhxrStkjqINUUOFZwbZ9wZDW/QjiRw9GImhRa2aFugi7r1jX96Vhs0
+	 1iasaSdGSVxMekaM7ZG82TRIYpAxSP+++Ijnzci/HnZPKs4r2Tb8QIDWNARnyFsg0L
+	 hIrC5ZmxbHV9g==
+Date: Thu, 26 Nov 2026 07:18:39 +1100
 From: Dave Chinner <dgc@kernel.org>
-To: "Steinar H. Gunderson" <steinar+kernel@gunderson.no>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: Hung I/O
-Message-ID: <awc-vvNFH3vfYLWv@dread>
-References: <sh2gykmlybrlf77d6mp76pddecwl47pxoookx2sbo74y6ffme4@gcu2kqu7q4o2>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: handle ophdr formatting entirely in xlog_write
+Message-ID: <awdCn4ByxYZSWE9E@dread>
+References: <20261125144430.728485-1-hch@lst.de>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -57,123 +57,47 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <sh2gykmlybrlf77d6mp76pddecwl47pxoookx2sbo74y6ffme4@gcu2kqu7q4o2>
+In-Reply-To: <20261125144430.728485-1-hch@lst.de>
 
-On Wed, Nov 25, 2026 at 05:42:50PM +0100, Steinar H. Gunderson wrote:
-> Hi,
+On Wed, Nov 25, 2026 at 03:42:21PM +0100, Christoph Hellwig wrote:
+> Hi all,
 > 
-> I'm seeing a problem I haven't seen before; I first saw it with 7.4.0-rc4
-> but it looks exactly the same on 7.3.6, so it may be something related to
-> changing workload.
-> 
-> I have a process that mmaps a fairly large file (~500GB) for read/write;
-> this is more than my amount of RAM (256GB) but the working set is generally
-> less (I work on only parts of the file at any given time, and MADV_DISCARD
-> things when I'm done with them). I'm not sure if this is directly related,
-> but it seems so.
-> 
-> At some point, all XFS filesystem I/O on my machine becomes really slow
-> and hangs for several minutes, before it recovers. (Stopping the process
-> does not cause immediate recovery.) The ext4 filesystems seem to be mostly
-> OK, but I haven't tested this thoroughly. The file is backed by XFS on an
-> mdadm RAID-6 against SATA 7200rpm drives (on a SAS controller), but even the
-> SSD-backed volumes seem to get large problems; various daemons hang and/or
-> time out since everything takes forever, SSH-ing into the machine times out,
-> etc..
-> 
-> dmesg outputs a few of these:
+> for historic reasons, generating of the log ophdrs is split over the log
+> item formatting and the core log write in somewhat awkward ways.  This
+> less to subtle extra code, extra (small) memory usage for keeping the
+> headers in memory when they are not needed.  This series refactors
+> the log vec formatting a bit and the xlog_write code a lot so that the
+> ophdrs are formatted when writing to the iclog, and the no memory
+> for the ophdrs is allocated for logvecs in the CIL.
 
-can you post the entire dmesg output from 'echo w >
-/proc/sysrq-trigger' and 'echo l > /proc/sysrq-trigger' to capture
-all the currently blocked and running processes when the hang
-happens.
+I don't have the capacity to review this any time soon.
 
-> 
->   [ 3263.529187] INFO: task sponge:111219 blocked in I/O wait for more than 120 seconds.
->   [ 3263.534641]       Not tainted 7.3.6 #1
->   [ 3263.540028] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
->   [ 3263.545487] task:sponge          state:D stack:0     pid:111219 tgid:111219 ppid:111216 task_flags:0x400100 flags:0x00080000
->   [ 3263.551029] Call Trace:
->   [ 3263.556397]  <TASK>
->   [ 3263.561662]  __schedule+0x581/0x10b0
->   [ 3263.566883]  schedule+0x28/0xa0
->   [ 3263.572011]  io_schedule+0x46/0x70
->   [ 3263.577103]  folio_wait_bit_common+0x13b/0x370
->   [ 3263.582194]  ? __pfx_wake_page_function+0x10/0x10
->   [ 3263.587227]  folio_wait_writeback+0x2c/0x80
->   [ 3263.592201]  truncate_inode_partial_folio+0x68/0x200
->   [ 3263.597161]  truncate_inode_pages_range+0x1e0/0x440
->   [ 3263.602094]  xfs_fs_evict_inode+0x1f/0x70 [xfs]
+Given all the issues we're still finding and having to fix from LLM
+analysis, I'm not a great fan of doing open-heart surgery to the
+core journal write path right now. This is not simple code, and
+without proper on-disk journal format verification, we've never
+really had a way of rigourously testing journal write path reworks.
 
-Waiting on data (page cache) writeback to complete....
+These sorts of changes have always been a bit of a 'merge and hope'
+process because 'test it with log stress' via fstests doesn't
+actually verify that what has been written to the journal has been
+recovered correctly. It just tests that recovery completes with
+error, and the lack of errors used to imply 'the code is good'.
 
-> A simpler one:
-> 
->   [14380.178852] INFO: task prometheus:14307 blocked in I/O wait for more than 120 seconds.
->   [14380.183922]       Not tainted 7.3.6 #1
->   [14380.188970] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
->   [14380.194138] task:prometheus      state:D stack:0     pid:14307 tgid:11079 ppid:1      task_flags:0x400040 flags:0x00080000
->   [14380.199474] Call Trace:
->   [14380.204758]  <TASK>
->   [14380.210031]  __schedule+0x581/0x10b0
->   [14380.215328]  schedule+0x28/0xa0
->   [14380.220571]  io_schedule+0x46/0x70
->   [14380.225767]  folio_wait_bit_common+0x13b/0x370
->   [14380.230958]  ? __pfx_wake_page_function+0x10/0x10
->   [14380.236131]  folio_wait_writeback+0x2c/0x80
->   [14380.241323]  __filemap_fdatawait_range+0x87/0xe0
->   [14380.246530]  file_write_and_wait_range+0x88/0xb0
->   [14380.251730]  xfs_file_fsync+0x4a/0x1b0 [xfs]
+I don't think that's good enough anymore. In this new world of
+journal fuzzing and LLM bug finding, we really need much
+more rigourous verification of what gets written to the journal
+before we start making fundamental changes to the way we track and
+write formatted log items into the journal. That way the log stress
+tests we currently have will formally verify that the contents
+of the journal being recovered are valid, and that we haven't
+introduced some subtle weird bug that will bite us in the future.
 
-Same.
+So, can we hold off making runtime infrastructure changes to the
+journal write path until after we land the recovery time on-disk
+journal format verification?
 
-> The stuck processes are typically stuck in xfs_buf_lock. Here's one from
-> kworker/u513:1+flush-253:37:
-> 
->   pannekake:~> sudo cat /proc/737609/stack
->   [<0>] xfs_buf_lock+0x32/0xd0 [xfs]
->   [<0>] xfs_buf_find_lock+0x51/0x100 [xfs]
->   [<0>] xfs_buf_read_map+0x94/0x2b0 [xfs]
->   [<0>] xfs_trans_read_buf_map+0x12d/0x270 [xfs]
->   [<0>] xfs_btree_read_buf_block+0xa0/0x120 [xfs]
->   [<0>] xfs_btree_lookup_get_block+0xa3/0x1f0 [xfs]
->   [<0>] xfs_btree_lookup+0xf2/0x550 [xfs]
->   [<0>] xfs_alloc_cntbt_iter+0x9e/0x1b0 [xfs]
-
-Somewhere in a freespace btree lookup. Likely waiting on metadata
-writeback, because this path needs to hold the AGF and that
-serialises access to the btree.
-
-> and here's one from a userspace process:
-> 
->   pannekake:~> sudo cat /proc/770769/stack
->   [<0>] xfs_buf_lock+0x32/0xd0 [xfs]
->   [<0>] xfs_buf_find_lock+0x51/0x100 [xfs]
->   [<0>] xfs_buf_read_map+0x94/0x2b0 [xfs]
->   [<0>] xfs_trans_read_buf_map+0x12d/0x270 [xfs]
->   [<0>] xfs_read_agi+0xa2/0x170 [xfs]
->   [<0>] xfs_ialloc_read_agi+0x4e/0x120 [xfs]
->   [<0>] xfs_dialloc+0x1e1/0x8a0 [xfs]
->   [<0>] xfs_create+0x297/0x460 [xfs]
-
-And that's waiting the AGI lock, which is needed to serialise inode
-allocation from that AG. Implies there is either another inode
-allocation/free in progress, or that it is waiting on metadata
-writeback...
-
-> Any ideas? It appears to be fairly easily reproducible, so I can do more
-> debugging if need be (although it's a production machine, so not too much
-> rebooting would be fine).
-
-Start with getting all the blocked tasks and building a dependency
-map of which tasks are stuck behind others. That will narrow down
-whether this is some internal deadlock in the filesystem or whether
-the lower layers of the stack have lost a bunch of IO completions...
-
-Cheers,
-
-Dave.
-
+-Dave.
 -- 
 Dave Chinner
 dgc@kernel.org
