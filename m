@@ -1,44 +1,44 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795642117;
-	b=Mh2TDs5qj+RSZgoGd9MnLLLOy7THLBif8Y0uuFsOpXLP1NAbU9aSzAh/VdpEZPXXWvWJ
-	 xrTP5XGyvRIjyKHG5xuUg+cHua6c5EFCUQFD7vhpEDhKx3xfrCMJl7uJakWvm7SCV9qXA
-	 F9qggOj3uGUGGOOOW+7yRnMfFSsT1Zzg+11Q4i3Oi2aOvmXcJfMTURpGj6BlBvb1e87hk
-	 Ip/4JwfBgNTQycEqe/af3VizfBq8C5cwHOBp++Dadlh3eFnyhekdb5x0x6a+KVLAVz+k2
-	 Dhu9lJ+CJk2D9Ovw0UWR3T2Uiljggoeu4iDNScdexbHuTfF8KOCFQVF34jRSANz38ww==
+	t=1795642120;
+	b=D8YPE9JaJauWdZkuzg0g9pizDG10gam1Yv6BxMH8FVtdTvn2NWe0ZtBz+fXJ599FlWHR
+	 4wtfyQxbFDkYzmZZhNlyo9VhOfTxUwqTJlkTBHEEZBymMS8xm+dz1X2ZNKfpwiiCxgxQF
+	 /2yLUDV+gGZGoDWtdyl0YDsYTF/4r/9YuR3K2TAcxfh0yYO1DtHkkckMxQo2I8cb01k41
+	 /98guL6l/3wt74PRZ2qv59dFeanKHWIYIN7tPeQcJTsVOcPvK7exNr+656FWNBqslKVuu
+	 WXAvTavLPGjMQcfhzVzdvfhQJES83cqO8RDXWoFLE/l9vWr0pfojY6vM02iTe6We1sg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795642117;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795642120;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=0dlKON1hdC24e4Jmd9FYFD7HOwnwmEXI53/rRaAoBpg=;
-	b=FDq3F0aguctNgyOa7w550PqdA9AVaRBwOAlTrL5+g2ZOce/TZ7Mc1mT0lSEfm4Ma3mD3
-	 g9IgvshwYjmu5ksblJQGuTfz4aDusy4Ieyhjo7eVDwtRqwXBFPKJsITwR7j+cJrCr8yQR
-	 G2dts8FiZBRL0F07J2ZPq6AZNYujv3ZPaYrqMZ77Gx1MavBQIk0iIznDvKsdzRIERogZs
-	 WJJPZRCxPmEGtz/UFoAmJtJfBKj8eyYrKxUWF2JqMi1ZP9B3DAASaEPCxL+8hR3rf5x5b
-	 j1J8dX09LBRttZhSDXjsK9gALIn2xQdPuGpZMeDj3hqJsnWsUvFPpBwG7bMbrsZAZQg==
+	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
+	bh=9UtX7zzVSsMJUzryDrNCvwr0ZC0Em9X8CNc1KVGMoFY=;
+	b=E1uhAdsQZCuteXin2sgoF93t/GBgnrBdFsJ23HGHHguVJqpCPgNXb2GTGIlw9q7GCzpn
+	 KyrUkEV4EU7+hQwOdnVCbHXdI5S2Bi58WnfPFyKvpHrXR4USefTgVrC/d99YvtHrtO3Wq
+	 IIMKTcvL4RjO/4MPEIRn+q/NKcz7V4/EFnjf/xUV3bm9g4oFwAbpbWkMhSUKtxv1YgE1/
+	 SOD42KpX0E35LT2PKETrkGepgLBVqNFWZZA2Ie98OfiJelAGlUXeHOLx4PTYTjv0in9Nv
+	 cIWVj+o8jQxYNpM/9LfSO+/ZnRnR55ultthSQ769Uhjqj5Lqk7uSYiNHXS733IP0vBA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=S64eoNPw;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iTVDBgnj;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CEA9D606A334;
-	Wed, 25 Nov 2026 21:28:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF9BC606A336;
+	Wed, 25 Nov 2026 21:28:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=S64eoNPw
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5DAC21F000C0;
-	Wed, 25 Nov 2026 21:28:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iTVDBgnj
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F05041F000C0;
+	Wed, 25 Nov 2026 21:28:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795642116;
-	bh=0dlKON1hdC24e4Jmd9FYFD7HOwnwmEXI53/rRaAoBpg=;
-	h=From:To:Cc:Subject:Date;
-	b=S64eoNPwd1hhfpQddx6y4wdjs2VqMUz+8MDV3ragn2i6/qWdeqWcMDaXHK8hv9mID
-	 OOHwLZnyB1reHJpzxV6FNfwIAHsC89ztmqFe7SMmKpNl3OSQ5BNepDuSC+JvLv89jq
-	 a1L8m7GRPBsNPNeIclQDH/WTtGCM4JaZFKY+tm++SqDRIy4QXJv4pXroxANZju/gJj
-	 QsudDPbZkIvk0YIpxa4aOuAtxYonFuxzl8CGjW1qhCcUcMwVfosTNbgWTHmeLHI3JZ
-	 nNwtxryzxLlgQMUnRIz2snAwUwdNdITgVzeFLxEn0rcBnljj9M9+kd298y9Mzano7/
-	 q6SKJ7jLd0K5w==
+	s=k20260515; t=1795642120;
+	bh=9UtX7zzVSsMJUzryDrNCvwr0ZC0Em9X8CNc1KVGMoFY=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=iTVDBgnjjApXyqlkRfWnFEOXA8y8ZcL6t07dfDIemezlwhNVf4ZUmVgIlo7UK61BM
+	 PZ6ReclAlyr6zIT//XKXXd/d3Wuyev7UVCVANO9l/I/K8KFpXnf2UZptkOONyyeUh9
+	 JZynEqACkzCH0WbFdoLyyyGvapBCQh34QwdEXhsVLtMLjZQXpuSwPZLcRTBQfhVC+b
+	 V8N1a5vmXyZxtqBiRVVJ0FA1m6fE0GMnW+KJhvQFQdqqmeVfLg+rNq4q6T1xcV8XIc
+	 eIL4QTjI4QsvwXzmPoR7nNDqpjdopiaMJFpY67eRQCuEH00fNsY5wkKdCK+2STyw2V
+	 /ZFqdkltI6HnQ==
 From: Zorro Lang <zlang@kernel.org>
 To: fstests@vger.kernel.org
 Cc: Andrey Albershteyn <aalbersh@redhat.com>,
@@ -47,10 +47,12 @@ Cc: Andrey Albershteyn <aalbersh@redhat.com>,
 	linux-xfs@vger.kernel.org,
 	linux-btrfs@vger.kernel.org,
 	linux-ext4@vger.kernel.org
-Subject: [PATCH 0/6] Add test hook infrastructure
-Date: Thu, 26 Nov 2026 05:28:17 +0800
-Message-ID: <20261125212823.3389430-1-zlang@kernel.org>
+Subject: [PATCH 1/6] common: add builtin test hook infrastructure
+Date: Thu, 26 Nov 2026 05:28:18 +0800
+Message-ID: <20261125212823.3389430-2-zlang@kernel.org>
 X-Mailer: git-send-email 2.56.0
+In-Reply-To: <20261125212823.3389430-1-zlang@kernel.org>
+References: <20261125212823.3389430-1-zlang@kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -62,71 +64,220 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Hi all,
+From: Dave Chinner <dchinner@redhat.com>
 
-This series adds test hook support to fstests, allowing users to
-customize a test run (e.g., collecting traces, capturing extra debug
-data, or reporting results to an external framework) without modifying
-fstests itself.  It is inspired by Dave Chinner's earlier hook
-infrastructure RFC [1] and also addresses the use cases from a recent
-fstests mailing list discussion [2], supporting both in-process and
-out-of-process hooks as well as a post-result event.
+Add support for user-defined test hooks so users can customize a
+test run without modifying fstests. Each hook is a bash script that
+defines hook_execute(). 'check' sources it in a subshell at specific
+points during a test, giving it full access to the test environment
+(devices, mount points, options, and fstests helpers).
 
-Hooks are registered on the command line via --hook-pre-test, --hook-post-test,
-and --hook-post-result:
+Hooks are registered as:
 
-	--hook-<event> path=/path/to/hook[,mode=in|out][,match=<glob>]...
+  --hook-pre-test path=/path/to/script[,match=<glob>]...
 
-Options can be repeated and hooks run in the order given.  Optional
-match=<glob> patterns restrict a hook to matching test names; without
-them, the hook runs for every test.
+--hook-post-test and --hook-post-result take the same format. These
+options can be repeated; hooks run in the order given. Without a
+match pattern, a hook runs for every test; otherwise, it runs only
+when the test name (<type>/<seq>, e.g. generic/482) matches at least
+one of the glob patterns.
 
-Two execution modes are supported:
+hook_execute() is passed the test name, along with the exit code
+(post-test) or final result (post-result). Hook output is saved to
+$seqres.hooks, and hook failures are logged without affecting the
+test result.
 
-  - mode=in (default): a bash script defining hook_execute(), sourced
-    in a subshell with full access to the test environment and fstests
-    helpers.
+Based on Dave Chinner's hook infrastructure RFC:
+https://lore.kernel.org/all/20210722064725.3077558-1-david@fromorbit.com/
 
-  - mode=out: a standalone executable written in any language, invoked
-    via env(1) with the test variables in HOOK_ENV_LIST and the hook
-    context.
-
-All hook output is appended to $seqres.hooks, and hook failures are
-logged there without affecting the test result.
-
-Series overview:
-
-  - Patch 1 adds the core hook infrastructure (mode=in) in common/hooks.
-  - Patch 2 adds out-of-process hook support (mode=out).
-  - Patches 3-5 wire up the pre-test, post-test, and post-result events
-    and CLI options in check.
-  - Patch 6 adds README.hooks documenting usage and examples.
-
-[1] https://lore.kernel.org/all/20210722064725.3077558-1-david@fromorbit.com/
-[2] https://lore.kernel.org/fstests/20261119123910.294544-1-cem@kernel.org/
-
-Feedback and reviews are welcome.
-
-Thanks,
-Zorro
-
-Dave Chinner (1):
-  common: add builtin test hook infrastructure
-
-Zorro Lang (5):
-  common: add out-of-process hook mode
-  check: introduce pre-test hook and CLI option
-  check: introduce post-test hook and CLI option
-  check: introduce post-result hook and CLI option
-  doc: document the test hooks
-
- README.hooks | 156 ++++++++++++++++++++++++++++++++++
- check        |  30 ++++++-
- common/hooks | 230 +++++++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 414 insertions(+), 2 deletions(-)
- create mode 100644 README.hooks
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Zorro Lang <zlang@kernel.org>
+---
+ common/hooks | 175 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 175 insertions(+)
  create mode 100644 common/hooks
 
+diff --git a/common/hooks b/common/hooks
+new file mode 100644
+index 00000000..b40028f2
+--- /dev/null
++++ b/common/hooks
+@@ -0,0 +1,175 @@
++# SPDX-License-Identifier: GPL-2.0
++#
++# Test hooks let you customize a test run without modifying fstests.
++# Each hook is a bash script that 'check' sources in a subshell at
++# specific points during a test, with full access to the test
++# environment (devices, mount points, options, and fstests helpers).
++#
++# Register hooks on the command line:
++#
++#	--hook-pre-test path=/path/to/script[,match=<glob>]...
++#
++# --hook-post-test and --hook-post-result take the same format. These
++# options can be repeated; hooks run in the order given. Without a
++# match pattern, a hook runs for every test; otherwise, it runs only
++# when the test name (<type>/<seq>, e.g. generic/482) matches at least
++# one of the glob patterns.
++#
++# Relative paths are resolved from $here (the fstests root directory).
++# Tilde (~) expansion is not supported; use $HOME or an absolute path.
++# Match patterns cannot contain whitespace or commas.
++#
++# Each hook script should define a hook_execute() function, which is
++# invoked with:
++#
++#	$1		test name (e.g. generic/482)
++#	$2		status: test exit code (post-test), final result
++#			such as pass/fail/notrun/expunge (post-result),
++#			or unset (pre-test)
++#	HOOK_EVENT	the event name (pre-test, post-test, post-result)
++#	runtime		test runtime in seconds (if applicable)
++#	cwd		$here
++#	stdout/stderr	appended to $seqres.hooks
++#
++# Scripts that don't define hook_execute() are silently skipped. Hook
++# failures are logged to $seqres.hooks and never affect the test result.
++
++_hook_pre_test_paths=()
++_hook_pre_test_matches=()
++_hook_post_test_paths=()
++_hook_post_test_matches=()
++_hook_post_result_paths=()
++_hook_post_result_matches=()
++
++# Parse a single --hook-<event> option and record it in the per-event
++# arrays. Repeated options are preserved in the order given.
++_hook_parse_args()
++{
++	local event="$1" args="$2"
++	local opts pair key value
++	local path="" matches=()
++
++	case "$event" in
++	pre-test|post-test|post-result)
++		;;
++	*)
++		_fatal "hook $event: unknown event"
++		;;
++	esac
++
++	IFS=, read -ra opts <<< "$args"
++	for pair in "${opts[@]}"; do
++		key="${pair%%=*}"
++		value="${pair#*=}"
++		if [ "$key" = "$pair" ]; then
++			_fatal "hook $event: expected key=value, got '$pair'"
++		fi
++		case "$key" in
++		path)
++			[ -z "$path" ] || _fatal "hook $event: duplicate 'path'"
++			path="$value"
++			;;
++		match)
++			matches+=("$value")
++			;;
++		*)
++			_fatal "hook $event: unknown option '$key'"
++			;;
++		esac
++	done
++
++	[ -n "$path" ] || _fatal "hook $event: missing 'path'"
++	case "$path" in
++	/*)	;;
++	*)	path="$here/$path" ;;
++	esac
++	[ -r "$path" ] || _fatal "hook $event: hook script not readable: $path"
++
++	case "$event" in
++	pre-test)
++		_hook_pre_test_paths+=("$path")
++		_hook_pre_test_matches+=("${matches[*]}")
++		;;
++	post-test)
++		_hook_post_test_paths+=("$path")
++		_hook_post_test_matches+=("${matches[*]}")
++		;;
++	post-result)
++		_hook_post_result_paths+=("$path")
++		_hook_post_result_matches+=("${matches[*]}")
++		;;
++	esac
++}
++
++# Return 0 if $test_seqnum matches any of the space-separated patterns,
++# or if no patterns are specified.
++_hook_matches()
++{
++	local test_seqnum="$1" patterns="$2"
++	local p
++
++	[ -z "$patterns" ] && return 0
++	for p in $patterns; do
++		[[ "$test_seqnum" == $p ]] && return 0
++	done
++	return 1
++}
++
++# Run a single hook in a subshell if its patterns match $test_seqnum.
++# Output and errors go to $seqres.hooks; failures never fail the test.
++_hook_run_one()
++{
++	local event="$1" test_seqnum="$2" status="$3" runtime="$4"
++	local path="$5" patterns="$6"
++	local rc log="$seqres.hooks"
++
++	_hook_matches "$test_seqnum" "$patterns" || return 0
++
++	(
++		export HOOK_EVENT="$event"
++		export runtime="$runtime"
++		. "$path"
++		declare -F hook_execute > /dev/null || return 0
++		hook_execute "$test_seqnum" ${status:+"$status"}
++	) >> "$log" 2>&1
++	rc=$?
++	if [ $rc -ne 0 ]; then
++		echo "hook $event: $path failed (exit code $rc)" >> "$log"
++	fi
++}
++
++# Run all hooks registered for $event that match $test_seqnum, in the
++# order they were given. $status and $runtime are optional and depend
++# on the event.
++_hook_run_event()
++{
++	local event="$1" test_seqnum="$2" status="$3" runtime="$4"
++	local i
++
++	case "$event" in
++	pre-test)
++		for ((i = 0; i < ${#_hook_pre_test_paths[@]}; i++)); do
++			_hook_run_one "$event" "$test_seqnum" \
++				"$status" "$runtime" \
++				"${_hook_pre_test_paths[$i]}" \
++				"${_hook_pre_test_matches[$i]}"
++		done
++		;;
++	post-test)
++		for ((i = 0; i < ${#_hook_post_test_paths[@]}; i++)); do
++			_hook_run_one "$event" "$test_seqnum" \
++				"$status" "$runtime" \
++				"${_hook_post_test_paths[$i]}" \
++				"${_hook_post_test_matches[$i]}"
++		done
++		;;
++	post-result)
++		for ((i = 0; i < ${#_hook_post_result_paths[@]}; i++)); do
++			_hook_run_one "$event" "$test_seqnum" \
++				"$status" "$runtime" \
++				"${_hook_post_result_paths[$i]}" \
++				"${_hook_post_result_matches[$i]}"
++		done
++		;;
++	esac
++}
 -- 
 2.56.0
 
