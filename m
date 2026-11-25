@@ -1,54 +1,114 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.167.200
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.131
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795600351;
-	b=w7K6OIGdqdCxwgwGc+IbOtQ4o/dXlNNMKkg2txLyEV+d/Iw+xv9eDkH00/qG9195tyD5
-	 nJQmRccJ2FKS8ylDoTBFRqhCRz5UtzizWmzRj60yYotQDS+ssJborMt8f2vZ+rb05HrJ6
-	 tQh1ZOKYOhkBfsO0NMYnquU1AjAFTM9ErpkJXDGydQ3DnabmKOEYYa+HY8UAo7jz/lcrH
-	 oUY+f/Qf1bSA2Ano/d5u6G1M518zlbwgTTCAqkpPHhZodxTuUVnHe82wsHNqd1aCGBHk7
-	 r0eE2mBiKdzETCQ4YhKuFFUocFe7syVmg+3FUp9rONTAiFPn/0irMSIFClLQAn3FXOg==
+	t=1795601749;
+	b=wEyY1r6H6+UzX6SkaLnVM4QQNRhl9Ts4Y5pAp/BA3YvDz7uF+uWLk7FMtfGG+7cb56Su
+	 hHP3zWVNzYmhvRRNJrYXDYKSkWVhIvZpvOhp3SjHhkr6hepdG5AnyAsELRgx/J6idrZQR
+	 /di1iGkzxLBf49ItBT5vk6/SR3a/FglUGOR1jXL03QXFBwoPJ+1RvLKaIwMsoPeS7Wku9
+	 f7z02bmY95B8dhXnZwqr6lXZGKJLUVJnylDYdiKYmefW/FArTg2k5Cx2TfgVhsGU80qzc
+	 zt4Ftv4vx9VKK6wBdNUOkBM+wRDGNy0aThjQqH+oqSpB+pCwt9SQpaFjqgpxZ/jVvIA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795600351;
-	h=DMARC-Filter:Received:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
-	 X-Gm-Message-State:MIME-Version:X-Received:Date:In-Reply-To:
-	 X-Google-Appengine-App-Id:X-Google-Appengine-App-Id-Alias:Message-ID:
-	 Subject:From:To:Content-Type;
-	bh=rDYrI57ud55NSWOFxTgViyOGUhOW41DRxkpMLR6U21w=;
-	b=X1CqDj7njeTpxommGVApeB3zORbH1L6qOnPEfn+Fv+25+S/N2gmPow81qYDTqcI6hBu4
-	 hpLZCyE5hP47+JhBg0QEy6NyfXWDmWpN9n6PCaT+RO3PYUcO/jC3OAzC1LojuWz2AK6ap
-	 TjUOdv1JoD4b6m+KljKM8dVxEespAJ35BSAp3GrUHcM6YqbRvkbcDSFwmQJXSrgWyIt/H
-	 oUYZZK3TBL8AYVZg4wH2ZXRYlX+/rGtdk/9RPBbnoP5ahWyXXdoNgHzzxTIs8DC2+FAFB
-	 vJYALxe9wwA6bA60mKHmj/q3kKf0bt5wnu0BTo3bt0Q9a34zubCZW30mchhZ1m0w75g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795601749;
+	h=DMARC-Filter:Received:DKIM-Signature:DKIM-Signature:DKIM-Signature:
+	 DKIM-Signature:Received:Received:Received:Date:From:To:Cc:Subject:
+	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
+	 In-Reply-To:X-Spamd-Result:X-Spam-Score:X-Spam-Level:X-Spam-Flag;
+	bh=e8sKqwxNACN+JfXcDE3eynoSNxxjB3Xf/j/Wqh4gx5E=;
+	b=gV4MvidqXRVYNfguwkjsi9yDG6npxl+lAGf1l84Yiemx0KhN+hjAQCDI+OAN+tPvLTJo
+	 NeVnabe2Dfs1qYYsJZrr7Hyf+F9bHRAOCbzhyeV0WpR1DGl3hcUbCHJHhR1fOD7Dr+vwr
+	 gpWO11xcBw0ovQjdXY4OW1msAHYW6iFiCDf4zRLUaZ0yH4ulTvw9ZFZLBNhvEKWyVvkdA
+	 KWqOHIsNQoWL6sPFsO/pBROusydFL5GxAFiMEr+KHZp8D1J+4a8UMgYHZzb30n+A8oVbl
+	 XFcvKWmfiY17URtWt7dDsO32KyipMigcfi847vp/iWgZA5OROyjO49S6605exGrzrkQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=fail header.from=syzkaller.appspotmail.com;
-	spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com;
-	arc=none smtp.remote-ip=209.85.167.200
-Received: from mail-oi1-f200.google.com (mail-oi1-f200.google.com [209.85.167.200])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=none header.from=suse.cz;
+	spf=pass smtp.mailfrom=suse.cz;
+	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=Z06kVsav;
+	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=YAvQYBkQ;
+	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=HhT85ONG;
+	dkim=neutral header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b="vX/h8QqE";
+	arc=none smtp.remote-ip=195.135.223.131
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 010A7606A31E
-	for <linux-xfs@vger.kernel.org>; Wed, 25 Nov 2026 09:52:30 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 010A7606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-oi1-f200.google.com with SMTP id 5614622812f47-4c467e19391so8072437b6e.3
-        for <linux-xfs@vger.kernel.org>; Wed, 25 Nov 2026 01:52:30 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795600350; x=1796205150;
-        h=content-type:to:from:subject:message-id:in-reply-to:date
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=rDYrI57ud55NSWOFxTgViyOGUhOW41DRxkpMLR6U21w=;
-        b=JcQcwTe/l68gy4cSJvJdB7egGM/Aciru/MjcpyVCCup465VRDXnKTj1KipNn1nRrsR
-         O0/t7UITRF7chM82GGng5RaLl+R+tNW6pc101C6sBpAiTTbIbKOpolgOKKC9ZYuU342n
-         CdiCaLNOYzbph0a2NFEYsIY3SogX7NroUTYve4x0lULkCcGDyrjUK2CTq0LgOZSF6jMd
-         1MLEMEuAmYtif9N6gTLowQcj7vnuPVXfrqOVZpEgDB9wamUb+1scTr9YezAnFjrXSYzP
-         SCVdndEJYZXTekm4uSpyLPKNtN3OtAw1MXdkfWvwdlYGmajfkNo2ZxGFoedzuaceNfLM
-         Bifw==
-X-Forwarded-Encrypted: i=1; AL+hErEEUm4+wu+uf+2yOsU99gQOiqIBj+lq3EMfh1OTU6GFoMHmJqBzQTeqYo4YXWzC2H1aSgFMA/g+6oI=@vger.kernel.org
-X-Gm-Message-State: APuU4Z8GmVdjNmCCiodQhOHW9uvCxpS0R74QrVgvuaj8q23kR4ZY8oLM
-	kRVooSZDPUQHwLn7foehO2V7yHCc+po7HL4AcLUhc+qPJYBdeuItTIgnFNqk6WFaofVn1LcHfeW
-	18YSYF1vB4c96ztpWehXz0xmSWrMaN3AvjaI0emawtd2VjWbGirWXmlKdjpQ=
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6093E606A323;
+	Wed, 25 Nov 2026 10:15:49 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6093E606A323
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=Z06kVsav;
+	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=YAvQYBkQ;
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=HhT85ONG;
+	dkim=neutral header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=vX/h8QqE
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 2EA141F7AB;
+	Wed, 25 Nov 2026 10:15:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1795601742; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=e8sKqwxNACN+JfXcDE3eynoSNxxjB3Xf/j/Wqh4gx5E=;
+	b=Z06kVsavmP7JScicGhz4PLwxBu3Dex4qiFvXFQcw6hiBXSgAPrY31rGsLOeD8I/afpGxWJ
+	QqvbieM8a3SnCpA7Y6NvO/lh3yjke/TCCdWF5sXAa71+xF7URX+YmX/guYIaETRth2VdQ8
+	X+SZ14rjsBbQF8ej4TrovKNBc078KcM=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1795601742;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=e8sKqwxNACN+JfXcDE3eynoSNxxjB3Xf/j/Wqh4gx5E=;
+	b=YAvQYBkQHWlLyq/pc6sxjMqrMqDGJezvFVbuvPSz/Ar7h1bOwCSdmBMoEZ2smb9B8M8JBC
+	ODHaG9GFSZ3kR0AA==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1795601741; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=e8sKqwxNACN+JfXcDE3eynoSNxxjB3Xf/j/Wqh4gx5E=;
+	b=HhT85ONGGnzQc8EzNUw9bIL19KxpV6xykb0gpdQl0kCw8mIPbOdunsyJcQSXg0b1GormL1
+	lRw59Xh0TSaLua+iR8MJPm0XaefZaMjMOcSx3P3W3vJ6YYGgrJvJhcKtoZt0fzweZQ+Faz
+	rUqtUBs61FQpsWJiUV2N90/xs5lEjHo=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1795601741;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=e8sKqwxNACN+JfXcDE3eynoSNxxjB3Xf/j/Wqh4gx5E=;
+	b=vX/h8QqEnMmoIVMqKy2xoZTwAcXtH8GK1fsnluYevvaejjH6oEbpgTXu0WSyCAsOPElHfr
+	3Mo54VbDLlNzkbBQ==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id F2408134CA;
+	Wed, 25 Nov 2026 10:15:40 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id gu3dMky1BmtxWQAAD6G6ig
+	(envelope-from <jack@suse.cz>); Wed, 25 Nov 2026 10:15:40 +0000
+Received: by quack.suse.cz (Postfix, from userid 1000)
+	id 7F82427BF7; Wed, 25 Nov 2026 11:15:40 +0100 (CET)
+Date: Wed, 25 Nov 2026 11:15:40 +0100
+From: Jan Kara <jack@suse.cz>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Matthew Wilcox <willy@infradead.org>, Jann Horn <jannh@google.com>, 
+	Pedro Falcato <pfalcato@suse.de>, David Howells <dhowells@redhat.com>, 
+	John Hubbard <jhubbard@nvidia.com>, Jan Kara <jack@suse.cz>, Rik van Riel <riel@surriel.com>, 
+	Qu Wenruo <wqu@suse.com>, "Darrick J. Wong" <djwong@kernel.org>, 
+	linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, 
+	linux-xfs@vger.kernel.org, linux-rdma@vger.kernel.org, Leon Romanovsky <leon@kernel.org>, 
+	Jason Gunthorpe <jgg@nvidia.com>
+Subject: Re: Removing ->dirty_folio
+Message-ID: <woe7ui2vuwznrdt4zxynkbnte7r57juoaicwuk4hmwmlhq7lmp@no52geqttfyk>
+References: <aoyWln-Gt-yvZQkE@casper.infradead.org>
+ <CAG48ez0vXVUu9j4rYUeCqgwyHKAiN_6fL--D90WvX9q7B41V-A@mail.gmail.com>
+ <ao3y8TtEGjniZ_4f@casper.infradead.org>
+ <20260826050733.GB15122@lst.de>
+ <20261125085814.GA24887@lst.de>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -58,103 +118,126 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-Received: by 2002:a05:6808:16a1:b0:572:d0fb:ae64 with SMTP id
- 5614622812f47-57a0bb6f16fmr17558738b6e.54.1795600349928; Wed, 25 Nov 2026
- 01:52:29 -0800 (PST)
-Date: Wed, 25 Nov 2026 01:52:29 -0800
-In-Reply-To: <6b048c5c.a481e175.27cf24.0021.GAE@google.com>
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <6b06afdd.9416b02e.106116.000e.GAE@google.com>
-Subject: Re: [syzbot] [iomap?] WARNING in iomap_release_folio
-From: syzbot <syzbot+daa4cd155cd8696efe4f@syzkaller.appspotmail.com>
-To: almaz.alexandrovich@paragon-software.com, brauner@kernel.org, 
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261125085814.GA24887@lst.de>
+X-Spamd-Result: default: False [-12.80 / 50.00];
+	SUSE_INTERNAL_BYPASS(-9.00)[];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	RCVD_COUNT_THREE(0.00)[3];
+	MIME_TRACE(0.00)[0:+];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	ARC_NA(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[17];
+	FROM_HAS_DN(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	TO_DN_SOME(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	RCVD_TLS_LAST(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MISSING_XM_UA(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.com:email]
+X-Spam-Score: -12.80
+X-Spam-Level: 
+X-Spam-Flag: NO
 
-syzbot has found a reproducer for the following issue on:
+On Wed 25-11-26 09:58:14, Christoph Hellwig wrote:
+> Bringing this back as we're having another slightly discussion of
+> GUP semantics right now and this discussion stopped before it really
+> started.
+> 
+> Any comments on my idea in here?  If someone on the mm side could
+> come up with a way to figure out if a folio is pinned longterm or
+> not and we get a pre-pin method into the fs I could start looking
+> into the fs and writeback side of this.
 
-HEAD commit:    4dce97c6c265 Merge tag 'ext4_for_linus-7.4-rc5' of git://g..
-git tree:       git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
-console output: https://syzkaller.appspot.com/x/log.txt?x=13bc88e9580000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=fbd0fc734eea62ed
-dashboard link: https://syzkaller.appspot.com/bug?extid=daa4cd155cd8696efe4f
-compiler:       Debian clang version 22.1.8 (1~deb13u5), Debian LLD 22.1.8
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=112662bd580000
+I think we agree regarding the direction where this should be going :).
+Regarding the tracking of longterm pins, I remember when we started working
+of the GUP / pin_user_pages() fixes, one of the ideas that we floated was
+to take pinned pages off the LRU (they cannot be freed anyway) and use that
+space in struct folio for the tracking we need. John? even had patches for
+that but the performance overhead was too big (primarily due to LRU locks
+contention) for direct IO. But for longterm pins, the additional overhead
+of the setup could be acceptable and that would significantly increase our
+maneuvering space in what we can do (because longterm pins are yet another
+page refcount in the end).
 
-The issue was bisected by AI to:
-
-commit 099ef9ab9203dff327f2d61e44773f9acbc01f13
-Author: Konstantin Komarov <almaz.alexandrovich@paragon-software.com>
-Date:   Fri Dec 26 13:45:19 2025 +0000
-
-    fs/ntfs3: implement iomap-based file operations
-
-AI reasoning:   https://syzkaller.appspot.com/ai_job?id=e3505470-e7cd-4afa-9bd4-3a5bf01c3027
-
-AI-generated root cause summary:
-`ntfs3` registers iomap folio lifecycle callbacks (`iomap_dirty_folio` and
-`iomap_release_folio`) on `ntfs_aops` and `ntfs_aops_cmpr`, which attach a
-per-block `struct iomap_folio_state` (`ifs`) to folios whenever
-`i_blocks_per_folio(inode, folio) > 1` (such as when NTFS cluster size is
-smaller than `PAGE_SIZE`). However, `ntfs_read_folio()` in `fs/ntfs3/inode.c`
-directly calls `folio_mark_uptodate(folio)` instead of
-`iomap_folio_mark_uptodate(folio)` when `ni->i_valid <= vbo` (and the same
-pattern appears in `ni_read_folio_cmpr`, `ntfs_compress_write`, and
-`attr_make_nonresident`). If an earlier incomplete or aborted iomap
-write/zero-range operation left `ifs` attached to an `!uptodate` folio,
-`folio_mark_uptodate()` sets `PG_uptodate` without updating the `ifs->state`
-uptodate bitmap. When kswapd later reclaims the clean folio via
-`iomap_release_folio()` -> `ifs_free()`, `ifs_is_fully_uptodate(folio, ifs) !=
-folio_test_uptodate(folio)` triggers the `WARN_ON_ONCE`.
-
-full analysis:  https://syzkaller.appspot.com/x/ai_root_cause?x=daa4cd155cd8696efe4f
-
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+daa4cd155cd8696efe4f@syzkaller.appspotmail.com
-
-The cause commit was identified by AI and may be wrong.
-If you agree with it, please also add:
-Fixes: 099ef9ab9203 ("fs/ntfs3: implement iomap-based file operations")
-
-------------[ cut here ]------------
-ifs_is_fully_uptodate(folio, ifs) != folio_test_uptodate(folio)
-WARNING: fs/iomap/buffered-io.c:295 at ifs_free+0x22d/0x2c0 fs/iomap/buffered-io.c:294, CPU#0: syz-executor112/5663
-Modules linked in:
-CPU: 0 UID: 0 PID: 5663 Comm: syz-executor112 Not tainted syzkaller #0 PREEMPT(full) 
-Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
-RIP: 0010:ifs_free+0x22d/0x2c0 fs/iomap/buffered-io.c:294
-Code: 41 5f 5d e9 55 0a bb ff e8 30 8e 4d ff 90 0f 0b 90 e9 0a ff ff ff e8 22 8e 4d ff 90 0f 0b 90 e9 3a ff ff ff e8 14 8e 4d ff 90 <0f> 0b 90 eb c7 44 89 f9 80 e1 07 80 c1 03 38 c1 0f 8c 3d fe ff ff
-RSP: 0018:ffffc90003b2f938 EFLAGS: 00010293
-RAX: ffffffff827bc41c RBX: ffff8880147a7f80 RCX: ffff888036eea580
-RDX: 0000000000000000 RSI: 0000000000000008 RDI: 0000000000000000
-RBP: 00000000827c4201 R08: ffffea00013c5487 R09: 1ffffd4000278a90
-R10: dffffc0000000000 R11: fffff94000278a91 R12: dffffc0000000000
-R13: 1ffffd4000278a95 R14: 0000000000000008 R15: 0000000000000000
-FS:  000055555a32a400(0000) GS:ffff88808a9e9000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00007f3c023b7000 CR3: 0000000013fb5000 CR4: 0000000000352ef0
-Call Trace:
- <TASK>
- iomap_release_folio+0x254/0x450 fs/iomap/buffered-io.c:826
- mapping_evict_folio+0x348/0x470 mm/truncate.c:374
- mapping_try_invalidate+0x260/0x4b0 mm/truncate.c:605
- generic_fadvise+0x610/0x750 mm/fadvise.c:157
- vfs_fadvise mm/fadvise.c:184 [inline]
- ksys_fadvise64_64 mm/fadvise.c:197 [inline]
- __do_sys_fadvise64 mm/fadvise.c:209 [inline]
- __se_sys_fadvise64 mm/fadvise.c:207 [inline]
- __x64_sys_fadvise64+0x145/0x190 mm/fadvise.c:207
- do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
- do_syscall_64+0x171/0x540 arch/x86/entry/syscall_64.c:89
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
-RIP: 0033:0x7f3c023eea2a
-Code: 10 00 00 00 48 63 4c 24 30 48 89 44 24 08 48 8d 44 24 20 48 89 44 24 10 eb a2 e8 f1 18 00 00 90 41 89 ca b8 dd 00 00 00 0f 05 <89> c2 f7 da 3d 00 f0 ff ff b8 00 00 00 00 0f 47 c2 c3 0f 1f 40 00
-RSP: 002b:00007ffd9854b3c8 EFLAGS: 00000246 ORIG_RAX: 00000000000000dd
-RAX: ffffffffffffffda RBX: 0000000000000003 RCX: 00007f3c023eea2a
-RDX: 0000000000001000 RSI: 0000000000000000 RDI: 0000000000000003
-RBP: 0000000000000000 R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000000000004 R11: 0000000000000246 R12: 00007ffd9854c520
-R13: 0000000000000000 R14: 0000000000000001 R15: 00007ffd9854b410
- </TASK>
+								Honza
+> 
+> On Wed, Aug 26, 2026 at 07:07:33AM +0200, Christoph Hellwig wrote:
+> > [adding rdma/hmm folks]
+> > 
+> > On Tue, Aug 25, 2026 at 08:54:25PM +0100, Matthew Wilcox wrote:
+> > > On Tue, Aug 25, 2026 at 09:35:57PM +0200, Jann Horn wrote:
+> > > > > The problem is GUP.  We have no way to force the GUP caller to go
+> > > > > through page_mkwrite again.  So instead we make the GUP caller call
+> > > > > folio_mark_dirty_lock() which many just don't, and generally we get away
+> > > > > with it.  But it's a bug, and a bad interface.
+> > > > 
+> > > > We currently have get_user_pages*() and pin_user_pages*(), where only
+> > > > the pin_*() version is properly usable for write access, right? And
+> > > > dropping such pins should always go through unpin_*() helpers?
+> > > 
+> > > Right.  I'm stuffing cheese into my ears and pretending that people
+> > > aren't calling get_user_pages() to do write accesses.  We should be
+> > > able to use this work to flush out the last remaining ones -- we
+> > > can put in various assertions that folios should still be dirty where
+> > > we currently have folio_mark_dirty() calls.
+> > 
+> > Last time I checked quite a few places still did.  Including various
+> > network file system O_DIRECT implementations (some got fixed, and
+> > for NFS a series is outstanding) and some really odd looking networking
+> > code.
+> > 
+> > I wish we could somehow force them to stop doing that, but I can't
+> > think of any. 
+> > 
+> > > Yes.  I think the only alternative would be storing a checksum of the
+> > > contents of the folio and seeing if it changed since the last write.
+> > > As you say, this is userspace doing something incredibly odd (I really
+> > > don't think people make a habit of mmap()ing files shared writable and
+> > > then giving RDMA longterm write accesses to them.  Not on machines with
+> > > poor quality flash storage anyway).
+> > > 
+> > > Or we could say "these pages only get written back on requested fsync()
+> > > rather than periodically".
+> > 
+> > Take one step back.  For regular pins we should be able to just wait for
+> > them given that they are by definition short lived, where short lived
+> > is defined by typical I/O latency for a wide range of "typical".
+> > We'll need the right helpers from the MM for that, and make sure
+> > we have a good way to debug file system hangs caused by incorrect
+> > use of the pinning, but all that is a solvable problem.
+> > Splitting read vs write pincounts would be really helpful to reduce
+> > the overhead of that.
+> > 
+> > The interesting case is FOLL_LONGTERM, as it can pin I/O for a much
+> > longer time.  And that also means IFF the user of FOLL_LONGTERM actually
+> > wants to be able to persist data on a shared mmap, it has to manually
+> > dirty folios one or more times during the FOLL_LONGTERM pin, because
+> > otherwise the file system would never know there is dirty data.
+> > The set_page_dirty call in ib_umem_odp_unmap_dma_pages is an example
+> > for that.
+> > 
+> > So what we'll need is:
+> > 
+> >  - a way for the file system to know if a dma pin on a folio is for a
+> >    short-term writable pin vs everything else.
+> >  - for the short term writable pin wait for it for data integrity syncs,
+> >    or otherwise just skip it.
+> >  - for FOLL_LONGTERM users we need an interface to (re-dirty) folios
+> >    while the long term pin persists.  This also needs a way for the
+> >    file system to reserve space.  Either as a rolling / bank switched
+> >    reservation for the whole life time of the mapping (although for
+> >    large mappings this might use up a lot of space), or to do that
+> >    ahead of whatever triggers the dirtying.
+> >    And maybe a way for file systems (or vm ops) to reject long
+> >    term writable pins if they don't want to deal with all this.
+> ---end quoted text---
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
