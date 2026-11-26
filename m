@@ -1,100 +1,53 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.48
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795715947;
-	b=4/kFmkKuJ/Nd4NbUrtU2wVA1uu+LVh7Q26QM61AQH8d20fRuQ1OUq2FeCJ1Z9s8n2aXO
-	 wWxAcEfSaU6RBtRC6qeE9a3k6fQqwzQXcPWtSZUBF1eai01xM65IMyo6lGNF+KHsDgiIe
-	 oGfB5X7CFQHOKJUCdtvQ/UmHdla0+G5GZbrYkLhceYkE1bEshd7xwDCvCXvGPfIzw2ZN+
-	 sKYyitltkLDROaNdWH964GhnHtzSQmkOnVgmzaPdUxZKWNymDm25noYy5FAw96ad7EVQ4
-	 hJdGwhiRoh6xPQBy2bL4fMwTxSG2/g34UKpfO7mZux2fzq/Aggx42jKH1xbRt8A5R2w==
+	t=1795717789;
+	b=h++Ee1ZgAVsTmXAJW5RSklf6cqpMejTD6CYuOjPSc4rPxRATeh+NiiGYWr11fhlTLAXO
+	 y3d5oeMUOSjveYuNwfry9Tm8H4d6Kdh7gj3oRLmikpDY2deAAtdpo5W0aVqHjowc4l+Oj
+	 W7NyaDmgGUTD9lH7S+PRU68LEhJpyaF19q88+i+Z3Xl70LglklGFkfup8zeiQBKsnMIk2
+	 D7vZFLLL+l8hzo0iu4haAwvOH9CEoYmmRY7u7Wo2IaJGmEgZfNHVuIVHGft5bVIX0OuG6
+	 X5V5xgoPcE4WJjXDef7A7Z+Q/YnP6MUrTqiya4K0R0kQC1o6yqtXEqGwubDgCJWhntg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795715947;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
-	 MIME-Version:Content-Type:Content-Transfer-Encoding;
-	bh=kSoIKOLT3+XabJWpUUxG3nmSVnvVHcKC8IWUKEmSpyk=;
-	b=x69jjLLGI0JWvKVRuW7a/RRAbnI31XD6igjls3TXU5xOFyZCtKwZPBQCAq2tmoE8Fp3G
-	 exp3vmspoWrMqIhHXC1jrHxupWrG7jwHoFr56KkAQEW2lWbF9Y84F5vucUchBor6tJ9gO
-	 MC8wyOlXtFTgASky/z2hrnM7pOafBfR4n8eY0q4ixuO0xOz/uwqHvKRjgpifhreK1oHut
-	 21gzXUCivN4Xda1pIh2bBKOMsG+F/GRc7SNqtnkrtpJZpDz+ifGg051Caq4x+vrvdI3bi
-	 7FBPvfFXF615rQ+T6MI5uplWiqpdf1i0S/SqKo1x4fz4tIhB+04itzjT73Xg35+VseQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795717789;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=1xBa9dGYGw8+GHqAY+jPmMhihMdrgV/VRFcTsTA4uD4=;
+	b=aO9gsDqE3nyY7ms31B0/+sEEUyVkLJMPctj3BJRweyYadD4v7yT8DbyUbo4pI9aA5ChP
+	 F0Rrk4Wh0MEI83SW4SgcYiwEB8UwflscB76OmBtvzO4qBmvvIXfIZ/RKEi5LBJVlS6/Yp
+	 4Fd313ZnRnFtLouZLLPL+JS1hI3kUih8mUOnlHEL/clqpBOLKvhat3I9umrVc+b6Te7ak
+	 /xqwulwvfRNQx8dZ7YodWffXOAaW6c+kCHUZ6UdNKSyUFxliAkOgWRCcaIQU038riCWqR
+	 D5RfIFmhAQYdvVGXJFWeU7gj7Nrbnm3rp4J0PKqJZtj69W7Datocz4V6pIA3jPS488w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=FjlYfhdN;
-	arc=none smtp.remote-ip=209.85.221.48
-Received: from mail-wr1-f48.google.com (mail-wr1-f48.google.com [209.85.221.48])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WnOEJ9Zv;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 305B8606A31E
-	for <linux-xfs@vger.kernel.org>; Thu, 26 Nov 2026 17:59:07 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 305B8606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54135606A31E
+	for <linux-xfs@vger.kernel.org>; Thu, 26 Nov 2026 18:29:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=FjlYfhdN
-Received: by mail-wr1-f48.google.com with SMTP id ffacd0b85a97d-4a5024b3c28so4786174f8f.0
-        for <linux-xfs@vger.kernel.org>; Thu, 26 Nov 2026 09:59:06 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1795715945; x=1796320745; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=kSoIKOLT3+XabJWpUUxG3nmSVnvVHcKC8IWUKEmSpyk=;
-        b=FjlYfhdN/THyqzVu6c+I6Y9P/7ZOaDE5FmS42pXMztlcikrhrWKLam6pUFL7txUkJ4
-         UbIS714OKdJsMkRJ7GLVMJ9KEmHUKYBDhdZ6hx6tOH6OWCIH6eUC0qPHSljx907N8dpf
-         zppdZzYKF9kth1swPK1kll4PVlIJ9VmTSet8Ajh+R3MZQHt6pWJcZLQRpLkobqdHedk1
-         +KIl+QLlV5rKSD2WNtJk2/9CJp8X49OsjGn5l9OeAWa6hFN8HXC6zpE2YIuBITTCtofw
-         jsEnwBCTCILxv0GNqWYhBoOh3ae4vC6w89H4NRoMlWphoWZsxqDoygEtdNq2gxo10jyq
-         47cg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795715945; x=1796320745;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=kSoIKOLT3+XabJWpUUxG3nmSVnvVHcKC8IWUKEmSpyk=;
-        b=UWB/Lv+w+1Dh+tLz8593N0Qj10pAh0H0w0J8TKgtr6Q9eIgoNE6mkbJLEcftpe38Kh
-         1ymaarzIIt/VGTJ0z8nnwKZPKuI6y43WHWvA5YO2Npo7aQsXkIJkfFHb8P9kfIrwWXB5
-         hROztCKdOJuqdb9pvfrh0v5Jc6RkvrGq08QBDsZwmqn04IxqIYIM0dQgdeCcKcY12grJ
-         K/hD6ybwrEOfIEKfD5WOJkM4qzDugPkW08kzkNDTooDUouh9FWfTveXb7ZFSsZNiCV2n
-         zZ9PrB63N0ZjuDnCcbRgYRMyoyd/MetnBC+xuhk51JOII2qZbIvZCUq/Y+TnOgscwQFo
-         lv5g==
-X-Forwarded-Encrypted: i=1; AL+hErEeawfEIE0oC2adTxK74/bXIU62PktHfAUkBVvquZXBkxpEaCx62DYwLYYbDi2hBJR9IFKQJ9UIm8Y=@vger.kernel.org
-X-Gm-Message-State: APuU4Z+PavnK/KUtppsftfsnb7YHPSUN1+zrWWJrXL1sC2RAADhEfMC/
-	iKvGCbA7kJQ/BGmPGyuBq0zieOo3aM7ZKbDmLz79+uasa3PEggSYlQJl
-X-Gm-Gg: AZFdTZcCMqPfjSt5PToRmzzr0+zIAqEWKdcwHVn6FFR2I5WEXK1TbW/1pbokzvaGF3y
-	BJ7A4JTGvRNy5+G19ezYQzs17WZ+zRDJE1BXOPXnd8qPFnPcqULx17W9XUaE7zCENj1mGwYutSu
-	0PNQafpmiE8IVyztf4iY0y6Nw5AAjJfb1Wkq7hDAahe+qJ9YZnRl7k/a8fRYZFjLzvHrHaqZSao
-	Q62sRKsTE5iC6ezTE8+Zwjgoz9oJwML0yL5x7YhlXKlgiV9hC0uPG3c7ZTUQSKQbdkZ7NJ+smhx
-	STe2yMy5fLW96f7XQuNP1OOTek6Fiv3/CaQqGfhIYGXmLzYP6+Idp4QbCuiX4PUqediPrBRB7+w
-	bD0OmntyR+tjJKvYIIJpHTricKYvJIOWOp0NN13Euh1pq78cbfYyutYmL1mzdRFgqXYaKO1/JW5
-	OyG6ayL/vkF2dzzQHNI4ZDiglzBcMcwGScwZhphqTN0XWIcORyTKzZ1fFJNiIPCmBf8dhegQeKz
-	5crdY5jNe4tldyR9zoGbmd5zbxf5YeMqv0pQTCmWWOQC9GCII6BUBoYb/ZcS+GoyRHnTQDzH8Fi
-	7erGUYJYyB1jsJMV1xMuiPXysGQa/kEeP6u5geRVYHJxPG2UKtd0ZbTCHqLeDUfnA3Qd1dJ/wcJ
-	uAgGvNm9eoudW7jWaoIuRoOXlDAU26J415mxYWg==
-X-Received: by 2002:a5d:59c3:0:b0:491:632f:2c8f with SMTP id ffacd0b85a97d-4aa4e01e2e6mr54213015f8f.2.1795715945287;
-        Thu, 26 Nov 2026 09:59:05 -0800 (PST)
-Received: from andreayoga.localdomain (93-42-14-189.ip84.fastwebnet.it. [93.42.14.189])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4ab6baa3882sm41519433f8f.49.2026.11.26.09.59.04
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 26 Nov 2026 09:59:04 -0800 (PST)
-From: Andrea Parri <parri.andrea@gmail.com>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: Andrea Parri <parri.andrea@gmail.com>,
-	Dave Chinner <dgc@kernel.org>,
-	Jeffin Philip <jeffinphilip14@gmail.com>,
-	linux-xfs@vger.kernel.org,
-	syzbot+c32ff62cf4913d345d0c@syzkaller.appspotmail.com,
-	syzbot+9d8e687768d0f38c1f09@syzkaller.appspotmail.com,
-	syzbot+a4fde844548510369112@syzkaller.appspotmail.com
-Subject: Re: [PATCH] xfs: wait for buffer unpinning before shutdown completion
-Date: Thu, 26 Nov 2026 18:58:45 +0100
-Message-ID: <20261126175846.167973-1-parri.andrea@gmail.com>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <awhtipqpIxxUgyjj@cronus.toxiclabs.cc>
-References: <20261126164604.158012-1-parri.andrea@gmail.com> <awhtipqpIxxUgyjj@cronus.toxiclabs.cc>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WnOEJ9Zv
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 213D41F000CA;
+	Thu, 26 Nov 2026 18:29:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795717788;
+	bh=1xBa9dGYGw8+GHqAY+jPmMhihMdrgV/VRFcTsTA4uD4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=WnOEJ9ZvC4wF7eK30ia0wWq7XeT7L7Z23Z168ZbGW08AcmNm2dJC5KsUvsYwPoc4K
+	 qWnPIUICTppdtyJsxWK+D9+LrNC34tsL5rx3RTwO5oiWpEesfgZVqX+lCkaHIDzkMl
+	 /e65acKmdYqpiO0pM/3ISHa6n0LvBb2pMJV79AEPAotzLXkvNpk/FeRO1zchh5gBrI
+	 35Ud6zvaAcfE0S+aCl3OMv248Nxz+eaTKTOiJLo+5ykAZwdxW7WfqTfS30Z1JuGE5u
+	 weAd50L2wRfF6W27wJsyjoa868OIgjeK+U5hPElM+Y8OdH2xBfT/pGJeAbVEl4gslU
+	 yMRRh7QzrvJXg==
+Date: Thu, 26 Nov 2026 19:29:45 +0100
+From: Carlos Maiolino <cem@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 01/15] xfs: don't bother setting oh_tid in callers of
+ xlog_write
+Message-ID: <awh6mZNL7-FTUwQ4@cronus.toxiclabs.cc>
+References: <20261125144430.728485-1-hch@lst.de>
+ <20261125144430.728485-2-hch@lst.de>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -104,41 +57,69 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261125144430.728485-2-hch@lst.de>
 
-On Thu, Nov 26, 2026 at 06:34:02PM +0100, Carlos Maiolino wrote:
-> I *think* Dave is already working on a proper fix for this on his
-> series, so I'll wait for him to look into this as I didn't have time to
-> go through his series yet.
+On Wed, Nov 25, 2026 at 03:42:22PM +0100, Christoph Hellwig wrote:
+> xlog_write always stamps oh_tid into the ophdr written to the log, so
+> don't bother setting in the callers as those values will always be
+> overwritten.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Thanks.  Please drop this patch in any case: Sashiko pointed out that
-it can deadlock in xfs_buf_delwri_submit(), which keeps every buffer it
-has submitted locked until all of them have been submitted:
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-  xfs_buf_delwri_submit()           CIL abort (xlog_cil_ail_insert)
-    lock bp1, xfs_buf_submit(bp1)
-      xfs_buf_wait_unpin(bp1)         xfs_buf_item_unpin(bp1, remove)
-                                        drop pin, wake waiters
-      log is shut down, complete bp1    xfs_buf_lock(bp1)    <- blocks
-    lock bp2, xfs_buf_submit(bp2)
-      xfs_buf_wait_unpin(bp2)    <- blocks, bp2 would be unpinned
-                                    later in the same abort
-
-This needs bp1 and bp2 to be pinned in the same aborted checkpoint, with
-the abort reaching bp1 first and bp1's unpin dropping the last BLI
-reference.  That is the quotacheck case the patch claims to fix.
-Without the patch, xfs_buf_submit() does not wait once the log is shut
-down, so this is a regression.
-
-I couldn't find Dave's series on lore.  Could you point me to it?  I'll
-check whether it covers these syzbot reports before sending anything
-else.
-
-> LLMs references should stay away from commit messages. Doesn't matter
-> what tool you used, the code is still your responsibility.
-
-Understood, I'll keep them out of the changelog.
-
-Thanks,
-Andrea
+> ---
+>  fs/xfs/xfs_log.c     | 1 -
+>  fs/xfs/xfs_log_cil.c | 4 ----
+>  2 files changed, 5 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index 74b324f915a1..9029e7856f1c 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -841,7 +841,6 @@ xlog_write_unmount_record(
+>  	} unmount_rec = {
+>  		.ophdr = {
+>  			.oh_clientid = XFS_LOG,
+> -			.oh_tid = cpu_to_be32(ticket->t_tid),
+>  			.oh_flags = XLOG_UNMOUNT_TRANS,
+>  		},
+>  		.ulf = {
+> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+> index b54a421cab63..7ba4ef32479c 100644
+> --- a/fs/xfs/xfs_log_cil.c
+> +++ b/fs/xfs/xfs_log_cil.c
+> @@ -1189,7 +1189,6 @@ xlog_cil_write_commit_record(
+>  	struct xlog		*log = ctx->cil->xc_log;
+>  	struct xlog_op_header	ophdr = {
+>  		.oh_clientid = XFS_TRANSACTION,
+> -		.oh_tid = cpu_to_be32(ctx->ticket->t_tid),
+>  		.oh_flags = XLOG_COMMIT_TRANS,
+>  	};
+>  	struct xfs_log_iovec	reg = {
+> @@ -1237,12 +1236,10 @@ xlog_cil_build_trans_hdr(
+>  	int			num_iovecs)
+>  {
+>  	struct xlog_ticket	*tic = ctx->ticket;
+> -	__be32			tid = cpu_to_be32(tic->t_tid);
+>  
+>  	memset(hdr, 0, sizeof(*hdr));
+>  
+>  	/* Log start record */
+> -	hdr->oph[0].oh_tid = tid;
+>  	hdr->oph[0].oh_clientid = XFS_TRANSACTION;
+>  	hdr->oph[0].oh_flags = XLOG_START_TRANS;
+>  
+> @@ -1252,7 +1249,6 @@ xlog_cil_build_trans_hdr(
+>  	hdr->lhdr[0].i_type = XLOG_REG_TYPE_LRHEADER;
+>  
+>  	/* log opheader */
+> -	hdr->oph[1].oh_tid = tid;
+>  	hdr->oph[1].oh_clientid = XFS_TRANSACTION;
+>  	hdr->oph[1].oh_len = cpu_to_be32(sizeof(struct xfs_trans_header));
+>  
+> -- 
+> 2.53.0
+> 
