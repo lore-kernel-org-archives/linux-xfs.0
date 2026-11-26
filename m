@@ -1,60 +1,58 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=185.70.43.97
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=124.71.93.112
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795692065;
-	b=44akmXExNqgqHDmI6bk2JJl0naMQ40q46JOXeknIwilNUxp2UJql7P51BJPoDXs6yo2B
-	 GHr6eQfuUaNmPBLVOmxDnAX6YZHeGvLnCO1l/zXx2Jz8t0sFIjIpSFSl0E3yjvap2JwWB
-	 +dbh4UgW4AqU6RT9OBKs/iwfUR+yvwZKCCEMLYDUD66KS8AGzzDm3l2LzKUH0V3ODd83j
-	 wo2BwWpcdw1+rfRVARDCFJ/MeH6A2/wahUHVcW7d7YgDKnb0L/u4CacszbpZHrk7Oi5A7
-	 E1Ctfcq8517nD51JmsHuPv+HO6hIP9CrI28jGLbhkIQwQwwvOWnJrPGPN+r6+S9VonA==
+	t=1795696321;
+	b=Kji9/QPcEFzOFvwQt06rLl4/BWo5L5dIgmIn14WqG7i7ZzXgfPjduRz4XHT2PomylZFl
+	 NmdGxqfPWnG0kiCrC8f4T2zL71MgShwd7KDEIa6G5sqXuoAXvU8SvLzwNFJ3jlFFw9N9s
+	 aHvMBB+f4FrILCsJCCBCz+YPDoKQPhMTNLeDCTXois/ThAxaUUP4x/VQXQ7mvF1QlpgUL
+	 YP9qdXu3keXMWoxFCex91L2t8G1YQstVFXqCYTozsm4ne2IoW4iUIj9A35ul7tr5EWAsu
+	 WQfzeEiVeAVbLVdROEj8nPZXVUqHvyzSa3UTxoZuxAvq1+Vo/GJ4/x5ouqFKPUecSNw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795692065;
-	h=DMARC-Filter:DKIM-Signature:Date:To:From:Cc:Subject:Message-ID:
-	 In-Reply-To:References:Feedback-ID:X-Pm-Message-ID:MIME-Version:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=zIHuFarcS6Fh+RV7UoaafACerN1VwcUrnwEg4Ma6T9A=;
-	b=ddw0b/1lrL9BoaKmeaGsfyC349+YkKY7TMJFLDoi8iwoqL4Kh8KOxmrG9n6OT7pjSSov
-	 IM89GRlQVVy/cBgNc5md6q0siLNzPVDUaTywf8syI1RAMpwPfjBaT7ur/gUFTBLlAbsgG
-	 V7WFktidD5Y/RTqXCWhFdI+DXmlkTKnyU+mRtLzZTjrTHzvOtW2NlA5/v9LgrYrpwbAkF
-	 hMEYxw7a83oP8ZajGR4MoPPsnESqvQEu/bxifI8PSkFAEUip6Ln0ddxgXVasy9ZV09AgW
-	 bUHoTEG61NY8w4DO+ns2Kz+HltGaCBu+6W9eRRvplVpTJvgHG8h4BFqs3cp6eiqyPpw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795696321;
+	h=DMARC-Filter:Received:Received:Received:From:To:Cc:Subject:Date:
+	 Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding:
+	 X-CM-TRANSID:X-Coremail-Antispam:X-CM-SenderInfo;
+	bh=uekKP1e+ZxB5m0N00GWw0kdKHIRnUoyGr3yEVp62UDM=;
+	b=G/hSdc1WH+ZCIEuEAtokQ1s6P7unUC5HYIrIJDFmbsFL7+tnEL6+u2s4r6ixDjpEEQD8
+	 BRHomdSmFNA8QScW/SYqy6pQOfxHK0JqPFfG2gyLBCr5IG8WZhycmrzXunA1wuw43fDRk
+	 FzihrUVnZg2yFMxM8ce+XzgP/6+qcURvu2RiMnLsLLfE74fDRrD3gq8Uxx0SEa8wxRDhe
+	 n63QQR9AOysWpWuqiiK6A7kiXVbjlqtKK7QWbhatOcVWyLrglECsidH6c3uJ38Y6uEBy3
+	 i8DPmgVFCsJcRaypSAsG4WtxyAeJTQwDaO5tzgEemRDw0jxZe9pYE4isvfym317YGZA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=a7snv.com;
-	spf=pass smtp.mailfrom=a7snv.com;
-	dkim=pass header.d=a7snv.com header.i=@a7snv.com header.a=rsa-sha256 header.s=protonmail header.b="p1g/GpoD";
-	arc=none smtp.remote-ip=185.70.43.97
-Received: from mail-4397.protonmail.ch (mail-4397.protonmail.ch [185.70.43.97])
+	dmarc=none header.from=huaweicloud.com;
+	spf=pass smtp.mailfrom=huaweicloud.com;
+	arc=none smtp.remote-ip=124.71.93.112
+Received: from dggmsgout12.his.huawei.com (dggmsgout12.his.huawei.com [124.71.93.112])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD329606A329;
-	Thu, 26 Nov 2026 11:21:04 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CD329606A329
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=a7snv.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=a7snv.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=a7snv.com header.i=@a7snv.com header.a=rsa-sha256 header.s=protonmail header.b=p1g/GpoD
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=a7snv.com;
-	s=protonmail; t=1795692062; x=1795951262;
-	bh=zIHuFarcS6Fh+RV7UoaafACerN1VwcUrnwEg4Ma6T9A=;
-	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
-	 Feedback-ID:From:To:Cc:Date:Subject:Reply-To:Feedback-ID:
-	 Message-ID:BIMI-Selector;
-	b=p1g/GpoDV6p7G8RLn4E9/ZRlEjWREq/H7gMEJDVN8w2qTVpNiYpGtLrnfZ2w/Jq2b
-	 YjLex073ORmJ96TZskqlPlWefWjlWF66QwRQgFFV8jyPQSoysKBXlQLrBCgWsqhC9c
-	 qYtJtNtDZNH5G8Ipy3xHuO2j9zAUoh242AE/A4nQmsfxl3ryFIDOiaZKHb2uc08hIg
-	 Z+W60M0z1dGneIWDqYHEbqnbxQtXznj7h3FwDO85GbyNpmSed0gI8ztf8Fennn8Sao
-	 EjAWQWHNIthrKSbYAlC1t7XgYlZNMG7kBB9YdylUGEZvTaW0U7xasX6w82/xANjPUU
-	 s8R1iDb55pnMA==
-Date: Thu, 26 Nov 2026 11:20:51 +0000
-To: Mengmeng Zhao <mengmeng.zhao@linux.dev>
-From: arsenova@a7snv.com
-Cc: Anuj Gupta <anuj1072538@gmail.com>, Nitesh Shetty <nj.shetty@samsung.com>, hch@lst.de, anuj20.g@samsung.com, axboe@kernel.dk, sumit.semwal@linaro.org, christian.koenig@amd.com, phasta@kernel.org, djbw@kernel.org, willy@infradead.org, jack@suse.cz, viro@zeniv.linux.org.uk, brauner@kernel.org, tytso@mit.edu, adilger.kernel@dilger.ca, libaokun@linux.alibaba.com, ojaswin@linux.ibm.com, ritesh.list@gmail.com, yi.zhang@huawei.com, asml.silence@gmail.com, corbet@lwn.net, skhan@linuxfoundation.org, rdunlap@infradead.org, liwang@kylinos.cn, zhaomengmeng@kylinos.cn, mcgrof@kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, nvdimm@lists.linux.dev, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-doc@vger.kernel.org, linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org
-Subject: Re: [RFC PATCH v2 2/8] iomap: add dma-buf direct I/O guards
-Message-ID: <XNQ-E6Q8GZFQ7mImRSSv-9Rn2rFxrM6VjLvIp5yb01GOtKLUp6q5lc7ZLXO-gylrW13D6rxO-KSHTrnWFowX8zKQnZvpm0QYHBHGDjyn-ZE=@a7snv.com>
-In-Reply-To: <bff85d7b-84dd-4f4a-91c1-7f5c9ef2e51a@linux.dev>
-References: <20261125171600.4053585-1-arsenova@a7snv.com> <bff85d7b-84dd-4f4a-91c1-7f5c9ef2e51a@linux.dev>
-Feedback-ID: 235448903:user:proton
-X-Pm-Message-ID: 61e994b372b81e8b5a2d310c657a2284db10d784
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23E87606A31C;
+	Thu, 26 Nov 2026 12:31:58 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 23E87606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.177])
+	by dggmsgout12.his.huawei.com (SkyGuard) with ESMTP id 4jZwsJ6TzTz1yQv;
+	Thu, 26 Nov 2026 20:31:48 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 46F1140628;
+	Thu, 26 Nov 2026 20:31:54 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.50.85.155])
+	by APP4 (Coremail) with UTF8SMTPSA id gCh0CgAnZPO4Jghr_ZKGFw--.23639S4;
+	Thu, 26 Nov 2026 20:31:54 +0800 (CST)
+From: Zizhi Wo <wozizhi@huaweicloud.com>
+To: cem@kernel.org,
+	dgc@kernel.org,
+	djwong@kernel.org,
+	hch@lst.de,
+	linux-xfs@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	yangerkun@huawei.com,
+	chengzhihao1@huawei.com,
+	wozizhi@huawei.com
+Subject: [PATCH] xfs: remove a few duplicated lines
+Date: Thu, 26 Nov 2026 20:22:29 +0800
+Message-ID: <20261126122229.2281679-1-wozizhi@huaweicloud.com>
+X-Mailer: git-send-email 2.52.0
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -64,18 +62,78 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgAnZPO4Jghr_ZKGFw--.23639S4
+X-Coremail-Antispam: 1UD129KBjvJXoW7trW5Ar1rZFyrXF4fAFy3twb_yoW8trW7pF
+	93J3y0kFs8Jw17ur4fXw409wn7J34xurW0kFykArnaqwn8JF40kF90kr10qw1Fqa15urnr
+	Wrs8Kr4xZa13W3JanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUyCb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Gr0_Xr1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Cr0_Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
+	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
+	x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
+	0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lc7CjxVAaw2AFwI0_Jw0_GFyl42xK82IYc2Ij
+	64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x
+	8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE
+	2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42
+	xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF
+	7I0E14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x07UAwIDUUUUU=
+X-CM-SenderInfo: pzr2x6tkl6x35dzhxuhorxvhhfrp/
 
-On Thu, Nov 26, 2026 at 06:23:06PM +0800, Mengmeng Zhao wrote:
-> Since Anuj is currently consolidating the XFS and ext4 dma-buf work
-> (along with the cross-file registration sharing updates) into a unified
-> series, I fold your diff into this patch and send a seperated V3 version
-> with your Co-developed-by and Signed-off-by (if you're okay with that)[1]=
-.
+From: Zizhi Wo <wozizhi@huawei.com>
 
-Yes, I'm fine with the Co-developed-by and Signed-off-by, both in v3
-and in Anuj's unified series.  Good to hear it holds up on real NVMe.
+Remove duplicated lines:
+- xfs_alloc_read_agf() checks pagf_freeblks twice.
+- xfs_ondisk.h checks the size of struct xfs_attrlist twice.
+- xfs_rtgroup.h declares xfs_rtginode_irele() twice.
 
-Thanks,
-Yun
+No functional changes.
+
+Signed-off-by: Zizhi Wo <wozizhi@huawei.com>
+---
+ fs/xfs/libxfs/xfs_alloc.c   | 1 -
+ fs/xfs/libxfs/xfs_ondisk.h  | 1 -
+ fs/xfs/libxfs/xfs_rtgroup.h | 2 --
+ 3 files changed, 4 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index ae221a158764..2c5b73803a6b 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -3509,7 +3509,6 @@ xfs_alloc_read_agf(
+ 	if (!xfs_is_shutdown(pag_mount(pag))) {
+ 		bool	ok = true;
+ 
+-		ok &= pag->pagf_freeblks == be32_to_cpu(agf->agf_freeblks);
+ 		ok &= pag->pagf_freeblks == be32_to_cpu(agf->agf_freeblks);
+ 		ok &= pag->pagf_btreeblks == be32_to_cpu(agf->agf_btreeblks);
+ 		ok &= pag->pagf_flcount == be32_to_cpu(agf->agf_flcount);
+diff --git a/fs/xfs/libxfs/xfs_ondisk.h b/fs/xfs/libxfs/xfs_ondisk.h
+index 23cde1248f01..ae16b1bc2bbe 100644
+--- a/fs/xfs/libxfs/xfs_ondisk.h
++++ b/fs/xfs/libxfs/xfs_ondisk.h
+@@ -305,7 +305,6 @@ xfs_check_ondisk_structs(void)
+ 	XFS_CHECK_STRUCT_SIZE(struct getbmapx,			48);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_attrlist_cursor,	16);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_attrlist,		8);
+-	XFS_CHECK_STRUCT_SIZE(struct xfs_attrlist,		8);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_attrlist_ent,		4);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_ag_geometry,		128);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_rtgroup_geometry,	128);
+diff --git a/fs/xfs/libxfs/xfs_rtgroup.h b/fs/xfs/libxfs/xfs_rtgroup.h
+index fca2eb74908c..e505be68462b 100644
+--- a/fs/xfs/libxfs/xfs_rtgroup.h
++++ b/fs/xfs/libxfs/xfs_rtgroup.h
+@@ -328,8 +328,6 @@ int xfs_rtginode_create(struct xfs_rtgroup *rtg, enum xfs_rtg_inodes type,
+ 		bool init);
+ void xfs_rtginode_irele(struct xfs_inode **ipp);
+ 
+-void xfs_rtginode_irele(struct xfs_inode **ipp);
+-
+ static inline const char *xfs_rtginode_path(xfs_rgnumber_t rgno,
+ 		enum xfs_rtg_inodes type)
+ {
+-- 
+2.53.0
+
