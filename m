@@ -1,59 +1,98 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=203.254.224.34
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.229.7
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795660299;
-	b=Q+4F/3XlKzZggaXuy8dCTgRz61j4qs+JS48PynM920Ejg125I6q0Y4mJGsifsfsP+oqU
-	 hn5Gt+U7dBTpweJVkhTevLHYP0lHxeXPMsjPjCXdPqOSqszzHfu1ipdrl+t5CKCGnNt6r
-	 jBtmfgJdOS0Y53zih7kg3ADRluaIAZDggNKhUgm4BXv/1UwmgN9YdpnFhCbapgg2NOYZP
-	 Zh4za21e8sj3mh/Tt1jXhB3u8trIjA6CPhp5kIhQOJyMX5y33hIokVv1XULq197GwBlti
-	 GrgkmgRWd821IagQSs3DJbwy0NGrvg3dMT4EXsOl2+tOGcS0NJYki0DYuj79X2bfPlw==
+	t=1795660481;
+	b=L18AUzzPWfc6NfhJ/dYv+I4yi1MT4tsHLxRZMt6jPBkQicaQTOkbqmwb10nGuxdNOqma
+	 ThUCWhot62ViNFZ8AJ91oCWmlNFylxyOqN0mWU4gMY441f8NdbYaMuUcXLZzyJkwkfVMc
+	 eki3CrrD6IY2K70iLDhOhsB9btzBnqJg7CJJkM6yvSLh23CoctePnrnhGUM6gmR10Zp+W
+	 qwpHvtTV/iA9mq25K68TeYkCOKlo/ImKrfVINVezzE6t0jf2raFM5zF9Y2BLrrqQegOz6
+	 2uhoqrzGyWGA+5ySaiLhuU9xbG1tD0hGKY12so5yOAyD+DRRooTYMmvGTZEgoF32A7A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795660299;
-	h=DMARC-Filter:Received:DKIM-Filter:DKIM-Signature:Received:Received:
-	 Mime-Version:Subject:Reply-To:Sender:From:To:CC:X-Priority:
-	 X-Content-Kind-Code:In-Reply-To:X-CPGS-Detection:X-Drm-Type:
-	 X-Msg-Generator:X-Msg-Type:X-Reply-Demand:Message-ID:Date:
-	 X-CMS-MailID:Content-Transfer-Encoding:Content-Type:X-Sendblock-Type:
-	 CMS-TYPE:X-CPGSPASS:X-CPGSPASS:cpgsPolicy:X-CFilter-Loop:
-	 X-CMS-RootMailID:References;
-	bh=Dq6OBzQdHUbs/BzDJCNRfQdk6Xw3G/4Db/gI/OgFZSs=;
-	b=x+exvP9aH/+pxsPlRT/P4GG2sC9bHTrmsjsla3djKRCFm73aSwTqN3KXNO5CzCEC9SZO
-	 XkuKkyB7AP+LwFPnUDXBbxXJFnzHY6GLHpPVBaXLivyO2HJJ7OXU4Z3X4phoRZ7PvWSUx
-	 Ky0sywKH9HOXFItWbgMZEtRoqawHGgiZ7/7fVuVcmrWNkslP6GqT8knonYECFgiek8Mxm
-	 ZSpiIV3JRZrujnlfx0nTq8Ez2dRcuhHkwR3bS81ztQsvAidDRudHIoeuG2sgzc2SRMMbs
-	 /PPvg8movKweT0JedIwWdjClF97FtnnIXx012FibTygcSTcND373RI/+H2ehD4D2urA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795660481;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-Id:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=x/ILrJ+/NMYTFTFp5J74uQeEtDJj7OVnJ5vnxO7aL9Q=;
+	b=wDUsCNA9GoMZ6EWhFDVIwK3erRvFGpmlIqdQzOD3zvzDPPOXmyZWqvJ+thB+/PysJfGH
+	 dqLzkRxC3Bxbq153TMLpE9EEmZ3hqee9Lw4McEDw/cOqbRXlyFZghfVdz7VyP/VGvmHtS
+	 YBEGI3q9eh14k07/z3Qv9qeeZ3DEqRaH1YlN6iRIuN77b7MZsiLqN8CDW25Yk1vy2NlDe
+	 60Aa5WLUp0GS2LVRuan3/gmyTyP4AdnIqc8wxye3pwpvEKlt4taHs+kKqV4MAFBojgcrm
+	 tWi36T0p3D+aYXE2gPRzI2R4UwDdyNBXcOi4xl7/krSiTWxsRFlF1UM5kMms98anNjw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=samsung.com;
-	spf=pass smtp.mailfrom=samsung.com;
-	dkim=pass header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=Ki00RmGm;
-	arc=none smtp.remote-ip=203.254.224.34
-Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=ctxJ8ZzC;
+	arc=none smtp.remote-ip=74.125.229.7
+Received: from mail-dy2-f7.google.com (mail-dy2-f7.google.com [74.125.229.7])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCA1B606A327
-	for <linux-xfs@vger.kernel.org>; Thu, 26 Nov 2026 02:31:37 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BCA1B606A327
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 275E3606A31E
+	for <linux-xfs@vger.kernel.org>; Thu, 26 Nov 2026 02:34:40 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 275E3606A31E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=Ki00RmGm
-Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
-	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20261126023130epoutp0421fdcdd4ae40c0701a470c9374f6b266~rd4UxmQwi0285402854epoutp04j
-	for <linux-xfs@vger.kernel.org>; Thu, 26 Nov 2026 02:31:30 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20261126023130epoutp0421fdcdd4ae40c0701a470c9374f6b266~rd4UxmQwi0285402854epoutp04j
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1795660290;
-	bh=Dq6OBzQdHUbs/BzDJCNRfQdk6Xw3G/4Db/gI/OgFZSs=;
-	h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-	b=Ki00RmGmAUmAFRSQpvSl9fMNY1toHGO+OgfTpzgmTy9k+z0sjL9I9/URcjNeNxUQW
-	 6zqdOBg5geJq3a3gR069TbbUfLlVqeOObCCtlUHZFj702hRNbKaiI+7iwUcYXezmkK
-	 3QqZzf1Sf7LCLylutVbl8VNN9CBStMHwsnpAO7Vc=
-Received: from epsnrtp04.localdomain (unknown [182.195.42.156]) by
-	epcas2p4.samsung.com (KnoxPortal) with ESMTPS id
-	20261126023129epcas2p419befa3754bc98095d9901f6835d3a5f~rd4UXsAxB0124701247epcas2p4z;
-	Thu, 26 Nov 2026 02:31:29 +0000 (GMT)
-Received: from epcas2p3.samsung.com (unknown [182.195.38.202]) by
-	epsnrtp04.localdomain (Postfix) with ESMTP id 4jZgXd5F2fz6B9mB; Thu, 26 Nov
-	2026 02:31:29 +0000 (GMT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=ctxJ8ZzC
+Received: by mail-dy2-f7.google.com with SMTP id 5a478bee46e88-386e226acaaso10164eec.0
+        for <linux-xfs@vger.kernel.org>; Wed, 25 Nov 2026 18:34:40 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1795660479; x=1796265279; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=x/ILrJ+/NMYTFTFp5J74uQeEtDJj7OVnJ5vnxO7aL9Q=;
+        b=ctxJ8ZzCb5J+nwhRb4lb2Eeuu+v3J86bGNTKlzTAQCD5zCdQpV498cQ3u7a/ujYruM
+         M2MQxJyBpyE8l9Xl+OcLQ/I6bBP9rRGmVjKBXXipNlXGmXNdK/Yky/hK/3CWJKybyvub
+         WpTSmK/GT8ZCMYsgiEF3voNroNE4W64F/ReheYKtIvfLLa0F6+/RAExTXhkrssOknuCY
+         L7hZLCtNAHnCBUwGBOvpk9JNr18DTGfUyiCEBLFMAndorG8mn7egM/K1l7c4vLh3g8aa
+         KIzYtddpF1mOxglxBVB+2bwPSHSNs0s3LMUfoc+mpfW9rdBCy/5q1pce0j1xMecC3T1H
+         z1Gg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795660479; x=1796265279;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=x/ILrJ+/NMYTFTFp5J74uQeEtDJj7OVnJ5vnxO7aL9Q=;
+        b=oEsUDQX54J5VM6amXgqB3e8dABeKTwEXp2UfffA+WNkdROUL+Q/C66Br16bJsu+9Dl
+         OYhdLQhtG2c9gLfIZdD2BKgA38HruTohp1ECjWlB4JWzwDVz171MSPa4Z/17/jvpfCyR
+         0ke4Cdi96eiUN3jufxEbId6CNiJM8dxMsVCkwwUjsZbCnnTXItC8Llg9/2KmK+L2+tKv
+         lZZKT89bGoSUWgvW0XTjKGpHhM2K1WE1TaS30rIs5wD3tF/qfRBBrXDjj+jtw4v5F6C3
+         NC8yU9ODPoLwS4eB4nJ5IwDvcMCQfN3EBe+kKcveMjyUSQ1LU8FdFk4et46HPHMYO4Z7
+         9x3Q==
+X-Forwarded-Encrypted: i=1; AL+hErFINjsgNNqb3lw9mSJ/FLVALzr4Frdc18jBywJBvXkURsWNxxUDO+58y5fHe8a0tRbvYbMqHXUcJgw=@vger.kernel.org
+X-Gm-Message-State: APuU4Z/4WousCBc0hF579p0wfrYLobE3grGhXH1V2F/eFwm2X82lJxlO
+	C6Co71AsY4frJf0hX+8SVIkBc2ZQRiTJjPiFWMjjThw+reqgAwETxWsl
+X-Gm-Gg: AZFdTZceSdfJmxOlsmwtL8oMwqlVLdXzxyreb/RgR0qHztBW6rP1WD6j039BKqQSfSx
+	+Cl18x3pC3C2ZYb+PwHXZHWwD79t80h9XgsMa5HudBBgwE5QDAfF8KdIgMUrerXtCCRR7AGNR5l
+	9UtEwsYZlVv70Msog4R2Ju8MrIUaI0aIEhcCkbPbr5hsF6U7NNfAXIM8qjhvkkk3VLLzpyprIue
+	ESO/Yhqlz9nKWfeFlbQxvC9EoUdnLdKIynqzjmGDOf9poYxkWnn/k+2mRazPlV/YMVE4ORbK8VA
+	UGgPzTW9SWPpnu+Pv35zq5p+pBBqCRRe/iN5oncCr96rjzURgM5PHCcwDT9flNy6ciDMuKR5rkO
+	JiCUNmWzMDt7l43oz3QHK2OvPT59jLnUCdlM/XQ27Mvbs1oSe0u62aX5UsiTYqhnW15Ne+gH+Ej
+	I90SgAe9T0BK2FqS6aj10/V16Vifoo8Ysb+W4esGx3+pkZ/HfAoci/8Y5UJ2OrYx8c855uS31YQ
+	BvMyLmqaDq7USAsB8hcFDP8Sh/eFn6g5OPqrimYDJ/Di/YKUg8l3moGMh8asrTznXEDN2BOpKIl
+	Nlde8vnXbnlJND2AcrSwP07FDVLUKfOg+KDl6PEkpFzeDIdV51OKt2NgR0dbFyFyvssELW4IkmA
+	jv0jWy61AtB1naiMauh7KvToRBU9kGUVOgradcph2EG/VR7hq18u65NC0g2IfeU36AzYmuyM=
+X-Received: by 2002:a05:701b:4281:20b0:14d:c7ae:85dd with SMTP id a92af1059eb24-1b55686523bmr20656315c88.7.1795660479079;
+        Wed, 25 Nov 2026 18:34:39 -0800 (PST)
+Received: from localhost (ec2-43-203-195-82.ap-northeast-2.compute.amazonaws.com. [43.203.195.82])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1b5566c1142sm44070633c88.2.2026.11.25.18.34.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 25 Nov 2026 18:34:38 -0800 (PST)
+From: jianyungao89@gmail.com
+To: linux-kernel@vger.kernel.org
+Cc: Jianyun Gao <jianyungao89@gmail.com>,
+	Carlos Maiolino <cem@kernel.org>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Eric Sandeen <sandeen@redhat.com>,
+	Alexei Starovoitov <ast@kernel.org>,
+	Yuzuki Ishiyama <ishiyama@hpc.is.uec.ac.jp>,
+	Jinliang Zheng <alexjlzheng@tencent.com>,
+	Dave Chinner <dchinner@redhat.com>,
+	linux-xfs@vger.kernel.org (open list:XFS FILESYSTEM)
+Subject: [PATCH] xfs: fix wrong lookup direction in xfs_refcount_lookup_eq tracepoint
+Date: Thu, 26 Nov 2026 10:34:01 +0800
+Message-Id: <20261126023419.5727-1-jianyungao89@gmail.com>
+X-Mailer: git-send-email 2.34.1
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -62,72 +101,35 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-Subject: RE:(2) (2) [PATCH v2 0/2] xfs: skip redundant fsync cache flushes
-Reply-To: daejun7.park@samsung.com
-Sender: Daejun Park <daejun7.park@samsung.com>
-From: Daejun Park <daejun7.park@samsung.com>
-To: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>
-CC: Dave Chinner <dgc@kernel.org>, Carlos Maiolino <cem@kernel.org>,
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, Christoph Hellwig
-	<hch@lst.de>, Dave Chinner <david@fromorbit.com>, "Darrick J. Wong"
-	<djwong@kernel.org>, Amir Goldstein <amir73il@gmail.com>, Brian Foster
-	<bfoster@redhat.com>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>, Daejun Park <daejun7.park@samsung.com>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-In-Reply-To: <awWJ54ztH1pWu61B@quentin>
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <20261126023129epcms2p114dbcd5fc1669a670ed09e71a24f44f2@epcms2p1>
-Date: Thu, 26 Nov 2026 11:31:29 +0900
-X-CMS-MailID: 20261126023129epcms2p114dbcd5fc1669a670ed09e71a24f44f2
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-cpgsPolicy: CPGSC10-223,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20261111064724epcas2p11498de70e50f2fbf4e21d5e7a723e01d
-References: <awWJ54ztH1pWu61B@quentin> <avQPb5z4ExBOiEJq@dread>
-	<20261111-xfs-fsync-flush-seq-v2-0-b5c00c25d276@samsung.com>
-	<20261117023345epcms2p5117009330b6c600f68c598d5e08aef5e@epcms2p5>
-	<CGME20261111064724epcas2p11498de70e50f2fbf4e21d5e7a723e01d@epcms2p1>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-On Tue, Nov 24, 2026 at 02:08:23PM +0100, Pankaj Raghav (Samsung) wrote:
-> It looks like the delay caused by flush acted as a group commit delay
-> which allowed for more batching and optimization before the logs were
-> written out?
+From: Jianyun Gao <jianyungao89@gmail.com>
 
-At 128 clients, where neither kernel stalls in unlink(), v2 does 18%
-more log writes per fsync (0.10 -> 0.12 in my table). The large
-increase from 256 clients comes with the unlink() stalls.
+The trace_xfs_refcount_lookup() call in xfs_refcount_lookup_eq() passes
+XFS_LOOKUP_LE. But the actual btree lookup below uses XFS_LOOKUP_EQ,
+so the trace record reports a mismatched lookup direction and misleads
+debugging.
 
-[...]
-> Could you detail your setup and how you measure log writes/fsync and the
-> latency numbers?
+Fixes: 08daa3ccf541b8 ("xfs: add repair helpers for the reference count btree")
+Signed-off-by: Jianyun Gao <jianyungao89@gmail.com>
+---
+ fs/xfs/libxfs/xfs_refcount.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Setup 1 is a QEMU guest with 8 vCPUs. Its disk is an 80 GiB partition
-of a Samsung 990 PRO, attached as virtio-blk with cache=none. The
-kernel is for-next 48326a2382d8 without XFS_DEBUG, KASAN or lockdep,
-with and without v2. Each run does mkfs.xfs with defaults and then
-"dbench -t 30 N" with the client.txt load file from dbench.
+diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+index 75e469576a8b..6a15a1afed1a 100644
+--- a/fs/xfs/libxfs/xfs_refcount.c
++++ b/fs/xfs/libxfs/xfs_refcount.c
+@@ -96,7 +96,7 @@ xfs_refcount_lookup_eq(
+ {
+ 	trace_xfs_refcount_lookup(cur,
+ 			xfs_refcount_encode_startblock(bno, domain),
+-			XFS_LOOKUP_LE);
++			XFS_LOOKUP_EQ);
+ 	cur->bc_rec.rc.rc_startblock = bno;
+ 	cur->bc_rec.rc.rc_blockcount = 0;
+ 	cur->bc_rec.rc.rc_domain = domain;
+-- 
+2.34.1
 
-Log writes per fsync is the change in the first field of the "log"
-line in /proc/fs/xfs/stat over the dbench execute phase, divided by
-the xfs_file_fsync() calls that bpftrace counts over the same phase.
-
-max_latency is the value dbench prints. The values over 1 s are
-unlink() calls.
-
-> I can also try to reproduce it locally.
-
-Thanks, that would help.
-
-Best regards,
-Daejun
