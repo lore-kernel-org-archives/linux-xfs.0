@@ -1,115 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=103.168.172.157
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.118
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795642982;
-	b=cehkS8mRO7mddAecXOdYQiRQ/9ozOgTn/PWbA8OQfAF1MEATej7aqVHtj2QLhhMtwQF2
-	 70tNnYZK+gZAXL+LWcE0nMOU2WCXrbolm2KGuhg3zpvf/CyCpRdR4cNqLSIWnWzdZEwjX
-	 ybgy3L2Hz5j++3tmtvzHktoco+XtOcORW/vrqTQBO/sMhg1BhvtijofQbekZokJyWxFUt
-	 WLYEuzzMN3/AD3m5ysGqeF5/bm2yTbKufAQdOHGDtEEwzUg1cbHTgU/bFKFuFcIq9QYx7
-	 tCjHaVP8cYPgo/+zjwg1MsEmJPWaQe2Y+oNBaJy21LGzy5SCrBWOwX1jiz3AQUVbDJQ==
+	t=1795656373;
+	b=LbFraK9Ph9wDRnJgGxCPVXWU8Qu/B/CvXRetv0jaJW6Oz4ffYyPPhQcthxeodknTwuMJ
+	 mucsJLG4w1Zwccsl/qQsJ6Wl4hcb5oGfcma0Q0SguKQ2wkUV5AO7qjwvu5miqUO6Bh59z
+	 rP/7Y5erEbEf7iVeDOvu8bmz38lmg4Zz0vKnjJWQYB1vHdPOwa8e8EsMMvkAyErqM+BsM
+	 zm6SZTQHxH/n4xlCpcLL6xpaVd8JO1LjXv5zTEaVZ3FyY1zpwhnJGsFFQa/0XysBwm3qv
+	 45PuYc4+2TwDXH1J9/UmiHwtRj5NtxuDHcLEVqcJidS3qwTVJj84pPfbtCR43LeoHRg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795642982;
-	h=DMARC-Filter:Received:Received:DKIM-Signature:DKIM-Signature:
-	 X-DKIM2-Info:DKIM2-Signature:X-DKIM2-Info:Message-Instance:
-	 X-ME-Sender:X-ME-Received:X-ME-Proxy-Cause:X-ME-Proxy:Feedback-ID:
-	 Received:Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:
-	 References:Content-Language:From:In-Reply-To:Content-Type:
+	a=rsa-sha256; c=relaxed/relaxed; t=1795656373;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:From:In-Reply-To:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=xBRG3bBvCN1AV2HG0Gn5yfhC8jwmZ18NCo/e7QqFk70=;
-	b=u110AgPbIY47lqsV1BFzm0RxrhG+RgdouQU5g/bnz139vtuZFCtA80Wzcsnd1rRVgNBn
-	 xSbtxpVcVMTiJRK0SJRPxmz0WcWZK6CmRYuJnK4NtOa7eR/Hj+v3x6z4zgoxyeSgxwJd0
-	 PpUoLeeP9gARQc/uC2VzMGdREHy2uU4yN+4mXK0nJIeVv5ItQZSWP2CwP4agXjRdz/pXn
-	 PgRt3KygF4OzcZibslUG/T+J6NOscm7j2oiITC6+q3nEs5lAQutpUnqdO1BmHlbZ/7btJ
-	 COKhMFjTlA/3D8PieGm0Nh8qv6VrrGHq2mWTTk2ITmpxDsCprWROSVVp5es2b/8066Q==
+	bh=Z/SO45JEq1Tj9RqYNIrS64ldH+SeEVWmw+AWikVk48g=;
+	b=TMp1D9zfghJms0gKytwU6YdtJB72N4/15ZPeFZ24lta4gyQm7UXFfuatKBNYAtx4/7+9
+	 aMjpk4NhuTYfvlI472CLRc1LwlW50POTrRgQtucOMB7sKGrtHC/vZ3fX9movXr5VKLt8O
+	 CxcZyCAPKrQg8/XFTSjRFZeBliOXTslZB03KSxxm91O93HcqYj9OE8wEQjrJwosd58ZeZ
+	 lHee6q9p31CKwLjdVjjpxtZfV3uV/nuGwO1l7Erup8Z71JqjTOecTc9/8J9AVFnpE6cVY
+	 uUE4YGJ55709wRVCnk2v74k61UPmL2+I4z60BXN77Q82zu7Mymh6dm8rcXaq/FsmYNA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=sandeen.net;
-	spf=pass smtp.mailfrom=sandeen.net;
-	dkim=pass header.d=sandeen.net header.i=@sandeen.net header.a=rsa-sha256 header.s=fm3 header.b=enBlAruI;
-	dkim=pass header.d=messagingengine.com header.i=@messagingengine.com header.a=rsa-sha256 header.s=fm3 header.b=U8z4y1QF;
-	arc=none smtp.remote-ip=103.168.172.157
-Received: from fhigh-a6-smtp.messagingengine.com (fhigh-a6-smtp.messagingengine.com [103.168.172.157])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=azCOmnH9;
+	arc=none smtp.remote-ip=91.218.175.118
+Received: from mta0.migadu.com (out-118.mta0.migadu.com [91.218.175.118])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B4C6606A321
-	for <linux-xfs@vger.kernel.org>; Wed, 25 Nov 2026 21:43:01 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8B4C6606A321
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandeen.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5C2E606A31E
+	for <linux-xfs@vger.kernel.org>; Thu, 26 Nov 2026 01:26:12 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B5C2E606A31E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=sandeen.net header.i=@sandeen.net header.a=rsa-sha256 header.s=fm3 header.b=enBlAruI;
-	dkim=pass (2048-bit key, unprotected) header.d=messagingengine.com header.i=@messagingengine.com header.a=rsa-sha256 header.s=fm3 header.b=U8z4y1QF
-Received: from phl-compute-06.internal (phl-compute-06.internal [10.202.2.46])
-	by mailfhigh.phl.internal (Postfix) with ESMTP id A7329140032B
-	for <linux-xfs@vger.kernel.org>; Wed, 25 Nov 2026 16:43:00 -0500 (EST)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-06.internal (MEProxy); Wed, 25 Nov 2026 16:43:00 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm3; t=1795642980;
-	 x=1795729380; bh=xBRG3bBvCN1AV2HG0Gn5yfhC8jwmZ18NCo/e7QqFk70=; b=
-	enBlAruIiVxRJHskFspwdOgc9waSxdsxlIzKFDCPbyjhOz/Vw4ysZvYrwoXuZba1
-	OFu1fjpgyEQsmgOjtNPrGAM4ViMT7UMMQ9t1H6i9zsQAQ1w5hUkHEFAuXDagNnsC
-	NliJCkeb/mHq7/rBBlfawbjqQjPqJRVvbkcMaeSKGBzZ1w/vOiM2AS7A5u3KtlrS
-	CGPvZ2y35XNjY95h4aMGxBsNkULBUC02RKRvCYfPkYEkTSVrDEjCKHe3T6iSxHyf
-	4XBredSiwl/uz5Ze6UM2LEFyHJmIQ40eVJeSHqZ4p2xqxknfOez+8RTOXLuKXUCu
-	oEJtuF9Cj50Zu14THfU2FA==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1795642980; x=
-	1795729380; bh=xBRG3bBvCN1AV2HG0Gn5yfhC8jwmZ18NCo/e7QqFk70=; b=U
-	8z4y1QF3cymoLUkEsgQz/d+EaiAS6ifaW07m3k6TDE1oNV7pvqqzsK+5aHHFfHuz
-	4FaMXMjm93HI753LtxDHev8Gqq5abItEcF/pPAvjnzeAS8P/MhGgLltAPTADepoJ
-	X7Gsre6D/KU6HLfl0eAOpzt8OGfNuPimKPqvpeC9sNpDSPSDmZoWUH723lPrBcMi
-	gA+IvzJKiPg3fuqyOxMprR8zsctOmgRnRyzouVBjzDWGNhXkgC5leCgltg1ml4WA
-	05ZCPl5HO8HSgaaqS1U3MnppJ7zYmmoy0WUayk4pa1aUTgSD2Q9v0dXsscLtxlpy
-	U9liJSnpk2dzWsFBqz20A==
-X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-09;
-	repo=github.com/dkim2wg/interop; date=2026-11-03; sw=lmtpprox;
-	action=sign d=sandeen.net a=rsa-sha256;
-DKIM2-Signature: i=1; m=1; t=1795642980; d=sandeen.net;
-	mf=PHNhbmRlZW5Ac2FuZGVlbi5uZXQ+;
-	rt=PGxpbnV4LXhmc0B2Z2VyLmtlcm5lbC5vcmc+;
-	s=fm3:rsa-sha256:MBVt0eD9yXyFAcsCRPwoSaLUFR1n+vgX/EIiN52g5Yl0qsD
-	D83ENxvrU9jN8bdm97xpr4M/Q2pm4GtLRC8AfWwSRyEJozHEYb0AEdPAsVv9pQB2
-	eG8XdhBoqWb7M7T7y9Fcx0PPYZKOzKeVQj587lCk/2kBGwqXKwE9dLfnzPXlzlJZ
-	WxC+G2Am//lZJzpH2gqDy5co2/SGROejhxpofg7sxFxKVBjoXoiZfoBXdlf83MtP
-	vWyIFAle/+HGeWHbFBipflz8Hv2s7d2G50CizfMOT9p8fxZxJGAmUDOi5QpYLNvf
-	s4XNOGVwL3i+ck2EfLD770i6DxImLzmaoWXYz1Q==;
-X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-09;
-	repo=github.com/dkim2wg/interop; date=2026-11-03; sw=lmtpprox;
-	action=mi-m=1; hc=14;
-	hn=cc,content-language,content-transfer-encoding,content-type,
-	date,feedback-id,from,in-reply-to,message-id,mime-version,
-	references,subject,to,user-agent;
-Message-Instance: m=1; h=sha256:ijOAq2XEthMI4DYOKIJYwYkdZ8XvNPjcBzfDNTTWNGA=:UnLj9JSoOXufQgS1hq0EJJkXiowOGjV9jCE51JgipZw=;
-X-ME-Sender: <xms:ZFYHa9Gl2y6KcUHVT2hVYxA6dm2FGJHiD73q_YO1UhddAIbWmxe6Lg>
-    <xme:ZFYHa5NGWICpjQMH9OjnxIO-RD2OeBJt3JuFokTUpbgO3ijiDXCtXztBGEJxZnO4t
-    NFtrhP24_ilG19Y5O4MLchl70_WUTkeCd5Ow6uz_1PNUS4IycThTfFoLw>
-X-ME-Received: <xmr:ZFYHa3exlCF4t3zbJ_SglBh_j4yTj_EYRDA1SV40mCDNuXm9tqcgQt3aGAu8UtPYgVXpMtZnxkxgsm_yKGgxc4OM5b9joA>
-X-ME-Proxy-Cause: dmFkZTGw+NEeMkxsA/vJpYEFRr/wBkOIRBde+ZjF7OwvZpxWWv6gbAEhQ40E8ZzlvGW9Rn
-    uBXSgjVkoRR4njPGw7kGuaDP5qZLPgcpWQDDAMEzVbLx3JTpzabKFAGtAq02pnDtaOhdjC
-    y2PuRX1BOEvbyyP23ZDx6+xypoM5ZWzmHUmTXuLO63/VIgdAPaCt1Auwhxwkm2N55wRl09
-    b+zMIzPlupGz93ahw5NvOPkvziTT2oypL5nKcQ1i4Wn/tXIGZJJzkvNkJyKHEqQTLOyY6l
-    Tt7VXUi7HdbQY44Utb+JT4HIkoFvAAY6AnFSFGYX9tcchTIcWbZa2UTCfjYhLVkccbexGq
-    YgZLAQhviyffJXeBRXXw6edEK+Zi2bes4DQAuEwbpketIhzxY2oCQFl/2v/c0jh/Ep1nKk
-    vqCGOSSO2jCIVanG68zXsIPmf+4sAuRI+9fNW9JKGK7ZeBW7axumWIelfl/KyrzNqjWHAe
-    SlSFM6QVRuYShr125NPyh4t2EXA+ddc83avsCmIQwf3iWlSZXQQsGoo7C6A0YrW/Kn8y4G
-    kj52CGSNt0AmwBDgWJyQ5KNmebVEEKGyKDJC0AXujskFUFT6/MHULvtL/rbq1EfodTc9HD
-    U0QiIooAOrWJhTaxMvv870odb+hoiPvOMBBMNpRKlhmKsTj8ocumLsIEDzCA
-X-ME-Proxy: <xmx:ZFYHa-ujFTUiUeNt_bMvzvmCrmd1HV2Gx-aZtvaymQWh72TjV6bSaw>
-    <xmx:ZFYHawmqNSc3woKgUJLLeiwP_cBsxTjXyY88QAtvZoqgR-xADfU5Nw>
-    <xmx:ZFYHa4zV5XqSP0ZxKZ1z3Oy_GHoiJdHzdjj0aJnW-YckHgj7IpJR8g>
-    <xmx:ZFYHa6P8AG0Fcza0-wcqo3Gn7VFncOXaWb8EPMQLUxbo-1bCbwxsrA>
-    <xmx:ZFYHa9rXzo4rQ5eYH0KnY-Z86c5xvBcl2gbkQAWKZsL-byi1Kv642-oA>
-Feedback-ID: i2b59495a:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
- 25 Nov 2026 16:42:59 -0500 (EST)
-Message-ID: <ad3315e9-398b-4e9f-b5b4-269ad1f1de60@sandeen.net>
-Date: Wed, 25 Nov 2026 15:42:59 -0600
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=azCOmnH9
+X-Envelope-To: linux-xfs@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=D1UHaW0a6adTmdkfzXoJGoIQXD78CQO3jmkmbRoDsZs=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1795656370; v=1; x=1796261170;
+ b=azCOmnH9erdm6Cq7Lccc2+ysEQanywkkrY/DWraFz6VtuY9rw5S6c40xDjasc3xluUPip9RY
+ 9LlRCC/MO58LJfhVW9AZjuFfWx23EihJRfUS6uorsOTBqOlZ7A9RHqSr19rSjOPdhipYWREZ+2/
+ J0Qroccg40VVunhAUitk4yE0=
+X-Envelope-To: linux-xfs@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id f65ccc0d161a6465;
+	Thu, 26 Nov 2026 01:26:10 +0000
+X-Mizu-Trace-ID: f65ccc0d161a6465
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <3bce3a69-e41c-4683-b1ca-9477dd41a7e0@linux.dev>
+Date: Thu, 26 Nov 2026 09:25:51 +0800
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -120,75 +59,72 @@ List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] xfs: Remove incorrect use of '&'
-To: Alejandro Colomar <alx@kernel.org>
-Cc: linux-xfs@vger.kernel.org, Carlos Maiolino <cem@kernel.org>,
- "Darrick J. Wong" <djwong@kernel.org>, Christoph Hellwig <hch@lst.de>
-References: <3783cf39b873890896eb889c8c09edb455559fce.1795626969.git.alx@kernel.org>
- <34b824e8-21fc-4271-bd60-29cc8b06a292@sandeen.net> <awckBo8FkdsGtb1t@devuan>
-Content-Language: en-US
-From: Eric Sandeen <sandeen@sandeen.net>
-In-Reply-To: <awckBo8FkdsGtb1t@devuan>
+Subject: Re: [RFC PATCH v2 0/8] ext4: Add dma-buf read/write support
+To: Anuj Gupta <anuj20.g@samsung.com>, Christoph Hellwig <hch@lst.de>,
+ Pavel Begunkov <asml.silence@gmail.com>,
+ Christian Brauner <brauner@kernel.org>
+Cc: Anuj Gupta <anuj1072538@gmail.com>, Nitesh Shetty
+ <nj.shetty@samsung.com>, Jens Axboe <axboe@kernel.dk>,
+ Sumit Semwal <sumit.semwal@linaro.org>,
+ Christian Koenig <christian.koenig@amd.com>,
+ Philipp Stanner <phasta@kernel.org>, Dan Williams <djbw@kernel.org>,
+ Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>,
+ Alexander Viro <viro@zeniv.linux.org.uk>, Theodore Ts'o <tytso@mit.edu>,
+ Andreas Dilger <adilger.kernel@dilger.ca>,
+ Baokun Li <libaokun@linux.alibaba.com>, Ojaswin Mujoo
+ <ojaswin@linux.ibm.com>, Ritesh Harjani <ritesh.list@gmail.com>,
+ Zhang Yi <yi.zhang@huawei.com>, Jonathan Corbet <corbet@lwn.net>,
+ Shuah Khan <skhan@linuxfoundation.org>, Randy Dunlap
+ <rdunlap@infradead.org>, linux-block@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+ nvdimm@lists.linux.dev, linux-ext4@vger.kernel.org,
+ linux-xfs@vger.kernel.org, linux-doc@vger.kernel.org,
+ linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ linaro-mm-sig@lists.linaro.org, Li Wang <liwang@kylinos.cn>,
+ Mengmeng Zhao <zhaomengmeng@kylinos.cn>
+References: <20261113070621.273953-1-mengmeng.zhao@linux.dev>
+ <20261120154153.GC28611@lst.de>
+ <361c4312-f77b-495f-9ee4-e0b9612b4463@linux.dev>
+ <CGME20261124084131epcas5p3098eab1bc134da7aefcc83c646b54a9d@epcas5p3.samsung.com>
+ <20261124084025.2101804-1-anuj20.g@samsung.com>
+From: Mengmeng Zhao <mengmeng.zhao@linux.dev>
+In-Reply-To: <20261124084025.2101804-1-anuj20.g@samsung.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 11/25/26 12:10 PM, Alejandro Colomar wrote:
-> Hi Eric,
+On 11/24/26 16:40, Anuj Gupta wrote:
+> On Mon, Nov 23, 2026 at 09:51:41AM +0800, Mengmeng Zhao wrote:
+>> Hi Anuj, I'd be happy to help pull our patches together into a single
+>> unified series and send it out for review, if you're okay with that—and
+>> would appreciate your review once it's posted as well. Please let me know how
+>> you'd like to coordinate, or if you have any updates in progress on your
+>> side before I put the series together.
 > 
->> Date: 2026-11-25 11:43:00-0600
->> From: Eric Sandeen <sandeen@sandeen.net>
->>
->> On 11/25/26 11:16 AM, Alejandro Colomar wrote:
->>> We want to pass the character array, not a pointer to it.
->>>
->>> This seems an obvious typo, introduced in a48373e7d35a (2026-01-20;
->>> "xfs: start creating infrastructure for health monitoring").
->>
->>
->> So,
->>
->> Fixes: a48373e7d35a ("xfs: start creating infrastructure for health monitoring")
->> Cc: stable@vger.kernel.org
+> Hi Mengmeng,
 > 
-> It's unnecessary, because the binary will have the same exact value
-> passed.  It's only a type-system issue, which affects diagnostics etc.,
-> but doesn't create an actual bug.
+> We already have updates in progress on the XFS side.
 > 
-> I would add the 'Fixes' tag, but without stable@, since it doesn't need
-> to be backported.  I didn't include the 'Fixes' tag because some
-> maintainers don't want to see them if there's no bug in the binary.
+> We will consolidate the combined series along with your ext4 work and
+> related patches, keeping your authorship.
 > 
-> Let me know your preference.
+> One more thing that we are looking at combining is the ability to share
+> the registration across files. Pavel had mentioned this earlier in our
+> xfs series [1] and posted a series too [2] which needs some more work.
+> 
+> FWIW, we also had ext4 changes, but intentionally started with one
+> filesystem (XFS) so that the common interface could settle first.
+> 
+> [1] https://lore.kernel.org/linux-block/4649a20f-aba9-418e-987f-66f21ab24410@gmail.com/
+> [2] https://lore.kernel.org/linux-block/cover.1793751001.git.asml.silence@gmail.com/
 
-yeah, fair enough. cem mentioned this too. Sorry for the noise :)
+Hi Anuj,
 
--Eric
+Sounds good, that makes sense given the ongoing XFS and shared registration
+updates. Thanks for including our ext4 patches and keeping the authorship.
+Feel free to loop me in once you post the combined series—I'd be happy to
+help review and test it.
 
-> 
-> Cheers,
-> Alex
-> 
->>
->>> Cc: Darrick J. Wong <djwong@kernel.org>
->>> Cc: Christoph Hellwig <hch@lst.de>
->>> Signed-off-by: Alejandro Colomar <alx@kernel.org>
->>> ---
->>>  fs/xfs/xfs_healthmon.c | 2 +-
->>>  1 file changed, 1 insertion(+), 1 deletion(-)
->>>
->>> diff --git a/fs/xfs/xfs_healthmon.c b/fs/xfs/xfs_healthmon.c
->>> index 2bdd747f1ead..56d19ffb02b3 100644
->>> --- a/fs/xfs/xfs_healthmon.c
->>> +++ b/fs/xfs/xfs_healthmon.c
->>> @@ -1061,7 +1061,7 @@ xfs_healthmon_validate(
->>>  		return false;
->>>  	if (hmo->format != XFS_HEALTH_MONITOR_FMT_V0)
->>>  		return false;
->>> -	if (memchr_inv(&hmo->pad, 0, sizeof(hmo->pad)))
->>> +	if (memchr_inv(hmo->pad, 0, sizeof(hmo->pad)))
->>>  		return false;
->>>  	return true;
->>>  }
->>
-> 
-
+I looked at Pavel's patchset as well, and noticed it adds a new f_dma_io_tag
+field to struct file, whereas Christoph and Christian want to avoid bloating
+struct file. Did I miss something, or do you have a different approach in mind
+to avoid adding fields to struct file?
