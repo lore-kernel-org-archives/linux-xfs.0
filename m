@@ -1,58 +1,53 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=124.71.93.112
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795702157;
-	b=E/u4NiVPm00deCBf4kiYPnGvtmqnghLYuE/NOodm4mTSTSPuUP3H9RYsHI0dERaBDpwD
-	 3gN0aqPIwPyH1l/No7h/U+fvS2SVC8nRSiNU+tycztJnKdZjt5ofIgLTGV88eWn/23ebf
-	 ZKXGW064+EpEVTtop+nZ1kNOuswWXHYPNSjwfP4qxRxdIZvWMzBMHrfTukP5q34ugkEwd
-	 p8Z6vC1jTVZh80/3/oYyIyvHBzxYnfX+uwn/+w+CCl943P4q6LnSHATPmg60BJlGIOGyv
-	 dtv+jg+zQcNo3AiVNnCsadx+MsB4a1I5P/T0ZQqL8SquX6N7z/Xn8cvScgCUD92aFdg==
+	t=1795702535;
+	b=CKrz9zMb5P9aBSA1MJvd4a6L635Xa/8AFh2GqRuTNisgoLft6TTC+bOQJnHClEITyic3
+	 jBh/sqBh3830i1cKWGpuTkTs4oEz5PHo+stIXt+90/BH+C7ENRl1Ellfqgd573DluLE3g
+	 Ny3GNNBiepXWEhocI3I4SDgMqPipwO4m9XMn4AR8hD2qPpJ3GqrO+eykwtM5Q++I8NBuN
+	 fxff/aD8qZosskxe31LKzlVwlbZ5aGC6p1eImqbwV3R8aIWcu4rUsREJjwZtNLxpTyKj+
+	 WyGx3c9/dOontfp3wh2+VKuUxqvQKqt/LESJi+MOnGJX9nY8k49c0rfHcKW1vNTDvAA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795702157;
-	h=DMARC-Filter:Received:Received:Received:From:To:Cc:Subject:Date:
-	 Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding:
-	 X-CM-TRANSID:X-Coremail-Antispam:X-CM-SenderInfo;
-	bh=Rf3v+CLOqjZdZyhzB4/SDElBJTZGH4TAHVYUJzau4dM=;
-	b=zw/70zz70MjMt2/9GWd10JN+8Kem5h3+IfFhrijTelFWI0H6aX8yJfaC4PVbOjRVrby1
-	 hDIZAZ1tU/9q9BwTwrp8ip9evZ55PvrYpk2c7cAFg9DlMg3N/h8QDrQzmJhSLHT5nZO4o
-	 0M2DU2eyP9EJ3WRB2zvqBfy3RT8H+PBzsb6aheh2tiLL0eww7U1Ovnx6sgZzY/BX76pFg
-	 zAReS43g7IUdr48ytX44sDmoUO2seD9sUk435o2D8y3334503DnOKPVKXJk40O5ilsnUB
-	 I3d8r0R0hymU4zkhAQy/ZOBx6CxmFvU1qqrx/2KWny5gU1T3Wbj+vUd1BGPOqkCJH0A==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795702535;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=tm2aP9IHJto56VqvlWlUBRTCk3Rbjf21oUK1cuoG/6A=;
+	b=usx46/24o+x5YCrsgf4hPwFGmMW6olETLFiqg5K/M3bPhbqkQCd5RjPJle2PxBFz5vAR
+	 7xAIwbFkZ+qLrVqforWvYNrgngTui2QcA44iTKR4oGT2TWO9539d7m1sGj9wuJ24D4DvW
+	 iK4lfgZsHtaB8tLMakMQJ9GlGne9QUN7odhjsM3lrLvD0zkuJblEdVmaN2UNH77oM4F5X
+	 jaKqHhhihcS45jsoEX9kvd28s/SlgaWCzIWxUPOnMNG6rKnzeyuPUObnUhWHaTISfhHy+
+	 y+eFesO0TF0/6itIMLxyCzrP8YOAv0ynKyQVmZTUewxF5k00MIrAvqk637xbXfhuHfA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=huaweicloud.com;
-	spf=none smtp.mailfrom=huaweicloud.com;
-	arc=none smtp.remote-ip=124.71.93.112
-Received: from dggmsgout12.his.huawei.com (dggmsgout12.his.huawei.com [124.71.93.112])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=k0h+qGFr;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B409E606A329;
-	Thu, 26 Nov 2026 14:09:15 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B409E606A329
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.170])
-	by dggmsgout12.his.huawei.com (SkyGuard) with ESMTP id 4jZz1b2yL1z1yQR;
-	Thu, 26 Nov 2026 22:09:07 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id E101F4056B;
-	Thu, 26 Nov 2026 22:09:12 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.50.85.155])
-	by APP4 (Coremail) with UTF8SMTPSA id gCh0CgCXzeyHPQhrhJmPFw--.54669S4;
-	Thu, 26 Nov 2026 22:09:12 +0800 (CST)
-From: Zizhi Wo <wozizhi@huaweicloud.com>
-To: cem@kernel.org,
-	dgc@kernel.org,
-	djwong@kernel.org,
-	hch@lst.de,
-	linux-xfs@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	yangerkun@huawei.com,
-	chengzhihao1@huawei.com,
-	wozizhi@huawei.com
-Subject: [PATCH V2] xfs: remove duplicated lines
-Date: Thu, 26 Nov 2026 21:59:47 +0800
-Message-ID: <20261126135947.2820748-1-wozizhi@huaweicloud.com>
-X-Mailer: git-send-email 2.52.0
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3193606A31C;
+	Thu, 26 Nov 2026 14:15:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=k0h+qGFr
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 816391F000C6;
+	Thu, 26 Nov 2026 14:15:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795702535;
+	bh=tm2aP9IHJto56VqvlWlUBRTCk3Rbjf21oUK1cuoG/6A=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=k0h+qGFrZxA44sM0hlxfcYrFaNv2R5nLMFSTZH/oYtxZjPFVKW0zR505VOTgM3od3
+	 gc61y9LDACE5OqfV47jdf+q/RSGGaE0v8G1690/bTmrCX4zxxUjRAWYSMM1kxEMbVj
+	 Q/IyESOnbr4agz3vmd4FsgXMtgSLFQ46RSvntn96mtKJBGpNQuEInmRi90BQiBDZSt
+	 eIQLz7fGXv8hIjGxZLP9bELn7BUUVraP6WBlsRboGnDrQWU/VOC5nYJD7O0IfIAzLn
+	 qKbI4+hpVFg5+/gL1y371IxT0hAH92V5L+0V7vz+fWpIoU2GC7dTt4fgdRbhh77Fql
+	 osmocMVSkBdZA==
+Date: Thu, 26 Nov 2026 15:15:29 +0100
+From: Carlos Maiolino <cem@kernel.org>
+To: Zizhi Wo <wozizhi@huaweicloud.com>
+Cc: dgc@kernel.org, djwong@kernel.org, hch@lst.de, 
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, yangerkun@huawei.com, 
+	chengzhihao1@huawei.com, wozizhi@huawei.com
+Subject: Re: [PATCH V2] xfs: remove duplicated lines
+Message-ID: <awg-k2ZtQ3BHioE2@cronus.toxiclabs.cc>
+References: <20261126135947.2820748-1-wozizhi@huaweicloud.com>
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -62,74 +57,66 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-xfs+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgCXzeyHPQhrhJmPFw--.54669S4
-X-Coremail-Antispam: 1UD129KBjvJXoW7trW5tFWkWF13tF18Ar1DJrb_yoW8uF4xpF
-	95G3yUKFs8Jw1UuF4fXw409w1Ik34xu3ykJFy8ArySqwn8tr4jkF1DKr1Fvr1rXan5Wrnr
-	Xr15tr4IvanrW3JanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUyKb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Gr0_Xr1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Cr0_Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
-	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
-	x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
-	0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lc7CjxVAaw2AFwI0_Jw0_GFyl42xK82IYc2Ij
-	64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x
-	8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE
-	2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42
-	xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF
-	7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUF1v3UUUUU
-X-CM-SenderInfo: pzr2x6tkl6x35dzhxuhorxvhhfrp/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261126135947.2820748-1-wozizhi@huaweicloud.com>
 
-From: Zizhi Wo <wozizhi@huawei.com>
+On Thu, Nov 26, 2026 at 09:59:47PM +0800, Zizhi Wo wrote:
+> From: Zizhi Wo <wozizhi@huawei.com>
+> 
+> Remove duplicated lines:
+> - xfs_ondisk.h checks the size of struct xfs_attrlist twice.
+> - xfs_rtgroup.h declares xfs_rtginode_irele() twice.
+> 
+> No functional changes.
+> 
+> Fixes: 650b774cf944 ("xfs: add static size checks for ioctl UABI")
+> Fixes: 6b08901a6e8f ("xfs: add realtime reverse map inode to metadata directory")
+> Signed-off-by: Zizhi Wo <wozizhi@huawei.com>
 
-Remove duplicated lines:
-- xfs_ondisk.h checks the size of struct xfs_attrlist twice.
-- xfs_rtgroup.h declares xfs_rtginode_irele() twice.
+Looks good.
 
-No functional changes.
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-Fixes: 650b774cf944 ("xfs: add static size checks for ioctl UABI")
-Fixes: 6b08901a6e8f ("xfs: add realtime reverse map inode to metadata directory")
-Signed-off-by: Zizhi Wo <wozizhi@huawei.com>
----
- fs/xfs/libxfs/xfs_ondisk.h  | 1 -
- fs/xfs/libxfs/xfs_rtgroup.h | 2 --
- 2 files changed, 3 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_ondisk.h b/fs/xfs/libxfs/xfs_ondisk.h
-index 23cde1248f01..ae16b1bc2bbe 100644
---- a/fs/xfs/libxfs/xfs_ondisk.h
-+++ b/fs/xfs/libxfs/xfs_ondisk.h
-@@ -303,11 +303,10 @@ xfs_check_ondisk_structs(void)
- 	XFS_CHECK_STRUCT_SIZE(struct dioattr,			12);
- 	XFS_CHECK_STRUCT_SIZE(struct getbmap,			32);
- 	XFS_CHECK_STRUCT_SIZE(struct getbmapx,			48);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_attrlist_cursor,	16);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_attrlist,		8);
--	XFS_CHECK_STRUCT_SIZE(struct xfs_attrlist,		8);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_attrlist_ent,		4);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_ag_geometry,		128);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_rtgroup_geometry,	128);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_error_injection,	8);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_fsop_geom,		256);
-diff --git a/fs/xfs/libxfs/xfs_rtgroup.h b/fs/xfs/libxfs/xfs_rtgroup.h
-index fca2eb74908c..e505be68462b 100644
---- a/fs/xfs/libxfs/xfs_rtgroup.h
-+++ b/fs/xfs/libxfs/xfs_rtgroup.h
-@@ -326,12 +326,10 @@ int xfs_rtginode_load(struct xfs_rtgroup *rtg, enum xfs_rtg_inodes type,
- 		struct xfs_trans *tp);
- int xfs_rtginode_create(struct xfs_rtgroup *rtg, enum xfs_rtg_inodes type,
- 		bool init);
- void xfs_rtginode_irele(struct xfs_inode **ipp);
- 
--void xfs_rtginode_irele(struct xfs_inode **ipp);
--
- static inline const char *xfs_rtginode_path(xfs_rgnumber_t rgno,
- 		enum xfs_rtg_inodes type)
- {
- 	return kasprintf(GFP_KERNEL, "%u.%s", rgno, xfs_rtginode_name(type));
- }
--- 
-2.52.0
-
+> ---
+>  fs/xfs/libxfs/xfs_ondisk.h  | 1 -
+>  fs/xfs/libxfs/xfs_rtgroup.h | 2 --
+>  2 files changed, 3 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_ondisk.h b/fs/xfs/libxfs/xfs_ondisk.h
+> index 23cde1248f01..ae16b1bc2bbe 100644
+> --- a/fs/xfs/libxfs/xfs_ondisk.h
+> +++ b/fs/xfs/libxfs/xfs_ondisk.h
+> @@ -303,11 +303,10 @@ xfs_check_ondisk_structs(void)
+>  	XFS_CHECK_STRUCT_SIZE(struct dioattr,			12);
+>  	XFS_CHECK_STRUCT_SIZE(struct getbmap,			32);
+>  	XFS_CHECK_STRUCT_SIZE(struct getbmapx,			48);
+>  	XFS_CHECK_STRUCT_SIZE(struct xfs_attrlist_cursor,	16);
+>  	XFS_CHECK_STRUCT_SIZE(struct xfs_attrlist,		8);
+> -	XFS_CHECK_STRUCT_SIZE(struct xfs_attrlist,		8);
+>  	XFS_CHECK_STRUCT_SIZE(struct xfs_attrlist_ent,		4);
+>  	XFS_CHECK_STRUCT_SIZE(struct xfs_ag_geometry,		128);
+>  	XFS_CHECK_STRUCT_SIZE(struct xfs_rtgroup_geometry,	128);
+>  	XFS_CHECK_STRUCT_SIZE(struct xfs_error_injection,	8);
+>  	XFS_CHECK_STRUCT_SIZE(struct xfs_fsop_geom,		256);
+> diff --git a/fs/xfs/libxfs/xfs_rtgroup.h b/fs/xfs/libxfs/xfs_rtgroup.h
+> index fca2eb74908c..e505be68462b 100644
+> --- a/fs/xfs/libxfs/xfs_rtgroup.h
+> +++ b/fs/xfs/libxfs/xfs_rtgroup.h
+> @@ -326,12 +326,10 @@ int xfs_rtginode_load(struct xfs_rtgroup *rtg, enum xfs_rtg_inodes type,
+>  		struct xfs_trans *tp);
+>  int xfs_rtginode_create(struct xfs_rtgroup *rtg, enum xfs_rtg_inodes type,
+>  		bool init);
+>  void xfs_rtginode_irele(struct xfs_inode **ipp);
+>  
+> -void xfs_rtginode_irele(struct xfs_inode **ipp);
+> -
+>  static inline const char *xfs_rtginode_path(xfs_rgnumber_t rgno,
+>  		enum xfs_rtg_inodes type)
+>  {
+>  	return kasprintf(GFP_KERNEL, "%u.%s", rgno, xfs_rtginode_name(type));
+>  }
+> -- 
+> 2.52.0
+> 
+> 
