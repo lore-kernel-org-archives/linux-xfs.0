@@ -1,57 +1,58 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795700963;
-	b=Tm/FlQI+MR2vKDbDRSo1H7R1wQyQT6cLIIsNQq17NxEXRRj1+66x/i7JxRfg8nkYxwpj
-	 RbHKNwndD6f2Uv2bJbQ0f2OhAsAlNuAoPQB26hLUIBTy1Md7Jnj/8R2sLtWpcB72jhSJg
-	 NL5MHluXTYN2+73F9GEYZK4JKLDvcj2j8LbvR27PGWZml45hr1uOooV9vr73P2BQFpPqs
-	 yA/HsgFkkBuCbhIqLj/LJyOHk3X3H5c04GPd+QqyH8QUQbs+AHD3YOsi3oRgqN4B58nbF
-	 Er7tIqHfb5XseNp+W3YV7ULoeZbELzEKfuW37LWqhfu3JE80mcwD008lihdNdNLmxjQ==
+	t=1795700969;
+	b=BqKxDOT7j8MmGBaVELtf02VETPWeaTUtHXbwStKfDkA0XHvoMLlthqq7eqHfzXxLSYLU
+	 STCQWnnc5oG0Bz3xi2dj6+qihAur97k/PmHk/5enNHuwlC+blh60TCMfm2iASaNMjPFEj
+	 W5EhYSIgma4w+OuCxqy6BdkYhBpbFct94iMazRU0avrkwL/o0c8FNgpAp9XQuXUknyx9g
+	 QrtanEhHpywuHz+RuolXWgN9cngEEk0YspKdG/mwtC+Gpsnqoj6h5mH5XUPSnU7lQtSab
+	 oTRBmWUchf3SfmtGqb+AwlwwZ2Zedl1VfGPx5JX8ftVpPDS6XvtryHMUdyIMo4vrObw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795700963;
-	h=Received:DKIM-Signature:From:To:In-Reply-To:References:Subject:
+	a=rsa-sha256; c=relaxed/relaxed; t=1795700969;
+	h=Received:DKIM-Signature:From:To:Cc:In-Reply-To:References:Subject:
 	 Message-Id:Date:MIME-Version:Content-Type:Content-Transfer-Encoding:
 	 X-Mailer;
-	bh=NPSQpQTltqIf0XJ7VNXqiz+KaXdcYp8qNQ6kjBes5z4=;
-	b=m0ToynOSRHOto7i+XuwYkaGpLAwh4RYOQkkYvCQGKmDpoF0GNshjonVOctksCk3tbJOf
-	 I7a+GE/JJP0L3BqSLREkl2O7WOAS6N3i1dh+JnlgJ+EQ4snfMlLZ37YeX91Dpc7lrk4f8
-	 4IRplAJQ0QY9t9XZDBzNHkmeoiS+U4hlYk9vcjycToCa4AnMmHptGJKwhYmBNTRAHqX5v
-	 U05oOND1vY2qiB1dqoPuO2GR3aIzRdYancBDlvhN4CBj3lGJxv6bKweCN4oBjKMqXEaAA
-	 e27WP6Hl9ThAhq6VlSSO3FaUxsCoxnNHniyAGc2aunza/DLzB/YUxYVh/wfui8Jtdjg==
+	bh=Dckl5cZ3WBWmSxFRR2nJW/3y+8t4JCFxv0tEEYaft8o=;
+	b=dJElr9W7BVWS3KA8vllNOz1Cn1qE8dRK3MWHI4XxEiPmIuFI0OnW6yqXdNXYN5rit2vM
+	 NEk59Zck+Wb2ZineGZEyCeNds2MOGtIUoXCHfHnFLwFebGKnHwMCsLwZmIMWX3CPmx6+W
+	 NWPsBbi37c7T0SzCQRDAcGwFwBpWbu0sRPLr3QWyBBOyE0yiHuXQsN2A0v3ibmq8hZe9Y
+	 Xc3ngdgfLJzxTKIToEK1uHxOmlOZvudNMW+PjPmLkRpdKJTuvnEPSRHH0eA5/fo7hId1B
+	 rllpx1/3UOFAornj0x9VABAszNHgmcuJ2m2FhbIfm27REbemZq1dfWd9//FULyeD3qg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XQOFNUNh;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CoVYVv0P;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF612606A31E;
-	Thu, 26 Nov 2026 13:49:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6351C606A334;
+	Thu, 26 Nov 2026 13:49:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XQOFNUNh
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0BC6B1F008B2;
-	Thu, 26 Nov 2026 13:49:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CoVYVv0P
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A9C0A1F00AD4;
+	Thu, 26 Nov 2026 13:49:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795700963;
-	bh=NPSQpQTltqIf0XJ7VNXqiz+KaXdcYp8qNQ6kjBes5z4=;
-	h=From:To:In-Reply-To:References:Subject:Date;
-	b=XQOFNUNhGT1djQkLGRJrfRKAoNwaL6nvksQaBAC8zU/ZqPJORsxMRnjFWA8wlaS/R
-	 aEvplfktszAt4rUt7dcqpgPJWanejChUUkq6VPAgsdZofyDfsfXp933v8Aya2WHGYY
-	 UKqLP7RrBGkdPIaSQJZMM6bFqtZNfUbQo4mNxbJ9KuJ3zdHjxnMfgH+aqcrd8FD/Fe
-	 1OzDl89myKivyH9YHOfC8hthTV/ODx/hB6fwJ1a6sCZoUL4xdwUPzTQ9lWLvQ/wC7G
-	 3UaY6ybmUrv2+AF/mjACQ3FtM2pRACAdi6jNnP6uybToDeFVNtKjD6DuIPZIKD7C/x
-	 yhNO+OUOwtsaA==
+	s=k20260515; t=1795700969;
+	bh=Dckl5cZ3WBWmSxFRR2nJW/3y+8t4JCFxv0tEEYaft8o=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date;
+	b=CoVYVv0Pyud3HwyOON6Wg/7fuwApC54MCMaL+0empd8BaTGSXojGQ1FYmDU8ruERx
+	 58y4OAHE0owWukJn8FnrB5nEiRDlUPi2M6CwiwrmMQpEiGmZJO+LbejDybDEVAmE7/
+	 Je0+8b4HFZ2zWXw8514SULtCCC0wQ37W0B3AA9iquGoDGAlpip9LjNh+S6QD8Wv0Be
+	 pH+zfc8RTacZ6YS8xPi72vlyL2C0mPbuox2F6Ajx6lxfOgkbE1SONwBvMw8oIyNBtl
+	 ytGZOTDZQzFRjPp3t40PBBTTNi2AlTUtldfJPPZgQ37tuPjLPTQQP5W38pAsh5zJlm
+	 YConAXaQXzhgA==
 From: Carlos Maiolino <cem@kernel.org>
-To: tytso@mit.edu, david@fromorbit.com, jack@suse.cz, djwong@kernel.org, 
- josef@toxicpanda.com, hch@lst.de, linux-xfs@vger.kernel.org, 
- linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, 
- tz2294@columbia.edu, brauner@kernel.org, Chris Mason <mason@kernel.org>
-In-Reply-To: <20261112214604.67875-7-mason@kernel.org>
-References: <20261112214604.67875-1-mason@kernel.org>
- <20261112214604.67875-7-mason@kernel.org>
-Subject: Re: [PATCH v9 06/14] xfs: recheck direct write alignment after
- write checks
-Message-Id: <179570095963.157938.9680779051208910940.b4-ty@kernel.org>
-Date: Thu, 26 Nov 2026 14:49:19 +0100
+To: linux-kernel@vger.kernel.org, jianyungao89@gmail.com
+Cc: "Darrick J. Wong" <djwong@kernel.org>, 
+ Eric Sandeen <sandeen@redhat.com>, Alexei Starovoitov <ast@kernel.org>, 
+ Yuzuki Ishiyama <ishiyama@hpc.is.uec.ac.jp>, 
+ Jinliang Zheng <alexjlzheng@tencent.com>, 
+ Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org
+In-Reply-To: <20261126023419.5727-1-jianyungao89@gmail.com>
+References: <20261126023419.5727-1-jianyungao89@gmail.com>
+Subject: Re: [PATCH] xfs: fix wrong lookup direction in
+ xfs_refcount_lookup_eq tracepoint
+Message-Id: <179570096631.157938.2404878356926986619.b4-ty@kernel.org>
+Date: Thu, 26 Nov 2026 14:49:26 +0100
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -65,22 +66,18 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.3
 
-On Thu, 12 Nov 2026 16:46:10 -0500, Chris Mason wrote:
-> A direct write to a reflinked file on XFS can expose stale disk contents
-> if O_APPEND or RLIMIT_FSIZE leaves it sector aligned but not block
-> aligned.
+On Thu, 26 Nov 2026 10:34:01 +0800, jianyungao89@gmail.com wrote:
+> The trace_xfs_refcount_lookup() call in xfs_refcount_lookup_eq() passes
+> XFS_LOOKUP_LE. But the actual btree lookup below uses XFS_LOOKUP_EQ,
+> so the trace record reports a mismatched lookup direction and misleads
+> debugging.
 > 
-> A direct write cannot fill only a part of a shared block, so XFS does
-> such a write through the page cache. xfs_file_dio_write() decides that
-> from the range that the caller passed. But O_APPEND and RLIMIT_FSIZE
-> change the range later, in xfs_file_write_checks():
 > 
-> [...]
 
 Applied to for-next, thanks!
 
-[06/14] xfs: recheck direct write alignment after write checks
-        commit: 3779fe1637ab7f8a8b57dfbee9ba584d6f01a893
+[1/1] xfs: fix wrong lookup direction in xfs_refcount_lookup_eq tracepoint
+      commit: a2a0791c4ef58ce943c7925491f31be95ebc7624
 
 Best regards,
 -- 
