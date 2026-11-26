@@ -1,58 +1,53 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795700969;
-	b=BqKxDOT7j8MmGBaVELtf02VETPWeaTUtHXbwStKfDkA0XHvoMLlthqq7eqHfzXxLSYLU
-	 STCQWnnc5oG0Bz3xi2dj6+qihAur97k/PmHk/5enNHuwlC+blh60TCMfm2iASaNMjPFEj
-	 W5EhYSIgma4w+OuCxqy6BdkYhBpbFct94iMazRU0avrkwL/o0c8FNgpAp9XQuXUknyx9g
-	 QrtanEhHpywuHz+RuolXWgN9cngEEk0YspKdG/mwtC+Gpsnqoj6h5mH5XUPSnU7lQtSab
-	 oTRBmWUchf3SfmtGqb+AwlwwZ2Zedl1VfGPx5JX8ftVpPDS6XvtryHMUdyIMo4vrObw==
+	t=1795700971;
+	b=tyqLz5WxJXOmURpwB4dTE4jBcXzrDD+LcqtSABgRuR99ORNDG8IYwS5HTwIYu1rsxALY
+	 QS8xyqItLJmnMElFU9N00YQRbo4abWohWodIhPs1mRJwyN9RszbIT152xBmuheOZhqasN
+	 jhSGXYejnGUXr1omcbvbbPOxaTrCEYCJSha1wPPwPzN+PrGbZGVZh0ScgWnWXtjrsktIx
+	 OWk/FD/nwZzJh5iG736kxLCiJgqpvUmugSGk/OO96Osf6os2t4pHbrfGr6NAhN9ZiFd2Q
+	 hfJ4EHDMJuVDC9DXb5C+MxXLUuFQv08RWCliZEpDjlsR6tqhxhym1oCQHad8luu86Jw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795700969;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795700971;
 	h=Received:DKIM-Signature:From:To:Cc:In-Reply-To:References:Subject:
 	 Message-Id:Date:MIME-Version:Content-Type:Content-Transfer-Encoding:
 	 X-Mailer;
-	bh=Dckl5cZ3WBWmSxFRR2nJW/3y+8t4JCFxv0tEEYaft8o=;
-	b=dJElr9W7BVWS3KA8vllNOz1Cn1qE8dRK3MWHI4XxEiPmIuFI0OnW6yqXdNXYN5rit2vM
-	 NEk59Zck+Wb2ZineGZEyCeNds2MOGtIUoXCHfHnFLwFebGKnHwMCsLwZmIMWX3CPmx6+W
-	 NWPsBbi37c7T0SzCQRDAcGwFwBpWbu0sRPLr3QWyBBOyE0yiHuXQsN2A0v3ibmq8hZe9Y
-	 Xc3ngdgfLJzxTKIToEK1uHxOmlOZvudNMW+PjPmLkRpdKJTuvnEPSRHH0eA5/fo7hId1B
-	 rllpx1/3UOFAornj0x9VABAszNHgmcuJ2m2FhbIfm27REbemZq1dfWd9//FULyeD3qg==
+	bh=cZa+Z1tCrM4PZ6fLd0V3NwOQh4P/kdjolZsmSO1TQFY=;
+	b=fQJDSV3CUfrRRS9zyUDO9TimmwpH8nhsYV2iGw4ExKAXvtkuFvuj+ZauIKjSb+vSZVy/
+	 WnutbMMCGLCvotIRjxJzpXs+TcKiXEDgLW+DASiEo5G3t5YG0LqgKA7X/iv9O33NIQqxH
+	 Gm7rpQLv+jTkE9LXEZlNu3aLQmS1jbtm896GR1deOTF+cKihUXTH5nzNhM2HB/0hcjcbE
+	 Uwb83YXgw1KFMPJBxZEGdLzJfPkJyid3pblwYcVPsfFmD9tP7syRa8qY3ttsKKLt6qVeI
+	 ZrUkSlqAw7diDIdFyqED1vmetWZV80cZGTCPfMLtSBWhL3iQI/37K17JNLunK99dRAg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CoVYVv0P;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TWhy6SJk;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6351C606A334;
-	Thu, 26 Nov 2026 13:49:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7221606A31E
+	for <linux-xfs@vger.kernel.org>; Thu, 26 Nov 2026 13:49:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CoVYVv0P
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A9C0A1F00AD4;
-	Thu, 26 Nov 2026 13:49:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TWhy6SJk
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5D4651F000C6;
+	Thu, 26 Nov 2026 13:49:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795700969;
-	bh=Dckl5cZ3WBWmSxFRR2nJW/3y+8t4JCFxv0tEEYaft8o=;
+	s=k20260515; t=1795700971;
+	bh=cZa+Z1tCrM4PZ6fLd0V3NwOQh4P/kdjolZsmSO1TQFY=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=CoVYVv0Pyud3HwyOON6Wg/7fuwApC54MCMaL+0empd8BaTGSXojGQ1FYmDU8ruERx
-	 58y4OAHE0owWukJn8FnrB5nEiRDlUPi2M6CwiwrmMQpEiGmZJO+LbejDybDEVAmE7/
-	 Je0+8b4HFZ2zWXw8514SULtCCC0wQ37W0B3AA9iquGoDGAlpip9LjNh+S6QD8Wv0Be
-	 pH+zfc8RTacZ6YS8xPi72vlyL2C0mPbuox2F6Ajx6lxfOgkbE1SONwBvMw8oIyNBtl
-	 ytGZOTDZQzFRjPp3t40PBBTTNi2AlTUtldfJPPZgQ37tuPjLPTQQP5W38pAsh5zJlm
-	 YConAXaQXzhgA==
+	b=TWhy6SJkk/OpF/Pbdfpeh/rNz41SwbrRUX6Yqn/HwNpXedw53jUdh03pzg8motu7T
+	 LdZsAich+MB4XQ70zv5ergKMqXmmbd4AgR1Oa0mQJz9CMvOznNlKxx14kfBYpbDcPm
+	 Tna9HcPDeyiYDuCJREq9FpEOEi/bt6xV8xzXl/No5Tw20Bgr/btTgmrRnJKTnvmmDq
+	 9znV7McnHgbY1KriQ7wlo4wxdCx+miugcmTlvjWsifCzTKBHiTkCocHqhh8qSJHV6R
+	 LKtK3YvbaiAR+EtqhtZXUH2nO0kJ1U6Hd/eo8yAlNxepuPUvBnphu+pxIwusKivnUh
+	 zQlTf5256gatQ==
 From: Carlos Maiolino <cem@kernel.org>
-To: linux-kernel@vger.kernel.org, jianyungao89@gmail.com
-Cc: "Darrick J. Wong" <djwong@kernel.org>, 
- Eric Sandeen <sandeen@redhat.com>, Alexei Starovoitov <ast@kernel.org>, 
- Yuzuki Ishiyama <ishiyama@hpc.is.uec.ac.jp>, 
- Jinliang Zheng <alexjlzheng@tencent.com>, 
- Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org
-In-Reply-To: <20261126023419.5727-1-jianyungao89@gmail.com>
-References: <20261126023419.5727-1-jianyungao89@gmail.com>
-Subject: Re: [PATCH] xfs: fix wrong lookup direction in
- xfs_refcount_lookup_eq tracepoint
-Message-Id: <179570096631.157938.2404878356926986619.b4-ty@kernel.org>
-Date: Thu, 26 Nov 2026 14:49:26 +0100
+To: linux-xfs@vger.kernel.org, Alejandro Colomar <alx@kernel.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, Christoph Hellwig <hch@lst.de>
+In-Reply-To: <3783cf39b873890896eb889c8c09edb455559fce.1795626969.git.alx@kernel.org>
+References: <3783cf39b873890896eb889c8c09edb455559fce.1795626969.git.alx@kernel.org>
+Subject: Re: [PATCH] xfs: Remove incorrect use of '&'
+Message-Id: <179570096988.157938.13140152686998128500.b4-ty@kernel.org>
+Date: Thu, 26 Nov 2026 14:49:29 +0100
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Post: <mailto:linux-xfs@vger.kernel.org>
@@ -66,18 +61,18 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.3
 
-On Thu, 26 Nov 2026 10:34:01 +0800, jianyungao89@gmail.com wrote:
-> The trace_xfs_refcount_lookup() call in xfs_refcount_lookup_eq() passes
-> XFS_LOOKUP_LE. But the actual btree lookup below uses XFS_LOOKUP_EQ,
-> so the trace record reports a mismatched lookup direction and misleads
-> debugging.
+On Wed, 25 Nov 2026 18:16:45 +0100, Alejandro Colomar wrote:
+> We want to pass the character array, not a pointer to it.
+> 
+> This seems an obvious typo, introduced in a48373e7d35a (2026-01-20;
+> "xfs: start creating infrastructure for health monitoring").
 > 
 > 
 
 Applied to for-next, thanks!
 
-[1/1] xfs: fix wrong lookup direction in xfs_refcount_lookup_eq tracepoint
-      commit: a2a0791c4ef58ce943c7925491f31be95ebc7624
+[1/1] xfs: Remove incorrect use of '&'
+      commit: 58de428557082dabdeaa1e1809766236f8e9d6c3
 
 Best regards,
 -- 
